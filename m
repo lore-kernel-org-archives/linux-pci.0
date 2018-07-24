@@ -1,89 +1,115 @@
-Return-Path: <SRS0=6yPx=JX=gmail.com=kernelfans@kernel.org>
-Return-Path: <SRS0=6yPx=JX=gmail.com=kernelfans@kernel.org>
+Return-Path: <linux-nvme-bounces+bjorn=helgaas.com@lists.infradead.org>
+Return-Path: <linux-nvme-bounces+bjorn=helgaas.com@lists.infradead.org>
+Date: Mon, 23 Jul 2018 21:16:02 -0600
+From: Alex Williamson <alex.williamson@redhat.com>
+To: Sinan Kaya <Okaya@kernel.org>
+Subject: Re: [PATCH v2 2/2] PCI: NVMe device specific reset quirk
+Message-ID: <20180723211602.2d85d28a@t450s.home>
+In-Reply-To: <CAK9iUCPG-H3vWjiEnjAgr_nWEf=0Sn+AvRt68_Sg16Zw8TobRg@mail.gmail.com>
+References: <20180724000944.7671.64284.stgit@gimli.home>
+ <20180724001310.7671.41243.stgit@gimli.home>
+ <abc86e6b-7df5-a84c-7e98-107c605812c6@kernel.org>
+ <20180723195711.0a3c9301@t450s.home>
+ <CAK9iUCPG-H3vWjiEnjAgr_nWEf=0Sn+AvRt68_Sg16Zw8TobRg@mail.gmail.com>
 MIME-Version: 1.0
-References: <1530600642-25090-1-git-send-email-kernelfans@gmail.com>
- <4685360.VNmeYLh0dQ@aspire.rjw.lan> <CAFgQCTusBM0-E=wAJgRJA7g-RnDi9ts==-M7KezNBwSWnyO=HA@mail.gmail.com>
- <6281446.GoJLz6Hq6C@aspire.rjw.lan> <CAFgQCTt7VfqM=UyCnvNFxrSw8Z6cUtAi3HUwR4_xPAc03SgHjQ@mail.gmail.com>
- <CAJZ5v0jo5-z0ZYDzdNPpn54+oAxpdG_=EvVDdz-HKxp7psu-EA@mail.gmail.com>
- <20180706083603.GA9063@wunner.de> <CAJZ5v0j6+m8NGMneG45tF9L1s6ahtFo91wPCO=3YOTEyAOL+VQ@mail.gmail.com>
- <CAFgQCTugu5XO06_xXb4ihkdfGJxtFX0813g2J-Jk2JeYtPP1vA@mail.gmail.com>
-In-Reply-To: <CAFgQCTugu5XO06_xXb4ihkdfGJxtFX0813g2J-Jk2JeYtPP1vA@mail.gmail.com>
-From: Pingfan Liu <kernelfans@gmail.com>
-Date: Sat, 7 Jul 2018 12:24:26 +0800
-Message-ID: <CAFgQCTsCjkDWJsNog_sTnS-ZaZ87fMFpKq1ekVSUG4MDs6K_jw@mail.gmail.com>
-Subject: Re: [PATCHv3 0/4] drivers/base: bugfix for supplier<-consumer
- ordering in device_kset
-To: rafael@kernel.org
-Cc: lukas@wunner.de, linux-kernel@vger.kernel.org,
-	Greg Kroah-Hartman <gregkh@linuxfoundation.org>, Grygorii Strashko <grygorii.strashko@ti.com>,
-	Christoph Hellwig <hch@infradead.org>, Bjorn Helgaas <helgaas@kernel.org>, Dave Young <dyoung@redhat.com>,
-	linux-pci@vger.kernel.org, linuxppc-dev@lists.ozlabs.org,
-	linux-pm@vger.kernel.org, kishon@ti.com
-Content-Type: text/plain; charset="UTF-8"
+List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-nvme>,
+ <mailto:linux-nvme-request@lists.infradead.org?subject=unsubscribe>
+List-Archive: <http://lists.infradead.org/pipermail/linux-nvme/>
+List-Post: <mailto:linux-nvme@lists.infradead.org>
+List-Help: <mailto:linux-nvme-request@lists.infradead.org?subject=help>
+List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-nvme>,
+ <mailto:linux-nvme-request@lists.infradead.org?subject=subscribe>
+Cc: linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
+ linux-nvme@lists.infradead.org
+Content-Type: text/plain; charset="us-ascii"
+Sender: "Linux-nvme" <linux-nvme-bounces@lists.infradead.org>
+Errors-To: linux-nvme-bounces+bjorn=helgaas.com@lists.infradead.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Fri, Jul 6, 2018 at 9:55 PM Pingfan Liu <kernelfans@gmail.com> wrote:
->
-> On Fri, Jul 6, 2018 at 4:47 PM Rafael J. Wysocki <rafael@kernel.org> wrote:
-> >
-> > On Fri, Jul 6, 2018 at 10:36 AM, Lukas Wunner <lukas@wunner.de> wrote:
-> > > [cc += Kishon Vijay Abraham]
-> > >
-> > > On Thu, Jul 05, 2018 at 11:18:28AM +0200, Rafael J. Wysocki wrote:
-> > >> OK, so calling devices_kset_move_last() from really_probe() clearly is
-> > >> a mistake.
-> > >>
-> > >> I'm not really sure what the intention of it was as the changelog of
-> > >> commit 52cdbdd49853d doesn't really explain that (why would it be
-> > >> insufficient without that change?)
-> > >
-> > > It seems 52cdbdd49853d fixed an issue with boards which have an MMC
-> > > whose reset pin needs to be driven high on shutdown, lest the MMC
-> > > won't be found on the next boot.
-> > >
-> > > The boards' devicetrees use a kludge wherein the reset pin is modelled
-> > > as a regulator.  The regulator is enabled when the MMC probes and
-> > > disabled on driver unbind and shutdown.  As a result, the pin is driven
-> > > low on shutdown and the MMC is not found on the next boot.
-> > >
-> > > To fix this, another kludge was invented wherein the GPIO expander
-> > > driving the reset pin unconditionally drives all its pins high on
-> > > shutdown, see pcf857x_shutdown() in drivers/gpio/gpio-pcf857x.c
-> > > (commit adc284755055, "gpio: pcf857x: restore the initial line state
-> > > of all pcf lines").
-> > >
-> > > For this kludge to work, the GPIO expander's ->shutdown hook needs to
-> > > be executed after the MMC expander's ->shutdown hook.
-> > >
-> > > Commit 52cdbdd49853d achieved that by reordering devices_kset according
-> > > to the probe order.  Apparently the MMC probes after the GPIO expander,
-> > > possibly because it returns -EPROBE_DEFER if the vmmc regulator isn't
-> > > available yet, see mmc_regulator_get_supply().
-> > >
-> > > Note, I'm just piecing the information together from git history,
-> > > I'm not responsible for these kludges.  (I'm innocent!)
-> >
-> > Sure enough. :-)
-> >
-> > In any case, calling devices_kset_move_last() in really_probe() is
-> > plain broken and if its only purpose was to address a single, arguably
-> > kludgy, use case, let's just get rid of it in the first place IMO.
-> >
-> Yes, if it is only used for a single use case.
->
-Think it again, I saw other potential issue with the current code.
-device_link_add->device_reorder_to_tail() can break the
-"supplier<-consumer" order. During moving children after parent's
-supplier, it ignores the order of child's consumer.  Beside this,
-essentially both devices_kset_move_after/_before() and
-device_pm_move_after/_before() expose  the shutdown order to the
-indirect caller,  and we can not expect that the caller can not handle
-it correctly. It should be a job of drivers core.  It is hard to
-extract high dimension info and pack them into one dimension
-linked-list. And in theory, it is warranted that the shutdown seq is
-correct by using device tree info. More important, it is cheap with
-the data structure in hand. So I think it is time to resolve the issue
-once for all.
+On Mon, 23 Jul 2018 19:20:41 -0700
+Sinan Kaya <Okaya@kernel.org> wrote:
 
-Thanks and regards,
-Pingfan
+> On 7/23/18, Alex Williamson <alex.williamson@redhat.com> wrote:
+> > On Mon, 23 Jul 2018 17:40:02 -0700
+> > Sinan Kaya <okaya@kernel.org> wrote:
+> >  
+> >> On 7/23/2018 5:13 PM, Alex Williamson wrote:  
+> >> > + * The NVMe specification requires that controllers support PCIe FLR,
+> >> > but
+> >> > + * but some Samsung SM961/PM961 controllers fail to recover after FLR
+> >> > (-1
+> >> > + * config space) unless the device is quiesced prior to FLR.  
+> >>
+> >> Does disabling the memory bit in PCI config space as part of the FLR
+> >> reset function help? (like the very first thing)  
+> >
+> > No, it does not.  I modified this to only clear PCI_COMMAND_MEMORY and
+> > call pcie_flr(), the Samsung controller dies just as it did previously.
+> >  
+> >> Can we do that in the pcie_flr() function to cover other endpoint types
+> >> that might be pushing traffic while code is trying to do a reset?  
+> >
+> > Do you mean PCI_COMMAND_MASTER rather than PCI_COMMAND_MEMORY?  
+> 
+> Yes
+> 
+> >  I tried
+> > that too, it doesn't work either.  I'm not really sure the theory
+> > behind clearing memory, clearing busmaster to stop DMA seems like a
+> > sane thing to do, but doesn't help here.  
+> 
+> Let me explain what I guessed. You might be able to fill in the blanks
+> where I am completely off.
+> 
+> We do vfio initiated flr reset immediately following guest machine
+> shutdown. The card could be fully enabled and pushing traffic to the
+> system at this moment.
+> 
+> I don't know if vfio does any device disable or not.
+
+Yes, pci_clear_master() is the very first thing we do in
+vfio_pci_disable(), well before we try to reset the device.
+ 
+> FLR is supposed to reset the endpoint but endpoint doesn't recover per
+> your report.
+> 
+> Having vendor specific reset routines for PCIE endpoints defeats the
+> purpose of FLR.
+> 
+> Since the adapter is fully functional, i suggested turning off bus
+> master and memory enable bits to stop endpoint from sending packets.
+> 
+> But, this is not helping either.
+> 
+> Those sleep statements looked very fragile to be honest.
+> 
+> I was curious if there is something else that we could do for other endpoints.
+> 
+> No objections otherwise.
+
+I certainly agree that it would be nice if FLR was more robust on these
+devices, but if all devices behaved within the specs we wouldn't have
+these quirks to start with ;)  Just as you're suggesting maybe we could
+disable busmaster before FLR, which is reasonable but doesn't work
+here, I'm basically moving that to a class specific action, quiesce the
+controller at the NVMe level rather than PCI level.  Essentially that's
+why I thought it reasonable to apply to all NVMe class devices rather
+than create just a quirk that delays after FLR for Intel and another
+that disables the NVMe controller just for Samsung.  Once I decide to
+apply to the whole class, then I need to bring in the device specific
+knowledge already found in the native nvme driver for the delay between
+clearing the enable bit and checking the ready status bit.  If it's
+fragile, then the bare metal nvme driver has the same frailty.  For the
+delay I added, all I can say is that it works for me and improves the
+usability of the device for this purpose.  I know that 200ms is too
+low, ISTR the issue was fixed at 210-220ms, so 250ms provides some
+headroom and I've not seen any issues there.  If we want to make it 500
+or 1000ms, that's fine by me, I expect it'd work, it's just unnecessary
+until we find devices that need longer delays.  Thanks,
+
+Alex
+
+_______________________________________________
+Linux-nvme mailing list
+Linux-nvme@lists.infradead.org
+http://lists.infradead.org/mailman/listinfo/linux-nvme
