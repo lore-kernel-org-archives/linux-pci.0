@@ -1,142 +1,94 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from foss.arm.com ([217.140.101.70]:38006 "EHLO foss.arm.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1752399AbeGDOJW (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Wed, 4 Jul 2018 10:09:22 -0400
-Date: Wed, 4 Jul 2018 15:11:13 +0100
-From: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
-To: Kishon Vijay Abraham I <kishon@ti.com>
-Cc: Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org,
-        linux-kernel@vger.kernel.org
-Subject: Re: [PATCH] PCI: endpoint: Fix NULL pointer dereference error when
- CONFIGFS is disabled
-Message-ID: <20180704141113.GB12863@red-moon>
-References: <20180703090017.22734-1-kishon@ti.com>
+Return-Path: <linux-nvme-bounces+bjorn=helgaas.com@lists.infradead.org>
+Return-Path: <linux-nvme-bounces+bjorn=helgaas.com@lists.infradead.org>
+Date: Tue, 24 Jul 2018 10:18:48 -0600
+From: Alex Williamson <alex.williamson@redhat.com>
+To: linux-pci@vger.kernel.org
+Subject: Re: [PATCH v3 3/3] PCI: Intel DC P3700 NVMe delay after FLR quirk
+Message-ID: <20180724101849.36f635eb@t450s.home>
+In-Reply-To: <20180724161446.2729.78211.stgit@gimli.home>
+References: <20180724160440.2729.75178.stgit@gimli.home>
+ <20180724161446.2729.78211.stgit@gimli.home>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20180703090017.22734-1-kishon@ti.com>
-Sender: linux-pci-owner@vger.kernel.org
+List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-nvme>,
+ <mailto:linux-nvme-request@lists.infradead.org?subject=unsubscribe>
+List-Archive: <http://lists.infradead.org/pipermail/linux-nvme/>
+List-Post: <mailto:linux-nvme@lists.infradead.org>
+List-Help: <mailto:linux-nvme-request@lists.infradead.org?subject=help>
+List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-nvme>,
+ <mailto:linux-nvme-request@lists.infradead.org?subject=subscribe>
+Cc: linux-kernel@vger.kernel.org, linux-nvme@lists.infradead.org
+Content-Type: text/plain; charset="us-ascii"
+Sender: "Linux-nvme" <linux-nvme-bounces@lists.infradead.org>
+Errors-To: linux-nvme-bounces+bjorn=helgaas.com@lists.infradead.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tue, Jul 03, 2018 at 02:30:17PM +0530, Kishon Vijay Abraham I wrote:
-> commit ef1433f717a2c63747a519d86965d73 ("PCI: endpoint: Create configfs
-> entry for each pci_epf_device_id table entry") while adding configfs
-> entry for each pci_epf_device_id table entry introduced a NULL pointer
-> dereference error when CONFIG_PCI_ENDPOINT_CONFIGFS is not enabled.
-> Fix it here.
+On Tue, 24 Jul 2018 10:14:46 -0600
+Alex Williamson <alex.williamson@redhat.com> wrote:
+
+> Add a device specific reset for Intel DC P3700 NVMe device which
+> exhibits a timeout failure in drivers waiting for the ready status to
+> update after NVMe enable if the driver interacts with the device too
+> quickly after FLR.  As this has been observed in device assignment
+> scenarios, resolve this with a device specific reset quirk to add an
+> additional, heuristically determined, delay after the FLR completes.
 > 
-> Fixes: ef1433f717a2c63747a519d86965d73 ("PCI: endpoint: Create configfs
-> entry for each pci_epf_device_id table entry")
-> 
-> Signed-off-by: Kishon Vijay Abraham I <kishon@ti.com>
+> Signed-off-by: Alex Williamson <alex.williamson@redhat.com>
 > ---
->  drivers/pci/endpoint/pci-epf-core.c | 62 ++++++++++++++++++++---------
->  1 file changed, 43 insertions(+), 19 deletions(-)
+>  drivers/pci/quirks.c |   22 ++++++++++++++++++++++
+>  1 file changed, 22 insertions(+)
 
-Applied to pci/controller-fixes, to be sent tentatively for one of
-the upcoming -rc*, thanks.
+I forgot to link the bz in this one, if this somehow becomes the final
+version, please add:
 
-Lorenzo
+Link: https://bugzilla.redhat.com/show_bug.cgi?id=159265
 
-> diff --git a/drivers/pci/endpoint/pci-epf-core.c b/drivers/pci/endpoint/pci-epf-core.c
-> index 523a8cab3bfb..7fe1930d6589 100644
-> --- a/drivers/pci/endpoint/pci-epf-core.c
-> +++ b/drivers/pci/endpoint/pci-epf-core.c
-> @@ -137,25 +137,60 @@ void *pci_epf_alloc_space(struct pci_epf *epf, size_t size, enum pci_barno bar)
+Thanks,
+Alex
+ 
+> diff --git a/drivers/pci/quirks.c b/drivers/pci/quirks.c
+> index 3899cdd2514b..08fafd804588 100644
+> --- a/drivers/pci/quirks.c
+> +++ b/drivers/pci/quirks.c
+> @@ -3751,6 +3751,27 @@ static int nvme_disable_and_flr(struct pci_dev *dev, int probe)
+>  	return 0;
 >  }
->  EXPORT_SYMBOL_GPL(pci_epf_alloc_space);
 >  
-> -/**
-> - * pci_epf_unregister_driver() - unregister the PCI EPF driver
-> - * @driver: the PCI EPF driver that has to be unregistered
-> - *
-> - * Invoke to unregister the PCI EPF driver.
-> - */
-> -void pci_epf_unregister_driver(struct pci_epf_driver *driver)
-> +static void pci_epf_remove_cfs(struct pci_epf_driver *driver)
->  {
->  	struct config_group *group;
->  
-> +	if (!IS_ENABLED(CONFIG_PCI_ENDPOINT_CONFIGFS))
-> +		return;
-> +
->  	mutex_lock(&pci_epf_mutex);
->  	list_for_each_entry(group, &driver->epf_group, group_entry)
->  		pci_ep_cfs_remove_epf_group(group);
->  	list_del(&driver->epf_group);
->  	mutex_unlock(&pci_epf_mutex);
-> +}
-> +
-> +/**
-> + * pci_epf_unregister_driver() - unregister the PCI EPF driver
-> + * @driver: the PCI EPF driver that has to be unregistered
-> + *
-> + * Invoke to unregister the PCI EPF driver.
+> +/*
+> + * Intel DC P3700 NVMe controller will timeout waiting for ready status
+> + * to change after NVMe enable if the driver starts interacting with the
+> + * device too quickly after FLR.  A 250ms delay after FLR has heuristically
+> + * proven to produce reliably working results for device assignment cases.
 > + */
-> +void pci_epf_unregister_driver(struct pci_epf_driver *driver)
+> +static int delay_250ms_after_flr(struct pci_dev *dev, int probe)
 > +{
-> +	pci_epf_remove_cfs(driver);
->  	driver_unregister(&driver->driver);
->  }
->  EXPORT_SYMBOL_GPL(pci_epf_unregister_driver);
->  
-> +static int pci_epf_add_cfs(struct pci_epf_driver *driver)
-> +{
-> +	struct config_group *group;
-> +	const struct pci_epf_device_id *id;
+> +	if (!pcie_has_flr(dev))
+> +		return -ENOTTY;
 > +
-> +	if (!IS_ENABLED(CONFIG_PCI_ENDPOINT_CONFIGFS))
+> +	if (probe)
 > +		return 0;
 > +
-> +	INIT_LIST_HEAD(&driver->epf_group);
+> +	pcie_flr(dev);
 > +
-> +	id = driver->id_table;
-> +	while (id->name[0]) {
-> +		group = pci_ep_cfs_add_epf_group(id->name);
-> +		if (IS_ERR(group)) {
-> +			pci_epf_remove_cfs(driver);
-> +			return PTR_ERR(group);
-> +		}
-> +
-> +		mutex_lock(&pci_epf_mutex);
-> +		list_add_tail(&group->group_entry, &driver->epf_group);
-> +		mutex_unlock(&pci_epf_mutex);
-> +		id++;
-> +	}
+> +	msleep(250);
 > +
 > +	return 0;
 > +}
 > +
->  /**
->   * __pci_epf_register_driver() - register a new PCI EPF driver
->   * @driver: structure representing PCI EPF driver
-> @@ -167,8 +202,6 @@ int __pci_epf_register_driver(struct pci_epf_driver *driver,
->  			      struct module *owner)
->  {
->  	int ret;
-> -	struct config_group *group;
-> -	const struct pci_epf_device_id *id;
->  
->  	if (!driver->ops)
->  		return -EINVAL;
-> @@ -183,16 +216,7 @@ int __pci_epf_register_driver(struct pci_epf_driver *driver,
->  	if (ret)
->  		return ret;
->  
-> -	INIT_LIST_HEAD(&driver->epf_group);
-> -
-> -	id = driver->id_table;
-> -	while (id->name[0]) {
-> -		group = pci_ep_cfs_add_epf_group(id->name);
-> -		mutex_lock(&pci_epf_mutex);
-> -		list_add_tail(&group->group_entry, &driver->epf_group);
-> -		mutex_unlock(&pci_epf_mutex);
-> -		id++;
-> -	}
-> +	pci_epf_add_cfs(driver);
->  
->  	return 0;
->  }
-> -- 
-> 2.17.1
+>  static const struct pci_dev_reset_methods pci_dev_reset_methods[] = {
+>  	{ PCI_VENDOR_ID_INTEL, PCI_DEVICE_ID_INTEL_82599_SFP_VF,
+>  		 reset_intel_82599_sfp_virtfn },
+> @@ -3759,6 +3780,7 @@ static const struct pci_dev_reset_methods pci_dev_reset_methods[] = {
+>  	{ PCI_VENDOR_ID_INTEL, PCI_DEVICE_ID_INTEL_IVB_M2_VGA,
+>  		reset_ivb_igd },
+>  	{ PCI_VENDOR_ID_SAMSUNG, 0xa804, nvme_disable_and_flr },
+> +	{ PCI_VENDOR_ID_INTEL, 0x0953, delay_250ms_after_flr },
+>  	{ PCI_VENDOR_ID_CHELSIO, PCI_ANY_ID,
+>  		reset_chelsio_generic_dev },
+>  	{ 0 }
 > 
+
+
+_______________________________________________
+Linux-nvme mailing list
+Linux-nvme@lists.infradead.org
+http://lists.infradead.org/mailman/listinfo/linux-nvme
