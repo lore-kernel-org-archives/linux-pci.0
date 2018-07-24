@@ -1,85 +1,50 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mx3-rdu2.redhat.com ([66.187.233.73]:58584 "EHLO mx1.redhat.com"
-        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1726909AbeGRTbM (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Wed, 18 Jul 2018 15:31:12 -0400
-Subject: [PATCH] PCI: Match Root Port's MPS to endpoint's MPSS when necessary
-From: Myron Stowe <myron.stowe@redhat.com>
-To: bhelgaas@google.com, linux-pci@vger.kernel.org
-Cc: keith.busch@intel.com, jdmason@kudzu.us
-Date: Wed, 18 Jul 2018 12:51:58 -0600
-Message-ID: <20180718185158.149373.77902.stgit@tak.stowe>
+Return-Path: <linux-nvme-bounces+bjorn=helgaas.com@lists.infradead.org>
+Return-Path: <linux-nvme-bounces+bjorn=helgaas.com@lists.infradead.org>
+Subject: [PATCH v2 0/2] PCI: NVMe reset quirk
+From: Alex Williamson <alex.williamson@redhat.com>
+To: linux-pci@vger.kernel.org
+Date: Mon, 23 Jul 2018 18:12:54 -0600
+Message-ID: <20180724000944.7671.64284.stgit@gimli.home>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Sender: linux-pci-owner@vger.kernel.org
+List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-nvme>,
+ <mailto:linux-nvme-request@lists.infradead.org?subject=unsubscribe>
+List-Archive: <http://lists.infradead.org/pipermail/linux-nvme/>
+List-Post: <mailto:linux-nvme@lists.infradead.org>
+List-Help: <mailto:linux-nvme-request@lists.infradead.org?subject=help>
+List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-nvme>,
+ <mailto:linux-nvme-request@lists.infradead.org?subject=subscribe>
+Cc: linux-kernel@vger.kernel.org, linux-nvme@lists.infradead.org
+Content-Type: text/plain; charset="us-ascii"
+Sender: "Linux-nvme" <linux-nvme-bounces@lists.infradead.org>
+Errors-To: linux-nvme-bounces+bjorn=helgaas.com@lists.infradead.org
 List-ID: <linux-pci.vger.kernel.org>
 
-In commit 27d868b5e6cf ("PCI: Set MPS to match upstream bridge"), we made
-sure every device's MPS setting matches its upstream bridge, making it more
-likely that a hot-added device will work in a system with an optimized MPS
-configuration.
+v2: Add bug link, use Samsung vendor ID, add spec references
 
-Recently I've started encountering systems where the endpoint device's MPSS
-capability is less than its root port's current MPS value, thus the
-endpoint is not capable of matching its upstream bridge's MPS setting (see:
-bugzilla via "Link:" below).  This leaves the system vunerable - the
-upstream root port could respond with larger sized TLPs than the endpoint
-can handle, and the endpoint will consider them to be 'Malformed'.
+As discussed in the 2nd patch, at least one NVMe controller sometimes
+doesn't like being reset while enabled and another will timeout during
+a subsequent re-enable if it happens too quickly after reset.
+Introduce a device specific reset quirk for all NVMe class devices so
+that we can try to get reliable behavior from them for device
+assignment and any other users of the PCI subsystem reset interface.
 
-One could use the "pci=pcie_bus_safe" kernel parameter to resolve the
-issue, but, it both forces a user to have to supply a kernel parameter to
-get the system to function reliable, and may end up limiting MPS settings
-of other, non-related, sub-topologies which could benefit from maintaining
-their larger values.
+Patches against current PCI next branch.  Thanks,
 
-This patch augments Keith's approach to include tuning down a root port's
-MPS setting when its hot-added endpoint device is not capable of matching
-it.  The tuning down, so that both the root port and endpoint match, is
-limited to root ports with downstream endpoint device sub-topologies.
+Alex
 
-Link: https://bugzilla.kernel.org/show_bug.cgi?id=200527
-Cc: Keith Busch <keith.busch@intel.com>
-Cc: Jon Mason <jdmason@kudzu.us>
-Cc: Sinan Kaya <okaya@kernel.org>
-Signed-off-by: Myron Stowe <myron.stowe@redhat.com>
 ---
- drivers/pci/probe.c |   12 ++++++++++--
- 1 file changed, 10 insertions(+), 2 deletions(-)
 
-diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
-index ac91b6f..2987bd9 100644
---- a/drivers/pci/probe.c
-+++ b/drivers/pci/probe.c
-@@ -1670,7 +1670,7 @@ int pci_setup_device(struct pci_dev *dev)
- static void pci_configure_mps(struct pci_dev *dev)
- {
- 	struct pci_dev *bridge = pci_upstream_bridge(dev);
--	int mps, p_mps, rc;
-+	int mps, mpss, p_mps, rc;
- 
- 	if (!pci_is_pcie(dev) || !bridge || !pci_is_pcie(bridge))
- 		return;
-@@ -1694,6 +1694,14 @@ static void pci_configure_mps(struct pci_dev *dev)
- 	if (pcie_bus_config != PCIE_BUS_DEFAULT)
- 		return;
- 
-+	mpss = 128 << dev->pcie_mpss;
-+	if (mpss < p_mps && pci_pcie_type(bridge) == PCI_EXP_TYPE_ROOT_PORT) {
-+		pcie_set_mps(bridge, mpss);
-+		pci_info(dev, "Upstream bridge's Max Payload Size set to %d (was %d, max %d)\n",
-+			 mpss, p_mps, 128 << bridge->pcie_mpss);
-+		p_mps = pcie_get_mps(bridge);
-+	}
-+
- 	rc = pcie_set_mps(dev, p_mps);
- 	if (rc) {
- 		pci_warn(dev, "can't set Max Payload Size to %d; if necessary, use \"pci=pcie_bus_safe\" and report a bug\n",
-@@ -1702,7 +1710,7 @@ static void pci_configure_mps(struct pci_dev *dev)
- 	}
- 
- 	pci_info(dev, "Max Payload Size set to %d (was %d, max %d)\n",
--		 p_mps, mps, 128 << dev->pcie_mpss);
-+		 p_mps, mps, mpss);
- }
- 
- static struct hpp_type0 pci_default_type0 = {
+Alex Williamson (2):
+      PCI: Export pcie_has_flr()
+      PCI: NVMe device specific reset quirk
+
+
+ drivers/pci/pci.c    |    3 +
+ drivers/pci/quirks.c |  118 ++++++++++++++++++++++++++++++++++++++++++++++++++
+ include/linux/pci.h  |    1 
+ 3 files changed, 121 insertions(+), 1 deletion(-)
+
+_______________________________________________
+Linux-nvme mailing list
+Linux-nvme@lists.infradead.org
+http://lists.infradead.org/mailman/listinfo/linux-nvme
