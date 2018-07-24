@@ -1,125 +1,60 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.29.99]:48236 "EHLO mail.kernel.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1731739AbeG2Bco (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Sat, 28 Jul 2018 21:32:44 -0400
-From: Sinan Kaya <okaya@kernel.org>
-To: linux-pci@vger.kernel.org
-Cc: Sinan Kaya <okaya@kernel.org>, Bjorn Helgaas <bhelgaas@google.com>,
-        Mika Westerberg <mika.westerberg@linux.intel.com>,
-        Keith Busch <keith.busch@intel.com>,
-        Oza Pawandeep <poza@codeaurora.org>,
-        Markus Elfring <elfring@users.sourceforge.net>,
-        Lukas Wunner <lukas@wunner.de>,
-        Kees Cook <keescook@chromium.org>
-Subject: [PATCH v6 1/1] PCI: pciehp: Ignore link events when there is a fatal error pending
-Date: Sat, 28 Jul 2018 02:13:24 -0700
-Message-Id: <20180728091324.154795-2-okaya@kernel.org>
-In-Reply-To: <20180728091324.154795-1-okaya@kernel.org>
-References: <20180728091324.154795-1-okaya@kernel.org>
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+From: Leonard Crestez <leonard.crestez@nxp.com>
+To: Lucas Stach <l.stach@pengutronix.de>,
+ Andrey Smirnov <andrew.smirnov@gmail.com>,
+ Richard Zhu <hongxing.zhu@nxp.com>, Shawn Guo <shawnguo@kernel.org>
+Subject: [PATCH v3 0/2] PCI: imx: Initial imx7d pm support
+Date: Tue, 24 Jul 2018 19:14:18 +0300
+Message-Id: <cover.1532448745.git.leonard.crestez@nxp.com>
+MIME-Version: 1.0
+List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
+List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
+List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
+List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
+List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
+Cc: Dong Aisheng <aisheng.dong@nxp.com>, Joao Pinto <Joao.Pinto@synopsys.com>,
+ kernel@pengutronix.de, Anson Huang <Anson.Huang@nxp.com>,
+ Jingoo Han <jingoohan1@gmail.com>, linux-kernel@vger.kernel.org,
+ Fabio Estevam <fabio.estevam@nxp.com>,
+ Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>, linux-imx@nxp.com,
+ Philipp Zabel <p.zabel@pengutronix.de>, linux-pci@vger.kernel.org,
+ Bjorn Helgaas <bhelgaas@google.com>, linux-arm-kernel@lists.infradead.org
+Content-Type: text/plain; charset="us-ascii"
+Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
+Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
 List-ID: <linux-pci.vger.kernel.org>
 
-We need to figure out how to gracefully return inside hotplug driver
-if link down happened and there is an error pending. Fatal error needs
-to be serviced by AER/DPC drivers. Hotplug driver is observing link
-events while AER/DPC drivers are performing link recovery today and
-are causing confusion for the hotplug statemachine.
+Changes since v2:
+ * Print with dev_info if link fails on resume (Lucas)
+ * Add a comment on imx7d pci irq mappings (Andrey)
+ * Make imx6_pcie_ltssm_disable print an error on IMX6Q (Lucas)
 
-1. check if there is a fatal error pending in the device_status register
-of the PCI Express capability on the root port.
-2. bail out from hotplug routine if this is the case.
-3. otherwise, existing behavior.
+The ltssm_disable does not return an error because it can't be usefully
+handled, reversing partial suspend is a nightmare and unlikely to work.
 
-If fatal error is pending and a fatal error service such as DPC or AER
-is running, it is the responsibility of the fatal error service to
-recover the link.
+ * Drop "reset: imx7: Fix always writing bits as 0 (accepted by Philipp)
 
-Signed-off-by: Sinan Kaya <okaya@kernel.org>
----
- drivers/pci/hotplug/pciehp_hpc.c | 13 ++++++++----
- drivers/pci/pci.h                |  1 +
- drivers/pci/pcie/err.c           | 35 ++++++++++++++++++++++++++++++++
- 3 files changed, 45 insertions(+), 4 deletions(-)
+Series is against linux-next tag next-20180724 where the reset patch was
+already accepted. The imx7d.dtsi patch is also useful standalone.
 
-diff --git a/drivers/pci/hotplug/pciehp_hpc.c b/drivers/pci/hotplug/pciehp_hpc.c
-index 718b6073afad..776566ab7583 100644
---- a/drivers/pci/hotplug/pciehp_hpc.c
-+++ b/drivers/pci/hotplug/pciehp_hpc.c
-@@ -612,10 +612,15 @@ static irqreturn_t pciehp_isr(int irq, void *dev_id)
- 	 * and cause the wrong event to queue.
- 	 */
- 	if (events & PCI_EXP_SLTSTA_DLLSC) {
--		ctrl_info(ctrl, "Slot(%s): Link %s\n", slot_name(slot),
--			  link ? "Up" : "Down");
--		pciehp_queue_interrupt_event(slot, link ? INT_LINK_UP :
--					     INT_LINK_DOWN);
-+		if (pci_fatal_error_pending(pdev, PCI_ERR_UNC_SURPDN))
-+			ctrl_info(ctrl, "Slot(%s): Ignoring Link %s event due to detected Fatal Error\n",
-+				  slot_name(slot), link ? "Up" : "Down");
-+		else {
-+			ctrl_info(ctrl, "Slot(%s): Link %s\n", slot_name(slot),
-+				  link ? "Up" : "Down");
-+			pciehp_queue_interrupt_event(slot, link ? INT_LINK_UP :
-+						     INT_LINK_DOWN);
-+		}
- 	} else if (events & PCI_EXP_SLTSTA_PDC) {
- 		present = !!(status & PCI_EXP_SLTSTA_PDS);
- 		ctrl_info(ctrl, "Slot(%s): Card %spresent\n", slot_name(slot),
-diff --git a/drivers/pci/pci.h b/drivers/pci/pci.h
-index 882f1f9596df..7494b2c0c5ff 100644
---- a/drivers/pci/pci.h
-+++ b/drivers/pci/pci.h
-@@ -360,6 +360,7 @@ void pci_enable_acs(struct pci_dev *dev);
- /* PCI error reporting and recovery */
- void pcie_do_fatal_recovery(struct pci_dev *dev, u32 service);
- void pcie_do_nonfatal_recovery(struct pci_dev *dev);
-+bool pci_fatal_error_pending(struct pci_dev *pdev, u32 usr_mask);
- 
- bool pcie_wait_for_link(struct pci_dev *pdev, bool active);
- #ifdef CONFIG_PCIEASPM
-diff --git a/drivers/pci/pcie/err.c b/drivers/pci/pcie/err.c
-index f7ce0cb0b0b7..316b2d2750b9 100644
---- a/drivers/pci/pcie/err.c
-+++ b/drivers/pci/pcie/err.c
-@@ -386,3 +386,38 @@ void pcie_do_nonfatal_recovery(struct pci_dev *dev)
- 	/* TODO: Should kernel panic here? */
- 	pci_info(dev, "AER: Device recovery failed\n");
- }
-+
-+bool pci_fatal_error_pending(struct pci_dev *pdev, u32 usr_mask)
-+{
-+	u16 err_status = 0;
-+	u32 status, mask;
-+	int rc;
-+
-+	if (!pci_is_pcie(pdev))
-+		return false;
-+
-+	rc = pcie_capability_read_word(pdev, PCI_EXP_DEVSTA, &err_status);
-+	if (rc)
-+		return false;
-+
-+	if (!(err_status & PCI_EXP_DEVSTA_FED))
-+		return false;
-+
-+	if (!pdev->aer_cap)
-+		return false;
-+
-+	rc = pci_read_config_dword(pdev, pdev->aer_cap + PCI_ERR_UNCOR_STATUS,
-+				   &status);
-+	if (rc)
-+		return false;
-+
-+	rc = pci_read_config_dword(pdev, pdev->aer_cap + PCI_ERR_UNCOR_MASK,
-+				   &mask);
-+	if (rc)
-+		return false;
-+
-+	status &= mask;
-+	status &= ~usr_mask;
-+
-+	return !!status;
-+}
+Link to v2: https://lkml.org/lkml/2018/7/20/472
+
+Leonard Crestez (2):
+  Revert "ARM: dts: imx7d: Invert legacy PCI irq mapping"
+  PCI: imx: Initial imx7d pm support
+
+ arch/arm/boot/dts/imx7d.dtsi          | 12 ++--
+ drivers/pci/controller/dwc/pci-imx6.c | 97 +++++++++++++++++++++++++--
+ 2 files changed, 100 insertions(+), 9 deletions(-)
+
 -- 
 2.17.1
+
+
+_______________________________________________
+linux-arm-kernel mailing list
+linux-arm-kernel@lists.infradead.org
+http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
