@@ -1,49 +1,55 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from foss.arm.com ([217.140.101.70]:52424 "EHLO foss.arm.com"
+Received: from mail.kernel.org ([198.145.29.99]:50732 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1729097AbeGZMMk (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Thu, 26 Jul 2018 08:12:40 -0400
-Date: Thu, 26 Jul 2018 11:56:17 +0100
-From: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
-To: Dan Carpenter <dan.carpenter@oracle.com>
-Cc: Subrahmanya Lingappa <l.subrahmanya@mobiveil.co.in>,
-        Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org,
-        kernel-janitors@vger.kernel.org
-Subject: Re: [PATCH] PCI: mobiveil: integer overflow in IB_WIN_SIZE
-Message-ID: <20180726105617.GA6181@red-moon>
-References: <20180705094539.xkmtfffbzl3kooum@kili.mountain>
+        id S1730357AbeGYWN2 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Wed, 25 Jul 2018 18:13:28 -0400
+Date: Wed, 25 Jul 2018 15:59:29 -0500
+From: Bjorn Helgaas <helgaas@kernel.org>
+To: Sinan Kaya <okaya@kernel.org>
+Cc: linux-pci@vger.kernel.org,
+        Jeff Kirsher <jeffrey.t.kirsher@intel.com>,
+        "David S. Miller" <davem@davemloft.net>,
+        Kalle Valo <kvalo@codeaurora.org>,
+        Johannes Berg <johannes.berg@intel.com>,
+        Emmanuel Grumbach <emmanuel.grumbach@intel.com>,
+        Luca Coelho <luciano.coelho@intel.com>,
+        ath9k-devel@qca.qualcomm.com, linuxwifi@intel.com,
+        intel-wired-lan@lists.osuosl.org, netdev@vger.kernel.org,
+        linux-kernel@vger.kernel.org, linux-wireless@vger.kernel.org
+Subject: Re: [PATCH v1 0/4] PCI: Remove unnecessary includes of
+ <linux/pci-aspm.h>
+Message-ID: <20180725205929.GB173328@bhelgaas-glaptop.roam.corp.google.com>
+References: <153254813164.92573.10755585465477668768.stgit@bhelgaas-glaptop.roam.corp.google.com>
+ <43748afd-712a-48e5-97a9-0b6046f575b3@kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20180705094539.xkmtfffbzl3kooum@kili.mountain>
+In-Reply-To: <43748afd-712a-48e5-97a9-0b6046f575b3@kernel.org>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Thu, Jul 05, 2018 at 12:45:39PM +0300, Dan Carpenter wrote:
-> IB_WIN_SIZE is larger than INT_MAX so we need to cast it to u64.
+On Wed, Jul 25, 2018 at 01:33:23PM -0700, Sinan Kaya wrote:
+> On 7/25/2018 12:52 PM, Bjorn Helgaas wrote:
+> > emove includes of <linux/pci-aspm.h> from files that don't need
+> > it.  I'll apply all these via the PCI tree unless there's objection.
+> > 
+> > ---
+> > 
+> > Bjorn Helgaas (4):
+> >        igb: Remove unnecessary include of <linux/pci-aspm.h>
+> >        ath9k: Remove unnecessary include of <linux/pci-aspm.h>
+> >        iwlwifi: Remove unnecessary include of <linux/pci-aspm.h>
+> >        PCI: Remove unnecessary include of <linux/pci-aspm.h>
 > 
-> Fixes: 9af6bcb11e12 ("PCI: mobiveil: Add Mobiveil PCIe Host Bridge IP driver")
-> Signed-off-by: Dan Carpenter <dan.carpenter@oracle.com>
-> ---
-> Untested...  Possibly the problem is that there are too many multiplies
-> by * 1024.
+> Thanks.
 > 
-> diff --git a/drivers/pci/controller/pcie-mobiveil.c b/drivers/pci/controller/pcie-mobiveil.c
+> Reviewed-by: Sinan Kaya <okaya@kernel.org>
+> 
+> Is it possible to kill that file altogether? I haven't looked who is
+> using outside of pci directory.
 
-Applied to pci/mobiveil for v4.19 (it is still not fixing anything
-given that the driver lacks a Kconfig and Makefile entries - that
-must be fixed with urgency), thanks.
+Thanks for taking a look!
 
-Lorenzo
-
-> index 4d6c20e47bed..cf0aa7cee5b0 100644
-> --- a/drivers/pci/controller/pcie-mobiveil.c
-> +++ b/drivers/pci/controller/pcie-mobiveil.c
-> @@ -107,7 +107,7 @@
->  #define CFG_WINDOW_TYPE	0
->  #define IO_WINDOW_TYPE		1
->  #define MEM_WINDOW_TYPE	2
-> -#define IB_WIN_SIZE		(256 * 1024 * 1024 * 1024)
-> +#define IB_WIN_SIZE		((u64)256 * 1024 * 1024 * 1024)
->  #define MAX_PIO_WINDOWS	8
->  
->  /* Parameters for the waiting for link up routine */
+It's possible we could remove it altogether; there's very little in
+it, and in most cases the only reason drivers include it is to disable
+certain ASPM link states to work around hardware defects.  It might
+make sense to just move that interface into <linux/pci.h>.
