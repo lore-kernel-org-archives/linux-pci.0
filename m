@@ -1,181 +1,71 @@
-Return-Path: <SRS0=N9qo=JT=gmail.com=kernelfans@kernel.org>
-Return-Path: <SRS0=N9qo=JT=gmail.com=kernelfans@kernel.org>
-From: Pingfan Liu <kernelfans@gmail.com>
-To: linux-kernel@vger.kernel.org
-Cc: Pingfan Liu <kernelfans@gmail.com>,
-	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-	"Rafael J . Wysocki" <rafael.j.wysocki@intel.com>,
-	Grygorii Strashko <grygorii.strashko@ti.com>,
-	Christoph Hellwig <hch@infradead.org>,
-	Bjorn Helgaas <helgaas@kernel.org>,
-	Dave Young <dyoung@redhat.com>,
-	linux-pci@vger.kernel.org,
-	linuxppc-dev@lists.ozlabs.org
-Subject: [PATCHv3 2/4] drivers/base: utilize device tree info to shutdown devices
-Date: Tue,  3 Jul 2018 14:50:40 +0800
-Message-Id: <1530600642-25090-3-git-send-email-kernelfans@gmail.com>
-In-Reply-To: <1530600642-25090-1-git-send-email-kernelfans@gmail.com>
-References: <1530600642-25090-1-git-send-email-kernelfans@gmail.com>
+Return-Path: <SRS0=entB=KJ=intel.com=jeffrey.t.kirsher@kernel.org>
+Return-Path: <SRS0=entB=KJ=intel.com=jeffrey.t.kirsher@kernel.org>
+Message-ID: <c3c236249fc8fc270e7100ed30c15a4269ab3eae.camel@intel.com>
+Subject: Re: [PATCH v1 1/4] igb: Remove unnecessary include of
+ <linux/pci-aspm.h>
+From: Jeff Kirsher <jeffrey.t.kirsher@intel.com>
+Reply-To: jeffrey.t.kirsher@intel.com
+To: Bjorn Helgaas <helgaas@kernel.org>, linux-pci@vger.kernel.org
+Cc: "David S. Miller" <davem@davemloft.net>, Kalle Valo
+ <kvalo@codeaurora.org>,  Johannes Berg <johannes.berg@intel.com>, Emmanuel
+ Grumbach <emmanuel.grumbach@intel.com>, Luca Coelho
+ <luciano.coelho@intel.com>, ath9k-devel@qca.qualcomm.com,
+ linuxwifi@intel.com,  intel-wired-lan@lists.osuosl.org,
+ netdev@vger.kernel.org,  linux-kernel@vger.kernel.org,
+ linux-wireless@vger.kernel.org
+Date: Wed, 25 Jul 2018 14:52:42 -0700
+In-Reply-To: <153254834342.92573.16877025672192312745.stgit@bhelgaas-glaptop.roam.corp.google.com>
+References: 
+	<153254813164.92573.10755585465477668768.stgit@bhelgaas-glaptop.roam.corp.google.com>
+	 <153254834342.92573.16877025672192312745.stgit@bhelgaas-glaptop.roam.corp.google.com>
+Content-Type: multipart/signed; micalg="pgp-sha256";
+	protocol="application/pgp-signature"; boundary="=-+VSfdhnE7sUHGmR3FE95"
+Mime-Version: 1.0
 List-ID: <linux-pci.vger.kernel.org>
 
-commit 52cdbdd49853 ("driver core: correct device's shutdown order")
-places an assumption of supplier<-consumer order on the process of probe.
-But it turns out to break down the parent <- child order in some scene.
-E.g in pci, a bridge is enabled by pci core, and behind it, the devices
-have been probed. Then comes the bridge's module, which enables extra
-feature(such as hotplug) on this bridge. This will break the
-parent<-children order and cause failure when "kexec -e" in some scenario.
 
-The detailed description of the scenario:
-An IBM Power9 machine on which, two drivers portdrv_pci and shpchp(a mod)
-match the PCI_CLASS_BRIDGE_PCI, but neither of them success to probe due
-to some issue. For this case, the bridge is moved after its children in
-devices_kset. Then, when "kexec -e", a ata-disk behind the bridge can not
-write back buffer in flight due to the former shutdown of the bridge which
-clears the BusMaster bit.
+--=-+VSfdhnE7sUHGmR3FE95
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
 
-It is a little hard to impose both "parent<-child" and "supplier<-consumer"
-order on devices_kset. Take the following scene:
-step0: before a consumer's probing, (note child_a is supplier of consumer_a)
-  [ consumer-X, child_a, ...., child_z] [... consumer_a, ..., consumer_z, ...] supplier-X
-                                         ^^^^^^^^^^ affected range ^^^^^^^^^^
-step1: when probing, moving consumer-X after supplier-X
-  [ child_a, ...., child_z] [.... consumer_a, ..., consumer_z, ...] supplier-X, consumer-X
-step2: the children of consumer-X should be re-ordered to maintain the seq
-  [... consumer_a, ..., consumer_z, ....] supplier-X  [consumer-X, child_a, ...., child_z]
-step3: the consumer_a should be re-ordered to maintain the seq
-  [... consumer_z, ...] supplier-X [ consumer-X, child_a, consumer_a ..., child_z]
+On Wed, 2018-07-25 at 14:52 -0500, Bjorn Helgaas wrote:
+> From: Bjorn Helgaas <bhelgaas@google.com>
+>=20
+> The igb driver doesn't need anything provided by pci-aspm.h, so
+> remove
+> the unnecessary include of it.
+>=20
+> Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
 
-It requires two nested recursion to drain out all out-of-order item in
-"affected range". To avoid such complicated code, this patch suggests
-to utilize the info in device tree, instead of using the order of
-devices_kset during shutdown. It iterates the device tree, and firstly
-shutdown a device's children and consumers. After this patch, the buggy
-commit is hollow and left to clean.
+Acked-by: Jeff Kirsher <jeffrey.t.kirsher@intel.com>
 
-Cc: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
-Cc: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
-Cc: Grygorii Strashko <grygorii.strashko@ti.com>
-Cc: Christoph Hellwig <hch@infradead.org>
-Cc: Bjorn Helgaas <helgaas@kernel.org>
-Cc: Dave Young <dyoung@redhat.com>
-Cc: linux-pci@vger.kernel.org
-Cc: linuxppc-dev@lists.ozlabs.org
-Signed-off-by: Pingfan Liu <kernelfans@gmail.com>
----
- drivers/base/core.c    | 48 +++++++++++++++++++++++++++++++++++++++++++-----
- include/linux/device.h |  1 +
- 2 files changed, 44 insertions(+), 5 deletions(-)
+I am fine with you picking up this change.
 
-diff --git a/drivers/base/core.c b/drivers/base/core.c
-index a48868f..684b994 100644
---- a/drivers/base/core.c
-+++ b/drivers/base/core.c
-@@ -1446,6 +1446,7 @@ void device_initialize(struct device *dev)
- 	INIT_LIST_HEAD(&dev->links.consumers);
- 	INIT_LIST_HEAD(&dev->links.suppliers);
- 	dev->links.status = DL_DEV_NO_DRIVER;
-+	dev->shutdown = false;
- }
- EXPORT_SYMBOL_GPL(device_initialize);
- 
-@@ -2811,7 +2812,6 @@ static void __device_shutdown(struct device *dev)
- 	 * lock is to be held
- 	 */
- 	parent = get_device(dev->parent);
--	get_device(dev);
- 	/*
- 	 * Make sure the device is off the kset list, in the
- 	 * event that dev->*->shutdown() doesn't remove it.
-@@ -2842,23 +2842,60 @@ static void __device_shutdown(struct device *dev)
- 			dev_info(dev, "shutdown\n");
- 		dev->driver->shutdown(dev);
- 	}
--
-+	dev->shutdown = true;
- 	device_unlock(dev);
- 	if (parent)
- 		device_unlock(parent);
- 
--	put_device(dev);
- 	put_device(parent);
- 	spin_lock(&devices_kset->list_lock);
- }
- 
-+/* shutdown dev's children and consumer firstly, then itself */
-+static int device_for_each_child_shutdown(struct device *dev)
-+{
-+	struct klist_iter i;
-+	struct device *child;
-+	struct device_link *link;
-+
-+	/* already shutdown, then skip this sub tree */
-+	if (dev->shutdown)
-+		return 0;
-+
-+	if (!dev->p)
-+		goto check_consumers;
-+
-+	/* there is breakage of lock in __device_shutdown(), and the redundant
-+	 * ref++ on srcu protected consumer is harmless since shutdown is not
-+	 * hot path.
-+	 */
-+	get_device(dev);
-+
-+	klist_iter_init(&dev->p->klist_children, &i);
-+	while ((child = next_device(&i)))
-+		device_for_each_child_shutdown(child);
-+	klist_iter_exit(&i);
-+
-+check_consumers:
-+	list_for_each_entry_rcu(link, &dev->links.consumers, s_node) {
-+		if (!link->consumer->shutdown)
-+			device_for_each_child_shutdown(link->consumer);
-+	}
-+
-+	__device_shutdown(dev);
-+	put_device(dev);
-+	return 0;
-+}
-+
- /**
-  * device_shutdown - call ->shutdown() on each device to shutdown.
-  */
- void device_shutdown(void)
- {
- 	struct device *dev;
-+	int idx;
- 
-+	idx = device_links_read_lock();
- 	spin_lock(&devices_kset->list_lock);
- 	/*
- 	 * Walk the devices list backward, shutting down each in turn.
-@@ -2866,11 +2903,12 @@ void device_shutdown(void)
- 	 * devices offline, even as the system is shutting down.
- 	 */
- 	while (!list_empty(&devices_kset->list)) {
--		dev = list_entry(devices_kset->list.prev, struct device,
-+		dev = list_entry(devices_kset->list.next, struct device,
- 				kobj.entry);
--		__device_shutdown(dev);
-+		device_for_each_child_shutdown(dev);
- 	}
- 	spin_unlock(&devices_kset->list_lock);
-+	device_links_read_unlock(idx);
- }
- 
- /*
-diff --git a/include/linux/device.h b/include/linux/device.h
-index 055a69d..8a0f784 100644
---- a/include/linux/device.h
-+++ b/include/linux/device.h
-@@ -1003,6 +1003,7 @@ struct device {
- 	bool			offline:1;
- 	bool			of_node_reused:1;
- 	bool			dma_32bit_limit:1;
-+	bool			shutdown:1; /* one direction: false->true */
- };
- 
- static inline struct device *kobj_to_dev(struct kobject *kobj)
--- 
-2.7.4
+> ---
+>  drivers/net/ethernet/intel/igb/igb_main.c |    1 -
+>  1 file changed, 1 deletion(-)
+
+
+--=-+VSfdhnE7sUHGmR3FE95
+Content-Type: application/pgp-signature; name="signature.asc"
+Content-Description: This is a digitally signed message part
+Content-Transfer-Encoding: 7bit
+
+-----BEGIN PGP SIGNATURE-----
+
+iQIzBAABCAAdFiEEiTyZWz+nnTrOJ1LZ5W/vlVpL7c4FAltY8SoACgkQ5W/vlVpL
+7c5QqBAAn455TsS28QqR/CrkGJoIUp0zfp/vAMA3B9AJjIdFSdsA96CWo/87QBkI
+2NdDy6ngDXPe9DdtDsnrEUKjs45O109izsYAeW885BaxGYYLkhyf/W44FGwuhgpE
+ZZLMHlM5GbcxliTjkPRgEN2/5M2XZPG3w5GvvHlbqwzgbF/u3qbt/jPgcDPT0fFP
++eBRzSnMvGiUj1EujvtfFze3BeIQl3pPgAE+mPAgScCequz0VBeBO60kuG+LcmeU
+uGDudpDucZnGlQWzUYXLdpPtsijUuQvjGDAfR4RhF36pNZYwcu6qkH+Gg+grKpHO
+a3aD8qGF6lobKkKC4sCxxnDjUfbJ4AQN4XNlwso4UIdVR2dh2KjZjRhuj211IR4Y
+Q5VxboEgsW4+rKeOZzy8GAxc5Xd32Omg1DKgl7ALWDlnQPjd7enmYLSn138LHDHf
+vSu3H6CiKrUcdVp2PxdQz4FNpO5XqfEx28Gi7mtkTwWMXyjo6blERyBTeyeE2yBa
+wXwk/FcC/jAxXxaPRZYccPjhU2p0ZWwuyUtlqQ73HieP4SYQG9EsgbmEve2VBHGN
+31gDX5vzSIui+astEAxzwnFyDUINVNS9Dabbyhc9crn1aKcz2SML3h6Kh7fqThhl
+Cs1s5NwcECY2VLPRYTw8QTVqCrcztxxhrT5r4I/7Yz6D5NExMG4=
+=yzWc
+-----END PGP SIGNATURE-----
+
+--=-+VSfdhnE7sUHGmR3FE95--
