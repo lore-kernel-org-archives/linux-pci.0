@@ -1,167 +1,128 @@
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-From: Sinan Kaya <okaya@codeaurora.org>
-To: linux-pci@vger.kernel.org
-Subject: [PATCH V5 3/6] PCI: Hide pci_reset_bridge_secondary_bus() from drivers
-Date: Mon,  2 Jul 2018 18:58:52 -0400
-Message-Id: <1530572336-20296-4-git-send-email-okaya@codeaurora.org>
-In-Reply-To: <1530572336-20296-1-git-send-email-okaya@codeaurora.org>
-References: <1530572336-20296-1-git-send-email-okaya@codeaurora.org>
+Return-Path: <SRS0=NWJH=KJ=gmail.com=marek.vasut@kernel.org>
+Return-Path: <SRS0=NWJH=KJ=gmail.com=marek.vasut@kernel.org>
+Subject: Re: [PATCH V2 4/5] PCI: rcar: Support runtime PM, link state L1
+ handling
+To: Bjorn Helgaas <helgaas@kernel.org>,
+ Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
+Cc: linux-pci@vger.kernel.org, Phil Edworthy <phil.edworthy@renesas.com>,
+ Marek Vasut <marek.vasut+renesas@gmail.com>,
+ Geert Uytterhoeven <geert+renesas@glider.be>,
+ Simon Horman <horms+renesas@verge.net.au>, Wolfram Sang <wsa@the-dreams.de>,
+ linux-renesas-soc@vger.kernel.org
+References: <20171110215843.432-1-marek.vasut+renesas@gmail.com>
+ <20171110215843.432-5-marek.vasut+renesas@gmail.com>
+ <20171117174906.GB22599@red-moon>
+ <3e0bc374-d296-675c-f290-256cc530feb7@gmail.com>
+ <20180611135912.GD75679@bhelgaas-glaptop.roam.corp.google.com>
+ <77d1eaf8-e180-f5f5-50f0-34c45e72c553@gmail.com>
+ <20180613135308.GB201807@bhelgaas-glaptop.roam.corp.google.com>
+ <20180613155252.GA12210@e107981-ln.cambridge.arm.com>
+ <20180613172559.GC201807@bhelgaas-glaptop.roam.corp.google.com>
+From: Marek Vasut <marek.vasut@gmail.com>
+Message-ID: <1d543b91-ac4f-7b61-4b2c-d8865e06d31e@gmail.com>
+Date: Wed, 25 Jul 2018 23:08:10 +0200
 MIME-Version: 1.0
-List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
-List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
-List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
-List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
-List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
-Cc: Keith Busch <keith.busch@intel.com>, Oza Pawandeep <poza@codeaurora.org>,
- Kees Cook <keescook@chromium.org>, Frederick Lawler <fred@fredlawl.com>,
- linux-arm-msm@vger.kernel.org, open list <linux-kernel@vger.kernel.org>,
- Sinan Kaya <okaya@codeaurora.org>, Lukas Wunner <lukas@wunner.de>,
- Bjorn Helgaas <bhelgaas@google.com>,
- Mika Westerberg <mika.westerberg@linux.intel.com>,
- linux-arm-kernel@lists.infradead.org
-Content-Type: text/plain; charset="us-ascii"
-Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
-Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
+In-Reply-To: <20180613172559.GC201807@bhelgaas-glaptop.roam.corp.google.com>
+Content-Type: text/plain; charset=utf-8
 List-ID: <linux-pci.vger.kernel.org>
 
-Rename pci_reset_bridge_secondary_bus() to pci_bridge_secondary_bus_reset()
-and move the declartation from linux/pci.h to drivers/pci.h to be used
-internally in PCI directory only.
+On 06/13/2018 07:25 PM, Bjorn Helgaas wrote:
+> On Wed, Jun 13, 2018 at 04:52:52PM +0100, Lorenzo Pieralisi wrote:
+>> On Wed, Jun 13, 2018 at 08:53:08AM -0500, Bjorn Helgaas wrote:
+>>> On Wed, Jun 13, 2018 at 01:54:51AM +0200, Marek Vasut wrote:
+>>>> On 06/11/2018 03:59 PM, Bjorn Helgaas wrote:
+>>>>> On Sun, Jun 10, 2018 at 03:57:10PM +0200, Marek Vasut wrote:
+>>>>>> On 11/17/2017 06:49 PM, Lorenzo Pieralisi wrote:
+>>>>>>> On Fri, Nov 10, 2017 at 10:58:42PM +0100, Marek Vasut wrote:
+>>>>>>>> From: Phil Edworthy <phil.edworthy@renesas.com>
+>>>>>>>>
+>>>>>>>> Most PCIe host controllers support L0s and L1 power states via ASPM.
+>>>>>>>> The R-Car hardware only supports L0s, so when the system suspends and
+>>>>>>>> resumes we have to manually handle L1.
+>>>>>>>> When the system suspends, cards can put themselves into L1 and send a
+>>>>>>>
+>>>>>>> I assumed L1 entry has to be negotiated depending upon the PCIe
+>>>>>>> hierarchy capabilities, I would appreciate if you can explain to
+>>>>>>> me what's the root cause of the issue please.
+>>>>>>
+>>>>>> You should probably ignore the suspend/resume part altogether. The issue
+>>>>>> here is that the cards can enter L1 state, while the controller won't do
+>>>>>> that automatically, it can only detect that the link went into L1 state.
+>>>>>> If that happens,the driver must manually put the controller to L1 state.
+>>>>>> The controller can transition out of L1 state automatically though.
+>>>>>
+>>>>> From earlier discussion I thought the R-Car root port did not
+>>>>> advertise L1 support.
+>>>>
+>>>> Which discussion ? This one or somewhere else ?
+>>>
+>>> https://lkml.kernel.org/r/HK2PR0601MB1393D917D343E6363484CA68F5CB0@HK2PR0601MB1393.apcprd06.prod.outlook.com
+>>>
+>>> Re-reading that, I think I see my misunderstanding.  I was only
+>>> considering L1 in the ASPM context.  I didn't realize the L1
+>>> implications of devices being in states other than D0.
+>>>
+>>> Obviously L1 support for ASPM is optional and advertised via Link
+>>> Capabilities.  But per PCIe r4.0, sec 5.2, L1 support is required for
+>>> PCI-PM compatible power management, and is entered "whenever all
+>>> Functions ... are programmed to a D-state other than D0."
+>>>
+>>> So I guess this means *every* device is supposed to support L1 when it
+>>> is in a non-D0 power state.  I think *this* is the case you're
+>>> solving.
+>>>
+>>> A little more of this detail, e.g., that this issue has nothing to do
+>>> with ASPM, it's probably an R-Car erratum that the RC can't transition
+>>> from L1 to L0, etc., in the changelog would really help clear things
+>>> up for me.
+>>
+>> I think that the issue is related to the L0->L1 transition upon system
+>> suspend (ie the kernel must force the controller into L1 when all
+>> devices are in a sleep state) and for this specific reason I still think
+>> that checking for a PM_Enter_L1 DLLP reception and doing the L0->L1
+>> transition within a config access is wrong and prone to error (what's
+>> the rationale behind that ?), this ought to be done using PM methods in
+>> the host controller driver.
+> 
+> But doesn't the problem happen whenever the link goes to L1, for any
+> reason?  E.g., runtime power management might put an endpoint in D3
+> even if we're not doing a whole system suspend.  A user could even
+> force the endpoint to D3 by writing to PCI_PM_CTRL with "setpci".  If
+> that's the case, I don't think the host controller PM methods will be
+> enough to work around the issue.
 
-Signed-off-by: Sinan Kaya <okaya@codeaurora.org>
----
- drivers/pci/hotplug/pciehp_hpc.c |  2 +-
- drivers/pci/pci.c                | 11 +++++------
- drivers/pci/pci.h                |  1 +
- drivers/pci/pcie/aer.c           |  2 +-
- drivers/pci/pcie/err.c           |  2 +-
- include/linux/pci.h              |  1 -
- 6 files changed, 9 insertions(+), 10 deletions(-)
+I think so, it's the link that goes into L1 state and this can happen
+without any action from the controller side.
 
-diff --git a/drivers/pci/hotplug/pciehp_hpc.c b/drivers/pci/hotplug/pciehp_hpc.c
-index bbaa211..8dae232 100644
---- a/drivers/pci/hotplug/pciehp_hpc.c
-+++ b/drivers/pci/hotplug/pciehp_hpc.c
-@@ -746,7 +746,7 @@ int pciehp_reset_slot(struct slot *slot, int probe)
- 	if (pciehp_poll_mode)
- 		del_timer_sync(&ctrl->poll_timer);
- 
--	rc = pci_reset_bridge_secondary_bus(ctrl->pcie->port);
-+	rc = pci_bridge_secondary_bus_reset(ctrl->pcie->port);
- 
- 	pcie_capability_write_word(pdev, PCI_EXP_SLTSTA, stat_mask);
- 	pcie_write_cmd_nowait(ctrl, ctrl_mask, ctrl_mask);
-diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
-index 98d1490..236220c 100644
---- a/drivers/pci/pci.c
-+++ b/drivers/pci/pci.c
-@@ -4224,19 +4224,18 @@ void __weak pcibios_reset_secondary_bus(struct pci_dev *dev)
- }
- 
- /**
-- * pci_reset_bridge_secondary_bus - Reset the secondary bus on a PCI bridge.
-+ * pci_bridge_secondary_bus_reset - Reset the secondary bus on a PCI bridge.
-  * @dev: Bridge device
-  *
-  * Use the bridge control register to assert reset on the secondary bus.
-  * Devices on the secondary bus are left in power-on state.
-  */
--int pci_reset_bridge_secondary_bus(struct pci_dev *dev)
-+int pci_bridge_secondary_bus_reset(struct pci_dev *dev)
- {
- 	pcibios_reset_secondary_bus(dev);
- 
- 	return pci_dev_wait(dev, "bus reset", PCIE_RESET_READY_POLL_MS);
- }
--EXPORT_SYMBOL_GPL(pci_reset_bridge_secondary_bus);
- 
- static int pci_parent_bus_reset(struct pci_dev *dev, int probe)
- {
-@@ -4253,7 +4252,7 @@ static int pci_parent_bus_reset(struct pci_dev *dev, int probe)
- 	if (probe)
- 		return 0;
- 
--	return pci_reset_bridge_secondary_bus(dev->bus->self);
-+	return pci_bridge_secondary_bus_reset(dev->bus->self);
- }
- 
- static int pci_reset_hotplug_slot(struct hotplug_slot *hotplug, int probe)
-@@ -4860,7 +4859,7 @@ static int pci_bus_reset(struct pci_bus *bus, int probe)
- 
- 	might_sleep();
- 
--	ret = pci_reset_bridge_secondary_bus(bus->self);
-+	ret = pci_bridge_secondary_bus_reset(bus->self);
- 
- 	pci_bus_unlock(bus);
- 
-@@ -4924,7 +4923,7 @@ int pci_try_reset_bus(struct pci_bus *bus)
- 
- 	if (pci_bus_trylock(bus)) {
- 		might_sleep();
--		rc = pci_reset_bridge_secondary_bus(bus->self);
-+		rc = pci_bridge_secondary_bus_reset(bus->self);
- 		pci_bus_unlock(bus);
- 	} else
- 		rc = -EAGAIN;
-diff --git a/drivers/pci/pci.h b/drivers/pci/pci.h
-index c358e7a0..f784263 100644
---- a/drivers/pci/pci.h
-+++ b/drivers/pci/pci.h
-@@ -33,6 +33,7 @@ int pci_mmap_fits(struct pci_dev *pdev, int resno, struct vm_area_struct *vmai,
- 		  enum pci_mmap_api mmap_api);
- 
- int pci_probe_reset_function(struct pci_dev *dev);
-+int pci_bridge_secondary_bus_reset(struct pci_dev *dev);
- 
- /**
-  * struct pci_platform_pm_ops - Firmware PM callbacks
-diff --git a/drivers/pci/pcie/aer.c b/drivers/pci/pcie/aer.c
-index bde723d..8c12efc 100644
---- a/drivers/pci/pcie/aer.c
-+++ b/drivers/pci/pcie/aer.c
-@@ -1314,7 +1314,7 @@ static pci_ers_result_t aer_root_reset(struct pci_dev *dev)
- 	reg32 &= ~ROOT_PORT_INTR_ON_MESG_MASK;
- 	pci_write_config_dword(dev, pos + PCI_ERR_ROOT_COMMAND, reg32);
- 
--	rc = pci_reset_bridge_secondary_bus(dev);
-+	rc = pci_bridge_secondary_bus_reset(dev);
- 	pci_printk(KERN_DEBUG, dev, "Root Port link has been reset\n");
- 
- 	/* Clear Root Error Status */
-diff --git a/drivers/pci/pcie/err.c b/drivers/pci/pcie/err.c
-index 03075cf..ae72f88 100644
---- a/drivers/pci/pcie/err.c
-+++ b/drivers/pci/pcie/err.c
-@@ -177,7 +177,7 @@ static pci_ers_result_t default_reset_link(struct pci_dev *dev)
- {
- 	int rc;
- 
--	rc = pci_reset_bridge_secondary_bus(dev);
-+	rc = pci_bridge_secondary_bus_reset(dev);
- 	pci_printk(KERN_DEBUG, dev, "downstream link has been reset\n");
- 	return rc ? PCI_ERS_RESULT_DISCONNECT : PCI_ERS_RESULT_RECOVERED;
- }
-diff --git a/include/linux/pci.h b/include/linux/pci.h
-index 340029b..6b12ce2 100644
---- a/include/linux/pci.h
-+++ b/include/linux/pci.h
-@@ -1102,7 +1102,6 @@ int pci_reset_bus(struct pci_bus *bus);
- int pci_try_reset_bus(struct pci_bus *bus);
- void pci_reset_secondary_bus(struct pci_dev *dev);
- void pcibios_reset_secondary_bus(struct pci_dev *dev);
--int pci_reset_bridge_secondary_bus(struct pci_dev *dev);
- void pci_update_resource(struct pci_dev *dev, int resno);
- int __must_check pci_assign_resource(struct pci_dev *dev, int i);
- int __must_check pci_reassign_resource(struct pci_dev *dev, int i, resource_size_t add_size, resource_size_t align);
+> The comment in the patch ("If we are not in L1 link state and we have
+> received PM_ENTER_L1 DLLP, transition to L1 link state") suggests that
+> the R-Car host doesn't handle step 10 in PCIe r4.0, sec 5.3.2.1
+> correctly, i.e., it doesn't complete the transition of the link to L1.
+> 
+> Putting this workaround in the config accessor makes sense to me
+> because in this situation the endpoint thinks it's in L1 and it won't
+> receive TLPs for config accesses.  Apparently forcing the RP to L1
+> completes the L1 entry, and the RP correctly handles the "Exit from L1
+> State" (sec 5.3.2.2) that's required when the RP needs to send a TLP
+> to the endpoint.
+> 
+> I think there's still a potential issue if the endpoint goes to a
+> non-D0 state, the link is stuck in this transitional state (endpoint
+> thinks it's L1, RP thinks it's L0), and the *endpoint* wants to exit
+> L1, e.g., so it can send a PME message for a wakeup.  I don't know
+> what happens then.
+
+Is there some hardware which I can use to simulate this situation ?
+
+> If there were a real erratum writeup for this, it would probably
+> discuss this situation.
+
+I went through the latest errata sheet and don't see anything. The
+datasheet only mentions that L0/L0s/L1 is supported and L2 is not supported.
+
+Maybe Phil can comment on this too ?
+
+[...]
 -- 
-2.7.4
-
-
-_______________________________________________
-linux-arm-kernel mailing list
-linux-arm-kernel@lists.infradead.org
-http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
+Best regards,
+Marek Vasut
