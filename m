@@ -1,117 +1,48 @@
-Return-Path: <okaya@kernel.org>
-Return-Path: <okaya@kernel.org>
-Subject: Re: [PATCH V5 3/3] PCI: Mask and unmask hotplug interrupts during
- reset
-To: Bjorn Helgaas <helgaas@kernel.org>
-Cc: Lukas Wunner <lukas@wunner.de>, Oza Pawandeep <poza@codeaurora.org>,
- linux-pci@vger.kernel.org, open list <linux-kernel@vger.kernel.org>,
- Keith Busch <keith.busch@intel.com>, linux-arm-msm@vger.kernel.org,
- Bjorn Helgaas <bhelgaas@google.com>, linux-arm-kernel@lists.infradead.org
-References: <CAK9iUCM=zWexWow9TwkRfO186Hwr5WyGy0NHZF1vtXn3wbbZGQ@mail.gmail.com>
- <12fc8de5-ff03-cb00-52cb-25a43c71d03a@codeaurora.org>
- <20180708171418.GA11476@wunner.de>
- <CAK9iUCMcic5mzGiT20KNxgwPo6AuajHFsoj7GOjSht5SwrQevg@mail.gmail.com>
- <20180709160008.GA1490@wunner.de>
- <CAK9iUCMMVR114msKiMHu7ik0VK8T5j=LAYAKsEkdnocTqkdMjQ@mail.gmail.com>
- <20180720200123.GS128988@bhelgaas-glaptop.roam.corp.google.com>
-From: Sinan Kaya <okaya@kernel.org>
-Message-ID: <2febe688-f973-5ff5-f61d-0451ad7d36ae@kernel.org>
-Date: Fri, 20 Jul 2018 19:58:20 -0700
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail.kernel.org ([198.145.29.99]:37450 "EHLO mail.kernel.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1729904AbeGYVFn (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Wed, 25 Jul 2018 17:05:43 -0400
+Subject: [PATCH v1 1/4] igb: Remove unnecessary include of <linux/pci-aspm.h>
+From: Bjorn Helgaas <helgaas@kernel.org>
+To: linux-pci@vger.kernel.org
+Cc: Jeff Kirsher <jeffrey.t.kirsher@intel.com>,
+        "David S. Miller" <davem@davemloft.net>,
+        Kalle Valo <kvalo@codeaurora.org>,
+        Johannes Berg <johannes.berg@intel.com>,
+        Emmanuel Grumbach <emmanuel.grumbach@intel.com>,
+        Luca Coelho <luciano.coelho@intel.com>,
+        ath9k-devel@qca.qualcomm.com, linuxwifi@intel.com,
+        intel-wired-lan@lists.osuosl.org, netdev@vger.kernel.org,
+        linux-kernel@vger.kernel.org, linux-wireless@vger.kernel.org
+Date: Wed, 25 Jul 2018 14:52:23 -0500
+Message-ID: <153254834342.92573.16877025672192312745.stgit@bhelgaas-glaptop.roam.corp.google.com>
+In-Reply-To: <153254813164.92573.10755585465477668768.stgit@bhelgaas-glaptop.roam.corp.google.com>
+References: <153254813164.92573.10755585465477668768.stgit@bhelgaas-glaptop.roam.corp.google.com>
 MIME-Version: 1.0
-In-Reply-To: <20180720200123.GS128988@bhelgaas-glaptop.roam.corp.google.com>
-Content-Type: text/plain; charset=utf-8; format=flowed
+Content-Type: text/plain; charset="utf-8"
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 7/20/2018 1:01 PM, Bjorn Helgaas wrote:
-> On Tue, Jul 10, 2018 at 02:30:11PM -0400, Sinan Kaya wrote:
->> On Mon, Jul 9, 2018 at 12:00 PM, Lukas Wunner <lukas@wunner.de> wrote:
->>> On Mon, Jul 09, 2018 at 08:48:44AM -0600, Sinan Kaya wrote:
->>>> On 7/8/18, Lukas Wunner <lukas@wunner.de> wrote:
->>>>> On Tue, Jul 03, 2018 at 11:43:26AM -0400, Sinan Kaya wrote:
->>>>>> My solution doesn't help if link down interrupt is observed
->>>>>> before the AER or DPC services.
->>>>>
->>>>> If pciehp gets an interrupt quicker than dpc/aer, it will (at
->>>>> least with my patches) remove all devices, check if the
->>>>> presence bit is set, and if so, try to bring the slot up
->>>>> again.
->>>>
->>>> Hotplug driver should only observe a link down interrupt. Link
->>>> would come up in response to a secondary bus reset initiated by
->>>> the AER driver.
->>>
->>> PCIe hotplug doesn't have separate Link Down and Link Up
->>> interrupts, there is only a Link State *Changed* event.
->>>
->>>> Can you point me to the code that would bring up the link in hp
->>>> code?
->>>
->>> I was referring to the situation with my recently posted pciehp
->>> patches applied, in particular patch [21/32] ("PCI: pciehp: Become
->>> resilient to missed events"):
->>> https://patchwork.ozlabs.org/patch/930389/
->>>
->>> When I get a presence or link changed event, I turn the slot off.
->>> That includes removing all devices in the slot.  Because even if
->>> the slot is still occupied or link is up, there was definitely a
->>> change and the safe behavior is to assume that the card in the
->>> slot is now a different one than before.
->>
->> We do have a bit of mess unfortunately. Error handling and hotplug
->> drivers do not play nicely with each other.
->>
->> When hotplug driver observes a link down, we are not checking if the
->> link down happened because user really wanted to remove a card or if
->> it was because it was originated by an error handling service such
->> as AER/DPC.
->>
->> I'm thinking that we could potentially check if a hotplug event is
->> pending at the entrance of fatal error handling. If it is pending,
->> we could poll until the status bit clears. That should flush the
->> link down event.
->>
->> Even then, link down indication of hotplug seem to turn off slot
->> power and LED.
->>
->> If AER/DPC service runs after the hotplug driver, link won't come
->> back up as the power to the slot is turned off.
->>
->> I'd like to hear about Bjorn's opinion before we throw something
->> else into this problem.
-> 
-> You guys know way more about this than I do.
-> 
-> I think the separation of AER/DPC/pciehp into separate drivers is
-> somewhat artificial because there are many interdependencies.  The
-> driver model doesn't apply very well because there's only one
-> underlying piece of hardware, which forces us to use the portdrv as
-> sort of a multiplexer.  The fact that portdrv claims these bridges
-> also means normal drivers (e.g., for performance counters) can't use
-> the usual model.
-> 
-> All that is to say that if integrating these services more tightly
-> would help solve this problem, I'd be open to that.
+From: Bjorn Helgaas <bhelgaas@google.com>
 
-I was looking at how to destroy the portdrv for a while. It looks like
-a much more bigger task to be honest. There are multiple levels of
-abstractions in the code as you highlighted.
+The igb driver doesn't need anything provided by pci-aspm.h, so remove
+the unnecessary include of it.
 
-My patch solves the problem if AER interrupt happens before the hotplug
-interrupt. We are masking the data link layer active interrupt. So,
-AER/DPC can perform their link operations without hotplug driver race.
+Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
+---
+ drivers/net/ethernet/intel/igb/igb_main.c |    1 -
+ 1 file changed, 1 deletion(-)
 
-We need to figure out how to gracefully return inside hotplug driver
-if link down happened and there is an error pending.
-
-My first question is why hotplug driver is reacting to the link event
-if there was not an actual device insertion/removal.
-
-Would it help to keep track of presence changed interrupts since last
-link event?
-
-IF counter is 0 and device is present, hotplug driver bails out
-silently as an example.
-
-> 
-> Bjorn
-> 
+diff --git a/drivers/net/ethernet/intel/igb/igb_main.c b/drivers/net/ethernet/intel/igb/igb_main.c
+index f707709969ac..c77fda05f683 100644
+--- a/drivers/net/ethernet/intel/igb/igb_main.c
++++ b/drivers/net/ethernet/intel/igb/igb_main.c
+@@ -22,7 +22,6 @@
+ #include <linux/if.h>
+ #include <linux/if_vlan.h>
+ #include <linux/pci.h>
+-#include <linux/pci-aspm.h>
+ #include <linux/delay.h>
+ #include <linux/interrupt.h>
+ #include <linux/ip.h>
