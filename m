@@ -1,111 +1,149 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mx0a-001b2d01.pphosted.com ([148.163.156.1]:39830 "EHLO
-        mx0a-001b2d01.pphosted.com" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1728705AbeG3Dax (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Sun, 29 Jul 2018 23:30:53 -0400
-Received: from pps.filterd (m0098396.ppops.net [127.0.0.1])
-        by mx0a-001b2d01.pphosted.com (8.16.0.22/8.16.0.22) with SMTP id w6U1sM1R055521
-        for <linux-pci@vger.kernel.org>; Sun, 29 Jul 2018 21:58:14 -0400
-Received: from e06smtp03.uk.ibm.com (e06smtp03.uk.ibm.com [195.75.94.99])
-        by mx0a-001b2d01.pphosted.com with ESMTP id 2khqukaj34-1
-        (version=TLSv1.2 cipher=AES256-GCM-SHA384 bits=256 verify=NOT)
-        for <linux-pci@vger.kernel.org>; Sun, 29 Jul 2018 21:58:14 -0400
-Received: from localhost
-        by e06smtp03.uk.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
-        for <linux-pci@vger.kernel.org> from <sbobroff@linux.ibm.com>;
-        Mon, 30 Jul 2018 02:58:11 +0100
-Date: Mon, 30 Jul 2018 11:58:05 +1000
-From: Sam Bobroff <sbobroff@linux.ibm.com>
-To: Michael Ellerman <mpe@ellerman.id.au>
-Cc: linuxppc-dev@lists.ozlabs.org, linux-pci@vger.kernel.org,
-        bhelgaas@google.com, bryantly@linux.vnet.ibm.com
-Subject: Re: [PATCH v2 1/1] powerpc/pseries: fix EEH recovery of some IOV
- devices
-References: <7598ffeb48c16c88a34937ad93b18f806222b8df.1527208281.git.sbobroff@linux.ibm.com>
- <87in5ymp03.fsf@concordia.ellerman.id.au>
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Subject: Re: [PATCH 4/7 v6] iommu/arm-smmu: Add support for the fsl-mc bus
+To: Nipun Gupta <nipun.gupta@nxp.com>, will.deacon@arm.com,
+ robh+dt@kernel.org, robh@kernel.org, mark.rutland@arm.com,
+ catalin.marinas@arm.com, gregkh@linuxfoundation.org,
+ laurentiu.tudor@nxp.com, bhelgaas@google.com, hch@lst.de
+References: <1531135103-10699-1-git-send-email-nipun.gupta@nxp.com>
+ <1531135103-10699-5-git-send-email-nipun.gupta@nxp.com>
+From: Robin Murphy <robin.murphy@arm.com>
+Message-ID: <ffa08d6b-580a-93bf-fdf8-571b7d26ee73@arm.com>
+Date: Wed, 25 Jul 2018 13:48:40 +0100
 MIME-Version: 1.0
-Content-Type: multipart/signed; micalg=pgp-sha256;
-        protocol="application/pgp-signature"; boundary="ZGiS0Q5IWpPtfppv"
-In-Reply-To: <87in5ymp03.fsf@concordia.ellerman.id.au>
-Message-Id: <20180730015804.GA10188@tungsten.ozlabs.ibm.com>
-Sender: linux-pci-owner@vger.kernel.org
+In-Reply-To: <1531135103-10699-5-git-send-email-nipun.gupta@nxp.com>
+List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
+List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
+List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
+List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
+List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
+Cc: devicetree@vger.kernel.org, stuyoder@gmail.com, bharat.bhushan@nxp.com,
+ shawnguo@kernel.org, joro@8bytes.org, linuxppc-dev@lists.ozlabs.org,
+ linux-kernel@vger.kernel.org, leoyang.li@nxp.com,
+ iommu@lists.linux-foundation.org, linux-pci@vger.kernel.org,
+ frowand.list@gmail.com, linux-arm-kernel@lists.infradead.org,
+ m.szyprowski@samsung.com
+Content-Type: text/plain; charset="us-ascii"; Format="flowed"
+Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
+Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
 List-ID: <linux-pci.vger.kernel.org>
 
+On 09/07/18 12:18, Nipun Gupta wrote:
+> Implement bus specific support for the fsl-mc bus including
+> registering arm_smmu_ops and bus specific device add operations.
 
---ZGiS0Q5IWpPtfppv
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-Content-Transfer-Encoding: quoted-printable
+I guess this is about as neat as it can get;
 
-On Mon, Jul 02, 2018 at 10:59:24AM +1000, Michael Ellerman wrote:
-> Sam Bobroff <sbobroff@linux.ibm.com> writes:
->=20
-> > EEH recovery currently fails on pSeries for some IOV capable PCI
-> > devices, if CONFIG_PCI_IOV is on and the hypervisor doesn't provide
-> > certain device tree properties for the device. (Found on an IOV
-> > capable device using the ipr driver.)
-> >
-> > Recovery fails in pci_enable_resources() at the check on r->parent,
-> > because r->flags is set and r->parent is not.  This state is due to
-> > sriov_init() setting the start, end and flags members of the IOV BARs
-> > but the parent not being set later in
-> > pseries_pci_fixup_iov_resources(), because the
-> > "ibm,open-sriov-vf-bar-info" property is missing.
-> >
-> > Correct this by zeroing the resource flags for IOV BARs when they
-> > can't be configured.
-> >
-> > Signed-off-by: Sam Bobroff <sbobroff@linux.ibm.com>
-> > ---
-> > Hi,
-> >
-> > This is a fix to allow EEH recovery to succeed in a specific situation,
-> > which I've tried to explain in the commit message.
-> >
-> > As with the RFC version, the IOV BARs are disabled by setting the resou=
-rce
-> > flags to 0 but the other fields are now left as-is because that is what=
- is done
-> > elsewhere (see sriov_init() and __pci_read_base()).
-> >
-> > I've also examined the concern raised by Bjorn Helgaas, that VFs could =
-be
-> > enabled later after the BARs are disabled, and it already seems safe: e=
-nabling
-> > VFs (on pseries) depends on another device tree property,
-> > "ibm,number-of-configurable-vfs" as well as support for the RTAS functi=
-on
-> > "ibm_map_pes". Since these are all part of the hypervisor's support for=
- IOV it
-> > seems unlikely that we would ever see some of them but not all. (None a=
-re
-> > currently provided by QEMU/KVM.) (Additionally, the ipr driver on which=
- the EEH
-> > recovery failure was discovered doesn't even seem to have SR-IOV suppor=
-t so it
-> > certainly can't enable VFs.)
->=20
-> Can you fold/reword the above into the change log, it seems like useful
-> detail.
->=20
-> cheers
+Reviewed-by: Robin Murphy <robin.murphy@arm.com>
 
-Sure, sounds good.
+> Signed-off-by: Nipun Gupta <nipun.gupta@nxp.com>
+> ---
+>   drivers/iommu/arm-smmu.c |  7 +++++++
+>   drivers/iommu/iommu.c    | 13 +++++++++++++
+>   include/linux/fsl/mc.h   |  8 ++++++++
+>   include/linux/iommu.h    |  2 ++
+>   4 files changed, 30 insertions(+)
+> 
+> diff --git a/drivers/iommu/arm-smmu.c b/drivers/iommu/arm-smmu.c
+> index f7a96bc..a011bb6 100644
+> --- a/drivers/iommu/arm-smmu.c
+> +++ b/drivers/iommu/arm-smmu.c
+> @@ -52,6 +52,7 @@
+>   #include <linux/spinlock.h>
+>   
+>   #include <linux/amba/bus.h>
+> +#include <linux/fsl/mc.h>
+>   
+>   #include "io-pgtable.h"
+>   #include "arm-smmu-regs.h"
+> @@ -1459,6 +1460,8 @@ static struct iommu_group *arm_smmu_device_group(struct device *dev)
+>   
+>   	if (dev_is_pci(dev))
+>   		group = pci_device_group(dev);
+> +	else if (dev_is_fsl_mc(dev))
+> +		group = fsl_mc_device_group(dev);
+>   	else
+>   		group = generic_device_group(dev);
+>   
+> @@ -2037,6 +2040,10 @@ static void arm_smmu_bus_init(void)
+>   		bus_set_iommu(&pci_bus_type, &arm_smmu_ops);
+>   	}
+>   #endif
+> +#ifdef CONFIG_FSL_MC_BUS
+> +	if (!iommu_present(&fsl_mc_bus_type))
+> +		bus_set_iommu(&fsl_mc_bus_type, &arm_smmu_ops);
+> +#endif
+>   }
+>   
+>   static int arm_smmu_device_probe(struct platform_device *pdev)
+> diff --git a/drivers/iommu/iommu.c b/drivers/iommu/iommu.c
+> index d227b86..df2f49e 100644
+> --- a/drivers/iommu/iommu.c
+> +++ b/drivers/iommu/iommu.c
+> @@ -32,6 +32,7 @@
+>   #include <linux/pci.h>
+>   #include <linux/bitops.h>
+>   #include <linux/property.h>
+> +#include <linux/fsl/mc.h>
+>   #include <trace/events/iommu.h>
+>   
+>   static struct kset *iommu_group_kset;
+> @@ -988,6 +989,18 @@ struct iommu_group *pci_device_group(struct device *dev)
+>   	return iommu_group_alloc();
+>   }
+>   
+> +/* Get the IOMMU group for device on fsl-mc bus */
+> +struct iommu_group *fsl_mc_device_group(struct device *dev)
+> +{
+> +	struct device *cont_dev = fsl_mc_cont_dev(dev);
+> +	struct iommu_group *group;
+> +
+> +	group = iommu_group_get(cont_dev);
+> +	if (!group)
+> +		group = iommu_group_alloc();
+> +	return group;
+> +}
+> +
+>   /**
+>    * iommu_group_get_for_dev - Find or create the IOMMU group for a device
+>    * @dev: target device
+> diff --git a/include/linux/fsl/mc.h b/include/linux/fsl/mc.h
+> index f27cb14..dddaca1 100644
+> --- a/include/linux/fsl/mc.h
+> +++ b/include/linux/fsl/mc.h
+> @@ -351,6 +351,14 @@ struct fsl_mc_io {
+>   #define dev_is_fsl_mc(_dev) (0)
+>   #endif
+>   
+> +/* Macro to check if a device is a container device */
+> +#define fsl_mc_is_cont_dev(_dev) (to_fsl_mc_device(_dev)->flags & \
+> +	FSL_MC_IS_DPRC)
+> +
+> +/* Macro to get the container device of a MC device */
+> +#define fsl_mc_cont_dev(_dev) (fsl_mc_is_cont_dev(_dev) ? \
+> +	(_dev) : (_dev)->parent)
+> +
+>   /*
+>    * module_fsl_mc_driver() - Helper macro for drivers that don't do
+>    * anything special in module init/exit.  This eliminates a lot of
+> diff --git a/include/linux/iommu.h b/include/linux/iommu.h
+> index 7447b0b..209891d 100644
+> --- a/include/linux/iommu.h
+> +++ b/include/linux/iommu.h
+> @@ -389,6 +389,8 @@ static inline size_t iommu_map_sg(struct iommu_domain *domain,
+>   extern struct iommu_group *pci_device_group(struct device *dev);
+>   /* Generic device grouping function */
+>   extern struct iommu_group *generic_device_group(struct device *dev);
+> +/* FSL-MC device grouping function */
+> +struct iommu_group *fsl_mc_device_group(struct device *dev);
+>   
+>   /**
+>    * struct iommu_fwspec - per-device IOMMU instance data
+> 
 
-
---ZGiS0Q5IWpPtfppv
-Content-Type: application/pgp-signature; name="signature.asc"
-
------BEGIN PGP SIGNATURE-----
-
-iQEzBAABCAAdFiEELWWF8pdtWK5YQRohMX8w6AQl/iIFAltecKUACgkQMX8w6AQl
-/iIuEAgAldcMH4SfqHL3E1/Vi5kTRRzLaFgr29LFeG8oPOQNWkTq2CvbcmzUTZgx
-xvHjxxZCBfus+s4SFCnvQsScFq5bve37XZj+NZr7X01DzkdBxG4VelCTUWAwHqJw
-hJtbM5iVSsYHCVOwcqF7RBn/Bxbah9PgHoXla67RZMq06vn1jZl8qeM29MephsqG
-+nQF26sxZ4Uh4Y6f39jWqUO0VntlNZtkbA7mRz0fc9Yc2lzAvDirMZEdtB+UEmdB
-iCGYTNR1+kkHiyML4XZYi6nIZ/WMTmDTl1cw3UzseRAUS4WczhDhsowzTBn6FCTs
-/1Ib5HTsw57/MbrT/tTcyQVhfi6GZw==
-=qHtA
------END PGP SIGNATURE-----
-
---ZGiS0Q5IWpPtfppv--
+_______________________________________________
+linux-arm-kernel mailing list
+linux-arm-kernel@lists.infradead.org
+http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
