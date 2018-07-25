@@ -1,140 +1,92 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mx0a-001b2d01.pphosted.com ([148.163.156.1]:36296 "EHLO
-        mx0a-001b2d01.pphosted.com" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1728701AbeG3DcC (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Sun, 29 Jul 2018 23:32:02 -0400
-Received: from pps.filterd (m0098393.ppops.net [127.0.0.1])
-        by mx0a-001b2d01.pphosted.com (8.16.0.22/8.16.0.22) with SMTP id w6U1wpUs080204
-        for <linux-pci@vger.kernel.org>; Sun, 29 Jul 2018 21:59:23 -0400
-Received: from e06smtp03.uk.ibm.com (e06smtp03.uk.ibm.com [195.75.94.99])
-        by mx0a-001b2d01.pphosted.com with ESMTP id 2kh5krtqar-1
-        (version=TLSv1.2 cipher=AES256-GCM-SHA384 bits=256 verify=NOT)
-        for <linux-pci@vger.kernel.org>; Sun, 29 Jul 2018 21:59:23 -0400
-Received: from localhost
-        by e06smtp03.uk.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
-        for <linux-pci@vger.kernel.org> from <sbobroff@linux.ibm.com>;
-        Mon, 30 Jul 2018 02:59:21 +0100
-From: Sam Bobroff <sbobroff@linux.ibm.com>
-To: linuxppc-dev@lists.ozlabs.org, linux-pci@vger.kernel.org
-Cc: mpe@ellerman.id.au, bhelgaas@google.com,
-        bryantly@linux.vnet.ibm.com
-Subject: [PATCH v3 1/1] powerpc/pseries: fix EEH recovery of some IOV devices
-Date: Mon, 30 Jul 2018 11:59:14 +1000
-Message-Id: <e63eb03c87a1a54257aa2bcc384cf07761824a7e.1532915951.git.sbobroff@linux.ibm.com>
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Subject: Re: [PATCH 5/7 v6] bus/fsl-mc: support dma configure for devices on
+ fsl-mc bus
+To: Nipun Gupta <nipun.gupta@nxp.com>, will.deacon@arm.com,
+ robh+dt@kernel.org, robh@kernel.org, mark.rutland@arm.com,
+ catalin.marinas@arm.com, gregkh@linuxfoundation.org,
+ laurentiu.tudor@nxp.com, bhelgaas@google.com, hch@lst.de
+References: <1531135103-10699-1-git-send-email-nipun.gupta@nxp.com>
+ <1531135103-10699-6-git-send-email-nipun.gupta@nxp.com>
+From: Robin Murphy <robin.murphy@arm.com>
+Message-ID: <6fa541f1-be67-3e8d-b12d-bdc6e244acb1@arm.com>
+Date: Wed, 25 Jul 2018 13:51:30 +0100
+MIME-Version: 1.0
+In-Reply-To: <1531135103-10699-6-git-send-email-nipun.gupta@nxp.com>
+List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
+List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
+List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
+List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
+List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
+Cc: devicetree@vger.kernel.org, stuyoder@gmail.com, bharat.bhushan@nxp.com,
+ shawnguo@kernel.org, joro@8bytes.org, linuxppc-dev@lists.ozlabs.org,
+ linux-kernel@vger.kernel.org, leoyang.li@nxp.com,
+ iommu@lists.linux-foundation.org, linux-pci@vger.kernel.org,
+ frowand.list@gmail.com, linux-arm-kernel@lists.infradead.org,
+ m.szyprowski@samsung.com
+Content-Type: text/plain; charset="us-ascii"; Format="flowed"
+Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
+Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
 List-ID: <linux-pci.vger.kernel.org>
 
-EEH recovery currently fails on pSeries for some IOV capable PCI
-devices, if CONFIG_PCI_IOV is on and the hypervisor doesn't provide
-certain device tree properties for the device. (Found on an IOV
-capable device using the ipr driver.)
+On 09/07/18 12:18, Nipun Gupta wrote:
+> This patch adds support of dma configuration for devices on fsl-mc
+> bus using 'dma_configure' callback for busses. Also, directly calling
+> arch_setup_dma_ops is removed from the fsl-mc bus.
 
-Recovery fails in pci_enable_resources() at the check on r->parent,
-because r->flags is set and r->parent is not.  This state is due to
-sriov_init() setting the start, end and flags members of the IOV BARs
-but the parent not being set later in
-pseries_pci_fixup_iov_resources(), because the
-"ibm,open-sriov-vf-bar-info" property is missing.
+Reviewed-by: Robin Murphy <robin.murphy@arm.com>
 
-Correct this by zeroing the resource flags for IOV BARs when they
-can't be configured (this is the same method used by sriov_init() and
-__pci_read_base()).
+> Signed-off-by: Nipun Gupta <nipun.gupta@nxp.com>
+> Reviewed-by: Laurentiu Tudor <laurentiu.tudor@nxp.com>
+> ---
+>   drivers/bus/fsl-mc/fsl-mc-bus.c | 15 +++++++++++----
+>   1 file changed, 11 insertions(+), 4 deletions(-)
+> 
+> diff --git a/drivers/bus/fsl-mc/fsl-mc-bus.c b/drivers/bus/fsl-mc/fsl-mc-bus.c
+> index 5d8266c..fa43c7d 100644
+> --- a/drivers/bus/fsl-mc/fsl-mc-bus.c
+> +++ b/drivers/bus/fsl-mc/fsl-mc-bus.c
+> @@ -127,6 +127,16 @@ static int fsl_mc_bus_uevent(struct device *dev, struct kobj_uevent_env *env)
+>   	return 0;
+>   }
+>   
+> +static int fsl_mc_dma_configure(struct device *dev)
+> +{
+> +	struct device *dma_dev = dev;
+> +
+> +	while (dev_is_fsl_mc(dma_dev))
+> +		dma_dev = dma_dev->parent;
+> +
+> +	return of_dma_configure(dev, dma_dev->of_node, 0);
+> +}
+> +
+>   static ssize_t modalias_show(struct device *dev, struct device_attribute *attr,
+>   			     char *buf)
+>   {
+> @@ -148,6 +158,7 @@ struct bus_type fsl_mc_bus_type = {
+>   	.name = "fsl-mc",
+>   	.match = fsl_mc_bus_match,
+>   	.uevent = fsl_mc_bus_uevent,
+> +	.dma_configure  = fsl_mc_dma_configure,
+>   	.dev_groups = fsl_mc_dev_groups,
+>   };
+>   EXPORT_SYMBOL_GPL(fsl_mc_bus_type);
+> @@ -633,10 +644,6 @@ int fsl_mc_device_add(struct fsl_mc_obj_desc *obj_desc,
+>   			goto error_cleanup_dev;
+>   	}
+>   
+> -	/* Objects are coherent, unless 'no shareability' flag set. */
+> -	if (!(obj_desc->flags & FSL_MC_OBJ_FLAG_NO_MEM_SHAREABILITY))
+> -		arch_setup_dma_ops(&mc_dev->dev, 0, 0, NULL, true);
+> -
+>   	/*
+>   	 * The device-specific probe callback will get invoked by device_add()
+>   	 */
+> 
 
-VFs cleared this way can't be enabled later, because that requires
-another device tree property, "ibm,number-of-configurable-vfs" as well
-as support for the RTAS function "ibm_map_pes". These are all part of
-hypervisor support for IOV and it seems unlikely that a hypervisor
-would ever partially, but not fully, support it. (None are currently
-provided by QEMU/KVM.)
-
-Signed-off-by: Sam Bobroff <sbobroff@linux.ibm.com>
----
-Hi,
-
-This is a fix to allow EEH recovery to succeed in a specific situation,
-which I've tried to explain in the commit message.
-
-As with the RFC version, the IOV BARs are disabled by setting the resource
-flags to 0 but the other fields are now left as-is because that is what is done
-elsewhere (see sriov_init() and __pci_read_base()).
-
-I've also examined the concern raised by Bjorn Helgaas, that VFs could be
-enabled later after the BARs are disabled, and it already seems safe: enabling
-VFs (on pseries) depends on another device tree property,
-"ibm,number-of-configurable-vfs" as well as support for the RTAS function
-"ibm_map_pes". Since these are all part of the hypervisor's support for IOV it
-seems unlikely that we would ever see some of them but not all. (None are
-currently provided by QEMU/KVM.) (Additionally, the ipr driver on which the EEH
-recovery failure was discovered doesn't even seem to have SR-IOV support so it
-certainly can't enable VFs.)
-
-Cheers,
-Sam.
-
-Patch set v3:
-Patch 1/1: powerpc/pseries: fix EEH recovery of some IOV devices
-* Moved some useful information from the cover letter to the commit log.
-
-Patch set v2:
-Patch 1/1: powerpc/pseries: fix EEH recovery of some IOV devices
-* Moved the BAR disabling code to a function.
-* Also check in pseries_pci_fixup_resources().
-
-Patch set v1:
-Patch 1/1: powerpc/pseries: fix EEH recovery of IOV devices
-
- arch/powerpc/platforms/pseries/setup.c | 25 +++++++++++++++++--------
- 1 file changed, 17 insertions(+), 8 deletions(-)
-
-diff --git a/arch/powerpc/platforms/pseries/setup.c b/arch/powerpc/platforms/pseries/setup.c
-index b55ad4286dc7..0a9e4243ae1d 100644
---- a/arch/powerpc/platforms/pseries/setup.c
-+++ b/arch/powerpc/platforms/pseries/setup.c
-@@ -645,6 +645,15 @@ void of_pci_parse_iov_addrs(struct pci_dev *dev, const int *indexes)
- 	}
- }
- 
-+static void pseries_disable_sriov_resources(struct pci_dev *pdev)
-+{
-+	int i;
-+
-+	pci_warn(pdev, "No hypervisor support for SR-IOV on this device, IOV BARs disabled.\n");
-+	for (i = 0; i < PCI_SRIOV_NUM_BARS; i++)
-+		pdev->resource[i + PCI_IOV_RESOURCES].flags = 0;
-+}
-+
- static void pseries_pci_fixup_resources(struct pci_dev *pdev)
- {
- 	const int *indexes;
-@@ -652,10 +661,10 @@ static void pseries_pci_fixup_resources(struct pci_dev *pdev)
- 
- 	/*Firmware must support open sriov otherwise dont configure*/
- 	indexes = of_get_property(dn, "ibm,open-sriov-vf-bar-info", NULL);
--	if (!indexes)
--		return;
--	/* Assign the addresses from device tree*/
--	of_pci_set_vf_bar_size(pdev, indexes);
-+	if (indexes)
-+		of_pci_set_vf_bar_size(pdev, indexes);
-+	else
-+		pseries_disable_sriov_resources(pdev);
- }
- 
- static void pseries_pci_fixup_iov_resources(struct pci_dev *pdev)
-@@ -667,10 +676,10 @@ static void pseries_pci_fixup_iov_resources(struct pci_dev *pdev)
- 		return;
- 	/*Firmware must support open sriov otherwise dont configure*/
- 	indexes = of_get_property(dn, "ibm,open-sriov-vf-bar-info", NULL);
--	if (!indexes)
--		return;
--	/* Assign the addresses from device tree*/
--	of_pci_parse_iov_addrs(pdev, indexes);
-+	if (indexes)
-+		of_pci_parse_iov_addrs(pdev, indexes);
-+	else
-+		pseries_disable_sriov_resources(pdev);
- }
- 
- static resource_size_t pseries_pci_iov_resource_alignment(struct pci_dev *pdev,
--- 
-2.16.1.74.g9b0b1f47b
+_______________________________________________
+linux-arm-kernel mailing list
+linux-arm-kernel@lists.infradead.org
+http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
