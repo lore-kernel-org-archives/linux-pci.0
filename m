@@ -1,57 +1,40 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from usa-sjc-mx-foss1.foss.arm.com ([217.140.101.70]:34722 "EHLO
-        foss.arm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1728289AbeGMNPG (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Fri, 13 Jul 2018 09:15:06 -0400
-Date: Fri, 13 Jul 2018 14:02:27 +0100
-From: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
-To: Alan Douglas <adouglas@cadence.com>
-Cc: bhelgaas@google.com, kishon@ti.com, linux-pci@vger.kernel.org,
-        devicetree@vger.kernel.org, robh+dt@kernel.org
-Subject: Re: [PATCH 0/5] PCI: cadence: Host and EP driver updates for PHY and
- power management
-Message-ID: <20180713130227.GA18515@red-moon>
-References: <1529915453-4633-1-git-send-email-adouglas@cadence.com>
+Return-Path: <okaya@kernel.org>
+Return-Path: <okaya@kernel.org>
+Subject: Re: [PATCH v1 0/4] PCI: Remove unnecessary includes of
+ <linux/pci-aspm.h>
+To: Bjorn Helgaas <helgaas@kernel.org>, linux-pci@vger.kernel.org
+Cc: Jeff Kirsher <jeffrey.t.kirsher@intel.com>,
+ "David S. Miller" <davem@davemloft.net>, Kalle Valo <kvalo@codeaurora.org>,
+ Johannes Berg <johannes.berg@intel.com>,
+ Emmanuel Grumbach <emmanuel.grumbach@intel.com>,
+ Luca Coelho <luciano.coelho@intel.com>, ath9k-devel@qca.qualcomm.com,
+ linuxwifi@intel.com, intel-wired-lan@lists.osuosl.org,
+ netdev@vger.kernel.org, linux-kernel@vger.kernel.org,
+ linux-wireless@vger.kernel.org
+References: <153254813164.92573.10755585465477668768.stgit@bhelgaas-glaptop.roam.corp.google.com>
+From: Sinan Kaya <okaya@kernel.org>
+Message-ID: <43748afd-712a-48e5-97a9-0b6046f575b3@kernel.org>
+Date: Wed, 25 Jul 2018 13:33:23 -0700
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1529915453-4633-1-git-send-email-adouglas@cadence.com>
-Sender: linux-pci-owner@vger.kernel.org
+In-Reply-To: <153254813164.92573.10755585465477668768.stgit@bhelgaas-glaptop.roam.corp.google.com>
+Content-Type: text/plain; charset=utf-8; format=flowed
 List-ID: <linux-pci.vger.kernel.org>
 
-On Mon, Jun 25, 2018 at 09:30:48AM +0100, Alan Douglas wrote:
-> This is a series of patches for the cadence PCIe host and EP drivers, to:
->  - Add optional list of generic PHYs to host and EP drivers
->  - Add PHY bindings to devicetree
->  - Add Power Management ops, which will enable/disable PHYs if present
->  - Add shutdown handler to host driver
->  - Update cdns_pcie_writel function signature
+On 7/25/2018 12:52 PM, Bjorn Helgaas wrote:
+> emove includes of <linux/pci-aspm.h> from files that don't need
+> it.  I'll apply all these via the PCI tree unless there's objection.
 > 
-> Changes in v3:
-> 	Use devm_phy_optional_get() to get optional PHY
-> 	Updated decription in DT bindings to cover use of single/multiple PHYs
-> 	Split patch to add shutdown callback in separate patch
-> 	Re-based on v4.18-rc1
+> ---
 > 
-> Changes in v2:
-> 	Split commit into four patches
-> 	Re-based on v4.17-rc1
-> 
-> Alan Douglas (5):
->   PCI: cadence: Update cdns_pcie_writel function signature
->   PCI: cadence: Add generic PHY support to host and EP drivers
->   dt-bindings: PCI: cadence: Add DT bindings for optional PHYs
->   PCI: cadence: Add Power Management ops for host and EP
->   PCI: cadence: Add shutdown callback to host driver
-> 
->  .../devicetree/bindings/pci/cdns,cdns-pcie-ep.txt  |    5 +
->  .../bindings/pci/cdns,cdns-pcie-host.txt           |    6 +
->  drivers/pci/controller/pcie-cadence-ep.c           |   15 +++-
->  drivers/pci/controller/pcie-cadence-host.c         |   33 +++++
->  drivers/pci/controller/pcie-cadence.c              |  123 ++++++++++++++++++++
->  drivers/pci/controller/pcie-cadence.h              |   13 ++-
->  6 files changed, 193 insertions(+), 2 deletions(-)
+> Bjorn Helgaas (4):
+>        igb: Remove unnecessary include of <linux/pci-aspm.h>
+>        ath9k: Remove unnecessary include of <linux/pci-aspm.h>
+>        iwlwifi: Remove unnecessary include of <linux/pci-aspm.h>
+>        PCI: Remove unnecessary include of <linux/pci-aspm.h>
 
-Applied to pci/cadence for v4.19, thank you very much.
+Thanks.
 
-Lorenzo
-> 
+Reviewed-by: Sinan Kaya <okaya@kernel.org>
+
+Is it possible to kill that file altogether? I haven't looked who is
+using outside of pci directory.
