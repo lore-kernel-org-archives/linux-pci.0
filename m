@@ -1,188 +1,172 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-From: Logan Gunthorpe <logang@deltatee.com>
-To: linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
-        linux-doc@vger.kernel.org
-Cc: Stephen Bates <sbates@raithlin.com>,
-        Christoph Hellwig <hch@lst.de>,
-        Bjorn Helgaas <bhelgaas@google.com>,
-        Jonathan Corbet <corbet@lwn.net>,
-        Ingo Molnar <mingo@kernel.org>,
-        Thomas Gleixner <tglx@linutronix.de>,
-        "Paul E. McKenney" <paulmck@linux.vnet.ibm.com>,
-        Marc Zyngier <marc.zyngier@arm.com>,
-        Kai-Heng Feng <kai.heng.feng@canonical.com>,
-        Frederic Weisbecker <frederic@kernel.org>,
-        Dan Williams <dan.j.williams@intel.com>,
-        =?UTF-8?q?J=C3=A9r=C3=B4me=20Glisse?= <jglisse@redhat.com>,
-        Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-        Alex Williamson <alex.williamson@redhat.com>,
-        =?UTF-8?q?Christian=20K=C3=B6nig?= <christian.koenig@amd.com>,
-        Matthew Wilcox <willy@infradead.org>,
-        Logan Gunthorpe <logang@deltatee.com>
-Date: Mon, 30 Jul 2018 10:18:40 -0600
-Message-Id: <20180730161840.13733-5-logang@deltatee.com>
-In-Reply-To: <20180730161840.13733-1-logang@deltatee.com>
-References: <20180730161840.13733-1-logang@deltatee.com>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail.kernel.org ([198.145.29.99]:39518 "EHLO mail.kernel.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1730085AbeGZSgl (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Thu, 26 Jul 2018 14:36:41 -0400
+Date: Thu, 26 Jul 2018 12:18:53 -0500
+From: Bjorn Helgaas <helgaas@kernel.org>
+To: Thomas Tai <thomas.tai@oracle.com>
+Cc: bhelgaas@google.com, keith.busch@intel.com,
+        linux-pci@vger.kernel.org, poza@codeaurora.org
+Subject: Re: [PATCH V3, 1/1] PCI/AER: fix use-after-free in
+ pcie_do_fatal_recovery
+Message-ID: <20180726171853.GC173328@bhelgaas-glaptop.roam.corp.google.com>
+References: <1532030555-7177-1-git-send-email-thomas.tai@oracle.com>
+ <1532030555-7177-2-git-send-email-thomas.tai@oracle.com>
+ <20180725202420.GA173328@bhelgaas-glaptop.roam.corp.google.com>
+ <90c59775-a344-c58a-89c3-511a44839365@oracle.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Subject: [PATCH v8 4/4] PCI: Introduce the disable_acs_redir parameter
-Sender: linux-kernel-owner@vger.kernel.org
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <90c59775-a344-c58a-89c3-511a44839365@oracle.com>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-In order to support P2P traffic on a segment of the PCI hierarchy,
-we must be able to disable the ACS redirect bits for select
-PCI bridges. The bridges must be selected before the devices are
-discovered by the kernel and the IOMMU groups created. Therefore,
-a kernel command line parameter is created to specify devices
-which must have their ACS bits disabled.
+On Thu, Jul 26, 2018 at 10:29:18AM -0400, Thomas Tai wrote:
+> [ ... ]>
+> > I know I suggested this strategy, but I think this ended up being more
+> > complicated than it's worth.
+> > 
+> > The problem code in pcie_do_fatal_recovery() essentially looks like
+> > this:
+> > 
+> >    pcie_do_fatal_recovery(dev)
+> >      pci_stop_and_remove_bus_device(dev);
+> >      reset_link(dev);
+> >      pci_cleanup_aer_uncorrect_error_status(dev);
+> >      pcie_wait_for_link(dev, ...);
+> >      pci_uevent_ers(dev, ...);
+> >      pci_info(dev, ...);
+> > 
+> > Some of this depends on the device type (bridge vs. endpoint) and the
+> > caller (AER vs. DPC), but given the right conditions, we can exercise
+> > all the above calls.
+> > 
+> > I think it is just broken that we keep doing things with "dev" after
+> > removing it.  IMHO this code should be restructured to avoid that.
+> > 
+> > I think fiddling with the refcount as in this patch adds too much
+> > complexity and makes it look like the current structure of
+> > pcie_do_fatal_recovery() is reasonable when it really isn't.
+> > 
+> > But restructuring pcie_do_fatal_recovery() is too big a project to do
+> > before v4.18, and we need to fix this problem.  I propose that we
+> > merge your v2 patch for now, so at least the band-aid is in the
+> > function that I think is broken.
+> > 
+> > I *would* like to reduce the scope of the get/put as in the patch
+> > below, though, so it is contained inside the rescan_remove lock.
+> > Could you try it and make sure it's still enough to avoid the problem?
+> > If it is, I'll add your sign-off and get this in v4.18.
+> 
+> Hi Bjorn,
+> Thank you for your review and the details analysis. Sure, let's do the work
+> around for now. I retested your patch below and works fine. You are welcome
+> to add my signed-off and get this in v4.18.
 
-The new parameter takes a list of devices separated by a semicolon.
-Each device specified will have it's ACS redirect bits disabled.
-This is similar to the existing 'resource_alignment' parameter.
+OK, I added your signed-off-by and put the patch below on my for-linus
+branch for v4.18.
 
-The ACS Request P2P Request Redirect, P2P Completion Redirect and P2P
-Egress Control bits are disabled which is sufficient to always allow
-passing P2P traffic uninterrupted. The bits are set after the kernel
-(optionally) enables the ACS bits itself. It is also done regardless of
-whether the kernel sets the bits or not seeing some BIOS firmware is known
-to set the bits on boot.
+> As far as reworking the pcie_do_fatal_recovery() goes, would you think I can
+> help out in any way? May be I can try rework the code to not use the dev
+> after it is removed.
 
-If the user tries to disable the ACS redirct for a device without the
-ACS capability, a warning is printed to dmesg.
+That'd be great!  I expect Oza and Keith will have useful insight
+there, too, so keep them in the loop.
 
-Signed-off-by: Logan Gunthorpe <logang@deltatee.com>
-Reviewed-by: Stephen Bates <sbates@raithlin.com>
-Acked-by: Christian König <christian.koenig@amd.com>
-Reviewed-by: Alex Williamson <alex.williamson@redhat.com>
----
- Documentation/admin-guide/kernel-parameters.txt |  9 +++
- drivers/pci/pci.c                               | 76 ++++++++++++++++++++++++-
- 2 files changed, 83 insertions(+), 2 deletions(-)
-
-diff --git a/Documentation/admin-guide/kernel-parameters.txt b/Documentation/admin-guide/kernel-parameters.txt
-index 1fdd1ef03984..ab19ed83f072 100644
---- a/Documentation/admin-guide/kernel-parameters.txt
-+++ b/Documentation/admin-guide/kernel-parameters.txt
-@@ -3192,6 +3192,15 @@
- 				Adding the window is slightly risky (it may
- 				conflict with unreported devices), so this
- 				taints the kernel.
-+		disable_acs_redir=<pci_dev>[; ...]
-+				Specify one or more PCI devices (in the format
-+				specified above) separated by semicolons.
-+				Each device specified will have the PCI ACS
-+				redirect capabilities forced off which will
-+				allow P2P traffic between devices through
-+				bridges without forcing it upstream. Note:
-+				this removes isolation between devices and
-+				will make the IOMMU groups less granular.
- 
- 	pcie_aspm=	[PCIE] Forcibly enable or disable PCIe Active State Power
- 			Management.
-diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
-index 7356039a1ae7..594e815a27ec 100644
---- a/drivers/pci/pci.c
-+++ b/drivers/pci/pci.c
-@@ -2983,6 +2983,66 @@ void pci_request_acs(void)
- 	pci_acs_enable = 1;
- }
- 
-+static const char *disable_acs_redir_param;
-+
-+/**
-+ * pci_disable_acs_redir - disable ACS redirect capabilities
-+ * @dev: the PCI device
-+ *
-+ * For only devices specified in the disable_acs_redir parameter.
-+ */
-+static void pci_disable_acs_redir(struct pci_dev *dev)
-+{
-+	int ret = 0;
-+	const char *p;
-+	int pos;
-+	u16 ctrl;
-+
-+	if (!disable_acs_redir_param)
-+		return;
-+
-+	p = disable_acs_redir_param;
-+	while (*p) {
-+		ret = pci_dev_str_match(dev, p, &p);
-+		if (ret < 0) {
-+			pr_info_once("PCI: Can't parse disable_acs_redir parameter: %s\n",
-+				     disable_acs_redir_param);
-+
-+			break;
-+		} else if (ret == 1) {
-+			/* Found a match */
-+			break;
-+		}
-+
-+		if (*p != ';' && *p != ',') {
-+			/* End of param or invalid format */
-+			break;
-+		}
-+		p++;
-+	}
-+
-+	if (ret != 1)
-+		return;
-+
-+	if (!pci_dev_specific_disable_acs_redir(dev))
-+		return;
-+
-+	pos = pci_find_ext_capability(dev, PCI_EXT_CAP_ID_ACS);
-+	if (!pos) {
-+		pci_warn(dev, "cannot disable ACS redirect for this hardware as it does not have ACS capabilities\n");
-+		return;
-+	}
-+
-+	pci_read_config_word(dev, pos + PCI_ACS_CTRL, &ctrl);
-+
-+	/* P2P Request & Completion Redirect */
-+	ctrl &= ~(PCI_ACS_RR | PCI_ACS_CR | PCI_ACS_EC);
-+
-+	pci_write_config_word(dev, pos + PCI_ACS_CTRL, ctrl);
-+
-+	pci_info(dev, "disabled ACS redirect\n");
-+}
-+
- /**
-  * pci_std_enable_acs - enable ACS on devices using standard ACS capabilites
-  * @dev: the PCI device
-@@ -3022,12 +3082,22 @@ static void pci_std_enable_acs(struct pci_dev *dev)
- void pci_enable_acs(struct pci_dev *dev)
- {
- 	if (!pci_acs_enable)
--		return;
-+		goto disable_acs_redir;
- 
- 	if (!pci_dev_specific_enable_acs(dev))
--		return;
-+		goto disable_acs_redir;
- 
- 	pci_std_enable_acs(dev);
-+
-+disable_acs_redir:
-+	/*
-+	 * Note: pci_disable_acs_redir() must be called even if
-+	 * ACS is not enabled by the kernel because the firmware
-+	 * may have unexpectedly set the flags. So if we are told
-+	 * to disable it, we should always disable it after setting
-+	 * the kernel's default preferences.
-+	 */
-+	pci_disable_acs_redir(dev);
- }
- 
- static bool pci_acs_flags_enabled(struct pci_dev *pdev, u16 acs_flags)
-@@ -6005,6 +6075,8 @@ static int __init pci_setup(char *str)
- 				pcie_bus_config = PCIE_BUS_PEER2PEER;
- 			} else if (!strncmp(str, "pcie_scan_all", 13)) {
- 				pci_add_flags(PCI_SCAN_ALL_PCIE_DEVS);
-+			} else if (!strncmp(str, "disable_acs_redir=", 18)) {
-+				disable_acs_redir_param = str + 18;
- 			} else {
- 				printk(KERN_ERR "PCI: Unknown option `%s'\n",
- 						str);
--- 
-2.11.0
+> > commit 277ce38f2ed6a4310acf3bd541fb3aee4ec27dee
+> > Author: Thomas Tai <thomas.tai@oracle.com>
+> > Date:   Tue Jul 24 16:47:59 2018 -0500
+> > 
+> >      PCI/AER: Work around use-after-free in pcie_do_fatal_recovery()
+> >      When an fatal error is received by a non-bridge device, the device is
+> >      removed, and pci_stop_and_remove_bus_device() deallocates the device
+> >      structure.  The freed device structure is used by subsequent code to send
+> >      uevents and print messages.
+> >      Hold a reference on the device until we're finished using it.  This is not
+> >      an ideal fix because pcie_do_fatal_recovery() should not use the device at
+> >      all after removing it, but that's too big a project for right now.
+> >      #
+> >      [bhelgaas: changelog, reduce get/put coverage]
+> >      Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
+> > 
+> > diff --git a/drivers/pci/pcie/err.c b/drivers/pci/pcie/err.c
+> > index fdbcc555860d..674984a9277a 100644
+> > --- a/drivers/pci/pcie/err.c
+> > +++ b/drivers/pci/pcie/err.c
+> > @@ -291,6 +291,7 @@ void pcie_do_fatal_recovery(struct pci_dev *dev, u32 service)
+> >   	parent = udev->subordinate;
+> >   	pci_lock_rescan_remove();
+> > +	pci_dev_get(dev);
+> >   	list_for_each_entry_safe_reverse(pdev, temp, &parent->devices,
+> >   					 bus_list) {
+> >   		pci_dev_get(pdev);
+> > @@ -325,6 +326,7 @@ void pcie_do_fatal_recovery(struct pci_dev *dev, u32 service)
+> >   		pci_info(dev, "Device recovery from fatal error failed\n");
+> >   	}
+> > +	pci_dev_put(dev);
+> >   	pci_unlock_rescan_remove();
+> >   }
+> > 
+> > > Signed-off-by: Thomas Tai <thomas.tai@oracle.com>
+> > > ---
+> > >   drivers/pci/pcie/aer.c | 27 +++++++++++++++++++++++++--
+> > >   1 file changed, 25 insertions(+), 2 deletions(-)
+> > > 
+> > > diff --git a/drivers/pci/pcie/aer.c b/drivers/pci/pcie/aer.c
+> > > index a2e8838..6e5e6a5 100644
+> > > --- a/drivers/pci/pcie/aer.c
+> > > +++ b/drivers/pci/pcie/aer.c
+> > > @@ -657,6 +657,10 @@ void cper_print_aer(struct pci_dev *dev, int aer_severity,
+> > >   static int add_error_device(struct aer_err_info *e_info, struct pci_dev *dev)
+> > >   {
+> > >   	if (e_info->error_dev_num < AER_MAX_MULTI_ERR_DEVICES) {
+> > > +		/* increment reference count to keep the dev
+> > > +		 * around until remove_source_device()
+> > > +		 */
+> > > +		pci_dev_get(dev);
+> > >   		e_info->dev[e_info->error_dev_num] = dev;
+> > >   		e_info->error_dev_num++;
+> > >   		return 0;
+> > > @@ -665,6 +669,21 @@ static int add_error_device(struct aer_err_info *e_info, struct pci_dev *dev)
+> > >   }
+> > >   /**
+> > > + * remove_source_device -remove error devices from the e_info
+> > > + * @e_info: pointer to error info
+> > > + */
+> > > +static void remove_source_device(struct aer_err_info *e_info)
+> > > +{
+> > > +	struct pci_dev *dev;
+> > > +
+> > > +	while (e_info->error_dev_num > 0) {
+> > > +		e_info->error_dev_num--;
+> > > +		dev = e_info->dev[e_info->error_dev_num];
+> > > +		pci_dev_put(dev);
+> > > +	}
+> > > +}
+> > > +
+> > > +/**
+> > >    * is_error_source - check whether the device is source of reported error
+> > >    * @dev: pointer to pci_dev to be checked
+> > >    * @e_info: pointer to reported error info
+> > > @@ -976,8 +995,10 @@ static void aer_isr_one_error(struct aer_rpc *rpc,
+> > >   			e_info->multi_error_valid = 0;
+> > >   		aer_print_port_info(pdev, e_info);
+> > > -		if (find_source_device(pdev, e_info))
+> > > +		if (find_source_device(pdev, e_info)) {
+> > >   			aer_process_err_devices(e_info);
+> > > +			remove_source_device(e_info);
+> > > +		}
+> > >   	}
+> > >   	if (e_src->status & PCI_ERR_ROOT_UNCOR_RCV) {
+> > > @@ -995,8 +1016,10 @@ static void aer_isr_one_error(struct aer_rpc *rpc,
+> > >   		aer_print_port_info(pdev, e_info);
+> > > -		if (find_source_device(pdev, e_info))
+> > > +		if (find_source_device(pdev, e_info)) {
+> > >   			aer_process_err_devices(e_info);
+> > > +			remove_source_device(e_info);
+> > > +		}
+> > >   	}
+> > >   }
+> > > -- 
+> > > 1.8.3.1
+> > > 
