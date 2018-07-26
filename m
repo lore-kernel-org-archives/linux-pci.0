@@ -1,62 +1,102 @@
-Return-Path: <SRS0=QMsv=KB=intel.com=jonathan.derrick@kernel.org>
-Return-Path: <SRS0=QMsv=KB=intel.com=jonathan.derrick@kernel.org>
-From: Jon Derrick <jonathan.derrick@intel.com>
-To: Bjorn Helgaas <helgaas@kernel.org>
-Cc: <linux-pci@vger.kernel.org>,
-	<linux-kernel@vger.kernel.org>,
-	<linux-doc@vger.kernel.org>,
-	Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
-	Keith Busch <keith.busch@intel.com>,
-	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-	Mika Westerberg <mika.westerberg@linux.intel.com>,
-	Sinan Kaya <okaya@codeaurora.org>,
-	Logan Gunthorpe <logang@deltatree.com>,
-	Stephen Bates <sbates@raithlin.com>,
-	Jon Derrick <jonathan.derrick@intel.com>
-Subject: [RFC 0/3] PCI: Granular hotplug memory/io reservation
-Date: Tue, 17 Jul 2018 15:39:44 -0600
-Message-Id: <1531863587-3723-1-git-send-email-jonathan.derrick@intel.com>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail-oi0-f65.google.com ([209.85.218.65]:37846 "EHLO
+        mail-oi0-f65.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1729406AbeGZPRV (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Thu, 26 Jul 2018 11:17:21 -0400
+MIME-Version: 1.0
+In-Reply-To: <20180726071433.GA2222@nanopsycho>
+References: <20180719010107.22363-1-saeedm@mellanox.com> <20180719010107.22363-11-saeedm@mellanox.com>
+ <20180718184947.6e472ee4@cakuba.netronome.com> <575e4a3a-af6f-aac4-fed6-fd4dad387105@mellanox.com>
+ <20180724125135.19121f1f@cakuba.netronome.com> <98071d31-bf99-d713-7fd1-4b1cc156377e@mellanox.com>
+ <CAKgT0UfG-4zuKArCbSLkZoCKs2-t6r9U4qQPPUvBk-e_5_3FCg@mail.gmail.com>
+ <20180725174359.6952c937@cakuba.netronome.com> <20180726071433.GA2222@nanopsycho>
+From: Alexander Duyck <alexander.duyck@gmail.com>
+Date: Thu, 26 Jul 2018 07:00:20 -0700
+Message-ID: <CAKgT0UeGOhjR756fMPx_k_o8Qq5x4waKMcdmtR3pLAT=xRHMgA@mail.gmail.com>
+Subject: Re: [net-next 10/16] net/mlx5: Support PCIe buffer congestion
+ handling via Devlink
+To: Jiri Pirko <jiri@resnulli.us>
+Cc: Jakub Kicinski <jakub.kicinski@netronome.com>,
+        Eran Ben Elisha <eranbe@mellanox.com>,
+        Saeed Mahameed <saeedm@mellanox.com>,
+        "David S. Miller" <davem@davemloft.net>,
+        "netdev@vger.kernel.org" <netdev@vger.kernel.org>,
+        linux-pci <linux-pci@vger.kernel.org>
+Content-Type: text/plain; charset="UTF-8"
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-This series granularizes hotplug memory/io reservations to allow different
-reservations by-id/by-path. It does this by expanding the kernel boot
-parameters pci=hpmemsize= and pci=hpiosize=.
+On Thu, Jul 26, 2018 at 12:14 AM, Jiri Pirko <jiri@resnulli.us> wrote:
+> Thu, Jul 26, 2018 at 02:43:59AM CEST, jakub.kicinski@netronome.com wrote:
+>>On Wed, 25 Jul 2018 08:23:26 -0700, Alexander Duyck wrote:
+>>> On Wed, Jul 25, 2018 at 5:31 AM, Eran Ben Elisha wrote:
+>>> > On 7/24/2018 10:51 PM, Jakub Kicinski wrote:
+>>> >>>> The devlink params haven't been upstream even for a full cycle and
+>>> >>>> already you guys are starting to use them to configure standard
+>>> >>>> features like queuing.
+>>> >>>
+>>> >>> We developed the devlink params in order to support non-standard
+>>> >>> configuration only. And for non-standard, there are generic and vendor
+>>> >>> specific options.
+>>> >>
+>>> >> I thought it was developed for performing non-standard and possibly
+>>> >> vendor specific configuration.  Look at DEVLINK_PARAM_GENERIC_* for
+>>> >> examples of well justified generic options for which we have no
+>>> >> other API.  The vendor mlx4 options look fairly vendor specific if you
+>>> >> ask me, too.
+>>> >>
+>>> >> Configuring queuing has an API.  The question is it acceptable to enter
+>>> >> into the risky territory of controlling offloads via devlink parameters
+>>> >> or would we rather make vendors take the time and effort to model
+>>> >> things to (a subset) of existing APIs.  The HW never fits the APIs
+>>> >> perfectly.
+>>> >
+>>> > I understand what you meant here, I would like to highlight that this
+>>> > mechanism was not meant to handle SRIOV, Representors, etc.
+>>> > The vendor specific configuration suggested here is to handle a congestion
+>>> > state in Multi Host environment (which includes PF and multiple VFs per
+>>> > host), where one host is not aware to the other hosts, and each is running
+>>> > on its own pci/driver. It is a device working mode configuration.
+>>> >
+>>> > This  couldn't fit into any existing API, thus creating this vendor specific
+>>> > unique API is needed.
+>>>
+>>> If we are just going to start creating devlink interfaces in for every
+>>> one-off option a device wants to add why did we even bother with
+>>> trying to prevent drivers from using sysfs? This just feels like we
+>>> are back to the same arguments we had back in the day with it.
+>>>
+>>> I feel like the bigger question here is if devlink is how we are going
+>>> to deal with all PCIe related features going forward, or should we
+>>> start looking at creating a new interface/tool for PCI/PCIe related
+>>> features? My concern is that we have already had features such as DMA
+>>> Coalescing that didn't really fit into anything and now we are
+>>> starting to see other things related to DMA and PCIe bus credits. I'm
+>>> wondering if we shouldn't start looking at a tool/interface to
+>>> configure all the PCIe related features such as interrupts, error
+>>> reporting, DMA configuration, power management, etc. Maybe we could
+>>> even look at sharing it across subsystems and include things like
+>>> storage, graphics, and other subsystems in the conversation.
+>>
+>>Agreed, for actual PCIe configuration (i.e. not ECN marking) we do need
+>>to build up an API.  Sharing it across subsystems would be very cool!
+>
+> I wonder howcome there isn't such API in place already. Or is it?
+> If it is not, do you have any idea how should it look like? Should it be
+> an extension of the existing PCI uapi or something completely new?
+> It would be probably good to loop some PCI people in...
 
-Patch 1/3:
-	Changes the hpmemsize behavior between occupied and non-occupied slots,
-	where occupied slots were being reserved their current allocation size
-	in addition to the hpmemsize parameter. Following this patch, both
-	occupied and non-occupied slots receive the same reservation and the
-	current allocation size of the occupied slots is considered as part of
-	the hotplug reservation.
+The closest thing I can think of in terms of answering your questions
+as to why we haven't seen anything like that would be setpci.
+Basically with that tool you can go through the PCI configuration
+space and update any piece you want. The problem is it can have
+effects on the driver and I don't recall there ever being any sort of
+notification mechanism added to make a driver aware of configuration
+updates.
 
-	I have an additional patch which does this for hpiosize, however I
-	don't have any compatible hotplug hardware requiring IO. I could
-	synthesize it to test, but I am also not aware of requirements other
-	users may have for additional IO.
+As far as the interface I don't know if we would want to use something
+like netlink or look at something completely new.
 
-Patch 2/3:
-	Adds the format parsing for hpmemsize and hpiosize. Please see the log
-	and 3/3 for documentation.
+I've gone ahead and added the linux-pci mailing list to the thread.
 
-	Additionally I've noticed there's some overlap in Logan's ACS set with
-	respect to format and device matching. Maybe this is something that can
-	be refactored into common code once one is accepted.
-
-Patch 3/3:
-	Documents the new expanded formats
-
-
-Jon Derrick (3):
-  PCI: Equalize hotplug memory for non/occupied slots
-  PCI: Granularize hpmemsize and hpiosize per-id/path
-  docs: Document the expanded hp{io,mem}size interface
-
- Documentation/admin-guide/kernel-parameters.txt |  21 +-
- drivers/pci/pci.c                               | 253 +++++++++++++++++++++++-
- drivers/pci/setup-bus.c                         |  44 +++--
- include/linux/pci.h                             |  21 +-
- 4 files changed, 309 insertions(+), 30 deletions(-)
-
--- 
-1.8.3.1
+- Alex
