@@ -1,334 +1,106 @@
 Return-Path: <linux-kernel-owner@vger.kernel.org>
-From: Gustavo Pimentel <gustavo.pimentel@synopsys.com>
-To: bhelgaas@google.com, lorenzo.pieralisi@arm.com,
-        Joao.Pinto@synopsys.com, jingoohan1@gmail.com, kishon@ti.com,
-        adouglas@cadence.com, jesper.nilsson@axis.com,
-        shawn.lin@rock-chips.com
-Cc: linux-pci@vger.kernel.org, linux-doc@vger.kernel.org,
-        linux-kernel@vger.kernel.org,
-        Gustavo Pimentel <gustavo.pimentel@synopsys.com>
-Subject: [PATCH v9 10/12] pci_endpoint_test: Add 2 ioctl commands
-Date: Mon,  9 Jul 2018 18:42:48 +0100
-Message-Id: <185f0395d22083c04364cb81b4c2e2448fa89fb2.1531155252.git.gustavo.pimentel@synopsys.com>
-In-Reply-To: <cover.1531155252.git.gustavo.pimentel@synopsys.com>
-References: <cover.1531155252.git.gustavo.pimentel@synopsys.com>
-In-Reply-To: <cover.1531155252.git.gustavo.pimentel@synopsys.com>
-References: <cover.1531155252.git.gustavo.pimentel@synopsys.com>
+Date: Thu, 26 Jul 2018 21:37:05 +0800
+From: Baoquan He <bhe@redhat.com>
+To: Michal Hocko <mhocko@kernel.org>
+Cc: Andrew Morton <akpm@linux-foundation.org>,
+        linux-kernel@vger.kernel.org, robh+dt@kernel.org,
+        dan.j.williams@intel.com, nicolas.pitre@linaro.org,
+        josh@joshtriplett.org, fengguang.wu@intel.com, bp@suse.de,
+        andy.shevchenko@gmail.com, patrik.r.jakobsson@gmail.com,
+        airlied@linux.ie, kys@microsoft.com, haiyangz@microsoft.com,
+        sthemmin@microsoft.com, dmitry.torokhov@gmail.com,
+        frowand.list@gmail.com, keith.busch@intel.com,
+        jonathan.derrick@intel.com, lorenzo.pieralisi@arm.com,
+        bhelgaas@google.com, tglx@linutronix.de, brijesh.singh@amd.com,
+        jglisse@redhat.com, thomas.lendacky@amd.com,
+        gregkh@linuxfoundation.org, baiyaowei@cmss.chinamobile.com,
+        richard.weiyang@gmail.com, devel@linuxdriverproject.org,
+        linux-input@vger.kernel.org, linux-nvdimm@lists.01.org,
+        devicetree@vger.kernel.org, linux-pci@vger.kernel.org,
+        ebiederm@xmission.com, vgoyal@redhat.com, dyoung@redhat.com,
+        yinghai@kernel.org, monstr@monstr.eu, davem@davemloft.net,
+        chris@zankel.net, jcmvbkbc@gmail.com, gustavo@padovan.org,
+        maarten.lankhorst@linux.intel.com, seanpaul@chromium.org,
+        linux-parisc@vger.kernel.org, linuxppc-dev@lists.ozlabs.org,
+        kexec@lists.infradead.org
+Subject: Re: [PATCH v7 4/4] kexec_file: Load kernel at top of system RAM if
+ required
+Message-ID: <20180726133705.GM6480@MiWiFi-R3L-srv>
+References: <20180718024944.577-1-bhe@redhat.com>
+ <20180718024944.577-5-bhe@redhat.com>
+ <20180718153326.b795e9ea7835432a56cd7011@linux-foundation.org>
+ <20180719151753.GB7147@localhost.localdomain>
+ <20180723143443.GD18181@dhcp22.suse.cz>
+ <20180725064813.GI6480@MiWiFi-R3L-srv>
+ <20180726125957.GH28386@dhcp22.suse.cz>
+ <20180726130904.GL6480@MiWiFi-R3L-srv>
+ <20180726131242.GI28386@dhcp22.suse.cz>
+ <20180726131420.GJ28386@dhcp22.suse.cz>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20180726131420.GJ28386@dhcp22.suse.cz>
 Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Add MSI-X support and update driver documentation accordingly.
+On 07/26/18 at 03:14pm, Michal Hocko wrote:
+> On Thu 26-07-18 15:12:42, Michal Hocko wrote:
+> > On Thu 26-07-18 21:09:04, Baoquan He wrote:
+> > > On 07/26/18 at 02:59pm, Michal Hocko wrote:
+> > > > On Wed 25-07-18 14:48:13, Baoquan He wrote:
+> > > > > On 07/23/18 at 04:34pm, Michal Hocko wrote:
+> > > > > > On Thu 19-07-18 23:17:53, Baoquan He wrote:
+> > > > > > > Kexec has been a formal feature in our distro, and customers owning
+> > > > > > > those kind of very large machine can make use of this feature to speed
+> > > > > > > up the reboot process. On uefi machine, the kexec_file loading will
+> > > > > > > search place to put kernel under 4G from top to down. As we know, the
+> > > > > > > 1st 4G space is DMA32 ZONE, dma, pci mmcfg, bios etc all try to consume
+> > > > > > > it. It may have possibility to not be able to find a usable space for
+> > > > > > > kernel/initrd. From the top down of the whole memory space, we don't
+> > > > > > > have this worry. 
+> > > > > > 
+> > > > > > I do not have the full context here but let me note that you should be
+> > > > > > careful when doing top-down reservation because you can easily get into
+> > > > > > hotplugable memory and break the hotremove usecase. We even warn when
+> > > > > > this is done. See memblock_find_in_range_node
+> > > > > 
+> > > > > Kexec read kernel/initrd file into buffer, just search usable positions
+> > > > > for them to do the later copying. You can see below struct kexec_segment, 
+> > > > > for the old kexec_load, kernel/initrd are read into user space buffer,
+> > > > > the @buf stores the user space buffer address, @mem stores the position
+> > > > > where kernel/initrd will be put. In kernel, it calls
+> > > > > kimage_load_normal_segment() to copy user space buffer to intermediate
+> > > > > pages which are allocated with flag GFP_KERNEL. These intermediate pages
+> > > > > are recorded as entries, later when user execute "kexec -e" to trigger
+> > > > > kexec jumping, it will do the final copying from the intermediate pages
+> > > > > to the real destination pages which @mem pointed. Because we can't touch
+> > > > > the existed data in 1st kernel when do kexec kernel loading. With my
+> > > > > understanding, GFP_KERNEL will make those intermediate pages be
+> > > > > allocated inside immovable area, it won't impact hotplugging. But the
+> > > > > @mem we searched in the whole system RAM might be lost along with
+> > > > > hotplug. Hence we need do kexec kernel again when hotplug event is
+> > > > > detected.
+> > > > 
+> > > > I am not sure I am following. If @mem is placed at movable node then the
+> > > > memory hotremove simply won't work, because we are seeing reserved pages
+> > > > and do not know what to do about them. They are not migrateable.
+> > > > Allocating intermediate pages from other nodes doesn't really help.
+> > > 
+> > > OK, I forgot the 2nd kernel which kexec jump into. It won't impact hotremove
+> > > in 1st kernel, it does impact the kernel which kexec jump into if kernel
+> > > is at top of system RAM and the top RAM is in movable node.
+> > 
+> > It will affect the 1st kernel (which does the memblock allocation
+> > top-down) as well. For reasons mentioned above.
+> 
+> And btw. in the ideal world, we would restrict the memblock allocation
+> top-down from the non-movable nodes. But I do not think we have that
+> information ready at the time when the reservation is done.
 
-Add 2 new IOCTL commands:
- - Allow to reconfigure driver IRQ type in runtime.
- - Allow to retrieve current driver IRQ type configured.
+Oh, you could mix kexec loading up with kdump kernel loading. For kdump
+kernel, we need reserve memory region during bootup with memblock
+allocator. For kexec loading, we just operate after system up, and do
+not need to reserve any memmory region. About memory used to load them,
+it's quite different way.
 
-Signed-off-by: Gustavo Pimentel <gustavo.pimentel@synopsys.com>
----
-Change v2->v3:
- - New patch file created base on the previous patch
-"misc: pci_endpoint_test: Add MSI-X support" patch file following
-Kishon's suggestion.
-Change v3->v4:
- - Rebased to Lorenzo's master branch v4.18-rc1.
-Change v4->v5:
- - Nothing changed, just to follow the patch set version.
-Change v5->v6:
- - Moved PCITEST_SET_IRQTYPE and PCITEST_GET_IRQTYPE ioctl entries
-from patch #10 to here.
- - Increased ioctl parameters range associated to
-drivers/misc/pci_endpoint_test.c driver.
-Change v6->v7:
- - irq_type variable update just before returning the function.
-Change v7->v8:
- - Re-sending the patch series.
-Change v8->v9:
- - Added a extra parameter to pci_endpoint_test_alloc_irq_vectors,
-that specifies which irq type should be allocated.
-
- Documentation/ioctl/ioctl-number.txt             |   2 +-
- Documentation/misc-devices/pci-endpoint-test.txt |   3 +
- drivers/misc/pci_endpoint_test.c                 | 176 +++++++++++++++++------
- include/uapi/linux/pcitest.h                     |   2 +
- 4 files changed, 136 insertions(+), 47 deletions(-)
-
-diff --git a/Documentation/ioctl/ioctl-number.txt b/Documentation/ioctl/ioctl-number.txt
-index 65259d4..c15c4f3 100644
---- a/Documentation/ioctl/ioctl-number.txt
-+++ b/Documentation/ioctl/ioctl-number.txt
-@@ -166,7 +166,7 @@ Code  Seq#(hex)	Include File		Comments
- 'P'	all	linux/soundcard.h	conflict!
- 'P'	60-6F	sound/sscape_ioctl.h	conflict!
- 'P'	00-0F	drivers/usb/class/usblp.c	conflict!
--'P'	01-07	drivers/misc/pci_endpoint_test.c	conflict!
-+'P'	01-09	drivers/misc/pci_endpoint_test.c	conflict!
- 'Q'	all	linux/soundcard.h
- 'R'	00-1F	linux/random.h		conflict!
- 'R'	01	linux/rfkill.h		conflict!
-diff --git a/Documentation/misc-devices/pci-endpoint-test.txt b/Documentation/misc-devices/pci-endpoint-test.txt
-index fdfa0f6..58ccca4 100644
---- a/Documentation/misc-devices/pci-endpoint-test.txt
-+++ b/Documentation/misc-devices/pci-endpoint-test.txt
-@@ -28,6 +28,9 @@ ioctl
- 	      to be tested should be passed as argument.
-  PCITEST_MSIX: Tests message signalled interrupts. The MSI-X number
- 	      to be tested should be passed as argument.
-+ PCITEST_SET_IRQTYPE: Changes driver IRQ type configuration. The IRQ type
-+	      should be passed as argument (0: Legacy, 1:MSI, 2:MSI-X).
-+ PCITEST_GET_IRQTYPE: Gets driver IRQ type configuration.
-  PCITEST_WRITE: Perform write tests. The size of the buffer should be passed
- 		as argument.
-  PCITEST_READ: Perform read tests. The size of the buffer should be passed
-diff --git a/drivers/misc/pci_endpoint_test.c b/drivers/misc/pci_endpoint_test.c
-index f4fef10..ce4b79a 100644
---- a/drivers/misc/pci_endpoint_test.c
-+++ b/drivers/misc/pci_endpoint_test.c
-@@ -157,6 +157,88 @@ static irqreturn_t pci_endpoint_test_irqhandler(int irq, void *dev_id)
- 	return IRQ_HANDLED;
- }
- 
-+static void pci_endpoint_test_free_irq_vectors(struct pci_endpoint_test *test)
-+{
-+	int i;
-+	struct pci_dev *pdev = test->pdev;
-+	struct device *dev = &pdev->dev;
-+
-+	for (i = 0; i < test->num_irqs; i++)
-+		devm_free_irq(dev, pci_irq_vector(pdev, i), test);
-+
-+	test->num_irqs = 0;
-+}
-+
-+static bool pci_endpoint_test_alloc_irq_vectors(struct pci_endpoint_test *test,
-+						int type)
-+{
-+	int irq = -1;
-+	struct pci_dev *pdev = test->pdev;
-+	struct device *dev = &pdev->dev;
-+	bool res = true;
-+
-+	switch (type) {
-+	case IRQ_TYPE_LEGACY:
-+		irq = 0;
-+		break;
-+	case IRQ_TYPE_MSI:
-+		irq = pci_alloc_irq_vectors(pdev, 1, 32, PCI_IRQ_MSI);
-+		if (irq < 0)
-+			dev_err(dev, "Failed to get MSI interrupts\n");
-+		break;
-+	case IRQ_TYPE_MSIX:
-+		irq = pci_alloc_irq_vectors(pdev, 1, 2048, PCI_IRQ_MSIX);
-+		if (irq < 0)
-+			dev_err(dev, "Failed to get MSI-X interrupts\n");
-+		break;
-+	default:
-+		dev_err(dev, "Invalid IRQ type selected\n");
-+	}
-+
-+	if (irq < 0) {
-+		irq = 0;
-+		res = false;
-+	}
-+	test->num_irqs = irq;
-+
-+	return res;
-+}
-+
-+static void pci_endpoint_test_release_irq(struct pci_endpoint_test *test)
-+{
-+	struct pci_dev *pdev = test->pdev;
-+
-+	pci_disable_msi(pdev);
-+	pci_disable_msix(pdev);
-+}
-+
-+static bool pci_endpoint_test_request_irq(struct pci_endpoint_test *test)
-+{
-+	int i;
-+	int err;
-+	struct pci_dev *pdev = test->pdev;
-+	struct device *dev = &pdev->dev;
-+
-+	err = devm_request_irq(dev, pdev->irq, pci_endpoint_test_irqhandler,
-+			       IRQF_SHARED, DRV_MODULE_NAME, test);
-+	if (err) {
-+		dev_err(dev, "Failed to request IRQ %d\n", pdev->irq);
-+		return false;
-+	}
-+
-+	for (i = 1; i < test->num_irqs; i++) {
-+		err = devm_request_irq(dev, pci_irq_vector(pdev, i),
-+				       pci_endpoint_test_irqhandler,
-+				       IRQF_SHARED, DRV_MODULE_NAME, test);
-+		if (err)
-+			dev_err(dev, "Failed to request IRQ %d for MSI%s %d\n",
-+				pci_irq_vector(pdev, i),
-+				irq_type == IRQ_TYPE_MSIX ? "-X" : "", i + 1);
-+	}
-+
-+	return true;
-+}
-+
- static bool pci_endpoint_test_bar(struct pci_endpoint_test *test,
- 				  enum pci_barno barno)
- {
-@@ -440,6 +522,38 @@ static bool pci_endpoint_test_read(struct pci_endpoint_test *test, size_t size)
- 	return ret;
- }
- 
-+static bool pci_endpoint_test_set_irq(struct pci_endpoint_test *test,
-+				      int req_irq_type)
-+{
-+	struct pci_dev *pdev = test->pdev;
-+	struct device *dev = &pdev->dev;
-+
-+	if (req_irq_type < IRQ_TYPE_LEGACY || req_irq_type > IRQ_TYPE_MSIX) {
-+		dev_err(dev, "Invalid IRQ type option\n");
-+		return false;
-+	}
-+
-+	if (irq_type == req_irq_type)
-+		return true;
-+
-+	pci_endpoint_test_free_irq_vectors(test);
-+	pci_endpoint_test_release_irq(test);
-+
-+	if (!pci_endpoint_test_alloc_irq_vectors(test, req_irq_type)) {
-+		pci_endpoint_test_release_irq(test);
-+		return false;
-+	}
-+
-+	if (!pci_endpoint_test_request_irq(test)) {
-+		pci_endpoint_test_release_irq(test);
-+		return false;
-+	}
-+
-+	irq_type = req_irq_type;
-+
-+	return true;
-+}
-+
- static long pci_endpoint_test_ioctl(struct file *file, unsigned int cmd,
- 				    unsigned long arg)
- {
-@@ -471,6 +585,12 @@ static long pci_endpoint_test_ioctl(struct file *file, unsigned int cmd,
- 	case PCITEST_COPY:
- 		ret = pci_endpoint_test_copy(test, arg);
- 		break;
-+	case PCITEST_SET_IRQTYPE:
-+		ret = pci_endpoint_test_set_irq(test, arg);
-+		break;
-+	case PCITEST_GET_IRQTYPE:
-+		ret = irq_type;
-+		break;
- 	}
- 
- ret:
-@@ -486,9 +606,7 @@ static const struct file_operations pci_endpoint_test_fops = {
- static int pci_endpoint_test_probe(struct pci_dev *pdev,
- 				   const struct pci_device_id *ent)
- {
--	int i;
- 	int err;
--	int irq = 0;
- 	int id;
- 	char name[20];
- 	enum pci_barno bar;
-@@ -537,41 +655,11 @@ static int pci_endpoint_test_probe(struct pci_dev *pdev,
- 
- 	pci_set_master(pdev);
- 
--	switch (irq_type) {
--	case IRQ_TYPE_LEGACY:
--		break;
--	case IRQ_TYPE_MSI:
--		irq = pci_alloc_irq_vectors(pdev, 1, 32, PCI_IRQ_MSI);
--		if (irq < 0)
--			dev_err(dev, "Failed to get MSI interrupts\n");
--		test->num_irqs = irq;
--		break;
--	case IRQ_TYPE_MSIX:
--		irq = pci_alloc_irq_vectors(pdev, 1, 2048, PCI_IRQ_MSIX);
--		if (irq < 0)
--			dev_err(dev, "Failed to get MSI-X interrupts\n");
--		test->num_irqs = irq;
--		break;
--	default:
--		dev_err(dev, "Invalid IRQ type selected\n");
--	}
--
--	err = devm_request_irq(dev, pdev->irq, pci_endpoint_test_irqhandler,
--			       IRQF_SHARED, DRV_MODULE_NAME, test);
--	if (err) {
--		dev_err(dev, "Failed to request IRQ %d\n", pdev->irq);
--		goto err_disable_msi;
--	}
-+	if (!pci_endpoint_test_alloc_irq_vectors(test, irq_type))
-+		goto err_disable_irq;
- 
--	for (i = 1; i < irq; i++) {
--		err = devm_request_irq(dev, pci_irq_vector(pdev, i),
--				       pci_endpoint_test_irqhandler,
--				       IRQF_SHARED, DRV_MODULE_NAME, test);
--		if (err)
--			dev_err(dev, "Failed to request IRQ %d for MSI%s %d\n",
--				pci_irq_vector(pdev, i),
--				irq_type == IRQ_TYPE_MSIX ? "-X" : "", i + 1);
--	}
-+	if (!pci_endpoint_test_request_irq(test))
-+		goto err_disable_irq;
- 
- 	for (bar = BAR_0; bar <= BAR_5; bar++) {
- 		if (pci_resource_flags(pdev, bar) & IORESOURCE_MEM) {
-@@ -631,12 +719,10 @@ static int pci_endpoint_test_probe(struct pci_dev *pdev,
- 			pci_iounmap(pdev, test->bar[bar]);
- 	}
- 
--	for (i = 0; i < irq; i++)
--		devm_free_irq(&pdev->dev, pci_irq_vector(pdev, i), test);
-+	pci_endpoint_test_free_irq_vectors(test);
- 
--err_disable_msi:
--	pci_disable_msi(pdev);
--	pci_disable_msix(pdev);
-+err_disable_irq:
-+	pci_endpoint_test_release_irq(test);
- 	pci_release_regions(pdev);
- 
- err_disable_pdev:
-@@ -648,7 +734,6 @@ static int pci_endpoint_test_probe(struct pci_dev *pdev,
- static void pci_endpoint_test_remove(struct pci_dev *pdev)
- {
- 	int id;
--	int i;
- 	enum pci_barno bar;
- 	struct pci_endpoint_test *test = pci_get_drvdata(pdev);
- 	struct miscdevice *misc_device = &test->miscdev;
-@@ -665,10 +750,9 @@ static void pci_endpoint_test_remove(struct pci_dev *pdev)
- 		if (test->bar[bar])
- 			pci_iounmap(pdev, test->bar[bar]);
- 	}
--	for (i = 0; i < test->num_irqs; i++)
--		devm_free_irq(&pdev->dev, pci_irq_vector(pdev, i), test);
--	pci_disable_msi(pdev);
--	pci_disable_msix(pdev);
-+	pci_endpoint_test_free_irq_vectors(test);
-+
-+	pci_endpoint_test_release_irq(test);
- 	pci_release_regions(pdev);
- 	pci_disable_device(pdev);
- }
-diff --git a/include/uapi/linux/pcitest.h b/include/uapi/linux/pcitest.h
-index d746fb1..cbf422e 100644
---- a/include/uapi/linux/pcitest.h
-+++ b/include/uapi/linux/pcitest.h
-@@ -17,5 +17,7 @@
- #define PCITEST_READ		_IOW('P', 0x5, unsigned long)
- #define PCITEST_COPY		_IOW('P', 0x6, unsigned long)
- #define PCITEST_MSIX		_IOW('P', 0x7, int)
-+#define PCITEST_SET_IRQTYPE	_IOW('P', 0x8, int)
-+#define PCITEST_GET_IRQTYPE	_IO('P', 0x9)
- 
- #endif /* __UAPI_LINUX_PCITEST_H */
--- 
-2.7.4
+Thanks
+Baoquan
