@@ -1,38 +1,93 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from bmailout1.hostsharing.net ([83.223.95.100]:53749 "EHLO
-        bmailout1.hostsharing.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S932910AbeGCIJM (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Tue, 3 Jul 2018 04:09:12 -0400
-Date: Tue, 3 Jul 2018 10:09:10 +0200
-From: Lukas Wunner <lukas@wunner.de>
-To: Sinan Kaya <okaya@codeaurora.org>
-Cc: Bjorn Helgaas <bhelgaas@google.com>,
-        Lorenzo Pieralisi <Lorenzo.Pieralisi@arm.com>,
-        Linux PCI <linux-pci@vger.kernel.org>
-Subject: Re: Coccinelle report for drivers/pci/
-Message-ID: <20180703080910.GB21136@wunner.de>
-References: <7db07760-49fe-e94b-62fc-556ba02c8e9e@codeaurora.org>
+Received: from mail.kernel.org ([198.145.29.99]:49006 "EHLO mail.kernel.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S2388467AbeG0Xti (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Fri, 27 Jul 2018 19:49:38 -0400
+Date: Fri, 27 Jul 2018 17:25:40 -0500
+From: Bjorn Helgaas <helgaas@kernel.org>
+To: Benjamin Herrenschmidt <benh@kernel.crashing.org>
+Cc: Hari Vyas <hari.vyas@broadcom.com>, bhelgaas@google.com,
+        linux-pci@vger.kernel.org, ray.jui@broadcom.com,
+        Paul Mackerras <paulus@samba.org>,
+        Michael Ellerman <mpe@ellerman.id.au>,
+        linuxppc-dev@lists.ozlabs.org
+Subject: Re: [PATCH v3] PCI: Data corruption happening due to race condition
+Message-ID: <20180727222540.GH173328@bhelgaas-glaptop.roam.corp.google.com>
+References: <1530608741-30664-1-git-send-email-hari.vyas@broadcom.com>
+ <1530608741-30664-2-git-send-email-hari.vyas@broadcom.com>
+ <20180718232904.GJ128988@bhelgaas-glaptop.roam.corp.google.com>
+ <65dd986d0b8b2ebe5132b365dabb2dbaaed9177f.camel@kernel.crashing.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <7db07760-49fe-e94b-62fc-556ba02c8e9e@codeaurora.org>
+In-Reply-To: <65dd986d0b8b2ebe5132b365dabb2dbaaed9177f.camel@kernel.crashing.org>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Mon, Jul 02, 2018 at 09:45:55PM -0400, Sinan Kaya wrote:
-> drivers/pci/hotplug/pciehp_pci.c:67:5-7: Unneeded variable: "rc". Return "0" on line 110
+On Thu, Jul 19, 2018 at 02:18:09PM +1000, Benjamin Herrenschmidt wrote:
+> On Wed, 2018-07-18 at 18:29 -0500, Bjorn Helgaas wrote:
+> > [+cc Paul, Michael, linuxppc-dev]
+> > 
+> 
+>    ..../...
+> 
+> > > Debugging revealed a race condition between pcie core driver
+> > > enabling is_added bit(pci_bus_add_device()) and nvme driver
+> > > reset work-queue enabling is_busmaster bit (by pci_set_master()).
+> > > As both fields are not handled in atomic manner and that clears
+> > > is_added bit.
+> > > 
+> > > Fix moves device addition is_added bit to separate private flag
+> > > variable and use different atomic functions to set and retrieve
+> > > device addition state. As is_added shares different memory
+> > > location so race condition is avoided.
+> > 
+> > Really nice bit of debugging!
+> 
+> Indeed. However I'm not fan of the solution. Shouldn't we instead have
+> some locking for the content of pci_dev ? I've always been wary of us
+> having other similar races in there.
+> 
+> As for the powerpc bits, I'm probably the one who wrote them, however,
+> I'm on vacation this week and right now, no bandwidth to context switch
+> all that back in :-) So give me a few days and/or ping me next week.
 
-Fixed by
-https://patchwork.ozlabs.org/patch/930379/
+OK, here's a ping :)
 
+Some powerpc cleanup would be ideal, but I'd like to fix the race for
+v4.19, so I'm fine with this patch as-is.  But I'd definitely want
+your ack before inserting the ugly #include path in the powerpc code.
 
-> drivers/pci/hotplug/pcihp_skeleton.c:98:5-11: Unneeded variable: "retval". Return "0" on line 106
-> drivers/pci/hotplug/pcihp_skeleton.c:84:5-11: Unneeded variable: "retval". Return "0" on line 92
-> drivers/pci/hotplug/pcihp_skeleton.c:201:5-11: Unneeded variable: "retval". Return "0" on line 210
-> drivers/pci/hotplug/pcihp_skeleton.c:171:5-11: Unneeded variable: "retval". Return "0" on line 180
-> drivers/pci/hotplug/pcihp_skeleton.c:186:5-11: Unneeded variable: "retval". Return "0" on line 195
-> drivers/pci/hotplug/pcihp_skeleton.c:156:5-11: Unneeded variable: "retval". Return "0" on line 165
-> drivers/pci/hotplug/pcihp_skeleton.c:137:5-11: Unneeded variable: "retval". Return "0" on line 150
-> drivers/pci/hotplug/pcihp_skeleton.c:112:5-11: Unneeded variable: "retval". Return "0" on line 131
-
-Fixed by 6c9c6bd4e2c8 ("PCI: hotplug: Delete skeleton driver"),
-queued on Bjorn's pci/hotplug branch for 4.19.
+> The powerpc PCI code contains a lot of cruft coming from the depth of
+> history, including rather nasty assumptions. We want to progressively
+> clean it up, starting with EEH, but it will take time.
+> 
+> Cheers,
+> Ben.
+> 
+> > > Signed-off-by: Hari Vyas <hari.vyas@broadcom.com>
+> > > ---
+> > >  arch/powerpc/kernel/pci-common.c          |  4 +++-
+> > >  arch/powerpc/platforms/powernv/pci-ioda.c |  3 ++-
+> > >  arch/powerpc/platforms/pseries/setup.c    |  3 ++-
+> > >  drivers/pci/bus.c                         |  6 +++---
+> > >  drivers/pci/hotplug/acpiphp_glue.c        |  2 +-
+> > >  drivers/pci/pci.h                         | 11 +++++++++++
+> > >  drivers/pci/probe.c                       |  4 ++--
+> > >  drivers/pci/remove.c                      |  5 +++--
+> > >  include/linux/pci.h                       |  1 -
+> > >  9 files changed, 27 insertions(+), 12 deletions(-)
+> > > 
+> > > diff --git a/arch/powerpc/kernel/pci-common.c b/arch/powerpc/kernel/pci-common.c
+> > > index fe9733f..471aac3 100644
+> > > --- a/arch/powerpc/kernel/pci-common.c
+> > > +++ b/arch/powerpc/kernel/pci-common.c
+> > > @@ -42,6 +42,8 @@
+> > >  #include <asm/ppc-pci.h>
+> > >  #include <asm/eeh.h>
+> > >  
+> > > +#include "../../../drivers/pci/pci.h"
+> > 
+> > I see why you need it, but this include path is really ugly.  Outside
+> > of bootloaders and tools, there are very few instances of includes
+> > like this that reference a different top-level directory, and I'm not
+> > very keen about adding more.
