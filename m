@@ -1,66 +1,37 @@
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Date: Wed, 18 Jul 2018 18:29:34 -0500
-From: Bjorn Helgaas <helgaas@kernel.org>
-To: Sinan Kaya <okaya@kernel.org>
-Subject: Re: [PATCH V5 5/6] PCI: Deprecate pci_reset_bus() and
- pci_reset_slot() functions
-Message-ID: <20180718232934.GK128988@bhelgaas-glaptop.roam.corp.google.com>
-References: <1530572336-20296-1-git-send-email-okaya@codeaurora.org>
- <1530572336-20296-6-git-send-email-okaya@codeaurora.org>
- <20180718223027.GI128988@bhelgaas-glaptop.roam.corp.google.com>
- <3d664a22-7362-07ec-584d-b38829a22ba2@kernel.org>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail.kernel.org ([198.145.29.99]:44122 "EHLO mail.kernel.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1730636AbeG0Tkx (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Fri, 27 Jul 2018 15:40:53 -0400
+Subject: Re: Should a PCIe Link Down event set the PCI_DEV_DISCONNECTED bit?
+To: Alex_Gagniuc@Dellteam.com, lukas@wunner.de
+Cc: mr.nuke.me@gmail.com, keith.busch@intel.com,
+        linux-pci@vger.kernel.org, Austin.Bolen@dell.com,
+        Stuart.Hayes@dell.com, Narendra.K@dell.com,
+        Christopher.Arzola@dell.com, David.Chalfant@dell.com
+References: <47727551-86ce-040a-2516-efa47ee3a76e@gmail.com>
+ <20180727071813.GA6128@wunner.de>
+ <f6aa0b881a824b4f82a29dad300aaaea@ausx13mps321.AMER.DELL.COM>
+ <20180727170543.GA5326@wunner.de>
+ <99604d46a7554eb38ee6c1579c53d835@ausx13mps321.AMER.DELL.COM>
+From: Sinan Kaya <okaya@kernel.org>
+Message-ID: <a7c024d3-4111-bbd2-68e9-2122be083cf7@kernel.org>
+Date: Fri, 27 Jul 2018 11:17:49 -0700
 MIME-Version: 1.0
-In-Reply-To: <3d664a22-7362-07ec-584d-b38829a22ba2@kernel.org>
-List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
-List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
-List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
-List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
-List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
-Cc: Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org,
- open list <linux-kernel@vger.kernel.org>, linux-arm-kernel@lists.infradead.org,
- linux-arm-msm@vger.kernel.org
-Content-Type: text/plain; charset="us-ascii"
-Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
-Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
+In-Reply-To: <99604d46a7554eb38ee6c1579c53d835@ausx13mps321.AMER.DELL.COM>
+Content-Type: text/plain; charset=utf-8; format=flowed
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wed, Jul 18, 2018 at 03:36:29PM -0700, Sinan Kaya wrote:
-> On 7/18/2018 3:30 PM, Bjorn Helgaas wrote:
-> > On Mon, Jul 02, 2018 at 06:58:54PM -0400, Sinan Kaya wrote:
-> > > pci_reset_bus() and pci_reset_slot() functions are not being used by
-> > > any code. Remove them from the kernel in favor of pci_try_reset_bus()
-> > > and pci_try_reset_slot() functions.
-> > > 
-> > > Signed-off-by: Sinan Kaya <okaya@codeaurora.org>
-> > > ---
-> > >   drivers/pci/pci.c   | 55 ++---------------------------------------------------
-> > >   include/linux/pci.h |  2 --
-> > >   2 files changed, 2 insertions(+), 55 deletions(-)
-> > > 
-> > > diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
-> > > index a31e6db..7e3f2e9 100644
-> > > --- a/drivers/pci/pci.c
-> > > +++ b/drivers/pci/pci.c
-> > > @@ -4784,9 +4784,9 @@ int pci_probe_reset_slot(struct pci_slot *slot)
-> > >   EXPORT_SYMBOL_GPL(pci_probe_reset_slot);
-> > >   /**
-> > > - * pci_reset_slot - reset a PCI slot
-> > > + * __pci_try_reset_slot - Try to reset a PCI slot
-> > >    * @slot: PCI slot to reset
-> > > - *
-> > > + *`
-> > 
-> > Is this "*`" intentional or a typo?  I can't find it in kernel-doc.rst
-> > (but it's full of ` and maybe I missed it).
+On 7/27/2018 10:51 AM, Alex_Gagniuc@Dellteam.com wrote:
+>> The first problem with that patch was that I hadn't fully understood
+>> yet when to set PCI_DEV_DISCONNECTED and when not to set it.
+> I think PCI_DEV_DISCONNECTED is a documentation issue above all else.
+> The history I was given is that drivers would take a very long time to
+> tear down a device. Config space IO to an nonexistent device took a long
+> while to time out. Performance was one motivation -- and was not documented.
 > 
-> Typo.
 
-Great, I fixed it.
-
-_______________________________________________
-linux-arm-kernel mailing list
-linux-arm-kernel@lists.infradead.org
-http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
+Completion timeouts are typically in the orders of 50ms. If you have a
+lot of outstanding non-posted requests, it will take time for SW to
+flush all requests.
