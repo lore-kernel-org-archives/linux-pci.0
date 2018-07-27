@@ -1,200 +1,102 @@
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-From: Leonard Crestez <leonard.crestez@nxp.com>
-To: Lucas Stach <l.stach@pengutronix.de>, Richard Zhu <hongxing.zhu@nxp.com>,
- Andrey Smirnov <andrew.smirnov@gmail.com>
-Subject: [PATCH v2 3/3] PCI: imx: Initial imx7d pm support
-Date: Fri, 20 Jul 2018 15:47:44 +0300
-Message-Id: <e42a6bb8ff0ddd6eaa31fe381875425a3730a73f.1532090446.git.leonard.crestez@nxp.com>
-In-Reply-To: <cover.1532090446.git.leonard.crestez@nxp.com>
-References: <cover.1532090446.git.leonard.crestez@nxp.com>
-MIME-Version: 1.0
-List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
-List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
-List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
-List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
-List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
-Cc: Dong Aisheng <aisheng.dong@nxp.com>, Joao Pinto <Joao.Pinto@synopsys.com>,
- linux-pm@vger.kernel.org, Jingoo Han <jingoohan1@gmail.com>,
- linux-kernel@vger.kernel.org, Fabio Estevam <fabio.estevam@nxp.com>,
- Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>, linux-imx@nxp.com,
- kernel@pengutronix.de, linux-pci@vger.kernel.org,
- Bjorn Helgaas <bhelgaas@google.com>, Shawn Guo <shawnguo@kernel.org>,
- linux-arm-kernel@lists.infradead.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from esa2.dell-outbound.iphmx.com ([68.232.149.220]:54087 "EHLO
+        esa2.dell-outbound.iphmx.com" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S2388156AbeG0ROh (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Fri, 27 Jul 2018 13:14:37 -0400
+Cc: <keith.busch@intel.com>, <linux-pci@vger.kernel.org>,
+        <Austin.Bolen@dell.com>, <Stuart.Hayes@dell.com>,
+        <Narendra.K@dell.com>, <Christopher.Arzola@dell.com>,
+        <David.Chalfant@dell.com>
+From: <Alex_Gagniuc@Dellteam.com>
+To: <lukas@wunner.de>, <mr.nuke.me@gmail.com>
+Subject: Re: Should a PCIe Link Down event set the PCI_DEV_DISCONNECTED bit?
+Date: Fri, 27 Jul 2018 15:52:04 +0000
+Message-ID: <f6aa0b881a824b4f82a29dad300aaaea@ausx13mps321.AMER.DELL.COM>
+References: <47727551-86ce-040a-2516-efa47ee3a76e@gmail.com>
+ <20180727071813.GA6128@wunner.de>
 Content-Type: text/plain; charset="us-ascii"
-Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
-Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
+MIME-Version: 1.0
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On imx7d the pcie-phy power domain is turned off in suspend and this can
-make the system hang after resume when attempting any read from PCI.
-
-Fix this by adding minimal suspend/resume code from the nxp internal
-tree. This will prepare for powering down on suspend and reset the block
-on resume.
-
-Code is only for imx7d but a very similar sequence can be used for
-other socs.
-
-The original author is mostly Richard Zhu <hongxing.zhu@nxp.com>, this
-patch adjusts the code to the upstream imx7d implemention using reset
-controls and power domains.
-
-Signed-off-by: Leonard Crestez <leonard.crestez@nxp.com>
----
- drivers/pci/controller/dwc/pci-imx6.c | 95 +++++++++++++++++++++++++--
- 1 file changed, 90 insertions(+), 5 deletions(-)
-
-diff --git a/drivers/pci/controller/dwc/pci-imx6.c b/drivers/pci/controller/dwc/pci-imx6.c
-index 80f604602783..daebee905108 100644
---- a/drivers/pci/controller/dwc/pci-imx6.c
-+++ b/drivers/pci/controller/dwc/pci-imx6.c
-@@ -540,10 +540,27 @@ static int imx6_pcie_wait_for_speed_change(struct imx6_pcie *imx6_pcie)
- 
- 	dev_err(dev, "Speed change timeout\n");
- 	return -EINVAL;
- }
- 
-+static void imx6_pcie_ltssm_enable(struct device *dev)
-+{
-+	struct imx6_pcie *imx6_pcie = dev_get_drvdata(dev);
-+
-+	switch (imx6_pcie->variant) {
-+	case IMX6Q:
-+	case IMX6SX:
-+	case IMX6QP:
-+		regmap_update_bits(imx6_pcie->iomuxc_gpr, IOMUXC_GPR12,
-+				   IMX6Q_GPR12_PCIE_CTL_2,
-+				   IMX6Q_GPR12_PCIE_CTL_2);
-+		break;
-+	case IMX7D:
-+		reset_control_deassert(imx6_pcie->apps_reset);
-+	}
-+}
-+
- static int imx6_pcie_establish_link(struct imx6_pcie *imx6_pcie)
- {
- 	struct dw_pcie *pci = imx6_pcie->pci;
- 	struct device *dev = pci->dev;
- 	u32 tmp;
-@@ -558,15 +575,11 @@ static int imx6_pcie_establish_link(struct imx6_pcie *imx6_pcie)
- 	tmp &= ~PCIE_RC_LCR_MAX_LINK_SPEEDS_MASK;
- 	tmp |= PCIE_RC_LCR_MAX_LINK_SPEEDS_GEN1;
- 	dw_pcie_writel_dbi(pci, PCIE_RC_LCR, tmp);
- 
- 	/* Start LTSSM. */
--	if (imx6_pcie->variant == IMX7D)
--		reset_control_deassert(imx6_pcie->apps_reset);
--	else
--		regmap_update_bits(imx6_pcie->iomuxc_gpr, IOMUXC_GPR12,
--				   IMX6Q_GPR12_PCIE_CTL_2, 1 << 10);
-+	imx6_pcie_ltssm_enable(dev);
- 
- 	ret = imx6_pcie_wait_for_link(imx6_pcie);
- 	if (ret)
- 		goto err_reset_phy;
- 
-@@ -681,10 +694,81 @@ static int imx6_add_pcie_port(struct imx6_pcie *imx6_pcie,
- 
- static const struct dw_pcie_ops dw_pcie_ops = {
- 	.link_up = imx6_pcie_link_up,
- };
- 
-+#ifdef CONFIG_PM_SLEEP
-+static void imx6_pcie_ltssm_disable(struct device *dev)
-+{
-+	struct imx6_pcie *imx6_pcie = dev_get_drvdata(dev);
-+
-+	switch (imx6_pcie->variant) {
-+	case IMX6Q:
-+	case IMX6SX:
-+	case IMX6QP:
-+		regmap_update_bits(imx6_pcie->iomuxc_gpr, IOMUXC_GPR12,
-+				   IMX6Q_GPR12_PCIE_CTL_2, 0);
-+		break;
-+	case IMX7D:
-+		reset_control_assert(imx6_pcie->apps_reset);
-+		break;
-+	}
-+}
-+
-+static void imx6_pcie_clk_disable(struct imx6_pcie *imx6_pcie)
-+{
-+	clk_disable_unprepare(imx6_pcie->pcie);
-+	clk_disable_unprepare(imx6_pcie->pcie_phy);
-+	clk_disable_unprepare(imx6_pcie->pcie_bus);
-+
-+	if (imx6_pcie->variant == IMX7D) {
-+		regmap_update_bits(imx6_pcie->iomuxc_gpr, IOMUXC_GPR12,
-+				   IMX7D_GPR12_PCIE_PHY_REFCLK_SEL,
-+				   IMX7D_GPR12_PCIE_PHY_REFCLK_SEL);
-+	}
-+}
-+
-+static int imx6_pcie_suspend_noirq(struct device *dev)
-+{
-+	struct imx6_pcie *imx6_pcie = dev_get_drvdata(dev);
-+
-+	if (imx6_pcie->variant != IMX7D)
-+		return 0;
-+
-+	imx6_pcie_clk_disable(imx6_pcie);
-+	imx6_pcie_ltssm_disable(dev);
-+
-+	return 0;
-+}
-+
-+static int imx6_pcie_resume_noirq(struct device *dev)
-+{
-+	int ret = 0;
-+	struct imx6_pcie *imx6_pcie = dev_get_drvdata(dev);
-+	struct pcie_port *pp = &imx6_pcie->pci->pp;
-+
-+	if (imx6_pcie->variant != IMX7D)
-+		return 0;
-+
-+	imx6_pcie_assert_core_reset(imx6_pcie);
-+	imx6_pcie_init_phy(imx6_pcie);
-+	imx6_pcie_deassert_core_reset(imx6_pcie);
-+	dw_pcie_setup_rc(pp);
-+
-+	ret = imx6_pcie_establish_link(imx6_pcie);
-+	if (ret < 0)
-+		pr_err("pcie link is down after resume.\n");
-+
-+	return 0;
-+}
-+#endif
-+
-+static const struct dev_pm_ops imx6_pcie_pm_ops = {
-+	SET_NOIRQ_SYSTEM_SLEEP_PM_OPS(imx6_pcie_suspend_noirq,
-+				      imx6_pcie_resume_noirq)
-+};
-+
- static int imx6_pcie_probe(struct platform_device *pdev)
- {
- 	struct device *dev = &pdev->dev;
- 	struct dw_pcie *pci;
- 	struct imx6_pcie *imx6_pcie;
-@@ -847,10 +931,11 @@ static const struct of_device_id imx6_pcie_of_match[] = {
- static struct platform_driver imx6_pcie_driver = {
- 	.driver = {
- 		.name	= "imx6q-pcie",
- 		.of_match_table = imx6_pcie_of_match,
- 		.suppress_bind_attrs = true,
-+		.pm = &imx6_pcie_pm_ops,
- 	},
- 	.probe    = imx6_pcie_probe,
- 	.shutdown = imx6_pcie_shutdown,
- };
- 
--- 
-2.17.1
-
-
-_______________________________________________
-linux-arm-kernel mailing list
-linux-arm-kernel@lists.infradead.org
-http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
+Hi Lukas,=0A=
+=0A=
++CC some more Dell folks.=0A=
+=0A=
+On 07/27/2018 02:18 AM, Lukas Wunner wrote:=0A=
+> On Thu, Jul 26, 2018 at 05:38:50PM -0500, Alex G. wrote:=0A=
+>> I was under the impression that a DLLSC or PDSC would trigger the=0A=
+>> PCI_DEV_DISCONNECTED bit to be set, blocking any further config access.=
+=0A=
+> =0A=
+> Only if the Presence Detect State bit in the Slot Status register is=0A=
+> not set.=0A=
+> =0A=
+> I think the idea was that if the card is still in the slot, its driver ca=
+n=0A=
+> be unbound orderly because the device is still accessible.  So there's no=
+=0A=
+> need to set PCI_DEV_DISCONNECTED.=0A=
+=0A=
+This sounds counter to what I had intuited. I mentally associate =0A=
+DISCONNECTED with "the link is down". I don't understand the idea of a =0A=
+driver doing an orderly removal when the link is down. Device registers =0A=
+wouldn't be accessible in that case.=0A=
+=0A=
+> However if there is a already a new card in the slot, PCI_DEV_DISCONNECTE=
+D=0A=
+> will erroneously not be set.  Also, if card removal was triggered by the=
+=0A=
+> link going down but the card is still in the slot, PCI_DEV_DISCONNECTED=
+=0A=
+> will also erroneously not be set even though it's inaccessible.=0A=
+> =0A=
+> The only situations when PCI_DEV_DISCONNECTED should not be set is if the=
+=0A=
+> card is being removed by sysfs or by the user pressing the Attention Butt=
+on.=0A=
+> Anything else is a surprise removal.  What we need to do is pass down a=
+=0A=
+> flag to pciehp_unconfigure_device() to indicate whether one of those two=
+=0A=
+> situations is at hand or not, and PCI_DEV_DISCONNECTED should be set=0A=
+> depending on that flag.=0A=
+=0A=
+That makes a little more sense. Is someone working on this?=0A=
+=0A=
+> Are you testing Bjorn's pci/hotplug branch or something based on 4.18 or=
+=0A=
+> earlier?  There is a major event handling rework queued on that branch,=
+=0A=
+> so you may want to test with that.=0A=
+=0A=
+Been using 4.18-rc6. I'll take a look at Bjorn's latest and greatest. =0A=
+Thank you for the heads-up.=0A=
+=0A=
+>> In the latter case, does it not make sense to have a separate bit to say=
+=0A=
+>> "Don't touch this device"?=0A=
+> =0A=
+> Hm, what would you need it for?=0A=
+=0A=
+Idiotic firmware bugs and unrefined device removal mechanisms. For =0A=
+example, on removal, we shouldn't be touching MSI registers on a device =0A=
+whose link is down. Firmware-first (FFS) systems tend to blow up, crash, =
+=0A=
+and burn when that happens.=0A=
+=0A=
+Another example is NVME subsystem resets (NSSR). NSSR resets the PCIe =0A=
+link, and the PD state stays the same. Once teardown gets to masking the =
+=0A=
+MSI-X bits, it sends an MMIO to the downed link.=0A=
+=0A=
+I want to resolve such crashes by guarding teardown paths against =0A=
+touching registers on the disconnected device -- yes, I know it's a =0A=
+band-aid and not a cure.=0A=
+=0A=
+Alex=0A=
+=0A=
+> Thanks,=0A=
+> =0A=
+> Lukas=0A=
+> =0A=
