@@ -1,83 +1,82 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.29.99]:45546 "EHLO mail.kernel.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1726796AbeGLWDW (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Thu, 12 Jul 2018 18:03:22 -0400
-Date: Thu, 12 Jul 2018 16:51:51 -0500
-From: Bjorn Helgaas <helgaas@kernel.org>
-To: Thomas Tai <thomas.tai@oracle.com>
-Cc: bhelgaas@google.com, poza@codeaurora.org,
-        linux-pci@vger.kernel.org, Keith Busch <keith.busch@intel.com>
-Subject: Re: [PATCH V2, 0/1] PCI/AER: fix use-after-free in
- pcie_do_fatal_recovery
-Message-ID: <20180712215151.GD28466@bhelgaas-glaptop.roam.corp.google.com>
-References: <1531416823-17841-1-git-send-email-thomas.tai@oracle.com>
+Received: from bmailout2.hostsharing.net ([83.223.90.240]:47783 "EHLO
+        bmailout2.hostsharing.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1732122AbeG0S2d (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Fri, 27 Jul 2018 14:28:33 -0400
+Date: Fri, 27 Jul 2018 19:05:43 +0200
+From: Lukas Wunner <lukas@wunner.de>
+To: Alex_Gagniuc@Dellteam.com
+Cc: mr.nuke.me@gmail.com, keith.busch@intel.com,
+        linux-pci@vger.kernel.org, Austin.Bolen@dell.com,
+        Stuart.Hayes@dell.com, Narendra.K@dell.com,
+        Christopher.Arzola@dell.com, David.Chalfant@dell.com
+Subject: Re: Should a PCIe Link Down event set the PCI_DEV_DISCONNECTED bit?
+Message-ID: <20180727170543.GA5326@wunner.de>
+References: <47727551-86ce-040a-2516-efa47ee3a76e@gmail.com>
+ <20180727071813.GA6128@wunner.de>
+ <f6aa0b881a824b4f82a29dad300aaaea@ausx13mps321.AMER.DELL.COM>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1531416823-17841-1-git-send-email-thomas.tai@oracle.com>
+In-Reply-To: <f6aa0b881a824b4f82a29dad300aaaea@ausx13mps321.AMER.DELL.COM>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-[+cc Keith for DPC question]
-
-On Thu, Jul 12, 2018 at 11:33:42AM -0600, Thomas Tai wrote:
-> Hi Bjorn,
-> Thank you very much to review the V1 patch. I reworked the patch as
-> you have suggested. Your suggestion is indeed better and cleaner.
-> Would you please have a look for me?
+On Fri, Jul 27, 2018 at 03:52:04PM +0000, Alex_Gagniuc@Dellteam.com wrote:
+> On 07/27/2018 02:18 AM, Lukas Wunner wrote:
+> > On Thu, Jul 26, 2018 at 05:38:50PM -0500, Alex G. wrote:
+> >> I was under the impression that a DLLSC or PDSC would trigger the
+> >> PCI_DEV_DISCONNECTED bit to be set, blocking any further config access.
+> > 
+> > Only if the Presence Detect State bit in the Slot Status register is
+> > not set.
+> > 
+> > I think the idea was that if the card is still in the slot, its driver can
+> > be unbound orderly because the device is still accessible.  So there's no
+> > need to set PCI_DEV_DISCONNECTED.
 > 
-> FYI, I did not clear the device structure in aer_isr_one_error()
-> just to avoid over complicated the fix.
+> This sounds counter to what I had intuited. I mentally associate 
+> DISCONNECTED with "the link is down". I don't understand the idea of a 
+> driver doing an orderly removal when the link is down. Device registers 
+> wouldn't be accessible in that case.
 
-I think that was a bad idea anyway.  I think the problem there is that
-add_error_device() copies the pci_dev pointer without taking a
-reference on it:
+That's basically what I meant, sorry for not being clear.
 
-  aer_isr
-    get_e_source              # dequeue from rpc->e_sources[]
-      *e_src = rpc->e_sources[x]
-    aer_isr_one_error
-      pdev = rpc->rpd         # pdev = Root Port pci_dev
-      find_source_device(pdev)
-	find_device_iter
-	  add_error_device
-	    e_info->dev[i] = dev   # <-- save pci_dev pointer
-      aer_process_err_devices
-	handle_error_source(e_info->dev[i])
-	  pcie_do_fatal_recovery
+> > However if there is a already a new card in the slot, PCI_DEV_DISCONNECTED
+> > will erroneously not be set.  Also, if card removal was triggered by the
+> > link going down but the card is still in the slot, PCI_DEV_DISCONNECTED
+> > will also erroneously not be set even though it's inaccessible.
+> > 
+> > The only situations when PCI_DEV_DISCONNECTED should not be set is if the
+> > card is being removed by sysfs or by the user pressing the Attention Button.
+> > Anything else is a surprise removal.  What we need to do is pass down a
+> > flag to pciehp_unconfigure_device() to indicate whether one of those two
+> > situations is at hand or not, and PCI_DEV_DISCONNECTED should be set
+> > depending on that flag.
+> 
+> That makes a little more sense. Is someone working on this?
 
-At this point, we have pci_dev pointers in e_info->dev[] that are
-potentially stale.  Right now nobody uses them, but I think it's
-sloppy that we still have them at all.
+Me, but not for 4.19, we're too late in the cycle, I'm going to post
+a small number of fixup patches for Bjorn's pci/hotplug branch shortly,
+to be included in 4.19, and that's it.
 
-I think a better way to fix this would be to call pci_dev_get() in
-add_error_device() when we save the pointer, and then do the
-corresponding pci_dev_put() in aer_isr_one_error(), after we return
-from aer_process_err_devices().
+I posted a patch as part of the series that's now on Bjorn's pci/hotplug
+branch which touched PCI_DEV_DISCONNECTED code in pciehp_pci.c, but had
+to withdraw that particular patch:
+https://patchwork.ozlabs.org/patch/930403/
 
-This could be done with a little helper function that iterates through
-e_info->dev[i], calls pci_dev_put() for each, and clears
-e_info->error_dev_num (which could then be removed from
-find_source_device()).
+The first problem with that patch was that I hadn't fully understood
+yet when to set PCI_DEV_DISCONNECTED and when not to set it.
 
-I think this would fix the problem you're seeing, so we wouldn't need
-the change in pcie_do_fatal_recovery().
+The second problem was that it fixed a deadlock on unplug in a way
+that wasn't generic enough.  The same deadlock can occur in other
+situations.  The real fix is to unbind the driver lockless in
+pci_stop_dev().  That's non-trivial to achieve, but doable.
+I don't think there's a way around that to fix the problem:
+https://www.spinics.net/lists/linux-pci/msg73652.html
 
-However, I think we're also slightly exposed in dpc_work(), in basically
-the same (possibly harmless) way.
+There's (still) a lot that can be improved in pciehp, I hope to
+keep working on that as time permits.
 
-  dpc_irq
-    schedule_work(&dpc->work)
-  ...
-  dpc_work
-    pdev = dpc->dev->port
-    pcie_do_fatal_recovery(pdev)
+Thanks,
 
-pdev may be removed by pcie_do_fatal_recovery(), but dpc_work() is still
-holding onto a pointer (which it never uses again).
-
-The DPC driver should be holding a reference to pdev (through some black
-magic I don't understand), but that would be released when pdev is removed,
-and I don't know what ensures that dpc_work() runs before that release.
-
-Bjorn
+Lukas
