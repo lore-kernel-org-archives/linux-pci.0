@@ -1,56 +1,50 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from fllv0016.ext.ti.com ([198.47.19.142]:55812 "EHLO
-        fllv0016.ext.ti.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1728610AbeGQK1t (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Tue, 17 Jul 2018 06:27:49 -0400
-Subject: Re: [PATCH v2 4/4] ARM: dts: dra7: Fix up unaligned access setting
- for PCIe EP
-To: Vignesh R <vigneshr@ti.com>, Tony Lindgren <tony@atomide.com>,
-        Rob Herring <robh+dt@kernel.org>,
-        Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
-References: <20180627122919.23926-1-vigneshr@ti.com>
- <20180627122919.23926-5-vigneshr@ti.com>
-CC: Bjorn Helgaas <bhelgaas@google.com>, <linux-omap@vger.kernel.org>,
-        <devicetree@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
-        <linux-pci@vger.kernel.org>
-From: Kishon Vijay Abraham I <kishon@ti.com>
-Message-ID: <92691b59-1952-b00f-da5b-f308f94aa2b7@ti.com>
-Date: Tue, 17 Jul 2018 15:25:50 +0530
+Received: from mail.kernel.org ([198.145.29.99]:48798 "EHLO mail.kernel.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1728656AbeG0Xmx (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Fri, 27 Jul 2018 19:42:53 -0400
+Date: Fri, 27 Jul 2018 17:18:55 -0500
+From: Bjorn Helgaas <helgaas@kernel.org>
+To: linux-pci@vger.kernel.org
+Cc: Jeff Kirsher <jeffrey.t.kirsher@intel.com>,
+        "David S. Miller" <davem@davemloft.net>,
+        Kalle Valo <kvalo@codeaurora.org>,
+        Johannes Berg <johannes.berg@intel.com>,
+        Emmanuel Grumbach <emmanuel.grumbach@intel.com>,
+        Luca Coelho <luciano.coelho@intel.com>,
+        ath9k-devel@qca.qualcomm.com, linuxwifi@intel.com,
+        intel-wired-lan@lists.osuosl.org, netdev@vger.kernel.org,
+        linux-kernel@vger.kernel.org, linux-wireless@vger.kernel.org
+Subject: Re: [PATCH v1 0/4] PCI: Remove unnecessary includes of
+ <linux/pci-aspm.h>
+Message-ID: <20180727221855.GG173328@bhelgaas-glaptop.roam.corp.google.com>
+References: <153254813164.92573.10755585465477668768.stgit@bhelgaas-glaptop.roam.corp.google.com>
 MIME-Version: 1.0
-In-Reply-To: <20180627122919.23926-5-vigneshr@ti.com>
-Content-Type: text/plain; charset="windows-1252"
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <153254813164.92573.10755585465477668768.stgit@bhelgaas-glaptop.roam.corp.google.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-
-
-On Wednesday 27 June 2018 05:59 PM, Vignesh R wrote:
-> Bit positions of PCIE_SS1_AXI2OCP_LEGACY_MODE_ENABLE and
-> PCIE_SS1_AXI2OCP_LEGACY_MODE_ENABLE in CTRL_CORE_SMA_SW_7 are
-> incorrectly documented in the TRM. In fact, the bit positions are
-> swapped. Update the DT bindings for PCIe EP to reflect the same.
+On Wed, Jul 25, 2018 at 02:52:08PM -0500, Bjorn Helgaas wrote:
+> Remove includes of <linux/pci-aspm.h> from files that don't need
+> it.  I'll apply all these via the PCI tree unless there's objection.
 > 
-> Signed-off-by: Vignesh R <vigneshr@ti.com>
-
-Shouldn't this be sent to stable fixes?
-
-Thanks
-Kishon
 > ---
->  arch/arm/boot/dts/dra7.dtsi | 2 +-
->  1 file changed, 1 insertion(+), 1 deletion(-)
 > 
-> diff --git a/arch/arm/boot/dts/dra7.dtsi b/arch/arm/boot/dts/dra7.dtsi
-> index 7bfe7f28e3bd..27ad193e1a87 100644
-> --- a/arch/arm/boot/dts/dra7.dtsi
-> +++ b/arch/arm/boot/dts/dra7.dtsi
-> @@ -355,7 +355,7 @@
->  				ti,hwmods = "pcie1";
->  				phys = <&pcie1_phy>;
->  				phy-names = "pcie-phy0";
-> -				ti,syscon-unaligned-access = <&scm_conf1 0x14 2>;
-> +				ti,syscon-unaligned-access = <&scm_conf1 0x14 1>;
->  				status = "disabled";
->  			};
->  		};
+> Bjorn Helgaas (4):
+>       igb: Remove unnecessary include of <linux/pci-aspm.h>
+>       ath9k: Remove unnecessary include of <linux/pci-aspm.h>
+>       iwlwifi: Remove unnecessary include of <linux/pci-aspm.h>
+>       PCI: Remove unnecessary include of <linux/pci-aspm.h>
 > 
+> 
+>  drivers/net/ethernet/intel/igb/igb_main.c     |    1 -
+>  drivers/net/wireless/ath/ath9k/pci.c          |    1 -
+>  drivers/net/wireless/intel/iwlwifi/pcie/drv.c |    1 -
+>  drivers/pci/pci-sysfs.c                       |    1 -
+>  drivers/pci/pci.c                             |    1 -
+>  drivers/pci/probe.c                           |    1 -
+>  drivers/pci/remove.c                          |    1 -
+>  7 files changed, 7 deletions(-)
+
+I applied these to the pci/aspm branch for v4.19.
