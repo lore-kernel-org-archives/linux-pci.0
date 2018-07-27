@@ -1,58 +1,88 @@
-Return-Path: <SRS0=+K0T=KJ=codeaurora.org=poza@kernel.org>
-Return-Path: <SRS0=+K0T=KJ=codeaurora.org=poza@kernel.org>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII;
- format=flowed
-Date: Wed, 25 Jul 2018 13:59:16 +0530
-From: poza@codeaurora.org
-To: Sinan Kaya <okaya@kernel.org>
-Cc: Bjorn Helgaas <helgaas@kernel.org>, Lukas Wunner <lukas@wunner.de>,
- linux-pci@vger.kernel.org, open list <linux-kernel@vger.kernel.org>, Keith
- Busch <keith.busch@intel.com>, linux-arm-msm@vger.kernel.org, Bjorn Helgaas
- <bhelgaas@google.com>, linux-arm-kernel@lists.infradead.org
-Subject: Re: [PATCH V5 3/3] PCI: Mask and unmask hotplug interrupts during
- reset
-In-Reply-To: <d34eb5da-0ae1-d455-93e2-2432ec7931ea@kernel.org>
-References: <CAK9iUCM=zWexWow9TwkRfO186Hwr5WyGy0NHZF1vtXn3wbbZGQ@mail.gmail.com>
- <12fc8de5-ff03-cb00-52cb-25a43c71d03a@codeaurora.org>
- <20180708171418.GA11476@wunner.de>
- <CAK9iUCMcic5mzGiT20KNxgwPo6AuajHFsoj7GOjSht5SwrQevg@mail.gmail.com>
- <20180709160008.GA1490@wunner.de>
- <CAK9iUCMMVR114msKiMHu7ik0VK8T5j=LAYAKsEkdnocTqkdMjQ@mail.gmail.com>
- <20180720200123.GS128988@bhelgaas-glaptop.roam.corp.google.com>
- <2febe688-f973-5ff5-f61d-0451ad7d36ae@kernel.org>
- <d34eb5da-0ae1-d455-93e2-2432ec7931ea@kernel.org>
-Message-ID: <5cdaf58f3c848b2a5097484cd703acae@codeaurora.org>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mga03.intel.com ([134.134.136.65]:9028 "EHLO mga03.intel.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S2389266AbeG0WHO (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Fri, 27 Jul 2018 18:07:14 -0400
+From: Andy Shevchenko <andriy.shevchenko@linux.intel.com>
+To: Stanislaw Gruszka <sgruszka@redhat.com>,
+        Helmut Schaa <helmut.schaa@googlemail.com>,
+        linux-wireless@vger.kernel.org,
+        Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org
+Cc: Andy Shevchenko <andriy.shevchenko@linux.intel.com>
+Subject: [PATCH v2] PCI: Add PCI_DEVICE_DATA() macro to fully describe device ID entry
+Date: Fri, 27 Jul 2018 23:43:37 +0300
+Message-Id: <20180727204337.60767-1-andriy.shevchenko@linux.intel.com>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 2018-07-21 11:37, Sinan Kaya wrote:
-> On 7/20/2018 7:58 PM, Sinan Kaya wrote:
->> We need to figure out how to gracefully return inside hotplug driver
->> if link down happened and there is an error pending.
-> 
-> How about adding the following into the hotplug ISR?
-> 
-> 1. check if firmware first is disabled
-> 2. check if there is a fatal error pending in the device_status 
-> register
-> of the PCI Express capability on the root port.
-> 3. bail out from hotplug routine if this is the case.
-> 4. otherwise, existing behavior.
+There are a lot of examples in the kernel where PCI_VDEVICE() is used and still
+looks not so convenient due to additional driver_data field attached.
 
-This makes sense.
+Introduce PCI_DEVICE_DATA() macro to fully describe device ID entry in shortest
+possible form. For example,
 
-from Lukas's text
+  before:
 
-"
-The user may turn the slot on/off via sysfs.  If an Attention Button
-is present, the user may also press that button to turn the slot on/off
-after 5 seconds.  Either way, it may cause pciehp's IRQ thread to run
-concurrently to a reset initiated by the AER driver, independently of
-any events signalled by the slot.
-"
+    { PCI_VDEVICE(INTEL, PCI_DEVICE_ID_INTEL_MRFLD),
+      (kernel_ulong_t) &dwc3_pci_mrfld_properties, },
 
-so if device gets removed and re-enumerated other than hotplug ISR,
-or any other similar path has to take care of checking ERR_FATAL status.
+  after:
 
-Regards,
-Oza.
+    { PCI_VDEVICE(INTEL, INTEL_MRFLD, &dwc3_pci_mrfld_properties },
+
+Drivers can be converted later on in independent way.
+
+While here, remove the unused macro with the same name
+from Ralink wireless driver.
+
+Signed-off-by: Andy Shevchenko <andriy.shevchenko@linux.intel.com>
+---
+ drivers/net/wireless/ralink/rt2x00/rt2x00pci.h |  6 ------
+ include/linux/pci.h                            | 15 +++++++++++++++
+ 2 files changed, 15 insertions(+), 6 deletions(-)
+
+diff --git a/drivers/net/wireless/ralink/rt2x00/rt2x00pci.h b/drivers/net/wireless/ralink/rt2x00/rt2x00pci.h
+index bc0ca5f58f38..283e2e607bba 100644
+--- a/drivers/net/wireless/ralink/rt2x00/rt2x00pci.h
++++ b/drivers/net/wireless/ralink/rt2x00/rt2x00pci.h
+@@ -27,12 +27,6 @@
+ #include <linux/io.h>
+ #include <linux/pci.h>
+ 
+-/*
+- * This variable should be used with the
+- * pci_driver structure initialization.
+- */
+-#define PCI_DEVICE_DATA(__ops)	.driver_data = (kernel_ulong_t)(__ops)
+-
+ /*
+  * PCI driver handlers.
+  */
+diff --git a/include/linux/pci.h b/include/linux/pci.h
+index d0961aefdbae..754da6f9adb3 100644
+--- a/include/linux/pci.h
++++ b/include/linux/pci.h
+@@ -825,6 +825,21 @@ struct pci_driver {
+ 	.vendor = PCI_VENDOR_ID_##vend, .device = (dev), \
+ 	.subvendor = PCI_ANY_ID, .subdevice = PCI_ANY_ID, 0, 0
+ 
++/**
++ * PCI_DEVICE_DATA - macro used to describe a specific PCI device in very short form
++ * @vend: the vendor name (without PCI_VENDOR_ID_ prefix)
++ * @dev: the device name (without PCI_DEVICE_ID_ prefix)
++ * @data: the driver data to be filled
++ *
++ * This macro is used to create a struct pci_device_id that matches a
++ * specific PCI device.  The subvendor, and subdevice fields will be set
++ * to PCI_ANY_ID.
++ */
++#define PCI_DEVICE_DATA(vend, dev, data) \
++	.vendor = PCI_VENDOR_ID_##vend, .device = PCI_DEVICE_ID_##dev, \
++	.subvendor = PCI_ANY_ID, .subdevice = PCI_ANY_ID, 0, 0, \
++	.driver_data = (kernel_ulong_t)(data)
++
+ enum {
+ 	PCI_REASSIGN_ALL_RSRC	= 0x00000001,	/* Ignore firmware setup */
+ 	PCI_REASSIGN_ALL_BUS	= 0x00000002,	/* Reassign all bus numbers */
+-- 
+2.18.0
