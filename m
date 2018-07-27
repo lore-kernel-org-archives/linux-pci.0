@@ -1,188 +1,50 @@
-Return-Path: <linux-nvme-bounces+bjorn=helgaas.com@lists.infradead.org>
-Return-Path: <linux-nvme-bounces+bjorn=helgaas.com@lists.infradead.org>
-Subject: [PATCH 2/2] PCI: NVMe device specific reset quirk
-From: Alex Williamson <alex.williamson@redhat.com>
-To: linux-pci@vger.kernel.org
-Date: Mon, 23 Jul 2018 16:24:31 -0600
-Message-ID: <20180723222431.4371.25962.stgit@gimli.home>
-In-Reply-To: <20180723221533.4371.90064.stgit@gimli.home>
-References: <20180723221533.4371.90064.stgit@gimli.home>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail.kernel.org ([198.145.29.99]:60772 "EHLO mail.kernel.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S2389373AbeG0WeX (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Fri, 27 Jul 2018 18:34:23 -0400
+Date: Fri, 27 Jul 2018 16:10:41 -0500
+From: Bjorn Helgaas <helgaas@kernel.org>
+To: Andy Shevchenko <andriy.shevchenko@linux.intel.com>
+Cc: Stanislaw Gruszka <sgruszka@redhat.com>,
+        Helmut Schaa <helmut.schaa@googlemail.com>,
+        linux-wireless@vger.kernel.org,
+        Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org,
+        Randy Dunlap <rdunlap@infradead.org>
+Subject: Re: [PATCH v3] PCI: Add PCI_DEVICE_DATA() macro to fully describe
+ device ID entry
+Message-ID: <20180727211041.GF173328@bhelgaas-glaptop.roam.corp.google.com>
+References: <20180727204945.60865-1-andriy.shevchenko@linux.intel.com>
 MIME-Version: 1.0
-List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-nvme>,
- <mailto:linux-nvme-request@lists.infradead.org?subject=unsubscribe>
-List-Archive: <http://lists.infradead.org/pipermail/linux-nvme/>
-List-Post: <mailto:linux-nvme@lists.infradead.org>
-List-Help: <mailto:linux-nvme-request@lists.infradead.org?subject=help>
-List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-nvme>,
- <mailto:linux-nvme-request@lists.infradead.org?subject=subscribe>
-Cc: linux-kernel@vger.kernel.org, linux-nvme@lists.infradead.org
-Content-Type: text/plain; charset="us-ascii"
-Sender: "Linux-nvme" <linux-nvme-bounces@lists.infradead.org>
-Errors-To: linux-nvme-bounces+bjorn=helgaas.com@lists.infradead.org
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20180727204945.60865-1-andriy.shevchenko@linux.intel.com>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Take advantage of NVMe devices using a standard interface to quiesce
-the controller prior to reset, including device specific delays before
-and after that reset.  This resolves several NVMe device assignment
-scenarios with two different vendors.  The Intel DC P3700 controller
-has been shown to only work as a VM boot device on the initial VM
-startup, failing after reset or reboot, and also fails to initialize
-after hot-plug into a VM.  Adding a delay after FLR resolves these
-cases.  The Samsung SM961/PM961 (960 EVO) sometimes fails to return
-from FLR with the PCI config space reading back as -1.  A reproducible
-instance of this behavior is resolved by clearing the enable bit in
-the configuration register and waiting for the ready status to clear
-(disabling the NVMe controller) prior to FLR.
+On Fri, Jul 27, 2018 at 11:49:44PM +0300, Andy Shevchenko wrote:
+> There are a lot of examples in the kernel where PCI_VDEVICE() is used and still
+> looks not so convenient due to additional driver_data field attached.
+> 
+> Introduce PCI_DEVICE_DATA() macro to fully describe device ID entry in shortest
+> possible form. For example,
+> 
+>   before:
+> 
+>     { PCI_VDEVICE(INTEL, PCI_DEVICE_ID_INTEL_MRFLD),
+>       (kernel_ulong_t) &dwc3_pci_mrfld_properties, },
+> 
+>   after:
+> 
+>     { PCI_DEVICE_DATA(INTEL, INTEL_MRFLD, &dwc3_pci_mrfld_properties) },
 
-As all NVMe devices make use of this standard interface and the NVMe
-specification also requires PCIe FLR support, we can apply this quirk
-to all devices with matching class code.
+Most device IDs include the vendor ID; did you consider pasting the
+vendor ID string into the device ID, so you would end up with this?
 
-Signed-off-by: Alex Williamson <alex.williamson@redhat.com>
----
- drivers/pci/quirks.c |  112 ++++++++++++++++++++++++++++++++++++++++++++++++++
- 1 file changed, 112 insertions(+)
+    { PCI_DEVICE_DATA(INTEL, MRFLD, &dwc3_pci_mrfld_properties) },
 
-diff --git a/drivers/pci/quirks.c b/drivers/pci/quirks.c
-index e72c8742aafa..83853562f220 100644
---- a/drivers/pci/quirks.c
-+++ b/drivers/pci/quirks.c
-@@ -28,6 +28,7 @@
- #include <linux/platform_data/x86/apple.h>
- #include <linux/pm_runtime.h>
- #include <linux/switchtec.h>
-+#include <linux/nvme.h>
- #include <asm/dma.h>	/* isa_dma_bridge_buggy */
- #include "pci.h"
- 
-@@ -3669,6 +3670,116 @@ static int reset_chelsio_generic_dev(struct pci_dev *dev, int probe)
- #define PCI_DEVICE_ID_INTEL_IVB_M_VGA      0x0156
- #define PCI_DEVICE_ID_INTEL_IVB_M2_VGA     0x0166
- 
-+/* NVMe controller needs delay before testing ready status */
-+#define NVME_QUIRK_CHK_RDY_DELAY	(1 << 0)
-+/* NVMe controller needs post-FLR delay */
-+#define NVME_QUIRK_POST_FLR_DELAY	(1 << 1)
-+
-+static const struct pci_device_id nvme_reset_tbl[] = {
-+	{ PCI_DEVICE(0x1bb1, 0x0100),   /* Seagate Nytro Flash Storage */
-+		.driver_data = NVME_QUIRK_CHK_RDY_DELAY, },
-+	{ PCI_DEVICE(0x1c58, 0x0003),   /* HGST adapter */
-+		.driver_data = NVME_QUIRK_CHK_RDY_DELAY, },
-+	{ PCI_DEVICE(0x1c58, 0x0023),   /* WDC SN200 adapter */
-+		.driver_data = NVME_QUIRK_CHK_RDY_DELAY, },
-+	{ PCI_DEVICE(0x1c5f, 0x0540),   /* Memblaze Pblaze4 adapter */
-+		.driver_data = NVME_QUIRK_CHK_RDY_DELAY, },
-+	{ PCI_DEVICE(0x144d, 0xa821),   /* Samsung PM1725 */
-+		.driver_data = NVME_QUIRK_CHK_RDY_DELAY, },
-+	{ PCI_DEVICE(0x144d, 0xa822),   /* Samsung PM1725a */
-+		.driver_data = NVME_QUIRK_CHK_RDY_DELAY, },
-+	{ PCI_DEVICE(PCI_VENDOR_ID_INTEL, 0x0953),   /* Intel DC P3700 */
-+		.driver_data = NVME_QUIRK_POST_FLR_DELAY, },
-+	{ PCI_DEVICE_CLASS(PCI_CLASS_STORAGE_EXPRESS, 0xffffff) },
-+	{ 0 }
-+};
-+
-+/*
-+ * The NVMe specification requires that controllers support PCIe FLR, but
-+ * but some Samsung SM961/PM961 controllers fail to recover after FLR (-1
-+ * config space) unless the device is quiesced prior to FLR.  Do this for
-+ * all NVMe devices by disabling the controller before reset.  Some Intel
-+ * controllers also require an additional post-FLR delay or else attempts
-+ * to re-enable will timeout, do that here as well with heuristically
-+ * determined delay value.  Also maintain the delay between disabling and
-+ * checking ready status as used by the native NVMe driver.
-+ */
-+static int reset_nvme(struct pci_dev *dev, int probe)
-+{
-+	const struct pci_device_id *id;
-+	void __iomem *bar;
-+	u16 cmd;
-+	u32 cfg;
-+
-+	id = pci_match_id(nvme_reset_tbl, dev);
-+	if (!id || !pcie_has_flr(dev) || !pci_resource_start(dev, 0))
-+		return -ENOTTY;
-+
-+	if (probe)
-+		return 0;
-+
-+	bar = pci_iomap(dev, 0, NVME_REG_CC + sizeof(cfg));
-+	if (!bar)
-+		return -ENOTTY;
-+
-+	pci_read_config_word(dev, PCI_COMMAND, &cmd);
-+	pci_write_config_word(dev, PCI_COMMAND, cmd | PCI_COMMAND_MEMORY);
-+
-+	cfg = readl(bar + NVME_REG_CC);
-+
-+	/* Disable controller if enabled */
-+	if (cfg & NVME_CC_ENABLE) {
-+		u64 cap = readq(bar + NVME_REG_CAP);
-+		unsigned long timeout;
-+
-+		/*
-+		 * Per nvme_disable_ctrl() skip shutdown notification as it
-+		 * could complete commands to the admin queue.  We only intend
-+		 * to quiesce the device before reset.
-+		 */
-+		cfg &= ~(NVME_CC_SHN_MASK | NVME_CC_ENABLE);
-+
-+		writel(cfg, bar + NVME_REG_CC);
-+
-+		/* A heuristic value, matches NVME_QUIRK_DELAY_AMOUNT */
-+		if (id->driver_data & NVME_QUIRK_CHK_RDY_DELAY)
-+			msleep(2300);
-+
-+		/* Cap register provides max timeout in 500ms increments */
-+		timeout = ((NVME_CAP_TIMEOUT(cap) + 1) * HZ / 2) + jiffies;
-+
-+		for (;;) {
-+			u32 status = readl(bar + NVME_REG_CSTS);
-+
-+			/* Ready status becomes zero on disable complete */
-+			if (!(status & NVME_CSTS_RDY))
-+				break;
-+
-+			msleep(100);
-+
-+			if (time_after(jiffies, timeout)) {
-+				pci_warn(dev, "Timeout waiting for NVMe ready status to clear after disable\n");
-+				break;
-+			}
-+		}
-+	}
-+
-+	pci_iounmap(dev, bar);
-+
-+	/*
-+	 * We could use the optional NVM Subsystem Reset here, hardware
-+	 * supporting this is simply unavailable at the time of this code
-+	 * to validate in comparison to PCIe FLR.  NVMe spec dictates that
-+	 * NVMe devices shall implement PCIe FLR.
-+	 */
-+	pcie_flr(dev);
-+
-+	if (id->driver_data & NVME_QUIRK_POST_FLR_DELAY)
-+		msleep(250); /* Heuristic based on Intel DC P3700 */
-+
-+	return 0;
-+}
-+
- static const struct pci_dev_reset_methods pci_dev_reset_methods[] = {
- 	{ PCI_VENDOR_ID_INTEL, PCI_DEVICE_ID_INTEL_82599_SFP_VF,
- 		 reset_intel_82599_sfp_virtfn },
-@@ -3678,6 +3789,7 @@ static const struct pci_dev_reset_methods pci_dev_reset_methods[] = {
- 		reset_ivb_igd },
- 	{ PCI_VENDOR_ID_CHELSIO, PCI_ANY_ID,
- 		reset_chelsio_generic_dev },
-+	{ PCI_ANY_ID, PCI_ANY_ID, reset_nvme },
- 	{ 0 }
- };
- 
+I don't absolutely love either PCI_VDEVICE or PCI_DEVICE_DATA because
+grep doesn't work as well to find uses of the symbol, but the existing
+2300 uses of PCI_VDEVICE are telling me pretty loudly to just get over
+it :)
 
-
-_______________________________________________
-Linux-nvme mailing list
-Linux-nvme@lists.infradead.org
-http://lists.infradead.org/mailman/listinfo/linux-nvme
+Bjorn
