@@ -1,79 +1,43 @@
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Date: Fri, 6 Jul 2018 12:01:30 +0100
-From: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
-To: Thomas Petazzoni <thomas.petazzoni@bootlin.com>
-Subject: Re: [PATCH 1/2] PCI: aardvark: Size bridges before resources
- allocation
-Message-ID: <20180706110130.GA14439@red-moon>
-References: <20180629091620.31503-1-thomas.petazzoni@bootlin.com>
- <20180629091620.31503-2-thomas.petazzoni@bootlin.com>
- <20180705141522.GA13716@red-moon>
- <20180705161909.2a7a6030@windsurf>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail.kernel.org ([198.145.29.99]:51000 "EHLO mail.kernel.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1730636AbeG0T6B (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Fri, 27 Jul 2018 15:58:01 -0400
+Subject: Re: Should a PCIe Link Down event set the PCI_DEV_DISCONNECTED bit?
+To: Alex_Gagniuc@Dellteam.com, lukas@wunner.de
+Cc: mr.nuke.me@gmail.com, keith.busch@intel.com,
+        linux-pci@vger.kernel.org, Austin.Bolen@dell.com,
+        Stuart.Hayes@dell.com, Narendra.K@dell.com,
+        Christopher.Arzola@dell.com, David.Chalfant@dell.com
+References: <47727551-86ce-040a-2516-efa47ee3a76e@gmail.com>
+ <20180727071813.GA6128@wunner.de>
+ <f6aa0b881a824b4f82a29dad300aaaea@ausx13mps321.AMER.DELL.COM>
+ <20180727170543.GA5326@wunner.de>
+ <99604d46a7554eb38ee6c1579c53d835@ausx13mps321.AMER.DELL.COM>
+ <a7c024d3-4111-bbd2-68e9-2122be083cf7@kernel.org>
+ <37ee3fa4e6334b5c8139a8d148fcf26a@ausx13mps321.AMER.DELL.COM>
+From: Sinan Kaya <okaya@kernel.org>
+Message-ID: <7182b371-320c-6578-cc70-7c32220ac827@kernel.org>
+Date: Fri, 27 Jul 2018 11:34:53 -0700
 MIME-Version: 1.0
-In-Reply-To: <20180705161909.2a7a6030@windsurf>
-List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
-List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
-List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
-List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
-List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
-Cc: Antoine Tenart <antoine.tenart@bootlin.com>, linux-pci@vger.kernel.org,
- Gregory Clement <gregory.clement@bootlin.com>,
- Maxime Chevallier <maxime.chevallier@bootlin.com>,
- Nadav Haklai <nadavh@marvell.com>, Victor Gu <xigu@marvell.com>,
- =?iso-8859-1?Q?Miqu=E8l?= Raynal <miquel.raynal@bootlin.com>,
- Bjorn Helgaas <bhelgaas@google.com>, Zachary Zhang <zhangzg@marvell.com>,
- Wilson Ding <dingwei@marvell.com>, linux-arm-kernel@lists.infradead.org
-Content-Type: text/plain; charset="us-ascii"
-Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
-Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
+In-Reply-To: <37ee3fa4e6334b5c8139a8d148fcf26a@ausx13mps321.AMER.DELL.COM>
+Content-Type: text/plain; charset=utf-8; format=flowed
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Thu, Jul 05, 2018 at 04:19:09PM +0200, Thomas Petazzoni wrote:
-> Hello Lorenzo,
-> 
-> Thanks for your feedback!
-> 
-> On Thu, 5 Jul 2018 15:15:22 +0100, Lorenzo Pieralisi wrote:
-> 
-> > I am queueing these two patches but this one seems a serious bug,
-> > I reckon we should send it to stable kernels (and would be grateful
-> > if you provide me with a Fixes tag and a kernel log to add to the
-> > commit log).
-> 
-> It is a serious bug, but it is not a regression. I.e whatever is fixed
-> by this patch never worked. So if you take a conservative view on
-> pushing patches to stable and only want to fix regressions, this one
-> doesn't qualify. However, if you take a more open approach and say you
-> want to fix obvious bugs/issues even in older stable kernels, then
-> indeed this patch qualifies.
-> 
-> If you are within the kernel developers with this more open approach to
-> sending patches to stable, then you can add:
-> 
-> Fixes: 8c39d710363c1 ("PCI: aardvark: Add Aardvark PCI host controller driver")
-> Cc: <stable@vger.kernel.org>
-> 
-> when applying the patch. Unless of course you want me to resend the
-> patch series with this added. Just let met know what you prefer.
+On 7/27/2018 11:23 AM, Alex_Gagniuc@Dellteam.com wrote:
+>> Completion timeouts are typically in the orders of 50ms. If you have a
+>> lot of outstanding non-posted requests, it will take time for SW to
+>> flush all requests.
+> That's why we check pci_dev_is_disconnected() in pci/access.c
+> But if the DISCONNECTED bit doesn't get set, it makes me wonder how
+> solid things currently are.
 
-It is up to you, I think it qualifies for stable kernels so I would
-send it but it is your choice, please let me know.
+I don't see any problem by setting this bit as long as the link is
+down regardless of the drive presence state and clearing it on link 
+recovery.
 
-Thanks,
-Lorenzo
+Is there a problem with this approach? I'm catching up with this
+thread.
 
-> Thanks!
-> 
-> Thomas
-> -- 
-> Thomas Petazzoni, CTO, Bootlin (formerly Free Electrons)
-> Embedded Linux and Kernel engineering
-> https://bootlin.com
-
-_______________________________________________
-linux-arm-kernel mailing list
-linux-arm-kernel@lists.infradead.org
-http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
+pcie_do_fatal_recovery() doesn't query presence as an example.
