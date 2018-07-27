@@ -1,73 +1,163 @@
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Date: Fri, 6 Jul 2018 13:42:45 +0200
-From: Thomas Petazzoni <thomas.petazzoni@bootlin.com>
-To: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
-Subject: Re: [PATCH 1/2] PCI: aardvark: Size bridges before resources
- allocation
-Message-ID: <20180706134245.3a554b27@windsurf>
-In-Reply-To: <20180706110130.GA14439@red-moon>
-References: <20180629091620.31503-1-thomas.petazzoni@bootlin.com>
- <20180629091620.31503-2-thomas.petazzoni@bootlin.com>
- <20180705141522.GA13716@red-moon>
- <20180705161909.2a7a6030@windsurf>
- <20180706110130.GA14439@red-moon>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail.kernel.org ([198.145.29.99]:54394 "EHLO mail.kernel.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S2389210AbeG0Vtx (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Fri, 27 Jul 2018 17:49:53 -0400
+Date: Fri, 27 Jul 2018 15:26:19 -0500
+From: Bjorn Helgaas <helgaas@kernel.org>
+To: Rajat Jain <rajatja@google.com>
+Cc: Bjorn Helgaas <bhelgaas@google.com>,
+        Keith Busch <keith.busch@intel.com>,
+        Vidya Sagar <vidyas@nvidia.com>,
+        Philippe Ombredanne <pombredanne@nexb.com>,
+        Kees Cook <keescook@chromium.org>,
+        "Gustavo A. R. Silva" <garsilva@embeddedor.com>,
+        Ard Biesheuvel <ard.biesheuvel@linaro.org>,
+        Sinan Kaya <okaya@codeaurora.org>,
+        Frederick Lawler <fred@fredlawl.com>,
+        linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
+        mayurkumar.patel@intel.com, rajatxjain@gmail.com,
+        Richard Hughes <rhughes@redhat.com>,
+        Carlos Garnacho <cgarnach@redhat.com>,
+        "Rafael J. Wysocki" <rjw@rjwysocki.net>,
+        Pali Rohar <pali.rohar@gmail.com>,
+        Takashi Iwai <tiwai@suse.de>,
+        Andy Whitcroft <apw@canonical.com>,
+        Colin Ian King <colin.king@canonical.com>
+Subject: Re: [PATCH v2] pci/aspm: Remove CONFIG_PCIEASPM_DEBUG
+Message-ID: <20180727202619.GD173328@bhelgaas-glaptop.roam.corp.google.com>
+References: <20180508230148.121852-1-rajatja@google.com>
+ <20180510233912.96454-1-rajatja@google.com>
 MIME-Version: 1.0
-List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
-List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
-List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
-List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
-List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
-Cc: Antoine Tenart <antoine.tenart@bootlin.com>, linux-pci@vger.kernel.org,
- Gregory Clement <gregory.clement@bootlin.com>,
- Maxime Chevallier <maxime.chevallier@bootlin.com>,
- Nadav Haklai <nadavh@marvell.com>, Victor Gu <xigu@marvell.com>,
- =?UTF-8?B?TWlxdcOobA==?= Raynal <miquel.raynal@bootlin.com>,
- Bjorn Helgaas <bhelgaas@google.com>, Zachary Zhang <zhangzg@marvell.com>,
- Wilson Ding <dingwei@marvell.com>, linux-arm-kernel@lists.infradead.org
-Content-Type: text/plain; charset="us-ascii"
-Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
-Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20180510233912.96454-1-rajatja@google.com>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hello,
+[+cc Rafael, Richard, Carlos, Pali, Takashi, Andy, Colin for question
+about how to expose ASPM power management in sysfs]
 
-On Fri, 6 Jul 2018 12:01:30 +0100, Lorenzo Pieralisi wrote:
-
-> > It is a serious bug, but it is not a regression. I.e whatever is fixed
-> > by this patch never worked. So if you take a conservative view on
-> > pushing patches to stable and only want to fix regressions, this one
-> > doesn't qualify. However, if you take a more open approach and say you
-> > want to fix obvious bugs/issues even in older stable kernels, then
-> > indeed this patch qualifies.
-> > 
-> > If you are within the kernel developers with this more open approach to
-> > sending patches to stable, then you can add:
-> > 
-> > Fixes: 8c39d710363c1 ("PCI: aardvark: Add Aardvark PCI host controller driver")
-> > Cc: <stable@vger.kernel.org>
-> > 
-> > when applying the patch. Unless of course you want me to resend the
-> > patch series with this added. Just let met know what you prefer.  
+On Thu, May 10, 2018 at 04:39:12PM -0700, Rajat Jain wrote:
+> ...
+> And some suggestions from Bjorn here:
+> https://www.spinics.net/lists/linux-pci/msg60541.html
 > 
-> It is up to you, I think it qualifies for stable kernels so I would
-> send it but it is your choice, please let me know.
+> This patch picks up one of the suggestion, to remove the
+> CONFIG_PCIEASPM_DEBUG and thus make the code always
+> avilable. This provides control to userspace to control
+> ASPM on a per slot / device basis using sysfs interface.
 
-It's OK for me to have it in stable kernels. The fix is pretty obvious,
-so you can add the Fixes/Cc tags when applying. Unless of course you
-want me to resend an updated version.
+TL;DR: When CONFIG_PCIEASPM_DEBUG=y, Linux makes ASPM control files
+       visible in sysfs, associated with the upstream end (e.g., Root
+       Port) of a link.  Should these files be associated with the
+       downstream end (e.g., NIC, GPU, etc) instead?
 
-Best regards,
+I think we do need to make ASPM control files visible in sysfs, as
+this patch does.  But I have a question about exactly *how* we want to
+do this.  I had planned to merge this patch for v4.19, but I think
+I'll postpone it until we figure this out.
 
-Thomas
--- 
-Thomas Petazzoni, CTO, Bootlin (formerly Free Electrons)
-Embedded Linux and Kernel engineering
-https://bootlin.com
+ASPM is a power management feature of a PCIe link, and it affects the
+devices on both ends of that link.  The upstream end (closest to the
+CPU) is typically a Root Port, and the downstream end is typically an
+Endpoint (e.g., a GPU, NIC, or NVMe device).  For example, my laptop
+has these devices:
 
-_______________________________________________
-linux-arm-kernel mailing list
-linux-arm-kernel@lists.infradead.org
-http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
+  00:1c.2 Intel Root Port to [bus 04]
+  04:00.0 Intel 8260 Wireless NIC
+
+There's a PCIe link between these two devices, and if both ends
+support it, ASPM reduces power usage when the NIC is idle.  The
+hardware reduces power usage automatically; the kernel only needs to
+configure ASPM.
+
+ASPM affects performance as well as power, so we have knobs to control
+the tradeoff.  Starting with the big hammers, we currently have:
+
+  - Kernel build-time setting (CONFIG_PCIEASPM_PERFORMANCE, etc).
+    Requires kernel rebuild and reboot.
+
+  - "pcie_aspm=X" kernel boot parameter.  Can only enable/disable and
+    requires a reboot.
+
+  - /sys/module/pcie_aspm/parameters/policy file.  At any time, root
+    can set the system-wide ASPM policy to one of these settings:
+
+      + highest performance, highest power consumption
+      + moderate power saving at cost of some performance
+      + aggressive power saving at cost of more performance
+      + use whatever setting BIOS configured
+
+  - Many /sys/devices/pci0000:00/0000:00:1c.2/power/link_state files.
+    At any time, root can set the ASPM policy to one of the above
+    settings, but for individual devices.  Currently these files are
+    only available when CONFIG_PCIEASPM_DEBUG=y (Red Hat does not
+    enable this, but Ubuntu does).
+
+The patch below changes it so these /sys/devices/.../link_state files
+*always* exist, regardless of CONFIG_PCIEASPM_DEBUG.
+
+The question is where those sysfs files should be.  Currently they are
+associated with the device at the *upstream* end of the link.  In the
+example above, they're associated with the Root Port:
+
+  /sys/devices/pci0000:00/0000:00:1c.2/power/link_state
+
+I don't know if that's the right place, or if they should be
+associated with the device at the *downstream* end of the link, i.e.,
+04:00.0.  The downstream end might be better because:
+
+  - It's easier to associate the downstream end with a device the user
+    cares about, e.g., a NIC, GPU, etc.  This is mostly a user-
+    interface issue.
+
+  - A link can lead to a multi-function device, and the spec allows
+    those functions to have different ASPM settings (see PCIe r4.0,
+    sec 5.4.1).  With the sysfs files at the upstream end of the link,
+    we have no way to configure those functions individually.
+
+Any thoughts?
+
+> ...
+> diff --git a/drivers/pci/pcie/Kconfig b/drivers/pci/pcie/Kconfig
+> index b12e28b3d8f9..089b9f559d88 100644
+> --- a/drivers/pci/pcie/Kconfig
+> +++ b/drivers/pci/pcie/Kconfig
+> @@ -46,14 +46,6 @@ config PCIEASPM
+>  
+>  	  When in doubt, say Y.
+>  
+> -config PCIEASPM_DEBUG
+> -	bool "Debug PCI Express ASPM"
+> -	depends on PCIEASPM
+> -	default n
+> -	help
+> -	  This enables PCI Express ASPM debug support. It will add per-device
+> -	  interface to control ASPM.
+> -
+>  choice
+>  	prompt "Default ASPM policy"
+>  	default PCIEASPM_DEFAULT
+> diff --git a/drivers/pci/pcie/aspm.c b/drivers/pci/pcie/aspm.c
+> index c687c817b47d..8ffc13d42baa 100644
+> --- a/drivers/pci/pcie/aspm.c
+> +++ b/drivers/pci/pcie/aspm.c
+> @@ -1161,7 +1161,6 @@ static int pcie_aspm_get_policy(char *buffer, const struct kernel_param *kp)
+>  module_param_call(policy, pcie_aspm_set_policy, pcie_aspm_get_policy,
+>  	NULL, 0644);
+>  
+> -#ifdef CONFIG_PCIEASPM_DEBUG
+>  static ssize_t link_state_show(struct device *dev,
+>  		struct device_attribute *attr,
+>  		char *buf)
+> @@ -1264,7 +1263,6 @@ void pcie_aspm_remove_sysfs_dev_files(struct pci_dev *pdev)
+>  		sysfs_remove_file_from_group(&pdev->dev.kobj,
+>  			&dev_attr_clk_ctl.attr, power_group);
+>  }
+> -#endif
+>  
+>  static int __init pcie_aspm_disable(char *str)
+>  {
+> -- 
+> 2.17.0.441.gb46fe60e1d-goog
+> 
