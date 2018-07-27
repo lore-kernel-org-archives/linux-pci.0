@@ -1,200 +1,130 @@
-Return-Path: <SRS0=7OUd=KP=wunner.de=lukas@kernel.org>
-Return-Path: <SRS0=7OUd=KP=wunner.de=lukas@kernel.org>
-Message-Id: <dac488604766f3dcb948e702210ecc381c4f907b.1533015755.git.lukas@wunner.de>
-From: Lukas Wunner <lukas@wunner.de>
-Date: Tue, 31 Jul 2018 07:50:37 +0200
-Subject: [PATCH] PCI: pciehp: Differentiate between surprise and safe removal
-To: Bjorn Helgaas <helgaas@kernel.org>
-Cc: Mika Westerberg <mika.westerberg@linux.intel.com>, Ashok Raj <ashok.raj@intel.com>, Keith Busch <keith.busch@intel.com>, Yinghai Lu <yinghai@kernel.org>, Sinan Kaya <okaya@kernel.org>, linux-pci@vger.kernel.org, Alexandru Gagniuc <mr.nuke.me@gmail.com>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from esa1.dell-outbound.iphmx.com ([68.232.153.90]:52099 "EHLO
+        esa1.dell-outbound.iphmx.com" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S2388739AbeG0TOF (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Fri, 27 Jul 2018 15:14:05 -0400
+Cc: <mr.nuke.me@gmail.com>, <keith.busch@intel.com>,
+        <linux-pci@vger.kernel.org>, <Austin.Bolen@dell.com>,
+        <Stuart.Hayes@dell.com>, <Narendra.K@dell.com>,
+        <Christopher.Arzola@dell.com>, <David.Chalfant@dell.com>
+From: <Alex_Gagniuc@Dellteam.com>
+To: <lukas@wunner.de>
+Subject: Re: Should a PCIe Link Down event set the PCI_DEV_DISCONNECTED bit?
+Date: Fri, 27 Jul 2018 17:51:04 +0000
+Message-ID: <99604d46a7554eb38ee6c1579c53d835@ausx13mps321.AMER.DELL.COM>
+References: <47727551-86ce-040a-2516-efa47ee3a76e@gmail.com>
+ <20180727071813.GA6128@wunner.de>
+ <f6aa0b881a824b4f82a29dad300aaaea@ausx13mps321.AMER.DELL.COM>
+ <20180727170543.GA5326@wunner.de>
+Content-Type: text/plain; charset="us-ascii"
+MIME-Version: 1.0
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-When removing PCI devices below a hotplug bridge, pciehp marks them as
-disconnected if the card is no longer present in the slot or it quiesces
-them if the card is still present (by disabling INTx interrupts, bus
-mastering and SERR# reporting).
-
-To detect whether the card is still present, pciehp checks the Presence
-Detect State bit in the Slot Status register.  The problem with this
-approach is that even if the card is present, the link to it may be
-down, and it that case it would be better to mark the devices as
-disconnected instead of trying to quiesce them.  Moreover, if the card
-in the slot was quickly replaced by another one, the Presence Detect
-State bit would be set, yet trying to quiesce the new card's devices
-would be wrong and the correct thing to do is to mark the previous
-card's devices as disconnected.
-
-Instead of looking at the Presence Detect State bit, it is better to
-differentiate whether the card was surprise removed versus safely
-removed (via sysfs or an Attention Button press).  On surprise removal,
-the devices should be marked as disconnected, whereas on safe removal it
-is correct to quiesce the devices.
-
-The knowledge whether a surprise removal or a safe removal is at hand
-does exist further up in the call stack:  A surprise removal is
-initiated by pciehp_handle_presence_or_link_change(), a safe removal by
-pciehp_handle_disable_request().
-
-Pass that information down to pciehp_unconfigure_device() and use it in
-lieu of the Presence Detect State bit.  While there, add kernel-doc to
-pciehp_unconfigure_device() and pciehp_configure_device().
-
-Tested-by: Alexandru Gagniuc <mr.nuke.me@gmail.com>
-Signed-off-by: Lukas Wunner <lukas@wunner.de>
-Cc: Keith Busch <keith.busch@intel.com>
----
- drivers/pci/hotplug/pciehp.h      |  2 +-
- drivers/pci/hotplug/pciehp_ctrl.c | 22 +++++++++++++---------
- drivers/pci/hotplug/pciehp_pci.c  | 23 ++++++++++++++++++++---
- 3 files changed, 34 insertions(+), 13 deletions(-)
-
-diff --git a/drivers/pci/hotplug/pciehp.h b/drivers/pci/hotplug/pciehp.h
-index 811cf83f956d..39c9c8815a35 100644
---- a/drivers/pci/hotplug/pciehp.h
-+++ b/drivers/pci/hotplug/pciehp.h
-@@ -181,7 +181,7 @@ void pciehp_handle_button_press(struct slot *slot);
- void pciehp_handle_disable_request(struct slot *slot);
- void pciehp_handle_presence_or_link_change(struct slot *slot, u32 events);
- int pciehp_configure_device(struct slot *p_slot);
--void pciehp_unconfigure_device(struct slot *p_slot);
-+void pciehp_unconfigure_device(struct slot *p_slot, bool presence);
- void pciehp_queue_pushbutton_work(struct work_struct *work);
- struct controller *pcie_init(struct pcie_device *dev);
- int pcie_init_notification(struct controller *ctrl);
-diff --git a/drivers/pci/hotplug/pciehp_ctrl.c b/drivers/pci/hotplug/pciehp_ctrl.c
-index 6855933ab372..7932e70e9f29 100644
---- a/drivers/pci/hotplug/pciehp_ctrl.c
-+++ b/drivers/pci/hotplug/pciehp_ctrl.c
-@@ -26,6 +26,9 @@
-    hotplug controller logic
-  */
- 
-+#define SAFE_REMOVAL	 true
-+#define SURPRISE_REMOVAL false
-+
- static void set_slot_off(struct controller *ctrl, struct slot *pslot)
- {
- 	/* turn off slot, turn on Amber LED, turn off Green LED if supported*/
-@@ -101,12 +104,13 @@ static int board_added(struct slot *p_slot)
- /**
-  * remove_board - Turns off slot and LEDs
-  * @p_slot: slot where board is being removed
-+ * @safe_removal: whether the board is safely removed (versus surprise removed)
-  */
--static void remove_board(struct slot *p_slot)
-+static void remove_board(struct slot *p_slot, bool safe_removal)
- {
- 	struct controller *ctrl = p_slot->ctrl;
- 
--	pciehp_unconfigure_device(p_slot);
-+	pciehp_unconfigure_device(p_slot, safe_removal);
- 
- 	if (POWER_CTRL(ctrl)) {
- 		pciehp_power_off_slot(p_slot);
-@@ -124,7 +128,7 @@ static void remove_board(struct slot *p_slot)
- }
- 
- static int pciehp_enable_slot(struct slot *slot);
--static int pciehp_disable_slot(struct slot *slot);
-+static int pciehp_disable_slot(struct slot *slot, bool safe_removal);
- 
- void pciehp_request(struct controller *ctrl, int action)
- {
-@@ -215,7 +219,7 @@ void pciehp_handle_disable_request(struct slot *slot)
- 	slot->state = POWEROFF_STATE;
- 	mutex_unlock(&slot->lock);
- 
--	ctrl->request_result = pciehp_disable_slot(slot);
-+	ctrl->request_result = pciehp_disable_slot(slot, SAFE_REMOVAL);
- }
- 
- void pciehp_handle_presence_or_link_change(struct slot *slot, u32 events)
-@@ -241,7 +245,7 @@ void pciehp_handle_presence_or_link_change(struct slot *slot, u32 events)
- 		if (events & PCI_EXP_SLTSTA_PDC)
- 			ctrl_info(ctrl, "Slot(%s): Card not present\n",
- 				  slot_name(slot));
--		pciehp_disable_slot(slot);
-+		pciehp_disable_slot(slot, SURPRISE_REMOVAL);
- 		break;
- 	default:
- 		mutex_unlock(&slot->lock);
-@@ -324,7 +328,7 @@ static int pciehp_enable_slot(struct slot *slot)
- 	return ret;
- }
- 
--static int __pciehp_disable_slot(struct slot *p_slot)
-+static int __pciehp_disable_slot(struct slot *p_slot, bool safe_removal)
- {
- 	u8 getstatus = 0;
- 	struct controller *ctrl = p_slot->ctrl;
-@@ -338,17 +342,17 @@ static int __pciehp_disable_slot(struct slot *p_slot)
- 		}
- 	}
- 
--	remove_board(p_slot);
-+	remove_board(p_slot, safe_removal);
- 	return 0;
- }
- 
--static int pciehp_disable_slot(struct slot *slot)
-+static int pciehp_disable_slot(struct slot *slot, bool safe_removal)
- {
- 	struct controller *ctrl = slot->ctrl;
- 	int ret;
- 
- 	pm_runtime_get_sync(&ctrl->pcie->port->dev);
--	ret = __pciehp_disable_slot(slot);
-+	ret = __pciehp_disable_slot(slot, safe_removal);
- 	pm_runtime_put(&ctrl->pcie->port->dev);
- 
- 	mutex_lock(&slot->lock);
-diff --git a/drivers/pci/hotplug/pciehp_pci.c b/drivers/pci/hotplug/pciehp_pci.c
-index 5c58c22e0c08..18f83e554c73 100644
---- a/drivers/pci/hotplug/pciehp_pci.c
-+++ b/drivers/pci/hotplug/pciehp_pci.c
-@@ -20,6 +20,14 @@
- #include "../pci.h"
- #include "pciehp.h"
- 
-+/**
-+ * pciehp_configure_device() - enumerate PCI devices below a hotplug bridge
-+ * @p_slot: PCIe hotplug slot
-+ *
-+ * Enumerate PCI devices below a hotplug bridge and add them to the system.
-+ * Return 0 on success, %-EEXIST if the devices are already enumerated or
-+ * %-ENODEV if enumeration failed.
-+ */
- int pciehp_configure_device(struct slot *p_slot)
- {
- 	struct pci_dev *dev;
-@@ -62,9 +70,19 @@ int pciehp_configure_device(struct slot *p_slot)
- 	return ret;
- }
- 
--void pciehp_unconfigure_device(struct slot *p_slot)
-+/**
-+ * pciehp_unconfigure_device() - remove PCI devices below a hotplug bridge
-+ * @p_slot: PCIe hotplug slot
-+ * @presence: whether the card is still present in the slot;
-+ *	true for safe removal via sysfs or an Attention Button press,
-+ *	false for surprise removal
-+ *
-+ * Unbind PCI devices below a hotplug bridge from their drivers and remove
-+ * them from the system.  Safely removed devices are quiesced.  Surprise
-+ * removed devices are marked as such to prevent further accesses.
-+ */
-+void pciehp_unconfigure_device(struct slot *p_slot, bool presence)
- {
--	u8 presence = 0;
- 	struct pci_dev *dev, *temp;
- 	struct pci_bus *parent = p_slot->ctrl->pcie->port->subordinate;
- 	u16 command;
-@@ -72,7 +90,6 @@ void pciehp_unconfigure_device(struct slot *p_slot)
- 
- 	ctrl_dbg(ctrl, "%s: domain:bus:dev = %04x:%02x:00\n",
- 		 __func__, pci_domain_nr(parent), parent->number);
--	pciehp_get_adapter_status(p_slot, &presence);
- 
- 	pci_lock_rescan_remove();
- 
--- 
-2.18.0
+On 07/27/2018 12:05 PM, Lukas Wunner wrote:=0A=
+> On Fri, Jul 27, 2018 at 03:52:04PM +0000, Alex_Gagniuc@Dellteam.com wrote=
+:=0A=
+>> On 07/27/2018 02:18 AM, Lukas Wunner wrote:=0A=
+>>> On Thu, Jul 26, 2018 at 05:38:50PM -0500, Alex G. wrote:=0A=
+>>>> I was under the impression that a DLLSC or PDSC would trigger the=0A=
+>>>> PCI_DEV_DISCONNECTED bit to be set, blocking any further config access=
+.=0A=
+>>>=0A=
+>>> Only if the Presence Detect State bit in the Slot Status register is=0A=
+>>> not set.=0A=
+>>>=0A=
+>>> I think the idea was that if the card is still in the slot, its driver =
+can=0A=
+>>> be unbound orderly because the device is still accessible.  So there's =
+no=0A=
+>>> need to set PCI_DEV_DISCONNECTED.=0A=
+>>=0A=
+>> This sounds counter to what I had intuited. I mentally associate=0A=
+>> DISCONNECTED with "the link is down". I don't understand the idea of a=
+=0A=
+>> driver doing an orderly removal when the link is down. Device registers=
+=0A=
+>> wouldn't be accessible in that case.=0A=
+> =0A=
+> That's basically what I meant, sorry for not being clear.=0A=
+> =0A=
+>>> However if there is a already a new card in the slot, PCI_DEV_DISCONNEC=
+TED=0A=
+>>> will erroneously not be set.  Also, if card removal was triggered by th=
+e=0A=
+>>> link going down but the card is still in the slot, PCI_DEV_DISCONNECTED=
+=0A=
+>>> will also erroneously not be set even though it's inaccessible.=0A=
+>>>=0A=
+>>> The only situations when PCI_DEV_DISCONNECTED should not be set is if t=
+he=0A=
+>>> card is being removed by sysfs or by the user pressing the Attention Bu=
+tton.=0A=
+>>> Anything else is a surprise removal.  What we need to do is pass down a=
+=0A=
+>>> flag to pciehp_unconfigure_device() to indicate whether one of those tw=
+o=0A=
+>>> situations is at hand or not, and PCI_DEV_DISCONNECTED should be set=0A=
+>>> depending on that flag.=0A=
+>>=0A=
+>> That makes a little more sense. Is someone working on this?=0A=
+> =0A=
+> Me, but not for 4.19, we're too late in the cycle, I'm going to post=0A=
+> a small number of fixup patches for Bjorn's pci/hotplug branch shortly,=
+=0A=
+> to be included in 4.19, and that's it.=0A=
+> =0A=
+> I posted a patch as part of the series that's now on Bjorn's pci/hotplug=
+=0A=
+> branch which touched PCI_DEV_DISCONNECTED code in pciehp_pci.c, but had=
+=0A=
+> to withdraw that particular patch:=0A=
+> https://patchwork.ozlabs.org/patch/930403/=0A=
+> =0A=
+> The first problem with that patch was that I hadn't fully understood=0A=
+> yet when to set PCI_DEV_DISCONNECTED and when not to set it.=0A=
+=0A=
+I think PCI_DEV_DISCONNECTED is a documentation issue above all else. =0A=
+The history I was given is that drivers would take a very long time to =0A=
+tear down a device. Config space IO to an nonexistent device took a long =
+=0A=
+while to time out. Performance was one motivation -- and was not documented=
+.=0A=
+=0A=
+> The second problem was that it fixed a deadlock on unplug in a way=0A=
+> that wasn't generic enough.  The same deadlock can occur in other=0A=
+> situations.  The real fix is to unbind the driver lockless in=0A=
+> pci_stop_dev().  That's non-trivial to achieve, but doable.=0A=
+> I don't think there's a way around that to fix the problem:=0A=
+> https://www.spinics.net/lists/linux-pci/msg73652.html=0A=
+> =0A=
+> There's (still) a lot that can be improved in pciehp, I hope to=0A=
+> keep working on that as time permits.=0A=
+=0A=
+Thanks for all the info. The fix that I was settling on is (pasted) =0A=
+below. Though that seems to conflict a bit with what you are trying to =0A=
+do. Now I'm a little conflicted If I should try to submit the below or not.=
+=0A=
+=0A=
+Alex=0A=
+=0A=
+diff --git a/drivers/pci/hotplug/pciehp_pci.c =0A=
+b/drivers/pci/hotplug/pciehp_pci.c=0A=
+index 3f518dea856d..5cf02639fa0b 100644=0A=
+--- a/drivers/pci/hotplug/pciehp_pci.c=0A=
++++ b/drivers/pci/hotplug/pciehp_pci.c=0A=
+@@ -74,6 +74,7 @@ int pciehp_unconfigure_device(struct slot *p_slot)=0A=
+         ctrl_dbg(ctrl, "%s: domain:bus:dev =3D %04x:%02x:00\n",=0A=
+                  __func__, pci_domain_nr(parent), parent->number);=0A=
+         pciehp_get_adapter_status(p_slot, &presence);=0A=
++       presence =3D presence && pciehp_check_link_active(ctrl);=0A=
+=0A=
+         pci_lock_rescan_remove();=0A=
+=0A=
+=0A=
+=0A=
+> Thanks,=0A=
+> =0A=
+> Lukas=0A=
+> =0A=
+=0A=
