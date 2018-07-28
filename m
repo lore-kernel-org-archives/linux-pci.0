@@ -1,55 +1,38 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from bmailout3.hostsharing.net ([176.9.242.62]:53473 "EHLO
-        bmailout3.hostsharing.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S932471AbeGCIeu (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Tue, 3 Jul 2018 04:34:50 -0400
-Date: Tue, 3 Jul 2018 10:34:47 +0200
-From: Lukas Wunner <lukas@wunner.de>
-To: Sinan Kaya <okaya@codeaurora.org>
-Cc: linux-pci@vger.kernel.org, linux-arm-msm@vger.kernel.org,
-        linux-arm-kernel@lists.infradead.org,
-        Bjorn Helgaas <bhelgaas@google.com>,
-        Oza Pawandeep <poza@codeaurora.org>,
-        Keith Busch <keith.busch@intel.com>,
-        open list <linux-kernel@vger.kernel.org>
-Subject: Re: [PATCH V5 3/3] PCI: Mask and unmask hotplug interrupts during
- reset
-Message-ID: <20180703083447.GA2689@wunner.de>
-References: <1530571967-19099-1-git-send-email-okaya@codeaurora.org>
- <1530571967-19099-4-git-send-email-okaya@codeaurora.org>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1530571967-19099-4-git-send-email-okaya@codeaurora.org>
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <SRS0=Eboi=KM=kernel.crashing.org=benh@kernel.org>
+Return-Path: <SRS0=Eboi=KM=kernel.crashing.org=benh@kernel.org>
+Message-ID: <63673ded743508a49436a1108e2f69142d6a3579.camel@kernel.crashing.org>
+Subject: Re: [PATCH v3] PCI: Data corruption happening due to race condition
+From: Benjamin Herrenschmidt <benh@kernel.crashing.org>
+To: Bjorn Helgaas <helgaas@kernel.org>
+Cc: Hari Vyas <hari.vyas@broadcom.com>, bhelgaas@google.com,
+        linux-pci@vger.kernel.org, ray.jui@broadcom.com,
+        Paul Mackerras
+ <paulus@samba.org>,
+        Michael Ellerman <mpe@ellerman.id.au>, linuxppc-dev@lists.ozlabs.org
+Date: Sat, 28 Jul 2018 10:45:22 +1000
+In-Reply-To: <20180727222540.GH173328@bhelgaas-glaptop.roam.corp.google.com>
+References: <1530608741-30664-1-git-send-email-hari.vyas@broadcom.com>
+	 <1530608741-30664-2-git-send-email-hari.vyas@broadcom.com>
+	 <20180718232904.GJ128988@bhelgaas-glaptop.roam.corp.google.com>
+	 <65dd986d0b8b2ebe5132b365dabb2dbaaed9177f.camel@kernel.crashing.org>
+	 <20180727222540.GH173328@bhelgaas-glaptop.roam.corp.google.com>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 List-ID: <linux-pci.vger.kernel.org>
 
-On Mon, Jul 02, 2018 at 06:52:47PM -0400, Sinan Kaya wrote:
-> If a bridge supports hotplug and observes a PCIe fatal error, the following
-> events happen:
+On Fri, 2018-07-27 at 17:25 -0500, Bjorn Helgaas wrote:
+> > As for the powerpc bits, I'm probably the one who wrote them, however,
+> > I'm on vacation this week and right now, no bandwidth to context switch
+> > all that back in :-) So give me a few days and/or ping me next week.
 > 
-> 1. AER driver removes the devices from PCI tree on fatal error
-> 2. AER driver brings down the link by issuing a secondary bus reset waits
-> for the link to come up.
-> 3. Hotplug driver observes a link down interrupt
-> 4. Hotplug driver tries to remove the devices waiting for the rescan lock
-> but devices are already removed by the AER driver and AER driver is waiting
-> for the link to come back up.
-> 5. AER driver tries to re-enumerate devices after polling for the link
-> state to go up.
-> 6. Hotplug driver obtains the lock and tries to remove the devices again.
+> OK, here's a ping :)
 > 
-> If a bridge is a hotplug capable bridge, mask hotplug interrupts before the
-> reset and unmask afterwards.
+> Some powerpc cleanup would be ideal, but I'd like to fix the race for
+> v4.19, so I'm fine with this patch as-is.  But I'd definitely want
+> your ack before inserting the ugly #include path in the powerpc code.
 
-Would it work for you if you just amended the AER driver to skip
-removal and re-enumeration of devices if the port is a hotplug bridge?
-Just check for is_hotplug_bridge in struct pci_dev.
+Go for it. Looks like I got a last minute meeting in Austin next week
+so i"ll have no time to look at any of this for a while.
 
-That would seem like a much simpler solution, given that it is known
-that the link will flap on reset, causing the hotplug driver to remove
-and re-enumerate devices.  That would also cover cases where hotplug is
-handled by a different driver than pciehp, or by the platform firmware.
-
-Thanks,
-
-Lukas
+Cheers,
+Ben.
