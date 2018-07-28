@@ -1,174 +1,257 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from smtprelay4.synopsys.com ([198.182.47.9]:57232 "EHLO
-        smtprelay.synopsys.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1730505AbeGSJO2 (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Thu, 19 Jul 2018 05:14:28 -0400
-From: Gustavo Pimentel <gustavo.pimentel@synopsys.com>
-To: bhelgaas@google.com, lorenzo.pieralisi@arm.com,
-        joao.pinto@synopsys.com, jingoohan1@gmail.com, kishon@ti.com,
-        adouglas@cadence.com, jesper.nilsson@axis.com,
-        shawn.lin@rock-chips.com
-Cc: linux-pci@vger.kernel.org, linux-doc@vger.kernel.org,
-        linux-kernel@vger.kernel.org,
-        Gustavo Pimentel <gustavo.pimentel@synopsys.com>
-Subject: [PATCH v14 05/12] PCI: dwc: Rework MSI callbacks handler
-Date: Thu, 19 Jul 2018 10:32:15 +0200
-Message-Id: <110c8e4ff341c66cac244e7448840006e3aeee29.1531922095.git.gustavo.pimentel@synopsys.com>
-In-Reply-To: <cover.1531922095.git.gustavo.pimentel@synopsys.com>
-References: <cover.1531922095.git.gustavo.pimentel@synopsys.com>
-In-Reply-To: <cover.1531922095.git.gustavo.pimentel@synopsys.com>
-References: <cover.1531922095.git.gustavo.pimentel@synopsys.com>
+Received: from bmailout1.hostsharing.net ([83.223.95.100]:40615 "EHLO
+        bmailout1.hostsharing.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1729576AbeG1T6z (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Sat, 28 Jul 2018 15:58:55 -0400
+Date: Sat, 28 Jul 2018 20:31:30 +0200
+From: Lukas Wunner <lukas@wunner.de>
+To: Alex_Gagniuc@Dellteam.com
+Cc: mr.nuke.me@gmail.com, keith.busch@intel.com,
+        linux-pci@vger.kernel.org, Austin.Bolen@dell.com,
+        Stuart.Hayes@dell.com, Narendra.K@dell.com,
+        Christopher.Arzola@dell.com, David.Chalfant@dell.com,
+        Sinan Kaya <okaya@kernel.org>
+Subject: Re: Should a PCIe Link Down event set the PCI_DEV_DISCONNECTED bit?
+Message-ID: <20180728183130.GA21482@wunner.de>
+References: <47727551-86ce-040a-2516-efa47ee3a76e@gmail.com>
+ <20180727071813.GA6128@wunner.de>
+ <f6aa0b881a824b4f82a29dad300aaaea@ausx13mps321.AMER.DELL.COM>
+ <20180727170543.GA5326@wunner.de>
+ <99604d46a7554eb38ee6c1579c53d835@ausx13mps321.AMER.DELL.COM>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <99604d46a7554eb38ee6c1579c53d835@ausx13mps321.AMER.DELL.COM>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Remove duplicate defines located on pcie-designware.h file already
-available on /include/uapi/linux/pci-regs.h file.
+On Fri, Jul 27, 2018 at 05:51:04PM +0000, Alex_Gagniuc@Dellteam.com wrote:
+> I think PCI_DEV_DISCONNECTED is a documentation issue above all else. 
+> The history I was given is that drivers would take a very long time to 
+> tear down a device. Config space IO to an nonexistent device took a long 
+> while to time out. Performance was one motivation -- and was not documented.
 
-Signed-off-by: Gustavo Pimentel <gustavo.pimentel@synopsys.com>
-Acked-by: Kishon Vijay Abraham I <kishon@ti.com>
+Often it is possible for the driver to detect surprise removal by
+checking if mmio reads return "all ones".  But in some cases that's
+a valid value to read from mmio and then this approach won't work.
+Also, checking every mmio read may negatively impact performance.
+
+Finally, if the card was quickly swapped and the link to the new
+card is already up, you may be accessing that new card.  (mmio
+accesses may then still return all ones if the BARs are blank,
+but at least config space accesses should work.)
+
+Once it has been determined that the device has been surprise removed,
+that fact should be cached somewhere to short-circuit any further device
+accesses.  PCI_DEV_DISCONNECTED can act as such a cache.
+
+
+> Thanks for all the info. The fix that I was settling on is (pasted) 
+> below. Though that seems to conflict a bit with what you are trying to 
+> do. Now I'm a little conflicted If I should try to submit the below or not.
+> 
+> --- a/drivers/pci/hotplug/pciehp_pci.c
+> +++ b/drivers/pci/hotplug/pciehp_pci.c
+> @@ -74,6 +74,7 @@ int pciehp_unconfigure_device(struct slot *p_slot)
+>          ctrl_dbg(ctrl, "%s: domain:bus:dev = %04x:%02x:00\n",
+>                   __func__, pci_domain_nr(parent), parent->number);
+>          pciehp_get_adapter_status(p_slot, &presence);
+> +       presence = presence && pciehp_check_link_active(ctrl);
+
+That approach won't work if the card was quickly swapped and the link
+to the new card is already up when pciehp_unconfigure_device() runs.
+
+FWIW, the below is what I had in mind (on top of Bjorn's pci/hotplug
+branch).  Does this work for you?
+
+-- >8 --
+Subject: [PATCH] PCI: pciehp: Differentiate between surprise and safe removal
+
+When removing PCI devices below a hotplug bridge, pciehp marks them as
+disconnected if the card is no longer present in the slot or it quiesces
+them if the card is still present (by disabling INTx interrupts, bus
+mastering and SERR# reporting).
+
+To detect whether the card is still present, pciehp checks the Presence
+Detect State bit in the Slot Status register.  The problem with this
+approach is that even if the card is present, the link to it may be
+down, and it that case it would be better to mark the devices as
+disconnected instead of trying to quiesce them.  Moreover, if the card
+in the slot was quickly replaced by another one, the Presence Detect
+State bit would be set, yet trying to quiesce the new card's devices
+would be wrong and the correct thing to do is to mark the previous
+card's devices as disconnected.
+
+Instead of looking at the Presence Detect State bit, it is better to
+differentiate whether the card was surprise removed versus safely
+removed (via sysfs or an Attention Button press).  On surprise removal,
+the devices should be marked as disconnected, whereas on safe removal it
+is correct to quiesce the devices.
+
+The knowledge whether a surprise removal or a safe removal is at hand
+does exist further up in the call stack:  A surprise removal is
+initiated by pciehp_handle_presence_or_link_change(), a safe removal by
+pciehp_handle_disable_request().
+
+Pass that information down to pciehp_unconfigure_device() and use it in
+lieu of the Presence Detect State bit.  While there, add kernel-doc to
+pciehp_unconfigure_device() and pciehp_configure_device().
+
+Signed-off-by: Lukas Wunner <lukas@wunner.de>
+Cc: Alexandru Gagniuc <mr.nuke.me@gmail.com>
 ---
-Change v1->v2:
- - Nothing changed, just to follow the patch set version.
-Change v2->v3:
- - Replaced wrong return value 0 to -EINVAL.
-Change v3->v4:
- - Rebased to Lorenzo's master branch v4.18-rc1.
-Change v4->v5:
- - Moved pci_epc_set_msi maximum interrupts validation into a new patch
-file #11.
-Change v5->v6:
- - Nothing changed, just to follow the patch set version.
-Change v6->v7:
- - Nothing changed, just to follow the patch set version.
-Change v7->v8:
- - Re-sending the patch series.
-Change v8->v9:
- - Nothing changed, just to follow the patch set version.
-Change v9->v10:
- - Nothing changed, just to follow the patch set version.
-Change v10->v11:
- - Nothing changed, just to follow the patch set version.
-Change v11->v12:
- - Nothing changed, just to follow the patch set version.
-Change v12->v13:
- - Re-sending the patch series.
-Change v13->v14:
- - Nothing changed, just to follow the patch set version.
+ drivers/pci/hotplug/pciehp.h      |  2 +-
+ drivers/pci/hotplug/pciehp_ctrl.c | 22 +++++++++++++---------
+ drivers/pci/hotplug/pciehp_pci.c  | 23 ++++++++++++++++++++---
+ 3 files changed, 34 insertions(+), 13 deletions(-)
 
- drivers/pci/controller/dwc/pcie-designware-ep.c | 49 +++++++++++++++++--------
- drivers/pci/controller/dwc/pcie-designware.h    | 11 ------
- 2 files changed, 33 insertions(+), 27 deletions(-)
-
-diff --git a/drivers/pci/controller/dwc/pcie-designware-ep.c b/drivers/pci/controller/dwc/pcie-designware-ep.c
-index 23be2c0..dd9c366 100644
---- a/drivers/pci/controller/dwc/pcie-designware-ep.c
-+++ b/drivers/pci/controller/dwc/pcie-designware-ep.c
-@@ -246,29 +246,38 @@ static int dw_pcie_ep_map_addr(struct pci_epc *epc, u8 func_no,
+diff --git a/drivers/pci/hotplug/pciehp.h b/drivers/pci/hotplug/pciehp.h
+index 652c46d9b215..bce29ae769dd 100644
+--- a/drivers/pci/hotplug/pciehp.h
++++ b/drivers/pci/hotplug/pciehp.h
+@@ -195,7 +195,7 @@ void pciehp_handle_button_press(struct slot *slot);
+ void pciehp_handle_disable_request(struct slot *slot);
+ void pciehp_handle_presence_or_link_change(struct slot *slot, u32 events);
+ int pciehp_configure_device(struct slot *p_slot);
+-void pciehp_unconfigure_device(struct slot *p_slot);
++void pciehp_unconfigure_device(struct slot *p_slot, bool presence);
+ void pciehp_queue_pushbutton_work(struct work_struct *work);
+ struct controller *pcie_init(struct pcie_device *dev);
+ int pcie_init_notification(struct controller *ctrl);
+diff --git a/drivers/pci/hotplug/pciehp_ctrl.c b/drivers/pci/hotplug/pciehp_ctrl.c
+index d7d55160b5f8..8836648e145f 100644
+--- a/drivers/pci/hotplug/pciehp_ctrl.c
++++ b/drivers/pci/hotplug/pciehp_ctrl.c
+@@ -40,6 +40,9 @@
+    hotplug controller logic
+  */
  
- static int dw_pcie_ep_get_msi(struct pci_epc *epc, u8 func_no)
++#define SAFE_REMOVAL	 true
++#define SURPRISE_REMOVAL false
++
+ static void set_slot_off(struct controller *ctrl, struct slot *pslot)
  {
--	int val;
- 	struct dw_pcie_ep *ep = epc_get_drvdata(epc);
- 	struct dw_pcie *pci = to_dw_pcie_from_ep(ep);
-+	u32 val, reg;
-+
-+	if (!ep->msi_cap)
-+		return -EINVAL;
+ 	/* turn off slot, turn on Amber LED, turn off Green LED if supported*/
+@@ -115,12 +118,13 @@ static int board_added(struct slot *p_slot)
+ /**
+  * remove_board - Turns off slot and LEDs
+  * @p_slot: slot where board is being removed
++ * @safe_removal: whether the board is safely removed (versus surprise removed)
+  */
+-static void remove_board(struct slot *p_slot)
++static void remove_board(struct slot *p_slot, bool safe_removal)
+ {
+ 	struct controller *ctrl = p_slot->ctrl;
  
--	val = dw_pcie_readw_dbi(pci, MSI_MESSAGE_CONTROL);
--	if (!(val & MSI_CAP_MSI_EN_MASK))
-+	reg = ep->msi_cap + PCI_MSI_FLAGS;
-+	val = dw_pcie_readw_dbi(pci, reg);
-+	if (!(val & PCI_MSI_FLAGS_ENABLE))
- 		return -EINVAL;
+-	pciehp_unconfigure_device(p_slot);
++	pciehp_unconfigure_device(p_slot, safe_removal);
  
--	val = (val & MSI_CAP_MME_MASK) >> MSI_CAP_MME_SHIFT;
-+	val = (val & PCI_MSI_FLAGS_QSIZE) >> 4;
-+
- 	return val;
+ 	if (POWER_CTRL(ctrl)) {
+ 		pciehp_power_off_slot(p_slot);
+@@ -138,7 +142,7 @@ static void remove_board(struct slot *p_slot)
  }
  
--static int dw_pcie_ep_set_msi(struct pci_epc *epc, u8 func_no, u8 encode_int)
-+static int dw_pcie_ep_set_msi(struct pci_epc *epc, u8 func_no, u8 interrupts)
+ static int pciehp_enable_slot(struct slot *slot);
+-static int pciehp_disable_slot(struct slot *slot);
++static int pciehp_disable_slot(struct slot *slot, bool safe_removal);
+ 
+ void pciehp_request(struct controller *ctrl, int action)
  {
--	int val;
- 	struct dw_pcie_ep *ep = epc_get_drvdata(epc);
- 	struct dw_pcie *pci = to_dw_pcie_from_ep(ep);
-+	u32 val, reg;
+@@ -230,7 +234,7 @@ void pciehp_handle_disable_request(struct slot *slot)
+ 	slot->state = POWEROFF_STATE;
+ 	mutex_unlock(&slot->lock);
  
--	val = dw_pcie_readw_dbi(pci, MSI_MESSAGE_CONTROL);
--	val &= ~MSI_CAP_MMC_MASK;
--	val |= (encode_int << MSI_CAP_MMC_SHIFT) & MSI_CAP_MMC_MASK;
-+	if (!ep->msi_cap)
-+		return -EINVAL;
-+
-+	reg = ep->msi_cap + PCI_MSI_FLAGS;
-+	val = dw_pcie_readw_dbi(pci, reg);
-+	val &= ~PCI_MSI_FLAGS_QMASK;
-+	val |= (interrupts << 1) & PCI_MSI_FLAGS_QMASK;
- 	dw_pcie_dbi_ro_wr_en(pci);
--	dw_pcie_writew_dbi(pci, MSI_MESSAGE_CONTROL, val);
-+	dw_pcie_writew_dbi(pci, reg, val);
- 	dw_pcie_dbi_ro_wr_dis(pci);
+-	ctrl->request_result = pciehp_disable_slot(slot);
++	ctrl->request_result = pciehp_disable_slot(slot, SAFE_REMOVAL);
+ }
  
+ void pciehp_handle_presence_or_link_change(struct slot *slot, u32 events)
+@@ -257,7 +261,7 @@ void pciehp_handle_presence_or_link_change(struct slot *slot, u32 events)
+ 		if (events & PCI_EXP_SLTSTA_PDC)
+ 			ctrl_info(ctrl, "Slot(%s): Card not present\n",
+ 				  slot_name(slot));
+-		pciehp_disable_slot(slot);
++		pciehp_disable_slot(slot, SURPRISE_REMOVAL);
+ 		break;
+ 	default:
+ 		mutex_unlock(&slot->lock);
+@@ -343,7 +347,7 @@ static int pciehp_enable_slot(struct slot *slot)
+ 	return ret;
+ }
+ 
+-static int __pciehp_disable_slot(struct slot *p_slot)
++static int __pciehp_disable_slot(struct slot *p_slot, bool safe_removal)
+ {
+ 	u8 getstatus = 0;
+ 	struct controller *ctrl = p_slot->ctrl;
+@@ -357,17 +361,17 @@ static int __pciehp_disable_slot(struct slot *p_slot)
+ 		}
+ 	}
+ 
+-	remove_board(p_slot);
++	remove_board(p_slot, safe_removal);
  	return 0;
-@@ -367,21 +376,29 @@ int dw_pcie_ep_raise_msi_irq(struct dw_pcie_ep *ep, u8 func_no,
- 	struct dw_pcie *pci = to_dw_pcie_from_ep(ep);
- 	struct pci_epc *epc = ep->epc;
- 	u16 msg_ctrl, msg_data;
--	u32 msg_addr_lower, msg_addr_upper;
-+	u32 msg_addr_lower, msg_addr_upper, reg;
- 	u64 msg_addr;
- 	bool has_upper;
+ }
+ 
+-static int pciehp_disable_slot(struct slot *slot)
++static int pciehp_disable_slot(struct slot *slot, bool safe_removal)
+ {
+ 	struct controller *ctrl = slot->ctrl;
  	int ret;
  
-+	if (!ep->msi_cap)
-+		return -EINVAL;
-+
- 	/* Raise MSI per the PCI Local Bus Specification Revision 3.0, 6.8.1. */
--	msg_ctrl = dw_pcie_readw_dbi(pci, MSI_MESSAGE_CONTROL);
-+	reg = ep->msi_cap + PCI_MSI_FLAGS;
-+	msg_ctrl = dw_pcie_readw_dbi(pci, reg);
- 	has_upper = !!(msg_ctrl & PCI_MSI_FLAGS_64BIT);
--	msg_addr_lower = dw_pcie_readl_dbi(pci, MSI_MESSAGE_ADDR_L32);
-+	reg = ep->msi_cap + PCI_MSI_ADDRESS_LO;
-+	msg_addr_lower = dw_pcie_readl_dbi(pci, reg);
- 	if (has_upper) {
--		msg_addr_upper = dw_pcie_readl_dbi(pci, MSI_MESSAGE_ADDR_U32);
--		msg_data = dw_pcie_readw_dbi(pci, MSI_MESSAGE_DATA_64);
-+		reg = ep->msi_cap + PCI_MSI_ADDRESS_HI;
-+		msg_addr_upper = dw_pcie_readl_dbi(pci, reg);
-+		reg = ep->msi_cap + PCI_MSI_DATA_64;
-+		msg_data = dw_pcie_readw_dbi(pci, reg);
- 	} else {
- 		msg_addr_upper = 0;
--		msg_data = dw_pcie_readw_dbi(pci, MSI_MESSAGE_DATA_32);
-+		reg = ep->msi_cap + PCI_MSI_DATA_32;
-+		msg_data = dw_pcie_readw_dbi(pci, reg);
- 	}
- 	msg_addr = ((u64) msg_addr_upper) << 32 | msg_addr_lower;
- 	ret = dw_pcie_ep_map_addr(epc, func_no, ep->msi_mem_phys, msg_addr,
-diff --git a/drivers/pci/controller/dwc/pcie-designware.h b/drivers/pci/controller/dwc/pcie-designware.h
-index 00ac419..e8b97f5 100644
---- a/drivers/pci/controller/dwc/pcie-designware.h
-+++ b/drivers/pci/controller/dwc/pcie-designware.h
-@@ -96,17 +96,6 @@
- #define PCIE_GET_ATU_INB_UNR_REG_OFFSET(region)				\
- 			((0x3 << 20) | ((region) << 9) | (0x1 << 8))
+ 	pm_runtime_get_sync(&ctrl->pcie->port->dev);
+-	ret = __pciehp_disable_slot(slot);
++	ret = __pciehp_disable_slot(slot, safe_removal);
+ 	pm_runtime_put(&ctrl->pcie->port->dev);
  
--#define MSI_MESSAGE_CONTROL		0x52
--#define MSI_CAP_MMC_SHIFT		1
--#define MSI_CAP_MMC_MASK		(7 << MSI_CAP_MMC_SHIFT)
--#define MSI_CAP_MME_SHIFT		4
--#define MSI_CAP_MSI_EN_MASK		0x1
--#define MSI_CAP_MME_MASK		(7 << MSI_CAP_MME_SHIFT)
--#define MSI_MESSAGE_ADDR_L32		0x54
--#define MSI_MESSAGE_ADDR_U32		0x58
--#define MSI_MESSAGE_DATA_32		0x58
--#define MSI_MESSAGE_DATA_64		0x5C
--
- #define MAX_MSI_IRQS			256
- #define MAX_MSI_IRQS_PER_CTRL		32
- #define MAX_MSI_CTRLS			(MAX_MSI_IRQS / MAX_MSI_IRQS_PER_CTRL)
+ 	mutex_lock(&slot->lock);
+diff --git a/drivers/pci/hotplug/pciehp_pci.c b/drivers/pci/hotplug/pciehp_pci.c
+index ec3f065bb1c0..079aac163484 100644
+--- a/drivers/pci/hotplug/pciehp_pci.c
++++ b/drivers/pci/hotplug/pciehp_pci.c
+@@ -34,6 +34,14 @@
+ #include "../pci.h"
+ #include "pciehp.h"
+ 
++/**
++ * pciehp_configure_device() - enumerate PCI devices below a hotplug bridge
++ * @p_slot: PCIe hotplug slot
++ *
++ * Enumerate PCI devices below a hotplug bridge and add them to the system.
++ * Return 0 on success, %-EEXIST if the devices are already enumerated or
++ * %-ENODEV if enumeration failed.
++ */
+ int pciehp_configure_device(struct slot *p_slot)
+ {
+ 	struct pci_dev *dev;
+@@ -76,9 +84,19 @@ int pciehp_configure_device(struct slot *p_slot)
+ 	return ret;
+ }
+ 
+-void pciehp_unconfigure_device(struct slot *p_slot)
++/**
++ * pciehp_unconfigure_device() - remove PCI devices below a hotplug bridge
++ * @p_slot: PCIe hotplug slot
++ * @presence: whether the card is still present in the slot;
++ *	true for safe removal via sysfs or an Attention Button press,
++ *	false for surprise removal
++ *
++ * Unbind PCI devices below a hotplug bridge from their drivers and remove
++ * them from the system.  Safely removed devices are quiesced.  Surprise
++ * removed devices are marked as such to prevent further accesses.
++ */
++void pciehp_unconfigure_device(struct slot *p_slot, bool presence)
+ {
+-	u8 presence = 0;
+ 	struct pci_dev *dev, *temp;
+ 	struct pci_bus *parent = p_slot->ctrl->pcie->port->subordinate;
+ 	u16 command;
+@@ -86,7 +104,6 @@ void pciehp_unconfigure_device(struct slot *p_slot)
+ 
+ 	ctrl_dbg(ctrl, "%s: domain:bus:dev = %04x:%02x:00\n",
+ 		 __func__, pci_domain_nr(parent), parent->number);
+-	pciehp_get_adapter_status(p_slot, &presence);
+ 
+ 	pci_lock_rescan_remove();
+ 
 -- 
-2.7.4
+2.18.0
