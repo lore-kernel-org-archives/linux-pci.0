@@ -1,88 +1,87 @@
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-From: Nipun Gupta <nipun.gupta@nxp.com>
-To: robin.murphy@arm.com, will.deacon@arm.com, robh+dt@kernel.org,
- robh@kernel.org, mark.rutland@arm.com, catalin.marinas@arm.com,
- gregkh@linuxfoundation.org, laurentiu.tudor@nxp.com, bhelgaas@google.com,
- hch@lst.de
-Subject: [PATCH 7/7 v6] arm64: dts: ls208xa: comply with the iommu map binding
- for fsl_mc
-Date: Mon,  9 Jul 2018 16:48:23 +0530
-Message-Id: <1531135103-10699-8-git-send-email-nipun.gupta@nxp.com>
-In-Reply-To: <1531135103-10699-1-git-send-email-nipun.gupta@nxp.com>
-References: <1531135103-10699-1-git-send-email-nipun.gupta@nxp.com>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from bmailout1.hostsharing.net ([83.223.95.100]:56151 "EHLO
+        bmailout1.hostsharing.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726242AbeG2N1T (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Sun, 29 Jul 2018 09:27:19 -0400
+Date: Sun, 29 Jul 2018 13:57:03 +0200
+From: Lukas Wunner <lukas@wunner.de>
+To: Sinan Kaya <okaya@kernel.org>
+Cc: linux-pci@vger.kernel.org, Bjorn Helgaas <bhelgaas@google.com>,
+        Mika Westerberg <mika.westerberg@linux.intel.com>,
+        Keith Busch <keith.busch@intel.com>,
+        Oza Pawandeep <poza@codeaurora.org>
+Subject: Re: [PATCH v6 1/1] PCI: pciehp: Ignore link events when there is a
+ fatal error pending
+Message-ID: <20180729115703.GA2781@wunner.de>
+References: <20180728091324.154795-1-okaya@kernel.org>
+ <20180728091324.154795-2-okaya@kernel.org>
 MIME-Version: 1.0
-List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
-List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
-List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
-List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
-List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
-Cc: devicetree@vger.kernel.org, stuyoder@gmail.com, bharat.bhushan@nxp.com,
- shawnguo@kernel.org, joro@8bytes.org, linuxppc-dev@lists.ozlabs.org,
- linux-kernel@vger.kernel.org, leoyang.li@nxp.com,
- iommu@lists.linux-foundation.org, Nipun Gupta <nipun.gupta@nxp.com>,
- linux-pci@vger.kernel.org, frowand.list@gmail.com,
- linux-arm-kernel@lists.infradead.org, m.szyprowski@samsung.com
-Content-Type: text/plain; charset="us-ascii"
-Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
-Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20180728091324.154795-2-okaya@kernel.org>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-fsl-mc bus support the new iommu-map property. Comply to this binding
-for fsl_mc bus.
+On Sat, Jul 28, 2018 at 02:13:24AM -0700, Sinan Kaya wrote:
+> We need to figure out how to gracefully return inside hotplug driver
+> if link down happened and there is an error pending. Fatal error needs
+> to be serviced by AER/DPC drivers. Hotplug driver is observing link
+> events while AER/DPC drivers are performing link recovery today and
+> are causing confusion for the hotplug statemachine.
+> 
+> 1. check if there is a fatal error pending in the device_status register
+> of the PCI Express capability on the root port.
+> 2. bail out from hotplug routine if this is the case.
+> 3. otherwise, existing behavior.
+> 
+> If fatal error is pending and a fatal error service such as DPC or AER
+> is running, it is the responsibility of the fatal error service to
+> recover the link.
+[snip]
+> --- a/drivers/pci/hotplug/pciehp_hpc.c
+> +++ b/drivers/pci/hotplug/pciehp_hpc.c
+> @@ -612,10 +612,15 @@ static irqreturn_t pciehp_isr(int irq, void *dev_id)
+>  	 * and cause the wrong event to queue.
+>  	 */
+>  	if (events & PCI_EXP_SLTSTA_DLLSC) {
+> -		ctrl_info(ctrl, "Slot(%s): Link %s\n", slot_name(slot),
+> -			  link ? "Up" : "Down");
+> -		pciehp_queue_interrupt_event(slot, link ? INT_LINK_UP :
+> -					     INT_LINK_DOWN);
+> +		if (pci_fatal_error_pending(pdev, PCI_ERR_UNC_SURPDN))
+> +			ctrl_info(ctrl, "Slot(%s): Ignoring Link %s event due to detected Fatal Error\n",
+> +				  slot_name(slot), link ? "Up" : "Down");
+> +		else {
+> +			ctrl_info(ctrl, "Slot(%s): Link %s\n", slot_name(slot),
+> +				  link ? "Up" : "Down");
+> +			pciehp_queue_interrupt_event(slot, link ? INT_LINK_UP :
+> +						     INT_LINK_DOWN);
+> +		}
 
-Signed-off-by: Nipun Gupta <nipun.gupta@nxp.com>
-Reviewed-by: Laurentiu Tudor <laurentiu.tudor@nxp.com>
----
- arch/arm64/boot/dts/freescale/fsl-ls208xa.dtsi | 7 ++++++-
- 1 file changed, 6 insertions(+), 1 deletion(-)
+The above is still based on the event handling in v4.18, so the patch
+doesn't apply to what's currently queued on Bjorn's pci/hotplug branch.
 
-diff --git a/arch/arm64/boot/dts/freescale/fsl-ls208xa.dtsi b/arch/arm64/boot/dts/freescale/fsl-ls208xa.dtsi
-index 137ef4d..3d5e049 100644
---- a/arch/arm64/boot/dts/freescale/fsl-ls208xa.dtsi
-+++ b/arch/arm64/boot/dts/freescale/fsl-ls208xa.dtsi
-@@ -184,6 +184,7 @@
- 		#address-cells = <2>;
- 		#size-cells = <2>;
- 		ranges;
-+		dma-ranges = <0x0 0x0 0x0 0x0 0x10000 0x00000000>;
- 
- 		clockgen: clocking@1300000 {
- 			compatible = "fsl,ls2080a-clockgen";
-@@ -357,6 +358,8 @@
- 			reg = <0x00000008 0x0c000000 0 0x40>,	 /* MC portal base */
- 			      <0x00000000 0x08340000 0 0x40000>; /* MC control reg */
- 			msi-parent = <&its>;
-+			iommu-map = <0 &smmu 0 0>;	/* This is fixed-up by u-boot */
-+			dma-coherent;
- 			#address-cells = <3>;
- 			#size-cells = <1>;
- 
-@@ -460,6 +463,9 @@
- 			compatible = "arm,mmu-500";
- 			reg = <0 0x5000000 0 0x800000>;
- 			#global-interrupts = <12>;
-+			#iommu-cells = <1>;
-+			stream-match-mask = <0x7C00>;
-+			dma-coherent;
- 			interrupts = <0 13 4>, /* global secure fault */
- 				     <0 14 4>, /* combined secure interrupt */
- 				     <0 15 4>, /* global non-secure fault */
-@@ -502,7 +508,6 @@
- 				     <0 204 4>, <0 205 4>,
- 				     <0 206 4>, <0 207 4>,
- 				     <0 208 4>, <0 209 4>;
--			mmu-masters = <&fsl_mc 0x300 0>;
- 		};
- 
- 		dspi: dspi@2100000 {
--- 
-1.9.1
+That said, a problem I see with the approach you're suggesting is that
+recovery from the fatal error may fail in pcie_do_fatal_recovery().
+The devices below the hotplug port will then have been removed but
+internally in pciehp the slot will remain in ON_STATE and slot power
+will remain enabled.  That feels wrong.
 
+After re-reading all the e-mails we've exchanged since early July,
+the approach Oza suggested in this e-mail seems the most sensible to me:
+https://lkml.kernel.org/r/324f8cf2fe6f7bdc43ca8a646eea908d@codeaurora.org
 
-_______________________________________________
-linux-arm-kernel mailing list
-linux-arm-kernel@lists.infradead.org
-http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
+He suggested skipping removal of devices in pcie_do_fatal_recovery()
+for hotplug ports.
+
+The rationale is that when a PCIe port raises a fatal error, that port
+will normally not have the ability to remove its children from the
+hierarchy unless it's a hotplug port.  Thus, if the port is a hotplug
+port, pcie_do_fatal_recovery() should let pciehp handle removal of the
+devices.  Only if it's not a hotplug port should pcie_do_fatal_recovery()
+remove the devices.  My understanding is that after the error has been
+cleared, the link should automatically come back up, is that correct?
+pciehp will then bring up the slot on its own.
+
+Thanks,
+
+Lukas
