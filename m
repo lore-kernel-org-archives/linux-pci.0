@@ -1,68 +1,64 @@
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-MIME-Version: 1.0
-In-Reply-To: <e42a6bb8ff0ddd6eaa31fe381875425a3730a73f.1532090446.git.leonard.crestez@nxp.com>
-References: <cover.1532090446.git.leonard.crestez@nxp.com>
- <e42a6bb8ff0ddd6eaa31fe381875425a3730a73f.1532090446.git.leonard.crestez@nxp.com>
-From: Fabio Estevam <festevam@gmail.com>
-Date: Fri, 20 Jul 2018 10:38:18 -0300
-Message-ID: <CAOMZO5BQjxeGOUE3jwbA_sRuYWQkHTJo3AeywXXpm-9kVdsYfw@mail.gmail.com>
-Subject: Re: [PATCH v2 3/3] PCI: imx: Initial imx7d pm support
-To: Leonard Crestez <leonard.crestez@nxp.com>
-List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
-List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
-List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
-List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
-List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
-Cc: Dong Aisheng <aisheng.dong@nxp.com>, Joao Pinto <Joao.Pinto@synopsys.com>,
- Richard Zhu <hongxing.zhu@nxp.com>, linux-pm@vger.kernel.org,
- Andrey Smirnov <andrew.smirnov@gmail.com>, Jingoo Han <jingoohan1@gmail.com>,
- linux-kernel <linux-kernel@vger.kernel.org>,
- Bjorn Helgaas <bhelgaas@google.com>,
- Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
- NXP Linux Team <linux-imx@nxp.com>, Sascha Hauer <kernel@pengutronix.de>,
- linux-pci@vger.kernel.org, Fabio Estevam <fabio.estevam@nxp.com>,
- Shawn Guo <shawnguo@kernel.org>,
- "moderated list:ARM/FREESCALE IMX / MXC ARM ARCHITECTURE"
- <linux-arm-kernel@lists.infradead.org>, Lucas Stach <l.stach@pengutronix.de>
-Content-Type: text/plain; charset="us-ascii"
-Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
-Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
+Return-Path: <SRS0=4/Hl=KN=linux.intel.com=andriy.shevchenko@kernel.org>
+Return-Path: <SRS0=4/Hl=KN=linux.intel.com=andriy.shevchenko@kernel.org>
+Message-ID: <c68d62cb07f66c6d82bf958e1d521dd570527d26.camel@linux.intel.com>
+Subject: Re: [PATCH v3] PCI: Add PCI_DEVICE_DATA() macro to fully describe
+ device ID entry
+From: Andy Shevchenko <andriy.shevchenko@linux.intel.com>
+To: Bjorn Helgaas <helgaas@kernel.org>
+Cc: Stanislaw Gruszka <sgruszka@redhat.com>, Helmut Schaa
+ <helmut.schaa@googlemail.com>, linux-wireless@vger.kernel.org, Bjorn
+ Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org, Randy Dunlap
+ <rdunlap@infradead.org>
+Date: Sun, 29 Jul 2018 15:49:49 +0300
+In-Reply-To: <20180727211041.GF173328@bhelgaas-glaptop.roam.corp.google.com>
+References: <20180727204945.60865-1-andriy.shevchenko@linux.intel.com>
+	 <20180727211041.GF173328@bhelgaas-glaptop.roam.corp.google.com>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 List-ID: <linux-pci.vger.kernel.org>
 
-Hi Leonard,
+On Fri, 2018-07-27 at 16:10 -0500, Bjorn Helgaas wrote:
+> On Fri, Jul 27, 2018 at 11:49:44PM +0300, Andy Shevchenko wrote:
+> > There are a lot of examples in the kernel where PCI_VDEVICE() is
+> > used and still
+> > looks not so convenient due to additional driver_data field
+> > attached.
+> > 
+> > Introduce PCI_DEVICE_DATA() macro to fully describe device ID entry
+> > in shortest
+> > possible form. For example,
+> > 
+> >   before:
+> > 
+> >     { PCI_VDEVICE(INTEL, PCI_DEVICE_ID_INTEL_MRFLD),
+> >       (kernel_ulong_t) &dwc3_pci_mrfld_properties, },
+> > 
+> >   after:
+> > 
+> >     { PCI_DEVICE_DATA(INTEL, INTEL_MRFLD,
+> > &dwc3_pci_mrfld_properties) },
+> 
+> Most device IDs include the vendor ID; did you consider pasting the
+> vendor ID string into the device ID, so you would end up with this?
+> 
+>     { PCI_DEVICE_DATA(INTEL, MRFLD, &dwc3_pci_mrfld_properties) },
 
-On Fri, Jul 20, 2018 at 9:47 AM, Leonard Crestez
-<leonard.crestez@nxp.com> wrote:
+While it makes it slightly shorter, it breaks consistency among such
+macros. I don't see any of them is using something like
+PCI_DEVICE_ID_##vend##dev.
 
-> +static int imx6_pcie_resume_noirq(struct device *dev)
-> +{
-> +       int ret = 0;
+Though I see few users outside of PCI subsystem that reinvent above
+line.
 
-There is no need for initializing 'ret' here.
+Do you think variant with ##vend##dev is better? I will update it for v4
+if needed.
 
-> +       struct imx6_pcie *imx6_pcie = dev_get_drvdata(dev);
-> +       struct pcie_port *pp = &imx6_pcie->pci->pp;
-> +
-> +       if (imx6_pcie->variant != IMX7D)
-> +               return 0;
-> +
-> +       imx6_pcie_assert_core_reset(imx6_pcie);
-> +       imx6_pcie_init_phy(imx6_pcie);
-> +       imx6_pcie_deassert_core_reset(imx6_pcie);
-> +       dw_pcie_setup_rc(pp);
-> +
-> +       ret = imx6_pcie_establish_link(imx6_pcie);
-> +       if (ret < 0)
-> +               pr_err("pcie link is down after resume.\n");
+> I don't absolutely love either PCI_VDEVICE or PCI_DEVICE_DATA because
+> grep doesn't work as well to find uses of the symbol, but the existing
+> 2300 uses of PCI_VDEVICE are telling me pretty loudly to just get over
+> it :)
 
-Shouldn't the error be propagated?
 
-Also, dev_err() is preferred instead of pr_err().
-
-_______________________________________________
-linux-arm-kernel mailing list
-linux-arm-kernel@lists.infradead.org
-http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
+-- 
+Andy Shevchenko <andriy.shevchenko@linux.intel.com>
+Intel Finland Oy
