@@ -1,102 +1,55 @@
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Date: Wed, 18 Jul 2018 10:49:24 +0100
-From: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
-To: Honghui Zhang <honghui.zhang@mediatek.com>
-Subject: Re: [PATCH v3 3/4] PCI: mediatek: Add system pm support for MT2712
- and MT7622
-Message-ID: <20180718094924.GA21463@red-moon>
-References: <1530518264-6125-1-git-send-email-honghui.zhang@mediatek.com>
- <1530518264-6125-4-git-send-email-honghui.zhang@mediatek.com>
- <20180717171543.GA20991@red-moon>
- <1531893761.31406.15.camel@mhfsdcap03>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from bmailout1.hostsharing.net ([83.223.95.100]:33809 "EHLO
+        bmailout1.hostsharing.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726203AbeG2NjS (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Sun, 29 Jul 2018 09:39:18 -0400
+Date: Sun, 29 Jul 2018 14:09:01 +0200
+From: Lukas Wunner <lukas@wunner.de>
+To: Sinan Kaya <okaya@kernel.org>
+Cc: Alex_Gagniuc@Dellteam.com, mr.nuke.me@gmail.com,
+        keith.busch@intel.com, linux-pci@vger.kernel.org,
+        Austin.Bolen@dell.com, Stuart.Hayes@dell.com, Narendra.K@dell.com,
+        Christopher.Arzola@dell.com, David.Chalfant@dell.com
+Subject: Re: Should a PCIe Link Down event set the PCI_DEV_DISCONNECTED bit?
+Message-ID: <20180729120901.GA8489@wunner.de>
+References: <47727551-86ce-040a-2516-efa47ee3a76e@gmail.com>
+ <20180727071813.GA6128@wunner.de>
+ <f6aa0b881a824b4f82a29dad300aaaea@ausx13mps321.AMER.DELL.COM>
+ <20180727170543.GA5326@wunner.de>
+ <99604d46a7554eb38ee6c1579c53d835@ausx13mps321.AMER.DELL.COM>
+ <20180728183130.GA21482@wunner.de>
+ <29894244-e682-9394-c408-bd989fb4716a@kernel.org>
 MIME-Version: 1.0
-In-Reply-To: <1531893761.31406.15.camel@mhfsdcap03>
-List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
-List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
-List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
-List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
-List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
-Cc: youlin.pei@mediatek.com, devicetree@vger.kernel.org,
- hongkun.cao@mediatek.com, ryder.lee@mediatek.com, khilman@kernel.org,
- marc.zyngier@arm.com, linux-pci@vger.kernel.org, sean.wang@mediatek.com,
- rjw@rjwysocki.net, linux-kernel@vger.kernel.org, yt.shen@mediatek.com,
- matthias.bgg@gmail.com, linux-mediatek@lists.infradead.org,
- yong.wu@mediatek.com, bhelgaas@google.com, yingjoe.chen@mediatek.com,
- ulf.hansson@linaro.org, eddie.huang@mediatek.com,
- linux-arm-kernel@lists.infradead.org
-Content-Type: text/plain; charset="us-ascii"
-Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
-Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <29894244-e682-9394-c408-bd989fb4716a@kernel.org>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wed, Jul 18, 2018 at 02:02:41PM +0800, Honghui Zhang wrote:
-
-<snip>
-
-> > > +static int __maybe_unused mtk_pcie_resume_noirq(struct device *dev)
-> > > +{
-> > > +	struct mtk_pcie *pcie = dev_get_drvdata(dev);
-> > > +	const struct mtk_pcie_soc *soc = pcie->soc;
-> > > +	struct mtk_pcie_port *port, *tmp;
-> > > +
-> > > +	if (!soc->pm_support)
-> > > +		return 0;
-> > > +
-> > > +	if (list_empty(&pcie->ports))
-> > > +		return 0;
-> > > +
-> > > +	if (dev->pm_domain) {
-> > > +		pm_runtime_enable(dev);
-> > > +		pm_runtime_get_sync(dev);
-> > > +	}
-> > 
-> > Are these runtime PM calls needed/abused here ?
-> > 
-> > Mind explaining the logic ?
-> > 
-> > There is certainly an asymmetry with the suspend callback which made me
-> > suspicious, I am pretty certain Rafael/Kevin/Ulf can help me clarify so
-> > that we can make progress with this patch.
-> > 
-> > Lorenzo
-> > 
-> Hi Lorenzo, thanks for your comments.
-> Sorry I don't get you.
-> I believe that in suspend callbacks the pm_runtime_put_sync and
-> pm_runtime_disable should be called to gated the CMOS for this module,
-> while the pm_rumtime_enable and pm_rumtime_get_sync should be called
-> in resume callback.
-
-That's why I CC'ed Rafael, Kevin and Ulf, to answer this question
-thoroughly, I am not sure it is needed and that's the right way
-of doing it in system suspend callbacks.
-
-> That's exactly this patch doing.
-> But the pm_rumtime_put_sync and pm_runtime_disable functions was wrapped
-> in the mtk_pcie_subsys_powerdown.
-
-Ah, sorry, I missed that.
-
-> I did not call mtk_pcie_subsys_powerup since it does not just wrapped
-> pm_rumtime related functions but also do the platform_resource_get,
-> devm_ioremap, and free_ck clock get which I do not needed in resume
-> callback.
+On Sat, Jul 28, 2018 at 05:26:57PM -0700, Sinan Kaya wrote:
+> On 7/28/2018 11:31 AM, Lukas Wunner wrote:
+> >The knowledge whether a surprise removal or a safe removal is at hand
+> >does exist further up in the call stack:  A surprise removal is
+> >initiated by pciehp_handle_presence_or_link_change(), a safe removal by
+> >pciehp_handle_disable_request().
 > 
-> Do you think it will be much clear if I abstract the
-> platform_resource_get, devm_ioremap functions from
-> mtk_pcie_subsys_powerup and put it to a new functions like
-> mtk_pcie_subsys_resource_get, and then we may call the
-> mtk_pcie_subsys_powerup in the resume function?
+> Can you also check if platform supports surprise link down error
+> reporting (Link Capabilities Register) and reports a surprise link
+> down event in AER Uncorrectable Error Status Register for the
+> hotplug code to make it more reliable?
 
-I think so but let's wait first for feedback on whether those
-runtime PM calls are needed in the first place.
+We read the Link Capabilities register in pcie_init() to determine if
+Data Link Layer Link Active Reporting is supported.  (That's a feature
+added in the PCIe r1.1 Base Spec.  Old devices that strictly adhere to
+PCIe r1.0 don't support it.)
 
-Lorenzo
+We could likewise cache the Surprise Down Error Reporting Capable bit
+in struct controller.  But I don't quite understand yet how and when
+you want it to be used by pciehp?  If the link goes down, pciehp doesn't
+care whether that's caused by a fatal error or removal by the user.
+It seems correct to me to also remove devices on a fatal error, after all
+they're no longer accessible until the error is cleared (IIUC).
+Do you agree or disagree?
 
-_______________________________________________
-linux-arm-kernel mailing list
-linux-arm-kernel@lists.infradead.org
-http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
+Thanks,
+
+Lukas
