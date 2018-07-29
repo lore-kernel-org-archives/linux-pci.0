@@ -1,63 +1,88 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-wr0-f194.google.com ([209.85.128.194]:35302 "EHLO
-        mail-wr0-f194.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S932920AbeGDIip (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Wed, 4 Jul 2018 04:38:45 -0400
-Received: by mail-wr0-f194.google.com with SMTP id h40-v6so4443703wrh.2
-        for <linux-pci@vger.kernel.org>; Wed, 04 Jul 2018 01:38:44 -0700 (PDT)
-Reply-To: christian.koenig@amd.com
-Subject: Re: [PATCH 0/5] drm: use core pcie functionality for pcie gen/width
-To: Alex Deucher <alexdeucher@gmail.com>,
-        amd-gfx@lists.freedesktop.org, dri-devel@lists.freedesktop.org,
-        airlied@gmail.com, linux-pci@vger.kernel.org, bhelgaas@google.com
-Cc: Alex Deucher <alexander.deucher@amd.com>
-References: <20180625210606.2736-1-alexander.deucher@amd.com>
-From: =?UTF-8?Q?Christian_K=c3=b6nig?= <ckoenig.leichtzumerken@gmail.com>
-Message-ID: <d285dc8f-d0a5-2397-cf85-3c55eb445cf9@gmail.com>
-Date: Wed, 4 Jul 2018 10:38:42 +0200
+Received: from bmailout3.hostsharing.net ([176.9.242.62]:56565 "EHLO
+        bmailout3.hostsharing.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726368AbeG2TKU (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Sun, 29 Jul 2018 15:10:20 -0400
+Date: Sun, 29 Jul 2018 19:39:07 +0200
+From: Lukas Wunner <lukas@wunner.de>
+To: Sinan Kaya <Okaya@kernel.org>
+Cc: linux-pci@vger.kernel.org, Bjorn Helgaas <bhelgaas@google.com>,
+        Mika Westerberg <mika.westerberg@linux.intel.com>,
+        Keith Busch <keith.busch@intel.com>,
+        Oza Pawandeep <poza@codeaurora.org>
+Subject: Re: [PATCH v6 1/1] PCI: pciehp: Ignore link events when there is a
+ fatal error pending
+Message-ID: <20180729173907.GA27216@wunner.de>
+References: <20180728091324.154795-1-okaya@kernel.org>
+ <20180728091324.154795-2-okaya@kernel.org>
+ <20180729115703.GA2781@wunner.de>
+ <CAK9iUCNfu8pKd1bHiQWVSYg+dppTSPV-Qa7YWBtaNLU_cwL8AA@mail.gmail.com>
 MIME-Version: 1.0
-In-Reply-To: <20180625210606.2736-1-alexander.deucher@amd.com>
-Content-Type: text/plain; charset=utf-8; format=flowed
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <CAK9iUCNfu8pKd1bHiQWVSYg+dppTSPV-Qa7YWBtaNLU_cwL8AA@mail.gmail.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Whole series is Acked-by: Christian König <christian.koenig@amd.com>.
+On Sun, Jul 29, 2018 at 09:44:50AM -0700, Sinan Kaya wrote:
+> On 7/29/18, Lukas Wunner <lukas@wunner.de> wrote:
+> > After re-reading all the e-mails we've exchanged since early July,
+> > the approach Oza suggested in this e-mail seems the most sensible to me:
+> > https://lkml.kernel.org/r/324f8cf2fe6f7bdc43ca8a646eea908d@codeaurora.org
+> >
+> > He suggested skipping removal of devices in pcie_do_fatal_recovery()
+> > for hotplug ports.
+> >
+> > The rationale is that when a PCIe port raises a fatal error, that port
+> > will normally not have the ability to remove its children from the
+> > hierarchy unless it's a hotplug port.  Thus, if the port is a hotplug
+> > port, pcie_do_fatal_recovery() should let pciehp handle removal of the
+> > devices.  Only if it's not a hotplug port should pcie_do_fatal_recovery()
+> > remove the devices.  My understanding is that after the error has been
+> > cleared, the link should automatically come back up, is that correct?
+> > pciehp will then bring up the slot on its own.
+> >
+> 
+> I understand your slot power concerns. I don't have an answer at this moment.
+> 
+> Here is the issue with mixing pciehp link handler and fatal error
+> recovery paths.
+> 
+> 1. fatal error happens
+> 2. Pciehp ISR executes and turns off slot power
+> 3. Fatal error recovery executes either secondary bus reset or dpc
+>    status trigger via reset_link() function to recover the link.
+> 4. Link doesn't recover because power is off.
 
-BTW: With patch #2 you created quite some noise in the news:
+With the new code on the pci/hotplug branch, the expected behavior is:
 
-https://www.tomshardware.com/news/amd-vega-20-pcie-4.0,37389.html
+4. Having brought the slot down after the DLLSC event,
+   pciehp_handle_presence_or_link_change() notices that the slot is
+   occupied ("Slot(...): Card present") and immediately tries to
+   bring the slot up again:
+   Slot power is re-enabled, green LED is set to blinking.
+   pciehp_check_link_status() then waits 1 second for the link to
+   go up.  If the link does not come up within 1 second, an error
+   message is logged but the procedure does not abort yet.  We then
+   wait for 100 ms and poll for 1 second whether the vendor ID of
+   slot 0 function 0 becomes readable.  Only if the link has not come
+   up at this point is the procedure aborted.
 
-Cheers,
-Christian.
+So the question is:
 
-Am 25.06.2018 um 23:06 schrieb Alex Deucher:
-> This series exports some pcie helper functions for use by drivers and
-> fixes up the amdgpu and radeon drivers to use this core functionality
-> rather than the duplicated functionality in the drm.  Finally we remove
-> the drm helpers since the duplicate the pcie functionality of the core.
-> This also adds proper pcie gen4 detection for amdgpu.
->
-> Alex Deucher (5):
->    pci: export pcie_get_speed_cap and pcie_get_width_cap
->    drm/amdgpu: update amd_pcie.h to include gen4 speeds
->    drm/amdgpu: use pcie functions for link width and speed
->    drm/radeon: use pcie functions for link width
->    drm: drop drm_pcie_get_speed_cap_mask and drm_pcie_get_max_link_width
->
->   drivers/gpu/drm/amd/amdgpu/amdgpu_device.c | 83 +++++++++++++++++++++---------
->   drivers/gpu/drm/amd/amdgpu/amdgpu_dpm.c    |  7 ++-
->   drivers/gpu/drm/amd/amdgpu/ci_dpm.c        |  3 +-
->   drivers/gpu/drm/amd/amdgpu/si_dpm.c        |  3 +-
->   drivers/gpu/drm/amd/include/amd_pcie.h     |  2 +
->   drivers/gpu/drm/drm_pci.c                  | 58 ---------------------
->   drivers/gpu/drm/radeon/ci_dpm.c            | 20 +++++--
->   drivers/gpu/drm/radeon/cik.c               | 22 ++++----
->   drivers/gpu/drm/radeon/r600_dpm.c          |  4 +-
->   drivers/gpu/drm/radeon/radeon.h            |  4 ++
->   drivers/gpu/drm/radeon/si.c                | 22 ++++----
->   drivers/gpu/drm/radeon/si_dpm.c            | 20 +++++--
->   drivers/pci/pci.c                          |  2 +
->   include/drm/drm_pci.h                      |  7 ---
->   include/linux/pci.h                        |  3 ++
->   15 files changed, 132 insertions(+), 128 deletions(-)
->
+a. Is DPC/AER able to recover from the error if slot power is disabled?
+   Or do we need to synchronize with pciehp to keep slot power enabled
+   so that the error can be handled?
+
+b. How fast is DPC/AER able to recover from a fatal error?
+   If it's more than 2.1 seconds, pciehp will not bring the slot up
+   automatically and the user is required to bring it up manually via
+   sysfs.  If we know that DPC/AER need a specific amount of time that
+   is longer than 2.1 seconds, we can amend board_added() to poll until
+   recovery from the fatal error (or use a waitqueue which is woken on
+   recovery), with a sufficient timeout.
+
+Does this work for you?
+
+Thanks,
+
+Lukas
