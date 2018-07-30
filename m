@@ -1,136 +1,211 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from usa-sjc-mx-foss1.foss.arm.com ([217.140.101.70]:33144 "EHLO
-        foss.arm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S933298AbeGIPcA (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Mon, 9 Jul 2018 11:32:00 -0400
-Date: Mon, 9 Jul 2018 16:33:51 +0100
-From: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
-To: Alan Douglas <adouglas@cadence.com>
-Cc: bhelgaas@google.com, kishon@ti.com, linux-pci@vger.kernel.org,
-        devicetree@vger.kernel.org, robh+dt@kernel.org
-Subject: Re: [PATCH 4/5] PCI: cadence: Add Power Management ops for host and
- EP
-Message-ID: <20180709153351.GA16292@red-moon>
-References: <1529915453-4633-1-git-send-email-adouglas@cadence.com>
- <1529915453-4633-5-git-send-email-adouglas@cadence.com>
+Return-Path: <SRS0=YYvE=KO=netronome.com=jakub.kicinski@kernel.org>
+Return-Path: <SRS0=YYvE=KO=netronome.com=jakub.kicinski@kernel.org>
+Date: Mon, 30 Jul 2018 15:00:26 -0700
+From: Jakub Kicinski <jakub.kicinski@netronome.com>
+To: Alexander Duyck <alexander.duyck@gmail.com>
+Cc: Bjorn Helgaas <helgaas@kernel.org>, Moshe Shemesh
+ <moshes20.il@gmail.com>, Jiri Pirko <jiri@resnulli.us>, Eran Ben Elisha
+ <eranbe@mellanox.com>, Saeed Mahameed <saeedm@mellanox.com>, "David S.
+ Miller" <davem@davemloft.net>, "netdev@vger.kernel.org"
+ <netdev@vger.kernel.org>, linux-pci <linux-pci@vger.kernel.org>
+Subject: Re: [net-next 10/16] net/mlx5: Support PCIe buffer congestion
+ handling via Devlink
+Message-ID: <20180730150026.022c729a@cakuba.netronome.com>
+In-Reply-To: <CAKgT0UcbXT6EXt=zwoOzZ-wm7uS70wvm9xMcsoSf6OzuJsLxMQ@mail.gmail.com>
+References: <575e4a3a-af6f-aac4-fed6-fd4dad387105@mellanox.com>
+	<20180724125135.19121f1f@cakuba.netronome.com>
+	<98071d31-bf99-d713-7fd1-4b1cc156377e@mellanox.com>
+	<CAKgT0UfG-4zuKArCbSLkZoCKs2-t6r9U4qQPPUvBk-e_5_3FCg@mail.gmail.com>
+	<20180725174359.6952c937@cakuba.netronome.com>
+	<20180726071433.GA2222@nanopsycho>
+	<CAKgT0UeGOhjR756fMPx_k_o8Qq5x4waKMcdmtR3pLAT=xRHMgA@mail.gmail.com>
+	<20180728160608.GI173328@bhelgaas-glaptop.roam.corp.google.com>
+	<CALBF4T81ArTWR_i6SogC4qe8xPf3WYvdrSkypXt65wOf_upopg@mail.gmail.com>
+	<CAKgT0UfkBQKqy87BcnQvfzrbonR5rm9cd3Q2dzsyR04vY-+FWg@mail.gmail.com>
+	<20180730140727.GJ173328@bhelgaas-glaptop.roam.corp.google.com>
+	<CAKgT0UcbXT6EXt=zwoOzZ-wm7uS70wvm9xMcsoSf6OzuJsLxMQ@mail.gmail.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1529915453-4633-5-git-send-email-adouglas@cadence.com>
-Sender: linux-pci-owner@vger.kernel.org
+Content-Type: text/plain; charset=US-ASCII
 List-ID: <linux-pci.vger.kernel.org>
 
-On Mon, Jun 25, 2018 at 09:30:52AM +0100, Alan Douglas wrote:
-> These PM ops will enable/disable the optional PHYs if present.  The
-> AXI link-down register in the host driver is now cleared in
-> cdns_pci_map_bus since the link-down bit will be set if the PHY has
-> been disabled.  It is not cleared when enabling the PHY, since the
-> link will not yet be up.
+On Mon, 30 Jul 2018 08:02:48 -0700, Alexander Duyck wrote:
+> On Mon, Jul 30, 2018 at 7:07 AM, Bjorn Helgaas <helgaas@kernel.org> wrote:
+> > On Sun, Jul 29, 2018 at 03:00:28PM -0700, Alexander Duyck wrote:  
+> >> On Sun, Jul 29, 2018 at 2:23 AM, Moshe Shemesh <moshes20.il@gmail.com> wrote:  
+> >> > On Sat, Jul 28, 2018 at 7:06 PM, Bjorn Helgaas <helgaas@kernel.org> wrote:  
+> >> >> On Thu, Jul 26, 2018 at 07:00:20AM -0700, Alexander Duyck wrote:  
+> >> >> > On Thu, Jul 26, 2018 at 12:14 AM, Jiri Pirko <jiri@resnulli.us> wrote:  
+> >> >> > > Thu, Jul 26, 2018 at 02:43:59AM CEST, jakub.kicinski@netronome.com wrote:  
+> >> >> > >>On Wed, 25 Jul 2018 08:23:26 -0700, Alexander Duyck wrote:  
+> >> >> > >>> On Wed, Jul 25, 2018 at 5:31 AM, Eran Ben Elisha wrote:  
+> >> >> > >>> > On 7/24/2018 10:51 PM, Jakub Kicinski wrote:  
+> >> >> > >>> >>>> The devlink params haven't been upstream even for a full cycle
+> >> >> > >>> >>>> and
+> >> >> > >>> >>>> already you guys are starting to use them to configure standard
+> >> >> > >>> >>>> features like queuing.  
+> >> >> > >>> >>>
+> >> >> > >>> >>> We developed the devlink params in order to support non-standard
+> >> >> > >>> >>> configuration only. And for non-standard, there are generic and
+> >> >> > >>> >>> vendor
+> >> >> > >>> >>> specific options.  
+> >> >> > >>> >>
+> >> >> > >>> >> I thought it was developed for performing non-standard and
+> >> >> > >>> >> possibly
+> >> >> > >>> >> vendor specific configuration.  Look at DEVLINK_PARAM_GENERIC_*
+> >> >> > >>> >> for
+> >> >> > >>> >> examples of well justified generic options for which we have no
+> >> >> > >>> >> other API.  The vendor mlx4 options look fairly vendor specific
+> >> >> > >>> >> if you
+> >> >> > >>> >> ask me, too.
+> >> >> > >>> >>
+> >> >> > >>> >> Configuring queuing has an API.  The question is it acceptable to
+> >> >> > >>> >> enter
+> >> >> > >>> >> into the risky territory of controlling offloads via devlink
+> >> >> > >>> >> parameters
+> >> >> > >>> >> or would we rather make vendors take the time and effort to model
+> >> >> > >>> >> things to (a subset) of existing APIs.  The HW never fits the
+> >> >> > >>> >> APIs
+> >> >> > >>> >> perfectly.  
+> >> >> > >>> >
+> >> >> > >>> > I understand what you meant here, I would like to highlight that
+> >> >> > >>> > this
+> >> >> > >>> > mechanism was not meant to handle SRIOV, Representors, etc.
+> >> >> > >>> > The vendor specific configuration suggested here is to handle a
+> >> >> > >>> > congestion
+> >> >> > >>> > state in Multi Host environment (which includes PF and multiple
+> >> >> > >>> > VFs per
+> >> >> > >>> > host), where one host is not aware to the other hosts, and each is
+> >> >> > >>> > running
+> >> >> > >>> > on its own pci/driver. It is a device working mode configuration.
+> >> >> > >>> >
+> >> >> > >>> > This  couldn't fit into any existing API, thus creating this
+> >> >> > >>> > vendor specific
+> >> >> > >>> > unique API is needed.  
+> >> >> > >>>
+> >> >> > >>> If we are just going to start creating devlink interfaces in for
+> >> >> > >>> every
+> >> >> > >>> one-off option a device wants to add why did we even bother with
+> >> >> > >>> trying to prevent drivers from using sysfs? This just feels like we
+> >> >> > >>> are back to the same arguments we had back in the day with it.
+> >> >> > >>>
+> >> >> > >>> I feel like the bigger question here is if devlink is how we are
+> >> >> > >>> going
+> >> >> > >>> to deal with all PCIe related features going forward, or should we
+> >> >> > >>> start looking at creating a new interface/tool for PCI/PCIe related
+> >> >> > >>> features? My concern is that we have already had features such as
+> >> >> > >>> DMA
+> >> >> > >>> Coalescing that didn't really fit into anything and now we are
+> >> >> > >>> starting to see other things related to DMA and PCIe bus credits.
+> >> >> > >>> I'm
+> >> >> > >>> wondering if we shouldn't start looking at a tool/interface to
+> >> >> > >>> configure all the PCIe related features such as interrupts, error
+> >> >> > >>> reporting, DMA configuration, power management, etc. Maybe we could
+> >> >> > >>> even look at sharing it across subsystems and include things like
+> >> >> > >>> storage, graphics, and other subsystems in the conversation.  
+> >> >> > >>
+> >> >> > >>Agreed, for actual PCIe configuration (i.e. not ECN marking) we do
+> >> >> > >> need
+> >> >> > >>to build up an API.  Sharing it across subsystems would be very cool!  
+> >> >>
+> >> >> I read the thread (starting at [1], for anybody else coming in late)
+> >> >> and I see this has something to do with "configuring outbound PCIe
+> >> >> buffers", but I haven't seen the connection to PCIe protocol or
+> >> >> features, i.e., I can't connect this to anything in the PCIe spec.
+> >> >>
+> >> >> Can somebody help me understand how the PCI core is relevant?  If
+> >> >> there's some connection with a feature defined by PCIe, or if it
+> >> >> affects the PCIe transaction protocol somehow, I'm definitely
+> >> >> interested in this.  But if this only affects the data transferred
+> >> >> over PCIe, i.e., the data payloads of PCIe TLP packets, then I'm not
+> >> >> sure why the PCI core should care.
+> >> >>  
+> >> >
+> >> >
+> >> > As you wrote, this is not a PCIe feature  or affects the PCIe transaction
+> >> > protocol.
+> >> >
+> >> > Actually, due to hardware limitation in current device, we have enabled a
+> >> > workaround in hardware.
+> >> >
+> >> > This mode is proprietary and not relevant to other PCIe devices, thus is set
+> >> > using driver-specific parameter in devlink  
+> >>
+> >> Essentially what this feature is doing is communicating the need for
+> >> PCIe back-pressure to the network fabric. So as the buffers on the
+> >> device start to fill because the device isn't able to get back PCIe
+> >> credits fast enough it will then start to send congestion
+> >> notifications to the network stack itself if I understand this
+> >> correctly.  
+> >
+> > This sounds like a hook that allows the device to tell its driver
+> > about PCIe flow control credits, and the driver can pass that on to
+> > the network stack.  IIUC, that would be a device-specific feature
+> > outside the scope of the PCI core.
 
-It is not entirely clear what you mean here, can you elaborate please ?
+Hm, I might be wrong but AFAIU the patch which sparked the discussion
+does not go all the way down to the PCIe FC.  PCIe layer works at max
+possible rate (single VC etc.), but there is a mismatch between network
+and PCIe speed.  E.g. with a 2x40GE NIC on a 8x8 PCIe v3 (63 Gbps) there
+can be more traffic flowing in than PCIe bus will be able to transfer
+to the host. From a networking ASIC perspective it's a fairly typical
+problem of dealing with mismatched port speeds, incast, etc.  GPUs or
+storage devices will not have this problem, it will only happen with
+non-flow controlled network technologies, i.e. netdevs.  It so happens
+the device is on a PCIe bus but the same problem can happen on SPI or
+any other bus.
 
-Thank you,
-Lorenzo
+Having said that a PCIe configuration API seems to continue to come up.
+Examples Alex gives below seem very valid (AFAIU them).
 
-> Signed-off-by: Alan Douglas <adouglas@cadence.com>
-> ---
->  drivers/pci/controller/pcie-cadence-ep.c   |    1 +
->  drivers/pci/controller/pcie-cadence-host.c |    3 ++
->  drivers/pci/controller/pcie-cadence.c      |   30 ++++++++++++++++++++++++++++
->  drivers/pci/controller/pcie-cadence.h      |    4 +++
->  4 files changed, 38 insertions(+), 0 deletions(-)
+> >> For now there are no major conflicts, but when we start getting into
+> >> stuff like PCIe DMA coalescing, and on a more general basis just PCIe
+> >> active state power management that is going to start making things
+> >> more complicated going forward.  
+> >
+> > We do support ASPM already in the PCI core, and we do have the
+> > pci_disable_link_state() interface, which is currently the only way
+> > drivers can influence it.  There are several drivers that do their own
+> > ASPM configuration, but this is not safe because it's not coordinated
+> > with what the PCI core does.  If/when drivers need more control, we
+> > should enhance the PCI core interfaces.  
 > 
-> diff --git a/drivers/pci/controller/pcie-cadence-ep.c b/drivers/pci/controller/pcie-cadence-ep.c
-> index c02f33d..3eabd99 100644
-> --- a/drivers/pci/controller/pcie-cadence-ep.c
-> +++ b/drivers/pci/controller/pcie-cadence-ep.c
-> @@ -555,6 +555,7 @@ static void cdns_pcie_ep_shutdown(struct platform_device *pdev)
->  	.driver = {
->  		.name = "cdns-pcie-ep",
->  		.of_match_table = cdns_pcie_ep_of_match,
-> +		.pm	= &cdns_pcie_pm_ops,
->  	},
->  	.probe = cdns_pcie_ep_probe,
->  	.shutdown = cdns_pcie_ep_shutdown,
-> diff --git a/drivers/pci/controller/pcie-cadence-host.c b/drivers/pci/controller/pcie-cadence-host.c
-> index 36f3109..e3e9b7d 100644
-> --- a/drivers/pci/controller/pcie-cadence-host.c
-> +++ b/drivers/pci/controller/pcie-cadence-host.c
-> @@ -61,6 +61,8 @@ struct cdns_pcie_rc {
->  	/* Check that the link is up */
->  	if (!(cdns_pcie_readl(pcie, CDNS_PCIE_LM_BASE) & 0x1))
->  		return NULL;
-> +	/* Clear AXI link-down status */
-> +	cdns_pcie_writel(pcie, CDNS_PCIE_AT_LINKDOWN, 0x0);
->  
->  	/* Update Output registers for AXI region 0. */
->  	addr0 = CDNS_PCIE_AT_OB_REGION_PCI_ADDR0_NBITS(12) |
-> @@ -345,6 +347,7 @@ static int cdns_pcie_host_probe(struct platform_device *pdev)
->  	.driver = {
->  		.name = "cdns-pcie-host",
->  		.of_match_table = cdns_pcie_host_of_match,
-> +		.pm	= &cdns_pcie_pm_ops,
->  	},
->  	.probe = cdns_pcie_host_probe,
->  };
-> diff --git a/drivers/pci/controller/pcie-cadence.c b/drivers/pci/controller/pcie-cadence.c
-> index 2edc126..86f1b00 100644
-> --- a/drivers/pci/controller/pcie-cadence.c
-> +++ b/drivers/pci/controller/pcie-cadence.c
-> @@ -217,3 +217,33 @@ int cdns_pcie_init_phy(struct device *dev, struct cdns_pcie *pcie)
->  
->  	return ret;
->  }
-> +
-> +#ifdef CONFIG_PM_SLEEP
-> +static int cdns_pcie_suspend_noirq(struct device *dev)
-> +{
-> +	struct cdns_pcie *pcie = dev_get_drvdata(dev);
-> +
-> +	cdns_pcie_disable_phy(pcie);
-> +
-> +	return 0;
-> +}
-> +
-> +static int cdns_pcie_resume_noirq(struct device *dev)
-> +{
-> +	struct cdns_pcie *pcie = dev_get_drvdata(dev);
-> +	int ret;
-> +
-> +	ret = cdns_pcie_enable_phy(pcie);
-> +	if (ret) {
-> +		dev_err(dev, "failed to enable phy\n");
-> +		return ret;
-> +	}
-> +
-> +	return 0;
-> +}
-> +#endif
-> +
-> +const struct dev_pm_ops cdns_pcie_pm_ops = {
-> +	SET_NOIRQ_SYSTEM_SLEEP_PM_OPS(cdns_pcie_suspend_noirq,
-> +				      cdns_pcie_resume_noirq)
-> +};
-> diff --git a/drivers/pci/controller/pcie-cadence.h b/drivers/pci/controller/pcie-cadence.h
-> index b342c80..ae6bf2a 100644
-> --- a/drivers/pci/controller/pcie-cadence.h
-> +++ b/drivers/pci/controller/pcie-cadence.h
-> @@ -166,6 +166,9 @@
->  #define CDNS_PCIE_AT_IB_RP_BAR_ADDR1(bar) \
->  	(CDNS_PCIE_AT_BASE + 0x0804 + (bar) * 0x0008)
->  
-> +/* AXI link down register */
-> +#define CDNS_PCIE_AT_LINKDOWN (CDNS_PCIE_AT_BASE + 0x0824)
-> +
->  enum cdns_pcie_rp_bar {
->  	RP_BAR0,
->  	RP_BAR1,
-> @@ -314,5 +317,6 @@ void cdns_pcie_set_outbound_region_for_normal_msg(struct cdns_pcie *pcie, u8 fn,
->  void cdns_pcie_disable_phy(struct cdns_pcie *pcie);
->  int cdns_pcie_enable_phy(struct cdns_pcie *pcie);
->  int cdns_pcie_init_phy(struct device *dev, struct cdns_pcie *pcie);
-> +extern const struct dev_pm_ops cdns_pcie_pm_ops;
->  
->  #endif /* _PCIE_CADENCE_H */
-> -- 
-> 1.7.1
+> This is kind of what I was getting at. It would be useful to have an
+> interface of some sort so that drivers get notified when a user is
+> making changes to configuration space and I don't know if anything
+> like that exists now.
 > 
+> > I don't know what PCIe DMA coalescing means, so I can't comment on
+> > that.  
+> 
+> There are devices, specifically network devices, that will hold off on
+> switching between either L0s or L1 and L0 by deferring DMA operations.
+> Basically the idea is supposed to be to hold off bringing the link up
+> for as long as possible in order to maximize power savings for the
+> ASPM state. This is something that has come up in the past, and I
+> don't know if there has been any interface determined for how to
+> handle this sort of configuration. Most of it occurs through MMIO.
+> 
+> >> I assume the devices we are talking about supporting this new feature
+> >> on either don't deal with ASPM or assume a quick turnaround to get out
+> >> of the lower power states? Otherwise that would definitely cause some
+> >> back-pressure buildups that would hurt performance.  
+> >
+> > Devices can communicate the ASPM exit latency they can tolerate via
+> > the Device Capabilities register (PCIe r4.0, sec 76.5.3.3).  Linux
+> > should be configuring ASPM to respect those device requirements.
+> >
+> > Bjorn  
+> 
+> Right. But my  point was something like ASPM will add extra complexity
+> to a feature such as what has been described here. My concern is that
+> I don't want us implementing stuff on a per-driver basis that is not
+> all that unique to the device. I don't really see the feature that was
+> described above as being something that will stay specific to this one
+> device for very long, especially if it provides added value. Basically
+> all it is doing is allowing exposing PCIe congestion management to
+> upper levels in the network stack. I don't even necessarily see it as
+> being networking specific as I would imagine there might be other
+> types of devices that could make use of knowing how many transactions
+> and such they could process at the same time.
+> 
+> - Alex
