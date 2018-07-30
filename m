@@ -1,36 +1,57 @@
-Return-Path: <okaya@kernel.org>
-Return-Path: <okaya@kernel.org>
-Subject: Re: [PATCH V5 3/3] PCI: Mask and unmask hotplug interrupts during
- reset
-From: Sinan Kaya <okaya@kernel.org>
+Return-Path: <SRS0=2+6m=KO=h08.hostsharing.net=foo00@kernel.org>
+Return-Path: <SRS0=2+6m=KO=h08.hostsharing.net=foo00@kernel.org>
+Date: Mon, 30 Jul 2018 10:32:10 +0200
+From: Lukas Wunner <lukas@wunner.de>
 To: Bjorn Helgaas <helgaas@kernel.org>
-Cc: Lukas Wunner <lukas@wunner.de>, Oza Pawandeep <poza@codeaurora.org>,
- linux-pci@vger.kernel.org, open list <linux-kernel@vger.kernel.org>,
- Keith Busch <keith.busch@intel.com>, linux-arm-msm@vger.kernel.org,
- Bjorn Helgaas <bhelgaas@google.com>, linux-arm-kernel@lists.infradead.org
-References: <CAK9iUCM=zWexWow9TwkRfO186Hwr5WyGy0NHZF1vtXn3wbbZGQ@mail.gmail.com>
- <12fc8de5-ff03-cb00-52cb-25a43c71d03a@codeaurora.org>
- <20180708171418.GA11476@wunner.de>
- <CAK9iUCMcic5mzGiT20KNxgwPo6AuajHFsoj7GOjSht5SwrQevg@mail.gmail.com>
- <20180709160008.GA1490@wunner.de>
- <CAK9iUCMMVR114msKiMHu7ik0VK8T5j=LAYAKsEkdnocTqkdMjQ@mail.gmail.com>
- <20180720200123.GS128988@bhelgaas-glaptop.roam.corp.google.com>
- <2febe688-f973-5ff5-f61d-0451ad7d36ae@kernel.org>
-Message-ID: <d34eb5da-0ae1-d455-93e2-2432ec7931ea@kernel.org>
-Date: Fri, 20 Jul 2018 23:07:20 -0700
+Cc: Rajat Jain <rajatja@google.com>, Keith Busch <keith.busch@intel.com>,
+	Vidya Sagar <vidyas@nvidia.com>,
+	Philippe Ombredanne <pombredanne@nexb.com>,
+	Ard Biesheuvel <ard.biesheuvel@linaro.org>,
+	Sinan Kaya <okaya@codeaurora.org>,
+	Frederick Lawler <fred@fredlawl.com>, linux-pci@vger.kernel.org,
+	linux-kernel@vger.kernel.org, mayurkumar.patel@intel.com,
+	rajatxjain@gmail.com, Richard Hughes <rhughes@redhat.com>,
+	Carlos Garnacho <cgarnach@redhat.com>,
+	"Rafael J. Wysocki" <rjw@rjwysocki.net>,
+	Takashi Iwai <tiwai@suse.de>
+Subject: Re: [PATCH v2] pci/aspm: Remove CONFIG_PCIEASPM_DEBUG
+Message-ID: <20180730083210.GA9641@wunner.de>
+References: <20180508230148.121852-1-rajatja@google.com>
+ <20180510233912.96454-1-rajatja@google.com>
+ <20180727202619.GD173328@bhelgaas-glaptop.roam.corp.google.com>
 MIME-Version: 1.0
-In-Reply-To: <2febe688-f973-5ff5-f61d-0451ad7d36ae@kernel.org>
-Content-Type: text/plain; charset=utf-8; format=flowed
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20180727202619.GD173328@bhelgaas-glaptop.roam.corp.google.com>
 List-ID: <linux-pci.vger.kernel.org>
 
-On 7/20/2018 7:58 PM, Sinan Kaya wrote:
-> We need to figure out how to gracefully return inside hotplug driver
-> if link down happened and there is an error pending.
+On Fri, Jul 27, 2018 at 03:26:19PM -0500, Bjorn Helgaas wrote:
+> The question is where those sysfs files should be.  Currently they are
+> associated with the device at the *upstream* end of the link.  In the
+> example above, they're associated with the Root Port:
+> 
+>   /sys/devices/pci0000:00/0000:00:1c.2/power/link_state
+> 
+> I don't know if that's the right place, or if they should be
+> associated with the device at the *downstream* end of the link, i.e.,
+> 04:00.0.  The downstream end might be better because:
+> 
+>   - It's easier to associate the downstream end with a device the user
+>     cares about, e.g., a NIC, GPU, etc.  This is mostly a user-
+>     interface issue.
+> 
+>   - A link can lead to a multi-function device, and the spec allows
+>     those functions to have different ASPM settings (see PCIe r4.0,
+>     sec 5.4.1).  With the sysfs files at the upstream end of the link,
+>     we have no way to configure those functions individually.
+> 
+> Any thoughts?
 
-How about adding the following into the hotplug ISR?
+Conceivably, could the downstream end not be enumerated at all?
+(E.g. a hotplug or rescan is necessary for it to be enumerated?)
 
-1. check if firmware first is disabled
-2. check if there is a fatal error pending in the device_status register
-of the PCI Express capability on the root port.
-3. bail out from hotplug routine if this is the case.
-4. otherwise, existing behavior.
+If so, the upstream end might be better because the ASPM settings
+can be configured in advance, before the downstream end appears.
+
+Thanks,
+
+Lukas
