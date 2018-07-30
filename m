@@ -1,132 +1,174 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from foss.arm.com ([217.140.101.70]:37954 "EHLO foss.arm.com"
+Received: from ale.deltatee.com ([207.54.116.67]:54574 "EHLO ale.deltatee.com"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1751761AbeGDOIJ (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Wed, 4 Jul 2018 10:08:09 -0400
-Date: Wed, 4 Jul 2018 15:09:55 +0100
-From: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
-To: Dexuan Cui <decui@microsoft.com>
-Cc: 'Bjorn Helgaas' <bhelgaas@google.com>,
-        "'linux-pci@vger.kernel.org'" <linux-pci@vger.kernel.org>,
-        KY Srinivasan <kys@microsoft.com>,
-        Stephen Hemminger <sthemmin@microsoft.com>,
-        "'olaf@aepfle.de'" <olaf@aepfle.de>,
-        "'apw@canonical.com'" <apw@canonical.com>,
-        "'jasowang@redhat.com'" <jasowang@redhat.com>,
-        "'linux-kernel@vger.kernel.org'" <linux-kernel@vger.kernel.org>,
-        "'driverdev-devel@linuxdriverproject.org'"
-        <driverdev-devel@linuxdriverproject.org>,
-        Haiyang Zhang <haiyangz@microsoft.com>,
-        "'vkuznets@redhat.com'" <vkuznets@redhat.com>,
-        "'marcelo.cerri@canonical.com'" <marcelo.cerri@canonical.com>
-Subject: Re: [PATCH v2] PCI: hv: Disable/enable irq rather than bh in
- hv_compose_msi_msg()
-Message-ID: <20180704140955.GA12863@red-moon>
-References: <KL1P15301MB0006BE5DB7C3C45386E4327FBF4C0@KL1P15301MB0006.APCP153.PROD.OUTLOOK.COM>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <KL1P15301MB0006BE5DB7C3C45386E4327FBF4C0@KL1P15301MB0006.APCP153.PROD.OUTLOOK.COM>
+        id S1731576AbeG3Ryg (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Mon, 30 Jul 2018 13:54:36 -0400
+From: Logan Gunthorpe <logang@deltatee.com>
+To: linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
+        linux-doc@vger.kernel.org
+Cc: Stephen Bates <sbates@raithlin.com>,
+        Christoph Hellwig <hch@lst.de>,
+        Bjorn Helgaas <bhelgaas@google.com>,
+        Jonathan Corbet <corbet@lwn.net>,
+        Ingo Molnar <mingo@kernel.org>,
+        Thomas Gleixner <tglx@linutronix.de>,
+        "Paul E. McKenney" <paulmck@linux.vnet.ibm.com>,
+        Marc Zyngier <marc.zyngier@arm.com>,
+        Kai-Heng Feng <kai.heng.feng@canonical.com>,
+        Frederic Weisbecker <frederic@kernel.org>,
+        Dan Williams <dan.j.williams@intel.com>,
+        =?UTF-8?q?J=C3=A9r=C3=B4me=20Glisse?= <jglisse@redhat.com>,
+        Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+        Alex Williamson <alex.williamson@redhat.com>,
+        =?UTF-8?q?Christian=20K=C3=B6nig?= <christian.koenig@amd.com>,
+        Matthew Wilcox <willy@infradead.org>,
+        Logan Gunthorpe <logang@deltatee.com>
+Date: Mon, 30 Jul 2018 10:18:39 -0600
+Message-Id: <20180730161840.13733-4-logang@deltatee.com>
+In-Reply-To: <20180730161840.13733-1-logang@deltatee.com>
+References: <20180730161840.13733-1-logang@deltatee.com>
+Subject: [PATCH v8 3/4] PCI: Introduce disable_acs_redir quirk
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Sun, Jul 01, 2018 at 06:22:23PM +0000, Dexuan Cui wrote:
-> 
-> Commit de0aa7b2f97d ("PCI: hv: Fix 2 hang issues in hv_compose_msi_msg()")
-> uses local_bh_disable()/enable(), because hv_pci_onchannelcallback() can
-> also run in tasklet context as the channel event callback, and here we
-> want to avoid the race.
-> 
-> With CONFIG_PROVE_LOCKING=y in the recent mainline, or old kernels that
-> don't have commit f71b74bca637 ("irq/softirqs: Use lockdep to assert IRQs
-> are disabled/enabled"), when the upper layer irq code calls
-> hv_compose_msi_msg() with local irq DISABLED, we'll see a warning at the
-> beginning of __local_bh_enable_ip():
-> 
-> IRQs not enabled as expected
->   WARNING: CPU: 0 PID: 408 at kernel/softirq.c:162 __local_bh_enable_ip
-> 
-> The warning exposes an issue in de0aa7b2f97d: local_bh_enable() can
-> potentially call do_softirq(), which is not supposed to run when local
-> irq is DISABLED. Let's fix this by using local_irq_save()/restore()
-> instead.
-> 
-> Note: hv_pci_onchannelcallback() is not a hot path because it's only
-> called when the PCI device is hot added and removed, which is infrequent.
-> 
-> Fixes: de0aa7b2f97d ("PCI: hv: Fix 2 hang issues in hv_compose_msi_msg()")
-> Signed-off-by: Dexuan Cui <decui@microsoft.com>
-> Reviewed-by: Haiyang Zhang <haiyangz@microsoft.com>
-> Cc: <stable@vger.kernel.org>
-> Cc: Stephen Hemminger <sthemmin@microsoft.com>
-> Cc: K. Y. Srinivasan <kys@microsoft.com>
-> ---
-> 
-> A trimmed version of the warning is:
-> 
-> IRQs not enabled as expected
-> WARNING: CPU: 0 PID: 408 at kernel/softirq.c:162 __local_bh_enable_ip+0xb0/0xe0
-> Call Trace:
->  hv_compose_msi_msg+0x209/0x462 [pci_hyperv]
->  irq_chip_compose_msi_msg+0x41/0x50
->  msi_domain_activate+0x1a/0x40
->  __irq_domain_activate_irq+0x59/0x90
->  irq_domain_activate_irq+0x25/0x40
->  __setup_irq+0x3ec/0x730
-> request_threaded_irq+0xfa/0x1a0
-> mlx4_init_eq_table+0x3c3/0x5f0 [mlx4_core]
-> mlx4_setup_hca+0x1db/0x750 [mlx4_core]
-> mlx4_load_one+0xad2/0x13b0 [mlx4_core]
-> mlx4_init_one+0x578/0x710 [mlx4_core]
-> local_pci_probe+0x1e/0x50
-> work_for_cpu_fn+0x10/0x20
-> process_one_work+0x1d4/0x5a0
-> worker_thread+0x1cb/0x3d0
-> kthread+0xf5/0x130
-> 
-> 
-> Changes since v1:
-> 	Updated the changelog only (fixed typos and some inaccuracy)
-> 
-> 
->  drivers/pci/controller/pci-hyperv.c | 8 +++++---
->  1 file changed, 5 insertions(+), 3 deletions(-)
+Intel SPT PCH hardware has an implementation of the ACS bits that
+does not comply with the PCI express standard. To deal with this
+the existing code has an enable_acs() quirk for the hardware.
 
-Applied to pci/controller-fixes, to be tentatively sent for an
-upcoming -rc, thanks.
+In order to be able to correctly disable the ACS redirect bits for
+all hardware we need an analagous quirk to disable those bits.
 
-Lorenzo
+This adds the function pci_dev_specific_disable_acs_redir() which
+behaves similarly to pci_dev_specific_enable_acs() but uses a new
+function pointer for quirks which disables the ACS redirect bits.
 
-> diff --git a/drivers/pci/controller/pci-hyperv.c b/drivers/pci/controller/pci-hyperv.c
-> index ba1d4b5..eb20296 100644
-> --- a/drivers/pci/controller/pci-hyperv.c
-> +++ b/drivers/pci/controller/pci-hyperv.c
-> @@ -1073,6 +1073,7 @@ static void hv_compose_msi_msg(struct irq_data *data, struct msi_msg *msg)
->  	struct pci_bus *pbus;
->  	struct pci_dev *pdev;
->  	struct cpumask *dest;
-> +	unsigned long flags;
->  	struct compose_comp_ctxt comp;
->  	struct tran_int_desc *int_desc;
->  	struct {
-> @@ -1164,14 +1165,15 @@ static void hv_compose_msi_msg(struct irq_data *data, struct msi_msg *msg)
->  		 * the channel callback directly when channel->target_cpu is
->  		 * the current CPU. When the higher level interrupt code
->  		 * calls us with interrupt enabled, let's add the
-> -		 * local_bh_disable()/enable() to avoid race.
-> +		 * local_irq_save()/restore() to avoid race:
-> +		 * hv_pci_onchannelcallback() can also run in tasklet.
->  		 */
-> -		local_bh_disable();
-> +		local_irq_save(flags);
->  
->  		if (hbus->hdev->channel->target_cpu == smp_processor_id())
->  			hv_pci_onchannelcallback(hbus);
->  
-> -		local_bh_enable();
-> +		local_irq_restore(flags);
->  
->  		if (hpdev->state == hv_pcichild_ejecting) {
->  			dev_err_once(&hbus->hdev->device,
-> -- 
-> 2.7.4
-> 
+Signed-off-by: Logan Gunthorpe <logang@deltatee.com>
+Reviewed-by: Alex Williamson <alex.williamson@redhat.com>
+---
+ drivers/pci/quirks.c | 78 ++++++++++++++++++++++++++++++++++++++++++++--------
+ include/linux/pci.h  |  5 ++++
+ 2 files changed, 71 insertions(+), 12 deletions(-)
+
+diff --git a/drivers/pci/quirks.c b/drivers/pci/quirks.c
+index f439de848658..414b22dc06b8 100644
+--- a/drivers/pci/quirks.c
++++ b/drivers/pci/quirks.c
+@@ -4553,27 +4553,81 @@ static int pci_quirk_enable_intel_spt_pch_acs(struct pci_dev *dev)
+ 	return 0;
+ }
+ 
+-static const struct pci_dev_enable_acs {
++static int pci_quirk_disable_intel_spt_pch_acs_redir(struct pci_dev *dev)
++{
++	int pos;
++	u32 cap, ctrl;
++
++	if (!pci_quirk_intel_spt_pch_acs_match(dev))
++		return -ENOTTY;
++
++	pos = pci_find_ext_capability(dev, PCI_EXT_CAP_ID_ACS);
++	if (!pos)
++		return -ENOTTY;
++
++	pci_read_config_dword(dev, pos + PCI_ACS_CAP, &cap);
++	pci_read_config_dword(dev, pos + INTEL_SPT_ACS_CTRL, &ctrl);
++
++	ctrl &= ~(PCI_ACS_RR | PCI_ACS_CR | PCI_ACS_EC);
++
++	pci_write_config_dword(dev, pos + INTEL_SPT_ACS_CTRL, ctrl);
++
++	pci_info(dev, "Intel SPT PCH root port workaround: disabled ACS redirect\n");
++
++	return 0;
++}
++
++static const struct pci_dev_acs_ops {
+ 	u16 vendor;
+ 	u16 device;
+ 	int (*enable_acs)(struct pci_dev *dev);
+-} pci_dev_enable_acs[] = {
+-	{ PCI_VENDOR_ID_INTEL, PCI_ANY_ID, pci_quirk_enable_intel_pch_acs },
+-	{ PCI_VENDOR_ID_INTEL, PCI_ANY_ID, pci_quirk_enable_intel_spt_pch_acs },
+-	{ 0 }
++	int (*disable_acs_redir)(struct pci_dev *dev);
++} pci_dev_acs_ops[] = {
++	{ PCI_VENDOR_ID_INTEL, PCI_ANY_ID,
++	  .enable_acs = pci_quirk_enable_intel_pch_acs,
++	},
++	{ PCI_VENDOR_ID_INTEL, PCI_ANY_ID,
++	  .enable_acs = pci_quirk_enable_intel_spt_pch_acs,
++	  .disable_acs_redir = pci_quirk_disable_intel_spt_pch_acs_redir
++	},
+ };
+ 
+ int pci_dev_specific_enable_acs(struct pci_dev *dev)
+ {
+-	const struct pci_dev_enable_acs *i;
++	const struct pci_dev_acs_ops *p;
++	int i;
+ 	int ret;
+ 
+-	for (i = pci_dev_enable_acs; i->enable_acs; i++) {
+-		if ((i->vendor == dev->vendor ||
+-		     i->vendor == (u16)PCI_ANY_ID) &&
+-		    (i->device == dev->device ||
+-		     i->device == (u16)PCI_ANY_ID)) {
+-			ret = i->enable_acs(dev);
++	for (i = 0; i < ARRAY_SIZE(pci_dev_acs_ops); i++) {
++		p = &pci_dev_acs_ops[i];
++		if ((p->vendor == dev->vendor ||
++		     p->vendor == (u16)PCI_ANY_ID) &&
++		    (p->device == dev->device ||
++		     p->device == (u16)PCI_ANY_ID) &&
++		    p->enable_acs) {
++			ret = p->enable_acs(dev);
++			if (ret >= 0)
++				return ret;
++		}
++	}
++
++	return -ENOTTY;
++}
++
++int pci_dev_specific_disable_acs_redir(struct pci_dev *dev)
++{
++	const struct pci_dev_acs_ops *p;
++	int i;
++	int ret;
++
++	for (i = 0; i < ARRAY_SIZE(pci_dev_acs_ops); i++) {
++		p = &pci_dev_acs_ops[i];
++		if ((p->vendor == dev->vendor ||
++		     p->vendor == (u16)PCI_ANY_ID) &&
++		    (p->device == dev->device ||
++		     p->device == (u16)PCI_ANY_ID) &&
++		    p->disable_acs_redir) {
++			ret = p->disable_acs_redir(dev);
+ 			if (ret >= 0)
+ 				return ret;
+ 		}
+diff --git a/include/linux/pci.h b/include/linux/pci.h
+index abd5d5e17aee..0a436ec4fef5 100644
+--- a/include/linux/pci.h
++++ b/include/linux/pci.h
+@@ -1880,6 +1880,7 @@ enum pci_fixup_pass {
+ void pci_fixup_device(enum pci_fixup_pass pass, struct pci_dev *dev);
+ int pci_dev_specific_acs_enabled(struct pci_dev *dev, u16 acs_flags);
+ int pci_dev_specific_enable_acs(struct pci_dev *dev);
++int pci_dev_specific_disable_acs_redir(struct pci_dev *dev);
+ #else
+ static inline void pci_fixup_device(enum pci_fixup_pass pass,
+ 				    struct pci_dev *dev) { }
+@@ -1892,6 +1893,10 @@ static inline int pci_dev_specific_enable_acs(struct pci_dev *dev)
+ {
+ 	return -ENOTTY;
+ }
++static inline int pci_dev_specific_disable_acs_redir(struct pci_dev *dev)
++{
++	return -ENOTTY;
++}
+ #endif
+ 
+ void __iomem *pcim_iomap(struct pci_dev *pdev, int bar, unsigned long maxlen);
+-- 
+2.11.0
