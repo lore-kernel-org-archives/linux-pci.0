@@ -1,52 +1,67 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from bmailout1.hostsharing.net ([83.223.95.100]:42125 "EHLO
-        bmailout1.hostsharing.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S933613AbeGAROp (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Sun, 1 Jul 2018 13:14:45 -0400
-Date: Sun, 1 Jul 2018 19:14:43 +0200
-From: Lukas Wunner <lukas@wunner.de>
-To: Sinan Kaya <okaya@codeaurora.org>
-Cc: linux-pci@vger.kernel.org, linux-arm-msm@vger.kernel.org,
-        linux-arm-kernel@lists.infradead.org,
-        Bjorn Helgaas <bhelgaas@google.com>,
-        Andy Shevchenko <andriy.shevchenko@linux.intel.com>,
-        Mika Westerberg <mika.westerberg@linux.intel.com>,
-        Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-        Oza Pawandeep <poza@codeaurora.org>,
-        Keith Busch <keith.busch@intel.com>,
-        open list <linux-kernel@vger.kernel.org>
-Subject: Re: [PATCH V4 7/7] PCI: Handle link reset via hotplug if supported
-Message-ID: <20180701171443.GA28249@wunner.de>
-References: <1530214274-21139-1-git-send-email-okaya@codeaurora.org>
- <1530214274-21139-7-git-send-email-okaya@codeaurora.org>
+Return-Path: <SRS0=6kc1=KO=linutronix.de=tglx@kernel.org>
+Return-Path: <SRS0=6kc1=KO=linutronix.de=tglx@kernel.org>
+Date: Tue, 31 Jul 2018 00:36:57 +0200 (CEST)
+From: Thomas Gleixner <tglx@linutronix.de>
+To: Bjorn Helgaas <helgaas@kernel.org>
+cc: Heiner Kallweit <hkallweit1@gmail.com>,
+    Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org,
+    Christoph Hellwig <hch@lst.de>, LKML <linux-kernel@vger.kernel.org>,
+    Marc Zyngier <marc.zyngier@arm.com>
+Subject: Re: [PATCH] PCI: let pci_request_irq properly deal with threaded
+ interrupts
+In-Reply-To: <20180730213028.GC45322@bhelgaas-glaptop.roam.corp.google.com>
+Message-ID: <alpine.DEB.2.21.1807310015170.1725@nanos.tec.linutronix.de>
+References: <d004975f-03a8-59f5-56ef-f4e1f8e12dfb@gmail.com> <20180730213028.GC45322@bhelgaas-glaptop.roam.corp.google.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1530214274-21139-7-git-send-email-okaya@codeaurora.org>
-Sender: linux-pci-owner@vger.kernel.org
+Content-Type: text/plain; charset=US-ASCII
 List-ID: <linux-pci.vger.kernel.org>
 
-On Thu, Jun 28, 2018 at 03:31:05PM -0400, Sinan Kaya wrote:
-> +static pci_ers_result_t pciehp_reset_link(struct pci_dev *pdev)
-> +{
-> +	struct pcie_device *pciedev;
-> +	struct controller *ctrl;
-> +	struct device *devhp;
-> +	struct slot *slot;
-> +	int rc;
-> +
-> +	devhp = pcie_port_find_device(pdev, PCIE_PORT_SERVICE_HP);
-> +	pciedev = to_pcie_device(devhp);
-> +	ctrl = get_service_data(pciedev);
-> +	slot = ctrl->slot;
-> +
-> +	rc = reset_slot(slot->hotplug_slot, 0);
-> +
-> +	return !rc ? PCI_ERS_RESULT_RECOVERED : PCI_ERS_RESULT_DISCONNECT;
-> +}
+On Mon, 30 Jul 2018, Bjorn Helgaas wrote:
 
-This looks like a bit of a detour.  There's a "struct pci_slot *slot"
-pointer in struct pci_dev.  Any reason not to simply call:
+> [+cc Thomas, Christoph, LKML]
 
-	rc = reset_slot(pdev->slot->hotplug_slot)
++ Marc
 
-Lukas
+> On Mon, Jul 30, 2018 at 12:03:42AM +0200, Heiner Kallweit wrote:
+> > If we have a threaded interrupt with the handler being NULL, then
+> > request_threaded_irq() -> __setup_irq() will complain and bail out
+> > if the IRQF_ONESHOT flag isn't set. Therefore check for the handler
+> > being NULL and set IRQF_ONESHOT in this case.
+> > 
+> > This change is needed to migrate the mei_me driver to
+> > pci_alloc_irq_vectors() and pci_request_irq().
+> > 
+> > Signed-off-by: Heiner Kallweit <hkallweit1@gmail.com>
+> 
+> I'd like an ack from Thomas because this requirement about IRQF_ONESHOT
+> usage isn't mentioned in the request_threaded_irq() function doc or
+> Documentation/
+
+Right. The documentation really needs some love and care. :(
+
+Yes, request for pure threaded interrupts are rejected if the oneshot flag
+is not set. The reason is that this would be deadly especially with level
+triggered interrupts because the primary default handler just wakes the
+thread and then reenables interrupts, which will make the interrupt come
+back immediately and the thread won't have a chance to actually shut it up
+in the device.
+
+That made me look into that code again and I found that we added a flag for
+irq chips to tell the core that the interrupt is one shot safe, i.e. that
+it can be requested w/o IRQF_ONESHOT. That was initially added to optimize
+MSI based interrupts which are oneshot safe by implementation.
+
+  dc9b229a58dc ("genirq: Allow irq chips to mark themself oneshot safe")
+
+The original patch added that flag to the x86 MSI irqchip code, but that
+part was not applied for reasons which slipped from memory. It might be
+worthwhile to revisit that in order to avoid the mask/unmask overhead for
+such cases.
+
+Anyway for the patch in question:
+
+       Reviewed-by: Thomas Gleixner <tglx@linutronix.de>
+
+Thanks,
+
+	tglx
