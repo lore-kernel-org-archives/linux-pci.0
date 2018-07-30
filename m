@@ -1,82 +1,76 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from smtprelay4.synopsys.com ([198.182.47.9]:58836 "EHLO
-        smtprelay.synopsys.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1753630AbeGFI44 (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Fri, 6 Jul 2018 04:56:56 -0400
-Subject: Re: [PATCH v6 00/11] Add MSI-X support on pcitest tool
-To: "bhelgaas@google.com" <bhelgaas@google.com>,
-        "lorenzo.pieralisi@arm.com" <lorenzo.pieralisi@arm.com>,
-        "Joao.Pinto@synopsys.com" <Joao.Pinto@synopsys.com>,
-        "jingoohan1@gmail.com" <jingoohan1@gmail.com>,
-        "kishon@ti.com" <kishon@ti.com>,
-        "adouglas@cadence.com" <adouglas@cadence.com>,
-        "jesper.nilsson@axis.com" <jesper.nilsson@axis.com>,
-        "shawn.lin@rock-chips.com" <shawn.lin@rock-chips.com>
-CC: "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-        "linux-doc@vger.kernel.org" <linux-doc@vger.kernel.org>,
-        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
-References: <cover.1529595907.git.gustavo.pimentel@synopsys.com>
-From: Gustavo Pimentel <Gustavo.Pimentel@synopsys.com>
-Message-ID: <77139978-65cc-b954-bc61-bebf3bcc67ac@synopsys.com>
-Date: Fri, 6 Jul 2018 09:54:42 +0100
+Received: from smtp.codeaurora.org ([198.145.29.96]:35608 "EHLO
+        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726087AbeG3IJ7 (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Mon, 30 Jul 2018 04:09:59 -0400
+From: Kalle Valo <kvalo@codeaurora.org>
+To: Andy Shevchenko <andriy.shevchenko@linux.intel.com>
+Cc: Stanislaw Gruszka <sgruszka@redhat.com>,
+        Helmut Schaa <helmut.schaa@googlemail.com>,
+        linux-wireless@vger.kernel.org,
+        Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org,
+        Randy Dunlap <rdunlap@infradead.org>, joe@perches.com
+Subject: Re: [PATCH v4] PCI: Add PCI_DEVICE_DATA() macro to fully describe device ID entry
+References: <20180729131656.63504-1-andriy.shevchenko@linux.intel.com>
+Date: Mon, 30 Jul 2018 09:36:26 +0300
+In-Reply-To: <20180729131656.63504-1-andriy.shevchenko@linux.intel.com> (Andy
+        Shevchenko's message of "Sun, 29 Jul 2018 16:16:56 +0300")
+Message-ID: <87fu01fcwl.fsf@purkki.adurom.net>
 MIME-Version: 1.0
-In-Reply-To: <cover.1529595907.git.gustavo.pimentel@synopsys.com>
-Content-Type: text/plain; charset="utf-8"
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hi,
+Andy Shevchenko <andriy.shevchenko@linux.intel.com> writes:
 
-Just a gentle reminder.
+> There are a lot of examples in the kernel where PCI_VDEVICE() is used and still
+> looks not so convenient due to additional driver_data field attached.
+>
+> Introduce PCI_DEVICE_DATA() macro to fully describe device ID entry in shortest
+> possible form. For example,
+>
+>   before:
+>
+>     { PCI_VDEVICE(INTEL, PCI_DEVICE_ID_INTEL_MRFLD),
+>       (kernel_ulong_t) &dwc3_pci_mrfld_properties, },
+>
+>   after:
+>
+>     { PCI_DEVICE_DATA(INTEL, MRFLD, &dwc3_pci_mrfld_properties) },
+>
+> Drivers can be converted later on in independent way.
+>
+> While here, remove the unused macro with the same name
+> from Ralink wireless driver.
+>
+> Signed-off-by: Andy Shevchenko <andriy.shevchenko@linux.intel.com>
+> ---
+>
+> - Add vend to the device (Bjorn)
+>
+> Bjorn, this also looks good.
+>
+>  drivers/net/wireless/ralink/rt2x00/rt2x00pci.h |  6 ------
+>  include/linux/pci.h                            | 15 +++++++++++++++
+>  2 files changed, 15 insertions(+), 6 deletions(-)
+>
+> diff --git a/drivers/net/wireless/ralink/rt2x00/rt2x00pci.h b/drivers/net/wireless/ralink/rt2x00/rt2x00pci.h
+> index bc0ca5f58f38..283e2e607bba 100644
+> --- a/drivers/net/wireless/ralink/rt2x00/rt2x00pci.h
+> +++ b/drivers/net/wireless/ralink/rt2x00/rt2x00pci.h
+> @@ -27,12 +27,6 @@
+>  #include <linux/io.h>
+>  #include <linux/pci.h>
+>  
+> -/*
+> - * This variable should be used with the
+> - * pci_driver structure initialization.
+> - */
+> -#define PCI_DEVICE_DATA(__ops)	.driver_data = (kernel_ulong_t)(__ops)
 
-Thanks.
+For rt2x00:
 
-On 21/06/2018 17:01, Gustavo Pimentel wrote:
-> Patch series made against Lorenzo's master branch.
-> 
-> Add MSI-X support on pcitest tool.
-> 
-> Add new callbacks methods and handlers to trigger the MSI-X interrupts
-> on the EP DesignWare IP driver.
-> 
-> Allow to set/get MSI-X EP maximum capability number.
-> 
-> Rework on set/get and triggering MSI methods on EP DesignWare IP driver.
-> 
-> Add a new input parameter (msix) to pcitest tool to test MSI-X feature.
-> 
-> Update the pcitest.sh script to support MSI-X feature tests.
-> 
-> Gustavo Pimentel (11):
->   PCI: endpoint: Add MSI-X interfaces
->   PCI: Update xxx_pcie_ep_raise_irq() and pci_epc_raise_irq() signatures
->   PCI: dwc: Add MSI-X callbacks handler
->   PCI: dwc: Rework MSI callbacks handler
->   PCI: dwc: Add legacy interrupt callback handler
->   pci-epf-test/pci_endpoint_test: Cleanup PCI_ENDPOINT_TEST memspace
->   pci-epf-test/pci_endpoint_test: Use irq_type module parameter
->   pci-epf-test/pci_endpoint_test: Add MSI-X support
->   pci_endpoint_test: Add 2 ioctl commands
->   tools: PCI: Add MSI-X support
->   PCI: endpoint: Add MSI set maximum restriction.
-> 
->  Documentation/ioctl/ioctl-number.txt              |   1 +
->  Documentation/misc-devices/pci-endpoint-test.txt  |   6 +
->  drivers/misc/pci_endpoint_test.c                  | 259 ++++++++++++++++------
->  drivers/pci/controller/dwc/pci-dra7xx.c           |   2 +-
->  drivers/pci/controller/dwc/pcie-artpec6.c         |   2 +-
->  drivers/pci/controller/dwc/pcie-designware-ep.c   | 205 +++++++++++++++--
->  drivers/pci/controller/dwc/pcie-designware-plat.c |   7 +-
->  drivers/pci/controller/dwc/pcie-designware.h      |  31 ++-
->  drivers/pci/controller/pcie-cadence-ep.c          |   3 +-
->  drivers/pci/controller/pcie-rockchip-ep.c         |   2 +-
->  drivers/pci/endpoint/functions/pci-epf-test.c     |  81 +++++--
->  drivers/pci/endpoint/pci-ep-cfs.c                 |  24 ++
->  drivers/pci/endpoint/pci-epc-core.c               |  68 +++++-
->  include/linux/pci-epc.h                           |  15 +-
->  include/linux/pci-epf.h                           |   1 +
->  include/uapi/linux/pcitest.h                      |   3 +
->  tools/pci/pcitest.c                               |  51 ++++-
->  tools/pci/pcitest.sh                              |  15 ++
->  18 files changed, 644 insertions(+), 132 deletions(-)
-> 
+Acked-by: Kalle Valo <kvalo@codeaurora.org>
+
+-- 
+Kalle Valo
