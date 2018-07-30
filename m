@@ -1,60 +1,66 @@
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-From: Leonard Crestez <leonard.crestez@nxp.com>
-To: Lucas Stach <l.stach@pengutronix.de>,
- Andrey Smirnov <andrew.smirnov@gmail.com>,
- Richard Zhu <hongxing.zhu@nxp.com>, Shawn Guo <shawnguo@kernel.org>
-Subject: [PATCH v3 0/2] PCI: imx: Initial imx7d pm support
-Date: Tue, 24 Jul 2018 19:14:18 +0300
-Message-Id: <cover.1532448745.git.leonard.crestez@nxp.com>
-MIME-Version: 1.0
-List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
-List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
-List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
-List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
-List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
-Cc: Dong Aisheng <aisheng.dong@nxp.com>, Joao Pinto <Joao.Pinto@synopsys.com>,
- kernel@pengutronix.de, Anson Huang <Anson.Huang@nxp.com>,
- Jingoo Han <jingoohan1@gmail.com>, linux-kernel@vger.kernel.org,
- Fabio Estevam <fabio.estevam@nxp.com>,
- Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>, linux-imx@nxp.com,
- Philipp Zabel <p.zabel@pengutronix.de>, linux-pci@vger.kernel.org,
- Bjorn Helgaas <bhelgaas@google.com>, linux-arm-kernel@lists.infradead.org
-Content-Type: text/plain; charset="us-ascii"
-Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
-Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from foss.arm.com ([217.140.101.70]:39582 "EHLO foss.arm.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1726562AbeG3PS2 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Mon, 30 Jul 2018 11:18:28 -0400
+From: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
+To: linux-pci@vger.kernel.org
+Cc: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
+        Bjorn Helgaas <bhelgaas@google.com>,
+        Subrahmanya Lingappa <l.subrahmanya@mobiveil.co.in>
+Subject: [PATCH 1/3] PCI: mobiveil: Fix struct mobiveil_pcie.pcie_reg_base address type
+Date: Mon, 30 Jul 2018 14:43:14 +0100
+Message-Id: <20180730134316.11719-2-lorenzo.pieralisi@arm.com>
+In-Reply-To: <20180730134316.11719-1-lorenzo.pieralisi@arm.com>
+References: <20180730134316.11719-1-lorenzo.pieralisi@arm.com>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Changes since v2:
- * Print with dev_info if link fails on resume (Lucas)
- * Add a comment on imx7d pci irq mappings (Andrey)
- * Make imx6_pcie_ltssm_disable print an error on IMX6Q (Lucas)
+The field pcie_reg_base in struct mobiveil_pcie represents a physical
+address so it should be of phys_addr_t type rather than void __iomem*;
+this results in the following compilation  warnings:
 
-The ltssm_disable does not return an error because it can't be usefully
-handled, reversing partial suspend is a nightmare and unlikely to work.
+drivers/pci/controller/pcie-mobiveil.c: In function
+'mobiveil_pcie_parse_dt':
+drivers/pci/controller/pcie-mobiveil.c:326:22: warning: assignment makes
+pointer from integer without a cast [-Wint-conversion]
+  pcie->pcie_reg_base = res->start;
+                      ^
+drivers/pci/controller/pcie-mobiveil.c: In function
+'mobiveil_pcie_enable_msi':
+drivers/pci/controller/pcie-mobiveil.c:485:25: warning: initialization
+makes integer from pointer without a cast [-Wint-conversion]
+  phys_addr_t msg_addr = pcie->pcie_reg_base;
+                         ^~~~
+drivers/pci/controller/pcie-mobiveil.c: In function
+'mobiveil_compose_msi_msg':
+drivers/pci/controller/pcie-mobiveil.c:640:21: warning: initialization
+makes integer from pointer without a cast [-Wint-conversion]
+  phys_addr_t addr = pcie->pcie_reg_base + (data->hwirq * sizeof(int));
 
- * Drop "reset: imx7: Fix always writing bits as 0 (accepted by Philipp)
+Fix the type and with it the compilation warnings.
 
-Series is against linux-next tag next-20180724 where the reset patch was
-already accepted. The imx7d.dtsi patch is also useful standalone.
+Fixes: 9af6bcb11e12 ("PCI: mobiveil: Add Mobiveil PCIe Host Bridge IP
+driver")
+Signed-off-by: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
+Cc: Bjorn Helgaas <bhelgaas@google.com>
+Cc: Subrahmanya Lingappa <l.subrahmanya@mobiveil.co.in>
+---
+ drivers/pci/controller/pcie-mobiveil.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-Link to v2: https://lkml.org/lkml/2018/7/20/472
-
-Leonard Crestez (2):
-  Revert "ARM: dts: imx7d: Invert legacy PCI irq mapping"
-  PCI: imx: Initial imx7d pm support
-
- arch/arm/boot/dts/imx7d.dtsi          | 12 ++--
- drivers/pci/controller/dwc/pci-imx6.c | 97 +++++++++++++++++++++++++--
- 2 files changed, 100 insertions(+), 9 deletions(-)
-
+diff --git a/drivers/pci/controller/pcie-mobiveil.c b/drivers/pci/controller/pcie-mobiveil.c
+index cf0aa7cee5b0..8b45f77d70f9 100644
+--- a/drivers/pci/controller/pcie-mobiveil.c
++++ b/drivers/pci/controller/pcie-mobiveil.c
+@@ -130,7 +130,7 @@ struct mobiveil_pcie {
+ 	void __iomem *config_axi_slave_base;	/* endpoint config base */
+ 	void __iomem *csr_axi_slave_base;	/* root port config base */
+ 	void __iomem *apb_csr_base;	/* MSI register base */
+-	void __iomem *pcie_reg_base;	/* Physical PCIe Controller Base */
++	phys_addr_t pcie_reg_base;	/* Physical PCIe Controller Base */
+ 	struct irq_domain *intx_domain;
+ 	raw_spinlock_t intx_mask_lock;
+ 	int irq;
 -- 
-2.17.1
-
-
-_______________________________________________
-linux-arm-kernel mailing list
-linux-arm-kernel@lists.infradead.org
-http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
+2.15.0
