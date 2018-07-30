@@ -1,107 +1,40 @@
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Message-ID: <1530607328.22468.102.camel@pengutronix.de>
-Subject: Re: [PATCH 2/2] PCI: imx: Initial imx7d pm support
-From: Lucas Stach <l.stach@pengutronix.de>
-To: Leonard Crestez <leonard.crestez@nxp.com>, "andrew.smirnov@gmail.com"
- <andrew.smirnov@gmail.com>, Richard Zhu <hongxing.zhu@nxp.com>
-Date: Tue, 03 Jul 2018 10:42:08 +0200
-In-Reply-To: <02207512447db4585a4e879e2a059ba223d57dbe.camel@nxp.com>
-References: <cover.1527621510.git.leonard.crestez@nxp.com>
- <a6176c8bcfbca08ce4e93e304bdcd48c4600f8e2.1527621510.git.leonard.crestez@nxp.com>
- <1528468422.26356.20.camel@pengutronix.de>
- <02207512447db4585a4e879e2a059ba223d57dbe.camel@nxp.com>
-Mime-Version: 1.0
-List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
-List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
-List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
-List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
-List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
-Cc: "lorenzo.pieralisi@arm.com" <lorenzo.pieralisi@arm.com>,
- Abel Vesa <abel.vesa@nxp.com>, Anson Huang <anson.huang@nxp.com>,
- "linux-pm@vger.kernel.org" <linux-pm@vger.kernel.org>,
- "jingoohan1@gmail.com" <jingoohan1@gmail.com>,
- "rjw@rjwysocki.net" <rjw@rjwysocki.net>,
- "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
- "Joao.Pinto@synopsys.com" <Joao.Pinto@synopsys.com>,
- "p.zabel@pengutronix.de" <p.zabel@pengutronix.de>,
- "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
- "bhelgaas@google.com" <bhelgaas@google.com>,
- "linux-arm-kernel@lists.infradead.org" <linux-arm-kernel@lists.infradead.org>
-Content-Type: text/plain; charset="utf-8"
-Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
-Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail-eopbgr710065.outbound.protection.outlook.com ([40.107.71.65]:42108
+        "EHLO NAM05-BY2-obe.outbound.protection.outlook.com"
+        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+        id S1726782AbeG3S5l (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Mon, 30 Jul 2018 14:57:41 -0400
+From: Alan Douglas <adouglas@cadence.com>
+To: <bhelgaas@google.com>
+CC: <kishon@ti.com>, <lorenzo.pieralisi@arm.com>,
+        <linux-pci@vger.kernel.org>, <gustavo.pimentel@synopsys.com>,
+        <cyrille.pitchen@bootlin.com>, <stelford@cadence.com>,
+        Alan Douglas <adouglas@cadence.com>
+Subject: [PATCH 0/5] Add MSI-X support for cadence EP driver
+Date: Mon, 30 Jul 2018 18:21:00 +0100
+Message-ID: <1532971260-5269-1-git-send-email-adouglas@cadence.com>
+MIME-Version: 1.0
+Content-Type: text/plain
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-QW0gTW9udGFnLCBkZW4gMDIuMDcuMjAxOCwgMTc6MTggKzAwMDAgc2NocmllYiBMZW9uYXJkIENy
-ZXN0ZXo6Cj4gT24gRnJpLCAyMDE4LTA2LTA4IGF0IDE2OjMzICswMjAwLCBMdWNhcyBTdGFjaCB3
-cm90ZToKPiA+IEFtIERpZW5zdGFnLCBkZW4gMjkuMDUuMjAxOCwgMjI6MzkgKzAzMDAgc2Nocmll
-YiBMZW9uYXJkIENyZXN0ZXo6Cj4gPiA+IE9uIGlteDdkIHRoZSBwaHkgaXMgdHVybmVkIG9mZiBp
-biBzdXNwZW5kIGFuZCBtdXN0IGJlIHJlc2V0IG9uIHJlc3VtZS4KPiA+ID4gUmlnaHQgbm93IGxz
-cGNpIC12IGZhaWxzIGFmdGVyIGEgc3VzcGVuZC9yZXN1bWUgY3ljbGUsIGZpeCB0aGlzIGJ5Cj4g
-PiA+IGFkZGluZyBtaW5pbWFsIHN1c3BlbmQvcmVzdW1lIGNvZGUgZnJvbSB0aGUgbnhwIHZlbmRv
-ciB0cmVlLgo+ID4gPiAKPiA+ID4gVGhpcyBpcyBjdXJyZW50bHkgb25seSBlbmFibGVkIGZvciBp
-bXg3IGJ1dCB0aGUgc2FtZSBzZXF1ZW5jZSBjYW4gYmUKPiA+ID4gYXBwbGllZCB0byBvdGhlciBp
-bXggcGNpZSB2YXJpYW50cy4KPiA+ID4gKyNpZmRlZiBDT05GSUdfUE1fU0xFRVAKPiA+ID4gK3N0
-YXRpYyBpbnQgaW14Nl9wY2llX3N1c3BlbmRfbm9pcnEoc3RydWN0IGRldmljZSAqZGV2KQo+ID4g
-PiArewo+ID4gPiA+ID4gPiArCXN0cnVjdCBpbXg2X3BjaWUgKmlteDZfcGNpZSA9IGRldl9nZXRf
-ZHJ2ZGF0YShkZXYpOwo+ID4gPiArCj4gPiA+ICsJaWYgKGlteDZfcGNpZS0+dmFyaWFudCA9PSBJ
-TVg3RCkgewo+ID4gCj4gPiBJbnN0ZWFkIG9mIHRoaXMgbGFyZ2UgaW5kZW50ZWQgYmxvY2ssIHBs
-ZWFzZSBqdXN0IGhhdmUgYW4gZWFybHkgcmV0dXJuCj4gPiBhdCB0aGUgc3RhcnQgb2YgdGhpcyBm
-dW5jdGlvbiwgbGlrZToKPiA+IAo+ID4gaWYgKGlteDZfcGNpZS0+dmFyaWFudCAhPSBJTVg3RCkK
-PiA+IAlyZXR1cm4gMDsKPiA+IAo+ID4gU2FtZSBmb3IgdGhlIHJlc3VtZSBmdW5jdGlvbi4KPiAK
-PiBPSy4gVGhlIHJlc3VtZSBzZXF1ZW5jZSBpcyBtb3N0bHkgdGhlIHNhbWUgZm9yIGFsbCBTT0Nz
-IHdoZXJlIGl0Cj4gYXBwbGllcy4KPiAKPiA+ID4gK3N0YXRpYyBpbnQgaW14Nl9wY2llX3Jlc3Vt
-ZV9ub2lycShzdHJ1Y3QgZGV2aWNlICpkZXYpCj4gPiA+ICt7Cj4gPiA+ID4gPiA+ICsJaW50IHJl
-dCA9IDA7Cj4gPiA+ID4gPiA+ICsJc3RydWN0IGlteDZfcGNpZSAqaW14Nl9wY2llID0gZGV2X2dl
-dF9kcnZkYXRhKGRldik7Cj4gPiA+ID4gPiA+ICsJc3RydWN0IHBjaWVfcG9ydCAqcHAgPSAmaW14
-Nl9wY2llLT5wY2ktPnBwOwo+ID4gPiAKPiA+ID4gKwo+ID4gPiA+ID4gPiArCWlmIChpbXg2X3Bj
-aWUtPnZhcmlhbnQgPT0gSU1YN0QpIHsKPiA+ID4gKwkJaW14Nl9wY2llX2x0c3NtX2Rpc2FibGUo
-ZGV2KTsKPiA+IAo+ID4gVGhlIExUU1NNIGRpc2FibGUgc2VlbXMgbWlzcGxhY2VkIGhlcmUuIEkg
-d291bGQgaGF2ZSBleHBlY3RlZCBpdCB0byBiZQo+ID4gaW4gdGhlIHN1c3BlbmQgZnVuY3Rpb24u
-Cj4gCj4gVGhpcyBpcyBhIHJlcXVpcmVtZW50IGZvciByZWluaXRpYWxpemluZyB0aGUgY29yZTog
-TFRTU00gbmVlZHMgdG8gYmUKPiB0dXJuZWQgb2ZmIGR1cmluZyBpbml0aWFsaXphdGlvbi4KCklm
-IHlvdSBkaXNhYmxlIExUU1NNIGR1cmluZyBzdXNwZW5kLCBpdCBzaG91bGQgYmUgb2ZmIHdoZW4g
-ZW50ZXJpbmcKdGhpcyByZXN1bWUgZnVuY3Rpb24sIG5vPwoKPiA+ID4gKwkJLyoKPiA+ID4gPiA+
-ID4gKwkJwqAqIGNvbnRyb2xsZXIgbWF5YmUgdHVybiBvZmYsIHJlLWNvbmZpZ3VyZSBhZ2Fpbgo+
-ID4gPiA+ID4gPiArCQnCoCovCj4gPiA+ID4gPiA+ICsJCWR3X3BjaWVfc2V0dXBfcmMocHApOwo+
-ID4gPiArCj4gPiA+ID4gPiA+ICsJCWlteDZfcGNpZV9sdHNzbV9lbmFibGUoZGV2KTsKPiA+ID4g
-Kwo+ID4gPiA+ID4gPiArCQlyZXQgPSBpbXg2X3BjaWVfd2FpdF9mb3JfbGluayhpbXg2X3BjaWUp
-Owo+ID4gPiA+ID4gPiArCQlpZiAocmV0IDwgMCkKPiA+ID4gKwkJCXByX2luZm8oInBjaWUgbGlu
-ayBpcyBkb3duIGFmdGVyIHJlc3VtZS5cbiIpOwo+ID4gCj4gPiBJZiB0aGUgUEhZIGhhcyBiZWVu
-IHBvd2VyZWQgZG93biBhbmQgTFRTU00gc3RvcHBlZCBJIGd1ZXNzIHdlIG5lZWQgdG8KPiA+IGRv
-IHRoZSBmdWxsIGlteDZfcGNpZV9lc3RhYmxpc2hfbGluaygpIGRhbmNlIGFnYWluIGhlcmUgdG8g
-cmVsaWFibHkgcmUtCj4gPiBlc3RhYmxpc2ggdGhlIGxpbmsuIFRoZSBhYm92ZSBzZWVtcyB1bnNh
-ZmUuCj4gCj4gV2hhdCBpbXg2X3BjaWVfZXN0YWJsaXNoX2xpbmsgZG9lcyBhZGRpdGlvbmFsbHkg
-aXMgc29tZSB3b3JrYXJvdW5kIGZvcgo+IGxpbmsgZ2VuIGRldGVjdGlvbi4gSSBhZ3JlZSB0aGF0
-IGl0IHNob3VsZCBiZSBpbmNsdWRlZC4KPiAKPiBUaGlzIHdvdWxkIG1ha2UgcmVzdW1lIG1vc3Rs
-eSB0aGUgc2FtZSBhcyBpbXhfcGNpZV9ob3N0X2luaXQgZXhjZXB0IGZvcgo+IGR3X3BjaWVfbXNp
-X2luaXQ7IHRoYXQgbmVlZHMgdG8gYmUgc2F2ZWQvcmVzdG9yZWQgc2VwYXJhdGVseS4KClJpZ2h0
-LCBzbyBtYXliZSB3ZSBjYW4gZXZlbiBjdXQgZG93biBvbiBsaW5lcyBvZiBjb2RlIGJ5IHNwbGl0
-dGluZyBhbmQKcmV1c2luZyBleGlzdGluZyBmdW5jdGlvbnMuCgo+IAo+IEFub3RoZXIgaXNzdWUg
-dGhhdCBzaG91bGQgYmUgZGlzY3Vzc2VkIGhlcmUgaXMgdGhhdCBvbiA2c3ggYW5kIDdkIHRoZQo+
-IGdwYyBQQ0lFIHBvd2VyIGRvbWFpbiBpcyBub3QgZGVmaW5lZCBjb3JyZWN0bHk6IHRoZSBQQ0lF
-IGJsb2NrIGlzIGluCj4gdGhlIERJU1BNSVggZG9tYWluIG9uIGJvdGggU09DcyBhbmQgaXQgaXMg
-b25seSBQQ0lFX1BIWSB3aGljaCBoYXMgYQo+IHNlcGFyYXRlIHBvd2VyIGRvbWFpbi4KPiAKPiBU
-aGlzIG1hdHRlcnM6IGVuYWJsaW5nIHBvd2VyLWdhdGluZyBmb3IgZGlzcGxheXMgd2lsbCBicmVh
-ayBwY2llIGlmCj4gdGhpcyByZWxhdGlvbnNoaXAgaXMgbm90IHRha2VuIGludG8gYWNjb3VudC4g
-SGVyZSBhcmUgc29tZSBvcHRpb25zOgo+IAo+IDEpIE1ha2UgJnBkX3BjaWUgYSBjaGlsZCBvZiAm
-cGRfZGlzcCBieSBoYWNraW5nIGludG8gZ3BjIHByb2JlCj4gZnVuY3Rpb25zIGFuZCBjYWxsaW5n
-IHBtX2dlbnBkX2FkZF9zdWJkb21haW4uIE5vdCB2ZXJ5IG5pY2UuCj4gCj4gMikgU3VwcG9ydCBu
-ZXN0aW5nIFBHQ3MgaW4gR1BDIGNvZGU/IExvdHMgb2YgY29kZSBhbmQgc3RpbGwgYW4KPiBpbmNv
-cnJlY3QgcmVwcmVzZW50YXRpb24gb2YgaGFyZHdhcmUuCj4gCj4gMykgU2V0IHBvd2VyLWRvbWFp
-bnMgPSA8JnBkX2Rpc3A+IGFuZCBlbmFibGUgcnVudGltZSBQTSBvbiAmcGRfcGNpZT8KPiAKPiA0
-KSBBZGQgc2VwYXJhdGUgZGV2aWNlcyBmb3IgdGhlIHBjaWUtcGh5LiBUaGVzZSB3b3VsZCBiZSBt
-b3N0bHkgZW1wdHkKPiBidXQgc3RpbGwgZGlmZmVyZW50LCBmb3IgZXhhbXBsZSBvbiBpbXg2c3gg
-dGhlIFBIWSBpcyBub3QgZXZlbgo+IGFjY2Vzc2libGUgb24gdGhlIGJ1cyBidXQgb25seSB0aG91
-Z2ggUENJRSByZWdpc3RlcnMuCgo1KSBUYWtlIGEgbG9vayBhdCB0aGUgbGludXgtcG0gbGlzdC4g
-OykgVGhlIHBvd2VyIGRvbWFpbiBmcmFtZXdvcmsgaGFzCmp1c3QgZ2FpbmVkIHN1cHBvcnQgZm9y
-IG11bHRpcGxlIHBvd2VyIGRvbWFpbnMgcGVyIGRldmljZS4gSSB0aGluayB0aGF0CiBpcyB0aGUg
-cmlnaHQgc29sdXRpb24gZm9yIHRoaXMsIGFzIGxpa2UgeW91IG1lbnRpb25lZCB0aGUgUEhZIGlz
-bid0CnJlYWxseSBhIHNlcGFyYXRlIGJsb2NrIG9uIGkuTVg2LCBidXQgcGFydCBvZiB0aGUgUENJ
-ZSBjb250cm9sbGVyCmRldmljZS4KClJlZ2FyZHMsCkx1Y2FzCgpfX19fX19fX19fX19fX19fX19f
-X19fX19fX19fX19fX19fX19fX19fX19fX19fXwpsaW51eC1hcm0ta2VybmVsIG1haWxpbmcgbGlz
-dApsaW51eC1hcm0ta2VybmVsQGxpc3RzLmluZnJhZGVhZC5vcmcKaHR0cDovL2xpc3RzLmluZnJh
-ZGVhZC5vcmcvbWFpbG1hbi9saXN0aW5mby9saW51eC1hcm0ta2VybmVsCg==
+Patch series made against Bjorn Helgaas's pci next branch.
+It relies on Gustavo Pimentel's patch series adding MSI-X
+support in the PCIe EP driver framework, and implements
+MSI-X support for the cadence endpoint driver.
+ - Use AXI region 0 for interrupt signalling
+ - Write MSI and MSI-X with 32bit value rather than 16bit
+ - Check for masking before sending MSI or MSI-X
+ - Check link is up before sending IRQ
+ - Use BAR5 for MSI-X vectors
+
+Alan Douglas (5):
+  PCI: cadence: Use AXI region 0 to signal interrupts from EP
+  PCI: cadence: Write MSI data with 32bits
+  PCI: cadence: Check whether MSI is masked before sending it
+  PCI: cadence: Check link is up before sending IRQ from EP
+  PCI: cadence: Add MSI-X capability to EP driver
+
+ drivers/pci/controller/pcie-cadence-ep.c |  129 ++++++++++++++++++++++++++++--
+ drivers/pci/controller/pcie-cadence.h    |    1 +
+ 2 files changed, 124 insertions(+), 6 deletions(-)
