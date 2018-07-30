@@ -1,247 +1,140 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from ale.deltatee.com ([207.54.116.67]:44622 "EHLO ale.deltatee.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1729689AbeGQRf7 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Tue, 17 Jul 2018 13:35:59 -0400
-From: Logan Gunthorpe <logang@deltatee.com>
-To: linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
-        linux-doc@vger.kernel.org
-Cc: Stephen Bates <sbates@raithlin.com>,
-        Christoph Hellwig <hch@lst.de>,
-        Bjorn Helgaas <bhelgaas@google.com>,
-        Jonathan Corbet <corbet@lwn.net>,
-        Ingo Molnar <mingo@kernel.org>,
-        Thomas Gleixner <tglx@linutronix.de>,
-        "Paul E. McKenney" <paulmck@linux.vnet.ibm.com>,
-        Marc Zyngier <marc.zyngier@arm.com>,
-        Kai-Heng Feng <kai.heng.feng@canonical.com>,
-        Frederic Weisbecker <frederic@kernel.org>,
-        Dan Williams <dan.j.williams@intel.com>,
-        =?UTF-8?q?J=C3=A9r=C3=B4me=20Glisse?= <jglisse@redhat.com>,
-        Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-        Alex Williamson <alex.williamson@redhat.com>,
-        =?UTF-8?q?Christian=20K=C3=B6nig?= <christian.koenig@amd.com>,
-        Matthew Wilcox <willy@infradead.org>,
-        Logan Gunthorpe <logang@deltatee.com>
-Date: Tue, 17 Jul 2018 11:02:02 -0600
-Message-Id: <20180717170204.30470-3-logang@deltatee.com>
-In-Reply-To: <20180717170204.30470-1-logang@deltatee.com>
-References: <20180717170204.30470-1-logang@deltatee.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Subject: [PATCH v7 2/4] PCI: Allow specifying devices using a base bus and path of devfns
+Received: from mx0a-001b2d01.pphosted.com ([148.163.156.1]:36296 "EHLO
+        mx0a-001b2d01.pphosted.com" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1728701AbeG3DcC (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Sun, 29 Jul 2018 23:32:02 -0400
+Received: from pps.filterd (m0098393.ppops.net [127.0.0.1])
+        by mx0a-001b2d01.pphosted.com (8.16.0.22/8.16.0.22) with SMTP id w6U1wpUs080204
+        for <linux-pci@vger.kernel.org>; Sun, 29 Jul 2018 21:59:23 -0400
+Received: from e06smtp03.uk.ibm.com (e06smtp03.uk.ibm.com [195.75.94.99])
+        by mx0a-001b2d01.pphosted.com with ESMTP id 2kh5krtqar-1
+        (version=TLSv1.2 cipher=AES256-GCM-SHA384 bits=256 verify=NOT)
+        for <linux-pci@vger.kernel.org>; Sun, 29 Jul 2018 21:59:23 -0400
+Received: from localhost
+        by e06smtp03.uk.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
+        for <linux-pci@vger.kernel.org> from <sbobroff@linux.ibm.com>;
+        Mon, 30 Jul 2018 02:59:21 +0100
+From: Sam Bobroff <sbobroff@linux.ibm.com>
+To: linuxppc-dev@lists.ozlabs.org, linux-pci@vger.kernel.org
+Cc: mpe@ellerman.id.au, bhelgaas@google.com,
+        bryantly@linux.vnet.ibm.com
+Subject: [PATCH v3 1/1] powerpc/pseries: fix EEH recovery of some IOV devices
+Date: Mon, 30 Jul 2018 11:59:14 +1000
+Message-Id: <e63eb03c87a1a54257aa2bcc384cf07761824a7e.1532915951.git.sbobroff@linux.ibm.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-When specifying PCI devices on the kernel command line using a
-BDF, the bus numbers can change when adding or replacing a device,
-changing motherboard firmware, or applying kernel parameters like
-pci=assign-buses. When this happens, it is usually undesirable to
-apply whatever command line tweak to the wrong device.
+EEH recovery currently fails on pSeries for some IOV capable PCI
+devices, if CONFIG_PCI_IOV is on and the hypervisor doesn't provide
+certain device tree properties for the device. (Found on an IOV
+capable device using the ipr driver.)
 
-Therefore, it is useful to be able to specify devices with a base
-bus number and the path of devfns needed to get to it. (Similar to
-the "device scope" structure in the Intel VT-d spec, Section 8.3.1.)
+Recovery fails in pci_enable_resources() at the check on r->parent,
+because r->flags is set and r->parent is not.  This state is due to
+sriov_init() setting the start, end and flags members of the IOV BARs
+but the parent not being set later in
+pseries_pci_fixup_iov_resources(), because the
+"ibm,open-sriov-vf-bar-info" property is missing.
 
-Thus, we add an option to specify devices in the following format:
+Correct this by zeroing the resource flags for IOV BARs when they
+can't be configured (this is the same method used by sriov_init() and
+__pci_read_base()).
 
-[<domain>:]<bus>:<slot>.<func>[/<slot>.<func>]*
+VFs cleared this way can't be enabled later, because that requires
+another device tree property, "ibm,number-of-configurable-vfs" as well
+as support for the RTAS function "ibm_map_pes". These are all part of
+hypervisor support for IOV and it seems unlikely that a hypervisor
+would ever partially, but not fully, support it. (None are currently
+provided by QEMU/KVM.)
 
-The path can be any segment within the PCI hierarchy of any length and
-determined through the use of 'lspci -t'. When specified this way, it is
-less likely that a renumbered bus will result in a valid device specification
-and the tweak won't be applied to the wrong device.
-
-Signed-off-by: Logan Gunthorpe <logang@deltatee.com>
-Reviewed-by: Stephen Bates <sbates@raithlin.com>
-Acked-by: Christian König <christian.koenig@amd.com>
-Reviewed-by: Alex Williamson <alex.williamson@redhat.com>
+Signed-off-by: Sam Bobroff <sbobroff@linux.ibm.com>
 ---
- Documentation/admin-guide/kernel-parameters.txt |   8 +-
- drivers/pci/pci.c                               | 117 ++++++++++++++++++++----
- 2 files changed, 103 insertions(+), 22 deletions(-)
+Hi,
 
-diff --git a/Documentation/admin-guide/kernel-parameters.txt b/Documentation/admin-guide/kernel-parameters.txt
-index 5cc215870ee1..1fdd1ef03984 100644
---- a/Documentation/admin-guide/kernel-parameters.txt
-+++ b/Documentation/admin-guide/kernel-parameters.txt
-@@ -3000,7 +3000,7 @@
- 				or a set of devices (<pci_dev>). These are
- 				specified in one of the following formats:
+This is a fix to allow EEH recovery to succeed in a specific situation,
+which I've tried to explain in the commit message.
+
+As with the RFC version, the IOV BARs are disabled by setting the resource
+flags to 0 but the other fields are now left as-is because that is what is done
+elsewhere (see sriov_init() and __pci_read_base()).
+
+I've also examined the concern raised by Bjorn Helgaas, that VFs could be
+enabled later after the BARs are disabled, and it already seems safe: enabling
+VFs (on pseries) depends on another device tree property,
+"ibm,number-of-configurable-vfs" as well as support for the RTAS function
+"ibm_map_pes". Since these are all part of the hypervisor's support for IOV it
+seems unlikely that we would ever see some of them but not all. (None are
+currently provided by QEMU/KVM.) (Additionally, the ipr driver on which the EEH
+recovery failure was discovered doesn't even seem to have SR-IOV support so it
+certainly can't enable VFs.)
+
+Cheers,
+Sam.
+
+Patch set v3:
+Patch 1/1: powerpc/pseries: fix EEH recovery of some IOV devices
+* Moved some useful information from the cover letter to the commit log.
+
+Patch set v2:
+Patch 1/1: powerpc/pseries: fix EEH recovery of some IOV devices
+* Moved the BAR disabling code to a function.
+* Also check in pseries_pci_fixup_resources().
+
+Patch set v1:
+Patch 1/1: powerpc/pseries: fix EEH recovery of IOV devices
+
+ arch/powerpc/platforms/pseries/setup.c | 25 +++++++++++++++++--------
+ 1 file changed, 17 insertions(+), 8 deletions(-)
+
+diff --git a/arch/powerpc/platforms/pseries/setup.c b/arch/powerpc/platforms/pseries/setup.c
+index b55ad4286dc7..0a9e4243ae1d 100644
+--- a/arch/powerpc/platforms/pseries/setup.c
++++ b/arch/powerpc/platforms/pseries/setup.c
+@@ -645,6 +645,15 @@ void of_pci_parse_iov_addrs(struct pci_dev *dev, const int *indexes)
+ 	}
+ }
  
--				[<domain>:]<bus>:<slot>.<func>
-+				[<domain>:]<bus>:<slot>.<func>[/<slot>.<func>]*
- 				pci:<vendor>:<device>[:<subvendor>:<subdevice>]
- 
- 				Note: the first format specifies a PCI
-@@ -3009,7 +3009,11 @@
- 				firmware changes, or due to changes caused
- 				by other kernel parameters. If the
- 				domain is left unspecified, it is
--				taken to be zero. The second format
-+				taken to be zero. Optionally, a path
-+				to a device through multiple slot/function
-+				addresses can be specified after the base
-+				address (this is more robust against
-+				renumbering issues). The second format
- 				selects devices using IDs from the
- 				configuration space which may match multiple
- 				devices in the system.
-diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
-index 6127155d4170..59638075b4df 100644
---- a/drivers/pci/pci.c
-+++ b/drivers/pci/pci.c
-@@ -192,6 +192,89 @@ EXPORT_SYMBOL_GPL(pci_ioremap_wc_bar);
- #endif
- 
- /**
-+ * pci_dev_str_match_path - test if a path string matches a device
-+ * @dev:    the PCI device to test
-+ * @p:      string to match the device against
-+ * @endptr: pointer to the string after the match
-+ *
-+ * Test if a string (typically from a kernel parameter) formatted as a
-+ * path of slot/function addresses matches a PCI device. The string must
-+ * be of the form:
-+ *
-+ *   [<domain>:]<bus>:<slot>.<func>[/<slot>.<func>]*
-+ *
-+ * A path for a device can be obtained using 'lspci -t'. Using a path
-+ * is more robust against bus renumbering than using only a single bus,
-+ * slot and function address.
-+ *
-+ * Returns 1 if the string matches the device, 0 if it does not and
-+ * a negative error code if it fails to parse the string.
-+ */
-+static int pci_dev_str_match_path(struct pci_dev *dev, const char *path,
-+				  const char **endptr)
++static void pseries_disable_sriov_resources(struct pci_dev *pdev)
 +{
-+	int ret;
-+	int seg, bus, slot, func;
-+	char *wpath, *p;
-+	char end;
++	int i;
 +
-+	*endptr = strchrnul(path, ';');
-+
-+	wpath = kmemdup_nul(path, *endptr - path, GFP_KERNEL);
-+	if (!wpath)
-+		return -ENOMEM;
-+
-+	while (1) {
-+		p = strrchr(wpath, '/');
-+		if (!p)
-+			break;
-+		ret = sscanf(p, "/%x.%x%c", &slot, &func, &end);
-+		if (ret != 2) {
-+			ret = -EINVAL;
-+			goto free_and_exit;
-+		}
-+
-+		if (dev->devfn != PCI_DEVFN(slot, func)) {
-+			ret = 0;
-+			goto free_and_exit;
-+		}
-+
-+		/*
-+		 * Note: we don't need to get a reference to the upstream
-+		 * bridge because we hold a reference to the top level
-+		 * device which should hold a reference to the bridge,
-+		 * and so on.
-+		 */
-+		dev = pci_upstream_bridge(dev);
-+		if (!dev) {
-+			ret = 0;
-+			goto free_and_exit;
-+		}
-+
-+		*p = 0;
-+	}
-+
-+	ret = sscanf(wpath, "%x:%x:%x.%x%c", &seg, &bus, &slot,
-+		     &func, &end);
-+	if (ret != 4) {
-+		seg = 0;
-+		ret = sscanf(wpath, "%x:%x.%x%c", &bus, &slot, &func, &end);
-+		if (ret != 3) {
-+			ret = -EINVAL;
-+			goto free_and_exit;
-+		}
-+	}
-+
-+	ret = (seg == pci_domain_nr(dev->bus) &&
-+	       bus == dev->bus->number &&
-+	       dev->devfn == PCI_DEVFN(slot, func));
-+
-+free_and_exit:
-+	kfree(wpath);
-+	return ret;
++	pci_warn(pdev, "No hypervisor support for SR-IOV on this device, IOV BARs disabled.\n");
++	for (i = 0; i < PCI_SRIOV_NUM_BARS; i++)
++		pdev->resource[i + PCI_IOV_RESOURCES].flags = 0;
 +}
 +
-+/**
-  * pci_dev_str_match - test if a string matches a device
-  * @dev:    the PCI device to test
-  * @p:      string to match the device against
-@@ -200,13 +283,16 @@ EXPORT_SYMBOL_GPL(pci_ioremap_wc_bar);
-  * Test if a string (typically from a kernel parameter) matches a specified
-  * PCI device. The string may be of one of the following formats:
-  *
-- *   [<domain>:]<bus>:<slot>.<func>
-+ *   [<domain>:]<bus>:<slot>.<func>[/<slot>.<func>]*
-  *   pci:<vendor>:<device>[:<subvendor>:<subdevice>]
-  *
-  * The first format specifies a PCI bus/slot/function address which
-  * may change if new hardware is inserted, if motherboard firmware changes,
-  * or due to changes caused in kernel parameters. If the domain is
-- * left unspecified, it is taken to be 0.
-+ * left unspecified, it is taken to be 0. In order to be robust against
-+ * bus renumbering issues, a path of PCI slot/function numbers may be used
-+ * to address the specific device. The path for a device can be determined
-+ * through the use of 'lspci -t'.
-  *
-  * The second format matches devices using IDs in the configuration
-  * space which may match multiple devices in the system. A value of 0
-@@ -222,7 +308,7 @@ static int pci_dev_str_match(struct pci_dev *dev, const char *p,
- 			     const char **endptr)
+ static void pseries_pci_fixup_resources(struct pci_dev *pdev)
  {
- 	int ret;
--	int seg, bus, slot, func, count;
-+	int count;
- 	unsigned short vendor, device, subsystem_vendor, subsystem_device;
+ 	const int *indexes;
+@@ -652,10 +661,10 @@ static void pseries_pci_fixup_resources(struct pci_dev *pdev)
  
- 	if (strncmp(p, "pci:", 4) == 0) {
-@@ -248,25 +334,16 @@ static int pci_dev_str_match(struct pci_dev *dev, const char *p,
- 		    (!subsystem_device ||
- 			    subsystem_device == dev->subsystem_device))
- 			goto found;
--
- 	} else {
--		/* PCI Bus,Slot,Function ids are specified */
--		ret = sscanf(p, "%x:%x:%x.%x%n", &seg, &bus, &slot,
--			     &func, &count);
--		if (ret != 4) {
--			seg = 0;
--			ret = sscanf(p, "%x:%x.%x%n", &bus, &slot,
--				     &func, &count);
--			if (ret != 3)
--				return -EINVAL;
--		}
--
--		p += count;
-+		/*
-+		 * PCI Bus,Slot,Function ids are specified
-+		 *  (optionally, may include a path of devfns following it)
-+		 */
+ 	/*Firmware must support open sriov otherwise dont configure*/
+ 	indexes = of_get_property(dn, "ibm,open-sriov-vf-bar-info", NULL);
+-	if (!indexes)
+-		return;
+-	/* Assign the addresses from device tree*/
+-	of_pci_set_vf_bar_size(pdev, indexes);
++	if (indexes)
++		of_pci_set_vf_bar_size(pdev, indexes);
++	else
++		pseries_disable_sriov_resources(pdev);
+ }
  
--		if (seg == pci_domain_nr(dev->bus) &&
--		    bus == dev->bus->number &&
--		    slot == PCI_SLOT(dev->devfn) &&
--		    func == PCI_FUNC(dev->devfn))
-+		ret = pci_dev_str_match_path(dev, p, &p);
-+		if (ret < 0)
-+			return ret;
-+		else if (ret)
- 			goto found;
- 	}
+ static void pseries_pci_fixup_iov_resources(struct pci_dev *pdev)
+@@ -667,10 +676,10 @@ static void pseries_pci_fixup_iov_resources(struct pci_dev *pdev)
+ 		return;
+ 	/*Firmware must support open sriov otherwise dont configure*/
+ 	indexes = of_get_property(dn, "ibm,open-sriov-vf-bar-info", NULL);
+-	if (!indexes)
+-		return;
+-	/* Assign the addresses from device tree*/
+-	of_pci_parse_iov_addrs(pdev, indexes);
++	if (indexes)
++		of_pci_parse_iov_addrs(pdev, indexes);
++	else
++		pseries_disable_sriov_resources(pdev);
+ }
  
+ static resource_size_t pseries_pci_iov_resource_alignment(struct pci_dev *pdev,
 -- 
-2.11.0
+2.16.1.74.g9b0b1f47b
