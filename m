@@ -1,144 +1,60 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-pl0-f67.google.com ([209.85.160.67]:41095 "EHLO
-        mail-pl0-f67.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726126AbeGMVyr (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Fri, 13 Jul 2018 17:54:47 -0400
-Received: by mail-pl0-f67.google.com with SMTP id w8-v6so12727161ply.8
-        for <linux-pci@vger.kernel.org>; Fri, 13 Jul 2018 14:38:22 -0700 (PDT)
-Date: Fri, 13 Jul 2018 14:38:19 -0700
-From: Stephen Hemminger <stephen@networkplumber.org>
-To: Bjorn Helgaas <helgaas@kernel.org>
-Cc: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>, bhelgaas@google.com,
-        kys@microsoft.com, linux-pci@vger.kernel.org,
-        Stephen Hemminger <sthemmin@microsoft.com>
-Subject: Re: [PATCH] PCI: hv: support reporting serial number as slot
- information
-Message-ID: <20180713143819.14da12b1@xeon-e3>
-In-Reply-To: <20180711134908.GF188359@bhelgaas-glaptop.roam.corp.google.com>
-References: <20180612164037.10672-1-sthemmin@microsoft.com>
- <20180704160834.GB12996@red-moon>
- <20180711134908.GF188359@bhelgaas-glaptop.roam.corp.google.com>
+Received: from eu-smtp-delivery-211.mimecast.com ([146.101.78.211]:35418 "EHLO
+        eu-smtp-delivery-211.mimecast.com" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1729283AbeG3PIF (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Mon, 30 Jul 2018 11:08:05 -0400
+From: David Laight <David.Laight@ACULAB.COM>
+To: 'Lukas Wunner' <lukas@wunner.de>,
+        "Alex_Gagniuc@Dellteam.com" <Alex_Gagniuc@Dellteam.com>
+CC: "mr.nuke.me@gmail.com" <mr.nuke.me@gmail.com>,
+        "keith.busch@intel.com" <keith.busch@intel.com>,
+        "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+        "Austin.Bolen@dell.com" <Austin.Bolen@dell.com>,
+        "Stuart.Hayes@dell.com" <Stuart.Hayes@dell.com>,
+        "Narendra.K@dell.com" <Narendra.K@dell.com>,
+        "Christopher.Arzola@dell.com" <Christopher.Arzola@dell.com>,
+        "David.Chalfant@dell.com" <David.Chalfant@dell.com>,
+        Sinan Kaya <okaya@kernel.org>
+Subject: RE: Should a PCIe Link Down event set the PCI_DEV_DISCONNECTED bit?
+Date: Mon, 30 Jul 2018 13:28:14 +0000
+Message-ID: <11e48a8d8e144259b4d0fb073c6899c7@AcuMS.aculab.com>
+References: <47727551-86ce-040a-2516-efa47ee3a76e@gmail.com>
+ <20180727071813.GA6128@wunner.de>
+ <f6aa0b881a824b4f82a29dad300aaaea@ausx13mps321.AMER.DELL.COM>
+ <20180727170543.GA5326@wunner.de>
+ <99604d46a7554eb38ee6c1579c53d835@ausx13mps321.AMER.DELL.COM>
+ <20180728183130.GA21482@wunner.de>
+In-Reply-To: <20180728183130.GA21482@wunner.de>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=UTF-8
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wed, 11 Jul 2018 08:49:08 -0500
-Bjorn Helgaas <helgaas@kernel.org> wrote:
+From: Lukas Wunner
+> Sent: 28 July 2018 19:32
+...
+> Finally, if the card was quickly swapped and the link to the new
+> card is already up, you may be accessing that new card.  (mmio
+> accesses may then still return all ones if the BARs are blank,
+> but at least config space accesses should work.)
 
-> On Wed, Jul 04, 2018 at 05:08:34PM +0100, Lorenzo Pieralisi wrote:
-> > On Tue, Jun 12, 2018 at 09:40:37AM -0700, Stephen Hemminger wrote: =20
-> > > The Hyper-V host API for PCI provides a unique "serial number" which
-> > > can be used as the basis for sysfs PCI slot table. This can be useful
-> > > for cases where userspace wants to find the PCI device based on
-> > > serial number.
-> > >=20
-> > > When an SR-IOV NIC is added, the host sends an attach message
-> > > with a serial number. The kernel doesn't use the serial number, but
-> > > it is useful when doing the same thing in a userspace driver such
-> > > as the DPDK. By having /sys/bus/pci/slots/N it provides a direct
-> > > way to find the matching PCI device. =20
->=20
-> Is this essentially a way to expose the serial number to userspace?
->=20
-> I confess I'm not super familiar with what the slot infrastructure
-> gives us, and I'm trying to figure out if it's the right way to do
-> this.  Would a file directly in the device directory, e.g.,
->=20
->   /sys/devices/pci0000:00/0000:00:00.0/serial
->=20
-> be a possibility?  There is an optional PCIe Device Serial Number
-> capability and also an optional serial number item in the VPD.  We
-> don't support either in the core yet, but maybe they could all be
-> exposed similarly?
->=20
-> Or is there something you need from the slot infrastructure in
-> addition to the serial number exposure?
->=20
-> You mentioned that this patch is along the lines of what KVM does.
-> Can you connect the dots a little bit for me as far as how this is
-> implemented for KVM?  I don't see KVM-related calls to
-> pci_create_slot() or pci_hp_register().
->=20
-> > > There may be some cases where the serial number is not unique such
-> > > as when using GPU's. But the PCI slot infrastructure will handle
-> > > that.
-> > >=20
-> > > This also shortens the network device names generated by
-> > > systemd/udev. The new names use slot (ens2) rather than
-> > > PCI address (enP2p0s2). =20
->=20
-> I don't recognize "enP2p0s2" as a PCI address.  Is that related to a
-> domain/bus/device/function address somehow, or is this some sort of
-> Windows-specific address?
->=20
-> > Hi Stephen,
-> >=20
-> > I wanted to apply this patch but wanted to make sure all HV
-> > maintainers are in agreement first since this looks like
-> > a significant user-space ABI change.
-> >=20
-> > I would also ask Bjorn's opinion on this since he has more
-> > insights into the slot interface history.
-> >=20
-> > Thanks,
-> > Lorenzo
-> >  =20
-> > > Signed-off-by: Stephen Hemminger <sthemmin@microsoft.com>
+On my i7-7700 system that no longer works (at least with some cards).
+If I take the PCIe link down completely (reset the FPGA on the card)
+it doesn't recover (loops through detect active/quiet and a third
+state I can't quite remember).
 
-Yes, this is a way to expose serial number to userspace as well as a
-way to help udev with naming.
+ISTR that it recovers from the link going down when I short out
+the PCIe data lines.
 
-Today, a VF device shows up as:
-$ lspci -n
-0002:00:02.0 0200: 15b3:1014 (rev 80)
+It worked fine on a XEON E5-2609 system - I did it a lot when
+updating the fpga image.
 
+Can anyone else verify whether this works on other systems?
+Or whether the kernel (or BIOS) needs to (re-)initialise
+some register to make link recovery work.
 
-And therefore is named: enP2p0s2 based on these rules:
-See: https://github.com/systemd/systemd/blob/master/src/udev/udev-builtin-n=
-et_id.c#L20
+	David
 
- * Two character prefixes based on the type of interface:
- *   en =E2=80=94 Ethernet
- *   sl =E2=80=94 serial line IP (slip)
- *   wl =E2=80=94 wlan
- *   ww =E2=80=94 wwan
- *
- * Type of names:
-
- *   o<index>[n<phys_port_name>|d<dev_port>]
- *                                         =E2=80=94 on-board device index =
-number
- *   s<slot>[f<function>][n<phys_port_name>|d<dev_port>]
- *                                         =E2=80=94 hotplug slot index num=
-ber
- *   x<MAC>                                =E2=80=94 MAC address
- *   [P<domain>]p<bus>s<slot>[f<function>][n<phys_port_name>|d<dev_port>]
- *                                         =E2=80=94 PCI geographical locat=
-ion
-
-I looked into several other options:
-  - put serial number into the device index number
-
-
-On KVM, the ACPI emulation provides PCI slot information so that is why
-the devices are named "ens3".
-
-I looked into several other options (none of which worked well):
-  * provide sysfs /index file but that wants to be handled by smbios
-  * use VPD serial number but that is a GUID not an integer
-  * full hotplug (but Hyper-V doesn't support real PCI hotplug)
-  * new device_attribute serial, but that is not easy to hook
-    into existing code, and udev won't know about it.
-
-Open to any ideas about how to best represent this.
-
-Thanks,
-Stephen
-
-
-
-PS: it is  nuisance that when the PCI support was moved to drivers/pci/cont=
-rollers
-it was not done in a way  that git correctly tracked the rename. Therefore
-all the commit history was broken :-(
+-
+Registered Address Lakeside, Bramley Road, Mount Farm, Milton Keynes, MK1 1PT, UK
+Registration No: 1397386 (Wales)
