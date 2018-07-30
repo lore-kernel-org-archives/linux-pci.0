@@ -1,128 +1,63 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:40400 "EHLO
-        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S932146AbeGBW7i (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Mon, 2 Jul 2018 18:59:38 -0400
-From: Sinan Kaya <okaya@codeaurora.org>
-To: linux-pci@vger.kernel.org
-Cc: linux-arm-msm@vger.kernel.org,
-        linux-arm-kernel@lists.infradead.org,
-        Sinan Kaya <okaya@codeaurora.org>,
-        Bjorn Helgaas <bhelgaas@google.com>,
-        linux-kernel@vger.kernel.org (open list)
-Subject: [PATCH V5 5/6] PCI: Deprecate pci_reset_bus() and pci_reset_slot() functions
-Date: Mon,  2 Jul 2018 18:58:54 -0400
-Message-Id: <1530572336-20296-6-git-send-email-okaya@codeaurora.org>
-In-Reply-To: <1530572336-20296-1-git-send-email-okaya@codeaurora.org>
-References: <1530572336-20296-1-git-send-email-okaya@codeaurora.org>
+Received: from mail.kernel.org ([198.145.29.99]:37020 "EHLO mail.kernel.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1727063AbeGaAnL (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Mon, 30 Jul 2018 20:43:11 -0400
+Date: Mon, 30 Jul 2018 18:05:55 -0500
+From: Bjorn Helgaas <helgaas@kernel.org>
+To: Heiner Kallweit <hkallweit1@gmail.com>
+Cc: Bjorn Helgaas <bhelgaas@google.com>,
+        "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
+Subject: Re: [PATCH] PCI: let pci_request_irq properly deal with threaded
+ interrupts
+Message-ID: <20180730230554.GF45322@bhelgaas-glaptop.roam.corp.google.com>
+References: <d004975f-03a8-59f5-56ef-f4e1f8e12dfb@gmail.com>
 MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <d004975f-03a8-59f5-56ef-f4e1f8e12dfb@gmail.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-pci_reset_bus() and pci_reset_slot() functions are not being used by
-any code. Remove them from the kernel in favor of pci_try_reset_bus()
-and pci_try_reset_slot() functions.
+On Mon, Jul 30, 2018 at 12:03:42AM +0200, Heiner Kallweit wrote:
+> If we have a threaded interrupt with the handler being NULL, then
+> request_threaded_irq() -> __setup_irq() will complain and bail out
+> if the IRQF_ONESHOT flag isn't set. Therefore check for the handler
+> being NULL and set IRQF_ONESHOT in this case.
+> 
+> This change is needed to migrate the mei_me driver to
+> pci_alloc_irq_vectors() and pci_request_irq().
+> 
+> Signed-off-by: Heiner Kallweit <hkallweit1@gmail.com>
 
-Signed-off-by: Sinan Kaya <okaya@codeaurora.org>
----
- drivers/pci/pci.c   | 55 ++---------------------------------------------------
- include/linux/pci.h |  2 --
- 2 files changed, 2 insertions(+), 55 deletions(-)
+Applied with Thomas' reviewed-by to pci/misc for v4.19, thanks!
 
-diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
-index a31e6db..7e3f2e9 100644
---- a/drivers/pci/pci.c
-+++ b/drivers/pci/pci.c
-@@ -4784,9 +4784,9 @@ int pci_probe_reset_slot(struct pci_slot *slot)
- EXPORT_SYMBOL_GPL(pci_probe_reset_slot);
- 
- /**
-- * pci_reset_slot - reset a PCI slot
-+ * __pci_try_reset_slot - Try to reset a PCI slot
-  * @slot: PCI slot to reset
-- *
-+ *`
-  * A PCI bus may host multiple slots, each slot may support a reset mechanism
-  * independent of other slots.  For instance, some slots may support slot power
-  * control.  In the case of a 1:1 bus to slot architecture, this function may
-@@ -4796,30 +4796,6 @@ EXPORT_SYMBOL_GPL(pci_probe_reset_slot);
-  * through this function.  PCI config space of all devices in the slot and
-  * behind the slot is saved before and restored after reset.
-  *
-- * Return 0 on success, non-zero on error.
-- */
--int pci_reset_slot(struct pci_slot *slot)
--{
--	int rc;
--
--	rc = pci_slot_reset(slot, 1);
--	if (rc)
--		return rc;
--
--	pci_slot_save_and_disable(slot);
--
--	rc = pci_slot_reset(slot, 0);
--
--	pci_slot_restore(slot);
--
--	return rc;
--}
--EXPORT_SYMBOL_GPL(pci_reset_slot);
--
--/**
-- * __pci_try_reset_slot - Try to reset a PCI slot
-- * @slot: PCI slot to reset
-- *
-  * Same as above except return -EAGAIN if the slot cannot be locked
-  */
- static int __pci_try_reset_slot(struct pci_slot *slot)
-@@ -4878,33 +4854,6 @@ int pci_probe_reset_bus(struct pci_bus *bus)
- EXPORT_SYMBOL_GPL(pci_probe_reset_bus);
- 
- /**
-- * pci_reset_bus - reset a PCI bus
-- * @bus: top level PCI bus to reset
-- *
-- * Do a bus reset on the given bus and any subordinate buses, saving
-- * and restoring state of all devices.
-- *
-- * Return 0 on success, non-zero on error.
-- */
--int pci_reset_bus(struct pci_bus *bus)
--{
--	int rc;
--
--	rc = pci_bus_reset(bus, 1);
--	if (rc)
--		return rc;
--
--	pci_bus_save_and_disable(bus);
--
--	rc = pci_bus_reset(bus, 0);
--
--	pci_bus_restore(bus);
--
--	return rc;
--}
--EXPORT_SYMBOL_GPL(pci_reset_bus);
--
--/**
-  * __pci_try_reset_bus - Try to reset a PCI bus
-  * @bus: top level PCI bus to reset
-  *
-diff --git a/include/linux/pci.h b/include/linux/pci.h
-index f5c85b6..ad0c89a 100644
---- a/include/linux/pci.h
-+++ b/include/linux/pci.h
-@@ -1095,9 +1095,7 @@ int pci_reset_function(struct pci_dev *dev);
- int pci_reset_function_locked(struct pci_dev *dev);
- int pci_try_reset_function(struct pci_dev *dev);
- int pci_probe_reset_slot(struct pci_slot *slot);
--int pci_reset_slot(struct pci_slot *slot);
- int pci_probe_reset_bus(struct pci_bus *bus);
--int pci_reset_bus(struct pci_bus *bus);
- int pci_try_reset_bus(struct pci_dev *dev);
- void pci_reset_secondary_bus(struct pci_dev *dev);
- void pcibios_reset_secondary_bus(struct pci_dev *dev);
--- 
-2.7.4
+> ---
+>  drivers/pci/irq.c | 6 +++++-
+>  1 file changed, 5 insertions(+), 1 deletion(-)
+> 
+> diff --git a/drivers/pci/irq.c b/drivers/pci/irq.c
+> index 2a808e10..a1de501a 100644
+> --- a/drivers/pci/irq.c
+> +++ b/drivers/pci/irq.c
+> @@ -86,13 +86,17 @@ int pci_request_irq(struct pci_dev *dev, unsigned int nr, irq_handler_t handler,
+>  	va_list ap;
+>  	int ret;
+>  	char *devname;
+> +	unsigned long irqflags = IRQF_SHARED;
+> +
+> +	if (!handler)
+> +		irqflags |= IRQF_ONESHOT;
+>  
+>  	va_start(ap, fmt);
+>  	devname = kvasprintf(GFP_KERNEL, fmt, ap);
+>  	va_end(ap);
+>  
+>  	ret = request_threaded_irq(pci_irq_vector(dev, nr), handler, thread_fn,
+> -			IRQF_SHARED, devname, dev_id);
+> +				   irqflags, devname, dev_id);
+>  	if (ret)
+>  		kfree(devname);
+>  	return ret;
+> -- 
+> 2.18.0
+> 
