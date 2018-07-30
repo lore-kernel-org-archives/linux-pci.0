@@ -1,55 +1,97 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from bmailout2.hostsharing.net ([83.223.90.240]:43037 "EHLO
-        bmailout2.hostsharing.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752181AbeGAOGg (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Sun, 1 Jul 2018 10:06:36 -0400
-Date: Sun, 1 Jul 2018 16:06:34 +0200
-From: Lukas Wunner <lukas@wunner.de>
-To: Hari Vyas <hari.vyas@broadcom.com>
-Cc: bhelgaas@google.com, benh@kernel.crashing.org,
-        linux-pci@vger.kernel.org, ray.jui@broadcom.com
-Subject: Re: [PATCH v2 1/3] PCI: Data corruption happening due to race
- condition
-Message-ID: <20180701140634.GA22322@wunner.de>
-References: <1530268061-17324-1-git-send-email-hari.vyas@broadcom.com>
- <1530268061-17324-2-git-send-email-hari.vyas@broadcom.com>
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+To: linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
+        linux-doc@vger.kernel.org
+Cc: Stephen Bates <sbates@raithlin.com>,
+        Christoph Hellwig <hch@lst.de>,
+        Bjorn Helgaas <bhelgaas@google.com>,
+        Jonathan Corbet <corbet@lwn.net>,
+        Ingo Molnar <mingo@kernel.org>,
+        Thomas Gleixner <tglx@linutronix.de>,
+        "Paul E. McKenney" <paulmck@linux.vnet.ibm.com>,
+        Marc Zyngier <marc.zyngier@arm.com>,
+        Kai-Heng Feng <kai.heng.feng@canonical.com>,
+        Frederic Weisbecker <frederic@kernel.org>,
+        Dan Williams <dan.j.williams@intel.com>,
+        =?UTF-8?B?SsOpcsO0bWUgR2xpc3Nl?= <jglisse@redhat.com>,
+        Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+        Alex Williamson <alex.williamson@redhat.com>,
+        =?UTF-8?Q?Christian_K=c3=b6nig?= <christian.koenig@amd.com>,
+        Matthew Wilcox <willy@infradead.org>
+References: <20180730161840.13733-1-logang@deltatee.com>
+From: Logan Gunthorpe <logang@deltatee.com>
+Message-ID: <1b911d4b-d8e4-d44d-af1b-8ec1a39983e6@deltatee.com>
+Date: Mon, 30 Jul 2018 10:41:43 -0600
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1530268061-17324-2-git-send-email-hari.vyas@broadcom.com>
-Sender: linux-pci-owner@vger.kernel.org
+In-Reply-To: <20180730161840.13733-1-logang@deltatee.com>
+Content-Type: text/plain; charset=utf-8
+Subject: Re: [PATCH v8 0/4] Add parameter for disabling ACS redirection for
+ P2P
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Fri, Jun 29, 2018 at 03:57:39PM +0530, Hari Vyas wrote:
-> Fix moves device addition is_added bit to separate private flag
-> variable and use different atomic functions to set, clear and
-> retrieve device addition state. As is_added shares different
-> memory location so race condition is avoided.
+Hey,
 
-As 0-day has already discovered, you need to squash all 3 patches
-together to avoid breaking the build.
+Oops, I missed finishing this up before sending it sorry:
 
-
-> +static inline int pci_dev_set_added(struct pci_dev *dev, void *unused)
-> +{
-> +	set_bit(PCI_DEV_ADDED, &dev->priv_flags);
-> +	return 0;
-> +}
-> +
-> +static inline int pci_dev_clear_added(struct pci_dev *dev, void *unused)
-> +{
-> +	clear_bit(PCI_DEV_ADDED, &dev->priv_flags);
-> +	return 0;
-> +}
-
-You don't need the "unused" parameter here and you can return void.
-pci_dev_set_disconnected() has the parameter because the function is
-passed in to pci_walk_bus() in a few places, but you're not doing that
-AFAICS.
-
-What you *could* do however is collapse pci_dev_set_added() and
-pci_dev_clear_added() into a single function, pass in a bool "added",
-then use assign_bit() to set or clear it.  It would save 6 LoC.
+This is mostly a resend with Alex's tags collected. Bjorn, can you
+please consider merging this? All patches have been reviewed and
+accepted by Alex.
 
 Thanks,
 
-Lukas
+Logan
+
+--
+
+Changes since v7:
+* Collected Alex's Reviewed-by Tags
+* Rebased onto v4.18-rc7 (no conflicts)
+
+
+On 30/07/18 10:18 AM, Logan Gunthorpe wrote:
+> Changes since v6:
+> * Fixed order of operations for device specific disable function as
+>   noticed by Alex
+> * Rebased onto v4.18-rc5 (no conflicts)
+> 
+> Changes since v5:
+> * Add a quirk to handle the Intel SPT PCH case (as pointed out by Alex)
+> * Warn in the case that we try to disable ACS redirect on a device
+>   that doesn't have the ACS capability (also suggested by Alex)
+> * Collect reviewed-by tag from Alex
+> * Rebased onto v4.18-rc4 (no conflicts)
+> 
+> Changes since v4:
+> * Fixed a couple documentation mistakes spotted by Randy
+> 
+> Changes since v3:
+> * Removed some of the cruft that was copied from the resource_alignment
+>   paramater (per Alex)
+> * A number of docuemntation fixes as noticed by Alex and Willy
+> 
+> Changes since v2:
+> * Rebased onto v4.18-rc1 (no conflicts)
+> * Minor tweaks to the documentation per Andy
+> * Removed the "path:" prefix and use the path parsing code
+>   for simple devices (as it works the same). Per a suggestion from Alex
+> 
+> Changes since v1:
+> * Reworked pci_dev_str_match_path using strrchr as suggested by Alex
+> * Collected Christian's Acks
+> 
+> 
+> Logan Gunthorpe (4):
+>   PCI: Make specifying PCI devices in kernel parameters reusable
+>   PCI: Allow specifying devices using a base bus and path of devfns
+>   PCI: Introduce disable_acs_redir quirk
+>   PCI: Introduce the disable_acs_redir parameter
+> 
+>  Documentation/admin-guide/kernel-parameters.txt |  41 +++-
+>  drivers/pci/pci.c                               | 310 +++++++++++++++++++-----
+>  drivers/pci/quirks.c                            |  78 +++++-
+>  include/linux/pci.h                             |   5 +
+>  4 files changed, 361 insertions(+), 73 deletions(-)
+> 
+> --
+> 2.11.0
+> 
