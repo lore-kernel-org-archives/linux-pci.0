@@ -1,112 +1,78 @@
-Return-Path: <linux-nvme-bounces+bjorn=helgaas.com@lists.infradead.org>
-Return-Path: <linux-nvme-bounces+bjorn=helgaas.com@lists.infradead.org>
-Message-ID: <1532461998.20066.5.camel@gmail.com>
-Subject: Re: [PATCH v3 2/3] PCI: Samsung SM961/PM961 NVMe disable before FLR
- quirk
-From: Minwoo Im <minwoo.im.dev@gmail.com>
-To: Alex Williamson <alex.williamson@redhat.com>, linux-pci@vger.kernel.org
-Date: Wed, 25 Jul 2018 04:53:18 +0900
-In-Reply-To: <20180724161440.2729.89835.stgit@gimli.home>
-References: <20180724160440.2729.75178.stgit@gimli.home>
- <20180724161440.2729.89835.stgit@gimli.home>
-Mime-Version: 1.0
-List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-nvme>,
- <mailto:linux-nvme-request@lists.infradead.org?subject=unsubscribe>
-List-Archive: <http://lists.infradead.org/pipermail/linux-nvme/>
-List-Post: <mailto:linux-nvme@lists.infradead.org>
-List-Help: <mailto:linux-nvme-request@lists.infradead.org?subject=help>
-List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-nvme>,
- <mailto:linux-nvme-request@lists.infradead.org?subject=subscribe>
-Cc: linux-kernel@vger.kernel.org, linux-nvme@lists.infradead.org
-Content-Type: text/plain; charset="utf-8"
-Sender: "Linux-nvme" <linux-nvme-bounces@lists.infradead.org>
-Errors-To: linux-nvme-bounces+bjorn=helgaas.com@lists.infradead.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from ale.deltatee.com ([207.54.116.67]:54542 "EHLO ale.deltatee.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1731447AbeG3Ryg (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Mon, 30 Jul 2018 13:54:36 -0400
+From: Logan Gunthorpe <logang@deltatee.com>
+To: linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
+        linux-doc@vger.kernel.org
+Cc: Stephen Bates <sbates@raithlin.com>,
+        Christoph Hellwig <hch@lst.de>,
+        Bjorn Helgaas <bhelgaas@google.com>,
+        Jonathan Corbet <corbet@lwn.net>,
+        Ingo Molnar <mingo@kernel.org>,
+        Thomas Gleixner <tglx@linutronix.de>,
+        "Paul E. McKenney" <paulmck@linux.vnet.ibm.com>,
+        Marc Zyngier <marc.zyngier@arm.com>,
+        Kai-Heng Feng <kai.heng.feng@canonical.com>,
+        Frederic Weisbecker <frederic@kernel.org>,
+        Dan Williams <dan.j.williams@intel.com>,
+        =?UTF-8?q?J=C3=A9r=C3=B4me=20Glisse?= <jglisse@redhat.com>,
+        Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+        Alex Williamson <alex.williamson@redhat.com>,
+        =?UTF-8?q?Christian=20K=C3=B6nig?= <christian.koenig@amd.com>,
+        Matthew Wilcox <willy@infradead.org>,
+        Logan Gunthorpe <logang@deltatee.com>
+Date: Mon, 30 Jul 2018 10:18:36 -0600
+Message-Id: <20180730161840.13733-1-logang@deltatee.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
+Subject: [PATCH v8 0/4] Add parameter for disabling ACS redirection for P2P
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-SGkgQWxleCwKCk9uIFR1ZSwgMjAxOC0wNy0yNCBhdCAxMDoxNCAtMDYwMCwgQWxleCBXaWxsaWFt
-c29uIHdyb3RlOgo+IFRoZSBTYW1zdW5nIFNNOTYxL1BNOTYxICg5NjAgRVZPKSBzb21ldGltZXMg
-ZmFpbHMgdG8gcmV0dXJuIGZyb20gRkxSCj4gd2l0aCB0aGUgUENJIGNvbmZpZyBzcGFjZSByZWFk
-aW5nIGJhY2sgYXMgLTEuwqDCoEEgcmVwcm9kdWNpYmxlIGluc3RhbmNlCj4gb2YgdGhpcyBiZWhh
-dmlvciBpcyByZXNvbHZlZCBieSBjbGVhcmluZyB0aGUgZW5hYmxlIGJpdCBpbiB0aGUgTlZNZQo+
-IGNvbmZpZ3VyYXRpb24gcmVnaXN0ZXIgYW5kIHdhaXRpbmcgZm9yIHRoZSByZWFkeSBzdGF0dXMg
-dG8gY2xlYXIKPiAoZGlzYWJsaW5nIHRoZSBOVk1lIGNvbnRyb2xsZXIpIHByaW9yIHRvIEZMUi4K
-PiAKPiBTaWduZWQtb2ZmLWJ5OiBBbGV4IFdpbGxpYW1zb24gPGFsZXgud2lsbGlhbXNvbkByZWRo
-YXQuY29tPgo+IC0tLQo+IMKgZHJpdmVycy9wY2kvcXVpcmtzLmMgfMKgwqDCoDgzCj4gKysrKysr
-KysrKysrKysrKysrKysrKysrKysrKysrKysrKysrKysrKysrKysrKysrKysKPiDCoDEgZmlsZSBj
-aGFuZ2VkLCA4MyBpbnNlcnRpb25zKCspCj4gCj4gZGlmZiAtLWdpdCBhL2RyaXZlcnMvcGNpL3F1
-aXJrcy5jIGIvZHJpdmVycy9wY2kvcXVpcmtzLmMKPiBpbmRleCBlNzJjODc0MmFhZmEuLjM4OTlj
-ZGQyNTE0YiAxMDA2NDQKPiAtLS0gYS9kcml2ZXJzL3BjaS9xdWlya3MuYwo+ICsrKyBiL2RyaXZl
-cnMvcGNpL3F1aXJrcy5jCj4gQEAgLTI4LDYgKzI4LDcgQEAKPiDCoCNpbmNsdWRlIDxsaW51eC9w
-bGF0Zm9ybV9kYXRhL3g4Ni9hcHBsZS5oPgo+IMKgI2luY2x1ZGUgPGxpbnV4L3BtX3J1bnRpbWUu
-aD4KPiDCoCNpbmNsdWRlIDxsaW51eC9zd2l0Y2h0ZWMuaD4KPiArI2luY2x1ZGUgPGxpbnV4L252
-bWUuaD4KPiDCoCNpbmNsdWRlIDxhc20vZG1hLmg+CS8qIGlzYV9kbWFfYnJpZGdlX2J1Z2d5ICov
-Cj4gwqAjaW5jbHVkZSAicGNpLmgiCj4gwqAKPiBAQCAtMzY2OSw2ICszNjcwLDg3IEBAIHN0YXRp
-YyBpbnQgcmVzZXRfY2hlbHNpb19nZW5lcmljX2RldihzdHJ1Y3QgcGNpX2Rldgo+ICpkZXYsIGlu
-dCBwcm9iZSkKPiDCoCNkZWZpbmUgUENJX0RFVklDRV9JRF9JTlRFTF9JVkJfTV9WR0HCoMKgwqDC
-oMKgwqAweDAxNTYKPiDCoCNkZWZpbmUgUENJX0RFVklDRV9JRF9JTlRFTF9JVkJfTTJfVkdBwqDC
-oMKgwqDCoDB4MDE2Ngo+IMKgCj4gKy8qCj4gKyAqIFRoZSBTYW1zdW5nIFNNOTYxL1BNOTYxIGNv
-bnRyb2xsZXIgY2FuIHNvbWV0aW1lcyBlbnRlciBhIGZhdGFsIHN0YXRlIGFmdGVyCj4gKyAqIEZM
-UiB3aGVyZSBjb25maWcgc3BhY2UgcmVhZHMgZnJvbSB0aGUgZGV2aWNlIHJldHVybiAtMS7CoMKg
-V2Ugc2VlbSB0byBiZQo+ICsgKiBhYmxlIHRvIGF2b2lkIHRoaXMgY29uZGl0aW9uIGlmIHdlIGRp
-c2FibGUgdGhlIE5WTWUgY29udHJvbGxlciBwcmlvciB0bwo+ICsgKiBGTFIuwqDCoFRoaXMgcXVp
-cmsgaXMgZ2VuZXJpYyBmb3IgYW55IE5WTWUgY2xhc3MgZGV2aWNlIHJlcXVpcmluZyBzaW1pbGFy
-Cj4gKyAqIGFzc2lzdGFuY2UgdG8gcXVpZXNjZSB0aGUgZGV2aWNlIHByaW9yIHRvIEZMUi4KPiAr
-ICoKPiArICogTlZNZSBzcGVjaWZpY2F0aW9uOiBodHRwczovL252bWV4cHJlc3Mub3JnL3Jlc291
-cmNlcy9zcGVjaWZpY2F0aW9ucy8KPiArICogUmV2aXNpb24gMS4wZToKCkl0IHNlZW1zIHRvbyBv
-bGQgdmVyc2lvbiBvZiBOVk1lIHNwZWNpZmljYXRpb24uIMKgRG8geW91IGhhdmUgYW55IHNwZWNp
-YWwgcmVhc29uCnRvIGNvbW1lbnQgdGhlIHNwZWNpZmllZCAxLjAgdmVyc2lvbiBpbnN0ZWFkIG9m
-IDEuMyBvciBzb21ldGhpbmcgbmV3ZXI/Cgo+ICsgKsKgwqDCoMKgQ2hhcHRlciAyOiBSZXF1aXJl
-ZCBhbmQgb3B0aW9uYWwgUENJIGNvbmZpZyByZWdpc3RlcnMKPiArICrCoMKgwqDCoENoYXB0ZXIg
-MzogTlZNZSBjb250cm9sIHJlZ2lzdGVycwo+ICsgKsKgwqDCoMKgQ2hhcHRlciA3LjM6IFJlc2V0
-IGJlaGF2aW9yCj4gKyAqLwo+ICtzdGF0aWMgaW50IG52bWVfZGlzYWJsZV9hbmRfZmxyKHN0cnVj
-dCBwY2lfZGV2ICpkZXYsIGludCBwcm9iZSkKClRoZSBuYW1lIG9mIHRoaXMgZnVuY3Rpb24gc2Vl
-bXMgYWJsZSB0byBiZSBzdGFydGVkIHdpdGggJ3Jlc2V0XycgcHJlZml4IGp1c3QKbGlrZSBvdGhl
-ciBxdWlya3MgZm9yIHJlc2V0LgpXaGF0IGFib3V0IHJlc2V0X3NhbXN1bmdfcG05NjEgb3Igc29t
-ZXRoaW5nPwoKPiArewo+ICsJdm9pZCBfX2lvbWVtICpiYXI7Cj4gKwl1MTYgY21kOwo+ICsJdTMy
-IGNmZzsKPiArCj4gKwlpZiAoZGV2LT5jbGFzcyAhPSBQQ0lfQ0xBU1NfU1RPUkFHRV9FWFBSRVNT
-IHx8Cj4gKwnCoMKgwqDCoCFwY2llX2hhc19mbHIoZGV2KSB8fCAhcGNpX3Jlc291cmNlX3N0YXJ0
-KGRldiwgMCkpCj4gKwkJcmV0dXJuIC1FTk9UVFk7Cj4gKwo+ICsJaWYgKHByb2JlKQo+ICsJCXJl
-dHVybiAwOwo+ICsKPiArCWJhciA9IHBjaV9pb21hcChkZXYsIDAsIE5WTUVfUkVHX0NDICsgc2l6
-ZW9mKGNmZykpOwo+ICsJaWYgKCFiYXIpCj4gKwkJcmV0dXJuIC1FTk9UVFk7Cj4gKwo+ICsJcGNp
-X3JlYWRfY29uZmlnX3dvcmQoZGV2LCBQQ0lfQ09NTUFORCwgJmNtZCk7Cj4gKwlwY2lfd3JpdGVf
-Y29uZmlnX3dvcmQoZGV2LCBQQ0lfQ09NTUFORCwgY21kIHwgUENJX0NPTU1BTkRfTUVNT1JZKTsK
-PiArCj4gKwljZmcgPSByZWFkbChiYXIgKyBOVk1FX1JFR19DQyk7Cj4gKwo+ICsJLyogRGlzYWJs
-ZSBjb250cm9sbGVyIGlmIGVuYWJsZWQgKi8KPiArCWlmIChjZmcgJiBOVk1FX0NDX0VOQUJMRSkg
-ewo+ICsJCXU2NCBjYXAgPSByZWFkcShiYXIgKyBOVk1FX1JFR19DQVApOwo+ICsJCXVuc2lnbmVk
-IGxvbmcgdGltZW91dDsKPiArCj4gKwkJLyoKPiArCQnCoCogUGVyIG52bWVfZGlzYWJsZV9jdHJs
-KCkgc2tpcCBzaHV0ZG93biBub3RpZmljYXRpb24gYXMgaXQKPiArCQnCoCogY291bGQgY29tcGxl
-dGUgY29tbWFuZHMgdG8gdGhlIGFkbWluIHF1ZXVlLsKgwqBXZSBvbmx5Cj4gaW50ZW5kCj4gKwkJ
-wqAqIHRvIHF1aWVzY2UgdGhlIGRldmljZSBiZWZvcmUgcmVzZXQuCj4gKwkJwqAqLwo+ICsJCWNm
-ZyAmPSB+KE5WTUVfQ0NfU0hOX01BU0sgfCBOVk1FX0NDX0VOQUJMRSk7Cj4gKwo+ICsJCXdyaXRl
-bChjZmcsIGJhciArIE5WTUVfUkVHX0NDKTsKPiArCj4gKwkJLyoKPiArCQnCoCogU29tZSBjb250
-cm9sbGVycyByZXF1aXJlIGFuIGFkZGl0aW9uYWwgZGVsYXkgaGVyZSwgc2VlCj4gKwkJwqAqIE5W
-TUVfUVVJUktfREVMQVlfQkVGT1JFX0NIS19SRFkuwqDCoE5vbmUgb2YgdGhvc2UgYXJlIHlldAo+
-ICsJCcKgKiBzdXBwb3J0ZWQgYnkgdGhpcyBxdWlyay4KPiArCQnCoCovCj4gKwo+ICsJCS8qIENh
-cCByZWdpc3RlciBwcm92aWRlcyBtYXggdGltZW91dCBpbiA1MDBtcyBpbmNyZW1lbnRzICovCj4g
-KwkJdGltZW91dCA9ICgoTlZNRV9DQVBfVElNRU9VVChjYXApICsgMSkgKiBIWiAvIDIpICsgamlm
-ZmllczsKPiArCj4gKwkJZm9yICg7Oykgewo+ICsJCQl1MzIgc3RhdHVzID0gcmVhZGwoYmFyICsg
-TlZNRV9SRUdfQ1NUUyk7Cj4gKwo+ICsJCQkvKiBSZWFkeSBzdGF0dXMgYmVjb21lcyB6ZXJvIG9u
-IGRpc2FibGUgY29tcGxldGUgKi8KPiArCQkJaWYgKCEoc3RhdHVzICYgTlZNRV9DU1RTX1JEWSkp
-Cj4gKwkJCQlicmVhazsKPiArCj4gKwkJCW1zbGVlcCgxMDApOwo+ICsKPiArCQkJaWYgKHRpbWVf
-YWZ0ZXIoamlmZmllcywgdGltZW91dCkpIHsKPiArCQkJCXBjaV93YXJuKGRldiwgIlRpbWVvdXQg
-d2FpdGluZyBmb3IgTlZNZSByZWFkeQo+IHN0YXR1cyB0byBjbGVhciBhZnRlciBkaXNhYmxlXG4i
-KTsKPiArCQkJCWJyZWFrOwo+ICsJCQl9Cj4gKwkJfQo+ICsJfQo+ICsKPiArCXBjaV9pb3VubWFw
-KGRldiwgYmFyKTsKPiArCj4gKwlwY2llX2ZscihkZXYpOwo+ICsKPiArCXJldHVybiAwOwo+ICt9
-Cj4gKwo+IMKgc3RhdGljIGNvbnN0IHN0cnVjdCBwY2lfZGV2X3Jlc2V0X21ldGhvZHMgcGNpX2Rl
-dl9yZXNldF9tZXRob2RzW10gPSB7Cj4gwqAJeyBQQ0lfVkVORE9SX0lEX0lOVEVMLCBQQ0lfREVW
-SUNFX0lEX0lOVEVMXzgyNTk5X1NGUF9WRiwKPiDCoAkJwqByZXNldF9pbnRlbF84MjU5OV9zZnBf
-dmlydGZuIH0sCj4gQEAgLTM2NzYsNiArMzc1OCw3IEBAIHN0YXRpYyBjb25zdCBzdHJ1Y3QgcGNp
-X2Rldl9yZXNldF9tZXRob2RzCj4gcGNpX2Rldl9yZXNldF9tZXRob2RzW10gPSB7Cj4gwqAJCXJl
-c2V0X2l2Yl9pZ2QgfSwKPiDCoAl7IFBDSV9WRU5ET1JfSURfSU5URUwsIFBDSV9ERVZJQ0VfSURf
-SU5URUxfSVZCX00yX1ZHQSwKPiDCoAkJcmVzZXRfaXZiX2lnZCB9LAo+ICsJeyBQQ0lfVkVORE9S
-X0lEX1NBTVNVTkcsIDB4YTgwNCwgbnZtZV9kaXNhYmxlX2FuZF9mbHIgfSwKCldoeSBkb24ndCB3
-ZSBqdXN0IGRlZmluZSBhIG1hY3JvIGp1c3QgbGlrZSBvdGhlciBERVZJQ0VfSURzLiAoZS5nLgpQ
-Q0lFX0RFVklDRV9JRF9JTlRFTF84MjU5OV9TRlBfVkYpLgoKI2RlZmluZSBQQ0lfREVWSUNFX0lE
-X1NBTVNVTkdfUE05NjEgwqAweGE4MDQKCj4gwqAJeyBQQ0lfVkVORE9SX0lEX0NIRUxTSU8sIFBD
-SV9BTllfSUQsCj4gwqAJCXJlc2V0X2NoZWxzaW9fZ2VuZXJpY19kZXYgfSwKPiDCoAl7IDAgfQo+
-IAo+IAo+IF9fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fCj4g
-TGludXgtbnZtZSBtYWlsaW5nIGxpc3QKPiBMaW51eC1udm1lQGxpc3RzLmluZnJhZGVhZC5vcmcK
-PiBodHRwOi8vbGlzdHMuaW5mcmFkZWFkLm9yZy9tYWlsbWFuL2xpc3RpbmZvL2xpbnV4LW52bWUK
-Cl9fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fCkxpbnV4LW52
-bWUgbWFpbGluZyBsaXN0CkxpbnV4LW52bWVAbGlzdHMuaW5mcmFkZWFkLm9yZwpodHRwOi8vbGlz
-dHMuaW5mcmFkZWFkLm9yZy9tYWlsbWFuL2xpc3RpbmZvL2xpbnV4LW52bWUK
+Changes since v6:
+* Fixed order of operations for device specific disable function as
+  noticed by Alex
+* Rebased onto v4.18-rc5 (no conflicts)
+
+Changes since v5:
+* Add a quirk to handle the Intel SPT PCH case (as pointed out by Alex)
+* Warn in the case that we try to disable ACS redirect on a device
+  that doesn't have the ACS capability (also suggested by Alex)
+* Collect reviewed-by tag from Alex
+* Rebased onto v4.18-rc4 (no conflicts)
+
+Changes since v4:
+* Fixed a couple documentation mistakes spotted by Randy
+
+Changes since v3:
+* Removed some of the cruft that was copied from the resource_alignment
+  paramater (per Alex)
+* A number of docuemntation fixes as noticed by Alex and Willy
+
+Changes since v2:
+* Rebased onto v4.18-rc1 (no conflicts)
+* Minor tweaks to the documentation per Andy
+* Removed the "path:" prefix and use the path parsing code
+  for simple devices (as it works the same). Per a suggestion from Alex
+
+Changes since v1:
+* Reworked pci_dev_str_match_path using strrchr as suggested by Alex
+* Collected Christian's Acks
+
+
+Logan Gunthorpe (4):
+  PCI: Make specifying PCI devices in kernel parameters reusable
+  PCI: Allow specifying devices using a base bus and path of devfns
+  PCI: Introduce disable_acs_redir quirk
+  PCI: Introduce the disable_acs_redir parameter
+
+ Documentation/admin-guide/kernel-parameters.txt |  41 +++-
+ drivers/pci/pci.c                               | 310 +++++++++++++++++++-----
+ drivers/pci/quirks.c                            |  78 +++++-
+ include/linux/pci.h                             |   5 +
+ 4 files changed, 361 insertions(+), 73 deletions(-)
+
+--
+2.11.0
