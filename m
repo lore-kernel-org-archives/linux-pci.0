@@ -1,110 +1,141 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from ale.deltatee.com ([207.54.116.67]:44588 "EHLO ale.deltatee.com"
+Received: from mail.kernel.org ([198.145.29.99]:48272 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1729689AbeGQRf4 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Tue, 17 Jul 2018 13:35:56 -0400
-From: Logan Gunthorpe <logang@deltatee.com>
-To: linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
-        linux-doc@vger.kernel.org
-Cc: Stephen Bates <sbates@raithlin.com>,
-        Christoph Hellwig <hch@lst.de>,
-        Bjorn Helgaas <bhelgaas@google.com>,
-        Jonathan Corbet <corbet@lwn.net>,
-        Ingo Molnar <mingo@kernel.org>,
-        Thomas Gleixner <tglx@linutronix.de>,
-        "Paul E. McKenney" <paulmck@linux.vnet.ibm.com>,
-        Marc Zyngier <marc.zyngier@arm.com>,
-        Kai-Heng Feng <kai.heng.feng@canonical.com>,
-        Frederic Weisbecker <frederic@kernel.org>,
-        Dan Williams <dan.j.williams@intel.com>,
-        =?UTF-8?q?J=C3=A9r=C3=B4me=20Glisse?= <jglisse@redhat.com>,
-        Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-        Alex Williamson <alex.williamson@redhat.com>,
-        =?UTF-8?q?Christian=20K=C3=B6nig?= <christian.koenig@amd.com>,
-        Matthew Wilcox <willy@infradead.org>,
-        Logan Gunthorpe <logang@deltatee.com>
-Date: Tue, 17 Jul 2018 11:02:00 -0600
-Message-Id: <20180717170204.30470-1-logang@deltatee.com>
+        id S1731288AbeG3W6t (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Mon, 30 Jul 2018 18:58:49 -0400
+Date: Mon, 30 Jul 2018 16:21:55 -0500
+From: Bjorn Helgaas <helgaas@kernel.org>
+To: Sam Bobroff <sbobroff@linux.ibm.com>
+Cc: linuxppc-dev@lists.ozlabs.org, linux-pci@vger.kernel.org,
+        mpe@ellerman.id.au, bhelgaas@google.com,
+        bryantly@linux.vnet.ibm.com
+Subject: Re: [PATCH v3 1/1] powerpc/pseries: fix EEH recovery of some IOV
+ devices
+Message-ID: <20180730212155.GB45322@bhelgaas-glaptop.roam.corp.google.com>
+References: <e63eb03c87a1a54257aa2bcc384cf07761824a7e.1532915951.git.sbobroff@linux.ibm.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Subject: [PATCH v7 0/4] Add parameter for disabling ACS redirection for P2P
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <e63eb03c87a1a54257aa2bcc384cf07761824a7e.1532915951.git.sbobroff@linux.ibm.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Changes since v6:
-* Fixed order of operations for device specific disable function as
-  noticed by Alex
-* Rebased onto v4.18-rc5 (no conflicts)
+On Mon, Jul 30, 2018 at 11:59:14AM +1000, Sam Bobroff wrote:
+> EEH recovery currently fails on pSeries for some IOV capable PCI
+> devices, if CONFIG_PCI_IOV is on and the hypervisor doesn't provide
+> certain device tree properties for the device. (Found on an IOV
+> capable device using the ipr driver.)
+> 
+> Recovery fails in pci_enable_resources() at the check on r->parent,
+> because r->flags is set and r->parent is not.  This state is due to
+> sriov_init() setting the start, end and flags members of the IOV BARs
+> but the parent not being set later in
+> pseries_pci_fixup_iov_resources(), because the
+> "ibm,open-sriov-vf-bar-info" property is missing.
+> 
+> Correct this by zeroing the resource flags for IOV BARs when they
+> can't be configured (this is the same method used by sriov_init() and
+> __pci_read_base()).
+> 
+> VFs cleared this way can't be enabled later, because that requires
+> another device tree property, "ibm,number-of-configurable-vfs" as well
+> as support for the RTAS function "ibm_map_pes". These are all part of
+> hypervisor support for IOV and it seems unlikely that a hypervisor
+> would ever partially, but not fully, support it. (None are currently
+> provided by QEMU/KVM.)
+> 
+> Signed-off-by: Sam Bobroff <sbobroff@linux.ibm.com>
 
+Michael, I assume you'll take this, since it only touches powerpc.
+Let me know if you need anything from me.
 
-Changes since v5:
-* Add a quirk to handle the Intel SPT PCH case (as pointed out by Alex)
-* Warn in the case that we try to disable ACS redirect on a device
-  that doesn't have the ACS capability (also suggested by Alex)
-* Collect reviewed-by tag from Alex
-* Rebased onto v4.18-rc4 (no conflicts)
-
-Changes since v4:
-* Fixed a couple documentation mistakes spotted by Randy
-
-Changes since v3:
-* Removed some of the cruft that was copied from the resource_alignment
-  paramater (per Alex)
-* A number of docuemntation fixes as noticed by Alex and Willy
-
-Changes since v2:
-* Rebased onto v4.18-rc1 (no conflicts)
-* Minor tweaks to the documentation per Andy
-* Removed the "path:" prefix and use the path parsing code
-  for simple devices (as it works the same). Per a suggestion from Alex
-
-Changes since v1:
-* Reworked pci_dev_str_match_path using strrchr as suggested by Alex
-* Collected Christian's Acks
-
---
-
-Hi,
-
-As discussed in our PCI P2PDMA series, we'd like to add a kernel
-parameter for selectively disabling ACS redirection for select
-bridges. Seeing this turned out to be a small series in itself, we've
-decided to send this separately from the P2P work.
-
-This series generalizes the code already done for the resource_alignment
-option that already exists. The first patch creates a helper function
-to match PCI devices against strings based on the code that already
-existed in pci_specified_resource_alignment().
-
-The second patch expands the new helper to optionally take a path of
-PCI devfns. This is to address Alex's renumbering concern when using
-simple bus-devfns. The implementation is essentially how he described it and
-similar to the Intel VT-d spec (Section 8.3.1).
-
-The final patch adds the disable_acs_redir kernel parameter which takes
-a list of PCI devices and will disable the ACS P2P Request Redirect,
-ACS P2P Completion Redirect and ACS P2P Egress Control bits for the
-selected devices. This allows P2P traffic between selected bridges and
-seeing it's done at boot, before the IOMMU groups will be created, the
-groups will match the security provided by ACS.
-
-Thanks,
-
-Logan
-
---
-
-Logan Gunthorpe (4):
-  PCI: Make specifying PCI devices in kernel parameters reusable
-  PCI: Allow specifying devices using a base bus and path of devfns
-  PCI: Introduce disable_acs_redir quirk
-  PCI: Introduce the disable_acs_redir parameter
-
- Documentation/admin-guide/kernel-parameters.txt |  41 +++-
- drivers/pci/pci.c                               | 310 +++++++++++++++++++-----
- drivers/pci/quirks.c                            |  78 +++++-
- include/linux/pci.h                             |   5 +
- 4 files changed, 361 insertions(+), 73 deletions(-)
-
---
-2.11.0
+> ---
+> Hi,
+> 
+> This is a fix to allow EEH recovery to succeed in a specific situation,
+> which I've tried to explain in the commit message.
+> 
+> As with the RFC version, the IOV BARs are disabled by setting the resource
+> flags to 0 but the other fields are now left as-is because that is what is done
+> elsewhere (see sriov_init() and __pci_read_base()).
+> 
+> I've also examined the concern raised by Bjorn Helgaas, that VFs could be
+> enabled later after the BARs are disabled, and it already seems safe: enabling
+> VFs (on pseries) depends on another device tree property,
+> "ibm,number-of-configurable-vfs" as well as support for the RTAS function
+> "ibm_map_pes". Since these are all part of the hypervisor's support for IOV it
+> seems unlikely that we would ever see some of them but not all. (None are
+> currently provided by QEMU/KVM.) (Additionally, the ipr driver on which the EEH
+> recovery failure was discovered doesn't even seem to have SR-IOV support so it
+> certainly can't enable VFs.)
+> 
+> Cheers,
+> Sam.
+> 
+> Patch set v3:
+> Patch 1/1: powerpc/pseries: fix EEH recovery of some IOV devices
+> * Moved some useful information from the cover letter to the commit log.
+> 
+> Patch set v2:
+> Patch 1/1: powerpc/pseries: fix EEH recovery of some IOV devices
+> * Moved the BAR disabling code to a function.
+> * Also check in pseries_pci_fixup_resources().
+> 
+> Patch set v1:
+> Patch 1/1: powerpc/pseries: fix EEH recovery of IOV devices
+> 
+>  arch/powerpc/platforms/pseries/setup.c | 25 +++++++++++++++++--------
+>  1 file changed, 17 insertions(+), 8 deletions(-)
+> 
+> diff --git a/arch/powerpc/platforms/pseries/setup.c b/arch/powerpc/platforms/pseries/setup.c
+> index b55ad4286dc7..0a9e4243ae1d 100644
+> --- a/arch/powerpc/platforms/pseries/setup.c
+> +++ b/arch/powerpc/platforms/pseries/setup.c
+> @@ -645,6 +645,15 @@ void of_pci_parse_iov_addrs(struct pci_dev *dev, const int *indexes)
+>  	}
+>  }
+>  
+> +static void pseries_disable_sriov_resources(struct pci_dev *pdev)
+> +{
+> +	int i;
+> +
+> +	pci_warn(pdev, "No hypervisor support for SR-IOV on this device, IOV BARs disabled.\n");
+> +	for (i = 0; i < PCI_SRIOV_NUM_BARS; i++)
+> +		pdev->resource[i + PCI_IOV_RESOURCES].flags = 0;
+> +}
+> +
+>  static void pseries_pci_fixup_resources(struct pci_dev *pdev)
+>  {
+>  	const int *indexes;
+> @@ -652,10 +661,10 @@ static void pseries_pci_fixup_resources(struct pci_dev *pdev)
+>  
+>  	/*Firmware must support open sriov otherwise dont configure*/
+>  	indexes = of_get_property(dn, "ibm,open-sriov-vf-bar-info", NULL);
+> -	if (!indexes)
+> -		return;
+> -	/* Assign the addresses from device tree*/
+> -	of_pci_set_vf_bar_size(pdev, indexes);
+> +	if (indexes)
+> +		of_pci_set_vf_bar_size(pdev, indexes);
+> +	else
+> +		pseries_disable_sriov_resources(pdev);
+>  }
+>  
+>  static void pseries_pci_fixup_iov_resources(struct pci_dev *pdev)
+> @@ -667,10 +676,10 @@ static void pseries_pci_fixup_iov_resources(struct pci_dev *pdev)
+>  		return;
+>  	/*Firmware must support open sriov otherwise dont configure*/
+>  	indexes = of_get_property(dn, "ibm,open-sriov-vf-bar-info", NULL);
+> -	if (!indexes)
+> -		return;
+> -	/* Assign the addresses from device tree*/
+> -	of_pci_parse_iov_addrs(pdev, indexes);
+> +	if (indexes)
+> +		of_pci_parse_iov_addrs(pdev, indexes);
+> +	else
+> +		pseries_disable_sriov_resources(pdev);
+>  }
+>  
+>  static resource_size_t pseries_pci_iov_resource_alignment(struct pci_dev *pdev,
+> -- 
+> 2.16.1.74.g9b0b1f47b
+> 
