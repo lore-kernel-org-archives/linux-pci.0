@@ -1,83 +1,81 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:52030 "EHLO
-        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1725900AbeGMF1f (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Fri, 13 Jul 2018 01:27:35 -0400
+Return-Path: <SRS0=6kc1=KO=linutronix.de=tglx@kernel.org>
+Return-Path: <SRS0=6kc1=KO=linutronix.de=tglx@kernel.org>
+Date: Tue, 31 Jul 2018 00:50:21 +0200 (CEST)
+From: Thomas Gleixner <tglx@linutronix.de>
+To: Bjorn Helgaas <helgaas@kernel.org>
+cc: Heiner Kallweit <hkallweit1@gmail.com>,
+    Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org,
+    Christoph Hellwig <hch@lst.de>, linux-kernel@vger.kernel.org,
+    MyungJoo Ham <myungjoo.ham@samsung.com>,
+    Chanwoo Choi <cw00.choi@samsung.com>, Russell King <linux@armlinux.org.uk>,
+    Sebastian Reichel <sre@kernel.org>, Milo Kim <milo.kim@ti.com>,
+    Krzysztof Kozlowski <krzk@kernel.org>,
+    Bartlomiej Zolnierkiewicz <b.zolnierkie@samsung.com>,
+    Lee Jones <lee.jones@linaro.org>
+Subject: Re: [PATCH] PCI: let pci_request_irq properly deal with threaded
+ interrupts
+In-Reply-To: <20180730224252.GE45322@bhelgaas-glaptop.roam.corp.google.com>
+Message-ID: <alpine.DEB.2.21.1807310047320.1725@nanos.tec.linutronix.de>
+References: <d004975f-03a8-59f5-56ef-f4e1f8e12dfb@gmail.com> <20180730213028.GC45322@bhelgaas-glaptop.roam.corp.google.com> <20180730224252.GE45322@bhelgaas-glaptop.roam.corp.google.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII;
- format=flowed
-Date: Fri, 13 Jul 2018 10:44:38 +0530
-From: poza@codeaurora.org
-To: Bharat Kumar Gogada <bharat.kumar.gogada@xilinx.com>
-Cc: linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
-        bhelgaas@google.com, linux-pci-owner@vger.kernel.org
-Subject: Re: [PATCH] PCI/AER: Enable SERR# forwarding in non ACPI flow
-In-Reply-To: <1531406719-18606-1-git-send-email-bharat.kumar.gogada@xilinx.com>
-References: <1531406719-18606-1-git-send-email-bharat.kumar.gogada@xilinx.com>
-Message-ID: <b5ba83a0fd8694905528f740a186b891@codeaurora.org>
-Sender: linux-pci-owner@vger.kernel.org
+Content-Type: text/plain; charset=US-ASCII
 List-ID: <linux-pci.vger.kernel.org>
 
-On 2018-07-12 20:15, Bharat Kumar Gogada wrote:
-> Currently PCI_BRIDGE_CTL_SERR is being enabled only in
-> ACPI flow.
-> This bit is required for forwarding errors reported
-> by EP devices to upstream device.
-> This patch enables SERR# for Type-1 PCI device.
-> 
-> Signed-off-by: Bharat Kumar Gogada <bharat.kumar.gogada@xilinx.com>
-> ---
->  drivers/pci/pcie/aer.c |   23 +++++++++++++++++++++++
->  1 files changed, 23 insertions(+), 0 deletions(-)
-> 
-> diff --git a/drivers/pci/pcie/aer.c b/drivers/pci/pcie/aer.c
-> index a2e8838..943e084 100644
-> --- a/drivers/pci/pcie/aer.c
-> +++ b/drivers/pci/pcie/aer.c
-> @@ -343,6 +343,19 @@ int pci_enable_pcie_error_reporting(struct pci_dev 
-> *dev)
->  	if (!dev->aer_cap)
->  		return -EIO;
-> 
-> +	if (!IS_ENABLED(CONFIG_ACPI) &&
-> +	    dev->hdr_type == PCI_HEADER_TYPE_BRIDGE) {
-> +		u16 control;
-> +
-> +		/*
-> +		 * A Type-1 PCI bridge will not forward ERR_ messages coming
-> +		 * from an endpoint if SERR# forwarding is not enabled.
-> +		 */
-> +		pci_read_config_word(dev, PCI_BRIDGE_CONTROL, &control);
-> +		control |= PCI_BRIDGE_CTL_SERR;
-> +		pci_write_config_word(dev, PCI_BRIDGE_CONTROL, control);
-> +	}
-> +
->  	return pcie_capability_set_word(dev, PCI_EXP_DEVCTL, 
-> PCI_EXP_AER_FLAGS);
->  }
->  EXPORT_SYMBOL_GPL(pci_enable_pcie_error_reporting);
-> @@ -352,6 +365,16 @@ int pci_disable_pcie_error_reporting(struct 
-> pci_dev *dev)
->  	if (pcie_aer_get_firmware_first(dev))
->  		return -EIO;
-> 
-> +	if (!IS_ENABLED(CONFIG_ACPI) &&
-> +	    dev->hdr_type == PCI_HEADER_TYPE_BRIDGE) {
-> +		u16 control;
-> +
-> +		/* Clear SERR Forwarding */
-> +		pci_read_config_word(dev, PCI_BRIDGE_CONTROL, &control);
-> +		control &= ~PCI_BRIDGE_CTL_SERR;
-> +		pci_write_config_word(dev, PCI_BRIDGE_CONTROL, control);
-> +	}
-> +
->  	return pcie_capability_clear_word(dev, PCI_EXP_DEVCTL,
->  					  PCI_EXP_AER_FLAGS);
->  }
+On Mon, 30 Jul 2018, Bjorn Helgaas wrote:
 
+> [+cc maintainers of possibly erroneous callers of request_threaded_irq()]
+> 
+> On Mon, Jul 30, 2018 at 04:30:28PM -0500, Bjorn Helgaas wrote:
+> > [+cc Thomas, Christoph, LKML]
+> > 
+> > On Mon, Jul 30, 2018 at 12:03:42AM +0200, Heiner Kallweit wrote:
+> > > If we have a threaded interrupt with the handler being NULL, then
+> > > request_threaded_irq() -> __setup_irq() will complain and bail out
+> > > if the IRQF_ONESHOT flag isn't set. Therefore check for the handler
+> > > being NULL and set IRQF_ONESHOT in this case.
+> > > 
+> > > This change is needed to migrate the mei_me driver to
+> > > pci_alloc_irq_vectors() and pci_request_irq().
+> > > 
+> > > Signed-off-by: Heiner Kallweit <hkallweit1@gmail.com>
+> > 
+> > I'd like an ack from Thomas because this requirement about IRQF_ONESHOT
+> > usage isn't mentioned in the request_threaded_irq() function doc or
+> > Documentation/
+> 
+> Possibly these other request_threaded_irq() callers are similarly
+> broken?  I can't tell for sure about tda998x_create(), but all the
+> others certainly call request_threaded_irq() with "handler == NULL"
+> and irqflags that do not contain IRQF_ONESHOT:
+> 
+>   max8997_muic_probe()
+>     request_threaded_irq(virq, NULL, ..., IRQF_NO_SUSPEND, ...)
+> 
+>   tda998x_create()
+>     request_threaded_irq(client->irq, NULL, ..., irqd_get_trigger_type(), ...)
+>     (I can't tell what irqd_get_trigger_type() does)
 
-Should this configuration no be set by Firmware ? why should Linux 
-dictate it ?
+It reads the trigger type back from the irq chip (level/edge/polarity) but
+does not return with the ONESHOT bit set.
 
-Regards,
-Oza.
+>   ab8500_btemp_probe()
+>   ab8500_charger_probe()
+>     request_threaded_irq(irq, NULL, ..., IRQF_SHARED | IRQF_NO_SUSPEND, ...)
+
+SHARED is interesting ....
+
+>   lp8788_set_irqs()
+>     request_threaded_irq(virq, NULL, ..., 0, ...)
+> 
+>   max77686_rtc_probe()
+>     request_threaded_irq(info->virq, NULL, ..., 0, ...)
+> 
+>   wm8350_register_irq()
+>     request_threaded_irq(irq + wm8350->irq_base, NULL, ..., flags, ...)
+>     (I think all callers of wm8350_register_irq() supply 0 for "flags")
+
+Indeed. This all looks pretty much wrong. No idea why nobody ever noticed.
+
+Thanks,
+
+	tglx
