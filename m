@@ -1,103 +1,247 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-lj1-f193.google.com ([209.85.208.193]:36435 "EHLO
-        mail-lj1-f193.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726455AbeGOQge (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Sun, 15 Jul 2018 12:36:34 -0400
-Received: by mail-lj1-f193.google.com with SMTP id u7-v6so25310162lji.3
-        for <linux-pci@vger.kernel.org>; Sun, 15 Jul 2018 09:13:06 -0700 (PDT)
-Subject: [PATCH 4/8] PCI: designware: Fix I/O space page leak
-From: Sergei Shtylyov <sergei.shtylyov@cogentembedded.com>
-To: Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org,
-        Jingoo Han <jingoohan1@gmail.com>,
-        Joao Pinto <Joao.Pinto@synopsys.com>,
-        Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
-References: <3e862a05-084a-d732-3060-6e2b234e9718@cogentembedded.com>
-Message-ID: <8cf81034-6404-5d7b-59bd-9dae2e14470b@cogentembedded.com>
-Date: Sun, 15 Jul 2018 19:13:04 +0300
+Received: from ale.deltatee.com ([207.54.116.67]:54558 "EHLO ale.deltatee.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1731766AbeG3Ryg (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Mon, 30 Jul 2018 13:54:36 -0400
+From: Logan Gunthorpe <logang@deltatee.com>
+To: linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
+        linux-doc@vger.kernel.org
+Cc: Stephen Bates <sbates@raithlin.com>,
+        Christoph Hellwig <hch@lst.de>,
+        Bjorn Helgaas <bhelgaas@google.com>,
+        Jonathan Corbet <corbet@lwn.net>,
+        Ingo Molnar <mingo@kernel.org>,
+        Thomas Gleixner <tglx@linutronix.de>,
+        "Paul E. McKenney" <paulmck@linux.vnet.ibm.com>,
+        Marc Zyngier <marc.zyngier@arm.com>,
+        Kai-Heng Feng <kai.heng.feng@canonical.com>,
+        Frederic Weisbecker <frederic@kernel.org>,
+        Dan Williams <dan.j.williams@intel.com>,
+        =?UTF-8?q?J=C3=A9r=C3=B4me=20Glisse?= <jglisse@redhat.com>,
+        Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+        Alex Williamson <alex.williamson@redhat.com>,
+        =?UTF-8?q?Christian=20K=C3=B6nig?= <christian.koenig@amd.com>,
+        Matthew Wilcox <willy@infradead.org>,
+        Logan Gunthorpe <logang@deltatee.com>
+Date: Mon, 30 Jul 2018 10:18:38 -0600
+Message-Id: <20180730161840.13733-3-logang@deltatee.com>
+In-Reply-To: <20180730161840.13733-1-logang@deltatee.com>
+References: <20180730161840.13733-1-logang@deltatee.com>
 MIME-Version: 1.0
-In-Reply-To: <3e862a05-084a-d732-3060-6e2b234e9718@cogentembedded.com>
-Content-Type: text/plain; charset=utf-8
+Content-Type: text/plain; charset=UTF-8
+Subject: [PATCH v8 2/4] PCI: Allow specifying devices using a base bus and path of devfns
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-When testing the R-Car PCIe driver on the Condor board,  I noticed that if
-I left  the PCIe PHY driver disabled, the kernel crashed with this BUG:
+When specifying PCI devices on the kernel command line using a
+BDF, the bus numbers can change when adding or replacing a device,
+changing motherboard firmware, or applying kernel parameters like
+pci=assign-buses. When this happens, it is usually undesirable to
+apply whatever command line tweak to the wrong device.
 
-[    1.225819] kernel BUG at lib/ioremap.c:72!
-[    1.230007] Internal error: Oops - BUG: 0 [#1] PREEMPT SMP
-[    1.235496] Modules linked in:
-[    1.238561] CPU: 0 PID: 39 Comm: kworker/0:1 Not tainted 4.17.0-dirty #1092
-[    1.245526] Hardware name: Renesas Condor board based on r8a77980 (DT)
-[    1.252075] Workqueue: events deferred_probe_work_func
-[    1.257220] pstate: 80000005 (Nzcv daif -PAN -UAO)
-[    1.262024] pc : ioremap_page_range+0x370/0x3c8
-[    1.266558] lr : ioremap_page_range+0x40/0x3c8
-[    1.271002] sp : ffff000008da39e0
-[    1.274317] x29: ffff000008da39e0 x28: 00e8000000000f07
-[    1.279636] x27: ffff7dfffee00000 x26: 0140000000000000
-[    1.284954] x25: ffff7dfffef00000 x24: 00000000000fe100
-[    1.290272] x23: ffff80007b906000 x22: ffff000008ab8000
-[    1.295590] x21: ffff000008bb1d58 x20: ffff7dfffef00000
-[    1.300909] x19: ffff800009c30fb8 x18: 0000000000000001
-[    1.306226] x17: 00000000000152d0 x16: 00000000014012d0
-[    1.311544] x15: 0000000000000000 x14: 0720072007200720
-[    1.316862] x13: 0720072007200720 x12: 0720072007200720
-[    1.322180] x11: 0720072007300730 x10: 00000000000000ae
-[    1.327498] x9 : 0000000000000000 x8 : ffff7dffff000000                      
-[    1.332816] x7 : 0000000000000000 x6 : 0000000000000100
-[    1.338134] x5 : 0000000000000000 x4 : 000000007b906000
-[    1.343452] x3 : ffff80007c61a880 x2 : ffff7dfffeefffff
-[    1.348770] x1 : 0000000040000000 x0 : 00e80000fe100f07
-[    1.354090] Process kworker/0:1 (pid: 39, stack limit = 0x        (ptrval))  
-[    1.361056] Call trace:
-[    1.363504]  ioremap_page_range+0x370/0x3c8
-[    1.367695]  pci_remap_iospace+0x7c/0xac
-[    1.371624]  pci_parse_request_of_pci_ranges+0x13c/0x190
-[    1.376945]  rcar_pcie_probe+0x4c/0xb04
-[    1.380786]  platform_drv_probe+0x50/0xbc
-[    1.384799]  driver_probe_device+0x21c/0x308
-[    1.389072]  __device_attach_driver+0x98/0xc8
-[    1.393431]  bus_for_each_drv+0x54/0x94
-[    1.397269]  __device_attach+0xc4/0x12c
-[    1.401107]  device_initial_probe+0x10/0x18
-[    1.405292]  bus_probe_device+0x90/0x98
-[    1.409130]  deferred_probe_work_func+0xb0/0x150
-[    1.413756]  process_one_work+0x12c/0x29c
-[    1.417768]  worker_thread+0x200/0x3fc
-[    1.421522]  kthread+0x108/0x134
-[    1.424755]  ret_from_fork+0x10/0x18
-[    1.428334] Code: f9004ba2 54000080 aa0003fb 17ffff48 (d4210000)
+Therefore, it is useful to be able to specify devices with a base
+bus number and the path of devfns needed to get to it. (Similar to
+the "device scope" structure in the Intel VT-d spec, Section 8.3.1.)
 
-It turned out that pci_remap_iospace() wasn't undone when the driver's
-probe failed, and since devm_phy_optional_get() returned -EPROBE_DEFER,
-the probe was retried,  finally causing the BUG due to trying to remap
-already remapped pages.
+Thus, we add an option to specify devices in the following format:
 
-The DesignWare PCIe driver has the same issue.  The most feasible solution
-seemed to introduce devm_pci_remap_iospace() -- which was done in the XGene
-PCIe driver patch posted earlier...
+[<domain>:]<bus>:<slot>.<func>[/<slot>.<func>]*
 
-Fixes: cbce7900598c ("PCI: designware: Make driver arch-agnostic")
-Signed-off-by: Sergei Shtylyov <sergei.shtylyov@cogentembedded.com>
-Acked-by: Jingoo Han <jingoohan1@gmail.com>
-Reviewed-by: Linus Walleij <linus.walleij@linaro.org>
-Acked-by: Bjorn Helgaas <bhelgaas@google.com>
+The path can be any segment within the PCI hierarchy of any length and
+determined through the use of 'lspci -t'. When specified this way, it is
+less likely that a renumbered bus will result in a valid device specification
+and the tweak won't be applied to the wrong device.
 
+Signed-off-by: Logan Gunthorpe <logang@deltatee.com>
+Reviewed-by: Stephen Bates <sbates@raithlin.com>
+Acked-by: Christian König <christian.koenig@amd.com>
+Reviewed-by: Alex Williamson <alex.williamson@redhat.com>
 ---
- drivers/pci/controller/dwc/pcie-designware-host.c |    3 ++-
- 1 file changed, 2 insertions(+), 1 deletion(-)
+ Documentation/admin-guide/kernel-parameters.txt |   8 +-
+ drivers/pci/pci.c                               | 117 ++++++++++++++++++++----
+ 2 files changed, 103 insertions(+), 22 deletions(-)
 
-Index: pci/drivers/pci/controller/dwc/pcie-designware-host.c
-===================================================================
---- pci.orig/drivers/pci/controller/dwc/pcie-designware-host.c
-+++ pci/drivers/pci/controller/dwc/pcie-designware-host.c
-@@ -363,7 +363,8 @@ int dw_pcie_host_init(struct pcie_port *
- 	resource_list_for_each_entry_safe(win, tmp, &bridge->windows) {
- 		switch (resource_type(win->res)) {
- 		case IORESOURCE_IO:
--			ret = pci_remap_iospace(win->res, pp->io_base);
-+			ret = devm_pci_remap_iospace(dev, win->res,
-+						     pp->io_base);
- 			if (ret) {
- 				dev_warn(dev, "Error %d: failed to map resource %pR\n",
- 					 ret, win->res);
+diff --git a/Documentation/admin-guide/kernel-parameters.txt b/Documentation/admin-guide/kernel-parameters.txt
+index 5cc215870ee1..1fdd1ef03984 100644
+--- a/Documentation/admin-guide/kernel-parameters.txt
++++ b/Documentation/admin-guide/kernel-parameters.txt
+@@ -3000,7 +3000,7 @@
+ 				or a set of devices (<pci_dev>). These are
+ 				specified in one of the following formats:
+ 
+-				[<domain>:]<bus>:<slot>.<func>
++				[<domain>:]<bus>:<slot>.<func>[/<slot>.<func>]*
+ 				pci:<vendor>:<device>[:<subvendor>:<subdevice>]
+ 
+ 				Note: the first format specifies a PCI
+@@ -3009,7 +3009,11 @@
+ 				firmware changes, or due to changes caused
+ 				by other kernel parameters. If the
+ 				domain is left unspecified, it is
+-				taken to be zero. The second format
++				taken to be zero. Optionally, a path
++				to a device through multiple slot/function
++				addresses can be specified after the base
++				address (this is more robust against
++				renumbering issues). The second format
+ 				selects devices using IDs from the
+ 				configuration space which may match multiple
+ 				devices in the system.
+diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
+index a6e5d195cbac..7356039a1ae7 100644
+--- a/drivers/pci/pci.c
++++ b/drivers/pci/pci.c
+@@ -192,6 +192,89 @@ EXPORT_SYMBOL_GPL(pci_ioremap_wc_bar);
+ #endif
+ 
+ /**
++ * pci_dev_str_match_path - test if a path string matches a device
++ * @dev:    the PCI device to test
++ * @p:      string to match the device against
++ * @endptr: pointer to the string after the match
++ *
++ * Test if a string (typically from a kernel parameter) formatted as a
++ * path of slot/function addresses matches a PCI device. The string must
++ * be of the form:
++ *
++ *   [<domain>:]<bus>:<slot>.<func>[/<slot>.<func>]*
++ *
++ * A path for a device can be obtained using 'lspci -t'. Using a path
++ * is more robust against bus renumbering than using only a single bus,
++ * slot and function address.
++ *
++ * Returns 1 if the string matches the device, 0 if it does not and
++ * a negative error code if it fails to parse the string.
++ */
++static int pci_dev_str_match_path(struct pci_dev *dev, const char *path,
++				  const char **endptr)
++{
++	int ret;
++	int seg, bus, slot, func;
++	char *wpath, *p;
++	char end;
++
++	*endptr = strchrnul(path, ';');
++
++	wpath = kmemdup_nul(path, *endptr - path, GFP_KERNEL);
++	if (!wpath)
++		return -ENOMEM;
++
++	while (1) {
++		p = strrchr(wpath, '/');
++		if (!p)
++			break;
++		ret = sscanf(p, "/%x.%x%c", &slot, &func, &end);
++		if (ret != 2) {
++			ret = -EINVAL;
++			goto free_and_exit;
++		}
++
++		if (dev->devfn != PCI_DEVFN(slot, func)) {
++			ret = 0;
++			goto free_and_exit;
++		}
++
++		/*
++		 * Note: we don't need to get a reference to the upstream
++		 * bridge because we hold a reference to the top level
++		 * device which should hold a reference to the bridge,
++		 * and so on.
++		 */
++		dev = pci_upstream_bridge(dev);
++		if (!dev) {
++			ret = 0;
++			goto free_and_exit;
++		}
++
++		*p = 0;
++	}
++
++	ret = sscanf(wpath, "%x:%x:%x.%x%c", &seg, &bus, &slot,
++		     &func, &end);
++	if (ret != 4) {
++		seg = 0;
++		ret = sscanf(wpath, "%x:%x.%x%c", &bus, &slot, &func, &end);
++		if (ret != 3) {
++			ret = -EINVAL;
++			goto free_and_exit;
++		}
++	}
++
++	ret = (seg == pci_domain_nr(dev->bus) &&
++	       bus == dev->bus->number &&
++	       dev->devfn == PCI_DEVFN(slot, func));
++
++free_and_exit:
++	kfree(wpath);
++	return ret;
++}
++
++/**
+  * pci_dev_str_match - test if a string matches a device
+  * @dev:    the PCI device to test
+  * @p:      string to match the device against
+@@ -200,13 +283,16 @@ EXPORT_SYMBOL_GPL(pci_ioremap_wc_bar);
+  * Test if a string (typically from a kernel parameter) matches a specified
+  * PCI device. The string may be of one of the following formats:
+  *
+- *   [<domain>:]<bus>:<slot>.<func>
++ *   [<domain>:]<bus>:<slot>.<func>[/<slot>.<func>]*
+  *   pci:<vendor>:<device>[:<subvendor>:<subdevice>]
+  *
+  * The first format specifies a PCI bus/slot/function address which
+  * may change if new hardware is inserted, if motherboard firmware changes,
+  * or due to changes caused in kernel parameters. If the domain is
+- * left unspecified, it is taken to be 0.
++ * left unspecified, it is taken to be 0. In order to be robust against
++ * bus renumbering issues, a path of PCI slot/function numbers may be used
++ * to address the specific device. The path for a device can be determined
++ * through the use of 'lspci -t'.
+  *
+  * The second format matches devices using IDs in the configuration
+  * space which may match multiple devices in the system. A value of 0
+@@ -222,7 +308,7 @@ static int pci_dev_str_match(struct pci_dev *dev, const char *p,
+ 			     const char **endptr)
+ {
+ 	int ret;
+-	int seg, bus, slot, func, count;
++	int count;
+ 	unsigned short vendor, device, subsystem_vendor, subsystem_device;
+ 
+ 	if (strncmp(p, "pci:", 4) == 0) {
+@@ -248,25 +334,16 @@ static int pci_dev_str_match(struct pci_dev *dev, const char *p,
+ 		    (!subsystem_device ||
+ 			    subsystem_device == dev->subsystem_device))
+ 			goto found;
+-
+ 	} else {
+-		/* PCI Bus,Slot,Function ids are specified */
+-		ret = sscanf(p, "%x:%x:%x.%x%n", &seg, &bus, &slot,
+-			     &func, &count);
+-		if (ret != 4) {
+-			seg = 0;
+-			ret = sscanf(p, "%x:%x.%x%n", &bus, &slot,
+-				     &func, &count);
+-			if (ret != 3)
+-				return -EINVAL;
+-		}
+-
+-		p += count;
++		/*
++		 * PCI Bus,Slot,Function ids are specified
++		 *  (optionally, may include a path of devfns following it)
++		 */
+ 
+-		if (seg == pci_domain_nr(dev->bus) &&
+-		    bus == dev->bus->number &&
+-		    slot == PCI_SLOT(dev->devfn) &&
+-		    func == PCI_FUNC(dev->devfn))
++		ret = pci_dev_str_match_path(dev, p, &p);
++		if (ret < 0)
++			return ret;
++		else if (ret)
+ 			goto found;
+ 	}
+ 
+-- 
+2.11.0
