@@ -1,72 +1,42 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from bmailout2.hostsharing.net ([83.223.90.240]:34491 "EHLO
-        bmailout2.hostsharing.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1728039AbeGRUKP (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Wed, 18 Jul 2018 16:10:15 -0400
-Date: Wed, 18 Jul 2018 21:30:53 +0200
-From: Lukas Wunner <lukas@wunner.de>
-To: Mika Westerberg <mika.westerberg@linux.intel.com>
-Cc: Bjorn Helgaas <bhelgaas@google.com>,
-        "Rafael J. Wysocki" <rafael.j.wysocki@intel.com>,
-        Ashok Raj <ashok.raj@intel.com>,
-        Keith Busch <keith.busch@intel.com>,
-        Yinghai Lu <yinghai@kernel.org>, Sinan Kaya <okaya@kernel.org>,
-        linux-pci@vger.kernel.org,
-        Andreas Noever <andreas.noever@gmail.com>
-Subject: Re: [PATCH 32/32] PCI: Whitelist Thunderbolt ports for runtime D3
-Message-ID: <20180718193053.GA20124@wunner.de>
-References: <cover.1529173804.git.lukas@wunner.de>
- <10206fe7f3967aa73ade5b24dc729de0e94c3b7f.1529173804.git.lukas@wunner.de>
- <20180621111354.GW2558@lahna.fi.intel.com>
+Return-Path: <SRS0=Iu0t=KO=gmail.com=andy.shevchenko@kernel.org>
+Return-Path: <SRS0=Iu0t=KO=gmail.com=andy.shevchenko@kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20180621111354.GW2558@lahna.fi.intel.com>
-Sender: linux-pci-owner@vger.kernel.org
+In-Reply-To: <20180730213028.GC45322@bhelgaas-glaptop.roam.corp.google.com>
+References: <d004975f-03a8-59f5-56ef-f4e1f8e12dfb@gmail.com> <20180730213028.GC45322@bhelgaas-glaptop.roam.corp.google.com>
+From: Andy Shevchenko <andy.shevchenko@gmail.com>
+Date: Tue, 31 Jul 2018 00:54:20 +0300
+Message-ID: <CAHp75VfJBdDxgV3dnv5UrG-DHg-_3at+BeO3j8kFAXUn2t11pQ@mail.gmail.com>
+Subject: Re: [PATCH] PCI: let pci_request_irq properly deal with threaded interrupts
+To: Bjorn Helgaas <helgaas@kernel.org>
+Cc: Heiner Kallweit <hkallweit1@gmail.com>, Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org,
+	Thomas Gleixner <tglx@linutronix.de>, Christoph Hellwig <hch@lst.de>,
+	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>
+Content-Type: text/plain; charset="UTF-8"
 List-ID: <linux-pci.vger.kernel.org>
 
-Hi Mika,
+On Tue, Jul 31, 2018 at 12:30 AM, Bjorn Helgaas <helgaas@kernel.org> wrote:
+> [+cc Thomas, Christoph, LKML]
+>
+> On Mon, Jul 30, 2018 at 12:03:42AM +0200, Heiner Kallweit wrote:
+>> If we have a threaded interrupt with the handler being NULL, then
+>> request_threaded_irq() -> __setup_irq() will complain and bail out
+>> if the IRQF_ONESHOT flag isn't set. Therefore check for the handler
+>> being NULL and set IRQF_ONESHOT in this case.
+>>
+>> This change is needed to migrate the mei_me driver to
+>> pci_alloc_irq_vectors() and pci_request_irq().
+>>
+>> Signed-off-by: Heiner Kallweit <hkallweit1@gmail.com>
+>
+> I'd like an ack from Thomas because this requirement about IRQF_ONESHOT
+> usage isn't mentioned in the request_threaded_irq() function doc or
+> Documentation/
 
-sorry for the delay!
+ * IRQF_ONESHOT - Interrupt is not reenabled after the hardirq handler finished.
+ *                Used by threaded interrupts which need to keep the
+ *                irq line disabled until the threaded handler has been run.
 
-On Thu, Jun 21, 2018 at 02:13:54PM +0300, Mika Westerberg wrote:
-> On Sat, Jun 16, 2018 at 09:25:00PM +0200, Lukas Wunner wrote:
-> > +		/* Even the oldest 2010 Thunderbolt controller supports D3. */
-> > +		if (bridge->is_thunderbolt)
-> > +			return true;
-> 
-> I have a small concern here. In PC world native PCIe hotplug used with
-> Thunderbolt comes in two flavors:
-> 
->   - Native PCI hotplug without runtime PM
->   - Native PCI hotplug with runtime PM
-> 
-> The former works so that even if it uses native PCIe hotplug, the power
-> management is done so that the Thunderbolt host router is hot-removed
-> when there is nothing connected (and that brings the power savings).
-> With the above change we start putting all Thunderbolt PCIe hotplug
-> ports to D3 runtime. While this probably works (and I tested it on the
-> same Dell) I don't think Windows does it and it may lead to a path that
-> has not been tested very thoroughly by OEMs.
-> 
-> So I wonder if it makes sense to restrict this particular check to Apple
-> hardware at this point?
 
-I'm not familiar at all with Windows, so this your call.  Normally I'd say,
-if there's no known case which forces us to constrain this to Apple, we
-probably shouldn't be overzealous.  OTOH I imagine you have to deal with
-Windows and broken BIOSes on a daily basis and can anticipate if problems
-are to be expected.
-
-The "host router" is the NHI, right?  So IIUC all downstream ports and
-the upstream port of the TB PCIe switch may go to D3hot, same for the
-root port.  And your concern is that hotplug addition or removal of the
-NHI might not work if those ports are in D3hot?
-
-What I don't get is, if we constrain this to Apple, TB ports on non-Apple
-systems may not runtime suspend (e.g. if the OEM botched the BIOS date
-to be < 2015) and then the "Native PCI hotplug with runtime PM" case
-will be broken, won't it?
-
-Thanks,
-
-Lukas
+-- 
+With Best Regards,
+Andy Shevchenko
