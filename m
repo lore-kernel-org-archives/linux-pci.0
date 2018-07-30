@@ -1,47 +1,87 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-eopbgr690067.outbound.protection.outlook.com ([40.107.69.67]:30496
-        "EHLO NAM04-CO1-obe.outbound.protection.outlook.com"
-        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1726782AbeG3S7M (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Mon, 30 Jul 2018 14:59:12 -0400
-From: Alan Douglas <adouglas@cadence.com>
-To: <bhelgaas@google.com>
-CC: <kishon@ti.com>, <lorenzo.pieralisi@arm.com>,
-        <linux-pci@vger.kernel.org>, <gustavo.pimentel@synopsys.com>,
-        <cyrille.pitchen@bootlin.com>, <stelford@cadence.com>,
-        Alan Douglas <adouglas@cadence.com>
-Subject: [PATCH 3/5] PCI: cadence: Check whether MSI is masked before sending it
-Date: Mon, 30 Jul 2018 18:22:53 +0100
-Message-ID: <1532971373-8591-1-git-send-email-adouglas@cadence.com>
+Return-Path: <SRS0=XCJX=KO=gmail.com=hkallweit1@kernel.org>
+Return-Path: <SRS0=XCJX=KO=gmail.com=hkallweit1@kernel.org>
+Subject: Re: [PATCH] PCI: let pci_request_irq properly deal with threaded
+ interrupts
+To: Bjorn Helgaas <helgaas@kernel.org>
+Cc: Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org,
+ Thomas Gleixner <tglx@linutronix.de>, Christoph Hellwig <hch@lst.de>,
+ linux-kernel@vger.kernel.org
+References: <d004975f-03a8-59f5-56ef-f4e1f8e12dfb@gmail.com>
+ <20180730213028.GC45322@bhelgaas-glaptop.roam.corp.google.com>
+From: Heiner Kallweit <hkallweit1@gmail.com>
+Message-ID: <d4666725-b459-832d-fb29-25ce930debe2@gmail.com>
+Date: Mon, 30 Jul 2018 23:50:51 +0200
 MIME-Version: 1.0
-Content-Type: text/plain
-Sender: linux-pci-owner@vger.kernel.org
+In-Reply-To: <20180730213028.GC45322@bhelgaas-glaptop.roam.corp.google.com>
+Content-Type: text/plain; charset=utf-8
 List-ID: <linux-pci.vger.kernel.org>
 
-The EP driver did not check the mask bit for each MSI before
-sending it in raise_irq.  This is now checked, and EINVAL is
-returned if masked.
+On 30.07.2018 23:30, Bjorn Helgaas wrote:
+> [+cc Thomas, Christoph, LKML]
+> 
+> On Mon, Jul 30, 2018 at 12:03:42AM +0200, Heiner Kallweit wrote:
+>> If we have a threaded interrupt with the handler being NULL, then
+>> request_threaded_irq() -> __setup_irq() will complain and bail out
+>> if the IRQF_ONESHOT flag isn't set. Therefore check for the handler
+>> being NULL and set IRQF_ONESHOT in this case.
+>>
+>> This change is needed to migrate the mei_me driver to
+>> pci_alloc_irq_vectors() and pci_request_irq().
+>>
+>> Signed-off-by: Heiner Kallweit <hkallweit1@gmail.com>
+> 
+> I'd like an ack from Thomas because this requirement about IRQF_ONESHOT
+> usage isn't mentioned in the request_threaded_irq() function doc or
+> Documentation/
+> 
+Sure.
 
-Signed-off-by: Alan Douglas <adouglas@cadence.com>
----
- drivers/pci/controller/pcie-cadence-ep.c |    5 +++++
- 1 files changed, 5 insertions(+), 0 deletions(-)
+That's the related comment in __setup_irq():
 
-diff --git a/drivers/pci/controller/pcie-cadence-ep.c b/drivers/pci/controller/pcie-cadence-ep.c
-index c3a0889..db75280 100644
---- a/drivers/pci/controller/pcie-cadence-ep.c
-+++ b/drivers/pci/controller/pcie-cadence-ep.c
-@@ -332,6 +332,11 @@ static int cdns_pcie_ep_send_msi_irq(struct cdns_pcie_ep *ep, u8 fn,
- 	if (!interrupt_num || interrupt_num > msi_count)
- 		return -EINVAL;
- 
-+	/* Check whether MSI is masked */
-+	data = cdns_pcie_ep_fn_readw(pcie, fn, cap + PCI_MSI_MASK_64);
-+	if (data & (1<<(interrupt_num-1)))
-+		return -EINVAL;
-+
- 	/* Compute the data value to be written. */
- 	data_mask = msi_count - 1;
- 	data = cdns_pcie_ep_fn_readw(pcie, fn, cap + PCI_MSI_DATA_64);
--- 
-1.7.1
+ * The interrupt was requested with handler = NULL, so
+ * we use the default primary handler for it. But it
+ * does not have the oneshot flag set. In combination
+ * with level interrupts this is deadly, because the
+ * default primary handler just wakes the thread, then
+ * the irq lines is reenabled, but the device still
+ * has the level irq asserted. Rinse and repeat....
+ *
+ * While this works for edge type interrupts, we play
+ * it safe and reject unconditionally because we can't
+ * say for sure which type this interrupt really
+ * has. The type flags are unreliable as the
+ * underlying chip implementation can override them.
+ */
+
+
+>> ---
+>>  drivers/pci/irq.c | 6 +++++-
+>>  1 file changed, 5 insertions(+), 1 deletion(-)
+>>
+>> diff --git a/drivers/pci/irq.c b/drivers/pci/irq.c
+>> index 2a808e10..a1de501a 100644
+>> --- a/drivers/pci/irq.c
+>> +++ b/drivers/pci/irq.c
+>> @@ -86,13 +86,17 @@ int pci_request_irq(struct pci_dev *dev, unsigned int nr, irq_handler_t handler,
+>>  	va_list ap;
+>>  	int ret;
+>>  	char *devname;
+>> +	unsigned long irqflags = IRQF_SHARED;
+>> +
+>> +	if (!handler)
+>> +		irqflags |= IRQF_ONESHOT;
+>>  
+>>  	va_start(ap, fmt);
+>>  	devname = kvasprintf(GFP_KERNEL, fmt, ap);
+>>  	va_end(ap);
+>>  
+>>  	ret = request_threaded_irq(pci_irq_vector(dev, nr), handler, thread_fn,
+>> -			IRQF_SHARED, devname, dev_id);
+>> +				   irqflags, devname, dev_id);
+>>  	if (ret)
+>>  		kfree(devname);
+>>  	return ret;
+>> -- 
+>> 2.18.0
+>>
+> 
