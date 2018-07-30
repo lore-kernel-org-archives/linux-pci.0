@@ -1,287 +1,72 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-From: Logan Gunthorpe <logang@deltatee.com>
-To: linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
-        linux-doc@vger.kernel.org
-Cc: Stephen Bates <sbates@raithlin.com>,
-        Christoph Hellwig <hch@lst.de>,
-        Bjorn Helgaas <bhelgaas@google.com>,
-        Jonathan Corbet <corbet@lwn.net>,
-        Ingo Molnar <mingo@kernel.org>,
-        Thomas Gleixner <tglx@linutronix.de>,
-        "Paul E. McKenney" <paulmck@linux.vnet.ibm.com>,
-        Marc Zyngier <marc.zyngier@arm.com>,
-        Kai-Heng Feng <kai.heng.feng@canonical.com>,
-        Frederic Weisbecker <frederic@kernel.org>,
-        Dan Williams <dan.j.williams@intel.com>,
-        =?UTF-8?q?J=C3=A9r=C3=B4me=20Glisse?= <jglisse@redhat.com>,
-        Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-        Alex Williamson <alex.williamson@redhat.com>,
-        =?UTF-8?q?Christian=20K=C3=B6nig?= <christian.koenig@amd.com>,
-        Matthew Wilcox <willy@infradead.org>,
-        Logan Gunthorpe <logang@deltatee.com>
-Date: Mon, 30 Jul 2018 10:18:37 -0600
-Message-Id: <20180730161840.13733-2-logang@deltatee.com>
-In-Reply-To: <20180730161840.13733-1-logang@deltatee.com>
-References: <20180730161840.13733-1-logang@deltatee.com>
+Return-Path: <linux-acpi-owner@vger.kernel.org>
+Date: Mon, 30 Jul 2018 16:56:46 -0500
+From: Bjorn Helgaas <helgaas@kernel.org>
+To: Lukas Wunner <lukas@wunner.de>
+Cc: linux-pci@vger.kernel.org, linux-acpi@vger.kernel.org,
+        linux-kernel@vger.kernel.org
+Subject: Re: [PATCH v1 1/2] PCI: Document patch submission hints
+Message-ID: <20180730215646.GD45322@bhelgaas-glaptop.roam.corp.google.com>
+References: <153030390808.57832.2200774416664543563.stgit@bhelgaas-glaptop.roam.corp.google.com>
+ <153030405971.57832.12860154795039493576.stgit@bhelgaas-glaptop.roam.corp.google.com>
+ <20180701174508.GB28249@wunner.de>
+ <20180712155946.GB28466@bhelgaas-glaptop.roam.corp.google.com>
+ <20180730143136.GA4093@wunner.de>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Subject: [PATCH v8 1/4] PCI: Make specifying PCI devices in kernel parameters reusable
-Sender: linux-kernel-owner@vger.kernel.org
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20180730143136.GA4093@wunner.de>
+Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Separate out the code to match a PCI device with a string (typically
-originating from a kernel parameter) from the
-pci_specified_resource_alignment() function into its own helper
-function.
+On Mon, Jul 30, 2018 at 04:31:36PM +0200, Lukas Wunner wrote:
+> On Thu, Jul 12, 2018 at 10:59:46AM -0500, Bjorn Helgaas wrote:
+> > But on reflection, I think the overall value of this writeup is
+> > minimal.  It's a lot of repetition of things already documented
+> > elsewhere and most of it boils down to "pay attention to existing
+> > practice and don't do things differently unless you're innovating and
+> > adding value."  That *should* be obvious, and if it's not, I doubt
+> > that adding one more thing to read is going to make it more obvious.
+> 
+> So my opinion is that your writeup does contain valid points that are
+> worth documenting:  For an open source project, a top priority is to
+> attract and retain contributors who improve the bus factor, who keep
+> the code base alive and maintained, thereby avoiding bit rot.
+> 
+> Knowledge diffusion, including documentation of best practices and
+> conventions, goes a long way towards that goal.  Your writeup was
+> mainly from a maintainer perspective: "consistency makes maintenance
+> easier".  But consistency is also valuable from a contributor
+> perspective:  It makes it easier to dive into a code base and find
+> your way around, and that includes changelogs in the git history.
+> 
+> There are important bits of knowledge in the writeup, if those can
+> be distilled, the result would very much be valuable to have in the tree.
+> 
+> Example:
+> 
+> > I generally use
+> > "PCI/XXX" for things in the core (mostly capabilities like MSI, AER,
+> > DPC, etc) and "PCI: xxx:" for drivers (shpchp, pciehp, etc).
+> 
+> That was in fact unknown to me.
+> 
+> If you find it difficult to put yourself in the shoes of a contributor,
+> I could try to rework the document and distill the points I find important.
 
-While we are at it, this change fixes the kernel style of the function
-(fixing a number of long lines and extra parentheses).
+I definitely want to make it easy and attractive for people to
+contribute to Linux in general.  I'd be glad for any hints.  You're
+right, it's hard for me to put myself in the shoes of a contributor,
+at least a new one.
 
-Additionally, make the analogous change to the kernel parameter
-documentation: Separating the description of how to specify a PCI device
-into it's own section at the head of the pci= parameter.
+I guess I'm hesitant because a lot of the things I included there seem
+like they border on the obsessive, and I don't want to ask
+contributors to make trivial changes to fit in with my personal
+quirks.  Since they're my quirks, I'd rather just silently fix them up
+as I apply patches.
 
-This patch should have no functional alterations.
+If there were a wider consensus on some things and they could be
+folded into Documentation/process/ somehow, that would be ideal, but
+I'm not sure there would be enough of a consensus, and I don't really
+want to start a big discussion about it.  But maybe there are a few
+things that wouldn't be controversial, I dunno.
 
-Signed-off-by: Logan Gunthorpe <logang@deltatee.com>
-Reviewed-by: Stephen Bates <sbates@raithlin.com>
-Acked-by: Christian König <christian.koenig@amd.com>
-Reviewed-by: Alex Williamson <alex.williamson@redhat.com>
----
- Documentation/admin-guide/kernel-parameters.txt |  28 ++++-
- drivers/pci/pci.c                               | 157 ++++++++++++++++--------
- 2 files changed, 126 insertions(+), 59 deletions(-)
-
-diff --git a/Documentation/admin-guide/kernel-parameters.txt b/Documentation/admin-guide/kernel-parameters.txt
-index 533ff5c68970..5cc215870ee1 100644
---- a/Documentation/admin-guide/kernel-parameters.txt
-+++ b/Documentation/admin-guide/kernel-parameters.txt
-@@ -2994,7 +2994,26 @@
- 			See header of drivers/block/paride/pcd.c.
- 			See also Documentation/blockdev/paride.txt.
- 
--	pci=option[,option...]	[PCI] various PCI subsystem options:
-+	pci=option[,option...]	[PCI] various PCI subsystem options.
-+
-+				Some options herein operate on a specific device
-+				or a set of devices (<pci_dev>). These are
-+				specified in one of the following formats:
-+
-+				[<domain>:]<bus>:<slot>.<func>
-+				pci:<vendor>:<device>[:<subvendor>:<subdevice>]
-+
-+				Note: the first format specifies a PCI
-+				bus/slot/function address which may change
-+				if new hardware is inserted, if motherboard
-+				firmware changes, or due to changes caused
-+				by other kernel parameters. If the
-+				domain is left unspecified, it is
-+				taken to be zero. The second format
-+				selects devices using IDs from the
-+				configuration space which may match multiple
-+				devices in the system.
-+
- 		earlydump	[X86] dump PCI config space before the kernel
- 				changes anything
- 		off		[X86] don't probe for the PCI bus
-@@ -3123,11 +3142,10 @@
- 				window. The default value is 64 megabytes.
- 		resource_alignment=
- 				Format:
--				[<order of align>@][<domain>:]<bus>:<slot>.<func>[; ...]
--				[<order of align>@]pci:<vendor>:<device>\
--						[:<subvendor>:<subdevice>][; ...]
-+				[<order of align>@]<pci_dev>[; ...]
- 				Specifies alignment and device to reassign
--				aligned memory resources.
-+				aligned memory resources. How to
-+				specify the device is described above.
- 				If <order of align> is not specified,
- 				PAGE_SIZE is used as alignment.
- 				PCI-PCI bridge can be specified, if resource
-diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
-index 316496e99da9..a6e5d195cbac 100644
---- a/drivers/pci/pci.c
-+++ b/drivers/pci/pci.c
-@@ -191,6 +191,92 @@ void __iomem *pci_ioremap_wc_bar(struct pci_dev *pdev, int bar)
- EXPORT_SYMBOL_GPL(pci_ioremap_wc_bar);
- #endif
- 
-+/**
-+ * pci_dev_str_match - test if a string matches a device
-+ * @dev:    the PCI device to test
-+ * @p:      string to match the device against
-+ * @endptr: pointer to the string after the match
-+ *
-+ * Test if a string (typically from a kernel parameter) matches a specified
-+ * PCI device. The string may be of one of the following formats:
-+ *
-+ *   [<domain>:]<bus>:<slot>.<func>
-+ *   pci:<vendor>:<device>[:<subvendor>:<subdevice>]
-+ *
-+ * The first format specifies a PCI bus/slot/function address which
-+ * may change if new hardware is inserted, if motherboard firmware changes,
-+ * or due to changes caused in kernel parameters. If the domain is
-+ * left unspecified, it is taken to be 0.
-+ *
-+ * The second format matches devices using IDs in the configuration
-+ * space which may match multiple devices in the system. A value of 0
-+ * for any field will match all devices. (Note: this differs from
-+ * in-kernel code that uses PCI_ANY_ID which is ~0; this is for
-+ * legacy reasons and convenience so users don't have to specify
-+ * FFFFFFFFs on the command line.)
-+ *
-+ * Returns 1 if the string matches the device, 0 if it does not and
-+ * a negative error code if the string cannot be parsed.
-+ */
-+static int pci_dev_str_match(struct pci_dev *dev, const char *p,
-+			     const char **endptr)
-+{
-+	int ret;
-+	int seg, bus, slot, func, count;
-+	unsigned short vendor, device, subsystem_vendor, subsystem_device;
-+
-+	if (strncmp(p, "pci:", 4) == 0) {
-+		/* PCI vendor/device (subvendor/subdevice) ids are specified */
-+		p += 4;
-+		ret = sscanf(p, "%hx:%hx:%hx:%hx%n", &vendor, &device,
-+			     &subsystem_vendor, &subsystem_device, &count);
-+		if (ret != 4) {
-+			ret = sscanf(p, "%hx:%hx%n", &vendor, &device, &count);
-+			if (ret != 2)
-+				return -EINVAL;
-+
-+			subsystem_vendor = 0;
-+			subsystem_device = 0;
-+		}
-+
-+		p += count;
-+
-+		if ((!vendor || vendor == dev->vendor) &&
-+		    (!device || device == dev->device) &&
-+		    (!subsystem_vendor ||
-+			    subsystem_vendor == dev->subsystem_vendor) &&
-+		    (!subsystem_device ||
-+			    subsystem_device == dev->subsystem_device))
-+			goto found;
-+
-+	} else {
-+		/* PCI Bus,Slot,Function ids are specified */
-+		ret = sscanf(p, "%x:%x:%x.%x%n", &seg, &bus, &slot,
-+			     &func, &count);
-+		if (ret != 4) {
-+			seg = 0;
-+			ret = sscanf(p, "%x:%x.%x%n", &bus, &slot,
-+				     &func, &count);
-+			if (ret != 3)
-+				return -EINVAL;
-+		}
-+
-+		p += count;
-+
-+		if (seg == pci_domain_nr(dev->bus) &&
-+		    bus == dev->bus->number &&
-+		    slot == PCI_SLOT(dev->devfn) &&
-+		    func == PCI_FUNC(dev->devfn))
-+			goto found;
-+	}
-+
-+	*endptr = p;
-+	return 0;
-+
-+found:
-+	*endptr = p;
-+	return 1;
-+}
- 
- static int __pci_find_next_cap_ttl(struct pci_bus *bus, unsigned int devfn,
- 				   u8 pos, int cap, int *ttl)
-@@ -5492,10 +5578,10 @@ static DEFINE_SPINLOCK(resource_alignment_lock);
- static resource_size_t pci_specified_resource_alignment(struct pci_dev *dev,
- 							bool *resize)
- {
--	int seg, bus, slot, func, align_order, count;
--	unsigned short vendor, device, subsystem_vendor, subsystem_device;
-+	int align_order, count;
- 	resource_size_t align = pcibios_default_alignment();
--	char *p;
-+	const char *p;
-+	int ret;
- 
- 	spin_lock(&resource_alignment_lock);
- 	p = resource_alignment_param;
-@@ -5515,58 +5601,21 @@ static resource_size_t pci_specified_resource_alignment(struct pci_dev *dev,
- 		} else {
- 			align_order = -1;
- 		}
--		if (strncmp(p, "pci:", 4) == 0) {
--			/* PCI vendor/device (subvendor/subdevice) ids are specified */
--			p += 4;
--			if (sscanf(p, "%hx:%hx:%hx:%hx%n",
--				&vendor, &device, &subsystem_vendor, &subsystem_device, &count) != 4) {
--				if (sscanf(p, "%hx:%hx%n", &vendor, &device, &count) != 2) {
--					printk(KERN_ERR "PCI: Can't parse resource_alignment parameter: pci:%s\n",
--						p);
--					break;
--				}
--				subsystem_vendor = subsystem_device = 0;
--			}
--			p += count;
--			if ((!vendor || (vendor == dev->vendor)) &&
--				(!device || (device == dev->device)) &&
--				(!subsystem_vendor || (subsystem_vendor == dev->subsystem_vendor)) &&
--				(!subsystem_device || (subsystem_device == dev->subsystem_device))) {
--				*resize = true;
--				if (align_order == -1)
--					align = PAGE_SIZE;
--				else
--					align = 1 << align_order;
--				/* Found */
--				break;
--			}
--		}
--		else {
--			if (sscanf(p, "%x:%x:%x.%x%n",
--				&seg, &bus, &slot, &func, &count) != 4) {
--				seg = 0;
--				if (sscanf(p, "%x:%x.%x%n",
--						&bus, &slot, &func, &count) != 3) {
--					/* Invalid format */
--					printk(KERN_ERR "PCI: Can't parse resource_alignment parameter: %s\n",
--						p);
--					break;
--				}
--			}
--			p += count;
--			if (seg == pci_domain_nr(dev->bus) &&
--				bus == dev->bus->number &&
--				slot == PCI_SLOT(dev->devfn) &&
--				func == PCI_FUNC(dev->devfn)) {
--				*resize = true;
--				if (align_order == -1)
--					align = PAGE_SIZE;
--				else
--					align = 1 << align_order;
--				/* Found */
--				break;
--			}
-+
-+		ret = pci_dev_str_match(dev, p, &p);
-+		if (ret == 1) {
-+			*resize = true;
-+			if (align_order == -1)
-+				align = PAGE_SIZE;
-+			else
-+				align = 1 << align_order;
-+			break;
-+		} else if (ret < 0) {
-+			pr_err("PCI: Can't parse resource_alignment parameter: %s\n",
-+			       p);
-+			break;
- 		}
-+
- 		if (*p != ';' && *p != ',') {
- 			/* End of param or invalid format */
- 			break;
--- 
-2.11.0
+Bjorn
