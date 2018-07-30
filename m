@@ -1,78 +1,173 @@
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Subject: Re: [PATCH V5 3/3] PCI: Mask and unmask hotplug interrupts during
- reset
-To: poza@codeaurora.org
-References: <1530571967-19099-1-git-send-email-okaya@codeaurora.org>
- <1530571967-19099-4-git-send-email-okaya@codeaurora.org>
- <20180703083447.GA2689@wunner.de>
- <8b6ce0f415858463d1c0588c29e30415@codeaurora.org>
- <9e871cc3978fbdca12ccf8a91f34ad07@codeaurora.org>
-From: Sinan Kaya <okaya@codeaurora.org>
-Message-ID: <2640af5e-f00f-d814-425d-78ac57714f6d@codeaurora.org>
-Date: Tue, 3 Jul 2018 09:25:15 -0400
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail.kernel.org ([198.145.29.99]:41610 "EHLO mail.kernel.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1726993AbeG3Pmk (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Mon, 30 Jul 2018 11:42:40 -0400
+Date: Mon, 30 Jul 2018 09:07:27 -0500
+From: Bjorn Helgaas <helgaas@kernel.org>
+To: Alexander Duyck <alexander.duyck@gmail.com>
+Cc: Moshe Shemesh <moshes20.il@gmail.com>,
+        Jiri Pirko <jiri@resnulli.us>,
+        Jakub Kicinski <jakub.kicinski@netronome.com>,
+        Eran Ben Elisha <eranbe@mellanox.com>,
+        Saeed Mahameed <saeedm@mellanox.com>,
+        "David S. Miller" <davem@davemloft.net>,
+        "netdev@vger.kernel.org" <netdev@vger.kernel.org>,
+        linux-pci <linux-pci@vger.kernel.org>
+Subject: Re: [net-next 10/16] net/mlx5: Support PCIe buffer congestion
+ handling via Devlink
+Message-ID: <20180730140727.GJ173328@bhelgaas-glaptop.roam.corp.google.com>
+References: <575e4a3a-af6f-aac4-fed6-fd4dad387105@mellanox.com>
+ <20180724125135.19121f1f@cakuba.netronome.com>
+ <98071d31-bf99-d713-7fd1-4b1cc156377e@mellanox.com>
+ <CAKgT0UfG-4zuKArCbSLkZoCKs2-t6r9U4qQPPUvBk-e_5_3FCg@mail.gmail.com>
+ <20180725174359.6952c937@cakuba.netronome.com>
+ <20180726071433.GA2222@nanopsycho>
+ <CAKgT0UeGOhjR756fMPx_k_o8Qq5x4waKMcdmtR3pLAT=xRHMgA@mail.gmail.com>
+ <20180728160608.GI173328@bhelgaas-glaptop.roam.corp.google.com>
+ <CALBF4T81ArTWR_i6SogC4qe8xPf3WYvdrSkypXt65wOf_upopg@mail.gmail.com>
+ <CAKgT0UfkBQKqy87BcnQvfzrbonR5rm9cd3Q2dzsyR04vY-+FWg@mail.gmail.com>
 MIME-Version: 1.0
-In-Reply-To: <9e871cc3978fbdca12ccf8a91f34ad07@codeaurora.org>
-List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
-List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
-List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
-List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
-List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
-Cc: linux-pci@vger.kernel.org, open list <linux-kernel@vger.kernel.org>,
- Keith Busch <keith.busch@intel.com>, Lukas Wunner <lukas@wunner.de>,
- linux-arm-msm@vger.kernel.org, Bjorn Helgaas <bhelgaas@google.com>,
- linux-arm-kernel@lists.infradead.org
-Content-Type: text/plain; charset="utf-8"
-Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
-Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <CAKgT0UfkBQKqy87BcnQvfzrbonR5rm9cd3Q2dzsyR04vY-+FWg@mail.gmail.com>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-PiAKPiB3aGF0IGlmIHdlIG9ubHkgaGF2ZSBjb25kaXRpb25hbCBlbnVtZXJhdGlvbiA/wqAgKGxl
-YXZpbmcgcmVtb3ZpbmcgZGV2aWNlcyBmb2xsb3dlZCBieSBTQlIgYXMgaXMpID8KPiAKCklmIHdl
-IGxlYXZlIGl0IGFzIGlzLCBob3RwbHVnIGRyaXZlciBvYnNlcnZlcyBhIGxpbmsgZG93biBpbnRl
-cnJ1cHQgYXMgc29vbgphcyBzZWNvbmRhcnkgYnVzIHJlc2V0IGlzIGlzc3VlZC4gSG90cGx1ZyBk
-cml2ZXIgd2lsbCB0cnkgZGV2aWNlIHJlbW92YWwgd2hpbGUKQUVSIGRyaXZlciBpcyB3b3JraW5n
-IG9uIHRoZSBjdXJyZW50bHkgb2JzZXJ2ZSBGQVRBTCBlcnJvciBjYXVzaW5nIGEgcmFjZQpjb25k
-aXRpb24uIEhvdHBsdWcgZHJpdmVyIHdhaXQgZm9yIHJlc2NhbiBsb2NrIHRvIGJlIG9idGFpbmVk
-LgoKPiBmb2xsb3dpbmcgY29kZSBpcyBkb2luZyBsaXR0bGUgbW9yZSBleHRyYSB3b3JrIHRoYW4g
-b3VyIG5vcm1hbCBFUlJfRkFUQUwgcGF0aC4KPiAKClNlZSB0aGlzIGNvbW1lbnQgYW5kIHRoZSBw
-c2V1ZG8gY29kZSBiZWxvdy4KCi8qCiAqIHBjaWVocCBoYXMgYSAxOjEgYnVzOnNsb3QgcmVsYXRp
-b25zaGlwIHNvIHdlIHVsdGltYXRlbHkgd2FudCBhIHNlY29uZGFyeQogKiBidXMgcmVzZXQgb2Yg
-dGhlIGJyaWRnZSwgYnV0IGF0IHRoZSBzYW1lIHRpbWUgd2Ugd2FudCB0byBlbnN1cmUgdGhhdCBp
-dCBpcwogKiBub3Qgc2VlbiBhcyBhIGhvdC11bnBsdWcsIGZvbGxvd2VkIGJ5IHRoZSBob3QtcGx1
-ZyBvZiB0aGUgZGV2aWNlLiBUaHVzLAogKiBkaXNhYmxlIGxpbmsgc3RhdGUgbm90aWZpY2F0aW9u
-IGFuZCBwcmVzZW5jZSBkZXRlY3Rpb24gY2hhbmdlIG5vdGlmaWNhdGlvbgogKiBtb21lbnRhcmls
-eSwgaWYgd2Ugc2VlIHRoYXQgdGhleSBjb3VsZCBpbnRlcmZlcmUuIEFsc28sIGNsZWFyIGFueSBz
-cHVyaW91cwogKiBldmVudHMgYWZ0ZXIuCiAqLwppbnQgcGNpZWhwX3Jlc2V0X3Nsb3Qoc3RydWN0
-IHNsb3QgKnNsb3QsIGludCBwcm9iZSkKewoJPG1hc2sgaG90cGx1ZyBpbnRlcnJ1cHRzPgoJPGlz
-c3VlIHNlY29uZGFyeSBidXMgcmVzZXQ+Cgk8dW5tYXNrIGhvdHBsdWcgaW50ZXJydXB0cz4KfQoK
-VGhpcyBwYXRjaCBpcyB0cnlpbmcgdG8gbWFzayB0aGUgaW50ZXJydXB0IGJlZm9yZSBzZWNvbmRh
-cnkgYnVzIHJlc2V0IGluIEFFUgpwYXRoIG5vdCBhZnRlci4KCk90aGVyd2lzZSwgaG90cGx1ZyBk
-cml2ZXIgd2lsbCByZW1vdmUgdGhlIGRldmljZXMgYXMgc29vbiBhcyBpdCBvYnRhaW5zIHRoZQpy
-ZXNjYW4gbG9jayBmb2xsb3dpbmcgQUVSIHJlY292ZXJ5IHNpbmNlIGhvdHBsdWcgaW50ZXJydXB0
-cyB3aWxsIGJlIHBlbmRpbmcuCgo+IHBjaWVocF91bmNvbmZpZ3VyZV9kZXZpY2UgZG9pbmcgbGl0
-dGxlIG1vcmUgdGhhbiBlbnVtZXJhdGlvbiB0byBxdWllc2NlbmNlIHRoZSBidXMuCj4gCj4gLyoK
-PiDCoMKgwqDCoMKgwqDCoMKgICogRW5zdXJlIHRoYXQgbm8gbmV3IFJlcXVlc3RzIHdpbGwgYmUg
-Z2VuZXJhdGVkIGZyb20KPiDCoMKgwqDCoMKgwqDCoMKgICogdGhlIGRldmljZS4KPiDCoMKgwqDC
-oMKgwqDCoMKgICovCj4gwqDCoMKgwqDCoMKgwqAgaWYgKHByZXNlbmNlKSB7Cj4gwqDCoMKgwqDC
-oMKgwqDCoMKgwqDCoCBwY2lfcmVhZF9jb25maWdfd29yZChkZXYsIFBDSV9DT01NQU5ELCAmY29t
-bWFuZCk7Cj4gwqDCoMKgwqDCoMKgwqDCoMKgwqDCoCBjb21tYW5kICY9IH4oUENJX0NPTU1BTkRf
-TUFTVEVSIHwgUENJX0NPTU1BTkRfU0VSUik7Cj4gwqDCoMKgwqDCoMKgwqDCoMKgwqDCoCBjb21t
-YW5kIHw9IFBDSV9DT01NQU5EX0lOVFhfRElTQUJMRTsKPiDCoMKgwqDCoMKgwqDCoMKgwqDCoMKg
-IHBjaV93cml0ZV9jb25maWdfd29yZChkZXYsIFBDSV9DT01NQU5ELCBjb21tYW5kKTsKPiDCoMKg
-wqDCoMKgwqDCoCB9Cj4gCj4gCj4gCj4+Cj4+Pgo+Pj4gVGhhdCB3b3VsZCBzZWVtIGxpa2UgYSBt
-dWNoIHNpbXBsZXIgc29sdXRpb24sIGdpdmVuIHRoYXQgaXQgaXMga25vd24KPj4+IHRoYXQgdGhl
-IGxpbmsgd2lsbCBmbGFwIG9uIHJlc2V0LCBjYXVzaW5nIHRoZSBob3RwbHVnIGRyaXZlciB0byBy
-ZW1vdmUKPj4+IGFuZCByZS1lbnVtZXJhdGUgZGV2aWNlcy7CoCBUaGF0IHdvdWxkIGFsc28gY292
-ZXIgY2FzZXMgd2hlcmUgaG90cGx1ZyBpcwo+Pj4gaGFuZGxlZCBieSBhIGRpZmZlcmVudCBkcml2
-ZXIgdGhhbiBwY2llaHAsIG9yIGJ5IHRoZSBwbGF0Zm9ybSBmaXJtd2FyZS4KPj4+Cj4+PiBUaGFu
-a3MsCj4+Pgo+Pj4gTHVrYXMKPiAKCgotLSAKU2luYW4gS2F5YQpRdWFsY29tbSBEYXRhY2VudGVy
-IFRlY2hub2xvZ2llcywgSW5jLiBhcyBhbiBhZmZpbGlhdGUgb2YgUXVhbGNvbW0gVGVjaG5vbG9n
-aWVzLCBJbmMuClF1YWxjb21tIFRlY2hub2xvZ2llcywgSW5jLiBpcyBhIG1lbWJlciBvZiB0aGUg
-Q29kZSBBdXJvcmEgRm9ydW0sIGEgTGludXggRm91bmRhdGlvbiBDb2xsYWJvcmF0aXZlIFByb2pl
-Y3QuCgpfX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fXwpsaW51
-eC1hcm0ta2VybmVsIG1haWxpbmcgbGlzdApsaW51eC1hcm0ta2VybmVsQGxpc3RzLmluZnJhZGVh
-ZC5vcmcKaHR0cDovL2xpc3RzLmluZnJhZGVhZC5vcmcvbWFpbG1hbi9saXN0aW5mby9saW51eC1h
-cm0ta2VybmVsCg==
+On Sun, Jul 29, 2018 at 03:00:28PM -0700, Alexander Duyck wrote:
+> On Sun, Jul 29, 2018 at 2:23 AM, Moshe Shemesh <moshes20.il@gmail.com> wrote:
+> > On Sat, Jul 28, 2018 at 7:06 PM, Bjorn Helgaas <helgaas@kernel.org> wrote:
+> >> On Thu, Jul 26, 2018 at 07:00:20AM -0700, Alexander Duyck wrote:
+> >> > On Thu, Jul 26, 2018 at 12:14 AM, Jiri Pirko <jiri@resnulli.us> wrote:
+> >> > > Thu, Jul 26, 2018 at 02:43:59AM CEST, jakub.kicinski@netronome.com
+> >> > > wrote:
+> >> > >>On Wed, 25 Jul 2018 08:23:26 -0700, Alexander Duyck wrote:
+> >> > >>> On Wed, Jul 25, 2018 at 5:31 AM, Eran Ben Elisha wrote:
+> >> > >>> > On 7/24/2018 10:51 PM, Jakub Kicinski wrote:
+> >> > >>> >>>> The devlink params haven't been upstream even for a full cycle
+> >> > >>> >>>> and
+> >> > >>> >>>> already you guys are starting to use them to configure standard
+> >> > >>> >>>> features like queuing.
+> >> > >>> >>>
+> >> > >>> >>> We developed the devlink params in order to support non-standard
+> >> > >>> >>> configuration only. And for non-standard, there are generic and
+> >> > >>> >>> vendor
+> >> > >>> >>> specific options.
+> >> > >>> >>
+> >> > >>> >> I thought it was developed for performing non-standard and
+> >> > >>> >> possibly
+> >> > >>> >> vendor specific configuration.  Look at DEVLINK_PARAM_GENERIC_*
+> >> > >>> >> for
+> >> > >>> >> examples of well justified generic options for which we have no
+> >> > >>> >> other API.  The vendor mlx4 options look fairly vendor specific
+> >> > >>> >> if you
+> >> > >>> >> ask me, too.
+> >> > >>> >>
+> >> > >>> >> Configuring queuing has an API.  The question is it acceptable to
+> >> > >>> >> enter
+> >> > >>> >> into the risky territory of controlling offloads via devlink
+> >> > >>> >> parameters
+> >> > >>> >> or would we rather make vendors take the time and effort to model
+> >> > >>> >> things to (a subset) of existing APIs.  The HW never fits the
+> >> > >>> >> APIs
+> >> > >>> >> perfectly.
+> >> > >>> >
+> >> > >>> > I understand what you meant here, I would like to highlight that
+> >> > >>> > this
+> >> > >>> > mechanism was not meant to handle SRIOV, Representors, etc.
+> >> > >>> > The vendor specific configuration suggested here is to handle a
+> >> > >>> > congestion
+> >> > >>> > state in Multi Host environment (which includes PF and multiple
+> >> > >>> > VFs per
+> >> > >>> > host), where one host is not aware to the other hosts, and each is
+> >> > >>> > running
+> >> > >>> > on its own pci/driver. It is a device working mode configuration.
+> >> > >>> >
+> >> > >>> > This  couldn't fit into any existing API, thus creating this
+> >> > >>> > vendor specific
+> >> > >>> > unique API is needed.
+> >> > >>>
+> >> > >>> If we are just going to start creating devlink interfaces in for
+> >> > >>> every
+> >> > >>> one-off option a device wants to add why did we even bother with
+> >> > >>> trying to prevent drivers from using sysfs? This just feels like we
+> >> > >>> are back to the same arguments we had back in the day with it.
+> >> > >>>
+> >> > >>> I feel like the bigger question here is if devlink is how we are
+> >> > >>> going
+> >> > >>> to deal with all PCIe related features going forward, or should we
+> >> > >>> start looking at creating a new interface/tool for PCI/PCIe related
+> >> > >>> features? My concern is that we have already had features such as
+> >> > >>> DMA
+> >> > >>> Coalescing that didn't really fit into anything and now we are
+> >> > >>> starting to see other things related to DMA and PCIe bus credits.
+> >> > >>> I'm
+> >> > >>> wondering if we shouldn't start looking at a tool/interface to
+> >> > >>> configure all the PCIe related features such as interrupts, error
+> >> > >>> reporting, DMA configuration, power management, etc. Maybe we could
+> >> > >>> even look at sharing it across subsystems and include things like
+> >> > >>> storage, graphics, and other subsystems in the conversation.
+> >> > >>
+> >> > >>Agreed, for actual PCIe configuration (i.e. not ECN marking) we do
+> >> > >> need
+> >> > >>to build up an API.  Sharing it across subsystems would be very cool!
+> >>
+> >> I read the thread (starting at [1], for anybody else coming in late)
+> >> and I see this has something to do with "configuring outbound PCIe
+> >> buffers", but I haven't seen the connection to PCIe protocol or
+> >> features, i.e., I can't connect this to anything in the PCIe spec.
+> >>
+> >> Can somebody help me understand how the PCI core is relevant?  If
+> >> there's some connection with a feature defined by PCIe, or if it
+> >> affects the PCIe transaction protocol somehow, I'm definitely
+> >> interested in this.  But if this only affects the data transferred
+> >> over PCIe, i.e., the data payloads of PCIe TLP packets, then I'm not
+> >> sure why the PCI core should care.
+> >>
+> >
+> >
+> > As you wrote, this is not a PCIe feature  or affects the PCIe transaction
+> > protocol.
+> >
+> > Actually, due to hardware limitation in current device, we have enabled a
+> > workaround in hardware.
+> >
+> > This mode is proprietary and not relevant to other PCIe devices, thus is set
+> > using driver-specific parameter in devlink
+> 
+> Essentially what this feature is doing is communicating the need for
+> PCIe back-pressure to the network fabric. So as the buffers on the
+> device start to fill because the device isn't able to get back PCIe
+> credits fast enough it will then start to send congestion
+> notifications to the network stack itself if I understand this
+> correctly.
+
+This sounds like a hook that allows the device to tell its driver
+about PCIe flow control credits, and the driver can pass that on to
+the network stack.  IIUC, that would be a device-specific feature
+outside the scope of the PCI core.
+
+> For now there are no major conflicts, but when we start getting into
+> stuff like PCIe DMA coalescing, and on a more general basis just PCIe
+> active state power management that is going to start making things
+> more complicated going forward.
+
+We do support ASPM already in the PCI core, and we do have the
+pci_disable_link_state() interface, which is currently the only way
+drivers can influence it.  There are several drivers that do their own
+ASPM configuration, but this is not safe because it's not coordinated
+with what the PCI core does.  If/when drivers need more control, we
+should enhance the PCI core interfaces.
+
+I don't know what PCIe DMA coalescing means, so I can't comment on
+that.
+
+> I assume the devices we are talking about supporting this new feature
+> on either don't deal with ASPM or assume a quick turnaround to get out
+> of the lower power states? Otherwise that would definitely cause some
+> back-pressure buildups that would hurt performance.
+
+Devices can communicate the ASPM exit latency they can tolerate via
+the Device Capabilities register (PCIe r4.0, sec 76.5.3.3).  Linux
+should be configuring ASPM to respect those device requirements.
+
+Bjorn
