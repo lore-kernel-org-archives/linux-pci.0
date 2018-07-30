@@ -1,88 +1,94 @@
-Return-Path: <linux-acpi-owner@vger.kernel.org>
-Date: Thu, 12 Jul 2018 10:59:46 -0500
-From: Bjorn Helgaas <helgaas@kernel.org>
-To: Lukas Wunner <lukas@wunner.de>
-Cc: linux-pci@vger.kernel.org, linux-acpi@vger.kernel.org,
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail-oi0-f65.google.com ([209.85.218.65]:32946 "EHLO
+        mail-oi0-f65.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1729477AbeGaBNd (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Mon, 30 Jul 2018 21:13:33 -0400
+From: Alexandru Gagniuc <mr.nuke.me@gmail.com>
+To: linux-pci@vger.kernel.org, bhelgaas@google.com
+Cc: keith.busch@intel.com, alex_gagniuc@dellteam.com,
+        austin_bolen@dell.com, shyam_iyer@dell.com,
+        Alexandru Gagniuc <mr.nuke.me@gmail.com>,
+        Frederick Lawler <fred@fredlawl.com>,
+        Oza Pawandeep <poza@codeaurora.org>,
         linux-kernel@vger.kernel.org
-Subject: Re: [PATCH v1 1/2] PCI: Document patch submission hints
-Message-ID: <20180712155946.GB28466@bhelgaas-glaptop.roam.corp.google.com>
-References: <153030390808.57832.2200774416664543563.stgit@bhelgaas-glaptop.roam.corp.google.com>
- <153030405971.57832.12860154795039493576.stgit@bhelgaas-glaptop.roam.corp.google.com>
- <20180701174508.GB28249@wunner.de>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20180701174508.GB28249@wunner.de>
-Sender: linux-acpi-owner@vger.kernel.org
+Subject: [PATCH v3] PCI/AER: Do not clear AER bits if we don't own AER
+Date: Mon, 30 Jul 2018 18:35:31 -0500
+Message-Id: <20180730233547.1238-1-mr.nuke.me@gmail.com>
+In-Reply-To: <3d05f662-2c29-90cd-9c74-6456939a0e6b@gmail.com>
+References: <3d05f662-2c29-90cd-9c74-6456939a0e6b@gmail.com>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Sun, Jul 01, 2018 at 07:45:08PM +0200, Lukas Wunner wrote:
-> On Fri, Jun 29, 2018 at 03:27:39PM -0500, Bjorn Helgaas wrote:
-> > --- /dev/null
-> > +++ b/Documentation/PCI/submitting-patches.txt
-> > @@ -0,0 +1,153 @@
-> > +Start with Documentation/process/submitting-patches.rst for general
-> > +guidance.
-> > +
-> > +These are things I look at when reviewing patches.
-> 
-> For an uninitiated reader who doesn't know that you're currently the
-> (sole) maintainer of the PCI subsystem, this sentence might look odd.
-> Who's "I"?  What happens if you onboard co-maintainers, are you
-> going to change this to "we"?
+When we don't own AER, we shouldn't touch the AER error bits. Clearing
+error bits willy-nilly might cause firmware to miss some errors. In
+theory, these bits get cleared by FFS, or via ACPI _HPX method. These
+mechanisms are not subject to the problem.
 
-You're absolutely right.  That was appropriate for email (where I
-originally posted this) but certainly not for the tree.
+This race is mostly of theoretical significance, since I can't
+reasonably demonstrate this race in the lab.
 
-> > +  - Follow the existing convention  Run "git log --oneline <file>" and make
-> > +    your subject line match previous changes in format, capitalization, and
-> > +    sentence structure.  For example, native host bridge driver patch
-> > +    titles look like this:
-> > +
-> > +      PCI: vmd: Remove IRQ affinity so we can allocate more IRQs
-> > +      PCI: mediatek: Add MSI support for MT2712 and MT7622
-> > +      PCI: rockchip: Remove IRQ domain if probe fails
-> 
-> A quick "git log --oneline --no-merges drivers/pci" shows that the prefixes
-> in use aren't consistent at all:  Sometimes a slash is used to separate
-> "PCI" from the subpart touched by the patch, sometimes a colon, e.g.
-> "PCI/AER: " versus "PCI: shpchp: ".  Your own patches aren't consistent
-> in that respect.  Sometimes, only "PCI: " is given as prefix, even though
-> the commit only touches a subpart such as "sysfs", so could easily specify
-> more precisely what it's touching.
-> 
-> If you value consistency, it would be good to codify the preferred form
-> right here.
+On a side-note, pcie_aer_is_kernel_first() is created to alleviate the
+need for two checks: aer_cap and get_firmware_first().
 
-I was trying to make the point that whenever we're doing *anything* in
-a shared project like Linux, it's better to look at existing practice
-and follow it than it is to slavishly follow rules.
+Signed-off-by: Alexandru Gagniuc <mr.nuke.me@gmail.com>
+---
 
-So I purposely didn't enumerate all the cases.  I think if you look at
-logs of individual files, they're pretty consistent.  I generally use
-"PCI/XXX" for things in the core (mostly capabilities like MSI, AER,
-DPC, etc) and "PCI: xxx:" for drivers (shpchp, pciehp, etc).  IIRC, I
-adopted this from previous practice.
+Changes since v2:
+  - Added missing negation in pci_cleanup_aer_error_status_regs()
 
-Of course there are things I don't apply that are different.  And
-Rafael does most of the PM stuff, so I try to follow *his* convention
-for that.
+ drivers/pci/pcie/aer.c | 17 ++++++++++-------
+ 1 file changed, 10 insertions(+), 7 deletions(-)
 
-> > +  - Always copy linux-pci@vger.kernel.org and linux-kernel@vger.kernel.org.
-> 
-> I'd drop linux-kernel here.  The volume on that list is already like
-> drinking from a firehose, I doubt it adds much value to cc it.
-
-It's useful as an archive and for people not subscribed to linux-pci
-who happen to see the occasional thing they want to respond to.
-Nobody expects to be able to follow everything on LKML.
-get_maintainer.pl reports LKML for everything, and I'm not trying to
-innovate by being different.
-
-But on reflection, I think the overall value of this writeup is
-minimal.  It's a lot of repetition of things already documented
-elsewhere and most of it boils down to "pay attention to existing
-practice and don't do things differently unless you're innovating and
-adding value."  That *should* be obvious, and if it's not, I doubt
-that adding one more thing to read is going to make it more obvious.
-
-Bjorn
+diff --git a/drivers/pci/pcie/aer.c b/drivers/pci/pcie/aer.c
+index a2e88386af28..40e5c86271d1 100644
+--- a/drivers/pci/pcie/aer.c
++++ b/drivers/pci/pcie/aer.c
+@@ -307,6 +307,12 @@ int pcie_aer_get_firmware_first(struct pci_dev *dev)
+ 		aer_set_firmware_first(dev);
+ 	return dev->__aer_firmware_first;
+ }
++
++static bool pcie_aer_is_kernel_first(struct pci_dev *dev)
++{
++	return !!dev->aer_cap && !pcie_aer_get_firmware_first(dev);
++}
++
+ #define	PCI_EXP_AER_FLAGS	(PCI_EXP_DEVCTL_CERE | PCI_EXP_DEVCTL_NFERE | \
+ 				 PCI_EXP_DEVCTL_FERE | PCI_EXP_DEVCTL_URRE)
+ 
+@@ -337,10 +343,7 @@ bool aer_acpi_firmware_first(void)
+ 
+ int pci_enable_pcie_error_reporting(struct pci_dev *dev)
+ {
+-	if (pcie_aer_get_firmware_first(dev))
+-		return -EIO;
+-
+-	if (!dev->aer_cap)
++	if (!pcie_aer_is_kernel_first(dev))
+ 		return -EIO;
+ 
+ 	return pcie_capability_set_word(dev, PCI_EXP_DEVCTL, PCI_EXP_AER_FLAGS);
+@@ -349,7 +352,7 @@ EXPORT_SYMBOL_GPL(pci_enable_pcie_error_reporting);
+ 
+ int pci_disable_pcie_error_reporting(struct pci_dev *dev)
+ {
+-	if (pcie_aer_get_firmware_first(dev))
++	if (!pcie_aer_is_kernel_first(dev))
+ 		return -EIO;
+ 
+ 	return pcie_capability_clear_word(dev, PCI_EXP_DEVCTL,
+@@ -383,10 +386,10 @@ int pci_cleanup_aer_error_status_regs(struct pci_dev *dev)
+ 	if (!pci_is_pcie(dev))
+ 		return -ENODEV;
+ 
+-	pos = dev->aer_cap;
+-	if (!pos)
++	if (!pcie_aer_is_kernel_first(dev))
+ 		return -EIO;
+ 
++	pos = dev->aer_cap;
+ 	port_type = pci_pcie_type(dev);
+ 	if (port_type == PCI_EXP_TYPE_ROOT_PORT) {
+ 		pci_read_config_dword(dev, pos + PCI_ERR_ROOT_STATUS, &status);
+-- 
+2.17.1
