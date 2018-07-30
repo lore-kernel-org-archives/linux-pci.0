@@ -1,86 +1,105 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from bmailout2.hostsharing.net ([83.223.90.240]:56127 "EHLO
-        bmailout2.hostsharing.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S932409AbeGCOM6 (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Tue, 3 Jul 2018 10:12:58 -0400
-Date: Tue, 3 Jul 2018 16:12:55 +0200
-From: Lukas Wunner <lukas@wunner.de>
-To: okaya@codeaurora.org
-Cc: linux-pci@vger.kernel.org, linux-arm-msm@vger.kernel.org,
-        linux-arm-kernel@lists.infradead.org,
-        Bjorn Helgaas <bhelgaas@google.com>,
-        Oza Pawandeep <poza@codeaurora.org>,
-        Keith Busch <keith.busch@intel.com>,
-        open list <linux-kernel@vger.kernel.org>
-Subject: Re: [PATCH V5 3/3] PCI: Mask and unmask hotplug interrupts during
- reset
-Message-ID: <20180703141255.GB18639@wunner.de>
-References: <1530571967-19099-1-git-send-email-okaya@codeaurora.org>
- <1530571967-19099-4-git-send-email-okaya@codeaurora.org>
- <20180703083447.GA2689@wunner.de>
- <8b6ce0f415858463d1c0588c29e30415@codeaurora.org>
+Received: from mx0a-001b2d01.pphosted.com ([148.163.156.1]:42810 "EHLO
+        mx0a-001b2d01.pphosted.com" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1726663AbeG3QnI (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Mon, 30 Jul 2018 12:43:08 -0400
+Received: from pps.filterd (m0098396.ppops.net [127.0.0.1])
+        by mx0a-001b2d01.pphosted.com (8.16.0.22/8.16.0.22) with SMTP id w6UF4NYs069937
+        for <linux-pci@vger.kernel.org>; Mon, 30 Jul 2018 11:07:43 -0400
+Received: from e17.ny.us.ibm.com (e17.ny.us.ibm.com [129.33.205.207])
+        by mx0a-001b2d01.pphosted.com with ESMTP id 2kj314ej7e-1
+        (version=TLSv1.2 cipher=AES256-GCM-SHA384 bits=256 verify=NOT)
+        for <linux-pci@vger.kernel.org>; Mon, 30 Jul 2018 11:07:42 -0400
+Received: from localhost
+        by e17.ny.us.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
+        for <linux-pci@vger.kernel.org> from <bryantly@linux.ibm.com>;
+        Mon, 30 Jul 2018 11:07:40 -0400
+Subject: Re: [PATCH v3 1/1] powerpc/pseries: fix EEH recovery of some IOV
+ devices
+To: Sam Bobroff <sbobroff@linux.ibm.com>,
+        linuxppc-dev@lists.ozlabs.org, linux-pci@vger.kernel.org
+Cc: mpe@ellerman.id.au, bhelgaas@google.com,
+        bryantly@linux.vnet.ibm.com
+References: <e63eb03c87a1a54257aa2bcc384cf07761824a7e.1532915951.git.sbobroff@linux.ibm.com>
+From: "Bryant G. Ly" <bryantly@linux.ibm.com>
+Date: Mon, 30 Jul 2018 10:07:35 -0500
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <8b6ce0f415858463d1c0588c29e30415@codeaurora.org>
+In-Reply-To: <e63eb03c87a1a54257aa2bcc384cf07761824a7e.1532915951.git.sbobroff@linux.ibm.com>
+Content-Type: text/plain; charset=utf-8
+Message-Id: <478afe66-34dd-458c-8b66-5e57c6b686eb@linux.ibm.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tue, Jul 03, 2018 at 07:30:28AM -0400, okaya@codeaurora.org wrote:
-> On 2018-07-03 04:34, Lukas Wunner wrote:
-> >On Mon, Jul 02, 2018 at 06:52:47PM -0400, Sinan Kaya wrote:
-> >>If a bridge supports hotplug and observes a PCIe fatal error, the
-> >>following
-> >>events happen:
-> >>
-> >>1. AER driver removes the devices from PCI tree on fatal error
-> >>2. AER driver brings down the link by issuing a secondary bus reset
-> >>waits
-> >>for the link to come up.
-> >>3. Hotplug driver observes a link down interrupt
-> >>4. Hotplug driver tries to remove the devices waiting for the rescan
-> >>lock
-> >>but devices are already removed by the AER driver and AER driver is
-> >>waiting
-> >>for the link to come back up.
-> >>5. AER driver tries to re-enumerate devices after polling for the link
-> >>state to go up.
-> >>6. Hotplug driver obtains the lock and tries to remove the devices
-> >>again.
-> >>
-> >>If a bridge is a hotplug capable bridge, mask hotplug interrupts before
-> >>the
-> >>reset and unmask afterwards.
-> >
-> >Would it work for you if you just amended the AER driver to skip
-> >removal and re-enumeration of devices if the port is a hotplug bridge?
-> >Just check for is_hotplug_bridge in struct pci_dev.
-> 
-> The reason why we want to remove devices before secondary bus reset is to
-> quiesce pcie bus traffic before issuing a reset.
-> 
-> Skipping this step might cause transactions to be lost in the middle of the
-> reset as there will be active traffic flowing and drivers will suddenly
-> start reading ffs.
+On 7/29/18 8:59 PM, Sam Bobroff wrote:
 
-Interesting, I think that merits a code comment.
+> EEH recovery currently fails on pSeries for some IOV capable PCI
+> devices, if CONFIG_PCI_IOV is on and the hypervisor doesn't provide
+> certain device tree properties for the device. (Found on an IOV
+> capable device using the ipr driver.)
+>
+> Recovery fails in pci_enable_resources() at the check on r->parent,
+> because r->flags is set and r->parent is not.  This state is due to
+> sriov_init() setting the start, end and flags members of the IOV BARs
+> but the parent not being set later in
+> pseries_pci_fixup_iov_resources(), because the
+> "ibm,open-sriov-vf-bar-info" property is missing.
+>
+> Correct this by zeroing the resource flags for IOV BARs when they
+> can't be configured (this is the same method used by sriov_init() and
+> __pci_read_base()).
+>
+> VFs cleared this way can't be enabled later, because that requires
+> another device tree property, "ibm,number-of-configurable-vfs" as well
+> as support for the RTAS function "ibm_map_pes". These are all part of
+> hypervisor support for IOV and it seems unlikely that a hypervisor
+> would ever partially, but not fully, support it. (None are currently
+> provided by QEMU/KVM.)
+>
+> Signed-off-by: Sam Bobroff <sbobroff@linux.ibm.com>
+> ---
+> Hi,
+>
+> This is a fix to allow EEH recovery to succeed in a specific situation,
+> which I've tried to explain in the commit message.
+>
+> As with the RFC version, the IOV BARs are disabled by setting the resource
+> flags to 0 but the other fields are now left as-is because that is what is done
+> elsewhere (see sriov_init() and __pci_read_base()).
+>
+> I've also examined the concern raised by Bjorn Helgaas, that VFs could be
+> enabled later after the BARs are disabled, and it already seems safe: enabling
+> VFs (on pseries) depends on another device tree property,
+> "ibm,number-of-configurable-vfs" as well as support for the RTAS function
+> "ibm_map_pes". Since these are all part of the hypervisor's support for IOV it
+> seems unlikely that we would ever see some of them but not all. (None are
+> currently provided by QEMU/KVM.) (Additionally, the ipr driver on which the EEH
+> recovery failure was discovered doesn't even seem to have SR-IOV support so it
+> certainly can't enable VFs.)
+>
+> Cheers,
+> Sam.
+>
+> Patch set v3:
+> Patch 1/1: powerpc/pseries: fix EEH recovery of some IOV devices
+> * Moved some useful information from the cover letter to the commit log.
+>
+> Patch set v2:
+> Patch 1/1: powerpc/pseries: fix EEH recovery of some IOV devices
+> * Moved the BAR disabling code to a function.
+> * Also check in pseries_pci_fixup_resources().
+>
+> Patch set v1:
+> Patch 1/1: powerpc/pseries: fix EEH recovery of IOV devices
+>
+>  arch/powerpc/platforms/pseries/setup.c | 25 +++++++++++++++++--------
+>  1 file changed, 17 insertions(+), 8 deletions(-)
+>
+> diff --git a/arch/powerpc/platforms/pseries/setup.c b/arch/powerpc/platforms/pseries/setup.c
+> index b55ad4286dc7..0a9e4243ae1d 100644
+> --- a/arch/powerpc/platforms/pseries/setup.c
+> +++ b/arch/powerpc/platforms/pseries/setup.c
+> @@ -645,6 +645,15 @@ void of_pci_parse_iov_addrs(struct pci_dev *dev, const int *indexes)
+>  	}
+>  }
 
-FWIW, macOS has a "PCI pause" callback to quiesce a device:
-https://opensource.apple.com/source/IOPCIFamily/IOPCIFamily-239.1.2/pause.rtf
-
-They're using it to reconfigure a device's BAR and bus number
-at runtime (sic!), e.g. if mmio windows need to be moved around
-on Thunderbolt hotplug if there's insufficient space:
-
-	"During pause reconfiguration, the following may be changed:
-	 - device BAR registers
-	 - the devices bus number
-	 - registry properties reflecting these values ("ranges",
-	   "assigned-addresses", "reg")
-	 - device MSI block values for address and value, but not the
-	   number of MSIs allocated"
-
-Conceptually, "PCI pause" is similar to putting the device in a suspend
-state.  I'm wondering if suspending the devices below the bridge would
-make more sense than removing them in the AER driver.
-
-Lukas
+Reviewed-by: Bryant G. Ly <bryantly@linux.ibm.com>
