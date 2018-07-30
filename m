@@ -1,124 +1,188 @@
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Date: Fri, 6 Jul 2018 09:13:14 +0200
-From: Thomas Petazzoni <thomas.petazzoni@bootlin.com>
-To: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
-Subject: Re: [PATCH 2/3] PCI: mvebu: Convert to use pci_host_bridge directly
-Message-ID: <20180706091314.2f221c4b@windsurf>
-In-Reply-To: <20180705162357.GB13716@red-moon>
-References: <20180629091007.31069-1-thomas.petazzoni@bootlin.com>
- <20180629091007.31069-3-thomas.petazzoni@bootlin.com>
- <20180705162357.GB13716@red-moon>
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+From: Logan Gunthorpe <logang@deltatee.com>
+To: linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
+        linux-doc@vger.kernel.org
+Cc: Stephen Bates <sbates@raithlin.com>,
+        Christoph Hellwig <hch@lst.de>,
+        Bjorn Helgaas <bhelgaas@google.com>,
+        Jonathan Corbet <corbet@lwn.net>,
+        Ingo Molnar <mingo@kernel.org>,
+        Thomas Gleixner <tglx@linutronix.de>,
+        "Paul E. McKenney" <paulmck@linux.vnet.ibm.com>,
+        Marc Zyngier <marc.zyngier@arm.com>,
+        Kai-Heng Feng <kai.heng.feng@canonical.com>,
+        Frederic Weisbecker <frederic@kernel.org>,
+        Dan Williams <dan.j.williams@intel.com>,
+        =?UTF-8?q?J=C3=A9r=C3=B4me=20Glisse?= <jglisse@redhat.com>,
+        Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+        Alex Williamson <alex.williamson@redhat.com>,
+        =?UTF-8?q?Christian=20K=C3=B6nig?= <christian.koenig@amd.com>,
+        Matthew Wilcox <willy@infradead.org>,
+        Logan Gunthorpe <logang@deltatee.com>
+Date: Mon, 30 Jul 2018 10:18:40 -0600
+Message-Id: <20180730161840.13733-5-logang@deltatee.com>
+In-Reply-To: <20180730161840.13733-1-logang@deltatee.com>
+References: <20180730161840.13733-1-logang@deltatee.com>
 MIME-Version: 1.0
-List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
-List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
-List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
-List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
-List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
-Cc: Nadav Haklai <nadavh@marvell.com>, Russell King <linux@arm.linux.org.uk>,
- Antoine Tenart <antoine.tenart@bootlin.com>, linux-pci@vger.kernel.org,
- Gregory Clement <gregory.clement@bootlin.com>,
- Maxime Chevallier <maxime.chevallier@bootlin.com>,
- Jason Gunthorpe <jgunthorpe@obsidianresearch.com>,
- =?UTF-8?B?TWlxdcOobA==?= Raynal <miquel.raynal@bootlin.com>,
- Bjorn Helgaas <bhelgaas@google.com>, linux-arm-kernel@lists.infradead.org
-Content-Type: text/plain; charset="us-ascii"
-Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
-Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
+Content-Type: text/plain; charset=UTF-8
+Subject: [PATCH v8 4/4] PCI: Introduce the disable_acs_redir parameter
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hello Lorenzo,
+In order to support P2P traffic on a segment of the PCI hierarchy,
+we must be able to disable the ACS redirect bits for select
+PCI bridges. The bridges must be selected before the devices are
+discovered by the kernel and the IOMMU groups created. Therefore,
+a kernel command line parameter is created to specify devices
+which must have their ACS bits disabled.
 
-Thanks for your review and feedback!
+The new parameter takes a list of devices separated by a semicolon.
+Each device specified will have it's ACS redirect bits disabled.
+This is similar to the existing 'resource_alignment' parameter.
 
-On Thu, 5 Jul 2018 17:23:57 +0100, Lorenzo Pieralisi wrote:
-> On Fri, Jun 29, 2018 at 11:10:06AM +0200, Thomas Petazzoni wrote:
-> 
-> [...]
-> 
-> > +	pcie->mem.name = "PCI MEM";
-> > +	pci_add_resource_offset(&pcie->resources, &pcie->mem, 0);  
-> 
-> Nit: pci_add_resource() would do.
+The ACS Request P2P Request Redirect, P2P Completion Redirect and P2P
+Egress Control bits are disabled which is sufficient to always allow
+passing P2P traffic uninterrupted. The bits are set after the kernel
+(optionally) enables the ACS bits itself. It is also done regardless of
+whether the kernel sets the bits or not seeing some BIOS firmware is known
+to set the bits on boot.
 
-Actually on this one, I wasn't sure of my conversion. The original
-(i.e current) code is:
+If the user tries to disable the ACS redirct for a device without the
+ACS capability, a warning is printed to dmesg.
 
--	if (resource_size(&pcie->realio) != 0)
--		pci_add_resource_offset(&sys->resources, &pcie->realio,
--					sys->io_offset);
--
--	pci_add_resource_offset(&sys->resources, &pcie->mem, sys->mem_offset);
--	pci_add_resource(&sys->resources, &pcie->busn);
+Signed-off-by: Logan Gunthorpe <logang@deltatee.com>
+Reviewed-by: Stephen Bates <sbates@raithlin.com>
+Acked-by: Christian König <christian.koenig@amd.com>
+Reviewed-by: Alex Williamson <alex.williamson@redhat.com>
+---
+ Documentation/admin-guide/kernel-parameters.txt |  9 +++
+ drivers/pci/pci.c                               | 76 ++++++++++++++++++++++++-
+ 2 files changed, 83 insertions(+), 2 deletions(-)
 
-I'm not sure what sys->io_offset and sys->mem_offset are. I dumped
-them, they are both zero, and reading the ARM PCI code, I couldn't see
-how they would be different than zero.
-
-Is my understanding correct ?
-
-> >  	pcie->nports = i;
-> >  
-> > -	for (i = 0; i < (IO_SPACE_LIMIT - SZ_64K); i += SZ_64K)
-> > -		pci_ioremap_io(i, pcie->io.start + i);  
-> 
-> Mmmm..I think that arch/arm let the mach override the mapping attributes
-> for MVEBU (for some platforms) so replacing this with
-> pci_remap_iospace() may trigger a regression, we need to investigate.
-
-Ah, that's a *very* good point. We do override the mapping attributes
-on Armada 370/XP, in
-https://elixir.bootlin.com/linux/latest/source/arch/arm/mach-mvebu/coherency.c#L177.
-
-What is your preference ? We stick to pci_ioremap_io(), or we do
-something to extend pci_remap_iospace() to cover this situation ?
-
-In general, I like the current trend of having PCI be more like other
-bus subsystems, where the code really is located in drivers/pci/, and
-not spread across architectures in various arch/<foo>/ folders.
-
-> Also, I do not know why the loop above does not pay attention to the
-> real IO space resource size, whether that's on purpose or just a left
-> over.
-
-This code was added by me in commit
-31e45ec3a4e73dcbeb51e03ab559812ba3e82cc2, which explains the rationale
-behind this change. Since we're doing this at probe time, we have no
-idea how much I/O space each PCI endpoint will require, and the Device
-Tree binding for this PCI controller doesn't give the size of the I/O
-space for each PCI port.
-
-On this Marvell platforms, there are two indirections between the
-virtual addresses and the actual access to the device:
-
-  virtual address  -->  physical address  --> "MBus address"
-                 ^^^^^^^                 ^^^^^^
-                   MMU                  MBus windows
-
-The pci_ioremap_io() configures the MMU, of course. But this is not
-sufficient for the I/O space of a particular device to be accessible: a
-MBus window has to be created. And those MBus window have a minimal
-size of 64 KB anyway.
-
-Therefore, calling pci_ioremap_io() with an hardcoded 64 KB is not a
-big deal. It consumes a few more PTEs indeed, but that's about it: the
-IO space will anyway be backed by a 64 KB MBus window, even if the PCI
-endpoint actually uses less of that.
-
-Does that make sense ? I suggest you have a look at the DT binding for
-pci-mvebu to understand a bit more the whole thing.
-
-Best regards,
-
-Thomas
+diff --git a/Documentation/admin-guide/kernel-parameters.txt b/Documentation/admin-guide/kernel-parameters.txt
+index 1fdd1ef03984..ab19ed83f072 100644
+--- a/Documentation/admin-guide/kernel-parameters.txt
++++ b/Documentation/admin-guide/kernel-parameters.txt
+@@ -3192,6 +3192,15 @@
+ 				Adding the window is slightly risky (it may
+ 				conflict with unreported devices), so this
+ 				taints the kernel.
++		disable_acs_redir=<pci_dev>[; ...]
++				Specify one or more PCI devices (in the format
++				specified above) separated by semicolons.
++				Each device specified will have the PCI ACS
++				redirect capabilities forced off which will
++				allow P2P traffic between devices through
++				bridges without forcing it upstream. Note:
++				this removes isolation between devices and
++				will make the IOMMU groups less granular.
+ 
+ 	pcie_aspm=	[PCIE] Forcibly enable or disable PCIe Active State Power
+ 			Management.
+diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
+index 7356039a1ae7..594e815a27ec 100644
+--- a/drivers/pci/pci.c
++++ b/drivers/pci/pci.c
+@@ -2983,6 +2983,66 @@ void pci_request_acs(void)
+ 	pci_acs_enable = 1;
+ }
+ 
++static const char *disable_acs_redir_param;
++
++/**
++ * pci_disable_acs_redir - disable ACS redirect capabilities
++ * @dev: the PCI device
++ *
++ * For only devices specified in the disable_acs_redir parameter.
++ */
++static void pci_disable_acs_redir(struct pci_dev *dev)
++{
++	int ret = 0;
++	const char *p;
++	int pos;
++	u16 ctrl;
++
++	if (!disable_acs_redir_param)
++		return;
++
++	p = disable_acs_redir_param;
++	while (*p) {
++		ret = pci_dev_str_match(dev, p, &p);
++		if (ret < 0) {
++			pr_info_once("PCI: Can't parse disable_acs_redir parameter: %s\n",
++				     disable_acs_redir_param);
++
++			break;
++		} else if (ret == 1) {
++			/* Found a match */
++			break;
++		}
++
++		if (*p != ';' && *p != ',') {
++			/* End of param or invalid format */
++			break;
++		}
++		p++;
++	}
++
++	if (ret != 1)
++		return;
++
++	if (!pci_dev_specific_disable_acs_redir(dev))
++		return;
++
++	pos = pci_find_ext_capability(dev, PCI_EXT_CAP_ID_ACS);
++	if (!pos) {
++		pci_warn(dev, "cannot disable ACS redirect for this hardware as it does not have ACS capabilities\n");
++		return;
++	}
++
++	pci_read_config_word(dev, pos + PCI_ACS_CTRL, &ctrl);
++
++	/* P2P Request & Completion Redirect */
++	ctrl &= ~(PCI_ACS_RR | PCI_ACS_CR | PCI_ACS_EC);
++
++	pci_write_config_word(dev, pos + PCI_ACS_CTRL, ctrl);
++
++	pci_info(dev, "disabled ACS redirect\n");
++}
++
+ /**
+  * pci_std_enable_acs - enable ACS on devices using standard ACS capabilites
+  * @dev: the PCI device
+@@ -3022,12 +3082,22 @@ static void pci_std_enable_acs(struct pci_dev *dev)
+ void pci_enable_acs(struct pci_dev *dev)
+ {
+ 	if (!pci_acs_enable)
+-		return;
++		goto disable_acs_redir;
+ 
+ 	if (!pci_dev_specific_enable_acs(dev))
+-		return;
++		goto disable_acs_redir;
+ 
+ 	pci_std_enable_acs(dev);
++
++disable_acs_redir:
++	/*
++	 * Note: pci_disable_acs_redir() must be called even if
++	 * ACS is not enabled by the kernel because the firmware
++	 * may have unexpectedly set the flags. So if we are told
++	 * to disable it, we should always disable it after setting
++	 * the kernel's default preferences.
++	 */
++	pci_disable_acs_redir(dev);
+ }
+ 
+ static bool pci_acs_flags_enabled(struct pci_dev *pdev, u16 acs_flags)
+@@ -6005,6 +6075,8 @@ static int __init pci_setup(char *str)
+ 				pcie_bus_config = PCIE_BUS_PEER2PEER;
+ 			} else if (!strncmp(str, "pcie_scan_all", 13)) {
+ 				pci_add_flags(PCI_SCAN_ALL_PCIE_DEVS);
++			} else if (!strncmp(str, "disable_acs_redir=", 18)) {
++				disable_acs_redir_param = str + 18;
+ 			} else {
+ 				printk(KERN_ERR "PCI: Unknown option `%s'\n",
+ 						str);
 -- 
-Thomas Petazzoni, CTO, Bootlin (formerly Free Electrons)
-Embedded Linux and Kernel engineering
-https://bootlin.com
-
-_______________________________________________
-linux-arm-kernel mailing list
-linux-arm-kernel@lists.infradead.org
-http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
+2.11.0
