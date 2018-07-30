@@ -1,177 +1,111 @@
-Return-Path: <SRS0=QzVP=KM=wunner.de=lukas@kernel.org>
-Return-Path: <SRS0=QzVP=KM=wunner.de=lukas@kernel.org>
-Message-Id: <f9c36223a126c86ecc7dc921f8f943d29926edc3.1532754355.git.lukas@wunner.de>
-In-Reply-To: <92c3c456edb461494d5c44e1ff6bab2711228ff1.1532754355.git.lukas@wunner.de>
-References: <92c3c456edb461494d5c44e1ff6bab2711228ff1.1532754355.git.lukas@wunner.de>
-From: Lukas Wunner <lukas@wunner.de>
-Date: Sat, 28 Jul 2018 07:22:00 +0200
-Subject: [PATCH 2/2] PCI: pciehp: Deduplicate presence check on probe & resume
-To: Bjorn Helgaas <helgaas@kernel.org>
-Cc: Mika Westerberg <mika.westerberg@linux.intel.com>, Sinan Kaya <okaya@kernel.org>, linux-pci@vger.kernel.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mx0a-001b2d01.pphosted.com ([148.163.156.1]:39830 "EHLO
+        mx0a-001b2d01.pphosted.com" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1728705AbeG3Dax (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Sun, 29 Jul 2018 23:30:53 -0400
+Received: from pps.filterd (m0098396.ppops.net [127.0.0.1])
+        by mx0a-001b2d01.pphosted.com (8.16.0.22/8.16.0.22) with SMTP id w6U1sM1R055521
+        for <linux-pci@vger.kernel.org>; Sun, 29 Jul 2018 21:58:14 -0400
+Received: from e06smtp03.uk.ibm.com (e06smtp03.uk.ibm.com [195.75.94.99])
+        by mx0a-001b2d01.pphosted.com with ESMTP id 2khqukaj34-1
+        (version=TLSv1.2 cipher=AES256-GCM-SHA384 bits=256 verify=NOT)
+        for <linux-pci@vger.kernel.org>; Sun, 29 Jul 2018 21:58:14 -0400
+Received: from localhost
+        by e06smtp03.uk.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
+        for <linux-pci@vger.kernel.org> from <sbobroff@linux.ibm.com>;
+        Mon, 30 Jul 2018 02:58:11 +0100
+Date: Mon, 30 Jul 2018 11:58:05 +1000
+From: Sam Bobroff <sbobroff@linux.ibm.com>
+To: Michael Ellerman <mpe@ellerman.id.au>
+Cc: linuxppc-dev@lists.ozlabs.org, linux-pci@vger.kernel.org,
+        bhelgaas@google.com, bryantly@linux.vnet.ibm.com
+Subject: Re: [PATCH v2 1/1] powerpc/pseries: fix EEH recovery of some IOV
+ devices
+References: <7598ffeb48c16c88a34937ad93b18f806222b8df.1527208281.git.sbobroff@linux.ibm.com>
+ <87in5ymp03.fsf@concordia.ellerman.id.au>
+MIME-Version: 1.0
+Content-Type: multipart/signed; micalg=pgp-sha256;
+        protocol="application/pgp-signature"; boundary="ZGiS0Q5IWpPtfppv"
+In-Reply-To: <87in5ymp03.fsf@concordia.ellerman.id.au>
+Message-Id: <20180730015804.GA10188@tungsten.ozlabs.ibm.com>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On driver probe and on resume from system sleep, pciehp checks the
-Presence Detect State bit in the Slot Status register to bring up an
-occupied slot or bring down an unoccupied slot.  Both code paths are
-identical, so deduplicate them per Mika's request.
 
-On probe, an additional check is performed to disable power of an
-unoccupied slot.  This can e.g. happen if power was enabled by BIOS.
-It cannot happen once pciehp has taken control, hence is not necessary
-on resume:  The Slot Control register is set to the same value that it
-had on suspend by pci_restore_state(), so if the slot was occupied,
-power is enabled and if it wasn't, power is disabled.  Should occupancy
-have changed during the system sleep transition, power is adjusted by
-bringing up or down the slot per the paragraph above.
+--ZGiS0Q5IWpPtfppv
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+Content-Transfer-Encoding: quoted-printable
 
-To allow for deduplication of the presence check, move the power check
-to pcie_init().  This seems safer anyway, because right now it is
-performed while interrupts are already enabled, and although I can't
-think of a scenario where pciehp_power_off_slot() and the IRQ thread
-collide, it does feel brittle.
+On Mon, Jul 02, 2018 at 10:59:24AM +1000, Michael Ellerman wrote:
+> Sam Bobroff <sbobroff@linux.ibm.com> writes:
+>=20
+> > EEH recovery currently fails on pSeries for some IOV capable PCI
+> > devices, if CONFIG_PCI_IOV is on and the hypervisor doesn't provide
+> > certain device tree properties for the device. (Found on an IOV
+> > capable device using the ipr driver.)
+> >
+> > Recovery fails in pci_enable_resources() at the check on r->parent,
+> > because r->flags is set and r->parent is not.  This state is due to
+> > sriov_init() setting the start, end and flags members of the IOV BARs
+> > but the parent not being set later in
+> > pseries_pci_fixup_iov_resources(), because the
+> > "ibm,open-sriov-vf-bar-info" property is missing.
+> >
+> > Correct this by zeroing the resource flags for IOV BARs when they
+> > can't be configured.
+> >
+> > Signed-off-by: Sam Bobroff <sbobroff@linux.ibm.com>
+> > ---
+> > Hi,
+> >
+> > This is a fix to allow EEH recovery to succeed in a specific situation,
+> > which I've tried to explain in the commit message.
+> >
+> > As with the RFC version, the IOV BARs are disabled by setting the resou=
+rce
+> > flags to 0 but the other fields are now left as-is because that is what=
+ is done
+> > elsewhere (see sriov_init() and __pci_read_base()).
+> >
+> > I've also examined the concern raised by Bjorn Helgaas, that VFs could =
+be
+> > enabled later after the BARs are disabled, and it already seems safe: e=
+nabling
+> > VFs (on pseries) depends on another device tree property,
+> > "ibm,number-of-configurable-vfs" as well as support for the RTAS functi=
+on
+> > "ibm_map_pes". Since these are all part of the hypervisor's support for=
+ IOV it
+> > seems unlikely that we would ever see some of them but not all. (None a=
+re
+> > currently provided by QEMU/KVM.) (Additionally, the ipr driver on which=
+ the EEH
+> > recovery failure was discovered doesn't even seem to have SR-IOV suppor=
+t so it
+> > certainly can't enable VFs.)
+>=20
+> Can you fold/reword the above into the change log, it seems like useful
+> detail.
+>=20
+> cheers
 
-However this means that pcie_init() may now write to the Slot Control
-register before the IRQ is requested.  If both the CCIE and HPIE bits
-happen to be set, pcie_wait_cmd() will wait for an interrupt (instead
-of polling the Command Completed bit) and eventually emit a timeout
-message.  Additionally, if a level-triggered INTx interrupt is used,
-the user may see a spurious interrupt splat.  Avoid by disabling
-interrupts before disabling power.  (Normally the HPIE and CCIE bits
-should be clear on probe, but conceivably they may already have been
-set e.g. by BIOS.)
+Sure, sounds good.
 
-Signed-off-by: Lukas Wunner <lukas@wunner.de>
-Cc: Mika Westerberg <mika.westerberg@linux.intel.com>
----
- drivers/pci/hotplug/pciehp_core.c | 63 ++++++++++++++++---------------
- drivers/pci/hotplug/pciehp_hpc.c  | 14 +++++++
- 2 files changed, 46 insertions(+), 31 deletions(-)
 
-diff --git a/drivers/pci/hotplug/pciehp_core.c b/drivers/pci/hotplug/pciehp_core.c
-index 01fcf1fa0f66..ec48c9433ae5 100644
---- a/drivers/pci/hotplug/pciehp_core.c
-+++ b/drivers/pci/hotplug/pciehp_core.c
-@@ -200,12 +200,40 @@ static int reset_slot(struct hotplug_slot *hotplug_slot, int probe)
- 	return pciehp_reset_slot(slot, probe);
- }
- 
-+/**
-+ * pciehp_check_presence() - synthesize event if presence has changed
-+ *
-+ * On probe and resume, an explicit presence check is necessary to bring up an
-+ * occupied slot or bring down an unoccupied slot.  This can't be triggered by
-+ * events in the Slot Status register, they may be stale and are therefore
-+ * cleared.  Secondly, sending an interrupt for "events that occur while
-+ * interrupt generation is disabled [when] interrupt generation is subsequently
-+ * enabled" is optional per PCIe r4.0, sec 6.7.3.4.
-+ */
-+static void pciehp_check_presence(struct controller *ctrl)
-+{
-+	struct slot *slot = ctrl->slot;
-+	u8 occupied;
-+
-+	down_read(&ctrl->reset_lock);
-+	mutex_lock(&slot->lock);
-+
-+	pciehp_get_adapter_status(slot, &occupied);
-+	if ((occupied && (slot->state == OFF_STATE ||
-+			  slot->state == BLINKINGON_STATE)) ||
-+	    (!occupied && (slot->state == ON_STATE ||
-+			   slot->state == BLINKINGOFF_STATE)))
-+		pciehp_request(ctrl, PCI_EXP_SLTSTA_PDC);
-+
-+	mutex_unlock(&slot->lock);
-+	up_read(&ctrl->reset_lock);
-+}
-+
- static int pciehp_probe(struct pcie_device *dev)
- {
- 	int rc;
- 	struct controller *ctrl;
- 	struct slot *slot;
--	u8 occupied, poweron;
- 
- 	/* If this is not a "hotplug" service, we have no business here. */
- 	if (dev->service != PCIE_PORT_SERVICE_HP)
-@@ -250,21 +278,7 @@ static int pciehp_probe(struct pcie_device *dev)
- 		goto err_out_shutdown_notification;
- 	}
- 
--	/* Check if slot is occupied */
--	down_read(&ctrl->reset_lock);
--	mutex_lock(&slot->lock);
--	pciehp_get_adapter_status(slot, &occupied);
--	pciehp_get_power_status(slot, &poweron);
--	if ((occupied && (slot->state == OFF_STATE ||
--			  slot->state == BLINKINGON_STATE)) ||
--	    (!occupied && (slot->state == ON_STATE ||
--			   slot->state == BLINKINGOFF_STATE)))
--		pciehp_request(ctrl, PCI_EXP_SLTSTA_PDC);
--	/* If empty slot's power status is on, turn power off */
--	if (!occupied && poweron && POWER_CTRL(ctrl))
--		pciehp_power_off_slot(slot);
--	mutex_unlock(&slot->lock);
--	up_read(&ctrl->reset_lock);
-+	pciehp_check_presence(ctrl);
- 
- 	return 0;
- 
-@@ -311,22 +325,9 @@ static int pciehp_resume_noirq(struct pcie_device *dev)
- 
- static int pciehp_resume(struct pcie_device *dev)
- {
--	struct controller *ctrl;
--	struct slot *slot;
--	u8 status;
--
--	ctrl = get_service_data(dev);
--	slot = ctrl->slot;
-+	struct controller *ctrl = get_service_data(dev);
- 
--	/* Check if slot is occupied */
--	pciehp_get_adapter_status(slot, &status);
--	mutex_lock(&slot->lock);
--	if ((status && (slot->state == OFF_STATE ||
--			slot->state == BLINKINGON_STATE)) ||
--	    (!status && (slot->state == ON_STATE ||
--			 slot->state == BLINKINGOFF_STATE)))
--		pciehp_request(ctrl, PCI_EXP_SLTSTA_PDC);
--	mutex_unlock(&slot->lock);
-+	pciehp_check_presence(ctrl);
- 
- 	return 0;
- }
-diff --git a/drivers/pci/hotplug/pciehp_hpc.c b/drivers/pci/hotplug/pciehp_hpc.c
-index 6f7de0819c88..5b15e76f3564 100644
---- a/drivers/pci/hotplug/pciehp_hpc.c
-+++ b/drivers/pci/hotplug/pciehp_hpc.c
-@@ -856,6 +856,7 @@ struct controller *pcie_init(struct pcie_device *dev)
- {
- 	struct controller *ctrl;
- 	u32 slot_cap, link_cap;
-+	u8 occupied, poweron;
- 	struct pci_dev *pdev = dev->port;
- 
- 	ctrl = kzalloc(sizeof(*ctrl), GFP_KERNEL);
-@@ -910,6 +911,19 @@ struct controller *pcie_init(struct pcie_device *dev)
- 	if (pcie_init_slot(ctrl))
- 		goto abort_ctrl;
- 
-+	/*
-+	 * If empty slot's power status is on, turn power off.  The IRQ isn't
-+	 * requested yet, so avoid triggering a notification with this command.
-+	 */
-+	if (POWER_CTRL(ctrl)) {
-+		pciehp_get_adapter_status(ctrl->slot, &occupied);
-+		pciehp_get_power_status(ctrl->slot, &poweron);
-+		if (!occupied && poweron) {
-+			pcie_disable_notification(ctrl);
-+			pciehp_power_off_slot(ctrl->slot);
-+		}
-+	}
-+
- 	return ctrl;
- 
- abort_ctrl:
--- 
-2.18.0
+--ZGiS0Q5IWpPtfppv
+Content-Type: application/pgp-signature; name="signature.asc"
+
+-----BEGIN PGP SIGNATURE-----
+
+iQEzBAABCAAdFiEELWWF8pdtWK5YQRohMX8w6AQl/iIFAltecKUACgkQMX8w6AQl
+/iIuEAgAldcMH4SfqHL3E1/Vi5kTRRzLaFgr29LFeG8oPOQNWkTq2CvbcmzUTZgx
+xvHjxxZCBfus+s4SFCnvQsScFq5bve37XZj+NZr7X01DzkdBxG4VelCTUWAwHqJw
+hJtbM5iVSsYHCVOwcqF7RBn/Bxbah9PgHoXla67RZMq06vn1jZl8qeM29MephsqG
++nQF26sxZ4Uh4Y6f39jWqUO0VntlNZtkbA7mRz0fc9Yc2lzAvDirMZEdtB+UEmdB
+iCGYTNR1+kkHiyML4XZYi6nIZ/WMTmDTl1cw3UzseRAUS4WczhDhsowzTBn6FCTs
+/1Ib5HTsw57/MbrT/tTcyQVhfi6GZw==
+=qHtA
+-----END PGP SIGNATURE-----
+
+--ZGiS0Q5IWpPtfppv--
