@@ -1,72 +1,170 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from fllv0016.ext.ti.com ([198.47.19.142]:39336 "EHLO
-        fllv0016.ext.ti.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1727309AbeGSLgY (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Thu, 19 Jul 2018 07:36:24 -0400
-Subject: Re: [PATCH v2 4/4] ARM: dts: dra7: Fix up unaligned access setting
- for PCIe EP
-To: Kishon Vijay Abraham I <kishon@ti.com>,
-        Tony Lindgren <tony@atomide.com>,
-        Rob Herring <robh+dt@kernel.org>,
-        Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
-CC: Bjorn Helgaas <bhelgaas@google.com>, <linux-omap@vger.kernel.org>,
-        <devicetree@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
-        <linux-pci@vger.kernel.org>
-References: <20180627122919.23926-1-vigneshr@ti.com>
- <20180627122919.23926-5-vigneshr@ti.com>
- <92691b59-1952-b00f-da5b-f308f94aa2b7@ti.com>
-From: Vignesh R <vigneshr@ti.com>
-Message-ID: <9bdf39d4-d9db-b80f-e3f4-88c3e068c306@ti.com>
-Date: Thu, 19 Jul 2018 16:24:26 +0530
+Return-Path: <SRS0=UTdO=KO=networkplumber.org=stephen@kernel.org>
+Return-Path: <SRS0=UTdO=KO=networkplumber.org=stephen@kernel.org>
+Date: Mon, 30 Jul 2018 12:22:50 -0700
+From: Stephen Hemminger <stephen@networkplumber.org>
+To: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
+Cc: Bjorn Helgaas <helgaas@kernel.org>, bhelgaas@google.com,
+ kys@microsoft.com, linux-pci@vger.kernel.org, Stephen Hemminger
+ <sthemmin@microsoft.com>
+Subject: Re: [PATCH] PCI: hv: support reporting serial number as slot
+ information
+Message-ID: <20180730122250.49bb348c@xeon-e3>
+In-Reply-To: <20180719165858.GA22716@red-moon>
+References: <20180612164037.10672-1-sthemmin@microsoft.com>
+	<20180704160834.GB12996@red-moon>
+	<20180711134908.GF188359@bhelgaas-glaptop.roam.corp.google.com>
+	<20180713143819.14da12b1@xeon-e3>
+	<20180719165858.GA22716@red-moon>
 MIME-Version: 1.0
-In-Reply-To: <92691b59-1952-b00f-da5b-f308f94aa2b7@ti.com>
-Content-Type: text/plain; charset="windows-1252"
-Sender: linux-pci-owner@vger.kernel.org
+Content-Type: text/plain; charset=UTF-8
 List-ID: <linux-pci.vger.kernel.org>
 
-Hi Tony,
+On Thu, 19 Jul 2018 17:58:59 +0100
+Lorenzo Pieralisi <lorenzo.pieralisi@arm.com> wrote:
 
-On Tuesday 17 July 2018 03:25 PM, Kishon Vijay Abraham I wrote:
-> 
-> 
-> On Wednesday 27 June 2018 05:59 PM, Vignesh R wrote:
->> Bit positions of PCIE_SS1_AXI2OCP_LEGACY_MODE_ENABLE and
->> PCIE_SS1_AXI2OCP_LEGACY_MODE_ENABLE in CTRL_CORE_SMA_SW_7 are
->> incorrectly documented in the TRM. In fact, the bit positions are
->> swapped. Update the DT bindings for PCIe EP to reflect the same.
->>
->> Signed-off-by: Vignesh R <vigneshr@ti.com>
-> 
-> Shouldn't this be sent to stable fixes?
+> On Fri, Jul 13, 2018 at 02:38:19PM -0700, Stephen Hemminger wrote:
+> > On Wed, 11 Jul 2018 08:49:08 -0500
+> > Bjorn Helgaas <helgaas@kernel.org> wrote:
+> >  =20
+> > > On Wed, Jul 04, 2018 at 05:08:34PM +0100, Lorenzo Pieralisi wrote: =20
+> > > > On Tue, Jun 12, 2018 at 09:40:37AM -0700, Stephen Hemminger wrote: =
+  =20
+> > > > > The Hyper-V host API for PCI provides a unique "serial number" wh=
+ich
+> > > > > can be used as the basis for sysfs PCI slot table. This can be us=
+eful
+> > > > > for cases where userspace wants to find the PCI device based on
+> > > > > serial number.
+> > > > >=20
+> > > > > When an SR-IOV NIC is added, the host sends an attach message
+> > > > > with a serial number. The kernel doesn't use the serial number, b=
+ut
+> > > > > it is useful when doing the same thing in a userspace driver such
+> > > > > as the DPDK. By having /sys/bus/pci/slots/N it provides a direct
+> > > > > way to find the matching PCI device.   =20
+> > >=20
+> > > Is this essentially a way to expose the serial number to userspace?
+> > >=20
+> > > I confess I'm not super familiar with what the slot infrastructure
+> > > gives us, and I'm trying to figure out if it's the right way to do
+> > > this.  Would a file directly in the device directory, e.g.,
+> > >=20
+> > >   /sys/devices/pci0000:00/0000:00:00.0/serial
+> > >=20
+> > > be a possibility?  There is an optional PCIe Device Serial Number
+> > > capability and also an optional serial number item in the VPD.  We
+> > > don't support either in the core yet, but maybe they could all be
+> > > exposed similarly?
+> > >=20
+> > > Or is there something you need from the slot infrastructure in
+> > > addition to the serial number exposure?
+> > >=20
+> > > You mentioned that this patch is along the lines of what KVM does.
+> > > Can you connect the dots a little bit for me as far as how this is
+> > > implemented for KVM?  I don't see KVM-related calls to
+> > > pci_create_slot() or pci_hp_register().
+> > >  =20
+> > > > > There may be some cases where the serial number is not unique such
+> > > > > as when using GPU's. But the PCI slot infrastructure will handle
+> > > > > that.
+> > > > >=20
+> > > > > This also shortens the network device names generated by
+> > > > > systemd/udev. The new names use slot (ens2) rather than
+> > > > > PCI address (enP2p0s2).   =20
+> > >=20
+> > > I don't recognize "enP2p0s2" as a PCI address.  Is that related to a
+> > > domain/bus/device/function address somehow, or is this some sort of
+> > > Windows-specific address?
+> > >  =20
+> > > > Hi Stephen,
+> > > >=20
+> > > > I wanted to apply this patch but wanted to make sure all HV
+> > > > maintainers are in agreement first since this looks like
+> > > > a significant user-space ABI change.
+> > > >=20
+> > > > I would also ask Bjorn's opinion on this since he has more
+> > > > insights into the slot interface history.
+> > > >=20
+> > > > Thanks,
+> > > > Lorenzo
+> > > >    =20
+> > > > > Signed-off-by: Stephen Hemminger <sthemmin@microsoft.com> =20
+> >=20
+> > Yes, this is a way to expose serial number to userspace as well as a
+> > way to help udev with naming. =20
+>=20
+> When you say "to help" it means "to fix" or to bring it on a par
+> with KVM ? This change is Hyper-V specific so I am not really against
+> it, still, I am not a big fan of making a serial number look like
+> a slot number to please udev either.
 
-This patch fixes:
+It provides udev with shorter more concise value that gives better result.
+Still would like something persistent and repeatable but it doesn't seem
+to be guaranteed by the host.
 
-Fixes: d23f3839fe97 ("ARM: dts: DRA7: Add pcie1 dt node for EP mode")
-Cc: stable@vger.kernel.org
+>=20
+> > Today, a VF device shows up as:
+> > $ lspci -n
+> > 0002:00:02.0 0200: 15b3:1014 (rev 80)
+> >=20
+> >=20
+> > And therefore is named: enP2p0s2 based on these rules:
+> > See: https://github.com/systemd/systemd/blob/master/src/udev/udev-built=
+in-net_id.c#L20
+> >=20
+> >  * Two character prefixes based on the type of interface:
+> >  *   en =E2=80=94 Ethernet
+> >  *   sl =E2=80=94 serial line IP (slip)
+> >  *   wl =E2=80=94 wlan
+> >  *   ww =E2=80=94 wwan
+> >  *
+> >  * Type of names:
+> >=20
+> >  *   o<index>[n<phys_port_name>|d<dev_port>]
+> >  *                                         =E2=80=94 on-board device in=
+dex number
+> >  *   s<slot>[f<function>][n<phys_port_name>|d<dev_port>]
+> >  *                                         =E2=80=94 hotplug slot index=
+ number
+> >  *   x<MAC>                                =E2=80=94 MAC address
+> >  *   [P<domain>]p<bus>s<slot>[f<function>][n<phys_port_name>|d<dev_port=
+>]
+> >  *                                         =E2=80=94 PCI geographical l=
+ocation
+> >=20
+> > I looked into several other options:
+> >   - put serial number into the device index number
+> >=20
+> >=20
+> > On KVM, the ACPI emulation provides PCI slot information so that is why
+> > the devices are named "ens3".
+> >=20
+> > I looked into several other options (none of which worked well):
+> >   * provide sysfs /index file but that wants to be handled by smbios
+> >   * use VPD serial number but that is a GUID not an integer
+> >   * full hotplug (but Hyper-V doesn't support real PCI hotplug)
+> >   * new device_attribute serial, but that is not easy to hook
+> >     into existing code, and udev won't know about it.
+> >=20
+> > Open to any ideas about how to best represent this. =20
+>=20
+> By trawling PCI patchwork I found this series that was not merged, maybe
+> it is a starting point to implement the latter suggestion:
+>=20
+> https://patchwork.ozlabs.org/patch/264610/
+>=20
+> udev won't know about it but as I say above that's not a bug
+> we are fixing either AFAICS.
 
-let me know if this needs to be resent with Fixes tag.
+Right this isn't a bug.
 
-Regards
-Vignesh
+The PCIe Device serial number (in patchwork) has a different meaning and
+can't be used. The PCIe device serial number comes from device config space
+and the serial number (i.e it is a property of the board).
+The value this patch is addressing is assigned by the host (similar to ACPI=
+ slots).
 
-> 
-> Thanks
-> Kishon
->> ---
->>  arch/arm/boot/dts/dra7.dtsi | 2 +-
->>  1 file changed, 1 insertion(+), 1 deletion(-)
->>
->> diff --git a/arch/arm/boot/dts/dra7.dtsi b/arch/arm/boot/dts/dra7.dtsi
->> index 7bfe7f28e3bd..27ad193e1a87 100644
->> --- a/arch/arm/boot/dts/dra7.dtsi
->> +++ b/arch/arm/boot/dts/dra7.dtsi
->> @@ -355,7 +355,7 @@
->>  				ti,hwmods = "pcie1";
->>  				phys = <&pcie1_phy>;
->>  				phy-names = "pcie-phy0";
->> -				ti,syscon-unaligned-access = <&scm_conf1 0x14 2>;
->> +				ti,syscon-unaligned-access = <&scm_conf1 0x14 1>;
->>  				status = "disabled";
->>  			};
->>  		};
->>
+On latest kernels (now that PCI domain is 32 bits), the SR-IOV VF device
+is even more ugly (enP37727p0s2) that was one of the motivations for this p=
+atch.
+With the patch udev will generate ens2.
