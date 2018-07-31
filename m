@@ -1,156 +1,84 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-From: Gustavo Pimentel <gustavo.pimentel@synopsys.com>
-To: bhelgaas@google.com, lorenzo.pieralisi@arm.com,
-        Joao.Pinto@synopsys.com, jingoohan1@gmail.com, kishon@ti.com,
-        adouglas@cadence.com, jesper.nilsson@axis.com,
-        shawn.lin@rock-chips.com
-Cc: linux-pci@vger.kernel.org, linux-doc@vger.kernel.org,
-        linux-kernel@vger.kernel.org, dFrom@synopsys.com,
-        d58689de99704f74c2eb4cf4ca0d62ea2efa36f8@synopsys.com,
-        Mon@synopsys.com, Sep@synopsys.com, 17@synopsys.com,
-        "00:00:00"@synopsys.com, 2001@synopsys.com,
-        Gustavo Pimentel <gustavo.pimentel@synopsys.com>
-Subject: [PATCH v7 03/11] PCI: dwc: Add MSI-X callbacks handler
-Date: Fri,  6 Jul 2018 14:26:16 +0100
-Message-Id: <1530883586-8395-1-git-send-email-gustavo.pimentel@synopsys.com>
-In-Reply-To: <cover.1530877028.git.gustavo.pimentel@synopsys.com>
-References: <cover.1530877028.git.gustavo.pimentel@synopsys.com>
-Sender: linux-kernel-owner@vger.kernel.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail.kernel.org ([198.145.29.99]:42076 "EHLO mail.kernel.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1732635AbeHAAuS (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Tue, 31 Jul 2018 20:50:18 -0400
+Date: Tue, 31 Jul 2018 18:07:40 -0500
+From: Bjorn Helgaas <helgaas@kernel.org>
+To: Shunyong Yang <shunyong.yang@hxt-semitech.com>
+Cc: bhelgaas@google.com, hch@infradead.org,
+        linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
+        Joey Zheng <yu.zheng@hxt-semitech.com>
+Subject: Re: [PATCH v2] PCI: Unify pci and normal dma direction definition
+Message-ID: <20180731230740.GP45322@bhelgaas-glaptop.roam.corp.google.com>
+References: <1531878035-33147-1-git-send-email-shunyong.yang@hxt-semitech.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1531878035-33147-1-git-send-email-shunyong.yang@hxt-semitech.com>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Remove duplicate defines located on pcie-designware.h file already
-available on /include/uapi/linux/pci-regs.h file.
+On Wed, Jul 18, 2018 at 09:40:35AM +0800, Shunyong Yang wrote:
+> Current DMA direction definitions in pci-dma-compat.h and dma-direction.h
+> are mirrored in value. Unifying them to enhance readability and avoid
+> possible inconsistency.
+> 
+> Cc: Joey Zheng <yu.zheng@hxt-semitech.com>
+> Signed-off-by: Shunyong Yang <shunyong.yang@hxt-semitech.com>
 
-Signed-off-by: Gustavo Pimentel <gustavo.pimentel@synopsys.com>
----
-Change v1->v2:
- - Nothing changed, just to follow the patch set version.
-Change v2->v3:
- - Replaced wrong return value 0 to -EINVAL.
-Change v3->v4:
- - Rebased to Lorenzo's master branch v4.18-rc1.
-Change v4->v5:
- - Moved pci_epc_set_msi maximum interrupts validation into a new patch
-file #11.
-Change v5->v6:
- - Nothing changed, just to follow the patch set version.
-Change v6->v7:
- - Nothing changed, just to follow the patch set version.
+Applied to pci/misc for v4.19, thanks!
 
- drivers/pci/controller/dwc/pcie-designware-ep.c | 49 +++++++++++++++++--------
- drivers/pci/controller/dwc/pcie-designware.h    | 11 ------
- 2 files changed, 33 insertions(+), 27 deletions(-)
-
-diff --git a/drivers/pci/controller/dwc/pcie-designware-ep.c b/drivers/pci/controller/dwc/pcie-designware-ep.c
-index bbe75d7..1f98db3 100644
---- a/drivers/pci/controller/dwc/pcie-designware-ep.c
-+++ b/drivers/pci/controller/dwc/pcie-designware-ep.c
-@@ -246,29 +246,38 @@ static int dw_pcie_ep_map_addr(struct pci_epc *epc, u8 func_no,
- 
- static int dw_pcie_ep_get_msi(struct pci_epc *epc, u8 func_no)
- {
--	int val;
- 	struct dw_pcie_ep *ep = epc_get_drvdata(epc);
- 	struct dw_pcie *pci = to_dw_pcie_from_ep(ep);
-+	u32 val, reg;
-+
-+	if (!ep->msi_cap)
-+		return -EINVAL;
- 
--	val = dw_pcie_readw_dbi(pci, MSI_MESSAGE_CONTROL);
--	if (!(val & MSI_CAP_MSI_EN_MASK))
-+	reg = ep->msi_cap + PCI_MSI_FLAGS;
-+	val = dw_pcie_readw_dbi(pci, reg);
-+	if (!(val & PCI_MSI_FLAGS_ENABLE))
- 		return -EINVAL;
- 
--	val = (val & MSI_CAP_MME_MASK) >> MSI_CAP_MME_SHIFT;
-+	val = (val & PCI_MSI_FLAGS_QSIZE) >> 4;
-+
- 	return val;
- }
- 
--static int dw_pcie_ep_set_msi(struct pci_epc *epc, u8 func_no, u8 encode_int)
-+static int dw_pcie_ep_set_msi(struct pci_epc *epc, u8 func_no, u8 interrupts)
- {
--	int val;
- 	struct dw_pcie_ep *ep = epc_get_drvdata(epc);
- 	struct dw_pcie *pci = to_dw_pcie_from_ep(ep);
-+	u32 val, reg;
- 
--	val = dw_pcie_readw_dbi(pci, MSI_MESSAGE_CONTROL);
--	val &= ~MSI_CAP_MMC_MASK;
--	val |= (encode_int << MSI_CAP_MMC_SHIFT) & MSI_CAP_MMC_MASK;
-+	if (!ep->msi_cap)
-+		return -EINVAL;
-+
-+	reg = ep->msi_cap + PCI_MSI_FLAGS;
-+	val = dw_pcie_readw_dbi(pci, reg);
-+	val &= ~PCI_MSI_FLAGS_QMASK;
-+	val |= (interrupts << 1) & PCI_MSI_FLAGS_QMASK;
- 	dw_pcie_dbi_ro_wr_en(pci);
--	dw_pcie_writew_dbi(pci, MSI_MESSAGE_CONTROL, val);
-+	dw_pcie_writew_dbi(pci, reg, val);
- 	dw_pcie_dbi_ro_wr_dis(pci);
- 
- 	return 0;
-@@ -367,21 +376,29 @@ int dw_pcie_ep_raise_msi_irq(struct dw_pcie_ep *ep, u8 func_no,
- 	struct dw_pcie *pci = to_dw_pcie_from_ep(ep);
- 	struct pci_epc *epc = ep->epc;
- 	u16 msg_ctrl, msg_data;
--	u32 msg_addr_lower, msg_addr_upper;
-+	u32 msg_addr_lower, msg_addr_upper, reg;
- 	u64 msg_addr;
- 	bool has_upper;
- 	int ret;
- 
-+	if (!ep->msi_cap)
-+		return -EINVAL;
-+
- 	/* Raise MSI per the PCI Local Bus Specification Revision 3.0, 6.8.1. */
--	msg_ctrl = dw_pcie_readw_dbi(pci, MSI_MESSAGE_CONTROL);
-+	reg = ep->msi_cap + PCI_MSI_FLAGS;
-+	msg_ctrl = dw_pcie_readw_dbi(pci, reg);
- 	has_upper = !!(msg_ctrl & PCI_MSI_FLAGS_64BIT);
--	msg_addr_lower = dw_pcie_readl_dbi(pci, MSI_MESSAGE_ADDR_L32);
-+	reg = ep->msi_cap + PCI_MSI_ADDRESS_LO;
-+	msg_addr_lower = dw_pcie_readl_dbi(pci, reg);
- 	if (has_upper) {
--		msg_addr_upper = dw_pcie_readl_dbi(pci, MSI_MESSAGE_ADDR_U32);
--		msg_data = dw_pcie_readw_dbi(pci, MSI_MESSAGE_DATA_64);
-+		reg = ep->msi_cap + PCI_MSI_ADDRESS_HI;
-+		msg_addr_upper = dw_pcie_readl_dbi(pci, reg);
-+		reg = ep->msi_cap + PCI_MSI_DATA_64;
-+		msg_data = dw_pcie_readw_dbi(pci, reg);
- 	} else {
- 		msg_addr_upper = 0;
--		msg_data = dw_pcie_readw_dbi(pci, MSI_MESSAGE_DATA_32);
-+		reg = ep->msi_cap + PCI_MSI_DATA_32;
-+		msg_data = dw_pcie_readw_dbi(pci, reg);
- 	}
- 	msg_addr = ((u64) msg_addr_upper) << 32 | msg_addr_lower;
- 	ret = dw_pcie_ep_map_addr(epc, func_no, ep->msi_mem_phys, msg_addr,
-diff --git a/drivers/pci/controller/dwc/pcie-designware.h b/drivers/pci/controller/dwc/pcie-designware.h
-index b22c5bb..a0ab12f 100644
---- a/drivers/pci/controller/dwc/pcie-designware.h
-+++ b/drivers/pci/controller/dwc/pcie-designware.h
-@@ -96,17 +96,6 @@
- #define PCIE_GET_ATU_INB_UNR_REG_OFFSET(region)				\
- 			((0x3 << 20) | ((region) << 9) | (0x1 << 8))
- 
--#define MSI_MESSAGE_CONTROL		0x52
--#define MSI_CAP_MMC_SHIFT		1
--#define MSI_CAP_MMC_MASK		(7 << MSI_CAP_MMC_SHIFT)
--#define MSI_CAP_MME_SHIFT		4
--#define MSI_CAP_MSI_EN_MASK		0x1
--#define MSI_CAP_MME_MASK		(7 << MSI_CAP_MME_SHIFT)
--#define MSI_MESSAGE_ADDR_L32		0x54
--#define MSI_MESSAGE_ADDR_U32		0x58
--#define MSI_MESSAGE_DATA_32		0x58
--#define MSI_MESSAGE_DATA_64		0x5C
--
- #define MAX_MSI_IRQS			256
- #define MAX_MSI_IRQS_PER_CTRL		32
- #define MAX_MSI_CTRLS			(MAX_MSI_IRQS / MAX_MSI_IRQS_PER_CTRL)
--- 
-2.7.4
+> ---
+> 
+> v2:
+>   Remove unnecessary comments and  braces according to Christoph's
+>   comments.
+> 
+> ---
+>  include/linux/dma-direction.h  | 6 ++----
+>  include/linux/pci-dma-compat.h | 8 ++++----
+>  2 files changed, 6 insertions(+), 8 deletions(-)
+> 
+> diff --git a/include/linux/dma-direction.h b/include/linux/dma-direction.h
+> index 3649a031893a..9c96e30e6a0b 100644
+> --- a/include/linux/dma-direction.h
+> +++ b/include/linux/dma-direction.h
+> @@ -1,14 +1,12 @@
+>  /* SPDX-License-Identifier: GPL-2.0 */
+>  #ifndef _LINUX_DMA_DIRECTION_H
+>  #define _LINUX_DMA_DIRECTION_H
+> -/*
+> - * These definitions mirror those in pci.h, so they can be used
+> - * interchangeably with their PCI_ counterparts.
+> - */
+> +
+>  enum dma_data_direction {
+>  	DMA_BIDIRECTIONAL = 0,
+>  	DMA_TO_DEVICE = 1,
+>  	DMA_FROM_DEVICE = 2,
+>  	DMA_NONE = 3,
+>  };
+> +
+>  #endif
+> diff --git a/include/linux/pci-dma-compat.h b/include/linux/pci-dma-compat.h
+> index 0dd1a3f7b309..c3f1b44ade29 100644
+> --- a/include/linux/pci-dma-compat.h
+> +++ b/include/linux/pci-dma-compat.h
+> @@ -8,10 +8,10 @@
+>  #include <linux/dma-mapping.h>
+>  
+>  /* This defines the direction arg to the DMA mapping routines. */
+> -#define PCI_DMA_BIDIRECTIONAL	0
+> -#define PCI_DMA_TODEVICE	1
+> -#define PCI_DMA_FROMDEVICE	2
+> -#define PCI_DMA_NONE		3
+> +#define PCI_DMA_BIDIRECTIONAL	DMA_BIDIRECTIONAL
+> +#define PCI_DMA_TODEVICE	DMA_TO_DEVICE
+> +#define PCI_DMA_FROMDEVICE	DMA_FROM_DEVICE
+> +#define PCI_DMA_NONE		DMA_NONE
+>  
+>  static inline void *
+>  pci_alloc_consistent(struct pci_dev *hwdev, size_t size,
+> -- 
+> 1.8.3.1
+> 
