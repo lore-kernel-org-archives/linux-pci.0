@@ -1,121 +1,41 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-sn1nam02on0087.outbound.protection.outlook.com ([104.47.36.87]:18880
-        "EHLO NAM02-SN1-obe.outbound.protection.outlook.com"
-        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1753671AbeGCHHb (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Tue, 3 Jul 2018 03:07:31 -0400
-Subject: Re: [PATCH 1/2] PCI: fix restoring resized BAR state on resume
-To: Bjorn Helgaas <helgaas@kernel.org>
-Cc: bhelgaas@google.com, linux-pci@vger.kernel.org,
-        linux-kernel@vger.kernel.org
-References: <20180614122146.62118-1-christian.koenig@amd.com>
- <20180630005718.GJ40928@bhelgaas-glaptop.roam.corp.google.com>
- <064ebaf7-8953-fd29-a688-26a5646111a0@gmail.com>
- <20180702134957.GA43045@bhelgaas-glaptop.roam.corp.google.com>
-From: =?UTF-8?Q?Christian_K=c3=b6nig?= <christian.koenig@amd.com>
-Message-ID: <91cdb8b2-ac72-f62d-2dcf-1c53d6d3a005@amd.com>
-Date: Tue, 3 Jul 2018 09:07:17 +0200
+Return-Path: <SRS0=sYJ9=KP=h08.hostsharing.net=foo00@kernel.org>
+Return-Path: <SRS0=sYJ9=KP=h08.hostsharing.net=foo00@kernel.org>
+Date: Tue, 31 Jul 2018 23:22:53 +0200
+From: Lukas Wunner <lukas@wunner.de>
+To: Mika Westerberg <mika.westerberg@linux.intel.com>,
+	Bjorn Helgaas <helgaas@kernel.org>, Sinan Kaya <okaya@kernel.org>
+Cc: linux-pci@vger.kernel.org
+Subject: Re: [PATCH 2/2] PCI: pciehp: Deduplicate presence check on probe &
+ resume
+Message-ID: <20180731212253.GA26620@wunner.de>
+References: <92c3c456edb461494d5c44e1ff6bab2711228ff1.1532754355.git.lukas@wunner.de>
+ <f9c36223a126c86ecc7dc921f8f943d29926edc3.1532754355.git.lukas@wunner.de>
+ <20180731080342.GA2534@lahna.fi.intel.com>
 MIME-Version: 1.0
-In-Reply-To: <20180702134957.GA43045@bhelgaas-glaptop.roam.corp.google.com>
-Content-Type: text/plain; charset=utf-8; format=flowed
-Sender: linux-pci-owner@vger.kernel.org
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20180731080342.GA2534@lahna.fi.intel.com>
 List-ID: <linux-pci.vger.kernel.org>
 
-Am 02.07.2018 um 15:49 schrieb Bjorn Helgaas:
-> On Mon, Jul 02, 2018 at 03:20:59PM +0200, Christian König wrote:
->> Am 30.06.2018 um 02:57 schrieb Bjorn Helgaas:
->>> On Thu, Jun 14, 2018 at 02:21:45PM +0200, Christian König wrote:
->>>> Resize BARs after resume to the expected size again.
->>>>
->>>> Signed-off-by: Christian König <christian.koenig@amd.com>
->>>> BugLink: https://bugzilla.kernel.org/show_bug.cgi?id=199959
->>>> CC: stable@vger.kernel.org      # v4.15+
->>> I applied both of these to pci/resource for v4.19, thanks!  It'd be nice to
->>> have them in v4.18, but since it's not a regression and the problem has
->>> been there since v4.15, I'm not sure I could justify it.
->> Well it is a regression. The change to enable this in the upstream driver
->> was added in 4.16, but a good bunch of people also compile our backported
->> DKMS module.
->>
->> And now those people are complaining that the driver stopped working after
->> resume in 4.15 with the DKMS module and with 4.16 with the upstream module.
->>
->> Alternatively I can disable resizing from the driver from kernels older than
->> v4.19.
-> Feel free to help justify including this in v4.18 by providing the
-> details of the regression and the relevant commits.  If this is
-> something that worked in v4.17, and some commit we merged for
-> v4.18-rc1 broke it, it would be a slam dunk to include the fix for
-> v4.18.  I took a quick look through the commits we added in v4.18-rc1
-> but didn't see anything obvious.
->
-> Obviously, putting a fix in v4.18 doesn't help the people running
-> v4.15 or v4.16.  The stable backports *will* help with that, and we
-> already have the tag for that.
->
-> The current trajectory we're on is that these are headed for
-> v4.19-rc1, and soon after they appear there, they will be backported
-> to the v4.15-v4.18 stable kernels.
+On Tue, Jul 31, 2018 at 11:03:42AM +0300, Mika Westerberg wrote:
+> On Sat, Jul 28, 2018 at 07:22:00AM +0200, Lukas Wunner wrote:
+> One small nit, see below:
+> 
+> > +/**
+> > + * pciehp_check_presence() - synthesize event if presence has changed
+> 
+> You should document the argument as well so that the tool that is used
+> to process these knows about it:
+> 
+>   @ctrl: ....
 
-Ah! Thanks for the explanation on how fixes flow into stable kernels and 
-you are right it's indeed not a regression in 4.18.
+Right, I'll fix that up in a follow-up commit since Bjorn has already
+pushed this version.
 
-In this case everything is fine and the backports to stable kernels 
-should handle that.
+@Bjorn: I've double-checked all the rebased and newly applied patches
+on the pci/hotplug branch, looks good.  Thanks for adding the reference
+to the "Link Status Mapped to the LTSSM" table to the commit message,
+and thanks to Sinan for pointing that table out.
 
-Thanks,
-Christian.
+Superb job everyone, thanks a lot!
 
->
-> Bjorn
->
->>>> ---
->>>>    drivers/pci/pci.c | 28 ++++++++++++++++++++++++++++
->>>>    1 file changed, 28 insertions(+)
->>>>
->>>> diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
->>>> index bd6f156dc3cf..d4685090378b 100644
->>>> --- a/drivers/pci/pci.c
->>>> +++ b/drivers/pci/pci.c
->>>> @@ -1159,6 +1159,33 @@ static void pci_restore_config_space(struct pci_dev *pdev)
->>>>    	}
->>>>    }
->>>> +static void pci_restore_rebar_state(struct pci_dev *pdev)
->>>> +{
->>>> +	unsigned int pos, nbars, i;
->>>> +	u32 ctrl;
->>>> +
->>>> +	pos = pci_find_ext_capability(pdev, PCI_EXT_CAP_ID_REBAR);
->>>> +	if (!pos)
->>>> +		return;
->>>> +
->>>> +	pci_read_config_dword(pdev, pos + PCI_REBAR_CTRL, &ctrl);
->>>> +	nbars = (ctrl & PCI_REBAR_CTRL_NBAR_MASK) >>
->>>> +		    PCI_REBAR_CTRL_NBAR_SHIFT;
->>>> +
->>>> +	for (i = 0; i < nbars; i++, pos += 8) {
->>>> +		struct resource *res;
->>>> +		int bar_idx, size;
->>>> +
->>>> +		pci_read_config_dword(pdev, pos + PCI_REBAR_CTRL, &ctrl);
->>>> +		bar_idx = ctrl & PCI_REBAR_CTRL_BAR_IDX;
->>>> +		res = pdev->resource + bar_idx;
->>>> +		size = order_base_2((resource_size(res) >> 20) | 1) - 1;
->>>> +		ctrl &= ~PCI_REBAR_CTRL_BAR_SIZE;
->>>> +		ctrl |= size << 8;
->>>> +		pci_write_config_dword(pdev, pos + PCI_REBAR_CTRL, ctrl);
->>>> +	}
->>>> +}
->>>> +
->>>>    /**
->>>>     * pci_restore_state - Restore the saved state of a PCI device
->>>>     * @dev: - PCI device that we're dealing with
->>>> @@ -1174,6 +1201,7 @@ void pci_restore_state(struct pci_dev *dev)
->>>>    	pci_restore_pri_state(dev);
->>>>    	pci_restore_ats_state(dev);
->>>>    	pci_restore_vc_state(dev);
->>>> +	pci_restore_rebar_state(dev);
->>>>    	pci_cleanup_aer_error_status_regs(dev);
->>>> -- 
->>>> 2.14.1
->>>>
+Lukas
