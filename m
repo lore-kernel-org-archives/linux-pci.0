@@ -1,239 +1,87 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from smtprelay4.synopsys.com ([198.182.47.9]:51122 "EHLO
-        smtprelay.synopsys.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S932755AbeGIQmv (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Mon, 9 Jul 2018 12:42:51 -0400
-Subject: Re: [PATCH v8 09/11] pci_endpoint_test: Add 2 ioctl commands
-To: Alan Douglas <adouglas@cadence.com>,
-        Gustavo Pimentel <gustavo.pimentel@synopsys.com>,
+Received: from mail-oi0-f44.google.com ([209.85.218.44]:44732 "EHLO
+        mail-oi0-f44.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1732393AbeGaQva (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Tue, 31 Jul 2018 12:51:30 -0400
+Subject: Re: [PATCH v5] PCI: Check for PCIe downtraining conditions
+To: Tal Gilboa <talgi@mellanox.com>,
+        Jakub Kicinski <jakub.kicinski@netronome.com>
+Cc: "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
         "bhelgaas@google.com" <bhelgaas@google.com>,
-        "lorenzo.pieralisi@arm.com" <lorenzo.pieralisi@arm.com>,
-        "Joao.Pinto@synopsys.com" <Joao.Pinto@synopsys.com>,
-        "jingoohan1@gmail.com" <jingoohan1@gmail.com>,
-        "kishon@ti.com" <kishon@ti.com>,
-        "jesper.nilsson@axis.com" <jesper.nilsson@axis.com>,
-        "shawn.lin@rock-chips.com" <shawn.lin@rock-chips.com>
-CC: "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-        "linux-doc@vger.kernel.org" <linux-doc@vger.kernel.org>,
+        "keith.busch@intel.com" <keith.busch@intel.com>,
+        "alex_gagniuc@dellteam.com" <alex_gagniuc@dellteam.com>,
+        "austin_bolen@dell.com" <austin_bolen@dell.com>,
+        "shyam_iyer@dell.com" <shyam_iyer@dell.com>,
+        "jeffrey.t.kirsher@intel.com" <jeffrey.t.kirsher@intel.com>,
+        "ariel.elior@cavium.com" <ariel.elior@cavium.com>,
+        "michael.chan@broadcom.com" <michael.chan@broadcom.com>,
+        "ganeshgr@chelsio.com" <ganeshgr@chelsio.com>,
+        Tariq Toukan <tariqt@mellanox.com>,
+        "airlied@gmail.com" <airlied@gmail.com>,
+        "alexander.deucher@amd.com" <alexander.deucher@amd.com>,
+        "mike.marciniszyn@intel.com" <mike.marciniszyn@intel.com>,
         "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
-References: <cover.1530891871.git.gustavo.pimentel@synopsys.com>
- <93f542ee1ec24d3a24150d8909074614536d6ce9.1530891871.git.gustavo.pimentel@synopsys.com>
- <MWHPR07MB350246B23FF90D27B60CF0B2D8440@MWHPR07MB3502.namprd07.prod.outlook.com>
-From: Gustavo Pimentel <Gustavo.Pimentel@synopsys.com>
-Message-ID: <8aba4644-60ea-cb08-c382-0bb75efe11a6@synopsys.com>
-Date: Mon, 9 Jul 2018 17:40:36 +0100
+References: <20180718215359.GG128988@bhelgaas-glaptop.roam.corp.google.com>
+ <20180723200339.23943-1-mr.nuke.me@gmail.com>
+ <20180723140143.1a46902f@cakuba.netronome.com>
+ <b9a6b3b8-56cf-8bb5-2568-071ccd8a4f28@mellanox.com>
+ <fc04618a-3b3b-58bd-edd5-cbde11638d7b@mellanox.com>
+From: "Alex G." <mr.nuke.me@gmail.com>
+Message-ID: <1b914780-e342-6aee-ffb2-ef81ac3ddd29@gmail.com>
+Date: Tue, 31 Jul 2018 10:10:42 -0500
 MIME-Version: 1.0
-In-Reply-To: <MWHPR07MB350246B23FF90D27B60CF0B2D8440@MWHPR07MB3502.namprd07.prod.outlook.com>
-Content-Type: text/plain; charset="utf-8"
+In-Reply-To: <fc04618a-3b3b-58bd-edd5-cbde11638d7b@mellanox.com>
+Content-Type: text/plain; charset=utf-8; format=flowed
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hi Alan,
-
-On 09/07/2018 16:22, Alan Douglas wrote:
-> Hi Gustavo,
+On 07/31/2018 01:40 AM, Tal Gilboa wrote:
+[snip]
+>>>> @@ -2240,6 +2258,9 @@ static void pci_init_capabilities(struct 
+>>>> pci_dev *dev)
+>>>>       /* Advanced Error Reporting */
+>>>>       pci_aer_init(dev);
+>>>> +    /* Check link and detect downtrain errors */
+>>>> +    pcie_check_upstream_link(dev);
+>>
+>> This is called for every PCIe device right? Won't there be a 
+>> duplicated print in case a device loads with lower PCIe bandwidth than 
+>> needed?
 > 
-> On  06 July 2018 16:52 Gustavo Pimentel <gustavo.pimentel@synopsys.com> wrote:
->> Add MSI-X support and update driver documentation accordingly.
->>
->> Add 2 new IOCTL commands:
->>  - Allow to reconfigure driver IRQ type in runtime.
->>  - Allow to retrieve current driver IRQ type configured.
->>
->> Signed-off-by: Gustavo Pimentel <gustavo.pimentel@synopsys.com>
->> ---
->> Change v2->v3:
->>  - New patch file created base on the previous patch
->> "misc: pci_endpoint_test: Add MSI-X support" patch file following
->> Kishon's suggestion.
->> Change v3->v4:
->>  - Rebased to Lorenzo's master branch v4.18-rc1.
->> Change v4->v5:
->>  - Nothing changed, just to follow the patch set version.
->> Change v5->v6:
->>  - Moved PCITEST_SET_IRQTYPE and PCITEST_GET_IRQTYPE ioctl entries
->> from patch #10 to here.
->>  - Increased ioctl parameters range associated to
->> drivers/misc/pci_endpoint_test.c driver.
->> Change v6->v7:
->>  - irq_type variable update just before returning the function.
->> Change v7->v8:
->>  - Re-sending the patch series.
->>
->>  Documentation/ioctl/ioctl-number.txt             |   2 +-
->>  Documentation/misc-devices/pci-endpoint-test.txt |   3 +
->>  drivers/misc/pci_endpoint_test.c                 | 175 +++++++++++++++++------
->>  include/uapi/linux/pcitest.h                     |   2 +
->>  4 files changed, 135 insertions(+), 47 deletions(-)
->>
->> diff --git a/Documentation/ioctl/ioctl-number.txt b/Documentation/ioctl/ioctl-number.txt
->> index 65259d4..c15c4f3 100644
->> --- a/Documentation/ioctl/ioctl-number.txt
->> +++ b/Documentation/ioctl/ioctl-number.txt
->> @@ -166,7 +166,7 @@ Code  Seq#(hex)	Include File		Comments
->>  'P'	all	linux/soundcard.h	conflict!
->>  'P'	60-6F	sound/sscape_ioctl.h	conflict!
->>  'P'	00-0F	drivers/usb/class/usblp.c	conflict!
->> -'P'	01-07	drivers/misc/pci_endpoint_test.c	conflict!
->> +'P'	01-09	drivers/misc/pci_endpoint_test.c	conflict!
->>  'Q'	all	linux/soundcard.h
->>  'R'	00-1F	linux/random.h		conflict!
->>  'R'	01	linux/rfkill.h		conflict!
->> diff --git a/Documentation/misc-devices/pci-endpoint-test.txt b/Documentation/misc-devices/pci-endpoint-test.txt
->> index fdfa0f6..58ccca4 100644
->> --- a/Documentation/misc-devices/pci-endpoint-test.txt
->> +++ b/Documentation/misc-devices/pci-endpoint-test.txt
->> @@ -28,6 +28,9 @@ ioctl
->>  	      to be tested should be passed as argument.
->>   PCITEST_MSIX: Tests message signalled interrupts. The MSI-X number
->>  	      to be tested should be passed as argument.
->> + PCITEST_SET_IRQTYPE: Changes driver IRQ type configuration. The IRQ type
->> +	      should be passed as argument (0: Legacy, 1:MSI, 2:MSI-X).
->> + PCITEST_GET_IRQTYPE: Gets driver IRQ type configuration.
->>   PCITEST_WRITE: Perform write tests. The size of the buffer should be passed
->>  		as argument.
->>   PCITEST_READ: Perform read tests. The size of the buffer should be passed
->> diff --git a/drivers/misc/pci_endpoint_test.c b/drivers/misc/pci_endpoint_test.c
->> index f4fef10..97082e3 100644
->> --- a/drivers/misc/pci_endpoint_test.c
->> +++ b/drivers/misc/pci_endpoint_test.c
->> @@ -157,6 +157,87 @@ static irqreturn_t pci_endpoint_test_irqhandler(int irq, void *dev_id)
->>  	return IRQ_HANDLED;
->>  }
->>
->> +static void pci_endpoint_test_free_irq_vectors(struct pci_endpoint_test *test)
->> +{
->> +	int i;
->> +	struct pci_dev *pdev = test->pdev;
->> +	struct device *dev = &pdev->dev;
->> +
->> +	for (i = 0; i < test->num_irqs; i++)
->> +		devm_free_irq(dev, pci_irq_vector(pdev, i), test);
->> +
->> +	test->num_irqs = 0;
->> +}
->> +
->> +static bool pci_endpoint_test_alloc_irq_vectors(struct pci_endpoint_test *test)
->> +{
->> +	int irq = -1;
->> +	struct pci_dev *pdev = test->pdev;
->> +	struct device *dev = &pdev->dev;
->> +	bool res = true;
->> +
->> +	switch (irq_type) {
->> +	case IRQ_TYPE_LEGACY:
->> +		irq = 0;
->> +		break;
->> +	case IRQ_TYPE_MSI:
->> +		irq = pci_alloc_irq_vectors(pdev, 1, 32, PCI_IRQ_MSI);
->> +		if (irq < 0)
->> +			dev_err(dev, "Failed to get MSI interrupts\n");
->> +		break;
->> +	case IRQ_TYPE_MSIX:
->> +		irq = pci_alloc_irq_vectors(pdev, 1, 2048, PCI_IRQ_MSIX);
->> +		if (irq < 0)
->> +			dev_err(dev, "Failed to get MSI-X interrupts\n");
->> +		break;
->> +	default:
->> +		dev_err(dev, "Invalid IRQ type selected\n");
->> +	}
->> +
->> +	if (irq < 0) {
->> +		irq = 0;
->> +		res = false;
->> +	}
->> +	test->num_irqs = irq;
->> +
->> +	return res;
->> +}
->> +
->> +static void pci_endpoint_test_release_irq(struct pci_endpoint_test *test)
->> +{
->> +	struct pci_dev *pdev = test->pdev;
->> +
->> +	pci_disable_msi(pdev);
->> +	pci_disable_msix(pdev);
->> +}
->> +
->> +static bool pci_endpoint_test_request_irq(struct pci_endpoint_test *test)
->> +{
->> +	int i;
->> +	int err;
->> +	struct pci_dev *pdev = test->pdev;
->> +	struct device *dev = &pdev->dev;
->> +
->> +	err = devm_request_irq(dev, pdev->irq, pci_endpoint_test_irqhandler,
->> +			       IRQF_SHARED, DRV_MODULE_NAME, test);
->> +	if (err) {
->> +		dev_err(dev, "Failed to request IRQ %d\n", pdev->irq);
->> +		return false;
->> +	}
->> +
->> +	for (i = 1; i < test->num_irqs; i++) {
->> +		err = devm_request_irq(dev, pci_irq_vector(pdev, i),
->> +				       pci_endpoint_test_irqhandler,
->> +				       IRQF_SHARED, DRV_MODULE_NAME, test);
->> +		if (err)
->> +			dev_err(dev, "Failed to request IRQ %d for MSI%s %d\n",
->> +				pci_irq_vector(pdev, i),
->> +				irq_type == IRQ_TYPE_MSIX ? "-X" : "", i + 1);
->> +	}
->> +
->> +	return true;
->> +}
->> +
->>  static bool pci_endpoint_test_bar(struct pci_endpoint_test *test,
->>  				  enum pci_barno barno)
->>  {
->> @@ -440,6 +521,38 @@ static bool pci_endpoint_test_read(struct pci_endpoint_test *test, size_t size)
->>  	return ret;
->>  }
->>
->> +static bool pci_endpoint_test_set_irq(struct pci_endpoint_test *test,
->> +				      int req_irq_type)
->> +{
->> +	struct pci_dev *pdev = test->pdev;
->> +	struct device *dev = &pdev->dev;
->> +
->> +	if (req_irq_type < IRQ_TYPE_LEGACY || req_irq_type > IRQ_TYPE_MSIX) {
->> +		dev_err(dev, "Invalid IRQ type option\n");
->> +		return false;
->> +	}
->> +
->> +	if (irq_type == req_irq_type)
->> +		return true;
->> +
->> +	pci_endpoint_test_free_irq_vectors(test);
->> +	pci_endpoint_test_release_irq(test);
->> +
->> +	if (!pci_endpoint_test_alloc_irq_vectors(test)) {
->> +		pci_endpoint_test_release_irq(test);
->> +		return false;
->> +	}
-> I am testing the latest patch set with the cadence driver, and find this step is not working correctly.
-> pci_endpoint_test_alloc_irq_vectors relies on the value of static irq_type to request the appropriate IRQ.
-> However, you don't set this value until a few lines later, so the first attempt to set the IRQ type fails.  (A
-> second attempt to set it will succeed however.)  I suggest setting irq_type before the call, or even adding
-> a parameter to pci_endpoint_test_alloc_irq_vectors() with the requested IRQ type to avoid having to set it
-> back again after a failed call.
+> Alex, can you comment on this please?
 
-Thank you for testing the code. This bug appeared on the patch version 6 after
-the Kishon's good suggestion of moving the irq type variable update immediately
-before function returning. Unfortunately I forgot the
-pci_endpoint_test_alloc_irq_vectors() dependency.
-Once again, thanks!
+Of course I can.
 
-Regards,
-Gustavo
+There's one print at probe() time, which happens if bandwidth < max. I 
+would think that's fine. There is a way to duplicate it, and that is if 
+the driver also calls print_link_status(). A few driver maintainers who 
+call it have indicated they'd be fine with removing it from the driver, 
+and leaving it in the core PCI.
 
->> +
->> +	if (!pci_endpoint_test_request_irq(test)) {
->> +		pci_endpoint_test_release_irq(test);
->> +		return false;
->> +	}
-> 
->> +
->> +	irq_type = req_irq_type;
->> +
->> +	return true;
->> +}
+Should the device come back at low speed, go away, then come back at 
+full speed we'd still only see one print from the first probe. Again, if 
+driver doesn't also call the function.
+There's the corner case where the device come up at < max, goes away, 
+then comes back faster, but still < max. There will be two prints, but 
+they won't be true duplicates -- each one will indicate different BW.
+
+Alex
+
+>>>> +
+>>>>       if (pci_probe_reset_function(dev) == 0)
+>>>>           dev->reset_fn = 1;
+>>>>   }
+>>>> diff --git a/include/linux/pci.h b/include/linux/pci.h
+>>>> index abd5d5e17aee..15bfab8f7a1b 100644
+>>>> --- a/include/linux/pci.h
+>>>> +++ b/include/linux/pci.h
+>>>> @@ -1088,6 +1088,7 @@ int pcie_set_mps(struct pci_dev *dev, int mps);
+>>>>   u32 pcie_bandwidth_available(struct pci_dev *dev, struct pci_dev 
+>>>> **limiting_dev,
+>>>>                    enum pci_bus_speed *speed,
+>>>>                    enum pcie_link_width *width);
+>>>> +void __pcie_print_link_status(struct pci_dev *dev, bool verbose);
+>>>>   void pcie_print_link_status(struct pci_dev *dev);
+>>>>   int pcie_flr(struct pci_dev *dev);
+>>>>   int __pci_reset_function_locked(struct pci_dev *dev);
+>>>
