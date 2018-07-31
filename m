@@ -1,84 +1,40 @@
-Return-Path: <SRS0=7OUd=KP=wunner.de=lukas@kernel.org>
-Return-Path: <SRS0=7OUd=KP=wunner.de=lukas@kernel.org>
-Message-Id: <3005bd6cf124c5fcc7f0720e973e741ba95919c7.1533012643.git.lukas@wunner.de>
-From: Lukas Wunner <lukas@wunner.de>
-Date: Tue, 31 Jul 2018 06:58:46 +0200
-Subject: [PATCH] PCI/ASPM: Fix link_state teardown on device removal
+Return-Path: <SRS0=oDuk=KP=suse.de=jroedel@kernel.org>
+Return-Path: <SRS0=oDuk=KP=suse.de=jroedel@kernel.org>
+Date: Tue, 31 Jul 2018 09:36:02 +0200
+From: Joerg Roedel <jroedel@suse.de>
 To: Bjorn Helgaas <helgaas@kernel.org>
-Cc: Rajat Jain <rajatxjain@gmail.com>, Shaohua Li <shaohua.li@intel.com>, linux-pci@vger.kernel.org
+Cc: Christoph Hellwig <hch@lst.de>, linux-pci@vger.kernel.org,
+	iommu@lists.linux-foundation.org, linuxppc-dev@lists.ozlabs.org,
+	x86@kernel.org, linux-sh@vger.kernel.org,
+	linux-kernel@vger.kernel.org
+Subject: Re: [PATCH] PCI: call dma_debug_add_bus for pci_bus_type in common
+ code
+Message-ID: <20180731073602.jbbcr4twd2gnkfoc@suse.de>
+References: <20180730073842.16092-1-hch@lst.de>
+ <20180730211713.GA45322@bhelgaas-glaptop.roam.corp.google.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20180730211713.GA45322@bhelgaas-glaptop.roam.corp.google.com>
 List-ID: <linux-pci.vger.kernel.org>
 
-Upon removal of the last device on a bus, the link_state of the bridge
-leading to that bus is sought to be torn down by having pci_stop_dev()
-call pcie_aspm_exit_link_state().
+On Mon, Jul 30, 2018 at 04:17:13PM -0500, Bjorn Helgaas wrote:
+> [+cc Joerg]
+> 
+> On Mon, Jul 30, 2018 at 09:38:42AM +0200, Christoph Hellwig wrote:
+> > There is nothing arch specific about PCI or dma-debug, so move this
+> > call to common code just after registering the bus type.
+> 
+> I assume that previously, even if the user set CONFIG_DMA_API_DEBUG=y
+> we only got PCI DMA debug on powerpc, sh, and x86.  And after this
+> patch, we'll get PCI DMA debug on *all* arches?
+> 
+> If that's true, I'll add a comment to that effect to the commitlog
+> since that new functionality might be of interest to other arches.
 
-When ASPM was originally introduced by commit 7d715a6c1ae5 ("PCI: add
-PCI Express ASPM support"), it determined whether the device being
-removed is the last one by calling list_empty() on the bridge's
-subordinate devices list.  That didn't work because the device is only
-removed from the list slightly later in pci_destroy_dev().
+There should be implicit support for dma-debug for all arches that use
+the generic dma_ops code. The dma_debug_add_bus() function just adds the
+reporting of pending dma-allocations on driver-unload for a device. 
 
-Commit 3419c75e15f8 ("PCI: properly clean up ASPM link state on device
-remove") attempted to fix it by calling list_is_last(), but that's not
-correct either because it checks whether the device is at the *end* of
-the list, not whether it's the last one *left* in the list.  If the user
-removes the device which happens to be at the end of the list via sysfs
-but other devices are preceding the device in the list, the link_state
-is torn down prematurely.
+Regards,
 
-The real fix is to move the invocation of pcie_aspm_exit_link_state() to
-pci_destroy_dev() and reinstate the call to list_empty().  Remove a
-duplicate check for dev->bus->self because pcie_aspm_exit_link_state()
-already contains an identical check.
-
-Fixes: 7d715a6c1ae5 ("PCI: add PCI Express ASPM support")
-Signed-off-by: Lukas Wunner <lukas@wunner.de>
-Cc: Shaohua Li <shaohua.li@intel.com>
-Cc: stable@vger.kernel.org # v2.6.26
----
-Alex Chiang, the author of 3419c75e15f8, cannot be cc'ed as the hp.com
-e-mail address used to author that commit bounces with 550 User unknown.
-Same for the canonical.com address used on Alex' last contribution
-856b185dd23d.
-
- drivers/pci/pcie/aspm.c | 2 +-
- drivers/pci/remove.c    | 4 +---
- 2 files changed, 2 insertions(+), 4 deletions(-)
-
-diff --git a/drivers/pci/pcie/aspm.c b/drivers/pci/pcie/aspm.c
-index 0e88b3ad065f..e492b8e47fb1 100644
---- a/drivers/pci/pcie/aspm.c
-+++ b/drivers/pci/pcie/aspm.c
-@@ -991,7 +991,7 @@ void pcie_aspm_exit_link_state(struct pci_dev *pdev)
- 	 * All PCIe functions are in one slot, remove one function will remove
- 	 * the whole slot, so just wait until we are the last function left.
- 	 */
--	if (!list_is_last(&pdev->bus_list, &parent->subordinate->devices))
-+	if (!list_empty(&parent->subordinate->devices))
- 		goto out;
- 
- 	link = parent->link_state;
-diff --git a/drivers/pci/remove.c b/drivers/pci/remove.c
-index 01ec7fcb5634..fb107fb5bb21 100644
---- a/drivers/pci/remove.c
-+++ b/drivers/pci/remove.c
-@@ -24,9 +24,6 @@ static void pci_stop_dev(struct pci_dev *dev)
- 		pci_remove_sysfs_dev_files(dev);
- 		dev->is_added = 0;
- 	}
--
--	if (dev->bus->self)
--		pcie_aspm_exit_link_state(dev);
- }
- 
- static void pci_destroy_dev(struct pci_dev *dev)
-@@ -40,6 +37,7 @@ static void pci_destroy_dev(struct pci_dev *dev)
- 	list_del(&dev->bus_list);
- 	up_write(&pci_bus_sem);
- 
-+	pcie_aspm_exit_link_state(dev);
- 	pci_bridge_d3_update(dev);
- 	pci_free_resources(dev);
- 	put_device(&dev->dev);
--- 
-2.18.0
+	Joerg
