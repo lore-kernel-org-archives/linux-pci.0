@@ -1,42 +1,124 @@
-Return-Path: <SRS0=N9qo=JT=gmail.com=kernelfans@kernel.org>
-Return-Path: <SRS0=N9qo=JT=gmail.com=kernelfans@kernel.org>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from aserp2120.oracle.com ([141.146.126.78]:56530 "EHLO
+        aserp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1732127AbeGaO4H (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Tue, 31 Jul 2018 10:56:07 -0400
+Subject: Re: Possible race condition in the kernel between PCI driver and AER
+ handling
+To: gokul cg <gokuljnpr@gmail.com>, linux-pci@vger.kernel.org
+References: <CAFP4jM9xmXHVnBPObNxTtr1kDo2kbW9G4N5q=BLU5gf5=+M0xg@mail.gmail.com>
+From: Thomas Tai <thomas.tai@oracle.com>
+Message-ID: <c5fb4a6a-136f-99f1-104e-32c923f00a22@oracle.com>
+Date: Tue, 31 Jul 2018 09:15:47 -0400
 MIME-Version: 1.0
-References: <1530600642-25090-1-git-send-email-kernelfans@gmail.com>
- <1530600642-25090-3-git-send-email-kernelfans@gmail.com> <20180703075106.GA21136@wunner.de>
-In-Reply-To: <20180703075106.GA21136@wunner.de>
-From: Pingfan Liu <kernelfans@gmail.com>
-Date: Tue, 3 Jul 2018 17:26:27 +0800
-Message-ID: <CAFgQCTt0M=+AQKXFXcOkxppjnDK9EAyNxHN=2F+n_NvyN=rQqg@mail.gmail.com>
-Subject: Re: [PATCHv3 2/4] drivers/base: utilize device tree info to shutdown devices
-To: lukas@wunner.de
-Cc: linux-kernel@vger.kernel.org,
-	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-	"Rafael J . Wysocki" <rafael.j.wysocki@intel.com>, Grygorii Strashko <grygorii.strashko@ti.com>,
-	Christoph Hellwig <hch@infradead.org>, Bjorn Helgaas <helgaas@kernel.org>, Dave Young <dyoung@redhat.com>,
-	linux-pci@vger.kernel.org, linuxppc-dev@lists.ozlabs.org
-Content-Type: text/plain; charset="UTF-8"
+In-Reply-To: <CAFP4jM9xmXHVnBPObNxTtr1kDo2kbW9G4N5q=BLU5gf5=+M0xg@mail.gmail.com>
+Content-Type: text/plain; charset=utf-8; format=flowed
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tue, Jul 3, 2018 at 3:51 PM Lukas Wunner <lukas@wunner.de> wrote:
->
-> On Tue, Jul 03, 2018 at 02:50:40PM +0800, Pingfan Liu wrote:
-> > commit 52cdbdd49853 ("driver core: correct device's shutdown order")
-> > places an assumption of supplier<-consumer order on the process of probe.
-> > But it turns out to break down the parent <- child order in some scene.
-> > E.g in pci, a bridge is enabled by pci core, and behind it, the devices
-> > have been probed. Then comes the bridge's module, which enables extra
-> > feature(such as hotplug) on this bridge. This will break the
-> > parent<-children order and cause failure when "kexec -e" in some scenario.
-> >
-> > The detailed description of the scenario:
-> > An IBM Power9 machine on which, two drivers portdrv_pci and shpchp(a mod)
-> > match the PCI_CLASS_BRIDGE_PCI, but neither of them success to probe due
-> > to some issue. For this case, the bridge is moved after its children in
-> > devices_kset. Then, when "kexec -e", a ata-disk behind the bridge can not
-> > write back buffer in flight due to the former shutdown of the bridge which
-> > clears the BusMaster bit.
->
-> If you revert commit cc27b735ad3a ("PCI/portdrv: Turn off PCIe services
-> during shutdown"), does the issue go away?
 
-Yes, it is gone.
+
+On 07/31/2018 08:42 AM, gokul cg wrote:
+> Hi All,
+> 
+> 
+> I am suspecting a possible race condition in the kernel between PCI 
+> driver and AER handling.
+> 
+> Because of the same kernel panic happens from worker thread which 
+> handles bottom half of aer irq.
+> 
+> 
+> I am seeing this issue when I suddenly power off PCI card which 
+> supports/enabled PCIE AER error reporting.
+> 
+> While powering off PCI device, AER driver will get AER IRQ for the 
+> device, from AER IRQ handler, it will cache AER error code and schedule 
+> worker thread to handle error.
+
+Hi Gokul,
+
+It may be an issue in the AER driver. How do you power off your device? 
+I've never seen this issue with normal shutdown nor "echo 0 > 
+/sys/bus/pci/slots/xx/power"
+
+Cheers,
+Thomas
+
+> 
+> The PCIe device will get removed from PCI tree before worker thread 
+> completes its task and kernel panic is  happening when worker thread 
+> tries to access PCI device's config space.
+> 
+> 
+> 
+> Issue:
+> 
+> 
+> crash>
+> 
+> crash> bt
+> 
+> PID: 2727   TASK: ffff880272adc530  CPU: 0   COMMAND: "kworker/0:2"
+> 
+> #0 [ffff88027469fac8] machine_kexec at ffffffff8102cf18
+> 
+> #1 [ffff88027469fb28] crash_kexec at ffffffff810a6b05
+> 
+> #2 [ffff88027469fbf0] oops_end at ffffffff8176d960
+> 
+> #3 [ffff88027469fc18] die at ffffffff810060db
+> 
+> #4 [ffff88027469fc48] do_general_protection at ffffffff8176d452
+> 
+> #5 [ffff88027469fc70] general_protection at ffffffff8176cdf2
+> 
+>      [exception RIP: pci_bus_read_config_dword+100]
+> 
+>      RIP: ffffffff813405f4  RSP: ffff88027469fd20  RFLAGS: 00010046
+> 
+>      RAX: 435f494350006963  RBX: ffff880274892000  RCX: 0000000000000004
+> 
+>      RDX: 0000000000000100  RSI: 0000000000000060  RDI: ffff880274892000
+> 
+>      RBP: ffff88027469fd48   R8: ffff88027469fd2c   R9: 00000000000012c0
+> 
+>      R10: 0000000000000006  R11: 00000000000012bf  R12: ffff88027469fd5c
+> 
+>      R13: 0000000000000246  R14: 0000000000000000  R15: ffff8802741a4000
+> 
+>      ORIG_RAX: ffffffffffffffff  CS: 0010  SS: 0000
+> 
+> #6 [ffff88027469fd50] pci_find_next_ext_capability at ffffffff81345d7b
+> 
+> #7 [ffff88027469fd90] pci_find_ext_capability at ffffffff81347225
+> 
+> #8 [ffff88027469fda0] get_device_error_info at ffffffff81356c4d
+> 
+> #9 [ffff88027469fdd0] aer_isr at ffffffff81357a38
+> 
+> #10 [ffff88027469fe28] process_one_work at ffffffff8105d4c0
+> 
+> #11 [ffff88027469fe70] worker_thread at ffffffff8105e251
+> 
+> #12 [ffff88027469fed0] kthread at ffffffff81064260
+> 
+> #13 [ffff88027469ff50] ret_from_fork at ffffffff81773a38
+> 
+> 
+> crash>
+> 
+> 
+> I have tested it on kernel 3.10 . But from source i could see that this 
+> case is still relevant for latest Linux source .
+> 
+> 
+> Can anybody tell me if this is an issue with AER driver in linux ?
+> 
+> 
+> 
+> 
+> Regards
+> 
+> Gokul CG
+> 
