@@ -1,74 +1,113 @@
-Return-Path: <SRS0=u1Dx=JW=gmail.com=rjwysocki@kernel.org>
-Return-Path: <SRS0=u1Dx=JW=gmail.com=rjwysocki@kernel.org>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail.kernel.org ([198.145.29.99]:39474 "EHLO mail.kernel.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1731637AbeHAA3l (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Tue, 31 Jul 2018 20:29:41 -0400
+Date: Tue, 31 Jul 2018 17:47:06 -0500
+From: Bjorn Helgaas <helgaas@kernel.org>
+To: Bharat Kumar Gogada <bharat.kumar.gogada@xilinx.com>
+Cc: linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
+        bhelgaas@google.com
+Subject: Re: [PATCH] PCI/AER: Enable SERR# forwarding in non ACPI flow
+Message-ID: <20180731224706.GO45322@bhelgaas-glaptop.roam.corp.google.com>
+References: <1531406719-18606-1-git-send-email-bharat.kumar.gogada@xilinx.com>
 MIME-Version: 1.0
-Sender: rjwysocki@gmail.com
-In-Reply-To: <20180706083603.GA9063@wunner.de>
-References: <1530600642-25090-1-git-send-email-kernelfans@gmail.com>
- <4685360.VNmeYLh0dQ@aspire.rjw.lan> <CAFgQCTusBM0-E=wAJgRJA7g-RnDi9ts==-M7KezNBwSWnyO=HA@mail.gmail.com>
- <6281446.GoJLz6Hq6C@aspire.rjw.lan> <CAFgQCTt7VfqM=UyCnvNFxrSw8Z6cUtAi3HUwR4_xPAc03SgHjQ@mail.gmail.com>
- <CAJZ5v0jo5-z0ZYDzdNPpn54+oAxpdG_=EvVDdz-HKxp7psu-EA@mail.gmail.com> <20180706083603.GA9063@wunner.de>
-From: "Rafael J. Wysocki" <rafael@kernel.org>
-Date: Fri, 6 Jul 2018 10:47:32 +0200
-Message-ID: <CAJZ5v0j6+m8NGMneG45tF9L1s6ahtFo91wPCO=3YOTEyAOL+VQ@mail.gmail.com>
-Subject: Re: [PATCHv3 0/4] drivers/base: bugfix for supplier<-consumer
- ordering in device_kset
-To: Lukas Wunner <lukas@wunner.de>
-Cc: "Rafael J. Wysocki" <rafael@kernel.org>, Pingfan Liu <kernelfans@gmail.com>,
-	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
-	Greg Kroah-Hartman <gregkh@linuxfoundation.org>, Grygorii Strashko <grygorii.strashko@ti.com>,
-	Christoph Hellwig <hch@infradead.org>, Bjorn Helgaas <helgaas@kernel.org>, Dave Young <dyoung@redhat.com>,
-	Linux PCI <linux-pci@vger.kernel.org>, linuxppc-dev <linuxppc-dev@lists.ozlabs.org>,
-	Linux PM <linux-pm@vger.kernel.org>, Kishon Vijay Abraham I <kishon@ti.com>
-Content-Type: text/plain; charset="UTF-8"
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1531406719-18606-1-git-send-email-bharat.kumar.gogada@xilinx.com>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Fri, Jul 6, 2018 at 10:36 AM, Lukas Wunner <lukas@wunner.de> wrote:
-> [cc += Kishon Vijay Abraham]
->
-> On Thu, Jul 05, 2018 at 11:18:28AM +0200, Rafael J. Wysocki wrote:
->> OK, so calling devices_kset_move_last() from really_probe() clearly is
->> a mistake.
->>
->> I'm not really sure what the intention of it was as the changelog of
->> commit 52cdbdd49853d doesn't really explain that (why would it be
->> insufficient without that change?)
->
-> It seems 52cdbdd49853d fixed an issue with boards which have an MMC
-> whose reset pin needs to be driven high on shutdown, lest the MMC
-> won't be found on the next boot.
->
-> The boards' devicetrees use a kludge wherein the reset pin is modelled
-> as a regulator.  The regulator is enabled when the MMC probes and
-> disabled on driver unbind and shutdown.  As a result, the pin is driven
-> low on shutdown and the MMC is not found on the next boot.
->
-> To fix this, another kludge was invented wherein the GPIO expander
-> driving the reset pin unconditionally drives all its pins high on
-> shutdown, see pcf857x_shutdown() in drivers/gpio/gpio-pcf857x.c
-> (commit adc284755055, "gpio: pcf857x: restore the initial line state
-> of all pcf lines").
->
-> For this kludge to work, the GPIO expander's ->shutdown hook needs to
-> be executed after the MMC expander's ->shutdown hook.
->
-> Commit 52cdbdd49853d achieved that by reordering devices_kset according
-> to the probe order.  Apparently the MMC probes after the GPIO expander,
-> possibly because it returns -EPROBE_DEFER if the vmmc regulator isn't
-> available yet, see mmc_regulator_get_supply().
->
-> Note, I'm just piecing the information together from git history,
-> I'm not responsible for these kludges.  (I'm innocent!)
+On Thu, Jul 12, 2018 at 08:15:19PM +0530, Bharat Kumar Gogada wrote:
+> Currently PCI_BRIDGE_CTL_SERR is being enabled only in
+> ACPI flow.
+> This bit is required for forwarding errors reported
+> by EP devices to upstream device.
+> This patch enables SERR# for Type-1 PCI device.
 
-Sure enough. :-)
+This does seem broken.
 
-In any case, calling devices_kset_move_last() in really_probe() is
-plain broken and if its only purpose was to address a single, arguably
-kludgy, use case, let's just get rid of it in the first place IMO.
+Figure 6-3 in PCIe r4.0, sec 6.2.6, would be a helpful reference to
+include in the commit log.
 
-> @Pingfan Liu, if you just remove the call to devices_kset_move_last()
-> from really_probe(), does the issue go away?
+Semi-related question: there are about 40 drivers that call
+pci_enable_pcie_error_reporting() and
+pci_disable_pcie_error_reporting().  I see that the PCI core
+calls pci_enable_pcie_error_reporting() for Root Ports and Switch
+Ports in this path:
 
-I would think so from the description of the problem (elsewhere in this thread).
+  aer_probe                     # for root ports only
+    aer_enable_rootport
+      set_downstream_devices_error_reporting
+        set_device_error_reporting
+          if (ROOT_PORT || UPSTREAM || DOWNSTREAM)
+            pci_enable_pcie_error_reporting
+        pci_walk_bus(..., set_device_error_reporting)
 
-Thanks,
-Rafael
+But the core doesn't call pci_enable_pcie_error_reporting() for
+endpoints.  I wonder why not.  Could we?  And then remove the calls
+from those drivers?  If PCI_EXP_AER_FLAGS should only be set if the
+driver is prepared, the pci_driver.err_handler would be a good hint.
+But I suspect we could do something sensible and at least report
+errors even if the driver doesn't have err_handler callbacks.
+
+On MIPS Octeon, it looks like pcibios_plat_dev_init() does already set
+PCI_EXP_AER_FLAGS for every device.
+
+But this question is obviously far beyond the scope of this current
+patch.
+
+> Signed-off-by: Bharat Kumar Gogada <bharat.kumar.gogada@xilinx.com>
+> ---
+>  drivers/pci/pcie/aer.c |   23 +++++++++++++++++++++++
+>  1 files changed, 23 insertions(+), 0 deletions(-)
+> 
+> diff --git a/drivers/pci/pcie/aer.c b/drivers/pci/pcie/aer.c
+> index a2e8838..943e084 100644
+> --- a/drivers/pci/pcie/aer.c
+> +++ b/drivers/pci/pcie/aer.c
+> @@ -343,6 +343,19 @@ int pci_enable_pcie_error_reporting(struct pci_dev *dev)
+>  	if (!dev->aer_cap)
+>  		return -EIO;
+>  
+> +	if (!IS_ENABLED(CONFIG_ACPI) &&
+> +	    dev->hdr_type == PCI_HEADER_TYPE_BRIDGE) {
+
+I think this test needs to be refined a little bit.  If the kernel
+happens to be built with CONFIG_ACPI=y but the current platform
+doesn't support ACPI, we still want to set PCI_BRIDGE_CTL_SERR,
+don't we?
+
+> +		u16 control;
+> +
+> +		/*
+> +		 * A Type-1 PCI bridge will not forward ERR_ messages coming
+> +		 * from an endpoint if SERR# forwarding is not enabled.
+> +		 */
+> +		pci_read_config_word(dev, PCI_BRIDGE_CONTROL, &control);
+> +		control |= PCI_BRIDGE_CTL_SERR;
+> +		pci_write_config_word(dev, PCI_BRIDGE_CONTROL, control);
+> +	}
+> +
+>  	return pcie_capability_set_word(dev, PCI_EXP_DEVCTL, PCI_EXP_AER_FLAGS);
+>  }
+>  EXPORT_SYMBOL_GPL(pci_enable_pcie_error_reporting);
+> @@ -352,6 +365,16 @@ int pci_disable_pcie_error_reporting(struct pci_dev *dev)
+>  	if (pcie_aer_get_firmware_first(dev))
+>  		return -EIO;
+>  
+> +	if (!IS_ENABLED(CONFIG_ACPI) &&
+> +	    dev->hdr_type == PCI_HEADER_TYPE_BRIDGE) {
+> +		u16 control;
+> +
+> +		/* Clear SERR Forwarding */
+> +		pci_read_config_word(dev, PCI_BRIDGE_CONTROL, &control);
+> +		control &= ~PCI_BRIDGE_CTL_SERR;
+> +		pci_write_config_word(dev, PCI_BRIDGE_CONTROL, control);
+> +	}
+> +
+>  	return pcie_capability_clear_word(dev, PCI_EXP_DEVCTL,
+>  					  PCI_EXP_AER_FLAGS);
+>  }
+> -- 
+> 1.7.1
+> 
