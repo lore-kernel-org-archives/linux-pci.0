@@ -1,129 +1,84 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from lelv0143.ext.ti.com ([198.47.23.248]:57810 "EHLO
-        lelv0143.ext.ti.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1753056AbeGFJEk (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Fri, 6 Jul 2018 05:04:40 -0400
-Subject: Re: [PATCH v6 07/11] pci-epf-test/pci_endpoint_test: Use irq_type
- module parameter
-To: Gustavo Pimentel <gustavo.pimentel@synopsys.com>,
-        <bhelgaas@google.com>, <lorenzo.pieralisi@arm.com>,
-        <Joao.Pinto@synopsys.com>, <jingoohan1@gmail.com>,
-        <adouglas@cadence.com>, <jesper.nilsson@axis.com>,
-        <shawn.lin@rock-chips.com>
-References: <cover.1529595907.git.gustavo.pimentel@synopsys.com>
- <98be2b2cfd6dfb9cdfed95da5fe8cde0a96ce37e.1529595907.git.gustavo.pimentel@synopsys.com>
-CC: <linux-pci@vger.kernel.org>, <linux-doc@vger.kernel.org>,
-        <linux-kernel@vger.kernel.org>
-From: Kishon Vijay Abraham I <kishon@ti.com>
-Message-ID: <7257e7a6-50be-ee72-776d-41af141739a7@ti.com>
-Date: Fri, 6 Jul 2018 14:34:25 +0530
-MIME-Version: 1.0
-In-Reply-To: <98be2b2cfd6dfb9cdfed95da5fe8cde0a96ce37e.1529595907.git.gustavo.pimentel@synopsys.com>
-Content-Type: text/plain; charset="windows-1252"
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <SRS0=7OUd=KP=wunner.de=lukas@kernel.org>
+Return-Path: <SRS0=7OUd=KP=wunner.de=lukas@kernel.org>
+Message-Id: <3005bd6cf124c5fcc7f0720e973e741ba95919c7.1533012643.git.lukas@wunner.de>
+From: Lukas Wunner <lukas@wunner.de>
+Date: Tue, 31 Jul 2018 06:58:46 +0200
+Subject: [PATCH] PCI/ASPM: Fix link_state teardown on device removal
+To: Bjorn Helgaas <helgaas@kernel.org>
+Cc: Rajat Jain <rajatxjain@gmail.com>, Shaohua Li <shaohua.li@intel.com>, linux-pci@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hi,
+Upon removal of the last device on a bus, the link_state of the bridge
+leading to that bus is sought to be torn down by having pci_stop_dev()
+call pcie_aspm_exit_link_state().
 
-On Thursday 21 June 2018 09:31 PM, Gustavo Pimentel wrote:
-> Add new driver parameter to allow interruption type selection.
-> 
-> Signed-off-by: Gustavo Pimentel <gustavo.pimentel@synopsys.com>
-> ---
-> Change v2->v3:
->  - New patch file created base on the previous patch
-> "misc: pci_endpoint_test: Add MSI-X support" patch file following
-> Kishon's suggestion.
-> Change v3->v4:
->  - Rebased to Lorenzo's master branch v4.18-rc1.
-> Change v4->v5:
->  - Nothing changed, just to follow the patch set version.
-> Change v5->v6:
->  - Nothing changed, just to follow the patch set version.
-> 
->  drivers/misc/pci_endpoint_test.c | 30 +++++++++++++++++++++---------
->  1 file changed, 21 insertions(+), 9 deletions(-)
-> 
-> diff --git a/drivers/misc/pci_endpoint_test.c b/drivers/misc/pci_endpoint_test.c
-> index 35fbfbd..4d2c9cb 100644
-> --- a/drivers/misc/pci_endpoint_test.c
-> +++ b/drivers/misc/pci_endpoint_test.c
-> @@ -82,6 +82,10 @@ static bool no_msi;
->  module_param(no_msi, bool, 0444);
->  MODULE_PARM_DESC(no_msi, "Disable MSI interrupt in pci_endpoint_test");
->  
-> +static int irq_type = IRQ_TYPE_MSI;
-> +module_param(irq_type, int, 0444);
-> +MODULE_PARM_DESC(irq_type, "IRQ mode selection in pci_endpoint_test (0 - Legacy, 1 - MSI)");
-> +
->  enum pci_barno {
->  	BAR_0,
->  	BAR_1,
-> @@ -108,7 +112,7 @@ struct pci_endpoint_test {
->  struct pci_endpoint_test_data {
->  	enum pci_barno test_reg_bar;
->  	size_t alignment;
-> -	bool no_msi;
-> +	int irq_type;
->  };
->  
->  static inline u32 pci_endpoint_test_readl(struct pci_endpoint_test *test,
-> @@ -291,8 +295,7 @@ static bool pci_endpoint_test_copy(struct pci_endpoint_test *test, size_t size)
->  	pci_endpoint_test_writel(test, PCI_ENDPOINT_TEST_SIZE,
->  				 size);
->  
-> -	pci_endpoint_test_writel(test, PCI_ENDPOINT_TEST_IRQ_TYPE,
-> -				 no_msi ? IRQ_TYPE_LEGACY : IRQ_TYPE_MSI);
-> +	pci_endpoint_test_writel(test, PCI_ENDPOINT_TEST_IRQ_TYPE, irq_type);
->  	pci_endpoint_test_writel(test, PCI_ENDPOINT_TEST_IRQ_NUMBER, 1);
->  	pci_endpoint_test_writel(test, PCI_ENDPOINT_TEST_COMMAND,
->  				 COMMAND_COPY);
-> @@ -361,8 +364,7 @@ static bool pci_endpoint_test_write(struct pci_endpoint_test *test, size_t size)
->  
->  	pci_endpoint_test_writel(test, PCI_ENDPOINT_TEST_SIZE, size);
->  
-> -	pci_endpoint_test_writel(test, PCI_ENDPOINT_TEST_IRQ_TYPE,
-> -				 no_msi ? IRQ_TYPE_LEGACY : IRQ_TYPE_MSI);
-> +	pci_endpoint_test_writel(test, PCI_ENDPOINT_TEST_IRQ_TYPE, irq_type);
->  	pci_endpoint_test_writel(test, PCI_ENDPOINT_TEST_IRQ_NUMBER, 1);
->  	pci_endpoint_test_writel(test, PCI_ENDPOINT_TEST_COMMAND,
->  				 COMMAND_READ);
-> @@ -419,8 +421,7 @@ static bool pci_endpoint_test_read(struct pci_endpoint_test *test, size_t size)
->  
->  	pci_endpoint_test_writel(test, PCI_ENDPOINT_TEST_SIZE, size);
->  
-> -	pci_endpoint_test_writel(test, PCI_ENDPOINT_TEST_IRQ_TYPE,
-> -				 no_msi ? IRQ_TYPE_LEGACY : IRQ_TYPE_MSI);
-> +	pci_endpoint_test_writel(test, PCI_ENDPOINT_TEST_IRQ_TYPE, irq_type);
->  	pci_endpoint_test_writel(test, PCI_ENDPOINT_TEST_IRQ_NUMBER, 1);
->  	pci_endpoint_test_writel(test, PCI_ENDPOINT_TEST_COMMAND,
->  				 COMMAND_WRITE);
-> @@ -505,11 +506,14 @@ static int pci_endpoint_test_probe(struct pci_dev *pdev,
->  	test->alignment = 0;
->  	test->pdev = pdev;
->  
-> +	if (no_msi)
-> +		irq_type = IRQ_TYPE_LEGACY;
-> +
->  	data = (struct pci_endpoint_test_data *)ent->driver_data;
->  	if (data) {
->  		test_reg_bar = data->test_reg_bar;
->  		test->alignment = data->alignment;
-> -		no_msi = data->no_msi;
-> +		irq_type = data->irq_type;
->  	}
->  
->  	init_completion(&test->irq_raised);
-> @@ -529,13 +533,21 @@ static int pci_endpoint_test_probe(struct pci_dev *pdev,
->  
->  	pci_set_master(pdev);
->  
-> -	if (!no_msi) {
-> +	switch (irq_type) {
-> +	case IRQ_TYPE_LEGACY:
-> +		irq = 0;
+When ASPM was originally introduced by commit 7d715a6c1ae5 ("PCI: add
+PCI Express ASPM support"), it determined whether the device being
+removed is the last one by calling list_empty() on the bridge's
+subordinate devices list.  That didn't work because the device is only
+removed from the list slightly later in pci_destroy_dev().
 
-Looks like this is not required. irq variable is used only for MSI irq.
+Commit 3419c75e15f8 ("PCI: properly clean up ASPM link state on device
+remove") attempted to fix it by calling list_is_last(), but that's not
+correct either because it checks whether the device is at the *end* of
+the list, not whether it's the last one *left* in the list.  If the user
+removes the device which happens to be at the end of the list via sysfs
+but other devices are preceding the device in the list, the link_state
+is torn down prematurely.
 
-Thanks
-Kishon
+The real fix is to move the invocation of pcie_aspm_exit_link_state() to
+pci_destroy_dev() and reinstate the call to list_empty().  Remove a
+duplicate check for dev->bus->self because pcie_aspm_exit_link_state()
+already contains an identical check.
+
+Fixes: 7d715a6c1ae5 ("PCI: add PCI Express ASPM support")
+Signed-off-by: Lukas Wunner <lukas@wunner.de>
+Cc: Shaohua Li <shaohua.li@intel.com>
+Cc: stable@vger.kernel.org # v2.6.26
+---
+Alex Chiang, the author of 3419c75e15f8, cannot be cc'ed as the hp.com
+e-mail address used to author that commit bounces with 550 User unknown.
+Same for the canonical.com address used on Alex' last contribution
+856b185dd23d.
+
+ drivers/pci/pcie/aspm.c | 2 +-
+ drivers/pci/remove.c    | 4 +---
+ 2 files changed, 2 insertions(+), 4 deletions(-)
+
+diff --git a/drivers/pci/pcie/aspm.c b/drivers/pci/pcie/aspm.c
+index 0e88b3ad065f..e492b8e47fb1 100644
+--- a/drivers/pci/pcie/aspm.c
++++ b/drivers/pci/pcie/aspm.c
+@@ -991,7 +991,7 @@ void pcie_aspm_exit_link_state(struct pci_dev *pdev)
+ 	 * All PCIe functions are in one slot, remove one function will remove
+ 	 * the whole slot, so just wait until we are the last function left.
+ 	 */
+-	if (!list_is_last(&pdev->bus_list, &parent->subordinate->devices))
++	if (!list_empty(&parent->subordinate->devices))
+ 		goto out;
+ 
+ 	link = parent->link_state;
+diff --git a/drivers/pci/remove.c b/drivers/pci/remove.c
+index 01ec7fcb5634..fb107fb5bb21 100644
+--- a/drivers/pci/remove.c
++++ b/drivers/pci/remove.c
+@@ -24,9 +24,6 @@ static void pci_stop_dev(struct pci_dev *dev)
+ 		pci_remove_sysfs_dev_files(dev);
+ 		dev->is_added = 0;
+ 	}
+-
+-	if (dev->bus->self)
+-		pcie_aspm_exit_link_state(dev);
+ }
+ 
+ static void pci_destroy_dev(struct pci_dev *dev)
+@@ -40,6 +37,7 @@ static void pci_destroy_dev(struct pci_dev *dev)
+ 	list_del(&dev->bus_list);
+ 	up_write(&pci_bus_sem);
+ 
++	pcie_aspm_exit_link_state(dev);
+ 	pci_bridge_d3_update(dev);
+ 	pci_free_resources(dev);
+ 	put_device(&dev->dev);
+-- 
+2.18.0
