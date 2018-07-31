@@ -1,86 +1,42 @@
-Return-Path: <SRS0=A2mq=JU=broadcom.com=ray.jui@kernel.org>
-Return-Path: <SRS0=A2mq=JU=broadcom.com=ray.jui@kernel.org>
-Subject: Re: [PATCH v2 0/5] Improve Broadcom PAXC support
-From: Ray Jui <ray.jui@broadcom.com>
-To: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
-Cc: Bjorn Helgaas <bhelgaas@google.com>, Bjorn Helgaas <helgaas@kernel.org>,
- linux-kernel@vger.kernel.org, bcm-kernel-feedback-list@broadcom.com,
- linux-pci@vger.kernel.org
-References: <1528762867-16823-1-git-send-email-ray.jui@broadcom.com>
- <45945371-3cd7-102d-bb47-69a60435542b@broadcom.com>
- <20180621164821.GA14519@e107981-ln.cambridge.arm.com>
- <e573bad0-05b1-c00f-8815-6ebe26218f05@broadcom.com>
-Message-ID: <dfc2a3d4-dbdb-5ebc-c000-b824d4d2075d@broadcom.com>
-Date: Tue, 3 Jul 2018 22:02:38 -0700
+Return-Path: <SRS0=BdnE=KP=arm.com=lorenzo.pieralisi@kernel.org>
+Return-Path: <SRS0=BdnE=KP=arm.com=lorenzo.pieralisi@kernel.org>
+Date: Tue, 31 Jul 2018 18:27:42 +0100
+From: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
+To: Bjorn Helgaas <helgaas@kernel.org>
+Cc: linux-pci@vger.kernel.org,
+	Subrahmanya Lingappa <l.subrahmanya@mobiveil.co.in>,
+	Bjorn Helgaas <bhelgaas@google.com>
+Subject: Re: [PATCH 0/3] PCI: mobiveil: Misc fixes
+Message-ID: <20180731172742.GA11381@red-moon>
+References: <20180730134316.11719-1-lorenzo.pieralisi@arm.com>
+ <20180731165600.GL45322@bhelgaas-glaptop.roam.corp.google.com>
 MIME-Version: 1.0
-In-Reply-To: <e573bad0-05b1-c00f-8815-6ebe26218f05@broadcom.com>
-Content-Type: text/plain; charset=utf-8; format=flowed
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20180731165600.GL45322@bhelgaas-glaptop.roam.corp.google.com>
 List-ID: <linux-pci.vger.kernel.org>
 
-Hi Lorenzo,
+On Tue, Jul 31, 2018 at 11:56:00AM -0500, Bjorn Helgaas wrote:
+> On Mon, Jul 30, 2018 at 02:43:13PM +0100, Lorenzo Pieralisi wrote:
+> > Subrahmanya,
+> > 
+> > I put together this series so that the Mobiveil controller driver
+> > can compile (successfully). Please review and ack as soon as possible
+> > since the current situation is a bit embarassing to be honest, we
+> > should be sending these patches as fixes this week so that they
+> > can make it for v4.18, currently the driver is in the kernel for
+> > nothing.
+> 
+> There doesn't seem to be much interest in the Mobiveil driver (the
+> last patch I see was on May 10), and as you say, it's not even in the
+> Makefile, so it has gotten zero testing or even building.
+> 
+> Should we just drop the driver and see if anybody wants to try again
+> next cycle?  I'm a little hesitant about flipping the switch to enable
+> a brand-new driver this late in the cycle.
 
-A friendly reminder: Have you had a chance to help to review the patch 
-series below?
+I totally share your concern - I do not know what's the best way
+to drop it but I think that reverting it is sensible given what
+this series has to do to enable it in the first place.
 
 Thanks,
-
-Ray
-
-On 6/21/2018 11:22 AM, Ray Jui wrote:
-> Hi Lorenzo,
-> 
-> On 6/21/2018 9:48 AM, Lorenzo Pieralisi wrote:
->> On Wed, Jun 20, 2018 at 10:26:28AM -0700, Ray Jui wrote:
->>> Hi Lorenzo/Bjorn,
->>>
->>> Could you please help to review this patch series when you have time?
->>>
->>> I believe I have addressed major comment in v1 from Bjorn and 
->>> answered all
->>> questions from Lorenzo.
->>
->> I will have a look next week, sorry for the delay.
-> 
-> Thanks a lot. Much appreciated!
-> 
-> Ray
-> 
->>
->> Thanks,
->> Lorenzo
->>
->>> Thanks,
->>>
->>> Ray
->>>
->>> On 6/11/2018 5:21 PM, Ray Jui wrote:
->>>> This patch series improves the Broadcom PAXC support by 1) adding more
->>>> quirks for specific versions of PAXC controllers; 2) adding logic to
->>>> reject internally unconfigured physical functions from the embedded
->>>> network processor acting as endpoint; 3) reducing verbose print level
->>>> in the outbound/inbound mapping code
->>>>
->>>> This patch series is based off v4.17 and is available on GIHUB:
->>>> repo: https://github.com/Broadcom/arm64-linux.git
->>>> branch: sr-paxc-v2
->>>>
->>>> Changes since v1:
->>>>   - consolidate 2 PAXC related patch series into 1
->>>>   - change the way how the capability list corruption is handled, per
->>>> recommendation from Bjorn. Now handle and fix up the corruption at
->>>> the config register read
->>>>   - rebase to v4.17
->>>>
->>>> Ray Jui (5):
->>>>    PCI: iproc: Activate PAXC bridge quirk for more devices
->>>>    PCI: iproc: Fix up corrupted PAXC root complex config registers
->>>>    PCI: iproc: Disable MSI parsing in certain PAXC blocks
->>>>    PCI: iproc: Reject unconfigured physical functions from PAXC
->>>>    PCI: iproc: Reduce inbound/outbound mapping print level
->>>>
->>>>   drivers/pci/host/pcie-iproc.c | 159 
->>>> +++++++++++++++++++++++++++++++++++-------
->>>>   drivers/pci/host/pcie-iproc.h |   8 +++
->>>>   drivers/pci/quirks.c          |   3 +
->>>>   3 files changed, 144 insertions(+), 26 deletions(-)
->>>>
+Lorenzo
