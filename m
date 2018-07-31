@@ -1,161 +1,106 @@
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-From: <honghui.zhang@mediatek.com>
-To: <lorenzo.pieralisi@arm.com>, <marc.zyngier@arm.com>,
- <bhelgaas@google.com>, <matthias.bgg@gmail.com>,
- <linux-arm-kernel@lists.infradead.org>, <linux-mediatek@lists.infradead.org>,
- <linux-pci@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
- <devicetree@vger.kernel.org>, <yingjoe.chen@mediatek.com>,
- <eddie.huang@mediatek.com>, <ryder.lee@mediatek.com>
-Subject: [PATCH v2 3/4] PCI: mediatek: Add system pm support for MT2712 and
- MT7622
-Date: Mon, 2 Jul 2018 11:49:43 +0800
-Message-ID: <1530503384-1218-4-git-send-email-honghui.zhang@mediatek.com>
-In-Reply-To: <1530503384-1218-1-git-send-email-honghui.zhang@mediatek.com>
-References: <1530503384-1218-1-git-send-email-honghui.zhang@mediatek.com>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail.kernel.org ([198.145.29.99]:38586 "EHLO mail.kernel.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1729273AbeGaMxI (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Tue, 31 Jul 2018 08:53:08 -0400
+Date: Tue, 31 Jul 2018 06:13:17 -0500
+From: Bjorn Helgaas <helgaas@kernel.org>
+To: Russell King - ARM Linux <linux@armlinux.org.uk>
+Cc: Thomas Gleixner <tglx@linutronix.de>,
+        Heiner Kallweit <hkallweit1@gmail.com>,
+        Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org,
+        Christoph Hellwig <hch@lst.de>, linux-kernel@vger.kernel.org,
+        MyungJoo Ham <myungjoo.ham@samsung.com>,
+        Chanwoo Choi <cw00.choi@samsung.com>,
+        Sebastian Reichel <sre@kernel.org>, Milo Kim <milo.kim@ti.com>,
+        Krzysztof Kozlowski <krzk@kernel.org>,
+        Bartlomiej Zolnierkiewicz <b.zolnierkie@samsung.com>,
+        Lee Jones <lee.jones@linaro.org>
+Subject: Re: [PATCH] PCI: let pci_request_irq properly deal with threaded
+ interrupts
+Message-ID: <20180731111317.GJ45322@bhelgaas-glaptop.roam.corp.google.com>
+References: <d004975f-03a8-59f5-56ef-f4e1f8e12dfb@gmail.com>
+ <20180730213028.GC45322@bhelgaas-glaptop.roam.corp.google.com>
+ <20180730224252.GE45322@bhelgaas-glaptop.roam.corp.google.com>
+ <alpine.DEB.2.21.1807310047320.1725@nanos.tec.linutronix.de>
+ <20180731080111.GG17271@n2100.armlinux.org.uk>
 MIME-Version: 1.0
-List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
-List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
-List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
-List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
-List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
-Cc: youlin.pei@mediatek.com, hongkun.cao@mediatek.com, sean.wang@mediatek.com,
- honghui.zhang@mediatek.com, yt.shen@mediatek.com, yong.wu@mediatek.com
-Content-Type: text/plain; charset="us-ascii"
-Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
-Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20180731080111.GG17271@n2100.armlinux.org.uk>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-From: Honghui Zhang <honghui.zhang@mediatek.com>
+On Tue, Jul 31, 2018 at 09:01:12AM +0100, Russell King - ARM Linux wrote:
+> On Tue, Jul 31, 2018 at 12:50:21AM +0200, Thomas Gleixner wrote:
+> > On Mon, 30 Jul 2018, Bjorn Helgaas wrote:
+> > 
+> > > [+cc maintainers of possibly erroneous callers of request_threaded_irq()]
+> > > 
+> > > On Mon, Jul 30, 2018 at 04:30:28PM -0500, Bjorn Helgaas wrote:
+> > > > [+cc Thomas, Christoph, LKML]
+> > > > 
+> > > > On Mon, Jul 30, 2018 at 12:03:42AM +0200, Heiner Kallweit wrote:
+> > > > > If we have a threaded interrupt with the handler being NULL, then
+> > > > > request_threaded_irq() -> __setup_irq() will complain and bail out
+> > > > > if the IRQF_ONESHOT flag isn't set. Therefore check for the handler
+> > > > > being NULL and set IRQF_ONESHOT in this case.
+> > > > > 
+> > > > > This change is needed to migrate the mei_me driver to
+> > > > > pci_alloc_irq_vectors() and pci_request_irq().
+> > > > > 
+> > > > > Signed-off-by: Heiner Kallweit <hkallweit1@gmail.com>
+> > > > 
+> > > > I'd like an ack from Thomas because this requirement about IRQF_ONESHOT
+> > > > usage isn't mentioned in the request_threaded_irq() function doc or
+> > > > Documentation/
+> > > 
+> > > Possibly these other request_threaded_irq() callers are similarly
+> > > broken?  I can't tell for sure about tda998x_create(), but all the
+> > > others certainly call request_threaded_irq() with "handler == NULL"
+> > > and irqflags that do not contain IRQF_ONESHOT:
+> > > 
+> > >   tda998x_create()
+> > >     request_threaded_irq(client->irq, NULL, ..., irqd_get_trigger_type(), ...)
+> > >     (I can't tell what irqd_get_trigger_type() does)
+> > 
+> > It reads the trigger type back from the irq chip (level/edge/polarity) but
+> > does not return with the ONESHOT bit set.
+> 
+> What tree are you (Bjorn) using there?  Looking in my git history,
+> request_threaded_irq() was added in January 2014, as:
+> 
+> +               irqf_trigger =
+> +                       irqd_get_trigger_type(irq_get_irq_data(client->irq));
+> +               ret = request_threaded_irq(client->irq, NULL,
+> +                                          tda998x_irq_thread,
+> +                                          irqf_trigger | IRQF_ONESHOT,
+> +                                          "tda998x", priv);
+> 
+> and updated more recently for the CEC support in ae81553c30ef
+> ("drm/i2c: tda998x: allow interrupt to be shared") to be:
+> 
+> -               irqf_trigger =
+> +               irq_flags =
+>                         irqd_get_trigger_type(irq_get_irq_data(client->irq));
+> +               irq_flags |= IRQF_SHARED | IRQF_ONESHOT;
+>                 ret = request_threaded_irq(client->irq, NULL,
+> -                                          tda998x_irq_thread,
+> -                                          irqf_trigger | IRQF_ONESHOT,
+> +                                          tda998x_irq_thread, irq_flags,
+>                                            "tda998x", priv);
+> 
+> In all cases, IRQF_ONESHOT has been set for this threaded interrupt.
+> 
+> I've also checked drm-next, and it doesn't show anything like what
+> Bjorn quoted.
+> 
+> Confused.  Bjorn, can you double check that what you think are
+> erroneous request_threaded_irq() calls are actually as per what
+> you quoted please?
 
-The MTCMOS of PCIe Host for MT2712 and MT7622 will be off when system
-suspend, and all the internal control register will be reset after system
-resume. The PCIe link should be re-established and the related control
-register values should be re-set after system resume.
+I was looking at v4.18-rc1, but in the case of tda998x_create(), I
+overlooked this line:
 
-Signed-off-by: Honghui Zhang <honghui.zhang@mediatek.com>
----
- drivers/pci/controller/pcie-mediatek.c | 67 ++++++++++++++++++++++++++++++++++
- 1 file changed, 67 insertions(+)
+  irq_flags |= IRQF_SHARED | IRQF_ONESHOT;
 
-diff --git a/drivers/pci/controller/pcie-mediatek.c b/drivers/pci/controller/pcie-mediatek.c
-index 86918d4..c530539 100644
---- a/drivers/pci/controller/pcie-mediatek.c
-+++ b/drivers/pci/controller/pcie-mediatek.c
-@@ -134,12 +134,14 @@ struct mtk_pcie_port;
- /**
-  * struct mtk_pcie_soc - differentiate between host generations
-  * @need_fix_class_id: whether this host's class ID needed to be fixed or not
-+ * @pm_support: whether the host's MTCMOS will be off when suspend
-  * @ops: pointer to configuration access functions
-  * @startup: pointer to controller setting functions
-  * @setup_irq: pointer to initialize IRQ functions
-  */
- struct mtk_pcie_soc {
- 	bool need_fix_class_id;
-+	bool pm_support;
- 	struct pci_ops *ops;
- 	int (*startup)(struct mtk_pcie_port *port);
- 	int (*setup_irq)(struct mtk_pcie_port *port, struct device_node *node);
-@@ -1197,12 +1199,75 @@ static int mtk_pcie_probe(struct platform_device *pdev)
- 	return err;
- }
- 
-+static int __maybe_unused mtk_pcie_suspend_noirq(struct device *dev)
-+{
-+	struct mtk_pcie *pcie = dev_get_drvdata(dev);
-+	const struct mtk_pcie_soc *soc = pcie->soc;
-+	struct mtk_pcie_port *port;
-+
-+	if (!soc->pm_support)
-+		return 0;
-+
-+	if (list_empty(&pcie->ports))
-+		return 0;
-+
-+	list_for_each_entry(port, &pcie->ports, list) {
-+		clk_disable_unprepare(port->pipe_ck);
-+		clk_disable_unprepare(port->obff_ck);
-+		clk_disable_unprepare(port->axi_ck);
-+		clk_disable_unprepare(port->aux_ck);
-+		clk_disable_unprepare(port->ahb_ck);
-+		clk_disable_unprepare(port->sys_ck);
-+		phy_power_off(port->phy);
-+		phy_exit(port->phy);
-+	}
-+
-+	mtk_pcie_subsys_powerdown(pcie);
-+
-+	return 0;
-+}
-+
-+static int __maybe_unused mtk_pcie_resume_noirq(struct device *dev)
-+{
-+	struct mtk_pcie *pcie = dev_get_drvdata(dev);
-+	const struct mtk_pcie_soc *soc = pcie->soc;
-+	struct mtk_pcie_port *port;
-+
-+	if (!soc->pm_support)
-+		return 0;
-+
-+	if (list_empty(&pcie->ports))
-+		return 0;
-+
-+	if (dev->pm_domain) {
-+		pm_runtime_enable(dev);
-+		pm_runtime_get_sync(dev);
-+	}
-+
-+	clk_prepare_enable(pcie->free_ck);
-+
-+	list_for_each_entry_safe(port, &pcie->ports, list)
-+		mtk_pcie_enable_port(port);
-+
-+	/* In case of EP was removed while system suspend. */
-+	if (list_empty(&pcie->ports))
-+		mtk_pcie_subsys_powerdown(pcie);
-+
-+	return 0;
-+}
-+
-+static const struct dev_pm_ops mtk_pcie_pm_ops = {
-+	SET_NOIRQ_SYSTEM_SLEEP_PM_OPS(mtk_pcie_suspend_noirq,
-+				      mtk_pcie_resume_noirq)
-+};
-+
- static const struct mtk_pcie_soc mtk_pcie_soc_v1 = {
- 	.ops = &mtk_pcie_ops,
- 	.startup = mtk_pcie_startup_port,
- };
- 
- static const struct mtk_pcie_soc mtk_pcie_soc_mt2712 = {
-+	.pm_support = true,
- 	.ops = &mtk_pcie_ops_v2,
- 	.startup = mtk_pcie_startup_port_v2,
- 	.setup_irq = mtk_pcie_setup_irq,
-@@ -1210,6 +1275,7 @@ static const struct mtk_pcie_soc mtk_pcie_soc_mt2712 = {
- 
- static const struct mtk_pcie_soc mtk_pcie_soc_mt7622 = {
- 	.need_fix_class_id = true,
-+	.pm_support = true,
- 	.ops = &mtk_pcie_ops_v2,
- 	.startup = mtk_pcie_startup_port_v2,
- 	.setup_irq = mtk_pcie_setup_irq,
-@@ -1229,6 +1295,7 @@ static struct platform_driver mtk_pcie_driver = {
- 		.name = "mtk-pcie",
- 		.of_match_table = mtk_pcie_ids,
- 		.suppress_bind_attrs = true,
-+		.pm = &mtk_pcie_pm_ops,
- 	},
- };
- builtin_platform_driver(mtk_pcie_driver);
--- 
-2.6.4
-
-
-_______________________________________________
-linux-arm-kernel mailing list
-linux-arm-kernel@lists.infradead.org
-http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
+Sorry!
