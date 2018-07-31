@@ -1,49 +1,51 @@
-Return-Path: <SRS0=MB38=JT=bootlin.com=thomas.petazzoni@kernel.org>
-Return-Path: <SRS0=MB38=JT=bootlin.com=thomas.petazzoni@kernel.org>
-Date: Tue, 3 Jul 2018 17:05:09 +0200
-From: Thomas Petazzoni <thomas.petazzoni@bootlin.com>
-To: Marek =?UTF-8?B?QmVow7pu?= <marek.behun@nic.cz>
-Cc: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>, Lorenzo
- Pieralisi <lorenzo.pieralisi@arm.com>, Bjorn Helgaas  <helgaas@kernel.org>,
- linux-pci@vger.kernel.org, Antoine =?UTF-8?B?VMOpbmFydA==?=
- <antoine.tenart@free-electrons.com>, =?UTF-8?B?R3LDqWdvcnk=?=  Clement
- <gregory.clement@free-electrons.com>, =?UTF-8?B?TWlxdcOobA==?= Raynal
- <miquel.raynal@free-electrons.com>, Victor Gu <xigu@marvell.com>
-Subject: Re: pcie-aardvark GEN2 link speed 2.5 GT/s instead of 5.0 GT/s
-Message-ID: <20180703170509.33935a67@windsurf>
-In-Reply-To: <20180703170059.6c5f8b47@dellmb.labs.office.nic.cz>
-References: <20180703170059.6c5f8b47@dellmb.labs.office.nic.cz>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from ozlabs.org ([203.11.71.1]:49887 "EHLO ozlabs.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1729768AbeGaLNr (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Tue, 31 Jul 2018 07:13:47 -0400
+From: Michael Ellerman <mpe@ellerman.id.au>
+To: Christoph Hellwig <hch@lst.de>, linux-pci@vger.kernel.org
+Cc: iommu@lists.linux-foundation.org, x86@kernel.org,
+        linuxppc-dev@lists.ozlabs.org, linux-kernel@vger.kernel.org,
+        linux-sh@vger.kernel.org
+Subject: Re: [PATCH] PCI: call dma_debug_add_bus for pci_bus_type in common code
+In-Reply-To: <20180730073842.16092-1-hch@lst.de>
+References: <20180730073842.16092-1-hch@lst.de>
+Date: Tue, 31 Jul 2018 19:34:18 +1000
+Message-ID: <87sh3zhhph.fsf@concordia.ellerman.id.au>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hello,
+Christoph Hellwig <hch@lst.de> writes:
 
-+Victor Gu in Cc.
+> There is nothing arch specific about PCI or dma-debug, so move this
+> call to common code just after registering the bus type.
+>
+> Signed-off-by: Christoph Hellwig <hch@lst.de>
+> ---
+>  arch/powerpc/kernel/dma.c | 3 ---
+>  arch/sh/drivers/pci/pci.c | 2 --
+>  arch/x86/kernel/pci-dma.c | 3 ---
+>  drivers/pci/pci-driver.c  | 2 +-
+>  4 files changed, 1 insertion(+), 9 deletions(-)
+>
+> diff --git a/arch/powerpc/kernel/dma.c b/arch/powerpc/kernel/dma.c
+> index 155170d70324..dbfc7056d7df 100644
+> --- a/arch/powerpc/kernel/dma.c
+> +++ b/arch/powerpc/kernel/dma.c
+> @@ -357,9 +357,6 @@ EXPORT_SYMBOL_GPL(dma_get_required_mask);
+>  
+>  static int __init dma_init(void)
+>  {
+> -#ifdef CONFIG_PCI
+> -	dma_debug_add_bus(&pci_bus_type);
+> -#endif
+>  #ifdef CONFIG_IBMVIO
+>  	dma_debug_add_bus(&vio_bus_type);
+>  #endif
 
-On Tue, 3 Jul 2018 17:00:59 +0200, Marek Beh=C3=BAn wrote:
+Acked-by: Michael Ellerman <mpe@ellerman.id.au> (powerpc)
 
-> for our testing purposes we are trying various PCIe cards on our Armada
-> 3720 board, but for some reason we cannot link the device at 5.0 GT/s.
-> The board should support PCIe GEN 2, and when given an ASM1062 MiniPCIe
-> SATA card, lspci -vvv prints:
->    LnkCap:	Port #1, Speed 5GT/s, Width x1, ...
-> but
->    LnkSta:	Speed 2.5GT/s, Width x1, ...
->=20
-> Is it possible to train the link with pcie-aardvark to 5.0GT/s?
-
-I would need to do some research to be able to answer, but as a quick
-reply, I would like to suggest to try the following patch series:
-
-  https://patchwork.ozlabs.org/project/linux-pci/list/?series=3D52819
-
-Could you let us know if it helps or not ?
-
-Best regards,
-
-Thomas
---=20
-Thomas Petazzoni, CTO, Bootlin (formerly Free Electrons)
-Embedded Linux and Kernel engineering
-https://bootlin.com
+cheers
