@@ -1,160 +1,66 @@
-Return-Path: <SRS0=N9qo=JT=gmail.com=kernelfans@kernel.org>
-Return-Path: <SRS0=N9qo=JT=gmail.com=kernelfans@kernel.org>
-From: Pingfan Liu <kernelfans@gmail.com>
-To: linux-kernel@vger.kernel.org
-Cc: Pingfan Liu <kernelfans@gmail.com>,
-	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-	"Rafael J . Wysocki" <rafael.j.wysocki@intel.com>,
-	Grygorii Strashko <grygorii.strashko@ti.com>,
-	Christoph Hellwig <hch@infradead.org>,
-	Bjorn Helgaas <helgaas@kernel.org>,
-	Dave Young <dyoung@redhat.com>,
-	linux-pci@vger.kernel.org,
-	linuxppc-dev@lists.ozlabs.org
-Subject: [PATCHv3 1/4] drivers/base: fold the routine of device's shutdown into a func
-Date: Tue,  3 Jul 2018 14:50:39 +0800
-Message-Id: <1530600642-25090-2-git-send-email-kernelfans@gmail.com>
-In-Reply-To: <1530600642-25090-1-git-send-email-kernelfans@gmail.com>
-References: <1530600642-25090-1-git-send-email-kernelfans@gmail.com>
+Return-Path: <krzk@kernel.org>
+Return-Path: <krzk@kernel.org>
+MIME-Version: 1.0
+In-Reply-To: <20180730224252.GE45322@bhelgaas-glaptop.roam.corp.google.com>
+References: <d004975f-03a8-59f5-56ef-f4e1f8e12dfb@gmail.com>
+ <20180730213028.GC45322@bhelgaas-glaptop.roam.corp.google.com> <20180730224252.GE45322@bhelgaas-glaptop.roam.corp.google.com>
+From: Krzysztof Kozlowski <krzk@kernel.org>
+Date: Tue, 31 Jul 2018 10:08:29 +0200
+Message-ID: <CAJKOXPfKEeZmk2zo4gdasES6Fx7Tq=wuVAtsq9+tNWMaTj8QnA@mail.gmail.com>
+Subject: Re: [PATCH] PCI: let pci_request_irq properly deal with threaded interrupts
+To: Bjorn Helgaas <helgaas@kernel.org>
+Cc: Heiner Kallweit <hkallweit1@gmail.com>, Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org,
+	Thomas Gleixner <tglx@linutronix.de>, Christoph Hellwig <hch@lst.de>, linux-kernel@vger.kernel.org,
+	MyungJoo Ham <myungjoo.ham@samsung.com>, Chanwoo Choi <cw00.choi@samsung.com>,
+	Russell King <linux@armlinux.org.uk>, Sebastian Reichel <sre@kernel.org>, Milo Kim <milo.kim@ti.com>,
+	Bartlomiej Zolnierkiewicz <b.zolnierkie@samsung.com>, Lee Jones <lee.jones@linaro.org>
+Content-Type: text/plain; charset="UTF-8"
 List-ID: <linux-pci.vger.kernel.org>
 
-Pack the code into a function to ease the using and reading.
+On 31 July 2018 at 00:42, Bjorn Helgaas <helgaas@kernel.org> wrote:
+> [+cc maintainers of possibly erroneous callers of request_threaded_irq()]
+>
+> On Mon, Jul 30, 2018 at 04:30:28PM -0500, Bjorn Helgaas wrote:
+>> [+cc Thomas, Christoph, LKML]
+>>
+>> On Mon, Jul 30, 2018 at 12:03:42AM +0200, Heiner Kallweit wrote:
+>> > If we have a threaded interrupt with the handler being NULL, then
+>> > request_threaded_irq() -> __setup_irq() will complain and bail out
+>> > if the IRQF_ONESHOT flag isn't set. Therefore check for the handler
+>> > being NULL and set IRQF_ONESHOT in this case.
+>> >
+>> > This change is needed to migrate the mei_me driver to
+>> > pci_alloc_irq_vectors() and pci_request_irq().
+>> >
+>> > Signed-off-by: Heiner Kallweit <hkallweit1@gmail.com>
+>>
+>> I'd like an ack from Thomas because this requirement about IRQF_ONESHOT
+>> usage isn't mentioned in the request_threaded_irq() function doc or
+>> Documentation/
+>
+> Possibly these other request_threaded_irq() callers are similarly
+> broken?  I can't tell for sure about tda998x_create(), but all the
+> others certainly call request_threaded_irq() with "handler == NULL"
+> and irqflags that do not contain IRQF_ONESHOT:
+>
+>   max8997_muic_probe()
+>     request_threaded_irq(virq, NULL, ..., IRQF_NO_SUSPEND, ...)
+>
+>   tda998x_create()
+>     request_threaded_irq(client->irq, NULL, ..., irqd_get_trigger_type(), ...)
+>     (I can't tell what irqd_get_trigger_type() does)
+>
+>   ab8500_btemp_probe()
+>   ab8500_charger_probe()
+>     request_threaded_irq(irq, NULL, ..., IRQF_SHARED | IRQF_NO_SUSPEND, ...)
+>
+>   lp8788_set_irqs()
+>     request_threaded_irq(virq, NULL, ..., 0, ...)
+>
+>   max77686_rtc_probe()
+>     request_threaded_irq(info->virq, NULL, ..., 0, ...)
 
-Cc: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
-Cc: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
-Cc: Grygorii Strashko <grygorii.strashko@ti.com>
-Cc: Christoph Hellwig <hch@infradead.org>
-Cc: Bjorn Helgaas <helgaas@kernel.org>
-Cc: Dave Young <dyoung@redhat.com>
-Cc: linux-pci@vger.kernel.org
-Cc: linuxppc-dev@lists.ozlabs.org
-Signed-off-by: Pingfan Liu <kernelfans@gmail.com>
----
- drivers/base/core.c | 100 +++++++++++++++++++++++++++-------------------------
- 1 file changed, 52 insertions(+), 48 deletions(-)
+max77686 works fine because it it is nested IRQ. Parent has ONESHOT flag set.
 
-diff --git a/drivers/base/core.c b/drivers/base/core.c
-index df3e1a4..a48868f 100644
---- a/drivers/base/core.c
-+++ b/drivers/base/core.c
-@@ -2802,12 +2802,62 @@ int device_move(struct device *dev, struct device *new_parent,
- }
- EXPORT_SYMBOL_GPL(device_move);
- 
-+static void __device_shutdown(struct device *dev)
-+{
-+	struct device *parent;
-+	/*
-+	 * hold reference count of device's parent to
-+	 * prevent it from being freed because parent's
-+	 * lock is to be held
-+	 */
-+	parent = get_device(dev->parent);
-+	get_device(dev);
-+	/*
-+	 * Make sure the device is off the kset list, in the
-+	 * event that dev->*->shutdown() doesn't remove it.
-+	 */
-+	list_del_init(&dev->kobj.entry);
-+	spin_unlock(&devices_kset->list_lock);
-+
-+	/* hold lock to avoid race with probe/release */
-+	if (parent)
-+		device_lock(parent);
-+	device_lock(dev);
-+
-+	/* Don't allow any more runtime suspends */
-+	pm_runtime_get_noresume(dev);
-+	pm_runtime_barrier(dev);
-+
-+	if (dev->class && dev->class->shutdown_pre) {
-+		if (initcall_debug)
-+			dev_info(dev, "shutdown_pre\n");
-+		dev->class->shutdown_pre(dev);
-+	}
-+	if (dev->bus && dev->bus->shutdown) {
-+		if (initcall_debug)
-+			dev_info(dev, "shutdown\n");
-+		dev->bus->shutdown(dev);
-+	} else if (dev->driver && dev->driver->shutdown) {
-+		if (initcall_debug)
-+			dev_info(dev, "shutdown\n");
-+		dev->driver->shutdown(dev);
-+	}
-+
-+	device_unlock(dev);
-+	if (parent)
-+		device_unlock(parent);
-+
-+	put_device(dev);
-+	put_device(parent);
-+	spin_lock(&devices_kset->list_lock);
-+}
-+
- /**
-  * device_shutdown - call ->shutdown() on each device to shutdown.
-  */
- void device_shutdown(void)
- {
--	struct device *dev, *parent;
-+	struct device *dev;
- 
- 	spin_lock(&devices_kset->list_lock);
- 	/*
-@@ -2818,53 +2868,7 @@ void device_shutdown(void)
- 	while (!list_empty(&devices_kset->list)) {
- 		dev = list_entry(devices_kset->list.prev, struct device,
- 				kobj.entry);
--
--		/*
--		 * hold reference count of device's parent to
--		 * prevent it from being freed because parent's
--		 * lock is to be held
--		 */
--		parent = get_device(dev->parent);
--		get_device(dev);
--		/*
--		 * Make sure the device is off the kset list, in the
--		 * event that dev->*->shutdown() doesn't remove it.
--		 */
--		list_del_init(&dev->kobj.entry);
--		spin_unlock(&devices_kset->list_lock);
--
--		/* hold lock to avoid race with probe/release */
--		if (parent)
--			device_lock(parent);
--		device_lock(dev);
--
--		/* Don't allow any more runtime suspends */
--		pm_runtime_get_noresume(dev);
--		pm_runtime_barrier(dev);
--
--		if (dev->class && dev->class->shutdown_pre) {
--			if (initcall_debug)
--				dev_info(dev, "shutdown_pre\n");
--			dev->class->shutdown_pre(dev);
--		}
--		if (dev->bus && dev->bus->shutdown) {
--			if (initcall_debug)
--				dev_info(dev, "shutdown\n");
--			dev->bus->shutdown(dev);
--		} else if (dev->driver && dev->driver->shutdown) {
--			if (initcall_debug)
--				dev_info(dev, "shutdown\n");
--			dev->driver->shutdown(dev);
--		}
--
--		device_unlock(dev);
--		if (parent)
--			device_unlock(parent);
--
--		put_device(dev);
--		put_device(parent);
--
--		spin_lock(&devices_kset->list_lock);
-+		__device_shutdown(dev);
- 	}
- 	spin_unlock(&devices_kset->list_lock);
- }
--- 
-2.7.4
+Best regards,
+Krzysztof
