@@ -1,57 +1,45 @@
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from gateway36.websitewelcome.com ([192.185.196.23]:20043 "EHLO
+        gateway36.websitewelcome.com" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1732353AbeGaRRe (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Tue, 31 Jul 2018 13:17:34 -0400
+Received: from cm15.websitewelcome.com (cm15.websitewelcome.com [100.42.49.9])
+        by gateway36.websitewelcome.com (Postfix) with ESMTP id 5FE70400F7ECA
+        for <linux-pci@vger.kernel.org>; Tue, 31 Jul 2018 09:16:29 -0500 (CDT)
+Subject: Re: [PATCH 1/2] PCI: pciehp: Avoid implicit fallthroughs in switch
+ statements
+To: Lukas Wunner <lukas@wunner.de>, Bjorn Helgaas <helgaas@kernel.org>
+Cc: Mika Westerberg <mika.westerberg@linux.intel.com>,
+        Sinan Kaya <okaya@kernel.org>, linux-pci@vger.kernel.org
+References: <92c3c456edb461494d5c44e1ff6bab2711228ff1.1532754355.git.lukas@wunner.de>
+From: "Gustavo A. R. Silva" <gustavo@embeddedor.com>
+Message-ID: <07e51d4b-db10-a402-8f08-40f98a86f7ba@embeddedor.com>
+Date: Tue, 31 Jul 2018 10:13:22 -0500
 MIME-Version: 1.0
-References: <cover.1532090446.git.leonard.crestez@nxp.com>
- <221deb47d7d38ecd6e0c7636f9a87ab693a3c539.1532090446.git.leonard.crestez@nxp.com>
-In-Reply-To: <221deb47d7d38ecd6e0c7636f9a87ab693a3c539.1532090446.git.leonard.crestez@nxp.com>
-From: Andrey Smirnov <andrew.smirnov@gmail.com>
-Date: Fri, 20 Jul 2018 08:33:58 -0700
-Message-ID: <CAHQ1cqF6TphuN8Ls54YA6bjty-bJF8twYboaG-RM=jox8CeQPA@mail.gmail.com>
-Subject: Re: [PATCH v2 1/3] Revert "ARM: dts: imx7d: Invert legacy PCI irq
- mapping"
-To: Leonard Crestez <leonard.crestez@nxp.com>
-List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
-List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
-List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
-List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
-List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
-Cc: Dong Aisheng <aisheng.dong@nxp.com>, Joao.Pinto@synopsys.com,
- Richard Zhu <hongxing.zhu@nxp.com>, linux-pm@vger.kernel.org,
- Jingoo Han <jingoohan1@gmail.com>, linux-kernel <linux-kernel@vger.kernel.org>,
- Fabio Estevam <fabio.estevam@nxp.com>, lorenzo.pieralisi@arm.com,
- linux-imx@nxp.com, Sascha Hauer <kernel@pengutronix.de>,
- linux-pci@vger.kernel.org, Bjorn Helgaas <bhelgaas@google.com>,
- Shawn Guo <shawnguo@kernel.org>,
- linux-arm-kernel <linux-arm-kernel@lists.infradead.org>,
- Lucas Stach <l.stach@pengutronix.de>
-Content-Type: text/plain; charset="us-ascii"
-Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
-Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
+In-Reply-To: <92c3c456edb461494d5c44e1ff6bab2711228ff1.1532754355.git.lukas@wunner.de>
+Content-Type: text/plain; charset=utf-8
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Fri, Jul 20, 2018 at 5:48 AM Leonard Crestez <leonard.crestez@nxp.com> wrote:
->
-> This reverts commit 1c86c9dd82f859b474474a7fee0d5195da2c9c1d.
->
-> That commit followed the reference manual but unfortunately the imx7d
-> manual is incorrect.
->
 
-I'd also add similar comment to DT file to prevent people from trying
-to "fix" this in the future.
 
-Also, this change is going to break QEMU's mapping found here:
+On 07/28/2018 12:22 AM, Lukas Wunner wrote:
+> Per Mika's request, add an explicit break to the last case of switch
+> statements everywhere in pciehp to be more defensive towards future
+> amendments.
+> 
+> Per Gustavo's request, mark all non-empty implicit fallthroughs with a
+> comment to silence warnings triggered by -Wimplicit-fallthrough=2.
+> 
+> Signed-off-by: Lukas Wunner <lukas@wunner.de>
+> Cc: Gustavo A. R. Silva <gustavo@embeddedor.com>
+> Cc: Mika Westerberg <mika.westerberg@linux.intel.com>
+> ---
 
-https://git.qemu.org/?p=qemu.git;a=blob;f=hw/arm/fsl-imx7.c;h=d5e26855a552e2d52b91f0435a607fae2f88456b;hb=HEAD#l464
 
-any change you are planning to make the change there as well?
+Acked-by: Gustavo A. R. Silva <gustavo@embeddedor.com>
 
-Thanks,
-Andrey Smirnov
 
-_______________________________________________
-linux-arm-kernel mailing list
-linux-arm-kernel@lists.infradead.org
-http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
+Thanks
+--
+Gustavo
