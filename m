@@ -1,212 +1,112 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-eopbgr60080.outbound.protection.outlook.com ([40.107.6.80]:30944
-        "EHLO EUR04-DB3-obe.outbound.protection.outlook.com"
-        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1726591AbeGaITY (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Tue, 31 Jul 2018 04:19:24 -0400
-Subject: Re: [PATCH v5] PCI: Check for PCIe downtraining conditions
-From: Tal Gilboa <talgi@mellanox.com>
-To: Jakub Kicinski <jakub.kicinski@netronome.com>,
-        Alexandru Gagniuc <mr.nuke.me@gmail.com>
-Cc: "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-        "bhelgaas@google.com" <bhelgaas@google.com>,
-        "keith.busch@intel.com" <keith.busch@intel.com>,
-        "alex_gagniuc@dellteam.com" <alex_gagniuc@dellteam.com>,
-        "austin_bolen@dell.com" <austin_bolen@dell.com>,
-        "shyam_iyer@dell.com" <shyam_iyer@dell.com>,
-        "jeffrey.t.kirsher@intel.com" <jeffrey.t.kirsher@intel.com>,
-        "ariel.elior@cavium.com" <ariel.elior@cavium.com>,
-        "michael.chan@broadcom.com" <michael.chan@broadcom.com>,
-        "ganeshgr@chelsio.com" <ganeshgr@chelsio.com>,
-        Tariq Toukan <tariqt@mellanox.com>,
-        "airlied@gmail.com" <airlied@gmail.com>,
-        "alexander.deucher@amd.com" <alexander.deucher@amd.com>,
-        "mike.marciniszyn@intel.com" <mike.marciniszyn@intel.com>,
-        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
-References: <20180718215359.GG128988@bhelgaas-glaptop.roam.corp.google.com>
- <20180723200339.23943-1-mr.nuke.me@gmail.com>
- <20180723140143.1a46902f@cakuba.netronome.com>
- <b9a6b3b8-56cf-8bb5-2568-071ccd8a4f28@mellanox.com>
-Message-ID: <fc04618a-3b3b-58bd-edd5-cbde11638d7b@mellanox.com>
-Date: Tue, 31 Jul 2018 09:40:22 +0300
+Received: from esa3.dell-outbound.iphmx.com ([68.232.153.94]:52731 "EHLO
+        esa3.dell-outbound.iphmx.com" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1727020AbeGaSRA (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Tue, 31 Jul 2018 14:17:00 -0400
+Cc: <mr.nuke.me@gmail.com>, <keith.busch@intel.com>,
+        <linux-pci@vger.kernel.org>, <Austin.Bolen@dell.com>,
+        <Stuart.Hayes@dell.com>, <Narendra.K@dell.com>,
+        <Christopher.Arzola@dell.com>, <David.Chalfant@dell.com>,
+        <okaya@kernel.org>
+From: <Alex_Gagniuc@Dellteam.com>
+To: <lukas@wunner.de>
+Subject: Re: Should a PCIe Link Down event set the PCI_DEV_DISCONNECTED bit?
+Date: Tue, 31 Jul 2018 16:35:51 +0000
+Message-ID: <f05149cf4d9743878397de7763561221@ausx13mps321.AMER.DELL.COM>
+References: <47727551-86ce-040a-2516-efa47ee3a76e@gmail.com>
+ <20180727071813.GA6128@wunner.de>
+ <f6aa0b881a824b4f82a29dad300aaaea@ausx13mps321.AMER.DELL.COM>
+ <20180727170543.GA5326@wunner.de>
+ <99604d46a7554eb38ee6c1579c53d835@ausx13mps321.AMER.DELL.COM>
+ <20180728183130.GA21482@wunner.de>
+ <c9a2b3463fd04f3eb7725f985c569b03@ausx13mps321.AMER.DELL.COM>
+ <20180731092857.GA13494@wunner.de>
+Content-Type: text/plain; charset="us-ascii"
 MIME-Version: 1.0
-In-Reply-To: <b9a6b3b8-56cf-8bb5-2568-071ccd8a4f28@mellanox.com>
-Content-Type: text/plain; charset=utf-8; format=flowed
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 7/24/2018 12:52 AM, Tal Gilboa wrote:
-> On 7/24/2018 12:01 AM, Jakub Kicinski wrote:
->> On Mon, 23 Jul 2018 15:03:38 -0500, Alexandru Gagniuc wrote:
->>> PCIe downtraining happens when both the device and PCIe port are
->>> capable of a larger bus width or higher speed than negotiated.
->>> Downtraining might be indicative of other problems in the system, and
->>> identifying this from userspace is neither intuitive, nor
->>> straightforward.
->>>
->>> The easiest way to detect this is with pcie_print_link_status(),
->>> since the bottleneck is usually the link that is downtrained. It's not
->>> a perfect solution, but it works extremely well in most cases.
->>>
->>> Signed-off-by: Alexandru Gagniuc <mr.nuke.me@gmail.com>
->>> ---
->>>
->>> For the sake of review, I've created a __pcie_print_link_status() which
->>> takes a 'verbose' argument. If we agree want to go this route, and 
->>> update
->>> the users of pcie_print_link_status(), I can split this up in two 
->>> patches.
->>> I prefer just printing this information in the core functions, and 
->>> letting
->>> drivers not have to worry about this. Though there seems to be strong 
->>> for
->>> not going that route, so here it goes:
->>
->> FWIW the networking drivers print PCIe BW because sometimes the network
->> bandwidth is simply over-provisioned on multi port cards, e.g. 80Gbps
->> card on a x8 link.
->>
->> Sorry to bike shed, but currently the networking cards print the info
->> during probe.  Would it make sense to move your message closer to probe
->> time?  Rather than when device is added.  If driver structure is
->> available, we could also consider adding a boolean to struct pci_driver
->> to indicate if driver wants the verbose message?  This way we avoid
->> duplicated prints.
->>
->> I have no objection to current patch, it LGTM.  Just a thought.
-> 
-> I don't see the reason for having two functions. What's the problem with 
-> adding the verbose argument to the original function?
-> 
->>
->>>   drivers/pci/pci.c   | 22 ++++++++++++++++++----
->>>   drivers/pci/probe.c | 21 +++++++++++++++++++++
->>>   include/linux/pci.h |  1 +
->>>   3 files changed, 40 insertions(+), 4 deletions(-) >>
->>> diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
->>> index 316496e99da9..414ad7b3abdb 100644
->>> --- a/drivers/pci/pci.c
->>> +++ b/drivers/pci/pci.c
->>> @@ -5302,14 +5302,15 @@ u32 pcie_bandwidth_capable(struct pci_dev 
->>> *dev, enum pci_bus_speed *speed,
->>>   }
->>>   /**
->>> - * pcie_print_link_status - Report the PCI device's link speed and 
->>> width
->>> + * __pcie_print_link_status - Report the PCI device's link speed and 
->>> width
->>>    * @dev: PCI device to query
->>> + * @verbose: Be verbose -- print info even when enough bandwidth is 
->>> available.
->>>    *
->>>    * Report the available bandwidth at the device.  If this is less 
->>> than the
->>>    * device is capable of, report the device's maximum possible 
->>> bandwidth and
->>>    * the upstream link that limits its performance to less than that.
->>>    */
->>> -void pcie_print_link_status(struct pci_dev *dev)
->>> +void __pcie_print_link_status(struct pci_dev *dev, bool verbose)
->>>   {
->>>       enum pcie_link_width width, width_cap;
->>>       enum pci_bus_speed speed, speed_cap;
->>> @@ -5319,11 +5320,11 @@ void pcie_print_link_status(struct pci_dev *dev)
->>>       bw_cap = pcie_bandwidth_capable(dev, &speed_cap, &width_cap);
->>>       bw_avail = pcie_bandwidth_available(dev, &limiting_dev, &speed, 
->>> &width);
->>> -    if (bw_avail >= bw_cap)
->>> +    if (bw_avail >= bw_cap && verbose)
->>>           pci_info(dev, "%u.%03u Gb/s available PCIe bandwidth (%s 
->>> x%d link)\n",
->>>                bw_cap / 1000, bw_cap % 1000,
->>>                PCIE_SPEED2STR(speed_cap), width_cap);
->>> -    else
->>> +    else if (bw_avail < bw_cap)
->>>           pci_info(dev, "%u.%03u Gb/s available PCIe bandwidth, 
->>> limited by %s x%d link at %s (capable of %u.%03u Gb/s with %s x%d 
->>> link)\n",
->>>                bw_avail / 1000, bw_avail % 1000,
->>>                PCIE_SPEED2STR(speed), width,
->>> @@ -5331,6 +5332,19 @@ void pcie_print_link_status(struct pci_dev *dev)
->>>                bw_cap / 1000, bw_cap % 1000,
->>>                PCIE_SPEED2STR(speed_cap), width_cap);
->>>   }
->>> +
->>> +/**
->>> + * pcie_print_link_status - Report the PCI device's link speed and 
->>> width
->>> + * @dev: PCI device to query
->>> + *
->>> + * Report the available bandwidth at the device.  If this is less 
->>> than the
->>> + * device is capable of, report the device's maximum possible 
->>> bandwidth and
->>> + * the upstream link that limits its performance to less than that.
->>> + */
->>> +void pcie_print_link_status(struct pci_dev *dev)
->>> +{
->>> +    __pcie_print_link_status(dev, true);
->>> +}
->>>   EXPORT_SYMBOL(pcie_print_link_status);
->>>   /**
->>> diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
->>> index ac876e32de4b..1f7336377c3b 100644
->>> --- a/drivers/pci/probe.c
->>> +++ b/drivers/pci/probe.c
->>> @@ -2205,6 +2205,24 @@ static struct pci_dev *pci_scan_device(struct 
->>> pci_bus *bus, int devfn)
->>>       return dev;
->>>   }
->>> +static void pcie_check_upstream_link(struct pci_dev *dev)
->>> +{
->>> +    if (!pci_is_pcie(dev))
->>> +        return;
->>> +
->>> +    /* Look from the device up to avoid downstream ports with no 
->>> devices. */
->>> +    if ((pci_pcie_type(dev) != PCI_EXP_TYPE_ENDPOINT) &&
->>> +        (pci_pcie_type(dev) != PCI_EXP_TYPE_LEG_END) &&
->>> +        (pci_pcie_type(dev) != PCI_EXP_TYPE_UPSTREAM))
->>> +        return;
->>> +
->>> +    /* Multi-function PCIe share the same link/status. */
->>> +    if (PCI_FUNC(dev->devfn) != 0 || dev->is_virtfn)
->>> +        return;
->>> +
->>> +    __pcie_print_link_status(dev, false);
->>> +}
->>> +
->>>   static void pci_init_capabilities(struct pci_dev *dev)
->>>   {
->>>       /* Enhanced Allocation */
->>> @@ -2240,6 +2258,9 @@ static void pci_init_capabilities(struct 
->>> pci_dev *dev)
->>>       /* Advanced Error Reporting */
->>>       pci_aer_init(dev);
->>> +    /* Check link and detect downtrain errors */
->>> +    pcie_check_upstream_link(dev);
-> 
-> This is called for every PCIe device right? Won't there be a duplicated 
-> print in case a device loads with lower PCIe bandwidth than needed?
-
-Alex, can you comment on this please?
-
-> 
->>> +
->>>       if (pci_probe_reset_function(dev) == 0)
->>>           dev->reset_fn = 1;
->>>   }
->>> diff --git a/include/linux/pci.h b/include/linux/pci.h
->>> index abd5d5e17aee..15bfab8f7a1b 100644
->>> --- a/include/linux/pci.h
->>> +++ b/include/linux/pci.h
->>> @@ -1088,6 +1088,7 @@ int pcie_set_mps(struct pci_dev *dev, int mps);
->>>   u32 pcie_bandwidth_available(struct pci_dev *dev, struct pci_dev 
->>> **limiting_dev,
->>>                    enum pci_bus_speed *speed,
->>>                    enum pcie_link_width *width);
->>> +void __pcie_print_link_status(struct pci_dev *dev, bool verbose);
->>>   void pcie_print_link_status(struct pci_dev *dev);
->>>   int pcie_flr(struct pci_dev *dev);
->>>   int __pci_reset_function_locked(struct pci_dev *dev);
->>
+On 07/31/2018 04:29 AM, Lukas Wunner wrote:=0A=
+> On Mon, Jul 30, 2018 at 09:38:04PM +0000, Alex_Gagniuc@Dellteam.com wrote=
+:=0A=
+>> On 07/28/2018 01:31 PM, Lukas Wunner wrote:=0A=
+>>> On Fri, Jul 27, 2018 at 05:51:04PM +0000, Alex_Gagniuc@Dellteam.com wro=
+te:=0A=
+>>>> I think PCI_DEV_DISCONNECTED is a documentation issue above all else.=
+=0A=
+>>>> The history I was given is that drivers would take a very long time to=
+=0A=
+>>>> tear down a device. Config space IO to an nonexistent device took a lo=
+ng=0A=
+>>>> while to time out. Performance was one motivation -- and was not=0A=
+>>>> documented.=0A=
+>>>=0A=
+>>> Often it is possible for the driver to detect surprise removal by=0A=
+>>> checking if mmio reads return "all ones".  But in some cases that's=0A=
+>>> a valid value to read from mmio and then this approach won't work.=0A=
+>>> Also, checking every mmio read may negatively impact performance.=0A=
+>>=0A=
+>> A colleague and me beat that dead horse to the afterdeath. Consensus was=
+=0A=
+>> that the return value is less reliable than a coin toss (of a two-heads=
+=0A=
+>> coin).=0A=
+> =0A=
+> Can you elaborate why?  Because the "official" stance is that checking=0A=
+> every read where "all ones" is an invalid value is the proper way to=0A=
+> detect unplugged devices.  (Official as in, voiced by Greg KH and Bjorn.)=
+=0A=
+> In that sense, PCI_DEV_DISCONNECTED is sort of an unloved child.=0A=
+=0A=
+All ones is not necessarily invalid. The bug surface is every single =0A=
+config read. This approach doesn't even cover config writes -- config =0A=
+writes are non-posted requests too in PCIe.=0A=
+"Build it, and they will come". That means that drivers would expect =0A=
+-ENODEV when a device is gone. If we have that infrastructure, more =0A=
+drivers will start using it over time, and it's something that can also =0A=
+be used by generic parts of the PCI code. That also means you need a =0A=
+generic mechanism to determine a device is bye-bye, and that's what =0A=
+PCI_DEV_DISCONNECTED gives you.=0A=
+=0A=
+> See this thread:=0A=
+> https://www.spinics.net/lists/linux-acpi/msg81445.html=0A=
+=0A=
+The discussion is based on the wrong assumptions that reads are =0A=
+symmetrical wrt to a device being present or not. However, completion =0A=
+timeouts and unsupported requests blow that assumption right out of the =0A=
+water. Best case scenario, you just waste a little more time waiting for =
+=0A=
+hardware IO. More common is to end up crashing the machine.=0A=
+=0A=
+Greg's ideas work in a perfect world where PCI and PCIe are equivalent =0A=
+at every level. And in that case, PCI_DEV_DISCONNECTED would have been =0A=
+pure, 100% genuine Redmond bloatware. We wouldn't have gotten complaints =
+=0A=
+from Facebook and other industry players that it takes too damn long to =0A=
+remove a device. We probably also wouldn't be seeing machines crash on =0A=
+PCIe removal.=0A=
+=0A=
+Fun fact: Before PCI_DEV_DISCONNECTED, you could physically swap a =0A=
+device before the the teardown path was done with the previous device. =0A=
+Figuring out what problems that caused is left as an exercise to the reader=
+.=0A=
+=0A=
+>>> FWIW, the below is what I had in mind (on top of Bjorn's pci/hotplug=0A=
+>>> branch).  Does this work for you?=0A=
+>>=0A=
+>> This, and another patch (you have been CC'd) solve my problem of=0A=
+>> crashing during surprise removal. Thanks!=0A=
+> =0A=
+> Ok thanks, I submitted the patch this morning with your Tested-by.=0A=
+=0A=
+Sweet. Thanks!=0A=
+=0A=
+> Unfortunately I forgot to cc all your Dell colleagues, sorry.=0A=
+=0A=
+They'll live. They already noticed it and sent me emails about it.=0A=
+=0A=
+Alex=0A=
+=0A=
+> Lukas=0A=
+> =0A=
+=0A=
