@@ -1,99 +1,85 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from foss.arm.com ([217.140.101.70]:51550 "EHLO foss.arm.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1728681AbeGZLCX (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Thu, 26 Jul 2018 07:02:23 -0400
-Date: Thu, 26 Jul 2018 10:46:14 +0100
-From: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
-To: Subrahmanya Lingappa <l.subrahmanya@mobiveil.co.in>
-Cc: Dan Carpenter <dan.carpenter@oracle.com>,
-        Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org,
-        kernel-janitors@vger.kernel.org
-Subject: Re: [PATCH] PCI: mobiveil: integer overflow in IB_WIN_SIZE
-Message-ID: <20180726094614.GA32422@e107981-ln.cambridge.arm.com>
-References: <20180705094539.xkmtfffbzl3kooum@kili.mountain>
- <20180706112652.GA14650@red-moon>
- <CAFZiPx1w_st+TY+EKm6nxvJ=S_ZJzUY2No8790V2haGX+ZO+Rg@mail.gmail.com>
- <20180709114241.GA1798@e107981-ln.cambridge.arm.com>
- <CAFZiPx3AoBJk5pN0sKDQnyA_DF8R9tiuBhRfCwiGpy62EmPEhQ@mail.gmail.com>
+Return-Path: <SRS0=tr2T=KP=linux.intel.com=mika.westerberg@kernel.org>
+Return-Path: <SRS0=tr2T=KP=linux.intel.com=mika.westerberg@kernel.org>
+Date: Tue, 31 Jul 2018 11:03:42 +0300
+From: Mika Westerberg <mika.westerberg@linux.intel.com>
+To: Lukas Wunner <lukas@wunner.de>
+Cc: Bjorn Helgaas <helgaas@kernel.org>, Sinan Kaya <okaya@kernel.org>,
+	linux-pci@vger.kernel.org
+Subject: Re: [PATCH 2/2] PCI: pciehp: Deduplicate presence check on probe &
+ resume
+Message-ID: <20180731080342.GA2534@lahna.fi.intel.com>
+References: <92c3c456edb461494d5c44e1ff6bab2711228ff1.1532754355.git.lukas@wunner.de>
+ <f9c36223a126c86ecc7dc921f8f943d29926edc3.1532754355.git.lukas@wunner.de>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <CAFZiPx3AoBJk5pN0sKDQnyA_DF8R9tiuBhRfCwiGpy62EmPEhQ@mail.gmail.com>
-Sender: linux-pci-owner@vger.kernel.org
+In-Reply-To: <f9c36223a126c86ecc7dc921f8f943d29926edc3.1532754355.git.lukas@wunner.de>
 List-ID: <linux-pci.vger.kernel.org>
 
-On Mon, Jul 16, 2018 at 12:10:46PM +0530, Subrahmanya Lingappa wrote:
-> Lorenzo,
+On Sat, Jul 28, 2018 at 07:22:00AM +0200, Lukas Wunner wrote:
+> On driver probe and on resume from system sleep, pciehp checks the
+> Presence Detect State bit in the Slot Status register to bring up an
+> occupied slot or bring down an unoccupied slot.  Both code paths are
+> identical, so deduplicate them per Mika's request.
 > 
-> looks like I missed it during the review process;
-> I'll submit the Kconfig and makefile as soon as possible.
-
-Hi Subrahmanya,
-
-Will you have time to submit a patch soon ? I would like to queue
-this fix too.
-
-Thanks,
-Lorenzo
-
-> Thanks,
+> On probe, an additional check is performed to disable power of an
+> unoccupied slot.  This can e.g. happen if power was enabled by BIOS.
+> It cannot happen once pciehp has taken control, hence is not necessary
+> on resume:  The Slot Control register is set to the same value that it
+> had on suspend by pci_restore_state(), so if the slot was occupied,
+> power is enabled and if it wasn't, power is disabled.  Should occupancy
+> have changed during the system sleep transition, power is adjusted by
+> bringing up or down the slot per the paragraph above.
 > 
-> On Mon, Jul 9, 2018 at 5:12 PM, Lorenzo Pieralisi
-> <lorenzo.pieralisi@arm.com> wrote:
-> > On Mon, Jul 09, 2018 at 03:55:00PM +0530, Subrahmanya Lingappa wrote:
-> >> Hi Lorenzo,
-> >>
-> >> Our reference IP's hardware registers require the to support 256GB
-> >> inbound window size and this driver did exactly that I believe.
-> >
-> > No it does not, please check what this patch does, the window size
-> > is not currently configured as you wish.
-> >
-> > More importantly, nobody can even test it given that this driver lacks a
-> > Kconfig and a Makefile entry unless I am missing something, I presume
-> > they were lost in patch reviews but you ought to fix this as soon as
-> > possible please since this was something I should not have missed.
-> >
-> >> May I ask, why do you think this size is questionable ?
-> >
-> > The macro is not questionable, it is buggy, the size is what you
-> > tell me it should be, I agree.
-> >
-> > Lorenzo
-> >
-> >>
-> >> Thanks.
-> >>
-> >>
-> >> On Fri, Jul 6, 2018 at 4:56 PM, Lorenzo Pieralisi
-> >> <lorenzo.pieralisi@arm.com> wrote:
-> >> > On Thu, Jul 05, 2018 at 12:45:39PM +0300, Dan Carpenter wrote:
-> >> >> IB_WIN_SIZE is larger than INT_MAX so we need to cast it to u64.
-> >> >>
-> >> >> Fixes: 9af6bcb11e12 ("PCI: mobiveil: Add Mobiveil PCIe Host Bridge IP driver")
-> >> >> Signed-off-by: Dan Carpenter <dan.carpenter@oracle.com>
-> >> >> ---
-> >> >> Untested...  Possibly the problem is that there are too many multiplies
-> >> >> by * 1024.
-> >> >
-> >> > Hi Subrahmanya,
-> >> >
-> >> > I always thought that that macro value was questionable, please
-> >> > can you comment on this ?
-> >> >
-> >> > Thanks,
-> >> > Lorenzo
-> >> >
-> >> >> diff --git a/drivers/pci/controller/pcie-mobiveil.c b/drivers/pci/controller/pcie-mobiveil.c
-> >> >> index 4d6c20e47bed..cf0aa7cee5b0 100644
-> >> >> --- a/drivers/pci/controller/pcie-mobiveil.c
-> >> >> +++ b/drivers/pci/controller/pcie-mobiveil.c
-> >> >> @@ -107,7 +107,7 @@
-> >> >>  #define CFG_WINDOW_TYPE      0
-> >> >>  #define IO_WINDOW_TYPE               1
-> >> >>  #define MEM_WINDOW_TYPE      2
-> >> >> -#define IB_WIN_SIZE          (256 * 1024 * 1024 * 1024)
-> >> >> +#define IB_WIN_SIZE          ((u64)256 * 1024 * 1024 * 1024)
-> >> >>  #define MAX_PIO_WINDOWS      8
-> >> >>
-> >> >>  /* Parameters for the waiting for link up routine */
+> To allow for deduplication of the presence check, move the power check
+> to pcie_init().  This seems safer anyway, because right now it is
+> performed while interrupts are already enabled, and although I can't
+> think of a scenario where pciehp_power_off_slot() and the IRQ thread
+> collide, it does feel brittle.
+> 
+> However this means that pcie_init() may now write to the Slot Control
+> register before the IRQ is requested.  If both the CCIE and HPIE bits
+> happen to be set, pcie_wait_cmd() will wait for an interrupt (instead
+> of polling the Command Completed bit) and eventually emit a timeout
+> message.  Additionally, if a level-triggered INTx interrupt is used,
+> the user may see a spurious interrupt splat.  Avoid by disabling
+> interrupts before disabling power.  (Normally the HPIE and CCIE bits
+> should be clear on probe, but conceivably they may already have been
+> set e.g. by BIOS.)
+> 
+> Signed-off-by: Lukas Wunner <lukas@wunner.de>
+> Cc: Mika Westerberg <mika.westerberg@linux.intel.com>
+
+Reviewed-by: Mika Westerberg <mika.westerberg@linux.intel.com>
+
+One small nit, see below:
+
+> ---
+>  drivers/pci/hotplug/pciehp_core.c | 63 ++++++++++++++++---------------
+>  drivers/pci/hotplug/pciehp_hpc.c  | 14 +++++++
+>  2 files changed, 46 insertions(+), 31 deletions(-)
+> 
+> diff --git a/drivers/pci/hotplug/pciehp_core.c b/drivers/pci/hotplug/pciehp_core.c
+> index 01fcf1fa0f66..ec48c9433ae5 100644
+> --- a/drivers/pci/hotplug/pciehp_core.c
+> +++ b/drivers/pci/hotplug/pciehp_core.c
+> @@ -200,12 +200,40 @@ static int reset_slot(struct hotplug_slot *hotplug_slot, int probe)
+>  	return pciehp_reset_slot(slot, probe);
+>  }
+>  
+> +/**
+> + * pciehp_check_presence() - synthesize event if presence has changed
+
+You should document the argument as well so that the tool that is used
+to process these knows about it:
+
+  @ctrl: ....
+
+> + *
+> + * On probe and resume, an explicit presence check is necessary to bring up an
+> + * occupied slot or bring down an unoccupied slot.  This can't be triggered by
+> + * events in the Slot Status register, they may be stale and are therefore
+> + * cleared.  Secondly, sending an interrupt for "events that occur while
+> + * interrupt generation is disabled [when] interrupt generation is subsequently
+> + * enabled" is optional per PCIe r4.0, sec 6.7.3.4.
+> + */
+> +static void pciehp_check_presence(struct controller *ctrl)
