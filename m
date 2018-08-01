@@ -1,52 +1,56 @@
-Return-Path: <linux-arch-owner@vger.kernel.org>
-From: Pu Wen <puwen@hygon.cn>
-Subject: Re: [PATCH v3 07/17] x86/pci: add Hygon PCI vendor and northbridge
- support
-To: Bjorn Helgaas <helgaas@kernel.org>
-Cc: tglx@linutronix.de, mingo@redhat.com, hpa@zytor.com,
-        x86@kernel.org, thomas.lendacky@amd.com, bp@alien8.de,
-        pbonzini@redhat.com, linux-kernel@vger.kernel.org,
-        linux-arch@vger.kernel.org, linux-pci@vger.kernel.org
-References: <cover.1533989492.git.puwen@hygon.cn>
- <0b8f3a7c5ba8b4f496f8f790e3dafa8d612ffc81.1533989492.git.puwen@hygon.cn>
- <20180813221436.GN113140@bhelgaas-glaptop.roam.corp.google.com>
-Message-ID: <ec0ef867-3254-9e17-bf37-de697e9d0709@hygon.cn>
-Date: Tue, 14 Aug 2018 12:56:51 +0800
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail-co1nam03on0042.outbound.protection.outlook.com ([104.47.40.42]:11461
+        "EHLO NAM03-CO1-obe.outbound.protection.outlook.com"
+        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+        id S2403811AbeHATBQ (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Wed, 1 Aug 2018 15:01:16 -0400
+From: Bharat Kumar Gogada <bharat.kumar.gogada@xilinx.com>
+To: <linux-pci@vger.kernel.org>, <linux-kernel@vger.kernel.org>
+CC: <bhelgaas@google.com>, <rgummal@xilinx.com>,
+        Bharat Kumar Gogada <bharat.kumar.gogada@xilinx.com>
+Subject: [PATCH 1/3] PCI: xilinx-nwl: Save error IRQ number in device_node private data
+Date: Wed, 1 Aug 2018 22:14:47 +0530
+Message-ID: <1533141889-19962-2-git-send-email-bharat.kumar.gogada@xilinx.com>
+In-Reply-To: <1533141889-19962-1-git-send-email-bharat.kumar.gogada@xilinx.com>
+References: <1533141889-19962-1-git-send-email-bharat.kumar.gogada@xilinx.com>
 MIME-Version: 1.0
-In-Reply-To: <20180813221436.GN113140@bhelgaas-glaptop.roam.corp.google.com>
-Content-Type: text/plain; charset=utf-8; format=flowed
-Sender: linux-arch-owner@vger.kernel.org
+Content-Type: text/plain
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 2018/8/14 6:14, Bjorn Helgaas wrote:
-> On Sat, Aug 11, 2018 at 09:27:42PM +0800, Pu Wen wrote:
->> diff --git a/include/linux/pci_ids.h b/include/linux/pci_ids.h
->> index 2950223..d0e98a9 100644
->> --- a/include/linux/pci_ids.h
->> +++ b/include/linux/pci_ids.h
->> @@ -511,6 +511,8 @@
->>   #define PCI_DEVICE_ID_AMI_MEGARAID	0x9010
->>   #define PCI_DEVICE_ID_AMI_MEGARAID2	0x9060
->>   
->> +#define PCI_VENDOR_ID_HYGON		0x1d94
-> 
-> Please add this entry so pci_ids.h remains sorted by Vendor ID, then Device
-> ID, as the comment at the top suggests.
+Xilinx ZynqMP PS PCIe has dedicated interrupt line for
+reporting PCIe errors along with AER.
+Save this error irq number in struct device_node private data,
+this will be used via PCI qiurks for AER kernel service.
 
-Thanks for the suggestion. Will place PCI_VENDOR_ID_HYGON between 
-PCI_VENDOR_ID_AMAZON(0x1d0f) and PCI_VENDOR_ID_TEKRAM(0x1de1) in next
-patch set.
+Signed-off-by: Bharat Kumar Gogada <bharat.kumar.gogada@xilinx.com>
+---
+ drivers/pci/controller/pcie-xilinx-nwl.c |    6 ++++++
+ 1 files changed, 6 insertions(+), 0 deletions(-)
 
-Pu Wen
-
-> 
-> With that changed,
-> 
-> Acked-by: Bjorn Helgaas <bhelgaas@google.com>	# pci_ids.h
-> 
->>   #define PCI_VENDOR_ID_AMD		0x1022
->>   #define PCI_DEVICE_ID_AMD_K8_NB		0x1100
->>   #define PCI_DEVICE_ID_AMD_K8_NB_ADDRMAP	0x1101
->> -- 
->> 2.7.4
->>
+diff --git a/drivers/pci/controller/pcie-xilinx-nwl.c b/drivers/pci/controller/pcie-xilinx-nwl.c
+index fb32840..d505fe5 100644
+--- a/drivers/pci/controller/pcie-xilinx-nwl.c
++++ b/drivers/pci/controller/pcie-xilinx-nwl.c
+@@ -663,6 +663,9 @@ static int nwl_pcie_bridge_init(struct nwl_pcie *pcie)
+ 	struct platform_device *pdev = to_platform_device(dev);
+ 	u32 breg_val, ecam_val, first_busno = 0;
+ 	int err;
++#ifdef CONFIG_PCIEAER
++	struct device_node *node = dev->of_node;
++#endif
+ 
+ 	breg_val = nwl_bridge_readl(pcie, E_BREG_CAPABILITIES) & BREG_PRESENT;
+ 	if (!breg_val) {
+@@ -744,6 +747,9 @@ static int nwl_pcie_bridge_init(struct nwl_pcie *pcie)
+ 			pcie->irq_misc);
+ 		return err;
+ 	}
++#ifdef CONFIG_PCIEAER
++	node->data =  &pcie->irq_misc;
++#endif
+ 
+ 	/* Disable all misc interrupts */
+ 	nwl_bridge_writel(pcie, (u32)~MSGF_MISC_SR_MASKALL, MSGF_MISC_MASK);
+-- 
+1.7.1
