@@ -1,83 +1,107 @@
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Subject: Re: framebuffer corruption due to overlapping stp instructions on
- arm64
-To: Mikulas Patocka <mpatocka@redhat.com>,
- Catalin Marinas <catalin.marinas@arm.com>
-References: <alpine.LRH.2.02.1808021242320.31834@file01.intranet.prod.int.rdu2.redhat.com>
- <CAHCPf3tFGqkYEcWNN4LaWThw_rVqT316pzLv6T7RfxwO-eZ0EA@mail.gmail.com>
- <alpine.LRH.2.02.1808030212340.17672@file01.intranet.prod.int.rdu2.redhat.com>
- <CAKv+Gu8DeuksZhk1g3q_msSKV_hSY_2e1uzVten9-oGO3j9Sqg@mail.gmail.com>
- <20180803094129.GB17798@arm.com>
- <alpine.LRH.2.02.1808031235410.31584@file01.intranet.prod.int.rdu2.redhat.com>
- <20180808113927.GA24736@iMac.local>
- <alpine.LRH.2.02.1808081011110.9997@file01.intranet.prod.int.rdu2.redhat.com>
-From: "Richard Earnshaw (lists)" <Richard.Earnshaw@arm.com>
-Message-ID: <b1a0dac5-3cf2-1a7f-ac7f-649126eb7873@arm.com>
-Date: Wed, 8 Aug 2018 16:01:12 +0100
+Return-Path: <SRS0=YUos=KQ=linux.intel.com=mika.westerberg@kernel.org>
+Return-Path: <SRS0=YUos=KQ=linux.intel.com=mika.westerberg@kernel.org>
+Date: Wed, 1 Aug 2018 19:43:58 +0300
+From: Mika Westerberg <mika.westerberg@linux.intel.com>
+To: Lukas Wunner <lukas@wunner.de>
+Cc: Bjorn Helgaas <helgaas@kernel.org>, Ashok Raj <ashok.raj@intel.com>,
+	Keith Busch <keith.busch@intel.com>,
+	Yinghai Lu <yinghai@kernel.org>, Sinan Kaya <okaya@kernel.org>,
+	linux-pci@vger.kernel.org, Alexandru Gagniuc <mr.nuke.me@gmail.com>
+Subject: Re: [PATCH] PCI: pciehp: Differentiate between surprise and safe
+ removal
+Message-ID: <20180801164358.GI2534@lahna.fi.intel.com>
+References: <dac488604766f3dcb948e702210ecc381c4f907b.1533015755.git.lukas@wunner.de>
 MIME-Version: 1.0
-In-Reply-To: <alpine.LRH.2.02.1808081011110.9997@file01.intranet.prod.int.rdu2.redhat.com>
-List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
-List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
-List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
-List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
-List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
-Cc: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>,
- Joao Pinto <Joao.Pinto@synopsys.com>, libc-alpha@sourceware.org,
- Ard Biesheuvel <ard.biesheuvel@linaro.org>, Jingoo Han <jingoohan1@gmail.com>,
- Will Deacon <will.deacon@arm.com>, Russell King <linux@armlinux.org.uk>,
- Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
- Matt Sealey <neko@bakuhatsu.net>, linux-pci@vger.kernel.org,
- linux-arm-kernel <linux-arm-kernel@lists.infradead.org>
-Content-Type: text/plain; charset="us-ascii"
-Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
-Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <dac488604766f3dcb948e702210ecc381c4f907b.1533015755.git.lukas@wunner.de>
 List-ID: <linux-pci.vger.kernel.org>
 
-On 08/08/18 15:12, Mikulas Patocka wrote:
+On Tue, Jul 31, 2018 at 07:50:37AM +0200, Lukas Wunner wrote:
+> When removing PCI devices below a hotplug bridge, pciehp marks them as
+> disconnected if the card is no longer present in the slot or it quiesces
+> them if the card is still present (by disabling INTx interrupts, bus
+> mastering and SERR# reporting).
 > 
+> To detect whether the card is still present, pciehp checks the Presence
+> Detect State bit in the Slot Status register.  The problem with this
+> approach is that even if the card is present, the link to it may be
+> down, and it that case it would be better to mark the devices as
+> disconnected instead of trying to quiesce them.  Moreover, if the card
+> in the slot was quickly replaced by another one, the Presence Detect
+> State bit would be set, yet trying to quiesce the new card's devices
+> would be wrong and the correct thing to do is to mark the previous
+> card's devices as disconnected.
 > 
-> On Wed, 8 Aug 2018, Catalin Marinas wrote:
+> Instead of looking at the Presence Detect State bit, it is better to
+> differentiate whether the card was surprise removed versus safely
+> removed (via sysfs or an Attention Button press).  On surprise removal,
+> the devices should be marked as disconnected, whereas on safe removal it
+> is correct to quiesce the devices.
 > 
->> On Fri, Aug 03, 2018 at 01:09:02PM -0400, Mikulas Patocka wrote:
->>> 	while (1) {
->>> 		start = (unsigned)random() % (LEN + 1);
->>> 		end = (unsigned)random() % (LEN + 1);
->>> 		if (start > end)
->>> 			continue;
->>> 		for (i = start; i < end; i++)
->>> 			data[i] = val++;
->>> 		memcpy(map + start, data + start, end - start);
->>> 		if (memcmp(map, data, LEN)) {
->>
->> It may be worth trying to do a memcmp(map+start, data+start, end-start)
->> here to see whether the hazard logic fails when the writes are unaligned
->> but the reads are not.
->>
->> This problem may as well appear if you do byte writes and read longs
->> back (and I consider this a hardware problem on this specific board).
+> The knowledge whether a surprise removal or a safe removal is at hand
+> does exist further up in the call stack:  A surprise removal is
+> initiated by pciehp_handle_presence_or_link_change(), a safe removal by
+> pciehp_handle_disable_request().
 > 
-> I triad to insert usleep(10000) between the memcpy and memcmp, but the 
-> same corruption occurs. So, it can't be read-after-write hazard. It is 
-> caused by the improper handling of hazard between the overlapping writes 
-> inside memcpy.
+> Pass that information down to pciehp_unconfigure_device() and use it in
+> lieu of the Presence Detect State bit.  While there, add kernel-doc to
+> pciehp_unconfigure_device() and pciehp_configure_device().
 > 
-> Mikulas
+> Tested-by: Alexandru Gagniuc <mr.nuke.me@gmail.com>
+> Signed-off-by: Lukas Wunner <lukas@wunner.de>
+> Cc: Keith Busch <keith.busch@intel.com>
+> ---
+>  drivers/pci/hotplug/pciehp.h      |  2 +-
+>  drivers/pci/hotplug/pciehp_ctrl.c | 22 +++++++++++++---------
+>  drivers/pci/hotplug/pciehp_pci.c  | 23 ++++++++++++++++++++---
+>  3 files changed, 34 insertions(+), 13 deletions(-)
 > 
+> diff --git a/drivers/pci/hotplug/pciehp.h b/drivers/pci/hotplug/pciehp.h
+> index 811cf83f956d..39c9c8815a35 100644
+> --- a/drivers/pci/hotplug/pciehp.h
+> +++ b/drivers/pci/hotplug/pciehp.h
+> @@ -181,7 +181,7 @@ void pciehp_handle_button_press(struct slot *slot);
+>  void pciehp_handle_disable_request(struct slot *slot);
+>  void pciehp_handle_presence_or_link_change(struct slot *slot, u32 events);
+>  int pciehp_configure_device(struct slot *p_slot);
+> -void pciehp_unconfigure_device(struct slot *p_slot);
+> +void pciehp_unconfigure_device(struct slot *p_slot, bool presence);
+>  void pciehp_queue_pushbutton_work(struct work_struct *work);
+>  struct controller *pcie_init(struct pcie_device *dev);
+>  int pcie_init_notification(struct controller *ctrl);
+> diff --git a/drivers/pci/hotplug/pciehp_ctrl.c b/drivers/pci/hotplug/pciehp_ctrl.c
+> index 6855933ab372..7932e70e9f29 100644
+> --- a/drivers/pci/hotplug/pciehp_ctrl.c
+> +++ b/drivers/pci/hotplug/pciehp_ctrl.c
+> @@ -26,6 +26,9 @@
+>     hotplug controller logic
+>   */
+>  
+> +#define SAFE_REMOVAL	 true
+> +#define SURPRISE_REMOVAL false
+> +
+>  static void set_slot_off(struct controller *ctrl, struct slot *pslot)
+>  {
+>  	/* turn off slot, turn on Amber LED, turn off Green LED if supported*/
+> @@ -101,12 +104,13 @@ static int board_added(struct slot *p_slot)
+>  /**
+>   * remove_board - Turns off slot and LEDs
+>   * @p_slot: slot where board is being removed
+> + * @safe_removal: whether the board is safely removed (versus surprise removed)
+>   */
+> -static void remove_board(struct slot *p_slot)
+> +static void remove_board(struct slot *p_slot, bool safe_removal)
+>  {
+>  	struct controller *ctrl = p_slot->ctrl;
+>  
+> -	pciehp_unconfigure_device(p_slot);
+> +	pciehp_unconfigure_device(p_slot, safe_removal);
 
-I don't think you've told us what form the corruption takes.  Does it
-lose some bytes?  Modify values beyond the copy range?  Write completely
-arbitrary values?
+Below we turn off power to the slot if it has power controller. Even if
+we disable slot from sysfs, I think it ends up being inaccessible after
+power is turned off. I wonder if we should mark the devices disconnected
+in that case as well?
 
-The overlapping writes in memcpy never write different values to the
-same location, so I still feel this must be some sort of HW issue, not a
-SW one.
-
-R.
-
-_______________________________________________
-linux-arm-kernel mailing list
-linux-arm-kernel@lists.infradead.org
-http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
+>  
+>  	if (POWER_CTRL(ctrl)) {
+>  		pciehp_power_off_slot(p_slot);
