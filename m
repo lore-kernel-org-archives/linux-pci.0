@@ -1,49 +1,59 @@
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Date: Wed, 15 Aug 2018 14:24:55 -0600
-From: Rob Herring <robh@kernel.org>
-To: Leonard Crestez <leonard.crestez@nxp.com>
-Subject: Re: [PATCH v4 3/6] reset: imx7: Add PCIE_CTRL_APPS_TURNOFF
-Message-ID: <20180815202455.GA15583@rob-hp-laptop>
-References: <cover.1534264292.git.leonard.crestez@nxp.com>
- <88a5997e37d048cfc2dabb44cc13dce89c93d5eb.1534264292.git.leonard.crestez@nxp.com>
+Return-Path: <SRS0=JTCm=KQ=h08.hostsharing.net=foo00@kernel.org>
+Return-Path: <SRS0=JTCm=KQ=h08.hostsharing.net=foo00@kernel.org>
+Date: Wed, 1 Aug 2018 19:15:12 +0200
+From: Lukas Wunner <lukas@wunner.de>
+To: Mika Westerberg <mika.westerberg@linux.intel.com>
+Cc: Bjorn Helgaas <helgaas@kernel.org>, Ashok Raj <ashok.raj@intel.com>,
+	Keith Busch <keith.busch@intel.com>,
+	Yinghai Lu <yinghai@kernel.org>, Sinan Kaya <okaya@kernel.org>,
+	linux-pci@vger.kernel.org, Alexandru Gagniuc <mr.nuke.me@gmail.com>
+Subject: Re: [PATCH] PCI: pciehp: Differentiate between surprise and safe
+ removal
+Message-ID: <20180801171512.GA28440@wunner.de>
+References: <dac488604766f3dcb948e702210ecc381c4f907b.1533015755.git.lukas@wunner.de>
+ <20180801164358.GI2534@lahna.fi.intel.com>
 MIME-Version: 1.0
-In-Reply-To: <88a5997e37d048cfc2dabb44cc13dce89c93d5eb.1534264292.git.leonard.crestez@nxp.com>
-List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
-List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
-List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
-List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
-List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
-Cc: Mark Rutland <mark.rutland@arm.com>, devicetree@vger.kernel.org,
- Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
- Richard Zhu <hongxing.zhu@nxp.com>, kernel@pengutronix.de,
- Anson Huang <Anson.Huang@nxp.com>, Andrey Smirnov <andrew.smirnov@gmail.com>,
- Jingoo Han <jingoohan1@gmail.com>, linux-kernel@vger.kernel.org,
- Joao Pinto <Joao.Pinto@synopsys.com>, linux-imx@nxp.com,
- Philipp Zabel <p.zabel@pengutronix.de>, linux-pci@vger.kernel.org,
- Bjorn Helgaas <bhelgaas@google.com>, Shawn Guo <shawnguo@kernel.org>,
- linux-arm-kernel@lists.infradead.org, Lucas Stach <l.stach@pengutronix.de>
-Content-Type: text/plain; charset="us-ascii"
-Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
-Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20180801164358.GI2534@lahna.fi.intel.com>
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tue, Aug 14, 2018 at 07:50:17PM +0300, Leonard Crestez wrote:
-> This is required for the imx pci driver to send the PME_Turn_Off TLP.
+On Wed, Aug 01, 2018 at 07:43:58PM +0300, Mika Westerberg wrote:
+> On Tue, Jul 31, 2018 at 07:50:37AM +0200, Lukas Wunner wrote:
+> > -static void remove_board(struct slot *p_slot)
+> > +static void remove_board(struct slot *p_slot, bool safe_removal)
+> >  {
+> >  	struct controller *ctrl = p_slot->ctrl;
+> >  
+> > -	pciehp_unconfigure_device(p_slot);
+> > +	pciehp_unconfigure_device(p_slot, safe_removal);
 > 
-> Signed-off-by: Leonard Crestez <leonard.crestez@nxp.com>
-> ---
->  drivers/reset/reset-imx7.c             | 1 +
+> Below we turn off power to the slot if it has power controller. Even if
+> we disable slot from sysfs, I think it ends up being inaccessible after
+> power is turned off. I wonder if we should mark the devices disconnected
+> in that case as well?
+> 
+> >  
+> >  	if (POWER_CTRL(ctrl)) {
+> >  		pciehp_power_off_slot(p_slot);
 
->  include/dt-bindings/reset/imx7-reset.h | 4 +++-
+No, when pciehp_unconfigure_device() returns, the PCI devices below
+the hotplug bridge are unbound and removed from the system.  They're
+gone, so the bit set in their pci_dev struct would no longer be
+accessible anyway.  Unless of course something is holding a ref on
+the pci_dev, but that would seem to be a bug.  (Accessing a device
+that's already removed from the system, that is.)
 
-Acked-by: Rob Herring <robh@kernel.org>
+Calling pci_dev_set_disconnected() only gives the PCI core and the
+driver bound to the device an indication that's it's inaccessible,
+so any code paths during unbound and PCI device teardown can skip
+accesses.  (Because pci_dev_is_disconnected() is currently scoped
+to the PCI core, the disconnected status can only be queried from
+drivers that live in the PCI core, such as portdrv and all the
+port services drivers.)  After the pci_dev is removed from the
+hierarchy, accessing it seems at least questionable.
 
->  2 files changed, 4 insertions(+), 1 deletion(-)
+Does this make things clearer?  Shout if it not. :-)
 
-_______________________________________________
-linux-arm-kernel mailing list
-linux-arm-kernel@lists.infradead.org
-http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
+Thanks,
+
+Lukas
