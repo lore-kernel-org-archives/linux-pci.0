@@ -1,112 +1,317 @@
-Return-Path: <SRS0=cPlX=JZ=google.com=bhelgaas@kernel.org>
-Return-Path: <SRS0=cPlX=JZ=google.com=bhelgaas@kernel.org>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail-lf1-f43.google.com ([209.85.167.43]:35060 "EHLO
+        mail-lf1-f43.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1733124AbeHAHhP (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Wed, 1 Aug 2018 03:37:15 -0400
+Received: by mail-lf1-f43.google.com with SMTP id f18-v6so12443868lfc.2
+        for <linux-pci@vger.kernel.org>; Tue, 31 Jul 2018 22:53:20 -0700 (PDT)
 MIME-Version: 1.0
-References: <1530600642-25090-1-git-send-email-kernelfans@gmail.com>
- <2108146.dv4EAOf6IP@aspire.rjw.lan> <CAFgQCTsGC8NH+5kXYD7vykJeUsaAzCAjgxSP-R0EqA3YvgsY0w@mail.gmail.com>
- <8816662.k3KXbdkA2e@aspire.rjw.lan> <CAErSpo4eaaieQiZjAejXAoCv82wddPOcRQXpiqD6X=fFW5XAHQ@mail.gmail.com>
- <CAJZ5v0hVDo-Y2gPTxd6yHVY=vr093hai1VhLzNzzhFkKe0LoKA@mail.gmail.com>
-In-Reply-To: <CAJZ5v0hVDo-Y2gPTxd6yHVY=vr093hai1VhLzNzzhFkKe0LoKA@mail.gmail.com>
-From: Bjorn Helgaas <bhelgaas@google.com>
-Date: Mon, 9 Jul 2018 17:06:39 -0500
-Message-ID: <CAErSpo4TOiBtdG0iwgeFpv76Lhs4s7PXAWv5_DG-VRyEoP5bOQ@mail.gmail.com>
-Subject: Re: [PATCH] driver core: Drop devices_kset_move_last() call from really_probe()
-To: "Rafael J. Wysocki" <rafael@kernel.org>
-Cc: "Rafael J. Wysocki" <rjw@rjwysocki.net>, Greg Kroah-Hartman <gregkh@linuxfoundation.org>, kernelfans@gmail.com,
-	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, Grygorii Strashko <grygorii.strashko@ti.com>,
-	Christoph Hellwig <hch@infradead.org>, Bjorn Helgaas <helgaas@kernel.org>, dyoung@redhat.com,
-	linux-pci@vger.kernel.org, Lukas Wunner <lukas@wunner.de>,
-	Linux PM list <linux-pm@vger.kernel.org>, Kishon Vijay Abraham I <kishon@ti.com>
-Content-Type: text/plain; charset="UTF-8"
+In-Reply-To: <c5fb4a6a-136f-99f1-104e-32c923f00a22@oracle.com>
+References: <CAFP4jM9xmXHVnBPObNxTtr1kDo2kbW9G4N5q=BLU5gf5=+M0xg@mail.gmail.com>
+ <c5fb4a6a-136f-99f1-104e-32c923f00a22@oracle.com>
+From: gokul cg <gokuljnpr@gmail.com>
+Date: Wed, 1 Aug 2018 11:23:18 +0530
+Message-ID: <CAFP4jM9VP0jQ77rQt2KzfhuFZdXQRiS54TqxcKBLy39+sR3uMw@mail.gmail.com>
+Subject: Re: Possible race condition in the kernel between PCI driver and AER handling
+To: Thomas Tai <thomas.tai@oracle.com>
+Cc: linux-pci@vger.kernel.org
+Content-Type: multipart/alternative; boundary="000000000000c1c63d0572594f49"
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-[+cc Kishon]
+--000000000000c1c63d0572594f49
+Content-Type: text/plain; charset="UTF-8"
 
-On Mon, Jul 9, 2018 at 4:35 PM Rafael J. Wysocki <rafael@kernel.org> wrote:
+Hi,
+
+I see there is a basic design flow. As AER and PCI drivers are independent
+modules ,
+locally storing pointer to any data structure from pci linked list in AER
+driver will create problem as there is no synchronization between the same .
+
+
+https://elixir.bootlin.com/linux/v3.10.99/source/drivers/pci/pcie/aer/aerdrv_core.c#L701
+Here 'struct aer_err_info
+<https://elixir.bootlin.com/linux/v3.10.99/ident/aer_err_info> *e_info
+<https://elixir.bootlin.com/linux/v3.10.99/ident/e_info>' has pointer to
+pci dev , which can be removed from pci tree at any time .
+I think this is the basic issue.
+
+
+Regards
+Gokul
+
+On Tue, Jul 31, 2018 at 6:45 PM, Thomas Tai <thomas.tai@oracle.com> wrote:
+
 >
-> On Mon, Jul 9, 2018 at 3:57 PM, Bjorn Helgaas <bhelgaas@google.com> wrote:
-> > On Fri, Jul 6, 2018 at 5:01 AM Rafael J. Wysocki <rjw@rjwysocki.net> wrote:
-> >>
-> >> From: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
-> >>
-> >> The devices_kset_move_last() call in really_probe() is a mistake
-> >> as it may cause parents to follow children in the devices_kset list
-> >> which then causes system shutdown to fail.  Namely, if a device has
-> >> children before really_probe() is called for it (which is not
-> >> uncommon), that call will cause it to be reordered after the children
-> >> in the devices_kset list and the ordering of that list will not
-> >> reflect the correct device shutdown order.
-> >>
-> >> Also it causes the devices_kset list to be constantly reordered
-> >> until all drivers have been probed which is totally pointless
-> >> overhead in the majority of cases.
-> >>
-> >> For that reason, revert the really_probe() modifications made by
-> >> commit 52cdbdd49853.
-> >
-> > I'm sure you've considered this, but I can't figure out whether this
-> > patch will reintroduce the problem that was solved by 52cdbdd49853.
-> > That patch updated two places: (1) really_probe(), the change you're
-> > reverting here, and (2) device_move().
-> >
-> > device_move() is only called from 4-5 places, none of which look
-> > related to the problem fixed by 52cdbdd49853, so it seems like that
-> > problem was probably resolved by the hunk you're reverting.
 >
-> That's right, but I don't want to revert all of it.  The other parts
-> of it are kind of useful as they make the handling of the devices_kset
-> list be consistent with the handling of dpm_list.
+> On 07/31/2018 08:42 AM, gokul cg wrote:
 >
-> The hunk I'm reverting, however, is completely off.  It not only is
-> incorrect (as per the above), but it also causes the devices_kset list
-> and dpm_list to be handled differently.
+>> Hi All,
+>>
+>>
+>> I am suspecting a possible race condition in the kernel between PCI
+>> driver and AER handling.
+>>
+>> Because of the same kernel panic happens from worker thread which handles
+>> bottom half of aer irq.
+>>
+>>
+>> I am seeing this issue when I suddenly power off PCI card which
+>> supports/enabled PCIE AER error reporting.
+>>
+>> While powering off PCI device, AER driver will get AER IRQ for the
+>> device, from AER IRQ handler, it will cache AER error code and schedule
+>> worker thread to handle error.
+>>
+>
+> Hi Gokul,
+>
+> It may be an issue in the AER driver. How do you power off your device?
+> I've never seen this issue with normal shutdown nor "echo 0 >
+> /sys/bus/pci/slots/xx/power"
+>
+> Cheers,
+> Thomas
+>
+>
+>
+>> The PCIe device will get removed from PCI tree before worker thread
+>> completes its task and kernel panic is  happening when worker thread tries
+>> to access PCI device's config space.
+>>
+>>
+>>
+>> Issue:
+>>
+>>
+>> crash>
+>>
+>> crash> bt
+>>
+>> PID: 2727   TASK: ffff880272adc530  CPU: 0   COMMAND: "kworker/0:2"
+>>
+>> #0 [ffff88027469fac8] machine_kexec at ffffffff8102cf18
+>>
+>> #1 [ffff88027469fb28] crash_kexec at ffffffff810a6b05
+>>
+>> #2 [ffff88027469fbf0] oops_end at ffffffff8176d960
+>>
+>> #3 [ffff88027469fc18] die at ffffffff810060db
+>>
+>> #4 [ffff88027469fc48] do_general_protection at ffffffff8176d452
+>>
+>> #5 [ffff88027469fc70] general_protection at ffffffff8176cdf2
+>>
+>>      [exception RIP: pci_bus_read_config_dword+100]
+>>
+>>      RIP: ffffffff813405f4  RSP: ffff88027469fd20  RFLAGS: 00010046
+>>
+>>      RAX: 435f494350006963  RBX: ffff880274892000  RCX: 0000000000000004
+>>
+>>      RDX: 0000000000000100  RSI: 0000000000000060  RDI: ffff880274892000
+>>
+>>      RBP: ffff88027469fd48   R8: ffff88027469fd2c   R9: 00000000000012c0
+>>
+>>      R10: 0000000000000006  R11: 00000000000012bf  R12: ffff88027469fd5c
+>>
+>>      R13: 0000000000000246  R14: 0000000000000000  R15: ffff8802741a4000
+>>
+>>      ORIG_RAX: ffffffffffffffff  CS: 0010  SS: 0000
+>>
+>> #6 [ffff88027469fd50] pci_find_next_ext_capability at ffffffff81345d7b
+>>
+>> #7 [ffff88027469fd90] pci_find_ext_capability at ffffffff81347225
+>>
+>> #8 [ffff88027469fda0] get_device_error_info at ffffffff81356c4d
+>>
+>> #9 [ffff88027469fdd0] aer_isr at ffffffff81357a38
+>>
+>> #10 [ffff88027469fe28] process_one_work at ffffffff8105d4c0
+>>
+>> #11 [ffff88027469fe70] worker_thread at ffffffff8105e251
+>>
+>> #12 [ffff88027469fed0] kthread at ffffffff81064260
+>>
+>> #13 [ffff88027469ff50] ret_from_fork at ffffffff81773a38
+>>
+>>
+>> crash>
+>>
+>>
+>> I have tested it on kernel 3.10 . But from source i could see that this
+>> case is still relevant for latest Linux source .
+>>
+>>
+>> Can anybody tell me if this is an issue with AER driver in linux ?
+>>
+>>
+>>
+>>
+>> Regards
+>>
+>> Gokul CG
+>>
+>>
 
-If I understand correctly, you are saying:
+--000000000000c1c63d0572594f49
+Content-Type: text/html; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
 
-  - the 52cdbdd49853 really_probe() hunk fixed a problem, but
-  - that hunk was the wrong fix for it, and
-  - this patch removes the wrong fix (and probably reintroduces the problem)
+<div dir=3D"ltr">Hi,<div><br></div><div>I see there is a basic design flow.=
+ As AER and PCI drivers are independent modules ,</div><div>locally storing=
+ pointer to any data structure from pci linked list in AER driver will crea=
+te problem as there is no synchronization between the same .</div><div><br>=
+</div><div><br></div><div><a href=3D"https://elixir.bootlin.com/linux/v3.10=
+.99/source/drivers/pci/pcie/aer/aerdrv_core.c#L701">https://elixir.bootlin.=
+com/linux/v3.10.99/source/drivers/pci/pcie/aer/aerdrv_core.c#L701</a></div>=
+<div><span class=3D"gmail-k" style=3D"font-family:&quot;Ubuntu Mono&quot;,m=
+onospace;font-size:0.9em;white-space:pre;box-sizing:inherit;color:rgb(0,136=
+,0)">Here &#39;struct</span><span style=3D"color:rgb(0,0,0);font-family:&qu=
+ot;Ubuntu Mono&quot;,monospace;font-size:0.9em;white-space:pre"> </span><sp=
+an class=3D"gmail-n" style=3D"color:rgb(0,0,0);font-family:&quot;Ubuntu Mon=
+o&quot;,monospace;font-size:0.9em;white-space:pre;box-sizing:inherit"><a hr=
+ef=3D"https://elixir.bootlin.com/linux/v3.10.99/ident/aer_err_info" style=
+=3D"box-sizing:inherit;background-color:rgb(244,246,255);color:inherit;text=
+-decoration-line:none;font-weight:700;border-radius:0.2em">aer_err_info</a>=
+</span><span style=3D"color:rgb(0,0,0);font-family:&quot;Ubuntu Mono&quot;,=
+monospace;font-size:0.9em;white-space:pre"> </span><span class=3D"gmail-o" =
+style=3D"font-family:&quot;Ubuntu Mono&quot;,monospace;font-size:0.9em;whit=
+e-space:pre;box-sizing:inherit;color:rgb(102,102,102)">*</span><span class=
+=3D"gmail-n" style=3D"font-family:&quot;Ubuntu Mono&quot;,monospace;font-si=
+ze:0.9em;white-space:pre;box-sizing:inherit"><a href=3D"https://elixir.boot=
+lin.com/linux/v3.10.99/ident/e_info" style=3D"color:inherit;box-sizing:inhe=
+rit;background-color:rgb(244,246,255);text-decoration-line:none;font-weight=
+:700;border-radius:0.2em">e_info</a><font color=3D"#666666">&#39; has point=
+er to pci dev , which can be removed from pci tree at any time .</font></sp=
+an></div><div><span class=3D"gmail-n" style=3D"font-family:&quot;Ubuntu Mon=
+o&quot;,monospace;font-size:0.9em;white-space:pre;box-sizing:inherit"><font=
+ color=3D"#666666">I think this is the basic issue.</font></span></div><div=
+><br></div><div><br></div><div>Regards</div><div>Gokul=C2=A0</div></div><di=
+v class=3D"gmail_extra"><br><div class=3D"gmail_quote">On Tue, Jul 31, 2018=
+ at 6:45 PM, Thomas Tai <span dir=3D"ltr">&lt;<a href=3D"mailto:thomas.tai@=
+oracle.com" target=3D"_blank">thomas.tai@oracle.com</a>&gt;</span> wrote:<b=
+r><blockquote class=3D"gmail_quote" style=3D"margin:0 0 0 .8ex;border-left:=
+1px #ccc solid;padding-left:1ex"><span class=3D""><br>
+<br>
+On 07/31/2018 08:42 AM, gokul cg wrote:<br>
+<blockquote class=3D"gmail_quote" style=3D"margin:0 0 0 .8ex;border-left:1p=
+x #ccc solid;padding-left:1ex">
+Hi All,<br>
+<br>
+<br>
+I am suspecting a possible race condition in the kernel between PCI driver =
+and AER handling.<br>
+<br>
+Because of the same kernel panic happens from worker thread which handles b=
+ottom half of aer irq.<br>
+<br>
+<br>
+I am seeing this issue when I suddenly power off PCI card which supports/en=
+abled PCIE AER error reporting.<br>
+<br>
+While powering off PCI device, AER driver will get AER IRQ for the device, =
+from AER IRQ handler, it will cache AER error code and schedule worker thre=
+ad to handle error.<br>
+</blockquote>
+<br></span>
+Hi Gokul,<br>
+<br>
+It may be an issue in the AER driver. How do you power off your device? I&#=
+39;ve never seen this issue with normal shutdown nor &quot;echo 0 &gt; /sys=
+/bus/pci/slots/xx/power&quot;<br>
+<br>
+Cheers,<br>
+Thomas<div class=3D"HOEnZb"><div class=3D"h5"><br>
+<br>
+<blockquote class=3D"gmail_quote" style=3D"margin:0 0 0 .8ex;border-left:1p=
+x #ccc solid;padding-left:1ex">
+<br>
+The PCIe device will get removed from PCI tree before worker thread complet=
+es its task and kernel panic is=C2=A0 happening when worker thread tries to=
+ access PCI device&#39;s config space.<br>
+<br>
+<br>
+<br>
+Issue:<br>
+<br>
+<br>
+crash&gt;<br>
+<br>
+crash&gt; bt<br>
+<br>
+PID: 2727=C2=A0 =C2=A0TASK: ffff880272adc530=C2=A0 CPU: 0=C2=A0 =C2=A0COMMA=
+ND: &quot;kworker/0:2&quot;<br>
+<br>
+#0 [ffff88027469fac8] machine_kexec at ffffffff8102cf18<br>
+<br>
+#1 [ffff88027469fb28] crash_kexec at ffffffff810a6b05<br>
+<br>
+#2 [ffff88027469fbf0] oops_end at ffffffff8176d960<br>
+<br>
+#3 [ffff88027469fc18] die at ffffffff810060db<br>
+<br>
+#4 [ffff88027469fc48] do_general_protection at ffffffff8176d452<br>
+<br>
+#5 [ffff88027469fc70] general_protection at ffffffff8176cdf2<br>
+<br>
+=C2=A0=C2=A0 =C2=A0 [exception RIP: pci_bus_read_config_dword+100]<br>
+<br>
+=C2=A0=C2=A0 =C2=A0 RIP: ffffffff813405f4=C2=A0 RSP: ffff88027469fd20=C2=A0=
+ RFLAGS: 00010046<br>
+<br>
+=C2=A0=C2=A0 =C2=A0 RAX: 435f494350006963=C2=A0 RBX: ffff880274892000=C2=A0=
+ RCX: 0000000000000004<br>
+<br>
+=C2=A0=C2=A0 =C2=A0 RDX: 0000000000000100=C2=A0 RSI: 0000000000000060=C2=A0=
+ RDI: ffff880274892000<br>
+<br>
+=C2=A0=C2=A0 =C2=A0 RBP: ffff88027469fd48=C2=A0 =C2=A0R8: ffff88027469fd2c=
+=C2=A0 =C2=A0R9: 00000000000012c0<br>
+<br>
+=C2=A0=C2=A0 =C2=A0 R10: 0000000000000006=C2=A0 R11: 00000000000012bf=C2=A0=
+ R12: ffff88027469fd5c<br>
+<br>
+=C2=A0=C2=A0 =C2=A0 R13: 0000000000000246=C2=A0 R14: 0000000000000000=C2=A0=
+ R15: ffff8802741a4000<br>
+<br>
+=C2=A0=C2=A0 =C2=A0 ORIG_RAX: ffffffffffffffff=C2=A0 CS: 0010=C2=A0 SS: 000=
+0<br>
+<br>
+#6 [ffff88027469fd50] pci_find_next_ext_capability at ffffffff81345d7b<br>
+<br>
+#7 [ffff88027469fd90] pci_find_ext_capability at ffffffff81347225<br>
+<br>
+#8 [ffff88027469fda0] get_device_error_info at ffffffff81356c4d<br>
+<br>
+#9 [ffff88027469fdd0] aer_isr at ffffffff81357a38<br>
+<br>
+#10 [ffff88027469fe28] process_one_work at ffffffff8105d4c0<br>
+<br>
+#11 [ffff88027469fe70] worker_thread at ffffffff8105e251<br>
+<br>
+#12 [ffff88027469fed0] kthread at ffffffff81064260<br>
+<br>
+#13 [ffff88027469ff50] ret_from_fork at ffffffff81773a38<br>
+<br>
+<br>
+crash&gt;<br>
+<br>
+<br>
+I have tested it on kernel 3.10 . But from source i could see that this cas=
+e is still relevant for latest Linux source .<br>
+<br>
+<br>
+Can anybody tell me if this is an issue with AER driver in linux ?<br>
+<br>
+<br>
+<br>
+<br>
+Regards<br>
+<br>
+Gokul CG<br>
+<br>
+</blockquote>
+</div></div></blockquote></div><br></div>
 
-If devices_kset is supposed to be ordered so children follow parents,
-I agree the really_probe() hunk doesn't make much sense because the
-parent/child relation is determined by the circuit design, not by the
-probe order.
-
-It just seems like it's worth being clear that we're reintroducing the
-problem fixed by 52cdbdd49853, so it needs to be solved a different
-way.  Ideally that would be done before this patch so there's not a
-regression, and this changelog could mention what's happening.
-
-> It had attempted to fix something, but it failed miserably at that.
-
-If you're saying that 52cdbdd49853 *tried* to fix a DRA7XX_evm reboot
-problem, but in fact, it did not fix that problem, then I guess there
-should be no issue with reverting that hunk.
-
-> >> Fixes: 52cdbdd49853 (driver core: correct device's shutdown order)
-> >> Link: https://lore.kernel.org/lkml/CAFgQCTt7VfqM=UyCnvNFxrSw8Z6cUtAi3HUwR4_xPAc03SgHjQ@mail.gmail.com/
-> >> Reported-by: Pingfan Liu <kernelfans@gmail.com>
-> >> Signed-off-by: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
-> >> ---
-> >>  drivers/base/dd.c |    8 --------
-> >>  1 file changed, 8 deletions(-)
-> >>
-> >> Index: linux-pm/drivers/base/dd.c
-> >> ===================================================================
-> >> --- linux-pm.orig/drivers/base/dd.c
-> >> +++ linux-pm/drivers/base/dd.c
-> >> @@ -434,14 +434,6 @@ re_probe:
-> >>                         goto probe_failed;
-> >>         }
-> >>
-> >> -       /*
-> >> -        * Ensure devices are listed in devices_kset in correct order
-> >> -        * It's important to move Dev to the end of devices_kset before
-> >> -        * calling .probe, because it could be recursive and parent Dev
-> >> -        * should always go first
-> >> -        */
-> >> -       devices_kset_move_last(dev);
-> >> -
-> >>         if (dev->bus->probe) {
-> >>                 ret = dev->bus->probe(dev);
-> >>                 if (ret)
-> >>
+--000000000000c1c63d0572594f49--
