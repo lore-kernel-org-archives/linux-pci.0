@@ -1,50 +1,94 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from usa-sjc-mx-foss1.foss.arm.com ([217.140.101.70]:55720 "EHLO
-        foss.arm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1730419AbeHISHO (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Thu, 9 Aug 2018 14:07:14 -0400
-Date: Thu, 9 Aug 2018 16:41:51 +0100
-From: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
-To: Ray Jui <ray.jui@broadcom.com>
-Cc: Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org,
-        Tomasz Nowicki <tn@semihalf.com>,
-        Vladimir Olovyannikov <vladimir.olovyannikov@broadcom.com>,
-        BCM Kernel Feedback <bcm-kernel-feedback-list@broadcom.com>
-Subject: Re: [RFC] ARM64, PCIe, annd ACPI
-Message-ID: <20180809154151.GB20329@red-moon>
-References: <89484aa0-08c4-0cff-500d-407d21e2f5fd@broadcom.com>
- <20180808093822.GA25150@e107981-ln.cambridge.arm.com>
- <a32a8761-f49f-f0cf-928b-0c323c2b540e@broadcom.com>
- <20180809085923.GA13428@e107981-ln.cambridge.arm.com>
- <9b5b5918-1492-df65-5b63-678b4a35ecb9@broadcom.com>
+Received: from mail.kernel.org ([198.145.29.99]:56066 "EHLO mail.kernel.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S2389419AbeHAPvE (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Wed, 1 Aug 2018 11:51:04 -0400
+Date: Wed, 1 Aug 2018 09:05:07 -0500
+From: Bjorn Helgaas <helgaas@kernel.org>
+To: Myron Stowe <myron.stowe@redhat.com>
+Cc: bhelgaas@google.com, linux-pci@vger.kernel.org,
+        keith.busch@intel.com, jdmason@kudzu.us
+Subject: Re: [PATCH] PCI: Match Root Port's MPS to endpoint's MPSS when
+ necessary
+Message-ID: <20180801140507.GQ45322@bhelgaas-glaptop.roam.corp.google.com>
+References: <20180718185158.149373.77902.stgit@tak.stowe>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <9b5b5918-1492-df65-5b63-678b4a35ecb9@broadcom.com>
+In-Reply-To: <20180718185158.149373.77902.stgit@tak.stowe>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Thu, Aug 09, 2018 at 07:57:52AM -0700, Ray Jui wrote:
-
-[...]
-
-> >As I said ARM64 ACPI PCI kernel support is in the mainline today and I
-> >am not willing to merge any more MCFG quirks at driver level - the
-> >information is out there, it is public and must be followed, either
-> >designers do that or no ACPI PCI support on your platform, sorry.
-> >
-> >Lorenzo
-> >
+On Wed, Jul 18, 2018 at 12:51:58PM -0600, Myron Stowe wrote:
+> In commit 27d868b5e6cf ("PCI: Set MPS to match upstream bridge"), we made
+> sure every device's MPS setting matches its upstream bridge, making it more
+> likely that a hot-added device will work in a system with an optimized MPS
+> configuration.
 > 
-> I just want to make sure I interpret this properly. This means if
-> the PCIe controller hardware does not support ECAM, there's pretty
-> much no way around it with SW based workaround going forward with
-> mainline kernel?
+> Recently I've started encountering systems where the endpoint device's MPSS
+> capability is less than its root port's current MPS value, thus the
+> endpoint is not capable of matching its upstream bridge's MPS setting (see:
+> bugzilla via "Link:" below).  This leaves the system vunerable - the
+> upstream root port could respond with larger sized TLPs than the endpoint
+> can handle, and the endpoint will consider them to be 'Malformed'.
+> 
+> One could use the "pci=pcie_bus_safe" kernel parameter to resolve the
+> issue, but, it both forces a user to have to supply a kernel parameter to
+> get the system to function reliable, and may end up limiting MPS settings
+> of other, non-related, sub-topologies which could benefit from maintaining
+> their larger values.
+> 
+> This patch augments Keith's approach to include tuning down a root port's
+> MPS setting when its hot-added endpoint device is not capable of matching
+> it.  The tuning down, so that both the root port and endpoint match, is
+> limited to root ports with downstream endpoint device sub-topologies.
+> 
+> Link: https://bugzilla.kernel.org/show_bug.cgi?id=200527
+> Cc: Keith Busch <keith.busch@intel.com>
+> Cc: Jon Mason <jdmason@kudzu.us>
+> Cc: Sinan Kaya <okaya@kernel.org>
+> Signed-off-by: Myron Stowe <myron.stowe@redhat.com>
 
-Yes.
+Applied to pci/enumeration for v4.19, thanks!
 
-> What about for the PCIe controller that was designed a few years back?
-
-It will bootstrap with DT :)
-
-Thanks,
-Lorenzo
+> ---
+>  drivers/pci/probe.c |   12 ++++++++++--
+>  1 file changed, 10 insertions(+), 2 deletions(-)
+> 
+> diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
+> index ac91b6f..2987bd9 100644
+> --- a/drivers/pci/probe.c
+> +++ b/drivers/pci/probe.c
+> @@ -1670,7 +1670,7 @@ int pci_setup_device(struct pci_dev *dev)
+>  static void pci_configure_mps(struct pci_dev *dev)
+>  {
+>  	struct pci_dev *bridge = pci_upstream_bridge(dev);
+> -	int mps, p_mps, rc;
+> +	int mps, mpss, p_mps, rc;
+>  
+>  	if (!pci_is_pcie(dev) || !bridge || !pci_is_pcie(bridge))
+>  		return;
+> @@ -1694,6 +1694,14 @@ static void pci_configure_mps(struct pci_dev *dev)
+>  	if (pcie_bus_config != PCIE_BUS_DEFAULT)
+>  		return;
+>  
+> +	mpss = 128 << dev->pcie_mpss;
+> +	if (mpss < p_mps && pci_pcie_type(bridge) == PCI_EXP_TYPE_ROOT_PORT) {
+> +		pcie_set_mps(bridge, mpss);
+> +		pci_info(dev, "Upstream bridge's Max Payload Size set to %d (was %d, max %d)\n",
+> +			 mpss, p_mps, 128 << bridge->pcie_mpss);
+> +		p_mps = pcie_get_mps(bridge);
+> +	}
+> +
+>  	rc = pcie_set_mps(dev, p_mps);
+>  	if (rc) {
+>  		pci_warn(dev, "can't set Max Payload Size to %d; if necessary, use \"pci=pcie_bus_safe\" and report a bug\n",
+> @@ -1702,7 +1710,7 @@ static void pci_configure_mps(struct pci_dev *dev)
+>  	}
+>  
+>  	pci_info(dev, "Max Payload Size set to %d (was %d, max %d)\n",
+> -		 p_mps, mps, 128 << dev->pcie_mpss);
+> +		 p_mps, mps, mpss);
+>  }
+>  
+>  static struct hpp_type0 pci_default_type0 = {
+> 
