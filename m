@@ -1,61 +1,37 @@
-Return-Path: <SRS0=a9CN=LA=kernel.crashing.org=benh@kernel.org>
-Return-Path: <SRS0=a9CN=LA=kernel.crashing.org=benh@kernel.org>
-From: Benjamin Herrenschmidt <benh@kernel.crashing.org>
-To: Bjorn Helgaas <helgaas@kernel.org>, linux-pci@vger.kernel.org
-Cc: Hari Vyas <hari.vyas@broadcom.com>, Ray Jui <ray.jui@broadcom.com>,
-        Srinath Mannam <srinath.mannam@broadcom.com>,
-        Guenter Roeck <linux@roeck-us.net>, Jens Axboe <axboe@kernel.dk>,
-        Lukas Wunner <lukas@wunner.de>,
-        Konstantin Khlebnikov <khlebnikov@yandex-team.ru>,
-        Marta Rybczynska <mrybczyn@kalray.eu>,
-        Pierre-Yves Kerbrat <pkerbrat@kalray.eu>, linux-kernel@vger.kernel.org,
-        Benjamin Herrenschmidt <benh@kernel.crashing.org>
-Subject: [RFC PATCH 2/6] pci: Set pci_dev->is_added before calling device_add
-Date: Fri, 17 Aug 2018 14:48:58 +1000
-Message-Id: <20180817044902.31420-3-benh@kernel.crashing.org>
-In-Reply-To: <20180817044902.31420-1-benh@kernel.crashing.org>
-References: <20180817044902.31420-1-benh@kernel.crashing.org>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail-eopbgr720070.outbound.protection.outlook.com ([40.107.72.70]:19728
+        "EHLO NAM05-CO1-obe.outbound.protection.outlook.com"
+        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+        id S2403758AbeHATAi (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Wed, 1 Aug 2018 15:00:38 -0400
+From: Bharat Kumar Gogada <bharat.kumar.gogada@xilinx.com>
+To: <linux-pci@vger.kernel.org>, <linux-kernel@vger.kernel.org>
+CC: <bhelgaas@google.com>, <rgummal@xilinx.com>,
+        Bharat Kumar Gogada <bharat.kumar.gogada@xilinx.com>
+Subject: [PATCH 0/3] Use xilinx controller irq for AER handler
+Date: Wed, 1 Aug 2018 22:14:46 +0530
+Message-ID: <1533141889-19962-1-git-send-email-bharat.kumar.gogada@xilinx.com>
+MIME-Version: 1.0
+Content-Type: text/plain
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-This re-fixes the bug reported by Hari Vyas <hari.vyas@broadcom.com>
-after my revert of his commit but in a much simpler way.
+Xilinx ZynqMP PS PCIe does not report AER interrupts using Advanced
+Error Interrupt Message Number. The controller has dedicated interrupt line
+for reporting PCIe errors along with AER.
 
-The main issues is that is_added was being set after the driver
-got bound and started, and thus setting it could race with other
-changes to struct pci_dev.
+Since pcie-xilinx-nwl.c is platform driver and AER uses irq from
+pci_dev, using struct device_node private data to save xilinx controller
+error irq line. Using PCI quirks this data is passed to sysdata of
+root port pci_dev which is retrieved and used for AER handler registration.
 
-This fixes it by setting the flag first, which also has the
-advantage of matching the fact that we are clearing it *after*
-unbinding in the remove path, thus the flag is now symtetric
-and always set while the driver code is running.
 
-Signed-off-by: Benjamin Herrenschmidt <benh@kernel.crashing.org>
----
- drivers/pci/bus.c | 4 ++--
- 1 file changed, 2 insertions(+), 2 deletions(-)
+Bharat Kumar Gogada (3):
+  PCI: xilinx-nwl: Save error IRQ number in device_node private data
+  PCI: Use dedicated Xilinx controller irq number for AER
+  PCI/portdrv: Add support for sharing xilinx controller irq with AER
 
-diff --git a/drivers/pci/bus.c b/drivers/pci/bus.c
-index 35b7fc87eac5..48ae63673aa8 100644
---- a/drivers/pci/bus.c
-+++ b/drivers/pci/bus.c
-@@ -321,16 +321,16 @@ void pci_bus_add_device(struct pci_dev *dev)
- 	pci_proc_attach_device(dev);
- 	pci_bridge_d3_update(dev);
- 
-+	dev->is_added = 1;
- 	dev->match_driver = true;
- 	retval = device_attach(&dev->dev);
- 	if (retval < 0 && retval != -EPROBE_DEFER) {
-+		dev->is_added = 0;
- 		pci_warn(dev, "device attach failed (%d)\n", retval);
- 		pci_proc_detach_device(dev);
- 		pci_remove_sysfs_dev_files(dev);
- 		return;
- 	}
--
--	dev->is_added = 1;
- }
- EXPORT_SYMBOL_GPL(pci_bus_add_device);
- 
--- 
-2.17.1
+ drivers/pci/controller/pcie-xilinx-nwl.c |    6 ++++++
+ drivers/pci/pcie/portdrv_core.c          |    4 ++++
+ drivers/pci/quirks.c                     |   29 +++++++++++++++++++++++++++++
+ 3 files changed, 39 insertions(+), 0 deletions(-)
