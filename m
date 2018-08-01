@@ -1,81 +1,113 @@
-Return-Path: <linux-acpi-owner@vger.kernel.org>
-Date: Thu, 16 Aug 2018 15:21:51 -0500
-From: Bjorn Helgaas <helgaas@kernel.org>
-To: "Rafael J. Wysocki" <rjw@rjwysocki.net>
-Cc: Linux PCI <linux-pci@vger.kernel.org>,
-        teika kazura <teika@gmx.com>,
-        Bjorn Helgaas <bhelgaas@google.com>,
-        LKML <linux-kernel@vger.kernel.org>,
-        Linux ACPI <linux-acpi@vger.kernel.org>,
-        Linux PM <linux-pm@vger.kernel.org>,
-        Mika Westerberg <mika.westerberg@linux.intel.com>
-Subject: Re: [PATCH] PCI / ACPI / PM: Resume all bridges on suspend-to-RAM
-Message-ID: <20180816202151.GA10316@bhelgaas-glaptop.roam.corp.google.com>
-References: <6401388.2t0qD3iTOr@aspire.rjw.lan>
+Return-Path: <SRS0=dvAb=KQ=bootlin.com=thomas.petazzoni@kernel.org>
+Return-Path: <SRS0=dvAb=KQ=bootlin.com=thomas.petazzoni@kernel.org>
+Date: Wed, 1 Aug 2018 11:37:41 +0200
+From: Thomas Petazzoni <thomas.petazzoni@bootlin.com>
+To: Russell King - ARM Linux <linux@armlinux.org.uk>
+Cc: Bjorn Helgaas <helgaas@kernel.org>, Bjorn Helgaas <bhelgaas@google.com>,
+ Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>, linux-pci@vger.kernel.org,
+ Antoine Tenart <antoine.tenart@bootlin.com>, Gregory Clement
+ <gregory.clement@bootlin.com>, Maxime Chevallier
+ <maxime.chevallier@bootlin.com>, Nadav Haklai <nadavh@marvell.com>, Victor
+ Gu <xigu@marvell.com>, =?UTF-8?B?TWlxdcOobA==?= Raynal
+ <miquel.raynal@bootlin.com>, Zachary Zhang <zhangzg@marvell.com>, Wilson
+ Ding <dingwei@marvell.com>, linux-arm-kernel@lists.infradead.org, Ray Jui
+ <ray.jui@broadcom.com>, Ley Foon Tan <lftan@altera.com>, Simon Horman
+ <horms@verge.net.au>
+Subject: Re: [PATCH 1/3] PCI: Introduce PCI software bridge common logic
+Message-ID: <20180801113741.06fceba9@windsurf>
+In-Reply-To: <20180801092119.GB30658@n2100.armlinux.org.uk>
+References: <20180629092231.32207-1-thomas.petazzoni@bootlin.com>
+	<20180629092231.32207-2-thomas.petazzoni@bootlin.com>
+	<20180712195802.GC28466@bhelgaas-glaptop.roam.corp.google.com>
+	<20180801104957.1b01b847@windsurf>
+	<20180801092119.GB30658@n2100.armlinux.org.uk>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <6401388.2t0qD3iTOr@aspire.rjw.lan>
-Sender: linux-acpi-owner@vger.kernel.org
+Content-Type: text/plain; charset=US-ASCII
 List-ID: <linux-pci.vger.kernel.org>
 
-On Thu, Aug 16, 2018 at 12:56:46PM +0200, Rafael J. Wysocki wrote:
-> From: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
-> 
-> Commit 26112ddc254c (PCI / ACPI / PM: Resume bridges w/o drivers on
-> suspend-to-RAM) attempted to fix a functional regression resulting
-> from commit c62ec4610c40 (PM / core: Fix direct_complete handling
-> for devices with no callbacks) by resuming PCI bridges without
-> drivers (that is, "parallel PCI" ones) during system-wide suspend if
-> the target system state is not ACPI S0 (working state).
-> 
-> That turns out insufficient, however, as it is reported that, at
-> least in one case, the platform firmware gets confused if a PCIe
-> root port is suspended before entering the ACPI S3 sleep state.
-> 
-> For this reason, drop the driver check from acpi_pci_need_resume()
-> and resume all bridges (including PCIe ports with drivers) during
-> system-wide suspend if the target system state is not ACPI S0.
-> 
-> [If the target system state is ACPI S0, it means suspend-to-idle
->  and the platform firmware is not going to be invoked to actually
->  suspend the system, so there is no need to resume the bridges in
->  that case.]
-> 
-> Fixes: c62ec4610c40 (PM / core: Fix direct_complete handling for devices with no callbacks)
-> Reported-by: teika kazura <teika@gmx.com>
-> Tested-by: teika kazura <teika@gmx.com>
-> Link: https://bugzilla.kernel.org/show_bug.cgi?id=200675
-> Cc: 4.15+ <stable@vger.kernel.org> # 4.15+: 26112ddc254c (PCI / ACPI / PM: Resume bridges ...)
-> Signed-off-by: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
+Hello Russell,
 
-Acked-by: Bjorn Helgaas <bhelgaas@google.com>
+Thanks for your feedback.
 
-Thanks for doing this.  I don't like dependencies on the PCIe
-PM/AER/hotplug/etc features being implemented as a "driver" because
-they could be implemented in the PCI core directly.
+On Wed, 1 Aug 2018 10:21:19 +0100, Russell King - ARM Linux wrote:
 
-> ---
->  drivers/pci/pci-acpi.c |    6 ++----
->  1 file changed, 2 insertions(+), 4 deletions(-)
+> >  (2) Agreeing on whether a RAM-like behavior is acceptable, and if not,
+> >      which solution do you propose instead.  
 > 
-> Index: linux-pm/drivers/pci/pci-acpi.c
-> ===================================================================
-> --- linux-pm.orig/drivers/pci/pci-acpi.c
-> +++ linux-pm/drivers/pci/pci-acpi.c
-> @@ -632,13 +632,11 @@ static bool acpi_pci_need_resume(struct
->  	/*
->  	 * In some cases (eg. Samsung 305V4A) leaving a bridge in suspend over
->  	 * system-wide suspend/resume confuses the platform firmware, so avoid
-> -	 * doing that, unless the bridge has a driver that should take care of
-> -	 * the PM handling.  According to Section 16.1.6 of ACPI 6.2, endpoint
-> +	 * doing that.  According to Section 16.1.6 of ACPI 6.2, endpoint
->  	 * devices are expected to be in D3 before invoking the S3 entry path
->  	 * from the firmware, so they should not be affected by this issue.
->  	 */
-> -	if (pci_is_bridge(dev) && !dev->driver &&
-> -	    acpi_target_system_state() != ACPI_STATE_S0)
-> +	if (pci_is_bridge(dev) && acpi_target_system_state() != ACPI_STATE_S0)
->  		return true;
->  
->  	if (!adev || !acpi_device_power_manageable(adev))
+> Please take the time to read the PCI(e) specifications and implement
+> what it recommends, rather than doing something else.  That's what I
+> did when I originally reworked the mvebu PCIe driver for Armada 388,
+> and it's the only sensible approach to have something that works with
+> the rest of the Linux PCI(e) layer.
+
+Actually, all what I'm doing is generalizing what the mvebu PCIe driver
+is doing (which you significantly contributed) to, and try to make it
+usable by other drivers that have the same need.
+
+So, I'm precisely trying to make sure we implement this stuff once,
+correctly, rather than duplicate it in several drivers. I'm not
+pretending that my first iteration is entirely correct, and your review
+of it to make it better is much appreciated.
+
+> Going off and implementing a non-standard behaviour is a recipe for
+> things breaking as the PCIe kernel support evolves.
+
+Sure.
+
+> The spec requires reserved registers to read back as zero and ignore
+> writes, whereas implemented registers have a mixture of behaviours:
 > 
+> - read/write
+> - read, write to clear
+> - read-only
+> 
+> Here's the extract(s):
+> 
+>    All PCI devices must treat Configuration Space write operations
+>    to reserved registers as no-ops; that is, the access must be
+>    completed normally on the bus and the data discarded. Read
+>    accesses to reserved or unimplemented registers must be completed
+>    normally and a data value of 0 returned.
+> 
+> (eg) PCI status:
+>    Reserved bits should be read-only and return zero when read.
+>    A one bit is reset (if it is not read-only) whenever the register
+>    is written, and the write data in the corresponding bit location
+>    is a 1.
+
+Right. This pci-sw-bridge layer should implement this behavior.
+
+> [which is why doing the read-modify-write action that some host
+>  bridges that only support 32-bit accesses is dangerous - it leads
+>  to various status bits being inadvertently reset.]
+> 
+> Getting this right in a software emulation of the register space for
+> each bit in every register makes for a happy Linux PCIe layer.
+
+Absolutely.
+
+> Now, configuration read/writes use naturally aligned addresses.  The
+> PCI specification defines the PC IO 0xcf8/0xcfc configuration access
+> mechanism.  The first register defines the address with a 6 bit
+> "double-word" address to cover the 256 bytes of standard config space.
+> Accesses to 0xcfc are forwarded to the PCI bus as a single
+> configuration request - and that means there is nothing to deal with
+> an attempt to access a mis-aligned word.
+> 
+> Indeed, if 0xcfe was to be accessed as a double word, this would
+> result in the processor reading the two bytes from IO address 0xcfe,
+> 0xcff, as well as 0xd00 and 0xd01 which are not part of the
+> configuration data register - resulting in undefined data being read.
+> 
+> So, basically, misaligned configuration accesses are not supported.
+
+OK. So the where & 2 that the RCAR driver is doing for 2 bytes accesses
+is OK, because bit 0 of where will always be 0 for a 2 bytes access.
+
+Thanks,
+
+Thomas Petazzoni
+-- 
+Thomas Petazzoni, CTO, Bootlin (formerly Free Electrons)
+Embedded Linux and Kernel engineering
+https://bootlin.com
