@@ -1,167 +1,289 @@
-Return-Path: <SRS0=5pGf=JU=arm.com=lorenzo.pieralisi@kernel.org>
-Return-Path: <SRS0=5pGf=JU=arm.com=lorenzo.pieralisi@kernel.org>
-Date: Wed, 4 Jul 2018 16:13:05 +0100
-From: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
-To: Ray Jui <ray.jui@broadcom.com>
-Cc: Robin Murphy <robin.murphy@arm.com>, poza@codeaurora.org,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Bjorn Helgaas <helgaas@kernel.org>, linux-kernel@vger.kernel.org,
-	bcm-kernel-feedback-list@broadcom.com, linux-pci@vger.kernel.org,
-	linux-pci-owner@vger.kernel.org
-Subject: Re: [PATCH INTERNAL 3/3] PCI: iproc: Disable MSI parsing in certain
- PAXC blocks
-Message-ID: <20180704151254.GA12996@red-moon>
-References: <1526577692-21104-1-git-send-email-ray.jui@broadcom.com>
- <1526577692-21104-4-git-send-email-ray.jui@broadcom.com>
- <ad41ea7f16414a83a2b3d7e6192bcf79@codeaurora.org>
- <20180518135614.GA18605@e107981-ln.cambridge.arm.com>
- <e433f2cf-63c5-37c3-f7ef-15ff0aa67e4f@broadcom.com>
- <20180521133305.GB1443@e107981-ln.cambridge.arm.com>
- <073832d4-88a0-efa1-2da8-5e07479e51e0@arm.com>
- <d8988a30-f604-f00d-cc8f-db01b4def3c9@broadcom.com>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail-lf1-f50.google.com ([209.85.167.50]:40362 "EHLO
+        mail-lf1-f50.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1733098AbeHAH0p (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Wed, 1 Aug 2018 03:26:45 -0400
+Received: by mail-lf1-f50.google.com with SMTP id y200-v6so12416948lfd.7
+        for <linux-pci@vger.kernel.org>; Tue, 31 Jul 2018 22:42:53 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
-In-Reply-To: <d8988a30-f604-f00d-cc8f-db01b4def3c9@broadcom.com>
+In-Reply-To: <c5fb4a6a-136f-99f1-104e-32c923f00a22@oracle.com>
+References: <CAFP4jM9xmXHVnBPObNxTtr1kDo2kbW9G4N5q=BLU5gf5=+M0xg@mail.gmail.com>
+ <c5fb4a6a-136f-99f1-104e-32c923f00a22@oracle.com>
+From: gokul cg <gokuljnpr@gmail.com>
+Date: Wed, 1 Aug 2018 11:12:51 +0530
+Message-ID: <CAFP4jM84BuVZ+yKvcVvbu_6LFoO+2iVivWWZTZgbEEy3=oMftg@mail.gmail.com>
+Subject: Re: Possible race condition in the kernel between PCI driver and AER handling
+To: Thomas Tai <thomas.tai@oracle.com>
+Cc: linux-pci@vger.kernel.org
+Content-Type: multipart/alternative; boundary="00000000000062a0960572592a40"
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tue, May 22, 2018 at 09:48:55AM -0700, Ray Jui wrote:
-> Hi Robin/Lorenzo,
-> 
-> On 5/21/2018 7:26 AM, Robin Murphy wrote:
-> >On 21/05/18 14:33, Lorenzo Pieralisi wrote:
-> >>[+Robin]
-> >>
-> >>On Fri, May 18, 2018 at 12:48:28PM -0700, Ray Jui wrote:
-> >>>Hi Lorenzo,
-> >>>
-> >>>On 5/18/2018 6:56 AM, Lorenzo Pieralisi wrote:
-> >>>>On Fri, May 18, 2018 at 02:53:41PM +0530, poza@codeaurora.org wrote:
-> >>>>>On 2018-05-17 22:51, Ray Jui wrote:
-> >>>>>>The internal MSI parsing logic in certain revisions of PAXC root
-> >>>>>>complexes does not work properly and can casue corruptions on the
-> >>>>>>writes. They need to be disabled
-> >>>>>>
-> >>>>>>Signed-off-by: Ray Jui <ray.jui@broadcom.com>
-> >>>>>>Reviewed-by: Scott Branden <scott.branden@broadcom.com>
-> >>>>>>---
-> >>>>>>drivers/pci/host/pcie-iproc.c | 34 ++++++++++++++++++++++++++++++++--
-> >>>>>>1 file changed, 32 insertions(+), 2 deletions(-)
-> >>>>>>
-> >>>>>>diff --git a/drivers/pci/host/pcie-iproc.c
-> >>>>>>b/drivers/pci/host/pcie-iproc.c
-> >>>>>>index 3c76c5f..b906d80 100644
-> >>>>>>--- a/drivers/pci/host/pcie-iproc.c
-> >>>>>>+++ b/drivers/pci/host/pcie-iproc.c
-> >>>>>>@@ -1144,10 +1144,22 @@ static int
-> >>>>>>iproc_pcie_paxb_v2_msi_steer(struct
-> >>>>>>iproc_pcie *pcie, u64 msi_addr)
-> >>>>>>    return ret;
-> >>>>>>}
-> >>>>>>
-> >>>>>>-static void iproc_pcie_paxc_v2_msi_steer(struct
-> >>>>>>iproc_pcie *pcie, u64
-> >>>>>>msi_addr)
-> >>>>>>+static void iproc_pcie_paxc_v2_msi_steer(struct
-> >>>>>>iproc_pcie *pcie, u64
-> >>>>>>msi_addr,
-> >>>>>>+                     bool enable)
-> >>>>>>{
-> >>>>>>    u32 val;
-> >>>>>>
-> >>>>>>+    if (!enable) {
-> >>>>>>+        /*
-> >>>>>>+         * Disable PAXC MSI steering. All write transfers will be
-> >>>>>>+         * treated as non-MSI transfers
-> >>>>>>+         */
-> >>>>>>+        val = iproc_pcie_read_reg(pcie, IPROC_PCIE_MSI_EN_CFG);
-> >>>>>>+        val &= ~MSI_ENABLE_CFG;
-> >>>>>>+        iproc_pcie_write_reg(pcie, IPROC_PCIE_MSI_EN_CFG, val);
-> >>>>>>+        return;
-> >>>>>>+    }
-> >>>>>>+
-> >>>>>>    /*
-> >>>>>>     * Program bits [43:13] of address of
-> >>>>>>GITS_TRANSLATER register into
-> >>>>>>     * bits [30:0] of the MSI base address register.  In
-> >>>>>>fact, in all iProc
-> >>>>>>@@ -1201,7 +1213,7 @@ static int
-> >>>>>>iproc_pcie_msi_steer(struct iproc_pcie
-> >>>>>>*pcie,
-> >>>>>>            return ret;
-> >>>>>>        break;
-> >>>>>>    case IPROC_PCIE_PAXC_V2:
-> >>>>>>-        iproc_pcie_paxc_v2_msi_steer(pcie, msi_addr);
-> >>>>>>+        iproc_pcie_paxc_v2_msi_steer(pcie, msi_addr, true);
-> >>>>>
-> >>>>>Are you calling iproc_pcie_paxc_v2_msi_steer() anywhere
-> >>>>>else with 'false' ?
-> >>>>>I see its getting called only from one place in current code
-> >>>>>iproc_pcie_msi_steer().
-> >>>>
-> >>>>It is called below with the false field to disable MSIs.
-> >>>>That's probably
-> >>>>one reason more to create a function to enable/disable MSIs instead of
-> >>>>adding a parameter to iproc_pcie_paxc_v2_msi_steer().
-> >>>
-> >>>Correct. Thanks for helping to explain.
-> >>>
-> >>>>
-> >>>>Which brings me to the question: what happens to those MSIs writes
-> >>>>when MSIs are disabled according to this patch ? Are they terminated
-> >>>>at the root complex ?
-> >>>
-> >>>Note the PAXC block parses MSI writes from our internally connected
-> >>>endpoints (i.e., an embedded network processor). The PAXC block examines
-> >>>these MSI writes and modifies the memory attributes (to DEVICE) of these
-> >>>data and then send them out to the AXI bus. These MSI writes
-> >>>will then be
-> >>>forwarded to the GIC (e.g., GICv2m, GICv3-ITS from ARM) for further
-> >>>processing. This is saying, PAXC itself does not process these
-> >>>MSI writes.
-> >>>They are processed by the GIC and associated interrupt will be generated
-> >>>form the GIC. PAXC's job is to parse and tag them properly so these MSI
-> >>>writes can reach the GIC, and at the same, reach the GIC at
-> >>>the right order.
-> >>>
-> >>>On some of these problematic PAXCs, we are being forced to
-> >>>disable this PAXC
-> >>>internal parsing logic. In this case, we set up static mapping with the
-> >>>IOMMU to modify the memory attributes of these MSI writes.
-> >>>These MSI writes
-> >>>are always designated towards a specific memory address (e.g.,
-> >>>on the GICv3
-> >>>based system, it's the address of the translator register),
-> >>>and that's why
-> >>>static mapping table can be set up to work around this.
-> >>
-> >>Which means, I presume, that there must be some code that somehow
-> >>somewhere in the kernel sets-up those mappings and it has to be related
-> >>to this patch, in which case I wonder why we enable the PAXC steering at
-> >>all given that this (hack) can be done through the IOMMU (and I assume
-> >>that on all PAXC platforms that do need MSIs there is an IOMMU IP
-> >>upstream the root bridge, otherwise I have no idea what will happen to
-> >>those MSI writes).
-> >
-> >If it's only rewriting memory attributes (FWIW it sounds like this
-> >thing is comparable to the AXI translation table of the PLDA root
-> >complex we have in Juno), then if the IOMMU is controlled by Linux
-> >the PAXC shouldn't be needed anyway. In that situation the
-> >GICv2m/ITS doorbell will be already mapped for the endpoint as
-> >device memory (and usually at some arbitrary address that the PAXC
-> >won't recognise anyway) - see iommu_dma_get_msi_page().
-> >
-> >If Linux *doesn't* know about the IOMMU, then the firmware should
-> >be free to set it up with a static 1:1 mapping of the PA space and
-> >leave it that way, provided Linux can't inadvertently stomp on
-> >those page tables later.
-> 
-> Right, in our case, we had our ATF bootloader set up 1:1 mapping for
-> this. In this case, PAXC internal MSI parsing is completely disabled
-> (which is what this patch does for those PAXC blocks that have this
-> issue).
+--00000000000062a0960572592a40
+Content-Type: text/plain; charset="UTF-8"
 
-Ok so to sum it up, why does the PCI host bridge code has to deal with
-this steering at all given the discussion above ? Why can't we disable
-PAXC steering completely ?
+Hi Thomas,
 
-Lorenzo
+In my hardware, there is i2c power control chip for PCI card, I just
+powered down using i2c command .
+
+Regards,
+Gokul
+
+On Tue, Jul 31, 2018 at 6:45 PM, Thomas Tai <thomas.tai@oracle.com> wrote:
+
+>
+>
+> On 07/31/2018 08:42 AM, gokul cg wrote:
+>
+>> Hi All,
+>>
+>>
+>> I am suspecting a possible race condition in the kernel between PCI
+>> driver and AER handling.
+>>
+>> Because of the same kernel panic happens from worker thread which handles
+>> bottom half of aer irq.
+>>
+>>
+>> I am seeing this issue when I suddenly power off PCI card which
+>> supports/enabled PCIE AER error reporting.
+>>
+>> While powering off PCI device, AER driver will get AER IRQ for the
+>> device, from AER IRQ handler, it will cache AER error code and schedule
+>> worker thread to handle error.
+>>
+>
+> Hi Gokul,
+>
+> It may be an issue in the AER driver. How do you power off your device?
+> I've never seen this issue with normal shutdown nor "echo 0 >
+> /sys/bus/pci/slots/xx/power"
+>
+> Cheers,
+> Thomas
+>
+>
+>
+>> The PCIe device will get removed from PCI tree before worker thread
+>> completes its task and kernel panic is  happening when worker thread tries
+>> to access PCI device's config space.
+>>
+>>
+>>
+>> Issue:
+>>
+>>
+>> crash>
+>>
+>> crash> bt
+>>
+>> PID: 2727   TASK: ffff880272adc530  CPU: 0   COMMAND: "kworker/0:2"
+>>
+>> #0 [ffff88027469fac8] machine_kexec at ffffffff8102cf18
+>>
+>> #1 [ffff88027469fb28] crash_kexec at ffffffff810a6b05
+>>
+>> #2 [ffff88027469fbf0] oops_end at ffffffff8176d960
+>>
+>> #3 [ffff88027469fc18] die at ffffffff810060db
+>>
+>> #4 [ffff88027469fc48] do_general_protection at ffffffff8176d452
+>>
+>> #5 [ffff88027469fc70] general_protection at ffffffff8176cdf2
+>>
+>>      [exception RIP: pci_bus_read_config_dword+100]
+>>
+>>      RIP: ffffffff813405f4  RSP: ffff88027469fd20  RFLAGS: 00010046
+>>
+>>      RAX: 435f494350006963  RBX: ffff880274892000  RCX: 0000000000000004
+>>
+>>      RDX: 0000000000000100  RSI: 0000000000000060  RDI: ffff880274892000
+>>
+>>      RBP: ffff88027469fd48   R8: ffff88027469fd2c   R9: 00000000000012c0
+>>
+>>      R10: 0000000000000006  R11: 00000000000012bf  R12: ffff88027469fd5c
+>>
+>>      R13: 0000000000000246  R14: 0000000000000000  R15: ffff8802741a4000
+>>
+>>      ORIG_RAX: ffffffffffffffff  CS: 0010  SS: 0000
+>>
+>> #6 [ffff88027469fd50] pci_find_next_ext_capability at ffffffff81345d7b
+>>
+>> #7 [ffff88027469fd90] pci_find_ext_capability at ffffffff81347225
+>>
+>> #8 [ffff88027469fda0] get_device_error_info at ffffffff81356c4d
+>>
+>> #9 [ffff88027469fdd0] aer_isr at ffffffff81357a38
+>>
+>> #10 [ffff88027469fe28] process_one_work at ffffffff8105d4c0
+>>
+>> #11 [ffff88027469fe70] worker_thread at ffffffff8105e251
+>>
+>> #12 [ffff88027469fed0] kthread at ffffffff81064260
+>>
+>> #13 [ffff88027469ff50] ret_from_fork at ffffffff81773a38
+>>
+>>
+>> crash>
+>>
+>>
+>> I have tested it on kernel 3.10 . But from source i could see that this
+>> case is still relevant for latest Linux source .
+>>
+>>
+>> Can anybody tell me if this is an issue with AER driver in linux ?
+>>
+>>
+>>
+>>
+>> Regards
+>>
+>> Gokul CG
+>>
+>>
+
+--00000000000062a0960572592a40
+Content-Type: text/html; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
+
+<div dir=3D"ltr">Hi=C2=A0<span style=3D"font-size:12.8px;text-decoration-st=
+yle:initial;text-decoration-color:initial;float:none;display:inline">Thomas=
+,</span><div><span style=3D"font-size:12.8px;text-decoration-style:initial;=
+text-decoration-color:initial;float:none;display:inline"><br></span></div><=
+div><span style=3D"font-size:12.8px;text-decoration-style:initial;text-deco=
+ration-color:initial;float:none;display:inline">In my hardware, there is i2=
+c power control chip for PCI card, I just powered down using i2c command .=
+=C2=A0</span></div><div><span style=3D"font-size:12.8px;text-decoration-sty=
+le:initial;text-decoration-color:initial;float:none;display:inline"><br></s=
+pan></div><div><span style=3D"font-size:12.8px;text-decoration-style:initia=
+l;text-decoration-color:initial;float:none;display:inline">Regards,</span><=
+/div><div><span style=3D"font-size:12.8px;text-decoration-style:initial;tex=
+t-decoration-color:initial;float:none;display:inline">Gokul=C2=A0</span></d=
+iv></div><div class=3D"gmail_extra"><br><div class=3D"gmail_quote">On Tue, =
+Jul 31, 2018 at 6:45 PM, Thomas Tai <span dir=3D"ltr">&lt;<a href=3D"mailto=
+:thomas.tai@oracle.com" target=3D"_blank">thomas.tai@oracle.com</a>&gt;</sp=
+an> wrote:<br><blockquote class=3D"gmail_quote" style=3D"margin:0 0 0 .8ex;=
+border-left:1px #ccc solid;padding-left:1ex"><span class=3D""><br>
+<br>
+On 07/31/2018 08:42 AM, gokul cg wrote:<br>
+<blockquote class=3D"gmail_quote" style=3D"margin:0 0 0 .8ex;border-left:1p=
+x #ccc solid;padding-left:1ex">
+Hi All,<br>
+<br>
+<br>
+I am suspecting a possible race condition in the kernel between PCI driver =
+and AER handling.<br>
+<br>
+Because of the same kernel panic happens from worker thread which handles b=
+ottom half of aer irq.<br>
+<br>
+<br>
+I am seeing this issue when I suddenly power off PCI card which supports/en=
+abled PCIE AER error reporting.<br>
+<br>
+While powering off PCI device, AER driver will get AER IRQ for the device, =
+from AER IRQ handler, it will cache AER error code and schedule worker thre=
+ad to handle error.<br>
+</blockquote>
+<br></span>
+Hi Gokul,<br>
+<br>
+It may be an issue in the AER driver. How do you power off your device? I&#=
+39;ve never seen this issue with normal shutdown nor &quot;echo 0 &gt; /sys=
+/bus/pci/slots/xx/power&quot;<br>
+<br>
+Cheers,<br>
+Thomas<div class=3D"HOEnZb"><div class=3D"h5"><br>
+<br>
+<blockquote class=3D"gmail_quote" style=3D"margin:0 0 0 .8ex;border-left:1p=
+x #ccc solid;padding-left:1ex">
+<br>
+The PCIe device will get removed from PCI tree before worker thread complet=
+es its task and kernel panic is=C2=A0 happening when worker thread tries to=
+ access PCI device&#39;s config space.<br>
+<br>
+<br>
+<br>
+Issue:<br>
+<br>
+<br>
+crash&gt;<br>
+<br>
+crash&gt; bt<br>
+<br>
+PID: 2727=C2=A0 =C2=A0TASK: ffff880272adc530=C2=A0 CPU: 0=C2=A0 =C2=A0COMMA=
+ND: &quot;kworker/0:2&quot;<br>
+<br>
+#0 [ffff88027469fac8] machine_kexec at ffffffff8102cf18<br>
+<br>
+#1 [ffff88027469fb28] crash_kexec at ffffffff810a6b05<br>
+<br>
+#2 [ffff88027469fbf0] oops_end at ffffffff8176d960<br>
+<br>
+#3 [ffff88027469fc18] die at ffffffff810060db<br>
+<br>
+#4 [ffff88027469fc48] do_general_protection at ffffffff8176d452<br>
+<br>
+#5 [ffff88027469fc70] general_protection at ffffffff8176cdf2<br>
+<br>
+=C2=A0=C2=A0 =C2=A0 [exception RIP: pci_bus_read_config_dword+100]<br>
+<br>
+=C2=A0=C2=A0 =C2=A0 RIP: ffffffff813405f4=C2=A0 RSP: ffff88027469fd20=C2=A0=
+ RFLAGS: 00010046<br>
+<br>
+=C2=A0=C2=A0 =C2=A0 RAX: 435f494350006963=C2=A0 RBX: ffff880274892000=C2=A0=
+ RCX: 0000000000000004<br>
+<br>
+=C2=A0=C2=A0 =C2=A0 RDX: 0000000000000100=C2=A0 RSI: 0000000000000060=C2=A0=
+ RDI: ffff880274892000<br>
+<br>
+=C2=A0=C2=A0 =C2=A0 RBP: ffff88027469fd48=C2=A0 =C2=A0R8: ffff88027469fd2c=
+=C2=A0 =C2=A0R9: 00000000000012c0<br>
+<br>
+=C2=A0=C2=A0 =C2=A0 R10: 0000000000000006=C2=A0 R11: 00000000000012bf=C2=A0=
+ R12: ffff88027469fd5c<br>
+<br>
+=C2=A0=C2=A0 =C2=A0 R13: 0000000000000246=C2=A0 R14: 0000000000000000=C2=A0=
+ R15: ffff8802741a4000<br>
+<br>
+=C2=A0=C2=A0 =C2=A0 ORIG_RAX: ffffffffffffffff=C2=A0 CS: 0010=C2=A0 SS: 000=
+0<br>
+<br>
+#6 [ffff88027469fd50] pci_find_next_ext_capability at ffffffff81345d7b<br>
+<br>
+#7 [ffff88027469fd90] pci_find_ext_capability at ffffffff81347225<br>
+<br>
+#8 [ffff88027469fda0] get_device_error_info at ffffffff81356c4d<br>
+<br>
+#9 [ffff88027469fdd0] aer_isr at ffffffff81357a38<br>
+<br>
+#10 [ffff88027469fe28] process_one_work at ffffffff8105d4c0<br>
+<br>
+#11 [ffff88027469fe70] worker_thread at ffffffff8105e251<br>
+<br>
+#12 [ffff88027469fed0] kthread at ffffffff81064260<br>
+<br>
+#13 [ffff88027469ff50] ret_from_fork at ffffffff81773a38<br>
+<br>
+<br>
+crash&gt;<br>
+<br>
+<br>
+I have tested it on kernel 3.10 . But from source i could see that this cas=
+e is still relevant for latest Linux source .<br>
+<br>
+<br>
+Can anybody tell me if this is an issue with AER driver in linux ?<br>
+<br>
+<br>
+<br>
+<br>
+Regards<br>
+<br>
+Gokul CG<br>
+<br>
+</blockquote>
+</div></div></blockquote></div><br></div>
+
+--00000000000062a0960572592a40--
