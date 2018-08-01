@@ -1,85 +1,63 @@
-Return-Path: <SRS0=J3+B=LD=codeaurora.org=poza@kernel.org>
-Return-Path: <SRS0=J3+B=LD=codeaurora.org=poza@kernel.org>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail-wm0-f67.google.com ([74.125.82.67]:51431 "EHLO
+        mail-wm0-f67.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S2387475AbeHAIv2 (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Wed, 1 Aug 2018 04:51:28 -0400
+Received: by mail-wm0-f67.google.com with SMTP id y2-v6so5717559wma.1
+        for <linux-pci@vger.kernel.org>; Wed, 01 Aug 2018 00:07:15 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII;
- format=flowed
-Date: Mon, 20 Aug 2018 10:49:46 +0530
-From: poza@codeaurora.org
-To: Benjamin Herrenschmidt <benh@kernel.crashing.org>
-Cc: Sinan Kaya <okaya@kernel.org>, Bjorn Helgaas <helgaas@kernel.org>,
- Thomas Tai <thomas.tai@oracle.com>, bhelgaas@google.com,
- keith.busch@intel.com, linux-pci@vger.kernel.org,
- linux-pci-owner@vger.kernel.org, Sam Bobroff <sam.bobroff@au1.ibm.com>
-Subject: Re: [PATCH 1/1] PCI/AER: prevent pcie_do_fatal_recovery from using
- device after it is removed
-In-Reply-To: <ab5cb5b277f1c1c1362ef597ca7b8c6a2cd32cdf.camel@kernel.crashing.org>
-References: <1534179088-44219-1-git-send-email-thomas.tai@oracle.com>
- <1534179088-44219-2-git-send-email-thomas.tai@oracle.com>
- <51f4b387d9bd96a42d526a6a029fc43b@codeaurora.org>
- <b0104a716319d76e734c307cb4bedd9d@codeaurora.org>
- <903394c04d6ad468ed06dc0a779200e7555345a7.camel@kernel.crashing.org>
- <6cb069038530757f31f3dd60328c7e30@codeaurora.org>
- <e931bc7a7e468e8bb2ee3766b3fcf96f1800f552.camel@kernel.crashing.org>
- <bf7ceabb6fe51398e0f4eebd9c4fe4ac1ec2b8a4.camel@kernel.crashing.org>
- <20180819021922.GE128050@bhelgaas-glaptop.roam.corp.google.com>
- <fe891b63-12c7-61ab-a59a-ae24ad766754@kernel.org>
- <ab5cb5b277f1c1c1362ef597ca7b8c6a2cd32cdf.camel@kernel.crashing.org>
-Message-ID: <908ff33ded8f31830f95a8889d8540f1@codeaurora.org>
+In-Reply-To: <20180726105617.GA6181@red-moon>
+References: <20180705094539.xkmtfffbzl3kooum@kili.mountain> <20180726105617.GA6181@red-moon>
+From: Subrahmanya Lingappa <l.subrahmanya@mobiveil.co.in>
+Date: Wed, 1 Aug 2018 12:37:14 +0530
+Message-ID: <CAFZiPx0p5YJz1M_K5AJYXT_NP04QxOQVTG8FLcFGkA=yCXdrWQ@mail.gmail.com>
+Subject: Re: [PATCH] PCI: mobiveil: integer overflow in IB_WIN_SIZE
+To: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
+Cc: Dan Carpenter <dan.carpenter@oracle.com>,
+        Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org,
+        kernel-janitors@vger.kernel.org
+Content-Type: text/plain; charset="UTF-8"
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 2018-08-20 07:33, Benjamin Herrenschmidt wrote:
-> On Sun, 2018-08-19 at 17:41 -0400, Sinan Kaya wrote:
->> On 8/18/2018 10:19 PM, Bjorn Helgaas wrote:
->> > > Bjorn, please revert all of those changes.
->> >
->> > Please send the appropriate patches and we'll go from there.
->> >
->> 
->> I'm also catching up on this thread.
->> 
->> I don't think revert is the way to go. There is certainly value in 
->> Oza's
->> code to make error handling common.
-> 
-> The revert of the Documentation change must happen though. It's
-> completely wrong. The documentation documents what EEH implements so by
-> making it match what I argue is a broken implementation in AER, you are
-> in fact breaking us.
-> 
->> We started by following the existing error handling scheme and then
->> moved onto the stop/remove behavior based on Bjorn's feedback.
-> 
-> Whish is utterly wrong.
-> 
->> The right thing is for Oza to rework the code to go back to original
->> error handling callback mechanism. That should be a trivial change.
-> 
-> At this stage I'm only asking to revert the documentation updatgae.
-> I'll send a patch to that effect.
-> 
-> As for figuring out where to go from there, I agree we should discuss
-> this further, I would love to be able to make more of the code common
-> with EEH as well.
-> 
-> Cheers,
-> Ben.
+Lorenzo,
+Added the compilation support in the next patch submitted at :
+https://patchwork.kernel.org/patch/10551771/
+
+please review.
+
+Thanks,
+Subrahmanya
 
 
-Reverting spec/Documentation which is fine by me.
-
-But the good thing has happened now is; we can have very clear 
-definition for the framework to go forward.
-e.g. how the errors have to be handled.
-
-Because of those patches, the whole error framework is under common code 
-base and now has become independent of service e.g. AER, DPC etc..
-That enables us to define or extend policies in more clearly defined way 
-irrespective of what services are running.
-
-Now it is just that we have to change in err.c and walk away with the 
-policies what we want to enforce.
-
-let me know how this sounds Ben.
-
-Regards,
-Oza.
+On Thu, Jul 26, 2018 at 4:26 PM, Lorenzo Pieralisi
+<lorenzo.pieralisi@arm.com> wrote:
+> On Thu, Jul 05, 2018 at 12:45:39PM +0300, Dan Carpenter wrote:
+>> IB_WIN_SIZE is larger than INT_MAX so we need to cast it to u64.
+>>
+>> Fixes: 9af6bcb11e12 ("PCI: mobiveil: Add Mobiveil PCIe Host Bridge IP driver")
+>> Signed-off-by: Dan Carpenter <dan.carpenter@oracle.com>
+>> ---
+>> Untested...  Possibly the problem is that there are too many multiplies
+>> by * 1024.
+>>
+>> diff --git a/drivers/pci/controller/pcie-mobiveil.c b/drivers/pci/controller/pcie-mobiveil.c
+>
+> Applied to pci/mobiveil for v4.19 (it is still not fixing anything
+> given that the driver lacks a Kconfig and Makefile entries - that
+> must be fixed with urgency), thanks.
+>
+> Lorenzo
+>
+>> index 4d6c20e47bed..cf0aa7cee5b0 100644
+>> --- a/drivers/pci/controller/pcie-mobiveil.c
+>> +++ b/drivers/pci/controller/pcie-mobiveil.c
+>> @@ -107,7 +107,7 @@
+>>  #define CFG_WINDOW_TYPE      0
+>>  #define IO_WINDOW_TYPE               1
+>>  #define MEM_WINDOW_TYPE      2
+>> -#define IB_WIN_SIZE          (256 * 1024 * 1024 * 1024)
+>> +#define IB_WIN_SIZE          ((u64)256 * 1024 * 1024 * 1024)
+>>  #define MAX_PIO_WINDOWS      8
+>>
+>>  /* Parameters for the waiting for link up routine */
