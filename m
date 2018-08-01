@@ -1,141 +1,157 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:51722 "EHLO
-        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S2390887AbeHPRJ6 (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Thu, 16 Aug 2018 13:09:58 -0400
+Received: from mail-lf1-f52.google.com ([209.85.167.52]:39855 "EHLO
+        mail-lf1-f52.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S2387519AbeHAUjS (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Wed, 1 Aug 2018 16:39:18 -0400
+Received: by mail-lf1-f52.google.com with SMTP id a134-v6so14049997lfe.6
+        for <linux-pci@vger.kernel.org>; Wed, 01 Aug 2018 11:52:08 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII;
- format=flowed
-Date: Thu, 16 Aug 2018 19:41:04 +0530
-From: poza@codeaurora.org
-To: Benjamin Herrenschmidt <benh@kernel.crashing.org>
-Cc: Thomas Tai <thomas.tai@oracle.com>, bhelgaas@google.com,
-        keith.busch@intel.com, linux-pci@vger.kernel.org,
-        linux-pci-owner@vger.kernel.org
-Subject: Re: [PATCH 1/1] PCI/AER: prevent pcie_do_fatal_recovery from using
- device after it is removed
-In-Reply-To: <9c7c60eb765c61d007169c9142fb335b0a4080df.camel@kernel.crashing.org>
-References: <1534179088-44219-1-git-send-email-thomas.tai@oracle.com>
- <1534179088-44219-2-git-send-email-thomas.tai@oracle.com>
- <51f4b387d9bd96a42d526a6a029fc43b@codeaurora.org>
- <b0104a716319d76e734c307cb4bedd9d@codeaurora.org>
- <903394c04d6ad468ed06dc0a779200e7555345a7.camel@kernel.crashing.org>
- <6cb069038530757f31f3dd60328c7e30@codeaurora.org>
- <e931bc7a7e468e8bb2ee3766b3fcf96f1800f552.camel@kernel.crashing.org>
- <5bd99bcacb772b588771fce62c61a59fdeb167f3.camel@kernel.crashing.org>
- <290750445f084c479963f54dd36af63a@codeaurora.org>
- <05bc3bccb2c6a0cb1696faf20073e567d7a5b8ee.camel@kernel.crashing.org>
- <2894d8df6e44860456377dade9ea5737@codeaurora.org>
- <9c7c60eb765c61d007169c9142fb335b0a4080df.camel@kernel.crashing.org>
-Message-ID: <c00a1ad4ffbf7ccecf3c8d05df4d8d82@codeaurora.org>
+In-Reply-To: <ecb55fb1-c3af-4f5b-86d2-1c669fa9f9ca@oracle.com>
+References: <CAFP4jM9xmXHVnBPObNxTtr1kDo2kbW9G4N5q=BLU5gf5=+M0xg@mail.gmail.com>
+ <c5fb4a6a-136f-99f1-104e-32c923f00a22@oracle.com> <CAFP4jM84BuVZ+yKvcVvbu_6LFoO+2iVivWWZTZgbEEy3=oMftg@mail.gmail.com>
+ <ecb55fb1-c3af-4f5b-86d2-1c669fa9f9ca@oracle.com>
+From: gokul cg <gokuljnpr@gmail.com>
+Date: Thu, 2 Aug 2018 00:22:07 +0530
+Message-ID: <CAFP4jM-=EvrLyybxEcpObQOrLS1z8CHG0q0xJZYJUxgtNKQBSw@mail.gmail.com>
+Subject: Re: Possible race condition in the kernel between PCI driver and AER handling
+To: Thomas Tai <thomas.tai@oracle.com>
+Cc: linux-pci@vger.kernel.org
+Content-Type: multipart/alternative; boundary="0000000000000112c10572643167"
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 2018-08-16 15:37, Benjamin Herrenschmidt wrote:
-> On Thu, 2018-08-16 at 14:33 +0530, poza@codeaurora.org wrote:
->> On 2018-08-16 13:42, Benjamin Herrenschmidt wrote:
->> >
->> when I meant spec, i meant PCIe Spec.
->> At least spec distinguish fatal and non-fatal
-> 
-> Yes, I'm well aware of that, however the policy implemented by EEH is
-> stricter in that *any* uncorrectable error will trigger an immediate
-> freeze of the endpoint in order to prevent bad data propagation.
-> 
-> However, you don't have to implement it that way for AER. You can
-> implement a policy where you don't enforce a reset of the device and
-> link unless the driver requests it.
-> 
-> However if/when the driver does, then you should honor the driver wish
-> and do it which isn't currently the case in the AER code.
-> 
-> Note that the current error callbacks have no way to convey the fatal
-> vs. non-fatal information to the device that I can see, we might want
-> to change the prototype here with a tree-wide patch if you think that
-> drivers might care.
-> 
->> Non-fatal errors are uncorrectable errors which cause a particular
->> transaction to be unreliable but the Link is otherwise fully 
->> functional.
->> Isolating Non-fatal from Fatal errors provides Requester/Receiver 
->> logic
->> in a device or system management software the opportunity to recover
->> from the error without resetting the components on the Link and
->> disturbing other transactions in progress.
->> "
->> 
->> Here the basic assumption is link is fully functional, hence we do not
->> initiate link reset. (while in case FATAL we do initiate Secondary Bus
->> Reset)
-> 
-> See above.
->> 
->> okay, so here is what current pcie_do_nonfatal_recovery() doe.
->> 
->> pcie_do_nonfatal_recovery
->>      report_error_detected()    >> calls driver callbacks
->>      report_mmio_enabled()
->>      report_slot_reset()  >> if PCI_ERS_RESULT_NEED_RESET
-> 
-> Above if the driver returned "NEED RESET" we should not just "report" a
-> slot reset, we should *perform* one :-) Unless the AER code does it in
-> a place I missed...
+--0000000000000112c10572643167
+Content-Type: text/plain; charset="UTF-8"
 
-I am willing work on this if Bjorn agrees.
-but I am still trying to figure out missing piece.
+HI Thomas ,
 
-so Ben,
-you are suggesting
 
-ERR_NONFATAL handling
-pcie_do_nonfatal_recovery
-      report_error_detected()    >> calls driver callbacks
-       report_mmio_enabled()
-       report_slot_reset()  >> if PCI_ERS_RESULT_NEED_RESET
-Here along with calling slot_reset, you are suggesting to do Secondary 
-Bus Reset ?
+Yes , its surprise removal .
 
-but this is ERR_NONFATAL and according to definition the link is still 
-good, so that the transcriptions on PCIe link can happen.
-so my question is why do we want to reset the link ?
+But as far as I know , linux kernel will handle surprise removal of PCIe
+device without panic.
 
-although
-I see following note in the code as well.
-                 /*
-		 * TODO: Should call platform-specific
-		 * functions to reset slot before calling
-		 * drivers' slot_reset callbacks?
-		 */
+The driver will suddenly start reading all 0xff and will then need to
+abort whatever it was doing. Usually all drivers handle this just fine.
+
+Nothing, the driver individually needs to handle the fact that it might
+at any time, start getting invalid data. If it doesn't, it needs to be
+fixed. Whether AER  driver that does not handle this properly?
+
 
 Regards,
-Oza.
+Gokul
 
-> 
-> Also we should do a hot reset at least, not just a link reset.
-> 
->>      report_resume()
->> 
->> If you suggest how it is broken, it will help me to understand.
->> probably you might want to point out what are the calls need to be 
->> added
->> or removed or differently handled, specially storage point of view.
-> 
-> 
+On Wed, Aug 1, 2018 at 11:17 PM, Thomas Tai <thomas.tai@oracle.com> wrote:
+
+>
+>
+> On 08/01/2018 01:42 AM, gokul cg wrote:
+>
+>> Hi Thomas,
+>>
+>> In my hardware, there is i2c power control chip for PCI card, I just
+>> powered down using i2c command .
+>>
+>
+> Hi Gokul,
+> When you power off the card via the i2c, it forcefully power off the card
+> without notify the kernel? That is, during the card power off sequence it
+> manages to send a last AER isr to report the error and die? I am kind of
+> expect the pcie surprise removal or hot plug driver will handle it
+> correctly.
+>
+> Thanks,
+> Thomas
+>
+>
 >> Regards,
->> Oza.
->> 
->> >
->> > Keep in mind that those callbacks were designed originally for EEH
->> > (which predates AER), and so was the spec written.
->> >
->> > We don't actually use the AER code on POWER today, so we didn't notice
->> > how broken the implementation was :-)
->> >
->> > We should fix that.
->> >
->> > Either we can sort all that out by email, or we should plan some kind
->> > of catch-up, either at Plumbers (provided I can go there) or maybe a
->> > webex call.
->> >
->> > Cheers,
->> > Ben.
+>> Gokul
+>>
+>
+
+--0000000000000112c10572643167
+Content-Type: text/html; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
+
+<div dir=3D"ltr">HI Thomas ,=C2=A0<div><br></div><div><br></div><div>Yes , =
+its surprise removal .</div><div><br></div><div>But as far as I know , linu=
+x kernel will handle surprise removal of PCIe device without panic.</div><d=
+iv><br></div><div><span style=3D"font-family:&quot;Helvetica Neue&quot;,Ari=
+al,sans-serif;text-decoration-style:initial;text-decoration-color:initial;f=
+loat:none;display:inline">The</span><span style=3D"font-family:&quot;Helvet=
+ica Neue&quot;,Arial,sans-serif;text-decoration-style:initial;text-decorati=
+on-color:initial;float:none;display:inline"><span>=C2=A0</span>driver will =
+suddenly start reading all 0xff and will then need to</span><br style=3D"fo=
+nt-family:&quot;Helvetica Neue&quot;,Arial,sans-serif;text-decoration-style=
+:initial;text-decoration-color:initial"><span style=3D"font-family:&quot;He=
+lvetica Neue&quot;,Arial,sans-serif;text-decoration-style:initial;text-deco=
+ration-color:initial;float:none;display:inline">abort</span><span style=3D"=
+font-family:&quot;Helvetica Neue&quot;,Arial,sans-serif;text-decoration-sty=
+le:initial;text-decoration-color:initial;float:none;display:inline"><span>=
+=C2=A0</span>whatever</span><span style=3D"font-family:&quot;Helvetica Neue=
+&quot;,Arial,sans-serif;text-decoration-style:initial;text-decoration-color=
+:initial;float:none;display:inline"><span>=C2=A0</span>it was doing</span><=
+span style=3D"font-family:&quot;Helvetica Neue&quot;,Arial,sans-serif;text-=
+decoration-style:initial;text-decoration-color:initial;float:none;display:i=
+nline">. Usually</span><span style=3D"font-family:&quot;Helvetica Neue&quot=
+;,Arial,sans-serif;text-decoration-style:initial;text-decoration-color:init=
+ial;float:none;display:inline"><span>=C2=A0</span>all drivers handle this j=
+ust fine.</span><br></div><div><span style=3D"font-family:&quot;Helvetica N=
+eue&quot;,Arial,sans-serif;text-decoration-style:initial;text-decoration-co=
+lor:initial;float:none;display:inline"><br></span></div><div><span style=3D=
+"font-family:&quot;Helvetica Neue&quot;,Arial,sans-serif;text-decoration-st=
+yle:initial;text-decoration-color:initial;float:none;display:inline"><span =
+style=3D"text-decoration-style:initial;text-decoration-color:initial;float:=
+none;display:inline">Nothing</span><span style=3D"text-decoration-style:ini=
+tial;text-decoration-color:initial;float:none;display:inline">, the driver =
+individually</span><span style=3D"text-decoration-style:initial;text-decora=
+tion-color:initial;float:none;display:inline"><span>=C2=A0</span>needs to h=
+andle the fact that it might</span><br style=3D"text-decoration-style:initi=
+al;text-decoration-color:initial"><span style=3D"text-decoration-style:init=
+ial;text-decoration-color:initial;float:none;display:inline">at any time, s=
+tart</span><span style=3D"text-decoration-style:initial;text-decoration-col=
+or:initial;float:none;display:inline"><span>=C2=A0</span>getting invalid</s=
+pan><span style=3D"text-decoration-style:initial;text-decoration-color:init=
+ial;float:none;display:inline"><span>=C2=A0</span>data. If it doesn&#39;t, =
+it needs to be</span><br style=3D"text-decoration-style:initial;text-decora=
+tion-color:initial"><span style=3D"text-decoration-style:initial;text-decor=
+ation-color:initial;float:none;display:inline">fixed. Whether AER=C2=A0 dri=
+ver that does not handle this properly?</span><br style=3D"text-decoration-=
+style:initial;text-decoration-color:initial"><br></span></div><div><br></di=
+v><div><font face=3D"Helvetica Neue, Arial, sans-serif">Regards,</font></di=
+v><div><font face=3D"Helvetica Neue, Arial, sans-serif">Gokul=C2=A0</font><=
+/div></div><div class=3D"gmail_extra"><br><div class=3D"gmail_quote">On Wed=
+, Aug 1, 2018 at 11:17 PM, Thomas Tai <span dir=3D"ltr">&lt;<a href=3D"mail=
+to:thomas.tai@oracle.com" target=3D"_blank">thomas.tai@oracle.com</a>&gt;</=
+span> wrote:<br><blockquote class=3D"gmail_quote" style=3D"margin:0 0 0 .8e=
+x;border-left:1px #ccc solid;padding-left:1ex"><br>
+<br>
+On 08/01/2018 01:42 AM, gokul cg wrote:<br>
+<blockquote class=3D"gmail_quote" style=3D"margin:0 0 0 .8ex;border-left:1p=
+x #ccc solid;padding-left:1ex">
+Hi Thomas,<span class=3D""><br>
+<br>
+In my hardware, there is i2c power control chip for PCI card, I just powere=
+d down using i2c command .<br>
+</span></blockquote>
+<br>
+Hi Gokul,<br>
+When you power off the card via the i2c, it forcefully power off the card w=
+ithout notify the kernel? That is, during the card power off sequence it ma=
+nages to send a last AER isr to report the error and die? I am kind of expe=
+ct the pcie surprise removal or hot plug driver will handle it correctly.<b=
+r>
+<br>
+Thanks,<br>
+Thomas<br>
+<br>
+<blockquote class=3D"gmail_quote" style=3D"margin:0 0 0 .8ex;border-left:1p=
+x #ccc solid;padding-left:1ex">
+<br>
+Regards,<br>
+Gokul<br>
+</blockquote>
+</blockquote></div><br></div>
+
+--0000000000000112c10572643167--
