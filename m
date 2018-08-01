@@ -1,121 +1,64 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-sh2.amlogic.com ([58.32.228.45]:7417 "EHLO
-        mail-sh2.amlogic.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1727238AbeH3MN6 (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Thu, 30 Aug 2018 08:13:58 -0400
-From: Hanjie Lin <hanjie.lin@amlogic.com>
-To: Bjorn Helgaas <bhelgaas@google.com>
-CC: Yue Wang <yue.wang@amlogic.com>,
-        Hanjie Lin <hanjie.lin@amlogic.com>,
-        Kevin Hilman <khilman@baylibre.com>,
-        Jerome Brunet <jbrunet@baylibre.com>,
-        Rob Herring <robh@kernel.org>, <linux-kernel@vger.kernel.org>,
-        <linux-pci@vger.kernel.org>,
-        <linux-arm-kernel@lists.infradead.org>,
-        <linux-amlogic@lists.infradead.org>,
-        Yixun Lan <yixun.lan@amlogic.com>,
-        Liang Yang <liang.yang@amlogic.com>,
-        Jianxin Pan <jianxin.pan@amlogic.com>,
-        Qiufang Dai <qiufang.dai@amlogic.com>,
-        Jian Hu <jian.hu@amlogic.com>, <devicetree@vger.kernel.org>
-Subject: [PATCH v3 1/2] dt-bindings: PCI: meson: add DT bindings for Amlogic Meson PCIe controller
-Date: Thu, 30 Aug 2018 16:13:48 +0800
-Message-ID: <1535616829-167936-2-git-send-email-hanjie.lin@amlogic.com>
-In-Reply-To: <1535616829-167936-1-git-send-email-hanjie.lin@amlogic.com>
-References: <1535616829-167936-1-git-send-email-hanjie.lin@amlogic.com>
+Return-Path: <SRS0=dvAb=KQ=bootlin.com=thomas.petazzoni@kernel.org>
+Return-Path: <SRS0=dvAb=KQ=bootlin.com=thomas.petazzoni@kernel.org>
+Date: Wed, 1 Aug 2018 11:54:30 +0200
+From: Thomas Petazzoni <thomas.petazzoni@bootlin.com>
+To: Russell King - ARM Linux <linux@armlinux.org.uk>
+Cc: Bjorn Helgaas <helgaas@kernel.org>, Bjorn Helgaas <bhelgaas@google.com>,
+ Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>, linux-pci@vger.kernel.org,
+ Antoine Tenart <antoine.tenart@bootlin.com>, Gregory Clement
+ <gregory.clement@bootlin.com>, Maxime Chevallier
+ <maxime.chevallier@bootlin.com>, Nadav Haklai <nadavh@marvell.com>, Victor
+ Gu <xigu@marvell.com>, =?UTF-8?B?TWlxdcOobA==?= Raynal
+ <miquel.raynal@bootlin.com>, Zachary Zhang <zhangzg@marvell.com>, Wilson
+ Ding <dingwei@marvell.com>, linux-arm-kernel@lists.infradead.org, Ray Jui
+ <ray.jui@broadcom.com>, Ley Foon Tan <lftan@altera.com>, Simon Horman
+ <horms@verge.net.au>
+Subject: Re: [PATCH 1/3] PCI: Introduce PCI software bridge common logic
+Message-ID: <20180801115430.388c62ae@windsurf>
+In-Reply-To: <20180801092119.GB30658@n2100.armlinux.org.uk>
+References: <20180629092231.32207-1-thomas.petazzoni@bootlin.com>
+	<20180629092231.32207-2-thomas.petazzoni@bootlin.com>
+	<20180712195802.GC28466@bhelgaas-glaptop.roam.corp.google.com>
+	<20180801104957.1b01b847@windsurf>
+	<20180801092119.GB30658@n2100.armlinux.org.uk>
 MIME-Version: 1.0
-Content-Type: text/plain
-Sender: linux-pci-owner@vger.kernel.org
+Content-Type: text/plain; charset=US-ASCII
 List-ID: <linux-pci.vger.kernel.org>
 
-From: Yue Wang <yue.wang@amlogic.com>
+Hello Russell,
 
-The Amlogic Meson PCIe host controller is based on the Synopsys DesignWare
-PCI core. This patch adds documentation for the DT bindings in Meson PCIe
-controller.
+On Wed, 1 Aug 2018 10:21:19 +0100, Russell King - ARM Linux wrote:
 
-Signed-off-by: Yue Wang <yue.wang@amlogic.com>
-Signed-off-by: Hanjie Lin <hanjie.lin@amlogic.com>
----
- .../devicetree/bindings/pci/amlogic,meson-pcie.txt | 70 ++++++++++++++++++++++
- 1 file changed, 70 insertions(+)
- create mode 100644 Documentation/devicetree/bindings/pci/amlogic,meson-pcie.txt
 
-diff --git a/Documentation/devicetree/bindings/pci/amlogic,meson-pcie.txt b/Documentation/devicetree/bindings/pci/amlogic,meson-pcie.txt
-new file mode 100644
-index 0000000..12b18f8
---- /dev/null
-+++ b/Documentation/devicetree/bindings/pci/amlogic,meson-pcie.txt
-@@ -0,0 +1,70 @@
-+Amlogic Meson AXG DWC PCIE SoC controller
-+
-+Amlogic Meson PCIe host controller is based on the Synopsys DesignWare PCI core.
-+It shares common functions with the PCIe DesignWare core driver and
-+inherits common properties defined in
-+Documentation/devicetree/bindings/pci/designware-pci.txt.
-+
-+Additional properties are described here:
-+
-+Required properties:
-+- compatible:
-+	should contain "amlogic,axg-pcie" to identify the core.
-+- reg:
-+	should contain the configuration address space.
-+- reg-names: Must be
-+	- "elbi"	External local bus interface registers
-+	- "cfg"		Meson specific registers
-+	- "phy"		Meson PCIE PHY registers
-+	- "config"	PCIe configuration space
-+- reset-gpios: The GPIO to generate PCIe PERST# assert and deassert signal.
-+- clocks: Must contain an entry for each entry in clock-names.
-+- clock-names: Must include the following entries:
-+	- "pclk"       PCIe GEN 100M PLL clock
-+	- "port"       PCIe_x(A or B) RC clock gate
-+	- "general"    PCIe Phy clock
-+	- "mipi"       PCIe_x(A or B) 100M ref clock gate
-+- resets: phandle to the reset lines.
-+- reset-names: must contain "phy" "port" and "apb"
-+       - "phy"         Share PHY reset
-+       - "port"        Port A or B reset
-+       - "apb"         Share APB reset
-+- device_type:
-+	should be "pci". As specified in designware-pcie.txt
-+
-+
-+Example configuration:
-+
-+	pcie: pcie@f9800000 {
-+			compatible = "amlogic,axg-pcie", "snps,dw-pcie";
-+			reg = <0x0 0xf9800000 0x0 0x400000
-+					0x0 0xff646000 0x0 0x2000
-+					0x0 0xff644000 0x0 0x2000
-+					0x0 0xf9f00000 0x0 0x100000>;
-+			reg-names = "elbi", "cfg", "phy", "config";
-+			reset-gpios = <&gpio GPIOX_19 GPIO_ACTIVE_HIGH>;
-+			interrupts = <GIC_SPI 177 IRQ_TYPE_EDGE_RISING>;
-+			#interrupt-cells = <1>;
-+			interrupt-map-mask = <0 0 0 0>;
-+			interrupt-map = <0 0 0 0 &gic GIC_SPI 179 IRQ_TYPE_EDGE_RISING>;
-+			bus-range = <0x0 0xff>;
-+			#address-cells = <3>;
-+			#size-cells = <2>;
-+			device_type = "pci";
-+			ranges = <0x82000000 0 0 0x0 0xf9c00000 0 0x00300000>;
-+
-+			clocks = <&clkc CLKID_USB
-+					&clkc CLKID_MIPI_ENABLE
-+					&clkc CLKID_PCIE_A
-+					&clkc CLKID_PCIE_CML_EN0>;
-+			clock-names = "general",
-+					"mipi",
-+					"pclk",
-+					"port";
-+			resets = <&reset RESET_PCIE_PHY>,
-+				<&reset RESET_PCIE_A>,
-+				<&reset RESET_PCIE_APB>;
-+			reset-names = "phy",
-+					"port",
-+					"apb";
-+	};
+>    All PCI devices must treat Configuration Space write operations
+>    to reserved registers as no-ops; that is, the access must be
+>    completed normally on the bus and the data discarded. Read
+>    accesses to reserved or unimplemented registers must be completed
+>    normally and a data value of 0 returned.
+> 
+> (eg) PCI status:
+>    Reserved bits should be read-only and return zero when read.
+>    A one bit is reset (if it is not read-only) whenever the register
+>    is written, and the write data in the corresponding bit location
+>    is a 1.
+> 
+> [which is why doing the read-modify-write action that some host
+>  bridges that only support 32-bit accesses is dangerous - it leads
+>  to various status bits being inadvertently reset.]
+
+Speaking of this, the generic pci_generic_config_write32() function
+indeed does this incorrectly, and prints a warning.
+
+However, I just looked at the pci-thunder-pem code, and it seems to
+correctly account for those W1C bits, by having an explicit list of
+registers and their W1C bits (see thunder_pem_bridge_w1c_bits). This
+isn't specific to the Thunder PCIe controller at all, and would benefit
+from being made generic, no ?
+
+Best regards,
+
+Thomas
 -- 
-2.7.4
+Thomas Petazzoni, CTO, Bootlin (formerly Free Electrons)
+Embedded Linux and Kernel engineering
+https://bootlin.com
