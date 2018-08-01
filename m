@@ -1,68 +1,53 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-qk0-f193.google.com ([209.85.220.193]:36112 "EHLO
-        mail-qk0-f193.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1729664AbeHHVKt (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Wed, 8 Aug 2018 17:10:49 -0400
-Received: by mail-qk0-f193.google.com with SMTP id x192-v6so2282842qkb.3
-        for <linux-pci@vger.kernel.org>; Wed, 08 Aug 2018 11:49:50 -0700 (PDT)
-Subject: Re: [RFC] ARM64, PCIe, annd ACPI
-To: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
-Cc: Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org,
-        Tomasz Nowicki <tn@semihalf.com>,
-        Vladimir Olovyannikov <vladimir.olovyannikov@broadcom.com>,
-        BCM Kernel Feedback <bcm-kernel-feedback-list@broadcom.com>
-References: <89484aa0-08c4-0cff-500d-407d21e2f5fd@broadcom.com>
- <20180808093822.GA25150@e107981-ln.cambridge.arm.com>
-From: Ray Jui <ray.jui@broadcom.com>
-Message-ID: <a32a8761-f49f-f0cf-928b-0c323c2b540e@broadcom.com>
-Date: Wed, 8 Aug 2018 11:49:46 -0700
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+From: Trent Piepho <tpiepho@impinj.com>
+To: "l.stach@pengutronix.de" <l.stach@pengutronix.de>,
+ "linux-arm-kernel@lists.infradead.org"
+ <linux-arm-kernel@lists.infradead.org>, "linux-pci@vger.kernel.org"
+ <linux-pci@vger.kernel.org>
+Subject: Re: [PATCH 1/2] ARM: dts: imx7d: Add node for PCIe PHY
+Date: Wed, 1 Aug 2018 17:33:32 +0000
+Message-ID: <1533144812.2283.227.camel@impinj.com>
+References: <20180718194424.8844-1-tpiepho@impinj.com>
+ <20180718194424.8844-2-tpiepho@impinj.com>
+ <1533119951.20186.5.camel@pengutronix.de>
+In-Reply-To: <1533119951.20186.5.camel@pengutronix.de>
 MIME-Version: 1.0
-In-Reply-To: <20180808093822.GA25150@e107981-ln.cambridge.arm.com>
-Content-Type: text/plain; charset=utf-8; format=flowed
-Sender: linux-pci-owner@vger.kernel.org
+List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
+List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
+List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
+List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
+List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
+Cc: "fabio.estevam@nxp.com" <fabio.estevam@nxp.com>,
+ "shawnguo@kernel.org" <shawnguo@kernel.org>,
+ "hongxing.zhu@nxp.com" <hongxing.zhu@nxp.com>,
+ "kernel@pengutronix.de" <kernel@pengutronix.de>
+Content-Type: text/plain; charset="us-ascii"
+Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
+Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
 List-ID: <linux-pci.vger.kernel.org>
 
-
-
-On 8/8/2018 2:38 AM, Lorenzo Pieralisi wrote:
-> On Tue, Aug 07, 2018 at 05:10:15PM -0700, Ray Jui wrote:
->> Hi Lorenzo/Bjorn,
->>
->> I have a question on PCIe controller APCI support on ARM64 based systems.
->>
->> If my understanding of the implementation of "pci_acpi_scan_root" under
->> "arch/arm64/kernel/pci.c" is correct, it appears
->> "pci_acpi_setup_ecam_mapping" is called within "pci_acpi_scan_root".
->>
->> Does that mean for a PCIe host controller on ARM64 to support ACPI, it needs
->> to support ECAM and MMIO based access to the configuration space registers?
->>
->> If the above statement is true, does it imply that any PCIe controller on
->> ARM64 that does not support MMIO based access to the config space register
->> cannot have ACPI support?
+On Wed, 2018-08-01 at 12:39 +0200, Lucas Stach wrote:
 > 
-> Yes and it is not just MMIO, config space must be ECAM compliant as described
-> in the PCI firmware specification and enforced here:
+> > +This is the PHY associated with the IMX7d PCIe controller.  It's
+> > used by the
+> > +PCI-e controller via the fsl,pcie-phy phandle.
+> > +
+> > +Required properties:
+> > +- compatible:
+> > +	- "fsl,imx-pcie-phy"
 > 
-> http://infocenter.arm.com/help/topic/com.arm.doc.den0029b/Server_Base_System_Architecture_v5_0_ARM_DEN_0029B.pdf
-> 
+> This is too generic. Please change it to "fsl,imx7-pcie-phy".
 
-Okay, got it, the SBSA spec makes it very clear that the PCIe controller 
-needs to support ECAM.
+Can anyone from NXP tell us if an external PCIe PHY block is present in
+other IMX designs?  I suspect that this is generic, but no design other
+than imx7d has had any reason to use this PHY register space yet.
 
-> In short: what's in the mainline (+ adequate PCI controller firmware
-> configuration) must be sufficient to bootstrap your PCI subsystem in
-> ACPI, it is a very simple litmus test and we won't add anything that
-> deviates from that to the mainline kernel ARM64 ACPI PCI code support.
-> 
-
-It sounds like I'll have to look into ways to work around this at the 
-driver level as Bjorn pointed out with some other examples.
-
-> Thanks,
-> Lorenzo
-> 
-
-Thanks!
-
-Ray
+If this is specific to this SoC, then maybe it shoudl be fsl,imx7d-
+pcie-phy, since the iMX7s has no pcie.
+_______________________________________________
+linux-arm-kernel mailing list
+linux-arm-kernel@lists.infradead.org
+http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
