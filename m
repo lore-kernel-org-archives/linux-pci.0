@@ -1,40 +1,48 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from bombadil.infradead.org ([198.137.202.133]:35880 "EHLO
-        bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1729035AbeGQOg3 (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Tue, 17 Jul 2018 10:36:29 -0400
-Date: Tue, 17 Jul 2018 07:03:35 -0700
-From: Christoph Hellwig <hch@infradead.org>
-To: Shunyong Yang <shunyong.yang@hxt-semitech.com>
-Cc: bhelgaas@google.com, linux-kernel@vger.kernel.org,
-        linux-pci@vger.kernel.org, Joey Zheng <yu.zheng@hxt-semitech.com>
-Subject: Re: [PATCH] PCI: Unify pci and normal dma direction definition
-Message-ID: <20180717140335.GA23500@infradead.org>
-References: <1531463840-34651-1-git-send-email-shunyong.yang@hxt-semitech.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1531463840-34651-1-git-send-email-shunyong.yang@hxt-semitech.com>
+Received: from ozlabs.org ([203.11.71.1]:59607 "EHLO ozlabs.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1733304AbeHAHIG (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Wed, 1 Aug 2018 03:08:06 -0400
+In-Reply-To: <e63eb03c87a1a54257aa2bcc384cf07761824a7e.1532915951.git.sbobroff@linux.ibm.com>
+To: Sam Bobroff <sbobroff@linux.ibm.com>,
+        linuxppc-dev@lists.ozlabs.org, linux-pci@vger.kernel.org
+From: Michael Ellerman <patch-notifications@ellerman.id.au>
+Cc: bhelgaas@google.com, bryantly@linux.vnet.ibm.com
+Subject: Re: [v3,1/1] powerpc/pseries: fix EEH recovery of some IOV devices
+Message-Id: <41gMDd5RDWz9sCq@ozlabs.org>
+Date: Wed,  1 Aug 2018 15:24:17 +1000 (AEST)
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-> diff --git a/include/linux/dma-direction.h b/include/linux/dma-direction.h
-> index 3649a031893a..9d52716e9218 100644
-> --- a/include/linux/dma-direction.h
-> +++ b/include/linux/dma-direction.h
-> @@ -2,7 +2,7 @@
->  #ifndef _LINUX_DMA_DIRECTION_H
->  #define _LINUX_DMA_DIRECTION_H
->  /*
-> - * These definitions mirror those in pci.h, so they can be used
-> + * These definitions mirror those in pci-dma-compat.h, so they can be used
->   * interchangeably with their PCI_ counterparts.
->   */
+On Mon, 2018-07-30 at 01:59:14 UTC, Sam Bobroff wrote:
+> EEH recovery currently fails on pSeries for some IOV capable PCI
+> devices, if CONFIG_PCI_IOV is on and the hypervisor doesn't provide
+> certain device tree properties for the device. (Found on an IOV
+> capable device using the ipr driver.)
+> 
+> Recovery fails in pci_enable_resources() at the check on r->parent,
+> because r->flags is set and r->parent is not.  This state is due to
+> sriov_init() setting the start, end and flags members of the IOV BARs
+> but the parent not being set later in
+> pseries_pci_fixup_iov_resources(), because the
+> "ibm,open-sriov-vf-bar-info" property is missing.
+> 
+> Correct this by zeroing the resource flags for IOV BARs when they
+> can't be configured (this is the same method used by sriov_init() and
+> __pci_read_base()).
+> 
+> VFs cleared this way can't be enabled later, because that requires
+> another device tree property, "ibm,number-of-configurable-vfs" as well
+> as support for the RTAS function "ibm_map_pes". These are all part of
+> hypervisor support for IOV and it seems unlikely that a hypervisor
+> would ever partially, but not fully, support it. (None are currently
+> provided by QEMU/KVM.)
+> 
+> Signed-off-by: Sam Bobroff <sbobroff@linux.ibm.com>
+> Reviewed-by: Bryant G. Ly <bryantly@linux.ibm.com>
 
-I think we can just drop this comment anymore.
+Applied to powerpc next, thanks.
 
-> +#define PCI_DMA_BIDIRECTIONAL	(DMA_BIDIRECTIONAL)
-> +#define PCI_DMA_TODEVICE	(DMA_TO_DEVICE)
-> +#define PCI_DMA_FROMDEVICE	(DMA_FROM_DEVICE)
-> +#define PCI_DMA_NONE		(DMA_NONE)
+https://git.kernel.org/powerpc/c/b87b9cf4935325c98522823caeddd3
 
-No need for the braces.
+cheers
