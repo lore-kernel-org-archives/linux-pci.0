@@ -1,200 +1,79 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from smtprelay4.synopsys.com ([198.182.47.9]:60178 "EHLO
-        smtprelay.synopsys.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1727406AbeHWPYm (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Thu, 23 Aug 2018 11:24:42 -0400
-From: Gustavo Pimentel <gustavo.pimentel@synopsys.com>
-To: bhelgaas@google.com, lorenzo.pieralisi@arm.com, kishon@ti.com,
-        corbet@lwn.net
-Cc: linux-pci@vger.kernel.org, linux-doc@vger.kernel.org,
-        linux-kernel@vger.kernel.org,
-        Gustavo Pimentel <gustavo.pimentel@synopsys.com>
-Subject: [PATCH] tools/pci: Change pcitest compiling process
-Date: Thu, 23 Aug 2018 13:55:15 +0200
-Message-Id: <f543d460ccff7891aa08c744fb675eb2c11fb2e7.1535025221.git.gustavo.pimentel@synopsys.com>
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Message-ID: <1533119951.20186.5.camel@pengutronix.de>
+Subject: Re: [PATCH 1/2] ARM: dts: imx7d: Add node for PCIe PHY
+From: Lucas Stach <l.stach@pengutronix.de>
+To: Trent Piepho <tpiepho@impinj.com>, linux-pci@vger.kernel.org,
+ linux-arm-kernel@lists.infradead.org
+Date: Wed, 01 Aug 2018 12:39:11 +0200
+In-Reply-To: <20180718194424.8844-2-tpiepho@impinj.com>
+References: <20180718194424.8844-1-tpiepho@impinj.com>
+ <20180718194424.8844-2-tpiepho@impinj.com>
+Mime-Version: 1.0
+List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
+List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
+List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
+List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
+List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
+Cc: Fabio Estevam <fabio.estevam@nxp.com>, Richard Zhu <hongxing.zhu@nxp.com>,
+ Shawn Guo <shawnguo@kernel.org>, Sascha Hauer <kernel@pengutronix.de>
+Content-Type: text/plain; charset="utf-8"
+Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
+Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Change tool compiling process in order to be build using the same
-mechanism used in other linux tools (e.g. iio, perf, etc). This will
-allow in future the buildroot tool to build and integrate this tool in
-a more expeditious way.
-
-Update documentation accordingly.
-
-Signed-off-by: Gustavo Pimentel <gustavo.pimentel@synopsys.com>
----
- Documentation/PCI/endpoint/pci-test-howto.txt | 19 ++++++----
- tools/Makefile                                | 13 ++++---
- tools/pci/Build                               |  1 +
- tools/pci/Makefile                            | 53 +++++++++++++++++++++++++++
- 4 files changed, 72 insertions(+), 14 deletions(-)
- create mode 100644 tools/pci/Build
- create mode 100644 tools/pci/Makefile
-
-diff --git a/Documentation/PCI/endpoint/pci-test-howto.txt b/Documentation/PCI/endpoint/pci-test-howto.txt
-index 75f48c3..16df733 100644
---- a/Documentation/PCI/endpoint/pci-test-howto.txt
-+++ b/Documentation/PCI/endpoint/pci-test-howto.txt
-@@ -98,17 +98,20 @@ Note that the devices listed here correspond to the value populated in 1.4 above
- 2.2 Using Endpoint Test function Device
- 
- pcitest.sh added in tools/pci/ can be used to run all the default PCI endpoint
--tests. Before pcitest.sh can be used pcitest.c should be compiled using the
--following commands.
-+tests. To compile this tool the following commands should be used:
- 
--	cd <kernel-dir>
--	make headers_install ARCH=arm
--	arm-linux-gnueabihf-gcc -Iusr/include tools/pci/pcitest.c -o pcitest
--	cp pcitest  <rootfs>/usr/sbin/
--	cp tools/pci/pcitest.sh <rootfs>
-+	# cd <kernel-dir>
-+	# make -C tools/pci
-+
-+or if you desire to compile and install in your system:
-+
-+	# cd <kernel-dir>
-+	# make -C tools/pci install
-+
-+The tool and script will be located in <rootfs>/usr/bin/
- 
- 2.2.1 pcitest.sh Output
--	# ./pcitest.sh
-+	# pcitest.sh
- 	BAR tests
- 
- 	BAR0:           OKAY
-diff --git a/tools/Makefile b/tools/Makefile
-index be02c8b..abb358a 100644
---- a/tools/Makefile
-+++ b/tools/Makefile
-@@ -21,6 +21,7 @@ help:
- 	@echo '  leds                   - LEDs  tools'
- 	@echo '  liblockdep             - user-space wrapper for kernel locking-validator'
- 	@echo '  bpf                    - misc BPF tools'
-+	@echo '  pci                    - PCI tools'
- 	@echo '  perf                   - Linux performance measurement and analysis tool'
- 	@echo '  selftests              - various kernel selftests'
- 	@echo '  spi                    - spi tools'
-@@ -59,7 +60,7 @@ acpi: FORCE
- cpupower: FORCE
- 	$(call descend,power/$@)
- 
--cgroup firewire hv guest spi usb virtio vm bpf iio gpio objtool leds wmi: FORCE
-+cgroup firewire hv guest spi usb virtio vm bpf iio gpio objtool leds wmi pci: FORCE
- 	$(call descend,$@)
- 
- liblockdep: FORCE
-@@ -94,7 +95,7 @@ kvm_stat: FORCE
- all: acpi cgroup cpupower gpio hv firewire liblockdep \
- 		perf selftests spi turbostat usb \
- 		virtio vm bpf x86_energy_perf_policy \
--		tmon freefall iio objtool kvm_stat wmi
-+		tmon freefall iio objtool kvm_stat wmi pci
- 
- acpi_install:
- 	$(call descend,power/$(@:_install=),install)
-@@ -102,7 +103,7 @@ acpi_install:
- cpupower_install:
- 	$(call descend,power/$(@:_install=),install)
- 
--cgroup_install firewire_install gpio_install hv_install iio_install perf_install spi_install usb_install virtio_install vm_install bpf_install objtool_install wmi_install:
-+cgroup_install firewire_install gpio_install hv_install iio_install perf_install spi_install usb_install virtio_install vm_install bpf_install objtool_install wmi_install pci_install:
- 	$(call descend,$(@:_install=),install)
- 
- liblockdep_install:
-@@ -128,7 +129,7 @@ install: acpi_install cgroup_install cpupower_install gpio_install \
- 		perf_install selftests_install turbostat_install usb_install \
- 		virtio_install vm_install bpf_install x86_energy_perf_policy_install \
- 		tmon_install freefall_install objtool_install kvm_stat_install \
--		wmi_install
-+		wmi_install pci_install
- 
- acpi_clean:
- 	$(call descend,power/acpi,clean)
-@@ -136,7 +137,7 @@ acpi_clean:
- cpupower_clean:
- 	$(call descend,power/cpupower,clean)
- 
--cgroup_clean hv_clean firewire_clean spi_clean usb_clean virtio_clean vm_clean wmi_clean bpf_clean iio_clean gpio_clean objtool_clean leds_clean:
-+cgroup_clean hv_clean firewire_clean spi_clean usb_clean virtio_clean vm_clean wmi_clean bpf_clean iio_clean gpio_clean objtool_clean leds_clean pci_clean:
- 	$(call descend,$(@:_clean=),clean)
- 
- liblockdep_clean:
-@@ -174,6 +175,6 @@ clean: acpi_clean cgroup_clean cpupower_clean hv_clean firewire_clean \
- 		perf_clean selftests_clean turbostat_clean spi_clean usb_clean virtio_clean \
- 		vm_clean bpf_clean iio_clean x86_energy_perf_policy_clean tmon_clean \
- 		freefall_clean build_clean libbpf_clean libsubcmd_clean liblockdep_clean \
--		gpio_clean objtool_clean leds_clean wmi_clean
-+		gpio_clean objtool_clean leds_clean wmi_clean pci_clean
- 
- .PHONY: FORCE
-diff --git a/tools/pci/Build b/tools/pci/Build
-new file mode 100644
-index 0000000..c375aea
---- /dev/null
-+++ b/tools/pci/Build
-@@ -0,0 +1 @@
-+pcitest-y += pcitest.o
-diff --git a/tools/pci/Makefile b/tools/pci/Makefile
-new file mode 100644
-index 0000000..46e4c2f
---- /dev/null
-+++ b/tools/pci/Makefile
-@@ -0,0 +1,53 @@
-+# SPDX-License-Identifier: GPL-2.0
-+include ../scripts/Makefile.include
-+
-+bindir ?= /usr/bin
-+
-+ifeq ($(srctree),)
-+srctree := $(patsubst %/,%,$(dir $(CURDIR)))
-+srctree := $(patsubst %/,%,$(dir $(srctree)))
-+endif
-+
-+# Do not use make's built-in rules
-+# (this improves performance and avoids hard-to-debug behaviour);
-+MAKEFLAGS += -r
-+
-+CFLAGS += -O2 -Wall -g -D_GNU_SOURCE -I$(OUTPUT)include
-+
-+ALL_TARGETS := pcitest pcitest.sh
-+ALL_PROGRAMS := $(patsubst %,$(OUTPUT)%,$(ALL_TARGETS))
-+
-+all: $(ALL_PROGRAMS)
-+
-+export srctree OUTPUT CC LD CFLAGS
-+include $(srctree)/tools/build/Makefile.include
-+
-+#
-+# We need the following to be outside of kernel tree
-+#
-+$(OUTPUT)include/linux/: ../../include/uapi/linux/
-+	mkdir -p $(OUTPUT)include/linux/ 2>&1 || true
-+	ln -sf $(CURDIR)/../../include/uapi/linux/pcitest.h $@
-+
-+prepare: $(OUTPUT)include/linux/
-+
-+PCITEST_IN := $(OUTPUT)pcitest-in.o
-+$(PCITEST_IN): prepare FORCE
-+	$(Q)$(MAKE) $(build)=pcitest
-+$(OUTPUT)pcitest: $(PCITEST_IN)
-+	$(QUIET_LINK)$(CC) $(CFLAGS) $(LDFLAGS) $< -o $@
-+
-+clean:
-+	rm -f $(ALL_PROGRAMS)
-+	rm -rf $(OUTPUT)include/
-+	find $(if $(OUTPUT),$(OUTPUT),.) -name '*.o' -delete -o -name '\.*.d' -delete
-+
-+install: $(ALL_PROGRAMS)
-+	install -d -m 755 $(DESTDIR)$(bindir);		\
-+	for program in $(ALL_PROGRAMS); do		\
-+		install $$program $(DESTDIR)$(bindir);	\
-+	done
-+
-+FORCE:
-+
-+.PHONY: all install clean FORCE prepare
--- 
-2.7.4
+QW0gTWl0dHdvY2gsIGRlbiAxOC4wNy4yMDE4LCAxMjo0NCAtMDcwMCBzY2hyaWViIFRyZW50IFBp
+ZXBobzoKPiBUaGVyZSBpc24ndCB5ZXQgYW55IGNvZGUgaW4gdGhlIGtlcm5lbCB0aGF0IHVzZXMg
+dGhpcyBkZXZpY2UncyByZWdpc3RlciwKPiBidXQgdGhlcmUgd2lsbCBiZSBzb21lIGZvciBhIFBD
+SWUgUExMIGVycmF0dW0gd29ydGthcm91bmQuCj4gCj4gVGhpcyBhZGRzIHRoZSBQSFkgYXMgYSBu
+ZXcgbm9kZS7CoMKgVGhlIFBDSS1lIGNvbnRyb2xsZXIgbm9kZSBnYWlucyBhCj4gcGhhbmRsZSBw
+cm9wZXJ0eSB0aGF0IHBvaW50cyB0byBpdC7CoMKgVGhlcmUgaXMgbm8gZHJpdmVyIGZvciB0aGUg
+UEhZIGF0Cj4gdGhpcyBwb2ludCBhbmQgYWxsIHRoZSBleGlzdGluZyBjb2RlIHRoYXQgcmVsYXRl
+cyB0byB0aGUgUEhZIGlzIHBhcnQgb2YKPiB0aGUgUENJLWUgY29udHJvbGxlciBkcml2ZXIgKGFu
+ZCBkb2VzIG5vdCBuZWVkIHJlZ2lzdGVyIGFjY2VzcywgeWV0KS4KPiAKPiA+IENjOiBTaGF3biBH
+dW8gPHNoYXduZ3VvQGtlcm5lbC5vcmc+Cj4gPiBDYzogU2FzY2hhIEhhdWVyIDxrZXJuZWxAcGVu
+Z3V0cm9uaXguZGU+Cj4gPiBDYzogRmFiaW8gRXN0ZXZhbSA8ZmFiaW8uZXN0ZXZhbUBueHAuY29t
+Pgo+ID4gQ2M6IFJpY2hhcmQgWmh1IDxob25neGluZy56aHVAbnhwLmNvbT4KPiA+IENjOiBMdWNh
+cyBTdGFjaCA8bC5zdGFjaEBwZW5ndXRyb25peC5kZT4KPiA+IFNpZ25lZC1vZmYtYnk6IFRyZW50
+IFBpZXBobyA8dHBpZXBob0BpbXBpbmouY29tPgo+IC0tLQo+IMKgRG9jdW1lbnRhdGlvbi9kZXZp
+Y2V0cmVlL2JpbmRpbmdzL3BjaS9mc2wsaW14NnEtcGNpZS50eHQgfCAxMSArKysrKysrKysrKwo+
+IMKgYXJjaC9hcm0vYm9vdC9kdHMvaW14N2QuZHRzacKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKg
+wqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqB8wqDCoDkgKysrKysrKysrCj4gwqAyIGZp
+bGVzIGNoYW5nZWQsIDIwIGluc2VydGlvbnMoKykKPiAKPiBkaWZmIC0tZ2l0IGEvRG9jdW1lbnRh
+dGlvbi9kZXZpY2V0cmVlL2JpbmRpbmdzL3BjaS9mc2wsaW14NnEtcGNpZS50eHQgYi9Eb2N1bWVu
+dGF0aW9uL2RldmljZXRyZWUvYmluZGluZ3MvcGNpL2ZzbCxpbXg2cS1wY2llLnR4dAo+IGluZGV4
+IGNiMzM0MjExODRhMC4uYzdhZWRhNjg3OGZmIDEwMDY0NAo+IC0tLSBhL0RvY3VtZW50YXRpb24v
+ZGV2aWNldHJlZS9iaW5kaW5ncy9wY2kvZnNsLGlteDZxLXBjaWUudHh0Cj4gKysrIGIvRG9jdW1l
+bnRhdGlvbi9kZXZpY2V0cmVlL2JpbmRpbmdzL3BjaS9mc2wsaW14NnEtcGNpZS50eHQKPiBAQCAt
+NTAsNiArNTAsNyBAQCBBZGRpdGlvbmFsIHJlcXVpcmVkIHByb3BlcnRpZXMgZm9yIGlteDdkLXBj
+aWU6Cj4gwqAtIHJlc2V0LW5hbWVzOiBNdXN0IGNvbnRhaW4gdGhlIGZvbGxvd2luZyBlbnRpcmVz
+Ogo+ID4gwqAJwqDCoMKgwqDCoMKgwqAtICJwY2llcGh5Igo+ID4gwqAJwqDCoMKgwqDCoMKgwqAt
+ICJhcHBzIgo+ICstIGZzbCxwY2llLXBoeTogQSBwaGFuZGxlIHRvIGFuIGZzbCxpbXgtcGNpZS1w
+aHkgbm9kZS4KPiDCoAo+IMKgRXhhbXBsZToKPiDCoAo+IEBAIC03NiwzICs3NywxMyBAQCBFeGFt
+cGxlOgo+ID4gwqAJCWNsb2NrcyA9IDwmY2xrcyAxNDQ+LCA8JmNsa3MgMjA2PiwgPCZjbGtzIDE4
+OT47Cj4gPiDCoAkJY2xvY2stbmFtZXMgPSAicGNpZSIsICJwY2llX2J1cyIsICJwY2llX3BoeSI7
+Cj4gPiDCoAl9Owo+ICsKPiArKiBGcmVlc2NhbGUgaS5NWDdkIFBDSWUgUEhZCj4gKwo+ICtUaGlz
+IGlzIHRoZSBQSFkgYXNzb2NpYXRlZCB3aXRoIHRoZSBJTVg3ZCBQQ0llIGNvbnRyb2xsZXIuwqDC
+oEl0J3MgdXNlZCBieSB0aGUKPiArUENJLWUgY29udHJvbGxlciB2aWEgdGhlIGZzbCxwY2llLXBo
+eSBwaGFuZGxlLgo+ICsKPiArUmVxdWlyZWQgcHJvcGVydGllczoKPiArLSBjb21wYXRpYmxlOgo+
+ICsJLSAiZnNsLGlteC1wY2llLXBoeSIKClRoaXMgaXMgdG9vIGdlbmVyaWMuIFBsZWFzZSBjaGFu
+Z2UgaXQgdG8gImZzbCxpbXg3LXBjaWUtcGh5Ii4KCj4gKy0gcmVnOiBiYXNlIGFkZHJlc3MgYW5k
+IGxlbmd0aCBvZiB0aGUgUENJZSBQSFkgY29udHJvbGxlcgo+IGRpZmYgLS1naXQgYS9hcmNoL2Fy
+bS9ib290L2R0cy9pbXg3ZC5kdHNpIGIvYXJjaC9hcm0vYm9vdC9kdHMvaW14N2QuZHRzaQo+IGlu
+ZGV4IDIwMDcxNGUzZmVlYS4uMzFmNWM4NTc2MjUxIDEwMDY0NAo+IC0tLSBhL2FyY2gvYXJtL2Jv
+b3QvZHRzL2lteDdkLmR0c2kKPiArKysgYi9hcmNoL2FybS9ib290L2R0cy9pbXg3ZC5kdHNpCj4g
+QEAgLTk0LDYgKzk0LDE0IEBACj4gPiDCoAl9Owo+IMKgfTsKPiDCoAo+ICsmYWlwczIgewo+ID4g
+PiArCXBjaWVfcGh5OiBwY2llLXBoeUAzMDZkMDAwMCB7Cj4gPiArCQnCoMKgY29tcGF0aWJsZSA9
+ICJmc2wsaW14LXBjaWUtcGh5IjsKPiA+ICsJCcKgwqByZWcgPSA8MHgzMDZkMDAwMCAweDEwMDAw
+PjsKPiA+ICsJCcKgwqBzdGF0dXMgPSAiZGlzYWJsZWQiOwo+ID4gKwl9Owo+ICt9Owo+ICsKPiDC
+oCZhaXBzMyB7Cj4gPiA+IMKgCXVzYm90ZzI6IHVzYkAzMGIyMDAwMCB7Cj4gPiDCoAkJY29tcGF0
+aWJsZSA9ICJmc2wsaW14N2QtdXNiIiwgImZzbCxpbXgyNy11c2IiOwo+IEBAIC0xNjcsNiArMTc1
+LDcgQEAKPiA+IMKgCQkJwqA8JnNyYyBJTVg3X1JFU0VUX1BDSUVfQ1RSTF9BUFBTX0VOPjsKPiA+
+IMKgCQlyZXNldC1uYW1lcyA9ICJwY2llcGh5IiwgImFwcHMiOwo+ID4gwqAJCXN0YXR1cyA9ICJk
+aXNhYmxlZCI7Cj4gPiArCQlmc2wscGNpZS1waHkgPSA8JnBjaWVfcGh5PjsKPiA+IMKgCX07Cj4g
+wqB9Owo+IMKgCgpfX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19f
+XwpsaW51eC1hcm0ta2VybmVsIG1haWxpbmcgbGlzdApsaW51eC1hcm0ta2VybmVsQGxpc3RzLmlu
+ZnJhZGVhZC5vcmcKaHR0cDovL2xpc3RzLmluZnJhZGVhZC5vcmcvbWFpbG1hbi9saXN0aW5mby9s
+aW51eC1hcm0ta2VybmVsCg==
