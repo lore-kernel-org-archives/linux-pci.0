@@ -1,133 +1,91 @@
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-From: Nipun Gupta <nipun.gupta@nxp.com>
-To: "robin.murphy@arm.com" <robin.murphy@arm.com>, "will.deacon@arm.com"
- <will.deacon@arm.com>, "robh+dt@kernel.org" <robh+dt@kernel.org>,
- "robh@kernel.org" <robh@kernel.org>, "mark.rutland@arm.com"
- <mark.rutland@arm.com>, "catalin.marinas@arm.com" <catalin.marinas@arm.com>,
- "gregkh@linuxfoundation.org" <gregkh@linuxfoundation.org>, Laurentiu Tudor
- <laurentiu.tudor@nxp.com>, "bhelgaas@google.com" <bhelgaas@google.com>,
- "hch@lst.de" <hch@lst.de>
-Subject: RE: [PATCH 0/7 v6] Support for fsl-mc bus and its devices in SMMU
-Date: Fri, 31 Aug 2018 11:57:48 +0000
-Message-ID: <VI1PR04MB4480D192810E7DEB38895F0AE60F0@VI1PR04MB4480.eurprd04.prod.outlook.com>
-References: <1531135103-10699-1-git-send-email-nipun.gupta@nxp.com>
-In-Reply-To: <1531135103-10699-1-git-send-email-nipun.gupta@nxp.com>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from eu-smtp-delivery-211.mimecast.com ([207.82.80.211]:49471 "EHLO
+        eu-smtp-delivery-211.mimecast.com" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S2387502AbeHAKlp (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Wed, 1 Aug 2018 06:41:45 -0400
+From: David Laight <David.Laight@ACULAB.COM>
+To: "'Alex_Gagniuc@Dellteam.com'" <Alex_Gagniuc@Dellteam.com>,
+        "lukas@wunner.de" <lukas@wunner.de>
+CC: "mr.nuke.me@gmail.com" <mr.nuke.me@gmail.com>,
+        "keith.busch@intel.com" <keith.busch@intel.com>,
+        "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+        "Austin.Bolen@dell.com" <Austin.Bolen@dell.com>,
+        "Stuart.Hayes@dell.com" <Stuart.Hayes@dell.com>,
+        "Narendra.K@dell.com" <Narendra.K@dell.com>,
+        "Christopher.Arzola@dell.com" <Christopher.Arzola@dell.com>,
+        "David.Chalfant@dell.com" <David.Chalfant@dell.com>,
+        "okaya@kernel.org" <okaya@kernel.org>
+Subject: RE: Should a PCIe Link Down event set the PCI_DEV_DISCONNECTED bit?
+Date: Wed, 1 Aug 2018 08:58:39 +0000
+Message-ID: <9870eb1907ae425bb9671c73845193f3@AcuMS.aculab.com>
+References: <47727551-86ce-040a-2516-efa47ee3a76e@gmail.com>
+ <20180727071813.GA6128@wunner.de>
+ <f6aa0b881a824b4f82a29dad300aaaea@ausx13mps321.AMER.DELL.COM>
+ <20180727170543.GA5326@wunner.de>
+ <99604d46a7554eb38ee6c1579c53d835@ausx13mps321.AMER.DELL.COM>
+ <20180728183130.GA21482@wunner.de>
+ <c9a2b3463fd04f3eb7725f985c569b03@ausx13mps321.AMER.DELL.COM>
+ <20180731092857.GA13494@wunner.de>
+ <f05149cf4d9743878397de7763561221@ausx13mps321.AMER.DELL.COM>
+In-Reply-To: <f05149cf4d9743878397de7763561221@ausx13mps321.AMER.DELL.COM>
 MIME-Version: 1.0
-List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
-List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
-List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
-List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
-List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
-Cc: "devicetree@vger.kernel.org" <devicetree@vger.kernel.org>,
- "stuyoder@gmail.com" <stuyoder@gmail.com>,
- Bharat Bhushan <bharat.bhushan@nxp.com>,
- "shawnguo@kernel.org" <shawnguo@kernel.org>,
- "joro@8bytes.org" <joro@8bytes.org>,
- "linuxppc-dev@lists.ozlabs.org" <linuxppc-dev@lists.ozlabs.org>,
- "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
- Leo Li <leoyang.li@nxp.com>,
- "iommu@lists.linux-foundation.org" <iommu@lists.linux-foundation.org>,
- "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
- "frowand.list@gmail.com" <frowand.list@gmail.com>,
- "linux-arm-kernel@lists.infradead.org" <linux-arm-kernel@lists.infradead.org>,
- "m.szyprowski@samsung.com" <m.szyprowski@samsung.com>
-Content-Type: text/plain; charset="us-ascii"
-Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
-Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
+Content-Type: text/plain; charset=UTF-8
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hi Joerg/Robin,
+From: Alex_Gagniuc@Dellteam.com
+> Sent: 31 July 2018 17:36
+> 
+> On 07/31/2018 04:29 AM, Lukas Wunner wrote:
+> > On Mon, Jul 30, 2018 at 09:38:04PM +0000, Alex_Gagniuc@Dellteam.com wrote:
+> >> On 07/28/2018 01:31 PM, Lukas Wunner wrote:
+> >>> On Fri, Jul 27, 2018 at 05:51:04PM +0000, Alex_Gagniuc@Dellteam.com wrote:
+> >>>> I think PCI_DEV_DISCONNECTED is a documentation issue above all else.
+> >>>> The history I was given is that drivers would take a very long time to
+> >>>> tear down a device. Config space IO to an nonexistent device took a long
+> >>>> while to time out. Performance was one motivation -- and was not
+> >>>> documented.
+> >>>
+> >>> Often it is possible for the driver to detect surprise removal by
+> >>> checking if mmio reads return "all ones".  But in some cases that's
+> >>> a valid value to read from mmio and then this approach won't work.
+> >>> Also, checking every mmio read may negatively impact performance.
+> >>
+> >> A colleague and me beat that dead horse to the afterdeath. Consensus was
+> >> that the return value is less reliable than a coin toss (of a two-heads
+> >> coin).
 
-Can you please let me know when these patches will be applied onto the tree.
-Is there anything else pending from my side.
+Something cheap-ish to find out whether a -1 was caused by a card
+removal might be sensible - Especially if it can be done without
+a config space read.
+Clearly you can't check anything BEFORE doing the read.
+And reading the pci-id from config space isn't entirely useful.
+If the card has reset itself (and the link recovered) then you
+need to read a BAR register and check it is setup.
 
-Thanks,
-Nipun
+More interestingly a read request that is inside the bridge's address
+window but outside any BAR (fairly easy to setup if the target has
+a large BAR and a small one) will also timeout (and return -1) even
+though there is no failure of the link.
 
-> -----Original Message-----
-> From: Nipun Gupta
-> Sent: Monday, July 9, 2018 4:48 PM
-> To: robin.murphy@arm.com; will.deacon@arm.com; robh+dt@kernel.org;
-> robh@kernel.org; mark.rutland@arm.com; catalin.marinas@arm.com;
-> gregkh@linuxfoundation.org; Laurentiu Tudor <laurentiu.tudor@nxp.com>;
-> bhelgaas@google.com; hch@lst.de
-> Cc: joro@8bytes.org; m.szyprowski@samsung.com; shawnguo@kernel.org;
-> frowand.list@gmail.com; iommu@lists.linux-foundation.org; linux-
-> kernel@vger.kernel.org; devicetree@vger.kernel.org; linux-arm-
-> kernel@lists.infradead.org; linuxppc-dev@lists.ozlabs.org; linux-
-> pci@vger.kernel.org; Bharat Bhushan <bharat.bhushan@nxp.com>;
-> stuyoder@gmail.com; Leo Li <leoyang.li@nxp.com>; Nipun Gupta
-> <nipun.gupta@nxp.com>
-> Subject: [PATCH 0/7 v6] Support for fsl-mc bus and its devices in SMMU
-> 
-> This patchset defines IOMMU DT binding for fsl-mc bus and adds
-> support in SMMU for fsl-mc bus.
-> 
-> The patch series is based on top of dma-mapping tree (for-next branch):
-> http://git.infradead.org/users/hch/dma-mapping.git
-> 
-> These patches
->   - Define property 'iommu-map' for fsl-mc bus (patch 1)
->   - Integrates the fsl-mc bus with the SMMU using this
->     IOMMU binding (patch 2,3,4)
->   - Adds the dma configuration support for fsl-mc bus (patch 5, 6)
->   - Updates the fsl-mc device node with iommu/dma related changes (patch 7)
-> 
-> Changes in v2:
->   - use iommu-map property for fsl-mc bus
->   - rebase over patchset https://patchwork.kernel.org/patch/10317337/
->     and make corresponding changes for dma configuration of devices on
->     fsl-mc bus
-> 
-> Changes in v3:
->   - move of_map_rid in drivers/of/address.c
-> 
-> Changes in v4:
->   - move of_map_rid in drivers/of/base.c
-> 
-> Changes in v5:
->   - break patch 5 in two separate patches (now patch 5/7 and patch 6/7)
->   - add changelog text in patch 3/7 and patch 5/7
->   - typo fix
-> 
-> Changes in v6:
->   - Updated fsl_mc_device_group() API to be more rational
->   - Added dma-coherent property in the LS2 smmu device node
->   - Minor fixes in the device-tree documentation
-> 
-> Nipun Gupta (7):
->   Documentation: fsl-mc: add iommu-map device-tree binding for fsl-mc
->     bus
->   iommu/of: make of_pci_map_rid() available for other devices too
->   iommu/of: support iommu configuration for fsl-mc devices
->   iommu/arm-smmu: Add support for the fsl-mc bus
->   bus: fsl-mc: support dma configure for devices on fsl-mc bus
->   bus: fsl-mc: set coherent dma mask for devices on fsl-mc bus
->   arm64: dts: ls208xa: comply with the iommu map binding for fsl_mc
-> 
->  .../devicetree/bindings/misc/fsl,qoriq-mc.txt      |  39 ++++++++
->  arch/arm64/boot/dts/freescale/fsl-ls208xa.dtsi     |   7 +-
->  drivers/bus/fsl-mc/fsl-mc-bus.c                    |  16 +++-
->  drivers/iommu/arm-smmu.c                           |   7 ++
->  drivers/iommu/iommu.c                              |  13 +++
->  drivers/iommu/of_iommu.c                           |  25 ++++-
->  drivers/of/base.c                                  | 102 +++++++++++++++++++++
->  drivers/of/irq.c                                   |   5 +-
->  drivers/pci/of.c                                   | 101 --------------------
->  include/linux/fsl/mc.h                             |   8 ++
->  include/linux/iommu.h                              |   2 +
->  include/linux/of.h                                 |  11 +++
->  include/linux/of_pci.h                             |  10 --
->  13 files changed, 224 insertions(+), 122 deletions(-)
-> 
-> --
-> 1.9.1
+If the target supports AER the information about the failed cycle
+ends up in the target's AER registers - even if the host bridge
+doesn't support AER (or it is being ignored).
+So it might be useful being able to read the AER registers even when
+no AER interrupt (or other notification) actually happens.
 
+I've not managed to get linux to pick up AER interrupts even on
+systems where the hardware clearly supports them (at least on
+some slots).  I suspect the BIOS is carefully disabling them
+because of reports of message logs being spammed with AER errors.
 
-_______________________________________________
-linux-arm-kernel mailing list
-linux-arm-kernel@lists.infradead.org
-http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
+We also have one system (possibly a Dell 740) where any failure
+of a PCIe link leads to an NMI and a kernel crash!
+Not entirely useful in a server model that is supposed to have
+resilience against various errors.
+
+	David
+
+-
+Registered Address Lakeside, Bramley Road, Mount Farm, Milton Keynes, MK1 1PT, UK
+Registration No: 1397386 (Wales)
