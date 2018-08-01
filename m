@@ -1,69 +1,176 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.29.99]:35902 "EHLO mail.kernel.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1728116AbeHCTXO (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Fri, 3 Aug 2018 15:23:14 -0400
-Subject: Re: [RFC] PCI: add support for Immediate Readiness
-To: Felipe Balbi <felipe.balbi@linux.intel.com>,
-        Bjorn Helgaas <bhelgaas@google.com>
+Received: from userp2130.oracle.com ([156.151.31.86]:53252 "EHLO
+        userp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S2389108AbeHAQKq (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Wed, 1 Aug 2018 12:10:46 -0400
+Subject: Re: Possible race condition in the kernel between PCI driver and AER
+ handling
+To: gokul cg <gokuljnpr@gmail.com>
 Cc: linux-pci@vger.kernel.org
-References: <20180802113635.7097-1-felipe.balbi@linux.intel.com>
- <15a43051-6b0f-1545-dc8f-b56b1513897b@kernel.org>
- <874lgcufsu.fsf@linux.intel.com>
-From: Sinan Kaya <okaya@kernel.org>
-Message-ID: <407fa9ef-dcbe-e803-f72e-cbea468592bf@kernel.org>
-Date: Fri, 3 Aug 2018 13:25:58 -0400
+References: <CAFP4jM9xmXHVnBPObNxTtr1kDo2kbW9G4N5q=BLU5gf5=+M0xg@mail.gmail.com>
+ <c5fb4a6a-136f-99f1-104e-32c923f00a22@oracle.com>
+ <CAFP4jM9VP0jQ77rQt2KzfhuFZdXQRiS54TqxcKBLy39+sR3uMw@mail.gmail.com>
+From: Thomas Tai <thomas.tai@oracle.com>
+Message-ID: <9aece481-b03d-c30a-7911-a07e586c1db4@oracle.com>
+Date: Wed, 1 Aug 2018 10:24:45 -0400
 MIME-Version: 1.0
-In-Reply-To: <874lgcufsu.fsf@linux.intel.com>
+In-Reply-To: <CAFP4jM9VP0jQ77rQt2KzfhuFZdXQRiS54TqxcKBLy39+sR3uMw@mail.gmail.com>
 Content-Type: text/plain; charset=utf-8; format=flowed
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 8/3/2018 2:26 AM, Felipe Balbi wrote:
-> Sinan Kaya <okaya@kernel.org> writes:
-> 
->> On 8/2/2018 7:36 AM, Felipe Balbi wrote:
->>> PCIe GEN4 defines a new bit on Status Register which tells us that, if
->>> Set, a function is immediately ready after a Reset. This means that
->>> all delays after a Conventional or Function Reset can be skipped.
->>
->> Can you give a reference to the section of the specification? or
->> a pointer to the ECN?
-> 
-> Section 7.5.1.1.4 of PCIe GEN4 spec. Table 7-4:
-> 
-> Immediate Readiness – This optional bit, when Set, indicates the
-> Function is guaranteed to be ready to successfully complete valid
-> configuration accesses at any time following any reset that the host is
-> capable of issuing Configuration Requests to this Function.
-> 
-> When this bit is Set, for accesses to this Function, software is exempt
-> from all requirements to delay configuration accesses following any type
-> of reset, including but not limited to the timing requirements defined
-> in Section 6.6.  How this guarantee is established is beyond the scope
-> of this document.
-> 
-> It is permitted that system software/firmware provide mechanisms that
-> supersede the indication provided by this bit, however such
-> software/firmware mechanisms are outside the scope of this
-> specification.
-> 
 
-Thanks for the spec reference.
 
-I think the patch is touching the wrong places. pci_dev_wait() is there
-to wait for CRS response to finish following reset.
+On 08/01/2018 01:53 AM, gokul cg wrote:
+> Hi,
+> 
+> I see there is a basic design flow. As AER and PCI drivers are 
+> independent modules ,
+> locally storing pointer to any data structure from pci linked list in 
+> AER driver will create problem as there is no synchronization between 
+> the same .
+> 
+> 
+> https://elixir.bootlin.com/linux/v3.10.99/source/drivers/pci/pcie/aer/aerdrv_core.c#L701
+> Here 'structaer_err_info 
+> <https://elixir.bootlin.com/linux/v3.10.99/ident/aer_err_info>*e_info 
+> <https://elixir.bootlin.com/linux/v3.10.99/ident/e_info>' has pointer to 
+> pci dev , which can be removed from pci tree at any time .
+> I think this is the basic issue.
 
-Typical sequences are:
-1. Do some kind of reset in another routine
-2. Wait reset specific wait time (1sec for secondary bus reset as an
-example and 100ms for d3-d0 transition)
-3. call pci_dev_wait() after reset to see if device can accept config
-transactions.
+Hi Gokul,
+Agree. We had an issue last week about this e_info storing the pci_dev 
+which is removed in the pcie_do_fatal_recovery() and causes 
+use-after-free problem.
 
-Since this applies to all resets, I think you also need to get rid of
-waits following different reset types in step #2 and return immediately.
-I suggest you review callers of pci_dev_wait() and tap in there.
+In your case, I am hoping to recreate your issue so that we can work 
+together to isolate and fix the issue. Do you have any suggestion how to 
+fix it at this moment?
 
-Another thing is that this is a common functionality. Initializing
-the flag in pm_init() would not be the best place.
+Thanks,
+Thomas
+
+> 
+> 
+> Regards
+> Gokul
+> 
+> On Tue, Jul 31, 2018 at 6:45 PM, Thomas Tai <thomas.tai@oracle.com 
+> <mailto:thomas.tai@oracle.com>> wrote:
+> 
+> 
+> 
+>     On 07/31/2018 08:42 AM, gokul cg wrote:
+> 
+>         Hi All,
+> 
+> 
+>         I am suspecting a possible race condition in the kernel between
+>         PCI driver and AER handling.
+> 
+>         Because of the same kernel panic happens from worker thread
+>         which handles bottom half of aer irq.
+> 
+> 
+>         I am seeing this issue when I suddenly power off PCI card which
+>         supports/enabled PCIE AER error reporting.
+> 
+>         While powering off PCI device, AER driver will get AER IRQ for
+>         the device, from AER IRQ handler, it will cache AER error code
+>         and schedule worker thread to handle error.
+> 
+> 
+>     Hi Gokul,
+> 
+>     It may be an issue in the AER driver. How do you power off your
+>     device? I've never seen this issue with normal shutdown nor "echo 0
+>      > /sys/bus/pci/slots/xx/power"
+> 
+>     Cheers,
+>     Thomas
+> 
+> 
+> 
+>         The PCIe device will get removed from PCI tree before worker
+>         thread completes its task and kernel panic is  happening when
+>         worker thread tries to access PCI device's config space.
+> 
+> 
+> 
+>         Issue:
+> 
+> 
+>         crash>
+> 
+>         crash> bt
+> 
+>         PID: 2727   TASK: ffff880272adc530  CPU: 0   COMMAND: "kworker/0:2"
+> 
+>         #0 [ffff88027469fac8] machine_kexec at ffffffff8102cf18
+> 
+>         #1 [ffff88027469fb28] crash_kexec at ffffffff810a6b05
+> 
+>         #2 [ffff88027469fbf0] oops_end at ffffffff8176d960
+> 
+>         #3 [ffff88027469fc18] die at ffffffff810060db
+> 
+>         #4 [ffff88027469fc48] do_general_protection at ffffffff8176d452
+> 
+>         #5 [ffff88027469fc70] general_protection at ffffffff8176cdf2
+> 
+>               [exception RIP: pci_bus_read_config_dword+100]
+> 
+>               RIP: ffffffff813405f4  RSP: ffff88027469fd20  RFLAGS: 00010046
+> 
+>               RAX: 435f494350006963  RBX: ffff880274892000  RCX:
+>         0000000000000004
+> 
+>               RDX: 0000000000000100  RSI: 0000000000000060  RDI:
+>         ffff880274892000
+> 
+>               RBP: ffff88027469fd48   R8: ffff88027469fd2c   R9:
+>         00000000000012c0
+> 
+>               R10: 0000000000000006  R11: 00000000000012bf  R12:
+>         ffff88027469fd5c
+> 
+>               R13: 0000000000000246  R14: 0000000000000000  R15:
+>         ffff8802741a4000
+> 
+>               ORIG_RAX: ffffffffffffffff  CS: 0010  SS: 0000
+> 
+>         #6 [ffff88027469fd50] pci_find_next_ext_capability at
+>         ffffffff81345d7b
+> 
+>         #7 [ffff88027469fd90] pci_find_ext_capability at ffffffff81347225
+> 
+>         #8 [ffff88027469fda0] get_device_error_info at ffffffff81356c4d
+> 
+>         #9 [ffff88027469fdd0] aer_isr at ffffffff81357a38
+> 
+>         #10 [ffff88027469fe28] process_one_work at ffffffff8105d4c0
+> 
+>         #11 [ffff88027469fe70] worker_thread at ffffffff8105e251
+> 
+>         #12 [ffff88027469fed0] kthread at ffffffff81064260
+> 
+>         #13 [ffff88027469ff50] ret_from_fork at ffffffff81773a38
+> 
+> 
+>         crash>
+> 
+> 
+>         I have tested it on kernel 3.10 . But from source i could see
+>         that this case is still relevant for latest Linux source .
+> 
+> 
+>         Can anybody tell me if this is an issue with AER driver in linux ?
+> 
+> 
+> 
+> 
+>         Regards
+> 
+>         Gokul CG
+> 
+> 
