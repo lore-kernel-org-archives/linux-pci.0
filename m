@@ -1,57 +1,68 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.29.99]:37640 "EHLO mail.kernel.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1729560AbeHNRGu (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Tue, 14 Aug 2018 13:06:50 -0400
-Date: Tue, 14 Aug 2018 09:19:26 -0500
-From: Bjorn Helgaas <helgaas@kernel.org>
-To: f.bluethner@mailbox.org
-Cc: Alex Williamson <alex.williamson@redhat.com>,
-        linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org
-Subject: Re: PCI: Add function 1 DMA alias quirk for Marvell 88SS9183
-Message-ID: <20180814141926.GP113140@bhelgaas-glaptop.roam.corp.google.com>
-References: <20180813194123.GM113140@bhelgaas-glaptop.roam.corp.google.com>
+Received: from aserp2130.oracle.com ([141.146.126.79]:46080 "EHLO
+        aserp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1732419AbeHBQIe (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Thu, 2 Aug 2018 12:08:34 -0400
+Subject: Re: Possible race condition in the kernel between PCI driver and AER
+ handling
+From: Thomas Tai <thomas.tai@oracle.com>
+To: gokul cg <gokuljnpr@gmail.com>
+Cc: linux-pci@vger.kernel.org
+References: <CAFP4jM9xmXHVnBPObNxTtr1kDo2kbW9G4N5q=BLU5gf5=+M0xg@mail.gmail.com>
+ <c5fb4a6a-136f-99f1-104e-32c923f00a22@oracle.com>
+ <CAFP4jM9VP0jQ77rQt2KzfhuFZdXQRiS54TqxcKBLy39+sR3uMw@mail.gmail.com>
+ <9aece481-b03d-c30a-7911-a07e586c1db4@oracle.com>
+Message-ID: <992c78ec-cc95-5868-0afc-e586c7de92b1@oracle.com>
+Date: Thu, 2 Aug 2018 10:17:04 -0400
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20180813194123.GM113140@bhelgaas-glaptop.roam.corp.google.com>
+In-Reply-To: <9aece481-b03d-c30a-7911-a07e586c1db4@oracle.com>
+Content-Type: text/plain; charset=utf-8; format=flowed
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Mon, Aug 13, 2018 at 02:41:23PM -0500, Bjorn Helgaas wrote:
-> Hi,
-> 
-> Thanks a lot for your new report
-> (https://bugzilla.kernel.org/show_bug.cgi?id=42679#c134).
-> 
-> Can you confirm that the patch below is equivalent to what you tested and
-> it resolves the problem?  If so, I'll try to include it for v4.19.
 
-I applied this to pci/virtualization for v4.19.  Please let me know if you
-see any issues.
+On 08/01/2018 10:24 AM, Thomas Tai wrote:
+> 
+> 
+> On 08/01/2018 01:53 AM, gokul cg wrote:
+>> Hi,
+>>
+>> I see there is a basic design flow. As AER and PCI drivers are 
+>> independent modules ,
+>> locally storing pointer to any data structure from pci linked list in 
+>> AER driver will create problem as there is no synchronization between 
+>> the same .
+>>
+>>
+>> https://elixir.bootlin.com/linux/v3.10.99/source/drivers/pci/pcie/aer/aerdrv_core.c#L701 
+>>
+>> Here 'structaer_err_info 
+>> <https://elixir.bootlin.com/linux/v3.10.99/ident/aer_err_info>*e_info 
+>> <https://elixir.bootlin.com/linux/v3.10.99/ident/e_info>' has pointer 
+>> to pci dev , which can be removed from pci tree at any time .
+>> I think this is the basic issue.
 
-> commit dd4e0ad485e12c9c04eb7a21ba69c24f12cb1918
-> Author: Bjorn Helgaas <bhelgaas@google.com>
-> Date:   Mon Aug 13 14:30:41 2018 -0500
-> 
->     PCI: Add function 1 DMA alias quirk for Marvell 88SS9183
->     
->     Add function 1 DMA alias quirk for Marvell 88SS9183 PCIe SSD Controller.
->     
->     Link: https://bugzilla.kernel.org/show_bug.cgi?id=42679#c134
->     Reported-by: <f.bluethner@mailbox.org>
->     Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
-> 
-> diff --git a/drivers/pci/quirks.c b/drivers/pci/quirks.c
-> index deb051583eda..6994544125ff 100644
-> --- a/drivers/pci/quirks.c
-> +++ b/drivers/pci/quirks.c
-> @@ -3845,6 +3845,9 @@ DECLARE_PCI_FIXUP_HEADER(PCI_VENDOR_ID_MARVELL_EXT, 0x917a,
->  /* https://bugzilla.kernel.org/show_bug.cgi?id=42679#c78 */
->  DECLARE_PCI_FIXUP_HEADER(PCI_VENDOR_ID_MARVELL_EXT, 0x9182,
->  			 quirk_dma_func1_alias);
-> +/* https://bugzilla.kernel.org/show_bug.cgi?id=42679#c134 */
-> +DECLARE_PCI_FIXUP_HEADER(PCI_VENDOR_ID_MARVELL_EXT, 0x9183,
-> +			 quirk_dma_func1_alias);
->  /* https://bugzilla.kernel.org/show_bug.cgi?id=42679#c46 */
->  DECLARE_PCI_FIXUP_HEADER(PCI_VENDOR_ID_MARVELL_EXT, 0x91a0,
->  			 quirk_dma_func1_alias);
+Hi Gokul,
+
+I am afraid that I am having hard time recreating your issue. Following 
+is the normal situation and wondering did you see any hotplug message 
+before the aer message?
+
+pcieport 0000:00:02.2: AER: Corrected error received: id=1130
+pciehp 0000:11:06.0:pcie204: Slot(102): Link Down
+pciehp 0000:11:06.0:pcie204: Slot(102): Link Down event ignored; already 
+powering off
+pcieport 0000:11:06.0: PCIe Bus Error: severity=Corrected, type=Physical 
+Layer, id=1130(Receiver ID)
+pcieport 0000:11:06.0:   device [111d:80b5] error 
+status/mask=00000001/0000e000
+pcieport 0000:11:06.0:    [ 0] Receiver Error
+
+As far as the pci_dev being corrupted, may be you can add 
+"slub_debug=FZP" in your kernel boot argument and rerun your test and 
+see if it find anything. I am curious that who corrupted the pci_dev in 
+the first place. I am not totally convinced that the problem is in the 
+AER codes.
+
+Cheers,
+Thomas
