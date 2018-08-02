@@ -1,57 +1,101 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-oi0-f66.google.com ([209.85.218.66]:45031 "EHLO
-        mail-oi0-f66.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1731432AbeHGBia (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Mon, 6 Aug 2018 21:38:30 -0400
-From: Alexandru Gagniuc <mr.nuke.me@gmail.com>
-To: linux-pci@vger.kernel.org, bhelgaas@google.com,
-        jakub.kicinski@netronome.com
-Cc: keith.busch@intel.com, alex_gagniuc@dellteam.com,
-        austin_bolen@dell.com, shyam_iyer@dell.com,
-        Alexandru Gagniuc <mr.nuke.me@gmail.com>,
-        Ariel Elior <ariel.elior@cavium.com>,
-        everest-linux-l2@cavium.com,
-        "David S. Miller" <davem@davemloft.net>,
-        Michael Chan <michael.chan@broadcom.com>,
-        Ganesh Goudar <ganeshgr@chelsio.com>,
-        Jeff Kirsher <jeffrey.t.kirsher@intel.com>,
-        Tariq Toukan <tariqt@mellanox.com>,
-        Saeed Mahameed <saeedm@mellanox.com>,
-        Leon Romanovsky <leon@kernel.org>,
-        Dirk van der Merwe <dirk.vandermerwe@netronome.com>,
-        netdev@vger.kernel.org, linux-kernel@vger.kernel.org,
-        intel-wired-lan@lists.osuosl.org, linux-rdma@vger.kernel.org,
-        oss-drivers@netronome.com
-Subject: [PATCH v6 8/9] net/mlx5: Do not call pcie_print_link_status()
-Date: Mon,  6 Aug 2018 18:25:42 -0500
-Message-Id: <20180806232600.25694-8-mr.nuke.me@gmail.com>
-In-Reply-To: <20180806232600.25694-1-mr.nuke.me@gmail.com>
-References: <CAErSpo4PK+SQLNfdkLNt9eLc7bpbxbkZCsa8T-tQpid601n0SQ@mail.gmail.com>
- <20180806232600.25694-1-mr.nuke.me@gmail.com>
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <SRS0=6E4e=KR=h08.hostsharing.net=foo00@kernel.org>
+Return-Path: <SRS0=6E4e=KR=h08.hostsharing.net=foo00@kernel.org>
+Date: Thu, 2 Aug 2018 17:07:49 +0200
+From: Lukas Wunner <lukas@wunner.de>
+To: gokul cg <gokuljnpr@gmail.com>, Thomas Tai <thomas.tai@oracle.com>
+Cc: Mika Westerberg <mika.westerberg@linux.intel.com>,
+	Bjorn Helgaas <helgaas@kernel.org>, Ashok Raj <ashok.raj@intel.com>,
+	Keith Busch <keith.busch@intel.com>,
+	Yinghai Lu <yinghai@kernel.org>, Sinan Kaya <okaya@kernel.org>,
+	linux-pci@vger.kernel.org, Alexandru Gagniuc <mr.nuke.me@gmail.com>
+Subject: Re: [PATCH] PCI: pciehp: Differentiate between surprise and safe
+ removal
+Message-ID: <20180802150749.GA31683@wunner.de>
+References: <dac488604766f3dcb948e702210ecc381c4f907b.1533015755.git.lukas@wunner.de>
+ <20180801164358.GI2534@lahna.fi.intel.com>
+ <20180801171512.GA28440@wunner.de>
+ <20180802072036.GN2534@lahna.fi.intel.com>
+ <CAFP4jM8AYG7hmkC_rYgXAfLoJmkJuW0e1UbgiayGrCPbb_yw8A@mail.gmail.com>
+ <20180802084657.GA21267@wunner.de>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20180802084657.GA21267@wunner.de>
 List-ID: <linux-pci.vger.kernel.org>
 
-This is now done by the PCI core to warn of sub-optimal bandwidth.
+[cc += Thomas Tai]
 
-Signed-off-by: Alexandru Gagniuc <mr.nuke.me@gmail.com>
+On Thu, Aug 02, 2018 at 10:46:57AM +0200, Lukas Wunner wrote:
+> On Thu, Aug 02, 2018 at 12:59:18PM +0530, gokul cg wrote:
+> > I am suspecting a possible race condition in the kernel between PCI driver
+> > and AER handling.
+> 
+> The solution is to acquire a ref on each device in add_error_device().
+> Then release the ref aer_process_err_devices() by calling pci_dev_put().
+
+So in case it wasn't clear, the below is what I had in mind.
+Completely untested though.  Does this work for you?
+
+For v3.10 compatibility, cherry-pick 89ee9f768003 (or alternatively
+cherry-pick 8496e85c20e7 and replace pci_dev_is_disconnected(dev)
+with !pci_device_is_present(dev)).
+
+-- >8 --
+Subject: [PATCH] PCI/AER: Fix use-after-free on surprise removal
+
+The work item to consume errors, aer_isr(), walks the hierarchy using
+pci_walk_bus() and stores a pointer to PCI devices which reported an
+error in an array.  As long as pci_walk_bus() runs, those pointers are
+valid because pci_bus_sem is held.  But once pci_walk_bus() finishes,
+nothing prevents the pointers from becoming invalid, e.g. through
+unplugging of the PCI devices.  The unprotected pointers are then
+dereferenced in aer_process_err_devices(), which may oops:
+
+  #5  general_protection at ffffffff8176cdf2
+      [exception RIP: pci_bus_read_config_dword+100]
+  #6  pci_find_next_ext_capability at ffffffff81345d7b
+  #7  pci_find_ext_capability at ffffffff81347225
+  #8  get_device_error_info at ffffffff81356c4d
+  #9  aer_isr at ffffffff81357a38
+
+Fix by holding a ref on the devices until they have been processed.
+Skip processing of unplugged devices.
+
+Reported-by: gokul cg <gokuljnpr@gmail.com>
+Signed-off-by: Lukas Wunner <lukas@wunner.de>
 ---
- drivers/net/ethernet/mellanox/mlx5/core/main.c | 4 ----
- 1 file changed, 4 deletions(-)
+ drivers/pci/pcie/aer.c | 6 +++++-
+ 1 file changed, 5 insertions(+), 1 deletion(-)
 
-diff --git a/drivers/net/ethernet/mellanox/mlx5/core/main.c b/drivers/net/ethernet/mellanox/mlx5/core/main.c
-index 615005e63819..e10f9c2bea3b 100644
---- a/drivers/net/ethernet/mellanox/mlx5/core/main.c
-+++ b/drivers/net/ethernet/mellanox/mlx5/core/main.c
-@@ -1045,10 +1045,6 @@ static int mlx5_load_one(struct mlx5_core_dev *dev, struct mlx5_priv *priv,
- 	dev_info(&pdev->dev, "firmware version: %d.%d.%d\n", fw_rev_maj(dev),
- 		 fw_rev_min(dev), fw_rev_sub(dev));
+diff --git a/drivers/pci/pcie/aer.c b/drivers/pci/pcie/aer.c
+index a2e8838..937592e 100644
+--- a/drivers/pci/pcie/aer.c
++++ b/drivers/pci/pcie/aer.c
+@@ -657,7 +657,7 @@ void cper_print_aer(struct pci_dev *dev, int aer_severity,
+ static int add_error_device(struct aer_err_info *e_info, struct pci_dev *dev)
+ {
+ 	if (e_info->error_dev_num < AER_MAX_MULTI_ERR_DEVICES) {
+-		e_info->dev[e_info->error_dev_num] = dev;
++		e_info->dev[e_info->error_dev_num] = pci_dev_get(dev);
+ 		e_info->error_dev_num++;
+ 		return 0;
+ 	}
+@@ -898,6 +898,9 @@ static int get_device_error_info(struct pci_dev *dev, struct aer_err_info *info)
+ 	if (!pos)
+ 		return 0;
  
--	/* Only PFs hold the relevant PCIe information for this query */
--	if (mlx5_core_is_pf(dev))
--		pcie_print_link_status(dev->pdev);
--
- 	/* on load removing any previous indication of internal error, device is
- 	 * up
- 	 */
++	if (pci_dev_is_disconnected(dev))
++		return 0;
++
+ 	if (info->severity == AER_CORRECTABLE) {
+ 		pci_read_config_dword(dev, pos + PCI_ERR_COR_STATUS,
+ 			&info->status);
+@@ -948,6 +951,7 @@ static inline void aer_process_err_devices(struct aer_err_info *e_info)
+ 	for (i = 0; i < e_info->error_dev_num && e_info->dev[i]; i++) {
+ 		if (get_device_error_info(e_info->dev[i], e_info))
+ 			handle_error_source(e_info->dev[i], e_info);
++		pci_dev_put(e_info->dev[i]);
+ 	}
+ }
+ 
 -- 
-2.17.1
+2.18.0
