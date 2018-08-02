@@ -1,124 +1,176 @@
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Date: Sat, 4 Aug 2018 09:29:10 -0400 (EDT)
-From: Mikulas Patocka <mpatocka@redhat.com>
-To: Matt Sealey <neko@bakuhatsu.net>
-Subject: Re: framebuffer corruption due to overlapping stp instructions on
- arm64
-In-Reply-To: <CAHCPf3s-+Qf=WBZz1KpisDMG3520jCUh8PLAO3PHa4jdt8kCTw@mail.gmail.com>
-Message-ID: <alpine.LRH.2.02.1808040840410.16932@file01.intranet.prod.int.rdu2.redhat.com>
-References: <alpine.LRH.2.02.1808021242320.31834@file01.intranet.prod.int.rdu2.redhat.com>
- <CAHCPf3tFGqkYEcWNN4LaWThw_rVqT316pzLv6T7RfxwO-eZ0EA@mail.gmail.com>
- <alpine.LRH.2.02.1808030212340.17672@file01.intranet.prod.int.rdu2.redhat.com>
- <CAKv+Gu8DeuksZhk1g3q_msSKV_hSY_2e1uzVten9-oGO3j9Sqg@mail.gmail.com>
- <20180803094129.GB17798@arm.com>
- <alpine.LRH.2.02.1808031235410.31584@file01.intranet.prod.int.rdu2.redhat.com>
- <CAKv+Gu-aNFh1fsr_05SEwDp99n3pLrguP7=tEcFQPNY53=K7Fw@mail.gmail.com>
- <alpine.LRH.2.02.1808031424140.14030@file01.intranet.prod.int.rdu2.redhat.com>
- <CAHCPf3s-+Qf=WBZz1KpisDMG3520jCUh8PLAO3PHa4jdt8kCTw@mail.gmail.com>
+Return-Path: <SRS0=+XN2=KR=gmail.com=gokuljnpr@kernel.org>
+Return-Path: <SRS0=+XN2=KR=gmail.com=gokuljnpr@kernel.org>
 MIME-Version: 1.0
-List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
-List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
-List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
-List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
-List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
-Cc: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>,
- Joao Pinto <Joao.Pinto@synopsys.com>,
- Ard Biesheuvel <ard.biesheuvel@linaro.org>,
- linux-pci <linux-pci@vger.kernel.org>, Jingoo Han <jingoohan1@gmail.com>,
- Will Deacon <will.deacon@arm.com>, Russell King <linux@armlinux.org.uk>,
- Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
- Catalin Marinas <catalin.marinas@arm.com>,
- linux-arm-kernel <linux-arm-kernel@lists.infradead.org>
-Content-Type: text/plain; charset="us-ascii"
-Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
-Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
+In-Reply-To: <20180802084657.GA21267@wunner.de>
+References: <dac488604766f3dcb948e702210ecc381c4f907b.1533015755.git.lukas@wunner.de>
+ <20180801164358.GI2534@lahna.fi.intel.com> <20180801171512.GA28440@wunner.de>
+ <20180802072036.GN2534@lahna.fi.intel.com> <CAFP4jM8AYG7hmkC_rYgXAfLoJmkJuW0e1UbgiayGrCPbb_yw8A@mail.gmail.com>
+ <20180802084657.GA21267@wunner.de>
+From: gokul cg <gokuljnpr@gmail.com>
+Date: Thu, 2 Aug 2018 17:58:50 +0530
+Message-ID: <CAFP4jM830j4Uh1=5jCfOAkEVOeVyu66N+ym7fVQZTTd9Fa3cPQ@mail.gmail.com>
+Subject: Re: [PATCH] PCI: pciehp: Differentiate between surprise and safe removal
+To: Lukas Wunner <lukas@wunner.de>
+Cc: Mika Westerberg <mika.westerberg@linux.intel.com>, Bjorn Helgaas <helgaas@kernel.org>,
+	Ashok Raj <ashok.raj@intel.com>, Keith Busch <keith.busch@intel.com>,
+	Yinghai Lu <yinghai@kernel.org>, Sinan Kaya <okaya@kernel.org>, linux-pci@vger.kernel.org,
+	Alexandru Gagniuc <mr.nuke.me@gmail.com>
+Content-Type: multipart/alternative; boundary="0000000000001e09e1057272f478"
 List-ID: <linux-pci.vger.kernel.org>
 
+--0000000000001e09e1057272f478
+Content-Type: text/plain; charset="UTF-8"
 
+Hi Lukas,
 
-On Fri, 3 Aug 2018, Matt Sealey wrote:
+>The solution is to acquire a ref on each device in add_error_device():
+I will give try and update if it works .
 
-> On 3 August 2018 at 13:25, Mikulas Patocka <mpatocka@redhat.com> wrote:
+regards,
+Gokul
+On Thu, Aug 2, 2018 at 2:16 PM, Lukas Wunner <lukas@wunner.de> wrote:
+
+> On Thu, Aug 02, 2018 at 12:59:18PM +0530, gokul cg wrote:
+> > I am suspecting a possible race condition in the kernel between PCI
+> driver
+> > and AER handling.
 > >
+> > Because of the same kernel panic happens from worker thread which handles
+> > bottom half of aer irq.
 > >
-> > On Fri, 3 Aug 2018, Ard Biesheuvel wrote:
+> > I am seeing this issue when I suddenly power off PCI card which
+> > supports/enabled PCIE AER error reporting.
 > >
-> >> Are we still talking about overlapping unaligned accesses here? Or do
-> >> you see other failures as well?
+> > While powering off PCI device, AER driver will get AER IRQ for the
+> device,
+> > from AER IRQ handler, it will cache AER error code and schedule worker
+> > thread to handle error.
 > >
-> > Yes - it is caused by overlapping unaligned accesses inside memcpy. When I
-> > put "dmb sy" between the overlapping accesses in
-> > glibc/sysdeps/aarch64/memcpy.S, this program doesn't detect any memory
-> > corruption.
-> 
-> It is a symptom of generating reorderable accesses inside memcpy. It's nothing
-> to do with alignment, per se (see below). A dmb sy just hides the symptoms.
-> 
-> What we're talking about here - yes, Ard, within certain amounts of 
-> reason - is that you cannot use PCI BAR memory as 'Normal' - certainly 
-> never cacheable memory, but Normal NC isn't good either.
+> > The PCIe device will get removed from PCI tree before worker thread
+> > completes its task and kernel panic is  happening when worker thread
+> tries
+> > to access PCI device's config space.
+> >
+> > #5 [ffff88027469fc70] general_protection at ffffffff8176cdf2
+> >     [exception RIP: pci_bus_read_config_dword+100]
+> > #6 [ffff88027469fd50] pci_find_next_ext_capability at ffffffff81345d7b
+> > #7 [ffff88027469fd90] pci_find_ext_capability at ffffffff81347225
+> > #8 [ffff88027469fda0] get_device_error_info at ffffffff81356c4d
+> > #9 [ffff88027469fdd0] aer_isr at ffffffff81357a38
+> > #10 [ffff88027469fe28] process_one_work at ffffffff8105d4c0
+> > #11 [ffff88027469fe70] worker_thread at ffffffff8105e251
+> > #12 [ffff88027469fed0] kthread at ffffffff81064260
+> > #13 [ffff88027469ff50] ret_from_fork at ffffffff81773a38
+> >
+> > I have tested it on kernel 3.10 . But from source i could see that this
+> > case is still relevant for latest Linux source .
+>
+> I'm not really familiar with the AER driver, but the problem is
+> actually easy to spot:
+>
+> find_source_device() walks the hierarchy and saves a pointer to
+> pci_dev's in an array.  That array is later traversed and the
+> pci_dev's are accessed.
+>
+> The solution is to acquire a ref on each device in add_error_device():
+>
+> -       e_info->dev[e_info->error_dev_num] = dev;
+> +       e_info->dev[e_info->error_dev_num] = pci_dev_get(dev);
+>
+> Then release the ref aer_process_err_devices() by calling pci_dev_put().
+>
+> I believe there's an ongoing refactoring of the AER driver and the
+> issue may be addressed in the course of it, but as a quick fix for
+> an ancient v3.10 kernel, the above should do the trick.
+>
+> HTH,
+>
+> Lukas
+>
 
-So, are you going to map the PCI BAR as Device-nGnRE and then emulate all 
-the unaligned accesses in the trap handler?
+--0000000000001e09e1057272f478
+Content-Type: text/html; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
 
-Or are you going to give up on supporting PCIe graphics on ARM at all?
+<div dir=3D"ltr">Hi=C2=A0<span style=3D"font-size:small;text-decoration-sty=
+le:initial;text-decoration-color:initial;float:none;display:inline">Lukas,<=
+/span><div><br></div><div><div>&gt;<span style=3D"font-size:small;backgroun=
+d-color:rgb(255,255,255);text-decoration-style:initial;text-decoration-colo=
+r:initial;float:none;display:inline">The solution is to acquire a ref on ea=
+ch device in add_error_device():</span></div><div>I will give try and updat=
+e if it works .<br><div class=3D"gmail_extra"><br></div><div class=3D"gmail=
+_extra">regards,</div><div class=3D"gmail_extra">Gokul=C2=A0</div><div clas=
+s=3D"gmail_extra"><div class=3D"gmail_quote">On Thu, Aug 2, 2018 at 2:16 PM=
+, Lukas Wunner <span dir=3D"ltr">&lt;<a href=3D"mailto:lukas@wunner.de" tar=
+get=3D"_blank">lukas@wunner.de</a>&gt;</span> wrote:<br><blockquote class=
+=3D"gmail_quote" style=3D"margin:0 0 0 .8ex;border-left:1px #ccc solid;padd=
+ing-left:1ex"><span class=3D"">On Thu, Aug 02, 2018 at 12:59:18PM +0530, go=
+kul cg wrote:<br>
+&gt; I am suspecting a possible race condition in the kernel between PCI dr=
+iver<br>
+&gt; and AER handling.<br>
+&gt; <br>
+&gt; Because of the same kernel panic happens from worker thread which hand=
+les<br>
+&gt; bottom half of aer irq.<br>
+&gt; <br>
+&gt; I am seeing this issue when I suddenly power off PCI card which<br>
+&gt; supports/enabled PCIE AER error reporting.<br>
+&gt; <br>
+&gt; While powering off PCI device, AER driver will get AER IRQ for the dev=
+ice,<br>
+&gt; from AER IRQ handler, it will cache AER error code and schedule worker=
+<br>
+&gt; thread to handle error.<br>
+&gt; <br>
+&gt; The PCIe device will get removed from PCI tree before worker thread<br=
+>
+&gt; completes its task and kernel panic is=C2=A0 happening when worker thr=
+ead tries<br>
+&gt; to access PCI device&#39;s config space.<br>
+&gt; <br>
+</span><span class=3D"">&gt; #5 [ffff88027469fc70] general_protection at ff=
+ffffff8176cdf2<br>
+&gt;=C2=A0 =C2=A0 =C2=A0[exception RIP: pci_bus_read_config_dword+100]<br>
+</span><span class=3D"">&gt; #6 [ffff88027469fd50] pci_find_next_ext_capabi=
+lity at ffffffff81345d7b<br>
+&gt; #7 [ffff88027469fd90] pci_find_ext_capability at ffffffff81347225<br>
+&gt; #8 [ffff88027469fda0] get_device_error_info at ffffffff81356c4d<br>
+&gt; #9 [ffff88027469fdd0] aer_isr at ffffffff81357a38<br>
+&gt; #10 [ffff88027469fe28] process_one_work at ffffffff8105d4c0<br>
+&gt; #11 [ffff88027469fe70] worker_thread at ffffffff8105e251<br>
+&gt; #12 [ffff88027469fed0] kthread at ffffffff81064260<br>
+&gt; #13 [ffff88027469ff50] ret_from_fork at ffffffff81773a38<br>
+&gt; <br>
+</span><span class=3D"">&gt; I have tested it on kernel 3.10 . But from sou=
+rce i could see that this<br>
+&gt; case is still relevant for latest Linux source .<br>
+<br>
+</span>I&#39;m not really familiar with the AER driver, but the problem is<=
+br>
+actually easy to spot:<br>
+<br>
+find_source_device() walks the hierarchy and saves a pointer to<br>
+pci_dev&#39;s in an array.=C2=A0 That array is later traversed and the<br>
+pci_dev&#39;s are accessed.<br>
+<br>
+The solution is to acquire a ref on each device in add_error_device():<br>
+<br>
+-=C2=A0 =C2=A0 =C2=A0 =C2=A0e_info-&gt;dev[e_info-&gt;error_dev_<wbr>num] =
+=3D dev;<br>
++=C2=A0 =C2=A0 =C2=A0 =C2=A0e_info-&gt;dev[e_info-&gt;error_dev_<wbr>num] =
+=3D pci_dev_get(dev);<br>
+<br>
+Then release the ref aer_process_err_devices() by calling pci_dev_put().<br=
+>
+<br>
+I believe there&#39;s an ongoing refactoring of the AER driver and the<br>
+issue may be addressed in the course of it, but as a quick fix for<br>
+an ancient v3.10 kernel, the above should do the trick.<br>
+<br>
+HTH,<br>
+<br>
+Lukas<br>
+</blockquote></div><br></div></div></div></div>
 
-Videocards have linear framebuffer for 25 years. It was introduced as a 
-feature that simplified graphics programming a lot - programmers can use C 
-pointer arithmetics for drawing and they don't have to fiddle with 
-hardware registers. If you argue that graphics programmers can't use it 
-(after they have been using it for 25 years) - they will just ignore you 
-and ARM.
-
-
-> Links is broken.
-
-What else should it use? Are you going to introduce new functions 
-memcpy_to_framebuffer() and memset_framebuffer()?
-
-> Even on Intel.
-
-No, it's not. Intel will detect overlapping accesses.
-
-You can write this - it is legal C code:
-
-void g(void);
-void overlapping(unsigned char *p)
-{
-        p[0] = p[1] = p[2] = p[3] = 1;
-        g();
-        p[3] = p[4] = p[5] = p[6] = 2;
-}
-
-and the compiler compiles it to this:
-
-overlapping:
-.LFB0:
-        pushl   %ebx
-        subl    $8, %esp
-        movl    16(%esp), %ebx
-        movl    $16843009, (%ebx)
-        call    g
-        movl    $33686018, 3(%ebx)
-        addl    $8, %esp
-        popl    %ebx
-        ret
-
-Now - if the CPU is incapable of detecing the hazaard between writes to 
-(%ebx) and 3(%ebx) and reorders these writes, it is just broken because it 
-violates the C standard.
-
-If you argue that ARM is incapable of detecting this hazaard and reorders 
-these two overlapping memory writes - it means that you can't use C 
-pointers to access videoram on ARM - which means that you can't have PCIe 
-graphics at all.
-
-Mikulas
-
-_______________________________________________
-linux-arm-kernel mailing list
-linux-arm-kernel@lists.infradead.org
-http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
+--0000000000001e09e1057272f478--
