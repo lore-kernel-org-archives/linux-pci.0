@@ -1,73 +1,76 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from usa-sjc-mx-foss1.foss.arm.com ([217.140.101.70]:42984 "EHLO
-        foss.arm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1727062AbeHHTRi (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Wed, 8 Aug 2018 15:17:38 -0400
-Date: Wed, 8 Aug 2018 17:57:00 +0100
-From: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
-To: Vignesh R <vigneshr@ti.com>
-Cc: Tony Lindgren <tony@atomide.com>,
-        Kishon Vijay Abraham I <kishon@ti.com>,
-        Bjorn Helgaas <bhelgaas@google.com>,
-        Rob Herring <robh+dt@kernel.org>, linux-omap@vger.kernel.org,
-        linux-pci@vger.kernel.org, devicetree@vger.kernel.org,
-        linux-kernel@vger.kernel.org
-Subject: Re: [PATCH v3 0/4] pci-dra7xx: Enable errata i870 workaround for RC
- mode
-Message-ID: <20180808165700.GB486@e107981-ln.cambridge.arm.com>
-References: <20180724173150.2701-1-vigneshr@ti.com>
+Return-Path: <SRS0=6E4e=KR=h08.hostsharing.net=foo00@kernel.org>
+Return-Path: <SRS0=6E4e=KR=h08.hostsharing.net=foo00@kernel.org>
+Date: Thu, 2 Aug 2018 10:46:57 +0200
+From: Lukas Wunner <lukas@wunner.de>
+To: gokul cg <gokuljnpr@gmail.com>
+Cc: Mika Westerberg <mika.westerberg@linux.intel.com>,
+	Bjorn Helgaas <helgaas@kernel.org>, Ashok Raj <ashok.raj@intel.com>,
+	Keith Busch <keith.busch@intel.com>,
+	Yinghai Lu <yinghai@kernel.org>, Sinan Kaya <okaya@kernel.org>,
+	linux-pci@vger.kernel.org, Alexandru Gagniuc <mr.nuke.me@gmail.com>
+Subject: Re: [PATCH] PCI: pciehp: Differentiate between surprise and safe
+ removal
+Message-ID: <20180802084657.GA21267@wunner.de>
+References: <dac488604766f3dcb948e702210ecc381c4f907b.1533015755.git.lukas@wunner.de>
+ <20180801164358.GI2534@lahna.fi.intel.com>
+ <20180801171512.GA28440@wunner.de>
+ <20180802072036.GN2534@lahna.fi.intel.com>
+ <CAFP4jM8AYG7hmkC_rYgXAfLoJmkJuW0e1UbgiayGrCPbb_yw8A@mail.gmail.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20180724173150.2701-1-vigneshr@ti.com>
-Sender: linux-pci-owner@vger.kernel.org
+In-Reply-To: <CAFP4jM8AYG7hmkC_rYgXAfLoJmkJuW0e1UbgiayGrCPbb_yw8A@mail.gmail.com>
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tue, Jul 24, 2018 at 11:01:46PM +0530, Vignesh R wrote:
-> Make workaround for errata i870 applicable in Host mode as
-> well(previously it was enabled only for EP mode) as per errata
-> documentation: http://www.ti.com/lit/er/sprz450/sprz450.pdf
+On Thu, Aug 02, 2018 at 12:59:18PM +0530, gokul cg wrote:
+> I am suspecting a possible race condition in the kernel between PCI driver
+> and AER handling.
 > 
-> Tested on DRA72 EVM
+> Because of the same kernel panic happens from worker thread which handles
+> bottom half of aer irq.
 > 
-> Tony,
+> I am seeing this issue when I suddenly power off PCI card which
+> supports/enabled PCIE AER error reporting.
 > 
-> If you are okay with the series, could you pick this via omap tree?
-> All ACKs are in place and Lorenzo is okay with PCIe bits to go along with
-> rest of DTS changes.
+> While powering off PCI device, AER driver will get AER IRQ for the device,
+> from AER IRQ handler, it will cache AER error code and schedule worker
+> thread to handle error.
+> 
+> The PCIe device will get removed from PCI tree before worker thread
+> completes its task and kernel panic is  happening when worker thread tries
+> to access PCI device's config space.
+> 
+> #5 [ffff88027469fc70] general_protection at ffffffff8176cdf2
+>     [exception RIP: pci_bus_read_config_dword+100]
+> #6 [ffff88027469fd50] pci_find_next_ext_capability at ffffffff81345d7b
+> #7 [ffff88027469fd90] pci_find_ext_capability at ffffffff81347225
+> #8 [ffff88027469fda0] get_device_error_info at ffffffff81356c4d
+> #9 [ffff88027469fdd0] aer_isr at ffffffff81357a38
+> #10 [ffff88027469fe28] process_one_work at ffffffff8105d4c0
+> #11 [ffff88027469fe70] worker_thread at ffffffff8105e251
+> #12 [ffff88027469fed0] kthread at ffffffff81064260
+> #13 [ffff88027469ff50] ret_from_fork at ffffffff81773a38
+> 
+> I have tested it on kernel 3.10 . But from source i could see that this
+> case is still relevant for latest Linux source .
 
-I think we have missed the v4.19 merge window by now - please let me
-know if I can drop this series from the PCI patch queue.
+I'm not really familiar with the AER driver, but the problem is
+actually easy to spot:
 
-Thanks,
-Lorenzo
+find_source_device() walks the hierarchy and saves a pointer to
+pci_dev's in an array.  That array is later traversed and the
+pci_dev's are accessed.
 
-> Regards
-> Vignesh
-> 
-> 
-> Changes since v2:
-> Reorder patch 2 to appear at the last.
-> Collect all the ACKs
-> 
-> Changes since v1:
-> Drop IRQ handling rework (will be sent out separately)
-> 
-> v2: https://patchwork.ozlabs.org/cover/935454/
-> v1: https://lkml.org/lkml/2017/12/1/59
-> 
-> 
-> Vignesh R (4):
->   dt-bindings: PCI: dra7xx: Add bindings for unaligned access in host
->     mode
->   ARM: dts: dra7: Enable workaround for errata i870 in PCIe host mode
->   ARM: dts: dra7: Fix up unaligned access setting for PCIe EP
->   pci: dwc: pci-dra7xx: Enable errata i870 for both EP and RC mode
-> 
->  Documentation/devicetree/bindings/pci/ti-pci.txt |  5 +++++
->  arch/arm/boot/dts/dra7.dtsi                      |  4 +++-
->  drivers/pci/controller/dwc/pci-dra7xx.c          | 12 ++++++------
->  3 files changed, 14 insertions(+), 7 deletions(-)
-> 
-> -- 
-> 2.18.0
-> 
+The solution is to acquire a ref on each device in add_error_device():
+
+-	e_info->dev[e_info->error_dev_num] = dev;
++	e_info->dev[e_info->error_dev_num] = pci_dev_get(dev);
+
+Then release the ref aer_process_err_devices() by calling pci_dev_put().
+
+I believe there's an ongoing refactoring of the AER driver and the
+issue may be addressed in the course of it, but as a quick fix for
+an ancient v3.10 kernel, the above should do the trick.
+
+HTH,
+
+Lukas
