@@ -1,90 +1,97 @@
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Message-ID: <8eb76c5b173a8e8f8f90b9d2204c1b3b0de06c51.camel@baylibre.com>
-Subject: Re: [PATCH 2/2] PCI: meson: add the Amlogic Meson PCIe phy driver
-From: Jerome Brunet <jbrunet@baylibre.com>
-To: Hanjie Lin <hanjie.lin@amlogic.com>, Kishon Vijay Abraham I <kishon@ti.com>
-Date: Fri, 17 Aug 2018 10:09:37 +0200
-In-Reply-To: <91658f21-6934-6085-8deb-b85a1f6b7815@amlogic.com>
-References: <1534227134-151584-1-git-send-email-hanjie.lin@amlogic.com>
- <1534227134-151584-3-git-send-email-hanjie.lin@amlogic.com>
- <486e8ab477cc22ff231d2e18d7de22efba2c5abd.camel@baylibre.com>
- <2b87e834-41e3-e418-95f0-c6d695cd8b3f@amlogic.com>
- <e5d9d89e79f8ec37b6337e54912f49a0b0856874.camel@baylibre.com>
- <91658f21-6934-6085-8deb-b85a1f6b7815@amlogic.com>
-Mime-Version: 1.0
-List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
-List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
-List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
-List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
-List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
-Cc: Rob Herring <robh@kernel.org>, Kevin Hilman <khilman@baylibre.com>,
- shawn.lin@rock-chips.com, linux-kernel@vger.kernel.org,
- Yue Wang <yue.wang@amlogic.com>, linux-pci@vger.kernel.org,
- Carlo Caione <carlo@caione.org>, linux-amlogic@lists.infradead.org,
- linux-arm-kernel@lists.infradead.org
-Content-Type: text/plain; charset="utf-8"
-Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
-Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mga11.intel.com ([192.55.52.93]:3083 "EHLO mga11.intel.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1732186AbeHBNbD (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Thu, 2 Aug 2018 09:31:03 -0400
+From: Felipe Balbi <felipe.balbi@linux.intel.com>
+To: Bjorn Helgaas <bhelgaas@google.com>
+Cc: linux-pci@vger.kernel.org,
+        Felipe Balbi <felipe.balbi@linux.intel.com>
+Subject: [RFC] PCI: add support for Immediate Readiness
+Date: Thu,  2 Aug 2018 14:36:35 +0300
+Message-Id: <20180802113635.7097-1-felipe.balbi@linux.intel.com>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-T24gRnJpLCAyMDE4LTA4LTE3IGF0IDE0OjEyICswODAwLCBIYW5qaWUgTGluIHdyb3RlOgo+IAo+
-IE9uIDIwMTgvOC8xNiAxNjozMywgSmVyb21lIEJydW5ldCB3cm90ZToKPiA+IE9uIFRodSwgMjAx
-OC0wOC0xNiBhdCAxMTowNSArMDgwMCwgSGFuamllIExpbiB3cm90ZToKPiA+ID4gCj4gPiA+IE9u
-IDIwMTgvOC8xNCAxODo0MSwgSmVyb21lIEJydW5ldCB3cm90ZToKPiA+ID4gPiBPbiBUdWUsIDIw
-MTgtMDgtMTQgYXQgMDI6MTIgLTA0MDAsIEhhbmppZSBMaW4gd3JvdGU6Cj4gPiA+ID4gPiBGcm9t
-OiBZdWUgV2FuZyA8eXVlLndhbmdAYW1sb2dpYy5jb20+Cj4gPiA+ID4gPiAKPiA+ID4gPiA+IFRo
-ZSBNZXNvbi1QQ0lFLVBIWSBjb250cm9sbGVyIHN1cHBvcnRzIHRoZSA1LUdicHMgZGF0YSByYXRl
-Cj4gPiA+ID4gPiBvZiB0aGUgUENJIEV4cHJlc3MgR2VuIDIgc3BlY2lmaWNhdGlvbiBhbmQgaXMg
-YmFja3dhcmRjb21wYXRpYmxlCj4gPiA+ID4gPiB3aXRoIHRoZSAyLjUtR2JwcyBHZW4gMS4xIHNw
-ZWNpZmljYXRpb24gd2l0aCBvbmx5Cj4gPiA+ID4gPiBpbmZlcnJlZCBpZGxlIGRldGVjdGlvbiBz
-dXBwb3J0ZWQgb24gQU1MT0dJQyBTb0NzLgo+ID4gPiA+IAo+ID4gPiA+IEl0IGxvb2tzIGxpa2Ug
-dGhlIHNvbGUgcHVycG9zZSBvZiB0aGlzIGRyaXZlciBpcyB0byBwcm92aWRlIHRoZSByZXNldCBs
-aW5lcyB0bwo+ID4gPiA+IHBjaWUgZHJpdmVyLgo+ID4gPiA+IAo+ID4gPiA+IEkgd29uZGVyIHdo
-eSB3ZSBuZWVkIHRoaXMgPyBDYW4ndCB0aGUgcGNpZSBkcml2ZXIgY2xhaW0gdGhlIHJlc2V0IGxp
-bmVzIGl0c2VsZi4KPiA+ID4gPiAKPiA+ID4gPiBBbHNvLCBhbiBpbml0IG9mIHRoaXMgcGh5IHdp
-bGwgYWx3YXlzIHJlc2V0IGJvdGggcG9ydC4gV2hhdCB3aWxsIGhhcHBlbiBpZiB0aGUKPiA+ID4g
-PiBmaXJzdCBwb3J0IGlzIGluIHVzZSBhbmQgdGhlIDJuZCBwb3J0IGNvbWVzIHVwID8/IAo+ID4g
-PiA+IAo+ID4gPiA+IExvb2tzIHRoZSB0aGUgcGNpZSBkcml2ZXIgc2hvdWxkIGNsYWltICdhcGIn
-IGFuZCAncGh5JyByZXNldCBsaW5lcyBhcyAic2hhcmVkIgo+ID4gPiA+IHJlc2V0IGFuZCB0aGUg
-cmVxdWlyZWQgJ3BvcnQnIGFzICdleGNsdXNpdmUnCj4gPiA+ID4gCj4gPiA+IAo+ID4gPiBUaGFu
-ayB5b3UgZm9yIHlvdXIgcmVzcG9uc2UuCj4gPiA+IAo+ID4gPiBZZXMsICdhcGInIGFuZCAncGh5
-JyByZXNldCBsaW5lcyBhcmUgc2hhcmVkLCBhbmQg4oCYcG9ydCcgcmVzZXQgbGluZSBpcyBleGNs
-dXNpdmUuCj4gPiA+IElmIHdlIGhhbmRsZSBhbGwgcmVzZXQgbGluZXMgZHVyaW5nIHRoZSBmaXJz
-dCBwb3J0IGluaXRpYWwgc2VxdWVuY2UsIAo+ID4gPiBhbmQgd2hlbiB0aGUgc2Vjb25kIHBvcnQg
-Y29tZXMgdXAsIHdlIHdpbGwgZG8gbm90aGluZyBhYm91dCB0aGUgcmVzdCBsaW5lcywgCj4gPiA+
-IGFuZCBkb24ndCBuZWVkIGEgZXh0cmEgQVBJIHRvIGRvIOKAmHBvcnQnIHJlc2V0Owo+ID4gCj4g
-PiBXaXRoIHdoaWNoIG90aGVyIGRyaXZlciBhcmUgeW91ciBjb250cm9sIHNoYXJlZCA/Cj4gPiAK
-PiA+IExvb2tzIGl0IGlzIHRoZSBhbnN3ZXIgaXMgbm9uZSBzaW5jZSB0aGlzIHBoeSBkcml2ZXIg
-d2lsbCByZXNldCBib3RoIHBvcnQKPiA+IGFscmVhZHksIGV2ZW4gaWYgb25lIGlzIHVzZWQuCj4g
-PiAKPiA+IEluIHRoaXMgY2FzZSB0aGUgZmFjdCB0aGF0IHlvdSBhcmUgdXNpbmcgc2hhcmVkIGNv
-bnRyb2wgaXMganVzdCBhYnVzaW5nIHRoZQo+ID4gZnJhbWV3b3JrIHRvIHJlc2V0IG9uY2UuCj4g
-PiAKPiA+IEFzIGZhciBhcyBJIGNhbiB0ZWxsLCB0aGlzIGRyaXZlciBtYWtlcyBubyBzZW5zZS4g
-VGhlIGFwcHJvcHJpYXRlIHJlc2V0IGxpbmVzCj4gPiBzaG91bGQgYmUgZ2l2ZW4gZGlyZWN0bHkg
-dG8geW91ciBwY2llIGRyaXZlci4gCj4gPiAKPiA+IAo+ID4gCj4gPiAuCj4gPiAKPiAKPiBBbWxv
-Z2ljIEFYRyBTT0MgaW5jbHVkZXMgdHdvIHBjaWUgY29udHJvbGxlcnMgYW5kIHBpcGVzIHdoZW4g
-b25seSBvbmUgcGNpZSBwaHk6IAo+IAo+ICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAg
-ICAgIChwb3J0X2EgcmVzZXQpCj4gICAgICAgICAgICAgICAgICAgICAgIHxQQ0lFX1JDX0EtLS0t
-PlBDSUVfUElQRV9BLS0tLS0tfCAKPiAgICAgKGFwYl9yZXNldCkgICAgICAgfCAgICAgICAgICAg
-ICAgICAgICAgICAgICAgICAgICB8ICAocGh5IHJlc2V0KQo+ICAgICBBUEIgQlVTLS0tPiAgICAg
-ICB8ICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgIHwgICBQQ0lFX1BIWQo+ICAgICAgICAg
-ICAgICAgICAgICAgICB8ICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgIHwKPiAgICAgICAg
-ICAgICAgICAgICAgICAgfCAgICAgICAgICAgICAocG9ydF9iX3Jlc2V0KSAgICB8Cj4gICAgICAg
-ICAgICAgICAgICAgICAgIHxQQ0lFX1JDX0ItLS0tPlBDSUVfUElQRV9CLS0tLS0tfAo+IAo+IFRo
-ZSBwaHlfcmVzZXQgYWZmZWN0IHRoZSBQQ0lFX1BIWS4KPiBUaGUgcG9ydF9hX3Jlc2V0IGFmZmVj
-dCB0aGUgUENJRV9QSVBFX0EsIHBvcnRfYl9yZXNldCBhZmZlY3QgdGhlIFBDSUVfUElQRV9CLiAK
-PiAKPiBBcyB5b3VyIHN1Z2dlc3Rpb24gd2Ugd2lsbCBtb3ZlIHRoZSAncG9ydCcgcmVzZXQgdG8g
-Y29udHJvbGxlciBkcml2ZXIsCj4gYW5kIGtlZXBpbmcgdGhlIHBoeSBkcml2ZXIgdG8gcHJvY2Vz
-cyB0aGUgJ2FwYicgYW5kICdwaHknIHJlc2V0IG9yIGFueQo+IG1vcmUgY2hhbmdlcyBvZiB0aGUg
-cGh5IGluIGZ1dHVyZS4KCkFzIGZhciBhcyBJIGNhbiB0ZWxsIGZyb20gdGhpcyBkaWFncmFtLCBJ
-dCB3b3VsZCBvbmx5IG1ha2Ugc2Vuc2UgZm9yIHRoZSAicGh5IgpyZXNldCBsaW5lIHRvIGJlIGNv
-bnRyb2xsZWQgYnkgeW91ciBwaHkgZHJpdmVyLgoKVGhlIGFwYiBhbmQgcG9ydCBpcyBvYnZpb3Vz
-bHkgcmVsYXRlZCB0byB0aGUgcGNpZSBkZXZpY2UvZHJpdmVyIGl0c2VsZiwgbm90IHRoZQpQSFku
-IEFuZCB3aGV0aGVyIHlvdSAxIG9yIDIgcmVzZXQgbGluZXMgaW4gaXQsIElNTyBpdCBpcyBvdmVy
-a2lsbCBhbmQKdW5uZWNlc3NhcnkgdG8gbWFrZSBhIHBoeSBkcml2ZXIgZm9yIHRoaXMuIAoKPiAK
-CgoKX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX18KbGludXgt
-YXJtLWtlcm5lbCBtYWlsaW5nIGxpc3QKbGludXgtYXJtLWtlcm5lbEBsaXN0cy5pbmZyYWRlYWQu
-b3JnCmh0dHA6Ly9saXN0cy5pbmZyYWRlYWQub3JnL21haWxtYW4vbGlzdGluZm8vbGludXgtYXJt
-LWtlcm5lbAo=
+PCIe GEN4 defines a new bit on Status Register which tells us that, if
+Set, a function is immediately ready after a Reset. This means that
+all delays after a Conventional or Function Reset can be skipped.
+
+This patch reads such bit and caches its value in a flag inside struct
+pci_dev to be checked later if we should delay or can skip delays
+after a reset.
+
+Signed-off-by: Felipe Balbi <felipe.balbi@linux.intel.com>
+---
+ drivers/pci/pci.c             | 9 ++++++++-
+ include/linux/pci.h           | 1 +
+ include/uapi/linux/pci_regs.h | 1 +
+ 3 files changed, 10 insertions(+), 1 deletion(-)
+
+diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
+index 316496e99da9..cf5239edd46a 100644
+--- a/drivers/pci/pci.c
++++ b/drivers/pci/pci.c
+@@ -835,7 +835,7 @@ static void __pci_start_power_transition(struct pci_dev *dev, pci_power_t state)
+ 		 * because have already delayed for the bridge.
+ 		 */
+ 		if (dev->runtime_d3cold) {
+-			if (dev->d3cold_delay)
++			if (dev->d3cold_delay && !dev->immediate)
+ 				msleep(dev->d3cold_delay);
+ 			/*
+ 			 * When powering on a bridge from D3cold, the
+@@ -2442,6 +2442,7 @@ EXPORT_SYMBOL_GPL(pci_d3cold_disable);
+ void pci_pm_init(struct pci_dev *dev)
+ {
+ 	int pm;
++	u16 status;
+ 	u16 pmc;
+ 
+ 	pm_runtime_forbid(&dev->dev);
+@@ -2504,6 +2505,9 @@ void pci_pm_init(struct pci_dev *dev)
+ 		/* Disable the PME# generation functionality */
+ 		pci_pme_active(dev, false);
+ 	}
++
++	pci_read_config_word(dev, PCI_STATUS, &status);
++	dev->immediate = status & PCI_STATUS_IMMEDIATE;
+ }
+ 
+ static unsigned long pci_ea_flags(struct pci_dev *dev, u8 prop)
+@@ -4034,6 +4038,9 @@ static int pci_dev_wait(struct pci_dev *dev, char *reset_type, int timeout)
+ 	int delay = 1;
+ 	u32 id;
+ 
++	if (dev->immediate)
++		return 0;
++
+ 	/*
+ 	 * After reset, the device should not silently discard config
+ 	 * requests, but it may still indicate that it needs more time by
+diff --git a/include/linux/pci.h b/include/linux/pci.h
+index abd5d5e17aee..d8f0a382b026 100644
+--- a/include/linux/pci.h
++++ b/include/linux/pci.h
+@@ -321,6 +321,7 @@ struct pci_dev {
+ 	pci_power_t	current_state;	/* Current operating state. In ACPI,
+ 					   this is D0-D3, D0 being fully
+ 					   functional, and D3 being off. */
++	unsigned int	immediate:1;	/* Supports Immediate Readiness */
+ 	u8		pm_cap;		/* PM capability offset */
+ 	unsigned int	pme_support:5;	/* Bitmask of states from which PME#
+ 					   can be generated */
+diff --git a/include/uapi/linux/pci_regs.h b/include/uapi/linux/pci_regs.h
+index 4da87e2ef8a8..796d12910791 100644
+--- a/include/uapi/linux/pci_regs.h
++++ b/include/uapi/linux/pci_regs.h
+@@ -52,6 +52,7 @@
+ #define  PCI_COMMAND_INTX_DISABLE 0x400 /* INTx Emulation Disable */
+ 
+ #define PCI_STATUS		0x06	/* 16 bits */
++#define  PCI_STATUS_IMMEDIATE	0x01	/* Immediate Readiness */
+ #define  PCI_STATUS_INTERRUPT	0x08	/* Interrupt status */
+ #define  PCI_STATUS_CAP_LIST	0x10	/* Support Capability List */
+ #define  PCI_STATUS_66MHZ	0x20	/* Support 66 MHz PCI 2.1 bus */
+-- 
+2.16.1
