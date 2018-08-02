@@ -1,130 +1,72 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-sh2.amlogic.com ([58.32.228.45]:51249 "EHLO
-        mail-sh2.amlogic.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1727626AbeH3MDg (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Thu, 30 Aug 2018 08:03:36 -0400
-Subject: Re: [PATCH v2 2/2] PCI: meson: add the Amlogic Meson PCIe phy driver
-To: Jerome Brunet <jbrunet@baylibre.com>,
-        Kishon Vijay Abraham I <kishon@ti.com>
-CC: Rob Herring <robh@kernel.org>,
-        Jianxin Pan <jianxin.pan@amlogic.com>,
-        <linux-pci@vger.kernel.org>, Yixun Lan <yixun.lan@amlogic.com>,
-        Yue Wang <yue.wang@amlogic.com>,
-        Qiufang Dai <qiufang.dai@amlogic.com>,
-        Liang Yang <liang.yang@amlogic.com>,
-        Jian Hu <jian.hu@amlogic.com>,
-        Kevin Hilman <khilman@baylibre.com>,
-        Carlo Caione <carlo@caione.org>,
-        <linux-amlogic@lists.infradead.org>,
-        <linux-arm-kernel@lists.infradead.org>
-References: <1535096006-152091-1-git-send-email-hanjie.lin@amlogic.com>
- <1535096006-152091-3-git-send-email-hanjie.lin@amlogic.com>
- <c21a2e25c934d19f913f625542f505cf45754f23.camel@baylibre.com>
-From: Hanjie Lin <hanjie.lin@amlogic.com>
-Message-ID: <b8deb2ef-5e73-b508-616e-b0303a0adc78@amlogic.com>
-Date: Thu, 30 Aug 2018 16:02:53 +0800
-MIME-Version: 1.0
-In-Reply-To: <c21a2e25c934d19f913f625542f505cf45754f23.camel@baylibre.com>
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Message-ID: <1533192900.20186.19.camel@pengutronix.de>
+Subject: Re: [PATCH 1/2] ARM: dts: imx7d: Add node for PCIe PHY
+From: Lucas Stach <l.stach@pengutronix.de>
+To: Richard Zhu <hongxing.zhu@nxp.com>, Trent Piepho <tpiepho@impinj.com>,
+ "linux-arm-kernel@lists.infradead.org"
+ <linux-arm-kernel@lists.infradead.org>, "linux-pci@vger.kernel.org"
+ <linux-pci@vger.kernel.org>
+Date: Thu, 02 Aug 2018 08:55:00 +0200
+In-Reply-To: <AM5PR0402MB28501824F60DB56D923758A38C2C0@AM5PR0402MB2850.eurprd04.prod.outlook.com>
+References: <20180718194424.8844-1-tpiepho@impinj.com>
+ <20180718194424.8844-2-tpiepho@impinj.com>
+ <1533119951.20186.5.camel@pengutronix.de>
+ <1533144812.2283.227.camel@impinj.com>
+ <AM5PR0402MB28501824F60DB56D923758A38C2C0@AM5PR0402MB2850.eurprd04.prod.outlook.com>
+Mime-Version: 1.0
+List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
+List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
+List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
+List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
+List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
+Cc: Fabio Estevam <fabio.estevam@nxp.com>,
+ "shawnguo@kernel.org" <shawnguo@kernel.org>,
+ "kernel@pengutronix.de" <kernel@pengutronix.de>
 Content-Type: text/plain; charset="utf-8"
-Sender: linux-pci-owner@vger.kernel.org
+Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
+Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
 List-ID: <linux-pci.vger.kernel.org>
 
-
-
-On 2018/8/29 23:57, Jerome Brunet wrote:
-> On Fri, 2018-08-24 at 15:33 +0800, Hanjie Lin wrote:
->> +static int meson_pcie_phy_probe(struct platform_device *pdev)
->> +{
->> +       struct device *dev = &pdev->dev;
->> +       struct meson_pcie_phy *mphy;
->> +       struct meson_pcie_reset *mrst;
->> +       struct phy *generic_phy;
->> +       struct phy_provider *phy_provider;
->> +       struct resource *res;
->> +       const struct meson_pcie_phy_data *data;
->> +
->> +       data = of_device_get_match_data(dev);
->> +       if (!data)
->> +               return -ENODEV;
->> +
->> +       mphy = devm_kzalloc(dev, sizeof(*mphy), GFP_KERNEL);
->> +       if (!mphy)
->> +               return -ENOMEM;
->> +       res = platform_get_resource(pdev, IORESOURCE_MEM, 0);
->> +       mphy->phy_base = devm_ioremap_resource(dev, res);
->> +       if (IS_ERR(mphy->phy_base))
->> +               return PTR_ERR(mphy->phy_base);
->> +
->> +       mrst = &mphy->reset;
->> +
->> +       mrst->phy = devm_reset_control_get_shared(dev, "phy");
-> 
-> I thought you said there was only phy on this platform.
-> If that's the case, what is this reset shared with ?
-
-Amlogic axg soc includes two pcie controllers and they share the same pcie phy.
-Because of two pcie controllers, meson_pcie_phy_probe() will be called two times.
-So, the phy reset must be shared.
-
-> 
->> +       if (IS_ERR(mrst->phy)) {
->> +               if (PTR_ERR(mrst->phy) != -EPROBE_DEFER)
->> +                       dev_err(dev, "couldn't get phy reset\n");
->> +
->> +               return PTR_ERR(mrst->phy);
->> +       }
->> +
->> +       reset_control_deassert(mrst->phy);
-> 
-> Is it really necessary before init() is called by the consumer ?
-> 
-
-For shared reset we must deassert first before do assert,
-currently if we don't do this deassert, we will get the below warning when
-controller driver do the share reset.
-
-int reset_control_assert(struct reset_control *rstc)
-{
-...
-	if (rstc->shared) {
-		if (WARN_ON(atomic_read(&rstc->deassert_count) == 0))
-
-
-
-
->> +
->> +       mphy->data = data;
->> +
->> +       generic_phy = devm_phy_create(dev, dev->of_node, mphy->data->ops);
->> +       if (IS_ERR(generic_phy)) {
->> +               if (PTR_ERR(generic_phy) != -EPROBE_DEFER)
->> +                       dev_err(dev, "failed to create PHY\n");
->> +
->> +               return PTR_ERR(generic_phy);
->> +       }
->> +
->> +       phy_set_drvdata(generic_phy, mphy);
->> +       phy_provider = devm_of_phy_provider_register(dev, of_phy_simple_xlate);
->> +
->> +       return PTR_ERR_OR_ZERO(phy_provider);
->> +}
->> +
->> +static struct platform_driver meson_pcie_phy_driver = {
->> +       .probe  = meson_pcie_phy_probe,
->> +       .driver = {
->> +               .of_match_table = meson_pcie_phy_match,
->> +               .name           = "meson-pcie-phy",
->> +       }
->> +};
-> 
-> 
-> .
-> 
-
-Thanks for the review.
-
-As described during the discussion [0], we consider it's too overkill to
-have a dedicated phy driver which only process reset line. So we will abandon phy driver 
-and integrate phy reset into the controller driver int the next version. 
-
-[0] https://lkml.kernel.org/r/1535096165-45827-1-git-send-email-hanjie.lin@amlogic.
+QW0gRG9ubmVyc3RhZywgZGVuIDAyLjA4LjIwMTgsIDAwOjQzICswMDAwIHNjaHJpZWIgUmljaGFy
+ZCBaaHU6Cj4gPiAtLS0tLU9yaWdpbmFsIE1lc3NhZ2UtLS0tLQo+ID4gPiA+IEZyb206IFRyZW50
+IFBpZXBobyBbbWFpbHRvOnRwaWVwaG9AaW1waW5qLmNvbV0KPiA+IFNlbnQ6IFRodXJzZGF5LCBB
+dWd1c3QgMiwgMjAxOCAxOjM0IEFNCj4gPiA+ID4gPiA+IFRvOiBsLnN0YWNoQHBlbmd1dHJvbml4
+LmRlOyBsaW51eC1hcm0ta2VybmVsQGxpc3RzLmluZnJhZGVhZC5vcmc7Cj4gPiBsaW51eC1wY2lA
+dmdlci5rZXJuZWwub3JnCj4gPiA+ID4gPiA+IENjOiBSaWNoYXJkIFpodSA8aG9uZ3hpbmcuemh1
+QG54cC5jb20+OyBzaGF3bmd1b0BrZXJuZWwub3JnOwo+ID4gPiA+IGtlcm5lbEBwZW5ndXRyb25p
+eC5kZTsgRmFiaW8gRXN0ZXZhbSA8ZmFiaW8uZXN0ZXZhbUBueHAuY29tPgo+ID4gU3ViamVjdDog
+UmU6IFtQQVRDSCAxLzJdIEFSTTogZHRzOiBpbXg3ZDogQWRkIG5vZGUgZm9yIFBDSWUgUEhZCj4g
+PiAKPiA+IE9uIFdlZCwgMjAxOC0wOC0wMSBhdCAxMjozOSArMDIwMCwgTHVjYXMgU3RhY2ggd3Jv
+dGU6Cj4gPiA+IAo+ID4gPiA+ICtUaGlzIGlzIHRoZSBQSFkgYXNzb2NpYXRlZCB3aXRoIHRoZSBJ
+TVg3ZCBQQ0llIGNvbnRyb2xsZXIuwqDCoEl0J3MKPiA+ID4gPiB1c2VkIGJ5IHRoZQo+ID4gPiA+
+ICtQQ0ktZSBjb250cm9sbGVyIHZpYSB0aGUgZnNsLHBjaWUtcGh5IHBoYW5kbGUuCj4gPiA+ID4g
+Kwo+ID4gPiA+ICtSZXF1aXJlZCBwcm9wZXJ0aWVzOgo+ID4gPiA+ICstIGNvbXBhdGlibGU6Cj4g
+PiA+ID4gKwktICJmc2wsaW14LXBjaWUtcGh5Igo+ID4gPiAKPiA+ID4gVGhpcyBpcyB0b28gZ2Vu
+ZXJpYy4gUGxlYXNlIGNoYW5nZSBpdCB0byAiZnNsLGlteDctcGNpZS1waHkiLgo+ID4gCj4gPiBD
+YW4gYW55b25lIGZyb20gTlhQIHRlbGwgdXMgaWYgYW4gZXh0ZXJuYWwgUENJZSBQSFkgYmxvY2sg
+aXMgcHJlc2VudCBpbiBvdGhlcgo+ID4gSU1YIGRlc2lnbnM/wqDCoEkgc3VzcGVjdCB0aGF0IHRo
+aXMgaXMgZ2VuZXJpYywgYnV0IG5vIGRlc2lnbiBvdGhlciB0aGFuIGlteDdkCj4gPiBoYXMgaGFk
+IGFueSByZWFzb24gdG8gdXNlIHRoaXMgUEhZIHJlZ2lzdGVyIHNwYWNlIHlldC4KPiA+IAo+IAo+
+IEhpIFRyZW50Ogo+IFRoZXJlIGlzIGEgZGlmZmVyZW50IFBDSWUgUEhZIGJsb2NrIGluIGlteDdk
+IFBDSWUgcmVmZXIgdG8gdGhlIGlteDYuCj4gU28sIHRoZSBzdGFuZGFsb25lIG1lbW9yeSByZWdp
+b24gaXMgdXNlZCB0byBtYXAgdGhlIGlteDdkIFBDSWUgUEhZIHJlZ2lzdGVycy4KPiBJbnN0ZWFk
+IG9mIHRoZSBzdGFuZGFsb25lIFBIWSBub2RlLCBob3cgYWJvdXQgdG8gaW5jbHVkZSB0aGUgUEhZ
+IHJlZ2lzdGVycyBtZW1vcnkgcmVnaW9uIGludG8gUENJZSBub2RlPwo+IEZvciBleGFtcGxlOgo+
+ID4gwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgcGNpZTogcGNpZUAweDMzODAwMDAwIHsK
+PiDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqBjb21wYXRp
+YmxlID0gImZzbCxpbXg3ZC1wY2llIiwgInNucHMsZHctcGNpZSI7Cj4gwqDCoMKgwqDCoMKgwqDC
+oMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgcmVnID0gPDB4MzM4MDAwMDAgMHg0MDAw
+PiwgPDB4MzA2ZDAwMDAgMHgxMDAwMD4sIDwweDRmZjAwMDAwIDB4ODAwMDA+Owo+IMKgwqDCoMKg
+wqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoHJlZy1uYW1lcyA9ICJkYmki
+LCAicGh5IiwgImNvbmZpZyI7CgpJIGRpc2xpa2UgdGhpcyBzb2x1dGlvbiwgYXMgaXQgaXNuJ3Qg
+YSBjb3JyZWN0IGRlc2NyaXB0aW9uIG9mIHRoZSBIVy4KSGF2aW5nIGl0IGFzIGEgc2VwYXJhdGUg
+bm9kZSB3aXRoIGl0J3Mgb3duIGNvbXBhdGlibGUsIGFzIGRvbmUgaW4gdGhpcwpwYXRjaHNldCwg
+YWxsb3dzIHVzIHRvIHN3aXRjaCBvdmVyIHRvIGEgcmVhbCBQSFkgZHJpdmVyIHNob3VsZCB3ZSBl
+dmVyCmhhdmUgYSBuZWVkIGZvciBpdCwgYWxsIHdpdGhvdXQgYnJlYWtpbmcgdGhlIERUIGFic3Ry
+YWN0aW9uIGFnYWluLgoKUmVnYXJkcywKTHVjYXMgCgpfX19fX19fX19fX19fX19fX19fX19fX19f
+X19fX19fX19fX19fX19fX19fX19fXwpsaW51eC1hcm0ta2VybmVsIG1haWxpbmcgbGlzdApsaW51
+eC1hcm0ta2VybmVsQGxpc3RzLmluZnJhZGVhZC5vcmcKaHR0cDovL2xpc3RzLmluZnJhZGVhZC5v
+cmcvbWFpbG1hbi9saXN0aW5mby9saW51eC1hcm0ta2VybmVsCg==
