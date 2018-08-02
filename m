@@ -1,70 +1,122 @@
-Return-Path: <SRS0=uSZ2=LE=intel.com=keith.busch@kernel.org>
-Return-Path: <SRS0=uSZ2=LE=intel.com=keith.busch@kernel.org>
-Date: Tue, 21 Aug 2018 16:04:56 -0600
-From: Keith Busch <keith.busch@intel.com>
-To: Benjamin Herrenschmidt <benh@kernel.crashing.org>
-Cc: poza@codeaurora.org, Sinan Kaya <okaya@kernel.org>,
-	Bjorn Helgaas <helgaas@kernel.org>,
-	Thomas Tai <thomas.tai@oracle.com>, bhelgaas@google.com,
-	linux-pci@vger.kernel.org, linux-pci-owner@vger.kernel.org,
-	Sam Bobroff <sam.bobroff@au1.ibm.com>
-Subject: Re: [PATCH 1/1] PCI/AER: prevent pcie_do_fatal_recovery from using
- device after it is removed
-Message-ID: <20180821220456.GC18612@localhost.localdomain>
-References: <908ff33ded8f31830f95a8889d8540f1@codeaurora.org>
- <5027d857bb59edfd33442003aa618ece1bc9cd52.camel@kernel.crashing.org>
- <b2e2ac5c92d8a91d00606754d1046578@codeaurora.org>
- <2ecd1fd6d763810d45697f846fa876b58a193b1b.camel@kernel.crashing.org>
- <a149d9657ca83b41c724b0ddd319c6fb@codeaurora.org>
- <512e0e11c3ba462c1d033f8b0e768fa27489731c.camel@kernel.crashing.org>
- <ad23b16cf7ff1f3b51961fda59533892@codeaurora.org>
- <2742bdba5ae8ccc420234b6e6b0224919367ed4c.camel@kernel.crashing.org>
- <20180821143751.GA18477@localhost.localdomain>
- <277b7056aa7af8e98d5cd912838e582783943aa9.camel@kernel.crashing.org>
+Return-Path: <SRS0=CTFa=KR=codeaurora.org=poza@kernel.org>
+Return-Path: <SRS0=CTFa=KR=codeaurora.org=poza@kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <277b7056aa7af8e98d5cd912838e582783943aa9.camel@kernel.crashing.org>
+Content-Type: text/plain; charset=US-ASCII;
+ format=flowed
+Date: Thu, 02 Aug 2018 11:53:28 +0530
+From: poza@codeaurora.org
+To: Bjorn Helgaas <helgaas@kernel.org>
+Cc: Bharat Kumar Gogada <bharat.kumar.gogada@xilinx.com>,
+ linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
+ bhelgaas@google.com, linux-pci-owner@vger.kernel.org
+Subject: Re: [PATCH] PCI/AER: Enable SERR# forwarding in non ACPI flow
+In-Reply-To: <20180731224706.GO45322@bhelgaas-glaptop.roam.corp.google.com>
+References: <1531406719-18606-1-git-send-email-bharat.kumar.gogada@xilinx.com>
+ <20180731224706.GO45322@bhelgaas-glaptop.roam.corp.google.com>
+Message-ID: <6a1266c49a5be0d598dd7f1ded94e93d@codeaurora.org>
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wed, Aug 22, 2018 at 07:14:32AM +1000, Benjamin Herrenschmidt wrote:
-> On Tue, 2018-08-21 at 08:37 -0600, Keith Busch wrote:
-> > > 
-> > > >      so if there is a way to figure out that in absence of pcihp, if DPC 
-> > > > is being used to support hotplug then we fall back to original DPC 
-> > > > mechanism (which is remove devices)
-> > > 
-> > > Not exactly. If the presence detect change indicates it was a hotplug
-> > > event rather.
-> > 
-> > The actions associated with error recovery will trigger link state changes
-> > for a lot of existing hardware. PCIEHP currently does the same removal
-> > sequence for both link state change (DLLSC) and presence detect change
-> > (PDC) events.
-> > 
-> > It sounds like you want pciehp to do nothing on the DLLSC events that it
-> > currently handles, and instead do the board removal only on PDC.  If that
-> > is the case, is the desire to not remove devices downstream a permanently
-> > disabled link, or does that responsibility fall onto some other component?
+On 2018-08-01 04:17, Bjorn Helgaas wrote:
+> On Thu, Jul 12, 2018 at 08:15:19PM +0530, Bharat Kumar Gogada wrote:
+>> Currently PCI_BRIDGE_CTL_SERR is being enabled only in
+>> ACPI flow.
+>> This bit is required for forwarding errors reported
+>> by EP devices to upstream device.
+>> This patch enables SERR# for Type-1 PCI device.
 > 
-> I think there need to be some coordination between pciehb and DPC on
-> link state change yes.
+> This does seem broken.
 > 
-> We could still remove the device if recovery fails. For example on EEH
-> we have a threshold and if a device fails more than N times within the
-> last M minutes (I don't remember the exact numbers and I'm not in front
-> of the code right now) we give up.
+> Figure 6-3 in PCIe r4.0, sec 6.2.6, would be a helpful reference to
+> include in the commit log.
 > 
-> Also under some circumstances, the link will change as a result of the
-> error handling doing a hot reset.
+> Semi-related question: there are about 40 drivers that call
+> pci_enable_pcie_error_reporting() and
+> pci_disable_pcie_error_reporting().  I see that the PCI core
+> calls pci_enable_pcie_error_reporting() for Root Ports and Switch
+> Ports in this path:
 > 
-> For example, if the error happens in a parent bridge and that gets
-> reset, the entire hierarchy underneath does too.
+>   aer_probe                     # for root ports only
+>     aer_enable_rootport
+>       set_downstream_devices_error_reporting
+>         set_device_error_reporting
+>           if (ROOT_PORT || UPSTREAM || DOWNSTREAM)
+>             pci_enable_pcie_error_reporting
+>         pci_walk_bus(..., set_device_error_reporting)
 > 
-> We need to save/restore the state of all bridges and devices (BARs
-> etc...) below that.
+> But the core doesn't call pci_enable_pcie_error_reporting() for
+> endpoints.  I wonder why not.  Could we?  And then remove the calls
+> from those drivers?  If PCI_EXP_AER_FLAGS should only be set if the
+> driver is prepared, the pci_driver.err_handler would be a good hint.
+> But I suspect we could do something sensible and at least report
+> errors even if the driver doesn't have err_handler callbacks.
+> 
 
-That's not good enough. You'd at least need to check SLTSTS.PDC on all
-bridge DSP's beneath the parent *before* you try to restore the state
-of devices beneath them. Those races are primarily why DPC currently
-removes and reenumerates instead, because that's not something that can
-be readily coordinated today.
+what about hot-plug case ?
+should not aer_init() call pci_enable_pcie_error_reporting() for all the 
+downstream pci_dev ?
+and remove all the calls from drivers..
+
+> On MIPS Octeon, it looks like pcibios_plat_dev_init() does already set
+> PCI_EXP_AER_FLAGS for every device.
+> 
+> But this question is obviously far beyond the scope of this current
+> patch.
+> 
+>> Signed-off-by: Bharat Kumar Gogada <bharat.kumar.gogada@xilinx.com>
+>> ---
+>>  drivers/pci/pcie/aer.c |   23 +++++++++++++++++++++++
+>>  1 files changed, 23 insertions(+), 0 deletions(-)
+>> 
+>> diff --git a/drivers/pci/pcie/aer.c b/drivers/pci/pcie/aer.c
+>> index a2e8838..943e084 100644
+>> --- a/drivers/pci/pcie/aer.c
+>> +++ b/drivers/pci/pcie/aer.c
+>> @@ -343,6 +343,19 @@ int pci_enable_pcie_error_reporting(struct 
+>> pci_dev *dev)
+>>  	if (!dev->aer_cap)
+>>  		return -EIO;
+>> 
+>> +	if (!IS_ENABLED(CONFIG_ACPI) &&
+>> +	    dev->hdr_type == PCI_HEADER_TYPE_BRIDGE) {
+> 
+> I think this test needs to be refined a little bit.  If the kernel
+> happens to be built with CONFIG_ACPI=y but the current platform
+> doesn't support ACPI, we still want to set PCI_BRIDGE_CTL_SERR,
+> don't we?
+> 
+>> +		u16 control;
+>> +
+>> +		/*
+>> +		 * A Type-1 PCI bridge will not forward ERR_ messages coming
+>> +		 * from an endpoint if SERR# forwarding is not enabled.
+>> +		 */
+>> +		pci_read_config_word(dev, PCI_BRIDGE_CONTROL, &control);
+>> +		control |= PCI_BRIDGE_CTL_SERR;
+>> +		pci_write_config_word(dev, PCI_BRIDGE_CONTROL, control);
+>> +	}
+>> +
+>>  	return pcie_capability_set_word(dev, PCI_EXP_DEVCTL, 
+>> PCI_EXP_AER_FLAGS);
+>>  }
+>>  EXPORT_SYMBOL_GPL(pci_enable_pcie_error_reporting);
+>> @@ -352,6 +365,16 @@ int pci_disable_pcie_error_reporting(struct 
+>> pci_dev *dev)
+>>  	if (pcie_aer_get_firmware_first(dev))
+>>  		return -EIO;
+>> 
+>> +	if (!IS_ENABLED(CONFIG_ACPI) &&
+>> +	    dev->hdr_type == PCI_HEADER_TYPE_BRIDGE) {
+>> +		u16 control;
+>> +
+>> +		/* Clear SERR Forwarding */
+>> +		pci_read_config_word(dev, PCI_BRIDGE_CONTROL, &control);
+>> +		control &= ~PCI_BRIDGE_CTL_SERR;
+>> +		pci_write_config_word(dev, PCI_BRIDGE_CONTROL, control);
+>> +	}
+>> +
+>>  	return pcie_capability_clear_word(dev, PCI_EXP_DEVCTL,
+>>  					  PCI_EXP_AER_FLAGS);
+>>  }
+>> --
+>> 1.7.1
+>> 
