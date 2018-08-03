@@ -1,59 +1,53 @@
-Return-Path: <SRS0=3Sc0=LN=kernel.crashing.org=benh@kernel.org>
-Return-Path: <SRS0=3Sc0=LN=kernel.crashing.org=benh@kernel.org>
-Message-ID: <fa27712ea85297f5294da007c3532038abb50b42.camel@kernel.crashing.org>
-Subject: Re: [PATCH 1/1] PCI/AER: prevent pcie_do_fatal_recovery from using
- device after it is removed
-From: Benjamin Herrenschmidt <benh@kernel.crashing.org>
-To: Keith Busch <keith.busch@intel.com>
-Cc: poza@codeaurora.org, Sinan Kaya <okaya@kernel.org>,
-        Bjorn Helgaas
- <helgaas@kernel.org>,
-        Thomas Tai <thomas.tai@oracle.com>, bhelgaas@google.com,
-        linux-pci@vger.kernel.org, linux-pci-owner@vger.kernel.org,
-        Sam Bobroff <sam.bobroff@au1.ibm.com>
-Date: Thu, 30 Aug 2018 14:26:02 +1000
-In-Reply-To: <20180830000100.GA5841@localhost.localdomain>
-References: <b2e2ac5c92d8a91d00606754d1046578@codeaurora.org>
-	 <2ecd1fd6d763810d45697f846fa876b58a193b1b.camel@kernel.crashing.org>
-	 <a149d9657ca83b41c724b0ddd319c6fb@codeaurora.org>
-	 <512e0e11c3ba462c1d033f8b0e768fa27489731c.camel@kernel.crashing.org>
-	 <ad23b16cf7ff1f3b51961fda59533892@codeaurora.org>
-	 <2742bdba5ae8ccc420234b6e6b0224919367ed4c.camel@kernel.crashing.org>
-	 <20180821143751.GA18477@localhost.localdomain>
-	 <277b7056aa7af8e98d5cd912838e582783943aa9.camel@kernel.crashing.org>
-	 <20180821220456.GC18612@localhost.localdomain>
-	 <5d69daf9918878b95b6df3265fc4c3d5b52f9baa.camel@kernel.crashing.org>
-	 <20180830000100.GA5841@localhost.localdomain>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+Return-Path: <SRS0=ei1Y=KS=linutronix.de=tglx@kernel.org>
+Return-Path: <SRS0=ei1Y=KS=linutronix.de=tglx@kernel.org>
+Date: Fri, 3 Aug 2018 21:40:53 +0200 (CEST)
+From: Thomas Gleixner <tglx@linutronix.de>
+To: Heiner Kallweit <hkallweit1@gmail.com>
+cc: Marc Zyngier <marc.zyngier@arm.com>, Bjorn Helgaas <helgaas@kernel.org>,
+    Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org,
+    Christoph Hellwig <hch@lst.de>, LKML <linux-kernel@vger.kernel.org>
+Subject: Re: [PATCH] PCI: let pci_request_irq properly deal with threaded
+ interrupts
+In-Reply-To: <420d6476-8ea4-0b37-e94a-f5842b7b0ff7@gmail.com>
+Message-ID: <alpine.DEB.2.21.1808032136490.1658@nanos.tec.linutronix.de>
+References: <d004975f-03a8-59f5-56ef-f4e1f8e12dfb@gmail.com> <20180730213028.GC45322@bhelgaas-glaptop.roam.corp.google.com> <alpine.DEB.2.21.1807310015170.1725@nanos.tec.linutronix.de> <86d0v4x75x.wl-marc.zyngier@arm.com> <0799ea22-70ed-3be6-cb80-449f53fef819@gmail.com>
+ <alpine.DEB.2.21.1808031605160.1745@nanos.tec.linutronix.de> <420d6476-8ea4-0b37-e94a-f5842b7b0ff7@gmail.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=US-ASCII
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wed, 2018-08-29 at 18:01 -0600, Keith Busch wrote:
-> On Wed, Aug 22, 2018 at 09:06:57AM +1000, Benjamin Herrenschmidt wrote:
-> > It can be probably done by a simple test & skip as you go down
-> > restoring state, then handling the removals after the dance is
-> > complete.
-> 
-> I tested on a variety of hardware, and there are mixed results. The spec
-> captures the crux of the problem with checking PDC (7.5.3.11):
-> 
->   Note that the in-band presence detect mechanism requires that power be
->   applied to an adapter for its presence to be detected. Consequently,
->   form factors that require a power controller for hot-plug must implement
->   a physical pin presence detect mechanism.
-> 
-> Many slots don't implement power controllers, so a secondary bus reset
-> always triggers a PDC. We can't really ignore PDC during fatal error
-> handling since hot plugs are the types of actions that often trigger
-> fatal errors..
-> 
-> Does it sound okay to trust PDC anyway? It's no worse than what would
-> happen currently, and it doesn't affect non-hotplug slots.
+On Fri, 3 Aug 2018, Heiner Kallweit wrote:
+> On 03.08.2018 16:09, Thomas Gleixner wrote:
+> > On Wed, 1 Aug 2018, Heiner Kallweit wrote:
+> >> diff --git a/kernel/irq/msi.c b/kernel/irq/msi.c
+> >> index 4ca2fd46..ba6da943 100644
+> >> --- a/kernel/irq/msi.c
+> >> +++ b/kernel/irq/msi.c
+> >> @@ -289,6 +289,9 @@ struct irq_domain *msi_create_irq_domain(struct fwnode_handle *fwnode,
+> >>         if (info->flags & MSI_FLAG_USE_DEF_CHIP_OPS)
+> >>                 msi_domain_update_chip_ops(info);
+> >>
+> >> +       /* MSI is oneshot-safe in general */
+> >> +       info->chip->flags |= IRQCHIP_ONESHOT_SAFE;
+> >> +
+> >>         domain = irq_domain_create_hierarchy(parent, IRQ_DOMAIN_FLAG_MSI, 0,
+> > 
+> > Looks about right, though there might be dragons. MSI is not always as sane
+> > as it should be...
+> > 
+> When saying "MSI isn't always sane", are you referring to the hardware or
+> the controller driver implementation? Basically for me the question is
+> whether we would be able to fix the issue if we meet such a dragon,
+> or whether we would have to revert the change.
 
-I think so.
+It's hardware unfortunately, so it might be a revert. PCI-MSI should be
+safe, but the wild MSI variants in SoCs might be the actual dragon caves.
 
-As you say, it's not worse and worst case, we try the recovery and
-fail, which can then lead to an unplug if we wish to do so. No biggie.
+> Do you think the chance of a dragon is low enough? Or better add the
+> flag only to the X86 PCI MSI irqchip for now?
 
-Cheers,
-Ben,
+I think PCI-MSI in general would be not too risky. Famous last words.
+
+Thanks,
+
+	tglx
