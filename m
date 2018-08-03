@@ -1,60 +1,69 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mx1.mailbox.org ([80.241.60.212]:21342 "EHLO mx1.mailbox.org"
+Received: from mail.kernel.org ([198.145.29.99]:35902 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1727787AbeHNVft (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Tue, 14 Aug 2018 17:35:49 -0400
-Subject: Re: PCI: Add function 1 DMA alias quirk for Marvell 88SS9183
-To: Bjorn Helgaas <helgaas@kernel.org>
-Cc: Alex Williamson <alex.williamson@redhat.com>,
-        linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org
-References: <20180813194123.GM113140@bhelgaas-glaptop.roam.corp.google.com>
- <20180814141926.GP113140@bhelgaas-glaptop.roam.corp.google.com>
-From: =?UTF-8?Q?Felix_Bl=c3=bcthner?= <f.bluethner@mailbox.org>
-Message-ID: <540cd923-51b4-ff3e-ffd5-a642400ec22a@mailbox.org>
-Date: Tue, 14 Aug 2018 20:47:15 +0200
+        id S1728116AbeHCTXO (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Fri, 3 Aug 2018 15:23:14 -0400
+Subject: Re: [RFC] PCI: add support for Immediate Readiness
+To: Felipe Balbi <felipe.balbi@linux.intel.com>,
+        Bjorn Helgaas <bhelgaas@google.com>
+Cc: linux-pci@vger.kernel.org
+References: <20180802113635.7097-1-felipe.balbi@linux.intel.com>
+ <15a43051-6b0f-1545-dc8f-b56b1513897b@kernel.org>
+ <874lgcufsu.fsf@linux.intel.com>
+From: Sinan Kaya <okaya@kernel.org>
+Message-ID: <407fa9ef-dcbe-e803-f72e-cbea468592bf@kernel.org>
+Date: Fri, 3 Aug 2018 13:25:58 -0400
 MIME-Version: 1.0
-In-Reply-To: <20180814141926.GP113140@bhelgaas-glaptop.roam.corp.google.com>
-Content-Type: text/plain; charset=windows-1252
+In-Reply-To: <874lgcufsu.fsf@linux.intel.com>
+Content-Type: text/plain; charset=utf-8; format=flowed
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Yes, I can confirm that patch. It is the same change I already compiled
-and installed and is running on my system successfully.
+On 8/3/2018 2:26 AM, Felipe Balbi wrote:
+> Sinan Kaya <okaya@kernel.org> writes:
+> 
+>> On 8/2/2018 7:36 AM, Felipe Balbi wrote:
+>>> PCIe GEN4 defines a new bit on Status Register which tells us that, if
+>>> Set, a function is immediately ready after a Reset. This means that
+>>> all delays after a Conventional or Function Reset can be skipped.
+>>
+>> Can you give a reference to the section of the specification? or
+>> a pointer to the ECN?
+> 
+> Section 7.5.1.1.4 of PCIe GEN4 spec. Table 7-4:
+> 
+> Immediate Readiness – This optional bit, when Set, indicates the
+> Function is guaranteed to be ready to successfully complete valid
+> configuration accesses at any time following any reset that the host is
+> capable of issuing Configuration Requests to this Function.
+> 
+> When this bit is Set, for accesses to this Function, software is exempt
+> from all requirements to delay configuration accesses following any type
+> of reset, including but not limited to the timing requirements defined
+> in Section 6.6.  How this guarantee is established is beyond the scope
+> of this document.
+> 
+> It is permitted that system software/firmware provide mechanisms that
+> supersede the indication provided by this bit, however such
+> software/firmware mechanisms are outside the scope of this
+> specification.
+> 
 
-> On Mon, Aug 13, 2018 at 02:41:23PM -0500, Bjorn Helgaas wrote:
->> Hi,
->>
->> Thanks a lot for your new report
->> (https://bugzilla.kernel.org/show_bug.cgi?id=42679#c134).
->>
->> Can you confirm that the patch below is equivalent to what you tested and
->> it resolves the problem?  If so, I'll try to include it for v4.19.
-> I applied this to pci/virtualization for v4.19.  Please let me know if you
-> see any issues.
->
->> commit dd4e0ad485e12c9c04eb7a21ba69c24f12cb1918
->> Author: Bjorn Helgaas <bhelgaas@google.com>
->> Date:   Mon Aug 13 14:30:41 2018 -0500
->>
->>     PCI: Add function 1 DMA alias quirk for Marvell 88SS9183
->>     
->>     Add function 1 DMA alias quirk for Marvell 88SS9183 PCIe SSD Controller.
->>     
->>     Link: https://bugzilla.kernel.org/show_bug.cgi?id=42679#c134
->>     Reported-by: <f.bluethner@mailbox.org>
->>     Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
->>
->> diff --git a/drivers/pci/quirks.c b/drivers/pci/quirks.c
->> index deb051583eda..6994544125ff 100644
->> --- a/drivers/pci/quirks.c
->> +++ b/drivers/pci/quirks.c
->> @@ -3845,6 +3845,9 @@ DECLARE_PCI_FIXUP_HEADER(PCI_VENDOR_ID_MARVELL_EXT, 0x917a,
->>  /* https://bugzilla.kernel.org/show_bug.cgi?id=42679#c78 */
->>  DECLARE_PCI_FIXUP_HEADER(PCI_VENDOR_ID_MARVELL_EXT, 0x9182,
->>  			 quirk_dma_func1_alias);
->> +/* https://bugzilla.kernel.org/show_bug.cgi?id=42679#c134 */
->> +DECLARE_PCI_FIXUP_HEADER(PCI_VENDOR_ID_MARVELL_EXT, 0x9183,
->> +			 quirk_dma_func1_alias);
->>  /* https://bugzilla.kernel.org/show_bug.cgi?id=42679#c46 */
->>  DECLARE_PCI_FIXUP_HEADER(PCI_VENDOR_ID_MARVELL_EXT, 0x91a0,
->>  			 quirk_dma_func1_alias);
+Thanks for the spec reference.
+
+I think the patch is touching the wrong places. pci_dev_wait() is there
+to wait for CRS response to finish following reset.
+
+Typical sequences are:
+1. Do some kind of reset in another routine
+2. Wait reset specific wait time (1sec for secondary bus reset as an
+example and 100ms for d3-d0 transition)
+3. call pci_dev_wait() after reset to see if device can accept config
+transactions.
+
+Since this applies to all resets, I think you also need to get rid of
+waits following different reset types in step #2 and return immediately.
+I suggest you review callers of pci_dev_wait() and tap in there.
+
+Another thing is that this is a common functionality. Initializing
+the flag in pm_init() would not be the best place.
