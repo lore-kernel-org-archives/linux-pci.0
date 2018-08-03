@@ -1,117 +1,156 @@
-Return-Path: <SRS0=HZd4=LD=kernel.crashing.org=benh@kernel.org>
-Return-Path: <SRS0=HZd4=LD=kernel.crashing.org=benh@kernel.org>
-Message-ID: <fa217fe562df74980febdd57e8e3361c2ece2ae2.camel@kernel.crashing.org>
-Subject: PATCH] Partial revert of "PCI/AER: Handle ERR_FATAL with removal
- and re-enumeration of devices"
-From: Benjamin Herrenschmidt <benh@kernel.crashing.org>
-To: Bjorn Helgaas <helgaas@kernel.org>
-Cc: poza@codeaurora.org, Thomas Tai <thomas.tai@oracle.com>,
-        bhelgaas@google.com, keith.busch@intel.com, linux-pci@vger.kernel.org,
-        linux-pci-owner@vger.kernel.org, Sam Bobroff <sam.bobroff@au1.ibm.com>
-Date: Mon, 20 Aug 2018 14:39:04 +1000
-In-Reply-To: <20180819021922.GE128050@bhelgaas-glaptop.roam.corp.google.com>
-References: <1534179088-44219-1-git-send-email-thomas.tai@oracle.com>
-	 <1534179088-44219-2-git-send-email-thomas.tai@oracle.com>
-	 <51f4b387d9bd96a42d526a6a029fc43b@codeaurora.org>
-	 <b0104a716319d76e734c307cb4bedd9d@codeaurora.org>
-	 <903394c04d6ad468ed06dc0a779200e7555345a7.camel@kernel.crashing.org>
-	 <6cb069038530757f31f3dd60328c7e30@codeaurora.org>
-	 <e931bc7a7e468e8bb2ee3766b3fcf96f1800f552.camel@kernel.crashing.org>
-	 <bf7ceabb6fe51398e0f4eebd9c4fe4ac1ec2b8a4.camel@kernel.crashing.org>
-	 <20180819021922.GE128050@bhelgaas-glaptop.roam.corp.google.com>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Date: Fri, 3 Aug 2018 13:09:02 -0400 (EDT)
+From: Mikulas Patocka <mpatocka@redhat.com>
+To: Will Deacon <will.deacon@arm.com>, Jingoo Han <jingoohan1@gmail.com>,
+ Joao Pinto <Joao.Pinto@synopsys.com>
+Subject: Re: framebuffer corruption due to overlapping stp instructions on
+ arm64
+In-Reply-To: <20180803094129.GB17798@arm.com>
+Message-ID: <alpine.LRH.2.02.1808031235410.31584@file01.intranet.prod.int.rdu2.redhat.com>
+References: <alpine.LRH.2.02.1808021242320.31834@file01.intranet.prod.int.rdu2.redhat.com>
+ <CAHCPf3tFGqkYEcWNN4LaWThw_rVqT316pzLv6T7RfxwO-eZ0EA@mail.gmail.com>
+ <alpine.LRH.2.02.1808030212340.17672@file01.intranet.prod.int.rdu2.redhat.com>
+ <CAKv+Gu8DeuksZhk1g3q_msSKV_hSY_2e1uzVten9-oGO3j9Sqg@mail.gmail.com>
+ <20180803094129.GB17798@arm.com>
+MIME-Version: 1.0
+List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
+List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
+List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
+List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
+List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
+Cc: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>,
+ libc-alpha@sourceware.org, Ard Biesheuvel <ard.biesheuvel@linaro.org>,
+ Catalin Marinas <catalin.marinas@arm.com>,
+ Russell King <linux@armlinux.org.uk>,
+ Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
+ Matt Sealey <neko@bakuhatsu.net>, linux-pci@vger.kernel.org,
+ linux-arm-kernel <linux-arm-kernel@lists.infradead.org>
+Content-Type: text/plain; charset="us-ascii"
+Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
+Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
 List-ID: <linux-pci.vger.kernel.org>
 
-This partially reverts commit 7e9084b36740b2ec263ea35efb203001f755e1d8.
 
-This only reverts the Documentation/PCI/pci-error-recovery.txt changes
 
-Those changes are incorrect, they change the documentation to adapt
-to the (imho incorrect) AER implementation, and as a result making
-it no longer match the EEH implementation.
+On Fri, 3 Aug 2018, Will Deacon wrote:
 
-I believe the policy described originally in this document is what
-should be implemented by everybody and the changes done by that commit
-would compromise, among others, the ability to recover from errors with
-storage devices.
+> On Fri, Aug 03, 2018 at 09:16:39AM +0200, Ard Biesheuvel wrote:
+> > On 3 August 2018 at 08:35, Mikulas Patocka <mpatocka@redhat.com> wrote:
+> > >
+> > >
+> > > On Thu, 2 Aug 2018, Matt Sealey wrote:
+> > >
+> > >> The easiest explanation for this would be that the memory isn?t mapped
+> > >> correctly. You can?t use PCIe memory spaces with anything other than
+> > >> Device-nGnRE or stricter mappings. That?s just differences between the
+> > >> AMBA and PCIe (posted/unposted) memory models.
+> > 
+> > Whoa hold on there.
+> > 
+> > Are you saying we cannot have PCIe BAR windows with memory semantics on ARM?
+> > 
+> > Most accelerated graphics drivers rely heavily on the ability to map
+> > the VRAM normal-non-cacheable (ioremap_wc, basically), and treat it as
+> > ordinary memory.
+> 
+> Yeah, I'd expect framebuffers to be mapped as normal NC. That should be
+> fine for prefetchable BARs, no?
+> 
+> Will
 
-Signed-off-by: Benjamin Herrenschmidt <benh@kernel.crashing.org>
----
- Documentation/PCI/pci-error-recovery.txt | 35 +++++++-----------------
- 1 file changed, 10 insertions(+), 25 deletions(-)
+So - why does it corrupt data then? I've created this program that 
+reproduces the data corruption quicky. If I run it on /dev/fb0, I get an 
+instant failure. Sometimes a few bytes are not written, sometimes a few 
+bytes are written with a value that should be 16 bytes apart.
 
-diff --git a/Documentation/PCI/pci-error-recovery.txt b/Documentation/PCI/pci-error-recovery.txt
-index 688b69121e82..0b6bb3ef449e 100644
---- a/Documentation/PCI/pci-error-recovery.txt
-+++ b/Documentation/PCI/pci-error-recovery.txt
-@@ -110,7 +110,7 @@ The actual steps taken by a platform to recover from a PCI error
- event will be platform-dependent, but will follow the general
- sequence described below.
- 
--STEP 0: Error Event: ERR_NONFATAL
-+STEP 0: Error Event
- -------------------
- A PCI bus error is detected by the PCI hardware.  On powerpc, the slot
- is isolated, in that all I/O is blocked: all reads return 0xffffffff,
-@@ -228,7 +228,13 @@ proceeds to either STEP3 (Link Reset) or to STEP 5 (Resume Operations).
- If any driver returned PCI_ERS_RESULT_NEED_RESET, then the platform
- proceeds to STEP 4 (Slot Reset)
- 
--STEP 3: Slot Reset
-+STEP 3: Link Reset
-+------------------
-+The platform resets the link.  This is a PCI-Express specific step
-+and is done whenever a fatal error has been detected that can be
-+"solved" by resetting the link.
-+
-+STEP 4: Slot Reset
- ------------------
- 
- In response to a return value of PCI_ERS_RESULT_NEED_RESET, the
-@@ -314,7 +320,7 @@ Failure).
- >>> However, it probably should.
- 
- 
--STEP 4: Resume Operations
-+STEP 5: Resume Operations
- -------------------------
- The platform will call the resume() callback on all affected device
- drivers if all drivers on the segment have returned
-@@ -326,7 +332,7 @@ a result code.
- At this point, if a new error happens, the platform will restart
- a new error recovery sequence.
- 
--STEP 5: Permanent Failure
-+STEP 6: Permanent Failure
- -------------------------
- A "permanent failure" has occurred, and the platform cannot recover
- the device.  The platform will call error_detected() with a
-@@ -349,27 +355,6 @@ errors. See the discussion in powerpc/eeh-pci-error-recovery.txt
- for additional detail on real-life experience of the causes of
- software errors.
- 
--STEP 0: Error Event: ERR_FATAL
---------------------
--PCI bus error is detected by the PCI hardware. On powerpc, the slot is
--isolated, in that all I/O is blocked: all reads return 0xffffffff, all
--writes are ignored.
--
--STEP 1: Remove devices
----------------------
--Platform removes the devices depending on the error agent, it could be
--this port for all subordinates or upstream component (likely downstream
--port)
--
--STEP 2: Reset link
----------------------
--The platform resets the link.  This is a PCI-Express specific step and is
--done whenever a fatal error has been detected that can be "solved" by
--resetting the link.
--
--STEP 3: Re-enumerate the devices
----------------------
--Initiates the re-enumeration.
- 
- Conclusion; General Remarks
- ---------------------------
+I tried to run it on system RAM mapped with the NC attribute and I didn't 
+get any corruption - that suggests the the bug may be in the PCIE 
+subsystem.
+
+Jingoo Han and Joao Pinto are maintainers for the designware PCIE 
+controllers. Could you suggest why does the controller corrupt data when 
+writing to videoram? Are there any tricks that could be tried to work 
+around the corruption?
+
+Mikulas
+
+
+
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+#include <fcntl.h>
+#include <unistd.h>
+#include <sys/mman.h>
+
+#define LEN		256
+#define PRINT_STRIDE	0x20
+
+static unsigned char data[LEN];
+static unsigned char val = 0;
+
+static unsigned char prev_data[LEN];
+
+static unsigned char map_copy[LEN];
+
+int main(int argc, char *argv[])
+{
+	unsigned long n = 0;
+	int h;
+	unsigned char *map;
+	unsigned start, end, i;
+
+	if (argc < 2) fprintf(stderr, "argc\n"), exit(1);
+	if (argc >= 4) srandom(atoll(argv[3]));
+	h = open(argv[1], O_RDWR | O_DSYNC);
+	if (h == -1) perror("open"), exit(1);
+	map = mmap(NULL, LEN, PROT_READ | PROT_WRITE, MAP_SHARED, h, argc >= 3 ? strtoull(argv[2], NULL, 16) : 0);
+	if (map == MAP_FAILED) perror("mmap"), exit(1);
+
+	memset(data, 0, LEN);
+	memset(prev_data, 0, LEN);
+	memset(map, 0, LEN);
+
+	sleep(1);
+
+	while (1) {
+		start = (unsigned)random() % (LEN + 1);
+		end = (unsigned)random() % (LEN + 1);
+		if (start > end)
+			continue;
+		for (i = start; i < end; i++)
+			data[i] = val++;
+		memcpy(map + start, data + start, end - start);
+		if (memcmp(map, data, LEN)) {
+			unsigned j;
+			memcpy(map_copy, map, LEN);
+			fprintf(stderr, "mismatch after %lu loops!\n", n);
+			fprintf(stderr, "last copied range: 0x%x - 0x%x (0x%x)\n", start, end, (unsigned)(end - start));
+			for (j = 0; j < LEN; j += PRINT_STRIDE) {
+				fprintf(stderr, "p[%03x]", j);
+				for (i = j; i < j + PRINT_STRIDE && i < LEN; i++)
+					fprintf(stderr, " %s%s%02x\e[0m", !(i % 4) ? " " : "", data[i] != map_copy[i] ? "\e[31m" : "", prev_data[i]);
+				fprintf(stderr, "\n");
+				fprintf(stderr, "d[%03x]", j);
+				for (i = j; i < j + PRINT_STRIDE && i < LEN; i++)
+					fprintf(stderr, " %s%s%02x\e[0m", !(i % 4) ? " " : "", data[i] != map_copy[i] ? "\e[31m" : "", data[i]);
+				fprintf(stderr, "\n");
+				fprintf(stderr, "m[%03x]", j);
+				for (i = j; i < j + PRINT_STRIDE && i < LEN; i++)
+					fprintf(stderr, " %s%s%02x\e[0m", !(i % 4) ? " " : "", data[i] != map_copy[i] ? "\e[31m" : "", map_copy[i]);
+				fprintf(stderr, "\n\n");
+			}
+			exit(1);
+		}
+		memcpy(prev_data, data, LEN);
+		n++;
+	}
+}
+
+_______________________________________________
+linux-arm-kernel mailing list
+linux-arm-kernel@lists.infradead.org
+http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
