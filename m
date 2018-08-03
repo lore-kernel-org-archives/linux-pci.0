@@ -1,82 +1,74 @@
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Date: Wed, 8 Aug 2018 12:21:31 -0400 (EDT)
-From: Mikulas Patocka <mpatocka@redhat.com>
-To: Catalin Marinas <catalin.marinas@arm.com>
-Subject: Re: framebuffer corruption due to overlapping stp instructions on
- arm64
-In-Reply-To: <20180808145017.GE24736@iMac.local>
-Message-ID: <alpine.LRH.2.02.1808081215120.31259@file01.intranet.prod.int.rdu2.redhat.com>
-References: <CAKv+Gu8DeuksZhk1g3q_msSKV_hSY_2e1uzVten9-oGO3j9Sqg@mail.gmail.com>
- <20180803094129.GB17798@arm.com>
- <alpine.LRH.2.02.1808031235410.31584@file01.intranet.prod.int.rdu2.redhat.com>
- <CAKv+Gu-aNFh1fsr_05SEwDp99n3pLrguP7=tEcFQPNY53=K7Fw@mail.gmail.com>
- <alpine.LRH.2.02.1808031424140.14030@file01.intranet.prod.int.rdu2.redhat.com>
- <CAHCPf3s-+Qf=WBZz1KpisDMG3520jCUh8PLAO3PHa4jdt8kCTw@mail.gmail.com>
- <20180808121641.GB24736@iMac.local>
- <b1de49af14d941979977af07dc81e1c2@AcuMS.aculab.com>
- <alpine.LRH.2.02.1808080939180.3325@file01.intranet.prod.int.rdu2.redhat.com>
- <19c70d2a0b224db78f72dd316ad006b8@AcuMS.aculab.com>
- <20180808145017.GE24736@iMac.local>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mga05.intel.com ([192.55.52.43]:14291 "EHLO mga05.intel.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1727192AbeHCIZm (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Fri, 3 Aug 2018 04:25:42 -0400
+From: Felipe Balbi <felipe.balbi@linux.intel.com>
+To: Sinan Kaya <okaya@kernel.org>, Bjorn Helgaas <bhelgaas@google.com>
+Cc: linux-pci@vger.kernel.org
+Subject: Re: [RFC] PCI: add support for Immediate Readiness
+In-Reply-To: <15a43051-6b0f-1545-dc8f-b56b1513897b@kernel.org>
+References: <20180802113635.7097-1-felipe.balbi@linux.intel.com> <15a43051-6b0f-1545-dc8f-b56b1513897b@kernel.org>
+Date: Fri, 03 Aug 2018 09:26:09 +0300
+Message-ID: <874lgcufsu.fsf@linux.intel.com>
 MIME-Version: 1.0
-List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
-List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
-List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
-List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
-List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
-Cc: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>,
- Joao Pinto <Joao.Pinto@synopsys.com>,
- Ard Biesheuvel <ard.biesheuvel@linaro.org>,
- linux-pci <linux-pci@vger.kernel.org>, Will Deacon <will.deacon@arm.com>,
- Russell King <linux@armlinux.org.uk>,
- Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
- David Laight <David.Laight@ACULAB.COM>, Matt Sealey <neko@bakuhatsu.net>,
- Jingoo Han <jingoohan1@gmail.com>,
- linux-arm-kernel <linux-arm-kernel@lists.infradead.org>
-Content-Type: text/plain; charset="us-ascii"
-Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
-Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
+Content-Type: multipart/signed; boundary="=-=-=";
+        micalg=pgp-sha512; protocol="application/pgp-signature"
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
+--=-=-=
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: quoted-printable
 
+Sinan Kaya <okaya@kernel.org> writes:
 
-On Wed, 8 Aug 2018, Catalin Marinas wrote:
+> On 8/2/2018 7:36 AM, Felipe Balbi wrote:
+>> PCIe GEN4 defines a new bit on Status Register which tells us that, if
+>> Set, a function is immediately ready after a Reset. This means that
+>> all delays after a Conventional or Function Reset can be skipped.
+>
+> Can you give a reference to the section of the specification? or
+> a pointer to the ECN?
 
-> On Wed, Aug 08, 2018 at 02:26:11PM +0000, David Laight wrote:
-> > From: Mikulas Patocka
-> > > Sent: 08 August 2018 14:47
-> > ...
-> > > The problem on ARM is that I see data corruption when the overlapping
-> > > unaligned writes are done just by a single core.
-> > 
-> > Is this a sequence of unaligned writes (that shouldn't modify the
-> > same physical locations) or an aligned write followed by an
-> > unaligned one that updates part of the earlier write.
-> > (Or the opposite order?)
-> 
-> In the memcpy() case, there can be a sequence of unaligned writes but
-> they would not modify the same byte (so no overlapping address at the
-> byte level).
+Section 7.5.1.1.4 of PCIe GEN4 spec. Table 7-4:
 
-They do modify the same byte, but with the same value. Suppose that you 
-want to copy a piece of data that is between 8 and 16 bytes long. You can 
-do this:
+Immediate Readiness =E2=80=93 This optional bit, when Set, indicates the
+Function is guaranteed to be ready to successfully complete valid
+configuration accesses at any time following any reset that the host is
+capable of issuing Configuration Requests to this Function.
 
-add src_end, src, len
-add dst_end, dst, len
-ldr x0, [src]
-ldr x1, [src_end - 8]
-str x0, [dst]
-str x1, [dst_end - 8]
+When this bit is Set, for accesses to this Function, software is exempt
+from all requirements to delay configuration accesses following any type
+of reset, including but not limited to the timing requirements defined
+in Section 6.6.  How this guarantee is established is beyond the scope
+of this document.
 
-The ARM64 memcpy uses this trick heavily in order to reduce branching, and 
-this is what makes the PCIe controller choke.
+It is permitted that system software/firmware provide mechanisms that
+supersede the indication provided by this bit, however such
+software/firmware mechanisms are outside the scope of this
+specification.
 
-Mikulas
+=2D-=20
+balbi
 
-_______________________________________________
-linux-arm-kernel mailing list
-linux-arm-kernel@lists.infradead.org
-http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
+--=-=-=
+Content-Type: application/pgp-signature; name="signature.asc"
+
+-----BEGIN PGP SIGNATURE-----
+
+iQIzBAEBCgAdFiEElLzh7wn96CXwjh2IzL64meEamQYFAltj9YEACgkQzL64meEa
+mQZPIQ//UPepDxS0tRfVkuXcLPDoGRCPDIo9RE5vfMpKV/GvXKEuL+b4XfdjTSjr
++R+PGx3qAbmjH03nt7wt5OtplnMoe2Yvdndx3E34XpolKCLSHhxQTCaITAUC1x4W
+18mgZI/q3zSVJwjbjz9zprGMlfbw6lTvmlrbQxyMamhI00KvUqbNZui38J4MUDr8
+rhoVVFSGCp45jlQaUZm+7jt8kaJi9tzfHVrwRGEavfteuYCx8CDJ1yx1ChJD6Yu2
+HSEDMi+c7LPB0Kje70xRELEGbqUlcWKyFdXfFaqxvx2wNQlNgd3MzDmm7/CH03L2
+LaCmRy8U+ru8UjTf91KEIZBcDlgIFCHY0i2OW7PQU0l2BSw7wQ542D1krRDkUzNJ
+7Z+Hpqli9quhIQj7tzDL8io1Cmzg/NxI6zaEwMpP/sdXMzD0V5GXI3qFWxu5cBiy
+bCYRMp/W/NgX+NYjRsnGzT0XQn7yLmIXnNydh6TM9b7UKWmicLQ/vSHjEr7YHlUo
+mOXqm0iGAr+0TPiW1vfHT3RhqijVHqnlgDbtzGHISeomcXftjN5nxkCVThYgzoTI
+KydLY44hv+Z2HwYJbuMJTTtfulMEzz+lIpN1lW9IZc7GtloZHKzbkM6E40exnb9b
+gw6nLmV6c3jEmh68fly9/cn7f/imgfHs2mCEfmXG/gR3LJT233c=
+=g6eO
+-----END PGP SIGNATURE-----
+--=-=-=--
