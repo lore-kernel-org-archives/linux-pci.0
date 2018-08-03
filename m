@@ -1,58 +1,100 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-Date: Mon, 20 Aug 2018 11:22:38 +0200
-From: Lukas Wunner <lukas@wunner.de>
-To: Sinan Kaya <okaya@kernel.org>
-Cc: linux-pci@vger.kernel.org, Bjorn Helgaas <bhelgaas@google.com>,
-        Mika Westerberg <mika.westerberg@linux.intel.com>,
-        Oza Pawandeep <poza@codeaurora.org>,
-        Keith Busch <keith.busch@intel.com>,
-        open list <linux-kernel@vger.kernel.org>
-Subject: Re: [PATCH v8 1/2] PCI: pciehp: Ignore link events when there is a
- fatal error pending
-Message-ID: <20180820092238.kvktwlovc64oa66e@wunner.de>
-References: <20180818065126.77912-1-okaya@kernel.org>
+Return-Path: <SRS0=8yBB=KS=gmail.com=hkallweit1@kernel.org>
+Return-Path: <SRS0=8yBB=KS=gmail.com=hkallweit1@kernel.org>
+Subject: Re: [PATCH] PCI: let pci_request_irq properly deal with threaded
+ interrupts
+To: Thomas Gleixner <tglx@linutronix.de>
+Cc: Marc Zyngier <marc.zyngier@arm.com>, Bjorn Helgaas <helgaas@kernel.org>,
+ Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org,
+ Christoph Hellwig <hch@lst.de>, LKML <linux-kernel@vger.kernel.org>
+References: <d004975f-03a8-59f5-56ef-f4e1f8e12dfb@gmail.com>
+ <20180730213028.GC45322@bhelgaas-glaptop.roam.corp.google.com>
+ <alpine.DEB.2.21.1807310015170.1725@nanos.tec.linutronix.de>
+ <86d0v4x75x.wl-marc.zyngier@arm.com>
+ <0799ea22-70ed-3be6-cb80-449f53fef819@gmail.com>
+ <alpine.DEB.2.21.1808031605160.1745@nanos.tec.linutronix.de>
+From: Heiner Kallweit <hkallweit1@gmail.com>
+Message-ID: <420d6476-8ea4-0b37-e94a-f5842b7b0ff7@gmail.com>
+Date: Fri, 3 Aug 2018 21:25:27 +0200
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20180818065126.77912-1-okaya@kernel.org>
-Sender: linux-kernel-owner@vger.kernel.org
+In-Reply-To: <alpine.DEB.2.21.1808031605160.1745@nanos.tec.linutronix.de>
+Content-Type: text/plain; charset=utf-8
 List-ID: <linux-pci.vger.kernel.org>
 
-On Fri, Aug 17, 2018 at 11:51:09PM -0700, Sinan Kaya wrote:
-> --- a/drivers/pci/hotplug/pciehp_ctrl.c
-> +++ b/drivers/pci/hotplug/pciehp_ctrl.c
-> @@ -222,9 +222,27 @@ void pciehp_handle_disable_request(struct slot *slot)
->  void pciehp_handle_presence_or_link_change(struct slot *slot, u32 events)
->  {
->  	struct controller *ctrl = slot->ctrl;
-> +	struct pci_dev *pdev = ctrl->pcie->port;
->  	bool link_active;
->  	u8 present;
->  
-> +	/* If a fatal error is pending, wait for AER or DPC to handle it. */
-> +	if (pcie_fatal_error_pending(pdev)) {
-> +		bool recovered;
-> +
-> +		recovered = pcie_wait_fatal_error_clear(pdev);
-> +
-> +		/* If the fatal error is gone and the link is up, return */
-> +		if (recovered && pcie_wait_for_link(pdev, true)) {
-> +			ctrl_info(ctrl, "Slot(%s): Ignoring Link event due to successful fatal error recovery\n",
-> +				  slot_name(slot));
-> +			return;
-> +		}
-> +
-> +		ctrl_info(ctrl, "Slot(%s): Fatal error recovery failed for Link event, trying hotplug reset\n",
-> +			  slot_name(slot));
-> +	}
-> +
+On 03.08.2018 16:09, Thomas Gleixner wrote:
+> On Wed, 1 Aug 2018, Heiner Kallweit wrote:
+>> On 31.07.2018 08:15, Marc Zyngier wrote:
+>>> On Mon, 30 Jul 2018 23:36:57 +0100,
+>>> Thomas Gleixner <tglx@linutronix.de> wrote:
+>>>>
+>>>> Yes, request for pure threaded interrupts are rejected if the oneshot flag
+>>>> is not set. The reason is that this would be deadly especially with level
+>>>> triggered interrupts because the primary default handler just wakes the
+>>>> thread and then reenables interrupts, which will make the interrupt come
+>>>> back immediately and the thread won't have a chance to actually shut it up
+>>>> in the device.
+>>>>
+>>>> That made me look into that code again and I found that we added a flag for
+>>>> irq chips to tell the core that the interrupt is one shot safe, i.e. that
+>>>> it can be requested w/o IRQF_ONESHOT. That was initially added to optimize
+>>>> MSI based interrupts which are oneshot safe by implementation.
+>>>>
+>>>>   dc9b229a58dc ("genirq: Allow irq chips to mark themself oneshot safe")
+>>>>
+>>>> The original patch added that flag to the x86 MSI irqchip code, but that
+>>>> part was not applied for reasons which slipped from memory. It might be
+>>>> worthwhile to revisit that in order to avoid the mask/unmask overhead for
+>>>> such cases.
+>>>
+>>> Yup, that would actually be beneficial to a range of interrupt
+>>> controllers (only an obscure GPIO driver makes use of this flag).
+>>>
+>>
+>> I'm not an expert on that area, but if MSI is oneshot-safe in general,
+>> then we could do the following in the framework instead of touching
+>> every MSI irq_chip. Opinions?
+>> I tested on X86 and at least my system is still running.
+>>
+>> diff --git a/kernel/irq/msi.c b/kernel/irq/msi.c
+>> index 4ca2fd46..ba6da943 100644
+>> --- a/kernel/irq/msi.c
+>> +++ b/kernel/irq/msi.c
+>> @@ -289,6 +289,9 @@ struct irq_domain *msi_create_irq_domain(struct fwnode_handle *fwnode,
+>>         if (info->flags & MSI_FLAG_USE_DEF_CHIP_OPS)
+>>                 msi_domain_update_chip_ops(info);
+>>
+>> +       /* MSI is oneshot-safe in general */
+>> +       info->chip->flags |= IRQCHIP_ONESHOT_SAFE;
+>> +
+>>         domain = irq_domain_create_hierarchy(parent, IRQ_DOMAIN_FLAG_MSI, 0,
+> 
+> Looks about right, though there might be dragons. MSI is not always as sane
+> as it should be...
+> 
+When saying "MSI isn't always sane", are you referring to the hardware or
+the controller driver implementation? Basically for me the question is
+whether we would be able to fix the issue if we meet such a dragon,
+or whether we would have to revert the change.
+Do you think the chance of a dragon is low enough? Or better add the
+flag only to the X86 PCI MSI irqchip for now?
 
-This differs from v7 of the patch in that *any* fatal error, not just
-a Surprise Link Down, results in pciehp waiting for the error to clear.
+>>> We could also consider extending this to support interrupt
+>>> hierarchies, as __setup_irq() seems only concerned with the top of the
+>>> stack (an IRQ provided by a generic MSI stack and backed by an irqchip
+>>> providing IRQCHIP_ONESHOT_SAFE would go unnoticed).
+>>>
+>>
+>> Would it be sufficient if one irq_chip in the hierarchy is oneshot-safe?
+>> Or what do we have to check for?
+> 
+> I think the top most chip is the key, the rest of the hierarchy is
+> irrelevant because the top most chip is the one which is responsible for
+> not creating an interrupt storm after the interrupt got acknowledged.
+> 
+Thanks for the explanation, then I'll submit a patch implementing
+this logic.
 
-I'm wondering if that's safe:  Theoretically, the user might quickly
-swap the card in the slot during, say, a Completion Timeout Error,
-and with this patch pciehp would carry on as if nothing happened.
-
-Thanks,
-
-Lukas
+> Thanks,
+> 
+> 	tglx
+> 
+Heiner
