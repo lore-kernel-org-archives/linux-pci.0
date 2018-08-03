@@ -1,40 +1,90 @@
-Return-Path: <SRS0=/dXs=K6=kernel.crashing.org=benh@kernel.org>
-Return-Path: <SRS0=/dXs=K6=kernel.crashing.org=benh@kernel.org>
-Message-ID: <5e42f7990673d11e3a020e7efcfd333215d48138.camel@kernel.crashing.org>
-Subject: Re: PCIe enable device races (Was: [PATCH v3] PCI: Data corruption
- happening due to race condition)
-From: Benjamin Herrenschmidt <benh@kernel.crashing.org>
-To: Bjorn Helgaas <helgaas@kernel.org>, Hari Vyas <hari.vyas@broadcom.com>
-Cc: bhelgaas@google.com, linux-pci@vger.kernel.org, ray.jui@broadcom.com
-Date: Wed, 15 Aug 2018 14:16:33 +1000
-In-Reply-To: <ecaed7664b46d73888d2494065905f8e108fc0f4.camel@kernel.crashing.org>
-References: <1530608741-30664-1-git-send-email-hari.vyas@broadcom.com>
-	 <20180731163727.GK45322@bhelgaas-glaptop.roam.corp.google.com>
-	 <ecaed7664b46d73888d2494065905f8e108fc0f4.camel@kernel.crashing.org>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail-wm0-f67.google.com ([74.125.82.67]:37542 "EHLO
+        mail-wm0-f67.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726829AbeHCHV0 (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Fri, 3 Aug 2018 03:21:26 -0400
+Received: by mail-wm0-f67.google.com with SMTP id n11-v6so4980928wmc.2
+        for <linux-pci@vger.kernel.org>; Thu, 02 Aug 2018 22:26:52 -0700 (PDT)
+MIME-Version: 1.0
+In-Reply-To: <20180801094710.GA12121@red-moon>
+References: <1533107047-16704-1-git-send-email-l.subrahmanya@mobiveil.co.in> <20180801094710.GA12121@red-moon>
+From: Subrahmanya Lingappa <l.subrahmanya@mobiveil.co.in>
+Date: Fri, 3 Aug 2018 10:56:51 +0530
+Message-ID: <CAFZiPx3zTQ1cMM5jq0_X3nzqWAbru9XL6iNJ4HJcNuhy=gmauw@mail.gmail.com>
+Subject: Re: [PATCH 1/1] PCI: mobiveil: Add Mobiveil PCIe Host Bridge IP
+ driver compile support
+To: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
+Cc: Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org
 Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wed, 2018-08-15 at 13:35 +1000, Benjamin Herrenschmidt wrote:
-> What's really needed is a per device mutex covering all those operations
-> on a given device. (This would also allow to get rid of those games with
-> atomics).
-> 
-> Any comments ?
+Lorenzo,
+My apologies, I did compile and submitted all those 12 versions which
+got accepted,
+I was away for a while and missed the mails, I'll try to be more
+attentive now on.
 
-Note: I'm experienting with a per-pci_dev mutex to protect the device
-state. If it works out, I suggest we add it, then progressively
-move things one by one under the protection of the mutex.
+Thanks for your time again.
+Subrahmanya
 
-Any objection to the approach ? If it fixes my problem, I'll send
-preliminary patches that cover the basic enable/disable and bus
-master settings to start with. We should try to get them into
-stable as this is breaking real world stuff for us.
 
-I suspect large x86 systems get lucky because their BIOSes do all
-the enables. It would be possible to reproduce the races there by
-hot-pluging a large external drawer using a cable card with a switch
-
-Cheers,
-Ben.
- 
+On Wed, Aug 1, 2018 at 3:17 PM, Lorenzo Pieralisi
+<lorenzo.pieralisi@arm.com> wrote:
+> On Wed, Aug 01, 2018 at 03:04:07AM -0400, Subrahmanya Lingappa wrote:
+>> Adds missing support for compilation of Mobiveil PCIe Host
+>> Bridge IP driver.
+>>
+>> Signed-off-by: Subrahmanya Lingappa <l.subrahmanya@mobiveil.co.in>
+>> ---
+>>  drivers/pci/controller/Kconfig  | 6 ++++++
+>>  drivers/pci/controller/Makefile | 1 +
+>>  2 files changed, 7 insertions(+)
+>
+> Have you tried compiling it ? (No).
+>
+> I CC'ed you on this series:
+>
+> https://patchwork.ozlabs.org/patch/950977/
+>
+> The mainline kernel is not a dumping ground where you drop you
+> code and forget about it - you did not even compile the driver,
+> let me remind you that you are supposed to maintain it.
+>
+> I will ask Bjorn to revert the driver, I am sorry about that
+> but that's not acceptable from a maintainership perspective.
+>
+> Lorenzo
+>
+>> diff --git a/drivers/pci/controller/Kconfig b/drivers/pci/controller/Kconfig
+>> index cc9fa02..ce26d7a 100644
+>> --- a/drivers/pci/controller/Kconfig
+>> +++ b/drivers/pci/controller/Kconfig
+>> @@ -186,6 +186,12 @@ config PCIE_ALTERA_MSI
+>>         Say Y here if you want PCIe MSI support for the Altera FPGA.
+>>         This MSI driver supports Altera MSI to GIC controller IP.
+>>
+>> +config PCIE_MOBIVEIL
+>> +       bool "Mobiveil AXI PCIe host bridge support"
+>> +       help
+>> +         Say 'Y' here if you want kernel to support the Mobiveil AXI PCIe
+>> +         Host Bridge driver.
+>> +
+>>  config PCI_HOST_THUNDER_PEM
+>>       bool "Cavium Thunder PCIe controller to off-chip devices"
+>>       depends on ARM64 || COMPILE_TEST
+>> diff --git a/drivers/pci/controller/Makefile b/drivers/pci/controller/Makefile
+>> index 24322b9..7c20553 100644
+>> --- a/drivers/pci/controller/Makefile
+>> +++ b/drivers/pci/controller/Makefile
+>> @@ -22,6 +22,7 @@ obj-$(CONFIG_PCIE_IPROC_PLATFORM) += pcie-iproc-platform.o
+>>  obj-$(CONFIG_PCIE_IPROC_BCMA) += pcie-iproc-bcma.o
+>>  obj-$(CONFIG_PCIE_ALTERA) += pcie-altera.o
+>>  obj-$(CONFIG_PCIE_ALTERA_MSI) += pcie-altera-msi.o
+>> +obj-$(CONFIG_PCIE_MOBIVEIL) += pcie-mobiveil.o
+>>  obj-$(CONFIG_PCIE_ROCKCHIP) += pcie-rockchip.o
+>>  obj-$(CONFIG_PCIE_ROCKCHIP_EP) += pcie-rockchip-ep.o
+>>  obj-$(CONFIG_PCIE_ROCKCHIP_HOST) += pcie-rockchip-host.o
+>> --
+>> 1.8.3.1
+>>
