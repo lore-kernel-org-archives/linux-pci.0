@@ -1,134 +1,174 @@
-Return-Path: <SRS0=CTFa=KR=codeaurora.org=poza@kernel.org>
-Return-Path: <SRS0=CTFa=KR=codeaurora.org=poza@kernel.org>
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Date: Fri, 3 Aug 2018 14:25:38 -0400 (EDT)
+From: Mikulas Patocka <mpatocka@redhat.com>
+To: Ard Biesheuvel <ard.biesheuvel@linaro.org>
+Subject: Re: framebuffer corruption due to overlapping stp instructions on
+ arm64
+In-Reply-To: <CAKv+Gu-aNFh1fsr_05SEwDp99n3pLrguP7=tEcFQPNY53=K7Fw@mail.gmail.com>
+Message-ID: <alpine.LRH.2.02.1808031424140.14030@file01.intranet.prod.int.rdu2.redhat.com>
+References: <alpine.LRH.2.02.1808021242320.31834@file01.intranet.prod.int.rdu2.redhat.com>
+ <CAHCPf3tFGqkYEcWNN4LaWThw_rVqT316pzLv6T7RfxwO-eZ0EA@mail.gmail.com>
+ <alpine.LRH.2.02.1808030212340.17672@file01.intranet.prod.int.rdu2.redhat.com>
+ <CAKv+Gu8DeuksZhk1g3q_msSKV_hSY_2e1uzVten9-oGO3j9Sqg@mail.gmail.com>
+ <20180803094129.GB17798@arm.com>
+ <alpine.LRH.2.02.1808031235410.31584@file01.intranet.prod.int.rdu2.redhat.com>
+ <CAKv+Gu-aNFh1fsr_05SEwDp99n3pLrguP7=tEcFQPNY53=K7Fw@mail.gmail.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII;
- format=flowed
-Date: Thu, 02 Aug 2018 11:56:40 +0530
-From: poza@codeaurora.org
-To: Bjorn Helgaas <helgaas@kernel.org>
-Cc: Bharat Kumar Gogada <bharat.kumar.gogada@xilinx.com>,
- linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
- bhelgaas@google.com, linux-pci-owner@vger.kernel.org
-Subject: Re: [PATCH] PCI/AER: Enable SERR# forwarding in non ACPI flow
-In-Reply-To: <6a1266c49a5be0d598dd7f1ded94e93d@codeaurora.org>
-References: <1531406719-18606-1-git-send-email-bharat.kumar.gogada@xilinx.com>
- <20180731224706.GO45322@bhelgaas-glaptop.roam.corp.google.com>
- <6a1266c49a5be0d598dd7f1ded94e93d@codeaurora.org>
-Message-ID: <ebb558d7b4c273ad6bf18b5d9266c821@codeaurora.org>
+List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
+List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
+List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
+List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
+List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
+Cc: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>,
+ Joao Pinto <Joao.Pinto@synopsys.com>, linux-pci <linux-pci@vger.kernel.org>,
+ Jingoo Han <jingoohan1@gmail.com>, Will Deacon <will.deacon@arm.com>,
+ Russell King <linux@armlinux.org.uk>,
+ Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
+ Matt Sealey <neko@bakuhatsu.net>, Catalin Marinas <catalin.marinas@arm.com>,
+ linux-arm-kernel <linux-arm-kernel@lists.infradead.org>
+Content-Type: text/plain; charset="us-ascii"
+Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
+Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 2018-08-02 11:53, poza@codeaurora.org wrote:
-> On 2018-08-01 04:17, Bjorn Helgaas wrote:
->> On Thu, Jul 12, 2018 at 08:15:19PM +0530, Bharat Kumar Gogada wrote:
->>> Currently PCI_BRIDGE_CTL_SERR is being enabled only in
->>> ACPI flow.
->>> This bit is required for forwarding errors reported
->>> by EP devices to upstream device.
->>> This patch enables SERR# for Type-1 PCI device.
->> 
->> This does seem broken.
->> 
->> Figure 6-3 in PCIe r4.0, sec 6.2.6, would be a helpful reference to
->> include in the commit log.
->> 
->> Semi-related question: there are about 40 drivers that call
->> pci_enable_pcie_error_reporting() and
->> pci_disable_pcie_error_reporting().  I see that the PCI core
->> calls pci_enable_pcie_error_reporting() for Root Ports and Switch
->> Ports in this path:
->> 
->>   aer_probe                     # for root ports only
->>     aer_enable_rootport
->>       set_downstream_devices_error_reporting
->>         set_device_error_reporting
->>           if (ROOT_PORT || UPSTREAM || DOWNSTREAM)
->>             pci_enable_pcie_error_reporting
->>         pci_walk_bus(..., set_device_error_reporting)
->> 
->> But the core doesn't call pci_enable_pcie_error_reporting() for
->> endpoints.  I wonder why not.  Could we?  And then remove the calls
->> from those drivers?  If PCI_EXP_AER_FLAGS should only be set if the
->> driver is prepared, the pci_driver.err_handler would be a good hint.
->> But I suspect we could do something sensible and at least report
->> errors even if the driver doesn't have err_handler callbacks.
->> 
+
+
+On Fri, 3 Aug 2018, Ard Biesheuvel wrote:
+
+> (- libc-alpha)
 > 
-> what about hot-plug case ?
-> should not aer_init() call pci_enable_pcie_error_reporting() for all
-> the downstream pci_dev ?
-> and remove all the calls from drivers..
+> On 3 August 2018 at 19:09, Mikulas Patocka <mpatocka@redhat.com> wrote:
+> >
+> >
+> > On Fri, 3 Aug 2018, Will Deacon wrote:
+> >
+> >> On Fri, Aug 03, 2018 at 09:16:39AM +0200, Ard Biesheuvel wrote:
+> >> > On 3 August 2018 at 08:35, Mikulas Patocka <mpatocka@redhat.com> wrote:
+> >> > >
+> >> > >
+> >> > > On Thu, 2 Aug 2018, Matt Sealey wrote:
+> >> > >
+> >> > >> The easiest explanation for this would be that the memory isn?t mapped
+> >> > >> correctly. You can?t use PCIe memory spaces with anything other than
+> >> > >> Device-nGnRE or stricter mappings. That?s just differences between the
+> >> > >> AMBA and PCIe (posted/unposted) memory models.
+> >> >
+> >> > Whoa hold on there.
+> >> >
+> >> > Are you saying we cannot have PCIe BAR windows with memory semantics on ARM?
+> >> >
+> >> > Most accelerated graphics drivers rely heavily on the ability to map
+> >> > the VRAM normal-non-cacheable (ioremap_wc, basically), and treat it as
+> >> > ordinary memory.
+> >>
+> >> Yeah, I'd expect framebuffers to be mapped as normal NC. That should be
+> >> fine for prefetchable BARs, no?
+> >>
+> >> Will
+> >
+> > So - why does it corrupt data then? I've created this program that
+> > reproduces the data corruption quicky. If I run it on /dev/fb0, I get an
+> > instant failure. Sometimes a few bytes are not written, sometimes a few
+> > bytes are written with a value that should be 16 bytes apart.
+> >
+> 
+> Are we still talking about overlapping unaligned accesses here? Or do
+> you see other failures as well?
+
+Yes - it is caused by overlapping unaligned accesses inside memcpy. When I 
+put "dmb sy" between the overlapping accesses in 
+glibc/sysdeps/aarch64/memcpy.S, this program doesn't detect any memory 
+corruption.
+
+> > I tried to run it on system RAM mapped with the NC attribute and I didn't
+> > get any corruption - that suggests the the bug may be in the PCIE
+> > subsystem.
+> >
+> > Jingoo Han and Joao Pinto are maintainers for the designware PCIE
+> > controllers. Could you suggest why does the controller corrupt data when
+> > writing to videoram? Are there any tricks that could be tried to work
+> > around the corruption?
+> >
+> > Mikulas
+> >
+> >
+> >
+> > #include <stdio.h>
+> > #include <stdlib.h>
+> > #include <string.h>
+> > #include <fcntl.h>
+> > #include <unistd.h>
+> > #include <sys/mman.h>
+> >
+> > #define LEN             256
+> > #define PRINT_STRIDE    0x20
+> >
+> > static unsigned char data[LEN];
+> > static unsigned char val = 0;
+> >
+> > static unsigned char prev_data[LEN];
+> >
+> > static unsigned char map_copy[LEN];
+> >
+> > int main(int argc, char *argv[])
+> > {
+> >         unsigned long n = 0;
+> >         int h;
+> >         unsigned char *map;
+> >         unsigned start, end, i;
+> >
+> >         if (argc < 2) fprintf(stderr, "argc\n"), exit(1);
+> >         if (argc >= 4) srandom(atoll(argv[3]));
+> >         h = open(argv[1], O_RDWR | O_DSYNC);
+> >         if (h == -1) perror("open"), exit(1);
+> >         map = mmap(NULL, LEN, PROT_READ | PROT_WRITE, MAP_SHARED, h, argc >= 3 ? strtoull(argv[2], NULL, 16) : 0);
+> >         if (map == MAP_FAILED) perror("mmap"), exit(1);
+> >
+> >         memset(data, 0, LEN);
+> >         memset(prev_data, 0, LEN);
+> >         memset(map, 0, LEN);
+> >
+> >         sleep(1);
+> >
+> >         while (1) {
+> >                 start = (unsigned)random() % (LEN + 1);
+> >                 end = (unsigned)random() % (LEN + 1);
+> >                 if (start > end)
+> >                         continue;
+> >                 for (i = start; i < end; i++)
+> >                         data[i] = val++;
+> >                 memcpy(map + start, data + start, end - start);
+> >                 if (memcmp(map, data, LEN)) {
+> >                         unsigned j;
+> >                         memcpy(map_copy, map, LEN);
+> >                         fprintf(stderr, "mismatch after %lu loops!\n", n);
+> >                         fprintf(stderr, "last copied range: 0x%x - 0x%x (0x%x)\n", start, end, (unsigned)(end - start));
+> >                         for (j = 0; j < LEN; j += PRINT_STRIDE) {
+> >                                 fprintf(stderr, "p[%03x]", j);
+> >                                 for (i = j; i < j + PRINT_STRIDE && i < LEN; i++)
+> >                                         fprintf(stderr, " %s%s%02x\e[0m", !(i % 4) ? " " : "", data[i] != map_copy[i] ? "\e[31m" : "", prev_data[i]);
+> >                                 fprintf(stderr, "\n");
+> >                                 fprintf(stderr, "d[%03x]", j);
+> >                                 for (i = j; i < j + PRINT_STRIDE && i < LEN; i++)
+> >                                         fprintf(stderr, " %s%s%02x\e[0m", !(i % 4) ? " " : "", data[i] != map_copy[i] ? "\e[31m" : "", data[i]);
+> >                                 fprintf(stderr, "\n");
+> >                                 fprintf(stderr, "m[%03x]", j);
+> >                                 for (i = j; i < j + PRINT_STRIDE && i < LEN; i++)
+> >                                         fprintf(stderr, " %s%s%02x\e[0m", !(i % 4) ? " " : "", data[i] != map_copy[i] ? "\e[31m" : "", map_copy[i]);
+> >                                 fprintf(stderr, "\n\n");
+> >                         }
+> >                         exit(1);
+> >                 }
+> >                 memcpy(prev_data, data, LEN);
+> >                 n++;
+> >         }
+> > }
 > 
 
-aer_init will be called for each device (pci_dev) while pciehp does 
-re-enumeration.
-so probable we might want to call pci_enable_pcie_error_reporting()
-but that dictates the design where AER framework is taking decision to 
-enable error reporting on behalf of drivers as well.
-but thats fine I think, if drivers do not want to participate then they 
-have to call  pci_disable_pcie_error_reporting explicitly.
-does this make sense ?
-
->> On MIPS Octeon, it looks like pcibios_plat_dev_init() does already set
->> PCI_EXP_AER_FLAGS for every device.
->> 
->> But this question is obviously far beyond the scope of this current
->> patch.
->> 
->>> Signed-off-by: Bharat Kumar Gogada <bharat.kumar.gogada@xilinx.com>
->>> ---
->>>  drivers/pci/pcie/aer.c |   23 +++++++++++++++++++++++
->>>  1 files changed, 23 insertions(+), 0 deletions(-)
->>> 
->>> diff --git a/drivers/pci/pcie/aer.c b/drivers/pci/pcie/aer.c
->>> index a2e8838..943e084 100644
->>> --- a/drivers/pci/pcie/aer.c
->>> +++ b/drivers/pci/pcie/aer.c
->>> @@ -343,6 +343,19 @@ int pci_enable_pcie_error_reporting(struct 
->>> pci_dev *dev)
->>>  	if (!dev->aer_cap)
->>>  		return -EIO;
->>> 
->>> +	if (!IS_ENABLED(CONFIG_ACPI) &&
->>> +	    dev->hdr_type == PCI_HEADER_TYPE_BRIDGE) {
->> 
->> I think this test needs to be refined a little bit.  If the kernel
->> happens to be built with CONFIG_ACPI=y but the current platform
->> doesn't support ACPI, we still want to set PCI_BRIDGE_CTL_SERR,
->> don't we?
->> 
->>> +		u16 control;
->>> +
->>> +		/*
->>> +		 * A Type-1 PCI bridge will not forward ERR_ messages coming
->>> +		 * from an endpoint if SERR# forwarding is not enabled.
->>> +		 */
->>> +		pci_read_config_word(dev, PCI_BRIDGE_CONTROL, &control);
->>> +		control |= PCI_BRIDGE_CTL_SERR;
->>> +		pci_write_config_word(dev, PCI_BRIDGE_CONTROL, control);
->>> +	}
->>> +
->>>  	return pcie_capability_set_word(dev, PCI_EXP_DEVCTL, 
->>> PCI_EXP_AER_FLAGS);
->>>  }
->>>  EXPORT_SYMBOL_GPL(pci_enable_pcie_error_reporting);
->>> @@ -352,6 +365,16 @@ int pci_disable_pcie_error_reporting(struct 
->>> pci_dev *dev)
->>>  	if (pcie_aer_get_firmware_first(dev))
->>>  		return -EIO;
->>> 
->>> +	if (!IS_ENABLED(CONFIG_ACPI) &&
->>> +	    dev->hdr_type == PCI_HEADER_TYPE_BRIDGE) {
->>> +		u16 control;
->>> +
->>> +		/* Clear SERR Forwarding */
->>> +		pci_read_config_word(dev, PCI_BRIDGE_CONTROL, &control);
->>> +		control &= ~PCI_BRIDGE_CTL_SERR;
->>> +		pci_write_config_word(dev, PCI_BRIDGE_CONTROL, control);
->>> +	}
->>> +
->>>  	return pcie_capability_clear_word(dev, PCI_EXP_DEVCTL,
->>>  					  PCI_EXP_AER_FLAGS);
->>>  }
->>> --
->>> 1.7.1
->>> 
+_______________________________________________
+linux-arm-kernel mailing list
+linux-arm-kernel@lists.infradead.org
+http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
