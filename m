@@ -1,47 +1,65 @@
-Return-Path: <SRS0=hyej=LE=deltatee.com=logang@kernel.org>
-Return-Path: <SRS0=hyej=LE=deltatee.com=logang@kernel.org>
-To: Eric Pilmore <epilmore@gigaio.com>
-Cc: Kit Chow <kchow@gigaio.com>, Bjorn Helgaas <helgaas@kernel.org>,
- linux-pci@vger.kernel.org, David Woodhouse <dwmw2@infradead.org>,
- Alex Williamson <alex.williamson@redhat.com>,
- iommu@lists.linux-foundation.org
-References: <CAOQPn8soxubJxb=vp7kz+AM6LbPH5y+_Nx0Vzv7rjV_nMMqEmA@mail.gmail.com>
- <20180809184331.GB113140@bhelgaas-glaptop.roam.corp.google.com>
- <CAOQPn8uPYKai49WYPqZp2wNd5of=0hUvPOHEtqP56RZu-hcjuw@mail.gmail.com>
- <b54899a8-a144-e8e0-9880-1800c4657b95@deltatee.com>
- <CAOQPn8tSNN+3igN-kMcQH46w_a9p6T+S7=c8CLREMLxr1kaTXQ@mail.gmail.com>
- <7068db44-af31-4462-f966-2dd2340ba0f0@deltatee.com>
- <695826a6-e10c-5a30-a51f-7cc61ba6e640@gigaio.com>
- <0d3f48c3-8c4f-4dfb-e883-23c168f12b9b@deltatee.com>
- <14db6acb-da4f-9604-7359-1671210fcb8b@gigaio.com>
- <ad2cd3f2-eb41-d4c2-7614-379c2e458352@deltatee.com>
- <CAOQPn8uuTEcmdQdZB9-A7FT+YWtxSuruGFwmwCPApffTJNs9Vg@mail.gmail.com>
-From: Logan Gunthorpe <logang@deltatee.com>
-Message-ID: <41419ada-7f16-0028-1e43-3b4a6c6960b6@deltatee.com>
-Date: Tue, 21 Aug 2018 17:20:58 -0600
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Subject: Re: framebuffer corruption due to overlapping stp instructions on
+ arm64
+To: Mikulas Patocka <mpatocka@redhat.com>, Will Deacon <will.deacon@arm.com>,
+ Jingoo Han <jingoohan1@gmail.com>, Joao Pinto <Joao.Pinto@synopsys.com>
+References: <alpine.LRH.2.02.1808021242320.31834@file01.intranet.prod.int.rdu2.redhat.com>
+ <CAHCPf3tFGqkYEcWNN4LaWThw_rVqT316pzLv6T7RfxwO-eZ0EA@mail.gmail.com>
+ <alpine.LRH.2.02.1808030212340.17672@file01.intranet.prod.int.rdu2.redhat.com>
+ <CAKv+Gu8DeuksZhk1g3q_msSKV_hSY_2e1uzVten9-oGO3j9Sqg@mail.gmail.com>
+ <20180803094129.GB17798@arm.com>
+ <alpine.LRH.2.02.1808031235410.31584@file01.intranet.prod.int.rdu2.redhat.com>
+From: Sinan Kaya <okaya@kernel.org>
+Message-ID: <f0ab7c55-c104-241e-99d1-8247b2c567d1@kernel.org>
+Date: Fri, 3 Aug 2018 13:32:10 -0400
 MIME-Version: 1.0
-In-Reply-To: <CAOQPn8uuTEcmdQdZB9-A7FT+YWtxSuruGFwmwCPApffTJNs9Vg@mail.gmail.com>
-Content-Type: text/plain; charset=utf-8
-Subject: Re: IOAT DMA w/IOMMU
+In-Reply-To: <alpine.LRH.2.02.1808031235410.31584@file01.intranet.prod.int.rdu2.redhat.com>
+List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
+List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
+List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
+List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
+List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
+Cc: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>,
+ libc-alpha@sourceware.org, Ard Biesheuvel <ard.biesheuvel@linaro.org>,
+ Catalin Marinas <catalin.marinas@arm.com>,
+ Russell King <linux@armlinux.org.uk>,
+ Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
+ Matt Sealey <neko@bakuhatsu.net>, linux-pci@vger.kernel.org,
+ linux-arm-kernel <linux-arm-kernel@lists.infradead.org>
+Content-Type: text/plain; charset="us-ascii"; Format="flowed"
+Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
+Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
 List-ID: <linux-pci.vger.kernel.org>
 
+On 8/3/2018 1:09 PM, Mikulas Patocka wrote:
+>>> Most accelerated graphics drivers rely heavily on the ability to map
+>>> the VRAM normal-non-cacheable (ioremap_wc, basically), and treat it as
+>>> ordinary memory.
+>> Yeah, I'd expect framebuffers to be mapped as normal NC. That should be
+>> fine for prefetchable BARs, no?
+>>
+>> Will
+> So - why does it corrupt data then? I've created this program that
+> reproduces the data corruption quicky. If I run it on /dev/fb0, I get an
+> instant failure. Sometimes a few bytes are not written, sometimes a few
+> bytes are written with a value that should be 16 bytes apart.
+> 
+> I tried to run it on system RAM mapped with the NC attribute and I didn't
+> get any corruption - that suggests the the bug may be in the PCIE
+> subsystem.
 
+Note that normal-NC gives you write combining whereas device
+nGnRE doesn't have any write-combining support.
+normal-NC is typically mapped to prefetchable BAR space where
+write-combining is welcome.
 
-On 21/08/18 05:18 PM, Eric Pilmore wrote:
-> We have been running locally with Kit's change for dma_map_resource and its
-> incorporation in ntb_async_tx_submit for the destination address and
-> it runs fine
-> under "load" (iperf) on a Xeon (Xeon(R) CPU E5-2680 v4 @ 2.40GHz) based system,
-> regardless of whether the DMA engine being used is IOAT or a PLX
-> device sitting in
-> the PCIe tree. However, when we go back to a i7 (i7-7700K CPU @ 4.20GHz) based
-> system it seems to run into issues, specifically when put under a
-> load. In this case,
-> just having a load using a single ping command with an interval=0, i.e. no delay
-> between ping packets, after a few thousand packets the system just hangs. No
-> panic or watchdogs.  Note that in this scenario I can only use a PLX DMA engine.
+It could be an issue on the SOC itself too. I suggest you contact your
+board vendor.
 
-This is just my best guess: but it sounds to me like a bug in the PLX
-DMA driver or hardware.
-
-Logan
+_______________________________________________
+linux-arm-kernel mailing list
+linux-arm-kernel@lists.infradead.org
+http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
