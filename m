@@ -1,64 +1,78 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.bootlin.com ([62.4.15.54]:50326 "EHLO mail.bootlin.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1732250AbeHCQf3 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Fri, 3 Aug 2018 12:35:29 -0400
-From: Thomas Petazzoni <thomas.petazzoni@bootlin.com>
-To: Bjorn Helgaas <bhelgaas@google.com>,
-        Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
-        linux-pci@vger.kernel.org
-Cc: Nadav Haklai <nadavh@marvell.com>,
-        Gregory Clement <gregory.clement@bootlin.com>,
-        =?UTF-8?q?Miqu=C3=A8l=20Raynal?= <miquel.raynal@bootlin.com>,
-        Maxime Chevallier <maxime.chevallier@bootlin.com>,
-        Antoine Tenart <antoine.tenart@bootlin.com>,
-        linux-arm-kernel@lists.infradead.org,
-        Thomas Petazzoni <thomas.petazzoni@bootlin.com>
-Subject: [PATCH v2 0/6] PCI: mvebu: cleanup and improvements
-Date: Fri,  3 Aug 2018 16:38:42 +0200
-Message-Id: <20180803143848.21551-1-thomas.petazzoni@bootlin.com>
+Received: from mail-wr1-f65.google.com ([209.85.221.65]:44223 "EHLO
+        mail-wr1-f65.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1728784AbeHCJjT (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Fri, 3 Aug 2018 05:39:19 -0400
+Received: by mail-wr1-f65.google.com with SMTP id r16-v6so4460507wrt.11
+        for <linux-pci@vger.kernel.org>; Fri, 03 Aug 2018 00:44:16 -0700 (PDT)
+MIME-Version: 1.0
+In-Reply-To: <20180730134316.11719-2-lorenzo.pieralisi@arm.com>
+References: <20180730134316.11719-1-lorenzo.pieralisi@arm.com> <20180730134316.11719-2-lorenzo.pieralisi@arm.com>
+From: Subrahmanya Lingappa <l.subrahmanya@mobiveil.co.in>
+Date: Fri, 3 Aug 2018 13:14:15 +0530
+Message-ID: <CAFZiPx35TzZzR93CqN1tgHAm44gBvWeJ1ArtOr3jWP=xVEX6Aw@mail.gmail.com>
+Subject: Re: [PATCH 1/3] PCI: mobiveil: Fix struct mobiveil_pcie.pcie_reg_base
+ address type
+To: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
+Cc: linux-pci@vger.kernel.org, Bjorn Helgaas <bhelgaas@google.com>
+Content-Type: text/plain; charset="UTF-8"
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hello,
+Lorenzo,
+Acked By: Subrahmanya Lingappa
 
-This is the v2 of the pci-mvebu cleanup and improvements, mainly
-aiming at using pci_host_bridge.
+Thanks,
+Subrahmanya
 
-Since v1, the changes are:
-
- - Rebase on v4.18-rc1 to make sure the patches apply
-
- - Add a patch fixing the I/O space end calculation (using
-   resource_size() as the .end address of a resource is not correct)
-
- - Only remap the I/O space if there is a PCI I/O aperture described
-   in the DT.
-
- - Use resource_size() in the loop mapping the I/O space, as suggested
-   by Lorenzo.
-
- - Use pci_add_resource() instead of pci_add_resource_offset(), as
-   suggested by Lorenzo.
-
- - Revert to using pci_ioremap_io(), since we need to map with a
-   special memory type on Armada platforms, and pci_remap_iospace()
-   doesn't allow to do that. Noticed by Lorenzo.
-
-Thanks!
-
-Thomas
-
-Thomas Petazzoni (6):
-  PCI: mvebu: Remove redundant platform_set_drvdata() call
-  PCI: mvebu: fix I/O space end address calculation
-  PCI: mvebu: only remap I/O space if configured
-  PCI: mvebu: use resource_size() to remap I/O space
-  PCI: mvebu: Convert to use pci_host_bridge directly
-  PCI: mvebu: Drop bogus comment above mvebu_pcie_map_registers()
-
- drivers/pci/controller/pci-mvebu.c | 153 +++++++++++++++++--------------------
- 1 file changed, 68 insertions(+), 85 deletions(-)
-
--- 
-2.14.4
+On Mon, Jul 30, 2018 at 7:13 PM, Lorenzo Pieralisi
+<lorenzo.pieralisi@arm.com> wrote:
+> The field pcie_reg_base in struct mobiveil_pcie represents a physical
+> address so it should be of phys_addr_t type rather than void __iomem*;
+> this results in the following compilation  warnings:
+>
+> drivers/pci/controller/pcie-mobiveil.c: In function
+> 'mobiveil_pcie_parse_dt':
+> drivers/pci/controller/pcie-mobiveil.c:326:22: warning: assignment makes
+> pointer from integer without a cast [-Wint-conversion]
+>   pcie->pcie_reg_base = res->start;
+>                       ^
+> drivers/pci/controller/pcie-mobiveil.c: In function
+> 'mobiveil_pcie_enable_msi':
+> drivers/pci/controller/pcie-mobiveil.c:485:25: warning: initialization
+> makes integer from pointer without a cast [-Wint-conversion]
+>   phys_addr_t msg_addr = pcie->pcie_reg_base;
+>                          ^~~~
+> drivers/pci/controller/pcie-mobiveil.c: In function
+> 'mobiveil_compose_msi_msg':
+> drivers/pci/controller/pcie-mobiveil.c:640:21: warning: initialization
+> makes integer from pointer without a cast [-Wint-conversion]
+>   phys_addr_t addr = pcie->pcie_reg_base + (data->hwirq * sizeof(int));
+>
+> Fix the type and with it the compilation warnings.
+>
+> Fixes: 9af6bcb11e12 ("PCI: mobiveil: Add Mobiveil PCIe Host Bridge IP
+> driver")
+> Signed-off-by: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
+> Cc: Bjorn Helgaas <bhelgaas@google.com>
+> Cc: Subrahmanya Lingappa <l.subrahmanya@mobiveil.co.in>
+> ---
+>  drivers/pci/controller/pcie-mobiveil.c | 2 +-
+>  1 file changed, 1 insertion(+), 1 deletion(-)
+>
+> diff --git a/drivers/pci/controller/pcie-mobiveil.c b/drivers/pci/controller/pcie-mobiveil.c
+> index cf0aa7cee5b0..8b45f77d70f9 100644
+> --- a/drivers/pci/controller/pcie-mobiveil.c
+> +++ b/drivers/pci/controller/pcie-mobiveil.c
+> @@ -130,7 +130,7 @@ struct mobiveil_pcie {
+>         void __iomem *config_axi_slave_base;    /* endpoint config base */
+>         void __iomem *csr_axi_slave_base;       /* root port config base */
+>         void __iomem *apb_csr_base;     /* MSI register base */
+> -       void __iomem *pcie_reg_base;    /* Physical PCIe Controller Base */
+> +       phys_addr_t pcie_reg_base;      /* Physical PCIe Controller Base */
+>         struct irq_domain *intx_domain;
+>         raw_spinlock_t intx_mask_lock;
+>         int irq;
+> --
+> 2.15.0
+>
