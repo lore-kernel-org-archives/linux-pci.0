@@ -1,42 +1,67 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from userp2130.oracle.com ([156.151.31.86]:53626 "EHLO
-        userp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S2388988AbeHATdu (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Wed, 1 Aug 2018 15:33:50 -0400
-Subject: Re: Possible race condition in the kernel between PCI driver and AER
- handling
-To: gokul cg <gokuljnpr@gmail.com>
-Cc: linux-pci@vger.kernel.org
-References: <CAFP4jM9xmXHVnBPObNxTtr1kDo2kbW9G4N5q=BLU5gf5=+M0xg@mail.gmail.com>
- <c5fb4a6a-136f-99f1-104e-32c923f00a22@oracle.com>
- <CAFP4jM84BuVZ+yKvcVvbu_6LFoO+2iVivWWZTZgbEEy3=oMftg@mail.gmail.com>
-From: Thomas Tai <thomas.tai@oracle.com>
-Message-ID: <ecb55fb1-c3af-4f5b-86d2-1c669fa9f9ca@oracle.com>
-Date: Wed, 1 Aug 2018 13:47:00 -0400
+Return-Path: <SRS0=8yBB=KS=gmail.com=hkallweit1@kernel.org>
+Return-Path: <SRS0=8yBB=KS=gmail.com=hkallweit1@kernel.org>
+Subject: Re: [PATCH] PCI: let pci_request_irq properly deal with threaded
+ interrupts
+To: Thomas Gleixner <tglx@linutronix.de>
+Cc: Marc Zyngier <marc.zyngier@arm.com>, Bjorn Helgaas <helgaas@kernel.org>,
+ Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org,
+ Christoph Hellwig <hch@lst.de>, LKML <linux-kernel@vger.kernel.org>
+References: <d004975f-03a8-59f5-56ef-f4e1f8e12dfb@gmail.com>
+ <20180730213028.GC45322@bhelgaas-glaptop.roam.corp.google.com>
+ <alpine.DEB.2.21.1807310015170.1725@nanos.tec.linutronix.de>
+ <86d0v4x75x.wl-marc.zyngier@arm.com>
+ <0799ea22-70ed-3be6-cb80-449f53fef819@gmail.com>
+ <alpine.DEB.2.21.1808031605160.1745@nanos.tec.linutronix.de>
+ <420d6476-8ea4-0b37-e94a-f5842b7b0ff7@gmail.com>
+ <alpine.DEB.2.21.1808032136490.1658@nanos.tec.linutronix.de>
+From: Heiner Kallweit <hkallweit1@gmail.com>
+Message-ID: <96285966-f2d2-c820-7f38-de22deeb8074@gmail.com>
+Date: Fri, 3 Aug 2018 22:55:00 +0200
 MIME-Version: 1.0
-In-Reply-To: <CAFP4jM84BuVZ+yKvcVvbu_6LFoO+2iVivWWZTZgbEEy3=oMftg@mail.gmail.com>
-Content-Type: text/plain; charset=utf-8; format=flowed
-Sender: linux-pci-owner@vger.kernel.org
+In-Reply-To: <alpine.DEB.2.21.1808032136490.1658@nanos.tec.linutronix.de>
+Content-Type: text/plain; charset=utf-8
 List-ID: <linux-pci.vger.kernel.org>
 
-
-
-On 08/01/2018 01:42 AM, gokul cg wrote:
-> Hi Thomas,
+On 03.08.2018 21:40, Thomas Gleixner wrote:
+> On Fri, 3 Aug 2018, Heiner Kallweit wrote:
+>> On 03.08.2018 16:09, Thomas Gleixner wrote:
+>>> On Wed, 1 Aug 2018, Heiner Kallweit wrote:
+>>>> diff --git a/kernel/irq/msi.c b/kernel/irq/msi.c
+>>>> index 4ca2fd46..ba6da943 100644
+>>>> --- a/kernel/irq/msi.c
+>>>> +++ b/kernel/irq/msi.c
+>>>> @@ -289,6 +289,9 @@ struct irq_domain *msi_create_irq_domain(struct fwnode_handle *fwnode,
+>>>>         if (info->flags & MSI_FLAG_USE_DEF_CHIP_OPS)
+>>>>                 msi_domain_update_chip_ops(info);
+>>>>
+>>>> +       /* MSI is oneshot-safe in general */
+>>>> +       info->chip->flags |= IRQCHIP_ONESHOT_SAFE;
+>>>> +
+>>>>         domain = irq_domain_create_hierarchy(parent, IRQ_DOMAIN_FLAG_MSI, 0,
+>>>
+>>> Looks about right, though there might be dragons. MSI is not always as sane
+>>> as it should be...
+>>>
+>> When saying "MSI isn't always sane", are you referring to the hardware or
+>> the controller driver implementation? Basically for me the question is
+>> whether we would be able to fix the issue if we meet such a dragon,
+>> or whether we would have to revert the change.
 > 
-> In my hardware, there is i2c power control chip for PCI card, I just 
-> powered down using i2c command .
-
-Hi Gokul,
-When you power off the card via the i2c, it forcefully power off the 
-card without notify the kernel? That is, during the card power off 
-sequence it manages to send a last AER isr to report the error and die? 
-I am kind of expect the pcie surprise removal or hot plug driver will 
-handle it correctly.
-
-Thanks,
-Thomas
-
+> It's hardware unfortunately, so it might be a revert. PCI-MSI should be
+> safe, but the wild MSI variants in SoCs might be the actual dragon caves.
 > 
-> Regards,
-> Gokul
+
+pci_msi_create_irq_domain() is used by controller drivers for PCI(e)
+controllers in SoCs like Mediatek, Armada, ..
+I assume you're referring to some other (non-PCI) SoC-internal
+MSI mechanism when saying "wild variants", right?
+
+>> Do you think the chance of a dragon is low enough? Or better add the
+>> flag only to the X86 PCI MSI irqchip for now?
+> 
+> I think PCI-MSI in general would be not too risky. Famous last words.
+> 
+> Thanks,
+> 
+> 	tglx
+> 
