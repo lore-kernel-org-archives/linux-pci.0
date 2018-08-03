@@ -1,139 +1,53 @@
-Return-Path: <linux-acpi-owner@vger.kernel.org>
-From: Arnd Bergmann <arnd@arndb.de>
-To: linux-pci@vger.kernel.org, Bjorn Helgaas <bhelgaas@google.com>
-Cc: linux-kernel@vger.kernel.org,
-        Christoph Hellwig <hch@infradead.org>,
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail.bootlin.com ([62.4.15.54]:50347 "EHLO mail.bootlin.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1732373AbeHCQfc (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Fri, 3 Aug 2018 12:35:32 -0400
+From: Thomas Petazzoni <thomas.petazzoni@bootlin.com>
+To: Bjorn Helgaas <bhelgaas@google.com>,
         Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
-        Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-        linuxppc-dev@lists.ozlabs.org, linux-acpi@vger.kernel.org,
-        Arnd Bergmann <arnd@arndb.de>
-Subject: [RFC 07/15] PCI/ACPI: clean up acpi_pci_root_create()
-Date: Fri, 17 Aug 2018 12:26:37 +0200
-Message-Id: <20180817102645.3839621-8-arnd@arndb.de>
-In-Reply-To: <20180817102645.3839621-1-arnd@arndb.de>
-References: <20180817102645.3839621-1-arnd@arndb.de>
-Sender: linux-acpi-owner@vger.kernel.org
+        linux-pci@vger.kernel.org
+Cc: Nadav Haklai <nadavh@marvell.com>,
+        Gregory Clement <gregory.clement@bootlin.com>,
+        =?UTF-8?q?Miqu=C3=A8l=20Raynal?= <miquel.raynal@bootlin.com>,
+        Maxime Chevallier <maxime.chevallier@bootlin.com>,
+        Antoine Tenart <antoine.tenart@bootlin.com>,
+        linux-arm-kernel@lists.infradead.org,
+        Thomas Petazzoni <thomas.petazzoni@bootlin.com>
+Subject: [PATCH v2 6/6] PCI: mvebu: Drop bogus comment above mvebu_pcie_map_registers()
+Date: Fri,  3 Aug 2018 16:38:48 +0200
+Message-Id: <20180803143848.21551-7-thomas.petazzoni@bootlin.com>
+In-Reply-To: <20180803143848.21551-1-thomas.petazzoni@bootlin.com>
+References: <20180803143848.21551-1-thomas.petazzoni@bootlin.com>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-The acpi_pci_create_root_bus() can be fully integrated into
-acpi_pci_root_create(), improving a few things:
+This comment has been there since the driver was introduced, but seems
+to be a leftover from previous iterations of the driver. Indeed, we do
+not lookup in a list to find the register ranges that matches the
+given port/lane, as the "reg" property is in each sub-node
+representing a PCI port. There is no lookup involved at all.
 
-* We can call pci_scan_root_bus_bridge(), which registers and
-  scans the bridge in one step.
-* After a failure in pci_register_host_bridge(), we correctly
-  clean up the resources.
-* The bridge settings (release function, flags, operations etc)
-  can get set up before registering the bridge.
-* Further cleanup would be possible, removing duplication between
-  pci_host_bridge and some ACPI structures.
-
-Signed-off-by: Arnd Bergmann <arnd@arndb.de>
+Signed-off-by: Thomas Petazzoni <thomas.petazzoni@bootlin.com>
 ---
- drivers/acpi/pci_root.c | 68 +++++++++++++++--------------------------
- 1 file changed, 24 insertions(+), 44 deletions(-)
+ drivers/pci/controller/pci-mvebu.c | 5 -----
+ 1 file changed, 5 deletions(-)
 
-diff --git a/drivers/acpi/pci_root.c b/drivers/acpi/pci_root.c
-index 85dbcf47015b..5f73de3b67c8 100644
---- a/drivers/acpi/pci_root.c
-+++ b/drivers/acpi/pci_root.c
-@@ -873,34 +873,6 @@ static void acpi_pci_root_release_info(struct pci_host_bridge *bridge)
- 	__acpi_pci_root_release_info(bridge->release_data);
+diff --git a/drivers/pci/controller/pci-mvebu.c b/drivers/pci/controller/pci-mvebu.c
+index 9055f03596ef..50eb0729385b 100644
+--- a/drivers/pci/controller/pci-mvebu.c
++++ b/drivers/pci/controller/pci-mvebu.c
+@@ -888,11 +888,6 @@ static resource_size_t mvebu_pcie_align_resource(struct pci_dev *dev,
+ 		return start;
  }
  
--static struct pci_bus *acpi_pci_create_root_bus(struct device *parent, int bus,
--		struct pci_ops *ops, void *sysdata, struct list_head *resources)
--{
--	int error;
--	struct pci_host_bridge *bridge;
--
--	bridge = pci_alloc_host_bridge(0);
--	if (!bridge)
--		return NULL;
--
--	bridge->dev.parent = parent;
--
--	list_splice_init(resources, &bridge->windows);
--	bridge->sysdata = sysdata;
--	bridge->busnr = bus;
--	bridge->ops = ops;
--
--	error = pci_register_host_bridge(bridge);
--	if (error < 0)
--		goto err_out;
--
--	return bridge->bus;
--
--err_out:
--	kfree(bridge);
--	return NULL;
--}
--
- struct pci_bus *acpi_pci_root_create(struct acpi_pci_root *root,
- 				     struct acpi_pci_root_ops *ops,
- 				     struct acpi_pci_root_info *info,
-@@ -909,8 +881,7 @@ struct pci_bus *acpi_pci_root_create(struct acpi_pci_root *root,
- 	int ret, busnum = root->secondary.start;
- 	struct acpi_device *device = root->device;
- 	int node = acpi_get_node(device->handle);
--	struct pci_bus *bus;
--	struct pci_host_bridge *host_bridge;
-+	struct pci_host_bridge *bridge;
- 
- 	info->root = root;
- 	info->bridge = device;
-@@ -930,30 +901,39 @@ struct pci_bus *acpi_pci_root_create(struct acpi_pci_root *root,
- 
- 	pci_acpi_root_add_resources(info);
- 	pci_add_resource(&info->resources, &root->secondary);
--	bus = acpi_pci_create_root_bus(NULL, busnum, ops->pci_ops,
--				  sysdata, &info->resources);
--	if (!bus)
-+
-+	bridge = pci_alloc_host_bridge(0);
-+	if (!bridge)
- 		goto out_release_info;
- 
--	host_bridge = to_pci_host_bridge(bus->bridge);
-+	list_splice_init(&info->resources, &bridge->windows);
-+	bridge->sysdata = sysdata;
-+	bridge->busnr = busnum;
-+	bridge->ops = ops->pci_ops;
-+	pci_set_host_bridge_release(bridge, acpi_pci_root_release_info,
-+				    info);
-+
- 	if (!(root->osc_control_set & OSC_PCI_EXPRESS_NATIVE_HP_CONTROL))
--		host_bridge->native_pcie_hotplug = 0;
-+		bridge->native_pcie_hotplug = 0;
- 	if (!(root->osc_control_set & OSC_PCI_SHPC_NATIVE_HP_CONTROL))
--		host_bridge->native_shpc_hotplug = 0;
-+		bridge->native_shpc_hotplug = 0;
- 	if (!(root->osc_control_set & OSC_PCI_EXPRESS_AER_CONTROL))
--		host_bridge->native_aer = 0;
-+		bridge->native_aer = 0;
- 	if (!(root->osc_control_set & OSC_PCI_EXPRESS_PME_CONTROL))
--		host_bridge->native_pme = 0;
-+		bridge->native_pme = 0;
- 	if (!(root->osc_control_set & OSC_PCI_EXPRESS_LTR_CONTROL))
--		host_bridge->native_ltr = 0;
-+		bridge->native_ltr = 0;
-+
-+	ret = pci_scan_root_bus_bridge(bridge);
-+	if (ret < 0)
-+		goto out_release_bridge;
- 
--	pci_scan_child_bus(bus);
--	pci_set_host_bridge_release(host_bridge, acpi_pci_root_release_info,
--				    info);
- 	if (node != NUMA_NO_NODE)
--		dev_printk(KERN_DEBUG, &bus->dev, "on NUMA node %d\n", node);
--	return bus;
-+		dev_printk(KERN_DEBUG, &bridge->bus->dev, "on NUMA node %d\n", node);
-+	return bridge->bus;
- 
-+out_release_bridge:
-+	pci_free_host_bridge(bridge);
- out_release_info:
- 	__acpi_pci_root_release_info(info);
- 	return NULL;
+-/*
+- * Looks up the list of register addresses encoded into the reg =
+- * <...> property for one that matches the given port/lane. Once
+- * found, maps it.
+- */
+ static void __iomem *mvebu_pcie_map_registers(struct platform_device *pdev,
+ 					      struct device_node *np,
+ 					      struct mvebu_pcie_port *port)
 -- 
-2.18.0
+2.14.4
