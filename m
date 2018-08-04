@@ -1,48 +1,39 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.29.99]:52840 "EHLO mail.kernel.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1730235AbeHFTNf (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Mon, 6 Aug 2018 15:13:35 -0400
-Subject: Re: [PATCH v7 1/1] PCI: pciehp: Ignore link events when there is a
- fatal error pending
-From: Sinan Kaya <okaya@kernel.org>
-To: Lukas Wunner <lukas@wunner.de>
-Cc: poza@codeaurora.org, linux-pci@vger.kernel.org,
-        Bjorn Helgaas <bhelgaas@google.com>,
-        Mika Westerberg <mika.westerberg@linux.intel.com>,
-        Keith Busch <keith.busch@intel.com>,
-        linux-pci-owner@vger.kernel.org
-References: <20180805225136.5800-1-okaya@kernel.org>
- <20180805225136.5800-2-okaya@kernel.org>
- <c1cfff22c63f6d3d6285575721a2a3e8@codeaurora.org>
- <20180806092614.GA28462@wunner.de>
- <2b4c23a2e97f61a124c95c49d604a853@codeaurora.org>
- <3d491f25-1d59-f257-1125-302e2d50e960@kernel.org>
- <22ce7172-b028-c0b1-d117-8096e016b15b@kernel.org>
- <20180806164445.GA28786@wunner.de>
- <1b59eb4b-e1f5-899c-cdfb-191c1bb915db@kernel.org>
-Message-ID: <d01a1e8c-cfcb-2d4c-d1f9-a4d1d35116f5@kernel.org>
-Date: Mon, 6 Aug 2018 13:03:32 -0400
-MIME-Version: 1.0
-In-Reply-To: <1b59eb4b-e1f5-899c-cdfb-191c1bb915db@kernel.org>
-Content-Type: text/plain; charset=utf-8; format=flowed
+Received: from bombadil.infradead.org ([198.137.202.133]:58386 "EHLO
+        bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726744AbeHDMOY (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Sat, 4 Aug 2018 08:14:24 -0400
+From: Christoph Hellwig <hch@lst.de>
+To: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
+        Bjorn Helgaas <bhelgaas@google.com>
+Cc: Palmer Dabbelt <palmer@dabbelt.com>,
+        "Wesley W . Terpstra" <wesley@sifive.com>,
+        Arnd Bergmann <arnd@arndb.de>, linux-pci@vger.kernel.org,
+        linux-riscv@lists.infradead.org
+Subject: add support for Xilinx PCIe root ports on RISC-V v3
+Date: Sat,  4 Aug 2018 12:13:59 +0200
+Message-Id: <20180804101402.10022-1-hch@lst.de>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 8/6/2018 12:49 PM, Sinan Kaya wrote:
->>> Surprise Link Down is also a fatal error.
->>
->> Seriously?  On a Downstream Port which has the Hot-Plug Surprise bit
->> in the Slot Capabilities register set, Surprise Link Down is a fatal
->> error?  That would seem somewhat contradictory.  Do you have a
->> section number in the PCIe Base Spec for this?
-> 
-> Spec 3.0. 7.10.2. Uncorrectable Error Status Register (Offset 04h)
-> bit 5 Surprise Down Error Status (Optional).
+Hi all,
 
-I think hotplug surprise capability takes priority over the one in AER
-register. Other non-hotplug capable systems can report a link down via
-AER Fatal error and recover via the error handling path.
+this series with patches originally from Palmer and Wesley adds support
+for the pcie-xilinx host driver on RISC-V boards.  The interesting part
+about that is that the IP blocks is limited to 32-bit DMA internally,
+which didn't seem to be an issue with the existing users, but shows
+up easily with the Sifive RISC-V boards that have physical memory
+wired up above 4G.
 
-We should maybe leave this one alone since hotplug code wouldn't clear
-the AER status registers.
+Note that patches 1 and 2 depend on changes in the dma-mapping tree
+to add the bus_dma_mask field to struct device and would have to merge
+through the dma-mapping tree or a shared stable branch.  Patch 3 could
+be merged independently.
+
+Changes since v2:
+ - rename the add_dev callback to add_device and allow it to return an
+   error code (to allow it to replace pcibios_add_device in the future)
+
+Changes since v1:
+ - move the add_dev method to struct pci_host_bridge
+ - use the new bus_dma_mask field
