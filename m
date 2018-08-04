@@ -1,79 +1,51 @@
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Date: Wed, 8 Aug 2018 14:37:02 -0400 (EDT)
-From: Mikulas Patocka <mpatocka@redhat.com>
-To: David Laight <David.Laight@ACULAB.COM>
-Subject: RE: framebuffer corruption due to overlapping stp instructions on
- arm64
-In-Reply-To: <19c70d2a0b224db78f72dd316ad006b8@AcuMS.aculab.com>
-Message-ID: <alpine.LRH.2.02.1808081435020.18198@file01.intranet.prod.int.rdu2.redhat.com>
-References: <alpine.LRH.2.02.1808021242320.31834@file01.intranet.prod.int.rdu2.redhat.com>
- <CAHCPf3tFGqkYEcWNN4LaWThw_rVqT316pzLv6T7RfxwO-eZ0EA@mail.gmail.com>
- <alpine.LRH.2.02.1808030212340.17672@file01.intranet.prod.int.rdu2.redhat.com>
- <CAKv+Gu8DeuksZhk1g3q_msSKV_hSY_2e1uzVten9-oGO3j9Sqg@mail.gmail.com>
- <20180803094129.GB17798@arm.com>
- <alpine.LRH.2.02.1808031235410.31584@file01.intranet.prod.int.rdu2.redhat.com>
- <CAKv+Gu-aNFh1fsr_05SEwDp99n3pLrguP7=tEcFQPNY53=K7Fw@mail.gmail.com>
- <alpine.LRH.2.02.1808031424140.14030@file01.intranet.prod.int.rdu2.redhat.com>
- <CAHCPf3s-+Qf=WBZz1KpisDMG3520jCUh8PLAO3PHa4jdt8kCTw@mail.gmail.com>
- <20180808121641.GB24736@iMac.local>
- <b1de49af14d941979977af07dc81e1c2@AcuMS.aculab.com>
- <alpine.LRH.2.02.1808080939180.3325@file01.intranet.prod.int.rdu2.redhat.com>
- <19c70d2a0b224db78f72dd316ad006b8@AcuMS.aculab.com>
-MIME-Version: 1.0
-List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
-List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
-List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
-List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
-List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
-Cc: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>,
- Joao Pinto <Joao.Pinto@synopsys.com>,
- Ard Biesheuvel <ard.biesheuvel@linaro.org>,
- 'Catalin Marinas' <catalin.marinas@arm.com>, Will Deacon <will.deacon@arm.com>,
- Russell King <linux@armlinux.org.uk>,
- Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
- Matt Sealey <neko@bakuhatsu.net>, linux-pci <linux-pci@vger.kernel.org>,
- Jingoo Han <jingoohan1@gmail.com>,
- linux-arm-kernel <linux-arm-kernel@lists.infradead.org>
-Content-Type: text/plain; charset="us-ascii"
-Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
-Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from bombadil.infradead.org ([198.137.202.133]:58774 "EHLO
+        bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726744AbeHDMOg (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Sat, 4 Aug 2018 08:14:36 -0400
+From: Christoph Hellwig <hch@lst.de>
+To: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
+        Bjorn Helgaas <bhelgaas@google.com>
+Cc: Palmer Dabbelt <palmer@dabbelt.com>,
+        "Wesley W . Terpstra" <wesley@sifive.com>,
+        Arnd Bergmann <arnd@arndb.de>, linux-pci@vger.kernel.org,
+        linux-riscv@lists.infradead.org
+Subject: [PATCH 3/3] PCI/xilinx: Depend on OF instead of the ARCH
+Date: Sat,  4 Aug 2018 12:14:02 +0200
+Message-Id: <20180804101402.10022-4-hch@lst.de>
+In-Reply-To: <20180804101402.10022-1-hch@lst.de>
+References: <20180804101402.10022-1-hch@lst.de>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
+There isn't a hard dependency of the Xilinx AXI-PCIe host bridge on any
+architecture.  For example: at SiFive we map RISC-V cores to Xilinx FPGAs
+and connect the Xilinx IP via a TileLink adapter, so the RISC-V Linux
+port will need to be able to enable PCIE_XILINX in order to have PCIe
+support.
 
+This patch decouples the PCIE_XILINX support from ARCH.  Instead it just
+depends on OF, which I believe is the only true dependency.
 
-On Wed, 8 Aug 2018, David Laight wrote:
+Signed-off-by: Palmer Dabbelt <palmer@dabbelt.com>
+[hch: switch to OF instead of OF_PCI now that the latter is gone]
+Signed-off-by: Christoph Hellwig <hch@lst.de>
+---
+ drivers/pci/controller/Kconfig | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-> From: Mikulas Patocka
-> > Sent: 08 August 2018 14:47
-> ...
-> > The problem on ARM is that I see data corruption when the overlapping
-> > unaligned writes are done just by a single core.
-> 
-> Is this a sequence of unaligned writes (that shouldn't modify the
-> same physical locations) or an aligned write followed by an
-> unaligned one that updates part of the earlier write.
-> (Or the opposite order?)
-> 
-> It might be that the unaligned writes are bypassing the write-combining
-> buffer (without flushing it) - so overtake the aligned write.
-> 
-> Alternatively the unaligned writes go through the write-combining
-> buffer but the byte-enables aren't handled in the expected way.
-> 
-> It ought to be possible to work out which sequence is actually broken.
-> 
-> 	David
-
-All the unaligned/or aligned writes inside memcpy write the same value to 
-the overlapping bytes. So, the corruption can't be explained just by 
-reordering the writes or failing to detect hazard between them.
-
-Mikulas
-
-_______________________________________________
-linux-arm-kernel mailing list
-linux-arm-kernel@lists.infradead.org
-http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
+diff --git a/drivers/pci/controller/Kconfig b/drivers/pci/controller/Kconfig
+index cc9fa02d32a0..0f7ce5eaeac8 100644
+--- a/drivers/pci/controller/Kconfig
++++ b/drivers/pci/controller/Kconfig
+@@ -102,7 +102,7 @@ config PCI_HOST_GENERIC
+ 
+ config PCIE_XILINX
+ 	bool "Xilinx AXI PCIe host bridge support"
+-	depends on ARCH_ZYNQ || MICROBLAZE || (MIPS && PCI_DRIVERS_GENERIC) || COMPILE_TEST
++	depends on OF || COMPILE_TEST
+ 	help
+ 	  Say 'Y' here if you want kernel to support the Xilinx AXI PCIe
+ 	  Host Bridge driver.
+-- 
+2.18.0
