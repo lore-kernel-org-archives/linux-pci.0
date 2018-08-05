@@ -1,64 +1,76 @@
-Return-Path: <SRS0=Hy8D=LD=intel.com=keith.busch@kernel.org>
-Return-Path: <SRS0=Hy8D=LD=intel.com=keith.busch@kernel.org>
-Date: Mon, 20 Aug 2018 15:35:45 -0600
-From: Keith Busch <keith.busch@intel.com>
-To: Sinan Kaya <okaya@kernel.org>
-Cc: Benjamin Herrenschmidt <benh@kernel.crashing.org>, poza@codeaurora.org,
-	Bjorn Helgaas <helgaas@kernel.org>,
-	Thomas Tai <thomas.tai@oracle.com>, bhelgaas@google.com,
-	linux-pci@vger.kernel.org, linux-pci-owner@vger.kernel.org,
-	Sam Bobroff <sam.bobroff@au1.ibm.com>
-Subject: Re: [PATCH 1/1] PCI/AER: prevent pcie_do_fatal_recovery from using
- device after it is removed
-Message-ID: <20180820213544.GA16805@localhost.localdomain>
-References: <20180819021922.GE128050@bhelgaas-glaptop.roam.corp.google.com>
- <fe891b63-12c7-61ab-a59a-ae24ad766754@kernel.org>
- <ab5cb5b277f1c1c1362ef597ca7b8c6a2cd32cdf.camel@kernel.crashing.org>
- <908ff33ded8f31830f95a8889d8540f1@codeaurora.org>
- <5027d857bb59edfd33442003aa618ece1bc9cd52.camel@kernel.crashing.org>
- <b2e2ac5c92d8a91d00606754d1046578@codeaurora.org>
- <2ecd1fd6d763810d45697f846fa876b58a193b1b.camel@kernel.crashing.org>
- <20180820155325.GA16148@localhost.localdomain>
- <cf6de256280be7a2948db6dd2b5bfae92e70e12f.camel@kernel.crashing.org>
- <6aa71d74-e4dc-c627-1496-981278388bce@kernel.org>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail-yb0-f193.google.com ([209.85.213.193]:33983 "EHLO
+        mail-yb0-f193.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726680AbeHEWIm (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Sun, 5 Aug 2018 18:08:42 -0400
+Received: by mail-yb0-f193.google.com with SMTP id e9-v6so4557332ybq.1
+        for <linux-pci@vger.kernel.org>; Sun, 05 Aug 2018 13:02:59 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <6aa71d74-e4dc-c627-1496-981278388bce@kernel.org>
+In-Reply-To: <20180804101402.10022-3-hch@lst.de>
+References: <20180804101402.10022-1-hch@lst.de> <20180804101402.10022-3-hch@lst.de>
+From: Wesley Terpstra <wesley@sifive.com>
+Date: Sun, 5 Aug 2018 13:02:58 -0700
+Message-ID: <CAMgXwTgr572J_HH396tfvT7Zj8Jj0fefKOSmVw2+Gwn8qcPR1g@mail.gmail.com>
+Subject: Re: [PATCH 2/3] PCI/xilinx: Work-around for hardware DMA limit (32 bits)
+To: Christoph Hellwig <hch@lst.de>
+Cc: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
+        Bjorn Helgaas <bhelgaas@google.com>,
+        Palmer Dabbelt <palmer@dabbelt.com>,
+        Arnd Bergmann <arnd@arndb.de>, linux-pci@vger.kernel.org,
+        linux-riscv@lists.infradead.org
+Content-Type: text/plain; charset="UTF-8"
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Mon, Aug 20, 2018 at 05:21:30PM -0400, Sinan Kaya wrote:
-> On 8/20/2018 5:05 PM, Benjamin Herrenschmidt wrote:
-> > On Mon, 2018-08-20 at 09:53 -0600, Keith Busch wrote:
-> > > On Mon, Aug 20, 2018 at 09:22:27PM +1000, Benjamin Herrenschmidt wrote:
-> > > > The main problem with unplug/replug (as I mentioned earlier) is that it
-> > > > just does NOT work for storage controllers (or similar type of
-> > > > devices). The links between the storage controller and the mounted
-> > > > filesystems is lost permanently, you'll most likely have to reboot the
-> > > > machine.
-> > > 
-> > > You probably shouldn't mount raw storage devices if they can be hot
-> > > added/removed. There are device mappers for that! :)
-> > 
-> > This is not about hot adding/removing, it's about error recovery.
-> > 
-> > > And you can't just change DPC device removal. A DPC event triggers
-> > > the link down, and that will trigger pciehp to disconnect the subtree
-> > > anyway. Having DPC do it too just means you get the same behavior with
-> > > or without enabling STLCTL.DLLSC.
-> > 
-> > This is wrong. EEH can trigger a link down to and we don't remove the
-> > subtree in that case. We allow the drivers to recover.
-> > 
-> 
-> I have a patch to solve this issue.
-> 
-> https://lkml.org/lkml/2018/8/19/124
-> 
-> Hotplug driver removes the devices on link down events and re-enumerates
-> on insertion.
-> 
-> I am trying to separate fatal error handling from hotplug.
+FYI, This Xilinx PCIe IP 32-bit cap only applies to SOME instances of
+the IP. The Ultrascale+ version of Xilinx PCIe hard IP does support
+64-bit or 32-bit. The Virtex7 version only supports 32-bit. The
+pcie-xilinx driver woks with both of these root complexes. So probably
+there should be a conditional hook in the DTS that triggers the
+work-around behaviour.
 
-I'll try to take a look. We can't always count on pciehp to do the
-removal when a removal occurs, though. The PCIe specification contains
-an implementation note that DPC may be used in place of hotplug surprise.
+On Sat, Aug 4, 2018 at 3:14 AM, Christoph Hellwig <hch@lst.de> wrote:
+> This PCIe bridge only has a 32 bit bus master interface, thus truncating
+> the DMA capability of all PCIe devices attached beneath it. This caps
+> the child device capability so that these devices work on systems with
+> physical memory beyond the 4GiB threshold.
+>
+> Based on an earlier patch from Wesley W. Terpstra <wesley@sifive.com>.
+>
+> Signed-off-by: Christoph Hellwig <hch@lst.de>
+> ---
+>  drivers/pci/controller/pcie-xilinx.c | 11 +++++++++++
+>  1 file changed, 11 insertions(+)
+>
+> diff --git a/drivers/pci/controller/pcie-xilinx.c b/drivers/pci/controller/pcie-xilinx.c
+> index 7b1389d8e2a5..ccfd91e0515f 100644
+> --- a/drivers/pci/controller/pcie-xilinx.c
+> +++ b/drivers/pci/controller/pcie-xilinx.c
+> @@ -197,6 +197,16 @@ static void __iomem *xilinx_pcie_map_bus(struct pci_bus *bus,
+>         return port->reg_base + relbus + where;
+>  }
+>
+> +/*
+> + * This PCIe bridge only has a 32 bit bus master interface, thus truncating
+> + * the DMA capability of all PCIe devices attached beneath it.
+> + */
+> +static int xilinx_pcie_add_device(struct pci_dev *pdev)
+> +{
+> +       pdev->dev.bus_dma_mask = DMA_BIT_MASK(32);
+> +       return 0;
+> +}
+> +
+>  /* PCIe operations */
+>  static struct pci_ops xilinx_pcie_ops = {
+>         .map_bus = xilinx_pcie_map_bus,
+> @@ -665,6 +675,7 @@ static int xilinx_pcie_probe(struct platform_device *pdev)
+>         bridge->ops = &xilinx_pcie_ops;
+>         bridge->map_irq = of_irq_parse_and_map_pci;
+>         bridge->swizzle_irq = pci_common_swizzle;
+> +       bridge->add_device = xilinx_pcie_add_device;
+>
+>  #ifdef CONFIG_PCI_MSI
+>         xilinx_pcie_msi_chip.dev = dev;
+> --
+> 2.18.0
+>
