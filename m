@@ -1,76 +1,74 @@
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Subject: Re: [PATCH v2 13/40] vfio: Add support for Shared Virtual Addressing
-To: Xu Zaibo <xuzaibo@huawei.com>, linux-arm-kernel@lists.infradead.org,
- linux-pci@vger.kernel.org, linux-acpi@vger.kernel.org,
- devicetree@vger.kernel.org, iommu@lists.linux-foundation.org,
- kvm@vger.kernel.org, linux-mm@kvack.org
-References: <20180511190641.23008-1-jean-philippe.brucker@arm.com>
- <20180511190641.23008-14-jean-philippe.brucker@arm.com>
- <5B83B11E.7010807@huawei.com>
-From: Jean-Philippe Brucker <jean-philippe.brucker@arm.com>
-Message-ID: <1d5b6529-4e5a-723c-3f1b-dd5a9adb490c@arm.com>
-Date: Fri, 31 Aug 2018 14:34:52 +0100
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail-wr1-f65.google.com ([209.85.221.65]:37553 "EHLO
+        mail-wr1-f65.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726769AbeHEWhA (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Sun, 5 Aug 2018 18:37:00 -0400
+Received: by mail-wr1-f65.google.com with SMTP id u12-v6so10416408wrr.4
+        for <linux-pci@vger.kernel.org>; Sun, 05 Aug 2018 13:31:11 -0700 (PDT)
+Subject: [PATCH v2] PCI: set flag IRQCHIP_ONESHOT_SAFE for PCI-MSI irqchip's
+From: Heiner Kallweit <hkallweit1@gmail.com>
+To: Bjorn Helgaas <bhelgaas@google.com>,
+        Thomas Gleixner <tglx@linutronix.de>
+Cc: "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
+References: <9f18bc20-cf27-bc3c-71e5-4e24a6c983c7@gmail.com>
+Message-ID: <70984d26-1d35-d925-f67b-698ed85bbab5@gmail.com>
+Date: Sun, 5 Aug 2018 22:31:03 +0200
 MIME-Version: 1.0
-In-Reply-To: <5B83B11E.7010807@huawei.com>
-List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
-List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
-List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
-List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
-List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
-Cc: xieyisheng1@huawei.com, liubo95@huawei.com, thunder.leizhen@huawei.com,
- will.deacon@arm.com, okaya@codeaurora.org, liguozhu <liguozhu@hisilicon.com>,
- fanghao11 <fanghao11@huawei.com>, yi.l.liu@intel.com, ashok.raj@intel.com,
- tn@semihalf.com, joro@8bytes.org, wangzhou1 <wangzhou1@hisilicon.com>,
- bharatku@xilinx.com, liudongdong3@huawei.com, rfranz@cavium.com,
- kevin.tian@intel.com, jacob.jun.pan@linux.intel.com, jcrouse@codeaurora.org,
- rgummal@xilinx.com, jonathan.cameron@huawei.com,
- =?UTF-8?B?57Gz57Gz?= <kenneth-lee-2012@foxmail.com>,
- shunyong.yang@hxt-semitech.com, dwmw2@infradead.org,
- ilias.apalodimas@linaro.org, alex.williamson@redhat.com, robdclark@gmail.com,
- robin.murphy@arm.com, christian.koenig@amd.com, nwatters@codeaurora.org,
- baolu.lu@linux.intel.com
-Content-Type: text/plain; charset="windows-1252"
-Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
-Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
+In-Reply-To: <9f18bc20-cf27-bc3c-71e5-4e24a6c983c7@gmail.com>
+Content-Type: text/plain; charset=utf-8
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hi Zaibo,
+If flag IRQCHIP_ONESHOT_SAFE isn't set for an irqchip and we have a
+threaded interrupt with no primary handler, then flag IRQF_ONESHOT
+needs to be set for the interrupt, causing some overhead in the
+threaded interrupt handler. For more detailed explanation also check
+following comment in __setup_irq():
 
-On 27/08/18 09:06, Xu Zaibo wrote:
->> +struct vfio_iommu_type1_bind_process {
->> +=A0=A0=A0 __u32=A0=A0=A0 flags;
->> +#define VFIO_IOMMU_BIND_PID=A0=A0=A0=A0=A0=A0=A0 (1 << 0)
->> +=A0=A0=A0 __u32=A0=A0=A0 pasid;
-> As I am doing some works on the SVA patch set. I just consider why the
-> user space need this pasid.
-> Maybe, is it much more reasonable to set the pasid into all devices
-> under the vfio container by
-> a call back function from 'vfio_devices'=A0 while
-> 'VFIO_IOMMU_BIND_PROCESS' CMD is executed
-> in kernel land? I am not sure because there exists no suitable call back
-> in 'vfio_device' at present.
+The interrupt was requested with handler = NULL, so we use the default
+primary handler for it. But it does not have the oneshot flag set.
+In combination with level interrupts this is deadly, because the
+default primary handler just wakes the thread, then the irq lines is
+reenabled, but the device still has the level irq asserted.
+Rinse and repeat....
+While this works for edge type interrupts, we play it safe and reject
+unconditionally because we can't say for sure which type this interrupt
+really has. The type flags are unreliable as the underlying chip
+implementation can override them.
 
-When using vfio-pci, the kernel doesn't know how to program the PASID
-into the device because the only kernel driver for the device is the
-generic vfio-pci module. The PCI specification doesn't describe a way of
-setting up the PASID, it's vendor-specific. Only the userspace
-application owning the device (and calling VFIO_IOMMU_BIND) knows how to
-do it, so we return the allocated PASID.
+Another comment in __setup_irq() gives a hint already that this
+overhead can be avoided for PCI-MSI:
 
-Note that unlike vfio-mdev where applications share slices of a
-function, with vfio-pci one application owns the whole function so it's
-safe to let userspace set the PASID in hardware. With vfio-mdev it's the
-kernel driver that should be in charge of setting the PASID as you
-described, and we wouldn't have a reason to return the PASID in the
-vfio_iommu_type1_bind_process structure.
+Some irq chips like MSI based interrupts are per se one shot safe.
+Check the chip flags, so we can avoid the unmask dance at the end
+of the threaded handler for those.
 
-Thanks,
-Jean
+Following this let's mark all PCI-MSI irqchip's as oneshot-safe.
 
-_______________________________________________
-linux-arm-kernel mailing list
-linux-arm-kernel@lists.infradead.org
-http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
+See also discussion here:
+https://marc.info/?l=linux-pci&m=153332526101128&w=2
+
+Signed-off-by: Heiner Kallweit <hkallweit1@gmail.com>
+---
+v2:
+- extended commit message
+---
+ drivers/pci/msi.c | 3 +++
+ 1 file changed, 3 insertions(+)
+
+diff --git a/drivers/pci/msi.c b/drivers/pci/msi.c
+index 4d88afdf..f2ef8964 100644
+--- a/drivers/pci/msi.c
++++ b/drivers/pci/msi.c
+@@ -1446,6 +1446,9 @@ struct irq_domain *pci_msi_create_irq_domain(struct fwnode_handle *fwnode,
+ 	if (IS_ENABLED(CONFIG_GENERIC_IRQ_RESERVATION_MODE))
+ 		info->flags |= MSI_FLAG_MUST_REACTIVATE;
+ 
++	/* PCI-MSI is oneshot-safe */
++	info->chip->flags |= IRQCHIP_ONESHOT_SAFE;
++
+ 	domain = msi_create_irq_domain(fwnode, info, parent);
+ 	if (!domain)
+ 		return NULL;
+-- 
+2.18.0
