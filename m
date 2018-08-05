@@ -1,165 +1,181 @@
-Return-Path: <linux-acpi-owner@vger.kernel.org>
-From: Arnd Bergmann <arnd@arndb.de>
-To: linux-pci@vger.kernel.org, Bjorn Helgaas <bhelgaas@google.com>
-Cc: linux-kernel@vger.kernel.org,
-        Christoph Hellwig <hch@infradead.org>,
-        Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
-        Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-        linuxppc-dev@lists.ozlabs.org, linux-acpi@vger.kernel.org,
-        Arnd Bergmann <arnd@arndb.de>
-Subject: [RFC 09/15] PCI: xenfront: clean up pcifront_scan_root()
-Date: Fri, 17 Aug 2018 12:26:39 +0200
-Message-Id: <20180817102645.3839621-10-arnd@arndb.de>
-In-Reply-To: <20180817102645.3839621-1-arnd@arndb.de>
-References: <20180817102645.3839621-1-arnd@arndb.de>
-Sender: linux-acpi-owner@vger.kernel.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail.kernel.org ([198.145.29.99]:60590 "EHLO mail.kernel.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1726613AbeHFA6M (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Sun, 5 Aug 2018 20:58:12 -0400
+From: Sinan Kaya <okaya@kernel.org>
+To: linux-pci@vger.kernel.org
+Cc: Sinan Kaya <okaya@kernel.org>, Bjorn Helgaas <bhelgaas@google.com>,
+        Lukas Wunner <lukas@wunner.de>,
+        Mika Westerberg <mika.westerberg@linux.intel.com>,
+        "Gustavo A. R. Silva" <gustavo@embeddedor.com>,
+        Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+        Oza Pawandeep <poza@codeaurora.org>,
+        Keith Busch <keith.busch@intel.com>
+Subject: [PATCH v7 1/1] PCI: pciehp: Ignore link events when there is a fatal error pending
+Date: Sun,  5 Aug 2018 15:51:36 -0700
+Message-Id: <20180805225136.5800-2-okaya@kernel.org>
+In-Reply-To: <20180805225136.5800-1-okaya@kernel.org>
+References: <20180805225136.5800-1-okaya@kernel.org>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Merging pci_scan_root_bus() into pcifront_scan_root() simplifies
-the implementation and makes it more readable. We can allocate
-the pcifront_sd structure along with the bridge structure, which
-helps manage its lifetime rules so we don't free it before the
-device has been released.
+AER/DPC reset is known as warm-resets. HP link recovery is known as
+cold-reset via power-off and power-on command to the PCI slot.
 
-There are two small issues that I noticed that could be improved:
+In the middle of a warm-reset operation (AER/DPC), we are:
 
-- It seems we unregister the 'bus' device that is a child of the
-  'pci_host_bridge' device after we unregister its parent in
-  pcifront_free_roots(), which seems odd.
-- We probably don't need an extra pci_bus_entry list at all,
-  but could instead walk the children of the pcifront_device,
-  which are all pci_host_bridge devices.
+1. turning off the slow power. Slot power needs to be kept on in order
+for recovery to succeed.
 
-Signed-off-by: Arnd Bergmann <arnd@arndb.de>
+2. performing a cold reset causing Fatal Error recovery to fail.
+
+If link goes down due to a DPC event, it should be recovered by DPC
+status trigger. Injecting a cold reset in the middle can cause a HW
+lockup as it is an undefined behavior.
+
+Similarly, If link goes down due to an AER secondary bus reset issue,
+it should be recovered by HW. Injecting a cold reset in the middle of a
+secondary bus reset can cause a HW lockup as it is an undefined behavior.
+
+1. HP ISR observes link down interrupt.
+2. HP ISR checks that there is a fatal error pending, it doesn't touch
+the link.
+3. HP ISR waits until link recovery happens.
+4. HP ISR calls the read vendor id function.
+5. If all fails, try the cold-reset approach.
+
+If fatal error is pending and a fatal error service such as DPC or AER
+is running, it is the responsibility of the fatal error service to
+recover the link.
+
+Signed-off-by: Sinan Kaya <okaya@kernel.org>
 ---
- drivers/pci/xen-pcifront.c | 67 ++++++++++++--------------------------
- 1 file changed, 21 insertions(+), 46 deletions(-)
+ drivers/pci/hotplug/pciehp_ctrl.c | 19 ++++++++++
+ drivers/pci/pci.h                 |  2 ++
+ drivers/pci/pcie/err.c            | 60 +++++++++++++++++++++++++++++++
+ 3 files changed, 81 insertions(+)
 
-diff --git a/drivers/pci/xen-pcifront.c b/drivers/pci/xen-pcifront.c
-index 24070e1c5f22..a5eb6cb02bec 100644
---- a/drivers/pci/xen-pcifront.c
-+++ b/drivers/pci/xen-pcifront.c
-@@ -443,40 +443,12 @@ static int pcifront_scan_bus(struct pcifront_device *pdev,
- 	return 0;
- }
- 
--static struct pci_bus *pci_scan_root_bus(struct device *parent, int bus,
--		struct pci_ops *ops, void *sysdata, struct list_head *resources)
--{
--	struct pci_host_bridge *bridge;
--	int error;
--
--	bridge = pci_alloc_host_bridge(0);
--	if (!bridge)
--		return NULL;
--
--	list_splice_init(resources, &bridge->windows);
--	bridge->dev.parent = parent;
--	bridge->sysdata = sysdata;
--	bridge->busnr = bus;
--	bridge->ops = ops;
--
--	error = pci_scan_root_bus_bridge(bridge);
--	if (error < 0)
--		goto err_out;
--
--	return bridge->bus;
--
--err_out:
--	kfree(bridge);
--	return NULL;
--}
--
- static int pcifront_scan_root(struct pcifront_device *pdev,
- 				 unsigned int domain, unsigned int bus)
+diff --git a/drivers/pci/hotplug/pciehp_ctrl.c b/drivers/pci/hotplug/pciehp_ctrl.c
+index da7c72372ffc..ba8dd51a3f0f 100644
+--- a/drivers/pci/hotplug/pciehp_ctrl.c
++++ b/drivers/pci/hotplug/pciehp_ctrl.c
+@@ -222,9 +222,28 @@ void pciehp_handle_disable_request(struct slot *slot)
+ void pciehp_handle_presence_or_link_change(struct slot *slot, u32 events)
  {
--	struct pci_bus *b;
--	LIST_HEAD(resources);
- 	struct pcifront_sd *sd = NULL;
- 	struct pci_bus_entry *bus_entry = NULL;
-+	struct pci_host_bridge *bridge;
- 	int err = 0;
- 	static struct resource busn_res = {
- 		.start = 0,
-@@ -498,50 +470,55 @@ static int pcifront_scan_root(struct pcifront_device *pdev,
- 	dev_info(&pdev->xdev->dev, "Creating PCI Frontend Bus %04x:%02x\n",
- 		 domain, bus);
+ 	struct controller *ctrl = slot->ctrl;
++	struct pci_dev *pdev = ctrl->pcie->port;
+ 	bool link_active;
+ 	u8 present;
  
-+	bridge = pci_alloc_host_bridge(sizeof(*sd));
-+	if (!bridge)
-+		return -ENOMEM;
++	/* If a fatal error is pending, wait for AER or DPC to handle it. */
++	if (pcie_fatal_error_pending(pdev, PCI_ERR_UNC_SURPDN)) {
++		bool recovered;
 +
- 	bus_entry = kzalloc(sizeof(*bus_entry), GFP_KERNEL);
--	sd = kzalloc(sizeof(*sd), GFP_KERNEL);
--	if (!bus_entry || !sd) {
-+	sd = pci_host_bridge_priv(bridge);
-+	if (!bus_entry) {
- 		err = -ENOMEM;
- 		goto err_out;
- 	}
--	pci_add_resource(&resources, &ioport_resource);
--	pci_add_resource(&resources, &iomem_resource);
--	pci_add_resource(&resources, &busn_res);
-+	pci_add_resource(&bridge->windows, &ioport_resource);
-+	pci_add_resource(&bridge->windows, &iomem_resource);
-+	pci_add_resource(&bridge->windows, &busn_res);
- 	pcifront_init_sd(sd, domain, bus, pdev);
-+	bridge->dev.parent = &pdev->xdev->dev;
-+	bridge->sysdata = sd;
-+	bridge->busnr = bus;
-+	bridge->ops = &pcifront_bus_ops;
++		recovered = pcie_wait_fatal_error_clear(pdev,
++						PCI_ERR_UNC_SURPDN);
++
++		/* If the fatal error is gone and the link is up, return */
++		if (recovered && pcie_wait_for_link(pdev, true)) {
++			ctrl_info(ctrl, "Slot(%s): Ignoring Link event due to successful fatal error recovery\n",
++				  slot_name(slot));
++			return;
++		}
++
++		ctrl_info(ctrl, "Slot(%s): Fatal error recovery failed for Link event, tryig hotplug reset\n",
++			  slot_name(slot));
++	}
++
+ 	/*
+ 	 * If the slot is on and presence or link has changed, turn it off.
+ 	 * Even if it's occupied again, we cannot assume the card is the same.
+diff --git a/drivers/pci/pci.h b/drivers/pci/pci.h
+index c358e7a07f3f..2ebb05338368 100644
+--- a/drivers/pci/pci.h
++++ b/drivers/pci/pci.h
+@@ -356,6 +356,8 @@ void pci_enable_acs(struct pci_dev *dev);
+ /* PCI error reporting and recovery */
+ void pcie_do_fatal_recovery(struct pci_dev *dev, u32 service);
+ void pcie_do_nonfatal_recovery(struct pci_dev *dev);
++bool pcie_fatal_error_pending(struct pci_dev *pdev, u32 usrmask);
++bool pcie_wait_fatal_error_clear(struct pci_dev *pdev, u32 usrmask);
  
- 	pci_lock_rescan_remove();
+ bool pcie_wait_for_link(struct pci_dev *pdev, bool active);
+ #ifdef CONFIG_PCIEASPM
+diff --git a/drivers/pci/pcie/err.c b/drivers/pci/pcie/err.c
+index f7ce0cb0b0b7..8ea012dbf063 100644
+--- a/drivers/pci/pcie/err.c
++++ b/drivers/pci/pcie/err.c
+@@ -16,6 +16,7 @@
+ #include <linux/kernel.h>
+ #include <linux/errno.h>
+ #include <linux/aer.h>
++#include <linux/delay.h>
+ #include "portdrv.h"
+ #include "../pci.h"
  
--	b = pci_scan_root_bus(&pdev->xdev->dev, bus,
--				  &pcifront_bus_ops, sd, &resources);
--	if (!b) {
-+	err = pci_scan_root_bus_bridge(bridge);
-+	if (err < 0) {
- 		dev_err(&pdev->xdev->dev,
- 			"Error creating PCI Frontend Bus!\n");
--		err = -ENOMEM;
- 		pci_unlock_rescan_remove();
--		pci_free_resource_list(&resources);
- 		goto err_out;
- 	}
- 
--	bus_entry->bus = b;
-+	bus_entry->bus = bridge->bus;
- 
- 	list_add(&bus_entry->list, &pdev->root_buses);
- 
- 	/* pci_scan_root_bus skips devices which do not have a
- 	* devfn==0. The pcifront_scan_bus enumerates all devfn. */
--	err = pcifront_scan_bus(pdev, domain, bus, b);
-+	err = pcifront_scan_bus(pdev, domain, bus, bridge->bus);
- 
- 	/* Claim resources before going "live" with our devices */
--	pci_walk_bus(b, pcifront_claim_resource, pdev);
-+	pci_walk_bus(bridge->bus, pcifront_claim_resource, pdev);
- 
- 	/* Create SysFS and notify udev of the devices. Aka: "going live" */
--	pci_bus_add_devices(b);
-+	pci_bus_add_devices(bridge->bus);
- 
- 	pci_unlock_rescan_remove();
- 	return err;
- 
- err_out:
-+	pci_free_host_bridge(bridge);
- 	kfree(bus_entry);
--	kfree(sd);
- 
- 	return err;
+@@ -386,3 +387,62 @@ void pcie_do_nonfatal_recovery(struct pci_dev *dev)
+ 	/* TODO: Should kernel panic here? */
+ 	pci_info(dev, "AER: Device recovery failed\n");
  }
-@@ -605,8 +582,6 @@ static void pcifront_free_roots(struct pcifront_device *pdev)
- 
- 		free_root_bus_devs(bus_entry->bus);
- 
--		kfree(bus_entry->bus->sysdata);
--
- 		device_unregister(bus_entry->bus->bridge);
- 		pci_remove_bus(bus_entry->bus);
- 
++
++bool pcie_fatal_error_pending(struct pci_dev *pdev, u32 usrmask)
++{
++	u16 err_status = 0;
++	u32 status, mask, severity;
++	int rc;
++
++	if (!pci_is_pcie(pdev))
++		return false;
++
++	rc = pcie_capability_read_word(pdev, PCI_EXP_DEVSTA, &err_status);
++	if (rc)
++		return false;
++
++	if (!(err_status & PCI_EXP_DEVSTA_FED))
++		return false;
++
++	if (!pdev->aer_cap)
++		return false;
++
++	rc = pci_read_config_dword(pdev, pdev->aer_cap + PCI_ERR_UNCOR_STATUS,
++				   &status);
++	if (rc)
++		return false;
++
++	rc = pci_read_config_dword(pdev, pdev->aer_cap + PCI_ERR_UNCOR_MASK,
++				   &mask);
++	if (rc)
++		return false;
++
++	rc = pci_read_config_dword(pdev, pdev->aer_cap + PCI_ERR_UNCOR_SEVER,
++				   &severity);
++	if (rc)
++		return false;
++
++	status &= mask;
++	status &= ~usrmask;
++	status &= severity;
++
++	return !!status;
++}
++
++bool pcie_wait_fatal_error_clear(struct pci_dev *pdev, u32 usrmask)
++{
++	int timeout = 1000;
++	bool ret;
++
++	for (;;) {
++		ret = pcie_fatal_error_pending(pdev, usrmask);
++		if (ret == false)
++			return true;
++		if (timeout <= 0)
++			break;
++		msleep(20);
++		timeout -= 20;
++	}
++
++	return false;
++}
 -- 
-2.18.0
+2.17.1
