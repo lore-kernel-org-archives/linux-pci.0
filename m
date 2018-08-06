@@ -1,80 +1,70 @@
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Subject: Re: [PATCH 2/2] PCI: meson: add the Amlogic Meson PCIe phy driver
-To: Jerome Brunet <jbrunet@baylibre.com>, Kishon Vijay Abraham I
- <kishon@ti.com>
-References: <1534227134-151584-1-git-send-email-hanjie.lin@amlogic.com>
- <1534227134-151584-3-git-send-email-hanjie.lin@amlogic.com>
- <486e8ab477cc22ff231d2e18d7de22efba2c5abd.camel@baylibre.com>
- <2b87e834-41e3-e418-95f0-c6d695cd8b3f@amlogic.com>
- <e5d9d89e79f8ec37b6337e54912f49a0b0856874.camel@baylibre.com>
-From: Hanjie Lin <hanjie.lin@amlogic.com>
-Message-ID: <91658f21-6934-6085-8deb-b85a1f6b7815@amlogic.com>
-Date: Fri, 17 Aug 2018 14:12:55 +0800
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from foss.arm.com ([217.140.101.70]:40174 "EHLO foss.arm.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1727099AbeHFRF0 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Mon, 6 Aug 2018 13:05:26 -0400
+Date: Mon, 6 Aug 2018 15:55:54 +0100
+From: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
+To: Arnd Bergmann <arnd@arndb.de>
+Cc: Christoph Hellwig <hch@lst.de>,
+        Bjorn Helgaas <bhelgaas@google.com>,
+        Palmer Dabbelt <palmer@dabbelt.com>,
+        "Wesley W. Terpstra" <wesley@sifive.com>,
+        linux-pci <linux-pci@vger.kernel.org>,
+        linux-riscv@lists.infradead.org
+Subject: Re: [PATCH 1/3] PCI: add a callback to struct pci_host_bridge for
+ adding a new device
+Message-ID: <20180806145554.GE18685@e107981-ln.cambridge.arm.com>
+References: <20180804101402.10022-1-hch@lst.de>
+ <20180804101402.10022-2-hch@lst.de>
+ <20180806112310.GB18685@e107981-ln.cambridge.arm.com>
+ <20180806123051.GA6997@lst.de>
+ <CAK8P3a0XyK+j4Z+xhxOYKa=5gHmFnWd7=fU=6A3=VkBXxWjSsw@mail.gmail.com>
 MIME-Version: 1.0
-In-Reply-To: <e5d9d89e79f8ec37b6337e54912f49a0b0856874.camel@baylibre.com>
-List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
-List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
-List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
-List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
-List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
-Cc: Rob Herring <robh@kernel.org>, Kevin Hilman <khilman@baylibre.com>,
- shawn.lin@rock-chips.com, linux-kernel@vger.kernel.org,
- Yue Wang <yue.wang@amlogic.com>, linux-pci@vger.kernel.org,
- Carlo Caione <carlo@caione.org>, linux-amlogic@lists.infradead.org,
- linux-arm-kernel@lists.infradead.org
-Content-Type: text/plain; charset="utf-8"
-Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
-Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <CAK8P3a0XyK+j4Z+xhxOYKa=5gHmFnWd7=fU=6A3=VkBXxWjSsw@mail.gmail.com>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-CgpPbiAyMDE4LzgvMTYgMTY6MzMsIEplcm9tZSBCcnVuZXQgd3JvdGU6Cj4gT24gVGh1LCAyMDE4
-LTA4LTE2IGF0IDExOjA1ICswODAwLCBIYW5qaWUgTGluIHdyb3RlOgo+Pgo+PiBPbiAyMDE4Lzgv
-MTQgMTg6NDEsIEplcm9tZSBCcnVuZXQgd3JvdGU6Cj4+PiBPbiBUdWUsIDIwMTgtMDgtMTQgYXQg
-MDI6MTIgLTA0MDAsIEhhbmppZSBMaW4gd3JvdGU6Cj4+Pj4gRnJvbTogWXVlIFdhbmcgPHl1ZS53
-YW5nQGFtbG9naWMuY29tPgo+Pj4+Cj4+Pj4gVGhlIE1lc29uLVBDSUUtUEhZIGNvbnRyb2xsZXIg
-c3VwcG9ydHMgdGhlIDUtR2JwcyBkYXRhIHJhdGUKPj4+PiBvZiB0aGUgUENJIEV4cHJlc3MgR2Vu
-IDIgc3BlY2lmaWNhdGlvbiBhbmQgaXMgYmFja3dhcmRjb21wYXRpYmxlCj4+Pj4gd2l0aCB0aGUg
-Mi41LUdicHMgR2VuIDEuMSBzcGVjaWZpY2F0aW9uIHdpdGggb25seQo+Pj4+IGluZmVycmVkIGlk
-bGUgZGV0ZWN0aW9uIHN1cHBvcnRlZCBvbiBBTUxPR0lDIFNvQ3MuCj4+Pgo+Pj4gSXQgbG9va3Mg
-bGlrZSB0aGUgc29sZSBwdXJwb3NlIG9mIHRoaXMgZHJpdmVyIGlzIHRvIHByb3ZpZGUgdGhlIHJl
-c2V0IGxpbmVzIHRvCj4+PiBwY2llIGRyaXZlci4KPj4+Cj4+PiBJIHdvbmRlciB3aHkgd2UgbmVl
-ZCB0aGlzID8gQ2FuJ3QgdGhlIHBjaWUgZHJpdmVyIGNsYWltIHRoZSByZXNldCBsaW5lcyBpdHNl
-bGYuCj4+Pgo+Pj4gQWxzbywgYW4gaW5pdCBvZiB0aGlzIHBoeSB3aWxsIGFsd2F5cyByZXNldCBi
-b3RoIHBvcnQuIFdoYXQgd2lsbCBoYXBwZW4gaWYgdGhlCj4+PiBmaXJzdCBwb3J0IGlzIGluIHVz
-ZSBhbmQgdGhlIDJuZCBwb3J0IGNvbWVzIHVwID8/IAo+Pj4KPj4+IExvb2tzIHRoZSB0aGUgcGNp
-ZSBkcml2ZXIgc2hvdWxkIGNsYWltICdhcGInIGFuZCAncGh5JyByZXNldCBsaW5lcyBhcyAic2hh
-cmVkIgo+Pj4gcmVzZXQgYW5kIHRoZSByZXF1aXJlZCAncG9ydCcgYXMgJ2V4Y2x1c2l2ZScKPj4+
-Cj4+Cj4+IFRoYW5rIHlvdSBmb3IgeW91ciByZXNwb25zZS4KPj4KPj4gWWVzLCAnYXBiJyBhbmQg
-J3BoeScgcmVzZXQgbGluZXMgYXJlIHNoYXJlZCwgYW5kIOKAmHBvcnQnIHJlc2V0IGxpbmUgaXMg
-ZXhjbHVzaXZlLgo+PiBJZiB3ZSBoYW5kbGUgYWxsIHJlc2V0IGxpbmVzIGR1cmluZyB0aGUgZmly
-c3QgcG9ydCBpbml0aWFsIHNlcXVlbmNlLCAKPj4gYW5kIHdoZW4gdGhlIHNlY29uZCBwb3J0IGNv
-bWVzIHVwLCB3ZSB3aWxsIGRvIG5vdGhpbmcgYWJvdXQgdGhlIHJlc3QgbGluZXMsIAo+PiBhbmQg
-ZG9uJ3QgbmVlZCBhIGV4dHJhIEFQSSB0byBkbyDigJhwb3J0JyByZXNldDsKPiAKPiBXaXRoIHdo
-aWNoIG90aGVyIGRyaXZlciBhcmUgeW91ciBjb250cm9sIHNoYXJlZCA/Cj4gCj4gTG9va3MgaXQg
-aXMgdGhlIGFuc3dlciBpcyBub25lIHNpbmNlIHRoaXMgcGh5IGRyaXZlciB3aWxsIHJlc2V0IGJv
-dGggcG9ydAo+IGFscmVhZHksIGV2ZW4gaWYgb25lIGlzIHVzZWQuCj4gCj4gSW4gdGhpcyBjYXNl
-IHRoZSBmYWN0IHRoYXQgeW91IGFyZSB1c2luZyBzaGFyZWQgY29udHJvbCBpcyBqdXN0IGFidXNp
-bmcgdGhlCj4gZnJhbWV3b3JrIHRvIHJlc2V0IG9uY2UuCj4gCj4gQXMgZmFyIGFzIEkgY2FuIHRl
-bGwsIHRoaXMgZHJpdmVyIG1ha2VzIG5vIHNlbnNlLiBUaGUgYXBwcm9wcmlhdGUgcmVzZXQgbGlu
-ZXMKPiBzaG91bGQgYmUgZ2l2ZW4gZGlyZWN0bHkgdG8geW91ciBwY2llIGRyaXZlci4gCj4gCj4g
-Cj4gCj4gLgo+IAoKQW1sb2dpYyBBWEcgU09DIGluY2x1ZGVzIHR3byBwY2llIGNvbnRyb2xsZXJz
-IGFuZCBwaXBlcyB3aGVuIG9ubHkgb25lIHBjaWUgcGh5OiAKCiAgICAgICAgICAgICAgICAgICAg
-ICAgICAgICAgICAgICAgIChwb3J0X2EgcmVzZXQpCiAgICAgICAgICAgICAgICAgICAgICB8UENJ
-RV9SQ19BLS0tLT5QQ0lFX1BJUEVfQS0tLS0tLXwgCiAgICAoYXBiX3Jlc2V0KSAgICAgICB8ICAg
-ICAgICAgICAgICAgICAgICAgICAgICAgICAgIHwgIChwaHkgcmVzZXQpCiAgICBBUEIgQlVTLS0t
-PiAgICAgICB8ICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgIHwgICBQQ0lFX1BIWQogICAg
-ICAgICAgICAgICAgICAgICAgfCAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICB8CiAgICAg
-ICAgICAgICAgICAgICAgICB8ICAgICAgICAgICAgIChwb3J0X2JfcmVzZXQpICAgIHwKICAgICAg
-ICAgICAgICAgICAgICAgIHxQQ0lFX1JDX0ItLS0tPlBDSUVfUElQRV9CLS0tLS0tfAoKVGhlIHBo
-eV9yZXNldCBhZmZlY3QgdGhlIFBDSUVfUEhZLgpUaGUgcG9ydF9hX3Jlc2V0IGFmZmVjdCB0aGUg
-UENJRV9QSVBFX0EsIHBvcnRfYl9yZXNldCBhZmZlY3QgdGhlIFBDSUVfUElQRV9CLiAKCkFzIHlv
-dXIgc3VnZ2VzdGlvbiB3ZSB3aWxsIG1vdmUgdGhlICdwb3J0JyByZXNldCB0byBjb250cm9sbGVy
-IGRyaXZlciwKYW5kIGtlZXBpbmcgdGhlIHBoeSBkcml2ZXIgdG8gcHJvY2VzcyB0aGUgJ2FwYicg
-YW5kICdwaHknIHJlc2V0IG9yIGFueQptb3JlIGNoYW5nZXMgb2YgdGhlIHBoeSBpbiBmdXR1cmUu
-CgoKX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX18KbGludXgt
-YXJtLWtlcm5lbCBtYWlsaW5nIGxpc3QKbGludXgtYXJtLWtlcm5lbEBsaXN0cy5pbmZyYWRlYWQu
-b3JnCmh0dHA6Ly9saXN0cy5pbmZyYWRlYWQub3JnL21haWxtYW4vbGlzdGluZm8vbGludXgtYXJt
-LWtlcm5lbAo=
+On Mon, Aug 06, 2018 at 03:54:13PM +0200, Arnd Bergmann wrote:
+> On Mon, Aug 6, 2018 at 2:25 PM Christoph Hellwig <hch@lst.de> wrote:
+> >
+> > On Mon, Aug 06, 2018 at 12:23:10PM +0100, Lorenzo Pieralisi wrote:
+> > > >     pci_configure_device(dev);
+> > > > @@ -2328,6 +2329,11 @@ void pci_device_add(struct pci_dev *dev, struct pci_bus *bus)
+> > > >     ret = pcibios_add_device(dev);
+> > > >     WARN_ON(ret < 0);
+> > > >
+> > > > +   if (host->add_device) {
+> > > > +           ret = host->add_device(dev);
+> > > > +           WARN_ON(ret < 0);
+> > > > +   }
+> > >
+> > > This looks fine; we could go a step further and make the hunk above
+> > > the default (weak) implementation of pcibios_add_device() that is
+> > > currently a NOP returning 0, I will remove it for v4.20.
+> >
+> > I'd love to see pcibios_add_device go away entirely.  But I wonder how to
+> > get setup the pci_host_bridge pointer for the remaining architectures that
+> > still implement it.  I did look for any easy way but couldn't find one.
+> > But then I don't really know this area of the PCI code too well.
+> 
+> If the platform doesn't already have a pointer to its pci_host_bridge
+> structure, it can call pci_find_host_bridge(bus->dev) to get it.
+> 
+> Ideally, platforms (either arch specific code or drivers/pci/controller)
+> should call pci_alloc_host_bridge()/pci_register_host_bridge()
+> instead of the traditional pci_create_root_bus() that is less flexible.
+> That way, the driver specific structure can get allocated together with
+> the host bridge.
+
+Yes that's basically the gist, it should be a matter of identifying code
+that creates the root bus (explicitly or implicitly - ie
+pci_scan_root_bus()) and patching it up, probably something to be done
+(and moved into -next) early -rc* since it is something that can easily
+break the world if we miss some code paths. I will have a look into
+that and can take this patch for that series if it does not go into
+v4.19.
+
+Thanks,
+Lorenzo
