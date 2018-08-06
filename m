@@ -1,158 +1,73 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-oi0-f66.google.com ([209.85.218.66]:37127 "EHLO
-        mail-oi0-f66.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1731308AbeHGBhp (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Mon, 6 Aug 2018 21:37:45 -0400
-From: Alexandru Gagniuc <mr.nuke.me@gmail.com>
-To: linux-pci@vger.kernel.org, bhelgaas@google.com,
-        jakub.kicinski@netronome.com
-Cc: keith.busch@intel.com, alex_gagniuc@dellteam.com,
-        austin_bolen@dell.com, shyam_iyer@dell.com,
-        Alexandru Gagniuc <mr.nuke.me@gmail.com>,
-        Ariel Elior <ariel.elior@cavium.com>,
-        everest-linux-l2@cavium.com,
-        "David S. Miller" <davem@davemloft.net>,
-        Michael Chan <michael.chan@broadcom.com>,
-        Ganesh Goudar <ganeshgr@chelsio.com>,
-        Jeff Kirsher <jeffrey.t.kirsher@intel.com>,
-        Tariq Toukan <tariqt@mellanox.com>,
-        Saeed Mahameed <saeedm@mellanox.com>,
-        Leon Romanovsky <leon@kernel.org>,
-        Dirk van der Merwe <dirk.vandermerwe@netronome.com>,
-        netdev@vger.kernel.org, linux-kernel@vger.kernel.org,
-        intel-wired-lan@lists.osuosl.org, linux-rdma@vger.kernel.org,
-        oss-drivers@netronome.com
-Subject: [PATCH v6 1/9] PCI: Check for PCIe downtraining conditions
-Date: Mon,  6 Aug 2018 18:25:35 -0500
-Message-Id: <20180806232600.25694-1-mr.nuke.me@gmail.com>
-In-Reply-To: <CAErSpo4PK+SQLNfdkLNt9eLc7bpbxbkZCsa8T-tQpid601n0SQ@mail.gmail.com>
-References: <CAErSpo4PK+SQLNfdkLNt9eLc7bpbxbkZCsa8T-tQpid601n0SQ@mail.gmail.com>
+Received: from mail-yw1-f65.google.com ([209.85.161.65]:35326 "EHLO
+        mail-yw1-f65.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1731432AbeHFV5S (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Mon, 6 Aug 2018 17:57:18 -0400
+Received: by mail-yw1-f65.google.com with SMTP id s68-v6so1039057ywg.2
+        for <linux-pci@vger.kernel.org>; Mon, 06 Aug 2018 12:46:41 -0700 (PDT)
+MIME-Version: 1.0
+References: <20180718215359.GG128988@bhelgaas-glaptop.roam.corp.google.com>
+ <20180723200339.23943-1-mr.nuke.me@gmail.com> <20180723140143.1a46902f@cakuba.netronome.com>
+ <b9a6b3b8-56cf-8bb5-2568-071ccd8a4f28@mellanox.com> <fc04618a-3b3b-58bd-edd5-cbde11638d7b@mellanox.com>
+ <1b914780-e342-6aee-ffb2-ef81ac3ddd29@gmail.com> <7424c5ba-ae44-3d8d-9dd5-360e17b6e3b9@mellanox.com>
+ <c0f2f79b1fe1491287b35e70ba76902a@ausx13mps321.AMER.DELL.COM>
+In-Reply-To: <c0f2f79b1fe1491287b35e70ba76902a@ausx13mps321.AMER.DELL.COM>
+From: Bjorn Helgaas <bhelgaas@google.com>
+Date: Mon, 6 Aug 2018 14:46:28 -0500
+Message-ID: <CAErSpo4PK+SQLNfdkLNt9eLc7bpbxbkZCsa8T-tQpid601n0SQ@mail.gmail.com>
+Subject: Re: [PATCH v5] PCI: Check for PCIe downtraining conditions
+To: Alex_Gagniuc@dellteam.com
+Cc: Tal Gilboa <talgi@mellanox.com>, mr.nuke.me@gmail.com,
+        jakub.kicinski@netronome.com, linux-pci@vger.kernel.org,
+        Keith Busch <keith.busch@intel.com>, Austin.Bolen@dell.com,
+        Shyam.Iyer@dell.com,
+        "Kirsher, Jeffrey T" <jeffrey.t.kirsher@intel.com>,
+        ariel.elior@cavium.com, michael.chan@broadcom.com,
+        ganeshgr@chelsio.com, tariqt@mellanox.com,
+        Dave Airlie <airlied@gmail.com>,
+        Alex Deucher <alexander.deucher@amd.com>,
+        "Marciniszyn, Mike" <mike.marciniszyn@intel.com>,
+        Linux Kernel Mailing List <linux-kernel@vger.kernel.org>
+Content-Type: text/plain; charset="UTF-8"
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-PCIe downtraining happens when both the device and PCIe port are
-capable of a larger bus width or higher speed than negotiated.
-Downtraining might be indicative of other problems in the system, and
-identifying this from userspace is neither intuitive, nor
-straightforward.
+On Mon, Aug 6, 2018 at 1:39 PM <Alex_Gagniuc@dellteam.com> wrote:
+>
+> On 08/05/2018 02:06 AM, Tal Gilboa wrote:
+> > On 7/31/2018 6:10 PM, Alex G. wrote:
+> >> On 07/31/2018 01:40 AM, Tal Gilboa wrote:
+> >> [snip]
+> >>>>>> @@ -2240,6 +2258,9 @@ static void pci_init_capabilities(struct
+> >>>>>> pci_dev *dev)
+> >>>>>>        /* Advanced Error Reporting */
+> >>>>>>        pci_aer_init(dev);
+> >>>>>> +    /* Check link and detect downtrain errors */
+> >>>>>> +    pcie_check_upstream_link(dev);
+> >>>>
+> >>>> This is called for every PCIe device right? Won't there be a
+> >>>> duplicated print in case a device loads with lower PCIe bandwidth
+> >>>> than needed?
+> >>>
+> >>> Alex, can you comment on this please?
+> >>
+> >> Of course I can.
+> >>
+> >> There's one print at probe() time, which happens if bandwidth < max. I
+> >> would think that's fine. There is a way to duplicate it, and that is if
+> >> the driver also calls print_link_status(). A few driver maintainers who
+> >> call it have indicated they'd be fine with removing it from the driver,
+> >> and leaving it in the core PCI.
+> >
+> > We would be fine with that as well. Please include the removal in your
+> > patches.
+>
+> What's the proper procedure? Do I wait for confirmation from Bjorn
+> before knocking on maintainer's doors, or do I William Wallace into
+> their trees and demand they merge the removal (pending Bjorn's approval
+> on the other side) ?
 
-The easiest way to detect this is with pcie_print_link_status(),
-since the bottleneck is usually the link that is downtrained. It's not
-a perfect solution, but it works extremely well in most cases.
+Post a v4 series that does the PCI core stuff as well as removing the
+driver code.
 
-Signed-off-by: Alexandru Gagniuc <mr.nuke.me@gmail.com>
----
- drivers/pci/pci.c   | 22 ++++++++++++++++++----
- drivers/pci/probe.c | 21 +++++++++++++++++++++
- include/linux/pci.h |  1 +
- 3 files changed, 40 insertions(+), 4 deletions(-)
-
-diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
-index 316496e99da9..414ad7b3abdb 100644
---- a/drivers/pci/pci.c
-+++ b/drivers/pci/pci.c
-@@ -5302,14 +5302,15 @@ u32 pcie_bandwidth_capable(struct pci_dev *dev, enum pci_bus_speed *speed,
- }
- 
- /**
-- * pcie_print_link_status - Report the PCI device's link speed and width
-+ * __pcie_print_link_status - Report the PCI device's link speed and width
-  * @dev: PCI device to query
-+ * @verbose: Be verbose -- print info even when enough bandwidth is available.
-  *
-  * Report the available bandwidth at the device.  If this is less than the
-  * device is capable of, report the device's maximum possible bandwidth and
-  * the upstream link that limits its performance to less than that.
-  */
--void pcie_print_link_status(struct pci_dev *dev)
-+void __pcie_print_link_status(struct pci_dev *dev, bool verbose)
- {
- 	enum pcie_link_width width, width_cap;
- 	enum pci_bus_speed speed, speed_cap;
-@@ -5319,11 +5320,11 @@ void pcie_print_link_status(struct pci_dev *dev)
- 	bw_cap = pcie_bandwidth_capable(dev, &speed_cap, &width_cap);
- 	bw_avail = pcie_bandwidth_available(dev, &limiting_dev, &speed, &width);
- 
--	if (bw_avail >= bw_cap)
-+	if (bw_avail >= bw_cap && verbose)
- 		pci_info(dev, "%u.%03u Gb/s available PCIe bandwidth (%s x%d link)\n",
- 			 bw_cap / 1000, bw_cap % 1000,
- 			 PCIE_SPEED2STR(speed_cap), width_cap);
--	else
-+	else if (bw_avail < bw_cap)
- 		pci_info(dev, "%u.%03u Gb/s available PCIe bandwidth, limited by %s x%d link at %s (capable of %u.%03u Gb/s with %s x%d link)\n",
- 			 bw_avail / 1000, bw_avail % 1000,
- 			 PCIE_SPEED2STR(speed), width,
-@@ -5331,6 +5332,19 @@ void pcie_print_link_status(struct pci_dev *dev)
- 			 bw_cap / 1000, bw_cap % 1000,
- 			 PCIE_SPEED2STR(speed_cap), width_cap);
- }
-+
-+/**
-+ * pcie_print_link_status - Report the PCI device's link speed and width
-+ * @dev: PCI device to query
-+ *
-+ * Report the available bandwidth at the device.  If this is less than the
-+ * device is capable of, report the device's maximum possible bandwidth and
-+ * the upstream link that limits its performance to less than that.
-+ */
-+void pcie_print_link_status(struct pci_dev *dev)
-+{
-+	__pcie_print_link_status(dev, true);
-+}
- EXPORT_SYMBOL(pcie_print_link_status);
- 
- /**
-diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
-index 611adcd9c169..1c8c26dd2cb2 100644
---- a/drivers/pci/probe.c
-+++ b/drivers/pci/probe.c
-@@ -2205,6 +2205,24 @@ static struct pci_dev *pci_scan_device(struct pci_bus *bus, int devfn)
- 	return dev;
- }
- 
-+static void pcie_check_upstream_link(struct pci_dev *dev)
-+{
-+	if (!pci_is_pcie(dev))
-+		return;
-+
-+	/* Look from the device up to avoid downstream ports with no devices. */
-+	if ((pci_pcie_type(dev) != PCI_EXP_TYPE_ENDPOINT) &&
-+	    (pci_pcie_type(dev) != PCI_EXP_TYPE_LEG_END) &&
-+	    (pci_pcie_type(dev) != PCI_EXP_TYPE_UPSTREAM))
-+		return;
-+
-+	/* Multi-function PCIe share the same link/status. */
-+	if (PCI_FUNC(dev->devfn) != 0 || dev->is_virtfn)
-+		return;
-+
-+	__pcie_print_link_status(dev, false);
-+}
-+
- static void pci_init_capabilities(struct pci_dev *dev)
- {
- 	/* Enhanced Allocation */
-@@ -2240,6 +2258,9 @@ static void pci_init_capabilities(struct pci_dev *dev)
- 	/* Advanced Error Reporting */
- 	pci_aer_init(dev);
- 
-+	/* Check link and detect downtrain errors */
-+	pcie_check_upstream_link(dev);
-+
- 	if (pci_probe_reset_function(dev) == 0)
- 		dev->reset_fn = 1;
- }
-diff --git a/include/linux/pci.h b/include/linux/pci.h
-index c133ccfa002e..d212de231259 100644
---- a/include/linux/pci.h
-+++ b/include/linux/pci.h
-@@ -1087,6 +1087,7 @@ int pcie_set_mps(struct pci_dev *dev, int mps);
- u32 pcie_bandwidth_available(struct pci_dev *dev, struct pci_dev **limiting_dev,
- 			     enum pci_bus_speed *speed,
- 			     enum pcie_link_width *width);
-+void __pcie_print_link_status(struct pci_dev *dev, bool verbose);
- void pcie_print_link_status(struct pci_dev *dev);
- int pcie_flr(struct pci_dev *dev);
- int __pci_reset_function_locked(struct pci_dev *dev);
--- 
-2.17.1
+Bjorn
