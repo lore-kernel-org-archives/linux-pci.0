@@ -1,73 +1,62 @@
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-From: David Laight <David.Laight@ACULAB.COM>
-To: 'Mikulas Patocka' <mpatocka@redhat.com>
-Subject: RE: framebuffer corruption due to overlapping stp instructions on
- arm64
-Date: Wed, 8 Aug 2018 14:26:11 +0000
-Message-ID: <19c70d2a0b224db78f72dd316ad006b8@AcuMS.aculab.com>
-References: <alpine.LRH.2.02.1808021242320.31834@file01.intranet.prod.int.rdu2.redhat.com>
- <CAHCPf3tFGqkYEcWNN4LaWThw_rVqT316pzLv6T7RfxwO-eZ0EA@mail.gmail.com>
- <alpine.LRH.2.02.1808030212340.17672@file01.intranet.prod.int.rdu2.redhat.com>
- <CAKv+Gu8DeuksZhk1g3q_msSKV_hSY_2e1uzVten9-oGO3j9Sqg@mail.gmail.com>
- <20180803094129.GB17798@arm.com>
- <alpine.LRH.2.02.1808031235410.31584@file01.intranet.prod.int.rdu2.redhat.com>
- <CAKv+Gu-aNFh1fsr_05SEwDp99n3pLrguP7=tEcFQPNY53=K7Fw@mail.gmail.com>
- <alpine.LRH.2.02.1808031424140.14030@file01.intranet.prod.int.rdu2.redhat.com>
- <CAHCPf3s-+Qf=WBZz1KpisDMG3520jCUh8PLAO3PHa4jdt8kCTw@mail.gmail.com>
- <20180808121641.GB24736@iMac.local>
- <b1de49af14d941979977af07dc81e1c2@AcuMS.aculab.com>
- <alpine.LRH.2.02.1808080939180.3325@file01.intranet.prod.int.rdu2.redhat.com>
-In-Reply-To: <alpine.LRH.2.02.1808080939180.3325@file01.intranet.prod.int.rdu2.redhat.com>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail.kernel.org ([198.145.29.99]:46316 "EHLO mail.kernel.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1732377AbeHFROK (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Mon, 6 Aug 2018 13:14:10 -0400
+Subject: Re: [PATCH v7 1/1] PCI: pciehp: Ignore link events when there is a
+ fatal error pending
+To: poza@codeaurora.org, Lukas Wunner <lukas@wunner.de>
+Cc: linux-pci@vger.kernel.org, Bjorn Helgaas <bhelgaas@google.com>,
+        Mika Westerberg <mika.westerberg@linux.intel.com>,
+        Keith Busch <keith.busch@intel.com>,
+        linux-pci-owner@vger.kernel.org
+References: <20180805225136.5800-1-okaya@kernel.org>
+ <20180805225136.5800-2-okaya@kernel.org>
+ <c1cfff22c63f6d3d6285575721a2a3e8@codeaurora.org>
+ <20180806092614.GA28462@wunner.de>
+ <2b4c23a2e97f61a124c95c49d604a853@codeaurora.org>
+From: Sinan Kaya <okaya@kernel.org>
+Message-ID: <3d491f25-1d59-f257-1125-302e2d50e960@kernel.org>
+Date: Mon, 6 Aug 2018 11:04:37 -0400
 MIME-Version: 1.0
-List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
-List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
-List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
-List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
-List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
-Cc: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>,
- Joao Pinto <Joao.Pinto@synopsys.com>,
- Ard Biesheuvel <ard.biesheuvel@linaro.org>,
- 'Catalin Marinas' <catalin.marinas@arm.com>, Will Deacon <will.deacon@arm.com>,
- Russell King <linux@armlinux.org.uk>,
- Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
- Matt Sealey <neko@bakuhatsu.net>, linux-pci <linux-pci@vger.kernel.org>,
- Jingoo Han <jingoohan1@gmail.com>,
- linux-arm-kernel <linux-arm-kernel@lists.infradead.org>
-Content-Type: text/plain; charset="us-ascii"
-Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
-Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
+In-Reply-To: <2b4c23a2e97f61a124c95c49d604a853@codeaurora.org>
+Content-Type: text/plain; charset=utf-8; format=flowed
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-From: Mikulas Patocka
-> Sent: 08 August 2018 14:47
-...
-> The problem on ARM is that I see data corruption when the overlapping
-> unaligned writes are done just by a single core.
+On 8/6/2018 10:55 AM, poza@codeaurora.org wrote:
+>>
+> 
+> Either AER or DPC would get triggered, not both.
+> in that case, if AER is disabled, then this code will return false 
+> thinking HP needs to handle it.
+> but it might be that DPC would be triggering as well.
+> but I dont see DPC check anywhere, rather we are relying on PCI_EXP_DEVSTA
+> and following condition:
+> if (!pdev->aer_cap)
+>        return false;
+> so here we dont check anything with respect to DPC capability (although 
+> there is no such thing as dpc_cap)
+> (except If I missed something)
 
-Is this a sequence of unaligned writes (that shouldn't modify the
-same physical locations) or an aligned write followed by an
-unaligned one that updates part of the earlier write.
-(Or the opposite order?)
+That's true. We either need to go poll every single source (AER/DPC) for
+an error or rely on the DEVSTA. For ease of implementation, I suggest
+DEVSTA. Something like this:
 
-It might be that the unaligned writes are bypassing the write-combining
-buffer (without flushing it) - so overtake the aligned write.
-
-Alternatively the unaligned writes go through the write-combining
-buffer but the byte-enables aren't handled in the expected way.
-
-It ought to be possible to work out which sequence is actually broken.
-
-	David
-
--
-Registered Address Lakeside, Bramley Road, Mount Farm, Milton Keynes, MK1 1PT, UK
-Registration No: 1397386 (Wales)
-
-
-_______________________________________________
-linux-arm-kernel mailing list
-linux-arm-kernel@lists.infradead.org
-http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
++bool pcie_fatal_error_pending(struct pci_dev *pdev, u32 usrmask)
++{
++	u16 err_status = 0;
++	u32 status, mask, severity;
++	int rc;
++
++	if (!pci_is_pcie(pdev))
++		return false;
++
++	rc = pcie_capability_read_word(pdev, PCI_EXP_DEVSTA, &err_status);
++	if (rc)
++		return false;
++
++	if (!(err_status & PCI_EXP_DEVSTA_FED))
++		return false;
++	return true;
++}
