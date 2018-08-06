@@ -1,152 +1,97 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.29.99]:48772 "EHLO mail.kernel.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1726397AbeHTCch (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Sun, 19 Aug 2018 22:32:37 -0400
-From: Sinan Kaya <okaya@kernel.org>
-To: linux-pci@vger.kernel.org
-Cc: Sinan Kaya <okaya@kernel.org>, Bjorn Helgaas <bhelgaas@google.com>,
-        Lukas Wunner <lukas@wunner.de>,
-        Mika Westerberg <mika.westerberg@linux.intel.com>,
-        "Gustavo A. R. Silva" <gustavo@embeddedor.com>,
-        Oza Pawandeep <poza@codeaurora.org>,
-        Keith Busch <keith.busch@intel.com>,
-        linux-kernel@vger.kernel.org (open list)
-Subject: [PATCH v8 1/2] PCI: pciehp: Ignore link events when there is a fatal error pending
-Date: Fri, 17 Aug 2018 23:51:09 -0700
-Message-Id: <20180818065126.77912-1-okaya@kernel.org>
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+MIME-Version: 1.0
+In-Reply-To: <CAPv3WKdxwoW5MAOvy6uEBEuMpsigMo98hyO+TpKMsFrKR9oBzg@mail.gmail.com>
+References: <alpine.LRH.2.02.1808021242320.31834@file01.intranet.prod.int.rdu2.redhat.com>
+ <CAHCPf3tFGqkYEcWNN4LaWThw_rVqT316pzLv6T7RfxwO-eZ0EA@mail.gmail.com>
+ <alpine.LRH.2.02.1808030212340.17672@file01.intranet.prod.int.rdu2.redhat.com>
+ <CAKv+Gu8DeuksZhk1g3q_msSKV_hSY_2e1uzVten9-oGO3j9Sqg@mail.gmail.com>
+ <20180803094129.GB17798@arm.com>
+ <alpine.LRH.2.02.1808031235410.31584@file01.intranet.prod.int.rdu2.redhat.com>
+ <CAKv+Gu-aNFh1fsr_05SEwDp99n3pLrguP7=tEcFQPNY53=K7Fw@mail.gmail.com>
+ <alpine.LRH.2.02.1808031424140.14030@file01.intranet.prod.int.rdu2.redhat.com>
+ <CAHCPf3s-+Qf=WBZz1KpisDMG3520jCUh8PLAO3PHa4jdt8kCTw@mail.gmail.com>
+ <CAKv+Gu9_h-WFi1j4+DWUN_dMj75SKKHxWoDH8WQ9P7S7MNpZQg@mail.gmail.com>
+ <alpine.LRH.2.02.1808060553130.30832@file01.intranet.prod.int.rdu2.redhat.com>
+ <99fff4fe-afa9-f12f-a518-472a9dd1c530@arm.com>
+ <CAPv3WKdxwoW5MAOvy6uEBEuMpsigMo98hyO+TpKMsFrKR9oBzg@mail.gmail.com>
+From: Ard Biesheuvel <ard.biesheuvel@linaro.org>
+Date: Mon, 6 Aug 2018 15:48:28 +0200
+Message-ID: <CAKv+Gu8XN-vP64G_NLHFcRUJ2fptSrmxfd6CHWDgHkJj073Hbg@mail.gmail.com>
+Subject: Re: framebuffer corruption due to overlapping stp instructions on
+ arm64
+To: Marcin Wojtas <mw@semihalf.com>
+List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
+List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
+List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
+List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
+List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
+Cc: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>,
+ Joao Pinto <Joao.Pinto@synopsys.com>, Jingoo Han <jingoohan1@gmail.com>,
+ linux-pci <linux-pci@vger.kernel.org>, Will Deacon <will.deacon@arm.com>,
+ Russell King - ARM Linux <linux@armlinux.org.uk>,
+ Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
+ Mikulas Patocka <mpatocka@redhat.com>, Matt Sealey <neko@bakuhatsu.net>,
+ Catalin Marinas <catalin.marinas@arm.com>, Robin Murphy <robin.murphy@arm.com>,
+ linux-arm-kernel <linux-arm-kernel@lists.infradead.org>
+Content-Type: text/plain; charset="utf-8"
+Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
+Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
 List-ID: <linux-pci.vger.kernel.org>
 
-AER/DPC reset is known as warm-resets. HP link recovery is known as
-cold-reset via power-off and power-on command to the PCI slot.
-
-In the middle of a warm-reset operation (AER/DPC), we are:
-
-1. turning off the slow power. Slot power needs to be kept on in order
-for recovery to succeed.
-
-2. performing a cold reset causing Fatal Error recovery to fail.
-
-If link goes down due to a DPC event, it should be recovered by DPC
-status trigger. Injecting a cold reset in the middle can cause a HW
-lockup as it is an undefined behavior.
-
-Similarly, If link goes down due to an AER secondary bus reset issue,
-it should be recovered by HW. Injecting a cold reset in the middle of a
-secondary bus reset can cause a HW lockup as it is an undefined behavior.
-
-1. HP ISR observes link down interrupt.
-2. HP ISR checks that there is a fatal error pending, it doesn't touch
-the link.
-3. HP ISR waits until link recovery happens.
-4. HP ISR calls the read vendor id function.
-5. If all fails, try the cold-reset approach.
-
-If fatal error is pending and a fatal error service such as DPC or AER
-is running, it is the responsibility of the fatal error service to
-recover the link.
-
-Signed-off-by: Sinan Kaya <okaya@kernel.org>
----
- drivers/pci/hotplug/pciehp_ctrl.c | 18 ++++++++++++++++
- drivers/pci/pci.h                 |  2 ++
- drivers/pci/pcie/err.c            | 34 +++++++++++++++++++++++++++++++
- 3 files changed, 54 insertions(+)
-
-diff --git a/drivers/pci/hotplug/pciehp_ctrl.c b/drivers/pci/hotplug/pciehp_ctrl.c
-index da7c72372ffc..22354b6850c3 100644
---- a/drivers/pci/hotplug/pciehp_ctrl.c
-+++ b/drivers/pci/hotplug/pciehp_ctrl.c
-@@ -222,9 +222,27 @@ void pciehp_handle_disable_request(struct slot *slot)
- void pciehp_handle_presence_or_link_change(struct slot *slot, u32 events)
- {
- 	struct controller *ctrl = slot->ctrl;
-+	struct pci_dev *pdev = ctrl->pcie->port;
- 	bool link_active;
- 	u8 present;
- 
-+	/* If a fatal error is pending, wait for AER or DPC to handle it. */
-+	if (pcie_fatal_error_pending(pdev)) {
-+		bool recovered;
-+
-+		recovered = pcie_wait_fatal_error_clear(pdev);
-+
-+		/* If the fatal error is gone and the link is up, return */
-+		if (recovered && pcie_wait_for_link(pdev, true)) {
-+			ctrl_info(ctrl, "Slot(%s): Ignoring Link event due to successful fatal error recovery\n",
-+				  slot_name(slot));
-+			return;
-+		}
-+
-+		ctrl_info(ctrl, "Slot(%s): Fatal error recovery failed for Link event, trying hotplug reset\n",
-+			  slot_name(slot));
-+	}
-+
- 	/*
- 	 * If the slot is on and presence or link has changed, turn it off.
- 	 * Even if it's occupied again, we cannot assume the card is the same.
-diff --git a/drivers/pci/pci.h b/drivers/pci/pci.h
-index c358e7a07f3f..e2d98654630b 100644
---- a/drivers/pci/pci.h
-+++ b/drivers/pci/pci.h
-@@ -356,6 +356,8 @@ void pci_enable_acs(struct pci_dev *dev);
- /* PCI error reporting and recovery */
- void pcie_do_fatal_recovery(struct pci_dev *dev, u32 service);
- void pcie_do_nonfatal_recovery(struct pci_dev *dev);
-+bool pcie_fatal_error_pending(struct pci_dev *pdev);
-+bool pcie_wait_fatal_error_clear(struct pci_dev *pdev);
- 
- bool pcie_wait_for_link(struct pci_dev *pdev, bool active);
- #ifdef CONFIG_PCIEASPM
-diff --git a/drivers/pci/pcie/err.c b/drivers/pci/pcie/err.c
-index f7ce0cb0b0b7..b1b5604cb00b 100644
---- a/drivers/pci/pcie/err.c
-+++ b/drivers/pci/pcie/err.c
-@@ -16,6 +16,7 @@
- #include <linux/kernel.h>
- #include <linux/errno.h>
- #include <linux/aer.h>
-+#include <linux/delay.h>
- #include "portdrv.h"
- #include "../pci.h"
- 
-@@ -386,3 +387,36 @@ void pcie_do_nonfatal_recovery(struct pci_dev *dev)
- 	/* TODO: Should kernel panic here? */
- 	pci_info(dev, "AER: Device recovery failed\n");
- }
-+
-+bool pcie_fatal_error_pending(struct pci_dev *pdev)
-+{
-+	u16 err_status = 0;
-+	int rc;
-+
-+	if (!pci_is_pcie(pdev))
-+		return false;
-+
-+	rc = pcie_capability_read_word(pdev, PCI_EXP_DEVSTA, &err_status);
-+	if (rc)
-+		return false;
-+
-+	return !!(err_status & PCI_EXP_DEVSTA_FED);
-+}
-+
-+bool pcie_wait_fatal_error_clear(struct pci_dev *pdev)
-+{
-+	int timeout = 1000;
-+	bool ret;
-+
-+	for (;;) {
-+		ret = pcie_fatal_error_pending(pdev);
-+		if (ret == false)
-+			return true;
-+		if (timeout <= 0)
-+			break;
-+		msleep(20);
-+		timeout -= 20;
-+	}
-+
-+	return false;
-+}
--- 
-2.17.1
+T24gNiBBdWd1c3QgMjAxOCBhdCAxNTo0MSwgTWFyY2luIFdvanRhcyA8bXdAc2VtaWhhbGYuY29t
+PiB3cm90ZToKPiBIaSBNaWt1bGFzLAo+Cj4gcG9uLiwgNiBzaWUgMjAxOCBvIDE0OjQyIFJvYmlu
+IE11cnBoeSA8cm9iaW4ubXVycGh5QGFybS5jb20+IG5hcGlzYcWCKGEpOgo+Pgo+PiBPbiAwNi8w
+OC8xOCAxMToyNSwgTWlrdWxhcyBQYXRvY2thIHdyb3RlOgo+PiBbLi4uXQo+PiA+PiBOb25lIG9m
+IHRoaXMgZXhwbGFpbnMgd2h5IHNvbWUgdHJhbnNhY3Rpb25zIGZhaWwgdG8gbWFrZSBpdCBhY3Jv
+c3MKPj4gPj4gZW50aXJlbHkuIFRoZSBvdmVybGFwcGluZyB3cml0ZXMgaW4gcXVlc3Rpb24gd3Jp
+dGUgdGhlIHNhbWUgZGF0YSB0bwo+PiA+PiB0aGUgbWVtb3J5IGxvY2F0aW9ucyB0aGF0IGFyZSBj
+b3ZlcmVkIGJ5IGJvdGgsIGFuZCBzbyB0aGUgb3JkZXJpbmcgaW4KPj4gPj4gd2hpY2ggdGhlIHRy
+YW5zYWN0aW9ucyBhcmUgcmVjZWl2ZWQgc2hvdWxkIG5vdCBhZmZlY3QgdGhlIG91dGNvbWUuCj4+
+ID4KPj4gPiBZb3UncmUgcmlnaHQgdGhhdCB0aGUgY29ycnVwdGlvbiBjb3VsZG4ndCBiZSBleHBs
+YWluZWQganVzdCBieSByZW9yZGVyaW5nCj4+ID4gd3JpdGVzLiBNeSBoeXBvdGhlc2lzIGlzIHRo
+YXQgdGhlIFBDSWUgY29udHJvbGxlciB0cmllcyB0byBkaXNhbWJpZ3VhdGUKPj4gPiB0aGUgb3Zl
+cmxhcHBpbmcgd3JpdGVzLCBidXQgdGhlIGRpc2FtYmlndWF0aW9uIGxvZ2ljIHdhcyBub3QgdGVz
+dGVkIGFuZCBpdAo+PiA+IGlzIGJ1Z2d5LiBJZiB0aGVyZSdzIGEgYmFycmllciBiZXR3ZWVuIHRo
+ZSBvdmVybGFwcGluZyB3cml0ZXMsIHRoZSBQQ0llCj4+ID4gY29udHJvbGxlciB3b24ndCBzZWUg
+YW55IG92ZXJsYXBwaW5nIHdyaXRlcywgc28gaXQgd29uJ3QgdHJpZ2dlciB0aGUKPj4gPiBmYXVs
+dHkgZGlzYW1iaWd1YXRpb24gbG9naWMgYW5kIGl0IHdvcmtzLgo+PiA+Cj4+ID4gQ291bGQgdGhl
+IEFSTSBlbmdpbmVlcnMgbG9vayBpZiB0aGVyZSdzIHNvbWUgY2hpY2tlbiBiaXQgaW4gQ29ydGV4
+LUE3Mgo+PiA+IHRoYXQgY291bGQgaW5zZXJ0IGJhcnJpZXJzIGJldHdlZW4gbm9uLWNhY2hlZCB3
+cml0ZXMgYXV0b21hdGljYWxseT8KPj4KPj4gSSBkb24ndCB0aGluayB0aGVyZSBpcywgYW5kIGV2
+ZW4gaWYgdGhlcmUgd2FzIEkgaW1hZ2luZSBpdCB3b3VsZCBoYXZlIGEKPj4gcHJldHR5IGhpZGVv
+dXMgZWZmZWN0IG9uIG5vbi1jb2hlcmVudCBETUEgYnVmZmVycyBhbmQgdGhlIHZhcmlvdXMgb3Ro
+ZXIKPj4gcGxhY2VzIGluIHdoaWNoIHdlIGhhdmUgTm9ybWFsLU5DIG1hcHBpbmdzIG9mIGFjdHVh
+bCBzeXN0ZW0gUkFNLgo+Pgo+PiA+IEkgb2JzZXJ2ZSB0aGVzZSBraW5kcyBvZiBjb3JydXB0aW9u
+czoKPj4gPiAtIGZhaWxpbmcgdG8gd3JpdGUgYSBmZXcgYnl0ZXMKPj4KPj4gVGhhdCBjb3VsZCBw
+b3RlbnRpYWxseSBiZSBleHBsYWluZWQgYnkgdGhlIHJlb3JkZXJpbmcvYXRvbWljaXR5IGlzc3Vl
+cwo+PiBNYXR0IG1lbnRpb25lZCwgaS5lLiB0aGUgbG9hZCBpcyBvYnNlcnZpbmcgcGFydCBvZiB0
+aGUgc3RvcmUsIGJlZm9yZSB0aGUKPj4gc3RvcmUgaGFzIGZ1bGx5IGNvbXBsZXRlZC4KPj4KPj4g
+PiAtIHdyaXRpbmcgYSBmZXcgYnl0ZXMgdGhhdCB3ZXJlIHdyaXR0ZW4gMTYgYnl0ZXMgYmVmb3Jl
+Cj4+ID4gLSB3cml0aW5nIGEgZmV3IGJ5dGVzIHRoYXQgd2VyZSB3cml0dGVuIDE2IGJ5dGVzIGFm
+dGVyCj4+Cj4+IFRob3NlIHNvdW5kIG1vcmUgbGlrZSB0aGUgaW50ZXJjb25uZWN0IG9yIHJvb3Qg
+Y29tcGxleCBpZ25vcmluZyB0aGUgYnl0ZQo+PiBzdHJvYmVzIG9uIGFuIHVuYWxpZ25lZCBidXJz
+dCwgb2Ygd2hpY2ggSSB0aGluayB0aGUgc2ltcGxpc3RpYyB2aWV3Cj4+IHdvdWxkIGJlICJpdCdz
+IGJyb2tlbiIuCj4+Cj4+IEZXSVcgSSBzdHVjayBteSBvbGQgTnZpZGlhIDc2MDBHVCBjYXJkIGlu
+IG15IEFybSBKdW5vIHIyIGJvYXJkICgyeAo+PiBDb3J0ZXgtQTcyKSwgYnVpbHQgeW91ciB0ZXN0
+IHByb2dyYW0gbmF0aXZlbHkgd2l0aCBHQ0MgOC4xLjEgYXQgLU8yLCBhbmQKPj4gaXQncyBzdGls
+bCBoYXBwaWx5IGZsaWNrZXJpbmcgcGl4ZWxzIGluIHRoZSBjb3JuZXIgb2YgdGhlIGNvbnNvbGUg
+YWZ0ZXIKPj4gbmVhcmx5IGFuIGhvdXIgKGluIHBhcmFsbGVsIHdpdGggc29tZSBpcGVyZjMganVz
+dCB0byBlbnN1cmUgcGxlbnR5IG9mCj4+IFBDSWUgdHJhZmZpYykuIEkgd291bGQgc3Ryb25nbHkg
+c3VzcGVjdCB0aGlzIGlzc3VlIGlzIHBhcnRpY3VsYXIgdG8KPj4gQXJtYWRhIDhrLCBzbyBpdHMn
+IHByb2JhYmx5IG9uZSBmb3IgdGhlIE1hcnZlbGwgZm9sa3MgdG8gdGFrZSBhIGNsb3Nlcgo+PiBs
+b29rIGF0IC0gSSBiZWxpZXZlIHNvbWUgcHJldmlvdXMgaW50ZXJjb25uZWN0IGlzc3VlcyBvbiB0
+aG9zZSBTb0NzIHdlcmUKPj4gYWN0dWFsbHkgZml4YWJsZSBpbiBmaXJtd2FyZS4KPj4KPj4KPgo+
+IE9uIG15IE1hY2NoaWF0byBJIHVzZSBHVDYzMCBjYXJkIChudXZlYXUgZHJpdmVyKSArIGRlYmlh
+biArIHhmY2UKPiBkZXNrdG9wIGFuZCBpbiBkdWFsIG1vbml0b3IgbW9kZSwgSSBjb3VsZCBydW4g
+YSBjb3VwbGUgb2YgMTA4MHAKPiBzdHJlYW1zLiBBbGwgc21vb3RoIGFuZCBJJ3ZlIG5ldmVyIG5v
+dGljZWQgYW55IGltYWdlIGNvcnJ1cHRpb24KPiB3aGF0c29ldmVyIChJIHNwZW50IGEgbG90IG9m
+IHRpbWUgaW4gZnJvbnQgb2Ygc3VjaCBzZXR1cCkuIEp1c3QgdG8gYmUKPiBvbiBhIHNhZmUgc2lk
+ZSwgY2FuIHlvdSBzZW5kIG1lIGEgYm9vdGxvZyBhbmQgeW91ciBib2FyZCByZXZpc2lvbj8gSSdk
+Cj4gbGlrZSB0byBzZWUgeW91ciBmaXJ3YXJlIHZlcnNpb24gYW5kIHR5cGUuCj4KCkhpIE1hcmNp
+biwKCkNvdWxkIHlvdSBwbGVhc2UgdHJ5IHJ1bm5pbmcgaGlzIHJlcHJvZHVjZXI/CgpfX19fX19f
+X19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fXwpsaW51eC1hcm0ta2VybmVs
+IG1haWxpbmcgbGlzdApsaW51eC1hcm0ta2VybmVsQGxpc3RzLmluZnJhZGVhZC5vcmcKaHR0cDov
+L2xpc3RzLmluZnJhZGVhZC5vcmcvbWFpbG1hbi9saXN0aW5mby9saW51eC1hcm0ta2VybmVsCg==
