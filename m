@@ -1,26 +1,50 @@
-Return-Path: <okaya@kernel.org>
-Return-Path: <okaya@kernel.org>
-Subject: Re: [PATCH 3/3] PCI/portdrv: Add support for sharing xilinx
- controller irq with AER
-To: Bjorn Helgaas <helgaas@kernel.org>
-Cc: Bharat Kumar Gogada <bharat.kumar.gogada@xilinx.com>,
- linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
- bhelgaas@google.com, rgummal@xilinx.com
-References: <1533141889-19962-1-git-send-email-bharat.kumar.gogada@xilinx.com>
- <1533141889-19962-4-git-send-email-bharat.kumar.gogada@xilinx.com>
- <7d5ae8ed-5623-3cd2-7769-77702448b2d6@kernel.org>
- <20180806205614.GC30691@bhelgaas-glaptop.roam.corp.google.com>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail.kernel.org ([198.145.29.99]:46736 "EHLO mail.kernel.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1727541AbeHFRQV (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Mon, 6 Aug 2018 13:16:21 -0400
+Subject: Re: [PATCH v7 1/1] PCI: pciehp: Ignore link events when there is a
+ fatal error pending
 From: Sinan Kaya <okaya@kernel.org>
-Message-ID: <b50328a5-2def-d1ff-c202-8d4b44bd3e28@kernel.org>
-Date: Mon, 6 Aug 2018 17:24:58 -0400
+To: poza@codeaurora.org, Lukas Wunner <lukas@wunner.de>
+Cc: linux-pci@vger.kernel.org, Bjorn Helgaas <bhelgaas@google.com>,
+        Mika Westerberg <mika.westerberg@linux.intel.com>,
+        Keith Busch <keith.busch@intel.com>,
+        linux-pci-owner@vger.kernel.org
+References: <20180805225136.5800-1-okaya@kernel.org>
+ <20180805225136.5800-2-okaya@kernel.org>
+ <c1cfff22c63f6d3d6285575721a2a3e8@codeaurora.org>
+ <20180806092614.GA28462@wunner.de>
+ <2b4c23a2e97f61a124c95c49d604a853@codeaurora.org>
+ <3d491f25-1d59-f257-1125-302e2d50e960@kernel.org>
+Message-ID: <22ce7172-b028-c0b1-d117-8096e016b15b@kernel.org>
+Date: Mon, 6 Aug 2018 11:06:48 -0400
 MIME-Version: 1.0
-In-Reply-To: <20180806205614.GC30691@bhelgaas-glaptop.roam.corp.google.com>
+In-Reply-To: <3d491f25-1d59-f257-1125-302e2d50e960@kernel.org>
 Content-Type: text/plain; charset=utf-8; format=flowed
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 8/6/2018 4:56 PM, Bjorn Helgaas wrote:
->> I remember seeing a similar patch before.
-> Are you thinking of [1]?
+On 8/6/2018 11:04 AM, Sinan Kaya wrote:
+>> Either AER or DPC would get triggered, not both.
+>> in that case, if AER is disabled, then this code will return false 
+>> thinking HP needs to handle it.
+>> but it might be that DPC would be triggering as well.
+>> but I dont see DPC check anywhere, rather we are relying on 
+>> PCI_EXP_DEVSTA
+>> and following condition:
+>> if (!pdev->aer_cap)
+>>        return false;
+>> so here we dont check anything with respect to DPC capability 
+>> (although there is no such thing as dpc_cap)
+>> (except If I missed something)
 > 
+> That's true. We either need to go poll every single source (AER/DPC) for
+> an error or rely on the DEVSTA. For ease of implementation, I suggest
+> DEVSTA. Something like this:
 
-yup.
+Hmm. Too quick...
+
+Reduced set doesn't help. Surprise Link Down is also a fatal error.
+That's what I was trying to exclude. We'll have to poll the error
+source.
