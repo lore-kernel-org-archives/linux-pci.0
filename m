@@ -1,67 +1,57 @@
-Return-Path: <SRS0=MrRY=LD=gmail.com=groeck7@kernel.org>
-Return-Path: <SRS0=MrRY=LD=gmail.com=groeck7@kernel.org>
-Sender: Guenter Roeck <groeck7@gmail.com>
-Date: Sun, 19 Aug 2018 18:31:01 -0700
-From: Guenter Roeck <linux@roeck-us.net>
-To: Benjamin Herrenschmidt <benh@kernel.crashing.org>
-Cc: Bjorn Helgaas <helgaas@kernel.org>, Hari Vyas <hari.vyas@broadcom.com>,
-	bhelgaas@google.com, linux-pci@vger.kernel.org,
-	ray.jui@broadcom.com,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
-Subject: Re: [RFC PATCH] pci: Proof of concept at fixing
- pci_enable_device/bridge races
-Message-ID: <20180820013101.GA2556@roeck-us.net>
-References: <1530608741-30664-1-git-send-email-hari.vyas@broadcom.com>
- <20180731163727.GK45322@bhelgaas-glaptop.roam.corp.google.com>
- <ecaed7664b46d73888d2494065905f8e108fc0f4.camel@kernel.crashing.org>
- <5e42f7990673d11e3a020e7efcfd333215d48138.camel@kernel.crashing.org>
- <58192cf94de3941f9141aa3203399ae2bcdf6b7a.camel@kernel.crashing.org>
- <08bc40a6af3e614e97a78fbaab688bfcd14520ac.camel@kernel.crashing.org>
- <20180815224028.GA12104@roeck-us.net>
- <947d07eb6bc64eefe5cfd9a08420a33f855cbe2c.camel@kernel.crashing.org>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <947d07eb6bc64eefe5cfd9a08420a33f855cbe2c.camel@kernel.crashing.org>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail-oi0-f66.google.com ([209.85.218.66]:45031 "EHLO
+        mail-oi0-f66.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1731432AbeHGBia (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Mon, 6 Aug 2018 21:38:30 -0400
+From: Alexandru Gagniuc <mr.nuke.me@gmail.com>
+To: linux-pci@vger.kernel.org, bhelgaas@google.com,
+        jakub.kicinski@netronome.com
+Cc: keith.busch@intel.com, alex_gagniuc@dellteam.com,
+        austin_bolen@dell.com, shyam_iyer@dell.com,
+        Alexandru Gagniuc <mr.nuke.me@gmail.com>,
+        Ariel Elior <ariel.elior@cavium.com>,
+        everest-linux-l2@cavium.com,
+        "David S. Miller" <davem@davemloft.net>,
+        Michael Chan <michael.chan@broadcom.com>,
+        Ganesh Goudar <ganeshgr@chelsio.com>,
+        Jeff Kirsher <jeffrey.t.kirsher@intel.com>,
+        Tariq Toukan <tariqt@mellanox.com>,
+        Saeed Mahameed <saeedm@mellanox.com>,
+        Leon Romanovsky <leon@kernel.org>,
+        Dirk van der Merwe <dirk.vandermerwe@netronome.com>,
+        netdev@vger.kernel.org, linux-kernel@vger.kernel.org,
+        intel-wired-lan@lists.osuosl.org, linux-rdma@vger.kernel.org,
+        oss-drivers@netronome.com
+Subject: [PATCH v6 8/9] net/mlx5: Do not call pcie_print_link_status()
+Date: Mon,  6 Aug 2018 18:25:42 -0500
+Message-Id: <20180806232600.25694-8-mr.nuke.me@gmail.com>
+In-Reply-To: <20180806232600.25694-1-mr.nuke.me@gmail.com>
+References: <CAErSpo4PK+SQLNfdkLNt9eLc7bpbxbkZCsa8T-tQpid601n0SQ@mail.gmail.com>
+ <20180806232600.25694-1-mr.nuke.me@gmail.com>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Thu, Aug 16, 2018 at 09:38:41AM +1000, Benjamin Herrenschmidt wrote:
-> On Wed, 2018-08-15 at 15:40 -0700, Guenter Roeck wrote:
-> > On Thu, Aug 16, 2018 at 07:50:13AM +1000, Benjamin Herrenschmidt wrote:
-> > > (Resent with lkml on copy)
-> > > 
-> > > [Note: This isn't meant to be merged, it need splitting at the very
-> > > least, see below]
-> > > 
-> > > This is something I cooked up quickly today to test if that would fix
-> > > my problems with large number of switch and NVME devices on POWER.
-> > > 
-> > 
-> > Is that a problem that can be reproduced with a qemu setup ?
-> 
-> With difficulty... mt-tcg might help, but you need a rather large
-> systems to reproduce it.
-> 
-> My repro-case is a 2 socket POWER9 system (about 40 cores off the top
-> of my mind, so 160 threads) with 72 NVME devices underneath a tree of
-> switches (I don't have the system at hand today to check how many).
-> 
-> It's possible to observe it I suppose on a smaller system (in theory a
-> single bridge with 2 devices is enough) but in practice the timing is
-> extremely hard to hit.
-> 
-> You need a combination of:
-> 
->   - The bridges come up disabled (which is the case when Linux does the
-> resource assignment, such as on POWER but not on x86 unless it's
-> hotplug)
-> 
->   - The nvme devices try to enable them simultaneously
-> 
-> Also the resulting error is a UR, I don't know how well qemu models
-> that.
-> 
-Not well enough, apparently. I tried for a while, registering as many
-nvme drives as the system would take, but I was not able to reproduce
-the problem with qemu. It was worth a try, though.
+This is now done by the PCI core to warn of sub-optimal bandwidth.
 
-Guenter
+Signed-off-by: Alexandru Gagniuc <mr.nuke.me@gmail.com>
+---
+ drivers/net/ethernet/mellanox/mlx5/core/main.c | 4 ----
+ 1 file changed, 4 deletions(-)
+
+diff --git a/drivers/net/ethernet/mellanox/mlx5/core/main.c b/drivers/net/ethernet/mellanox/mlx5/core/main.c
+index 615005e63819..e10f9c2bea3b 100644
+--- a/drivers/net/ethernet/mellanox/mlx5/core/main.c
++++ b/drivers/net/ethernet/mellanox/mlx5/core/main.c
+@@ -1045,10 +1045,6 @@ static int mlx5_load_one(struct mlx5_core_dev *dev, struct mlx5_priv *priv,
+ 	dev_info(&pdev->dev, "firmware version: %d.%d.%d\n", fw_rev_maj(dev),
+ 		 fw_rev_min(dev), fw_rev_sub(dev));
+ 
+-	/* Only PFs hold the relevant PCIe information for this query */
+-	if (mlx5_core_is_pf(dev))
+-		pcie_print_link_status(dev->pdev);
+-
+ 	/* on load removing any previous indication of internal error, device is
+ 	 * up
+ 	 */
+-- 
+2.17.1
