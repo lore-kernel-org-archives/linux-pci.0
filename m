@@ -1,118 +1,76 @@
-Return-Path: <SRS0=8eAj=KX=suse.com=jlee@kernel.org>
-Return-Path: <SRS0=8eAj=KX=suse.com=jlee@kernel.org>
-Date: Wed, 8 Aug 2018 23:53:18 +0800
-From: joeyli <jlee@suse.com>
-To: Bjorn Helgaas <helgaas@kernel.org>
-Cc: "Lee, Chun-Yi" <joeyli.kernel@gmail.com>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Thomas Gleixner <tglx@linutronix.de>,
-	Ingo Molnar <mingo@redhat.com>, "H . Peter Anvin" <hpa@zytor.com>,
-	x86@kernel.org, linux-pci@vger.kernel.org,
-	linux-kernel@vger.kernel.org
-Subject: Re: [PATCH] x86/PCI: Claim the resources of firmware enabled IOAPIC
- before children bus
-Message-ID: <20180808155318.GE13767@linux-l9pv.suse>
-References: <20180724110144.16442-1-jlee@suse.com>
- <20180806214807.GE30691@bhelgaas-glaptop.roam.corp.google.com>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail-qt0-f193.google.com ([209.85.216.193]:36465 "EHLO
+        mail-qt0-f193.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1727585AbeHFV75 (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Mon, 6 Aug 2018 17:59:57 -0400
+Received: by mail-qt0-f193.google.com with SMTP id t5-v6so15295827qtn.3
+        for <linux-pci@vger.kernel.org>; Mon, 06 Aug 2018 12:49:19 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20180806214807.GE30691@bhelgaas-glaptop.roam.corp.google.com>
+References: <20180804101402.10022-1-hch@lst.de> <20180804101402.10022-2-hch@lst.de>
+ <20180806112310.GB18685@e107981-ln.cambridge.arm.com> <20180806123051.GA6997@lst.de>
+ <CAK8P3a0XyK+j4Z+xhxOYKa=5gHmFnWd7=fU=6A3=VkBXxWjSsw@mail.gmail.com> <20180806145554.GE18685@e107981-ln.cambridge.arm.com>
+In-Reply-To: <20180806145554.GE18685@e107981-ln.cambridge.arm.com>
+From: Arnd Bergmann <arnd@arndb.de>
+Date: Mon, 6 Aug 2018 21:49:02 +0200
+Message-ID: <CAK8P3a1wFw9HYKPAJatNL3bUQ-u+d_eVok1E7omYWaRf6P+Rbg@mail.gmail.com>
+Subject: Re: [PATCH 1/3] PCI: add a callback to struct pci_host_bridge for
+ adding a new device
+To: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
+Cc: Christoph Hellwig <hch@lst.de>,
+        Bjorn Helgaas <bhelgaas@google.com>,
+        Palmer Dabbelt <palmer@dabbelt.com>,
+        "Wesley W. Terpstra" <wesley@sifive.com>,
+        linux-pci <linux-pci@vger.kernel.org>,
+        linux-riscv@lists.infradead.org
+Content-Type: text/plain; charset="UTF-8"
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hi Bjorn,
-
-First, thanks for your review!
-
-On Mon, Aug 06, 2018 at 04:48:07PM -0500, Bjorn Helgaas wrote:
-> On Tue, Jul 24, 2018 at 07:01:44PM +0800, Lee, Chun-Yi wrote:
-> > I got a machine that the resource of firmware enabled IOAPIC conflicts
-> > with the resource of a children bus when the PCI host bus be hotplug.
-> > 
-> > [ 3182.243325] PCI host bridge to bus 0001:40
-> > [ 3182.243328] pci_bus 0001:40: root bus resource [io  0xc000-0xdfff window]
-> > [ 3182.243330] pci_bus 0001:40: root bus resource [mem 0xdc000000-0xebffffff window]
-> > [ 3182.243331] pci_bus 0001:40: root bus resource [mem 0x212400000000-0x2125ffffffff window]
-> > [ 3182.243334] pci_bus 0001:40: root bus resource [bus 40-7e]
-> > ...
-> > [ 3182.244737] pci 0001:40:05.4: [8086:6f2c] type 00 class 0x080020
-> > [ 3182.244746] pci 0001:40:05.4: reg 0x10: [mem 0xdc000000-0xdc000fff]
-> > ...
-> > [ 3182.246697] pci 0001:40:02.0: PCI bridge to [bus 41]
-> > [ 3182.246702] pci 0001:40:02.0:   bridge window [mem 0xdc000000-0xdc7fffff]
-> > ...
-> > pci 0001:40:05.4: can't claim BAR 0 [mem 0xdc000000-0xdc000fff]: address conflict with PCI Bus 0001:41 [mem 0xdc000000-0xdc7fffff]
-> > 
-> > The bus topology:
-> > 
-> >  +-[0001:40]-+-02.0-[41]--
-> >  |           +-03.0-[41]--
-> >  |           +-03.2-[41]--+-00.0  Intel Corporation I350 Gigabit Network Connection
-> >  |           |            +-00.1  Intel Corporation I350 Gigabit Network Connection
-> >  |           |            +-00.2  Intel Corporation I350 Gigabit Network Connection
-> >  |           |            \-00.3  Intel Corporation I350 Gigabit Network Connection
-> >  |           +-05.0  Intel Corporation Xeon E7 v4/Xeon E5 v4/Xeon E3 v4/Xeon D Map/VTd_Misc/System Management
-> >  |           +-05.1  Intel Corporation Xeon E7 v4/Xeon E5 v4/Xeon E3 v4/Xeon D IIO Hot Plug
-> >  |           +-05.2  Intel Corporation Xeon E7 v4/Xeon E5 v4/Xeon E3 v4/Xeon D IIO RAS/Control Status/Global Errors
-> >  |           \-05.4  Intel Corporation Xeon E7 v4/Xeon E5 v4/Xeon E3 v4/Xeon D I/O APIC
-> > 
-> > This problem causes that the NIC behine the child bus was not available
-> > after PCI host bridge hotpluged.
-> > 
-> > Kernel does not want to change resource of firmware enabled IOAPIC, but
-> > the priority of children bus's resources are higher than any other devices.
-> > So this conflict can not be handled by the reassigning logic of kernel.
-
-Sorry for my description is not clear. The "priority" is for resources
-clamining, not for the address decoding.
-
-> 
-> I don't understand this paragraph.  AFAIK, if two devices on a bus
-> both decode the same address, as the IOAPIC and the bridge do here,
-> the only real "priority" in PCI would be subtractive decode.  But I
-> don't think that applies here since the bridge is using a positive
-> decode window.
+On Mon, Aug 6, 2018 at 4:56 PM Lorenzo Pieralisi
+<lorenzo.pieralisi@arm.com> wrote:
 >
-
-Sorry for I didn't understand... How could you know the bridge doesn't
-apply subtractive decode?
-
-> I would expect that a read to the [mem 0xdc000000-0xdc000fff] range
-> would potentially receive two read completions, which would cause an
-> Unexpected Completion error.
+> On Mon, Aug 06, 2018 at 03:54:13PM +0200, Arnd Bergmann wrote:
+> > On Mon, Aug 6, 2018 at 2:25 PM Christoph Hellwig <hch@lst.de> wrote:
+> > >
+> > > On Mon, Aug 06, 2018 at 12:23:10PM +0100, Lorenzo Pieralisi wrote:
+> > > > >     pci_configure_device(dev);
+> > > > > @@ -2328,6 +2329,11 @@ void pci_device_add(struct pci_dev *dev, struct pci_bus *bus)
+> > > > >     ret = pcibios_add_device(dev);
+> > > > >     WARN_ON(ret < 0);
+> > > > >
+> > > > > +   if (host->add_device) {
+> > > > > +           ret = host->add_device(dev);
+> > > > > +           WARN_ON(ret < 0);
+> > > > > +   }
+> > > >
+> > > > This looks fine; we could go a step further and make the hunk above
+> > > > the default (weak) implementation of pcibios_add_device() that is
+> > > > currently a NOP returning 0, I will remove it for v4.20.
+> > >
+> > > I'd love to see pcibios_add_device go away entirely.  But I wonder how to
+> > > get setup the pci_host_bridge pointer for the remaining architectures that
+> > > still implement it.  I did look for any easy way but couldn't find one.
+> > > But then I don't really know this area of the PCI code too well.
+> >
+> > If the platform doesn't already have a pointer to its pci_host_bridge
+> > structure, it can call pci_find_host_bridge(bus->dev) to get it.
+> >
+> > Ideally, platforms (either arch specific code or drivers/pci/controller)
+> > should call pci_alloc_host_bridge()/pci_register_host_bridge()
+> > instead of the traditional pci_create_root_bus() that is less flexible.
+> > That way, the driver specific structure can get allocated together with
+> > the host bridge.
 >
+> Yes that's basically the gist, it should be a matter of identifying code
+> that creates the root bus (explicitly or implicitly - ie
+> pci_scan_root_bus()) and patching it up, probably something to be done
+> (and moved into -next) early -rc* since it is something that can easily
+> break the world if we miss some code paths. I will have a look into
+> that and can take this patch for that series if it does not go into
+> v4.19.
 
-Thanks for your information. The I350 NIC doesn't work after hotplug.
-So it may causes by Unexpected Completion error as you mentioned.
- 
-> Maybe you mean that we don't want to change the IOAPIC resources, but
-> it's OK if we move the bridge window, so in that sense, the IOAPIC is
-> "higher priority" than the bridge window?  This is the reverse of what
-> your paragraph seems to say.
->
+I've started prototyping something now, will post something tomorrow.
+I have an idea for a version that should be minimally invasive, at the
+cost of duplicating some code in drivers that still use the old interfaces.
 
-Yes, this is what I mean. Sorry for my paragraph causes confusing. 
-
-The memory decoder bit in the command register of 0001:40:05.4 IOAPIC
-is raised by firmware after hotplug. So kernel treats it as a
-_firmware enabled_ IOAPIC. Because kernel don't want to change the IOAPIC
-resources, so my patch try to claim the IOAPIC resources before all
-bridges. It can workaround the hotplug problem on issue machine.
-
-But, actually I am not sure that this hacking makes sense. And, I also
-don't know why the memory decoder bit is raised by firmware when hotplug.
-Maybe this is a firmware problem.
- 
-> > This patch claims the resources of firmware enabled IOAPIC before
-> > children bus. Then kernel gets a chance to reassign the resources of
-> > children bus to avoid the conflict.
-> 
-> Can you open a report at https://bugzilla.kernel.org, attach the
-> before and after dmesg logs, and include the URL in the commit log?
->
-
-OK, I have filed a bug on kernel bugzilla and also attached dmesg
-log:
-	https://bugzilla.kernel.org/show_bug.cgi?id=200765
-
-Thanks a lot!
-Joey Lee
+        Arnd
