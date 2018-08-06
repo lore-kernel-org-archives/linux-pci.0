@@ -1,62 +1,56 @@
-Return-Path: <SRS0=bZ5k=K7=yandex-team.ru=khlebnikov@kernel.org>
-Return-Path: <SRS0=bZ5k=K7=yandex-team.ru=khlebnikov@kernel.org>
-Subject: Re: PCIe enable device races (Was: [PATCH v3] PCI: Data corruption
- happening due to race condition)
-To: Benjamin Herrenschmidt <benh@kernel.crashing.org>,
- Bjorn Helgaas <helgaas@kernel.org>
-Cc: Hari Vyas <hari.vyas@broadcom.com>, bhelgaas@google.com,
- linux-pci@vger.kernel.org, ray.jui@broadcom.com, Jens Axboe <axboe@kernel.dk>
-References: <1530608741-30664-1-git-send-email-hari.vyas@broadcom.com>
- <20180731163727.GK45322@bhelgaas-glaptop.roam.corp.google.com>
- <ecaed7664b46d73888d2494065905f8e108fc0f4.camel@kernel.crashing.org>
- <20180815185027.GE28888@bhelgaas-glaptop.roam.corp.google.com>
- <e3316c91ad722434360b4018b17cbfe265e97801.camel@kernel.crashing.org>
-From: Konstantin Khlebnikov <khlebnikov@yandex-team.ru>
-Message-ID: <fa218ce2-c337-e776-d958-f1f8a1129c9a@yandex-team.ru>
-Date: Thu, 16 Aug 2018 10:58:43 +0300
-MIME-Version: 1.0
-In-Reply-To: <e3316c91ad722434360b4018b17cbfe265e97801.camel@kernel.crashing.org>
-Content-Type: text/plain; charset=utf-8; format=flowed
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail-oi0-f66.google.com ([209.85.218.66]:36451 "EHLO
+        mail-oi0-f66.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S2387557AbeHGBiG (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Mon, 6 Aug 2018 21:38:06 -0400
+From: Alexandru Gagniuc <mr.nuke.me@gmail.com>
+To: linux-pci@vger.kernel.org, bhelgaas@google.com,
+        jakub.kicinski@netronome.com
+Cc: keith.busch@intel.com, alex_gagniuc@dellteam.com,
+        austin_bolen@dell.com, shyam_iyer@dell.com,
+        Alexandru Gagniuc <mr.nuke.me@gmail.com>,
+        Ariel Elior <ariel.elior@cavium.com>,
+        everest-linux-l2@cavium.com,
+        "David S. Miller" <davem@davemloft.net>,
+        Michael Chan <michael.chan@broadcom.com>,
+        Ganesh Goudar <ganeshgr@chelsio.com>,
+        Jeff Kirsher <jeffrey.t.kirsher@intel.com>,
+        Tariq Toukan <tariqt@mellanox.com>,
+        Saeed Mahameed <saeedm@mellanox.com>,
+        Leon Romanovsky <leon@kernel.org>,
+        Dirk van der Merwe <dirk.vandermerwe@netronome.com>,
+        netdev@vger.kernel.org, linux-kernel@vger.kernel.org,
+        intel-wired-lan@lists.osuosl.org, linux-rdma@vger.kernel.org,
+        oss-drivers@netronome.com
+Subject: [PATCH v6 4/9] cxgb4: Do not call pcie_print_link_status()
+Date: Mon,  6 Aug 2018 18:25:38 -0500
+Message-Id: <20180806232600.25694-4-mr.nuke.me@gmail.com>
+In-Reply-To: <20180806232600.25694-1-mr.nuke.me@gmail.com>
+References: <CAErSpo4PK+SQLNfdkLNt9eLc7bpbxbkZCsa8T-tQpid601n0SQ@mail.gmail.com>
+ <20180806232600.25694-1-mr.nuke.me@gmail.com>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 16.08.2018 00:52, Benjamin Herrenschmidt wrote:
-> On Wed, 2018-08-15 at 13:50 -0500, Bjorn Helgaas wrote:
->> Yes, this is definitely broken.  Some folks have tried to fix it in
->> the past, but it hasn't quite happened yet.  We actually merged one
->> patch, 40f11adc7cd9 ("PCI: Avoid race while enabling upstream
->> bridges"), but had to revert it after we found issues:
->>
->> https://lkml.kernel.org/r/1501858648-22228-1-git-send-email-srinath.mannam@broadcom.com
->> https://lkml.kernel.org/r/20170915072352.10453.31977.stgit@bhelgaas-glaptop.roam.corp.google.com
-> 
-> Ok so I had a look at this previous patch and it adds yet anothe use of
-> some global mutex to protect part of the operation which makes me
-> cringe a bit, we have too many of these.
-> 
-> What do you think of the one I sent yesterday ? (I can't find it in the
-> archives yet)
-> 
-> [RFC PATCH] pci: Proof of concept at fixing pci_enable_device/bridge races
-> 
-> The patch itself needs splitting etc... but the basic idea is to move away
-> from those global mutexes in a number of places and have one in the pci_dev
-> struct itself to protect its state.
-> 
-> I would also like to use this rather than the bitmap atomics for is_added
-> etc... (Hari's fix) in the long run. Atomics aren't significantly cheaper
-> and imho makes thing even messier.
-> 
-> Jens, Konstantin, any chance you can test if the above also breaks iwlwifi
-> (I don't see why it would but ...)
-> 
+This is now done by the PCI core to warn of sub-optimal bandwidth.
 
-I suppose original race was discovered between enabling bridge and device as described here
+Signed-off-by: Alexandru Gagniuc <mr.nuke.me@gmail.com>
+---
+ drivers/net/ethernet/chelsio/cxgb4/cxgb4_main.c | 3 ---
+ 1 file changed, 3 deletions(-)
 
-https://lore.kernel.org/lkml/150547971091.977464.16294045866179907260.stgit@buzz/T/#u
-
-I barely can remember what I ever posted this, so I couldn't reproduce for sure.
-
-> Cheers,
-> Ben.
-> 
-> 
+diff --git a/drivers/net/ethernet/chelsio/cxgb4/cxgb4_main.c b/drivers/net/ethernet/chelsio/cxgb4/cxgb4_main.c
+index a8926e97935e..049958898c17 100644
+--- a/drivers/net/ethernet/chelsio/cxgb4/cxgb4_main.c
++++ b/drivers/net/ethernet/chelsio/cxgb4/cxgb4_main.c
+@@ -5726,9 +5726,6 @@ static int init_one(struct pci_dev *pdev, const struct pci_device_id *ent)
+ 			free_msix_info(adapter);
+ 	}
+ 
+-	/* check for PCI Express bandwidth capabiltites */
+-	pcie_print_link_status(pdev);
+-
+ 	err = init_rss(adapter);
+ 	if (err)
+ 		goto out_free_dev;
+-- 
+2.17.1
