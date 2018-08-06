@@ -1,70 +1,54 @@
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-From: David Laight <David.Laight@ACULAB.COM>
-To: 'Catalin Marinas' <catalin.marinas@arm.com>, Matt Sealey
- <neko@bakuhatsu.net>
-Subject: RE: framebuffer corruption due to overlapping stp instructions on
- arm64
-Date: Wed, 8 Aug 2018 13:02:54 +0000
-Message-ID: <b1de49af14d941979977af07dc81e1c2@AcuMS.aculab.com>
-References: <alpine.LRH.2.02.1808021242320.31834@file01.intranet.prod.int.rdu2.redhat.com>
- <CAHCPf3tFGqkYEcWNN4LaWThw_rVqT316pzLv6T7RfxwO-eZ0EA@mail.gmail.com>
- <alpine.LRH.2.02.1808030212340.17672@file01.intranet.prod.int.rdu2.redhat.com>
- <CAKv+Gu8DeuksZhk1g3q_msSKV_hSY_2e1uzVten9-oGO3j9Sqg@mail.gmail.com>
- <20180803094129.GB17798@arm.com>
- <alpine.LRH.2.02.1808031235410.31584@file01.intranet.prod.int.rdu2.redhat.com>
- <CAKv+Gu-aNFh1fsr_05SEwDp99n3pLrguP7=tEcFQPNY53=K7Fw@mail.gmail.com>
- <alpine.LRH.2.02.1808031424140.14030@file01.intranet.prod.int.rdu2.redhat.com>
- <CAHCPf3s-+Qf=WBZz1KpisDMG3520jCUh8PLAO3PHa4jdt8kCTw@mail.gmail.com>
- <20180808121641.GB24736@iMac.local>
-In-Reply-To: <20180808121641.GB24736@iMac.local>
-MIME-Version: 1.0
-List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
-List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
-List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
-List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
-List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
-Cc: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>,
- Joao Pinto <Joao.Pinto@synopsys.com>,
- Ard Biesheuvel <ard.biesheuvel@linaro.org>,
- linux-pci <linux-pci@vger.kernel.org>, Will Deacon <will.deacon@arm.com>,
- Russell King <linux@armlinux.org.uk>, Linux Kernel
- Mailing List <linux-kernel@vger.kernel.org>,
- Mikulas Patocka <mpatocka@redhat.com>, Jingoo Han <jingoohan1@gmail.com>,
- linux-arm-kernel <linux-arm-kernel@lists.infradead.org>
-Content-Type: text/plain; charset="us-ascii"
-Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
-Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail-oi0-f67.google.com ([209.85.218.67]:38022 "EHLO
+        mail-oi0-f67.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1731308AbeHGBhz (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Mon, 6 Aug 2018 21:37:55 -0400
+From: Alexandru Gagniuc <mr.nuke.me@gmail.com>
+To: linux-pci@vger.kernel.org, bhelgaas@google.com,
+        jakub.kicinski@netronome.com
+Cc: keith.busch@intel.com, alex_gagniuc@dellteam.com,
+        austin_bolen@dell.com, shyam_iyer@dell.com,
+        Alexandru Gagniuc <mr.nuke.me@gmail.com>,
+        Ariel Elior <ariel.elior@cavium.com>,
+        everest-linux-l2@cavium.com,
+        "David S. Miller" <davem@davemloft.net>,
+        Michael Chan <michael.chan@broadcom.com>,
+        Ganesh Goudar <ganeshgr@chelsio.com>,
+        Jeff Kirsher <jeffrey.t.kirsher@intel.com>,
+        Tariq Toukan <tariqt@mellanox.com>,
+        Saeed Mahameed <saeedm@mellanox.com>,
+        Leon Romanovsky <leon@kernel.org>,
+        Dirk van der Merwe <dirk.vandermerwe@netronome.com>,
+        netdev@vger.kernel.org, linux-kernel@vger.kernel.org,
+        intel-wired-lan@lists.osuosl.org, linux-rdma@vger.kernel.org,
+        oss-drivers@netronome.com
+Subject: [PATCH v6 2/9] bnx2x: Do not call pcie_print_link_status()
+Date: Mon,  6 Aug 2018 18:25:36 -0500
+Message-Id: <20180806232600.25694-2-mr.nuke.me@gmail.com>
+In-Reply-To: <20180806232600.25694-1-mr.nuke.me@gmail.com>
+References: <CAErSpo4PK+SQLNfdkLNt9eLc7bpbxbkZCsa8T-tQpid601n0SQ@mail.gmail.com>
+ <20180806232600.25694-1-mr.nuke.me@gmail.com>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-From: Catalin Marinas
-> Sent: 08 August 2018 13:17
-...
-> I think hazarding is what goes wrong here, especially since with
-> overlapping unaligned addresses. However, I disagree that it is
-> impossible to implement this properly on a platform with PCIe so that
-> Normal NC mappings can be used.
+This is now done by the PCI core to warn of sub-optimal bandwidth.
 
-I've been trying to follow this discussion...
+Signed-off-by: Alexandru Gagniuc <mr.nuke.me@gmail.com>
+---
+ drivers/net/ethernet/broadcom/bnx2x/bnx2x_main.c | 1 -
+ 1 file changed, 1 deletion(-)
 
-Is the problem just that reads don't snoop/flush the write-combining buffer?
-Aligned writes that end on an appropriate boundary will leave the write
-combining buffer empty.
-But if the buffer isn't emptied the PCIe read gets ahead of the PCIe write.
-
-ISTR even x86 requires a fence instruction in some sequence associated
-with write-combining writes.
-
-	David
-
--
-Registered Address Lakeside, Bramley Road, Mount Farm, Milton Keynes, MK1 1PT, UK
-Registration No: 1397386 (Wales)
-
-
-_______________________________________________
-linux-arm-kernel mailing list
-linux-arm-kernel@lists.infradead.org
-http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
+diff --git a/drivers/net/ethernet/broadcom/bnx2x/bnx2x_main.c b/drivers/net/ethernet/broadcom/bnx2x/bnx2x_main.c
+index 57348f2b49a3..3eadd6201dff 100644
+--- a/drivers/net/ethernet/broadcom/bnx2x/bnx2x_main.c
++++ b/drivers/net/ethernet/broadcom/bnx2x/bnx2x_main.c
+@@ -14100,7 +14100,6 @@ static int bnx2x_init_one(struct pci_dev *pdev,
+ 	       board_info[ent->driver_data].name,
+ 	       (CHIP_REV(bp) >> 12) + 'A', (CHIP_METAL(bp) >> 4),
+ 	       dev->base_addr, bp->pdev->irq, dev->dev_addr);
+-	pcie_print_link_status(bp->pdev);
+ 
+ 	bnx2x_register_phc(bp);
+ 
+-- 
+2.17.1
