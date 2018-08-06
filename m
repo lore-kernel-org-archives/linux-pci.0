@@ -1,89 +1,68 @@
-Return-Path: <SRS0=35td=LE=gigaio.com=epilmore@kernel.org>
-Return-Path: <SRS0=35td=LE=gigaio.com=epilmore@kernel.org>
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Date: Mon, 6 Aug 2018 16:31:18 -0400 (EDT)
+From: Mikulas Patocka <mpatocka@redhat.com>
+To: Ard Biesheuvel <ard.biesheuvel@linaro.org>
+Subject: Re: framebuffer corruption due to overlapping stp instructions on
+ arm64
+In-Reply-To: <CAKv+Gu_iCgAeGmrajZ_euMcFLntWG1a51HF_HQ1TO=fV_v__AQ@mail.gmail.com>
+Message-ID: <alpine.LRH.2.02.1808061630380.18304@file01.intranet.prod.int.rdu2.redhat.com>
+References: <alpine.LRH.2.02.1808021242320.31834@file01.intranet.prod.int.rdu2.redhat.com>
+ <20180803094129.GB17798@arm.com>
+ <alpine.LRH.2.02.1808031235410.31584@file01.intranet.prod.int.rdu2.redhat.com>
+ <CAKv+Gu-aNFh1fsr_05SEwDp99n3pLrguP7=tEcFQPNY53=K7Fw@mail.gmail.com>
+ <alpine.LRH.2.02.1808031424140.14030@file01.intranet.prod.int.rdu2.redhat.com>
+ <CAHCPf3s-+Qf=WBZz1KpisDMG3520jCUh8PLAO3PHa4jdt8kCTw@mail.gmail.com>
+ <CAKv+Gu9_h-WFi1j4+DWUN_dMj75SKKHxWoDH8WQ9P7S7MNpZQg@mail.gmail.com>
+ <alpine.LRH.2.02.1808060553130.30832@file01.intranet.prod.int.rdu2.redhat.com>
+ <99fff4fe-afa9-f12f-a518-472a9dd1c530@arm.com>
+ <CAKv+Gu_C2g=C=gMpk4a5jpDORnxZY6t1v=HDoy59m5vwNBxBBg@mail.gmail.com>
+ <alpine.LRH.2.02.1808061306490.12989@file01.intranet.prod.int.rdu2.redhat.com>
+ <CAKv+Gu_8Rq6X24ZOYvG7+kQQGSGYAZuu_co4k1nJS8K7rkrWMA@mail.gmail.com>
+ <alpine.LRH.2.02.1808061552090.11930@file01.intranet.prod.int.rdu2.redhat.com>
+ <CAKv+Gu_iCgAeGmrajZ_euMcFLntWG1a51HF_HQ1TO=fV_v__AQ@mail.gmail.com>
 MIME-Version: 1.0
-In-Reply-To: <dd918b52-7ddc-662c-5980-edf3e96ebca2@deltatee.com>
-References: <CAOQPn8soxubJxb=vp7kz+AM6LbPH5y+_Nx0Vzv7rjV_nMMqEmA@mail.gmail.com>
- <20180809184331.GB113140@bhelgaas-glaptop.roam.corp.google.com>
- <CAOQPn8uPYKai49WYPqZp2wNd5of=0hUvPOHEtqP56RZu-hcjuw@mail.gmail.com>
- <b54899a8-a144-e8e0-9880-1800c4657b95@deltatee.com> <CAOQPn8tSNN+3igN-kMcQH46w_a9p6T+S7=c8CLREMLxr1kaTXQ@mail.gmail.com>
- <7068db44-af31-4462-f966-2dd2340ba0f0@deltatee.com> <695826a6-e10c-5a30-a51f-7cc61ba6e640@gigaio.com>
- <0d3f48c3-8c4f-4dfb-e883-23c168f12b9b@deltatee.com> <14db6acb-da4f-9604-7359-1671210fcb8b@gigaio.com>
- <ad2cd3f2-eb41-d4c2-7614-379c2e458352@deltatee.com> <CAOQPn8uuTEcmdQdZB9-A7FT+YWtxSuruGFwmwCPApffTJNs9Vg@mail.gmail.com>
- <41419ada-7f16-0028-1e43-3b4a6c6960b6@deltatee.com> <CAOQPn8uyozbmEV0Ww3LW4XDcaY1ZwV0yazsPxPQC0AfLNUhKYw@mail.gmail.com>
- <dd918b52-7ddc-662c-5980-edf3e96ebca2@deltatee.com>
-From: Eric Pilmore <epilmore@gigaio.com>
-Date: Tue, 21 Aug 2018 16:45:20 -0700
-Message-ID: <CAOQPn8vO7wP2XGwyJALxkyeBFG6fkTAFgF8QcGiiJF0fOMBa4Q@mail.gmail.com>
-Subject: Re: IOAT DMA w/IOMMU
-To: Logan Gunthorpe <logang@deltatee.com>
-Cc: Kit Chow <kchow@gigaio.com>, Bjorn Helgaas <helgaas@kernel.org>, linux-pci@vger.kernel.org,
-	David Woodhouse <dwmw2@infradead.org>, Alex Williamson <alex.williamson@redhat.com>,
-	iommu@lists.linux-foundation.org
-Content-Type: text/plain; charset="UTF-8"
+List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
+List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
+List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
+List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
+List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
+Cc: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>,
+ Joao Pinto <Joao.Pinto@synopsys.com>,
+ Catalin Marinas <catalin.marinas@arm.com>,
+ linux-pci <linux-pci@vger.kernel.org>, Will Deacon <will.deacon@arm.com>,
+ Russell King <linux@armlinux.org.uk>,
+ Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
+ Matt Sealey <neko@bakuhatsu.net>, Jingoo Han <jingoohan1@gmail.com>,
+ Robin Murphy <robin.murphy@arm.com>,
+ linux-arm-kernel <linux-arm-kernel@lists.infradead.org>
+Content-Type: text/plain; charset="us-ascii"
+Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
+Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tue, Aug 21, 2018 at 4:35 PM, Logan Gunthorpe <logang@deltatee.com> wrote:
->
->
-> On 21/08/18 05:28 PM, Eric Pilmore wrote:
->>
->>
->> On Tue, Aug 21, 2018 at 4:20 PM, Logan Gunthorpe <logang@deltatee.com
->> <mailto:logang@deltatee.com>> wrote:
->>
->>
->>
->>     On 21/08/18 05:18 PM, Eric Pilmore wrote:
->>     > We have been running locally with Kit's change for dma_map_resource and its
->>     > incorporation in ntb_async_tx_submit for the destination address and
->>     > it runs fine
->>     > under "load" (iperf) on a Xeon (Xeon(R) CPU E5-2680 v4 @ 2.40GHz) based system,
->>     > regardless of whether the DMA engine being used is IOAT or a PLX
->>     > device sitting in
->>     > the PCIe tree. However, when we go back to a i7 (i7-7700K CPU @ 4.20GHz) based
->>     > system it seems to run into issues, specifically when put under a
->>     > load. In this case,
->>     > just having a load using a single ping command with an interval=0, i.e. no delay
->>     > between ping packets, after a few thousand packets the system just hangs. No
->>     > panic or watchdogs.  Note that in this scenario I can only use a PLX DMA engine.
->>
->>     This is just my best guess: but it sounds to me like a bug in the PLX
->>     DMA driver or hardware.
->>
->>
->> The PLX DMA driver?  But the PLX driver isn't really even involved in
->> the mapping
->> stage.  Are you thinking maybe the stage at which the DMA descriptor is
->> freed and
->> the PLX DMA driver does a dma_descriptor_unmap?
->
-> Hmm, well what would make you think the hang is during
-> mapping/unmapping?
 
-Well, the only difference between success and failure is running with the
-call to dma_map_resource for the destination address, which is a PCI BAR
-address. Prior to Kit introducing this call, we never created a mapping for the
-destination PCI BAR address and it worked fine on all systems when using
-PLX DMA. It was only when we went to a Xeon system and attempted to use
-IOAT DMA that we found we needed a mapping for that destination PCI BAR
-address.
 
-The only thing the PLX driver does related to "mappings" is a call to
-dma_descriptor_unmap when the descriptor is freed, however that is more
-of an administrative step to clean up the unmap-data data structure used
-when the mapping was originally established.
+On Mon, 6 Aug 2018, Ard Biesheuvel wrote:
 
-> I would expect a hang to be in handling completions
-> from the DMA engine or something like that.
->
->> Again, PLX did not exhibit any issues on the Xeon system.
->
-> Oh, I missed that. That puts a crinkle in my theory but, as you say, it
-> could be a timing issue.
->
-> Also, it's VERY strange that it would hang the entire system. That makes
-> things very hard to debug...
+> > Unfortunatelly, it doesn't work. I verified that the bit is set after
+> > booting Linux, but the memcpy corruption was still present.
+> >
+> > I also tried the other chicken bits, it slowed down the system noticeably,
+> > but had no effect on the memcpy corruption.
+> >
+> 
+> OK, it was worth a shot
+> 
+> Let's wait and see if Marcin has any results.
 
-Tell me about it!  ;-)
+BTW. is there documentation for that DesignWare PCIe controller somewhere?
 
-Eric
+Mikulas
+
+_______________________________________________
+linux-arm-kernel mailing list
+linux-arm-kernel@lists.infradead.org
+http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
