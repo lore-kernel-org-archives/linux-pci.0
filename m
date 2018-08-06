@@ -1,60 +1,158 @@
-Return-Path: <linux-nvme-bounces+bjorn=helgaas.com@lists.infradead.org>
-Return-Path: <linux-nvme-bounces+bjorn=helgaas.com@lists.infradead.org>
-Subject: Re: [PATCH v5 13/13] nvmet: Optionally use PCI P2P memory
-To: Logan Gunthorpe <logang@deltatee.com>, linux-kernel@vger.kernel.org,
- linux-pci@vger.kernel.org, linux-nvme@lists.infradead.org,
- linux-rdma@vger.kernel.org, linux-nvdimm@lists.01.org,
- linux-block@vger.kernel.org
-References: <20180830185352.3369-1-logang@deltatee.com>
- <20180830185352.3369-14-logang@deltatee.com>
-From: Sagi Grimberg <sagi@grimberg.me>
-Message-ID: <ecbb669a-2e84-1333-7e0d-1560cf014750@grimberg.me>
-Date: Thu, 30 Aug 2018 17:25:09 -0700
-MIME-Version: 1.0
-In-Reply-To: <20180830185352.3369-14-logang@deltatee.com>
-List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-nvme>,
- <mailto:linux-nvme-request@lists.infradead.org?subject=unsubscribe>
-List-Archive: <http://lists.infradead.org/pipermail/linux-nvme/>
-List-Post: <mailto:linux-nvme@lists.infradead.org>
-List-Help: <mailto:linux-nvme-request@lists.infradead.org?subject=help>
-List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-nvme>,
- <mailto:linux-nvme-request@lists.infradead.org?subject=subscribe>
-Cc: =?UTF-8?Q?Christian_K=c3=b6nig?= <christian.koenig@amd.com>,
- Benjamin Herrenschmidt <benh@kernel.crashing.org>,
- Steve Wise <swise@opengridcomputing.com>,
- Alex Williamson <alex.williamson@redhat.com>,
- Stephen Bates <sbates@raithlin.com>, Keith Busch <keith.busch@intel.com>,
- =?UTF-8?B?SsOpcsO0bWUgR2xpc3Nl?= <jglisse@redhat.com>,
- Jason Gunthorpe <jgg@mellanox.com>, Bjorn Helgaas <bhelgaas@google.com>,
- Max Gurtovoy <maxg@mellanox.com>, Dan Williams <dan.j.williams@intel.com>,
- Christoph Hellwig <hch@lst.de>
-Content-Type: text/plain; charset="utf-8"; Format="flowed"
-Sender: "Linux-nvme" <linux-nvme-bounces@lists.infradead.org>
-Errors-To: linux-nvme-bounces+bjorn=helgaas.com@lists.infradead.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail-oi0-f66.google.com ([209.85.218.66]:37127 "EHLO
+        mail-oi0-f66.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1731308AbeHGBhp (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Mon, 6 Aug 2018 21:37:45 -0400
+From: Alexandru Gagniuc <mr.nuke.me@gmail.com>
+To: linux-pci@vger.kernel.org, bhelgaas@google.com,
+        jakub.kicinski@netronome.com
+Cc: keith.busch@intel.com, alex_gagniuc@dellteam.com,
+        austin_bolen@dell.com, shyam_iyer@dell.com,
+        Alexandru Gagniuc <mr.nuke.me@gmail.com>,
+        Ariel Elior <ariel.elior@cavium.com>,
+        everest-linux-l2@cavium.com,
+        "David S. Miller" <davem@davemloft.net>,
+        Michael Chan <michael.chan@broadcom.com>,
+        Ganesh Goudar <ganeshgr@chelsio.com>,
+        Jeff Kirsher <jeffrey.t.kirsher@intel.com>,
+        Tariq Toukan <tariqt@mellanox.com>,
+        Saeed Mahameed <saeedm@mellanox.com>,
+        Leon Romanovsky <leon@kernel.org>,
+        Dirk van der Merwe <dirk.vandermerwe@netronome.com>,
+        netdev@vger.kernel.org, linux-kernel@vger.kernel.org,
+        intel-wired-lan@lists.osuosl.org, linux-rdma@vger.kernel.org,
+        oss-drivers@netronome.com
+Subject: [PATCH v6 1/9] PCI: Check for PCIe downtraining conditions
+Date: Mon,  6 Aug 2018 18:25:35 -0500
+Message-Id: <20180806232600.25694-1-mr.nuke.me@gmail.com>
+In-Reply-To: <CAErSpo4PK+SQLNfdkLNt9eLc7bpbxbkZCsa8T-tQpid601n0SQ@mail.gmail.com>
+References: <CAErSpo4PK+SQLNfdkLNt9eLc7bpbxbkZCsa8T-tQpid601n0SQ@mail.gmail.com>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Cj4gKy8qCj4gKyAqIElmIGFsbG93X3AycG1lbSBpcyBzZXQsIHdlIHdpbGwgdHJ5IHRvIHVzZSBQ
-MlAgbWVtb3J5IGZvciB0aGUgU0dMIGxpc3RzIGZvcgo+ICsgKiDOmS9PIGNvbW1hbmRzLiBUaGlz
-IHJlcXVpcmVzIHRoZSBQQ0kgcDJwIGRldmljZSB0byBiZSBjb21wYXRpYmxlIHdpdGggdGhlCj4g
-KyAqIGJhY2tpbmcgZGV2aWNlIGZvciBldmVyeSBuYW1lc3BhY2Ugb24gdGhpcyBjb250cm9sbGVy
-Lgo+ICsgKi8KPiArc3RhdGljIHZvaWQgbnZtZXRfc2V0dXBfcDJwbWVtKHN0cnVjdCBudm1ldF9j
-dHJsICpjdHJsLCBzdHJ1Y3QgbnZtZXRfcmVxICpyZXEpCj4gK3sKPiArCXN0cnVjdCBudm1ldF9u
-cyAqbnM7Cj4gKwlpbnQgcmV0Owo+ICsKPiArCWlmICghcmVxLT5wb3J0LT51c2VfcDJwbWVtIHx8
-ICFyZXEtPnAycF9jbGllbnQpCj4gKwkJcmV0dXJuOwo+ICsKPiArCW11dGV4X2xvY2soJmN0cmwt
-PnN1YnN5cy0+bG9jayk7Cj4gKwo+ICsJcmV0ID0gcGNpX3AycGRtYV9hZGRfY2xpZW50KCZjdHJs
-LT5wMnBfY2xpZW50cywgcmVxLT5wMnBfY2xpZW50KTsKPiArCWlmIChyZXQpIHsKPiArCQlwcl9l
-cnIoImZhaWxlZCBhZGRpbmcgcGVlci10by1wZWVyIERNQSBjbGllbnQgJXM6ICVkXG4iLAo+ICsJ
-CSAgICAgICBkZXZfbmFtZShyZXEtPnAycF9jbGllbnQpLCByZXQpOwo+ICsJCWdvdG8gZnJlZV9k
-ZXZpY2VzOwo+ICsJfQo+ICsKPiArCWxpc3RfZm9yX2VhY2hfZW50cnlfcmN1KG5zLCAmY3RybC0+
-c3Vic3lzLT5uYW1lc3BhY2VzLCBkZXZfbGluaykgewo+ICsJCXJldCA9IG52bWV0X3AycGRtYV9h
-ZGRfY2xpZW50KGN0cmwsIG5zKTsKPiArCQlpZiAocmV0KQo+ICsJCQlnb3RvIGZyZWVfZGV2aWNl
-czsKPiArCX0KPiArCj4gKwlpZiAocmVxLT5wb3J0LT5wMnBfZGV2KSB7Cj4gKwkJaWYgKCFwY2lf
-cDJwZG1hX2Fzc2lnbl9wcm92aWRlcihyZXEtPnBvcnQtPnAycF9kZXYsCj4gKwkJCQkJCSZjdHJs
-LT5wMnBfY2xpZW50cykpIHsKPiArCQkJcHJfaW5mbygicGVlci10by1wZWVyIG1lbW9yeSBvbiAl
-cyBpcyBub3Qgc3VwcG9ydGVkXG4iLAo+ICsJCQkJcGNpX25hbWUocmVxLT5wb3J0LT5wMnBfZGV2
-KSk7Cj4gKwkJCWdvdG8gZnJlZV9kZXZpY2VzOwo+ICsJCX0KPiArCQljdHJsLT5wMnBfZGV2ID0g
-cGNpX2Rldl9nZXQocmVxLT5wb3J0LT5wMnBfZGV2KTsKPiArCX0gZWxzZSB7CgpXaGVuIGlzIHBv
-cnQtPnAycF9kZXYgPT0gTlVMTD8gYSBsaXR0bGUgbW9yZSBkb2N1bWVudGF0aW9uIHdvdWxkIGhl
-bHAgCmhlcmUuLi4KCl9fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19f
-X19fCkxpbnV4LW52bWUgbWFpbGluZyBsaXN0CkxpbnV4LW52bWVAbGlzdHMuaW5mcmFkZWFkLm9y
-ZwpodHRwOi8vbGlzdHMuaW5mcmFkZWFkLm9yZy9tYWlsbWFuL2xpc3RpbmZvL2xpbnV4LW52bWUK
+PCIe downtraining happens when both the device and PCIe port are
+capable of a larger bus width or higher speed than negotiated.
+Downtraining might be indicative of other problems in the system, and
+identifying this from userspace is neither intuitive, nor
+straightforward.
+
+The easiest way to detect this is with pcie_print_link_status(),
+since the bottleneck is usually the link that is downtrained. It's not
+a perfect solution, but it works extremely well in most cases.
+
+Signed-off-by: Alexandru Gagniuc <mr.nuke.me@gmail.com>
+---
+ drivers/pci/pci.c   | 22 ++++++++++++++++++----
+ drivers/pci/probe.c | 21 +++++++++++++++++++++
+ include/linux/pci.h |  1 +
+ 3 files changed, 40 insertions(+), 4 deletions(-)
+
+diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
+index 316496e99da9..414ad7b3abdb 100644
+--- a/drivers/pci/pci.c
++++ b/drivers/pci/pci.c
+@@ -5302,14 +5302,15 @@ u32 pcie_bandwidth_capable(struct pci_dev *dev, enum pci_bus_speed *speed,
+ }
+ 
+ /**
+- * pcie_print_link_status - Report the PCI device's link speed and width
++ * __pcie_print_link_status - Report the PCI device's link speed and width
+  * @dev: PCI device to query
++ * @verbose: Be verbose -- print info even when enough bandwidth is available.
+  *
+  * Report the available bandwidth at the device.  If this is less than the
+  * device is capable of, report the device's maximum possible bandwidth and
+  * the upstream link that limits its performance to less than that.
+  */
+-void pcie_print_link_status(struct pci_dev *dev)
++void __pcie_print_link_status(struct pci_dev *dev, bool verbose)
+ {
+ 	enum pcie_link_width width, width_cap;
+ 	enum pci_bus_speed speed, speed_cap;
+@@ -5319,11 +5320,11 @@ void pcie_print_link_status(struct pci_dev *dev)
+ 	bw_cap = pcie_bandwidth_capable(dev, &speed_cap, &width_cap);
+ 	bw_avail = pcie_bandwidth_available(dev, &limiting_dev, &speed, &width);
+ 
+-	if (bw_avail >= bw_cap)
++	if (bw_avail >= bw_cap && verbose)
+ 		pci_info(dev, "%u.%03u Gb/s available PCIe bandwidth (%s x%d link)\n",
+ 			 bw_cap / 1000, bw_cap % 1000,
+ 			 PCIE_SPEED2STR(speed_cap), width_cap);
+-	else
++	else if (bw_avail < bw_cap)
+ 		pci_info(dev, "%u.%03u Gb/s available PCIe bandwidth, limited by %s x%d link at %s (capable of %u.%03u Gb/s with %s x%d link)\n",
+ 			 bw_avail / 1000, bw_avail % 1000,
+ 			 PCIE_SPEED2STR(speed), width,
+@@ -5331,6 +5332,19 @@ void pcie_print_link_status(struct pci_dev *dev)
+ 			 bw_cap / 1000, bw_cap % 1000,
+ 			 PCIE_SPEED2STR(speed_cap), width_cap);
+ }
++
++/**
++ * pcie_print_link_status - Report the PCI device's link speed and width
++ * @dev: PCI device to query
++ *
++ * Report the available bandwidth at the device.  If this is less than the
++ * device is capable of, report the device's maximum possible bandwidth and
++ * the upstream link that limits its performance to less than that.
++ */
++void pcie_print_link_status(struct pci_dev *dev)
++{
++	__pcie_print_link_status(dev, true);
++}
+ EXPORT_SYMBOL(pcie_print_link_status);
+ 
+ /**
+diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
+index 611adcd9c169..1c8c26dd2cb2 100644
+--- a/drivers/pci/probe.c
++++ b/drivers/pci/probe.c
+@@ -2205,6 +2205,24 @@ static struct pci_dev *pci_scan_device(struct pci_bus *bus, int devfn)
+ 	return dev;
+ }
+ 
++static void pcie_check_upstream_link(struct pci_dev *dev)
++{
++	if (!pci_is_pcie(dev))
++		return;
++
++	/* Look from the device up to avoid downstream ports with no devices. */
++	if ((pci_pcie_type(dev) != PCI_EXP_TYPE_ENDPOINT) &&
++	    (pci_pcie_type(dev) != PCI_EXP_TYPE_LEG_END) &&
++	    (pci_pcie_type(dev) != PCI_EXP_TYPE_UPSTREAM))
++		return;
++
++	/* Multi-function PCIe share the same link/status. */
++	if (PCI_FUNC(dev->devfn) != 0 || dev->is_virtfn)
++		return;
++
++	__pcie_print_link_status(dev, false);
++}
++
+ static void pci_init_capabilities(struct pci_dev *dev)
+ {
+ 	/* Enhanced Allocation */
+@@ -2240,6 +2258,9 @@ static void pci_init_capabilities(struct pci_dev *dev)
+ 	/* Advanced Error Reporting */
+ 	pci_aer_init(dev);
+ 
++	/* Check link and detect downtrain errors */
++	pcie_check_upstream_link(dev);
++
+ 	if (pci_probe_reset_function(dev) == 0)
+ 		dev->reset_fn = 1;
+ }
+diff --git a/include/linux/pci.h b/include/linux/pci.h
+index c133ccfa002e..d212de231259 100644
+--- a/include/linux/pci.h
++++ b/include/linux/pci.h
+@@ -1087,6 +1087,7 @@ int pcie_set_mps(struct pci_dev *dev, int mps);
+ u32 pcie_bandwidth_available(struct pci_dev *dev, struct pci_dev **limiting_dev,
+ 			     enum pci_bus_speed *speed,
+ 			     enum pcie_link_width *width);
++void __pcie_print_link_status(struct pci_dev *dev, bool verbose);
+ void pcie_print_link_status(struct pci_dev *dev);
+ int pcie_flr(struct pci_dev *dev);
+ int __pci_reset_function_locked(struct pci_dev *dev);
+-- 
+2.17.1
