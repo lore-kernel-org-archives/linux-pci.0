@@ -1,56 +1,53 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-co1nam03on0042.outbound.protection.outlook.com ([104.47.40.42]:11461
-        "EHLO NAM03-CO1-obe.outbound.protection.outlook.com"
-        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S2403811AbeHATBQ (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Wed, 1 Aug 2018 15:01:16 -0400
-From: Bharat Kumar Gogada <bharat.kumar.gogada@xilinx.com>
-To: <linux-pci@vger.kernel.org>, <linux-kernel@vger.kernel.org>
-CC: <bhelgaas@google.com>, <rgummal@xilinx.com>,
-        Bharat Kumar Gogada <bharat.kumar.gogada@xilinx.com>
-Subject: [PATCH 1/3] PCI: xilinx-nwl: Save error IRQ number in device_node private data
-Date: Wed, 1 Aug 2018 22:14:47 +0530
-Message-ID: <1533141889-19962-2-git-send-email-bharat.kumar.gogada@xilinx.com>
-In-Reply-To: <1533141889-19962-1-git-send-email-bharat.kumar.gogada@xilinx.com>
-References: <1533141889-19962-1-git-send-email-bharat.kumar.gogada@xilinx.com>
+Received: from bmailout1.hostsharing.net ([83.223.95.100]:44219 "EHLO
+        bmailout1.hostsharing.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1727730AbeHFLjA (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Mon, 6 Aug 2018 07:39:00 -0400
+Date: Mon, 6 Aug 2018 11:30:46 +0200
+From: Lukas Wunner <lukas@wunner.de>
+To: Sinan Kaya <okaya@kernel.org>
+Cc: linux-pci@vger.kernel.org, Bjorn Helgaas <bhelgaas@google.com>,
+        Mika Westerberg <mika.westerberg@linux.intel.com>,
+        Oza Pawandeep <poza@codeaurora.org>,
+        Keith Busch <keith.busch@intel.com>
+Subject: Re: [PATCH v7 1/1] PCI: pciehp: Ignore link events when there is a
+ fatal error pending
+Message-ID: <20180806093046.GB28462@wunner.de>
+References: <20180805225136.5800-1-okaya@kernel.org>
+ <20180805225136.5800-2-okaya@kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20180805225136.5800-2-okaya@kernel.org>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Xilinx ZynqMP PS PCIe has dedicated interrupt line for
-reporting PCIe errors along with AER.
-Save this error irq number in struct device_node private data,
-this will be used via PCI qiurks for AER kernel service.
+On Sun, Aug 05, 2018 at 03:51:36PM -0700, Sinan Kaya wrote:
+> --- a/drivers/pci/hotplug/pciehp_ctrl.c
+> +++ b/drivers/pci/hotplug/pciehp_ctrl.c
+> @@ -222,9 +222,28 @@ void pciehp_handle_disable_request(struct slot *slot)
+>  void pciehp_handle_presence_or_link_change(struct slot *slot, u32 events)
+>  {
+>  	struct controller *ctrl = slot->ctrl;
+> +	struct pci_dev *pdev = ctrl->pcie->port;
+>  	bool link_active;
+>  	u8 present;
+>  
+> +	/* If a fatal error is pending, wait for AER or DPC to handle it. */
+> +	if (pcie_fatal_error_pending(pdev, PCI_ERR_UNC_SURPDN)) {
+> +		bool recovered;
+> +
+> +		recovered = pcie_wait_fatal_error_clear(pdev,
+> +						PCI_ERR_UNC_SURPDN);
+> +
+> +		/* If the fatal error is gone and the link is up, return */
+> +		if (recovered && pcie_wait_for_link(pdev, true)) {
+> +			ctrl_info(ctrl, "Slot(%s): Ignoring Link event due to successful fatal error recovery\n",
+> +				  slot_name(slot));
+> +			return;
+> +		}
+> +
+> +		ctrl_info(ctrl, "Slot(%s): Fatal error recovery failed for Link event, tryig hotplug reset\n",
 
-Signed-off-by: Bharat Kumar Gogada <bharat.kumar.gogada@xilinx.com>
----
- drivers/pci/controller/pcie-xilinx-nwl.c |    6 ++++++
- 1 files changed, 6 insertions(+), 0 deletions(-)
+Typo tryig -> trying.  Otherwise this is
 
-diff --git a/drivers/pci/controller/pcie-xilinx-nwl.c b/drivers/pci/controller/pcie-xilinx-nwl.c
-index fb32840..d505fe5 100644
---- a/drivers/pci/controller/pcie-xilinx-nwl.c
-+++ b/drivers/pci/controller/pcie-xilinx-nwl.c
-@@ -663,6 +663,9 @@ static int nwl_pcie_bridge_init(struct nwl_pcie *pcie)
- 	struct platform_device *pdev = to_platform_device(dev);
- 	u32 breg_val, ecam_val, first_busno = 0;
- 	int err;
-+#ifdef CONFIG_PCIEAER
-+	struct device_node *node = dev->of_node;
-+#endif
- 
- 	breg_val = nwl_bridge_readl(pcie, E_BREG_CAPABILITIES) & BREG_PRESENT;
- 	if (!breg_val) {
-@@ -744,6 +747,9 @@ static int nwl_pcie_bridge_init(struct nwl_pcie *pcie)
- 			pcie->irq_misc);
- 		return err;
- 	}
-+#ifdef CONFIG_PCIEAER
-+	node->data =  &pcie->irq_misc;
-+#endif
- 
- 	/* Disable all misc interrupts */
- 	nwl_bridge_writel(pcie, (u32)~MSGF_MISC_SR_MASKALL, MSGF_MISC_MASK);
--- 
-1.7.1
+Reviewed-by: Lukas Wunner <lukas@wunner.de>
