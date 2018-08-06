@@ -1,62 +1,106 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.29.99]:41954 "EHLO mail.kernel.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1725870AbeHNX5Y (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Tue, 14 Aug 2018 19:57:24 -0400
-Date: Tue, 14 Aug 2018 16:08:21 -0500
-From: Bjorn Helgaas <helgaas@kernel.org>
-To: Bert Kenward <bkenward@solarflare.com>
-Cc: Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org
-Subject: Re: [PATCH] pci/vpd: Ensure VPD is checked before timeout
-Message-ID: <20180814210821.GB28888@bhelgaas-glaptop.roam.corp.google.com>
-References: <66bbf8b3-bab9-1860-12c9-1c187ddc4201@solarflare.com>
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <66bbf8b3-bab9-1860-12c9-1c187ddc4201@solarflare.com>
-Sender: linux-pci-owner@vger.kernel.org
+References: <alpine.LRH.2.02.1808021242320.31834@file01.intranet.prod.int.rdu2.redhat.com>
+ <CAHCPf3tFGqkYEcWNN4LaWThw_rVqT316pzLv6T7RfxwO-eZ0EA@mail.gmail.com>
+ <alpine.LRH.2.02.1808030212340.17672@file01.intranet.prod.int.rdu2.redhat.com>
+ <CAKv+Gu8DeuksZhk1g3q_msSKV_hSY_2e1uzVten9-oGO3j9Sqg@mail.gmail.com>
+ <20180803094129.GB17798@arm.com>
+ <alpine.LRH.2.02.1808031235410.31584@file01.intranet.prod.int.rdu2.redhat.com>
+ <CAKv+Gu-aNFh1fsr_05SEwDp99n3pLrguP7=tEcFQPNY53=K7Fw@mail.gmail.com>
+ <alpine.LRH.2.02.1808031424140.14030@file01.intranet.prod.int.rdu2.redhat.com>
+ <CAHCPf3s-+Qf=WBZz1KpisDMG3520jCUh8PLAO3PHa4jdt8kCTw@mail.gmail.com>
+ <CAKv+Gu9_h-WFi1j4+DWUN_dMj75SKKHxWoDH8WQ9P7S7MNpZQg@mail.gmail.com>
+ <alpine.LRH.2.02.1808060553130.30832@file01.intranet.prod.int.rdu2.redhat.com>
+ <99fff4fe-afa9-f12f-a518-472a9dd1c530@arm.com>
+ <CAPv3WKdxwoW5MAOvy6uEBEuMpsigMo98hyO+TpKMsFrKR9oBzg@mail.gmail.com>
+ <CAKv+Gu8XN-vP64G_NLHFcRUJ2fptSrmxfd6CHWDgHkJj073Hbg@mail.gmail.com>
+In-Reply-To: <CAKv+Gu8XN-vP64G_NLHFcRUJ2fptSrmxfd6CHWDgHkJj073Hbg@mail.gmail.com>
+From: Marcin Wojtas <mw@semihalf.com>
+Date: Mon, 6 Aug 2018 16:07:39 +0200
+Message-ID: <CAPv3WKeVkWChEE7WjKuu__bg+zvh9dTNy=U_2jiSyWxFWiatbA@mail.gmail.com>
+Subject: Re: framebuffer corruption due to overlapping stp instructions on
+ arm64
+To: Ard Biesheuvel <ard.biesheuvel@linaro.org>, mpatocka@redhat.com
+List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
+List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
+List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
+List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
+List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
+Cc: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>,
+ Joao Pinto <Joao.Pinto@synopsys.com>, Jingoo Han <jingoohan1@gmail.com>,
+ Catalin Marinas <catalin.marinas@arm.com>, Will Deacon <will.deacon@arm.com>,
+ Russell King - ARM Linux <linux@armlinux.org.uk>,
+ Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
+ Matt Sealey <neko@bakuhatsu.net>, linux-pci@vger.kernel.org,
+ Robin Murphy <robin.murphy@arm.com>, linux-arm-kernel@lists.infradead.org
+Content-Type: text/plain; charset="utf-8"
+Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
+Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Thu, Jul 26, 2018 at 04:21:29PM +0100, Bert Kenward wrote:
-> We check the timeout before we check the VPD access completion bit.
-> On a very heavily loaded system this can cause VPD access to timeout.
-> We should check the completion bit before checking the timeout.
-> 
-> Signed-off-by: Bert Kenward <bkenward@solarflare.com>
-
-Applied to pci/misc for v4.19, thanks!
-
-> ---
->  drivers/pci/vpd.c | 7 +++++--
->  1 file changed, 5 insertions(+), 2 deletions(-)
-> 
-> diff --git a/drivers/pci/vpd.c b/drivers/pci/vpd.c
-> index 8617565ba561..4963c2e2bd4c 100644
-> --- a/drivers/pci/vpd.c
-> +++ b/drivers/pci/vpd.c
-> @@ -146,7 +146,7 @@ static int pci_vpd_wait(struct pci_dev *dev)
->  	if (!vpd->busy)
->  		return 0;
->  
-> -	while (time_before(jiffies, timeout)) {
-> +	do {
->  		ret = pci_user_read_config_word(dev, vpd->cap + PCI_VPD_ADDR,
->  						&status);
->  		if (ret < 0)
-> @@ -160,10 +160,13 @@ static int pci_vpd_wait(struct pci_dev *dev)
->  		if (fatal_signal_pending(current))
->  			return -EINTR;
->  
-> +		if (time_after(jiffies, timeout))
-> +			break;
-> +
->  		usleep_range(10, max_sleep);
->  		if (max_sleep < 1024)
->  			max_sleep *= 2;
-> -	}
-> +	} while (true);
->  
->  	pci_warn(dev, "VPD access failed.  This is likely a firmware bug on this device.  Contact the card vendor for a firmware update\n");
->  	return -ETIMEDOUT;
-> -- 
-> 2.13.6
-> 
+SGkgQXJkLCBNaWt1bGFzLAoKcG9uLiwgNiBzaWUgMjAxOCBvIDE1OjQ4IEFyZCBCaWVzaGV1dmVs
+IDxhcmQuYmllc2hldXZlbEBsaW5hcm8ub3JnPiBuYXBpc2HFgihhKToKPgo+IE9uIDYgQXVndXN0
+IDIwMTggYXQgMTU6NDEsIE1hcmNpbiBXb2p0YXMgPG13QHNlbWloYWxmLmNvbT4gd3JvdGU6Cj4g
+PiBIaSBNaWt1bGFzLAo+ID4KPiA+IHBvbi4sIDYgc2llIDIwMTggbyAxNDo0MiBSb2JpbiBNdXJw
+aHkgPHJvYmluLm11cnBoeUBhcm0uY29tPiBuYXBpc2HFgihhKToKPiA+Pgo+ID4+IE9uIDA2LzA4
+LzE4IDExOjI1LCBNaWt1bGFzIFBhdG9ja2Egd3JvdGU6Cj4gPj4gWy4uLl0KPiA+PiA+PiBOb25l
+IG9mIHRoaXMgZXhwbGFpbnMgd2h5IHNvbWUgdHJhbnNhY3Rpb25zIGZhaWwgdG8gbWFrZSBpdCBh
+Y3Jvc3MKPiA+PiA+PiBlbnRpcmVseS4gVGhlIG92ZXJsYXBwaW5nIHdyaXRlcyBpbiBxdWVzdGlv
+biB3cml0ZSB0aGUgc2FtZSBkYXRhIHRvCj4gPj4gPj4gdGhlIG1lbW9yeSBsb2NhdGlvbnMgdGhh
+dCBhcmUgY292ZXJlZCBieSBib3RoLCBhbmQgc28gdGhlIG9yZGVyaW5nIGluCj4gPj4gPj4gd2hp
+Y2ggdGhlIHRyYW5zYWN0aW9ucyBhcmUgcmVjZWl2ZWQgc2hvdWxkIG5vdCBhZmZlY3QgdGhlIG91
+dGNvbWUuCj4gPj4gPgo+ID4+ID4gWW91J3JlIHJpZ2h0IHRoYXQgdGhlIGNvcnJ1cHRpb24gY291
+bGRuJ3QgYmUgZXhwbGFpbmVkIGp1c3QgYnkgcmVvcmRlcmluZwo+ID4+ID4gd3JpdGVzLiBNeSBo
+eXBvdGhlc2lzIGlzIHRoYXQgdGhlIFBDSWUgY29udHJvbGxlciB0cmllcyB0byBkaXNhbWJpZ3Vh
+dGUKPiA+PiA+IHRoZSBvdmVybGFwcGluZyB3cml0ZXMsIGJ1dCB0aGUgZGlzYW1iaWd1YXRpb24g
+bG9naWMgd2FzIG5vdCB0ZXN0ZWQgYW5kIGl0Cj4gPj4gPiBpcyBidWdneS4gSWYgdGhlcmUncyBh
+IGJhcnJpZXIgYmV0d2VlbiB0aGUgb3ZlcmxhcHBpbmcgd3JpdGVzLCB0aGUgUENJZQo+ID4+ID4g
+Y29udHJvbGxlciB3b24ndCBzZWUgYW55IG92ZXJsYXBwaW5nIHdyaXRlcywgc28gaXQgd29uJ3Qg
+dHJpZ2dlciB0aGUKPiA+PiA+IGZhdWx0eSBkaXNhbWJpZ3VhdGlvbiBsb2dpYyBhbmQgaXQgd29y
+a3MuCj4gPj4gPgo+ID4+ID4gQ291bGQgdGhlIEFSTSBlbmdpbmVlcnMgbG9vayBpZiB0aGVyZSdz
+IHNvbWUgY2hpY2tlbiBiaXQgaW4gQ29ydGV4LUE3Mgo+ID4+ID4gdGhhdCBjb3VsZCBpbnNlcnQg
+YmFycmllcnMgYmV0d2VlbiBub24tY2FjaGVkIHdyaXRlcyBhdXRvbWF0aWNhbGx5Pwo+ID4+Cj4g
+Pj4gSSBkb24ndCB0aGluayB0aGVyZSBpcywgYW5kIGV2ZW4gaWYgdGhlcmUgd2FzIEkgaW1hZ2lu
+ZSBpdCB3b3VsZCBoYXZlIGEKPiA+PiBwcmV0dHkgaGlkZW91cyBlZmZlY3Qgb24gbm9uLWNvaGVy
+ZW50IERNQSBidWZmZXJzIGFuZCB0aGUgdmFyaW91cyBvdGhlcgo+ID4+IHBsYWNlcyBpbiB3aGlj
+aCB3ZSBoYXZlIE5vcm1hbC1OQyBtYXBwaW5ncyBvZiBhY3R1YWwgc3lzdGVtIFJBTS4KPiA+Pgo+
+ID4+ID4gSSBvYnNlcnZlIHRoZXNlIGtpbmRzIG9mIGNvcnJ1cHRpb25zOgo+ID4+ID4gLSBmYWls
+aW5nIHRvIHdyaXRlIGEgZmV3IGJ5dGVzCj4gPj4KPiA+PiBUaGF0IGNvdWxkIHBvdGVudGlhbGx5
+IGJlIGV4cGxhaW5lZCBieSB0aGUgcmVvcmRlcmluZy9hdG9taWNpdHkgaXNzdWVzCj4gPj4gTWF0
+dCBtZW50aW9uZWQsIGkuZS4gdGhlIGxvYWQgaXMgb2JzZXJ2aW5nIHBhcnQgb2YgdGhlIHN0b3Jl
+LCBiZWZvcmUgdGhlCj4gPj4gc3RvcmUgaGFzIGZ1bGx5IGNvbXBsZXRlZC4KPiA+Pgo+ID4+ID4g
+LSB3cml0aW5nIGEgZmV3IGJ5dGVzIHRoYXQgd2VyZSB3cml0dGVuIDE2IGJ5dGVzIGJlZm9yZQo+
+ID4+ID4gLSB3cml0aW5nIGEgZmV3IGJ5dGVzIHRoYXQgd2VyZSB3cml0dGVuIDE2IGJ5dGVzIGFm
+dGVyCj4gPj4KPiA+PiBUaG9zZSBzb3VuZCBtb3JlIGxpa2UgdGhlIGludGVyY29ubmVjdCBvciBy
+b290IGNvbXBsZXggaWdub3JpbmcgdGhlIGJ5dGUKPiA+PiBzdHJvYmVzIG9uIGFuIHVuYWxpZ25l
+ZCBidXJzdCwgb2Ygd2hpY2ggSSB0aGluayB0aGUgc2ltcGxpc3RpYyB2aWV3Cj4gPj4gd291bGQg
+YmUgIml0J3MgYnJva2VuIi4KPiA+Pgo+ID4+IEZXSVcgSSBzdHVjayBteSBvbGQgTnZpZGlhIDc2
+MDBHVCBjYXJkIGluIG15IEFybSBKdW5vIHIyIGJvYXJkICgyeAo+ID4+IENvcnRleC1BNzIpLCBi
+dWlsdCB5b3VyIHRlc3QgcHJvZ3JhbSBuYXRpdmVseSB3aXRoIEdDQyA4LjEuMSBhdCAtTzIsIGFu
+ZAo+ID4+IGl0J3Mgc3RpbGwgaGFwcGlseSBmbGlja2VyaW5nIHBpeGVscyBpbiB0aGUgY29ybmVy
+IG9mIHRoZSBjb25zb2xlIGFmdGVyCj4gPj4gbmVhcmx5IGFuIGhvdXIgKGluIHBhcmFsbGVsIHdp
+dGggc29tZSBpcGVyZjMganVzdCB0byBlbnN1cmUgcGxlbnR5IG9mCj4gPj4gUENJZSB0cmFmZmlj
+KS4gSSB3b3VsZCBzdHJvbmdseSBzdXNwZWN0IHRoaXMgaXNzdWUgaXMgcGFydGljdWxhciB0bwo+
+ID4+IEFybWFkYSA4aywgc28gaXRzJyBwcm9iYWJseSBvbmUgZm9yIHRoZSBNYXJ2ZWxsIGZvbGtz
+IHRvIHRha2UgYSBjbG9zZXIKPiA+PiBsb29rIGF0IC0gSSBiZWxpZXZlIHNvbWUgcHJldmlvdXMg
+aW50ZXJjb25uZWN0IGlzc3VlcyBvbiB0aG9zZSBTb0NzIHdlcmUKPiA+PiBhY3R1YWxseSBmaXhh
+YmxlIGluIGZpcm13YXJlLgo+ID4+Cj4gPj4KPiA+Cj4gPiBPbiBteSBNYWNjaGlhdG8gSSB1c2Ug
+R1Q2MzAgY2FyZCAobnV2ZWF1IGRyaXZlcikgKyBkZWJpYW4gKyB4ZmNlCj4gPiBkZXNrdG9wIGFu
+ZCBpbiBkdWFsIG1vbml0b3IgbW9kZSwgSSBjb3VsZCBydW4gYSBjb3VwbGUgb2YgMTA4MHAKPiA+
+IHN0cmVhbXMuIEFsbCBzbW9vdGggYW5kIEkndmUgbmV2ZXIgbm90aWNlZCBhbnkgaW1hZ2UgY29y
+cnVwdGlvbgo+ID4gd2hhdHNvZXZlciAoSSBzcGVudCBhIGxvdCBvZiB0aW1lIGluIGZyb250IG9m
+IHN1Y2ggc2V0dXApLiBKdXN0IHRvIGJlCj4gPiBvbiBhIHNhZmUgc2lkZSwgY2FuIHlvdSBzZW5k
+IG1lIGEgYm9vdGxvZyBhbmQgeW91ciBib2FyZCByZXZpc2lvbj8gSSdkCj4gPiBsaWtlIHRvIHNl
+ZSB5b3VyIGZpcndhcmUgdmVyc2lvbiBhbmQgdHlwZS4KPiA+Cj4KPiBIaSBNYXJjaW4sCj4KPiBD
+b3VsZCB5b3UgcGxlYXNlIHRyeSBydW5uaW5nIGhpcyByZXByb2R1Y2VyPwoKVGhpcyBpcyBleGFj
+dGx5IHdoYXQgSSBwbGFuIHRvIGRvLCBhcyBzb29uIGFzIEkgY2FuIHBsdWcgbXkgR0ZYIGNhcmQK
+YmFjayB0byB0aGUgYm9hcmQgKHRvbW9ycm93KS4gSnVzdCB0byByZW1haW4gYWxpZ25lZCAtIGlz
+IGl0IG9rLCBpZiBJCmJvb3QgbXkgZGViaWFuIHdpdGggR1Q2MzAgcGx1Z2dlZCwgY29tcGlsZSB0
+aGUgcHJvZ3JhbSB3aXRoIC1PMiBhbmQKc2ltbHBseSBydW4gaXQgb24gL2Rldi9mYjA/CgpCZXN0
+IHJlZ2FyZHMsCk1hcmNpbgoKX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19f
+X19fX19fX18KbGludXgtYXJtLWtlcm5lbCBtYWlsaW5nIGxpc3QKbGludXgtYXJtLWtlcm5lbEBs
+aXN0cy5pbmZyYWRlYWQub3JnCmh0dHA6Ly9saXN0cy5pbmZyYWRlYWQub3JnL21haWxtYW4vbGlz
+dGluZm8vbGludXgtYXJtLWtlcm5lbAo=
