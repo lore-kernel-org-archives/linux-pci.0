@@ -1,65 +1,92 @@
-Return-Path: <SRS0=iI2m=KX=broadcom.com=ray.jui@kernel.org>
-Return-Path: <SRS0=iI2m=KX=broadcom.com=ray.jui@kernel.org>
-Subject: Re: [RFC] ARM64, PCIe, annd ACPI
-To: Bjorn Helgaas <helgaas@kernel.org>
-Cc: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
- Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org,
- Tomasz Nowicki <tn@semihalf.com>,
- Vladimir Olovyannikov <vladimir.olovyannikov@broadcom.com>,
- BCM Kernel Feedback <bcm-kernel-feedback-list@broadcom.com>
-References: <89484aa0-08c4-0cff-500d-407d21e2f5fd@broadcom.com>
- <20180808021025.GC49411@bhelgaas-glaptop.roam.corp.google.com>
-From: Ray Jui <ray.jui@broadcom.com>
-Message-ID: <be61d512-5a68-7320-a205-2a6fbd24ce81@broadcom.com>
-Date: Wed, 8 Aug 2018 11:46:57 -0700
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Date: Mon, 6 Aug 2018 18:13:57 +0100
+From: Catalin Marinas <catalin.marinas@arm.com>
+To: Ard Biesheuvel <ard.biesheuvel@linaro.org>
+Subject: Re: framebuffer corruption due to overlapping stp instructions on
+ arm64
+Message-ID: <20180806171356.kk45vd7n5bdi6ka3@armageddon.cambridge.arm.com>
+References: <CAKv+Gu8DeuksZhk1g3q_msSKV_hSY_2e1uzVten9-oGO3j9Sqg@mail.gmail.com>
+ <20180803094129.GB17798@arm.com>
+ <alpine.LRH.2.02.1808031235410.31584@file01.intranet.prod.int.rdu2.redhat.com>
+ <CAKv+Gu-aNFh1fsr_05SEwDp99n3pLrguP7=tEcFQPNY53=K7Fw@mail.gmail.com>
+ <alpine.LRH.2.02.1808031424140.14030@file01.intranet.prod.int.rdu2.redhat.com>
+ <CAHCPf3s-+Qf=WBZz1KpisDMG3520jCUh8PLAO3PHa4jdt8kCTw@mail.gmail.com>
+ <CAKv+Gu9_h-WFi1j4+DWUN_dMj75SKKHxWoDH8WQ9P7S7MNpZQg@mail.gmail.com>
+ <alpine.LRH.2.02.1808060553130.30832@file01.intranet.prod.int.rdu2.redhat.com>
+ <99fff4fe-afa9-f12f-a518-472a9dd1c530@arm.com>
+ <CAKv+Gu_C2g=C=gMpk4a5jpDORnxZY6t1v=HDoy59m5vwNBxBBg@mail.gmail.com>
 MIME-Version: 1.0
-In-Reply-To: <20180808021025.GC49411@bhelgaas-glaptop.roam.corp.google.com>
-Content-Type: text/plain; charset=utf-8; format=flowed
+In-Reply-To: <CAKv+Gu_C2g=C=gMpk4a5jpDORnxZY6t1v=HDoy59m5vwNBxBBg@mail.gmail.com>
+List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
+List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
+List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
+List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
+List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
+Cc: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>,
+ Joao Pinto <Joao.Pinto@synopsys.com>, linux-pci <linux-pci@vger.kernel.org>,
+ Will Deacon <will.deacon@arm.com>, Russell King <linux@armlinux.org.uk>,
+ Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
+ Mikulas Patocka <mpatocka@redhat.com>, Matt Sealey <neko@bakuhatsu.net>,
+ Jingoo Han <jingoohan1@gmail.com>, Robin Murphy <robin.murphy@arm.com>,
+ linux-arm-kernel <linux-arm-kernel@lists.infradead.org>
+Content-Type: text/plain; charset="us-ascii"
+Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
+Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
 List-ID: <linux-pci.vger.kernel.org>
 
+On Mon, Aug 06, 2018 at 05:47:36PM +0200, Ard Biesheuvel wrote:
+> On 6 August 2018 at 14:42, Robin Murphy <robin.murphy@arm.com> wrote:
+> > On 06/08/18 11:25, Mikulas Patocka wrote:
+> > [...]
+> >>>
+> >>> None of this explains why some transactions fail to make it across
+> >>> entirely. The overlapping writes in question write the same data to
+> >>> the memory locations that are covered by both, and so the ordering in
+> >>> which the transactions are received should not affect the outcome.
+> >>
+> >> You're right that the corruption couldn't be explained just by reordering
+> >> writes. My hypothesis is that the PCIe controller tries to disambiguate
+> >> the overlapping writes, but the disambiguation logic was not tested and it
+> >> is buggy. If there's a barrier between the overlapping writes, the PCIe
+> >> controller won't see any overlapping writes, so it won't trigger the
+> >> faulty disambiguation logic and it works.
+> >>
+> >> Could the ARM engineers look if there's some chicken bit in Cortex-A72
+> >> that could insert barriers between non-cached writes automatically?
+> >
+> > I don't think there is, and even if there was I imagine it would have a
+> > pretty hideous effect on non-coherent DMA buffers and the various other
+> > places in which we have Normal-NC mappings of actual system RAM.
+> 
+> Looking at the A72 manual, there is one chicken bit that looks like it
+> may be related:
+> 
+> CPUACTLR_EL1 bit #50:
+> 
+> 0 Enables store streaming on NC/GRE memory type. This is the reset value.
+> 1 Disables store streaming on NC/GRE memory type.
+> 
+> so putting something like
+> 
+> mrs x0, S3_1_C15_C2_0
+> orr x0, x0, #(1 << 50)
+> msr S3_1_C15_C2_0, x0
+> 
+> in __cpu_setup() would be worth a try.
 
+Note that access to this register may be disabled at EL3 by firmware
+(ACTLR_EL3.CPUACTLR).
 
-On 8/7/2018 7:10 PM, Bjorn Helgaas wrote:
-> On Tue, Aug 07, 2018 at 05:10:15PM -0700, Ray Jui wrote:
->> Hi Lorenzo/Bjorn,
->>
->> I have a question on PCIe controller APCI support on ARM64 based systems.
->>
->> If my understanding of the implementation of "pci_acpi_scan_root" under
->> "arch/arm64/kernel/pci.c" is correct, it appears
->> "pci_acpi_setup_ecam_mapping" is called within "pci_acpi_scan_root".
->>
->> Does that mean for a PCIe host controller on ARM64 to support ACPI, it needs
->> to support ECAM and MMIO based access to the configuration space registers?
->   
-> Yes.  In my opinion, a PCIe host controller is generally required to
-> support ECAM even if the platform doesn't support ACPI.  I base this
-> on PCIe r4.0, sec 7.2.2:
-> 
->    For systems that are PC-compatible, or that do not implement a
->    processor-architecture-specific firmware interface standard that
->    allows access to the Configuration Space, the ECAM is required as
->    defined in this section.
-> 
->> If the above statement is true, does it imply that any PCIe controller on
->> ARM64 that does not support MMIO based access to the config space register
->> cannot have ACPI support?
-> 
-> We would treat that as a non-compliant platform that requires special
-> quirks to work around the problem.  That does mean we have to add
-> platform-specific quirks, which of course means we can't run an old
-> kernel on a new platform that lacks standard ECAM.  There are several
-> existing systems like this.
-> 
-> The notes and examples here should be a place to start:
-> 
->    drivers/pci/controller/Makefile
->    drivers/pci/controller/dwc/Makefile
->    drivers/acpi/pci_mcfg.c
-> 
-> Bjorn
-> 
+FWIW, Mikulas' test seems to run fine on a ThunderX1 with AMD
+FirePro W2100 (on /dev/fb1)
 
-Thanks for the pointers, Bjorn! Very helpful!
+-- 
+Catalin
 
-Ray
+_______________________________________________
+linux-arm-kernel mailing list
+linux-arm-kernel@lists.infradead.org
+http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
