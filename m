@@ -1,69 +1,86 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from aserp2120.oracle.com ([141.146.126.78]:55216 "EHLO
-        aserp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1725901AbeHPQaG (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Thu, 16 Aug 2018 12:30:06 -0400
-Subject: Re: [PATCH 1/1] PCI/AER: prevent pcie_do_fatal_recovery from using
- device after it is removed
-To: Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-        poza@codeaurora.org
-Cc: okaya@kernel.org, bhelgaas@google.com, keith.busch@intel.com,
-        linux-pci@vger.kernel.org, linux-pci-owner@vger.kernel.org,
-        Sam Bobroff <sam.bobroff@au1.ibm.com>
-References: <1534179088-44219-1-git-send-email-thomas.tai@oracle.com>
- <1534179088-44219-2-git-send-email-thomas.tai@oracle.com>
- <51f4b387d9bd96a42d526a6a029fc43b@codeaurora.org>
- <b0104a716319d76e734c307cb4bedd9d@codeaurora.org>
- <903394c04d6ad468ed06dc0a779200e7555345a7.camel@kernel.crashing.org>
- <6cb069038530757f31f3dd60328c7e30@codeaurora.org>
- <e931bc7a7e468e8bb2ee3766b3fcf96f1800f552.camel@kernel.crashing.org>
- <bf7ceabb6fe51398e0f4eebd9c4fe4ac1ec2b8a4.camel@kernel.crashing.org>
- <42bd39aef30fe24bfc48d378e1f5d35d@codeaurora.org>
- <54d19e0e3d44bedf247853144c6bbfed5561a125.camel@kernel.crashing.org>
- <f022581a9ecb88e5501a09bdcdc62954@codeaurora.org>
- <6382ee9197b781f5f5680aa60176f937669a0a13.camel@kernel.crashing.org>
-From: Thomas Tai <thomas.tai@oracle.com>
-Message-ID: <a33a74a5-40cd-0dfe-1712-7587c85a4a54@oracle.com>
-Date: Thu, 16 Aug 2018 09:30:21 -0400
-MIME-Version: 1.0
-In-Reply-To: <6382ee9197b781f5f5680aa60176f937669a0a13.camel@kernel.crashing.org>
-Content-Type: text/plain; charset=utf-8; format=flowed
+Received: from mail-oi0-f66.google.com ([209.85.218.66]:40007 "EHLO
+        mail-oi0-f66.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S2387557AbeHGBiS (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Mon, 6 Aug 2018 21:38:18 -0400
+From: Alexandru Gagniuc <mr.nuke.me@gmail.com>
+To: linux-pci@vger.kernel.org, bhelgaas@google.com,
+        jakub.kicinski@netronome.com
+Cc: keith.busch@intel.com, alex_gagniuc@dellteam.com,
+        austin_bolen@dell.com, shyam_iyer@dell.com,
+        Alexandru Gagniuc <mr.nuke.me@gmail.com>,
+        Ariel Elior <ariel.elior@cavium.com>,
+        everest-linux-l2@cavium.com,
+        "David S. Miller" <davem@davemloft.net>,
+        Michael Chan <michael.chan@broadcom.com>,
+        Ganesh Goudar <ganeshgr@chelsio.com>,
+        Jeff Kirsher <jeffrey.t.kirsher@intel.com>,
+        Tariq Toukan <tariqt@mellanox.com>,
+        Saeed Mahameed <saeedm@mellanox.com>,
+        Leon Romanovsky <leon@kernel.org>,
+        Dirk van der Merwe <dirk.vandermerwe@netronome.com>,
+        netdev@vger.kernel.org, linux-kernel@vger.kernel.org,
+        intel-wired-lan@lists.osuosl.org, linux-rdma@vger.kernel.org,
+        oss-drivers@netronome.com
+Subject: [PATCH v6 6/9] ixgbe: Do not call pcie_print_link_status()
+Date: Mon,  6 Aug 2018 18:25:40 -0500
+Message-Id: <20180806232600.25694-6-mr.nuke.me@gmail.com>
+In-Reply-To: <20180806232600.25694-1-mr.nuke.me@gmail.com>
+References: <CAErSpo4PK+SQLNfdkLNt9eLc7bpbxbkZCsa8T-tQpid601n0SQ@mail.gmail.com>
+ <20180806232600.25694-1-mr.nuke.me@gmail.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-[ ... ]>
->> and all we have to do is discuss and evolve it or change it
->> we can catch up on webex, (Sinan is going to be there in Plumber's
->> conference, I might not be able to join there, as we have bring-up
->> coming)
-> 
-> Ok, I'll try to get there. Let's plan at least a BOF or two if not a
-> microconf.
-> 
-> To setup a webex let's first list who needs to attend and respective
-> timezones so we can figure out a time. I'm in Australia east coast.
+This is now done by the PCI core to warn of sub-optimal bandwidth.
 
-Hi guys,
-I see that there are a lot discussion regarding the error handling. May 
-I join the webex and hopefully I can be helpful? I'm in Canada east 
-coast (Ottawa,Ontario,Canada)
+Signed-off-by: Alexandru Gagniuc <mr.nuke.me@gmail.com>
+---
+ drivers/net/ethernet/intel/ixgbe/ixgbe_main.c | 26 -------------------
+ 1 file changed, 26 deletions(-)
 
-Thank you,
-Thomas
-
-> 
->>>> The way DPC used to behave in 2016, is still the same; which involved
->>>> removing and re-enumerating the devices.
->>>
->>> Which is mostly useless for anything that isn't a network device.
->>>
->>> We've been doing EEH for something like 15 to 20 years, so we have a
->>> long experience with what it takes to get PCI(e) devices to recover on
->>> enterprise systems.
->>>
->>> Removing and re-enumerating is one of the very worst thing you can do
->>> in that area.
->>>
->>> Cheers,
->>> Ben.
-> 
+diff --git a/drivers/net/ethernet/intel/ixgbe/ixgbe_main.c b/drivers/net/ethernet/intel/ixgbe/ixgbe_main.c
+index 62e57b05a0ae..7ecdc6c03a66 100644
+--- a/drivers/net/ethernet/intel/ixgbe/ixgbe_main.c
++++ b/drivers/net/ethernet/intel/ixgbe/ixgbe_main.c
+@@ -241,28 +241,6 @@ static inline bool ixgbe_pcie_from_parent(struct ixgbe_hw *hw)
+ 	}
+ }
+ 
+-static void ixgbe_check_minimum_link(struct ixgbe_adapter *adapter,
+-				     int expected_gts)
+-{
+-	struct ixgbe_hw *hw = &adapter->hw;
+-	struct pci_dev *pdev;
+-
+-	/* Some devices are not connected over PCIe and thus do not negotiate
+-	 * speed. These devices do not have valid bus info, and thus any report
+-	 * we generate may not be correct.
+-	 */
+-	if (hw->bus.type == ixgbe_bus_type_internal)
+-		return;
+-
+-	/* determine whether to use the parent device */
+-	if (ixgbe_pcie_from_parent(&adapter->hw))
+-		pdev = adapter->pdev->bus->parent->self;
+-	else
+-		pdev = adapter->pdev;
+-
+-	pcie_print_link_status(pdev);
+-}
+-
+ static void ixgbe_service_event_schedule(struct ixgbe_adapter *adapter)
+ {
+ 	if (!test_bit(__IXGBE_DOWN, &adapter->state) &&
+@@ -10585,10 +10563,6 @@ static int ixgbe_probe(struct pci_dev *pdev, const struct pci_device_id *ent)
+ 		break;
+ 	}
+ 
+-	/* don't check link if we failed to enumerate functions */
+-	if (expected_gts > 0)
+-		ixgbe_check_minimum_link(adapter, expected_gts);
+-
+ 	err = ixgbe_read_pba_string_generic(hw, part_str, sizeof(part_str));
+ 	if (err)
+ 		strlcpy(part_str, "Unknown", sizeof(part_str));
+-- 
+2.17.1
