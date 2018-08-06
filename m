@@ -1,61 +1,106 @@
-Return-Path: <SRS0=a9CN=LA=kernel.crashing.org=benh@kernel.org>
-Return-Path: <SRS0=a9CN=LA=kernel.crashing.org=benh@kernel.org>
-Message-ID: <16dc573e5a9add534153b1236d3665b035b8d581.camel@kernel.crashing.org>
-Subject: Re: [RFC PATCH 0/6] pci: Rework is_added race fix and address
- bridge enable races
-From: Benjamin Herrenschmidt <benh@kernel.crashing.org>
-To: Bjorn Helgaas <helgaas@kernel.org>, linux-pci@vger.kernel.org
-Cc: Hari Vyas <hari.vyas@broadcom.com>, Ray Jui <ray.jui@broadcom.com>,
-        Srinath Mannam <srinath.mannam@broadcom.com>,
-        Guenter Roeck
- <linux@roeck-us.net>, Jens Axboe <axboe@kernel.dk>,
-        Lukas Wunner
- <lukas@wunner.de>,
-        Konstantin Khlebnikov <khlebnikov@yandex-team.ru>,
-        Marta
- Rybczynska <mrybczyn@kalray.eu>,
-        Pierre-Yves Kerbrat <pkerbrat@kalray.eu>, linux-kernel@vger.kernel.org
-Date: Fri, 17 Aug 2018 15:03:49 +1000
-In-Reply-To: <20180817044902.31420-1-benh@kernel.crashing.org>
-References: <20180817044902.31420-1-benh@kernel.crashing.org>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Date: Mon, 6 Aug 2018 13:09:18 -0400 (EDT)
+From: Mikulas Patocka <mpatocka@redhat.com>
+To: Ard Biesheuvel <ard.biesheuvel@linaro.org>
+Subject: Re: framebuffer corruption due to overlapping stp instructions on
+ arm64
+In-Reply-To: <CAKv+Gu_C2g=C=gMpk4a5jpDORnxZY6t1v=HDoy59m5vwNBxBBg@mail.gmail.com>
+Message-ID: <alpine.LRH.2.02.1808061306490.12989@file01.intranet.prod.int.rdu2.redhat.com>
+References: <alpine.LRH.2.02.1808021242320.31834@file01.intranet.prod.int.rdu2.redhat.com>
+ <CAHCPf3tFGqkYEcWNN4LaWThw_rVqT316pzLv6T7RfxwO-eZ0EA@mail.gmail.com>
+ <alpine.LRH.2.02.1808030212340.17672@file01.intranet.prod.int.rdu2.redhat.com>
+ <CAKv+Gu8DeuksZhk1g3q_msSKV_hSY_2e1uzVten9-oGO3j9Sqg@mail.gmail.com>
+ <20180803094129.GB17798@arm.com>
+ <alpine.LRH.2.02.1808031235410.31584@file01.intranet.prod.int.rdu2.redhat.com>
+ <CAKv+Gu-aNFh1fsr_05SEwDp99n3pLrguP7=tEcFQPNY53=K7Fw@mail.gmail.com>
+ <alpine.LRH.2.02.1808031424140.14030@file01.intranet.prod.int.rdu2.redhat.com>
+ <CAHCPf3s-+Qf=WBZz1KpisDMG3520jCUh8PLAO3PHa4jdt8kCTw@mail.gmail.com>
+ <CAKv+Gu9_h-WFi1j4+DWUN_dMj75SKKHxWoDH8WQ9P7S7MNpZQg@mail.gmail.com>
+ <alpine.LRH.2.02.1808060553130.30832@file01.intranet.prod.int.rdu2.redhat.com>
+ <99fff4fe-afa9-f12f-a518-472a9dd1c530@arm.com>
+ <CAKv+Gu_C2g=C=gMpk4a5jpDORnxZY6t1v=HDoy59m5vwNBxBBg@mail.gmail.com>
+MIME-Version: 1.0
+List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
+List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
+List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
+List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
+List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
+Cc: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>,
+ Joao Pinto <Joao.Pinto@synopsys.com>,
+ Catalin Marinas <catalin.marinas@arm.com>,
+ linux-pci <linux-pci@vger.kernel.org>, Will Deacon <will.deacon@arm.com>,
+ Russell King <linux@armlinux.org.uk>,
+ Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
+ Matt Sealey <neko@bakuhatsu.net>, Jingoo Han <jingoohan1@gmail.com>,
+ Robin Murphy <robin.murphy@arm.com>,
+ linux-arm-kernel <linux-arm-kernel@lists.infradead.org>
+Content-Type: text/plain; charset="us-ascii"
+Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
+Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Fri, 2018-08-17 at 14:48 +1000, Benjamin Herrenschmidt wrote:
-> The second part aims at fixing the enable/disable/set_master races,
-> and does so by providing a framework for future device state locking
-> issues.
+
+
+On Mon, 6 Aug 2018, Ard Biesheuvel wrote:
+
+> On 6 August 2018 at 14:42, Robin Murphy <robin.murphy@arm.com> wrote:
+> > On 06/08/18 11:25, Mikulas Patocka wrote:
+> > [...]
+> >>>
+> >>> None of this explains why some transactions fail to make it across
+> >>> entirely. The overlapping writes in question write the same data to
+> >>> the memory locations that are covered by both, and so the ordering in
+> >>> which the transactions are received should not affect the outcome.
+> >>
+> >>
+> >> You're right that the corruption couldn't be explained just by reordering
+> >> writes. My hypothesis is that the PCIe controller tries to disambiguate
+> >> the overlapping writes, but the disambiguation logic was not tested and it
+> >> is buggy. If there's a barrier between the overlapping writes, the PCIe
+> >> controller won't see any overlapping writes, so it won't trigger the
+> >> faulty disambiguation logic and it works.
+> >>
+> >> Could the ARM engineers look if there's some chicken bit in Cortex-A72
+> >> that could insert barriers between non-cached writes automatically?
+> >
+> >
+> > I don't think there is, and even if there was I imagine it would have a
+> > pretty hideous effect on non-coherent DMA buffers and the various other
+> > places in which we have Normal-NC mappings of actual system RAM.
+> >
 > 
-> It introduces a pci_dev->state_mutex which is used at a lower level
-> than the device_lock (the device lock isn't suitable, as explained
-> in the cset comments) and uses it to protect enablement and set_master.
+> Looking at the A72 manual, there is one chicken bit that looks like it
+> may be related:
+> 
+> CPUACTLR_EL1 bit #50:
+> 
+> 0 Enables store streaming on NC/GRE memory type. This is the reset value.
+> 1 Disables store streaming on NC/GRE memory type.
+> 
+> so putting something like
+> 
+> mrs x0, S3_1_C15_C2_0
+> orr x0, x0, #(1 << 50)
+> msr S3_1_C15_C2_0, x0
+> 
+> in __cpu_setup() would be worth a try.
 
-As discussed in the series, I'm not using the device_lock because I
-don't like it creeping out of drivers/base too much unless you
-explicitly try to lock against concurrent add/remove.
+It won't boot.
 
-That being said, if we decided we prefer using it to solve the
-enable/disable race, then we have to be careful of a few things:
+But if i write the same value that was read, it also won't boot.
 
- - Driver callbacks hold it, so we can't take it from within
-pci_enable_device(), pci_set_master() etc... themselves. We'll have to
-assume the caller has it
+I created a simple kernel module that reads this register and it has bit 
+32 set, all other bits clear. But when I write the same value into it, the 
+core that does the write is stuck in infinite loop.
 
- - The above means auditing callers of these various APIs that might be
-calling them from outside of a driver callback and add the necessary
-lock
+So, it seems that we are writing this register from a wrong place.
 
- - We need to take great care about the possibility of the parent
-device(s) lock being held. It can happen for USB for example. Now we
-don't have USB->PCI adapters that I know of that uses the PCI stack in
-Linux but generally assuming your parent lock isn't held is risky. So I
-would be a bit weary of walking up the bridge chain and taking it
-unconditionally.
+Mikulas
 
-Alternatively, we could hijack an existing global lock, for example
-mvoe the bridge_mutex outside of ACPI and use it for the upwards bridge
-walk, and ignore the other possible races with enable/disable.
-
-Cheers,
-Ben.
+_______________________________________________
+linux-arm-kernel mailing list
+linux-arm-kernel@lists.infradead.org
+http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
