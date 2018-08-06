@@ -1,100 +1,61 @@
-Return-Path: <SRS0=8yBB=KS=gmail.com=hkallweit1@kernel.org>
-Return-Path: <SRS0=8yBB=KS=gmail.com=hkallweit1@kernel.org>
-Subject: Re: [PATCH] PCI: let pci_request_irq properly deal with threaded
- interrupts
-To: Thomas Gleixner <tglx@linutronix.de>
-Cc: Marc Zyngier <marc.zyngier@arm.com>, Bjorn Helgaas <helgaas@kernel.org>,
- Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org,
- Christoph Hellwig <hch@lst.de>, LKML <linux-kernel@vger.kernel.org>
-References: <d004975f-03a8-59f5-56ef-f4e1f8e12dfb@gmail.com>
- <20180730213028.GC45322@bhelgaas-glaptop.roam.corp.google.com>
- <alpine.DEB.2.21.1807310015170.1725@nanos.tec.linutronix.de>
- <86d0v4x75x.wl-marc.zyngier@arm.com>
- <0799ea22-70ed-3be6-cb80-449f53fef819@gmail.com>
- <alpine.DEB.2.21.1808031605160.1745@nanos.tec.linutronix.de>
-From: Heiner Kallweit <hkallweit1@gmail.com>
-Message-ID: <420d6476-8ea4-0b37-e94a-f5842b7b0ff7@gmail.com>
-Date: Fri, 3 Aug 2018 21:25:27 +0200
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from smtp.codeaurora.org ([198.145.29.96]:48772 "EHLO
+        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1732385AbeHFRWD (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Mon, 6 Aug 2018 13:22:03 -0400
 MIME-Version: 1.0
-In-Reply-To: <alpine.DEB.2.21.1808031605160.1745@nanos.tec.linutronix.de>
-Content-Type: text/plain; charset=utf-8
+Content-Type: text/plain; charset=UTF-8;
+ format=flowed
+Date: Mon, 06 Aug 2018 20:42:30 +0530
+From: poza@codeaurora.org
+To: Sinan Kaya <okaya@kernel.org>
+Cc: Lukas Wunner <lukas@wunner.de>, linux-pci@vger.kernel.org,
+        Bjorn Helgaas <bhelgaas@google.com>,
+        Mika Westerberg <mika.westerberg@linux.intel.com>,
+        Keith Busch <keith.busch@intel.com>,
+        linux-pci-owner@vger.kernel.org
+Subject: Re: [PATCH v7 1/1] PCI: pciehp: Ignore link events when there is a
+ fatal error pending
+In-Reply-To: <22ce7172-b028-c0b1-d117-8096e016b15b@kernel.org>
+References: <20180805225136.5800-1-okaya@kernel.org>
+ <20180805225136.5800-2-okaya@kernel.org>
+ <c1cfff22c63f6d3d6285575721a2a3e8@codeaurora.org>
+ <20180806092614.GA28462@wunner.de>
+ <2b4c23a2e97f61a124c95c49d604a853@codeaurora.org>
+ <3d491f25-1d59-f257-1125-302e2d50e960@kernel.org>
+ <22ce7172-b028-c0b1-d117-8096e016b15b@kernel.org>
+Message-ID: <16b40dfd99c37c67e3d103f6fb7738ef@codeaurora.org>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 03.08.2018 16:09, Thomas Gleixner wrote:
-> On Wed, 1 Aug 2018, Heiner Kallweit wrote:
->> On 31.07.2018 08:15, Marc Zyngier wrote:
->>> On Mon, 30 Jul 2018 23:36:57 +0100,
->>> Thomas Gleixner <tglx@linutronix.de> wrote:
->>>>
->>>> Yes, request for pure threaded interrupts are rejected if the oneshot flag
->>>> is not set. The reason is that this would be deadly especially with level
->>>> triggered interrupts because the primary default handler just wakes the
->>>> thread and then reenables interrupts, which will make the interrupt come
->>>> back immediately and the thread won't have a chance to actually shut it up
->>>> in the device.
->>>>
->>>> That made me look into that code again and I found that we added a flag for
->>>> irq chips to tell the core that the interrupt is one shot safe, i.e. that
->>>> it can be requested w/o IRQF_ONESHOT. That was initially added to optimize
->>>> MSI based interrupts which are oneshot safe by implementation.
->>>>
->>>>   dc9b229a58dc ("genirq: Allow irq chips to mark themself oneshot safe")
->>>>
->>>> The original patch added that flag to the x86 MSI irqchip code, but that
->>>> part was not applied for reasons which slipped from memory. It might be
->>>> worthwhile to revisit that in order to avoid the mask/unmask overhead for
->>>> such cases.
->>>
->>> Yup, that would actually be beneficial to a range of interrupt
->>> controllers (only an obscure GPIO driver makes use of this flag).
->>>
->>
->> I'm not an expert on that area, but if MSI is oneshot-safe in general,
->> then we could do the following in the framework instead of touching
->> every MSI irq_chip. Opinions?
->> I tested on X86 and at least my system is still running.
->>
->> diff --git a/kernel/irq/msi.c b/kernel/irq/msi.c
->> index 4ca2fd46..ba6da943 100644
->> --- a/kernel/irq/msi.c
->> +++ b/kernel/irq/msi.c
->> @@ -289,6 +289,9 @@ struct irq_domain *msi_create_irq_domain(struct fwnode_handle *fwnode,
->>         if (info->flags & MSI_FLAG_USE_DEF_CHIP_OPS)
->>                 msi_domain_update_chip_ops(info);
->>
->> +       /* MSI is oneshot-safe in general */
->> +       info->chip->flags |= IRQCHIP_ONESHOT_SAFE;
->> +
->>         domain = irq_domain_create_hierarchy(parent, IRQ_DOMAIN_FLAG_MSI, 0,
+On 2018-08-06 20:36, Sinan Kaya wrote:
+> On 8/6/2018 11:04 AM, Sinan Kaya wrote:
+>>> Either AER or DPC would get triggered, not both.
+>>> in that case, if AER is disabled, then this code will return false 
+>>> thinking HP needs to handle it.
+>>> but it might be that DPC would be triggering as well.
+>>> but I dont see DPC check anywhere, rather we are relying on 
+>>> PCI_EXP_DEVSTA
+>>> and following condition:
+>>> if (!pdev->aer_cap)
+>>>        return false;
+>>> so here we dont check anything with respect to DPC capability 
+>>> (although there is no such thing as dpc_cap)
+>>> (except If I missed something)
+>> 
+>> That's true. We either need to go poll every single source (AER/DPC) 
+>> for
+>> an error or rely on the DEVSTA. For ease of implementation, I suggest
+>> DEVSTA. Something like this:
 > 
-> Looks about right, though there might be dragons. MSI is not always as sane
-> as it should be...
+> Hmm. Too quick...
 > 
-When saying "MSI isn't always sane", are you referring to the hardware or
-the controller driver implementation? Basically for me the question is
-whether we would be able to fix the issue if we meet such a dragon,
-or whether we would have to revert the change.
-Do you think the chance of a dragon is low enough? Or better add the
-flag only to the X86 PCI MSI irqchip for now?
+> Reduced set doesn't help. Surprise Link Down is also a fatal error.
+> That's what I was trying to exclude. We'll have to poll the error
+> source.
 
->>> We could also consider extending this to support interrupt
->>> hierarchies, as __setup_irq() seems only concerned with the top of the
->>> stack (an IRQ provided by a generic MSI stack and backed by an irqchip
->>> providing IRQCHIP_ONESHOT_SAFE would go unnoticed).
->>>
->>
->> Would it be sufficient if one irq_chip in the hierarchy is oneshot-safe?
->> Or what do we have to check for?
-> 
-> I think the top most chip is the key, the rest of the hierarchy is
-> irrelevant because the top most chip is the one which is responsible for
-> not creating an interrupt storm after the interrupt got acknowledged.
-> 
-Thanks for the explanation, then I'll submit a patch implementing
-this logic.
 
-> Thanks,
-> 
-> 	tglx
-> 
-Heiner
+How about using pcie_port_find_service() ?
+
+Regards,
+Oza.
