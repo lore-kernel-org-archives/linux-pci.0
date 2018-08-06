@@ -1,192 +1,159 @@
-Return-Path: <SRS0=7PBg=KZ=gigaio.com=kchow@kernel.org>
-Return-Path: <SRS0=7PBg=KZ=gigaio.com=kchow@kernel.org>
-From: Kit Chow <kchow@gigaio.com>
-Subject: Re: IOAT DMA w/IOMMU
-To: Logan Gunthorpe <logang@deltatee.com>, "Jiang, Dave"
- <dave.jiang@intel.com>, Eric Pilmore <epilmore@gigaio.com>,
- Bjorn Helgaas <helgaas@kernel.org>
-Cc: "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
- David Woodhouse <dwmw2@infradead.org>,
- Alex Williamson <alex.williamson@redhat.com>,
- "iommu@lists.linux-foundation.org" <iommu@lists.linux-foundation.org>
-References: <CAOQPn8soxubJxb=vp7kz+AM6LbPH5y+_Nx0Vzv7rjV_nMMqEmA@mail.gmail.com>
- <20180809184331.GB113140@bhelgaas-glaptop.roam.corp.google.com>
- <CAOQPn8uPYKai49WYPqZp2wNd5of=0hUvPOHEtqP56RZu-hcjuw@mail.gmail.com>
- <b54899a8-a144-e8e0-9880-1800c4657b95@deltatee.com>
- <95e53520-b05f-4be4-e694-463d717453a8@gigaio.com>
- <cdd9245f-eb23-9e10-1755-8f396a2cd255@deltatee.com>
- <b278c1e5-6f08-c879-a27d-7fc172645fd5@gigaio.com>
- <f04fae39-645e-3c6e-07c0-b194260bf5de@deltatee.com>
- <3f503940-db6a-ec75-ed15-1db99d5d48ef@gigaio.com>
- <112A412BB11A1242B37129D931BCE5348382CFB2@fmsmsx117.amr.corp.intel.com>
- <b8af340c-d40b-cb8c-987f-b394f1d6ec3e@gigaio.com>
- <adf51c74-36fa-b61d-8497-27bd75178ba4@deltatee.com>
- <aa9c3f41-efc9-8c68-a517-2736c8986621@gigaio.com>
-Message-ID: <1170c096-a749-6ee3-32d4-ebba1d12adff@gigaio.com>
-Date: Fri, 10 Aug 2018 09:02:02 -0700
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
 MIME-Version: 1.0
-In-Reply-To: <aa9c3f41-efc9-8c68-a517-2736c8986621@gigaio.com>
-Content-Type: text/plain; charset=utf-8; format=flowed
+In-Reply-To: <alpine.LRH.2.02.1808061306490.12989@file01.intranet.prod.int.rdu2.redhat.com>
+References: <alpine.LRH.2.02.1808021242320.31834@file01.intranet.prod.int.rdu2.redhat.com>
+ <CAHCPf3tFGqkYEcWNN4LaWThw_rVqT316pzLv6T7RfxwO-eZ0EA@mail.gmail.com>
+ <alpine.LRH.2.02.1808030212340.17672@file01.intranet.prod.int.rdu2.redhat.com>
+ <CAKv+Gu8DeuksZhk1g3q_msSKV_hSY_2e1uzVten9-oGO3j9Sqg@mail.gmail.com>
+ <20180803094129.GB17798@arm.com>
+ <alpine.LRH.2.02.1808031235410.31584@file01.intranet.prod.int.rdu2.redhat.com>
+ <CAKv+Gu-aNFh1fsr_05SEwDp99n3pLrguP7=tEcFQPNY53=K7Fw@mail.gmail.com>
+ <alpine.LRH.2.02.1808031424140.14030@file01.intranet.prod.int.rdu2.redhat.com>
+ <CAHCPf3s-+Qf=WBZz1KpisDMG3520jCUh8PLAO3PHa4jdt8kCTw@mail.gmail.com>
+ <CAKv+Gu9_h-WFi1j4+DWUN_dMj75SKKHxWoDH8WQ9P7S7MNpZQg@mail.gmail.com>
+ <alpine.LRH.2.02.1808060553130.30832@file01.intranet.prod.int.rdu2.redhat.com>
+ <99fff4fe-afa9-f12f-a518-472a9dd1c530@arm.com>
+ <CAKv+Gu_C2g=C=gMpk4a5jpDORnxZY6t1v=HDoy59m5vwNBxBBg@mail.gmail.com>
+ <alpine.LRH.2.02.1808061306490.12989@file01.intranet.prod.int.rdu2.redhat.com>
+From: Ard Biesheuvel <ard.biesheuvel@linaro.org>
+Date: Mon, 6 Aug 2018 19:21:37 +0200
+Message-ID: <CAKv+Gu_8Rq6X24ZOYvG7+kQQGSGYAZuu_co4k1nJS8K7rkrWMA@mail.gmail.com>
+Subject: Re: framebuffer corruption due to overlapping stp instructions on
+ arm64
+To: Mikulas Patocka <mpatocka@redhat.com>
+List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
+List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
+List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
+List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
+List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
+Cc: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>,
+ Joao Pinto <Joao.Pinto@synopsys.com>,
+ Catalin Marinas <catalin.marinas@arm.com>,
+ linux-pci <linux-pci@vger.kernel.org>, Will Deacon <will.deacon@arm.com>,
+ Russell King <linux@armlinux.org.uk>,
+ Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
+ Matt Sealey <neko@bakuhatsu.net>, Jingoo Han <jingoohan1@gmail.com>,
+ Robin Murphy <robin.murphy@arm.com>,
+ linux-arm-kernel <linux-arm-kernel@lists.infradead.org>
+Content-Type: text/plain; charset="us-ascii"
+Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
+Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Turns out there is no dma_map_resource routine on x86. get_dma_ops 
-returns intel_dma_ops which has map_resource pointing to NULL.
-
-(gdb) p intel_dma_ops
-$7 = {alloc = 0xffffffff8150f310 <intel_alloc_coherent>,
-   free = 0xffffffff8150ec20 <intel_free_coherent>,
-   mmap = 0x0 <irq_stack_union>, get_sgtable = 0x0 <irq_stack_union>,
-   map_page = 0xffffffff8150f2d0 <intel_map_page>,
-   unmap_page = 0xffffffff8150ec10 <intel_unmap_page>,
-   map_sg = 0xffffffff8150ef40 <intel_map_sg>,
-   unmap_sg = 0xffffffff8150eb80 <intel_unmap_sg>,
-   map_resource = 0x0 <irq_stack_union>,
-   unmap_resource = 0x0 <irq_stack_union>,
-   sync_single_for_cpu = 0x0 <irq_stack_union>,
-   sync_single_for_device = 0x0 <irq_stack_union>,
-   sync_sg_for_cpu = 0x0 <irq_stack_union>,
-   sync_sg_for_device = 0x0 <irq_stack_union>,
-   cache_sync = 0x0 <irq_stack_union>,
-   mapping_error = 0xffffffff815095f0 <intel_mapping_error>,
-   dma_supported = 0xffffffff81033830 <x86_dma_supported>, is_phys = 0}
-
-Will poke around some in the intel_map_page code but can you actually 
-get a valid struct page for a pci bar address (dma_map_single calls 
-virt_to_page)?  If not, does a map_resource routine that can properly 
-map a pci bar address need to be implemented?
-
-Kit
-
----
-
-
-static inline dma_addr_t dma_map_single_attrs(struct device *dev, void *ptr,
-                                               size_t size,
-                                               enum dma_data_direction dir,
-                                               unsigned long attrs)
-{
-         const struct dma_map_ops *ops = get_dma_ops(dev);
-         dma_addr_t addr;
-
-         BUG_ON(!valid_dma_direction(dir));
-         addr = ops->map_page(dev, virt_to_page(ptr),
-                              offset_in_page(ptr), size,
-                              dir, attrs);
-         debug_dma_map_page(dev, virt_to_page(ptr),
-                            offset_in_page(ptr), size,
-                            dir, addr, true);
-         return addr;
-}
-
-
-
-
-
-
-On 08/09/2018 04:00 PM, Kit Chow wrote:
+On 6 August 2018 at 19:09, Mikulas Patocka <mpatocka@redhat.com> wrote:
 >
 >
-> On 08/09/2018 03:50 PM, Logan Gunthorpe wrote:
+> On Mon, 6 Aug 2018, Ard Biesheuvel wrote:
+>
+>> On 6 August 2018 at 14:42, Robin Murphy <robin.murphy@arm.com> wrote:
+>> > On 06/08/18 11:25, Mikulas Patocka wrote:
+>> > [...]
+>> >>>
+>> >>> None of this explains why some transactions fail to make it across
+>> >>> entirely. The overlapping writes in question write the same data to
+>> >>> the memory locations that are covered by both, and so the ordering in
+>> >>> which the transactions are received should not affect the outcome.
+>> >>
+>> >>
+>> >> You're right that the corruption couldn't be explained just by reordering
+>> >> writes. My hypothesis is that the PCIe controller tries to disambiguate
+>> >> the overlapping writes, but the disambiguation logic was not tested and it
+>> >> is buggy. If there's a barrier between the overlapping writes, the PCIe
+>> >> controller won't see any overlapping writes, so it won't trigger the
+>> >> faulty disambiguation logic and it works.
+>> >>
+>> >> Could the ARM engineers look if there's some chicken bit in Cortex-A72
+>> >> that could insert barriers between non-cached writes automatically?
+>> >
+>> >
+>> > I don't think there is, and even if there was I imagine it would have a
+>> > pretty hideous effect on non-coherent DMA buffers and the various other
+>> > places in which we have Normal-NC mappings of actual system RAM.
+>> >
 >>
->> On 09/08/18 04:48 PM, Kit Chow wrote:
->>> Based on Logan's comments, I am very hopeful that the dma_map_resource
->>> will make things work on the older platforms...
->> Well, I *think* dma_map_single() would still work. So I'm not that
->> confident that's the root of your problem. I'd still like to see the
->> actual code snippet you are using.
+>> Looking at the A72 manual, there is one chicken bit that looks like it
+>> may be related:
 >>
->> Logan
-> Here's the code snippet - (ntbdebug & 4) path does dma_map_resource of 
-> the pci bar address.
+>> CPUACTLR_EL1 bit #50:
+>>
+>> 0 Enables store streaming on NC/GRE memory type. This is the reset value.
+>> 1 Disables store streaming on NC/GRE memory type.
+>>
+>> so putting something like
+>>
+>> mrs x0, S3_1_C15_C2_0
+>> orr x0, x0, #(1 << 50)
+>> msr S3_1_C15_C2_0, x0
+>>
+>> in __cpu_setup() would be worth a try.
 >
-> It was:
->                 unmap->addr[1] = dma_map_single(device->dev, (void 
-> *)dest, len,
->                     DMA_TO_DEVICE);
+> It won't boot.
 >
-> Kit
-> ---
+> But if i write the same value that was read, it also won't boot.
 >
+> I created a simple kernel module that reads this register and it has bit
+> 32 set, all other bits clear. But when I write the same value into it, the
+> core that does the write is stuck in infinite loop.
 >
-> static int ntb_async_tx_submit(struct ntb_transport_qp *qp,
->                                struct ntb_queue_entry *entry)
-> {
->         struct dma_async_tx_descriptor *txd;
->         struct dma_chan *chan = qp->tx_dma_chan;
->         struct dma_device *device;
->         size_t len = entry->len;
->         void *buf = entry->buf;
->         size_t dest_off, buff_off;
->         struct dmaengine_unmap_data *unmap;
->         dma_addr_t dest;
->         dma_cookie_t cookie;
->         int     unmapcnt;
+> So, it seems that we are writing this register from a wrong place.
 >
->         device = chan->device;
->
->         dest = qp->tx_mw_phys + qp->tx_max_frame * entry->tx_index;
->
->         buff_off = (size_t)buf & ~PAGE_MASK;
->         dest_off = (size_t)dest & ~PAGE_MASK;
->
->         if (!is_dma_copy_aligned(device, buff_off, dest_off, len))
->                 goto err;
->
->
->         if (ntbdebug & 0x4) {
->                 unmapcnt = 2;
->         } else {
->                 unmapcnt = 1;
->         }
->
->         unmap = dmaengine_get_unmap_data(device->dev, unmapcnt, 
-> GFP_NOWAIT);
->         if (!unmap)
->                 goto err;
->
->         unmap->len = len;
->         unmap->addr[0] = dma_map_page(device->dev, virt_to_page(buf),
->                                       buff_off, len, DMA_TO_DEVICE);
->         if (dma_mapping_error(device->dev, unmap->addr[0]))
->                 goto err_get_unmap;
->
->         if (ntbdebug & 0x4) {
->                 unmap->addr[1] = dma_map_resource(device->dev,
->                     (phys_addr_t)dest, len, DMA_TO_DEVICE, 0);
->                 if (dma_mapping_error(device->dev, unmap->addr[1]))
->                         goto err_get_unmap;
->                 unmap->to_cnt = 2;
->         } else {
->                 unmap->addr[1] = dest;
->                 unmap->to_cnt = 1;
->         }
->
->         txd = device->device_prep_dma_memcpy(chan, unmap->addr[1],
->             unmap->addr[0], len, DMA_PREP_INTERRUPT);
->
->         if (!txd)
->                 goto err_get_unmap;
->
->         txd->callback_result = ntb_tx_copy_callback;
->         txd->callback_param = entry;
->         dma_set_unmap(txd, unmap);
->
->         cookie = dmaengine_submit(txd);
->         if (dma_submit_error(cookie))
->                 goto err_set_unmap;
->
->         dmaengine_unmap_put(unmap);
->
->         dma_async_issue_pending(chan);
->
->         return 0;
->
-> err_set_unmap:
->         dma_descriptor_unmap(txd);
->         txd->desc_free(txd);
-> err_get_unmap:
->         dmaengine_unmap_put(unmap);
-> err:
->         return -ENXIO;
-> }
->
+
+Ah, my bad. I didn't look closely enough at the description:
+
+"""
+The accessibility to the CPUACTLR_EL1 by Exception level is:
+
+EL0              -
+EL1(NS)          RW (a)
+EL1(S)           RW (a)
+EL2              RW (b)
+EL3(SCR.NS = 1)  RW
+EL3(SCR.NS = 0)  RW
+
+(a) Write access if ACTLR_EL3.CPUACTLR is 1 and ACTLR_EL2.CPUACTLR is
+1, or ACTLR_EL3.CPUACTLR is 1 and SCR.NS is 0.
+"""
+
+so you'll have to do this from ARM Trusted Firmware. If you're
+comfortable rebuilding that:
+
+diff --git a/include/lib/cpus/aarch64/cortex_a72.h
+b/include/lib/cpus/aarch64/cortex_a72.h
+index bfd64918625b..a7b8cf4be0c6 100644
+--- a/include/lib/cpus/aarch64/cortex_a72.h
++++ b/include/lib/cpus/aarch64/cortex_a72.h
+@@ -31,6 +31,7 @@
+ #define CORTEX_A72_ACTLR_EL1                   S3_1_C15_C2_0
+
+ #define CORTEX_A72_ACTLR_DISABLE_L1_DCACHE_HW_PFTCH    (1 << 56)
++#define CORTEX_A72_ACTLR_DIS_NC_GRE_STORE_STREAMING    (1 << 50)
+ #define CORTEX_A72_ACTLR_NO_ALLOC_WBWA         (1 << 49)
+ #define CORTEX_A72_ACTLR_DCC_AS_DCCI           (1 << 44)
+ #define CORTEX_A72_ACTLR_EL1_DIS_INSTR_PREFETCH                (1 << 32)
+diff --git a/lib/cpus/aarch64/cortex_a72.S b/lib/cpus/aarch64/cortex_a72.S
+index 55e508678284..5914d6ee3ba6 100644
+--- a/lib/cpus/aarch64/cortex_a72.S
++++ b/lib/cpus/aarch64/cortex_a72.S
+@@ -133,6 +133,15 @@ func cortex_a72_reset_func
+        orr     x0, x0, #CORTEX_A72_ECTLR_SMP_BIT
+        msr     CORTEX_A72_ECTLR_EL1, x0
+        isb
++
++       /* ---------------------------------------------
++        * Disables store streaming on NC/GRE memory type.
++        * ---------------------------------------------
++        */
++       mrs     x0, CORTEX_A72_ACTLR_EL1
++       orr     x0, x0, #CORTEX_A72_ACTLR_DIS_NC_GRE_STORE_STREAMING
++       msr     CORTEX_A72_ACTLR_EL1, x0
++       isb
+        ret x19
+ endfunc cortex_a72_reset_func
+
+_______________________________________________
+linux-arm-kernel mailing list
+linux-arm-kernel@lists.infradead.org
+http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
