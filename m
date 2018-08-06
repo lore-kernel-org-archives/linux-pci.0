@@ -1,42 +1,93 @@
-Return-Path: <SRS0=Ly/z=KY=deltatee.com=logang@kernel.org>
-Return-Path: <SRS0=Ly/z=KY=deltatee.com=logang@kernel.org>
-To: Kit Chow <kchow@gigaio.com>, Eric Pilmore <epilmore@gigaio.com>,
- Bjorn Helgaas <helgaas@kernel.org>
-Cc: linux-pci@vger.kernel.org, David Woodhouse <dwmw2@infradead.org>,
- Alex Williamson <alex.williamson@redhat.com>,
- iommu@lists.linux-foundation.org
-References: <CAOQPn8soxubJxb=vp7kz+AM6LbPH5y+_Nx0Vzv7rjV_nMMqEmA@mail.gmail.com>
- <20180809184331.GB113140@bhelgaas-glaptop.roam.corp.google.com>
- <CAOQPn8uPYKai49WYPqZp2wNd5of=0hUvPOHEtqP56RZu-hcjuw@mail.gmail.com>
- <b54899a8-a144-e8e0-9880-1800c4657b95@deltatee.com>
- <95e53520-b05f-4be4-e694-463d717453a8@gigaio.com>
-From: Logan Gunthorpe <logang@deltatee.com>
-Message-ID: <cdd9245f-eb23-9e10-1755-8f396a2cd255@deltatee.com>
-Date: Thu, 9 Aug 2018 14:11:17 -0600
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from foss.arm.com ([217.140.101.70]:36602 "EHLO foss.arm.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1727009AbeHFNbv (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Mon, 6 Aug 2018 09:31:51 -0400
+Date: Mon, 6 Aug 2018 12:23:10 +0100
+From: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
+To: Christoph Hellwig <hch@lst.de>
+Cc: Bjorn Helgaas <bhelgaas@google.com>,
+        Palmer Dabbelt <palmer@dabbelt.com>,
+        "Wesley W . Terpstra" <wesley@sifive.com>,
+        Arnd Bergmann <arnd@arndb.de>, linux-pci@vger.kernel.org,
+        linux-riscv@lists.infradead.org
+Subject: Re: [PATCH 1/3] PCI: add a callback to struct pci_host_bridge for
+ adding a new device
+Message-ID: <20180806112310.GB18685@e107981-ln.cambridge.arm.com>
+References: <20180804101402.10022-1-hch@lst.de>
+ <20180804101402.10022-2-hch@lst.de>
 MIME-Version: 1.0
-In-Reply-To: <95e53520-b05f-4be4-e694-463d717453a8@gigaio.com>
-Content-Type: text/plain; charset=utf-8
-Subject: Re: IOAT DMA w/IOMMU
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20180804101402.10022-2-hch@lst.de>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
+On Sat, Aug 04, 2018 at 12:14:00PM +0200, Christoph Hellwig wrote:
+> There is currently no way for a PCIe bridge to impose constraints on
+> devices added to it.  For example, the Xilinx PCIe host bridge only
+> supports 32-bit physical addresses (due to a limitation on the AXI
+> port's address width).  Thus, even devices that claim to support 64-bit
+> DMA addresses must be restricted to 32-bit addresses when attached to
+> this host controller.
+> 
+> This patch adds a "add_device" method  to struct pci_host_bridge that
+> allows the host driver to act upon acting adding devices.
+> 
+> Based on an earlier patch from Wesley W. Terpstra <wesley@sifive.com>.
+> 
+> Signed-off-by: Christoph Hellwig <hch@lst.de>
+> ---
+>  drivers/pci/probe.c | 6 ++++++
+>  include/linux/pci.h | 1 +
+>  2 files changed, 7 insertions(+)
+> 
+> diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
+> index ac876e32de4b..452190fb05e7 100644
+> --- a/drivers/pci/probe.c
+> +++ b/drivers/pci/probe.c
+> @@ -2290,6 +2290,7 @@ static void pci_set_msi_domain(struct pci_dev *dev)
+>  
+>  void pci_device_add(struct pci_dev *dev, struct pci_bus *bus)
+>  {
+> +	struct pci_host_bridge *host = pci_find_host_bridge(bus);
+>  	int ret;
+>  
+>  	pci_configure_device(dev);
+> @@ -2328,6 +2329,11 @@ void pci_device_add(struct pci_dev *dev, struct pci_bus *bus)
+>  	ret = pcibios_add_device(dev);
+>  	WARN_ON(ret < 0);
+>  
+> +	if (host->add_device) {
+> +		ret = host->add_device(dev);
+> +		WARN_ON(ret < 0);
+> +	}
 
+This looks fine; we could go a step further and make the hunk above
+the default (weak) implementation of pcibios_add_device() that is
+currently a NOP returning 0, I will remove it for v4.20.
 
-On 09/08/18 01:47 PM, Kit Chow wrote:
->> I haven't tested this scenario but my guess would be that IOAT would
->> indeed go through the IOMMU and the PCI BAR address would need to be
->> properly mapped into the IOAT's IOVA. The fact that you see DMAR errors
->> is probably a good indication that this is the case. I really don't know
->> why you'd want to DMA something without mapping it.
-> I have experimented with changing ntb_async_tx_submit to dma_map the PCI 
-> BAR
-> address. With this, I get a different DMAR error:
+I am fine with the patch as-is (even though I am not a big fan of
+those WARN_ON but that's not a problem related to your patch, as you
+said we are *not* handling the ret value in the current mainline).
 
-What code did you use to do this?
+Acked-by: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
 
-
-> DMAR: [DMA Write] Request device [07:00.4] fault addr ffd00000
-> [fault reason 12] non-zero reserved fields in PTE
-
-Also, what device corresponds to 07:00.4 on your system?
-
-Logan
+> +
+>  	/* Set up MSI IRQ domain */
+>  	pci_set_msi_domain(dev);
+>  
+> diff --git a/include/linux/pci.h b/include/linux/pci.h
+> index abd5d5e17aee..1524adbb30ab 100644
+> --- a/include/linux/pci.h
+> +++ b/include/linux/pci.h
+> @@ -485,6 +485,7 @@ struct pci_host_bridge {
+>  			resource_size_t start,
+>  			resource_size_t size,
+>  			resource_size_t align);
+> +	int (*add_device)(struct pci_dev *dev);
+>  	unsigned long	private[0] ____cacheline_aligned;
+>  };
+>  
+> -- 
+> 2.18.0
+> 
