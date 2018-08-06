@@ -1,36 +1,94 @@
-Return-Path: <SRS0=V20j=LN=huawei.com=liudongdong3@kernel.org>
-Return-Path: <SRS0=V20j=LN=huawei.com=liudongdong3@kernel.org>
-From: Dongdong Liu <liudongdong3@huawei.com>
-To: <catalin.marinas@arm.com>, <will.deacon@arm.com>,
-	<Lorenzo.Pieralisi@arm.com>
-CC: <helgaas@kernel.org>, <linux-arm-kernel@lists.infradead.org>,
-	<linux-pci@vger.kernel.org>, <linuxarm@huawei.com>
-Subject: [PATCH] arm64: defconfig: Enable PCIEPORTBUS
-Date: Thu, 30 Aug 2018 20:29:32 +0800
-Message-ID: <1535632172-127690-1-git-send-email-liudongdong3@huawei.com>
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
 MIME-Version: 1.0
-Content-Type: text/plain
+References: <alpine.LRH.2.02.1808021242320.31834@file01.intranet.prod.int.rdu2.redhat.com>
+ <CAHCPf3tFGqkYEcWNN4LaWThw_rVqT316pzLv6T7RfxwO-eZ0EA@mail.gmail.com>
+ <alpine.LRH.2.02.1808030212340.17672@file01.intranet.prod.int.rdu2.redhat.com>
+ <CAKv+Gu8DeuksZhk1g3q_msSKV_hSY_2e1uzVten9-oGO3j9Sqg@mail.gmail.com>
+ <20180803094129.GB17798@arm.com>
+ <alpine.LRH.2.02.1808031235410.31584@file01.intranet.prod.int.rdu2.redhat.com>
+ <CAKv+Gu-aNFh1fsr_05SEwDp99n3pLrguP7=tEcFQPNY53=K7Fw@mail.gmail.com>
+ <alpine.LRH.2.02.1808031424140.14030@file01.intranet.prod.int.rdu2.redhat.com>
+ <CAHCPf3s-+Qf=WBZz1KpisDMG3520jCUh8PLAO3PHa4jdt8kCTw@mail.gmail.com>
+ <CAKv+Gu9_h-WFi1j4+DWUN_dMj75SKKHxWoDH8WQ9P7S7MNpZQg@mail.gmail.com>
+ <alpine.LRH.2.02.1808060553130.30832@file01.intranet.prod.int.rdu2.redhat.com>
+ <99fff4fe-afa9-f12f-a518-472a9dd1c530@arm.com>
+In-Reply-To: <99fff4fe-afa9-f12f-a518-472a9dd1c530@arm.com>
+From: Marcin Wojtas <mw@semihalf.com>
+Date: Mon, 6 Aug 2018 15:41:34 +0200
+Message-ID: <CAPv3WKdxwoW5MAOvy6uEBEuMpsigMo98hyO+TpKMsFrKR9oBzg@mail.gmail.com>
+Subject: Re: framebuffer corruption due to overlapping stp instructions on
+ arm64
+To: mpatocka@redhat.com
+List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
+List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
+List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
+List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
+List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
+Cc: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>,
+ Joao Pinto <Joao.Pinto@synopsys.com>,
+ Ard Biesheuvel <ard.biesheuvel@linaro.org>,
+ Catalin Marinas <catalin.marinas@arm.com>, Will Deacon <will.deacon@arm.com>,
+ Russell King - ARM Linux <linux@armlinux.org.uk>,
+ Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
+ Matt Sealey <neko@bakuhatsu.net>, linux-pci@vger.kernel.org,
+ Jingoo Han <jingoohan1@gmail.com>, Robin Murphy <robin.murphy@arm.com>,
+ linux-arm-kernel@lists.infradead.org
+Content-Type: text/plain; charset="utf-8"
+Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
+Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
 List-ID: <linux-pci.vger.kernel.org>
 
-PCIe features like AER, Hotplug, PME, DPC depend on PCIEPORTBUS,
-so enable PCIEPORTBUS as default.
-
-Signed-off-by: Dongdong Liu <liudongdong3@huawei.com>
----
- arch/arm64/configs/defconfig | 1 +
- 1 file changed, 1 insertion(+)
-
-diff --git a/arch/arm64/configs/defconfig b/arch/arm64/configs/defconfig
-index f67e8d5..e5652e9 100644
---- a/arch/arm64/configs/defconfig
-+++ b/arch/arm64/configs/defconfig
-@@ -67,6 +67,7 @@ CONFIG_ARCH_XGENE=y
- CONFIG_ARCH_ZX=y
- CONFIG_ARCH_ZYNQMP=y
- CONFIG_PCI=y
-+CONFIG_PCIEPORTBUS=y
- CONFIG_PCI_IOV=y
- CONFIG_HOTPLUG_PCI=y
- CONFIG_HOTPLUG_PCI_ACPI=y
--- 
-1.9.1
+SGkgTWlrdWxhcywKCnBvbi4sIDYgc2llIDIwMTggbyAxNDo0MiBSb2JpbiBNdXJwaHkgPHJvYmlu
+Lm11cnBoeUBhcm0uY29tPiBuYXBpc2HFgihhKToKPgo+IE9uIDA2LzA4LzE4IDExOjI1LCBNaWt1
+bGFzIFBhdG9ja2Egd3JvdGU6Cj4gWy4uLl0KPiA+PiBOb25lIG9mIHRoaXMgZXhwbGFpbnMgd2h5
+IHNvbWUgdHJhbnNhY3Rpb25zIGZhaWwgdG8gbWFrZSBpdCBhY3Jvc3MKPiA+PiBlbnRpcmVseS4g
+VGhlIG92ZXJsYXBwaW5nIHdyaXRlcyBpbiBxdWVzdGlvbiB3cml0ZSB0aGUgc2FtZSBkYXRhIHRv
+Cj4gPj4gdGhlIG1lbW9yeSBsb2NhdGlvbnMgdGhhdCBhcmUgY292ZXJlZCBieSBib3RoLCBhbmQg
+c28gdGhlIG9yZGVyaW5nIGluCj4gPj4gd2hpY2ggdGhlIHRyYW5zYWN0aW9ucyBhcmUgcmVjZWl2
+ZWQgc2hvdWxkIG5vdCBhZmZlY3QgdGhlIG91dGNvbWUuCj4gPgo+ID4gWW91J3JlIHJpZ2h0IHRo
+YXQgdGhlIGNvcnJ1cHRpb24gY291bGRuJ3QgYmUgZXhwbGFpbmVkIGp1c3QgYnkgcmVvcmRlcmlu
+Zwo+ID4gd3JpdGVzLiBNeSBoeXBvdGhlc2lzIGlzIHRoYXQgdGhlIFBDSWUgY29udHJvbGxlciB0
+cmllcyB0byBkaXNhbWJpZ3VhdGUKPiA+IHRoZSBvdmVybGFwcGluZyB3cml0ZXMsIGJ1dCB0aGUg
+ZGlzYW1iaWd1YXRpb24gbG9naWMgd2FzIG5vdCB0ZXN0ZWQgYW5kIGl0Cj4gPiBpcyBidWdneS4g
+SWYgdGhlcmUncyBhIGJhcnJpZXIgYmV0d2VlbiB0aGUgb3ZlcmxhcHBpbmcgd3JpdGVzLCB0aGUg
+UENJZQo+ID4gY29udHJvbGxlciB3b24ndCBzZWUgYW55IG92ZXJsYXBwaW5nIHdyaXRlcywgc28g
+aXQgd29uJ3QgdHJpZ2dlciB0aGUKPiA+IGZhdWx0eSBkaXNhbWJpZ3VhdGlvbiBsb2dpYyBhbmQg
+aXQgd29ya3MuCj4gPgo+ID4gQ291bGQgdGhlIEFSTSBlbmdpbmVlcnMgbG9vayBpZiB0aGVyZSdz
+IHNvbWUgY2hpY2tlbiBiaXQgaW4gQ29ydGV4LUE3Mgo+ID4gdGhhdCBjb3VsZCBpbnNlcnQgYmFy
+cmllcnMgYmV0d2VlbiBub24tY2FjaGVkIHdyaXRlcyBhdXRvbWF0aWNhbGx5Pwo+Cj4gSSBkb24n
+dCB0aGluayB0aGVyZSBpcywgYW5kIGV2ZW4gaWYgdGhlcmUgd2FzIEkgaW1hZ2luZSBpdCB3b3Vs
+ZCBoYXZlIGEKPiBwcmV0dHkgaGlkZW91cyBlZmZlY3Qgb24gbm9uLWNvaGVyZW50IERNQSBidWZm
+ZXJzIGFuZCB0aGUgdmFyaW91cyBvdGhlcgo+IHBsYWNlcyBpbiB3aGljaCB3ZSBoYXZlIE5vcm1h
+bC1OQyBtYXBwaW5ncyBvZiBhY3R1YWwgc3lzdGVtIFJBTS4KPgo+ID4gSSBvYnNlcnZlIHRoZXNl
+IGtpbmRzIG9mIGNvcnJ1cHRpb25zOgo+ID4gLSBmYWlsaW5nIHRvIHdyaXRlIGEgZmV3IGJ5dGVz
+Cj4KPiBUaGF0IGNvdWxkIHBvdGVudGlhbGx5IGJlIGV4cGxhaW5lZCBieSB0aGUgcmVvcmRlcmlu
+Zy9hdG9taWNpdHkgaXNzdWVzCj4gTWF0dCBtZW50aW9uZWQsIGkuZS4gdGhlIGxvYWQgaXMgb2Jz
+ZXJ2aW5nIHBhcnQgb2YgdGhlIHN0b3JlLCBiZWZvcmUgdGhlCj4gc3RvcmUgaGFzIGZ1bGx5IGNv
+bXBsZXRlZC4KPgo+ID4gLSB3cml0aW5nIGEgZmV3IGJ5dGVzIHRoYXQgd2VyZSB3cml0dGVuIDE2
+IGJ5dGVzIGJlZm9yZQo+ID4gLSB3cml0aW5nIGEgZmV3IGJ5dGVzIHRoYXQgd2VyZSB3cml0dGVu
+IDE2IGJ5dGVzIGFmdGVyCj4KPiBUaG9zZSBzb3VuZCBtb3JlIGxpa2UgdGhlIGludGVyY29ubmVj
+dCBvciByb290IGNvbXBsZXggaWdub3JpbmcgdGhlIGJ5dGUKPiBzdHJvYmVzIG9uIGFuIHVuYWxp
+Z25lZCBidXJzdCwgb2Ygd2hpY2ggSSB0aGluayB0aGUgc2ltcGxpc3RpYyB2aWV3Cj4gd291bGQg
+YmUgIml0J3MgYnJva2VuIi4KPgo+IEZXSVcgSSBzdHVjayBteSBvbGQgTnZpZGlhIDc2MDBHVCBj
+YXJkIGluIG15IEFybSBKdW5vIHIyIGJvYXJkICgyeAo+IENvcnRleC1BNzIpLCBidWlsdCB5b3Vy
+IHRlc3QgcHJvZ3JhbSBuYXRpdmVseSB3aXRoIEdDQyA4LjEuMSBhdCAtTzIsIGFuZAo+IGl0J3Mg
+c3RpbGwgaGFwcGlseSBmbGlja2VyaW5nIHBpeGVscyBpbiB0aGUgY29ybmVyIG9mIHRoZSBjb25z
+b2xlIGFmdGVyCj4gbmVhcmx5IGFuIGhvdXIgKGluIHBhcmFsbGVsIHdpdGggc29tZSBpcGVyZjMg
+anVzdCB0byBlbnN1cmUgcGxlbnR5IG9mCj4gUENJZSB0cmFmZmljKS4gSSB3b3VsZCBzdHJvbmds
+eSBzdXNwZWN0IHRoaXMgaXNzdWUgaXMgcGFydGljdWxhciB0bwo+IEFybWFkYSA4aywgc28gaXRz
+JyBwcm9iYWJseSBvbmUgZm9yIHRoZSBNYXJ2ZWxsIGZvbGtzIHRvIHRha2UgYSBjbG9zZXIKPiBs
+b29rIGF0IC0gSSBiZWxpZXZlIHNvbWUgcHJldmlvdXMgaW50ZXJjb25uZWN0IGlzc3VlcyBvbiB0
+aG9zZSBTb0NzIHdlcmUKPiBhY3R1YWxseSBmaXhhYmxlIGluIGZpcm13YXJlLgo+Cj4KCk9uIG15
+IE1hY2NoaWF0byBJIHVzZSBHVDYzMCBjYXJkIChudXZlYXUgZHJpdmVyKSArIGRlYmlhbiArIHhm
+Y2UKZGVza3RvcCBhbmQgaW4gZHVhbCBtb25pdG9yIG1vZGUsIEkgY291bGQgcnVuIGEgY291cGxl
+IG9mIDEwODBwCnN0cmVhbXMuIEFsbCBzbW9vdGggYW5kIEkndmUgbmV2ZXIgbm90aWNlZCBhbnkg
+aW1hZ2UgY29ycnVwdGlvbgp3aGF0c29ldmVyIChJIHNwZW50IGEgbG90IG9mIHRpbWUgaW4gZnJv
+bnQgb2Ygc3VjaCBzZXR1cCkuIEp1c3QgdG8gYmUKb24gYSBzYWZlIHNpZGUsIGNhbiB5b3Ugc2Vu
+ZCBtZSBhIGJvb3Rsb2cgYW5kIHlvdXIgYm9hcmQgcmV2aXNpb24/IEknZApsaWtlIHRvIHNlZSB5
+b3VyIGZpcndhcmUgdmVyc2lvbiBhbmQgdHlwZS4KClRoYW5rcywKTWFyY2luCgpfX19fX19fX19f
+X19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fXwpsaW51eC1hcm0ta2VybmVsIG1h
+aWxpbmcgbGlzdApsaW51eC1hcm0ta2VybmVsQGxpc3RzLmluZnJhZGVhZC5vcmcKaHR0cDovL2xp
+c3RzLmluZnJhZGVhZC5vcmcvbWFpbG1hbi9saXN0aW5mby9saW51eC1hcm0ta2VybmVsCg==
