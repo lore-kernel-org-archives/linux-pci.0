@@ -1,61 +1,176 @@
-Return-Path: <okaya@kernel.org>
-Return-Path: <okaya@kernel.org>
-Subject: Re: [PATCH 1/1] PCI/AER: prevent pcie_do_fatal_recovery from using
- device after it is removed
-From: Sinan Kaya <okaya@kernel.org>
-To: Keith Busch <keith.busch@intel.com>
-Cc: Benjamin Herrenschmidt <benh@kernel.crashing.org>, poza@codeaurora.org,
- Bjorn Helgaas <helgaas@kernel.org>, Thomas Tai <thomas.tai@oracle.com>,
- bhelgaas@google.com, linux-pci@vger.kernel.org,
- linux-pci-owner@vger.kernel.org, Sam Bobroff <sam.bobroff@au1.ibm.com>
-References: <908ff33ded8f31830f95a8889d8540f1@codeaurora.org>
- <5027d857bb59edfd33442003aa618ece1bc9cd52.camel@kernel.crashing.org>
- <b2e2ac5c92d8a91d00606754d1046578@codeaurora.org>
- <2ecd1fd6d763810d45697f846fa876b58a193b1b.camel@kernel.crashing.org>
- <a149d9657ca83b41c724b0ddd319c6fb@codeaurora.org>
- <512e0e11c3ba462c1d033f8b0e768fa27489731c.camel@kernel.crashing.org>
- <ad23b16cf7ff1f3b51961fda59533892@codeaurora.org>
- <2742bdba5ae8ccc420234b6e6b0224919367ed4c.camel@kernel.crashing.org>
- <20180821143751.GA18477@localhost.localdomain>
- <621f599b-8a87-5bde-5a9f-ecb5bdbcf716@kernel.org>
- <20180821152920.GA18612@localhost.localdomain>
- <37dc87b0-d0b1-8eb0-3eb9-ebccec6e4d77@kernel.org>
-Message-ID: <d47fc39b-e903-34d7-43ba-aeb27c912ab5@kernel.org>
-Date: Tue, 21 Aug 2018 11:55:11 -0400
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
 MIME-Version: 1.0
-In-Reply-To: <37dc87b0-d0b1-8eb0-3eb9-ebccec6e4d77@kernel.org>
-Content-Type: text/plain; charset=utf-8; format=flowed
+In-Reply-To: <alpine.LRH.2.02.1808061552090.11930@file01.intranet.prod.int.rdu2.redhat.com>
+References: <alpine.LRH.2.02.1808021242320.31834@file01.intranet.prod.int.rdu2.redhat.com>
+ <alpine.LRH.2.02.1808030212340.17672@file01.intranet.prod.int.rdu2.redhat.com>
+ <CAKv+Gu8DeuksZhk1g3q_msSKV_hSY_2e1uzVten9-oGO3j9Sqg@mail.gmail.com>
+ <20180803094129.GB17798@arm.com>
+ <alpine.LRH.2.02.1808031235410.31584@file01.intranet.prod.int.rdu2.redhat.com>
+ <CAKv+Gu-aNFh1fsr_05SEwDp99n3pLrguP7=tEcFQPNY53=K7Fw@mail.gmail.com>
+ <alpine.LRH.2.02.1808031424140.14030@file01.intranet.prod.int.rdu2.redhat.com>
+ <CAHCPf3s-+Qf=WBZz1KpisDMG3520jCUh8PLAO3PHa4jdt8kCTw@mail.gmail.com>
+ <CAKv+Gu9_h-WFi1j4+DWUN_dMj75SKKHxWoDH8WQ9P7S7MNpZQg@mail.gmail.com>
+ <alpine.LRH.2.02.1808060553130.30832@file01.intranet.prod.int.rdu2.redhat.com>
+ <99fff4fe-afa9-f12f-a518-472a9dd1c530@arm.com>
+ <CAKv+Gu_C2g=C=gMpk4a5jpDORnxZY6t1v=HDoy59m5vwNBxBBg@mail.gmail.com>
+ <alpine.LRH.2.02.1808061306490.12989@file01.intranet.prod.int.rdu2.redhat.com>
+ <CAKv+Gu_8Rq6X24ZOYvG7+kQQGSGYAZuu_co4k1nJS8K7rkrWMA@mail.gmail.com>
+ <alpine.LRH.2.02.1808061552090.11930@file01.intranet.prod.int.rdu2.redhat.com>
+From: Ard Biesheuvel <ard.biesheuvel@linaro.org>
+Date: Mon, 6 Aug 2018 22:11:30 +0200
+Message-ID: <CAKv+Gu_iCgAeGmrajZ_euMcFLntWG1a51HF_HQ1TO=fV_v__AQ@mail.gmail.com>
+Subject: Re: framebuffer corruption due to overlapping stp instructions on
+ arm64
+To: Mikulas Patocka <mpatocka@redhat.com>
+List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
+List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
+List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
+List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
+List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
+Cc: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>,
+ Joao Pinto <Joao.Pinto@synopsys.com>,
+ Catalin Marinas <catalin.marinas@arm.com>,
+ linux-pci <linux-pci@vger.kernel.org>, Will Deacon <will.deacon@arm.com>,
+ Russell King <linux@armlinux.org.uk>,
+ Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
+ Matt Sealey <neko@bakuhatsu.net>, Jingoo Han <jingoohan1@gmail.com>,
+ Robin Murphy <robin.murphy@arm.com>,
+ linux-arm-kernel <linux-arm-kernel@lists.infradead.org>
+Content-Type: text/plain; charset="us-ascii"
+Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
+Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 8/21/2018 11:50 AM, Sinan Kaya wrote:
-> On 8/21/2018 11:29 AM, Keith Busch wrote:
->>> Hotplug driver needs to handle both physical removal as well as 
->>> intermittent
->>> link down issues though.
->> Back to your patch you linked to earlier, your proposal is to have
->> pciehp wait for DEVSTS.FED before deciding if it needs to handle the
->> DLLSC event. That might be a start, but it isn't enough since that
->> status isn't set if the downstream device reported ERR_FATAL. I think
->> you'd need to check the secondary status register for a Received System
->> Error.
-> 
-> Hmm, good feedback.
-> 
-> I was trying not to mix AER/DPC with HP but obviously I failed.
-> I can add a flag to struct pci_dev like aer_pending for AER.
-> 
-> 1. AER ISR sets aer_pending
-> 2. AER ISR issues a secondary bus reset
-> 3. Hotplug driver bails out on aer_pending
-> 4. AER ISR performs the recovery
-> 
-> It is slightly more challenging on the DPC front as HW brings down
-> the link automatically and hotplug driver can observe the link down
-> event before the DPC ISR. I'll have to go check if DPC interrupt is
-> pending.
-> 
-> Let me know if this works out.
+On 6 August 2018 at 21:54, Mikulas Patocka <mpatocka@redhat.com> wrote:
+>
+>
+> On Mon, 6 Aug 2018, Ard Biesheuvel wrote:
+>
+>> On 6 August 2018 at 19:09, Mikulas Patocka <mpatocka@redhat.com> wrote:
+>> >
+>> >
+>> > On Mon, 6 Aug 2018, Ard Biesheuvel wrote:
+>> >
+>> >> On 6 August 2018 at 14:42, Robin Murphy <robin.murphy@arm.com> wrote:
+>> >> > On 06/08/18 11:25, Mikulas Patocka wrote:
+>> >> > [...]
+>> >> >>>
+>> >> >>> None of this explains why some transactions fail to make it across
+>> >> >>> entirely. The overlapping writes in question write the same data to
+>> >> >>> the memory locations that are covered by both, and so the ordering in
+>> >> >>> which the transactions are received should not affect the outcome.
+>> >> >>
+>> >> >>
+>> >> >> You're right that the corruption couldn't be explained just by reordering
+>> >> >> writes. My hypothesis is that the PCIe controller tries to disambiguate
+>> >> >> the overlapping writes, but the disambiguation logic was not tested and it
+>> >> >> is buggy. If there's a barrier between the overlapping writes, the PCIe
+>> >> >> controller won't see any overlapping writes, so it won't trigger the
+>> >> >> faulty disambiguation logic and it works.
+>> >> >>
+>> >> >> Could the ARM engineers look if there's some chicken bit in Cortex-A72
+>> >> >> that could insert barriers between non-cached writes automatically?
+>> >> >
+>> >> >
+>> >> > I don't think there is, and even if there was I imagine it would have a
+>> >> > pretty hideous effect on non-coherent DMA buffers and the various other
+>> >> > places in which we have Normal-NC mappings of actual system RAM.
+>> >> >
+>> >>
+>> >> Looking at the A72 manual, there is one chicken bit that looks like it
+>> >> may be related:
+>> >>
+>> >> CPUACTLR_EL1 bit #50:
+>> >>
+>> >> 0 Enables store streaming on NC/GRE memory type. This is the reset value.
+>> >> 1 Disables store streaming on NC/GRE memory type.
+>> >>
+>> >> so putting something like
+>> >>
+>> >> mrs x0, S3_1_C15_C2_0
+>> >> orr x0, x0, #(1 << 50)
+>> >> msr S3_1_C15_C2_0, x0
+>> >>
+>> >> in __cpu_setup() would be worth a try.
+>> >
+>> > It won't boot.
+>> >
+>> > But if i write the same value that was read, it also won't boot.
+>> >
+>> > I created a simple kernel module that reads this register and it has bit
+>> > 32 set, all other bits clear. But when I write the same value into it, the
+>> > core that does the write is stuck in infinite loop.
+>> >
+>> > So, it seems that we are writing this register from a wrong place.
+>> >
+>>
+>> Ah, my bad. I didn't look closely enough at the description:
+>>
+>> """
+>> The accessibility to the CPUACTLR_EL1 by Exception level is:
+>>
+>> EL0              -
+>> EL1(NS)          RW (a)
+>> EL1(S)           RW (a)
+>> EL2              RW (b)
+>> EL3(SCR.NS = 1)  RW
+>> EL3(SCR.NS = 0)  RW
+>>
+>> (a) Write access if ACTLR_EL3.CPUACTLR is 1 and ACTLR_EL2.CPUACTLR is
+>> 1, or ACTLR_EL3.CPUACTLR is 1 and SCR.NS is 0.
+>> """
+>>
+>> so you'll have to do this from ARM Trusted Firmware. If you're
+>> comfortable rebuilding that:
+>>
+>> diff --git a/include/lib/cpus/aarch64/cortex_a72.h
+>> b/include/lib/cpus/aarch64/cortex_a72.h
+>> index bfd64918625b..a7b8cf4be0c6 100644
+>> --- a/include/lib/cpus/aarch64/cortex_a72.h
+>> +++ b/include/lib/cpus/aarch64/cortex_a72.h
+>> @@ -31,6 +31,7 @@
+>>  #define CORTEX_A72_ACTLR_EL1                   S3_1_C15_C2_0
+>>
+>>  #define CORTEX_A72_ACTLR_DISABLE_L1_DCACHE_HW_PFTCH    (1 << 56)
+>> +#define CORTEX_A72_ACTLR_DIS_NC_GRE_STORE_STREAMING    (1 << 50)
+>>  #define CORTEX_A72_ACTLR_NO_ALLOC_WBWA         (1 << 49)
+>>  #define CORTEX_A72_ACTLR_DCC_AS_DCCI           (1 << 44)
+>>  #define CORTEX_A72_ACTLR_EL1_DIS_INSTR_PREFETCH                (1 << 32)
+>> diff --git a/lib/cpus/aarch64/cortex_a72.S b/lib/cpus/aarch64/cortex_a72.S
+>> index 55e508678284..5914d6ee3ba6 100644
+>> --- a/lib/cpus/aarch64/cortex_a72.S
+>> +++ b/lib/cpus/aarch64/cortex_a72.S
+>> @@ -133,6 +133,15 @@ func cortex_a72_reset_func
+>>         orr     x0, x0, #CORTEX_A72_ECTLR_SMP_BIT
+>>         msr     CORTEX_A72_ECTLR_EL1, x0
+>>         isb
+>> +
+>> +       /* ---------------------------------------------
+>> +        * Disables store streaming on NC/GRE memory type.
+>> +        * ---------------------------------------------
+>> +        */
+>> +       mrs     x0, CORTEX_A72_ACTLR_EL1
+>> +       orr     x0, x0, #CORTEX_A72_ACTLR_DIS_NC_GRE_STORE_STREAMING
+>> +       msr     CORTEX_A72_ACTLR_EL1, x0
+>> +       isb
+>>         ret x19
+>>  endfunc cortex_a72_reset_func
+>
+> Unfortunatelly, it doesn't work. I verified that the bit is set after
+> booting Linux, but the memcpy corruption was still present.
+>
+> I also tried the other chicken bits, it slowed down the system noticeably,
+> but had no effect on the memcpy corruption.
+>
 
-I forgot to mention that I didn't really want to rely on Secondary
-Status Registers as most of the recent PCIe controller HW don't really
-implement the old PCI status register bits correctly.
+OK, it was worth a shot
+
+Let's wait and see if Marcin has any results.
+
+_______________________________________________
+linux-arm-kernel mailing list
+linux-arm-kernel@lists.infradead.org
+http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
