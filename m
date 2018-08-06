@@ -1,61 +1,92 @@
-Return-Path: <linux-nvme-bounces+bjorn=helgaas.com@lists.infradead.org>
-Return-Path: <linux-nvme-bounces+bjorn=helgaas.com@lists.infradead.org>
-Subject: Re: [PATCH v5 06/13] PCI/P2PDMA: Add P2P DMA driver writer's
- documentation
-To: Logan Gunthorpe <logang@deltatee.com>, linux-kernel@vger.kernel.org,
- linux-pci@vger.kernel.org, linux-nvme@lists.infradead.org,
- linux-rdma@vger.kernel.org, linux-nvdimm@lists.01.org,
- linux-block@vger.kernel.org
-References: <20180830185352.3369-1-logang@deltatee.com>
- <20180830185352.3369-7-logang@deltatee.com>
- <98bff500-4e4c-3a34-6762-16ef4b076d90@amd.com>
- <6820d451-9591-1979-00bf-60c65fc4f136@deltatee.com>
-From: =?UTF-8?Q?Christian_K=c3=b6nig?= <christian.koenig@amd.com>
-Message-ID: <30411655-9b90-749e-857f-318dac7cccbf@amd.com>
-Date: Fri, 31 Aug 2018 19:38:50 +0200
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Subject: Re: framebuffer corruption due to overlapping stp instructions on
+ arm64
+To: Mikulas Patocka <mpatocka@redhat.com>,
+ Ard Biesheuvel <ard.biesheuvel@linaro.org>
+References: <alpine.LRH.2.02.1808021242320.31834@file01.intranet.prod.int.rdu2.redhat.com>
+ <CAHCPf3tFGqkYEcWNN4LaWThw_rVqT316pzLv6T7RfxwO-eZ0EA@mail.gmail.com>
+ <alpine.LRH.2.02.1808030212340.17672@file01.intranet.prod.int.rdu2.redhat.com>
+ <CAKv+Gu8DeuksZhk1g3q_msSKV_hSY_2e1uzVten9-oGO3j9Sqg@mail.gmail.com>
+ <20180803094129.GB17798@arm.com>
+ <alpine.LRH.2.02.1808031235410.31584@file01.intranet.prod.int.rdu2.redhat.com>
+ <CAKv+Gu-aNFh1fsr_05SEwDp99n3pLrguP7=tEcFQPNY53=K7Fw@mail.gmail.com>
+ <alpine.LRH.2.02.1808031424140.14030@file01.intranet.prod.int.rdu2.redhat.com>
+ <CAHCPf3s-+Qf=WBZz1KpisDMG3520jCUh8PLAO3PHa4jdt8kCTw@mail.gmail.com>
+ <CAKv+Gu9_h-WFi1j4+DWUN_dMj75SKKHxWoDH8WQ9P7S7MNpZQg@mail.gmail.com>
+ <alpine.LRH.2.02.1808060553130.30832@file01.intranet.prod.int.rdu2.redhat.com>
+From: Robin Murphy <robin.murphy@arm.com>
+Message-ID: <99fff4fe-afa9-f12f-a518-472a9dd1c530@arm.com>
+Date: Mon, 6 Aug 2018 13:42:20 +0100
 MIME-Version: 1.0
-In-Reply-To: <6820d451-9591-1979-00bf-60c65fc4f136@deltatee.com>
-List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-nvme>,
- <mailto:linux-nvme-request@lists.infradead.org?subject=unsubscribe>
-List-Archive: <http://lists.infradead.org/pipermail/linux-nvme/>
-List-Post: <mailto:linux-nvme@lists.infradead.org>
-List-Help: <mailto:linux-nvme-request@lists.infradead.org?subject=help>
-List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-nvme>,
- <mailto:linux-nvme-request@lists.infradead.org?subject=subscribe>
-Cc: Sagi Grimberg <sagi@grimberg.me>, Jonathan Corbet <corbet@lwn.net>,
- Benjamin Herrenschmidt <benh@kernel.crashing.org>,
- Alex Williamson <alex.williamson@redhat.com>,
- Stephen Bates <sbates@raithlin.com>, Keith Busch <keith.busch@intel.com>,
- =?UTF-8?B?SsOpcsO0bWUgR2xpc3Nl?= <jglisse@redhat.com>,
- Jason Gunthorpe <jgg@mellanox.com>, Bjorn Helgaas <bhelgaas@google.com>,
- Max Gurtovoy <maxg@mellanox.com>, Dan Williams <dan.j.williams@intel.com>,
- Christoph Hellwig <hch@lst.de>
-Content-Type: text/plain; charset="utf-8"; Format="flowed"
-Sender: "Linux-nvme" <linux-nvme-bounces@lists.infradead.org>
-Errors-To: linux-nvme-bounces+bjorn=helgaas.com@lists.infradead.org
+In-Reply-To: <alpine.LRH.2.02.1808060553130.30832@file01.intranet.prod.int.rdu2.redhat.com>
+List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
+List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
+List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
+List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
+List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
+Cc: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>,
+ Joao Pinto <Joao.Pinto@synopsys.com>,
+ Catalin Marinas <catalin.marinas@arm.com>,
+ linux-pci <linux-pci@vger.kernel.org>, Will Deacon <will.deacon@arm.com>,
+ Russell King <linux@armlinux.org.uk>,
+ Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
+ Matt Sealey <neko@bakuhatsu.net>, Jingoo Han <jingoohan1@gmail.com>,
+ linux-arm-kernel <linux-arm-kernel@lists.infradead.org>
+Content-Type: text/plain; charset="us-ascii"; Format="flowed"
+Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
+Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
 List-ID: <linux-pci.vger.kernel.org>
 
-QW0gMzEuMDguMjAxOCB1bSAxNzo1MSBzY2hyaWViIExvZ2FuIEd1bnRob3JwZToKPgo+IE9uIDMx
-LzA4LzE4IDAyOjA4IEFNLCBDaHJpc3RpYW4gS8O2bmlnIHdyb3RlOgo+Pj4gK09uZSBvZiB0aGUg
-YmlnZ2VzdCBpc3N1ZXMgaXMgdGhhdCBQQ0kgZG9lc24ndCByZXF1aXJlIGZvcndhcmRpbmcKPj4+
-ICt0cmFuc2FjdGlvbnMgYmV0d2VlbiBoaWVyYXJjaHkgZG9tYWlucywgYW5kIGluIFBDSWUsIGVh
-Y2ggUm9vdCBQb3J0Cj4+PiArZGVmaW5lcyBhIHNlcGFyYXRlIGhpZXJhcmNoeSBkb21haW4uIFRv
-IG1ha2UgdGhpbmdzIHdvcnNlLCB0aGVyZSBpcyBubwo+Pj4gK3NpbXBsZSB3YXkgdG8gZGV0ZXJt
-aW5lIGlmIGEgZ2l2ZW4gUm9vdCBDb21wbGV4IHN1cHBvcnRzIHRoaXMgb3Igbm90Lgo+Pj4gKyhT
-ZWUgUENJZSByNC4wLCBzZWMgMS4zLjEpLiBUaGVyZWZvcmUsIGFzIG9mIHRoaXMgd3JpdGluZywg
-dGhlIGtlcm5lbAo+Pj4gK29ubHkgc3VwcG9ydHMgZG9pbmcgUDJQIHdoZW4gdGhlIGVuZHBvaW50
-cyBpbnZvbHZlZCBhcmUgYWxsIGJlaGluZCB0aGUKPj4+ICtzYW1lIFBDSSBicmlkZ2UsIGFzIHN1
-Y2ggZGV2aWNlcyBhcmUgYWxsIGluIHRoZSBzYW1lIFBDSSBoaWVyYXJjaHkKPj4+ICtkb21haW4s
-IGFuZCB0aGUgc3BlYyBndWFyYW50ZWVzIHRoYXQgYWxsIHRyYW5zYWNhdGlvbnMgd2l0aGluIHRo
-ZQo+Pj4gK2hpZXJhcmNoeSB3aWxsIGJlIHJvdXRhYmxlLCBidXQgaXQgZG9lcyBub3QgcmVxdWly
-ZSByb3V0aW5nCj4+PiArYmV0d2VlbiBoaWVyYXJjaGllcy4KPj4gQ2FuIHdlIGFkZCBhIGtlcm5l
-bCBjb21tYW5kIGxpbmUgc3dpdGNoIGFuZCBhIHdoaXRlbGlzdCB0byBlbmFibGUgUDJQCj4+IGJl
-dHdlZW4gc2VwYXJhdGUgaGllcmFyY2hpZXM/Cj4gSW4gZnV0dXJlIHdvcmssIHllcy4gQnV0IG5v
-dCBmb3IgdGhpcyBwYXRjaHNldC4gVGhpcyBpcyBkZWZpbml0ZWx5IHRoZQo+IHdheSBJIHNlZSB0
-aGluZ3MgZ29pbmcsIGJ1dCB3ZSd2ZSBjaG9zZW4gdG8gc3RhcnQgd2l0aCB3aGF0IHdlJ3ZlIHBy
-ZXNlbnRlZC4KClNvdW5kcyBsaWtlIGEgcGxhbiB0byBtZS4KCklmIHlvdSBjYW4gc2VwYXJhdGUg
-b3V0IGFkZGluZyB0aGUgZGV0ZWN0aW9uIEkgY2FuIHRha2UgYSBsb29rIGFkZGluZyAKdGhpcyB3
-aXRoIG15IERNQS1idWYgUDJQIGVmZm9ydHMuCgpDaHJpc3RpYW4uCgo+Cj4gTG9nYW4KCgpfX19f
-X19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fXwpMaW51eC1udm1lIG1h
-aWxpbmcgbGlzdApMaW51eC1udm1lQGxpc3RzLmluZnJhZGVhZC5vcmcKaHR0cDovL2xpc3RzLmlu
-ZnJhZGVhZC5vcmcvbWFpbG1hbi9saXN0aW5mby9saW51eC1udm1lCg==
+On 06/08/18 11:25, Mikulas Patocka wrote:
+[...]
+>> None of this explains why some transactions fail to make it across
+>> entirely. The overlapping writes in question write the same data to
+>> the memory locations that are covered by both, and so the ordering in
+>> which the transactions are received should not affect the outcome.
+> 
+> You're right that the corruption couldn't be explained just by reordering
+> writes. My hypothesis is that the PCIe controller tries to disambiguate
+> the overlapping writes, but the disambiguation logic was not tested and it
+> is buggy. If there's a barrier between the overlapping writes, the PCIe
+> controller won't see any overlapping writes, so it won't trigger the
+> faulty disambiguation logic and it works.
+> 
+> Could the ARM engineers look if there's some chicken bit in Cortex-A72
+> that could insert barriers between non-cached writes automatically?
+
+I don't think there is, and even if there was I imagine it would have a 
+pretty hideous effect on non-coherent DMA buffers and the various other 
+places in which we have Normal-NC mappings of actual system RAM.
+
+> I observe these kinds of corruptions:
+> - failing to write a few bytes
+
+That could potentially be explained by the reordering/atomicity issues 
+Matt mentioned, i.e. the load is observing part of the store, before the 
+store has fully completed.
+
+> - writing a few bytes that were written 16 bytes before
+> - writing a few bytes that were written 16 bytes after
+
+Those sound more like the interconnect or root complex ignoring the byte 
+strobes on an unaligned burst, of which I think the simplistic view 
+would be "it's broken".
+
+FWIW I stuck my old Nvidia 7600GT card in my Arm Juno r2 board (2x 
+Cortex-A72), built your test program natively with GCC 8.1.1 at -O2, and 
+it's still happily flickering pixels in the corner of the console after 
+nearly an hour (in parallel with some iperf3 just to ensure plenty of 
+PCIe traffic). I would strongly suspect this issue is particular to 
+Armada 8k, so its' probably one for the Marvell folks to take a closer 
+look at - I believe some previous interconnect issues on those SoCs were 
+actually fixable in firmware.
+
+Robin.
+
+_______________________________________________
+linux-arm-kernel mailing list
+linux-arm-kernel@lists.infradead.org
+http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
