@@ -1,91 +1,86 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.29.99]:54162 "EHLO mail.kernel.org"
+Received: from mail.kernel.org ([198.145.29.99]:32920 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1726094AbeHQGJV (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Fri, 17 Aug 2018 02:09:21 -0400
-Date: Thu, 16 Aug 2018 22:07:41 -0500
+        id S1728948AbeHFXOw (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Mon, 6 Aug 2018 19:14:52 -0400
+Date: Mon, 6 Aug 2018 16:03:57 -0500
 From: Bjorn Helgaas <helgaas@kernel.org>
-To: Benjamin Herrenschmidt <benh@kernel.crashing.org>
-Cc: Hari Vyas <hari.vyas@broadcom.com>, bhelgaas@google.com,
-        linux-pci@vger.kernel.org, Ray Jui <ray.jui@broadcom.com>,
-        linux-kernel@vger.kernel.org,
-        Srinath Mannam <srinath.mannam@broadcom.com>,
-        Guenter Roeck <linux@roeck-us.net>,
-        Jens Axboe <axboe@kernel.dk>, Lukas Wunner <lukas@wunner.de>,
-        Konstantin Khlebnikov <khlebnikov@yandex-team.ru>,
-        Marta Rybczynska <mrybczyn@kalray.eu>,
-        Pierre-Yves Kerbrat <pkerbrat@kalray.eu>
-Subject: Re: [RFC PATCH] pci: Proof of concept at fixing
- pci_enable_device/bridge races
-Message-ID: <20180817030741.GC10316@bhelgaas-glaptop.roam.corp.google.com>
-References: <1530608741-30664-1-git-send-email-hari.vyas@broadcom.com>
- <20180731163727.GK45322@bhelgaas-glaptop.roam.corp.google.com>
- <ecaed7664b46d73888d2494065905f8e108fc0f4.camel@kernel.crashing.org>
- <5e42f7990673d11e3a020e7efcfd333215d48138.camel@kernel.crashing.org>
- <58192cf94de3941f9141aa3203399ae2bcdf6b7a.camel@kernel.crashing.org>
- <08bc40a6af3e614e97a78fbaab688bfcd14520ac.camel@kernel.crashing.org>
+To: Bharat Kumar Gogada <bharat.kumar.gogada@xilinx.com>
+Cc: linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
+        bhelgaas@google.com, rgummal@xilinx.com
+Subject: Re: [PATCH 2/3] PCI: Use dedicated Xilinx controller irq number for
+ AER
+Message-ID: <20180806210357.GD30691@bhelgaas-glaptop.roam.corp.google.com>
+References: <1533141889-19962-1-git-send-email-bharat.kumar.gogada@xilinx.com>
+ <1533141889-19962-3-git-send-email-bharat.kumar.gogada@xilinx.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <08bc40a6af3e614e97a78fbaab688bfcd14520ac.camel@kernel.crashing.org>
+In-Reply-To: <1533141889-19962-3-git-send-email-bharat.kumar.gogada@xilinx.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-[+cc Srinath, Guenter, Jens, Lukas, Konstantin, Marta, Pierre-Yves]
-
-On Thu, Aug 16, 2018 at 07:50:13AM +1000, Benjamin Herrenschmidt wrote:
-> [Note: This isn't meant to be merged, it need splitting at the very
-> least, see below]
+On Wed, Aug 01, 2018 at 10:14:48PM +0530, Bharat Kumar Gogada wrote:
+> Xilinx ZynqMP PS PCIe does not report AER interrupts using Advanced
+> Error Interrupt Message Number. The controller has dedicated interrupt line
+> for reporting PCIe errors along with AER.
 > 
-> This is something I cooked up quickly today to test if that would fix
-> my problems with large number of switch and NVME devices on POWER.
+> Using pci_dev->sysdata of root port to save controller irq number, which
+> will be used for registering AER irq handler.
 > 
-> So far it does...
+> Signed-off-by: Bharat Kumar Gogada <bharat.kumar.gogada@xilinx.com>
+> ---
+>  drivers/pci/quirks.c |   29 +++++++++++++++++++++++++++++
+>  1 files changed, 29 insertions(+), 0 deletions(-)
 > 
-> The issue (as discussed in the Re: PCIe enable device races thread) is
-> that pci_enable_device and related functions along with pci_set_master
-> and pci_enable_bridge are fundamentally racy.
+> diff --git a/drivers/pci/quirks.c b/drivers/pci/quirks.c
+> index f439de8..e666373 100644
+> --- a/drivers/pci/quirks.c
+> +++ b/drivers/pci/quirks.c
+> @@ -4753,3 +4753,32 @@ static void quirk_gpu_hda(struct pci_dev *hda)
+>  			      PCI_CLASS_MULTIMEDIA_HD_AUDIO, 8, quirk_gpu_hda);
+>  DECLARE_PCI_FIXUP_CLASS_FINAL(PCI_VENDOR_ID_NVIDIA, PCI_ANY_ID,
+>  			      PCI_CLASS_MULTIMEDIA_HD_AUDIO, 8, quirk_gpu_hda);
+> +
+> +#if defined(CONFIG_ARCH_ZYNQMP) && defined(CONFIG_PCIE_XILINX_NWL) && \
+> +	defined(CONFIG_PCIEAER)
+> +/*
+> + * Xilinx ZynqMP PS PCIe does not report AER interrupts using Advanced
+> + * Error Interrupt Message Number. The controller has dedicated interrupt line
+> + * for reporting PCIe errors along with AER.
+
+Your comment says "PCIe errors along with AER", but your ifdef tests
+CONFIG_PCIEAER.  Per PCIe r4.0, sec 6.2.6, interrupts can be generated
+even if AER isn't supported.  Don't we want to allow that?
+
+> + */
+> +#include <linux/of.h>
+> +#include <linux/of_irq.h>
+> +
+> +static void quirk_xilinx_aer_irq(struct pci_dev *dev)
+> +{
+> +	struct device_node *dev_node;
+> +
+> +	if (pci_pcie_type(dev) == PCI_EXP_TYPE_ROOT_PORT &&
+> +	    pci_find_ext_capability(dev, PCI_EXT_CAP_ID_ERR)) {
+> +		dev_node = of_find_compatible_node(NULL, NULL,
+> +						   "xlnx,nwl-pcie-2.11");
+> +		if (!dev_node) {
+> +			dev_err(&dev->dev, "Error could not find ZynqMP PS PCIe node\n");
+
+Use pci_err().
+
+Doesn't arm64 support generic kernels that may contain support for
+several platforms?  We don't want a warning if a generic kernel
+happens to be running on a non-ZynqMP system.
+
+> +			return;
+> +		}
+> +
+> +		dev->sysdata = dev_node->data;
+> +	}
+> +}
+> +DECLARE_PCI_FIXUP_EARLY(PCI_VENDOR_ID_XILINX, PCI_ANY_ID, quirk_xilinx_aer_irq);
+> +#endif
+> -- 
+> 1.7.1
 > 
-> There is no lockign protecting the state of the device in pci_dev and
-> if multiple devices under the same bridge try to enable it simultaneously
-> one some of them will potentially start accessing it before it has actually
-> been enabled.
-> 
-> Now there are a LOT more fields in pci_dev that aren't covered by any
-> form of locking.
-
-Most of the PCI core relies on the assumption that only a single
-thread touches a device at a time.  This is generally true of the core
-during enumeration because enumeration is single-threaded.  It's
-generally true in normal driver operation because the core shouldn't
-touch a device after a driver claims it.
-
-But there are several exceptions, and I think we need to understand
-those scenarios before applying locks willy-nilly.
-
-One big exception is that enabling device A may also touch an upstream
-bridge B.  That causes things like your issue and Srinath's issue
-where drivers simultaneously enabling two devices below the same
-bridge corrupt the bridge's state [1].  Marta reported essentially the
-same issue [2].
-
-Hari's issue [3] seems related to a race between a driver work queue
-and the core enumerating the device.  I should have pushed harder to
-understand this; I feel like we papered over the immediate problem
-without clearing up the larger issue of why the core enumeration path
-(pci_bus_add_device()) is running at the same time as a driver.
-
-DPC/AER error handling adds more cases where the core potentially
-accesses devices asynchronously to the driver.
-
-User-mode sysfs controls like ASPM are also asynchronous to drivers.
-
-Even setpci is a potential issue, though I don't know how far we want
-to go to protect it.  I think we should make setpci taint the kernel
-anyway.
-
-It might be nice if we had some sort of writeup of the locking
-strategy as a whole.
-
-[1] https://lkml.kernel.org/r/1501858648-22228-1-git-send-email-srinath.mannam@broadcom.com
-[2] https://lkml.kernel.org/r/744877924.5841545.1521630049567.JavaMail.zimbra@kalray.eu
-[3] https://lkml.kernel.org/r/1530608741-30664-2-git-send-email-hari.vyas@broadcom.com
