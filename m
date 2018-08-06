@@ -1,13 +1,25 @@
 Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
 Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Date: Tue, 21 Aug 2018 14:15:12 +0800
-From: Jisheng Zhang <Jisheng.Zhang@synaptics.com>
-To: Jingoo Han <jingoohan1@gmail.com>, Joao Pinto
- <Joao.Pinto@synopsys.com>, Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
- Bjorn Helgaas <bhelgaas@google.com>
-Subject: [PATCH v2] PCI: dwc: fix scheduling while atomic issues
-Message-ID: <20180821141512.368e3df2@xhacker.debian>
 MIME-Version: 1.0
+In-Reply-To: <99fff4fe-afa9-f12f-a518-472a9dd1c530@arm.com>
+References: <alpine.LRH.2.02.1808021242320.31834@file01.intranet.prod.int.rdu2.redhat.com>
+ <CAHCPf3tFGqkYEcWNN4LaWThw_rVqT316pzLv6T7RfxwO-eZ0EA@mail.gmail.com>
+ <alpine.LRH.2.02.1808030212340.17672@file01.intranet.prod.int.rdu2.redhat.com>
+ <CAKv+Gu8DeuksZhk1g3q_msSKV_hSY_2e1uzVten9-oGO3j9Sqg@mail.gmail.com>
+ <20180803094129.GB17798@arm.com>
+ <alpine.LRH.2.02.1808031235410.31584@file01.intranet.prod.int.rdu2.redhat.com>
+ <CAKv+Gu-aNFh1fsr_05SEwDp99n3pLrguP7=tEcFQPNY53=K7Fw@mail.gmail.com>
+ <alpine.LRH.2.02.1808031424140.14030@file01.intranet.prod.int.rdu2.redhat.com>
+ <CAHCPf3s-+Qf=WBZz1KpisDMG3520jCUh8PLAO3PHa4jdt8kCTw@mail.gmail.com>
+ <CAKv+Gu9_h-WFi1j4+DWUN_dMj75SKKHxWoDH8WQ9P7S7MNpZQg@mail.gmail.com>
+ <alpine.LRH.2.02.1808060553130.30832@file01.intranet.prod.int.rdu2.redhat.com>
+ <99fff4fe-afa9-f12f-a518-472a9dd1c530@arm.com>
+From: Ard Biesheuvel <ard.biesheuvel@linaro.org>
+Date: Mon, 6 Aug 2018 14:53:07 +0200
+Message-ID: <CAKv+Gu_UZmq=6juE98ceXgJ1KCgvzncYbzYiC2Uz+6mhf6yMpw@mail.gmail.com>
+Subject: Re: framebuffer corruption due to overlapping stp instructions on
+ arm64
+To: Robin Murphy <robin.murphy@arm.com>
 List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
  <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
 List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
@@ -15,96 +27,78 @@ List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
 List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
 List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
  <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
-Cc: linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
- linux-arm-kernel@lists.infradead.org
+Cc: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>,
+ Joao Pinto <Joao.Pinto@synopsys.com>,
+ Catalin Marinas <catalin.marinas@arm.com>,
+ linux-pci <linux-pci@vger.kernel.org>, Will Deacon <will.deacon@arm.com>,
+ Russell King <linux@armlinux.org.uk>,
+ Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
+ Mikulas Patocka <mpatocka@redhat.com>, Matt Sealey <neko@bakuhatsu.net>,
+ Jingoo Han <jingoohan1@gmail.com>,
+ linux-arm-kernel <linux-arm-kernel@lists.infradead.org>
 Content-Type: text/plain; charset="us-ascii"
 Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
 Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
 List-ID: <linux-pci.vger.kernel.org>
 
-When programming inbound/outbound atu, we call usleep_range() after
-each checking PCIE_ATU_ENABLE bit. Unfortunately, the atu programming
-can be called in atomic context:
+On 6 August 2018 at 14:42, Robin Murphy <robin.murphy@arm.com> wrote:
+> On 06/08/18 11:25, Mikulas Patocka wrote:
+> [...]
+>>>
+>>> None of this explains why some transactions fail to make it across
+>>> entirely. The overlapping writes in question write the same data to
+>>> the memory locations that are covered by both, and so the ordering in
+>>> which the transactions are received should not affect the outcome.
+>>
+>>
+>> You're right that the corruption couldn't be explained just by reordering
+>> writes. My hypothesis is that the PCIe controller tries to disambiguate
+>> the overlapping writes, but the disambiguation logic was not tested and it
+>> is buggy. If there's a barrier between the overlapping writes, the PCIe
+>> controller won't see any overlapping writes, so it won't trigger the
+>> faulty disambiguation logic and it works.
+>>
+>> Could the ARM engineers look if there's some chicken bit in Cortex-A72
+>> that could insert barriers between non-cached writes automatically?
+>
+>
+> I don't think there is, and even if there was I imagine it would have a
+> pretty hideous effect on non-coherent DMA buffers and the various other
+> places in which we have Normal-NC mappings of actual system RAM.
+>
+>> I observe these kinds of corruptions:
+>> - failing to write a few bytes
+>
+>
+> That could potentially be explained by the reordering/atomicity issues Matt
+> mentioned, i.e. the load is observing part of the store, before the store
+> has fully completed.
+>
 
-inbound atu programming could be called through
-pci_epc_write_header()
-  =>dw_pcie_ep_write_header()
-    =>dw_pcie_prog_inbound_atu()
+OK, so that means the unaligned transaction gets split, and the
+subtransactions are reordered with the aligned transaction so that the
+sub-writes contain stale values from the sub-reads?
 
-outbound atu programming could be called through
-pci_bus_read_config_dword()
-  =>dw_pcie_rd_conf()
-    =>dw_pcie_prog_outbound_atu()
+>> - writing a few bytes that were written 16 bytes before
+>> - writing a few bytes that were written 16 bytes after
+>
+>
+> Those sound more like the interconnect or root complex ignoring the byte
+> strobes on an unaligned burst, of which I think the simplistic view would be
+> "it's broken".
+>
+> FWIW I stuck my old Nvidia 7600GT card in my Arm Juno r2 board (2x
+> Cortex-A72), built your test program natively with GCC 8.1.1 at -O2, and
+> it's still happily flickering pixels in the corner of the console after
+> nearly an hour (in parallel with some iperf3 just to ensure plenty of PCIe
+> traffic). I would strongly suspect this issue is particular to Armada 8k, so
+> its' probably one for the Marvell folks to take a closer look at - I believe
+> some previous interconnect issues on those SoCs were actually fixable in
+> firmware.
+>
 
-Fix this issue by calling mdelay() instead.
-
-Signed-off-by: Jisheng Zhang <Jisheng.Zhang@synaptics.com>
----
-
-Since v1
- - use mdelay() instead of udelay() to avoid __bad_udelay()
-
- drivers/pci/controller/dwc/pcie-designware.c | 8 ++++----
- drivers/pci/controller/dwc/pcie-designware.h | 3 +--
- 2 files changed, 5 insertions(+), 6 deletions(-)
-
-diff --git a/drivers/pci/controller/dwc/pcie-designware.c b/drivers/pci/controller/dwc/pcie-designware.c
-index 778c4f76a884..2153956a0b20 100644
---- a/drivers/pci/controller/dwc/pcie-designware.c
-+++ b/drivers/pci/controller/dwc/pcie-designware.c
-@@ -135,7 +135,7 @@ static void dw_pcie_prog_outbound_atu_unroll(struct dw_pcie *pci, int index,
- 		if (val & PCIE_ATU_ENABLE)
- 			return;
- 
--		usleep_range(LINK_WAIT_IATU_MIN, LINK_WAIT_IATU_MAX);
-+		mdelay(LINK_WAIT_IATU);
- 	}
- 	dev_err(pci->dev, "Outbound iATU is not being enabled\n");
- }
-@@ -178,7 +178,7 @@ void dw_pcie_prog_outbound_atu(struct dw_pcie *pci, int index, int type,
- 		if (val & PCIE_ATU_ENABLE)
- 			return;
- 
--		usleep_range(LINK_WAIT_IATU_MIN, LINK_WAIT_IATU_MAX);
-+		mdelay(LINK_WAIT_IATU);
- 	}
- 	dev_err(pci->dev, "Outbound iATU is not being enabled\n");
- }
-@@ -236,7 +236,7 @@ static int dw_pcie_prog_inbound_atu_unroll(struct dw_pcie *pci, int index,
- 		if (val & PCIE_ATU_ENABLE)
- 			return 0;
- 
--		usleep_range(LINK_WAIT_IATU_MIN, LINK_WAIT_IATU_MAX);
-+		mdelay(LINK_WAIT_IATU);
- 	}
- 	dev_err(pci->dev, "Inbound iATU is not being enabled\n");
- 
-@@ -282,7 +282,7 @@ int dw_pcie_prog_inbound_atu(struct dw_pcie *pci, int index, int bar,
- 		if (val & PCIE_ATU_ENABLE)
- 			return 0;
- 
--		usleep_range(LINK_WAIT_IATU_MIN, LINK_WAIT_IATU_MAX);
-+		mdelay(LINK_WAIT_IATU);
- 	}
- 	dev_err(pci->dev, "Inbound iATU is not being enabled\n");
- 
-diff --git a/drivers/pci/controller/dwc/pcie-designware.h b/drivers/pci/controller/dwc/pcie-designware.h
-index 96126fd8403c..9f1a5e399b70 100644
---- a/drivers/pci/controller/dwc/pcie-designware.h
-+++ b/drivers/pci/controller/dwc/pcie-designware.h
-@@ -26,8 +26,7 @@
- 
- /* Parameters for the waiting for iATU enabled routine */
- #define LINK_WAIT_MAX_IATU_RETRIES	5
--#define LINK_WAIT_IATU_MIN		9000
--#define LINK_WAIT_IATU_MAX		10000
-+#define LINK_WAIT_IATU			9
- 
- /* Synopsys-specific PCIe configuration registers */
- #define PCIE_PORT_LINK_CONTROL		0x710
--- 
-2.18.0
-
+IIRC that was DVM dropping a few VA bits at the top, and a single MMIO
+control bit to put it back into 'non-broken' mode.
 
 _______________________________________________
 linux-arm-kernel mailing list
