@@ -1,54 +1,55 @@
-Return-Path: <SRS0=FW5r=KZ=deltatee.com=logang@kernel.org>
-Return-Path: <SRS0=FW5r=KZ=deltatee.com=logang@kernel.org>
-To: Kit Chow <kchow@gigaio.com>, "Jiang, Dave" <dave.jiang@intel.com>,
- Eric Pilmore <epilmore@gigaio.com>, Bjorn Helgaas <helgaas@kernel.org>
-Cc: "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
- David Woodhouse <dwmw2@infradead.org>,
- Alex Williamson <alex.williamson@redhat.com>,
- "iommu@lists.linux-foundation.org" <iommu@lists.linux-foundation.org>
-References: <CAOQPn8soxubJxb=vp7kz+AM6LbPH5y+_Nx0Vzv7rjV_nMMqEmA@mail.gmail.com>
- <20180809184331.GB113140@bhelgaas-glaptop.roam.corp.google.com>
- <CAOQPn8uPYKai49WYPqZp2wNd5of=0hUvPOHEtqP56RZu-hcjuw@mail.gmail.com>
- <b54899a8-a144-e8e0-9880-1800c4657b95@deltatee.com>
- <95e53520-b05f-4be4-e694-463d717453a8@gigaio.com>
- <cdd9245f-eb23-9e10-1755-8f396a2cd255@deltatee.com>
- <b278c1e5-6f08-c879-a27d-7fc172645fd5@gigaio.com>
- <f04fae39-645e-3c6e-07c0-b194260bf5de@deltatee.com>
- <3f503940-db6a-ec75-ed15-1db99d5d48ef@gigaio.com>
- <112A412BB11A1242B37129D931BCE5348382CFB2@fmsmsx117.amr.corp.intel.com>
- <b8af340c-d40b-cb8c-987f-b394f1d6ec3e@gigaio.com>
- <adf51c74-36fa-b61d-8497-27bd75178ba4@deltatee.com>
- <aa9c3f41-efc9-8c68-a517-2736c8986621@gigaio.com>
- <1170c096-a749-6ee3-32d4-ebba1d12adff@gigaio.com>
-From: Logan Gunthorpe <logang@deltatee.com>
-Message-ID: <929f3dfa-fbff-c582-3be5-c368f11feb7e@deltatee.com>
-Date: Fri, 10 Aug 2018 10:24:19 -0600
+Return-Path: <SRS0=85J+=KW=gmail.com=jingoohan1@kernel.org>
+Return-Path: <SRS0=85J+=KW=gmail.com=jingoohan1@kernel.org>
+From: "Jingoo Han" <jingoohan1@gmail.com>
+To: "'Felipe Balbi'" <felipe.balbi@linux.intel.com>,
+	"'Bjorn Helgaas'" <helgaas@kernel.org>
+Cc: "'Bjorn Helgaas'" <bhelgaas@google.com>,
+	<linux-pci@vger.kernel.org>,
+	<stable@vger.kernel.org>
+References: <20180803065120.29322-1-felipe.balbi@linux.intel.com> <20180806182327.GA30691@bhelgaas-glaptop.roam.corp.google.com> <87lg9ia8q6.fsf@linux.intel.com>
+In-Reply-To: <87lg9ia8q6.fsf@linux.intel.com>
+Subject: Re: [PATCH] PCI: Fix bit definitions for LNKCAP2 register
+Date: Tue, 7 Aug 2018 14:18:23 -0400
+Message-ID: <000001d42e7b$07990170$16cb0450$@gmail.com>
 MIME-Version: 1.0
-In-Reply-To: <1170c096-a749-6ee3-32d4-ebba1d12adff@gigaio.com>
-Content-Type: text/plain; charset=utf-8
-Subject: Re: IOAT DMA w/IOMMU
+Content-Type: text/plain;
+	charset="us-ascii"
 List-ID: <linux-pci.vger.kernel.org>
 
+On Tuesday, August 7, 2018 4:21 AM, Felipe Balbi wrote:
+> 
+> 
+> Hi,
+> 
+> Bjorn Helgaas <helgaas@kernel.org> writes:
+> > On Fri, Aug 03, 2018 at 09:51:20AM +0300, Felipe Balbi wrote:
+> >> Even thhough commit b891b4dc1eed claimed that original bit definitions
+> >> were wrong, that's not really the case. After verifying PCI
+> >> Specification Revisions 3.0, 3.1 and 4.0, Link Capabilites 2
+> >> Register's bit definitions were always starting from Bit 0.
+> >>
+> >> This has been causing issues reporting correct link speeds on sysfs.
+> >
+> > Can you elaborate on this a bit?  b891b4dc1eed still looks correct to
+> > me.  I'm looking at PCIe r4.0, sec 7.5.3.18, where it shows:
+> >
+> >   bit    0  RsvdP
+> >   bits 7:1  Supported Link Speeds Vector
+> 
+> I had missed this detail, actually. It was a misinterpretation of the
+> spec. Sorry for the noise.
 
+Hi Balbi,
 
-On 10/08/18 10:02 AM, Kit Chow wrote:
-> Turns out there is no dma_map_resource routine on x86. get_dma_ops 
-> returns intel_dma_ops which has map_resource pointing to NULL.
+I can understand your situation. The detail of PCIe spec is very confusing.
+Actually, I was one of those who misunderstood. However, after reviewing
+the PCIe spec carefully, I found that the bit definition was wrong. At that
+time,
+I already checked that my patch works properly with Exynos SoCs. Thank you.
 
-Oh, yup. I wasn't aware of that. From a cursory view, it looks like it
-shouldn't be too hard to implement though.
+Best regards,
+Jingoo Han
 
-> Will poke around some in the intel_map_page code but can you actually 
-> get a valid struct page for a pci bar address (dma_map_single calls 
-> virt_to_page)?  If not, does a map_resource routine that can properly 
-> map a pci bar address need to be implemented?
-
-Yes, you can not get a struct page for a PCI bar address unless it's
-mapped with ZONE_DEVICE like in my p2p work. So that would explain why
-dma_map_single() didn't work.
-
-This all implies that ntb_transport doesn't work with DMA and the IOMMU
-turned on. I'm not sure I've ever tried that configuration myself but it
-is a bit surprising.
-
-Logan
+> 
+> --
+> balbi
