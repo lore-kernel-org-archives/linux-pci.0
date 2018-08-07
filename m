@@ -1,86 +1,149 @@
-Return-Path: <SRS0=a9CN=LA=kernel.crashing.org=benh@kernel.org>
-Return-Path: <SRS0=a9CN=LA=kernel.crashing.org=benh@kernel.org>
-Message-ID: <cc822c731d47fe527ca4f97130a98ebb5b52db72.camel@kernel.crashing.org>
-Subject: Re: PCIe enable device races (Was: [PATCH v3] PCI: Data corruption
- happening due to race condition)
-From: Benjamin Herrenschmidt <benh@kernel.crashing.org>
-To: Lukas Wunner <lukas@wunner.de>
-Cc: Hari Vyas <hari.vyas@broadcom.com>,
-        Konstantin Khlebnikov
- <khlebnikov@yandex-team.ru>,
-        Bjorn Helgaas <helgaas@kernel.org>,
-        Bjorn
- Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org,
-        Ray Jui
- <ray.jui@broadcom.com>, Jens Axboe <axboe@kernel.dk>
-Date: Fri, 17 Aug 2018 10:43:00 +1000
-In-Reply-To: <305a61080c60da17a1561b6891c91db5c439bb87.camel@kernel.crashing.org>
-References: <1530608741-30664-1-git-send-email-hari.vyas@broadcom.com>
-	 <20180731163727.GK45322@bhelgaas-glaptop.roam.corp.google.com>
-	 <ecaed7664b46d73888d2494065905f8e108fc0f4.camel@kernel.crashing.org>
-	 <20180815185027.GE28888@bhelgaas-glaptop.roam.corp.google.com>
-	 <e3316c91ad722434360b4018b17cbfe265e97801.camel@kernel.crashing.org>
-	 <fa218ce2-c337-e776-d958-f1f8a1129c9a@yandex-team.ru>
-	 <6f76eb5f54fdc780dac744773d836214d7844346.camel@kernel.crashing.org>
-	 <CAM5rFu-QCBq9TdoiFtvfNENUaS5Tpay5f0H9_BenEqK8nDgoNg@mail.gmail.com>
-	 <f7aa5f1904f56beb3d202033089449a45f86e6d3.camel@kernel.crashing.org>
-	 <20180816102645.btqgmnycprgyup4o@wunner.de>
-	 <305a61080c60da17a1561b6891c91db5c439bb87.camel@kernel.crashing.org>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+MIME-Version: 1.0
+References: <alpine.LRH.2.02.1808021242320.31834@file01.intranet.prod.int.rdu2.redhat.com>
+ <alpine.LRH.2.02.1808030212340.17672@file01.intranet.prod.int.rdu2.redhat.com>
+ <CAKv+Gu8DeuksZhk1g3q_msSKV_hSY_2e1uzVten9-oGO3j9Sqg@mail.gmail.com>
+ <20180803094129.GB17798@arm.com>
+ <alpine.LRH.2.02.1808031235410.31584@file01.intranet.prod.int.rdu2.redhat.com>
+ <CAKv+Gu-aNFh1fsr_05SEwDp99n3pLrguP7=tEcFQPNY53=K7Fw@mail.gmail.com>
+ <alpine.LRH.2.02.1808031424140.14030@file01.intranet.prod.int.rdu2.redhat.com>
+ <CAHCPf3s-+Qf=WBZz1KpisDMG3520jCUh8PLAO3PHa4jdt8kCTw@mail.gmail.com>
+ <CAKv+Gu9_h-WFi1j4+DWUN_dMj75SKKHxWoDH8WQ9P7S7MNpZQg@mail.gmail.com>
+ <alpine.LRH.2.02.1808060553130.30832@file01.intranet.prod.int.rdu2.redhat.com>
+ <99fff4fe-afa9-f12f-a518-472a9dd1c530@arm.com>
+ <CAKv+Gu_C2g=C=gMpk4a5jpDORnxZY6t1v=HDoy59m5vwNBxBBg@mail.gmail.com>
+ <alpine.LRH.2.02.1808061306490.12989@file01.intranet.prod.int.rdu2.redhat.com>
+ <CAKv+Gu_8Rq6X24ZOYvG7+kQQGSGYAZuu_co4k1nJS8K7rkrWMA@mail.gmail.com>
+ <alpine.LRH.2.02.1808061552090.11930@file01.intranet.prod.int.rdu2.redhat.com>
+ <CAKv+Gu_iCgAeGmrajZ_euMcFLntWG1a51HF_HQ1TO=fV_v__AQ@mail.gmail.com>
+In-Reply-To: <CAKv+Gu_iCgAeGmrajZ_euMcFLntWG1a51HF_HQ1TO=fV_v__AQ@mail.gmail.com>
+From: Marcin Wojtas <mw@semihalf.com>
+Date: Tue, 7 Aug 2018 18:40:36 +0200
+Message-ID: <CAPv3WKdCMpy6KarducQEtSYP35zdELhparkmPPMKGMUhsdk1Qw@mail.gmail.com>
+Subject: Re: framebuffer corruption due to overlapping stp instructions on
+ arm64
+To: Ard Biesheuvel <ard.biesheuvel@linaro.org>, mpatocka@redhat.com
+List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
+List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
+List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
+List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
+List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
+Cc: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>,
+ Joao Pinto <Joao.Pinto@synopsys.com>, Jingoo Han <jingoohan1@gmail.com>,
+ Catalin Marinas <catalin.marinas@arm.com>, Will Deacon <will.deacon@arm.com>,
+ Russell King - ARM Linux <linux@armlinux.org.uk>,
+ Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
+ Matt Sealey <neko@bakuhatsu.net>, linux-pci@vger.kernel.org,
+ Robin Murphy <robin.murphy@arm.com>, linux-arm-kernel@lists.infradead.org
+Content-Type: text/plain; charset="utf-8"
+Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
+Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Fri, 2018-08-17 at 09:17 +1000, Benjamin Herrenschmidt wrote:
-> 
-> > What is your rationale to introduce an additional mutex instead if
-> > utilizing the existing mutex in struct device via device_lock() /
-> > device_unlock() or alternatively pci_dev_lock() / pci_dev_unlock()?
-> > 
-> > This is also what Bjorn had suggested here:
-> > https://lore.kernel.org/lkml/20170816134354.GV32525@bhelgaas-glaptop.roam.corp.google.com/
-> 
-> The device_lock() is really meant for the core device model
-> (drivers/base/*) internal synchronization. I'm rather weary of
-> extending its use to drivers.
-> 
-> In the specific PCI case, the obvious reason is that probe() is already
-> called with that held. Thus we have an immediate deadlock if we try to
-> take it in pci_enable_device() for example on the device itself.
-> 
-> We could require that pci_enable_device() is always called with the
-> lock already held, and only take it for the parents when walking the
-> bus hierarchy but frankly, this sort of implicit locking requirements
-> are a rabbit hole and will lead to all sort of interesting bugs and
-> extra driver auditing requirements.
-
-In addition, there are additional uncertainties about whether
-the device_lock of the parent is held or not.
-
-Generally this only happens for USB but there are some cases when
-the device has busy consumer links where remove() will hold it too.
-
-That would make the walking-up-the-bus for pci_enable_bridge()
-rather tricky.
-
-That leads to crazy things like pci_reset_function() vs
-pci_reset_function_locked(). Whenever we end up doing that, that's
-usually a sign that we didn't think things through.
-
-I think we would benefit greatly from the clarity of having a dedicated
-mutex for pci_dev that handles all of our state management. We can
-start with the enable_cnt (and as a result stop using atomics) and
-is_busmaster, we can extend to is_added thus making Hari's patch
-unnecessary, and then start looking at everything else.
-
-We still need the actual device_lock for some things, like the whole
-pci_bus_reset() business which we really want to exclude from
-concurrent driver binding/unbinding I suppose.
-
-We mostly get away with the lack of locking today because the bulk of
-the :1 fields in there tend to be only use either at discovery time
-or by the driver init, so in a single threaded manner, but as we saw
-already, that assumption breaks on bridges and is generally rather
-unsafe.
-
-Cheers,
-Ben.
+QXJkLCBNaWt1bGFzLAoKcG9uLiwgNiBzaWUgMjAxOCBvIDIyOjExIEFyZCBCaWVzaGV1dmVsIDxh
+cmQuYmllc2hldXZlbEBsaW5hcm8ub3JnPiBuYXBpc2HFgihhKToKPgo+IE9uIDYgQXVndXN0IDIw
+MTggYXQgMjE6NTQsIE1pa3VsYXMgUGF0b2NrYSA8bXBhdG9ja2FAcmVkaGF0LmNvbT4gd3JvdGU6
+Cj4gPgo+ID4KPiA+IE9uIE1vbiwgNiBBdWcgMjAxOCwgQXJkIEJpZXNoZXV2ZWwgd3JvdGU6Cj4g
+Pgo+ID4+IE9uIDYgQXVndXN0IDIwMTggYXQgMTk6MDksIE1pa3VsYXMgUGF0b2NrYSA8bXBhdG9j
+a2FAcmVkaGF0LmNvbT4gd3JvdGU6Cj4gPj4gPgo+ID4+ID4KPiA+PiA+IE9uIE1vbiwgNiBBdWcg
+MjAxOCwgQXJkIEJpZXNoZXV2ZWwgd3JvdGU6Cj4gPj4gPgo+ID4+ID4+IE9uIDYgQXVndXN0IDIw
+MTggYXQgMTQ6NDIsIFJvYmluIE11cnBoeSA8cm9iaW4ubXVycGh5QGFybS5jb20+IHdyb3RlOgo+
+ID4+ID4+ID4gT24gMDYvMDgvMTggMTE6MjUsIE1pa3VsYXMgUGF0b2NrYSB3cm90ZToKPiA+PiA+
+PiA+IFsuLi5dCj4gPj4gPj4gPj4+Cj4gPj4gPj4gPj4+IE5vbmUgb2YgdGhpcyBleHBsYWlucyB3
+aHkgc29tZSB0cmFuc2FjdGlvbnMgZmFpbCB0byBtYWtlIGl0IGFjcm9zcwo+ID4+ID4+ID4+PiBl
+bnRpcmVseS4gVGhlIG92ZXJsYXBwaW5nIHdyaXRlcyBpbiBxdWVzdGlvbiB3cml0ZSB0aGUgc2Ft
+ZSBkYXRhIHRvCj4gPj4gPj4gPj4+IHRoZSBtZW1vcnkgbG9jYXRpb25zIHRoYXQgYXJlIGNvdmVy
+ZWQgYnkgYm90aCwgYW5kIHNvIHRoZSBvcmRlcmluZyBpbgo+ID4+ID4+ID4+PiB3aGljaCB0aGUg
+dHJhbnNhY3Rpb25zIGFyZSByZWNlaXZlZCBzaG91bGQgbm90IGFmZmVjdCB0aGUgb3V0Y29tZS4K
+PiA+PiA+PiA+Pgo+ID4+ID4+ID4+Cj4gPj4gPj4gPj4gWW91J3JlIHJpZ2h0IHRoYXQgdGhlIGNv
+cnJ1cHRpb24gY291bGRuJ3QgYmUgZXhwbGFpbmVkIGp1c3QgYnkgcmVvcmRlcmluZwo+ID4+ID4+
+ID4+IHdyaXRlcy4gTXkgaHlwb3RoZXNpcyBpcyB0aGF0IHRoZSBQQ0llIGNvbnRyb2xsZXIgdHJp
+ZXMgdG8gZGlzYW1iaWd1YXRlCj4gPj4gPj4gPj4gdGhlIG92ZXJsYXBwaW5nIHdyaXRlcywgYnV0
+IHRoZSBkaXNhbWJpZ3VhdGlvbiBsb2dpYyB3YXMgbm90IHRlc3RlZCBhbmQgaXQKPiA+PiA+PiA+
+PiBpcyBidWdneS4gSWYgdGhlcmUncyBhIGJhcnJpZXIgYmV0d2VlbiB0aGUgb3ZlcmxhcHBpbmcg
+d3JpdGVzLCB0aGUgUENJZQo+ID4+ID4+ID4+IGNvbnRyb2xsZXIgd29uJ3Qgc2VlIGFueSBvdmVy
+bGFwcGluZyB3cml0ZXMsIHNvIGl0IHdvbid0IHRyaWdnZXIgdGhlCj4gPj4gPj4gPj4gZmF1bHR5
+IGRpc2FtYmlndWF0aW9uIGxvZ2ljIGFuZCBpdCB3b3Jrcy4KPiA+PiA+PiA+Pgo+ID4+ID4+ID4+
+IENvdWxkIHRoZSBBUk0gZW5naW5lZXJzIGxvb2sgaWYgdGhlcmUncyBzb21lIGNoaWNrZW4gYml0
+IGluIENvcnRleC1BNzIKPiA+PiA+PiA+PiB0aGF0IGNvdWxkIGluc2VydCBiYXJyaWVycyBiZXR3
+ZWVuIG5vbi1jYWNoZWQgd3JpdGVzIGF1dG9tYXRpY2FsbHk/Cj4gPj4gPj4gPgo+ID4+ID4+ID4K
+PiA+PiA+PiA+IEkgZG9uJ3QgdGhpbmsgdGhlcmUgaXMsIGFuZCBldmVuIGlmIHRoZXJlIHdhcyBJ
+IGltYWdpbmUgaXQgd291bGQgaGF2ZSBhCj4gPj4gPj4gPiBwcmV0dHkgaGlkZW91cyBlZmZlY3Qg
+b24gbm9uLWNvaGVyZW50IERNQSBidWZmZXJzIGFuZCB0aGUgdmFyaW91cyBvdGhlcgo+ID4+ID4+
+ID4gcGxhY2VzIGluIHdoaWNoIHdlIGhhdmUgTm9ybWFsLU5DIG1hcHBpbmdzIG9mIGFjdHVhbCBz
+eXN0ZW0gUkFNLgo+ID4+ID4+ID4KPiA+PiA+Pgo+ID4+ID4+IExvb2tpbmcgYXQgdGhlIEE3MiBt
+YW51YWwsIHRoZXJlIGlzIG9uZSBjaGlja2VuIGJpdCB0aGF0IGxvb2tzIGxpa2UgaXQKPiA+PiA+
+PiBtYXkgYmUgcmVsYXRlZDoKPiA+PiA+Pgo+ID4+ID4+IENQVUFDVExSX0VMMSBiaXQgIzUwOgo+
+ID4+ID4+Cj4gPj4gPj4gMCBFbmFibGVzIHN0b3JlIHN0cmVhbWluZyBvbiBOQy9HUkUgbWVtb3J5
+IHR5cGUuIFRoaXMgaXMgdGhlIHJlc2V0IHZhbHVlLgo+ID4+ID4+IDEgRGlzYWJsZXMgc3RvcmUg
+c3RyZWFtaW5nIG9uIE5DL0dSRSBtZW1vcnkgdHlwZS4KPiA+PiA+Pgo+ID4+ID4+IHNvIHB1dHRp
+bmcgc29tZXRoaW5nIGxpa2UKPiA+PiA+Pgo+ID4+ID4+IG1ycyB4MCwgUzNfMV9DMTVfQzJfMAo+
+ID4+ID4+IG9yciB4MCwgeDAsICMoMSA8PCA1MCkKPiA+PiA+PiBtc3IgUzNfMV9DMTVfQzJfMCwg
+eDAKPiA+PiA+Pgo+ID4+ID4+IGluIF9fY3B1X3NldHVwKCkgd291bGQgYmUgd29ydGggYSB0cnku
+Cj4gPj4gPgo+ID4+ID4gSXQgd29uJ3QgYm9vdC4KPiA+PiA+Cj4gPj4gPiBCdXQgaWYgaSB3cml0
+ZSB0aGUgc2FtZSB2YWx1ZSB0aGF0IHdhcyByZWFkLCBpdCBhbHNvIHdvbid0IGJvb3QuCj4gPj4g
+Pgo+ID4+ID4gSSBjcmVhdGVkIGEgc2ltcGxlIGtlcm5lbCBtb2R1bGUgdGhhdCByZWFkcyB0aGlz
+IHJlZ2lzdGVyIGFuZCBpdCBoYXMgYml0Cj4gPj4gPiAzMiBzZXQsIGFsbCBvdGhlciBiaXRzIGNs
+ZWFyLiBCdXQgd2hlbiBJIHdyaXRlIHRoZSBzYW1lIHZhbHVlIGludG8gaXQsIHRoZQo+ID4+ID4g
+Y29yZSB0aGF0IGRvZXMgdGhlIHdyaXRlIGlzIHN0dWNrIGluIGluZmluaXRlIGxvb3AuCj4gPj4g
+Pgo+ID4+ID4gU28sIGl0IHNlZW1zIHRoYXQgd2UgYXJlIHdyaXRpbmcgdGhpcyByZWdpc3RlciBm
+cm9tIGEgd3JvbmcgcGxhY2UuCj4gPj4gPgo+ID4+Cj4gPj4gQWgsIG15IGJhZC4gSSBkaWRuJ3Qg
+bG9vayBjbG9zZWx5IGVub3VnaCBhdCB0aGUgZGVzY3JpcHRpb246Cj4gPj4KPiA+PiAiIiIKPiA+
+PiBUaGUgYWNjZXNzaWJpbGl0eSB0byB0aGUgQ1BVQUNUTFJfRUwxIGJ5IEV4Y2VwdGlvbiBsZXZl
+bCBpczoKPiA+Pgo+ID4+IEVMMCAgICAgICAgICAgICAgLQo+ID4+IEVMMShOUykgICAgICAgICAg
+UlcgKGEpCj4gPj4gRUwxKFMpICAgICAgICAgICBSVyAoYSkKPiA+PiBFTDIgICAgICAgICAgICAg
+IFJXIChiKQo+ID4+IEVMMyhTQ1IuTlMgPSAxKSAgUlcKPiA+PiBFTDMoU0NSLk5TID0gMCkgIFJX
+Cj4gPj4KPiA+PiAoYSkgV3JpdGUgYWNjZXNzIGlmIEFDVExSX0VMMy5DUFVBQ1RMUiBpcyAxIGFu
+ZCBBQ1RMUl9FTDIuQ1BVQUNUTFIgaXMKPiA+PiAxLCBvciBBQ1RMUl9FTDMuQ1BVQUNUTFIgaXMg
+MSBhbmQgU0NSLk5TIGlzIDAuCj4gPj4gIiIiCj4gPj4KPiA+PiBzbyB5b3UnbGwgaGF2ZSB0byBk
+byB0aGlzIGZyb20gQVJNIFRydXN0ZWQgRmlybXdhcmUuIElmIHlvdSdyZQo+ID4+IGNvbWZvcnRh
+YmxlIHJlYnVpbGRpbmcgdGhhdDoKPiA+Pgo+ID4+IGRpZmYgLS1naXQgYS9pbmNsdWRlL2xpYi9j
+cHVzL2FhcmNoNjQvY29ydGV4X2E3Mi5oCj4gPj4gYi9pbmNsdWRlL2xpYi9jcHVzL2FhcmNoNjQv
+Y29ydGV4X2E3Mi5oCj4gPj4gaW5kZXggYmZkNjQ5MTg2MjViLi5hN2I4Y2Y0YmUwYzYgMTAwNjQ0
+Cj4gPj4gLS0tIGEvaW5jbHVkZS9saWIvY3B1cy9hYXJjaDY0L2NvcnRleF9hNzIuaAo+ID4+ICsr
+KyBiL2luY2x1ZGUvbGliL2NwdXMvYWFyY2g2NC9jb3J0ZXhfYTcyLmgKPiA+PiBAQCAtMzEsNiAr
+MzEsNyBAQAo+ID4+ICAjZGVmaW5lIENPUlRFWF9BNzJfQUNUTFJfRUwxICAgICAgICAgICAgICAg
+ICAgIFMzXzFfQzE1X0MyXzAKPiA+Pgo+ID4+ICAjZGVmaW5lIENPUlRFWF9BNzJfQUNUTFJfRElT
+QUJMRV9MMV9EQ0FDSEVfSFdfUEZUQ0ggICAgKDEgPDwgNTYpCj4gPj4gKyNkZWZpbmUgQ09SVEVY
+X0E3Ml9BQ1RMUl9ESVNfTkNfR1JFX1NUT1JFX1NUUkVBTUlORyAgICAoMSA8PCA1MCkKPiA+PiAg
+I2RlZmluZSBDT1JURVhfQTcyX0FDVExSX05PX0FMTE9DX1dCV0EgICAgICAgICAoMSA8PCA0OSkK
+PiA+PiAgI2RlZmluZSBDT1JURVhfQTcyX0FDVExSX0RDQ19BU19EQ0NJICAgICAgICAgICAoMSA8
+PCA0NCkKPiA+PiAgI2RlZmluZSBDT1JURVhfQTcyX0FDVExSX0VMMV9ESVNfSU5TVFJfUFJFRkVU
+Q0ggICAgICAgICAgICAgICAgKDEgPDwgMzIpCj4gPj4gZGlmZiAtLWdpdCBhL2xpYi9jcHVzL2Fh
+cmNoNjQvY29ydGV4X2E3Mi5TIGIvbGliL2NwdXMvYWFyY2g2NC9jb3J0ZXhfYTcyLlMKPiA+PiBp
+bmRleCA1NWU1MDg2NzgyODQuLjU5MTRkNmVlM2JhNiAxMDA2NDQKPiA+PiAtLS0gYS9saWIvY3B1
+cy9hYXJjaDY0L2NvcnRleF9hNzIuUwo+ID4+ICsrKyBiL2xpYi9jcHVzL2FhcmNoNjQvY29ydGV4
+X2E3Mi5TCj4gPj4gQEAgLTEzMyw2ICsxMzMsMTUgQEAgZnVuYyBjb3J0ZXhfYTcyX3Jlc2V0X2Z1
+bmMKPiA+PiAgICAgICAgIG9yciAgICAgeDAsIHgwLCAjQ09SVEVYX0E3Ml9FQ1RMUl9TTVBfQklU
+Cj4gPj4gICAgICAgICBtc3IgICAgIENPUlRFWF9BNzJfRUNUTFJfRUwxLCB4MAo+ID4+ICAgICAg
+ICAgaXNiCj4gPj4gKwo+ID4+ICsgICAgICAgLyogLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0t
+LS0tLS0tLS0tLS0tLS0tLS0tCj4gPj4gKyAgICAgICAgKiBEaXNhYmxlcyBzdG9yZSBzdHJlYW1p
+bmcgb24gTkMvR1JFIG1lbW9yeSB0eXBlLgo+ID4+ICsgICAgICAgICogLS0tLS0tLS0tLS0tLS0t
+LS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tCj4gPj4gKyAgICAgICAgKi8KPiA+PiArICAg
+ICAgIG1ycyAgICAgeDAsIENPUlRFWF9BNzJfQUNUTFJfRUwxCj4gPj4gKyAgICAgICBvcnIgICAg
+IHgwLCB4MCwgI0NPUlRFWF9BNzJfQUNUTFJfRElTX05DX0dSRV9TVE9SRV9TVFJFQU1JTkcKPiA+
+PiArICAgICAgIG1zciAgICAgQ09SVEVYX0E3Ml9BQ1RMUl9FTDEsIHgwCj4gPj4gKyAgICAgICBp
+c2IKPiA+PiAgICAgICAgIHJldCB4MTkKPiA+PiAgZW5kZnVuYyBjb3J0ZXhfYTcyX3Jlc2V0X2Z1
+bmMKPiA+Cj4gPiBVbmZvcnR1bmF0ZWxseSwgaXQgZG9lc24ndCB3b3JrLiBJIHZlcmlmaWVkIHRo
+YXQgdGhlIGJpdCBpcyBzZXQgYWZ0ZXIKPiA+IGJvb3RpbmcgTGludXgsIGJ1dCB0aGUgbWVtY3B5
+IGNvcnJ1cHRpb24gd2FzIHN0aWxsIHByZXNlbnQuCj4gPgo+ID4gSSBhbHNvIHRyaWVkIHRoZSBv
+dGhlciBjaGlja2VuIGJpdHMsIGl0IHNsb3dlZCBkb3duIHRoZSBzeXN0ZW0gbm90aWNlYWJseSwK
+PiA+IGJ1dCBoYWQgbm8gZWZmZWN0IG9uIHRoZSBtZW1jcHkgY29ycnVwdGlvbi4KPiA+Cj4KPiBP
+SywgaXQgd2FzIHdvcnRoIGEgc2hvdAo+Cj4gTGV0J3Mgd2FpdCBhbmQgc2VlIGlmIE1hcmNpbiBo
+YXMgYW55IHJlc3VsdHMuCj4KCkFmdGVyIHNvbWUgc2VsZi1jYXVzZWQgc2V0dXAgaXNzdWVzIEkg
+d2FzIGFibGUgdG8gcnVuIHRoZSB0ZXN0IG9uIG15Ck1hY2NoaWF0b0JpbiB3aXRoIHRoZSBrZXJu
+ZWwgdjQuMTgtcmM4LiBJdCdzIGJlZW4gcnVubmluZyBmb3IgMWgrIG5vdywKbG9hZGluZyB0aGUg
+Q1BVIHRvIDEwMCUgYW5kIG5vIHNpbmdsZSBlcnJvciBldmVudC4uLgoKSSBidWlsdCB0aGUgYmlu
+YXJ5IGZpbGUgd2l0aDoKZ2NjLWxpbmFyby03LjIuMS0yMDE3LjExLXg4Nl82NF9hYXJjaDY0LWxp
+bnV4LWdudS9iaW4vYWFyY2g2NC1saW51eC1nbnUtZ2NjIC1PMgoKTWF5YmUgaXQncyB0aGUgb2xk
+ZXIgZmlybXdhcmUgaXNzdWU/IFBsZWFzZSBzZW5kIHRoZSBmdWxsIGJvb3Rsb2cgd2l0aAp0aGUg
+dmVyeSBmaXJzdCBsaW5lIGFmdGVyIHJlc2V0LiBNeSBib2FyZCByZXYgaXMgdjEuMyBhbmQgSSB1
+c2UKbWFpbmxpbmUgVUVGSSAobmV3ZXN0IGVkazIgKyBlZGsyLXBsYXRmb3JtcykgKyBuZXdlc3Qg
+cHVibGljbHkKYXZhaWxhYmxlIEFSTS1URiBhbmQgZWFybGllc3QgZmlybXdhcmUgZm9yIHRoaXMg
+Ym9hcmQuCgpCZXN0IHJlZ2FyZHMsCk1hcmNpbgoKX19fX19fX19fX19fX19fX19fX19fX19fX19f
+X19fX19fX19fX19fX19fX19fX18KbGludXgtYXJtLWtlcm5lbCBtYWlsaW5nIGxpc3QKbGludXgt
+YXJtLWtlcm5lbEBsaXN0cy5pbmZyYWRlYWQub3JnCmh0dHA6Ly9saXN0cy5pbmZyYWRlYWQub3Jn
+L21haWxtYW4vbGlzdGluZm8vbGludXgtYXJtLWtlcm5lbAo=
