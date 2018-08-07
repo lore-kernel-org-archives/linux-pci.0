@@ -1,114 +1,255 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from userp2130.oracle.com ([156.151.31.86]:49514 "EHLO
-        userp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1729249AbeHOSgh (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Wed, 15 Aug 2018 14:36:37 -0400
-Subject: Re: [PATCH 1/1] PCI/AER: prevent pcie_do_fatal_recovery from using
- device after it is removed
-To: poza@codeaurora.org
-Cc: bhelgaas@google.com, keith.busch@intel.com,
-        linux-pci@vger.kernel.org, linux-pci-owner@vger.kernel.org
-References: <1534179088-44219-1-git-send-email-thomas.tai@oracle.com>
- <1534179088-44219-2-git-send-email-thomas.tai@oracle.com>
- <51f4b387d9bd96a42d526a6a029fc43b@codeaurora.org>
- <b0104a716319d76e734c307cb4bedd9d@codeaurora.org>
- <8b8db3c5-e884-d697-6193-b409276f9638@oracle.com>
- <fa97a363892f757203ec7209f374a220@codeaurora.org>
- <08462817-7a4f-2d8a-a329-e856c9e702c9@oracle.com>
- <9215fe3c62c2f15d7da221bb77bd5680@codeaurora.org>
+Return-Path: <SRS0=0i/8=KW=oracle.com=thomas.tai@kernel.org>
+Return-Path: <SRS0=0i/8=KW=oracle.com=thomas.tai@kernel.org>
+Subject: Re: [PATCH] PCI: pciehp: Differentiate between surprise and safe
+ removal
+To: gokul cg <gokuljnpr@gmail.com>
+Cc: Lukas Wunner <lukas@wunner.de>,
+        Mika Westerberg <mika.westerberg@linux.intel.com>,
+        Bjorn Helgaas <helgaas@kernel.org>, Ashok Raj <ashok.raj@intel.com>,
+        Keith Busch <keith.busch@intel.com>, Yinghai Lu <yinghai@kernel.org>,
+        Sinan Kaya <okaya@kernel.org>, linux-pci@vger.kernel.org,
+        Alexandru Gagniuc <mr.nuke.me@gmail.com>
+References: <dac488604766f3dcb948e702210ecc381c4f907b.1533015755.git.lukas@wunner.de>
+ <20180801164358.GI2534@lahna.fi.intel.com> <20180801171512.GA28440@wunner.de>
+ <20180802072036.GN2534@lahna.fi.intel.com>
+ <CAFP4jM8AYG7hmkC_rYgXAfLoJmkJuW0e1UbgiayGrCPbb_yw8A@mail.gmail.com>
+ <20180802084657.GA21267@wunner.de> <20180802150749.GA31683@wunner.de>
+ <ebb526d2-0440-6bd7-765c-b7489d75d830@oracle.com>
+ <CAFP4jM_hqaHjHx1A4G05cX8p3gQGywkXLf1bNa+6Kpdzb_+bTw@mail.gmail.com>
 From: Thomas Tai <thomas.tai@oracle.com>
-Message-ID: <a23efe6f-4341-edaa-a230-c2f1c93ff0ce@oracle.com>
-Date: Wed, 15 Aug 2018 11:43:50 -0400
+Message-ID: <1881c4f2-9502-bca8-3bac-089fdf6b43a4@oracle.com>
+Date: Tue, 7 Aug 2018 10:26:02 -0400
 MIME-Version: 1.0
-In-Reply-To: <9215fe3c62c2f15d7da221bb77bd5680@codeaurora.org>
+In-Reply-To: <CAFP4jM_hqaHjHx1A4G05cX8p3gQGywkXLf1bNa+6Kpdzb_+bTw@mail.gmail.com>
 Content-Type: text/plain; charset=utf-8; format=flowed
-Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-[ ... ]>>>>>>> +        if (dev)
->>>>>>> +            pci_info(dev, "Device recovery from fatal error 
->>>>>>> successful\n");
->>>>>>> +        else
->>>>>>> +            pr_err("AER: Can not find pci_dev for 
->>>>>>> %04x:%02x:%02x.%x\n",
->>>>>>> +                   domain, bus,
->>>>>>> +                   PCI_SLOT(devfn), PCI_FUNC(devfn));
->>>>>>> +        pci_dev_put(dev);
->>>>
->>>> That is, replace above with:
->>>>
->>>>     pr_info("AER: Device %04x:%02x:%02x.%x recover from fatal error
->>>> successful\n", domain, bus, PCI_SLOT(devfn), PCI_FUNC(devfn));
->>>>
->>> is this not sufficient to print ?  which is there already.
->>> pci_info(dev, "Device recovery from fatal error successful\n");
->>
->> Unfortunately, I can't use "dev" because as you said I can't
->> pci_get_domain_slot to search for it after rescanning.
->>
->> -T
-> 
-> If I understood the patch correctly,
-> 1) it is restructuring of pci_dev_put(dev);
-> 2) now we are sending uevent only if it is bridge.
-> 3) the other logic where you store and compare bdf is not required, 
-> although we have to fix following.
-> pci_info(dev, "Device recovery from fatal error successful\n");
-> 
-> 
-> probably 1) and 2) could be a separate patch.
 
-Yes Oza. I will separate 1) and 2) and fix the pci_info(dev, "...") to 
-use domain:bus:devfn
+
+On 08/06/2018 02:33 PM, gokul cg wrote:
+> Hi,
+> 
+> I have tried with following patch and I am still getting same kernel panic.
+
+Sorry to hear that. What kernel message did you see before the crash. We 
+assume the hotplug is corrupting the pci_dev, but is it really? Have you 
+tried without insmod the hotplug provided that you can still power off 
+the device via your I2C.
 
 > 
-> by the way,
-> In my testing even after removing device the call pci_uevent_ers(dev, 
-> PCI_ERS_RESULT_DISCONNECT); did not create any problem.
-
-I think that is dangerous, if we restructure pci_dev_put(dev), ie revert 
-commit bd91b56cb3b27492963caeb5fccefe20a986ca8d. The dev structure is 
-freed and we shouldn't really use it to send pci_uevent_ers(). Although 
-pci_uevent_ers() may be smart enough to figure out to avoid crash, we 
-should only use it when the dev is not removed.
-
-Thanks,
-Thomas
-
->>
+> -------------X++++++++++++++++++++X---------------------
 > 
->>
->>>
->>>>
->>>>>>>      } else {
->>>>>>> -        pci_uevent_ers(dev, PCI_ERS_RESULT_DISCONNECT);
->>>>>>> -        pci_info(dev, "Device recovery from fatal error failed\n");
->>>>>>> +        if (is_bridge_device)
->>>>>> previously there was no condition.. why is this required now ?
->>>>>> and it was doing on "dev" while you are doing it on "udev"
->>>>> is that the reason we dont watnt o use dev after it is removed ? 
->>>>> instead do pci_uevent_ers on bridge ?
->>>>
->>>>
->>>> Yes, that's exactly the reason. I should have written down the reason
->>>> in the commit log. Here is the details explanation for the benefit of
->>>> others. If the failing device is a bridge device, udev is equal to
->>>> dev. So we can use udev in the pci_uevent_ers. But for non bridge
->>>> device the device is already removed from the bus and thus can't send
->>>> pci_uevent_ers.
->>>>
->>>> Thank you,
->>>> Thomas
->>>>
->>>>>>> +            pci_uevent_ers(udev, PCI_ERS_RESULT_DISCONNECT);
->>>>>>> +        pr_err("AER: Device %04x:%02x:%02x.%x recovery from 
->>>>>>> fatal error failed\n",
->>>>>>> +               domain, bus, PCI_SLOT(devfn), PCI_FUNC(devfn));
->>>>>>>      }
->>>>>>>
->>>>>>> -    pci_dev_put(dev);
->>>>>>>      pci_unlock_rescan_remove();
->>>>>>>  }
->>>>>>
->>>>>> Regards,
->>>>>> Oza.
+> diff --git a/drivers/pci/pcie/aer/aerdrv_core.c 
+> b/drivers/pci/pcie/aer/aerdrv_core.c
+> index 0f4554e..05592aa 100644
+> --- a/drivers/pci/pcie/aer/aerdrv_core.c
+> +++ b/drivers/pci/pcie/aer/aerdrv_core.c
+> @@ -26,6 +26,7 @@
+>   #include <linux/slab.h>
+>   #include <linux/kfifo.h>
+>   #include "aerdrv.h"
+> +#include "../../pci.h"
+> 
+>   static bool forceload;
+>   static bool nosourceid;
+> @@ -82,7 +82,7 @@ EXPORT_SYMBOL_GPL(pci_cleanup_aer_uncorrect_error_status);
+>   static int add_error_device(struct aer_err_info *e_info, struct 
+> pci_dev *dev)
+>   {
+> if (e_info->error_dev_num < AER_MAX_MULTI_ERR_DEVICES) {
+> -e_info->dev[e_info->error_dev_num] = dev;
+> +e_info->dev[e_info->error_dev_num] = pci_dev_get(dev);
+> e_info->error_dev_num++;
+> return 0;
+> }
+> @@ -659,6 +659,9 @@ static int get_device_error_info(struct pci_dev 
+> *dev, struct aer_err_info *info)
+> if (!pos)
+> return 1;
+> 
+> +        if (pci_dev_is_disconnected(dev))
+> +                return 0;
+> +
+> if (info->severity == AER_CORRECTABLE) {
+> pci_read_config_dword(dev, pos + PCI_ERR_COR_STATUS,
+> &info->status);
+> @@ -710,6 +713,8 @@ static inline void aer_process_err_devices(struct 
+> pcie_device *p_device,
+> for (i = 0; i < e_info->error_dev_num && e_info->dev[i]; i++) {
+> if (get_device_error_info(e_info->dev[i], e_info))
+> handle_error_source(p_device, e_info->dev[i], e_info);
+> +
+> +                pci_dev_put(e_info->dev[i]);
+> }
+>   }
+> -------------X++++++++++++++++++++X---------------------
+> 
+> 
+> Note: I have configured CONFIG_HOTPLUG_PCI_PCIE and CONFIG_HOTPLUG_PCI 
+> as modules and  loading in start up using script.
+> 
+> root@/proc/:~# cat config | grep -i HOT
+> CONFIG_TICK_ONESHOT=y
+> CONFIG_HOTPLUG=y
+> # CONFIG_MEMORY_HOTPLUG is not set
+> CONFIG_HOTPLUG_CPU=y
+> # CONFIG_BOOTPARAM_HOTPLUG_CPU0 is not set
+> # CONFIG_DEBUG_HOTPLUG_CPU0 is not set
+> CONFIG_ARCH_ENABLE_MEMORY_HOTPLUG=y
+> CONFIG_ACPI_HOTPLUG_CPU=y
+> CONFIG_HOTPLUG_PCI_PCIE=m
+> CONFIG_HOTPLUG_PCI=m
+> # CONFIG_HOTPLUG_PCI_CPCI is not set
+> # CONFIG_HOTPLUG_PCI_SHPC is not set
+> CONFIG_DM_SNAPSHOT=y
+> # CONFIG_USB_STORAGE_JUMPSHOT is not set
+> # CONFIG_TRACER_SNAPSHOT is not set
+> root@/proc/:~#
+> 
+> Panic back trace :
+> crash> bt
+> PID: 24     TASK: ffff880274ac0000  CPU: 0   COMMAND: "kworker/0:1"
+>   #0 [ffff880274abbac8] machine_kexec at ffffffff8102cf18
+>   #1 [ffff880274abbb28] crash_kexec at ffffffff810a6b05
+>   #2 [ffff880274abbbf0] oops_end at ffffffff8176d8a0
+>   #3 [ffff880274abbc18] die at ffffffff810060db
+>   #4 [ffff880274abbc48] do_general_protection at ffffffff8176d392
+>   #5 [ffff880274abbc70] general_protection at ffffffff8176cd32
+>      [exception RIP: pci_bus_read_config_dword+100]
+>      RIP: ffffffff813405f4  RSP: ffff880274abbd20  RFLAGS: 00010046
+>      RAX: 435f494350006963  RBX: ffff880274891800  RCX: 0000000000000004
+>      RDX: 0000000000000ffc  RSI: 0000000000000060  RDI: ffff880274891800
+>      RBP: ffff880274abbd48   R8: ffff880274abbd2c   R9: 00000000000002b8
+>      R10: ffff880274340000  R11: 0000000000000246  R12: ffff880274abbd5c
+>      R13: 0000000000000246  R14: 0000000000000000  R15: ffff880274920000
+>      ORIG_RAX: ffffffffffffffff  CS: 0010  SS: 0018
+>   #6 [ffff880274abbd50] pci_find_next_ext_capability at ffffffff81345db6
+>   #7 [ffff880274abbd90] pci_find_ext_capability at ffffffff81347225
+>   #8 [ffff880274abbda0] get_device_error_info at ffffffff81356c4d
+>   #9 [ffff880274abbdd0] aer_isr at ffffffff81357ab0
+> #10 [ffff880274abbe28] process_one_work at ffffffff8105d4c0
+> #11 [ffff880274abbe70] worker_thread at ffffffff8105e251
+> #12 [ffff880274abbed0] kthread at ffffffff81064260
+> #13 [ffff880274abbf50] ret_from_fork at ffffffff81773978
+> crash>
+> 
+> 
+> Regards,
+> Gokul
+> 
+> On Thu, Aug 2, 2018 at 10:39 PM, Thomas Tai <thomas.tai@oracle.com 
+> <mailto:thomas.tai@oracle.com>> wrote:
+> 
+> 
+>     On 08/02/2018 11:07 AM, Lukas Wunner wrote:
+> 
+>         [cc += Thomas Tai]
+> 
+> 
+>     Hi Lukas,
+>     Thank you very much for cc me.
+> 
+> 
+>         On Thu, Aug 02, 2018 at 10:46:57AM +0200, Lukas Wunner wrote:
+> 
+>             On Thu, Aug 02, 2018 at 12:59:18PM +0530, gokul cg wrote:
+> 
+>                 I am suspecting a possible race condition in the kernel
+>                 between PCI driver
+>                 and AER handling.
+> 
+> 
+>             The solution is to acquire a ref on each device in
+>             add_error_device().
+>             Then release the ref aer_process_err_devices() by calling
+>             pci_dev_put().
+> 
+> 
+>         So in case it wasn't clear, the below is what I had in mind.
+>         Completely untested though.  Does this work for you?
+> 
+>         For v3.10 compatibility, cherry-pick 89ee9f768003 (or alternatively
+>         cherry-pick 8496e85c20e7 and replace pci_dev_is_disconnected(dev)
+>         with !pci_device_is_present(dev)).
+> 
+>         -- >8 --
+>         Subject: [PATCH] PCI/AER: Fix use-after-free on surprise removal
+> 
+>         The work item to consume errors, aer_isr(), walks the hierarchy
+>         using
+>         pci_walk_bus() and stores a pointer to PCI devices which reported an
+>         error in an array.  As long as pci_walk_bus() runs, those
+>         pointers are
+>         valid because pci_bus_sem is held.  But once pci_walk_bus()
+>         finishes,
+>         nothing prevents the pointers from becoming invalid, e.g. through
+>         unplugging of the PCI devices.  The unprotected pointers are then
+>         dereferenced in aer_process_err_devices(), which may oops:
+> 
+> 
+>     I like your idea to increment the refcount during pci_walk_bus(),
+>     that should fix the use-after-free issue. We just need Gokul to
+>     confirm if it fixes his issue or not.
+> 
+>     Thanks,
+>     Thomas
+> 
+> 
+> 
+>             #5  general_protection at ffffffff8176cdf2
+>                 [exception RIP: pci_bus_read_config_dword+100]
+>             #6  pci_find_next_ext_capability at ffffffff81345d7b
+>             #7  pci_find_ext_capability at ffffffff81347225
+>             #8  get_device_error_info at ffffffff81356c4d
+>             #9  aer_isr at ffffffff81357a38
+> 
+>         Fix by holding a ref on the devices until they have been processed.
+>         Skip processing of unplugged devices.
+> 
+>         Reported-by: gokul cg <gokuljnpr@gmail.com
+>         <mailto:gokuljnpr@gmail.com>>
+>         Signed-off-by: Lukas Wunner <lukas@wunner.de
+>         <mailto:lukas@wunner.de>>
+>         ---
+>            drivers/pci/pcie/aer.c | 6 +++++-
+>            1 file changed, 5 insertions(+), 1 deletion(-)
+> 
+>         diff --git a/drivers/pci/pcie/aer.c b/drivers/pci/pcie/aer.c
+>         index a2e8838..937592e 100644
+>         --- a/drivers/pci/pcie/aer.c
+>         +++ b/drivers/pci/pcie/aer.c
+>         @@ -657,7 +657,7 @@ void cper_print_aer(struct pci_dev *dev, int
+>         aer_severity,
+>            static int add_error_device(struct aer_err_info *e_info,
+>         struct pci_dev *dev)
+>            {
+>                  if (e_info->error_dev_num < AER_MAX_MULTI_ERR_DEVICES) {
+>         -               e_info->dev[e_info->error_dev_num] = dev;
+>         +               e_info->dev[e_info->error_dev_num] =
+>         pci_dev_get(dev);
+>                          e_info->error_dev_num++;
+>                          return 0;
+>                  }
+>         @@ -898,6 +898,9 @@ static int get_device_error_info(struct
+>         pci_dev *dev, struct aer_err_info *info)
+>                  if (!pos)
+>                          return 0;
+>            +     if (pci_dev_is_disconnected(dev))
+>         +               return 0;
+>         +
+>                  if (info->severity == AER_CORRECTABLE) {
+>                          pci_read_config_dword(dev, pos +
+>         PCI_ERR_COR_STATUS,
+>                                  &info->status);
+>         @@ -948,6 +951,7 @@ static inline void
+>         aer_process_err_devices(struct aer_err_info *e_info)
+>                  for (i = 0; i < e_info->error_dev_num &&
+>         e_info->dev[i]; i++) {
+>                          if (get_device_error_info(e_info->dev[i], e_info))
+>                                  handle_error_source(e_info->dev[i],
+>         e_info);
+>         +               pci_dev_put(e_info->dev[i]);
+>                  }
+>            }
+> 
+> 
