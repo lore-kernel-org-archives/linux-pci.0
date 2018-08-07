@@ -1,136 +1,178 @@
-Return-Path: <linux-acpi-owner@vger.kernel.org>
-Subject: Re: [PATCH v2 13/40] vfio: Add support for Shared Virtual Addressing
-To: Jean-Philippe Brucker <jean-philippe.brucker@arm.com>,
-        <linux-arm-kernel@lists.infradead.org>,
-        <linux-pci@vger.kernel.org>, <linux-acpi@vger.kernel.org>,
-        <devicetree@vger.kernel.org>, <iommu@lists.linux-foundation.org>,
-        <kvm@vger.kernel.org>, <linux-mm@kvack.org>
-References: <20180511190641.23008-1-jean-philippe.brucker@arm.com>
- <20180511190641.23008-14-jean-philippe.brucker@arm.com>
-CC: <joro@8bytes.org>, <will.deacon@arm.com>, <robin.murphy@arm.com>,
-        <alex.williamson@redhat.com>, <tn@semihalf.com>,
-        <liubo95@huawei.com>, <thunder.leizhen@huawei.com>,
-        <xieyisheng1@huawei.com>, <ilias.apalodimas@linaro.org>,
-        <jonathan.cameron@huawei.com>, <liudongdong3@huawei.com>,
-        <shunyong.yang@hxt-semitech.com>, <nwatters@codeaurora.org>,
-        <okaya@codeaurora.org>, <jcrouse@codeaurora.org>,
-        <rfranz@cavium.com>, <dwmw2@infradead.org>,
-        <jacob.jun.pan@linux.intel.com>, <yi.l.liu@intel.com>,
-        <ashok.raj@intel.com>, <kevin.tian@intel.com>,
-        <baolu.lu@linux.intel.com>, <robdclark@gmail.com>,
-        <christian.koenig@amd.com>, <bharatku@xilinx.com>,
-        <rgummal@xilinx.com>,
-        =?UTF-8?B?57Gz57Gz?= <kenneth-lee-2012@foxmail.com>,
-        wangzhou1 <wangzhou1@hisilicon.com>,
-        liguozhu <liguozhu@hisilicon.com>,
-        fanghao11 <fanghao11@huawei.com>
-From: Xu Zaibo <xuzaibo@huawei.com>
-Message-ID: <5B83B11E.7010807@huawei.com>
-Date: Mon, 27 Aug 2018 16:06:54 +0800
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail.kernel.org ([198.145.29.99]:53626 "EHLO mail.kernel.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1726494AbeHGX6H (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Tue, 7 Aug 2018 19:58:07 -0400
+Date: Tue, 7 Aug 2018 16:41:41 -0500
+From: Bjorn Helgaas <helgaas@kernel.org>
+To: Alexandru Gagniuc <mr.nuke.me@gmail.com>
+Cc: linux-pci@vger.kernel.org, bhelgaas@google.com,
+        jakub.kicinski@netronome.com, keith.busch@intel.com,
+        alex_gagniuc@dellteam.com, austin_bolen@dell.com,
+        shyam_iyer@dell.com, Ariel Elior <ariel.elior@cavium.com>,
+        everest-linux-l2@cavium.com,
+        "David S. Miller" <davem@davemloft.net>,
+        Michael Chan <michael.chan@broadcom.com>,
+        Ganesh Goudar <ganeshgr@chelsio.com>,
+        Jeff Kirsher <jeffrey.t.kirsher@intel.com>,
+        Tariq Toukan <tariqt@mellanox.com>,
+        Saeed Mahameed <saeedm@mellanox.com>,
+        Leon Romanovsky <leon@kernel.org>,
+        Dirk van der Merwe <dirk.vandermerwe@netronome.com>,
+        netdev@vger.kernel.org, linux-kernel@vger.kernel.org,
+        intel-wired-lan@lists.osuosl.org, linux-rdma@vger.kernel.org,
+        oss-drivers@netronome.com
+Subject: Re: [PATCH v6 1/9] PCI: Check for PCIe downtraining conditions
+Message-ID: <20180807214141.GA49411@bhelgaas-glaptop.roam.corp.google.com>
+References: <CAErSpo4PK+SQLNfdkLNt9eLc7bpbxbkZCsa8T-tQpid601n0SQ@mail.gmail.com>
+ <20180806232600.25694-1-mr.nuke.me@gmail.com>
 MIME-Version: 1.0
-In-Reply-To: <20180511190641.23008-14-jean-philippe.brucker@arm.com>
-Content-Type: text/plain; charset="windows-1252"; format=flowed
-Sender: linux-acpi-owner@vger.kernel.org
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20180806232600.25694-1-mr.nuke.me@gmail.com>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hi Jean,
+On Mon, Aug 06, 2018 at 06:25:35PM -0500, Alexandru Gagniuc wrote:
+> PCIe downtraining happens when both the device and PCIe port are
+> capable of a larger bus width or higher speed than negotiated.
+> Downtraining might be indicative of other problems in the system, and
+> identifying this from userspace is neither intuitive, nor
+> straightforward.
+> 
+> The easiest way to detect this is with pcie_print_link_status(),
+> since the bottleneck is usually the link that is downtrained. It's not
+> a perfect solution, but it works extremely well in most cases.
 
-On 2018/5/12 3:06, Jean-Philippe Brucker wrote:
-> diff --git a/include/uapi/linux/vfio.h b/include/uapi/linux/vfio.h
-> index 1aa7b82e8169..dc07752c8fe8 100644
-> --- a/include/uapi/linux/vfio.h
-> +++ b/include/uapi/linux/vfio.h
-> @@ -665,6 +665,82 @@ struct vfio_iommu_type1_dma_unmap {
->   #define VFIO_IOMMU_ENABLE	_IO(VFIO_TYPE, VFIO_BASE + 15)
->   #define VFIO_IOMMU_DISABLE	_IO(VFIO_TYPE, VFIO_BASE + 16)
->   
-> +/*
-> + * VFIO_IOMMU_BIND_PROCESS
-> + *
-> + * Allocate a PASID for a process address space, and use it to attach this
-> + * process to all devices in the container. Devices can then tag their DMA
-> + * traffic with the returned @pasid to perform transactions on the associated
-> + * virtual address space. Mapping and unmapping buffers is performed by standard
-> + * functions such as mmap and malloc.
-> + *
-> + * If flag is VFIO_IOMMU_BIND_PID, @pid contains the pid of a foreign process to
-> + * bind. Otherwise the current task is bound. Given that the caller owns the
-> + * device, setting this flag grants the caller read and write permissions on the
-> + * entire address space of foreign process described by @pid. Therefore,
-> + * permission to perform the bind operation on a foreign process is governed by
-> + * the ptrace access mode PTRACE_MODE_ATTACH_REALCREDS check. See man ptrace(2)
-> + * for more information.
-> + *
-> + * On success, VFIO writes a Process Address Space ID (PASID) into @pasid. This
-> + * ID is unique to a process and can be used on all devices in the container.
-> + *
-> + * On fork, the child inherits the device fd and can use the bonds setup by its
-> + * parent. Consequently, the child has R/W access on the address spaces bound by
-> + * its parent. After an execv, the device fd is closed and the child doesn't
-> + * have access to the address space anymore.
-> + *
-> + * To remove a bond between process and container, VFIO_IOMMU_UNBIND ioctl is
-> + * issued with the same parameters. If a pid was specified in VFIO_IOMMU_BIND,
-> + * it should also be present for VFIO_IOMMU_UNBIND. Otherwise unbind the current
-> + * task from the container.
-> + */
-> +struct vfio_iommu_type1_bind_process {
-> +	__u32	flags;
-> +#define VFIO_IOMMU_BIND_PID		(1 << 0)
-> +	__u32	pasid;
-As I am doing some works on the SVA patch set. I just consider why the 
-user space need this pasid.
-Maybe, is it much more reasonable to set the pasid into all devices 
-under the vfio container by
-a call back function from 'vfio_devices'  while 
-'VFIO_IOMMU_BIND_PROCESS' CMD is executed
-in kernel land? I am not sure because there exists no suitable call back 
-in 'vfio_device' at present.
+After this series, there are no callers of pcie_print_link_status(),
+which means we *only* print something if a device is capable of more
+bandwidth than the fabric can deliver.
 
-Thanks,
-Zaibo
-> +	__s32	pid;
-> +};
+ISTR some desire to have this information for NICs even if the device
+isn't limited, so I'm just double-checking to make sure the driver
+guys are OK with this change.
+
+There are no callers of __pcie_print_link_status() outside the PCI
+core, so I would move the declaration from include/linux/pci.h to
+drivers/pci/pci.h.
+
+If we agree that we *never* need to print anything unless a device is
+constrained by the fabric, I would get rid of the "verbose" flag and
+keep everything in pcie_print_link_status().
+
+> Signed-off-by: Alexandru Gagniuc <mr.nuke.me@gmail.com>
+> ---
+>  drivers/pci/pci.c   | 22 ++++++++++++++++++----
+>  drivers/pci/probe.c | 21 +++++++++++++++++++++
+>  include/linux/pci.h |  1 +
+>  3 files changed, 40 insertions(+), 4 deletions(-)
+> 
+> diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
+> index 316496e99da9..414ad7b3abdb 100644
+> --- a/drivers/pci/pci.c
+> +++ b/drivers/pci/pci.c
+> @@ -5302,14 +5302,15 @@ u32 pcie_bandwidth_capable(struct pci_dev *dev, enum pci_bus_speed *speed,
+>  }
+>  
+>  /**
+> - * pcie_print_link_status - Report the PCI device's link speed and width
+> + * __pcie_print_link_status - Report the PCI device's link speed and width
+>   * @dev: PCI device to query
+> + * @verbose: Be verbose -- print info even when enough bandwidth is available.
+>   *
+>   * Report the available bandwidth at the device.  If this is less than the
+>   * device is capable of, report the device's maximum possible bandwidth and
+>   * the upstream link that limits its performance to less than that.
+>   */
+> -void pcie_print_link_status(struct pci_dev *dev)
+> +void __pcie_print_link_status(struct pci_dev *dev, bool verbose)
+>  {
+>  	enum pcie_link_width width, width_cap;
+>  	enum pci_bus_speed speed, speed_cap;
+> @@ -5319,11 +5320,11 @@ void pcie_print_link_status(struct pci_dev *dev)
+>  	bw_cap = pcie_bandwidth_capable(dev, &speed_cap, &width_cap);
+>  	bw_avail = pcie_bandwidth_available(dev, &limiting_dev, &speed, &width);
+>  
+> -	if (bw_avail >= bw_cap)
+> +	if (bw_avail >= bw_cap && verbose)
+>  		pci_info(dev, "%u.%03u Gb/s available PCIe bandwidth (%s x%d link)\n",
+>  			 bw_cap / 1000, bw_cap % 1000,
+>  			 PCIE_SPEED2STR(speed_cap), width_cap);
+> -	else
+> +	else if (bw_avail < bw_cap)
+>  		pci_info(dev, "%u.%03u Gb/s available PCIe bandwidth, limited by %s x%d link at %s (capable of %u.%03u Gb/s with %s x%d link)\n",
+>  			 bw_avail / 1000, bw_avail % 1000,
+>  			 PCIE_SPEED2STR(speed), width,
+> @@ -5331,6 +5332,19 @@ void pcie_print_link_status(struct pci_dev *dev)
+>  			 bw_cap / 1000, bw_cap % 1000,
+>  			 PCIE_SPEED2STR(speed_cap), width_cap);
+>  }
 > +
-> +/*
-> + * Only mode supported at the moment is VFIO_IOMMU_BIND_PROCESS, which takes
-> + * vfio_iommu_type1_bind_process in data.
+> +/**
+> + * pcie_print_link_status - Report the PCI device's link speed and width
+> + * @dev: PCI device to query
+> + *
+> + * Report the available bandwidth at the device.  If this is less than the
+> + * device is capable of, report the device's maximum possible bandwidth and
+> + * the upstream link that limits its performance to less than that.
 > + */
-> +struct vfio_iommu_type1_bind {
-> +	__u32	argsz;
-> +	__u32	flags;
-> +#define VFIO_IOMMU_BIND_PROCESS		(1 << 0)
-> +	__u8	data[];
-> +};
+> +void pcie_print_link_status(struct pci_dev *dev)
+> +{
+> +	__pcie_print_link_status(dev, true);
+> +}
+>  EXPORT_SYMBOL(pcie_print_link_status);
+>  
+>  /**
+> diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
+> index 611adcd9c169..1c8c26dd2cb2 100644
+> --- a/drivers/pci/probe.c
+> +++ b/drivers/pci/probe.c
+> @@ -2205,6 +2205,24 @@ static struct pci_dev *pci_scan_device(struct pci_bus *bus, int devfn)
+>  	return dev;
+>  }
+>  
+> +static void pcie_check_upstream_link(struct pci_dev *dev)
+> +{
+> +	if (!pci_is_pcie(dev))
+> +		return;
 > +
-> +/*
-> + * VFIO_IOMMU_BIND - _IOWR(VFIO_TYPE, VFIO_BASE + 22, struct vfio_iommu_bind)
-> + *
-> + * Manage address spaces of devices in this container. Initially a TYPE1
-> + * container can only have one address space, managed with
-> + * VFIO_IOMMU_MAP/UNMAP_DMA.
-> + *
-> + * An IOMMU of type VFIO_TYPE1_NESTING_IOMMU can be managed by both MAP/UNMAP
-> + * and BIND ioctls at the same time. MAP/UNMAP acts on the stage-2 (host) page
-> + * tables, and BIND manages the stage-1 (guest) page tables. Other types of
-> + * IOMMU may allow MAP/UNMAP and BIND to coexist, where MAP/UNMAP controls
-> + * non-PASID traffic and BIND controls PASID traffic. But this depends on the
-> + * underlying IOMMU architecture and isn't guaranteed.
-> + *
-> + * Availability of this feature depends on the device, its bus, the underlying
-> + * IOMMU and the CPU architecture.
-> + *
-> + * returns: 0 on success, -errno on failure.
-> + */
-> +#define VFIO_IOMMU_BIND		_IO(VFIO_TYPE, VFIO_BASE + 22)
+> +	/* Look from the device up to avoid downstream ports with no devices. */
+> +	if ((pci_pcie_type(dev) != PCI_EXP_TYPE_ENDPOINT) &&
+> +	    (pci_pcie_type(dev) != PCI_EXP_TYPE_LEG_END) &&
+> +	    (pci_pcie_type(dev) != PCI_EXP_TYPE_UPSTREAM))
+> +		return;
 > +
-> +/*
-> + * VFIO_IOMMU_UNBIND - _IOWR(VFIO_TYPE, VFIO_BASE + 23, struct vfio_iommu_bind)
-> + *
-> + * Undo what was done by the corresponding VFIO_IOMMU_BIND ioctl.
-> + */
-> +#define VFIO_IOMMU_UNBIND	_IO(VFIO_TYPE, VFIO_BASE + 23)
+> +	/* Multi-function PCIe share the same link/status. */
+> +	if (PCI_FUNC(dev->devfn) != 0 || dev->is_virtfn)
+> +		return;
 > +
->   /* -------- Additional API for SPAPR TCE (Server POWERPC) IOMMU -------- */
->   
->   /*
+> +	__pcie_print_link_status(dev, false);
+> +}
+> +
+>  static void pci_init_capabilities(struct pci_dev *dev)
+>  {
+>  	/* Enhanced Allocation */
+> @@ -2240,6 +2258,9 @@ static void pci_init_capabilities(struct pci_dev *dev)
+>  	/* Advanced Error Reporting */
+>  	pci_aer_init(dev);
+>  
+> +	/* Check link and detect downtrain errors */
+> +	pcie_check_upstream_link(dev);
+> +
+>  	if (pci_probe_reset_function(dev) == 0)
+>  		dev->reset_fn = 1;
+>  }
+> diff --git a/include/linux/pci.h b/include/linux/pci.h
+> index c133ccfa002e..d212de231259 100644
+> --- a/include/linux/pci.h
+> +++ b/include/linux/pci.h
+> @@ -1087,6 +1087,7 @@ int pcie_set_mps(struct pci_dev *dev, int mps);
+>  u32 pcie_bandwidth_available(struct pci_dev *dev, struct pci_dev **limiting_dev,
+>  			     enum pci_bus_speed *speed,
+>  			     enum pcie_link_width *width);
+> +void __pcie_print_link_status(struct pci_dev *dev, bool verbose);
+>  void pcie_print_link_status(struct pci_dev *dev);
+>  int pcie_flr(struct pci_dev *dev);
+>  int __pci_reset_function_locked(struct pci_dev *dev);
+> -- 
+> 2.17.1
+> 
