@@ -1,62 +1,52 @@
-Return-Path: <SRS0=uSZ2=LE=intel.com=keith.busch@kernel.org>
-Return-Path: <SRS0=uSZ2=LE=intel.com=keith.busch@kernel.org>
-Date: Tue, 21 Aug 2018 17:13:08 -0600
-From: Keith Busch <keith.busch@intel.com>
-To: Benjamin Herrenschmidt <benh@kernel.crashing.org>
-Cc: poza@codeaurora.org, Sinan Kaya <okaya@kernel.org>,
-	Bjorn Helgaas <helgaas@kernel.org>,
-	Thomas Tai <thomas.tai@oracle.com>, bhelgaas@google.com,
-	linux-pci@vger.kernel.org, linux-pci-owner@vger.kernel.org,
-	Sam Bobroff <sam.bobroff@au1.ibm.com>
-Subject: Re: [PATCH 1/1] PCI/AER: prevent pcie_do_fatal_recovery from using
- device after it is removed
-Message-ID: <20180821231308.GB19320@localhost.localdomain>
-References: <b2e2ac5c92d8a91d00606754d1046578@codeaurora.org>
- <2ecd1fd6d763810d45697f846fa876b58a193b1b.camel@kernel.crashing.org>
- <a149d9657ca83b41c724b0ddd319c6fb@codeaurora.org>
- <512e0e11c3ba462c1d033f8b0e768fa27489731c.camel@kernel.crashing.org>
- <ad23b16cf7ff1f3b51961fda59533892@codeaurora.org>
- <2742bdba5ae8ccc420234b6e6b0224919367ed4c.camel@kernel.crashing.org>
- <20180821143751.GA18477@localhost.localdomain>
- <277b7056aa7af8e98d5cd912838e582783943aa9.camel@kernel.crashing.org>
- <20180821220456.GC18612@localhost.localdomain>
- <5d69daf9918878b95b6df3265fc4c3d5b52f9baa.camel@kernel.crashing.org>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail-ed1-f66.google.com ([209.85.208.66]:35327 "EHLO
+        mail-ed1-f66.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1727224AbeHGJRz (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Tue, 7 Aug 2018 05:17:55 -0400
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <5d69daf9918878b95b6df3265fc4c3d5b52f9baa.camel@kernel.crashing.org>
+In-Reply-To: <266e5f874b36aa83f3327879d85921fab52d5461.1529079120.git.mchehab+samsung@kernel.org>
+References: <cover.1529079119.git.mchehab+samsung@kernel.org> <266e5f874b36aa83f3327879d85921fab52d5461.1529079120.git.mchehab+samsung@kernel.org>
+From: Chen-Yu Tsai <wens@csie.org>
+Date: Tue, 7 Aug 2018 15:04:35 +0800
+Message-ID: <CAGb2v65+6zV1E--KvD3Si=XNmDE3oaZ2hBxvm86KjTwUv9BnSw@mail.gmail.com>
+Subject: Re: [PATCH v4 23/26] devicetree: fix a series of wrong file references
+To: Mauro Carvalho Chehab <mchehab+samsung@kernel.org>
+Cc: Linux Doc Mailing List <linux-doc@vger.kernel.org>,
+        Jonathan Corbet <corbet@lwn.net>,
+        Mauro Carvalho Chehab <mchehab@infradead.org>,
+        linux-kernel <linux-kernel@vger.kernel.org>,
+        Dmitry Torokhov <dmitry.torokhov@gmail.com>,
+        Rob Herring <robh+dt@kernel.org>,
+        Mark Rutland <mark.rutland@arm.com>,
+        Lee Jones <lee.jones@linaro.org>,
+        Maxime Ripard <maxime.ripard@bootlin.com>,
+        Zhou Wang <wangzhou1@hisilicon.com>,
+        Bjorn Helgaas <bhelgaas@google.com>,
+        Xiaowei Song <songxiaowei@hisilicon.com>,
+        Binghui Wang <wangbinghui@hisilicon.com>,
+        Liam Girdwood <lgirdwood@gmail.com>,
+        Mark Brown <broonie@kernel.org>,
+        Maxime Coquelin <mcoquelin.stm32@gmail.com>,
+        Alexandre Torgue <alexandre.torgue@st.com>,
+        linux-input@vger.kernel.org,
+        devicetree <devicetree@vger.kernel.org>,
+        linux-arm-kernel <linux-arm-kernel@lists.infradead.org>,
+        linux-pci@vger.kernel.org, Linux-ALSA <alsa-devel@alsa-project.org>
+Content-Type: text/plain; charset="UTF-8"
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wed, Aug 22, 2018 at 09:06:57AM +1000, Benjamin Herrenschmidt wrote:
-> On Tue, 2018-08-21 at 16:04 -0600, Keith Busch wrote:
-> > > I think there need to be some coordination between pciehb and DPC on
-> > > link state change yes.
-> > > 
-> > > We could still remove the device if recovery fails. For example on EEH
-> > > we have a threshold and if a device fails more than N times within the
-> > > last M minutes (I don't remember the exact numbers and I'm not in front
-> > > of the code right now) we give up.
-> > > 
-> > > Also under some circumstances, the link will change as a result of the
-> > > error handling doing a hot reset.
-> > > 
-> > > For example, if the error happens in a parent bridge and that gets
-> > > reset, the entire hierarchy underneath does too.
-> > > 
-> > > We need to save/restore the state of all bridges and devices (BARs
-> > > etc...) below that.
-> > 
-> > That's not good enough. You'd at least need to check SLTSTS.PDC on all
-> > bridge DSP's beneath the parent *before* you try to restore the state
-> > of devices beneath them. Those races are primarily why DPC currently
-> > removes and reenumerates instead, because that's not something that can
-> > be readily coordinated today.
-> 
-> It can be probably done by a simple test & skip as you go down
-> restoring state, then handling the removals after the dance is
-> complete.
+On Sat, Jun 16, 2018 at 12:30 AM, Mauro Carvalho Chehab
+<mchehab+samsung@kernel.org> wrote:
+> As files got renamed, their references broke.
+>
+> Manually fix a series of broken refs at the DT bindings.
+>
+> Signed-off-by: Mauro Carvalho Chehab <mchehab+samsung@kernel.org>
+> ---
+>  .../devicetree/bindings/input/rmi4/rmi_2d_sensor.txt |  2 +-
+>  Documentation/devicetree/bindings/mfd/sun6i-prcm.txt |  2 +-
 
-You can't just test the states in config space. You're racing with
-pciehp's ISR, which clears those states. You'd need to fundamentally
-change pciehp to (1) not process such events until some currently
-undefined criteria is established, and (2) save and export the previously
-latched states while pciehp bottom half processing is stalled.
+If still applicable,
+
+Acked-by: Chen-Yu Tsai <wens@csie.org>
