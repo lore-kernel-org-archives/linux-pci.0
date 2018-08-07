@@ -1,53 +1,75 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from bmailout1.hostsharing.net ([83.223.95.100]:44219 "EHLO
-        bmailout1.hostsharing.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1727730AbeHFLjA (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Mon, 6 Aug 2018 07:39:00 -0400
-Date: Mon, 6 Aug 2018 11:30:46 +0200
-From: Lukas Wunner <lukas@wunner.de>
-To: Sinan Kaya <okaya@kernel.org>
-Cc: linux-pci@vger.kernel.org, Bjorn Helgaas <bhelgaas@google.com>,
-        Mika Westerberg <mika.westerberg@linux.intel.com>,
-        Oza Pawandeep <poza@codeaurora.org>,
-        Keith Busch <keith.busch@intel.com>
-Subject: Re: [PATCH v7 1/1] PCI: pciehp: Ignore link events when there is a
- fatal error pending
-Message-ID: <20180806093046.GB28462@wunner.de>
-References: <20180805225136.5800-1-okaya@kernel.org>
- <20180805225136.5800-2-okaya@kernel.org>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20180805225136.5800-2-okaya@kernel.org>
+Received: from mga14.intel.com ([192.55.52.115]:7944 "EHLO mga14.intel.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S2389581AbeHGUHt (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Tue, 7 Aug 2018 16:07:49 -0400
+Message-ID: <263e783d8aa8b50c27d8919d178066367162488e.camel@intel.com>
+Subject: Re: [PATCH v6 5/9] fm10k: Do not call pcie_print_link_status()
+From: Jeff Kirsher <jeffrey.t.kirsher@intel.com>
+Reply-To: jeffrey.t.kirsher@intel.com
+To: Alexandru Gagniuc <mr.nuke.me@gmail.com>,
+        linux-pci@vger.kernel.org, bhelgaas@google.com,
+        jakub.kicinski@netronome.com
+Cc: keith.busch@intel.com, alex_gagniuc@dellteam.com,
+        austin_bolen@dell.com, shyam_iyer@dell.com,
+        Ariel Elior <ariel.elior@cavium.com>,
+        everest-linux-l2@cavium.com,
+        "David S. Miller" <davem@davemloft.net>,
+        Michael Chan <michael.chan@broadcom.com>,
+        Ganesh Goudar <ganeshgr@chelsio.com>,
+        Tariq Toukan <tariqt@mellanox.com>,
+        Saeed Mahameed <saeedm@mellanox.com>,
+        Leon Romanovsky <leon@kernel.org>,
+        Dirk van der Merwe <dirk.vandermerwe@netronome.com>,
+        netdev@vger.kernel.org, linux-kernel@vger.kernel.org,
+        intel-wired-lan@lists.osuosl.org, linux-rdma@vger.kernel.org,
+        oss-drivers@netronome.com
+Date: Tue, 07 Aug 2018 10:52:17 -0700
+In-Reply-To: <20180806232600.25694-5-mr.nuke.me@gmail.com>
+References: <CAErSpo4PK+SQLNfdkLNt9eLc7bpbxbkZCsa8T-tQpid601n0SQ@mail.gmail.com>
+         <20180806232600.25694-1-mr.nuke.me@gmail.com>
+         <20180806232600.25694-5-mr.nuke.me@gmail.com>
+Content-Type: multipart/signed; micalg="pgp-sha256";
+        protocol="application/pgp-signature"; boundary="=-J5aSTQDattGGpjY4QXtq"
+Mime-Version: 1.0
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Sun, Aug 05, 2018 at 03:51:36PM -0700, Sinan Kaya wrote:
-> --- a/drivers/pci/hotplug/pciehp_ctrl.c
-> +++ b/drivers/pci/hotplug/pciehp_ctrl.c
-> @@ -222,9 +222,28 @@ void pciehp_handle_disable_request(struct slot *slot)
->  void pciehp_handle_presence_or_link_change(struct slot *slot, u32 events)
->  {
->  	struct controller *ctrl = slot->ctrl;
-> +	struct pci_dev *pdev = ctrl->pcie->port;
->  	bool link_active;
->  	u8 present;
->  
-> +	/* If a fatal error is pending, wait for AER or DPC to handle it. */
-> +	if (pcie_fatal_error_pending(pdev, PCI_ERR_UNC_SURPDN)) {
-> +		bool recovered;
-> +
-> +		recovered = pcie_wait_fatal_error_clear(pdev,
-> +						PCI_ERR_UNC_SURPDN);
-> +
-> +		/* If the fatal error is gone and the link is up, return */
-> +		if (recovered && pcie_wait_for_link(pdev, true)) {
-> +			ctrl_info(ctrl, "Slot(%s): Ignoring Link event due to successful fatal error recovery\n",
-> +				  slot_name(slot));
-> +			return;
-> +		}
-> +
-> +		ctrl_info(ctrl, "Slot(%s): Fatal error recovery failed for Link event, tryig hotplug reset\n",
 
-Typo tryig -> trying.  Otherwise this is
+--=-J5aSTQDattGGpjY4QXtq
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
 
-Reviewed-by: Lukas Wunner <lukas@wunner.de>
+On Mon, 2018-08-06 at 18:25 -0500, Alexandru Gagniuc wrote:
+> This is now done by the PCI core to warn of sub-optimal bandwidth.
+>=20
+> Signed-off-by: Alexandru Gagniuc <mr.nuke.me@gmail.com>
+> ---
+>  drivers/net/ethernet/intel/fm10k/fm10k_pci.c | 3 ---
+>  1 file changed, 3 deletions(-)
+
+Acked-by: Jeff Kirsher <jeffrey.t.kirsher@intel.com>
+
+--=-J5aSTQDattGGpjY4QXtq
+Content-Type: application/pgp-signature; name="signature.asc"
+Content-Description: This is a digitally signed message part
+Content-Transfer-Encoding: 7bit
+
+-----BEGIN PGP SIGNATURE-----
+
+iQIzBAABCAAdFiEEiTyZWz+nnTrOJ1LZ5W/vlVpL7c4FAltp3FEACgkQ5W/vlVpL
+7c7Vag/9HVyuEGVsk8QblGk3urNCoL2kGmQG2Gm4z/7uv5SZUqkWMBTa1n2y+N+U
+w3wIC9/eSLz7GOUUEU6pWobU/ORkiPzl7D6yYVMvNLb3eS7InWvKiAvBkF/+e1Ya
+ktzRLiacJFGwkavQfYa6ga5suNEC1YA7uf1yZ7yWxsahdLcFrznY7uhmRe+93wLs
+jWpMr3HClUj1dUkfqjc3f/C42yALGCOdi328+OrV0APx3063eu73peNoDvbM+oXA
+9S+p1sb2pG7wwWs9VHLPjGm3r6Qgl3fyWVTsTmV1KhJRajMq4Dw6/fjGqb219vZE
+L3Y5y4MCLoteCQmBIbHBanLOjXG/JYq7CBR8sPZyBcYlYcWRqNJd3DiQGyHS+a8c
+NePyrPa6LLIxLEJfUqk0hNWSYiPshc3YipoZhhVFlp+dGNVZZJJ2UKhSZMsweFAw
+aYMVh/gjumHM2EJe9AYKob4aCH94KbA0WJfQ79phvr8Z6VS47Ikv3kojAHvmwJe4
+FHI+s8adHTvM4eJZePCuhUBoP9rEZDgchnUpZVAoUxvYUeKdopNAwfizTor1Jg2a
+QUdfz6SDVqf9sHBzT4ypvXy7A/9mgi/GhY2FisDAl76a2yemkjuOP1J4W2ivpkrP
+z0A0LQ6u17Eko9abpm89jFx1qwJEiE9RNtxDjkrzb6DSASzMizo=
+=PPMO
+-----END PGP SIGNATURE-----
+
+--=-J5aSTQDattGGpjY4QXtq--
