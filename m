@@ -1,112 +1,97 @@
-Return-Path: <SRS0=JeCf=LN=gmail.com=andy.shevchenko@kernel.org>
-Return-Path: <SRS0=JeCf=LN=gmail.com=andy.shevchenko@kernel.org>
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Date: Tue, 7 Aug 2018 14:17:34 -0400 (EDT)
+From: Mikulas Patocka <mpatocka@redhat.com>
+To: Ard Biesheuvel <ard.biesheuvel@linaro.org>
+Subject: Re: framebuffer corruption due to overlapping stp instructions on
+ arm64
+In-Reply-To: <CAKv+Gu_HasYTYLy3d_1vhBHA=M5i40DmU3EuVHhzT4pRiahcmA@mail.gmail.com>
+Message-ID: <alpine.LRH.2.02.1808071414340.25017@file01.intranet.prod.int.rdu2.redhat.com>
+References: <alpine.LRH.2.02.1808021242320.31834@file01.intranet.prod.int.rdu2.redhat.com>
+ <CAHCPf3s-+Qf=WBZz1KpisDMG3520jCUh8PLAO3PHa4jdt8kCTw@mail.gmail.com>
+ <CAKv+Gu9_h-WFi1j4+DWUN_dMj75SKKHxWoDH8WQ9P7S7MNpZQg@mail.gmail.com>
+ <alpine.LRH.2.02.1808060553130.30832@file01.intranet.prod.int.rdu2.redhat.com>
+ <99fff4fe-afa9-f12f-a518-472a9dd1c530@arm.com>
+ <CAKv+Gu_C2g=C=gMpk4a5jpDORnxZY6t1v=HDoy59m5vwNBxBBg@mail.gmail.com>
+ <alpine.LRH.2.02.1808061306490.12989@file01.intranet.prod.int.rdu2.redhat.com>
+ <CAKv+Gu_8Rq6X24ZOYvG7+kQQGSGYAZuu_co4k1nJS8K7rkrWMA@mail.gmail.com>
+ <alpine.LRH.2.02.1808061552090.11930@file01.intranet.prod.int.rdu2.redhat.com>
+ <CAKv+Gu_iCgAeGmrajZ_euMcFLntWG1a51HF_HQ1TO=fV_v__AQ@mail.gmail.com>
+ <CAPv3WKdCMpy6KarducQEtSYP35zdELhparkmPPMKGMUhsdk1Qw@mail.gmail.com>
+ <alpine.LRH.2.02.1808071331260.16565@file01.intranet.prod.int.rdu2.redhat.com>
+ <CAKv+Gu_HasYTYLy3d_1vhBHA=M5i40DmU3EuVHhzT4pRiahcmA@mail.gmail.com>
 MIME-Version: 1.0
-References: <cover.1534686484.git.lukas@wunner.de>
-In-Reply-To: <cover.1534686484.git.lukas@wunner.de>
-From: Andy Shevchenko <andy.shevchenko@gmail.com>
-Date: Thu, 30 Aug 2018 11:50:13 +0300
-Message-ID: <CAHp75Veby=mo5s7QvfEhVLjGYBEL9GDDD_CfBmgS3Y+sxRzwSA@mail.gmail.com>
-Subject: Re: [PATCH 0/9] PCI hotplug diet
-To: Lukas Wunner <lukas@wunner.de>
-Cc: Bjorn Helgaas <helgaas@kernel.org>, linux-pci@vger.kernel.org, okaya@kernel.org,
-	Mika Westerberg <mika.westerberg@linux.intel.com>, Keith Busch <keith.busch@intel.com>,
-	Oza Pawandeep <poza@codeaurora.org>, Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	"Rafael J. Wysocki" <rjw@rjwysocki.net>, Len Brown <lenb@kernel.org>, scott@spiteful.org,
-	Paul Mackerras <paulus@samba.org>, Michael Ellerman <mpe@ellerman.id.au>, gwshan@linux.vnet.ibm.com,
-	Sebastian Ott <sebott@linux.vnet.ibm.com>, gerald.schaefer@de.ibm.com,
-	Corentin Chary <corentin.chary@gmail.com>, Darren Hart <dvhart@infradead.org>,
-	Andy Shevchenko <andy@infradead.org>, Greg Kroah-Hartman <gregkh@linuxfoundation.org>, dan.zink@hpe.com,
-	jshah@us.ibm.com, zubarev@us.ibm.com, prarit@redhat.com,
-	ACPI Devel Maling List <linux-acpi@vger.kernel.org>, linux-s390@vger.kernel.org,
-	Platform Driver <platform-driver-x86@vger.kernel.org>,
-	acpi4asus-user <acpi4asus-user@lists.sourceforge.net>,
-	"open list:LINUX FOR POWERPC PA SEMI PWRFICIENT" <linuxppc-dev@lists.ozlabs.org>
-Content-Type: text/plain; charset="UTF-8"
+List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
+List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
+List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
+List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
+List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
+Cc: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>,
+ Joao Pinto <Joao.Pinto@synopsys.com>, Jingoo Han <jingoohan1@gmail.com>,
+ linux-pci <linux-pci@vger.kernel.org>, Will Deacon <will.deacon@arm.com>,
+ Russell King - ARM Linux <linux@armlinux.org.uk>,
+ Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
+ Matt Sealey <neko@bakuhatsu.net>, Catalin Marinas <catalin.marinas@arm.com>,
+ Marcin Wojtas <mw@semihalf.com>, Robin Murphy <robin.murphy@arm.com>,
+ linux-arm-kernel <linux-arm-kernel@lists.infradead.org>
+Content-Type: text/plain; charset="us-ascii"
+Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
+Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Sun, Aug 19, 2018 at 5:35 PM Lukas Wunner <lukas@wunner.de> wrote:
->
-> Here's PCI hotplug material I've prepared for v4.20:
->
-> Patches [1/9] to [8/9] reduce the code by 488 lines.  There should be no
-> loss of functionality and no new features, just less and simpler code.
->
-> Patch [9/9] collects TODOs for hotplug drivers to spur contributions.
->
->
-> I've assumed that my patch "PCI: pciehp: Differentiate between surprise
-> and safe removal" (submitted July 31) gets merged before this series:
-> https://patchwork.ozlabs.org/patch/951386/
->
-> If that patch is not accepted or other pciehp-related patches are merged
-> before this series, I'll have to rebase patch [4/9] ("PCI: pciehp: Unify
-> controller and slot structs").  No big deal, just a heads-up.
->
-
-Acked-by: Andy Shevchenko <andy.shevchenko@gmail.com>
-
-for PDx86 bits
-
-> Thanks,
->
-> Lukas
->
->
-> Lukas Wunner (9):
->   PCI: Simplify disconnected marking
->   PCI: pciehp: Drop unnecessary includes
->   PCI: pciehp: Drop hotplug_slot_ops wrappers
->   PCI: pciehp: Unify controller and slot structs
->   PCI: pciehp: Reshuffle controller struct for clarity
->   PCI: hotplug: Constify hotplug_slot_ops
->   PCI: hotplug: Drop hotplug_slot_info
->   PCI: hotplug: Embed hotplug_slot
->   PCI: hotplug: Document TODOs
->
->  arch/powerpc/include/asm/pnv-pci.h      |   2 +-
->  drivers/pci/hotplug/TODO                |  74 +++++++
->  drivers/pci/hotplug/acpiphp.h           |  10 +-
->  drivers/pci/hotplug/acpiphp_core.c      |  36 +---
->  drivers/pci/hotplug/acpiphp_ibm.c       |   2 +-
->  drivers/pci/hotplug/cpci_hotplug.h      |  11 +-
->  drivers/pci/hotplug/cpci_hotplug_core.c | 105 +++-------
->  drivers/pci/hotplug/cpci_hotplug_pci.c  |   6 +-
->  drivers/pci/hotplug/cpqphp.h            |   9 +-
->  drivers/pci/hotplug/cpqphp_core.c       |  59 ++----
->  drivers/pci/hotplug/cpqphp_ctrl.c       |  31 +--
->  drivers/pci/hotplug/ibmphp.h            |   9 +-
->  drivers/pci/hotplug/ibmphp_core.c       | 121 ++++-------
->  drivers/pci/hotplug/ibmphp_ebda.c       |  70 +------
->  drivers/pci/hotplug/pci_hotplug_core.c  |  53 ++---
->  drivers/pci/hotplug/pciehp.h            | 138 ++++++-------
->  drivers/pci/hotplug/pciehp_core.c       | 127 +++---------
->  drivers/pci/hotplug/pciehp_ctrl.c       | 255 +++++++++++-------------
->  drivers/pci/hotplug/pciehp_hpc.c        | 127 ++++--------
->  drivers/pci/hotplug/pciehp_pci.c        |  24 +--
->  drivers/pci/hotplug/pnv_php.c           |  35 ++--
->  drivers/pci/hotplug/rpaphp.h            |  10 +-
->  drivers/pci/hotplug/rpaphp_core.c       |  20 +-
->  drivers/pci/hotplug/rpaphp_pci.c        |  11 +-
->  drivers/pci/hotplug/rpaphp_slot.c       |  22 +-
->  drivers/pci/hotplug/s390_pci_hpc.c      |  44 ++--
->  drivers/pci/hotplug/sgi_hotplug.c       |  63 +++---
->  drivers/pci/hotplug/shpchp.h            |   8 +-
->  drivers/pci/hotplug/shpchp_core.c       |  48 ++---
->  drivers/pci/hotplug/shpchp_ctrl.c       |  21 +-
->  drivers/pci/pci.c                       |   4 +-
->  drivers/pci/pcie/err.c                  |   8 +-
->  drivers/pci/slot.c                      |   2 +-
->  drivers/platform/x86/asus-wmi.c         |  39 +---
->  drivers/platform/x86/eeepc-laptop.c     |  43 ++--
->  include/linux/pci_hotplug.h             |  43 +---
->  36 files changed, 638 insertions(+), 1052 deletions(-)
->  create mode 100644 drivers/pci/hotplug/TODO
->
-> --
-> 2.18.0
->
 
 
--- 
-With Best Regards,
-Andy Shevchenko
+On Tue, 7 Aug 2018, Ard Biesheuvel wrote:
+
+> On 7 August 2018 at 19:39, Mikulas Patocka <mpatocka@redhat.com> wrote:
+> >
+> >
+> > On Tue, 7 Aug 2018, Marcin Wojtas wrote:
+> >
+> >> Ard, Mikulas,
+> >>
+> >> After some self-caused setup issues I was able to run the test on my
+> >> MacchiatoBin with the kernel v4.18-rc8. It's been running for 1h+ now,
+> >> loading the CPU to 100% and no single error event...
+> >>
+> >> I built the binary file with:
+> >> gcc-linaro-7.2.1-2017.11-x86_64_aarch64-linux-gnu/bin/aarch64-linux-gnu-gcc -O2
+> >>
+> >> Maybe it's the older firmware issue?
+> >
+> > I have downloaded and built the firmware recently (it has timestamp Jul 30
+> > 2018).
+> >
+> > Do you still have your firmware file "flash-image.bin" that you used, so
+> > that I could try it?
+> >
+> >> Please send the full bootlog with
+> >> the very first line after reset. My board rev is v1.3 and I use
+> >> mainline UEFI (newest edk2 + edk2-platforms) + newest publicly
+> >> available ARM-TF and earliest firmware for this board.
+> >>
+> >> Best regards,
+> >> Marcin
+> >
+> 
+> Mikulas,
+> 
+> Is the issue reproducible with an nvidia card + nouveau driver as well ?
+> 
+> Given the screen corruption i see with radeon even on other arm
+> systems, i'd like to ensure that this is a platform bug not a driver
+> bug.
+
+I see the same memcpy-to-framebuffer corruption on Radeon HD 6450 and 
+nVidia Quadro NVS 285.
+
+3D acceleration on nVidia is slow, but it doesn't have visible glitches.
+
+Mikulas
+
+_______________________________________________
+linux-arm-kernel mailing list
+linux-arm-kernel@lists.infradead.org
+http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
