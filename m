@@ -1,63 +1,43 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from usa-sjc-mx-foss1.foss.arm.com ([217.140.101.70]:36222 "EHLO
-        foss.arm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1728723AbeHFNBW (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Mon, 6 Aug 2018 09:01:22 -0400
-Date: Mon, 6 Aug 2018 11:52:46 +0100
-From: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
-To: Christoph Hellwig <hch@lst.de>
-Cc: Bjorn Helgaas <bhelgaas@google.com>,
-        Palmer Dabbelt <palmer@dabbelt.com>,
-        "Wesley W . Terpstra" <wesley@sifive.com>,
-        Arnd Bergmann <arnd@arndb.de>, linux-pci@vger.kernel.org,
-        linux-riscv@lists.infradead.org
-Subject: Re: [PATCH 3/3] PCI/xilinx: Depend on OF instead of the ARCH
-Message-ID: <20180806105246.GA18685@e107981-ln.cambridge.arm.com>
-References: <20180804101402.10022-1-hch@lst.de>
- <20180804101402.10022-4-hch@lst.de>
+Return-Path: <SRS0=MFNn=KW=google.com=bhelgaas@kernel.org>
+Return-Path: <SRS0=MFNn=KW=google.com=bhelgaas@kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20180804101402.10022-4-hch@lst.de>
-Sender: linux-pci-owner@vger.kernel.org
+References: <20180803065120.29322-1-felipe.balbi@linux.intel.com>
+ <20180806182327.GA30691@bhelgaas-glaptop.roam.corp.google.com> <87lg9ia8q6.fsf@linux.intel.com>
+In-Reply-To: <87lg9ia8q6.fsf@linux.intel.com>
+From: Bjorn Helgaas <bhelgaas@google.com>
+Date: Tue, 7 Aug 2018 15:13:16 -0500
+Message-ID: <CAErSpo595gmyeWNtY4Ur6VQoxS82bx8JQ-PoSv0oUdn-j7pJCA@mail.gmail.com>
+Subject: Re: [PATCH] PCI: Fix bit definitions for LNKCAP2 register
+To: felipe.balbi@linux.intel.com
+Cc: Bjorn Helgaas <helgaas@kernel.org>, linux-pci@vger.kernel.org, stable@vger.kernel.org,
+	Jingoo Han <jingoohan1@gmail.com>
+Content-Type: text/plain; charset="UTF-8"
 List-ID: <linux-pci.vger.kernel.org>
 
-On Sat, Aug 04, 2018 at 12:14:02PM +0200, Christoph Hellwig wrote:
-> There isn't a hard dependency of the Xilinx AXI-PCIe host bridge on any
-> architecture.  For example: at SiFive we map RISC-V cores to Xilinx FPGAs
-> and connect the Xilinx IP via a TileLink adapter, so the RISC-V Linux
-> port will need to be able to enable PCIE_XILINX in order to have PCIe
-> support.
-> 
-> This patch decouples the PCIE_XILINX support from ARCH.  Instead it just
-> depends on OF, which I believe is the only true dependency.
-> 
-> Signed-off-by: Palmer Dabbelt <palmer@dabbelt.com>
-> [hch: switch to OF instead of OF_PCI now that the latter is gone]
-> Signed-off-by: Christoph Hellwig <hch@lst.de>
-> ---
->  drivers/pci/controller/Kconfig | 2 +-
->  1 file changed, 1 insertion(+), 1 deletion(-)
+On Tue, Aug 7, 2018 at 3:24 AM Felipe Balbi
+<felipe.balbi@linux.intel.com> wrote:
+>
+>
+> Hi,
+>
+> Bjorn Helgaas <helgaas@kernel.org> writes:
+> > On Fri, Aug 03, 2018 at 09:51:20AM +0300, Felipe Balbi wrote:
+> >> Even thhough commit b891b4dc1eed claimed that original bit definitions
+> >> were wrong, that's not really the case. After verifying PCI
+> >> Specification Revisions 3.0, 3.1 and 4.0, Link Capabilites 2
+> >> Register's bit definitions were always starting from Bit 0.
+> >>
+> >> This has been causing issues reporting correct link speeds on sysfs.
+> >
+> > Can you elaborate on this a bit?  b891b4dc1eed still looks correct to
+> > me.  I'm looking at PCIe r4.0, sec 7.5.3.18, where it shows:
+> >
+> >   bit    0  RsvdP
+> >   bits 7:1  Supported Link Speeds Vector
+>
+> I had missed this detail, actually. It was a misinterpretation of the
+> spec. Sorry for the noise.
 
-I have applied it to pci/controller/misc for v4.19, even though I am
-not sure Bjorn will have time to put into -next and send it for
-the upcoming merge window, we shall try.
-
-Thanks,
-Lorenzo
-
-> diff --git a/drivers/pci/controller/Kconfig b/drivers/pci/controller/Kconfig
-> index cc9fa02d32a0..0f7ce5eaeac8 100644
-> --- a/drivers/pci/controller/Kconfig
-> +++ b/drivers/pci/controller/Kconfig
-> @@ -102,7 +102,7 @@ config PCI_HOST_GENERIC
->  
->  config PCIE_XILINX
->  	bool "Xilinx AXI PCIe host bridge support"
-> -	depends on ARCH_ZYNQ || MICROBLAZE || (MIPS && PCI_DRIVERS_GENERIC) || COMPILE_TEST
-> +	depends on OF || COMPILE_TEST
->  	help
->  	  Say 'Y' here if you want kernel to support the Xilinx AXI PCIe
->  	  Host Bridge driver.
-> -- 
-> 2.18.0
-> 
+No problem.  You were seeing something incorrect in sysfs, so if we
+can help diagnose or fix whatever the real problem is, don't hesitate
+to ask!
