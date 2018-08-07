@@ -1,85 +1,76 @@
-Return-Path: <linux-acpi-owner@vger.kernel.org>
-From: Sinan Kaya <okaya@kernel.org>
-To: linux-pci@vger.kernel.org
-Cc: Sinan Kaya <okaya@kernel.org>, Bjorn Helgaas <bhelgaas@google.com>,
-        "Rafael J. Wysocki" <rjw@rjwysocki.net>,
-        Len Brown <lenb@kernel.org>,
-        linux-acpi@vger.kernel.org (open list:ACPI),
-        linux-kernel@vger.kernel.org (open list)
-Subject: [PATCH 2/2] PCI/ACPI: allow _OSC presence to be optional for PCI
-Date: Thu,  9 Aug 2018 18:46:23 +0000
-Message-Id: <1533840383-7841-2-git-send-email-okaya@kernel.org>
-In-Reply-To: <1533840383-7841-1-git-send-email-okaya@kernel.org>
-References: <1533840383-7841-1-git-send-email-okaya@kernel.org>
-Sender: linux-acpi-owner@vger.kernel.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mga14.intel.com ([192.55.52.115]:7837 "EHLO mga14.intel.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1727155AbeHGUHV (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Tue, 7 Aug 2018 16:07:21 -0400
+Message-ID: <5c5e532859f4322cd6f8d15af1fad47231aaf95e.camel@intel.com>
+Subject: Re: [PATCH v6 6/9] ixgbe: Do not call pcie_print_link_status()
+From: Jeff Kirsher <jeffrey.t.kirsher@intel.com>
+Reply-To: jeffrey.t.kirsher@intel.com
+To: Alexandru Gagniuc <mr.nuke.me@gmail.com>,
+        linux-pci@vger.kernel.org, bhelgaas@google.com,
+        jakub.kicinski@netronome.com
+Cc: keith.busch@intel.com, alex_gagniuc@dellteam.com,
+        austin_bolen@dell.com, shyam_iyer@dell.com,
+        Ariel Elior <ariel.elior@cavium.com>,
+        everest-linux-l2@cavium.com,
+        "David S. Miller" <davem@davemloft.net>,
+        Michael Chan <michael.chan@broadcom.com>,
+        Ganesh Goudar <ganeshgr@chelsio.com>,
+        Tariq Toukan <tariqt@mellanox.com>,
+        Saeed Mahameed <saeedm@mellanox.com>,
+        Leon Romanovsky <leon@kernel.org>,
+        Dirk van der Merwe <dirk.vandermerwe@netronome.com>,
+        netdev@vger.kernel.org, linux-kernel@vger.kernel.org,
+        intel-wired-lan@lists.osuosl.org, linux-rdma@vger.kernel.org,
+        oss-drivers@netronome.com
+Date: Tue, 07 Aug 2018 10:51:49 -0700
+In-Reply-To: <20180806232600.25694-6-mr.nuke.me@gmail.com>
+References: <CAErSpo4PK+SQLNfdkLNt9eLc7bpbxbkZCsa8T-tQpid601n0SQ@mail.gmail.com>
+         <20180806232600.25694-1-mr.nuke.me@gmail.com>
+         <20180806232600.25694-6-mr.nuke.me@gmail.com>
+Content-Type: multipart/signed; micalg="pgp-sha256";
+        protocol="application/pgp-signature"; boundary="=-pPzt0jonzh3gyG7n0GJr"
+Mime-Version: 1.0
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-ACPI Spec 6.0 Section 6.2.11.3 OSC Implementation Example for PCI
-Host Bridge Devices:
 
-For a host bridge device that originates a PCI Express hierarchy,
-the _OSC interface defined in this section is required.
+--=-pPzt0jonzh3gyG7n0GJr
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
 
-For a host bridge device that originates a PCI/PCI-X bus hierarchy,
-inclusion of an _OSC object is optional.
+On Mon, 2018-08-06 at 18:25 -0500, Alexandru Gagniuc wrote:
+> This is now done by the PCI core to warn of sub-optimal bandwidth.
+>=20
+> Signed-off-by: Alexandru Gagniuc <mr.nuke.me@gmail.com>
+> ---
+>  drivers/net/ethernet/intel/ixgbe/ixgbe_main.c | 26 ---------------
+> ----
+>  1 file changed, 26 deletions(-)
 
-Allow PCI host bridges to bail out silently if _OSC is not found.
+Acked-by: Jeff Kirsher <jeffrey.t.kirsher@intel.com>
 
-Signed-off-by: Sinan Kaya <okaya@kernel.org>
-Reported-by: Michael Kelley <mikelley@microsoft.com>
----
- drivers/acpi/pci_root.c | 16 ++++++++++++----
- 1 file changed, 12 insertions(+), 4 deletions(-)
+--=-pPzt0jonzh3gyG7n0GJr
+Content-Type: application/pgp-signature; name="signature.asc"
+Content-Description: This is a digitally signed message part
+Content-Transfer-Encoding: 7bit
 
-diff --git a/drivers/acpi/pci_root.c b/drivers/acpi/pci_root.c
-index 9d738e2..c94ed01 100644
---- a/drivers/acpi/pci_root.c
-+++ b/drivers/acpi/pci_root.c
-@@ -421,7 +421,8 @@ acpi_status acpi_pci_osc_control_set(acpi_handle handle, u32 *mask, u32 req)
- }
- EXPORT_SYMBOL(acpi_pci_osc_control_set);
- 
--static void negotiate_os_control(struct acpi_pci_root *root, int *no_aspm)
-+static void negotiate_os_control(struct acpi_pci_root *root, int *no_aspm,
-+				 bool is_pcie)
- {
- 	u32 support, control, requested;
- 	acpi_status status;
-@@ -460,9 +461,14 @@ static void negotiate_os_control(struct acpi_pci_root *root, int *no_aspm)
- 		if (pcie_aspm_support_enabled())
- 			aspm_msg = "; disabling ASPM";
- 
--		dev_info(&device->dev, "_OSC failed (%s) %s\n",
--				 acpi_format_exception(status), aspm_msg);
- 		*no_aspm = 1;
-+
-+		/* _OSC is optional for PCI host bridges */
-+		if ((status == AE_NOT_FOUND) && !is_pcie)
-+			return;
-+
-+		dev_info(&device->dev, "_OSC failed (%s) %s\n",
-+			 acpi_format_exception(status), aspm_msg);
- 		return;
- 	}
- 
-@@ -538,6 +544,7 @@ static int acpi_pci_root_add(struct acpi_device *device,
- 	acpi_handle handle = device->handle;
- 	int no_aspm = 0;
- 	bool hotadd = system_state == SYSTEM_RUNNING;
-+	bool is_pcie;
- 
- 	root = kzalloc(sizeof(struct acpi_pci_root), GFP_KERNEL);
- 	if (!root)
-@@ -595,7 +602,8 @@ static int acpi_pci_root_add(struct acpi_device *device,
- 
- 	root->mcfg_addr = acpi_pci_root_get_mcfg_addr(handle);
- 
--	negotiate_os_control(root, &no_aspm);
-+	is_pcie = strcmp(acpi_device_hid(device), "PNP0A08") == 0;
-+	negotiate_os_control(root, &no_aspm, is_pcie);
- 
- 	/*
- 	 * TBD: Need PCI interface for enumeration/configuration of roots.
--- 
-2.7.4
+-----BEGIN PGP SIGNATURE-----
 
+iQIzBAABCAAdFiEEiTyZWz+nnTrOJ1LZ5W/vlVpL7c4FAltp3DUACgkQ5W/vlVpL
+7c5JQw/9Fo7T4k0FAjGAyShZDwDb7xKB9kdLlyat5WsUfbW1EYdHwfc0U0nd3KeB
+QGUyMPIwqDi6tSTCJmIyHozKALqwY4ukd7ei6Thkap3NN8AKlUbiAuZtbFbpvbp/
+3lOEph9Qqsu2ECAz8YYrpd3cEiyPdPmSaPOJCC6evWd9NKeWE5LQ/oqxR4I9+nVx
+zjnUfyiUuhdwQpPVyo61V4b/OeQZJK2vhWjFzSFU4AJpm1Ieb+e9dZnZE/rTbXN6
+pT4BonB7lB0LNLi5tuYTIODkYWoh/aOfjP1oPXApQRvUlw7KaUYVWCkIhta4R1Kh
+gPstjHJe2nn8vYsAeId9m5+t+g0G6RfpD9KtVDidsCCDAZe0gOW4SzA4aE3pBGb2
+DwArJ93VxqhGdNc+Ll1GyuMRBB4quwoaAAQDdDd18OwXivYZ1kHrZIOpjj9rANia
+wGRyimWjpEmLg9OZbvHypsUc5bC8Nd36WeZJeEMNtcLaCJRBoxeoaRgwVTGqNYiU
+/EGMNnKE5OuLlwfHt8t0rFwz+4BAVIm+SKwYN5SXN6EjC2y0HlXE8OmdPkXLf7oL
+S0FEm3v6TB0KeQJpxZ7WBjAKK9TBoXMvf7M169DtQKJ18M2OnOhUQ8pIC+/vnGh1
+ALsptbV/M0dQiHEL8fj2DtchOLS9p1D3ccQ6VWMPtE2hTAEwtmI=
+=iqdT
+-----END PGP SIGNATURE-----
+
+--=-pPzt0jonzh3gyG7n0GJr--
