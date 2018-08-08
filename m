@@ -1,67 +1,60 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from usa-sjc-mx-foss1.foss.arm.com ([217.140.101.70]:50376 "EHLO
-        foss.arm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1727371AbeHILXV (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Thu, 9 Aug 2018 07:23:21 -0400
-Date: Thu, 9 Aug 2018 09:59:23 +0100
-From: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
-To: Ray Jui <ray.jui@broadcom.com>
-Cc: Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org,
-        Tomasz Nowicki <tn@semihalf.com>,
-        Vladimir Olovyannikov <vladimir.olovyannikov@broadcom.com>,
-        BCM Kernel Feedback <bcm-kernel-feedback-list@broadcom.com>
-Subject: Re: [RFC] ARM64, PCIe, annd ACPI
-Message-ID: <20180809085923.GA13428@e107981-ln.cambridge.arm.com>
-References: <89484aa0-08c4-0cff-500d-407d21e2f5fd@broadcom.com>
- <20180808093822.GA25150@e107981-ln.cambridge.arm.com>
- <a32a8761-f49f-f0cf-928b-0c323c2b540e@broadcom.com>
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Date: Wed, 8 Aug 2018 12:39:28 +0100
+From: Catalin Marinas <catalin.marinas@arm.com>
+To: Mikulas Patocka <mpatocka@redhat.com>
+Subject: Re: framebuffer corruption due to overlapping stp instructions on
+ arm64
+Message-ID: <20180808113927.GA24736@iMac.local>
+References: <alpine.LRH.2.02.1808021242320.31834@file01.intranet.prod.int.rdu2.redhat.com>
+ <CAHCPf3tFGqkYEcWNN4LaWThw_rVqT316pzLv6T7RfxwO-eZ0EA@mail.gmail.com>
+ <alpine.LRH.2.02.1808030212340.17672@file01.intranet.prod.int.rdu2.redhat.com>
+ <CAKv+Gu8DeuksZhk1g3q_msSKV_hSY_2e1uzVten9-oGO3j9Sqg@mail.gmail.com>
+ <20180803094129.GB17798@arm.com>
+ <alpine.LRH.2.02.1808031235410.31584@file01.intranet.prod.int.rdu2.redhat.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <a32a8761-f49f-f0cf-928b-0c323c2b540e@broadcom.com>
-Sender: linux-pci-owner@vger.kernel.org
+In-Reply-To: <alpine.LRH.2.02.1808031235410.31584@file01.intranet.prod.int.rdu2.redhat.com>
+List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
+List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
+List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
+List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
+List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
+Cc: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>,
+ Joao Pinto <Joao.Pinto@synopsys.com>, libc-alpha@sourceware.org,
+ Ard Biesheuvel <ard.biesheuvel@linaro.org>, Jingoo Han <jingoohan1@gmail.com>,
+ Will Deacon <will.deacon@arm.com>, Russell King <linux@armlinux.org.uk>,
+ Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
+ Matt Sealey <neko@bakuhatsu.net>, linux-pci@vger.kernel.org,
+ linux-arm-kernel <linux-arm-kernel@lists.infradead.org>
+Content-Type: text/plain; charset="us-ascii"
+Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
+Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wed, Aug 08, 2018 at 11:49:46AM -0700, Ray Jui wrote:
-> 
-> 
-> On 8/8/2018 2:38 AM, Lorenzo Pieralisi wrote:
-> >On Tue, Aug 07, 2018 at 05:10:15PM -0700, Ray Jui wrote:
-> >>Hi Lorenzo/Bjorn,
-> >>
-> >>I have a question on PCIe controller APCI support on ARM64 based systems.
-> >>
-> >>If my understanding of the implementation of "pci_acpi_scan_root" under
-> >>"arch/arm64/kernel/pci.c" is correct, it appears
-> >>"pci_acpi_setup_ecam_mapping" is called within "pci_acpi_scan_root".
-> >>
-> >>Does that mean for a PCIe host controller on ARM64 to support ACPI, it needs
-> >>to support ECAM and MMIO based access to the configuration space registers?
-> >>
-> >>If the above statement is true, does it imply that any PCIe controller on
-> >>ARM64 that does not support MMIO based access to the config space register
-> >>cannot have ACPI support?
-> >
-> >Yes and it is not just MMIO, config space must be ECAM compliant as described
-> >in the PCI firmware specification and enforced here:
-> >
-> >http://infocenter.arm.com/help/topic/com.arm.doc.den0029b/Server_Base_System_Architecture_v5_0_ARM_DEN_0029B.pdf
-> >
-> 
-> Okay, got it, the SBSA spec makes it very clear that the PCIe controller
-> needs to support ECAM.
-> 
-> >In short: what's in the mainline (+ adequate PCI controller firmware
-> >configuration) must be sufficient to bootstrap your PCI subsystem in
-> >ACPI, it is a very simple litmus test and we won't add anything that
-> >deviates from that to the mainline kernel ARM64 ACPI PCI code support.
-> >
-> 
-> It sounds like I'll have to look into ways to work around this at the driver
-> level as Bjorn pointed out with some other examples.
+On Fri, Aug 03, 2018 at 01:09:02PM -0400, Mikulas Patocka wrote:
+> 	while (1) {
+> 		start = (unsigned)random() % (LEN + 1);
+> 		end = (unsigned)random() % (LEN + 1);
+> 		if (start > end)
+> 			continue;
+> 		for (i = start; i < end; i++)
+> 			data[i] = val++;
+> 		memcpy(map + start, data + start, end - start);
+> 		if (memcmp(map, data, LEN)) {
 
-As I said ARM64 ACPI PCI kernel support is in the mainline today and I
-am not willing to merge any more MCFG quirks at driver level - the
-information is out there, it is public and must be followed, either
-designers do that or no ACPI PCI support on your platform, sorry.
+It may be worth trying to do a memcmp(map+start, data+start, end-start)
+here to see whether the hazard logic fails when the writes are unaligned
+but the reads are not.
 
-Lorenzo
+This problem may as well appear if you do byte writes and read longs
+back (and I consider this a hardware problem on this specific board).
+
+-- 
+Catalin
+
+_______________________________________________
+linux-arm-kernel mailing list
+linux-arm-kernel@lists.infradead.org
+http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
