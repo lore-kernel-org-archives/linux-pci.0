@@ -1,46 +1,64 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-pf1-f196.google.com ([209.85.210.196]:38995 "EHLO
-        mail-pf1-f196.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726680AbeHHIGj (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Wed, 8 Aug 2018 04:06:39 -0400
-From: AceLan Kao <acelan.kao@canonical.com>
-To: Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org,
-        linux-kernel@vger.kernel.org
-Subject: [PATCH] PCI: Fix calculation of bridge window's size
-Date: Wed,  8 Aug 2018 13:48:37 +0800
-Message-Id: <20180808054837.19717-1-acelan.kao@canonical.com>
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+From: Leonard Crestez <leonard.crestez@nxp.com>
+To: "lorenzo.pieralisi@arm.com" <lorenzo.pieralisi@arm.com>,
+ "shawnguo@kernel.org" <shawnguo@kernel.org>, "bhelgaas@google.com"
+ <bhelgaas@google.com>
+Subject: Re: [PATCH v3 0/2] PCI: imx: Initial imx7d pm support
+Date: Wed, 8 Aug 2018 10:53:52 +0000
+Message-ID: <bac2cb70b16d81f589915fc0900126b516414243.camel@nxp.com>
+References: <cover.1532448745.git.leonard.crestez@nxp.com>
+In-Reply-To: <cover.1532448745.git.leonard.crestez@nxp.com>
+MIME-Version: 1.0
+List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
+List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
+List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
+List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
+List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
+Cc: "A.s. Dong" <aisheng.dong@nxp.com>,
+ "Joao.Pinto@synopsys.com" <Joao.Pinto@synopsys.com>,
+ Richard Zhu <hongxing.zhu@nxp.com>,
+ "kernel@pengutronix.de" <kernel@pengutronix.de>,
+ Anson Huang <anson.huang@nxp.com>,
+ "andrew.smirnov@gmail.com" <andrew.smirnov@gmail.com>,
+ "jingoohan1@gmail.com" <jingoohan1@gmail.com>,
+ "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+ dl-linux-imx <linux-imx@nxp.com>,
+ "p.zabel@pengutronix.de" <p.zabel@pengutronix.de>,
+ "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+ Fabio Estevam <fabio.estevam@nxp.com>,
+ "linux-arm-kernel@lists.infradead.org" <linux-arm-kernel@lists.infradead.org>,
+ "l.stach@pengutronix.de" <l.stach@pengutronix.de>
+Content-Type: text/plain; charset="us-ascii"
+Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
+Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
 List-ID: <linux-pci.vger.kernel.org>
 
-There are some 0 resource size pci devices, and it leads to the
-accumulator fails to maintain the correct value.
-It results in a strange issue on my machine that xhci_hcd failed to init.
-   [    2.437278] xhci_hcd 0000:05:00.0: init 0000:05:00.0 fail, -16
-   [    2.437300] xhci_hcd: probe of 0000:05:00.0 failed with error -16
+On Tue, 2018-07-24 at 19:14 +0300, Leonard Crestez wrote:
+> Changes since v2:
+>  * Print with dev_info if link fails on resume (Lucas)
+>  * Add a comment on imx7d pci irq mappings (Andrey)
+>  * Make imx6_pcie_ltssm_disable print an error on IMX6Q (Lucas)
+> 
+> The ltssm_disable does not return an error because it can't be usefully
+> handled, reversing partial suspend is a nightmare and unlikely to work.
+> 
+>  * Drop "reset: imx7: Fix always writing bits as 0 (accepted by Philipp)
+> 
+> Series is against linux-next tag next-20180724 where the reset patch was
+> already accepted. The imx7d.dtsi patch is also useful standalone.
+> 
+> Link to v2: https://lkml.org/lkml/2018/7/20/472
 
-To fix this, check if the resource size equals to 0, doesn't increase size.
+This is a gentle reminder that this series was reviewed by Lucas two
+weeks ago but not yet included.
 
-Fixes: c9c75143a596 ("PCI: Fix calculation of bridge window's size and alignment")
-CC: stable@vger.kernel.org # 4.14+
-
-Signed-off-by: AceLan Kao <acelan.kao@canonical.com>
----
- drivers/pci/setup-bus.c | 3 ++-
- 1 file changed, 2 insertions(+), 1 deletion(-)
-
-diff --git a/drivers/pci/setup-bus.c b/drivers/pci/setup-bus.c
-index 79b1824e83b4..ae05dde8c6e3 100644
---- a/drivers/pci/setup-bus.c
-+++ b/drivers/pci/setup-bus.c
-@@ -1061,7 +1061,8 @@ static int pbus_size_mem(struct pci_bus *bus, unsigned long mask,
- 				r->flags = 0;
- 				continue;
- 			}
--			size += max(r_size, align);
-+			if (r_size != 0)
-+				size += max(r_size, align);
- 			/* Exclude ranges with size > align from
- 			   calculation of the alignment. */
- 			if (r_size <= align)
--- 
-2.17.1
+--
+Regards,
+Leonard
+_______________________________________________
+linux-arm-kernel mailing list
+linux-arm-kernel@lists.infradead.org
+http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
