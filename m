@@ -1,60 +1,65 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mx3-rdu2.redhat.com ([66.187.233.73]:45646 "EHLO mx1.redhat.com"
-        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1728821AbeHMVDB (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Mon, 13 Aug 2018 17:03:01 -0400
-Subject: [PATCH 1/2] PCI: Skip MPS logic for Virtual Functions (VFs)
-From: Myron Stowe <myron.stowe@redhat.com>
-To: bhelgaas@google.com, linux-pci@vger.kernel.org
-Cc: keith.busch@intel.com, jdmason@kudzu.us, okaya@kernel.org
-Date: Mon, 13 Aug 2018 12:19:39 -0600
-Message-ID: <20180813181939.105655.50410.stgit@tak.stowe>
-In-Reply-To: <20180813181931.105655.22182.stgit@tak.stowe>
-References: <20180813181931.105655.22182.stgit@tak.stowe>
+Return-Path: <SRS0=iI2m=KX=broadcom.com=ray.jui@kernel.org>
+Return-Path: <SRS0=iI2m=KX=broadcom.com=ray.jui@kernel.org>
+Subject: Re: [RFC] ARM64, PCIe, annd ACPI
+To: Bjorn Helgaas <helgaas@kernel.org>
+Cc: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
+ Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org,
+ Tomasz Nowicki <tn@semihalf.com>,
+ Vladimir Olovyannikov <vladimir.olovyannikov@broadcom.com>,
+ BCM Kernel Feedback <bcm-kernel-feedback-list@broadcom.com>
+References: <89484aa0-08c4-0cff-500d-407d21e2f5fd@broadcom.com>
+ <20180808021025.GC49411@bhelgaas-glaptop.roam.corp.google.com>
+From: Ray Jui <ray.jui@broadcom.com>
+Message-ID: <be61d512-5a68-7320-a205-2a6fbd24ce81@broadcom.com>
+Date: Wed, 8 Aug 2018 11:46:57 -0700
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Sender: linux-pci-owner@vger.kernel.org
+In-Reply-To: <20180808021025.GC49411@bhelgaas-glaptop.roam.corp.google.com>
+Content-Type: text/plain; charset=utf-8; format=flowed
 List-ID: <linux-pci.vger.kernel.org>
 
-Section 9.3.5.4 "Device Control Register" specifically shows both
-Max_Payload_Size (MPS) and Max_Read_request_Size (MRRS) to be 'RsvdP' for
-VFs in Table 9-16 [1].  Just prior to the table it states:
-  "PF and VF functionality is defined in Section 7.5.3.4 except where
-   noted in Table 9-16.  For VF fields marked 'RsvdP', the PF setting
-   applies to the VF."
 
-All of which implies that with respect to Max_Payload_Size Supported
-(MPSS), MPS, and MRRS values, we should not be paying any attention to the
-VF's fields, but rather only to the PF's.  Only looking at the PF's fields
-also logically makes sense as it's the sole physical interface to the PCIe
-bus.
 
-[1] PCI Express Base Specification, Revision 4.0 Version 1.0 (2017).
+On 8/7/2018 7:10 PM, Bjorn Helgaas wrote:
+> On Tue, Aug 07, 2018 at 05:10:15PM -0700, Ray Jui wrote:
+>> Hi Lorenzo/Bjorn,
+>>
+>> I have a question on PCIe controller APCI support on ARM64 based systems.
+>>
+>> If my understanding of the implementation of "pci_acpi_scan_root" under
+>> "arch/arm64/kernel/pci.c" is correct, it appears
+>> "pci_acpi_setup_ecam_mapping" is called within "pci_acpi_scan_root".
+>>
+>> Does that mean for a PCIe host controller on ARM64 to support ACPI, it needs
+>> to support ECAM and MMIO based access to the configuration space registers?
+>   
+> Yes.  In my opinion, a PCIe host controller is generally required to
+> support ECAM even if the platform doesn't support ACPI.  I base this
+> on PCIe r4.0, sec 7.2.2:
+> 
+>    For systems that are PC-compatible, or that do not implement a
+>    processor-architecture-specific firmware interface standard that
+>    allows access to the Configuration Space, the ECAM is required as
+>    defined in this section.
+> 
+>> If the above statement is true, does it imply that any PCIe controller on
+>> ARM64 that does not support MMIO based access to the config space register
+>> cannot have ACPI support?
+> 
+> We would treat that as a non-compliant platform that requires special
+> quirks to work around the problem.  That does mean we have to add
+> platform-specific quirks, which of course means we can't run an old
+> kernel on a new platform that lacks standard ECAM.  There are several
+> existing systems like this.
+> 
+> The notes and examples here should be a place to start:
+> 
+>    drivers/pci/controller/Makefile
+>    drivers/pci/controller/dwc/Makefile
+>    drivers/acpi/pci_mcfg.c
+> 
+> Bjorn
+> 
 
-Link: https://bugzilla.kernel.org/show_bug.cgi?id=200527
-Cc: Keith Busch <keith.busch@intel.com>
-Cc: Sinan Kaya <okaya@kernel.org>
-Cc: Dongdong Liu <liudongdong3@huawei.com>
-Cc: Jon Mason <jdmason@kudzu.us>
-Fixes: 27d868b5e6cf ("PCI: Set MPS to match upstream bridge")
-Cc: stable@vger.kernel.org # 4.3+
-Signed-off-by: Myron Stowe <myron.stowe@redhat.com>
----
- drivers/pci/probe.c |    4 ++++
- 1 file changed, 4 insertions(+)
+Thanks for the pointers, Bjorn! Very helpful!
 
-diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
-index 611adcd..b285786 100644
---- a/drivers/pci/probe.c
-+++ b/drivers/pci/probe.c
-@@ -1730,6 +1730,10 @@ static void pci_configure_mps(struct pci_dev *dev)
- 	if (!pci_is_pcie(dev) || !bridge || !pci_is_pcie(bridge))
- 		return;
- 
-+	/* MPS and MRRS fields are of type 'RsvdP' for VFs, short-circuit out */
-+	if (dev->is_virtfn)
-+		return;
-+
- 	mps = pcie_get_mps(dev);
- 	p_mps = pcie_get_mps(bridge);
- 
+Ray
