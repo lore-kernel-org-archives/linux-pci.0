@@ -1,72 +1,68 @@
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Message-ID: <1533192900.20186.19.camel@pengutronix.de>
-Subject: Re: [PATCH 1/2] ARM: dts: imx7d: Add node for PCIe PHY
-From: Lucas Stach <l.stach@pengutronix.de>
-To: Richard Zhu <hongxing.zhu@nxp.com>, Trent Piepho <tpiepho@impinj.com>,
- "linux-arm-kernel@lists.infradead.org"
- <linux-arm-kernel@lists.infradead.org>, "linux-pci@vger.kernel.org"
- <linux-pci@vger.kernel.org>
-Date: Thu, 02 Aug 2018 08:55:00 +0200
-In-Reply-To: <AM5PR0402MB28501824F60DB56D923758A38C2C0@AM5PR0402MB2850.eurprd04.prod.outlook.com>
-References: <20180718194424.8844-1-tpiepho@impinj.com>
- <20180718194424.8844-2-tpiepho@impinj.com>
- <1533119951.20186.5.camel@pengutronix.de>
- <1533144812.2283.227.camel@impinj.com>
- <AM5PR0402MB28501824F60DB56D923758A38C2C0@AM5PR0402MB2850.eurprd04.prod.outlook.com>
-Mime-Version: 1.0
-List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
-List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
-List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
-List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
-List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
-Cc: Fabio Estevam <fabio.estevam@nxp.com>,
- "shawnguo@kernel.org" <shawnguo@kernel.org>,
- "kernel@pengutronix.de" <kernel@pengutronix.de>
-Content-Type: text/plain; charset="utf-8"
-Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
-Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail.kernel.org ([198.145.29.99]:48260 "EHLO mail.kernel.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1727748AbeHHUVI (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Wed, 8 Aug 2018 16:21:08 -0400
+Date: Wed, 8 Aug 2018 13:00:19 -0500
+From: Bjorn Helgaas <helgaas@kernel.org>
+To: AceLan Kao <acelan.kao@canonical.com>
+Cc: Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org,
+        linux-kernel@vger.kernel.org
+Subject: Re: [PATCH] PCI: Fix calculation of bridge window's size
+Message-ID: <20180808180019.GE49411@bhelgaas-glaptop.roam.corp.google.com>
+References: <20180808054837.19717-1-acelan.kao@canonical.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20180808054837.19717-1-acelan.kao@canonical.com>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-QW0gRG9ubmVyc3RhZywgZGVuIDAyLjA4LjIwMTgsIDAwOjQzICswMDAwIHNjaHJpZWIgUmljaGFy
-ZCBaaHU6Cj4gPiAtLS0tLU9yaWdpbmFsIE1lc3NhZ2UtLS0tLQo+ID4gPiA+IEZyb206IFRyZW50
-IFBpZXBobyBbbWFpbHRvOnRwaWVwaG9AaW1waW5qLmNvbV0KPiA+IFNlbnQ6IFRodXJzZGF5LCBB
-dWd1c3QgMiwgMjAxOCAxOjM0IEFNCj4gPiA+ID4gPiA+IFRvOiBsLnN0YWNoQHBlbmd1dHJvbml4
-LmRlOyBsaW51eC1hcm0ta2VybmVsQGxpc3RzLmluZnJhZGVhZC5vcmc7Cj4gPiBsaW51eC1wY2lA
-dmdlci5rZXJuZWwub3JnCj4gPiA+ID4gPiA+IENjOiBSaWNoYXJkIFpodSA8aG9uZ3hpbmcuemh1
-QG54cC5jb20+OyBzaGF3bmd1b0BrZXJuZWwub3JnOwo+ID4gPiA+IGtlcm5lbEBwZW5ndXRyb25p
-eC5kZTsgRmFiaW8gRXN0ZXZhbSA8ZmFiaW8uZXN0ZXZhbUBueHAuY29tPgo+ID4gU3ViamVjdDog
-UmU6IFtQQVRDSCAxLzJdIEFSTTogZHRzOiBpbXg3ZDogQWRkIG5vZGUgZm9yIFBDSWUgUEhZCj4g
-PiAKPiA+IE9uIFdlZCwgMjAxOC0wOC0wMSBhdCAxMjozOSArMDIwMCwgTHVjYXMgU3RhY2ggd3Jv
-dGU6Cj4gPiA+IAo+ID4gPiA+ICtUaGlzIGlzIHRoZSBQSFkgYXNzb2NpYXRlZCB3aXRoIHRoZSBJ
-TVg3ZCBQQ0llIGNvbnRyb2xsZXIuwqDCoEl0J3MKPiA+ID4gPiB1c2VkIGJ5IHRoZQo+ID4gPiA+
-ICtQQ0ktZSBjb250cm9sbGVyIHZpYSB0aGUgZnNsLHBjaWUtcGh5IHBoYW5kbGUuCj4gPiA+ID4g
-Kwo+ID4gPiA+ICtSZXF1aXJlZCBwcm9wZXJ0aWVzOgo+ID4gPiA+ICstIGNvbXBhdGlibGU6Cj4g
-PiA+ID4gKwktICJmc2wsaW14LXBjaWUtcGh5Igo+ID4gPiAKPiA+ID4gVGhpcyBpcyB0b28gZ2Vu
-ZXJpYy4gUGxlYXNlIGNoYW5nZSBpdCB0byAiZnNsLGlteDctcGNpZS1waHkiLgo+ID4gCj4gPiBD
-YW4gYW55b25lIGZyb20gTlhQIHRlbGwgdXMgaWYgYW4gZXh0ZXJuYWwgUENJZSBQSFkgYmxvY2sg
-aXMgcHJlc2VudCBpbiBvdGhlcgo+ID4gSU1YIGRlc2lnbnM/wqDCoEkgc3VzcGVjdCB0aGF0IHRo
-aXMgaXMgZ2VuZXJpYywgYnV0IG5vIGRlc2lnbiBvdGhlciB0aGFuIGlteDdkCj4gPiBoYXMgaGFk
-IGFueSByZWFzb24gdG8gdXNlIHRoaXMgUEhZIHJlZ2lzdGVyIHNwYWNlIHlldC4KPiA+IAo+IAo+
-IEhpIFRyZW50Ogo+IFRoZXJlIGlzIGEgZGlmZmVyZW50IFBDSWUgUEhZIGJsb2NrIGluIGlteDdk
-IFBDSWUgcmVmZXIgdG8gdGhlIGlteDYuCj4gU28sIHRoZSBzdGFuZGFsb25lIG1lbW9yeSByZWdp
-b24gaXMgdXNlZCB0byBtYXAgdGhlIGlteDdkIFBDSWUgUEhZIHJlZ2lzdGVycy4KPiBJbnN0ZWFk
-IG9mIHRoZSBzdGFuZGFsb25lIFBIWSBub2RlLCBob3cgYWJvdXQgdG8gaW5jbHVkZSB0aGUgUEhZ
-IHJlZ2lzdGVycyBtZW1vcnkgcmVnaW9uIGludG8gUENJZSBub2RlPwo+IEZvciBleGFtcGxlOgo+
-ID4gwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgcGNpZTogcGNpZUAweDMzODAwMDAwIHsK
-PiDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqBjb21wYXRp
-YmxlID0gImZzbCxpbXg3ZC1wY2llIiwgInNucHMsZHctcGNpZSI7Cj4gwqDCoMKgwqDCoMKgwqDC
-oMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgcmVnID0gPDB4MzM4MDAwMDAgMHg0MDAw
-PiwgPDB4MzA2ZDAwMDAgMHgxMDAwMD4sIDwweDRmZjAwMDAwIDB4ODAwMDA+Owo+IMKgwqDCoMKg
-wqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoHJlZy1uYW1lcyA9ICJkYmki
-LCAicGh5IiwgImNvbmZpZyI7CgpJIGRpc2xpa2UgdGhpcyBzb2x1dGlvbiwgYXMgaXQgaXNuJ3Qg
-YSBjb3JyZWN0IGRlc2NyaXB0aW9uIG9mIHRoZSBIVy4KSGF2aW5nIGl0IGFzIGEgc2VwYXJhdGUg
-bm9kZSB3aXRoIGl0J3Mgb3duIGNvbXBhdGlibGUsIGFzIGRvbmUgaW4gdGhpcwpwYXRjaHNldCwg
-YWxsb3dzIHVzIHRvIHN3aXRjaCBvdmVyIHRvIGEgcmVhbCBQSFkgZHJpdmVyIHNob3VsZCB3ZSBl
-dmVyCmhhdmUgYSBuZWVkIGZvciBpdCwgYWxsIHdpdGhvdXQgYnJlYWtpbmcgdGhlIERUIGFic3Ry
-YWN0aW9uIGFnYWluLgoKUmVnYXJkcywKTHVjYXMgCgpfX19fX19fX19fX19fX19fX19fX19fX19f
-X19fX19fX19fX19fX19fX19fX19fXwpsaW51eC1hcm0ta2VybmVsIG1haWxpbmcgbGlzdApsaW51
-eC1hcm0ta2VybmVsQGxpc3RzLmluZnJhZGVhZC5vcmcKaHR0cDovL2xpc3RzLmluZnJhZGVhZC5v
-cmcvbWFpbG1hbi9saXN0aW5mby9saW51eC1hcm0ta2VybmVsCg==
+On Wed, Aug 08, 2018 at 01:48:37PM +0800, AceLan Kao wrote:
+> There are some 0 resource size pci devices, and it leads to the
+> accumulator fails to maintain the correct value.
+> It results in a strange issue on my machine that xhci_hcd failed to init.
+>    [    2.437278] xhci_hcd 0000:05:00.0: init 0000:05:00.0 fail, -16
+>    [    2.437300] xhci_hcd: probe of 0000:05:00.0 failed with error -16
+
+I don't think it's possible for a PCI device to have a BAR of zero
+size.  Bits 0-3 of memory BARs are read-only, leading to a minimum BAR
+size of 16 bytes; similarly, bits 0-1 of I/O BARs are read-only,
+giving a minimum size of 4 ports.
+
+My guess is that if you have a pci_dev with a resource that looks like
+it's valid but has zero size, that resource came from OF or device
+tree.  If that's the case, I'd say we should fix the OF or DT parsing
+code to reject those resources.  If we do that, we shouldn't need the
+patch below.
+
+Can you open a bugzilla.kernel.org report and attach the complete
+dmesg log leading up to this, as well as the "sudo lspci -vv" output
+for this device?  It should have clues about how we got here.
+
+> To fix this, check if the resource size equals to 0, doesn't increase size.
+> 
+> Fixes: c9c75143a596 ("PCI: Fix calculation of bridge window's size and alignment")
+> CC: stable@vger.kernel.org # 4.14+
+> 
+> Signed-off-by: AceLan Kao <acelan.kao@canonical.com>
+> ---
+>  drivers/pci/setup-bus.c | 3 ++-
+>  1 file changed, 2 insertions(+), 1 deletion(-)
+> 
+> diff --git a/drivers/pci/setup-bus.c b/drivers/pci/setup-bus.c
+> index 79b1824e83b4..ae05dde8c6e3 100644
+> --- a/drivers/pci/setup-bus.c
+> +++ b/drivers/pci/setup-bus.c
+> @@ -1061,7 +1061,8 @@ static int pbus_size_mem(struct pci_bus *bus, unsigned long mask,
+>  				r->flags = 0;
+>  				continue;
+>  			}
+> -			size += max(r_size, align);
+> +			if (r_size != 0)
+> +				size += max(r_size, align);
+>  			/* Exclude ranges with size > align from
+>  			   calculation of the alignment. */
+>  			if (r_size <= align)
+> -- 
+> 2.17.1
+> 
