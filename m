@@ -1,123 +1,107 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-pl1-f193.google.com ([209.85.214.193]:40526 "EHLO
-        mail-pl1-f193.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1729189AbeH2UWn (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Wed, 29 Aug 2018 16:22:43 -0400
-Received: by mail-pl1-f193.google.com with SMTP id s17-v6so2512780plp.7
-        for <linux-pci@vger.kernel.org>; Wed, 29 Aug 2018 09:25:02 -0700 (PDT)
-From: Stephen Hemminger <stephen@networkplumber.org>
-To: kys@microsoft.com, haiyangz@microsoft.com, sthemmin@microsoft.com
-Cc: devel@linuxdriverproject.org, netdev@vger.kernel.org,
-        linux-pci@vger.kernel.org
-Subject: [PATCH net-next 1/2] PCI: hv: support reporting serial number as slot information
-Date: Wed, 29 Aug 2018 09:24:51 -0700
-Message-Id: <20180829162452.25805-2-sthemmin@microsoft.com>
-In-Reply-To: <20180829162452.25805-1-sthemmin@microsoft.com>
-References: <20180829162452.25805-1-sthemmin@microsoft.com>
+Received: from mail-it0-f66.google.com ([209.85.214.66]:53753 "EHLO
+        mail-it0-f66.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1727062AbeHHSyW (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Wed, 8 Aug 2018 14:54:22 -0400
+Subject: Re: [PATCH v6 8/9] net/mlx5: Do not call pcie_print_link_status()
+To: Tal Gilboa <talgi@mellanox.com>, Leon Romanovsky <leon@kernel.org>
+Cc: linux-pci@vger.kernel.org, bhelgaas@google.com,
+        jakub.kicinski@netronome.com, keith.busch@intel.com,
+        alex_gagniuc@dellteam.com, austin_bolen@dell.com,
+        shyam_iyer@dell.com, Ariel Elior <ariel.elior@cavium.com>,
+        everest-linux-l2@cavium.com,
+        "David S. Miller" <davem@davemloft.net>,
+        Michael Chan <michael.chan@broadcom.com>,
+        Ganesh Goudar <ganeshgr@chelsio.com>,
+        Jeff Kirsher <jeffrey.t.kirsher@intel.com>,
+        Tariq Toukan <tariqt@mellanox.com>,
+        Saeed Mahameed <saeedm@mellanox.com>,
+        Dirk van der Merwe <dirk.vandermerwe@netronome.com>,
+        netdev@vger.kernel.org, linux-kernel@vger.kernel.org,
+        intel-wired-lan@lists.osuosl.org, linux-rdma@vger.kernel.org,
+        oss-drivers@netronome.com
+References: <CAErSpo4PK+SQLNfdkLNt9eLc7bpbxbkZCsa8T-tQpid601n0SQ@mail.gmail.com>
+ <20180806232600.25694-1-mr.nuke.me@gmail.com>
+ <20180806232600.25694-8-mr.nuke.me@gmail.com>
+ <20180808060848.GQ13378@mtr-leonro.mtl.com>
+ <05056a70-ee78-ea3c-0b9b-6d64a8663b11@mellanox.com>
+ <20180808154142.GZ13378@mtr-leonro.mtl.com>
+ <5578cd9a-e4f0-85ab-4a86-bfa23eec136c@mellanox.com>
+From: "Alex G." <mr.nuke.me@gmail.com>
+Message-ID: <79264a38-e3e4-d270-95df-a09047f7a15e@gmail.com>
+Date: Wed, 8 Aug 2018 11:33:51 -0500
+MIME-Version: 1.0
+In-Reply-To: <5578cd9a-e4f0-85ab-4a86-bfa23eec136c@mellanox.com>
+Content-Type: text/plain; charset=windows-1252; format=flowed
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-The Hyper-V host API for PCI provides a unique "serial number" which
-can be used as basis for sysfs PCI slot table. This can be useful
-for cases where userspace wants to find the PCI device based on
-serial number.
 
-When an SR-IOV NIC is added, the host sends an attach message
-with serial number. The kernel doesn't use the serial number, but
-it is useful when doing the same thing in a userspace driver such
-as the DPDK. By having /sys/bus/pci/slots/N it provides a direct
-way to find the matching PCI device.
 
-There may be some cases where serial number is not unique such
-as when using GPU's. But the PCI slot infrastructure will handle
-that by adding suffix "2-1" etc.
+On 08/08/2018 10:56 AM, Tal Gilboa wrote:
+> On 8/8/2018 6:41 PM, Leon Romanovsky wrote:
+>> On Wed, Aug 08, 2018 at 05:23:12PM +0300, Tal Gilboa wrote:
+>>> On 8/8/2018 9:08 AM, Leon Romanovsky wrote:
+>>>> On Mon, Aug 06, 2018 at 06:25:42PM -0500, Alexandru Gagniuc wrote:
+>>>>> This is now done by the PCI core to warn of sub-optimal bandwidth.
+>>>>>
+>>>>> Signed-off-by: Alexandru Gagniuc <mr.nuke.me@gmail.com>
+>>>>> ---
+>>>>>    drivers/net/ethernet/mellanox/mlx5/core/main.c | 4 ----
+>>>>>    1 file changed, 4 deletions(-)
+>>>>>
+>>>>
+>>>> Thanks,
+>>>> Reviewed-by: Leon Romanovsky <leonro@mellanox.com>
+>>>>
+>>>
+>>> Alex,
+>>> I loaded mlx5 driver with and without these series. The report in 
+>>> dmesg is
+>>> now missing. From what I understood, the status should be reported at 
+>>> least
+>>> once, even if everything is in order.
+>>
+>> It is not what this series is doing and it removes prints completely if
+>> fabric can deliver more than card is capable.
+>>
+>>> We need this functionality to stay.
+>>
+>> I'm not sure that you need this information in driver's dmesg output,
+>> but most probably something globally visible and accessible per-pci
+>> device.
+> 
+> Currently we have users that look for it. If we remove the dmesg print 
+> we need this to be reported elsewhere. Adding it to sysfs for example 
+> should be a valid solution for our case.
 
-This has a side effect which may also be useful. The common udev
-network device naming policy uses the slot information (rather
-than PCI address). This causes udev to give shorter network device
-names for VF devices.  It does not break applications or startup
-because the VF device must never be configured directly.
+I think a stop-gap measure is to leave the pcie_print_link_status() call 
+in drivers that really need it for whatever reason. Implementing a 
+reliable reporting through sysfs might take some tinkering, and I don't 
+think it's a sufficient reason to block the heart of this series -- 
+being able to detect bottlenecks and link downtraining.
 
-Signed-off-by: Stephen Hemminger <sthemmin@microsoft.com>
----
- drivers/pci/controller/pci-hyperv.c | 30 +++++++++++++++++++++++++++++
- 1 file changed, 30 insertions(+)
+Alex
 
-diff --git a/drivers/pci/controller/pci-hyperv.c b/drivers/pci/controller/pci-hyperv.c
-index c00f82cc54aa..e6a6c1146a41 100644
---- a/drivers/pci/controller/pci-hyperv.c
-+++ b/drivers/pci/controller/pci-hyperv.c
-@@ -89,6 +89,8 @@ static enum pci_protocol_version_t pci_protocol_version;
- 
- #define STATUS_REVISION_MISMATCH 0xC0000059
- 
-+#define SLOT_NAME_SIZE 21
-+
- /*
-  * Message Types
-  */
-@@ -494,6 +496,7 @@ struct hv_pci_dev {
- 	struct list_head list_entry;
- 	refcount_t refs;
- 	enum hv_pcichild_state state;
-+	struct pci_slot *pci_slot;
- 	struct pci_function_description desc;
- 	bool reported_missing;
- 	struct hv_pcibus_device *hbus;
-@@ -1457,6 +1460,28 @@ static void prepopulate_bars(struct hv_pcibus_device *hbus)
- 	spin_unlock_irqrestore(&hbus->device_list_lock, flags);
- }
- 
-+static void hv_pci_assign_slots(struct hv_pcibus_device *hbus)
-+{
-+	struct hv_pci_dev *hpdev;
-+	char name[SLOT_NAME_SIZE];
-+	unsigned long flags;
-+	int slot_nr;
-+
-+	spin_lock_irqsave(&hbus->device_list_lock, flags);
-+	list_for_each_entry(hpdev, &hbus->children, list_entry) {
-+		if (hpdev->pci_slot)
-+			continue;
-+
-+		slot_nr = PCI_SLOT(wslot_to_devfn(hpdev->desc.win_slot.slot));
-+		snprintf(name, SLOT_NAME_SIZE, "%u", hpdev->desc.ser);
-+		hpdev->pci_slot = pci_create_slot(hbus->pci_bus, slot_nr,
-+					  name, NULL);
-+		if (!hpdev->pci_slot)
-+			pr_warn("pci_create slot %s failed\n", name);
-+	}
-+	spin_unlock_irqrestore(&hbus->device_list_lock, flags);
-+}
-+
- /**
-  * create_root_hv_pci_bus() - Expose a new root PCI bus
-  * @hbus:	Root PCI bus, as understood by this driver
-@@ -1480,6 +1505,7 @@ static int create_root_hv_pci_bus(struct hv_pcibus_device *hbus)
- 	pci_lock_rescan_remove();
- 	pci_scan_child_bus(hbus->pci_bus);
- 	pci_bus_assign_resources(hbus->pci_bus);
-+	hv_pci_assign_slots(hbus);
- 	pci_bus_add_devices(hbus->pci_bus);
- 	pci_unlock_rescan_remove();
- 	hbus->state = hv_pcibus_installed;
-@@ -1742,6 +1768,7 @@ static void pci_devices_present_work(struct work_struct *work)
- 		 */
- 		pci_lock_rescan_remove();
- 		pci_scan_child_bus(hbus->pci_bus);
-+		hv_pci_assign_slots(hbus);
- 		pci_unlock_rescan_remove();
- 		break;
- 
-@@ -1858,6 +1885,9 @@ static void hv_eject_device_work(struct work_struct *work)
- 	list_del(&hpdev->list_entry);
- 	spin_unlock_irqrestore(&hpdev->hbus->device_list_lock, flags);
- 
-+	if (hpdev->pci_slot)
-+		pci_destroy_slot(hpdev->pci_slot);
-+
- 	memset(&ctxt, 0, sizeof(ctxt));
- 	ejct_pkt = (struct pci_eject_response *)&ctxt.pkt.message;
- 	ejct_pkt->message_type.type = PCI_EJECTION_COMPLETE;
--- 
-2.18.0
+>>
+>>>
+>>> net-next (dmesg output for 07:00.0):
+>>> [270498.625351] mlx5_core 0000:07:00.0: firmware version: 14.22.4020
+>>> [270498.632130] mlx5_core 0000:07:00.0: 63.008 Gb/s available PCIe 
+>>> bandwidth
+>>> (8 GT/s x8 link)
+>>> [270499.169533] (0000:07:00.0): E-Switch: Total vports 9, per vport: max
+>>> uc(1024) max mc(16384)
+>>> [270499.182358] mlx5_core 0000:07:00.0: Port module event: module 0, 
+>>> Cable
+>>> plugged
+>>>
+>>> net-next + patches (dmesg output for 07:00.0):
+>>> [  331.608472] mlx5_core 0000:07:00.0: firmware version: 14.22.4020
+>>> [  332.564938] (0000:07:00.0): E-Switch: Total vports 9, per vport: max
+>>> uc(1024) max mc(16384)
+>>> [  332.616271] mlx5_core 0000:07:00.0: Port module event: module 0, 
+>>> Cable
+>>> plugged
+>>>
+>>>
