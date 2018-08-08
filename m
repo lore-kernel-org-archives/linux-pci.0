@@ -1,131 +1,110 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from gate.crashing.org ([63.228.1.57]:36356 "EHLO gate.crashing.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1726034AbeHQCbj (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Thu, 16 Aug 2018 22:31:39 -0400
-Message-ID: <def1568d0c8ce9a455760da1271724d6e65a3286.camel@kernel.crashing.org>
-Subject: Re: [PATCH 1/1] PCI/AER: prevent pcie_do_fatal_recovery from using
- device after it is removed
-From: Benjamin Herrenschmidt <benh@kernel.crashing.org>
-To: poza@codeaurora.org
-Cc: Thomas Tai <thomas.tai@oracle.com>, bhelgaas@google.com,
-        keith.busch@intel.com, linux-pci@vger.kernel.org,
-        linux-pci-owner@vger.kernel.org
-Date: Fri, 17 Aug 2018 09:30:23 +1000
-In-Reply-To: <c00a1ad4ffbf7ccecf3c8d05df4d8d82@codeaurora.org>
-References: <1534179088-44219-1-git-send-email-thomas.tai@oracle.com>
-         <1534179088-44219-2-git-send-email-thomas.tai@oracle.com>
-         <51f4b387d9bd96a42d526a6a029fc43b@codeaurora.org>
-         <b0104a716319d76e734c307cb4bedd9d@codeaurora.org>
-         <903394c04d6ad468ed06dc0a779200e7555345a7.camel@kernel.crashing.org>
-         <6cb069038530757f31f3dd60328c7e30@codeaurora.org>
-         <e931bc7a7e468e8bb2ee3766b3fcf96f1800f552.camel@kernel.crashing.org>
-         <5bd99bcacb772b588771fce62c61a59fdeb167f3.camel@kernel.crashing.org>
-         <290750445f084c479963f54dd36af63a@codeaurora.org>
-         <05bc3bccb2c6a0cb1696faf20073e567d7a5b8ee.camel@kernel.crashing.org>
-         <2894d8df6e44860456377dade9ea5737@codeaurora.org>
-         <9c7c60eb765c61d007169c9142fb335b0a4080df.camel@kernel.crashing.org>
-         <c00a1ad4ffbf7ccecf3c8d05df4d8d82@codeaurora.org>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+MIME-Version: 1.0
+References: <alpine.LRH.2.02.1808021242320.31834@file01.intranet.prod.int.rdu2.redhat.com>
+ <CAHCPf3tFGqkYEcWNN4LaWThw_rVqT316pzLv6T7RfxwO-eZ0EA@mail.gmail.com>
+ <alpine.LRH.2.02.1808030212340.17672@file01.intranet.prod.int.rdu2.redhat.com>
+ <CAKv+Gu8DeuksZhk1g3q_msSKV_hSY_2e1uzVten9-oGO3j9Sqg@mail.gmail.com>
+ <20180803094129.GB17798@arm.com>
+ <alpine.LRH.2.02.1808031235410.31584@file01.intranet.prod.int.rdu2.redhat.com>
+ <20180808113927.GA24736@iMac.local>
+ <alpine.LRH.2.02.1808081011110.9997@file01.intranet.prod.int.rdu2.redhat.com>
+ <b1a0dac5-3cf2-1a7f-ac7f-649126eb7873@arm.com>
+ <20180808151444.GF24736@iMac.local>
+In-Reply-To: <20180808151444.GF24736@iMac.local>
+From: Arnd Bergmann <arnd@arndb.de>
+Date: Wed, 8 Aug 2018 18:01:31 +0200
+Message-ID: <CAK8P3a2=rVvvW8bBcrPm3nXNNP56Ygxchu4ThD2ZgZ_cVcd8wQ@mail.gmail.com>
+Subject: Re: framebuffer corruption due to overlapping stp instructions on
+ arm64
+To: Catalin Marinas <catalin.marinas@arm.com>
+List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
+List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
+List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
+List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
+List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
+Cc: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>,
+ Richard.Earnshaw@arm.com, Joao Pinto <Joao.Pinto@synopsys.com>,
+ GNU C Library <libc-alpha@sourceware.org>,
+ Ard Biesheuvel <ard.biesheuvel@linaro.org>, Jingoo Han <jingoohan1@gmail.com>,
+ Will Deacon <will.deacon@arm.com>,
+ Russell King - ARM Linux <linux@armlinux.org.uk>,
+ Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
+ Mikulas Patocka <mpatocka@redhat.com>, neko@bakuhatsu.net,
+ linux-pci <linux-pci@vger.kernel.org>,
+ Linux ARM <linux-arm-kernel@lists.infradead.org>
+Content-Type: text/plain; charset="us-ascii"
+Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
+Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Thu, 2018-08-16 at 19:41 +0530, poza@codeaurora.org wrote:
-> 
-> > See above.
-> > > 
-> > > okay, so here is what current pcie_do_nonfatal_recovery() doe.
-> > > 
-> > > pcie_do_nonfatal_recovery
-> > >      report_error_detected()    >> calls driver callbacks
-> > >      report_mmio_enabled()
-> > >      report_slot_reset()  >> if PCI_ERS_RESULT_NEED_RESET
-> > 
-> > Above if the driver returned "NEED RESET" we should not just "report" a
-> > slot reset, we should *perform* one :-) Unless the AER code does it in
-> > a place I missed...
-> 
-> I am willing work on this if Bjorn agrees.
-> but I am still trying to figure out missing piece.
-> 
-> so Ben,
-> you are suggesting
-> 
-> ERR_NONFATAL handling
-> pcie_do_nonfatal_recovery
->       report_error_detected()    >> calls driver callbacks
->        report_mmio_enabled()
->        report_slot_reset()  >> if PCI_ERS_RESULT_NEED_RESET
-> Here along with calling slot_reset, you are suggesting to do Secondary 
-> Bus Reset ?
-> 
-> but this is ERR_NONFATAL and according to definition the link is still 
-> good, so that the transcriptions on PCIe link can happen.
-> so my question is why do we want to reset the link ?
+On Wed, Aug 8, 2018 at 5:15 PM Catalin Marinas <catalin.marinas@arm.com> wrote:
+>
+> On Wed, Aug 08, 2018 at 04:01:12PM +0100, Richard Earnshaw wrote:
+> > On 08/08/18 15:12, Mikulas Patocka wrote:
+> > > On Wed, 8 Aug 2018, Catalin Marinas wrote:
+> > >> On Fri, Aug 03, 2018 at 01:09:02PM -0400, Mikulas Patocka wrote:
+> - failing to write a few bytes
+> - writing a few bytes that were written 16 bytes before
+> - writing a few bytes that were written 16 bytes after
+>
+> > The overlapping writes in memcpy never write different values to the
+> > same location, so I still feel this must be some sort of HW issue, not a
+> > SW one.
+>
+> So do I (my interpretation is that it combines or rather skips some of
+> the writes to the same 16-byte address as it ignores the data strobes).
 
-The driver responded to you from error_detected() or mmio_enabled()
-that it wants the slot to be reset. So you should do so. This comes
-from the driver deciding that whatever happens, it doesn't trust the
-device state anymore.
+Maybe it just always writes to the wrong location, 16 bytes apart for one of
+the stp instructions. Since we are usually dealing with a pair of overlapping
+'stp', both unaligned, that could explain both the missing bytes (we write
+data to the wrong place, but overwrite it with the correct data right away)
+and the extra copy (we write it to the wrong place, but then write the correct
+data to the correct place as well).
 
-report_slot_reset() iirc is about telling the driver that the reset has
-been performed and it can reconfigure the device.
+This sounds a bit like what the original ARM CPUs did on unaligned
+memory access, where a single aligned 4-byte location was accessed,
+but the bytes swapped around.
 
-To be frank I haven't looked at this in a while, so we should refer to
-the document before ou patched it :-) But the basic design we created
-back then was precisely that the driver would have the ultimate say in
-the matter.
+There may be a few more things worth trying out or analysing from
+the recorded past failures to understand more about how it goes
+wrong:
 
-Also because multiple devices, at least on power, can share a domain, 
-we can get into a situation where one device requires a reset, so all
-will get reset, and their respective drivers need to be notified.
+- For which data lengths does it fail? Having two overlapping
+  unaligned stp is something that only happens for 16..96 byte
+  memcpy.
 
-Note: it's not so much about resetting the *link* than about resetting
-the *device*.
+- What if we use a pair of str instructions instead of an stp in
+  a modified memcpy? Does it now write to still write to the
+  wrong place 16 bytes away, just 8 bytes away, or correctly?
 
-> although
-> I see following note in the code as well.
->                  /*
-> 		 * TODO: Should call platform-specific
-> 		 * functions to reset slot before calling
-> 		 * drivers' slot_reset callbacks?
-> 		 */
+- Does it change in any way if we do the overlapping writes
+  in the reverse order? E.g. for the 16..64 byte case:
 
-Yup :-)
+diff --git a/sysdeps/aarch64/memcpy.S b/sysdeps/aarch64/memcpy.S
+index 7e1163e6a0..09d0160bdf 100644
+--- a/sysdeps/aarch64/memcpy.S
++++ b/sysdeps/aarch64/memcpy.S
+@@ -102,11 +102,11 @@ ENTRY (MEMCPY)
+        tbz     tmp1, 5, 1f
+        ldp     B_l, B_h, [src, 16]
+        ldp     C_l, C_h, [srcend, -32]
+-       stp     B_l, B_h, [dstin, 16]
+        stp     C_l, C_h, [dstend, -32]
++       stp     B_l, B_h, [dstin, 16]
+ 1:
+-       stp     A_l, A_h, [dstin]
+        stp     D_l, D_h, [dstend, -16]
++       stp     A_l, A_h, [dstin]
+        ret
 
-Cheers,
-Ben.
+        .p2align 4
 
-> Regards,
-> Oza.
-> 
-> > 
-> > Also we should do a hot reset at least, not just a link reset.
-> > 
-> > >      report_resume()
-> > > 
-> > > If you suggest how it is broken, it will help me to understand.
-> > > probably you might want to point out what are the calls need to be 
-> > > added
-> > > or removed or differently handled, specially storage point of view.
-> > 
-> > 
-> > > Regards,
-> > > Oza.
-> > > 
-> > > > 
-> > > > Keep in mind that those callbacks were designed originally for EEH
-> > > > (which predates AER), and so was the spec written.
-> > > > 
-> > > > We don't actually use the AER code on POWER today, so we didn't notice
-> > > > how broken the implementation was :-)
-> > > > 
-> > > > We should fix that.
-> > > > 
-> > > > Either we can sort all that out by email, or we should plan some kind
-> > > > of catch-up, either at Plumbers (provided I can go there) or maybe a
-> > > > webex call.
-> > > > 
-> > > > Cheers,
-> > > > Ben.
+        Arnd
+
+_______________________________________________
+linux-arm-kernel mailing list
+linux-arm-kernel@lists.infradead.org
+http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
