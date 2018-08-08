@@ -1,47 +1,79 @@
-Return-Path: <SRS0=g1/S=K7=deltatee.com=logang@kernel.org>
-Return-Path: <SRS0=g1/S=K7=deltatee.com=logang@kernel.org>
-To: Kit Chow <kchow@gigaio.com>, Eric Pilmore <epilmore@gigaio.com>
-Cc: Bjorn Helgaas <helgaas@kernel.org>, linux-pci@vger.kernel.org,
- David Woodhouse <dwmw2@infradead.org>,
- Alex Williamson <alex.williamson@redhat.com>,
- iommu@lists.linux-foundation.org
-References: <CAOQPn8soxubJxb=vp7kz+AM6LbPH5y+_Nx0Vzv7rjV_nMMqEmA@mail.gmail.com>
- <20180809184331.GB113140@bhelgaas-glaptop.roam.corp.google.com>
- <CAOQPn8uPYKai49WYPqZp2wNd5of=0hUvPOHEtqP56RZu-hcjuw@mail.gmail.com>
- <b54899a8-a144-e8e0-9880-1800c4657b95@deltatee.com>
- <CAOQPn8tSNN+3igN-kMcQH46w_a9p6T+S7=c8CLREMLxr1kaTXQ@mail.gmail.com>
- <7068db44-af31-4462-f966-2dd2340ba0f0@deltatee.com>
- <695826a6-e10c-5a30-a51f-7cc61ba6e640@gigaio.com>
-From: Logan Gunthorpe <logang@deltatee.com>
-Message-ID: <0d3f48c3-8c4f-4dfb-e883-23c168f12b9b@deltatee.com>
-Date: Thu, 16 Aug 2018 11:21:44 -0600
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Date: Wed, 8 Aug 2018 14:37:02 -0400 (EDT)
+From: Mikulas Patocka <mpatocka@redhat.com>
+To: David Laight <David.Laight@ACULAB.COM>
+Subject: RE: framebuffer corruption due to overlapping stp instructions on
+ arm64
+In-Reply-To: <19c70d2a0b224db78f72dd316ad006b8@AcuMS.aculab.com>
+Message-ID: <alpine.LRH.2.02.1808081435020.18198@file01.intranet.prod.int.rdu2.redhat.com>
+References: <alpine.LRH.2.02.1808021242320.31834@file01.intranet.prod.int.rdu2.redhat.com>
+ <CAHCPf3tFGqkYEcWNN4LaWThw_rVqT316pzLv6T7RfxwO-eZ0EA@mail.gmail.com>
+ <alpine.LRH.2.02.1808030212340.17672@file01.intranet.prod.int.rdu2.redhat.com>
+ <CAKv+Gu8DeuksZhk1g3q_msSKV_hSY_2e1uzVten9-oGO3j9Sqg@mail.gmail.com>
+ <20180803094129.GB17798@arm.com>
+ <alpine.LRH.2.02.1808031235410.31584@file01.intranet.prod.int.rdu2.redhat.com>
+ <CAKv+Gu-aNFh1fsr_05SEwDp99n3pLrguP7=tEcFQPNY53=K7Fw@mail.gmail.com>
+ <alpine.LRH.2.02.1808031424140.14030@file01.intranet.prod.int.rdu2.redhat.com>
+ <CAHCPf3s-+Qf=WBZz1KpisDMG3520jCUh8PLAO3PHa4jdt8kCTw@mail.gmail.com>
+ <20180808121641.GB24736@iMac.local>
+ <b1de49af14d941979977af07dc81e1c2@AcuMS.aculab.com>
+ <alpine.LRH.2.02.1808080939180.3325@file01.intranet.prod.int.rdu2.redhat.com>
+ <19c70d2a0b224db78f72dd316ad006b8@AcuMS.aculab.com>
 MIME-Version: 1.0
-In-Reply-To: <695826a6-e10c-5a30-a51f-7cc61ba6e640@gigaio.com>
-Content-Type: text/plain; charset=utf-8
-Subject: Re: IOAT DMA w/IOMMU
+List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
+List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
+List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
+List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
+List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
+Cc: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>,
+ Joao Pinto <Joao.Pinto@synopsys.com>,
+ Ard Biesheuvel <ard.biesheuvel@linaro.org>,
+ 'Catalin Marinas' <catalin.marinas@arm.com>, Will Deacon <will.deacon@arm.com>,
+ Russell King <linux@armlinux.org.uk>,
+ Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
+ Matt Sealey <neko@bakuhatsu.net>, linux-pci <linux-pci@vger.kernel.org>,
+ Jingoo Han <jingoohan1@gmail.com>,
+ linux-arm-kernel <linux-arm-kernel@lists.infradead.org>
+Content-Type: text/plain; charset="us-ascii"
+Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
+Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
 List-ID: <linux-pci.vger.kernel.org>
 
 
 
-On 16/08/18 11:16 AM, Kit Chow wrote:
-> I only have access to intel hosts for testing (and possibly an AMD
-> host currently collecting dust) and am not sure how to go about getting
-> the proper test coverage for other architectures.
+On Wed, 8 Aug 2018, David Laight wrote:
 
-Well, I thought you were only changing the Intel IOMMU implementation...
-So testing on Intel hardware seems fine to me.
+> From: Mikulas Patocka
+> > Sent: 08 August 2018 14:47
+> ...
+> > The problem on ARM is that I see data corruption when the overlapping
+> > unaligned writes are done just by a single core.
+> 
+> Is this a sequence of unaligned writes (that shouldn't modify the
+> same physical locations) or an aligned write followed by an
+> unaligned one that updates part of the earlier write.
+> (Or the opposite order?)
+> 
+> It might be that the unaligned writes are bypassing the write-combining
+> buffer (without flushing it) - so overtake the aligned write.
+> 
+> Alternatively the unaligned writes go through the write-combining
+> buffer but the byte-enables aren't handled in the expected way.
+> 
+> It ought to be possible to work out which sequence is actually broken.
+> 
+> 	David
 
-> Any suggestions? Do you anticipate any issues with dma mapping the pci bar
-> address in ntb_async_tx_submit on non-x86 archs?  Do you or know of folks
-> who have ntb test setups with non-x86 hosts who might be able to help?
+All the unaligned/or aligned writes inside memcpy write the same value to 
+the overlapping bytes. So, the corruption can't be explained just by 
+reordering the writes or failing to detect hazard between them.
 
-I expect other IOMMUs will need to be updated to properly support
-dma_map_resource but that will probably need to be done on a case by
-case basis as the need arises. Unfortunately it seems the work to add
-dma_map_resource() didn't really consider that the IOMMUs had to have
-proper support and probably should have errored out instead of just
-passing along the physical address if the IOMMU didn't have support.
+Mikulas
 
-I don't know of anyone with an NTB setup on anything but x86 at the moment.
-
-Logan
+_______________________________________________
+linux-arm-kernel mailing list
+linux-arm-kernel@lists.infradead.org
+http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
