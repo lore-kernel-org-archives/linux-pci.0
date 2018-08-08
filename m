@@ -1,49 +1,112 @@
-Return-Path: <SRS0=nZYW=K7=kernel.dk=axboe@kernel.org>
-Return-Path: <SRS0=nZYW=K7=kernel.dk=axboe@kernel.org>
-Subject: Re: PCIe enable device races (Was: [PATCH v3] PCI: Data corruption
- happening due to race condition)
-To: Benjamin Herrenschmidt <benh@kernel.crashing.org>,
- Konstantin Khlebnikov <khlebnikov@yandex-team.ru>,
- Bjorn Helgaas <helgaas@kernel.org>
-Cc: Hari Vyas <hari.vyas@broadcom.com>, bhelgaas@google.com,
- linux-pci@vger.kernel.org, ray.jui@broadcom.com
-References: <1530608741-30664-1-git-send-email-hari.vyas@broadcom.com>
- <20180731163727.GK45322@bhelgaas-glaptop.roam.corp.google.com>
- <ecaed7664b46d73888d2494065905f8e108fc0f4.camel@kernel.crashing.org>
- <20180815185027.GE28888@bhelgaas-glaptop.roam.corp.google.com>
- <e3316c91ad722434360b4018b17cbfe265e97801.camel@kernel.crashing.org>
- <fa218ce2-c337-e776-d958-f1f8a1129c9a@yandex-team.ru>
- <6f76eb5f54fdc780dac744773d836214d7844346.camel@kernel.crashing.org>
- <62ac393c-931a-f328-acf6-c9afc8a026ea@kernel.dk>
- <d8cd08c2e5ade8087d1ce3a4c046be1bd3228a0d.camel@kernel.crashing.org>
-From: Jens Axboe <axboe@kernel.dk>
-Message-ID: <208f0e92-cf0c-3df1-5b16-2a8ec02b8d6d@kernel.dk>
-Date: Thu, 16 Aug 2018 15:56:38 -0600
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail.kernel.org ([198.145.29.99]:33428 "EHLO mail.kernel.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1727202AbeHHSB5 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Wed, 8 Aug 2018 14:01:57 -0400
+Date: Wed, 8 Aug 2018 18:41:42 +0300
+From: Leon Romanovsky <leon@kernel.org>
+To: Tal Gilboa <talgi@mellanox.com>
+Cc: Alexandru Gagniuc <mr.nuke.me@gmail.com>,
+        linux-pci@vger.kernel.org, bhelgaas@google.com,
+        jakub.kicinski@netronome.com, keith.busch@intel.com,
+        alex_gagniuc@dellteam.com, austin_bolen@dell.com,
+        shyam_iyer@dell.com, Ariel Elior <ariel.elior@cavium.com>,
+        everest-linux-l2@cavium.com,
+        "David S. Miller" <davem@davemloft.net>,
+        Michael Chan <michael.chan@broadcom.com>,
+        Ganesh Goudar <ganeshgr@chelsio.com>,
+        Jeff Kirsher <jeffrey.t.kirsher@intel.com>,
+        Tariq Toukan <tariqt@mellanox.com>,
+        Saeed Mahameed <saeedm@mellanox.com>,
+        Dirk van der Merwe <dirk.vandermerwe@netronome.com>,
+        netdev@vger.kernel.org, linux-kernel@vger.kernel.org,
+        intel-wired-lan@lists.osuosl.org, linux-rdma@vger.kernel.org,
+        oss-drivers@netronome.com
+Subject: Re: [PATCH v6 8/9] net/mlx5: Do not call pcie_print_link_status()
+Message-ID: <20180808154142.GZ13378@mtr-leonro.mtl.com>
+References: <CAErSpo4PK+SQLNfdkLNt9eLc7bpbxbkZCsa8T-tQpid601n0SQ@mail.gmail.com>
+ <20180806232600.25694-1-mr.nuke.me@gmail.com>
+ <20180806232600.25694-8-mr.nuke.me@gmail.com>
+ <20180808060848.GQ13378@mtr-leonro.mtl.com>
+ <05056a70-ee78-ea3c-0b9b-6d64a8663b11@mellanox.com>
 MIME-Version: 1.0
-In-Reply-To: <d8cd08c2e5ade8087d1ce3a4c046be1bd3228a0d.camel@kernel.crashing.org>
-Content-Type: text/plain; charset=utf-8
+Content-Type: multipart/signed; micalg=pgp-sha1;
+        protocol="application/pgp-signature"; boundary="cfJ13FhsvNR/yOpm"
+In-Reply-To: <05056a70-ee78-ea3c-0b9b-6d64a8663b11@mellanox.com>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 8/16/18 3:37 PM, Benjamin Herrenschmidt wrote:
-> On Thu, 2018-08-16 at 13:43 -0600, Jens Axboe wrote:
->>
->>> Ok. Well, my patch fixes it for my repro-case at least and seems to not
->>> break anyhting on my thinkpad so ...
->>>
->>> Bjorn, are you ok with the approach ? If yes, I'll start breaking up
->>> that patch into a few smaller bits in case something goes wrong and we
->>> want to bisect (such as the changes I did to tracking is_busmaster
->>> etc...)
->>
->> I can try it too, but I was never CC'ed on the actual patch.
-> 
-> https://lore.kernel.org/lkml/08bc40a6af3e614e97a78fbaab688bfcd14520ac.camel@kernel.crashing.org/
-> 
-> (I'll also fwd privately)
 
-Boots and works fine for me, but I'm also now on a gen6 x1, my initial
-report was on a gen4. I still have the gen4, I can power it up and see
-if it works there as well.
+--cfJ13FhsvNR/yOpm
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
 
--- 
-Jens Axboe
+On Wed, Aug 08, 2018 at 05:23:12PM +0300, Tal Gilboa wrote:
+> On 8/8/2018 9:08 AM, Leon Romanovsky wrote:
+> > On Mon, Aug 06, 2018 at 06:25:42PM -0500, Alexandru Gagniuc wrote:
+> > > This is now done by the PCI core to warn of sub-optimal bandwidth.
+> > >
+> > > Signed-off-by: Alexandru Gagniuc <mr.nuke.me@gmail.com>
+> > > ---
+> > >   drivers/net/ethernet/mellanox/mlx5/core/main.c | 4 ----
+> > >   1 file changed, 4 deletions(-)
+> > >
+> >
+> > Thanks,
+> > Reviewed-by: Leon Romanovsky <leonro@mellanox.com>
+> >
+>
+> Alex,
+> I loaded mlx5 driver with and without these series. The report in dmesg is
+> now missing. From what I understood, the status should be reported at least
+> once, even if everything is in order.
+
+It is not what this series is doing and it removes prints completely if
+fabric can deliver more than card is capable.
+
+> We need this functionality to stay.
+
+I'm not sure that you need this information in driver's dmesg output,
+but most probably something globally visible and accessible per-pci
+device.
+
+>
+> net-next (dmesg output for 07:00.0):
+> [270498.625351] mlx5_core 0000:07:00.0: firmware version: 14.22.4020
+> [270498.632130] mlx5_core 0000:07:00.0: 63.008 Gb/s available PCIe bandwidth
+> (8 GT/s x8 link)
+> [270499.169533] (0000:07:00.0): E-Switch: Total vports 9, per vport: max
+> uc(1024) max mc(16384)
+> [270499.182358] mlx5_core 0000:07:00.0: Port module event: module 0, Cable
+> plugged
+>
+> net-next + patches (dmesg output for 07:00.0):
+> [  331.608472] mlx5_core 0000:07:00.0: firmware version: 14.22.4020
+> [  332.564938] (0000:07:00.0): E-Switch: Total vports 9, per vport: max
+> uc(1024) max mc(16384)
+> [  332.616271] mlx5_core 0000:07:00.0: Port module event: module 0, Cable
+> plugged
+>
+>
+
+--cfJ13FhsvNR/yOpm
+Content-Type: application/pgp-signature; name="signature.asc"
+
+-----BEGIN PGP SIGNATURE-----
+
+iQIcBAEBAgAGBQJbaw82AAoJEORje4g2clinSrcQAIG8XlaVMnqmX9ZIn10cfkoz
+lngbzsg4KBPfVjhswO/NwYTa6S9Q0E8rMqGZJ1oWW9lPkiNJHxf6eK82lRerJmER
+Le5Bx6uUWDXPUg5UV1cpSlC6VwOW3oBrlo0EnHJRYK7mmLNnQJ7yLAGleWTNySpk
+S6ZkX3nO4x1a2CjUIxg4d1Jl9m9iP8enQyPsBPTIdgYlH39xFh8NwaQ3fjytErEV
+kW/C1K2mKryiSs9ss+xLfS4c7v2BT552DrnwMsOpdVF6zUWt8a2yA0vrQP4G+b+s
+q1s1i1SCHVGiDXT62T8lAL3p/sTf1k8ERwJHhxNuVlPc+cuC1rUt8MJ8my+DACbk
+JqPhwo+HSKDGphsUTbrJ0Hc9f7PW9fv+nRDrciE/9Q/0tBj5zVR+kh+53EJzJcEW
+q1wXpbh26dYdeo93Ki48a9kmJJ/mjlRn6ma1TfAgaab6Ct//rIBhpkDt1eOUn773
+xoiXVNdwRWzQTFgeeWiA8pebyUU+e08gZSvhHyQjT0d1WWpZQMmVpUJ2MKCdaHF9
+8kNsjww4h/F9PozSYlvQwduxp+3F+D/K656TC0rtAUvCRKsfynZWfRIb3KlBIWnE
+7uTCDmvmLLf6W+8tVWY0u9obmtVHkcyvkUEPElyhfVazdw1dLue2UigdNN2SN7Y+
+YY+vEw9UQ/ez/RY9zQD6
+=/LzE
+-----END PGP SIGNATURE-----
+
+--cfJ13FhsvNR/yOpm--
