@@ -1,77 +1,68 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.29.99]:39274 "EHLO mail.kernel.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1727209AbeHJQ2j (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Fri, 10 Aug 2018 12:28:39 -0400
-Date: Fri, 10 Aug 2018 08:58:37 -0500
-From: Bjorn Helgaas <helgaas@kernel.org>
-To: joeyli <jlee@suse.com>
-Cc: "Lee, Chun-Yi" <joeyli.kernel@gmail.com>,
-        Bjorn Helgaas <bhelgaas@google.com>,
-        Thomas Gleixner <tglx@linutronix.de>,
-        Ingo Molnar <mingo@redhat.com>,
-        "H . Peter Anvin" <hpa@zytor.com>, x86@kernel.org,
-        linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org
-Subject: Re: [PATCH] x86/PCI: Claim the resources of firmware enabled IOAPIC
- before children bus
-Message-ID: <20180810135837.GI113140@bhelgaas-glaptop.roam.corp.google.com>
-References: <20180724110144.16442-1-jlee@suse.com>
- <20180806214807.GE30691@bhelgaas-glaptop.roam.corp.google.com>
- <20180808155318.GE13767@linux-l9pv.suse>
- <20180808212322.GF49411@bhelgaas-glaptop.roam.corp.google.com>
- <20180810092501.GP13767@linux-l9pv.suse>
+Received: from mail-qk0-f193.google.com ([209.85.220.193]:36112 "EHLO
+        mail-qk0-f193.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1729664AbeHHVKt (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Wed, 8 Aug 2018 17:10:49 -0400
+Received: by mail-qk0-f193.google.com with SMTP id x192-v6so2282842qkb.3
+        for <linux-pci@vger.kernel.org>; Wed, 08 Aug 2018 11:49:50 -0700 (PDT)
+Subject: Re: [RFC] ARM64, PCIe, annd ACPI
+To: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
+Cc: Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org,
+        Tomasz Nowicki <tn@semihalf.com>,
+        Vladimir Olovyannikov <vladimir.olovyannikov@broadcom.com>,
+        BCM Kernel Feedback <bcm-kernel-feedback-list@broadcom.com>
+References: <89484aa0-08c4-0cff-500d-407d21e2f5fd@broadcom.com>
+ <20180808093822.GA25150@e107981-ln.cambridge.arm.com>
+From: Ray Jui <ray.jui@broadcom.com>
+Message-ID: <a32a8761-f49f-f0cf-928b-0c323c2b540e@broadcom.com>
+Date: Wed, 8 Aug 2018 11:49:46 -0700
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20180810092501.GP13767@linux-l9pv.suse>
+In-Reply-To: <20180808093822.GA25150@e107981-ln.cambridge.arm.com>
+Content-Type: text/plain; charset=utf-8; format=flowed
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Fri, Aug 10, 2018 at 05:25:01PM +0800, joeyli wrote:
-> On Wed, Aug 08, 2018 at 04:23:22PM -0500, Bjorn Helgaas wrote:
-> ...
 
-> The lspci log shows "Normal decode" on the bridge, I think that means
-> positively decode.
 
-Right.
-
-> hm... I have another question that it may not relates to this issue. I
-> was tracing the code path of PCI hot-remove/hotplug. Base on spec, looks
-> that the RST# should be asserted when hot-remove. And the memory decode
-> bit must be set to zero after RST# be asserted. But I didn't see that
-> any kernel PCI/ACPI code set RST#. The only possible code to set RST# is
-> in POWER architecture. Do you know who assert the RST# when hot-remove?    
-
-RST# is a conventional PCI signal (not a PCIe signal).  In any case, I
-would expect signals like that to be handled by hardware, not by
-software.  What section of the spec are you looking at?  I wouldn't
-expect any requirements for doing things to a device when the device
-is being hot-removed, since the device may already be inaccessible,
-e.g., physically unreachable.
-
-On a hot-*add*, there would of course be requirements about how the
-device powers up and comes out of reset.  For native drivers like
-pciehp/shpcpd/etc, there are often ways for software to control power
-to the slot, e.g., the "Power Controller Control" bit in the PCIe Slot
-Control register.
-
-For ACPI-mediated hotplug (as in your situation), the actual hardware
-details are handled by the firmware and all the OS sees are things
-like ACPI Notify events and it uses methods like _STA and other things
-mentioned in ACPI v6.2, sec 6.3.
-
-> > What are the chances of getting a firmware fix?  Has this firmware
-> > already shipped to customers?
+On 8/8/2018 2:38 AM, Lorenzo Pieralisi wrote:
+> On Tue, Aug 07, 2018 at 05:10:15PM -0700, Ray Jui wrote:
+>> Hi Lorenzo/Bjorn,
+>>
+>> I have a question on PCIe controller APCI support on ARM64 based systems.
+>>
+>> If my understanding of the implementation of "pci_acpi_scan_root" under
+>> "arch/arm64/kernel/pci.c" is correct, it appears
+>> "pci_acpi_setup_ecam_mapping" is called within "pci_acpi_scan_root".
+>>
+>> Does that mean for a PCIe host controller on ARM64 to support ACPI, it needs
+>> to support ECAM and MMIO based access to the configuration space registers?
+>>
+>> If the above statement is true, does it imply that any PCIe controller on
+>> ARM64 that does not support MMIO based access to the config space register
+>> cannot have ACPI support?
 > 
-> The good news is that the machine has not shipped yet. As I know
-> that manufacturer is also finding the root cause for why firmware
-> enabled memory decode bit and also set the wrong addresses.
+> Yes and it is not just MMIO, config space must be ECAM compliant as described
+> in the PCI firmware specification and enforced here:
+> 
+> http://infocenter.arm.com/help/topic/com.arm.doc.den0029b/Server_Base_System_Architecture_v5_0_ARM_DEN_0029B.pdf
+> 
 
-I don't think it's necessarily a problem that firmware enables the
-IOAPIC.  This is ACPI-mediated hotplug and it looks like it adds CPUs,
-memory, and I/O.  I wouldn't be surprised if the firmware has to make
-the IOAPIC operational to make some parts of the hot-add work.
+Okay, got it, the SBSA spec makes it very clear that the PCIe controller 
+needs to support ECAM.
 
-The address conflict is the real problem.
+> In short: what's in the mainline (+ adequate PCI controller firmware
+> configuration) must be sufficient to bootstrap your PCI subsystem in
+> ACPI, it is a very simple litmus test and we won't add anything that
+> deviates from that to the mainline kernel ARM64 ACPI PCI code support.
+> 
 
-Bjorn
+It sounds like I'll have to look into ways to work around this at the 
+driver level as Bjorn pointed out with some other examples.
+
+> Thanks,
+> Lorenzo
+> 
+
+Thanks!
+
+Ray
