@@ -1,87 +1,87 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-Subject: Re: [PATCH v6 8/9] net/mlx5: Do not call pcie_print_link_status()
-To: Leon Romanovsky <leon@kernel.org>
-Cc: Alexandru Gagniuc <mr.nuke.me@gmail.com>,
-        linux-pci@vger.kernel.org, bhelgaas@google.com,
-        jakub.kicinski@netronome.com, keith.busch@intel.com,
-        alex_gagniuc@dellteam.com, austin_bolen@dell.com,
-        shyam_iyer@dell.com, Ariel Elior <ariel.elior@cavium.com>,
-        everest-linux-l2@cavium.com,
-        "David S. Miller" <davem@davemloft.net>,
-        Michael Chan <michael.chan@broadcom.com>,
-        Ganesh Goudar <ganeshgr@chelsio.com>,
-        Jeff Kirsher <jeffrey.t.kirsher@intel.com>,
-        Tariq Toukan <tariqt@mellanox.com>,
-        Saeed Mahameed <saeedm@mellanox.com>,
-        Dirk van der Merwe <dirk.vandermerwe@netronome.com>,
-        netdev@vger.kernel.org, linux-kernel@vger.kernel.org,
-        intel-wired-lan@lists.osuosl.org, linux-rdma@vger.kernel.org,
-        oss-drivers@netronome.com
-References: <CAErSpo4PK+SQLNfdkLNt9eLc7bpbxbkZCsa8T-tQpid601n0SQ@mail.gmail.com>
- <20180806232600.25694-1-mr.nuke.me@gmail.com>
- <20180806232600.25694-8-mr.nuke.me@gmail.com>
- <20180808060848.GQ13378@mtr-leonro.mtl.com>
- <05056a70-ee78-ea3c-0b9b-6d64a8663b11@mellanox.com>
- <20180808154142.GZ13378@mtr-leonro.mtl.com>
-From: Tal Gilboa <talgi@mellanox.com>
-Message-ID: <5578cd9a-e4f0-85ab-4a86-bfa23eec136c@mellanox.com>
-Date: Wed, 8 Aug 2018 18:56:29 +0300
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Date: Wed, 8 Aug 2018 09:46:34 -0400 (EDT)
+From: Mikulas Patocka <mpatocka@redhat.com>
+To: David Laight <David.Laight@ACULAB.COM>
+Subject: RE: framebuffer corruption due to overlapping stp instructions on
+ arm64
+In-Reply-To: <b1de49af14d941979977af07dc81e1c2@AcuMS.aculab.com>
+Message-ID: <alpine.LRH.2.02.1808080939180.3325@file01.intranet.prod.int.rdu2.redhat.com>
+References: <alpine.LRH.2.02.1808021242320.31834@file01.intranet.prod.int.rdu2.redhat.com>
+ <CAHCPf3tFGqkYEcWNN4LaWThw_rVqT316pzLv6T7RfxwO-eZ0EA@mail.gmail.com>
+ <alpine.LRH.2.02.1808030212340.17672@file01.intranet.prod.int.rdu2.redhat.com>
+ <CAKv+Gu8DeuksZhk1g3q_msSKV_hSY_2e1uzVten9-oGO3j9Sqg@mail.gmail.com>
+ <20180803094129.GB17798@arm.com>
+ <alpine.LRH.2.02.1808031235410.31584@file01.intranet.prod.int.rdu2.redhat.com>
+ <CAKv+Gu-aNFh1fsr_05SEwDp99n3pLrguP7=tEcFQPNY53=K7Fw@mail.gmail.com>
+ <alpine.LRH.2.02.1808031424140.14030@file01.intranet.prod.int.rdu2.redhat.com>
+ <CAHCPf3s-+Qf=WBZz1KpisDMG3520jCUh8PLAO3PHa4jdt8kCTw@mail.gmail.com>
+ <20180808121641.GB24736@iMac.local>
+ <b1de49af14d941979977af07dc81e1c2@AcuMS.aculab.com>
 MIME-Version: 1.0
-In-Reply-To: <20180808154142.GZ13378@mtr-leonro.mtl.com>
-Content-Type: text/plain; charset=windows-1252; format=flowed
-Sender: linux-kernel-owner@vger.kernel.org
+List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
+List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
+List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
+List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
+List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
+Cc: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>,
+ Joao Pinto <Joao.Pinto@synopsys.com>,
+ Ard Biesheuvel <ard.biesheuvel@linaro.org>,
+ 'Catalin Marinas' <catalin.marinas@arm.com>, Will Deacon <will.deacon@arm.com>,
+ Russell King <linux@armlinux.org.uk>,
+ Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
+ Matt Sealey <neko@bakuhatsu.net>, linux-pci <linux-pci@vger.kernel.org>,
+ Jingoo Han <jingoohan1@gmail.com>,
+ linux-arm-kernel <linux-arm-kernel@lists.infradead.org>
+Content-Type: text/plain; charset="us-ascii"
+Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
+Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 8/8/2018 6:41 PM, Leon Romanovsky wrote:
-> On Wed, Aug 08, 2018 at 05:23:12PM +0300, Tal Gilboa wrote:
->> On 8/8/2018 9:08 AM, Leon Romanovsky wrote:
->>> On Mon, Aug 06, 2018 at 06:25:42PM -0500, Alexandru Gagniuc wrote:
->>>> This is now done by the PCI core to warn of sub-optimal bandwidth.
->>>>
->>>> Signed-off-by: Alexandru Gagniuc <mr.nuke.me@gmail.com>
->>>> ---
->>>>    drivers/net/ethernet/mellanox/mlx5/core/main.c | 4 ----
->>>>    1 file changed, 4 deletions(-)
->>>>
->>>
->>> Thanks,
->>> Reviewed-by: Leon Romanovsky <leonro@mellanox.com>
->>>
->>
->> Alex,
->> I loaded mlx5 driver with and without these series. The report in dmesg is
->> now missing. From what I understood, the status should be reported at least
->> once, even if everything is in order.
-> 
-> It is not what this series is doing and it removes prints completely if
-> fabric can deliver more than card is capable.
-> 
->> We need this functionality to stay.
-> 
-> I'm not sure that you need this information in driver's dmesg output,
-> but most probably something globally visible and accessible per-pci
-> device.
 
-Currently we have users that look for it. If we remove the dmesg print 
-we need this to be reported elsewhere. Adding it to sysfs for example 
-should be a valid solution for our case.
 
+On Wed, 8 Aug 2018, David Laight wrote:
+
+> From: Catalin Marinas
+> > Sent: 08 August 2018 13:17
+> ...
+> > I think hazarding is what goes wrong here, especially since with
+> > overlapping unaligned addresses. However, I disagree that it is
+> > impossible to implement this properly on a platform with PCIe so that
+> > Normal NC mappings can be used.
 > 
->>
->> net-next (dmesg output for 07:00.0):
->> [270498.625351] mlx5_core 0000:07:00.0: firmware version: 14.22.4020
->> [270498.632130] mlx5_core 0000:07:00.0: 63.008 Gb/s available PCIe bandwidth
->> (8 GT/s x8 link)
->> [270499.169533] (0000:07:00.0): E-Switch: Total vports 9, per vport: max
->> uc(1024) max mc(16384)
->> [270499.182358] mlx5_core 0000:07:00.0: Port module event: module 0, Cable
->> plugged
->>
->> net-next + patches (dmesg output for 07:00.0):
->> [  331.608472] mlx5_core 0000:07:00.0: firmware version: 14.22.4020
->> [  332.564938] (0000:07:00.0): E-Switch: Total vports 9, per vport: max
->> uc(1024) max mc(16384)
->> [  332.616271] mlx5_core 0000:07:00.0: Port module event: module 0, Cable
->> plugged
->>
->>
+> I've been trying to follow this discussion...
+> 
+> Is the problem just that reads don't snoop/flush the write-combining buffer?
+
+No. The pixel corruption is permanently visible on the monitor (even if 
+there are no reads from the framebuffer at all). So it can't be explained 
+as mishandling read-after-write hazard.
+
+> Aligned writes that end on an appropriate boundary will leave the write
+> combining buffer empty.
+> But if the buffer isn't emptied the PCIe read gets ahead of the PCIe write.
+> 
+> ISTR even x86 requires a fence instruction in some sequence associated
+> with write-combining writes.
+
+Other x86 cores may observe wc writes out of order - but a single x86 
+core is self-consistent - i.e. if you do
+movl $0x00000000, (%ebx)
+movl $0xFFFFFFFF, 3(%ebx)
+then the byte at ebx+3 will always contain 0xFF. The core can't just 
+corrupt data while doing reordering.
+
+The problem on ARM is that I see data corruption when the overlapping 
+unaligned writes are done just by a single core.
+
+> 	David
+
+Mikulas
+
+_______________________________________________
+linux-arm-kernel mailing list
+linux-arm-kernel@lists.infradead.org
+http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
