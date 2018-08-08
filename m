@@ -1,68 +1,130 @@
-Return-Path: <SRS0=6zic=LD=oracle.com=thomas.tai@kernel.org>
-Return-Path: <SRS0=6zic=LD=oracle.com=thomas.tai@kernel.org>
-Subject: Re: [PATCH 1/1] PCI/AER: prevent pcie_do_fatal_recovery from using
- device after it is removed
-To: Benjamin Herrenschmidt <benh@kernel.crashing.org>, poza@codeaurora.org,
-        Bjorn Helgaas <helgaas@kernel.org>
-Cc: Sinan Kaya <okaya@kernel.org>, bhelgaas@google.com, keith.busch@intel.com,
-        linux-pci@vger.kernel.org, linux-pci-owner@vger.kernel.org,
-        Sam Bobroff <sam.bobroff@au1.ibm.com>
-References: <b0104a716319d76e734c307cb4bedd9d@codeaurora.org>
- <903394c04d6ad468ed06dc0a779200e7555345a7.camel@kernel.crashing.org>
- <6cb069038530757f31f3dd60328c7e30@codeaurora.org>
- <e931bc7a7e468e8bb2ee3766b3fcf96f1800f552.camel@kernel.crashing.org>
- <bf7ceabb6fe51398e0f4eebd9c4fe4ac1ec2b8a4.camel@kernel.crashing.org>
- <42bd39aef30fe24bfc48d378e1f5d35d@codeaurora.org>
- <54d19e0e3d44bedf247853144c6bbfed5561a125.camel@kernel.crashing.org>
- <f022581a9ecb88e5501a09bdcdc62954@codeaurora.org>
- <1d5b1157-2f78-5fab-78f0-5828892fc739@kernel.org>
- <c7b996e0856cbea16cbb94287225bf2083158f02.camel@kernel.crashing.org>
- <20180819022402.GF128050@bhelgaas-glaptop.roam.corp.google.com>
- <6f0b939604aa10e9de2a6bd7fed76ce5@codeaurora.org>
- <6435dd654f4e98f311a0544e1ff7b608aa2a4f4c.camel@kernel.crashing.org>
-From: Thomas Tai <thomas.tai@oracle.com>
-Message-ID: <b3a3d1a2-567e-8d48-8628-f58e88dd78f6@oracle.com>
-Date: Mon, 20 Aug 2018 09:02:43 -0400
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Date: Wed, 8 Aug 2018 14:25:48 -0400 (EDT)
+From: Mikulas Patocka <mpatocka@redhat.com>
+To: Arnd Bergmann <arnd@arndb.de>
+Subject: Re: framebuffer corruption due to overlapping stp instructions on
+ arm64
+In-Reply-To: <CAK8P3a2=rVvvW8bBcrPm3nXNNP56Ygxchu4ThD2ZgZ_cVcd8wQ@mail.gmail.com>
+Message-ID: <alpine.LRH.2.02.1808081347180.18198@file01.intranet.prod.int.rdu2.redhat.com>
+References: <alpine.LRH.2.02.1808021242320.31834@file01.intranet.prod.int.rdu2.redhat.com>
+ <CAHCPf3tFGqkYEcWNN4LaWThw_rVqT316pzLv6T7RfxwO-eZ0EA@mail.gmail.com>
+ <alpine.LRH.2.02.1808030212340.17672@file01.intranet.prod.int.rdu2.redhat.com>
+ <CAKv+Gu8DeuksZhk1g3q_msSKV_hSY_2e1uzVten9-oGO3j9Sqg@mail.gmail.com>
+ <20180803094129.GB17798@arm.com>
+ <alpine.LRH.2.02.1808031235410.31584@file01.intranet.prod.int.rdu2.redhat.com>
+ <20180808113927.GA24736@iMac.local>
+ <alpine.LRH.2.02.1808081011110.9997@file01.intranet.prod.int.rdu2.redhat.com>
+ <b1a0dac5-3cf2-1a7f-ac7f-649126eb7873@arm.com>
+ <20180808151444.GF24736@iMac.local>
+ <CAK8P3a2=rVvvW8bBcrPm3nXNNP56Ygxchu4ThD2ZgZ_cVcd8wQ@mail.gmail.com>
 MIME-Version: 1.0
-In-Reply-To: <6435dd654f4e98f311a0544e1ff7b608aa2a4f4c.camel@kernel.crashing.org>
-Content-Type: text/plain; charset=utf-8; format=flowed
+List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
+List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
+List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
+List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
+List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
+Cc: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>,
+ Richard.Earnshaw@arm.com, Joao Pinto <Joao.Pinto@synopsys.com>,
+ GNU C Library <libc-alpha@sourceware.org>,
+ Ard Biesheuvel <ard.biesheuvel@linaro.org>,
+ linux-pci <linux-pci@vger.kernel.org>,
+ Catalin Marinas <catalin.marinas@arm.com>, Will Deacon <will.deacon@arm.com>,
+ Russell King - ARM Linux <linux@armlinux.org.uk>,
+ Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, neko@bakuhatsu.net,
+ Jingoo Han <jingoohan1@gmail.com>,
+ Linux ARM <linux-arm-kernel@lists.infradead.org>
+Content-Type: text/plain; charset="us-ascii"
+Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
+Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
 List-ID: <linux-pci.vger.kernel.org>
 
 
 
-On 08/20/2018 01:15 AM, Benjamin Herrenschmidt wrote:
-> On Mon, 2018-08-20 at 10:39 +0530, poza@codeaurora.org wrote:
->> On 2018-08-19 07:54, Bjorn Helgaas wrote:
->>> On Fri, Aug 17, 2018 at 09:27:03AM +1000, Benjamin Herrenschmidt wrote:
->>>> On Thu, 2018-08-16 at 09:46 -0400, Sinan Kaya wrote:
->>>>> On 8/16/2018 4:22 AM, poza@codeaurora.org wrote:
->>>>>> we can catch up on webex, (Sinan is going to be there in Plumber's
->>>>>> conference, I might not be able to join there, as we have bring-up coming)
->>>>>
->>>>> My plumbers conference attendance is not confirmed yet. I'm trying to
->>>>> combine it with a business trip. I did not get an ACK yet from my boss.
->>>>
->>>> Ok, I'll collect the names and will propose a time/date early next
->>>> week, I'm a bit caught up until monday.
->>>>
->>>> Bjorn, are you available as well ?
->>>
->>> I'm in CDT (UTC-5).  Possible times for me are 6am-10pm CDT.
->>
->> I am in India timezone.
-> 
-> Hrm ... this is going to be difficult to reconcile. Let's first see
-> what we can do by email this week shall we ?
+On Wed, 8 Aug 2018, Arnd Bergmann wrote:
 
-OK, I will catch up on email to see the details. I suppose I should hold 
-off the original patch to fix the "prevent pcie_do_fatal_recovery from 
-using device after it is removed" patch, right?
+> On Wed, Aug 8, 2018 at 5:15 PM Catalin Marinas <catalin.marinas@arm.com> wrote:
+> >
+> > On Wed, Aug 08, 2018 at 04:01:12PM +0100, Richard Earnshaw wrote:
+> > > On 08/08/18 15:12, Mikulas Patocka wrote:
+> > > > On Wed, 8 Aug 2018, Catalin Marinas wrote:
+> > > >> On Fri, Aug 03, 2018 at 01:09:02PM -0400, Mikulas Patocka wrote:
+> > - failing to write a few bytes
+> > - writing a few bytes that were written 16 bytes before
+> > - writing a few bytes that were written 16 bytes after
+> >
+> > > The overlapping writes in memcpy never write different values to the
+> > > same location, so I still feel this must be some sort of HW issue, not a
+> > > SW one.
+> >
+> > So do I (my interpretation is that it combines or rather skips some of
+> > the writes to the same 16-byte address as it ignores the data strobes).
+> 
+> Maybe it just always writes to the wrong location, 16 bytes apart for one of
+> the stp instructions. Since we are usually dealing with a pair of overlapping
+> 'stp', both unaligned, that could explain both the missing bytes (we write
+> data to the wrong place, but overwrite it with the correct data right away)
+> and the extra copy (we write it to the wrong place, but then write the correct
+> data to the correct place as well).
+> 
+> This sounds a bit like what the original ARM CPUs did on unaligned
+> memory access, where a single aligned 4-byte location was accessed,
+> but the bytes swapped around.
+> 
+> There may be a few more things worth trying out or analysing from
+> the recorded past failures to understand more about how it goes
+> wrong:
+> 
+> - For which data lengths does it fail? Having two overlapping
+>   unaligned stp is something that only happens for 16..96 byte
+>   memcpy.
 
-Thank you,
-Thomas
+If you want to research the corruptions in detail, I uploaded a file 
+containing 7k corruptions here: 
+http://people.redhat.com/~mpatocka/testcases/arm-pcie-corruption/
 
+> - What if we use a pair of str instructions instead of an stp in
+>   a modified memcpy? Does it now write to still write to the
+>   wrong place 16 bytes away, just 8 bytes away, or correctly?
+
+I replaced all stp instructions with str and it didn't have effect on 
+corruptions. Either a few bytes is omitted, or a value that belongs 16 
+bytes before or after is written.
+
+> - Does it change in any way if we do the overlapping writes
+>   in the reverse order? E.g. for the 16..64 byte case:
 > 
-> Cheers,
-> Ben.
+> diff --git a/sysdeps/aarch64/memcpy.S b/sysdeps/aarch64/memcpy.S
+> index 7e1163e6a0..09d0160bdf 100644
+> --- a/sysdeps/aarch64/memcpy.S
+> +++ b/sysdeps/aarch64/memcpy.S
+> @@ -102,11 +102,11 @@ ENTRY (MEMCPY)
+>         tbz     tmp1, 5, 1f
+>         ldp     B_l, B_h, [src, 16]
+>         ldp     C_l, C_h, [srcend, -32]
+> -       stp     B_l, B_h, [dstin, 16]
+>         stp     C_l, C_h, [dstend, -32]
+> +       stp     B_l, B_h, [dstin, 16]
+>  1:
+> -       stp     A_l, A_h, [dstin]
+>         stp     D_l, D_h, [dstend, -16]
+> +       stp     A_l, A_h, [dstin]
+>         ret
 > 
+>         .p2align 4
 > 
+>         Arnd
+
+After reordering them, I observe only omitted writes, there are no longer 
+misdirected writes:
+
+http://people.redhat.com/~mpatocka/testcases/arm-pcie-corruption/reorder-test/
+
+Mikulas
+
+_______________________________________________
+linux-arm-kernel mailing list
+linux-arm-kernel@lists.infradead.org
+http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
