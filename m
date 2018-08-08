@@ -1,175 +1,156 @@
-Return-Path: <linux-acpi-owner@vger.kernel.org>
-From: Arnd Bergmann <arnd@arndb.de>
-To: linux-pci@vger.kernel.org, Bjorn Helgaas <bhelgaas@google.com>
-Cc: linux-kernel@vger.kernel.org,
-        Christoph Hellwig <hch@infradead.org>,
-        Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
-        Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-        linuxppc-dev@lists.ozlabs.org, linux-acpi@vger.kernel.org,
-        Arnd Bergmann <arnd@arndb.de>
-Subject: [RFC 06/15] powerpc/pci: fold pci_create_root_bus into pcibios_scan_phb
-Date: Fri, 17 Aug 2018 12:26:36 +0200
-Message-Id: <20180817102645.3839621-7-arnd@arndb.de>
-In-Reply-To: <20180817102645.3839621-1-arnd@arndb.de>
-References: <20180817102645.3839621-1-arnd@arndb.de>
-Sender: linux-acpi-owner@vger.kernel.org
+Return-Path: <SRS0=IRWQ=KX=gmail.com=mr.nuke.me@kernel.org>
+Return-Path: <SRS0=IRWQ=KX=gmail.com=mr.nuke.me@kernel.org>
+Subject: Re: [PATCH v3] PCI/AER: Do not clear AER bits if we don't own AER
+To: Bjorn Helgaas <helgaas@kernel.org>
+Cc: linux-pci@vger.kernel.org, bhelgaas@google.com, keith.busch@intel.com,
+ alex_gagniuc@dellteam.com, austin_bolen@dell.com, shyam_iyer@dell.com,
+ Frederick Lawler <fred@fredlawl.com>, Oza Pawandeep <poza@codeaurora.org>,
+ linux-kernel@vger.kernel.org
+References: <3d05f662-2c29-90cd-9c74-6456939a0e6b@gmail.com>
+ <20180730233547.1238-1-mr.nuke.me@gmail.com>
+ <20180808011429.GB49411@bhelgaas-glaptop.roam.corp.google.com>
+From: "Alex G." <mr.nuke.me@gmail.com>
+Message-ID: <56a5722e-d102-554d-cbea-44af3383f7e3@gmail.com>
+Date: Tue, 7 Aug 2018 22:46:19 -0500
+MIME-Version: 1.0
+In-Reply-To: <20180808011429.GB49411@bhelgaas-glaptop.roam.corp.google.com>
+Content-Type: text/plain; charset=utf-8; format=flowed
 List-ID: <linux-pci.vger.kernel.org>
 
-This slightly simplifies the pcibios_scan_phb() implementation, and
-gives us an easier point to add further fields in the pci_host_bridge
-structure.
 
-I tried removing fields that are duplicated between pci_host_bridge
-and pci_controller (which really serve the same purpose), but
-ran into the problem that we can't call pci_alloc_host_bridge()
-as early as pcibios_alloc_controller(). Some more refactoring
-is needed for that, but it could noticably clean the powerpc code
-up more.
 
-Signed-off-by: Arnd Bergmann <arnd@arndb.de>
----
- arch/powerpc/include/asm/pci-bridge.h |  3 ++
- arch/powerpc/kernel/pci-common.c      | 72 ++++++++++-----------------
- 2 files changed, 30 insertions(+), 45 deletions(-)
+On 08/07/2018 08:14 PM, Bjorn Helgaas wrote:
+> On Mon, Jul 30, 2018 at 06:35:31PM -0500, Alexandru Gagniuc wrote:
+>> When we don't own AER, we shouldn't touch the AER error bits. Clearing
+>> error bits willy-nilly might cause firmware to miss some errors. In
+>> theory, these bits get cleared by FFS, or via ACPI _HPX method. These
+>> mechanisms are not subject to the problem.
+> 
+> What's FFS?
 
-diff --git a/arch/powerpc/include/asm/pci-bridge.h b/arch/powerpc/include/asm/pci-bridge.h
-index 94d449031b18..42ae567084d9 100644
---- a/arch/powerpc/include/asm/pci-bridge.h
-+++ b/arch/powerpc/include/asm/pci-bridge.h
-@@ -51,8 +51,11 @@ struct pci_controller_ops {
- 
- /*
-  * Structure of a PCI controller (host bridge)
-+ * Some members here are duplicated in struct pci_host_bridge
-+ * and should be moved there.
-  */
- struct pci_controller {
-+	struct pci_host_bridge *bridge;
- 	struct pci_bus *bus;
- 	char is_dynamic;
- #ifdef CONFIG_PPC64
-diff --git a/arch/powerpc/kernel/pci-common.c b/arch/powerpc/kernel/pci-common.c
-index 57ca621a32f4..096011ec8670 100644
---- a/arch/powerpc/kernel/pci-common.c
-+++ b/arch/powerpc/kernel/pci-common.c
-@@ -1587,81 +1587,63 @@ struct device_node *pcibios_get_phb_of_node(struct pci_bus *bus)
- 	return of_node_get(hose->dn);
- }
- 
--static struct pci_bus *pci_create_root_bus(struct device *parent, int bus,
--		struct pci_ops *ops, void *sysdata, struct list_head *resources)
--{
--	int error;
--	struct pci_host_bridge *bridge;
--
--	bridge = pci_alloc_host_bridge(0);
--	if (!bridge)
--		return NULL;
--
--	bridge->dev.parent = parent;
--
--	list_splice_init(resources, &bridge->windows);
--	bridge->sysdata = sysdata;
--	bridge->busnr = bus;
--	bridge->ops = ops;
--
--	error = pci_register_host_bridge(bridge);
--	if (error < 0)
--		goto err_out;
--
--	return bridge->bus;
--
--err_out:
--	kfree(bridge);
--	return NULL;
--}
--
- /**
-  * pci_scan_phb - Given a pci_controller, setup and scan the PCI bus
-  * @hose: Pointer to the PCI host controller instance structure
-  */
- void pcibios_scan_phb(struct pci_controller *hose)
- {
--	LIST_HEAD(resources);
--	struct pci_bus *bus;
- 	struct device_node *node = hose->dn;
- 	int mode;
-+	struct pci_host_bridge *bridge;
-+	int error;
- 
- 	pr_debug("PCI: Scanning PHB %pOF\n", node);
- 
-+	/* The allocation should ideally be done in pcibios_alloc_controller(),
-+	 * but pci_alloc_host_bridge() requires slab to work first */
-+	bridge = pci_alloc_host_bridge(0);
-+	if (!bridge)
-+		return;
-+
- 	/* Get some IO space for the new PHB */
- 	pcibios_setup_phb_io_space(hose);
- 
- 	/* Wire up PHB bus resources */
--	pcibios_setup_phb_resources(hose, &resources);
-+	pcibios_setup_phb_resources(hose, &bridge->windows);
- 
- 	hose->busn.start = hose->first_busno;
- 	hose->busn.end	 = hose->last_busno;
- 	hose->busn.flags = IORESOURCE_BUS;
--	pci_add_resource(&resources, &hose->busn);
-+	pci_add_resource(&bridge->windows, &hose->busn);
-+
-+	bridge->dev.parent = hose->parent;
-+	bridge->sysdata = hose;
-+	bridge->busnr = hose->first_busno;
-+	bridge->ops = hose->ops;
- 
--	/* Create an empty bus for the toplevel */
--	bus = pci_create_root_bus(hose->parent, hose->first_busno,
--				  hose->ops, hose, &resources);
--	if (bus == NULL) {
-+	error = pci_register_host_bridge(bridge);
-+	if (error < 0) {
- 		pr_err("Failed to create bus for PCI domain %04x\n",
- 			hose->global_number);
--		pci_free_resource_list(&resources);
-+		pci_free_host_bridge(bridge);
- 		return;
- 	}
--	hose->bus = bus;
-+	hose->bridge = bridge;
-+	hose->bus = bridge->bus;
- 
- 	/* Get probe mode and perform scan */
- 	mode = PCI_PROBE_NORMAL;
- 	if (node && hose->controller_ops.probe_mode)
--		mode = hose->controller_ops.probe_mode(bus);
-+		mode = hose->controller_ops.probe_mode(bridge->bus);
- 	pr_debug("    probe mode: %d\n", mode);
- 	if (mode == PCI_PROBE_DEVTREE)
--		of_scan_bus(node, bus);
-+		of_scan_bus(node, bridge->bus);
- 
- 	if (mode == PCI_PROBE_NORMAL) {
--		pci_bus_update_busn_res_end(bus, 255);
--		hose->last_busno = pci_scan_child_bus(bus);
--		pci_bus_update_busn_res_end(bus, hose->last_busno);
-+		pci_bus_update_busn_res_end(bridge->bus, 255);
-+		hose->last_busno = pci_scan_child_bus(bridge->bus);
-+		pci_bus_update_busn_res_end(bridge->bus, hose->last_busno);
- 	}
- 
- 	/* Platform gets a chance to do some global fixups before
-@@ -1671,9 +1653,9 @@ void pcibios_scan_phb(struct pci_controller *hose)
- 		ppc_md.pcibios_fixup_phb(hose);
- 
- 	/* Configure PCI Express settings */
--	if (bus && !pci_has_flag(PCI_PROBE_ONLY)) {
-+	if (bridge->bus && !pci_has_flag(PCI_PROBE_ONLY)) {
- 		struct pci_bus *child;
--		list_for_each_entry(child, &bus->children, node)
-+		list_for_each_entry(child, &bridge->bus->children, node)
- 			pcie_bus_configure_settings(child);
- 	}
- }
--- 
-2.18.0
+Firmware-first. Nobody likes spelling it out, and all other proposed 
+acronyms are insanely tong-twisting. So, FFS.
+
+> I guess you mean FFS and _HPX are not subject to the problem because
+> they're supplied by firmware, so firmware would be responsible for
+> looking at the bits before clearing them?
+
+Exactly.
+
+>> This race is mostly of theoretical significance, since I can't
+>> reasonably demonstrate this race in the lab.
+>>
+>> On a side-note, pcie_aer_is_kernel_first() is created to alleviate the
+>> need for two checks: aer_cap and get_firmware_first().
+>>
+>> Signed-off-by: Alexandru Gagniuc <mr.nuke.me@gmail.com>
+>> ---
+>>
+>> Changes since v2:
+>>    - Added missing negation in pci_cleanup_aer_error_status_regs()
+>>
+>>   drivers/pci/pcie/aer.c | 17 ++++++++++-------
+>>   1 file changed, 10 insertions(+), 7 deletions(-)
+>>
+>> diff --git a/drivers/pci/pcie/aer.c b/drivers/pci/pcie/aer.c
+>> index a2e88386af28..40e5c86271d1 100644
+>> --- a/drivers/pci/pcie/aer.c
+>> +++ b/drivers/pci/pcie/aer.c
+>> @@ -307,6 +307,12 @@ int pcie_aer_get_firmware_first(struct pci_dev *dev)
+>>   		aer_set_firmware_first(dev);
+>>   	return dev->__aer_firmware_first;
+>>   }
+>> +
+>> +static bool pcie_aer_is_kernel_first(struct pci_dev *dev)
+>> +{
+>> +	return !!dev->aer_cap && !pcie_aer_get_firmware_first(dev);
+>> +}
+> 
+> I think it complicates things to have both "firmware_first" and
+> "kernel_first" interfaces, so I would prefer to stick with the
+> existing "firmware_first" style.
+> 
+>>   #define	PCI_EXP_AER_FLAGS	(PCI_EXP_DEVCTL_CERE | PCI_EXP_DEVCTL_NFERE | \
+>>   				 PCI_EXP_DEVCTL_FERE | PCI_EXP_DEVCTL_URRE)
+>>   
+>> @@ -337,10 +343,7 @@ bool aer_acpi_firmware_first(void)
+>>   
+>>   int pci_enable_pcie_error_reporting(struct pci_dev *dev)
+>>   {
+>> -	if (pcie_aer_get_firmware_first(dev))
+>> -		return -EIO;
+>> -
+>> -	if (!dev->aer_cap)
+>> +	if (!pcie_aer_is_kernel_first(dev))
+>>   		return -EIO;
+>>   
+>>   	return pcie_capability_set_word(dev, PCI_EXP_DEVCTL, PCI_EXP_AER_FLAGS);
+> 
+> This change doesn't actually fix anything, does it?  It looks like a
+> cleanup that doesn't change the behavior.
+
+Initially (v1), this was a one-liner, but someone had a complaint about 
+having pcie_aer_get_firmware_first() boilerplate all over the place. 
+That's why I added the "kernel_first" function (previous comment), and 
+then updated this here for completeness. I'm also fine with v1.
+
+>> @@ -349,7 +352,7 @@ EXPORT_SYMBOL_GPL(pci_enable_pcie_error_reporting);
+>>   
+>>   int pci_disable_pcie_error_reporting(struct pci_dev *dev)
+>>   {
+>> -	if (pcie_aer_get_firmware_first(dev))
+>> +	if (!pcie_aer_is_kernel_first(dev))
+>>   		return -EIO;
+> 
+> This change does effectively add a test for dev->aer_cap.  That makes
+> sense in terms of symmetry with pci_enable_pcie_error_reporting(),
+> but I think it should be a separate patch because it's conceptually
+> separate from the change below.
+> 
+> We should keep the existing behavior (but add the symmetry) here for
+> now, but it's not clear to me that these paths should care about AER
+> or firmware-first at all.  PCI_EXP_DEVCTL is not an AER register and
+> we have the _HPX mechanism for firmware to influence it (which these
+> paths currently ignore).  I suspect we should program these reporting
+> enable bits in the core enumeration path instead of having drivers
+> call these interfaces.
+
+The headache is that FFS needs the reporting bit to stay enabled in 
+order to get AER notifications. Disabling things here could really break 
+firmware. Of course, that's a cyclical argument, since FW is broken by 
+definition.
+
+> If/when we make changes along these lines, the history will be easier
+> to follow if *this* change is not connected with the change below to
+> pci_cleanup_aer_error_status_regs().
+
+I agree. I think it might be preferred then to go with v1, and leave the 
+refactoring to a later time, since the extra changes are cosmetical and 
+social.
+
+>>   	return pcie_capability_clear_word(dev, PCI_EXP_DEVCTL,
+>> @@ -383,10 +386,10 @@ int pci_cleanup_aer_error_status_regs(struct pci_dev *dev)
+>>   	if (!pci_is_pcie(dev))
+>>   		return -ENODEV;
+>>   
+>> -	pos = dev->aer_cap;
+>> -	if (!pos)
+>> +	if (!pcie_aer_is_kernel_first(dev))
+>>   		return -EIO;
+> 
+> This part makes sense to me, but I think I would rather have it match
+> the existing style in pci_enable_pcie_error_reporting(), i.e., keep
+> the test for dev->aer_cap and add a test for
+> pcie_aer_get_firmware_first().
+
+Had it that way in v1.
+
+Alex
+
+>> +	pos = dev->aer_cap;
+>>   	port_type = pci_pcie_type(dev);
+>>   	if (port_type == PCI_EXP_TYPE_ROOT_PORT) {
+>>   		pci_read_config_dword(dev, pos + PCI_ERR_ROOT_STATUS, &status);
+>> -- 
+>> 2.17.1
+>>
