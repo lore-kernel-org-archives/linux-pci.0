@@ -1,227 +1,168 @@
-Return-Path: <SRS0=a9CN=LA=kernel.crashing.org=benh@kernel.org>
-Return-Path: <SRS0=a9CN=LA=kernel.crashing.org=benh@kernel.org>
-From: Benjamin Herrenschmidt <benh@kernel.crashing.org>
-To: Bjorn Helgaas <helgaas@kernel.org>, linux-pci@vger.kernel.org
-Cc: Hari Vyas <hari.vyas@broadcom.com>, Ray Jui <ray.jui@broadcom.com>,
-        Srinath Mannam <srinath.mannam@broadcom.com>,
-        Guenter Roeck <linux@roeck-us.net>, Jens Axboe <axboe@kernel.dk>,
-        Lukas Wunner <lukas@wunner.de>,
-        Konstantin Khlebnikov <khlebnikov@yandex-team.ru>,
-        Marta Rybczynska <mrybczyn@kalray.eu>,
-        Pierre-Yves Kerbrat <pkerbrat@kalray.eu>, linux-kernel@vger.kernel.org,
-        Benjamin Herrenschmidt <benh@kernel.crashing.org>
-Subject: [RFC PATCH 1/6] Revert "PCI: Fix is_added/is_busmaster race condition"
-Date: Fri, 17 Aug 2018 14:48:57 +1000
-Message-Id: <20180817044902.31420-2-benh@kernel.crashing.org>
-In-Reply-To: <20180817044902.31420-1-benh@kernel.crashing.org>
-References: <20180817044902.31420-1-benh@kernel.crashing.org>
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+MIME-Version: 1.0
+References: <alpine.LRH.2.02.1808021242320.31834@file01.intranet.prod.int.rdu2.redhat.com>
+ <CAHCPf3tFGqkYEcWNN4LaWThw_rVqT316pzLv6T7RfxwO-eZ0EA@mail.gmail.com>
+ <alpine.LRH.2.02.1808030212340.17672@file01.intranet.prod.int.rdu2.redhat.com>
+ <CAKv+Gu8DeuksZhk1g3q_msSKV_hSY_2e1uzVten9-oGO3j9Sqg@mail.gmail.com>
+ <20180803094129.GB17798@arm.com>
+ <alpine.LRH.2.02.1808031235410.31584@file01.intranet.prod.int.rdu2.redhat.com>
+ <20180808113927.GA24736@iMac.local>
+ <alpine.LRH.2.02.1808081011110.9997@file01.intranet.prod.int.rdu2.redhat.com>
+ <b1a0dac5-3cf2-1a7f-ac7f-649126eb7873@arm.com>
+ <20180808151444.GF24736@iMac.local>
+ <CAK8P3a2=rVvvW8bBcrPm3nXNNP56Ygxchu4ThD2ZgZ_cVcd8wQ@mail.gmail.com>
+ <alpine.LRH.2.02.1808081347180.18198@file01.intranet.prod.int.rdu2.redhat.com>
+In-Reply-To: <alpine.LRH.2.02.1808081347180.18198@file01.intranet.prod.int.rdu2.redhat.com>
+From: Arnd Bergmann <arnd@arndb.de>
+Date: Wed, 8 Aug 2018 23:51:53 +0200
+Message-ID: <CAK8P3a1CdL5ZVvWPMriOknTCgkfbR4F-a6dRZ7ap9+NiD8H5cg@mail.gmail.com>
+Subject: Re: framebuffer corruption due to overlapping stp instructions on
+ arm64
+To: Mikulas Patocka <mpatocka@redhat.com>
+List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
+List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
+List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
+List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
+List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
+Cc: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>,
+ Richard.Earnshaw@arm.com, Joao Pinto <Joao.Pinto@synopsys.com>,
+ GNU C Library <libc-alpha@sourceware.org>,
+ Ard Biesheuvel <ard.biesheuvel@linaro.org>,
+ linux-pci <linux-pci@vger.kernel.org>,
+ Catalin Marinas <catalin.marinas@arm.com>, Will Deacon <will.deacon@arm.com>,
+ Russell King - ARM Linux <linux@armlinux.org.uk>,
+ Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, neko@bakuhatsu.net,
+ Jingoo Han <jingoohan1@gmail.com>,
+ Linux ARM <linux-arm-kernel@lists.infradead.org>
+Content-Type: text/plain; charset="us-ascii"
+Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
+Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
 List-ID: <linux-pci.vger.kernel.org>
 
-This reverts commit 44bda4b7d26e9fffed6d7152d98a2e9edaeb2a76.
+On Wed, Aug 8, 2018 at 8:25 PM Mikulas Patocka <mpatocka@redhat.com> wrote:
+> On Wed, 8 Aug 2018, Arnd Bergmann wrote:
+>
+> > On Wed, Aug 8, 2018 at 5:15 PM Catalin Marinas <catalin.marinas@arm.com> wrote:
+> > >
+> > > On Wed, Aug 08, 2018 at 04:01:12PM +0100, Richard Earnshaw wrote:
+> > > > On 08/08/18 15:12, Mikulas Patocka wrote:
+> > > > > On Wed, 8 Aug 2018, Catalin Marinas wrote:
+> > > > >> On Fri, Aug 03, 2018 at 01:09:02PM -0400, Mikulas Patocka wrote:
+> > > - failing to write a few bytes
+> > > - writing a few bytes that were written 16 bytes before
+> > > - writing a few bytes that were written 16 bytes after
+> > >
+> > > > The overlapping writes in memcpy never write different values to the
+> > > > same location, so I still feel this must be some sort of HW issue, not a
+> > > > SW one.
+> > >
+> > > So do I (my interpretation is that it combines or rather skips some of
+> > > the writes to the same 16-byte address as it ignores the data strobes).
+> >
+> > Maybe it just always writes to the wrong location, 16 bytes apart for one of
+> > the stp instructions. Since we are usually dealing with a pair of overlapping
+> > 'stp', both unaligned, that could explain both the missing bytes (we write
+> > data to the wrong place, but overwrite it with the correct data right away)
+> > and the extra copy (we write it to the wrong place, but then write the correct
+> > data to the correct place as well).
+> >
+> > This sounds a bit like what the original ARM CPUs did on unaligned
+> > memory access, where a single aligned 4-byte location was accessed,
+> > but the bytes swapped around.
+> >
+> > There may be a few more things worth trying out or analysing from
+> > the recorded past failures to understand more about how it goes
+> > wrong:
+> >
+> > - For which data lengths does it fail? Having two overlapping
+> >   unaligned stp is something that only happens for 16..96 byte
+> >   memcpy.
+>
+> If you want to research the corruptions in detail, I uploaded a file
+> containing 7k corruptions here:
+> http://people.redhat.com/~mpatocka/testcases/arm-pcie-corruption/
 
-The new pci state mutex provides a simpler way of addressing
-this race and avoids the relative includes added to the powerpc
-code.
+Nice!
 
-Signed-off-by: Benjamin Herrenschmidt <benh@kernel.crashing.org>
----
- arch/powerpc/kernel/pci-common.c          |  4 +---
- arch/powerpc/platforms/powernv/pci-ioda.c |  3 +--
- arch/powerpc/platforms/pseries/setup.c    |  3 +--
- drivers/pci/bus.c                         |  6 +++---
- drivers/pci/hotplug/acpiphp_glue.c        |  2 +-
- drivers/pci/pci.h                         | 11 -----------
- drivers/pci/probe.c                       |  4 ++--
- drivers/pci/remove.c                      |  5 ++---
- include/linux/pci.h                       |  1 +
- 9 files changed, 12 insertions(+), 27 deletions(-)
+I already found a couple of things:
 
-diff --git a/arch/powerpc/kernel/pci-common.c b/arch/powerpc/kernel/pci-common.c
-index 471aac313b89..fe9733ffffaa 100644
---- a/arch/powerpc/kernel/pci-common.c
-+++ b/arch/powerpc/kernel/pci-common.c
-@@ -42,8 +42,6 @@
- #include <asm/ppc-pci.h>
- #include <asm/eeh.h>
- 
--#include "../../../drivers/pci/pci.h"
--
- /* hose_spinlock protects accesses to the the phb_bitmap. */
- static DEFINE_SPINLOCK(hose_spinlock);
- LIST_HEAD(hose_list);
-@@ -1016,7 +1014,7 @@ void pcibios_setup_bus_devices(struct pci_bus *bus)
- 		/* Cardbus can call us to add new devices to a bus, so ignore
- 		 * those who are already fully discovered
- 		 */
--		if (pci_dev_is_added(dev))
-+		if (dev->is_added)
- 			continue;
- 
- 		pcibios_setup_device(dev);
-diff --git a/arch/powerpc/platforms/powernv/pci-ioda.c b/arch/powerpc/platforms/powernv/pci-ioda.c
-index 70b2e1e0f23c..5bd0eb6681bc 100644
---- a/arch/powerpc/platforms/powernv/pci-ioda.c
-+++ b/arch/powerpc/platforms/powernv/pci-ioda.c
-@@ -46,7 +46,6 @@
- 
- #include "powernv.h"
- #include "pci.h"
--#include "../../../../drivers/pci/pci.h"
- 
- #define PNV_IODA1_M64_NUM	16	/* Number of M64 BARs	*/
- #define PNV_IODA1_M64_SEGS	8	/* Segments per M64 BAR	*/
-@@ -3139,7 +3138,7 @@ static void pnv_pci_ioda_fixup_iov_resources(struct pci_dev *pdev)
- 	struct pci_dn *pdn;
- 	int mul, total_vfs;
- 
--	if (!pdev->is_physfn || pci_dev_is_added(pdev))
-+	if (!pdev->is_physfn || pdev->is_added)
- 		return;
- 
- 	pdn = pci_get_pdn(pdev);
-diff --git a/arch/powerpc/platforms/pseries/setup.c b/arch/powerpc/platforms/pseries/setup.c
-index 8a4868a3964b..139f0af6c3d9 100644
---- a/arch/powerpc/platforms/pseries/setup.c
-+++ b/arch/powerpc/platforms/pseries/setup.c
-@@ -71,7 +71,6 @@
- #include <asm/security_features.h>
- 
- #include "pseries.h"
--#include "../../../../drivers/pci/pci.h"
- 
- int CMO_PrPSP = -1;
- int CMO_SecPSP = -1;
-@@ -665,7 +664,7 @@ static void pseries_pci_fixup_iov_resources(struct pci_dev *pdev)
- 	const int *indexes;
- 	struct device_node *dn = pci_device_to_OF_node(pdev);
- 
--	if (!pdev->is_physfn || pci_dev_is_added(pdev))
-+	if (!pdev->is_physfn || pdev->is_added)
- 		return;
- 	/*Firmware must support open sriov otherwise dont configure*/
- 	indexes = of_get_property(dn, "ibm,open-sriov-vf-bar-info", NULL);
-diff --git a/drivers/pci/bus.c b/drivers/pci/bus.c
-index 5cb40b2518f9..35b7fc87eac5 100644
---- a/drivers/pci/bus.c
-+++ b/drivers/pci/bus.c
-@@ -330,7 +330,7 @@ void pci_bus_add_device(struct pci_dev *dev)
- 		return;
- 	}
- 
--	pci_dev_assign_added(dev, true);
-+	dev->is_added = 1;
- }
- EXPORT_SYMBOL_GPL(pci_bus_add_device);
- 
-@@ -347,14 +347,14 @@ void pci_bus_add_devices(const struct pci_bus *bus)
- 
- 	list_for_each_entry(dev, &bus->devices, bus_list) {
- 		/* Skip already-added devices */
--		if (pci_dev_is_added(dev))
-+		if (dev->is_added)
- 			continue;
- 		pci_bus_add_device(dev);
- 	}
- 
- 	list_for_each_entry(dev, &bus->devices, bus_list) {
- 		/* Skip if device attach failed */
--		if (!pci_dev_is_added(dev))
-+		if (!dev->is_added)
- 			continue;
- 		child = dev->subordinate;
- 		if (child)
-diff --git a/drivers/pci/hotplug/acpiphp_glue.c b/drivers/pci/hotplug/acpiphp_glue.c
-index ef0b1b6ba86f..3a17b290df5d 100644
---- a/drivers/pci/hotplug/acpiphp_glue.c
-+++ b/drivers/pci/hotplug/acpiphp_glue.c
-@@ -509,7 +509,7 @@ static void enable_slot(struct acpiphp_slot *slot)
- 
- 	list_for_each_entry(dev, &bus->devices, bus_list) {
- 		/* Assume that newly added devices are powered on already. */
--		if (!pci_dev_is_added(dev))
-+		if (!dev->is_added)
- 			dev->current_state = PCI_D0;
- 	}
- 
-diff --git a/drivers/pci/pci.h b/drivers/pci/pci.h
-index 6e0d1528d471..473aa10a5dbf 100644
---- a/drivers/pci/pci.h
-+++ b/drivers/pci/pci.h
-@@ -295,7 +295,6 @@ struct pci_sriov {
- 
- /* pci_dev priv_flags */
- #define PCI_DEV_DISCONNECTED 0
--#define PCI_DEV_ADDED 1
- 
- static inline int pci_dev_set_disconnected(struct pci_dev *dev, void *unused)
- {
-@@ -308,16 +307,6 @@ static inline bool pci_dev_is_disconnected(const struct pci_dev *dev)
- 	return test_bit(PCI_DEV_DISCONNECTED, &dev->priv_flags);
- }
- 
--static inline void pci_dev_assign_added(struct pci_dev *dev, bool added)
--{
--	assign_bit(PCI_DEV_ADDED, &dev->priv_flags, added);
--}
--
--static inline bool pci_dev_is_added(const struct pci_dev *dev)
--{
--	return test_bit(PCI_DEV_ADDED, &dev->priv_flags);
--}
--
- #ifdef CONFIG_PCIEAER
- #include <linux/aer.h>
- 
-diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
-index ec784009a36b..440445ac7dfa 100644
---- a/drivers/pci/probe.c
-+++ b/drivers/pci/probe.c
-@@ -2525,13 +2525,13 @@ int pci_scan_slot(struct pci_bus *bus, int devfn)
- 	dev = pci_scan_single_device(bus, devfn);
- 	if (!dev)
- 		return 0;
--	if (!pci_dev_is_added(dev))
-+	if (!dev->is_added)
- 		nr++;
- 
- 	for (fn = next_fn(bus, dev, 0); fn > 0; fn = next_fn(bus, dev, fn)) {
- 		dev = pci_scan_single_device(bus, devfn + fn);
- 		if (dev) {
--			if (!pci_dev_is_added(dev))
-+			if (!dev->is_added)
- 				nr++;
- 			dev->multifunction = 1;
- 		}
-diff --git a/drivers/pci/remove.c b/drivers/pci/remove.c
-index 461e7fd2756f..01ec7fcb5634 100644
---- a/drivers/pci/remove.c
-+++ b/drivers/pci/remove.c
-@@ -18,12 +18,11 @@ static void pci_stop_dev(struct pci_dev *dev)
- {
- 	pci_pme_active(dev, false);
- 
--	if (pci_dev_is_added(dev)) {
-+	if (dev->is_added) {
- 		device_release_driver(&dev->dev);
- 		pci_proc_detach_device(dev);
- 		pci_remove_sysfs_dev_files(dev);
--
--		pci_dev_assign_added(dev, false);
-+		dev->is_added = 0;
- 	}
- 
- 	if (dev->bus->self)
-diff --git a/include/linux/pci.h b/include/linux/pci.h
-index 9b87f1936906..9799109c5e25 100644
---- a/include/linux/pci.h
-+++ b/include/linux/pci.h
-@@ -373,6 +373,7 @@ struct pci_dev {
- 	unsigned int	transparent:1;		/* Subtractive decode bridge */
- 	unsigned int	multifunction:1;	/* Multi-function device */
- 
-+	unsigned int	is_added:1;
- 	unsigned int	is_busmaster:1;		/* Is busmaster */
- 	unsigned int	no_msi:1;		/* May not use MSI */
- 	unsigned int	no_64bit_msi:1; 	/* May only use 32-bit MSIs */
--- 
-2.17.1
+- Failure to copy always happens at the *end* of a 16 byte aligned
+  physical address, it misses between 1 and 6 bytes, never 7 or more,
+  and it's more likely to be fewer bytes that are affected.
+   279 7
+   389 6
+   484 5
+   683 4
+   741 3
+   836 2
+   946 1
+
+- The first byte that fails to get copied is always 16 bytes after the
+  memcpy target. Since we only observe it at the end of the 16 byte
+  range, it means this happens specifically for addresses ending in
+  0x9 (7 bytes missed) to 0xf (1 byte missed).
+
+- Out of 7445 corruptions, 4358 were of the kind that misses a copy at the
+  end of a 16-byte area, they were for copies between 41 and 64 bytes,
+  more to the larger end of the scale  (note that with your test program,
+  smaller memcpys happen more frequenly than larger ones).
+     47 0x29
+     36 0x2a
+     47 0x2b
+     23 0x2c
+     29 0x2d
+     31 0x2e
+     36 0x2f
+     46 0x30
+     45 0x31
+     51 0x32
+     62 0x33
+     64 0x34
+     77 0x35
+     91 0x36
+     90 0x37
+    100 0x38
+    100 0x39
+    209 0x3a
+    279 0x3b
+    366 0x3c
+    498 0x3d
+    602 0x3e
+    682 0x3f
+    747 0x40
+
+- All corruption with data copied to the wrong place happened for copies
+  between 33 and 47 bytes, mostly to the smaller end of the scale:
+    391 0x21
+    360 0x22
+    319 0x23
+    273 0x24
+    273 0x25
+    241 0x26
+    224 0x27
+    221 0x28
+    231 0x29
+    208 0x2a
+    163 0x2b
+     86 0x2c
+     63 0x2d
+     33 0x2e
+      1 0x2f
+
+- One common (but not the only, still investigating) case for data getting
+  written to the wrong place is:
+   * corruption starts 16 bytes after the memcpy start
+   * corrupt bytes are the same as the bytes written to the start
+   * start address ends in 0x1 through 0x7
+   * length of corruption is at most memcpy length- 32, always
+     between 1 and 7.
+
+       Arnd
+
+_______________________________________________
+linux-arm-kernel mailing list
+linux-arm-kernel@lists.infradead.org
+http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
