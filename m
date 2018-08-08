@@ -1,60 +1,87 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from bmailout3.hostsharing.net ([176.9.242.62]:40127 "EHLO
-        bmailout3.hostsharing.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726077AbeHTUq7 (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Mon, 20 Aug 2018 16:46:59 -0400
-Date: Mon, 20 Aug 2018 19:22:13 +0200
-From: Lukas Wunner <lukas@wunner.de>
-To: Sinan Kaya <okaya@kernel.org>
-Cc: linux-pci@vger.kernel.org, Bjorn Helgaas <bhelgaas@google.com>,
-        Mika Westerberg <mika.westerberg@linux.intel.com>,
-        Oza Pawandeep <poza@codeaurora.org>,
-        Keith Busch <keith.busch@intel.com>,
-        open list <linux-kernel@vger.kernel.org>
-Subject: Re: [PATCH v8 1/2] PCI: pciehp: Ignore link events when there is a
- fatal error pending
-Message-ID: <20180820172213.tg4fle6ugi7lkhxx@wunner.de>
-References: <20180818065126.77912-1-okaya@kernel.org>
- <20180820092238.kvktwlovc64oa66e@wunner.de>
- <c207adfb-ba3d-700b-2935-aab2fe171e6b@kernel.org>
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+Subject: Re: [PATCH v6 8/9] net/mlx5: Do not call pcie_print_link_status()
+To: Leon Romanovsky <leon@kernel.org>
+Cc: Alexandru Gagniuc <mr.nuke.me@gmail.com>,
+        linux-pci@vger.kernel.org, bhelgaas@google.com,
+        jakub.kicinski@netronome.com, keith.busch@intel.com,
+        alex_gagniuc@dellteam.com, austin_bolen@dell.com,
+        shyam_iyer@dell.com, Ariel Elior <ariel.elior@cavium.com>,
+        everest-linux-l2@cavium.com,
+        "David S. Miller" <davem@davemloft.net>,
+        Michael Chan <michael.chan@broadcom.com>,
+        Ganesh Goudar <ganeshgr@chelsio.com>,
+        Jeff Kirsher <jeffrey.t.kirsher@intel.com>,
+        Tariq Toukan <tariqt@mellanox.com>,
+        Saeed Mahameed <saeedm@mellanox.com>,
+        Dirk van der Merwe <dirk.vandermerwe@netronome.com>,
+        netdev@vger.kernel.org, linux-kernel@vger.kernel.org,
+        intel-wired-lan@lists.osuosl.org, linux-rdma@vger.kernel.org,
+        oss-drivers@netronome.com
+References: <CAErSpo4PK+SQLNfdkLNt9eLc7bpbxbkZCsa8T-tQpid601n0SQ@mail.gmail.com>
+ <20180806232600.25694-1-mr.nuke.me@gmail.com>
+ <20180806232600.25694-8-mr.nuke.me@gmail.com>
+ <20180808060848.GQ13378@mtr-leonro.mtl.com>
+ <05056a70-ee78-ea3c-0b9b-6d64a8663b11@mellanox.com>
+ <20180808154142.GZ13378@mtr-leonro.mtl.com>
+From: Tal Gilboa <talgi@mellanox.com>
+Message-ID: <5578cd9a-e4f0-85ab-4a86-bfa23eec136c@mellanox.com>
+Date: Wed, 8 Aug 2018 18:56:29 +0300
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <c207adfb-ba3d-700b-2935-aab2fe171e6b@kernel.org>
-Sender: linux-pci-owner@vger.kernel.org
+In-Reply-To: <20180808154142.GZ13378@mtr-leonro.mtl.com>
+Content-Type: text/plain; charset=windows-1252; format=flowed
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Mon, Aug 20, 2018 at 12:59:05PM -0400, Sinan Kaya wrote:
-> On 8/20/2018 5:22 AM, Lukas Wunner wrote:
-> > > +
-> > This differs from v7 of the patch in that*any*  fatal error, not just
-> > a Surprise Link Down, results in pciehp waiting for the error to clear.
-> > 
-> > I'm wondering if that's safe:  Theoretically, the user might quickly
-> > swap the card in the slot during, say, a Completion Timeout Error,
-> > and with this patch pciehp would carry on as if nothing happened.
+On 8/8/2018 6:41 PM, Leon Romanovsky wrote:
+> On Wed, Aug 08, 2018 at 05:23:12PM +0300, Tal Gilboa wrote:
+>> On 8/8/2018 9:08 AM, Leon Romanovsky wrote:
+>>> On Mon, Aug 06, 2018 at 06:25:42PM -0500, Alexandru Gagniuc wrote:
+>>>> This is now done by the PCI core to warn of sub-optimal bandwidth.
+>>>>
+>>>> Signed-off-by: Alexandru Gagniuc <mr.nuke.me@gmail.com>
+>>>> ---
+>>>>    drivers/net/ethernet/mellanox/mlx5/core/main.c | 4 ----
+>>>>    1 file changed, 4 deletions(-)
+>>>>
+>>>
+>>> Thanks,
+>>> Reviewed-by: Leon Romanovsky <leonro@mellanox.com>
+>>>
+>>
+>> Alex,
+>> I loaded mlx5 driver with and without these series. The report in dmesg is
+>> now missing. From what I understood, the status should be reported at least
+>> once, even if everything is in order.
 > 
-> Functionally both patches are identical. The v7 was still allowing
-> AER/DPC to handle all fatal error events except Surprise Link Down.
+> It is not what this series is doing and it removes prints completely if
+> fabric can deliver more than card is capable.
 > 
-> Now, second patch (v8 2/2) is masking the surprise link down event
-> as we have talked before. Therefore, there is no need to filter
-> out incoming errors by reading the status register and masking the
-> unwanted bits.
-
-Ok, missed that.
-
-
-> Just to clarify something, this patch will wait for only the FATAL
-> error events to be handled by the error handling services only.
+>> We need this functionality to stay.
 > 
-> Completion Timeout is a NONFATAL error event by default unless
-> somebody tweaks the severity bits.
+> I'm not sure that you need this information in driver's dmesg output,
+> but most probably something globally visible and accessible per-pci
+> device.
+
+Currently we have users that look for it. If we remove the dmesg print 
+we need this to be reported elsewhere. Adding it to sysfs for example 
+should be a valid solution for our case.
+
 > 
-> Anyhow, all FATAL errors cause one sort of link down either
-> initiated by software (AER) or hardware (DPC).
-> Therefore, hotplug driver will observe a link down event and
-> AER/DPC needs to handle the event as usual.
-
-Thanks for the clarification.
-
-Lukas
+>>
+>> net-next (dmesg output for 07:00.0):
+>> [270498.625351] mlx5_core 0000:07:00.0: firmware version: 14.22.4020
+>> [270498.632130] mlx5_core 0000:07:00.0: 63.008 Gb/s available PCIe bandwidth
+>> (8 GT/s x8 link)
+>> [270499.169533] (0000:07:00.0): E-Switch: Total vports 9, per vport: max
+>> uc(1024) max mc(16384)
+>> [270499.182358] mlx5_core 0000:07:00.0: Port module event: module 0, Cable
+>> plugged
+>>
+>> net-next + patches (dmesg output for 07:00.0):
+>> [  331.608472] mlx5_core 0000:07:00.0: firmware version: 14.22.4020
+>> [  332.564938] (0000:07:00.0): E-Switch: Total vports 9, per vport: max
+>> uc(1024) max mc(16384)
+>> [  332.616271] mlx5_core 0000:07:00.0: Port module event: module 0, Cable
+>> plugged
+>>
+>>
