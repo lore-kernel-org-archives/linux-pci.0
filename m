@@ -1,56 +1,72 @@
-Return-Path: <linux-nvme-bounces+bjorn=helgaas.com@lists.infradead.org>
-Return-Path: <linux-nvme-bounces+bjorn=helgaas.com@lists.infradead.org>
-To: =?UTF-8?Q?Christian_K=c3=b6nig?= <christian.koenig@amd.com>,
- linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
- linux-nvme@lists.infradead.org, linux-rdma@vger.kernel.org,
- linux-nvdimm@lists.01.org, linux-block@vger.kernel.org
-References: <20180830185352.3369-1-logang@deltatee.com>
- <20180830185352.3369-7-logang@deltatee.com>
- <98bff500-4e4c-3a34-6762-16ef4b076d90@amd.com>
-From: Logan Gunthorpe <logang@deltatee.com>
-Message-ID: <6820d451-9591-1979-00bf-60c65fc4f136@deltatee.com>
-Date: Fri, 31 Aug 2018 09:51:06 -0600
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+From: Leonard Crestez <leonard.crestez@nxp.com>
+To: "lorenzo.pieralisi@arm.com" <lorenzo.pieralisi@arm.com>
+Subject: Re: [PATCH v3 0/2] PCI: imx: Initial imx7d pm support
+Date: Wed, 8 Aug 2018 11:37:14 +0000
+Message-ID: <a5556be9a5f62ea0472a1a2336bce8d71df0dcaa.camel@nxp.com>
+References: <cover.1532448745.git.leonard.crestez@nxp.com>
+ <bac2cb70b16d81f589915fc0900126b516414243.camel@nxp.com>
+ <20180808111429.GC25150@e107981-ln.cambridge.arm.com>
+In-Reply-To: <20180808111429.GC25150@e107981-ln.cambridge.arm.com>
 MIME-Version: 1.0
-In-Reply-To: <98bff500-4e4c-3a34-6762-16ef4b076d90@amd.com>
-Subject: Re: [PATCH v5 06/13] PCI/P2PDMA: Add P2P DMA driver writer's
- documentation
-List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-nvme>,
- <mailto:linux-nvme-request@lists.infradead.org?subject=unsubscribe>
-List-Archive: <http://lists.infradead.org/pipermail/linux-nvme/>
-List-Post: <mailto:linux-nvme@lists.infradead.org>
-List-Help: <mailto:linux-nvme-request@lists.infradead.org?subject=help>
-List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-nvme>,
- <mailto:linux-nvme-request@lists.infradead.org?subject=subscribe>
-Cc: Sagi Grimberg <sagi@grimberg.me>, Jonathan Corbet <corbet@lwn.net>,
- Benjamin Herrenschmidt <benh@kernel.crashing.org>,
- Alex Williamson <alex.williamson@redhat.com>,
- Stephen Bates <sbates@raithlin.com>, Keith Busch <keith.busch@intel.com>,
- =?UTF-8?B?SsOpcsO0bWUgR2xpc3Nl?= <jglisse@redhat.com>,
- Jason Gunthorpe <jgg@mellanox.com>, Bjorn Helgaas <bhelgaas@google.com>,
- Max Gurtovoy <maxg@mellanox.com>, Dan Williams <dan.j.williams@intel.com>,
- Christoph Hellwig <hch@lst.de>
-Content-Type: text/plain; charset="utf-8"
-Sender: "Linux-nvme" <linux-nvme-bounces@lists.infradead.org>
-Errors-To: linux-nvme-bounces+bjorn=helgaas.com@lists.infradead.org
+List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
+List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
+List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
+List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
+List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
+Cc: "A.s. Dong" <aisheng.dong@nxp.com>,
+ "Joao.Pinto@synopsys.com" <Joao.Pinto@synopsys.com>,
+ Richard Zhu <hongxing.zhu@nxp.com>,
+ "kernel@pengutronix.de" <kernel@pengutronix.de>,
+ Anson Huang <anson.huang@nxp.com>,
+ "andrew.smirnov@gmail.com" <andrew.smirnov@gmail.com>,
+ "jingoohan1@gmail.com" <jingoohan1@gmail.com>,
+ "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+ "bhelgaas@google.com" <bhelgaas@google.com>, dl-linux-imx <linux-imx@nxp.com>,
+ "p.zabel@pengutronix.de" <p.zabel@pengutronix.de>,
+ "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+ Fabio Estevam <fabio.estevam@nxp.com>,
+ "shawnguo@kernel.org" <shawnguo@kernel.org>,
+ "linux-arm-kernel@lists.infradead.org" <linux-arm-kernel@lists.infradead.org>,
+ "l.stach@pengutronix.de" <l.stach@pengutronix.de>
+Content-Type: text/plain; charset="us-ascii"
+Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
+Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
 List-ID: <linux-pci.vger.kernel.org>
 
-CgpPbiAzMS8wOC8xOCAwMjowOCBBTSwgQ2hyaXN0aWFuIEvDtm5pZyB3cm90ZToKPj4gK09uZSBv
-ZiB0aGUgYmlnZ2VzdCBpc3N1ZXMgaXMgdGhhdCBQQ0kgZG9lc24ndCByZXF1aXJlIGZvcndhcmRp
-bmcKPj4gK3RyYW5zYWN0aW9ucyBiZXR3ZWVuIGhpZXJhcmNoeSBkb21haW5zLCBhbmQgaW4gUENJ
-ZSwgZWFjaCBSb290IFBvcnQKPj4gK2RlZmluZXMgYSBzZXBhcmF0ZSBoaWVyYXJjaHkgZG9tYWlu
-LiBUbyBtYWtlIHRoaW5ncyB3b3JzZSwgdGhlcmUgaXMgbm8KPj4gK3NpbXBsZSB3YXkgdG8gZGV0
-ZXJtaW5lIGlmIGEgZ2l2ZW4gUm9vdCBDb21wbGV4IHN1cHBvcnRzIHRoaXMgb3Igbm90Lgo+PiAr
-KFNlZSBQQ0llIHI0LjAsIHNlYyAxLjMuMSkuIFRoZXJlZm9yZSwgYXMgb2YgdGhpcyB3cml0aW5n
-LCB0aGUga2VybmVsCj4+ICtvbmx5IHN1cHBvcnRzIGRvaW5nIFAyUCB3aGVuIHRoZSBlbmRwb2lu
-dHMgaW52b2x2ZWQgYXJlIGFsbCBiZWhpbmQgdGhlCj4+ICtzYW1lIFBDSSBicmlkZ2UsIGFzIHN1
-Y2ggZGV2aWNlcyBhcmUgYWxsIGluIHRoZSBzYW1lIFBDSSBoaWVyYXJjaHkKPj4gK2RvbWFpbiwg
-YW5kIHRoZSBzcGVjIGd1YXJhbnRlZXMgdGhhdCBhbGwgdHJhbnNhY2F0aW9ucyB3aXRoaW4gdGhl
-Cj4+ICtoaWVyYXJjaHkgd2lsbCBiZSByb3V0YWJsZSwgYnV0IGl0IGRvZXMgbm90IHJlcXVpcmUg
-cm91dGluZwo+PiArYmV0d2VlbiBoaWVyYXJjaGllcy4KPiAKPiBDYW4gd2UgYWRkIGEga2VybmVs
-IGNvbW1hbmQgbGluZSBzd2l0Y2ggYW5kIGEgd2hpdGVsaXN0IHRvIGVuYWJsZSBQMlAgCj4gYmV0
-d2VlbiBzZXBhcmF0ZSBoaWVyYXJjaGllcz8KCkluIGZ1dHVyZSB3b3JrLCB5ZXMuIEJ1dCBub3Qg
-Zm9yIHRoaXMgcGF0Y2hzZXQuIFRoaXMgaXMgZGVmaW5pdGVseSB0aGUKd2F5IEkgc2VlIHRoaW5n
-cyBnb2luZywgYnV0IHdlJ3ZlIGNob3NlbiB0byBzdGFydCB3aXRoIHdoYXQgd2UndmUgcHJlc2Vu
-dGVkLgoKTG9nYW4KCl9fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19f
-X19fCkxpbnV4LW52bWUgbWFpbGluZyBsaXN0CkxpbnV4LW52bWVAbGlzdHMuaW5mcmFkZWFkLm9y
-ZwpodHRwOi8vbGlzdHMuaW5mcmFkZWFkLm9yZy9tYWlsbWFuL2xpc3RpbmZvL2xpbnV4LW52bWUK
+On Wed, 2018-08-08 at 12:14 +0100, Lorenzo Pieralisi wrote:
+> On Wed, Aug 08, 2018 at 10:53:52AM +0000, Leonard Crestez wrote:
+> > On Tue, 2018-07-24 at 19:14 +0300, Leonard Crestez wrote:
+> > > Changes since v2:
+> > >  * Print with dev_info if link fails on resume (Lucas)
+> > >  * Add a comment on imx7d pci irq mappings (Andrey)
+> > >  * Make imx6_pcie_ltssm_disable print an error on IMX6Q (Lucas)
+> > > 
+> > > The ltssm_disable does not return an error because it can't be usefully
+> > > handled, reversing partial suspend is a nightmare and unlikely to work.
+> > > 
+> > >  * Drop "reset: imx7: Fix always writing bits as 0 (accepted by Philipp)
+> > > 
+> > > Series is against linux-next tag next-20180724 where the reset patch was
+> > > already accepted. The imx7d.dtsi patch is also useful standalone.
+> > > 
+> > > Link to v2: https://emea01.safelinks.protection.outlook.com/?url=https%3A%2F%2Flkml.org%2Flkml%2F2018%2F7%2F20%2F472&amp;data=02%7C01%7Cleonard.crestez%40nxp.com%7Cc1e98512a50246c457a208d5fd2021dc%7C686ea1d3bc2b4c6fa92cd99c5c301635%7C0%7C0%7C636693236811248777&amp;sdata=gxs1%2BfevIaBmQCVcJLUK41ml8CK2zLg%2FFKGGV%2F%2FHSLQ%3D&amp;reserved=0
+> > 
+> > This is a gentle reminder that this series was reviewed by Lucas two
+> > weeks ago but not yet included.
+> 
+> Does this series have a functional dependency on the reset fix ? If yes
+> we can have a bisection proplem depending on which tree gets merged
+> first.
+
+Yes, without the reset fix I expect hangs.
+
+Maybe the reset fix should be pulled in the pci tree? I don't know how
+these issues are sorted out.
+_______________________________________________
+linux-arm-kernel mailing list
+linux-arm-kernel@lists.infradead.org
+http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
