@@ -1,74 +1,64 @@
-Return-Path: <SRS0=oEMe=K7=gigaio.com=kchow@kernel.org>
-Return-Path: <SRS0=oEMe=K7=gigaio.com=kchow@kernel.org>
-Subject: Re: IOAT DMA w/IOMMU
-To: Logan Gunthorpe <logang@deltatee.com>, Eric Pilmore <epilmore@gigaio.com>
-Cc: Bjorn Helgaas <helgaas@kernel.org>, linux-pci@vger.kernel.org,
- David Woodhouse <dwmw2@infradead.org>,
- Alex Williamson <alex.williamson@redhat.com>,
- iommu@lists.linux-foundation.org,
- "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
-References: <CAOQPn8soxubJxb=vp7kz+AM6LbPH5y+_Nx0Vzv7rjV_nMMqEmA@mail.gmail.com>
- <20180809184331.GB113140@bhelgaas-glaptop.roam.corp.google.com>
- <CAOQPn8uPYKai49WYPqZp2wNd5of=0hUvPOHEtqP56RZu-hcjuw@mail.gmail.com>
- <b54899a8-a144-e8e0-9880-1800c4657b95@deltatee.com>
- <CAOQPn8tSNN+3igN-kMcQH46w_a9p6T+S7=c8CLREMLxr1kaTXQ@mail.gmail.com>
- <7068db44-af31-4462-f966-2dd2340ba0f0@deltatee.com>
-From: Kit Chow <kchow@gigaio.com>
-Message-ID: <695826a6-e10c-5a30-a51f-7cc61ba6e640@gigaio.com>
-Date: Thu, 16 Aug 2018 10:16:14 -0700
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Date: Wed, 8 Aug 2018 15:50:17 +0100
+From: Catalin Marinas <catalin.marinas@arm.com>
+To: David Laight <David.Laight@ACULAB.COM>
+Subject: Re: framebuffer corruption due to overlapping stp instructions on
+ arm64
+Message-ID: <20180808145017.GE24736@iMac.local>
+References: <CAKv+Gu8DeuksZhk1g3q_msSKV_hSY_2e1uzVten9-oGO3j9Sqg@mail.gmail.com>
+ <20180803094129.GB17798@arm.com>
+ <alpine.LRH.2.02.1808031235410.31584@file01.intranet.prod.int.rdu2.redhat.com>
+ <CAKv+Gu-aNFh1fsr_05SEwDp99n3pLrguP7=tEcFQPNY53=K7Fw@mail.gmail.com>
+ <alpine.LRH.2.02.1808031424140.14030@file01.intranet.prod.int.rdu2.redhat.com>
+ <CAHCPf3s-+Qf=WBZz1KpisDMG3520jCUh8PLAO3PHa4jdt8kCTw@mail.gmail.com>
+ <20180808121641.GB24736@iMac.local>
+ <b1de49af14d941979977af07dc81e1c2@AcuMS.aculab.com>
+ <alpine.LRH.2.02.1808080939180.3325@file01.intranet.prod.int.rdu2.redhat.com>
+ <19c70d2a0b224db78f72dd316ad006b8@AcuMS.aculab.com>
 MIME-Version: 1.0
-In-Reply-To: <7068db44-af31-4462-f966-2dd2340ba0f0@deltatee.com>
-Content-Type: text/plain; charset=utf-8; format=flowed
+In-Reply-To: <19c70d2a0b224db78f72dd316ad006b8@AcuMS.aculab.com>
+List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
+List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
+List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
+List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
+List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
+Cc: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>,
+ Joao Pinto <Joao.Pinto@synopsys.com>,
+ Ard Biesheuvel <ard.biesheuvel@linaro.org>,
+ linux-pci <linux-pci@vger.kernel.org>, Will Deacon <will.deacon@arm.com>,
+ Russell King <linux@armlinux.org.uk>,
+ Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
+ 'Mikulas Patocka' <mpatocka@redhat.com>, Matt Sealey <neko@bakuhatsu.net>,
+ Jingoo Han <jingoohan1@gmail.com>,
+ linux-arm-kernel <linux-arm-kernel@lists.infradead.org>
+Content-Type: text/plain; charset="us-ascii"
+Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
+Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
 List-ID: <linux-pci.vger.kernel.org>
 
+On Wed, Aug 08, 2018 at 02:26:11PM +0000, David Laight wrote:
+> From: Mikulas Patocka
+> > Sent: 08 August 2018 14:47
+> ...
+> > The problem on ARM is that I see data corruption when the overlapping
+> > unaligned writes are done just by a single core.
+> 
+> Is this a sequence of unaligned writes (that shouldn't modify the
+> same physical locations) or an aligned write followed by an
+> unaligned one that updates part of the earlier write.
+> (Or the opposite order?)
 
-On 08/09/2018 02:36 PM, Logan Gunthorpe wrote:
->
-> On 09/08/18 03:31 PM, Eric Pilmore wrote:
->> On Thu, Aug 9, 2018 at 12:35 PM, Logan Gunthorpe <logang@deltatee.com> wrote:
->>> Hey,
->>>
->>> On 09/08/18 12:51 PM, Eric Pilmore wrote:
->>>>>> Was wondering if anybody here has used IOAT DMA engines with an
->>>>>> IOMMU turned on (Xeon based system)? My specific question is really
->>>>>> whether it is possible to DMA (w/IOAT) to a PCI BAR address as the
->>>>>> destination without having to map that address to the IOVA space of
->>>>>> the DMA engine first (assuming the IOMMU is on)?
->>> I haven't tested this scenario but my guess would be that IOAT would
->>> indeed go through the IOMMU and the PCI BAR address would need to be
->>> properly mapped into the IOAT's IOVA. The fact that you see DMAR errors
->>> is probably a good indication that this is the case. I really don't know
->>> why you'd want to DMA something without mapping it.
->> The thought was to avoid paying the price of having to go through yet another
->> translation and also because it was not believed to be necessary anyway since
->> the DMA device could go straight to a PCI BAR address without the need for a
->> mapping.  We have been playing with two DMA engines, IOAT and PLX. The
->> PLX does not have any issues going straight to the PCI BAR address, but unlike
->> IOAT, PLX is sitting "in the PCI tree".
-> Yes, you can do true P2P transactions with the PLX DMA engine. (Though
-> you do have to be careful as technically you need to translate to a PCI
-> bus address not the CPU physical address which are the same on x86; and
-> you need to watch that ACS doesn't mess it up).
->
-> It doesn't sound like it's possible to avoid the IOMMU when using the
-> IOAT so you need the mapping. I would not expect the extra translation
-> in the IOMMU to be noticeable, performance wise.
->
-> Logan
-Hi Logan,
+In the memcpy() case, there can be a sequence of unaligned writes but
+they would not modify the same byte (so no overlapping address at the
+byte level).
 
-Based on Dave Jiang's suggestion, I am looking into upstreaming the
-ntb change to dma map the pci bar address in ntb_async_tx_submit() 
-(along with
-the intel iommu change to support dma_map_resource).
+-- 
+Catalin
 
-I only have access to intel hosts for testing (and possibly an AMD
-host currently collecting dust) and am not sure how to go about getting
-the proper test coverage for other architectures.
-
-Any suggestions? Do you anticipate any issues with dma mapping the pci bar
-address in ntb_async_tx_submit on non-x86 archs?  Do you or know of folks
-who have ntb test setups with non-x86 hosts who might be able to help?
-
-Thanks
-Kit
+_______________________________________________
+linux-arm-kernel mailing list
+linux-arm-kernel@lists.infradead.org
+http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
