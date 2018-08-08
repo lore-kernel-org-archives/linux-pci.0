@@ -1,73 +1,93 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.29.99]:37846 "EHLO mail.kernel.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1726542AbeHHI05 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Wed, 8 Aug 2018 04:26:57 -0400
-Date: Wed, 8 Aug 2018 09:08:48 +0300
-From: Leon Romanovsky <leon@kernel.org>
-To: Alexandru Gagniuc <mr.nuke.me@gmail.com>
-Cc: linux-pci@vger.kernel.org, bhelgaas@google.com,
-        jakub.kicinski@netronome.com, keith.busch@intel.com,
-        alex_gagniuc@dellteam.com, austin_bolen@dell.com,
-        shyam_iyer@dell.com, Ariel Elior <ariel.elior@cavium.com>,
-        everest-linux-l2@cavium.com,
-        "David S. Miller" <davem@davemloft.net>,
-        Michael Chan <michael.chan@broadcom.com>,
-        Ganesh Goudar <ganeshgr@chelsio.com>,
-        Jeff Kirsher <jeffrey.t.kirsher@intel.com>,
-        Tariq Toukan <tariqt@mellanox.com>,
-        Saeed Mahameed <saeedm@mellanox.com>,
-        Dirk van der Merwe <dirk.vandermerwe@netronome.com>,
-        netdev@vger.kernel.org, linux-kernel@vger.kernel.org,
-        intel-wired-lan@lists.osuosl.org, linux-rdma@vger.kernel.org,
-        oss-drivers@netronome.com
-Subject: Re: [PATCH v6 8/9] net/mlx5: Do not call pcie_print_link_status()
-Message-ID: <20180808060848.GQ13378@mtr-leonro.mtl.com>
-References: <CAErSpo4PK+SQLNfdkLNt9eLc7bpbxbkZCsa8T-tQpid601n0SQ@mail.gmail.com>
- <20180806232600.25694-1-mr.nuke.me@gmail.com>
- <20180806232600.25694-8-mr.nuke.me@gmail.com>
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
 MIME-Version: 1.0
-Content-Type: multipart/signed; micalg=pgp-sha1;
-        protocol="application/pgp-signature"; boundary="2hMgfIw2X+zgXrFs"
-In-Reply-To: <20180806232600.25694-8-mr.nuke.me@gmail.com>
-Sender: linux-pci-owner@vger.kernel.org
+References: <CAKv+Gu8DeuksZhk1g3q_msSKV_hSY_2e1uzVten9-oGO3j9Sqg@mail.gmail.com>
+ <20180803094129.GB17798@arm.com>
+ <alpine.LRH.2.02.1808031235410.31584@file01.intranet.prod.int.rdu2.redhat.com>
+ <CAKv+Gu-aNFh1fsr_05SEwDp99n3pLrguP7=tEcFQPNY53=K7Fw@mail.gmail.com>
+ <alpine.LRH.2.02.1808031424140.14030@file01.intranet.prod.int.rdu2.redhat.com>
+ <CAHCPf3s-+Qf=WBZz1KpisDMG3520jCUh8PLAO3PHa4jdt8kCTw@mail.gmail.com>
+ <20180808121641.GB24736@iMac.local>
+ <b1de49af14d941979977af07dc81e1c2@AcuMS.aculab.com>
+ <alpine.LRH.2.02.1808080939180.3325@file01.intranet.prod.int.rdu2.redhat.com>
+ <19c70d2a0b224db78f72dd316ad006b8@AcuMS.aculab.com>
+ <20180808145017.GE24736@iMac.local>
+ <alpine.LRH.2.02.1808081215120.31259@file01.intranet.prod.int.rdu2.redhat.com>
+In-Reply-To: <alpine.LRH.2.02.1808081215120.31259@file01.intranet.prod.int.rdu2.redhat.com>
+From: Arnd Bergmann <arnd@arndb.de>
+Date: Wed, 8 Aug 2018 18:31:09 +0200
+Message-ID: <CAK8P3a3iURkU8LThO3xLtaNjkYArdpw+6_WqJQog4EgrcQy23g@mail.gmail.com>
+Subject: Re: framebuffer corruption due to overlapping stp instructions on
+ arm64
+To: Mikulas Patocka <mpatocka@redhat.com>
+List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
+List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
+List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
+List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
+List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
+Cc: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>,
+ Joao Pinto <Joao.Pinto@synopsys.com>,
+ Ard Biesheuvel <ard.biesheuvel@linaro.org>,
+ Catalin Marinas <catalin.marinas@arm.com>, Will Deacon <will.deacon@arm.com>,
+ Russell King - ARM Linux <linux@armlinux.org.uk>,
+ Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
+ David Laight <David.Laight@aculab.com>, neko@bakuhatsu.net,
+ linux-pci <linux-pci@vger.kernel.org>, Jingoo Han <jingoohan1@gmail.com>,
+ Linux ARM <linux-arm-kernel@lists.infradead.org>
+Content-Type: text/plain; charset="us-ascii"
+Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
+Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
 List-ID: <linux-pci.vger.kernel.org>
 
-
---2hMgfIw2X+zgXrFs
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-
-On Mon, Aug 06, 2018 at 06:25:42PM -0500, Alexandru Gagniuc wrote:
-> This is now done by the PCI core to warn of sub-optimal bandwidth.
+On Wed, Aug 8, 2018 at 6:22 PM Mikulas Patocka <mpatocka@redhat.com> wrote:
 >
-> Signed-off-by: Alexandru Gagniuc <mr.nuke.me@gmail.com>
-> ---
->  drivers/net/ethernet/mellanox/mlx5/core/main.c | 4 ----
->  1 file changed, 4 deletions(-)
+> On Wed, 8 Aug 2018, Catalin Marinas wrote:
 >
+> > On Wed, Aug 08, 2018 at 02:26:11PM +0000, David Laight wrote:
+> > > From: Mikulas Patocka
+> > > > Sent: 08 August 2018 14:47
+> > > ...
+> > > > The problem on ARM is that I see data corruption when the overlapping
+> > > > unaligned writes are done just by a single core.
+> > >
+> > > Is this a sequence of unaligned writes (that shouldn't modify the
+> > > same physical locations) or an aligned write followed by an
+> > > unaligned one that updates part of the earlier write.
+> > > (Or the opposite order?)
+> >
+> > In the memcpy() case, there can be a sequence of unaligned writes but
+> > they would not modify the same byte (so no overlapping address at the
+> > byte level).
+>
+> They do modify the same byte, but with the same value. Suppose that you
+> want to copy a piece of data that is between 8 and 16 bytes long. You can
+> do this:
+>
+> add src_end, src, len
+> add dst_end, dst, len
+> ldr x0, [src]
+> ldr x1, [src_end - 8]
+> str x0, [dst]
+> str x1, [dst_end - 8]
+>
+> The ARM64 memcpy uses this trick heavily in order to reduce branching, and
+> this is what makes the PCIe controller choke.
 
-Thanks,
-Reviewed-by: Leon Romanovsky <leonro@mellanox.com>
+So when a single unaligned 'stp' gets translated into a PCIe with TLP
+with length=5 (20 bytes) and LastBE = ~1stBE, write combining the
+overlapping stores gives us a TLP with a longer length (5..8 for two
+stores), and byte-enable bits that are not exactly a complement.
 
---2hMgfIw2X+zgXrFs
-Content-Type: application/pgp-signature; name="signature.asc"
+If the explanation is just that of the byte-enable settings of the merged
+TLP are wrong, maybe the problem is that one of them is always
+the complement of the other, which would work for power-of-two
+length but not the odd length of the TLP post write-combining?
 
------BEGIN PGP SIGNATURE-----
+      Arnd
 
-iQIcBAEBAgAGBQJbaojwAAoJEORje4g2clin/HIP/2W8reNA2ST0qw9ktcqoAtM5
-XQKIgyD8DVxLkj0MjeQ+bzCpWwHzhNzXWMp+roOdvwhZSFav1uW+KyFidPn+r/0Q
-6OR57qkoWv0Z/+35kFu5XWcSXg0g+3AzdukC42x6icE9zJKHzFIOYP5Q4AxUwNG0
-ucAaouLXgioVQEyl64H7LgTzQNaUXPNb4zX8SaEtPBBeE1q0bo1LqBLLfUxRlGb8
-LcgkPpKcDoLM5MKZVWmPGPR2S0imdDgt7K/1d8QvW7obq02dkwCLUG6DRw2qjLdC
-K9heg0zilZlS2/fpzxIgrBTmdrSVxTU3ThEYF6h5PHcJTAZ3QNo8BYOmpG0Htic3
-/QT317O6cM/gEZbySsBxGMJHa/li/5+Btv7e1B1lsoARsIuZsuEYy0giK5c1rqx0
-pgD2miV4TnJdOmqvImtsrLQQF43PE9oemIYvhRIuItEDPWBEU6eElnQoGiH23RXE
-l4X1NVruTJzEpEkirzpkdQ1GdsL82AXeil1QO0iD/f4+4j04mDbzRoVeYFLO/OM1
-qRTZhfvydrbQIzP4zw9yWVqxbqHiRoEMjyY0vfD0lvnhq+8shcWFeFQLzBGOXDSn
-sqFSL7sFxAG3VcnWYwEiBvacuuEr4vSMCgbm9rvhBwXzNFp5XT3v02eYvgQ9P6Lr
-ph6iCl9z86ww3oO/AGmo
-=I8Ry
------END PGP SIGNATURE-----
-
---2hMgfIw2X+zgXrFs--
+_______________________________________________
+linux-arm-kernel mailing list
+linux-arm-kernel@lists.infradead.org
+http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
