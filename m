@@ -1,32 +1,60 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.29.99]:49378 "EHLO mail.kernel.org"
+Received: from mail.kernel.org ([198.145.29.99]:46024 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1726436AbeHTCgv (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Sun, 19 Aug 2018 22:36:51 -0400
-Subject: Re: [PATCH v8 2/2] PCI: pciehp: Mask AER surprise link down error if
- hotplug is enabled
-To: linux-pci@vger.kernel.org
-Cc: Bjorn Helgaas <bhelgaas@google.com>,
-        Lukas Wunner <lukas@wunner.de>,
-        Andy Shevchenko <andy.shevchenko@gmail.com>,
-        Mika Westerberg <mika.westerberg@linux.intel.com>,
-        open list <linux-kernel@vger.kernel.org>
-References: <20180818065126.77912-1-okaya@kernel.org>
- <20180818065126.77912-2-okaya@kernel.org>
-From: Sinan Kaya <okaya@kernel.org>
-Message-ID: <75a82f6d-10dc-d980-8abf-8e1410f866cb@kernel.org>
-Date: Sun, 19 Aug 2018 19:23:36 -0400
+        id S1726158AbeHHE1n (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Wed, 8 Aug 2018 00:27:43 -0400
+Date: Tue, 7 Aug 2018 21:10:25 -0500
+From: Bjorn Helgaas <helgaas@kernel.org>
+To: Ray Jui <ray.jui@broadcom.com>
+Cc: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
+        Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org,
+        Tomasz Nowicki <tn@semihalf.com>,
+        Vladimir Olovyannikov <vladimir.olovyannikov@broadcom.com>,
+        BCM Kernel Feedback <bcm-kernel-feedback-list@broadcom.com>
+Subject: Re: [RFC] ARM64, PCIe, annd ACPI
+Message-ID: <20180808021025.GC49411@bhelgaas-glaptop.roam.corp.google.com>
+References: <89484aa0-08c4-0cff-500d-407d21e2f5fd@broadcom.com>
 MIME-Version: 1.0
-In-Reply-To: <20180818065126.77912-2-okaya@kernel.org>
-Content-Type: text/plain; charset=utf-8; format=flowed
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <89484aa0-08c4-0cff-500d-407d21e2f5fd@broadcom.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 8/18/2018 2:51 AM, Sinan Kaya wrote:
->   	cleanup_slot(ctrl);
-> +	pciehp_control_surprise_error(ctrl, true);
+On Tue, Aug 07, 2018 at 05:10:15PM -0700, Ray Jui wrote:
+> Hi Lorenzo/Bjorn,
+> 
+> I have a question on PCIe controller APCI support on ARM64 based systems.
+> 
+> If my understanding of the implementation of "pci_acpi_scan_root" under
+> "arch/arm64/kernel/pci.c" is correct, it appears
+> "pci_acpi_setup_ecam_mapping" is called within "pci_acpi_scan_root".
+> 
+> Does that mean for a PCIe host controller on ARM64 to support ACPI, it needs
+> to support ECAM and MMIO based access to the configuration space registers?
+ 
+Yes.  In my opinion, a PCIe host controller is generally required to
+support ECAM even if the platform doesn't support ACPI.  I base this
+on PCIe r4.0, sec 7.2.2:
 
-I think I need to move this one line up but I'd like to see some input
-here and also ask for some testing.
+  For systems that are PC-compatible, or that do not implement a
+  processor-architecture-specific firmware interface standard that
+  allows access to the Configuration Space, the ECAM is required as
+  defined in this section.
 
-I don't have any hardware to test.
+> If the above statement is true, does it imply that any PCIe controller on
+> ARM64 that does not support MMIO based access to the config space register
+> cannot have ACPI support?
+
+We would treat that as a non-compliant platform that requires special
+quirks to work around the problem.  That does mean we have to add
+platform-specific quirks, which of course means we can't run an old
+kernel on a new platform that lacks standard ECAM.  There are several
+existing systems like this.
+
+The notes and examples here should be a place to start:
+
+  drivers/pci/controller/Makefile
+  drivers/pci/controller/dwc/Makefile
+  drivers/acpi/pci_mcfg.c
+
+Bjorn
