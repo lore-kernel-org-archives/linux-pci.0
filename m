@@ -1,259 +1,375 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.bootlin.com ([62.4.15.54]:50360 "EHLO mail.bootlin.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1732446AbeHCQfc (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Fri, 3 Aug 2018 12:35:32 -0400
-From: Thomas Petazzoni <thomas.petazzoni@bootlin.com>
-To: Bjorn Helgaas <bhelgaas@google.com>,
-        Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
-        linux-pci@vger.kernel.org
-Cc: Nadav Haklai <nadavh@marvell.com>,
-        Gregory Clement <gregory.clement@bootlin.com>,
-        =?UTF-8?q?Miqu=C3=A8l=20Raynal?= <miquel.raynal@bootlin.com>,
-        Maxime Chevallier <maxime.chevallier@bootlin.com>,
-        Antoine Tenart <antoine.tenart@bootlin.com>,
-        linux-arm-kernel@lists.infradead.org,
-        Thomas Petazzoni <thomas.petazzoni@bootlin.com>
-Subject: [PATCH v2 5/6] PCI: mvebu: Convert to use pci_host_bridge directly
-Date: Fri,  3 Aug 2018 16:38:47 +0200
-Message-Id: <20180803143848.21551-6-thomas.petazzoni@bootlin.com>
-In-Reply-To: <20180803143848.21551-1-thomas.petazzoni@bootlin.com>
-References: <20180803143848.21551-1-thomas.petazzoni@bootlin.com>
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <SRS0=b1Fv=KX=oracle.com=thomas.tai@kernel.org>
+Return-Path: <SRS0=b1Fv=KX=oracle.com=thomas.tai@kernel.org>
+Subject: Re: [PATCH] PCI: pciehp: Differentiate between surprise and safe
+ removal
+To: gokul cg <gokuljnpr@gmail.com>
+Cc: Lukas Wunner <lukas@wunner.de>,
+        Mika Westerberg <mika.westerberg@linux.intel.com>,
+        Bjorn Helgaas <helgaas@kernel.org>, Ashok Raj <ashok.raj@intel.com>,
+        Keith Busch <keith.busch@intel.com>, Yinghai Lu <yinghai@kernel.org>,
+        Sinan Kaya <okaya@kernel.org>, linux-pci@vger.kernel.org,
+        Alexandru Gagniuc <mr.nuke.me@gmail.com>
+References: <dac488604766f3dcb948e702210ecc381c4f907b.1533015755.git.lukas@wunner.de>
+ <20180801164358.GI2534@lahna.fi.intel.com> <20180801171512.GA28440@wunner.de>
+ <20180802072036.GN2534@lahna.fi.intel.com>
+ <CAFP4jM8AYG7hmkC_rYgXAfLoJmkJuW0e1UbgiayGrCPbb_yw8A@mail.gmail.com>
+ <20180802084657.GA21267@wunner.de> <20180802150749.GA31683@wunner.de>
+ <ebb526d2-0440-6bd7-765c-b7489d75d830@oracle.com>
+ <CAFP4jM_hqaHjHx1A4G05cX8p3gQGywkXLf1bNa+6Kpdzb_+bTw@mail.gmail.com>
+ <0afd8c9c-8552-4141-3ccf-9d90d4698a0b@oracle.com>
+ <CAFP4jM8fS3dRtCDNWcBd+X92tNu0G4orx-aycgKfdcRu5hFGdw@mail.gmail.com>
+From: Thomas Tai <thomas.tai@oracle.com>
+Message-ID: <2be77108-8db1-dbc4-7dd8-68b22ef9dd1c@oracle.com>
+Date: Wed, 8 Aug 2018 16:49:24 -0400
+MIME-Version: 1.0
+In-Reply-To: <CAFP4jM8fS3dRtCDNWcBd+X92tNu0G4orx-aycgKfdcRu5hFGdw@mail.gmail.com>
+Content-Type: text/plain; charset=utf-8; format=flowed
 List-ID: <linux-pci.vger.kernel.org>
 
-Rather than using the ARM-specific pci_common_init_dev() API, use the
-pci_host_bridge logic directly.
 
-Unfortunately, we can't use devm_of_pci_get_host_bridge_resources(),
-because the DT binding for describing PCIe apertures for this PCI
-controller is a bit special, and we cannot retrieve them from the
-'ranges' property. Therefore, we still have some special code to
-handle this.
 
-Signed-off-by: Thomas Petazzoni <thomas.petazzoni@bootlin.com>
----
- drivers/pci/controller/pci-mvebu.c | 136 +++++++++++++++++--------------------
- 1 file changed, 63 insertions(+), 73 deletions(-)
+On 08/08/2018 07:21 AM, gokul cg wrote:
+> Thanks Thomas,
+> 
+> With patch you suggested , panic has gone away from 
+> 'pci_find_next_ext_capability' as we not using inside aer_isr , but now 
+> it hits at pci_bus_read_config_dword.
 
-diff --git a/drivers/pci/controller/pci-mvebu.c b/drivers/pci/controller/pci-mvebu.c
-index 05f863435e5e..9055f03596ef 100644
---- a/drivers/pci/controller/pci-mvebu.c
-+++ b/drivers/pci/controller/pci-mvebu.c
-@@ -125,6 +125,7 @@ struct mvebu_pcie {
- 	struct platform_device *pdev;
- 	struct mvebu_pcie_port *ports;
- 	struct msi_controller *msi;
-+	struct list_head resources;
- 	struct resource io;
- 	struct resource realio;
- 	struct resource mem;
-@@ -800,7 +801,7 @@ static struct mvebu_pcie_port *mvebu_pcie_find_port(struct mvebu_pcie *pcie,
- static int mvebu_pcie_wr_conf(struct pci_bus *bus, u32 devfn,
- 			      int where, int size, u32 val)
- {
--	struct mvebu_pcie *pcie = sys_to_pcie(bus->sysdata);
-+	struct mvebu_pcie *pcie = bus->sysdata;
- 	struct mvebu_pcie_port *port;
- 	int ret;
- 
-@@ -826,7 +827,7 @@ static int mvebu_pcie_wr_conf(struct pci_bus *bus, u32 devfn,
- static int mvebu_pcie_rd_conf(struct pci_bus *bus, u32 devfn, int where,
- 			      int size, u32 *val)
- {
--	struct mvebu_pcie *pcie = sys_to_pcie(bus->sysdata);
-+	struct mvebu_pcie *pcie = bus->sysdata;
- 	struct mvebu_pcie_port *port;
- 	int ret;
- 
-@@ -857,36 +858,6 @@ static struct pci_ops mvebu_pcie_ops = {
- 	.write = mvebu_pcie_wr_conf,
- };
- 
--static int mvebu_pcie_setup(int nr, struct pci_sys_data *sys)
--{
--	struct mvebu_pcie *pcie = sys_to_pcie(sys);
--	int err, i;
--
--	pcie->mem.name = "PCI MEM";
--	pcie->realio.name = "PCI I/O";
--
--	if (resource_size(&pcie->realio) != 0)
--		pci_add_resource_offset(&sys->resources, &pcie->realio,
--					sys->io_offset);
--
--	pci_add_resource_offset(&sys->resources, &pcie->mem, sys->mem_offset);
--	pci_add_resource(&sys->resources, &pcie->busn);
--
--	err = devm_request_pci_bus_resources(&pcie->pdev->dev, &sys->resources);
--	if (err)
--		return 0;
--
--	for (i = 0; i < pcie->nports; i++) {
--		struct mvebu_pcie_port *port = &pcie->ports[i];
--
--		if (!port->base)
--			continue;
--		mvebu_pcie_setup_hw(port);
--	}
--
--	return 1;
--}
--
- static resource_size_t mvebu_pcie_align_resource(struct pci_dev *dev,
- 						 const struct resource *res,
- 						 resource_size_t start,
-@@ -917,26 +888,6 @@ static resource_size_t mvebu_pcie_align_resource(struct pci_dev *dev,
- 		return start;
- }
- 
--static void mvebu_pcie_enable(struct mvebu_pcie *pcie)
--{
--	struct hw_pci hw;
--
--	memset(&hw, 0, sizeof(hw));
--
--#ifdef CONFIG_PCI_MSI
--	hw.msi_ctrl = pcie->msi;
--#endif
--
--	hw.nr_controllers = 1;
--	hw.private_data   = (void **)&pcie;
--	hw.setup          = mvebu_pcie_setup;
--	hw.map_irq        = of_irq_parse_and_map_pci;
--	hw.ops            = &mvebu_pcie_ops;
--	hw.align_resource = mvebu_pcie_align_resource;
--
--	pci_common_init_dev(&pcie->pdev->dev, &hw);
--}
--
- /*
-  * Looks up the list of register addresses encoded into the reg =
-  * <...> property for one that matches the given port/lane. Once
-@@ -1190,28 +1141,39 @@ static void mvebu_pcie_powerdown(struct mvebu_pcie_port *port)
- 	clk_disable_unprepare(port->clk);
- }
- 
--static int mvebu_pcie_probe(struct platform_device *pdev)
-+/*
-+ * We can't use devm_of_pci_get_host_bridge_resources() because we
-+ * need to parse our special DT properties encoding the MEM and IO
-+ * apertures.
-+ */
-+static int mvebu_pcie_parse_request_resources(struct mvebu_pcie *pcie)
- {
--	struct device *dev = &pdev->dev;
--	struct mvebu_pcie *pcie;
-+	struct device *dev = &pcie->pdev->dev;
- 	struct device_node *np = dev->of_node;
--	struct device_node *child;
--	int num, i, ret;
-+	unsigned int i;
-+	int ret;
- 
--	pcie = devm_kzalloc(dev, sizeof(*pcie), GFP_KERNEL);
--	if (!pcie)
--		return -ENOMEM;
-+	INIT_LIST_HEAD(&pcie->resources);
- 
--	pcie->pdev = pdev;
--	platform_set_drvdata(pdev, pcie);
-+	/* Get the bus range */
-+	ret = of_pci_parse_bus_range(np, &pcie->busn);
-+	if (ret) {
-+		dev_err(dev, "failed to parse bus-range property: %d\n", ret);
-+		return ret;
-+	}
-+	pci_add_resource(&pcie->resources, &pcie->busn);
- 
--	/* Get the PCIe memory and I/O aperture */
-+	/* Get the PCIe memory aperture */
- 	mvebu_mbus_get_pcie_mem_aperture(&pcie->mem);
- 	if (resource_size(&pcie->mem) == 0) {
- 		dev_err(dev, "invalid memory aperture size\n");
- 		return -EINVAL;
- 	}
- 
-+	pcie->mem.name = "PCI MEM";
-+	pci_add_resource(&pcie->resources, &pcie->mem);
-+
-+	/* Get the PCIe IO aperture */
- 	mvebu_mbus_get_pcie_io_aperture(&pcie->io);
- 
- 	if (resource_size(&pcie->io) != 0) {
-@@ -1220,19 +1182,38 @@ static int mvebu_pcie_probe(struct platform_device *pdev)
- 		pcie->realio.end = min_t(resource_size_t,
- 					 IO_SPACE_LIMIT - SZ_64K,
- 					 resource_size(&pcie->io) - 1);
-+		pcie->realio.name = "PCI I/O";
- 
- 		for (i = 0; i < resource_size(&pcie->realio); i += SZ_64K)
- 			pci_ioremap_io(i, pcie->io.start + i);
--	} else
--		pcie->realio = pcie->io;
- 
--	/* Get the bus range */
--	ret = of_pci_parse_bus_range(np, &pcie->busn);
--	if (ret) {
--		dev_err(dev, "failed to parse bus-range property: %d\n", ret);
--		return ret;
-+		pci_add_resource(&pcie->resources, &pcie->realio);
- 	}
- 
-+	return devm_request_pci_bus_resources(dev, &pcie->resources);
-+}
-+
-+static int mvebu_pcie_probe(struct platform_device *pdev)
-+{
-+	struct device *dev = &pdev->dev;
-+	struct mvebu_pcie *pcie;
-+	struct pci_host_bridge *bridge;
-+	struct device_node *np = dev->of_node;
-+	struct device_node *child;
-+	int num, i, ret;
-+
-+	bridge = devm_pci_alloc_host_bridge(dev, sizeof(struct mvebu_pcie));
-+	if (!bridge)
-+		return -ENOMEM;
-+
-+	pcie = pci_host_bridge_priv(bridge);
-+	pcie->pdev = pdev;
-+	platform_set_drvdata(pdev, pcie);
-+
-+	ret = mvebu_pcie_parse_request_resources(pcie);
-+	if (ret)
-+		return ret;
-+
- 	num = of_get_available_child_count(np);
- 
- 	pcie->ports = devm_kcalloc(dev, num, sizeof(*pcie->ports), GFP_KERNEL);
-@@ -1275,15 +1256,24 @@ static int mvebu_pcie_probe(struct platform_device *pdev)
- 			continue;
- 		}
- 
-+		mvebu_pcie_setup_hw(port);
- 		mvebu_pcie_set_local_dev_nr(port, 1);
- 		mvebu_sw_pci_bridge_init(port);
- 	}
- 
- 	pcie->nports = i;
- 
--	mvebu_pcie_enable(pcie);
--
--	return 0;
-+	list_splice_init(&pcie->resources, &bridge->windows);
-+	bridge->dev.parent = dev;
-+	bridge->sysdata = pcie;
-+	bridge->busnr = 0;
-+	bridge->ops = &mvebu_pcie_ops;
-+	bridge->map_irq = of_irq_parse_and_map_pci;
-+	bridge->swizzle_irq = pci_common_swizzle;
-+	bridge->align_resource = mvebu_pcie_align_resource;
-+	bridge->msi = pcie->msi;
-+
-+	return pci_host_probe(bridge);
- }
- 
- static const struct of_device_id mvebu_pcie_of_match_table[] = {
--- 
-2.14.4
+Hmm, that's too bad. You probably are right, the dev->bus->ops->read may 
+be corrupted. I am wondering can you print out the dev->bus->ops->read 
+in normal working condition and compare it with the surprise power off.
+
+By the way, I am using following aer-inject tools:
+https://git.kernel.org/pub/scm/linux/kernel/git/gong.chen/aer-inject.git
+
+Others thoughts is that I did pci_stop_and_remove_bus_device() and then 
+call pci_read_config_dword() I still don't get the protection fault. Do 
+your device driver do something special when it detects the power off? 
+Or, may be the BIOS/UEFI did something to prevent the configure read?
+
+Regards,
+Thomas
+
+> 
+> -------------------xxxxxxx bt og xxxxxxxx-----------------"
+> PID: 24     TASK: ffff880274ac0000  CPU: 0   COMMAND: "kworker/0:1"
+>   #0 [ffff880274abbb18] machine_kexec at ffffffff8102cf18
+>   #1 [ffff880274abbb78] crash_kexec at ffffffff810a6b05
+>   #2 [ffff880274abbc40] oops_end at ffffffff8176d960
+>   #3 [ffff880274abbc68] die at ffffffff810060db
+>   #4 [ffff880274abbc98] do_general_protection at ffffffff8176d452
+>   #5 [ffff880274abbcc0] general_protection at ffffffff8176cdf2
+>      [exception RIP: pci_bus_read_config_dword+100]
+>      RIP: ffffffff813405f4  RSP: ffff880274abbd70  RFLAGS: 00010046
+>      RAX: 455a494c41495449  RBX: ffff880274891800  RCX: 0000000000000004
+>      RDX: 0000000000000110  RSI: 0000000000000060  RDI: ffff880274891800
+>      RBP: ffff880274abbd98   R8: ffff880274abbd7c   R9: 00000000000011b5
+>      R10: 0000000000000000  R11: 00000000000011b4  R12: ffff8802741a0210
+>      R13: 0000000000000246  R14: ffff880272afc008  R15: ffff880272af8800
+>      ORIG_RAX: ffffffffffffffff  CS: 0010  SS: 0018
+>   #6 [ffff880274abbda0] get_device_error_info at ffffffff81356d74
+>   #7 [ffff880274abbdd0] aer_isr at ffffffff81357b41
+>   #8 [ffff880274abbe28] process_one_work at ffffffff8105d4c0
+>   #9 [ffff880274abbe70] worker_thread at ffffffff8105e251
+> #10 [ffff880274abbed0] kthread at ffffffff81064260
+> #11 [ffff880274abbf50] ret_from_fork at ffffffff81773a38"
+> 
+> -------------------xxxxxxx bt og end xxxxxxxx-----------------
+> 
+> 
+> Regards,
+> Gokul
+> 
+> 
+> On Tue, Aug 7, 2018 at 9:00 PM, Thomas Tai <thomas.tai@oracle.com 
+> <mailto:thomas.tai@oracle.com>> wrote:
+> 
+>     Hi Gokul,
+>     Something pop up in my mind and want to share with you. I assume
+>     that your device is not a root port device or a switch device. I
+>     assume when you power off the device, a FATAL error is sent to the
+>     root port thus trigger the aer_isr.
+> 
+>     Since it is a fatal error and your device is not a switch device,
+>     the code should not reach out your device because fatal error means
+>     that the link to your device is not reliable. So the
+>     pci_find_ext_capability() looks strange to me. When compare the code
+>     with the master branch. v3.10 is missing following patch. Would you
+>     think you can give it a try?
+> 
+>     commit 66b808099146166c44157600a166c8372172cd76
+>     Author: Keith Busch <keith.busch@intel.com
+>     <mailto:keith.busch@intel.com>>
+>     Date:   Tue Sep 27 16:23:34 2016 -0400
+> 
+>          PCI/AER: Cache capability position
+> 
+>          Save the position of the error reporting capability so it
+>     doesn't need to
+>          be rediscovered during error handling.
+> 
+>          Signed-off-by: Keith Busch <keith.busch@intel.com
+>     <mailto:keith.busch@intel.com>>
+>          Signed-off-by: Bjorn Helgaas <bhelgaas@google.com
+>     <mailto:bhelgaas@google.com>>
+>          CC: Lukas Wunner <lukas@wunner.de <mailto:lukas@wunner.de>>
+> 
+>     - Thomas
+> 
+> 
+>     On 08/06/2018 02:33 PM, gokul cg wrote:
+> 
+>         Hi,
+> 
+>         I have tried with following patch and I am still getting same
+>         kernel panic.
+> 
+>         -------------X++++++++++++++++++++X---------------------
+> 
+>         diff --git a/drivers/pci/pcie/aer/aerdrv_core.c
+>         b/drivers/pci/pcie/aer/aerdrv_core.c
+>         index 0f4554e..05592aa 100644
+>         --- a/drivers/pci/pcie/aer/aerdrv_core.c
+>         +++ b/drivers/pci/pcie/aer/aerdrv_core.c
+>         @@ -26,6 +26,7 @@
+>            #include <linux/slab.h>
+>            #include <linux/kfifo.h>
+>            #include "aerdrv.h"
+>         +#include "../../pci.h"
+> 
+>            static bool forceload;
+>            static bool nosourceid;
+>         @@ -82,7 +82,7 @@
+>         EXPORT_SYMBOL_GPL(pci_cleanup_aer_uncorrect_error_status);
+>            static int add_error_device(struct aer_err_info *e_info,
+>         struct pci_dev *dev)
+>            {
+>         if (e_info->error_dev_num < AER_MAX_MULTI_ERR_DEVICES) {
+>         -e_info->dev[e_info->error_dev_num] = dev;
+>         +e_info->dev[e_info->error_dev_num] = pci_dev_get(dev);
+> 
+>         e_info->error_dev_num++;
+>         return 0;
+>         }
+>         @@ -659,6 +659,9 @@ static int get_device_error_info(struct
+>         pci_dev *dev, struct aer_err_info *info)
+>         if (!pos)
+>         return 1;
+> 
+>         +        if (pci_dev_is_disconnected(dev))
+>         +                return 0;
+>         +
+>         if (info->severity == AER_CORRECTABLE) {
+>         pci_read_config_dword(dev, pos + PCI_ERR_COR_STATUS,
+>         &info->status);
+>         @@ -710,6 +713,8 @@ static inline void
+>         aer_process_err_devices(struct pcie_device *p_device,
+>         for (i = 0; i < e_info->error_dev_num && e_info->dev[i]; i++) {
+>         if (get_device_error_info(e_info->dev[i], e_info))
+>         handle_error_source(p_device, e_info->dev[i], e_info);
+>         +
+>         +                pci_dev_put(e_info->dev[i]);
+>         }
+>            }
+>         -------------X++++++++++++++++++++X---------------------
+> 
+> 
+>         Note: I have configured CONFIG_HOTPLUG_PCI_PCIE and
+>         CONFIG_HOTPLUG_PCI as modules and  loading in start up using script.
+> 
+>         root@/proc/:~# cat config | grep -i HOT
+>         CONFIG_TICK_ONESHOT=y
+>         CONFIG_HOTPLUG=y
+>         # CONFIG_MEMORY_HOTPLUG is not set
+>         CONFIG_HOTPLUG_CPU=y
+>         # CONFIG_BOOTPARAM_HOTPLUG_CPU0 is not set
+>         # CONFIG_DEBUG_HOTPLUG_CPU0 is not set
+>         CONFIG_ARCH_ENABLE_MEMORY_HOTPLUG=y
+>         CONFIG_ACPI_HOTPLUG_CPU=y
+>         CONFIG_HOTPLUG_PCI_PCIE=m
+>         CONFIG_HOTPLUG_PCI=m
+>         # CONFIG_HOTPLUG_PCI_CPCI is not set
+>         # CONFIG_HOTPLUG_PCI_SHPC is not set
+>         CONFIG_DM_SNAPSHOT=y
+>         # CONFIG_USB_STORAGE_JUMPSHOT is not set
+>         # CONFIG_TRACER_SNAPSHOT is not set
+>         root@/proc/:~#
+> 
+>         Panic back trace :
+>         crash> bt
+>         PID: 24     TASK: ffff880274ac0000  CPU: 0   COMMAND: "kworker/0:1"
+>            #0 [ffff880274abbac8] machine_kexec at ffffffff8102cf18
+>            #1 [ffff880274abbb28] crash_kexec at ffffffff810a6b05
+>            #2 [ffff880274abbbf0] oops_end at ffffffff8176d8a0
+>            #3 [ffff880274abbc18] die at ffffffff810060db
+>            #4 [ffff880274abbc48] do_general_protection at ffffffff8176d392
+>            #5 [ffff880274abbc70] general_protection at ffffffff8176cd32
+>               [exception RIP: pci_bus_read_config_dword+100]
+>               RIP: ffffffff813405f4  RSP: ffff880274abbd20  RFLAGS: 00010046
+>               RAX: 435f494350006963  RBX: ffff880274891800  RCX:
+>         0000000000000004
+>               RDX: 0000000000000ffc  RSI: 0000000000000060  RDI:
+>         ffff880274891800
+>               RBP: ffff880274abbd48   R8: ffff880274abbd2c   R9:
+>         00000000000002b8
+>               R10: ffff880274340000  R11: 0000000000000246  R12:
+>         ffff880274abbd5c
+>               R13: 0000000000000246  R14: 0000000000000000  R15:
+>         ffff880274920000
+>               ORIG_RAX: ffffffffffffffff  CS: 0010  SS: 0018
+>            #6 [ffff880274abbd50] pci_find_next_ext_capability at
+>         ffffffff81345db6
+>            #7 [ffff880274abbd90] pci_find_ext_capability at ffffffff81347225
+>            #8 [ffff880274abbda0] get_device_error_info at ffffffff81356c4d
+>            #9 [ffff880274abbdd0] aer_isr at ffffffff81357ab0
+>         #10 [ffff880274abbe28] process_one_work at ffffffff8105d4c0
+>         #11 [ffff880274abbe70] worker_thread at ffffffff8105e251
+>         #12 [ffff880274abbed0] kthread at ffffffff81064260
+>         #13 [ffff880274abbf50] ret_from_fork at ffffffff81773978
+>         crash>
+> 
+> 
+>         Regards,
+>         Gokul
+> 
+>         On Thu, Aug 2, 2018 at 10:39 PM, Thomas Tai
+>         <thomas.tai@oracle.com <mailto:thomas.tai@oracle.com>
+>         <mailto:thomas.tai@oracle.com <mailto:thomas.tai@oracle.com>>>
+>         wrote:
+> 
+> 
+>              On 08/02/2018 11:07 AM, Lukas Wunner wrote:
+> 
+>                  [cc += Thomas Tai]
+> 
+> 
+>              Hi Lukas,
+>              Thank you very much for cc me.
+> 
+> 
+>                  On Thu, Aug 02, 2018 at 10:46:57AM +0200, Lukas Wunner
+>         wrote:
+> 
+>                      On Thu, Aug 02, 2018 at 12:59:18PM +0530, gokul cg
+>         wrote:
+> 
+>                          I am suspecting a possible race condition in
+>         the kernel
+>                          between PCI driver
+>                          and AER handling.
+> 
+> 
+>                      The solution is to acquire a ref on each device in
+>                      add_error_device().
+>                      Then release the ref aer_process_err_devices() by
+>         calling
+>                      pci_dev_put().
+> 
+> 
+>                  So in case it wasn't clear, the below is what I had in
+>         mind.
+>                  Completely untested though.  Does this work for you?
+> 
+>                  For v3.10 compatibility, cherry-pick 89ee9f768003 (or
+>         alternatively
+>                  cherry-pick 8496e85c20e7 and replace
+>         pci_dev_is_disconnected(dev)
+>                  with !pci_device_is_present(dev)).
+> 
+>                  -- >8 --
+>                  Subject: [PATCH] PCI/AER: Fix use-after-free on
+>         surprise removal
+> 
+>                  The work item to consume errors, aer_isr(), walks the
+>         hierarchy
+>                  using
+>                  pci_walk_bus() and stores a pointer to PCI devices
+>         which reported an
+>                  error in an array.  As long as pci_walk_bus() runs, those
+>                  pointers are
+>                  valid because pci_bus_sem is held.  But once pci_walk_bus()
+>                  finishes,
+>                  nothing prevents the pointers from becoming invalid,
+>         e.g. through
+>                  unplugging of the PCI devices.  The unprotected
+>         pointers are then
+>                  dereferenced in aer_process_err_devices(), which may oops:
+> 
+> 
+>              I like your idea to increment the refcount during
+>         pci_walk_bus(),
+>              that should fix the use-after-free issue. We just need Gokul to
+>              confirm if it fixes his issue or not.
+> 
+>              Thanks,
+>              Thomas
+> 
+> 
+> 
+>                      #5  general_protection at ffffffff8176cdf2
+>                          [exception RIP: pci_bus_read_config_dword+100]
+>                      #6  pci_find_next_ext_capability at ffffffff81345d7b
+>                      #7  pci_find_ext_capability at ffffffff81347225
+>                      #8  get_device_error_info at ffffffff81356c4d
+>                      #9  aer_isr at ffffffff81357a38
+> 
+>                  Fix by holding a ref on the devices until they have
+>         been processed.
+>                  Skip processing of unplugged devices.
+> 
+>                  Reported-by: gokul cg <gokuljnpr@gmail.com
+>         <mailto:gokuljnpr@gmail.com>
+>                  <mailto:gokuljnpr@gmail.com <mailto:gokuljnpr@gmail.com>>>
+>                  Signed-off-by: Lukas Wunner <lukas@wunner.de
+>         <mailto:lukas@wunner.de>
+>                  <mailto:lukas@wunner.de <mailto:lukas@wunner.de>>>
+> 
+>                  ---
+>                     drivers/pci/pcie/aer.c | 6 +++++-
+>                     1 file changed, 5 insertions(+), 1 deletion(-)
+> 
+>                  diff --git a/drivers/pci/pcie/aer.c
+>         b/drivers/pci/pcie/aer.c
+>                  index a2e8838..937592e 100644
+>                  --- a/drivers/pci/pcie/aer.c
+>                  +++ b/drivers/pci/pcie/aer.c
+>                  @@ -657,7 +657,7 @@ void cper_print_aer(struct pci_dev
+>         *dev, int
+>                  aer_severity,
+>                     static int add_error_device(struct aer_err_info *e_info,
+>                  struct pci_dev *dev)
+>                     {
+>                           if (e_info->error_dev_num <
+>         AER_MAX_MULTI_ERR_DEVICES) {
+>                  -               e_info->dev[e_info->error_dev_num] = dev;
+>                  +               e_info->dev[e_info->error_dev_num] =
+>                  pci_dev_get(dev);
+>                                   e_info->error_dev_num++;
+>                                   return 0;
+>                           }
+>                  @@ -898,6 +898,9 @@ static int get_device_error_info(struct
+>                  pci_dev *dev, struct aer_err_info *info)
+>                           if (!pos)
+>                                   return 0;
+>                     +     if (pci_dev_is_disconnected(dev))
+>                  +               return 0;
+>                  +
+>                           if (info->severity == AER_CORRECTABLE) {
+>                                   pci_read_config_dword(dev, pos +
+>                  PCI_ERR_COR_STATUS,
+>                                           &info->status);
+>                  @@ -948,6 +951,7 @@ static inline void
+>                  aer_process_err_devices(struct aer_err_info *e_info)
+>                           for (i = 0; i < e_info->error_dev_num &&
+>                  e_info->dev[i]; i++) {
+>                                   if
+>         (get_device_error_info(e_info->dev[i], e_info))
+>                                          
+>         handle_error_source(e_info->dev[i],
+>                  e_info);
+>                  +               pci_dev_put(e_info->dev[i]);
+>                           }
+>                     }
+> 
+> 
+> 
