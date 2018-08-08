@@ -1,21 +1,24 @@
 Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
 Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Date: Tue, 21 Aug 2018 23:26:44 +0800
-From: Shawn Guo <shawnguo@kernel.org>
-To: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
-Subject: Re: [PATCH v3 0/2] PCI: imx: Initial imx7d pm support
-Message-ID: <20180821152643.GC32159@dragon>
-References: <cover.1532448745.git.leonard.crestez@nxp.com>
- <bac2cb70b16d81f589915fc0900126b516414243.camel@nxp.com>
- <20180808111429.GC25150@e107981-ln.cambridge.arm.com>
- <a5556be9a5f62ea0472a1a2336bce8d71df0dcaa.camel@nxp.com>
- <20180808141938.GA30428@e107981-ln.cambridge.arm.com>
- <efd9c1d560cae84e2a4ee7585a4c61d5d40ba755.camel@nxp.com>
- <20180808152741.GA31808@e107981-ln.cambridge.arm.com>
- <52ee6376fa15d3a9a62bcfa5d87173e454ccc024.camel@nxp.com>
- <20180810151341.GA6863@e107981-ln.cambridge.arm.com>
+Date: Wed, 8 Aug 2018 12:21:31 -0400 (EDT)
+From: Mikulas Patocka <mpatocka@redhat.com>
+To: Catalin Marinas <catalin.marinas@arm.com>
+Subject: Re: framebuffer corruption due to overlapping stp instructions on
+ arm64
+In-Reply-To: <20180808145017.GE24736@iMac.local>
+Message-ID: <alpine.LRH.2.02.1808081215120.31259@file01.intranet.prod.int.rdu2.redhat.com>
+References: <CAKv+Gu8DeuksZhk1g3q_msSKV_hSY_2e1uzVten9-oGO3j9Sqg@mail.gmail.com>
+ <20180803094129.GB17798@arm.com>
+ <alpine.LRH.2.02.1808031235410.31584@file01.intranet.prod.int.rdu2.redhat.com>
+ <CAKv+Gu-aNFh1fsr_05SEwDp99n3pLrguP7=tEcFQPNY53=K7Fw@mail.gmail.com>
+ <alpine.LRH.2.02.1808031424140.14030@file01.intranet.prod.int.rdu2.redhat.com>
+ <CAHCPf3s-+Qf=WBZz1KpisDMG3520jCUh8PLAO3PHa4jdt8kCTw@mail.gmail.com>
+ <20180808121641.GB24736@iMac.local>
+ <b1de49af14d941979977af07dc81e1c2@AcuMS.aculab.com>
+ <alpine.LRH.2.02.1808080939180.3325@file01.intranet.prod.int.rdu2.redhat.com>
+ <19c70d2a0b224db78f72dd316ad006b8@AcuMS.aculab.com>
+ <20180808145017.GE24736@iMac.local>
 MIME-Version: 1.0
-In-Reply-To: <20180810151341.GA6863@e107981-ln.cambridge.arm.com>
 List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
  <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
 List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
@@ -23,56 +26,55 @@ List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
 List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
 List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
  <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
-Cc: "A.s. Dong" <aisheng.dong@nxp.com>,
- "Joao.Pinto@synopsys.com" <Joao.Pinto@synopsys.com>,
- Richard Zhu <hongxing.zhu@nxp.com>,
- "kernel@pengutronix.de" <kernel@pengutronix.de>,
- Anson Huang <anson.huang@nxp.com>,
- "andrew.smirnov@gmail.com" <andrew.smirnov@gmail.com>,
- "jingoohan1@gmail.com" <jingoohan1@gmail.com>,
- "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
- "bhelgaas@google.com" <bhelgaas@google.com>, dl-linux-imx <linux-imx@nxp.com>,
- "p.zabel@pengutronix.de" <p.zabel@pengutronix.de>,
- "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
- Fabio Estevam <fabio.estevam@nxp.com>,
- Leonard Crestez <leonard.crestez@nxp.com>,
- "linux-arm-kernel@lists.infradead.org" <linux-arm-kernel@lists.infradead.org>,
- "l.stach@pengutronix.de" <l.stach@pengutronix.de>
+Cc: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>,
+ Joao Pinto <Joao.Pinto@synopsys.com>,
+ Ard Biesheuvel <ard.biesheuvel@linaro.org>,
+ linux-pci <linux-pci@vger.kernel.org>, Will Deacon <will.deacon@arm.com>,
+ Russell King <linux@armlinux.org.uk>,
+ Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
+ David Laight <David.Laight@ACULAB.COM>, Matt Sealey <neko@bakuhatsu.net>,
+ Jingoo Han <jingoohan1@gmail.com>,
+ linux-arm-kernel <linux-arm-kernel@lists.infradead.org>
 Content-Type: text/plain; charset="us-ascii"
 Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
 Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Fri, Aug 10, 2018 at 04:13:41PM +0100, Lorenzo Pieralisi wrote:
-> On Fri, Aug 10, 2018 at 11:11:55AM +0000, Leonard Crestez wrote:
-> 
-> [...]
-> 
-> > This needs further clarification: without the reset patch this will
-> > hang on imx7 suspend/resume but this is the current behavior anyway.
+
+
+On Wed, 8 Aug 2018, Catalin Marinas wrote:
+
+> On Wed, Aug 08, 2018 at 02:26:11PM +0000, David Laight wrote:
+> > From: Mikulas Patocka
+> > > Sent: 08 August 2018 14:47
+> > ...
+> > > The problem on ARM is that I see data corruption when the overlapping
+> > > unaligned writes are done just by a single core.
 > > 
-> > Both patches are required for imx7 pci suspend and including them out
-> > of order shouldn't break unrelated functionality.
-> > 
-> > So it should actually be fine to just include the pci changes now,
-> > right?
+> > Is this a sequence of unaligned writes (that shouldn't modify the
+> > same physical locations) or an aligned write followed by an
+> > unaligned one that updates part of the earlier write.
+> > (Or the opposite order?)
 > 
-> It is a bit late for v4.19 but before considering that, this series
-> is actually a set of fixes, correct ? If that's the case I think
-> Shawn can send them upstream for a v4.19-rc*, I can ACK them if that
-> sounds reasonable.
-> 
-> Patch (2) subject must make clear you are actually fixing a problem if
-> we choose this course of action.
+> In the memcpy() case, there can be a sequence of unaligned writes but
+> they would not modify the same byte (so no overlapping address at the
+> byte level).
 
-This is something never worked before, so it's a new feature to me.
-That said, I'm not in the position to send the PCI patch for 4.19-rc as
-a fix though IMX (arm-soc) tree.
+They do modify the same byte, but with the same value. Suppose that you 
+want to copy a piece of data that is between 8 and 16 bytes long. You can 
+do this:
 
-I will send the DTS patch for 4.19-rc inclusion though, since that's
-indeed a fix.
+add src_end, src, len
+add dst_end, dst, len
+ldr x0, [src]
+ldr x1, [src_end - 8]
+str x0, [dst]
+str x1, [dst_end - 8]
 
-Shawn
+The ARM64 memcpy uses this trick heavily in order to reduce branching, and 
+this is what makes the PCIe controller choke.
+
+Mikulas
 
 _______________________________________________
 linux-arm-kernel mailing list
