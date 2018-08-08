@@ -1,255 +1,93 @@
-Return-Path: <SRS0=0i/8=KW=oracle.com=thomas.tai@kernel.org>
-Return-Path: <SRS0=0i/8=KW=oracle.com=thomas.tai@kernel.org>
-Subject: Re: [PATCH] PCI: pciehp: Differentiate between surprise and safe
- removal
-To: gokul cg <gokuljnpr@gmail.com>
-Cc: Lukas Wunner <lukas@wunner.de>,
-        Mika Westerberg <mika.westerberg@linux.intel.com>,
-        Bjorn Helgaas <helgaas@kernel.org>, Ashok Raj <ashok.raj@intel.com>,
-        Keith Busch <keith.busch@intel.com>, Yinghai Lu <yinghai@kernel.org>,
-        Sinan Kaya <okaya@kernel.org>, linux-pci@vger.kernel.org,
-        Alexandru Gagniuc <mr.nuke.me@gmail.com>
-References: <dac488604766f3dcb948e702210ecc381c4f907b.1533015755.git.lukas@wunner.de>
- <20180801164358.GI2534@lahna.fi.intel.com> <20180801171512.GA28440@wunner.de>
- <20180802072036.GN2534@lahna.fi.intel.com>
- <CAFP4jM8AYG7hmkC_rYgXAfLoJmkJuW0e1UbgiayGrCPbb_yw8A@mail.gmail.com>
- <20180802084657.GA21267@wunner.de> <20180802150749.GA31683@wunner.de>
- <ebb526d2-0440-6bd7-765c-b7489d75d830@oracle.com>
- <CAFP4jM_hqaHjHx1A4G05cX8p3gQGywkXLf1bNa+6Kpdzb_+bTw@mail.gmail.com>
-From: Thomas Tai <thomas.tai@oracle.com>
-Message-ID: <1881c4f2-9502-bca8-3bac-089fdf6b43a4@oracle.com>
-Date: Tue, 7 Aug 2018 10:26:02 -0400
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Date: Wed, 8 Aug 2018 14:40:16 -0400 (EDT)
+From: Mikulas Patocka <mpatocka@redhat.com>
+To: Catalin Marinas <catalin.marinas@arm.com>
+Subject: Re: framebuffer corruption due to overlapping stp instructions on
+ arm64
+In-Reply-To: <20180808142852.GD24736@iMac.local>
+Message-ID: <alpine.LRH.2.02.1808081437260.18198@file01.intranet.prod.int.rdu2.redhat.com>
+References: <alpine.LRH.2.02.1808021242320.31834@file01.intranet.prod.int.rdu2.redhat.com>
+ <CAHCPf3tFGqkYEcWNN4LaWThw_rVqT316pzLv6T7RfxwO-eZ0EA@mail.gmail.com>
+ <alpine.LRH.2.02.1808030212340.17672@file01.intranet.prod.int.rdu2.redhat.com>
+ <CAKv+Gu8DeuksZhk1g3q_msSKV_hSY_2e1uzVten9-oGO3j9Sqg@mail.gmail.com>
+ <20180803094129.GB17798@arm.com>
+ <alpine.LRH.2.02.1808031235410.31584@file01.intranet.prod.int.rdu2.redhat.com>
+ <20180808113927.GA24736@iMac.local>
+ <alpine.LRH.2.02.1808081011110.9997@file01.intranet.prod.int.rdu2.redhat.com>
+ <20180808142852.GD24736@iMac.local>
 MIME-Version: 1.0
-In-Reply-To: <CAFP4jM_hqaHjHx1A4G05cX8p3gQGywkXLf1bNa+6Kpdzb_+bTw@mail.gmail.com>
-Content-Type: text/plain; charset=utf-8; format=flowed
+List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
+List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
+List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
+List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
+List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
+Cc: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>,
+ Joao Pinto <Joao.Pinto@synopsys.com>, libc-alpha@sourceware.org,
+ Ard Biesheuvel <ard.biesheuvel@linaro.org>, Jingoo Han <jingoohan1@gmail.com>,
+ Will Deacon <will.deacon@arm.com>, Russell King <linux@armlinux.org.uk>,
+ Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
+ Matt Sealey <neko@bakuhatsu.net>, linux-pci@vger.kernel.org,
+ linux-arm-kernel <linux-arm-kernel@lists.infradead.org>
+Content-Type: text/plain; charset="us-ascii"
+Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
+Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
 List-ID: <linux-pci.vger.kernel.org>
 
 
 
-On 08/06/2018 02:33 PM, gokul cg wrote:
-> Hi,
-> 
-> I have tried with following patch and I am still getting same kernel panic.
+On Wed, 8 Aug 2018, Catalin Marinas wrote:
 
-Sorry to hear that. What kernel message did you see before the crash. We 
-assume the hotplug is corrupting the pci_dev, but is it really? Have you 
-tried without insmod the hotplug provided that you can still power off 
-the device via your I2C.
+> On Wed, Aug 08, 2018 at 10:12:27AM -0400, Mikulas Patocka wrote:
+> > On Wed, 8 Aug 2018, Catalin Marinas wrote:
+> > > On Fri, Aug 03, 2018 at 01:09:02PM -0400, Mikulas Patocka wrote:
+> > > > 	while (1) {
+> > > > 		start = (unsigned)random() % (LEN + 1);
+> > > > 		end = (unsigned)random() % (LEN + 1);
+> > > > 		if (start > end)
+> > > > 			continue;
+> > > > 		for (i = start; i < end; i++)
+> > > > 			data[i] = val++;
+> > > > 		memcpy(map + start, data + start, end - start);
+> > > > 		if (memcmp(map, data, LEN)) {
+> > > 
+> > > It may be worth trying to do a memcmp(map+start, data+start, end-start)
+> > > here to see whether the hazard logic fails when the writes are unaligned
+> > > but the reads are not.
+> > > 
+> > > This problem may as well appear if you do byte writes and read longs
+> > > back (and I consider this a hardware problem on this specific board).
+> > 
+> > I triad to insert usleep(10000) between the memcpy and memcmp, but the 
+> > same corruption occurs. So, it can't be read-after-write hazard. It is 
+> > caused by the improper handling of hazard between the overlapping writes 
+> > inside memcpy.
+> 
+> It could get it wrong between subsequent writes to the same 64-bit range
+> (e.g. the address & ~63 is the same but the data strobes for which bytes
+> to write are different). If it somehow thinks that it's a
+> write-after-write hazard even though the strobes are different, it could
+> cancel one of the writes.
 
-> 
-> -------------X++++++++++++++++++++X---------------------
-> 
-> diff --git a/drivers/pci/pcie/aer/aerdrv_core.c 
-> b/drivers/pci/pcie/aer/aerdrv_core.c
-> index 0f4554e..05592aa 100644
-> --- a/drivers/pci/pcie/aer/aerdrv_core.c
-> +++ b/drivers/pci/pcie/aer/aerdrv_core.c
-> @@ -26,6 +26,7 @@
->   #include <linux/slab.h>
->   #include <linux/kfifo.h>
->   #include "aerdrv.h"
-> +#include "../../pci.h"
-> 
->   static bool forceload;
->   static bool nosourceid;
-> @@ -82,7 +82,7 @@ EXPORT_SYMBOL_GPL(pci_cleanup_aer_uncorrect_error_status);
->   static int add_error_device(struct aer_err_info *e_info, struct 
-> pci_dev *dev)
->   {
-> if (e_info->error_dev_num < AER_MAX_MULTI_ERR_DEVICES) {
-> -e_info->dev[e_info->error_dev_num] = dev;
-> +e_info->dev[e_info->error_dev_num] = pci_dev_get(dev);
-> e_info->error_dev_num++;
-> return 0;
-> }
-> @@ -659,6 +659,9 @@ static int get_device_error_info(struct pci_dev 
-> *dev, struct aer_err_info *info)
-> if (!pos)
-> return 1;
-> 
-> +        if (pci_dev_is_disconnected(dev))
-> +                return 0;
-> +
-> if (info->severity == AER_CORRECTABLE) {
-> pci_read_config_dword(dev, pos + PCI_ERR_COR_STATUS,
-> &info->status);
-> @@ -710,6 +713,8 @@ static inline void aer_process_err_devices(struct 
-> pcie_device *p_device,
-> for (i = 0; i < e_info->error_dev_num && e_info->dev[i]; i++) {
-> if (get_device_error_info(e_info->dev[i], e_info))
-> handle_error_source(p_device, e_info->dev[i], e_info);
-> +
-> +                pci_dev_put(e_info->dev[i]);
-> }
->   }
-> -------------X++++++++++++++++++++X---------------------
-> 
-> 
-> Note: I have configured CONFIG_HOTPLUG_PCI_PCIE and CONFIG_HOTPLUG_PCI 
-> as modules and  loading in start up using script.
-> 
-> root@/proc/:~# cat config | grep -i HOT
-> CONFIG_TICK_ONESHOT=y
-> CONFIG_HOTPLUG=y
-> # CONFIG_MEMORY_HOTPLUG is not set
-> CONFIG_HOTPLUG_CPU=y
-> # CONFIG_BOOTPARAM_HOTPLUG_CPU0 is not set
-> # CONFIG_DEBUG_HOTPLUG_CPU0 is not set
-> CONFIG_ARCH_ENABLE_MEMORY_HOTPLUG=y
-> CONFIG_ACPI_HOTPLUG_CPU=y
-> CONFIG_HOTPLUG_PCI_PCIE=m
-> CONFIG_HOTPLUG_PCI=m
-> # CONFIG_HOTPLUG_PCI_CPCI is not set
-> # CONFIG_HOTPLUG_PCI_SHPC is not set
-> CONFIG_DM_SNAPSHOT=y
-> # CONFIG_USB_STORAGE_JUMPSHOT is not set
-> # CONFIG_TRACER_SNAPSHOT is not set
-> root@/proc/:~#
-> 
-> Panic back trace :
-> crash> bt
-> PID: 24     TASK: ffff880274ac0000  CPU: 0   COMMAND: "kworker/0:1"
->   #0 [ffff880274abbac8] machine_kexec at ffffffff8102cf18
->   #1 [ffff880274abbb28] crash_kexec at ffffffff810a6b05
->   #2 [ffff880274abbbf0] oops_end at ffffffff8176d8a0
->   #3 [ffff880274abbc18] die at ffffffff810060db
->   #4 [ffff880274abbc48] do_general_protection at ffffffff8176d392
->   #5 [ffff880274abbc70] general_protection at ffffffff8176cd32
->      [exception RIP: pci_bus_read_config_dword+100]
->      RIP: ffffffff813405f4  RSP: ffff880274abbd20  RFLAGS: 00010046
->      RAX: 435f494350006963  RBX: ffff880274891800  RCX: 0000000000000004
->      RDX: 0000000000000ffc  RSI: 0000000000000060  RDI: ffff880274891800
->      RBP: ffff880274abbd48   R8: ffff880274abbd2c   R9: 00000000000002b8
->      R10: ffff880274340000  R11: 0000000000000246  R12: ffff880274abbd5c
->      R13: 0000000000000246  R14: 0000000000000000  R15: ffff880274920000
->      ORIG_RAX: ffffffffffffffff  CS: 0010  SS: 0018
->   #6 [ffff880274abbd50] pci_find_next_ext_capability at ffffffff81345db6
->   #7 [ffff880274abbd90] pci_find_ext_capability at ffffffff81347225
->   #8 [ffff880274abbda0] get_device_error_info at ffffffff81356c4d
->   #9 [ffff880274abbdd0] aer_isr at ffffffff81357ab0
-> #10 [ffff880274abbe28] process_one_work at ffffffff8105d4c0
-> #11 [ffff880274abbe70] worker_thread at ffffffff8105e251
-> #12 [ffff880274abbed0] kthread at ffffffff81064260
-> #13 [ffff880274abbf50] ret_from_fork at ffffffff81773978
-> crash>
-> 
-> 
-> Regards,
-> Gokul
-> 
-> On Thu, Aug 2, 2018 at 10:39 PM, Thomas Tai <thomas.tai@oracle.com 
-> <mailto:thomas.tai@oracle.com>> wrote:
-> 
-> 
->     On 08/02/2018 11:07 AM, Lukas Wunner wrote:
-> 
->         [cc += Thomas Tai]
-> 
-> 
->     Hi Lukas,
->     Thank you very much for cc me.
-> 
-> 
->         On Thu, Aug 02, 2018 at 10:46:57AM +0200, Lukas Wunner wrote:
-> 
->             On Thu, Aug 02, 2018 at 12:59:18PM +0530, gokul cg wrote:
-> 
->                 I am suspecting a possible race condition in the kernel
->                 between PCI driver
->                 and AER handling.
-> 
-> 
->             The solution is to acquire a ref on each device in
->             add_error_device().
->             Then release the ref aer_process_err_devices() by calling
->             pci_dev_put().
-> 
-> 
->         So in case it wasn't clear, the below is what I had in mind.
->         Completely untested though.  Does this work for you?
-> 
->         For v3.10 compatibility, cherry-pick 89ee9f768003 (or alternatively
->         cherry-pick 8496e85c20e7 and replace pci_dev_is_disconnected(dev)
->         with !pci_device_is_present(dev)).
-> 
->         -- >8 --
->         Subject: [PATCH] PCI/AER: Fix use-after-free on surprise removal
-> 
->         The work item to consume errors, aer_isr(), walks the hierarchy
->         using
->         pci_walk_bus() and stores a pointer to PCI devices which reported an
->         error in an array.  As long as pci_walk_bus() runs, those
->         pointers are
->         valid because pci_bus_sem is held.  But once pci_walk_bus()
->         finishes,
->         nothing prevents the pointers from becoming invalid, e.g. through
->         unplugging of the PCI devices.  The unprotected pointers are then
->         dereferenced in aer_process_err_devices(), which may oops:
-> 
-> 
->     I like your idea to increment the refcount during pci_walk_bus(),
->     that should fix the use-after-free issue. We just need Gokul to
->     confirm if it fixes his issue or not.
-> 
->     Thanks,
->     Thomas
-> 
-> 
-> 
->             #5  general_protection at ffffffff8176cdf2
->                 [exception RIP: pci_bus_read_config_dword+100]
->             #6  pci_find_next_ext_capability at ffffffff81345d7b
->             #7  pci_find_ext_capability at ffffffff81347225
->             #8  get_device_error_info at ffffffff81356c4d
->             #9  aer_isr at ffffffff81357a38
-> 
->         Fix by holding a ref on the devices until they have been processed.
->         Skip processing of unplugged devices.
-> 
->         Reported-by: gokul cg <gokuljnpr@gmail.com
->         <mailto:gokuljnpr@gmail.com>>
->         Signed-off-by: Lukas Wunner <lukas@wunner.de
->         <mailto:lukas@wunner.de>>
->         ---
->            drivers/pci/pcie/aer.c | 6 +++++-
->            1 file changed, 5 insertions(+), 1 deletion(-)
-> 
->         diff --git a/drivers/pci/pcie/aer.c b/drivers/pci/pcie/aer.c
->         index a2e8838..937592e 100644
->         --- a/drivers/pci/pcie/aer.c
->         +++ b/drivers/pci/pcie/aer.c
->         @@ -657,7 +657,7 @@ void cper_print_aer(struct pci_dev *dev, int
->         aer_severity,
->            static int add_error_device(struct aer_err_info *e_info,
->         struct pci_dev *dev)
->            {
->                  if (e_info->error_dev_num < AER_MAX_MULTI_ERR_DEVICES) {
->         -               e_info->dev[e_info->error_dev_num] = dev;
->         +               e_info->dev[e_info->error_dev_num] =
->         pci_dev_get(dev);
->                          e_info->error_dev_num++;
->                          return 0;
->                  }
->         @@ -898,6 +898,9 @@ static int get_device_error_info(struct
->         pci_dev *dev, struct aer_err_info *info)
->                  if (!pos)
->                          return 0;
->            +     if (pci_dev_is_disconnected(dev))
->         +               return 0;
->         +
->                  if (info->severity == AER_CORRECTABLE) {
->                          pci_read_config_dword(dev, pos +
->         PCI_ERR_COR_STATUS,
->                                  &info->status);
->         @@ -948,6 +951,7 @@ static inline void
->         aer_process_err_devices(struct aer_err_info *e_info)
->                  for (i = 0; i < e_info->error_dev_num &&
->         e_info->dev[i]; i++) {
->                          if (get_device_error_info(e_info->dev[i], e_info))
->                                  handle_error_source(e_info->dev[i],
->         e_info);
->         +               pci_dev_put(e_info->dev[i]);
->                  }
->            }
-> 
-> 
+I believe that the SoC has logic for write-after-write detection, but the 
+logic is broken and corrupts data.
+
+If I insert "dmb sy" between the overlapping writes, there's no corruption 
+(the PCIe controller won't see any overlapping writes in that case).
+
+> It may be worth trying with a byte-only memcpy() function while keeping
+> the default memcmp().
+
+I tried that and byte-only memcpy works without any corruption.
+
+> -- 
+> Catalin
+
+Mikulas
+
+_______________________________________________
+linux-arm-kernel mailing list
+linux-arm-kernel@lists.infradead.org
+http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
