@@ -1,81 +1,135 @@
-Return-Path: <SRS0=HZd4=LD=kernel.crashing.org=benh@kernel.org>
-Return-Path: <SRS0=HZd4=LD=kernel.crashing.org=benh@kernel.org>
-Message-ID: <5027d857bb59edfd33442003aa618ece1bc9cd52.camel@kernel.crashing.org>
-Subject: Re: [PATCH 1/1] PCI/AER: prevent pcie_do_fatal_recovery from using
- device after it is removed
-From: Benjamin Herrenschmidt <benh@kernel.crashing.org>
-To: poza@codeaurora.org
-Cc: Sinan Kaya <okaya@kernel.org>, Bjorn Helgaas <helgaas@kernel.org>,
-        Thomas Tai <thomas.tai@oracle.com>, bhelgaas@google.com,
-        keith.busch@intel.com, linux-pci@vger.kernel.org,
-        linux-pci-owner@vger.kernel.org, Sam Bobroff <sam.bobroff@au1.ibm.com>
-Date: Mon, 20 Aug 2018 15:33:16 +1000
-In-Reply-To: <908ff33ded8f31830f95a8889d8540f1@codeaurora.org>
-References: <1534179088-44219-1-git-send-email-thomas.tai@oracle.com>
-	 <1534179088-44219-2-git-send-email-thomas.tai@oracle.com>
-	 <51f4b387d9bd96a42d526a6a029fc43b@codeaurora.org>
-	 <b0104a716319d76e734c307cb4bedd9d@codeaurora.org>
-	 <903394c04d6ad468ed06dc0a779200e7555345a7.camel@kernel.crashing.org>
-	 <6cb069038530757f31f3dd60328c7e30@codeaurora.org>
-	 <e931bc7a7e468e8bb2ee3766b3fcf96f1800f552.camel@kernel.crashing.org>
-	 <bf7ceabb6fe51398e0f4eebd9c4fe4ac1ec2b8a4.camel@kernel.crashing.org>
-	 <20180819021922.GE128050@bhelgaas-glaptop.roam.corp.google.com>
-	 <fe891b63-12c7-61ab-a59a-ae24ad766754@kernel.org>
-	 <ab5cb5b277f1c1c1362ef597ca7b8c6a2cd32cdf.camel@kernel.crashing.org>
-	 <908ff33ded8f31830f95a8889d8540f1@codeaurora.org>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail.kernel.org ([198.145.29.99]:33380 "EHLO mail.kernel.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1726111AbeHHDbg (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Tue, 7 Aug 2018 23:31:36 -0400
+Date: Tue, 7 Aug 2018 20:14:29 -0500
+From: Bjorn Helgaas <helgaas@kernel.org>
+To: Alexandru Gagniuc <mr.nuke.me@gmail.com>
+Cc: linux-pci@vger.kernel.org, bhelgaas@google.com,
+        keith.busch@intel.com, alex_gagniuc@dellteam.com,
+        austin_bolen@dell.com, shyam_iyer@dell.com,
+        Frederick Lawler <fred@fredlawl.com>,
+        Oza Pawandeep <poza@codeaurora.org>,
+        linux-kernel@vger.kernel.org
+Subject: Re: [PATCH v3] PCI/AER: Do not clear AER bits if we don't own AER
+Message-ID: <20180808011429.GB49411@bhelgaas-glaptop.roam.corp.google.com>
+References: <3d05f662-2c29-90cd-9c74-6456939a0e6b@gmail.com>
+ <20180730233547.1238-1-mr.nuke.me@gmail.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20180730233547.1238-1-mr.nuke.me@gmail.com>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Mon, 2018-08-20 at 10:49 +0530, poza@codeaurora.org wrote:
+On Mon, Jul 30, 2018 at 06:35:31PM -0500, Alexandru Gagniuc wrote:
+> When we don't own AER, we shouldn't touch the AER error bits. Clearing
+> error bits willy-nilly might cause firmware to miss some errors. In
+> theory, these bits get cleared by FFS, or via ACPI _HPX method. These
+> mechanisms are not subject to the problem.
+
+What's FFS?
+
+I guess you mean FFS and _HPX are not subject to the problem because
+they're supplied by firmware, so firmware would be responsible for
+looking at the bits before clearing them?
+
+> This race is mostly of theoretical significance, since I can't
+> reasonably demonstrate this race in the lab.
 > 
-> Reverting spec/Documentation which is fine by me.
+> On a side-note, pcie_aer_is_kernel_first() is created to alleviate the
+> need for two checks: aer_cap and get_firmware_first().
 > 
-> But the good thing has happened now is; we can have very clear 
-> definition for the framework to go forward.
-> e.g. how the errors have to be handled.
+> Signed-off-by: Alexandru Gagniuc <mr.nuke.me@gmail.com>
+> ---
 > 
-> Because of those patches, the whole error framework is under common code 
-> base and now has become independent of service e.g. AER, DPC etc..
-
-Well, EEH isn't yet :-) But then the EEH code is a real mess buried in
-arch/powerpc. Sam (CC) is trying to improve that situation and I might
-step in as well to help if we think we can make things more common, it
-would definitely help.
-
-> That enables us to define or extend policies in more clearly defined way 
-> irrespective of what services are running.
+> Changes since v2:
+>   - Added missing negation in pci_cleanup_aer_error_status_regs()
 > 
-> Now it is just that we have to change in err.c and walk away with the 
-> policies what we want to enforce.
+>  drivers/pci/pcie/aer.c | 17 ++++++++++-------
+>  1 file changed, 10 insertions(+), 7 deletions(-)
 > 
-> let me know how this sounds Ben.
+> diff --git a/drivers/pci/pcie/aer.c b/drivers/pci/pcie/aer.c
+> index a2e88386af28..40e5c86271d1 100644
+> --- a/drivers/pci/pcie/aer.c
+> +++ b/drivers/pci/pcie/aer.c
+> @@ -307,6 +307,12 @@ int pcie_aer_get_firmware_first(struct pci_dev *dev)
+>  		aer_set_firmware_first(dev);
+>  	return dev->__aer_firmware_first;
+>  }
+> +
+> +static bool pcie_aer_is_kernel_first(struct pci_dev *dev)
+> +{
+> +	return !!dev->aer_cap && !pcie_aer_get_firmware_first(dev);
+> +}
 
-So for now, I've sent a revert patch for the Documentation/ bit to
-Bjorn, and I have no (not yet at least) beef in what you do in
-drivers/pci/* ... however, that said, I think it would be great to move
-EEH toward having a bulk of the policy use common code as well.
+I think it complicates things to have both "firmware_first" and
+"kernel_first" interfaces, so I would prefer to stick with the
+existing "firmware_first" style.
 
-It will be long road, in part due to the historical crappyness of our
-EEH code, so my thinking is we should:
+>  #define	PCI_EXP_AER_FLAGS	(PCI_EXP_DEVCTL_CERE | PCI_EXP_DEVCTL_NFERE | \
+>  				 PCI_EXP_DEVCTL_FERE | PCI_EXP_DEVCTL_URRE)
+>  
+> @@ -337,10 +343,7 @@ bool aer_acpi_firmware_first(void)
+>  
+>  int pci_enable_pcie_error_reporting(struct pci_dev *dev)
+>  {
+> -	if (pcie_aer_get_firmware_first(dev))
+> -		return -EIO;
+> -
+> -	if (!dev->aer_cap)
+> +	if (!pcie_aer_is_kernel_first(dev))
+>  		return -EIO;
+>  
+>  	return pcie_capability_set_word(dev, PCI_EXP_DEVCTL, PCI_EXP_AER_FLAGS);
 
- - First agree on what we want the policy to be. I need to read a bit
-more about DPC since that's new to me, it seems to be similar to what
-our EEH does, with slighty less granularity (we can freeze access to
-individual functions for example).
+This change doesn't actually fix anything, does it?  It looks like a
+cleanup that doesn't change the behavior.
 
- - Rework err.c to implement that policy with the existing AER and DPC
-code.
+> @@ -349,7 +352,7 @@ EXPORT_SYMBOL_GPL(pci_enable_pcie_error_reporting);
+>  
+>  int pci_disable_pcie_error_reporting(struct pci_dev *dev)
+>  {
+> -	if (pcie_aer_get_firmware_first(dev))
+> +	if (!pcie_aer_is_kernel_first(dev))
+>  		return -EIO;
 
- - Figure out what hooks might be needed to be able to plumb EEH into
-it, possibly removing a bunch of crap in arch/powerpc (yay !)
+This change does effectively add a test for dev->aer_cap.  That makes
+sense in terms of symmetry with pci_enable_pcie_error_reporting(),
+but I think it should be a separate patch because it's conceptually
+separate from the change below.
 
-I don't think having a webex will be that practical with the timezones
-involved. I'm trying to get approval to go to Plumbers in which case we
-could setup a BOF but I have no guarantee at this point that I can make
-it happen.
+We should keep the existing behavior (but add the symmetry) here for
+now, but it's not clear to me that these paths should care about AER
+or firmware-first at all.  PCI_EXP_DEVCTL is not an AER register and
+we have the _HPX mechanism for firmware to influence it (which these
+paths currently ignore).  I suspect we should program these reporting
+enable bits in the core enumeration path instead of having drivers
+call these interfaces.
 
-So let's try using email as much possible for now.
+If/when we make changes along these lines, the history will be easier
+to follow if *this* change is not connected with the change below to
+pci_cleanup_aer_error_status_regs().
 
-Cheers,
-Ben.
+>  	return pcie_capability_clear_word(dev, PCI_EXP_DEVCTL,
+> @@ -383,10 +386,10 @@ int pci_cleanup_aer_error_status_regs(struct pci_dev *dev)
+>  	if (!pci_is_pcie(dev))
+>  		return -ENODEV;
+>  
+> -	pos = dev->aer_cap;
+> -	if (!pos)
+> +	if (!pcie_aer_is_kernel_first(dev))
+>  		return -EIO;
+
+This part makes sense to me, but I think I would rather have it match
+the existing style in pci_enable_pcie_error_reporting(), i.e., keep
+the test for dev->aer_cap and add a test for
+pcie_aer_get_firmware_first().
+
+> +	pos = dev->aer_cap;
+>  	port_type = pci_pcie_type(dev);
+>  	if (port_type == PCI_EXP_TYPE_ROOT_PORT) {
+>  		pci_read_config_dword(dev, pos + PCI_ERR_ROOT_STATUS, &status);
+> -- 
+> 2.17.1
+> 
