@@ -1,121 +1,149 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:43610 "EHLO mx1.redhat.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1727075AbeHPBhV (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Wed, 15 Aug 2018 21:37:21 -0400
-Date: Wed, 15 Aug 2018 16:43:08 -0600
-From: Alex Williamson <alex.williamson@redhat.com>
-To: Mika Westerberg <mika.westerberg@linux.intel.com>
-Cc: Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org
-Subject: Re: [PATCH] PCI: Add ACS quirk for Intel 300 series chipset
-Message-ID: <20180815164308.6ad5dd39@t450s.home>
-In-Reply-To: <20180815152139.4e469fd4@t450s.home>
-References: <20180427104423.2203-1-mika.westerberg@linux.intel.com>
-        <20180815152139.4e469fd4@t450s.home>
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+Date: Wed, 8 Aug 2018 20:27:36 +0300
+From: Leon Romanovsky <leon@kernel.org>
+To: "Alex G." <mr.nuke.me@gmail.com>
+Cc: Tal Gilboa <talgi@mellanox.com>, linux-pci@vger.kernel.org,
+        bhelgaas@google.com, jakub.kicinski@netronome.com,
+        keith.busch@intel.com, alex_gagniuc@dellteam.com,
+        austin_bolen@dell.com, shyam_iyer@dell.com,
+        Ariel Elior <ariel.elior@cavium.com>,
+        everest-linux-l2@cavium.com,
+        "David S. Miller" <davem@davemloft.net>,
+        Michael Chan <michael.chan@broadcom.com>,
+        Ganesh Goudar <ganeshgr@chelsio.com>,
+        Jeff Kirsher <jeffrey.t.kirsher@intel.com>,
+        Tariq Toukan <tariqt@mellanox.com>,
+        Saeed Mahameed <saeedm@mellanox.com>,
+        Dirk van der Merwe <dirk.vandermerwe@netronome.com>,
+        netdev@vger.kernel.org, linux-kernel@vger.kernel.org,
+        intel-wired-lan@lists.osuosl.org, linux-rdma@vger.kernel.org,
+        oss-drivers@netronome.com
+Subject: Re: [PATCH v6 8/9] net/mlx5: Do not call pcie_print_link_status()
+Message-ID: <20180808172736.GB13378@mtr-leonro.mtl.com>
+References: <CAErSpo4PK+SQLNfdkLNt9eLc7bpbxbkZCsa8T-tQpid601n0SQ@mail.gmail.com>
+ <20180806232600.25694-1-mr.nuke.me@gmail.com>
+ <20180806232600.25694-8-mr.nuke.me@gmail.com>
+ <20180808060848.GQ13378@mtr-leonro.mtl.com>
+ <05056a70-ee78-ea3c-0b9b-6d64a8663b11@mellanox.com>
+ <20180808154142.GZ13378@mtr-leonro.mtl.com>
+ <5578cd9a-e4f0-85ab-4a86-bfa23eec136c@mellanox.com>
+ <79264a38-e3e4-d270-95df-a09047f7a15e@gmail.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Sender: linux-pci-owner@vger.kernel.org
+Content-Type: multipart/signed; micalg=pgp-sha1;
+        protocol="application/pgp-signature"; boundary="mXDO3udm/xYWQeMQ"
+In-Reply-To: <79264a38-e3e4-d270-95df-a09047f7a15e@gmail.com>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wed, 15 Aug 2018 15:21:39 -0600
-Alex Williamson <alex.williamson@redhat.com> wrote:
 
-> On Fri, 27 Apr 2018 13:44:23 +0300
-> Mika Westerberg <mika.westerberg@linux.intel.com> wrote:
-> 
-> > Intel 300 series chipset still has the same ACS issue than the previous
-> > generations so extend the ACS quirk to cover it as well.
-> > 
-> > Signed-off-by: Mika Westerberg <mika.westerberg@linux.intel.com>
-> > ---
-> >  drivers/pci/quirks.c | 6 ++++++
-> >  1 file changed, 6 insertions(+)  
-> 
-> There seems to be some suspicion whether this patch is correct, see
-> link below[1].  The user lists a kernel "4.14.36-1-lts" where lspci
-> shows the ACSCtl register with SV, RR, and CR enabled.  AIUI how
-> previous Intel root ports were defective in this regard, a dword
-> register was used for the ACS capability and control field rather than
-> the spec defined word register, therefore the upper half of each
-> mal-sized register was reserved.  I don't think lspci has gained any
-> insight into this quirk, so showing those control values enabled
-> suggests this hardware might actually not require the quirk.
-> 
-> The second listing for v4.17 (and I don't know if this is actually
-> v4.17.10 which would include the stable backport of this patch or
-> v4.17.0) shows the ACSCtl register as zero.  This is what we'd see if
-> the hardware does have this errata OR if we applied the quirk to
-> hardware that doesn't require it.  The existence of the first listing
-> kind of suggests the latter.
-> 
-> Is there a datasheet available to support this quirk?  Thanks,
-> 
+--mXDO3udm/xYWQeMQ
+Content-Type: text/plain; charset=iso-8859-1
+Content-Disposition: inline
+Content-Transfer-Encoding: quoted-printable
+
+On Wed, Aug 08, 2018 at 11:33:51AM -0500, Alex G. wrote:
+>
+>
+> On 08/08/2018 10:56 AM, Tal Gilboa wrote:
+> > On 8/8/2018 6:41 PM, Leon Romanovsky wrote:
+> > > On Wed, Aug 08, 2018 at 05:23:12PM +0300, Tal Gilboa wrote:
+> > > > On 8/8/2018 9:08 AM, Leon Romanovsky wrote:
+> > > > > On Mon, Aug 06, 2018 at 06:25:42PM -0500, Alexandru Gagniuc wrote:
+> > > > > > This is now done by the PCI core to warn of sub-optimal bandwid=
+th.
+> > > > > >
+> > > > > > Signed-off-by: Alexandru Gagniuc <mr.nuke.me@gmail.com>
+> > > > > > ---
+> > > > > > =A0=A0 drivers/net/ethernet/mellanox/mlx5/core/main.c | 4 ----
+> > > > > > =A0=A0 1 file changed, 4 deletions(-)
+> > > > > >
+> > > > >
+> > > > > Thanks,
+> > > > > Reviewed-by: Leon Romanovsky <leonro@mellanox.com>
+> > > > >
+> > > >
+> > > > Alex,
+> > > > I loaded mlx5 driver with and without these series. The report
+> > > > in dmesg is
+> > > > now missing. From what I understood, the status should be
+> > > > reported at least
+> > > > once, even if everything is in order.
+> > >
+> > > It is not what this series is doing and it removes prints completely =
+if
+> > > fabric can deliver more than card is capable.
+> > >
+> > > > We need this functionality to stay.
+> > >
+> > > I'm not sure that you need this information in driver's dmesg output,
+> > > but most probably something globally visible and accessible per-pci
+> > > device.
+> >
+> > Currently we have users that look for it. If we remove the dmesg print
+> > we need this to be reported elsewhere. Adding it to sysfs for example
+> > should be a valid solution for our case.
+>
+> I think a stop-gap measure is to leave the pcie_print_link_status() call =
+in
+> drivers that really need it for whatever reason. Implementing a reliable
+> reporting through sysfs might take some tinkering, and I don't think it's=
+ a
+> sufficient reason to block the heart of this series -- being able to dete=
+ct
+> bottlenecks and link downtraining.
+
+IMHO, you did right change and it is better to replace this print to some
+more generic solution now while you are doing it and don't leave leftovers.
+
+Thanks
+
+>
 > Alex
-> 
-> [1]https://www.reddit.com/r/VFIO/comments/97da1s/intel_c246_suspect_300_series_acs_quirk_breaks/
+>
+> > >
+> > > >
+> > > > net-next (dmesg output for 07:00.0):
+> > > > [270498.625351] mlx5_core 0000:07:00.0: firmware version: 14.22.4020
+> > > > [270498.632130] mlx5_core 0000:07:00.0: 63.008 Gb/s available
+> > > > PCIe bandwidth
+> > > > (8 GT/s x8 link)
+> > > > [270499.169533] (0000:07:00.0): E-Switch: Total vports 9, per vport=
+: max
+> > > > uc(1024) max mc(16384)
+> > > > [270499.182358] mlx5_core 0000:07:00.0: Port module event:
+> > > > module 0, Cable
+> > > > plugged
+> > > >
+> > > > net-next + patches (dmesg output for 07:00.0):
+> > > > [=A0 331.608472] mlx5_core 0000:07:00.0: firmware version: 14.22.40=
+20
+> > > > [=A0 332.564938] (0000:07:00.0): E-Switch: Total vports 9, per vpor=
+t: max
+> > > > uc(1024) max mc(16384)
+> > > > [=A0 332.616271] mlx5_core 0000:07:00.0: Port module event: module
+> > > > 0, Cable
+> > > > plugged
+> > > >
+> > > >
 
-Sorry for the self follow-up, but another user pointed me to these:
+--mXDO3udm/xYWQeMQ
+Content-Type: application/pgp-signature; name="signature.asc"
 
-https://www.intel.com/content/dam/www/public/us/en/documents/datasheets/300-series-chipset-pch-datasheet-vol-1.pdf
-https://www.intel.com/content/dam/www/public/us/en/documents/specification-updates/300-series-c240-series-chipset-pch-spec-update.pdf
+-----BEGIN PGP SIGNATURE-----
 
-And the device IDs match and the errata is #3 in the second link, yet:
+iQIcBAEBAgAGBQJbaygIAAoJEORje4g2clinD3oP/257jSKTCkI3FUiqmT5G1WqS
++IMg0/i8ShffFMfKq/MEwYKNHkYHzD2SRRM5sI2OKsA4BaivqsxkASbZSA6jNt6E
+57Or3vwsSZUZvwrkEjyqUduvp6CbZIjNQ4pLJhCOXwMFHyKL/zSKbwwqpueZl6Fa
+KTzzDzidv8gDVjZnd/HohtG7xC9PaCkyQncSOrYq0jPTVsxBUytTPy5t34THMoup
+OP1tct5Ei0R/WegvY+KpaCLSsP2SufytdovkYz3mrrrT1acPBIn5MvxR8VFKT+43
+SSOa5cKs5Q39N0csiL8UvMf7EgF1fNbpL2/oQtU+xAWqEU28w7jqE/FiZcGGzDdT
+Eavb5uy6jfdOeWR3SVGsNIT3F3d7exLCojniCTDdts4TShd2UUAl+3DSZLO8cNlL
+/arWoHrK9DbswSjmXa3R7tXDlVl5hs/mnVU6SPzNC6ApGqMV8jz2w5GVQfyXpQOl
+72brLxicafsMzPjh0vj+6/QjzuTPIFfc71vcSKYpcRitKIltJi1V8fD0RzoPq6lt
+oW2LTBpMKuZnjR06xKtYgoc4QN97jW17n750K+J8jvulRntaH+eZjWsoW60yA/0m
+SsD0352SaRL/5el0jL3917h76T5TH2iiIatklAwco6EgNtciHiIprjZ2ZGvRz24g
+KFBNnSnlL79Snqt0uHMU
+=Eeoq
+-----END PGP SIGNATURE-----
 
-00:1c.0 PCI bridge [0604]: Intel Corporation Device [8086:a338] (rev f0) (prog-if 00 [Normal decode])
-00:1c.2 PCI bridge [0604]: Intel Corporation Device [8086:a33a] (rev f0) (prog-if 00 [Normal decode])
-	Capabilities: [140 v1] Access Control Services
-		ACSCap:	SrcValid+ TransBlk+ ReqRedir+ CmpltRedir+ UpstreamFwd- EgressCtrl- DirectTrans-
-		ACSCtl:	SrcValid+ TransBlk- ReqRedir+ CmpltRedir+ UpstreamFwd- EgressCtrl- DirectTrans-
-00:1c.5 PCI bridge [0604]: Intel Corporation Device [8086:a33d] (rev f0) (prog-if 00 [Normal decode])
-	Capabilities: [140 v1] Access Control Services
-		ACSCap:	SrcValid+ TransBlk+ ReqRedir+ CmpltRedir+ UpstreamFwd- EgressCtrl- DirectTrans-
-		ACSCtl:	SrcValid+ TransBlk- ReqRedir+ CmpltRedir+ UpstreamFwd- EgressCtrl- DirectTrans-
-00:1c.6 PCI bridge [0604]: Intel Corporation Device [8086:a33e] (rev f0) (prog-if 00 [Normal decode])
-	Capabilities: [140 v1] Access Control Services
-		ACSCap:	SrcValid+ TransBlk+ ReqRedir+ CmpltRedir+ UpstreamFwd- EgressCtrl- DirectTrans-
-		ACSCtl:	SrcValid+ TransBlk- ReqRedir+ CmpltRedir+ UpstreamFwd- EgressCtrl- DirectTrans-
-00:1c.7 PCI bridge [0604]: Intel Corporation Device [8086:a33f] (rev f0) (prog-if 00 [Normal decode])
-	Capabilities: [140 v1] Access Control Services
-		ACSCap:	SrcValid+ TransBlk+ ReqRedir+ CmpltRedir+ UpstreamFwd- EgressCtrl- DirectTrans-
-		ACSCtl:	SrcValid+ TransBlk- ReqRedir+ CmpltRedir+ UpstreamFwd- EgressCtrl- DirectTrans-
-
-And the dump of config space is (1c.2):
-
-140: 0d 00 01 15 0f 00 0d 00 00 00 00 00 00 00 00 00
-                 ^^^^^ ^^^^^
-                  Cap   Ctl
-
-So it sure seems like the quirk shouldn't apply here.  Note that the
-user calls this a C246 chipset, though this isn't a directly addressed
-product SKU in either document.  The LPC device ID is a309, which also
-is not directly addressed by the above datasheet.  Has Intel fixed this
-in some SKUs, but not others, both using the same root port device
-IDs?  Thanks,
-
-Alex
-
-> > diff --git a/drivers/pci/quirks.c b/drivers/pci/quirks.c
-> > index 2990ad1e7c99..7a0f41176369 100644
-> > --- a/drivers/pci/quirks.c
-> > +++ b/drivers/pci/quirks.c
-> > @@ -4230,6 +4230,11 @@ static int pci_quirk_qcom_rp_acs(struct pci_dev *dev, u16 acs_flags)
-> >   * 0xa290-0xa29f PCI Express Root port #{0-16}
-> >   * 0xa2e7-0xa2ee PCI Express Root port #{17-24}
-> >   *
-> > + * The 300 series chipset suffers from the same bug so include those root
-> > + * ports here as well.
-> > + *
-> > + * 0xa32c-0xa343 PCI Express Root port #{0-24}
-> > + *
-> >   * [1] http://www.intel.com/content/www/us/en/chipsets/100-series-chipset-datasheet-vol-2.html
-> >   * [2] http://www.intel.com/content/www/us/en/chipsets/100-series-chipset-datasheet-vol-1.html
-> >   * [3] http://www.intel.com/content/www/us/en/chipsets/100-series-chipset-spec-update.html
-> > @@ -4244,6 +4249,7 @@ static bool pci_quirk_intel_spt_pch_acs_match(struct pci_dev *dev)
-> >  	switch (dev->device) {
-> >  	case 0xa110 ... 0xa11f: case 0xa167 ... 0xa16a: /* Sunrise Point */
-> >  	case 0xa290 ... 0xa29f: case 0xa2e7 ... 0xa2ee: /* Union Point */
-> > +	case 0xa32c ... 0xa343:				/* 300 series */
-> >  		return true;
-> >  	}
-> >    
-> 
+--mXDO3udm/xYWQeMQ--
