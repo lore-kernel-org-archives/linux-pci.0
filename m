@@ -1,63 +1,70 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-wm0-f67.google.com ([74.125.82.67]:51431 "EHLO
-        mail-wm0-f67.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S2387475AbeHAIv2 (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Wed, 1 Aug 2018 04:51:28 -0400
-Received: by mail-wm0-f67.google.com with SMTP id y2-v6so5717559wma.1
-        for <linux-pci@vger.kernel.org>; Wed, 01 Aug 2018 00:07:15 -0700 (PDT)
+Return-Path: <SRS0=Od/I=KX=linux.intel.com=felipe.balbi@kernel.org>
+Return-Path: <SRS0=Od/I=KX=linux.intel.com=felipe.balbi@kernel.org>
+From: Felipe Balbi <felipe.balbi@linux.intel.com>
+To: Bjorn Helgaas <bhelgaas@google.com>
+Cc: Bjorn Helgaas <helgaas@kernel.org>, linux-pci@vger.kernel.org, stable@vger.kernel.org, Jingoo Han <jingoohan1@gmail.com>
+Subject: Re: [PATCH] PCI: Fix bit definitions for LNKCAP2 register
+In-Reply-To: <CAErSpo595gmyeWNtY4Ur6VQoxS82bx8JQ-PoSv0oUdn-j7pJCA@mail.gmail.com>
+References: <20180803065120.29322-1-felipe.balbi@linux.intel.com> <20180806182327.GA30691@bhelgaas-glaptop.roam.corp.google.com> <87lg9ia8q6.fsf@linux.intel.com> <CAErSpo595gmyeWNtY4Ur6VQoxS82bx8JQ-PoSv0oUdn-j7pJCA@mail.gmail.com>
+Date: Wed, 08 Aug 2018 09:30:56 +0300
+Message-ID: <87va8l8j4v.fsf@linux.intel.com>
 MIME-Version: 1.0
-In-Reply-To: <20180726105617.GA6181@red-moon>
-References: <20180705094539.xkmtfffbzl3kooum@kili.mountain> <20180726105617.GA6181@red-moon>
-From: Subrahmanya Lingappa <l.subrahmanya@mobiveil.co.in>
-Date: Wed, 1 Aug 2018 12:37:14 +0530
-Message-ID: <CAFZiPx0p5YJz1M_K5AJYXT_NP04QxOQVTG8FLcFGkA=yCXdrWQ@mail.gmail.com>
-Subject: Re: [PATCH] PCI: mobiveil: integer overflow in IB_WIN_SIZE
-To: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
-Cc: Dan Carpenter <dan.carpenter@oracle.com>,
-        Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org,
-        kernel-janitors@vger.kernel.org
-Content-Type: text/plain; charset="UTF-8"
-Sender: linux-pci-owner@vger.kernel.org
+Content-Type: multipart/signed; boundary="=-=-=";
+	micalg=pgp-sha512; protocol="application/pgp-signature"
 List-ID: <linux-pci.vger.kernel.org>
 
-Lorenzo,
-Added the compilation support in the next patch submitted at :
-https://patchwork.kernel.org/patch/10551771/
-
-please review.
-
-Thanks,
-Subrahmanya
+--=-=-=
+Content-Type: text/plain
+Content-Transfer-Encoding: quoted-printable
 
 
-On Thu, Jul 26, 2018 at 4:26 PM, Lorenzo Pieralisi
-<lorenzo.pieralisi@arm.com> wrote:
-> On Thu, Jul 05, 2018 at 12:45:39PM +0300, Dan Carpenter wrote:
->> IB_WIN_SIZE is larger than INT_MAX so we need to cast it to u64.
+Hi,
+
+Bjorn Helgaas <bhelgaas@google.com> writes:
+>> Bjorn Helgaas <helgaas@kernel.org> writes:
+>> > On Fri, Aug 03, 2018 at 09:51:20AM +0300, Felipe Balbi wrote:
+>> >> Even thhough commit b891b4dc1eed claimed that original bit definitions
+>> >> were wrong, that's not really the case. After verifying PCI
+>> >> Specification Revisions 3.0, 3.1 and 4.0, Link Capabilites 2
+>> >> Register's bit definitions were always starting from Bit 0.
+>> >>
+>> >> This has been causing issues reporting correct link speeds on sysfs.
+>> >
+>> > Can you elaborate on this a bit?  b891b4dc1eed still looks correct to
+>> > me.  I'm looking at PCIe r4.0, sec 7.5.3.18, where it shows:
+>> >
+>> >   bit    0  RsvdP
+>> >   bits 7:1  Supported Link Speeds Vector
 >>
->> Fixes: 9af6bcb11e12 ("PCI: mobiveil: Add Mobiveil PCIe Host Bridge IP driver")
->> Signed-off-by: Dan Carpenter <dan.carpenter@oracle.com>
->> ---
->> Untested...  Possibly the problem is that there are too many multiplies
->> by * 1024.
->>
->> diff --git a/drivers/pci/controller/pcie-mobiveil.c b/drivers/pci/controller/pcie-mobiveil.c
+>> I had missed this detail, actually. It was a misinterpretation of the
+>> spec. Sorry for the noise.
 >
-> Applied to pci/mobiveil for v4.19 (it is still not fixing anything
-> given that the driver lacks a Kconfig and Makefile entries - that
-> must be fixed with urgency), thanks.
->
-> Lorenzo
->
->> index 4d6c20e47bed..cf0aa7cee5b0 100644
->> --- a/drivers/pci/controller/pcie-mobiveil.c
->> +++ b/drivers/pci/controller/pcie-mobiveil.c
->> @@ -107,7 +107,7 @@
->>  #define CFG_WINDOW_TYPE      0
->>  #define IO_WINDOW_TYPE               1
->>  #define MEM_WINDOW_TYPE      2
->> -#define IB_WIN_SIZE          (256 * 1024 * 1024 * 1024)
->> +#define IB_WIN_SIZE          ((u64)256 * 1024 * 1024 * 1024)
->>  #define MAX_PIO_WINDOWS      8
->>
->>  /* Parameters for the waiting for link up routine */
+> No problem.  You were seeing something incorrect in sysfs, so if we
+> can help diagnose or fix whatever the real problem is, don't hesitate
+> to ask!
+
+Sure thing, but I think this is a problem elsewhere :)
+
+=2D-=20
+balbi
+
+--=-=-=
+Content-Type: application/pgp-signature; name="signature.asc"
+
+-----BEGIN PGP SIGNATURE-----
+
+iQIzBAEBCgAdFiEElLzh7wn96CXwjh2IzL64meEamQYFAltqjiIACgkQzL64meEa
+mQYZQRAAgHifmyahzYrbCaZXS79zbYJX8uLdHExj7K/zq2+R07S1w8tNOL1oHY0E
+CCgfvTcywxkcz62o49j2g5hV0tjcrr82d/ce29KhA+JxBPmvl+4qAVcMp7+KgU0/
+78s2d8bMUyNJjQ5KoF2SC+vHN2b4juuXHQZyPFA8rn0QuZ7m+CrtjCpTKGwqC+vh
+LOftPEn48dYuxyWMMrIolyxwYxwuTaxyWLi2buOI5+C1yH6zFJE+yPMWr2zwM95S
+Cq/SEMXaJlc+lThD3B8Sx002ivOQVbk3lXdN4LZLsw/XvgfuH5Qppjg68jSNbv+p
+Vl5QvoU7ofIRpD7TiylcbPSgIqnT865GaEOIxlhrhplacyI5Gu0Ez6B3bCrI+yFx
+X20ndIZmQOcnKfTAYitn8WR5XwadH+pqko9URBQbdRmlPM5Vu4iLEZs8c9lqLpa7
+Qp+P2WvPnNg+XBx0vqiEkSIzH6zR8+T4C/+XxrhvPi3e3CWiyJML2pL00nB/YbKa
+h24w2KieWppmBVSmm5sEoYIzgopj2V6O67EnF/IeYb2OAJ/T/I28Ck8MSQ259rv8
+69mjUu0pe/BoXyqc5Mm/yOHmvAq8XfXeO8GVJuYYEqiscRni1QHbzL9fK6g7RQa7
+CmSrJse33RVU1NNFPUAIdP0n739OAGh7eUKLEkYKCLzBFiIo2B0=
+=5Eq8
+-----END PGP SIGNATURE-----
+--=-=-=--
