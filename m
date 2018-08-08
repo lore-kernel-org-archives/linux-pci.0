@@ -1,76 +1,49 @@
-Return-Path: <SRS0=cgPf=K4=deltatee.com=logang@kernel.org>
-Return-Path: <SRS0=cgPf=K4=deltatee.com=logang@kernel.org>
-To: Kit Chow <kchow@gigaio.com>, Robin Murphy <robin.murphy@arm.com>,
- Dave Jiang <dave.jiang@intel.com>, Eric Pilmore <epilmore@gigaio.com>,
- Bjorn Helgaas <helgaas@kernel.org>
-Cc: "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
- Alex Williamson <alex.williamson@redhat.com>,
- David Woodhouse <dwmw2@infradead.org>,
- "iommu@lists.linux-foundation.org" <iommu@lists.linux-foundation.org>
-References: <CAOQPn8soxubJxb=vp7kz+AM6LbPH5y+_Nx0Vzv7rjV_nMMqEmA@mail.gmail.com>
- <b8af340c-d40b-cb8c-987f-b394f1d6ec3e@gigaio.com>
- <adf51c74-36fa-b61d-8497-27bd75178ba4@deltatee.com>
- <aa9c3f41-efc9-8c68-a517-2736c8986621@gigaio.com>
- <1170c096-a749-6ee3-32d4-ebba1d12adff@gigaio.com>
- <929f3dfa-fbff-c582-3be5-c368f11feb7e@deltatee.com>
- <460cc47f-6a8e-67b0-01a0-02f0c51df258@intel.com>
- <0f653f8f-c7ae-831d-e238-2742590d9ea1@deltatee.com>
- <6525fa4d-7d9b-0136-7206-f8351230af46@intel.com>
- <f22c565e-ba49-c83d-3e51-7967664c7136@deltatee.com>
- <499934e7-3734-1aee-37dd-b42a5d2a2608@intel.com>
- <9d135f61-20c2-e966-4d7d-3e154384ea08@gigaio.com>
- <0a9fa9c3-dbe4-6451-9c1a-06b662702f61@deltatee.com>
- <a2391f6c-d73b-c140-edad-8cd6584dd437@gigaio.com>
- <c8d69f9b-b3a6-76ee-1a90-b3dbaaa9b82b@arm.com>
- <3772d88a-e9ad-465a-c91f-df8f9c6219be@gigaio.com>
- <dd18cf79-aa10-9801-bf95-192f0b86b6d9@gigaio.com>
- <0e839acf-5948-42aa-2ad6-72ca0d84a8c3@deltatee.com>
- <bcfc8738-cbf6-7124-3d79-a1bdfe161d36@gigaio.com>
-From: Logan Gunthorpe <logang@deltatee.com>
-Message-ID: <712ecb24-8919-05a5-f64c-6a1faa971edc@deltatee.com>
-Date: Mon, 13 Aug 2018 17:50:50 -0600
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from foss.arm.com ([217.140.101.70]:36364 "EHLO foss.arm.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1726875AbeHHL5W (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Wed, 8 Aug 2018 07:57:22 -0400
+Date: Wed, 8 Aug 2018 10:38:22 +0100
+From: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
+To: Ray Jui <ray.jui@broadcom.com>
+Cc: Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org,
+        Tomasz Nowicki <tn@semihalf.com>,
+        Vladimir Olovyannikov <vladimir.olovyannikov@broadcom.com>,
+        BCM Kernel Feedback <bcm-kernel-feedback-list@broadcom.com>
+Subject: Re: [RFC] ARM64, PCIe, annd ACPI
+Message-ID: <20180808093822.GA25150@e107981-ln.cambridge.arm.com>
+References: <89484aa0-08c4-0cff-500d-407d21e2f5fd@broadcom.com>
 MIME-Version: 1.0
-In-Reply-To: <bcfc8738-cbf6-7124-3d79-a1bdfe161d36@gigaio.com>
-Content-Type: text/plain; charset=utf-8
-Subject: Re: IOAT DMA w/IOMMU
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <89484aa0-08c4-0cff-500d-407d21e2f5fd@broadcom.com>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
+On Tue, Aug 07, 2018 at 05:10:15PM -0700, Ray Jui wrote:
+> Hi Lorenzo/Bjorn,
+> 
+> I have a question on PCIe controller APCI support on ARM64 based systems.
+> 
+> If my understanding of the implementation of "pci_acpi_scan_root" under
+> "arch/arm64/kernel/pci.c" is correct, it appears
+> "pci_acpi_setup_ecam_mapping" is called within "pci_acpi_scan_root".
+> 
+> Does that mean for a PCIe host controller on ARM64 to support ACPI, it needs
+> to support ECAM and MMIO based access to the configuration space registers?
+> 
+> If the above statement is true, does it imply that any PCIe controller on
+> ARM64 that does not support MMIO based access to the config space register
+> cannot have ACPI support?
 
+Yes and it is not just MMIO, config space must be ECAM compliant as described
+in the PCI firmware specification and enforced here:
 
-On 13/08/18 05:48 PM, Kit Chow wrote:
-> On 08/13/2018 04:39 PM, Logan Gunthorpe wrote:
->>
->> On 13/08/18 05:30 PM, Kit Chow wrote:
->>> In arch/x86/include/asm/page.h, there is the following comment in
->>> regards to validating the virtual address.
->>>
->>> /*
->>>   * virt_to_page(kaddr) returns a valid pointer if and only if
->>>   * virt_addr_valid(kaddr) returns true.
->>>   */
->>> #define virt_to_page(kaddr)     pfn_to_page(__pa(kaddr) >> PAGE_SHIFT)
->>>
->>> So it looks like the validation by virt_addr_valid was somehow dropped
->>> from the virt_to_page code path. Does anyone have any ideas what
->>> happended to it?
->> I don't think it was ever validated (though I haven't been around long
->> enough to say for certain). What the comment is saying is that you
->> shouldn't rely on virt_to_page() unless you know virt_addr_valid() is
->> true (which in most cases you can without the extra check). virt_to_page
->> is meant to be really fast so adding an extra validation would probably
->> be a significant performance regression for the entire kernel.
->>
->> The fact that this can happen through dma_map_single() is non-ideal at
->> best. It assumes the caller is mapping regular memory and doesn't check
->> this at all. It may make sense to fix that but I think people expect
->> dma_map_single() to be as fast as possible as well...
->>
-> Perhaps include the validation with some debug turned on?
+http://infocenter.arm.com/help/topic/com.arm.doc.den0029b/Server_Base_System_Architecture_v5_0_ARM_DEN_0029B.pdf
 
-The problem is how often do you develop code with any of the debug
-config options turned on?
+In short: what's in the mainline (+ adequate PCI controller firmware
+configuration) must be sufficient to bootstrap your PCI subsystem in
+ACPI, it is a very simple litmus test and we won't add anything that
+deviates from that to the mainline kernel ARM64 ACPI PCI code support.
 
-There's already a couple of BUG_ONs in dma_map_single so maybe another
-one with virt_addr_valid wouldn't be so bad.
-
-Logan
+Thanks,
+Lorenzo
