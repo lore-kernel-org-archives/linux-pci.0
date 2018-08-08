@@ -1,64 +1,69 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from nikam.ms.mff.cuni.cz ([195.113.20.16]:44438 "EHLO
-        nikam.ms.mff.cuni.cz" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1727756AbeHLMGC (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Sun, 12 Aug 2018 08:06:02 -0400
-Date: Sun, 12 Aug 2018 11:28:37 +0200
-From: Martin Mares <mj@ucw.cz>
-To: Matthew Wilcox <willy@infradead.org>
-Cc: Logan Gunthorpe <logang@deltatee.com>,
-        linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
-        linux-doc@vger.kernel.org, Stephen Bates <sbates@raithlin.com>,
-        Christoph Hellwig <hch@lst.de>,
-        Bjorn Helgaas <bhelgaas@google.com>,
-        Jonathan Corbet <corbet@lwn.net>,
-        Ingo Molnar <mingo@kernel.org>,
-        Thomas Gleixner <tglx@linutronix.de>,
-        "Paul E. McKenney" <paulmck@linux.vnet.ibm.com>,
-        Marc Zyngier <marc.zyngier@arm.com>,
-        Kai-Heng Feng <kai.heng.feng@canonical.com>,
-        Frederic Weisbecker <frederic@kernel.org>,
-        Dan Williams <dan.j.williams@intel.com>,
-        =?utf-8?B?SsOpcsO0bWU=?= Glisse <jglisse@redhat.com>,
-        Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-        Alex Williamson <alex.williamson@redhat.com>,
-        Christian =?utf-8?B?S8O2bmln?= <christian.koenig@amd.com>
-Subject: Re: lspci: Display path to device
-Message-ID: <mj+md-20180812.092635.39872.nikam@ucw.cz>
-References: <20180717170204.30470-1-logang@deltatee.com>
- <20180717203900.GA1771@bombadil.infradead.org>
- <mj+md-20180810.091549.51451.nikam@ucw.cz>
- <mj+md-20180810.103017.64385.nikam@ucw.cz>
- <20180810145655.GA16533@bombadil.infradead.org>
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Date: Wed, 8 Aug 2018 10:12:27 -0400 (EDT)
+From: Mikulas Patocka <mpatocka@redhat.com>
+To: Catalin Marinas <catalin.marinas@arm.com>
+Subject: Re: framebuffer corruption due to overlapping stp instructions on
+ arm64
+In-Reply-To: <20180808113927.GA24736@iMac.local>
+Message-ID: <alpine.LRH.2.02.1808081011110.9997@file01.intranet.prod.int.rdu2.redhat.com>
+References: <alpine.LRH.2.02.1808021242320.31834@file01.intranet.prod.int.rdu2.redhat.com>
+ <CAHCPf3tFGqkYEcWNN4LaWThw_rVqT316pzLv6T7RfxwO-eZ0EA@mail.gmail.com>
+ <alpine.LRH.2.02.1808030212340.17672@file01.intranet.prod.int.rdu2.redhat.com>
+ <CAKv+Gu8DeuksZhk1g3q_msSKV_hSY_2e1uzVten9-oGO3j9Sqg@mail.gmail.com>
+ <20180803094129.GB17798@arm.com>
+ <alpine.LRH.2.02.1808031235410.31584@file01.intranet.prod.int.rdu2.redhat.com>
+ <20180808113927.GA24736@iMac.local>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20180810145655.GA16533@bombadil.infradead.org>
-Sender: linux-pci-owner@vger.kernel.org
+List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
+List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
+List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
+List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
+List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
+Cc: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>,
+ Joao Pinto <Joao.Pinto@synopsys.com>, libc-alpha@sourceware.org,
+ Ard Biesheuvel <ard.biesheuvel@linaro.org>, Jingoo Han <jingoohan1@gmail.com>,
+ Will Deacon <will.deacon@arm.com>, Russell King <linux@armlinux.org.uk>,
+ Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
+ Matt Sealey <neko@bakuhatsu.net>, linux-pci@vger.kernel.org,
+ linux-arm-kernel <linux-arm-kernel@lists.infradead.org>
+Content-Type: text/plain; charset="us-ascii"
+Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
+Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hello!
 
-> One is that using -P and -s together doesn't work because we haven't
-> scanned the entire topology.
+
+On Wed, 8 Aug 2018, Catalin Marinas wrote:
+
+> On Fri, Aug 03, 2018 at 01:09:02PM -0400, Mikulas Patocka wrote:
+> > 	while (1) {
+> > 		start = (unsigned)random() % (LEN + 1);
+> > 		end = (unsigned)random() % (LEN + 1);
+> > 		if (start > end)
+> > 			continue;
+> > 		for (i = start; i < end; i++)
+> > 			data[i] = val++;
+> > 		memcpy(map + start, data + start, end - start);
+> > 		if (memcmp(map, data, LEN)) {
 > 
-> $ ./lspci-mw -PF tests/fujitsu-p8010.lspci -s 1d:00.0
-> 00:1e.0/03.0/00.0 Network controller: 3Com Corporation 3com 3CRWE154G72 [Office Connect Wireless LAN Adapter] (rev 01)
-> $ ./lspci-mm -PF tests/fujitsu-p8010.lspci -s 1d:00.0
-> 1d:00.0 Network controller: 3Com Corporation 3com 3CRWE154G72 [Office Connect Wireless LAN Adapter] (rev 01)
-
-Fixed. When topology is required, we now scan all devices and apply the
-filters later.
-
-> The other is that even when not using -s, the topology isn't fully represented:
+> It may be worth trying to do a memcmp(map+start, data+start, end-start)
+> here to see whether the hazard logic fails when the writes are unaligned
+> but the reads are not.
 > 
-> $ ./lspci-mm -PF tests/fujitsu-p8010.lspci |grep 3com
-> 00:1e.0/00.0 Network controller: 3Com Corporation 3com 3CRWE154G72 [Office Connect Wireless LAN Adapter] (rev 01)
+> This problem may as well appear if you do byte writes and read longs
+> back (and I consider this a hardware problem on this specific board).
 
-Ah well, it seems that the tree mode never worked with CardBus bridges. Fixed.
+I triad to insert usleep(10000) between the memcpy and memcmp, but the 
+same corruption occurs. So, it can't be read-after-write hazard. It is 
+caused by the improper handling of hazard between the overlapping writes 
+inside memcpy.
 
-After some pondering, I changed the format of the paths to include bus numbers
-in all steps. I think it is more intuitive.
+Mikulas
 
-Please give it a try. If it works, I will merge the branch to master.
-
-					Martin
+_______________________________________________
+linux-arm-kernel mailing list
+linux-arm-kernel@lists.infradead.org
+http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
