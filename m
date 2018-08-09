@@ -1,111 +1,84 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-sh2.amlogic.com ([58.32.228.45]:16601 "EHLO
-        mail-sh2.amlogic.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1727098AbeH3LiT (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Thu, 30 Aug 2018 07:38:19 -0400
-Subject: Re: [PATCH v2 1/2] dt-bindings: PCI: meson: add DT bindings for
- Amlogic Meson PCIe controller
-To: Rob Herring <robh@kernel.org>
-CC: Jerome Brunet <jbrunet@baylibre.com>,
-        Bjorn Helgaas <bhelgaas@google.com>,
-        Yue Wang <yue.wang@amlogic.com>,
-        Kevin Hilman <khilman@baylibre.com>,
-        <linux-kernel@vger.kernel.org>, <linux-pci@vger.kernel.org>,
-        <linux-arm-kernel@lists.infradead.org>,
-        <linux-amlogic@lists.infradead.org>,
-        Yixun Lan <yixun.lan@amlogic.com>,
-        Liang Yang <liang.yang@amlogic.com>,
-        Jianxin Pan <jianxin.pan@amlogic.com>,
-        Qiufang Dai <qiufang.dai@amlogic.com>,
-        Jian Hu <jian.hu@amlogic.com>, <devicetree@vger.kernel.org>
-References: <1535096165-45827-1-git-send-email-hanjie.lin@amlogic.com>
- <1535096165-45827-2-git-send-email-hanjie.lin@amlogic.com>
- <8c48964151d24758298ba935da336c0829e2b287.camel@baylibre.com>
- <11d7547b-feb4-6ecb-cef3-db46ce8ee2ef@amlogic.com>
- <20180829004122.GA25928@bogus>
-From: Hanjie Lin <hanjie.lin@amlogic.com>
-Message-ID: <84d5399c-67d4-f8a4-3613-00d91f21292f@amlogic.com>
-Date: Thu, 30 Aug 2018 15:37:30 +0800
+Received: from mail-qt0-f195.google.com ([209.85.216.195]:35657 "EHLO
+        mail-qt0-f195.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1730419AbeHIRXN (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Thu, 9 Aug 2018 13:23:13 -0400
+Received: by mail-qt0-f195.google.com with SMTP id r21-v6so6842116qtm.2
+        for <linux-pci@vger.kernel.org>; Thu, 09 Aug 2018 07:57:57 -0700 (PDT)
+Subject: Re: [RFC] ARM64, PCIe, annd ACPI
+To: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
+Cc: Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org,
+        Tomasz Nowicki <tn@semihalf.com>,
+        Vladimir Olovyannikov <vladimir.olovyannikov@broadcom.com>,
+        BCM Kernel Feedback <bcm-kernel-feedback-list@broadcom.com>
+References: <89484aa0-08c4-0cff-500d-407d21e2f5fd@broadcom.com>
+ <20180808093822.GA25150@e107981-ln.cambridge.arm.com>
+ <a32a8761-f49f-f0cf-928b-0c323c2b540e@broadcom.com>
+ <20180809085923.GA13428@e107981-ln.cambridge.arm.com>
+From: Ray Jui <ray.jui@broadcom.com>
+Message-ID: <9b5b5918-1492-df65-5b63-678b4a35ecb9@broadcom.com>
+Date: Thu, 9 Aug 2018 07:57:52 -0700
 MIME-Version: 1.0
-In-Reply-To: <20180829004122.GA25928@bogus>
-Content-Type: text/plain; charset="windows-1252"
+In-Reply-To: <20180809085923.GA13428@e107981-ln.cambridge.arm.com>
+Content-Type: text/plain; charset=utf-8; format=flowed
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
+Hi Lorenzo,
 
-
-On 2018/8/29 8:41, Rob Herring wrote:
-> On Mon, Aug 27, 2018 at 04:55:20PM +0800, Hanjie Lin wrote:
+On 8/9/2018 1:59 AM, Lorenzo Pieralisi wrote:
+> On Wed, Aug 08, 2018 at 11:49:46AM -0700, Ray Jui wrote:
 >>
 >>
->> On 2018/8/24 16:22, Jerome Brunet wrote:
->>> On Fri, 2018-08-24 at 15:36 +0800, Hanjie Lin wrote:
->>>> From: Yue Wang <yue.wang@amlogic.com>
+>> On 8/8/2018 2:38 AM, Lorenzo Pieralisi wrote:
+>>> On Tue, Aug 07, 2018 at 05:10:15PM -0700, Ray Jui wrote:
+>>>> Hi Lorenzo/Bjorn,
 >>>>
->>>> The Amlogic Meson PCIe host controller is based on the Synopsys DesignWare
->>>> PCI core. This patch adds documentation for the DT bindings in Meson PCIe
->>>> controller.
+>>>> I have a question on PCIe controller APCI support on ARM64 based systems.
 >>>>
->>>> Signed-off-by: Yue Wang <yue.wang@amlogic.com>
->>>> Signed-off-by: Hanjie Lin <hanjie.lin@amlogic.com>
->>>> ---
->>>>  .../devicetree/bindings/pci/amlogic,meson-pcie.txt | 63 ++++++++++++++++++++++
->>>>  1 file changed, 63 insertions(+)
->>>>  create mode 100644 Documentation/devicetree/bindings/pci/amlogic,meson-pcie.txt
+>>>> If my understanding of the implementation of "pci_acpi_scan_root" under
+>>>> "arch/arm64/kernel/pci.c" is correct, it appears
+>>>> "pci_acpi_setup_ecam_mapping" is called within "pci_acpi_scan_root".
 >>>>
->>>> diff --git a/Documentation/devicetree/bindings/pci/amlogic,meson-pcie.txt b/Documentation/devicetree/bindings/pci/amlogic,meson-pcie.txt
->>>> new file mode 100644
->>>> index 0000000..8a831d1
->>>> --- /dev/null
->>>> +++ b/Documentation/devicetree/bindings/pci/amlogic,meson-pcie.txt
->>>> @@ -0,0 +1,63 @@
->>>> +Amlogic Meson AXG DWC PCIE SoC controller
->>>> +
->>>> +Amlogic Meson PCIe host controller is based on the Synopsys DesignWare PCI core.
->>>> +It shares common functions with the PCIe DesignWare core driver and
->>>> +inherits common properties defined in
->>>> +Documentation/devicetree/bindings/pci/designware-pci.txt.
->>>> +
->>>> +Additional properties are described here:
->>>> +
->>>> +Required properties:
->>>> +- compatible:
->>>> +	should contain "amlogic,axg-pcie" to identify the core.
->>>> +- reg:
->>>> +	Should contain the configuration address space.
->>>> +- reg-names: Must be
->>>> +	- "elbi"	External local bus interface registers
->>>> +	- "cfg"		Meson specific registers
->>>> +	- "config"	PCIe configuration space
->>>> +- reset-gpios: The GPIO to generate PCIe PERST# assert and deassert signal.
->>>> +- clocks: Must contain an entry for each entry in clock-names.
->>>> +- clock-names: Must include the following entries:
->>>> +	- "pclk"       PCIe GEN 100M PLL clock
->>>> +	- "port"       PCIe_x(A or B) RC clock gate
->>>> +	- "general"    PCIe Phy clock
->>>> +	- "mipi"       PCIe_x(A or B) 100M ref clock gate
->>>> +- resets: phandle to the reset lines.
->>>> +- reset-names: must contain "phy" and "peripheral"
->>>> +       - "port" Port A or B reset
->>>> +       - "apb" APB reset
+>>>> Does that mean for a PCIe host controller on ARM64 to support ACPI, it needs
+>>>> to support ECAM and MMIO based access to the configuration space registers?
+>>>>
+>>>> If the above statement is true, does it imply that any PCIe controller on
+>>>> ARM64 that does not support MMIO based access to the config space register
+>>>> cannot have ACPI support?
 >>>
->>> The above description is not coherent (phy <=> port)
+>>> Yes and it is not just MMIO, config space must be ECAM compliant as described
+>>> in the PCI firmware specification and enforced here:
+>>>
+>>> http://infocenter.arm.com/help/topic/com.arm.doc.den0029b/Server_Base_System_Architecture_v5_0_ARM_DEN_0029B.pdf
 >>>
 >>
->> Yes, this should be port and apb here.
->> We'll integrate phy driver into ctrl driver, and move phy reset to here also.
+>> Okay, got it, the SBSA spec makes it very clear that the PCIe controller
+>> needs to support ECAM.
+>>
+>>> In short: what's in the mainline (+ adequate PCI controller firmware
+>>> configuration) must be sufficient to bootstrap your PCI subsystem in
+>>> ACPI, it is a very simple litmus test and we won't add anything that
+>>> deviates from that to the mainline kernel ARM64 ACPI PCI code support.
+>>>
+>>
+>> It sounds like I'll have to look into ways to work around this at the driver
+>> level as Bjorn pointed out with some other examples.
 > 
-> Why? That's the wrong thing to do if they are separate h/w blocks. You 
-> can do whatever you like in the drivers, but the DT should reflect the 
-> h/w.
+> As I said ARM64 ACPI PCI kernel support is in the mainline today and I
+> am not willing to merge any more MCFG quirks at driver level - the
+> information is out there, it is public and must be followed, either
+> designers do that or no ACPI PCI support on your platform, sorry.
 > 
-> Rob
-> 
-> .
+> Lorenzo
 > 
 
-We have the dedicated phy driver which only process reset job,
-and we consider that it's too overkill to do just these things .
-So we will integrate phy reset job into the controller driver int the next version.  
+I just want to make sure I interpret this properly. This means if the 
+PCIe controller hardware does not support ECAM, there's pretty much no 
+way around it with SW based workaround going forward with mainline kernel?
 
-thanks. 
+What about for the PCIe controller that was designed a few years back?
+
+Thanks,
+
+Ray
