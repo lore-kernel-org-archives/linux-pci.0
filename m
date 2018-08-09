@@ -1,144 +1,63 @@
-Return-Path: <linux-nvme-bounces+bjorn=helgaas.com@lists.infradead.org>
-Return-Path: <linux-nvme-bounces+bjorn=helgaas.com@lists.infradead.org>
-Subject: Re: [PATCH v5 06/13] PCI/P2PDMA: Add P2P DMA driver writer's
- documentation
-To: Logan Gunthorpe <logang@deltatee.com>, linux-kernel@vger.kernel.org,
- linux-pci@vger.kernel.org, linux-nvme@lists.infradead.org,
- linux-rdma@vger.kernel.org, linux-nvdimm@lists.01.org,
- linux-block@vger.kernel.org
-References: <20180830185352.3369-1-logang@deltatee.com>
- <20180830185352.3369-7-logang@deltatee.com>
-From: Randy Dunlap <rdunlap@infradead.org>
-Message-ID: <382af881-0ae1-0274-4628-0137071125b1@infradead.org>
-Date: Thu, 30 Aug 2018 17:34:32 -0700
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail.kernel.org ([198.145.29.99]:51764 "EHLO mail.kernel.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1730880AbeHIQk6 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Thu, 9 Aug 2018 12:40:58 -0400
+Date: Thu, 9 Aug 2018 09:15:51 -0500
+From: Bjorn Helgaas <helgaas@kernel.org>
+To: Alexandru Gagniuc <mr.nuke.me@gmail.com>
+Cc: bhelgaas@google.com, keith.busch@intel.com,
+        alex_gagniuc@dellteam.com, austin_bolen@dell.com,
+        shyam_iyer@dell.com, Frederick Lawler <fred@fredlawl.com>,
+        Oza Pawandeep <poza@codeaurora.org>, linux-pci@vger.kernel.org,
+        linux-kernel@vger.kernel.org
+Subject: Re: [PATCH] PCI/AER: Do not clear AER bits if we don't own AER
+Message-ID: <20180809141551.GH49411@bhelgaas-glaptop.roam.corp.google.com>
+References: <20180717153135.25925-1-mr.nuke.me@gmail.com>
 MIME-Version: 1.0
-In-Reply-To: <20180830185352.3369-7-logang@deltatee.com>
-List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-nvme>,
- <mailto:linux-nvme-request@lists.infradead.org?subject=unsubscribe>
-List-Archive: <http://lists.infradead.org/pipermail/linux-nvme/>
-List-Post: <mailto:linux-nvme@lists.infradead.org>
-List-Help: <mailto:linux-nvme-request@lists.infradead.org?subject=help>
-List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-nvme>,
- <mailto:linux-nvme-request@lists.infradead.org?subject=subscribe>
-Cc: Sagi Grimberg <sagi@grimberg.me>,
- =?UTF-8?Q?Christian_K=c3=b6nig?= <christian.koenig@amd.com>,
- Benjamin Herrenschmidt <benh@kernel.crashing.org>,
- Jonathan Corbet <corbet@lwn.net>, Alex Williamson <alex.williamson@redhat.com>,
- Stephen Bates <sbates@raithlin.com>, Keith Busch <keith.busch@intel.com>,
- =?UTF-8?B?SsOpcsO0bWUgR2xpc3Nl?= <jglisse@redhat.com>,
- Jason Gunthorpe <jgg@mellanox.com>, Bjorn Helgaas <bhelgaas@google.com>,
- Max Gurtovoy <maxg@mellanox.com>, Dan Williams <dan.j.williams@intel.com>,
- Christoph Hellwig <hch@lst.de>
-Content-Type: text/plain; charset="us-ascii"
-Sender: "Linux-nvme" <linux-nvme-bounces@lists.infradead.org>
-Errors-To: linux-nvme-bounces+bjorn=helgaas.com@lists.infradead.org
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20180717153135.25925-1-mr.nuke.me@gmail.com>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hi,
-
-I have a few comments below...
-
-On 08/30/2018 11:53 AM, Logan Gunthorpe wrote:
+On Tue, Jul 17, 2018 at 10:31:23AM -0500, Alexandru Gagniuc wrote:
+> When we don't own AER, we shouldn't touch the AER error bits. This
+> happens unconditionally on device probe(). Clearing AER bits
+> willy-nilly might cause firmware to miss errors. Instead
+> these bits should get cleared by FFS, or via ACPI _HPX method.
 > 
-> Signed-off-by: Logan Gunthorpe <logang@deltatee.com>
-> Cc: Jonathan Corbet <corbet@lwn.net>
+> This race is mostly of theoretical significance, as it is not easy to
+> reasonably demonstrate it in testing.
+> 
+> Signed-off-by: Alexandru Gagniuc <mr.nuke.me@gmail.com>
 > ---
->  Documentation/driver-api/pci/index.rst  |   1 +
->  Documentation/driver-api/pci/p2pdma.rst | 170 ++++++++++++++++++++++++++++++++
->  2 files changed, 171 insertions(+)
->  create mode 100644 Documentation/driver-api/pci/p2pdma.rst
+>  drivers/pci/pcie/aer.c | 3 +++
+>  1 file changed, 3 insertions(+)
+> 
+> diff --git a/drivers/pci/pcie/aer.c b/drivers/pci/pcie/aer.c
+> index a2e88386af28..18037a2a8231 100644
+> --- a/drivers/pci/pcie/aer.c
+> +++ b/drivers/pci/pcie/aer.c
+> @@ -383,6 +383,9 @@ int pci_cleanup_aer_error_status_regs(struct pci_dev *dev)
+>  	if (!pci_is_pcie(dev))
+>  		return -ENODEV;
+>  
+> +	if (pcie_aer_get_firmware_first(dev))
+> +		return -EIO;
 
-> diff --git a/Documentation/driver-api/pci/p2pdma.rst b/Documentation/driver-api/pci/p2pdma.rst
-> new file mode 100644
-> index 000000000000..ac857450d53f
-> --- /dev/null
-> +++ b/Documentation/driver-api/pci/p2pdma.rst
-> @@ -0,0 +1,170 @@
-> +.. SPDX-License-Identifier: GPL-2.0
-> +
-> +============================
-> +PCI Peer-to-Peer DMA Support
-> +============================
-> +
-> +The PCI bus has pretty decent support for performing DMA transfers
-> +between two devices on the bus. This type of transaction is henceforth
-> +called Peer-to-Peer (or P2P). However, there are a number of issues that
-> +make P2P transactions tricky to do in a perfectly safe way.
-> +
-> +One of the biggest issues is that PCI doesn't require forwarding
-> +transactions between hierarchy domains, and in PCIe, each Root Port
-> +defines a separate hierarchy domain. To make things worse, there is no
-> +simple way to determine if a given Root Complex supports this or not.
-> +(See PCIe r4.0, sec 1.3.1). Therefore, as of this writing, the kernel
-> +only supports doing P2P when the endpoints involved are all behind the
-> +same PCI bridge, as such devices are all in the same PCI hierarchy
-> +domain, and the spec guarantees that all transacations within the
+I like this patch.
 
-                                            transactions
+Do we need the same thing in the following places that also clear AER
+status bits or write AER control bits?
 
-> +hierarchy will be routable, but it does not require routing
-> +between hierarchies.
-> +
-> +The second issue is that to make use of existing interfaces in Linux,
-> +memory that is used for P2P transactions needs to be backed by struct
-> +pages. However, PCI BARs are not typically cache coherent so there are
-> +a few corner case gotchas with these pages so developers need to
-> +be careful about what they do with them.
-> +
-> +
-> +Driver Writer's Guide
-> +=====================
-> +
-> +In a given P2P implementation there may be three or more different
-> +types of kernel drivers in play:
-> +
-> +* Provider - A driver which provides or publishes P2P resources like
-> +  memory or doorbell registers to other drivers.
-> +* Client - A driver which makes use of a resource by setting up a
-> +  DMA transaction to or from it.
-> +* Orchestrator - A driver which orchestrates the flow of data between
-> +  clients and providers
+  enable_ecrc_checking()
+  disable_ecrc_checking()
+  pci_cleanup_aer_uncorrect_error_status()
+  pci_aer_clear_fatal_status()
 
-Might as well end that last one with a period since the other 2 are.
-
-> +
-> +In many cases there could be overlap between these three types (i.e.,
-> +it may be typical for a driver to be both a provider and a client).
-> +
-
-[snip]
-
-> +
-> +Orchestrator Drivers
-> +--------------------
-> +
-> +The first task an orchestrator driver must do is compile a list of
-> +all client devices that will be involved in a given transaction. For
-> +example, the NVMe Target driver creates a list including all NVMe
-> +devices and the RNIC in use. The list is stored as an anonymous struct
-> +list_head which must be initialized with the usual INIT_LIST_HEAD.
-> +The following functions may then be used to add to, remove from and free
-> +the list of clients with the functions :c:func:`pci_p2pdma_add_client()`,
-> +:c:func:`pci_p2pdma_remove_client()` and
-> +:c:func:`pci_p2pdma_client_list_free()`.
-> +
-> +With the client list in hand, the orchestrator may then call> +:c:func:`pci_p2pmem_find()` to obtain a published P2P memory provider
-> +that is supported (behind the same root port) as all the clients. If more
-> +than one provider is supported, the one nearest to all the clients will
-> +be chosen first. If there are more than one provider is an equal distance
-> +away, the one returned will be chosen at random. This function returns the PCI
-
-random or just arbitrarily?
-
-> +device to use for the provider with a reference taken and therefore
-> +when it's no longer needed it should be returned with pci_dev_put().
-
-
-thanks,
--- 
-~Randy
-
-_______________________________________________
-Linux-nvme mailing list
-Linux-nvme@lists.infradead.org
-http://lists.infradead.org/mailman/listinfo/linux-nvme
+>  	pos = dev->aer_cap;
+>  	if (!pos)
+>  		return -EIO;
+> -- 
+> 2.14.3
+> 
