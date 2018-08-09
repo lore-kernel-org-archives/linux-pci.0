@@ -1,65 +1,53 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from gate.crashing.org ([63.228.1.57]:36178 "EHLO gate.crashing.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1725926AbeHTFgl (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Mon, 20 Aug 2018 01:36:41 -0400
-Message-ID: <ab5cb5b277f1c1c1362ef597ca7b8c6a2cd32cdf.camel@kernel.crashing.org>
-Subject: Re: [PATCH 1/1] PCI/AER: prevent pcie_do_fatal_recovery from using
- device after it is removed
-From: Benjamin Herrenschmidt <benh@kernel.crashing.org>
-To: Sinan Kaya <okaya@kernel.org>, Bjorn Helgaas <helgaas@kernel.org>
-Cc: poza@codeaurora.org, Thomas Tai <thomas.tai@oracle.com>,
-        bhelgaas@google.com, keith.busch@intel.com,
-        linux-pci@vger.kernel.org, linux-pci-owner@vger.kernel.org,
-        Sam Bobroff <sam.bobroff@au1.ibm.com>
-Date: Mon, 20 Aug 2018 12:03:24 +1000
-In-Reply-To: <fe891b63-12c7-61ab-a59a-ae24ad766754@kernel.org>
-References: <1534179088-44219-1-git-send-email-thomas.tai@oracle.com>
-         <1534179088-44219-2-git-send-email-thomas.tai@oracle.com>
-         <51f4b387d9bd96a42d526a6a029fc43b@codeaurora.org>
-         <b0104a716319d76e734c307cb4bedd9d@codeaurora.org>
-         <903394c04d6ad468ed06dc0a779200e7555345a7.camel@kernel.crashing.org>
-         <6cb069038530757f31f3dd60328c7e30@codeaurora.org>
-         <e931bc7a7e468e8bb2ee3766b3fcf96f1800f552.camel@kernel.crashing.org>
-         <bf7ceabb6fe51398e0f4eebd9c4fe4ac1ec2b8a4.camel@kernel.crashing.org>
-         <20180819021922.GE128050@bhelgaas-glaptop.roam.corp.google.com>
-         <fe891b63-12c7-61ab-a59a-ae24ad766754@kernel.org>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-nvme-bounces+bjorn=helgaas.com@lists.infradead.org>
+Return-Path: <linux-nvme-bounces+bjorn=helgaas.com@lists.infradead.org>
+Date: Thu, 9 Aug 2018 14:35:53 -0500
+From: Bjorn Helgaas <helgaas@kernel.org>
+To: Alex Williamson <alex.williamson@redhat.com>
+Subject: Re: [PATCH v3 3/3] PCI: Intel DC P3700 NVMe delay after FLR quirk
+Message-ID: <20180809193553.GD113140@bhelgaas-glaptop.roam.corp.google.com>
+References: <20180724160440.2729.75178.stgit@gimli.home>
+ <20180724161446.2729.78211.stgit@gimli.home>
+ <20180724101849.36f635eb@t450s.home>
+MIME-Version: 1.0
+In-Reply-To: <20180724101849.36f635eb@t450s.home>
+List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-nvme>,
+ <mailto:linux-nvme-request@lists.infradead.org?subject=unsubscribe>
+List-Archive: <http://lists.infradead.org/pipermail/linux-nvme/>
+List-Post: <mailto:linux-nvme@lists.infradead.org>
+List-Help: <mailto:linux-nvme-request@lists.infradead.org?subject=help>
+List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-nvme>,
+ <mailto:linux-nvme-request@lists.infradead.org?subject=subscribe>
+Cc: linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
+ linux-nvme@lists.infradead.org
+Content-Type: text/plain; charset="us-ascii"
+Sender: "Linux-nvme" <linux-nvme-bounces@lists.infradead.org>
+Errors-To: linux-nvme-bounces+bjorn=helgaas.com@lists.infradead.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Sun, 2018-08-19 at 17:41 -0400, Sinan Kaya wrote:
-> On 8/18/2018 10:19 PM, Bjorn Helgaas wrote:
-> > > Bjorn, please revert all of those changes.
-> > 
-> > Please send the appropriate patches and we'll go from there.
-> > 
+On Tue, Jul 24, 2018 at 10:18:48AM -0600, Alex Williamson wrote:
+> On Tue, 24 Jul 2018 10:14:46 -0600
+> Alex Williamson <alex.williamson@redhat.com> wrote:
 > 
-> I'm also catching up on this thread.
+> > Add a device specific reset for Intel DC P3700 NVMe device which
+> > exhibits a timeout failure in drivers waiting for the ready status to
+> > update after NVMe enable if the driver interacts with the device too
+> > quickly after FLR.  As this has been observed in device assignment
+> > scenarios, resolve this with a device specific reset quirk to add an
+> > additional, heuristically determined, delay after the FLR completes.
+> > 
+> > Signed-off-by: Alex Williamson <alex.williamson@redhat.com>
+> > ---
+> >  drivers/pci/quirks.c |   22 ++++++++++++++++++++++
+> >  1 file changed, 22 insertions(+)
 > 
-> I don't think revert is the way to go. There is certainly value in Oza's
-> code to make error handling common.
+> I forgot to link the bz in this one, if this somehow becomes the final
+> version, please add:
+> 
+> Link: https://bugzilla.redhat.com/show_bug.cgi?id=159265
 
-The revert of the Documentation change must happen though. It's
-completely wrong. The documentation documents what EEH implements so by
-making it match what I argue is a broken implementation in AER, you are
-in fact breaking us.
+Corrected link to: https://bugzilla.redhat.com/show_bug.cgi?id=1592654
 
-> We started by following the existing error handling scheme and then
-> moved onto the stop/remove behavior based on Bjorn's feedback.
-
-Whish is utterly wrong.
-
-> The right thing is for Oza to rework the code to go back to original
-> error handling callback mechanism. That should be a trivial change.
-
-At this stage I'm only asking to revert the documentation updatgae.
-I'll send a patch to that effect.
-
-As for figuring out where to go from there, I agree we should discuss
-this further, I would love to be able to make more of the code common
-with EEH as well.
-
-Cheers,
-Ben.
+_______________________________________________
+Linux-nvme mailing list
+Linux-nvme@lists.infradead.org
+http://lists.infradead.org/mailman/listinfo/linux-nvme
