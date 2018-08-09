@@ -1,62 +1,63 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from youngberry.canonical.com ([91.189.89.112]:57631 "EHLO
-        youngberry.canonical.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1727545AbeHaQN7 (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Fri, 31 Aug 2018 12:13:59 -0400
-Received: from mail-pl1-f200.google.com ([209.85.214.200])
-        by youngberry.canonical.com with esmtps (TLS1.0:RSA_AES_128_CBC_SHA1:16)
-        (Exim 4.76)
-        (envelope-from <anthony.wong@canonical.com>)
-        id 1fviCN-0002Pw-NJ
-        for linux-pci@vger.kernel.org; Fri, 31 Aug 2018 12:06:47 +0000
-Received: by mail-pl1-f200.google.com with SMTP id 90-v6so5886210pla.18
-        for <linux-pci@vger.kernel.org>; Fri, 31 Aug 2018 05:06:47 -0700 (PDT)
-From: Anthony Wong <anthony.wong@ubuntu.com>
-To: nic_swsd@realtek.com, bhelgaas@google.com, netdev@vger.kernel.org,
-        davem@davemloft.net, linux-kernel@vger.kernel.org,
-        linux-pci@vger.kernel.org
-Subject: [PATCH] r8169: add support for NCube 8168 network card
-Date: Fri, 31 Aug 2018 20:06:42 +0800
-Message-Id: <1535717202-26397-1-git-send-email-anthony.wong@ubuntu.com>
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <SRS0=Ly/z=KY=deltatee.com=logang@kernel.org>
+Return-Path: <SRS0=Ly/z=KY=deltatee.com=logang@kernel.org>
+To: Bjorn Helgaas <helgaas@kernel.org>
+Cc: linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
+ linux-doc@vger.kernel.org, Stephen Bates <sbates@raithlin.com>,
+ Christoph Hellwig <hch@lst.de>, Bjorn Helgaas <bhelgaas@google.com>,
+ Jonathan Corbet <corbet@lwn.net>, Ingo Molnar <mingo@kernel.org>,
+ Thomas Gleixner <tglx@linutronix.de>,
+ "Paul E. McKenney" <paulmck@linux.vnet.ibm.com>,
+ Marc Zyngier <marc.zyngier@arm.com>,
+ Kai-Heng Feng <kai.heng.feng@canonical.com>,
+ Frederic Weisbecker <frederic@kernel.org>,
+ Dan Williams <dan.j.williams@intel.com>, =?UTF-8?B?SsOpcsO0bWUgR2xpc3Nl?=
+ <jglisse@redhat.com>, Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+ Alex Williamson <alex.williamson@redhat.com>,
+ =?UTF-8?Q?Christian_K=c3=b6nig?= <christian.koenig@amd.com>,
+ Matthew Wilcox <willy@infradead.org>
+References: <20180730161840.13733-1-logang@deltatee.com>
+ <20180730161840.13733-2-logang@deltatee.com>
+ <20180809211541.GF113140@bhelgaas-glaptop.roam.corp.google.com>
+From: Logan Gunthorpe <logang@deltatee.com>
+Message-ID: <512aa96e-1c31-ecbd-88c7-a5e417d533ba@deltatee.com>
+Date: Thu, 9 Aug 2018 15:18:16 -0600
+MIME-Version: 1.0
+In-Reply-To: <20180809211541.GF113140@bhelgaas-glaptop.roam.corp.google.com>
+Content-Type: text/plain; charset=utf-8
+Subject: Re: [PATCH v8 1/4] PCI: Make specifying PCI devices in kernel
+ parameters reusable
 List-ID: <linux-pci.vger.kernel.org>
 
-This card identifies itself as:
-  Ethernet controller [0200]: NCube Device [10ff:8168] (rev 06)
-  Subsystem: TP-LINK Technologies Co., Ltd. Device [7470:3468]
 
-Adding a new entry to rtl8169_pci_tbl makes the card work.
 
-Link: http://launchpad.net/bugs/1788730
-Cc: <stable@vger.kernel.org>
-Signed-off-by: Anthony Wong <anthony.wong@ubuntu.com>
----
- drivers/net/ethernet/realtek/r8169.c | 1 +
- include/linux/pci_ids.h              | 2 ++
- 2 files changed, 3 insertions(+)
+On 09/08/18 03:15 PM, Bjorn Helgaas wrote:
+>> @@ -2994,7 +2994,26 @@
+>>  			See header of drivers/block/paride/pcd.c.
+>>  			See also Documentation/blockdev/paride.txt.
+>>  
+>> -	pci=option[,option...]	[PCI] various PCI subsystem options:
+>> +	pci=option[,option...]	[PCI] various PCI subsystem options.
+>> +
+>> +				Some options herein operate on a specific device
+>> +				or a set of devices (<pci_dev>). These are
+>> +				specified in one of the following formats:
+>> +
+>> +				[<domain>:]<bus>:<slot>.<func>
+>> +				pci:<vendor>:<device>[:<subvendor>:<subdevice>]
+>> +
+>> +				Note: the first format specifies a PCI
+>> +				bus/slot/function address which may change
+> 
+> Unless you object, I'm going to change "slot" references like this to
+> "device" so they match "BDF" and the language in the spec, which uses
+> "slot" to refer to a physical slot and "device" when referring to
+> geographical device addresses.  I can do this when I apply these, so
+> no need for you to repost them.
 
-diff --git a/drivers/net/ethernet/realtek/r8169.c b/drivers/net/ethernet/realtek/r8169.c
-index ac30679..b08d51b 100644
---- a/drivers/net/ethernet/realtek/r8169.c
-+++ b/drivers/net/ethernet/realtek/r8169.c
-@@ -218,6 +218,7 @@ static const struct pci_device_id rtl8169_pci_tbl[] = {
- 	{ PCI_DEVICE(PCI_VENDOR_ID_REALTEK,	0x8161), 0, 0, RTL_CFG_1 },
- 	{ PCI_DEVICE(PCI_VENDOR_ID_REALTEK,	0x8167), 0, 0, RTL_CFG_0 },
- 	{ PCI_DEVICE(PCI_VENDOR_ID_REALTEK,	0x8168), 0, 0, RTL_CFG_1 },
-+	{ PCI_DEVICE(PCI_VENDOR_ID_NCUBE,	0x8168), 0, 0, RTL_CFG_1 },
- 	{ PCI_DEVICE(PCI_VENDOR_ID_REALTEK,	0x8169), 0, 0, RTL_CFG_0 },
- 	{ PCI_VENDOR_ID_DLINK,			0x4300,
- 		PCI_VENDOR_ID_DLINK, 0x4b10,		 0, 0, RTL_CFG_1 },
-diff --git a/include/linux/pci_ids.h b/include/linux/pci_ids.h
-index 6656286..d4afd80 100644
---- a/include/linux/pci_ids.h
-+++ b/include/linux/pci_ids.h
-@@ -3088,4 +3088,6 @@
- 
- #define PCI_VENDOR_ID_OCZ		0x1b85
- 
-+#define PCI_VENDOR_ID_NCUBE		0x10ff
-+
- #endif /* _LINUX_PCI_IDS_H */
--- 
-2.7.4
+No objection. I never liked the "slot" reference but was trying to
+remain consistent with what was there before. If I remember correctly
+there's a bunch of places in the kernel that use slot as well.
+
+Thanks,
+
+Logan
