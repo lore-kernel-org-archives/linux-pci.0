@@ -1,157 +1,58 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-lf1-f52.google.com ([209.85.167.52]:39855 "EHLO
-        mail-lf1-f52.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S2387519AbeHAUjS (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Wed, 1 Aug 2018 16:39:18 -0400
-Received: by mail-lf1-f52.google.com with SMTP id a134-v6so14049997lfe.6
-        for <linux-pci@vger.kernel.org>; Wed, 01 Aug 2018 11:52:08 -0700 (PDT)
+Return-Path: <SRS0=Ly/z=KY=deltatee.com=logang@kernel.org>
+Return-Path: <SRS0=Ly/z=KY=deltatee.com=logang@kernel.org>
+To: Kit Chow <kchow@gigaio.com>, Eric Pilmore <epilmore@gigaio.com>,
+ Bjorn Helgaas <helgaas@kernel.org>
+Cc: linux-pci@vger.kernel.org, David Woodhouse <dwmw2@infradead.org>,
+ Alex Williamson <alex.williamson@redhat.com>,
+ iommu@lists.linux-foundation.org
+References: <CAOQPn8soxubJxb=vp7kz+AM6LbPH5y+_Nx0Vzv7rjV_nMMqEmA@mail.gmail.com>
+ <20180809184331.GB113140@bhelgaas-glaptop.roam.corp.google.com>
+ <CAOQPn8uPYKai49WYPqZp2wNd5of=0hUvPOHEtqP56RZu-hcjuw@mail.gmail.com>
+ <b54899a8-a144-e8e0-9880-1800c4657b95@deltatee.com>
+ <95e53520-b05f-4be4-e694-463d717453a8@gigaio.com>
+ <cdd9245f-eb23-9e10-1755-8f396a2cd255@deltatee.com>
+ <b278c1e5-6f08-c879-a27d-7fc172645fd5@gigaio.com>
+From: Logan Gunthorpe <logang@deltatee.com>
+Message-ID: <f04fae39-645e-3c6e-07c0-b194260bf5de@deltatee.com>
+Date: Thu, 9 Aug 2018 15:11:07 -0600
 MIME-Version: 1.0
-In-Reply-To: <ecb55fb1-c3af-4f5b-86d2-1c669fa9f9ca@oracle.com>
-References: <CAFP4jM9xmXHVnBPObNxTtr1kDo2kbW9G4N5q=BLU5gf5=+M0xg@mail.gmail.com>
- <c5fb4a6a-136f-99f1-104e-32c923f00a22@oracle.com> <CAFP4jM84BuVZ+yKvcVvbu_6LFoO+2iVivWWZTZgbEEy3=oMftg@mail.gmail.com>
- <ecb55fb1-c3af-4f5b-86d2-1c669fa9f9ca@oracle.com>
-From: gokul cg <gokuljnpr@gmail.com>
-Date: Thu, 2 Aug 2018 00:22:07 +0530
-Message-ID: <CAFP4jM-=EvrLyybxEcpObQOrLS1z8CHG0q0xJZYJUxgtNKQBSw@mail.gmail.com>
-Subject: Re: Possible race condition in the kernel between PCI driver and AER handling
-To: Thomas Tai <thomas.tai@oracle.com>
-Cc: linux-pci@vger.kernel.org
-Content-Type: multipart/alternative; boundary="0000000000000112c10572643167"
-Sender: linux-pci-owner@vger.kernel.org
+In-Reply-To: <b278c1e5-6f08-c879-a27d-7fc172645fd5@gigaio.com>
+Content-Type: text/plain; charset=utf-8
+Subject: Re: IOAT DMA w/IOMMU
 List-ID: <linux-pci.vger.kernel.org>
 
---0000000000000112c10572643167
-Content-Type: text/plain; charset="UTF-8"
-
-HI Thomas ,
 
 
-Yes , its surprise removal .
-
-But as far as I know , linux kernel will handle surprise removal of PCIe
-device without panic.
-
-The driver will suddenly start reading all 0xff and will then need to
-abort whatever it was doing. Usually all drivers handle this just fine.
-
-Nothing, the driver individually needs to handle the fact that it might
-at any time, start getting invalid data. If it doesn't, it needs to be
-fixed. Whether AER  driver that does not handle this properly?
-
-
-Regards,
-Gokul
-
-On Wed, Aug 1, 2018 at 11:17 PM, Thomas Tai <thomas.tai@oracle.com> wrote:
-
->
->
-> On 08/01/2018 01:42 AM, gokul cg wrote:
->
->> Hi Thomas,
+On 09/08/18 02:57 PM, Kit Chow wrote:
+> 
+> 
+> On 08/09/2018 01:11 PM, Logan Gunthorpe wrote:
 >>
->> In my hardware, there is i2c power control chip for PCI card, I just
->> powered down using i2c command .
->>
->
-> Hi Gokul,
-> When you power off the card via the i2c, it forcefully power off the card
-> without notify the kernel? That is, during the card power off sequence it
-> manages to send a last AER isr to report the error and die? I am kind of
-> expect the pcie surprise removal or hot plug driver will handle it
-> correctly.
->
-> Thanks,
-> Thomas
->
->
->> Regards,
->> Gokul
->>
->
+>> On 09/08/18 01:47 PM, Kit Chow wrote:
+>>>> I haven't tested this scenario but my guess would be that IOAT would
+>>>> indeed go through the IOMMU and the PCI BAR address would need to be
+>>>> properly mapped into the IOAT's IOVA. The fact that you see DMAR errors
+>>>> is probably a good indication that this is the case. I really don't know
+>>>> why you'd want to DMA something without mapping it.
+>>> I have experimented with changing ntb_async_tx_submit to dma_map the PCI
+>>> BAR
+>>> address. With this, I get a different DMAR error:
+>> What code did you use to do this?
+> If you mean version of linux, it is 4.15.7.  Or specific dma_map call, I 
+> believe it was dma_map_single.
 
---0000000000000112c10572643167
-Content-Type: text/html; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
+I mean the complete code you use to do the mapping so we can see if it's
+correct. dma_map_single() seems like an odd choice, I expected to see
+dma_map_resource().
 
-<div dir=3D"ltr">HI Thomas ,=C2=A0<div><br></div><div><br></div><div>Yes , =
-its surprise removal .</div><div><br></div><div>But as far as I know , linu=
-x kernel will handle surprise removal of PCIe device without panic.</div><d=
-iv><br></div><div><span style=3D"font-family:&quot;Helvetica Neue&quot;,Ari=
-al,sans-serif;text-decoration-style:initial;text-decoration-color:initial;f=
-loat:none;display:inline">The</span><span style=3D"font-family:&quot;Helvet=
-ica Neue&quot;,Arial,sans-serif;text-decoration-style:initial;text-decorati=
-on-color:initial;float:none;display:inline"><span>=C2=A0</span>driver will =
-suddenly start reading all 0xff and will then need to</span><br style=3D"fo=
-nt-family:&quot;Helvetica Neue&quot;,Arial,sans-serif;text-decoration-style=
-:initial;text-decoration-color:initial"><span style=3D"font-family:&quot;He=
-lvetica Neue&quot;,Arial,sans-serif;text-decoration-style:initial;text-deco=
-ration-color:initial;float:none;display:inline">abort</span><span style=3D"=
-font-family:&quot;Helvetica Neue&quot;,Arial,sans-serif;text-decoration-sty=
-le:initial;text-decoration-color:initial;float:none;display:inline"><span>=
-=C2=A0</span>whatever</span><span style=3D"font-family:&quot;Helvetica Neue=
-&quot;,Arial,sans-serif;text-decoration-style:initial;text-decoration-color=
-:initial;float:none;display:inline"><span>=C2=A0</span>it was doing</span><=
-span style=3D"font-family:&quot;Helvetica Neue&quot;,Arial,sans-serif;text-=
-decoration-style:initial;text-decoration-color:initial;float:none;display:i=
-nline">. Usually</span><span style=3D"font-family:&quot;Helvetica Neue&quot=
-;,Arial,sans-serif;text-decoration-style:initial;text-decoration-color:init=
-ial;float:none;display:inline"><span>=C2=A0</span>all drivers handle this j=
-ust fine.</span><br></div><div><span style=3D"font-family:&quot;Helvetica N=
-eue&quot;,Arial,sans-serif;text-decoration-style:initial;text-decoration-co=
-lor:initial;float:none;display:inline"><br></span></div><div><span style=3D=
-"font-family:&quot;Helvetica Neue&quot;,Arial,sans-serif;text-decoration-st=
-yle:initial;text-decoration-color:initial;float:none;display:inline"><span =
-style=3D"text-decoration-style:initial;text-decoration-color:initial;float:=
-none;display:inline">Nothing</span><span style=3D"text-decoration-style:ini=
-tial;text-decoration-color:initial;float:none;display:inline">, the driver =
-individually</span><span style=3D"text-decoration-style:initial;text-decora=
-tion-color:initial;float:none;display:inline"><span>=C2=A0</span>needs to h=
-andle the fact that it might</span><br style=3D"text-decoration-style:initi=
-al;text-decoration-color:initial"><span style=3D"text-decoration-style:init=
-ial;text-decoration-color:initial;float:none;display:inline">at any time, s=
-tart</span><span style=3D"text-decoration-style:initial;text-decoration-col=
-or:initial;float:none;display:inline"><span>=C2=A0</span>getting invalid</s=
-pan><span style=3D"text-decoration-style:initial;text-decoration-color:init=
-ial;float:none;display:inline"><span>=C2=A0</span>data. If it doesn&#39;t, =
-it needs to be</span><br style=3D"text-decoration-style:initial;text-decora=
-tion-color:initial"><span style=3D"text-decoration-style:initial;text-decor=
-ation-color:initial;float:none;display:inline">fixed. Whether AER=C2=A0 dri=
-ver that does not handle this properly?</span><br style=3D"text-decoration-=
-style:initial;text-decoration-color:initial"><br></span></div><div><br></di=
-v><div><font face=3D"Helvetica Neue, Arial, sans-serif">Regards,</font></di=
-v><div><font face=3D"Helvetica Neue, Arial, sans-serif">Gokul=C2=A0</font><=
-/div></div><div class=3D"gmail_extra"><br><div class=3D"gmail_quote">On Wed=
-, Aug 1, 2018 at 11:17 PM, Thomas Tai <span dir=3D"ltr">&lt;<a href=3D"mail=
-to:thomas.tai@oracle.com" target=3D"_blank">thomas.tai@oracle.com</a>&gt;</=
-span> wrote:<br><blockquote class=3D"gmail_quote" style=3D"margin:0 0 0 .8e=
-x;border-left:1px #ccc solid;padding-left:1ex"><br>
-<br>
-On 08/01/2018 01:42 AM, gokul cg wrote:<br>
-<blockquote class=3D"gmail_quote" style=3D"margin:0 0 0 .8ex;border-left:1p=
-x #ccc solid;padding-left:1ex">
-Hi Thomas,<span class=3D""><br>
-<br>
-In my hardware, there is i2c power control chip for PCI card, I just powere=
-d down using i2c command .<br>
-</span></blockquote>
-<br>
-Hi Gokul,<br>
-When you power off the card via the i2c, it forcefully power off the card w=
-ithout notify the kernel? That is, during the card power off sequence it ma=
-nages to send a last AER isr to report the error and die? I am kind of expe=
-ct the pcie surprise removal or hot plug driver will handle it correctly.<b=
-r>
-<br>
-Thanks,<br>
-Thomas<br>
-<br>
-<blockquote class=3D"gmail_quote" style=3D"margin:0 0 0 .8ex;border-left:1p=
-x #ccc solid;padding-left:1ex">
-<br>
-Regards,<br>
-Gokul<br>
-</blockquote>
-</blockquote></div><br></div>
+>>> DMAR: [DMA Write] Request device [07:00.4] fault addr ffd00000
+>>> [fault reason 12] non-zero reserved fields in PTE
+>> Also, what device corresponds to 07:00.4 on your system?
+> I believe 07.00.4 was the PLX dma device. I get the same error with ioat.
 
---0000000000000112c10572643167--
+Using the mapping with the PLX dma device likely converts it from a pure
+P2P request to one where the TLPs pass through the IOMMU. So the fact
+that you get the same error with both means IOAT almost certainly goes
+through the IOMMU and there's something wrong with the mapping setup.
+
+Logan
