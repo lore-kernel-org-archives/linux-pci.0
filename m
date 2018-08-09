@@ -1,137 +1,73 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-it0-f41.google.com ([209.85.214.41]:34802 "EHLO
-        mail-it0-f41.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726321AbeHQLES (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Fri, 17 Aug 2018 07:04:18 -0400
-Received: by mail-it0-f41.google.com with SMTP id d70-v6so917664ith.1
-        for <linux-pci@vger.kernel.org>; Fri, 17 Aug 2018 01:01:54 -0700 (PDT)
+Return-Path: <SRS0=yS5w=KY=canonical.com=chia-lin.kao@kernel.org>
+Return-Path: <SRS0=yS5w=KY=canonical.com=chia-lin.kao@kernel.org>
 MIME-Version: 1.0
-References: <CABXGCsMZaDZDONX6+McFJr2UMZR9inQTeTsKWqQXcwMCPrc96g@mail.gmail.com>
- <CABXGCsNC3RBk+TXSwRS6c+p5wPOvmDrxHbC=PxwZemspWmcnsA@mail.gmail.com> <1400dd1991be3138c3d0583d3094896e@codeaurora.org>
-In-Reply-To: <1400dd1991be3138c3d0583d3094896e@codeaurora.org>
-From: Mikhail Gavrilov <mikhail.v.gavrilov@gmail.com>
-Date: Fri, 17 Aug 2018 13:01:41 +0500
-Message-ID: <CABXGCsMwBwNbnO7ehkp6z0rjo-9WOLTbQYeDxqFL2haD=PGHyw@mail.gmail.com>
-Subject: Re: [4.18 rc8 BUG] AER: Corrected error received: 0000:00:00.0
-To: poza@codeaurora.org, linux-pci@vger.kernel.org
-Content-Type: multipart/mixed; boundary="00000000000005e5d505739cf92b"
-Sender: linux-pci-owner@vger.kernel.org
+In-Reply-To: <20180808180019.GE49411@bhelgaas-glaptop.roam.corp.google.com>
+References: <20180808054837.19717-1-acelan.kao@canonical.com> <20180808180019.GE49411@bhelgaas-glaptop.roam.corp.google.com>
+From: AceLan Kao <acelan.kao@canonical.com>
+Date: Thu, 9 Aug 2018 14:29:31 +0800
+Message-ID: <CAFv23QmqwgS-wcO+RWMKb9Ejo4zjqmWTvKorar1uJuZzfJ1iHw@mail.gmail.com>
+Subject: Re: [PATCH] PCI: Fix calculation of bridge window's size
+To: Bjorn Helgaas <helgaas@kernel.org>
+Cc: Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org,
+	"Linux-Kernel@Vger. Kernel. Org" <linux-kernel@vger.kernel.org>
+Content-Type: text/plain; charset="UTF-8"
 List-ID: <linux-pci.vger.kernel.org>
 
---00000000000005e5d505739cf92b
-Content-Type: text/plain; charset="UTF-8"
+Hi Bjorn,
 
+Here is the public bug.
+https://bugzilla.kernel.org/show_bug.cgi?id=200769
+
+Best regards,
+AceLan Kao.
+
+2018-08-09 2:00 GMT+08:00 Bjorn Helgaas <helgaas@kernel.org>:
+> On Wed, Aug 08, 2018 at 01:48:37PM +0800, AceLan Kao wrote:
+>> There are some 0 resource size pci devices, and it leads to the
+>> accumulator fails to maintain the correct value.
+>> It results in a strange issue on my machine that xhci_hcd failed to init.
+>>    [    2.437278] xhci_hcd 0000:05:00.0: init 0000:05:00.0 fail, -16
+>>    [    2.437300] xhci_hcd: probe of 0000:05:00.0 failed with error -16
 >
+> I don't think it's possible for a PCI device to have a BAR of zero
+> size.  Bits 0-3 of memory BARs are read-only, leading to a minimum BAR
+> size of 16 bytes; similarly, bits 0-1 of I/O BARs are read-only,
+> giving a minimum size of 4 ports.
 >
-> Can you send lspci output ?
+> My guess is that if you have a pci_dev with a resource that looks like
+> it's valid but has zero size, that resource came from OF or device
+> tree.  If that's the case, I'd say we should fix the OF or DT parsing
+> code to reject those resources.  If we do that, we shouldn't need the
+> patch below.
 >
-> Regards,
-> Oza.
-
-
-yes,
-attached here
-
-
---
-Best Regards,
-Mike Gavrilov.
-
---00000000000005e5d505739cf92b
-Content-Type: text/plain; charset="US-ASCII"; name="lspci.txt"
-Content-Disposition: attachment; filename="lspci.txt"
-Content-Transfer-Encoding: base64
-Content-ID: <f_jkxpepc00>
-X-Attachment-Id: f_jkxpepc00
-
-IyBsc3BjaSAtbm4KMDA6MDAuMCBIb3N0IGJyaWRnZSBbMDYwMF06IEFkdmFuY2VkIE1pY3JvIERl
-dmljZXMsIEluYy4gW0FNRF0gRmFtaWx5IDE3aCAoTW9kZWxzIDAwaC0wZmgpIFJvb3QgQ29tcGxl
-eCBbMTAyMjoxNDUwXQowMDowMC4yIElPTU1VIFswODA2XTogQWR2YW5jZWQgTWljcm8gRGV2aWNl
-cywgSW5jLiBbQU1EXSBGYW1pbHkgMTdoIChNb2RlbHMgMDBoLTBmaCkgSS9PIE1lbW9yeSBNYW5h
-Z2VtZW50IFVuaXQgWzEwMjI6MTQ1MV0KMDA6MDEuMCBIb3N0IGJyaWRnZSBbMDYwMF06IEFkdmFu
-Y2VkIE1pY3JvIERldmljZXMsIEluYy4gW0FNRF0gRmFtaWx5IDE3aCAoTW9kZWxzIDAwaC0wZmgp
-IFBDSWUgRHVtbXkgSG9zdCBCcmlkZ2UgWzEwMjI6MTQ1Ml0KMDA6MDEuMSBQQ0kgYnJpZGdlIFsw
-NjA0XTogQWR2YW5jZWQgTWljcm8gRGV2aWNlcywgSW5jLiBbQU1EXSBGYW1pbHkgMTdoIChNb2Rl
-bHMgMDBoLTBmaCkgUENJZSBHUFAgQnJpZGdlIFsxMDIyOjE0NTNdCjAwOjAxLjMgUENJIGJyaWRn
-ZSBbMDYwNF06IEFkdmFuY2VkIE1pY3JvIERldmljZXMsIEluYy4gW0FNRF0gRmFtaWx5IDE3aCAo
-TW9kZWxzIDAwaC0wZmgpIFBDSWUgR1BQIEJyaWRnZSBbMTAyMjoxNDUzXQowMDowMi4wIEhvc3Qg
-YnJpZGdlIFswNjAwXTogQWR2YW5jZWQgTWljcm8gRGV2aWNlcywgSW5jLiBbQU1EXSBGYW1pbHkg
-MTdoIChNb2RlbHMgMDBoLTBmaCkgUENJZSBEdW1teSBIb3N0IEJyaWRnZSBbMTAyMjoxNDUyXQow
-MDowMy4wIEhvc3QgYnJpZGdlIFswNjAwXTogQWR2YW5jZWQgTWljcm8gRGV2aWNlcywgSW5jLiBb
-QU1EXSBGYW1pbHkgMTdoIChNb2RlbHMgMDBoLTBmaCkgUENJZSBEdW1teSBIb3N0IEJyaWRnZSBb
-MTAyMjoxNDUyXQowMDowMy4xIFBDSSBicmlkZ2UgWzA2MDRdOiBBZHZhbmNlZCBNaWNybyBEZXZp
-Y2VzLCBJbmMuIFtBTURdIEZhbWlseSAxN2ggKE1vZGVscyAwMGgtMGZoKSBQQ0llIEdQUCBCcmlk
-Z2UgWzEwMjI6MTQ1M10KMDA6MDQuMCBIb3N0IGJyaWRnZSBbMDYwMF06IEFkdmFuY2VkIE1pY3Jv
-IERldmljZXMsIEluYy4gW0FNRF0gRmFtaWx5IDE3aCAoTW9kZWxzIDAwaC0wZmgpIFBDSWUgRHVt
-bXkgSG9zdCBCcmlkZ2UgWzEwMjI6MTQ1Ml0KMDA6MDcuMCBIb3N0IGJyaWRnZSBbMDYwMF06IEFk
-dmFuY2VkIE1pY3JvIERldmljZXMsIEluYy4gW0FNRF0gRmFtaWx5IDE3aCAoTW9kZWxzIDAwaC0w
-ZmgpIFBDSWUgRHVtbXkgSG9zdCBCcmlkZ2UgWzEwMjI6MTQ1Ml0KMDA6MDcuMSBQQ0kgYnJpZGdl
-IFswNjA0XTogQWR2YW5jZWQgTWljcm8gRGV2aWNlcywgSW5jLiBbQU1EXSBGYW1pbHkgMTdoIChN
-b2RlbHMgMDBoLTBmaCkgSW50ZXJuYWwgUENJZSBHUFAgQnJpZGdlIDAgdG8gQnVzIEIgWzEwMjI6
-MTQ1NF0KMDA6MDguMCBIb3N0IGJyaWRnZSBbMDYwMF06IEFkdmFuY2VkIE1pY3JvIERldmljZXMs
-IEluYy4gW0FNRF0gRmFtaWx5IDE3aCAoTW9kZWxzIDAwaC0wZmgpIFBDSWUgRHVtbXkgSG9zdCBC
-cmlkZ2UgWzEwMjI6MTQ1Ml0KMDA6MDguMSBQQ0kgYnJpZGdlIFswNjA0XTogQWR2YW5jZWQgTWlj
-cm8gRGV2aWNlcywgSW5jLiBbQU1EXSBGYW1pbHkgMTdoIChNb2RlbHMgMDBoLTBmaCkgSW50ZXJu
-YWwgUENJZSBHUFAgQnJpZGdlIDAgdG8gQnVzIEIgWzEwMjI6MTQ1NF0KMDA6MTQuMCBTTUJ1cyBb
-MGMwNV06IEFkdmFuY2VkIE1pY3JvIERldmljZXMsIEluYy4gW0FNRF0gRkNIIFNNQnVzIENvbnRy
-b2xsZXIgWzEwMjI6NzkwYl0gKHJldiA1OSkKMDA6MTQuMyBJU0EgYnJpZGdlIFswNjAxXTogQWR2
-YW5jZWQgTWljcm8gRGV2aWNlcywgSW5jLiBbQU1EXSBGQ0ggTFBDIEJyaWRnZSBbMTAyMjo3OTBl
-XSAocmV2IDUxKQowMDoxOC4wIEhvc3QgYnJpZGdlIFswNjAwXTogQWR2YW5jZWQgTWljcm8gRGV2
-aWNlcywgSW5jLiBbQU1EXSBGYW1pbHkgMTdoIChNb2RlbHMgMDBoLTBmaCkgRGF0YSBGYWJyaWM6
-IERldmljZSAxOGg7IEZ1bmN0aW9uIDAgWzEwMjI6MTQ2MF0KMDA6MTguMSBIb3N0IGJyaWRnZSBb
-MDYwMF06IEFkdmFuY2VkIE1pY3JvIERldmljZXMsIEluYy4gW0FNRF0gRmFtaWx5IDE3aCAoTW9k
-ZWxzIDAwaC0wZmgpIERhdGEgRmFicmljOiBEZXZpY2UgMThoOyBGdW5jdGlvbiAxIFsxMDIyOjE0
-NjFdCjAwOjE4LjIgSG9zdCBicmlkZ2UgWzA2MDBdOiBBZHZhbmNlZCBNaWNybyBEZXZpY2VzLCBJ
-bmMuIFtBTURdIEZhbWlseSAxN2ggKE1vZGVscyAwMGgtMGZoKSBEYXRhIEZhYnJpYzogRGV2aWNl
-IDE4aDsgRnVuY3Rpb24gMiBbMTAyMjoxNDYyXQowMDoxOC4zIEhvc3QgYnJpZGdlIFswNjAwXTog
-QWR2YW5jZWQgTWljcm8gRGV2aWNlcywgSW5jLiBbQU1EXSBGYW1pbHkgMTdoIChNb2RlbHMgMDBo
-LTBmaCkgRGF0YSBGYWJyaWM6IERldmljZSAxOGg7IEZ1bmN0aW9uIDMgWzEwMjI6MTQ2M10KMDA6
-MTguNCBIb3N0IGJyaWRnZSBbMDYwMF06IEFkdmFuY2VkIE1pY3JvIERldmljZXMsIEluYy4gW0FN
-RF0gRmFtaWx5IDE3aCAoTW9kZWxzIDAwaC0wZmgpIERhdGEgRmFicmljOiBEZXZpY2UgMThoOyBG
-dW5jdGlvbiA0IFsxMDIyOjE0NjRdCjAwOjE4LjUgSG9zdCBicmlkZ2UgWzA2MDBdOiBBZHZhbmNl
-ZCBNaWNybyBEZXZpY2VzLCBJbmMuIFtBTURdIEZhbWlseSAxN2ggKE1vZGVscyAwMGgtMGZoKSBE
-YXRhIEZhYnJpYzogRGV2aWNlIDE4aDsgRnVuY3Rpb24gNSBbMTAyMjoxNDY1XQowMDoxOC42IEhv
-c3QgYnJpZGdlIFswNjAwXTogQWR2YW5jZWQgTWljcm8gRGV2aWNlcywgSW5jLiBbQU1EXSBGYW1p
-bHkgMTdoIChNb2RlbHMgMDBoLTBmaCkgRGF0YSBGYWJyaWM6IERldmljZSAxOGg7IEZ1bmN0aW9u
-IDYgWzEwMjI6MTQ2Nl0KMDA6MTguNyBIb3N0IGJyaWRnZSBbMDYwMF06IEFkdmFuY2VkIE1pY3Jv
-IERldmljZXMsIEluYy4gW0FNRF0gRmFtaWx5IDE3aCAoTW9kZWxzIDAwaC0wZmgpIERhdGEgRmFi
-cmljOiBEZXZpY2UgMThoOyBGdW5jdGlvbiA3IFsxMDIyOjE0NjddCjAxOjAwLjAgTm9uLVZvbGF0
-aWxlIG1lbW9yeSBjb250cm9sbGVyIFswMTA4XTogSW50ZWwgQ29ycG9yYXRpb24gT3B0YW5lIFNT
-RCA5MDBQIFNlcmllcyBbODA4NjoyNzAwXQowMjowMC4wIFVTQiBjb250cm9sbGVyIFswYzAzXTog
-QWR2YW5jZWQgTWljcm8gRGV2aWNlcywgSW5jLiBbQU1EXSBEZXZpY2UgWzEwMjI6NDNkMF0gKHJl
-diAwMSkKMDI6MDAuMSBTQVRBIGNvbnRyb2xsZXIgWzAxMDZdOiBBZHZhbmNlZCBNaWNybyBEZXZp
-Y2VzLCBJbmMuIFtBTURdIERldmljZSBbMTAyMjo0M2M4XSAocmV2IDAxKQowMjowMC4yIFBDSSBi
-cmlkZ2UgWzA2MDRdOiBBZHZhbmNlZCBNaWNybyBEZXZpY2VzLCBJbmMuIFtBTURdIERldmljZSBb
-MTAyMjo0M2M2XSAocmV2IDAxKQowMzowMC4wIFBDSSBicmlkZ2UgWzA2MDRdOiBBZHZhbmNlZCBN
-aWNybyBEZXZpY2VzLCBJbmMuIFtBTURdIERldmljZSBbMTAyMjo0M2M3XSAocmV2IDAxKQowMzow
-MS4wIFBDSSBicmlkZ2UgWzA2MDRdOiBBZHZhbmNlZCBNaWNybyBEZXZpY2VzLCBJbmMuIFtBTURd
-IERldmljZSBbMTAyMjo0M2M3XSAocmV2IDAxKQowMzowMi4wIFBDSSBicmlkZ2UgWzA2MDRdOiBB
-ZHZhbmNlZCBNaWNybyBEZXZpY2VzLCBJbmMuIFtBTURdIERldmljZSBbMTAyMjo0M2M3XSAocmV2
-IDAxKQowMzowMy4wIFBDSSBicmlkZ2UgWzA2MDRdOiBBZHZhbmNlZCBNaWNybyBEZXZpY2VzLCBJ
-bmMuIFtBTURdIERldmljZSBbMTAyMjo0M2M3XSAocmV2IDAxKQowMzowNC4wIFBDSSBicmlkZ2Ug
-WzA2MDRdOiBBZHZhbmNlZCBNaWNybyBEZXZpY2VzLCBJbmMuIFtBTURdIERldmljZSBbMTAyMjo0
-M2M3XSAocmV2IDAxKQowNDowMC4wIEV0aGVybmV0IGNvbnRyb2xsZXIgWzAyMDBdOiBJbnRlbCBD
-b3Jwb3JhdGlvbiBJMjExIEdpZ2FiaXQgTmV0d29yayBDb25uZWN0aW9uIFs4MDg2OjE1MzldIChy
-ZXYgMDMpCjA1OjAwLjAgTmV0d29yayBjb250cm9sbGVyIFswMjgwXTogUmVhbHRlayBTZW1pY29u
-ZHVjdG9yIENvLiwgTHRkLiBSVEw4ODIyQkUgODAyLjExYS9iL2cvbi9hYyBXaUZpIGFkYXB0ZXIg
-WzEwZWM6YjgyMl0KMDk6MDAuMCBQQ0kgYnJpZGdlIFswNjA0XTogQWR2YW5jZWQgTWljcm8gRGV2
-aWNlcywgSW5jLiBbQU1EXSBEZXZpY2UgWzEwMjI6MTQ3MF0gKHJldiBjMykKMGE6MDAuMCBQQ0kg
-YnJpZGdlIFswNjA0XTogQWR2YW5jZWQgTWljcm8gRGV2aWNlcywgSW5jLiBbQU1EXSBEZXZpY2Ug
-WzEwMjI6MTQ3MV0KMGI6MDAuMCBWR0EgY29tcGF0aWJsZSBjb250cm9sbGVyIFswMzAwXTogQWR2
-YW5jZWQgTWljcm8gRGV2aWNlcywgSW5jLiBbQU1EL0FUSV0gVmVnYSAxMCBYVCBbUmFkZW9uIFJY
-IFZlZ2EgNjRdIFsxMDAyOjY4N2ZdIChyZXYgYzMpCjBiOjAwLjEgQXVkaW8gZGV2aWNlIFswNDAz
-XTogQWR2YW5jZWQgTWljcm8gRGV2aWNlcywgSW5jLiBbQU1EL0FUSV0gRGV2aWNlIFsxMDAyOmFh
-ZjhdCjBjOjAwLjAgTm9uLUVzc2VudGlhbCBJbnN0cnVtZW50YXRpb24gWzEzMDBdOiBBZHZhbmNl
-ZCBNaWNybyBEZXZpY2VzLCBJbmMuIFtBTURdIERldmljZSBbMTAyMjoxNDVhXQowYzowMC4yIEVu
-Y3J5cHRpb24gY29udHJvbGxlciBbMTA4MF06IEFkdmFuY2VkIE1pY3JvIERldmljZXMsIEluYy4g
-W0FNRF0gRmFtaWx5IDE3aCAoTW9kZWxzIDAwaC0wZmgpIFBsYXRmb3JtIFNlY3VyaXR5IFByb2Nl
-c3NvciBbMTAyMjoxNDU2XQowYzowMC4zIFVTQiBjb250cm9sbGVyIFswYzAzXTogQWR2YW5jZWQg
-TWljcm8gRGV2aWNlcywgSW5jLiBbQU1EXSBVU0IgMy4wIEhvc3QgY29udHJvbGxlciBbMTAyMjox
-NDVmXQowZDowMC4wIE5vbi1Fc3NlbnRpYWwgSW5zdHJ1bWVudGF0aW9uIFsxMzAwXTogQWR2YW5j
-ZWQgTWljcm8gRGV2aWNlcywgSW5jLiBbQU1EXSBEZXZpY2UgWzEwMjI6MTQ1NV0KMGQ6MDAuMiBT
-QVRBIGNvbnRyb2xsZXIgWzAxMDZdOiBBZHZhbmNlZCBNaWNybyBEZXZpY2VzLCBJbmMuIFtBTURd
-IEZDSCBTQVRBIENvbnRyb2xsZXIgW0FIQ0kgbW9kZV0gWzEwMjI6NzkwMV0gKHJldiA1MSkKMGQ6
-MDAuMyBBdWRpbyBkZXZpY2UgWzA0MDNdOiBBZHZhbmNlZCBNaWNybyBEZXZpY2VzLCBJbmMuIFtB
-TURdIEZhbWlseSAxN2ggKE1vZGVscyAwMGgtMGZoKSBIRCBBdWRpbyBDb250cm9sbGVyIFsxMDIy
-OjE0NTddCg==
---00000000000005e5d505739cf92b--
+> Can you open a bugzilla.kernel.org report and attach the complete
+> dmesg log leading up to this, as well as the "sudo lspci -vv" output
+> for this device?  It should have clues about how we got here.
+>
+>> To fix this, check if the resource size equals to 0, doesn't increase size.
+>>
+>> Fixes: c9c75143a596 ("PCI: Fix calculation of bridge window's size and alignment")
+>> CC: stable@vger.kernel.org # 4.14+
+>>
+>> Signed-off-by: AceLan Kao <acelan.kao@canonical.com>
+>> ---
+>>  drivers/pci/setup-bus.c | 3 ++-
+>>  1 file changed, 2 insertions(+), 1 deletion(-)
+>>
+>> diff --git a/drivers/pci/setup-bus.c b/drivers/pci/setup-bus.c
+>> index 79b1824e83b4..ae05dde8c6e3 100644
+>> --- a/drivers/pci/setup-bus.c
+>> +++ b/drivers/pci/setup-bus.c
+>> @@ -1061,7 +1061,8 @@ static int pbus_size_mem(struct pci_bus *bus, unsigned long mask,
+>>                               r->flags = 0;
+>>                               continue;
+>>                       }
+>> -                     size += max(r_size, align);
+>> +                     if (r_size != 0)
+>> +                             size += max(r_size, align);
+>>                       /* Exclude ranges with size > align from
+>>                          calculation of the alignment. */
+>>                       if (r_size <= align)
+>> --
+>> 2.17.1
+>>
