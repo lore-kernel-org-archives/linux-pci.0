@@ -1,65 +1,74 @@
-Return-Path: <SRS0=xQUW=KZ=intel.com=dave.jiang@kernel.org>
-Return-Path: <SRS0=xQUW=KZ=intel.com=dave.jiang@kernel.org>
-Subject: Re: IOAT DMA w/IOMMU
-To: Logan Gunthorpe <logang@deltatee.com>, Kit Chow <kchow@gigaio.com>,
- Eric Pilmore <epilmore@gigaio.com>, Bjorn Helgaas <helgaas@kernel.org>
-Cc: "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
- David Woodhouse <dwmw2@infradead.org>,
- Alex Williamson <alex.williamson@redhat.com>,
- "iommu@lists.linux-foundation.org" <iommu@lists.linux-foundation.org>
-References: <CAOQPn8soxubJxb=vp7kz+AM6LbPH5y+_Nx0Vzv7rjV_nMMqEmA@mail.gmail.com>
- <20180809184331.GB113140@bhelgaas-glaptop.roam.corp.google.com>
- <CAOQPn8uPYKai49WYPqZp2wNd5of=0hUvPOHEtqP56RZu-hcjuw@mail.gmail.com>
- <b54899a8-a144-e8e0-9880-1800c4657b95@deltatee.com>
- <95e53520-b05f-4be4-e694-463d717453a8@gigaio.com>
- <cdd9245f-eb23-9e10-1755-8f396a2cd255@deltatee.com>
- <b278c1e5-6f08-c879-a27d-7fc172645fd5@gigaio.com>
- <f04fae39-645e-3c6e-07c0-b194260bf5de@deltatee.com>
- <3f503940-db6a-ec75-ed15-1db99d5d48ef@gigaio.com>
- <112A412BB11A1242B37129D931BCE5348382CFB2@fmsmsx117.amr.corp.intel.com>
- <b8af340c-d40b-cb8c-987f-b394f1d6ec3e@gigaio.com>
- <adf51c74-36fa-b61d-8497-27bd75178ba4@deltatee.com>
- <aa9c3f41-efc9-8c68-a517-2736c8986621@gigaio.com>
- <1170c096-a749-6ee3-32d4-ebba1d12adff@gigaio.com>
- <929f3dfa-fbff-c582-3be5-c368f11feb7e@deltatee.com>
-From: Dave Jiang <dave.jiang@intel.com>
-Message-ID: <460cc47f-6a8e-67b0-01a0-02f0c51df258@intel.com>
-Date: Fri, 10 Aug 2018 09:31:42 -0700
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail.kernel.org ([198.145.29.99]:58942 "EHLO mail.kernel.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1726893AbeHIVoq (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Thu, 9 Aug 2018 17:44:46 -0400
+Date: Thu, 9 Aug 2018 14:18:32 -0500
+From: Bjorn Helgaas <helgaas@kernel.org>
+To: "Alex G." <mr.nuke.me@gmail.com>
+Cc: Alex_Gagniuc@Dellteam.com, bhelgaas@google.com,
+        keith.busch@intel.com, Austin.Bolen@dell.com, Shyam.Iyer@dell.com,
+        fred@fredlawl.com, poza@codeaurora.org, linux-pci@vger.kernel.org,
+        linux-kernel@vger.kernel.org
+Subject: Re: [PATCH] PCI/AER: Do not clear AER bits if we don't own AER
+Message-ID: <20180809191832.GC113140@bhelgaas-glaptop.roam.corp.google.com>
+References: <20180717153135.25925-1-mr.nuke.me@gmail.com>
+ <20180809141551.GH49411@bhelgaas-glaptop.roam.corp.google.com>
+ <2cae6a5ac8324be18b8dcf3d7dfcc288@ausx13mps321.AMER.DELL.COM>
+ <20180809182905.GA113140@bhelgaas-glaptop.roam.corp.google.com>
+ <d235e71d-647f-00d1-8a21-2784b7939c25@gmail.com>
 MIME-Version: 1.0
-In-Reply-To: <929f3dfa-fbff-c582-3be5-c368f11feb7e@deltatee.com>
-Content-Type: text/plain; charset=utf-8
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <d235e71d-647f-00d1-8a21-2784b7939c25@gmail.com>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
+On Thu, Aug 09, 2018 at 02:00:23PM -0500, Alex G. wrote:
+> On 08/09/2018 01:29 PM, Bjorn Helgaas wrote:
+> > On Thu, Aug 09, 2018 at 04:46:32PM +0000, Alex_Gagniuc@Dellteam.com wrote:
+> > > On 08/09/2018 09:16 AM, Bjorn Helgaas wrote:
+> (snip_
+> > > >     enable_ecrc_checking()
+> > > >     disable_ecrc_checking()
+> > > 
+> > > I don't immediately see how this would affect FFS, but the bits are part
+> > > of the AER capability structure. According to the FFS model, those would
+> > > be owned by FW, and we'd have to avoid touching them.
+> > 
+> > Per ACPI v6.2, sec 18.3.2.4, the HEST may contain entries for Root
+> > Ports that contain the FIRMWARE_FIRST flag as well as values the OS is
+> > supposed to write to several AER capability registers.  It looks like
+> > we currently ignore everything except the FIRMWARE_FIRST and GLOBAL
+> > flags (ACPI_HEST_FIRMWARE_FIRST and ACPI_HEST_GLOBAL in Linux).
+> > 
+> > That seems like a pretty major screwup and more than I want to fix
+> > right now.
+> 
+> The logic is not very clear, but I think it goes like this:
+> For GLOBAL and FFS, disable native AER everywhere.
+> When !GLOBAL and FFS, then only disable native AER for the root port
+> described by the HEST entry.
 
+I agree the code is convoluted, but that sounds right to me.
 
-On 08/10/2018 09:24 AM, Logan Gunthorpe wrote:
-> 
-> 
-> On 10/08/18 10:02 AM, Kit Chow wrote:
->> Turns out there is no dma_map_resource routine on x86. get_dma_ops 
->> returns intel_dma_ops which has map_resource pointing to NULL.
-> 
-> Oh, yup. I wasn't aware of that. From a cursory view, it looks like it
-> shouldn't be too hard to implement though.
-> 
->> Will poke around some in the intel_map_page code but can you actually 
->> get a valid struct page for a pci bar address (dma_map_single calls 
->> virt_to_page)?  If not, does a map_resource routine that can properly 
->> map a pci bar address need to be implemented?
-> 
-> Yes, you can not get a struct page for a PCI bar address unless it's
-> mapped with ZONE_DEVICE like in my p2p work. So that would explain why
-> dma_map_single() didn't work.
-> 
-> This all implies that ntb_transport doesn't work with DMA and the IOMMU
-> turned on. I'm not sure I've ever tried that configuration myself but it
-> is a bit surprising.
+What I meant is that we ignore the values the HEST entry tells us
+we're supposed to write to Device Control and the AER Uncorrectable
+Error Mask, Uncorrectable Error Severity, Correctable Error Mask, and
+AER Capabilities and Control.
 
-Hmm....that's surprising because it seems to work on Skylake platform
-when I tested it yesterday with Intel NTB. Kit is using a Haswell
-platform at the moment I think. Although I'm curious if it works with
-the PLX NTB he's using on Skylake.
+> > > For practical considerations this is not an issue today. The ACPI error
+> > > handling code currently crashes when it encounters any fatal error, so
+> > > we wouldn't hit this in the FFS case.
+> > 
+> > I wasn't aware the firmware-first path was *that* broken.  Are there
+> > problem reports for this?  Is this a regression?
+> 
+> It's been like this since, I believe, 3.10, and probably much earlier. All
+> reports that I have seen of linux crashing on surprise hot-plug have been
+> caused by the panic() call in the apei code. Dell BIOSes do an extreme
+> amount of work to determine when it's safe to _not_ report errors to the OS,
+> since all known OSes crash on this path.
 
-> 
-> Logan
-> 
+Oh, is this the __ghes_panic() path?  If so, I'm going to turn away
+and plead ignorance unless the PCI core is doing something wrong that
+eventually results in that panic.
