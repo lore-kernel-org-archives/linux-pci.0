@@ -1,59 +1,113 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-qt0-f195.google.com ([209.85.216.195]:43086 "EHLO
-        mail-qt0-f195.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1727582AbeHFQDn (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Mon, 6 Aug 2018 12:03:43 -0400
-Received: by mail-qt0-f195.google.com with SMTP id f18-v6so13794745qtp.10
-        for <linux-pci@vger.kernel.org>; Mon, 06 Aug 2018 06:54:29 -0700 (PDT)
+Received: from mail-ua0-f194.google.com ([209.85.217.194]:33570 "EHLO
+        mail-ua0-f194.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1725878AbeHIJtD (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Thu, 9 Aug 2018 05:49:03 -0400
+Received: by mail-ua0-f194.google.com with SMTP id i4-v6so5263645uak.0
+        for <linux-pci@vger.kernel.org>; Thu, 09 Aug 2018 00:25:32 -0700 (PDT)
 MIME-Version: 1.0
-References: <20180804101402.10022-1-hch@lst.de> <20180804101402.10022-2-hch@lst.de>
- <20180806112310.GB18685@e107981-ln.cambridge.arm.com> <20180806123051.GA6997@lst.de>
-In-Reply-To: <20180806123051.GA6997@lst.de>
-From: Arnd Bergmann <arnd@arndb.de>
-Date: Mon, 6 Aug 2018 15:54:13 +0200
-Message-ID: <CAK8P3a0XyK+j4Z+xhxOYKa=5gHmFnWd7=fU=6A3=VkBXxWjSsw@mail.gmail.com>
-Subject: Re: [PATCH 1/3] PCI: add a callback to struct pci_host_bridge for
- adding a new device
-To: Christoph Hellwig <hch@lst.de>
-Cc: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
-        Bjorn Helgaas <bhelgaas@google.com>,
-        Palmer Dabbelt <palmer@dabbelt.com>,
-        "Wesley W. Terpstra" <wesley@sifive.com>,
-        linux-pci <linux-pci@vger.kernel.org>,
-        linux-riscv@lists.infradead.org
+From: Patrick Talbert <ptalbert@redhat.com>
+Date: Thu, 9 Aug 2018 09:25:20 +0200
+Message-ID: <CAPRrrxWVYJpRqKLmDQLnCUQdkcxhHzmD+S8pxnvi_+-2VUcbPA@mail.gmail.com>
+Subject: Should pcie_aspm_init_link_state() run when FADT ASPM disable bit is set?
+To: linux-pci@vger.kernel.org
+Cc: Myron Stowe <mstowe@redhat.com>
 Content-Type: text/plain; charset="UTF-8"
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Mon, Aug 6, 2018 at 2:25 PM Christoph Hellwig <hch@lst.de> wrote:
->
-> On Mon, Aug 06, 2018 at 12:23:10PM +0100, Lorenzo Pieralisi wrote:
-> > >     pci_configure_device(dev);
-> > > @@ -2328,6 +2329,11 @@ void pci_device_add(struct pci_dev *dev, struct pci_bus *bus)
-> > >     ret = pcibios_add_device(dev);
-> > >     WARN_ON(ret < 0);
-> > >
-> > > +   if (host->add_device) {
-> > > +           ret = host->add_device(dev);
-> > > +           WARN_ON(ret < 0);
-> > > +   }
-> >
-> > This looks fine; we could go a step further and make the hunk above
-> > the default (weak) implementation of pcibios_add_device() that is
-> > currently a NOP returning 0, I will remove it for v4.20.
->
-> I'd love to see pcibios_add_device go away entirely.  But I wonder how to
-> get setup the pci_host_bridge pointer for the remaining architectures that
-> still implement it.  I did look for any easy way but couldn't find one.
-> But then I don't really know this area of the PCI code too well.
+Hello,
 
-If the platform doesn't already have a pointer to its pci_host_bridge
-structure, it can call pci_find_host_bridge(bus->dev) to get it.
+I think there may be a logic issue with ASPM but I am not so familiar
+with this area so maybe I misunderstand.
 
-Ideally, platforms (either arch specific code or drivers/pci/controller)
-should call pci_alloc_host_bridge()/pci_register_host_bridge()
-instead of the traditional pci_create_root_bus() that is less flexible.
-That way, the driver specific structure can get allocated together with
-the host bridge.
+acpi_pci_init() checks ACPI FADT method for the ACPI_FADT_NO_ASPM flag
+and will disable ASPM support if it is set. It calls pcie_no_aspm() to
+do this. pcie_no_aspm() sets the global aspm_disabled = 1 to indicate
+this state:
 
-         Arnd
+365 static int __init acpi_pci_init(void)
+366 {
+367         int ret;
+368
+369         if (acpi_gbl_FADT.boot_flags & ACPI_FADT_NO_MSI) {
+370                 pr_info("ACPI FADT declares the system doesn't
+support MSI, so disable it\n");
+371                 pci_no_msi();
+372         }
+373
+374         if (acpi_gbl_FADT.boot_flags & ACPI_FADT_NO_ASPM) {
+375                 pr_info("ACPI FADT declares the system doesn't
+support PCIe ASPM, so disable it\n");
+376                 pcie_no_aspm();
+377         }
+378
+379         ret = register_acpi_bus_type(&acpi_pci_bus);
+380         if (ret)
+381                 return 0;
+382
+383         pci_set_platform_pm(&acpi_pci_platform_pm);
+384         acpi_pci_slot_init();
+385         acpiphp_init();
+386
+387         return 0;
+388 }
+389 arch_initcall(acpi_pci_init);
+
+973 void pcie_no_aspm(void)
+974 {
+975         /*
+976          * Disabling ASPM is intended to prevent the kernel from modifying
+977          * existing hardware state, not to clear existing state.
+To that end:
+978          * (a) set policy to POLICY_DEFAULT in order to avoid changing state
+979          * (b) prevent userspace from changing policy
+980          */
+981         if (!aspm_force) {
+982                 aspm_policy = POLICY_DEFAULT;
+983                 aspm_disabled = 1;
+984         }
+985 }
+
+But then later on, during individual initialization of PCI devices,
+pci_scan_slot() will call pcie_aspm_init_link_state().
+pcie_aspm_init_link_state() does its work unless global
+aspm_support_enabled is false.
+
+But, shouldn't pcie_aspm_init_link_state() also check aspm_disabled ?
+Something like:
+
+diff --git a/drivers/pci/pcie/aspm.c b/drivers/pci/pcie/aspm.c
+index 8b56dad..5491dbf 100644
+--- a/drivers/pci/pcie/aspm.c
++++ b/drivers/pci/pcie/aspm.c
+@@ -574,7 +574,7 @@ void pcie_aspm_init_link_state(struct pci_dev *pdev)
+        struct pcie_link_state *link;
+        int blacklist = !!pcie_aspm_sanity_check(pdev);
+
+-       if (!aspm_support_enabled)
++       if (!aspm_support_enabled || aspm_disabled)
+                return;
+
+        if (pdev->link_state)
+
+
+In "387d375 PCI: Don't clear ASPM bits when the FADT declares it's
+unsupported" the message says:
+
+    Communications with a hardware vendor confirm that the expected behaviour
+    on systems that set the FADT ASPM disable bit but which still grant full
+    PCIe control is for the OS to leave any BIOS configuration intact and
+    refuse to touch the ASPM bits.  This mimics the behaviour of Windows.
+
+
+I apologize, but I do not immediately understand the distinction
+between the meaning of aspm_support_enabled and aspm_disabled so I am
+likely missing some key point.
+
+But anyway, this query comes about because a host which reports the
+ACPI_FADT_NO_ASPM bit set hangs on boot unless pcie_aspm=off is set.
+
+Thank you,
+
+Patrick
