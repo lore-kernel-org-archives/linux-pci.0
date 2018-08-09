@@ -1,40 +1,54 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from bmailout2.hostsharing.net ([83.223.90.240]:44931 "EHLO
-        bmailout2.hostsharing.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1732568AbeHFSyn (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Mon, 6 Aug 2018 14:54:43 -0400
-Date: Mon, 6 Aug 2018 18:44:45 +0200
-From: Lukas Wunner <lukas@wunner.de>
-To: Sinan Kaya <okaya@kernel.org>
-Cc: poza@codeaurora.org, linux-pci@vger.kernel.org,
-        Bjorn Helgaas <bhelgaas@google.com>,
-        Mika Westerberg <mika.westerberg@linux.intel.com>,
-        Keith Busch <keith.busch@intel.com>,
-        linux-pci-owner@vger.kernel.org
-Subject: Re: [PATCH v7 1/1] PCI: pciehp: Ignore link events when there is a
- fatal error pending
-Message-ID: <20180806164445.GA28786@wunner.de>
-References: <20180805225136.5800-1-okaya@kernel.org>
- <20180805225136.5800-2-okaya@kernel.org>
- <c1cfff22c63f6d3d6285575721a2a3e8@codeaurora.org>
- <20180806092614.GA28462@wunner.de>
- <2b4c23a2e97f61a124c95c49d604a853@codeaurora.org>
- <3d491f25-1d59-f257-1125-302e2d50e960@kernel.org>
- <22ce7172-b028-c0b1-d117-8096e016b15b@kernel.org>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <22ce7172-b028-c0b1-d117-8096e016b15b@kernel.org>
+Received: from mail.kernel.org ([198.145.29.99]:50076 "EHLO mail.kernel.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1727038AbeHIVMk (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Thu, 9 Aug 2018 17:12:40 -0400
+From: Sinan Kaya <okaya@kernel.org>
+To: linux-pci@vger.kernel.org
+Cc: Sinan Kaya <okaya@kernel.org>, Bjorn Helgaas <bhelgaas@google.com>,
+        "Rafael J. Wysocki" <rjw@rjwysocki.net>,
+        Len Brown <lenb@kernel.org>,
+        linux-acpi@vger.kernel.org (open list:ACPI),
+        linux-kernel@vger.kernel.org (open list)
+Subject: [PATCH 1/2] PCI/ACPI: correct error message for ASPM disabling
+Date: Thu,  9 Aug 2018 18:46:22 +0000
+Message-Id: <1533840383-7841-1-git-send-email-okaya@kernel.org>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Mon, Aug 06, 2018 at 11:06:48AM -0400, Sinan Kaya wrote:
-> Surprise Link Down is also a fatal error.
+If _OSC execution fails today for platforms without an _OSC
+entry, code is printing a misleading message saying disabling
+ASPM as follows:
 
-Seriously?  On a Downstream Port which has the Hot-Plug Surprise bit
-in the Slot Capabilities register set, Surprise Link Down is a fatal
-error?  That would seem somewhat contradictory.  Do you have a
-section number in the PCIe Base Spec for this?
+acpi PNP0A03:00: _OSC failed (AE_NOT_FOUND); disabling ASPM
 
-Thanks,
+We need to ensure that platform supports ASPM to begin with.
 
-Lukas
+Signed-off-by: Sinan Kaya <okaya@kernel.org>
+Reported-by: Michael Kelley <mikelley@microsoft.com>
+---
+ drivers/acpi/pci_root.c | 9 +++++++--
+ 1 file changed, 7 insertions(+), 2 deletions(-)
+
+diff --git a/drivers/acpi/pci_root.c b/drivers/acpi/pci_root.c
+index 7433035..9d738e2 100644
+--- a/drivers/acpi/pci_root.c
++++ b/drivers/acpi/pci_root.c
+@@ -455,8 +455,13 @@ static void negotiate_os_control(struct acpi_pci_root *root, int *no_aspm)
+ 	decode_osc_support(root, "OS supports", support);
+ 	status = acpi_pci_osc_support(root, support);
+ 	if (ACPI_FAILURE(status)) {
+-		dev_info(&device->dev, "_OSC failed (%s); disabling ASPM\n",
+-			 acpi_format_exception(status));
++		char *aspm_msg = "";
++
++		if (pcie_aspm_support_enabled())
++			aspm_msg = "; disabling ASPM";
++
++		dev_info(&device->dev, "_OSC failed (%s) %s\n",
++				 acpi_format_exception(status), aspm_msg);
+ 		*no_aspm = 1;
+ 		return;
+ 	}
+-- 
+2.7.4
