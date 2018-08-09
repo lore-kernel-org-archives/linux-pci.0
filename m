@@ -1,106 +1,42 @@
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Return-Path: <SRS0=Ly/z=KY=deltatee.com=logang@kernel.org>
+Return-Path: <SRS0=Ly/z=KY=deltatee.com=logang@kernel.org>
+To: Kit Chow <kchow@gigaio.com>, Eric Pilmore <epilmore@gigaio.com>,
+ Bjorn Helgaas <helgaas@kernel.org>
+Cc: linux-pci@vger.kernel.org, David Woodhouse <dwmw2@infradead.org>,
+ Alex Williamson <alex.williamson@redhat.com>,
+ iommu@lists.linux-foundation.org
+References: <CAOQPn8soxubJxb=vp7kz+AM6LbPH5y+_Nx0Vzv7rjV_nMMqEmA@mail.gmail.com>
+ <20180809184331.GB113140@bhelgaas-glaptop.roam.corp.google.com>
+ <CAOQPn8uPYKai49WYPqZp2wNd5of=0hUvPOHEtqP56RZu-hcjuw@mail.gmail.com>
+ <b54899a8-a144-e8e0-9880-1800c4657b95@deltatee.com>
+ <95e53520-b05f-4be4-e694-463d717453a8@gigaio.com>
+From: Logan Gunthorpe <logang@deltatee.com>
+Message-ID: <cdd9245f-eb23-9e10-1755-8f396a2cd255@deltatee.com>
+Date: Thu, 9 Aug 2018 14:11:17 -0600
 MIME-Version: 1.0
-References: <alpine.LRH.2.02.1808021242320.31834@file01.intranet.prod.int.rdu2.redhat.com>
- <CAHCPf3tFGqkYEcWNN4LaWThw_rVqT316pzLv6T7RfxwO-eZ0EA@mail.gmail.com>
- <alpine.LRH.2.02.1808030212340.17672@file01.intranet.prod.int.rdu2.redhat.com>
- <CAKv+Gu8DeuksZhk1g3q_msSKV_hSY_2e1uzVten9-oGO3j9Sqg@mail.gmail.com>
- <20180803094129.GB17798@arm.com>
- <alpine.LRH.2.02.1808031235410.31584@file01.intranet.prod.int.rdu2.redhat.com>
- <CAKv+Gu-aNFh1fsr_05SEwDp99n3pLrguP7=tEcFQPNY53=K7Fw@mail.gmail.com>
- <alpine.LRH.2.02.1808031424140.14030@file01.intranet.prod.int.rdu2.redhat.com>
- <CAHCPf3s-+Qf=WBZz1KpisDMG3520jCUh8PLAO3PHa4jdt8kCTw@mail.gmail.com>
- <CAKv+Gu9_h-WFi1j4+DWUN_dMj75SKKHxWoDH8WQ9P7S7MNpZQg@mail.gmail.com>
- <alpine.LRH.2.02.1808060553130.30832@file01.intranet.prod.int.rdu2.redhat.com>
- <99fff4fe-afa9-f12f-a518-472a9dd1c530@arm.com>
- <CAPv3WKdxwoW5MAOvy6uEBEuMpsigMo98hyO+TpKMsFrKR9oBzg@mail.gmail.com>
- <CAKv+Gu8XN-vP64G_NLHFcRUJ2fptSrmxfd6CHWDgHkJj073Hbg@mail.gmail.com>
-In-Reply-To: <CAKv+Gu8XN-vP64G_NLHFcRUJ2fptSrmxfd6CHWDgHkJj073Hbg@mail.gmail.com>
-From: Marcin Wojtas <mw@semihalf.com>
-Date: Mon, 6 Aug 2018 16:07:39 +0200
-Message-ID: <CAPv3WKeVkWChEE7WjKuu__bg+zvh9dTNy=U_2jiSyWxFWiatbA@mail.gmail.com>
-Subject: Re: framebuffer corruption due to overlapping stp instructions on
- arm64
-To: Ard Biesheuvel <ard.biesheuvel@linaro.org>, mpatocka@redhat.com
-List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
-List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
-List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
-List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
-List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
-Cc: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>,
- Joao Pinto <Joao.Pinto@synopsys.com>, Jingoo Han <jingoohan1@gmail.com>,
- Catalin Marinas <catalin.marinas@arm.com>, Will Deacon <will.deacon@arm.com>,
- Russell King - ARM Linux <linux@armlinux.org.uk>,
- Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
- Matt Sealey <neko@bakuhatsu.net>, linux-pci@vger.kernel.org,
- Robin Murphy <robin.murphy@arm.com>, linux-arm-kernel@lists.infradead.org
-Content-Type: text/plain; charset="utf-8"
-Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
-Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
+In-Reply-To: <95e53520-b05f-4be4-e694-463d717453a8@gigaio.com>
+Content-Type: text/plain; charset=utf-8
+Subject: Re: IOAT DMA w/IOMMU
 List-ID: <linux-pci.vger.kernel.org>
 
-SGkgQXJkLCBNaWt1bGFzLAoKcG9uLiwgNiBzaWUgMjAxOCBvIDE1OjQ4IEFyZCBCaWVzaGV1dmVs
-IDxhcmQuYmllc2hldXZlbEBsaW5hcm8ub3JnPiBuYXBpc2HFgihhKToKPgo+IE9uIDYgQXVndXN0
-IDIwMTggYXQgMTU6NDEsIE1hcmNpbiBXb2p0YXMgPG13QHNlbWloYWxmLmNvbT4gd3JvdGU6Cj4g
-PiBIaSBNaWt1bGFzLAo+ID4KPiA+IHBvbi4sIDYgc2llIDIwMTggbyAxNDo0MiBSb2JpbiBNdXJw
-aHkgPHJvYmluLm11cnBoeUBhcm0uY29tPiBuYXBpc2HFgihhKToKPiA+Pgo+ID4+IE9uIDA2LzA4
-LzE4IDExOjI1LCBNaWt1bGFzIFBhdG9ja2Egd3JvdGU6Cj4gPj4gWy4uLl0KPiA+PiA+PiBOb25l
-IG9mIHRoaXMgZXhwbGFpbnMgd2h5IHNvbWUgdHJhbnNhY3Rpb25zIGZhaWwgdG8gbWFrZSBpdCBh
-Y3Jvc3MKPiA+PiA+PiBlbnRpcmVseS4gVGhlIG92ZXJsYXBwaW5nIHdyaXRlcyBpbiBxdWVzdGlv
-biB3cml0ZSB0aGUgc2FtZSBkYXRhIHRvCj4gPj4gPj4gdGhlIG1lbW9yeSBsb2NhdGlvbnMgdGhh
-dCBhcmUgY292ZXJlZCBieSBib3RoLCBhbmQgc28gdGhlIG9yZGVyaW5nIGluCj4gPj4gPj4gd2hp
-Y2ggdGhlIHRyYW5zYWN0aW9ucyBhcmUgcmVjZWl2ZWQgc2hvdWxkIG5vdCBhZmZlY3QgdGhlIG91
-dGNvbWUuCj4gPj4gPgo+ID4+ID4gWW91J3JlIHJpZ2h0IHRoYXQgdGhlIGNvcnJ1cHRpb24gY291
-bGRuJ3QgYmUgZXhwbGFpbmVkIGp1c3QgYnkgcmVvcmRlcmluZwo+ID4+ID4gd3JpdGVzLiBNeSBo
-eXBvdGhlc2lzIGlzIHRoYXQgdGhlIFBDSWUgY29udHJvbGxlciB0cmllcyB0byBkaXNhbWJpZ3Vh
-dGUKPiA+PiA+IHRoZSBvdmVybGFwcGluZyB3cml0ZXMsIGJ1dCB0aGUgZGlzYW1iaWd1YXRpb24g
-bG9naWMgd2FzIG5vdCB0ZXN0ZWQgYW5kIGl0Cj4gPj4gPiBpcyBidWdneS4gSWYgdGhlcmUncyBh
-IGJhcnJpZXIgYmV0d2VlbiB0aGUgb3ZlcmxhcHBpbmcgd3JpdGVzLCB0aGUgUENJZQo+ID4+ID4g
-Y29udHJvbGxlciB3b24ndCBzZWUgYW55IG92ZXJsYXBwaW5nIHdyaXRlcywgc28gaXQgd29uJ3Qg
-dHJpZ2dlciB0aGUKPiA+PiA+IGZhdWx0eSBkaXNhbWJpZ3VhdGlvbiBsb2dpYyBhbmQgaXQgd29y
-a3MuCj4gPj4gPgo+ID4+ID4gQ291bGQgdGhlIEFSTSBlbmdpbmVlcnMgbG9vayBpZiB0aGVyZSdz
-IHNvbWUgY2hpY2tlbiBiaXQgaW4gQ29ydGV4LUE3Mgo+ID4+ID4gdGhhdCBjb3VsZCBpbnNlcnQg
-YmFycmllcnMgYmV0d2VlbiBub24tY2FjaGVkIHdyaXRlcyBhdXRvbWF0aWNhbGx5Pwo+ID4+Cj4g
-Pj4gSSBkb24ndCB0aGluayB0aGVyZSBpcywgYW5kIGV2ZW4gaWYgdGhlcmUgd2FzIEkgaW1hZ2lu
-ZSBpdCB3b3VsZCBoYXZlIGEKPiA+PiBwcmV0dHkgaGlkZW91cyBlZmZlY3Qgb24gbm9uLWNvaGVy
-ZW50IERNQSBidWZmZXJzIGFuZCB0aGUgdmFyaW91cyBvdGhlcgo+ID4+IHBsYWNlcyBpbiB3aGlj
-aCB3ZSBoYXZlIE5vcm1hbC1OQyBtYXBwaW5ncyBvZiBhY3R1YWwgc3lzdGVtIFJBTS4KPiA+Pgo+
-ID4+ID4gSSBvYnNlcnZlIHRoZXNlIGtpbmRzIG9mIGNvcnJ1cHRpb25zOgo+ID4+ID4gLSBmYWls
-aW5nIHRvIHdyaXRlIGEgZmV3IGJ5dGVzCj4gPj4KPiA+PiBUaGF0IGNvdWxkIHBvdGVudGlhbGx5
-IGJlIGV4cGxhaW5lZCBieSB0aGUgcmVvcmRlcmluZy9hdG9taWNpdHkgaXNzdWVzCj4gPj4gTWF0
-dCBtZW50aW9uZWQsIGkuZS4gdGhlIGxvYWQgaXMgb2JzZXJ2aW5nIHBhcnQgb2YgdGhlIHN0b3Jl
-LCBiZWZvcmUgdGhlCj4gPj4gc3RvcmUgaGFzIGZ1bGx5IGNvbXBsZXRlZC4KPiA+Pgo+ID4+ID4g
-LSB3cml0aW5nIGEgZmV3IGJ5dGVzIHRoYXQgd2VyZSB3cml0dGVuIDE2IGJ5dGVzIGJlZm9yZQo+
-ID4+ID4gLSB3cml0aW5nIGEgZmV3IGJ5dGVzIHRoYXQgd2VyZSB3cml0dGVuIDE2IGJ5dGVzIGFm
-dGVyCj4gPj4KPiA+PiBUaG9zZSBzb3VuZCBtb3JlIGxpa2UgdGhlIGludGVyY29ubmVjdCBvciBy
-b290IGNvbXBsZXggaWdub3JpbmcgdGhlIGJ5dGUKPiA+PiBzdHJvYmVzIG9uIGFuIHVuYWxpZ25l
-ZCBidXJzdCwgb2Ygd2hpY2ggSSB0aGluayB0aGUgc2ltcGxpc3RpYyB2aWV3Cj4gPj4gd291bGQg
-YmUgIml0J3MgYnJva2VuIi4KPiA+Pgo+ID4+IEZXSVcgSSBzdHVjayBteSBvbGQgTnZpZGlhIDc2
-MDBHVCBjYXJkIGluIG15IEFybSBKdW5vIHIyIGJvYXJkICgyeAo+ID4+IENvcnRleC1BNzIpLCBi
-dWlsdCB5b3VyIHRlc3QgcHJvZ3JhbSBuYXRpdmVseSB3aXRoIEdDQyA4LjEuMSBhdCAtTzIsIGFu
-ZAo+ID4+IGl0J3Mgc3RpbGwgaGFwcGlseSBmbGlja2VyaW5nIHBpeGVscyBpbiB0aGUgY29ybmVy
-IG9mIHRoZSBjb25zb2xlIGFmdGVyCj4gPj4gbmVhcmx5IGFuIGhvdXIgKGluIHBhcmFsbGVsIHdp
-dGggc29tZSBpcGVyZjMganVzdCB0byBlbnN1cmUgcGxlbnR5IG9mCj4gPj4gUENJZSB0cmFmZmlj
-KS4gSSB3b3VsZCBzdHJvbmdseSBzdXNwZWN0IHRoaXMgaXNzdWUgaXMgcGFydGljdWxhciB0bwo+
-ID4+IEFybWFkYSA4aywgc28gaXRzJyBwcm9iYWJseSBvbmUgZm9yIHRoZSBNYXJ2ZWxsIGZvbGtz
-IHRvIHRha2UgYSBjbG9zZXIKPiA+PiBsb29rIGF0IC0gSSBiZWxpZXZlIHNvbWUgcHJldmlvdXMg
-aW50ZXJjb25uZWN0IGlzc3VlcyBvbiB0aG9zZSBTb0NzIHdlcmUKPiA+PiBhY3R1YWxseSBmaXhh
-YmxlIGluIGZpcm13YXJlLgo+ID4+Cj4gPj4KPiA+Cj4gPiBPbiBteSBNYWNjaGlhdG8gSSB1c2Ug
-R1Q2MzAgY2FyZCAobnV2ZWF1IGRyaXZlcikgKyBkZWJpYW4gKyB4ZmNlCj4gPiBkZXNrdG9wIGFu
-ZCBpbiBkdWFsIG1vbml0b3IgbW9kZSwgSSBjb3VsZCBydW4gYSBjb3VwbGUgb2YgMTA4MHAKPiA+
-IHN0cmVhbXMuIEFsbCBzbW9vdGggYW5kIEkndmUgbmV2ZXIgbm90aWNlZCBhbnkgaW1hZ2UgY29y
-cnVwdGlvbgo+ID4gd2hhdHNvZXZlciAoSSBzcGVudCBhIGxvdCBvZiB0aW1lIGluIGZyb250IG9m
-IHN1Y2ggc2V0dXApLiBKdXN0IHRvIGJlCj4gPiBvbiBhIHNhZmUgc2lkZSwgY2FuIHlvdSBzZW5k
-IG1lIGEgYm9vdGxvZyBhbmQgeW91ciBib2FyZCByZXZpc2lvbj8gSSdkCj4gPiBsaWtlIHRvIHNl
-ZSB5b3VyIGZpcndhcmUgdmVyc2lvbiBhbmQgdHlwZS4KPiA+Cj4KPiBIaSBNYXJjaW4sCj4KPiBD
-b3VsZCB5b3UgcGxlYXNlIHRyeSBydW5uaW5nIGhpcyByZXByb2R1Y2VyPwoKVGhpcyBpcyBleGFj
-dGx5IHdoYXQgSSBwbGFuIHRvIGRvLCBhcyBzb29uIGFzIEkgY2FuIHBsdWcgbXkgR0ZYIGNhcmQK
-YmFjayB0byB0aGUgYm9hcmQgKHRvbW9ycm93KS4gSnVzdCB0byByZW1haW4gYWxpZ25lZCAtIGlz
-IGl0IG9rLCBpZiBJCmJvb3QgbXkgZGViaWFuIHdpdGggR1Q2MzAgcGx1Z2dlZCwgY29tcGlsZSB0
-aGUgcHJvZ3JhbSB3aXRoIC1PMiBhbmQKc2ltbHBseSBydW4gaXQgb24gL2Rldi9mYjA/CgpCZXN0
-IHJlZ2FyZHMsCk1hcmNpbgoKX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19f
-X19fX19fX18KbGludXgtYXJtLWtlcm5lbCBtYWlsaW5nIGxpc3QKbGludXgtYXJtLWtlcm5lbEBs
-aXN0cy5pbmZyYWRlYWQub3JnCmh0dHA6Ly9saXN0cy5pbmZyYWRlYWQub3JnL21haWxtYW4vbGlz
-dGluZm8vbGludXgtYXJtLWtlcm5lbAo=
+
+
+On 09/08/18 01:47 PM, Kit Chow wrote:
+>> I haven't tested this scenario but my guess would be that IOAT would
+>> indeed go through the IOMMU and the PCI BAR address would need to be
+>> properly mapped into the IOAT's IOVA. The fact that you see DMAR errors
+>> is probably a good indication that this is the case. I really don't know
+>> why you'd want to DMA something without mapping it.
+> I have experimented with changing ntb_async_tx_submit to dma_map the PCI 
+> BAR
+> address. With this, I get a different DMAR error:
+
+What code did you use to do this?
+
+
+> DMAR: [DMA Write] Request device [07:00.4] fault addr ffd00000
+> [fault reason 12] non-zero reserved fields in PTE
+
+Also, what device corresponds to 07:00.4 on your system?
+
+Logan
