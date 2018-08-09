@@ -1,57 +1,65 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mga17.intel.com ([192.55.52.151]:10601 "EHLO mga17.intel.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1726275AbeHaVm0 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Fri, 31 Aug 2018 17:42:26 -0400
-Subject: [PATCH for-rc 0/2] IB/hfi1: PCI bug due to pci core changes
-From: Dennis Dalessandro <dennis.dalessandro@intel.com>
-To: bhelgaas@google.com, jgg@ziepe.ca, dledford@redhat.com
-Cc: Sinan Kaya <okaya@codeaurora.org>,
-        "Michael J. Ruhl" <michael.j.ruhl@intel.com>,
-        linux-pci@vger.kernel.org, linux-rdma@vger.kernel.org
-Date: Fri, 31 Aug 2018 10:33:54 -0700
-Message-ID: <20180831173132.21741.25892.stgit@scvm10.sc.intel.com>
+Received: from mail-qk0-f196.google.com ([209.85.220.196]:43635 "EHLO
+        mail-qk0-f196.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1732163AbeHISKH (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Thu, 9 Aug 2018 14:10:07 -0400
+Received: by mail-qk0-f196.google.com with SMTP id z74-v6so4309717qkb.10
+        for <linux-pci@vger.kernel.org>; Thu, 09 Aug 2018 08:44:38 -0700 (PDT)
+Subject: Re: [RFC] ARM64, PCIe, annd ACPI
+To: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
+Cc: Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org,
+        Tomasz Nowicki <tn@semihalf.com>,
+        Vladimir Olovyannikov <vladimir.olovyannikov@broadcom.com>,
+        BCM Kernel Feedback <bcm-kernel-feedback-list@broadcom.com>
+References: <89484aa0-08c4-0cff-500d-407d21e2f5fd@broadcom.com>
+ <20180808093822.GA25150@e107981-ln.cambridge.arm.com>
+ <a32a8761-f49f-f0cf-928b-0c323c2b540e@broadcom.com>
+ <20180809085923.GA13428@e107981-ln.cambridge.arm.com>
+ <9b5b5918-1492-df65-5b63-678b4a35ecb9@broadcom.com>
+ <20180809154151.GB20329@red-moon>
+From: Ray Jui <ray.jui@broadcom.com>
+Message-ID: <27e3dd65-50d9-08a2-9639-b7d229f48227@broadcom.com>
+Date: Thu, 9 Aug 2018 08:44:34 -0700
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
+In-Reply-To: <20180809154151.GB20329@red-moon>
+Content-Type: text/plain; charset=utf-8; format=flowed
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hi Bjorn, Doug and Jason,
+Hi Lorenzo,
 
-As discussed on the pci list [1] our driver was broken with the following three
-changes in 4.19 merge window:
+On 8/9/2018 8:41 AM, Lorenzo Pieralisi wrote:
+> On Thu, Aug 09, 2018 at 07:57:52AM -0700, Ray Jui wrote:
+> 
+> [...]
+> 
+>>> As I said ARM64 ACPI PCI kernel support is in the mainline today and I
+>>> am not willing to merge any more MCFG quirks at driver level - the
+>>> information is out there, it is public and must be followed, either
+>>> designers do that or no ACPI PCI support on your platform, sorry.
+>>>
+>>> Lorenzo
+>>>
+>>
+>> I just want to make sure I interpret this properly. This means if
+>> the PCIe controller hardware does not support ECAM, there's pretty
+>> much no way around it with SW based workaround going forward with
+>> mainline kernel?
+> 
+> Yes.
+> 
+>> What about for the PCIe controller that was designed a few years back?
+> 
+> It will bootstrap with DT :)
 
-c6a44ba950d1 ("PCI: Rename pci_try_reset_bus() to pci_reset_bus()")
-409888e0966e ("IB/hfi1: Use pci_try_reset_bus() for initiating PCI Secondary Bus Reset")
-811c5cb37df4 ("PCI: Unify try slot and bus reset API")
+Okay, one more quick question, what about for distributions that will 
+eventually disable DT and force ACPI?
 
-Ideally I'd like to see those patches reverted but we could also go with
-something like the following series. I know there is a desire to have a more
-clean API but since this is already the rc phase I think that is best delayed.
-Clearly the first attempt at an API clean up did not work out so well.
+> 
+> Thanks,
+> Lorenzo
+> 
 
-I'm not sure how you maintainers want to handle this since the fix straddles
-both subsystems so I'm sending it to both linux-rdma and linux-pci.
+Thanks,
 
-At the request of discussion on the linux-pci list I have also filed a bug [2].
-
-[1] https://marc.info/?l=linux-pci&m=153539692917785&w=2
-[2] https://bugzilla.kernel.org/show_bug.cgi?id=200985
-
-Thanks
-
-
----
-
-Dennis Dalessandro (2):
-      PCI: Fix faulty logic in pci_reset_bus()
-      IB/hfi1,PCI: Allow bus reset while probing
-
-
- drivers/infiniband/hw/hfi1/pcie.c |   11 ++++-------
- drivers/pci/pci.c                 |    3 ++-
- include/linux/pci.h               |    3 +++
- 3 files changed, 9 insertions(+), 8 deletions(-)
-
---
--Denny
+Ray
