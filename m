@@ -1,243 +1,164 @@
-Return-Path: <SRS0=/dXs=K6=kernel.crashing.org=benh@kernel.org>
-Return-Path: <SRS0=/dXs=K6=kernel.crashing.org=benh@kernel.org>
-Message-ID: <08bc40a6af3e614e97a78fbaab688bfcd14520ac.camel@kernel.crashing.org>
-Subject: [RFC PATCH] pci: Proof of concept at fixing
- pci_enable_device/bridge races
-From: Benjamin Herrenschmidt <benh@kernel.crashing.org>
-To: Bjorn Helgaas <helgaas@kernel.org>, Hari Vyas <hari.vyas@broadcom.com>
-Cc: bhelgaas@google.com, linux-pci@vger.kernel.org, ray.jui@broadcom.com,
-        "linux-kernel@vger.kernel.org"
-	 <linux-kernel@vger.kernel.org>
-Date: Thu, 16 Aug 2018 07:50:13 +1000
-In-Reply-To: <58192cf94de3941f9141aa3203399ae2bcdf6b7a.camel@kernel.crashing.org>
-References: <1530608741-30664-1-git-send-email-hari.vyas@broadcom.com>
-	 <20180731163727.GK45322@bhelgaas-glaptop.roam.corp.google.com>
-	 <ecaed7664b46d73888d2494065905f8e108fc0f4.camel@kernel.crashing.org>
-	 <5e42f7990673d11e3a020e7efcfd333215d48138.camel@kernel.crashing.org>
-	 <58192cf94de3941f9141aa3203399ae2bcdf6b7a.camel@kernel.crashing.org>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from bombadil.infradead.org ([198.137.202.133]:35946 "EHLO
+        bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1727218AbeHJCPs (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Thu, 9 Aug 2018 22:15:48 -0400
+Date: Thu, 9 Aug 2018 16:48:30 -0700
+From: Matthew Wilcox <willy@infradead.org>
+To: Martin Mares <mj@ucw.cz>, Logan Gunthorpe <logang@deltatee.com>
+Cc: linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
+        linux-doc@vger.kernel.org, Stephen Bates <sbates@raithlin.com>,
+        Christoph Hellwig <hch@lst.de>,
+        Bjorn Helgaas <bhelgaas@google.com>,
+        Jonathan Corbet <corbet@lwn.net>,
+        Ingo Molnar <mingo@kernel.org>,
+        Thomas Gleixner <tglx@linutronix.de>,
+        "Paul E. McKenney" <paulmck@linux.vnet.ibm.com>,
+        Marc Zyngier <marc.zyngier@arm.com>,
+        Kai-Heng Feng <kai.heng.feng@canonical.com>,
+        Frederic Weisbecker <frederic@kernel.org>,
+        Dan Williams <dan.j.williams@intel.com>,
+        =?iso-8859-1?B?Suly9G1l?= Glisse <jglisse@redhat.com>,
+        Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+        Alex Williamson <alex.williamson@redhat.com>,
+        Christian =?iso-8859-1?Q?K=F6nig?= <christian.koenig@amd.com>
+Subject: Re: lspci: Display path to device
+Message-ID: <20180809234830.GA30835@bombadil.infradead.org>
+References: <20180717170204.30470-1-logang@deltatee.com>
+ <20180717203900.GA1771@bombadil.infradead.org>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20180717203900.GA1771@bombadil.infradead.org>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-(Resent with lkml on copy)
 
-[Note: This isn't meant to be merged, it need splitting at the very
-least, see below]
+Martin?  Bjorn's looking to merge this soon and it'd be nice to have
+the support in lspci too.
 
-This is something I cooked up quickly today to test if that would fix
-my problems with large number of switch and NVME devices on POWER.
-
-So far it does...
-
-The issue (as discussed in the Re: PCIe enable device races thread) is
-that pci_enable_device and related functions along with pci_set_master
-and pci_enable_bridge are fundamentally racy.
-
-There is no lockign protecting the state of the device in pci_dev and
-if multiple devices under the same bridge try to enable it simultaneously
-one some of them will potentially start accessing it before it has actually
-been enabled.
-
-Now there are a LOT more fields in pci_dev that aren't covered by any
-form of locking.
-
-Additionally, some other parts such as ASPM or SR-IOV seem to be trying to do
-their own ad-hoc locking, but will manipulate bit fields in pci_dev that
-might be sharing words with other unrelated bit fields racily.
-
-So I think we need to introduce a pci_dev mutex aimed at synchronizing
-the main enable/master state of a given device, and possibly also the
-bazillion of state bits held inside pci_dev.
-
-I suggest a progressive approach:
-
- 1- First we add the mutex, and put a red line comment "/* ----- */" in
-    struct pci_dev, at the bottom
-
- 2- We move the basic enable/disable/set_master stuff under that lock and
-    move the corresponding fields in pci_dev below the line comment.
-
- 3- Progressively, as we untangle them and verify their locking, we move
-    individual fields below the line so that we have a good visibility of
-    what has been addressed/audited already and what not
-
-Note: I would very much like to keep most of the probing/resource allocation
-single threaded at least within a given domain, I know we have some attempts
-at locking in the hotplug code for that, I'm not ready to tackle that or
-change it at this stage.
-
-We might be able to also addrss the is_added issues (Hari Vyas stuff) using
-the same mutex, I haven't looked into the details.
-
-Not-signed-off-by: Benjamin Herrenschmidt <benh@kernel.crashing.org>
----
-
-diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
-index 316496e99da9..9c4895c40f1d 100644
---- a/drivers/pci/pci.c
-+++ b/drivers/pci/pci.c
-@@ -1348,9 +1348,13 @@ static int do_pci_enable_device(struct pci_dev *dev, int bars)
-  */
- int pci_reenable_device(struct pci_dev *dev)
- {
-+	int rc = 0;
-+
-+	mutex_lock(&dev->lock);
- 	if (pci_is_enabled(dev))
--		return do_pci_enable_device(dev, (1 << PCI_NUM_RESOURCES) - 1);
--	return 0;
-+		rc = do_pci_enable_device(dev, (1 << PCI_NUM_RESOURCES) - 1);
-+	mutex_unlock(&dev->lock);
-+	return rc;
- }
- EXPORT_SYMBOL(pci_reenable_device);
- 
-@@ -1363,12 +1367,6 @@ static void pci_enable_bridge(struct pci_dev *dev)
- 	if (bridge)
- 		pci_enable_bridge(bridge);
- 
--	if (pci_is_enabled(dev)) {
--		if (!dev->is_busmaster)
--			pci_set_master(dev);
--		return;
--	}
--
- 	retval = pci_enable_device(dev);
- 	if (retval)
- 		pci_err(dev, "Error enabling bridge (%d), continuing\n",
-@@ -1379,9 +1377,16 @@ static void pci_enable_bridge(struct pci_dev *dev)
- static int pci_enable_device_flags(struct pci_dev *dev, unsigned long flags)
- {
- 	struct pci_dev *bridge;
--	int err;
-+	int err = 0;
- 	int i, bars = 0;
- 
-+	/* Handle upstream bridges first to avoid locking issues */
-+	bridge = pci_upstream_bridge(dev);
-+	if (bridge)
-+		pci_enable_bridge(bridge);
-+
-+	mutex_lock(&dev->lock);
-+
- 	/*
- 	 * Power state could be unknown at this point, either due to a fresh
- 	 * boot or a device removal call.  So get the current power state
-@@ -1394,12 +1399,9 @@ static int pci_enable_device_flags(struct pci_dev *dev, unsigned long flags)
- 		dev->current_state = (pmcsr & PCI_PM_CTRL_STATE_MASK);
- 	}
- 
-+	/* Already enabled ? */
- 	if (atomic_inc_return(&dev->enable_cnt) > 1)
--		return 0;		/* already enabled */
--
--	bridge = pci_upstream_bridge(dev);
--	if (bridge)
--		pci_enable_bridge(bridge);
-+		goto bail;
- 
- 	/* only skip sriov related */
- 	for (i = 0; i <= PCI_ROM_RESOURCE; i++)
-@@ -1412,6 +1414,8 @@ static int pci_enable_device_flags(struct pci_dev *dev, unsigned long flags)
- 	err = do_pci_enable_device(dev, bars);
- 	if (err < 0)
- 		atomic_dec(&dev->enable_cnt);
-+ bail:
-+	mutex_unlock(&dev->lock);
- 	return err;
- }
- 
-@@ -1618,6 +1622,7 @@ static void do_pci_disable_device(struct pci_dev *dev)
- 	if (pci_command & PCI_COMMAND_MASTER) {
- 		pci_command &= ~PCI_COMMAND_MASTER;
- 		pci_write_config_word(dev, PCI_COMMAND, pci_command);
-+		dev->is_busmaster = 0;
- 	}
- 
- 	pcibios_disable_device(dev);
-@@ -1632,8 +1637,10 @@ static void do_pci_disable_device(struct pci_dev *dev)
-  */
- void pci_disable_enabled_device(struct pci_dev *dev)
- {
-+	mutex_lock(&dev->lock);
- 	if (pci_is_enabled(dev))
- 		do_pci_disable_device(dev);
-+	mutex_unlock(&dev->lock);
- }
- 
- /**
-@@ -1657,12 +1664,13 @@ void pci_disable_device(struct pci_dev *dev)
- 	dev_WARN_ONCE(&dev->dev, atomic_read(&dev->enable_cnt) <= 0,
- 		      "disabling already-disabled device");
- 
-+	mutex_lock(&dev->lock);
- 	if (atomic_dec_return(&dev->enable_cnt) != 0)
--		return;
-+		goto bail;
- 
- 	do_pci_disable_device(dev);
--
--	dev->is_busmaster = 0;
-+ bail:
-+	mutex_unlock(&dev->lock);
- }
- EXPORT_SYMBOL(pci_disable_device);
- 
-@@ -3764,8 +3772,12 @@ void __weak pcibios_set_master(struct pci_dev *dev)
-  */
- void pci_set_master(struct pci_dev *dev)
- {
--	__pci_set_master(dev, true);
--	pcibios_set_master(dev);
-+	mutex_lock(&dev->lock);
-+	if (!dev->is_busmaster) {
-+		__pci_set_master(dev, true);
-+		pcibios_set_master(dev);
-+	}
-+	mutex_unlock(&dev->lock);
- }
- EXPORT_SYMBOL(pci_set_master);
- 
-@@ -3775,7 +3787,9 @@ EXPORT_SYMBOL(pci_set_master);
-  */
- void pci_clear_master(struct pci_dev *dev)
- {
-+	mutex_lock(&dev->lock);
- 	__pci_set_master(dev, false);
-+	mutex_unlock(&dev->lock);
- }
- EXPORT_SYMBOL(pci_clear_master);
- 
-diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
-index 611adcd9c169..77701bfe0d3d 100644
---- a/drivers/pci/probe.c
-+++ b/drivers/pci/probe.c
-@@ -2102,6 +2102,7 @@ struct pci_dev *pci_alloc_dev(struct pci_bus *bus)
- 	INIT_LIST_HEAD(&dev->bus_list);
- 	dev->dev.type = &pci_dev_type;
- 	dev->bus = pci_bus_get(bus);
-+	mutex_init(&dev->lock);
- 
- 	return dev;
- }
-diff --git a/include/linux/pci.h b/include/linux/pci.h
-index c133ccfa002e..09e94ba6adf0 100644
---- a/include/linux/pci.h
-+++ b/include/linux/pci.h
-@@ -33,6 +33,7 @@
- #include <linux/io.h>
- #include <linux/resource_ext.h>
- #include <uapi/linux/pci.h>
-+#include <linux/mutex.h>
- 
- #include <linux/pci_ids.h>
- 
-@@ -289,6 +290,8 @@ struct pci_dev {
- 	struct proc_dir_entry *procent;	/* Device entry in /proc/bus/pci */
- 	struct pci_slot	*slot;		/* Physical slot this device is in */
- 
-+	struct mutex	lock;
-+
- 	unsigned int	devfn;		/* Encoded device & function index */
- 	unsigned short	vendor;
- 	unsigned short	device;
+On Tue, Jul 17, 2018 at 01:39:00PM -0700, Matthew Wilcox wrote:
+> On Tue, Jul 17, 2018 at 11:02:00AM -0600, Logan Gunthorpe wrote:
+> > The second patch expands the new helper to optionally take a path of
+> > PCI devfns. This is to address Alex's renumbering concern when using
+> > simple bus-devfns. The implementation is essentially how he described it and
+> > similar to the Intel VT-d spec (Section 8.3.1).
+> 
+> I don't like telling the user to grovel around lspci -t by hand.  It's
+> not many lines of code to add a new -P option to lspci to show the path
+> to each device instead of bus:dev.fn
+> 
+> Here's three examples, first without, then with -P.
+> 
+> (my laptop):
+> 6d:00.0 Non-Volatile memory controller: Samsung Electronics Co Ltd NVMe SSD Controller SM961/PM961
+> 00:1d.0/00.0 Non-Volatile memory controller: Samsung Electronics Co Ltd NVMe SSD Controller SM961/PM961
+> 
+> (tests/PCI-X-bridges-and-domains):
+> 0002:42:00.0 Ethernet controller: Trident Microsystems 4DWave DX (rev 26)
+> 0002:00:02.4/01.0/00.0 Ethernet controller: Trident Microsystems 4DWave DX (rev 26)
+> 
+> (my Nehalem system):
+> 04:00.0 Serial Attached SCSI controller: LSI Logic / Symbios Logic SAS2008 PCI-Express Fusion-MPT SAS-2 [Falcon] (rev 02)
+> 00:03.0/00.0/00.0/00.0 Serial Attached SCSI controller: LSI Logic / Symbios Logic SAS2008 PCI-Express Fusion-MPT SAS-2 [Falcon] (rev 02)
+> 
+> The Nehalem system makes an interesting testcase because it exposes some
+> registers in fake PCIe devices that aren't behind the root ports.  eg:
+> 
+> ff:06.3 Host bridge: Intel Corporation Xeon 5500/Core i7 Integrated Memory Controller Channel 2 Thermal Control Registers (rev 04)
+> 
+> Martin, what do you think to this patch?  Also, I'm happy to send you
+> the lspci -xxxx from the Nehalem system to add to tests/
+> 
+> diff --git a/lspci.c b/lspci.c
+> index 3bf1925..ae0fdd2 100644
+> --- a/lspci.c
+> +++ b/lspci.c
+> @@ -19,6 +19,7 @@ int verbose;				/* Show detailed information */
+>  static int opt_hex;			/* Show contents of config space as hexadecimal numbers */
+>  struct pci_filter filter;		/* Device filter */
+>  static int opt_tree;			/* Show bus tree */
+> +static int opt_path;			/* Show bridge path */
+>  static int opt_machine;			/* Generate machine-readable output */
+>  static int opt_map_mode;		/* Bus mapping mode enabled */
+>  static int opt_domains;			/* Show domain numbers (0=disabled, 1=auto-detected, 2=requested) */
+> @@ -29,7 +30,7 @@ char *opt_pcimap;			/* Override path to Linux modules.pcimap */
+>  
+>  const char program_name[] = "lspci";
+>  
+> -static char options[] = "nvbxs:d:ti:mgp:qkMDQ" GENERIC_OPTIONS ;
+> +static char options[] = "nvbxs:d:tPi:mgp:qkMDQ" GENERIC_OPTIONS ;
+>  
+>  static char help_msg[] =
+>  "Usage: lspci [<switches>]\n"
+> @@ -247,6 +248,34 @@ sort_them(void)
+>  
+>  /*** Normal output ***/
+>  
+> +static void
+> +show_slot_path(struct pci_dev *p)
+> +{
+> +  struct pci_dev *d = NULL;
+> +
+> +  if (opt_path && p->bus)
+> +    {
+> +      for (d = p->access->devices; d; d = d->next) {
+> +	if (d->hdrtype == -1)
+> +	  d->hdrtype = pci_read_byte(d, PCI_HEADER_TYPE) & 0x7f;
+> +	if (d->hdrtype != PCI_HEADER_TYPE_BRIDGE &&
+> +	    d->hdrtype != PCI_HEADER_TYPE_CARDBUS)
+> +	  continue;
+> +	if (pci_read_byte(d, PCI_SECONDARY_BUS) > p->bus)
+> +	  continue;
+> +	if (pci_read_byte(d, PCI_SUBORDINATE_BUS) < p->bus)
+> +	  continue;
+> +	show_slot_path(d);
+> +	break;
+> +      }
+> +    }
+> +
+> +  if (d)
+> +    printf("/%02x.%d", p->dev, p->func);
+> +  else
+> +    printf("%02x:%02x.%d", p->bus, p->dev, p->func);
+> +}
+> +
+>  static void
+>  show_slot_name(struct device *d)
+>  {
+> @@ -254,7 +283,7 @@ show_slot_name(struct device *d)
+>  
+>    if (!opt_machine ? opt_domains : (p->domain || opt_domains >= 2))
+>      printf("%04x:", p->domain);
+> -  printf("%02x:%02x.%d", p->bus, p->dev, p->func);
+> +  show_slot_path(p);
+>  }
+>  
+>  void
+> @@ -989,6 +1018,9 @@ main(int argc, char **argv)
+>        case 'x':
+>  	opt_hex++;
+>  	break;
+> +      case 'P':
+> +	opt_path++;
+> +	break;
+>        case 't':
+>  	opt_tree++;
+>  	break;
+> diff --git a/lspci.man b/lspci.man
+> index 35b3620..565dd5b 100644
+> --- a/lspci.man
+> +++ b/lspci.man
+> @@ -95,6 +95,9 @@ PCI bus instead of as seen by the kernel.
+>  .B -D
+>  Always show PCI domain numbers. By default, lspci suppresses them on machines which
+>  have only domain 0.
+> +.TP
+> +.B -P
+> +Name PCI devices by path through each bridge, instead of by bus number.
+>  
+>  .SS Options to control resolving ID's to names
+>  .TP
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-doc" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
