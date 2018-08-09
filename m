@@ -1,193 +1,135 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:57054 "EHLO
-        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1725992AbeHQNcf (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Fri, 17 Aug 2018 09:32:35 -0400
+Return-Path: <SRS0=fEc7=KY=gigaio.com=kchow@kernel.org>
+Return-Path: <SRS0=fEc7=KY=gigaio.com=kchow@kernel.org>
+Subject: Re: IOAT DMA w/IOMMU
+To: Logan Gunthorpe <logang@deltatee.com>, "Jiang, Dave"
+ <dave.jiang@intel.com>, Eric Pilmore <epilmore@gigaio.com>,
+ Bjorn Helgaas <helgaas@kernel.org>
+Cc: "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+ David Woodhouse <dwmw2@infradead.org>,
+ Alex Williamson <alex.williamson@redhat.com>,
+ "iommu@lists.linux-foundation.org" <iommu@lists.linux-foundation.org>
+References: <CAOQPn8soxubJxb=vp7kz+AM6LbPH5y+_Nx0Vzv7rjV_nMMqEmA@mail.gmail.com>
+ <20180809184331.GB113140@bhelgaas-glaptop.roam.corp.google.com>
+ <CAOQPn8uPYKai49WYPqZp2wNd5of=0hUvPOHEtqP56RZu-hcjuw@mail.gmail.com>
+ <b54899a8-a144-e8e0-9880-1800c4657b95@deltatee.com>
+ <95e53520-b05f-4be4-e694-463d717453a8@gigaio.com>
+ <cdd9245f-eb23-9e10-1755-8f396a2cd255@deltatee.com>
+ <b278c1e5-6f08-c879-a27d-7fc172645fd5@gigaio.com>
+ <f04fae39-645e-3c6e-07c0-b194260bf5de@deltatee.com>
+ <3f503940-db6a-ec75-ed15-1db99d5d48ef@gigaio.com>
+ <112A412BB11A1242B37129D931BCE5348382CFB2@fmsmsx117.amr.corp.intel.com>
+ <b8af340c-d40b-cb8c-987f-b394f1d6ec3e@gigaio.com>
+ <adf51c74-36fa-b61d-8497-27bd75178ba4@deltatee.com>
+From: Kit Chow <kchow@gigaio.com>
+Message-ID: <aa9c3f41-efc9-8c68-a517-2736c8986621@gigaio.com>
+Date: Thu, 9 Aug 2018 16:00:00 -0700
 MIME-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII;
- format=flowed
-Date: Fri, 17 Aug 2018 15:59:39 +0530
-From: poza@codeaurora.org
-To: Benjamin Herrenschmidt <benh@kernel.crashing.org>
-Cc: Thomas Tai <thomas.tai@oracle.com>, bhelgaas@google.com,
-        keith.busch@intel.com, linux-pci@vger.kernel.org,
-        linux-pci-owner@vger.kernel.org
-Subject: Re: [PATCH 1/1] PCI/AER: prevent pcie_do_fatal_recovery from using
- device after it is removed
-In-Reply-To: <def1568d0c8ce9a455760da1271724d6e65a3286.camel@kernel.crashing.org>
-References: <1534179088-44219-1-git-send-email-thomas.tai@oracle.com>
- <1534179088-44219-2-git-send-email-thomas.tai@oracle.com>
- <51f4b387d9bd96a42d526a6a029fc43b@codeaurora.org>
- <b0104a716319d76e734c307cb4bedd9d@codeaurora.org>
- <903394c04d6ad468ed06dc0a779200e7555345a7.camel@kernel.crashing.org>
- <6cb069038530757f31f3dd60328c7e30@codeaurora.org>
- <e931bc7a7e468e8bb2ee3766b3fcf96f1800f552.camel@kernel.crashing.org>
- <5bd99bcacb772b588771fce62c61a59fdeb167f3.camel@kernel.crashing.org>
- <290750445f084c479963f54dd36af63a@codeaurora.org>
- <05bc3bccb2c6a0cb1696faf20073e567d7a5b8ee.camel@kernel.crashing.org>
- <2894d8df6e44860456377dade9ea5737@codeaurora.org>
- <9c7c60eb765c61d007169c9142fb335b0a4080df.camel@kernel.crashing.org>
- <c00a1ad4ffbf7ccecf3c8d05df4d8d82@codeaurora.org>
- <def1568d0c8ce9a455760da1271724d6e65a3286.camel@kernel.crashing.org>
-Message-ID: <65ec0c5b4682c0f0215114ac09d46cf5@codeaurora.org>
-Sender: linux-pci-owner@vger.kernel.org
+In-Reply-To: <adf51c74-36fa-b61d-8497-27bd75178ba4@deltatee.com>
+Content-Type: text/plain; charset=utf-8; format=flowed
 List-ID: <linux-pci.vger.kernel.org>
 
-On 2018-08-17 05:00, Benjamin Herrenschmidt wrote:
-> On Thu, 2018-08-16 at 19:41 +0530, poza@codeaurora.org wrote:
->> 
->> > See above.
->> > >
->> > > okay, so here is what current pcie_do_nonfatal_recovery() doe.
->> > >
->> > > pcie_do_nonfatal_recovery
->> > >      report_error_detected()    >> calls driver callbacks
->> > >      report_mmio_enabled()
->> > >      report_slot_reset()  >> if PCI_ERS_RESULT_NEED_RESET
->> >
->> > Above if the driver returned "NEED RESET" we should not just "report" a
->> > slot reset, we should *perform* one :-) Unless the AER code does it in
->> > a place I missed...
->> 
->> I am willing work on this if Bjorn agrees.
->> but I am still trying to figure out missing piece.
->> 
->> so Ben,
->> you are suggesting
->> 
->> ERR_NONFATAL handling
->> pcie_do_nonfatal_recovery
->>       report_error_detected()    >> calls driver callbacks
->>        report_mmio_enabled()
->>        report_slot_reset()  >> if PCI_ERS_RESULT_NEED_RESET
->> Here along with calling slot_reset, you are suggesting to do Secondary
->> Bus Reset ?
->> 
->> but this is ERR_NONFATAL and according to definition the link is still
->> good, so that the transcriptions on PCIe link can happen.
->> so my question is why do we want to reset the link ?
-> 
-> The driver responded to you from error_detected() or mmio_enabled()
-> that it wants the slot to be reset. So you should do so. This comes
-> from the driver deciding that whatever happens, it doesn't trust the
-> device state anymore.
-> 
-> report_slot_reset() iirc is about telling the driver that the reset has
-> been performed and it can reconfigure the device.
-> 
-> To be frank I haven't looked at this in a while, so we should refer to
-> the document before ou patched it :-) But the basic design we created
-> back then was precisely that the driver would have the ultimate say in
-> the matter.
-
-The existing design is; framework dictating drivers what it should do 
-rather than driver deciding.
-let me explain.
-
-aer_isr
-     aer_isr_one_error
-          get_device_error_info   >> this checks
-               {
-                 /* Link is still healthy for IO reads */    >> Bjorn 
-this looks like a very strange thing to me, if link is not healthy we 
-are not even going for pcie_do_fatal_recovery()
-		pci_read_config_dword(dev, pos + PCI_ERR_UNCOR_STATUS,
-			&info->status);
-		pci_read_config_dword(dev, pos + PCI_ERR_UNCOR_MASK,
-			&info->mask);
-		if (!(info->status & ~info->mask))
-			return 0;
-
-               {
-         handle_error_source
-         pcie_do_nonfatal_recovery or pcie_do_fatal_recovery
-
-now it does not seem to me that driver has some way of knowing if it has 
-to return PCI_ERS_RESULT_CAN_RECOVER ? or PCI_ERS_RESULT_NEED_RESET?
-
-let us take an example of storage driver here e.g. NVME
-nvme_error_detected()  relies heavily on pci_channel_state_t which is 
-passed by error framework  (err.c)
-
-I understand your point of view and original intention of design that 
-let driver dictate whether it wants slot_reset ?
-but driver relies on framework to pass that information in order to take 
-decision.
-
-In case of pci_channel_io_frozen  (which is ERR_FATAL), most of the 
-drivers demand link reset.
-
-but in case of ERR_NONFATAL, the link is supposed to be functional and 
-there is no need for link reset.
-and exactly all the PCI based drivers returns 
-PCI_ERS_RESULT_CAN_RECOVER, which is valid.
 
 
-so I think to conclude, you are referring more of your views towards
-pcie_do_fatal_recovery()
+On 08/09/2018 03:50 PM, Logan Gunthorpe wrote:
+>
+> On 09/08/18 04:48 PM, Kit Chow wrote:
+>> Based on Logan's comments, I am very hopeful that the dma_map_resource
+>> will make things work on the older platforms...
+> Well, I *think* dma_map_single() would still work. So I'm not that
+> confident that's the root of your problem. I'd still like to see the
+> actual code snippet you are using.
+>
+> Logan
+Here's the code snippet - (ntbdebug & 4) path does dma_map_resource of 
+the pci bar address.
+
+It was:
+                 unmap->addr[1] = dma_map_single(device->dev, (void 
+*)dest, len,
+                     DMA_TO_DEVICE);
+
+Kit
+---
 
 
-which does
+static int ntb_async_tx_submit(struct ntb_transport_qp *qp,
+                                struct ntb_queue_entry *entry)
+{
+         struct dma_async_tx_descriptor *txd;
+         struct dma_chan *chan = qp->tx_dma_chan;
+         struct dma_device *device;
+         size_t len = entry->len;
+         void *buf = entry->buf;
+         size_t dest_off, buff_off;
+         struct dmaengine_unmap_data *unmap;
+         dma_addr_t dest;
+         dma_cookie_t cookie;
+         int     unmapcnt;
 
-> remove_devices from the downstream link
-> reset_link()   (Secondary bus reset)
-> re-enumerate.
+         device = chan->device;
 
-and this is what DPC defined, and AER is just following that.
+         dest = qp->tx_mw_phys + qp->tx_max_frame * entry->tx_index;
 
-Regards,
-Oza.
+         buff_off = (size_t)buf & ~PAGE_MASK;
+         dest_off = (size_t)dest & ~PAGE_MASK;
 
-> 
-> Also because multiple devices, at least on power, can share a domain,
-> we can get into a situation where one device requires a reset, so all
-> will get reset, and their respective drivers need to be notified.
-> 
-> Note: it's not so much about resetting the *link* than about resetting
-> the *device*.
-> 
->> although
->> I see following note in the code as well.
->>                  /*
->> 		 * TODO: Should call platform-specific
->> 		 * functions to reset slot before calling
->> 		 * drivers' slot_reset callbacks?
->> 		 */
-> 
-> Yup :-)
-> 
-> Cheers,
-> Ben.
-> 
->> Regards,
->> Oza.
->> 
->> >
->> > Also we should do a hot reset at least, not just a link reset.
->> >
->> > >      report_resume()
->> > >
->> > > If you suggest how it is broken, it will help me to understand.
->> > > probably you might want to point out what are the calls need to be
->> > > added
->> > > or removed or differently handled, specially storage point of view.
->> >
->> >
->> > > Regards,
->> > > Oza.
->> > >
->> > > >
->> > > > Keep in mind that those callbacks were designed originally for EEH
->> > > > (which predates AER), and so was the spec written.
->> > > >
->> > > > We don't actually use the AER code on POWER today, so we didn't notice
->> > > > how broken the implementation was :-)
->> > > >
->> > > > We should fix that.
->> > > >
->> > > > Either we can sort all that out by email, or we should plan some kind
->> > > > of catch-up, either at Plumbers (provided I can go there) or maybe a
->> > > > webex call.
->> > > >
->> > > > Cheers,
->> > > > Ben.
+         if (!is_dma_copy_aligned(device, buff_off, dest_off, len))
+                 goto err;
+
+
+         if (ntbdebug & 0x4) {
+                 unmapcnt = 2;
+         } else {
+                 unmapcnt = 1;
+         }
+
+         unmap = dmaengine_get_unmap_data(device->dev, unmapcnt, 
+GFP_NOWAIT);
+         if (!unmap)
+                 goto err;
+
+         unmap->len = len;
+         unmap->addr[0] = dma_map_page(device->dev, virt_to_page(buf),
+                                       buff_off, len, DMA_TO_DEVICE);
+         if (dma_mapping_error(device->dev, unmap->addr[0]))
+                 goto err_get_unmap;
+
+         if (ntbdebug & 0x4) {
+                 unmap->addr[1] = dma_map_resource(device->dev,
+                     (phys_addr_t)dest, len, DMA_TO_DEVICE, 0);
+                 if (dma_mapping_error(device->dev, unmap->addr[1]))
+                         goto err_get_unmap;
+                 unmap->to_cnt = 2;
+         } else {
+                 unmap->addr[1] = dest;
+                 unmap->to_cnt = 1;
+         }
+
+         txd = device->device_prep_dma_memcpy(chan, unmap->addr[1],
+             unmap->addr[0], len, DMA_PREP_INTERRUPT);
+
+         if (!txd)
+                 goto err_get_unmap;
+
+         txd->callback_result = ntb_tx_copy_callback;
+         txd->callback_param = entry;
+         dma_set_unmap(txd, unmap);
+
+         cookie = dmaengine_submit(txd);
+         if (dma_submit_error(cookie))
+                 goto err_set_unmap;
+
+         dmaengine_unmap_put(unmap);
+
+         dma_async_issue_pending(chan);
+
+         return 0;
+
+err_set_unmap:
+         dma_descriptor_unmap(txd);
+         txd->desc_free(txd);
+err_get_unmap:
+         dmaengine_unmap_put(unmap);
+err:
+         return -ENXIO;
+}
