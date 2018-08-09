@@ -1,122 +1,62 @@
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Date: Tue, 14 Aug 2018 16:53:40 -0600
-From: Rob Herring <robh@kernel.org>
-To: Hanjie Lin <hanjie.lin@amlogic.com>
-Subject: Re: [PATCH 1/2] dt-bindings: PCI: meson: add DT bindings for Amlogic
- Meson PCIe controller
-Message-ID: <20180814225340.GA25470@rob-hp-laptop>
-References: <1534227522-186798-1-git-send-email-hanjie.lin@amlogic.com>
- <1534227522-186798-2-git-send-email-hanjie.lin@amlogic.com>
+Return-Path: <SRS0=fEc7=KY=gigaio.com=kchow@kernel.org>
+Return-Path: <SRS0=fEc7=KY=gigaio.com=kchow@kernel.org>
+Subject: Re: IOAT DMA w/IOMMU
+To: Logan Gunthorpe <logang@deltatee.com>, Eric Pilmore
+ <epilmore@gigaio.com>, Bjorn Helgaas <helgaas@kernel.org>
+Cc: linux-pci@vger.kernel.org, David Woodhouse <dwmw2@infradead.org>,
+ Alex Williamson <alex.williamson@redhat.com>,
+ iommu@lists.linux-foundation.org
+References: <CAOQPn8soxubJxb=vp7kz+AM6LbPH5y+_Nx0Vzv7rjV_nMMqEmA@mail.gmail.com>
+ <20180809184331.GB113140@bhelgaas-glaptop.roam.corp.google.com>
+ <CAOQPn8uPYKai49WYPqZp2wNd5of=0hUvPOHEtqP56RZu-hcjuw@mail.gmail.com>
+ <b54899a8-a144-e8e0-9880-1800c4657b95@deltatee.com>
+From: Kit Chow <kchow@gigaio.com>
+Message-ID: <95e53520-b05f-4be4-e694-463d717453a8@gigaio.com>
+Date: Thu, 9 Aug 2018 12:47:57 -0700
 MIME-Version: 1.0
-In-Reply-To: <1534227522-186798-2-git-send-email-hanjie.lin@amlogic.com>
-List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
-List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
-List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
-List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
-List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
-Cc: devicetree@vger.kernel.org, Kevin Hilman <khilman@baylibre.com>,
- linux-kernel@vger.kernel.org, Yue Wang <yue.wang@amlogic.com>,
- linux-pci@vger.kernel.org, Bjorn Helgaas <bhelgaas@google.com>,
- linux-amlogic@lists.infradead.org, linux-arm-kernel@lists.infradead.org
-Content-Type: text/plain; charset="us-ascii"
-Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
-Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
+In-Reply-To: <b54899a8-a144-e8e0-9880-1800c4657b95@deltatee.com>
+Content-Type: text/plain; charset=utf-8; format=flowed
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tue, Aug 14, 2018 at 02:18:41AM -0400, Hanjie Lin wrote:
-> From: Yue Wang <yue.wang@amlogic.com>
-> 
-> The Amlogic Meson PCIe host controller is based on the Synopsys DesignWare
-> PCI core. This patch adds documentation for the DT bindings in Meson PCIe
-> controller.
-> 
-> Signed-off-by: Yue Wang <hanjie.lin@amlogic.com>
-> Signed-off-by: Hanjie Lin <hanjie.lin@amlogic.com>
-> ---
->  .../devicetree/bindings/pci/amlogic,meson-pcie.txt | 57 ++++++++++++++++++++++
->  1 file changed, 57 insertions(+)
->  create mode 100644 Documentation/devicetree/bindings/pci/amlogic,meson-pcie.txt
-> 
-> diff --git a/Documentation/devicetree/bindings/pci/amlogic,meson-pcie.txt b/Documentation/devicetree/bindings/pci/amlogic,meson-pcie.txt
-> new file mode 100644
-> index 0000000..48233e4
-> --- /dev/null
-> +++ b/Documentation/devicetree/bindings/pci/amlogic,meson-pcie.txt
-> @@ -0,0 +1,57 @@
-> +Amlogic Meson AXG DWC PCIE SoC controller
-> +
-> +Amlogic Meson PCIe host controller is based on the Synopsys DesignWare PCI core.
-> +It shares common functions with the PCIe DesignWare core driver and
-> +inherits common properties defined in
-> +Documentation/devicetree/bindings/pci/designware-pci.txt.
-> +
-> +Additional properties are described here:
-> +
-> +Required properties:
-> +- compatible:
-> +	should contain "amlogic,axg-pcie" to identify the core.
-> +- reg:
-> +	Should contain the configuration address space.
-> +- reg-names: Must be
-> +	- "elbi"	External local bus interface registers
-> +	- "cfg"		Meson specific registers
-> +	- "config"	PCIe configuration space
-> +- clocks: Must contain an entry for each entry in clock-names.
-> +- clock-names: Must include the following entries:
-> +	- "pcie"
-> +	- "pcie_bus"
-> +	- "pcie_general"
-> +	- "pcie_mipi_en"
-> +
-> +Example configuration:
-> +
-> +	pcie: pcie@dffff000 {
 
-Unit-address is wrong.
+On 08/09/2018 12:35 PM, Logan Gunthorpe wrote:
+> Hey,
+>
+> On 09/08/18 12:51 PM, Eric Pilmore wrote:
+>>>> Was wondering if anybody here has used IOAT DMA engines with an
+>>>> IOMMU turned on (Xeon based system)? My specific question is really
+>>>> whether it is possible to DMA (w/IOAT) to a PCI BAR address as the
+>>>> destination without having to map that address to the IOVA space of
+>>>> the DMA engine first (assuming the IOMMU is on)?
+> I haven't tested this scenario but my guess would be that IOAT would
+> indeed go through the IOMMU and the PCI BAR address would need to be
+> properly mapped into the IOAT's IOVA. The fact that you see DMAR errors
+> is probably a good indication that this is the case. I really don't know
+> why you'd want to DMA something without mapping it.
+I have experimented with changing ntb_async_tx_submit to dma_map the PCI 
+BAR
+address. With this, I get a different DMAR error:
 
-> +			compatible = "amlogic,axg-pcie", "snps,dw-pcie";
-> +			reg = <0x0 0xf9800000 0x0 0x400000
-> +					0x0 0xff646000 0x0 0x2000
-> +					0x0 0xf9f00000 0x0 0x100000>;
-> +			reg-names = "elbi", "cfg", "config";
-> +			reset-gpio = <&gpio GPIOX_19 GPIO_ACTIVE_HIGH>;
+DMAR: [DMA Write] Request device [07:00.4] fault addr ffd00000
+[fault reason 12] non-zero reserved fields in PTE
 
-Not documented and should be reset-gpios.
-
-> +			interrupts = <0 177 IRQ_TYPE_EDGE_RISING>;
-> +			#interrupt-cells = <1>;
-> +			interrupt-map-mask = <0 0 0 0>;
-> +			interrupt-map = <0 0 0 0 &gic GIC_SPI 179 IRQ_TYPE_EDGE_RISING>;
-> +			bus-range = <0x0 0xff>;
-> +			#address-cells = <3>;
-> +			#size-cells = <2>;
-> +			device_type = "pci";
-> +			phys = <&pcie_phy>;
-> +			ranges = <0x82000000 0 0 0x0 0xf9c00000 0 0x00300000>;
-> +			num-lanes = <1>;
-> +			pcie-num = <1>;
-
-Not documented. What's this?
-
-> +
-> +			clocks = <&clkc CLKID_USB
-> +					&clkc CLKID_MIPI_ENABLE
-> +					&clkc CLKID_PCIE_A
-> +					&clkc CLKID_PCIE_CML_EN0>;
-> +			clock-names = "pcie_general",
-> +					"pcie_refpll",
-> +					"pcie_mipi_en",
-> +					"pcie",
-> +					"port";
-> +	};
-> -- 
-> 2.7.4
-> 
-
-_______________________________________________
-linux-arm-kernel mailing list
-linux-arm-kernel@lists.infradead.org
-http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
+Kit
+>>> So is this a peer-to-peer DMA scenario?  You mention DMA, which would
+>>> be a transaction initiated by a PCI device, to a PCI BAR address, so
+>>> it doesn't sound like system memory is involved.
+>> No, not peer-to-peer.  This is from system memory (e.g. SKB buffer which
+>> has had an IOMMU mapping created) to a PCI BAR address.
+> It's definitely peer-to-peer in the case where you are using a DMA
+> engine in the PCI tree. You have the DMA PCI device sending TLPs
+> directly to the PCI BAR device. So, if everything is done right, the
+> TLPs will avoid the root complex completely. (Though, ACS settings could
+> also prevent this from working and you'd either get similar DMAR errors
+> or they'd disappear into a black hole).
+>
+> When using the IOAT, it is part of the CPU so I wouldn't say it's really
+> peer-to-peer. But an argument could be made that it is. Though, this is
+> exactly what the existing ntb_transport is doing: DMAing from system
+> memory to a PCI BAR and vice versa using IOAT.
+>
+> Logan
+>
