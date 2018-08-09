@@ -1,92 +1,72 @@
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Subject: Re: framebuffer corruption due to overlapping stp instructions on
- arm64
-To: Mikulas Patocka <mpatocka@redhat.com>,
- Ard Biesheuvel <ard.biesheuvel@linaro.org>
-References: <alpine.LRH.2.02.1808021242320.31834@file01.intranet.prod.int.rdu2.redhat.com>
- <CAHCPf3tFGqkYEcWNN4LaWThw_rVqT316pzLv6T7RfxwO-eZ0EA@mail.gmail.com>
- <alpine.LRH.2.02.1808030212340.17672@file01.intranet.prod.int.rdu2.redhat.com>
- <CAKv+Gu8DeuksZhk1g3q_msSKV_hSY_2e1uzVten9-oGO3j9Sqg@mail.gmail.com>
- <20180803094129.GB17798@arm.com>
- <alpine.LRH.2.02.1808031235410.31584@file01.intranet.prod.int.rdu2.redhat.com>
- <CAKv+Gu-aNFh1fsr_05SEwDp99n3pLrguP7=tEcFQPNY53=K7Fw@mail.gmail.com>
- <alpine.LRH.2.02.1808031424140.14030@file01.intranet.prod.int.rdu2.redhat.com>
- <CAHCPf3s-+Qf=WBZz1KpisDMG3520jCUh8PLAO3PHa4jdt8kCTw@mail.gmail.com>
- <CAKv+Gu9_h-WFi1j4+DWUN_dMj75SKKHxWoDH8WQ9P7S7MNpZQg@mail.gmail.com>
- <alpine.LRH.2.02.1808060553130.30832@file01.intranet.prod.int.rdu2.redhat.com>
-From: Robin Murphy <robin.murphy@arm.com>
-Message-ID: <99fff4fe-afa9-f12f-a518-472a9dd1c530@arm.com>
-Date: Mon, 6 Aug 2018 13:42:20 +0100
+Return-Path: <linux-nvme-bounces+bjorn=helgaas.com@lists.infradead.org>
+Return-Path: <linux-nvme-bounces+bjorn=helgaas.com@lists.infradead.org>
+Subject: [PATCH v4 1/3] PCI: Export pcie_has_flr()
+From: Alex Williamson <alex.williamson@redhat.com>
+To: linux-pci@vger.kernel.org
+Date: Thu, 09 Aug 2018 14:04:14 -0600
+Message-ID: <153384505430.15793.4988988835441214121.stgit@gimli.home>
+In-Reply-To: <153384487209.15793.15203778129263981368.stgit@gimli.home>
+References: <153384487209.15793.15203778129263981368.stgit@gimli.home>
 MIME-Version: 1.0
-In-Reply-To: <alpine.LRH.2.02.1808060553130.30832@file01.intranet.prod.int.rdu2.redhat.com>
-List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
-List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
-List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
-List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
-List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
-Cc: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>,
- Joao Pinto <Joao.Pinto@synopsys.com>,
- Catalin Marinas <catalin.marinas@arm.com>,
- linux-pci <linux-pci@vger.kernel.org>, Will Deacon <will.deacon@arm.com>,
- Russell King <linux@armlinux.org.uk>,
- Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
- Matt Sealey <neko@bakuhatsu.net>, Jingoo Han <jingoohan1@gmail.com>,
- linux-arm-kernel <linux-arm-kernel@lists.infradead.org>
-Content-Type: text/plain; charset="us-ascii"; Format="flowed"
-Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
-Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
+List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-nvme>,
+ <mailto:linux-nvme-request@lists.infradead.org?subject=unsubscribe>
+List-Archive: <http://lists.infradead.org/pipermail/linux-nvme/>
+List-Post: <mailto:linux-nvme@lists.infradead.org>
+List-Help: <mailto:linux-nvme-request@lists.infradead.org?subject=help>
+List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-nvme>,
+ <mailto:linux-nvme-request@lists.infradead.org?subject=subscribe>
+Cc: linux-kernel@vger.kernel.org, linux-nvme@lists.infradead.org
+Content-Type: text/plain; charset="us-ascii"
+Sender: "Linux-nvme" <linux-nvme-bounces@lists.infradead.org>
+Errors-To: linux-nvme-bounces+bjorn=helgaas.com@lists.infradead.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 06/08/18 11:25, Mikulas Patocka wrote:
-[...]
->> None of this explains why some transactions fail to make it across
->> entirely. The overlapping writes in question write the same data to
->> the memory locations that are covered by both, and so the ordering in
->> which the transactions are received should not affect the outcome.
-> 
-> You're right that the corruption couldn't be explained just by reordering
-> writes. My hypothesis is that the PCIe controller tries to disambiguate
-> the overlapping writes, but the disambiguation logic was not tested and it
-> is buggy. If there's a barrier between the overlapping writes, the PCIe
-> controller won't see any overlapping writes, so it won't trigger the
-> faulty disambiguation logic and it works.
-> 
-> Could the ARM engineers look if there's some chicken bit in Cortex-A72
-> that could insert barriers between non-cached writes automatically?
+pcie_flr() suggests pcie_has_flr() to ensure that PCIe FLR support is
+present prior to calling.  pcie_flr() is exported while pcie_has_flr()
+is not.  Resolve this.
 
-I don't think there is, and even if there was I imagine it would have a 
-pretty hideous effect on non-coherent DMA buffers and the various other 
-places in which we have Normal-NC mappings of actual system RAM.
+Signed-off-by: Alex Williamson <alex.williamson@redhat.com>
+---
+ drivers/pci/pci.c   |    3 ++-
+ include/linux/pci.h |    1 +
+ 2 files changed, 3 insertions(+), 1 deletion(-)
 
-> I observe these kinds of corruptions:
-> - failing to write a few bytes
+diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
+index 2bec76c9d9a7..52fe2d72a99c 100644
+--- a/drivers/pci/pci.c
++++ b/drivers/pci/pci.c
+@@ -4071,7 +4071,7 @@ static int pci_dev_wait(struct pci_dev *dev, char *reset_type, int timeout)
+  * Returns true if the device advertises support for PCIe function level
+  * resets.
+  */
+-static bool pcie_has_flr(struct pci_dev *dev)
++bool pcie_has_flr(struct pci_dev *dev)
+ {
+ 	u32 cap;
+ 
+@@ -4081,6 +4081,7 @@ static bool pcie_has_flr(struct pci_dev *dev)
+ 	pcie_capability_read_dword(dev, PCI_EXP_DEVCAP, &cap);
+ 	return cap & PCI_EXP_DEVCAP_FLR;
+ }
++EXPORT_SYMBOL_GPL(pcie_has_flr);
+ 
+ /**
+  * pcie_flr - initiate a PCIe function level reset
+diff --git a/include/linux/pci.h b/include/linux/pci.h
+index 04c7ea6ed67b..bbe030d7814f 100644
+--- a/include/linux/pci.h
++++ b/include/linux/pci.h
+@@ -1092,6 +1092,7 @@ u32 pcie_bandwidth_available(struct pci_dev *dev, struct pci_dev **limiting_dev,
+ 			     enum pci_bus_speed *speed,
+ 			     enum pcie_link_width *width);
+ void pcie_print_link_status(struct pci_dev *dev);
++bool pcie_has_flr(struct pci_dev *dev);
+ int pcie_flr(struct pci_dev *dev);
+ int __pci_reset_function_locked(struct pci_dev *dev);
+ int pci_reset_function(struct pci_dev *dev);
 
-That could potentially be explained by the reordering/atomicity issues 
-Matt mentioned, i.e. the load is observing part of the store, before the 
-store has fully completed.
-
-> - writing a few bytes that were written 16 bytes before
-> - writing a few bytes that were written 16 bytes after
-
-Those sound more like the interconnect or root complex ignoring the byte 
-strobes on an unaligned burst, of which I think the simplistic view 
-would be "it's broken".
-
-FWIW I stuck my old Nvidia 7600GT card in my Arm Juno r2 board (2x 
-Cortex-A72), built your test program natively with GCC 8.1.1 at -O2, and 
-it's still happily flickering pixels in the corner of the console after 
-nearly an hour (in parallel with some iperf3 just to ensure plenty of 
-PCIe traffic). I would strongly suspect this issue is particular to 
-Armada 8k, so its' probably one for the Marvell folks to take a closer 
-look at - I believe some previous interconnect issues on those SoCs were 
-actually fixable in firmware.
-
-Robin.
 
 _______________________________________________
-linux-arm-kernel mailing list
-linux-arm-kernel@lists.infradead.org
-http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
+Linux-nvme mailing list
+Linux-nvme@lists.infradead.org
+http://lists.infradead.org/mailman/listinfo/linux-nvme
