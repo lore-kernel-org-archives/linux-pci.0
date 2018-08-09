@@ -1,63 +1,97 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-co1nam03on0081.outbound.protection.outlook.com ([104.47.40.81]:54579
-        "EHLO NAM03-CO1-obe.outbound.protection.outlook.com"
-        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1726384AbeHPR1G (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Thu, 16 Aug 2018 13:27:06 -0400
-From: Alan Douglas <adouglas@cadence.com>
-To: Ramon Fried <ramon.fried@gmail.com>,
-        "bhelgaas@google.com" <bhelgaas@google.com>
-CC: "kishon@ti.com" <kishon@ti.com>,
-        "lorenzo.pieralisi@arm.com" <lorenzo.pieralisi@arm.com>,
-        "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-        "gustavo.pimentel@synopsys.com" <gustavo.pimentel@synopsys.com>,
-        "cyrille.pitchen@bootlin.com" <cyrille.pitchen@bootlin.com>,
-        Scott Telford <stelford@cadence.com>
-Subject: RE: [PATCH v2 0/5] Add MSI-X support for cadence EP driver
-Date: Thu, 16 Aug 2018 14:28:06 +0000
-Message-ID: <MWHPR07MB3502DD2C6CAADBA52D56166CD83E0@MWHPR07MB3502.namprd07.prod.outlook.com>
-References: <1534340781-19194-1-git-send-email-adouglas@cadence.com>
- <615023FB-D8BA-4F12-BC2B-EDDBBDA39148@gmail.com>
-In-Reply-To: <615023FB-D8BA-4F12-BC2B-EDDBBDA39148@gmail.com>
-Content-Type: text/plain; charset="utf-8"
+Received: from smtp.codeaurora.org ([198.145.29.96]:42594 "EHLO
+        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1731432AbeHIRgt (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Thu, 9 Aug 2018 13:36:49 -0400
 MIME-Version: 1.0
+Content-Type: text/plain; charset=US-ASCII;
+ format=flowed
+Date: Thu, 09 Aug 2018 20:41:27 +0530
+From: poza@codeaurora.org
+To: Bharat Kumar Gogada <bharat.kumar.gogada@xilinx.com>
+Cc: linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
+        bhelgaas@google.com, rgummal@xilinx.com,
+        linux-pci-owner@vger.kernel.org
+Subject: Re: [PATCH v2] PCI/AER: Enable SERR# forwarding in non ACPI flow
+In-Reply-To: <1533826657-24552-1-git-send-email-bharat.kumar.gogada@xilinx.com>
+References: <1533826657-24552-1-git-send-email-bharat.kumar.gogada@xilinx.com>
+Message-ID: <2f53b7dd9c1464f40b10217eb64d511e@codeaurora.org>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-SGkgUmFtb24sDQoNCk9uIDE1IEF1Z3VzdCAyMDE4IDE3OjU2LCBSYW1vbiBGcmllZCB3cm90ZToN
-Cj4gT24gQXVndXN0IDE1LCAyMDE4IDQ6NDY6MjEgUE0gR01UKzAzOjAwLCBBbGFuIERvdWdsYXMg
-PGFkb3VnbGFzQGNhZGVuY2UuY29tPiB3cm90ZToNCj4gPlRoZSBwYXRjaCBpbXBsZW1lbnRzIE1T
-SS1YIHN1cHBvcnQgaW4gdGhlIGNhZGVuY2UgZW5kcG9pbnQgZHJpdmVyLg0KPiA+DQo+ID5UaGlz
-IHBhdGNoIGRlcGVuZHMgb24gb24gR3VzdGF2byBQaW1lbnRlbCdzIHBhdGNoIHNlcmllcyBhZGRp
-bmcgTVNJLVgNCj4gPnN1cHBvcnQgZm9yIEVQICgiQWRkIE1TSS1YIHN1cHBvcnQgb24gcGNpdGVz
-dCB0b29sIikNCj4gPg0KPiA+SXQgYWxzbyBhZGRzIGZpeGVzIGZvciBNU0kgaXNzdWVzIGRpc2Nv
-dmVyZWQgZHVyaW5nIHRlc3Rpbmcgb2YgTVNJLVgNCj4gPiAgLSBVc2UgQVhJIHJlZ2lvbiAwIGZv
-ciBpbnRlcnJ1cHQgc2lnbmFsbGluZw0KPiA+ICAtIFdyaXRlIE1TSSBhbmQgTVNJLVggd2l0aCAz
-MmJpdCB2YWx1ZSByYXRoZXIgdGhhbiAxNmJpdA0KPiA+ICAtIENoZWNrIGZvciBtYXNraW5nIGJl
-Zm9yZSBzZW5kaW5nIE1TSSBvciBNU0ktWA0KPiA+ICAtIENoZWNrIGxpbmsgaXMgdXAgYmVmb3Jl
-IHNlbmRpbmcgSVJRDQo+ID4NCj4gSGkuDQo+IEFGQUlLIHRoZSBCSU9TIGFsbG9jYXRlcyBwaHlz
-aWNhbCBtZW1vcnkgZm9yIHRoZSBiYXJzLiBBc3N1bWluZyB0aGF0IHRoZSBNU0l4IGJhciBpcyBv
-bmx5IG1hcHBlZCBhZnRlciBrZXJuZWwgYm9vdHMgb24gdGhlIGVuZHBvaW50LA0KPiBjb3VsZCBp
-dCBiZSB0b28gbGF0ZT8NCj4gDQo+IERvIHdlIG5lZWQgdG8gdHJpZ2dlciByZS1lbnVtZXJhdGlv
-biBvZiB0aGUgUENJIGJ1cyBmcm9tIGhvc3Qgc2lkZSB3aGVuIHdvcmtpbmcgd2l0aCB0aGlzIGFz
-IGFuIGVuZHBvaW50Pw0KSXQgZGVwZW5kcyBvbiBob3cgeW91IGFyZSB1c2luZyBpdC4gIFBGMCBp
-cyBhbHdheXMgZW5hYmxlZCBpbiB0aGUgY2FkZW5jZSBIVywgc28gd2lsbCBiZSBlbnVtZXJhdGVk
-IGF0IGJvb3QsDQphcyBsb25nIGFzIHRoZSBFUCBIVyBpcyBvdXQgb2YgcmVzZXQgYW5kIFBIWSBp
-cyBlbmFibGVkLg0KVGhlIFBDSWUgRVAgaGFyZHdhcmUgY2FuIGJlIGluaXRpYWxpemVkIHNvIHRo
-YXQgQkFScyBhcmUgZW5hYmxlZCBieSBkZWZhdWx0LCBiZWZvcmUgdGhlIGtlcm5lbCBib290cyBv
-biB0aGUNCmVuZHBvaW50LCBhbmQgc28gdGhleSB3aWxsIGJlIGZvdW5kIGFuZCBtYXBwZWQgZHVy
-aW5nIHRoZSBpbml0aWFsIGVudW1lcmF0aW9uIGFuZCB5b3UgZG9uJ3QgbmVlZCB0bw0KcmUtZW51
-bWVyYXRlLiAgVGhlIE1TSS1YIHZlY3RvcnMgY2FuJ3QgYmUgd3JpdHRlbiB0byB0aGUgQkFSIHVu
-dGlsIHRoZSBFUCBrZXJuZWwgaGFzIGJvb3RlZCBhbmQgdGhlIEVQIGRyaXZlcg0KaGFzIG1hcHBl
-ZCB0aGUgQkFSIHRvIGxvY2FsIEVQIG1lbW9yeSB0aG91Z2ggKHVubGVzcyAgeW91IGFsc28gY29u
-ZmlndXJlIHRoaXMgaW4gdGhlIFBDSWUgRVAgaGFyZHdhcmUsIG9yIGluIA0KRVAgcHJlLWJvb3Qs
-IGJ1dCBpbiB0aGF0IGNhc2UgeW91IGFyZSBwcm9iYWJseSBub3QgdXNpbmcgdGhlIEVQIGRyaXZl
-ciBmcmFtZXdvcmsuKQ0KDQpUaGUgRVAgZHJpdmVyIGZyYW1ld29yayBkb2VzLCBpbiBteSB1bmRl
-cnN0YW5kaW5nLCBnZW5lcmFsbHkgZXhwZWN0IHJlLWVudW1lcmF0aW9uIGFmdGVyIHRoZQ0KRVAg
-a2VybmVsIGhhcyBib290ZWQgYW5kIHRoZSBkcml2ZXIgaGFzIGJlZW4gaW5pdGlhbGl6ZWQsIHNp
-bmNlIGl0IGFsbG93cyBjb25maWd1cmF0aW9uIG9mIGRldmljZSBJRCwgQkFSDQpzaXplcyBldGMu
-LCBhbmQgaWYgeW91IGNoYW5nZSBhbnkgb2YgdGhlc2UgZnJvbSB0aGUgSFcgZGVmYXVsdHMgYXQg
-Ym9vdCB5b3Ugd2lsbCBuZWVkIHRvIHJlLWVudW1lcmF0ZS4NCg0KQWxsIHRlc3RzIEkgaGF2ZSBk
-b25lIGZvciB0aGUgRVAgZHJpdmVyIGhhdmUgYmVlbiB3aXRob3V0IEJJT1MgZW51bWVyYXRpb24s
-IGFuZCB0cmlnZ2VyaW5nIHJlLWVudW1lcmF0aW9uDQphZnRlciBpbml0aWFsaXppbmcgdGhlIEJB
-UiBzaXplcyBldGMuIHZpYSB0aGUgRVAgZHJpdmVyDQoNClJlZ2FyZHMsDQpBbGFuDQoNCg==
+On 2018-08-09 20:27, Bharat Kumar Gogada wrote:
+> As per Figure 6-3 in PCIe r4.0, sec 6.2.6, ERR_ messages
+> will be forwarded from the secondary interface to the primary 
+> interface,
+> if the SERR# Enable bit in the Bridge Control register is set.
+> Currently PCI_BRIDGE_CTL_SERR is being enabled only in
+> ACPI flow.
+> This patch enables PCI_BRIDGE_CTL_SERR for Type-1 PCI device.
+> 
+> Signed-off-by: Bharat Kumar Gogada <bharat.kumar.gogada@xilinx.com>
+> ---
+>  drivers/pci/pcie/aer.c |   23 +++++++++++++++++++++++
+>  1 files changed, 23 insertions(+), 0 deletions(-)
+> 
+> diff --git a/drivers/pci/pcie/aer.c b/drivers/pci/pcie/aer.c
+> index a2e8838..4fb0d24 100644
+> --- a/drivers/pci/pcie/aer.c
+> +++ b/drivers/pci/pcie/aer.c
+> @@ -343,6 +343,20 @@ int pci_enable_pcie_error_reporting(struct pci_dev 
+> *dev)
+>  	if (!dev->aer_cap)
+>  		return -EIO;
+> 
+> +	if (dev->hdr_type == PCI_HEADER_TYPE_BRIDGE) {
+> +		u16 control;
+> +
+> +		/*
+> +		 * A Type-1 PCI bridge will not forward ERR_ messages coming
+> +		 * from an endpoint if SERR# forwarding is not enabled.
+> +		 */
+> +		pci_read_config_word(dev, PCI_BRIDGE_CONTROL, &control);
+> +		if (!(control & PCI_BRIDGE_CTL_SERR)) {
+> +			control |= PCI_BRIDGE_CTL_SERR;
+> +			pci_write_config_word(dev, PCI_BRIDGE_CONTROL, control);
+> +		}
+> +	}
+> +
+>  	return pcie_capability_set_word(dev, PCI_EXP_DEVCTL, 
+> PCI_EXP_AER_FLAGS);
+>  }
+>  EXPORT_SYMBOL_GPL(pci_enable_pcie_error_reporting);
+> @@ -352,6 +366,15 @@ int pci_disable_pcie_error_reporting(struct 
+> pci_dev *dev)
+>  	if (pcie_aer_get_firmware_first(dev))
+>  		return -EIO;
+> 
+> +	if (dev->hdr_type == PCI_HEADER_TYPE_BRIDGE) {
+> +		u16 control;
+> +
+> +		/* Clear SERR Forwarding */
+> +		pci_read_config_word(dev, PCI_BRIDGE_CONTROL, &control);
+> +		control &= ~PCI_BRIDGE_CTL_SERR;
+> +		pci_write_config_word(dev, PCI_BRIDGE_CONTROL, control);
+> +	}
+> +
+>  	return pcie_capability_clear_word(dev, PCI_EXP_DEVCTL,
+>  					  PCI_EXP_AER_FLAGS);
+>  }
+
+
+Hi Bjorn,
+
+I made some comments on patchv1., same I am putting it across here.
+
+what about hot-plug case ?
+should not aer_init() call pci_enable_pcie_error_reporting() for all
+the downstream pci_dev ?
+and remove all the calls from drivers..
+aer_init will be called for each device (pci_dev) while pciehp does 
+re-enumeration.
+so probable we might want to call pci_enable_pcie_error_reporting()
+but that dictates the design where AER framework is taking decision to 
+enable error reporting on behalf of drivers as well.
+but thats fine I think, if drivers do not want to participate then they 
+have to call  pci_disable_pcie_error_reporting explicitly.
+does this make sense ?
