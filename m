@@ -1,88 +1,86 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mga12.intel.com ([192.55.52.136]:14103 "EHLO mga12.intel.com"
+Received: from mail.kernel.org ([198.145.29.99]:38374 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1727416AbeIABeu (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Fri, 31 Aug 2018 21:34:50 -0400
-From: Keith Busch <keith.busch@intel.com>
-To: Linux PCI <linux-pci@vger.kernel.org>,
-        Bjorn Helgaas <bhelgaas@google.com>
-Cc: Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-        Sinan Kaya <okaya@kernel.org>,
-        Thomas Tai <thomas.tai@oracle.com>, poza@codeaurora.org,
-        Lukas Wunner <lukas@wunner.de>,
-        Keith Busch <keith.busch@intel.com>
-Subject: [PATCH 15/16] PCI/DPC: Wait for reset complete
-Date: Fri, 31 Aug 2018 15:26:38 -0600
-Message-Id: <20180831212639.10196-16-keith.busch@intel.com>
-In-Reply-To: <20180831212639.10196-1-keith.busch@intel.com>
-References: <20180831212639.10196-1-keith.busch@intel.com>
+        id S1727221AbeHIXn4 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Thu, 9 Aug 2018 19:43:56 -0400
+Date: Thu, 9 Aug 2018 16:17:14 -0500
+From: Bjorn Helgaas <helgaas@kernel.org>
+To: Logan Gunthorpe <logang@deltatee.com>
+Cc: linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
+        linux-doc@vger.kernel.org, Stephen Bates <sbates@raithlin.com>,
+        Christoph Hellwig <hch@lst.de>,
+        Bjorn Helgaas <bhelgaas@google.com>,
+        Jonathan Corbet <corbet@lwn.net>,
+        Ingo Molnar <mingo@kernel.org>,
+        Thomas Gleixner <tglx@linutronix.de>,
+        "Paul E. McKenney" <paulmck@linux.vnet.ibm.com>,
+        Marc Zyngier <marc.zyngier@arm.com>,
+        Kai-Heng Feng <kai.heng.feng@canonical.com>,
+        Frederic Weisbecker <frederic@kernel.org>,
+        Dan Williams <dan.j.williams@intel.com>,
+        =?iso-8859-1?B?Suly9G1l?= Glisse <jglisse@redhat.com>,
+        Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+        Alex Williamson <alex.williamson@redhat.com>,
+        Christian =?iso-8859-1?Q?K=F6nig?= <christian.koenig@amd.com>,
+        Matthew Wilcox <willy@infradead.org>
+Subject: Re: [PATCH v8 3/4] PCI: Introduce disable_acs_redir quirk
+Message-ID: <20180809211714.GG113140@bhelgaas-glaptop.roam.corp.google.com>
+References: <20180730161840.13733-1-logang@deltatee.com>
+ <20180730161840.13733-4-logang@deltatee.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20180730161840.13733-4-logang@deltatee.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-DPC is only for error recovery. Since we're not removing the topology
-and relying on link state interrupts to re-enumerate anymore, the dpc
-reset handler has to implement the required reset timings and checks.
+On Mon, Jul 30, 2018 at 10:18:39AM -0600, Logan Gunthorpe wrote:
+> Intel SPT PCH hardware has an implementation of the ACS bits that
+> does not comply with the PCI express standard. To deal with this
+> the existing code has an enable_acs() quirk for the hardware.
+> 
+> In order to be able to correctly disable the ACS redirect bits for
+> all hardware we need an analagous quirk to disable those bits.
+> 
+> This adds the function pci_dev_specific_disable_acs_redir() which
+> behaves similarly to pci_dev_specific_enable_acs() but uses a new
+> function pointer for quirks which disables the ACS redirect bits.
+> 
+> Signed-off-by: Logan Gunthorpe <logang@deltatee.com>
+> Reviewed-by: Alex Williamson <alex.williamson@redhat.com>
+> ---
+> ...
 
-Signed-off-by: Keith Busch <keith.busch@intel.com>
----
- drivers/pci/pcie/dpc.c | 32 +++++++++++++++++++-------------
- 1 file changed, 19 insertions(+), 13 deletions(-)
+> diff --git a/include/linux/pci.h b/include/linux/pci.h
+> index abd5d5e17aee..0a436ec4fef5 100644
+> --- a/include/linux/pci.h
+> +++ b/include/linux/pci.h
+> @@ -1880,6 +1880,7 @@ enum pci_fixup_pass {
+>  void pci_fixup_device(enum pci_fixup_pass pass, struct pci_dev *dev);
+>  int pci_dev_specific_acs_enabled(struct pci_dev *dev, u16 acs_flags);
+>  int pci_dev_specific_enable_acs(struct pci_dev *dev);
+> +int pci_dev_specific_disable_acs_redir(struct pci_dev *dev);
+>  #else
+>  static inline void pci_fixup_device(enum pci_fixup_pass pass,
+>  				    struct pci_dev *dev) { }
+> @@ -1892,6 +1893,10 @@ static inline int pci_dev_specific_enable_acs(struct pci_dev *dev)
+>  {
+>  	return -ENOTTY;
+>  }
+> +static inline int pci_dev_specific_disable_acs_redir(struct pci_dev *dev)
+> +{
+> +	return -ENOTTY;
+> +}
 
-diff --git a/drivers/pci/pcie/dpc.c b/drivers/pci/pcie/dpc.c
-index 93ce26191a2b..34bac3e2beac 100644
---- a/drivers/pci/pcie/dpc.c
-+++ b/drivers/pci/pcie/dpc.c
-@@ -66,32 +66,38 @@ static int dpc_wait_rp_inactive(struct dpc_dev *dpc)
- 
- static pci_ers_result_t dpc_reset_link(struct pci_dev *pdev)
- {
--	struct dpc_dev *dpc;
--	struct pcie_device *pciedev;
--	struct device *devdpc;
--
--	u16 cap;
-+	struct device *dev = pcie_port_find_device(pdev, PCIE_PORT_SERVICE_DPC);
-+	struct pcie_device *pciedev = to_pcie_device(dev);
-+	struct dpc_dev *dpc = get_service_data(pciedev);
-+	u16 cap = dpc->cap_pos;
- 
- 	/*
- 	 * DPC disables the Link automatically in hardware, so it has
- 	 * already been reset by the time we get here.
--	 */
--	devdpc = pcie_port_find_device(pdev, PCIE_PORT_SERVICE_DPC);
--	pciedev = to_pcie_device(devdpc);
--	dpc = get_service_data(pciedev);
--	cap = dpc->cap_pos;
--
--	/*
-+	 *
- 	 * Wait until the Link is inactive, then clear DPC Trigger Status
- 	 * to allow the Port to leave DPC.
- 	 */
- 	pcie_wait_for_link(pdev, false);
--
- 	if (dpc->rp_extensions && dpc_wait_rp_inactive(dpc))
- 		return PCI_ERS_RESULT_DISCONNECT;
- 
- 	pci_write_config_word(pdev, cap + PCI_EXP_DPC_STATUS,
- 			      PCI_EXP_DPC_STATUS_TRIGGER);
-+	/*
-+	 * PCIe 4.0r1 6.6.1, a component must enter LTSSM Detect within 20ms,
-+	 * after which we should expect an link active if the reset was
-+	 * successful. If so, software must wait a minimum 100ms before sending
-+	 * configuration requests to devices downstream this port.
-+	 *
-+	 * If the link fails to activate, either the device was physically
-+	 * removed or the link is permanently failed.
-+	 */
-+	msleep(20);
-+	if (!pcie_wait_for_link(pdev, true))
-+		return PCI_ERS_RESULT_DISCONNECT;
-+	msleep(100);
-+
- 	if (pdev->subordinate)
- 		pdev->subordinate->error_state = pci_channel_io_normal;
- 	return PCI_ERS_RESULT_RECOVERED;
--- 
-2.14.4
+I assume these could go in drivers/pci/pci.h instead of
+include/linux/pci.h?
+
+I can do that (and add another patch to move the
+pci_dev_specific_acs_enabled() and pci_dev_specific_enable_acs()
+declarations, which also are only used inside drivers/pci) if you agree.
+
+>  #endif
+>  
+>  void __iomem *pcim_iomap(struct pci_dev *pdev, int bar, unsigned long maxlen);
+> -- 
+> 2.11.0
+> 
