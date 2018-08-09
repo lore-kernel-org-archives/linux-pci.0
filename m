@@ -1,65 +1,83 @@
-Return-Path: <SRS0=cgPf=K4=deltatee.com=logang@kernel.org>
-Return-Path: <SRS0=cgPf=K4=deltatee.com=logang@kernel.org>
-To: Kit Chow <kchow@gigaio.com>, Robin Murphy <robin.murphy@arm.com>,
- Dave Jiang <dave.jiang@intel.com>, Eric Pilmore <epilmore@gigaio.com>,
+Return-Path: <SRS0=fEc7=KY=gigaio.com=kchow@kernel.org>
+Return-Path: <SRS0=fEc7=KY=gigaio.com=kchow@kernel.org>
+Subject: Re: IOAT DMA w/IOMMU
+To: "Jiang, Dave" <dave.jiang@intel.com>,
+ Logan Gunthorpe <logang@deltatee.com>, Eric Pilmore <epilmore@gigaio.com>,
  Bjorn Helgaas <helgaas@kernel.org>
 Cc: "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
- Alex Williamson <alex.williamson@redhat.com>,
  David Woodhouse <dwmw2@infradead.org>,
+ Alex Williamson <alex.williamson@redhat.com>,
  "iommu@lists.linux-foundation.org" <iommu@lists.linux-foundation.org>
 References: <CAOQPn8soxubJxb=vp7kz+AM6LbPH5y+_Nx0Vzv7rjV_nMMqEmA@mail.gmail.com>
+ <20180809184331.GB113140@bhelgaas-glaptop.roam.corp.google.com>
+ <CAOQPn8uPYKai49WYPqZp2wNd5of=0hUvPOHEtqP56RZu-hcjuw@mail.gmail.com>
+ <b54899a8-a144-e8e0-9880-1800c4657b95@deltatee.com>
+ <95e53520-b05f-4be4-e694-463d717453a8@gigaio.com>
+ <cdd9245f-eb23-9e10-1755-8f396a2cd255@deltatee.com>
+ <b278c1e5-6f08-c879-a27d-7fc172645fd5@gigaio.com>
+ <f04fae39-645e-3c6e-07c0-b194260bf5de@deltatee.com>
+ <3f503940-db6a-ec75-ed15-1db99d5d48ef@gigaio.com>
  <112A412BB11A1242B37129D931BCE5348382CFB2@fmsmsx117.amr.corp.intel.com>
- <b8af340c-d40b-cb8c-987f-b394f1d6ec3e@gigaio.com>
- <adf51c74-36fa-b61d-8497-27bd75178ba4@deltatee.com>
- <aa9c3f41-efc9-8c68-a517-2736c8986621@gigaio.com>
- <1170c096-a749-6ee3-32d4-ebba1d12adff@gigaio.com>
- <929f3dfa-fbff-c582-3be5-c368f11feb7e@deltatee.com>
- <460cc47f-6a8e-67b0-01a0-02f0c51df258@intel.com>
- <0f653f8f-c7ae-831d-e238-2742590d9ea1@deltatee.com>
- <6525fa4d-7d9b-0136-7206-f8351230af46@intel.com>
- <f22c565e-ba49-c83d-3e51-7967664c7136@deltatee.com>
- <499934e7-3734-1aee-37dd-b42a5d2a2608@intel.com>
- <9d135f61-20c2-e966-4d7d-3e154384ea08@gigaio.com>
- <0a9fa9c3-dbe4-6451-9c1a-06b662702f61@deltatee.com>
- <a2391f6c-d73b-c140-edad-8cd6584dd437@gigaio.com>
- <c8d69f9b-b3a6-76ee-1a90-b3dbaaa9b82b@arm.com>
- <3772d88a-e9ad-465a-c91f-df8f9c6219be@gigaio.com>
- <dd18cf79-aa10-9801-bf95-192f0b86b6d9@gigaio.com>
-From: Logan Gunthorpe <logang@deltatee.com>
-Message-ID: <0e839acf-5948-42aa-2ad6-72ca0d84a8c3@deltatee.com>
-Date: Mon, 13 Aug 2018 17:39:29 -0600
+From: Kit Chow <kchow@gigaio.com>
+Message-ID: <b8af340c-d40b-cb8c-987f-b394f1d6ec3e@gigaio.com>
+Date: Thu, 9 Aug 2018 15:48:27 -0700
 MIME-Version: 1.0
-In-Reply-To: <dd18cf79-aa10-9801-bf95-192f0b86b6d9@gigaio.com>
-Content-Type: text/plain; charset=utf-8
-Subject: Re: IOAT DMA w/IOMMU
+In-Reply-To: <112A412BB11A1242B37129D931BCE5348382CFB2@fmsmsx117.amr.corp.intel.com>
+Content-Type: text/plain; charset=utf-8; format=flowed
 List-ID: <linux-pci.vger.kernel.org>
 
 
 
-On 13/08/18 05:30 PM, Kit Chow wrote:
-> In arch/x86/include/asm/page.h, there is the following comment in
-> regards to validating the virtual address.
-> 
-> /*
->  * virt_to_page(kaddr) returns a valid pointer if and only if
->  * virt_addr_valid(kaddr) returns true.
->  */
-> #define virt_to_page(kaddr)     pfn_to_page(__pa(kaddr) >> PAGE_SHIFT)
-> 
-> So it looks like the validation by virt_addr_valid was somehow dropped
-> from the virt_to_page code path. Does anyone have any ideas what
-> happended to it?
+On 08/09/2018 03:40 PM, Jiang, Dave wrote:
+>> -----Original Message-----
+>> From: linux-pci-owner@vger.kernel.org [mailto:linux-pci-owner@vger.kernel.org] On Behalf Of Kit Chow
+>> Sent: Thursday, August 9, 2018 2:48 PM
+>> To: Logan Gunthorpe <logang@deltatee.com>; Eric Pilmore <epilmore@gigaio.com>; Bjorn Helgaas <helgaas@kernel.org>
+>> Cc: linux-pci@vger.kernel.org; David Woodhouse <dwmw2@infradead.org>; Alex Williamson <alex.williamson@redhat.com>;
+>> iommu@lists.linux-foundation.org
+>> Subject: Re: IOAT DMA w/IOMMU
+>>
+>>
+>>
+>> On 08/09/2018 02:11 PM, Logan Gunthorpe wrote:
+>>> On 09/08/18 02:57 PM, Kit Chow wrote:
+>>>> On 08/09/2018 01:11 PM, Logan Gunthorpe wrote:
+>>>>> On 09/08/18 01:47 PM, Kit Chow wrote:
+>>>>>>> I haven't tested this scenario but my guess would be that IOAT would
+>>>>>>> indeed go through the IOMMU and the PCI BAR address would need to be
+>>>>>>> properly mapped into the IOAT's IOVA. The fact that you see DMAR errors
+>>>>>>> is probably a good indication that this is the case. I really don't know
+>>>>>>> why you'd want to DMA something without mapping it.
+>>>>>> I have experimented with changing ntb_async_tx_submit to dma_map the PCI
+>>>>>> BAR
+>>>>>> address. With this, I get a different DMAR error:
+>>>>> What code did you use to do this?
+>>>> If you mean version of linux, it is 4.15.7.  Or specific dma_map call, I
+>>>> believe it was dma_map_single.
+>>> I mean the complete code you use to do the mapping so we can see if it's
+>>> correct. dma_map_single() seems like an odd choice, I expected to see
+>>> dma_map_resource().
+>> Thanks for the suggestion!  Will try out dma_map_resource and report back.
+>>
+>> Kit
+> Kit, I was able to try this on the Skylake Xeon platform with Intel NTB and ioatdma and I did not encounter any issues. Unfortunately I do not have my pre-Skylake platform to test anymore to verify.
+We are expecting to get skylakes within a couple of weeks and I'll have 
+a chance to give it a go on there.
 
-I don't think it was ever validated (though I haven't been around long
-enough to say for certain). What the comment is saying is that you
-shouldn't rely on virt_to_page() unless you know virt_addr_valid() is
-true (which in most cases you can without the extra check). virt_to_page
-is meant to be really fast so adding an extra validation would probably
-be a significant performance regression for the entire kernel.
+Based on Logan's comments, I am very hopeful that the dma_map_resource 
+will make things work on the older platforms...
 
-The fact that this can happen through dma_map_single() is non-ideal at
-best. It assumes the caller is mapping regular memory and doesn't check
-this at all. It may make sense to fix that but I think people expect
-dma_map_single() to be as fast as possible as well...
+Thanks
+Kit
 
-Logan
+
+>>>>>> DMAR: [DMA Write] Request device [07:00.4] fault addr ffd00000
+>>>>>> [fault reason 12] non-zero reserved fields in PTE
+>>>>> Also, what device corresponds to 07:00.4 on your system?
+>>>> I believe 07.00.4 was the PLX dma device. I get the same error with ioat.
+>>> Using the mapping with the PLX dma device likely converts it from a pure
+>>> P2P request to one where the TLPs pass through the IOMMU. So the fact
+>>> that you get the same error with both means IOAT almost certainly goes
+>>> through the IOMMU and there's something wrong with the mapping setup.
+>>>
+>>> Logan
