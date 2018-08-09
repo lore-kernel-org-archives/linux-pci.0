@@ -1,61 +1,39 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-From: Bharat Kumar Gogada <bharat.kumar.gogada@xilinx.com>
-To: <linux-pci@vger.kernel.org>, <linux-kernel@vger.kernel.org>
-CC: <bhelgaas@google.com>, <rgummal@xilinx.com>,
-        Bharat Kumar Gogada <bharat.kumar.gogada@xilinx.com>
-Subject: [PATCH 2/4] PCI: Add pci_check_platform_service_irqs
-Date: Fri, 10 Aug 2018 21:09:38 +0530
-Message-ID: <1533915580-31805-3-git-send-email-bharat.kumar.gogada@xilinx.com>
-In-Reply-To: <1533915580-31805-1-git-send-email-bharat.kumar.gogada@xilinx.com>
-References: <1533915580-31805-1-git-send-email-bharat.kumar.gogada@xilinx.com>
+Return-Path: <SRS0=Ly/z=KY=deltatee.com=logang@kernel.org>
+Return-Path: <SRS0=Ly/z=KY=deltatee.com=logang@kernel.org>
+To: Kit Chow <kchow@gigaio.com>, "Jiang, Dave" <dave.jiang@intel.com>,
+ Eric Pilmore <epilmore@gigaio.com>, Bjorn Helgaas <helgaas@kernel.org>
+Cc: "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+ David Woodhouse <dwmw2@infradead.org>,
+ Alex Williamson <alex.williamson@redhat.com>,
+ "iommu@lists.linux-foundation.org" <iommu@lists.linux-foundation.org>
+References: <CAOQPn8soxubJxb=vp7kz+AM6LbPH5y+_Nx0Vzv7rjV_nMMqEmA@mail.gmail.com>
+ <20180809184331.GB113140@bhelgaas-glaptop.roam.corp.google.com>
+ <CAOQPn8uPYKai49WYPqZp2wNd5of=0hUvPOHEtqP56RZu-hcjuw@mail.gmail.com>
+ <b54899a8-a144-e8e0-9880-1800c4657b95@deltatee.com>
+ <95e53520-b05f-4be4-e694-463d717453a8@gigaio.com>
+ <cdd9245f-eb23-9e10-1755-8f396a2cd255@deltatee.com>
+ <b278c1e5-6f08-c879-a27d-7fc172645fd5@gigaio.com>
+ <f04fae39-645e-3c6e-07c0-b194260bf5de@deltatee.com>
+ <3f503940-db6a-ec75-ed15-1db99d5d48ef@gigaio.com>
+ <112A412BB11A1242B37129D931BCE5348382CFB2@fmsmsx117.amr.corp.intel.com>
+ <b8af340c-d40b-cb8c-987f-b394f1d6ec3e@gigaio.com>
+From: Logan Gunthorpe <logang@deltatee.com>
+Message-ID: <adf51c74-36fa-b61d-8497-27bd75178ba4@deltatee.com>
+Date: Thu, 9 Aug 2018 16:50:04 -0600
 MIME-Version: 1.0
-Content-Type: text/plain
-Sender: linux-kernel-owner@vger.kernel.org
+In-Reply-To: <b8af340c-d40b-cb8c-987f-b394f1d6ec3e@gigaio.com>
+Content-Type: text/plain; charset=utf-8
+Subject: Re: IOAT DMA w/IOMMU
 List-ID: <linux-pci.vger.kernel.org>
 
-Adding method pci_check_platform_service_irqs to check if platform
-has registered method to proivde dedicated IRQ lines for PCIe services
-like AER/PME etc.
 
-Signed-off-by: Bharat Kumar Gogada <bharat.kumar.gogada@xilinx.com>
----
- include/linux/pci.h |   24 ++++++++++++++++++++++++
- 1 files changed, 24 insertions(+), 0 deletions(-)
 
-diff --git a/include/linux/pci.h b/include/linux/pci.h
-index c28f575..8eb6470 100644
---- a/include/linux/pci.h
-+++ b/include/linux/pci.h
-@@ -2271,6 +2271,30 @@ static inline bool pci_ari_enabled(struct pci_bus *bus)
- }
- 
- /**
-+ * pci_check_platform_service_irqs - check platform service irq's
-+ * @pdev: PCI Express device to check
-+ * @irqs: Array of irqs to populate
-+ * @mask: Bitmask of capabilities
-+ *
-+ * Return value: Bitmask after clearing platform supported service
-+ * bits
-+ */
-+static inline int pci_check_platform_service_irqs(struct pci_dev *dev,
-+						  int *irqs, int mask)
-+{
-+	struct pci_host_bridge *bridge;
-+
-+	if (pci_pcie_type(dev) != PCI_EXP_TYPE_ROOT_PORT)
-+		return -EINVAL;
-+
-+	bridge = pci_find_host_bridge(dev->bus);
-+	if (bridge && bridge->setup_platform_service_irq)
-+		return bridge->setup_platform_service_irq(bridge, irqs, mask);
-+	else
-+		return -EINVAL;
-+}
-+
-+/**
-  * pci_is_thunderbolt_attached - whether device is on a Thunderbolt daisy chain
-  * @pdev: PCI device to check
-  *
--- 
-1.7.1
+On 09/08/18 04:48 PM, Kit Chow wrote:
+> Based on Logan's comments, I am very hopeful that the dma_map_resource 
+> will make things work on the older platforms...
+
+Well, I *think* dma_map_single() would still work. So I'm not that
+confident that's the root of your problem. I'd still like to see the
+actual code snippet you are using.
+
+Logan
