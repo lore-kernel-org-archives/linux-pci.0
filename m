@@ -1,66 +1,42 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-From: Bharat Kumar Gogada <bharat.kumar.gogada@xilinx.com>
-To: <linux-pci@vger.kernel.org>, <linux-kernel@vger.kernel.org>
-CC: <bhelgaas@google.com>, <rgummal@xilinx.com>,
-        Bharat Kumar Gogada <bharat.kumar.gogada@xilinx.com>
-Subject: [PATCH 4/4] PCI: xilinx-nwl: Add method to setup_platform_service_irq hook
-Date: Fri, 10 Aug 2018 21:09:40 +0530
-Message-ID: <1533915580-31805-5-git-send-email-bharat.kumar.gogada@xilinx.com>
-In-Reply-To: <1533915580-31805-1-git-send-email-bharat.kumar.gogada@xilinx.com>
-References: <1533915580-31805-1-git-send-email-bharat.kumar.gogada@xilinx.com>
+Return-Path: <SRS0=Ly/z=KY=deltatee.com=logang@kernel.org>
+Return-Path: <SRS0=Ly/z=KY=deltatee.com=logang@kernel.org>
+To: Bjorn Helgaas <helgaas@kernel.org>
+Cc: linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
+ linux-doc@vger.kernel.org, Stephen Bates <sbates@raithlin.com>,
+ Christoph Hellwig <hch@lst.de>, Bjorn Helgaas <bhelgaas@google.com>,
+ Jonathan Corbet <corbet@lwn.net>, Ingo Molnar <mingo@kernel.org>,
+ Thomas Gleixner <tglx@linutronix.de>,
+ "Paul E. McKenney" <paulmck@linux.vnet.ibm.com>,
+ Marc Zyngier <marc.zyngier@arm.com>,
+ Kai-Heng Feng <kai.heng.feng@canonical.com>,
+ Frederic Weisbecker <frederic@kernel.org>,
+ Dan Williams <dan.j.williams@intel.com>, =?UTF-8?B?SsOpcsO0bWUgR2xpc3Nl?=
+ <jglisse@redhat.com>, Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+ Alex Williamson <alex.williamson@redhat.com>,
+ =?UTF-8?Q?Christian_K=c3=b6nig?= <christian.koenig@amd.com>,
+ Matthew Wilcox <willy@infradead.org>
+References: <20180730161840.13733-1-logang@deltatee.com>
+ <20180809230332.GH113140@bhelgaas-glaptop.roam.corp.google.com>
+From: Logan Gunthorpe <logang@deltatee.com>
+Message-ID: <0efce4ce-3b86-7efd-39c0-84d5740d49ef@deltatee.com>
+Date: Thu, 9 Aug 2018 17:27:18 -0600
 MIME-Version: 1.0
-Content-Type: text/plain
-Sender: linux-kernel-owner@vger.kernel.org
+In-Reply-To: <20180809230332.GH113140@bhelgaas-glaptop.roam.corp.google.com>
+Content-Type: text/plain; charset=utf-8
+Subject: Re: [PATCH v8 0/4] Add parameter for disabling ACS redirection for
+ P2P
 List-ID: <linux-pci.vger.kernel.org>
 
-Add nwl_setup_service_irqs hook to setup_platform_service_irq IRQs to
-register platform provided IRQ number to kernel AER service.
 
-Signed-off-by: Bharat Kumar Gogada <bharat.kumar.gogada@xilinx.com>
----
- drivers/pci/controller/pcie-xilinx-nwl.c |   16 ++++++++++++++++
- 1 files changed, 16 insertions(+), 0 deletions(-)
 
-diff --git a/drivers/pci/controller/pcie-xilinx-nwl.c b/drivers/pci/controller/pcie-xilinx-nwl.c
-index fb32840..285647b 100644
---- a/drivers/pci/controller/pcie-xilinx-nwl.c
-+++ b/drivers/pci/controller/pcie-xilinx-nwl.c
-@@ -22,6 +22,7 @@
- #include <linux/irqchip/chained_irq.h>
- 
- #include "../pci.h"
-+#include "../pcie/portdrv.h"
- 
- /* Bridge core config registers */
- #define BRCFG_PCIE_RX0			0x00000000
-@@ -819,6 +820,20 @@ static int nwl_pcie_parse_dt(struct nwl_pcie *pcie,
- 	return 0;
- }
- 
-+int nwl_setup_service_irqs(struct pci_host_bridge *bridge, int *irqs,
-+			   int plat_mask)
-+{
-+	struct nwl_pcie *pcie;
-+
-+	pcie = pci_host_bridge_priv(bridge);
-+	if (plat_mask & PCIE_PORT_SERVICE_AER) {
-+		irqs[PCIE_PORT_SERVICE_AER_SHIFT] = pcie->irq_misc;
-+		plat_mask &= ~(1 << PCIE_PORT_SERVICE_AER_SHIFT);
-+	}
-+
-+	return plat_mask;
-+}
-+
- static const struct of_device_id nwl_pcie_of_match[] = {
- 	{ .compatible = "xlnx,nwl-pcie-2.11", },
- 	{}
-@@ -880,6 +895,7 @@ static int nwl_pcie_probe(struct platform_device *pdev)
- 	bridge->ops = &nwl_pcie_ops;
- 	bridge->map_irq = of_irq_parse_and_map_pci;
- 	bridge->swizzle_irq = pci_common_swizzle;
-+	bridge->setup_platform_service_irq = nwl_setup_service_irqs;
- 
- 	if (IS_ENABLED(CONFIG_PCI_MSI)) {
- 		err = nwl_pcie_enable_msi(pcie);
--- 
-1.7.1
+On 09/08/18 05:03 PM, Bjorn Helgaas wrote:
+
+> I reorganized this a bit and split the quirk code into a couple
+> patches an put the result on my pci/peer-to-peer branch for v4.19.
+> 
+> I think the result is equivalent, but let me know if I made a mistake.
+
+Thanks for the cleanup, Bjorn. I reviewed the patches and did a quick
+diff between my v8 and your branch. Everything looks good.
+
+Logan
