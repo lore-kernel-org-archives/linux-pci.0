@@ -1,66 +1,88 @@
-Return-Path: <okaya@kernel.org>
-Return-Path: <okaya@kernel.org>
-Subject: Re: [PATCH 1/1] PCI/AER: prevent pcie_do_fatal_recovery from using
- device after it is removed
-To: Benjamin Herrenschmidt <benh@kernel.crashing.org>,
- Keith Busch <keith.busch@intel.com>
-Cc: poza@codeaurora.org, Bjorn Helgaas <helgaas@kernel.org>,
- Thomas Tai <thomas.tai@oracle.com>, bhelgaas@google.com,
- linux-pci@vger.kernel.org, linux-pci-owner@vger.kernel.org,
- Sam Bobroff <sam.bobroff@au1.ibm.com>
-References: <6cb069038530757f31f3dd60328c7e30@codeaurora.org>
- <e931bc7a7e468e8bb2ee3766b3fcf96f1800f552.camel@kernel.crashing.org>
- <bf7ceabb6fe51398e0f4eebd9c4fe4ac1ec2b8a4.camel@kernel.crashing.org>
- <20180819021922.GE128050@bhelgaas-glaptop.roam.corp.google.com>
- <fe891b63-12c7-61ab-a59a-ae24ad766754@kernel.org>
- <ab5cb5b277f1c1c1362ef597ca7b8c6a2cd32cdf.camel@kernel.crashing.org>
- <908ff33ded8f31830f95a8889d8540f1@codeaurora.org>
- <5027d857bb59edfd33442003aa618ece1bc9cd52.camel@kernel.crashing.org>
- <b2e2ac5c92d8a91d00606754d1046578@codeaurora.org>
- <2ecd1fd6d763810d45697f846fa876b58a193b1b.camel@kernel.crashing.org>
- <20180820155325.GA16148@localhost.localdomain>
- <cf6de256280be7a2948db6dd2b5bfae92e70e12f.camel@kernel.crashing.org>
-From: Sinan Kaya <okaya@kernel.org>
-Message-ID: <6aa71d74-e4dc-c627-1496-981278388bce@kernel.org>
-Date: Mon, 20 Aug 2018 17:21:30 -0400
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail.kernel.org ([198.145.29.99]:37708 "EHLO mail.kernel.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1727156AbeHIXmX (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Thu, 9 Aug 2018 19:42:23 -0400
+Date: Thu, 9 Aug 2018 16:15:41 -0500
+From: Bjorn Helgaas <helgaas@kernel.org>
+To: Logan Gunthorpe <logang@deltatee.com>
+Cc: linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
+        linux-doc@vger.kernel.org, Stephen Bates <sbates@raithlin.com>,
+        Christoph Hellwig <hch@lst.de>,
+        Bjorn Helgaas <bhelgaas@google.com>,
+        Jonathan Corbet <corbet@lwn.net>,
+        Ingo Molnar <mingo@kernel.org>,
+        Thomas Gleixner <tglx@linutronix.de>,
+        "Paul E. McKenney" <paulmck@linux.vnet.ibm.com>,
+        Marc Zyngier <marc.zyngier@arm.com>,
+        Kai-Heng Feng <kai.heng.feng@canonical.com>,
+        Frederic Weisbecker <frederic@kernel.org>,
+        Dan Williams <dan.j.williams@intel.com>,
+        =?iso-8859-1?B?Suly9G1l?= Glisse <jglisse@redhat.com>,
+        Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+        Alex Williamson <alex.williamson@redhat.com>,
+        Christian =?iso-8859-1?Q?K=F6nig?= <christian.koenig@amd.com>,
+        Matthew Wilcox <willy@infradead.org>
+Subject: Re: [PATCH v8 1/4] PCI: Make specifying PCI devices in kernel
+ parameters reusable
+Message-ID: <20180809211541.GF113140@bhelgaas-glaptop.roam.corp.google.com>
+References: <20180730161840.13733-1-logang@deltatee.com>
+ <20180730161840.13733-2-logang@deltatee.com>
 MIME-Version: 1.0
-In-Reply-To: <cf6de256280be7a2948db6dd2b5bfae92e70e12f.camel@kernel.crashing.org>
-Content-Type: text/plain; charset=utf-8; format=flowed
+Content-Type: text/plain; charset=iso-8859-1
+In-Reply-To: <20180730161840.13733-2-logang@deltatee.com>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 8/20/2018 5:05 PM, Benjamin Herrenschmidt wrote:
-> On Mon, 2018-08-20 at 09:53 -0600, Keith Busch wrote:
->> On Mon, Aug 20, 2018 at 09:22:27PM +1000, Benjamin Herrenschmidt wrote:
->>> The main problem with unplug/replug (as I mentioned earlier) is that it
->>> just does NOT work for storage controllers (or similar type of
->>> devices). The links between the storage controller and the mounted
->>> filesystems is lost permanently, you'll most likely have to reboot the
->>> machine.
->>
->> You probably shouldn't mount raw storage devices if they can be hot
->> added/removed. There are device mappers for that! :)
+On Mon, Jul 30, 2018 at 10:18:37AM -0600, Logan Gunthorpe wrote:
+> Separate out the code to match a PCI device with a string (typically
+> originating from a kernel parameter) from the
+> pci_specified_resource_alignment() function into its own helper
+> function.
 > 
-> This is not about hot adding/removing, it's about error recovery.
+> While we are at it, this change fixes the kernel style of the function
+> (fixing a number of long lines and extra parentheses).
 > 
->> And you can't just change DPC device removal. A DPC event triggers
->> the link down, and that will trigger pciehp to disconnect the subtree
->> anyway. Having DPC do it too just means you get the same behavior with
->> or without enabling STLCTL.DLLSC.
+> Additionally, make the analogous change to the kernel parameter
+> documentation: Separating the description of how to specify a PCI device
+> into it's own section at the head of the pci= parameter.
 > 
-> This is wrong. EEH can trigger a link down to and we don't remove the
-> subtree in that case. We allow the drivers to recover.
+> This patch should have no functional alterations.
 > 
+> Signed-off-by: Logan Gunthorpe <logang@deltatee.com>
+> Reviewed-by: Stephen Bates <sbates@raithlin.com>
+> Acked-by: Christian König <christian.koenig@amd.com>
+> Reviewed-by: Alex Williamson <alex.williamson@redhat.com>
+> ---
+>  Documentation/admin-guide/kernel-parameters.txt |  28 ++++-
+>  drivers/pci/pci.c                               | 157 ++++++++++++++++--------
+>  2 files changed, 126 insertions(+), 59 deletions(-)
+> 
+> diff --git a/Documentation/admin-guide/kernel-parameters.txt b/Documentation/admin-guide/kernel-parameters.txt
+> index 533ff5c68970..5cc215870ee1 100644
+> --- a/Documentation/admin-guide/kernel-parameters.txt
+> +++ b/Documentation/admin-guide/kernel-parameters.txt
+> @@ -2994,7 +2994,26 @@
+>  			See header of drivers/block/paride/pcd.c.
+>  			See also Documentation/blockdev/paride.txt.
+>  
+> -	pci=option[,option...]	[PCI] various PCI subsystem options:
+> +	pci=option[,option...]	[PCI] various PCI subsystem options.
+> +
+> +				Some options herein operate on a specific device
+> +				or a set of devices (<pci_dev>). These are
+> +				specified in one of the following formats:
+> +
+> +				[<domain>:]<bus>:<slot>.<func>
+> +				pci:<vendor>:<device>[:<subvendor>:<subdevice>]
+> +
+> +				Note: the first format specifies a PCI
+> +				bus/slot/function address which may change
 
-I have a patch to solve this issue.
+Unless you object, I'm going to change "slot" references like this to
+"device" so they match "BDF" and the language in the spec, which uses
+"slot" to refer to a physical slot and "device" when referring to
+geographical device addresses.  I can do this when I apply these, so
+no need for you to repost them.
 
-https://lkml.org/lkml/2018/8/19/124
-
-Hotplug driver removes the devices on link down events and re-enumerates
-on insertion.
-
-I am trying to separate fatal error handling from hotplug.
-
-> Ben.
-> 
-> 
-> 
+Bjorn
