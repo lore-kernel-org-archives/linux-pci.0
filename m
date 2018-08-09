@@ -1,74 +1,99 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.29.99]:58942 "EHLO mail.kernel.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1726893AbeHIVoq (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Thu, 9 Aug 2018 17:44:46 -0400
-Date: Thu, 9 Aug 2018 14:18:32 -0500
-From: Bjorn Helgaas <helgaas@kernel.org>
-To: "Alex G." <mr.nuke.me@gmail.com>
-Cc: Alex_Gagniuc@Dellteam.com, bhelgaas@google.com,
-        keith.busch@intel.com, Austin.Bolen@dell.com, Shyam.Iyer@dell.com,
-        fred@fredlawl.com, poza@codeaurora.org, linux-pci@vger.kernel.org,
-        linux-kernel@vger.kernel.org
+Return-Path: <SRS0=8QV7=KY=dellteam.com=Alex_Gagniuc@kernel.org>
+Return-Path: <SRS0=8QV7=KY=dellteam.com=Alex_Gagniuc@kernel.org>
+Cc: <bhelgaas@google.com>, <keith.busch@intel.com>, <Austin.Bolen@dell.com>,
+        <Shyam.Iyer@dell.com>, <fred@fredlawl.com>, <poza@codeaurora.org>,
+        <linux-pci@vger.kernel.org>, <linux-kernel@vger.kernel.org>
+From: <Alex_Gagniuc@Dellteam.com>
+To: <helgaas@kernel.org>, <mr.nuke.me@gmail.com>
 Subject: Re: [PATCH] PCI/AER: Do not clear AER bits if we don't own AER
-Message-ID: <20180809191832.GC113140@bhelgaas-glaptop.roam.corp.google.com>
+Date: Thu, 9 Aug 2018 16:46:32 +0000
+Message-ID: <2cae6a5ac8324be18b8dcf3d7dfcc288@ausx13mps321.AMER.DELL.COM>
 References: <20180717153135.25925-1-mr.nuke.me@gmail.com>
  <20180809141551.GH49411@bhelgaas-glaptop.roam.corp.google.com>
- <2cae6a5ac8324be18b8dcf3d7dfcc288@ausx13mps321.AMER.DELL.COM>
- <20180809182905.GA113140@bhelgaas-glaptop.roam.corp.google.com>
- <d235e71d-647f-00d1-8a21-2784b7939c25@gmail.com>
+Content-Type: text/plain; charset="us-ascii"
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <d235e71d-647f-00d1-8a21-2784b7939c25@gmail.com>
-Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Thu, Aug 09, 2018 at 02:00:23PM -0500, Alex G. wrote:
-> On 08/09/2018 01:29 PM, Bjorn Helgaas wrote:
-> > On Thu, Aug 09, 2018 at 04:46:32PM +0000, Alex_Gagniuc@Dellteam.com wrote:
-> > > On 08/09/2018 09:16 AM, Bjorn Helgaas wrote:
-> (snip_
-> > > >     enable_ecrc_checking()
-> > > >     disable_ecrc_checking()
-> > > 
-> > > I don't immediately see how this would affect FFS, but the bits are part
-> > > of the AER capability structure. According to the FFS model, those would
-> > > be owned by FW, and we'd have to avoid touching them.
-> > 
-> > Per ACPI v6.2, sec 18.3.2.4, the HEST may contain entries for Root
-> > Ports that contain the FIRMWARE_FIRST flag as well as values the OS is
-> > supposed to write to several AER capability registers.  It looks like
-> > we currently ignore everything except the FIRMWARE_FIRST and GLOBAL
-> > flags (ACPI_HEST_FIRMWARE_FIRST and ACPI_HEST_GLOBAL in Linux).
-> > 
-> > That seems like a pretty major screwup and more than I want to fix
-> > right now.
-> 
-> The logic is not very clear, but I think it goes like this:
-> For GLOBAL and FFS, disable native AER everywhere.
-> When !GLOBAL and FFS, then only disable native AER for the root port
-> described by the HEST entry.
-
-I agree the code is convoluted, but that sounds right to me.
-
-What I meant is that we ignore the values the HEST entry tells us
-we're supposed to write to Device Control and the AER Uncorrectable
-Error Mask, Uncorrectable Error Severity, Correctable Error Mask, and
-AER Capabilities and Control.
-
-> > > For practical considerations this is not an issue today. The ACPI error
-> > > handling code currently crashes when it encounters any fatal error, so
-> > > we wouldn't hit this in the FFS case.
-> > 
-> > I wasn't aware the firmware-first path was *that* broken.  Are there
-> > problem reports for this?  Is this a regression?
-> 
-> It's been like this since, I believe, 3.10, and probably much earlier. All
-> reports that I have seen of linux crashing on surprise hot-plug have been
-> caused by the panic() call in the apei code. Dell BIOSes do an extreme
-> amount of work to determine when it's safe to _not_ report errors to the OS,
-> since all known OSes crash on this path.
-
-Oh, is this the __ghes_panic() path?  If so, I'm going to turn away
-and plead ignorance unless the PCI core is doing something wrong that
-eventually results in that panic.
+On 08/09/2018 09:16 AM, Bjorn Helgaas wrote:=0A=
+> On Tue, Jul 17, 2018 at 10:31:23AM -0500, Alexandru Gagniuc wrote:=0A=
+>> When we don't own AER, we shouldn't touch the AER error bits. This=0A=
+>> happens unconditionally on device probe(). Clearing AER bits=0A=
+>> willy-nilly might cause firmware to miss errors. Instead=0A=
+>> these bits should get cleared by FFS, or via ACPI _HPX method.=0A=
+>>=0A=
+>> This race is mostly of theoretical significance, as it is not easy to=0A=
+>> reasonably demonstrate it in testing.=0A=
+>>=0A=
+>> Signed-off-by: Alexandru Gagniuc <mr.nuke.me@gmail.com>=0A=
+>> ---=0A=
+>>   drivers/pci/pcie/aer.c | 3 +++=0A=
+>>   1 file changed, 3 insertions(+)=0A=
+>>=0A=
+>> diff --git a/drivers/pci/pcie/aer.c b/drivers/pci/pcie/aer.c=0A=
+>> index a2e88386af28..18037a2a8231 100644=0A=
+>> --- a/drivers/pci/pcie/aer.c=0A=
+>> +++ b/drivers/pci/pcie/aer.c=0A=
+>> @@ -383,6 +383,9 @@ int pci_cleanup_aer_error_status_regs(struct pci_dev=
+ *dev)=0A=
+>>   	if (!pci_is_pcie(dev))=0A=
+>>   		return -ENODEV;=0A=
+>>   =0A=
+>> +	if (pcie_aer_get_firmware_first(dev))=0A=
+>> +		return -EIO;=0A=
+> =0A=
+> I like this patch.=0A=
+> =0A=
+> Do we need the same thing in the following places that also clear AER=0A=
+> status bits or write AER control bits?=0A=
+=0A=
+In theory, every exported function would guard for this. I think the =0A=
+idea a long long time ago was that the check happens during =0A=
+initialization, and the others are not hit.=0A=
+=0A=
+>    enable_ecrc_checking()=0A=
+>    disable_ecrc_checking()=0A=
+=0A=
+I don't immediately see how this would affect FFS, but the bits are part =
+=0A=
+of the AER capability structure. According to the FFS model, those would =
+=0A=
+be owned by FW, and we'd have to avoid touching them.=0A=
+=0A=
+>    pci_cleanup_aer_uncorrect_error_status()=0A=
+=0A=
+This probably should be guarded. It's only called from a few specific =0A=
+drivers, so the impact is not as high as being called from the core.=0A=
+=0A=
+>    pci_aer_clear_fatal_status()=0A=
+=0A=
+This is only called when doing fatal_recovery, right?=0A=
+For practical considerations this is not an issue today. The ACPI error =0A=
+handling code currently crashes when it encounters any fatal error, so =0A=
+we wouldn't hit this in the FFS case.=0A=
+=0A=
+If the ACPI code pulls its thinking appendage out of the other end of =0A=
+the digestive tract, then we could be hitting this in the future. For =0A=
+correctness, guarding makes sense.=0A=
+=0A=
+The PCIe standards contact I usually talk to about these PCIe subtleties =
+=0A=
+is currently on vacation. The number one issue was a FFS corner case =0A=
+with OS clearing bits on probe. The other functions you mention are a =0A=
+corner case of a corner case. The big fish is =0A=
+pci_cleanup_aer_error_status_regs() on probe(), and it would be nice to =0A=
+have that resolved.=0A=
+=0A=
+I'll sync up with Austin when he gets back to see about the other =0A=
+functions though I suspect we'll end up fixing them as well.=0A=
+=0A=
+Alex=0A=
+=0A=
+>>   	pos =3D dev->aer_cap;=0A=
+>>   	if (!pos)=0A=
+>>   		return -EIO;=0A=
+>> -- =0A=
+>> 2.14.3=0A=
+>>=0A=
+> =0A=
+=0A=
+=0A=
