@@ -1,93 +1,78 @@
-Return-Path: <SRS0=ZLZ+=K4=gigaio.com=kchow@kernel.org>
-Return-Path: <SRS0=ZLZ+=K4=gigaio.com=kchow@kernel.org>
-Subject: Re: IOAT DMA w/IOMMU
-To: Logan Gunthorpe <logang@deltatee.com>, Dave Jiang <dave.jiang@intel.com>,
- Eric Pilmore <epilmore@gigaio.com>, Bjorn Helgaas <helgaas@kernel.org>
-Cc: "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
- David Woodhouse <dwmw2@infradead.org>,
- Alex Williamson <alex.williamson@redhat.com>,
- "iommu@lists.linux-foundation.org" <iommu@lists.linux-foundation.org>
-References: <CAOQPn8soxubJxb=vp7kz+AM6LbPH5y+_Nx0Vzv7rjV_nMMqEmA@mail.gmail.com>
- <cdd9245f-eb23-9e10-1755-8f396a2cd255@deltatee.com>
- <b278c1e5-6f08-c879-a27d-7fc172645fd5@gigaio.com>
- <f04fae39-645e-3c6e-07c0-b194260bf5de@deltatee.com>
- <3f503940-db6a-ec75-ed15-1db99d5d48ef@gigaio.com>
- <112A412BB11A1242B37129D931BCE5348382CFB2@fmsmsx117.amr.corp.intel.com>
- <b8af340c-d40b-cb8c-987f-b394f1d6ec3e@gigaio.com>
- <adf51c74-36fa-b61d-8497-27bd75178ba4@deltatee.com>
- <aa9c3f41-efc9-8c68-a517-2736c8986621@gigaio.com>
- <1170c096-a749-6ee3-32d4-ebba1d12adff@gigaio.com>
- <929f3dfa-fbff-c582-3be5-c368f11feb7e@deltatee.com>
- <460cc47f-6a8e-67b0-01a0-02f0c51df258@intel.com>
- <0f653f8f-c7ae-831d-e238-2742590d9ea1@deltatee.com>
- <6525fa4d-7d9b-0136-7206-f8351230af46@intel.com>
- <f22c565e-ba49-c83d-3e51-7967664c7136@deltatee.com>
- <499934e7-3734-1aee-37dd-b42a5d2a2608@intel.com>
- <9d135f61-20c2-e966-4d7d-3e154384ea08@gigaio.com>
- <0a9fa9c3-dbe4-6451-9c1a-06b662702f61@deltatee.com>
-From: Kit Chow <kchow@gigaio.com>
-Message-ID: <a2391f6c-d73b-c140-edad-8cd6584dd437@gigaio.com>
-Date: Mon, 13 Aug 2018 07:23:22 -0700
+Return-Path: <SRS0=P+JW=KY=arm.com=punit.agrawal@kernel.org>
+Return-Path: <SRS0=P+JW=KY=arm.com=punit.agrawal@kernel.org>
+From: Punit Agrawal <punit.agrawal@arm.com>
+To: Bjorn Helgaas <helgaas@kernel.org>
+Cc: Bjorn Helgaas <bhelgaas@google.com>,  Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,  Jeremy Linton <jeremy.linton@arm.com>,  linux-arm <linux-arm-kernel@lists.infradead.org>,  Catalin Marinas <catalin.marinas@arm.com>,  Will Deacon <will.deacon@arm.com>,  Jiang Liu <jiang.liu@linux.intel.com>,  linux-pci@vger.kernel.org,  Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,  linux-acpi@vger.kernel.org,  linux-mm@kvack.org
+Subject: Re: [PATCH] arm64: PCI: Remove node-local allocations when initialising host controller
+References: <20180801173132.19739-1-punit.agrawal@arm.com>
+	<38ad03ba-2658-98c8-1888-0aa3bfb59bd4@arm.com>
+	<20180802143319.GA13512@red-moon>
+	<CAErSpo5i7AAXq4vmfsH2WjheXpzzM1iaehdeM24eQZjzYY39Rg@mail.gmail.com>
+	<87eff85364.fsf@e105922-lin.cambridge.arm.com>
+	<20180808172211.GD49411@bhelgaas-glaptop.roam.corp.google.com>
+Date: Thu, 09 Aug 2018 09:31:41 +0100
+In-Reply-To: <20180808172211.GD49411@bhelgaas-glaptop.roam.corp.google.com>
+	(Bjorn Helgaas's message of "Wed, 8 Aug 2018 12:22:11 -0500")
+Message-ID: <871sb83pqq.fsf@e105922-lin.cambridge.arm.com>
 MIME-Version: 1.0
-In-Reply-To: <0a9fa9c3-dbe4-6451-9c1a-06b662702f61@deltatee.com>
-Content-Type: text/plain; charset=utf-8; format=flowed
+Content-Type: text/plain
 List-ID: <linux-pci.vger.kernel.org>
 
+Bjorn Helgaas <helgaas@kernel.org> writes:
 
-
-On 08/10/2018 07:10 PM, Logan Gunthorpe wrote:
+> On Wed, Aug 08, 2018 at 03:44:03PM +0100, Punit Agrawal wrote:
+>> Bjorn Helgaas <bhelgaas@google.com> writes:
+>> > On Thu, Aug 2, 2018 at 9:33 AM Lorenzo Pieralisi
+>> > <lorenzo.pieralisi@arm.com> wrote:
+>> >> On Wed, Aug 01, 2018 at 02:38:51PM -0500, Jeremy Linton wrote:
+>> >>
+>> >> Jiang Liu does not work on the kernel anymore so we won't know
+>> >> anytime soon the reasoning behind commit 965cd0e4a5e5
+>> >>
+>> >> > On 08/01/2018 12:31 PM, Punit Agrawal wrote:
+>> >> > >Memory for host controller data structures is allocated local to the
+>> >> > >node to which the controller is associated with. This has been the
+>> >> > >behaviour since support for ACPI was added in
+>> >> > >commit 0cb0786bac15 ("ARM64: PCI: Support ACPI-based PCI host controller").
+>> >> >
+>> >> > Which was apparently influenced by:
+>> >> >
+>> >> > 965cd0e4a5e5 x86, PCI, ACPI: Use kmalloc_node() to optimize for performance
+>> >> >
+>> >> > Was there an actual use-case behind that change?
+>> >> >
+>> >> > I think this fixes the immediate boot problem, but if there is any
+>> >> > perf advantage it seems wise to keep it... Particularly since x86
+>> >> > seems to be doing the node sanitation in pci_acpi_root_get_node().
+>> >>
+>> >> I am struggling to see the perf advantage of allocating a struct
+>> >> that the PCI controller will never read/write from a NUMA node that
+>> >> is local to the PCI controller, happy to be corrected if there is
+>> >> a sound rationale behind that.
+>> >
+>> > If there is no reason to use kzalloc_node() here, we shouldn't use it.
+>> >
+>> > But we should use it (or not use it) consistently across arches.  I do
+>> > not believe there is an arch-specific reason to be different.
+>> > Currently, pci_acpi_scan_root() uses kzalloc_node() on x86 and arm64,
+>> > but kzalloc() on ia64.  They all ought to be the same.
+>> 
+>> From my understanding, arm64 use of kzalloc_node() was derived from the
+>> x86 version. Maybe somebody familiar with behaviour on x86 can provide
+>> input here.
 >
-> On 10/08/18 06:53 PM, Kit Chow wrote:
->> I was able to finally succeed in doing the dma transfers over ioat only
->> when prot has DMA_PTE_WRITE set by setting the direction to either
->> DMA_FROM_DEVICE or DMA_BIDIRECTIONAL. Any ideas if the prot settings
->> need to be changed? Are there any bad side effects if I used
->> DMA_BIDIRECTIONAL?
-> Good to hear it. Without digging into the direction much all I can say
-> is that it can sometimes be very confusing what the direction is. Adding
-> another PCI device just adds to the confusion.
-Yep, confusing :).
+> If you want to remove use of kzalloc_node(), I'm fine with that as
+> long as you do it for x86 at the same time (maybe separate patches,
+> but at least in the same series).
+>
+> I don't see any evidence in 965cd0e4a5e5 ("x86, PCI, ACPI: Use
+> kmalloc_node() to optimize for performance") that it actually improves
+> performance, so I'd be inclined to just use kzalloc().
 
-======================= =============================================
-DMA_NONE		no direction (used for debugging)
-DMA_TO_DEVICE		data is going from the memory to the device
-DMA_FROM_DEVICE		data is coming from the device to the memory
-DMA_BIDIRECTIONAL	direction isn't known
-======================= =============================================
+Thanks for confirming.
 
-> I believe, the direction should be from the IOAT's point of view. So if
-> the IOAT is writing to the BAR you'd set DMA_FROM_DEVICE (ie. data is
-> coming from the IOAT) and if it's reading you'd set DMA_TO_DEVICE (ie.
-> data is going to the IOAT).
-It would certainly seem like DMA_TO_DEVICE would be the proper choice; 
-IOAT is the plumbing to move host data (memory) to the bar address (device).
-
-Will go with what works and set DMA_FROM_DEVICE.
-
-In ntb_async_tx_submit, does the direction used for the dma_map routines 
-for the src and dest addresses need to be consistent?
-
-And does the direction setting for the dmaengine_unmap_data have to be 
-consistent with the direction used in dma_map_*?
-
-BTW, dmaengine_unmap routine only calls dma_unmap_page. Should it keep 
-track of the dma_map routine used and call the corresponding dma_unmap 
-routine?  In the case of the intel iommu, it doesn't matter.
-
-Thanks
-Kit
+I'm happy to add a patch updating x86 use of kzalloc_node() as
+well. I'll post something once the merge window closes.
 
 >
-> Using DMA_BIDIRECTIONAL just forgoes any hardware security / protection
-> that the buffer would have in terms of direction. Generally it's good
-> practice to use the strictest direction you can.
->
->> Given that using the pci bar address as is without getting an iommu
->> address results in the same "PTE Write access" error, I wonder if there
->> is some internal 'prot' associated with the non-translated pci bar
->> address that just needs to be tweaked to include DMA_PTE_WRITE???
-> No, I don't think so. The 'prot' will be a property of the IOMMU. Not
-> having an entry is probably just the same (from the perspective of the
-> error you see) as only having an entry for reading.
->
-> Logan
+> Bjorn
