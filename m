@@ -1,181 +1,238 @@
-Return-Path: <SRS0=ZLZ+=K4=gigaio.com=kchow@kernel.org>
-Return-Path: <SRS0=ZLZ+=K4=gigaio.com=kchow@kernel.org>
-Subject: Re: IOAT DMA w/IOMMU
-From: Kit Chow <kchow@gigaio.com>
-To: Robin Murphy <robin.murphy@arm.com>, Logan Gunthorpe
- <logang@deltatee.com>, Dave Jiang <dave.jiang@intel.com>,
- Eric Pilmore <epilmore@gigaio.com>, Bjorn Helgaas <helgaas@kernel.org>
-Cc: "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
- Alex Williamson <alex.williamson@redhat.com>,
- David Woodhouse <dwmw2@infradead.org>,
- "iommu@lists.linux-foundation.org" <iommu@lists.linux-foundation.org>
-References: <CAOQPn8soxubJxb=vp7kz+AM6LbPH5y+_Nx0Vzv7rjV_nMMqEmA@mail.gmail.com>
- <3f503940-db6a-ec75-ed15-1db99d5d48ef@gigaio.com>
- <112A412BB11A1242B37129D931BCE5348382CFB2@fmsmsx117.amr.corp.intel.com>
- <b8af340c-d40b-cb8c-987f-b394f1d6ec3e@gigaio.com>
- <adf51c74-36fa-b61d-8497-27bd75178ba4@deltatee.com>
- <aa9c3f41-efc9-8c68-a517-2736c8986621@gigaio.com>
- <1170c096-a749-6ee3-32d4-ebba1d12adff@gigaio.com>
- <929f3dfa-fbff-c582-3be5-c368f11feb7e@deltatee.com>
- <460cc47f-6a8e-67b0-01a0-02f0c51df258@intel.com>
- <0f653f8f-c7ae-831d-e238-2742590d9ea1@deltatee.com>
- <6525fa4d-7d9b-0136-7206-f8351230af46@intel.com>
- <f22c565e-ba49-c83d-3e51-7967664c7136@deltatee.com>
- <499934e7-3734-1aee-37dd-b42a5d2a2608@intel.com>
- <9d135f61-20c2-e966-4d7d-3e154384ea08@gigaio.com>
- <0a9fa9c3-dbe4-6451-9c1a-06b662702f61@deltatee.com>
- <a2391f6c-d73b-c140-edad-8cd6584dd437@gigaio.com>
- <c8d69f9b-b3a6-76ee-1a90-b3dbaaa9b82b@arm.com>
- <3772d88a-e9ad-465a-c91f-df8f9c6219be@gigaio.com>
-Message-ID: <b0658bb5-4cbe-3b8d-e360-02c5640d2615@gigaio.com>
-Date: Mon, 13 Aug 2018 16:36:11 -0700
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+Date: Thu, 9 Aug 2018 09:02:55 -0500
+From: Bjorn Helgaas <helgaas@kernel.org>
+To: Leon Romanovsky <leon@kernel.org>
+Cc: "Alex G." <mr.nuke.me@gmail.com>, Tal Gilboa <talgi@mellanox.com>,
+        linux-pci@vger.kernel.org, bhelgaas@google.com,
+        jakub.kicinski@netronome.com, keith.busch@intel.com,
+        alex_gagniuc@dellteam.com, austin_bolen@dell.com,
+        shyam_iyer@dell.com, Ariel Elior <ariel.elior@cavium.com>,
+        everest-linux-l2@cavium.com,
+        "David S. Miller" <davem@davemloft.net>,
+        Michael Chan <michael.chan@broadcom.com>,
+        Ganesh Goudar <ganeshgr@chelsio.com>,
+        Jeff Kirsher <jeffrey.t.kirsher@intel.com>,
+        Tariq Toukan <tariqt@mellanox.com>,
+        Saeed Mahameed <saeedm@mellanox.com>,
+        Dirk van der Merwe <dirk.vandermerwe@netronome.com>,
+        netdev@vger.kernel.org, linux-kernel@vger.kernel.org,
+        intel-wired-lan@lists.osuosl.org, linux-rdma@vger.kernel.org,
+        oss-drivers@netronome.com
+Subject: Re: [PATCH v6 8/9] net/mlx5: Do not call pcie_print_link_status()
+Message-ID: <20180809140255.GG49411@bhelgaas-glaptop.roam.corp.google.com>
+References: <CAErSpo4PK+SQLNfdkLNt9eLc7bpbxbkZCsa8T-tQpid601n0SQ@mail.gmail.com>
+ <20180806232600.25694-1-mr.nuke.me@gmail.com>
+ <20180806232600.25694-8-mr.nuke.me@gmail.com>
+ <20180808060848.GQ13378@mtr-leonro.mtl.com>
+ <05056a70-ee78-ea3c-0b9b-6d64a8663b11@mellanox.com>
+ <20180808154142.GZ13378@mtr-leonro.mtl.com>
+ <5578cd9a-e4f0-85ab-4a86-bfa23eec136c@mellanox.com>
+ <79264a38-e3e4-d270-95df-a09047f7a15e@gmail.com>
+ <20180808172736.GB13378@mtr-leonro.mtl.com>
 MIME-Version: 1.0
-In-Reply-To: <3772d88a-e9ad-465a-c91f-df8f9c6219be@gigaio.com>
-Content-Type: text/plain; charset=utf-8; format=flowed
+Content-Type: text/plain; charset=iso-8859-1
+In-Reply-To: <20180808172736.GB13378@mtr-leonro.mtl.com>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
+On Wed, Aug 08, 2018 at 08:27:36PM +0300, Leon Romanovsky wrote:
+> On Wed, Aug 08, 2018 at 11:33:51AM -0500, Alex G. wrote:
+> >
+> >
+> > On 08/08/2018 10:56 AM, Tal Gilboa wrote:
+> > > On 8/8/2018 6:41 PM, Leon Romanovsky wrote:
+> > > > On Wed, Aug 08, 2018 at 05:23:12PM +0300, Tal Gilboa wrote:
+> > > > > On 8/8/2018 9:08 AM, Leon Romanovsky wrote:
+> > > > > > On Mon, Aug 06, 2018 at 06:25:42PM -0500, Alexandru Gagniuc wrote:
+> > > > > > > This is now done by the PCI core to warn of sub-optimal bandwidth.
+> > > > > > >
+> > > > > > > Signed-off-by: Alexandru Gagniuc <mr.nuke.me@gmail.com>
+> > > > > > > ---
+> > > > > > > �� drivers/net/ethernet/mellanox/mlx5/core/main.c | 4 ----
+> > > > > > > �� 1 file changed, 4 deletions(-)
+> > > > > > >
+> > > > > >
+> > > > > > Thanks,
+> > > > > > Reviewed-by: Leon Romanovsky <leonro@mellanox.com>
+> > > > > >
+> > > > >
+> > > > > Alex,
+> > > > > I loaded mlx5 driver with and without these series. The report
+> > > > > in dmesg is
+> > > > > now missing. From what I understood, the status should be
+> > > > > reported at least
+> > > > > once, even if everything is in order.
+> > > >
+> > > > It is not what this series is doing and it removes prints completely if
+> > > > fabric can deliver more than card is capable.
+> > > >
+> > > > > We need this functionality to stay.
+> > > >
+> > > > I'm not sure that you need this information in driver's dmesg output,
+> > > > but most probably something globally visible and accessible per-pci
+> > > > device.
+> > >
+> > > Currently we have users that look for it. If we remove the dmesg print
+> > > we need this to be reported elsewhere. Adding it to sysfs for example
+> > > should be a valid solution for our case.
+> >
+> > I think a stop-gap measure is to leave the pcie_print_link_status() call in
+> > drivers that really need it for whatever reason. Implementing a reliable
+> > reporting through sysfs might take some tinkering, and I don't think it's a
+> > sufficient reason to block the heart of this series -- being able to detect
+> > bottlenecks and link downtraining.
+> 
+> IMHO, you did right change and it is better to replace this print to some
+> more generic solution now while you are doing it and don't leave leftovers.
 
-Taking a step back, I was a little surprised that dma_map_single 
-successfully returned an
-iommu address for the pci bar address passed into it during my initial 
-experiment...
+I'd like to make forward progress on this, so I propose we merge only
+the PCI core change (patch 1/9) and drop the individual driver
+changes.  That would mean:
 
-Internally, dma_map_single calls virt_to_page() to translate the 
-"virtual address" into a
-page and intel_map page then calls page_to_phys() to convert the page to 
-a dma_addr_t.
+  - We'll get a message from every NIC driver that calls
+    pcie_print_link_status() as before.
 
-The virt_to_page and page_to_phys routines don't appear to do any 
-validation and just
-uses arithmetic to do the conversions.
+  - We'll get a new message from the core for every downtrained link.
 
-the pci bar address (0x383c70e51578) does fall into a valid VA range in 
-x86_64 so
-it could conceivably be a valid VA.  So I tried an virtual address 
-inside the VA hole
-  and and it too returned without any errors.
+  - If a link leading to the NIC is downtrained, there will be
+    duplicate messages.  Maybe that's overkill but it's not terrible.
 
-virt_to_page(0x800000000000) -> 0xffffede000000000
-page_to_phys(0xffffede000000000) -> 0xf80000000000
+I provisionally put the patch below on my pci/enumeration branch.
+Objections?
 
-In arch/x86/include/asm/page.h, there is the following comment in regards to
-validating the virtual address.
 
-/*
-  * virt_to_page(kaddr) returns a valid pointer if and only if
-  * virt_addr_valid(kaddr) returns true.
-  */
-#define virt_to_page(kaddr)     pfn_to_page(__pa(kaddr) >> PAGE_SHIFT)
+commit c870cc8cbc4d79014f3daa74d1e412f32e42bf1b
+Author: Alexandru Gagniuc <mr.nuke.me@gmail.com>
+Date:   Mon Aug 6 18:25:35 2018 -0500
 
-So it looks like the validation by virt_addr_valid was somehow dropped 
-from the
-virt_to_page code path. Does anyone have any ideas what happended to it?
+    PCI: Check for PCIe Link downtraining
+    
+    When both ends of a PCIe Link are capable of a higher bandwidth than is
+    currently in use, the Link is said to be "downtrained".  A downtrained Link
+    may indicate hardware or configuration problems in the system, but it's
+    hard to identify such Links from userspace.
+    
+    Refactor pcie_print_link_status() so it continues to always print PCIe
+    bandwidth information, as several NIC drivers desire.
+    
+    Add a new internal __pcie_print_link_status() to emit a message only when a
+    device's bandwidth is constrained by the fabric and call it from the PCI
+    core for all devices, which identifies all downtrained Links.  It also
+    emits messages for a few cases that are technically not downtrained, such
+    as a x4 device in an open-ended x1 slot.
+    
+    Signed-off-by: Alexandru Gagniuc <mr.nuke.me@gmail.com>
+    [bhelgaas: changelog, move __pcie_print_link_status() declaration to
+    drivers/pci/, rename pcie_check_upstream_link() to
+    pcie_report_downtraining()]
+    Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
 
-Kit
-
-(Resending, earlier message tagged as containing html subpart)
-
-On 08/13/2018 08:21 AM, Kit Chow wrote:
->
->
-> On 08/13/2018 07:59 AM, Robin Murphy wrote:
->> On 13/08/18 15:23, Kit Chow wrote:
->>> On 08/10/2018 07:10 PM, Logan Gunthorpe wrote:
->>>>
->>>> On 10/08/18 06:53 PM, Kit Chow wrote:
->>>>> I was able to finally succeed in doing the dma transfers over ioat 
->>>>> only
->>>>> when prot has DMA_PTE_WRITE set by setting the direction to either
->>>>> DMA_FROM_DEVICE or DMA_BIDIRECTIONAL. Any ideas if the prot settings
->>>>> need to be changed? Are there any bad side effects if I used
->>>>> DMA_BIDIRECTIONAL?
->>>> Good to hear it. Without digging into the direction much all I can say
->>>> is that it can sometimes be very confusing what the direction is. 
->>>> Adding
->>>> another PCI device just adds to the confusion.
->>> Yep, confusing :).
->>>
->>> ======================= =============================================
->>> DMA_NONE        no direction (used for debugging)
->>> DMA_TO_DEVICE        data is going from the memory to the device
->>> DMA_FROM_DEVICE        data is coming from the device to the memory
->>> DMA_BIDIRECTIONAL    direction isn't known
->>> ======================= =============================================
->>>
->>>> I believe, the direction should be from the IOAT's point of view. 
->>>> So if
->>>> the IOAT is writing to the BAR you'd set DMA_FROM_DEVICE (ie. data is
->>>> coming from the IOAT) and if it's reading you'd set DMA_TO_DEVICE (ie.
->>>> data is going to the IOAT).
->>> It would certainly seem like DMA_TO_DEVICE would be the proper 
->>> choice; IOAT is the plumbing to move host data (memory) to the bar 
->>> address (device).
->>
->> Except that the "device" in question is the IOAT itself (more 
->> generally, it means the device represented by the first argument to 
->> dma_map_*() - the one actually emitting the reads and writes). The 
->> context of a DMA API call is the individual mapping in question, not 
->> whatever overall operation it may be part of - your example already 
->> involves two separate mappings: one "from" system memory "to" the DMA 
->> engine, and one "from" the DMA engine "to" PCI BAR memory.
->
-> OK, that makes sense.  The middleman (aka DMA engine device) is the 
-> key in the to/from puzzle. Thanks!
->
->
->>
->> Note that the DMA API's dma_direction is also distinct from the 
->> dmaengine API's dma_transfer_direction, and there's plenty of fun to 
->> be had mapping between the two - see pl330.c or rcar-dmac.c for other 
->> examples of dma_map_resource() for slave devices - no guarantees that 
->> those implementations are entirely correct (especially the one I 
->> did!), but in practice they do make the "DMA engine behind an IOMMU" 
->> case work for UARTs and similar straightforward slaves.
->>
->>> Will go with what works and set DMA_FROM_DEVICE.
->>>
->>> In ntb_async_tx_submit, does the direction used for the dma_map 
->>> routines for the src and dest addresses need to be consistent?
->>
->> In general, the mappings of source and destination addresses would 
->> typically have opposite directions as above, unless they're both 
->> bidirectional.
->>
->>> And does the direction setting for the dmaengine_unmap_data have to 
->>> be consistent with the direction used in dma_map_*?
->>
->> Yes, the arguments to an unmap are expected to match whatever was 
->> passed to the corresponding map call. CONFIG_DMA_API_DEBUG should 
->> help catch any mishaps.
->>
->> Robin.
->>
->>> BTW, dmaengine_unmap routine only calls dma_unmap_page. Should it 
->>> keep track of the dma_map routine used and call the corresponding 
->>> dma_unmap routine?  In the case of the intel iommu, it doesn't matter.
->>>
->>> Thanks
->>> Kit
->>>
->>>>
->>>> Using DMA_BIDIRECTIONAL just forgoes any hardware security / 
->>>> protection
->>>> that the buffer would have in terms of direction. Generally it's good
->>>> practice to use the strictest direction you can.
->>>>
->>>>> Given that using the pci bar address as is without getting an iommu
->>>>> address results in the same "PTE Write access" error, I wonder if 
->>>>> there
->>>>> is some internal 'prot' associated with the non-translated pci bar
->>>>> address that just needs to be tweaked to include DMA_PTE_WRITE???
->>>> No, I don't think so. The 'prot' will be a property of the IOMMU. Not
->>>> having an entry is probably just the same (from the perspective of the
->>>> error you see) as only having an entry for reading.
->>>>
->>>> Logan
->>>
->>> _______________________________________________
->>> iommu mailing list
->>> iommu@lists.linux-foundation.org
->>> https://lists.linuxfoundation.org/mailman/listinfo/iommu
->
+diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
+index 97acba712e4e..a84d341504a5 100644
+--- a/drivers/pci/pci.c
++++ b/drivers/pci/pci.c
+@@ -5264,14 +5264,16 @@ u32 pcie_bandwidth_capable(struct pci_dev *dev, enum pci_bus_speed *speed,
+ }
+ 
+ /**
+- * pcie_print_link_status - Report the PCI device's link speed and width
++ * __pcie_print_link_status - Report the PCI device's link speed and width
+  * @dev: PCI device to query
++ * @verbose: Print info even when enough bandwidth is available
+  *
+- * Report the available bandwidth at the device.  If this is less than the
+- * device is capable of, report the device's maximum possible bandwidth and
+- * the upstream link that limits its performance to less than that.
++ * If the available bandwidth at the device is less than the device is
++ * capable of, report the device's maximum possible bandwidth and the
++ * upstream link that limits its performance.  If @verbose, always print
++ * the available bandwidth, even if the device isn't constrained.
+  */
+-void pcie_print_link_status(struct pci_dev *dev)
++void __pcie_print_link_status(struct pci_dev *dev, bool verbose)
+ {
+ 	enum pcie_link_width width, width_cap;
+ 	enum pci_bus_speed speed, speed_cap;
+@@ -5281,11 +5283,11 @@ void pcie_print_link_status(struct pci_dev *dev)
+ 	bw_cap = pcie_bandwidth_capable(dev, &speed_cap, &width_cap);
+ 	bw_avail = pcie_bandwidth_available(dev, &limiting_dev, &speed, &width);
+ 
+-	if (bw_avail >= bw_cap)
++	if (bw_avail >= bw_cap && verbose)
+ 		pci_info(dev, "%u.%03u Gb/s available PCIe bandwidth (%s x%d link)\n",
+ 			 bw_cap / 1000, bw_cap % 1000,
+ 			 PCIE_SPEED2STR(speed_cap), width_cap);
+-	else
++	else if (bw_avail < bw_cap)
+ 		pci_info(dev, "%u.%03u Gb/s available PCIe bandwidth, limited by %s x%d link at %s (capable of %u.%03u Gb/s with %s x%d link)\n",
+ 			 bw_avail / 1000, bw_avail % 1000,
+ 			 PCIE_SPEED2STR(speed), width,
+@@ -5293,6 +5295,17 @@ void pcie_print_link_status(struct pci_dev *dev)
+ 			 bw_cap / 1000, bw_cap % 1000,
+ 			 PCIE_SPEED2STR(speed_cap), width_cap);
+ }
++
++/**
++ * pcie_print_link_status - Report the PCI device's link speed and width
++ * @dev: PCI device to query
++ *
++ * Report the available bandwidth at the device.
++ */
++void pcie_print_link_status(struct pci_dev *dev)
++{
++	__pcie_print_link_status(dev, true);
++}
+ EXPORT_SYMBOL(pcie_print_link_status);
+ 
+ /**
+diff --git a/drivers/pci/pci.h b/drivers/pci/pci.h
+index 70808c168fb9..ce880dab5bc8 100644
+--- a/drivers/pci/pci.h
++++ b/drivers/pci/pci.h
+@@ -263,6 +263,7 @@ enum pci_bus_speed pcie_get_speed_cap(struct pci_dev *dev);
+ enum pcie_link_width pcie_get_width_cap(struct pci_dev *dev);
+ u32 pcie_bandwidth_capable(struct pci_dev *dev, enum pci_bus_speed *speed,
+ 			   enum pcie_link_width *width);
++void __pcie_print_link_status(struct pci_dev *dev, bool verbose);
+ 
+ /* Single Root I/O Virtualization */
+ struct pci_sriov {
+diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
+index bc147c586643..387fc8ac54ec 100644
+--- a/drivers/pci/probe.c
++++ b/drivers/pci/probe.c
+@@ -2231,6 +2231,25 @@ static struct pci_dev *pci_scan_device(struct pci_bus *bus, int devfn)
+ 	return dev;
+ }
+ 
++static void pcie_report_downtraining(struct pci_dev *dev)
++{
++	if (!pci_is_pcie(dev))
++		return;
++
++	/* Look from the device up to avoid downstream ports with no devices */
++	if ((pci_pcie_type(dev) != PCI_EXP_TYPE_ENDPOINT) &&
++	    (pci_pcie_type(dev) != PCI_EXP_TYPE_LEG_END) &&
++	    (pci_pcie_type(dev) != PCI_EXP_TYPE_UPSTREAM))
++		return;
++
++	/* Multi-function PCIe devices share the same link/status */
++	if (PCI_FUNC(dev->devfn) != 0 || dev->is_virtfn)
++		return;
++
++	/* Print link status only if the device is constrained by the fabric */
++	__pcie_print_link_status(dev, false);
++}
++
+ static void pci_init_capabilities(struct pci_dev *dev)
+ {
+ 	/* Enhanced Allocation */
+@@ -2266,6 +2285,8 @@ static void pci_init_capabilities(struct pci_dev *dev)
+ 	/* Advanced Error Reporting */
+ 	pci_aer_init(dev);
+ 
++	pcie_report_downtraining(dev);
++
+ 	if (pci_probe_reset_function(dev) == 0)
+ 		dev->reset_fn = 1;
+ }
