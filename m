@@ -1,122 +1,50 @@
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-From: Alan Douglas <adouglas@cadence.com>
-To: Rob Herring <robh@kernel.org>, Lorenzo Pieralisi
- <lorenzo.pieralisi@arm.com>
-Subject: RE: [PATCH] PCI: remove unnecessary check of device_type == pci
-Date: Thu, 30 Aug 2018 14:33:45 +0000
-Message-ID: <BN6PR07MB3491262D6674CC2F9734FB3CD8080@BN6PR07MB3491.namprd07.prod.outlook.com>
-References: <20180829183440.13601-1-robh@kernel.org>
-In-Reply-To: <20180829183440.13601-1-robh@kernel.org>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from usa-sjc-mx-foss1.foss.arm.com ([217.140.101.70]:55720 "EHLO
+        foss.arm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1730419AbeHISHO (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Thu, 9 Aug 2018 14:07:14 -0400
+Date: Thu, 9 Aug 2018 16:41:51 +0100
+From: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
+To: Ray Jui <ray.jui@broadcom.com>
+Cc: Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org,
+        Tomasz Nowicki <tn@semihalf.com>,
+        Vladimir Olovyannikov <vladimir.olovyannikov@broadcom.com>,
+        BCM Kernel Feedback <bcm-kernel-feedback-list@broadcom.com>
+Subject: Re: [RFC] ARM64, PCIe, annd ACPI
+Message-ID: <20180809154151.GB20329@red-moon>
+References: <89484aa0-08c4-0cff-500d-407d21e2f5fd@broadcom.com>
+ <20180808093822.GA25150@e107981-ln.cambridge.arm.com>
+ <a32a8761-f49f-f0cf-928b-0c323c2b540e@broadcom.com>
+ <20180809085923.GA13428@e107981-ln.cambridge.arm.com>
+ <9b5b5918-1492-df65-5b63-678b4a35ecb9@broadcom.com>
 MIME-Version: 1.0
-List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
-List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
-List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
-List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
-List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
-Cc: "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
- Subrahmanya Lingappa <l.subrahmanya@mobiveil.co.in>,
- Will Deacon <will.deacon@arm.com>,
- "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
- Michal Simek <michal.simek@xilinx.com>, Bjorn Helgaas <bhelgaas@google.com>,
- "linux-arm-kernel@lists.infradead.org" <linux-arm-kernel@lists.infradead.org>
-Content-Type: text/plain; charset="us-ascii"
-Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
-Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <9b5b5918-1492-df65-5b63-678b4a35ecb9@broadcom.com>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hi,
+On Thu, Aug 09, 2018 at 07:57:52AM -0700, Ray Jui wrote:
 
-On 29 August 2018 19:35, Rob Herring wrote:
-> To: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
-> Cc: linux-kernel@vger.kernel.org; Will Deacon <will.deacon@arm.com>; Bjorn Helgaas <bhelgaas@google.com>; Alan Douglas
-> <adouglas@cadence.com>; Subrahmanya Lingappa <l.subrahmanya@mobiveil.co.in>; Michal Simek <michal.simek@xilinx.com>; linux-
-> pci@vger.kernel.org; linux-arm-kernel@lists.infradead.org
-> Subject: [PATCH] PCI: remove unnecessary check of device_type == pci
-> 
-> EXTERNAL MAIL
-> 
-> 
-> PCI host drivers have already matched on compatible strings, so checking
-> device_type is redundant. Also, device_type is considered deprecated for
-> FDT though we've still been requiring it for PCI hosts as it is useful
-> for finding PCI buses.
-> 
-> Cc: Will Deacon <will.deacon@arm.com>
-> Cc: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
-> Cc: Bjorn Helgaas <bhelgaas@google.com>
-> Cc: Alan Douglas <adouglas@cadence.com>
-> Cc: Subrahmanya Lingappa <l.subrahmanya@mobiveil.co.in>
-> Cc: Michal Simek <michal.simek@xilinx.com>
-> Cc: linux-pci@vger.kernel.org
-> Cc: linux-arm-kernel@lists.infradead.org
-> Signed-off-by: Rob Herring <robh@kernel.org>
-> ---
->  drivers/pci/controller/pci-host-common.c   | 8 --------
->  drivers/pci/controller/pcie-cadence-host.c | 7 -------
->  drivers/pci/controller/pcie-mobiveil.c     | 7 -------
->  drivers/pci/controller/pcie-xilinx-nwl.c   | 9 ---------
->  drivers/pci/controller/pcie-xilinx.c       | 7 -------
->  5 files changed, 38 deletions(-)
-> 
-> diff --git a/drivers/pci/controller/pci-host-common.c b/drivers/pci/controller/pci-host-common.c
-> index d8f10451f273..c742881b5061 100644
-> --- a/drivers/pci/controller/pci-host-common.c
-> +++ b/drivers/pci/controller/pci-host-common.c
-> @@ -58,9 +58,7 @@ static struct pci_config_window *gen_pci_init(struct device *dev,
->  int pci_host_common_probe(struct platform_device *pdev,
->  			  struct pci_ecam_ops *ops)
->  {
-> -	const char *type;
->  	struct device *dev = &pdev->dev;
-> -	struct device_node *np = dev->of_node;
->  	struct pci_host_bridge *bridge;
->  	struct pci_config_window *cfg;
->  	struct list_head resources;
-> @@ -70,12 +68,6 @@ int pci_host_common_probe(struct platform_device *pdev,
->  	if (!bridge)
->  		return -ENOMEM;
-> 
-> -	type = of_get_property(np, "device_type", NULL);
-> -	if (!type || strcmp(type, "pci")) {
-> -		dev_err(dev, "invalid \"device_type\" %s\n", type);
-> -		return -EINVAL;
-> -	}
-> -
->  	of_pci_check_probe_only();
-> 
->  	/* Parse and map our Configuration Space windows */
-> diff --git a/drivers/pci/controller/pcie-cadence-host.c b/drivers/pci/controller/pcie-cadence-host.c
-> index ec394f6a19c8..97e251090b4f 100644
-> --- a/drivers/pci/controller/pcie-cadence-host.c
-> +++ b/drivers/pci/controller/pcie-cadence-host.c
-> @@ -235,7 +235,6 @@ static int cdns_pcie_host_init(struct device *dev,
-> 
->  static int cdns_pcie_host_probe(struct platform_device *pdev)
->  {
-> -	const char *type;
->  	struct device *dev = &pdev->dev;
->  	struct device_node *np = dev->of_node;
->  	struct pci_host_bridge *bridge;
-> @@ -268,12 +267,6 @@ static int cdns_pcie_host_probe(struct platform_device *pdev)
->  	rc->device_id = 0xffff;
->  	of_property_read_u16(np, "device-id", &rc->device_id);
-> 
-> -	type = of_get_property(np, "device_type", NULL);
-> -	if (!type || strcmp(type, "pci")) {
-> -		dev_err(dev, "invalid \"device_type\" %s\n", type);
-> -		return -EINVAL;
-> -	}
-> -
->  	res = platform_get_resource_byname(pdev, IORESOURCE_MEM, "reg");
->  	pcie->reg_base = devm_ioremap_resource(dev, res);
->  	if (IS_ERR(pcie->reg_base)) {
-With regards to drivers/pci/controller/pcie-cadence-host.c
-Acked-by: Alan Douglas <adouglas@cadence.com>
+[...]
 
-_______________________________________________
-linux-arm-kernel mailing list
-linux-arm-kernel@lists.infradead.org
-http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
+> >As I said ARM64 ACPI PCI kernel support is in the mainline today and I
+> >am not willing to merge any more MCFG quirks at driver level - the
+> >information is out there, it is public and must be followed, either
+> >designers do that or no ACPI PCI support on your platform, sorry.
+> >
+> >Lorenzo
+> >
+> 
+> I just want to make sure I interpret this properly. This means if
+> the PCIe controller hardware does not support ECAM, there's pretty
+> much no way around it with SW based workaround going forward with
+> mainline kernel?
+
+Yes.
+
+> What about for the PCIe controller that was designed a few years back?
+
+It will bootstrap with DT :)
+
+Thanks,
+Lorenzo
