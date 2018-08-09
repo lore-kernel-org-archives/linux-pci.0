@@ -1,90 +1,68 @@
-Return-Path: <SRS0=/dXs=K6=kernel.crashing.org=benh@kernel.org>
-Return-Path: <SRS0=/dXs=K6=kernel.crashing.org=benh@kernel.org>
-Message-ID: <ecaed7664b46d73888d2494065905f8e108fc0f4.camel@kernel.crashing.org>
-Subject: PCIe enable device races (Was: [PATCH v3] PCI: Data corruption
- happening due to race condition)
-From: Benjamin Herrenschmidt <benh@kernel.crashing.org>
-To: Bjorn Helgaas <helgaas@kernel.org>, Hari Vyas <hari.vyas@broadcom.com>
-Cc: bhelgaas@google.com, linux-pci@vger.kernel.org, ray.jui@broadcom.com
-Date: Wed, 15 Aug 2018 13:35:16 +1000
-In-Reply-To: <20180731163727.GK45322@bhelgaas-glaptop.roam.corp.google.com>
-References: <1530608741-30664-1-git-send-email-hari.vyas@broadcom.com>
-	 <20180731163727.GK45322@bhelgaas-glaptop.roam.corp.google.com>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+From: Bharat Kumar Gogada <bharat.kumar.gogada@xilinx.com>
+To: <linux-pci@vger.kernel.org>, <linux-kernel@vger.kernel.org>
+CC: <bhelgaas@google.com>, <rgummal@xilinx.com>,
+        Bharat Kumar Gogada <bharat.kumar.gogada@xilinx.com>
+Subject: [PATCH v2] PCI/AER: Enable SERR# forwarding in non ACPI flow
+Date: Thu, 9 Aug 2018 20:27:37 +0530
+Message-ID: <1533826657-24552-1-git-send-email-bharat.kumar.gogada@xilinx.com>
+MIME-Version: 1.0
+Content-Type: text/plain
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tue, 2018-07-31 at 11:37 -0500, Bjorn Helgaas wrote:
-> On Tue, Jul 03, 2018 at 02:35:40PM +0530, Hari Vyas wrote:
-> > Changes in v3:
-> > 	As per review comments from Lukas Wunner <lukas@wunner.de>,
-> > 	squashed 3 commits to single commit. Without this build breaks.
-> > 	Also clubbed set and clear function for is_added bits to a
-> > 	single assign function. This optimizes code and reduce LoC.
-> > 	Removed one wrongly added blank line in pci.c
-> > 	 
-> > Changes in v2:
-> >         To avoid race condition while updating is_added and is_busmaster
-> >         bits, is_added is moved to a private flag variable.
-> >         is_added updation is handled in atomic manner also.
-> > 
-> > Hari Vyas (1):
-> >   PCI: Data corruption happening due to race condition
+As per Figure 6-3 in PCIe r4.0, sec 6.2.6, ERR_ messages
+will be forwarded from the secondary interface to the primary interface,
+if the SERR# Enable bit in the Bridge Control register is set.
+Currently PCI_BRIDGE_CTL_SERR is being enabled only in
+ACPI flow.
+This patch enables PCI_BRIDGE_CTL_SERR for Type-1 PCI device.
 
-Sooo .... I was chasing a different problem which makes me think we
-have a deeper problem here.
+Signed-off-by: Bharat Kumar Gogada <bharat.kumar.gogada@xilinx.com>
+---
+ drivers/pci/pcie/aer.c |   23 +++++++++++++++++++++++
+ 1 files changed, 23 insertions(+), 0 deletions(-)
 
-In my case, I have a system with >70 nvme devices behind layers of
-switches.
-
-What I think is happening is all the nvme devices are probed in
-parallel (the machine has about 40 CPU cores).
-
-They all call pci_enable_device() around the same time.
-
-This will walk up the bridge/switch chain and try to enable every
-switch along the way. However there is *no* locking at the switch level
-at all that I can see. Or am I missing something subtle ?
-
-So here's an example simplified scenario:
-
-	Bridge
-	/    \
-     dev A   dev B
-
-Both dev A and B hit pci_enable_device() simultaneously, thus both
-call pci_enable_bridge() at the same time: This does (simplified):
-
-	if (pci_is_enabled(dev)) {
-		if (!dev->is_busmaster)
-			pci_set_master(dev);
-		return;
-	}
-
-	retval = pci_enable_device(dev);
-	if (retval)
-		pci_err(dev, "Error enabling bridge (%d), continuing\n",
-			retval);
-	pci_set_master(dev);
-
-Now the pci_is_enabled() just checks dev->enable_cnt and pci_enable_device()
-increments it *before* enabling the device.
-
-So it's possible that pci_is_enabled() returns true for the bridge for dev B
-because dev A just did the atomic_inc_return(), but hasn't actually enabled
-the bridge yet (hasnt yet hit the config space).
-
-At that point, driver for dev B hits an MMIO and gets an UR response from
-the bridge.
-
-I need to setup a rig to verify my theory but I think this is racy. The same
-race is also present with dev->is_busmaster. Using bitmaps won't help.
-
-What's really needed is a per device mutex covering all those operations
-on a given device. (This would also allow to get rid of those games with
-atomics).
-
-Any comments ?
-
-Cheers,
-Ben.
+diff --git a/drivers/pci/pcie/aer.c b/drivers/pci/pcie/aer.c
+index a2e8838..4fb0d24 100644
+--- a/drivers/pci/pcie/aer.c
++++ b/drivers/pci/pcie/aer.c
+@@ -343,6 +343,20 @@ int pci_enable_pcie_error_reporting(struct pci_dev *dev)
+ 	if (!dev->aer_cap)
+ 		return -EIO;
+ 
++	if (dev->hdr_type == PCI_HEADER_TYPE_BRIDGE) {
++		u16 control;
++
++		/*
++		 * A Type-1 PCI bridge will not forward ERR_ messages coming
++		 * from an endpoint if SERR# forwarding is not enabled.
++		 */
++		pci_read_config_word(dev, PCI_BRIDGE_CONTROL, &control);
++		if (!(control & PCI_BRIDGE_CTL_SERR)) {
++			control |= PCI_BRIDGE_CTL_SERR;
++			pci_write_config_word(dev, PCI_BRIDGE_CONTROL, control);
++		}
++	}
++
+ 	return pcie_capability_set_word(dev, PCI_EXP_DEVCTL, PCI_EXP_AER_FLAGS);
+ }
+ EXPORT_SYMBOL_GPL(pci_enable_pcie_error_reporting);
+@@ -352,6 +366,15 @@ int pci_disable_pcie_error_reporting(struct pci_dev *dev)
+ 	if (pcie_aer_get_firmware_first(dev))
+ 		return -EIO;
+ 
++	if (dev->hdr_type == PCI_HEADER_TYPE_BRIDGE) {
++		u16 control;
++
++		/* Clear SERR Forwarding */
++		pci_read_config_word(dev, PCI_BRIDGE_CONTROL, &control);
++		control &= ~PCI_BRIDGE_CTL_SERR;
++		pci_write_config_word(dev, PCI_BRIDGE_CONTROL, control);
++	}
++
+ 	return pcie_capability_clear_word(dev, PCI_EXP_DEVCTL,
+ 					  PCI_EXP_AER_FLAGS);
+ }
+-- 
+1.7.1
