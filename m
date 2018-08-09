@@ -1,54 +1,47 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-oi0-f66.google.com ([209.85.218.66]:45296 "EHLO
-        mail-oi0-f66.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1731432AbeHGBif (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Mon, 6 Aug 2018 21:38:35 -0400
-From: Alexandru Gagniuc <mr.nuke.me@gmail.com>
-To: linux-pci@vger.kernel.org, bhelgaas@google.com,
-        jakub.kicinski@netronome.com
-Cc: keith.busch@intel.com, alex_gagniuc@dellteam.com,
-        austin_bolen@dell.com, shyam_iyer@dell.com,
-        Alexandru Gagniuc <mr.nuke.me@gmail.com>,
-        Ariel Elior <ariel.elior@cavium.com>,
-        everest-linux-l2@cavium.com,
-        "David S. Miller" <davem@davemloft.net>,
-        Michael Chan <michael.chan@broadcom.com>,
-        Ganesh Goudar <ganeshgr@chelsio.com>,
-        Jeff Kirsher <jeffrey.t.kirsher@intel.com>,
-        Tariq Toukan <tariqt@mellanox.com>,
-        Saeed Mahameed <saeedm@mellanox.com>,
-        Leon Romanovsky <leon@kernel.org>,
-        Dirk van der Merwe <dirk.vandermerwe@netronome.com>,
-        netdev@vger.kernel.org, linux-kernel@vger.kernel.org,
-        intel-wired-lan@lists.osuosl.org, linux-rdma@vger.kernel.org,
-        oss-drivers@netronome.com
-Subject: [PATCH v6 9/9] nfp: Do not call pcie_print_link_status()
-Date: Mon,  6 Aug 2018 18:25:43 -0500
-Message-Id: <20180806232600.25694-9-mr.nuke.me@gmail.com>
-In-Reply-To: <20180806232600.25694-1-mr.nuke.me@gmail.com>
-References: <CAErSpo4PK+SQLNfdkLNt9eLc7bpbxbkZCsa8T-tQpid601n0SQ@mail.gmail.com>
- <20180806232600.25694-1-mr.nuke.me@gmail.com>
+Received: from mail-co1nam03on0086.outbound.protection.outlook.com ([104.47.40.86]:15007
+        "EHLO NAM03-CO1-obe.outbound.protection.outlook.com"
+        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+        id S1727786AbeHIOXo (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Thu, 9 Aug 2018 10:23:44 -0400
+From: Alan Douglas <adouglas@cadence.com>
+To: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
+CC: "bhelgaas@google.com" <bhelgaas@google.com>,
+        "kishon@ti.com" <kishon@ti.com>,
+        "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+        "gustavo.pimentel@synopsys.com" <gustavo.pimentel@synopsys.com>,
+        "cyrille.pitchen@bootlin.com" <cyrille.pitchen@bootlin.com>,
+        Scott Telford <stelford@cadence.com>
+Subject: RE: [PATCH 0/5] Add MSI-X support for cadence EP driver
+Date: Thu, 9 Aug 2018 11:59:06 +0000
+Message-ID: <MWHPR07MB35027FFA5F33ED9D6C8006D5D8250@MWHPR07MB3502.namprd07.prod.outlook.com>
+References: <1532971260-5269-1-git-send-email-adouglas@cadence.com>
+ <20180808163821.GA486@e107981-ln.cambridge.arm.com>
+In-Reply-To: <20180808163821.GA486@e107981-ln.cambridge.arm.com>
+Content-Type: text/plain; charset="utf-8"
+MIME-Version: 1.0
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-This is now done by the PCI core to warn of sub-optimal bandwidth.
-
-Signed-off-by: Alexandru Gagniuc <mr.nuke.me@gmail.com>
----
- drivers/net/ethernet/netronome/nfp/nfpcore/nfp6000_pcie.c | 1 -
- 1 file changed, 1 deletion(-)
-
-diff --git a/drivers/net/ethernet/netronome/nfp/nfpcore/nfp6000_pcie.c b/drivers/net/ethernet/netronome/nfp/nfpcore/nfp6000_pcie.c
-index 749655c329b2..0324f99bd1a7 100644
---- a/drivers/net/ethernet/netronome/nfp/nfpcore/nfp6000_pcie.c
-+++ b/drivers/net/ethernet/netronome/nfp/nfpcore/nfp6000_pcie.c
-@@ -1324,7 +1324,6 @@ struct nfp_cpp *nfp_cpp_from_nfp6000_pcie(struct pci_dev *pdev)
- 	/*  Finished with card initialization. */
- 	dev_info(&pdev->dev,
- 		 "Netronome Flow Processor NFP4000/NFP6000 PCIe Card Probe\n");
--	pcie_print_link_status(pdev);
- 
- 	nfp = kzalloc(sizeof(*nfp), GFP_KERNEL);
- 	if (!nfp) {
--- 
-2.17.1
+T24gIDA4IEF1Z3VzdCAyMDE4IDE3OjM4LCBMb3JlbnpvIFBpZXJhbGlzaSB3cm90ZToNCj4gT24g
+TW9uLCBKdWwgMzAsIDIwMTggYXQgMDY6MjE6MDBQTSArMDEwMCwgQWxhbiBEb3VnbGFzIHdyb3Rl
+Og0KPiA+IFBhdGNoIHNlcmllcyBtYWRlIGFnYWluc3QgQmpvcm4gSGVsZ2FhcydzIHBjaSBuZXh0
+IGJyYW5jaC4NCj4gDQo+IEFsd2F5cyByZWJhc2UgcGF0Y2hlcyBvbiBhIGZpeGVkIC1yYyAoaWUg
+Qmpvcm4gYW5kIEkgYXJlIHVzaW5nDQo+IHY0LjE4LXJjMSkgYW5kIG1lbnRpb24gdGhlIGRlcGVu
+ZGVuY3kgcmF0aGVyIHRoYW4gcmViYXNpbmcgdGhlDQo+IHNlcmllcyBvbiBwY2ktbmV4dCBwbGVh
+c2UuDQo+IA0KT0ssIHdpbGwgZG8gdGhhdCBmb3IgdjENCg0KPiA+IEl0IHJlbGllcyBvbiBHdXN0
+YXZvIFBpbWVudGVsJ3MgcGF0Y2ggc2VyaWVzIGFkZGluZyBNU0ktWA0KPiA+IHN1cHBvcnQgaW4g
+dGhlIFBDSWUgRVAgZHJpdmVyIGZyYW1ld29yaywgYW5kIGltcGxlbWVudHMNCj4gPiBNU0ktWCBz
+dXBwb3J0IGZvciB0aGUgY2FkZW5jZSBlbmRwb2ludCBkcml2ZXIuDQo+ID4gIC0gVXNlIEFYSSBy
+ZWdpb24gMCBmb3IgaW50ZXJydXB0IHNpZ25hbGxpbmcNCj4gPiAgLSBXcml0ZSBNU0kgYW5kIE1T
+SS1YIHdpdGggMzJiaXQgdmFsdWUgcmF0aGVyIHRoYW4gMTZiaXQNCj4gPiAgLSBDaGVjayBmb3Ig
+bWFza2luZyBiZWZvcmUgc2VuZGluZyBNU0kgb3IgTVNJLVgNCj4gPiAgLSBDaGVjayBsaW5rIGlz
+IHVwIGJlZm9yZSBzZW5kaW5nIElSUQ0KPiANCj4gVGhlc2UgZmlyc3QgZm91ciBhcmUgZml4ZXMg
+b3IgY2hhbmdlcyByZXF1aXJlZCBiZWZvcmUgZW5hYmxpbmcNCj4gdGhlIGxhc3QgcGF0Y2ggaW4g
+dGhlIHNlcmllcyA/DQo+IA0KPiBSZXdvcmRlZDogZG9lcyB0aGUgY3VycmVudCBkcml2ZXIgd29y
+ayB3aXRob3V0IHRoZSBmaXJzdCA0DQo+IHBhdGNoZXMgYXBwbGllZCA/DQo+IA0KPiBJZiB0aGV5
+IGFyZSBmaXhlcyBwbGVhc2UgbWFyayB0aGVtIGFzIHN1Y2ggaW4gdGhlIGNvbW1pdCBsb2cuDQo+
+IA0KVGhlc2UgYXJlIGZpeGVzLCB3aWxsIG1hcmsgdGhlbSBhcyBzdWNoIGluIHRoZSBsb2csIGFu
+ZCB3aWxsDQpzcGxpdCBwYXRjaGVzIHN1Y2ggdGhhdCB0aGV5IGNhbiBiZSBhcHBsaWVkIHdpdGhv
+dXQgYWRkaW5nDQpNU0ktWCBzdXBwb3J0Lg0KDQpUaGFua3MgZm9yIHlvdXIgY29tbWVudHMsDQpB
+bGFuDQo=
