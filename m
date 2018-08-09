@@ -1,66 +1,81 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mx0a-001b2d01.pphosted.com ([148.163.156.1]:35058 "EHLO
-        mx0a-001b2d01.pphosted.com" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1726104AbeHUEij (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Tue, 21 Aug 2018 00:38:39 -0400
-Received: from pps.filterd (m0098404.ppops.net [127.0.0.1])
-        by mx0a-001b2d01.pphosted.com (8.16.0.22/8.16.0.22) with SMTP id w7L1IocK007232
-        for <linux-pci@vger.kernel.org>; Mon, 20 Aug 2018 21:20:42 -0400
-Received: from e31.co.us.ibm.com (e31.co.us.ibm.com [32.97.110.149])
-        by mx0a-001b2d01.pphosted.com with ESMTP id 2m055aeyu5-1
-        (version=TLSv1.2 cipher=AES256-GCM-SHA384 bits=256 verify=NOT)
-        for <linux-pci@vger.kernel.org>; Mon, 20 Aug 2018 21:20:42 -0400
-Received: from localhost
-        by e31.co.us.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
-        for <linux-pci@vger.kernel.org> from <tyreld@linux.vnet.ibm.com>;
-        Mon, 20 Aug 2018 19:20:41 -0600
-From: Tyrel Datwyler <tyreld@linux.vnet.ibm.com>
-To: mpe@ellerman.id.au
-Cc: benh@kernel.crashing.org, linuxppc-dev@lists.ozlabs.org,
-        nfont@linux.vnet.ibm.com, linux-pci@vger.kernel.org,
-        bhelgaas@google.com, linux-kernel@vger.kernel.org,
-        Tyrel Datwyler <tyreld@linux.vnet.ibm.com>
-Subject: [PATCH] MAINTAINERS: add maintainer entries for RPA pci hotplug drivers
-Date: Mon, 20 Aug 2018 18:20:31 -0700
-Message-Id: <1534814431-20112-1-git-send-email-tyreld@linux.vnet.ibm.com>
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <SRS0=0wuL=KY=gigaio.com=epilmore@kernel.org>
+Return-Path: <SRS0=0wuL=KY=gigaio.com=epilmore@kernel.org>
+MIME-Version: 1.0
+In-Reply-To: <b54899a8-a144-e8e0-9880-1800c4657b95@deltatee.com>
+References: <CAOQPn8soxubJxb=vp7kz+AM6LbPH5y+_Nx0Vzv7rjV_nMMqEmA@mail.gmail.com>
+ <20180809184331.GB113140@bhelgaas-glaptop.roam.corp.google.com>
+ <CAOQPn8uPYKai49WYPqZp2wNd5of=0hUvPOHEtqP56RZu-hcjuw@mail.gmail.com> <b54899a8-a144-e8e0-9880-1800c4657b95@deltatee.com>
+From: Eric Pilmore <epilmore@gigaio.com>
+Date: Thu, 9 Aug 2018 14:31:33 -0700
+Message-ID: <CAOQPn8tSNN+3igN-kMcQH46w_a9p6T+S7=c8CLREMLxr1kaTXQ@mail.gmail.com>
+Subject: Re: IOAT DMA w/IOMMU
+To: Logan Gunthorpe <logang@deltatee.com>
+Cc: Bjorn Helgaas <helgaas@kernel.org>, linux-pci@vger.kernel.org,
+	David Woodhouse <dwmw2@infradead.org>, Alex Williamson <alex.williamson@redhat.com>,
+	iommu@lists.linux-foundation.org
+Content-Type: text/plain; charset="UTF-8"
 List-ID: <linux-pci.vger.kernel.org>
 
-Adding myself as maintiner of the IBM RPA hotplug modules located in
-drivers/pci/hotplug directory. These modules provide kernel interfaces
-for support of Dynamic Logical Partitioning (DLPAR) of Logical and
-Physical IO slots, and hotplug of physical PCI slots of a PHB on
-RPA-compliant ppc64 platforms (pseries).
+On Thu, Aug 9, 2018 at 12:35 PM, Logan Gunthorpe <logang@deltatee.com> wrote:
+> Hey,
+>
+> On 09/08/18 12:51 PM, Eric Pilmore wrote:
+>>>> Was wondering if anybody here has used IOAT DMA engines with an
+>>>> IOMMU turned on (Xeon based system)? My specific question is really
+>>>> whether it is possible to DMA (w/IOAT) to a PCI BAR address as the
+>>>> destination without having to map that address to the IOVA space of
+>>>> the DMA engine first (assuming the IOMMU is on)?
+>
+> I haven't tested this scenario but my guess would be that IOAT would
+> indeed go through the IOMMU and the PCI BAR address would need to be
+> properly mapped into the IOAT's IOVA. The fact that you see DMAR errors
+> is probably a good indication that this is the case. I really don't know
+> why you'd want to DMA something without mapping it.
 
-Signed-off-by: Tyrel Datwyler <tyreld@linux.vnet.ibm.com>
----
- MAINTAINERS | 14 ++++++++++++++
- 1 file changed, 14 insertions(+)
+The thought was to avoid paying the price of having to go through yet another
+translation and also because it was not believed to be necessary anyway since
+the DMA device could go straight to a PCI BAR address without the need for a
+mapping.  We have been playing with two DMA engines, IOAT and PLX. The
+PLX does not have any issues going straight to the PCI BAR address, but unlike
+IOAT, PLX is sitting "in the PCI tree".
 
-diff --git a/MAINTAINERS b/MAINTAINERS
-index 5df1b36..7b5dc3f 100644
---- a/MAINTAINERS
-+++ b/MAINTAINERS
-@@ -6984,6 +6984,20 @@ F:	drivers/crypto/vmx/aes*
- F:	drivers/crypto/vmx/ghash*
- F:	drivers/crypto/vmx/ppc-xlate.pl
- 
-+IBM Power PCI Hotplug Driver for RPA-compliant PPC64 platform
-+M:	Tyrel Datwyler <tyreld@linux.vnet.ibm.com>
-+L:	linux-pci@vger.kernel.org
-+L:	linuxppc-dev@lists.ozlabs.org
-+S:	Supported
-+F:	drivers/pci/hotplug/rpaphp*
-+
-+IBM Power IO DLPAR Driver for RPA-compliant PPC64 platform
-+M:	Tyrel Datwyler <tyreld@linux.vnet.ibm.com>
-+L:	linux-pci@vger.kernel.org
-+L:	linuxppc-dev@lists.ozlabs.org
-+S:	Supported
-+F:	drivers/pci/hotplug/rpadlpar*
-+
- IBM ServeRAID RAID DRIVER
- S:	Orphan
- F:	drivers/scsi/ips.*
+>
+>>> So is this a peer-to-peer DMA scenario?  You mention DMA, which would
+>>> be a transaction initiated by a PCI device, to a PCI BAR address, so
+>>> it doesn't sound like system memory is involved.
+>>
+>> No, not peer-to-peer.  This is from system memory (e.g. SKB buffer which
+>> has had an IOMMU mapping created) to a PCI BAR address.
+>
+> It's definitely peer-to-peer in the case where you are using a DMA
+> engine in the PCI tree. You have the DMA PCI device sending TLPs
+> directly to the PCI BAR device. So, if everything is done right, the
+> TLPs will avoid the root complex completely. (Though, ACS settings could
+> also prevent this from working and you'd either get similar DMAR errors
+> or they'd disappear into a black hole).
+>
+> When using the IOAT, it is part of the CPU so I wouldn't say it's really
+> peer-to-peer. But an argument could be made that it is. Though, this is
+> exactly what the existing ntb_transport is doing: DMAing from system
+> memory to a PCI BAR and vice versa using IOAT.
+>
+> Logan
+>
+
+
+
 -- 
-1.8.3.1
+Eric Pilmore
+epilmore@gigaio.com
+http://gigaio.com
+Phone: (858) 775 2514
+
+This e-mail message is intended only for the individual(s) to whom it
+is addressed and
+may contain information that is privileged, confidential, proprietary,
+or otherwise exempt
+from disclosure under applicable law. If you believe you have received
+this message in
+error, please advise the sender by return e-mail and delete it from
+your mailbox.
+Thank you.
