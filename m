@@ -1,64 +1,77 @@
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-From: Thomas Petazzoni <thomas.petazzoni@bootlin.com>
-To: Bjorn Helgaas <bhelgaas@google.com>,
- Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>, linux-pci@vger.kernel.org
-Subject: [PATCH v2 2/6] PCI: mvebu: fix I/O space end address calculation
-Date: Fri,  3 Aug 2018 16:38:44 +0200
-Message-Id: <20180803143848.21551-3-thomas.petazzoni@bootlin.com>
-In-Reply-To: <20180803143848.21551-1-thomas.petazzoni@bootlin.com>
-References: <20180803143848.21551-1-thomas.petazzoni@bootlin.com>
-List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
-List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
-List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
-List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
-List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
-Cc: Antoine Tenart <antoine.tenart@bootlin.com>,
- Gregory Clement <gregory.clement@bootlin.com>,
- Maxime Chevallier <maxime.chevallier@bootlin.com>,
- Nadav Haklai <nadavh@marvell.com>,
- Thomas Petazzoni <thomas.petazzoni@bootlin.com>,
- =?UTF-8?q?Miqu=C3=A8l=20Raynal?= <miquel.raynal@bootlin.com>,
- linux-arm-kernel@lists.infradead.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail.kernel.org ([198.145.29.99]:39274 "EHLO mail.kernel.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1727209AbeHJQ2j (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Fri, 10 Aug 2018 12:28:39 -0400
+Date: Fri, 10 Aug 2018 08:58:37 -0500
+From: Bjorn Helgaas <helgaas@kernel.org>
+To: joeyli <jlee@suse.com>
+Cc: "Lee, Chun-Yi" <joeyli.kernel@gmail.com>,
+        Bjorn Helgaas <bhelgaas@google.com>,
+        Thomas Gleixner <tglx@linutronix.de>,
+        Ingo Molnar <mingo@redhat.com>,
+        "H . Peter Anvin" <hpa@zytor.com>, x86@kernel.org,
+        linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org
+Subject: Re: [PATCH] x86/PCI: Claim the resources of firmware enabled IOAPIC
+ before children bus
+Message-ID: <20180810135837.GI113140@bhelgaas-glaptop.roam.corp.google.com>
+References: <20180724110144.16442-1-jlee@suse.com>
+ <20180806214807.GE30691@bhelgaas-glaptop.roam.corp.google.com>
+ <20180808155318.GE13767@linux-l9pv.suse>
+ <20180808212322.GF49411@bhelgaas-glaptop.roam.corp.google.com>
+ <20180810092501.GP13767@linux-l9pv.suse>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
-Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20180810092501.GP13767@linux-l9pv.suse>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-pcie->realio.end should be the address of last byte of the area,
-therefore using resource_size() of another resource is not correct, we
-must substract 1 to get the address of the last byte.
+On Fri, Aug 10, 2018 at 05:25:01PM +0800, joeyli wrote:
+> On Wed, Aug 08, 2018 at 04:23:22PM -0500, Bjorn Helgaas wrote:
+> ...
 
-Fixes: 11be65472a427 ("PCI: mvebu: Adapt to the new device tree layout")
-Signed-off-by: Thomas Petazzoni <thomas.petazzoni@bootlin.com>
----
-This bug never had any visible impact, so there is no need to push to
-stable.
----
- drivers/pci/controller/pci-mvebu.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+> The lspci log shows "Normal decode" on the bridge, I think that means
+> positively decode.
 
-diff --git a/drivers/pci/controller/pci-mvebu.c b/drivers/pci/controller/pci-mvebu.c
-index 38fa2d08527d..a195592723c2 100644
---- a/drivers/pci/controller/pci-mvebu.c
-+++ b/drivers/pci/controller/pci-mvebu.c
-@@ -1219,7 +1219,7 @@ static int mvebu_pcie_probe(struct platform_device *pdev)
- 		pcie->realio.start = PCIBIOS_MIN_IO;
- 		pcie->realio.end = min_t(resource_size_t,
- 					 IO_SPACE_LIMIT,
--					 resource_size(&pcie->io));
-+					 resource_size(&pcie->io) - 1);
- 	} else
- 		pcie->realio = pcie->io;
- 
--- 
-2.14.4
+Right.
 
+> hm... I have another question that it may not relates to this issue. I
+> was tracing the code path of PCI hot-remove/hotplug. Base on spec, looks
+> that the RST# should be asserted when hot-remove. And the memory decode
+> bit must be set to zero after RST# be asserted. But I didn't see that
+> any kernel PCI/ACPI code set RST#. The only possible code to set RST# is
+> in POWER architecture. Do you know who assert the RST# when hot-remove?    
 
-_______________________________________________
-linux-arm-kernel mailing list
-linux-arm-kernel@lists.infradead.org
-http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
+RST# is a conventional PCI signal (not a PCIe signal).  In any case, I
+would expect signals like that to be handled by hardware, not by
+software.  What section of the spec are you looking at?  I wouldn't
+expect any requirements for doing things to a device when the device
+is being hot-removed, since the device may already be inaccessible,
+e.g., physically unreachable.
+
+On a hot-*add*, there would of course be requirements about how the
+device powers up and comes out of reset.  For native drivers like
+pciehp/shpcpd/etc, there are often ways for software to control power
+to the slot, e.g., the "Power Controller Control" bit in the PCIe Slot
+Control register.
+
+For ACPI-mediated hotplug (as in your situation), the actual hardware
+details are handled by the firmware and all the OS sees are things
+like ACPI Notify events and it uses methods like _STA and other things
+mentioned in ACPI v6.2, sec 6.3.
+
+> > What are the chances of getting a firmware fix?  Has this firmware
+> > already shipped to customers?
+> 
+> The good news is that the machine has not shipped yet. As I know
+> that manufacturer is also finding the root cause for why firmware
+> enabled memory decode bit and also set the wrong addresses.
+
+I don't think it's necessarily a problem that firmware enables the
+IOAPIC.  This is ACPI-mediated hotplug and it looks like it adds CPUs,
+memory, and I/O.  I wouldn't be surprised if the firmware has to make
+the IOAPIC operational to make some parts of the hot-add work.
+
+The address conflict is the real problem.
+
+Bjorn
