@@ -1,66 +1,132 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mga18.intel.com ([134.134.136.126]:20525 "EHLO mga18.intel.com"
+Received: from mail.kernel.org ([198.145.29.99]:46576 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1726826AbeH0Xkc (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Mon, 27 Aug 2018 19:40:32 -0400
-Subject: Re: bug in pci_try_reset_bus
-To: Sinan Kaya <okaya@codeaurora.org>, bhelgaas@google.com,
-        linux-pci@vger.kernel.org
-References: <3d3d78fb-f1f2-ec4f-38f9-0b0d14564f53@intel.com>
- <323b3bbe-d255-8a5d-2a9c-d64e1f86cb64@codeaurora.org>
- <bd7dbd5a-eebc-9142-f9a2-3b5ff8de9b8b@intel.com>
- <d437400c-7eed-19d3-9cf2-b8a42217136b@codeaurora.org>
- <2f0fb394-f1c9-d782-ffec-dac04b1ac0a9@intel.com>
- <84484c45-64ff-ca2d-39dd-ee579e28558e@codeaurora.org>
-From: Dennis Dalessandro <dennis.dalessandro@intel.com>
-Message-ID: <8bc2c143-5938-33ed-d852-7f039bde7a13@intel.com>
-Date: Mon, 27 Aug 2018 15:52:14 -0400
+        id S1727173AbeHJXon (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Fri, 10 Aug 2018 19:44:43 -0400
+Date: Fri, 10 Aug 2018 16:13:08 -0500
+From: Bjorn Helgaas <helgaas@kernel.org>
+To: Patrick Talbert <ptalbert@redhat.com>
+Cc: linux-pci@vger.kernel.org, Myron Stowe <mstowe@redhat.com>,
+        Frederick Lawler <fred@fredlawl.com>
+Subject: Re: Should pcie_aspm_init_link_state() run when FADT ASPM disable
+ bit is set?
+Message-ID: <20180810211308.GK113140@bhelgaas-glaptop.roam.corp.google.com>
+References: <CAPRrrxWVYJpRqKLmDQLnCUQdkcxhHzmD+S8pxnvi_+-2VUcbPA@mail.gmail.com>
 MIME-Version: 1.0
-In-Reply-To: <84484c45-64ff-ca2d-39dd-ee579e28558e@codeaurora.org>
-Content-Type: text/plain; charset=utf-8; format=flowed
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <CAPRrrxWVYJpRqKLmDQLnCUQdkcxhHzmD+S8pxnvi_+-2VUcbPA@mail.gmail.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 8/27/2018 3:08 PM, Sinan Kaya wrote:
->> The call stack from the driver is:
->>
->> pci_reset_bus(pdev)
->>      __pci_reset_bus(pdev->bus) <-- after fixing first issue
->>          pci_bus_reset(bus, 1)
->>              Checks ptr and if resetable.
->>              if (probe)
->>                  return 0 <-- here is where it returns
->>
-> 
-> Probe is there to query if this particular device supports reset or not. 
-> Which
-> is the very first thing this code does to ensure we are allowed to touch it
-> and it is correct.
-> 
-> If probe is returning 0, this code won't return from here. It will continue
-> to trylock piece.
+[+cc Fred]
 
-The probe arg is hard coded to 1 in this path. Actually both calls in 
-pci.c it is hard coded to 1. Maybe we just need to get rid of that arg 
-all together?
+On Thu, Aug 09, 2018 at 09:25:20AM +0200, Patrick Talbert wrote:
+> Hello,
+> 
+> I think there may be a logic issue with ASPM but I am not so familiar
+> with this area so maybe I misunderstand.
+> 
+> acpi_pci_init() checks ACPI FADT method for the ACPI_FADT_NO_ASPM flag
+> and will disable ASPM support if it is set. It calls pcie_no_aspm() to
+> do this. pcie_no_aspm() sets the global aspm_disabled = 1 to indicate
+> this state:
+> 
+> 365 static int __init acpi_pci_init(void)
+> 366 {
+> 367         int ret;
+> 368
+> 369         if (acpi_gbl_FADT.boot_flags & ACPI_FADT_NO_MSI) {
+> 370                 pr_info("ACPI FADT declares the system doesn't
+> support MSI, so disable it\n");
+> 371                 pci_no_msi();
+> 372         }
+> 373
+> 374         if (acpi_gbl_FADT.boot_flags & ACPI_FADT_NO_ASPM) {
+> 375                 pr_info("ACPI FADT declares the system doesn't
+> support PCIe ASPM, so disable it\n");
+> 376                 pcie_no_aspm();
+> 377         }
+> 378
+> 379         ret = register_acpi_bus_type(&acpi_pci_bus);
+> 380         if (ret)
+> 381                 return 0;
+> 382
+> 383         pci_set_platform_pm(&acpi_pci_platform_pm);
+> 384         acpi_pci_slot_init();
+> 385         acpiphp_init();
+> 386
+> 387         return 0;
+> 388 }
+> 389 arch_initcall(acpi_pci_init);
+> 
+> 973 void pcie_no_aspm(void)
+> 974 {
+> 975         /*
+> 976          * Disabling ASPM is intended to prevent the kernel from modifying
+> 977          * existing hardware state, not to clear existing state.
+> To that end:
+> 978          * (a) set policy to POLICY_DEFAULT in order to avoid changing state
+> 979          * (b) prevent userspace from changing policy
+> 980          */
+> 981         if (!aspm_force) {
+> 982                 aspm_policy = POLICY_DEFAULT;
+> 983                 aspm_disabled = 1;
+> 984         }
+> 985 }
+> 
+> But then later on, during individual initialization of PCI devices,
+> pci_scan_slot() will call pcie_aspm_init_link_state().
+> pcie_aspm_init_link_state() does its work unless global
+> aspm_support_enabled is false.
+> 
+> But, shouldn't pcie_aspm_init_link_state() also check aspm_disabled ?
+> Something like:
+> 
+> diff --git a/drivers/pci/pcie/aspm.c b/drivers/pci/pcie/aspm.c
+> index 8b56dad..5491dbf 100644
+> --- a/drivers/pci/pcie/aspm.c
+> +++ b/drivers/pci/pcie/aspm.c
+> @@ -574,7 +574,7 @@ void pcie_aspm_init_link_state(struct pci_dev *pdev)
+>         struct pcie_link_state *link;
+>         int blacklist = !!pcie_aspm_sanity_check(pdev);
+> 
+> -       if (!aspm_support_enabled)
+> +       if (!aspm_support_enabled || aspm_disabled)
+>                 return;
+> 
+>         if (pdev->link_state)
+> 
+> 
+> In "387d375 PCI: Don't clear ASPM bits when the FADT declares it's
+> unsupported" the message says:
+> 
+>     Communications with a hardware vendor confirm that the expected behaviour
+>     on systems that set the FADT ASPM disable bit but which still grant full
+>     PCIe control is for the OS to leave any BIOS configuration intact and
+>     refuse to touch the ASPM bits.  This mimics the behaviour of Windows.
+> 
+> 
+> I apologize, but I do not immediately understand the distinction
+> between the meaning of aspm_support_enabled and aspm_disabled so I am
+> likely missing some key point.
 
-> 
->      rc = pci_bus_reset(bus, 1);
->      if (rc)
->          return rc;
-> 
-> My guess is you are failing below with -EAGAIN because lock fails:
-> 
-> if (pci_bus_trylock(bus)) {
-> 
-> } else {
->      rc = -EAGAIN;
-> }
-> 
-> can you please confirm?
+Don't apologize, this code confuses everybody who looks at it, which
+is a clear signal that it needs some love :)
 
-Ah yes, silly me. pci_bus_reset() returns 0 and it does go on but 
-doesn't make it to the trylock, it gets hung calling 
-pci_bus_save_and_disable().
+> But anyway, this query comes about because a host which reports the
+> ACPI_FADT_NO_ASPM bit set hangs on boot unless pcie_aspm=off is set.
 
--Denny
+That's a terrible situation and very difficult to debug.  How did you
+figure out that this was related to ASPM?  Can you tell anything about
+where the hang is?
+
+Is there any chance you could collect a complete dmesg log and output
+of "sudo lspci -vvv" from that system (obviously you'd have to boot
+with "pcie_aspm=off" or your patch, so we could attach it to a
+bugzilla.kernel.org report that could be mentioned in the patch?
+
+I assume this system works with Windows.  I agree that based on the
+387d37577fdd changelog, we probably shouldn't be doing anything in
+pcie_aspm_init_link_state().
+
+Bjorn
