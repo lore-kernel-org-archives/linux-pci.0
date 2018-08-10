@@ -1,82 +1,66 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.29.99]:34972 "EHLO mail.kernel.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1726609AbeHUULk (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Tue, 21 Aug 2018 16:11:40 -0400
-Date: Tue, 21 Aug 2018 11:50:42 -0500
-From: Bjorn Helgaas <helgaas@kernel.org>
-To: Lukas Wunner <lukas@wunner.de>
-Cc: linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
-        mmyangfl@gmail.com, Ashok Raj <ashok.raj@intel.com>,
-        Rajat Jain <rajatja@google.com>
-Subject: Re: Enumeration issue with QCA9005 AR9462
-Message-ID: <20180821165042.GC154536@bhelgaas-glaptop.roam.corp.google.com>
-References: <20180820230624.GB154536@bhelgaas-glaptop.roam.corp.google.com>
- <20180821054704.jlqk5zrlbbsjsd4g@wunner.de>
- <20180821072541.tcdg5fkk4zrwxahj@wunner.de>
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+From: Bharat Kumar Gogada <bharat.kumar.gogada@xilinx.com>
+To: <linux-pci@vger.kernel.org>, <linux-kernel@vger.kernel.org>
+CC: <bhelgaas@google.com>, <rgummal@xilinx.com>,
+        Bharat Kumar Gogada <bharat.kumar.gogada@xilinx.com>
+Subject: [PATCH 4/4] PCI: xilinx-nwl: Add method to setup_platform_service_irq hook
+Date: Fri, 10 Aug 2018 21:09:40 +0530
+Message-ID: <1533915580-31805-5-git-send-email-bharat.kumar.gogada@xilinx.com>
+In-Reply-To: <1533915580-31805-1-git-send-email-bharat.kumar.gogada@xilinx.com>
+References: <1533915580-31805-1-git-send-email-bharat.kumar.gogada@xilinx.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20180821072541.tcdg5fkk4zrwxahj@wunner.de>
-Sender: linux-pci-owner@vger.kernel.org
+Content-Type: text/plain
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-[+cc Rajat, Ashok]
+Add nwl_setup_service_irqs hook to setup_platform_service_irq IRQs to
+register platform provided IRQ number to kernel AER service.
 
-On Tue, Aug 21, 2018 at 09:25:41AM +0200, Lukas Wunner wrote:
-> On Tue, Aug 21, 2018 at 07:47:04AM +0200, Lukas Wunner wrote:
-> > On Mon, Aug 20, 2018 at 06:06:24PM -0500, Bjorn Helgaas wrote:
-> > > mmyangfl@gmail.com reported a problem [1]: on v4.17, a QCA9005 AR9462
-> > > wifi device was present at boot, but disappeared after suspend/resume.
-> > > 
-> > > He also tested a recent kernel (5c60a7389d79, from Thu Aug 16),
-> > > where the suspend/resume problem doesn't seem to happen, but the wifi
-> > > device isn't enumerated correctly at boot-time.
-> > > 
-> > > [    0.928714] pciehp 0000:04:00.0:pcie204: Slot #0 AttnBtn- PwrCtrl- MRL- AttnInd- PwrInd- HotPlug+ Surprise+ Interlock- NoCompl- LLActRep+
-> > > [    0.928752] pciehp 0000:04:00.0:pcie204: Slot(0-1): Card not present
-> > > [    0.928811] pciehp 0000:04:00.0:pcie204: Slot(0-1): Link Up
-> > > [    0.928815] pciehp 0000:04:00.0:pcie204: Slot(0-1): No adapter
-> > > 
-> > > [1] https://bugzilla.kernel.org/show_bug.cgi?id=200839
-> > > [2] https://bugzilla.kernel.org/attachment.cgi?id=277923
-> > 
-> > The hardware appears to be broken in that the Presence Detect State bit
-> > in the Slot Status register is 0 (Slot Empty) even though the slot is
-> > occupied.
-> [...]
-> > Possible solutions:
-> > 
-> > (a) Be lenient towards broken hardware and accept DLActive+ as a proxy
-> >     for PresDet+.
-> > 
-> > (b) Add a blacklist to pciehp such that it doesn't bind to [1ae9:0200].
-> >     The bug reporter writes that "it's a single Half Mini PCIe card,
-> >     with two chipsets (Wil6110? + AR9462) combined by a PCIe hub".
-> >     This sounds like it's not really hotpluggable.
-> >     (Is Mini PCIe hotplug capable at all?)
-> > 
-> > Let me go through the driver and see if (a) is feasible and how intrusive
-> > it would be.
-> 
-> So (a) would seem to be feasible, we could add a quirk for devices like
-> this to call pciehp_check_link_active() in pciehp_get_adapter_status().
-> 
-> Alternatively, we could generally add a call to pciehp_check_link_active()
-> in get_adapter_status(), pciehp_check_presence() and pcie_init() and thus
-> avoid a quirk for this specific device.
-> The existing call in __pciehp_enable_slot() could actually be removed,
-> this code path is only entered if either PDS or DLLLA is set.
-> 
-> And the third option would be to add a quirk like quirk_hotplug_bridge()
-> which sets is_hotplug_bridge = 0 on this broken device such that pciehp
-> doesn't bind to it in the first place.
+Signed-off-by: Bharat Kumar Gogada <bharat.kumar.gogada@xilinx.com>
+---
+ drivers/pci/controller/pcie-xilinx-nwl.c |   16 ++++++++++++++++
+ 1 files changed, 16 insertions(+), 0 deletions(-)
 
-It sounds like with (a), you could make this work without having a
-Wil6110-specific quirk, i.e., if the Link Status says the link is
-active, we assume a device is present.  That seems reasonable to me
-and it sort of fits with these previous changes:
-
-  385895fef6b5 ("PCI: pciehp: Prioritize data-link event over presence detect")
-  e48f1b67f668 ("PCI: pciehp: Use link change notifications for hot-plug and removal")
-
-Bjorn
+diff --git a/drivers/pci/controller/pcie-xilinx-nwl.c b/drivers/pci/controller/pcie-xilinx-nwl.c
+index fb32840..285647b 100644
+--- a/drivers/pci/controller/pcie-xilinx-nwl.c
++++ b/drivers/pci/controller/pcie-xilinx-nwl.c
+@@ -22,6 +22,7 @@
+ #include <linux/irqchip/chained_irq.h>
+ 
+ #include "../pci.h"
++#include "../pcie/portdrv.h"
+ 
+ /* Bridge core config registers */
+ #define BRCFG_PCIE_RX0			0x00000000
+@@ -819,6 +820,20 @@ static int nwl_pcie_parse_dt(struct nwl_pcie *pcie,
+ 	return 0;
+ }
+ 
++int nwl_setup_service_irqs(struct pci_host_bridge *bridge, int *irqs,
++			   int plat_mask)
++{
++	struct nwl_pcie *pcie;
++
++	pcie = pci_host_bridge_priv(bridge);
++	if (plat_mask & PCIE_PORT_SERVICE_AER) {
++		irqs[PCIE_PORT_SERVICE_AER_SHIFT] = pcie->irq_misc;
++		plat_mask &= ~(1 << PCIE_PORT_SERVICE_AER_SHIFT);
++	}
++
++	return plat_mask;
++}
++
+ static const struct of_device_id nwl_pcie_of_match[] = {
+ 	{ .compatible = "xlnx,nwl-pcie-2.11", },
+ 	{}
+@@ -880,6 +895,7 @@ static int nwl_pcie_probe(struct platform_device *pdev)
+ 	bridge->ops = &nwl_pcie_ops;
+ 	bridge->map_irq = of_irq_parse_and_map_pci;
+ 	bridge->swizzle_irq = pci_common_swizzle;
++	bridge->setup_platform_service_irq = nwl_setup_service_irqs;
+ 
+ 	if (IS_ENABLED(CONFIG_PCI_MSI)) {
+ 		err = nwl_pcie_enable_msi(pcie);
+-- 
+1.7.1
