@@ -1,100 +1,89 @@
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Date: Wed, 8 Aug 2018 14:56:02 -0400 (EDT)
-From: Mikulas Patocka <mpatocka@redhat.com>
-To: David Laight <David.Laight@ACULAB.COM>
-Subject: RE: framebuffer corruption due to overlapping stp instructions on
- arm64
-In-Reply-To: <a804913d98ae4598a725cb40a6d19b4e@AcuMS.aculab.com>
-Message-ID: <alpine.LRH.2.02.1808081453540.18198@file01.intranet.prod.int.rdu2.redhat.com>
-References: <CAKv+Gu8DeuksZhk1g3q_msSKV_hSY_2e1uzVten9-oGO3j9Sqg@mail.gmail.com>
- <20180803094129.GB17798@arm.com>
- <alpine.LRH.2.02.1808031235410.31584@file01.intranet.prod.int.rdu2.redhat.com>
- <CAKv+Gu-aNFh1fsr_05SEwDp99n3pLrguP7=tEcFQPNY53=K7Fw@mail.gmail.com>
- <alpine.LRH.2.02.1808031424140.14030@file01.intranet.prod.int.rdu2.redhat.com>
- <CAHCPf3s-+Qf=WBZz1KpisDMG3520jCUh8PLAO3PHa4jdt8kCTw@mail.gmail.com>
- <20180808121641.GB24736@iMac.local>
- <b1de49af14d941979977af07dc81e1c2@AcuMS.aculab.com>
- <alpine.LRH.2.02.1808080939180.3325@file01.intranet.prod.int.rdu2.redhat.com>
- <19c70d2a0b224db78f72dd316ad006b8@AcuMS.aculab.com>
- <20180808145017.GE24736@iMac.local>
- <alpine.LRH.2.02.1808081215120.31259@file01.intranet.prod.int.rdu2.redhat.com>
- <CAK8P3a3iURkU8LThO3xLtaNjkYArdpw+6_WqJQog4EgrcQy23g@mail.gmail.com>
- <a804913d98ae4598a725cb40a6d19b4e@AcuMS.aculab.com>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from fllv0015.ext.ti.com ([198.47.19.141]:42880 "EHLO
+        fllv0015.ext.ti.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726181AbeHJMf6 (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Fri, 10 Aug 2018 08:35:58 -0400
+From: Vignesh R <vigneshr@ti.com>
+Subject: Re: [PATCH v3 0/4] pci-dra7xx: Enable errata i870 workaround for RC
+ mode
+To: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
+CC: Tony Lindgren <tony@atomide.com>,
+        KISHON VIJAY ABRAHAM <kishon@ti.com>,
+        Bjorn Helgaas <bhelgaas@google.com>,
+        Rob Herring <robh+dt@kernel.org>,
+        "linux-omap@vger.kernel.org" <linux-omap@vger.kernel.org>,
+        "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+        "devicetree@vger.kernel.org" <devicetree@vger.kernel.org>,
+        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
+References: <20180724173150.2701-1-vigneshr@ti.com>
+ <20180808165700.GB486@e107981-ln.cambridge.arm.com>
+Message-ID: <ba428a15-77bf-e09c-3bd7-b5a0eae7ee13@ti.com>
+Date: Fri, 10 Aug 2018 15:37:28 +0530
 MIME-Version: 1.0
-List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
-List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
-List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
-List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
-List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
-Cc: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>,
- Joao Pinto <Joao.Pinto@synopsys.com>, 'Arnd Bergmann' <arnd@arndb.de>,
- Ard Biesheuvel <ard.biesheuvel@linaro.org>,
- Catalin Marinas <catalin.marinas@arm.com>, Will Deacon <will.deacon@arm.com>,
- Russell King - ARM Linux <linux@armlinux.org.uk>,
- Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
- "neko@bakuhatsu.net" <neko@bakuhatsu.net>,
- linux-pci <linux-pci@vger.kernel.org>, Jingoo Han <jingoohan1@gmail.com>,
- Linux ARM <linux-arm-kernel@lists.infradead.org>
-Content-Type: text/plain; charset="us-ascii"
-Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
-Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
+In-Reply-To: <20180808165700.GB486@e107981-ln.cambridge.arm.com>
+Content-Type: text/plain; charset="utf-8"
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
 
 
-On Wed, 8 Aug 2018, David Laight wrote:
+On Wednesday 08 August 2018 10:27 PM, Lorenzo Pieralisi wrote:
+> On Tue, Jul 24, 2018 at 11:01:46PM +0530, Vignesh R wrote:
+>> Make workaround for errata i870 applicable in Host mode as
+>> well(previously it was enabled only for EP mode) as per errata
+>> documentation: http://www.ti.com/lit/er/sprz450/sprz450.pdf
+>>
+>> Tested on DRA72 EVM
+>>
+>> Tony,
+>>
+>> If you are okay with the series, could you pick this via omap tree?
+>> All ACKs are in place and Lorenzo is okay with PCIe bits to go along with
+>> rest of DTS changes.
+> 
+> I think we have missed the v4.19 merge window by now - 
 
-> From: Arnd Bergmann
-> > Sent: 08 August 2018 17:31
-> ..
-> > > They do modify the same byte, but with the same value. Suppose that you
-> > > want to copy a piece of data that is between 8 and 16 bytes long. You can
-> > > do this:
-> > >
-> > > add src_end, src, len
-> > > add dst_end, dst, len
-> > > ldr x0, [src]
-> > > ldr x1, [src_end - 8]
-> > > str x0, [dst]
-> > > str x1, [dst_end - 8]
-> 
-> I've done that myself (on x86) copied the last 'word' first then
-> everything else in increasing address order.
-> 
-> > > The ARM64 memcpy uses this trick heavily in order to reduce branching, and
-> > > this is what makes the PCIe controller choke.
-> 
-> More likely the write combining buffer?
+Right. I didn't get any response from Tony.
 
-When I write to memory (using the NC mapping - that is also used in the 
-PCI BAR), I get no corruption. So the corruption must be in the PCIe 
-controller, not the core or memory subsystem.
-
-I also tried to disable write streaming on NC mapping with a chicken bit, 
-but it didn't help.
-
-> > So when a single unaligned 'stp' gets translated into a PCIe with TLP
-> > with length=5 (20 bytes) and LastBE = ~1stBE, write combining the
-> > overlapping stores gives us a TLP with a longer length (5..8 for two
-> > stores), and byte-enable bits that are not exactly a complement.
+> please let me know if I can drop this series from the PCI patch queue.
 > 
-> Write combining should generate a much longer TLP.
-> Depending on the size of the write combining buffer.
-> 
-> But in the above case I'd have thought that the second write
-> would fail to 'combine' - because it isn't contiguous with the
-> stored data.
-> 
-> So something more complex will be going on.
-> 
-> 	David
 
-Mikulas
+Ok, I will resend the patch after 4.19-rc. Thanks!
 
-_______________________________________________
-linux-arm-kernel mailing list
-linux-arm-kernel@lists.infradead.org
-http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
+Regards
+Vignesh
+
+
+> Thanks,
+> Lorenzo
+> 
+>> Regards
+>> Vignesh
+>>
+>>
+>> Changes since v2:
+>> Reorder patch 2 to appear at the last.
+>> Collect all the ACKs
+>>
+>> Changes since v1:
+>> Drop IRQ handling rework (will be sent out separately)
+>>
+>> v2: https://patchwork.ozlabs.org/cover/935454/
+>> v1: https://lkml.org/lkml/2017/12/1/59
+>>
+>>
+>> Vignesh R (4):
+>>   dt-bindings: PCI: dra7xx: Add bindings for unaligned access in host
+>>     mode
+>>   ARM: dts: dra7: Enable workaround for errata i870 in PCIe host mode
+>>   ARM: dts: dra7: Fix up unaligned access setting for PCIe EP
+>>   pci: dwc: pci-dra7xx: Enable errata i870 for both EP and RC mode
+>>
+>>  Documentation/devicetree/bindings/pci/ti-pci.txt |  5 +++++
+>>  arch/arm/boot/dts/dra7.dtsi                      |  4 +++-
+>>  drivers/pci/controller/dwc/pci-dra7xx.c          | 12 ++++++------
+>>  3 files changed, 14 insertions(+), 7 deletions(-)
+>>
+>> -- 
+>> 2.18.0
+>>
