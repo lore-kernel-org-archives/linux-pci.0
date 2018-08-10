@@ -1,52 +1,46 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.29.99]:34214 "EHLO mail.kernel.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1729990AbeHMWZC (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Mon, 13 Aug 2018 18:25:02 -0400
-Date: Mon, 13 Aug 2018 14:41:23 -0500
-From: Bjorn Helgaas <helgaas@kernel.org>
-To: f.bluethner@mailbox.org
-Cc: Alex Williamson <alex.williamson@redhat.com>,
-        linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org
-Subject: PCI: Add function 1 DMA alias quirk for Marvell 88SS9183
-Message-ID: <20180813194123.GM113140@bhelgaas-glaptop.roam.corp.google.com>
+Return-Path: <SRS0=FW5r=KZ=deltatee.com=logang@kernel.org>
+Return-Path: <SRS0=FW5r=KZ=deltatee.com=logang@kernel.org>
+To: Dave Jiang <dave.jiang@intel.com>, Kit Chow <kchow@gigaio.com>,
+ Eric Pilmore <epilmore@gigaio.com>, Bjorn Helgaas <helgaas@kernel.org>
+Cc: "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+ David Woodhouse <dwmw2@infradead.org>,
+ Alex Williamson <alex.williamson@redhat.com>,
+ "iommu@lists.linux-foundation.org" <iommu@lists.linux-foundation.org>
+References: <CAOQPn8soxubJxb=vp7kz+AM6LbPH5y+_Nx0Vzv7rjV_nMMqEmA@mail.gmail.com>
+ <20180809184331.GB113140@bhelgaas-glaptop.roam.corp.google.com>
+ <CAOQPn8uPYKai49WYPqZp2wNd5of=0hUvPOHEtqP56RZu-hcjuw@mail.gmail.com>
+ <b54899a8-a144-e8e0-9880-1800c4657b95@deltatee.com>
+ <95e53520-b05f-4be4-e694-463d717453a8@gigaio.com>
+ <cdd9245f-eb23-9e10-1755-8f396a2cd255@deltatee.com>
+ <b278c1e5-6f08-c879-a27d-7fc172645fd5@gigaio.com>
+ <f04fae39-645e-3c6e-07c0-b194260bf5de@deltatee.com>
+ <3f503940-db6a-ec75-ed15-1db99d5d48ef@gigaio.com>
+ <112A412BB11A1242B37129D931BCE5348382CFB2@fmsmsx117.amr.corp.intel.com>
+ <b8af340c-d40b-cb8c-987f-b394f1d6ec3e@gigaio.com>
+ <adf51c74-36fa-b61d-8497-27bd75178ba4@deltatee.com>
+ <aa9c3f41-efc9-8c68-a517-2736c8986621@gigaio.com>
+ <1170c096-a749-6ee3-32d4-ebba1d12adff@gigaio.com>
+ <929f3dfa-fbff-c582-3be5-c368f11feb7e@deltatee.com>
+ <460cc47f-6a8e-67b0-01a0-02f0c51df258@intel.com>
+ <0f653f8f-c7ae-831d-e238-2742590d9ea1@deltatee.com>
+ <6525fa4d-7d9b-0136-7206-f8351230af46@intel.com>
+From: Logan Gunthorpe <logang@deltatee.com>
+Message-ID: <f22c565e-ba49-c83d-3e51-7967664c7136@deltatee.com>
+Date: Fri, 10 Aug 2018 11:15:50 -0600
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Sender: linux-pci-owner@vger.kernel.org
+In-Reply-To: <6525fa4d-7d9b-0136-7206-f8351230af46@intel.com>
+Content-Type: text/plain; charset=utf-8
+Subject: Re: IOAT DMA w/IOMMU
 List-ID: <linux-pci.vger.kernel.org>
 
-Hi,
-
-Thanks a lot for your new report
-(https://bugzilla.kernel.org/show_bug.cgi?id=42679#c134).
-
-Can you confirm that the patch below is equivalent to what you tested and
-it resolves the problem?  If so, I'll try to include it for v4.19.
 
 
-commit dd4e0ad485e12c9c04eb7a21ba69c24f12cb1918
-Author: Bjorn Helgaas <bhelgaas@google.com>
-Date:   Mon Aug 13 14:30:41 2018 -0500
+On 10/08/18 11:01 AM, Dave Jiang wrote:
+> Or if the BIOS has provided mapping for the Intel NTB device
+> specifically? Is that a possibility? NTB does go through the IOMMU.
 
-    PCI: Add function 1 DMA alias quirk for Marvell 88SS9183
-    
-    Add function 1 DMA alias quirk for Marvell 88SS9183 PCIe SSD Controller.
-    
-    Link: https://bugzilla.kernel.org/show_bug.cgi?id=42679#c134
-    Reported-by: <f.bluethner@mailbox.org>
-    Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
+I don't know but if the BIOS is doing it, but that would only at best
+work for Intel NTB.... I see no hope in getting the BIOS to map the MW
+for a Switchtec NTB device...
 
-diff --git a/drivers/pci/quirks.c b/drivers/pci/quirks.c
-index deb051583eda..6994544125ff 100644
---- a/drivers/pci/quirks.c
-+++ b/drivers/pci/quirks.c
-@@ -3845,6 +3845,9 @@ DECLARE_PCI_FIXUP_HEADER(PCI_VENDOR_ID_MARVELL_EXT, 0x917a,
- /* https://bugzilla.kernel.org/show_bug.cgi?id=42679#c78 */
- DECLARE_PCI_FIXUP_HEADER(PCI_VENDOR_ID_MARVELL_EXT, 0x9182,
- 			 quirk_dma_func1_alias);
-+/* https://bugzilla.kernel.org/show_bug.cgi?id=42679#c134 */
-+DECLARE_PCI_FIXUP_HEADER(PCI_VENDOR_ID_MARVELL_EXT, 0x9183,
-+			 quirk_dma_func1_alias);
- /* https://bugzilla.kernel.org/show_bug.cgi?id=42679#c46 */
- DECLARE_PCI_FIXUP_HEADER(PCI_VENDOR_ID_MARVELL_EXT, 0x91a0,
- 			 quirk_dma_func1_alias);
+Logan
