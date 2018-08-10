@@ -1,57 +1,71 @@
-Return-Path: <SRS0=5T7n=LO=linux.intel.com=mika.westerberg@kernel.org>
-Return-Path: <SRS0=5T7n=LO=linux.intel.com=mika.westerberg@kernel.org>
-Date: Fri, 31 Aug 2018 16:51:35 +0300
-From: Mika Westerberg <mika.westerberg@linux.intel.com>
-To: Jon Derrick <jonathan.derrick@intel.com>
-Cc: Bjorn Helgaas <helgaas@kernel.org>, linux-pci@vger.kernel.org,
-	linux-kernel@vger.kernel.org,
-	Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
-	Keith Busch <keith.busch@intel.com>,
-	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-	Sinan Kaya <okaya@kernel.org>, Christoph Hellwig <hch@lst.de>,
-	Matthew Wilcox <willy@infradead.org>,
-	Logan Gunthorpe <logang@deltatee.com>,
-	Stephen Bates <sbates@raithlin.com>
-Subject: Re: [PATCH v2] PCI: Equalize hotplug memory for non/occupied slots
-Message-ID: <20180831135135.GO2283@lahna.fi.intel.com>
-References: <1535667120-3002-1-git-send-email-jonathan.derrick@intel.com>
- <1535667120-3002-2-git-send-email-jonathan.derrick@intel.com>
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Date: Fri, 10 Aug 2018 16:13:41 +0100
+From: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
+To: Leonard Crestez <leonard.crestez@nxp.com>
+Subject: Re: [PATCH v3 0/2] PCI: imx: Initial imx7d pm support
+Message-ID: <20180810151341.GA6863@e107981-ln.cambridge.arm.com>
+References: <cover.1532448745.git.leonard.crestez@nxp.com>
+ <bac2cb70b16d81f589915fc0900126b516414243.camel@nxp.com>
+ <20180808111429.GC25150@e107981-ln.cambridge.arm.com>
+ <a5556be9a5f62ea0472a1a2336bce8d71df0dcaa.camel@nxp.com>
+ <20180808141938.GA30428@e107981-ln.cambridge.arm.com>
+ <efd9c1d560cae84e2a4ee7585a4c61d5d40ba755.camel@nxp.com>
+ <20180808152741.GA31808@e107981-ln.cambridge.arm.com>
+ <52ee6376fa15d3a9a62bcfa5d87173e454ccc024.camel@nxp.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1535667120-3002-2-git-send-email-jonathan.derrick@intel.com>
+In-Reply-To: <52ee6376fa15d3a9a62bcfa5d87173e454ccc024.camel@nxp.com>
+List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
+List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
+List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
+List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
+List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
+Cc: "A.s. Dong" <aisheng.dong@nxp.com>,
+ "Joao.Pinto@synopsys.com" <Joao.Pinto@synopsys.com>,
+ Richard Zhu <hongxing.zhu@nxp.com>,
+ "kernel@pengutronix.de" <kernel@pengutronix.de>,
+ Anson Huang <anson.huang@nxp.com>,
+ "andrew.smirnov@gmail.com" <andrew.smirnov@gmail.com>,
+ "jingoohan1@gmail.com" <jingoohan1@gmail.com>,
+ "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+ "bhelgaas@google.com" <bhelgaas@google.com>, dl-linux-imx <linux-imx@nxp.com>,
+ "p.zabel@pengutronix.de" <p.zabel@pengutronix.de>,
+ "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+ Fabio Estevam <fabio.estevam@nxp.com>,
+ "shawnguo@kernel.org" <shawnguo@kernel.org>,
+ "linux-arm-kernel@lists.infradead.org" <linux-arm-kernel@lists.infradead.org>,
+ "l.stach@pengutronix.de" <l.stach@pengutronix.de>
+Content-Type: text/plain; charset="us-ascii"
+Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
+Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Thu, Aug 30, 2018 at 04:12:00PM -0600, Jon Derrick wrote:
-> Currently, a hotplug bridge will be given hpmemsize additional memory if
-> available, in order to satisfy any future hotplug allocation
-> requirements.
-> 
-> These calculations don't consider the current memory size of the hotplug
-> bridge/slot, so hotplug bridges/slots which have downstream devices will
-> get their current allocation in addition to the hpmemsize value.
-> 
-> This makes for possibly undesirable results with a mix of unoccupied and
-> occupied slots (ex, with hpmemsize=2M):
-> 
-> 02:03.0 PCI bridge: <-- Occupied
-> 	Memory behind bridge: d6200000-d64fffff [size=3M]
-> 02:04.0 PCI bridge: <-- Unoccupied
-> 	Memory behind bridge: d6500000-d66fffff [size=2M]
-> 
-> This change considers the current allocation size when using the
-> hpmemsize parameter to make the reservations predictable for the mix of
-> unoccupied and occupied slots:
-> 
-> 02:03.0 PCI bridge: <-- Occupied
-> 	Memory behind bridge: d6200000-d63fffff [size=2M]
-> 02:04.0 PCI bridge: <-- Unoccupied
-> 	Memory behind bridge: d6400000-d65fffff [size=2M]
-> 
-> The calculation for IO (hpiosize) should be similar, but platform
-> firmwares I've encountered (including QEMU) provide strict allocations
-> for IO and would not provide free IO resources for hotplug buses
-> in order to prove this calculation.
-> 
-> Signed-off-by: Jon Derrick <jonathan.derrick@intel.com>
+On Fri, Aug 10, 2018 at 11:11:55AM +0000, Leonard Crestez wrote:
 
-Reviewed-by: Mika Westerberg <mika.westerberg@linux.intel.com>
+[...]
+
+> This needs further clarification: without the reset patch this will
+> hang on imx7 suspend/resume but this is the current behavior anyway.
+> 
+> Both patches are required for imx7 pci suspend and including them out
+> of order shouldn't break unrelated functionality.
+> 
+> So it should actually be fine to just include the pci changes now,
+> right?
+
+It is a bit late for v4.19 but before considering that, this series
+is actually a set of fixes, correct ? If that's the case I think
+Shawn can send them upstream for a v4.19-rc*, I can ACK them if that
+sounds reasonable.
+
+Patch (2) subject must make clear you are actually fixing a problem if
+we choose this course of action.
+
+Lorenzo
+
+_______________________________________________
+linux-arm-kernel mailing list
+linux-arm-kernel@lists.infradead.org
+http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
