@@ -1,178 +1,144 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.29.99]:53626 "EHLO mail.kernel.org"
+Received: from mail.kernel.org ([198.145.29.99]:38040 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1726494AbeHGX6H (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Tue, 7 Aug 2018 19:58:07 -0400
-Date: Tue, 7 Aug 2018 16:41:41 -0500
+        id S1727404AbeHJT7S (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Fri, 10 Aug 2018 15:59:18 -0400
+Date: Fri, 10 Aug 2018 12:28:29 -0500
 From: Bjorn Helgaas <helgaas@kernel.org>
-To: Alexandru Gagniuc <mr.nuke.me@gmail.com>
-Cc: linux-pci@vger.kernel.org, bhelgaas@google.com,
-        jakub.kicinski@netronome.com, keith.busch@intel.com,
-        alex_gagniuc@dellteam.com, austin_bolen@dell.com,
-        shyam_iyer@dell.com, Ariel Elior <ariel.elior@cavium.com>,
-        everest-linux-l2@cavium.com,
-        "David S. Miller" <davem@davemloft.net>,
-        Michael Chan <michael.chan@broadcom.com>,
-        Ganesh Goudar <ganeshgr@chelsio.com>,
-        Jeff Kirsher <jeffrey.t.kirsher@intel.com>,
-        Tariq Toukan <tariqt@mellanox.com>,
-        Saeed Mahameed <saeedm@mellanox.com>,
-        Leon Romanovsky <leon@kernel.org>,
-        Dirk van der Merwe <dirk.vandermerwe@netronome.com>,
-        netdev@vger.kernel.org, linux-kernel@vger.kernel.org,
-        intel-wired-lan@lists.osuosl.org, linux-rdma@vger.kernel.org,
-        oss-drivers@netronome.com
-Subject: Re: [PATCH v6 1/9] PCI: Check for PCIe downtraining conditions
-Message-ID: <20180807214141.GA49411@bhelgaas-glaptop.roam.corp.google.com>
-References: <CAErSpo4PK+SQLNfdkLNt9eLc7bpbxbkZCsa8T-tQpid601n0SQ@mail.gmail.com>
- <20180806232600.25694-1-mr.nuke.me@gmail.com>
+To: Dongdong Liu <liudongdong3@huawei.com>
+Cc: Myron Stowe <myron.stowe@redhat.com>, bhelgaas@google.com,
+        linux-pci@vger.kernel.org, keith.busch@intel.com, jdmason@kudzu.us
+Subject: Re: [PATCH] PCI: Match Root Port's MPS to endpoint's MPSS when
+ necessary
+Message-ID: <20180810172829.GJ113140@bhelgaas-glaptop.roam.corp.google.com>
+References: <20180718185158.149373.77902.stgit@tak.stowe>
+ <20180801140507.GQ45322@bhelgaas-glaptop.roam.corp.google.com>
+ <3f18a887-e669-f54d-1e89-36347cbfa44b@huawei.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20180806232600.25694-1-mr.nuke.me@gmail.com>
+Content-Type: text/plain; charset=utf-8
+In-Reply-To: <3f18a887-e669-f54d-1e89-36347cbfa44b@huawei.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Mon, Aug 06, 2018 at 06:25:35PM -0500, Alexandru Gagniuc wrote:
-> PCIe downtraining happens when both the device and PCIe port are
-> capable of a larger bus width or higher speed than negotiated.
-> Downtraining might be indicative of other problems in the system, and
-> identifying this from userspace is neither intuitive, nor
-> straightforward.
+On Fri, Aug 10, 2018 at 06:04:39PM +0800, Dongdong Liu wrote:
+> Hi Bjorn, Myron
 > 
-> The easiest way to detect this is with pcie_print_link_status(),
-> since the bottleneck is usually the link that is downtrained. It's not
-> a perfect solution, but it works extremely well in most cases.
-
-After this series, there are no callers of pcie_print_link_status(),
-which means we *only* print something if a device is capable of more
-bandwidth than the fabric can deliver.
-
-ISTR some desire to have this information for NICs even if the device
-isn't limited, so I'm just double-checking to make sure the driver
-guys are OK with this change.
-
-There are no callers of __pcie_print_link_status() outside the PCI
-core, so I would move the declaration from include/linux/pci.h to
-drivers/pci/pci.h.
-
-If we agree that we *never* need to print anything unless a device is
-constrained by the fabric, I would get rid of the "verbose" flag and
-keep everything in pcie_print_link_status().
-
-> Signed-off-by: Alexandru Gagniuc <mr.nuke.me@gmail.com>
-> ---
->  drivers/pci/pci.c   | 22 ++++++++++++++++++----
->  drivers/pci/probe.c | 21 +++++++++++++++++++++
->  include/linux/pci.h |  1 +
->  3 files changed, 40 insertions(+), 4 deletions(-)
+> I found a bug after applied the patch.
 > 
-> diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
-> index 316496e99da9..414ad7b3abdb 100644
-> --- a/drivers/pci/pci.c
-> +++ b/drivers/pci/pci.c
-> @@ -5302,14 +5302,15 @@ u32 pcie_bandwidth_capable(struct pci_dev *dev, enum pci_bus_speed *speed,
->  }
->  
->  /**
-> - * pcie_print_link_status - Report the PCI device's link speed and width
-> + * __pcie_print_link_status - Report the PCI device's link speed and width
->   * @dev: PCI device to query
-> + * @verbose: Be verbose -- print info even when enough bandwidth is available.
->   *
->   * Report the available bandwidth at the device.  If this is less than the
->   * device is capable of, report the device's maximum possible bandwidth and
->   * the upstream link that limits its performance to less than that.
->   */
-> -void pcie_print_link_status(struct pci_dev *dev)
-> +void __pcie_print_link_status(struct pci_dev *dev, bool verbose)
->  {
->  	enum pcie_link_width width, width_cap;
->  	enum pci_bus_speed speed, speed_cap;
-> @@ -5319,11 +5320,11 @@ void pcie_print_link_status(struct pci_dev *dev)
->  	bw_cap = pcie_bandwidth_capable(dev, &speed_cap, &width_cap);
->  	bw_avail = pcie_bandwidth_available(dev, &limiting_dev, &speed, &width);
->  
-> -	if (bw_avail >= bw_cap)
-> +	if (bw_avail >= bw_cap && verbose)
->  		pci_info(dev, "%u.%03u Gb/s available PCIe bandwidth (%s x%d link)\n",
->  			 bw_cap / 1000, bw_cap % 1000,
->  			 PCIE_SPEED2STR(speed_cap), width_cap);
-> -	else
-> +	else if (bw_avail < bw_cap)
->  		pci_info(dev, "%u.%03u Gb/s available PCIe bandwidth, limited by %s x%d link at %s (capable of %u.%03u Gb/s with %s x%d link)\n",
->  			 bw_avail / 1000, bw_avail % 1000,
->  			 PCIE_SPEED2STR(speed), width,
-> @@ -5331,6 +5332,19 @@ void pcie_print_link_status(struct pci_dev *dev)
->  			 bw_cap / 1000, bw_cap % 1000,
->  			 PCIE_SPEED2STR(speed_cap), width_cap);
->  }
-> +
-> +/**
-> + * pcie_print_link_status - Report the PCI device's link speed and width
-> + * @dev: PCI device to query
-> + *
-> + * Report the available bandwidth at the device.  If this is less than the
-> + * device is capable of, report the device's maximum possible bandwidth and
-> + * the upstream link that limits its performance to less than that.
-> + */
-> +void pcie_print_link_status(struct pci_dev *dev)
-> +{
-> +	__pcie_print_link_status(dev, true);
-> +}
->  EXPORT_SYMBOL(pcie_print_link_status);
->  
->  /**
-> diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
-> index 611adcd9c169..1c8c26dd2cb2 100644
-> --- a/drivers/pci/probe.c
-> +++ b/drivers/pci/probe.c
-> @@ -2205,6 +2205,24 @@ static struct pci_dev *pci_scan_device(struct pci_bus *bus, int devfn)
->  	return dev;
->  }
->  
-> +static void pcie_check_upstream_link(struct pci_dev *dev)
-> +{
-> +	if (!pci_is_pcie(dev))
-> +		return;
-> +
-> +	/* Look from the device up to avoid downstream ports with no devices. */
-> +	if ((pci_pcie_type(dev) != PCI_EXP_TYPE_ENDPOINT) &&
-> +	    (pci_pcie_type(dev) != PCI_EXP_TYPE_LEG_END) &&
-> +	    (pci_pcie_type(dev) != PCI_EXP_TYPE_UPSTREAM))
-> +		return;
-> +
-> +	/* Multi-function PCIe share the same link/status. */
-> +	if (PCI_FUNC(dev->devfn) != 0 || dev->is_virtfn)
-> +		return;
-> +
-> +	__pcie_print_link_status(dev, false);
-> +}
-> +
->  static void pci_init_capabilities(struct pci_dev *dev)
->  {
->  	/* Enhanced Allocation */
-> @@ -2240,6 +2258,9 @@ static void pci_init_capabilities(struct pci_dev *dev)
->  	/* Advanced Error Reporting */
->  	pci_aer_init(dev);
->  
-> +	/* Check link and detect downtrain errors */
-> +	pcie_check_upstream_link(dev);
-> +
->  	if (pci_probe_reset_function(dev) == 0)
->  		dev->reset_fn = 1;
->  }
-> diff --git a/include/linux/pci.h b/include/linux/pci.h
-> index c133ccfa002e..d212de231259 100644
-> --- a/include/linux/pci.h
-> +++ b/include/linux/pci.h
-> @@ -1087,6 +1087,7 @@ int pcie_set_mps(struct pci_dev *dev, int mps);
->  u32 pcie_bandwidth_available(struct pci_dev *dev, struct pci_dev **limiting_dev,
->  			     enum pci_bus_speed *speed,
->  			     enum pcie_link_width *width);
-> +void __pcie_print_link_status(struct pci_dev *dev, bool verbose);
->  void pcie_print_link_status(struct pci_dev *dev);
->  int pcie_flr(struct pci_dev *dev);
->  int __pci_reset_function_locked(struct pci_dev *dev);
-> -- 
-> 2.17.1
+> The topology is as below. The 82599 netcard with two functions connect to RP.
+>  +-[0000:80]-+-00.0-[81]--+-00.0  Device 8086:10fb
+>  |           |            \-00.1  Device 8086:10fb
+> 
+> 1. lspci -s BDF -vvv  to get the value of device's MPSS , MPS and MRRS.
+> RP (80:00.0): MPSS=512 MPS=512 MRRS=512
+> EP PF0(81:00.0): MPSS=512 MPS=512 MRRS=512
+>    PF1(81:00.1): MPSS=512 MPS=512 MRRS=512
+> 
+> 2. Enable SRIOV.
+> echo 1  > /sys/devices/pci0000\:80/0000\:80\:00.0/0000\:81\:00.0/sriov_numvfs
+> RP(80:00.0): MPSS=512 MPS=128 MRRS=512
+>                           ^^^
+> EP PF0(81:00.0): MPSS=512 MPS=512 MRRS=512
+> 			      ^^^ 	
+>    PF1(81:00.1): MPSS=512 MPS=512 MRRS=512
+> 			      ^^^ 	
+>    VF0(81:10.0): MPSS=128 MPS=128 MRRS=128
+>                               ^^^
+> The 82599 netcard PF (MPSS 512) and VF's MPSS (MPSS 128) are different.
+> Then RP (MPS 128) will report Malformed TLP when PF0/PF1 has memory write operation with MPS 512.
+> 
+> The 82599 netcard could work ok without the patch.
+> The values of MPSS, MPS, MRRS are as below without the patch.
+> 
+> RP(80:00.0): MPSS=512 MPS=512 MRRS=512
+>                           ^^^
+> EP PF0(81:00.0): MPSS=512 MPS=512 MRRS=512
+> 			      ^^^ 	
+>    PF1(81:00.1): MPSS=512 MPS=512 MRRS=512
+> 			      ^^^ 	
+>    VF0(81:10.0): MPSS=128 MPS=128 MRRS=128
+>                               ^^^
+
+OK, thanks a lot for testing this out.
+
+I'll drop this change for now until we figure out what's going on.
+
+> 在 2018/8/1 22:05, Bjorn Helgaas 写道:
+> > On Wed, Jul 18, 2018 at 12:51:58PM -0600, Myron Stowe wrote:
+> > > In commit 27d868b5e6cf ("PCI: Set MPS to match upstream bridge"), we made
+> > > sure every device's MPS setting matches its upstream bridge, making it more
+> > > likely that a hot-added device will work in a system with an optimized MPS
+> > > configuration.
+> > > 
+> > > Recently I've started encountering systems where the endpoint device's MPSS
+> > > capability is less than its root port's current MPS value, thus the
+> > > endpoint is not capable of matching its upstream bridge's MPS setting (see:
+> > > bugzilla via "Link:" below).  This leaves the system vunerable - the
+> > > upstream root port could respond with larger sized TLPs than the endpoint
+> > > can handle, and the endpoint will consider them to be 'Malformed'.
+> > > 
+> > > One could use the "pci=pcie_bus_safe" kernel parameter to resolve the
+> > > issue, but, it both forces a user to have to supply a kernel parameter to
+> > > get the system to function reliable, and may end up limiting MPS settings
+> > > of other, non-related, sub-topologies which could benefit from maintaining
+> > > their larger values.
+> > > 
+> > > This patch augments Keith's approach to include tuning down a root port's
+> > > MPS setting when its hot-added endpoint device is not capable of matching
+> > > it.  The tuning down, so that both the root port and endpoint match, is
+> > > limited to root ports with downstream endpoint device sub-topologies.
+> > > 
+> > > Link: https://bugzilla.kernel.org/show_bug.cgi?id=200527
+> > > Cc: Keith Busch <keith.busch@intel.com>
+> > > Cc: Jon Mason <jdmason@kudzu.us>
+> > > Cc: Sinan Kaya <okaya@kernel.org>
+> > > Signed-off-by: Myron Stowe <myron.stowe@redhat.com>
+> > 
+> > Applied to pci/enumeration for v4.19, thanks!
+> > 
+> > > ---
+> > >  drivers/pci/probe.c |   12 ++++++++++--
+> > >  1 file changed, 10 insertions(+), 2 deletions(-)
+> > > 
+> > > diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
+> > > index ac91b6f..2987bd9 100644
+> > > --- a/drivers/pci/probe.c
+> > > +++ b/drivers/pci/probe.c
+> > > @@ -1670,7 +1670,7 @@ int pci_setup_device(struct pci_dev *dev)
+> > >  static void pci_configure_mps(struct pci_dev *dev)
+> > >  {
+> > >  	struct pci_dev *bridge = pci_upstream_bridge(dev);
+> > > -	int mps, p_mps, rc;
+> > > +	int mps, mpss, p_mps, rc;
+> > > 
+> > >  	if (!pci_is_pcie(dev) || !bridge || !pci_is_pcie(bridge))
+> > >  		return;
+> > > @@ -1694,6 +1694,14 @@ static void pci_configure_mps(struct pci_dev *dev)
+> > >  	if (pcie_bus_config != PCIE_BUS_DEFAULT)
+> > >  		return;
+> > > 
+> > > +	mpss = 128 << dev->pcie_mpss;
+> > > +	if (mpss < p_mps && pci_pcie_type(bridge) == PCI_EXP_TYPE_ROOT_PORT) {
+> > > +		pcie_set_mps(bridge, mpss);
+> > > +		pci_info(dev, "Upstream bridge's Max Payload Size set to %d (was %d, max %d)\n",
+> > > +			 mpss, p_mps, 128 << bridge->pcie_mpss);
+> > > +		p_mps = pcie_get_mps(bridge);
+> > > +	}
+> > > +
+> > >  	rc = pcie_set_mps(dev, p_mps);
+> > >  	if (rc) {
+> > >  		pci_warn(dev, "can't set Max Payload Size to %d; if necessary, use \"pci=pcie_bus_safe\" and report a bug\n",
+> > > @@ -1702,7 +1710,7 @@ static void pci_configure_mps(struct pci_dev *dev)
+> > >  	}
+> > > 
+> > >  	pci_info(dev, "Max Payload Size set to %d (was %d, max %d)\n",
+> > > -		 p_mps, mps, 128 << dev->pcie_mpss);
+> > > +		 p_mps, mps, mpss);
+> > >  }
+> > > 
+> > >  static struct hpp_type0 pci_default_type0 = {
+> > > 
+> > 
+> > .
+> > 
 > 
