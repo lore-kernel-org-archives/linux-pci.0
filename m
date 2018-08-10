@@ -1,107 +1,59 @@
-Return-Path: <SRS0=YUos=KQ=linux.intel.com=mika.westerberg@kernel.org>
-Return-Path: <SRS0=YUos=KQ=linux.intel.com=mika.westerberg@kernel.org>
-Date: Wed, 1 Aug 2018 19:43:58 +0300
-From: Mika Westerberg <mika.westerberg@linux.intel.com>
-To: Lukas Wunner <lukas@wunner.de>
-Cc: Bjorn Helgaas <helgaas@kernel.org>, Ashok Raj <ashok.raj@intel.com>,
-	Keith Busch <keith.busch@intel.com>,
-	Yinghai Lu <yinghai@kernel.org>, Sinan Kaya <okaya@kernel.org>,
-	linux-pci@vger.kernel.org, Alexandru Gagniuc <mr.nuke.me@gmail.com>
-Subject: Re: [PATCH] PCI: pciehp: Differentiate between surprise and safe
- removal
-Message-ID: <20180801164358.GI2534@lahna.fi.intel.com>
-References: <dac488604766f3dcb948e702210ecc381c4f907b.1533015755.git.lukas@wunner.de>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <dac488604766f3dcb948e702210ecc381c4f907b.1533015755.git.lukas@wunner.de>
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+Message-ID: <307063ff7bbdcc0c3896f027b09245e542764f48.camel@perches.com>
+Subject: Re: [PATCH 1/2] PCI/ACPI: correct error message for ASPM disabling
+From: Joe Perches <joe@perches.com>
+To: Sinan Kaya <okaya@kernel.org>, linux-pci@vger.kernel.org
+Cc: Bjorn Helgaas <bhelgaas@google.com>,
+        "Rafael J. Wysocki" <rjw@rjwysocki.net>,
+        Len Brown <lenb@kernel.org>,
+        "open list:ACPI" <linux-acpi@vger.kernel.org>,
+        open list <linux-kernel@vger.kernel.org>
+Date: Thu, 09 Aug 2018 17:27:18 -0700
+In-Reply-To: <1533840383-7841-1-git-send-email-okaya@kernel.org>
+References: <1533840383-7841-1-git-send-email-okaya@kernel.org>
+Content-Type: text/plain; charset="ISO-8859-1"
+Mime-Version: 1.0
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tue, Jul 31, 2018 at 07:50:37AM +0200, Lukas Wunner wrote:
-> When removing PCI devices below a hotplug bridge, pciehp marks them as
-> disconnected if the card is no longer present in the slot or it quiesces
-> them if the card is still present (by disabling INTx interrupts, bus
-> mastering and SERR# reporting).
+On Thu, 2018-08-09 at 18:46 +0000, Sinan Kaya wrote:
+> If _OSC execution fails today for platforms without an _OSC
+> entry, code is printing a misleading message saying disabling
+> ASPM as follows:
 > 
-> To detect whether the card is still present, pciehp checks the Presence
-> Detect State bit in the Slot Status register.  The problem with this
-> approach is that even if the card is present, the link to it may be
-> down, and it that case it would be better to mark the devices as
-> disconnected instead of trying to quiesce them.  Moreover, if the card
-> in the slot was quickly replaced by another one, the Presence Detect
-> State bit would be set, yet trying to quiesce the new card's devices
-> would be wrong and the correct thing to do is to mark the previous
-> card's devices as disconnected.
+> acpi PNP0A03:00: _OSC failed (AE_NOT_FOUND); disabling ASPM
 > 
-> Instead of looking at the Presence Detect State bit, it is better to
-> differentiate whether the card was surprise removed versus safely
-> removed (via sysfs or an Attention Button press).  On surprise removal,
-> the devices should be marked as disconnected, whereas on safe removal it
-> is correct to quiesce the devices.
+> We need to ensure that platform supports ASPM to begin with.
 > 
-> The knowledge whether a surprise removal or a safe removal is at hand
-> does exist further up in the call stack:  A surprise removal is
-> initiated by pciehp_handle_presence_or_link_change(), a safe removal by
-> pciehp_handle_disable_request().
-> 
-> Pass that information down to pciehp_unconfigure_device() and use it in
-> lieu of the Presence Detect State bit.  While there, add kernel-doc to
-> pciehp_unconfigure_device() and pciehp_configure_device().
-> 
-> Tested-by: Alexandru Gagniuc <mr.nuke.me@gmail.com>
-> Signed-off-by: Lukas Wunner <lukas@wunner.de>
-> Cc: Keith Busch <keith.busch@intel.com>
+> Signed-off-by: Sinan Kaya <okaya@kernel.org>
+> Reported-by: Michael Kelley <mikelley@microsoft.com>
 > ---
->  drivers/pci/hotplug/pciehp.h      |  2 +-
->  drivers/pci/hotplug/pciehp_ctrl.c | 22 +++++++++++++---------
->  drivers/pci/hotplug/pciehp_pci.c  | 23 ++++++++++++++++++++---
->  3 files changed, 34 insertions(+), 13 deletions(-)
+>  drivers/acpi/pci_root.c | 9 +++++++--
+>  1 file changed, 7 insertions(+), 2 deletions(-)
 > 
-> diff --git a/drivers/pci/hotplug/pciehp.h b/drivers/pci/hotplug/pciehp.h
-> index 811cf83f956d..39c9c8815a35 100644
-> --- a/drivers/pci/hotplug/pciehp.h
-> +++ b/drivers/pci/hotplug/pciehp.h
-> @@ -181,7 +181,7 @@ void pciehp_handle_button_press(struct slot *slot);
->  void pciehp_handle_disable_request(struct slot *slot);
->  void pciehp_handle_presence_or_link_change(struct slot *slot, u32 events);
->  int pciehp_configure_device(struct slot *p_slot);
-> -void pciehp_unconfigure_device(struct slot *p_slot);
-> +void pciehp_unconfigure_device(struct slot *p_slot, bool presence);
->  void pciehp_queue_pushbutton_work(struct work_struct *work);
->  struct controller *pcie_init(struct pcie_device *dev);
->  int pcie_init_notification(struct controller *ctrl);
-> diff --git a/drivers/pci/hotplug/pciehp_ctrl.c b/drivers/pci/hotplug/pciehp_ctrl.c
-> index 6855933ab372..7932e70e9f29 100644
-> --- a/drivers/pci/hotplug/pciehp_ctrl.c
-> +++ b/drivers/pci/hotplug/pciehp_ctrl.c
-> @@ -26,6 +26,9 @@
->     hotplug controller logic
->   */
->  
-> +#define SAFE_REMOVAL	 true
-> +#define SURPRISE_REMOVAL false
+> diff --git a/drivers/acpi/pci_root.c b/drivers/acpi/pci_root.c
+[]
+> @@ -455,8 +455,13 @@ static void negotiate_os_control(struct acpi_pci_root *root, int *no_aspm)
+>  	decode_osc_support(root, "OS supports", support);
+>  	status = acpi_pci_osc_support(root, support);
+>  	if (ACPI_FAILURE(status)) {
+> -		dev_info(&device->dev, "_OSC failed (%s); disabling ASPM\n",
+> -			 acpi_format_exception(status));
+> +		char *aspm_msg = "";
 > +
->  static void set_slot_off(struct controller *ctrl, struct slot *pslot)
->  {
->  	/* turn off slot, turn on Amber LED, turn off Green LED if supported*/
-> @@ -101,12 +104,13 @@ static int board_added(struct slot *p_slot)
->  /**
->   * remove_board - Turns off slot and LEDs
->   * @p_slot: slot where board is being removed
-> + * @safe_removal: whether the board is safely removed (versus surprise removed)
->   */
-> -static void remove_board(struct slot *p_slot)
-> +static void remove_board(struct slot *p_slot, bool safe_removal)
->  {
->  	struct controller *ctrl = p_slot->ctrl;
->  
-> -	pciehp_unconfigure_device(p_slot);
-> +	pciehp_unconfigure_device(p_slot, safe_removal);
+> +		if (pcie_aspm_support_enabled())
+> +			aspm_msg = "; disabling ASPM";
+> +
+> +		dev_info(&device->dev, "_OSC failed (%s) %s\n",
+> +				 acpi_format_exception(status), aspm_msg);
 
-Below we turn off power to the slot if it has power controller. Even if
-we disable slot from sysfs, I think it ends up being inaccessible after
-power is turned off. I wonder if we should mark the devices disconnected
-in that case as well?
+I think this would read better not using a temporary and
+using a ternary instead.
 
->  
->  	if (POWER_CTRL(ctrl)) {
->  		pciehp_power_off_slot(p_slot);
+		dev_info(&device->dev, "_OSC failed (%s)%s\n",
+			 acpi_format_exception(status),
+			 pcie_aspm_support_enabled() ? "; disabling ASPM" : "");
+
+>  		*no_aspm = 1;
+>  		return;
+>  	}
