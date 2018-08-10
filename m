@@ -1,120 +1,54 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:50232 "EHLO
-        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1728101AbeHNMCw (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Tue, 14 Aug 2018 08:02:52 -0400
+Return-Path: <SRS0=FW5r=KZ=deltatee.com=logang@kernel.org>
+Return-Path: <SRS0=FW5r=KZ=deltatee.com=logang@kernel.org>
+To: Kit Chow <kchow@gigaio.com>, "Jiang, Dave" <dave.jiang@intel.com>,
+ Eric Pilmore <epilmore@gigaio.com>, Bjorn Helgaas <helgaas@kernel.org>
+Cc: "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+ David Woodhouse <dwmw2@infradead.org>,
+ Alex Williamson <alex.williamson@redhat.com>,
+ "iommu@lists.linux-foundation.org" <iommu@lists.linux-foundation.org>
+References: <CAOQPn8soxubJxb=vp7kz+AM6LbPH5y+_Nx0Vzv7rjV_nMMqEmA@mail.gmail.com>
+ <20180809184331.GB113140@bhelgaas-glaptop.roam.corp.google.com>
+ <CAOQPn8uPYKai49WYPqZp2wNd5of=0hUvPOHEtqP56RZu-hcjuw@mail.gmail.com>
+ <b54899a8-a144-e8e0-9880-1800c4657b95@deltatee.com>
+ <95e53520-b05f-4be4-e694-463d717453a8@gigaio.com>
+ <cdd9245f-eb23-9e10-1755-8f396a2cd255@deltatee.com>
+ <b278c1e5-6f08-c879-a27d-7fc172645fd5@gigaio.com>
+ <f04fae39-645e-3c6e-07c0-b194260bf5de@deltatee.com>
+ <3f503940-db6a-ec75-ed15-1db99d5d48ef@gigaio.com>
+ <112A412BB11A1242B37129D931BCE5348382CFB2@fmsmsx117.amr.corp.intel.com>
+ <b8af340c-d40b-cb8c-987f-b394f1d6ec3e@gigaio.com>
+ <adf51c74-36fa-b61d-8497-27bd75178ba4@deltatee.com>
+ <aa9c3f41-efc9-8c68-a517-2736c8986621@gigaio.com>
+ <1170c096-a749-6ee3-32d4-ebba1d12adff@gigaio.com>
+From: Logan Gunthorpe <logang@deltatee.com>
+Message-ID: <929f3dfa-fbff-c582-3be5-c368f11feb7e@deltatee.com>
+Date: Fri, 10 Aug 2018 10:24:19 -0600
 MIME-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII;
- format=flowed
-Date: Tue, 14 Aug 2018 14:46:32 +0530
-From: poza@codeaurora.org
-To: Thomas Tai <thomas.tai@oracle.com>
-Cc: bhelgaas@google.com, keith.busch@intel.com,
-        linux-pci@vger.kernel.org
-Subject: Re: [PATCH 1/1] PCI/AER: prevent pcie_do_fatal_recovery from using
- device after it is removed
-In-Reply-To: <1534179088-44219-2-git-send-email-thomas.tai@oracle.com>
-References: <1534179088-44219-1-git-send-email-thomas.tai@oracle.com>
- <1534179088-44219-2-git-send-email-thomas.tai@oracle.com>
-Message-ID: <51f4b387d9bd96a42d526a6a029fc43b@codeaurora.org>
-Sender: linux-pci-owner@vger.kernel.org
+In-Reply-To: <1170c096-a749-6ee3-32d4-ebba1d12adff@gigaio.com>
+Content-Type: text/plain; charset=utf-8
+Subject: Re: IOAT DMA w/IOMMU
 List-ID: <linux-pci.vger.kernel.org>
 
-On 2018-08-13 22:21, Thomas Tai wrote:
-> In order to prevent the pcie_do_fatal_recovery() from
-> using the device after it is removed, the device's
-> domain:bus:devfn is stored at the entry of
-> pcie_do_fatal_recovery(). After rescanning the bus, the
-> stored domain:bus:devfn is used to find the device and
-> uses to report pci_info. The original issue only happens
-> on an non-bridge device, a local variable is used instead
-> of checking the device's header type.
-> 
-> Signed-off-by: Thomas Tai <thomas.tai@oracle.com>
-> ---
->  drivers/pci/pcie/err.c | 33 +++++++++++++++++++++++----------
->  1 file changed, 23 insertions(+), 10 deletions(-)
-> 
-> diff --git a/drivers/pci/pcie/err.c b/drivers/pci/pcie/err.c
-> index f02e334..3414445 100644
-> --- a/drivers/pci/pcie/err.c
-> +++ b/drivers/pci/pcie/err.c
-> @@ -287,15 +287,20 @@ void pcie_do_fatal_recovery(struct pci_dev *dev,
-> u32 service)
->  	struct pci_bus *parent;
->  	struct pci_dev *pdev, *temp;
->  	pci_ers_result_t result;
-> +	bool is_bridge_device = false;
-> +	u16 domain = pci_domain_nr(dev->bus);
-> +	u8 bus = dev->bus->number;
-> +	u8 devfn = dev->devfn;
-> 
-> -	if (dev->hdr_type == PCI_HEADER_TYPE_BRIDGE)
-> +	if (dev->hdr_type == PCI_HEADER_TYPE_BRIDGE) {
-> +		is_bridge_device = true;
->  		udev = dev;
-> -	else
-> +	} else {
->  		udev = dev->bus->self;
-> +	}
-> 
->  	parent = udev->subordinate;
->  	pci_lock_rescan_remove();
-> -	pci_dev_get(dev);
->  	list_for_each_entry_safe_reverse(pdev, temp, &parent->devices,
->  					 bus_list) {
->  		pci_dev_get(pdev);
-> @@ -309,27 +314,35 @@ void pcie_do_fatal_recovery(struct pci_dev *dev,
-> u32 service)
-> 
->  	result = reset_link(udev, service);
-> 
-> -	if ((service == PCIE_PORT_SERVICE_AER) &&
-> -	    (dev->hdr_type == PCI_HEADER_TYPE_BRIDGE)) {
-> +	if (service == PCIE_PORT_SERVICE_AER && is_bridge_device) {
->  		/*
->  		 * If the error is reported by a bridge, we think this error
->  		 * is related to the downstream link of the bridge, so we
->  		 * do error recovery on all subordinates of the bridge instead
->  		 * of the bridge and clear the error status of the bridge.
->  		 */
-> -		pci_cleanup_aer_uncorrect_error_status(dev);
-> +		pci_cleanup_aer_uncorrect_error_status(udev);
->  	}
-> 
->  	if (result == PCI_ERS_RESULT_RECOVERED) {
->  		if (pcie_wait_for_link(udev, true))
->  			pci_rescan_bus(udev->bus);
-> -		pci_info(dev, "Device recovery from fatal error successful\n");
-> +		/* find the pci_dev after rescanning the bus */
-> +		dev = pci_get_domain_bus_and_slot(domain, bus, devfn);
-one of the motivations was to remove and re-enumerate rather then going 
-thorugh driver's recovery sequence
-was; it might be possible that hotplug capable bridge, the device might 
-have changed.
-hence this check will fail
-> +		if (dev)
-> +			pci_info(dev, "Device recovery from fatal error successful\n");
-> +		else
-> +			pr_err("AER: Can not find pci_dev for %04x:%02x:%02x.%x\n",
-> +			       domain, bus,
-> +			       PCI_SLOT(devfn), PCI_FUNC(devfn));
-> +		pci_dev_put(dev);
->  	} else {
-> -		pci_uevent_ers(dev, PCI_ERS_RESULT_DISCONNECT);
-> -		pci_info(dev, "Device recovery from fatal error failed\n");
-> +		if (is_bridge_device)
-previously there was no condition.. why is this required now ?
-and it was doing on "dev" while you are doing it on "udev"
-> +			pci_uevent_ers(udev, PCI_ERS_RESULT_DISCONNECT);
-> +		pr_err("AER: Device %04x:%02x:%02x.%x recovery from fatal error 
-> failed\n",
-> +		       domain, bus, PCI_SLOT(devfn), PCI_FUNC(devfn));
->  	}
-> 
-> -	pci_dev_put(dev);
->  	pci_unlock_rescan_remove();
->  }
 
-Regards,
-Oza.
+
+On 10/08/18 10:02 AM, Kit Chow wrote:
+> Turns out there is no dma_map_resource routine on x86. get_dma_ops 
+> returns intel_dma_ops which has map_resource pointing to NULL.
+
+Oh, yup. I wasn't aware of that. From a cursory view, it looks like it
+shouldn't be too hard to implement though.
+
+> Will poke around some in the intel_map_page code but can you actually 
+> get a valid struct page for a pci bar address (dma_map_single calls 
+> virt_to_page)?  If not, does a map_resource routine that can properly 
+> map a pci bar address need to be implemented?
+
+Yes, you can not get a struct page for a PCI bar address unless it's
+mapped with ZONE_DEVICE like in my p2p work. So that would explain why
+dma_map_single() didn't work.
+
+This all implies that ntb_transport doesn't work with DMA and the IOMMU
+turned on. I'm not sure I've ever tried that configuration myself but it
+is a bit surprising.
+
+Logan
