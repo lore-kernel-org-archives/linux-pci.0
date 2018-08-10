@@ -1,139 +1,44 @@
-Return-Path: <SRS0=dBQP=LC=wunner.de=lukas@kernel.org>
-Return-Path: <SRS0=dBQP=LC=wunner.de=lukas@kernel.org>
-Message-Id: <261ea1a908d79a6b458ac1d82557a92860d862b4.1534686485.git.lukas@wunner.de>
-In-Reply-To: <cover.1534686484.git.lukas@wunner.de>
-References: <cover.1534686484.git.lukas@wunner.de>
-From: Lukas Wunner <lukas@wunner.de>
-Date: Sun, 19 Aug 2018 16:29:00 +0200
-Subject: [PATCH 5/9] PCI: pciehp: Reshuffle controller struct for clarity
-To: Bjorn Helgaas <helgaas@kernel.org>, linux-pci@vger.kernel.org, Sinan Kaya <okaya@kernel.org>, Mika Westerberg <mika.westerberg@linux.intel.com>
+Return-Path: <SRS0=FW5r=KZ=deltatee.com=logang@kernel.org>
+Return-Path: <SRS0=FW5r=KZ=deltatee.com=logang@kernel.org>
+To: Kit Chow <kchow@gigaio.com>, "Jiang, Dave" <dave.jiang@intel.com>,
+ Eric Pilmore <epilmore@gigaio.com>, Bjorn Helgaas <helgaas@kernel.org>
+Cc: "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+ David Woodhouse <dwmw2@infradead.org>,
+ Alex Williamson <alex.williamson@redhat.com>,
+ "iommu@lists.linux-foundation.org" <iommu@lists.linux-foundation.org>
+References: <CAOQPn8soxubJxb=vp7kz+AM6LbPH5y+_Nx0Vzv7rjV_nMMqEmA@mail.gmail.com>
+ <20180809184331.GB113140@bhelgaas-glaptop.roam.corp.google.com>
+ <CAOQPn8uPYKai49WYPqZp2wNd5of=0hUvPOHEtqP56RZu-hcjuw@mail.gmail.com>
+ <b54899a8-a144-e8e0-9880-1800c4657b95@deltatee.com>
+ <95e53520-b05f-4be4-e694-463d717453a8@gigaio.com>
+ <cdd9245f-eb23-9e10-1755-8f396a2cd255@deltatee.com>
+ <b278c1e5-6f08-c879-a27d-7fc172645fd5@gigaio.com>
+ <f04fae39-645e-3c6e-07c0-b194260bf5de@deltatee.com>
+ <3f503940-db6a-ec75-ed15-1db99d5d48ef@gigaio.com>
+ <112A412BB11A1242B37129D931BCE5348382CFB2@fmsmsx117.amr.corp.intel.com>
+ <b8af340c-d40b-cb8c-987f-b394f1d6ec3e@gigaio.com>
+ <adf51c74-36fa-b61d-8497-27bd75178ba4@deltatee.com>
+ <aa9c3f41-efc9-8c68-a517-2736c8986621@gigaio.com>
+ <1170c096-a749-6ee3-32d4-ebba1d12adff@gigaio.com>
+ <c8dd4740-f01a-372f-2990-2e1163f94042@gigaio.com>
+From: Logan Gunthorpe <logang@deltatee.com>
+Message-ID: <672079e5-7432-fcd8-d81c-6d7010b71630@deltatee.com>
+Date: Fri, 10 Aug 2018 10:24:54 -0600
+MIME-Version: 1.0
+In-Reply-To: <c8dd4740-f01a-372f-2990-2e1163f94042@gigaio.com>
+Content-Type: text/plain; charset=utf-8
+Subject: Re: IOAT DMA w/IOMMU
 List-ID: <linux-pci.vger.kernel.org>
 
-The members in pciehp's controller struct are arranged in a seemingly
-arbitrary order and have grown to an amount that I no longer consider
-easily graspable by contributors.
 
-Sort the members into 5 rubrics:
-* Slot Capabilities register and quirks
-* Slot Control register access
-* Slot Status register event handling
-* state machine
-* hotplug core interface
 
-Obviously, this is just my personal bikeshed color and if anyone has a
-better idea, please come forward.  Any ordering will do as long as the
-information is presented in a manageable manner.
+On 10/08/18 10:23 AM, Kit Chow wrote:
+> There is an internal routine (__intel_map_single) inside the intel iommu 
+> code that does the actual mapping using a phys_addr_t. Think I'll try to 
+> implement a intel_map_resource routine that calls that routine directly 
+> without all of the conversions done for dma_map_{single,page} (pci bar 
+> addr -> page -> phys_addr)...
 
-Change unsigned int members to bool where applicable.  Some of these
-were declared as bitfields, which doesn't really save a whole lot of
-memory due to padding.  It is also racy if adjacent bitfields are
-modified concurrently.
+Nice, yes, that was what I was thinking.
 
-No functional change intended.
-
-Signed-off-by: Lukas Wunner <lukas@wunner.de>
----
- drivers/pci/hotplug/pciehp.h | 59 +++++++++++++++++++-----------------
- 1 file changed, 32 insertions(+), 27 deletions(-)
-
-diff --git a/drivers/pci/hotplug/pciehp.h b/drivers/pci/hotplug/pciehp.h
-index 32f2701fb8dc..f3c0a376ffd5 100644
---- a/drivers/pci/hotplug/pciehp.h
-+++ b/drivers/pci/hotplug/pciehp.h
-@@ -60,38 +60,38 @@ do {									\
- 
- /**
-  * struct controller - PCIe hotplug controller
-- * @ctrl_lock: serializes writes to the Slot Control register
-  * @pcie: pointer to the controller's PCIe port service device
-- * @reset_lock: prevents access to the Data Link Layer Link Active bit in the
-- *	Link Status register and to the Presence Detect State bit in the Slot
-- *	Status register during a slot reset which may cause them to flap
-- * @queue: wait queue to wake up on reception of a Command Completed event,
-- *	used for synchronous writes to the Slot Control register
-  * @slot_cap: cached copy of the Slot Capabilities register
-+ * @link_active_reporting: cached copy of Data Link Layer Link Active Reporting
-+ *	Capable bit in Link Capabilities register; if this bit is zero, the
-+ *	Data Link Layer Link Active bit in the Link Status register will never
-+ *	be set and the driver is thus confined to wait 1 second before assuming
-+ *	the link to a hotplugged device is up and accessing it
-  * @slot_ctrl: cached copy of the Slot Control register
-- * @poll_thread: thread to poll for slot events if no IRQ is available,
-- *	enabled with pciehp_poll_mode module parameter
-+ * @ctrl_lock: serializes writes to the Slot Control register
-  * @cmd_started: jiffies when the Slot Control register was last written;
-  *	the next write is allowed 1 second later, absent a Command Completed
-  *	interrupt (PCIe r4.0, sec 6.7.3.2)
-  * @cmd_busy: flag set on Slot Control register write, cleared by IRQ handler
-  *	on reception of a Command Completed event
-- * @link_active_reporting: cached copy of Data Link Layer Link Active Reporting
-- *	Capable bit in Link Capabilities register; if this bit is zero, the
-- *	Data Link Layer Link Active bit in the Link Status register will never
-- *	be set and the driver is thus confined to wait 1 second before assuming
-- *	the link to a hotplugged device is up and accessing it
-+ * @queue: wait queue to wake up on reception of a Command Completed event,
-+ *	used for synchronous writes to the Slot Control register
-+ * @pending_events: used by the IRQ handler to save events retrieved from the
-+ *	Slot Status register for later consumption by the IRQ thread
-  * @notification_enabled: whether the IRQ was requested successfully
-  * @power_fault_detected: whether a power fault was detected by the hardware
-  *	that has not yet been cleared by the user
-- * @pending_events: used by the IRQ handler to save events retrieved from the
-- *	Slot Status register for later consumption by the IRQ thread
-+ * @poll_thread: thread to poll for slot events if no IRQ is available,
-+ *	enabled with pciehp_poll_mode module parameter
-  * @state: current state machine position
-  * @state_lock: protects reads and writes of @state;
-  *	protects scheduling, execution and cancellation of @button_work
-  * @button_work: work item to turn the slot on or off after 5 seconds
-  *	in response to an Attention Button press
-  * @hotplug_slot: pointer to the structure registered with the PCI hotplug core
-+ * @reset_lock: prevents access to the Data Link Layer Link Active bit in the
-+ *	Link Status register and to the Presence Detect State bit in the Slot
-+ *	Status register during a slot reset which may cause them to flap
-  * @request_result: result of last user request submitted to the IRQ thread
-  * @requester: wait queue to wake up on completion of user request,
-  *	used for synchronous slot enable/disable request via sysfs
-@@ -100,23 +100,28 @@ do {									\
-  * unlike other drivers, the two aren't represented by separate structures.
-  */
- struct controller {
--	struct mutex ctrl_lock;
- 	struct pcie_device *pcie;
--	struct rw_semaphore reset_lock;
-+
-+	u32 slot_cap;				/* capabilities and quirks */
-+	bool link_active_reporting;
-+
-+	u16 slot_ctrl;				/* control register access */
-+	struct mutex ctrl_lock;
-+	unsigned long cmd_started;
-+	bool cmd_busy;
- 	wait_queue_head_t queue;
--	u32 slot_cap;
--	u16 slot_ctrl;
-+
-+	atomic_t pending_events;		/* event handling */
-+	bool notification_enabled;
-+	bool power_fault_detected;
- 	struct task_struct *poll_thread;
--	unsigned long cmd_started;	/* jiffies */
--	unsigned int cmd_busy:1;
--	unsigned int link_active_reporting:1;
--	unsigned int notification_enabled:1;
--	unsigned int power_fault_detected;
--	atomic_t pending_events;
--	u8 state;
-+
-+	u8 state;				/* state machine */
- 	struct mutex state_lock;
- 	struct delayed_work button_work;
--	struct hotplug_slot *hotplug_slot;
-+
-+	struct hotplug_slot *hotplug_slot;	/* hotplug core interface */
-+	struct rw_semaphore reset_lock;
- 	int request_result;
- 	wait_queue_head_t requester;
- };
--- 
-2.18.0
+Logan
