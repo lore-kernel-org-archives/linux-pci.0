@@ -1,46 +1,69 @@
-Return-Path: <okaya@kernel.org>
-Return-Path: <okaya@kernel.org>
-Subject: Re: [PATCH 1/1] PCI/AER: prevent pcie_do_fatal_recovery from using
- device after it is removed
-To: Benjamin Herrenschmidt <benh@kernel.crashing.org>,
- Keith Busch <keith.busch@intel.com>
-Cc: poza@codeaurora.org, Bjorn Helgaas <helgaas@kernel.org>,
- Thomas Tai <thomas.tai@oracle.com>, bhelgaas@google.com,
- linux-pci@vger.kernel.org, linux-pci-owner@vger.kernel.org,
- Sam Bobroff <sam.bobroff@au1.ibm.com>
-References: <20180819021922.GE128050@bhelgaas-glaptop.roam.corp.google.com>
- <fe891b63-12c7-61ab-a59a-ae24ad766754@kernel.org>
- <ab5cb5b277f1c1c1362ef597ca7b8c6a2cd32cdf.camel@kernel.crashing.org>
- <908ff33ded8f31830f95a8889d8540f1@codeaurora.org>
- <5027d857bb59edfd33442003aa618ece1bc9cd52.camel@kernel.crashing.org>
- <b2e2ac5c92d8a91d00606754d1046578@codeaurora.org>
- <2ecd1fd6d763810d45697f846fa876b58a193b1b.camel@kernel.crashing.org>
- <20180820155325.GA16148@localhost.localdomain>
- <cf6de256280be7a2948db6dd2b5bfae92e70e12f.camel@kernel.crashing.org>
- <6aa71d74-e4dc-c627-1496-981278388bce@kernel.org>
- <20180820213544.GA16805@localhost.localdomain>
- <0193e0c5a52d8f2e93958f0683f3acc81cef2bc9.camel@kernel.crashing.org>
-From: Sinan Kaya <okaya@kernel.org>
-Message-ID: <fd538f20-0754-f127-ceb9-693fec90b4af@kernel.org>
-Date: Mon, 20 Aug 2018 18:02:57 -0400
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail-sn1nam01on0055.outbound.protection.outlook.com ([104.47.32.55]:19140
+        "EHLO NAM01-SN1-obe.outbound.protection.outlook.com"
+        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+        id S1727539AbeHJSPs (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Fri, 10 Aug 2018 14:15:48 -0400
+From: Bharat Kumar Gogada <bharat.kumar.gogada@xilinx.com>
+To: <linux-pci@vger.kernel.org>, <linux-kernel@vger.kernel.org>
+CC: <bhelgaas@google.com>, <rgummal@xilinx.com>,
+        Bharat Kumar Gogada <bharat.kumar.gogada@xilinx.com>
+Subject: [PATCH 3/4] PCI/portdrv: Check platform supported service IRQ's
+Date: Fri, 10 Aug 2018 21:09:39 +0530
+Message-ID: <1533915580-31805-4-git-send-email-bharat.kumar.gogada@xilinx.com>
+In-Reply-To: <1533915580-31805-1-git-send-email-bharat.kumar.gogada@xilinx.com>
+References: <1533915580-31805-1-git-send-email-bharat.kumar.gogada@xilinx.com>
 MIME-Version: 1.0
-In-Reply-To: <0193e0c5a52d8f2e93958f0683f3acc81cef2bc9.camel@kernel.crashing.org>
-Content-Type: text/plain; charset=utf-8; format=flowed
+Content-Type: text/plain
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 8/20/2018 5:53 PM, Benjamin Herrenschmidt wrote:
->>> Hotplug driver removes the devices on link down events and re-enumerates
->>> on insertion.
->>>
->>> I am trying to separate fatal error handling from hotplug.
->> I'll try to take a look. We can't always count on pciehp to do the
->> removal when a removal occurs, though. The PCIe specification contains
->> an implementation note that DPC may be used in place of hotplug surprise.
-> Can't you use the presence detect to differenciate ?
-> 
-> Also, I don't have the specs at hand right now, but does the hotplug
-> brigde have a way to "latch' the change in presence detect so we can
-> see if it has transitioned even if it's back on ?
+Platforms may have dedicated IRQ lines for PCIe services like
+AER/PME etc., check for such IRQ lines.
+Check mask and fill legacy irq line for services other than
+platform supported service IRQ number.
 
-There is only presence detect change and link layer change. No actual
-state information.
+Signed-off-by: Bharat Kumar Gogada <bharat.kumar.gogada@xilinx.com>
+---
+ drivers/pci/pcie/portdrv_core.c |   19 +++++++++++++++++--
+ 1 files changed, 17 insertions(+), 2 deletions(-)
+
+diff --git a/drivers/pci/pcie/portdrv_core.c b/drivers/pci/pcie/portdrv_core.c
+index e0261ad..a7d024c 100644
+--- a/drivers/pci/pcie/portdrv_core.c
++++ b/drivers/pci/pcie/portdrv_core.c
+@@ -166,6 +166,19 @@ static int pcie_init_service_irqs(struct pci_dev *dev, int *irqs, int mask)
+ 		irqs[i] = -1;
+ 
+ 	/*
++	 * Some platforms have dedicated interrupt line from root complex to
++	 * interrupt controller for PCIe services like AER/PME etc., check
++	 * if platform registered with any such IRQ.
++	 */
++	if (pci_pcie_type(dev) == PCI_EXP_TYPE_ROOT_PORT) {
++		int plat_mask;
++
++		plat_mask = pci_check_platform_service_irqs(dev, irqs, mask);
++		if (plat_mask > 0)
++			mask = mask & plat_mask;
++	}
++
++	/*
+ 	 * If we support PME but can't use MSI/MSI-X for it, we have to
+ 	 * fall back to INTx or other interrupts, e.g., a system shared
+ 	 * interrupt.
+@@ -183,8 +196,10 @@ static int pcie_init_service_irqs(struct pci_dev *dev, int *irqs, int mask)
+ 	if (ret < 0)
+ 		return -ENODEV;
+ 
+-	for (i = 0; i < PCIE_PORT_DEVICE_MAXSERVICES; i++)
+-		irqs[i] = pci_irq_vector(dev, 0);
++	for (i = 0; i < PCIE_PORT_DEVICE_MAXSERVICES; i++) {
++		if (mask & (1 << i))
++			irqs[i] = pci_irq_vector(dev, 0);
++	}
+ 
+ 	return 0;
+ }
+-- 
+1.7.1
