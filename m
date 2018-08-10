@@ -1,62 +1,65 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mga12.intel.com ([192.55.52.136]:14103 "EHLO mga12.intel.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1727416AbeIABev (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Fri, 31 Aug 2018 21:34:51 -0400
-From: Keith Busch <keith.busch@intel.com>
-To: Linux PCI <linux-pci@vger.kernel.org>,
-        Bjorn Helgaas <bhelgaas@google.com>
-Cc: Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-        Sinan Kaya <okaya@kernel.org>,
-        Thomas Tai <thomas.tai@oracle.com>, poza@codeaurora.org,
-        Lukas Wunner <lukas@wunner.de>,
-        Keith Busch <keith.busch@intel.com>
-Subject: [PATCH 16/16] PCI: Unify device inaccessible
-Date: Fri, 31 Aug 2018 15:26:39 -0600
-Message-Id: <20180831212639.10196-17-keith.busch@intel.com>
-In-Reply-To: <20180831212639.10196-1-keith.busch@intel.com>
-References: <20180831212639.10196-1-keith.busch@intel.com>
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <SRS0=xQUW=KZ=intel.com=dave.jiang@kernel.org>
+Return-Path: <SRS0=xQUW=KZ=intel.com=dave.jiang@kernel.org>
+Subject: Re: IOAT DMA w/IOMMU
+To: Logan Gunthorpe <logang@deltatee.com>, Kit Chow <kchow@gigaio.com>,
+ Eric Pilmore <epilmore@gigaio.com>, Bjorn Helgaas <helgaas@kernel.org>
+Cc: "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+ David Woodhouse <dwmw2@infradead.org>,
+ Alex Williamson <alex.williamson@redhat.com>,
+ "iommu@lists.linux-foundation.org" <iommu@lists.linux-foundation.org>
+References: <CAOQPn8soxubJxb=vp7kz+AM6LbPH5y+_Nx0Vzv7rjV_nMMqEmA@mail.gmail.com>
+ <20180809184331.GB113140@bhelgaas-glaptop.roam.corp.google.com>
+ <CAOQPn8uPYKai49WYPqZp2wNd5of=0hUvPOHEtqP56RZu-hcjuw@mail.gmail.com>
+ <b54899a8-a144-e8e0-9880-1800c4657b95@deltatee.com>
+ <95e53520-b05f-4be4-e694-463d717453a8@gigaio.com>
+ <cdd9245f-eb23-9e10-1755-8f396a2cd255@deltatee.com>
+ <b278c1e5-6f08-c879-a27d-7fc172645fd5@gigaio.com>
+ <f04fae39-645e-3c6e-07c0-b194260bf5de@deltatee.com>
+ <3f503940-db6a-ec75-ed15-1db99d5d48ef@gigaio.com>
+ <112A412BB11A1242B37129D931BCE5348382CFB2@fmsmsx117.amr.corp.intel.com>
+ <b8af340c-d40b-cb8c-987f-b394f1d6ec3e@gigaio.com>
+ <adf51c74-36fa-b61d-8497-27bd75178ba4@deltatee.com>
+ <aa9c3f41-efc9-8c68-a517-2736c8986621@gigaio.com>
+ <1170c096-a749-6ee3-32d4-ebba1d12adff@gigaio.com>
+ <929f3dfa-fbff-c582-3be5-c368f11feb7e@deltatee.com>
+From: Dave Jiang <dave.jiang@intel.com>
+Message-ID: <460cc47f-6a8e-67b0-01a0-02f0c51df258@intel.com>
+Date: Fri, 10 Aug 2018 09:31:42 -0700
+MIME-Version: 1.0
+In-Reply-To: <929f3dfa-fbff-c582-3be5-c368f11feb7e@deltatee.com>
+Content-Type: text/plain; charset=utf-8
 List-ID: <linux-pci.vger.kernel.org>
 
-This patch brings surprise removals and permanent failures together so
-no longer need separate flags.
 
-Signed-off-by: Keith Busch <keith.busch@intel.com>
----
- drivers/pci/pci.h | 11 +++++------
- 1 file changed, 5 insertions(+), 6 deletions(-)
 
-diff --git a/drivers/pci/pci.h b/drivers/pci/pci.h
-index ed2965ee6779..20cadf91cd9c 100644
---- a/drivers/pci/pci.h
-+++ b/drivers/pci/pci.h
-@@ -294,21 +294,20 @@ struct pci_sriov {
- 	bool		drivers_autoprobe; /* Auto probing of VFs by driver */
- };
- 
--/* pci_dev priv_flags */
--#define PCI_DEV_DISCONNECTED 0
--#define PCI_DEV_ADDED 1
--
- static inline int pci_dev_set_disconnected(struct pci_dev *dev, void *unused)
- {
--	set_bit(PCI_DEV_DISCONNECTED, &dev->priv_flags);
-+	dev->error_state = pci_channel_io_perm_failure;
- 	return 0;
- }
- 
- static inline bool pci_dev_is_disconnected(const struct pci_dev *dev)
- {
--	return test_bit(PCI_DEV_DISCONNECTED, &dev->priv_flags);
-+	return dev->error_state == pci_channel_io_perm_failure;
- }
- 
-+/* pci_dev priv_flags */
-+#define PCI_DEV_ADDED 0
-+
- static inline void pci_dev_assign_added(struct pci_dev *dev, bool added)
- {
- 	assign_bit(PCI_DEV_ADDED, &dev->priv_flags, added);
--- 
-2.14.4
+On 08/10/2018 09:24 AM, Logan Gunthorpe wrote:
+> 
+> 
+> On 10/08/18 10:02 AM, Kit Chow wrote:
+>> Turns out there is no dma_map_resource routine on x86. get_dma_ops 
+>> returns intel_dma_ops which has map_resource pointing to NULL.
+> 
+> Oh, yup. I wasn't aware of that. From a cursory view, it looks like it
+> shouldn't be too hard to implement though.
+> 
+>> Will poke around some in the intel_map_page code but can you actually 
+>> get a valid struct page for a pci bar address (dma_map_single calls 
+>> virt_to_page)?  If not, does a map_resource routine that can properly 
+>> map a pci bar address need to be implemented?
+> 
+> Yes, you can not get a struct page for a PCI bar address unless it's
+> mapped with ZONE_DEVICE like in my p2p work. So that would explain why
+> dma_map_single() didn't work.
+> 
+> This all implies that ntb_transport doesn't work with DMA and the IOMMU
+> turned on. I'm not sure I've ever tried that configuration myself but it
+> is a bit surprising.
+
+Hmm....that's surprising because it seems to work on Skylake platform
+when I tested it yesterday with Intel NTB. Kit is using a Haswell
+platform at the moment I think. Although I'm curious if it works with
+the PLX NTB he's using on Skylake.
+
+> 
+> Logan
+> 
