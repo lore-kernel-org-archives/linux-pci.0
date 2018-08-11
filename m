@@ -1,72 +1,131 @@
-Return-Path: <SRS0=35td=LE=gigaio.com=epilmore@kernel.org>
-Return-Path: <SRS0=35td=LE=gigaio.com=epilmore@kernel.org>
+Return-Path: <SRS0=mUXL=K2=huawei.com=liudongdong3@kernel.org>
+Return-Path: <SRS0=mUXL=K2=huawei.com=liudongdong3@kernel.org>
+Subject: Re: [PATCH] PCI: Match Root Port's MPS to endpoint's MPSS when
+ necessary
+To: Myron Stowe <mstowe@redhat.com>
+References: <20180718185158.149373.77902.stgit@tak.stowe>
+ <20180801140507.GQ45322@bhelgaas-glaptop.roam.corp.google.com>
+ <3f18a887-e669-f54d-1e89-36347cbfa44b@huawei.com>
+ <20180810153319.53182e19@zim>
+CC: Bjorn Helgaas <helgaas@kernel.org>, Myron Stowe <myron.stowe@redhat.com>,
+	<bhelgaas@google.com>, <linux-pci@vger.kernel.org>, <keith.busch@intel.com>,
+	<jdmason@kudzu.us>
+From: Dongdong Liu <liudongdong3@huawei.com>
+Message-ID: <4fea21e5-c180-0df6-ebad-b5cba8b3c9ba@huawei.com>
+Date: Sat, 11 Aug 2018 11:47:24 +0800
 MIME-Version: 1.0
-In-Reply-To: <ad2cd3f2-eb41-d4c2-7614-379c2e458352@deltatee.com>
-References: <CAOQPn8soxubJxb=vp7kz+AM6LbPH5y+_Nx0Vzv7rjV_nMMqEmA@mail.gmail.com>
- <20180809184331.GB113140@bhelgaas-glaptop.roam.corp.google.com>
- <CAOQPn8uPYKai49WYPqZp2wNd5of=0hUvPOHEtqP56RZu-hcjuw@mail.gmail.com>
- <b54899a8-a144-e8e0-9880-1800c4657b95@deltatee.com> <CAOQPn8tSNN+3igN-kMcQH46w_a9p6T+S7=c8CLREMLxr1kaTXQ@mail.gmail.com>
- <7068db44-af31-4462-f966-2dd2340ba0f0@deltatee.com> <695826a6-e10c-5a30-a51f-7cc61ba6e640@gigaio.com>
- <0d3f48c3-8c4f-4dfb-e883-23c168f12b9b@deltatee.com> <14db6acb-da4f-9604-7359-1671210fcb8b@gigaio.com>
- <ad2cd3f2-eb41-d4c2-7614-379c2e458352@deltatee.com>
-From: Eric Pilmore <epilmore@gigaio.com>
-Date: Tue, 21 Aug 2018 16:18:55 -0700
-Message-ID: <CAOQPn8uuTEcmdQdZB9-A7FT+YWtxSuruGFwmwCPApffTJNs9Vg@mail.gmail.com>
-Subject: Re: IOAT DMA w/IOMMU
-To: Logan Gunthorpe <logang@deltatee.com>
-Cc: Kit Chow <kchow@gigaio.com>, Bjorn Helgaas <helgaas@kernel.org>, linux-pci@vger.kernel.org,
-	David Woodhouse <dwmw2@infradead.org>, Alex Williamson <alex.williamson@redhat.com>,
-	iommu@lists.linux-foundation.org
-Content-Type: text/plain; charset="UTF-8"
+In-Reply-To: <20180810153319.53182e19@zim>
+Content-Type: text/plain; charset="utf-8"; format=flowed
 List-ID: <linux-pci.vger.kernel.org>
 
-On Thu, Aug 16, 2018 at 11:56 AM, Logan Gunthorpe <logang@deltatee.com> wrote:
->
->
->
-> On 16/08/18 12:53 PM, Kit Chow wrote:
-> >
-> >
-> > On 08/16/2018 10:21 AM, Logan Gunthorpe wrote:
-> >>
-> >> On 16/08/18 11:16 AM, Kit Chow wrote:
-> >>> I only have access to intel hosts for testing (and possibly an AMD
-> >>> host currently collecting dust) and am not sure how to go about getting
-> >>> the proper test coverage for other architectures.
-> >> Well, I thought you were only changing the Intel IOMMU implementation...
-> >> So testing on Intel hardware seems fine to me.
-> > For the ntb change, I wasn't sure if there was some other arch where
-> > ntb_async_tx_submit would work ok with the pci bar address but
-> > would break with the dma map (assuming map_resource has been implemented).
-> > If its all x86 at the moment, I guess I'm good to go. Please confirm.
->
-> I expect lots of arches have issues with dma_map_resource(), it's pretty
-> new and if it didn't work correctly on x86 I imagine many other arches
-> are wrong too. I an arch is doesn't work, someone will have to fix that
-> arches Iommu implementation. But using dma_map_resource() in
-> ntb_transport is definitely correct compared to what was done before.
->
-> Logan
+Hi Myron
 
+在 2018/8/11 5:33, Myron Stowe 写道:
+> On Fri, 10 Aug 2018 18:04:39 +0800
+> Dongdong Liu <liudongdong3@huawei.com> wrote:
+>
+>> Hi Bjorn, Myron
+>>
+>> I found a bug after applied the patch.
+>>
+>> The topology is as below. The 82599 netcard with two functions
+>> connect to RP. +-[0000:80]-+-00.0-[81]--+-00.0  Device 8086:10fb
+>>   |           |            \-00.1  Device 8086:10fb
+>>
+>> 1. lspci -s BDF -vvv  to get the value of device's MPSS , MPS and
+>> MRRS. RP (80:00.0): MPSS=512 MPS=512 MRRS=512
+>> EP PF0(81:00.0): MPSS=512 MPS=512 MRRS=512
+>>     PF1(81:00.1): MPSS=512 MPS=512 MRRS=512
+>>
+>> 2. Enable SRIOV.
+>> echo 1
+>>> /sys/devices/pci0000\:80/0000\:80\:00.0/0000\:81\:00.0/sriov_numvfs
+>>> RP(80:00.0): MPSS=512 MPS=128 MRRS=512
+>>                            ^^^
+>> EP PF0(81:00.0): MPSS=512 MPS=512 MRRS=512
+>> 			      ^^^ 	
+>>     PF1(81:00.1): MPSS=512 MPS=512 MRRS=512
+>> 			      ^^^ 	
+>>     VF0(81:10.0): MPSS=128 MPS=128 MRRS=128
+>>                                ^^^
+>> The 82599 netcard PF (MPSS 512) and VF's MPSS (MPSS 128) are
+>> different. Then RP (MPS 128) will report Malformed TLP when PF0/PF1
+>> has memory write operation with MPS 512.
+>>
+>> The 82599 netcard could work ok without the patch.
+>> The values of MPSS, MPS, MRRS are as below without the patch.
+>>
+>> RP(80:00.0): MPSS=512 MPS=512 MRRS=512
+>>                            ^^^
+>> EP PF0(81:00.0): MPSS=512 MPS=512 MRRS=512
+>> 			      ^^^ 	
+>>     PF1(81:00.1): MPSS=512 MPS=512 MRRS=512
+>> 			      ^^^ 	
+>>     VF0(81:10.0): MPSS=128 MPS=128 MRRS=128
+>>                                ^^^
+>
+> Hi Dongdong,
+>
+> Thanks for the testing and noticing a problem with the patch,
+> especially before it was incorporated upstream!
+>
+>
+> Looking into the PCI Express Base spec (4.0 r1.0), section 9.3.5.3
+> concerning the "Device Capabilities Register", it indicates "PF and VF
+> functionality is defined in Section 7.5.3.3 except where noted in
+> Table 9-15".  Table 9-15 doesn't specifically mention anything with
+> respect to MPSS which would make one _think_ that its respective VF's
+> bits are valid.
+Yes, very easy to misunderstand especially section 7.5.3.3 says
+Max_Payload_Size Supported--
+The Functions of a Multi-Function Device are permitted to report
+different values for this field.
+>
+> However, section 9.3.5.4, concerning the "Device Control Register",
+> does specifically show both Max_Payload_Size (MPS) and
+> Max_Read_request_Size (MRRS) to be 'RsvdP' for VFs in Table 9-16
+> [1].  Just prior to the table it states:
+>   "PF and VF functionality is defined in Section 7.5.3.4 except where
+>    noted in Table 9-16. For VF fields marked RsvdP, the PF setting
+>    applies to the VF."
+>
+> All of which implies that with respect to MPSS, MPS, and MRRS values,
+> we should _not_ be paying any attention to the VF's fields, but
+> rather only to the PF's.  Only looking at the PF's fields also
+> _logically_ makes sense as it is the sole physical interface to the
+> PCIe bus.
+Thanks for clarifying this.
+>
+>
+> As to the patch, looks like an additional check as to if the
+> device is a virtual function - 'dev->is_virtfn' - is needed where we
+> bail out early in the case that it is.
 
-We have been running locally with Kit's change for dma_map_resource and its
-incorporation in ntb_async_tx_submit for the destination address and
-it runs fine
-under "load" (iperf) on a Xeon (Xeon(R) CPU E5-2680 v4 @ 2.40GHz) based system,
-regardless of whether the DMA engine being used is IOAT or a PLX
-device sitting in
-the PCIe tree. However, when we go back to a i7 (i7-7700K CPU @ 4.20GHz) based
-system it seems to run into issues, specifically when put under a
-load. In this case,
-just having a load using a single ping command with an interval=0, i.e. no delay
-between ping packets, after a few thousand packets the system just hangs. No
-panic or watchdogs.  Note that in this scenario I can only use a PLX DMA engine.
-
-Just wondering if anybody might have a clue as to why the i7 system might run
-into issues, but a Xeon system not. IOMMU differences? My gut reaction is that
-the problem may not necessarily be IOMMU hardware related, but perhaps simply
-a timing issue given the difference in cpu speeds between these systems and
-maybe we're hitting some window in the Intel IOMMU mapping/unmapping logic.
-
+Yes, that will be ok.
 Thanks,
-Eric
+Dongdong
+
+>
+>
+> [1] Per 7.4 "Configuration Register Types: 'RsvdP' fields are -
+>       "Reserved for future RW implementations.  Register bits are
+>        read-only and must return zero when read. Software must preserve
+>        the value read for writes to bits."
+>     which accounts for the MPS, and MRRS values being read as '0', and
+>     thus subsequently intereptred as '128'.
+>
+>     Which brings up a tangental question: Should 'lspci' interpret,
+>     and output, 'RsvdP' fields of the Device Control Register
+>     corresponding to VFs?
+>
+> Myron
+>
+>>
+>> Thanks,
+>> Dongdong
+> 在 2018/8/1 22:05, Bjorn Helgaas 写道:
+>>
+> snip O<
+>
+> .
+>
