@@ -1,176 +1,67 @@
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Return-Path: <SRS0=qTcG=K2=deltatee.com=logang@kernel.org>
+Return-Path: <SRS0=qTcG=K2=deltatee.com=logang@kernel.org>
+To: Kit Chow <kchow@gigaio.com>, Dave Jiang <dave.jiang@intel.com>,
+ Eric Pilmore <epilmore@gigaio.com>, Bjorn Helgaas <helgaas@kernel.org>
+Cc: "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+ David Woodhouse <dwmw2@infradead.org>,
+ Alex Williamson <alex.williamson@redhat.com>,
+ "iommu@lists.linux-foundation.org" <iommu@lists.linux-foundation.org>
+References: <CAOQPn8soxubJxb=vp7kz+AM6LbPH5y+_Nx0Vzv7rjV_nMMqEmA@mail.gmail.com>
+ <95e53520-b05f-4be4-e694-463d717453a8@gigaio.com>
+ <cdd9245f-eb23-9e10-1755-8f396a2cd255@deltatee.com>
+ <b278c1e5-6f08-c879-a27d-7fc172645fd5@gigaio.com>
+ <f04fae39-645e-3c6e-07c0-b194260bf5de@deltatee.com>
+ <3f503940-db6a-ec75-ed15-1db99d5d48ef@gigaio.com>
+ <112A412BB11A1242B37129D931BCE5348382CFB2@fmsmsx117.amr.corp.intel.com>
+ <b8af340c-d40b-cb8c-987f-b394f1d6ec3e@gigaio.com>
+ <adf51c74-36fa-b61d-8497-27bd75178ba4@deltatee.com>
+ <aa9c3f41-efc9-8c68-a517-2736c8986621@gigaio.com>
+ <1170c096-a749-6ee3-32d4-ebba1d12adff@gigaio.com>
+ <929f3dfa-fbff-c582-3be5-c368f11feb7e@deltatee.com>
+ <460cc47f-6a8e-67b0-01a0-02f0c51df258@intel.com>
+ <0f653f8f-c7ae-831d-e238-2742590d9ea1@deltatee.com>
+ <6525fa4d-7d9b-0136-7206-f8351230af46@intel.com>
+ <f22c565e-ba49-c83d-3e51-7967664c7136@deltatee.com>
+ <499934e7-3734-1aee-37dd-b42a5d2a2608@intel.com>
+ <9d135f61-20c2-e966-4d7d-3e154384ea08@gigaio.com>
+From: Logan Gunthorpe <logang@deltatee.com>
+Message-ID: <0a9fa9c3-dbe4-6451-9c1a-06b662702f61@deltatee.com>
+Date: Fri, 10 Aug 2018 20:10:20 -0600
 MIME-Version: 1.0
-In-Reply-To: <alpine.LRH.2.02.1808061552090.11930@file01.intranet.prod.int.rdu2.redhat.com>
-References: <alpine.LRH.2.02.1808021242320.31834@file01.intranet.prod.int.rdu2.redhat.com>
- <alpine.LRH.2.02.1808030212340.17672@file01.intranet.prod.int.rdu2.redhat.com>
- <CAKv+Gu8DeuksZhk1g3q_msSKV_hSY_2e1uzVten9-oGO3j9Sqg@mail.gmail.com>
- <20180803094129.GB17798@arm.com>
- <alpine.LRH.2.02.1808031235410.31584@file01.intranet.prod.int.rdu2.redhat.com>
- <CAKv+Gu-aNFh1fsr_05SEwDp99n3pLrguP7=tEcFQPNY53=K7Fw@mail.gmail.com>
- <alpine.LRH.2.02.1808031424140.14030@file01.intranet.prod.int.rdu2.redhat.com>
- <CAHCPf3s-+Qf=WBZz1KpisDMG3520jCUh8PLAO3PHa4jdt8kCTw@mail.gmail.com>
- <CAKv+Gu9_h-WFi1j4+DWUN_dMj75SKKHxWoDH8WQ9P7S7MNpZQg@mail.gmail.com>
- <alpine.LRH.2.02.1808060553130.30832@file01.intranet.prod.int.rdu2.redhat.com>
- <99fff4fe-afa9-f12f-a518-472a9dd1c530@arm.com>
- <CAKv+Gu_C2g=C=gMpk4a5jpDORnxZY6t1v=HDoy59m5vwNBxBBg@mail.gmail.com>
- <alpine.LRH.2.02.1808061306490.12989@file01.intranet.prod.int.rdu2.redhat.com>
- <CAKv+Gu_8Rq6X24ZOYvG7+kQQGSGYAZuu_co4k1nJS8K7rkrWMA@mail.gmail.com>
- <alpine.LRH.2.02.1808061552090.11930@file01.intranet.prod.int.rdu2.redhat.com>
-From: Ard Biesheuvel <ard.biesheuvel@linaro.org>
-Date: Mon, 6 Aug 2018 22:11:30 +0200
-Message-ID: <CAKv+Gu_iCgAeGmrajZ_euMcFLntWG1a51HF_HQ1TO=fV_v__AQ@mail.gmail.com>
-Subject: Re: framebuffer corruption due to overlapping stp instructions on
- arm64
-To: Mikulas Patocka <mpatocka@redhat.com>
-List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
-List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
-List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
-List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
-List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
-Cc: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>,
- Joao Pinto <Joao.Pinto@synopsys.com>,
- Catalin Marinas <catalin.marinas@arm.com>,
- linux-pci <linux-pci@vger.kernel.org>, Will Deacon <will.deacon@arm.com>,
- Russell King <linux@armlinux.org.uk>,
- Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
- Matt Sealey <neko@bakuhatsu.net>, Jingoo Han <jingoohan1@gmail.com>,
- Robin Murphy <robin.murphy@arm.com>,
- linux-arm-kernel <linux-arm-kernel@lists.infradead.org>
-Content-Type: text/plain; charset="us-ascii"
-Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
-Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
+In-Reply-To: <9d135f61-20c2-e966-4d7d-3e154384ea08@gigaio.com>
+Content-Type: text/plain; charset=utf-8
+Subject: Re: IOAT DMA w/IOMMU
 List-ID: <linux-pci.vger.kernel.org>
 
-On 6 August 2018 at 21:54, Mikulas Patocka <mpatocka@redhat.com> wrote:
->
->
-> On Mon, 6 Aug 2018, Ard Biesheuvel wrote:
->
->> On 6 August 2018 at 19:09, Mikulas Patocka <mpatocka@redhat.com> wrote:
->> >
->> >
->> > On Mon, 6 Aug 2018, Ard Biesheuvel wrote:
->> >
->> >> On 6 August 2018 at 14:42, Robin Murphy <robin.murphy@arm.com> wrote:
->> >> > On 06/08/18 11:25, Mikulas Patocka wrote:
->> >> > [...]
->> >> >>>
->> >> >>> None of this explains why some transactions fail to make it across
->> >> >>> entirely. The overlapping writes in question write the same data to
->> >> >>> the memory locations that are covered by both, and so the ordering in
->> >> >>> which the transactions are received should not affect the outcome.
->> >> >>
->> >> >>
->> >> >> You're right that the corruption couldn't be explained just by reordering
->> >> >> writes. My hypothesis is that the PCIe controller tries to disambiguate
->> >> >> the overlapping writes, but the disambiguation logic was not tested and it
->> >> >> is buggy. If there's a barrier between the overlapping writes, the PCIe
->> >> >> controller won't see any overlapping writes, so it won't trigger the
->> >> >> faulty disambiguation logic and it works.
->> >> >>
->> >> >> Could the ARM engineers look if there's some chicken bit in Cortex-A72
->> >> >> that could insert barriers between non-cached writes automatically?
->> >> >
->> >> >
->> >> > I don't think there is, and even if there was I imagine it would have a
->> >> > pretty hideous effect on non-coherent DMA buffers and the various other
->> >> > places in which we have Normal-NC mappings of actual system RAM.
->> >> >
->> >>
->> >> Looking at the A72 manual, there is one chicken bit that looks like it
->> >> may be related:
->> >>
->> >> CPUACTLR_EL1 bit #50:
->> >>
->> >> 0 Enables store streaming on NC/GRE memory type. This is the reset value.
->> >> 1 Disables store streaming on NC/GRE memory type.
->> >>
->> >> so putting something like
->> >>
->> >> mrs x0, S3_1_C15_C2_0
->> >> orr x0, x0, #(1 << 50)
->> >> msr S3_1_C15_C2_0, x0
->> >>
->> >> in __cpu_setup() would be worth a try.
->> >
->> > It won't boot.
->> >
->> > But if i write the same value that was read, it also won't boot.
->> >
->> > I created a simple kernel module that reads this register and it has bit
->> > 32 set, all other bits clear. But when I write the same value into it, the
->> > core that does the write is stuck in infinite loop.
->> >
->> > So, it seems that we are writing this register from a wrong place.
->> >
->>
->> Ah, my bad. I didn't look closely enough at the description:
->>
->> """
->> The accessibility to the CPUACTLR_EL1 by Exception level is:
->>
->> EL0              -
->> EL1(NS)          RW (a)
->> EL1(S)           RW (a)
->> EL2              RW (b)
->> EL3(SCR.NS = 1)  RW
->> EL3(SCR.NS = 0)  RW
->>
->> (a) Write access if ACTLR_EL3.CPUACTLR is 1 and ACTLR_EL2.CPUACTLR is
->> 1, or ACTLR_EL3.CPUACTLR is 1 and SCR.NS is 0.
->> """
->>
->> so you'll have to do this from ARM Trusted Firmware. If you're
->> comfortable rebuilding that:
->>
->> diff --git a/include/lib/cpus/aarch64/cortex_a72.h
->> b/include/lib/cpus/aarch64/cortex_a72.h
->> index bfd64918625b..a7b8cf4be0c6 100644
->> --- a/include/lib/cpus/aarch64/cortex_a72.h
->> +++ b/include/lib/cpus/aarch64/cortex_a72.h
->> @@ -31,6 +31,7 @@
->>  #define CORTEX_A72_ACTLR_EL1                   S3_1_C15_C2_0
->>
->>  #define CORTEX_A72_ACTLR_DISABLE_L1_DCACHE_HW_PFTCH    (1 << 56)
->> +#define CORTEX_A72_ACTLR_DIS_NC_GRE_STORE_STREAMING    (1 << 50)
->>  #define CORTEX_A72_ACTLR_NO_ALLOC_WBWA         (1 << 49)
->>  #define CORTEX_A72_ACTLR_DCC_AS_DCCI           (1 << 44)
->>  #define CORTEX_A72_ACTLR_EL1_DIS_INSTR_PREFETCH                (1 << 32)
->> diff --git a/lib/cpus/aarch64/cortex_a72.S b/lib/cpus/aarch64/cortex_a72.S
->> index 55e508678284..5914d6ee3ba6 100644
->> --- a/lib/cpus/aarch64/cortex_a72.S
->> +++ b/lib/cpus/aarch64/cortex_a72.S
->> @@ -133,6 +133,15 @@ func cortex_a72_reset_func
->>         orr     x0, x0, #CORTEX_A72_ECTLR_SMP_BIT
->>         msr     CORTEX_A72_ECTLR_EL1, x0
->>         isb
->> +
->> +       /* ---------------------------------------------
->> +        * Disables store streaming on NC/GRE memory type.
->> +        * ---------------------------------------------
->> +        */
->> +       mrs     x0, CORTEX_A72_ACTLR_EL1
->> +       orr     x0, x0, #CORTEX_A72_ACTLR_DIS_NC_GRE_STORE_STREAMING
->> +       msr     CORTEX_A72_ACTLR_EL1, x0
->> +       isb
->>         ret x19
->>  endfunc cortex_a72_reset_func
->
-> Unfortunatelly, it doesn't work. I verified that the bit is set after
-> booting Linux, but the memcpy corruption was still present.
->
-> I also tried the other chicken bits, it slowed down the system noticeably,
-> but had no effect on the memcpy corruption.
->
 
-OK, it was worth a shot
 
-Let's wait and see if Marcin has any results.
+On 10/08/18 06:53 PM, Kit Chow wrote:
+> I was able to finally succeed in doing the dma transfers over ioat only
+> when prot has DMA_PTE_WRITE set by setting the direction to either
+> DMA_FROM_DEVICE or DMA_BIDIRECTIONAL. Any ideas if the prot settings
+> need to be changed? Are there any bad side effects if I used
+> DMA_BIDIRECTIONAL?
 
-_______________________________________________
-linux-arm-kernel mailing list
-linux-arm-kernel@lists.infradead.org
-http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
+Good to hear it. Without digging into the direction much all I can say
+is that it can sometimes be very confusing what the direction is. Adding
+another PCI device just adds to the confusion.
+
+I believe, the direction should be from the IOAT's point of view. So if
+the IOAT is writing to the BAR you'd set DMA_FROM_DEVICE (ie. data is
+coming from the IOAT) and if it's reading you'd set DMA_TO_DEVICE (ie.
+data is going to the IOAT).
+
+Using DMA_BIDIRECTIONAL just forgoes any hardware security / protection
+that the buffer would have in terms of direction. Generally it's good
+practice to use the strictest direction you can.
+
+> Given that using the pci bar address as is without getting an iommu
+> address results in the same "PTE Write access" error, I wonder if there
+> is some internal 'prot' associated with the non-translated pci bar
+> address that just needs to be tweaked to include DMA_PTE_WRITE???
+
+No, I don't think so. The 'prot' will be a property of the IOMMU. Not
+having an entry is probably just the same (from the perspective of the
+error you see) as only having an entry for reading.
+
+Logan
