@@ -1,65 +1,109 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mx0b-001b2d01.pphosted.com ([148.163.158.5]:39906 "EHLO
-        mx0a-001b2d01.pphosted.com" rhost-flags-OK-OK-OK-FAIL)
-        by vger.kernel.org with ESMTP id S1727408AbeHPAuB (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Wed, 15 Aug 2018 20:50:01 -0400
-Received: from pps.filterd (m0098417.ppops.net [127.0.0.1])
-        by mx0a-001b2d01.pphosted.com (8.16.0.22/8.16.0.22) with SMTP id w7FLsSpV116045
-        for <linux-pci@vger.kernel.org>; Wed, 15 Aug 2018 17:55:59 -0400
-Received: from e06smtp03.uk.ibm.com (e06smtp03.uk.ibm.com [195.75.94.99])
-        by mx0a-001b2d01.pphosted.com with ESMTP id 2kvv500n9h-1
-        (version=TLSv1.2 cipher=AES256-GCM-SHA384 bits=256 verify=NOT)
-        for <linux-pci@vger.kernel.org>; Wed, 15 Aug 2018 17:55:59 -0400
-Received: from localhost
-        by e06smtp03.uk.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
-        for <linux-pci@vger.kernel.org> from <benh@au1.ibm.com>;
-        Wed, 15 Aug 2018 22:55:57 +0100
-Subject: Re: [PATCH 1/1] PCI/AER: prevent pcie_do_fatal_recovery from using
- device after it is removed
-From: Benjamin Herrenschmidt <benh@au1.ibm.com>
-Reply-To: benh@au1.ibm.com
-To: poza@codeaurora.org, Thomas Tai <thomas.tai@oracle.com>
-Cc: bhelgaas@google.com, keith.busch@intel.com,
-        linux-pci@vger.kernel.org, linux-pci-owner@vger.kernel.org
-Date: Thu, 16 Aug 2018 07:55:48 +1000
-In-Reply-To: <b0104a716319d76e734c307cb4bedd9d@codeaurora.org>
-References: <1534179088-44219-1-git-send-email-thomas.tai@oracle.com>
-         <1534179088-44219-2-git-send-email-thomas.tai@oracle.com>
-         <51f4b387d9bd96a42d526a6a029fc43b@codeaurora.org>
-         <b0104a716319d76e734c307cb4bedd9d@codeaurora.org>
-Mime-Version: 1.0
-Message-Id: <1c844f2fff88379a2ccc84a1c2ddc2a61dfa036f.camel@au1.ibm.com>
-Content-Type: text/plain; charset="UTF-8"
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <SRS0=I0nE=K3=suse.com=jlee@kernel.org>
+Return-Path: <SRS0=I0nE=K3=suse.com=jlee@kernel.org>
+Date: Sun, 12 Aug 2018 08:15:45 +0800
+From: joeyli <jlee@suse.com>
+To: Bjorn Helgaas <helgaas@kernel.org>
+Cc: "Lee, Chun-Yi" <joeyli.kernel@gmail.com>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Thomas Gleixner <tglx@linutronix.de>,
+	Ingo Molnar <mingo@redhat.com>, "H . Peter Anvin" <hpa@zytor.com>,
+	x86@kernel.org, linux-pci@vger.kernel.org,
+	linux-kernel@vger.kernel.org
+Subject: Re: [PATCH] x86/PCI: Claim the resources of firmware enabled IOAPIC
+ before children bus
+Message-ID: <20180812001413.GC3570@linux-l9pv.suse>
+References: <20180724110144.16442-1-jlee@suse.com>
+ <20180806214807.GE30691@bhelgaas-glaptop.roam.corp.google.com>
+ <20180808155318.GE13767@linux-l9pv.suse>
+ <20180808212322.GF49411@bhelgaas-glaptop.roam.corp.google.com>
+ <20180810092501.GP13767@linux-l9pv.suse>
+ <20180810135837.GI113140@bhelgaas-glaptop.roam.corp.google.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20180810135837.GI113140@bhelgaas-glaptop.roam.corp.google.com>
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tue, 2018-08-14 at 14:52 +0530, poza@codeaurora.org wrote:
-> > >       if (result == PCI_ERS_RESULT_RECOVERED) {
-> > >               if (pcie_wait_for_link(udev, true))
-> > >                       pci_rescan_bus(udev->bus);
-> > > -            pci_info(dev, "Device recovery from fatal error successful\n");
-> > > +            /* find the pci_dev after rescanning the bus */
-> > > +            dev = pci_get_domain_bus_and_slot(domain, bus, devfn);
+On Fri, Aug 10, 2018 at 08:58:37AM -0500, Bjorn Helgaas wrote:
+> On Fri, Aug 10, 2018 at 05:25:01PM +0800, joeyli wrote:
+> > On Wed, Aug 08, 2018 at 04:23:22PM -0500, Bjorn Helgaas wrote:
+> > ...
+[...snip]
+> > hm... I have another question that it may not relates to this issue. I
+> > was tracing the code path of PCI hot-remove/hotplug. Base on spec, looks
+> > that the RST# should be asserted when hot-remove. And the memory decode
+> > bit must be set to zero after RST# be asserted. But I didn't see that
+> > any kernel PCI/ACPI code set RST#. The only possible code to set RST# is
+> > in POWER architecture. Do you know who assert the RST# when hot-remove?    
+> 
+> RST# is a conventional PCI signal (not a PCIe signal).  In any case, I
+> would expect signals like that to be handled by hardware, not by
+> software.  What section of the spec are you looking at?  I wouldn't
+
+In PCI Hot-Plug Spec v1.1
+
+2.2.1 Hot Removal
+The Hot-Plug System Driver uses the Hot-Plug Controller to do the following:
+a) Assert RST# to the slot and isolate the slot from the rest of the bus, in
+   either order.
+b) Power down the slot.
+c) Change the optional slot-state indicator, as defined in Section 3.1.1, to show
+   that the slot is off.
+
+In the above description, it said that "Hot-Plug System Driver" should done
+the job. So I was think that kernel driver must asserts RST#, but I didn't
+find that in kernel code.
+
+Then, in PCI Local Bus spec v2.2, it mentions:
+
+Table 6-1: Command Register Bits
+Bit Location            Description
+0                       ...State after RST# is 0.
+1                       ...State after RST# is 0.
+
+So, after hot-remove the RST# must be asserted and the IO/memory
+decode bit should also be set to zero.
+
+I was tracing the kerenl hot-remove code for RST# because I
+want to make sure that kernel didn't change the RST# state from
+firmware.
+
+> expect any requirements for doing things to a device when the device
+> is being hot-removed, since the device may already be inaccessible,
+> e.g., physically unreachable.
+
+I see! It makes sense.
+
+But I still confused about the "Hot-Plug System Driver" wording in
+PCI Hot-Plug Spec. The "Hot-Plug System Driver " means a kernel
+driver?
+
+> 
+> On a hot-*add*, there would of course be requirements about how the
+> device powers up and comes out of reset.  For native drivers like
+> pciehp/shpcpd/etc, there are often ways for software to control power
+> to the slot, e.g., the "Power Controller Control" bit in the PCIe Slot
+> Control register.
+> 
+> For ACPI-mediated hotplug (as in your situation), the actual hardware
+> details are handled by the firmware and all the OS sees are things
+> like ACPI Notify events and it uses methods like _STA and other things
+> mentioned in ACPI v6.2, sec 6.3.
+> 
+> > > What are the chances of getting a firmware fix?  Has this firmware
+> > > already shipped to customers?
 > > 
-> > one of the motivations was to remove and re-enumerate rather then
-> > going thorugh driver's recovery sequence
-> > was; it might be possible that hotplug capable bridge, the device
-> > might have changed.
-> > hence this check will fail
+> > The good news is that the machine has not shipped yet. As I know
+> > that manufacturer is also finding the root cause for why firmware
+> > enabled memory decode bit and also set the wrong addresses.
+> 
+> I don't think it's necessarily a problem that firmware enables the
+> IOAPIC.  This is ACPI-mediated hotplug and it looks like it adds CPUs,
+> memory, and I/O.  I wouldn't be surprised if the firmware has to make
+> the IOAPIC operational to make some parts of the hot-add work.
+> 
+> The address conflict is the real problem.
 
-Under what circumstances do you actually "unplug" the device ? We are
-trying to cleanup/fix some of the PowerPC EEH code which is in a way
-similar to AER, and we found that this unplug/replug, which we do if
-the driver doesn't have recovery callbacks only, is causing more
-problems than it solves.
+Thanks for your explanation. It's really useful to me.
 
-We are moving toward instead unbinding the driver, resetting the
-device, then re-binding the driver instead of unplug/replug.
-
-Also why would you ever bypass the driver callbacks if the driver has
-some ? The whole point is to keep the driver bound while resetting the
-device (provided it has the right callbacks) so we don't lose the
-linkage between stroage devices and mounted filesystems.
-
-Cheers,
-Ben.
+Thanks a lot!
+Joey Lee
