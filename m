@@ -1,113 +1,64 @@
-Return-Path: <SRS0=kyUp=LA=h08.hostsharing.net=foo00@kernel.org>
-Return-Path: <SRS0=kyUp=LA=h08.hostsharing.net=foo00@kernel.org>
-Date: Fri, 17 Aug 2018 18:39:19 +0200
-From: Lukas Wunner <lukas@wunner.de>
-To: Benjamin Herrenschmidt <benh@kernel.crashing.org>
-Cc: Bjorn Helgaas <helgaas@kernel.org>, Hari Vyas <hari.vyas@broadcom.com>,
-	linux-pci@vger.kernel.org, ray.jui@broadcom.com,
-	Konstantin Khlebnikov <khlebnikov@yandex-team.ru>,
-	Jens Axboe <axboe@kernel.dk>
-Subject: Re: PCIe enable device races (Was: [PATCH v3] PCI: Data corruption
- happening due to race condition)
-Message-ID: <20180817163919.wxrk5bnexqplgm7z@wunner.de>
-References: <1530608741-30664-1-git-send-email-hari.vyas@broadcom.com>
- <20180731163727.GK45322@bhelgaas-glaptop.roam.corp.google.com>
- <ecaed7664b46d73888d2494065905f8e108fc0f4.camel@kernel.crashing.org>
- <20180815185027.GE28888@bhelgaas-glaptop.roam.corp.google.com>
- <e3316c91ad722434360b4018b17cbfe265e97801.camel@kernel.crashing.org>
- <20180816122807.6xof2u3hbhv57ua5@wunner.de>
- <6b610ee94bcef718db97600ae0ee931de3501e40.camel@kernel.crashing.org>
- <6ce65522aee9a2edbc6c116624b1b0b60a7b79d8.camel@kernel.crashing.org>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from nikam.ms.mff.cuni.cz ([195.113.20.16]:44438 "EHLO
+        nikam.ms.mff.cuni.cz" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1727756AbeHLMGC (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Sun, 12 Aug 2018 08:06:02 -0400
+Date: Sun, 12 Aug 2018 11:28:37 +0200
+From: Martin Mares <mj@ucw.cz>
+To: Matthew Wilcox <willy@infradead.org>
+Cc: Logan Gunthorpe <logang@deltatee.com>,
+        linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
+        linux-doc@vger.kernel.org, Stephen Bates <sbates@raithlin.com>,
+        Christoph Hellwig <hch@lst.de>,
+        Bjorn Helgaas <bhelgaas@google.com>,
+        Jonathan Corbet <corbet@lwn.net>,
+        Ingo Molnar <mingo@kernel.org>,
+        Thomas Gleixner <tglx@linutronix.de>,
+        "Paul E. McKenney" <paulmck@linux.vnet.ibm.com>,
+        Marc Zyngier <marc.zyngier@arm.com>,
+        Kai-Heng Feng <kai.heng.feng@canonical.com>,
+        Frederic Weisbecker <frederic@kernel.org>,
+        Dan Williams <dan.j.williams@intel.com>,
+        =?utf-8?B?SsOpcsO0bWU=?= Glisse <jglisse@redhat.com>,
+        Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+        Alex Williamson <alex.williamson@redhat.com>,
+        Christian =?utf-8?B?S8O2bmln?= <christian.koenig@amd.com>
+Subject: Re: lspci: Display path to device
+Message-ID: <mj+md-20180812.092635.39872.nikam@ucw.cz>
+References: <20180717170204.30470-1-logang@deltatee.com>
+ <20180717203900.GA1771@bombadil.infradead.org>
+ <mj+md-20180810.091549.51451.nikam@ucw.cz>
+ <mj+md-20180810.103017.64385.nikam@ucw.cz>
+ <20180810145655.GA16533@bombadil.infradead.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <6ce65522aee9a2edbc6c116624b1b0b60a7b79d8.camel@kernel.crashing.org>
+In-Reply-To: <20180810145655.GA16533@bombadil.infradead.org>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Fri, Aug 17, 2018 at 11:12:50AM +1000, Benjamin Herrenschmidt wrote:
-> Allright, looking at those atomic flags, we have two today:
+Hello!
+
+> One is that using -P and -s together doesn't work because we haven't
+> scanned the entire topology.
 > 
->  - PCI_DEV_DISCONNECTED
+> $ ./lspci-mw -PF tests/fujitsu-p8010.lspci -s 1d:00.0
+> 00:1e.0/03.0/00.0 Network controller: 3Com Corporation 3com 3CRWE154G72 [Office Connect Wireless LAN Adapter] (rev 01)
+> $ ./lspci-mm -PF tests/fujitsu-p8010.lspci -s 1d:00.0
+> 1d:00.0 Network controller: 3Com Corporation 3com 3CRWE154G72 [Office Connect Wireless LAN Adapter] (rev 01)
+
+Fixed. When topology is required, we now scan all devices and apply the
+filters later.
+
+> The other is that even when not using -s, the topology isn't fully represented:
 > 
-> Now that's a complete dup of pci_channel_state_t error_state, yuck.
+> $ ./lspci-mm -PF tests/fujitsu-p8010.lspci |grep 3com
+> 00:1e.0/00.0 Network controller: 3Com Corporation 3com 3CRWE154G72 [Office Connect Wireless LAN Adapter] (rev 01)
 
-Guess what, I did suggest to use pci_channel_state back then:
+Ah well, it seems that the tree mode never worked with CardBus bridges. Fixed.
 
-   "We've got three pci_channel_state values defined in include/linux/pci.h,
-    "normal", "frozen" and "perm_failure".  Instead of adding a new
-    "is_removed" bit to struct pci_dev, would it perhaps make more sense to
-    just add a new type of pci_channel_state for removed devices?"
-    https://spinics.net/lists/linux-pci/msg55411.html
+After some pondering, I changed the format of the paths to include bus numbers
+in all steps. I think it is more intuitive.
 
-This was Keith's answer:
+Please give it a try. If it works, I will merge the branch to master.
 
-   "I'd be happy if we can reuse that, but concerned about overloading
-    error_state's intended purpose for AER. The conditions under which an
-    'is_removed' may be set can also create AER events, and the aer driver
-    overrides the error_state."
-    https://spinics.net/lists/linux-pci/msg55417.html
-
-
-> Also the atomic bit is completely pointless. It only protects the
-> actual field from RMW access, it doesn't synchronize with any of the
-> users.
-
-Synchronizing with users?  There's nothing to synchronize with here,
-once it has been determined the device is gone, the bit should be set
-ASAP.  Places where this bit is checked need to be able to cope with the
-device physically removed but the bit not yet set.  They should just
-skip device accesses *if* the bit is set.
-
-The bit was made atomic because Bjorn wanted to avoid RMW races:
-
-   "This makes me slightly worried because this is a bitfield and there's
-    no locking.  A concurrent write to some nearby field can corrupt
-    things.  It doesn't look *likely*, but it's a lot of work to be
-    convinced that this is completely safe, especially since the writer is
-    running on behalf of the bridge, and the target is a child of the
-    bridge."
-    https://patchwork.kernel.org/patch/9402793/
-
-
-> It's also tested in __pci_write_msi_msg, why ? What for ? If MMIO is
-> blocked it's handled by the channel state. Again, you notice the
-> complete absence of synchronization between the producer and the
-> consumer of that bit.
-
-Well, a quick git blame would have led you to commit 0170591bb067,
-which contains the following rationale:
-
-   "Check the device connected state prior to executing device shutdown
-    operations or writing MSI messages so that tear down on disconnected
-    devices completes quicker."
-                      ^^^^^^^
-
->  - PCI_DEV_ADDED
-> 
-> Now the only reason that was moved was to avoid the RMW races on the
-> bit itself. There is, here too, 0 synchronization with the callers.
-> 
-> Now I forgot the specific details of the race Hari found, but this is
-> definitely not the right way to fix things. Plus it forced powerpc to
-> do a relative path include which sucks.
-> 
-> The latter would be much more cleanly handled using the mutex I
-> proposed.
-
-I disagree, a mutex is not cleaner if it adds 3 LoC instead of 1
-while the only point is to avoid RMW races and not achieve any kind
-of synchronization.
-
-
-> The former should go a way, that's what error_state is already meant to
-> be. As for the locking, this needs to be looked at more closely since
-> this is inherently a racy op, though testing it in the MSI writing code
-> looks more like a band-aid than a feature to me. The original commit
-> lokos like it's meant to just be some kind of optimisation. One has to
-> be careful however of the possible ordering issues when the bit is
-> cleared.
-
-PCI_DEV_DISCONNECTED is never cleared.  What sense would that make?
-
-Thanks,
-
-Lukas
+					Martin
