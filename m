@@ -1,44 +1,65 @@
-Return-Path: <SRS0=veIH=K7=kernel.crashing.org=benh@kernel.org>
-Return-Path: <SRS0=veIH=K7=kernel.crashing.org=benh@kernel.org>
-Message-ID: <d8cd08c2e5ade8087d1ce3a4c046be1bd3228a0d.camel@kernel.crashing.org>
-Subject: Re: PCIe enable device races (Was: [PATCH v3] PCI: Data corruption
- happening due to race condition)
-From: Benjamin Herrenschmidt <benh@kernel.crashing.org>
-To: Jens Axboe <axboe@kernel.dk>,
-        Konstantin Khlebnikov
-	 <khlebnikov@yandex-team.ru>,
-        Bjorn Helgaas <helgaas@kernel.org>
-Cc: Hari Vyas <hari.vyas@broadcom.com>, bhelgaas@google.com,
-        linux-pci@vger.kernel.org, ray.jui@broadcom.com
-Date: Fri, 17 Aug 2018 07:37:35 +1000
-In-Reply-To: <62ac393c-931a-f328-acf6-c9afc8a026ea@kernel.dk>
-References: <1530608741-30664-1-git-send-email-hari.vyas@broadcom.com>
-	 <20180731163727.GK45322@bhelgaas-glaptop.roam.corp.google.com>
-	 <ecaed7664b46d73888d2494065905f8e108fc0f4.camel@kernel.crashing.org>
-	 <20180815185027.GE28888@bhelgaas-glaptop.roam.corp.google.com>
-	 <e3316c91ad722434360b4018b17cbfe265e97801.camel@kernel.crashing.org>
-	 <fa218ce2-c337-e776-d958-f1f8a1129c9a@yandex-team.ru>
-	 <6f76eb5f54fdc780dac744773d836214d7844346.camel@kernel.crashing.org>
-	 <62ac393c-931a-f328-acf6-c9afc8a026ea@kernel.dk>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+Return-Path: <SRS0=cgPf=K4=deltatee.com=logang@kernel.org>
+Return-Path: <SRS0=cgPf=K4=deltatee.com=logang@kernel.org>
+To: Kit Chow <kchow@gigaio.com>, Robin Murphy <robin.murphy@arm.com>,
+ Dave Jiang <dave.jiang@intel.com>, Eric Pilmore <epilmore@gigaio.com>,
+ Bjorn Helgaas <helgaas@kernel.org>
+Cc: "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+ Alex Williamson <alex.williamson@redhat.com>,
+ David Woodhouse <dwmw2@infradead.org>,
+ "iommu@lists.linux-foundation.org" <iommu@lists.linux-foundation.org>
+References: <CAOQPn8soxubJxb=vp7kz+AM6LbPH5y+_Nx0Vzv7rjV_nMMqEmA@mail.gmail.com>
+ <112A412BB11A1242B37129D931BCE5348382CFB2@fmsmsx117.amr.corp.intel.com>
+ <b8af340c-d40b-cb8c-987f-b394f1d6ec3e@gigaio.com>
+ <adf51c74-36fa-b61d-8497-27bd75178ba4@deltatee.com>
+ <aa9c3f41-efc9-8c68-a517-2736c8986621@gigaio.com>
+ <1170c096-a749-6ee3-32d4-ebba1d12adff@gigaio.com>
+ <929f3dfa-fbff-c582-3be5-c368f11feb7e@deltatee.com>
+ <460cc47f-6a8e-67b0-01a0-02f0c51df258@intel.com>
+ <0f653f8f-c7ae-831d-e238-2742590d9ea1@deltatee.com>
+ <6525fa4d-7d9b-0136-7206-f8351230af46@intel.com>
+ <f22c565e-ba49-c83d-3e51-7967664c7136@deltatee.com>
+ <499934e7-3734-1aee-37dd-b42a5d2a2608@intel.com>
+ <9d135f61-20c2-e966-4d7d-3e154384ea08@gigaio.com>
+ <0a9fa9c3-dbe4-6451-9c1a-06b662702f61@deltatee.com>
+ <a2391f6c-d73b-c140-edad-8cd6584dd437@gigaio.com>
+ <c8d69f9b-b3a6-76ee-1a90-b3dbaaa9b82b@arm.com>
+ <3772d88a-e9ad-465a-c91f-df8f9c6219be@gigaio.com>
+ <dd18cf79-aa10-9801-bf95-192f0b86b6d9@gigaio.com>
+From: Logan Gunthorpe <logang@deltatee.com>
+Message-ID: <0e839acf-5948-42aa-2ad6-72ca0d84a8c3@deltatee.com>
+Date: Mon, 13 Aug 2018 17:39:29 -0600
+MIME-Version: 1.0
+In-Reply-To: <dd18cf79-aa10-9801-bf95-192f0b86b6d9@gigaio.com>
+Content-Type: text/plain; charset=utf-8
+Subject: Re: IOAT DMA w/IOMMU
 List-ID: <linux-pci.vger.kernel.org>
 
-On Thu, 2018-08-16 at 13:43 -0600, Jens Axboe wrote:
+
+
+On 13/08/18 05:30 PM, Kit Chow wrote:
+> In arch/x86/include/asm/page.h, there is the following comment in
+> regards to validating the virtual address.
 > 
-> > Ok. Well, my patch fixes it for my repro-case at least and seems to not
-> > break anyhting on my thinkpad so ...
-> > 
-> > Bjorn, are you ok with the approach ? If yes, I'll start breaking up
-> > that patch into a few smaller bits in case something goes wrong and we
-> > want to bisect (such as the changes I did to tracking is_busmaster
-> > etc...)
+> /*
+>  * virt_to_page(kaddr) returns a valid pointer if and only if
+>  * virt_addr_valid(kaddr) returns true.
+>  */
+> #define virt_to_page(kaddr)     pfn_to_page(__pa(kaddr) >> PAGE_SHIFT)
 > 
-> I can try it too, but I was never CC'ed on the actual patch.
+> So it looks like the validation by virt_addr_valid was somehow dropped
+> from the virt_to_page code path. Does anyone have any ideas what
+> happended to it?
 
-https://lore.kernel.org/lkml/08bc40a6af3e614e97a78fbaab688bfcd14520ac.camel@kernel.crashing.org/
+I don't think it was ever validated (though I haven't been around long
+enough to say for certain). What the comment is saying is that you
+shouldn't rely on virt_to_page() unless you know virt_addr_valid() is
+true (which in most cases you can without the extra check). virt_to_page
+is meant to be really fast so adding an extra validation would probably
+be a significant performance regression for the entire kernel.
 
-(I'll also fwd privately)
+The fact that this can happen through dma_map_single() is non-ideal at
+best. It assumes the caller is mapping regular memory and doesn't check
+this at all. It may make sense to fix that but I think people expect
+dma_map_single() to be as fast as possible as well...
 
-Cheers,
-Ben.
+Logan
