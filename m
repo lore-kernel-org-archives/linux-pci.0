@@ -1,63 +1,41 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.29.99]:51764 "EHLO mail.kernel.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1730880AbeHIQk6 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Thu, 9 Aug 2018 12:40:58 -0400
-Date: Thu, 9 Aug 2018 09:15:51 -0500
-From: Bjorn Helgaas <helgaas@kernel.org>
-To: Alexandru Gagniuc <mr.nuke.me@gmail.com>
-Cc: bhelgaas@google.com, keith.busch@intel.com,
-        alex_gagniuc@dellteam.com, austin_bolen@dell.com,
-        shyam_iyer@dell.com, Frederick Lawler <fred@fredlawl.com>,
-        Oza Pawandeep <poza@codeaurora.org>, linux-pci@vger.kernel.org,
-        linux-kernel@vger.kernel.org
-Subject: Re: [PATCH] PCI/AER: Do not clear AER bits if we don't own AER
-Message-ID: <20180809141551.GH49411@bhelgaas-glaptop.roam.corp.google.com>
-References: <20180717153135.25925-1-mr.nuke.me@gmail.com>
+Received: from mx3-rdu2.redhat.com ([66.187.233.73]:45634 "EHLO mx1.redhat.com"
+        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+        id S1728821AbeHMVCy (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Mon, 13 Aug 2018 17:02:54 -0400
+Subject: [PATCH 0/2] Augment device matching its upstream Root Port's MPS
+ logic
+From: Myron Stowe <myron.stowe@redhat.com>
+To: bhelgaas@google.com, linux-pci@vger.kernel.org
+Cc: keith.busch@intel.com, jdmason@kudzu.us, okaya@kernel.org
+Date: Mon, 13 Aug 2018 12:19:31 -0600
+Message-ID: <20180813181931.105655.22182.stgit@tak.stowe>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20180717153135.25925-1-mr.nuke.me@gmail.com>
+Content-Type: text/plain; charset="utf-8"
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tue, Jul 17, 2018 at 10:31:23AM -0500, Alexandru Gagniuc wrote:
-> When we don't own AER, we shouldn't touch the AER error bits. This
-> happens unconditionally on device probe(). Clearing AER bits
-> willy-nilly might cause firmware to miss errors. Instead
-> these bits should get cleared by FFS, or via ACPI _HPX method.
-> 
-> This race is mostly of theoretical significance, as it is not easy to
-> reasonably demonstrate it in testing.
-> 
-> Signed-off-by: Alexandru Gagniuc <mr.nuke.me@gmail.com>
-> ---
->  drivers/pci/pcie/aer.c | 3 +++
->  1 file changed, 3 insertions(+)
-> 
-> diff --git a/drivers/pci/pcie/aer.c b/drivers/pci/pcie/aer.c
-> index a2e88386af28..18037a2a8231 100644
-> --- a/drivers/pci/pcie/aer.c
-> +++ b/drivers/pci/pcie/aer.c
-> @@ -383,6 +383,9 @@ int pci_cleanup_aer_error_status_regs(struct pci_dev *dev)
->  	if (!pci_is_pcie(dev))
->  		return -ENODEV;
->  
-> +	if (pcie_aer_get_firmware_first(dev))
-> +		return -EIO;
+In commit 27d868b5e6cf ("PCI: Set MPS to match upstream bridge") Keith made
+sure every device's MPS setting matched its upstream bridge, making it more
+likely that a hot-added devices would work in a system with an optimized MPS
+configuration.
 
-I like this patch.
+This series augments Keith's approach to include tuning down a Root Port's
+MPS setting in the case where a hot-added device is not capable of matching
+it (see: [1]).
 
-Do we need the same thing in the following places that also clear AER
-status bits or write AER control bits?
+Testing by Dongdong exposed a bug with the logic including Virtual Functions
+(VFs).  VFs should not be included so a pre-cursor patch, 1/2, was added to
+cover such.
 
-  enable_ecrc_checking()
-  disable_ecrc_checking()
-  pci_cleanup_aer_uncorrect_error_status()
-  pci_aer_clear_fatal_status()
+[1] https://bugzilla.kernel.org/show_bug.cgi?id=200527
 
->  	pos = dev->aer_cap;
->  	if (!pos)
->  		return -EIO;
-> -- 
-> 2.14.3
-> 
+Myron Stowe (2):
+      PCI: Skip MPS logic for Virtual Functions (VFs)
+      PCI: Match Root Port's MPS to endpoint's MPSS as necessary
+
+
+ drivers/pci/probe.c |   16 ++++++++++++++--
+ 1 file changed, 14 insertions(+), 2 deletions(-)
+
+-- 
