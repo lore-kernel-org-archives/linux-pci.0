@@ -1,101 +1,88 @@
-Return-Path: <SRS0=brxM=LE=codeaurora.org=poza@kernel.org>
-Return-Path: <SRS0=brxM=LE=codeaurora.org=poza@kernel.org>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mx3-rdu2.redhat.com ([66.187.233.73]:59530 "EHLO mx1.redhat.com"
+        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+        id S1729858AbeHMVDI (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Mon, 13 Aug 2018 17:03:08 -0400
+Subject: [PATCH 2/2] PCI: Match Root Port's MPS to endpoint's MPSS as
+ necessary
+From: Myron Stowe <myron.stowe@redhat.com>
+To: bhelgaas@google.com, linux-pci@vger.kernel.org
+Cc: keith.busch@intel.com, jdmason@kudzu.us, okaya@kernel.org
+Date: Mon, 13 Aug 2018 12:19:46 -0600
+Message-ID: <20180813181946.105655.94535.stgit@tak.stowe>
+In-Reply-To: <20180813181931.105655.22182.stgit@tak.stowe>
+References: <20180813181931.105655.22182.stgit@tak.stowe>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII;
- format=flowed
-Date: Tue, 21 Aug 2018 21:00:13 +0530
-From: poza@codeaurora.org
-To: Keith Busch <keith.busch@intel.com>
-Cc: Benjamin Herrenschmidt <benh@kernel.crashing.org>, Sinan Kaya
- <okaya@kernel.org>, Bjorn Helgaas <helgaas@kernel.org>, Thomas Tai
- <thomas.tai@oracle.com>, bhelgaas@google.com, linux-pci@vger.kernel.org,
- linux-pci-owner@vger.kernel.org, Sam Bobroff <sam.bobroff@au1.ibm.com>
-Subject: Re: [PATCH 1/1] PCI/AER: prevent pcie_do_fatal_recovery from using
- device after it is removed
-In-Reply-To: <20180821143751.GA18477@localhost.localdomain>
-References: <fe891b63-12c7-61ab-a59a-ae24ad766754@kernel.org>
- <ab5cb5b277f1c1c1362ef597ca7b8c6a2cd32cdf.camel@kernel.crashing.org>
- <908ff33ded8f31830f95a8889d8540f1@codeaurora.org>
- <5027d857bb59edfd33442003aa618ece1bc9cd52.camel@kernel.crashing.org>
- <b2e2ac5c92d8a91d00606754d1046578@codeaurora.org>
- <2ecd1fd6d763810d45697f846fa876b58a193b1b.camel@kernel.crashing.org>
- <a149d9657ca83b41c724b0ddd319c6fb@codeaurora.org>
- <512e0e11c3ba462c1d033f8b0e768fa27489731c.camel@kernel.crashing.org>
- <ad23b16cf7ff1f3b51961fda59533892@codeaurora.org>
- <2742bdba5ae8ccc420234b6e6b0224919367ed4c.camel@kernel.crashing.org>
- <20180821143751.GA18477@localhost.localdomain>
-Message-ID: <5839a8643dedd459fc55e327d1ad5217@codeaurora.org>
+Content-Type: text/plain; charset="utf-8"
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 2018-08-21 20:07, Keith Busch wrote:
-> On Tue, Aug 21, 2018 at 04:06:30PM +1000, Benjamin Herrenschmidt wrote:
->> On Tue, 2018-08-21 at 10:44 +0530, poza@codeaurora.org wrote:
->> >
->> > Ok Let me summarize the so far discussed things.
->> >
->> > It would be nice if we all (Bjorn, Keith, Ben, Sinan) can hold consensus
->> > on this.
->> >
->> > 1) Right now AER and DPC both calls pcie_do_fatal_recovery(), I majorly
->> > see DPC as error handling and recovery agent rather than being used for
->> > hotplug.
->> >     so in my opinion, both AER and DPC should have same error handling
->> > and recovery mechanism
->> 
->> Yes.
->> 
->> >     so if there is a way to figure out that in absence of pcihp, if DPC
->> > is being used to support hotplug then we fall back to original DPC
->> > mechanism (which is remove devices)
->> 
->> Not exactly. If the presence detect change indicates it was a hotplug
->> event rather.
-> 
-> The actions associated with error recovery will trigger link state 
-> changes
-> for a lot of existing hardware. PCIEHP currently does the same removal
-> sequence for both link state change (DLLSC) and presence detect change
-> (PDC) events.
-> 
-> It sounds like you want pciehp to do nothing on the DLLSC events that 
-> it
-> currently handles, and instead do the board removal only on PDC.  If 
-> that
-> is the case, is the desire to not remove devices downstream a 
-> permanently
-> disabled link, or does that responsibility fall onto some other 
-> component?
+In commit 27d868b5e6cf ("PCI: Set MPS to match upstream bridge"), we made
+sure every device's MPS setting matches its upstream bridge, making it more
+likely that a hot-added device will work in a system with an optimized MPS
+configuration.
 
-Keith
+Recently I've started encountering systems where the endpoint device's MPSS
+capability is less than its Root Port's current MPS value, thus the
+endpoint is not capable of matching its upstream bridge's MPS setting (see:
+bugzilla via "Link:" below).  This leaves the system vulnerable - the
+upstream Root Port could respond with larger sized TLPs than the device
+can handle, and the device will consider them to be 'Malformed'.
 
-Are you in agreement with following ?
+One could use the "pci=pcie_bus_safe" kernel parameter to resolve the
+issue, but, it both forces a user to have to supply a kernel parameter to
+get the system to function reliable, and may end up limiting MPS settings
+of other, non-related, sub-topologies which could benefit from maintaining
+their larger values.
 
-"
-Right now AER and DPC both calls pcie_do_fatal_recovery(), I majorly see 
-DPC as error handling and recovery agent rather than being used for 
-hotplug.
-    so in my opinion, both AER and DPC should have same error handling 
-and recovery mechanism
+This patch augments Keith's approach to include tuning down a Root Port's
+MPS setting when its hot-added endpoint device is not capable of matching
+it.
 
-    so if there is a way to figure out that in absence of pcihp, if DPC 
-is being used to support hotplug then we fall back to original DPC 
-mechanism (which is remove devices)
-    otherwise, we fall back to drivers callbacks.
+Link: https://bugzilla.kernel.org/show_bug.cgi?id=200527
+Cc: Keith Busch <keith.busch@intel.com>
+Cc: Sinan Kaya <okaya@kernel.org>
+Cc: Dongdong Liu <liudongdong3@huawei.com>
+Acked-by: Jon Mason <jdmason@kudzu.us>
+Signed-off-by: Myron Stowe <myron.stowe@redhat.com>
+---
+ drivers/pci/probe.c |   12 ++++++++++--
+ 1 file changed, 10 insertions(+), 2 deletions(-)
 
-    Spec 6.7.5 Async Removal
-    "
-    The Surprise Down error resulting from async removal may trigger 
-Downstream Port Containment (See Section 6.2.10).
-    Downstream Port Containment following an async removal may be 
-utilized to hold the Link of a
-    Downstream Port in the Disabled LTSSM state while host software 
-recovers from the side effects of an async removal.
-    "
-
-    I think above is implementation specific. but there has to be some 
-way to kow if we are using DPC for hotplug or not !
-    otherwise it is assumed to be used for error handling and recovery
-
-    pcie_do_fatal_recovery should take care of above. so that we support 
-both error handling and async removal from DPC point of view.
-"
+diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
+index b285786..a1a243e 100644
+--- a/drivers/pci/probe.c
++++ b/drivers/pci/probe.c
+@@ -1725,7 +1725,7 @@ int pci_setup_device(struct pci_dev *dev)
+ static void pci_configure_mps(struct pci_dev *dev)
+ {
+ 	struct pci_dev *bridge = pci_upstream_bridge(dev);
+-	int mps, p_mps, rc;
++	int mps, mpss, p_mps, rc;
+ 
+ 	if (!pci_is_pcie(dev) || !bridge || !pci_is_pcie(bridge))
+ 		return;
+@@ -1753,6 +1753,14 @@ static void pci_configure_mps(struct pci_dev *dev)
+ 	if (pcie_bus_config != PCIE_BUS_DEFAULT)
+ 		return;
+ 
++	mpss = 128 << dev->pcie_mpss;
++	if (mpss < p_mps && pci_pcie_type(bridge) == PCI_EXP_TYPE_ROOT_PORT) {
++		pcie_set_mps(bridge, mpss);
++		pci_info(dev, "Upstream bridge's Max Payload Size set to %d (was %d, max %d)\n",
++			 mpss, p_mps, 128 << bridge->pcie_mpss);
++		p_mps = pcie_get_mps(bridge);
++	}
++
+ 	rc = pcie_set_mps(dev, p_mps);
+ 	if (rc) {
+ 		pci_warn(dev, "can't set Max Payload Size to %d; if necessary, use \"pci=pcie_bus_safe\" and report a bug\n",
+@@ -1761,7 +1769,7 @@ static void pci_configure_mps(struct pci_dev *dev)
+ 	}
+ 
+ 	pci_info(dev, "Max Payload Size set to %d (was %d, max %d)\n",
+-		 p_mps, mps, 128 << dev->pcie_mpss);
++		 p_mps, mps, mpss);
+ }
+ 
+ static struct hpp_type0 pci_default_type0 = {
