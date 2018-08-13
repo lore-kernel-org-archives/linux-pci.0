@@ -1,99 +1,101 @@
-Return-Path: <SRS0=Bsgf=LE=linux.vnet.ibm.com=tyreld@kernel.org>
-Return-Path: <SRS0=Bsgf=LE=linux.vnet.ibm.com=tyreld@kernel.org>
-Subject: Re: [PATCH 7/9] PCI: hotplug: Drop hotplug_slot_info
-To: Lukas Wunner <lukas@wunner.de>, Bjorn Helgaas <helgaas@kernel.org>,
-        linux-pci@vger.kernel.org, Sinan Kaya <okaya@kernel.org>,
-        Mika Westerberg <mika.westerberg@linux.intel.com>
-Cc: Scott Murray <scott@spiteful.org>, linux-s390@vger.kernel.org,
-        Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-        acpi4asus-user@lists.sourceforge.net,
-        "Rafael J. Wysocki"
- <rjw@rjwysocki.net>,
-        Gavin Shan <gwshan@linux.vnet.ibm.com>,
-        platform-driver-x86@vger.kernel.org, linux-acpi@vger.kernel.org,
-        Paul Mackerras <paulus@samba.org>,
-        Sebastian Ott
- <sebott@linux.vnet.ibm.com>,
-        Corentin Chary <corentin.chary@gmail.com>,
-        Darren Hart <dvhart@infradead.org>, linuxppc-dev@lists.ozlabs.org,
-        Andy Shevchenko <andy@infradead.org>,
-        Gerald Schaefer <gerald.schaefer@de.ibm.com>,
-        Len Brown <lenb@kernel.org>
-References: <cover.1534686484.git.lukas@wunner.de>
- <a364bcc959e01f2ebab27cefc5b87ff01633275c.1534686485.git.lukas@wunner.de>
-From: Tyrel Datwyler <tyreld@linux.vnet.ibm.com>
-Date: Mon, 20 Aug 2018 17:41:58 -0700
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail.kernel.org ([198.145.29.99]:47642 "EHLO mail.kernel.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1730225AbeHMV2p (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Mon, 13 Aug 2018 17:28:45 -0400
+Date: Mon, 13 Aug 2018 13:45:16 -0500
+From: Bjorn Helgaas <helgaas@kernel.org>
+To: joeyli <jlee@suse.com>
+Cc: "Lee, Chun-Yi" <joeyli.kernel@gmail.com>,
+        Bjorn Helgaas <bhelgaas@google.com>,
+        Thomas Gleixner <tglx@linutronix.de>,
+        Ingo Molnar <mingo@redhat.com>,
+        "H . Peter Anvin" <hpa@zytor.com>, x86@kernel.org,
+        linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org
+Subject: Re: [PATCH] x86/PCI: Claim the resources of firmware enabled IOAPIC
+ before children bus
+Message-ID: <20180813184516.GL113140@bhelgaas-glaptop.roam.corp.google.com>
+References: <20180724110144.16442-1-jlee@suse.com>
+ <20180806214807.GE30691@bhelgaas-glaptop.roam.corp.google.com>
+ <20180808155318.GE13767@linux-l9pv.suse>
+ <20180808212322.GF49411@bhelgaas-glaptop.roam.corp.google.com>
+ <20180810092501.GP13767@linux-l9pv.suse>
+ <20180810135837.GI113140@bhelgaas-glaptop.roam.corp.google.com>
+ <20180812001413.GC3570@linux-l9pv.suse>
 MIME-Version: 1.0
-In-Reply-To: <a364bcc959e01f2ebab27cefc5b87ff01633275c.1534686485.git.lukas@wunner.de>
-Content-Type: text/plain; charset=utf-8
-Message-Id: <a3cb1919-6796-ae68-718d-d5c13caef3f1@linux.vnet.ibm.com>
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20180812001413.GC3570@linux-l9pv.suse>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 08/19/2018 07:29 AM, Lukas Wunner wrote:
-> Ever since the PCI hotplug core was introduced in 2002, drivers had to
-> allocate and register a struct hotplug_slot_info for every slot:
-> https://git.kernel.org/tglx/history/c/a8a2069f432c
+On Sun, Aug 12, 2018 at 08:15:45AM +0800, joeyli wrote:
+> On Fri, Aug 10, 2018 at 08:58:37AM -0500, Bjorn Helgaas wrote:
+> > On Fri, Aug 10, 2018 at 05:25:01PM +0800, joeyli wrote:
+> > > On Wed, Aug 08, 2018 at 04:23:22PM -0500, Bjorn Helgaas wrote:
+> > > ...
+> [...snip]
+> > > hm... I have another question that it may not relates to this issue. I
+> > > was tracing the code path of PCI hot-remove/hotplug. Base on spec, looks
+> > > that the RST# should be asserted when hot-remove. And the memory decode
+> > > bit must be set to zero after RST# be asserted. But I didn't see that
+> > > any kernel PCI/ACPI code set RST#. The only possible code to set RST# is
+> > > in POWER architecture. Do you know who assert the RST# when hot-remove?    
+> > 
+> > RST# is a conventional PCI signal (not a PCIe signal).  In any case, I
+> > would expect signals like that to be handled by hardware, not by
+> > software.  What section of the spec are you looking at?  I wouldn't
 > 
-> Apparently the idea was that drivers furnish the hotplug core with an
-> up-to-date card presence status, power status, latch status and
-> attention indicator status as well as notify the hotplug core of changes
-> thereof.  However only 4 out of 12 hotplug drivers bother to notify the
-> hotplug core with pci_hp_change_slot_info() and the hotplug core never
-> made any use of the information:  There is just a single macro in
-> pci_hotplug_core.c, GET_STATUS(), which uses the hotplug_slot_info if
-> the driver lacks the corresponding callback in hotplug_slot_ops.  The
-> macro is called when the user reads the attribute via sysfs.
+> In PCI Hot-Plug Spec v1.1
 > 
-> Now, if the callback isn't defined, the attribute isn't exposed in sysfs
-> in the first place (see e.g. has_power_file()).  There are only two
-> situations when the hotplug_slot_info would actually be accessed:
+> 2.2.1 Hot Removal
+> The Hot-Plug System Driver uses the Hot-Plug Controller to do the following:
+> a) Assert RST# to the slot and isolate the slot from the rest of the bus, in
+>    either order.
+> b) Power down the slot.
+> c) Change the optional slot-state indicator, as defined in Section 3.1.1, to show
+>    that the slot is off.
 > 
-> * If the driver defines ->enable_slot or ->disable_slot but not
->   ->get_power_status.
-> 
-> * If the driver defines ->set_attention_status but not
->   ->get_attention_status.
-> 
-> There is no driver doing the former and just a single driver doing the
-> latter, namely pnv_php.c.  Amend it with a ->get_attention_status
-> callback.  With that, the hotplug_slot_info becomes completely unused by
-> the PCI hotplug core.  But a few drivers use it internally as a cache:
-> 
-> cpcihp uses it to cache the latch_status and adapter_status.
-> cpqhp uses it to cache the adapter_status.
-> pnv_php and rpaphp use it to cache the attention_status.
-> shpchp uses it to cache all four values.
-> 
-> Amend these drivers to cache the information in their private slot
-> struct.  shpchp's slot struct already contains members to cache the
-> power_status and adapter_status, so additional members are only needed
-> for the other two values.  In the case of cpqphp, the cached value is
-> only accessed in a single place, so instead of caching it, read the
-> current value from the hardware.
-> 
-> Caution:  acpiphp, cpci, cpqhp, shpchp, asus-wmi and eeepc-laptop
-> populate the hotplug_slot_info with initial values on probe.  That code
-> is herewith removed.  There is a theoretical chance that the code has
-> side effects without which the driver fails to function, e.g. if the
-> ACPI method to read the adapter status needs to be executed at least
-> once on probe.  That seems unlikely to me, still maintainers should
-> review the changes carefully for this possibility.
-> 
-> Signed-off-by: Lukas Wunner <lukas@wunner.de>
-> Cc: Rafael J. Wysocki <rjw@rjwysocki.net>
-> Cc: Len Brown <lenb@kernel.org>
-> Cc: Scott Murray <scott@spiteful.org>
-> Cc: Benjamin Herrenschmidt <benh@kernel.crashing.org>
-> Cc: Paul Mackerras <paulus@samba.org>
-> Cc: Michael Ellerman <mpe@ellerman.id.au>
-> Cc: Gavin Shan <gwshan@linux.vnet.ibm.com>
-> Cc: Sebastian Ott <sebott@linux.vnet.ibm.com>
-> Cc: Gerald Schaefer <gerald.schaefer@de.ibm.com>
-> Cc: Corentin Chary <corentin.chary@gmail.com>
-> Cc: Darren Hart <dvhart@infradead.org>
-> Cc: Andy Shevchenko <andy@infradead.org>
-> ---
+> In the above description, it said that "Hot-Plug System Driver" should done
+> the job. So I was think that kernel driver must asserts RST#, but I didn't
+> find that in kernel code.
 
-With regards to driver/pci/hotplug/rpa*
+I don't think there's much in that spec that's still relevant unless
+you are using conventional PCI.  Most current hardware would be using
+PCIe, and the PCIe spec itself covers hotplug (PCIe r4.0, sec 6.7).
 
-Acked-by: Tyrel Datwyler <tyreld@linux.vnet.ibm.com>
+Prior to PCIe, hotplug wasn't directly included in the PCI spec, and
+there were several varieties of hotplug controllers (SHPC, Compaq
+hotplug controller, IBM hotplug controller, CompactPCI, etc.)
+
+The PCI Hot-Plug spec covers the high-level model but doesn't have the
+details of any of these controllers.  There is a separate spec for the
+SHPC ("PCI Standard Hot-Plug Controller and Subsystem Specification",
+r1.0, June 20, 2001), which does talk about requirements for RST#.
+But even there I don't see a way for software to directly control
+RST#; it looks like software programs the Slot Control Logic, which in
+turn manages RST# based on commands from the software and hardware
+inputs like presence detect.
+
+> Then, in PCI Local Bus spec v2.2, it mentions:
+> 
+> Table 6-1: Command Register Bits
+> Bit Location            Description
+> 0                       ...State after RST# is 0.
+> 1                       ...State after RST# is 0.
+> 
+> So, after hot-remove the RST# must be asserted and the IO/memory
+> decode bit should also be set to zero.
+> 
+> I was tracing the kerenl hot-remove code for RST# because I
+> want to make sure that kernel didn't change the RST# state from
+> firmware.
+> ...
+
+> But I still confused about the "Hot-Plug System Driver" wording in
+> PCI Hot-Plug Spec. The "Hot-Plug System Driver " means a kernel
+> driver?
+
+I would interpret "Hot-Plug System Driver" to refer to one of the
+kernel PCI hotplug drivers (pciehp, shpcpd, cpqphp, ibmphp, etc.)
+
+Bjorn
