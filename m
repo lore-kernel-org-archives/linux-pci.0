@@ -1,65 +1,52 @@
-Return-Path: <linux-nvme-bounces+bjorn=helgaas.com@lists.infradead.org>
-Return-Path: <linux-nvme-bounces+bjorn=helgaas.com@lists.infradead.org>
-Date: Thu, 9 Aug 2018 15:23:40 -0500
-From: Bjorn Helgaas <helgaas@kernel.org>
-To: Alex Williamson <alex.williamson@redhat.com>
-Subject: Re: [PATCH v4 0/3] PCI: NVMe reset quirks
-Message-ID: <20180809202340.GE113140@bhelgaas-glaptop.roam.corp.google.com>
-References: <153384487209.15793.15203778129263981368.stgit@gimli.home>
+Return-Path: <linux-arch-owner@vger.kernel.org>
+From: Pu Wen <puwen@hygon.cn>
+Subject: Re: [PATCH v3 07/17] x86/pci: add Hygon PCI vendor and northbridge
+ support
+To: Bjorn Helgaas <helgaas@kernel.org>
+Cc: tglx@linutronix.de, mingo@redhat.com, hpa@zytor.com,
+        x86@kernel.org, thomas.lendacky@amd.com, bp@alien8.de,
+        pbonzini@redhat.com, linux-kernel@vger.kernel.org,
+        linux-arch@vger.kernel.org, linux-pci@vger.kernel.org
+References: <cover.1533989492.git.puwen@hygon.cn>
+ <0b8f3a7c5ba8b4f496f8f790e3dafa8d612ffc81.1533989492.git.puwen@hygon.cn>
+ <20180813221436.GN113140@bhelgaas-glaptop.roam.corp.google.com>
+Message-ID: <ec0ef867-3254-9e17-bf37-de697e9d0709@hygon.cn>
+Date: Tue, 14 Aug 2018 12:56:51 +0800
 MIME-Version: 1.0
-In-Reply-To: <153384487209.15793.15203778129263981368.stgit@gimli.home>
-List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-nvme>,
- <mailto:linux-nvme-request@lists.infradead.org?subject=unsubscribe>
-List-Archive: <http://lists.infradead.org/pipermail/linux-nvme/>
-List-Post: <mailto:linux-nvme@lists.infradead.org>
-List-Help: <mailto:linux-nvme-request@lists.infradead.org?subject=help>
-List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-nvme>,
- <mailto:linux-nvme-request@lists.infradead.org?subject=subscribe>
-Cc: linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
- linux-nvme@lists.infradead.org
-Content-Type: text/plain; charset="us-ascii"
-Sender: "Linux-nvme" <linux-nvme-bounces@lists.infradead.org>
-Errors-To: linux-nvme-bounces+bjorn=helgaas.com@lists.infradead.org
+In-Reply-To: <20180813221436.GN113140@bhelgaas-glaptop.roam.corp.google.com>
+Content-Type: text/plain; charset=utf-8; format=flowed
+Sender: linux-arch-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Thu, Aug 09, 2018 at 02:04:03PM -0600, Alex Williamson wrote:
-> v4: Fix 0-day i386 build error for readq, simply use readl
->     instead, the bits we're interested in are 24:31 and the NVMe
->     spec indicates that smaller, aligned accesses are allowed.
->     Update bz links for both device specific resets.
+On 2018/8/14 6:14, Bjorn Helgaas wrote:
+> On Sat, Aug 11, 2018 at 09:27:42PM +0800, Pu Wen wrote:
+>> diff --git a/include/linux/pci_ids.h b/include/linux/pci_ids.h
+>> index 2950223..d0e98a9 100644
+>> --- a/include/linux/pci_ids.h
+>> +++ b/include/linux/pci_ids.h
+>> @@ -511,6 +511,8 @@
+>>   #define PCI_DEVICE_ID_AMI_MEGARAID	0x9010
+>>   #define PCI_DEVICE_ID_AMI_MEGARAID2	0x9060
+>>   
+>> +#define PCI_VENDOR_ID_HYGON		0x1d94
 > 
-> v3: Separate quirks, only for the afflicted devices
-> 
-> v2: Add bug link, use Samsung vendor ID, add spec references
-> 
-> Fix two different NVMe device reset issues with device specific
-> quirks.  The Samsung controller in patch 2 sometimes doesn't like
-> being reset while enabled, so disable the NVMe controller prior to
-> FLR.  This quirk is generic to all NVMe class devices, though I've
-> dropped the additional delay some devices require between disabling
-> and checking ready status.  This can be added later should any of
-> those devices need this quirk.  The Intel controller quirk is now
-> just a simple delay after FLR, which clearly any device needing
-> similar behavior can also use.  Thanks,
-> 
-> Alex
-> 
-> ---
-> 
-> Alex Williamson (3):
->       PCI: Export pcie_has_flr()
->       PCI: Samsung SM961/PM961 NVMe disable before FLR quirk
->       PCI: Intel DC P3700 NVMe delay after FLR quirk
-> 
-> 
->  drivers/pci/pci.c    |    3 +
->  drivers/pci/quirks.c |  105 ++++++++++++++++++++++++++++++++++++++++++++++++++
->  include/linux/pci.h  |    1 
->  3 files changed, 108 insertions(+), 1 deletion(-)
+> Please add this entry so pci_ids.h remains sorted by Vendor ID, then Device
+> ID, as the comment at the top suggests.
 
-Applied to pci/virtualization for v4.19, thanks!
+Thanks for the suggestion. Will place PCI_VENDOR_ID_HYGON between 
+PCI_VENDOR_ID_AMAZON(0x1d0f) and PCI_VENDOR_ID_TEKRAM(0x1de1) in next
+patch set.
 
-_______________________________________________
-Linux-nvme mailing list
-Linux-nvme@lists.infradead.org
-http://lists.infradead.org/mailman/listinfo/linux-nvme
+Pu Wen
+
+> 
+> With that changed,
+> 
+> Acked-by: Bjorn Helgaas <bhelgaas@google.com>	# pci_ids.h
+> 
+>>   #define PCI_VENDOR_ID_AMD		0x1022
+>>   #define PCI_DEVICE_ID_AMD_K8_NB		0x1100
+>>   #define PCI_DEVICE_ID_AMD_K8_NB_ADDRMAP	0x1101
+>> -- 
+>> 2.7.4
+>>
