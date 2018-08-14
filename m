@@ -1,79 +1,130 @@
-Return-Path: <SRS0=S6c9=LA=kalray.eu=mrybczyn@kernel.org>
-Return-Path: <SRS0=S6c9=LA=kalray.eu=mrybczyn@kernel.org>
-Date: Fri, 17 Aug 2018 10:09:50 +0200 (CEST)
-From: Marta Rybczynska <mrybczyn@kalray.eu>
-To: Benjamin Herrenschmidt <benh@kernel.crashing.org>
-Cc: Bjorn Helgaas <helgaas@kernel.org>, linux-pci@vger.kernel.org,
-	Hari Vyas <hari.vyas@broadcom.com>, Ray Jui <ray.jui@broadcom.com>,
-	Srinath Mannam <srinath.mannam@broadcom.com>,
-	Guenter Roeck <linux@roeck-us.net>, Jens Axboe <axboe@kernel.dk>,
-	Lukas Wunner <lukas@wunner.de>,
-	Konstantin Khlebnikov <khlebnikov@yandex-team.ru>,
-	Pierre-Yves Kerbrat <pkerbrat@kalray.eu>,
-	linux-kernel@vger.kernel.org
-Message-ID: <66577784.13494160.1534493390262.JavaMail.zimbra@kalray.eu>
-In-Reply-To: <20180817044902.31420-6-benh@kernel.crashing.org>
-References: <20180817044902.31420-1-benh@kernel.crashing.org> <20180817044902.31420-6-benh@kernel.crashing.org>
-Subject: Re: [RFC PATCH 5/6] pci: Protect the enable/disable state of
- pci_dev using the state mutex
-MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Message-ID: <fd6b76f0c6f5b4dfd1527440b0f6275417e434c1.camel@baylibre.com>
+Subject: Re: [PATCH 1/2] dt-bindings: PCI: meson: add DT bindings for
+ Amlogic Meson PCIe controller
+From: Jerome Brunet <jbrunet@baylibre.com>
+To: Hanjie Lin <hanjie.lin@amlogic.com>, Bjorn Helgaas <bhelgaas@google.com>
+Date: Tue, 14 Aug 2018 12:41:26 +0200
+In-Reply-To: <1534227522-186798-2-git-send-email-hanjie.lin@amlogic.com>
+References: <1534227522-186798-1-git-send-email-hanjie.lin@amlogic.com>
+ <1534227522-186798-2-git-send-email-hanjie.lin@amlogic.com>
+Mime-Version: 1.0
+List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
+List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
+List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
+List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
+List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
+Cc: Rob Herring <robh@kernel.org>, devicetree@vger.kernel.org,
+ Kevin Hilman <khilman@baylibre.com>, linux-kernel@vger.kernel.org,
+ Yue Wang <yue.wang@amlogic.com>, linux-pci@vger.kernel.org,
+ linux-amlogic@lists.infradead.org, linux-arm-kernel@lists.infradead.org
+Content-Type: text/plain; charset="us-ascii"
+Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
+Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
 List-ID: <linux-pci.vger.kernel.org>
 
-
-
------ On 17 Aug, 2018, at 06:49, Benjamin Herrenschmidt benh@kernel.crashing.org wrote:
-
-> This protects enable/disable operations using the state mutex to
-> avoid races with, for example, concurrent enables on a bridge.
+On Tue, 2018-08-14 at 02:18 -0400, Hanjie Lin wrote:
+> From: Yue Wang <yue.wang@amlogic.com>
 > 
-> The bus hierarchy is walked first before taking the lock to
-> avoid lock nesting (though it would be ok if we ensured that
-> we always nest them bottom-up, it is better to just avoid the
-> issue alltogether, especially as we might find cases where
-> we want to take it top-down later).
+> The Amlogic Meson PCIe host controller is based on the Synopsys DesignWare
+> PCI core. This patch adds documentation for the DT bindings in Meson PCIe
+> controller.
 > 
-> Signed-off-by: Benjamin Herrenschmidt <benh@kernel.crashing.org>
-
-
+> Signed-off-by: Yue Wang <hanjie.lin@amlogic.com>
+> Signed-off-by: Hanjie Lin <hanjie.lin@amlogic.com>
+> ---
+>  .../devicetree/bindings/pci/amlogic,meson-pcie.txt | 57 ++++++++++++++++++++++
+>  1 file changed, 57 insertions(+)
+>  create mode 100644 Documentation/devicetree/bindings/pci/amlogic,meson-pcie.txt
 > 
-> static void pci_enable_bridge(struct pci_dev *dev)
-> {
-> 	struct pci_dev *bridge;
-> -	int retval;
-> +	int retval, enabled;
-> 
-> 	bridge = pci_upstream_bridge(dev);
-> 	if (bridge)
-> 		pci_enable_bridge(bridge);
-> 
-> -	if (pci_is_enabled(dev)) {
-> -		if (!dev->is_busmaster)
-> -			pci_set_master(dev);
-> +	/* Already enabled ? */
-> +	pci_dev_state_lock(dev);
-> +	enabled = pci_is_enabled(dev);
-> +	if (enabled && !dev->is_busmaster)
-> +		pci_set_master(dev);
-> +	pci_dev_state_unlock(dev);
-> +	if (enabled)
-> 		return;
-> -	}
-> 
+> diff --git a/Documentation/devicetree/bindings/pci/amlogic,meson-pcie.txt b/Documentation/devicetree/bindings/pci/amlogic,meson-pcie.txt
+> new file mode 100644
+> index 0000000..48233e4
+> --- /dev/null
+> +++ b/Documentation/devicetree/bindings/pci/amlogic,meson-pcie.txt
+> @@ -0,0 +1,57 @@
+> +Amlogic Meson AXG DWC PCIE SoC controller
+> +
+> +Amlogic Meson PCIe host controller is based on the Synopsys DesignWare PCI core.
+> +It shares common functions with the PCIe DesignWare core driver and
+> +inherits common properties defined in
+> +Documentation/devicetree/bindings/pci/designware-pci.txt.
+> +
+> +Additional properties are described here:
+> +
+> +Required properties:
+> +- compatible:
+> +	should contain "amlogic,axg-pcie" to identify the core.
+> +- reg:
+> +	Should contain the configuration address space.
+> +- reg-names: Must be
+> +	- "elbi"	External local bus interface registers
+> +	- "cfg"		Meson specific registers
+> +	- "config"	PCIe configuration space
+> +- clocks: Must contain an entry for each entry in clock-names.
+> +- clock-names: Must include the following entries:
+> +	- "pcie"
+> +	- "pcie_bus"
+> +	- "pcie_general"
+> +	- "pcie_mipi_en"
 
-This looks complicated too me especially with the double locking. What do you
-think about a function doing that check that used an unlocked version of
-pcie_set_master?
+Could you briefly describe what each clock is needed for ?
 
-Like:
+> +
+> +Example configuration:
+> +
+> +	pcie: pcie@dffff000 {
+> +			compatible = "amlogic,axg-pcie", "snps,dw-pcie";
+> +			reg = <0x0 0xf9800000 0x0 0x400000
+> +					0x0 0xff646000 0x0 0x2000
+> +					0x0 0xf9f00000 0x0 0x100000>;
+> +			reg-names = "elbi", "cfg", "config";
+> +			reset-gpio = <&gpio GPIOX_19 GPIO_ACTIVE_HIGH>;
+> +			interrupts = <0 177 IRQ_TYPE_EDGE_RISING>;
 
-        dev_state_lock(dev);
-        enabled = pci_is_enabled(dev);
-        if (enabled &&  !dev->is_busmaster)
-                pci_set_master_unlocked();
-        pci_dev_state_unlock(dev);
+replace 0 with GIC_SPI please
 
-BTW If I remember correctly the code today can set bus mastering multiple
-times without checking if already done.
+> +			#interrupt-cells = <1>;
+> +			interrupt-map-mask = <0 0 0 0>;
+> +			interrupt-map = <0 0 0 0 &gic GIC_SPI 179 IRQ_TYPE_EDGE_RISING>;
+> +			bus-range = <0x0 0xff>;
+> +			#address-cells = <3>;
+> +			#size-cells = <2>;
+> +			device_type = "pci";
+> +			phys = <&pcie_phy>;
+> +			ranges = <0x82000000 0 0 0x0 0xf9c00000 0 0x00300000>;
+> +			num-lanes = <1>;
+> +			pcie-num = <1>;
+> +
+> +			clocks = <&clkc CLKID_USB
+> +					&clkc CLKID_MIPI_ENABLE
+> +					&clkc CLKID_PCIE_A
+> +					&clkc CLKID_PCIE_CML_EN0>;
+> +			clock-names = "pcie_general",
+> +					"pcie_refpll",
+> +					"pcie_mipi_en",
+> +					"pcie",
+> +					"port";
 
-Marta
+Several things are disturbing above:
+* pcie_general is provided by the USB clock gate ???
+* pcie_refpll: I suppose this is a copy/paste error, not used in your driver
+(and shouldn't be need BTW)
+
+suggested names:
+* pcie_general -> general
+* pcie_mipi_en -> mipi
+* pcie -> pclk
+* port (OK)
+
+> +	};
+
+
+
+_______________________________________________
+linux-arm-kernel mailing list
+linux-arm-kernel@lists.infradead.org
+http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
