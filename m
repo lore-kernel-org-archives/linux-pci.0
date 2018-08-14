@@ -1,81 +1,74 @@
-Return-Path: <SRS0=0wuL=KY=gigaio.com=epilmore@kernel.org>
-Return-Path: <SRS0=0wuL=KY=gigaio.com=epilmore@kernel.org>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail.kernel.org ([198.145.29.99]:60406 "EHLO mail.kernel.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1729990AbeHNQqC (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Tue, 14 Aug 2018 12:46:02 -0400
+Date: Tue, 14 Aug 2018 08:58:43 -0500
+From: Bjorn Helgaas <helgaas@kernel.org>
+To: "Luck, Tony" <tony.luck@intel.com>
+Cc: Mauro Carvalho Chehab <mchehab@kernel.org>,
+        Borislav Petkov <bp@alien8.de>,
+        "linux-edac@vger.kernel.org" <linux-edac@vger.kernel.org>,
+        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+        "Lee, Chun-Yi" <joeyli.kernel@gmail.com>,
+        linux-pci@vger.kernel.org,
+        Masayoshi Mizuma <m.mizuma@jp.fujitsu.com>
+Subject: Re: sb_edac.c lacks PCI domain support?
+Message-ID: <20180814135843.GA149076@bhelgaas-glaptop.roam.corp.google.com>
+References: <20180808200747.GA219159@bhelgaas-glaptop.roam.corp.google.com>
+ <3908561D78D1C84285E8C5FCA982C28F7D3A370D@ORSMSX110.amr.corp.intel.com>
 MIME-Version: 1.0
-In-Reply-To: <b54899a8-a144-e8e0-9880-1800c4657b95@deltatee.com>
-References: <CAOQPn8soxubJxb=vp7kz+AM6LbPH5y+_Nx0Vzv7rjV_nMMqEmA@mail.gmail.com>
- <20180809184331.GB113140@bhelgaas-glaptop.roam.corp.google.com>
- <CAOQPn8uPYKai49WYPqZp2wNd5of=0hUvPOHEtqP56RZu-hcjuw@mail.gmail.com> <b54899a8-a144-e8e0-9880-1800c4657b95@deltatee.com>
-From: Eric Pilmore <epilmore@gigaio.com>
-Date: Thu, 9 Aug 2018 14:31:33 -0700
-Message-ID: <CAOQPn8tSNN+3igN-kMcQH46w_a9p6T+S7=c8CLREMLxr1kaTXQ@mail.gmail.com>
-Subject: Re: IOAT DMA w/IOMMU
-To: Logan Gunthorpe <logang@deltatee.com>
-Cc: Bjorn Helgaas <helgaas@kernel.org>, linux-pci@vger.kernel.org,
-	David Woodhouse <dwmw2@infradead.org>, Alex Williamson <alex.williamson@redhat.com>,
-	iommu@lists.linux-foundation.org
-Content-Type: text/plain; charset="UTF-8"
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <3908561D78D1C84285E8C5FCA982C28F7D3A370D@ORSMSX110.amr.corp.intel.com>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Thu, Aug 9, 2018 at 12:35 PM, Logan Gunthorpe <logang@deltatee.com> wrote:
-> Hey,
->
-> On 09/08/18 12:51 PM, Eric Pilmore wrote:
->>>> Was wondering if anybody here has used IOAT DMA engines with an
->>>> IOMMU turned on (Xeon based system)? My specific question is really
->>>> whether it is possible to DMA (w/IOAT) to a PCI BAR address as the
->>>> destination without having to map that address to the IOVA space of
->>>> the DMA engine first (assuming the IOMMU is on)?
->
-> I haven't tested this scenario but my guess would be that IOAT would
-> indeed go through the IOMMU and the PCI BAR address would need to be
-> properly mapped into the IOAT's IOVA. The fact that you see DMAR errors
-> is probably a good indication that this is the case. I really don't know
-> why you'd want to DMA something without mapping it.
+[+cc Mizuma-san, linux-pci]
 
-The thought was to avoid paying the price of having to go through yet another
-translation and also because it was not believed to be necessary anyway since
-the DMA device could go straight to a PCI BAR address without the need for a
-mapping.  We have been playing with two DMA engines, IOAT and PLX. The
-PLX does not have any issues going straight to the PCI BAR address, but unlike
-IOAT, PLX is sitting "in the PCI tree".
+On Wed, Aug 08, 2018 at 08:18:03PM +0000, Luck, Tony wrote:
+> > I think sb_edac.c (and probably other EDAC stuff) lacks PCI domain
+> > support
+> 
+> There's a patch queued to fix this.
+> 
+>   https://marc.info/?l=linux-edac&m=153256485215534&w=2
 
->
->>> So is this a peer-to-peer DMA scenario?  You mention DMA, which would
->>> be a transaction initiated by a PCI device, to a PCI BAR address, so
->>> it doesn't sound like system memory is involved.
->>
->> No, not peer-to-peer.  This is from system memory (e.g. SKB buffer which
->> has had an IOMMU mapping created) to a PCI BAR address.
->
-> It's definitely peer-to-peer in the case where you are using a DMA
-> engine in the PCI tree. You have the DMA PCI device sending TLPs
-> directly to the PCI BAR device. So, if everything is done right, the
-> TLPs will avoid the root complex completely. (Though, ACS settings could
-> also prevent this from working and you'd either get similar DMAR errors
-> or they'd disappear into a black hole).
->
-> When using the IOAT, it is part of the CPU so I wouldn't say it's really
-> peer-to-peer. But an argument could be made that it is. Though, this is
-> exactly what the existing ntb_transport is doing: DMAing from system
-> memory to a PCI BAR and vice versa using IOAT.
->
-> Logan
->
+That's excellent, thank you!
 
+i7core_edac.c also looks suspicious because it manages things based on
+"socket", which is computed from a PCI bus number, and doesn't
+reference the PCI domain at all:
 
+  bus = pdev->bus->number;
+  socket = last_bus - bus;
+  alloc_i7core_dev(socket, ...);
 
--- 
-Eric Pilmore
-epilmore@gigaio.com
-http://gigaio.com
-Phone: (858) 775 2514
+> > It looks like 88ae80aa609c ("EDAC, skx_edac: Handle systems with
+> > segmented PCI busses") fixes a similar problem; maybe that should
+> > be applied elsewhere in EDAC as well?
+> >
+> > Why doesn't EDAC use the standard pci_register_driver() interface?
+> > That would avoid issues like this.  It would also avoid the potential
+> > conflict of another driver operating on the device at the same time.
+> 
+> EDAC drivers get information to translate system physical addresses
+> to DIMM addresses from a whole bundle of different PCIe devices config
+> space.  Connections between different parts of the translation algorithm
+> depend on finding the devices that belong to the same memory controller
+> by matching up bus numbers (actually <segment,busnumber> tuples as
+> we are now finding).
+> 
+> Can pci_register_driver() cope with this odd usage?
 
-This e-mail message is intended only for the individual(s) to whom it
-is addressed and
-may contain information that is privileged, confidential, proprietary,
-or otherwise exempt
-from disclosure under applicable law. If you believe you have received
-this message in
-error, please advise the sender by return e-mail and delete it from
-your mailbox.
-Thank you.
+pci_register_driver() can bind a driver to as many devices as desired.
+It would be up to the driver to keep track of all its devices and
+match them up by <segment,busnumber>.  But I think the drivers keep
+track of all that already.
+
+The biggest problem would probably be the fact that it couldn't depend
+on being bound to devices in any given order.  It might have to check
+to see whether it has found all the devices it expects, or maybe
+become a little resilient to having errors reported when it doesn't
+have all the information it needs to decode them.
+
+Bjorn
