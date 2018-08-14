@@ -1,65 +1,124 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.29.99]:43440 "EHLO mail.kernel.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1731028AbeHWRHx (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Thu, 23 Aug 2018 13:07:53 -0400
-Date: Thu, 23 Aug 2018 08:38:05 -0500
-From: Bjorn Helgaas <helgaas@kernel.org>
-To: Jian-Hong Pan <jian-hong@endlessm.com>
-Cc: Heiner Kallweit <hkallweit1@gmail.com>,
-        Thomas Gleixner <tglx@linutronix.de>,
-        David Miller <davem@davemloft.net>,
-        Realtek linux nic maintainers <nic_swsd@realtek.com>,
-        netdev@vger.kernel.org,
-        Linux Kernel <linux-kernel@vger.kernel.org>,
-        Linux Upstreaming Team <linux@endlessm.com>,
-        linux-pci@vger.kernel.org, marc.zyngier@arm.com, hch@lst.de
-Subject: Re: [PATCH] r8169: don't use MSI-X on RTL8106e
-Message-ID: <20180823133805.GE154536@bhelgaas-glaptop.roam.corp.google.com>
-References: <ac30d4e6-6411-09e6-1205-96e3e8e29f6f@gmail.com>
- <20180820184438.GA154536@bhelgaas-glaptop.roam.corp.google.com>
- <9d7d960a-6c55-dc4b-7969-f5cf46bff0ce@gmail.com>
- <20180821.123108.89921430801253333.davem@davemloft.net>
- <da97e198-7683-e0ff-92a9-3b1b22da3757@gmail.com>
- <alpine.DEB.2.21.1808221222260.2514@nanos.tec.linutronix.de>
- <36bd086d-8d26-5162-ae24-95b259571221@gmail.com>
- <CAPpJ_edz3H81EqRSg5jeOXoULt7AKwcTpNFL6Ntt8rhQBPFBFQ@mail.gmail.com>
+Received: from smtp.codeaurora.org ([198.145.29.96]:54990 "EHLO
+        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1731956AbeHNMIu (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Tue, 14 Aug 2018 08:08:50 -0400
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <CAPpJ_edz3H81EqRSg5jeOXoULt7AKwcTpNFL6Ntt8rhQBPFBFQ@mail.gmail.com>
+Content-Type: text/plain; charset=US-ASCII;
+ format=flowed
+Date: Tue, 14 Aug 2018 14:52:29 +0530
+From: poza@codeaurora.org
+To: Thomas Tai <thomas.tai@oracle.com>
+Cc: bhelgaas@google.com, keith.busch@intel.com,
+        linux-pci@vger.kernel.org, linux-pci-owner@vger.kernel.org
+Subject: Re: [PATCH 1/1] PCI/AER: prevent pcie_do_fatal_recovery from using
+ device after it is removed
+In-Reply-To: <51f4b387d9bd96a42d526a6a029fc43b@codeaurora.org>
+References: <1534179088-44219-1-git-send-email-thomas.tai@oracle.com>
+ <1534179088-44219-2-git-send-email-thomas.tai@oracle.com>
+ <51f4b387d9bd96a42d526a6a029fc43b@codeaurora.org>
+Message-ID: <b0104a716319d76e734c307cb4bedd9d@codeaurora.org>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Thu, Aug 23, 2018 at 06:46:28PM +0800, Jian-Hong Pan wrote:
-> > On 22.08.2018 13:44, Thomas Gleixner wrote:
-> >> Can you please do the following:
+On 2018-08-14 14:46, poza@codeaurora.org wrote:
+> On 2018-08-13 22:21, Thomas Tai wrote:
+>> In order to prevent the pcie_do_fatal_recovery() from
+>> using the device after it is removed, the device's
+>> domain:bus:devfn is stored at the entry of
+>> pcie_do_fatal_recovery(). After rescanning the bus, the
+>> stored domain:bus:devfn is used to find the device and
+>> uses to report pci_info. The original issue only happens
+>> on an non-bridge device, a local variable is used instead
+>> of checking the device's header type.
+>> 
+>> Signed-off-by: Thomas Tai <thomas.tai@oracle.com>
+>> ---
+>>  drivers/pci/pcie/err.c | 33 +++++++++++++++++++++++----------
+>>  1 file changed, 23 insertions(+), 10 deletions(-)
+>> 
+>> diff --git a/drivers/pci/pcie/err.c b/drivers/pci/pcie/err.c
+>> index f02e334..3414445 100644
+>> --- a/drivers/pci/pcie/err.c
+>> +++ b/drivers/pci/pcie/err.c
+>> @@ -287,15 +287,20 @@ void pcie_do_fatal_recovery(struct pci_dev *dev,
+>> u32 service)
+>>  	struct pci_bus *parent;
+>>  	struct pci_dev *pdev, *temp;
+>>  	pci_ers_result_t result;
+>> +	bool is_bridge_device = false;
+>> +	u16 domain = pci_domain_nr(dev->bus);
+>> +	u8 bus = dev->bus->number;
+>> +	u8 devfn = dev->devfn;
+>> 
+>> -	if (dev->hdr_type == PCI_HEADER_TYPE_BRIDGE)
+>> +	if (dev->hdr_type == PCI_HEADER_TYPE_BRIDGE) {
+>> +		is_bridge_device = true;
+>>  		udev = dev;
+>> -	else
+>> +	} else {
+>>  		udev = dev->bus->self;
+>> +	}
+>> 
+>>  	parent = udev->subordinate;
+>>  	pci_lock_rescan_remove();
+>> -	pci_dev_get(dev);
+>>  	list_for_each_entry_safe_reverse(pdev, temp, &parent->devices,
+>>  					 bus_list) {
+>>  		pci_dev_get(pdev);
+>> @@ -309,27 +314,35 @@ void pcie_do_fatal_recovery(struct pci_dev *dev,
+>> u32 service)
+>> 
+>>  	result = reset_link(udev, service);
+>> 
+>> -	if ((service == PCIE_PORT_SERVICE_AER) &&
+>> -	    (dev->hdr_type == PCI_HEADER_TYPE_BRIDGE)) {
+>> +	if (service == PCIE_PORT_SERVICE_AER && is_bridge_device) {
+>>  		/*
+>>  		 * If the error is reported by a bridge, we think this error
+>>  		 * is related to the downstream link of the bridge, so we
+>>  		 * do error recovery on all subordinates of the bridge instead
+>>  		 * of the bridge and clear the error status of the bridge.
+>>  		 */
+>> -		pci_cleanup_aer_uncorrect_error_status(dev);
+>> +		pci_cleanup_aer_uncorrect_error_status(udev);
+>>  	}
+>> 
+>>  	if (result == PCI_ERS_RESULT_RECOVERED) {
+>>  		if (pcie_wait_for_link(udev, true))
+>>  			pci_rescan_bus(udev->bus);
+>> -		pci_info(dev, "Device recovery from fatal error successful\n");
+>> +		/* find the pci_dev after rescanning the bus */
+>> +		dev = pci_get_domain_bus_and_slot(domain, bus, devfn);
+> one of the motivations was to remove and re-enumerate rather then
+> going thorugh driver's recovery sequence
+> was; it might be possible that hotplug capable bridge, the device
+> might have changed.
+> hence this check will fail
+>> +		if (dev)
+>> +			pci_info(dev, "Device recovery from fatal error successful\n");
+>> +		else
+>> +			pr_err("AER: Can not find pci_dev for %04x:%02x:%02x.%x\n",
+>> +			       domain, bus,
+>> +			       PCI_SLOT(devfn), PCI_FUNC(devfn));
+>> +		pci_dev_put(dev);
+>>  	} else {
+>> -		pci_uevent_ers(dev, PCI_ERS_RESULT_DISCONNECT);
+>> -		pci_info(dev, "Device recovery from fatal error failed\n");
+>> +		if (is_bridge_device)
+> previously there was no condition.. why is this required now ?
+> and it was doing on "dev" while you are doing it on "udev"
+is that the reason we dont watnt o use dev after it is removed ? instead 
+do pci_uevent_ers on bridge ?
+>> +			pci_uevent_ers(udev, PCI_ERS_RESULT_DISCONNECT);
+>> +		pr_err("AER: Device %04x:%02x:%02x.%x recovery from fatal error 
+>> failed\n",
+>> +		       domain, bus, PCI_SLOT(devfn), PCI_FUNC(devfn));
+>>  	}
+>> 
+>> -	pci_dev_put(dev);
+>>  	pci_unlock_rescan_remove();
+>>  }
 > 
-> Tested on ASUS X441AUR equipped with RTL8106e.
-> This is the laptop whose ethernet does not come back after resume, if
-> it does not fallback to MSI.
-> ...
-
-> dev@endless:~$ sudo lspci -xnnvvs 02:00.0
-> ...
-> 00: ec 10 36 81 07 04 10 00 07 00 00 02 10 00 00 00
-> 10: 01 e0 00 00 00 00 00 00 04 00 10 ef 00 00 00 00
-> 20: 0c 00 00 e0 00 00 00 00 00 00 00 00 43 10 0f 20
-> 30: 00 00 00 00 40 00 00 00 00 00 00 00 ff 01 00 00
-> 
-> After comparing, there is no difference between before suspend and
-> after resume.
-
-It'd be better to compare the hex data directly and ignore the lspci
-decoding, since lspci doesn't decode everything.  You only dumped the
-first 0x40 bytes of config space, and all capabilities, including the
-MSI and MSI-X capabilities, are past that:
-
-> Capabilities: [50] MSI: Enable- Count=1/1 Maskable- 64bit+
-> Capabilities: [b0] MSI-X: Enable+ Count=4 Masked-
-> Vector table: BAR=4 offset=00000000
-> PBA: BAR=4 offset=00000800
-
-In addition, some of the MSI-X information for this device is in BAR
-4.  "lspci -xxx" will dump all config space, and you can use a tool
-like http://cmp.felk.cvut.cz/~pisa/linux/rdwrmem.c or
-https://github.com/billfarrow/pcimem to dump the BAR contents.
+> Regards,
+> Oza.
