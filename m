@@ -1,77 +1,81 @@
-Return-Path: <SRS0=HZd4=LD=kernel.crashing.org=benh@kernel.org>
-Return-Path: <SRS0=HZd4=LD=kernel.crashing.org=benh@kernel.org>
-Message-ID: <da6003cf6bcda1921c45b9334caba4c9afceee54.camel@kernel.crashing.org>
-Subject: Re: [PATCH 1/1] PCI/AER: prevent pcie_do_fatal_recovery from using
- device after it is removed
-From: Benjamin Herrenschmidt <benh@kernel.crashing.org>
-To: Thomas Tai <thomas.tai@oracle.com>, poza@codeaurora.org,
-        Bjorn Helgaas
-	 <helgaas@kernel.org>
-Cc: Sinan Kaya <okaya@kernel.org>, bhelgaas@google.com, keith.busch@intel.com,
-        linux-pci@vger.kernel.org, linux-pci-owner@vger.kernel.org,
-        Sam Bobroff <sam.bobroff@au1.ibm.com>
-Date: Mon, 20 Aug 2018 23:27:13 +1000
-In-Reply-To: <b3a3d1a2-567e-8d48-8628-f58e88dd78f6@oracle.com>
-References: <b0104a716319d76e734c307cb4bedd9d@codeaurora.org>
-	 <903394c04d6ad468ed06dc0a779200e7555345a7.camel@kernel.crashing.org>
-	 <6cb069038530757f31f3dd60328c7e30@codeaurora.org>
-	 <e931bc7a7e468e8bb2ee3766b3fcf96f1800f552.camel@kernel.crashing.org>
-	 <bf7ceabb6fe51398e0f4eebd9c4fe4ac1ec2b8a4.camel@kernel.crashing.org>
-	 <42bd39aef30fe24bfc48d378e1f5d35d@codeaurora.org>
-	 <54d19e0e3d44bedf247853144c6bbfed5561a125.camel@kernel.crashing.org>
-	 <f022581a9ecb88e5501a09bdcdc62954@codeaurora.org>
-	 <1d5b1157-2f78-5fab-78f0-5828892fc739@kernel.org>
-	 <c7b996e0856cbea16cbb94287225bf2083158f02.camel@kernel.crashing.org>
-	 <20180819022402.GF128050@bhelgaas-glaptop.roam.corp.google.com>
-	 <6f0b939604aa10e9de2a6bd7fed76ce5@codeaurora.org>
-	 <6435dd654f4e98f311a0544e1ff7b608aa2a4f4c.camel@kernel.crashing.org>
-	 <b3a3d1a2-567e-8d48-8628-f58e88dd78f6@oracle.com>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+From: Leonard Crestez <leonard.crestez@nxp.com>
+To: Shawn Guo <shawnguo@kernel.org>,
+ Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
+ Philipp Zabel <p.zabel@pengutronix.de>,
+ Lucas Stach <l.stach@pengutronix.de>
+Subject: [PATCH v4 3/6] reset: imx7: Add PCIE_CTRL_APPS_TURNOFF
+Date: Tue, 14 Aug 2018 19:50:17 +0300
+Message-Id: <88a5997e37d048cfc2dabb44cc13dce89c93d5eb.1534264292.git.leonard.crestez@nxp.com>
+In-Reply-To: <cover.1534264292.git.leonard.crestez@nxp.com>
+References: <cover.1534264292.git.leonard.crestez@nxp.com>
+MIME-Version: 1.0
+List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
+List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
+List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
+List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
+List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
+Cc: Mark Rutland <mark.rutland@arm.com>, devicetree@vger.kernel.org,
+ Joao Pinto <Joao.Pinto@synopsys.com>, Richard Zhu <hongxing.zhu@nxp.com>,
+ Anson Huang <Anson.Huang@nxp.com>, Andrey Smirnov <andrew.smirnov@gmail.com>,
+ Jingoo Han <jingoohan1@gmail.com>, linux-kernel@vger.kernel.org,
+ Rob Herring <robh+dt@kernel.org>, linux-imx@nxp.com, kernel@pengutronix.de,
+ linux-pci@vger.kernel.org, Bjorn Helgaas <bhelgaas@google.com>,
+ linux-arm-kernel@lists.infradead.org
+Content-Type: text/plain; charset="us-ascii"
+Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
+Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Mon, 2018-08-20 at 09:02 -0400, Thomas Tai wrote:
-> 
-> On 08/20/2018 01:15 AM, Benjamin Herrenschmidt wrote:
-> > On Mon, 2018-08-20 at 10:39 +0530, poza@codeaurora.org wrote:
-> > > On 2018-08-19 07:54, Bjorn Helgaas wrote:
-> > > > On Fri, Aug 17, 2018 at 09:27:03AM +1000, Benjamin Herrenschmidt wrote:
-> > > > > On Thu, 2018-08-16 at 09:46 -0400, Sinan Kaya wrote:
-> > > > > > On 8/16/2018 4:22 AM, poza@codeaurora.org wrote:
-> > > > > > > we can catch up on webex, (Sinan is going to be there in Plumber's
-> > > > > > > conference, I might not be able to join there, as we have bring-up coming)
-> > > > > > 
-> > > > > > My plumbers conference attendance is not confirmed yet. I'm trying to
-> > > > > > combine it with a business trip. I did not get an ACK yet from my boss.
-> > > > > 
-> > > > > Ok, I'll collect the names and will propose a time/date early next
-> > > > > week, I'm a bit caught up until monday.
-> > > > > 
-> > > > > Bjorn, are you available as well ?
-> > > > 
-> > > > I'm in CDT (UTC-5).  Possible times for me are 6am-10pm CDT.
-> > > 
-> > > I am in India timezone.
-> > 
-> > Hrm ... this is going to be difficult to reconcile. Let's first see
-> > what we can do by email this week shall we ?
-> 
-> OK, I will catch up on email to see the details. I suppose I should hold 
-> off the original patch to fix the "prevent pcie_do_fatal_recovery from 
-> using device after it is removed" patch, right?
+This is required for the imx pci driver to send the PME_Turn_Off TLP.
 
-I wouldn't hold on bug fixes for now. We might refactor all of this but
-it might take a kernel version or two...
+Signed-off-by: Leonard Crestez <leonard.crestez@nxp.com>
+---
+ drivers/reset/reset-imx7.c             | 1 +
+ include/dt-bindings/reset/imx7-reset.h | 4 +++-
+ 2 files changed, 4 insertions(+), 1 deletion(-)
 
-Cheers,
-Ben.
+diff --git a/drivers/reset/reset-imx7.c b/drivers/reset/reset-imx7.c
+index 97d9f08271c5..77911fa8f31d 100644
+--- a/drivers/reset/reset-imx7.c
++++ b/drivers/reset/reset-imx7.c
+@@ -65,10 +65,11 @@ static const struct imx7_src_signal imx7_src_signals[IMX7_RESET_NUM] = {
+ 	[IMX7_RESET_MIPI_PHY_MRST]	= { SRC_MIPIPHY_RCR, BIT(1) },
+ 	[IMX7_RESET_MIPI_PHY_SRST]	= { SRC_MIPIPHY_RCR, BIT(2) },
+ 	[IMX7_RESET_PCIEPHY]		= { SRC_PCIEPHY_RCR, BIT(2) | BIT(1) },
+ 	[IMX7_RESET_PCIEPHY_PERST]	= { SRC_PCIEPHY_RCR, BIT(3) },
+ 	[IMX7_RESET_PCIE_CTRL_APPS_EN]	= { SRC_PCIEPHY_RCR, BIT(6) },
++	[IMX7_RESET_PCIE_CTRL_APPS_TURNOFF] = { SRC_PCIEPHY_RCR, BIT(11) },
+ 	[IMX7_RESET_DDRC_PRST]		= { SRC_DDRC_RCR, BIT(0) },
+ 	[IMX7_RESET_DDRC_CORE_RST]	= { SRC_DDRC_RCR, BIT(1) },
+ };
+ 
+ static struct imx7_src *to_imx7_src(struct reset_controller_dev *rcdev)
+diff --git a/include/dt-bindings/reset/imx7-reset.h b/include/dt-bindings/reset/imx7-reset.h
+index 63948170c7b2..31b3f87dde9a 100644
+--- a/include/dt-bindings/reset/imx7-reset.h
++++ b/include/dt-bindings/reset/imx7-reset.h
+@@ -54,9 +54,11 @@
+  */
+ #define IMX7_RESET_PCIE_CTRL_APPS_EN	22
+ #define IMX7_RESET_DDRC_PRST		23
+ #define IMX7_RESET_DDRC_CORE_RST	24
+ 
+-#define IMX7_RESET_NUM			25
++#define IMX7_RESET_PCIE_CTRL_APPS_TURNOFF 25
++
++#define IMX7_RESET_NUM			26
+ 
+ #endif
+ 
+-- 
+2.17.1
 
-> 
-> Thank you,
-> Thomas
-> 
-> > 
-> > Cheers,
-> > Ben.
-> > 
-> > 
+
+_______________________________________________
+linux-arm-kernel mailing list
+linux-arm-kernel@lists.infradead.org
+http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
