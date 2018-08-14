@@ -1,105 +1,148 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-From: Bharat Kumar Gogada <bharatku@xilinx.com>
-To: "poza@codeaurora.org" <poza@codeaurora.org>
-CC: "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-        "bhelgaas@google.com" <bhelgaas@google.com>,
-        Ravikiran Gummaluri <rgummal@xilinx.com>,
-        "linux-pci-owner@vger.kernel.org" <linux-pci-owner@vger.kernel.org>
-Subject: RE: [PATCH v2] PCI/AER: Enable SERR# forwarding in non ACPI flow
-Date: Fri, 24 Aug 2018 12:13:24 +0000
-Message-ID: <BL0PR02MB4849845E4161CDC9BE391EB2A5360@BL0PR02MB4849.namprd02.prod.outlook.com>
-References: <1533826657-24552-1-git-send-email-bharat.kumar.gogada@xilinx.com>
- <2f53b7dd9c1464f40b10217eb64d511e@codeaurora.org>
-In-Reply-To: <2f53b7dd9c1464f40b10217eb64d511e@codeaurora.org>
-Content-Type: text/plain; charset="us-ascii"
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from aserp2130.oracle.com ([141.146.126.79]:51142 "EHLO
+        aserp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1732667AbeHNQiq (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Tue, 14 Aug 2018 12:38:46 -0400
+Subject: Re: [PATCH 1/1] PCI/AER: prevent pcie_do_fatal_recovery from using
+ device after it is removed
+To: poza@codeaurora.org
+Cc: bhelgaas@google.com, keith.busch@intel.com,
+        linux-pci@vger.kernel.org, linux-pci-owner@vger.kernel.org
+References: <1534179088-44219-1-git-send-email-thomas.tai@oracle.com>
+ <1534179088-44219-2-git-send-email-thomas.tai@oracle.com>
+ <51f4b387d9bd96a42d526a6a029fc43b@codeaurora.org>
+ <b0104a716319d76e734c307cb4bedd9d@codeaurora.org>
+From: Thomas Tai <thomas.tai@oracle.com>
+Message-ID: <8b8db3c5-e884-d697-6193-b409276f9638@oracle.com>
+Date: Tue, 14 Aug 2018 09:51:24 -0400
 MIME-Version: 1.0
-Sender: linux-kernel-owner@vger.kernel.org
+In-Reply-To: <b0104a716319d76e734c307cb4bedd9d@codeaurora.org>
+Content-Type: text/plain; charset=utf-8; format=flowed
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-> Subject: Re: [PATCH v2] PCI/AER: Enable SERR# forwarding in non ACPI flow
->=20
-> On 2018-08-09 20:27, Bharat Kumar Gogada wrote:
-> > As per Figure 6-3 in PCIe r4.0, sec 6.2.6, ERR_ messages will be
-> > forwarded from the secondary interface to the primary interface, if
-> > the SERR# Enable bit in the Bridge Control register is set.
-> > Currently PCI_BRIDGE_CTL_SERR is being enabled only in ACPI flow.
-> > This patch enables PCI_BRIDGE_CTL_SERR for Type-1 PCI device.
-> >
-> > Signed-off-by: Bharat Kumar Gogada <bharat.kumar.gogada@xilinx.com>
-> > ---
-> >  drivers/pci/pcie/aer.c |   23 +++++++++++++++++++++++
-> >  1 files changed, 23 insertions(+), 0 deletions(-)
-> >
-> > diff --git a/drivers/pci/pcie/aer.c b/drivers/pci/pcie/aer.c index
-> > a2e8838..4fb0d24 100644
-> > --- a/drivers/pci/pcie/aer.c
-> > +++ b/drivers/pci/pcie/aer.c
-> > @@ -343,6 +343,20 @@ int pci_enable_pcie_error_reporting(struct
-> > pci_dev
-> > *dev)
-> >  	if (!dev->aer_cap)
-> >  		return -EIO;
-> >
-> > +	if (dev->hdr_type =3D=3D PCI_HEADER_TYPE_BRIDGE) {
-> > +		u16 control;
-> > +
-> > +		/*
-> > +		 * A Type-1 PCI bridge will not forward ERR_ messages
-> coming
-> > +		 * from an endpoint if SERR# forwarding is not enabled.
-> > +		 */
-> > +		pci_read_config_word(dev, PCI_BRIDGE_CONTROL,
-> &control);
-> > +		if (!(control & PCI_BRIDGE_CTL_SERR)) {
-> > +			control |=3D PCI_BRIDGE_CTL_SERR;
-> > +			pci_write_config_word(dev, PCI_BRIDGE_CONTROL,
-> control);
-> > +		}
-> > +	}
-> > +
-> >  	return pcie_capability_set_word(dev, PCI_EXP_DEVCTL,
-> > PCI_EXP_AER_FLAGS);  }
-> > EXPORT_SYMBOL_GPL(pci_enable_pcie_error_reporting);
-> > @@ -352,6 +366,15 @@ int pci_disable_pcie_error_reporting(struct
-> > pci_dev *dev)
-> >  	if (pcie_aer_get_firmware_first(dev))
-> >  		return -EIO;
-> >
-> > +	if (dev->hdr_type =3D=3D PCI_HEADER_TYPE_BRIDGE) {
-> > +		u16 control;
-> > +
-> > +		/* Clear SERR Forwarding */
-> > +		pci_read_config_word(dev, PCI_BRIDGE_CONTROL,
-> &control);
-> > +		control &=3D ~PCI_BRIDGE_CTL_SERR;
-> > +		pci_write_config_word(dev, PCI_BRIDGE_CONTROL, control);
-> > +	}
-> > +
-> >  	return pcie_capability_clear_word(dev, PCI_EXP_DEVCTL,
-> >  					  PCI_EXP_AER_FLAGS);
-> >  }
->=20
->=20
-> Hi Bjorn,
->=20
-> I made some comments on patchv1., same I am putting it across here.
->=20
-> what about hot-plug case ?
-> should not aer_init() call pci_enable_pcie_error_reporting() for all the
-> downstream pci_dev ?
-> and remove all the calls from drivers..
-> aer_init will be called for each device (pci_dev) while pciehp does re-
-> enumeration.
-> so probable we might want to call pci_enable_pcie_error_reporting() but
-> that dictates the design where AER framework is taking decision to enable
-> error reporting on behalf of drivers as well.
-> but thats fine I think, if drivers do not want to participate then they h=
-ave to
-> call  pci_disable_pcie_error_reporting explicitly.
-> does this make sense ?
->=20
-Hi Bjorn,
-Can you please comment on this.
+On 08/14/2018 05:22 AM, poza@codeaurora.org wrote:
+> On 2018-08-14 14:46, poza@codeaurora.org wrote:
+>> On 2018-08-13 22:21, Thomas Tai wrote:
+>>> In order to prevent the pcie_do_fatal_recovery() from
+>>> using the device after it is removed, the device's
+>>> domain:bus:devfn is stored at the entry of
+>>> pcie_do_fatal_recovery(). After rescanning the bus, the
+>>> stored domain:bus:devfn is used to find the device and
+>>> uses to report pci_info. The original issue only happens
+>>> on an non-bridge device, a local variable is used instead
+>>> of checking the device's header type.
+>>>
+>>> Signed-off-by: Thomas Tai <thomas.tai@oracle.com>
+>>> ---
+>>>  drivers/pci/pcie/err.c | 33 +++++++++++++++++++++++----------
+>>>  1 file changed, 23 insertions(+), 10 deletions(-)
+>>>
+>>> diff --git a/drivers/pci/pcie/err.c b/drivers/pci/pcie/err.c
+>>> index f02e334..3414445 100644
+>>> --- a/drivers/pci/pcie/err.c
+>>> +++ b/drivers/pci/pcie/err.c
+>>> @@ -287,15 +287,20 @@ void pcie_do_fatal_recovery(struct pci_dev *dev,
+>>> u32 service)
+>>>      struct pci_bus *parent;
+>>>      struct pci_dev *pdev, *temp;
+>>>      pci_ers_result_t result;
+>>> +    bool is_bridge_device = false;
+>>> +    u16 domain = pci_domain_nr(dev->bus);
+>>> +    u8 bus = dev->bus->number;
+>>> +    u8 devfn = dev->devfn;
+>>>
+>>> -    if (dev->hdr_type == PCI_HEADER_TYPE_BRIDGE)
+>>> +    if (dev->hdr_type == PCI_HEADER_TYPE_BRIDGE) {
+>>> +        is_bridge_device = true;
+>>>          udev = dev;
+>>> -    else
+>>> +    } else {
+>>>          udev = dev->bus->self;
+>>> +    }
+>>>
+>>>      parent = udev->subordinate;
+>>>      pci_lock_rescan_remove();
+>>> -    pci_dev_get(dev);
+>>>      list_for_each_entry_safe_reverse(pdev, temp, &parent->devices,
+>>>                       bus_list) {
+>>>          pci_dev_get(pdev);
+>>> @@ -309,27 +314,35 @@ void pcie_do_fatal_recovery(struct pci_dev *dev,
+>>> u32 service)
+>>>
+>>>      result = reset_link(udev, service);
+>>>
+>>> -    if ((service == PCIE_PORT_SERVICE_AER) &&
+>>> -        (dev->hdr_type == PCI_HEADER_TYPE_BRIDGE)) {
+>>> +    if (service == PCIE_PORT_SERVICE_AER && is_bridge_device) {
+>>>          /*
+>>>           * If the error is reported by a bridge, we think this error
+>>>           * is related to the downstream link of the bridge, so we
+>>>           * do error recovery on all subordinates of the bridge instead
+>>>           * of the bridge and clear the error status of the bridge.
+>>>           */
+>>> -        pci_cleanup_aer_uncorrect_error_status(dev);
+>>> +        pci_cleanup_aer_uncorrect_error_status(udev);
+>>>      }
+>>>
+>>>      if (result == PCI_ERS_RESULT_RECOVERED) {
+>>>          if (pcie_wait_for_link(udev, true))
+>>>              pci_rescan_bus(udev->bus);
+>>> -        pci_info(dev, "Device recovery from fatal error successful\n");
+>>> +        /* find the pci_dev after rescanning the bus */
+>>> +        dev = pci_get_domain_bus_and_slot(domain, bus, devfn);
+>> one of the motivations was to remove and re-enumerate rather then
+>> going thorugh driver's recovery sequence
+>> was; it might be possible that hotplug capable bridge, the device
+>> might have changed.
+>> hence this check will fail
 
-Bharat
+Thanks Oza for your information. Instead of searching for the dev_pci, 
+should I just use the stored domain:bus:devfn to printout the info?
+
+>>> +        if (dev)
+>>> +            pci_info(dev, "Device recovery from fatal error 
+>>> successful\n");
+>>> +        else
+>>> +            pr_err("AER: Can not find pci_dev for %04x:%02x:%02x.%x\n",
+>>> +                   domain, bus,
+>>> +                   PCI_SLOT(devfn), PCI_FUNC(devfn));
+>>> +        pci_dev_put(dev);
+
+That is, replace above with:
+	
+	pr_info("AER: Device %04x:%02x:%02x.%x recover from fatal error 
+successful\n", domain, bus, PCI_SLOT(devfn), PCI_FUNC(devfn));
+
+
+>>>      } else {
+>>> -        pci_uevent_ers(dev, PCI_ERS_RESULT_DISCONNECT);
+>>> -        pci_info(dev, "Device recovery from fatal error failed\n");
+>>> +        if (is_bridge_device)
+>> previously there was no condition.. why is this required now ?
+>> and it was doing on "dev" while you are doing it on "udev"
+> is that the reason we dont watnt o use dev after it is removed ? instead 
+> do pci_uevent_ers on bridge ?
+
+
+Yes, that's exactly the reason. I should have written down the reason in 
+the commit log. Here is the details explanation for the benefit of 
+others. If the failing device is a bridge device, udev is equal to dev. 
+So we can use udev in the pci_uevent_ers. But for non bridge device the 
+device is already removed from the bus and thus can't send pci_uevent_ers.
+
+Thank you,
+Thomas
+
+>>> +            pci_uevent_ers(udev, PCI_ERS_RESULT_DISCONNECT);
+>>> +        pr_err("AER: Device %04x:%02x:%02x.%x recovery from fatal 
+>>> error failed\n",
+>>> +               domain, bus, PCI_SLOT(devfn), PCI_FUNC(devfn));
+>>>      }
+>>>
+>>> -    pci_dev_put(dev);
+>>>      pci_unlock_rescan_remove();
+>>>  }
+>>
+>> Regards,
+>> Oza.
