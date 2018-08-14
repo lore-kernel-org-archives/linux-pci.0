@@ -1,93 +1,120 @@
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from smtp.codeaurora.org ([198.145.29.96]:50232 "EHLO
+        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1728101AbeHNMCw (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Tue, 14 Aug 2018 08:02:52 -0400
 MIME-Version: 1.0
-References: <CAKv+Gu8DeuksZhk1g3q_msSKV_hSY_2e1uzVten9-oGO3j9Sqg@mail.gmail.com>
- <20180803094129.GB17798@arm.com>
- <alpine.LRH.2.02.1808031235410.31584@file01.intranet.prod.int.rdu2.redhat.com>
- <CAKv+Gu-aNFh1fsr_05SEwDp99n3pLrguP7=tEcFQPNY53=K7Fw@mail.gmail.com>
- <alpine.LRH.2.02.1808031424140.14030@file01.intranet.prod.int.rdu2.redhat.com>
- <CAHCPf3s-+Qf=WBZz1KpisDMG3520jCUh8PLAO3PHa4jdt8kCTw@mail.gmail.com>
- <20180808121641.GB24736@iMac.local>
- <b1de49af14d941979977af07dc81e1c2@AcuMS.aculab.com>
- <alpine.LRH.2.02.1808080939180.3325@file01.intranet.prod.int.rdu2.redhat.com>
- <19c70d2a0b224db78f72dd316ad006b8@AcuMS.aculab.com>
- <20180808145017.GE24736@iMac.local>
- <alpine.LRH.2.02.1808081215120.31259@file01.intranet.prod.int.rdu2.redhat.com>
-In-Reply-To: <alpine.LRH.2.02.1808081215120.31259@file01.intranet.prod.int.rdu2.redhat.com>
-From: Arnd Bergmann <arnd@arndb.de>
-Date: Wed, 8 Aug 2018 18:31:09 +0200
-Message-ID: <CAK8P3a3iURkU8LThO3xLtaNjkYArdpw+6_WqJQog4EgrcQy23g@mail.gmail.com>
-Subject: Re: framebuffer corruption due to overlapping stp instructions on
- arm64
-To: Mikulas Patocka <mpatocka@redhat.com>
-List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
-List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
-List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
-List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
-List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
-Cc: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>,
- Joao Pinto <Joao.Pinto@synopsys.com>,
- Ard Biesheuvel <ard.biesheuvel@linaro.org>,
- Catalin Marinas <catalin.marinas@arm.com>, Will Deacon <will.deacon@arm.com>,
- Russell King - ARM Linux <linux@armlinux.org.uk>,
- Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
- David Laight <David.Laight@aculab.com>, neko@bakuhatsu.net,
- linux-pci <linux-pci@vger.kernel.org>, Jingoo Han <jingoohan1@gmail.com>,
- Linux ARM <linux-arm-kernel@lists.infradead.org>
-Content-Type: text/plain; charset="us-ascii"
-Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
-Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
+Content-Type: text/plain; charset=US-ASCII;
+ format=flowed
+Date: Tue, 14 Aug 2018 14:46:32 +0530
+From: poza@codeaurora.org
+To: Thomas Tai <thomas.tai@oracle.com>
+Cc: bhelgaas@google.com, keith.busch@intel.com,
+        linux-pci@vger.kernel.org
+Subject: Re: [PATCH 1/1] PCI/AER: prevent pcie_do_fatal_recovery from using
+ device after it is removed
+In-Reply-To: <1534179088-44219-2-git-send-email-thomas.tai@oracle.com>
+References: <1534179088-44219-1-git-send-email-thomas.tai@oracle.com>
+ <1534179088-44219-2-git-send-email-thomas.tai@oracle.com>
+Message-ID: <51f4b387d9bd96a42d526a6a029fc43b@codeaurora.org>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wed, Aug 8, 2018 at 6:22 PM Mikulas Patocka <mpatocka@redhat.com> wrote:
->
-> On Wed, 8 Aug 2018, Catalin Marinas wrote:
->
-> > On Wed, Aug 08, 2018 at 02:26:11PM +0000, David Laight wrote:
-> > > From: Mikulas Patocka
-> > > > Sent: 08 August 2018 14:47
-> > > ...
-> > > > The problem on ARM is that I see data corruption when the overlapping
-> > > > unaligned writes are done just by a single core.
-> > >
-> > > Is this a sequence of unaligned writes (that shouldn't modify the
-> > > same physical locations) or an aligned write followed by an
-> > > unaligned one that updates part of the earlier write.
-> > > (Or the opposite order?)
-> >
-> > In the memcpy() case, there can be a sequence of unaligned writes but
-> > they would not modify the same byte (so no overlapping address at the
-> > byte level).
->
-> They do modify the same byte, but with the same value. Suppose that you
-> want to copy a piece of data that is between 8 and 16 bytes long. You can
-> do this:
->
-> add src_end, src, len
-> add dst_end, dst, len
-> ldr x0, [src]
-> ldr x1, [src_end - 8]
-> str x0, [dst]
-> str x1, [dst_end - 8]
->
-> The ARM64 memcpy uses this trick heavily in order to reduce branching, and
-> this is what makes the PCIe controller choke.
+On 2018-08-13 22:21, Thomas Tai wrote:
+> In order to prevent the pcie_do_fatal_recovery() from
+> using the device after it is removed, the device's
+> domain:bus:devfn is stored at the entry of
+> pcie_do_fatal_recovery(). After rescanning the bus, the
+> stored domain:bus:devfn is used to find the device and
+> uses to report pci_info. The original issue only happens
+> on an non-bridge device, a local variable is used instead
+> of checking the device's header type.
+> 
+> Signed-off-by: Thomas Tai <thomas.tai@oracle.com>
+> ---
+>  drivers/pci/pcie/err.c | 33 +++++++++++++++++++++++----------
+>  1 file changed, 23 insertions(+), 10 deletions(-)
+> 
+> diff --git a/drivers/pci/pcie/err.c b/drivers/pci/pcie/err.c
+> index f02e334..3414445 100644
+> --- a/drivers/pci/pcie/err.c
+> +++ b/drivers/pci/pcie/err.c
+> @@ -287,15 +287,20 @@ void pcie_do_fatal_recovery(struct pci_dev *dev,
+> u32 service)
+>  	struct pci_bus *parent;
+>  	struct pci_dev *pdev, *temp;
+>  	pci_ers_result_t result;
+> +	bool is_bridge_device = false;
+> +	u16 domain = pci_domain_nr(dev->bus);
+> +	u8 bus = dev->bus->number;
+> +	u8 devfn = dev->devfn;
+> 
+> -	if (dev->hdr_type == PCI_HEADER_TYPE_BRIDGE)
+> +	if (dev->hdr_type == PCI_HEADER_TYPE_BRIDGE) {
+> +		is_bridge_device = true;
+>  		udev = dev;
+> -	else
+> +	} else {
+>  		udev = dev->bus->self;
+> +	}
+> 
+>  	parent = udev->subordinate;
+>  	pci_lock_rescan_remove();
+> -	pci_dev_get(dev);
+>  	list_for_each_entry_safe_reverse(pdev, temp, &parent->devices,
+>  					 bus_list) {
+>  		pci_dev_get(pdev);
+> @@ -309,27 +314,35 @@ void pcie_do_fatal_recovery(struct pci_dev *dev,
+> u32 service)
+> 
+>  	result = reset_link(udev, service);
+> 
+> -	if ((service == PCIE_PORT_SERVICE_AER) &&
+> -	    (dev->hdr_type == PCI_HEADER_TYPE_BRIDGE)) {
+> +	if (service == PCIE_PORT_SERVICE_AER && is_bridge_device) {
+>  		/*
+>  		 * If the error is reported by a bridge, we think this error
+>  		 * is related to the downstream link of the bridge, so we
+>  		 * do error recovery on all subordinates of the bridge instead
+>  		 * of the bridge and clear the error status of the bridge.
+>  		 */
+> -		pci_cleanup_aer_uncorrect_error_status(dev);
+> +		pci_cleanup_aer_uncorrect_error_status(udev);
+>  	}
+> 
+>  	if (result == PCI_ERS_RESULT_RECOVERED) {
+>  		if (pcie_wait_for_link(udev, true))
+>  			pci_rescan_bus(udev->bus);
+> -		pci_info(dev, "Device recovery from fatal error successful\n");
+> +		/* find the pci_dev after rescanning the bus */
+> +		dev = pci_get_domain_bus_and_slot(domain, bus, devfn);
+one of the motivations was to remove and re-enumerate rather then going 
+thorugh driver's recovery sequence
+was; it might be possible that hotplug capable bridge, the device might 
+have changed.
+hence this check will fail
+> +		if (dev)
+> +			pci_info(dev, "Device recovery from fatal error successful\n");
+> +		else
+> +			pr_err("AER: Can not find pci_dev for %04x:%02x:%02x.%x\n",
+> +			       domain, bus,
+> +			       PCI_SLOT(devfn), PCI_FUNC(devfn));
+> +		pci_dev_put(dev);
+>  	} else {
+> -		pci_uevent_ers(dev, PCI_ERS_RESULT_DISCONNECT);
+> -		pci_info(dev, "Device recovery from fatal error failed\n");
+> +		if (is_bridge_device)
+previously there was no condition.. why is this required now ?
+and it was doing on "dev" while you are doing it on "udev"
+> +			pci_uevent_ers(udev, PCI_ERS_RESULT_DISCONNECT);
+> +		pr_err("AER: Device %04x:%02x:%02x.%x recovery from fatal error 
+> failed\n",
+> +		       domain, bus, PCI_SLOT(devfn), PCI_FUNC(devfn));
+>  	}
+> 
+> -	pci_dev_put(dev);
+>  	pci_unlock_rescan_remove();
+>  }
 
-So when a single unaligned 'stp' gets translated into a PCIe with TLP
-with length=5 (20 bytes) and LastBE = ~1stBE, write combining the
-overlapping stores gives us a TLP with a longer length (5..8 for two
-stores), and byte-enable bits that are not exactly a complement.
-
-If the explanation is just that of the byte-enable settings of the merged
-TLP are wrong, maybe the problem is that one of them is always
-the complement of the other, which would work for power-of-two
-length but not the odd length of the TLP post write-combining?
-
-      Arnd
-
-_______________________________________________
-linux-arm-kernel mailing list
-linux-arm-kernel@lists.infradead.org
-http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
+Regards,
+Oza.
