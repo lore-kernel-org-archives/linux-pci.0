@@ -1,114 +1,117 @@
-Return-Path: <SRS0=Fxrs=K7=intel.com=jonathan.derrick@kernel.org>
-Return-Path: <SRS0=Fxrs=K7=intel.com=jonathan.derrick@kernel.org>
-From: "Derrick, Jonathan" <jonathan.derrick@intel.com>
-To: "Busch, Keith" <keith.busch@intel.com>
-CC: "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	"okaya@kernel.org" <okaya@kernel.org>, "willy@infradead.org"
-	<willy@infradead.org>, "liudongdong3@huawei.com" <liudongdong3@huawei.com>,
-	"helgaas@kernel.org" <helgaas@kernel.org>, "poza@codeaurora.org"
-	<poza@codeaurora.org>, "linux-pci@vger.kernel.org"
-	<linux-pci@vger.kernel.org>, "linux-doc@vger.kernel.org"
-	<linux-doc@vger.kernel.org>
-Subject: Re: [PATCH 1/2] PCI/DPC: Add 'nodpc' parameter
-Date: Thu, 16 Aug 2018 21:28:45 +0000
-Message-ID: <1534454924.13356.1.camel@intel.com>
-References: <1534368400-2807-1-git-send-email-jonathan.derrick@intel.com>
-	 <20180816154940.GD5762@bombadil.infradead.org>
-	 <1534434641.17819.27.camel@intel.com>
-	 <20180816203111.GB10316@bhelgaas-glaptop.roam.corp.google.com>
-	 <1534452635.17819.53.camel@intel.com>
-	 <20180816211940.GB7400@localhost.localdomain>
-In-Reply-To: <20180816211940.GB7400@localhost.localdomain>
-Content-Type: multipart/signed; micalg=sha-1;
-	protocol="application/x-pkcs7-signature"; boundary="=-L6lWukXHkEQXS82Ei7AQ"
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail-eopbgr60043.outbound.protection.outlook.com ([40.107.6.43]:35184
+        "EHLO EUR04-DB3-obe.outbound.protection.outlook.com"
+        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+        id S1730635AbeHNTjN (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Tue, 14 Aug 2018 15:39:13 -0400
+From: Leonard Crestez <leonard.crestez@nxp.com>
+To: Shawn Guo <shawnguo@kernel.org>,
+        Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
+        Philipp Zabel <p.zabel@pengutronix.de>,
+        Lucas Stach <l.stach@pengutronix.de>
+Cc: Andrey Smirnov <andrew.smirnov@gmail.com>,
+        Richard Zhu <hongxing.zhu@nxp.com>,
+        Anson Huang <Anson.Huang@nxp.com>,
+        Bjorn Helgaas <bhelgaas@google.com>,
+        Jingoo Han <jingoohan1@gmail.com>,
+        Joao Pinto <Joao.Pinto@synopsys.com>,
+        linux-pci@vger.kernel.org, linux-imx@nxp.com,
+        kernel@pengutronix.de, linux-arm-kernel@lists.infradead.org,
+        devicetree@vger.kernel.org, linux-kernel@vger.kernel.org,
+        Rob Herring <robh+dt@kernel.org>,
+        Mark Rutland <mark.rutland@arm.com>
+Subject: [PATCH v4 6/6] PCI: imx: Add PME_Turn_Off support
+Date: Tue, 14 Aug 2018 19:50:20 +0300
+Message-Id: <7079253f4622c78a6c8a911dda1df60a3198a9a9.1534264292.git.leonard.crestez@nxp.com>
+In-Reply-To: <cover.1534264292.git.leonard.crestez@nxp.com>
+References: <cover.1534264292.git.leonard.crestez@nxp.com>
 MIME-Version: 1.0
+Content-Type: text/plain
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
---=-L6lWukXHkEQXS82Ei7AQ
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
+When the root complex suspends it must send a PME_Turn_Off TLP.
+Implement this by asserting the "turnoff" reset.
 
-On Thu, 2018-08-16 at 15:19 -0600, Keith Busch wrote:
-> On Thu, Aug 16, 2018 at 01:50:42PM -0700, Derrick, Jonathan wrote:
-> > It can also be disabled with setpci, but is that any less of a
-> > hassle?
-> > Genuine question to understand your point of view.
->=20
-> That is not a real solution, IMO. 'setpci' is good to inject things
-> for testing, but it changes config space without the kernel aware
-> that
-> you've done that, so it is inherently racey with other kernel threads
-> touching pci config space. And the kernel or platform may end up
-> undoing
-> what you had 'setpci' do anyway with no immediate way to be notified
-> it
-> was changed.
+On imx7d this is functionality is part of the SRC and exposed through
+the linux reset-controller subsystem. On imx6 equivalent bits are in the
+IOMUXC GPR area which the imx6-pcie driver accesses directly.
 
-It sounds like a sysfs toggle could be useful regardless of the boot
-parameter.
---=-L6lWukXHkEQXS82Ei7AQ
-Content-Type: application/x-pkcs7-signature; name="smime.p7s"
-Content-Disposition: attachment; filename="smime.p7s"
-Content-Transfer-Encoding: base64
+This is only for imx7d right now but it's deliberately implemented as an
+optional reset, ignoring the chip variant:
+* Older dtbs won't have this reset so it will be ignored.
+* Future chips might also expose this as a reset controller.
 
-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
-AG6qjTBc2iB2iz6IVnzrBtQT5DR3KM6EqbMTwur8keTC11xls7lwWexzsSgt37V9UNKAqfsZPgcX
-AgMBAAGjggI3MIICMzAdBgNVHQ4EFgQUJRdznv8EeAa3g+3F5NKtNNctuBcwHwYDVR0jBBgwFoAU
-HmkqtNwo/kcYTiELP7ysES/wmPUwZQYDVR0fBF4wXDBaoFigVoZUaHR0cDovL3d3dy5pbnRlbC5j
-b20vcmVwb3NpdG9yeS9DUkwvSW50ZWwlMjBFeHRlcm5hbCUyMEJhc2ljJTIwSXNzdWluZyUyMENB
-JTIwNEEuY3JsMIGfBggrBgEFBQcBAQSBkjCBjzBpBggrBgEFBQcwAoZdaHR0cDovL3d3dy5pbnRl
-bC5jb20vcmVwb3NpdG9yeS9jZXJ0aWZpY2F0ZXMvSW50ZWwlMjBFeHRlcm5hbCUyMEJhc2ljJTIw
-SXNzdWluZyUyMENBJTIwNEEuY3J0MCIGCCsGAQUFBzABhhZodHRwOi8vb2NzcC5pbnRlbC5jb20v
-MAsGA1UdDwQEAwIHgDA8BgkrBgEEAYI3FQcELzAtBiUrBgEEAYI3FQiGw4x1hJnlUYP9gSiFjp9T
-gpHACWeB3r05lfBDAgFkAgEJMB8GA1UdJQQYMBYGCCsGAQUFBwMEBgorBgEEAYI3CgMMMCkGCSsG
-AQQBgjcVCgQcMBowCgYIKwYBBQUHAwQwDAYKKwYBBAGCNwoDDDBRBgNVHREESjBIoCoGCisGAQQB
-gjcUAgOgHAwaam9uYXRoYW4uZGVycmlja0BpbnRlbC5jb22BGmpvbmF0aGFuLmRlcnJpY2tAaW50
-ZWwuY29tMA0GCSqGSIb3DQEBBQUAA4IBAQA5LNb+VnWY0V21FlNjnQ2BIb5gmlED29zwQiC5yezn
-2SexgvN31129iJSkXuiBHdcVJiUAUPHYuxPRwumwbrkY6m+sYi9kIzKt+ZKNNAN4WbnavsbyRBlb
-cIn2E5swqD+sks8AmKivHmg+gFeboLaOf+EqVihIz1Wec1PpbX98R1t2ep7Y/81DD1fIjAWHl6Mq
-TJwjKQuYB01kkJdXZAGPXUQSARR1y2D1YpCkDqfGH2STaB4nenD4INSyhTGo5RV9wwTAibyrIq50
-rnmvBnHTmICQVdHuIhG1gGmDLUAGqfrU3W2QJr9gkICdrTMgIEdd8s73wknaZxZKqfRxnMVQMYIC
-FzCCAhMCAQEwgZAweTELMAkGA1UEBhMCVVMxCzAJBgNVBAgTAkNBMRQwEgYDVQQHEwtTYW50YSBD
-bGFyYTEaMBgGA1UEChMRSW50ZWwgQ29ycG9yYXRpb24xKzApBgNVBAMTIkludGVsIEV4dGVybmFs
-IEJhc2ljIElzc3VpbmcgQ0EgNEECEzMAAKye+0C3syvSXOcAAAAArJ4wCQYFKw4DAhoFAKBdMBgG
-CSqGSIb3DQEJAzELBgkqhkiG9w0BBwEwHAYJKoZIhvcNAQkFMQ8XDTE4MDgxNjIxMjg0NFowIwYJ
-KoZIhvcNAQkEMRYEFFN7WvrHGsbZuKjY1QSqYrKQ5fwZMA0GCSqGSIb3DQEBAQUABIIBADjnodVQ
-cJ3Cew8AyNb8YGRKS5IRZQZVirccgCMZjMbf5ooECpf9TD4ankWdMP3KkpDKGCd8S9zCqfp+ozXz
-2fdQxG3OV3XCMpPUFiJOMT1Y4ACRFn5K1mp8X6Td5QPbOX6BLCFOpPgwMfciLJr8A8YEti0j0myk
-+42MlZEZZgI/nk6TpSkDtQodC53Vbh5r4AdaL9e/V3kF33lVAElfx9pl3PZvnGwDSG6PWNGlBBLo
-/JH0iQz16EVFtRevwe5efz5Bdnh7ZIzNimpb+mUwFG3ZBMXBfgrT4ajcGth0JvnPW5yMkZ9HCvos
-lOwPeuuDBux9/8uxfd1DeetlTiRqrgwAAAAAAAA=
+For example imx8m (not yet supported) has the exact same
+PCIE_CTRL_APPS_TURNOFF bit in the same location.
 
+Signed-off-by: Leonard Crestez <leonard.crestez@nxp.com>
+---
+ drivers/pci/controller/dwc/pci-imx6.c | 15 +++++++++++++++
+ 1 file changed, 15 insertions(+)
 
---=-L6lWukXHkEQXS82Ei7AQ--
+diff --git a/drivers/pci/controller/dwc/pci-imx6.c b/drivers/pci/controller/dwc/pci-imx6.c
+index 926858701726..eeba64392dba 100644
+--- a/drivers/pci/controller/dwc/pci-imx6.c
++++ b/drivers/pci/controller/dwc/pci-imx6.c
+@@ -50,10 +50,11 @@ struct imx6_pcie {
+ 	struct clk		*pcie_inbound_axi;
+ 	struct clk		*pcie;
+ 	struct regmap		*iomuxc_gpr;
+ 	struct reset_control	*pciephy_reset;
+ 	struct reset_control	*apps_reset;
++	struct reset_control	*turnoff_reset;
+ 	enum imx6_pcie_variants variant;
+ 	u32			tx_deemph_gen1;
+ 	u32			tx_deemph_gen2_3p5db;
+ 	u32			tx_deemph_gen2_6db;
+ 	u32			tx_swing_full;
+@@ -757,10 +758,16 @@ static void imx6_pcie_ltssm_disable(struct device *dev)
+ 	default:
+ 		dev_err(dev, "ltssm_disable not supported\n");
+ 	}
+ }
+ 
++static void imx6_pcie_pm_turnoff(struct imx6_pcie *imx6_pcie)
++{
++	reset_control_assert(imx6_pcie->turnoff_reset);
++	reset_control_deassert(imx6_pcie->turnoff_reset);
++}
++
+ static void imx6_pcie_clk_disable(struct imx6_pcie *imx6_pcie)
+ {
+ 	clk_disable_unprepare(imx6_pcie->pcie);
+ 	clk_disable_unprepare(imx6_pcie->pcie_phy);
+ 	clk_disable_unprepare(imx6_pcie->pcie_bus);
+@@ -777,10 +784,11 @@ static int imx6_pcie_suspend_noirq(struct device *dev)
+ 	struct imx6_pcie *imx6_pcie = dev_get_drvdata(dev);
+ 
+ 	if (imx6_pcie->variant != IMX7D)
+ 		return 0;
+ 
++	imx6_pcie_pm_turnoff(imx6_pcie);
+ 	imx6_pcie_clk_disable(imx6_pcie);
+ 	imx6_pcie_ltssm_disable(dev);
+ 
+ 	return 0;
+ }
+@@ -904,10 +912,17 @@ static int imx6_pcie_probe(struct platform_device *pdev)
+ 		break;
+ 	default:
+ 		break;
+ 	}
+ 
++	/* Grab turnoff reset */
++	imx6_pcie->turnoff_reset = devm_reset_control_get_optional_exclusive(dev, "turnoff");
++	if (IS_ERR(imx6_pcie->turnoff_reset)) {
++		dev_err(dev, "Failed to get TURNOFF reset control\n");
++		return PTR_ERR(imx6_pcie->turnoff_reset);
++	}
++
+ 	/* Grab GPR config register range */
+ 	imx6_pcie->iomuxc_gpr =
+ 		 syscon_regmap_lookup_by_compatible("fsl,imx6q-iomuxc-gpr");
+ 	if (IS_ERR(imx6_pcie->iomuxc_gpr)) {
+ 		dev_err(dev, "unable to find iomuxc registers\n");
+-- 
+2.17.1
