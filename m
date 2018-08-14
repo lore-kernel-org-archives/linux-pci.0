@@ -1,48 +1,62 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-sn1nam02on0074.outbound.protection.outlook.com ([104.47.36.74]:11931
-        "EHLO NAM02-SN1-obe.outbound.protection.outlook.com"
-        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1729125AbeHOQlU (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Wed, 15 Aug 2018 12:41:20 -0400
-From: Alan Douglas <adouglas@cadence.com>
-To: <bhelgaas@google.com>
-CC: <kishon@ti.com>, <lorenzo.pieralisi@arm.com>,
-        <linux-pci@vger.kernel.org>, <gustavo.pimentel@synopsys.com>,
-        <cyrille.pitchen@bootlin.com>, <stelford@cadence.com>,
-        Alan Douglas <adouglas@cadence.com>
-Subject: [PATCH v2 4/5] PCI: cadence: Check link is up before sending IRQ from EP
-Date: Wed, 15 Aug 2018 14:48:41 +0100
-Message-ID: <1534340921-23032-1-git-send-email-adouglas@cadence.com>
+Received: from mail.kernel.org ([198.145.29.99]:41954 "EHLO mail.kernel.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1725870AbeHNX5Y (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Tue, 14 Aug 2018 19:57:24 -0400
+Date: Tue, 14 Aug 2018 16:08:21 -0500
+From: Bjorn Helgaas <helgaas@kernel.org>
+To: Bert Kenward <bkenward@solarflare.com>
+Cc: Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org
+Subject: Re: [PATCH] pci/vpd: Ensure VPD is checked before timeout
+Message-ID: <20180814210821.GB28888@bhelgaas-glaptop.roam.corp.google.com>
+References: <66bbf8b3-bab9-1860-12c9-1c187ddc4201@solarflare.com>
 MIME-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <66bbf8b3-bab9-1860-12c9-1c187ddc4201@solarflare.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-If EP attempts to send an IRQ (legacy, MSI or MSI-X) while the
-link is not up, return -EINVAL
+On Thu, Jul 26, 2018 at 04:21:29PM +0100, Bert Kenward wrote:
+> We check the timeout before we check the VPD access completion bit.
+> On a very heavily loaded system this can cause VPD access to timeout.
+> We should check the completion bit before checking the timeout.
+> 
+> Signed-off-by: Bert Kenward <bkenward@solarflare.com>
 
-Fixes: 37dddf14f1ae ("PCI: cadence: Add EndPoint Controller driver for Cadence PCIe controller")
-Signed-off-by: Alan Douglas <adouglas@cadence.com>
----
- drivers/pci/controller/pcie-cadence-ep.c | 6 ++++++
- 1 file changed, 6 insertions(+)
+Applied to pci/misc for v4.19, thanks!
 
-diff --git a/drivers/pci/controller/pcie-cadence-ep.c b/drivers/pci/controller/pcie-cadence-ep.c
-index 56f6b87..1248d75 100644
---- a/drivers/pci/controller/pcie-cadence-ep.c
-+++ b/drivers/pci/controller/pcie-cadence-ep.c
-@@ -370,6 +370,12 @@ static int cdns_pcie_ep_raise_irq(struct pci_epc *epc, u8 fn,
- 				  enum pci_epc_irq_type type, u8 interrupt_num)
- {
- 	struct cdns_pcie_ep *ep = epc_get_drvdata(epc);
-+	u32 link_status;
-+
-+	/* Can't send an IRQ if the link is down. */
-+	link_status = cdns_pcie_readl(&ep->pcie, CDNS_PCIE_LM_BASE);
-+	if (!(link_status & 0x1))
-+		return -EINVAL;
- 
- 	switch (type) {
- 	case PCI_EPC_IRQ_LEGACY:
--- 
-1.9.0
+> ---
+>  drivers/pci/vpd.c | 7 +++++--
+>  1 file changed, 5 insertions(+), 2 deletions(-)
+> 
+> diff --git a/drivers/pci/vpd.c b/drivers/pci/vpd.c
+> index 8617565ba561..4963c2e2bd4c 100644
+> --- a/drivers/pci/vpd.c
+> +++ b/drivers/pci/vpd.c
+> @@ -146,7 +146,7 @@ static int pci_vpd_wait(struct pci_dev *dev)
+>  	if (!vpd->busy)
+>  		return 0;
+>  
+> -	while (time_before(jiffies, timeout)) {
+> +	do {
+>  		ret = pci_user_read_config_word(dev, vpd->cap + PCI_VPD_ADDR,
+>  						&status);
+>  		if (ret < 0)
+> @@ -160,10 +160,13 @@ static int pci_vpd_wait(struct pci_dev *dev)
+>  		if (fatal_signal_pending(current))
+>  			return -EINTR;
+>  
+> +		if (time_after(jiffies, timeout))
+> +			break;
+> +
+>  		usleep_range(10, max_sleep);
+>  		if (max_sleep < 1024)
+>  			max_sleep *= 2;
+> -	}
+> +	} while (true);
+>  
+>  	pci_warn(dev, "VPD access failed.  This is likely a firmware bug on this device.  Contact the card vendor for a firmware update\n");
+>  	return -ETIMEDOUT;
+> -- 
+> 2.13.6
+> 
