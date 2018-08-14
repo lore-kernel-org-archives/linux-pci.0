@@ -1,45 +1,49 @@
-Return-Path: <SRS0=oDjp=K6=intel.com=keith.busch@kernel.org>
-Return-Path: <SRS0=oDjp=K6=intel.com=keith.busch@kernel.org>
-Date: Wed, 15 Aug 2018 17:03:22 -0600
-From: Keith Busch <keith.busch@intel.com>
-To: Jon Derrick <jonathan.derrick@intel.com>
-Cc: linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
-	linux-doc@vger.kernel.org, Bjorn Helgaas <helgaas@kernel.org>,
-	Sinan Kaya <okaya@kernel.org>, Oza Pawandeep <poza@codeaurora.org>,
-	Dongdong Liu <liudongdong3@huawei.com>
-Subject: Re: [PATCH 1/2] PCI/DPC: Add 'nodpc' parameter
-Message-ID: <20180815230321.GA5438@localhost.localdomain>
-References: <1534368400-2807-1-git-send-email-jonathan.derrick@intel.com>
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+From: Hanjie Lin <hanjie.lin@amlogic.com>
+To: Kishon Vijay Abraham I <kishon@ti.com>
+Subject: [PATCH 0/2] add the Amlogic Meson PCIe phy driver.
+Date: Tue, 14 Aug 2018 02:12:12 -0400
+Message-ID: <1534227134-151584-1-git-send-email-hanjie.lin@amlogic.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1534368400-2807-1-git-send-email-jonathan.derrick@intel.com>
+List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
+List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
+List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
+List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
+List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
+Cc: Rob Herring <robh@kernel.org>, Hanjie Lin <hanjie.lin@amlogic.com>,
+ devicetree@vger.kernel.org, Kevin Hilman <khilman@baylibre.com>,
+ shawn.lin@rock-chips.com, linux-kernel@vger.kernel.org,
+ linux-pci@vger.kernel.org, Carlo Caione <carlo@caione.org>,
+ linux-amlogic@lists.infradead.org, linux-arm-kernel@lists.infradead.org
+Content-Type: text/plain; charset="us-ascii"
+Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
+Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wed, Aug 15, 2018 at 03:26:39PM -0600, Jon Derrick wrote:
-> --- a/drivers/pci/pci.h
-> +++ b/drivers/pci/pci.h
-> @@ -536,4 +536,10 @@ static inline void pci_aer_clear_fatal_status(struct pci_dev *dev) { }
->  static inline void pci_aer_clear_device_status(struct pci_dev *dev) { }
->  #endif
->  
-> +#ifdef CONFIG_PCIE_DPC
-> +void pci_no_dpc(void);
-> +#else
-> +static inline void pci_no_dpc(void) { }
-> +#endif
+This patcheset add the driver and dt-bindings for
+the Meson-PCIE-PHY controller.
 
-<snip>
+Yue Wang (2):
+  dt-bindings: PCI: meson: add DT bindings for Amlogic Meson PCIe Phy
+    controller
+  PCI: meson: add the Amlogic Meson PCIe phy driver
 
-> --- a/include/linux/pci.h
-> +++ b/include/linux/pci.h
-> @@ -1473,6 +1473,12 @@ static inline int pci_irqd_intx_xlate(struct irq_domain *d,
->  static inline bool pci_aer_available(void) { return false; }
->  #endif
->  
-> +#ifdef CONFIG_PCIE_DPC
-> +bool pci_dpc_available(void);
-> +#else
-> +static inline bool pci_dpc_available(void) { return false; }
-> +#endif
+ .../bindings/phy/amlogic,meson-pcie-phy.txt        |  31 ++++
+ drivers/phy/amlogic/Kconfig                        |   8 ++
+ drivers/phy/amlogic/Makefile                       |   1 +
+ drivers/phy/amlogic/phy-meson-axg-pcie.c           | 160 +++++++++++++++++++++
+ 4 files changed, 200 insertions(+)
+ create mode 100644 Documentation/devicetree/bindings/phy/amlogic,meson-pcie-phy.txt
+ create mode 100644 drivers/phy/amlogic/phy-meson-axg-pcie.c
 
-Seems like these two sections belong together. Otherwise, looks fine.
+-- 
+2.7.4
+
+
+_______________________________________________
+linux-arm-kernel mailing list
+linux-arm-kernel@lists.infradead.org
+http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
