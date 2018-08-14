@@ -1,26 +1,11 @@
 Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
 Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+From: Hanjie Lin <hanjie.lin@amlogic.com>
+To: Bjorn Helgaas <bhelgaas@google.com>
+Subject: [PATCH 0/2] add the Amlogic Meson PCIe controller driver.
+Date: Tue, 14 Aug 2018 02:18:40 -0400
+Message-ID: <1534227522-186798-1-git-send-email-hanjie.lin@amlogic.com>
 MIME-Version: 1.0
-In-Reply-To: <CAPv3WKdxwoW5MAOvy6uEBEuMpsigMo98hyO+TpKMsFrKR9oBzg@mail.gmail.com>
-References: <alpine.LRH.2.02.1808021242320.31834@file01.intranet.prod.int.rdu2.redhat.com>
- <CAHCPf3tFGqkYEcWNN4LaWThw_rVqT316pzLv6T7RfxwO-eZ0EA@mail.gmail.com>
- <alpine.LRH.2.02.1808030212340.17672@file01.intranet.prod.int.rdu2.redhat.com>
- <CAKv+Gu8DeuksZhk1g3q_msSKV_hSY_2e1uzVten9-oGO3j9Sqg@mail.gmail.com>
- <20180803094129.GB17798@arm.com>
- <alpine.LRH.2.02.1808031235410.31584@file01.intranet.prod.int.rdu2.redhat.com>
- <CAKv+Gu-aNFh1fsr_05SEwDp99n3pLrguP7=tEcFQPNY53=K7Fw@mail.gmail.com>
- <alpine.LRH.2.02.1808031424140.14030@file01.intranet.prod.int.rdu2.redhat.com>
- <CAHCPf3s-+Qf=WBZz1KpisDMG3520jCUh8PLAO3PHa4jdt8kCTw@mail.gmail.com>
- <CAKv+Gu9_h-WFi1j4+DWUN_dMj75SKKHxWoDH8WQ9P7S7MNpZQg@mail.gmail.com>
- <alpine.LRH.2.02.1808060553130.30832@file01.intranet.prod.int.rdu2.redhat.com>
- <99fff4fe-afa9-f12f-a518-472a9dd1c530@arm.com>
- <CAPv3WKdxwoW5MAOvy6uEBEuMpsigMo98hyO+TpKMsFrKR9oBzg@mail.gmail.com>
-From: Ard Biesheuvel <ard.biesheuvel@linaro.org>
-Date: Mon, 6 Aug 2018 15:48:28 +0200
-Message-ID: <CAKv+Gu8XN-vP64G_NLHFcRUJ2fptSrmxfd6CHWDgHkJj073Hbg@mail.gmail.com>
-Subject: Re: framebuffer corruption due to overlapping stp instructions on
- arm64
-To: Marcin Wojtas <mw@semihalf.com>
 List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
  <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
 List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
@@ -28,70 +13,36 @@ List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
 List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
 List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
  <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
-Cc: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>,
- Joao Pinto <Joao.Pinto@synopsys.com>, Jingoo Han <jingoohan1@gmail.com>,
- linux-pci <linux-pci@vger.kernel.org>, Will Deacon <will.deacon@arm.com>,
- Russell King - ARM Linux <linux@armlinux.org.uk>,
- Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
- Mikulas Patocka <mpatocka@redhat.com>, Matt Sealey <neko@bakuhatsu.net>,
- Catalin Marinas <catalin.marinas@arm.com>, Robin Murphy <robin.murphy@arm.com>,
- linux-arm-kernel <linux-arm-kernel@lists.infradead.org>
-Content-Type: text/plain; charset="utf-8"
+Cc: Rob Herring <robh@kernel.org>, Hanjie Lin <hanjie.lin@amlogic.com>,
+ devicetree@vger.kernel.org, Kevin Hilman <khilman@baylibre.com>,
+ linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
+ linux-amlogic@lists.infradead.org, linux-arm-kernel@lists.infradead.org
+Content-Type: text/plain; charset="us-ascii"
 Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
 Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
 List-ID: <linux-pci.vger.kernel.org>
 
-T24gNiBBdWd1c3QgMjAxOCBhdCAxNTo0MSwgTWFyY2luIFdvanRhcyA8bXdAc2VtaWhhbGYuY29t
-PiB3cm90ZToKPiBIaSBNaWt1bGFzLAo+Cj4gcG9uLiwgNiBzaWUgMjAxOCBvIDE0OjQyIFJvYmlu
-IE11cnBoeSA8cm9iaW4ubXVycGh5QGFybS5jb20+IG5hcGlzYcWCKGEpOgo+Pgo+PiBPbiAwNi8w
-OC8xOCAxMToyNSwgTWlrdWxhcyBQYXRvY2thIHdyb3RlOgo+PiBbLi4uXQo+PiA+PiBOb25lIG9m
-IHRoaXMgZXhwbGFpbnMgd2h5IHNvbWUgdHJhbnNhY3Rpb25zIGZhaWwgdG8gbWFrZSBpdCBhY3Jv
-c3MKPj4gPj4gZW50aXJlbHkuIFRoZSBvdmVybGFwcGluZyB3cml0ZXMgaW4gcXVlc3Rpb24gd3Jp
-dGUgdGhlIHNhbWUgZGF0YSB0bwo+PiA+PiB0aGUgbWVtb3J5IGxvY2F0aW9ucyB0aGF0IGFyZSBj
-b3ZlcmVkIGJ5IGJvdGgsIGFuZCBzbyB0aGUgb3JkZXJpbmcgaW4KPj4gPj4gd2hpY2ggdGhlIHRy
-YW5zYWN0aW9ucyBhcmUgcmVjZWl2ZWQgc2hvdWxkIG5vdCBhZmZlY3QgdGhlIG91dGNvbWUuCj4+
-ID4KPj4gPiBZb3UncmUgcmlnaHQgdGhhdCB0aGUgY29ycnVwdGlvbiBjb3VsZG4ndCBiZSBleHBs
-YWluZWQganVzdCBieSByZW9yZGVyaW5nCj4+ID4gd3JpdGVzLiBNeSBoeXBvdGhlc2lzIGlzIHRo
-YXQgdGhlIFBDSWUgY29udHJvbGxlciB0cmllcyB0byBkaXNhbWJpZ3VhdGUKPj4gPiB0aGUgb3Zl
-cmxhcHBpbmcgd3JpdGVzLCBidXQgdGhlIGRpc2FtYmlndWF0aW9uIGxvZ2ljIHdhcyBub3QgdGVz
-dGVkIGFuZCBpdAo+PiA+IGlzIGJ1Z2d5LiBJZiB0aGVyZSdzIGEgYmFycmllciBiZXR3ZWVuIHRo
-ZSBvdmVybGFwcGluZyB3cml0ZXMsIHRoZSBQQ0llCj4+ID4gY29udHJvbGxlciB3b24ndCBzZWUg
-YW55IG92ZXJsYXBwaW5nIHdyaXRlcywgc28gaXQgd29uJ3QgdHJpZ2dlciB0aGUKPj4gPiBmYXVs
-dHkgZGlzYW1iaWd1YXRpb24gbG9naWMgYW5kIGl0IHdvcmtzLgo+PiA+Cj4+ID4gQ291bGQgdGhl
-IEFSTSBlbmdpbmVlcnMgbG9vayBpZiB0aGVyZSdzIHNvbWUgY2hpY2tlbiBiaXQgaW4gQ29ydGV4
-LUE3Mgo+PiA+IHRoYXQgY291bGQgaW5zZXJ0IGJhcnJpZXJzIGJldHdlZW4gbm9uLWNhY2hlZCB3
-cml0ZXMgYXV0b21hdGljYWxseT8KPj4KPj4gSSBkb24ndCB0aGluayB0aGVyZSBpcywgYW5kIGV2
-ZW4gaWYgdGhlcmUgd2FzIEkgaW1hZ2luZSBpdCB3b3VsZCBoYXZlIGEKPj4gcHJldHR5IGhpZGVv
-dXMgZWZmZWN0IG9uIG5vbi1jb2hlcmVudCBETUEgYnVmZmVycyBhbmQgdGhlIHZhcmlvdXMgb3Ro
-ZXIKPj4gcGxhY2VzIGluIHdoaWNoIHdlIGhhdmUgTm9ybWFsLU5DIG1hcHBpbmdzIG9mIGFjdHVh
-bCBzeXN0ZW0gUkFNLgo+Pgo+PiA+IEkgb2JzZXJ2ZSB0aGVzZSBraW5kcyBvZiBjb3JydXB0aW9u
-czoKPj4gPiAtIGZhaWxpbmcgdG8gd3JpdGUgYSBmZXcgYnl0ZXMKPj4KPj4gVGhhdCBjb3VsZCBw
-b3RlbnRpYWxseSBiZSBleHBsYWluZWQgYnkgdGhlIHJlb3JkZXJpbmcvYXRvbWljaXR5IGlzc3Vl
-cwo+PiBNYXR0IG1lbnRpb25lZCwgaS5lLiB0aGUgbG9hZCBpcyBvYnNlcnZpbmcgcGFydCBvZiB0
-aGUgc3RvcmUsIGJlZm9yZSB0aGUKPj4gc3RvcmUgaGFzIGZ1bGx5IGNvbXBsZXRlZC4KPj4KPj4g
-PiAtIHdyaXRpbmcgYSBmZXcgYnl0ZXMgdGhhdCB3ZXJlIHdyaXR0ZW4gMTYgYnl0ZXMgYmVmb3Jl
-Cj4+ID4gLSB3cml0aW5nIGEgZmV3IGJ5dGVzIHRoYXQgd2VyZSB3cml0dGVuIDE2IGJ5dGVzIGFm
-dGVyCj4+Cj4+IFRob3NlIHNvdW5kIG1vcmUgbGlrZSB0aGUgaW50ZXJjb25uZWN0IG9yIHJvb3Qg
-Y29tcGxleCBpZ25vcmluZyB0aGUgYnl0ZQo+PiBzdHJvYmVzIG9uIGFuIHVuYWxpZ25lZCBidXJz
-dCwgb2Ygd2hpY2ggSSB0aGluayB0aGUgc2ltcGxpc3RpYyB2aWV3Cj4+IHdvdWxkIGJlICJpdCdz
-IGJyb2tlbiIuCj4+Cj4+IEZXSVcgSSBzdHVjayBteSBvbGQgTnZpZGlhIDc2MDBHVCBjYXJkIGlu
-IG15IEFybSBKdW5vIHIyIGJvYXJkICgyeAo+PiBDb3J0ZXgtQTcyKSwgYnVpbHQgeW91ciB0ZXN0
-IHByb2dyYW0gbmF0aXZlbHkgd2l0aCBHQ0MgOC4xLjEgYXQgLU8yLCBhbmQKPj4gaXQncyBzdGls
-bCBoYXBwaWx5IGZsaWNrZXJpbmcgcGl4ZWxzIGluIHRoZSBjb3JuZXIgb2YgdGhlIGNvbnNvbGUg
-YWZ0ZXIKPj4gbmVhcmx5IGFuIGhvdXIgKGluIHBhcmFsbGVsIHdpdGggc29tZSBpcGVyZjMganVz
-dCB0byBlbnN1cmUgcGxlbnR5IG9mCj4+IFBDSWUgdHJhZmZpYykuIEkgd291bGQgc3Ryb25nbHkg
-c3VzcGVjdCB0aGlzIGlzc3VlIGlzIHBhcnRpY3VsYXIgdG8KPj4gQXJtYWRhIDhrLCBzbyBpdHMn
-IHByb2JhYmx5IG9uZSBmb3IgdGhlIE1hcnZlbGwgZm9sa3MgdG8gdGFrZSBhIGNsb3Nlcgo+PiBs
-b29rIGF0IC0gSSBiZWxpZXZlIHNvbWUgcHJldmlvdXMgaW50ZXJjb25uZWN0IGlzc3VlcyBvbiB0
-aG9zZSBTb0NzIHdlcmUKPj4gYWN0dWFsbHkgZml4YWJsZSBpbiBmaXJtd2FyZS4KPj4KPj4KPgo+
-IE9uIG15IE1hY2NoaWF0byBJIHVzZSBHVDYzMCBjYXJkIChudXZlYXUgZHJpdmVyKSArIGRlYmlh
-biArIHhmY2UKPiBkZXNrdG9wIGFuZCBpbiBkdWFsIG1vbml0b3IgbW9kZSwgSSBjb3VsZCBydW4g
-YSBjb3VwbGUgb2YgMTA4MHAKPiBzdHJlYW1zLiBBbGwgc21vb3RoIGFuZCBJJ3ZlIG5ldmVyIG5v
-dGljZWQgYW55IGltYWdlIGNvcnJ1cHRpb24KPiB3aGF0c29ldmVyIChJIHNwZW50IGEgbG90IG9m
-IHRpbWUgaW4gZnJvbnQgb2Ygc3VjaCBzZXR1cCkuIEp1c3QgdG8gYmUKPiBvbiBhIHNhZmUgc2lk
-ZSwgY2FuIHlvdSBzZW5kIG1lIGEgYm9vdGxvZyBhbmQgeW91ciBib2FyZCByZXZpc2lvbj8gSSdk
-Cj4gbGlrZSB0byBzZWUgeW91ciBmaXJ3YXJlIHZlcnNpb24gYW5kIHR5cGUuCj4KCkhpIE1hcmNp
-biwKCkNvdWxkIHlvdSBwbGVhc2UgdHJ5IHJ1bm5pbmcgaGlzIHJlcHJvZHVjZXI/CgpfX19fX19f
-X19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fXwpsaW51eC1hcm0ta2VybmVs
-IG1haWxpbmcgbGlzdApsaW51eC1hcm0ta2VybmVsQGxpc3RzLmluZnJhZGVhZC5vcmcKaHR0cDov
-L2xpc3RzLmluZnJhZGVhZC5vcmcvbWFpbG1hbi9saXN0aW5mby9saW51eC1hcm0ta2VybmVsCg==
+The Amlogic Meson PCIe host controller is based on the Synopsys DesignWare
+PCI core. This patchset add the driver and dt-bindings of the controller.
+
+Yue Wang (2):
+  dt-bindings: PCI: meson: add DT bindings for Amlogic Meson PCIe
+    controller
+  PCI: meson: add the Amlogic Meson PCIe controller driver
+
+ .../devicetree/bindings/pci/amlogic,meson-pcie.txt |  57 ++
+ drivers/pci/controller/dwc/Kconfig                 |  12 +
+ drivers/pci/controller/dwc/Makefile                |   1 +
+ drivers/pci/controller/dwc/pci-meson.c             | 588 +++++++++++++++++++++
+ 4 files changed, 658 insertions(+)
+ create mode 100644 Documentation/devicetree/bindings/pci/amlogic,meson-pcie.txt
+ create mode 100644 drivers/pci/controller/dwc/pci-meson.c
+
+-- 
+2.7.4
+
+
+_______________________________________________
+linux-arm-kernel mailing list
+linux-arm-kernel@lists.infradead.org
+http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
