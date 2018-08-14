@@ -1,64 +1,57 @@
-Return-Path: <linux-arch-owner@vger.kernel.org>
-Date: Mon, 13 Aug 2018 17:14:36 -0500
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail.kernel.org ([198.145.29.99]:37640 "EHLO mail.kernel.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1729560AbeHNRGu (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Tue, 14 Aug 2018 13:06:50 -0400
+Date: Tue, 14 Aug 2018 09:19:26 -0500
 From: Bjorn Helgaas <helgaas@kernel.org>
-To: Pu Wen <puwen@hygon.cn>
-Cc: tglx@linutronix.de, mingo@redhat.com, hpa@zytor.com,
-        x86@kernel.org, thomas.lendacky@amd.com, bp@alien8.de,
-        pbonzini@redhat.com, linux-kernel@vger.kernel.org,
-        linux-arch@vger.kernel.org, linux-pci@vger.kernel.org
-Subject: Re: [PATCH v3 07/17] x86/pci: add Hygon PCI vendor and northbridge
- support
-Message-ID: <20180813221436.GN113140@bhelgaas-glaptop.roam.corp.google.com>
-References: <cover.1533989492.git.puwen@hygon.cn>
- <0b8f3a7c5ba8b4f496f8f790e3dafa8d612ffc81.1533989492.git.puwen@hygon.cn>
+To: f.bluethner@mailbox.org
+Cc: Alex Williamson <alex.williamson@redhat.com>,
+        linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org
+Subject: Re: PCI: Add function 1 DMA alias quirk for Marvell 88SS9183
+Message-ID: <20180814141926.GP113140@bhelgaas-glaptop.roam.corp.google.com>
+References: <20180813194123.GM113140@bhelgaas-glaptop.roam.corp.google.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <0b8f3a7c5ba8b4f496f8f790e3dafa8d612ffc81.1533989492.git.puwen@hygon.cn>
-Sender: linux-arch-owner@vger.kernel.org
+In-Reply-To: <20180813194123.GM113140@bhelgaas-glaptop.roam.corp.google.com>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Sat, Aug 11, 2018 at 09:27:42PM +0800, Pu Wen wrote:
-> As Hygon register its PCI Vendor ID as a new one "0x1d94", so add a new
-> definition PCI_VENDOR_ID_HYGON in include/linux/pci_ids.h.
+On Mon, Aug 13, 2018 at 02:41:23PM -0500, Bjorn Helgaas wrote:
+> Hi,
 > 
-> Also Hygon PCI Device ID(0x1450/0x1463/0x1464) for Host bridge is added
-> to amd_nb.c. And it need to define new arrays for Hygon:
-> hygon_root_ids[], hygon_nb_misc_ids[], hygon_nb_link_ids[].
+> Thanks a lot for your new report
+> (https://bugzilla.kernel.org/show_bug.cgi?id=42679#c134).
 > 
-> To enable Hygon north bridge support, add new variable root_ids, and
-> assign its value based on whether CPU vendor is AMD or Hygon. Modify
-> the CONFIG_AMD_NB to depends on either AMD or Hygon.
+> Can you confirm that the patch below is equivalent to what you tested and
+> it resolves the problem?  If so, I'll try to include it for v4.19.
+
+I applied this to pci/virtualization for v4.19.  Please let me know if you
+see any issues.
+
+> commit dd4e0ad485e12c9c04eb7a21ba69c24f12cb1918
+> Author: Bjorn Helgaas <bhelgaas@google.com>
+> Date:   Mon Aug 13 14:30:41 2018 -0500
 > 
-> Add Hygon support in amd_postcore_init(), early_root_info_init().
+>     PCI: Add function 1 DMA alias quirk for Marvell 88SS9183
+>     
+>     Add function 1 DMA alias quirk for Marvell 88SS9183 PCIe SSD Controller.
+>     
+>     Link: https://bugzilla.kernel.org/show_bug.cgi?id=42679#c134
+>     Reported-by: <f.bluethner@mailbox.org>
+>     Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
 > 
-> Signed-off-by: Pu Wen <puwen@hygon.cn>
-> ---
->  arch/x86/Kconfig         |  2 +-
->  arch/x86/kernel/amd_nb.c | 51 ++++++++++++++++++++++++++++++++++++++++++------
->  arch/x86/pci/amd_bus.c   |  6 ++++--
->  include/linux/pci_ids.h  |  2 ++
->  4 files changed, 52 insertions(+), 9 deletions(-)
-
-> diff --git a/include/linux/pci_ids.h b/include/linux/pci_ids.h
-> index 2950223..d0e98a9 100644
-> --- a/include/linux/pci_ids.h
-> +++ b/include/linux/pci_ids.h
-> @@ -511,6 +511,8 @@
->  #define PCI_DEVICE_ID_AMI_MEGARAID	0x9010
->  #define PCI_DEVICE_ID_AMI_MEGARAID2	0x9060
->  
-> +#define PCI_VENDOR_ID_HYGON		0x1d94
-
-Please add this entry so pci_ids.h remains sorted by Vendor ID, then Device
-ID, as the comment at the top suggests.
-
-With that changed,
-
-Acked-by: Bjorn Helgaas <bhelgaas@google.com>	# pci_ids.h
-
->  #define PCI_VENDOR_ID_AMD		0x1022
->  #define PCI_DEVICE_ID_AMD_K8_NB		0x1100
->  #define PCI_DEVICE_ID_AMD_K8_NB_ADDRMAP	0x1101
-> -- 
-> 2.7.4
-> 
+> diff --git a/drivers/pci/quirks.c b/drivers/pci/quirks.c
+> index deb051583eda..6994544125ff 100644
+> --- a/drivers/pci/quirks.c
+> +++ b/drivers/pci/quirks.c
+> @@ -3845,6 +3845,9 @@ DECLARE_PCI_FIXUP_HEADER(PCI_VENDOR_ID_MARVELL_EXT, 0x917a,
+>  /* https://bugzilla.kernel.org/show_bug.cgi?id=42679#c78 */
+>  DECLARE_PCI_FIXUP_HEADER(PCI_VENDOR_ID_MARVELL_EXT, 0x9182,
+>  			 quirk_dma_func1_alias);
+> +/* https://bugzilla.kernel.org/show_bug.cgi?id=42679#c134 */
+> +DECLARE_PCI_FIXUP_HEADER(PCI_VENDOR_ID_MARVELL_EXT, 0x9183,
+> +			 quirk_dma_func1_alias);
+>  /* https://bugzilla.kernel.org/show_bug.cgi?id=42679#c46 */
+>  DECLARE_PCI_FIXUP_HEADER(PCI_VENDOR_ID_MARVELL_EXT, 0x91a0,
+>  			 quirk_dma_func1_alias);
