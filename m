@@ -1,211 +1,243 @@
-Return-Path: <SRS0=gWbn=LF=codeaurora.org=poza@kernel.org>
-Return-Path: <SRS0=gWbn=LF=codeaurora.org=poza@kernel.org>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII;
- format=flowed
-Date: Wed, 22 Aug 2018 10:05:56 +0530
-From: poza@codeaurora.org
-To: Bjorn Helgaas <helgaas@kernel.org>
-Cc: Benjamin Herrenschmidt <benh@kernel.crashing.org>, Thomas Tai
- <thomas.tai@oracle.com>, bhelgaas@google.com, keith.busch@intel.com,
- linux-pci@vger.kernel.org, linux-pci-owner@vger.kernel.org, Sam Bobroff
- <sam.bobroff@au1.ibm.com>
-Subject: Re: PATCH] Partial revert of "PCI/AER: Handle ERR_FATAL with removal
- and re-enumeration of devices"
-In-Reply-To: <20180821195023.GD154536@bhelgaas-glaptop.roam.corp.google.com>
-References: <1534179088-44219-1-git-send-email-thomas.tai@oracle.com>
- <1534179088-44219-2-git-send-email-thomas.tai@oracle.com>
- <51f4b387d9bd96a42d526a6a029fc43b@codeaurora.org>
- <b0104a716319d76e734c307cb4bedd9d@codeaurora.org>
- <903394c04d6ad468ed06dc0a779200e7555345a7.camel@kernel.crashing.org>
- <6cb069038530757f31f3dd60328c7e30@codeaurora.org>
- <e931bc7a7e468e8bb2ee3766b3fcf96f1800f552.camel@kernel.crashing.org>
- <bf7ceabb6fe51398e0f4eebd9c4fe4ac1ec2b8a4.camel@kernel.crashing.org>
- <20180819021922.GE128050@bhelgaas-glaptop.roam.corp.google.com>
- <fa217fe562df74980febdd57e8e3361c2ece2ae2.camel@kernel.crashing.org>
- <20180821195023.GD154536@bhelgaas-glaptop.roam.corp.google.com>
-Message-ID: <5b7b16598ecd480de32e5a5b2e673910@codeaurora.org>
+Return-Path: <SRS0=/dXs=K6=kernel.crashing.org=benh@kernel.org>
+Return-Path: <SRS0=/dXs=K6=kernel.crashing.org=benh@kernel.org>
+Message-ID: <08bc40a6af3e614e97a78fbaab688bfcd14520ac.camel@kernel.crashing.org>
+Subject: [RFC PATCH] pci: Proof of concept at fixing
+ pci_enable_device/bridge races
+From: Benjamin Herrenschmidt <benh@kernel.crashing.org>
+To: Bjorn Helgaas <helgaas@kernel.org>, Hari Vyas <hari.vyas@broadcom.com>
+Cc: bhelgaas@google.com, linux-pci@vger.kernel.org, ray.jui@broadcom.com,
+        "linux-kernel@vger.kernel.org"
+	 <linux-kernel@vger.kernel.org>
+Date: Thu, 16 Aug 2018 07:50:13 +1000
+In-Reply-To: <58192cf94de3941f9141aa3203399ae2bcdf6b7a.camel@kernel.crashing.org>
+References: <1530608741-30664-1-git-send-email-hari.vyas@broadcom.com>
+	 <20180731163727.GK45322@bhelgaas-glaptop.roam.corp.google.com>
+	 <ecaed7664b46d73888d2494065905f8e108fc0f4.camel@kernel.crashing.org>
+	 <5e42f7990673d11e3a020e7efcfd333215d48138.camel@kernel.crashing.org>
+	 <58192cf94de3941f9141aa3203399ae2bcdf6b7a.camel@kernel.crashing.org>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 List-ID: <linux-pci.vger.kernel.org>
 
-On 2018-08-22 01:20, Bjorn Helgaas wrote:
-> On Mon, Aug 20, 2018 at 02:39:04PM +1000, Benjamin Herrenschmidt wrote:
->> This partially reverts commit 
->> 7e9084b36740b2ec263ea35efb203001f755e1d8.
->> 
->> This only reverts the Documentation/PCI/pci-error-recovery.txt changes
->> 
->> Those changes are incorrect, they change the documentation to adapt
->> to the (imho incorrect) AER implementation, and as a result making
->> it no longer match the EEH implementation.
->> 
->> I believe the policy described originally in this document is what
->> should be implemented by everybody and the changes done by that commit
->> would compromise, among others, the ability to recover from errors 
->> with
->> storage devices.
-> 
-> I think we should align EEH, AER, and DPC as much as possible,
-> including making this documentation match the code.
-> 
-> Because of its name, this file *looks* like it should match the code
-> in the PCI core, i.e., drivers/pci/...  So I think it would be
-> confusing to simply apply this revert without making a more direct
-> connection between this documentation and the powerpc-specific EEH
-> code.
-> 
-> If we can change AER & DPC to correspond to EEH, then I think it would
-> make sense to apply this revert along with those AER & DPC changes so
-> the documentation stays in step with the code.
+(Resent with lkml on copy)
 
-I agree with you Bjorn, but it looks like we are far from holding some 
-consensus on the behavior.
-the other mail-chain [PCI/AER: prevent pcie_do_fatal_recovery from using 
-device after it is removed]
-has gone long enough, and touched lot of things all together. hence I 
-would like to just use this mail-chain just to discuss
-about AER, DPC behaviour.
+[Note: This isn't meant to be merged, it need splitting at the very
+least, see below]
 
-let me put forward the proposal here to this mail-chain.
+This is something I cooked up quickly today to test if that would fix
+my problems with large number of switch and NVME devices on POWER.
 
-1) Right now AER and DPC both calls pcie_do_fatal_recovery(), I majorly 
-see DPC as error handling and recovery agent rather than being used for 
-hotplug.
-    so in my opinion, both AER and DPC should have same error handling 
-and recovery mechanism
+So far it does...
 
-    so if there is a way to figure out that in absence of pcihp, if DPC 
-is being used to support hotplug then we fall back to original DPC 
-mechanism (which
-    is remove devices)
-    otherwise, we fall back to drivers callbacks.
+The issue (as discussed in the Re: PCIe enable device races thread) is
+that pci_enable_device and related functions along with pci_set_master
+and pci_enable_bridge are fundamentally racy.
 
-    Spec 6.7.5 Async Removal
-    "
-    The Surprise Down error resulting from async removal may trigger 
-Downstream Port Containment (See Section 6.2.10).
-    Downstream Port Containment following an async removal may be 
-utilized to hold the Link of a
-    Downstream Port in the Disabled LTSSM state while host software 
-recovers from the side effects of an async removal.
-    "
-    pcie_do_fatal_recovery should take care of above. so that we support 
-both error handling and async removal from DPC point of view.
+There is no lockign protecting the state of the device in pci_dev and
+if multiple devices under the same bridge try to enable it simultaneously
+one some of them will potentially start accessing it before it has actually
+been enabled.
 
+Now there are a LOT more fields in pci_dev that aren't covered by any
+form of locking.
 
-2) pci_channel_io_frozen is the one which should be used from framework 
-to communicate driver that this is ERR_FATAL, the it is left to the 
-driver(s) to see if they want reset of the link (SBR).
+Additionally, some other parts such as ASPM or SR-IOV seem to be trying to do
+their own ad-hoc locking, but will manipulate bit fields in pci_dev that
+might be sharing words with other unrelated bit fields racily.
 
-3) pcie_do_nonfatal_recovery; we sould actually reset the link e.g. SBR 
-if driver requests the reset of link.  (there is already TDO note 
-anyway).
-    if (status == PCI_ERS_RESULT_NEED_RESET) {
-         /*
-          * TODO: Should call platform-specific
-          * functions to reset slot before calling
-          * drivers' slot_reset callbacks?
-          */
-         status = broadcast_error_message(dev,
-                 state,
-                 "slot_reset",
-                 report_slot_reset);
-     }
+So I think we need to introduce a pci_dev mutex aimed at synchronizing
+the main enable/master state of a given device, and possibly also the
+bazillion of state bits held inside pci_dev.
 
+I suggest a progressive approach:
 
-Regards,
-Oza.
+ 1- First we add the mutex, and put a red line comment "/* ----- */" in
+    struct pci_dev, at the bottom
 
+ 2- We move the basic enable/disable/set_master stuff under that lock and
+    move the corresponding fields in pci_dev below the line comment.
 
-> 
->> Signed-off-by: Benjamin Herrenschmidt <benh@kernel.crashing.org>
->> ---
->>  Documentation/PCI/pci-error-recovery.txt | 35 
->> +++++++-----------------
->>  1 file changed, 10 insertions(+), 25 deletions(-)
->> 
->> diff --git a/Documentation/PCI/pci-error-recovery.txt 
->> b/Documentation/PCI/pci-error-recovery.txt
->> index 688b69121e82..0b6bb3ef449e 100644
->> --- a/Documentation/PCI/pci-error-recovery.txt
->> +++ b/Documentation/PCI/pci-error-recovery.txt
->> @@ -110,7 +110,7 @@ The actual steps taken by a platform to recover 
->> from a PCI error
->>  event will be platform-dependent, but will follow the general
->>  sequence described below.
->> 
->> -STEP 0: Error Event: ERR_NONFATAL
->> +STEP 0: Error Event
->>  -------------------
->>  A PCI bus error is detected by the PCI hardware.  On powerpc, the 
->> slot
->>  is isolated, in that all I/O is blocked: all reads return 0xffffffff,
->> @@ -228,7 +228,13 @@ proceeds to either STEP3 (Link Reset) or to STEP 
->> 5 (Resume Operations).
->>  If any driver returned PCI_ERS_RESULT_NEED_RESET, then the platform
->>  proceeds to STEP 4 (Slot Reset)
->> 
->> -STEP 3: Slot Reset
->> +STEP 3: Link Reset
->> +------------------
->> +The platform resets the link.  This is a PCI-Express specific step
->> +and is done whenever a fatal error has been detected that can be
->> +"solved" by resetting the link.
->> +
->> +STEP 4: Slot Reset
->>  ------------------
->> 
->>  In response to a return value of PCI_ERS_RESULT_NEED_RESET, the
->> @@ -314,7 +320,7 @@ Failure).
->>  >>> However, it probably should.
->> 
->> 
->> -STEP 4: Resume Operations
->> +STEP 5: Resume Operations
->>  -------------------------
->>  The platform will call the resume() callback on all affected device
->>  drivers if all drivers on the segment have returned
->> @@ -326,7 +332,7 @@ a result code.
->>  At this point, if a new error happens, the platform will restart
->>  a new error recovery sequence.
->> 
->> -STEP 5: Permanent Failure
->> +STEP 6: Permanent Failure
->>  -------------------------
->>  A "permanent failure" has occurred, and the platform cannot recover
->>  the device.  The platform will call error_detected() with a
->> @@ -349,27 +355,6 @@ errors. See the discussion in 
->> powerpc/eeh-pci-error-recovery.txt
->>  for additional detail on real-life experience of the causes of
->>  software errors.
->> 
->> -STEP 0: Error Event: ERR_FATAL
->> --------------------
->> -PCI bus error is detected by the PCI hardware. On powerpc, the slot 
->> is
->> -isolated, in that all I/O is blocked: all reads return 0xffffffff, 
->> all
->> -writes are ignored.
->> -
->> -STEP 1: Remove devices
->> ---------------------
->> -Platform removes the devices depending on the error agent, it could 
->> be
->> -this port for all subordinates or upstream component (likely 
->> downstream
->> -port)
->> -
->> -STEP 2: Reset link
->> ---------------------
->> -The platform resets the link.  This is a PCI-Express specific step 
->> and is
->> -done whenever a fatal error has been detected that can be "solved" by
->> -resetting the link.
->> -
->> -STEP 3: Re-enumerate the devices
->> ---------------------
->> -Initiates the re-enumeration.
->> 
->>  Conclusion; General Remarks
->>  ---------------------------
->> 
->> 
+ 3- Progressively, as we untangle them and verify their locking, we move
+    individual fields below the line so that we have a good visibility of
+    what has been addressed/audited already and what not
+
+Note: I would very much like to keep most of the probing/resource allocation
+single threaded at least within a given domain, I know we have some attempts
+at locking in the hotplug code for that, I'm not ready to tackle that or
+change it at this stage.
+
+We might be able to also addrss the is_added issues (Hari Vyas stuff) using
+the same mutex, I haven't looked into the details.
+
+Not-signed-off-by: Benjamin Herrenschmidt <benh@kernel.crashing.org>
+---
+
+diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
+index 316496e99da9..9c4895c40f1d 100644
+--- a/drivers/pci/pci.c
++++ b/drivers/pci/pci.c
+@@ -1348,9 +1348,13 @@ static int do_pci_enable_device(struct pci_dev *dev, int bars)
+  */
+ int pci_reenable_device(struct pci_dev *dev)
+ {
++	int rc = 0;
++
++	mutex_lock(&dev->lock);
+ 	if (pci_is_enabled(dev))
+-		return do_pci_enable_device(dev, (1 << PCI_NUM_RESOURCES) - 1);
+-	return 0;
++		rc = do_pci_enable_device(dev, (1 << PCI_NUM_RESOURCES) - 1);
++	mutex_unlock(&dev->lock);
++	return rc;
+ }
+ EXPORT_SYMBOL(pci_reenable_device);
+ 
+@@ -1363,12 +1367,6 @@ static void pci_enable_bridge(struct pci_dev *dev)
+ 	if (bridge)
+ 		pci_enable_bridge(bridge);
+ 
+-	if (pci_is_enabled(dev)) {
+-		if (!dev->is_busmaster)
+-			pci_set_master(dev);
+-		return;
+-	}
+-
+ 	retval = pci_enable_device(dev);
+ 	if (retval)
+ 		pci_err(dev, "Error enabling bridge (%d), continuing\n",
+@@ -1379,9 +1377,16 @@ static void pci_enable_bridge(struct pci_dev *dev)
+ static int pci_enable_device_flags(struct pci_dev *dev, unsigned long flags)
+ {
+ 	struct pci_dev *bridge;
+-	int err;
++	int err = 0;
+ 	int i, bars = 0;
+ 
++	/* Handle upstream bridges first to avoid locking issues */
++	bridge = pci_upstream_bridge(dev);
++	if (bridge)
++		pci_enable_bridge(bridge);
++
++	mutex_lock(&dev->lock);
++
+ 	/*
+ 	 * Power state could be unknown at this point, either due to a fresh
+ 	 * boot or a device removal call.  So get the current power state
+@@ -1394,12 +1399,9 @@ static int pci_enable_device_flags(struct pci_dev *dev, unsigned long flags)
+ 		dev->current_state = (pmcsr & PCI_PM_CTRL_STATE_MASK);
+ 	}
+ 
++	/* Already enabled ? */
+ 	if (atomic_inc_return(&dev->enable_cnt) > 1)
+-		return 0;		/* already enabled */
+-
+-	bridge = pci_upstream_bridge(dev);
+-	if (bridge)
+-		pci_enable_bridge(bridge);
++		goto bail;
+ 
+ 	/* only skip sriov related */
+ 	for (i = 0; i <= PCI_ROM_RESOURCE; i++)
+@@ -1412,6 +1414,8 @@ static int pci_enable_device_flags(struct pci_dev *dev, unsigned long flags)
+ 	err = do_pci_enable_device(dev, bars);
+ 	if (err < 0)
+ 		atomic_dec(&dev->enable_cnt);
++ bail:
++	mutex_unlock(&dev->lock);
+ 	return err;
+ }
+ 
+@@ -1618,6 +1622,7 @@ static void do_pci_disable_device(struct pci_dev *dev)
+ 	if (pci_command & PCI_COMMAND_MASTER) {
+ 		pci_command &= ~PCI_COMMAND_MASTER;
+ 		pci_write_config_word(dev, PCI_COMMAND, pci_command);
++		dev->is_busmaster = 0;
+ 	}
+ 
+ 	pcibios_disable_device(dev);
+@@ -1632,8 +1637,10 @@ static void do_pci_disable_device(struct pci_dev *dev)
+  */
+ void pci_disable_enabled_device(struct pci_dev *dev)
+ {
++	mutex_lock(&dev->lock);
+ 	if (pci_is_enabled(dev))
+ 		do_pci_disable_device(dev);
++	mutex_unlock(&dev->lock);
+ }
+ 
+ /**
+@@ -1657,12 +1664,13 @@ void pci_disable_device(struct pci_dev *dev)
+ 	dev_WARN_ONCE(&dev->dev, atomic_read(&dev->enable_cnt) <= 0,
+ 		      "disabling already-disabled device");
+ 
++	mutex_lock(&dev->lock);
+ 	if (atomic_dec_return(&dev->enable_cnt) != 0)
+-		return;
++		goto bail;
+ 
+ 	do_pci_disable_device(dev);
+-
+-	dev->is_busmaster = 0;
++ bail:
++	mutex_unlock(&dev->lock);
+ }
+ EXPORT_SYMBOL(pci_disable_device);
+ 
+@@ -3764,8 +3772,12 @@ void __weak pcibios_set_master(struct pci_dev *dev)
+  */
+ void pci_set_master(struct pci_dev *dev)
+ {
+-	__pci_set_master(dev, true);
+-	pcibios_set_master(dev);
++	mutex_lock(&dev->lock);
++	if (!dev->is_busmaster) {
++		__pci_set_master(dev, true);
++		pcibios_set_master(dev);
++	}
++	mutex_unlock(&dev->lock);
+ }
+ EXPORT_SYMBOL(pci_set_master);
+ 
+@@ -3775,7 +3787,9 @@ EXPORT_SYMBOL(pci_set_master);
+  */
+ void pci_clear_master(struct pci_dev *dev)
+ {
++	mutex_lock(&dev->lock);
+ 	__pci_set_master(dev, false);
++	mutex_unlock(&dev->lock);
+ }
+ EXPORT_SYMBOL(pci_clear_master);
+ 
+diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
+index 611adcd9c169..77701bfe0d3d 100644
+--- a/drivers/pci/probe.c
++++ b/drivers/pci/probe.c
+@@ -2102,6 +2102,7 @@ struct pci_dev *pci_alloc_dev(struct pci_bus *bus)
+ 	INIT_LIST_HEAD(&dev->bus_list);
+ 	dev->dev.type = &pci_dev_type;
+ 	dev->bus = pci_bus_get(bus);
++	mutex_init(&dev->lock);
+ 
+ 	return dev;
+ }
+diff --git a/include/linux/pci.h b/include/linux/pci.h
+index c133ccfa002e..09e94ba6adf0 100644
+--- a/include/linux/pci.h
++++ b/include/linux/pci.h
+@@ -33,6 +33,7 @@
+ #include <linux/io.h>
+ #include <linux/resource_ext.h>
+ #include <uapi/linux/pci.h>
++#include <linux/mutex.h>
+ 
+ #include <linux/pci_ids.h>
+ 
+@@ -289,6 +290,8 @@ struct pci_dev {
+ 	struct proc_dir_entry *procent;	/* Device entry in /proc/bus/pci */
+ 	struct pci_slot	*slot;		/* Physical slot this device is in */
+ 
++	struct mutex	lock;
++
+ 	unsigned int	devfn;		/* Encoded device & function index */
+ 	unsigned short	vendor;
+ 	unsigned short	device;
