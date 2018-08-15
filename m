@@ -1,76 +1,55 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from foss.arm.com ([217.140.101.70]:41310 "EHLO foss.arm.com"
+Received: from gate.crashing.org ([63.228.1.57]:55368 "EHLO gate.crashing.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1726954AbeHHSBI (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Wed, 8 Aug 2018 14:01:08 -0400
-Date: Wed, 8 Aug 2018 16:40:58 +0100
-From: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
-To: Thomas Petazzoni <thomas.petazzoni@bootlin.com>
-Cc: Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org,
-        Nadav Haklai <nadavh@marvell.com>,
-        Gregory Clement <gregory.clement@bootlin.com>,
-        =?iso-8859-1?Q?Miqu=E8l?= Raynal <miquel.raynal@bootlin.com>,
-        Maxime Chevallier <maxime.chevallier@bootlin.com>,
-        Antoine Tenart <antoine.tenart@bootlin.com>,
-        linux-arm-kernel@lists.infradead.org
-Subject: Re: [PATCH v2 0/6] PCI: mvebu: cleanup and improvements
-Message-ID: <20180808154058.GA19383@red-moon>
-References: <20180803143848.21551-1-thomas.petazzoni@bootlin.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20180803143848.21551-1-thomas.petazzoni@bootlin.com>
+        id S1727126AbeHPAu3 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Wed, 15 Aug 2018 20:50:29 -0400
+Message-ID: <903394c04d6ad468ed06dc0a779200e7555345a7.camel@kernel.crashing.org>
+Subject: Re: [PATCH 1/1] PCI/AER: prevent pcie_do_fatal_recovery from using
+ device after it is removed
+From: Benjamin Herrenschmidt <benh@kernel.crashing.org>
+To: poza@codeaurora.org, Thomas Tai <thomas.tai@oracle.com>
+Cc: bhelgaas@google.com, keith.busch@intel.com,
+        linux-pci@vger.kernel.org, linux-pci-owner@vger.kernel.org
+Date: Thu, 16 Aug 2018 07:56:11 +1000
+In-Reply-To: <b0104a716319d76e734c307cb4bedd9d@codeaurora.org>
+References: <1534179088-44219-1-git-send-email-thomas.tai@oracle.com>
+         <1534179088-44219-2-git-send-email-thomas.tai@oracle.com>
+         <51f4b387d9bd96a42d526a6a029fc43b@codeaurora.org>
+         <b0104a716319d76e734c307cb4bedd9d@codeaurora.org>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Fri, Aug 03, 2018 at 04:38:42PM +0200, Thomas Petazzoni wrote:
-> Hello,
-> 
-> This is the v2 of the pci-mvebu cleanup and improvements, mainly
-> aiming at using pci_host_bridge.
-> 
-> Since v1, the changes are:
-> 
->  - Rebase on v4.18-rc1 to make sure the patches apply
-> 
->  - Add a patch fixing the I/O space end calculation (using
->    resource_size() as the .end address of a resource is not correct)
-> 
->  - Only remap the I/O space if there is a PCI I/O aperture described
->    in the DT.
-> 
->  - Use resource_size() in the loop mapping the I/O space, as suggested
->    by Lorenzo.
-> 
->  - Use pci_add_resource() instead of pci_add_resource_offset(), as
->    suggested by Lorenzo.
-> 
->  - Revert to using pci_ioremap_io(), since we need to map with a
->    special memory type on Armada platforms, and pci_remap_iospace()
->    doesn't allow to do that. Noticed by Lorenzo.
+(resent using my proper email address)
 
-Pulled into pci/mvebu (I reworded some commit logs in the process
-please have a look) for (tentatively) v4.19 but it is a bit late
-in the cycle so let's see how things go.
+On Tue, 2018-08-14 at 14:52 +0530, poza@codeaurora.org wrote:
+> > >       if (result == PCI_ERS_RESULT_RECOVERED) {
+> > >               if (pcie_wait_for_link(udev, true))
+> > >                       pci_rescan_bus(udev->bus);
+> > > -            pci_info(dev, "Device recovery from fatal error successful\n");
+> > > +            /* find the pci_dev after rescanning the bus */
+> > > +            dev = pci_get_domain_bus_and_slot(domain, bus, devfn);
+> > 
+> > one of the motivations was to remove and re-enumerate rather then
+> > going thorugh driver's recovery sequence
+> > was; it might be possible that hotplug capable bridge, the device
+> > might have changed.
+> > hence this check will fail
 
-Thanks,
-Lorenzo
+Under what circumstances do you actually "unplug" the device ? We are
+trying to cleanup/fix some of the PowerPC EEH code which is in a way
+similar to AER, and we found that this unplug/replug, which we do if
+the driver doesn't have recovery callbacks only, is causing more
+problems than it solves.
 
-> 
-> Thanks!
-> 
-> Thomas
-> 
-> Thomas Petazzoni (6):
->   PCI: mvebu: Remove redundant platform_set_drvdata() call
->   PCI: mvebu: fix I/O space end address calculation
->   PCI: mvebu: only remap I/O space if configured
->   PCI: mvebu: use resource_size() to remap I/O space
->   PCI: mvebu: Convert to use pci_host_bridge directly
->   PCI: mvebu: Drop bogus comment above mvebu_pcie_map_registers()
-> 
->  drivers/pci/controller/pci-mvebu.c | 153 +++++++++++++++++--------------------
->  1 file changed, 68 insertions(+), 85 deletions(-)
-> 
-> -- 
-> 2.14.4
-> 
+We are moving toward instead unbinding the driver, resetting the
+device, then re-binding the driver instead of unplug/replug.
+
+Also why would you ever bypass the driver callbacks if the driver has
+some ? The whole point is to keep the driver bound while resetting the
+device (provided it has the right callbacks) so we don't lose the
+linkage between stroage devices and mounted filesystems.
+
+Cheers,
+Ben.
