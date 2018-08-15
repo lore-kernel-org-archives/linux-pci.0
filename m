@@ -1,36 +1,45 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from bmailout1.hostsharing.net ([83.223.95.100]:57531 "EHLO
-        bmailout1.hostsharing.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726079AbeHIUYS (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Thu, 9 Aug 2018 16:24:18 -0400
-Date: Thu, 9 Aug 2018 19:58:19 +0200
-From: Lukas Wunner <lukas@wunner.de>
-To: Keith Busch <keith.busch@intel.com>
-Cc: Linux PCI <linux-pci@vger.kernel.org>,
-        Bjorn Helgaas <bhelgaas@google.com>
-Subject: Re: [PATCH] pci/sriov: Hold rescan lock while enumerating
-Message-ID: <20180809175819.42j6laq5gxtpnlxy@wunner.de>
-References: <20180809163356.18650-1-keith.busch@intel.com>
+Received: from mail-bn3nam01on0060.outbound.protection.outlook.com ([104.47.33.60]:14400
+        "EHLO NAM01-BN3-obe.outbound.protection.outlook.com"
+        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+        id S1729363AbeHOQj5 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Wed, 15 Aug 2018 12:39:57 -0400
+From: Alan Douglas <adouglas@cadence.com>
+To: <bhelgaas@google.com>
+CC: <kishon@ti.com>, <lorenzo.pieralisi@arm.com>,
+        <linux-pci@vger.kernel.org>, <gustavo.pimentel@synopsys.com>,
+        <cyrille.pitchen@bootlin.com>, <stelford@cadence.com>,
+        Alan Douglas <adouglas@cadence.com>
+Subject: [PATCH v2 2/5] PCI: cadence: Write MSI data with 32bits
+Date: Wed, 15 Aug 2018 14:47:31 +0100
+Message-ID: <1534340851-21091-1-git-send-email-adouglas@cadence.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20180809163356.18650-1-keith.busch@intel.com>
+Content-Type: text/plain
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Thu, Aug 09, 2018 at 10:33:56AM -0600, Keith Busch wrote:
-> --- a/drivers/pci/pci-sysfs.c
-> +++ b/drivers/pci/pci-sysfs.c
-> @@ -591,6 +591,7 @@ static ssize_t sriov_numvfs_store(struct device *dev,
->  	if (num_vfs > pci_sriov_get_totalvfs(pdev))
->  		return -ERANGE;
->  
-> +	pci_lock_rescan_remove();
->  	device_lock(&pdev->dev);
+According to the PCIe specification, although the MSI data is only
+16bits, the upper 16bits should be written as 0.  Use writel
+instead of writew when writing the MSI data to the host.
 
-Doesn't this obviate the need to hold the device_lock()?  What could
-otherwise run concurrently that doesn't hold pci_lock_rescan_remove()
-and would cause a race condition?
+Fixes: 37dddf14f1ae ("PCI: cadence: Add EndPoint Controller driver for Cadence PCIe controller")
+Signed-off-by: Alan Douglas <adouglas@cadence.com>
+---
+ drivers/pci/controller/pcie-cadence-ep.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-Thanks,
-
-Lukas
+diff --git a/drivers/pci/controller/pcie-cadence-ep.c b/drivers/pci/controller/pcie-cadence-ep.c
+index a67dc91..970d934 100644
+--- a/drivers/pci/controller/pcie-cadence-ep.c
++++ b/drivers/pci/controller/pcie-cadence-ep.c
+@@ -356,7 +356,7 @@ static int cdns_pcie_ep_send_msi_irq(struct cdns_pcie_ep *ep, u8 fn,
+ 		ep->irq_pci_addr = (pci_addr & ~pci_addr_mask);
+ 		ep->irq_pci_fn = fn;
+ 	}
+-	writew(data, ep->irq_cpu_addr + (pci_addr & pci_addr_mask));
++	writel(data, ep->irq_cpu_addr + (pci_addr & pci_addr_mask));
+ 
+ 	return 0;
+ }
+-- 
+1.9.0
