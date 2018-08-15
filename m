@@ -1,40 +1,121 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-pl0-f68.google.com ([209.85.160.68]:43200 "EHLO
-        mail-pl0-f68.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726458AbeHQLT4 (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Fri, 17 Aug 2018 07:19:56 -0400
-Received: by mail-pl0-f68.google.com with SMTP id x6-v6so3379858plv.10
-        for <linux-pci@vger.kernel.org>; Fri, 17 Aug 2018 01:17:30 -0700 (PDT)
-Received: from localhost.localdomain ([2402:f000:1:1501:200:5efe:a66f:53fa])
-        by smtp.gmail.com with ESMTPSA id t186-v6sm1509519pgd.77.2018.08.17.01.17.29
-        for <linux-pci@vger.kernel.org>
-        (version=TLS1_2 cipher=ECDHE-RSA-AES128-SHA bits=128/128);
-        Fri, 17 Aug 2018 01:17:29 -0700 (PDT)
-From: Jiecheng Wu <jasonwood2031@gmail.com>
-To: linux-pci@vger.kernel.org
-Subject: [PATCH] dpc.c: fix missing return value check of pci_find_ext_capability()
-Date: Fri, 17 Aug 2018 16:17:19 +0800
-Message-Id: <20180817081719.11156-1-jasonwood2031@gmail.com>
+Received: from mx1.redhat.com ([209.132.183.28]:43610 "EHLO mx1.redhat.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1727075AbeHPBhV (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Wed, 15 Aug 2018 21:37:21 -0400
+Date: Wed, 15 Aug 2018 16:43:08 -0600
+From: Alex Williamson <alex.williamson@redhat.com>
+To: Mika Westerberg <mika.westerberg@linux.intel.com>
+Cc: Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org
+Subject: Re: [PATCH] PCI: Add ACS quirk for Intel 300 series chipset
+Message-ID: <20180815164308.6ad5dd39@t450s.home>
+In-Reply-To: <20180815152139.4e469fd4@t450s.home>
+References: <20180427104423.2203-1-mika.westerberg@linux.intel.com>
+        <20180815152139.4e469fd4@t450s.home>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=US-ASCII
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Function dpc_probe() defined in drivers/pci/pcie/dpc.c calls pci_find_ext_capability(). Function pci_find_ext_capability() returns the address of the requested extended capability structure within the device's PCI configuration space or 0 if the device does not support it. The return value of this function should be checked against 0.
----
- drivers/pci/pcie/dpc.c | 2 ++
- 1 file changed, 2 insertions(+)
+On Wed, 15 Aug 2018 15:21:39 -0600
+Alex Williamson <alex.williamson@redhat.com> wrote:
 
-diff --git a/drivers/pci/pcie/dpc.c b/drivers/pci/pcie/dpc.c
-index f03279f..30ff550 100644
---- a/drivers/pci/pcie/dpc.c
-+++ b/drivers/pci/pcie/dpc.c
-@@ -226,6 +226,8 @@ static int dpc_probe(struct pcie_device *dev)
- 		return -ENOMEM;
- 
- 	dpc->cap_pos = pci_find_ext_capability(pdev, PCI_EXT_CAP_ID_DPC);
-+	if (!dpc->cap_pos)
-+		return -ENODEV;
- 	dpc->dev = dev;
- 	set_service_data(dev, dpc);
- 
--- 
-2.6.4
+> On Fri, 27 Apr 2018 13:44:23 +0300
+> Mika Westerberg <mika.westerberg@linux.intel.com> wrote:
+> 
+> > Intel 300 series chipset still has the same ACS issue than the previous
+> > generations so extend the ACS quirk to cover it as well.
+> > 
+> > Signed-off-by: Mika Westerberg <mika.westerberg@linux.intel.com>
+> > ---
+> >  drivers/pci/quirks.c | 6 ++++++
+> >  1 file changed, 6 insertions(+)  
+> 
+> There seems to be some suspicion whether this patch is correct, see
+> link below[1].  The user lists a kernel "4.14.36-1-lts" where lspci
+> shows the ACSCtl register with SV, RR, and CR enabled.  AIUI how
+> previous Intel root ports were defective in this regard, a dword
+> register was used for the ACS capability and control field rather than
+> the spec defined word register, therefore the upper half of each
+> mal-sized register was reserved.  I don't think lspci has gained any
+> insight into this quirk, so showing those control values enabled
+> suggests this hardware might actually not require the quirk.
+> 
+> The second listing for v4.17 (and I don't know if this is actually
+> v4.17.10 which would include the stable backport of this patch or
+> v4.17.0) shows the ACSCtl register as zero.  This is what we'd see if
+> the hardware does have this errata OR if we applied the quirk to
+> hardware that doesn't require it.  The existence of the first listing
+> kind of suggests the latter.
+> 
+> Is there a datasheet available to support this quirk?  Thanks,
+> 
+> Alex
+> 
+> [1]https://www.reddit.com/r/VFIO/comments/97da1s/intel_c246_suspect_300_series_acs_quirk_breaks/
+
+Sorry for the self follow-up, but another user pointed me to these:
+
+https://www.intel.com/content/dam/www/public/us/en/documents/datasheets/300-series-chipset-pch-datasheet-vol-1.pdf
+https://www.intel.com/content/dam/www/public/us/en/documents/specification-updates/300-series-c240-series-chipset-pch-spec-update.pdf
+
+And the device IDs match and the errata is #3 in the second link, yet:
+
+00:1c.0 PCI bridge [0604]: Intel Corporation Device [8086:a338] (rev f0) (prog-if 00 [Normal decode])
+00:1c.2 PCI bridge [0604]: Intel Corporation Device [8086:a33a] (rev f0) (prog-if 00 [Normal decode])
+	Capabilities: [140 v1] Access Control Services
+		ACSCap:	SrcValid+ TransBlk+ ReqRedir+ CmpltRedir+ UpstreamFwd- EgressCtrl- DirectTrans-
+		ACSCtl:	SrcValid+ TransBlk- ReqRedir+ CmpltRedir+ UpstreamFwd- EgressCtrl- DirectTrans-
+00:1c.5 PCI bridge [0604]: Intel Corporation Device [8086:a33d] (rev f0) (prog-if 00 [Normal decode])
+	Capabilities: [140 v1] Access Control Services
+		ACSCap:	SrcValid+ TransBlk+ ReqRedir+ CmpltRedir+ UpstreamFwd- EgressCtrl- DirectTrans-
+		ACSCtl:	SrcValid+ TransBlk- ReqRedir+ CmpltRedir+ UpstreamFwd- EgressCtrl- DirectTrans-
+00:1c.6 PCI bridge [0604]: Intel Corporation Device [8086:a33e] (rev f0) (prog-if 00 [Normal decode])
+	Capabilities: [140 v1] Access Control Services
+		ACSCap:	SrcValid+ TransBlk+ ReqRedir+ CmpltRedir+ UpstreamFwd- EgressCtrl- DirectTrans-
+		ACSCtl:	SrcValid+ TransBlk- ReqRedir+ CmpltRedir+ UpstreamFwd- EgressCtrl- DirectTrans-
+00:1c.7 PCI bridge [0604]: Intel Corporation Device [8086:a33f] (rev f0) (prog-if 00 [Normal decode])
+	Capabilities: [140 v1] Access Control Services
+		ACSCap:	SrcValid+ TransBlk+ ReqRedir+ CmpltRedir+ UpstreamFwd- EgressCtrl- DirectTrans-
+		ACSCtl:	SrcValid+ TransBlk- ReqRedir+ CmpltRedir+ UpstreamFwd- EgressCtrl- DirectTrans-
+
+And the dump of config space is (1c.2):
+
+140: 0d 00 01 15 0f 00 0d 00 00 00 00 00 00 00 00 00
+                 ^^^^^ ^^^^^
+                  Cap   Ctl
+
+So it sure seems like the quirk shouldn't apply here.  Note that the
+user calls this a C246 chipset, though this isn't a directly addressed
+product SKU in either document.  The LPC device ID is a309, which also
+is not directly addressed by the above datasheet.  Has Intel fixed this
+in some SKUs, but not others, both using the same root port device
+IDs?  Thanks,
+
+Alex
+
+> > diff --git a/drivers/pci/quirks.c b/drivers/pci/quirks.c
+> > index 2990ad1e7c99..7a0f41176369 100644
+> > --- a/drivers/pci/quirks.c
+> > +++ b/drivers/pci/quirks.c
+> > @@ -4230,6 +4230,11 @@ static int pci_quirk_qcom_rp_acs(struct pci_dev *dev, u16 acs_flags)
+> >   * 0xa290-0xa29f PCI Express Root port #{0-16}
+> >   * 0xa2e7-0xa2ee PCI Express Root port #{17-24}
+> >   *
+> > + * The 300 series chipset suffers from the same bug so include those root
+> > + * ports here as well.
+> > + *
+> > + * 0xa32c-0xa343 PCI Express Root port #{0-24}
+> > + *
+> >   * [1] http://www.intel.com/content/www/us/en/chipsets/100-series-chipset-datasheet-vol-2.html
+> >   * [2] http://www.intel.com/content/www/us/en/chipsets/100-series-chipset-datasheet-vol-1.html
+> >   * [3] http://www.intel.com/content/www/us/en/chipsets/100-series-chipset-spec-update.html
+> > @@ -4244,6 +4249,7 @@ static bool pci_quirk_intel_spt_pch_acs_match(struct pci_dev *dev)
+> >  	switch (dev->device) {
+> >  	case 0xa110 ... 0xa11f: case 0xa167 ... 0xa16a: /* Sunrise Point */
+> >  	case 0xa290 ... 0xa29f: case 0xa2e7 ... 0xa2ee: /* Union Point */
+> > +	case 0xa32c ... 0xa343:				/* 300 series */
+> >  		return true;
+> >  	}
+> >    
+> 
