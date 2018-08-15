@@ -1,53 +1,53 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from Galois.linutronix.de ([146.0.238.70]:41259 "EHLO
-        Galois.linutronix.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726186AbeHDJA7 (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Sat, 4 Aug 2018 05:00:59 -0400
-Date: Sat, 4 Aug 2018 09:01:18 +0200 (CEST)
-From: Thomas Gleixner <tglx@linutronix.de>
-To: Heiner Kallweit <hkallweit1@gmail.com>
-cc: Bjorn Helgaas <bhelgaas@google.com>,
-        "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-        LKML <linux-kernel@vger.kernel.org>,
-        Marc Zyngier <marc.zyngier@arm.com>
-Subject: Re: [PATCH] PCI: set flag IRQCHIP_ONESHOT_SAFE for PCI-MSI
- irqchip's
-In-Reply-To: <9f18bc20-cf27-bc3c-71e5-4e24a6c983c7@gmail.com>
-Message-ID: <alpine.DEB.2.21.1808040900150.1658@nanos.tec.linutronix.de>
-References: <9f18bc20-cf27-bc3c-71e5-4e24a6c983c7@gmail.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <SRS0=/dXs=K6=kernel.crashing.org=benh@kernel.org>
+Return-Path: <SRS0=/dXs=K6=kernel.crashing.org=benh@kernel.org>
+Message-ID: <e3316c91ad722434360b4018b17cbfe265e97801.camel@kernel.crashing.org>
+Subject: Re: PCIe enable device races (Was: [PATCH v3] PCI: Data corruption
+ happening due to race condition)
+From: Benjamin Herrenschmidt <benh@kernel.crashing.org>
+To: Bjorn Helgaas <helgaas@kernel.org>
+Cc: Hari Vyas <hari.vyas@broadcom.com>, bhelgaas@google.com,
+        linux-pci@vger.kernel.org, ray.jui@broadcom.com,
+        Konstantin Khlebnikov
+	 <khlebnikov@yandex-team.ru>,
+        Jens Axboe <axboe@kernel.dk>
+Date: Thu, 16 Aug 2018 07:52:06 +1000
+In-Reply-To: <20180815185027.GE28888@bhelgaas-glaptop.roam.corp.google.com>
+References: <1530608741-30664-1-git-send-email-hari.vyas@broadcom.com>
+	 <20180731163727.GK45322@bhelgaas-glaptop.roam.corp.google.com>
+	 <ecaed7664b46d73888d2494065905f8e108fc0f4.camel@kernel.crashing.org>
+	 <20180815185027.GE28888@bhelgaas-glaptop.roam.corp.google.com>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 List-ID: <linux-pci.vger.kernel.org>
 
-On Fri, 3 Aug 2018, Heiner Kallweit wrote:
-
-> PCI-MSI is oneshot-safe, therefore set flag IRQCHIP_ONESHOT_SAFE to
-> avoid unneeded masking/unmasking. See also discussion here:
-> https://marc.info/?l=linux-pci&m=153332526101128&w=2
-
-This changelog really wants a bit more detailed information.
-
-> Signed-off-by: Heiner Kallweit <hkallweit1@gmail.com>
-> ---
->  drivers/pci/msi.c | 3 +++
->  1 file changed, 3 insertions(+)
+On Wed, 2018-08-15 at 13:50 -0500, Bjorn Helgaas wrote:
+> Yes, this is definitely broken.  Some folks have tried to fix it in
+> the past, but it hasn't quite happened yet.  We actually merged one
+> patch, 40f11adc7cd9 ("PCI: Avoid race while enabling upstream
+> bridges"), but had to revert it after we found issues:
 > 
-> diff --git a/drivers/pci/msi.c b/drivers/pci/msi.c
-> index 4d88afdf..f2ef8964 100644
-> --- a/drivers/pci/msi.c
-> +++ b/drivers/pci/msi.c
-> @@ -1446,6 +1446,9 @@ struct irq_domain *pci_msi_create_irq_domain(struct fwnode_handle *fwnode,
->  	if (IS_ENABLED(CONFIG_GENERIC_IRQ_RESERVATION_MODE))
->  		info->flags |= MSI_FLAG_MUST_REACTIVATE;
->  
-> +	/* PCI-MSI is oneshot-safe */
-> +	info->chip->flags |= IRQCHIP_ONESHOT_SAFE;
-> +
->  	domain = msi_create_irq_domain(fwnode, info, parent);
->  	if (!domain)
->  		return NULL;
-> -- 
-> 2.18.0
-> 
-> 
+> https://lkml.kernel.org/r/1501858648-22228-1-git-send-email-srinath.mannam@broadcom.com
+> https://lkml.kernel.org/r/20170915072352.10453.31977.stgit@bhelgaas-glaptop.roam.corp.google.com
+
+Ok so I had a look at this previous patch and it adds yet anothe use of
+some global mutex to protect part of the operation which makes me
+cringe a bit, we have too many of these.
+
+What do you think of the one I sent yesterday ? (I can't find it in the
+archives yet)
+
+[RFC PATCH] pci: Proof of concept at fixing pci_enable_device/bridge races
+
+The patch itself needs splitting etc... but the basic idea is to move away
+from those global mutexes in a number of places and have one in the pci_dev
+struct itself to protect its state.
+
+I would also like to use this rather than the bitmap atomics for is_added
+etc... (Hari's fix) in the long run. Atomics aren't significantly cheaper
+and imho makes thing even messier.
+
+Jens, Konstantin, any chance you can test if the above also breaks iwlwifi
+(I don't see why it would but ...)
+
+Cheers,
+Ben.
