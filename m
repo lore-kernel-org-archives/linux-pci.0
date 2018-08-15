@@ -1,63 +1,49 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from bombadil.infradead.org ([198.137.202.133]:58596 "EHLO
-        bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726744AbeHDMO3 (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Sat, 4 Aug 2018 08:14:29 -0400
-From: Christoph Hellwig <hch@lst.de>
-To: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
-        Bjorn Helgaas <bhelgaas@google.com>
-Cc: Palmer Dabbelt <palmer@dabbelt.com>,
-        "Wesley W . Terpstra" <wesley@sifive.com>,
-        Arnd Bergmann <arnd@arndb.de>, linux-pci@vger.kernel.org,
-        linux-riscv@lists.infradead.org
-Subject: [PATCH 2/3] PCI/xilinx: Work-around for hardware DMA limit (32 bits)
-Date: Sat,  4 Aug 2018 12:14:01 +0200
-Message-Id: <20180804101402.10022-3-hch@lst.de>
-In-Reply-To: <20180804101402.10022-1-hch@lst.de>
-References: <20180804101402.10022-1-hch@lst.de>
+Received: from mail-cys01nam02on0072.outbound.protection.outlook.com ([104.47.37.72]:55603
+        "EHLO NAM02-CY1-obe.outbound.protection.outlook.com"
+        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+        id S1729363AbeHOQjX (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Wed, 15 Aug 2018 12:39:23 -0400
+From: Alan Douglas <adouglas@cadence.com>
+To: <bhelgaas@google.com>
+CC: <kishon@ti.com>, <lorenzo.pieralisi@arm.com>,
+        <linux-pci@vger.kernel.org>, <gustavo.pimentel@synopsys.com>,
+        <cyrille.pitchen@bootlin.com>, <stelford@cadence.com>,
+        Alan Douglas <adouglas@cadence.com>
+Subject: [PATCH v2 0/5] Add MSI-X support for cadence EP driver
+Date: Wed, 15 Aug 2018 14:46:21 +0100
+Message-ID: <1534340781-19194-1-git-send-email-adouglas@cadence.com>
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-This PCIe bridge only has a 32 bit bus master interface, thus truncating
-the DMA capability of all PCIe devices attached beneath it. This caps
-the child device capability so that these devices work on systems with
-physical memory beyond the 4GiB threshold.
+The patch implements MSI-X support in the cadence endpoint driver.
 
-Based on an earlier patch from Wesley W. Terpstra <wesley@sifive.com>.
+This patch depends on on Gustavo Pimentel's patch series adding MSI-X
+support for EP ("Add MSI-X support on pcitest tool") 
 
-Signed-off-by: Christoph Hellwig <hch@lst.de>
----
- drivers/pci/controller/pcie-xilinx.c | 11 +++++++++++
- 1 file changed, 11 insertions(+)
+It also adds fixes for MSI issues discovered during testing of MSI-X
+  - Use AXI region 0 for interrupt signalling
+  - Write MSI and MSI-X with 32bit value rather than 16bit
+  - Check for masking before sending MSI or MSI-X
+  - Check link is up before sending IRQ
 
-diff --git a/drivers/pci/controller/pcie-xilinx.c b/drivers/pci/controller/pcie-xilinx.c
-index 7b1389d8e2a5..ccfd91e0515f 100644
---- a/drivers/pci/controller/pcie-xilinx.c
-+++ b/drivers/pci/controller/pcie-xilinx.c
-@@ -197,6 +197,16 @@ static void __iomem *xilinx_pcie_map_bus(struct pci_bus *bus,
- 	return port->reg_base + relbus + where;
- }
- 
-+/*
-+ * This PCIe bridge only has a 32 bit bus master interface, thus truncating
-+ * the DMA capability of all PCIe devices attached beneath it.
-+ */
-+static int xilinx_pcie_add_device(struct pci_dev *pdev)
-+{
-+	pdev->dev.bus_dma_mask = DMA_BIT_MASK(32);
-+	return 0;
-+}
-+
- /* PCIe operations */
- static struct pci_ops xilinx_pcie_ops = {
- 	.map_bus = xilinx_pcie_map_bus,
-@@ -665,6 +675,7 @@ static int xilinx_pcie_probe(struct platform_device *pdev)
- 	bridge->ops = &xilinx_pcie_ops;
- 	bridge->map_irq = of_irq_parse_and_map_pci;
- 	bridge->swizzle_irq = pci_common_swizzle;
-+	bridge->add_device = xilinx_pcie_add_device;
- 
- #ifdef CONFIG_PCI_MSI
- 	xilinx_pcie_msi_chip.dev = dev;
+Changes since v1:
+  - Rebased on 4.18-rc1
+  - Update commit log to mark first 4 patches as fixes
+  - Correct formatting issues pointed out by checkpatch --strict
+
+Alan Douglas (5):
+  PCI: cadence: Use AXI region 0 to signal interrupts from EP
+  PCI: cadence: Write MSI data with 32bits
+  PCI: cadence: Check whether MSI is masked before sending it
+  PCI: cadence: Check link is up before sending IRQ from EP
+  PCI: cadence: Add MSI-X capability to EP driver
+
+ drivers/pci/controller/pcie-cadence-ep.c | 131 +++++++++++++++++++++++++++++--
+ drivers/pci/controller/pcie-cadence.h    |   1 +
+ 2 files changed, 125 insertions(+), 7 deletions(-)
+
 -- 
-2.18.0
+1.9.0
