@@ -1,47 +1,167 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.29.99]:46736 "EHLO mail.kernel.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1725809AbeHSFdw (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Sun, 19 Aug 2018 01:33:52 -0400
-Date: Sat, 18 Aug 2018 21:24:02 -0500
-From: Bjorn Helgaas <helgaas@kernel.org>
-To: Benjamin Herrenschmidt <benh@kernel.crashing.org>
-Cc: Sinan Kaya <okaya@kernel.org>, poza@codeaurora.org,
-        Thomas Tai <thomas.tai@oracle.com>, bhelgaas@google.com,
-        keith.busch@intel.com, linux-pci@vger.kernel.org,
-        linux-pci-owner@vger.kernel.org,
-        Sam Bobroff <sam.bobroff@au1.ibm.com>
+Received: from aserp2130.oracle.com ([141.146.126.79]:39984 "EHLO
+        aserp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1729125AbeHORyr (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Wed, 15 Aug 2018 13:54:47 -0400
 Subject: Re: [PATCH 1/1] PCI/AER: prevent pcie_do_fatal_recovery from using
  device after it is removed
-Message-ID: <20180819022402.GF128050@bhelgaas-glaptop.roam.corp.google.com>
-References: <b0104a716319d76e734c307cb4bedd9d@codeaurora.org>
- <903394c04d6ad468ed06dc0a779200e7555345a7.camel@kernel.crashing.org>
- <6cb069038530757f31f3dd60328c7e30@codeaurora.org>
- <e931bc7a7e468e8bb2ee3766b3fcf96f1800f552.camel@kernel.crashing.org>
- <bf7ceabb6fe51398e0f4eebd9c4fe4ac1ec2b8a4.camel@kernel.crashing.org>
- <42bd39aef30fe24bfc48d378e1f5d35d@codeaurora.org>
- <54d19e0e3d44bedf247853144c6bbfed5561a125.camel@kernel.crashing.org>
- <f022581a9ecb88e5501a09bdcdc62954@codeaurora.org>
- <1d5b1157-2f78-5fab-78f0-5828892fc739@kernel.org>
- <c7b996e0856cbea16cbb94287225bf2083158f02.camel@kernel.crashing.org>
+To: poza@codeaurora.org
+Cc: bhelgaas@google.com, keith.busch@intel.com,
+        linux-pci@vger.kernel.org, linux-pci-owner@vger.kernel.org
+References: <1534179088-44219-1-git-send-email-thomas.tai@oracle.com>
+ <1534179088-44219-2-git-send-email-thomas.tai@oracle.com>
+ <51f4b387d9bd96a42d526a6a029fc43b@codeaurora.org>
+ <b0104a716319d76e734c307cb4bedd9d@codeaurora.org>
+ <8b8db3c5-e884-d697-6193-b409276f9638@oracle.com>
+ <fa97a363892f757203ec7209f374a220@codeaurora.org>
+From: Thomas Tai <thomas.tai@oracle.com>
+Message-ID: <08462817-7a4f-2d8a-a329-e856c9e702c9@oracle.com>
+Date: Wed, 15 Aug 2018 11:02:05 -0400
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <c7b996e0856cbea16cbb94287225bf2083158f02.camel@kernel.crashing.org>
+In-Reply-To: <fa97a363892f757203ec7209f374a220@codeaurora.org>
+Content-Type: text/plain; charset=utf-8; format=flowed
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Fri, Aug 17, 2018 at 09:27:03AM +1000, Benjamin Herrenschmidt wrote:
-> On Thu, 2018-08-16 at 09:46 -0400, Sinan Kaya wrote:
-> > On 8/16/2018 4:22 AM, poza@codeaurora.org wrote:
-> > > we can catch up on webex, (Sinan is going to be there in Plumber's 
-> > > conference, I might not be able to join there, as we have bring-up coming)
-> > 
-> > My plumbers conference attendance is not confirmed yet. I'm trying to
-> > combine it with a business trip. I did not get an ACK yet from my boss.
-> 
-> Ok, I'll collect the names and will propose a time/date early next
-> week, I'm a bit caught up until monday.
-> 
-> Bjorn, are you available as well ?
 
-I'm in CDT (UTC-5).  Possible times for me are 6am-10pm CDT.
+
+On 08/15/2018 10:57 AM, poza@codeaurora.org wrote:
+> On 2018-08-14 19:21, Thomas Tai wrote:
+>> On 08/14/2018 05:22 AM, poza@codeaurora.org wrote:
+>>> On 2018-08-14 14:46, poza@codeaurora.org wrote:
+>>>> On 2018-08-13 22:21, Thomas Tai wrote:
+>>>>> In order to prevent the pcie_do_fatal_recovery() from
+>>>>> using the device after it is removed, the device's
+>>>>> domain:bus:devfn is stored at the entry of
+>>>>> pcie_do_fatal_recovery(). After rescanning the bus, the
+>>>>> stored domain:bus:devfn is used to find the device and
+>>>>> uses to report pci_info. The original issue only happens
+>>>>> on an non-bridge device, a local variable is used instead
+>>>>> of checking the device's header type.
+>>>>>
+>>>>> Signed-off-by: Thomas Tai <thomas.tai@oracle.com>
+>>>>> ---
+>>>>>  drivers/pci/pcie/err.c | 33 +++++++++++++++++++++++----------
+>>>>>  1 file changed, 23 insertions(+), 10 deletions(-)
+>>>>>
+>>>>> diff --git a/drivers/pci/pcie/err.c b/drivers/pci/pcie/err.c
+>>>>> index f02e334..3414445 100644
+>>>>> --- a/drivers/pci/pcie/err.c
+>>>>> +++ b/drivers/pci/pcie/err.c
+>>>>> @@ -287,15 +287,20 @@ void pcie_do_fatal_recovery(struct pci_dev *dev,
+>>>>> u32 service)
+>>>>>      struct pci_bus *parent;
+>>>>>      struct pci_dev *pdev, *temp;
+>>>>>      pci_ers_result_t result;
+>>>>> +    bool is_bridge_device = false;
+>>>>> +    u16 domain = pci_domain_nr(dev->bus);
+>>>>> +    u8 bus = dev->bus->number;
+>>>>> +    u8 devfn = dev->devfn;
+>>>>>
+>>>>> -    if (dev->hdr_type == PCI_HEADER_TYPE_BRIDGE)
+>>>>> +    if (dev->hdr_type == PCI_HEADER_TYPE_BRIDGE) {
+>>>>> +        is_bridge_device = true;
+>>>>>          udev = dev;
+>>>>> -    else
+>>>>> +    } else {
+>>>>>          udev = dev->bus->self;
+>>>>> +    }
+>>>>>
+>>>>>      parent = udev->subordinate;
+>>>>>      pci_lock_rescan_remove();
+>>>>> -    pci_dev_get(dev);
+>>>>>      list_for_each_entry_safe_reverse(pdev, temp, &parent->devices,
+>>>>>                       bus_list) {
+>>>>>          pci_dev_get(pdev);
+>>>>> @@ -309,27 +314,35 @@ void pcie_do_fatal_recovery(struct pci_dev *dev,
+>>>>> u32 service)
+>>>>>
+>>>>>      result = reset_link(udev, service);
+>>>>>
+>>>>> -    if ((service == PCIE_PORT_SERVICE_AER) &&
+>>>>> -        (dev->hdr_type == PCI_HEADER_TYPE_BRIDGE)) {
+>>>>> +    if (service == PCIE_PORT_SERVICE_AER && is_bridge_device) {
+>>>>>          /*
+>>>>>           * If the error is reported by a bridge, we think this error
+>>>>>           * is related to the downstream link of the bridge, so we
+>>>>>           * do error recovery on all subordinates of the bridge 
+>>>>> instead
+>>>>>           * of the bridge and clear the error status of the bridge.
+>>>>>           */
+>>>>> -        pci_cleanup_aer_uncorrect_error_status(dev);
+>>>>> +        pci_cleanup_aer_uncorrect_error_status(udev);
+>>>>>      }
+>>>>>
+>>>>>      if (result == PCI_ERS_RESULT_RECOVERED) {
+>>>>>          if (pcie_wait_for_link(udev, true))
+>>>>>              pci_rescan_bus(udev->bus);
+>>>>> -        pci_info(dev, "Device recovery from fatal error 
+>>>>> successful\n");
+>>>>> +        /* find the pci_dev after rescanning the bus */
+>>>>> +        dev = pci_get_domain_bus_and_slot(domain, bus, devfn);
+>>>> one of the motivations was to remove and re-enumerate rather then
+>>>> going thorugh driver's recovery sequence
+>>>> was; it might be possible that hotplug capable bridge, the device
+>>>> might have changed.
+>>>> hence this check will fail
+>>
+>> Thanks Oza for your information. Instead of searching for the dev_pci,
+>> should I just use the stored domain:bus:devfn to printout the info?
+>>
+>>>>> +        if (dev)
+>>>>> +            pci_info(dev, "Device recovery from fatal error 
+>>>>> successful\n");
+>>>>> +        else
+>>>>> +            pr_err("AER: Can not find pci_dev for 
+>>>>> %04x:%02x:%02x.%x\n",
+>>>>> +                   domain, bus,
+>>>>> +                   PCI_SLOT(devfn), PCI_FUNC(devfn));
+>>>>> +        pci_dev_put(dev);
+>>
+>> That is, replace above with:
+>>
+>>     pr_info("AER: Device %04x:%02x:%02x.%x recover from fatal error
+>> successful\n", domain, bus, PCI_SLOT(devfn), PCI_FUNC(devfn));
+>>
+> is this not sufficient to print ?  which is there already.
+> pci_info(dev, "Device recovery from fatal error successful\n");
+
+Unfortunately, I can't use "dev" because as you said I can't 
+pci_get_domain_slot to search for it after rescanning.
+
+-T
+
+> 
+>>
+>>>>>      } else {
+>>>>> -        pci_uevent_ers(dev, PCI_ERS_RESULT_DISCONNECT);
+>>>>> -        pci_info(dev, "Device recovery from fatal error failed\n");
+>>>>> +        if (is_bridge_device)
+>>>> previously there was no condition.. why is this required now ?
+>>>> and it was doing on "dev" while you are doing it on "udev"
+>>> is that the reason we dont watnt o use dev after it is removed ? 
+>>> instead do pci_uevent_ers on bridge ?
+>>
+>>
+>> Yes, that's exactly the reason. I should have written down the reason
+>> in the commit log. Here is the details explanation for the benefit of
+>> others. If the failing device is a bridge device, udev is equal to
+>> dev. So we can use udev in the pci_uevent_ers. But for non bridge
+>> device the device is already removed from the bus and thus can't send
+>> pci_uevent_ers.
+>>
+>> Thank you,
+>> Thomas
+>>
+>>>>> +            pci_uevent_ers(udev, PCI_ERS_RESULT_DISCONNECT);
+>>>>> +        pr_err("AER: Device %04x:%02x:%02x.%x recovery from fatal 
+>>>>> error failed\n",
+>>>>> +               domain, bus, PCI_SLOT(devfn), PCI_FUNC(devfn));
+>>>>>      }
+>>>>>
+>>>>> -    pci_dev_put(dev);
+>>>>>      pci_unlock_rescan_remove();
+>>>>>  }
+>>>>
+>>>> Regards,
+>>>> Oza.
