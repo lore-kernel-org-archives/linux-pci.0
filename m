@@ -1,72 +1,59 @@
-Return-Path: <linux-nvme-bounces+bjorn=helgaas.com@lists.infradead.org>
-Return-Path: <linux-nvme-bounces+bjorn=helgaas.com@lists.infradead.org>
-Subject: [PATCH v4 1/3] PCI: Export pcie_has_flr()
-From: Alex Williamson <alex.williamson@redhat.com>
-To: linux-pci@vger.kernel.org
-Date: Thu, 09 Aug 2018 14:04:14 -0600
-Message-ID: <153384505430.15793.4988988835441214121.stgit@gimli.home>
-In-Reply-To: <153384487209.15793.15203778129263981368.stgit@gimli.home>
-References: <153384487209.15793.15203778129263981368.stgit@gimli.home>
-MIME-Version: 1.0
-List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-nvme>,
- <mailto:linux-nvme-request@lists.infradead.org?subject=unsubscribe>
-List-Archive: <http://lists.infradead.org/pipermail/linux-nvme/>
-List-Post: <mailto:linux-nvme@lists.infradead.org>
-List-Help: <mailto:linux-nvme-request@lists.infradead.org?subject=help>
-List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-nvme>,
- <mailto:linux-nvme-request@lists.infradead.org?subject=subscribe>
-Cc: linux-kernel@vger.kernel.org, linux-nvme@lists.infradead.org
-Content-Type: text/plain; charset="us-ascii"
-Sender: "Linux-nvme" <linux-nvme-bounces@lists.infradead.org>
-Errors-To: linux-nvme-bounces+bjorn=helgaas.com@lists.infradead.org
+Return-Path: <SRS0=/dXs=K6=kernel.crashing.org=benh@kernel.org>
+Return-Path: <SRS0=/dXs=K6=kernel.crashing.org=benh@kernel.org>
+Message-ID: <2e4eaef24dda4ab209ccfa8ac1ee4b073856da41.camel@kernel.crashing.org>
+Subject: Re: PCIe enable device races (Was: [PATCH v3] PCI: Data corruption
+ happening due to race condition)
+From: Benjamin Herrenschmidt <benh@kernel.crashing.org>
+To: Bjorn Helgaas <helgaas@kernel.org>
+Cc: Hari Vyas <hari.vyas@broadcom.com>, bhelgaas@google.com,
+        linux-pci@vger.kernel.org, ray.jui@broadcom.com,
+        Konstantin Khlebnikov
+	 <khlebnikov@yandex-team.ru>,
+        Jens Axboe <axboe@kernel.dk>
+Date: Thu, 16 Aug 2018 09:23:56 +1000
+In-Reply-To: <e3316c91ad722434360b4018b17cbfe265e97801.camel@kernel.crashing.org>
+References: <1530608741-30664-1-git-send-email-hari.vyas@broadcom.com>
+	 <20180731163727.GK45322@bhelgaas-glaptop.roam.corp.google.com>
+	 <ecaed7664b46d73888d2494065905f8e108fc0f4.camel@kernel.crashing.org>
+	 <20180815185027.GE28888@bhelgaas-glaptop.roam.corp.google.com>
+	 <e3316c91ad722434360b4018b17cbfe265e97801.camel@kernel.crashing.org>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 List-ID: <linux-pci.vger.kernel.org>
 
-pcie_flr() suggests pcie_has_flr() to ensure that PCIe FLR support is
-present prior to calling.  pcie_flr() is exported while pcie_has_flr()
-is not.  Resolve this.
+On Thu, 2018-08-16 at 07:52 +1000, Benjamin Herrenschmidt wrote:
+> On Wed, 2018-08-15 at 13:50 -0500, Bjorn Helgaas wrote:
+> > Yes, this is definitely broken.  Some folks have tried to fix it in
+> > the past, but it hasn't quite happened yet.  We actually merged one
+> > patch, 40f11adc7cd9 ("PCI: Avoid race while enabling upstream
+> > bridges"), but had to revert it after we found issues:
+> > 
+> > https://lkml.kernel.org/r/1501858648-22228-1-git-send-email-srinath.mannam@broadcom.com
+> > https://lkml.kernel.org/r/20170915072352.10453.31977.stgit@bhelgaas-glaptop.roam.corp.google.com
+> 
+> Ok so I had a look at this previous patch and it adds yet anothe use of
+> some global mutex to protect part of the operation which makes me
+> cringe a bit, we have too many of these.
+> 
+> What do you think of the one I sent yesterday ? (I can't find it in the
+> archives yet)
 
-Signed-off-by: Alex Williamson <alex.williamson@redhat.com>
----
- drivers/pci/pci.c   |    3 ++-
- include/linux/pci.h |    1 +
- 2 files changed, 3 insertions(+), 1 deletion(-)
+I verified on my Thinkpad X1 Carbon Gen4, everything seems to be
+working fine with the patch applied, including iwlwifi.
 
-diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
-index 2bec76c9d9a7..52fe2d72a99c 100644
---- a/drivers/pci/pci.c
-+++ b/drivers/pci/pci.c
-@@ -4071,7 +4071,7 @@ static int pci_dev_wait(struct pci_dev *dev, char *reset_type, int timeout)
-  * Returns true if the device advertises support for PCIe function level
-  * resets.
-  */
--static bool pcie_has_flr(struct pci_dev *dev)
-+bool pcie_has_flr(struct pci_dev *dev)
- {
- 	u32 cap;
- 
-@@ -4081,6 +4081,7 @@ static bool pcie_has_flr(struct pci_dev *dev)
- 	pcie_capability_read_dword(dev, PCI_EXP_DEVCAP, &cap);
- 	return cap & PCI_EXP_DEVCAP_FLR;
- }
-+EXPORT_SYMBOL_GPL(pcie_has_flr);
- 
- /**
-  * pcie_flr - initiate a PCIe function level reset
-diff --git a/include/linux/pci.h b/include/linux/pci.h
-index 04c7ea6ed67b..bbe030d7814f 100644
---- a/include/linux/pci.h
-+++ b/include/linux/pci.h
-@@ -1092,6 +1092,7 @@ u32 pcie_bandwidth_available(struct pci_dev *dev, struct pci_dev **limiting_dev,
- 			     enum pci_bus_speed *speed,
- 			     enum pcie_link_width *width);
- void pcie_print_link_status(struct pci_dev *dev);
-+bool pcie_has_flr(struct pci_dev *dev);
- int pcie_flr(struct pci_dev *dev);
- int __pci_reset_function_locked(struct pci_dev *dev);
- int pci_reset_function(struct pci_dev *dev);
-
-
-_______________________________________________
-Linux-nvme mailing list
-Linux-nvme@lists.infradead.org
-http://lists.infradead.org/mailman/listinfo/linux-nvme
+> [RFC PATCH] pci: Proof of concept at fixing pci_enable_device/bridge races
+> 
+> The patch itself needs splitting etc... but the basic idea is to move away
+> from those global mutexes in a number of places and have one in the pci_dev
+> struct itself to protect its state.
+> 
+> I would also like to use this rather than the bitmap atomics for is_added
+> etc... (Hari's fix) in the long run. Atomics aren't significantly cheaper
+> and imho makes thing even messier.
+> 
+> Jens, Konstantin, any chance you can test if the above also breaks iwlwifi
+> (I don't see why it would but ...)
+> 
+> Cheers,
+> Ben.
+> 
