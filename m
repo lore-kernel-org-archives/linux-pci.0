@@ -1,58 +1,65 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from smtprelay2.synopsys.com ([198.182.60.111]:54348 "EHLO
-        smtprelay.synopsys.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726246AbeHWPEU (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Thu, 23 Aug 2018 11:04:20 -0400
-From: Gustavo Pimentel <gustavo.pimentel@synopsys.com>
-To: bhelgaas@google.com, lorenzo.pieralisi@arm.com, kishon@ti.com
-Cc: linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
-        Gustavo Pimentel <gustavo.pimentel@synopsys.com>
-Subject: [PATCH] tools/pci: Fix compilation warnings
-Date: Thu, 23 Aug 2018 13:34:53 +0200
-Message-Id: <b2433aaac6ace7b1b9843b520242d9e9185d3685.1535024080.git.gustavo.pimentel@synopsys.com>
+Received: from mx0b-001b2d01.pphosted.com ([148.163.158.5]:39906 "EHLO
+        mx0a-001b2d01.pphosted.com" rhost-flags-OK-OK-OK-FAIL)
+        by vger.kernel.org with ESMTP id S1727408AbeHPAuB (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Wed, 15 Aug 2018 20:50:01 -0400
+Received: from pps.filterd (m0098417.ppops.net [127.0.0.1])
+        by mx0a-001b2d01.pphosted.com (8.16.0.22/8.16.0.22) with SMTP id w7FLsSpV116045
+        for <linux-pci@vger.kernel.org>; Wed, 15 Aug 2018 17:55:59 -0400
+Received: from e06smtp03.uk.ibm.com (e06smtp03.uk.ibm.com [195.75.94.99])
+        by mx0a-001b2d01.pphosted.com with ESMTP id 2kvv500n9h-1
+        (version=TLSv1.2 cipher=AES256-GCM-SHA384 bits=256 verify=NOT)
+        for <linux-pci@vger.kernel.org>; Wed, 15 Aug 2018 17:55:59 -0400
+Received: from localhost
+        by e06smtp03.uk.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
+        for <linux-pci@vger.kernel.org> from <benh@au1.ibm.com>;
+        Wed, 15 Aug 2018 22:55:57 +0100
+Subject: Re: [PATCH 1/1] PCI/AER: prevent pcie_do_fatal_recovery from using
+ device after it is removed
+From: Benjamin Herrenschmidt <benh@au1.ibm.com>
+Reply-To: benh@au1.ibm.com
+To: poza@codeaurora.org, Thomas Tai <thomas.tai@oracle.com>
+Cc: bhelgaas@google.com, keith.busch@intel.com,
+        linux-pci@vger.kernel.org, linux-pci-owner@vger.kernel.org
+Date: Thu, 16 Aug 2018 07:55:48 +1000
+In-Reply-To: <b0104a716319d76e734c307cb4bedd9d@codeaurora.org>
+References: <1534179088-44219-1-git-send-email-thomas.tai@oracle.com>
+         <1534179088-44219-2-git-send-email-thomas.tai@oracle.com>
+         <51f4b387d9bd96a42d526a6a029fc43b@codeaurora.org>
+         <b0104a716319d76e734c307cb4bedd9d@codeaurora.org>
+Mime-Version: 1.0
+Message-Id: <1c844f2fff88379a2ccc84a1c2ddc2a61dfa036f.camel@au1.ibm.com>
+Content-Type: text/plain; charset="UTF-8"
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Fix compilation warnings:
- - remove unused variables
- - change function return from int to void, since it's not used
+On Tue, 2018-08-14 at 14:52 +0530, poza@codeaurora.org wrote:
+> > >       if (result == PCI_ERS_RESULT_RECOVERED) {
+> > >               if (pcie_wait_for_link(udev, true))
+> > >                       pci_rescan_bus(udev->bus);
+> > > -            pci_info(dev, "Device recovery from fatal error successful\n");
+> > > +            /* find the pci_dev after rescanning the bus */
+> > > +            dev = pci_get_domain_bus_and_slot(domain, bus, devfn);
+> > 
+> > one of the motivations was to remove and re-enumerate rather then
+> > going thorugh driver's recovery sequence
+> > was; it might be possible that hotplug capable bridge, the device
+> > might have changed.
+> > hence this check will fail
 
-Signed-off-by: Gustavo Pimentel <gustavo.pimentel@synopsys.com>
----
- tools/pci/pcitest.c | 7 ++-----
- 1 file changed, 2 insertions(+), 5 deletions(-)
+Under what circumstances do you actually "unplug" the device ? We are
+trying to cleanup/fix some of the PowerPC EEH code which is in a way
+similar to AER, and we found that this unplug/replug, which we do if
+the driver doesn't have recovery callbacks only, is causing more
+problems than it solves.
 
-diff --git a/tools/pci/pcitest.c b/tools/pci/pcitest.c
-index 9074b47..8ca1c62 100644
---- a/tools/pci/pcitest.c
-+++ b/tools/pci/pcitest.c
-@@ -23,7 +23,6 @@
- #include <stdio.h>
- #include <stdlib.h>
- #include <sys/ioctl.h>
--#include <time.h>
- #include <unistd.h>
- 
- #include <linux/pcitest.h>
-@@ -43,17 +42,15 @@ struct pci_test {
- 	unsigned long	size;
- };
- 
--static int run_test(struct pci_test *test)
-+static void run_test(struct pci_test *test)
- {
- 	long ret;
- 	int fd;
--	struct timespec start, end;
--	double time;
- 
- 	fd = open(test->device, O_RDWR);
- 	if (fd < 0) {
- 		perror("can't open PCI Endpoint Test device");
--		return fd;
-+		return;
- 	}
- 
- 	if (test->barnum >= 0 && test->barnum <= 5) {
--- 
-2.7.4
+We are moving toward instead unbinding the driver, resetting the
+device, then re-binding the driver instead of unplug/replug.
+
+Also why would you ever bypass the driver callbacks if the driver has
+some ? The whole point is to keep the driver bound while resetting the
+device (provided it has the right callbacks) so we don't lose the
+linkage between stroage devices and mounted filesystems.
+
+Cheers,
+Ben.
