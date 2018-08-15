@@ -1,135 +1,191 @@
-Return-Path: <SRS0=ey29=LD=broadcom.com=hari.vyas@kernel.org>
-Return-Path: <SRS0=ey29=LD=broadcom.com=hari.vyas@kernel.org>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from smtp.codeaurora.org ([198.145.29.96]:47926 "EHLO
+        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1729287AbeHOSS5 (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Wed, 15 Aug 2018 14:18:57 -0400
 MIME-Version: 1.0
-In-Reply-To: <21451a6ba97eada5d4a8a49b2726edde58266817.camel@kernel.crashing.org>
-References: <20180817044902.31420-1-benh@kernel.crashing.org>
- <20180817044902.31420-2-benh@kernel.crashing.org> <20180817154431.GC128050@bhelgaas-glaptop.roam.corp.google.com>
- <06c1233b71dea08b1fc32334acefc48c32c46557.camel@kernel.crashing.org>
- <20180819022440.GG128050@bhelgaas-glaptop.roam.corp.google.com>
- <4d777ed8c17b479e59b16cc0b4e9a3f6537f9884.camel@kernel.crashing.org>
- <CAM5rFu_dsfAiQtVnM58631tFUxYyzXrA5tgz8_v0=or3Lv8YbA@mail.gmail.com> <21451a6ba97eada5d4a8a49b2726edde58266817.camel@kernel.crashing.org>
-From: Hari Vyas <hari.vyas@broadcom.com>
-Date: Mon, 20 Aug 2018 17:13:40 +0530
-Message-ID: <CAM5rFu-e7N0AseqjmiAOd1uEMjL8Kvupw7YK08ogYQh_6C5F6A@mail.gmail.com>
-Subject: Re: [RFC PATCH 1/6] Revert "PCI: Fix is_added/is_busmaster race condition"
-To: Benjamin Herrenschmidt <benh@kernel.crashing.org>
-Cc: Bjorn Helgaas <helgaas@kernel.org>, linux-pci@vger.kernel.org,
-	Ray Jui <ray.jui@broadcom.com>, Srinath Mannam <srinath.mannam@broadcom.com>,
-	Guenter Roeck <linux@roeck-us.net>, Jens Axboe <axboe@kernel.dk>, Lukas Wunner <lukas@wunner.de>,
-	Konstantin Khlebnikov <khlebnikov@yandex-team.ru>, Marta Rybczynska <mrybczyn@kalray.eu>,
-	Pierre-Yves Kerbrat <pkerbrat@kalray.eu>, linux-kernel@vger.kernel.org
-Content-Type: text/plain; charset="UTF-8"
+Content-Type: text/plain; charset=UTF-8;
+ format=flowed
+Date: Wed, 15 Aug 2018 20:56:20 +0530
+From: poza@codeaurora.org
+To: Thomas Tai <thomas.tai@oracle.com>
+Cc: bhelgaas@google.com, keith.busch@intel.com,
+        linux-pci@vger.kernel.org, linux-pci-owner@vger.kernel.org
+Subject: Re: [PATCH 1/1] PCI/AER: prevent pcie_do_fatal_recovery from using
+ device after it is removed
+In-Reply-To: <08462817-7a4f-2d8a-a329-e856c9e702c9@oracle.com>
+References: <1534179088-44219-1-git-send-email-thomas.tai@oracle.com>
+ <1534179088-44219-2-git-send-email-thomas.tai@oracle.com>
+ <51f4b387d9bd96a42d526a6a029fc43b@codeaurora.org>
+ <b0104a716319d76e734c307cb4bedd9d@codeaurora.org>
+ <8b8db3c5-e884-d697-6193-b409276f9638@oracle.com>
+ <fa97a363892f757203ec7209f374a220@codeaurora.org>
+ <08462817-7a4f-2d8a-a329-e856c9e702c9@oracle.com>
+Message-ID: <9215fe3c62c2f15d7da221bb77bd5680@codeaurora.org>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Mon, Aug 20, 2018 at 4:39 PM, Benjamin Herrenschmidt
-<benh@kernel.crashing.org> wrote:
-> On Mon, 2018-08-20 at 11:55 +0530, Hari Vyas wrote:
->> On Mon, Aug 20, 2018 at 7:40 AM, Benjamin Herrenschmidt
->> <benh@kernel.crashing.org> wrote:
->> > On Sat, 2018-08-18 at 21:24 -0500, Bjorn Helgaas wrote:
->> > > On Sat, Aug 18, 2018 at 01:24:51PM +1000, Benjamin Herrenschmidt wrote:
->> > > > On Fri, 2018-08-17 at 10:44 -0500, Bjorn Helgaas wrote:
->> > > > > On Fri, Aug 17, 2018 at 02:48:57PM +1000, Benjamin Herrenschmidt wrote:
->> > > > > > This reverts commit 44bda4b7d26e9fffed6d7152d98a2e9edaeb2a76.
->> > > > >
->> > > > > Just to be clear, if I understand correctly, this is a pure revert of
->> > > > > 44bda4b7d26e and as such it reintroduces the problem solved by that
->> > > > > commit.
->> > > > >
->> > > > > If your solution turns out to be better, that's great, but it would be
->> > > > > nice to avoid the bisection hole of reintroducing the problem, then
->> > > > > fixing it again later.
->> > > >
->> > > > There is no way to do that other than merging the revert and the fix
->> > > > into one. That said, the race is sufficiently hard to hit that I
->> > > > wouldn't worry too much about it.
->> > >
->> > > OK, then at least mention that in the changelog.
->> >
->> > Sure will do. This is just RFC at this stage :-)
->> >
->> > As for the race with enable, what's your take on my approach ? The
->> > basic premise is that we need some kind of mutex to make the updates to
->> > enable_cnt and the actual config space changes atomic. While at it we
->> > can fold pci_set_master vs. is_busmaster as well as those are racy too.
->> >
->> > I chose to create a new mutex which we should be able to address other
->> > similar races if we find them. The other solutions that I dismissed
->> > were:
->> >
->> >  - Using the device_lock. A explained previously, this is tricky, I
->> > prefer not using this for anything other than locking against
->> > concurrent add/remove. The main issue is that drivers will be sometimes
->> > called in context where that's already held, so we can't take it inside
->> > pci_enable_device() and I'd rather not add new constraints such as
->> > "pci_enable_device() must be only called from probe() unless you also
->> > take the device lock". It would be tricky to audit everybody...
->> >
->> >  - Using a global mutex. We could move the bridge lock from AER to core
->> > code for example, and use that. But it doesn't buy us much, and
->> > slightly redecuces parallelism. It also makes it a little bit more
->> > messy to walk up the bridge chain, we'd have to do a
->> > pci_enable_device_unlocked or something, messy.
->> >
->> > So are you ok with the approach ? Do you prefer one of the above
->> > regardless ? Something else ?
->> >
->> > Cheers,
->> > Ben.
->> >
->> >
->>
->> Some concern was raised about race situation so just to be more clear
->> about race condition.
->
-> This is not what the above discussion is about.
->
-> The race with is is_added is due to the fact that the bit is set too
-> later as discussed previously and in my changelog.
->
-> The race I'm talking about here is the race related to multiple
-> subtrees trying to simultaneously enable a parent bridge.
->
->> Situation is described in Bug 200283 - PCI: Data corruption happening
->> due to a race condition.
->> Issue was discovered by our broadcom QA team.
->> Initially commit was to use one separate lock only for avoiding race
->> condition but after review, approach was slightly changed to move
->> is_added  to pci_dev private flags as it was completely
->> internal/private variable of pci core driver.
->> Powerpc legacy arch code was using is_added flag directly which looks
->> bit strange so  ../../ type of inclusion of pci.h was required. I know
->> it looks ugly but it is being used in some legacy code still.
->> Anyway, as stated earlier too, problem should be just solved in better way.
->
-> The is_added race can be fixed with a 3 lines patch moving is_added up
-> to before device_attach() I believe. I yet have to find a scenario
-> where doing so would break something but it's possible that I missed a
-> case.
->
-> At this stage, I'm more intested however in us agreeing how to fix the
-> other race, the one with enabling. As I wrote above, I proposed an
-> approach based on a mutex in pci_dev, and this is what I would like
-> discussed.
->
-> This race is currently causing our large systems to randomly error out
-> at boot time when probing some PCIe devices. I'm putting a band-aid in
-> the powerpc code for now to pre-enable bridges at boot, but I'd rather
-> have the race fixed in the generic code.
->
-> Ben.
->
->
-I was initially using spin lock in
-"PATCH v1] PCI: Data corruption happening due to race condition" and didn't
-face  issue at-least in our environment for our race condition.
-Anyway, we can leave this minor is_added issue time-being and concentrate on
-current pci bridge concern. Could you re-share your latest patch in
-your environment
-and your first doubt where race situation could happen. May be forum
-can suggest
-some-thing good.
+On 2018-08-15 20:32, Thomas Tai wrote:
+> On 08/15/2018 10:57 AM, poza@codeaurora.org wrote:
+>> On 2018-08-14 19:21, Thomas Tai wrote:
+>>> On 08/14/2018 05:22 AM, poza@codeaurora.org wrote:
+>>>> On 2018-08-14 14:46, poza@codeaurora.org wrote:
+>>>>> On 2018-08-13 22:21, Thomas Tai wrote:
+>>>>>> In order to prevent the pcie_do_fatal_recovery() from
+>>>>>> using the device after it is removed, the device's
+>>>>>> domain:bus:devfn is stored at the entry of
+>>>>>> pcie_do_fatal_recovery(). After rescanning the bus, the
+>>>>>> stored domain:bus:devfn is used to find the device and
+>>>>>> uses to report pci_info. The original issue only happens
+>>>>>> on an non-bridge device, a local variable is used instead
+>>>>>> of checking the device's header type.
+>>>>>> 
+>>>>>> Signed-off-by: Thomas Tai <thomas.tai@oracle.com>
+>>>>>> ---
+>>>>>>  drivers/pci/pcie/err.c | 33 +++++++++++++++++++++++----------
+>>>>>>  1 file changed, 23 insertions(+), 10 deletions(-)
+>>>>>> 
+>>>>>> diff --git a/drivers/pci/pcie/err.c b/drivers/pci/pcie/err.c
+>>>>>> index f02e334..3414445 100644
+>>>>>> --- a/drivers/pci/pcie/err.c
+>>>>>> +++ b/drivers/pci/pcie/err.c
+>>>>>> @@ -287,15 +287,20 @@ void pcie_do_fatal_recovery(struct pci_dev 
+>>>>>> *dev,
+>>>>>> u32 service)
+>>>>>>      struct pci_bus *parent;
+>>>>>>      struct pci_dev *pdev, *temp;
+>>>>>>      pci_ers_result_t result;
+>>>>>> +    bool is_bridge_device = false;
+>>>>>> +    u16 domain = pci_domain_nr(dev->bus);
+>>>>>> +    u8 bus = dev->bus->number;
+>>>>>> +    u8 devfn = dev->devfn;
+>>>>>> 
+>>>>>> -    if (dev->hdr_type == PCI_HEADER_TYPE_BRIDGE)
+>>>>>> +    if (dev->hdr_type == PCI_HEADER_TYPE_BRIDGE) {
+>>>>>> +        is_bridge_device = true;
+>>>>>>          udev = dev;
+>>>>>> -    else
+>>>>>> +    } else {
+>>>>>>          udev = dev->bus->self;
+>>>>>> +    }
+>>>>>> 
+>>>>>>      parent = udev->subordinate;
+>>>>>>      pci_lock_rescan_remove();
+>>>>>> -    pci_dev_get(dev);
+>>>>>>      list_for_each_entry_safe_reverse(pdev, temp, 
+>>>>>> &parent->devices,
+>>>>>>                       bus_list) {
+>>>>>>          pci_dev_get(pdev);
+>>>>>> @@ -309,27 +314,35 @@ void pcie_do_fatal_recovery(struct pci_dev 
+>>>>>> *dev,
+>>>>>> u32 service)
+>>>>>> 
+>>>>>>      result = reset_link(udev, service);
+>>>>>> 
+>>>>>> -    if ((service == PCIE_PORT_SERVICE_AER) &&
+>>>>>> -        (dev->hdr_type == PCI_HEADER_TYPE_BRIDGE)) {
+>>>>>> +    if (service == PCIE_PORT_SERVICE_AER && is_bridge_device) {
+>>>>>>          /*
+>>>>>>           * If the error is reported by a bridge, we think this 
+>>>>>> error
+>>>>>>           * is related to the downstream link of the bridge, so we
+>>>>>>           * do error recovery on all subordinates of the bridge 
+>>>>>> instead
+>>>>>>           * of the bridge and clear the error status of the 
+>>>>>> bridge.
+>>>>>>           */
+>>>>>> -        pci_cleanup_aer_uncorrect_error_status(dev);
+>>>>>> +        pci_cleanup_aer_uncorrect_error_status(udev);
+>>>>>>      }
+>>>>>> 
+>>>>>>      if (result == PCI_ERS_RESULT_RECOVERED) {
+>>>>>>          if (pcie_wait_for_link(udev, true))
+>>>>>>              pci_rescan_bus(udev->bus);
+>>>>>> -        pci_info(dev, "Device recovery from fatal error 
+>>>>>> successful\n");
+>>>>>> +        /* find the pci_dev after rescanning the bus */
+>>>>>> +        dev = pci_get_domain_bus_and_slot(domain, bus, devfn);
+>>>>> one of the motivations was to remove and re-enumerate rather then
+>>>>> going thorugh driver's recovery sequence
+>>>>> was; it might be possible that hotplug capable bridge, the device
+>>>>> might have changed.
+>>>>> hence this check will fail
+>>> 
+>>> Thanks Oza for your information. Instead of searching for the 
+>>> dev_pci,
+>>> should I just use the stored domain:bus:devfn to printout the info?
+>>> 
+>>>>>> +        if (dev)
+>>>>>> +            pci_info(dev, "Device recovery from fatal error 
+>>>>>> successful\n");
+>>>>>> +        else
+>>>>>> +            pr_err("AER: Can not find pci_dev for 
+>>>>>> %04x:%02x:%02x.%x\n",
+>>>>>> +                   domain, bus,
+>>>>>> +                   PCI_SLOT(devfn), PCI_FUNC(devfn));
+>>>>>> +        pci_dev_put(dev);
+>>> 
+>>> That is, replace above with:
+>>> 
+>>>     pr_info("AER: Device %04x:%02x:%02x.%x recover from fatal error
+>>> successful\n", domain, bus, PCI_SLOT(devfn), PCI_FUNC(devfn));
+>>> 
+>> is this not sufficient to print ?  which is there already.
+>> pci_info(dev, "Device recovery from fatal error successful\n");
+> 
+> Unfortunately, I can't use "dev" because as you said I can't
+> pci_get_domain_slot to search for it after rescanning.
+> 
+> -T
+
+If I understood the patch correctly,
+1) it is restructuring of pci_dev_put(dev);
+2) now we are sending uevent only if it is bridge.
+3) the other logic where you store and compare bdf is not required, 
+although we have to fix following.
+pci_info(dev, "Device recovery from fatal error successful\n");
 
 
-Regard,
-hari.
+probably 1) and 2) could be a separate patch.
+
+by the way,
+In my testing even after removing device the call pci_uevent_ers(dev, 
+PCI_ERS_RESULT_DISCONNECT); did not create any problem.
+> 
+
+> 
+>> 
+>>> 
+>>>>>>      } else {
+>>>>>> -        pci_uevent_ers(dev, PCI_ERS_RESULT_DISCONNECT);
+>>>>>> -        pci_info(dev, "Device recovery from fatal error 
+>>>>>> failed\n");
+>>>>>> +        if (is_bridge_device)
+>>>>> previously there was no condition.. why is this required now ?
+>>>>> and it was doing on "dev" while you are doing it on "udev"
+>>>> is that the reason we dont watnt o use dev after it is removed ? 
+>>>> instead do pci_uevent_ers on bridge ?
+>>> 
+>>> 
+>>> Yes, that's exactly the reason. I should have written down the reason
+>>> in the commit log. Here is the details explanation for the benefit of
+>>> others. If the failing device is a bridge device, udev is equal to
+>>> dev. So we can use udev in the pci_uevent_ers. But for non bridge
+>>> device the device is already removed from the bus and thus can't send
+>>> pci_uevent_ers.
+>>> 
+>>> Thank you,
+>>> Thomas
+>>> 
+>>>>>> +            pci_uevent_ers(udev, PCI_ERS_RESULT_DISCONNECT);
+>>>>>> +        pr_err("AER: Device %04x:%02x:%02x.%x recovery from fatal 
+>>>>>> error failed\n",
+>>>>>> +               domain, bus, PCI_SLOT(devfn), PCI_FUNC(devfn));
+>>>>>>      }
+>>>>>> 
+>>>>>> -    pci_dev_put(dev);
+>>>>>>      pci_unlock_rescan_remove();
+>>>>>>  }
+>>>>> 
+>>>>> Regards,
+>>>>> Oza.
