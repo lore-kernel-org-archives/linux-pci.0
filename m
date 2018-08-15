@@ -1,64 +1,81 @@
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Date: Wed, 8 Aug 2018 15:50:17 +0100
-From: Catalin Marinas <catalin.marinas@arm.com>
-To: David Laight <David.Laight@ACULAB.COM>
-Subject: Re: framebuffer corruption due to overlapping stp instructions on
- arm64
-Message-ID: <20180808145017.GE24736@iMac.local>
-References: <CAKv+Gu8DeuksZhk1g3q_msSKV_hSY_2e1uzVten9-oGO3j9Sqg@mail.gmail.com>
- <20180803094129.GB17798@arm.com>
- <alpine.LRH.2.02.1808031235410.31584@file01.intranet.prod.int.rdu2.redhat.com>
- <CAKv+Gu-aNFh1fsr_05SEwDp99n3pLrguP7=tEcFQPNY53=K7Fw@mail.gmail.com>
- <alpine.LRH.2.02.1808031424140.14030@file01.intranet.prod.int.rdu2.redhat.com>
- <CAHCPf3s-+Qf=WBZz1KpisDMG3520jCUh8PLAO3PHa4jdt8kCTw@mail.gmail.com>
- <20180808121641.GB24736@iMac.local>
- <b1de49af14d941979977af07dc81e1c2@AcuMS.aculab.com>
- <alpine.LRH.2.02.1808080939180.3325@file01.intranet.prod.int.rdu2.redhat.com>
- <19c70d2a0b224db78f72dd316ad006b8@AcuMS.aculab.com>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail.kernel.org ([198.145.29.99]:41508 "EHLO mail.kernel.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1726375AbeHODCg (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Tue, 14 Aug 2018 23:02:36 -0400
+Date: Tue, 14 Aug 2018 19:12:57 -0500
+From: Bjorn Helgaas <helgaas@kernel.org>
+To: Heiner Kallweit <hkallweit1@gmail.com>
+Cc: Bjorn Helgaas <bhelgaas@google.com>,
+        Thomas Gleixner <tglx@linutronix.de>,
+        "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
+Subject: Re: [PATCH v2] PCI: set flag IRQCHIP_ONESHOT_SAFE for PCI-MSI
+ irqchip's
+Message-ID: <20180815001257.GD28888@bhelgaas-glaptop.roam.corp.google.com>
+References: <9f18bc20-cf27-bc3c-71e5-4e24a6c983c7@gmail.com>
+ <70984d26-1d35-d925-f67b-698ed85bbab5@gmail.com>
 MIME-Version: 1.0
-In-Reply-To: <19c70d2a0b224db78f72dd316ad006b8@AcuMS.aculab.com>
-List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
-List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
-List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
-List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
-List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
-Cc: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>,
- Joao Pinto <Joao.Pinto@synopsys.com>,
- Ard Biesheuvel <ard.biesheuvel@linaro.org>,
- linux-pci <linux-pci@vger.kernel.org>, Will Deacon <will.deacon@arm.com>,
- Russell King <linux@armlinux.org.uk>,
- Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
- 'Mikulas Patocka' <mpatocka@redhat.com>, Matt Sealey <neko@bakuhatsu.net>,
- Jingoo Han <jingoohan1@gmail.com>,
- linux-arm-kernel <linux-arm-kernel@lists.infradead.org>
-Content-Type: text/plain; charset="us-ascii"
-Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
-Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <70984d26-1d35-d925-f67b-698ed85bbab5@gmail.com>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wed, Aug 08, 2018 at 02:26:11PM +0000, David Laight wrote:
-> From: Mikulas Patocka
-> > Sent: 08 August 2018 14:47
-> ...
-> > The problem on ARM is that I see data corruption when the overlapping
-> > unaligned writes are done just by a single core.
+On Sun, Aug 05, 2018 at 10:31:03PM +0200, Heiner Kallweit wrote:
+> If flag IRQCHIP_ONESHOT_SAFE isn't set for an irqchip and we have a
+> threaded interrupt with no primary handler, then flag IRQF_ONESHOT
+> needs to be set for the interrupt, causing some overhead in the
+> threaded interrupt handler. For more detailed explanation also check
+> following comment in __setup_irq():
 > 
-> Is this a sequence of unaligned writes (that shouldn't modify the
-> same physical locations) or an aligned write followed by an
-> unaligned one that updates part of the earlier write.
-> (Or the opposite order?)
+> The interrupt was requested with handler = NULL, so we use the default
+> primary handler for it. But it does not have the oneshot flag set.
+> In combination with level interrupts this is deadly, because the
+> default primary handler just wakes the thread, then the irq lines is
+> reenabled, but the device still has the level irq asserted.
+> Rinse and repeat....
+> While this works for edge type interrupts, we play it safe and reject
+> unconditionally because we can't say for sure which type this interrupt
+> really has. The type flags are unreliable as the underlying chip
+> implementation can override them.
+> 
+> Another comment in __setup_irq() gives a hint already that this
+> overhead can be avoided for PCI-MSI:
+> 
+> Some irq chips like MSI based interrupts are per se one shot safe.
+> Check the chip flags, so we can avoid the unmask dance at the end
+> of the threaded handler for those.
+> 
+> Following this let's mark all PCI-MSI irqchip's as oneshot-safe.
+> 
+> See also discussion here:
+> https://marc.info/?l=linux-pci&m=153332526101128&w=2
+> 
+> Signed-off-by: Heiner Kallweit <hkallweit1@gmail.com>
 
-In the memcpy() case, there can be a sequence of unaligned writes but
-they would not modify the same byte (so no overlapping address at the
-byte level).
+Applied to pci/msi for v4.19, thanks!
 
--- 
-Catalin
-
-_______________________________________________
-linux-arm-kernel mailing list
-linux-arm-kernel@lists.infradead.org
-http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
+> ---
+> v2:
+> - extended commit message
+> ---
+>  drivers/pci/msi.c | 3 +++
+>  1 file changed, 3 insertions(+)
+> 
+> diff --git a/drivers/pci/msi.c b/drivers/pci/msi.c
+> index 4d88afdf..f2ef8964 100644
+> --- a/drivers/pci/msi.c
+> +++ b/drivers/pci/msi.c
+> @@ -1446,6 +1446,9 @@ struct irq_domain *pci_msi_create_irq_domain(struct fwnode_handle *fwnode,
+>  	if (IS_ENABLED(CONFIG_GENERIC_IRQ_RESERVATION_MODE))
+>  		info->flags |= MSI_FLAG_MUST_REACTIVATE;
+>  
+> +	/* PCI-MSI is oneshot-safe */
+> +	info->chip->flags |= IRQCHIP_ONESHOT_SAFE;
+> +
+>  	domain = msi_create_irq_domain(fwnode, info, parent);
+>  	if (!domain)
+>  		return NULL;
+> -- 
+> 2.18.0
+> 
+> 
