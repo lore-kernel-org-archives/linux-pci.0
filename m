@@ -1,126 +1,158 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from gate.crashing.org ([63.228.1.57]:50205 "EHLO gate.crashing.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S2387713AbeHPJsS (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Thu, 16 Aug 2018 05:48:18 -0400
-Message-ID: <e931bc7a7e468e8bb2ee3766b3fcf96f1800f552.camel@kernel.crashing.org>
+Received: from aserp2120.oracle.com ([141.146.126.78]:50962 "EHLO
+        aserp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1729347AbeHOS50 (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Wed, 15 Aug 2018 14:57:26 -0400
 Subject: Re: [PATCH 1/1] PCI/AER: prevent pcie_do_fatal_recovery from using
  device after it is removed
-From: Benjamin Herrenschmidt <benh@kernel.crashing.org>
 To: poza@codeaurora.org
-Cc: Thomas Tai <thomas.tai@oracle.com>, bhelgaas@google.com,
-        keith.busch@intel.com, linux-pci@vger.kernel.org,
-        linux-pci-owner@vger.kernel.org
-Date: Thu, 16 Aug 2018 16:51:43 +1000
-In-Reply-To: <6cb069038530757f31f3dd60328c7e30@codeaurora.org>
+Cc: bhelgaas@google.com, keith.busch@intel.com,
+        linux-pci@vger.kernel.org, linux-pci-owner@vger.kernel.org
 References: <1534179088-44219-1-git-send-email-thomas.tai@oracle.com>
-         <1534179088-44219-2-git-send-email-thomas.tai@oracle.com>
-         <51f4b387d9bd96a42d526a6a029fc43b@codeaurora.org>
-         <b0104a716319d76e734c307cb4bedd9d@codeaurora.org>
-         <903394c04d6ad468ed06dc0a779200e7555345a7.camel@kernel.crashing.org>
-         <6cb069038530757f31f3dd60328c7e30@codeaurora.org>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+ <1534179088-44219-2-git-send-email-thomas.tai@oracle.com>
+ <51f4b387d9bd96a42d526a6a029fc43b@codeaurora.org>
+ <b0104a716319d76e734c307cb4bedd9d@codeaurora.org>
+ <8b8db3c5-e884-d697-6193-b409276f9638@oracle.com>
+ <fa97a363892f757203ec7209f374a220@codeaurora.org>
+ <08462817-7a4f-2d8a-a329-e856c9e702c9@oracle.com>
+ <9215fe3c62c2f15d7da221bb77bd5680@codeaurora.org>
+ <a23efe6f-4341-edaa-a230-c2f1c93ff0ce@oracle.com>
+ <3c5fe7896f5d558fef9d37f8b7156a3b@codeaurora.org>
+From: Thomas Tai <thomas.tai@oracle.com>
+Message-ID: <c36f36bb-d80d-de58-af19-2653ac21b9a4@oracle.com>
+Date: Wed, 15 Aug 2018 12:04:33 -0400
+MIME-Version: 1.0
+In-Reply-To: <3c5fe7896f5d558fef9d37f8b7156a3b@codeaurora.org>
+Content-Type: text/plain; charset=utf-8; format=flowed
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Thu, 2018-08-16 at 12:06 +0530, poza@codeaurora.org wrote:
+
+
+On 08/15/2018 11:59 AM, poza@codeaurora.org wrote:
+> On 2018-08-15 21:13, Thomas Tai wrote:
+>> [ ... ]>>>>>>> +        if (dev)
+>>>>>>>>> +            pci_info(dev, "Device recovery from fatal error 
+>>>>>>>>> successful\n");
+>>>>>>>>> +        else
+>>>>>>>>> +            pr_err("AER: Can not find pci_dev for 
+>>>>>>>>> %04x:%02x:%02x.%x\n",
+>>>>>>>>> +                   domain, bus,
+>>>>>>>>> +                   PCI_SLOT(devfn), PCI_FUNC(devfn));
+>>>>>>>>> +        pci_dev_put(dev);
+>>>>>>
+>>>>>> That is, replace above with:
+>>>>>>
+>>>>>>     pr_info("AER: Device %04x:%02x:%02x.%x recover from fatal error
+>>>>>> successful\n", domain, bus, PCI_SLOT(devfn), PCI_FUNC(devfn));
+>>>>>>
+>>>>> is this not sufficient to print ?  which is there already.
+>>>>> pci_info(dev, "Device recovery from fatal error successful\n");
+>>>>
+>>>> Unfortunately, I can't use "dev" because as you said I can't
+>>>> pci_get_domain_slot to search for it after rescanning.
+>>>>
+>>>> -T
+>>>
+>>> If I understood the patch correctly,
+>>> 1) it is restructuring of pci_dev_put(dev);
+>>> 2) now we are sending uevent only if it is bridge.
+>>> 3) the other logic where you store and compare bdf is not required, 
+>>> although we have to fix following.
+>>> pci_info(dev, "Device recovery from fatal error successful\n");
+>>>
+>>>
+>>> probably 1) and 2) could be a separate patch.
+>>
+>> Yes Oza. I will separate 1) and 2) and fix the pci_info(dev, "...") to
+>> use domain:bus:devfn
 > 
-> > Under what circumstances do you actually "unplug" the device ? We are
-> > trying to cleanup/fix some of the PowerPC EEH code which is in a way
-> > similar to AER, and we found that this unplug/replug, which we do if
-> > the driver doesn't have recovery callbacks only, is causing more
-> > problems than it solves.
-> > 
-> > We are moving toward instead unbinding the driver, resetting the
-> > device, then re-binding the driver instead of unplug/replug.
-> > 
-> > Also why would you ever bypass the driver callbacks if the driver has
-> > some ? The whole point is to keep the driver bound while resetting the
-> > device (provided it has the right callbacks) so we don't lose the
-> > linkage between stroage devices and mounted filesystems.
-> > 
+> Thanks Thomas,
+> although I am not sure on 3)  by doing following.
 > 
-> there are two different paths we are taking, one is for ERR_FATAL and 
-> the other is for ERR_NONFATAL.
-
-Ok. With EEH we have a much finer granularity but fundamentally we
-don't care as long as we reset the device.
-
-> while AER and DPC converge into ERR_FATAL path; ERR_NONFATAL path is the 
-> one where AER and driver callbacks would come into picture.
-
-I disagree. See below.
-
-> since DPC does hw recovery of the link, and handles only ERR_FATAL, we 
-> do remove devices and re-enumerate them.
-
-What is "DPC" ?
-
-> but if the error is no fatal, we will fall back to driver callbacks to 
-> initiate link error handling and recovery process.
-
-Hrm ... the callbacks were never about link errors, they were about
-device errors of any kind and predate PCIe concept of links in fact.
-
-They include iommu errors, HW errors, SW bugs etc...
-
-> under normal circumstances I do not see the some downstream devices 
-> would have been replaced in case of FATAL errors, but code might not 
-> want to assume that
-> same device is there, since we are removing downstream devices 
-> completely. so taking reference of old BDF and keeping it for later 
-> reference is not good idea.
-> although I think there are some parts of pcie_do_fatal_recovery need a 
-> fix, which Thomas is fixing is anyway.
-
-I think you shouldn't be unplugging/replugging.
-
-> so yes, I agree with you and we are talking about same thing e.g.
-> "
->   We are moving toward instead unbinding the driver, resetting the
->   device, then re-binding the driver instead of unplug/replug.
-> "
+>   dev = pci_get_domain_bus_and_slot(domain, bus, devfn);
+>       if (dev)
+>          pci_info(dev, "Device recovery from fatal error successful\n");
 > 
-> driver callbacks are very much there, please have a look at 
-> pcie_do_nonfatal_recovery().
+> but also it may be the case that device is removed and there is no new 
+> device which would match BDF
+> so in any case recovery has happened as far as PCIe link is concerned.
+> 
+> surprisingly in my case followin also went fine
+> pci_info(dev, "Device recovery from fatal error successful\n");
+> I guess probably after re-enumeration, I got the sane dev back !! (since 
+> it enumerated the same device)
+> 
+> how about something like this
+> 
+> dev = pci_get_domain_bus_and_slot(domain, bus, devfn);
+>       if (dev)
+>          pci_info(dev, "Device recovery from fatal error successful\n");
+>        else
+>           pr_ifo ("AER: Device recovery from fatal error successful")
 
-Even for fatal. Why on earth would you skip the driver callbacks ? Most
-errors are fatal anyway.
+That is cool! Thank you for your suggestion, I will do so in V2.
 
-For us, we don't really differenciate because in order to avoid any
-form of propagation of bad data, our HW will freeze/isolate a device on
-any error, whether it's fatal or non fatal.
-
-So we treat them both as needing a full recovery which usually implies
-a reset of the device.
-
-However we do that through the use of the driver callbacks because
-otherwise you will lose the linkage between a storage driver and the
-moutned file systems which cannot be recovered, so you are killing your
-system.
-
-> refering Sepc: 6.2.2.2.1 Fatal Errors, where link is unreliable and it 
-> might need AER style reset of link or DPC style HW recovery
-> In both cases, the shutdown callbacks are expected to be called,
-
-No, this is wrong and not the intent of the error handling.
-
-You seem to be applying PCIe specific concepts brain-farted at Intel
-that are way way away from what we care about in practice and in Linux.
-
-> e.g.  some driver handle errors ERR_NONFATAL or FATAL in similar ways
-> e.g.
-> ioat_pcie_error_detected();  calls  ioat_shutdown(); in case of 
-> ERR_NONFATAL
-> otherwise ioat_shutdown() in case of ERR_FATAL.
-
-Since when the error handling callbacks even have the concept of FATAL
-vs. non-fatal ? This doesn't appear anyhwhere in the prototype of the
-struct pci_error_handlers and shouldn't.
-
-Benm=.
+Thomas
 
 > 
-> > Cheers,
-> > Ben.
+> Regards,
+> Oza.
+> 
+>>
+>>>
+>>> by the way,
+>>> In my testing even after removing device the call pci_uevent_ers(dev, 
+>>> PCI_ERS_RESULT_DISCONNECT); did not create any problem.
+>>
+>> I think that is dangerous, if we restructure pci_dev_put(dev), ie
+>> revert commit bd91b56cb3b27492963caeb5fccefe20a986ca8d. The dev
+>> structure is freed and we shouldn't really use it to send
+>> pci_uevent_ers(). Although pci_uevent_ers() may be smart enough to
+>> figure out to avoid crash, we should only use it when the dev is not
+>> removed.
+>>
+> 
+> I Agree.
+> 
+>> Thanks,
+>> Thomas
+>>
+>>>>
+>>>
+>>>>
+>>>>>
+>>>>>>
+>>>>>>>>>      } else {
+>>>>>>>>> -        pci_uevent_ers(dev, PCI_ERS_RESULT_DISCONNECT);
+>>>>>>>>> -        pci_info(dev, "Device recovery from fatal error 
+>>>>>>>>> failed\n");
+>>>>>>>>> +        if (is_bridge_device)
+>>>>>>>> previously there was no condition.. why is this required now ?
+>>>>>>>> and it was doing on "dev" while you are doing it on "udev"
+>>>>>>> is that the reason we dont watnt o use dev after it is removed ? 
+>>>>>>> instead do pci_uevent_ers on bridge ?
+>>>>>>
+>>>>>>
+>>>>>> Yes, that's exactly the reason. I should have written down the reason
+>>>>>> in the commit log. Here is the details explanation for the benefit of
+>>>>>> others. If the failing device is a bridge device, udev is equal to
+>>>>>> dev. So we can use udev in the pci_uevent_ers. But for non bridge
+>>>>>> device the device is already removed from the bus and thus can't send
+>>>>>> pci_uevent_ers.
+>>>>>>
+>>>>>> Thank you,
+>>>>>> Thomas
+>>>>>>
+>>>>>>>>> +            pci_uevent_ers(udev, PCI_ERS_RESULT_DISCONNECT);
+>>>>>>>>> +        pr_err("AER: Device %04x:%02x:%02x.%x recovery from 
+>>>>>>>>> fatal error failed\n",
+>>>>>>>>> +               domain, bus, PCI_SLOT(devfn), PCI_FUNC(devfn));
+>>>>>>>>>      }
+>>>>>>>>>
+>>>>>>>>> -    pci_dev_put(dev);
+>>>>>>>>>      pci_unlock_rescan_remove();
+>>>>>>>>>  }
+>>>>>>>>
+>>>>>>>> Regards,
+>>>>>>>> Oza.
