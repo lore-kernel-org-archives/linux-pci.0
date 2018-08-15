@@ -1,125 +1,167 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-oi0-f68.google.com ([209.85.218.68]:42036 "EHLO
-        mail-oi0-f68.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726162AbeH1GMs (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Tue, 28 Aug 2018 02:12:48 -0400
-Received: by mail-oi0-f68.google.com with SMTP id q204-v6so88111oig.9
-        for <linux-pci@vger.kernel.org>; Mon, 27 Aug 2018 19:23:26 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <20180824154212.GB8601@al>
-References: <CAD8Lp46Y2eOR7WE28xToUL8s-aYiqPa0nS=1GSD0AxkddXq6+A@mail.gmail.com>
- <20180824154212.GB8601@al>
-From: Daniel Drake <drake@endlessm.com>
-Date: Tue, 28 Aug 2018 10:23:24 +0800
-Message-ID: <CAD8Lp45D6=pqsgr_tXS08pE0dbG1XhcwnDB3mGZQ=P3ETxywzw@mail.gmail.com>
-Subject: Re: [Nouveau] Rewriting Intel PCI bridge prefetch base address bits
- solves nvidia graphics issues
-To: Peter Wu <peter@lekensteyn.nl>
-Cc: linux-pci@vger.kernel.org, nouveau@lists.freedesktop.org,
-        Linux PM <linux-pm@vger.kernel.org>,
-        Endless Linux Upstreaming Team <linux@endlessm.com>
-Content-Type: text/plain; charset="UTF-8"
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <SRS0=Vm9w=K6=intel.com=jonathan.derrick@kernel.org>
+Return-Path: <SRS0=Vm9w=K6=intel.com=jonathan.derrick@kernel.org>
+From: Jon Derrick <jonathan.derrick@intel.com>
+To: <linux-pci@vger.kernel.org>
+Cc: <linux-kernel@vger.kernel.org>,
+	<linux-doc@vger.kernel.org>,
+	Bjorn Helgaas <helgaas@kernel.org>,
+	Keith Busch <keith.busch@intel.com>,
+	Sinan Kaya <okaya@kernel.org>,
+	Oza Pawandeep <poza@codeaurora.org>,
+	Dongdong Liu <liudongdong3@huawei.com>,
+	Jon Derrick <jonathan.derrick@intel.com>
+Subject: [PATCH 1/2] PCI/DPC: Add 'nodpc' parameter
+Date: Wed, 15 Aug 2018 15:26:39 -0600
+Message-Id: <1534368400-2807-1-git-send-email-jonathan.derrick@intel.com>
 List-ID: <linux-pci.vger.kernel.org>
 
-On Fri, Aug 24, 2018 at 11:42 PM, Peter Wu <peter@lekensteyn.nl> wrote:
-> Are these systems also affected through runtime power management? For
-> example:
->
->     modprobe nouveau    # should enable runtime PM
->     sleep 6             # wait for runtime suspend to kick in
->     lspci -s1:          # runtime resume by reading PCI config space
->
-> On laptops from about 2015-2016 with a GTX 9xxM this sequence results in
-> hangs on various laptops
-> (https://bugzilla.kernel.org/show_bug.cgi?id=156341).
+Some users may want to disable downstream port containment (DPC), so
+give them this option
 
-This works fine here. I'm facing a different issue.
+Signed-off-by: Jon Derrick <jonathan.derrick@intel.com>
+---
+ drivers/pci/pci.c      |  2 ++
+ drivers/pci/pci.h      |  6 ++++++
+ drivers/pci/pcie/dpc.c | 48 ++++++++++++++++++++++++++++++++++++++----------
+ include/linux/pci.h    |  6 ++++++
+ 4 files changed, 52 insertions(+), 10 deletions(-)
 
->> After a lot of experimentation I found a workaround: during resume,
->> set the value of PCI_PREF_BASE_UPPER32 to 0 on the parent PCI bridge.
->> Easily done in drivers/pci/quirks.c. Now all nvidia stuff works fine.
->
-> I am curious, how did you discover this? While this could work, perhaps
-> there are alternative workarounds/fixes?
-
-Based on the observation that the following procedure works fine (note
-the addition of step 3):
-
-1. Boot
-2. Suspend/resume
-3. echo rescan > /sys/bus/pci/devices/0000:00:1c.0/rescan
-4. Load nouveau driver
-5. Start X
-
-I worked through the rescan codepath until I had isolated the specific
-code which magically makes things work (in pci_bridge_check_ranges).
-
-Having found that, step 3 in the above test procedure can be replaced
-with a simple:
-   setpci -s 00:1c.0 0x28.l=0
-
-> When you say "parent PCI" bridge, is that actually the device you see in
-> "lspci -tv"? On a Dell XPS 9560, the GPU is under a different device:
->
->   -[0000:00]-+-00.0  Intel Corporation Xeon E3-1200 v6/7th Gen Core Processor Host Bridge/DRAM Registers
->              +-01.0-[01]----00.0  NVIDIA Corporation GP107M [GeForce GTX 1050 Mobile]
->
->  00:01.0 PCI bridge [0604]: Intel Corporation Xeon E3-1200 v5/E3-1500 v5/6th Gen Core Processor PCIe Controller (x16) [8086:1901] (rev 05)
-
-Yes, it's the parent bridge shown by lspci. The address of this varies
-from system to system.
-
->> 1. Is the Intel PCI bridge misbehaving here? Why does writing the same
->> value of PCI_PREF_BASE_UPPER32 make any difference at all?
->
-> At what point in the suspend code path did you insert this write? It is
-> possible that the write somehow acted as a fence/memory barrier?
-
-static void quirk_pref_base_upper32(struct pci_dev *dev)
-{
-       u32 pref_base_upper32;
-       pci_read_config_dword(dev, PCI_PREF_BASE_UPPER32, &pref_base_upper32);
-       pci_write_config_dword(dev, PCI_PREF_BASE_UPPER32, pref_base_upper32);
-}
-DECLARE_PCI_FIXUP_RESUME(PCI_VENDOR_ID_INTEL,  0x9d10, quirk_pref_base_upper32);
-
-I don't think it's acting as a barrier. I tried changing this code to
-rewrite other registers such as PCI_PREF_MEMORY_BASE and that makes
-the bug come back.
-
->> 2. Who is responsible for saving and restoring PCI bridge
->> configuration during suspend and resume? Linux? ACPI? BIOS?
->
-> Not sure about PCI bridges, but at least for the PCI Express Capability
-> registers, it is in control of the OS when control is granted via the
-> ACPI _OSC method.
-
-I guess you are referring to pci_save_pcie_state(). I can't see
-anything equivalent for the bridge registers.
-
-> As Windows is probably not affected by this issue, a change must be
-> possible to make Linux more compatible with Windows. Though I am not
-> sure what change is needed.
-
-I agree. There's a definite difference with Windows here and it would
-be great to find a fix along those lines.
-
-> I recently compared PCI configuration space access and ACPI method
-> invocation using QEMU + VFIO with Linux 4.18, Windows 7 and Windows 10
-> (1803). There were differences like disabling MSI/interrupts before
-> suspend, setting the Enable Clock Power Management bit in PCI Express
-> Link Control and more, but applying these changes were so far not really
-> successful.
-
-Interesting. Do you know any way that I could spy on Windows' accesses
-to the PCI bridge registers?
-Looking at at https://wiki.archlinux.org/index.php/PCI_passthrough_via_OVMF
-I suspect VFIO would not help me here.
-It says:
-    Note: If they are grouped with other devices in this manner, pci
-root ports and bridges should neither be bound to vfio at boot, nor be
-added to the VM.
-
-Thanks
-Daniel
+diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
+index 80da484..4e629c2 100644
+--- a/drivers/pci/pci.c
++++ b/drivers/pci/pci.c
+@@ -6062,6 +6062,8 @@ static int __init pci_setup(char *str)
+ 				pcie_ats_disabled = true;
+ 			} else if (!strcmp(str, "noaer")) {
+ 				pci_no_aer();
++			} else if (!strcmp(str, "nodpc")) {
++				pci_no_dpc();
+ 			} else if (!strcmp(str, "earlydump")) {
+ 				pci_early_dump = true;
+ 			} else if (!strncmp(str, "realloc=", 8)) {
+diff --git a/drivers/pci/pci.h b/drivers/pci/pci.h
+index 6e0d152..f73f29e 100644
+--- a/drivers/pci/pci.h
++++ b/drivers/pci/pci.h
+@@ -536,4 +536,10 @@ static inline void pci_aer_clear_fatal_status(struct pci_dev *dev) { }
+ static inline void pci_aer_clear_device_status(struct pci_dev *dev) { }
+ #endif
+ 
++#ifdef CONFIG_PCIE_DPC
++void pci_no_dpc(void);
++#else
++static inline void pci_no_dpc(void) { }
++#endif
++
+ #endif /* DRIVERS_PCI_H */
+diff --git a/drivers/pci/pcie/dpc.c b/drivers/pci/pcie/dpc.c
+index f03279f..068fca0 100644
+--- a/drivers/pci/pcie/dpc.c
++++ b/drivers/pci/pcie/dpc.c
+@@ -44,6 +44,18 @@ struct dpc_dev {
+ 	"Memory Request Completion Timeout",		 /* Bit Position 18 */
+ };
+ 
++static int pcie_dpc_disable;
++
++void pci_no_dpc(void)
++{
++	pcie_dpc_disable = 1;
++}
++
++bool pci_dpc_available(void)
++{
++	return !pcie_dpc_disable && pci_aer_available() && pci_msi_enabled();
++}
++
+ static int dpc_wait_rp_inactive(struct dpc_dev *dpc)
+ {
+ 	unsigned long timeout = jiffies + HZ;
+@@ -209,6 +221,17 @@ static irqreturn_t dpc_irq(int irq, void *context)
+ 	return IRQ_HANDLED;
+ }
+ 
++static void dpc_disable(struct pci_dev *pdev)
++{
++	u16 cap_pos, ctl;
++
++	cap_pos = pci_find_ext_capability(pdev, PCI_EXT_CAP_ID_DPC);
++	pci_read_config_word(pdev, cap_pos + PCI_EXP_DPC_CTL, &ctl);
++	ctl &= ~(PCI_EXP_DPC_CTL_EN_FATAL | PCI_EXP_DPC_CTL_EN_NONFATAL |
++		 PCI_EXP_DPC_CTL_INT_EN);
++	pci_write_config_word(pdev, cap_pos + PCI_EXP_DPC_CTL, ctl);
++}
++
+ #define FLAG(x, y) (((x) & (y)) ? '+' : '-')
+ static int dpc_probe(struct pcie_device *dev)
+ {
+@@ -221,9 +244,16 @@ static int dpc_probe(struct pcie_device *dev)
+ 	if (pcie_aer_get_firmware_first(pdev))
+ 		return -ENOTSUPP;
+ 
++	if (!pci_dpc_available()) {
++		status = -ENOTSUPP;
++		goto disable_dpc;
++	}
++
+ 	dpc = devm_kzalloc(device, sizeof(*dpc), GFP_KERNEL);
+-	if (!dpc)
+-		return -ENOMEM;
++	if (!dpc) {
++		status = -ENOMEM;
++		goto disable_dpc;
++	}
+ 
+ 	dpc->cap_pos = pci_find_ext_capability(pdev, PCI_EXT_CAP_ID_DPC);
+ 	dpc->dev = dev;
+@@ -235,7 +265,7 @@ static int dpc_probe(struct pcie_device *dev)
+ 	if (status) {
+ 		dev_warn(device, "request IRQ%d failed: %d\n", dev->irq,
+ 			 status);
+-		return status;
++		goto disable_dpc;
+ 	}
+ 
+ 	pci_read_config_word(pdev, dpc->cap_pos + PCI_EXP_DPC_CAP, &cap);
+@@ -260,17 +290,15 @@ static int dpc_probe(struct pcie_device *dev)
+ 		FLAG(cap, PCI_EXP_DPC_CAP_SW_TRIGGER), dpc->rp_log_size,
+ 		FLAG(cap, PCI_EXP_DPC_CAP_DL_ACTIVE));
+ 	return status;
++
++disable_dpc:
++	dpc_disable(pdev);
++	return status;
+ }
+ 
+ static void dpc_remove(struct pcie_device *dev)
+ {
+-	struct dpc_dev *dpc = get_service_data(dev);
+-	struct pci_dev *pdev = dev->port;
+-	u16 ctl;
+-
+-	pci_read_config_word(pdev, dpc->cap_pos + PCI_EXP_DPC_CTL, &ctl);
+-	ctl &= ~(PCI_EXP_DPC_CTL_EN_FATAL | PCI_EXP_DPC_CTL_INT_EN);
+-	pci_write_config_word(pdev, dpc->cap_pos + PCI_EXP_DPC_CTL, ctl);
++	dpc_disable(dev->port);
+ }
+ 
+ static struct pcie_port_service_driver dpcdriver = {
+diff --git a/include/linux/pci.h b/include/linux/pci.h
+index 5454e6b..559b792 100644
+--- a/include/linux/pci.h
++++ b/include/linux/pci.h
+@@ -1473,6 +1473,12 @@ static inline int pci_irqd_intx_xlate(struct irq_domain *d,
+ static inline bool pci_aer_available(void) { return false; }
+ #endif
+ 
++#ifdef CONFIG_PCIE_DPC
++bool pci_dpc_available(void);
++#else
++static inline bool pci_dpc_available(void) { return false; }
++#endif
++
+ #ifdef CONFIG_PCIE_ECRC
+ void pcie_set_ecrc_checking(struct pci_dev *dev);
+ void pcie_ecrc_get_policy(char *str);
+-- 
+1.8.3.1
