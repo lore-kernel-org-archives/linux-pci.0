@@ -1,104 +1,39 @@
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-From: Leonard Crestez <leonard.crestez@nxp.com>
-To: "ulf.hansson@linaro.org" <ulf.hansson@linaro.org>
-Subject: Re: [RFC] PCI: imx: Add multi-pd support
-Date: Fri, 3 Aug 2018 18:07:09 +0000
-Message-ID: <53f9f939dbce11e1c96986ff41f29dd6e41b9220.camel@nxp.com>
-References: <8018069bc772376caef29e76280e4d0facffdb68.1532455922.git.leonard.crestez@nxp.com>
- <CAPDyKFpN99iDYf1mcG-G1=AAkiw8OjoynvK+5cBV8GvCs6WtKg@mail.gmail.com>
-In-Reply-To: <CAPDyKFpN99iDYf1mcG-G1=AAkiw8OjoynvK+5cBV8GvCs6WtKg@mail.gmail.com>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail.kernel.org ([198.145.29.99]:47782 "EHLO mail.kernel.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1729292AbeHPQpO (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Thu, 16 Aug 2018 12:45:14 -0400
+Subject: Re: [PATCH 1/1] PCI/AER: prevent pcie_do_fatal_recovery from using
+ device after it is removed
+To: poza@codeaurora.org,
+        Benjamin Herrenschmidt <benh@kernel.crashing.org>
+Cc: Thomas Tai <thomas.tai@oracle.com>, bhelgaas@google.com,
+        keith.busch@intel.com, linux-pci@vger.kernel.org,
+        linux-pci-owner@vger.kernel.org,
+        Sam Bobroff <sam.bobroff@au1.ibm.com>
+References: <1534179088-44219-1-git-send-email-thomas.tai@oracle.com>
+ <1534179088-44219-2-git-send-email-thomas.tai@oracle.com>
+ <51f4b387d9bd96a42d526a6a029fc43b@codeaurora.org>
+ <b0104a716319d76e734c307cb4bedd9d@codeaurora.org>
+ <903394c04d6ad468ed06dc0a779200e7555345a7.camel@kernel.crashing.org>
+ <6cb069038530757f31f3dd60328c7e30@codeaurora.org>
+ <e931bc7a7e468e8bb2ee3766b3fcf96f1800f552.camel@kernel.crashing.org>
+ <bf7ceabb6fe51398e0f4eebd9c4fe4ac1ec2b8a4.camel@kernel.crashing.org>
+ <42bd39aef30fe24bfc48d378e1f5d35d@codeaurora.org>
+ <54d19e0e3d44bedf247853144c6bbfed5561a125.camel@kernel.crashing.org>
+ <f022581a9ecb88e5501a09bdcdc62954@codeaurora.org>
+From: Sinan Kaya <okaya@kernel.org>
+Message-ID: <1d5b1157-2f78-5fab-78f0-5828892fc739@kernel.org>
+Date: Thu, 16 Aug 2018 09:46:29 -0400
 MIME-Version: 1.0
-List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
-List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
-List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
-List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
-List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
-Cc: Richard Zhu <hongxing.zhu@nxp.com>, Anson Huang <anson.huang@nxp.com>,
- "linux-pm@vger.kernel.org" <linux-pm@vger.kernel.org>,
- "andrew.smirnov@gmail.com" <andrew.smirnov@gmail.com>,
- "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
- "rjw@rjwysocki.net" <rjw@rjwysocki.net>,
- "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
- "jonathanh@nvidia.com" <jonathanh@nvidia.com>,
- dl-linux-imx <linux-imx@nxp.com>,
- "kernel@pengutronix.de" <kernel@pengutronix.de>,
- Fabio Estevam <fabio.estevam@nxp.com>,
- "shawnguo@kernel.org" <shawnguo@kernel.org>,
- "linux-arm-kernel@lists.infradead.org" <linux-arm-kernel@lists.infradead.org>,
- "l.stach@pengutronix.de" <l.stach@pengutronix.de>
-Content-Type: text/plain; charset="us-ascii"
-Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
-Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
+In-Reply-To: <f022581a9ecb88e5501a09bdcdc62954@codeaurora.org>
+Content-Type: text/plain; charset=utf-8; format=flowed
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tue, 2018-07-31 at 10:32 +0200, Ulf Hansson wrote:
-> On 24 July 2018 at 20:17, Leonard Crestez <leonard.crestez@nxp.com> wrote:
-> > On some chips the PCIE and PCIE_PHY blocks are in separate power domains
-> > which can be power-gated independently. The driver needs to handle this
-> > by keeping both domain active.
-> > 
-> > This is intended for imx6sx where PCIE is in DISPMIX and PCIE_PHY in
-> > it's own domain. Defining the DISPMIX domain requires a way for pcie to
-> > keep it active or it will break when displays are off.
-> > 
-> > The power-domains on imx6sx are meant to look like this:
-> >         power-domains = <&pd_disp>, <&pd_pci>;
-> >         power-domain-names = "pcie", "pcie_phy";
-> > 
-> > Signed-off-by: Leonard Crestez <leonard.crestez@nxp.com>
-> Reviewed-by: Ulf Hansson <ulf.hansson@linaro.org>
+On 8/16/2018 4:22 AM, poza@codeaurora.org wrote:
+> we can catch up on webex, (Sinan is going to be there in Plumber's 
+> conference, I might not be able to join there, as we have bring-up coming)
 
-Thanks for taking the time to look at this, I will likely repost this
-as PATCH in a series later.
-
-> > Right now if a device has a single power domain it will be activated
-> > before probe but if it has multiple domains they need to be explicitly
-> > "attached" to and controlled. Supporting both is a bit awkward, this
-> > patch makes the distinction based on (dev->pm_domain != NULL).
-> > 
-> > Maybe the PM core should make this distinction based on a flag in struct
-> > device_driver instead of number of power-domains? So by default when a
-> > device has multiple power domains they would would be activated
-> > together and this patch would be unnecessary.
-> 
-> Activation is deliberately left to be manged by each user, as the PM
-> core/genpd can't know when powering on the PM domains make sense.
-
-By default the PM core could treat a list of pm domains just like it
-treats a domain now. My patch doesn't do anything pci-specific, it just
-attaches all domains and creates device links. Couldn't the core do
-this?
-
-> The main reason to why genpd powers on the PM domain for the single PM
-> domain case, is because of legacy behaviors in drivers.
-
-Wouldn't it be nicer to out-out of such legacy behaviors with a flag in
-struct driver instead of single-versus-multiple domains?
-
-> > The device_link is marked as "STATELESS" because otherwise a warning is
-> > triggered in device_links_driver_bound. This seems to happen because the
-> > pd devices are always marked as "DL_DEV_NO_DRIVER". Maybe they should be
-> > instead always be marked as DL_DEV_DRIVER_BOUND?
-> 
-> Using STATELESS is correct, because the supplier devices, which are
-> managed by genpd don't have any driver attached to them.
-
-As far as I can tell these genpd_dev devices need to be manually
-unregistered in the consumer's remove function, right? If they were
-marked with DL_DEV_DRIVER_BOUND then you could use
-DL_FLAG_AUTOREMOVE_SUPPLIER on them.
-
-As far as I can tell the DL_DEV_* states are used to deal with probing
-order but since no driver will ever bind to these suppliers we could
-treat them as effectively always bounds.
-
-
-Perhaps this can be revisited later, imx-pci is not a very good usecase
-for this because it doesn't even support remove.
-_______________________________________________
-linux-arm-kernel mailing list
-linux-arm-kernel@lists.infradead.org
-http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
+My plumbers conference attendance is not confirmed yet. I'm trying to
+combine it with a business trip. I did not get an ACK yet from my boss.
