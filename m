@@ -1,98 +1,74 @@
-Return-Path: <linux-acpi-owner@vger.kernel.org>
-From: Arnd Bergmann <arnd@arndb.de>
-To: linux-pci@vger.kernel.org, Bjorn Helgaas <bhelgaas@google.com>
-Cc: linux-kernel@vger.kernel.org,
-        Christoph Hellwig <hch@infradead.org>,
-        Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
-        Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-        linuxppc-dev@lists.ozlabs.org, linux-acpi@vger.kernel.org,
-        Arnd Bergmann <arnd@arndb.de>
-Subject: [RFC 00/15] PCI: turn some __weak functions into callbacks
-Date: Fri, 17 Aug 2018 12:26:30 +0200
-Message-Id: <20180817102645.3839621-1-arnd@arndb.de>
-Sender: linux-acpi-owner@vger.kernel.org
+Return-Path: <SRS0=veIH=K7=kernel.crashing.org=benh@kernel.org>
+Return-Path: <SRS0=veIH=K7=kernel.crashing.org=benh@kernel.org>
+Message-ID: <6f76eb5f54fdc780dac744773d836214d7844346.camel@kernel.crashing.org>
+Subject: Re: PCIe enable device races (Was: [PATCH v3] PCI: Data corruption
+ happening due to race condition)
+From: Benjamin Herrenschmidt <benh@kernel.crashing.org>
+To: Konstantin Khlebnikov <khlebnikov@yandex-team.ru>,
+        Bjorn Helgaas
+	 <helgaas@kernel.org>
+Cc: Hari Vyas <hari.vyas@broadcom.com>, bhelgaas@google.com,
+        linux-pci@vger.kernel.org, ray.jui@broadcom.com,
+        Jens Axboe
+ <axboe@kernel.dk>
+Date: Thu, 16 Aug 2018 18:02:59 +1000
+In-Reply-To: <fa218ce2-c337-e776-d958-f1f8a1129c9a@yandex-team.ru>
+References: <1530608741-30664-1-git-send-email-hari.vyas@broadcom.com>
+	 <20180731163727.GK45322@bhelgaas-glaptop.roam.corp.google.com>
+	 <ecaed7664b46d73888d2494065905f8e108fc0f4.camel@kernel.crashing.org>
+	 <20180815185027.GE28888@bhelgaas-glaptop.roam.corp.google.com>
+	 <e3316c91ad722434360b4018b17cbfe265e97801.camel@kernel.crashing.org>
+	 <fa218ce2-c337-e776-d958-f1f8a1129c9a@yandex-team.ru>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 List-ID: <linux-pci.vger.kernel.org>
 
-Hi Bjorn and others,
+On Thu, 2018-08-16 at 10:58 +0300, Konstantin Khlebnikov wrote:
+> On 16.08.2018 00:52, Benjamin Herrenschmidt wrote:
+> > On Wed, 2018-08-15 at 13:50 -0500, Bjorn Helgaas wrote:
+> > > Yes, this is definitely broken.  Some folks have tried to fix it in
+> > > the past, but it hasn't quite happened yet.  We actually merged one
+> > > patch, 40f11adc7cd9 ("PCI: Avoid race while enabling upstream
+> > > bridges"), but had to revert it after we found issues:
+> > > 
+> > > https://lkml.kernel.org/r/1501858648-22228-1-git-send-email-srinath.mannam@broadcom.com
+> > > https://lkml.kernel.org/r/20170915072352.10453.31977.stgit@bhelgaas-glaptop.roam.corp.google.com
+> > 
+> > Ok so I had a look at this previous patch and it adds yet anothe use of
+> > some global mutex to protect part of the operation which makes me
+> > cringe a bit, we have too many of these.
+> > 
+> > What do you think of the one I sent yesterday ? (I can't find it in the
+> > archives yet)
+> > 
+> > [RFC PATCH] pci: Proof of concept at fixing pci_enable_device/bridge races
+> > 
+> > The patch itself needs splitting etc... but the basic idea is to move away
+> > from those global mutexes in a number of places and have one in the pci_dev
+> > struct itself to protect its state.
+> > 
+> > I would also like to use this rather than the bitmap atomics for is_added
+> > etc... (Hari's fix) in the long run. Atomics aren't significantly cheaper
+> > and imho makes thing even messier.
+> > 
+> > Jens, Konstantin, any chance you can test if the above also breaks iwlwifi
+> > (I don't see why it would but ...)
+> > 
+> 
+> I suppose original race was discovered between enabling bridge and device as described here
+> 
+> https://lore.kernel.org/lkml/150547971091.977464.16294045866179907260.stgit@buzz/T/#u
+> 
+> I barely can remember what I ever posted this, so I couldn't reproduce for sure.
 
-Triggered by Christoph's patches, I had another go at converting
-all of the remaining pci host bridge implementations to be based
-on pci_alloc_host_bridge and a separate registration function.
+Ok. Well, my patch fixes it for my repro-case at least and seems to not
+break anyhting on my thinkpad so ...
 
-This is made possible through work from Lorenzo and others to
-convert many of the existing drivers, as well as the removal
-of some of the older architectures that nobody used.
+Bjorn, are you ok with the approach ? If yes, I'll start breaking up
+that patch into a few smaller bits in case something goes wrong and we
+want to bisect (such as the changes I did to tracking is_busmaster
+etc...)
 
-I'm adding a bit of duplication into the less maintained code
-here, but it makes everything more consistent, and gives an
-easy place to hook up callback functions etc.
-
-The three parts of this series are:
-
-a) push up the registration into the callers (this is where
-   code gets added)
-b) clean up some of the more common host bridge
-   implementations again to integrate that code better.
-   This could be done for the rest as well, or we could just
-   leave them alone.
-c) start moving the __weak functions into callbacks in
-   pci_host_bridge. This is intentionally incomplete, since
-   it is a lot of work to do it for all those functions,
-   and I want to get consensus on the approach first, as well
-   as maybe get other developers to help out with the rest.
-
-Please have a look.
-
-       Arnd
-
-[1] https://lore.kernel.org/lkml/4288331.jNpl6KXlNO@wuerfel/
-[2] https://patchwork.kernel.org/patch/10555657/
-
-Arnd Bergmann (15):
-  PCI: clean up legacy host bridge scan functions
-  PCI: move pci_scan_bus into callers
-  PCI: move pci_scan_root_bus into callers
-  PCI: export pci_register_host_bridge
-  PCI: move pci_create_root_bus into callers
-  powerpc/pci: fold pci_create_root_bus into pcibios_scan_phb
-  PCI/ACPI: clean up acpi_pci_root_create()
-  x86: PCI: clean up pcibios_scan_root()
-  PCI: xenfront: clean up pcifront_scan_root()
-  sparc/PCI: simplify pci_scan_one_pbm
-  PCI: hyperv: convert to pci_scan_root_bus_bridge
-  PCI: make pcibios_bus_add_device() a callback function
-  PCI: turn pcibios_alloc_irq into a callback
-  PCI: make pcibios_root_bridge_prepare a callback
-  PCI: make pcibios_add_bus/remove_bus callbacks
-
- arch/arm64/kernel/pci.c               |  40 ++-----
- arch/ia64/pci/pci.c                   |  25 +----
- arch/ia64/sn/kernel/io_init.c         |  27 +++++
- arch/microblaze/pci/pci-common.c      |  27 +++++
- arch/powerpc/include/asm/pci-bridge.h |   3 +
- arch/powerpc/kernel/pci-common.c      |  60 +++++------
- arch/s390/pci/pci.c                   |  30 +++++-
- arch/sh/drivers/pci/pci.c             |   1 +
- arch/sh/drivers/pci/pcie-sh7786.c     |   3 +-
- arch/sh/include/asm/pci.h             |   2 +
- arch/sparc/kernel/pci.c               |  40 ++++---
- arch/sparc/kernel/pcic.c              |  35 ++++++
- arch/x86/pci/acpi.c                   |  15 +--
- arch/x86/pci/common.c                 |  42 ++++----
- arch/xtensa/kernel/pci.c              |  27 +++++
- drivers/acpi/pci_root.c               |  43 +++++---
- drivers/parisc/dino.c                 |  28 +++++
- drivers/parisc/lba_pci.c              |  28 +++++
- drivers/pci/bus.c                     |   8 +-
- drivers/pci/controller/pci-hyperv.c   |  47 ++++----
- drivers/pci/controller/vmd.c          |  30 +++++-
- drivers/pci/hotplug/ibmphp_core.c     |  35 ++++++
- drivers/pci/pci-driver.c              |  13 ++-
- drivers/pci/probe.c                   | 150 +++++++++-----------------
- drivers/pci/xen-pcifront.c            |  40 +++----
- include/linux/acpi.h                  |   2 +
- include/linux/pci.h                   |  17 ++-
- 27 files changed, 514 insertions(+), 304 deletions(-)
-
--- 
-2.18.0
+Cheers,
+ben.
+ 
