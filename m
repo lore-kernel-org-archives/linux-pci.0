@@ -1,67 +1,126 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from usa-sjc-mx-foss1.foss.arm.com ([217.140.101.70]:35260 "EHLO
-        foss.arm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1725948AbeHTNCb (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Mon, 20 Aug 2018 09:02:31 -0400
-From: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
-To: linux-kernel@vger.kernel.org
-Cc: linux-pci@vger.kernel.org,
-        Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
-        Palmer Dabbelt <palmer@dabbelt.com>,
-        Bjorn Helgaas <bhelgaas@google.com>,
-        Bharat Kumar Gogada <bharatku@xilinx.com>,
-        Michal Simek <monstr@monstr.eu>
-Subject: [PATCH] microblaze/PCI: Remove stale pcibios_align_resource() comment
-Date: Mon, 20 Aug 2018 10:47:29 +0100
-Message-Id: <20180820094729.362-1-lorenzo.pieralisi@arm.com>
+Received: from gate.crashing.org ([63.228.1.57]:50205 "EHLO gate.crashing.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S2387713AbeHPJsS (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Thu, 16 Aug 2018 05:48:18 -0400
+Message-ID: <e931bc7a7e468e8bb2ee3766b3fcf96f1800f552.camel@kernel.crashing.org>
+Subject: Re: [PATCH 1/1] PCI/AER: prevent pcie_do_fatal_recovery from using
+ device after it is removed
+From: Benjamin Herrenschmidt <benh@kernel.crashing.org>
+To: poza@codeaurora.org
+Cc: Thomas Tai <thomas.tai@oracle.com>, bhelgaas@google.com,
+        keith.busch@intel.com, linux-pci@vger.kernel.org,
+        linux-pci-owner@vger.kernel.org
+Date: Thu, 16 Aug 2018 16:51:43 +1000
+In-Reply-To: <6cb069038530757f31f3dd60328c7e30@codeaurora.org>
+References: <1534179088-44219-1-git-send-email-thomas.tai@oracle.com>
+         <1534179088-44219-2-git-send-email-thomas.tai@oracle.com>
+         <51f4b387d9bd96a42d526a6a029fc43b@codeaurora.org>
+         <b0104a716319d76e734c307cb4bedd9d@codeaurora.org>
+         <903394c04d6ad468ed06dc0a779200e7555345a7.camel@kernel.crashing.org>
+         <6cb069038530757f31f3dd60328c7e30@codeaurora.org>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-commit 01cf9d524ff0 ("microblaze/PCI: Support generic Xilinx AXI PCIe Host
-Bridge IP driver")
+On Thu, 2018-08-16 at 12:06 +0530, poza@codeaurora.org wrote:
+> 
+> > Under what circumstances do you actually "unplug" the device ? We are
+> > trying to cleanup/fix some of the PowerPC EEH code which is in a way
+> > similar to AER, and we found that this unplug/replug, which we do if
+> > the driver doesn't have recovery callbacks only, is causing more
+> > problems than it solves.
+> > 
+> > We are moving toward instead unbinding the driver, resetting the
+> > device, then re-binding the driver instead of unplug/replug.
+> > 
+> > Also why would you ever bypass the driver callbacks if the driver has
+> > some ? The whole point is to keep the driver bound while resetting the
+> > device (provided it has the right callbacks) so we don't lose the
+> > linkage between stroage devices and mounted filesystems.
+> > 
+> 
+> there are two different paths we are taking, one is for ERR_FATAL and 
+> the other is for ERR_NONFATAL.
 
-and
+Ok. With EEH we have a much finer granularity but fundamentally we
+don't care as long as we reset the device.
 
-commit ecf677c8dcaa ("PCI: Add a generic weak pcibios_align_resource()")
+> while AER and DPC converge into ERR_FATAL path; ERR_NONFATAL path is the 
+> one where AER and driver callbacks would come into picture.
 
-first patched then removed pcibios_align_resource() from the microblaze
-architecture code but failed to remove the comment that was added to
-it.
+I disagree. See below.
 
-Remove it since it has now become stale and it is quite confusing.
+> since DPC does hw recovery of the link, and handles only ERR_FATAL, we 
+> do remove devices and re-enumerate them.
 
-Signed-off-by: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
-Cc: Palmer Dabbelt <palmer@dabbelt.com>
-Cc: Bjorn Helgaas <bhelgaas@google.com>
-Cc: Bharat Kumar Gogada <bharatku@xilinx.com>
-Cc: Michal Simek <monstr@monstr.eu>
----
- arch/microblaze/pci/pci-common.c | 13 -------------
- 1 file changed, 13 deletions(-)
+What is "DPC" ?
 
-diff --git a/arch/microblaze/pci/pci-common.c b/arch/microblaze/pci/pci-common.c
-index f34346d56095..2ffd171af8b6 100644
---- a/arch/microblaze/pci/pci-common.c
-+++ b/arch/microblaze/pci/pci-common.c
-@@ -597,19 +597,6 @@ static void pcibios_fixup_resources(struct pci_dev *dev)
- }
- DECLARE_PCI_FIXUP_HEADER(PCI_ANY_ID, PCI_ANY_ID, pcibios_fixup_resources);
- 
--/*
-- * We need to avoid collisions with `mirrored' VGA ports
-- * and other strange ISA hardware, so we always want the
-- * addresses to be allocated in the 0x000-0x0ff region
-- * modulo 0x400.
-- *
-- * Why? Because some silly external IO cards only decode
-- * the low 10 bits of the IO address. The 0x00-0xff region
-- * is reserved for motherboard devices that decode all 16
-- * bits, so it's ok to allocate at, say, 0x2800-0x28ff,
-- * but we want to try to avoid allocating at 0x2900-0x2bff
-- * which might have be mirrored at 0x0100-0x03ff..
-- */
- int pcibios_add_device(struct pci_dev *dev)
- {
- 	dev->irq = of_irq_parse_and_map_pci(dev, 0, 0);
--- 
-2.15.0
+> but if the error is no fatal, we will fall back to driver callbacks to 
+> initiate link error handling and recovery process.
+
+Hrm ... the callbacks were never about link errors, they were about
+device errors of any kind and predate PCIe concept of links in fact.
+
+They include iommu errors, HW errors, SW bugs etc...
+
+> under normal circumstances I do not see the some downstream devices 
+> would have been replaced in case of FATAL errors, but code might not 
+> want to assume that
+> same device is there, since we are removing downstream devices 
+> completely. so taking reference of old BDF and keeping it for later 
+> reference is not good idea.
+> although I think there are some parts of pcie_do_fatal_recovery need a 
+> fix, which Thomas is fixing is anyway.
+
+I think you shouldn't be unplugging/replugging.
+
+> so yes, I agree with you and we are talking about same thing e.g.
+> "
+>   We are moving toward instead unbinding the driver, resetting the
+>   device, then re-binding the driver instead of unplug/replug.
+> "
+> 
+> driver callbacks are very much there, please have a look at 
+> pcie_do_nonfatal_recovery().
+
+Even for fatal. Why on earth would you skip the driver callbacks ? Most
+errors are fatal anyway.
+
+For us, we don't really differenciate because in order to avoid any
+form of propagation of bad data, our HW will freeze/isolate a device on
+any error, whether it's fatal or non fatal.
+
+So we treat them both as needing a full recovery which usually implies
+a reset of the device.
+
+However we do that through the use of the driver callbacks because
+otherwise you will lose the linkage between a storage driver and the
+moutned file systems which cannot be recovered, so you are killing your
+system.
+
+> refering Sepc: 6.2.2.2.1 Fatal Errors, where link is unreliable and it 
+> might need AER style reset of link or DPC style HW recovery
+> In both cases, the shutdown callbacks are expected to be called,
+
+No, this is wrong and not the intent of the error handling.
+
+You seem to be applying PCIe specific concepts brain-farted at Intel
+that are way way away from what we care about in practice and in Linux.
+
+> e.g.  some driver handle errors ERR_NONFATAL or FATAL in similar ways
+> e.g.
+> ioat_pcie_error_detected();  calls  ioat_shutdown(); in case of 
+> ERR_NONFATAL
+> otherwise ioat_shutdown() in case of ERR_FATAL.
+
+Since when the error handling callbacks even have the concept of FATAL
+vs. non-fatal ? This doesn't appear anyhwhere in the prototype of the
+struct pci_error_handlers and shouldn't.
+
+Benm=.
+
+> 
+> > Cheers,
+> > Ben.
