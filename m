@@ -1,52 +1,131 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-ed1-f66.google.com ([209.85.208.66]:35327 "EHLO
-        mail-ed1-f66.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1727224AbeHGJRz (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Tue, 7 Aug 2018 05:17:55 -0400
-MIME-Version: 1.0
-In-Reply-To: <266e5f874b36aa83f3327879d85921fab52d5461.1529079120.git.mchehab+samsung@kernel.org>
-References: <cover.1529079119.git.mchehab+samsung@kernel.org> <266e5f874b36aa83f3327879d85921fab52d5461.1529079120.git.mchehab+samsung@kernel.org>
-From: Chen-Yu Tsai <wens@csie.org>
-Date: Tue, 7 Aug 2018 15:04:35 +0800
-Message-ID: <CAGb2v65+6zV1E--KvD3Si=XNmDE3oaZ2hBxvm86KjTwUv9BnSw@mail.gmail.com>
-Subject: Re: [PATCH v4 23/26] devicetree: fix a series of wrong file references
-To: Mauro Carvalho Chehab <mchehab+samsung@kernel.org>
-Cc: Linux Doc Mailing List <linux-doc@vger.kernel.org>,
-        Jonathan Corbet <corbet@lwn.net>,
-        Mauro Carvalho Chehab <mchehab@infradead.org>,
-        linux-kernel <linux-kernel@vger.kernel.org>,
-        Dmitry Torokhov <dmitry.torokhov@gmail.com>,
-        Rob Herring <robh+dt@kernel.org>,
-        Mark Rutland <mark.rutland@arm.com>,
-        Lee Jones <lee.jones@linaro.org>,
-        Maxime Ripard <maxime.ripard@bootlin.com>,
-        Zhou Wang <wangzhou1@hisilicon.com>,
-        Bjorn Helgaas <bhelgaas@google.com>,
-        Xiaowei Song <songxiaowei@hisilicon.com>,
-        Binghui Wang <wangbinghui@hisilicon.com>,
-        Liam Girdwood <lgirdwood@gmail.com>,
-        Mark Brown <broonie@kernel.org>,
-        Maxime Coquelin <mcoquelin.stm32@gmail.com>,
-        Alexandre Torgue <alexandre.torgue@st.com>,
-        linux-input@vger.kernel.org,
-        devicetree <devicetree@vger.kernel.org>,
-        linux-arm-kernel <linux-arm-kernel@lists.infradead.org>,
-        linux-pci@vger.kernel.org, Linux-ALSA <alsa-devel@alsa-project.org>
+Received: from gate.crashing.org ([63.228.1.57]:36356 "EHLO gate.crashing.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1726034AbeHQCbj (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Thu, 16 Aug 2018 22:31:39 -0400
+Message-ID: <def1568d0c8ce9a455760da1271724d6e65a3286.camel@kernel.crashing.org>
+Subject: Re: [PATCH 1/1] PCI/AER: prevent pcie_do_fatal_recovery from using
+ device after it is removed
+From: Benjamin Herrenschmidt <benh@kernel.crashing.org>
+To: poza@codeaurora.org
+Cc: Thomas Tai <thomas.tai@oracle.com>, bhelgaas@google.com,
+        keith.busch@intel.com, linux-pci@vger.kernel.org,
+        linux-pci-owner@vger.kernel.org
+Date: Fri, 17 Aug 2018 09:30:23 +1000
+In-Reply-To: <c00a1ad4ffbf7ccecf3c8d05df4d8d82@codeaurora.org>
+References: <1534179088-44219-1-git-send-email-thomas.tai@oracle.com>
+         <1534179088-44219-2-git-send-email-thomas.tai@oracle.com>
+         <51f4b387d9bd96a42d526a6a029fc43b@codeaurora.org>
+         <b0104a716319d76e734c307cb4bedd9d@codeaurora.org>
+         <903394c04d6ad468ed06dc0a779200e7555345a7.camel@kernel.crashing.org>
+         <6cb069038530757f31f3dd60328c7e30@codeaurora.org>
+         <e931bc7a7e468e8bb2ee3766b3fcf96f1800f552.camel@kernel.crashing.org>
+         <5bd99bcacb772b588771fce62c61a59fdeb167f3.camel@kernel.crashing.org>
+         <290750445f084c479963f54dd36af63a@codeaurora.org>
+         <05bc3bccb2c6a0cb1696faf20073e567d7a5b8ee.camel@kernel.crashing.org>
+         <2894d8df6e44860456377dade9ea5737@codeaurora.org>
+         <9c7c60eb765c61d007169c9142fb335b0a4080df.camel@kernel.crashing.org>
+         <c00a1ad4ffbf7ccecf3c8d05df4d8d82@codeaurora.org>
 Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Sat, Jun 16, 2018 at 12:30 AM, Mauro Carvalho Chehab
-<mchehab+samsung@kernel.org> wrote:
-> As files got renamed, their references broke.
->
-> Manually fix a series of broken refs at the DT bindings.
->
-> Signed-off-by: Mauro Carvalho Chehab <mchehab+samsung@kernel.org>
-> ---
->  .../devicetree/bindings/input/rmi4/rmi_2d_sensor.txt |  2 +-
->  Documentation/devicetree/bindings/mfd/sun6i-prcm.txt |  2 +-
+On Thu, 2018-08-16 at 19:41 +0530, poza@codeaurora.org wrote:
+> 
+> > See above.
+> > > 
+> > > okay, so here is what current pcie_do_nonfatal_recovery() doe.
+> > > 
+> > > pcie_do_nonfatal_recovery
+> > >      report_error_detected()    >> calls driver callbacks
+> > >      report_mmio_enabled()
+> > >      report_slot_reset()  >> if PCI_ERS_RESULT_NEED_RESET
+> > 
+> > Above if the driver returned "NEED RESET" we should not just "report" a
+> > slot reset, we should *perform* one :-) Unless the AER code does it in
+> > a place I missed...
+> 
+> I am willing work on this if Bjorn agrees.
+> but I am still trying to figure out missing piece.
+> 
+> so Ben,
+> you are suggesting
+> 
+> ERR_NONFATAL handling
+> pcie_do_nonfatal_recovery
+>       report_error_detected()    >> calls driver callbacks
+>        report_mmio_enabled()
+>        report_slot_reset()  >> if PCI_ERS_RESULT_NEED_RESET
+> Here along with calling slot_reset, you are suggesting to do Secondary 
+> Bus Reset ?
+> 
+> but this is ERR_NONFATAL and according to definition the link is still 
+> good, so that the transcriptions on PCIe link can happen.
+> so my question is why do we want to reset the link ?
 
-If still applicable,
+The driver responded to you from error_detected() or mmio_enabled()
+that it wants the slot to be reset. So you should do so. This comes
+from the driver deciding that whatever happens, it doesn't trust the
+device state anymore.
 
-Acked-by: Chen-Yu Tsai <wens@csie.org>
+report_slot_reset() iirc is about telling the driver that the reset has
+been performed and it can reconfigure the device.
+
+To be frank I haven't looked at this in a while, so we should refer to
+the document before ou patched it :-) But the basic design we created
+back then was precisely that the driver would have the ultimate say in
+the matter.
+
+Also because multiple devices, at least on power, can share a domain, 
+we can get into a situation where one device requires a reset, so all
+will get reset, and their respective drivers need to be notified.
+
+Note: it's not so much about resetting the *link* than about resetting
+the *device*.
+
+> although
+> I see following note in the code as well.
+>                  /*
+> 		 * TODO: Should call platform-specific
+> 		 * functions to reset slot before calling
+> 		 * drivers' slot_reset callbacks?
+> 		 */
+
+Yup :-)
+
+Cheers,
+Ben.
+
+> Regards,
+> Oza.
+> 
+> > 
+> > Also we should do a hot reset at least, not just a link reset.
+> > 
+> > >      report_resume()
+> > > 
+> > > If you suggest how it is broken, it will help me to understand.
+> > > probably you might want to point out what are the calls need to be 
+> > > added
+> > > or removed or differently handled, specially storage point of view.
+> > 
+> > 
+> > > Regards,
+> > > Oza.
+> > > 
+> > > > 
+> > > > Keep in mind that those callbacks were designed originally for EEH
+> > > > (which predates AER), and so was the spec written.
+> > > > 
+> > > > We don't actually use the AER code on POWER today, so we didn't notice
+> > > > how broken the implementation was :-)
+> > > > 
+> > > > We should fix that.
+> > > > 
+> > > > Either we can sort all that out by email, or we should plan some kind
+> > > > of catch-up, either at Plumbers (provided I can go there) or maybe a
+> > > > webex call.
+> > > > 
+> > > > Cheers,
+> > > > Ben.
