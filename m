@@ -1,94 +1,69 @@
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Subject: Re: [PATCH 2/2] PCI: meson: add the Amlogic Meson PCIe phy driver
-To: Jerome Brunet <jbrunet@baylibre.com>, Kishon Vijay Abraham I
- <kishon@ti.com>
-References: <1534227134-151584-1-git-send-email-hanjie.lin@amlogic.com>
- <1534227134-151584-3-git-send-email-hanjie.lin@amlogic.com>
- <486e8ab477cc22ff231d2e18d7de22efba2c5abd.camel@baylibre.com>
- <2b87e834-41e3-e418-95f0-c6d695cd8b3f@amlogic.com>
- <e5d9d89e79f8ec37b6337e54912f49a0b0856874.camel@baylibre.com>
- <91658f21-6934-6085-8deb-b85a1f6b7815@amlogic.com>
- <8eb76c5b173a8e8f8f90b9d2204c1b3b0de06c51.camel@baylibre.com>
-From: Hanjie Lin <hanjie.lin@amlogic.com>
-Message-ID: <d6f7e1bf-bbfa-01a0-e86b-d7d8e27c097c@amlogic.com>
-Date: Fri, 17 Aug 2018 19:17:09 +0800
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from aserp2120.oracle.com ([141.146.126.78]:55216 "EHLO
+        aserp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1725901AbeHPQaG (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Thu, 16 Aug 2018 12:30:06 -0400
+Subject: Re: [PATCH 1/1] PCI/AER: prevent pcie_do_fatal_recovery from using
+ device after it is removed
+To: Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+        poza@codeaurora.org
+Cc: okaya@kernel.org, bhelgaas@google.com, keith.busch@intel.com,
+        linux-pci@vger.kernel.org, linux-pci-owner@vger.kernel.org,
+        Sam Bobroff <sam.bobroff@au1.ibm.com>
+References: <1534179088-44219-1-git-send-email-thomas.tai@oracle.com>
+ <1534179088-44219-2-git-send-email-thomas.tai@oracle.com>
+ <51f4b387d9bd96a42d526a6a029fc43b@codeaurora.org>
+ <b0104a716319d76e734c307cb4bedd9d@codeaurora.org>
+ <903394c04d6ad468ed06dc0a779200e7555345a7.camel@kernel.crashing.org>
+ <6cb069038530757f31f3dd60328c7e30@codeaurora.org>
+ <e931bc7a7e468e8bb2ee3766b3fcf96f1800f552.camel@kernel.crashing.org>
+ <bf7ceabb6fe51398e0f4eebd9c4fe4ac1ec2b8a4.camel@kernel.crashing.org>
+ <42bd39aef30fe24bfc48d378e1f5d35d@codeaurora.org>
+ <54d19e0e3d44bedf247853144c6bbfed5561a125.camel@kernel.crashing.org>
+ <f022581a9ecb88e5501a09bdcdc62954@codeaurora.org>
+ <6382ee9197b781f5f5680aa60176f937669a0a13.camel@kernel.crashing.org>
+From: Thomas Tai <thomas.tai@oracle.com>
+Message-ID: <a33a74a5-40cd-0dfe-1712-7587c85a4a54@oracle.com>
+Date: Thu, 16 Aug 2018 09:30:21 -0400
 MIME-Version: 1.0
-In-Reply-To: <8eb76c5b173a8e8f8f90b9d2204c1b3b0de06c51.camel@baylibre.com>
-List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
-List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
-List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
-List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
-List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
-Cc: Rob Herring <robh@kernel.org>, Kevin Hilman <khilman@baylibre.com>,
- shawn.lin@rock-chips.com, linux-kernel@vger.kernel.org,
- Yue Wang <yue.wang@amlogic.com>, linux-pci@vger.kernel.org,
- Carlo Caione <carlo@caione.org>, linux-amlogic@lists.infradead.org,
- linux-arm-kernel@lists.infradead.org
-Content-Type: text/plain; charset="utf-8"
-Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
-Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
+In-Reply-To: <6382ee9197b781f5f5680aa60176f937669a0a13.camel@kernel.crashing.org>
+Content-Type: text/plain; charset=utf-8; format=flowed
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-CgpPbiAyMDE4LzgvMTcgMTY6MDksIEplcm9tZSBCcnVuZXQgd3JvdGU6Cj4gT24gRnJpLCAyMDE4
-LTA4LTE3IGF0IDE0OjEyICswODAwLCBIYW5qaWUgTGluIHdyb3RlOgo+Pgo+PiBPbiAyMDE4Lzgv
-MTYgMTY6MzMsIEplcm9tZSBCcnVuZXQgd3JvdGU6Cj4+PiBPbiBUaHUsIDIwMTgtMDgtMTYgYXQg
-MTE6MDUgKzA4MDAsIEhhbmppZSBMaW4gd3JvdGU6Cj4+Pj4KPj4+PiBPbiAyMDE4LzgvMTQgMTg6
-NDEsIEplcm9tZSBCcnVuZXQgd3JvdGU6Cj4+Pj4+IE9uIFR1ZSwgMjAxOC0wOC0xNCBhdCAwMjox
-MiAtMDQwMCwgSGFuamllIExpbiB3cm90ZToKPj4+Pj4+IEZyb206IFl1ZSBXYW5nIDx5dWUud2Fu
-Z0BhbWxvZ2ljLmNvbT4KPj4+Pj4+Cj4+Pj4+PiBUaGUgTWVzb24tUENJRS1QSFkgY29udHJvbGxl
-ciBzdXBwb3J0cyB0aGUgNS1HYnBzIGRhdGEgcmF0ZQo+Pj4+Pj4gb2YgdGhlIFBDSSBFeHByZXNz
-IEdlbiAyIHNwZWNpZmljYXRpb24gYW5kIGlzIGJhY2t3YXJkY29tcGF0aWJsZQo+Pj4+Pj4gd2l0
-aCB0aGUgMi41LUdicHMgR2VuIDEuMSBzcGVjaWZpY2F0aW9uIHdpdGggb25seQo+Pj4+Pj4gaW5m
-ZXJyZWQgaWRsZSBkZXRlY3Rpb24gc3VwcG9ydGVkIG9uIEFNTE9HSUMgU29Dcy4KPj4+Pj4KPj4+
-Pj4gSXQgbG9va3MgbGlrZSB0aGUgc29sZSBwdXJwb3NlIG9mIHRoaXMgZHJpdmVyIGlzIHRvIHBy
-b3ZpZGUgdGhlIHJlc2V0IGxpbmVzIHRvCj4+Pj4+IHBjaWUgZHJpdmVyLgo+Pj4+Pgo+Pj4+PiBJ
-IHdvbmRlciB3aHkgd2UgbmVlZCB0aGlzID8gQ2FuJ3QgdGhlIHBjaWUgZHJpdmVyIGNsYWltIHRo
-ZSByZXNldCBsaW5lcyBpdHNlbGYuCj4+Pj4+Cj4+Pj4+IEFsc28sIGFuIGluaXQgb2YgdGhpcyBw
-aHkgd2lsbCBhbHdheXMgcmVzZXQgYm90aCBwb3J0LiBXaGF0IHdpbGwgaGFwcGVuIGlmIHRoZQo+
-Pj4+PiBmaXJzdCBwb3J0IGlzIGluIHVzZSBhbmQgdGhlIDJuZCBwb3J0IGNvbWVzIHVwID8/IAo+
-Pj4+Pgo+Pj4+PiBMb29rcyB0aGUgdGhlIHBjaWUgZHJpdmVyIHNob3VsZCBjbGFpbSAnYXBiJyBh
-bmQgJ3BoeScgcmVzZXQgbGluZXMgYXMgInNoYXJlZCIKPj4+Pj4gcmVzZXQgYW5kIHRoZSByZXF1
-aXJlZCAncG9ydCcgYXMgJ2V4Y2x1c2l2ZScKPj4+Pj4KPj4+Pgo+Pj4+IFRoYW5rIHlvdSBmb3Ig
-eW91ciByZXNwb25zZS4KPj4+Pgo+Pj4+IFllcywgJ2FwYicgYW5kICdwaHknIHJlc2V0IGxpbmVz
-IGFyZSBzaGFyZWQsIGFuZCDigJhwb3J0JyByZXNldCBsaW5lIGlzIGV4Y2x1c2l2ZS4KPj4+PiBJ
-ZiB3ZSBoYW5kbGUgYWxsIHJlc2V0IGxpbmVzIGR1cmluZyB0aGUgZmlyc3QgcG9ydCBpbml0aWFs
-IHNlcXVlbmNlLCAKPj4+PiBhbmQgd2hlbiB0aGUgc2Vjb25kIHBvcnQgY29tZXMgdXAsIHdlIHdp
-bGwgZG8gbm90aGluZyBhYm91dCB0aGUgcmVzdCBsaW5lcywgCj4+Pj4gYW5kIGRvbid0IG5lZWQg
-YSBleHRyYSBBUEkgdG8gZG8g4oCYcG9ydCcgcmVzZXQ7Cj4+Pgo+Pj4gV2l0aCB3aGljaCBvdGhl
-ciBkcml2ZXIgYXJlIHlvdXIgY29udHJvbCBzaGFyZWQgPwo+Pj4KPj4+IExvb2tzIGl0IGlzIHRo
-ZSBhbnN3ZXIgaXMgbm9uZSBzaW5jZSB0aGlzIHBoeSBkcml2ZXIgd2lsbCByZXNldCBib3RoIHBv
-cnQKPj4+IGFscmVhZHksIGV2ZW4gaWYgb25lIGlzIHVzZWQuCj4+Pgo+Pj4gSW4gdGhpcyBjYXNl
-IHRoZSBmYWN0IHRoYXQgeW91IGFyZSB1c2luZyBzaGFyZWQgY29udHJvbCBpcyBqdXN0IGFidXNp
-bmcgdGhlCj4+PiBmcmFtZXdvcmsgdG8gcmVzZXQgb25jZS4KPj4+Cj4+PiBBcyBmYXIgYXMgSSBj
-YW4gdGVsbCwgdGhpcyBkcml2ZXIgbWFrZXMgbm8gc2Vuc2UuIFRoZSBhcHByb3ByaWF0ZSByZXNl
-dCBsaW5lcwo+Pj4gc2hvdWxkIGJlIGdpdmVuIGRpcmVjdGx5IHRvIHlvdXIgcGNpZSBkcml2ZXIu
-IAo+Pj4KPj4+Cj4+Pgo+Pj4gLgo+Pj4KPj4KPj4gQW1sb2dpYyBBWEcgU09DIGluY2x1ZGVzIHR3
-byBwY2llIGNvbnRyb2xsZXJzIGFuZCBwaXBlcyB3aGVuIG9ubHkgb25lIHBjaWUgcGh5OiAKPj4K
-Pj4gICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgKHBvcnRfYSByZXNldCkKPj4g
-ICAgICAgICAgICAgICAgICAgICAgIHxQQ0lFX1JDX0EtLS0tPlBDSUVfUElQRV9BLS0tLS0tfCAK
-Pj4gICAgIChhcGJfcmVzZXQpICAgICAgIHwgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAg
-fCAgKHBoeSByZXNldCkKPj4gICAgIEFQQiBCVVMtLS0+ICAgICAgIHwgICAgICAgICAgICAgICAg
-ICAgICAgICAgICAgICAgfCAgIFBDSUVfUEhZCj4+ICAgICAgICAgICAgICAgICAgICAgICB8ICAg
-ICAgICAgICAgICAgICAgICAgICAgICAgICAgIHwKPj4gICAgICAgICAgICAgICAgICAgICAgIHwg
-ICAgICAgICAgICAgKHBvcnRfYl9yZXNldCkgICAgfAo+PiAgICAgICAgICAgICAgICAgICAgICAg
-fFBDSUVfUkNfQi0tLS0+UENJRV9QSVBFX0ItLS0tLS18Cj4+Cj4+IFRoZSBwaHlfcmVzZXQgYWZm
-ZWN0IHRoZSBQQ0lFX1BIWS4KPj4gVGhlIHBvcnRfYV9yZXNldCBhZmZlY3QgdGhlIFBDSUVfUElQ
-RV9BLCBwb3J0X2JfcmVzZXQgYWZmZWN0IHRoZSBQQ0lFX1BJUEVfQi4gCj4+Cj4+IEFzIHlvdXIg
-c3VnZ2VzdGlvbiB3ZSB3aWxsIG1vdmUgdGhlICdwb3J0JyByZXNldCB0byBjb250cm9sbGVyIGRy
-aXZlciwKPj4gYW5kIGtlZXBpbmcgdGhlIHBoeSBkcml2ZXIgdG8gcHJvY2VzcyB0aGUgJ2FwYicg
-YW5kICdwaHknIHJlc2V0IG9yIGFueQo+PiBtb3JlIGNoYW5nZXMgb2YgdGhlIHBoeSBpbiBmdXR1
-cmUuCj4gCj4gQXMgZmFyIGFzIEkgY2FuIHRlbGwgZnJvbSB0aGlzIGRpYWdyYW0sIEl0IHdvdWxk
-IG9ubHkgbWFrZSBzZW5zZSBmb3IgdGhlICJwaHkiCj4gcmVzZXQgbGluZSB0byBiZSBjb250cm9s
-bGVkIGJ5IHlvdXIgcGh5IGRyaXZlci4KPiAKPiBUaGUgYXBiIGFuZCBwb3J0IGlzIG9idmlvdXNs
-eSByZWxhdGVkIHRvIHRoZSBwY2llIGRldmljZS9kcml2ZXIgaXRzZWxmLCBub3QgdGhlCj4gUEhZ
-LiBBbmQgd2hldGhlciB5b3UgMSBvciAyIHJlc2V0IGxpbmVzIGluIGl0LCBJTU8gaXQgaXMgb3Zl
-cmtpbGwgYW5kCj4gdW5uZWNlc3NhcnkgdG8gbWFrZSBhIHBoeSBkcml2ZXIgZm9yIHRoaXMuIAo+
-IAoKWWVhaCwgdGhhdCBtYWtlcyBzZW5zZS4KV2Ugd2lsbCBtb3ZlICdhcGInIHJlc2V0IHRvIGNv
-bnRyb2xsZXIgZHJpdmVyIGluIG5leHQgdmVyc2lvbiB0b28uCgpUaGFua3MuCgo+Pgo+IAo+IAo+
-IC4KPiAKCl9fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fCmxp
-bnV4LWFybS1rZXJuZWwgbWFpbGluZyBsaXN0CmxpbnV4LWFybS1rZXJuZWxAbGlzdHMuaW5mcmFk
-ZWFkLm9yZwpodHRwOi8vbGlzdHMuaW5mcmFkZWFkLm9yZy9tYWlsbWFuL2xpc3RpbmZvL2xpbnV4
-LWFybS1rZXJuZWwK
+[ ... ]>
+>> and all we have to do is discuss and evolve it or change it
+>> we can catch up on webex, (Sinan is going to be there in Plumber's
+>> conference, I might not be able to join there, as we have bring-up
+>> coming)
+> 
+> Ok, I'll try to get there. Let's plan at least a BOF or two if not a
+> microconf.
+> 
+> To setup a webex let's first list who needs to attend and respective
+> timezones so we can figure out a time. I'm in Australia east coast.
+
+Hi guys,
+I see that there are a lot discussion regarding the error handling. May 
+I join the webex and hopefully I can be helpful? I'm in Canada east 
+coast (Ottawa,Ontario,Canada)
+
+Thank you,
+Thomas
+
+> 
+>>>> The way DPC used to behave in 2016, is still the same; which involved
+>>>> removing and re-enumerating the devices.
+>>>
+>>> Which is mostly useless for anything that isn't a network device.
+>>>
+>>> We've been doing EEH for something like 15 to 20 years, so we have a
+>>> long experience with what it takes to get PCI(e) devices to recover on
+>>> enterprise systems.
+>>>
+>>> Removing and re-enumerating is one of the very worst thing you can do
+>>> in that area.
+>>>
+>>> Cheers,
+>>> Ben.
+> 
