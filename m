@@ -1,69 +1,58 @@
-Return-Path: <SRS0=i0qC=KY=intel.com=dave.jiang@kernel.org>
-Return-Path: <SRS0=i0qC=KY=intel.com=dave.jiang@kernel.org>
-From: "Jiang, Dave" <dave.jiang@intel.com>
-To: Kit Chow <kchow@gigaio.com>, Logan Gunthorpe <logang@deltatee.com>, "Eric
- Pilmore" <epilmore@gigaio.com>, Bjorn Helgaas <helgaas@kernel.org>
-CC: "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>, David Woodhouse
-	<dwmw2@infradead.org>, Alex Williamson <alex.williamson@redhat.com>,
-	"iommu@lists.linux-foundation.org" <iommu@lists.linux-foundation.org>
-Subject: RE: IOAT DMA w/IOMMU
-Date: Thu, 9 Aug 2018 22:40:57 +0000
-Message-ID: <112A412BB11A1242B37129D931BCE5348382CFB2@fmsmsx117.amr.corp.intel.com>
-References: <CAOQPn8soxubJxb=vp7kz+AM6LbPH5y+_Nx0Vzv7rjV_nMMqEmA@mail.gmail.com>
- <20180809184331.GB113140@bhelgaas-glaptop.roam.corp.google.com>
- <CAOQPn8uPYKai49WYPqZp2wNd5of=0hUvPOHEtqP56RZu-hcjuw@mail.gmail.com>
- <b54899a8-a144-e8e0-9880-1800c4657b95@deltatee.com>
- <95e53520-b05f-4be4-e694-463d717453a8@gigaio.com>
- <cdd9245f-eb23-9e10-1755-8f396a2cd255@deltatee.com>
- <b278c1e5-6f08-c879-a27d-7fc172645fd5@gigaio.com>
- <f04fae39-645e-3c6e-07c0-b194260bf5de@deltatee.com>
- <3f503940-db6a-ec75-ed15-1db99d5d48ef@gigaio.com>
-In-Reply-To: <3f503940-db6a-ec75-ed15-1db99d5d48ef@gigaio.com>
-Content-Type: text/plain; charset="utf-8"
-MIME-Version: 1.0
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from gate.crashing.org ([63.228.1.57]:36706 "EHLO gate.crashing.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S2389828AbeHPLJ6 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Thu, 16 Aug 2018 07:09:58 -0400
+Message-ID: <05bc3bccb2c6a0cb1696faf20073e567d7a5b8ee.camel@kernel.crashing.org>
+Subject: Re: [PATCH 1/1] PCI/AER: prevent pcie_do_fatal_recovery from using
+ device after it is removed
+From: Benjamin Herrenschmidt <benh@kernel.crashing.org>
+To: poza@codeaurora.org
+Cc: Thomas Tai <thomas.tai@oracle.com>, bhelgaas@google.com,
+        keith.busch@intel.com, linux-pci@vger.kernel.org,
+        linux-pci-owner@vger.kernel.org
+Date: Thu, 16 Aug 2018 18:12:57 +1000
+In-Reply-To: <290750445f084c479963f54dd36af63a@codeaurora.org>
+References: <1534179088-44219-1-git-send-email-thomas.tai@oracle.com>
+         <1534179088-44219-2-git-send-email-thomas.tai@oracle.com>
+         <51f4b387d9bd96a42d526a6a029fc43b@codeaurora.org>
+         <b0104a716319d76e734c307cb4bedd9d@codeaurora.org>
+         <903394c04d6ad468ed06dc0a779200e7555345a7.camel@kernel.crashing.org>
+         <6cb069038530757f31f3dd60328c7e30@codeaurora.org>
+         <e931bc7a7e468e8bb2ee3766b3fcf96f1800f552.camel@kernel.crashing.org>
+         <5bd99bcacb772b588771fce62c61a59fdeb167f3.camel@kernel.crashing.org>
+         <290750445f084c479963f54dd36af63a@codeaurora.org>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-PiAtLS0tLU9yaWdpbmFsIE1lc3NhZ2UtLS0tLQ0KPiBGcm9tOiBsaW51eC1wY2ktb3duZXJAdmdl
-ci5rZXJuZWwub3JnIFttYWlsdG86bGludXgtcGNpLW93bmVyQHZnZXIua2VybmVsLm9yZ10gT24g
-QmVoYWxmIE9mIEtpdCBDaG93DQo+IFNlbnQ6IFRodXJzZGF5LCBBdWd1c3QgOSwgMjAxOCAyOjQ4
-IFBNDQo+IFRvOiBMb2dhbiBHdW50aG9ycGUgPGxvZ2FuZ0BkZWx0YXRlZS5jb20+OyBFcmljIFBp
-bG1vcmUgPGVwaWxtb3JlQGdpZ2Fpby5jb20+OyBCam9ybiBIZWxnYWFzIDxoZWxnYWFzQGtlcm5l
-bC5vcmc+DQo+IENjOiBsaW51eC1wY2lAdmdlci5rZXJuZWwub3JnOyBEYXZpZCBXb29kaG91c2Ug
-PGR3bXcyQGluZnJhZGVhZC5vcmc+OyBBbGV4IFdpbGxpYW1zb24gPGFsZXgud2lsbGlhbXNvbkBy
-ZWRoYXQuY29tPjsNCj4gaW9tbXVAbGlzdHMubGludXgtZm91bmRhdGlvbi5vcmcNCj4gU3ViamVj
-dDogUmU6IElPQVQgRE1BIHcvSU9NTVUNCj4gDQo+IA0KPiANCj4gT24gMDgvMDkvMjAxOCAwMjox
-MSBQTSwgTG9nYW4gR3VudGhvcnBlIHdyb3RlOg0KPiA+DQo+ID4gT24gMDkvMDgvMTggMDI6NTcg
-UE0sIEtpdCBDaG93IHdyb3RlOg0KPiA+Pg0KPiA+PiBPbiAwOC8wOS8yMDE4IDAxOjExIFBNLCBM
-b2dhbiBHdW50aG9ycGUgd3JvdGU6DQo+ID4+PiBPbiAwOS8wOC8xOCAwMTo0NyBQTSwgS2l0IENo
-b3cgd3JvdGU6DQo+ID4+Pj4+IEkgaGF2ZW4ndCB0ZXN0ZWQgdGhpcyBzY2VuYXJpbyBidXQgbXkg
-Z3Vlc3Mgd291bGQgYmUgdGhhdCBJT0FUIHdvdWxkDQo+ID4+Pj4+IGluZGVlZCBnbyB0aHJvdWdo
-IHRoZSBJT01NVSBhbmQgdGhlIFBDSSBCQVIgYWRkcmVzcyB3b3VsZCBuZWVkIHRvIGJlDQo+ID4+
-Pj4+IHByb3Blcmx5IG1hcHBlZCBpbnRvIHRoZSBJT0FUJ3MgSU9WQS4gVGhlIGZhY3QgdGhhdCB5
-b3Ugc2VlIERNQVIgZXJyb3JzDQo+ID4+Pj4+IGlzIHByb2JhYmx5IGEgZ29vZCBpbmRpY2F0aW9u
-IHRoYXQgdGhpcyBpcyB0aGUgY2FzZS4gSSByZWFsbHkgZG9uJ3Qga25vdw0KPiA+Pj4+PiB3aHkg
-eW91J2Qgd2FudCB0byBETUEgc29tZXRoaW5nIHdpdGhvdXQgbWFwcGluZyBpdC4NCj4gPj4+PiBJ
-IGhhdmUgZXhwZXJpbWVudGVkIHdpdGggY2hhbmdpbmcgbnRiX2FzeW5jX3R4X3N1Ym1pdCB0byBk
-bWFfbWFwIHRoZSBQQ0kNCj4gPj4+PiBCQVINCj4gPj4+PiBhZGRyZXNzLiBXaXRoIHRoaXMsIEkg
-Z2V0IGEgZGlmZmVyZW50IERNQVIgZXJyb3I6DQo+ID4+PiBXaGF0IGNvZGUgZGlkIHlvdSB1c2Ug
-dG8gZG8gdGhpcz8NCj4gPj4gSWYgeW91IG1lYW4gdmVyc2lvbiBvZiBsaW51eCwgaXQgaXMgNC4x
-NS43LsKgIE9yIHNwZWNpZmljIGRtYV9tYXAgY2FsbCwgSQ0KPiA+PiBiZWxpZXZlIGl0IHdhcyBk
-bWFfbWFwX3NpbmdsZS4NCj4gPiBJIG1lYW4gdGhlIGNvbXBsZXRlIGNvZGUgeW91IHVzZSB0byBk
-byB0aGUgbWFwcGluZyBzbyB3ZSBjYW4gc2VlIGlmIGl0J3MNCj4gPiBjb3JyZWN0LiBkbWFfbWFw
-X3NpbmdsZSgpIHNlZW1zIGxpa2UgYW4gb2RkIGNob2ljZSwgSSBleHBlY3RlZCB0byBzZWUNCj4g
-PiBkbWFfbWFwX3Jlc291cmNlKCkuDQo+IFRoYW5rcyBmb3IgdGhlIHN1Z2dlc3Rpb24hwqAgV2ls
-bCB0cnkgb3V0IGRtYV9tYXBfcmVzb3VyY2UgYW5kIHJlcG9ydCBiYWNrLg0KPiANCj4gS2l0DQoN
-CktpdCwgSSB3YXMgYWJsZSB0byB0cnkgdGhpcyBvbiB0aGUgU2t5bGFrZSBYZW9uIHBsYXRmb3Jt
-IHdpdGggSW50ZWwgTlRCIGFuZCBpb2F0ZG1hIGFuZCBJIGRpZCBub3QgZW5jb3VudGVyIGFueSBp
-c3N1ZXMuIFVuZm9ydHVuYXRlbHkgSSBkbyBub3QgaGF2ZSBteSBwcmUtU2t5bGFrZSBwbGF0Zm9y
-bSB0byB0ZXN0IGFueW1vcmUgdG8gdmVyaWZ5Lg0KDQo+IA0KPiA+Pj4+IERNQVI6IFtETUEgV3Jp
-dGVdIFJlcXVlc3QgZGV2aWNlIFswNzowMC40XSBmYXVsdCBhZGRyIGZmZDAwMDAwDQo+ID4+Pj4g
-W2ZhdWx0IHJlYXNvbiAxMl0gbm9uLXplcm8gcmVzZXJ2ZWQgZmllbGRzIGluIFBURQ0KPiA+Pj4g
-QWxzbywgd2hhdCBkZXZpY2UgY29ycmVzcG9uZHMgdG8gMDc6MDAuNCBvbiB5b3VyIHN5c3RlbT8N
-Cj4gPj4gSSBiZWxpZXZlIDA3LjAwLjQgd2FzIHRoZSBQTFggZG1hIGRldmljZS4gSSBnZXQgdGhl
-IHNhbWUgZXJyb3Igd2l0aCBpb2F0Lg0KPiA+IFVzaW5nIHRoZSBtYXBwaW5nIHdpdGggdGhlIFBM
-WCBkbWEgZGV2aWNlIGxpa2VseSBjb252ZXJ0cyBpdCBmcm9tIGEgcHVyZQ0KPiA+IFAyUCByZXF1
-ZXN0IHRvIG9uZSB3aGVyZSB0aGUgVExQcyBwYXNzIHRocm91Z2ggdGhlIElPTU1VLiBTbyB0aGUg
-ZmFjdA0KPiA+IHRoYXQgeW91IGdldCB0aGUgc2FtZSBlcnJvciB3aXRoIGJvdGggbWVhbnMgSU9B
-VCBhbG1vc3QgY2VydGFpbmx5IGdvZXMNCj4gPiB0aHJvdWdoIHRoZSBJT01NVSBhbmQgdGhlcmUn
-cyBzb21ldGhpbmcgd3Jvbmcgd2l0aCB0aGUgbWFwcGluZyBzZXR1cC4NCj4gPg0KPiA+IExvZ2Fu
-DQoNCg==
+On Thu, 2018-08-16 at 13:37 +0530, poza@codeaurora.org wrote:
+> > 
+> > In fact looking at pcie_do_nonfatal_recovery() it's indeed completely
+> > broken. It tells the driver that the slot was reset without actually
+> > resetting anything... Ugh.
+> > 
+> > Ben.
+> 
+> pcie_do_nonfatal_recovery() exhibit the same behavior with or without 
+> the patch-series.
+> in short, there was no functional change brought in to 
+> pcie_do_nonfatal_recovery()
+
+Yes, I know, I'm just saying what it does is broken :-)
+
+Keep in mind that those callbacks were designed originally for EEH
+(which predates AER), and so was the spec written.
+
+We don't actually use the AER code on POWER today, so we didn't notice
+how broken the implementation was :-)
+
+We should fix that.
+
+Either we can sort all that out by email, or we should plan some kind
+of catch-up, either at Plumbers (provided I can go there) or maybe a
+webex call.
+
+Cheers,
+Ben.
