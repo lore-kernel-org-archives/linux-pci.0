@@ -1,65 +1,114 @@
-Return-Path: <SRS0=uSZ2=LE=intel.com=keith.busch@kernel.org>
-Return-Path: <SRS0=uSZ2=LE=intel.com=keith.busch@kernel.org>
-Date: Tue, 21 Aug 2018 16:33:03 -0600
-From: Keith Busch <keith.busch@intel.com>
-To: Benjamin Herrenschmidt <benh@kernel.crashing.org>
-Cc: poza@codeaurora.org, Sinan Kaya <okaya@kernel.org>,
-	Bjorn Helgaas <helgaas@kernel.org>,
-	Thomas Tai <thomas.tai@oracle.com>, bhelgaas@google.com,
-	linux-pci@vger.kernel.org, linux-pci-owner@vger.kernel.org,
-	Sam Bobroff <sam.bobroff@au1.ibm.com>
-Subject: Re: [PATCH 1/1] PCI/AER: prevent pcie_do_fatal_recovery from using
- device after it is removed
-Message-ID: <20180821223303.GA19320@localhost.localdomain>
-References: <5027d857bb59edfd33442003aa618ece1bc9cd52.camel@kernel.crashing.org>
- <b2e2ac5c92d8a91d00606754d1046578@codeaurora.org>
- <2ecd1fd6d763810d45697f846fa876b58a193b1b.camel@kernel.crashing.org>
- <a149d9657ca83b41c724b0ddd319c6fb@codeaurora.org>
- <512e0e11c3ba462c1d033f8b0e768fa27489731c.camel@kernel.crashing.org>
- <ad23b16cf7ff1f3b51961fda59533892@codeaurora.org>
- <2742bdba5ae8ccc420234b6e6b0224919367ed4c.camel@kernel.crashing.org>
- <20180821143751.GA18477@localhost.localdomain>
- <277b7056aa7af8e98d5cd912838e582783943aa9.camel@kernel.crashing.org>
- <20180821220456.GC18612@localhost.localdomain>
+Return-Path: <SRS0=Fxrs=K7=intel.com=jonathan.derrick@kernel.org>
+Return-Path: <SRS0=Fxrs=K7=intel.com=jonathan.derrick@kernel.org>
+From: "Derrick, Jonathan" <jonathan.derrick@intel.com>
+To: "Busch, Keith" <keith.busch@intel.com>
+CC: "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	"okaya@kernel.org" <okaya@kernel.org>, "willy@infradead.org"
+	<willy@infradead.org>, "liudongdong3@huawei.com" <liudongdong3@huawei.com>,
+	"helgaas@kernel.org" <helgaas@kernel.org>, "poza@codeaurora.org"
+	<poza@codeaurora.org>, "linux-pci@vger.kernel.org"
+	<linux-pci@vger.kernel.org>, "linux-doc@vger.kernel.org"
+	<linux-doc@vger.kernel.org>
+Subject: Re: [PATCH 1/2] PCI/DPC: Add 'nodpc' parameter
+Date: Thu, 16 Aug 2018 21:28:45 +0000
+Message-ID: <1534454924.13356.1.camel@intel.com>
+References: <1534368400-2807-1-git-send-email-jonathan.derrick@intel.com>
+	 <20180816154940.GD5762@bombadil.infradead.org>
+	 <1534434641.17819.27.camel@intel.com>
+	 <20180816203111.GB10316@bhelgaas-glaptop.roam.corp.google.com>
+	 <1534452635.17819.53.camel@intel.com>
+	 <20180816211940.GB7400@localhost.localdomain>
+In-Reply-To: <20180816211940.GB7400@localhost.localdomain>
+Content-Type: multipart/signed; micalg=sha-1;
+	protocol="application/x-pkcs7-signature"; boundary="=-L6lWukXHkEQXS82Ei7AQ"
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20180821220456.GC18612@localhost.localdomain>
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tue, Aug 21, 2018 at 04:04:56PM -0600, Keith Busch wrote:
-> > For example, if the error happens in a parent bridge and that gets
-> > reset, the entire hierarchy underneath does too.
-> > 
-> > We need to save/restore the state of all bridges and devices (BARs
-> > etc...) below that.
-> 
-> That's not good enough. You'd at least need to check SLTSTS.PDC on all
-> bridge DSP's beneath the parent *before* you try to restore the state
-> of devices beneath them. Those races are primarily why DPC currently
-> removes and reenumerates instead, because that's not something that can
-> be readily coordinated today.
+--=-L6lWukXHkEQXS82Ei7AQ
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
 
-A picture of a real scenario to go with the above comments:
+On Thu, 2018-08-16 at 15:19 -0600, Keith Busch wrote:
+> On Thu, Aug 16, 2018 at 01:50:42PM -0700, Derrick, Jonathan wrote:
+> > It can also be disabled with setpci, but is that any less of a
+> > hassle?
+> > Genuine question to understand your point of view.
+>=20
+> That is not a real solution, IMO. 'setpci' is good to inject things
+> for testing, but it changes config space without the kernel aware
+> that
+> you've done that, so it is inherently racey with other kernel threads
+> touching pci config space. And the kernel or platform may end up
+> undoing
+> what you had 'setpci' do anyway with no immediate way to be notified
+> it
+> was changed.
 
-                    ----------------
-  --------          |              |
-  |      |       -------        -------       --------------
-  |  RP  | <---> | USP | SWITCH | DSP | <---> | END DEVICE |
-  |      |       ------         -------       --------------
-  --------          |              |
-                    ----------------
+It sounds like a sysfs toggle could be useful regardless of the boot
+parameter.
+--=-L6lWukXHkEQXS82Ei7AQ
+Content-Type: application/x-pkcs7-signature; name="smime.p7s"
+Content-Disposition: attachment; filename="smime.p7s"
+Content-Transfer-Encoding: base64
 
-The downstream port (DSP) is hotplug capable, and the root port (RP)
-has DPC enabled.
+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
+AG6qjTBc2iB2iz6IVnzrBtQT5DR3KM6EqbMTwur8keTC11xls7lwWexzsSgt37V9UNKAqfsZPgcX
+AgMBAAGjggI3MIICMzAdBgNVHQ4EFgQUJRdznv8EeAa3g+3F5NKtNNctuBcwHwYDVR0jBBgwFoAU
+HmkqtNwo/kcYTiELP7ysES/wmPUwZQYDVR0fBF4wXDBaoFigVoZUaHR0cDovL3d3dy5pbnRlbC5j
+b20vcmVwb3NpdG9yeS9DUkwvSW50ZWwlMjBFeHRlcm5hbCUyMEJhc2ljJTIwSXNzdWluZyUyMENB
+JTIwNEEuY3JsMIGfBggrBgEFBQcBAQSBkjCBjzBpBggrBgEFBQcwAoZdaHR0cDovL3d3dy5pbnRl
+bC5jb20vcmVwb3NpdG9yeS9jZXJ0aWZpY2F0ZXMvSW50ZWwlMjBFeHRlcm5hbCUyMEJhc2ljJTIw
+SXNzdWluZyUyMENBJTIwNEEuY3J0MCIGCCsGAQUFBzABhhZodHRwOi8vb2NzcC5pbnRlbC5jb20v
+MAsGA1UdDwQEAwIHgDA8BgkrBgEEAYI3FQcELzAtBiUrBgEEAYI3FQiGw4x1hJnlUYP9gSiFjp9T
+gpHACWeB3r05lfBDAgFkAgEJMB8GA1UdJQQYMBYGCCsGAQUFBwMEBgorBgEEAYI3CgMMMCkGCSsG
+AQQBgjcVCgQcMBowCgYIKwYBBQUHAwQwDAYKKwYBBAGCNwoDDDBRBgNVHREESjBIoCoGCisGAQQB
+gjcUAgOgHAwaam9uYXRoYW4uZGVycmlja0BpbnRlbC5jb22BGmpvbmF0aGFuLmRlcnJpY2tAaW50
+ZWwuY29tMA0GCSqGSIb3DQEBBQUAA4IBAQA5LNb+VnWY0V21FlNjnQ2BIb5gmlED29zwQiC5yezn
+2SexgvN31129iJSkXuiBHdcVJiUAUPHYuxPRwumwbrkY6m+sYi9kIzKt+ZKNNAN4WbnavsbyRBlb
+cIn2E5swqD+sks8AmKivHmg+gFeboLaOf+EqVihIz1Wec1PpbX98R1t2ep7Y/81DD1fIjAWHl6Mq
+TJwjKQuYB01kkJdXZAGPXUQSARR1y2D1YpCkDqfGH2STaB4nenD4INSyhTGo5RV9wwTAibyrIq50
+rnmvBnHTmICQVdHuIhG1gGmDLUAGqfrU3W2QJr9gkICdrTMgIEdd8s73wknaZxZKqfRxnMVQMYIC
+FzCCAhMCAQEwgZAweTELMAkGA1UEBhMCVVMxCzAJBgNVBAgTAkNBMRQwEgYDVQQHEwtTYW50YSBD
+bGFyYTEaMBgGA1UEChMRSW50ZWwgQ29ycG9yYXRpb24xKzApBgNVBAMTIkludGVsIEV4dGVybmFs
+IEJhc2ljIElzc3VpbmcgQ0EgNEECEzMAAKye+0C3syvSXOcAAAAArJ4wCQYFKw4DAhoFAKBdMBgG
+CSqGSIb3DQEJAzELBgkqhkiG9w0BBwEwHAYJKoZIhvcNAQkFMQ8XDTE4MDgxNjIxMjg0NFowIwYJ
+KoZIhvcNAQkEMRYEFFN7WvrHGsbZuKjY1QSqYrKQ5fwZMA0GCSqGSIb3DQEBAQUABIIBADjnodVQ
+cJ3Cew8AyNb8YGRKS5IRZQZVirccgCMZjMbf5ooECpf9TD4ankWdMP3KkpDKGCd8S9zCqfp+ozXz
+2fdQxG3OV3XCMpPUFiJOMT1Y4ACRFn5K1mp8X6Td5QPbOX6BLCFOpPgwMfciLJr8A8YEti0j0myk
++42MlZEZZgI/nk6TpSkDtQodC53Vbh5r4AdaL9e/V3kF33lVAElfx9pl3PZvnGwDSG6PWNGlBBLo
+/JH0iQz16EVFtRevwe5efz5Bdnh7ZIzNimpb+mUwFG3ZBMXBfgrT4ajcGth0JvnPW5yMkZ9HCvos
+lOwPeuuDBux9/8uxfd1DeetlTiRqrgwAAAAAAAA=
 
-Lets say you hot swap END DEVICE at a time with an inflight posted
-transaction such that the RP triggers a CTO, starting a DPC event.
-If you treat the RP's DPC event as just "error handling" and restore
-the state after containment is released, we are in undefined behavior
-because of the mistaken idententy of the device below the SWITCH DSP.
 
-Re-enumerating the topology is easy since it has no races like that. I
-understand re-enumeration is problematic for some scenarios, so if we
-really need to avoid re-enumeration except when absolutely necessary,
-it should be possible if we can detangle the necessary coordination
-between the port service drivers.
+--=-L6lWukXHkEQXS82Ei7AQ--
