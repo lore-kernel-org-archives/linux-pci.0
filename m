@@ -1,42 +1,101 @@
-Return-Path: <SRS0=Ly/z=KY=deltatee.com=logang@kernel.org>
-Return-Path: <SRS0=Ly/z=KY=deltatee.com=logang@kernel.org>
-To: Bjorn Helgaas <helgaas@kernel.org>
-Cc: linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
- linux-doc@vger.kernel.org, Stephen Bates <sbates@raithlin.com>,
- Christoph Hellwig <hch@lst.de>, Bjorn Helgaas <bhelgaas@google.com>,
- Jonathan Corbet <corbet@lwn.net>, Ingo Molnar <mingo@kernel.org>,
- Thomas Gleixner <tglx@linutronix.de>,
- "Paul E. McKenney" <paulmck@linux.vnet.ibm.com>,
- Marc Zyngier <marc.zyngier@arm.com>,
- Kai-Heng Feng <kai.heng.feng@canonical.com>,
- Frederic Weisbecker <frederic@kernel.org>,
- Dan Williams <dan.j.williams@intel.com>, =?UTF-8?B?SsOpcsO0bWUgR2xpc3Nl?=
- <jglisse@redhat.com>, Benjamin Herrenschmidt <benh@kernel.crashing.org>,
- Alex Williamson <alex.williamson@redhat.com>,
- =?UTF-8?Q?Christian_K=c3=b6nig?= <christian.koenig@amd.com>,
- Matthew Wilcox <willy@infradead.org>
-References: <20180730161840.13733-1-logang@deltatee.com>
- <20180809230332.GH113140@bhelgaas-glaptop.roam.corp.google.com>
-From: Logan Gunthorpe <logang@deltatee.com>
-Message-ID: <0efce4ce-3b86-7efd-39c0-84d5740d49ef@deltatee.com>
-Date: Thu, 9 Aug 2018 17:27:18 -0600
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from smtp.codeaurora.org ([198.145.29.96]:60808 "EHLO
+        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1725749AbeHPLC3 (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Thu, 16 Aug 2018 07:02:29 -0400
 MIME-Version: 1.0
-In-Reply-To: <20180809230332.GH113140@bhelgaas-glaptop.roam.corp.google.com>
-Content-Type: text/plain; charset=utf-8
-Subject: Re: [PATCH v8 0/4] Add parameter for disabling ACS redirection for
- P2P
+Content-Type: text/plain; charset=US-ASCII;
+ format=flowed
+Date: Thu, 16 Aug 2018 13:35:43 +0530
+From: poza@codeaurora.org
+To: Benjamin Herrenschmidt <benh@kernel.crashing.org>, okaya@kernel.org
+Cc: Thomas Tai <thomas.tai@oracle.com>, bhelgaas@google.com,
+        keith.busch@intel.com, linux-pci@vger.kernel.org,
+        linux-pci-owner@vger.kernel.org,
+        Sam Bobroff <sam.bobroff@au1.ibm.com>
+Subject: Re: [PATCH 1/1] PCI/AER: prevent pcie_do_fatal_recovery from using
+ device after it is removed
+In-Reply-To: <bf7ceabb6fe51398e0f4eebd9c4fe4ac1ec2b8a4.camel@kernel.crashing.org>
+References: <1534179088-44219-1-git-send-email-thomas.tai@oracle.com>
+ <1534179088-44219-2-git-send-email-thomas.tai@oracle.com>
+ <51f4b387d9bd96a42d526a6a029fc43b@codeaurora.org>
+ <b0104a716319d76e734c307cb4bedd9d@codeaurora.org>
+ <903394c04d6ad468ed06dc0a779200e7555345a7.camel@kernel.crashing.org>
+ <6cb069038530757f31f3dd60328c7e30@codeaurora.org>
+ <e931bc7a7e468e8bb2ee3766b3fcf96f1800f552.camel@kernel.crashing.org>
+ <bf7ceabb6fe51398e0f4eebd9c4fe4ac1ec2b8a4.camel@kernel.crashing.org>
+Message-ID: <42bd39aef30fe24bfc48d378e1f5d35d@codeaurora.org>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-
-
-On 09/08/18 05:03 PM, Bjorn Helgaas wrote:
-
-> I reorganized this a bit and split the quirk code into a couple
-> patches an put the result on my pci/peer-to-peer branch for v4.19.
+On 2018-08-16 12:35, Benjamin Herrenschmidt wrote:
+> On Thu, 2018-08-16 at 16:51 +1000, Benjamin Herrenschmidt wrote:
+>> No, this is wrong and not the intent of the error handling.
+>> 
+>> You seem to be applying PCIe specific concepts brain-farted at Intel
+>> that are way way away from what we care about in practice and in 
+>> Linux.
+>> 
+>> > e.g.  some driver handle errors ERR_NONFATAL or FATAL in similar ways
+>> > e.g.
+>> > ioat_pcie_error_detected();  calls  ioat_shutdown(); in case of
+>> > ERR_NONFATAL
+>> > otherwise ioat_shutdown() in case of ERR_FATAL.
+>> 
+>> Since when the error handling callbacks even have the concept of FATAL
+>> vs. non-fatal ? This doesn't appear anyhwhere in the prototype of the
+>> struct pci_error_handlers and shouldn't.
 > 
-> I think the result is equivalent, but let me know if I made a mistake.
+> Ugh... I just saw the changes you did to Documentation/PCI/pci-error-
+> recovery.txt and I would very much like to revert those !
+> 
+> Bjorn, you shouldn't let changes to the PCI error handling through
+> without acks from us, it looks like we didn't notice (we can't possibly
+> monitor all lists).
+> 
+> We wrote that in the firsat place and our EEH infrastructure rely on it
+> heavily on it.
+> 
+> Poza, you seem to have not understood the intent of the code and are
+> now changing the rules in ways that are broken in our opinion. This is
+> bad.
+> 
+> Bjorn, please revert all of those changes.
+> 
+> There was NEVER an intent to separate fatal from non-fatal at that
+> level. We could pass the information to the driver if we wished but the
+> recovery sequence is NOT intended to be different.
+> 
+> Especially we specifically do NOT want to unplug and replug the device
+> for fatal errors at all. This is not going to work with drivers that
+> cannot re-link with their various kernel services, such as storage
+> devices re-connecting with mounted file systems etc...
+> 
+> Those changes are utterly broken.
+> 
+> The basic premise of the design that we woudl do that unplug/replug
+> trick if and ONLY IF the driver doesn't have the appropriate callbacks.
+> 
+> We are also now looking at replacing this with an ubind/re-bind because
+> in practice, the unplugging is causing us all sort of problems. Sam
+> (CC) can elaborate.
+> 
+> Bjorn, we are the main authors of that spec (Linas wrote it under my
+> supervision) and created those callbacks for EEH. AER picked them up
+> only later. Those changes must be at the very least acked by us before
+> going upstream.
+> 
+> Ben.
 
-Thanks for the cleanup, Bjorn. I reviewed the patches and did a quick
-diff between my v8 and your branch. Everything looks good.
 
-Logan
++ Sinan
+
+This patch set was there in mailing list for nearly 17 to 18 revisions 
+for 7 months.
+besides the intent was to bring DPC and AER into the same well defined 
+way of error handling.
+The way DPC used to behave in 2016, is still the same; which involved 
+removing and re-enumerating the devices.
+
+Regards,
+Oza.
