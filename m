@@ -1,127 +1,89 @@
-Return-Path: <SRS0=a9CN=LA=kernel.crashing.org=benh@kernel.org>
-Return-Path: <SRS0=a9CN=LA=kernel.crashing.org=benh@kernel.org>
-Message-ID: <e6d45448f3bde4b1d83f1588b7e6aa729cf77300.camel@kernel.crashing.org>
-Subject: Re: [RFC PATCH 5/6] pci: Protect the enable/disable state of
- pci_dev using the state mutex
+Return-Path: <SRS0=veIH=K7=kernel.crashing.org=benh@kernel.org>
+Return-Path: <SRS0=veIH=K7=kernel.crashing.org=benh@kernel.org>
+Message-ID: <6b610ee94bcef718db97600ae0ee931de3501e40.camel@kernel.crashing.org>
+Subject: Re: PCIe enable device races (Was: [PATCH v3] PCI: Data corruption
+ happening due to race condition)
 From: Benjamin Herrenschmidt <benh@kernel.crashing.org>
-To: Hari Vyas <hari.vyas@broadcom.com>
-Cc: Marta Rybczynska <mrybczyn@kalray.eu>, Bjorn Helgaas
- <helgaas@kernel.org>,
-        linux-pci@vger.kernel.org, Ray Jui
- <ray.jui@broadcom.com>,
-        Srinath Mannam <srinath.mannam@broadcom.com>,
-        Guenter Roeck <linux@roeck-us.net>, Jens Axboe <axboe@kernel.dk>,
-        Lukas
- Wunner <lukas@wunner.de>,
+To: Lukas Wunner <lukas@wunner.de>
+Cc: Bjorn Helgaas <helgaas@kernel.org>, Hari Vyas <hari.vyas@broadcom.com>,
+        linux-pci@vger.kernel.org, ray.jui@broadcom.com,
         Konstantin Khlebnikov
- <khlebnikov@yandex-team.ru>,
-        Pierre-Yves Kerbrat <pkerbrat@kalray.eu>, linux-kernel@vger.kernel.org
-Date: Fri, 17 Aug 2018 20:24:40 +1000
-In-Reply-To: <CAM5rFu8ebfaV=8QQ8u=4HThM2T4ZRR9XHxqhKoyAfnv0N79Z8Q@mail.gmail.com>
-References: <20180817044902.31420-1-benh@kernel.crashing.org>
-	 <20180817044902.31420-6-benh@kernel.crashing.org>
-	 <66577784.13494160.1534493390262.JavaMail.zimbra@kalray.eu>
-	 <1ffafe01887e3b760f84488b06339aba64f586e5.camel@kernel.crashing.org>
-	 <CAM5rFu-h25j-vfvybKbKr4huhBgpV3Rusj8E2JyaoG1YnokeMw@mail.gmail.com>
-	 <af7ceae785489f2006074109b27b3f07b190c89b.camel@kernel.crashing.org>
-	 <CAM5rFu8ebfaV=8QQ8u=4HThM2T4ZRR9XHxqhKoyAfnv0N79Z8Q@mail.gmail.com>
+	 <khlebnikov@yandex-team.ru>,
+        Jens Axboe <axboe@kernel.dk>
+Date: Fri, 17 Aug 2018 09:25:59 +1000
+In-Reply-To: <20180816122807.6xof2u3hbhv57ua5@wunner.de>
+References: <1530608741-30664-1-git-send-email-hari.vyas@broadcom.com>
+	 <20180731163727.GK45322@bhelgaas-glaptop.roam.corp.google.com>
+	 <ecaed7664b46d73888d2494065905f8e108fc0f4.camel@kernel.crashing.org>
+	 <20180815185027.GE28888@bhelgaas-glaptop.roam.corp.google.com>
+	 <e3316c91ad722434360b4018b17cbfe265e97801.camel@kernel.crashing.org>
+	 <20180816122807.6xof2u3hbhv57ua5@wunner.de>
 Content-Type: text/plain; charset="UTF-8"
 Mime-Version: 1.0
 List-ID: <linux-pci.vger.kernel.org>
 
-On Fri, 2018-08-17 at 15:40 +0530, Hari Vyas wrote:
+
+On Thu, 2018-08-16 at 14:28 +0200, Lukas Wunner wrote:
+> On Thu, Aug 16, 2018 at 07:52:06AM +1000, Benjamin Herrenschmidt wrote:
+> > I would also like to use this rather than the bitmap atomics for is_added
+> > etc... (Hari's fix) in the long run. Atomics aren't significantly cheaper
+> > and imho makes thing even messier.
 > 
-> > So I'm rather dubious of adding a whole new layer of "modify" callbacks
-> > to config space accessors for that, especially since they won't do any
-> > good on architectures with lockless config accesses such as ... x86
-> > 
-> 
-> modify() is optional.  host/controller layers may override it.
-> It was just a proposal to avoid race issues which happens in SMP environment and
-> solves other issues. I agree, nothing great anyhow can be done in
-> lockless config
+> PCI device enablement isn't a hotpath, so the performance saving of
+> acquire/release memory barriers vs. full memory barriers is hardly
+> a strong argument.
 
-Right so let's not go down the path of creating low level accessors
-providing a semantic that cannot actually be provided by some
-architectures :-)
+My argument is not about performance. Fine grained atomics are a mess,
+and make you lose the big picture. The problem isn't so much that
+indiviual bits need to avoid low level RMW races, but overall higher
+level bnehaviours need to be synchronized, such as the enable race
+above.
 
-> > > 2) SW level(internal data structure):
-> > > About is_added,is_busmaster: These all are bit fields so infact I too
-> > > suggested to remove those bit fields and
-> > > make separate variables in pci_dev structure.
-> > > This will avoid all data-overwritten,concurrency issues but ofcourse
-> > > at the level of space cost.
-> > 
-> > It's unnecessary to do blanket changes without first understanding the
-> > details of what's going on. A lot of these things are never touched
-> > outside of the overall single threaded environment of
-> > discovery/assignment or under driver control, in which case it's
-> > expectd that the driver doesn't call them in racy ways
-> > 
-> > That said, I'm happy to move some of them under my proposed
-> > dev_state_lock.
-> > 
-> > For is_added specifically, the field is simply set at the wrong time as
-> > you can see in my previous patch.
-> > 
-> Issue needs to be addressed and that is our goal.
+> Atomic bitops have the advantage of being usable in atomic context,
+> unlike a struct mutex.  And they don't require any spinning if the
+> variable is accessed concurrently.
 
-Yes.
+And why on earth would you need to use pci_enable_device or manipulate
+is_added in an atomic context ?
 
-> Some times simple mistakes need lot of debugging which happened in my case and
-> my suggestion is to just avoid. SMP related issues are popping up now
-> so we just need to be careful.
+Atomic bitops are a giant race-o-matic and experience shows that 99% of
+the time, people using them insteaf of standard locking are getting it
+wrong.
 
-Oh I agree, and I took me a while to re-debug independently some of the
-issues on my side too :-) I should be clearer that I very much do
-appreciate your debugging work and finding those problems !
+The PCI code is already messy enough, let's not "fix" the broken
+synchronization accross the board in an even messier way.
 
-I might disagree on the solution but your effort is very valuable and
-I'm sure we can converge on a solution that works for everybody.
+> Last not least an atomic bitop needs just 1 line of code versus 3 lines
+> of code to acquire a lock, update the variable and release the lock.
+> "Elegance is not optional."
 
- .../...
+Sorry, atomics isn't elegance, it's broken crap. The flags dont' live
+in isolation. They relate to an overall function. For example
+is_busmaster relates to the actual setting of the bus master bit in the
+command register. Those two needs to be updated together atomically,
+you need a lock or a mutex. Not an atomic.
 
-> > Can you remind us in this thread which specific cases of RMW races of
-> > config space you were trying to address ?
-> > 
-> 
-> Same pci bridge master, memory bit setting concern only (which my
-> colleague Srinath figured out after lot of effort some time back) where only one bit in
-> PCI_COMMAND  was getting set.
-> (Bug 200793 - PCI: read-write config operation doesn't look like SMP safe)
-> My approach is to handle with modify operations at lower level so bits
-> are not over-written or lost.
+This is true of about everything else.
 
-Right so those are the same old races with pci_set_master() on the
-bridge upward chain ?
+> That said, the race *you're* dealing with appears to be distinct from
+> Hari's in that a lock is unavoidable because (AFAIUI) atomic_inc_return()
+> is called before enablement actually happens, yet both needs to happen
+> atomically.
 
-If yes then this should be addressed by my patches but there are still
-some debate about whether to add that new mutex or try to use an
-existing one, so let's see what Bjorn has to say.
+Every single time one of these flags represent more than the flag
+itself, but some other state that is being modified or updates, then
+you need a lock to cover both the flag and the other state.
 
-I think the set-master and enable/disable issues are intimately related
-and should be solved together by some higher level locking.
+So if we are going to create a sane locking mechanism to protect the
+various bits of pci_dev (not just enable), let's use it for everything
+shall we ? At least everything that doesn't need to be manipulated in
+atomic context.
 
-This is a typical case where the "atomic" enable_cnt provided people
-with a false sense of safety while the code in practice was still
-completely racy.
+That also possibly include removing some of the ad-hoc locks in various
+parts of pcie/* etc...
 
-> As stated earlier, issue should be just resolved in better way. No
-> issue in going with majority
-
-Hehe, ok. I think the is_added fix is simply to move it up since it
-matches the rest of the code in that area, but let's see what Bjorn has
-to say in that regard.
-
-As for the enable/disable/set_master races, Ive wrote my arguments in
-favor of a dedicated lock, let's see what others have to respond.
-
-Cheers,
 Ben.
 
-> Regards,
-> hari
-> > Cheers,
-> > Ben.
-> > 
-> > 
+> Thanks,
+> 
+> Lukas
