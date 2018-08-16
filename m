@@ -1,67 +1,55 @@
-Return-Path: <SRS0=WUkt=LA=arm.com=lorenzo.pieralisi@kernel.org>
-Return-Path: <SRS0=WUkt=LA=arm.com=lorenzo.pieralisi@kernel.org>
-Date: Fri, 17 Aug 2018 16:25:37 +0100
-From: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
-To: Arnd Bergmann <arnd@arndb.de>
-Cc: Bjorn Helgaas <helgaas@kernel.org>, Christoph Hellwig <hch@lst.de>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Palmer Dabbelt <palmer@dabbelt.com>,
-	"Wesley W. Terpstra" <wesley@sifive.com>,
-	linux-pci <linux-pci@vger.kernel.org>,
-	linux-riscv@lists.infradead.org
-Subject: Re: [PATCH 1/3] PCI: add a callback to struct pci_host_bridge for
- adding a new device
-Message-ID: <20180817152537.GA14912@red-moon>
-References: <20180801151403.20660-1-hch@lst.de>
- <20180801151403.20660-2-hch@lst.de>
- <20180802165430.GA13725@red-moon>
- <20180815195227.GG28888@bhelgaas-glaptop.roam.corp.google.com>
- <20180816205901.GA15085@bhelgaas-glaptop.roam.corp.google.com>
- <CAK8P3a02StKtvE+dfESGdeB_zvLbqy9jYwWWgzV6AaeAwyNu=Q@mail.gmail.com>
+Return-Path: <SRS0=oEMe=K7=gigaio.com=kchow@kernel.org>
+Return-Path: <SRS0=oEMe=K7=gigaio.com=kchow@kernel.org>
+Subject: Re: IOAT DMA w/IOMMU
+To: Logan Gunthorpe <logang@deltatee.com>, Eric Pilmore <epilmore@gigaio.com>
+Cc: Bjorn Helgaas <helgaas@kernel.org>, linux-pci@vger.kernel.org,
+ David Woodhouse <dwmw2@infradead.org>,
+ Alex Williamson <alex.williamson@redhat.com>,
+ iommu@lists.linux-foundation.org
+References: <CAOQPn8soxubJxb=vp7kz+AM6LbPH5y+_Nx0Vzv7rjV_nMMqEmA@mail.gmail.com>
+ <20180809184331.GB113140@bhelgaas-glaptop.roam.corp.google.com>
+ <CAOQPn8uPYKai49WYPqZp2wNd5of=0hUvPOHEtqP56RZu-hcjuw@mail.gmail.com>
+ <b54899a8-a144-e8e0-9880-1800c4657b95@deltatee.com>
+ <CAOQPn8tSNN+3igN-kMcQH46w_a9p6T+S7=c8CLREMLxr1kaTXQ@mail.gmail.com>
+ <7068db44-af31-4462-f966-2dd2340ba0f0@deltatee.com>
+ <695826a6-e10c-5a30-a51f-7cc61ba6e640@gigaio.com>
+ <0d3f48c3-8c4f-4dfb-e883-23c168f12b9b@deltatee.com>
+From: Kit Chow <kchow@gigaio.com>
+Message-ID: <14db6acb-da4f-9604-7359-1671210fcb8b@gigaio.com>
+Date: Thu, 16 Aug 2018 11:53:53 -0700
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <CAK8P3a02StKtvE+dfESGdeB_zvLbqy9jYwWWgzV6AaeAwyNu=Q@mail.gmail.com>
+In-Reply-To: <0d3f48c3-8c4f-4dfb-e883-23c168f12b9b@deltatee.com>
+Content-Type: text/plain; charset=utf-8; format=flowed
 List-ID: <linux-pci.vger.kernel.org>
 
-On Thu, Aug 16, 2018 at 11:04:53PM +0200, Arnd Bergmann wrote:
-> On Thu, Aug 16, 2018 at 10:59 PM Bjorn Helgaas <helgaas@kernel.org> wrote:
-> > On Wed, Aug 15, 2018 at 02:52:28PM -0500, Bjorn Helgaas wrote:
-> > > On Thu, Aug 02, 2018 at 05:54:30PM +0100, Lorenzo Pieralisi wrote:
-> 
-> > > This patch seems OK to me.
-> > >
-> > > I don't really care about the prototype.  There's only one
-> > > pcibios_add_device() implementation (x86) that returns anything other
-> > > than 0, and that's a pretty obscure error case related to f9a37be0f02a
-> > > ("x86: Use PCI setup data"), which lets us use ROM data from boot
-> > > services.  Even then the only thing that happens is a WARN_ON().  A
-> > > more descriptive printk would be a lot more useful.
-> >
-> > Thinking about this some more, I'm not so sure about the connection
-> > with removing pcibios_add_device().  This host_bridge->add_dev() hook
-> > would be for host bridge-specific things, while pcibios_add_device()
-> > is for arch-specific things.
-> >
-> > I'd still love to get rid of pcibios_add_device() (especially the
-> > non-arch-specific things like the pci_claim_resource() in s390); I'm
-> > just not sure yet whether this particular patch is the vehicle.
-> 
-> I think most of the arch-specific pcibios_* calls are actually
-> host bridge specific after all, it just so happens that they are
-> implemented on architectures that only have one specific
-> host bridge implementation, or that they are used on an
-> architecture that does something odd in one place and needs
-> to do something else in another place.
-> 
-> For pci_claim_resource() we seem to be doing this in a number
-> of different places, but there isn't strictly a reason for that.
 
-pci_claim_resource() is needed if either arch code or the host
-controller driver does not trigger a resources assignment (which claims
-them while at it); in theory that's arch agnostic but it turned out to
-be very arch/platform specific - aka if we move s390 code to core code
-we will notice :) so pci_claim_resource() in a pcibios call is
-unfortunately legitimate - whether it can be moved out of it to
-generic code that's a very complicated problem.
 
-Lorenzo
+On 08/16/2018 10:21 AM, Logan Gunthorpe wrote:
+>
+> On 16/08/18 11:16 AM, Kit Chow wrote:
+>> I only have access to intel hosts for testing (and possibly an AMD
+>> host currently collecting dust) and am not sure how to go about getting
+>> the proper test coverage for other architectures.
+> Well, I thought you were only changing the Intel IOMMU implementation...
+> So testing on Intel hardware seems fine to me.
+For the ntb change, I wasn't sure if there was some other arch where
+ntb_async_tx_submit would work ok with the pci bar address but
+would break with the dma map (assuming map_resource has been implemented).
+If its all x86 at the moment, I guess I'm good to go. Please confirm.
+
+Thanks
+Kit
+
+>> Any suggestions? Do you anticipate any issues with dma mapping the pci bar
+>> address in ntb_async_tx_submit on non-x86 archs?  Do you or know of folks
+>> who have ntb test setups with non-x86 hosts who might be able to help?
+> I expect other IOMMUs will need to be updated to properly support
+> dma_map_resource but that will probably need to be done on a case by
+> case basis as the need arises. Unfortunately it seems the work to add
+> dma_map_resource() didn't really consider that the IOMMUs had to have
+> proper support and probably should have errored out instead of just
+> passing along the physical address if the IOMMU didn't have support.
+>
+> I don't know of anyone with an NTB setup on anything but x86 at the moment.
+>
+> Logan
