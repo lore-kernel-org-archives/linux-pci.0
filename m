@@ -1,50 +1,73 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-Subject: Re: PCI Endpoint - Missing inbound mapping ops ?
-To: Ramon Fried <ramon.fried@gmail.com>
-References: <CA+Kvs9kZKt0tvsB-YqomM7grvRyDr=B-HPWUNv1ZcKi8w9ms-A@mail.gmail.com>
- <cdc09cf9-27dd-7838-34e7-12d63571e770@ti.com>
- <CA+Kvs9mV3u045acfBa2pEiUcVDyYroVrobtsKKBpDAfX+Os5iQ@mail.gmail.com>
-CC: <lorenzo.pieralisi@arm.com>, <bhelgaas@google.com>,
-        <linux-pci@vger.kernel.org>,
-        open list <linux-kernel@vger.kernel.org>
-From: Kishon Vijay Abraham I <kishon@ti.com>
-Message-ID: <3ffbd957-a62f-b1ec-63b9-4ab3e03c8873@ti.com>
-Date: Tue, 14 Aug 2018 18:34:27 +0530
-MIME-Version: 1.0
-In-Reply-To: <CA+Kvs9mV3u045acfBa2pEiUcVDyYroVrobtsKKBpDAfX+Os5iQ@mail.gmail.com>
-Content-Type: text/plain; charset="utf-8"
-Sender: linux-kernel-owner@vger.kernel.org
+Return-Path: <SRS0=veIH=K7=kernel.crashing.org=benh@kernel.org>
+Return-Path: <SRS0=veIH=K7=kernel.crashing.org=benh@kernel.org>
+Message-ID: <9730c02c56b43bbaaea3f93306a83560a2d40b3e.camel@kernel.crashing.org>
+Subject: Re: PCIe enable device races (Was: [PATCH v3] PCI: Data corruption
+ happening due to race condition)
+From: Benjamin Herrenschmidt <benh@kernel.crashing.org>
+To: Hari Vyas <hari.vyas@broadcom.com>
+Cc: Konstantin Khlebnikov <khlebnikov@yandex-team.ru>,
+        Bjorn Helgaas
+	 <helgaas@kernel.org>,
+        Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org,
+        Ray Jui <ray.jui@broadcom.com>, Jens Axboe
+	 <axboe@kernel.dk>
+Date: Thu, 16 Aug 2018 20:11:18 +1000
+In-Reply-To: <f7aa5f1904f56beb3d202033089449a45f86e6d3.camel@kernel.crashing.org>
+References: <1530608741-30664-1-git-send-email-hari.vyas@broadcom.com>
+	 <20180731163727.GK45322@bhelgaas-glaptop.roam.corp.google.com>
+	 <ecaed7664b46d73888d2494065905f8e108fc0f4.camel@kernel.crashing.org>
+	 <20180815185027.GE28888@bhelgaas-glaptop.roam.corp.google.com>
+	 <e3316c91ad722434360b4018b17cbfe265e97801.camel@kernel.crashing.org>
+	 <fa218ce2-c337-e776-d958-f1f8a1129c9a@yandex-team.ru>
+	 <6f76eb5f54fdc780dac744773d836214d7844346.camel@kernel.crashing.org>
+	 <CAM5rFu-QCBq9TdoiFtvfNENUaS5Tpay5f0H9_BenEqK8nDgoNg@mail.gmail.com>
+	 <f7aa5f1904f56beb3d202033089449a45f86e6d3.camel@kernel.crashing.org>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 List-ID: <linux-pci.vger.kernel.org>
 
-Hi,
+On Thu, 2018-08-16 at 20:10 +1000, Benjamin Herrenschmidt wrote:
+> On Thu, 2018-08-16 at 14:52 +0530, Hari Vyas wrote:
+> > 
+> > There was an issue reported by my colleague srinath while enabling pci
+> > bridge and a race
+> > condition was happening while setting memory and master bits i.e. bits
+> > were over-written.
+> > As per my understanding is_busmaster and is_added bit race issue was
+> > at internal data
+> > management and is quite different from pci bridge enabling issue.
+> > Am I missing some thing ? Would be interested to know what exactly was
+> > affected due to
+> > is_busmaster fix.
+> 
+> The is_busmaster fix isn't I think affecting anything, however I don't
+> like the use of atomics for these things. It's a band-aid. If we grow a
+> proper pci_dev mutex, which is what I'm introducing here, it should be
+> able to also handle the is_added race etc..
+> 
+> > In any case, one bug is already filed and may propose a patch soon
+> > about pci bridge enabling scenario.
+> 
+> I already did, see the patch I posted earlier.
 
-On Tuesday 14 August 2018 06:25 PM, Ramon Fried wrote:
-> On Tue, Aug 14, 2018 at 1:53 PM Kishon Vijay Abraham I <kishon@ti.com> wrote:
->>
->> Hi,
->>
->> On Tuesday 14 August 2018 06:19 PM, Ramon Fried wrote:
->>> Hi.
->>> I recently saw that the PCI endpoint API only supports outbound memory
->>> mapping: (AXI -> PCI) through the map_addr op.
->>> Why inbound mapping is missing (PCI->AXI) is missing ?
->>> In almost all of the PCI EP controllers I've worked with there was a
->>> need to map complete BARS or part of BARS to mmio/aperature regions on
->>> the device.
->>
->> pci_epc_set_bar() is used for mapping BAR.
-> Thanks Kishon.
-> what about address mapping ? Synopsys has this functionality if I
-> recall correctly.
+https://lore.kernel.org/lkml/08bc40a6af3e614e97a78fbaab688bfcd14520ac.camel@kernel.crashing.org/
 
-The addresses that the RC will put in BAR's is not known while we initialize
-the endpoint. So we really can't map BAR's PCI address to an inbound address
-while EP initialization.
-
-I think some older version of Synopsys had this (and didn't have BAR mapping).
-Actually TI's K2G had this IP. However the ATU registers here are mapped to
-BAR0. So the host side PCI driver can program the PCI address (that the RC has
-allocated for BARs) in ATU.
-
-Thanks
-Kishon
+> >  In summary, bit manipulation is not working fine due to race
+> > conditions in SMP
+> > environment.
+> 
+> Right, among other things.
+> 
+> My proposed patch (which I will try to break down tomorrow or next week
+> into smaller bits) introduces a per-pci_dev mutex and uses it to fix
+> the enable & set_master races.
+> 
+> My proposal is to then progressively move more things under the
+> umbrella of that mutex in order to properly protect the pci_dev
+> internal state.
+> 
+> Cheers,
+> Ben.
+> 
+> > Regards,
+> > hari
