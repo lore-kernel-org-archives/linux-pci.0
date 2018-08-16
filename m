@@ -1,91 +1,54 @@
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Date: Wed, 8 Aug 2018 16:14:45 +0100
-From: Catalin Marinas <catalin.marinas@arm.com>
-To: "Richard Earnshaw (lists)" <Richard.Earnshaw@arm.com>
-Subject: Re: framebuffer corruption due to overlapping stp instructions on
- arm64
-Message-ID: <20180808151444.GF24736@iMac.local>
-References: <alpine.LRH.2.02.1808021242320.31834@file01.intranet.prod.int.rdu2.redhat.com>
- <CAHCPf3tFGqkYEcWNN4LaWThw_rVqT316pzLv6T7RfxwO-eZ0EA@mail.gmail.com>
- <alpine.LRH.2.02.1808030212340.17672@file01.intranet.prod.int.rdu2.redhat.com>
- <CAKv+Gu8DeuksZhk1g3q_msSKV_hSY_2e1uzVten9-oGO3j9Sqg@mail.gmail.com>
- <20180803094129.GB17798@arm.com>
- <alpine.LRH.2.02.1808031235410.31584@file01.intranet.prod.int.rdu2.redhat.com>
- <20180808113927.GA24736@iMac.local>
- <alpine.LRH.2.02.1808081011110.9997@file01.intranet.prod.int.rdu2.redhat.com>
- <b1a0dac5-3cf2-1a7f-ac7f-649126eb7873@arm.com>
-MIME-Version: 1.0
-In-Reply-To: <b1a0dac5-3cf2-1a7f-ac7f-649126eb7873@arm.com>
-List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
-List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
-List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
-List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
-List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
-Cc: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>,
- Joao Pinto <Joao.Pinto@synopsys.com>, libc-alpha@sourceware.org,
- Ard Biesheuvel <ard.biesheuvel@linaro.org>, Jingoo Han <jingoohan1@gmail.com>,
- Will Deacon <will.deacon@arm.com>, Russell King <linux@armlinux.org.uk>,
- Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
- Mikulas Patocka <mpatocka@redhat.com>, Matt Sealey <neko@bakuhatsu.net>,
- linux-pci@vger.kernel.org,
- linux-arm-kernel <linux-arm-kernel@lists.infradead.org>
-Content-Type: text/plain; charset="us-ascii"
-Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
-Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
+Return-Path: <SRS0=veIH=K7=kernel.crashing.org=benh@kernel.org>
+Return-Path: <SRS0=veIH=K7=kernel.crashing.org=benh@kernel.org>
+Message-ID: <add1477c22d5195a4acc166d8ce9d1b2fc104eda.camel@kernel.crashing.org>
+Subject: Re: PCIe enable device races (Was: [PATCH v3] PCI: Data corruption
+ happening due to race condition)
+From: Benjamin Herrenschmidt <benh@kernel.crashing.org>
+To: Jens Axboe <axboe@kernel.dk>,
+        Konstantin Khlebnikov
+	 <khlebnikov@yandex-team.ru>,
+        Bjorn Helgaas <helgaas@kernel.org>
+Cc: Hari Vyas <hari.vyas@broadcom.com>, bhelgaas@google.com,
+        linux-pci@vger.kernel.org, ray.jui@broadcom.com
+Date: Fri, 17 Aug 2018 09:09:28 +1000
+In-Reply-To: <208f0e92-cf0c-3df1-5b16-2a8ec02b8d6d@kernel.dk>
+References: <1530608741-30664-1-git-send-email-hari.vyas@broadcom.com>
+	 <20180731163727.GK45322@bhelgaas-glaptop.roam.corp.google.com>
+	 <ecaed7664b46d73888d2494065905f8e108fc0f4.camel@kernel.crashing.org>
+	 <20180815185027.GE28888@bhelgaas-glaptop.roam.corp.google.com>
+	 <e3316c91ad722434360b4018b17cbfe265e97801.camel@kernel.crashing.org>
+	 <fa218ce2-c337-e776-d958-f1f8a1129c9a@yandex-team.ru>
+	 <6f76eb5f54fdc780dac744773d836214d7844346.camel@kernel.crashing.org>
+	 <62ac393c-931a-f328-acf6-c9afc8a026ea@kernel.dk>
+	 <d8cd08c2e5ade8087d1ce3a4c046be1bd3228a0d.camel@kernel.crashing.org>
+	 <208f0e92-cf0c-3df1-5b16-2a8ec02b8d6d@kernel.dk>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wed, Aug 08, 2018 at 04:01:12PM +0100, Richard Earnshaw wrote:
-> On 08/08/18 15:12, Mikulas Patocka wrote:
-> > On Wed, 8 Aug 2018, Catalin Marinas wrote:
-> >> On Fri, Aug 03, 2018 at 01:09:02PM -0400, Mikulas Patocka wrote:
-> >>> 	while (1) {
-> >>> 		start = (unsigned)random() % (LEN + 1);
-> >>> 		end = (unsigned)random() % (LEN + 1);
-> >>> 		if (start > end)
-> >>> 			continue;
-> >>> 		for (i = start; i < end; i++)
-> >>> 			data[i] = val++;
-> >>> 		memcpy(map + start, data + start, end - start);
-> >>> 		if (memcmp(map, data, LEN)) {
-> >>
-> >> It may be worth trying to do a memcmp(map+start, data+start, end-start)
-> >> here to see whether the hazard logic fails when the writes are unaligned
-> >> but the reads are not.
-> >>
-> >> This problem may as well appear if you do byte writes and read longs
-> >> back (and I consider this a hardware problem on this specific board).
+On Thu, 2018-08-16 at 15:56 -0600, Jens Axboe wrote:
+> On 8/16/18 3:37 PM, Benjamin Herrenschmidt wrote:
+> > On Thu, 2018-08-16 at 13:43 -0600, Jens Axboe wrote:
+> > > 
+> > > > Ok. Well, my patch fixes it for my repro-case at least and seems to not
+> > > > break anyhting on my thinkpad so ...
+> > > > 
+> > > > Bjorn, are you ok with the approach ? If yes, I'll start breaking up
+> > > > that patch into a few smaller bits in case something goes wrong and we
+> > > > want to bisect (such as the changes I did to tracking is_busmaster
+> > > > etc...)
+> > > 
+> > > I can try it too, but I was never CC'ed on the actual patch.
 > > 
-> > I triad to insert usleep(10000) between the memcpy and memcmp, but the 
-> > same corruption occurs. So, it can't be read-after-write hazard. It is 
-> > caused by the improper handling of hazard between the overlapping writes 
-> > inside memcpy.
+> > https://lore.kernel.org/lkml/08bc40a6af3e614e97a78fbaab688bfcd14520ac.camel@kernel.crashing.org/
+> > 
+> > (I'll also fwd privately)
 > 
-> I don't think you've told us what form the corruption takes.  Does it
-> lose some bytes?  Modify values beyond the copy range?  Write completely
-> arbitrary values?
+> Boots and works fine for me, but I'm also now on a gen6 x1, my initial
+> report was on a gen4. I still have the gen4, I can power it up and see
+> if it works there as well.
 
->From this message:
+Mine is a gen4 and it works fine :)
 
-https://lore.kernel.org/lkml/alpine.LRH.2.02.1808060553130.30832@file01.intranet.prod.int.rdu2.redhat.com/
-
-- failing to write a few bytes
-- writing a few bytes that were written 16 bytes before
-- writing a few bytes that were written 16 bytes after
-
-> The overlapping writes in memcpy never write different values to the
-> same location, so I still feel this must be some sort of HW issue, not a
-> SW one.
-
-So do I (my interpretation is that it combines or rather skips some of
-the writes to the same 16-byte address as it ignores the data strobes).
-
--- 
-Catalin
-
-_______________________________________________
-linux-arm-kernel mailing list
-linux-arm-kernel@lists.infradead.org
-http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
+Cheers,
+Ben.
