@@ -1,75 +1,53 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mga14.intel.com ([192.55.52.115]:7944 "EHLO mga14.intel.com"
+Received: from mga02.intel.com ([134.134.136.20]:10537 "EHLO mga02.intel.com"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S2389581AbeHGUHt (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Tue, 7 Aug 2018 16:07:49 -0400
-Message-ID: <263e783d8aa8b50c27d8919d178066367162488e.camel@intel.com>
-Subject: Re: [PATCH v6 5/9] fm10k: Do not call pcie_print_link_status()
-From: Jeff Kirsher <jeffrey.t.kirsher@intel.com>
-Reply-To: jeffrey.t.kirsher@intel.com
-To: Alexandru Gagniuc <mr.nuke.me@gmail.com>,
-        linux-pci@vger.kernel.org, bhelgaas@google.com,
-        jakub.kicinski@netronome.com
-Cc: keith.busch@intel.com, alex_gagniuc@dellteam.com,
-        austin_bolen@dell.com, shyam_iyer@dell.com,
-        Ariel Elior <ariel.elior@cavium.com>,
-        everest-linux-l2@cavium.com,
-        "David S. Miller" <davem@davemloft.net>,
-        Michael Chan <michael.chan@broadcom.com>,
-        Ganesh Goudar <ganeshgr@chelsio.com>,
-        Tariq Toukan <tariqt@mellanox.com>,
-        Saeed Mahameed <saeedm@mellanox.com>,
-        Leon Romanovsky <leon@kernel.org>,
-        Dirk van der Merwe <dirk.vandermerwe@netronome.com>,
-        netdev@vger.kernel.org, linux-kernel@vger.kernel.org,
-        intel-wired-lan@lists.osuosl.org, linux-rdma@vger.kernel.org,
-        oss-drivers@netronome.com
-Date: Tue, 07 Aug 2018 10:52:17 -0700
-In-Reply-To: <20180806232600.25694-5-mr.nuke.me@gmail.com>
-References: <CAErSpo4PK+SQLNfdkLNt9eLc7bpbxbkZCsa8T-tQpid601n0SQ@mail.gmail.com>
-         <20180806232600.25694-1-mr.nuke.me@gmail.com>
-         <20180806232600.25694-5-mr.nuke.me@gmail.com>
-Content-Type: multipart/signed; micalg="pgp-sha256";
-        protocol="application/pgp-signature"; boundary="=-J5aSTQDattGGpjY4QXtq"
-Mime-Version: 1.0
+        id S1725783AbeHPW2r (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Thu, 16 Aug 2018 18:28:47 -0400
+Date: Thu, 16 Aug 2018 22:28:05 +0300
+From: Mika Westerberg <mika.westerberg@linux.intel.com>
+To: Alex Williamson <alex.williamson@redhat.com>
+Cc: Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org
+Subject: Re: [PATCH] PCI: Add ACS quirk for Intel 300 series chipset
+Message-ID: <20180816192805.GN2343@lahna.fi.intel.com>
+References: <20180427104423.2203-1-mika.westerberg@linux.intel.com>
+ <20180815152139.4e469fd4@t450s.home>
+ <20180815164308.6ad5dd39@t450s.home>
+ <20180816061015.GD2343@lahna.fi.intel.com>
+ <20180816091303.69ce8e45@t450s.home>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20180816091303.69ce8e45@t450s.home>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
+On Thu, Aug 16, 2018 at 09:13:03AM -0600, Alex Williamson wrote:
+>  static int pci_quirk_enable_intel_spt_pch_acs(struct pci_dev *dev)
+>  {
+>  	int pos;
+> +	u16 std_ctrl;
+>  	u32 cap, ctrl;
+>  
+>  	if (!pci_quirk_intel_spt_pch_acs_match(dev))
+> @@ -4621,6 +4628,18 @@ static int pci_quirk_enable_intel_spt_pch_acs(struct pci_dev *dev)
+>  	if (!pos)
+>  		return -ENOTTY;
+>  
+> +	/* If the std control word has bits set or is writable, do not quirk */
+> +	pci_read_config_word(dev, pos + PCI_ACS_CTRL, &std_ctrl);
+> +	if (std_ctrl)
+> +		return -ENOTTY;
+> +
+> +	pci_write_config_word(dev, pos + PCI_ACS_CTRL, 0xff);
 
---=-J5aSTQDattGGpjY4QXtq
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
+I don't know ACS well but could the above have some unwanted
+side-effects, even if we write back zeroes below?
 
-On Mon, 2018-08-06 at 18:25 -0500, Alexandru Gagniuc wrote:
-> This is now done by the PCI core to warn of sub-optimal bandwidth.
->=20
-> Signed-off-by: Alexandru Gagniuc <mr.nuke.me@gmail.com>
-> ---
->  drivers/net/ethernet/intel/fm10k/fm10k_pci.c | 3 ---
->  1 file changed, 3 deletions(-)
-
-Acked-by: Jeff Kirsher <jeffrey.t.kirsher@intel.com>
-
---=-J5aSTQDattGGpjY4QXtq
-Content-Type: application/pgp-signature; name="signature.asc"
-Content-Description: This is a digitally signed message part
-Content-Transfer-Encoding: 7bit
-
------BEGIN PGP SIGNATURE-----
-
-iQIzBAABCAAdFiEEiTyZWz+nnTrOJ1LZ5W/vlVpL7c4FAltp3FEACgkQ5W/vlVpL
-7c7Vag/9HVyuEGVsk8QblGk3urNCoL2kGmQG2Gm4z/7uv5SZUqkWMBTa1n2y+N+U
-w3wIC9/eSLz7GOUUEU6pWobU/ORkiPzl7D6yYVMvNLb3eS7InWvKiAvBkF/+e1Ya
-ktzRLiacJFGwkavQfYa6ga5suNEC1YA7uf1yZ7yWxsahdLcFrznY7uhmRe+93wLs
-jWpMr3HClUj1dUkfqjc3f/C42yALGCOdi328+OrV0APx3063eu73peNoDvbM+oXA
-9S+p1sb2pG7wwWs9VHLPjGm3r6Qgl3fyWVTsTmV1KhJRajMq4Dw6/fjGqb219vZE
-L3Y5y4MCLoteCQmBIbHBanLOjXG/JYq7CBR8sPZyBcYlYcWRqNJd3DiQGyHS+a8c
-NePyrPa6LLIxLEJfUqk0hNWSYiPshc3YipoZhhVFlp+dGNVZZJJ2UKhSZMsweFAw
-aYMVh/gjumHM2EJe9AYKob4aCH94KbA0WJfQ79phvr8Z6VS47Ikv3kojAHvmwJe4
-FHI+s8adHTvM4eJZePCuhUBoP9rEZDgchnUpZVAoUxvYUeKdopNAwfizTor1Jg2a
-QUdfz6SDVqf9sHBzT4ypvXy7A/9mgi/GhY2FisDAl76a2yemkjuOP1J4W2ivpkrP
-z0A0LQ6u17Eko9abpm89jFx1qwJEiE9RNtxDjkrzb6DSASzMizo=
-=PPMO
------END PGP SIGNATURE-----
-
---=-J5aSTQDattGGpjY4QXtq--
+> +	pci_read_config_word(dev, pos + PCI_ACS_CTRL, &std_ctrl);
+> +	if (std_ctrl) {
+> +		pci_write_config_word(dev, pos + PCI_ACS_CTRL, 0);
+> +		return -ENOTTY;
+> +	}
+> +
+>  	pci_read_config_dword(dev, pos + PCI_ACS_CAP, &cap);
+>  	pci_read_config_dword(dev, pos + INTEL_SPT_ACS_CTRL, &ctrl);
+>  
