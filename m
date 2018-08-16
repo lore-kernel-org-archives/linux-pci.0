@@ -1,238 +1,84 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-Date: Thu, 9 Aug 2018 09:02:55 -0500
-From: Bjorn Helgaas <helgaas@kernel.org>
-To: Leon Romanovsky <leon@kernel.org>
-Cc: "Alex G." <mr.nuke.me@gmail.com>, Tal Gilboa <talgi@mellanox.com>,
-        linux-pci@vger.kernel.org, bhelgaas@google.com,
-        jakub.kicinski@netronome.com, keith.busch@intel.com,
-        alex_gagniuc@dellteam.com, austin_bolen@dell.com,
-        shyam_iyer@dell.com, Ariel Elior <ariel.elior@cavium.com>,
-        everest-linux-l2@cavium.com,
-        "David S. Miller" <davem@davemloft.net>,
-        Michael Chan <michael.chan@broadcom.com>,
-        Ganesh Goudar <ganeshgr@chelsio.com>,
-        Jeff Kirsher <jeffrey.t.kirsher@intel.com>,
-        Tariq Toukan <tariqt@mellanox.com>,
-        Saeed Mahameed <saeedm@mellanox.com>,
-        Dirk van der Merwe <dirk.vandermerwe@netronome.com>,
-        netdev@vger.kernel.org, linux-kernel@vger.kernel.org,
-        intel-wired-lan@lists.osuosl.org, linux-rdma@vger.kernel.org,
-        oss-drivers@netronome.com
-Subject: Re: [PATCH v6 8/9] net/mlx5: Do not call pcie_print_link_status()
-Message-ID: <20180809140255.GG49411@bhelgaas-glaptop.roam.corp.google.com>
-References: <CAErSpo4PK+SQLNfdkLNt9eLc7bpbxbkZCsa8T-tQpid601n0SQ@mail.gmail.com>
- <20180806232600.25694-1-mr.nuke.me@gmail.com>
- <20180806232600.25694-8-mr.nuke.me@gmail.com>
- <20180808060848.GQ13378@mtr-leonro.mtl.com>
- <05056a70-ee78-ea3c-0b9b-6d64a8663b11@mellanox.com>
- <20180808154142.GZ13378@mtr-leonro.mtl.com>
- <5578cd9a-e4f0-85ab-4a86-bfa23eec136c@mellanox.com>
- <79264a38-e3e4-d270-95df-a09047f7a15e@gmail.com>
- <20180808172736.GB13378@mtr-leonro.mtl.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
-In-Reply-To: <20180808172736.GB13378@mtr-leonro.mtl.com>
-Sender: linux-kernel-owner@vger.kernel.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from gate.crashing.org ([63.228.1.57]:44781 "EHLO gate.crashing.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1726046AbeHPKCN (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Thu, 16 Aug 2018 06:02:13 -0400
+Message-ID: <bf7ceabb6fe51398e0f4eebd9c4fe4ac1ec2b8a4.camel@kernel.crashing.org>
+Subject: Re: [PATCH 1/1] PCI/AER: prevent pcie_do_fatal_recovery from using
+ device after it is removed
+From: Benjamin Herrenschmidt <benh@kernel.crashing.org>
+To: poza@codeaurora.org
+Cc: Thomas Tai <thomas.tai@oracle.com>, bhelgaas@google.com,
+        keith.busch@intel.com, linux-pci@vger.kernel.org,
+        linux-pci-owner@vger.kernel.org,
+        Sam Bobroff <sam.bobroff@au1.ibm.com>
+Date: Thu, 16 Aug 2018 17:05:30 +1000
+In-Reply-To: <e931bc7a7e468e8bb2ee3766b3fcf96f1800f552.camel@kernel.crashing.org>
+References: <1534179088-44219-1-git-send-email-thomas.tai@oracle.com>
+         <1534179088-44219-2-git-send-email-thomas.tai@oracle.com>
+         <51f4b387d9bd96a42d526a6a029fc43b@codeaurora.org>
+         <b0104a716319d76e734c307cb4bedd9d@codeaurora.org>
+         <903394c04d6ad468ed06dc0a779200e7555345a7.camel@kernel.crashing.org>
+         <6cb069038530757f31f3dd60328c7e30@codeaurora.org>
+         <e931bc7a7e468e8bb2ee3766b3fcf96f1800f552.camel@kernel.crashing.org>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wed, Aug 08, 2018 at 08:27:36PM +0300, Leon Romanovsky wrote:
-> On Wed, Aug 08, 2018 at 11:33:51AM -0500, Alex G. wrote:
-> >
-> >
-> > On 08/08/2018 10:56 AM, Tal Gilboa wrote:
-> > > On 8/8/2018 6:41 PM, Leon Romanovsky wrote:
-> > > > On Wed, Aug 08, 2018 at 05:23:12PM +0300, Tal Gilboa wrote:
-> > > > > On 8/8/2018 9:08 AM, Leon Romanovsky wrote:
-> > > > > > On Mon, Aug 06, 2018 at 06:25:42PM -0500, Alexandru Gagniuc wrote:
-> > > > > > > This is now done by the PCI core to warn of sub-optimal bandwidth.
-> > > > > > >
-> > > > > > > Signed-off-by: Alexandru Gagniuc <mr.nuke.me@gmail.com>
-> > > > > > > ---
-> > > > > > >    drivers/net/ethernet/mellanox/mlx5/core/main.c | 4 ----
-> > > > > > >    1 file changed, 4 deletions(-)
-> > > > > > >
-> > > > > >
-> > > > > > Thanks,
-> > > > > > Reviewed-by: Leon Romanovsky <leonro@mellanox.com>
-> > > > > >
-> > > > >
-> > > > > Alex,
-> > > > > I loaded mlx5 driver with and without these series. The report
-> > > > > in dmesg is
-> > > > > now missing. From what I understood, the status should be
-> > > > > reported at least
-> > > > > once, even if everything is in order.
-> > > >
-> > > > It is not what this series is doing and it removes prints completely if
-> > > > fabric can deliver more than card is capable.
-> > > >
-> > > > > We need this functionality to stay.
-> > > >
-> > > > I'm not sure that you need this information in driver's dmesg output,
-> > > > but most probably something globally visible and accessible per-pci
-> > > > device.
-> > >
-> > > Currently we have users that look for it. If we remove the dmesg print
-> > > we need this to be reported elsewhere. Adding it to sysfs for example
-> > > should be a valid solution for our case.
-> >
-> > I think a stop-gap measure is to leave the pcie_print_link_status() call in
-> > drivers that really need it for whatever reason. Implementing a reliable
-> > reporting through sysfs might take some tinkering, and I don't think it's a
-> > sufficient reason to block the heart of this series -- being able to detect
-> > bottlenecks and link downtraining.
+On Thu, 2018-08-16 at 16:51 +1000, Benjamin Herrenschmidt wrote:
+> No, this is wrong and not the intent of the error handling.
 > 
-> IMHO, you did right change and it is better to replace this print to some
-> more generic solution now while you are doing it and don't leave leftovers.
+> You seem to be applying PCIe specific concepts brain-farted at Intel
+> that are way way away from what we care about in practice and in Linux.
+> 
+> > e.g.  some driver handle errors ERR_NONFATAL or FATAL in similar ways
+> > e.g.
+> > ioat_pcie_error_detected();  calls  ioat_shutdown(); in case of 
+> > ERR_NONFATAL
+> > otherwise ioat_shutdown() in case of ERR_FATAL.
+> 
+> Since when the error handling callbacks even have the concept of FATAL
+> vs. non-fatal ? This doesn't appear anyhwhere in the prototype of the
+> struct pci_error_handlers and shouldn't.
 
-I'd like to make forward progress on this, so I propose we merge only
-the PCI core change (patch 1/9) and drop the individual driver
-changes.  That would mean:
+Ugh... I just saw the changes you did to Documentation/PCI/pci-error-
+recovery.txt and I would very much like to revert those !
 
-  - We'll get a message from every NIC driver that calls
-    pcie_print_link_status() as before.
+Bjorn, you shouldn't let changes to the PCI error handling through
+without acks from us, it looks like we didn't notice (we can't possibly
+monitor all lists).
 
-  - We'll get a new message from the core for every downtrained link.
+We wrote that in the firsat place and our EEH infrastructure rely on it
+heavily on it.
 
-  - If a link leading to the NIC is downtrained, there will be
-    duplicate messages.  Maybe that's overkill but it's not terrible.
+Poza, you seem to have not understood the intent of the code and are
+now changing the rules in ways that are broken in our opinion. This is
+bad.
 
-I provisionally put the patch below on my pci/enumeration branch.
-Objections?
+Bjorn, please revert all of those changes.
 
+There was NEVER an intent to separate fatal from non-fatal at that
+level. We could pass the information to the driver if we wished but the
+recovery sequence is NOT intended to be different.
 
-commit c870cc8cbc4d79014f3daa74d1e412f32e42bf1b
-Author: Alexandru Gagniuc <mr.nuke.me@gmail.com>
-Date:   Mon Aug 6 18:25:35 2018 -0500
+Especially we specifically do NOT want to unplug and replug the device
+for fatal errors at all. This is not going to work with drivers that
+cannot re-link with their various kernel services, such as storage
+devices re-connecting with mounted file systems etc...
 
-    PCI: Check for PCIe Link downtraining
-    
-    When both ends of a PCIe Link are capable of a higher bandwidth than is
-    currently in use, the Link is said to be "downtrained".  A downtrained Link
-    may indicate hardware or configuration problems in the system, but it's
-    hard to identify such Links from userspace.
-    
-    Refactor pcie_print_link_status() so it continues to always print PCIe
-    bandwidth information, as several NIC drivers desire.
-    
-    Add a new internal __pcie_print_link_status() to emit a message only when a
-    device's bandwidth is constrained by the fabric and call it from the PCI
-    core for all devices, which identifies all downtrained Links.  It also
-    emits messages for a few cases that are technically not downtrained, such
-    as a x4 device in an open-ended x1 slot.
-    
-    Signed-off-by: Alexandru Gagniuc <mr.nuke.me@gmail.com>
-    [bhelgaas: changelog, move __pcie_print_link_status() declaration to
-    drivers/pci/, rename pcie_check_upstream_link() to
-    pcie_report_downtraining()]
-    Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
+Those changes are utterly broken.
 
-diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
-index 97acba712e4e..a84d341504a5 100644
---- a/drivers/pci/pci.c
-+++ b/drivers/pci/pci.c
-@@ -5264,14 +5264,16 @@ u32 pcie_bandwidth_capable(struct pci_dev *dev, enum pci_bus_speed *speed,
- }
- 
- /**
-- * pcie_print_link_status - Report the PCI device's link speed and width
-+ * __pcie_print_link_status - Report the PCI device's link speed and width
-  * @dev: PCI device to query
-+ * @verbose: Print info even when enough bandwidth is available
-  *
-- * Report the available bandwidth at the device.  If this is less than the
-- * device is capable of, report the device's maximum possible bandwidth and
-- * the upstream link that limits its performance to less than that.
-+ * If the available bandwidth at the device is less than the device is
-+ * capable of, report the device's maximum possible bandwidth and the
-+ * upstream link that limits its performance.  If @verbose, always print
-+ * the available bandwidth, even if the device isn't constrained.
-  */
--void pcie_print_link_status(struct pci_dev *dev)
-+void __pcie_print_link_status(struct pci_dev *dev, bool verbose)
- {
- 	enum pcie_link_width width, width_cap;
- 	enum pci_bus_speed speed, speed_cap;
-@@ -5281,11 +5283,11 @@ void pcie_print_link_status(struct pci_dev *dev)
- 	bw_cap = pcie_bandwidth_capable(dev, &speed_cap, &width_cap);
- 	bw_avail = pcie_bandwidth_available(dev, &limiting_dev, &speed, &width);
- 
--	if (bw_avail >= bw_cap)
-+	if (bw_avail >= bw_cap && verbose)
- 		pci_info(dev, "%u.%03u Gb/s available PCIe bandwidth (%s x%d link)\n",
- 			 bw_cap / 1000, bw_cap % 1000,
- 			 PCIE_SPEED2STR(speed_cap), width_cap);
--	else
-+	else if (bw_avail < bw_cap)
- 		pci_info(dev, "%u.%03u Gb/s available PCIe bandwidth, limited by %s x%d link at %s (capable of %u.%03u Gb/s with %s x%d link)\n",
- 			 bw_avail / 1000, bw_avail % 1000,
- 			 PCIE_SPEED2STR(speed), width,
-@@ -5293,6 +5295,17 @@ void pcie_print_link_status(struct pci_dev *dev)
- 			 bw_cap / 1000, bw_cap % 1000,
- 			 PCIE_SPEED2STR(speed_cap), width_cap);
- }
-+
-+/**
-+ * pcie_print_link_status - Report the PCI device's link speed and width
-+ * @dev: PCI device to query
-+ *
-+ * Report the available bandwidth at the device.
-+ */
-+void pcie_print_link_status(struct pci_dev *dev)
-+{
-+	__pcie_print_link_status(dev, true);
-+}
- EXPORT_SYMBOL(pcie_print_link_status);
- 
- /**
-diff --git a/drivers/pci/pci.h b/drivers/pci/pci.h
-index 70808c168fb9..ce880dab5bc8 100644
---- a/drivers/pci/pci.h
-+++ b/drivers/pci/pci.h
-@@ -263,6 +263,7 @@ enum pci_bus_speed pcie_get_speed_cap(struct pci_dev *dev);
- enum pcie_link_width pcie_get_width_cap(struct pci_dev *dev);
- u32 pcie_bandwidth_capable(struct pci_dev *dev, enum pci_bus_speed *speed,
- 			   enum pcie_link_width *width);
-+void __pcie_print_link_status(struct pci_dev *dev, bool verbose);
- 
- /* Single Root I/O Virtualization */
- struct pci_sriov {
-diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
-index bc147c586643..387fc8ac54ec 100644
---- a/drivers/pci/probe.c
-+++ b/drivers/pci/probe.c
-@@ -2231,6 +2231,25 @@ static struct pci_dev *pci_scan_device(struct pci_bus *bus, int devfn)
- 	return dev;
- }
- 
-+static void pcie_report_downtraining(struct pci_dev *dev)
-+{
-+	if (!pci_is_pcie(dev))
-+		return;
-+
-+	/* Look from the device up to avoid downstream ports with no devices */
-+	if ((pci_pcie_type(dev) != PCI_EXP_TYPE_ENDPOINT) &&
-+	    (pci_pcie_type(dev) != PCI_EXP_TYPE_LEG_END) &&
-+	    (pci_pcie_type(dev) != PCI_EXP_TYPE_UPSTREAM))
-+		return;
-+
-+	/* Multi-function PCIe devices share the same link/status */
-+	if (PCI_FUNC(dev->devfn) != 0 || dev->is_virtfn)
-+		return;
-+
-+	/* Print link status only if the device is constrained by the fabric */
-+	__pcie_print_link_status(dev, false);
-+}
-+
- static void pci_init_capabilities(struct pci_dev *dev)
- {
- 	/* Enhanced Allocation */
-@@ -2266,6 +2285,8 @@ static void pci_init_capabilities(struct pci_dev *dev)
- 	/* Advanced Error Reporting */
- 	pci_aer_init(dev);
- 
-+	pcie_report_downtraining(dev);
-+
- 	if (pci_probe_reset_function(dev) == 0)
- 		dev->reset_fn = 1;
- }
+The basic premise of the design that we woudl do that unplug/replug
+trick if and ONLY IF the driver doesn't have the appropriate callbacks.
+
+We are also now looking at replacing this with an ubind/re-bind because
+in practice, the unplugging is causing us all sort of problems. Sam
+(CC) can elaborate.
+
+Bjorn, we are the main authors of that spec (Linas wrote it under my
+supervision) and created those callbacks for EEH. AER picked them up
+only later. Those changes must be at the very least acked by us before
+going upstream.
+
+Ben.
