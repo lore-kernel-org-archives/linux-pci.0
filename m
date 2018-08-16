@@ -1,43 +1,93 @@
-Return-Path: <SRS0=/dXs=K6=kernel.crashing.org=benh@kernel.org>
-Return-Path: <SRS0=/dXs=K6=kernel.crashing.org=benh@kernel.org>
-Message-ID: <58192cf94de3941f9141aa3203399ae2bcdf6b7a.camel@kernel.crashing.org>
+Return-Path: <SRS0=ut0H=K7=broadcom.com=hari.vyas@kernel.org>
+Return-Path: <SRS0=ut0H=K7=broadcom.com=hari.vyas@kernel.org>
+MIME-Version: 1.0
+In-Reply-To: <6f76eb5f54fdc780dac744773d836214d7844346.camel@kernel.crashing.org>
+References: <1530608741-30664-1-git-send-email-hari.vyas@broadcom.com>
+ <20180731163727.GK45322@bhelgaas-glaptop.roam.corp.google.com>
+ <ecaed7664b46d73888d2494065905f8e108fc0f4.camel@kernel.crashing.org>
+ <20180815185027.GE28888@bhelgaas-glaptop.roam.corp.google.com>
+ <e3316c91ad722434360b4018b17cbfe265e97801.camel@kernel.crashing.org>
+ <fa218ce2-c337-e776-d958-f1f8a1129c9a@yandex-team.ru> <6f76eb5f54fdc780dac744773d836214d7844346.camel@kernel.crashing.org>
+From: Hari Vyas <hari.vyas@broadcom.com>
+Date: Thu, 16 Aug 2018 14:52:04 +0530
+Message-ID: <CAM5rFu-QCBq9TdoiFtvfNENUaS5Tpay5f0H9_BenEqK8nDgoNg@mail.gmail.com>
 Subject: Re: PCIe enable device races (Was: [PATCH v3] PCI: Data corruption
  happening due to race condition)
-From: Benjamin Herrenschmidt <benh@kernel.crashing.org>
-To: Bjorn Helgaas <helgaas@kernel.org>, Hari Vyas <hari.vyas@broadcom.com>
-Cc: bhelgaas@google.com, linux-pci@vger.kernel.org, ray.jui@broadcom.com
-Date: Wed, 15 Aug 2018 14:44:22 +1000
-In-Reply-To: <5e42f7990673d11e3a020e7efcfd333215d48138.camel@kernel.crashing.org>
-References: <1530608741-30664-1-git-send-email-hari.vyas@broadcom.com>
-	 <20180731163727.GK45322@bhelgaas-glaptop.roam.corp.google.com>
-	 <ecaed7664b46d73888d2494065905f8e108fc0f4.camel@kernel.crashing.org>
-	 <5e42f7990673d11e3a020e7efcfd333215d48138.camel@kernel.crashing.org>
+To: Benjamin Herrenschmidt <benh@kernel.crashing.org>
+Cc: Konstantin Khlebnikov <khlebnikov@yandex-team.ru>, Bjorn Helgaas <helgaas@kernel.org>,
+	Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org,
+	Ray Jui <ray.jui@broadcom.com>, Jens Axboe <axboe@kernel.dk>
 Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wed, 2018-08-15 at 14:16 +1000, Benjamin Herrenschmidt wrote:
-> On Wed, 2018-08-15 at 13:35 +1000, Benjamin Herrenschmidt wrote:
-> > What's really needed is a per device mutex covering all those operations
-> > on a given device. (This would also allow to get rid of those games with
-> > atomics).
-> > 
-> > Any comments ?
-> 
-> Note: I'm experienting with a per-pci_dev mutex to protect the device
-> state. If it works out, I suggest we add it, then progressively
-> move things one by one under the protection of the mutex.
-> 
-> Any objection to the approach ? If it fixes my problem, I'll send
-> preliminary patches that cover the basic enable/disable and bus
-> master settings to start with. We should try to get them into
-> stable as this is breaking real world stuff for us.
-> 
-> I suspect large x86 systems get lucky because their BIOSes do all
-> the enables. It would be possible to reproduce the races there by
-> hot-pluging a large external drawer using a cable card with a switch
+On Thu, Aug 16, 2018 at 1:32 PM, Benjamin Herrenschmidt
+<benh@kernel.crashing.org> wrote:
+> On Thu, 2018-08-16 at 10:58 +0300, Konstantin Khlebnikov wrote:
+>> On 16.08.2018 00:52, Benjamin Herrenschmidt wrote:
+>> > On Wed, 2018-08-15 at 13:50 -0500, Bjorn Helgaas wrote:
+>> > > Yes, this is definitely broken.  Some folks have tried to fix it in
+>> > > the past, but it hasn't quite happened yet.  We actually merged one
+>> > > patch, 40f11adc7cd9 ("PCI: Avoid race while enabling upstream
+>> > > bridges"), but had to revert it after we found issues:
+>> > >
+>> > > https://lkml.kernel.org/r/1501858648-22228-1-git-send-email-srinath.mannam@broadcom.com
+>> > > https://lkml.kernel.org/r/20170915072352.10453.31977.stgit@bhelgaas-glaptop.roam.corp.google.com
+>> >
+>> > Ok so I had a look at this previous patch and it adds yet anothe use of
+>> > some global mutex to protect part of the operation which makes me
+>> > cringe a bit, we have too many of these.
+>> >
+>> > What do you think of the one I sent yesterday ? (I can't find it in the
+>> > archives yet)
+>> >
+>> > [RFC PATCH] pci: Proof of concept at fixing pci_enable_device/bridge races
+>> >
+>> > The patch itself needs splitting etc... but the basic idea is to move away
+>> > from those global mutexes in a number of places and have one in the pci_dev
+>> > struct itself to protect its state.
+>> >
+>> > I would also like to use this rather than the bitmap atomics for is_added
+>> > etc... (Hari's fix) in the long run. Atomics aren't significantly cheaper
+>> > and imho makes thing even messier.
+>> >
+>> > Jens, Konstantin, any chance you can test if the above also breaks iwlwifi
+>> > (I don't see why it would but ...)
+>> >
+>>
+>> I suppose original race was discovered between enabling bridge and device as described here
+>>
+>> https://lore.kernel.org/lkml/150547971091.977464.16294045866179907260.stgit@buzz/T/#u
+>>
+>> I barely can remember what I ever posted this, so I couldn't reproduce for sure.
+>
+> Ok. Well, my patch fixes it for my repro-case at least and seems to not
+> break anyhting on my thinkpad so ...
+>
+> Bjorn, are you ok with the approach ? If yes, I'll start breaking up
+> that patch into a few smaller bits in case something goes wrong and we
+> want to bisect (such as the changes I did to tracking is_busmaster
+> etc...)
+>
+> Cheers,
+> ben.
+>
+>
+There was an issue reported by my colleague srinath while enabling pci
+bridge and a race
+condition was happening while setting memory and master bits i.e. bits
+were over-written.
+As per my understanding is_busmaster and is_added bit race issue was
+at internal data
+management and is quite different from pci bridge enabling issue.
+Am I missing some thing ? Would be interested to know what exactly was
+affected due to
+is_busmaster fix.
 
-BTW. Should we plan a PCIe microconf for Plumbers ?
+In any case, one bug is already filed and may propose a patch soon
+about pci bridge enabling
+scenario. In summary, bit manipulation is not working fine due to race
+conditions in SMP
+environment.
 
-Cheers,
-Ben.
+Regards,
+hari
