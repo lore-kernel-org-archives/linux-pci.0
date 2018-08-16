@@ -1,87 +1,74 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-oi0-f66.google.com ([209.85.218.66]:38856 "EHLO
-        mail-oi0-f66.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1727763AbeH3Lmd (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Thu, 30 Aug 2018 07:42:33 -0400
-Received: by mail-oi0-f66.google.com with SMTP id x197-v6so13831996oix.5
-        for <linux-pci@vger.kernel.org>; Thu, 30 Aug 2018 00:41:44 -0700 (PDT)
+Return-Path: <SRS0=oEMe=K7=gigaio.com=kchow@kernel.org>
+Return-Path: <SRS0=oEMe=K7=gigaio.com=kchow@kernel.org>
+Subject: Re: IOAT DMA w/IOMMU
+To: Logan Gunthorpe <logang@deltatee.com>, Eric Pilmore <epilmore@gigaio.com>
+Cc: Bjorn Helgaas <helgaas@kernel.org>, linux-pci@vger.kernel.org,
+ David Woodhouse <dwmw2@infradead.org>,
+ Alex Williamson <alex.williamson@redhat.com>,
+ iommu@lists.linux-foundation.org,
+ "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
+References: <CAOQPn8soxubJxb=vp7kz+AM6LbPH5y+_Nx0Vzv7rjV_nMMqEmA@mail.gmail.com>
+ <20180809184331.GB113140@bhelgaas-glaptop.roam.corp.google.com>
+ <CAOQPn8uPYKai49WYPqZp2wNd5of=0hUvPOHEtqP56RZu-hcjuw@mail.gmail.com>
+ <b54899a8-a144-e8e0-9880-1800c4657b95@deltatee.com>
+ <CAOQPn8tSNN+3igN-kMcQH46w_a9p6T+S7=c8CLREMLxr1kaTXQ@mail.gmail.com>
+ <7068db44-af31-4462-f966-2dd2340ba0f0@deltatee.com>
+From: Kit Chow <kchow@gigaio.com>
+Message-ID: <695826a6-e10c-5a30-a51f-7cc61ba6e640@gigaio.com>
+Date: Thu, 16 Aug 2018 10:16:14 -0700
 MIME-Version: 1.0
-In-Reply-To: <20180828095722.GA8820@al>
-References: <CAD8Lp46Y2eOR7WE28xToUL8s-aYiqPa0nS=1GSD0AxkddXq6+A@mail.gmail.com>
- <20180824154212.GB8601@al> <CAD8Lp45D6=pqsgr_tXS08pE0dbG1XhcwnDB3mGZQ=P3ETxywzw@mail.gmail.com>
- <20180828095722.GA8820@al>
-From: Daniel Drake <drake@endlessm.com>
-Date: Thu, 30 Aug 2018 15:41:43 +0800
-Message-ID: <CAD8Lp44Re2menmZfY3GLExZVMDfQANTvG3hWC1wQwrXpQ6WKCA@mail.gmail.com>
-Subject: Re: [Nouveau] Rewriting Intel PCI bridge prefetch base address bits
- solves nvidia graphics issues
-To: Peter Wu <peter@lekensteyn.nl>
-Cc: linux-pci@vger.kernel.org, nouveau@lists.freedesktop.org,
-        Linux PM <linux-pm@vger.kernel.org>,
-        Endless Linux Upstreaming Team <linux@endlessm.com>
-Content-Type: text/plain; charset="UTF-8"
-Sender: linux-pci-owner@vger.kernel.org
+In-Reply-To: <7068db44-af31-4462-f966-2dd2340ba0f0@deltatee.com>
+Content-Type: text/plain; charset=utf-8; format=flowed
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tue, Aug 28, 2018 at 5:57 PM, Peter Wu <peter@lekensteyn.nl> wrote:
-> Just to be sure, after "sleep", do both devices report "suspended" in
-> /sys/bus/pci/devices/0000:00:1c.0/power/runtime_status
-> /sys/bus/pci/devices/0000:01:00.0/power/runtime_status
+
+On 08/09/2018 02:36 PM, Logan Gunthorpe wrote:
 >
-> and was this reproduced with a recent mainline kernel with no special
-> cmdline options? The endlessm kernel on Github seems to have quite some
-> patches, one of them explicitly disable runtime PM:
-> https://github.com/endlessm/linux/commit/8b128b50cd6725eee2ae9025a1510a221d9b42f2
-
-Yes, I checked for this issue in the past and I'm certain that nouveau
-runtime pm works fine.
-
-I also checked again now on X542UQ and the results are the same.
-nouveau can do runtime suspend/resume (confirmed by reading
-runtime_status) and then render 3D graphics OK. lspci is fine too. It
-is just S3 suspend that is affected. This was testing on Linux 4.18
-unmodified. I had to set nouveau runpm parameter to 1 for it to use
-runtime pm.
-
-Also checked with Karol's patch, the S3 issue is still there. Seems
-like 2 different issues.
-
-> Could you share some details:
-> - acpidump
-> - lspci -nnxxxxvvv
-> - BIOS version (from /sys/class/dmi/id/)
-> - kernel version (mainline?)
-
-Linux 4.18 mainline
-BIOS version: X542UQ.202
-acpidump: https://gist.githubusercontent.com/dsd/79352284d4adce14f30d70e94fad89f2/raw/ed9480e924be413fff567da2edd5a2a7a86619d0/gistfile1.txt
-pci: https://gist.githubusercontent.com/dsd/79352284d4adce14f30d70e94fad89f2/raw/ed9480e924be413fff567da2edd5a2a7a86619d0/pci
-
-> Only non-bridge devices can be passed to a guest, but perhaps logging
-> access to the emulated bridge is already sufficient. The Prefetchable
-> Base Upper 32 Bits register is at offset 0x28.
+> On 09/08/18 03:31 PM, Eric Pilmore wrote:
+>> On Thu, Aug 9, 2018 at 12:35 PM, Logan Gunthorpe <logang@deltatee.com> wrote:
+>>> Hey,
+>>>
+>>> On 09/08/18 12:51 PM, Eric Pilmore wrote:
+>>>>>> Was wondering if anybody here has used IOAT DMA engines with an
+>>>>>> IOMMU turned on (Xeon based system)? My specific question is really
+>>>>>> whether it is possible to DMA (w/IOAT) to a PCI BAR address as the
+>>>>>> destination without having to map that address to the IOVA space of
+>>>>>> the DMA engine first (assuming the IOMMU is on)?
+>>> I haven't tested this scenario but my guess would be that IOAT would
+>>> indeed go through the IOMMU and the PCI BAR address would need to be
+>>> properly mapped into the IOAT's IOVA. The fact that you see DMAR errors
+>>> is probably a good indication that this is the case. I really don't know
+>>> why you'd want to DMA something without mapping it.
+>> The thought was to avoid paying the price of having to go through yet another
+>> translation and also because it was not believed to be necessary anyway since
+>> the DMA device could go straight to a PCI BAR address without the need for a
+>> mapping.  We have been playing with two DMA engines, IOAT and PLX. The
+>> PLX does not have any issues going straight to the PCI BAR address, but unlike
+>> IOAT, PLX is sitting "in the PCI tree".
+> Yes, you can do true P2P transactions with the PLX DMA engine. (Though
+> you do have to be careful as technically you need to translate to a PCI
+> bus address not the CPU physical address which are the same on x86; and
+> you need to watch that ACS doesn't mess it up).
 >
-> In a trace where the Nvidia device is disabled/enabled via Device
-> Manager, I see writes on the enable path:
+> It doesn't sound like it's possible to avoid the IOMMU when using the
+> IOAT so you need the mapping. I would not expect the extra translation
+> in the IOMMU to be noticeable, performance wise.
 >
->     2571@1535108904.593107:rp_write_config (ioh3420, @0x28, 0x0, len=0x4)
->
-> For Linux, I only see one write at startup, none on runtime resume.
-> I did not test system sleep/resume. (disable/enable is arguably a bit
-> different from system s/r, you may want to do additional testing here.)
+> Logan
+Hi Logan,
 
-I managed to install Win10 Home under virt-manager with the nvidia
-device passed through.
-However the nvidia windows driver installer refuses to install, says:
-    The NVIDIA graphics driver is not compatible with this version of Windows.
-    This graphics driver could not find compatible graphics hardware.
+Based on Dave Jiang's suggestion, I am looking into upstreaming the
+ntb change to dma map the pci bar address in ntb_async_tx_submit() 
+(along with
+the intel iommu change to support dma_map_resource).
 
-One trick for similar sounding problems is to change hypervisor vendor
-ID but no luck here.
+I only have access to intel hosts for testing (and possibly an AMD
+host currently collecting dust) and am not sure how to go about getting
+the proper test coverage for other architectures.
 
-I was going to check if I can monitor PCI bridge config space access
-even without the nvidia driver installed, but I can't find a way to
-make the windows VM suspend and resume - the option is not available
-in the VM.
+Any suggestions? Do you anticipate any issues with dma mapping the pci bar
+address in ntb_async_tx_submit on non-x86 archs?  Do you or know of folks
+who have ntb test setups with non-x86 hosts who might be able to help?
 
-Daniel
+Thanks
+Kit
