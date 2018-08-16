@@ -1,431 +1,720 @@
-Return-Path: <SRS0=ZLZ+=K4=gigaio.com=kchow@kernel.org>
-Return-Path: <SRS0=ZLZ+=K4=gigaio.com=kchow@kernel.org>
-Subject: Re: IOAT DMA w/IOMMU
-From: Kit Chow <kchow@gigaio.com>
-To: Robin Murphy <robin.murphy@arm.com>, Logan Gunthorpe
- <logang@deltatee.com>, Dave Jiang <dave.jiang@intel.com>,
- Eric Pilmore <epilmore@gigaio.com>, Bjorn Helgaas <helgaas@kernel.org>
-Cc: "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
- Alex Williamson <alex.williamson@redhat.com>,
- David Woodhouse <dwmw2@infradead.org>,
- "iommu@lists.linux-foundation.org" <iommu@lists.linux-foundation.org>
-References: <CAOQPn8soxubJxb=vp7kz+AM6LbPH5y+_Nx0Vzv7rjV_nMMqEmA@mail.gmail.com>
- <3f503940-db6a-ec75-ed15-1db99d5d48ef@gigaio.com>
- <112A412BB11A1242B37129D931BCE5348382CFB2@fmsmsx117.amr.corp.intel.com>
- <b8af340c-d40b-cb8c-987f-b394f1d6ec3e@gigaio.com>
- <adf51c74-36fa-b61d-8497-27bd75178ba4@deltatee.com>
- <aa9c3f41-efc9-8c68-a517-2736c8986621@gigaio.com>
- <1170c096-a749-6ee3-32d4-ebba1d12adff@gigaio.com>
- <929f3dfa-fbff-c582-3be5-c368f11feb7e@deltatee.com>
- <460cc47f-6a8e-67b0-01a0-02f0c51df258@intel.com>
- <0f653f8f-c7ae-831d-e238-2742590d9ea1@deltatee.com>
- <6525fa4d-7d9b-0136-7206-f8351230af46@intel.com>
- <f22c565e-ba49-c83d-3e51-7967664c7136@deltatee.com>
- <499934e7-3734-1aee-37dd-b42a5d2a2608@intel.com>
- <9d135f61-20c2-e966-4d7d-3e154384ea08@gigaio.com>
- <0a9fa9c3-dbe4-6451-9c1a-06b662702f61@deltatee.com>
- <a2391f6c-d73b-c140-edad-8cd6584dd437@gigaio.com>
- <c8d69f9b-b3a6-76ee-1a90-b3dbaaa9b82b@arm.com>
- <3772d88a-e9ad-465a-c91f-df8f9c6219be@gigaio.com>
-Message-ID: <dd18cf79-aa10-9801-bf95-192f0b86b6d9@gigaio.com>
-Date: Mon, 13 Aug 2018 16:30:51 -0700
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Subject: Re: [PATCH 2/2] PCI: meson: add the Amlogic Meson PCIe controller
+ driver
+To: Jerome Brunet <jbrunet@baylibre.com>, Bjorn Helgaas <bhelgaas@google.com>
+References: <1534227522-186798-1-git-send-email-hanjie.lin@amlogic.com>
+ <1534227522-186798-3-git-send-email-hanjie.lin@amlogic.com>
+ <c5715abea71d8988b542216804c35853de168e9a.camel@baylibre.com>
+From: Hanjie Lin <hanjie.lin@amlogic.com>
+Message-ID: <8354ef3c-821e-cfe9-1fde-d44b3eb22402@amlogic.com>
+Date: Thu, 16 Aug 2018 11:22:33 +0800
 MIME-Version: 1.0
-In-Reply-To: <3772d88a-e9ad-465a-c91f-df8f9c6219be@gigaio.com>
-Content-Type: multipart/alternative;
- boundary="------------A4CE38F0D46C2E9E0683DDB3"
+In-Reply-To: <c5715abea71d8988b542216804c35853de168e9a.camel@baylibre.com>
+List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
+List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
+List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
+List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
+List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
+Cc: Rob Herring <robh@kernel.org>, Kevin Hilman <khilman@baylibre.com>,
+ linux-kernel@vger.kernel.org, Yue Wang <yue.wang@amlogic.com>,
+ linux-pci@vger.kernel.org, linux-amlogic@lists.infradead.org,
+ linux-arm-kernel@lists.infradead.org
+Content-Type: text/plain; charset="us-ascii"
+Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
+Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
 List-ID: <linux-pci.vger.kernel.org>
 
-This is a multi-part message in MIME format.
---------------A4CE38F0D46C2E9E0683DDB3
-Content-Type: text/plain; charset=utf-8; format=flowed
-Content-Transfer-Encoding: 8bit
-
-Taking a step back, I was a little surprised that dma_map_single 
-successfully returned an iommu address for the pci bar address passed 
-into it during my initial experiment...
-
-Internally, dma_map_single calls virt_to_page() to translate the 
-"virtual address" into a page and intel_map page then calls 
-page_to_phys() to convert the page to a dma_addr_t.
-
-The virt_to_page and page_to_phys routines don't appear to do any 
-validation and just uses arithmetic to do the conversions.
-
-the pci bar address (0x383c70e51578) does fall into a valid VA range in 
-x86_64 so it could conceivably be a valid VA.  So I tried an virtual 
-address inside the VA hole and and it too returned without any errors.
-
-virt_to_page(0x800000000000) -> 0xffffede000000000
-page_to_phys(0xffffede000000000) -> 0xf80000000000
-
-In arch/x86/include/asm/page.h, there is the following comment in 
-regards to validating the virtual address.
-
-/*
-  * virt_to_page(kaddr) returns a valid pointer if and only if
-  * virt_addr_valid(kaddr) returns true.
-  */
-#define virt_to_page(kaddr)     pfn_to_page(__pa(kaddr) >> PAGE_SHIFT)
-
-So it looks like the validation by virt_addr_valid was somehow dropped 
-from the virt_to_page code path. Does anyone have any ideas what 
-happended to it?
-
-Kit
 
 
-On 08/13/2018 08:21 AM, Kit Chow wrote:
->
->
-> On 08/13/2018 07:59 AM, Robin Murphy wrote:
->> On 13/08/18 15:23, Kit Chow wrote:
->>> On 08/10/2018 07:10 PM, Logan Gunthorpe wrote:
->>>>
->>>> On 10/08/18 06:53 PM, Kit Chow wrote:
->>>>> I was able to finally succeed in doing the dma transfers over ioat 
->>>>> only
->>>>> when prot has DMA_PTE_WRITE set by setting the direction to either
->>>>> DMA_FROM_DEVICE or DMA_BIDIRECTIONAL. Any ideas if the prot settings
->>>>> need to be changed? Are there any bad side effects if I used
->>>>> DMA_BIDIRECTIONAL?
->>>> Good to hear it. Without digging into the direction much all I can say
->>>> is that it can sometimes be very confusing what the direction is. 
->>>> Adding
->>>> another PCI device just adds to the confusion.
->>> Yep, confusing :).
->>>
->>> ======================= =============================================
->>> DMA_NONE        no direction (used for debugging)
->>> DMA_TO_DEVICE        data is going from the memory to the device
->>> DMA_FROM_DEVICE        data is coming from the device to the memory
->>> DMA_BIDIRECTIONAL    direction isn't known
->>> ======================= =============================================
->>>
->>>> I believe, the direction should be from the IOAT's point of view. 
->>>> So if
->>>> the IOAT is writing to the BAR you'd set DMA_FROM_DEVICE (ie. data is
->>>> coming from the IOAT) and if it's reading you'd set DMA_TO_DEVICE (ie.
->>>> data is going to the IOAT).
->>> It would certainly seem like DMA_TO_DEVICE would be the proper 
->>> choice; IOAT is the plumbing to move host data (memory) to the bar 
->>> address (device).
+On 2018/8/14 18:41, Jerome Brunet wrote:
+> On Tue, 2018-08-14 at 02:18 -0400, Hanjie Lin wrote:
+>> From: Yue Wang <yue.wang@amlogic.com>
 >>
->> Except that the "device" in question is the IOAT itself (more 
->> generally, it means the device represented by the first argument to 
->> dma_map_*() - the one actually emitting the reads and writes). The 
->> context of a DMA API call is the individual mapping in question, not 
->> whatever overall operation it may be part of - your example already 
->> involves two separate mappings: one "from" system memory "to" the DMA 
->> engine, and one "from" the DMA engine "to" PCI BAR memory.
->
-> OK, that makes sense.  The middleman (aka DMA engine device) is the 
-> key in the to/from puzzle. Thanks!
->
->
+>> The Amlogic Meson PCIe host controller is based on the Synopsys DesignWare
+>> PCI core. This patch adds the driver support for Meson PCIe controller.
 >>
->> Note that the DMA API's dma_direction is also distinct from the 
->> dmaengine API's dma_transfer_direction, and there's plenty of fun to 
->> be had mapping between the two - see pl330.c or rcar-dmac.c for other 
->> examples of dma_map_resource() for slave devices - no guarantees that 
->> those implementations are entirely correct (especially the one I 
->> did!), but in practice they do make the "DMA engine behind an IOMMU" 
->> case work for UARTs and similar straightforward slaves.
+>> Signed-off-by: Yue Wang <yue.wang@amlogic.com>
+>> Signed-off-by: Hanjie Lin <hanjie.lin@amlogic.com>
+>> ---
+>>  drivers/pci/controller/dwc/Kconfig     |  12 +
+>>  drivers/pci/controller/dwc/Makefile    |   1 +
+>>  drivers/pci/controller/dwc/pci-meson.c | 588 +++++++++++++++++++++++++++++++++
+>>  3 files changed, 601 insertions(+)
+>>  create mode 100644 drivers/pci/controller/dwc/pci-meson.c
 >>
->>> Will go with what works and set DMA_FROM_DEVICE.
->>>
->>> In ntb_async_tx_submit, does the direction used for the dma_map 
->>> routines for the src and dest addresses need to be consistent?
->>
->> In general, the mappings of source and destination addresses would 
->> typically have opposite directions as above, unless they're both 
->> bidirectional.
->>
->>> And does the direction setting for the dmaengine_unmap_data have to 
->>> be consistent with the direction used in dma_map_*?
->>
->> Yes, the arguments to an unmap are expected to match whatever was 
->> passed to the corresponding map call. CONFIG_DMA_API_DEBUG should 
->> help catch any mishaps.
->>
->> Robin.
->>
->>> BTW, dmaengine_unmap routine only calls dma_unmap_page. Should it 
->>> keep track of the dma_map routine used and call the corresponding 
->>> dma_unmap routine?  In the case of the intel iommu, it doesn't matter.
->>>
->>> Thanks
->>> Kit
->>>
->>>>
->>>> Using DMA_BIDIRECTIONAL just forgoes any hardware security / 
->>>> protection
->>>> that the buffer would have in terms of direction. Generally it's good
->>>> practice to use the strictest direction you can.
->>>>
->>>>> Given that using the pci bar address as is without getting an iommu
->>>>> address results in the same "PTE Write access" error, I wonder if 
->>>>> there
->>>>> is some internal 'prot' associated with the non-translated pci bar
->>>>> address that just needs to be tweaked to include DMA_PTE_WRITE???
->>>> No, I don't think so. The 'prot' will be a property of the IOMMU. Not
->>>> having an entry is probably just the same (from the perspective of the
->>>> error you see) as only having an entry for reading.
->>>>
->>>> Logan
->>>
->>> _______________________________________________
->>> iommu mailing list
->>> iommu@lists.linux-foundation.org
->>> https://lists.linuxfoundation.org/mailman/listinfo/iommu
->
+>> diff --git a/drivers/pci/controller/dwc/Kconfig b/drivers/pci/controller/dwc/Kconfig
+>> index 91b0194..6cb36f6 100644
+>> --- a/drivers/pci/controller/dwc/Kconfig
+>> +++ b/drivers/pci/controller/dwc/Kconfig
+>> @@ -193,4 +193,16 @@ config PCIE_HISI_STB
+>>  	help
+>>            Say Y here if you want PCIe controller support on HiSilicon STB SoCs
+>>  
+>> +config PCI_MESON
+>> +	bool "MESON PCIe controller"
+>> +	depends on PCI
+>> +	depends on PCI_MSI_IRQ_DOMAIN
+>> +	select PCIEPORTBUS
+>> +	select PCIE_DW_HOST
+>> +	help
+>> +	  Say Y here if you want to enable PCI controller support on Amlogic
+>> +	  SoCs. The PCI controller on Amlogic is based on DesignWare hardware
+>> +	  and therefore the driver re-uses the DesignWare core functions to
+>> +	  implement the driver.
+>> +
+>>  endmenu
+>> diff --git a/drivers/pci/controller/dwc/Makefile b/drivers/pci/controller/dwc/Makefile
+>> index 5d2ce72..cf676bd 100644
+>> --- a/drivers/pci/controller/dwc/Makefile
+>> +++ b/drivers/pci/controller/dwc/Makefile
+>> @@ -14,6 +14,7 @@ obj-$(CONFIG_PCIE_ARMADA_8K) += pcie-armada8k.o
+>>  obj-$(CONFIG_PCIE_ARTPEC6) += pcie-artpec6.o
+>>  obj-$(CONFIG_PCIE_KIRIN) += pcie-kirin.o
+>>  obj-$(CONFIG_PCIE_HISI_STB) += pcie-histb.o
+>> +obj-$(CONFIG_PCI_MESON) += pci-meson.o
+>>  
+>>  # The following drivers are for devices that use the generic ACPI
+>>  # pci_root.c driver but don't support standard ECAM config access.
+>> diff --git a/drivers/pci/controller/dwc/pci-meson.c b/drivers/pci/controller/dwc/pci-meson.c
+>> new file mode 100644
+>> index 0000000..1e96e45
+>> --- /dev/null
+>> +++ b/drivers/pci/controller/dwc/pci-meson.c
+>> @@ -0,0 +1,588 @@
+>> +// SPDX-License-Identifier: GPL-2.0
+>> +/*
+>> + * PCIe host controller driver for Amlogic MESON SoCs
+>> + *
+>> + * Copyright (c) 2018 Amlogic, inc.
+>> + * Author: Yue Wang <yue.wang@amlogic.com>
+>> + */
+>> +
+>> +#include <linux/clk.h>
+>> +#include <linux/delay.h>
+>> +#include <linux/of_device.h>
+>> +#include <linux/of_gpio.h>
+>> +#include <linux/pci.h>
+>> +#include <linux/platform_device.h>
+>> +#include <linux/phy/phy.h>
+>> +#include <linux/resource.h>
+>> +#include <linux/types.h>
+>> +
+>> +#include "pcie-designware.h"
+>> +
+>> +#define to_meson_pcie(x) dev_get_drvdata((x)->dev)
+>> +
+>> +/* External local bus interface registers */
+>> +#define PLR_OFFSET			0x700
+>> +#define PCIE_PORT_LINK_CTRL_OFF		(PLR_OFFSET + 0x10)
+>> +#define FAST_LINK_MODE			BIT(7)
+>> +#define LINK_CAPABLE_MASK		GENMASK(21, 16)
+>> +#define LINK_CAPABLE_X1			BIT(16)
+>> +
+>> +#define PCIE_GEN2_CTRL_OFF		(PLR_OFFSET + 0x10c)
+>> +#define NUM_OF_LANES_MASK		GENMASK(12, 8)
+>> +#define NUM_OF_LANES_X1			BIT(8)
+>> +#define DIRECT_SPEED_CHANGE		BIT(17)
+>> +
+>> +#define TYPE1_HDR_OFFSET		0x0
+>> +#define PCIE_STATUS_COMMAND		(TYPE1_HDR_OFFSET + 0x04)
+>> +#define PCI_IO_EN			BIT(0)
+>> +#define PCI_MEM_SPACE_EN		BIT(1)
+>> +#define PCI_BUS_MASTER_EN		BIT(2)
+>> +
+>> +#define PCIE_BASE_ADDR0			(TYPE1_HDR_OFFSET + 0x10)
+>> +#define PCIE_BASE_ADDR1			(TYPE1_HDR_OFFSET + 0x14)
+>> +
+>> +#define PCIE_CAP_OFFSET			0x70
+>> +#define PCIE_DEV_CTRL_DEV_STUS		(PCIE_CAP_OFFSET + 0x08)
+>> +#define PCIE_CAP_MAX_PAYLOAD_MASK	GENMASK(7, 5)
+>> +#define PCIE_CAP_MAX_PAYLOAD_SIZE(x)	((x) << 5)
+>> +#define PCIE_CAP_MAX_READ_REQ_MASK	GENMASK(14, 12)
+>> +#define PCIE_CAP_MAX_READ_REQ_SIZE(x)	((x) << 12)
+>> +
+>> +#define PCI_CLASS_REVISION_MASK		GENMASK(7, 0)
+>> +
+>> +/* PCIe specific config registers */
+>> +#define PCIE_CFG0			0x0
+>> +#define APP_LTSSM_ENABLE		BIT(7)
+>> +
+>> +#define PCIE_CFG_STATUS12		0x30
+>> +#define IS_SMLH_LINK_UP(x)		((x) & (1 << 6) ? 1 : 0)
+>> +#define IS_RDLH_LINK_UP(x)		((x) & (1 << 16) ? 1 : 0)
+>> +#define IS_LTSSM_UP(x)			((((x) >> 10) & 0x1f) == 0x11 ? 1 : 0)
+> 
+> those ternary ops are overkill
 
+Yes, we will modify it.
+#define IS_SMLH_LINK_UP(x) ((x) & (1 << 6))
+#define IS_RDLH_LINK_UP(x) ((x) & (1 << 16) )
+#define IS_LTSSM_UP(x) ((((x) >> 10) & 0x1f) == 0x11)
 
---------------A4CE38F0D46C2E9E0683DDB3
-Content-Type: text/html; charset=utf-8
-Content-Transfer-Encoding: 8bit
+> 
+>> +
+>> +#define PCIE_CFG_STATUS17		0x44
+>> +#define PM_CURRENT_STATE(x)		(((x) >> 7) & 0x1)
+>> +
+>> +#define WAIT_LINKUP_TIMEOUT		2000
+>> +#define PORT_CLK_RATE			100000000UL
+>> +#define MAX_PAYLOAD_SIZE		256
+>> +#define MAX_READ_REQ_SIZE		256
+>> +
+>> +enum pcie_data_rate {
+>> +	PCIE_GEN1,
+>> +	PCIE_GEN2,
+>> +	PCIE_GEN3,
+>> +	PCIE_GEN4
+>> +};
+>> +
+>> +struct meson_pcie_mem_res {
+>> +	void __iomem *elbi_base; /* DT 0th resource */
+>> +	void __iomem *cfg_base; /* DT 2nd resource */
+>> +};
+>> +
+>> +struct meson_pcie_clk_res {
+>> +	struct clk *clk;
+>> +	struct clk *mipi_gate;
+>> +	struct clk *port_clk;
+>> +	struct clk *general_clk;
+>> +};
+>> +
+>> +struct meson_pcie {
+>> +	struct dw_pcie pci;
+>> +	struct meson_pcie_mem_res mem_res;
+>> +	struct meson_pcie_clk_res clk_res;
+>> +	int reset_gpio;
+>> +
+>> +	struct phy *phy;
+>> +	enum of_gpio_flags gpio_flag;
+>> +	int pcie_num;
+>> +	u32 port_num;
+>> +	u32 device_attch;
+>> +};
+>> +
+>> +static int meson_pcie_get_mem(struct platform_device *pdev,
+>> +			      struct meson_pcie *mp)
+>> +{
+>> +	struct device *dev = mp->pci.dev;
+>> +	struct resource *res;
+>> +
+>> +	res = platform_get_resource_byname(pdev, IORESOURCE_MEM, "elbi");
+>> +	if (!res)
+>> +		return -ENODEV;
+>> +
+>> +	mp->mem_res.elbi_base = devm_ioremap_resource(dev, res);
+>> +	if (IS_ERR(mp->mem_res.elbi_base))
+>> +		return PTR_ERR(mp->mem_res.elbi_base);
+>> +
+>> +	res = platform_get_resource_byname(pdev, IORESOURCE_MEM, "cfg");
+>> +	if (!res)
+>> +		return -ENODEV;
+>> +
+>> +	mp->mem_res.cfg_base = devm_ioremap_resource(dev, res);
+>> +	if (IS_ERR(mp->mem_res.cfg_base))
+>> +		return PTR_ERR(mp->mem_res.cfg_base);
+>> +
+>> +	return 0;
+>> +}
+>> +
+>> +static int meson_pcie_init_clk(struct meson_pcie *mp)
+>> +{
+>> +	struct device *dev = mp->pci.dev;
+>> +	struct meson_pcie_clk_res *res = &mp->clk_res;
+>> +	int ret;
+>> +
+>> +	res->port_clk = devm_clk_get(dev, "port");
+>> +	if (IS_ERR(res->port_clk)) {
+>> +		if (PTR_ERR(res->port_clk) != -EPROBE_DEFER)
+>> +			dev_err(dev, "Failed to get pcie port clock\n");
+>> +
+>> +		return PTR_ERR(res->port_clk);
+>> +	}
+>> +
+>> +	res->mipi_gate = devm_clk_get(dev, "pcie_mipi_en");
+>> +	if (IS_ERR(res->mipi_gate)) {
+>> +		if (PTR_ERR(res->mipi_gate) != -EPROBE_DEFER)
+>> +			dev_err(dev, "Failed to get pcie mipi clock\n");
+>> +
+>> +		return PTR_ERR(res->mipi_gate);
+>> +	}
+>> +
+>> +	res->general_clk = devm_clk_get(dev, "pcie_general");
+>> +	if (IS_ERR(res->general_clk)) {
+>> +		if (PTR_ERR(res->general_clk) != -EPROBE_DEFER)
+>> +			dev_err(dev, "Failed to get pcie general clock\n");
+>> +
+>> +		return PTR_ERR(res->general_clk);
+>> +	}
+>> +
+>> +	res->clk = devm_clk_get(dev, "pcie");
+>> +	if (IS_ERR(res->clk)) {
+>> +		if (PTR_ERR(res->clk) != -EPROBE_DEFER)
+>> +			dev_err(dev, "Failed to get pcie rc clock\n");
+>> +
+>> +		return PTR_ERR(res->clk);
+>> +	}
+>> +
+>> +	phy_init(mp->phy);
+>> +
+>> +	ret = clk_set_rate(res->port_clk, PORT_CLK_RATE);
+>> +	if (ret) {
+>> +		dev_err(dev, "set bus clk rate failed, ret = %d", ret);
+>> +		goto err_clk;
+>> +	}
+>> +
+>> +	ret = clk_prepare_enable(res->port_clk);
+>> +	if (ret) {
+>> +		dev_err(dev, "cannot enable pcie port clock");
+>> +		goto err_clk;
+>> +	}
+>> +
+>> +	ret = clk_prepare_enable(res->mipi_gate);
+>> +	if (ret) {
+>> +		dev_err(dev, "cannot enable pcie mipi gate clock");
+>> +		goto err_port_clk;
+>> +	}
+>> +
+>> +	ret = clk_prepare_enable(res->general_clk);
+>> +	if (ret) {
+>> +		dev_err(dev, "cannot enable pcie general clock");
+>> +		goto err_mipi_gate;
+>> +	}
+>> +
+>> +	ret = clk_prepare_enable(res->clk);
+>> +	if (ret) {
+>> +		dev_err(dev, "cannot enable pcie rc clock");
+>> +		goto err_general_clk;
+>> +	}
+>> +
+>> +	return 0;
+>> +
+>> +err_general_clk:
+>> +	clk_disable_unprepare(res->general_clk);
+>> +err_mipi_gate:
+>> +	clk_disable_unprepare(res->mipi_gate);
+>> +err_port_clk:
+>> +	clk_disable_unprepare(res->port_clk);
+>> +err_clk:
+>> +	return ret;
+>> +}
+>> +
+>> +static void meson_pcie_deinit_clk(struct meson_pcie *mp)
+>> +{
+>> +	clk_disable_unprepare(mp->clk_res.clk);
+>> +	clk_disable_unprepare(mp->clk_res.general_clk);
+>> +	clk_disable_unprepare(mp->clk_res.mipi_gate);
+>> +	clk_disable_unprepare(mp->clk_res.port_clk);
+>> +}
+>> +
+>> +static inline void meson_elb_writel(struct meson_pcie *mp, u32 val, u32 reg)
+>> +{
+>> +	writel(val, mp->mem_res.elbi_base + reg);
+>> +}
+>> +
+>> +static inline u32 meson_elb_readl(struct meson_pcie *mp, u32 reg)
+>> +{
+>> +	return readl(mp->mem_res.elbi_base + reg);
+>> +}
+>> +
+>> +static inline u32 meson_cfg_readl(struct meson_pcie *mp, u32 reg)
+>> +{
+>> +	return readl(mp->mem_res.cfg_base + reg);
+>> +}
+>> +
+>> +static inline void meson_cfg_writel(struct meson_pcie *mp, u32 val, u32 reg)
+>> +{
+>> +	writel(val, mp->mem_res.cfg_base + reg);
+>> +}
+>> +
+>> +static void meson_pcie_assert_reset(struct meson_pcie *mp)
+>> +{
+>> +	int val;
+>> +
+>> +	if (!(gpio_is_valid(mp->reset_gpio)))
+>> +		return;
+> 
+> if you use devm_gpiod_get() to get the gpio, this is not required
 
-<html>
-  <head>
-    <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
-  </head>
-  <body text="#000000" bgcolor="#FFFFFF">
-    <p><tt>Taking a step back, I was a little surprised that
-        dma_map_single successfully returned an iommu address for the
-        pci bar address passed into it during my initial experiment... <br>
-      </tt></p>
-    <p><tt>Internally, dma_map_single calls virt_to_page() to translate
-        the "virtual address" into a page and intel_map page then calls
-        page_to_phys() to convert the page to a dma_addr_t.</tt></p>
-    <p><tt>The virt_to_page and page_to_phys routines don't appear to do
-        any validation and just uses arithmetic to do the conversions.</tt></p>
-    <p><tt>the pci bar address (0x383c70e51578) does fall into a valid
-        VA range in x86_64 so it could conceivably be a valid VA.  So I
-        tried an virtual address inside the VA hole and and it too
-        returned without any errors.<br>
-      </tt></p>
-    <tt>virt_to_page(0x800000000000) -&gt; </tt><tt>0xffffede000000000
-      <br>
-    </tt><tt>page_to_phys(</tt><tt>0xffffede000000000</tt><tt>) -&gt; </tt><tt>0xf80000000000</tt>
-    <p><tt><tt>
-        </tt></tt></p>
-    <p><tt>In arch/x86/include/asm/page.h, there is the following
-        comment in regards to validating the virtual address.<br>
-      </tt></p>
-    <p><tt>/*<br>
-        <font color="#ff0000"> * virt_to_page(kaddr) returns a valid
-          pointer if and only if<br>
-           * virt_addr_valid(kaddr) returns true.</font><br>
-         */<br>
-        #define virt_to_page(kaddr)     pfn_to_page(__pa(kaddr) &gt;&gt;
-        PAGE_SHIFT)<br>
-        <br>
-      </tt></p>
-    <p><tt>So it looks like the validation by virt_addr_valid was
-        somehow dropped from the virt_to_page code path. Does anyone
-        have any ideas what happended to </tt><tt><tt>it?</tt>
-      </tt>
-    </p>
-    <p><tt>Kit</tt><br>
-    </p>
-    <br>
-    <div class="moz-cite-prefix">On 08/13/2018 08:21 AM, Kit Chow wrote:<br>
-    </div>
-    <blockquote type="cite"
-      cite="mid:3772d88a-e9ad-465a-c91f-df8f9c6219be@gigaio.com">
-      <br>
-      <br>
-      On 08/13/2018 07:59 AM, Robin Murphy wrote:
-      <br>
-      <blockquote type="cite">On 13/08/18 15:23, Kit Chow wrote:
-        <br>
-        <blockquote type="cite">On 08/10/2018 07:10 PM, Logan Gunthorpe
-          wrote:
-          <br>
-          <blockquote type="cite">
-            <br>
-            On 10/08/18 06:53 PM, Kit Chow wrote:
-            <br>
-            <blockquote type="cite">I was able to finally succeed in
-              doing the dma transfers over ioat only
-              <br>
-              when prot has DMA_PTE_WRITE set by setting the direction
-              to either
-              <br>
-              DMA_FROM_DEVICE or DMA_BIDIRECTIONAL. Any ideas if the
-              prot settings
-              <br>
-              need to be changed? Are there any bad side effects if I
-              used
-              <br>
-              DMA_BIDIRECTIONAL?
-              <br>
-            </blockquote>
-            Good to hear it. Without digging into the direction much all
-            I can say
-            <br>
-            is that it can sometimes be very confusing what the
-            direction is. Adding
-            <br>
-            another PCI device just adds to the confusion.
-            <br>
-          </blockquote>
-          Yep, confusing :).
-          <br>
-          <br>
-          =======================
-          =============================================
-          <br>
-          DMA_NONE        no direction (used for debugging)
-          <br>
-          DMA_TO_DEVICE        data is going from the memory to the
-          device
-          <br>
-          DMA_FROM_DEVICE        data is coming from the device to the
-          memory
-          <br>
-          DMA_BIDIRECTIONAL    direction isn't known
-          <br>
-          =======================
-          =============================================
-          <br>
-          <br>
-          <blockquote type="cite">I believe, the direction should be
-            from the IOAT's point of view. So if
-            <br>
-            the IOAT is writing to the BAR you'd set DMA_FROM_DEVICE
-            (ie. data is
-            <br>
-            coming from the IOAT) and if it's reading you'd set
-            DMA_TO_DEVICE (ie.
-            <br>
-            data is going to the IOAT).
-            <br>
-          </blockquote>
-          It would certainly seem like DMA_TO_DEVICE would be the proper
-          choice; IOAT is the plumbing to move host data (memory) to the
-          bar address (device).
-          <br>
-        </blockquote>
-        <br>
-        Except that the "device" in question is the IOAT itself (more
-        generally, it means the device represented by the first argument
-        to dma_map_*() - the one actually emitting the reads and
-        writes). The context of a DMA API call is the individual mapping
-        in question, not whatever overall operation it may be part of -
-        your example already involves two separate mappings: one "from"
-        system memory "to" the DMA engine, and one "from" the DMA engine
-        "to" PCI BAR memory.
-        <br>
-      </blockquote>
-      <br>
-      OK, that makes sense.  The middleman (aka DMA engine device) is
-      the key in the to/from puzzle. Thanks!
-      <br>
-      <br>
-      <br>
-      <blockquote type="cite">
-        <br>
-        Note that the DMA API's dma_direction is also distinct from the
-        dmaengine API's dma_transfer_direction, and there's plenty of
-        fun to be had mapping between the two - see pl330.c or
-        rcar-dmac.c for other examples of dma_map_resource() for slave
-        devices - no guarantees that those implementations are entirely
-        correct (especially the one I did!), but in practice they do
-        make the "DMA engine behind an IOMMU" case work for UARTs and
-        similar straightforward slaves.
-        <br>
-        <br>
-        <blockquote type="cite">Will go with what works and set
-          DMA_FROM_DEVICE.
-          <br>
-          <br>
-          In ntb_async_tx_submit, does the direction used for the
-          dma_map routines for the src and dest addresses need to be
-          consistent?
-          <br>
-        </blockquote>
-        <br>
-        In general, the mappings of source and destination addresses
-        would typically have opposite directions as above, unless
-        they're both bidirectional.
-        <br>
-        <br>
-        <blockquote type="cite">And does the direction setting for the
-          dmaengine_unmap_data have to be consistent with the direction
-          used in dma_map_*?
-          <br>
-        </blockquote>
-        <br>
-        Yes, the arguments to an unmap are expected to match whatever
-        was passed to the corresponding map call. CONFIG_DMA_API_DEBUG
-        should help catch any mishaps.
-        <br>
-        <br>
-        Robin.
-        <br>
-        <br>
-        <blockquote type="cite">BTW, dmaengine_unmap routine only calls
-          dma_unmap_page. Should it keep track of the dma_map routine
-          used and call the corresponding dma_unmap routine?  In the
-          case of the intel iommu, it doesn't matter.
-          <br>
-          <br>
-          Thanks
-          <br>
-          Kit
-          <br>
-          <br>
-          <blockquote type="cite">
-            <br>
-            Using DMA_BIDIRECTIONAL just forgoes any hardware security /
-            protection
-            <br>
-            that the buffer would have in terms of direction. Generally
-            it's good
-            <br>
-            practice to use the strictest direction you can.
-            <br>
-            <br>
-            <blockquote type="cite">Given that using the pci bar address
-              as is without getting an iommu
-              <br>
-              address results in the same "PTE Write access" error, I
-              wonder if there
-              <br>
-              is some internal 'prot' associated with the non-translated
-              pci bar
-              <br>
-              address that just needs to be tweaked to include
-              DMA_PTE_WRITE???
-              <br>
-            </blockquote>
-            No, I don't think so. The 'prot' will be a property of the
-            IOMMU. Not
-            <br>
-            having an entry is probably just the same (from the
-            perspective of the
-            <br>
-            error you see) as only having an entry for reading.
-            <br>
-            <br>
-            Logan
-            <br>
-          </blockquote>
-          <br>
-          _______________________________________________
-          <br>
-          iommu mailing list
-          <br>
-          <a class="moz-txt-link-abbreviated" href="mailto:iommu@lists.linux-foundation.org">iommu@lists.linux-foundation.org</a>
-          <br>
-          <a class="moz-txt-link-freetext" href="https://lists.linuxfoundation.org/mailman/listinfo/iommu">https://lists.linuxfoundation.org/mailman/listinfo/iommu</a>
-          <br>
-        </blockquote>
-      </blockquote>
-      <br>
-    </blockquote>
-    <br>
-  </body>
-</html>
+Right, this is unnecessary, I will delete it.
 
---------------A4CE38F0D46C2E9E0683DDB3--
+> 
+>> +
+>> +	if (mp->gpio_flag & OF_GPIO_OPEN_DRAIN) {
+>> +		val = mp->gpio_flag & OF_GPIO_ACTIVE_LOW ? 1 : 0;
+> 
+> handling active low should be up to gpiolib ... not open coded
+
+Yes, we had a really bad ieda here.
+
+> 
+>> +		gpio_direction_output(mp->reset_gpio, val);
+>> +		udelay(500);
+>> +		gpio_direction_input(mp->reset_gpio);
+>> +	} else {
+>> +		val = mp->gpio_flag & OF_GPIO_ACTIVE_LOW ? 1 : 0;
+>> +		gpio_set_value_cansleep(mp->reset_gpio, val);
+>> +		udelay(500);
+>> +		val = mp->gpio_flag & OF_GPIO_ACTIVE_LOW ? 0 : 1;
+>> +		gpio_set_value_cansleep(mp->reset_gpio, val);
+>> +	}
+> 
+> I'm a bit puzzled by this. Should this OPEN_DRAIN thing be handled in the
+> GPIO/PINCTRL driver ?
+
+Yes, we will fix it. 
+
+Thanks for your suggestions.
+
+> 
+>> +}
+>> +
+>> +static void meson_pcie_init_dw(struct meson_pcie *mp)
+>> +{
+>> +	u32 val = 0;
+>> +
+>> +	val = meson_cfg_readl(mp, PCIE_CFG0);
+>> +	val |= APP_LTSSM_ENABLE;
+>> +	meson_cfg_writel(mp, val, PCIE_CFG0);
+>> +
+>> +	val = meson_elb_readl(mp, PCIE_PORT_LINK_CTRL_OFF);
+>> +	val &= ~LINK_CAPABLE_MASK;
+>> +	meson_elb_writel(mp, val, PCIE_PORT_LINK_CTRL_OFF);
+>> +
+>> +	val = meson_elb_readl(mp, PCIE_PORT_LINK_CTRL_OFF);
+>> +	val |= LINK_CAPABLE_X1 | FAST_LINK_MODE;
+>> +	meson_elb_writel(mp, val, PCIE_PORT_LINK_CTRL_OFF);
+>> +
+>> +	val = meson_elb_readl(mp, PCIE_GEN2_CTRL_OFF);
+>> +	val &= ~NUM_OF_LANES_MASK;
+>> +	meson_elb_writel(mp, val, PCIE_GEN2_CTRL_OFF);
+>> +
+>> +	val = meson_elb_readl(mp, PCIE_GEN2_CTRL_OFF);
+>> +	val |= NUM_OF_LANES_X1 | DIRECT_SPEED_CHANGE;
+>> +	meson_elb_writel(mp, val, PCIE_GEN2_CTRL_OFF);
+>> +
+>> +	meson_elb_writel(mp, 0x0, PCIE_BASE_ADDR0);
+>> +	meson_elb_writel(mp, 0x0, PCIE_BASE_ADDR1);
+>> +}
+>> +
+>> +static int meson_size_to_payload(int size)
+>> +{
+>> +	if (size & (size - 1) || size < 128 || size > 4096)
+>> +		return 1;
+>> +
+>> +	return fls(size) - 8;
+>> +}
+>> +
+>> +static void meson_set_max_payload(struct meson_pcie *mp, int size)
+>> +{
+>> +	u32 val = 0;
+>> +	int max_payload_size = meson_size_to_payload(size);
+>> +
+>> +	val = meson_elb_readl(mp, PCIE_DEV_CTRL_DEV_STUS);
+>> +	val &= ~PCIE_CAP_MAX_PAYLOAD_MASK;
+>> +	meson_elb_writel(mp, val, PCIE_DEV_CTRL_DEV_STUS);
+>> +
+>> +	val = meson_elb_readl(mp, PCIE_DEV_CTRL_DEV_STUS);
+>> +	val |= PCIE_CAP_MAX_PAYLOAD_SIZE(max_payload_size);
+>> +	meson_elb_writel(mp, val, PCIE_DEV_CTRL_DEV_STUS);
+>> +}
+>> +
+>> +static void meson_set_max_rd_req_size(struct meson_pcie *mp, int size)
+>> +{
+>> +	u32 val = 0;
+>> +	int max_rd_req_size = meson_size_to_payload(size);
+>> +
+>> +	val = meson_elb_readl(mp, PCIE_DEV_CTRL_DEV_STUS);
+>> +	val &= ~PCIE_CAP_MAX_READ_REQ_MASK;
+>> +	meson_elb_writel(mp, val, PCIE_DEV_CTRL_DEV_STUS);
+>> +
+>> +	val = meson_elb_readl(mp, PCIE_DEV_CTRL_DEV_STUS);
+>> +	val |= PCIE_CAP_MAX_READ_REQ_SIZE(max_rd_req_size);
+>> +	meson_elb_writel(mp, val, PCIE_DEV_CTRL_DEV_STUS);
+>> +}
+>> +
+>> +static inline void meson_enable_memory_space(struct meson_pcie *mp)
+>> +{
+>> +	/* Set the RC Bus Master, Memory Space and I/O Space enables */
+>> +	meson_elb_writel(mp, PCI_IO_EN | PCI_MEM_SPACE_EN | PCI_BUS_MASTER_EN,
+>> +			 PCIE_STATUS_COMMAND);
+>> +}
+>> +
+>> +static int meson_pcie_establish_link(struct meson_pcie *mp)
+>> +{
+>> +	struct dw_pcie *pci = &mp->pci;
+>> +	struct pcie_port *pp = &pci->pp;
+>> +
+>> +	meson_pcie_init_dw(mp);
+>> +	meson_set_max_payload(mp, MAX_PAYLOAD_SIZE);
+>> +	meson_set_max_rd_req_size(mp, MAX_READ_REQ_SIZE);
+>> +
+>> +	dw_pcie_setup_rc(pp);
+>> +	meson_enable_memory_space(mp);
+>> +
+>> +	meson_pcie_assert_reset(mp);
+>> +
+>> +	/* check if the link is up or not */
+>> +	if (!dw_pcie_wait_for_link(pci))
+>> +		return 0;
+>> +
+>> +	return -ETIMEDOUT;
+>> +}
+>> +
+>> +static void meson_pcie_msi_init(struct meson_pcie *mp)
+>> +{
+>> +	struct pcie_port *pp = &mp->pci.pp;
+>> +
+>> +	dw_pcie_msi_init(pp);
+>> +}
+>> +
+>> +static void meson_pcie_enable_interrupts(struct meson_pcie *mp)
+>> +{
+>> +	if (IS_ENABLED(CONFIG_PCI_MSI))
+>> +		meson_pcie_msi_init(mp);
+>> +}
+>> +
+>> +static u32 meson_pcie_read_dbi(struct dw_pcie *pci, void __iomem *base,
+>> +			       u32 reg, size_t size)
+>> +{
+>> +	u32 val;
+>> +
+>> +	dw_pcie_read(base + reg, size, &val);
+>> +
+>> +	return val;
+>> +}
+>> +
+>> +static void meson_pcie_write_dbi(struct dw_pcie *pci, void __iomem *base,
+>> +				 u32 reg, size_t size, u32 val)
+>> +{
+>> +	dw_pcie_write(base + reg, size, val);
+>> +}
+>> +
+>> +static int meson_pcie_rd_own_conf(struct pcie_port *pp, int where, int size,
+>> +				  u32 *val)
+>> +{
+>> +	struct dw_pcie *pci = to_dw_pcie_from_pp(pp);
+>> +	struct meson_pcie *mp = to_meson_pcie(pci);
+>> +
+>> +	if (!mp->device_attch)
+>> +		return 0;
+>> +
+>> +	/* the device class is not reported correctly from the register */
+>> +	if (where == PCI_CLASS_REVISION) {
+>> +		*val = readl(pci->dbi_base + PCI_CLASS_REVISION);
+>> +		/* keep revision id */
+>> +		*val &= PCI_CLASS_REVISION_MASK;
+>> +		*val |= PCI_CLASS_BRIDGE_PCI << 16;
+>> +		return PCIBIOS_SUCCESSFUL;
+>> +	}
+>> +
+>> +	return dw_pcie_read(pci->dbi_base + where, size, val);
+>> +}
+>> +
+>> +static int meson_pcie_wr_own_conf(struct pcie_port *pp, int where,
+>> +				  int size, u32 val)
+>> +{
+>> +	struct dw_pcie *pci = to_dw_pcie_from_pp(pp);
+>> +	struct meson_pcie *mp = to_meson_pcie(pci);
+>> +
+>> +	if (!mp->device_attch)
+>> +		return 0;
+>> +
+>> +	return dw_pcie_write(pci->dbi_base + where, size, val);
+>> +}
+>> +
+>> +static int meson_pcie_link_up(struct dw_pcie *pci)
+>> +{
+>> +	struct meson_pcie *mp = to_meson_pcie(pci);
+>> +	struct device *dev = pci->dev;
+>> +	u32 smlh_up = 0;
+>> +	u32 ltssm_up = 0;
+>> +	u32 rdlh_up = 0;
+>> +	u32 speed_okay = 0;
+>> +	u32 cnt = 0;
+>> +	u32 state12, state17;
+>> +
+>> +	while (smlh_up == 0 || rdlh_up == 0 || ltssm_up == 0 ||
+>> +	       speed_okay == 0) {
+>> +		udelay(20);
+>> +
+>> +		state12 = meson_cfg_readl(mp, PCIE_CFG_STATUS12);
+>> +		state17 = meson_cfg_readl(mp, PCIE_CFG_STATUS17);
+>> +		smlh_up = IS_SMLH_LINK_UP(state12);
+>> +		rdlh_up = IS_RDLH_LINK_UP(state12);
+>> +		ltssm_up = IS_LTSSM_UP(state12);
+>> +
+>> +		if (PM_CURRENT_STATE(state17) < PCIE_GEN3)
+>> +			speed_okay = 1;
+>> +
+>> +		if (smlh_up)
+>> +			dev_dbg(dev, "smlh_link_up is on\n");
+>> +		if (rdlh_up)
+>> +			dev_dbg(dev, "rdlh_link_up is on\n");
+>> +		if (ltssm_up)
+>> +			dev_dbg(dev, "ltssm_up is on\n");
+>> +		if (speed_okay)
+>> +			dev_dbg(dev, "speed_okay\n");
+>> +
+>> +		cnt++;
+>> +
+>> +		if (cnt >= WAIT_LINKUP_TIMEOUT) {
+>> +			dev_err(dev, "Error: Wait linkup timeout.\n");
+>> +			return 0;
+>> +		}
+>> +	}
+>> +
+>> +	return 1;
+>> +}
+>> +
+>> +static int meson_pcie_host_init(struct pcie_port *pp)
+>> +{
+>> +	struct dw_pcie *pci = to_dw_pcie_from_pp(pp);
+>> +	struct meson_pcie *mp = to_meson_pcie(pci);
+>> +	int ret;
+>> +
+>> +	ret = meson_pcie_establish_link(mp);
+>> +
+>> +	if (ret)
+>> +		return ret;
+>> +
+>> +	mp->device_attch = 1;
+>> +	meson_pcie_enable_interrupts(mp);
+>> +
+>> +	return 0;
+>> +}
+>> +
+>> +static const struct dw_pcie_host_ops meson_pcie_host_ops = {
+>> +	.rd_own_conf = meson_pcie_rd_own_conf,
+>> +	.wr_own_conf = meson_pcie_wr_own_conf,
+>> +	.host_init = meson_pcie_host_init,
+>> +};
+>> +
+>> +static int meson_add_pcie_port(struct meson_pcie *mp,
+>> +			       struct platform_device *pdev)
+>> +{
+>> +	struct dw_pcie *pci = &mp->pci;
+>> +	struct pcie_port *pp = &pci->pp;
+>> +	struct device *dev = &pdev->dev;
+>> +	int ret;
+>> +
+>> +	if (IS_ENABLED(CONFIG_PCI_MSI)) {
+>> +		pp->msi_irq = platform_get_irq(pdev, 0);
+>> +		if (pp->msi_irq < 0) {
+>> +			dev_err(dev, "failed to get msi irq\n");
+>> +			return pp->msi_irq;
+>> +		}
+>> +	}
+>> +
+>> +	pp->root_bus_nr = -1;
+>> +	pp->ops = &meson_pcie_host_ops;
+>> +	pci->dbi_base = mp->mem_res.elbi_base;
+>> +
+>> +	ret = dw_pcie_host_init(pp);
+>> +	if (ret) {
+>> +		dev_err(dev, "failed to initialize host\n");
+>> +		return ret;
+>> +	}
+>> +
+>> +	return 0;
+>> +}
+>> +
+>> +static const struct dw_pcie_ops dw_pcie_ops = {
+>> +	.read_dbi = meson_pcie_read_dbi,
+>> +	.write_dbi = meson_pcie_write_dbi,
+>> +	.link_up = meson_pcie_link_up,
+>> +};
+>> +
+>> +static int meson_pcie_probe(struct platform_device *pdev)
+>> +{
+>> +	struct device *dev = &pdev->dev;
+>> +	struct device_node *np = dev->of_node;
+>> +	struct dw_pcie *pci;
+>> +	struct meson_pcie *mp;
+>> +	int ret;
+>> +
+>> +	mp = devm_kzalloc(dev, sizeof(*mp), GFP_KERNEL);
+>> +	if (!mp)
+>> +		return -ENOMEM;
+>> +
+>> +	pci = &mp->pci;
+>> +	pci->dev = dev;
+>> +	pci->ops = &dw_pcie_ops;
+>> +
+>> +	mp->reset_gpio = of_get_named_gpio_flags(np, "reset-gpio", 0,
+>> +						 &mp->gpio_flag);
+>> +	if (mp->reset_gpio >= 0)
+>> +		devm_gpio_request(dev, mp->reset_gpio, "RESET");
+> 
+> devm_gpiod_get(dev, "reset", GPIOD_OUT_LOW);
+> 
+> 
+>> +
+>> +	if (of_property_read_u32(np, "pcie-num", &mp->pcie_num))
+>> +		dev_err(dev, "Get pcie-num failed, set default %d\n",
+>> +			mp->pcie_num);
+> 
+> What's the use of this ?
+> 
+>> +
+>> +	mp->phy = devm_of_phy_get(dev, np, NULL);
+>> +	if (IS_ERR(mp->phy)) {
+>> +		if (PTR_ERR(mp->phy) != -EPROBE_DEFER)
+>> +			dev_err(dev, "Get phy failed, set default %ld\n",
+>> +				PTR_ERR(mp->phy));
+>> +
+>> +		return PTR_ERR(mp->phy);
+>> +	}
+>> +
+>> +	phy_power_on(mp->phy);
+>> +
+>> +	ret = meson_pcie_init_clk(mp);
+>> +	if (ret) {
+>> +		dev_err(dev, "Init clock resources failed, %d\n", ret);
+>> +		return ret;
+>> +	}
+>> +
+>> +	ret = meson_pcie_get_mem(pdev, mp);
+>> +	if (ret) {
+>> +		dev_err(dev, "Get memory resource failed, %d\n", ret);
+>> +		return ret;
+>> +	}
+>> +
+>> +	platform_set_drvdata(pdev, mp);
+>> +
+>> +	ret = meson_add_pcie_port(mp, pdev);
+>> +	if (ret < 0) {
+>> +		dev_err(dev, "Add PCIE port failed, %d\n", ret);
+>> +		meson_pcie_deinit_clk(mp);
+>> +	}
+>> +
+>> +	return ret;
+>> +}
+>> +
+>> +static const struct of_device_id meson_pcie_of_match[] = {
+>> +	{
+>> +		.compatible = "amlogic,axg-pcie",
+>> +	},
+>> +	{},
+>> +};
+>> +
+>> +static struct platform_driver meson_pcie_driver = {
+>> +	.probe = meson_pcie_probe,
+>> +	.driver = {
+>> +		.name = "meson-pcie",
+>> +		.of_match_table = meson_pcie_of_match,
+>> +	},
+>> +};
+>> +
+>> +builtin_platform_driver(meson_pcie_driver);
+> 
+> 
+> .
+> 
+
+_______________________________________________
+linux-arm-kernel mailing list
+linux-arm-kernel@lists.infradead.org
+http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
