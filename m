@@ -1,58 +1,49 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:55060 "EHLO
-        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726094AbeHQJhw (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Fri, 17 Aug 2018 05:37:52 -0400
+Return-Path: <SRS0=nZYW=K7=kernel.dk=axboe@kernel.org>
+Return-Path: <SRS0=nZYW=K7=kernel.dk=axboe@kernel.org>
+Subject: Re: PCIe enable device races (Was: [PATCH v3] PCI: Data corruption
+ happening due to race condition)
+To: Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+ Konstantin Khlebnikov <khlebnikov@yandex-team.ru>,
+ Bjorn Helgaas <helgaas@kernel.org>
+Cc: Hari Vyas <hari.vyas@broadcom.com>, bhelgaas@google.com,
+ linux-pci@vger.kernel.org, ray.jui@broadcom.com
+References: <1530608741-30664-1-git-send-email-hari.vyas@broadcom.com>
+ <20180731163727.GK45322@bhelgaas-glaptop.roam.corp.google.com>
+ <ecaed7664b46d73888d2494065905f8e108fc0f4.camel@kernel.crashing.org>
+ <20180815185027.GE28888@bhelgaas-glaptop.roam.corp.google.com>
+ <e3316c91ad722434360b4018b17cbfe265e97801.camel@kernel.crashing.org>
+ <fa218ce2-c337-e776-d958-f1f8a1129c9a@yandex-team.ru>
+ <6f76eb5f54fdc780dac744773d836214d7844346.camel@kernel.crashing.org>
+ <62ac393c-931a-f328-acf6-c9afc8a026ea@kernel.dk>
+ <d8cd08c2e5ade8087d1ce3a4c046be1bd3228a0d.camel@kernel.crashing.org>
+From: Jens Axboe <axboe@kernel.dk>
+Message-ID: <208f0e92-cf0c-3df1-5b16-2a8ec02b8d6d@kernel.dk>
+Date: Thu, 16 Aug 2018 15:56:38 -0600
 MIME-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII;
- format=flowed
-Date: Fri, 17 Aug 2018 12:05:10 +0530
-From: poza@codeaurora.org
-To: Benjamin Herrenschmidt <benh@kernel.crashing.org>
-Cc: Sinan Kaya <okaya@kernel.org>, Thomas Tai <thomas.tai@oracle.com>,
-        bhelgaas@google.com, keith.busch@intel.com,
-        linux-pci@vger.kernel.org, linux-pci-owner@vger.kernel.org,
-        Sam Bobroff <sam.bobroff@au1.ibm.com>
-Subject: Re: [PATCH 1/1] PCI/AER: prevent pcie_do_fatal_recovery from using
- device after it is removed
-In-Reply-To: <c7b996e0856cbea16cbb94287225bf2083158f02.camel@kernel.crashing.org>
-References: <1534179088-44219-1-git-send-email-thomas.tai@oracle.com>
- <1534179088-44219-2-git-send-email-thomas.tai@oracle.com>
- <51f4b387d9bd96a42d526a6a029fc43b@codeaurora.org>
- <b0104a716319d76e734c307cb4bedd9d@codeaurora.org>
- <903394c04d6ad468ed06dc0a779200e7555345a7.camel@kernel.crashing.org>
- <6cb069038530757f31f3dd60328c7e30@codeaurora.org>
- <e931bc7a7e468e8bb2ee3766b3fcf96f1800f552.camel@kernel.crashing.org>
- <bf7ceabb6fe51398e0f4eebd9c4fe4ac1ec2b8a4.camel@kernel.crashing.org>
- <42bd39aef30fe24bfc48d378e1f5d35d@codeaurora.org>
- <54d19e0e3d44bedf247853144c6bbfed5561a125.camel@kernel.crashing.org>
- <f022581a9ecb88e5501a09bdcdc62954@codeaurora.org>
- <1d5b1157-2f78-5fab-78f0-5828892fc739@kernel.org>
- <c7b996e0856cbea16cbb94287225bf2083158f02.camel@kernel.crashing.org>
-Message-ID: <fc990c79bfef2ab4cdd27bf4e14b2086@codeaurora.org>
-Sender: linux-pci-owner@vger.kernel.org
+In-Reply-To: <d8cd08c2e5ade8087d1ce3a4c046be1bd3228a0d.camel@kernel.crashing.org>
+Content-Type: text/plain; charset=utf-8
 List-ID: <linux-pci.vger.kernel.org>
 
-On 2018-08-17 04:57, Benjamin Herrenschmidt wrote:
-> On Thu, 2018-08-16 at 09:46 -0400, Sinan Kaya wrote:
->> On 8/16/2018 4:22 AM, poza@codeaurora.org wrote:
->> > we can catch up on webex, (Sinan is going to be there in Plumber's
->> > conference, I might not be able to join there, as we have bring-up coming)
->> 
->> My plumbers conference attendance is not confirmed yet. I'm trying to
->> combine it with a business trip. I did not get an ACK yet from my 
->> boss.
+On 8/16/18 3:37 PM, Benjamin Herrenschmidt wrote:
+> On Thu, 2018-08-16 at 13:43 -0600, Jens Axboe wrote:
+>>
+>>> Ok. Well, my patch fixes it for my repro-case at least and seems to not
+>>> break anyhting on my thinkpad so ...
+>>>
+>>> Bjorn, are you ok with the approach ? If yes, I'll start breaking up
+>>> that patch into a few smaller bits in case something goes wrong and we
+>>> want to bisect (such as the changes I did to tracking is_busmaster
+>>> etc...)
+>>
+>> I can try it too, but I was never CC'ed on the actual patch.
 > 
-> Ok, I'll collect the names and will propose a time/date early next
-> week, I'm a bit caught up until monday.
+> https://lore.kernel.org/lkml/08bc40a6af3e614e97a78fbaab688bfcd14520ac.camel@kernel.crashing.org/
 > 
-> Bjorn, are you available as well ?
+> (I'll also fwd privately)
 
-I might be able to make it to Plumbers conference.
+Boots and works fine for me, but I'm also now on a gen6 x1, my initial
+report was on a gen4. I still have the gen4, I can power it up and see
+if it works there as well.
 
-Regards,
-Oza.
-
-> 
-> Cheers,
-> Ben.
+-- 
+Jens Axboe
