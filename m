@@ -1,45 +1,52 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:48332 "EHLO
-        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726115AbeHUIzx (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Tue, 21 Aug 2018 04:55:53 -0400
-Received: from mail.codeaurora.org (localhost.localdomain [127.0.0.1])
-        by smtp.codeaurora.org (Postfix) with ESMTP id ED3D361220
-        for <linux-pci@vger.kernel.org>; Tue, 21 Aug 2018 05:37:15 +0000 (UTC)
-MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8;
- format=flowed
-Date: Tue, 21 Aug 2018 11:07:15 +0530
-From: poza@codeaurora.org
-To: linux-pci@vger.kernel.org
-Subject: PCIe Page request Interface Query (PRI)
-Message-ID: <dbc3e13525d36553dfab3219fc6d4d81@codeaurora.org>
+Received: from gate.crashing.org ([63.228.1.57]:50451 "EHLO gate.crashing.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1726046AbeHPJ4V (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Thu, 16 Aug 2018 05:56:21 -0400
+Message-ID: <5bd99bcacb772b588771fce62c61a59fdeb167f3.camel@kernel.crashing.org>
+Subject: Re: [PATCH 1/1] PCI/AER: prevent pcie_do_fatal_recovery from using
+ device after it is removed
+From: Benjamin Herrenschmidt <benh@kernel.crashing.org>
+To: poza@codeaurora.org
+Cc: Thomas Tai <thomas.tai@oracle.com>, bhelgaas@google.com,
+        keith.busch@intel.com, linux-pci@vger.kernel.org,
+        linux-pci-owner@vger.kernel.org
+Date: Thu, 16 Aug 2018 16:59:34 +1000
+In-Reply-To: <e931bc7a7e468e8bb2ee3766b3fcf96f1800f552.camel@kernel.crashing.org>
+References: <1534179088-44219-1-git-send-email-thomas.tai@oracle.com>
+         <1534179088-44219-2-git-send-email-thomas.tai@oracle.com>
+         <51f4b387d9bd96a42d526a6a029fc43b@codeaurora.org>
+         <b0104a716319d76e734c307cb4bedd9d@codeaurora.org>
+         <903394c04d6ad468ed06dc0a779200e7555345a7.camel@kernel.crashing.org>
+         <6cb069038530757f31f3dd60328c7e30@codeaurora.org>
+         <e931bc7a7e468e8bb2ee3766b3fcf96f1800f552.camel@kernel.crashing.org>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hi All,
+On Thu, 2018-08-16 at 16:51 +1000, Benjamin Herrenschmidt wrote:
+> > refering Sepc: 6.2.2.2.1 Fatal Errors, where link is unreliable and it 
+> > might need AER style reset of link or DPC style HW recovery
+> > In both cases, the shutdown callbacks are expected to be called,
+> 
+> No, this is wrong and not the intent of the error handling.
+> 
+> You seem to be applying PCIe specific concepts brain-farted at Intel
+> that are way way away from what we care about in practice and in Linux.
+> 
+> > e.g.  some driver handle errors ERR_NONFATAL or FATAL in similar ways
+> > e.g.
+> > ioat_pcie_error_detected();  calls  ioat_shutdown(); in case of 
+> > ERR_NONFATAL
+> > otherwise ioat_shutdown() in case of ERR_FATAL.
+> 
+> Since when the error handling callbacks even have the concept of FATAL
+> vs. non-fatal ? This doesn't appear anyhwhere in the prototype of the
+> struct pci_error_handlers and shouldn't.
 
+In fact looking at pcie_do_nonfatal_recovery() it's indeed completely
+broken. It tells the driver that the slot was reset without actually
+resetting anything... Ugh.
 
-We have implemented the access control (ACS) for PRI request. If the BDF 
-number of the PRI request is outside of the control window, the request 
-will be dropped.
-
-However, there is an requirement from PCIE spec 10.4, which says
-
-Spec: 10.4 Page Request Services
-A Page Request Message is a PCIe Message Request that is Routed to the 
-Root Complex (see the PCI Express Base Specification) with a Message 
-Code of 4 (0000 0100b). The mechanism employed at the RC to buffer 
-requests is implementation specific. The only requirement is that an RC 
-not silently discard requests.
-
-My question on "The only requirement is that an RC not silently discard 
-requests."
-
-1) what is SW’s expectation in this case? Is hw expected to trigger an 
-interrupt ?
-2) any information to be logged anywhere into status register ?
-3) What if there are back-to-back violations?
-
-Regards,
-Oza.
+Ben.
