@@ -1,76 +1,74 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from bombadil.infradead.org ([198.137.202.133]:58502 "EHLO
-        bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726744AbeHDMO0 (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Sat, 4 Aug 2018 08:14:26 -0400
-From: Christoph Hellwig <hch@lst.de>
-To: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
-        Bjorn Helgaas <bhelgaas@google.com>
-Cc: Palmer Dabbelt <palmer@dabbelt.com>,
-        "Wesley W . Terpstra" <wesley@sifive.com>,
-        Arnd Bergmann <arnd@arndb.de>, linux-pci@vger.kernel.org,
-        linux-riscv@lists.infradead.org
-Subject: [PATCH 1/3] PCI: add a callback to struct pci_host_bridge for adding a new device
-Date: Sat,  4 Aug 2018 12:14:00 +0200
-Message-Id: <20180804101402.10022-2-hch@lst.de>
-In-Reply-To: <20180804101402.10022-1-hch@lst.de>
-References: <20180804101402.10022-1-hch@lst.de>
+Received: from mx3-rdu2.redhat.com ([66.187.233.73]:46328 "EHLO mx1.redhat.com"
+        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+        id S1725783AbeHPXZk (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Thu, 16 Aug 2018 19:25:40 -0400
+Date: Thu, 16 Aug 2018 14:25:04 -0600
+From: Alex Williamson <alex.williamson@redhat.com>
+To: Mika Westerberg <mika.westerberg@linux.intel.com>
+Cc: Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org
+Subject: Re: [PATCH] PCI: Add ACS quirk for Intel 300 series chipset
+Message-ID: <20180816142504.4e3d121c@t450s.home>
+In-Reply-To: <20180816192805.GN2343@lahna.fi.intel.com>
+References: <20180427104423.2203-1-mika.westerberg@linux.intel.com>
+        <20180815152139.4e469fd4@t450s.home>
+        <20180815164308.6ad5dd39@t450s.home>
+        <20180816061015.GD2343@lahna.fi.intel.com>
+        <20180816091303.69ce8e45@t450s.home>
+        <20180816192805.GN2343@lahna.fi.intel.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=US-ASCII
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-There is currently no way for a PCIe bridge to impose constraints on
-devices added to it.  For example, the Xilinx PCIe host bridge only
-supports 32-bit physical addresses (due to a limitation on the AXI
-port's address width).  Thus, even devices that claim to support 64-bit
-DMA addresses must be restricted to 32-bit addresses when attached to
-this host controller.
+On Thu, 16 Aug 2018 22:28:05 +0300
+Mika Westerberg <mika.westerberg@linux.intel.com> wrote:
 
-This patch adds a "add_device" method  to struct pci_host_bridge that
-allows the host driver to act upon acting adding devices.
+> On Thu, Aug 16, 2018 at 09:13:03AM -0600, Alex Williamson wrote:
+> >  static int pci_quirk_enable_intel_spt_pch_acs(struct pci_dev *dev)
+> >  {
+> >  	int pos;
+> > +	u16 std_ctrl;
+> >  	u32 cap, ctrl;
+> >  
+> >  	if (!pci_quirk_intel_spt_pch_acs_match(dev))
+> > @@ -4621,6 +4628,18 @@ static int pci_quirk_enable_intel_spt_pch_acs(struct pci_dev *dev)
+> >  	if (!pos)
+> >  		return -ENOTTY;
+> >  
+> > +	/* If the std control word has bits set or is writable, do not quirk */
+> > +	pci_read_config_word(dev, pos + PCI_ACS_CTRL, &std_ctrl);
+> > +	if (std_ctrl)
+> > +		return -ENOTTY;
+> > +
+> > +	pci_write_config_word(dev, pos + PCI_ACS_CTRL, 0xff);  
+> 
+> I don't know ACS well but could the above have some unwanted
+> side-effects, even if we write back zeroes below?
 
-Based on an earlier patch from Wesley W. Terpstra <wesley@sifive.com>.
+It can certainly influence in-flight packet routing, but at the point
+we're performing this test, we're about to do that anyway.  This should
+only be happening during discovery and we're limited to a set of root
+ports for this test, so we shouldn't have any drivers attached
+downstream from here.  For the majority of devices that would pass
+through this quirk, we expect the register to behave as if it were
+read-only so we can only potentially break the already broken C246 port
+through here.
 
-Signed-off-by: Christoph Hellwig <hch@lst.de>
----
- drivers/pci/probe.c | 6 ++++++
- include/linux/pci.h | 1 +
- 2 files changed, 7 insertions(+)
+We could possibly refine this to fully replace pci_std_enable_acs(),
+even for the matched Intel root ports that seem to be fixed by
+attempting to set the requested flags at the standard location, test if
+they stick, if so consider it done (exit success rather than -ENOTTY),
+if not try the dword version.  Thanks,
 
-diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
-index ac876e32de4b..452190fb05e7 100644
---- a/drivers/pci/probe.c
-+++ b/drivers/pci/probe.c
-@@ -2290,6 +2290,7 @@ static void pci_set_msi_domain(struct pci_dev *dev)
- 
- void pci_device_add(struct pci_dev *dev, struct pci_bus *bus)
- {
-+	struct pci_host_bridge *host = pci_find_host_bridge(bus);
- 	int ret;
- 
- 	pci_configure_device(dev);
-@@ -2328,6 +2329,11 @@ void pci_device_add(struct pci_dev *dev, struct pci_bus *bus)
- 	ret = pcibios_add_device(dev);
- 	WARN_ON(ret < 0);
- 
-+	if (host->add_device) {
-+		ret = host->add_device(dev);
-+		WARN_ON(ret < 0);
-+	}
-+
- 	/* Set up MSI IRQ domain */
- 	pci_set_msi_domain(dev);
- 
-diff --git a/include/linux/pci.h b/include/linux/pci.h
-index abd5d5e17aee..1524adbb30ab 100644
---- a/include/linux/pci.h
-+++ b/include/linux/pci.h
-@@ -485,6 +485,7 @@ struct pci_host_bridge {
- 			resource_size_t start,
- 			resource_size_t size,
- 			resource_size_t align);
-+	int (*add_device)(struct pci_dev *dev);
- 	unsigned long	private[0] ____cacheline_aligned;
- };
- 
--- 
-2.18.0
+Alex
+
+> > +	pci_read_config_word(dev, pos + PCI_ACS_CTRL, &std_ctrl);
+> > +	if (std_ctrl) {
+> > +		pci_write_config_word(dev, pos + PCI_ACS_CTRL, 0);
+> > +		return -ENOTTY;
+> > +	}
+> > +
+> >  	pci_read_config_dword(dev, pos + PCI_ACS_CAP, &cap);
+> >  	pci_read_config_dword(dev, pos + INTEL_SPT_ACS_CTRL, &ctrl);
+> >    
