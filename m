@@ -1,75 +1,59 @@
-Return-Path: <SRS0=Bsgf=LE=linux.vnet.ibm.com=tyreld@kernel.org>
-Return-Path: <SRS0=Bsgf=LE=linux.vnet.ibm.com=tyreld@kernel.org>
-Subject: Re: [PATCH 8/9] PCI: hotplug: Embed hotplug_slot
-To: Lukas Wunner <lukas@wunner.de>, Bjorn Helgaas <helgaas@kernel.org>,
-        linux-pci@vger.kernel.org, Sinan Kaya <okaya@kernel.org>,
-        Mika Westerberg <mika.westerberg@linux.intel.com>
-Cc: Scott Murray <scott@spiteful.org>, linux-s390@vger.kernel.org,
-        Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-        acpi4asus-user@lists.sourceforge.net,
-        "Rafael J. Wysocki"
- <rjw@rjwysocki.net>,
-        Gavin Shan <gwshan@linux.vnet.ibm.com>,
-        platform-driver-x86@vger.kernel.org, linux-acpi@vger.kernel.org,
-        Paul Mackerras <paulus@samba.org>,
-        Sebastian Ott
- <sebott@linux.vnet.ibm.com>,
-        Corentin Chary <corentin.chary@gmail.com>,
-        Darren Hart <dvhart@infradead.org>, linuxppc-dev@lists.ozlabs.org,
-        Andy Shevchenko <andy@infradead.org>,
-        Gerald Schaefer <gerald.schaefer@de.ibm.com>,
-        Len Brown <lenb@kernel.org>
-References: <cover.1534686484.git.lukas@wunner.de>
- <9918fbca94bcfc03d1560b191d138d3e6664cc86.1534686485.git.lukas@wunner.de>
-From: Tyrel Datwyler <tyreld@linux.vnet.ibm.com>
-Date: Mon, 20 Aug 2018 17:43:17 -0700
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail.kernel.org ([198.145.29.99]:49964 "EHLO mail.kernel.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1725903AbeHPXbq (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Thu, 16 Aug 2018 19:31:46 -0400
+Date: Thu, 16 Aug 2018 15:31:11 -0500
+From: Bjorn Helgaas <helgaas@kernel.org>
+To: "Derrick, Jonathan" <jonathan.derrick@intel.com>
+Cc: "willy@infradead.org" <willy@infradead.org>,
+        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+        "okaya@kernel.org" <okaya@kernel.org>,
+        "liudongdong3@huawei.com" <liudongdong3@huawei.com>,
+        "poza@codeaurora.org" <poza@codeaurora.org>,
+        "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+        "Busch, Keith" <keith.busch@intel.com>,
+        "linux-doc@vger.kernel.org" <linux-doc@vger.kernel.org>
+Subject: Re: [PATCH 1/2] PCI/DPC: Add 'nodpc' parameter
+Message-ID: <20180816203111.GB10316@bhelgaas-glaptop.roam.corp.google.com>
+References: <1534368400-2807-1-git-send-email-jonathan.derrick@intel.com>
+ <20180816154940.GD5762@bombadil.infradead.org>
+ <1534434641.17819.27.camel@intel.com>
 MIME-Version: 1.0
-In-Reply-To: <9918fbca94bcfc03d1560b191d138d3e6664cc86.1534686485.git.lukas@wunner.de>
-Content-Type: text/plain; charset=utf-8
-Message-Id: <f2ff6486-35bc-2ade-deec-caa7ab15d8e5@linux.vnet.ibm.com>
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1534434641.17819.27.camel@intel.com>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 08/19/2018 07:29 AM, Lukas Wunner wrote:
-> When the PCI hotplug core and its first user, cpqphp, were introduced in
-> February 2002 with historic commit a8a2069f432c, cpqphp allocated a slot
-> struct for its internal use plus a hotplug_slot struct to be registered
-> with the hotplug core and linked the two with pointers:
-> https://git.kernel.org/tglx/history/c/a8a2069f432c
+On Thu, Aug 16, 2018 at 03:50:47PM +0000, Derrick, Jonathan wrote:
+> On Thu, 2018-08-16 at 08:49 -0700, Matthew Wilcox wrote:
+> > On Wed, Aug 15, 2018 at 03:26:39PM -0600, Jon Derrick wrote:
+> > > Some users may want to disable downstream port containment (DPC),
+> > > so
+> > > give them this option
+> > 
+> > Is it possible they might only want to disable DPC on a subset of the
+> > hierarchy rather than globally?
 > 
-> Nowadays, the predominant pattern in the tree is to embed ("subclass")
-> such structures in one another and cast to the containing struct with
-> container_of().  But it wasn't until July 2002 that container_of() was
-> introduced with historic commit ec4f214232cf:
-> https://git.kernel.org/tglx/history/c/ec4f214232cf
-> 
-> pnv_php, introduced in 2016, did the right thing and embedded struct
-> hotplug_slot in its internal struct pnv_php_slot, but all other drivers
-> cargo-culted cpqphp's design and linked separate structs with pointers.
-> 
-> Embedding structs is preferrable to linking them with pointers because
-> it requires fewer allocations, thereby reducing overhead and simplifying
-> error paths.  Casting an embedded struct to the containing struct
-> becomes a cheap subtraction rather than a dereference.  And having fewer
-> pointers reduces the risk of them pointing nowhere either accidentally
-> or due to an attack.
-> 
-> Convert all drivers to embed struct hotplug_slot in their internal slot
-> struct.  The "private" pointer in struct hotplug_slot thereby becomes
-> unused, so drop it.
-> 
-> Signed-off-by: Lukas Wunner <lukas@wunner.de>
-> Cc: Rafael J. Wysocki <rjw@rjwysocki.net>
-> Cc: Len Brown <lenb@kernel.org>
-> Cc: Scott Murray <scott@spiteful.org>
-> Cc: Benjamin Herrenschmidt <benh@kernel.crashing.org>
-> Cc: Paul Mackerras <paulus@samba.org>
-> Cc: Michael Ellerman <mpe@ellerman.id.au>
-> Cc: Gavin Shan <gwshan@linux.vnet.ibm.com>
-> Cc: Sebastian Ott <sebott@linux.vnet.ibm.com>
-> Cc: Gerald Schaefer <gerald.schaefer@de.ibm.com>
-> Cc: Corentin Chary <corentin.chary@gmail.com>
-> Cc: Darren Hart <dvhart@infradead.org
+> Absolutely. I was hoping Logan's pci dev_str would land because I have
+> a few others I want to convert to that api for granular tuning
 
-With regards to driver/pci/hotplug/rpa*
+What's the use case here?  I acknowledge there are cases where we need
+them, but I'm not a fan of kernel parameters in general because
+they're a real hassle for users.
 
-Acked-by: Tyrel Datwyler <tyreld@linux.vnet.ibm.com>
+Is there something wrong with DPC?  Is there some way we can make it
+smarter so it does the right thing automatically?
+
+I'm more OK with a blanket "nodpc" switch intended for debugging.
+If we add the complexity of subsets of the hierarchy it starts
+sounding like an administrative thing that makes me more hesitant. 
+
+Could this be done via a sysfs switch instead?  That potentially could
+work for hot-added things where a kernel parameter doesn't work so
+well.
+
+Please squash the doc patch and the code change so it's easier to keep
+them together.
+
+Bjorn
