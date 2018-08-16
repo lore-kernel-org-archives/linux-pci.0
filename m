@@ -1,107 +1,175 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.29.99]:40142 "EHLO mail.kernel.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1728601AbeHFUdu (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Mon, 6 Aug 2018 16:33:50 -0400
-Date: Mon, 6 Aug 2018 13:23:27 -0500
-From: Bjorn Helgaas <helgaas@kernel.org>
-To: Felipe Balbi <felipe.balbi@linux.intel.com>
-Cc: Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org,
-        stable@vger.kernel.org, Jingoo Han <jingoohan1@gmail.com>
-Subject: Re: [PATCH] PCI: Fix bit definitions for LNKCAP2 register
-Message-ID: <20180806182327.GA30691@bhelgaas-glaptop.roam.corp.google.com>
-References: <20180803065120.29322-1-felipe.balbi@linux.intel.com>
+Return-Path: <SRS0=nBid=K7=codeaurora.org=poza@kernel.org>
+Return-Path: <SRS0=nBid=K7=codeaurora.org=poza@kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20180803065120.29322-1-felipe.balbi@linux.intel.com>
-Sender: linux-pci-owner@vger.kernel.org
+Content-Type: text/plain; charset=US-ASCII;
+ format=flowed
+Date: Thu, 16 Aug 2018 14:57:08 +0530
+From: poza@codeaurora.org
+To: Jon Derrick <jonathan.derrick@intel.com>
+Cc: linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
+ linux-doc@vger.kernel.org, Bjorn Helgaas <helgaas@kernel.org>, Keith Busch
+ <keith.busch@intel.com>, Sinan Kaya <okaya@kernel.org>, Dongdong Liu
+ <liudongdong3@huawei.com>
+Subject: Re: [PATCH 1/2] PCI/DPC: Add 'nodpc' parameter
+In-Reply-To: <1534368400-2807-1-git-send-email-jonathan.derrick@intel.com>
+References: <1534368400-2807-1-git-send-email-jonathan.derrick@intel.com>
+Message-ID: <f11c06374a90650e862cb68206ad2fdb@codeaurora.org>
 List-ID: <linux-pci.vger.kernel.org>
 
-[+cc Jingoo]
-
-On Fri, Aug 03, 2018 at 09:51:20AM +0300, Felipe Balbi wrote:
-> Even thhough commit b891b4dc1eed claimed that original bit definitions
-> were wrong, that's not really the case. After verifying PCI
-> Specification Revisions 3.0, 3.1 and 4.0, Link Capabilites 2
-> Register's bit definitions were always starting from Bit 0.
+On 2018-08-16 02:56, Jon Derrick wrote:
+> Some users may want to disable downstream port containment (DPC), so
+> give them this option
 > 
-> This has been causing issues reporting correct link speeds on sysfs.
-
-Can you elaborate on this a bit?  b891b4dc1eed still looks correct to
-me.  I'm looking at PCIe r4.0, sec 7.5.3.18, where it shows:
-
-  bit    0  RsvdP
-  bits 7:1  Supported Link Speeds Vector
-  bit    8  Crosslink Supported
-  ...
-
-The text in table 7-32 does say:
-
-  Bit definitions within this field are:
-
-    Bit 0    2.5 GT/s
-    Bit 1    5.0 GT/s
-    ...
-
-It says "Bit 0" there, but it's referring to bit 0 of the *field*,
-which is bits 7:1 of the LNKCAP2 register, so bit 0 of the field is
-bit 1 of the 32-bit LNKCAP2 register.
-
-I guess you must be looking at this path, since it's the only generic
-path that uses PCI_EXP_LNKCAP2_SLS_2_5GB:
-
-  max_link_speed_show()
-    speed = pcie_get_speed_cap(pdev)
-      pcie_capability_read_dword(dev, PCI_EXP_LNKCAP2, &lnkcap2)
-      if (lnkcap2)
-        ...
-        else if (lnkcap2 & PCI_EXP_LNKCAP2_SLS_2_5GB)
-	  return PCIE_SPEED_2_5GT
-    PCIE_SPEED2STR(speed)
-      ...
-      (speed) == PCIE_SPEED_2_5GT ? "2.5 GT/s"
-
-We don't extract the Supported Speeds Vector by masking and shifting,
-so PCI_EXP_LNKCAP2_SLS_2_5GB and related definitions should be based
-on the entire 32-bit register, not just the individual field within
-that register.
-
-Can you attach the output of "sudo lspci -vvxxx" for a relevant
-device and the contents of the sysfs file that is wrong?
-
-> Fixes: b891b4dc1eed ("PCI: Fix bit definitions of PCI_EXP_LNKCAP2 register")
-> Cc: <stable@vger.kernel.org> # v3.8+
-> Signed-off-by: Felipe Balbi <felipe.balbi@linux.intel.com>
+> Signed-off-by: Jon Derrick <jonathan.derrick@intel.com>
 > ---
+>  drivers/pci/pci.c      |  2 ++
+>  drivers/pci/pci.h      |  6 ++++++
+>  drivers/pci/pcie/dpc.c | 48 
+> ++++++++++++++++++++++++++++++++++++++----------
+>  include/linux/pci.h    |  6 ++++++
+>  4 files changed, 52 insertions(+), 10 deletions(-)
 > 
-> PCI Spec References:
+> diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
+> index 80da484..4e629c2 100644
+> --- a/drivers/pci/pci.c
+> +++ b/drivers/pci/pci.c
+> @@ -6062,6 +6062,8 @@ static int __init pci_setup(char *str)
+>  				pcie_ats_disabled = true;
+>  			} else if (!strcmp(str, "noaer")) {
+>  				pci_no_aer();
+> +			} else if (!strcmp(str, "nodpc")) {
+> +				pci_no_dpc();
+>  			} else if (!strcmp(str, "earlydump")) {
+>  				pci_early_dump = true;
+>  			} else if (!strncmp(str, "realloc=", 8)) {
+> diff --git a/drivers/pci/pci.h b/drivers/pci/pci.h
+> index 6e0d152..f73f29e 100644
+> --- a/drivers/pci/pci.h
+> +++ b/drivers/pci/pci.h
+> @@ -536,4 +536,10 @@ static inline void
+> pci_aer_clear_fatal_status(struct pci_dev *dev) { }
+>  static inline void pci_aer_clear_device_status(struct pci_dev *dev) { 
+> }
+>  #endif
 > 
-> - 4.0 https://members.pcisig.com/wg/PCI-SIG/document/10912?downloadRevision=active
-> - 3.1 https://members.pcisig.com/wg/PCI-SIG/document/download/8257
-> - 3.0 https://members.pcisig.com/wg/PCI-SIG/document/download/8265
+> +#ifdef CONFIG_PCIE_DPC
+> +void pci_no_dpc(void);
+> +#else
+> +static inline void pci_no_dpc(void) { }
+> +#endif
+> +
+>  #endif /* DRIVERS_PCI_H */
+> diff --git a/drivers/pci/pcie/dpc.c b/drivers/pci/pcie/dpc.c
+> index f03279f..068fca0 100644
+> --- a/drivers/pci/pcie/dpc.c
+> +++ b/drivers/pci/pcie/dpc.c
+> @@ -44,6 +44,18 @@ struct dpc_dev {
+>  	"Memory Request Completion Timeout",		 /* Bit Position 18 */
+>  };
 > 
->  include/uapi/linux/pci_regs.h | 8 ++++----
->  1 file changed, 4 insertions(+), 4 deletions(-)
+> +static int pcie_dpc_disable;
+> +
+> +void pci_no_dpc(void)
+> +{
+> +	pcie_dpc_disable = 1;
+> +}
+> +
+> +bool pci_dpc_available(void)
+> +{
+> +	return !pcie_dpc_disable && pci_aer_available() && pci_msi_enabled();
+
+1) why do you check pci_aer_available() ?
+2) and pci_aer_available() already internally checks pci_msi_enabled();
+
+> +}
+> +
+>  static int dpc_wait_rp_inactive(struct dpc_dev *dpc)
+>  {
+>  	unsigned long timeout = jiffies + HZ;
+> @@ -209,6 +221,17 @@ static irqreturn_t dpc_irq(int irq, void *context)
+>  	return IRQ_HANDLED;
+>  }
 > 
-> diff --git a/include/uapi/linux/pci_regs.h b/include/uapi/linux/pci_regs.h
-> index 796d12910791..6ad597b3d082 100644
-> --- a/include/uapi/linux/pci_regs.h
-> +++ b/include/uapi/linux/pci_regs.h
-> @@ -652,10 +652,10 @@
->  #define PCI_EXP_DEVSTA2		42	/* Device Status 2 */
->  #define PCI_CAP_EXP_RC_ENDPOINT_SIZEOF_V2	44	/* v2 endpoints without link end here */
->  #define PCI_EXP_LNKCAP2		44	/* Link Capabilities 2 */
-> -#define  PCI_EXP_LNKCAP2_SLS_2_5GB	0x00000002 /* Supported Speed 2.5GT/s */
-> -#define  PCI_EXP_LNKCAP2_SLS_5_0GB	0x00000004 /* Supported Speed 5GT/s */
-> -#define  PCI_EXP_LNKCAP2_SLS_8_0GB	0x00000008 /* Supported Speed 8GT/s */
-> -#define  PCI_EXP_LNKCAP2_SLS_16_0GB	0x00000010 /* Supported Speed 16GT/s */
-> +#define  PCI_EXP_LNKCAP2_SLS_2_5GB	0x00000001 /* Supported Speed 2.5GT/s */
-> +#define  PCI_EXP_LNKCAP2_SLS_5_0GB	0x00000002 /* Supported Speed 5GT/s */
-> +#define  PCI_EXP_LNKCAP2_SLS_8_0GB	0x00000004 /* Supported Speed 8GT/s */
-> +#define  PCI_EXP_LNKCAP2_SLS_16_0GB	0x00000008 /* Supported Speed 16GT/s */
->  #define  PCI_EXP_LNKCAP2_CROSSLINK	0x00000100 /* Crosslink supported */
->  #define PCI_EXP_LNKCTL2		48	/* Link Control 2 */
->  #define PCI_EXP_LNKCTL2_TLS		0x000f
-> -- 
-> 2.16.1
+> +static void dpc_disable(struct pci_dev *pdev)
+> +{
+> +	u16 cap_pos, ctl;
+> +
+> +	cap_pos = pci_find_ext_capability(pdev, PCI_EXT_CAP_ID_DPC);
+> +	pci_read_config_word(pdev, cap_pos + PCI_EXP_DPC_CTL, &ctl);
+> +	ctl &= ~(PCI_EXP_DPC_CTL_EN_FATAL | PCI_EXP_DPC_CTL_EN_NONFATAL |
+> +		 PCI_EXP_DPC_CTL_INT_EN);
+> +	pci_write_config_word(pdev, cap_pos + PCI_EXP_DPC_CTL, ctl);
+> +}
+> +
+>  #define FLAG(x, y) (((x) & (y)) ? '+' : '-')
+>  static int dpc_probe(struct pcie_device *dev)
+>  {
+> @@ -221,9 +244,16 @@ static int dpc_probe(struct pcie_device *dev)
+>  	if (pcie_aer_get_firmware_first(pdev))
+>  		return -ENOTSUPP;
 > 
+> +	if (!pci_dpc_available()) {
+> +		status = -ENOTSUPP;
+> +		goto disable_dpc;
+> +	}
+> +
+>  	dpc = devm_kzalloc(device, sizeof(*dpc), GFP_KERNEL);
+> -	if (!dpc)
+> -		return -ENOMEM;
+> +	if (!dpc) {
+> +		status = -ENOMEM;
+> +		goto disable_dpc;
+> +	}
+> 
+>  	dpc->cap_pos = pci_find_ext_capability(pdev, PCI_EXT_CAP_ID_DPC);
+>  	dpc->dev = dev;
+> @@ -235,7 +265,7 @@ static int dpc_probe(struct pcie_device *dev)
+>  	if (status) {
+>  		dev_warn(device, "request IRQ%d failed: %d\n", dev->irq,
+>  			 status);
+> -		return status;
+> +		goto disable_dpc;
+>  	}
+> 
+>  	pci_read_config_word(pdev, dpc->cap_pos + PCI_EXP_DPC_CAP, &cap);
+> @@ -260,17 +290,15 @@ static int dpc_probe(struct pcie_device *dev)
+>  		FLAG(cap, PCI_EXP_DPC_CAP_SW_TRIGGER), dpc->rp_log_size,
+>  		FLAG(cap, PCI_EXP_DPC_CAP_DL_ACTIVE));
+>  	return status;
+> +
+> +disable_dpc:
+> +	dpc_disable(pdev);
+> +	return status;
+>  }
+> 
+>  static void dpc_remove(struct pcie_device *dev)
+>  {
+> -	struct dpc_dev *dpc = get_service_data(dev);
+> -	struct pci_dev *pdev = dev->port;
+> -	u16 ctl;
+> -
+> -	pci_read_config_word(pdev, dpc->cap_pos + PCI_EXP_DPC_CTL, &ctl);
+> -	ctl &= ~(PCI_EXP_DPC_CTL_EN_FATAL | PCI_EXP_DPC_CTL_INT_EN);
+> -	pci_write_config_word(pdev, dpc->cap_pos + PCI_EXP_DPC_CTL, ctl);
+> +	dpc_disable(dev->port);
+>  }
+> 
+>  static struct pcie_port_service_driver dpcdriver = {
+> diff --git a/include/linux/pci.h b/include/linux/pci.h
+> index 5454e6b..559b792 100644
+> --- a/include/linux/pci.h
+> +++ b/include/linux/pci.h
+> @@ -1473,6 +1473,12 @@ static inline int pci_irqd_intx_xlate(struct
+> irq_domain *d,
+>  static inline bool pci_aer_available(void) { return false; }
+>  #endif
+> 
+> +#ifdef CONFIG_PCIE_DPC
+> +bool pci_dpc_available(void);
+> +#else
+> +static inline bool pci_dpc_available(void) { return false; }
+> +#endif
+> +
+>  #ifdef CONFIG_PCIE_ECRC
+>  void pcie_set_ecrc_checking(struct pci_dev *dev);
+>  void pcie_ecrc_get_policy(char *str);
