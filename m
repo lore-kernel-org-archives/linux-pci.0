@@ -1,56 +1,66 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from nikam.ms.mff.cuni.cz ([195.113.20.16]:49726 "EHLO
-        nikam.ms.mff.cuni.cz" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1728066AbeHLN3Z (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Sun, 12 Aug 2018 09:29:25 -0400
-Date: Sun, 12 Aug 2018 12:51:46 +0200
-From: Martin Mares <mj@ucw.cz>
-To: Matthew Wilcox <willy@infradead.org>
-Cc: Logan Gunthorpe <logang@deltatee.com>,
-        linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
-        linux-doc@vger.kernel.org, Stephen Bates <sbates@raithlin.com>,
-        Christoph Hellwig <hch@lst.de>,
-        Bjorn Helgaas <bhelgaas@google.com>,
-        Jonathan Corbet <corbet@lwn.net>,
-        Ingo Molnar <mingo@kernel.org>,
-        Thomas Gleixner <tglx@linutronix.de>,
-        "Paul E. McKenney" <paulmck@linux.vnet.ibm.com>,
-        Marc Zyngier <marc.zyngier@arm.com>,
-        Kai-Heng Feng <kai.heng.feng@canonical.com>,
-        Frederic Weisbecker <frederic@kernel.org>,
-        Dan Williams <dan.j.williams@intel.com>,
-        =?utf-8?B?SsOpcsO0bWU=?= Glisse <jglisse@redhat.com>,
-        Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-        Alex Williamson <alex.williamson@redhat.com>,
-        Christian =?utf-8?B?S8O2bmln?= <christian.koenig@amd.com>
-Subject: Re: lspci: Display path to device
-Message-ID: <mj+md-20180812.105055.30846.nikam@ucw.cz>
-References: <20180717170204.30470-1-logang@deltatee.com>
- <20180717203900.GA1771@bombadil.infradead.org>
- <mj+md-20180810.091549.51451.nikam@ucw.cz>
- <mj+md-20180810.103017.64385.nikam@ucw.cz>
- <20180810145655.GA16533@bombadil.infradead.org>
- <mj+md-20180812.092635.39872.nikam@ucw.cz>
- <20180812103133.GB2984@bombadil.infradead.org>
+Return-Path: <SRS0=ut0H=K7=broadcom.com=hari.vyas@kernel.org>
+Return-Path: <SRS0=ut0H=K7=broadcom.com=hari.vyas@kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20180812103133.GB2984@bombadil.infradead.org>
-Sender: linux-pci-owner@vger.kernel.org
+In-Reply-To: <20180816102645.btqgmnycprgyup4o@wunner.de>
+References: <1530608741-30664-1-git-send-email-hari.vyas@broadcom.com>
+ <20180731163727.GK45322@bhelgaas-glaptop.roam.corp.google.com>
+ <ecaed7664b46d73888d2494065905f8e108fc0f4.camel@kernel.crashing.org>
+ <20180815185027.GE28888@bhelgaas-glaptop.roam.corp.google.com>
+ <e3316c91ad722434360b4018b17cbfe265e97801.camel@kernel.crashing.org>
+ <fa218ce2-c337-e776-d958-f1f8a1129c9a@yandex-team.ru> <6f76eb5f54fdc780dac744773d836214d7844346.camel@kernel.crashing.org>
+ <CAM5rFu-QCBq9TdoiFtvfNENUaS5Tpay5f0H9_BenEqK8nDgoNg@mail.gmail.com>
+ <f7aa5f1904f56beb3d202033089449a45f86e6d3.camel@kernel.crashing.org> <20180816102645.btqgmnycprgyup4o@wunner.de>
+From: Hari Vyas <hari.vyas@broadcom.com>
+Date: Thu, 16 Aug 2018 16:17:01 +0530
+Message-ID: <CAM5rFu_YX8eQxRkQ5_YGdDvZ3M+v6ciry31VSnHF36J2MqOfQw@mail.gmail.com>
+Subject: Re: PCIe enable device races (Was: [PATCH v3] PCI: Data corruption
+ happening due to race condition)
+To: Lukas Wunner <lukas@wunner.de>
+Cc: Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	Konstantin Khlebnikov <khlebnikov@yandex-team.ru>, Bjorn Helgaas <helgaas@kernel.org>,
+	Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org,
+	Ray Jui <ray.jui@broadcom.com>, Jens Axboe <axboe@kernel.dk>
+Content-Type: text/plain; charset="UTF-8"
 List-ID: <linux-pci.vger.kernel.org>
 
-Hello!
+On Thu, Aug 16, 2018 at 3:56 PM, Lukas Wunner <lukas@wunner.de> wrote:
+> On Thu, Aug 16, 2018 at 08:10:28PM +1000, Benjamin Herrenschmidt wrote:
+>> On Thu, 2018-08-16 at 14:52 +0530, Hari Vyas wrote:
+>> > There was an issue reported by my colleague srinath while enabling pci
+>> > bridge and a race condition was happening while setting memory and
+>> > master bits i.e. bits were over-written.
+>> > As per my understanding is_busmaster and is_added bit race issue was
+>> > at internal data management and is quite different from pci bridge
+>> > enabling issue.
+>> > Am I missing some thing ? Would be interested to know what exactly was
+>> > affected due to is_busmaster fix.
+>>
+>> The is_busmaster fix isn't I think affecting anything, however I don't
+>> like the use of atomics for these things. It's a band-aid. If we grow a
+>> proper pci_dev mutex, which is what I'm introducing here, it should be
+>> able to also handle the is_added race etc..
+>
+> What is your rationale to introduce an additional mutex instead if
+> utilizing the existing mutex in struct device via device_lock() /
+> device_unlock() or alternatively pci_dev_lock() / pci_dev_unlock()?
+>
+> This is also what Bjorn had suggested here:
+> https://lore.kernel.org/lkml/20170816134354.GV32525@bhelgaas-glaptop.roam.corp.google.com/
+>
+> Thanks,
+>
+> Lukas
+Agreeing. My "pci bridge enabling" proposed simple fix(issue is not
+easy to reproduce in our environment
+so not tested yet but believe it should work) too uses existing
+locking mechanism only.
 
-> I agree it's more intuitive, but it's not the format that Logan's code
-> is expecting, so it's not as useful for my purposes.  How about this?
-> 
-> $ ./lspci -PF tests/fujitsu-p8010.lspci -s 1d:00.0
-> 00:1e.0/03.0/00.0 Network controller: 3Com Corporation 3com 3CRWE154G72 [Office Connect Wireless LAN Adapter] (rev 01)
-> $ ./lspci -PPF tests/fujitsu-p8010.lspci -s 1d:00.0
-> 00:1e.0/1c:03.0/1d:00.0 Network controller: 3Com Corporation 3com 3CRWE154G72 [Office Connect Wireless LAN Adapter] (rev 01)
+https://bugzilla.kernel.org/show_bug.cgi?id=200793
 
-Yes, this looks fine.
+Currently addressing only PCI_COMMAND but can be easily extended for
+other pci config having bit fields.
+Good that we all are in same direction. Issue should be fixed though
+be addressed in different way.
 
-It is merged to master now and I will push a new release out of the door soon.
-
-			Thanks!
-					Martin
+Regards,
+hari
