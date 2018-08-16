@@ -1,89 +1,62 @@
-Return-Path: <linux-acpi-owner@vger.kernel.org>
-From: Arnd Bergmann <arnd@arndb.de>
-To: linux-pci@vger.kernel.org, Bjorn Helgaas <bhelgaas@google.com>
-Cc: linux-kernel@vger.kernel.org,
-        Christoph Hellwig <hch@infradead.org>,
-        Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
-        Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-        linuxppc-dev@lists.ozlabs.org, linux-acpi@vger.kernel.org,
-        Arnd Bergmann <arnd@arndb.de>
-Subject: [RFC 04/15] PCI: export pci_register_host_bridge
-Date: Fri, 17 Aug 2018 12:26:34 +0200
-Message-Id: <20180817102645.3839621-5-arnd@arndb.de>
-In-Reply-To: <20180817102645.3839621-1-arnd@arndb.de>
-References: <20180817102645.3839621-1-arnd@arndb.de>
-Sender: linux-acpi-owner@vger.kernel.org
+Return-Path: <SRS0=bZ5k=K7=yandex-team.ru=khlebnikov@kernel.org>
+Return-Path: <SRS0=bZ5k=K7=yandex-team.ru=khlebnikov@kernel.org>
+Subject: Re: PCIe enable device races (Was: [PATCH v3] PCI: Data corruption
+ happening due to race condition)
+To: Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+ Bjorn Helgaas <helgaas@kernel.org>
+Cc: Hari Vyas <hari.vyas@broadcom.com>, bhelgaas@google.com,
+ linux-pci@vger.kernel.org, ray.jui@broadcom.com, Jens Axboe <axboe@kernel.dk>
+References: <1530608741-30664-1-git-send-email-hari.vyas@broadcom.com>
+ <20180731163727.GK45322@bhelgaas-glaptop.roam.corp.google.com>
+ <ecaed7664b46d73888d2494065905f8e108fc0f4.camel@kernel.crashing.org>
+ <20180815185027.GE28888@bhelgaas-glaptop.roam.corp.google.com>
+ <e3316c91ad722434360b4018b17cbfe265e97801.camel@kernel.crashing.org>
+From: Konstantin Khlebnikov <khlebnikov@yandex-team.ru>
+Message-ID: <fa218ce2-c337-e776-d958-f1f8a1129c9a@yandex-team.ru>
+Date: Thu, 16 Aug 2018 10:58:43 +0300
+MIME-Version: 1.0
+In-Reply-To: <e3316c91ad722434360b4018b17cbfe265e97801.camel@kernel.crashing.org>
+Content-Type: text/plain; charset=utf-8; format=flowed
 List-ID: <linux-pci.vger.kernel.org>
 
-There are a couple of users of the old pci_create_root_bus() interface,
-which calls pci_register_host_bridge() without actually scanning the bus.
+On 16.08.2018 00:52, Benjamin Herrenschmidt wrote:
+> On Wed, 2018-08-15 at 13:50 -0500, Bjorn Helgaas wrote:
+>> Yes, this is definitely broken.  Some folks have tried to fix it in
+>> the past, but it hasn't quite happened yet.  We actually merged one
+>> patch, 40f11adc7cd9 ("PCI: Avoid race while enabling upstream
+>> bridges"), but had to revert it after we found issues:
+>>
+>> https://lkml.kernel.org/r/1501858648-22228-1-git-send-email-srinath.mannam@broadcom.com
+>> https://lkml.kernel.org/r/20170915072352.10453.31977.stgit@bhelgaas-glaptop.roam.corp.google.com
+> 
+> Ok so I had a look at this previous patch and it adds yet anothe use of
+> some global mutex to protect part of the operation which makes me
+> cringe a bit, we have too many of these.
+> 
+> What do you think of the one I sent yesterday ? (I can't find it in the
+> archives yet)
+> 
+> [RFC PATCH] pci: Proof of concept at fixing pci_enable_device/bridge races
+> 
+> The patch itself needs splitting etc... but the basic idea is to move away
+> from those global mutexes in a number of places and have one in the pci_dev
+> struct itself to protect its state.
+> 
+> I would also like to use this rather than the bitmap atomics for is_added
+> etc... (Hari's fix) in the long run. Atomics aren't significantly cheaper
+> and imho makes thing even messier.
+> 
+> Jens, Konstantin, any chance you can test if the above also breaks iwlwifi
+> (I don't see why it would but ...)
+> 
 
-In order to get those callers a little closer to the current method
-of separating the allocation and probing of the host bridge, this
-exports the internal interface to modules. If all the callers can
-get moved over to pci_host_probe() or pci_scan_root_bus_bridge()
-later, the export can be removed again.
+I suppose original race was discovered between enabling bridge and device as described here
 
-Signed-off-by: Arnd Bergmann <arnd@arndb.de>
----
- drivers/pci/probe.c | 25 ++++++++++++++++++++++++-
- include/linux/pci.h |  1 +
- 2 files changed, 25 insertions(+), 1 deletion(-)
+https://lore.kernel.org/lkml/150547971091.977464.16294045866179907260.stgit@buzz/T/#u
 
-diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
-index cf169742c03e..5ca7d5941ad0 100644
---- a/drivers/pci/probe.c
-+++ b/drivers/pci/probe.c
-@@ -762,7 +762,29 @@ static void pci_set_bus_msi_domain(struct pci_bus *bus)
- 	dev_set_msi_domain(&bus->dev, d);
- }
- 
--static int pci_register_host_bridge(struct pci_host_bridge *bridge)
-+/*
-+ * pci_register_host_bridge() - Register a host bridge without scanning
-+ *
-+ * @bridge: a newly allocated host bridge structure
-+ *
-+ * This is the core part of bringing up a new PCI host bridge,
-+ * before we scan for attached devices and register them as
-+ * pci_dev.
-+ *
-+ * For the most part, this is an implementation detail of the
-+ * pci_host_probe() interface, which brings up the entire bus,
-+ * bus some older platforms still call it directly and manually
-+ * scan for devices.
-+ *
-+ * If your driver uses this, try to convert it to using
-+ * pci_host_probe() instead.
-+ *
-+ * Return: zero on suggess, or a negative error code.
-+ * Note: after pci_register_host_bridge() successfully returns,
-+ * the pci_host_bridge device is alive in driver core, and must
-+ * not be freed directly.
-+ */
-+int pci_register_host_bridge(struct pci_host_bridge *bridge)
- {
- 	struct device *parent = bridge->dev.parent;
- 	struct resource_entry *window, *n;
-@@ -877,6 +899,7 @@ static int pci_register_host_bridge(struct pci_host_bridge *bridge)
- 	kfree(bus);
- 	return err;
- }
-+EXPORT_SYMBOL_GPL(pci_register_host_bridge);
- 
- static bool pci_bridge_child_ext_cfg_accessible(struct pci_dev *bridge)
- {
-diff --git a/include/linux/pci.h b/include/linux/pci.h
-index d226e06fb5e5..e1337148cf9f 100644
---- a/include/linux/pci.h
-+++ b/include/linux/pci.h
-@@ -909,6 +909,7 @@ struct pci_bus *pci_create_root_bus(struct device *parent, int bus,
- 				    struct pci_ops *ops, void *sysdata,
- 				    struct list_head *resources);
- int pci_host_probe(struct pci_host_bridge *bridge);
-+int pci_register_host_bridge(struct pci_host_bridge *);
- int pci_bus_insert_busn_res(struct pci_bus *b, int bus, int busmax);
- int pci_bus_update_busn_res_end(struct pci_bus *b, int busmax);
- void pci_bus_release_busn_res(struct pci_bus *b);
--- 
-2.18.0
+I barely can remember what I ever posted this, so I couldn't reproduce for sure.
+
+> Cheers,
+> Ben.
+> 
+> 
