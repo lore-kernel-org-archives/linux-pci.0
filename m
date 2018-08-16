@@ -1,105 +1,57 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from gate.crashing.org ([63.228.1.57]:46543 "EHLO gate.crashing.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1727206AbeHPNF0 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Thu, 16 Aug 2018 09:05:26 -0400
-Message-ID: <9c7c60eb765c61d007169c9142fb335b0a4080df.camel@kernel.crashing.org>
-Subject: Re: [PATCH 1/1] PCI/AER: prevent pcie_do_fatal_recovery from using
- device after it is removed
-From: Benjamin Herrenschmidt <benh@kernel.crashing.org>
-To: poza@codeaurora.org
-Cc: Thomas Tai <thomas.tai@oracle.com>, bhelgaas@google.com,
-        keith.busch@intel.com, linux-pci@vger.kernel.org,
-        linux-pci-owner@vger.kernel.org
-Date: Thu, 16 Aug 2018 20:07:43 +1000
-In-Reply-To: <2894d8df6e44860456377dade9ea5737@codeaurora.org>
-References: <1534179088-44219-1-git-send-email-thomas.tai@oracle.com>
-         <1534179088-44219-2-git-send-email-thomas.tai@oracle.com>
-         <51f4b387d9bd96a42d526a6a029fc43b@codeaurora.org>
-         <b0104a716319d76e734c307cb4bedd9d@codeaurora.org>
-         <903394c04d6ad468ed06dc0a779200e7555345a7.camel@kernel.crashing.org>
-         <6cb069038530757f31f3dd60328c7e30@codeaurora.org>
-         <e931bc7a7e468e8bb2ee3766b3fcf96f1800f552.camel@kernel.crashing.org>
-         <5bd99bcacb772b588771fce62c61a59fdeb167f3.camel@kernel.crashing.org>
-         <290750445f084c479963f54dd36af63a@codeaurora.org>
-         <05bc3bccb2c6a0cb1696faf20073e567d7a5b8ee.camel@kernel.crashing.org>
-         <2894d8df6e44860456377dade9ea5737@codeaurora.org>
+Return-Path: <SRS0=EhFM=K7=gmail.com=arndbergmann@kernel.org>
+Return-Path: <SRS0=EhFM=K7=gmail.com=arndbergmann@kernel.org>
+MIME-Version: 1.0
+References: <20180801151403.20660-1-hch@lst.de> <20180801151403.20660-2-hch@lst.de>
+ <20180802165430.GA13725@red-moon> <20180815195227.GG28888@bhelgaas-glaptop.roam.corp.google.com>
+ <20180816205901.GA15085@bhelgaas-glaptop.roam.corp.google.com>
+In-Reply-To: <20180816205901.GA15085@bhelgaas-glaptop.roam.corp.google.com>
+From: Arnd Bergmann <arnd@arndb.de>
+Date: Thu, 16 Aug 2018 23:04:53 +0200
+Message-ID: <CAK8P3a02StKtvE+dfESGdeB_zvLbqy9jYwWWgzV6AaeAwyNu=Q@mail.gmail.com>
+Subject: Re: [PATCH 1/3] PCI: add a callback to struct pci_host_bridge for
+ adding a new device
+To: Bjorn Helgaas <helgaas@kernel.org>
+Cc: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>, Christoph Hellwig <hch@lst.de>,
+	Bjorn Helgaas <bhelgaas@google.com>, Palmer Dabbelt <palmer@dabbelt.com>,
+	"Wesley W. Terpstra" <wesley@sifive.com>, linux-pci <linux-pci@vger.kernel.org>,
+	linux-riscv@lists.infradead.org
 Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
-Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Thu, 2018-08-16 at 14:33 +0530, poza@codeaurora.org wrote:
-> On 2018-08-16 13:42, Benjamin Herrenschmidt wrote:
-> > 
-> when I meant spec, i meant PCIe Spec.
-> At least spec distinguish fatal and non-fatal
+On Thu, Aug 16, 2018 at 10:59 PM Bjorn Helgaas <helgaas@kernel.org> wrote:
+> On Wed, Aug 15, 2018 at 02:52:28PM -0500, Bjorn Helgaas wrote:
+> > On Thu, Aug 02, 2018 at 05:54:30PM +0100, Lorenzo Pieralisi wrote:
 
-Yes, I'm well aware of that, however the policy implemented by EEH is
-stricter in that *any* uncorrectable error will trigger an immediate
-freeze of the endpoint in order to prevent bad data propagation.
+> > This patch seems OK to me.
+> >
+> > I don't really care about the prototype.  There's only one
+> > pcibios_add_device() implementation (x86) that returns anything other
+> > than 0, and that's a pretty obscure error case related to f9a37be0f02a
+> > ("x86: Use PCI setup data"), which lets us use ROM data from boot
+> > services.  Even then the only thing that happens is a WARN_ON().  A
+> > more descriptive printk would be a lot more useful.
+>
+> Thinking about this some more, I'm not so sure about the connection
+> with removing pcibios_add_device().  This host_bridge->add_dev() hook
+> would be for host bridge-specific things, while pcibios_add_device()
+> is for arch-specific things.
+>
+> I'd still love to get rid of pcibios_add_device() (especially the
+> non-arch-specific things like the pci_claim_resource() in s390); I'm
+> just not sure yet whether this particular patch is the vehicle.
 
-However, you don't have to implement it that way for AER. You can
-implement a policy where you don't enforce a reset of the device and
-link unless the driver requests it.
+I think most of the arch-specific pcibios_* calls are actually
+host bridge specific after all, it just so happens that they are
+implemented on architectures that only have one specific
+host bridge implementation, or that they are used on an
+architecture that does something odd in one place and needs
+to do something else in another place.
 
-However if/when the driver does, then you should honor the driver wish
-and do it which isn't currently the case in the AER code.
+For pci_claim_resource() we seem to be doing this in a number
+of different places, but there isn't strictly a reason for that.
 
-Note that the current error callbacks have no way to convey the fatal
-vs. non-fatal information to the device that I can see, we might want
-to change the prototype here with a tree-wide patch if you think that
-drivers might care.
+I've started a patch series to turn all the __weak pcibios_*
+functions into callbacks, which seems to be the right solution
+for almost all of them.
 
-> Non-fatal errors are uncorrectable errors which cause a particular 
-> transaction to be unreliable but the Link is otherwise fully functional.
-> Isolating Non-fatal from Fatal errors provides Requester/Receiver logic 
-> in a device or system management software the opportunity to recover
-> from the error without resetting the components on the Link and 
-> disturbing other transactions in progress.
-> "
-> 
-> Here the basic assumption is link is fully functional, hence we do not 
-> initiate link reset. (while in case FATAL we do initiate Secondary Bus 
-> Reset)
-
-See above.
-> 
-> okay, so here is what current pcie_do_nonfatal_recovery() doe.
-> 
-> pcie_do_nonfatal_recovery
->      report_error_detected()    >> calls driver callbacks
->      report_mmio_enabled()
->      report_slot_reset()  >> if PCI_ERS_RESULT_NEED_RESET
-
-Above if the driver returned "NEED RESET" we should not just "report" a
-slot reset, we should *perform* one :-) Unless the AER code does it in
-a place I missed...
-
-Also we should do a hot reset at least, not just a link reset.
-
->      report_resume()
-> 
-> If you suggest how it is broken, it will help me to understand.
-> probably you might want to point out what are the calls need to be added 
-> or removed or differently handled, specially storage point of view.
-
-
-> Regards,
-> Oza.
-> 
-> > 
-> > Keep in mind that those callbacks were designed originally for EEH
-> > (which predates AER), and so was the spec written.
-> > 
-> > We don't actually use the AER code on POWER today, so we didn't notice
-> > how broken the implementation was :-)
-> > 
-> > We should fix that.
-> > 
-> > Either we can sort all that out by email, or we should plan some kind
-> > of catch-up, either at Plumbers (provided I can go there) or maybe a
-> > webex call.
-> > 
-> > Cheers,
-> > Ben.
+      Arnd
