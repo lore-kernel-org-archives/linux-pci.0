@@ -1,48 +1,44 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-it0-f42.google.com ([209.85.214.42]:36860 "EHLO
-        mail-it0-f42.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726319AbeHQIkF (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Fri, 17 Aug 2018 04:40:05 -0400
-Received: by mail-it0-f42.google.com with SMTP id p81-v6so10346198itp.1
-        for <linux-pci@vger.kernel.org>; Thu, 16 Aug 2018 22:38:05 -0700 (PDT)
-MIME-Version: 1.0
-References: <CABXGCsMZaDZDONX6+McFJr2UMZR9inQTeTsKWqQXcwMCPrc96g@mail.gmail.com>
-In-Reply-To: <CABXGCsMZaDZDONX6+McFJr2UMZR9inQTeTsKWqQXcwMCPrc96g@mail.gmail.com>
-From: Mikhail Gavrilov <mikhail.v.gavrilov@gmail.com>
-Date: Fri, 17 Aug 2018 10:37:53 +0500
-Message-ID: <CABXGCsNC3RBk+TXSwRS6c+p5wPOvmDrxHbC=PxwZemspWmcnsA@mail.gmail.com>
-Subject: Re: [4.18 rc8 BUG] AER: Corrected error received: 0000:00:00.0
-To: linux-pci@vger.kernel.org
+Return-Path: <SRS0=veIH=K7=kernel.crashing.org=benh@kernel.org>
+Return-Path: <SRS0=veIH=K7=kernel.crashing.org=benh@kernel.org>
+Message-ID: <d8cd08c2e5ade8087d1ce3a4c046be1bd3228a0d.camel@kernel.crashing.org>
+Subject: Re: PCIe enable device races (Was: [PATCH v3] PCI: Data corruption
+ happening due to race condition)
+From: Benjamin Herrenschmidt <benh@kernel.crashing.org>
+To: Jens Axboe <axboe@kernel.dk>,
+        Konstantin Khlebnikov
+	 <khlebnikov@yandex-team.ru>,
+        Bjorn Helgaas <helgaas@kernel.org>
+Cc: Hari Vyas <hari.vyas@broadcom.com>, bhelgaas@google.com,
+        linux-pci@vger.kernel.org, ray.jui@broadcom.com
+Date: Fri, 17 Aug 2018 07:37:35 +1000
+In-Reply-To: <62ac393c-931a-f328-acf6-c9afc8a026ea@kernel.dk>
+References: <1530608741-30664-1-git-send-email-hari.vyas@broadcom.com>
+	 <20180731163727.GK45322@bhelgaas-glaptop.roam.corp.google.com>
+	 <ecaed7664b46d73888d2494065905f8e108fc0f4.camel@kernel.crashing.org>
+	 <20180815185027.GE28888@bhelgaas-glaptop.roam.corp.google.com>
+	 <e3316c91ad722434360b4018b17cbfe265e97801.camel@kernel.crashing.org>
+	 <fa218ce2-c337-e776-d958-f1f8a1129c9a@yandex-team.ru>
+	 <6f76eb5f54fdc780dac744773d836214d7844346.camel@kernel.crashing.org>
+	 <62ac393c-931a-f328-acf6-c9afc8a026ea@kernel.dk>
 Content-Type: text/plain; charset="UTF-8"
-Sender: linux-pci-owner@vger.kernel.org
+Mime-Version: 1.0
 List-ID: <linux-pci.vger.kernel.org>
 
-Is there anyone alive here?
-Nobody wants to help me?
+On Thu, 2018-08-16 at 13:43 -0600, Jens Axboe wrote:
+> 
+> > Ok. Well, my patch fixes it for my repro-case at least and seems to not
+> > break anyhting on my thinkpad so ...
+> > 
+> > Bjorn, are you ok with the approach ? If yes, I'll start breaking up
+> > that patch into a few smaller bits in case something goes wrong and we
+> > want to bisect (such as the changes I did to tracking is_busmaster
+> > etc...)
+> 
+> I can try it too, but I was never CC'ed on the actual patch.
 
+https://lore.kernel.org/lkml/08bc40a6af3e614e97a78fbaab688bfcd14520ac.camel@kernel.crashing.org/
 
---
-Best Regards,
-Mike Gavrilov.
-On Wed, 15 Aug 2018 at 22:40, Mikhail Gavrilov
-<mikhail.v.gavrilov@gmail.com> wrote:
->
-> Hi guys.
-> I hope I wrote in appropriate list.
-> I assembled a new computer.
-> But my joy is marred by a lot of errors in the kernel log:
-> [  104.373852] pcieport 0000:00:03.1: AER: Corrected error received:
-> 0000:00:00.0
-> [  104.373877] pcieport 0000:00:03.1: PCIe Bus Error:
-> severity=Corrected, type=Data Link Layer, (Transmitter ID)
-> [  104.373881] pcieport 0000:00:03.1:   device [1022:1453] error
-> status/mask=00001000/00006000
-> [  104.373886] pcieport 0000:00:03.1:    [12] Replay Timer Timeout
-> I don't know it may be false positive or can impact performance.
-> Anyway I hope it can be fixed because such count of errors make it
-> difficult to observe real problems.
->
->
-> --
-> Best Regards,
-> Mike Gavrilov.
+(I'll also fwd privately)
+
+Cheers,
+Ben.
