@@ -1,107 +1,71 @@
-Return-Path: <SRS0=rB3A=LN=intel.com=jonathan.derrick@kernel.org>
-Return-Path: <SRS0=rB3A=LN=intel.com=jonathan.derrick@kernel.org>
-From: Jon Derrick <jonathan.derrick@intel.com>
-To: Bjorn Helgaas <helgaas@kernel.org>
-Cc: <linux-pci@vger.kernel.org>,
-	<linux-kernel@vger.kernel.org>,
-	Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
-	Keith Busch <keith.busch@intel.com>,
-	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-	Mika Westerberg <mika.westerberg@linux.intel.com>,
-	Sinan Kaya <okaya@kernel.org>,
-	Christoph Hellwig <hch@lst.de>,
-	Matthew Wilcox <willy@infradead.org>,
-	Logan Gunthorpe <logang@deltatee.com>,
-	Stephen Bates <sbates@raithlin.com>,
-	Jon Derrick <jonathan.derrick@intel.com>
-Subject: [PATCH v2] PCI: Equalize hotplug memory for non/occupied slots
-Date: Thu, 30 Aug 2018 16:12:00 -0600
-Message-Id: <1535667120-3002-2-git-send-email-jonathan.derrick@intel.com>
-In-Reply-To: <1535667120-3002-1-git-send-email-jonathan.derrick@intel.com>
-References: <1535667120-3002-1-git-send-email-jonathan.derrick@intel.com>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from gate.crashing.org ([63.228.1.57]:58180 "EHLO gate.crashing.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1726199AbeHPLNX (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Thu, 16 Aug 2018 07:13:23 -0400
+Message-ID: <54d19e0e3d44bedf247853144c6bbfed5561a125.camel@kernel.crashing.org>
+Subject: Re: [PATCH 1/1] PCI/AER: prevent pcie_do_fatal_recovery from using
+ device after it is removed
+From: Benjamin Herrenschmidt <benh@kernel.crashing.org>
+To: poza@codeaurora.org, okaya@kernel.org
+Cc: Thomas Tai <thomas.tai@oracle.com>, bhelgaas@google.com,
+        keith.busch@intel.com, linux-pci@vger.kernel.org,
+        linux-pci-owner@vger.kernel.org,
+        Sam Bobroff <sam.bobroff@au1.ibm.com>
+Date: Thu, 16 Aug 2018 18:15:25 +1000
+In-Reply-To: <42bd39aef30fe24bfc48d378e1f5d35d@codeaurora.org>
+References: <1534179088-44219-1-git-send-email-thomas.tai@oracle.com>
+         <1534179088-44219-2-git-send-email-thomas.tai@oracle.com>
+         <51f4b387d9bd96a42d526a6a029fc43b@codeaurora.org>
+         <b0104a716319d76e734c307cb4bedd9d@codeaurora.org>
+         <903394c04d6ad468ed06dc0a779200e7555345a7.camel@kernel.crashing.org>
+         <6cb069038530757f31f3dd60328c7e30@codeaurora.org>
+         <e931bc7a7e468e8bb2ee3766b3fcf96f1800f552.camel@kernel.crashing.org>
+         <bf7ceabb6fe51398e0f4eebd9c4fe4ac1ec2b8a4.camel@kernel.crashing.org>
+         <42bd39aef30fe24bfc48d378e1f5d35d@codeaurora.org>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Currently, a hotplug bridge will be given hpmemsize additional memory if
-available, in order to satisfy any future hotplug allocation
-requirements.
+On Thu, 2018-08-16 at 13:35 +0530, poza@codeaurora.org wrote:
+> > 
+> > Bjorn, we are the main authors of that spec (Linas wrote it under my
+> > supervision) and created those callbacks for EEH. AER picked them up
+> > only later. Those changes must be at the very least acked by us before
+> > going upstream.
+> > 
+> > Ben.
+> 
+> 
+> + Sinan
+> 
+> This patch set was there in mailing list for nearly 17 to 18 revisions 
+> for 7 months.
 
-These calculations don't consider the current memory size of the hotplug
-bridge/slot, so hotplug bridges/slots which have downstream devices will
-get their current allocation in addition to the hpmemsize value.
+Right and sadly the guy doing EEH on our side left and I didn't notice
+what was going on in the list.
 
-This makes for possibly undesirable results with a mix of unoccupied and
-occupied slots (ex, with hpmemsize=2M):
+But Bjorn should know better :-)
 
-02:03.0 PCI bridge: <-- Occupied
-	Memory behind bridge: d6200000-d64fffff [size=3M]
-02:04.0 PCI bridge: <-- Unoccupied
-	Memory behind bridge: d6500000-d66fffff [size=2M]
+> besides the intent was to bring DPC and AER into the same well defined 
+> way of error handling.
 
-This change considers the current allocation size when using the
-hpmemsize parameter to make the reservations predictable for the mix of
-unoccupied and occupied slots:
+That's a good idea, but we need to fix DPC and AER understanding of the
+intent of those callbacks, not change the spec to match the broken
+implementation.
 
-02:03.0 PCI bridge: <-- Occupied
-	Memory behind bridge: d6200000-d63fffff [size=2M]
-02:04.0 PCI bridge: <-- Unoccupied
-	Memory behind bridge: d6400000-d65fffff [size=2M]
+> The way DPC used to behave in 2016, is still the same; which involved 
+> removing and re-enumerating the devices.
 
-The calculation for IO (hpiosize) should be similar, but platform
-firmwares I've encountered (including QEMU) provide strict allocations
-for IO and would not provide free IO resources for hotplug buses
-in order to prove this calculation.
+Which is mostly useless for anything that isn't a network device.
 
-Signed-off-by: Jon Derrick <jonathan.derrick@intel.com>
----
- drivers/pci/setup-bus.c | 21 ++++++++++++++-------
- 1 file changed, 14 insertions(+), 7 deletions(-)
+We've been doing EEH for something like 15 to 20 years, so we have a
+long experience with what it takes to get PCI(e) devices to recover on
+enterprise systems.
 
-diff --git a/drivers/pci/setup-bus.c b/drivers/pci/setup-bus.c
-index 79b1824..70d0aba 100644
---- a/drivers/pci/setup-bus.c
-+++ b/drivers/pci/setup-bus.c
-@@ -831,7 +831,8 @@ static resource_size_t calculate_iosize(resource_size_t size,
- 
- static resource_size_t calculate_memsize(resource_size_t size,
- 		resource_size_t min_size,
--		resource_size_t size1,
-+		resource_size_t add_size,
-+		resource_size_t children_add_size,
- 		resource_size_t old_size,
- 		resource_size_t align)
- {
-@@ -841,7 +842,15 @@ static resource_size_t calculate_memsize(resource_size_t size,
- 		old_size = 0;
- 	if (size < old_size)
- 		size = old_size;
--	size = ALIGN(size + size1, align);
-+
-+	/*
-+	 * Consider the current allocation size when adding size for extra
-+	 * hotplug memory. This ensures that occupied slots don't receive
-+	 * unneccessary memory allocations in addition to their current size.
-+	 * The calculation should be similar for calculate_iosize, but was
-+	 * unable to be tested.
-+	 */
-+	size = ALIGN(max(size, add_size) + children_add_size, align);
- 	return size;
- }
- 
-@@ -1079,12 +1088,10 @@ static int pbus_size_mem(struct pci_bus *bus, unsigned long mask,
- 
- 	min_align = calculate_mem_align(aligns, max_order);
- 	min_align = max(min_align, window_alignment(bus, b_res->flags));
--	size0 = calculate_memsize(size, min_size, 0, resource_size(b_res), min_align);
-+	size0 = calculate_memsize(size, min_size, 0, 0, resource_size(b_res), min_align);
- 	add_align = max(min_align, add_align);
--	if (children_add_size > add_size)
--		add_size = children_add_size;
--	size1 = (!realloc_head || (realloc_head && !add_size)) ? size0 :
--		calculate_memsize(size, min_size, add_size,
-+	size1 = (!realloc_head || (realloc_head && !add_size && !children_add_size)) ? size0 :
-+		calculate_memsize(size, min_size, add_size, children_add_size,
- 				resource_size(b_res), add_align);
- 	if (!size0 && !size1) {
- 		if (b_res->start || b_res->end)
--- 
-1.8.3.1
+Removing and re-enumerating is one of the very worst thing you can do
+in that area.
+
+Cheers,
+Ben.
