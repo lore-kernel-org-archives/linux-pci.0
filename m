@@ -1,68 +1,89 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-From: Bharat Kumar Gogada <bharat.kumar.gogada@xilinx.com>
-To: <linux-pci@vger.kernel.org>, <linux-kernel@vger.kernel.org>
-CC: <bhelgaas@google.com>, <rgummal@xilinx.com>,
-        Bharat Kumar Gogada <bharat.kumar.gogada@xilinx.com>
-Subject: [PATCH v2] PCI/AER: Enable SERR# forwarding in non ACPI flow
-Date: Thu, 9 Aug 2018 20:27:37 +0530
-Message-ID: <1533826657-24552-1-git-send-email-bharat.kumar.gogada@xilinx.com>
-MIME-Version: 1.0
-Content-Type: text/plain
-Sender: linux-kernel-owner@vger.kernel.org
+Return-Path: <SRS0=veIH=K7=kernel.crashing.org=benh@kernel.org>
+Return-Path: <SRS0=veIH=K7=kernel.crashing.org=benh@kernel.org>
+Message-ID: <7c423d2aa74cbc04533caf9fa30f8cbca286007e.camel@kernel.crashing.org>
+Subject: Re: PCIe enable device races (Was: [PATCH v3] PCI: Data corruption
+ happening due to race condition)
+From: Benjamin Herrenschmidt <benh@kernel.crashing.org>
+To: Hari Vyas <hari.vyas@broadcom.com>, Lukas Wunner <lukas@wunner.de>
+Cc: Konstantin Khlebnikov <khlebnikov@yandex-team.ru>,
+        Bjorn Helgaas
+	 <helgaas@kernel.org>,
+        Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org,
+        Ray Jui <ray.jui@broadcom.com>, Jens Axboe
+	 <axboe@kernel.dk>
+Date: Fri, 17 Aug 2018 09:20:40 +1000
+In-Reply-To: <CAM5rFu_YX8eQxRkQ5_YGdDvZ3M+v6ciry31VSnHF36J2MqOfQw@mail.gmail.com>
+References: <1530608741-30664-1-git-send-email-hari.vyas@broadcom.com>
+	 <20180731163727.GK45322@bhelgaas-glaptop.roam.corp.google.com>
+	 <ecaed7664b46d73888d2494065905f8e108fc0f4.camel@kernel.crashing.org>
+	 <20180815185027.GE28888@bhelgaas-glaptop.roam.corp.google.com>
+	 <e3316c91ad722434360b4018b17cbfe265e97801.camel@kernel.crashing.org>
+	 <fa218ce2-c337-e776-d958-f1f8a1129c9a@yandex-team.ru>
+	 <6f76eb5f54fdc780dac744773d836214d7844346.camel@kernel.crashing.org>
+	 <CAM5rFu-QCBq9TdoiFtvfNENUaS5Tpay5f0H9_BenEqK8nDgoNg@mail.gmail.com>
+	 <f7aa5f1904f56beb3d202033089449a45f86e6d3.camel@kernel.crashing.org>
+	 <20180816102645.btqgmnycprgyup4o@wunner.de>
+	 <CAM5rFu_YX8eQxRkQ5_YGdDvZ3M+v6ciry31VSnHF36J2MqOfQw@mail.gmail.com>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 List-ID: <linux-pci.vger.kernel.org>
 
-As per Figure 6-3 in PCIe r4.0, sec 6.2.6, ERR_ messages
-will be forwarded from the secondary interface to the primary interface,
-if the SERR# Enable bit in the Bridge Control register is set.
-Currently PCI_BRIDGE_CTL_SERR is being enabled only in
-ACPI flow.
-This patch enables PCI_BRIDGE_CTL_SERR for Type-1 PCI device.
+On Thu, 2018-08-16 at 16:17 +0530, Hari Vyas wrote:
+> On Thu, Aug 16, 2018 at 3:56 PM, Lukas Wunner <lukas@wunner.de> wrote:
+> > On Thu, Aug 16, 2018 at 08:10:28PM +1000, Benjamin Herrenschmidt wrote:
+> > > On Thu, 2018-08-16 at 14:52 +0530, Hari Vyas wrote:
+> > > > There was an issue reported by my colleague srinath while enabling pci
+> > > > bridge and a race condition was happening while setting memory and
+> > > > master bits i.e. bits were over-written.
+> > > > As per my understanding is_busmaster and is_added bit race issue was
+> > > > at internal data management and is quite different from pci bridge
+> > > > enabling issue.
+> > > > Am I missing some thing ? Would be interested to know what exactly was
+> > > > affected due to is_busmaster fix.
+> > > 
+> > > The is_busmaster fix isn't I think affecting anything, however I don't
+> > > like the use of atomics for these things. It's a band-aid. If we grow a
+> > > proper pci_dev mutex, which is what I'm introducing here, it should be
+> > > able to also handle the is_added race etc..
+> > 
+> > What is your rationale to introduce an additional mutex instead if
+> > utilizing the existing mutex in struct device via device_lock() /
+> > device_unlock() or alternatively pci_dev_lock() / pci_dev_unlock()?
+> > 
+> > This is also what Bjorn had suggested here:
+> > https://lore.kernel.org/lkml/20170816134354.GV32525@bhelgaas-glaptop.roam.corp.google.com/
+> > 
+> > Thanks,
+> > 
+> > Lukas
+> 
+> Agreeing. My "pci bridge enabling" proposed simple fix(issue is not
+> easy to reproduce in our environment
+> so not tested yet but believe it should work) too uses existing
+> locking mechanism only.
+> 
+> https://bugzilla.kernel.org/show_bug.cgi?id=200793
+> 
+> Currently addressing only PCI_COMMAND but can be easily extended for
+> other pci config having bit fields.
+> Good that we all are in same direction. Issue should be fixed though
+> be addressed in different way.
 
-Signed-off-by: Bharat Kumar Gogada <bharat.kumar.gogada@xilinx.com>
----
- drivers/pci/pcie/aer.c |   23 +++++++++++++++++++++++
- 1 files changed, 23 insertions(+), 0 deletions(-)
+This is straight in line with your is_added fix, more way too fine
+grained locking that fixes the details of accessing a specific field or
+pair off fields but completely ignore the higher level interactions.
 
-diff --git a/drivers/pci/pcie/aer.c b/drivers/pci/pcie/aer.c
-index a2e8838..4fb0d24 100644
---- a/drivers/pci/pcie/aer.c
-+++ b/drivers/pci/pcie/aer.c
-@@ -343,6 +343,20 @@ int pci_enable_pcie_error_reporting(struct pci_dev *dev)
- 	if (!dev->aer_cap)
- 		return -EIO;
- 
-+	if (dev->hdr_type == PCI_HEADER_TYPE_BRIDGE) {
-+		u16 control;
-+
-+		/*
-+		 * A Type-1 PCI bridge will not forward ERR_ messages coming
-+		 * from an endpoint if SERR# forwarding is not enabled.
-+		 */
-+		pci_read_config_word(dev, PCI_BRIDGE_CONTROL, &control);
-+		if (!(control & PCI_BRIDGE_CTL_SERR)) {
-+			control |= PCI_BRIDGE_CTL_SERR;
-+			pci_write_config_word(dev, PCI_BRIDGE_CONTROL, control);
-+		}
-+	}
-+
- 	return pcie_capability_set_word(dev, PCI_EXP_DEVCTL, PCI_EXP_AER_FLAGS);
- }
- EXPORT_SYMBOL_GPL(pci_enable_pcie_error_reporting);
-@@ -352,6 +366,15 @@ int pci_disable_pcie_error_reporting(struct pci_dev *dev)
- 	if (pcie_aer_get_firmware_first(dev))
- 		return -EIO;
- 
-+	if (dev->hdr_type == PCI_HEADER_TYPE_BRIDGE) {
-+		u16 control;
-+
-+		/* Clear SERR Forwarding */
-+		pci_read_config_word(dev, PCI_BRIDGE_CONTROL, &control);
-+		control &= ~PCI_BRIDGE_CTL_SERR;
-+		pci_write_config_word(dev, PCI_BRIDGE_CONTROL, control);
-+	}
-+
- 	return pcie_capability_clear_word(dev, PCI_EXP_DEVCTL,
- 					  PCI_EXP_AER_FLAGS);
- }
--- 
-1.7.1
+I'm not fan of this approach at all.
+
+Most of the manipulations done in all those code path are NOT
+scalability critical and that sort of extra fine grained locking is not
+only very fragile, but wasteful.
+
+Itt's like playing whack-a-mole with micro-races, the overall picture
+quickly becomes a mess, it already more/less is with all the random
+global mutexes here or there.
+
+It's a lot cleaner to have a mutex in the device itself that covers its
+general state.
+
+Ben.
