@@ -1,83 +1,98 @@
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Date: Wed, 8 Aug 2018 10:10:48 -0400 (EDT)
-From: Mikulas Patocka <mpatocka@redhat.com>
-To: Marcin Wojtas <mw@semihalf.com>
-Subject: Re: framebuffer corruption due to overlapping stp instructions on
- arm64
-In-Reply-To: <CAPv3WKcKoEe=Qysp6Oac2C=G9bUhUQf1twSRCY+_qJ6XEC-iag@mail.gmail.com>
-Message-ID: <alpine.LRH.2.02.1808081010130.9997@file01.intranet.prod.int.rdu2.redhat.com>
-References: <alpine.LRH.2.02.1808021242320.31834@file01.intranet.prod.int.rdu2.redhat.com>
- <CAHCPf3s-+Qf=WBZz1KpisDMG3520jCUh8PLAO3PHa4jdt8kCTw@mail.gmail.com>
- <CAKv+Gu9_h-WFi1j4+DWUN_dMj75SKKHxWoDH8WQ9P7S7MNpZQg@mail.gmail.com>
- <alpine.LRH.2.02.1808060553130.30832@file01.intranet.prod.int.rdu2.redhat.com>
- <99fff4fe-afa9-f12f-a518-472a9dd1c530@arm.com>
- <CAKv+Gu_C2g=C=gMpk4a5jpDORnxZY6t1v=HDoy59m5vwNBxBBg@mail.gmail.com>
- <alpine.LRH.2.02.1808061306490.12989@file01.intranet.prod.int.rdu2.redhat.com>
- <CAKv+Gu_8Rq6X24ZOYvG7+kQQGSGYAZuu_co4k1nJS8K7rkrWMA@mail.gmail.com>
- <alpine.LRH.2.02.1808061552090.11930@file01.intranet.prod.int.rdu2.redhat.com>
- <CAKv+Gu_iCgAeGmrajZ_euMcFLntWG1a51HF_HQ1TO=fV_v__AQ@mail.gmail.com>
- <CAPv3WKdCMpy6KarducQEtSYP35zdELhparkmPPMKGMUhsdk1Qw@mail.gmail.com>
- <alpine.LRH.2.02.1808071331260.16565@file01.intranet.prod.int.rdu2.redhat.com>
- <CAPv3WKcKoEe=Qysp6Oac2C=G9bUhUQf1twSRCY+_qJ6XEC-iag@mail.gmail.com>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from smtp.codeaurora.org ([198.145.29.96]:45004 "EHLO
+        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726335AbeHPJcw (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Thu, 16 Aug 2018 05:32:52 -0400
 MIME-Version: 1.0
-List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
-List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
-List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
-List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
-List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
-Cc: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>,
- Joao Pinto <Joao.Pinto@synopsys.com>,
- Ard Biesheuvel <ard.biesheuvel@linaro.org>,
- Catalin Marinas <catalin.marinas@arm.com>, Will Deacon <will.deacon@arm.com>,
- Russell King - ARM Linux <linux@armlinux.org.uk>,
- Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
- Matt Sealey <neko@bakuhatsu.net>, linux-pci@vger.kernel.org,
- Jingoo Han <jingoohan1@gmail.com>, Robin Murphy <robin.murphy@arm.com>,
- linux-arm-kernel@lists.infradead.org
-Content-Type: text/plain; charset="us-ascii"
-Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
-Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
+Content-Type: text/plain; charset=US-ASCII;
+ format=flowed
+Date: Thu, 16 Aug 2018 12:06:36 +0530
+From: poza@codeaurora.org
+To: Benjamin Herrenschmidt <benh@kernel.crashing.org>
+Cc: Thomas Tai <thomas.tai@oracle.com>, bhelgaas@google.com,
+        keith.busch@intel.com, linux-pci@vger.kernel.org,
+        linux-pci-owner@vger.kernel.org
+Subject: Re: [PATCH 1/1] PCI/AER: prevent pcie_do_fatal_recovery from using
+ device after it is removed
+In-Reply-To: <903394c04d6ad468ed06dc0a779200e7555345a7.camel@kernel.crashing.org>
+References: <1534179088-44219-1-git-send-email-thomas.tai@oracle.com>
+ <1534179088-44219-2-git-send-email-thomas.tai@oracle.com>
+ <51f4b387d9bd96a42d526a6a029fc43b@codeaurora.org>
+ <b0104a716319d76e734c307cb4bedd9d@codeaurora.org>
+ <903394c04d6ad468ed06dc0a779200e7555345a7.camel@kernel.crashing.org>
+Message-ID: <6cb069038530757f31f3dd60328c7e30@codeaurora.org>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-
-
-On Wed, 8 Aug 2018, Marcin Wojtas wrote:
-
-> Hi Mikulas,
+On 2018-08-16 03:26, Benjamin Herrenschmidt wrote:
+> (resent using my proper email address)
 > 
-> wt., 7 sie 2018 o 19:39 Mikulas Patocka <mpatocka@redhat.com> napisa?(a):
-> >
-> >
-> >
-> > On Tue, 7 Aug 2018, Marcin Wojtas wrote:
-> >
-> > > Ard, Mikulas,
-> > >
-> > > After some self-caused setup issues I was able to run the test on my
-> > > MacchiatoBin with the kernel v4.18-rc8. It's been running for 1h+ now,
-> > > loading the CPU to 100% and no single error event...
-> > >
-> > > I built the binary file with:
-> > > gcc-linaro-7.2.1-2017.11-x86_64_aarch64-linux-gnu/bin/aarch64-linux-gnu-gcc -O2
-> > >
-> > > Maybe it's the older firmware issue?
-> >
-> > I have downloaded and built the firmware recently (it has timestamp Jul 30
-> > 2018).
-> >
-> > Do you still have your firmware file "flash-image.bin" that you used, so
-> > that I could try it?
+> On Tue, 2018-08-14 at 14:52 +0530, poza@codeaurora.org wrote:
+>> > >       if (result == PCI_ERS_RESULT_RECOVERED) {
+>> > >               if (pcie_wait_for_link(udev, true))
+>> > >                       pci_rescan_bus(udev->bus);
+>> > > -            pci_info(dev, "Device recovery from fatal error successful\n");
+>> > > +            /* find the pci_dev after rescanning the bus */
+>> > > +            dev = pci_get_domain_bus_and_slot(domain, bus, devfn);
+>> >
+>> > one of the motivations was to remove and re-enumerate rather then
+>> > going thorugh driver's recovery sequence
+>> > was; it might be possible that hotplug capable bridge, the device
+>> > might have changed.
+>> > hence this check will fail
 > 
-> Attached. Please let know if you see any difference.
+> Under what circumstances do you actually "unplug" the device ? We are
+> trying to cleanup/fix some of the PowerPC EEH code which is in a way
+> similar to AER, and we found that this unplug/replug, which we do if
+> the driver doesn't have recovery callbacks only, is causing more
+> problems than it solves.
+> 
+> We are moving toward instead unbinding the driver, resetting the
+> device, then re-binding the driver instead of unplug/replug.
+> 
+> Also why would you ever bypass the driver callbacks if the driver has
+> some ? The whole point is to keep the driver bound while resetting the
+> device (provided it has the right callbacks) so we don't lose the
+> linkage between stroage devices and mounted filesystems.
+> 
 
-I booted this image, but the same corruption happens.
+there are two different paths we are taking, one is for ERR_FATAL and 
+the other is for ERR_NONFATAL.
+while AER and DPC converge into ERR_FATAL path; ERR_NONFATAL path is the 
+one where AER and driver callbacks would come into picture.
 
-Mikulas
+since DPC does hw recovery of the link, and handles only ERR_FATAL, we 
+do remove devices and re-enumerate them.
+but if the error is no fatal, we will fall back to driver callbacks to 
+initiate link error handling and recovery process.
 
-_______________________________________________
-linux-arm-kernel mailing list
-linux-arm-kernel@lists.infradead.org
-http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
+under normal circumstances I do not see the some downstream devices 
+would have been replaced in case of FATAL errors, but code might not 
+want to assume that
+same device is there, since we are removing downstream devices 
+completely. so taking reference of old BDF and keeping it for later 
+reference is not good idea.
+although I think there are some parts of pcie_do_fatal_recovery need a 
+fix, which Thomas is fixing is anyway.
+
+so yes, I agree with you and we are talking about same thing e.g.
+"
+  We are moving toward instead unbinding the driver, resetting the
+  device, then re-binding the driver instead of unplug/replug.
+"
+
+driver callbacks are very much there, please have a look at 
+pcie_do_nonfatal_recovery().
+
+refering Sepc: 6.2.2.2.1 Fatal Errors, where link is unreliable and it 
+might need AER style reset of link or DPC style HW recovery
+In both cases, the shutdown callbacks are expected to be called,
+e.g.  some driver handle errors ERR_NONFATAL or FATAL in similar ways
+e.g.
+ioat_pcie_error_detected();  calls  ioat_shutdown(); in case of 
+ERR_NONFATAL
+otherwise ioat_shutdown() in case of ERR_FATAL.
+
+
+> Cheers,
+> Ben.
