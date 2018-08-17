@@ -1,112 +1,169 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.29.99]:48678 "EHLO mail.kernel.org"
+Received: from mail.kernel.org ([198.145.29.99]:48314 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1726996AbeH1X22 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Tue, 28 Aug 2018 19:28:28 -0400
-Date: Tue, 28 Aug 2018 14:35:17 -0500
+        id S1726664AbeHQRxM (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Fri, 17 Aug 2018 13:53:12 -0400
+Date: Fri, 17 Aug 2018 09:49:30 -0500
 From: Bjorn Helgaas <helgaas@kernel.org>
-To: Zihan Yang <whois.zihan.yang@gmail.com>
-Cc: linux-pci@vger.kernel.org,
-        Mauro Carvalho Chehab <mchehab@kernel.org>,
-        Borislav Petkov <bp@alien8.de>,
-        Tony Luck <tony.luck@intel.com>, linux-edac@vger.kernel.org,
-        linux-kernel@vger.kernel.org
-Subject: Re: Peer bridge fixup issue under multiple pci domain
-Message-ID: <20180828193517.GA158292@bhelgaas-glaptop.roam.corp.google.com>
-References: <CAKwiv-gK1wxw57TVK7GXe3bfkr=0eCS9zn7F_mZRYUL+2Ovr9w@mail.gmail.com>
+To: Hari Vyas <hari.vyas@broadcom.com>
+Cc: bhelgaas@google.com, linux-pci@vger.kernel.org
+Subject: Re: [PATCH] PCI: fix of read-write config operation in SMP
+ environment
+Message-ID: <20180817144930.GB128050@bhelgaas-glaptop.roam.corp.google.com>
+References: <1534516668-1206-1-git-send-email-hari.vyas@broadcom.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <CAKwiv-gK1wxw57TVK7GXe3bfkr=0eCS9zn7F_mZRYUL+2Ovr9w@mail.gmail.com>
+In-Reply-To: <1534516668-1206-1-git-send-email-hari.vyas@broadcom.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-[+cc EDAC folks, LKML]
+On Fri, Aug 17, 2018 at 08:07:48PM +0530, Hari Vyas wrote:
+> Read modify write operations performed on same pci configuration
+> registers which have bit fields may not work properly in SMP
+> environment. Let us assume one thread tries to set master bit
+> and other thread memory bit of PCI_COMMAND register, result may
+> be unpredictable.
 
-On Sat, Aug 25, 2018 at 10:58:57PM +0800, Zihan Yang wrote:
-> Hi all,
+It's possible we'll need something like this, but we would have to
+have a clear understanding of what threads are involved.
+
+For example, if the problem were that a driver had two threads and
+thread A tried to set PCI_COMMAND_MASTER and thread B tried to set
+PCI_COMMAND_MEMORY, I'd say that's just a driver synchronization
+problem that should be fixed in the driver.
+
+So I'm going to defer this until we work through Ben's patches.
+If you think we still need this after that, please repost it.
+
+> Better we introduce a new routine in struct pci_ops like
+> (int (*modify_safe)(struct pci_bus *bus, unsigned int devfn,
+> int where, int size, u32 old, u32 new);
+> This routine may first read current value and apply diff.
 > 
-> I'm trying to use multiple pci domain in qemu q35, but I find there
-> might be some issues in peer bridge fixup.
+> Signed-off-by: Hari Vyas <hari.vyas@broadcom.com>
+> ---
+>  drivers/pci/access.c    | 61 +++++++++++++++++++++++++++++++++++++++++++++++++
+>  drivers/pci/pci.c       |  1 +
+>  drivers/pci/setup-res.c |  2 +-
+>  include/linux/pci.h     |  4 ++++
+>  4 files changed, 67 insertions(+), 1 deletion(-)
 > 
-> In short, pcibios_fixup_peer_bridges function assumes only one pci
-> domain (0) by default. This is OK when as qemu by default uses only
-> one pci domain too. However, if I add another host bridge which is
-> put into pci domain 1 by using _SEG, and a pcie_pci_bridge is attached
-> to the bus 1 under this new pci domain 1 rather than domain 0, the
-> kernel will recognize the bus 01 differently.
+> diff --git a/drivers/pci/access.c b/drivers/pci/access.c
+> index a3ad2fe..c4cf99b 100644
+> --- a/drivers/pci/access.c
+> +++ b/drivers/pci/access.c
+> @@ -588,3 +588,64 @@ int pci_write_config_dword(const struct pci_dev *dev, int where,
+>  	return pci_bus_write_config_dword(dev->bus, dev->devfn, where, val);
+>  }
+>  EXPORT_SYMBOL(pci_write_config_dword);
+> +
+> +#define PCI_OP_MODIFY(size, type, len) \
+> +int pci_bus_modify_config_##size \
+> +	(struct pci_bus *bus, unsigned int devfn, int pos, 		\
+> +	 type rval, type wval)						\
+> +{									\
+> +	int res;							\
+> +	unsigned long flags;						\
+> +	u32 rdata = 0;							\
+> +	u32 wdata = 0;							\
+> +	u32 temp_data = 0;						\
+> +	if (PCI_##size##_BAD) return PCIBIOS_BAD_REGISTER_NUMBER;	\
+> +	pci_lock_config(flags);						\
+> +	if (bus->ops->modify) {						\
+> +		res = bus->ops->modify(bus, devfn, pos, len,		\
+> +				       rval, wval);			\
+> +	} else {							\
+> +		temp_data = rval ^ wval;				\
+> +		res = bus->ops->read(bus, devfn, pos, len, &rdata);	\
+> +		wdata = rdata ^ temp_data;				\
+> +		res = bus->ops->write(bus, devfn, pos, len, wdata);	\
+> +	}								\
+> +	pci_unlock_config(flags);					\
+> +	return res;							\
+> +}
+> +
+> +PCI_OP_MODIFY(byte, u8, 1)
+> +PCI_OP_MODIFY(word, u16, 2)
+> +PCI_OP_MODIFY(dword, u32, 4)
+> +int pci_modify_config_byte(const struct pci_dev *dev, int where,
+> +			   u8 rval, u8 wval)
+> +{
+> +	if (pci_dev_is_disconnected(dev)) {
+> +		return PCIBIOS_DEVICE_NOT_FOUND;
+> +	}
+> +	return pci_bus_modify_config_byte(dev->bus, dev->devfn, where,
+> +					  rval, wval);
+> +}
+> +EXPORT_SYMBOL(pci_modify_config_byte);
+> +
+> +int pci_modify_config_word(const struct pci_dev *dev, int where,
+> +			   u16 rval, u16 wval)
+> +{
+> +	if (pci_dev_is_disconnected(dev)) {
+> +		return PCIBIOS_DEVICE_NOT_FOUND;
+> +	}
+> +	return pci_bus_modify_config_word(dev->bus, dev->devfn, where,
+> +					  rval, wval);
+> +}
+> +EXPORT_SYMBOL(pci_modify_config_word);
+> +
+> +int pci_modify_config_dword(const struct pci_dev *dev, int where,
+> +			    u32 rval, u32 wval)
+> +{
+> +	if (pci_dev_is_disconnected(dev)) {
+> +		return PCIBIOS_DEVICE_NOT_FOUND;
+> +	}
+> +	return pci_bus_modify_config_dword(dev->bus, dev->devfn, where,
+> +					   rval, wval);
+> +}
+> +EXPORT_SYMBOL(pci_modify_config_dword);
+> diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
+> index 316496e..db1c132 100644
+> --- a/drivers/pci/pci.c
+> +++ b/drivers/pci/pci.c
+> @@ -3712,6 +3712,7 @@ static void __pci_set_master(struct pci_dev *dev, bool enable)
+>  		pci_dbg(dev, "%s bus mastering\n",
+>  			enable ? "enabling" : "disabling");
+>  		pci_write_config_word(dev, PCI_COMMAND, cmd);
+> +		pci_modify_config_word(dev, PCI_COMMAND, old_cmd, cmd);
+>  	}
+>  	dev->is_busmaster = enable;
+>  }
+> diff --git a/drivers/pci/setup-res.c b/drivers/pci/setup-res.c
+> index d8ca40a..a2e6fa4 100644
+> --- a/drivers/pci/setup-res.c
+> +++ b/drivers/pci/setup-res.c
+> @@ -493,7 +493,7 @@ int pci_enable_resources(struct pci_dev *dev, int mask)
+>  
+>  	if (cmd != old_cmd) {
+>  		pci_info(dev, "enabling device (%04x -> %04x)\n", old_cmd, cmd);
+> -		pci_write_config_word(dev, PCI_COMMAND, cmd);
+> +		pci_modify_config_word(dev, PCI_COMMAND, old_cmd, cmd);
+>  	}
+>  	return 0;
+>  }
+> diff --git a/include/linux/pci.h b/include/linux/pci.h
+> index c133ccf..d948c4b 100644
+> --- a/include/linux/pci.h
+> +++ b/include/linux/pci.h
+> @@ -664,6 +664,7 @@ struct pci_ops {
+>  	void __iomem *(*map_bus)(struct pci_bus *bus, unsigned int devfn, int where);
+>  	int (*read)(struct pci_bus *bus, unsigned int devfn, int where, int size, u32 *val);
+>  	int (*write)(struct pci_bus *bus, unsigned int devfn, int where, int size, u32 val);
+> +	int (*modify)(struct pci_bus *bus, unsigned int devfn, int where, int size, u32 rval, u32 wval);
+>  };
+>  
+>  /*
+> @@ -991,6 +992,9 @@ int pci_generic_config_write32(struct pci_bus *bus, unsigned int devfn,
+>  int pci_write_config_byte(const struct pci_dev *dev, int where, u8 val);
+>  int pci_write_config_word(const struct pci_dev *dev, int where, u16 val);
+>  int pci_write_config_dword(const struct pci_dev *dev, int where, u32 val);
+> +int pci_modify_config_byte(const struct pci_dev *dev, int where, u8 rval, u8 wval);
+> +int pci_modify_config_word(const struct pci_dev *dev, int where, u16 rval, u16 wval);
+> +int pci_modify_config_dword(const struct pci_dev *dev, int where, u32 rval, u32 wval);
+>  
+>  int pcie_capability_read_word(struct pci_dev *dev, int pos, u16 *val);
+>  int pcie_capability_read_dword(struct pci_dev *dev, int pos, u32 *val);
+> -- 
+> 1.9.1
 > 
-> More specifically, pcibios_fixup_peer_bridges only reads all the buses
-> under domain 0 but it can read the pci bus 01 in pci domain 1 and treat
-> it as a peer bus of 0000:00. The consequence is this 01 bus is recognized
-> as 0000:01, but it should have been recognized as 0001:01.
-> 
-> The host bus 0001:00 can be recognized so I guess pcibios_fixup_peer_bridges
-> needs updating to take care of multiple domains? Or is it just an bios issue?
-> I'm not quite sure and I'm open to any suggestions.
-
-Is there something that actually does not work, or is this just a
-concern that the code looks wrong?
-
-pcibios_fixup_peer_bridges() is ancient history from before x86 used
-the ACPI namespace to discover host bridges.  It blindly probes for
-devices on buses 0-255, but as you say, only in domain 0.
-
-Using multiple PCI domains really requires ACPI support so we know
-what the other domains are (_SEG) and how to access their config space
-(MCFG).  When we do have ACPI support in the platform and the kernel,
-drivers/acpi/pci_root.c discovers all the host bridges in all domains
-via PNP0A03 or PNP0A08 devices in the ACPI namespace, and in most
-cases pcibios_fixup_peer_bridges() will do nothing.
-
-However, there *are* systems where the firmware does not expose all
-host bridges and in those cases, pcibios_fixup_peer_bridges() can be a
-problem.  For example, Intel processors often have management devices
-on bus 7f or ff.  If the ACPI namespace doesn't have a host bridge to
-those buses, pci_root.c won't find them, but
-pcibios_fixup_peer_bridges() *will*.
-
-This leads to several problems.  Here's a dmesg sample from [1]
-(found by googling for 'dmesg log "PCI: discovered peer bus ff"'):
-
-  ACPI: PCI Root Bridge [PCI0] (domain 0000 [bus 00-ff])
-  PCI: Discovered peer bus fe
-  pci_bus 0000:fe: root bus resource [io  0x0000-0xffff]
-  pci_bus 0000:fe: root bus resource [mem 0x00000000-0xffffffffff]
-  pci 0000:fe:03.0: [8086:2d98] type 00 class 0x060000
-  PCI: Discovered peer bus ff
-  pci_bus 0000:ff: root bus resource [io  0x0000-0xffff]
-  pci_bus 0000:ff: root bus resource [mem 0x00000000-0xffffffffff]
-  pci 0000:ff:03.0: [8086:2d98] type 00 class 0x060000
-  EDAC MC1: Giving out device to module i7core_edac.c controller i7 core #1: DEV 0000:fe:03.0 (INTERRUPT)
-  EDAC PCI0: Giving out device to module i7core_edac controller EDAC PCI controller: DEV 0000:fe:03.0 (POLLED)
-  EDAC MC0: Giving out device to module i7core_edac.c controller i7 core #0: DEV 0000:ff:03.0 (INTERRUPT)
-  EDAC PCI1: Giving out device to module i7core_edac controller EDAC PCI controller: DEV 0000:ff:03.0 (POLLED)
-
-Some of the problems are:
-
-  - Firmware may have omitted the host bridges to [bus fe] and
-    [bus ff] from the ACPI namespace because *it* is using those
-    management devices, so EDAC blindly using them is a potential
-    conflict.
-
-  - pcibios_fixup_peer_bridges() only scans domain 0, so if this
-    system had multiple domains, EDAC would only work on things in
-    domain 0, ignoring other domains.
-
-  - The PCI core can't do bus number assignment correctly for devices
-    behind bridge PCI0.  The firmware told us [bus 00-ff] was
-    available, so the core may assign bus number fe to some deep
-    switch hierarchy.  But bus fe conflicts with the devices on the
-    "peer bus fe".  This part is a firmware bug: it should have told
-    us that PCI0 leads to [bus 00-fd], not [bus 00-ff].
-
-  - The PCI core can't do resource assignment correctly for devices on
-    [bus fe] and [bus ff].  It has no information about what MMIO and
-    I/O port are routed to those buses, so it assumes *all* memory and
-    I/O ports are routed there, which is clearly incorrect.  This part
-    is a Linux bug; we really shouldn't be poking around for buses
-    that ACPI didn't tell us about.
-
-Bjorn
-
-[1] https://bugs.freedesktop.org/attachment.cgi?id=136529
