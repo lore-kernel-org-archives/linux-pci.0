@@ -1,101 +1,157 @@
-Return-Path: <linux-nvme-bounces+bjorn=helgaas.com@lists.infradead.org>
-Return-Path: <linux-nvme-bounces+bjorn=helgaas.com@lists.infradead.org>
-From: Logan Gunthorpe <logang@deltatee.com>
-To: linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
- linux-nvme@lists.infradead.org, linux-rdma@vger.kernel.org,
- linux-nvdimm@lists.01.org, linux-block@vger.kernel.org
-Date: Thu, 30 Aug 2018 12:53:46 -0600
-Message-Id: <20180830185352.3369-8-logang@deltatee.com>
-In-Reply-To: <20180830185352.3369-1-logang@deltatee.com>
-References: <20180830185352.3369-1-logang@deltatee.com>
-Subject: [PATCH v5 07/13] block: Add PCI P2P flag for request queue and check
- support for requests
-List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-nvme>,
- <mailto:linux-nvme-request@lists.infradead.org?subject=unsubscribe>
-List-Archive: <http://lists.infradead.org/pipermail/linux-nvme/>
-List-Post: <mailto:linux-nvme@lists.infradead.org>
-List-Help: <mailto:linux-nvme-request@lists.infradead.org?subject=help>
-List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-nvme>,
- <mailto:linux-nvme-request@lists.infradead.org?subject=subscribe>
-Cc: Sagi Grimberg <sagi@grimberg.me>,
- =?UTF-8?q?Christian=20K=C3=B6nig?= <christian.koenig@amd.com>,
- Benjamin Herrenschmidt <benh@kernel.crashing.org>,
- Alex Williamson <alex.williamson@redhat.com>,
- Stephen Bates <sbates@raithlin.com>, Keith Busch <keith.busch@intel.com>,
- =?UTF-8?q?J=C3=A9r=C3=B4me=20Glisse?= <jglisse@redhat.com>,
- Jason Gunthorpe <jgg@mellanox.com>, Bjorn Helgaas <bhelgaas@google.com>,
- Max Gurtovoy <maxg@mellanox.com>, Dan Williams <dan.j.williams@intel.com>,
- Logan Gunthorpe <logang@deltatee.com>, Christoph Hellwig <hch@lst.de>
-MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Sender: "Linux-nvme" <linux-nvme-bounces@lists.infradead.org>
-Errors-To: linux-nvme-bounces+bjorn=helgaas.com@lists.infradead.org
+Return-Path: <SRS0=a9CN=LA=kernel.crashing.org=benh@kernel.org>
+Return-Path: <SRS0=a9CN=LA=kernel.crashing.org=benh@kernel.org>
+From: Benjamin Herrenschmidt <benh@kernel.crashing.org>
+To: Bjorn Helgaas <helgaas@kernel.org>, linux-pci@vger.kernel.org
+Cc: Hari Vyas <hari.vyas@broadcom.com>, Ray Jui <ray.jui@broadcom.com>,
+        Srinath Mannam <srinath.mannam@broadcom.com>,
+        Guenter Roeck <linux@roeck-us.net>, Jens Axboe <axboe@kernel.dk>,
+        Lukas Wunner <lukas@wunner.de>,
+        Konstantin Khlebnikov <khlebnikov@yandex-team.ru>,
+        Marta Rybczynska <mrybczyn@kalray.eu>,
+        Pierre-Yves Kerbrat <pkerbrat@kalray.eu>, linux-kernel@vger.kernel.org,
+        Benjamin Herrenschmidt <benh@kernel.crashing.org>
+Subject: [RFC PATCH 5/6] pci: Protect the enable/disable state of pci_dev using the state mutex
+Date: Fri, 17 Aug 2018 14:49:01 +1000
+Message-Id: <20180817044902.31420-6-benh@kernel.crashing.org>
+In-Reply-To: <20180817044902.31420-1-benh@kernel.crashing.org>
+References: <20180817044902.31420-1-benh@kernel.crashing.org>
 List-ID: <linux-pci.vger.kernel.org>
 
-QUEUE_FLAG_PCI_P2P is introduced meaning a driver's request queue
-supports targeting P2P memory.
+This protects enable/disable operations using the state mutex to
+avoid races with, for example, concurrent enables on a bridge.
 
-When a request is submitted we check if PCI P2PDMA memory is assigned
-to the first page in the bio. If it is, we ensure the queue it's
-submitted to supports it, and enforce REQ_NOMERGE.
+The bus hierarchy is walked first before taking the lock to
+avoid lock nesting (though it would be ok if we ensured that
+we always nest them bottom-up, it is better to just avoid the
+issue alltogether, especially as we might find cases where
+we want to take it top-down later).
 
-Signed-off-by: Logan Gunthorpe <logang@deltatee.com>
+Signed-off-by: Benjamin Herrenschmidt <benh@kernel.crashing.org>
 ---
- block/blk-core.c       | 14 ++++++++++++++
- include/linux/blkdev.h |  3 +++
- 2 files changed, 17 insertions(+)
+ drivers/pci/pci.c | 51 ++++++++++++++++++++++++++++++++---------------
+ 1 file changed, 35 insertions(+), 16 deletions(-)
 
-diff --git a/block/blk-core.c b/block/blk-core.c
-index dee56c282efb..cc0289c7b983 100644
---- a/block/blk-core.c
-+++ b/block/blk-core.c
-@@ -2264,6 +2264,20 @@ generic_make_request_checks(struct bio *bio)
- 	if ((bio->bi_opf & REQ_NOWAIT) && !queue_is_rq_based(q))
- 		goto not_supported;
- 
-+	/*
-+	 * Ensure PCI P2PDMA memory is not used in requests to queues that
-+	 * have no support. This should never happen if the higher layers using
-+	 * P2PDMA do the right thing and use the proper P2PDMA client
-+	 * infrastructure. Also, ensure such requests use REQ_NOMERGE
-+	 * seeing requests can not mix P2PDMA and non-P2PDMA memory at
-+	 * this time.
-+	 */
-+	if (bio->bi_vcnt && is_pci_p2pdma_page(bio->bi_io_vec->bv_page)) {
-+		if (WARN_ON_ONCE(!blk_queue_pci_p2pdma(q)))
-+			goto not_supported;
-+		bio->bi_opf |= REQ_NOMERGE;
-+	}
+diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
+index 62591c153999..68152de2b5a0 100644
+--- a/drivers/pci/pci.c
++++ b/drivers/pci/pci.c
+@@ -1540,26 +1540,33 @@ static int do_pci_enable_device(struct pci_dev *dev, int bars)
+  */
+ int pci_reenable_device(struct pci_dev *dev)
+ {
++	int rc = 0;
 +
- 	if (should_fail_bio(bio))
- 		goto end_io;
++	pci_dev_state_lock(dev);
+ 	if (pci_is_enabled(dev))
+-		return do_pci_enable_device(dev, (1 << PCI_NUM_RESOURCES) - 1);
+-	return 0;
++		rc = do_pci_enable_device(dev, (1 << PCI_NUM_RESOURCES) - 1);
++	pci_dev_state_unlock(dev);
++	return rc;
+ }
+ EXPORT_SYMBOL(pci_reenable_device);
  
-diff --git a/include/linux/blkdev.h b/include/linux/blkdev.h
-index d6869e0e2b64..7bf80ca802e1 100644
---- a/include/linux/blkdev.h
-+++ b/include/linux/blkdev.h
-@@ -699,6 +699,7 @@ struct request_queue {
- #define QUEUE_FLAG_SCSI_PASSTHROUGH 27	/* queue supports SCSI commands */
- #define QUEUE_FLAG_QUIESCED    28	/* queue has been quiesced */
- #define QUEUE_FLAG_PREEMPT_ONLY	29	/* only process REQ_PREEMPT requests */
-+#define QUEUE_FLAG_PCI_P2PDMA  30	/* device supports pci p2p requests */
+ static void pci_enable_bridge(struct pci_dev *dev)
+ {
+ 	struct pci_dev *bridge;
+-	int retval;
++	int retval, enabled;
  
- #define QUEUE_FLAG_DEFAULT	((1 << QUEUE_FLAG_IO_STAT) |		\
- 				 (1 << QUEUE_FLAG_SAME_COMP)	|	\
-@@ -731,6 +732,8 @@ bool blk_queue_flag_test_and_clear(unsigned int flag, struct request_queue *q);
- #define blk_queue_dax(q)	test_bit(QUEUE_FLAG_DAX, &(q)->queue_flags)
- #define blk_queue_scsi_passthrough(q)	\
- 	test_bit(QUEUE_FLAG_SCSI_PASSTHROUGH, &(q)->queue_flags)
-+#define blk_queue_pci_p2pdma(q)	\
-+	test_bit(QUEUE_FLAG_PCI_P2PDMA, &(q)->queue_flags)
+ 	bridge = pci_upstream_bridge(dev);
+ 	if (bridge)
+ 		pci_enable_bridge(bridge);
  
- #define blk_noretry_request(rq) \
- 	((rq)->cmd_flags & (REQ_FAILFAST_DEV|REQ_FAILFAST_TRANSPORT| \
+-	if (pci_is_enabled(dev)) {
+-		if (!dev->is_busmaster)
+-			pci_set_master(dev);
++	/* Already enabled ? */
++	pci_dev_state_lock(dev);
++	enabled = pci_is_enabled(dev);
++	if (enabled && !dev->is_busmaster)
++		pci_set_master(dev);
++	pci_dev_state_unlock(dev);
++	if (enabled)
+ 		return;
+-	}
+ 
+ 	retval = pci_enable_device(dev);
+ 	if (retval)
+@@ -1571,9 +1578,16 @@ static void pci_enable_bridge(struct pci_dev *dev)
+ static int pci_enable_device_flags(struct pci_dev *dev, unsigned long flags)
+ {
+ 	struct pci_dev *bridge;
+-	int err;
++	int err = 0;
+ 	int i, bars = 0;
+ 
++	/* Handle upstream bridges first to avoid locking issues */
++	bridge = pci_upstream_bridge(dev);
++	if (bridge)
++		pci_enable_bridge(bridge);
++
++	pci_dev_state_lock(dev);
++
+ 	/*
+ 	 * Power state could be unknown at this point, either due to a fresh
+ 	 * boot or a device removal call.  So get the current power state
+@@ -1586,12 +1600,9 @@ static int pci_enable_device_flags(struct pci_dev *dev, unsigned long flags)
+ 		dev->current_state = (pmcsr & PCI_PM_CTRL_STATE_MASK);
+ 	}
+ 
++	/* Already enabled ? */
+ 	if (atomic_inc_return(&dev->enable_cnt) > 1)
+-		return 0;		/* already enabled */
+-
+-	bridge = pci_upstream_bridge(dev);
+-	if (bridge)
+-		pci_enable_bridge(bridge);
++		goto bail;
+ 
+ 	/* only skip sriov related */
+ 	for (i = 0; i <= PCI_ROM_RESOURCE; i++)
+@@ -1604,6 +1615,8 @@ static int pci_enable_device_flags(struct pci_dev *dev, unsigned long flags)
+ 	err = do_pci_enable_device(dev, bars);
+ 	if (err < 0)
+ 		atomic_dec(&dev->enable_cnt);
++ bail:
++	pci_dev_state_unlock(dev);
+ 	return err;
+ }
+ 
+@@ -1820,12 +1833,16 @@ static void do_pci_disable_device(struct pci_dev *dev)
+  * @dev: PCI device to disable
+  *
+  * NOTE: This function is a backend of PCI power management routines and is
+- * not supposed to be called drivers.
++ * not supposed to be called drivers. It will keep enable_cnt and is_busmaster
++ * unmodified so that the resume code knows how to restore the corresponding
++ * command register bits.
+  */
+ void pci_disable_enabled_device(struct pci_dev *dev)
+ {
++	pci_dev_state_lock(dev);
+ 	if (pci_is_enabled(dev))
+ 		do_pci_disable_device(dev);
++	pci_dev_state_unlock(dev);
+ }
+ 
+ /**
+@@ -1849,12 +1866,14 @@ void pci_disable_device(struct pci_dev *dev)
+ 	dev_WARN_ONCE(&dev->dev, atomic_read(&dev->enable_cnt) <= 0,
+ 		      "disabling already-disabled device");
+ 
++	pci_dev_state_lock(dev);
+ 	if (atomic_dec_return(&dev->enable_cnt) != 0)
+-		return;
++		goto bail;
+ 
+ 	do_pci_disable_device(dev);
+-
+ 	dev->is_busmaster = 0;
++ bail:
++	pci_dev_state_unlock(dev);
+ }
+ EXPORT_SYMBOL(pci_disable_device);
+ 
 -- 
-2.11.0
-
-
-_______________________________________________
-Linux-nvme mailing list
-Linux-nvme@lists.infradead.org
-http://lists.infradead.org/mailman/listinfo/linux-nvme
+2.17.1
