@@ -1,92 +1,227 @@
-Return-Path: <SRS0=aCoa=LE=google.com=rajatja@kernel.org>
-Return-Path: <SRS0=aCoa=LE=google.com=rajatja@kernel.org>
-MIME-Version: 1.0
-References: <20180820230624.GB154536@bhelgaas-glaptop.roam.corp.google.com>
- <20180821054704.jlqk5zrlbbsjsd4g@wunner.de> <20180821072541.tcdg5fkk4zrwxahj@wunner.de>
- <20180821165042.GC154536@bhelgaas-glaptop.roam.corp.google.com>
-In-Reply-To: <20180821165042.GC154536@bhelgaas-glaptop.roam.corp.google.com>
-From: Rajat Jain <rajatja@google.com>
-Date: Tue, 21 Aug 2018 13:24:22 -0700
-Message-ID: <CACK8Z6FTy8CyYbuaOu1Fucty1AMYRmsKQAXFJJhELq-qt5cb9A@mail.gmail.com>
-Subject: Re: Enumeration issue with QCA9005 AR9462
-To: Bjorn Helgaas <helgaas@kernel.org>
-Cc: Lukas Wunner <lukas@wunner.de>, linux-pci <linux-pci@vger.kernel.org>,
-	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, mmyangfl@gmail.com, ashok.raj@intel.com
-Content-Type: text/plain; charset="UTF-8"
+Return-Path: <SRS0=a9CN=LA=kernel.crashing.org=benh@kernel.org>
+Return-Path: <SRS0=a9CN=LA=kernel.crashing.org=benh@kernel.org>
+From: Benjamin Herrenschmidt <benh@kernel.crashing.org>
+To: Bjorn Helgaas <helgaas@kernel.org>, linux-pci@vger.kernel.org
+Cc: Hari Vyas <hari.vyas@broadcom.com>, Ray Jui <ray.jui@broadcom.com>,
+        Srinath Mannam <srinath.mannam@broadcom.com>,
+        Guenter Roeck <linux@roeck-us.net>, Jens Axboe <axboe@kernel.dk>,
+        Lukas Wunner <lukas@wunner.de>,
+        Konstantin Khlebnikov <khlebnikov@yandex-team.ru>,
+        Marta Rybczynska <mrybczyn@kalray.eu>,
+        Pierre-Yves Kerbrat <pkerbrat@kalray.eu>, linux-kernel@vger.kernel.org,
+        Benjamin Herrenschmidt <benh@kernel.crashing.org>
+Subject: [RFC PATCH 1/6] Revert "PCI: Fix is_added/is_busmaster race condition"
+Date: Fri, 17 Aug 2018 14:48:57 +1000
+Message-Id: <20180817044902.31420-2-benh@kernel.crashing.org>
+In-Reply-To: <20180817044902.31420-1-benh@kernel.crashing.org>
+References: <20180817044902.31420-1-benh@kernel.crashing.org>
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tue, Aug 21, 2018 at 9:50 AM Bjorn Helgaas <helgaas@kernel.org> wrote:
->
-> [+cc Rajat, Ashok]
->
-> On Tue, Aug 21, 2018 at 09:25:41AM +0200, Lukas Wunner wrote:
-> > On Tue, Aug 21, 2018 at 07:47:04AM +0200, Lukas Wunner wrote:
-> > > On Mon, Aug 20, 2018 at 06:06:24PM -0500, Bjorn Helgaas wrote:
-> > > > mmyangfl@gmail.com reported a problem [1]: on v4.17, a QCA9005 AR9462
-> > > > wifi device was present at boot, but disappeared after suspend/resume.
-> > > >
-> > > > He also tested a recent kernel (5c60a7389d79, from Thu Aug 16),
-> > > > where the suspend/resume problem doesn't seem to happen, but the wifi
-> > > > device isn't enumerated correctly at boot-time.
-> > > >
-> > > > [    0.928714] pciehp 0000:04:00.0:pcie204: Slot #0 AttnBtn- PwrCtrl- MRL- AttnInd- PwrInd- HotPlug+ Surprise+ Interlock- NoCompl- LLActRep+
-> > > > [    0.928752] pciehp 0000:04:00.0:pcie204: Slot(0-1): Card not present
-> > > > [    0.928811] pciehp 0000:04:00.0:pcie204: Slot(0-1): Link Up
-> > > > [    0.928815] pciehp 0000:04:00.0:pcie204: Slot(0-1): No adapter
-> > > >
-> > > > [1] https://bugzilla.kernel.org/show_bug.cgi?id=200839
-> > > > [2] https://bugzilla.kernel.org/attachment.cgi?id=277923
-> > >
-> > > The hardware appears to be broken in that the Presence Detect State bit
-> > > in the Slot Status register is 0 (Slot Empty) even though the slot is
-> > > occupied.
-> > [...]
-> > > Possible solutions:
-> > >
-> > > (a) Be lenient towards broken hardware and accept DLActive+ as a proxy
-> > >     for PresDet+.
-> > >
-> > > (b) Add a blacklist to pciehp such that it doesn't bind to [1ae9:0200].
-> > >     The bug reporter writes that "it's a single Half Mini PCIe card,
-> > >     with two chipsets (Wil6110? + AR9462) combined by a PCIe hub".
-> > >     This sounds like it's not really hotpluggable.
-> > >     (Is Mini PCIe hotplug capable at all?)
-> > >
-> > > Let me go through the driver and see if (a) is feasible and how intrusive
-> > > it would be.
-> >
-> > So (a) would seem to be feasible, we could add a quirk for devices like
-> > this to call pciehp_check_link_active() in pciehp_get_adapter_status().
-> >
-> > Alternatively, we could generally add a call to pciehp_check_link_active()
-> > in get_adapter_status(), pciehp_check_presence() and pcie_init() and thus
-> > avoid a quirk for this specific device.
-> > The existing call in __pciehp_enable_slot() could actually be removed,
-> > this code path is only entered if either PDS or DLLLA is set.
-> >
-> > And the third option would be to add a quirk like quirk_hotplug_bridge()
-> > which sets is_hotplug_bridge = 0 on this broken device such that pciehp
-> > doesn't bind to it in the first place.
->
-> It sounds like with (a), you could make this work without having a
-> Wil6110-specific quirk, i.e., if the Link Status says the link is
-> active, we assume a device is present.  That seems reasonable to me
-> and it sort of fits with these previous changes:
+This reverts commit 44bda4b7d26e9fffed6d7152d98a2e9edaeb2a76.
 
+The new pci state mutex provides a simpler way of addressing
+this race and avoids the relative includes added to the powerpc
+code.
 
-I also like idea (a) and think it makes sense. One thing to note is
-that we may pass the same confusion ("how is my wifi detected when no
-card is not present on the slot") to userspace in case anyone looks in
-/sysfs (but I don't think anyone looks that deeply).
+Signed-off-by: Benjamin Herrenschmidt <benh@kernel.crashing.org>
+---
+ arch/powerpc/kernel/pci-common.c          |  4 +---
+ arch/powerpc/platforms/powernv/pci-ioda.c |  3 +--
+ arch/powerpc/platforms/pseries/setup.c    |  3 +--
+ drivers/pci/bus.c                         |  6 +++---
+ drivers/pci/hotplug/acpiphp_glue.c        |  2 +-
+ drivers/pci/pci.h                         | 11 -----------
+ drivers/pci/probe.c                       |  4 ++--
+ drivers/pci/remove.c                      |  5 ++---
+ include/linux/pci.h                       |  1 +
+ 9 files changed, 12 insertions(+), 27 deletions(-)
 
-Thanks,
-
-Rajat
-
-
->
->
->   385895fef6b5 ("PCI: pciehp: Prioritize data-link event over presence detect")
->   e48f1b67f668 ("PCI: pciehp: Use link change notifications for hot-plug and removal")
->
-> Bjorn
+diff --git a/arch/powerpc/kernel/pci-common.c b/arch/powerpc/kernel/pci-common.c
+index 471aac313b89..fe9733ffffaa 100644
+--- a/arch/powerpc/kernel/pci-common.c
++++ b/arch/powerpc/kernel/pci-common.c
+@@ -42,8 +42,6 @@
+ #include <asm/ppc-pci.h>
+ #include <asm/eeh.h>
+ 
+-#include "../../../drivers/pci/pci.h"
+-
+ /* hose_spinlock protects accesses to the the phb_bitmap. */
+ static DEFINE_SPINLOCK(hose_spinlock);
+ LIST_HEAD(hose_list);
+@@ -1016,7 +1014,7 @@ void pcibios_setup_bus_devices(struct pci_bus *bus)
+ 		/* Cardbus can call us to add new devices to a bus, so ignore
+ 		 * those who are already fully discovered
+ 		 */
+-		if (pci_dev_is_added(dev))
++		if (dev->is_added)
+ 			continue;
+ 
+ 		pcibios_setup_device(dev);
+diff --git a/arch/powerpc/platforms/powernv/pci-ioda.c b/arch/powerpc/platforms/powernv/pci-ioda.c
+index 70b2e1e0f23c..5bd0eb6681bc 100644
+--- a/arch/powerpc/platforms/powernv/pci-ioda.c
++++ b/arch/powerpc/platforms/powernv/pci-ioda.c
+@@ -46,7 +46,6 @@
+ 
+ #include "powernv.h"
+ #include "pci.h"
+-#include "../../../../drivers/pci/pci.h"
+ 
+ #define PNV_IODA1_M64_NUM	16	/* Number of M64 BARs	*/
+ #define PNV_IODA1_M64_SEGS	8	/* Segments per M64 BAR	*/
+@@ -3139,7 +3138,7 @@ static void pnv_pci_ioda_fixup_iov_resources(struct pci_dev *pdev)
+ 	struct pci_dn *pdn;
+ 	int mul, total_vfs;
+ 
+-	if (!pdev->is_physfn || pci_dev_is_added(pdev))
++	if (!pdev->is_physfn || pdev->is_added)
+ 		return;
+ 
+ 	pdn = pci_get_pdn(pdev);
+diff --git a/arch/powerpc/platforms/pseries/setup.c b/arch/powerpc/platforms/pseries/setup.c
+index 8a4868a3964b..139f0af6c3d9 100644
+--- a/arch/powerpc/platforms/pseries/setup.c
++++ b/arch/powerpc/platforms/pseries/setup.c
+@@ -71,7 +71,6 @@
+ #include <asm/security_features.h>
+ 
+ #include "pseries.h"
+-#include "../../../../drivers/pci/pci.h"
+ 
+ int CMO_PrPSP = -1;
+ int CMO_SecPSP = -1;
+@@ -665,7 +664,7 @@ static void pseries_pci_fixup_iov_resources(struct pci_dev *pdev)
+ 	const int *indexes;
+ 	struct device_node *dn = pci_device_to_OF_node(pdev);
+ 
+-	if (!pdev->is_physfn || pci_dev_is_added(pdev))
++	if (!pdev->is_physfn || pdev->is_added)
+ 		return;
+ 	/*Firmware must support open sriov otherwise dont configure*/
+ 	indexes = of_get_property(dn, "ibm,open-sriov-vf-bar-info", NULL);
+diff --git a/drivers/pci/bus.c b/drivers/pci/bus.c
+index 5cb40b2518f9..35b7fc87eac5 100644
+--- a/drivers/pci/bus.c
++++ b/drivers/pci/bus.c
+@@ -330,7 +330,7 @@ void pci_bus_add_device(struct pci_dev *dev)
+ 		return;
+ 	}
+ 
+-	pci_dev_assign_added(dev, true);
++	dev->is_added = 1;
+ }
+ EXPORT_SYMBOL_GPL(pci_bus_add_device);
+ 
+@@ -347,14 +347,14 @@ void pci_bus_add_devices(const struct pci_bus *bus)
+ 
+ 	list_for_each_entry(dev, &bus->devices, bus_list) {
+ 		/* Skip already-added devices */
+-		if (pci_dev_is_added(dev))
++		if (dev->is_added)
+ 			continue;
+ 		pci_bus_add_device(dev);
+ 	}
+ 
+ 	list_for_each_entry(dev, &bus->devices, bus_list) {
+ 		/* Skip if device attach failed */
+-		if (!pci_dev_is_added(dev))
++		if (!dev->is_added)
+ 			continue;
+ 		child = dev->subordinate;
+ 		if (child)
+diff --git a/drivers/pci/hotplug/acpiphp_glue.c b/drivers/pci/hotplug/acpiphp_glue.c
+index ef0b1b6ba86f..3a17b290df5d 100644
+--- a/drivers/pci/hotplug/acpiphp_glue.c
++++ b/drivers/pci/hotplug/acpiphp_glue.c
+@@ -509,7 +509,7 @@ static void enable_slot(struct acpiphp_slot *slot)
+ 
+ 	list_for_each_entry(dev, &bus->devices, bus_list) {
+ 		/* Assume that newly added devices are powered on already. */
+-		if (!pci_dev_is_added(dev))
++		if (!dev->is_added)
+ 			dev->current_state = PCI_D0;
+ 	}
+ 
+diff --git a/drivers/pci/pci.h b/drivers/pci/pci.h
+index 6e0d1528d471..473aa10a5dbf 100644
+--- a/drivers/pci/pci.h
++++ b/drivers/pci/pci.h
+@@ -295,7 +295,6 @@ struct pci_sriov {
+ 
+ /* pci_dev priv_flags */
+ #define PCI_DEV_DISCONNECTED 0
+-#define PCI_DEV_ADDED 1
+ 
+ static inline int pci_dev_set_disconnected(struct pci_dev *dev, void *unused)
+ {
+@@ -308,16 +307,6 @@ static inline bool pci_dev_is_disconnected(const struct pci_dev *dev)
+ 	return test_bit(PCI_DEV_DISCONNECTED, &dev->priv_flags);
+ }
+ 
+-static inline void pci_dev_assign_added(struct pci_dev *dev, bool added)
+-{
+-	assign_bit(PCI_DEV_ADDED, &dev->priv_flags, added);
+-}
+-
+-static inline bool pci_dev_is_added(const struct pci_dev *dev)
+-{
+-	return test_bit(PCI_DEV_ADDED, &dev->priv_flags);
+-}
+-
+ #ifdef CONFIG_PCIEAER
+ #include <linux/aer.h>
+ 
+diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
+index ec784009a36b..440445ac7dfa 100644
+--- a/drivers/pci/probe.c
++++ b/drivers/pci/probe.c
+@@ -2525,13 +2525,13 @@ int pci_scan_slot(struct pci_bus *bus, int devfn)
+ 	dev = pci_scan_single_device(bus, devfn);
+ 	if (!dev)
+ 		return 0;
+-	if (!pci_dev_is_added(dev))
++	if (!dev->is_added)
+ 		nr++;
+ 
+ 	for (fn = next_fn(bus, dev, 0); fn > 0; fn = next_fn(bus, dev, fn)) {
+ 		dev = pci_scan_single_device(bus, devfn + fn);
+ 		if (dev) {
+-			if (!pci_dev_is_added(dev))
++			if (!dev->is_added)
+ 				nr++;
+ 			dev->multifunction = 1;
+ 		}
+diff --git a/drivers/pci/remove.c b/drivers/pci/remove.c
+index 461e7fd2756f..01ec7fcb5634 100644
+--- a/drivers/pci/remove.c
++++ b/drivers/pci/remove.c
+@@ -18,12 +18,11 @@ static void pci_stop_dev(struct pci_dev *dev)
+ {
+ 	pci_pme_active(dev, false);
+ 
+-	if (pci_dev_is_added(dev)) {
++	if (dev->is_added) {
+ 		device_release_driver(&dev->dev);
+ 		pci_proc_detach_device(dev);
+ 		pci_remove_sysfs_dev_files(dev);
+-
+-		pci_dev_assign_added(dev, false);
++		dev->is_added = 0;
+ 	}
+ 
+ 	if (dev->bus->self)
+diff --git a/include/linux/pci.h b/include/linux/pci.h
+index 9b87f1936906..9799109c5e25 100644
+--- a/include/linux/pci.h
++++ b/include/linux/pci.h
+@@ -373,6 +373,7 @@ struct pci_dev {
+ 	unsigned int	transparent:1;		/* Subtractive decode bridge */
+ 	unsigned int	multifunction:1;	/* Multi-function device */
+ 
++	unsigned int	is_added:1;
+ 	unsigned int	is_busmaster:1;		/* Is busmaster */
+ 	unsigned int	no_msi:1;		/* May not use MSI */
+ 	unsigned int	no_64bit_msi:1; 	/* May only use 32-bit MSIs */
+-- 
+2.17.1
