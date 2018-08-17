@@ -1,75 +1,90 @@
-Return-Path: <SRS0=uSZ2=LE=intel.com=keith.busch@kernel.org>
-Return-Path: <SRS0=uSZ2=LE=intel.com=keith.busch@kernel.org>
-Date: Tue, 21 Aug 2018 10:44:13 -0600
-From: Keith Busch <keith.busch@intel.com>
-To: Sinan Kaya <okaya@kernel.org>
-Cc: Benjamin Herrenschmidt <benh@kernel.crashing.org>, poza@codeaurora.org,
-	Bjorn Helgaas <helgaas@kernel.org>,
-	Thomas Tai <thomas.tai@oracle.com>, bhelgaas@google.com,
-	linux-pci@vger.kernel.org, linux-pci-owner@vger.kernel.org,
-	Sam Bobroff <sam.bobroff@au1.ibm.com>
-Subject: Re: [PATCH 1/1] PCI/AER: prevent pcie_do_fatal_recovery from using
- device after it is removed
-Message-ID: <20180821164413.GB18612@localhost.localdomain>
-References: <b2e2ac5c92d8a91d00606754d1046578@codeaurora.org>
- <2ecd1fd6d763810d45697f846fa876b58a193b1b.camel@kernel.crashing.org>
- <a149d9657ca83b41c724b0ddd319c6fb@codeaurora.org>
- <512e0e11c3ba462c1d033f8b0e768fa27489731c.camel@kernel.crashing.org>
- <ad23b16cf7ff1f3b51961fda59533892@codeaurora.org>
- <2742bdba5ae8ccc420234b6e6b0224919367ed4c.camel@kernel.crashing.org>
- <20180821143751.GA18477@localhost.localdomain>
- <621f599b-8a87-5bde-5a9f-ecb5bdbcf716@kernel.org>
- <20180821152920.GA18612@localhost.localdomain>
- <37dc87b0-d0b1-8eb0-3eb9-ebccec6e4d77@kernel.org>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <37dc87b0-d0b1-8eb0-3eb9-ebccec6e4d77@kernel.org>
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Message-ID: <8eb76c5b173a8e8f8f90b9d2204c1b3b0de06c51.camel@baylibre.com>
+Subject: Re: [PATCH 2/2] PCI: meson: add the Amlogic Meson PCIe phy driver
+From: Jerome Brunet <jbrunet@baylibre.com>
+To: Hanjie Lin <hanjie.lin@amlogic.com>, Kishon Vijay Abraham I <kishon@ti.com>
+Date: Fri, 17 Aug 2018 10:09:37 +0200
+In-Reply-To: <91658f21-6934-6085-8deb-b85a1f6b7815@amlogic.com>
+References: <1534227134-151584-1-git-send-email-hanjie.lin@amlogic.com>
+ <1534227134-151584-3-git-send-email-hanjie.lin@amlogic.com>
+ <486e8ab477cc22ff231d2e18d7de22efba2c5abd.camel@baylibre.com>
+ <2b87e834-41e3-e418-95f0-c6d695cd8b3f@amlogic.com>
+ <e5d9d89e79f8ec37b6337e54912f49a0b0856874.camel@baylibre.com>
+ <91658f21-6934-6085-8deb-b85a1f6b7815@amlogic.com>
+Mime-Version: 1.0
+List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
+List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
+List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
+List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
+List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
+Cc: Rob Herring <robh@kernel.org>, Kevin Hilman <khilman@baylibre.com>,
+ shawn.lin@rock-chips.com, linux-kernel@vger.kernel.org,
+ Yue Wang <yue.wang@amlogic.com>, linux-pci@vger.kernel.org,
+ Carlo Caione <carlo@caione.org>, linux-amlogic@lists.infradead.org,
+ linux-arm-kernel@lists.infradead.org
+Content-Type: text/plain; charset="utf-8"
+Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
+Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tue, Aug 21, 2018 at 11:50:54AM -0400, Sinan Kaya wrote:
-> On 8/21/2018 11:29 AM, Keith Busch wrote:
-> > > Hotplug driver needs to handle both physical removal as well as intermittent
-> > > link down issues though.
-> > Back to your patch you linked to earlier, your proposal is to have
-> > pciehp wait for DEVSTS.FED before deciding if it needs to handle the
-> > DLLSC event. That might be a start, but it isn't enough since that
-> > status isn't set if the downstream device reported ERR_FATAL. I think
-> > you'd need to check the secondary status register for a Received System
-> > Error.
-> 
-> Hmm, good feedback.
-> 
-> I was trying not to mix AER/DPC with HP but obviously I failed.
-> I can add a flag to struct pci_dev like aer_pending for AER.
-> 
-> 1. AER ISR sets aer_pending
-> 2. AER ISR issues a secondary bus reset
-> 3. Hotplug driver bails out on aer_pending
-> 4. AER ISR performs the recovery
-> 
-> It is slightly more challenging on the DPC front as HW brings down
-> the link automatically and hotplug driver can observe the link down
-> event before the DPC ISR. I'll have to go check if DPC interrupt is
-> pending.
-> 
-> Let me know if this works out.
-
-That sounds like a step in a good direction.
-
-I think it's also safe to say the spec requires a slot capable of swapping
-devices report the PDC slot event, so that should be valid criteria for
-knowing if a hotplug event occured. There are other issues that we may
-need to fix.
-
-Consider a hierarchy of switches where the root port starts a DPC
-event and the kernel tries to recover. Meanwhile devices downstream
-switches lower in the hierarchy have changed. Since recovery doesn't do
-re-enumeration and the top level downstream port didn't detect a hotplug
-event, the recovery will "initialize" the wrong device to potentially
-undefined results.
-
-I think we'd need pciehp involved when error recovery rewalks the
-downstream buses so pciehp may check PDC on capable ports. Implementing
-'error_resume' in pciehp to de-enumerate/re-enumerate accordingly might
-work ... If that happened, pciehp could call pcie_do_fatal_recovery()
-and all three services could be unified!
+T24gRnJpLCAyMDE4LTA4LTE3IGF0IDE0OjEyICswODAwLCBIYW5qaWUgTGluIHdyb3RlOgo+IAo+
+IE9uIDIwMTgvOC8xNiAxNjozMywgSmVyb21lIEJydW5ldCB3cm90ZToKPiA+IE9uIFRodSwgMjAx
+OC0wOC0xNiBhdCAxMTowNSArMDgwMCwgSGFuamllIExpbiB3cm90ZToKPiA+ID4gCj4gPiA+IE9u
+IDIwMTgvOC8xNCAxODo0MSwgSmVyb21lIEJydW5ldCB3cm90ZToKPiA+ID4gPiBPbiBUdWUsIDIw
+MTgtMDgtMTQgYXQgMDI6MTIgLTA0MDAsIEhhbmppZSBMaW4gd3JvdGU6Cj4gPiA+ID4gPiBGcm9t
+OiBZdWUgV2FuZyA8eXVlLndhbmdAYW1sb2dpYy5jb20+Cj4gPiA+ID4gPiAKPiA+ID4gPiA+IFRo
+ZSBNZXNvbi1QQ0lFLVBIWSBjb250cm9sbGVyIHN1cHBvcnRzIHRoZSA1LUdicHMgZGF0YSByYXRl
+Cj4gPiA+ID4gPiBvZiB0aGUgUENJIEV4cHJlc3MgR2VuIDIgc3BlY2lmaWNhdGlvbiBhbmQgaXMg
+YmFja3dhcmRjb21wYXRpYmxlCj4gPiA+ID4gPiB3aXRoIHRoZSAyLjUtR2JwcyBHZW4gMS4xIHNw
+ZWNpZmljYXRpb24gd2l0aCBvbmx5Cj4gPiA+ID4gPiBpbmZlcnJlZCBpZGxlIGRldGVjdGlvbiBz
+dXBwb3J0ZWQgb24gQU1MT0dJQyBTb0NzLgo+ID4gPiA+IAo+ID4gPiA+IEl0IGxvb2tzIGxpa2Ug
+dGhlIHNvbGUgcHVycG9zZSBvZiB0aGlzIGRyaXZlciBpcyB0byBwcm92aWRlIHRoZSByZXNldCBs
+aW5lcyB0bwo+ID4gPiA+IHBjaWUgZHJpdmVyLgo+ID4gPiA+IAo+ID4gPiA+IEkgd29uZGVyIHdo
+eSB3ZSBuZWVkIHRoaXMgPyBDYW4ndCB0aGUgcGNpZSBkcml2ZXIgY2xhaW0gdGhlIHJlc2V0IGxp
+bmVzIGl0c2VsZi4KPiA+ID4gPiAKPiA+ID4gPiBBbHNvLCBhbiBpbml0IG9mIHRoaXMgcGh5IHdp
+bGwgYWx3YXlzIHJlc2V0IGJvdGggcG9ydC4gV2hhdCB3aWxsIGhhcHBlbiBpZiB0aGUKPiA+ID4g
+PiBmaXJzdCBwb3J0IGlzIGluIHVzZSBhbmQgdGhlIDJuZCBwb3J0IGNvbWVzIHVwID8/IAo+ID4g
+PiA+IAo+ID4gPiA+IExvb2tzIHRoZSB0aGUgcGNpZSBkcml2ZXIgc2hvdWxkIGNsYWltICdhcGIn
+IGFuZCAncGh5JyByZXNldCBsaW5lcyBhcyAic2hhcmVkIgo+ID4gPiA+IHJlc2V0IGFuZCB0aGUg
+cmVxdWlyZWQgJ3BvcnQnIGFzICdleGNsdXNpdmUnCj4gPiA+ID4gCj4gPiA+IAo+ID4gPiBUaGFu
+ayB5b3UgZm9yIHlvdXIgcmVzcG9uc2UuCj4gPiA+IAo+ID4gPiBZZXMsICdhcGInIGFuZCAncGh5
+JyByZXNldCBsaW5lcyBhcmUgc2hhcmVkLCBhbmQg4oCYcG9ydCcgcmVzZXQgbGluZSBpcyBleGNs
+dXNpdmUuCj4gPiA+IElmIHdlIGhhbmRsZSBhbGwgcmVzZXQgbGluZXMgZHVyaW5nIHRoZSBmaXJz
+dCBwb3J0IGluaXRpYWwgc2VxdWVuY2UsIAo+ID4gPiBhbmQgd2hlbiB0aGUgc2Vjb25kIHBvcnQg
+Y29tZXMgdXAsIHdlIHdpbGwgZG8gbm90aGluZyBhYm91dCB0aGUgcmVzdCBsaW5lcywgCj4gPiA+
+IGFuZCBkb24ndCBuZWVkIGEgZXh0cmEgQVBJIHRvIGRvIOKAmHBvcnQnIHJlc2V0Owo+ID4gCj4g
+PiBXaXRoIHdoaWNoIG90aGVyIGRyaXZlciBhcmUgeW91ciBjb250cm9sIHNoYXJlZCA/Cj4gPiAK
+PiA+IExvb2tzIGl0IGlzIHRoZSBhbnN3ZXIgaXMgbm9uZSBzaW5jZSB0aGlzIHBoeSBkcml2ZXIg
+d2lsbCByZXNldCBib3RoIHBvcnQKPiA+IGFscmVhZHksIGV2ZW4gaWYgb25lIGlzIHVzZWQuCj4g
+PiAKPiA+IEluIHRoaXMgY2FzZSB0aGUgZmFjdCB0aGF0IHlvdSBhcmUgdXNpbmcgc2hhcmVkIGNv
+bnRyb2wgaXMganVzdCBhYnVzaW5nIHRoZQo+ID4gZnJhbWV3b3JrIHRvIHJlc2V0IG9uY2UuCj4g
+PiAKPiA+IEFzIGZhciBhcyBJIGNhbiB0ZWxsLCB0aGlzIGRyaXZlciBtYWtlcyBubyBzZW5zZS4g
+VGhlIGFwcHJvcHJpYXRlIHJlc2V0IGxpbmVzCj4gPiBzaG91bGQgYmUgZ2l2ZW4gZGlyZWN0bHkg
+dG8geW91ciBwY2llIGRyaXZlci4gCj4gPiAKPiA+IAo+ID4gCj4gPiAuCj4gPiAKPiAKPiBBbWxv
+Z2ljIEFYRyBTT0MgaW5jbHVkZXMgdHdvIHBjaWUgY29udHJvbGxlcnMgYW5kIHBpcGVzIHdoZW4g
+b25seSBvbmUgcGNpZSBwaHk6IAo+IAo+ICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAg
+ICAgIChwb3J0X2EgcmVzZXQpCj4gICAgICAgICAgICAgICAgICAgICAgIHxQQ0lFX1JDX0EtLS0t
+PlBDSUVfUElQRV9BLS0tLS0tfCAKPiAgICAgKGFwYl9yZXNldCkgICAgICAgfCAgICAgICAgICAg
+ICAgICAgICAgICAgICAgICAgICB8ICAocGh5IHJlc2V0KQo+ICAgICBBUEIgQlVTLS0tPiAgICAg
+ICB8ICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgIHwgICBQQ0lFX1BIWQo+ICAgICAgICAg
+ICAgICAgICAgICAgICB8ICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgIHwKPiAgICAgICAg
+ICAgICAgICAgICAgICAgfCAgICAgICAgICAgICAocG9ydF9iX3Jlc2V0KSAgICB8Cj4gICAgICAg
+ICAgICAgICAgICAgICAgIHxQQ0lFX1JDX0ItLS0tPlBDSUVfUElQRV9CLS0tLS0tfAo+IAo+IFRo
+ZSBwaHlfcmVzZXQgYWZmZWN0IHRoZSBQQ0lFX1BIWS4KPiBUaGUgcG9ydF9hX3Jlc2V0IGFmZmVj
+dCB0aGUgUENJRV9QSVBFX0EsIHBvcnRfYl9yZXNldCBhZmZlY3QgdGhlIFBDSUVfUElQRV9CLiAK
+PiAKPiBBcyB5b3VyIHN1Z2dlc3Rpb24gd2Ugd2lsbCBtb3ZlIHRoZSAncG9ydCcgcmVzZXQgdG8g
+Y29udHJvbGxlciBkcml2ZXIsCj4gYW5kIGtlZXBpbmcgdGhlIHBoeSBkcml2ZXIgdG8gcHJvY2Vz
+cyB0aGUgJ2FwYicgYW5kICdwaHknIHJlc2V0IG9yIGFueQo+IG1vcmUgY2hhbmdlcyBvZiB0aGUg
+cGh5IGluIGZ1dHVyZS4KCkFzIGZhciBhcyBJIGNhbiB0ZWxsIGZyb20gdGhpcyBkaWFncmFtLCBJ
+dCB3b3VsZCBvbmx5IG1ha2Ugc2Vuc2UgZm9yIHRoZSAicGh5IgpyZXNldCBsaW5lIHRvIGJlIGNv
+bnRyb2xsZWQgYnkgeW91ciBwaHkgZHJpdmVyLgoKVGhlIGFwYiBhbmQgcG9ydCBpcyBvYnZpb3Vz
+bHkgcmVsYXRlZCB0byB0aGUgcGNpZSBkZXZpY2UvZHJpdmVyIGl0c2VsZiwgbm90IHRoZQpQSFku
+IEFuZCB3aGV0aGVyIHlvdSAxIG9yIDIgcmVzZXQgbGluZXMgaW4gaXQsIElNTyBpdCBpcyBvdmVy
+a2lsbCBhbmQKdW5uZWNlc3NhcnkgdG8gbWFrZSBhIHBoeSBkcml2ZXIgZm9yIHRoaXMuIAoKPiAK
+CgoKX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX18KbGludXgt
+YXJtLWtlcm5lbCBtYWlsaW5nIGxpc3QKbGludXgtYXJtLWtlcm5lbEBsaXN0cy5pbmZyYWRlYWQu
+b3JnCmh0dHA6Ly9saXN0cy5pbmZyYWRlYWQub3JnL21haWxtYW4vbGlzdGluZm8vbGludXgtYXJt
+LWtlcm5lbAo=
