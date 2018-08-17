@@ -1,118 +1,198 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-Message-ID: <8c48964151d24758298ba935da336c0829e2b287.camel@baylibre.com>
-Subject: Re: [PATCH v2 1/2] dt-bindings: PCI: meson: add DT bindings for
- Amlogic Meson PCIe controller
-From: Jerome Brunet <jbrunet@baylibre.com>
-To: Hanjie Lin <hanjie.lin@amlogic.com>,
-        Bjorn Helgaas <bhelgaas@google.com>
-Cc: Yue Wang <yue.wang@amlogic.com>,
-        Kevin Hilman <khilman@baylibre.com>,
-        Rob Herring <robh@kernel.org>, linux-kernel@vger.kernel.org,
-        linux-pci@vger.kernel.org, linux-arm-kernel@lists.infradead.org,
-        linux-amlogic@lists.infradead.org,
-        Yixun Lan <yixun.lan@amlogic.com>,
-        Liang Yang <liang.yang@amlogic.com>,
-        Jianxin Pan <jianxin.pan@amlogic.com>,
-        Qiufang Dai <qiufang.dai@amlogic.com>,
-        Jian Hu <jian.hu@amlogic.com>, devicetree@vger.kernel.org
-Date: Fri, 24 Aug 2018 10:22:55 +0200
-In-Reply-To: <1535096165-45827-2-git-send-email-hanjie.lin@amlogic.com>
-References: <1535096165-45827-1-git-send-email-hanjie.lin@amlogic.com>
-         <1535096165-45827-2-git-send-email-hanjie.lin@amlogic.com>
+Return-Path: <SRS0=a9CN=LA=kernel.crashing.org=benh@kernel.org>
+Return-Path: <SRS0=a9CN=LA=kernel.crashing.org=benh@kernel.org>
+Message-ID: <b8a55827a5e574900628f5b718e52e259b32acd9.camel@kernel.crashing.org>
+Subject: [RFC PATCH v2 3/6] pci: Remove priv_flags and use dev->error_state
+ for "disconnected" status
+From: Benjamin Herrenschmidt <benh@kernel.crashing.org>
+To: Bjorn Helgaas <helgaas@kernel.org>, linux-pci@vger.kernel.org
+Cc: Hari Vyas <hari.vyas@broadcom.com>, Ray Jui <ray.jui@broadcom.com>,
+        Srinath Mannam <srinath.mannam@broadcom.com>,
+        Guenter Roeck
+ <linux@roeck-us.net>, Jens Axboe <axboe@kernel.dk>,
+        Lukas Wunner
+ <lukas@wunner.de>,
+        Konstantin Khlebnikov <khlebnikov@yandex-team.ru>,
+        Marta
+ Rybczynska <mrybczyn@kalray.eu>,
+        Pierre-Yves Kerbrat <pkerbrat@kalray.eu>, linux-kernel@vger.kernel.org
+Date: Fri, 17 Aug 2018 15:13:49 +1000
+In-Reply-To: <20180817044902.31420-4-benh@kernel.crashing.org>
+References: <20180817044902.31420-1-benh@kernel.crashing.org>
+	 <20180817044902.31420-4-benh@kernel.crashing.org>
 Content-Type: text/plain; charset="UTF-8"
 Mime-Version: 1.0
-Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Fri, 2018-08-24 at 15:36 +0800, Hanjie Lin wrote:
-> From: Yue Wang <yue.wang@amlogic.com>
-> 
-> The Amlogic Meson PCIe host controller is based on the Synopsys DesignWare
-> PCI core. This patch adds documentation for the DT bindings in Meson PCIe
-> controller.
-> 
-> Signed-off-by: Yue Wang <yue.wang@amlogic.com>
-> Signed-off-by: Hanjie Lin <hanjie.lin@amlogic.com>
-> ---
->  .../devicetree/bindings/pci/amlogic,meson-pcie.txt | 63 ++++++++++++++++++++++
->  1 file changed, 63 insertions(+)
->  create mode 100644 Documentation/devicetree/bindings/pci/amlogic,meson-pcie.txt
-> 
-> diff --git a/Documentation/devicetree/bindings/pci/amlogic,meson-pcie.txt b/Documentation/devicetree/bindings/pci/amlogic,meson-pcie.txt
-> new file mode 100644
-> index 0000000..8a831d1
-> --- /dev/null
-> +++ b/Documentation/devicetree/bindings/pci/amlogic,meson-pcie.txt
-> @@ -0,0 +1,63 @@
-> +Amlogic Meson AXG DWC PCIE SoC controller
-> +
-> +Amlogic Meson PCIe host controller is based on the Synopsys DesignWare PCI core.
-> +It shares common functions with the PCIe DesignWare core driver and
-> +inherits common properties defined in
-> +Documentation/devicetree/bindings/pci/designware-pci.txt.
-> +
-> +Additional properties are described here:
-> +
-> +Required properties:
-> +- compatible:
-> +	should contain "amlogic,axg-pcie" to identify the core.
-> +- reg:
-> +	Should contain the configuration address space.
-> +- reg-names: Must be
-> +	- "elbi"	External local bus interface registers
-> +	- "cfg"		Meson specific registers
-> +	- "config"	PCIe configuration space
-> +- reset-gpios: The GPIO to generate PCIe PERST# assert and deassert signal.
-> +- clocks: Must contain an entry for each entry in clock-names.
-> +- clock-names: Must include the following entries:
-> +	- "pclk"       PCIe GEN 100M PLL clock
-> +	- "port"       PCIe_x(A or B) RC clock gate
-> +	- "general"    PCIe Phy clock
-> +	- "mipi"       PCIe_x(A or B) 100M ref clock gate
-> +- resets: phandle to the reset lines.
-> +- reset-names: must contain "phy" and "peripheral"
-> +       - "port" Port A or B reset
-> +       - "apb" APB reset
+This already represents whether a device is accessible or not,
+creating a new flag isn't particularly helpful.
 
-The above description is not coherent (phy <=> port)
+dev->error_state being an int, assigning it doesn't require
+an atomic operation per-se. The existing atomic bitop only
+protects the field, not anything else anyway.
 
-> +
-> +Example configuration:
-> +
-> +	pcie: pcie@f9800000 {
-> +			compatible = "amlogic,axg-pcie", "snps,dw-pcie";
-> +			reg = <0x0 0xf9800000 0x0 0x400000
-> +					0x0 0xff646000 0x0 0x2000
-> +					0x0 0xf9f00000 0x0 0x100000>;
-> +			reg-names = "elbi", "cfg", "config";
-> +			reset-gpios = <&gpio GPIOX_19 GPIO_ACTIVE_HIGH>;
-> +			interrupts = <GIC_SPI 177 IRQ_TYPE_EDGE_RISING>;
-> +			#interrupt-cells = <1>;
-> +			interrupt-map-mask = <0 0 0 0>;
-> +			interrupt-map = <0 0 0 0 &gic GIC_SPI 179 IRQ_TYPE_EDGE_RISING>;
-> +			bus-range = <0x0 0xff>;
-> +			#address-cells = <3>;
-> +			#size-cells = <2>;
-> +			device_type = "pci";
+Signed-off-by: Benjamin Herrenschmidt <benh@kernel.crashing.org>
+---
 
-Not described above - is it even used ?
+v2. Initialize the io channel state before we try to read the header
 
-> +			phys = <&pcie_phy>;
+ drivers/pci/access.c | 12 ++++++------
+ drivers/pci/msi.c    |  4 ++--
+ drivers/pci/pci.c    |  2 +-
+ drivers/pci/pci.h    | 11 ++---------
+ drivers/pci/probe.c  |  4 +++-
+ include/linux/pci.h  |  2 --
+ 6 files changed, 14 insertions(+), 21 deletions(-)
 
-Not documented and not necessary. Please remove this.
-
-> +			ranges = <0x82000000 0 0 0x0 0xf9c00000 0 0x00300000>;
-> +
-> +			clocks = <&clkc CLKID_USB
-> +					&clkc CLKID_MIPI_ENABLE
-> +					&clkc CLKID_PCIE_A
-> +					&clkc CLKID_PCIE_CML_EN0>;
-> +			clock-names = "general",
-> +					"mipi",
-> +					"pclk",
-> +					"port";
-> +			resets = <&reset RESET_PCIE_A>,
-> +				<&reset RESET_PCIE_APB>;
-> +			reset-names = "port",
-> +					"apb";
-> +	};
+diff --git a/drivers/pci/access.c b/drivers/pci/access.c
+index a3ad2fe185b9..ad97a3544636 100644
+--- a/drivers/pci/access.c
++++ b/drivers/pci/access.c
+@@ -535,7 +535,7 @@ EXPORT_SYMBOL(pcie_capability_clear_and_set_dword);
+ 
+ int pci_read_config_byte(const struct pci_dev *dev, int where, u8 *val)
+ {
+-	if (pci_dev_is_disconnected(dev)) {
++	if (pci_channel_offline(dev)) {
+ 		*val = ~0;
+ 		return PCIBIOS_DEVICE_NOT_FOUND;
+ 	}
+@@ -545,7 +545,7 @@ EXPORT_SYMBOL(pci_read_config_byte);
+ 
+ int pci_read_config_word(const struct pci_dev *dev, int where, u16 *val)
+ {
+-	if (pci_dev_is_disconnected(dev)) {
++	if (pci_channel_offline(dev)) {
+ 		*val = ~0;
+ 		return PCIBIOS_DEVICE_NOT_FOUND;
+ 	}
+@@ -556,7 +556,7 @@ EXPORT_SYMBOL(pci_read_config_word);
+ int pci_read_config_dword(const struct pci_dev *dev, int where,
+ 					u32 *val)
+ {
+-	if (pci_dev_is_disconnected(dev)) {
++	if (pci_channel_offline(dev)) {
+ 		*val = ~0;
+ 		return PCIBIOS_DEVICE_NOT_FOUND;
+ 	}
+@@ -566,7 +566,7 @@ EXPORT_SYMBOL(pci_read_config_dword);
+ 
+ int pci_write_config_byte(const struct pci_dev *dev, int where, u8 val)
+ {
+-	if (pci_dev_is_disconnected(dev))
++	if (pci_channel_offline(dev))
+ 		return PCIBIOS_DEVICE_NOT_FOUND;
+ 	return pci_bus_write_config_byte(dev->bus, dev->devfn, where, val);
+ }
+@@ -574,7 +574,7 @@ EXPORT_SYMBOL(pci_write_config_byte);
+ 
+ int pci_write_config_word(const struct pci_dev *dev, int where, u16 val)
+ {
+-	if (pci_dev_is_disconnected(dev))
++	if (pci_channel_offline(dev))
+ 		return PCIBIOS_DEVICE_NOT_FOUND;
+ 	return pci_bus_write_config_word(dev->bus, dev->devfn, where, val);
+ }
+@@ -583,7 +583,7 @@ EXPORT_SYMBOL(pci_write_config_word);
+ int pci_write_config_dword(const struct pci_dev *dev, int where,
+ 					 u32 val)
+ {
+-	if (pci_dev_is_disconnected(dev))
++	if (pci_channel_offline(dev))
+ 		return PCIBIOS_DEVICE_NOT_FOUND;
+ 	return pci_bus_write_config_dword(dev->bus, dev->devfn, where, val);
+ }
+diff --git a/drivers/pci/msi.c b/drivers/pci/msi.c
+index f2ef896464b3..2f872db40042 100644
+--- a/drivers/pci/msi.c
++++ b/drivers/pci/msi.c
+@@ -298,7 +298,7 @@ void __pci_write_msi_msg(struct msi_desc *entry, struct msi_msg *msg)
+ {
+ 	struct pci_dev *dev = msi_desc_to_pci_dev(entry);
+ 
+-	if (dev->current_state != PCI_D0 || pci_dev_is_disconnected(dev)) {
++	if (dev->current_state != PCI_D0 || pci_channel_offline(dev)) {
+ 		/* Don't touch the hardware now */
+ 	} else if (entry->msi_attrib.is_msix) {
+ 		void __iomem *base = pci_msix_desc_addr(entry);
+@@ -975,7 +975,7 @@ static void pci_msix_shutdown(struct pci_dev *dev)
+ 	if (!pci_msi_enable || !dev || !dev->msix_enabled)
+ 		return;
+ 
+-	if (pci_dev_is_disconnected(dev)) {
++	if (pci_channel_offline(dev)) {
+ 		dev->msix_enabled = 0;
+ 		return;
+ 	}
+diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
+index 29ff9619b5fa..62591c153999 100644
+--- a/drivers/pci/pci.c
++++ b/drivers/pci/pci.c
+@@ -5713,7 +5713,7 @@ bool pci_device_is_present(struct pci_dev *pdev)
+ {
+ 	u32 v;
+ 
+-	if (pci_dev_is_disconnected(pdev))
++	if (pci_channel_offline(pdev))
+ 		return false;
+ 	return pci_bus_read_dev_vendor_id(pdev->bus, pdev->devfn, &v, 0);
+ }
+diff --git a/drivers/pci/pci.h b/drivers/pci/pci.h
+index 473aa10a5dbf..f7704333e6a1 100644
+--- a/drivers/pci/pci.h
++++ b/drivers/pci/pci.h
+@@ -293,18 +293,11 @@ struct pci_sriov {
+ 	bool		drivers_autoprobe; /* Auto probing of VFs by driver */
+ };
+ 
+-/* pci_dev priv_flags */
+-#define PCI_DEV_DISCONNECTED 0
+-
+ static inline int pci_dev_set_disconnected(struct pci_dev *dev, void *unused)
+ {
+-	set_bit(PCI_DEV_DISCONNECTED, &dev->priv_flags);
+-	return 0;
+-}
++	dev->error_state = pci_channel_io_perm_failure;
+ 
+-static inline bool pci_dev_is_disconnected(const struct pci_dev *dev)
+-{
+-	return test_bit(PCI_DEV_DISCONNECTED, &dev->priv_flags);
++	return 0;
+ }
+ 
+ #ifdef CONFIG_PCIEAER
+diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
+index 440445ac7dfa..5cf982b3031b 100644
+--- a/drivers/pci/probe.c
++++ b/drivers/pci/probe.c
+@@ -1581,6 +1581,9 @@ int pci_setup_device(struct pci_dev *dev)
+ 	struct pci_bus_region region;
+ 	struct resource *res;
+ 
++	/* This must be set before any config space access */
++	dev->error_state = pci_channel_io_normal;
++
+ 	hdr_type = pci_hdr_type(dev);
+ 
+ 	dev->sysdata = dev->bus->sysdata;
+@@ -1588,7 +1591,6 @@ int pci_setup_device(struct pci_dev *dev)
+ 	dev->dev.bus = &pci_bus_type;
+ 	dev->hdr_type = hdr_type & 0x7f;
+ 	dev->multifunction = !!(hdr_type & 0x80);
+-	dev->error_state = pci_channel_io_normal;
+ 	set_pcie_port_type(dev);
+ 
+ 	pci_dev_assign_slot(dev);
+diff --git a/include/linux/pci.h b/include/linux/pci.h
+index 9799109c5e25..f58bda204f09 100644
+--- a/include/linux/pci.h
++++ b/include/linux/pci.h
+@@ -443,8 +443,6 @@ struct pci_dev {
+ 	phys_addr_t	rom;		/* Physical address if not from BAR */
+ 	size_t		romlen;		/* Length if not from BAR */
+ 	char		*driver_override; /* Driver name to force a match */
+-
+-	unsigned long	priv_flags;	/* Private flags for the PCI driver */
+ };
+ 
+ static inline struct pci_dev *pci_physfn(struct pci_dev *dev)
