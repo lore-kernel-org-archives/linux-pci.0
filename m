@@ -1,74 +1,46 @@
-Return-Path: <SRS0=veIH=K7=kernel.crashing.org=benh@kernel.org>
-Return-Path: <SRS0=veIH=K7=kernel.crashing.org=benh@kernel.org>
-Message-ID: <6f76eb5f54fdc780dac744773d836214d7844346.camel@kernel.crashing.org>
-Subject: Re: PCIe enable device races (Was: [PATCH v3] PCI: Data corruption
- happening due to race condition)
-From: Benjamin Herrenschmidt <benh@kernel.crashing.org>
-To: Konstantin Khlebnikov <khlebnikov@yandex-team.ru>,
-        Bjorn Helgaas
-	 <helgaas@kernel.org>
-Cc: Hari Vyas <hari.vyas@broadcom.com>, bhelgaas@google.com,
-        linux-pci@vger.kernel.org, ray.jui@broadcom.com,
-        Jens Axboe
- <axboe@kernel.dk>
-Date: Thu, 16 Aug 2018 18:02:59 +1000
-In-Reply-To: <fa218ce2-c337-e776-d958-f1f8a1129c9a@yandex-team.ru>
-References: <1530608741-30664-1-git-send-email-hari.vyas@broadcom.com>
-	 <20180731163727.GK45322@bhelgaas-glaptop.roam.corp.google.com>
-	 <ecaed7664b46d73888d2494065905f8e108fc0f4.camel@kernel.crashing.org>
-	 <20180815185027.GE28888@bhelgaas-glaptop.roam.corp.google.com>
-	 <e3316c91ad722434360b4018b17cbfe265e97801.camel@kernel.crashing.org>
-	 <fa218ce2-c337-e776-d958-f1f8a1129c9a@yandex-team.ru>
+Return-Path: <linux-acpi-owner@vger.kernel.org>
+MIME-Version: 1.0
+References: <6401388.2t0qD3iTOr@aspire.rjw.lan> <20180817.144354.2288619657950222607.teika@gmx.com>
+In-Reply-To: <20180817.144354.2288619657950222607.teika@gmx.com>
+From: "Rafael J. Wysocki" <rafael@kernel.org>
+Date: Fri, 17 Aug 2018 09:50:52 +0200
+Message-ID: <CAJZ5v0gueiBtbAS00LQ0yp15=OmvZe-i2ETzxaPvVD5wuZGV7Q@mail.gmail.com>
+Subject: Re: [PATCH] PCI / ACPI / PM: Resume all bridges on suspend-to-RAM
+To: teika@gmx.com
+Cc: "Rafael J. Wysocki" <rjw@rjwysocki.net>,
+        Linux PCI <linux-pci@vger.kernel.org>,
+        Bjorn Helgaas <bhelgaas@google.com>,
+        Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
+        ACPI Devel Maling List <linux-acpi@vger.kernel.org>,
+        Linux PM <linux-pm@vger.kernel.org>,
+        Mika Westerberg <mika.westerberg@linux.intel.com>
 Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Thu, 2018-08-16 at 10:58 +0300, Konstantin Khlebnikov wrote:
-> On 16.08.2018 00:52, Benjamin Herrenschmidt wrote:
-> > On Wed, 2018-08-15 at 13:50 -0500, Bjorn Helgaas wrote:
-> > > Yes, this is definitely broken.  Some folks have tried to fix it in
-> > > the past, but it hasn't quite happened yet.  We actually merged one
-> > > patch, 40f11adc7cd9 ("PCI: Avoid race while enabling upstream
-> > > bridges"), but had to revert it after we found issues:
-> > > 
-> > > https://lkml.kernel.org/r/1501858648-22228-1-git-send-email-srinath.mannam@broadcom.com
-> > > https://lkml.kernel.org/r/20170915072352.10453.31977.stgit@bhelgaas-glaptop.roam.corp.google.com
-> > 
-> > Ok so I had a look at this previous patch and it adds yet anothe use of
-> > some global mutex to protect part of the operation which makes me
-> > cringe a bit, we have too many of these.
-> > 
-> > What do you think of the one I sent yesterday ? (I can't find it in the
-> > archives yet)
-> > 
-> > [RFC PATCH] pci: Proof of concept at fixing pci_enable_device/bridge races
-> > 
-> > The patch itself needs splitting etc... but the basic idea is to move away
-> > from those global mutexes in a number of places and have one in the pci_dev
-> > struct itself to protect its state.
-> > 
-> > I would also like to use this rather than the bitmap atomics for is_added
-> > etc... (Hari's fix) in the long run. Atomics aren't significantly cheaper
-> > and imho makes thing even messier.
-> > 
-> > Jens, Konstantin, any chance you can test if the above also breaks iwlwifi
-> > (I don't see why it would but ...)
-> > 
-> 
-> I suppose original race was discovered between enabling bridge and device as described here
-> 
-> https://lore.kernel.org/lkml/150547971091.977464.16294045866179907260.stgit@buzz/T/#u
-> 
-> I barely can remember what I ever posted this, so I couldn't reproduce for sure.
+On Fri, Aug 17, 2018 at 7:45 AM Teika Kazura <teika@gmx.com> wrote:
+>
+> For the record, about the exactness of the patch description.
+>
+> The patch mentions the regression by the commit c62ec4610c40, but it is not the cause of the bug (https://bugzilla.kernel.org/show_bug.cgi?id=20067)
+> reported by me; I reverted c62ec4610c40 on linux-4.17.13, and the bug remained.
+>
+> # Some details: my bug was introduced by the commit (i) 877b3729ca0 on Jan 3. The commit (ii) c62ec4610c40 was on May 22. The commit (iii) 26112ddc254c
+> on Jun 30 fixes one problem caused by c62ec4610c40. The present patch modifies the code of the commit (iii), so it can be said as the completion of the
+> commit (iii). It at the same time fixes my bug, too.
 
-Ok. Well, my patch fixes it for my repro-case at least and seems to not
-break anyhting on my thinkpad so ...
+You are right, commit 877b3729ca0 introduced the issue for you, but it
+did that by exposing the same functional problem in the firmware that
+was previously addressed by commit 26112ddc254c in a different case.
 
-Bjorn, are you ok with the approach ? If yes, I'll start breaking up
-that patch into a few smaller bits in case something goes wrong and we
-want to bisect (such as the changes I did to tracking is_busmaster
-etc...)
+> This suggests the present patch possibly fixes other unknown PM problems; former kernels had some loose end(s). Now this patch puts the kernel in a better position.
+>
+> I'm a lay Linux user, and don't know if this post helps. If it does, it may be worth mentioning it in the above bugzilla entry.
+
+Yes, it does, thanks!
+
+I have updated the tags and the commit log of this patch according to
+the information above.
 
 Cheers,
-ben.
- 
+Rafael
