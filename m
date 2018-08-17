@@ -1,155 +1,89 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from ale.deltatee.com ([207.54.116.67]:40086 "EHLO ale.deltatee.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1727406AbeH3W5l (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Thu, 30 Aug 2018 18:57:41 -0400
-From: Logan Gunthorpe <logang@deltatee.com>
-To: linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
-        linux-nvme@lists.infradead.org, linux-rdma@vger.kernel.org,
-        linux-nvdimm@lists.01.org, linux-block@vger.kernel.org
-Cc: Stephen Bates <sbates@raithlin.com>,
-        Christoph Hellwig <hch@lst.de>,
-        Keith Busch <keith.busch@intel.com>,
-        Sagi Grimberg <sagi@grimberg.me>,
-        Bjorn Helgaas <bhelgaas@google.com>,
-        Jason Gunthorpe <jgg@mellanox.com>,
-        Max Gurtovoy <maxg@mellanox.com>,
-        Dan Williams <dan.j.williams@intel.com>,
-        =?UTF-8?q?J=C3=A9r=C3=B4me=20Glisse?= <jglisse@redhat.com>,
+Return-Path: <linux-acpi-owner@vger.kernel.org>
+From: Arnd Bergmann <arnd@arndb.de>
+To: linux-pci@vger.kernel.org, Bjorn Helgaas <bhelgaas@google.com>
+Cc: linux-kernel@vger.kernel.org,
+        Christoph Hellwig <hch@infradead.org>,
+        Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
         Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-        Alex Williamson <alex.williamson@redhat.com>,
-        =?UTF-8?q?Christian=20K=C3=B6nig?= <christian.koenig@amd.com>,
-        Logan Gunthorpe <logang@deltatee.com>
-Date: Thu, 30 Aug 2018 12:53:51 -0600
-Message-Id: <20180830185352.3369-13-logang@deltatee.com>
-In-Reply-To: <20180830185352.3369-1-logang@deltatee.com>
-References: <20180830185352.3369-1-logang@deltatee.com>
-Subject: [PATCH v5 12/13] nvmet: Introduce helper functions to allocate and free request SGLs
-Sender: linux-pci-owner@vger.kernel.org
+        linuxppc-dev@lists.ozlabs.org, linux-acpi@vger.kernel.org,
+        Arnd Bergmann <arnd@arndb.de>
+Subject: [RFC 04/15] PCI: export pci_register_host_bridge
+Date: Fri, 17 Aug 2018 12:26:34 +0200
+Message-Id: <20180817102645.3839621-5-arnd@arndb.de>
+In-Reply-To: <20180817102645.3839621-1-arnd@arndb.de>
+References: <20180817102645.3839621-1-arnd@arndb.de>
+Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Add helpers to allocate and free the SGL in a struct nvmet_req:
+There are a couple of users of the old pci_create_root_bus() interface,
+which calls pci_register_host_bridge() without actually scanning the bus.
 
-int nvmet_req_alloc_sgl(struct nvmet_req *req, struct nvmet_sq *sq)
-void nvmet_req_free_sgl(struct nvmet_req *req)
+In order to get those callers a little closer to the current method
+of separating the allocation and probing of the host bridge, this
+exports the internal interface to modules. If all the callers can
+get moved over to pci_host_probe() or pci_scan_root_bus_bridge()
+later, the export can be removed again.
 
-This will be expanded in a future patch to implement peer-to-peer
-memory DMAs and should be common with all target drivers. The presently
-unused 'sq' argument in the alloc function will be necessary to
-decide whether to use peer-to-peer memory and obtain the correct
-provider to allocate the memory.
-
-The new helpers are used in nvmet-rdma. Seeing we use req.transfer_len
-as the length of the SGL it is set earlier and cleared on any error.
-It also seems to be unnecessary to accumulate the length as the map_sgl
-functions should only ever be called once per request.
-
-Signed-off-by: Logan Gunthorpe <logang@deltatee.com>
-Cc: Christoph Hellwig <hch@lst.de>
-Cc: Sagi Grimberg <sagi@grimberg.me>
+Signed-off-by: Arnd Bergmann <arnd@arndb.de>
 ---
- drivers/nvme/target/core.c  | 18 ++++++++++++++++++
- drivers/nvme/target/nvmet.h |  2 ++
- drivers/nvme/target/rdma.c  | 20 ++++++++++++--------
- 3 files changed, 32 insertions(+), 8 deletions(-)
+ drivers/pci/probe.c | 25 ++++++++++++++++++++++++-
+ include/linux/pci.h |  1 +
+ 2 files changed, 25 insertions(+), 1 deletion(-)
 
-diff --git a/drivers/nvme/target/core.c b/drivers/nvme/target/core.c
-index ebf3e7a6c49e..6a1c8d5f552b 100644
---- a/drivers/nvme/target/core.c
-+++ b/drivers/nvme/target/core.c
-@@ -725,6 +725,24 @@ void nvmet_req_execute(struct nvmet_req *req)
- }
- EXPORT_SYMBOL_GPL(nvmet_req_execute);
- 
-+int nvmet_req_alloc_sgl(struct nvmet_req *req, struct nvmet_sq *sq)
-+{
-+	req->sg = sgl_alloc(req->transfer_len, GFP_KERNEL, &req->sg_cnt);
-+	if (!req->sg)
-+		return -ENOMEM;
-+
-+	return 0;
-+}
-+EXPORT_SYMBOL_GPL(nvmet_req_alloc_sgl);
-+
-+void nvmet_req_free_sgl(struct nvmet_req *req)
-+{
-+	sgl_free(req->sg);
-+	req->sg = NULL;
-+	req->sg_cnt = 0;
-+}
-+EXPORT_SYMBOL_GPL(nvmet_req_free_sgl);
-+
- static inline bool nvmet_cc_en(u32 cc)
- {
- 	return (cc >> NVME_CC_EN_SHIFT) & 0x1;
-diff --git a/drivers/nvme/target/nvmet.h b/drivers/nvme/target/nvmet.h
-index ec9af4ee03b6..7d6cb61021e4 100644
---- a/drivers/nvme/target/nvmet.h
-+++ b/drivers/nvme/target/nvmet.h
-@@ -336,6 +336,8 @@ bool nvmet_req_init(struct nvmet_req *req, struct nvmet_cq *cq,
- void nvmet_req_uninit(struct nvmet_req *req);
- void nvmet_req_execute(struct nvmet_req *req);
- void nvmet_req_complete(struct nvmet_req *req, u16 status);
-+int nvmet_req_alloc_sgl(struct nvmet_req *req, struct nvmet_sq *sq);
-+void nvmet_req_free_sgl(struct nvmet_req *req);
- 
- void nvmet_cq_setup(struct nvmet_ctrl *ctrl, struct nvmet_cq *cq, u16 qid,
- 		u16 size);
-diff --git a/drivers/nvme/target/rdma.c b/drivers/nvme/target/rdma.c
-index 3533e918ea37..e148dee72ba5 100644
---- a/drivers/nvme/target/rdma.c
-+++ b/drivers/nvme/target/rdma.c
-@@ -489,7 +489,7 @@ static void nvmet_rdma_release_rsp(struct nvmet_rdma_rsp *rsp)
- 	}
- 
- 	if (rsp->req.sg != rsp->cmd->inline_sg)
--		sgl_free(rsp->req.sg);
-+		nvmet_req_free_sgl(&rsp->req);
- 
- 	if (unlikely(!list_empty_careful(&queue->rsp_wr_wait_list)))
- 		nvmet_rdma_process_wr_wait_list(queue);
-@@ -638,24 +638,24 @@ static u16 nvmet_rdma_map_sgl_keyed(struct nvmet_rdma_rsp *rsp,
- {
- 	struct rdma_cm_id *cm_id = rsp->queue->cm_id;
- 	u64 addr = le64_to_cpu(sgl->addr);
--	u32 len = get_unaligned_le24(sgl->length);
- 	u32 key = get_unaligned_le32(sgl->key);
- 	int ret;
- 
-+	rsp->req.transfer_len = get_unaligned_le24(sgl->length);
-+
- 	/* no data command? */
--	if (!len)
-+	if (!rsp->req.transfer_len)
- 		return 0;
- 
--	rsp->req.sg = sgl_alloc(len, GFP_KERNEL, &rsp->req.sg_cnt);
--	if (!rsp->req.sg)
--		return NVME_SC_INTERNAL;
-+	ret = nvmet_req_alloc_sgl(&rsp->req, &rsp->queue->nvme_sq);
-+	if (ret < 0)
-+		goto error_out;
- 
- 	ret = rdma_rw_ctx_init(&rsp->rw, cm_id->qp, cm_id->port_num,
- 			rsp->req.sg, rsp->req.sg_cnt, 0, addr, key,
- 			nvmet_data_dir(&rsp->req));
- 	if (ret < 0)
--		return NVME_SC_INTERNAL;
--	rsp->req.transfer_len += len;
-+		goto error_out;
- 	rsp->n_rdma += ret;
- 
- 	if (invalidate) {
-@@ -664,6 +664,10 @@ static u16 nvmet_rdma_map_sgl_keyed(struct nvmet_rdma_rsp *rsp,
- 	}
- 
- 	return 0;
-+
-+error_out:
-+	rsp->req.transfer_len = 0;
-+	return NVME_SC_INTERNAL;
+diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
+index cf169742c03e..5ca7d5941ad0 100644
+--- a/drivers/pci/probe.c
++++ b/drivers/pci/probe.c
+@@ -762,7 +762,29 @@ static void pci_set_bus_msi_domain(struct pci_bus *bus)
+ 	dev_set_msi_domain(&bus->dev, d);
  }
  
- static u16 nvmet_rdma_map_sgl(struct nvmet_rdma_rsp *rsp)
+-static int pci_register_host_bridge(struct pci_host_bridge *bridge)
++/*
++ * pci_register_host_bridge() - Register a host bridge without scanning
++ *
++ * @bridge: a newly allocated host bridge structure
++ *
++ * This is the core part of bringing up a new PCI host bridge,
++ * before we scan for attached devices and register them as
++ * pci_dev.
++ *
++ * For the most part, this is an implementation detail of the
++ * pci_host_probe() interface, which brings up the entire bus,
++ * bus some older platforms still call it directly and manually
++ * scan for devices.
++ *
++ * If your driver uses this, try to convert it to using
++ * pci_host_probe() instead.
++ *
++ * Return: zero on suggess, or a negative error code.
++ * Note: after pci_register_host_bridge() successfully returns,
++ * the pci_host_bridge device is alive in driver core, and must
++ * not be freed directly.
++ */
++int pci_register_host_bridge(struct pci_host_bridge *bridge)
+ {
+ 	struct device *parent = bridge->dev.parent;
+ 	struct resource_entry *window, *n;
+@@ -877,6 +899,7 @@ static int pci_register_host_bridge(struct pci_host_bridge *bridge)
+ 	kfree(bus);
+ 	return err;
+ }
++EXPORT_SYMBOL_GPL(pci_register_host_bridge);
+ 
+ static bool pci_bridge_child_ext_cfg_accessible(struct pci_dev *bridge)
+ {
+diff --git a/include/linux/pci.h b/include/linux/pci.h
+index d226e06fb5e5..e1337148cf9f 100644
+--- a/include/linux/pci.h
++++ b/include/linux/pci.h
+@@ -909,6 +909,7 @@ struct pci_bus *pci_create_root_bus(struct device *parent, int bus,
+ 				    struct pci_ops *ops, void *sysdata,
+ 				    struct list_head *resources);
+ int pci_host_probe(struct pci_host_bridge *bridge);
++int pci_register_host_bridge(struct pci_host_bridge *);
+ int pci_bus_insert_busn_res(struct pci_bus *b, int bus, int busmax);
+ int pci_bus_update_busn_res_end(struct pci_bus *b, int busmax);
+ void pci_bus_release_busn_res(struct pci_bus *b);
 -- 
-2.11.0
+2.18.0
