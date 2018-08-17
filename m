@@ -1,34 +1,137 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.29.99]:60550 "EHLO mail.kernel.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1726680AbeHFA6B (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Sun, 5 Aug 2018 20:58:01 -0400
-From: Sinan Kaya <okaya@kernel.org>
-To: linux-pci@vger.kernel.org
-Cc: Sinan Kaya <okaya@kernel.org>
-Subject: [PATCH v7 0/1] PCI: Handle conflict between hotplug and error handling
-Date: Sun,  5 Aug 2018 15:51:35 -0700
-Message-Id: <20180805225136.5800-1-okaya@kernel.org>
+Received: from mail-it0-f41.google.com ([209.85.214.41]:34802 "EHLO
+        mail-it0-f41.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726321AbeHQLES (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Fri, 17 Aug 2018 07:04:18 -0400
+Received: by mail-it0-f41.google.com with SMTP id d70-v6so917664ith.1
+        for <linux-pci@vger.kernel.org>; Fri, 17 Aug 2018 01:01:54 -0700 (PDT)
+MIME-Version: 1.0
+References: <CABXGCsMZaDZDONX6+McFJr2UMZR9inQTeTsKWqQXcwMCPrc96g@mail.gmail.com>
+ <CABXGCsNC3RBk+TXSwRS6c+p5wPOvmDrxHbC=PxwZemspWmcnsA@mail.gmail.com> <1400dd1991be3138c3d0583d3094896e@codeaurora.org>
+In-Reply-To: <1400dd1991be3138c3d0583d3094896e@codeaurora.org>
+From: Mikhail Gavrilov <mikhail.v.gavrilov@gmail.com>
+Date: Fri, 17 Aug 2018 13:01:41 +0500
+Message-ID: <CABXGCsMwBwNbnO7ehkp6z0rjo-9WOLTbQYeDxqFL2haD=PGHyw@mail.gmail.com>
+Subject: Re: [4.18 rc8 BUG] AER: Corrected error received: 0000:00:00.0
+To: poza@codeaurora.org, linux-pci@vger.kernel.org
+Content-Type: multipart/mixed; boundary="00000000000005e5d505739cf92b"
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Lukas:
-'Your patch "[PATCH v6 1/1] PCI: pciehp: Ignore link events when there
-is a fatal error pending" only checks once for a pending fatal error,
-it should poll until either the fatal error is gone or a timeout is
-hit.  If the fatal error is gone and the link is up, you can just return
-from pciehp_handle_presence_or_link_change().  Else (in the timeout case)
-fall back to the normal handling of a Link Down, i.e. let it bring down
-the slot.'
+--00000000000005e5d505739cf92b
+Content-Type: text/plain; charset="UTF-8"
+
+>
+>
+> Can you send lspci output ?
+>
+> Regards,
+> Oza.
 
 
-Sinan Kaya (1):
-  PCI: pciehp: Ignore link events when there is a fatal error pending
+yes,
+attached here
 
- drivers/pci/hotplug/pciehp_ctrl.c | 19 ++++++++++
- drivers/pci/pci.h                 |  2 ++
- drivers/pci/pcie/err.c            | 60 +++++++++++++++++++++++++++++++
- 3 files changed, 81 insertions(+)
 
--- 
-2.17.1
+--
+Best Regards,
+Mike Gavrilov.
+
+--00000000000005e5d505739cf92b
+Content-Type: text/plain; charset="US-ASCII"; name="lspci.txt"
+Content-Disposition: attachment; filename="lspci.txt"
+Content-Transfer-Encoding: base64
+Content-ID: <f_jkxpepc00>
+X-Attachment-Id: f_jkxpepc00
+
+IyBsc3BjaSAtbm4KMDA6MDAuMCBIb3N0IGJyaWRnZSBbMDYwMF06IEFkdmFuY2VkIE1pY3JvIERl
+dmljZXMsIEluYy4gW0FNRF0gRmFtaWx5IDE3aCAoTW9kZWxzIDAwaC0wZmgpIFJvb3QgQ29tcGxl
+eCBbMTAyMjoxNDUwXQowMDowMC4yIElPTU1VIFswODA2XTogQWR2YW5jZWQgTWljcm8gRGV2aWNl
+cywgSW5jLiBbQU1EXSBGYW1pbHkgMTdoIChNb2RlbHMgMDBoLTBmaCkgSS9PIE1lbW9yeSBNYW5h
+Z2VtZW50IFVuaXQgWzEwMjI6MTQ1MV0KMDA6MDEuMCBIb3N0IGJyaWRnZSBbMDYwMF06IEFkdmFu
+Y2VkIE1pY3JvIERldmljZXMsIEluYy4gW0FNRF0gRmFtaWx5IDE3aCAoTW9kZWxzIDAwaC0wZmgp
+IFBDSWUgRHVtbXkgSG9zdCBCcmlkZ2UgWzEwMjI6MTQ1Ml0KMDA6MDEuMSBQQ0kgYnJpZGdlIFsw
+NjA0XTogQWR2YW5jZWQgTWljcm8gRGV2aWNlcywgSW5jLiBbQU1EXSBGYW1pbHkgMTdoIChNb2Rl
+bHMgMDBoLTBmaCkgUENJZSBHUFAgQnJpZGdlIFsxMDIyOjE0NTNdCjAwOjAxLjMgUENJIGJyaWRn
+ZSBbMDYwNF06IEFkdmFuY2VkIE1pY3JvIERldmljZXMsIEluYy4gW0FNRF0gRmFtaWx5IDE3aCAo
+TW9kZWxzIDAwaC0wZmgpIFBDSWUgR1BQIEJyaWRnZSBbMTAyMjoxNDUzXQowMDowMi4wIEhvc3Qg
+YnJpZGdlIFswNjAwXTogQWR2YW5jZWQgTWljcm8gRGV2aWNlcywgSW5jLiBbQU1EXSBGYW1pbHkg
+MTdoIChNb2RlbHMgMDBoLTBmaCkgUENJZSBEdW1teSBIb3N0IEJyaWRnZSBbMTAyMjoxNDUyXQow
+MDowMy4wIEhvc3QgYnJpZGdlIFswNjAwXTogQWR2YW5jZWQgTWljcm8gRGV2aWNlcywgSW5jLiBb
+QU1EXSBGYW1pbHkgMTdoIChNb2RlbHMgMDBoLTBmaCkgUENJZSBEdW1teSBIb3N0IEJyaWRnZSBb
+MTAyMjoxNDUyXQowMDowMy4xIFBDSSBicmlkZ2UgWzA2MDRdOiBBZHZhbmNlZCBNaWNybyBEZXZp
+Y2VzLCBJbmMuIFtBTURdIEZhbWlseSAxN2ggKE1vZGVscyAwMGgtMGZoKSBQQ0llIEdQUCBCcmlk
+Z2UgWzEwMjI6MTQ1M10KMDA6MDQuMCBIb3N0IGJyaWRnZSBbMDYwMF06IEFkdmFuY2VkIE1pY3Jv
+IERldmljZXMsIEluYy4gW0FNRF0gRmFtaWx5IDE3aCAoTW9kZWxzIDAwaC0wZmgpIFBDSWUgRHVt
+bXkgSG9zdCBCcmlkZ2UgWzEwMjI6MTQ1Ml0KMDA6MDcuMCBIb3N0IGJyaWRnZSBbMDYwMF06IEFk
+dmFuY2VkIE1pY3JvIERldmljZXMsIEluYy4gW0FNRF0gRmFtaWx5IDE3aCAoTW9kZWxzIDAwaC0w
+ZmgpIFBDSWUgRHVtbXkgSG9zdCBCcmlkZ2UgWzEwMjI6MTQ1Ml0KMDA6MDcuMSBQQ0kgYnJpZGdl
+IFswNjA0XTogQWR2YW5jZWQgTWljcm8gRGV2aWNlcywgSW5jLiBbQU1EXSBGYW1pbHkgMTdoIChN
+b2RlbHMgMDBoLTBmaCkgSW50ZXJuYWwgUENJZSBHUFAgQnJpZGdlIDAgdG8gQnVzIEIgWzEwMjI6
+MTQ1NF0KMDA6MDguMCBIb3N0IGJyaWRnZSBbMDYwMF06IEFkdmFuY2VkIE1pY3JvIERldmljZXMs
+IEluYy4gW0FNRF0gRmFtaWx5IDE3aCAoTW9kZWxzIDAwaC0wZmgpIFBDSWUgRHVtbXkgSG9zdCBC
+cmlkZ2UgWzEwMjI6MTQ1Ml0KMDA6MDguMSBQQ0kgYnJpZGdlIFswNjA0XTogQWR2YW5jZWQgTWlj
+cm8gRGV2aWNlcywgSW5jLiBbQU1EXSBGYW1pbHkgMTdoIChNb2RlbHMgMDBoLTBmaCkgSW50ZXJu
+YWwgUENJZSBHUFAgQnJpZGdlIDAgdG8gQnVzIEIgWzEwMjI6MTQ1NF0KMDA6MTQuMCBTTUJ1cyBb
+MGMwNV06IEFkdmFuY2VkIE1pY3JvIERldmljZXMsIEluYy4gW0FNRF0gRkNIIFNNQnVzIENvbnRy
+b2xsZXIgWzEwMjI6NzkwYl0gKHJldiA1OSkKMDA6MTQuMyBJU0EgYnJpZGdlIFswNjAxXTogQWR2
+YW5jZWQgTWljcm8gRGV2aWNlcywgSW5jLiBbQU1EXSBGQ0ggTFBDIEJyaWRnZSBbMTAyMjo3OTBl
+XSAocmV2IDUxKQowMDoxOC4wIEhvc3QgYnJpZGdlIFswNjAwXTogQWR2YW5jZWQgTWljcm8gRGV2
+aWNlcywgSW5jLiBbQU1EXSBGYW1pbHkgMTdoIChNb2RlbHMgMDBoLTBmaCkgRGF0YSBGYWJyaWM6
+IERldmljZSAxOGg7IEZ1bmN0aW9uIDAgWzEwMjI6MTQ2MF0KMDA6MTguMSBIb3N0IGJyaWRnZSBb
+MDYwMF06IEFkdmFuY2VkIE1pY3JvIERldmljZXMsIEluYy4gW0FNRF0gRmFtaWx5IDE3aCAoTW9k
+ZWxzIDAwaC0wZmgpIERhdGEgRmFicmljOiBEZXZpY2UgMThoOyBGdW5jdGlvbiAxIFsxMDIyOjE0
+NjFdCjAwOjE4LjIgSG9zdCBicmlkZ2UgWzA2MDBdOiBBZHZhbmNlZCBNaWNybyBEZXZpY2VzLCBJ
+bmMuIFtBTURdIEZhbWlseSAxN2ggKE1vZGVscyAwMGgtMGZoKSBEYXRhIEZhYnJpYzogRGV2aWNl
+IDE4aDsgRnVuY3Rpb24gMiBbMTAyMjoxNDYyXQowMDoxOC4zIEhvc3QgYnJpZGdlIFswNjAwXTog
+QWR2YW5jZWQgTWljcm8gRGV2aWNlcywgSW5jLiBbQU1EXSBGYW1pbHkgMTdoIChNb2RlbHMgMDBo
+LTBmaCkgRGF0YSBGYWJyaWM6IERldmljZSAxOGg7IEZ1bmN0aW9uIDMgWzEwMjI6MTQ2M10KMDA6
+MTguNCBIb3N0IGJyaWRnZSBbMDYwMF06IEFkdmFuY2VkIE1pY3JvIERldmljZXMsIEluYy4gW0FN
+RF0gRmFtaWx5IDE3aCAoTW9kZWxzIDAwaC0wZmgpIERhdGEgRmFicmljOiBEZXZpY2UgMThoOyBG
+dW5jdGlvbiA0IFsxMDIyOjE0NjRdCjAwOjE4LjUgSG9zdCBicmlkZ2UgWzA2MDBdOiBBZHZhbmNl
+ZCBNaWNybyBEZXZpY2VzLCBJbmMuIFtBTURdIEZhbWlseSAxN2ggKE1vZGVscyAwMGgtMGZoKSBE
+YXRhIEZhYnJpYzogRGV2aWNlIDE4aDsgRnVuY3Rpb24gNSBbMTAyMjoxNDY1XQowMDoxOC42IEhv
+c3QgYnJpZGdlIFswNjAwXTogQWR2YW5jZWQgTWljcm8gRGV2aWNlcywgSW5jLiBbQU1EXSBGYW1p
+bHkgMTdoIChNb2RlbHMgMDBoLTBmaCkgRGF0YSBGYWJyaWM6IERldmljZSAxOGg7IEZ1bmN0aW9u
+IDYgWzEwMjI6MTQ2Nl0KMDA6MTguNyBIb3N0IGJyaWRnZSBbMDYwMF06IEFkdmFuY2VkIE1pY3Jv
+IERldmljZXMsIEluYy4gW0FNRF0gRmFtaWx5IDE3aCAoTW9kZWxzIDAwaC0wZmgpIERhdGEgRmFi
+cmljOiBEZXZpY2UgMThoOyBGdW5jdGlvbiA3IFsxMDIyOjE0NjddCjAxOjAwLjAgTm9uLVZvbGF0
+aWxlIG1lbW9yeSBjb250cm9sbGVyIFswMTA4XTogSW50ZWwgQ29ycG9yYXRpb24gT3B0YW5lIFNT
+RCA5MDBQIFNlcmllcyBbODA4NjoyNzAwXQowMjowMC4wIFVTQiBjb250cm9sbGVyIFswYzAzXTog
+QWR2YW5jZWQgTWljcm8gRGV2aWNlcywgSW5jLiBbQU1EXSBEZXZpY2UgWzEwMjI6NDNkMF0gKHJl
+diAwMSkKMDI6MDAuMSBTQVRBIGNvbnRyb2xsZXIgWzAxMDZdOiBBZHZhbmNlZCBNaWNybyBEZXZp
+Y2VzLCBJbmMuIFtBTURdIERldmljZSBbMTAyMjo0M2M4XSAocmV2IDAxKQowMjowMC4yIFBDSSBi
+cmlkZ2UgWzA2MDRdOiBBZHZhbmNlZCBNaWNybyBEZXZpY2VzLCBJbmMuIFtBTURdIERldmljZSBb
+MTAyMjo0M2M2XSAocmV2IDAxKQowMzowMC4wIFBDSSBicmlkZ2UgWzA2MDRdOiBBZHZhbmNlZCBN
+aWNybyBEZXZpY2VzLCBJbmMuIFtBTURdIERldmljZSBbMTAyMjo0M2M3XSAocmV2IDAxKQowMzow
+MS4wIFBDSSBicmlkZ2UgWzA2MDRdOiBBZHZhbmNlZCBNaWNybyBEZXZpY2VzLCBJbmMuIFtBTURd
+IERldmljZSBbMTAyMjo0M2M3XSAocmV2IDAxKQowMzowMi4wIFBDSSBicmlkZ2UgWzA2MDRdOiBB
+ZHZhbmNlZCBNaWNybyBEZXZpY2VzLCBJbmMuIFtBTURdIERldmljZSBbMTAyMjo0M2M3XSAocmV2
+IDAxKQowMzowMy4wIFBDSSBicmlkZ2UgWzA2MDRdOiBBZHZhbmNlZCBNaWNybyBEZXZpY2VzLCBJ
+bmMuIFtBTURdIERldmljZSBbMTAyMjo0M2M3XSAocmV2IDAxKQowMzowNC4wIFBDSSBicmlkZ2Ug
+WzA2MDRdOiBBZHZhbmNlZCBNaWNybyBEZXZpY2VzLCBJbmMuIFtBTURdIERldmljZSBbMTAyMjo0
+M2M3XSAocmV2IDAxKQowNDowMC4wIEV0aGVybmV0IGNvbnRyb2xsZXIgWzAyMDBdOiBJbnRlbCBD
+b3Jwb3JhdGlvbiBJMjExIEdpZ2FiaXQgTmV0d29yayBDb25uZWN0aW9uIFs4MDg2OjE1MzldIChy
+ZXYgMDMpCjA1OjAwLjAgTmV0d29yayBjb250cm9sbGVyIFswMjgwXTogUmVhbHRlayBTZW1pY29u
+ZHVjdG9yIENvLiwgTHRkLiBSVEw4ODIyQkUgODAyLjExYS9iL2cvbi9hYyBXaUZpIGFkYXB0ZXIg
+WzEwZWM6YjgyMl0KMDk6MDAuMCBQQ0kgYnJpZGdlIFswNjA0XTogQWR2YW5jZWQgTWljcm8gRGV2
+aWNlcywgSW5jLiBbQU1EXSBEZXZpY2UgWzEwMjI6MTQ3MF0gKHJldiBjMykKMGE6MDAuMCBQQ0kg
+YnJpZGdlIFswNjA0XTogQWR2YW5jZWQgTWljcm8gRGV2aWNlcywgSW5jLiBbQU1EXSBEZXZpY2Ug
+WzEwMjI6MTQ3MV0KMGI6MDAuMCBWR0EgY29tcGF0aWJsZSBjb250cm9sbGVyIFswMzAwXTogQWR2
+YW5jZWQgTWljcm8gRGV2aWNlcywgSW5jLiBbQU1EL0FUSV0gVmVnYSAxMCBYVCBbUmFkZW9uIFJY
+IFZlZ2EgNjRdIFsxMDAyOjY4N2ZdIChyZXYgYzMpCjBiOjAwLjEgQXVkaW8gZGV2aWNlIFswNDAz
+XTogQWR2YW5jZWQgTWljcm8gRGV2aWNlcywgSW5jLiBbQU1EL0FUSV0gRGV2aWNlIFsxMDAyOmFh
+ZjhdCjBjOjAwLjAgTm9uLUVzc2VudGlhbCBJbnN0cnVtZW50YXRpb24gWzEzMDBdOiBBZHZhbmNl
+ZCBNaWNybyBEZXZpY2VzLCBJbmMuIFtBTURdIERldmljZSBbMTAyMjoxNDVhXQowYzowMC4yIEVu
+Y3J5cHRpb24gY29udHJvbGxlciBbMTA4MF06IEFkdmFuY2VkIE1pY3JvIERldmljZXMsIEluYy4g
+W0FNRF0gRmFtaWx5IDE3aCAoTW9kZWxzIDAwaC0wZmgpIFBsYXRmb3JtIFNlY3VyaXR5IFByb2Nl
+c3NvciBbMTAyMjoxNDU2XQowYzowMC4zIFVTQiBjb250cm9sbGVyIFswYzAzXTogQWR2YW5jZWQg
+TWljcm8gRGV2aWNlcywgSW5jLiBbQU1EXSBVU0IgMy4wIEhvc3QgY29udHJvbGxlciBbMTAyMjox
+NDVmXQowZDowMC4wIE5vbi1Fc3NlbnRpYWwgSW5zdHJ1bWVudGF0aW9uIFsxMzAwXTogQWR2YW5j
+ZWQgTWljcm8gRGV2aWNlcywgSW5jLiBbQU1EXSBEZXZpY2UgWzEwMjI6MTQ1NV0KMGQ6MDAuMiBT
+QVRBIGNvbnRyb2xsZXIgWzAxMDZdOiBBZHZhbmNlZCBNaWNybyBEZXZpY2VzLCBJbmMuIFtBTURd
+IEZDSCBTQVRBIENvbnRyb2xsZXIgW0FIQ0kgbW9kZV0gWzEwMjI6NzkwMV0gKHJldiA1MSkKMGQ6
+MDAuMyBBdWRpbyBkZXZpY2UgWzA0MDNdOiBBZHZhbmNlZCBNaWNybyBEZXZpY2VzLCBJbmMuIFtB
+TURdIEZhbWlseSAxN2ggKE1vZGVscyAwMGgtMGZoKSBIRCBBdWRpbyBDb250cm9sbGVyIFsxMDIy
+OjE0NTddCg==
+--00000000000005e5d505739cf92b--
