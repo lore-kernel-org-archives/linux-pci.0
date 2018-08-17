@@ -1,165 +1,94 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-pl1-f193.google.com ([209.85.214.193]:39871 "EHLO
-        mail-pl1-f193.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1727181AbeIADDG (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Fri, 31 Aug 2018 23:03:06 -0400
-Received: by mail-pl1-f193.google.com with SMTP id w14-v6so6074635plp.6
-        for <linux-pci@vger.kernel.org>; Fri, 31 Aug 2018 15:53:28 -0700 (PDT)
-From: Bjorn Andersson <bjorn.andersson@linaro.org>
-To: Stanimir Varbanov <svarbanov@mm-sol.com>,
-        Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
-        Bjorn Helgaas <bhelgaas@google.com>
-Cc: linux-pci@vger.kernel.org, linux-arm-msm@vger.kernel.org,
-        linux-kernel@vger.kernel.org
-Subject: [PATCH v2] PCI: qcom: Fix error handling in pm_runtime support
-Date: Fri, 31 Aug 2018 15:55:10 -0700
-Message-Id: <20180831225510.32230-1-bjorn.andersson@linaro.org>
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Subject: Re: [PATCH 2/2] PCI: meson: add the Amlogic Meson PCIe phy driver
+To: Jerome Brunet <jbrunet@baylibre.com>, Kishon Vijay Abraham I
+ <kishon@ti.com>
+References: <1534227134-151584-1-git-send-email-hanjie.lin@amlogic.com>
+ <1534227134-151584-3-git-send-email-hanjie.lin@amlogic.com>
+ <486e8ab477cc22ff231d2e18d7de22efba2c5abd.camel@baylibre.com>
+ <2b87e834-41e3-e418-95f0-c6d695cd8b3f@amlogic.com>
+ <e5d9d89e79f8ec37b6337e54912f49a0b0856874.camel@baylibre.com>
+ <91658f21-6934-6085-8deb-b85a1f6b7815@amlogic.com>
+ <8eb76c5b173a8e8f8f90b9d2204c1b3b0de06c51.camel@baylibre.com>
+From: Hanjie Lin <hanjie.lin@amlogic.com>
+Message-ID: <d6f7e1bf-bbfa-01a0-e86b-d7d8e27c097c@amlogic.com>
+Date: Fri, 17 Aug 2018 19:17:09 +0800
+MIME-Version: 1.0
+In-Reply-To: <8eb76c5b173a8e8f8f90b9d2204c1b3b0de06c51.camel@baylibre.com>
+List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
+List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
+List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
+List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
+List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
+Cc: Rob Herring <robh@kernel.org>, Kevin Hilman <khilman@baylibre.com>,
+ shawn.lin@rock-chips.com, linux-kernel@vger.kernel.org,
+ Yue Wang <yue.wang@amlogic.com>, linux-pci@vger.kernel.org,
+ Carlo Caione <carlo@caione.org>, linux-amlogic@lists.infradead.org,
+ linux-arm-kernel@lists.infradead.org
+Content-Type: text/plain; charset="utf-8"
+Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
+Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
 List-ID: <linux-pci.vger.kernel.org>
 
-The driver does not cope with the fact that probe can fail in a number
-of cases after enabling pm_runtime on the device, this results in
-warnings about "Unbalanced pm_runtime_enable". Further more if probe
-fails after invoking host_init the power-domain will be left referenced.
-
-As it's not possible for the error handling in qcom_pcie_host_init() to
-handle errors happening after returning from that function the
-pm_runtime_get_sync() is moved to probe() as well.
-
-Fixes: 854b69efbdd2 ("PCI: qcom: add runtime pm support to pcie_port")
-Acked-by: Stanimir Varbanov <svarbanov@mm-sol.com>
-Signed-off-by: Bjorn Andersson <bjorn.andersson@linaro.org>
----
-
-Changes since v1:
-- Dropped remove function, as this can't be called
-- Handle pm_runtime_get_sync() errors
-- Add "Fixes" tag
-
- drivers/pci/controller/dwc/pcie-qcom.c | 56 ++++++++++++++++++--------
- 1 file changed, 39 insertions(+), 17 deletions(-)
-
-diff --git a/drivers/pci/controller/dwc/pcie-qcom.c b/drivers/pci/controller/dwc/pcie-qcom.c
-index d2373e4d141c..3bfaad052736 100644
---- a/drivers/pci/controller/dwc/pcie-qcom.c
-+++ b/drivers/pci/controller/dwc/pcie-qcom.c
-@@ -1117,7 +1117,6 @@ static int qcom_pcie_host_init(struct pcie_port *pp)
- 	struct qcom_pcie *pcie = to_qcom_pcie(pci);
- 	int ret;
- 
--	pm_runtime_get_sync(pci->dev);
- 	qcom_ep_reset_assert(pcie);
- 
- 	ret = pcie->ops->init(pcie);
-@@ -1154,7 +1153,6 @@ static int qcom_pcie_host_init(struct pcie_port *pp)
- 	phy_power_off(pcie->phy);
- err_deinit:
- 	pcie->ops->deinit(pcie);
--	pm_runtime_put(pci->dev);
- 
- 	return ret;
- }
-@@ -1244,6 +1242,12 @@ static int qcom_pcie_probe(struct platform_device *pdev)
- 		return -ENOMEM;
- 
- 	pm_runtime_enable(dev);
-+	ret = pm_runtime_get_sync(dev);
-+	if (ret < 0) {
-+		pm_runtime_disable(dev);
-+		return ret;
-+	}
-+
- 	pci->dev = dev;
- 	pci->ops = &dw_pcie_ops;
- 	pp = &pci->pp;
-@@ -1253,44 +1257,56 @@ static int qcom_pcie_probe(struct platform_device *pdev)
- 	pcie->ops = of_device_get_match_data(dev);
- 
- 	pcie->reset = devm_gpiod_get_optional(dev, "perst", GPIOD_OUT_LOW);
--	if (IS_ERR(pcie->reset))
--		return PTR_ERR(pcie->reset);
-+	if (IS_ERR(pcie->reset)) {
-+		ret = PTR_ERR(pcie->reset);
-+		goto err_pm_runtime_put;
-+	}
- 
- 	res = platform_get_resource_byname(pdev, IORESOURCE_MEM, "parf");
- 	pcie->parf = devm_ioremap_resource(dev, res);
--	if (IS_ERR(pcie->parf))
--		return PTR_ERR(pcie->parf);
-+	if (IS_ERR(pcie->parf)) {
-+		ret = PTR_ERR(pcie->parf);
-+		goto err_pm_runtime_put;
-+	}
- 
- 	res = platform_get_resource_byname(pdev, IORESOURCE_MEM, "dbi");
- 	pci->dbi_base = devm_pci_remap_cfg_resource(dev, res);
--	if (IS_ERR(pci->dbi_base))
--		return PTR_ERR(pci->dbi_base);
-+	if (IS_ERR(pci->dbi_base)) {
-+		ret = PTR_ERR(pci->dbi_base);
-+		goto err_pm_runtime_put;
-+	}
- 
- 	res = platform_get_resource_byname(pdev, IORESOURCE_MEM, "elbi");
- 	pcie->elbi = devm_ioremap_resource(dev, res);
--	if (IS_ERR(pcie->elbi))
--		return PTR_ERR(pcie->elbi);
-+	if (IS_ERR(pcie->elbi)) {
-+		ret = PTR_ERR(pcie->elbi);
-+		goto err_pm_runtime_put;
-+	}
- 
- 	pcie->phy = devm_phy_optional_get(dev, "pciephy");
--	if (IS_ERR(pcie->phy))
--		return PTR_ERR(pcie->phy);
-+	if (IS_ERR(pcie->phy)) {
-+		ret = PTR_ERR(pcie->phy);
-+		goto err_pm_runtime_put;
-+	}
- 
- 	ret = pcie->ops->get_resources(pcie);
- 	if (ret)
--		return ret;
-+		goto err_pm_runtime_put;
- 
- 	pp->ops = &qcom_pcie_dw_ops;
- 
- 	if (IS_ENABLED(CONFIG_PCI_MSI)) {
- 		pp->msi_irq = platform_get_irq_byname(pdev, "msi");
--		if (pp->msi_irq < 0)
--			return pp->msi_irq;
-+		if (pp->msi_irq < 0) {
-+			ret = pp->msi_irq;
-+			goto err_pm_runtime_put;
-+		}
- 	}
- 
- 	ret = phy_init(pcie->phy);
- 	if (ret) {
- 		pm_runtime_disable(&pdev->dev);
--		return ret;
-+		goto err_pm_runtime_put;
- 	}
- 
- 	platform_set_drvdata(pdev, pcie);
-@@ -1299,10 +1315,16 @@ static int qcom_pcie_probe(struct platform_device *pdev)
- 	if (ret) {
- 		dev_err(dev, "cannot initialize host\n");
- 		pm_runtime_disable(&pdev->dev);
--		return ret;
-+		goto err_pm_runtime_put;
- 	}
- 
- 	return 0;
-+
-+err_pm_runtime_put:
-+	pm_runtime_put(dev);
-+	pm_runtime_disable(dev);
-+
-+	return ret;
- }
- 
- static const struct of_device_id qcom_pcie_match[] = {
--- 
-2.18.0
+CgpPbiAyMDE4LzgvMTcgMTY6MDksIEplcm9tZSBCcnVuZXQgd3JvdGU6Cj4gT24gRnJpLCAyMDE4
+LTA4LTE3IGF0IDE0OjEyICswODAwLCBIYW5qaWUgTGluIHdyb3RlOgo+Pgo+PiBPbiAyMDE4Lzgv
+MTYgMTY6MzMsIEplcm9tZSBCcnVuZXQgd3JvdGU6Cj4+PiBPbiBUaHUsIDIwMTgtMDgtMTYgYXQg
+MTE6MDUgKzA4MDAsIEhhbmppZSBMaW4gd3JvdGU6Cj4+Pj4KPj4+PiBPbiAyMDE4LzgvMTQgMTg6
+NDEsIEplcm9tZSBCcnVuZXQgd3JvdGU6Cj4+Pj4+IE9uIFR1ZSwgMjAxOC0wOC0xNCBhdCAwMjox
+MiAtMDQwMCwgSGFuamllIExpbiB3cm90ZToKPj4+Pj4+IEZyb206IFl1ZSBXYW5nIDx5dWUud2Fu
+Z0BhbWxvZ2ljLmNvbT4KPj4+Pj4+Cj4+Pj4+PiBUaGUgTWVzb24tUENJRS1QSFkgY29udHJvbGxl
+ciBzdXBwb3J0cyB0aGUgNS1HYnBzIGRhdGEgcmF0ZQo+Pj4+Pj4gb2YgdGhlIFBDSSBFeHByZXNz
+IEdlbiAyIHNwZWNpZmljYXRpb24gYW5kIGlzIGJhY2t3YXJkY29tcGF0aWJsZQo+Pj4+Pj4gd2l0
+aCB0aGUgMi41LUdicHMgR2VuIDEuMSBzcGVjaWZpY2F0aW9uIHdpdGggb25seQo+Pj4+Pj4gaW5m
+ZXJyZWQgaWRsZSBkZXRlY3Rpb24gc3VwcG9ydGVkIG9uIEFNTE9HSUMgU29Dcy4KPj4+Pj4KPj4+
+Pj4gSXQgbG9va3MgbGlrZSB0aGUgc29sZSBwdXJwb3NlIG9mIHRoaXMgZHJpdmVyIGlzIHRvIHBy
+b3ZpZGUgdGhlIHJlc2V0IGxpbmVzIHRvCj4+Pj4+IHBjaWUgZHJpdmVyLgo+Pj4+Pgo+Pj4+PiBJ
+IHdvbmRlciB3aHkgd2UgbmVlZCB0aGlzID8gQ2FuJ3QgdGhlIHBjaWUgZHJpdmVyIGNsYWltIHRo
+ZSByZXNldCBsaW5lcyBpdHNlbGYuCj4+Pj4+Cj4+Pj4+IEFsc28sIGFuIGluaXQgb2YgdGhpcyBw
+aHkgd2lsbCBhbHdheXMgcmVzZXQgYm90aCBwb3J0LiBXaGF0IHdpbGwgaGFwcGVuIGlmIHRoZQo+
+Pj4+PiBmaXJzdCBwb3J0IGlzIGluIHVzZSBhbmQgdGhlIDJuZCBwb3J0IGNvbWVzIHVwID8/IAo+
+Pj4+Pgo+Pj4+PiBMb29rcyB0aGUgdGhlIHBjaWUgZHJpdmVyIHNob3VsZCBjbGFpbSAnYXBiJyBh
+bmQgJ3BoeScgcmVzZXQgbGluZXMgYXMgInNoYXJlZCIKPj4+Pj4gcmVzZXQgYW5kIHRoZSByZXF1
+aXJlZCAncG9ydCcgYXMgJ2V4Y2x1c2l2ZScKPj4+Pj4KPj4+Pgo+Pj4+IFRoYW5rIHlvdSBmb3Ig
+eW91ciByZXNwb25zZS4KPj4+Pgo+Pj4+IFllcywgJ2FwYicgYW5kICdwaHknIHJlc2V0IGxpbmVz
+IGFyZSBzaGFyZWQsIGFuZCDigJhwb3J0JyByZXNldCBsaW5lIGlzIGV4Y2x1c2l2ZS4KPj4+PiBJ
+ZiB3ZSBoYW5kbGUgYWxsIHJlc2V0IGxpbmVzIGR1cmluZyB0aGUgZmlyc3QgcG9ydCBpbml0aWFs
+IHNlcXVlbmNlLCAKPj4+PiBhbmQgd2hlbiB0aGUgc2Vjb25kIHBvcnQgY29tZXMgdXAsIHdlIHdp
+bGwgZG8gbm90aGluZyBhYm91dCB0aGUgcmVzdCBsaW5lcywgCj4+Pj4gYW5kIGRvbid0IG5lZWQg
+YSBleHRyYSBBUEkgdG8gZG8g4oCYcG9ydCcgcmVzZXQ7Cj4+Pgo+Pj4gV2l0aCB3aGljaCBvdGhl
+ciBkcml2ZXIgYXJlIHlvdXIgY29udHJvbCBzaGFyZWQgPwo+Pj4KPj4+IExvb2tzIGl0IGlzIHRo
+ZSBhbnN3ZXIgaXMgbm9uZSBzaW5jZSB0aGlzIHBoeSBkcml2ZXIgd2lsbCByZXNldCBib3RoIHBv
+cnQKPj4+IGFscmVhZHksIGV2ZW4gaWYgb25lIGlzIHVzZWQuCj4+Pgo+Pj4gSW4gdGhpcyBjYXNl
+IHRoZSBmYWN0IHRoYXQgeW91IGFyZSB1c2luZyBzaGFyZWQgY29udHJvbCBpcyBqdXN0IGFidXNp
+bmcgdGhlCj4+PiBmcmFtZXdvcmsgdG8gcmVzZXQgb25jZS4KPj4+Cj4+PiBBcyBmYXIgYXMgSSBj
+YW4gdGVsbCwgdGhpcyBkcml2ZXIgbWFrZXMgbm8gc2Vuc2UuIFRoZSBhcHByb3ByaWF0ZSByZXNl
+dCBsaW5lcwo+Pj4gc2hvdWxkIGJlIGdpdmVuIGRpcmVjdGx5IHRvIHlvdXIgcGNpZSBkcml2ZXIu
+IAo+Pj4KPj4+Cj4+Pgo+Pj4gLgo+Pj4KPj4KPj4gQW1sb2dpYyBBWEcgU09DIGluY2x1ZGVzIHR3
+byBwY2llIGNvbnRyb2xsZXJzIGFuZCBwaXBlcyB3aGVuIG9ubHkgb25lIHBjaWUgcGh5OiAKPj4K
+Pj4gICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgKHBvcnRfYSByZXNldCkKPj4g
+ICAgICAgICAgICAgICAgICAgICAgIHxQQ0lFX1JDX0EtLS0tPlBDSUVfUElQRV9BLS0tLS0tfCAK
+Pj4gICAgIChhcGJfcmVzZXQpICAgICAgIHwgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAg
+fCAgKHBoeSByZXNldCkKPj4gICAgIEFQQiBCVVMtLS0+ICAgICAgIHwgICAgICAgICAgICAgICAg
+ICAgICAgICAgICAgICAgfCAgIFBDSUVfUEhZCj4+ICAgICAgICAgICAgICAgICAgICAgICB8ICAg
+ICAgICAgICAgICAgICAgICAgICAgICAgICAgIHwKPj4gICAgICAgICAgICAgICAgICAgICAgIHwg
+ICAgICAgICAgICAgKHBvcnRfYl9yZXNldCkgICAgfAo+PiAgICAgICAgICAgICAgICAgICAgICAg
+fFBDSUVfUkNfQi0tLS0+UENJRV9QSVBFX0ItLS0tLS18Cj4+Cj4+IFRoZSBwaHlfcmVzZXQgYWZm
+ZWN0IHRoZSBQQ0lFX1BIWS4KPj4gVGhlIHBvcnRfYV9yZXNldCBhZmZlY3QgdGhlIFBDSUVfUElQ
+RV9BLCBwb3J0X2JfcmVzZXQgYWZmZWN0IHRoZSBQQ0lFX1BJUEVfQi4gCj4+Cj4+IEFzIHlvdXIg
+c3VnZ2VzdGlvbiB3ZSB3aWxsIG1vdmUgdGhlICdwb3J0JyByZXNldCB0byBjb250cm9sbGVyIGRy
+aXZlciwKPj4gYW5kIGtlZXBpbmcgdGhlIHBoeSBkcml2ZXIgdG8gcHJvY2VzcyB0aGUgJ2FwYicg
+YW5kICdwaHknIHJlc2V0IG9yIGFueQo+PiBtb3JlIGNoYW5nZXMgb2YgdGhlIHBoeSBpbiBmdXR1
+cmUuCj4gCj4gQXMgZmFyIGFzIEkgY2FuIHRlbGwgZnJvbSB0aGlzIGRpYWdyYW0sIEl0IHdvdWxk
+IG9ubHkgbWFrZSBzZW5zZSBmb3IgdGhlICJwaHkiCj4gcmVzZXQgbGluZSB0byBiZSBjb250cm9s
+bGVkIGJ5IHlvdXIgcGh5IGRyaXZlci4KPiAKPiBUaGUgYXBiIGFuZCBwb3J0IGlzIG9idmlvdXNs
+eSByZWxhdGVkIHRvIHRoZSBwY2llIGRldmljZS9kcml2ZXIgaXRzZWxmLCBub3QgdGhlCj4gUEhZ
+LiBBbmQgd2hldGhlciB5b3UgMSBvciAyIHJlc2V0IGxpbmVzIGluIGl0LCBJTU8gaXQgaXMgb3Zl
+cmtpbGwgYW5kCj4gdW5uZWNlc3NhcnkgdG8gbWFrZSBhIHBoeSBkcml2ZXIgZm9yIHRoaXMuIAo+
+IAoKWWVhaCwgdGhhdCBtYWtlcyBzZW5zZS4KV2Ugd2lsbCBtb3ZlICdhcGInIHJlc2V0IHRvIGNv
+bnRyb2xsZXIgZHJpdmVyIGluIG5leHQgdmVyc2lvbiB0b28uCgpUaGFua3MuCgo+Pgo+IAo+IAo+
+IC4KPiAKCl9fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fCmxp
+bnV4LWFybS1rZXJuZWwgbWFpbGluZyBsaXN0CmxpbnV4LWFybS1rZXJuZWxAbGlzdHMuaW5mcmFk
+ZWFkLm9yZwpodHRwOi8vbGlzdHMuaW5mcmFkZWFkLm9yZy9tYWlsbWFuL2xpc3RpbmZvL2xpbnV4
+LWFybS1rZXJuZWwK
