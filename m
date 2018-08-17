@@ -1,110 +1,102 @@
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-MIME-Version: 1.0
-References: <alpine.LRH.2.02.1808021242320.31834@file01.intranet.prod.int.rdu2.redhat.com>
- <CAHCPf3tFGqkYEcWNN4LaWThw_rVqT316pzLv6T7RfxwO-eZ0EA@mail.gmail.com>
- <alpine.LRH.2.02.1808030212340.17672@file01.intranet.prod.int.rdu2.redhat.com>
- <CAKv+Gu8DeuksZhk1g3q_msSKV_hSY_2e1uzVten9-oGO3j9Sqg@mail.gmail.com>
- <20180803094129.GB17798@arm.com>
- <alpine.LRH.2.02.1808031235410.31584@file01.intranet.prod.int.rdu2.redhat.com>
- <20180808113927.GA24736@iMac.local>
- <alpine.LRH.2.02.1808081011110.9997@file01.intranet.prod.int.rdu2.redhat.com>
- <b1a0dac5-3cf2-1a7f-ac7f-649126eb7873@arm.com>
- <20180808151444.GF24736@iMac.local>
-In-Reply-To: <20180808151444.GF24736@iMac.local>
-From: Arnd Bergmann <arnd@arndb.de>
-Date: Wed, 8 Aug 2018 18:01:31 +0200
-Message-ID: <CAK8P3a2=rVvvW8bBcrPm3nXNNP56Ygxchu4ThD2ZgZ_cVcd8wQ@mail.gmail.com>
-Subject: Re: framebuffer corruption due to overlapping stp instructions on
- arm64
-To: Catalin Marinas <catalin.marinas@arm.com>
-List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
-List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
-List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
-List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
-List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
-Cc: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>,
- Richard.Earnshaw@arm.com, Joao Pinto <Joao.Pinto@synopsys.com>,
- GNU C Library <libc-alpha@sourceware.org>,
- Ard Biesheuvel <ard.biesheuvel@linaro.org>, Jingoo Han <jingoohan1@gmail.com>,
- Will Deacon <will.deacon@arm.com>,
- Russell King - ARM Linux <linux@armlinux.org.uk>,
- Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
- Mikulas Patocka <mpatocka@redhat.com>, neko@bakuhatsu.net,
- linux-pci <linux-pci@vger.kernel.org>,
- Linux ARM <linux-arm-kernel@lists.infradead.org>
-Content-Type: text/plain; charset="us-ascii"
-Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
-Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
+Return-Path: <SRS0=a9CN=LA=kernel.crashing.org=benh@kernel.org>
+Return-Path: <SRS0=a9CN=LA=kernel.crashing.org=benh@kernel.org>
+Message-ID: <1ffafe01887e3b760f84488b06339aba64f586e5.camel@kernel.crashing.org>
+Subject: Re: [RFC PATCH 5/6] pci: Protect the enable/disable state of
+ pci_dev using the state mutex
+From: Benjamin Herrenschmidt <benh@kernel.crashing.org>
+To: Marta Rybczynska <mrybczyn@kalray.eu>
+Cc: Bjorn Helgaas <helgaas@kernel.org>, linux-pci@vger.kernel.org,
+        Hari Vyas
+ <hari.vyas@broadcom.com>, Ray Jui <ray.jui@broadcom.com>,
+        Srinath Mannam
+ <srinath.mannam@broadcom.com>,
+        Guenter Roeck <linux@roeck-us.net>, Jens
+ Axboe <axboe@kernel.dk>,
+        Lukas Wunner <lukas@wunner.de>,
+        Konstantin
+ Khlebnikov <khlebnikov@yandex-team.ru>,
+        Pierre-Yves Kerbrat
+ <pkerbrat@kalray.eu>,
+        linux-kernel@vger.kernel.org
+Date: Fri, 17 Aug 2018 18:30:16 +1000
+In-Reply-To: <66577784.13494160.1534493390262.JavaMail.zimbra@kalray.eu>
+References: <20180817044902.31420-1-benh@kernel.crashing.org>
+	 <20180817044902.31420-6-benh@kernel.crashing.org>
+	 <66577784.13494160.1534493390262.JavaMail.zimbra@kalray.eu>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wed, Aug 8, 2018 at 5:15 PM Catalin Marinas <catalin.marinas@arm.com> wrote:
->
-> On Wed, Aug 08, 2018 at 04:01:12PM +0100, Richard Earnshaw wrote:
-> > On 08/08/18 15:12, Mikulas Patocka wrote:
-> > > On Wed, 8 Aug 2018, Catalin Marinas wrote:
-> > >> On Fri, Aug 03, 2018 at 01:09:02PM -0400, Mikulas Patocka wrote:
-> - failing to write a few bytes
-> - writing a few bytes that were written 16 bytes before
-> - writing a few bytes that were written 16 bytes after
->
-> > The overlapping writes in memcpy never write different values to the
-> > same location, so I still feel this must be some sort of HW issue, not a
-> > SW one.
->
-> So do I (my interpretation is that it combines or rather skips some of
-> the writes to the same 16-byte address as it ignores the data strobes).
+On Fri, 2018-08-17 at 10:09 +0200, Marta Rybczynska wrote:
+> 
+> ----- On 17 Aug, 2018, at 06:49, Benjamin Herrenschmidt benh@kernel.crashing.org wrote:
+> 
+> > This protects enable/disable operations using the state mutex to
+> > avoid races with, for example, concurrent enables on a bridge.
+> > 
+> > The bus hierarchy is walked first before taking the lock to
+> > avoid lock nesting (though it would be ok if we ensured that
+> > we always nest them bottom-up, it is better to just avoid the
+> > issue alltogether, especially as we might find cases where
+> > we want to take it top-down later).
+> > 
+> > Signed-off-by: Benjamin Herrenschmidt <benh@kernel.crashing.org>
+> 
+> 
+> > 
+> > static void pci_enable_bridge(struct pci_dev *dev)
+> > {
+> > 	struct pci_dev *bridge;
+> > -	int retval;
+> > +	int retval, enabled;
+> > 
+> > 	bridge = pci_upstream_bridge(dev);
+> > 	if (bridge)
+> > 		pci_enable_bridge(bridge);
+> > 
+> > -	if (pci_is_enabled(dev)) {
+> > -		if (!dev->is_busmaster)
+> > -			pci_set_master(dev);
+> > +	/* Already enabled ? */
+> > +	pci_dev_state_lock(dev);
+> > +	enabled = pci_is_enabled(dev);
+> > +	if (enabled && !dev->is_busmaster)
+> > +		pci_set_master(dev);
+> > +	pci_dev_state_unlock(dev);
+> > +	if (enabled)
+> > 		return;
+> > -	}
+> > 
+> 
+> This looks complicated too me especially with the double locking. What do you
+> think about a function doing that check that used an unlocked version of
+> pcie_set_master?
+> 
+> Like:
+> 
+>         dev_state_lock(dev);
+>         enabled = pci_is_enabled(dev);
+>         if (enabled &&  !dev->is_busmaster)
+>                 pci_set_master_unlocked();
+>         pci_dev_state_unlock(dev);
+> 
+> BTW If I remember correctly the code today can set bus mastering multiple
+> times without checking if already done.
 
-Maybe it just always writes to the wrong location, 16 bytes apart for one of
-the stp instructions. Since we are usually dealing with a pair of overlapping
-'stp', both unaligned, that could explain both the missing bytes (we write
-data to the wrong place, but overwrite it with the correct data right away)
-and the extra copy (we write it to the wrong place, but then write the correct
-data to the correct place as well).
+I don't mind but I tend to dislike all those _unlocked() suffixes, I
+suppose my generation is typing adverse enough that we call these
+__something instead :)
 
-This sounds a bit like what the original ARM CPUs did on unaligned
-memory access, where a single aligned 4-byte location was accessed,
-but the bytes swapped around.
+As for setting multiple times, yes pci_set_master() doesn't check but
+look at the "-" hunks of my patch, I'm not changing the existing test
+here. Not that it matters much, it's an optimization.
 
-There may be a few more things worth trying out or analysing from
-the recorded past failures to understand more about how it goes
-wrong:
+In fact my original version just completely removed the whole lot
+and just unconditionally did pci_enable_device() + pci_set_master(),
+just ignoring the existing state :-)
 
-- For which data lengths does it fail? Having two overlapping
-  unaligned stp is something that only happens for 16..96 byte
-  memcpy.
+But I decided to keep the patch functionally equivalent so I added it
+back.
 
-- What if we use a pair of str instructions instead of an stp in
-  a modified memcpy? Does it now write to still write to the
-  wrong place 16 bytes away, just 8 bytes away, or correctly?
-
-- Does it change in any way if we do the overlapping writes
-  in the reverse order? E.g. for the 16..64 byte case:
-
-diff --git a/sysdeps/aarch64/memcpy.S b/sysdeps/aarch64/memcpy.S
-index 7e1163e6a0..09d0160bdf 100644
---- a/sysdeps/aarch64/memcpy.S
-+++ b/sysdeps/aarch64/memcpy.S
-@@ -102,11 +102,11 @@ ENTRY (MEMCPY)
-        tbz     tmp1, 5, 1f
-        ldp     B_l, B_h, [src, 16]
-        ldp     C_l, C_h, [srcend, -32]
--       stp     B_l, B_h, [dstin, 16]
-        stp     C_l, C_h, [dstend, -32]
-+       stp     B_l, B_h, [dstin, 16]
- 1:
--       stp     A_l, A_h, [dstin]
-        stp     D_l, D_h, [dstend, -16]
-+       stp     A_l, A_h, [dstin]
-        ret
-
-        .p2align 4
-
-        Arnd
-
-_______________________________________________
-linux-arm-kernel mailing list
-linux-arm-kernel@lists.infradead.org
-http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
+Cheers,
+Ben.
