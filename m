@@ -1,49 +1,86 @@
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Date: Tue, 21 Aug 2018 23:31:01 +0800
-From: Shawn Guo <shawnguo@kernel.org>
-To: Leonard Crestez <leonard.crestez@nxp.com>
-Subject: Re: [PATCH v3 1/2] Revert "ARM: dts: imx7d: Invert legacy PCI irq
- mapping"
-Message-ID: <20180821153059.GD32159@dragon>
-References: <cover.1532448745.git.leonard.crestez@nxp.com>
- <ed0ceaa10da805bc79e85ec7d60fcce9d4327066.1532448745.git.leonard.crestez@nxp.com>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail.kernel.org ([198.145.29.99]:49078 "EHLO mail.kernel.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1727398AbeHQT3f (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Fri, 17 Aug 2018 15:29:35 -0400
+Date: Fri, 17 Aug 2018 11:25:34 -0500
+From: Bjorn Helgaas <helgaas@kernel.org>
+To: Benjamin Herrenschmidt <benh@kernel.crashing.org>
+Cc: linux-pci@vger.kernel.org, Hari Vyas <hari.vyas@broadcom.com>,
+        Ray Jui <ray.jui@broadcom.com>,
+        Srinath Mannam <srinath.mannam@broadcom.com>,
+        Guenter Roeck <linux@roeck-us.net>,
+        Jens Axboe <axboe@kernel.dk>, Lukas Wunner <lukas@wunner.de>,
+        Konstantin Khlebnikov <khlebnikov@yandex-team.ru>,
+        Marta Rybczynska <mrybczyn@kalray.eu>,
+        Pierre-Yves Kerbrat <pkerbrat@kalray.eu>,
+        linux-kernel@vger.kernel.org
+Subject: Re: [RFC PATCH 2/6] pci: Set pci_dev->is_added before calling
+ device_add
+Message-ID: <20180817162534.GD128050@bhelgaas-glaptop.roam.corp.google.com>
+References: <20180817044902.31420-1-benh@kernel.crashing.org>
+ <20180817044902.31420-3-benh@kernel.crashing.org>
 MIME-Version: 1.0
-In-Reply-To: <ed0ceaa10da805bc79e85ec7d60fcce9d4327066.1532448745.git.leonard.crestez@nxp.com>
-List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
-List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
-List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
-List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
-List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
-Cc: Dong Aisheng <aisheng.dong@nxp.com>, Joao Pinto <Joao.Pinto@synopsys.com>,
- Richard Zhu <hongxing.zhu@nxp.com>, kernel@pengutronix.de,
- Anson Huang <Anson.Huang@nxp.com>, Andrey Smirnov <andrew.smirnov@gmail.com>,
- Jingoo Han <jingoohan1@gmail.com>, linux-kernel@vger.kernel.org,
- Fabio Estevam <fabio.estevam@nxp.com>,
- Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>, linux-imx@nxp.com,
- Philipp Zabel <p.zabel@pengutronix.de>, linux-pci@vger.kernel.org,
- Bjorn Helgaas <bhelgaas@google.com>, linux-arm-kernel@lists.infradead.org,
- Lucas Stach <l.stach@pengutronix.de>
-Content-Type: text/plain; charset="us-ascii"
-Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
-Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20180817044902.31420-3-benh@kernel.crashing.org>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tue, Jul 24, 2018 at 07:14:19PM +0300, Leonard Crestez wrote:
-> This reverts commit 1c86c9dd82f859b474474a7fee0d5195da2c9c1d.
+On Fri, Aug 17, 2018 at 02:48:58PM +1000, Benjamin Herrenschmidt wrote:
+> This re-fixes the bug reported by Hari Vyas <hari.vyas@broadcom.com>
+> after my revert of his commit but in a much simpler way.
 > 
-> That commit followed the reference manual but unfortunately the imx7d
-> manual is incorrect.
-> 
-> Tested with ath9k pcie card and confirmed internally.
-> 
-> Signed-off-by: Leonard Crestez <leonard.crestez@nxp.com>
+> The main issues is that is_added was being set after the driver
+> got bound and started, and thus setting it could race with other
+> changes to struct pci_dev.
 
-Applied, thanks.
+The "bind driver, then set dev->added = 1" order seems to have been
+there since the beginning of dev->is_added:
 
-_______________________________________________
-linux-arm-kernel mailing list
-linux-arm-kernel@lists.infradead.org
-http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
+http://git.kernel.org/cgit/linux/kernel/git/torvalds/linux.git/commit/?id=8a1bc9013a03
+
+This patch seems reasonable, but I'm a little dubious about the
+existence of "is_added" in the first place.  As far as I can tell, the
+only other buses with something similar are the MEN Chameleon bus and
+the Intel Management Engine Interface.
+
+The PCI uses of "is_added" don't seem *that* critical or unique to
+PCI, so I'm not 100% convinced we need it at all.  But I haven't
+looked into it enough to be able to propose an alternative.
+
+> This fixes it by setting the flag first, which also has the
+> advantage of matching the fact that we are clearing it *after*
+> unbinding in the remove path, thus the flag is now symtetric
+> and always set while the driver code is running.
+> 
+> Signed-off-by: Benjamin Herrenschmidt <benh@kernel.crashing.org>
+> ---
+>  drivers/pci/bus.c | 4 ++--
+>  1 file changed, 2 insertions(+), 2 deletions(-)
+> 
+> diff --git a/drivers/pci/bus.c b/drivers/pci/bus.c
+> index 35b7fc87eac5..48ae63673aa8 100644
+> --- a/drivers/pci/bus.c
+> +++ b/drivers/pci/bus.c
+> @@ -321,16 +321,16 @@ void pci_bus_add_device(struct pci_dev *dev)
+>  	pci_proc_attach_device(dev);
+>  	pci_bridge_d3_update(dev);
+>  
+> +	dev->is_added = 1;
+>  	dev->match_driver = true;
+>  	retval = device_attach(&dev->dev);
+>  	if (retval < 0 && retval != -EPROBE_DEFER) {
+> +		dev->is_added = 0;
+>  		pci_warn(dev, "device attach failed (%d)\n", retval);
+>  		pci_proc_detach_device(dev);
+>  		pci_remove_sysfs_dev_files(dev);
+>  		return;
+>  	}
+> -
+> -	dev->is_added = 1;
+>  }
+>  EXPORT_SYMBOL_GPL(pci_bus_add_device);
+>  
+> -- 
+> 2.17.1
+> 
