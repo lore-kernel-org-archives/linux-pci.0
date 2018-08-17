@@ -1,76 +1,71 @@
-Return-Path: <SRS0=hyej=LE=deltatee.com=logang@kernel.org>
-Return-Path: <SRS0=hyej=LE=deltatee.com=logang@kernel.org>
-To: Eric Pilmore <epilmore@gigaio.com>
-Cc: Kit Chow <kchow@gigaio.com>, Bjorn Helgaas <helgaas@kernel.org>,
- linux-pci@vger.kernel.org, David Woodhouse <dwmw2@infradead.org>,
- Alex Williamson <alex.williamson@redhat.com>,
- iommu@lists.linux-foundation.org
-References: <CAOQPn8soxubJxb=vp7kz+AM6LbPH5y+_Nx0Vzv7rjV_nMMqEmA@mail.gmail.com>
- <20180809184331.GB113140@bhelgaas-glaptop.roam.corp.google.com>
- <CAOQPn8uPYKai49WYPqZp2wNd5of=0hUvPOHEtqP56RZu-hcjuw@mail.gmail.com>
- <b54899a8-a144-e8e0-9880-1800c4657b95@deltatee.com>
- <CAOQPn8tSNN+3igN-kMcQH46w_a9p6T+S7=c8CLREMLxr1kaTXQ@mail.gmail.com>
- <7068db44-af31-4462-f966-2dd2340ba0f0@deltatee.com>
- <695826a6-e10c-5a30-a51f-7cc61ba6e640@gigaio.com>
- <0d3f48c3-8c4f-4dfb-e883-23c168f12b9b@deltatee.com>
- <14db6acb-da4f-9604-7359-1671210fcb8b@gigaio.com>
- <ad2cd3f2-eb41-d4c2-7614-379c2e458352@deltatee.com>
- <CAOQPn8uuTEcmdQdZB9-A7FT+YWtxSuruGFwmwCPApffTJNs9Vg@mail.gmail.com>
- <41419ada-7f16-0028-1e43-3b4a6c6960b6@deltatee.com>
- <CAOQPn8uyozbmEV0Ww3LW4XDcaY1ZwV0yazsPxPQC0AfLNUhKYw@mail.gmail.com>
-From: Logan Gunthorpe <logang@deltatee.com>
-Message-ID: <dd918b52-7ddc-662c-5980-edf3e96ebca2@deltatee.com>
-Date: Tue, 21 Aug 2018 17:35:00 -0600
+Return-Path: <SRS0=GcD9=LA=gmail.com=arndbergmann@kernel.org>
+Return-Path: <SRS0=GcD9=LA=gmail.com=arndbergmann@kernel.org>
 MIME-Version: 1.0
-In-Reply-To: <CAOQPn8uyozbmEV0Ww3LW4XDcaY1ZwV0yazsPxPQC0AfLNUhKYw@mail.gmail.com>
-Content-Type: text/plain; charset=utf-8
-Subject: Re: IOAT DMA w/IOMMU
+References: <20180801151403.20660-1-hch@lst.de> <20180801151403.20660-2-hch@lst.de>
+ <20180802165430.GA13725@red-moon> <20180815195227.GG28888@bhelgaas-glaptop.roam.corp.google.com>
+ <20180816205901.GA15085@bhelgaas-glaptop.roam.corp.google.com>
+ <CAK8P3a02StKtvE+dfESGdeB_zvLbqy9jYwWWgzV6AaeAwyNu=Q@mail.gmail.com> <20180817152537.GA14912@red-moon>
+In-Reply-To: <20180817152537.GA14912@red-moon>
+From: Arnd Bergmann <arnd@arndb.de>
+Date: Fri, 17 Aug 2018 17:47:22 +0200
+Message-ID: <CAK8P3a1chT03G28N8VXa1-NAGiDQLCy_D-dq_QawE2PyZAspVg@mail.gmail.com>
+Subject: Re: [PATCH 1/3] PCI: add a callback to struct pci_host_bridge for
+ adding a new device
+To: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
+Cc: Bjorn Helgaas <helgaas@kernel.org>, Christoph Hellwig <hch@lst.de>, Bjorn Helgaas <bhelgaas@google.com>,
+	Palmer Dabbelt <palmer@dabbelt.com>, "Wesley W. Terpstra" <wesley@sifive.com>,
+	linux-pci <linux-pci@vger.kernel.org>, linux-riscv@lists.infradead.org
+Content-Type: text/plain; charset="UTF-8"
 List-ID: <linux-pci.vger.kernel.org>
 
+On Fri, Aug 17, 2018 at 5:25 PM Lorenzo Pieralisi
+<lorenzo.pieralisi@arm.com> wrote:
+>
+> On Thu, Aug 16, 2018 at 11:04:53PM +0200, Arnd Bergmann wrote:
+> > On Thu, Aug 16, 2018 at 10:59 PM Bjorn Helgaas <helgaas@kernel.org> wrote:
+> > > On Wed, Aug 15, 2018 at 02:52:28PM -0500, Bjorn Helgaas wrote:
+> > > > On Thu, Aug 02, 2018 at 05:54:30PM +0100, Lorenzo Pieralisi wrote:
+> >
+> > > > This patch seems OK to me.
+> > > >
+> > > > I don't really care about the prototype.  There's only one
+> > > > pcibios_add_device() implementation (x86) that returns anything other
+> > > > than 0, and that's a pretty obscure error case related to f9a37be0f02a
+> > > > ("x86: Use PCI setup data"), which lets us use ROM data from boot
+> > > > services.  Even then the only thing that happens is a WARN_ON().  A
+> > > > more descriptive printk would be a lot more useful.
+> > >
+> > > Thinking about this some more, I'm not so sure about the connection
+> > > with removing pcibios_add_device().  This host_bridge->add_dev() hook
+> > > would be for host bridge-specific things, while pcibios_add_device()
+> > > is for arch-specific things.
+> > >
+> > > I'd still love to get rid of pcibios_add_device() (especially the
+> > > non-arch-specific things like the pci_claim_resource() in s390); I'm
+> > > just not sure yet whether this particular patch is the vehicle.
+> >
+> > I think most of the arch-specific pcibios_* calls are actually
+> > host bridge specific after all, it just so happens that they are
+> > implemented on architectures that only have one specific
+> > host bridge implementation, or that they are used on an
+> > architecture that does something odd in one place and needs
+> > to do something else in another place.
+> >
+> > For pci_claim_resource() we seem to be doing this in a number
+> > of different places, but there isn't strictly a reason for that.
+>
+> pci_claim_resource() is needed if either arch code or the host
+> controller driver does not trigger a resources assignment (which claims
+> them while at it); in theory that's arch agnostic but it turned out to
+> be very arch/platform specific - aka if we move s390 code to core code
+> we will notice :) so pci_claim_resource() in a pcibios call is
+> unfortunately legitimate - whether it can be moved out of it to
+> generic code that's a very complicated problem.
 
+The generic pci_host_probe() already does either pci_bus_claim_resources() or
+pci_bus_size_bridges()/pci_bus_assign_resources()/pcie_bus_configure_settings()
 
-On 21/08/18 05:28 PM, Eric Pilmore wrote:
-> 
-> 
-> On Tue, Aug 21, 2018 at 4:20 PM, Logan Gunthorpe <logang@deltatee.com
-> <mailto:logang@deltatee.com>> wrote:
-> 
-> 
-> 
->     On 21/08/18 05:18 PM, Eric Pilmore wrote:
->     > We have been running locally with Kit's change for dma_map_resource and its
->     > incorporation in ntb_async_tx_submit for the destination address and
->     > it runs fine
->     > under "load" (iperf) on a Xeon (Xeon(R) CPU E5-2680 v4 @ 2.40GHz) based system,
->     > regardless of whether the DMA engine being used is IOAT or a PLX
->     > device sitting in
->     > the PCIe tree. However, when we go back to a i7 (i7-7700K CPU @ 4.20GHz) based
->     > system it seems to run into issues, specifically when put under a
->     > load. In this case,
->     > just having a load using a single ping command with an interval=0, i.e. no delay
->     > between ping packets, after a few thousand packets the system just hangs. No
->     > panic or watchdogs.  Note that in this scenario I can only use a PLX DMA engine.
-> 
->     This is just my best guess: but it sounds to me like a bug in the PLX
->     DMA driver or hardware.
-> 
-> 
-> The PLX DMA driver?  But the PLX driver isn't really even involved in
-> the mapping
-> stage.  Are you thinking maybe the stage at which the DMA descriptor is
-> freed and
-> the PLX DMA driver does a dma_descriptor_unmap?
+I would hope that we can move a lot of implementations over to just
+call this function, with the appropriate PCI_PROBE_ONLY setting.
 
-Hmm, well what would make you think the hang is during
-mapping/unmapping? I would expect a hang to be in handling completions
-from the DMA engine or something like that.
-
-> Again, PLX did not exhibit any issues on the Xeon system.
-
-Oh, I missed that. That puts a crinkle in my theory but, as you say, it
-could be a timing issue.
-
-Also, it's VERY strange that it would hang the entire system. That makes
-things very hard to debug...
-
-Logan
+       Arnd
