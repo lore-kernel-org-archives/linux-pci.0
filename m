@@ -1,42 +1,107 @@
-Return-Path: <okaya@kernel.org>
-Return-Path: <okaya@kernel.org>
-Subject: Re: [PATCH 1/1] PCI/AER: prevent pcie_do_fatal_recovery from using
- device after it is removed
-To: Keith Busch <keith.busch@intel.com>, Lukas Wunner <lukas@wunner.de>
-Cc: Benjamin Herrenschmidt <benh@kernel.crashing.org>, poza@codeaurora.org,
- Bjorn Helgaas <helgaas@kernel.org>, Thomas Tai <thomas.tai@oracle.com>,
- bhelgaas@google.com, linux-pci@vger.kernel.org,
- linux-pci-owner@vger.kernel.org, Sam Bobroff <sam.bobroff@au1.ibm.com>
-References: <2ecd1fd6d763810d45697f846fa876b58a193b1b.camel@kernel.crashing.org>
- <20180820155325.GA16148@localhost.localdomain>
- <cf6de256280be7a2948db6dd2b5bfae92e70e12f.camel@kernel.crashing.org>
- <6aa71d74-e4dc-c627-1496-981278388bce@kernel.org>
- <20180820213544.GA16805@localhost.localdomain>
- <0193e0c5a52d8f2e93958f0683f3acc81cef2bc9.camel@kernel.crashing.org>
- <fd538f20-0754-f127-ceb9-693fec90b4af@kernel.org>
- <44195c0d7159ce4cd01b660002b2f5af5d53678b.camel@kernel.crashing.org>
- <184814fb-0caf-b260-4415-8f96fbdf4831@kernel.org>
- <20180822091333.rre2okhnrot44dyq@wunner.de>
- <20180822143853.GC19320@localhost.localdomain>
-From: Sinan Kaya <okaya@kernel.org>
-Message-ID: <1e83e715-4a7c-05c7-9720-35e3d81cf157@kernel.org>
-Date: Wed, 22 Aug 2018 10:51:57 -0400
-MIME-Version: 1.0
-In-Reply-To: <20180822143853.GC19320@localhost.localdomain>
-Content-Type: text/plain; charset=utf-8; format=flowed
+Return-Path: <linux-acpi-owner@vger.kernel.org>
+From: Arnd Bergmann <arnd@arndb.de>
+To: linux-pci@vger.kernel.org, Bjorn Helgaas <bhelgaas@google.com>
+Cc: linux-kernel@vger.kernel.org,
+        Christoph Hellwig <hch@infradead.org>,
+        Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
+        Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+        linuxppc-dev@lists.ozlabs.org, linux-acpi@vger.kernel.org,
+        Arnd Bergmann <arnd@arndb.de>
+Subject: [RFC 13/15] PCI: turn pcibios_alloc_irq into a callback
+Date: Fri, 17 Aug 2018 12:26:43 +0200
+Message-Id: <20180817102645.3839621-14-arnd@arndb.de>
+In-Reply-To: <20180817102645.3839621-1-arnd@arndb.de>
+References: <20180817102645.3839621-1-arnd@arndb.de>
+Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 8/22/2018 10:38 AM, Keith Busch wrote:
-> On Wed, Aug 22, 2018 at 11:13:33AM +0200, Lukas Wunner wrote:
->> On Mon, Aug 20, 2018 at 06:13:03PM -0400, Sinan Kaya wrote:
->>> presence detect is optional
->>
->> Hm, how so?  Do you have a spec reference for that?
-> 
-> Yeah, presence detect state and change are required if the slot supports
-> hot plug. If the slot doesn't support these, error handling becomes a
-> lot simpler.
-> 
+Weak functions are a bit confusing, and we can better deal with
+this using a callback function. pcibios_free_irq() is actually
+completely unused, but it seems better to treat it the same way
+as the allocation, unless we want to remove it completely.
 
-I double checked the slot capabilities register. You are right, it is
-required.
+Signed-off-by: Arnd Bergmann <arnd@arndb.de>
+---
+ arch/arm64/kernel/pci.c  | 16 +++-------------
+ drivers/pci/pci-driver.c | 13 +++++++++++--
+ include/linux/pci.h      |  2 ++
+ 3 files changed, 16 insertions(+), 15 deletions(-)
+
+diff --git a/arch/arm64/kernel/pci.c b/arch/arm64/kernel/pci.c
+index 0e2ea1c78542..3d196c68e362 100644
+--- a/arch/arm64/kernel/pci.c
++++ b/arch/arm64/kernel/pci.c
+@@ -22,19 +22,6 @@
+ #include <linux/pci-ecam.h>
+ #include <linux/slab.h>
+ 
+-#ifdef CONFIG_ACPI
+-/*
+- * Try to assign the IRQ number when probing a new device
+- */
+-int pcibios_alloc_irq(struct pci_dev *dev)
+-{
+-	if (!acpi_disabled)
+-		acpi_pci_irq_enable(dev);
+-
+-	return 0;
+-}
+-#endif
+-
+ /*
+  * raw_pci_read/write - Platform-specific PCI config space access.
+  */
+@@ -93,6 +80,9 @@ int pcibios_root_bridge_prepare(struct pci_host_bridge *bridge)
+ 
+ 		ACPI_COMPANION_SET(&bridge->dev, adev);
+ 		set_dev_node(bus_dev, acpi_get_node(acpi_device_handle(adev)));
++
++		/* Try to assign the IRQ number when probing a new device */
++		bridge->alloc_irq = acpi_pci_irq_enable;
+ 	}
+ 
+ 	return 0;
+diff --git a/drivers/pci/pci-driver.c b/drivers/pci/pci-driver.c
+index bef17c3fca67..c96bc7bd56da 100644
+--- a/drivers/pci/pci-driver.c
++++ b/drivers/pci/pci-driver.c
+@@ -387,13 +387,22 @@ static int __pci_device_probe(struct pci_driver *drv, struct pci_dev *pci_dev)
+ 	return error;
+ }
+ 
+-int __weak pcibios_alloc_irq(struct pci_dev *dev)
++int pcibios_alloc_irq(struct pci_dev *dev)
+ {
++	struct pci_host_bridge *bridge = pci_find_host_bridge(dev->bus);
++
++	if (bridge->alloc_irq)
++		return bridge->alloc_irq(dev);
++
+ 	return 0;
+ }
+ 
+-void __weak pcibios_free_irq(struct pci_dev *dev)
++void pcibios_free_irq(struct pci_dev *dev)
+ {
++	struct pci_host_bridge *bridge = pci_find_host_bridge(dev->bus);
++
++	if (bridge->free_irq)
++		bridge->free_irq(dev);
+ }
+ 
+ #ifdef CONFIG_PCI_IOV
+diff --git a/include/linux/pci.h b/include/linux/pci.h
+index d1072690cb4f..1296d9fcc5da 100644
+--- a/include/linux/pci.h
++++ b/include/linux/pci.h
+@@ -476,6 +476,8 @@ struct pci_host_bridge {
+ 	int (*map_irq)(const struct pci_dev *, u8, u8);
+ 	void (*release_fn)(struct pci_host_bridge *);
+ 	void (*bus_add_device)(struct pci_dev *pdev);
++	int (*alloc_irq)(struct pci_dev *);
++	int (*free_irq)(struct pci_dev *);
+ 	void		*release_data;
+ 	struct msi_controller *msi;
+ 	unsigned int	ignore_reset_delay:1;	/* For entire hierarchy */
+-- 
+2.18.0
