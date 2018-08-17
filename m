@@ -1,50 +1,42 @@
-Return-Path: <linux-acpi-owner@vger.kernel.org>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail.kernel.org ([198.145.29.99]:39002 "EHLO mail.kernel.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1727398AbeHQSsY (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Fri, 17 Aug 2018 14:48:24 -0400
+Date: Fri, 17 Aug 2018 10:44:31 -0500
+From: Bjorn Helgaas <helgaas@kernel.org>
+To: Benjamin Herrenschmidt <benh@kernel.crashing.org>
+Cc: linux-pci@vger.kernel.org, Hari Vyas <hari.vyas@broadcom.com>,
+        Ray Jui <ray.jui@broadcom.com>,
+        Srinath Mannam <srinath.mannam@broadcom.com>,
+        Guenter Roeck <linux@roeck-us.net>,
+        Jens Axboe <axboe@kernel.dk>, Lukas Wunner <lukas@wunner.de>,
+        Konstantin Khlebnikov <khlebnikov@yandex-team.ru>,
+        Marta Rybczynska <mrybczyn@kalray.eu>,
+        Pierre-Yves Kerbrat <pkerbrat@kalray.eu>,
+        linux-kernel@vger.kernel.org
+Subject: Re: [RFC PATCH 1/6] Revert "PCI: Fix is_added/is_busmaster race
+ condition"
+Message-ID: <20180817154431.GC128050@bhelgaas-glaptop.roam.corp.google.com>
+References: <20180817044902.31420-1-benh@kernel.crashing.org>
+ <20180817044902.31420-2-benh@kernel.crashing.org>
 MIME-Version: 1.0
-References: <20180817102645.3839621-1-arnd@arndb.de> <20180817102645.3839621-8-arnd@arndb.de>
- <CAJZ5v0iCgQxxuoCB9B4-Ho3xeLwb4v99Xyw-9e-tT53mRD+YVQ@mail.gmail.com>
- <CAK8P3a31Ds14Ke1qLoMapK1Wq1M4tR6n+nL1VOKzR8+oN0eOBw@mail.gmail.com> <CAJZ5v0gu_agFQBS7UjTMY3FR7woPPN-riJ6frwk1QoetGoVjfA@mail.gmail.com>
-In-Reply-To: <CAJZ5v0gu_agFQBS7UjTMY3FR7woPPN-riJ6frwk1QoetGoVjfA@mail.gmail.com>
-From: Arnd Bergmann <arnd@arndb.de>
-Date: Mon, 20 Aug 2018 13:36:19 +0200
-Message-ID: <CAK8P3a2nHxGTo9ajAweQpoutLhUns8SK0c6NWf4nV=PZhf0j_A@mail.gmail.com>
-Subject: Re: [RFC 07/15] PCI/ACPI: clean up acpi_pci_root_create()
-To: Rafael Wysocki <rafael@kernel.org>
-Cc: linux-pci <linux-pci@vger.kernel.org>,
-        Bjorn Helgaas <bhelgaas@google.com>,
-        Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
-        Christoph Hellwig <hch@infradead.org>,
-        Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
-        Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-        linuxppc-dev <linuxppc-dev@lists.ozlabs.org>,
-        ACPI Devel Maling List <linux-acpi@vger.kernel.org>
-Content-Type: text/plain; charset="UTF-8"
-Sender: linux-acpi-owner@vger.kernel.org
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20180817044902.31420-2-benh@kernel.crashing.org>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Mon, Aug 20, 2018 at 1:24 PM Rafael J. Wysocki <rafael@kernel.org> wrote:
->
-> On Mon, Aug 20, 2018 at 1:20 PM Arnd Bergmann <arnd@arndb.de> wrote:
-> >
-> > On Mon, Aug 20, 2018 at 10:23 AM Rafael J. Wysocki <rafael@kernel.org> wrote:
-> > > On Fri, Aug 17, 2018 at 12:33 PM Arnd Bergmann <arnd@arndb.de> wrote:
-> > > > @@ -909,8 +881,7 @@ struct pci_bus *acpi_pci_root_create(struct acpi_pci_root *root,
-> > > >         int ret, busnum = root->secondary.start;
-> > > >         struct acpi_device *device = root->device;
-> > > >         int node = acpi_get_node(device->handle);
-> > > > -       struct pci_bus *bus;
-> > > > -       struct pci_host_bridge *host_bridge;
-> > > > +       struct pci_host_bridge *bridge;
-> > >
-> > > Why "bridge" and not "host" or even something to stand for "root complex"?
-> > >
-> > > Or maybe it can still be "host_bridge"?
-> >
-> > I did this for consistency with the naming in drivers/pci/probe.c,
-> > which always declares the local variable as 'struct pci_host_bridge *bridge'.
-> > It's easy to change here if you feel strongly about it (I don't).
->
-> I would leave host_bridge here.  It would make the patch smaller too I think.
+On Fri, Aug 17, 2018 at 02:48:57PM +1000, Benjamin Herrenschmidt wrote:
+> This reverts commit 44bda4b7d26e9fffed6d7152d98a2e9edaeb2a76.
 
-Ok, I've changed my local copy as you suggested now.
+Just to be clear, if I understand correctly, this is a pure revert of
+44bda4b7d26e and as such it reintroduces the problem solved by that
+commit.
 
-      Arnd
+If your solution turns out to be better, that's great, but it would be
+nice to avoid the bisection hole of reintroducing the problem, then
+fixing it again later.
+
+> The new pci state mutex provides a simpler way of addressing
+> this race and avoids the relative includes added to the powerpc
+> code.
