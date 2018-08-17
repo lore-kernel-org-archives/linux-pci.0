@@ -1,38 +1,29 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:47178 "EHLO
-        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1727212AbeH1RRW (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Tue, 28 Aug 2018 13:17:22 -0400
-Subject: Re: bug in pci_try_reset_bus
-To: Dennis Dalessandro <dennis.dalessandro@intel.com>,
-        bhelgaas@google.com, linux-pci@vger.kernel.org
-References: <3d3d78fb-f1f2-ec4f-38f9-0b0d14564f53@intel.com>
- <323b3bbe-d255-8a5d-2a9c-d64e1f86cb64@codeaurora.org>
- <bd7dbd5a-eebc-9142-f9a2-3b5ff8de9b8b@intel.com>
- <d437400c-7eed-19d3-9cf2-b8a42217136b@codeaurora.org>
- <2f0fb394-f1c9-d782-ffec-dac04b1ac0a9@intel.com>
- <84484c45-64ff-ca2d-39dd-ee579e28558e@codeaurora.org>
- <8bc2c143-5938-33ed-d852-7f039bde7a13@intel.com>
- <4bf1a54c-4622-0472-7a43-a6d6ff049322@codeaurora.org>
- <980dc79b-a1b7-08ab-294f-1cb318d996fe@intel.com>
-From: Sinan Kaya <okaya@codeaurora.org>
-Message-ID: <401a24b3-c7bb-03ee-8753-0c94d8aee79c@codeaurora.org>
-Date: Tue, 28 Aug 2018 09:25:40 -0400
+Received: from mga05.intel.com ([192.55.52.43]:7229 "EHLO mga05.intel.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1726355AbeHQRFp (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Fri, 17 Aug 2018 13:05:45 -0400
+Date: Fri, 17 Aug 2018 08:03:06 -0600
+From: Keith Busch <keith.busch@intel.com>
+To: Jiecheng Wu <jasonwood2031@gmail.com>
+Cc: linux-pci@vger.kernel.org
+Subject: Re: [PATCH] dpc.c: fix missing return value check of
+ pci_find_ext_capability()
+Message-ID: <20180817140305.GA9244@localhost.localdomain>
+References: <20180817081719.11156-1-jasonwood2031@gmail.com>
 MIME-Version: 1.0
-In-Reply-To: <980dc79b-a1b7-08ab-294f-1cb318d996fe@intel.com>
-Content-Type: text/plain; charset=utf-8; format=flowed
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20180817081719.11156-1-jasonwood2031@gmail.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 8/27/2018 4:48 PM, Dennis Dalessandro wrote:
->> Possible solutions are:
->> 1. introduce a locked reset API > 2. skip lock during probe
->> 3. bring back raw reset API even though it is undesirable.
-> 
-> I think the first option is the cleanest. I can put together a patch and 
-> post it soon.
+On Fri, Aug 17, 2018 at 04:17:19PM +0800, Jiecheng Wu wrote:
+> Function dpc_probe() defined in drivers/pci/pcie/dpc.c calls
+> pci_find_ext_capability(). Function pci_find_ext_capability() returns
+> the address of the requested extended capability structure within the
+> device's PCI configuration space or 0 if the device does not support
+> it. The return value of this function should be checked against 0.
 
-I was thinking about this. These locked API are getting out of control. It could
-be a simpler solution to change the mutex type of device_lock such that it can
-be locked twice. I think I have seen some examples of how to do this in the
-NVMe driver.
+dpc_probe will not get called if the capability doesn't exist. The
+capability existing is the criteria for PCIE_PORT_SERVICE_DPC flag,
+which is required to call dpc_probe.
