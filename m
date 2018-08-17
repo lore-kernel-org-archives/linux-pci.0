@@ -1,39 +1,40 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from bombadil.infradead.org ([198.137.202.133]:58386 "EHLO
-        bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726744AbeHDMOY (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Sat, 4 Aug 2018 08:14:24 -0400
-From: Christoph Hellwig <hch@lst.de>
-To: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
-        Bjorn Helgaas <bhelgaas@google.com>
-Cc: Palmer Dabbelt <palmer@dabbelt.com>,
-        "Wesley W . Terpstra" <wesley@sifive.com>,
-        Arnd Bergmann <arnd@arndb.de>, linux-pci@vger.kernel.org,
-        linux-riscv@lists.infradead.org
-Subject: add support for Xilinx PCIe root ports on RISC-V v3
-Date: Sat,  4 Aug 2018 12:13:59 +0200
-Message-Id: <20180804101402.10022-1-hch@lst.de>
+Received: from mail-pl0-f68.google.com ([209.85.160.68]:43200 "EHLO
+        mail-pl0-f68.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726458AbeHQLT4 (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Fri, 17 Aug 2018 07:19:56 -0400
+Received: by mail-pl0-f68.google.com with SMTP id x6-v6so3379858plv.10
+        for <linux-pci@vger.kernel.org>; Fri, 17 Aug 2018 01:17:30 -0700 (PDT)
+Received: from localhost.localdomain ([2402:f000:1:1501:200:5efe:a66f:53fa])
+        by smtp.gmail.com with ESMTPSA id t186-v6sm1509519pgd.77.2018.08.17.01.17.29
+        for <linux-pci@vger.kernel.org>
+        (version=TLS1_2 cipher=ECDHE-RSA-AES128-SHA bits=128/128);
+        Fri, 17 Aug 2018 01:17:29 -0700 (PDT)
+From: Jiecheng Wu <jasonwood2031@gmail.com>
+To: linux-pci@vger.kernel.org
+Subject: [PATCH] dpc.c: fix missing return value check of pci_find_ext_capability()
+Date: Fri, 17 Aug 2018 16:17:19 +0800
+Message-Id: <20180817081719.11156-1-jasonwood2031@gmail.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hi all,
+Function dpc_probe() defined in drivers/pci/pcie/dpc.c calls pci_find_ext_capability(). Function pci_find_ext_capability() returns the address of the requested extended capability structure within the device's PCI configuration space or 0 if the device does not support it. The return value of this function should be checked against 0.
+---
+ drivers/pci/pcie/dpc.c | 2 ++
+ 1 file changed, 2 insertions(+)
 
-this series with patches originally from Palmer and Wesley adds support
-for the pcie-xilinx host driver on RISC-V boards.  The interesting part
-about that is that the IP blocks is limited to 32-bit DMA internally,
-which didn't seem to be an issue with the existing users, but shows
-up easily with the Sifive RISC-V boards that have physical memory
-wired up above 4G.
-
-Note that patches 1 and 2 depend on changes in the dma-mapping tree
-to add the bus_dma_mask field to struct device and would have to merge
-through the dma-mapping tree or a shared stable branch.  Patch 3 could
-be merged independently.
-
-Changes since v2:
- - rename the add_dev callback to add_device and allow it to return an
-   error code (to allow it to replace pcibios_add_device in the future)
-
-Changes since v1:
- - move the add_dev method to struct pci_host_bridge
- - use the new bus_dma_mask field
+diff --git a/drivers/pci/pcie/dpc.c b/drivers/pci/pcie/dpc.c
+index f03279f..30ff550 100644
+--- a/drivers/pci/pcie/dpc.c
++++ b/drivers/pci/pcie/dpc.c
+@@ -226,6 +226,8 @@ static int dpc_probe(struct pcie_device *dev)
+ 		return -ENOMEM;
+ 
+ 	dpc->cap_pos = pci_find_ext_capability(pdev, PCI_EXT_CAP_ID_DPC);
++	if (!dpc->cap_pos)
++		return -ENODEV;
+ 	dpc->dev = dev;
+ 	set_service_data(dev, dpc);
+ 
+-- 
+2.6.4
