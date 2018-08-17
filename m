@@ -1,202 +1,175 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-sh2.amlogic.com ([58.32.228.45]:27897 "EHLO
-        mail-sh2.amlogic.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726818AbeHXLGS (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Fri, 24 Aug 2018 07:06:18 -0400
-From: Hanjie Lin <hanjie.lin@amlogic.com>
-To: Kishon Vijay Abraham I <kishon@ti.com>
-CC: Yue Wang <yue.wang@amlogic.com>,
-        Hanjie Lin <hanjie.lin@amlogic.com>,
-        <linux-amlogic@lists.infradead.org>, <linux-pci@vger.kernel.org>,
-        <linux-arm-kernel@lists.infradead.org>,
-        Kevin Hilman <khilman@baylibre.com>,
-        Carlo Caione <carlo@caione.org>, Rob Herring <robh@kernel.org>,
-        Yixun Lan <yixun.lan@amlogic.com>,
-        Liang Yang <liang.yang@amlogic.com>,
-        Jianxin Pan <jianxin.pan@amlogic.com>,
-        Qiufang Dai <qiufang.dai@amlogic.com>,
-        Jian Hu <jian.hu@amlogic.com>
-Subject: [PATCH v2 2/2] PCI: meson: add the Amlogic Meson PCIe phy driver
-Date: Fri, 24 Aug 2018 15:33:26 +0800
-Message-ID: <1535096006-152091-3-git-send-email-hanjie.lin@amlogic.com>
-In-Reply-To: <1535096006-152091-1-git-send-email-hanjie.lin@amlogic.com>
-References: <1535096006-152091-1-git-send-email-hanjie.lin@amlogic.com>
+Return-Path: <SRS0=Mh2n=LA=broadcom.com=hari.vyas@kernel.org>
+Return-Path: <SRS0=Mh2n=LA=broadcom.com=hari.vyas@kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain
-Sender: linux-pci-owner@vger.kernel.org
+In-Reply-To: <20180817144930.GB128050@bhelgaas-glaptop.roam.corp.google.com>
+References: <1534516668-1206-1-git-send-email-hari.vyas@broadcom.com> <20180817144930.GB128050@bhelgaas-glaptop.roam.corp.google.com>
+From: Hari Vyas <hari.vyas@broadcom.com>
+Date: Fri, 17 Aug 2018 20:53:50 +0530
+Message-ID: <CAM5rFu9hzfc_wvLYZ=JU09VewBVfs_h2dr6AxpQdoJcMCm2XaQ@mail.gmail.com>
+Subject: Re: [PATCH] PCI: fix of read-write config operation in SMP environment
+To: Bjorn Helgaas <helgaas@kernel.org>
+Cc: Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org
+Content-Type: text/plain; charset="UTF-8"
 List-ID: <linux-pci.vger.kernel.org>
 
-From: Yue Wang <yue.wang@amlogic.com>
+On Fri, Aug 17, 2018 at 8:19 PM, Bjorn Helgaas <helgaas@kernel.org> wrote:
+> On Fri, Aug 17, 2018 at 08:07:48PM +0530, Hari Vyas wrote:
+>> Read modify write operations performed on same pci configuration
+>> registers which have bit fields may not work properly in SMP
+>> environment. Let us assume one thread tries to set master bit
+>> and other thread memory bit of PCI_COMMAND register, result may
+>> be unpredictable.
+>
+> It's possible we'll need something like this, but we would have to
+> have a clear understanding of what threads are involved.
+>
+> For example, if the problem were that a driver had two threads and
+> thread A tried to set PCI_COMMAND_MASTER and thread B tried to set
+> PCI_COMMAND_MEMORY, I'd say that's just a driver synchronization
+> problem that should be fixed in the driver.
+>
+> So I'm going to defer this until we work through Ben's patches.
+> If you think we still need this after that, please repost it.
+>
+Thanks for your comment. I just raised patch to open up discussion.
+Whichever one is good, we
+should move to that one. I know this is bit heavy approach but
+concern is handled
+at lower layer which is root cause so could avoid unknown problematic scenarios
+from higher level driver but I agree,  Let's first try out Ben's patch
+and proceed accordingly.
 
-The Meson-PCIE-PHY controller supports the 5-Gbps data rate
-of the PCI Express Gen 2 specification and is backwardcompatible
-with the 2.5-Gbps Gen 1.1 specification with only
-inferred idle detection supported on AMLOGIC SoCs.
-
-Signed-off-by: Yue Wang <yue.wang@amlogic.com>
-Signed-off-by: Hanjie Lin <hanjie.lin@amlogic.com>
----
- drivers/phy/amlogic/Kconfig              |   8 ++
- drivers/phy/amlogic/Makefile             |   1 +
- drivers/phy/amlogic/phy-meson-axg-pcie.c | 124 +++++++++++++++++++++++++++++++
- 3 files changed, 133 insertions(+)
- create mode 100644 drivers/phy/amlogic/phy-meson-axg-pcie.c
-
-diff --git a/drivers/phy/amlogic/Kconfig b/drivers/phy/amlogic/Kconfig
-index 23fe1cd..3ab07f9 100644
---- a/drivers/phy/amlogic/Kconfig
-+++ b/drivers/phy/amlogic/Kconfig
-@@ -36,3 +36,11 @@ config PHY_MESON_GXL_USB3
- 	  Enable this to support the Meson USB3 PHY and OTG detection
- 	  IP block found in Meson GXL and GXM SoCs.
- 	  If unsure, say N.
-+
-+config PHY_MESON_AXG_PCIE
-+	bool "Meson AXG PCIe PHY driver"
-+	depends on OF && (ARCH_MESON || COMPILE_TEST)
-+	select GENERIC_PHY
-+	help
-+	  Enable PCIe PHY support for Meson AXG SoC series.
-+	  This driver provides PHY interface for Meson PCIe controller.
-\ No newline at end of file
-diff --git a/drivers/phy/amlogic/Makefile b/drivers/phy/amlogic/Makefile
-index 4fd8848..5ab8578 100644
---- a/drivers/phy/amlogic/Makefile
-+++ b/drivers/phy/amlogic/Makefile
-@@ -1,3 +1,4 @@
- obj-$(CONFIG_PHY_MESON8B_USB2)		+= phy-meson8b-usb2.o
- obj-$(CONFIG_PHY_MESON_GXL_USB2)	+= phy-meson-gxl-usb2.o
- obj-$(CONFIG_PHY_MESON_GXL_USB3)	+= phy-meson-gxl-usb3.o
-+obj-$(CONFIG_PHY_MESON_AXG_PCIE)	+= phy-meson-axg-pcie.o
-diff --git a/drivers/phy/amlogic/phy-meson-axg-pcie.c b/drivers/phy/amlogic/phy-meson-axg-pcie.c
-new file mode 100644
-index 0000000..b517f9e
---- /dev/null
-+++ b/drivers/phy/amlogic/phy-meson-axg-pcie.c
-@@ -0,0 +1,124 @@
-+// SPDX-License-Identifier: (GPL-2.0+ or MIT)
-+/*
-+ * Amlogic MESON SoC series PCIe PHY driver
-+ *
-+ * Phy provider for PCIe controller on MESON SoC series
-+ *
-+ * Copyright (c) 2018 Amlogic, inc.
-+ * Yue Wang <yue.wang@amlogic.com>
-+ */
-+
-+#include <linux/delay.h>
-+#include <linux/io.h>
-+#include <linux/of.h>
-+#include <linux/of_platform.h>
-+#include <linux/platform_device.h>
-+#include <linux/phy/phy.h>
-+#include <linux/reset.h>
-+
-+struct meson_pcie_phy_data {
-+	const struct phy_ops	*ops;
-+};
-+
-+struct meson_pcie_reset {
-+	struct reset_control	*phy;
-+};
-+
-+struct meson_pcie_phy {
-+	const struct meson_pcie_phy_data	*data;
-+	struct meson_pcie_reset	reset;
-+	void __iomem	*phy_base;
-+};
-+
-+#define MESON_PCIE_PHY_POWERUP 0x1c
-+
-+static int meson_pcie_phy_init(struct phy *phy)
-+{
-+	struct meson_pcie_phy *mphy = phy_get_drvdata(phy);
-+	struct meson_pcie_reset *mrst = &mphy->reset;
-+
-+	writel(MESON_PCIE_PHY_POWERUP, mphy->phy_base);
-+	reset_control_assert(mrst->phy);
-+	udelay(400);
-+	reset_control_deassert(mrst->phy);
-+	udelay(500);
-+
-+	return 0;
-+}
-+
-+static const struct phy_ops meson_phy_ops = {
-+	.init		= meson_pcie_phy_init,
-+	.owner		= THIS_MODULE,
-+};
-+
-+static const struct meson_pcie_phy_data meson_pcie_phy_data = {
-+	.ops		= &meson_phy_ops,
-+};
-+
-+static const struct of_device_id meson_pcie_phy_match[] = {
-+	{
-+		.compatible = "amlogic,axg-pcie-phy",
-+		.data = &meson_pcie_phy_data,
-+	},
-+	{},
-+};
-+
-+static int meson_pcie_phy_probe(struct platform_device *pdev)
-+{
-+	struct device *dev = &pdev->dev;
-+	struct meson_pcie_phy *mphy;
-+	struct meson_pcie_reset *mrst;
-+	struct phy *generic_phy;
-+	struct phy_provider *phy_provider;
-+	struct resource *res;
-+	const struct meson_pcie_phy_data *data;
-+
-+	data = of_device_get_match_data(dev);
-+	if (!data)
-+		return -ENODEV;
-+
-+	mphy = devm_kzalloc(dev, sizeof(*mphy), GFP_KERNEL);
-+	if (!mphy)
-+		return -ENOMEM;
-+	res = platform_get_resource(pdev, IORESOURCE_MEM, 0);
-+	mphy->phy_base = devm_ioremap_resource(dev, res);
-+	if (IS_ERR(mphy->phy_base))
-+		return PTR_ERR(mphy->phy_base);
-+
-+	mrst = &mphy->reset;
-+
-+	mrst->phy = devm_reset_control_get_shared(dev, "phy");
-+	if (IS_ERR(mrst->phy)) {
-+		if (PTR_ERR(mrst->phy) != -EPROBE_DEFER)
-+			dev_err(dev, "couldn't get phy reset\n");
-+
-+		return PTR_ERR(mrst->phy);
-+	}
-+
-+	reset_control_deassert(mrst->phy);
-+
-+	mphy->data = data;
-+
-+	generic_phy = devm_phy_create(dev, dev->of_node, mphy->data->ops);
-+	if (IS_ERR(generic_phy)) {
-+		if (PTR_ERR(generic_phy) != -EPROBE_DEFER)
-+			dev_err(dev, "failed to create PHY\n");
-+
-+		return PTR_ERR(generic_phy);
-+	}
-+
-+	phy_set_drvdata(generic_phy, mphy);
-+	phy_provider = devm_of_phy_provider_register(dev, of_phy_simple_xlate);
-+
-+	return PTR_ERR_OR_ZERO(phy_provider);
-+}
-+
-+static struct platform_driver meson_pcie_phy_driver = {
-+	.probe	= meson_pcie_phy_probe,
-+	.driver = {
-+		.of_match_table	= meson_pcie_phy_match,
-+		.name		= "meson-pcie-phy",
-+	}
-+};
-+
-+builtin_platform_driver(meson_pcie_phy_driver);
--- 
-2.7.4
+Regards,
+hari
+>> Better we introduce a new routine in struct pci_ops like
+>> (int (*modify_safe)(struct pci_bus *bus, unsigned int devfn,
+>> int where, int size, u32 old, u32 new);
+>> This routine may first read current value and apply diff.
+>>
+>> Signed-off-by: Hari Vyas <hari.vyas@broadcom.com>
+>> ---
+>>  drivers/pci/access.c    | 61 +++++++++++++++++++++++++++++++++++++++++++++++++
+>>  drivers/pci/pci.c       |  1 +
+>>  drivers/pci/setup-res.c |  2 +-
+>>  include/linux/pci.h     |  4 ++++
+>>  4 files changed, 67 insertions(+), 1 deletion(-)
+>>
+>> diff --git a/drivers/pci/access.c b/drivers/pci/access.c
+>> index a3ad2fe..c4cf99b 100644
+>> --- a/drivers/pci/access.c
+>> +++ b/drivers/pci/access.c
+>> @@ -588,3 +588,64 @@ int pci_write_config_dword(const struct pci_dev *dev, int where,
+>>       return pci_bus_write_config_dword(dev->bus, dev->devfn, where, val);
+>>  }
+>>  EXPORT_SYMBOL(pci_write_config_dword);
+>> +
+>> +#define PCI_OP_MODIFY(size, type, len) \
+>> +int pci_bus_modify_config_##size \
+>> +     (struct pci_bus *bus, unsigned int devfn, int pos,              \
+>> +      type rval, type wval)                                          \
+>> +{                                                                    \
+>> +     int res;                                                        \
+>> +     unsigned long flags;                                            \
+>> +     u32 rdata = 0;                                                  \
+>> +     u32 wdata = 0;                                                  \
+>> +     u32 temp_data = 0;                                              \
+>> +     if (PCI_##size##_BAD) return PCIBIOS_BAD_REGISTER_NUMBER;       \
+>> +     pci_lock_config(flags);                                         \
+>> +     if (bus->ops->modify) {                                         \
+>> +             res = bus->ops->modify(bus, devfn, pos, len,            \
+>> +                                    rval, wval);                     \
+>> +     } else {                                                        \
+>> +             temp_data = rval ^ wval;                                \
+>> +             res = bus->ops->read(bus, devfn, pos, len, &rdata);     \
+>> +             wdata = rdata ^ temp_data;                              \
+>> +             res = bus->ops->write(bus, devfn, pos, len, wdata);     \
+>> +     }                                                               \
+>> +     pci_unlock_config(flags);                                       \
+>> +     return res;                                                     \
+>> +}
+>> +
+>> +PCI_OP_MODIFY(byte, u8, 1)
+>> +PCI_OP_MODIFY(word, u16, 2)
+>> +PCI_OP_MODIFY(dword, u32, 4)
+>> +int pci_modify_config_byte(const struct pci_dev *dev, int where,
+>> +                        u8 rval, u8 wval)
+>> +{
+>> +     if (pci_dev_is_disconnected(dev)) {
+>> +             return PCIBIOS_DEVICE_NOT_FOUND;
+>> +     }
+>> +     return pci_bus_modify_config_byte(dev->bus, dev->devfn, where,
+>> +                                       rval, wval);
+>> +}
+>> +EXPORT_SYMBOL(pci_modify_config_byte);
+>> +
+>> +int pci_modify_config_word(const struct pci_dev *dev, int where,
+>> +                        u16 rval, u16 wval)
+>> +{
+>> +     if (pci_dev_is_disconnected(dev)) {
+>> +             return PCIBIOS_DEVICE_NOT_FOUND;
+>> +     }
+>> +     return pci_bus_modify_config_word(dev->bus, dev->devfn, where,
+>> +                                       rval, wval);
+>> +}
+>> +EXPORT_SYMBOL(pci_modify_config_word);
+>> +
+>> +int pci_modify_config_dword(const struct pci_dev *dev, int where,
+>> +                         u32 rval, u32 wval)
+>> +{
+>> +     if (pci_dev_is_disconnected(dev)) {
+>> +             return PCIBIOS_DEVICE_NOT_FOUND;
+>> +     }
+>> +     return pci_bus_modify_config_dword(dev->bus, dev->devfn, where,
+>> +                                        rval, wval);
+>> +}
+>> +EXPORT_SYMBOL(pci_modify_config_dword);
+>> diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
+>> index 316496e..db1c132 100644
+>> --- a/drivers/pci/pci.c
+>> +++ b/drivers/pci/pci.c
+>> @@ -3712,6 +3712,7 @@ static void __pci_set_master(struct pci_dev *dev, bool enable)
+>>               pci_dbg(dev, "%s bus mastering\n",
+>>                       enable ? "enabling" : "disabling");
+>>               pci_write_config_word(dev, PCI_COMMAND, cmd);
+>> +             pci_modify_config_word(dev, PCI_COMMAND, old_cmd, cmd);
+>>       }
+>>       dev->is_busmaster = enable;
+>>  }
+>> diff --git a/drivers/pci/setup-res.c b/drivers/pci/setup-res.c
+>> index d8ca40a..a2e6fa4 100644
+>> --- a/drivers/pci/setup-res.c
+>> +++ b/drivers/pci/setup-res.c
+>> @@ -493,7 +493,7 @@ int pci_enable_resources(struct pci_dev *dev, int mask)
+>>
+>>       if (cmd != old_cmd) {
+>>               pci_info(dev, "enabling device (%04x -> %04x)\n", old_cmd, cmd);
+>> -             pci_write_config_word(dev, PCI_COMMAND, cmd);
+>> +             pci_modify_config_word(dev, PCI_COMMAND, old_cmd, cmd);
+>>       }
+>>       return 0;
+>>  }
+>> diff --git a/include/linux/pci.h b/include/linux/pci.h
+>> index c133ccf..d948c4b 100644
+>> --- a/include/linux/pci.h
+>> +++ b/include/linux/pci.h
+>> @@ -664,6 +664,7 @@ struct pci_ops {
+>>       void __iomem *(*map_bus)(struct pci_bus *bus, unsigned int devfn, int where);
+>>       int (*read)(struct pci_bus *bus, unsigned int devfn, int where, int size, u32 *val);
+>>       int (*write)(struct pci_bus *bus, unsigned int devfn, int where, int size, u32 val);
+>> +     int (*modify)(struct pci_bus *bus, unsigned int devfn, int where, int size, u32 rval, u32 wval);
+>>  };
+>>
+>>  /*
+>> @@ -991,6 +992,9 @@ int pci_generic_config_write32(struct pci_bus *bus, unsigned int devfn,
+>>  int pci_write_config_byte(const struct pci_dev *dev, int where, u8 val);
+>>  int pci_write_config_word(const struct pci_dev *dev, int where, u16 val);
+>>  int pci_write_config_dword(const struct pci_dev *dev, int where, u32 val);
+>> +int pci_modify_config_byte(const struct pci_dev *dev, int where, u8 rval, u8 wval);
+>> +int pci_modify_config_word(const struct pci_dev *dev, int where, u16 rval, u16 wval);
+>> +int pci_modify_config_dword(const struct pci_dev *dev, int where, u32 rval, u32 wval);
+>>
+>>  int pcie_capability_read_word(struct pci_dev *dev, int pos, u16 *val);
+>>  int pcie_capability_read_dword(struct pci_dev *dev, int pos, u32 *val);
+>> --
+>> 1.9.1
+>>
