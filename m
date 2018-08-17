@@ -1,64 +1,85 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mga12.intel.com ([192.55.52.136]:14083 "EHLO mga12.intel.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1727416AbeIABer (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Fri, 31 Aug 2018 21:34:47 -0400
-From: Keith Busch <keith.busch@intel.com>
-To: Linux PCI <linux-pci@vger.kernel.org>,
-        Bjorn Helgaas <bhelgaas@google.com>
-Cc: Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-        Sinan Kaya <okaya@kernel.org>,
-        Thomas Tai <thomas.tai@oracle.com>, poza@codeaurora.org,
-        Lukas Wunner <lukas@wunner.de>,
-        Keith Busch <keith.busch@intel.com>
-Subject: [PATCH 09/16] PCI/ERR: Report current recovery status for udev
-Date: Fri, 31 Aug 2018 15:26:32 -0600
-Message-Id: <20180831212639.10196-10-keith.busch@intel.com>
-In-Reply-To: <20180831212639.10196-1-keith.busch@intel.com>
-References: <20180831212639.10196-1-keith.busch@intel.com>
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-acpi-owner@vger.kernel.org>
+Date: Fri, 17 Aug 2018 14:43:54 +0900 (JST)
+Message-Id: <20180817.144354.2288619657950222607.teika@gmx.com>
+To: rjw@rjwysocki.net
+Cc: linux-pci@vger.kernel.org, bhelgaas@google.com,
+        linux-kernel@vger.kernel.org, linux-acpi@vger.kernel.org,
+        linux-pm@vger.kernel.org, mika.westerberg@linux.intel.com
+Subject: Re: [PATCH] PCI / ACPI / PM: Resume all bridges on suspend-to-RAM
+From: Teika Kazura <teika@gmx.com>
+In-Reply-To: <6401388.2t0qD3iTOr@aspire.rjw.lan>
+References: <6401388.2t0qD3iTOr@aspire.rjw.lan>
+Mime-Version: 1.0
+Content-Type: Text/Plain; charset=utf-8
+Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-A device still participates in error recovery even if it doesn't have
-the error callbacks. This patch provides the status for user event
-watchers.
-
-Signed-off-by: Keith Busch <keith.busch@intel.com>
----
- drivers/pci/pcie/err.c | 12 ++++++------
- 1 file changed, 6 insertions(+), 6 deletions(-)
-
-diff --git a/drivers/pci/pcie/err.c b/drivers/pci/pcie/err.c
-index ee9014615add..a42a17a851fb 100644
---- a/drivers/pci/pcie/err.c
-+++ b/drivers/pci/pcie/err.c
-@@ -67,12 +67,12 @@ static int report_error_detected(struct pci_dev *dev,
- 			vote = PCI_ERS_RESULT_NO_AER_DRIVER;
- 		else
- 			vote = PCI_ERS_RESULT_NONE;
--	} else {
--		err_handler = dev->driver->err_handler;
--		vote = err_handler->error_detected(dev, state);
--		pci_uevent_ers(dev, PCI_ERS_RESULT_NONE);
-+		goto out;
- 	}
--
-+	err_handler = dev->driver->err_handler;
-+	vote = err_handler->error_detected(dev, state);
-+out:
-+	pci_uevent_ers(dev, vote);
- 	*result = merge_result(*result, vote);
- 	device_unlock(&dev->dev);
- 	return 0;
-@@ -140,8 +140,8 @@ static int report_resume(struct pci_dev *dev, void *data)
- 
- 	err_handler = dev->driver->err_handler;
- 	err_handler->resume(dev);
--	pci_uevent_ers(dev, PCI_ERS_RESULT_RECOVERED);
- out:
-+	pci_uevent_ers(dev, PCI_ERS_RESULT_RECOVERED);
- 	device_unlock(&dev->dev);
- 	return 0;
- }
--- 
-2.14.4
+Rm9yIHRoZSByZWNvcmQsIGFib3V0IHRoZSBleGFjdG5lc3Mgb2YgdGhlIHBhdGNoIGRlc2NyaXB0
+aW9uLg0KDQpUaGUgcGF0Y2ggbWVudGlvbnMgdGhlIHJlZ3Jlc3Npb24gYnkgdGhlIGNvbW1pdCBj
+NjJlYzQ2MTBjNDAsIGJ1dCBpdCBpcyBub3QgdGhlIGNhdXNlIG9mIHRoZSBidWcgKGh0dHBzOi8v
+YnVnemlsbGEua2VybmVsLm9yZy9zaG93X2J1Zy5jZ2k/aWQ9MjAwNjcpIHJlcG9ydGVkIGJ5IG1l
+OyBJIHJldmVydGVkIGM2MmVjNDYxMGM0MCBvbiBsaW51eC00LjE3LjEzLCBhbmQgdGhlIGJ1ZyBy
+ZW1haW5lZC4NCg0KIyBTb21lIGRldGFpbHM6IG15IGJ1ZyB3YXMgaW50cm9kdWNlZCBieSB0aGUg
+Y29tbWl0IChpKSA4NzdiMzcyOWNhMCBvbiBKYW4gMy4gVGhlIGNvbW1pdCAoaWkpIGM2MmVjNDYx
+MGM0MCB3YXMgb24gTWF5IDIyLiBUaGUgY29tbWl0IChpaWkpIDI2MTEyZGRjMjU0YyBvbiBKdW4g
+MzAgZml4ZXMgb25lIHByb2JsZW0gY2F1c2VkIGJ5IGM2MmVjNDYxMGM0MC4gVGhlIHByZXNlbnQg
+cGF0Y2ggbW9kaWZpZXMgdGhlIGNvZGUgb2YgdGhlIGNvbW1pdCAoaWlpKSwgc28gaXQgY2FuIGJl
+IHNhaWQgYXMgdGhlIGNvbXBsZXRpb24gb2YgdGhlIGNvbW1pdCAoaWlpKS4gSXQgYXQgdGhlIHNh
+bWUgdGltZSBmaXhlcyBteSBidWcsIHRvby4NCg0KVGhpcyBzdWdnZXN0cyB0aGUgcHJlc2VudCBw
+YXRjaCBwb3NzaWJseSBmaXhlcyBvdGhlciB1bmtub3duIFBNIHByb2JsZW1zOyBmb3JtZXIga2Vy
+bmVscyBoYWQgc29tZSBsb29zZSBlbmQocykuIE5vdyB0aGlzIHBhdGNoIHB1dHMgdGhlIGtlcm5l
+bCBpbiBhIGJldHRlciBwb3NpdGlvbi4NCg0KSSdtIGEgbGF5IExpbnV4IHVzZXIsIGFuZCBkb24n
+dCBrbm93IGlmIHRoaXMgcG9zdCBoZWxwcy4gSWYgaXQgZG9lcywgaXQgbWF5IGJlIHdvcnRoIG1l
+bnRpb25pbmcgaXQgaW4gdGhlIGFib3ZlIGJ1Z3ppbGxhIGVudHJ5Lg0KDQpEemnEmWt1asSZICh0
+aGFua3MpLCBrZXJuZWwgZGV2ZWxvcGVycy4gQmVzdCByZWdhcmRzLA0KVGVpa2EgKFRlaWthIGth
+enVyYSkNCg0KRnJvbTogIlJhZmFlbCBKLiBXeXNvY2tpIiA8cmp3QHJqd3lzb2NraS5uZXQ+DQpT
+dWJqZWN0OiBbUEFUQ0hdIFBDSSAvIEFDUEkgLyBQTTogUmVzdW1lIGFsbCBicmlkZ2VzIG9uIHN1
+c3BlbmQtdG8tUkFNDQpEYXRlOiBUaHUsIDE2IEF1ZyAyMDE4IDEyOjU2OjQ2ICswMjAwDQoNCj4g
+RnJvbTogUmFmYWVsIEouIFd5c29ja2kgPHJhZmFlbC5qLnd5c29ja2lAaW50ZWwuY29tPg0KPiAN
+Cj4gQ29tbWl0IDI2MTEyZGRjMjU0YyAoUENJIC8gQUNQSSAvIFBNOiBSZXN1bWUgYnJpZGdlcyB3
+L28gZHJpdmVycyBvbg0KPiBzdXNwZW5kLXRvLVJBTSkgYXR0ZW1wdGVkIHRvIGZpeCBhIGZ1bmN0
+aW9uYWwgcmVncmVzc2lvbiByZXN1bHRpbmcNCj4gZnJvbSBjb21taXQgYzYyZWM0NjEwYzQwIChQ
+TSAvIGNvcmU6IEZpeCBkaXJlY3RfY29tcGxldGUgaGFuZGxpbmcNCj4gZm9yIGRldmljZXMgd2l0
+aCBubyBjYWxsYmFja3MpIGJ5IHJlc3VtaW5nIFBDSSBicmlkZ2VzIHdpdGhvdXQNCj4gZHJpdmVy
+cyAodGhhdCBpcywgInBhcmFsbGVsIFBDSSIgb25lcykgZHVyaW5nIHN5c3RlbS13aWRlIHN1c3Bl
+bmQgaWYNCj4gdGhlIHRhcmdldCBzeXN0ZW0gc3RhdGUgaXMgbm90IEFDUEkgUzAgKHdvcmtpbmcg
+c3RhdGUpLg0KPiANCj4gVGhhdCB0dXJucyBvdXQgaW5zdWZmaWNpZW50LCBob3dldmVyLCBhcyBp
+dCBpcyByZXBvcnRlZCB0aGF0LCBhdA0KPiBsZWFzdCBpbiBvbmUgY2FzZSwgdGhlIHBsYXRmb3Jt
+IGZpcm13YXJlIGdldHMgY29uZnVzZWQgaWYgYSBQQ0llDQo+IHJvb3QgcG9ydCBpcyBzdXNwZW5k
+ZWQgYmVmb3JlIGVudGVyaW5nIHRoZSBBQ1BJIFMzIHNsZWVwIHN0YXRlLg0KPiANCj4gRm9yIHRo
+aXMgcmVhc29uLCBkcm9wIHRoZSBkcml2ZXIgY2hlY2sgZnJvbSBhY3BpX3BjaV9uZWVkX3Jlc3Vt
+ZSgpDQo+IGFuZCByZXN1bWUgYWxsIGJyaWRnZXMgKGluY2x1ZGluZyBQQ0llIHBvcnRzIHdpdGgg
+ZHJpdmVycykgZHVyaW5nDQo+IHN5c3RlbS13aWRlIHN1c3BlbmQgaWYgdGhlIHRhcmdldCBzeXN0
+ZW0gc3RhdGUgaXMgbm90IEFDUEkgUzAuDQo+IA0KPiBbSWYgdGhlIHRhcmdldCBzeXN0ZW0gc3Rh
+dGUgaXMgQUNQSSBTMCwgaXQgbWVhbnMgc3VzcGVuZC10by1pZGxlDQo+ICBhbmQgdGhlIHBsYXRm
+b3JtIGZpcm13YXJlIGlzIG5vdCBnb2luZyB0byBiZSBpbnZva2VkIHRvIGFjdHVhbGx5DQo+ICBz
+dXNwZW5kIHRoZSBzeXN0ZW0sIHNvIHRoZXJlIGlzIG5vIG5lZWQgdG8gcmVzdW1lIHRoZSBicmlk
+Z2VzIGluDQo+ICB0aGF0IGNhc2UuXQ0KPiANCj4gRml4ZXM6IGM2MmVjNDYxMGM0MCAoUE0gLyBj
+b3JlOiBGaXggZGlyZWN0X2NvbXBsZXRlIGhhbmRsaW5nIGZvciBkZXZpY2VzIHdpdGggbm8gY2Fs
+bGJhY2tzKQ0KPiBSZXBvcnRlZC1ieTogdGVpa2Ega2F6dXJhIDx0ZWlrYUBnbXguY29tPg0KPiBU
+ZXN0ZWQtYnk6IHRlaWthIGthenVyYSA8dGVpa2FAZ214LmNvbT4NCj4gTGluazogaHR0cHM6Ly9i
+dWd6aWxsYS5rZXJuZWwub3JnL3Nob3dfYnVnLmNnaT9pZD0yMDA2NzUNCj4gQ2M6IDQuMTUrIDxz
+dGFibGVAdmdlci5rZXJuZWwub3JnPiAjIDQuMTUrOiAyNjExMmRkYzI1NGMgKFBDSSAvIEFDUEkg
+LyBQTTogUmVzdW1lIGJyaWRnZXMgLi4uKQ0KPiBTaWduZWQtb2ZmLWJ5OiBSYWZhZWwgSi4gV3lz
+b2NraSA8cmFmYWVsLmoud3lzb2NraUBpbnRlbC5jb20+DQo+IC0tLQ0KPiAgZHJpdmVycy9wY2kv
+cGNpLWFjcGkuYyB8ICAgIDYgKystLS0tDQo+ICAxIGZpbGUgY2hhbmdlZCwgMiBpbnNlcnRpb25z
+KCspLCA0IGRlbGV0aW9ucygtKQ0KPiANCj4gSW5kZXg6IGxpbnV4LXBtL2RyaXZlcnMvcGNpL3Bj
+aS1hY3BpLmMNCj4gPT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09
+PT09PT09PT09PT09PT09PT09PT09PQ0KPiAtLS0gbGludXgtcG0ub3JpZy9kcml2ZXJzL3BjaS9w
+Y2ktYWNwaS5jDQo+ICsrKyBsaW51eC1wbS9kcml2ZXJzL3BjaS9wY2ktYWNwaS5jDQo+IEBAIC02
+MzIsMTMgKzYzMiwxMSBAQCBzdGF0aWMgYm9vbCBhY3BpX3BjaV9uZWVkX3Jlc3VtZShzdHJ1Y3QN
+Cj4gIAkvKg0KPiAgCSAqIEluIHNvbWUgY2FzZXMgKGVnLiBTYW1zdW5nIDMwNVY0QSkgbGVhdmlu
+ZyBhIGJyaWRnZSBpbiBzdXNwZW5kIG92ZXINCj4gIAkgKiBzeXN0ZW0td2lkZSBzdXNwZW5kL3Jl
+c3VtZSBjb25mdXNlcyB0aGUgcGxhdGZvcm0gZmlybXdhcmUsIHNvIGF2b2lkDQo+IC0JICogZG9p
+bmcgdGhhdCwgdW5sZXNzIHRoZSBicmlkZ2UgaGFzIGEgZHJpdmVyIHRoYXQgc2hvdWxkIHRha2Ug
+Y2FyZSBvZg0KPiAtCSAqIHRoZSBQTSBoYW5kbGluZy4gIEFjY29yZGluZyB0byBTZWN0aW9uIDE2
+LjEuNiBvZiBBQ1BJIDYuMiwgZW5kcG9pbnQNCj4gKwkgKiBkb2luZyB0aGF0LiAgQWNjb3JkaW5n
+IHRvIFNlY3Rpb24gMTYuMS42IG9mIEFDUEkgNi4yLCBlbmRwb2ludA0KPiAgCSAqIGRldmljZXMg
+YXJlIGV4cGVjdGVkIHRvIGJlIGluIEQzIGJlZm9yZSBpbnZva2luZyB0aGUgUzMgZW50cnkgcGF0
+aA0KPiAgCSAqIGZyb20gdGhlIGZpcm13YXJlLCBzbyB0aGV5IHNob3VsZCBub3QgYmUgYWZmZWN0
+ZWQgYnkgdGhpcyBpc3N1ZS4NCj4gIAkgKi8NCj4gLQlpZiAocGNpX2lzX2JyaWRnZShkZXYpICYm
+ICFkZXYtPmRyaXZlciAmJg0KPiAtCSAgICBhY3BpX3RhcmdldF9zeXN0ZW1fc3RhdGUoKSAhPSBB
+Q1BJX1NUQVRFX1MwKQ0KPiArCWlmIChwY2lfaXNfYnJpZGdlKGRldikgJiYgYWNwaV90YXJnZXRf
+c3lzdGVtX3N0YXRlKCkgIT0gQUNQSV9TVEFURV9TMCkNCj4gIAkJcmV0dXJuIHRydWU7DQo+ICAN
+Cj4gIAlpZiAoIWFkZXYgfHwgIWFjcGlfZGV2aWNlX3Bvd2VyX21hbmFnZWFibGUoYWRldikpDQo+
+IA0K
