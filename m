@@ -1,53 +1,79 @@
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-From: Trent Piepho <tpiepho@impinj.com>
-To: "l.stach@pengutronix.de" <l.stach@pengutronix.de>,
- "linux-arm-kernel@lists.infradead.org"
- <linux-arm-kernel@lists.infradead.org>, "linux-pci@vger.kernel.org"
- <linux-pci@vger.kernel.org>
-Subject: Re: [PATCH 1/2] ARM: dts: imx7d: Add node for PCIe PHY
-Date: Wed, 1 Aug 2018 17:33:32 +0000
-Message-ID: <1533144812.2283.227.camel@impinj.com>
-References: <20180718194424.8844-1-tpiepho@impinj.com>
- <20180718194424.8844-2-tpiepho@impinj.com>
- <1533119951.20186.5.camel@pengutronix.de>
-In-Reply-To: <1533119951.20186.5.camel@pengutronix.de>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail-by2nam03on0048.outbound.protection.outlook.com ([104.47.42.48]:50971
+        "EHLO NAM03-BY2-obe.outbound.protection.outlook.com"
+        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+        id S1726349AbeHQLei (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Fri, 17 Aug 2018 07:34:38 -0400
+From: Alan Douglas <adouglas@cadence.com>
+To: Ramon Fried <ramon.fried@gmail.com>
+CC: Bjorn Helgaas <bhelgaas@google.com>,
+        "kishon@ti.com" <kishon@ti.com>,
+        "lorenzo.pieralisi@arm.com" <lorenzo.pieralisi@arm.com>,
+        "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+        "gustavo.pimentel@synopsys.com" <gustavo.pimentel@synopsys.com>,
+        "cyrille.pitchen@bootlin.com" <cyrille.pitchen@bootlin.com>,
+        Scott Telford <stelford@cadence.com>
+Subject: RE: [PATCH v2 0/5] Add MSI-X support for cadence EP driver
+Date: Fri, 17 Aug 2018 08:32:03 +0000
+Message-ID: <MWHPR07MB3502630540660CC0E120DC09D83D0@MWHPR07MB3502.namprd07.prod.outlook.com>
+References: <1534340781-19194-1-git-send-email-adouglas@cadence.com>
+ <615023FB-D8BA-4F12-BC2B-EDDBBDA39148@gmail.com>
+ <MWHPR07MB3502DD2C6CAADBA52D56166CD83E0@MWHPR07MB3502.namprd07.prod.outlook.com>
+ <CA+Kvs9m=jECCcy6RCrtKvJOAwt5Fr8XFFkkijMy3MFe9trav5g@mail.gmail.com>
+ <CA+Kvs9=YMSNCC-vAREQNDAQaUBVs+eewXAEyWwVpqCbjo4LS3g@mail.gmail.com>
+In-Reply-To: <CA+Kvs9=YMSNCC-vAREQNDAQaUBVs+eewXAEyWwVpqCbjo4LS3g@mail.gmail.com>
+Content-Type: text/plain; charset="utf-8"
 MIME-Version: 1.0
-List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
-List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
-List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
-List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
-List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
-Cc: "fabio.estevam@nxp.com" <fabio.estevam@nxp.com>,
- "shawnguo@kernel.org" <shawnguo@kernel.org>,
- "hongxing.zhu@nxp.com" <hongxing.zhu@nxp.com>,
- "kernel@pengutronix.de" <kernel@pengutronix.de>
-Content-Type: text/plain; charset="us-ascii"
-Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
-Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wed, 2018-08-01 at 12:39 +0200, Lucas Stach wrote:
-> 
-> > +This is the PHY associated with the IMX7d PCIe controller.  It's
-> > used by the
-> > +PCI-e controller via the fsl,pcie-phy phandle.
-> > +
-> > +Required properties:
-> > +- compatible:
-> > +	- "fsl,imx-pcie-phy"
-> 
-> This is too generic. Please change it to "fsl,imx7-pcie-phy".
-
-Can anyone from NXP tell us if an external PCIe PHY block is present in
-other IMX designs?  I suspect that this is generic, but no design other
-than imx7d has had any reason to use this PHY register space yet.
-
-If this is specific to this SoC, then maybe it shoudl be fsl,imx7d-
-pcie-phy, since the iMX7s has no pcie.
-_______________________________________________
-linux-arm-kernel mailing list
-linux-arm-kernel@lists.infradead.org
-http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
+SGkgUmFtb24sDQoNCk9uIDE3IEF1Z3VzdCAyMDE4IDA1OjA5LCBSYW1vbiBGcmllZCB3cm90ZToN
+Cj4gT24gRnJpLCBBdWcgMTcsIDIwMTggYXQgNzowNSBBTSBSYW1vbiBGcmllZCA8cmFtb24uZnJp
+ZWRAZ21haWwuY29tPiB3cm90ZToNCj4gPiBPbiBUaHUsIEF1ZyAxNiwgMjAxOCBhdCA1OjI4IFBN
+IEFsYW4gRG91Z2xhcyA8YWRvdWdsYXNAY2FkZW5jZS5jb20+IHdyb3RlOg0KPiA+PiBPbiAxNSBB
+dWd1c3QgMjAxOCAxNzo1NiwgUmFtb24gRnJpZWQgd3JvdGU6DQo+ID4+ID4gT24gQXVndXN0IDE1
+LCAyMDE4IDQ6NDY6MjEgUE0gR01UKzAzOjAwLCBBbGFuIERvdWdsYXMgPGFkb3VnbGFzQGNhZGVu
+Y2UuY29tPiB3cm90ZToNCj4gPj4gPiA+VGhlIHBhdGNoIGltcGxlbWVudHMgTVNJLVggc3VwcG9y
+dCBpbiB0aGUgY2FkZW5jZSBlbmRwb2ludCBkcml2ZXIuDQo+ID4+ID4gPg0KPiA+PiA+ID5UaGlz
+IHBhdGNoIGRlcGVuZHMgb24gb24gR3VzdGF2byBQaW1lbnRlbCdzIHBhdGNoIHNlcmllcyBhZGRp
+bmcgTVNJLVgNCj4gPj4gPiA+c3VwcG9ydCBmb3IgRVAgKCJBZGQgTVNJLVggc3VwcG9ydCBvbiBw
+Y2l0ZXN0IHRvb2wiKQ0KPiA+PiA+ID4NCj4gPj4gPiA+SXQgYWxzbyBhZGRzIGZpeGVzIGZvciBN
+U0kgaXNzdWVzIGRpc2NvdmVyZWQgZHVyaW5nIHRlc3Rpbmcgb2YgTVNJLVgNCj4gPj4gPiA+ICAt
+IFVzZSBBWEkgcmVnaW9uIDAgZm9yIGludGVycnVwdCBzaWduYWxsaW5nDQo+ID4+ID4gPiAgLSBX
+cml0ZSBNU0kgYW5kIE1TSS1YIHdpdGggMzJiaXQgdmFsdWUgcmF0aGVyIHRoYW4gMTZiaXQNCj4g
+Pj4gPiA+ICAtIENoZWNrIGZvciBtYXNraW5nIGJlZm9yZSBzZW5kaW5nIE1TSSBvciBNU0ktWA0K
+PiA+PiA+ID4gIC0gQ2hlY2sgbGluayBpcyB1cCBiZWZvcmUgc2VuZGluZyBJUlENCj4gPj4gPiA+
+DQo+ID4+ID4gSGkuDQo+ID4+ID4gQUZBSUsgdGhlIEJJT1MgYWxsb2NhdGVzIHBoeXNpY2FsIG1l
+bW9yeSBmb3IgdGhlIGJhcnMuIEFzc3VtaW5nIHRoYXQgdGhlIE1TSXggYmFyIGlzIG9ubHkgbWFw
+cGVkIGFmdGVyIGtlcm5lbCBib290cyBvbiB0aGUNCj4gZW5kcG9pbnQsDQo+ID4+ID4gY291bGQg
+aXQgYmUgdG9vIGxhdGU/DQo+ID4+ID4NCj4gPj4gPiBEbyB3ZSBuZWVkIHRvIHRyaWdnZXIgcmUt
+ZW51bWVyYXRpb24gb2YgdGhlIFBDSSBidXMgZnJvbSBob3N0IHNpZGUgd2hlbiB3b3JraW5nIHdp
+dGggdGhpcyBhcyBhbiBlbmRwb2ludD8NCj4gPj4gSXQgZGVwZW5kcyBvbiBob3cgeW91IGFyZSB1
+c2luZyBpdC4gIFBGMCBpcyBhbHdheXMgZW5hYmxlZCBpbiB0aGUgY2FkZW5jZSBIVywgc28gd2ls
+bCBiZSBlbnVtZXJhdGVkIGF0IGJvb3QsDQo+ID4+IGFzIGxvbmcgYXMgdGhlIEVQIEhXIGlzIG91
+dCBvZiByZXNldCBhbmQgUEhZIGlzIGVuYWJsZWQuDQo+ID4+IFRoZSBQQ0llIEVQIGhhcmR3YXJl
+IGNhbiBiZSBpbml0aWFsaXplZCBzbyB0aGF0IEJBUnMgYXJlIGVuYWJsZWQgYnkgZGVmYXVsdCwg
+YmVmb3JlIHRoZSBrZXJuZWwgYm9vdHMgb24gdGhlDQo+ID4+IGVuZHBvaW50LCBhbmQgc28gdGhl
+eSB3aWxsIGJlIGZvdW5kIGFuZCBtYXBwZWQgZHVyaW5nIHRoZSBpbml0aWFsIGVudW1lcmF0aW9u
+IGFuZCB5b3UgZG9uJ3QgbmVlZCB0bw0KPiA+PiByZS1lbnVtZXJhdGUuICBUaGUgTVNJLVggdmVj
+dG9ycyBjYW4ndCBiZSB3cml0dGVuIHRvIHRoZSBCQVIgdW50aWwgdGhlIEVQIGtlcm5lbCBoYXMg
+Ym9vdGVkIGFuZCB0aGUgRVAgZHJpdmVyDQo+ID4+IGhhcyBtYXBwZWQgdGhlIEJBUiB0byBsb2Nh
+bCBFUCBtZW1vcnkgdGhvdWdoICh1bmxlc3MgIHlvdSBhbHNvIGNvbmZpZ3VyZSB0aGlzIGluIHRo
+ZSBQQ0llIEVQIGhhcmR3YXJlLCBvciBpbg0KPiA+PiBFUCBwcmUtYm9vdCwgYnV0IGluIHRoYXQg
+Y2FzZSB5b3UgYXJlIHByb2JhYmx5IG5vdCB1c2luZyB0aGUgRVAgZHJpdmVyIGZyYW1ld29yay4p
+DQo+ID4+DQo+ID4+IFRoZSBFUCBkcml2ZXIgZnJhbWV3b3JrIGRvZXMsIGluIG15IHVuZGVyc3Rh
+bmRpbmcsIGdlbmVyYWxseSBleHBlY3QgcmUtZW51bWVyYXRpb24gYWZ0ZXIgdGhlDQo+ID4+IEVQ
+IGtlcm5lbCBoYXMgYm9vdGVkIGFuZCB0aGUgZHJpdmVyIGhhcyBiZWVuIGluaXRpYWxpemVkLCBz
+aW5jZSBpdCBhbGxvd3MgY29uZmlndXJhdGlvbiBvZiBkZXZpY2UgSUQsIEJBUg0KPiA+PiBzaXpl
+cyBldGMuLCBhbmQgaWYgeW91IGNoYW5nZSBhbnkgb2YgdGhlc2UgZnJvbSB0aGUgSFcgZGVmYXVs
+dHMgYXQgYm9vdCB5b3Ugd2lsbCBuZWVkIHRvIHJlLWVudW1lcmF0ZS4NCj4gPj4NCj4gVGhpcyBi
+YXNpY2FsbHkgbWVhbnMgdGhhdCB0aGlzIGRyaXZlciBpcyBmb3IgaG9iYnlpc3QgLyBlbnRodXNp
+YXN0LA0KPiB5b3UgY2FuJ3QgYmFzZSBhIHJlYWwgcHJvZHVjdCBleHBlY3RpbmcNCj4gcmUtZW51
+bWVyYXRpb24gb2YgdGhlIGJ1cy4gcmlnaHQgPw0KSXQgZGVwZW5kcyB3aGF0IHlvdSBtZWFuIGJ5
+IGEgcmVhbCBwcm9kdWN0LCBidXQgeWVzIGl0J3Mgbm90IGludGVuZGVkIGZvciB1c2UgaW4gYSB0
+eXBpY2FsIFBDSWUgZGV2aWNlLg0KVGhlcmUgYXJlIGEgd2lkZSB2YXJpZXR5IG9mIHVzZSBjYXNl
+cyBmb3IgdGhlIEVQIGRyaXZlciBmcmFtZXdvcmssIG5vdCBuZWNlc3NhcmlseSBob2JieWlzdC9l
+bnRodXNpYXN0Lg0KVGhlIGRvY3VtZW50YXRpb24gaGVyZTogaHR0cHM6Ly93d3cua2VybmVsLm9y
+Zy9kb2MvRG9jdW1lbnRhdGlvbi9QQ0kvZW5kcG9pbnQvcGNpLWVuZHBvaW50LnR4dA0KbWVudGlv
+bnMgdGVzdGluZyBvciB2YWxpZGF0aW9uLCBjby1wcm9jZXNzb3IgYWNjZWxlcmF0b3IsIGV0Yy4g
+YXMgcG9zc2libGUgdXNlIGNhc2VzLg0KDQpSZWdhcmRzLA0KQWxhbg0K
