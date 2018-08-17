@@ -1,102 +1,48 @@
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Date: Mon, 6 Aug 2018 13:19:18 -0400 (EDT)
-From: Mikulas Patocka <mpatocka@redhat.com>
-To: Catalin Marinas <catalin.marinas@arm.com>
-Subject: Re: framebuffer corruption due to overlapping stp instructions on
- arm64
-In-Reply-To: <20180806171356.kk45vd7n5bdi6ka3@armageddon.cambridge.arm.com>
-Message-ID: <alpine.LRH.2.02.1808061317470.12989@file01.intranet.prod.int.rdu2.redhat.com>
-References: <CAKv+Gu8DeuksZhk1g3q_msSKV_hSY_2e1uzVten9-oGO3j9Sqg@mail.gmail.com>
- <20180803094129.GB17798@arm.com>
- <alpine.LRH.2.02.1808031235410.31584@file01.intranet.prod.int.rdu2.redhat.com>
- <CAKv+Gu-aNFh1fsr_05SEwDp99n3pLrguP7=tEcFQPNY53=K7Fw@mail.gmail.com>
- <alpine.LRH.2.02.1808031424140.14030@file01.intranet.prod.int.rdu2.redhat.com>
- <CAHCPf3s-+Qf=WBZz1KpisDMG3520jCUh8PLAO3PHa4jdt8kCTw@mail.gmail.com>
- <CAKv+Gu9_h-WFi1j4+DWUN_dMj75SKKHxWoDH8WQ9P7S7MNpZQg@mail.gmail.com>
- <alpine.LRH.2.02.1808060553130.30832@file01.intranet.prod.int.rdu2.redhat.com>
- <99fff4fe-afa9-f12f-a518-472a9dd1c530@arm.com>
- <CAKv+Gu_C2g=C=gMpk4a5jpDORnxZY6t1v=HDoy59m5vwNBxBBg@mail.gmail.com>
- <20180806171356.kk45vd7n5bdi6ka3@armageddon.cambridge.arm.com>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from smtp.codeaurora.org ([198.145.29.96]:38736 "EHLO
+        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1725845AbeHQN6X (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Fri, 17 Aug 2018 09:58:23 -0400
 MIME-Version: 1.0
-List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
-List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
-List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
-List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
-List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
-Cc: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>,
- Joao Pinto <Joao.Pinto@synopsys.com>,
- Ard Biesheuvel <ard.biesheuvel@linaro.org>,
- linux-pci <linux-pci@vger.kernel.org>, Will Deacon <will.deacon@arm.com>,
- Russell King <linux@armlinux.org.uk>,
- Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
- Matt Sealey <neko@bakuhatsu.net>, Jingoo Han <jingoohan1@gmail.com>,
- Robin Murphy <robin.murphy@arm.com>,
- linux-arm-kernel <linux-arm-kernel@lists.infradead.org>
-Content-Type: text/plain; charset="us-ascii"
-Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
-Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
+Content-Type: text/plain; charset=US-ASCII;
+ format=flowed
+Date: Fri, 17 Aug 2018 16:25:23 +0530
+From: poza@codeaurora.org
+To: Jiecheng Wu <jasonwood2031@gmail.com>
+Cc: linux-pci@vger.kernel.org, linux-pci-owner@vger.kernel.org
+Subject: Re: [PATCH] dpc.c: fix missing return value check of
+ pci_find_ext_capability()
+In-Reply-To: <20180817081719.11156-1-jasonwood2031@gmail.com>
+References: <20180817081719.11156-1-jasonwood2031@gmail.com>
+Message-ID: <01c1740e09b6c970246da06ca792bbdf@codeaurora.org>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-
-
-On Mon, 6 Aug 2018, Catalin Marinas wrote:
-
-> On Mon, Aug 06, 2018 at 05:47:36PM +0200, Ard Biesheuvel wrote:
-> > On 6 August 2018 at 14:42, Robin Murphy <robin.murphy@arm.com> wrote:
-> > > On 06/08/18 11:25, Mikulas Patocka wrote:
-> > > [...]
-> > >>>
-> > >>> None of this explains why some transactions fail to make it across
-> > >>> entirely. The overlapping writes in question write the same data to
-> > >>> the memory locations that are covered by both, and so the ordering in
-> > >>> which the transactions are received should not affect the outcome.
-> > >>
-> > >> You're right that the corruption couldn't be explained just by reordering
-> > >> writes. My hypothesis is that the PCIe controller tries to disambiguate
-> > >> the overlapping writes, but the disambiguation logic was not tested and it
-> > >> is buggy. If there's a barrier between the overlapping writes, the PCIe
-> > >> controller won't see any overlapping writes, so it won't trigger the
-> > >> faulty disambiguation logic and it works.
-> > >>
-> > >> Could the ARM engineers look if there's some chicken bit in Cortex-A72
-> > >> that could insert barriers between non-cached writes automatically?
-> > >
-> > > I don't think there is, and even if there was I imagine it would have a
-> > > pretty hideous effect on non-coherent DMA buffers and the various other
-> > > places in which we have Normal-NC mappings of actual system RAM.
-> > 
-> > Looking at the A72 manual, there is one chicken bit that looks like it
-> > may be related:
-> > 
-> > CPUACTLR_EL1 bit #50:
-> > 
-> > 0 Enables store streaming on NC/GRE memory type. This is the reset value.
-> > 1 Disables store streaming on NC/GRE memory type.
-> > 
-> > so putting something like
-> > 
-> > mrs x0, S3_1_C15_C2_0
-> > orr x0, x0, #(1 << 50)
-> > msr S3_1_C15_C2_0, x0
-> > 
-> > in __cpu_setup() would be worth a try.
+On 2018-08-17 13:47, Jiecheng Wu wrote:
+> Function dpc_probe() defined in drivers/pci/pcie/dpc.c calls
+> pci_find_ext_capability(). Function pci_find_ext_capability() returns
+> the address of the requested extended capability structure within the
+> device's PCI configuration space or 0 if the device does not support
+> it. The return value of this function should be checked against 0.
+> ---
+>  drivers/pci/pcie/dpc.c | 2 ++
+>  1 file changed, 2 insertions(+)
 > 
-> Note that access to this register may be disabled at EL3 by firmware
-> (ACTLR_EL3.CPUACTLR).
+> diff --git a/drivers/pci/pcie/dpc.c b/drivers/pci/pcie/dpc.c
+> index f03279f..30ff550 100644
+> --- a/drivers/pci/pcie/dpc.c
+> +++ b/drivers/pci/pcie/dpc.c
+> @@ -226,6 +226,8 @@ static int dpc_probe(struct pcie_device *dev)
+>  		return -ENOMEM;
 > 
-> FWIW, Mikulas' test seems to run fine on a ThunderX1 with AMD
-> FirePro W2100 (on /dev/fb1)
+>  	dpc->cap_pos = pci_find_ext_capability(pdev, PCI_EXT_CAP_ID_DPC);
+> +	if (!dpc->cap_pos)
+> +		return -ENODEV;
+nitpick: space here
+>  	dpc->dev = dev;
+>  	set_service_data(dev, dpc);
 
-I have the EDK EFI firmware sources (and I can load it from a SD card, so 
-there's no risk of bricking the board), so I can insert the write into it, 
-if you say where.
+looks ok to me otherwise.
 
-Mikulas
-
-_______________________________________________
-linux-arm-kernel mailing list
-linux-arm-kernel@lists.infradead.org
-http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
+Regards,
+Oza.
