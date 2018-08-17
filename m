@@ -1,69 +1,40 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mga12.intel.com ([192.55.52.136]:14103 "EHLO mga12.intel.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1727416AbeIABet (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Fri, 31 Aug 2018 21:34:49 -0400
-From: Keith Busch <keith.busch@intel.com>
-To: Linux PCI <linux-pci@vger.kernel.org>,
-        Bjorn Helgaas <bhelgaas@google.com>
-Cc: Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-        Sinan Kaya <okaya@kernel.org>,
-        Thomas Tai <thomas.tai@oracle.com>, poza@codeaurora.org,
+Return-Path: <SRS0=a9CN=LA=kernel.crashing.org=benh@kernel.org>
+Return-Path: <SRS0=a9CN=LA=kernel.crashing.org=benh@kernel.org>
+From: Benjamin Herrenschmidt <benh@kernel.crashing.org>
+To: Bjorn Helgaas <helgaas@kernel.org>, linux-pci@vger.kernel.org
+Cc: Hari Vyas <hari.vyas@broadcom.com>, Ray Jui <ray.jui@broadcom.com>,
+        Srinath Mannam <srinath.mannam@broadcom.com>,
+        Guenter Roeck <linux@roeck-us.net>, Jens Axboe <axboe@kernel.dk>,
         Lukas Wunner <lukas@wunner.de>,
-        Keith Busch <keith.busch@intel.com>
-Subject: [PATCH 12/16] PCI/pciehp: Fix powerfault detection order
-Date: Fri, 31 Aug 2018 15:26:35 -0600
-Message-Id: <20180831212639.10196-13-keith.busch@intel.com>
-In-Reply-To: <20180831212639.10196-1-keith.busch@intel.com>
-References: <20180831212639.10196-1-keith.busch@intel.com>
-Sender: linux-pci-owner@vger.kernel.org
+        Konstantin Khlebnikov <khlebnikov@yandex-team.ru>,
+        Marta Rybczynska <mrybczyn@kalray.eu>,
+        Pierre-Yves Kerbrat <pkerbrat@kalray.eu>, linux-kernel@vger.kernel.org
+Subject: [RFC PATCH 0/6] pci: Rework is_added race fix and address bridge enable races
+Date: Fri, 17 Aug 2018 14:48:56 +1000
+Message-Id: <20180817044902.31420-1-benh@kernel.crashing.org>
 List-ID: <linux-pci.vger.kernel.org>
 
-A device add in a power controller controlled slot will power on and
-clear power fault slot events, but this was happening before the interrupt
-handler attempted to set the sticky status and attention indicators. The
-wrong status will be set if a hot-add and power fault are handled in
-one interrupt. This patch fixes that by checking for power faults before
-checking for new devices.
+This is really two series but since they conflict a bit separately
+here they are in one:
 
-Signed-off-by: Keith Busch <keith.busch@intel.com>
----
- drivers/pci/hotplug/pciehp_hpc.c | 16 ++++++++--------
- 1 file changed, 8 insertions(+), 8 deletions(-)
+First we undo the mess of those atomic priv_flags. The atomicity
+doesn't provide any security since there's no locking against
+the other state pertaining to those flags, it only protects the
+flags themselves.
 
-diff --git a/drivers/pci/hotplug/pciehp_hpc.c b/drivers/pci/hotplug/pciehp_hpc.c
-index 7136e3430925..c6116e516e1e 100644
---- a/drivers/pci/hotplug/pciehp_hpc.c
-+++ b/drivers/pci/hotplug/pciehp_hpc.c
-@@ -646,6 +646,14 @@ static irqreturn_t pciehp_ist(int irq, void *dev_id)
- 		pciehp_handle_button_press(slot);
- 	}
- 
-+	/* Check Power Fault Detected */
-+	if ((events & PCI_EXP_SLTSTA_PFD) && !ctrl->power_fault_detected) {
-+		ctrl->power_fault_detected = 1;
-+		ctrl_err(ctrl, "Slot(%s): Power fault\n", slot_name(slot));
-+		pciehp_set_attention_status(slot, 1);
-+		pciehp_green_led_off(slot);
-+	}
-+
- 	/*
- 	 * Disable requests have higher priority than Presence Detect Changed
- 	 * or Data Link Layer State Changed events.
-@@ -657,14 +665,6 @@ static irqreturn_t pciehp_ist(int irq, void *dev_id)
- 		pciehp_handle_presence_or_link_change(slot, events);
- 	up_read(&ctrl->reset_lock);
- 
--	/* Check Power Fault Detected */
--	if ((events & PCI_EXP_SLTSTA_PFD) && !ctrl->power_fault_detected) {
--		ctrl->power_fault_detected = 1;
--		ctrl_err(ctrl, "Slot(%s): Power fault\n", slot_name(slot));
--		pciehp_set_attention_status(slot, 1);
--		pciehp_green_led_off(slot);
--	}
--
- 	pci_config_pm_runtime_put(pdev);
- 	wake_up(&ctrl->requester);
- 	return IRQ_HANDLED;
--- 
-2.14.4
+The is_added mess is fixed much more simply by moving the assignment
+of the flag to before we start the driver. This is in line with the
+rest of the PCI code: until bound to the device model, we are essentially
+assuming a single threaded environment. is_added is a flag that is
+logically owned by that part of the PCI code, and thus should be set
+and cleared within that "safer" environment.
+
+This removes the horrid relative includes in the powerpc code as well.
+
+The second part aims at fixing the enable/disable/set_master races,
+and does so by providing a framework for future device state locking
+issues.
+
+It introduces a pci_dev->state_mutex which is used at a lower level
+than the device_lock (the device lock isn't suitable, as explained
+in the cset comments) and uses it to protect enablement and set_master.
