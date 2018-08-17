@@ -1,260 +1,90 @@
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-MIME-Version: 1.0
-In-Reply-To: <CAHCPf3s-+Qf=WBZz1KpisDMG3520jCUh8PLAO3PHa4jdt8kCTw@mail.gmail.com>
-References: <alpine.LRH.2.02.1808021242320.31834@file01.intranet.prod.int.rdu2.redhat.com>
- <CAHCPf3tFGqkYEcWNN4LaWThw_rVqT316pzLv6T7RfxwO-eZ0EA@mail.gmail.com>
- <alpine.LRH.2.02.1808030212340.17672@file01.intranet.prod.int.rdu2.redhat.com>
- <CAKv+Gu8DeuksZhk1g3q_msSKV_hSY_2e1uzVten9-oGO3j9Sqg@mail.gmail.com>
- <20180803094129.GB17798@arm.com>
- <alpine.LRH.2.02.1808031235410.31584@file01.intranet.prod.int.rdu2.redhat.com>
- <CAKv+Gu-aNFh1fsr_05SEwDp99n3pLrguP7=tEcFQPNY53=K7Fw@mail.gmail.com>
- <alpine.LRH.2.02.1808031424140.14030@file01.intranet.prod.int.rdu2.redhat.com>
- <CAHCPf3s-+Qf=WBZz1KpisDMG3520jCUh8PLAO3PHa4jdt8kCTw@mail.gmail.com>
-From: Ard Biesheuvel <ard.biesheuvel@linaro.org>
-Date: Fri, 3 Aug 2018 23:20:32 +0200
-Message-ID: <CAKv+Gu9_h-WFi1j4+DWUN_dMj75SKKHxWoDH8WQ9P7S7MNpZQg@mail.gmail.com>
-Subject: Re: framebuffer corruption due to overlapping stp instructions on
- arm64
-To: Matt Sealey <neko@bakuhatsu.net>
-List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
-List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
-List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
-List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
-List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
-Cc: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>,
- Joao Pinto <Joao.Pinto@synopsys.com>, linux-pci <linux-pci@vger.kernel.org>,
- Catalin Marinas <catalin.marinas@arm.com>, Will Deacon <will.deacon@arm.com>,
- Russell King <linux@armlinux.org.uk>,
- Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
- Mikulas Patocka <mpatocka@redhat.com>, Jingoo Han <jingoohan1@gmail.com>,
- linux-arm-kernel <linux-arm-kernel@lists.infradead.org>
-Content-Type: text/plain; charset="us-ascii"
-Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
-Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
+Return-Path: <SRS0=a9CN=LA=kernel.crashing.org=benh@kernel.org>
+Return-Path: <SRS0=a9CN=LA=kernel.crashing.org=benh@kernel.org>
+From: Benjamin Herrenschmidt <benh@kernel.crashing.org>
+To: Bjorn Helgaas <helgaas@kernel.org>, linux-pci@vger.kernel.org
+Cc: Hari Vyas <hari.vyas@broadcom.com>, Ray Jui <ray.jui@broadcom.com>,
+        Srinath Mannam <srinath.mannam@broadcom.com>,
+        Guenter Roeck <linux@roeck-us.net>, Jens Axboe <axboe@kernel.dk>,
+        Lukas Wunner <lukas@wunner.de>,
+        Konstantin Khlebnikov <khlebnikov@yandex-team.ru>,
+        Marta Rybczynska <mrybczyn@kalray.eu>,
+        Pierre-Yves Kerbrat <pkerbrat@kalray.eu>, linux-kernel@vger.kernel.org,
+        Benjamin Herrenschmidt <benh@kernel.crashing.org>
+Subject: [RFC PATCH 4/6] pci: Add a mutex to pci_dev to protect device state
+Date: Fri, 17 Aug 2018 14:49:00 +1000
+Message-Id: <20180817044902.31420-5-benh@kernel.crashing.org>
+In-Reply-To: <20180817044902.31420-1-benh@kernel.crashing.org>
+References: <20180817044902.31420-1-benh@kernel.crashing.org>
 List-ID: <linux-pci.vger.kernel.org>
 
-On 3 August 2018 at 22:44, Matt Sealey <neko@bakuhatsu.net> wrote:
-> On 3 August 2018 at 13:25, Mikulas Patocka <mpatocka@redhat.com> wrote:
->>
->>
->> On Fri, 3 Aug 2018, Ard Biesheuvel wrote:
->>
->>> Are we still talking about overlapping unaligned accesses here? Or do
->>> you see other failures as well?
->>
->> Yes - it is caused by overlapping unaligned accesses inside memcpy. When I
->> put "dmb sy" between the overlapping accesses in
->> glibc/sysdeps/aarch64/memcpy.S, this program doesn't detect any memory
->> corruption.
->
-> It is a symptom of generating reorderable accesses inside memcpy. It's nothing
-> to do with alignment, per se (see below). A dmb sy just hides the symptoms.
->
-> What we're talking about here - yes, Ard, within certain amounts of
-> reason - is that
-> you cannot use PCI BAR memory as 'Normal' - certainly never cacheable memory,
-> but Normal NC isn't good either. That is that your CPU cannot post
-> writes or reads
-> towards PCI memory spaces unless it is dealing with it as Device memory or very
-> strictly controlled use of Normal Non-Cacheable.
->
-> I understand why the rest of the world likes to mark stuff as
-> 'writecombine,' but
-> that's x86-ism, not an Arm memory type.
->
-> There is potential for accesses to the same slave from different
-> masters (or just
-> different AXI IDs, most cores rotate over 8 or 16 or so for Normal
-> memory to achieve)
-> to be reordered. PCIe has no idea what the source was, it will just
-> accept them in the order it receives them, and also it will be
-> strictly defined to
-> manage incoming AXI or ACE transactions (and barriers..) in a way that does
-> not violate the PCIe memory model - the worst case is deadlocks, the best case
-> is you see some very strange behavior.
->
-> In any case the original ordering of two Normal-NC transactions may
-> not make it to
-> the PCIe bridge in the first place which is probably why a DMB
-> resolves it - it will
-> force the core to issue them in order and it's likely unless there is
-> some hyper-complex
-> multi-pathing going on, they'll stay ordered. If you MUST preserve the
-> order between
-> two Normal memory accesses, a barrier is required. The same is true also of any
-> re-orderable device access.
->
+This adds a pci_dev mutex which will be used to fix a number
+of races related to the various state bits maintained in
+that structure.
 
-None of this explains why some transactions fail to make it across
-entirely. The overlapping writes in question write the same data to
-the memory locations that are covered by both, and so the ordering in
-which the transactions are received should not affect the outcome.
+We call it "state_lock" with similarly named accessors to avoid
+confusion with the pci_dev_lock() which uses the device_lock().
 
+This is a low level mutex meant to protect the mapping between
+the state fields and the hardware state, for example enabling
+disabling, setting/clearing bus master etc...
 
+These operations can happen while the device_lock() is already
+held (but don't have to) so a separate mutex is preferable.
 
->>> > I tried to run it on system RAM mapped with the NC attribute and I didn't
->>> > get any corruption - that suggests the the bug may be in the PCIE
->>> > subsystem.
->
-> Pure fluke.
->
-> I'll give a simple explanation. The Arm Architecture defines
-> single-copy and multi-copy
-> atomic transactions. You can treat 'single-copy' to mean that that
-> transaction cannot
-> be made partial, or reordered within itself, i.e. it must modify
-> memory (if it is a store) in
-> a single swift effort and any future reads from that memory must
-> return the FULL result
-> of that write.
->
-> Multi-copy means it can be resized and reordered a bit. Will Deacon is
-> going to crucify
-> me for simplifying it, but.. let's proceed with a poor example:
->
-> STR X0,[X1] on a 32-bit bus cannot ever be single-copy atomic, because
-> you cannot
-> write 64-bits of data on a 32-bit bus in a single, unbreakable
-> transaction. This is because
-> from one bus cycle to the next, one half of the transaction will be in
-> a different place. Your
-> interconnect will have latched and buffered 32-bits and the CPU is
-> holding the other.
->
-> STP X0, X1, [X2] on a 64-bit bus can be single-copy atomic with
-> respect to the element
-> size. But it is on the whole multi-copy atomic - that is to say that
-> it can provide a single
-> transaction with multiple elements which are transmitted, and those
-> elements could be
-> messed with on the way down the pipe.
->
-> On a 128-bit bus, you might expect it to be single-copy atomic because
-> the entire
-> transaction can be fit into one single data beat, but *it is most
-> definitely not* according
-> to the architecture. The data from X0 and X1 may be required to be
-> stored at *X2 and
-> *(X2+8), but the architecture doesn't care which one is written first.
-> Neither does AMBA.
->
-> STP is only ever guaranteed to be single-copy atomic with regards to
-> the element size
-> (which is the X register in question). If you swap the data around,
-> and do STP X1, X0,
-> [X2] you may see a different result dependent on how the processor
-> decides to pull
-> data from the register file and in what order. Users of the old 32-bit
-> ARM STM instruction
-> will recall that it writes the register list in incrementing order,
-> lowest register number to
-> lowest address, so what is the solution for STP? Do you expect expect
-> X0 to be emitted
-> on the bus first or the data to be stored in *X2?
->
-> It's neither!
->
-> That means you can do an STP on one processor and an LDR of one of the 64-bit
-> words on another processor, and you may be able to see
->
-> a) None of the STP transaction
-> b) X2 is written with the value in X0, but X2+8 is not holding the value in X1
-> c) b, only reversed
-> d) What you expect
->
-> And this can change dependent on the resizers and bridges and QoS and paths
-> between a master interface and a slave interface, although a truly
-> single-copy atomic
-> transaction going through a downsizer to smaller than the transaction
-> size is a broken
-> system design, it may be allowable if the downsizer hazards addresses
-> to the granularity
-> of the larger bus size on the read and write channels and will stall
-> the read until the write
-> has committed at least to a buffer, or downstream of the downsizer, so
-> that it will return
-> on read the full breadth of the memory update.... that's down to the
-> system designer.
-> There are plenty of places things like this can happen - in cache
-> controllers, for
-> example, and merging store buffers (you may have a 256 bit or 512 bit
-> buffer, but
-> only a 128-bit memory interface).
->
-> memcpy() as a function nor the loads and stores it makes are not
-> single-copy atomic,
-> no transactions need to be with Normal memory, so that merged stores
-> and linefills
-> (if cacheable) can be done. Hence, your memcpy() is just randomly
-> chucking whatever
-> data it likes to the bus and they'll arrive in any old order,
-> 'writecombine' semantics make
-> you think you'll only ever see one very large write with all the CPU
-> activity merged
-> together - also NOT true.
->
-> And the granularity of the hazarding in your system, from the CPU
-> store buffer to the
-> bus interface to the interconnect buffering to the PCIe bridge to the
-> PCIe EP is.. what?
-> Not the same all the way down, I'll bet you.
->
-> It is assuming that Intel writecombine semantics would apply, which to
-> be truthful are NO
-> different to the ones of a merging store buffer in an Arm processor
-> (Intel architecture states
-> that the writecombine buffer can be flushed at any time with any
-> amount of actual data,
-> it might not be the biggest burst you can imagine), but in practice it
-> tends to be in cache-line
-> sized chunks with strict incrementing order and subsequent writes due
-> to the extremely
-> large pipeline and queueing will be absorbed by the writecombine
-> buffer almost with
-> guarantee.
->
-> Links is broken. Even on Intel. If you overlap memory transactions and
-> expect them to be
-> gathered and reordered to produce nice, ordered non-overlapping
-> streaming transactions
-> you'll be sorely disappointed when they don't, which is what is
-> happening here. The fix is
-> use barriers - and don't rely on single-copy atomicity (which is the
-> only saving feature that
-> would not require you to use a barrier) since this is a situation
-> where absolutely none is
-> afforded.
->
-> It'd be easier to cross your fingers that the PCIe RC is has a
-> coherent master port (ACE-Lite
-> or something fancier) and can snoop into CPU caches. Then you can mark a memory
-> location in DRAM as Normal Inner/Outer Cacheable Writeback,
-> Inner/Outer Shareable,
-> Write-allocate, read-allocate, and you won't even notice your CPU
-> doing any memory
-> writes, but yes if you tell a graphics adapter that it's main
-> framebuffer is in DRAM it might
-> be a bit slower (to the speed of the PCIe link.. which may affect your
-> maximum resolution
-> in some really strange circumstances). If it cannot use a DRAM
-> framebuffer then I'd have to
-> wonder why not.. every PCI graphics card I ever used could take any
-> base address and
-> the magic of PCI bus mastering would handle it. This is no different
-> to how you'd use
-> DRAM as texture memory.. phenomenally slowly, but without having to
-> worry about any
-> ordering semantics (except you should flush your data cache to PoC at
-> the end of every
-> frame).
->
-> Ta,
-> Matt
+Signed-off-by: Benjamin Herrenschmidt <benh@kernel.crashing.org>
+---
+ drivers/pci/probe.c |  1 +
+ include/linux/pci.h | 17 +++++++++++++++++
+ 2 files changed, 18 insertions(+)
 
-_______________________________________________
-linux-arm-kernel mailing list
-linux-arm-kernel@lists.infradead.org
-http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
+diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
+index 440445ac7dfa..3ce287ab6150 100644
+--- a/drivers/pci/probe.c
++++ b/drivers/pci/probe.c
+@@ -2155,6 +2155,7 @@ struct pci_dev *pci_alloc_dev(struct pci_bus *bus)
+ 	INIT_LIST_HEAD(&dev->bus_list);
+ 	dev->dev.type = &pci_dev_type;
+ 	dev->bus = pci_bus_get(bus);
++	mutex_init(&dev->state_lock);
+ 
+ 	return dev;
+ }
+diff --git a/include/linux/pci.h b/include/linux/pci.h
+index f58bda204f09..0d4fc22df190 100644
+--- a/include/linux/pci.h
++++ b/include/linux/pci.h
+@@ -33,6 +33,7 @@
+ #include <linux/io.h>
+ #include <linux/resource_ext.h>
+ #include <uapi/linux/pci.h>
++#include <linux/mutex.h>
+ 
+ #include <linux/pci_ids.h>
+ 
+@@ -443,8 +444,24 @@ struct pci_dev {
+ 	phys_addr_t	rom;		/* Physical address if not from BAR */
+ 	size_t		romlen;		/* Length if not from BAR */
+ 	char		*driver_override; /* Driver name to force a match */
++
++	unsigned long	priv_flags;	/* Private flags for the PCI driver */
++
++	struct mutex	state_lock;	/* Protect local state bits */
++
++	/* --- Fields below this line are protected by the state_lock mutex */
+ };
+ 
++static inline void pci_dev_state_lock(struct pci_dev *dev)
++{
++	mutex_lock(&dev->state_lock);
++}
++
++static inline void pci_dev_state_unlock(struct pci_dev *dev)
++{
++	mutex_unlock(&dev->state_lock);
++}
++
+ static inline struct pci_dev *pci_physfn(struct pci_dev *dev)
+ {
+ #ifdef CONFIG_PCI_IOV
+-- 
+2.17.1
