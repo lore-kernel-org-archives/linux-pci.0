@@ -1,64 +1,127 @@
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-From: Leonard Crestez <leonard.crestez@nxp.com>
-To: "lorenzo.pieralisi@arm.com" <lorenzo.pieralisi@arm.com>,
- "shawnguo@kernel.org" <shawnguo@kernel.org>, "bhelgaas@google.com"
- <bhelgaas@google.com>
-Subject: Re: [PATCH v3 0/2] PCI: imx: Initial imx7d pm support
-Date: Wed, 8 Aug 2018 10:53:52 +0000
-Message-ID: <bac2cb70b16d81f589915fc0900126b516414243.camel@nxp.com>
-References: <cover.1532448745.git.leonard.crestez@nxp.com>
-In-Reply-To: <cover.1532448745.git.leonard.crestez@nxp.com>
+Return-Path: <SRS0=Mh2n=LA=broadcom.com=hari.vyas@kernel.org>
+Return-Path: <SRS0=Mh2n=LA=broadcom.com=hari.vyas@kernel.org>
 MIME-Version: 1.0
-List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
-List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
-List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
-List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
-List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
-Cc: "A.s. Dong" <aisheng.dong@nxp.com>,
- "Joao.Pinto@synopsys.com" <Joao.Pinto@synopsys.com>,
- Richard Zhu <hongxing.zhu@nxp.com>,
- "kernel@pengutronix.de" <kernel@pengutronix.de>,
- Anson Huang <anson.huang@nxp.com>,
- "andrew.smirnov@gmail.com" <andrew.smirnov@gmail.com>,
- "jingoohan1@gmail.com" <jingoohan1@gmail.com>,
- "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
- dl-linux-imx <linux-imx@nxp.com>,
- "p.zabel@pengutronix.de" <p.zabel@pengutronix.de>,
- "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
- Fabio Estevam <fabio.estevam@nxp.com>,
- "linux-arm-kernel@lists.infradead.org" <linux-arm-kernel@lists.infradead.org>,
- "l.stach@pengutronix.de" <l.stach@pengutronix.de>
-Content-Type: text/plain; charset="us-ascii"
-Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
-Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
+In-Reply-To: <1ffafe01887e3b760f84488b06339aba64f586e5.camel@kernel.crashing.org>
+References: <20180817044902.31420-1-benh@kernel.crashing.org>
+ <20180817044902.31420-6-benh@kernel.crashing.org> <66577784.13494160.1534493390262.JavaMail.zimbra@kalray.eu>
+ <1ffafe01887e3b760f84488b06339aba64f586e5.camel@kernel.crashing.org>
+From: Hari Vyas <hari.vyas@broadcom.com>
+Date: Fri, 17 Aug 2018 14:30:16 +0530
+Message-ID: <CAM5rFu-h25j-vfvybKbKr4huhBgpV3Rusj8E2JyaoG1YnokeMw@mail.gmail.com>
+Subject: Re: [RFC PATCH 5/6] pci: Protect the enable/disable state of pci_dev
+ using the state mutex
+To: Benjamin Herrenschmidt <benh@kernel.crashing.org>
+Cc: Marta Rybczynska <mrybczyn@kalray.eu>, Bjorn Helgaas <helgaas@kernel.org>, linux-pci@vger.kernel.org,
+	Ray Jui <ray.jui@broadcom.com>, Srinath Mannam <srinath.mannam@broadcom.com>,
+	Guenter Roeck <linux@roeck-us.net>, Jens Axboe <axboe@kernel.dk>, Lukas Wunner <lukas@wunner.de>,
+	Konstantin Khlebnikov <khlebnikov@yandex-team.ru>, Pierre-Yves Kerbrat <pkerbrat@kalray.eu>,
+	linux-kernel@vger.kernel.org
+Content-Type: text/plain; charset="UTF-8"
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tue, 2018-07-24 at 19:14 +0300, Leonard Crestez wrote:
-> Changes since v2:
->  * Print with dev_info if link fails on resume (Lucas)
->  * Add a comment on imx7d pci irq mappings (Andrey)
->  * Make imx6_pcie_ltssm_disable print an error on IMX6Q (Lucas)
-> 
-> The ltssm_disable does not return an error because it can't be usefully
-> handled, reversing partial suspend is a nightmare and unlikely to work.
-> 
->  * Drop "reset: imx7: Fix always writing bits as 0 (accepted by Philipp)
-> 
-> Series is against linux-next tag next-20180724 where the reset patch was
-> already accepted. The imx7d.dtsi patch is also useful standalone.
-> 
-> Link to v2: https://lkml.org/lkml/2018/7/20/472
+On Fri, Aug 17, 2018 at 2:00 PM, Benjamin Herrenschmidt
+<benh@kernel.crashing.org> wrote:
+> On Fri, 2018-08-17 at 10:09 +0200, Marta Rybczynska wrote:
+>>
+>> ----- On 17 Aug, 2018, at 06:49, Benjamin Herrenschmidt benh@kernel.crashing.org wrote:
+>>
+>> > This protects enable/disable operations using the state mutex to
+>> > avoid races with, for example, concurrent enables on a bridge.
+>> >
+>> > The bus hierarchy is walked first before taking the lock to
+>> > avoid lock nesting (though it would be ok if we ensured that
+>> > we always nest them bottom-up, it is better to just avoid the
+>> > issue alltogether, especially as we might find cases where
+>> > we want to take it top-down later).
+>> >
+>> > Signed-off-by: Benjamin Herrenschmidt <benh@kernel.crashing.org>
+>>
+>>
+>> >
+>> > static void pci_enable_bridge(struct pci_dev *dev)
+>> > {
+>> >     struct pci_dev *bridge;
+>> > -   int retval;
+>> > +   int retval, enabled;
+>> >
+>> >     bridge = pci_upstream_bridge(dev);
+>> >     if (bridge)
+>> >             pci_enable_bridge(bridge);
+>> >
+>> > -   if (pci_is_enabled(dev)) {
+>> > -           if (!dev->is_busmaster)
+>> > -                   pci_set_master(dev);
+>> > +   /* Already enabled ? */
+>> > +   pci_dev_state_lock(dev);
+>> > +   enabled = pci_is_enabled(dev);
+>> > +   if (enabled && !dev->is_busmaster)
+>> > +           pci_set_master(dev);
+>> > +   pci_dev_state_unlock(dev);
+>> > +   if (enabled)
+>> >             return;
+>> > -   }
+>> >
+>>
+>> This looks complicated too me especially with the double locking. What do you
+>> think about a function doing that check that used an unlocked version of
+>> pcie_set_master?
+>>
+>> Like:
+>>
+>>         dev_state_lock(dev);
+>>         enabled = pci_is_enabled(dev);
+>>         if (enabled &&  !dev->is_busmaster)
+>>                 pci_set_master_unlocked();
+>>         pci_dev_state_unlock(dev);
+>>
+>> BTW If I remember correctly the code today can set bus mastering multiple
+>> times without checking if already done.
+>
+> I don't mind but I tend to dislike all those _unlocked() suffixes, I
+> suppose my generation is typing adverse enough that we call these
+> __something instead :)
+>
+> As for setting multiple times, yes pci_set_master() doesn't check but
+> look at the "-" hunks of my patch, I'm not changing the existing test
+> here. Not that it matters much, it's an optimization.
+>
+> In fact my original version just completely removed the whole lot
+> and just unconditionally did pci_enable_device() + pci_set_master(),
+> just ignoring the existing state :-)
+>
+> But I decided to keep the patch functionally equivalent so I added it
+> back.
+>
+> Cheers,
+> Ben.
+>
+>
+So many mail threads for common issues going so just trying to
+summarize concern from my side.
+1) HW level
+PCI Config data overwritten (ex: PCI_COMMAND bits etc) was happening
+at lower layer so from my
+perspective, it is best to handle concern at lower level with locking
+mechanism and that is what
+I proposed in my upcoming patch. Without that, I guess, we may end up
+in issues later with some weird scenario
+which may not be known today  and we will again be fine tuning stuff
+here and there.
+2) SW level(internal data structure):
+About is_added,is_busmaster: These all are bit fields so infact I too
+suggested to remove those bit fields and
+make separate variables in pci_dev structure. This will avoid all
+data-overwritten,concurrency issues but ofcourse
+at the level of space cost.
+Other possibility will be either to use atomic or locking mechanism
+for these. My point here is also same, better
+avoid fine tuning later stage.
+Moving is_added up and down doesn't look like good as we are just
+shifting issue up and down.
 
-This is a gentle reminder that this series was reviewed by Lucas two
-weeks ago but not yet included.
+Please check and decide accordingly. I will hold my to-be-submitted
+modify() patch about handling hw level
+over-written case with locking around read-write operation.
 
---
 Regards,
-Leonard
-_______________________________________________
-linux-arm-kernel mailing list
-linux-arm-kernel@lists.infradead.org
-http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
+hari
