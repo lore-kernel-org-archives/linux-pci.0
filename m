@@ -1,60 +1,168 @@
-Return-Path: <SRS0=uSZ2=LE=intel.com=keith.busch@kernel.org>
-Return-Path: <SRS0=uSZ2=LE=intel.com=keith.busch@kernel.org>
-Date: Tue, 21 Aug 2018 08:37:51 -0600
-From: Keith Busch <keith.busch@intel.com>
-To: Benjamin Herrenschmidt <benh@kernel.crashing.org>
-Cc: poza@codeaurora.org, Sinan Kaya <okaya@kernel.org>,
-	Bjorn Helgaas <helgaas@kernel.org>,
-	Thomas Tai <thomas.tai@oracle.com>, bhelgaas@google.com,
-	linux-pci@vger.kernel.org, linux-pci-owner@vger.kernel.org,
-	Sam Bobroff <sam.bobroff@au1.ibm.com>
-Subject: Re: [PATCH 1/1] PCI/AER: prevent pcie_do_fatal_recovery from using
- device after it is removed
-Message-ID: <20180821143751.GA18477@localhost.localdomain>
-References: <fe891b63-12c7-61ab-a59a-ae24ad766754@kernel.org>
- <ab5cb5b277f1c1c1362ef597ca7b8c6a2cd32cdf.camel@kernel.crashing.org>
- <908ff33ded8f31830f95a8889d8540f1@codeaurora.org>
- <5027d857bb59edfd33442003aa618ece1bc9cd52.camel@kernel.crashing.org>
- <b2e2ac5c92d8a91d00606754d1046578@codeaurora.org>
- <2ecd1fd6d763810d45697f846fa876b58a193b1b.camel@kernel.crashing.org>
- <a149d9657ca83b41c724b0ddd319c6fb@codeaurora.org>
- <512e0e11c3ba462c1d033f8b0e768fa27489731c.camel@kernel.crashing.org>
- <ad23b16cf7ff1f3b51961fda59533892@codeaurora.org>
- <2742bdba5ae8ccc420234b6e6b0224919367ed4c.camel@kernel.crashing.org>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <2742bdba5ae8ccc420234b6e6b0224919367ed4c.camel@kernel.crashing.org>
+Return-Path: <SRS0=a9CN=LA=kernel.crashing.org=benh@kernel.org>
+Return-Path: <SRS0=a9CN=LA=kernel.crashing.org=benh@kernel.org>
+From: Benjamin Herrenschmidt <benh@kernel.crashing.org>
+To: Bjorn Helgaas <helgaas@kernel.org>, linux-pci@vger.kernel.org
+Cc: Hari Vyas <hari.vyas@broadcom.com>, Ray Jui <ray.jui@broadcom.com>,
+        Srinath Mannam <srinath.mannam@broadcom.com>,
+        Guenter Roeck <linux@roeck-us.net>, Jens Axboe <axboe@kernel.dk>,
+        Lukas Wunner <lukas@wunner.de>,
+        Konstantin Khlebnikov <khlebnikov@yandex-team.ru>,
+        Marta Rybczynska <mrybczyn@kalray.eu>,
+        Pierre-Yves Kerbrat <pkerbrat@kalray.eu>, linux-kernel@vger.kernel.org,
+        Benjamin Herrenschmidt <benh@kernel.crashing.org>
+Subject: [RFC PATCH 3/6] pci: Remove priv_flags and use dev->error_state for "disconnected" status
+Date: Fri, 17 Aug 2018 14:48:59 +1000
+Message-Id: <20180817044902.31420-4-benh@kernel.crashing.org>
+In-Reply-To: <20180817044902.31420-1-benh@kernel.crashing.org>
+References: <20180817044902.31420-1-benh@kernel.crashing.org>
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tue, Aug 21, 2018 at 04:06:30PM +1000, Benjamin Herrenschmidt wrote:
-> On Tue, 2018-08-21 at 10:44 +0530, poza@codeaurora.org wrote:
-> > 
-> > Ok Let me summarize the so far discussed things.
-> > 
-> > It would be nice if we all (Bjorn, Keith, Ben, Sinan) can hold consensus 
-> > on this.
-> > 
-> > 1) Right now AER and DPC both calls pcie_do_fatal_recovery(), I majorly 
-> > see DPC as error handling and recovery agent rather than being used for 
-> > hotplug.
-> >     so in my opinion, both AER and DPC should have same error handling 
-> > and recovery mechanism
-> 
-> Yes.
->
-> >     so if there is a way to figure out that in absence of pcihp, if DPC 
-> > is being used to support hotplug then we fall back to original DPC 
-> > mechanism (which is remove devices)
-> 
-> Not exactly. If the presence detect change indicates it was a hotplug
-> event rather.
+This already represents whether a device is accessible or not,
+creating a new flag isn't particularly helpful.
 
-The actions associated with error recovery will trigger link state changes
-for a lot of existing hardware. PCIEHP currently does the same removal
-sequence for both link state change (DLLSC) and presence detect change
-(PDC) events.
+dev->error_state being an int, assigning it doesn't require
+an atomic operation per-se. The existing atomic bitop only
+protects the field, not anything else anyway.
 
-It sounds like you want pciehp to do nothing on the DLLSC events that it
-currently handles, and instead do the board removal only on PDC.  If that
-is the case, is the desire to not remove devices downstream a permanently
-disabled link, or does that responsibility fall onto some other component?
+Signed-off-by: Benjamin Herrenschmidt <benh@kernel.crashing.org>
+---
+ drivers/pci/access.c | 12 ++++++------
+ drivers/pci/msi.c    |  4 ++--
+ drivers/pci/pci.c    |  2 +-
+ drivers/pci/pci.h    | 11 ++---------
+ include/linux/pci.h  |  2 --
+ 5 files changed, 11 insertions(+), 20 deletions(-)
+
+diff --git a/drivers/pci/access.c b/drivers/pci/access.c
+index a3ad2fe185b9..ad97a3544636 100644
+--- a/drivers/pci/access.c
++++ b/drivers/pci/access.c
+@@ -535,7 +535,7 @@ EXPORT_SYMBOL(pcie_capability_clear_and_set_dword);
+ 
+ int pci_read_config_byte(const struct pci_dev *dev, int where, u8 *val)
+ {
+-	if (pci_dev_is_disconnected(dev)) {
++	if (pci_channel_offline(dev)) {
+ 		*val = ~0;
+ 		return PCIBIOS_DEVICE_NOT_FOUND;
+ 	}
+@@ -545,7 +545,7 @@ EXPORT_SYMBOL(pci_read_config_byte);
+ 
+ int pci_read_config_word(const struct pci_dev *dev, int where, u16 *val)
+ {
+-	if (pci_dev_is_disconnected(dev)) {
++	if (pci_channel_offline(dev)) {
+ 		*val = ~0;
+ 		return PCIBIOS_DEVICE_NOT_FOUND;
+ 	}
+@@ -556,7 +556,7 @@ EXPORT_SYMBOL(pci_read_config_word);
+ int pci_read_config_dword(const struct pci_dev *dev, int where,
+ 					u32 *val)
+ {
+-	if (pci_dev_is_disconnected(dev)) {
++	if (pci_channel_offline(dev)) {
+ 		*val = ~0;
+ 		return PCIBIOS_DEVICE_NOT_FOUND;
+ 	}
+@@ -566,7 +566,7 @@ EXPORT_SYMBOL(pci_read_config_dword);
+ 
+ int pci_write_config_byte(const struct pci_dev *dev, int where, u8 val)
+ {
+-	if (pci_dev_is_disconnected(dev))
++	if (pci_channel_offline(dev))
+ 		return PCIBIOS_DEVICE_NOT_FOUND;
+ 	return pci_bus_write_config_byte(dev->bus, dev->devfn, where, val);
+ }
+@@ -574,7 +574,7 @@ EXPORT_SYMBOL(pci_write_config_byte);
+ 
+ int pci_write_config_word(const struct pci_dev *dev, int where, u16 val)
+ {
+-	if (pci_dev_is_disconnected(dev))
++	if (pci_channel_offline(dev))
+ 		return PCIBIOS_DEVICE_NOT_FOUND;
+ 	return pci_bus_write_config_word(dev->bus, dev->devfn, where, val);
+ }
+@@ -583,7 +583,7 @@ EXPORT_SYMBOL(pci_write_config_word);
+ int pci_write_config_dword(const struct pci_dev *dev, int where,
+ 					 u32 val)
+ {
+-	if (pci_dev_is_disconnected(dev))
++	if (pci_channel_offline(dev))
+ 		return PCIBIOS_DEVICE_NOT_FOUND;
+ 	return pci_bus_write_config_dword(dev->bus, dev->devfn, where, val);
+ }
+diff --git a/drivers/pci/msi.c b/drivers/pci/msi.c
+index f2ef896464b3..2f872db40042 100644
+--- a/drivers/pci/msi.c
++++ b/drivers/pci/msi.c
+@@ -298,7 +298,7 @@ void __pci_write_msi_msg(struct msi_desc *entry, struct msi_msg *msg)
+ {
+ 	struct pci_dev *dev = msi_desc_to_pci_dev(entry);
+ 
+-	if (dev->current_state != PCI_D0 || pci_dev_is_disconnected(dev)) {
++	if (dev->current_state != PCI_D0 || pci_channel_offline(dev)) {
+ 		/* Don't touch the hardware now */
+ 	} else if (entry->msi_attrib.is_msix) {
+ 		void __iomem *base = pci_msix_desc_addr(entry);
+@@ -975,7 +975,7 @@ static void pci_msix_shutdown(struct pci_dev *dev)
+ 	if (!pci_msi_enable || !dev || !dev->msix_enabled)
+ 		return;
+ 
+-	if (pci_dev_is_disconnected(dev)) {
++	if (pci_channel_offline(dev)) {
+ 		dev->msix_enabled = 0;
+ 		return;
+ 	}
+diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
+index 29ff9619b5fa..62591c153999 100644
+--- a/drivers/pci/pci.c
++++ b/drivers/pci/pci.c
+@@ -5713,7 +5713,7 @@ bool pci_device_is_present(struct pci_dev *pdev)
+ {
+ 	u32 v;
+ 
+-	if (pci_dev_is_disconnected(pdev))
++	if (pci_channel_offline(pdev))
+ 		return false;
+ 	return pci_bus_read_dev_vendor_id(pdev->bus, pdev->devfn, &v, 0);
+ }
+diff --git a/drivers/pci/pci.h b/drivers/pci/pci.h
+index 473aa10a5dbf..f7704333e6a1 100644
+--- a/drivers/pci/pci.h
++++ b/drivers/pci/pci.h
+@@ -293,18 +293,11 @@ struct pci_sriov {
+ 	bool		drivers_autoprobe; /* Auto probing of VFs by driver */
+ };
+ 
+-/* pci_dev priv_flags */
+-#define PCI_DEV_DISCONNECTED 0
+-
+ static inline int pci_dev_set_disconnected(struct pci_dev *dev, void *unused)
+ {
+-	set_bit(PCI_DEV_DISCONNECTED, &dev->priv_flags);
+-	return 0;
+-}
++	dev->error_state = pci_channel_io_perm_failure;
+ 
+-static inline bool pci_dev_is_disconnected(const struct pci_dev *dev)
+-{
+-	return test_bit(PCI_DEV_DISCONNECTED, &dev->priv_flags);
++	return 0;
+ }
+ 
+ #ifdef CONFIG_PCIEAER
+diff --git a/include/linux/pci.h b/include/linux/pci.h
+index 9799109c5e25..f58bda204f09 100644
+--- a/include/linux/pci.h
++++ b/include/linux/pci.h
+@@ -443,8 +443,6 @@ struct pci_dev {
+ 	phys_addr_t	rom;		/* Physical address if not from BAR */
+ 	size_t		romlen;		/* Length if not from BAR */
+ 	char		*driver_override; /* Driver name to force a match */
+-
+-	unsigned long	priv_flags;	/* Private flags for the PCI driver */
+ };
+ 
+ static inline struct pci_dev *pci_physfn(struct pci_dev *dev)
+-- 
+2.17.1
