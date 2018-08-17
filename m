@@ -1,156 +1,99 @@
-Return-Path: <SRS0=IRWQ=KX=gmail.com=mr.nuke.me@kernel.org>
-Return-Path: <SRS0=IRWQ=KX=gmail.com=mr.nuke.me@kernel.org>
-Subject: Re: [PATCH v3] PCI/AER: Do not clear AER bits if we don't own AER
-To: Bjorn Helgaas <helgaas@kernel.org>
-Cc: linux-pci@vger.kernel.org, bhelgaas@google.com, keith.busch@intel.com,
- alex_gagniuc@dellteam.com, austin_bolen@dell.com, shyam_iyer@dell.com,
- Frederick Lawler <fred@fredlawl.com>, Oza Pawandeep <poza@codeaurora.org>,
- linux-kernel@vger.kernel.org
-References: <3d05f662-2c29-90cd-9c74-6456939a0e6b@gmail.com>
- <20180730233547.1238-1-mr.nuke.me@gmail.com>
- <20180808011429.GB49411@bhelgaas-glaptop.roam.corp.google.com>
-From: "Alex G." <mr.nuke.me@gmail.com>
-Message-ID: <56a5722e-d102-554d-cbea-44af3383f7e3@gmail.com>
-Date: Tue, 7 Aug 2018 22:46:19 -0500
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail.kernel.org ([198.145.29.99]:40708 "EHLO mail.kernel.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1725816AbeHQR3F (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Fri, 17 Aug 2018 13:29:05 -0400
+Date: Fri, 17 Aug 2018 09:25:29 -0500
+From: Bjorn Helgaas <helgaas@kernel.org>
+To: "Derrick, Jonathan" <jonathan.derrick@intel.com>
+Cc: "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+        "okaya@kernel.org" <okaya@kernel.org>,
+        "willy@infradead.org" <willy@infradead.org>,
+        "liudongdong3@huawei.com" <liudongdong3@huawei.com>,
+        "poza@codeaurora.org" <poza@codeaurora.org>,
+        "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+        "Busch, Keith" <keith.busch@intel.com>,
+        "linux-doc@vger.kernel.org" <linux-doc@vger.kernel.org>
+Subject: Re: [PATCH 1/2] PCI/DPC: Add 'nodpc' parameter
+Message-ID: <20180817142529.GA128050@bhelgaas-glaptop.roam.corp.google.com>
+References: <1534368400-2807-1-git-send-email-jonathan.derrick@intel.com>
+ <20180816154940.GD5762@bombadil.infradead.org>
+ <1534434641.17819.27.camel@intel.com>
+ <20180816203111.GB10316@bhelgaas-glaptop.roam.corp.google.com>
+ <1534452635.17819.53.camel@intel.com>
 MIME-Version: 1.0
-In-Reply-To: <20180808011429.GB49411@bhelgaas-glaptop.roam.corp.google.com>
-Content-Type: text/plain; charset=utf-8; format=flowed
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1534452635.17819.53.camel@intel.com>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-
-
-On 08/07/2018 08:14 PM, Bjorn Helgaas wrote:
-> On Mon, Jul 30, 2018 at 06:35:31PM -0500, Alexandru Gagniuc wrote:
->> When we don't own AER, we shouldn't touch the AER error bits. Clearing
->> error bits willy-nilly might cause firmware to miss some errors. In
->> theory, these bits get cleared by FFS, or via ACPI _HPX method. These
->> mechanisms are not subject to the problem.
+On Thu, Aug 16, 2018 at 08:50:42PM +0000, Derrick, Jonathan wrote:
+> On Thu, 2018-08-16 at 15:31 -0500, Bjorn Helgaas wrote:
+> > On Thu, Aug 16, 2018 at 03:50:47PM +0000, Derrick, Jonathan wrote:
+> > > On Thu, 2018-08-16 at 08:49 -0700, Matthew Wilcox wrote:
+> > > > On Wed, Aug 15, 2018 at 03:26:39PM -0600, Jon Derrick wrote:
+> > > > > Some users may want to disable downstream port containment
+> > > > > (DPC),
+> > > > > so
+> > > > > give them this option
+> > > > 
+> > > > Is it possible they might only want to disable DPC on a subset of
+> > > > the
+> > > > hierarchy rather than globally?
+> > > 
+> > > Absolutely. I was hoping Logan's pci dev_str would land because I
+> > > have
+> > > a few others I want to convert to that api for granular tuning
+> > 
+> > What's the use case here?  I acknowledge there are cases where we
+> > need
+> > them, but I'm not a fan of kernel parameters in general because
+> > they're a real hassle for users.
+> > 
+> > Is there something wrong with DPC?  Is there some way we can make it
+> > smarter so it does the right thing automatically?
+> I've encountered some BIOS or switches (not sure who) who've appeared
+> to have enabled DPC by default, prior to kernel setup. Some users may
+> just not want this, but it was primarily intended for debugging when I
+> conceived it.
 > 
-> What's FFS?
+> There's also the ongoing thread in linux-pci about err handling in PPC
+> EEH, who may also desire to disable DPC until those issues are
+> resolved.
 
-Firmware-first. Nobody likes spelling it out, and all other proposed 
-acronyms are insanely tong-twisting. So, FFS.
+I haven't caught up on that thread yet.  If DPC is incompatible with
+PPC EEH, there's always the possibility of a switch in the code to
+disable DPC automatically on PPC.
 
-> I guess you mean FFS and _HPX are not subject to the problem because
-> they're supplied by firmware, so firmware would be responsible for
-> looking at the bits before clearing them?
+> It can also be disabled with setpci, but is that any less of a hassle?
+> Genuine question to understand your point of view.
 
-Exactly.
+Keith already answered here; setpci is primarily for debugging and
+shouldn't be recommended as normal practice.
 
->> This race is mostly of theoretical significance, since I can't
->> reasonably demonstrate this race in the lab.
->>
->> On a side-note, pcie_aer_is_kernel_first() is created to alleviate the
->> need for two checks: aer_cap and get_firmware_first().
->>
->> Signed-off-by: Alexandru Gagniuc <mr.nuke.me@gmail.com>
->> ---
->>
->> Changes since v2:
->>    - Added missing negation in pci_cleanup_aer_error_status_regs()
->>
->>   drivers/pci/pcie/aer.c | 17 ++++++++++-------
->>   1 file changed, 10 insertions(+), 7 deletions(-)
->>
->> diff --git a/drivers/pci/pcie/aer.c b/drivers/pci/pcie/aer.c
->> index a2e88386af28..40e5c86271d1 100644
->> --- a/drivers/pci/pcie/aer.c
->> +++ b/drivers/pci/pcie/aer.c
->> @@ -307,6 +307,12 @@ int pcie_aer_get_firmware_first(struct pci_dev *dev)
->>   		aer_set_firmware_first(dev);
->>   	return dev->__aer_firmware_first;
->>   }
->> +
->> +static bool pcie_aer_is_kernel_first(struct pci_dev *dev)
->> +{
->> +	return !!dev->aer_cap && !pcie_aer_get_firmware_first(dev);
->> +}
-> 
-> I think it complicates things to have both "firmware_first" and
-> "kernel_first" interfaces, so I would prefer to stick with the
-> existing "firmware_first" style.
-> 
->>   #define	PCI_EXP_AER_FLAGS	(PCI_EXP_DEVCTL_CERE | PCI_EXP_DEVCTL_NFERE | \
->>   				 PCI_EXP_DEVCTL_FERE | PCI_EXP_DEVCTL_URRE)
->>   
->> @@ -337,10 +343,7 @@ bool aer_acpi_firmware_first(void)
->>   
->>   int pci_enable_pcie_error_reporting(struct pci_dev *dev)
->>   {
->> -	if (pcie_aer_get_firmware_first(dev))
->> -		return -EIO;
->> -
->> -	if (!dev->aer_cap)
->> +	if (!pcie_aer_is_kernel_first(dev))
->>   		return -EIO;
->>   
->>   	return pcie_capability_set_word(dev, PCI_EXP_DEVCTL, PCI_EXP_AER_FLAGS);
-> 
-> This change doesn't actually fix anything, does it?  It looks like a
-> cleanup that doesn't change the behavior.
+> > I'm more OK with a blanket "nodpc" switch intended for debugging.
+> > If we add the complexity of subsets of the hierarchy it starts
+> > sounding like an administrative thing that makes me more hesitant. 
+> ...
+> To again understand your point of view, is there anything wrong with
+> administrative things in kernel boot parameters? There will be cases
+> where we may want to deviate from default or global pci=* parameters
+> for certain hierarchies and they can't necessarily be set after the
+> fact (ex, hpmemsize).
 
-Initially (v1), this was a one-liner, but someone had a complaint about 
-having pcie_aer_get_firmware_first() boilerplate all over the place. 
-That's why I added the "kernel_first" function (previous comment), and 
-then updated this here for completeness. I'm also fine with v1.
+"There will be cases" sounds like we're doing something that *might*
+be useful in the future.  It's better if we wait until we actually
+discover a need for something.
 
->> @@ -349,7 +352,7 @@ EXPORT_SYMBOL_GPL(pci_enable_pcie_error_reporting);
->>   
->>   int pci_disable_pcie_error_reporting(struct pci_dev *dev)
->>   {
->> -	if (pcie_aer_get_firmware_first(dev))
->> +	if (!pcie_aer_is_kernel_first(dev))
->>   		return -EIO;
-> 
-> This change does effectively add a test for dev->aer_cap.  That makes
-> sense in terms of symmetry with pci_enable_pcie_error_reporting(),
-> but I think it should be a separate patch because it's conceptually
-> separate from the change below.
-> 
-> We should keep the existing behavior (but add the symmetry) here for
-> now, but it's not clear to me that these paths should care about AER
-> or firmware-first at all.  PCI_EXP_DEVCTL is not an AER register and
-> we have the _HPX mechanism for firmware to influence it (which these
-> paths currently ignore).  I suspect we should program these reporting
-> enable bits in the core enumeration path instead of having drivers
-> call these interfaces.
+There's also a tendency among users to trip over a problem, discover a
+boot parameter like "pci=nomsi", and conclude that the problem is
+"fixed".  In fact, we want the bug report so we can fix the kernel so
+no boot parameter is needed.
 
-The headache is that FFS needs the reporting bit to stay enabled in 
-order to get AER notifications. Disabling things here could really break 
-firmware. Of course, that's a cyclical argument, since FW is broken by 
-definition.
+I agree there are things that can't be set after boot.  Is this one of
+them?  This seems like something that could be controlled at run-time.
+But even there, I will ask what the requirement for it is, because we
+don't want to clutter sysfs with things only needed for debugging.
 
-> If/when we make changes along these lines, the history will be easier
-> to follow if *this* change is not connected with the change below to
-> pci_cleanup_aer_error_status_regs().
-
-I agree. I think it might be preferred then to go with v1, and leave the 
-refactoring to a later time, since the extra changes are cosmetical and 
-social.
-
->>   	return pcie_capability_clear_word(dev, PCI_EXP_DEVCTL,
->> @@ -383,10 +386,10 @@ int pci_cleanup_aer_error_status_regs(struct pci_dev *dev)
->>   	if (!pci_is_pcie(dev))
->>   		return -ENODEV;
->>   
->> -	pos = dev->aer_cap;
->> -	if (!pos)
->> +	if (!pcie_aer_is_kernel_first(dev))
->>   		return -EIO;
-> 
-> This part makes sense to me, but I think I would rather have it match
-> the existing style in pci_enable_pcie_error_reporting(), i.e., keep
-> the test for dev->aer_cap and add a test for
-> pcie_aer_get_firmware_first().
-
-Had it that way in v1.
-
-Alex
-
->> +	pos = dev->aer_cap;
->>   	port_type = pci_pcie_type(dev);
->>   	if (port_type == PCI_EXP_TYPE_ROOT_PORT) {
->>   		pci_read_config_dword(dev, pos + PCI_ERR_ROOT_STATUS, &status);
->> -- 
->> 2.17.1
->>
+Boot parameters are a hassle because it's hard to build a user
+interface on top of them, and they require a reboot to take effect.
