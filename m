@@ -1,80 +1,187 @@
-Return-Path: <okaya@kernel.org>
-Return-Path: <okaya@kernel.org>
-Subject: Re: [PATCH 1/1] PCI/AER: prevent pcie_do_fatal_recovery from using
- device after it is removed
-To: Benjamin Herrenschmidt <benh@kernel.crashing.org>,
- Keith Busch <keith.busch@intel.com>
-Cc: poza@codeaurora.org, Bjorn Helgaas <helgaas@kernel.org>,
- Thomas Tai <thomas.tai@oracle.com>, bhelgaas@google.com,
- linux-pci@vger.kernel.org, linux-pci-owner@vger.kernel.org,
- Sam Bobroff <sam.bobroff@au1.ibm.com>
-References: <20180819021922.GE128050@bhelgaas-glaptop.roam.corp.google.com>
- <fe891b63-12c7-61ab-a59a-ae24ad766754@kernel.org>
- <ab5cb5b277f1c1c1362ef597ca7b8c6a2cd32cdf.camel@kernel.crashing.org>
- <908ff33ded8f31830f95a8889d8540f1@codeaurora.org>
- <5027d857bb59edfd33442003aa618ece1bc9cd52.camel@kernel.crashing.org>
- <b2e2ac5c92d8a91d00606754d1046578@codeaurora.org>
- <2ecd1fd6d763810d45697f846fa876b58a193b1b.camel@kernel.crashing.org>
- <20180820155325.GA16148@localhost.localdomain>
- <cf6de256280be7a2948db6dd2b5bfae92e70e12f.camel@kernel.crashing.org>
- <6aa71d74-e4dc-c627-1496-981278388bce@kernel.org>
- <20180820213544.GA16805@localhost.localdomain>
- <0193e0c5a52d8f2e93958f0683f3acc81cef2bc9.camel@kernel.crashing.org>
- <fd538f20-0754-f127-ceb9-693fec90b4af@kernel.org>
- <44195c0d7159ce4cd01b660002b2f5af5d53678b.camel@kernel.crashing.org>
-From: Sinan Kaya <okaya@kernel.org>
-Message-ID: <184814fb-0caf-b260-4415-8f96fbdf4831@kernel.org>
-Date: Mon, 20 Aug 2018 18:13:03 -0400
-MIME-Version: 1.0
-In-Reply-To: <44195c0d7159ce4cd01b660002b2f5af5d53678b.camel@kernel.crashing.org>
-Content-Type: text/plain; charset=utf-8; format=flowed
+Return-Path: <linux-acpi-owner@vger.kernel.org>
+From: Arnd Bergmann <arnd@arndb.de>
+To: linux-pci@vger.kernel.org, Bjorn Helgaas <bhelgaas@google.com>
+Cc: linux-kernel@vger.kernel.org,
+        Christoph Hellwig <hch@infradead.org>,
+        Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
+        Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+        linuxppc-dev@lists.ozlabs.org, linux-acpi@vger.kernel.org,
+        Arnd Bergmann <arnd@arndb.de>
+Subject: [RFC 02/15] PCI: move pci_scan_bus into callers
+Date: Fri, 17 Aug 2018 12:26:32 +0200
+Message-Id: <20180817102645.3839621-3-arnd@arndb.de>
+In-Reply-To: <20180817102645.3839621-1-arnd@arndb.de>
+References: <20180817102645.3839621-1-arnd@arndb.de>
+Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 8/20/2018 6:04 PM, Benjamin Herrenschmidt wrote:
-> On Mon, 2018-08-20 at 18:02 -0400, Sinan Kaya wrote:
->> On 8/20/2018 5:53 PM, Benjamin Herrenschmidt wrote:
->>>>> Hotplug driver removes the devices on link down events and re-enumerates
->>>>> on insertion.
->>>>>
->>>>> I am trying to separate fatal error handling from hotplug.
->>>>
->>>> I'll try to take a look. We can't always count on pciehp to do the
->>>> removal when a removal occurs, though. The PCIe specification contains
->>>> an implementation note that DPC may be used in place of hotplug surprise.
->>>
->>> Can't you use the presence detect to differenciate ?
->>>
->>> Also, I don't have the specs at hand right now, but does the hotplug
->>> brigde have a way to "latch' the change in presence detect so we can
->>> see if it has transitioned even if it's back on ?
->>
->> There is only presence detect change and link layer change. No actual
->> state information.
-> 
-> It does latch that it has changed tho right ? So if presence detect
-> hasn't changed, we can assume it's an error and not an unplug ?
-> 
-> We could discriminate that way to reduce the risk of doing a recovery
-> without unbind on something that was actually removed and replaced.
-> 
+There are only two remaining callers of the old pci_scan_bus()
+interface. Since we want to expose the pci_host_bridge structure
+everywhere and discourage users from calling the old interfaces,
+let's move the implementation into the respective callsites.
 
-I proposed this as one of the possible solutions but presence detect is
-optional and also presence detect interrupt can be delivered after
-link layer interrupt as well. No guarantees with respect to the order of
-link layer interrupt and presence detect interrupts delivery.
+While this duplicates the source code, it makes the object code
+smaller for all users by avoiding the global implementation,
+and it allows further cleanup of the two callers.
 
-I instead look at fatal error pending bit in device status register to
-decide if the link down was initiated due to a pending fatal error or
-somebody actually removed the card.
+Signed-off-by: Arnd Bergmann <arnd@arndb.de>
+---
+ arch/sparc/kernel/pcic.c          | 35 ++++++++++++++++++++++++++++++
+ drivers/pci/hotplug/ibmphp_core.c | 35 ++++++++++++++++++++++++++++++
+ drivers/pci/probe.c               | 36 -------------------------------
+ include/linux/pci.h               |  1 -
+ 4 files changed, 70 insertions(+), 37 deletions(-)
 
-If fatal error is pending, wait until it is cleared. If link is healthy,
-return gracefully.
-
-Otherwise, proceed with the hotplug removal.
-
-
-> Cheers,
-> Ben.
-> 
-> 
-> 
+diff --git a/arch/sparc/kernel/pcic.c b/arch/sparc/kernel/pcic.c
+index ee4c9a9a171c..0197b80fe590 100644
+--- a/arch/sparc/kernel/pcic.c
++++ b/arch/sparc/kernel/pcic.c
+@@ -387,6 +387,41 @@ int __init pcic_probe(void)
+ 	return 0;
+ }
+ 
++static struct resource busn_resource = {
++	.name	= "PCI busn",
++	.start	= 0,
++	.end	= 255,
++	.flags	= IORESOURCE_BUS,
++};
++
++static struct pci_bus *pci_scan_bus(int bus, struct pci_ops *ops,
++					void *sysdata)
++{
++	struct pci_host_bridge *bridge;
++	int error;
++
++	bridge = pci_alloc_host_bridge(0);
++	if (!bridge)
++		return NULL;
++
++	pci_add_resource(&bridge->windows, &ioport_resource);
++	pci_add_resource(&bridge->windows, &iomem_resource);
++	pci_add_resource(&bridge->windows, &busn_resource);
++	bridge->sysdata = sysdata;
++	bridge->busnr = bus;
++	bridge->ops = ops;
++
++	error = pci_scan_root_bus_bridge(bridge);
++	if (error < 0)
++		goto err;
++
++	return bridge->bus;
++
++err_res:
++	pci_free_host_bridge(bridge);
++	return NULL;
++}
++
+ static void __init pcic_pbm_scan_bus(struct linux_pcic *pcic)
+ {
+ 	struct linux_pbm_info *pbm = &pcic->pbm;
+diff --git a/drivers/pci/hotplug/ibmphp_core.c b/drivers/pci/hotplug/ibmphp_core.c
+index 4ea57e9019f1..d35463ee96ba 100644
+--- a/drivers/pci/hotplug/ibmphp_core.c
++++ b/drivers/pci/hotplug/ibmphp_core.c
+@@ -717,6 +717,41 @@ static void ibm_unconfigure_device(struct pci_func *func)
+ 	pci_unlock_rescan_remove();
+ }
+ 
++static struct resource busn_resource = {
++	.name	= "pci busn",
++	.start	= 0,
++	.end	= 255,
++	.flags	= IORESOURCE_BUS,
++};
++
++static struct pci_bus *pci_scan_bus(int bus, struct pci_ops *ops,
++					void *sysdata)
++{
++	struct pci_host_bridge *bridge;
++	int error;
++
++	bridge = pci_alloc_host_bridge(0);
++	if (!bridge)
++		return NULL;
++
++	pci_add_resource(&bridge->windows, &ioport_resource);
++	pci_add_resource(&bridge->windows, &iomem_resource);
++	pci_add_resource(&bridge->windows, &busn_resource);
++	bridge->sysdata = sysdata;
++	bridge->busnr = bus;
++	bridge->ops = ops;
++
++	error = pci_scan_root_bus_bridge(bridge);
++	if (error < 0)
++		goto err;
++
++	return bridge->bus;
++
++err:
++	pci_free_host_bridge(bridge);
++	return NULL;
++}
++
+ /*
+  * The following function is to fix kernel bug regarding
+  * getting bus entries, here we manually add those primary
+diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
+index b0f666271245..12c3aa63c34d 100644
+--- a/drivers/pci/probe.c
++++ b/drivers/pci/probe.c
+@@ -3078,42 +3078,6 @@ struct pci_bus *pci_scan_root_bus(struct device *parent, int bus,
+ }
+ EXPORT_SYMBOL(pci_scan_root_bus);
+ 
+-static struct resource busn_resource = {
+-	.name	= "PCI busn",
+-	.start	= 0,
+-	.end	= 255,
+-	.flags	= IORESOURCE_BUS,
+-};
+-
+-struct pci_bus *pci_scan_bus(int bus, struct pci_ops *ops,
+-					void *sysdata)
+-{
+-	struct pci_host_bridge *bridge;
+-	int error;
+-
+-	bridge = pci_alloc_host_bridge(0);
+-	if (!bridge)
+-		goto err;
+-
+-	pci_add_resource(&bridge->windows, &ioport_resource);
+-	pci_add_resource(&bridge->windows, &iomem_resource);
+-	pci_add_resource(&bridge->windows, &busn_resource);
+-	bridge->sysdata = sysdata;
+-	bridge->busnr = bus;
+-	bridge->ops = ops;
+-
+-	error = pci_scan_root_bus_bridge(bridge);
+-	if (error < 0)
+-		goto err;
+-
+-	return bridge->bus;
+-
+-err:
+-	pci_free_host_bridge(bridge);
+-	return NULL;
+-}
+-EXPORT_SYMBOL(pci_scan_bus);
+-
+ /**
+  * pci_rescan_bus_bridge_resize - Scan a PCI bus for devices
+  * @bridge: PCI bridge for the bus to scan
+diff --git a/include/linux/pci.h b/include/linux/pci.h
+index e72ca8dd6241..d77ce35a2b33 100644
+--- a/include/linux/pci.h
++++ b/include/linux/pci.h
+@@ -905,7 +905,6 @@ void pcibios_bus_to_resource(struct pci_bus *bus, struct resource *res,
+ void pcibios_scan_specific_bus(int busn);
+ struct pci_bus *pci_find_bus(int domain, int busnr);
+ void pci_bus_add_devices(const struct pci_bus *bus);
+-struct pci_bus *pci_scan_bus(int bus, struct pci_ops *ops, void *sysdata);
+ struct pci_bus *pci_create_root_bus(struct device *parent, int bus,
+ 				    struct pci_ops *ops, void *sysdata,
+ 				    struct list_head *resources);
+-- 
+2.18.0
