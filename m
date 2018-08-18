@@ -1,112 +1,152 @@
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-From: Hanjie Lin <hanjie.lin@amlogic.com>
-To: Bjorn Helgaas <bhelgaas@google.com>
-Subject: [PATCH 1/2] dt-bindings: PCI: meson: add DT bindings for Amlogic
- Meson PCIe controller
-Date: Tue, 14 Aug 2018 02:18:41 -0400
-Message-ID: <1534227522-186798-2-git-send-email-hanjie.lin@amlogic.com>
-In-Reply-To: <1534227522-186798-1-git-send-email-hanjie.lin@amlogic.com>
-References: <1534227522-186798-1-git-send-email-hanjie.lin@amlogic.com>
-MIME-Version: 1.0
-List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
-List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
-List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
-List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
-List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
-Cc: Rob Herring <robh@kernel.org>, Yue Wang <hanjie.lin@amlogic.com>,
- devicetree@vger.kernel.org, Kevin Hilman <khilman@baylibre.com>,
- linux-kernel@vger.kernel.org, Yue Wang <yue.wang@amlogic.com>,
- linux-pci@vger.kernel.org, linux-amlogic@lists.infradead.org,
- linux-arm-kernel@lists.infradead.org
-Content-Type: text/plain; charset="us-ascii"
-Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
-Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail.kernel.org ([198.145.29.99]:48772 "EHLO mail.kernel.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1726397AbeHTCch (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Sun, 19 Aug 2018 22:32:37 -0400
+From: Sinan Kaya <okaya@kernel.org>
+To: linux-pci@vger.kernel.org
+Cc: Sinan Kaya <okaya@kernel.org>, Bjorn Helgaas <bhelgaas@google.com>,
+        Lukas Wunner <lukas@wunner.de>,
+        Mika Westerberg <mika.westerberg@linux.intel.com>,
+        "Gustavo A. R. Silva" <gustavo@embeddedor.com>,
+        Oza Pawandeep <poza@codeaurora.org>,
+        Keith Busch <keith.busch@intel.com>,
+        linux-kernel@vger.kernel.org (open list)
+Subject: [PATCH v8 1/2] PCI: pciehp: Ignore link events when there is a fatal error pending
+Date: Fri, 17 Aug 2018 23:51:09 -0700
+Message-Id: <20180818065126.77912-1-okaya@kernel.org>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-From: Yue Wang <yue.wang@amlogic.com>
+AER/DPC reset is known as warm-resets. HP link recovery is known as
+cold-reset via power-off and power-on command to the PCI slot.
 
-The Amlogic Meson PCIe host controller is based on the Synopsys DesignWare
-PCI core. This patch adds documentation for the DT bindings in Meson PCIe
-controller.
+In the middle of a warm-reset operation (AER/DPC), we are:
 
-Signed-off-by: Yue Wang <hanjie.lin@amlogic.com>
-Signed-off-by: Hanjie Lin <hanjie.lin@amlogic.com>
+1. turning off the slow power. Slot power needs to be kept on in order
+for recovery to succeed.
+
+2. performing a cold reset causing Fatal Error recovery to fail.
+
+If link goes down due to a DPC event, it should be recovered by DPC
+status trigger. Injecting a cold reset in the middle can cause a HW
+lockup as it is an undefined behavior.
+
+Similarly, If link goes down due to an AER secondary bus reset issue,
+it should be recovered by HW. Injecting a cold reset in the middle of a
+secondary bus reset can cause a HW lockup as it is an undefined behavior.
+
+1. HP ISR observes link down interrupt.
+2. HP ISR checks that there is a fatal error pending, it doesn't touch
+the link.
+3. HP ISR waits until link recovery happens.
+4. HP ISR calls the read vendor id function.
+5. If all fails, try the cold-reset approach.
+
+If fatal error is pending and a fatal error service such as DPC or AER
+is running, it is the responsibility of the fatal error service to
+recover the link.
+
+Signed-off-by: Sinan Kaya <okaya@kernel.org>
 ---
- .../devicetree/bindings/pci/amlogic,meson-pcie.txt | 57 ++++++++++++++++++++++
- 1 file changed, 57 insertions(+)
- create mode 100644 Documentation/devicetree/bindings/pci/amlogic,meson-pcie.txt
+ drivers/pci/hotplug/pciehp_ctrl.c | 18 ++++++++++++++++
+ drivers/pci/pci.h                 |  2 ++
+ drivers/pci/pcie/err.c            | 34 +++++++++++++++++++++++++++++++
+ 3 files changed, 54 insertions(+)
 
-diff --git a/Documentation/devicetree/bindings/pci/amlogic,meson-pcie.txt b/Documentation/devicetree/bindings/pci/amlogic,meson-pcie.txt
-new file mode 100644
-index 0000000..48233e4
---- /dev/null
-+++ b/Documentation/devicetree/bindings/pci/amlogic,meson-pcie.txt
-@@ -0,0 +1,57 @@
-+Amlogic Meson AXG DWC PCIE SoC controller
+diff --git a/drivers/pci/hotplug/pciehp_ctrl.c b/drivers/pci/hotplug/pciehp_ctrl.c
+index da7c72372ffc..22354b6850c3 100644
+--- a/drivers/pci/hotplug/pciehp_ctrl.c
++++ b/drivers/pci/hotplug/pciehp_ctrl.c
+@@ -222,9 +222,27 @@ void pciehp_handle_disable_request(struct slot *slot)
+ void pciehp_handle_presence_or_link_change(struct slot *slot, u32 events)
+ {
+ 	struct controller *ctrl = slot->ctrl;
++	struct pci_dev *pdev = ctrl->pcie->port;
+ 	bool link_active;
+ 	u8 present;
+ 
++	/* If a fatal error is pending, wait for AER or DPC to handle it. */
++	if (pcie_fatal_error_pending(pdev)) {
++		bool recovered;
 +
-+Amlogic Meson PCIe host controller is based on the Synopsys DesignWare PCI core.
-+It shares common functions with the PCIe DesignWare core driver and
-+inherits common properties defined in
-+Documentation/devicetree/bindings/pci/designware-pci.txt.
++		recovered = pcie_wait_fatal_error_clear(pdev);
 +
-+Additional properties are described here:
++		/* If the fatal error is gone and the link is up, return */
++		if (recovered && pcie_wait_for_link(pdev, true)) {
++			ctrl_info(ctrl, "Slot(%s): Ignoring Link event due to successful fatal error recovery\n",
++				  slot_name(slot));
++			return;
++		}
 +
-+Required properties:
-+- compatible:
-+	should contain "amlogic,axg-pcie" to identify the core.
-+- reg:
-+	Should contain the configuration address space.
-+- reg-names: Must be
-+	- "elbi"	External local bus interface registers
-+	- "cfg"		Meson specific registers
-+	- "config"	PCIe configuration space
-+- clocks: Must contain an entry for each entry in clock-names.
-+- clock-names: Must include the following entries:
-+	- "pcie"
-+	- "pcie_bus"
-+	- "pcie_general"
-+	- "pcie_mipi_en"
++		ctrl_info(ctrl, "Slot(%s): Fatal error recovery failed for Link event, trying hotplug reset\n",
++			  slot_name(slot));
++	}
 +
-+Example configuration:
+ 	/*
+ 	 * If the slot is on and presence or link has changed, turn it off.
+ 	 * Even if it's occupied again, we cannot assume the card is the same.
+diff --git a/drivers/pci/pci.h b/drivers/pci/pci.h
+index c358e7a07f3f..e2d98654630b 100644
+--- a/drivers/pci/pci.h
++++ b/drivers/pci/pci.h
+@@ -356,6 +356,8 @@ void pci_enable_acs(struct pci_dev *dev);
+ /* PCI error reporting and recovery */
+ void pcie_do_fatal_recovery(struct pci_dev *dev, u32 service);
+ void pcie_do_nonfatal_recovery(struct pci_dev *dev);
++bool pcie_fatal_error_pending(struct pci_dev *pdev);
++bool pcie_wait_fatal_error_clear(struct pci_dev *pdev);
+ 
+ bool pcie_wait_for_link(struct pci_dev *pdev, bool active);
+ #ifdef CONFIG_PCIEASPM
+diff --git a/drivers/pci/pcie/err.c b/drivers/pci/pcie/err.c
+index f7ce0cb0b0b7..b1b5604cb00b 100644
+--- a/drivers/pci/pcie/err.c
++++ b/drivers/pci/pcie/err.c
+@@ -16,6 +16,7 @@
+ #include <linux/kernel.h>
+ #include <linux/errno.h>
+ #include <linux/aer.h>
++#include <linux/delay.h>
+ #include "portdrv.h"
+ #include "../pci.h"
+ 
+@@ -386,3 +387,36 @@ void pcie_do_nonfatal_recovery(struct pci_dev *dev)
+ 	/* TODO: Should kernel panic here? */
+ 	pci_info(dev, "AER: Device recovery failed\n");
+ }
 +
-+	pcie: pcie@dffff000 {
-+			compatible = "amlogic,axg-pcie", "snps,dw-pcie";
-+			reg = <0x0 0xf9800000 0x0 0x400000
-+					0x0 0xff646000 0x0 0x2000
-+					0x0 0xf9f00000 0x0 0x100000>;
-+			reg-names = "elbi", "cfg", "config";
-+			reset-gpio = <&gpio GPIOX_19 GPIO_ACTIVE_HIGH>;
-+			interrupts = <0 177 IRQ_TYPE_EDGE_RISING>;
-+			#interrupt-cells = <1>;
-+			interrupt-map-mask = <0 0 0 0>;
-+			interrupt-map = <0 0 0 0 &gic GIC_SPI 179 IRQ_TYPE_EDGE_RISING>;
-+			bus-range = <0x0 0xff>;
-+			#address-cells = <3>;
-+			#size-cells = <2>;
-+			device_type = "pci";
-+			phys = <&pcie_phy>;
-+			ranges = <0x82000000 0 0 0x0 0xf9c00000 0 0x00300000>;
-+			num-lanes = <1>;
-+			pcie-num = <1>;
++bool pcie_fatal_error_pending(struct pci_dev *pdev)
++{
++	u16 err_status = 0;
++	int rc;
 +
-+			clocks = <&clkc CLKID_USB
-+					&clkc CLKID_MIPI_ENABLE
-+					&clkc CLKID_PCIE_A
-+					&clkc CLKID_PCIE_CML_EN0>;
-+			clock-names = "pcie_general",
-+					"pcie_refpll",
-+					"pcie_mipi_en",
-+					"pcie",
-+					"port";
-+	};
++	if (!pci_is_pcie(pdev))
++		return false;
++
++	rc = pcie_capability_read_word(pdev, PCI_EXP_DEVSTA, &err_status);
++	if (rc)
++		return false;
++
++	return !!(err_status & PCI_EXP_DEVSTA_FED);
++}
++
++bool pcie_wait_fatal_error_clear(struct pci_dev *pdev)
++{
++	int timeout = 1000;
++	bool ret;
++
++	for (;;) {
++		ret = pcie_fatal_error_pending(pdev);
++		if (ret == false)
++			return true;
++		if (timeout <= 0)
++			break;
++		msleep(20);
++		timeout -= 20;
++	}
++
++	return false;
++}
 -- 
-2.7.4
-
-
-_______________________________________________
-linux-arm-kernel mailing list
-linux-arm-kernel@lists.infradead.org
-http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
+2.17.1
