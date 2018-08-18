@@ -1,74 +1,88 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-wr1-f65.google.com ([209.85.221.65]:37553 "EHLO
-        mail-wr1-f65.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726769AbeHEWhA (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Sun, 5 Aug 2018 18:37:00 -0400
-Received: by mail-wr1-f65.google.com with SMTP id u12-v6so10416408wrr.4
-        for <linux-pci@vger.kernel.org>; Sun, 05 Aug 2018 13:31:11 -0700 (PDT)
-Subject: [PATCH v2] PCI: set flag IRQCHIP_ONESHOT_SAFE for PCI-MSI irqchip's
-From: Heiner Kallweit <hkallweit1@gmail.com>
-To: Bjorn Helgaas <bhelgaas@google.com>,
-        Thomas Gleixner <tglx@linutronix.de>
-Cc: "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
-References: <9f18bc20-cf27-bc3c-71e5-4e24a6c983c7@gmail.com>
-Message-ID: <70984d26-1d35-d925-f67b-698ed85bbab5@gmail.com>
-Date: Sun, 5 Aug 2018 22:31:03 +0200
-MIME-Version: 1.0
-In-Reply-To: <9f18bc20-cf27-bc3c-71e5-4e24a6c983c7@gmail.com>
-Content-Type: text/plain; charset=utf-8
+Received: from mail.kernel.org ([198.145.29.99]:48890 "EHLO mail.kernel.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1726397AbeHTCck (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Sun, 19 Aug 2018 22:32:40 -0400
+From: Sinan Kaya <okaya@kernel.org>
+To: linux-pci@vger.kernel.org
+Cc: Sinan Kaya <okaya@kernel.org>, Bjorn Helgaas <bhelgaas@google.com>,
+        Lukas Wunner <lukas@wunner.de>,
+        Andy Shevchenko <andy.shevchenko@gmail.com>,
+        Mika Westerberg <mika.westerberg@linux.intel.com>,
+        linux-kernel@vger.kernel.org (open list)
+Subject: [PATCH v8 2/2] PCI: pciehp: Mask AER surprise link down error if hotplug is enabled
+Date: Fri, 17 Aug 2018 23:51:10 -0700
+Message-Id: <20180818065126.77912-2-okaya@kernel.org>
+In-Reply-To: <20180818065126.77912-1-okaya@kernel.org>
+References: <20180818065126.77912-1-okaya@kernel.org>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-If flag IRQCHIP_ONESHOT_SAFE isn't set for an irqchip and we have a
-threaded interrupt with no primary handler, then flag IRQF_ONESHOT
-needs to be set for the interrupt, causing some overhead in the
-threaded interrupt handler. For more detailed explanation also check
-following comment in __setup_irq():
+PCIe Spec 3.0. 7.10.2. Uncorrectable Error Status Register (Offset 04h)
+defines link down errors as an AER error as bit 5 Surprise Down Error
+Status.
 
-The interrupt was requested with handler = NULL, so we use the default
-primary handler for it. But it does not have the oneshot flag set.
-In combination with level interrupts this is deadly, because the
-default primary handler just wakes the thread, then the irq lines is
-reenabled, but the device still has the level irq asserted.
-Rinse and repeat....
-While this works for edge type interrupts, we play it safe and reject
-unconditionally because we can't say for sure which type this interrupt
-really has. The type flags are unreliable as the underlying chip
-implementation can override them.
+If hotplug is supported by a particular port, we want hotplug driver
+to handle the link down/up conditions via Data Link Layer Active
+interrupt rather than the AER error interrupt. Mask the Surprise Down
+Error during hotplug driver and re-enable it during remove.
 
-Another comment in __setup_irq() gives a hint already that this
-overhead can be avoided for PCI-MSI:
-
-Some irq chips like MSI based interrupts are per se one shot safe.
-Check the chip flags, so we can avoid the unmask dance at the end
-of the threaded handler for those.
-
-Following this let's mark all PCI-MSI irqchip's as oneshot-safe.
-
-See also discussion here:
-https://marc.info/?l=linux-pci&m=153332526101128&w=2
-
-Signed-off-by: Heiner Kallweit <hkallweit1@gmail.com>
+Signed-off-by: Sinan Kaya <okaya@kernel.org>
 ---
-v2:
-- extended commit message
----
- drivers/pci/msi.c | 3 +++
- 1 file changed, 3 insertions(+)
+ drivers/pci/hotplug/pciehp_core.c | 27 +++++++++++++++++++++++++++
+ 1 file changed, 27 insertions(+)
 
-diff --git a/drivers/pci/msi.c b/drivers/pci/msi.c
-index 4d88afdf..f2ef8964 100644
---- a/drivers/pci/msi.c
-+++ b/drivers/pci/msi.c
-@@ -1446,6 +1446,9 @@ struct irq_domain *pci_msi_create_irq_domain(struct fwnode_handle *fwnode,
- 	if (IS_ENABLED(CONFIG_GENERIC_IRQ_RESERVATION_MODE))
- 		info->flags |= MSI_FLAG_MUST_REACTIVATE;
+diff --git a/drivers/pci/hotplug/pciehp_core.c b/drivers/pci/hotplug/pciehp_core.c
+index ec48c9433ae5..8322db8f369a 100644
+--- a/drivers/pci/hotplug/pciehp_core.c
++++ b/drivers/pci/hotplug/pciehp_core.c
+@@ -229,6 +229,29 @@ static void pciehp_check_presence(struct controller *ctrl)
+ 	up_read(&ctrl->reset_lock);
+ }
  
-+	/* PCI-MSI is oneshot-safe */
-+	info->chip->flags |= IRQCHIP_ONESHOT_SAFE;
++static int pciehp_control_surprise_error(struct controller *ctrl, bool enable)
++{
++	struct pci_dev *pdev = ctrl->pcie->port;
++	u32 reg32;
++	int pos;
 +
- 	domain = msi_create_irq_domain(fwnode, info, parent);
- 	if (!domain)
- 		return NULL;
++	if (!pci_is_pcie(pdev))
++		return -ENODEV;
++
++	pos = pdev->aer_cap;
++	if (!pos)
++		return -ENODEV;
++
++	pci_read_config_dword(pdev, pos + PCI_ERR_UNCOR_MASK, &reg32);
++	if (enable)
++		reg32 &= ~PCI_ERR_UNC_SURPDN;
++	else
++		reg32 |= PCI_ERR_UNC_SURPDN;
++	pci_write_config_dword(pdev, pos + PCI_ERR_UNCOR_MASK, reg32);
++
++	return 0;
++}
++
+ static int pciehp_probe(struct pcie_device *dev)
+ {
+ 	int rc;
+@@ -280,6 +303,9 @@ static int pciehp_probe(struct pcie_device *dev)
+ 
+ 	pciehp_check_presence(ctrl);
+ 
++	/* We want exclusive control of link down events in hotplug driver */
++	pciehp_control_surprise_error(ctrl, false);
++
+ 	return 0;
+ 
+ err_out_shutdown_notification:
+@@ -298,6 +324,7 @@ static void pciehp_remove(struct pcie_device *dev)
+ 	pci_hp_del(ctrl->slot->hotplug_slot);
+ 	pcie_shutdown_notification(ctrl);
+ 	cleanup_slot(ctrl);
++	pciehp_control_surprise_error(ctrl, true);
+ 	pciehp_release_ctrl(ctrl);
+ }
+ 
 -- 
-2.18.0
+2.17.1
