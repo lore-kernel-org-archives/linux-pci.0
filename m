@@ -1,122 +1,104 @@
-Return-Path: <SRS0=CTFa=KR=codeaurora.org=poza@kernel.org>
-Return-Path: <SRS0=CTFa=KR=codeaurora.org=poza@kernel.org>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII;
- format=flowed
-Date: Thu, 02 Aug 2018 11:53:28 +0530
-From: poza@codeaurora.org
+Return-Path: <SRS0=yCvU=LB=kernel.crashing.org=benh@kernel.org>
+Return-Path: <SRS0=yCvU=LB=kernel.crashing.org=benh@kernel.org>
+Message-ID: <8dafc92f9c9cefba89ec1ec9839d086540af4557.camel@kernel.crashing.org>
+Subject: Re: [RFC PATCH 2/6] pci: Set pci_dev->is_added before calling
+ device_add
+From: Benjamin Herrenschmidt <benh@kernel.crashing.org>
 To: Bjorn Helgaas <helgaas@kernel.org>
-Cc: Bharat Kumar Gogada <bharat.kumar.gogada@xilinx.com>,
- linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
- bhelgaas@google.com, linux-pci-owner@vger.kernel.org
-Subject: Re: [PATCH] PCI/AER: Enable SERR# forwarding in non ACPI flow
-In-Reply-To: <20180731224706.GO45322@bhelgaas-glaptop.roam.corp.google.com>
-References: <1531406719-18606-1-git-send-email-bharat.kumar.gogada@xilinx.com>
- <20180731224706.GO45322@bhelgaas-glaptop.roam.corp.google.com>
-Message-ID: <6a1266c49a5be0d598dd7f1ded94e93d@codeaurora.org>
+Cc: linux-pci@vger.kernel.org, Hari Vyas <hari.vyas@broadcom.com>,
+        Ray Jui
+ <ray.jui@broadcom.com>,
+        Srinath Mannam <srinath.mannam@broadcom.com>,
+        Guenter Roeck <linux@roeck-us.net>, Jens Axboe <axboe@kernel.dk>,
+        Lukas
+ Wunner <lukas@wunner.de>,
+        Konstantin Khlebnikov
+ <khlebnikov@yandex-team.ru>,
+        Marta Rybczynska <mrybczyn@kalray.eu>,
+        Pierre-Yves Kerbrat <pkerbrat@kalray.eu>, linux-kernel@vger.kernel.org
+Date: Sat, 18 Aug 2018 13:28:15 +1000
+In-Reply-To: <20180817162534.GD128050@bhelgaas-glaptop.roam.corp.google.com>
+References: <20180817044902.31420-1-benh@kernel.crashing.org>
+	 <20180817044902.31420-3-benh@kernel.crashing.org>
+	 <20180817162534.GD128050@bhelgaas-glaptop.roam.corp.google.com>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 List-ID: <linux-pci.vger.kernel.org>
 
-On 2018-08-01 04:17, Bjorn Helgaas wrote:
-> On Thu, Jul 12, 2018 at 08:15:19PM +0530, Bharat Kumar Gogada wrote:
->> Currently PCI_BRIDGE_CTL_SERR is being enabled only in
->> ACPI flow.
->> This bit is required for forwarding errors reported
->> by EP devices to upstream device.
->> This patch enables SERR# for Type-1 PCI device.
+On Fri, 2018-08-17 at 11:25 -0500, Bjorn Helgaas wrote:
+> On Fri, Aug 17, 2018 at 02:48:58PM +1000, Benjamin Herrenschmidt wrote:
+> > This re-fixes the bug reported by Hari Vyas <hari.vyas@broadcom.com>
+> > after my revert of his commit but in a much simpler way.
+> > 
+> > The main issues is that is_added was being set after the driver
+> > got bound and started, and thus setting it could race with other
+> > changes to struct pci_dev.
 > 
-> This does seem broken.
+> The "bind driver, then set dev->added = 1" order seems to have been
+> there since the beginning of dev->is_added:
 > 
-> Figure 6-3 in PCIe r4.0, sec 6.2.6, would be a helpful reference to
-> include in the commit log.
+> http://git.kernel.org/cgit/linux/kernel/git/torvalds/linux.git/commit/?id=8a1bc9013a03
 > 
-> Semi-related question: there are about 40 drivers that call
-> pci_enable_pcie_error_reporting() and
-> pci_disable_pcie_error_reporting().  I see that the PCI core
-> calls pci_enable_pcie_error_reporting() for Root Ports and Switch
-> Ports in this path:
+> This patch seems reasonable, but I'm a little dubious about the
+> existence of "is_added" in the first place.  As far as I can tell, the
+> only other buses with something similar are the MEN Chameleon bus and
+> the Intel Management Engine Interface.
 > 
->   aer_probe                     # for root ports only
->     aer_enable_rootport
->       set_downstream_devices_error_reporting
->         set_device_error_reporting
->           if (ROOT_PORT || UPSTREAM || DOWNSTREAM)
->             pci_enable_pcie_error_reporting
->         pci_walk_bus(..., set_device_error_reporting)
-> 
-> But the core doesn't call pci_enable_pcie_error_reporting() for
-> endpoints.  I wonder why not.  Could we?  And then remove the calls
-> from those drivers?  If PCI_EXP_AER_FLAGS should only be set if the
-> driver is prepared, the pci_driver.err_handler would be a good hint.
-> But I suspect we could do something sensible and at least report
-> errors even if the driver doesn't have err_handler callbacks.
-> 
+> The PCI uses of "is_added" don't seem *that* critical or unique to
+> PCI, so I'm not 100% convinced we need it at all.  But I haven't
+> looked into it enough to be able to propose an alternative.
 
-what about hot-plug case ?
-should not aer_init() call pci_enable_pcie_error_reporting() for all the 
-downstream pci_dev ?
-and remove all the calls from drivers..
+This is a whole different conversation you are taking us into :-)
 
-> On MIPS Octeon, it looks like pcibios_plat_dev_init() does already set
-> PCI_EXP_AER_FLAGS for every device.
-> 
-> But this question is obviously far beyond the scope of this current
-> patch.
-> 
->> Signed-off-by: Bharat Kumar Gogada <bharat.kumar.gogada@xilinx.com>
->> ---
->>  drivers/pci/pcie/aer.c |   23 +++++++++++++++++++++++
->>  1 files changed, 23 insertions(+), 0 deletions(-)
->> 
->> diff --git a/drivers/pci/pcie/aer.c b/drivers/pci/pcie/aer.c
->> index a2e8838..943e084 100644
->> --- a/drivers/pci/pcie/aer.c
->> +++ b/drivers/pci/pcie/aer.c
->> @@ -343,6 +343,19 @@ int pci_enable_pcie_error_reporting(struct 
->> pci_dev *dev)
->>  	if (!dev->aer_cap)
->>  		return -EIO;
->> 
->> +	if (!IS_ENABLED(CONFIG_ACPI) &&
->> +	    dev->hdr_type == PCI_HEADER_TYPE_BRIDGE) {
-> 
-> I think this test needs to be refined a little bit.  If the kernel
-> happens to be built with CONFIG_ACPI=y but the current platform
-> doesn't support ACPI, we still want to set PCI_BRIDGE_CTL_SERR,
-> don't we?
-> 
->> +		u16 control;
->> +
->> +		/*
->> +		 * A Type-1 PCI bridge will not forward ERR_ messages coming
->> +		 * from an endpoint if SERR# forwarding is not enabled.
->> +		 */
->> +		pci_read_config_word(dev, PCI_BRIDGE_CONTROL, &control);
->> +		control |= PCI_BRIDGE_CTL_SERR;
->> +		pci_write_config_word(dev, PCI_BRIDGE_CONTROL, control);
->> +	}
->> +
->>  	return pcie_capability_set_word(dev, PCI_EXP_DEVCTL, 
->> PCI_EXP_AER_FLAGS);
->>  }
->>  EXPORT_SYMBOL_GPL(pci_enable_pcie_error_reporting);
->> @@ -352,6 +365,16 @@ int pci_disable_pcie_error_reporting(struct 
->> pci_dev *dev)
->>  	if (pcie_aer_get_firmware_first(dev))
->>  		return -EIO;
->> 
->> +	if (!IS_ENABLED(CONFIG_ACPI) &&
->> +	    dev->hdr_type == PCI_HEADER_TYPE_BRIDGE) {
->> +		u16 control;
->> +
->> +		/* Clear SERR Forwarding */
->> +		pci_read_config_word(dev, PCI_BRIDGE_CONTROL, &control);
->> +		control &= ~PCI_BRIDGE_CTL_SERR;
->> +		pci_write_config_word(dev, PCI_BRIDGE_CONTROL, control);
->> +	}
->> +
->>  	return pcie_capability_clear_word(dev, PCI_EXP_DEVCTL,
->>  					  PCI_EXP_AER_FLAGS);
->>  }
->> --
->> 1.7.1
->> 
+is_added is currently needed for a number of reasons, mostly relating
+to partial hotplug, and historically comes from the fact that we
+separated the PCI probing & tree construction from the registration
+with the device-model. This of course comes from the fact that the
+device model didn't actually exist yet when the PCI code was
+created :-)
+
+So let's keep things separate shall we ? I'd rather fix this correctly
+now, and get rid of that pesky atomic priv_flags which I think is just
+going to be a long term add to the mess rather than an improvement, and
+separately we can discuss whether is_added is something that can go
+away, but I suspect this will come in the form of either a deeper
+rework of how we do PCI probing, or simply finding a struct device/kobj
+field we can use as a hint that we've added the device already for
+hotplug.
+
+> > This fixes it by setting the flag first, which also has the
+> > advantage of matching the fact that we are clearing it *after*
+> > unbinding in the remove path, thus the flag is now symtetric
+> > and always set while the driver code is running.
+> > 
+> > Signed-off-by: Benjamin Herrenschmidt <benh@kernel.crashing.org>
+> > ---
+> >  drivers/pci/bus.c | 4 ++--
+> >  1 file changed, 2 insertions(+), 2 deletions(-)
+> > 
+> > diff --git a/drivers/pci/bus.c b/drivers/pci/bus.c
+> > index 35b7fc87eac5..48ae63673aa8 100644
+> > --- a/drivers/pci/bus.c
+> > +++ b/drivers/pci/bus.c
+> > @@ -321,16 +321,16 @@ void pci_bus_add_device(struct pci_dev *dev)
+> >  	pci_proc_attach_device(dev);
+> >  	pci_bridge_d3_update(dev);
+> >  
+> > +	dev->is_added = 1;
+> >  	dev->match_driver = true;
+> >  	retval = device_attach(&dev->dev);
+> >  	if (retval < 0 && retval != -EPROBE_DEFER) {
+> > +		dev->is_added = 0;
+> >  		pci_warn(dev, "device attach failed (%d)\n", retval);
+> >  		pci_proc_detach_device(dev);
+> >  		pci_remove_sysfs_dev_files(dev);
+> >  		return;
+> >  	}
+> > -
+> > -	dev->is_added = 1;
+> >  }
+> >  EXPORT_SYMBOL_GPL(pci_bus_add_device);
+> >  
+> > -- 
+> > 2.17.1
+> > 
