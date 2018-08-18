@@ -1,59 +1,46 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-Message-ID: <307063ff7bbdcc0c3896f027b09245e542764f48.camel@perches.com>
-Subject: Re: [PATCH 1/2] PCI/ACPI: correct error message for ASPM disabling
-From: Joe Perches <joe@perches.com>
-To: Sinan Kaya <okaya@kernel.org>, linux-pci@vger.kernel.org
-Cc: Bjorn Helgaas <bhelgaas@google.com>,
-        "Rafael J. Wysocki" <rjw@rjwysocki.net>,
-        Len Brown <lenb@kernel.org>,
-        "open list:ACPI" <linux-acpi@vger.kernel.org>,
-        open list <linux-kernel@vger.kernel.org>
-Date: Thu, 09 Aug 2018 17:27:18 -0700
-In-Reply-To: <1533840383-7841-1-git-send-email-okaya@kernel.org>
-References: <1533840383-7841-1-git-send-email-okaya@kernel.org>
-Content-Type: text/plain; charset="ISO-8859-1"
+Return-Path: <SRS0=yCvU=LB=kernel.crashing.org=benh@kernel.org>
+Return-Path: <SRS0=yCvU=LB=kernel.crashing.org=benh@kernel.org>
+Message-ID: <06c1233b71dea08b1fc32334acefc48c32c46557.camel@kernel.crashing.org>
+Subject: Re: [RFC PATCH 1/6] Revert "PCI: Fix is_added/is_busmaster race
+ condition"
+From: Benjamin Herrenschmidt <benh@kernel.crashing.org>
+To: Bjorn Helgaas <helgaas@kernel.org>
+Cc: linux-pci@vger.kernel.org, Hari Vyas <hari.vyas@broadcom.com>,
+        Ray Jui
+ <ray.jui@broadcom.com>,
+        Srinath Mannam <srinath.mannam@broadcom.com>,
+        Guenter Roeck <linux@roeck-us.net>, Jens Axboe <axboe@kernel.dk>,
+        Lukas
+ Wunner <lukas@wunner.de>,
+        Konstantin Khlebnikov
+ <khlebnikov@yandex-team.ru>,
+        Marta Rybczynska <mrybczyn@kalray.eu>,
+        Pierre-Yves Kerbrat <pkerbrat@kalray.eu>, linux-kernel@vger.kernel.org
+Date: Sat, 18 Aug 2018 13:24:51 +1000
+In-Reply-To: <20180817154431.GC128050@bhelgaas-glaptop.roam.corp.google.com>
+References: <20180817044902.31420-1-benh@kernel.crashing.org>
+	 <20180817044902.31420-2-benh@kernel.crashing.org>
+	 <20180817154431.GC128050@bhelgaas-glaptop.roam.corp.google.com>
+Content-Type: text/plain; charset="UTF-8"
 Mime-Version: 1.0
-Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Thu, 2018-08-09 at 18:46 +0000, Sinan Kaya wrote:
-> If _OSC execution fails today for platforms without an _OSC
-> entry, code is printing a misleading message saying disabling
-> ASPM as follows:
+On Fri, 2018-08-17 at 10:44 -0500, Bjorn Helgaas wrote:
+> On Fri, Aug 17, 2018 at 02:48:57PM +1000, Benjamin Herrenschmidt wrote:
+> > This reverts commit 44bda4b7d26e9fffed6d7152d98a2e9edaeb2a76.
 > 
-> acpi PNP0A03:00: _OSC failed (AE_NOT_FOUND); disabling ASPM
+> Just to be clear, if I understand correctly, this is a pure revert of
+> 44bda4b7d26e and as such it reintroduces the problem solved by that
+> commit.
 > 
-> We need to ensure that platform supports ASPM to begin with.
-> 
-> Signed-off-by: Sinan Kaya <okaya@kernel.org>
-> Reported-by: Michael Kelley <mikelley@microsoft.com>
-> ---
->  drivers/acpi/pci_root.c | 9 +++++++--
->  1 file changed, 7 insertions(+), 2 deletions(-)
-> 
-> diff --git a/drivers/acpi/pci_root.c b/drivers/acpi/pci_root.c
-[]
-> @@ -455,8 +455,13 @@ static void negotiate_os_control(struct acpi_pci_root *root, int *no_aspm)
->  	decode_osc_support(root, "OS supports", support);
->  	status = acpi_pci_osc_support(root, support);
->  	if (ACPI_FAILURE(status)) {
-> -		dev_info(&device->dev, "_OSC failed (%s); disabling ASPM\n",
-> -			 acpi_format_exception(status));
-> +		char *aspm_msg = "";
-> +
-> +		if (pcie_aspm_support_enabled())
-> +			aspm_msg = "; disabling ASPM";
-> +
-> +		dev_info(&device->dev, "_OSC failed (%s) %s\n",
-> +				 acpi_format_exception(status), aspm_msg);
+> If your solution turns out to be better, that's great, but it would be
+> nice to avoid the bisection hole of reintroducing the problem, then
+> fixing it again later.
 
-I think this would read better not using a temporary and
-using a ternary instead.
+There is no way to do that other than merging the revert and the fix
+into one. That said, the race is sufficiently hard to hit that I
+wouldn't worry too much about it.
 
-		dev_info(&device->dev, "_OSC failed (%s)%s\n",
-			 acpi_format_exception(status),
-			 pcie_aspm_support_enabled() ? "; disabling ASPM" : "");
-
->  		*no_aspm = 1;
->  		return;
->  	}
+> > The new pci state mutex provides a simpler way of addressing
+> > this race and avoids the relative includes added to the powerpc
+> > code.
