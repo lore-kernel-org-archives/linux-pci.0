@@ -1,76 +1,89 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-yb0-f193.google.com ([209.85.213.193]:33983 "EHLO
-        mail-yb0-f193.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726680AbeHEWIm (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Sun, 5 Aug 2018 18:08:42 -0400
-Received: by mail-yb0-f193.google.com with SMTP id e9-v6so4557332ybq.1
-        for <linux-pci@vger.kernel.org>; Sun, 05 Aug 2018 13:02:59 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <20180804101402.10022-3-hch@lst.de>
-References: <20180804101402.10022-1-hch@lst.de> <20180804101402.10022-3-hch@lst.de>
-From: Wesley Terpstra <wesley@sifive.com>
-Date: Sun, 5 Aug 2018 13:02:58 -0700
-Message-ID: <CAMgXwTgr572J_HH396tfvT7Zj8Jj0fefKOSmVw2+Gwn8qcPR1g@mail.gmail.com>
-Subject: Re: [PATCH 2/3] PCI/xilinx: Work-around for hardware DMA limit (32 bits)
-To: Christoph Hellwig <hch@lst.de>
-Cc: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
-        Bjorn Helgaas <bhelgaas@google.com>,
-        Palmer Dabbelt <palmer@dabbelt.com>,
-        Arnd Bergmann <arnd@arndb.de>, linux-pci@vger.kernel.org,
-        linux-riscv@lists.infradead.org
-Content-Type: text/plain; charset="UTF-8"
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <SRS0=dBQP=LC=wunner.de=lukas@kernel.org>
+Return-Path: <SRS0=dBQP=LC=wunner.de=lukas@kernel.org>
+Message-Id: <10f51ea0e0a29b33a5f87e7eb98fe4cdf8cb681f.1534686485.git.lukas@wunner.de>
+In-Reply-To: <cover.1534686484.git.lukas@wunner.de>
+References: <cover.1534686484.git.lukas@wunner.de>
+From: Lukas Wunner <lukas@wunner.de>
+Date: Sun, 19 Aug 2018 16:29:00 +0200
+Subject: [PATCH 1/9] PCI: Simplify disconnected marking
+To: Bjorn Helgaas <helgaas@kernel.org>, linux-pci@vger.kernel.org, Sinan Kaya <okaya@kernel.org>, Mika Westerberg <mika.westerberg@linux.intel.com>
+Cc: Keith Busch <keith.busch@intel.com>, Oza Pawandeep <poza@codeaurora.org>, Benjamin Herrenschmidt <benh@kernel.crashing.org>
 List-ID: <linux-pci.vger.kernel.org>
 
-FYI, This Xilinx PCIe IP 32-bit cap only applies to SOME instances of
-the IP. The Ultrascale+ version of Xilinx PCIe hard IP does support
-64-bit or 32-bit. The Virtex7 version only supports 32-bit. The
-pcie-xilinx driver woks with both of these root complexes. So probably
-there should be a conditional hook in the DTS that triggers the
-work-around behaviour.
+Commit 89ee9f768003 ("PCI: Add device disconnected state") iterates over
+the devices on a parent bus, marks each as disconnected, then marks
+each device's children as disconnected using pci_walk_bus().
 
-On Sat, Aug 4, 2018 at 3:14 AM, Christoph Hellwig <hch@lst.de> wrote:
-> This PCIe bridge only has a 32 bit bus master interface, thus truncating
-> the DMA capability of all PCIe devices attached beneath it. This caps
-> the child device capability so that these devices work on systems with
-> physical memory beyond the 4GiB threshold.
->
-> Based on an earlier patch from Wesley W. Terpstra <wesley@sifive.com>.
->
-> Signed-off-by: Christoph Hellwig <hch@lst.de>
-> ---
->  drivers/pci/controller/pcie-xilinx.c | 11 +++++++++++
->  1 file changed, 11 insertions(+)
->
-> diff --git a/drivers/pci/controller/pcie-xilinx.c b/drivers/pci/controller/pcie-xilinx.c
-> index 7b1389d8e2a5..ccfd91e0515f 100644
-> --- a/drivers/pci/controller/pcie-xilinx.c
-> +++ b/drivers/pci/controller/pcie-xilinx.c
-> @@ -197,6 +197,16 @@ static void __iomem *xilinx_pcie_map_bus(struct pci_bus *bus,
->         return port->reg_base + relbus + where;
->  }
->
-> +/*
-> + * This PCIe bridge only has a 32 bit bus master interface, thus truncating
-> + * the DMA capability of all PCIe devices attached beneath it.
-> + */
-> +static int xilinx_pcie_add_device(struct pci_dev *pdev)
-> +{
-> +       pdev->dev.bus_dma_mask = DMA_BIT_MASK(32);
-> +       return 0;
-> +}
-> +
->  /* PCIe operations */
->  static struct pci_ops xilinx_pcie_ops = {
->         .map_bus = xilinx_pcie_map_bus,
-> @@ -665,6 +675,7 @@ static int xilinx_pcie_probe(struct platform_device *pdev)
->         bridge->ops = &xilinx_pcie_ops;
->         bridge->map_irq = of_irq_parse_and_map_pci;
->         bridge->swizzle_irq = pci_common_swizzle;
-> +       bridge->add_device = xilinx_pcie_add_device;
->
->  #ifdef CONFIG_PCI_MSI
->         xilinx_pcie_msi_chip.dev = dev;
-> --
-> 2.18.0
->
+The same can be achieved more succinctly by calling pci_walk_bus() on
+the parent bus.  Moreover, this does not need to wait until acquiring
+pci_lock_rescan_remove(), so move it out of that critical section.
+
+The critical section in err.c contains a pci_dev_get() / pci_dev_put()
+pair which was apparently copy-pasted from pciehp_pci.c.  In the latter
+it serves the purpose of holding the struct pci_dev in place until the
+Command register is updated.  err.c doesn't do anything like that, hence
+the pair is unnecessary.  Remove it.
+
+Signed-off-by: Lukas Wunner <lukas@wunner.de>
+Cc: Keith Busch <keith.busch@intel.com>
+Cc: Oza Pawandeep <poza@codeaurora.org>
+Cc: Sinan Kaya <okaya@kernel.org>
+Cc: Benjamin Herrenschmidt <benh@kernel.crashing.org>
+---
+ drivers/pci/hotplug/pciehp_pci.c | 9 +++------
+ drivers/pci/pcie/err.c           | 8 ++------
+ 2 files changed, 5 insertions(+), 12 deletions(-)
+
+diff --git a/drivers/pci/hotplug/pciehp_pci.c b/drivers/pci/hotplug/pciehp_pci.c
+index 18f83e554c73..0322bd4f0a7a 100644
+--- a/drivers/pci/hotplug/pciehp_pci.c
++++ b/drivers/pci/hotplug/pciehp_pci.c
+@@ -91,6 +91,9 @@ void pciehp_unconfigure_device(struct slot *p_slot, bool presence)
+ 	ctrl_dbg(ctrl, "%s: domain:bus:dev = %04x:%02x:00\n",
+ 		 __func__, pci_domain_nr(parent), parent->number);
+ 
++	if (!presence)
++		pci_walk_bus(parent, pci_dev_set_disconnected, NULL);
++
+ 	pci_lock_rescan_remove();
+ 
+ 	/*
+@@ -102,12 +105,6 @@ void pciehp_unconfigure_device(struct slot *p_slot, bool presence)
+ 	list_for_each_entry_safe_reverse(dev, temp, &parent->devices,
+ 					 bus_list) {
+ 		pci_dev_get(dev);
+-		if (!presence) {
+-			pci_dev_set_disconnected(dev, NULL);
+-			if (pci_has_subordinate(dev))
+-				pci_walk_bus(dev->subordinate,
+-					     pci_dev_set_disconnected, NULL);
+-		}
+ 		pci_stop_and_remove_bus_device(dev);
+ 		/*
+ 		 * Ensure that no new Requests will be generated from
+diff --git a/drivers/pci/pcie/err.c b/drivers/pci/pcie/err.c
+index 708fd3a0d646..cac406b6e936 100644
+--- a/drivers/pci/pcie/err.c
++++ b/drivers/pci/pcie/err.c
+@@ -292,17 +292,13 @@ void pcie_do_fatal_recovery(struct pci_dev *dev, u32 service)
+ 		udev = dev->bus->self;
+ 
+ 	parent = udev->subordinate;
++	pci_walk_bus(parent, pci_dev_set_disconnected, NULL);
++
+ 	pci_lock_rescan_remove();
+ 	pci_dev_get(dev);
+ 	list_for_each_entry_safe_reverse(pdev, temp, &parent->devices,
+ 					 bus_list) {
+-		pci_dev_get(pdev);
+-		pci_dev_set_disconnected(pdev, NULL);
+-		if (pci_has_subordinate(pdev))
+-			pci_walk_bus(pdev->subordinate,
+-				     pci_dev_set_disconnected, NULL);
+ 		pci_stop_and_remove_bus_device(pdev);
+-		pci_dev_put(pdev);
+ 	}
+ 
+ 	result = reset_link(udev, service);
+-- 
+2.18.0
