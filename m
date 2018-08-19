@@ -1,66 +1,215 @@
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-From: Leonard Crestez <leonard.crestez@nxp.com>
-To: Shawn Guo <shawnguo@kernel.org>,
- Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
- Philipp Zabel <p.zabel@pengutronix.de>,
- Lucas Stach <l.stach@pengutronix.de>
-Subject: [PATCH v4 4/6] dt-bindings: imx6q-pcie: Add turnoff reset for imx7d
-Date: Tue, 14 Aug 2018 19:50:18 +0300
-Message-Id: <e4e35d89f8e393cd291cb612a95faf1653a26f9b.1534264292.git.leonard.crestez@nxp.com>
-In-Reply-To: <cover.1534264292.git.leonard.crestez@nxp.com>
-References: <cover.1534264292.git.leonard.crestez@nxp.com>
-MIME-Version: 1.0
-List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
-List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
-List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
-List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
-List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
-Cc: Mark Rutland <mark.rutland@arm.com>, devicetree@vger.kernel.org,
- Joao Pinto <Joao.Pinto@synopsys.com>, Richard Zhu <hongxing.zhu@nxp.com>,
- Anson Huang <Anson.Huang@nxp.com>, Andrey Smirnov <andrew.smirnov@gmail.com>,
- Jingoo Han <jingoohan1@gmail.com>, linux-kernel@vger.kernel.org,
- Rob Herring <robh+dt@kernel.org>, linux-imx@nxp.com, kernel@pengutronix.de,
- linux-pci@vger.kernel.org, Bjorn Helgaas <bhelgaas@google.com>,
- linux-arm-kernel@lists.infradead.org
-Content-Type: text/plain; charset="us-ascii"
-Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
-Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
+Return-Path: <SRS0=dBQP=LC=wunner.de=lukas@kernel.org>
+Return-Path: <SRS0=dBQP=LC=wunner.de=lukas@kernel.org>
+Message-Id: <f430b343ae47e0587401a2b0c6d24f3c6f90cdfd.1534686485.git.lukas@wunner.de>
+In-Reply-To: <cover.1534686484.git.lukas@wunner.de>
+References: <cover.1534686484.git.lukas@wunner.de>
+From: Lukas Wunner <lukas@wunner.de>
+Date: Sun, 19 Aug 2018 16:29:00 +0200
+Subject: [PATCH 3/9] PCI: pciehp: Drop hotplug_slot_ops wrappers
+To: Bjorn Helgaas <helgaas@kernel.org>, linux-pci@vger.kernel.org, Sinan Kaya <okaya@kernel.org>, Mika Westerberg <mika.westerberg@linux.intel.com>
 List-ID: <linux-pci.vger.kernel.org>
 
-This is documented as "required" but won't be present in old dtbs.
+pciehp's ->enable_slot, ->disable_slot, ->get_attention_status and
+->reset_slot callbacks are currently implemented by wrapper functions
+that do nothing else but call down to a backend function.  The backends
+are not called from anywhere else, so drop the wrappers and use the
+backends directly as callbacks, thereby shaving off a few lines of
+unnecessary code.
 
-These resets are also present on other imx chips but right now only
-imx7d implements them through the reset controller subsystem.
+No functional change intended.
 
-Signed-off-by: Leonard Crestez <leonard.crestez@nxp.com>
+Signed-off-by: Lukas Wunner <lukas@wunner.de>
 ---
- Documentation/devicetree/bindings/pci/fsl,imx6q-pcie.txt | 1 +
- 1 file changed, 1 insertion(+)
+ drivers/pci/hotplug/pciehp.h      |  8 +++---
+ drivers/pci/hotplug/pciehp_core.c | 43 +++----------------------------
+ drivers/pci/hotplug/pciehp_ctrl.c |  6 +++--
+ drivers/pci/hotplug/pciehp_hpc.c  |  8 ++++--
+ 4 files changed, 18 insertions(+), 47 deletions(-)
 
-diff --git a/Documentation/devicetree/bindings/pci/fsl,imx6q-pcie.txt b/Documentation/devicetree/bindings/pci/fsl,imx6q-pcie.txt
-index cb33421184a0..f37494d5a7be 100644
---- a/Documentation/devicetree/bindings/pci/fsl,imx6q-pcie.txt
-+++ b/Documentation/devicetree/bindings/pci/fsl,imx6q-pcie.txt
-@@ -48,10 +48,11 @@ Additional required properties for imx7d-pcie:
- - resets: Must contain phandles to PCIe-related reset lines exposed by SRC
-   IP block
- - reset-names: Must contain the following entires:
- 	       - "pciephy"
- 	       - "apps"
-+	       - "turnoff"
+diff --git a/drivers/pci/hotplug/pciehp.h b/drivers/pci/hotplug/pciehp.h
+index 337f2a5a303f..8131c08b21e5 100644
+--- a/drivers/pci/hotplug/pciehp.h
++++ b/drivers/pci/hotplug/pciehp.h
+@@ -173,8 +173,6 @@ struct controller {
+ #define NO_CMD_CMPL(ctrl)	((ctrl)->slot_cap & PCI_EXP_SLTCAP_NCCS)
+ #define PSN(ctrl)		(((ctrl)->slot_cap & PCI_EXP_SLTCAP_PSN) >> 19)
  
- Example:
+-int pciehp_sysfs_enable_slot(struct slot *slot);
+-int pciehp_sysfs_disable_slot(struct slot *slot);
+ void pciehp_request(struct controller *ctrl, int action);
+ void pciehp_handle_button_press(struct slot *slot);
+ void pciehp_handle_disable_request(struct slot *slot);
+@@ -189,7 +187,6 @@ void pcie_clear_hotplug_events(struct controller *ctrl);
+ int pciehp_power_on_slot(struct slot *slot);
+ void pciehp_power_off_slot(struct slot *slot);
+ void pciehp_get_power_status(struct slot *slot, u8 *status);
+-void pciehp_get_attention_status(struct slot *slot, u8 *status);
  
- 	pcie@01000000 {
- 		compatible = "fsl,imx6q-pcie", "snps,dw-pcie";
+ void pciehp_set_attention_status(struct slot *slot, u8 status);
+ void pciehp_get_latch_status(struct slot *slot, u8 *status);
+@@ -201,8 +198,11 @@ void pciehp_green_led_blink(struct slot *slot);
+ int pciehp_check_link_status(struct controller *ctrl);
+ bool pciehp_check_link_active(struct controller *ctrl);
+ void pciehp_release_ctrl(struct controller *ctrl);
+-int pciehp_reset_slot(struct slot *slot, int probe);
+ 
++int pciehp_sysfs_enable_slot(struct hotplug_slot *hotplug_slot);
++int pciehp_sysfs_disable_slot(struct hotplug_slot *hotplug_slot);
++int pciehp_reset_slot(struct hotplug_slot *hotplug_slot, int probe);
++int pciehp_get_attention_status(struct hotplug_slot *hotplug_slot, u8 *status);
+ int pciehp_set_raw_indicator_status(struct hotplug_slot *h_slot, u8 status);
+ int pciehp_get_raw_indicator_status(struct hotplug_slot *h_slot, u8 *status);
+ 
+diff --git a/drivers/pci/hotplug/pciehp_core.c b/drivers/pci/hotplug/pciehp_core.c
+index e77e17106f52..ccaf01e6eced 100644
+--- a/drivers/pci/hotplug/pciehp_core.c
++++ b/drivers/pci/hotplug/pciehp_core.c
+@@ -45,13 +45,9 @@ MODULE_PARM_DESC(pciehp_poll_time, "Polling mechanism frequency, in seconds");
+ #define PCIE_MODULE_NAME "pciehp"
+ 
+ static int set_attention_status(struct hotplug_slot *slot, u8 value);
+-static int enable_slot(struct hotplug_slot *slot);
+-static int disable_slot(struct hotplug_slot *slot);
+ static int get_power_status(struct hotplug_slot *slot, u8 *value);
+-static int get_attention_status(struct hotplug_slot *slot, u8 *value);
+ static int get_latch_status(struct hotplug_slot *slot, u8 *value);
+ static int get_adapter_status(struct hotplug_slot *slot, u8 *value);
+-static int reset_slot(struct hotplug_slot *slot, int probe);
+ 
+ static int init_slot(struct controller *ctrl)
+ {
+@@ -75,15 +71,15 @@ static int init_slot(struct controller *ctrl)
+ 	if (!ops)
+ 		goto out;
+ 
+-	ops->enable_slot = enable_slot;
+-	ops->disable_slot = disable_slot;
++	ops->enable_slot = pciehp_sysfs_enable_slot;
++	ops->disable_slot = pciehp_sysfs_disable_slot;
+ 	ops->get_power_status = get_power_status;
+ 	ops->get_adapter_status = get_adapter_status;
+-	ops->reset_slot = reset_slot;
++	ops->reset_slot = pciehp_reset_slot;
+ 	if (MRL_SENS(ctrl))
+ 		ops->get_latch_status = get_latch_status;
+ 	if (ATTN_LED(ctrl)) {
+-		ops->get_attention_status = get_attention_status;
++		ops->get_attention_status = pciehp_get_attention_status;
+ 		ops->set_attention_status = set_attention_status;
+ 	} else if (ctrl->pcie->port->hotplug_user_indicators) {
+ 		ops->get_attention_status = pciehp_get_raw_indicator_status;
+@@ -134,22 +130,6 @@ static int set_attention_status(struct hotplug_slot *hotplug_slot, u8 status)
+ 	return 0;
+ }
+ 
+-
+-static int enable_slot(struct hotplug_slot *hotplug_slot)
+-{
+-	struct slot *slot = hotplug_slot->private;
+-
+-	return pciehp_sysfs_enable_slot(slot);
+-}
+-
+-
+-static int disable_slot(struct hotplug_slot *hotplug_slot)
+-{
+-	struct slot *slot = hotplug_slot->private;
+-
+-	return pciehp_sysfs_disable_slot(slot);
+-}
+-
+ static int get_power_status(struct hotplug_slot *hotplug_slot, u8 *value)
+ {
+ 	struct slot *slot = hotplug_slot->private;
+@@ -161,14 +141,6 @@ static int get_power_status(struct hotplug_slot *hotplug_slot, u8 *value)
+ 	return 0;
+ }
+ 
+-static int get_attention_status(struct hotplug_slot *hotplug_slot, u8 *value)
+-{
+-	struct slot *slot = hotplug_slot->private;
+-
+-	pciehp_get_attention_status(slot, value);
+-	return 0;
+-}
+-
+ static int get_latch_status(struct hotplug_slot *hotplug_slot, u8 *value)
+ {
+ 	struct slot *slot = hotplug_slot->private;
+@@ -191,13 +163,6 @@ static int get_adapter_status(struct hotplug_slot *hotplug_slot, u8 *value)
+ 	return 0;
+ }
+ 
+-static int reset_slot(struct hotplug_slot *hotplug_slot, int probe)
+-{
+-	struct slot *slot = hotplug_slot->private;
+-
+-	return pciehp_reset_slot(slot, probe);
+-}
+-
+ /**
+  * pciehp_check_presence() - synthesize event if presence has changed
+  *
+diff --git a/drivers/pci/hotplug/pciehp_ctrl.c b/drivers/pci/hotplug/pciehp_ctrl.c
+index ffaf0976e6af..c4d0f902f1d2 100644
+--- a/drivers/pci/hotplug/pciehp_ctrl.c
++++ b/drivers/pci/hotplug/pciehp_ctrl.c
+@@ -364,8 +364,9 @@ static int pciehp_disable_slot(struct slot *slot, bool safe_removal)
+ 	return ret;
+ }
+ 
+-int pciehp_sysfs_enable_slot(struct slot *p_slot)
++int pciehp_sysfs_enable_slot(struct hotplug_slot *hotplug_slot)
+ {
++	struct slot *p_slot = hotplug_slot->private;
+ 	struct controller *ctrl = p_slot->ctrl;
+ 
+ 	mutex_lock(&p_slot->lock);
+@@ -402,8 +403,9 @@ int pciehp_sysfs_enable_slot(struct slot *p_slot)
+ 	return -ENODEV;
+ }
+ 
+-int pciehp_sysfs_disable_slot(struct slot *p_slot)
++int pciehp_sysfs_disable_slot(struct hotplug_slot *hotplug_slot)
+ {
++	struct slot *p_slot = hotplug_slot->private;
+ 	struct controller *ctrl = p_slot->ctrl;
+ 
+ 	mutex_lock(&p_slot->lock);
+diff --git a/drivers/pci/hotplug/pciehp_hpc.c b/drivers/pci/hotplug/pciehp_hpc.c
+index 16a56aa20a6b..017161c03a4d 100644
+--- a/drivers/pci/hotplug/pciehp_hpc.c
++++ b/drivers/pci/hotplug/pciehp_hpc.c
+@@ -326,8 +326,9 @@ int pciehp_get_raw_indicator_status(struct hotplug_slot *hotplug_slot,
+ 	return 0;
+ }
+ 
+-void pciehp_get_attention_status(struct slot *slot, u8 *status)
++int pciehp_get_attention_status(struct hotplug_slot *hotplug_slot, u8 *status)
+ {
++	struct slot *slot = hotplug_slot->private;
+ 	struct controller *ctrl = slot->ctrl;
+ 	struct pci_dev *pdev = ctrl_dev(ctrl);
+ 	u16 slot_ctrl;
+@@ -352,6 +353,8 @@ void pciehp_get_attention_status(struct slot *slot, u8 *status)
+ 		*status = 0xFF;
+ 		break;
+ 	}
++
++	return 0;
+ }
+ 
+ void pciehp_get_power_status(struct slot *slot, u8 *status)
+@@ -753,8 +756,9 @@ void pcie_clear_hotplug_events(struct controller *ctrl)
+  * momentarily, if we see that they could interfere. Also, clear any spurious
+  * events after.
+  */
+-int pciehp_reset_slot(struct slot *slot, int probe)
++int pciehp_reset_slot(struct hotplug_slot *hotplug_slot, int probe)
+ {
++	struct slot *slot = hotplug_slot->private;
+ 	struct controller *ctrl = slot->ctrl;
+ 	struct pci_dev *pdev = ctrl_dev(ctrl);
+ 	u16 stat_mask = 0, ctrl_mask = 0;
 -- 
-2.17.1
-
-
-_______________________________________________
-linux-arm-kernel mailing list
-linux-arm-kernel@lists.infradead.org
-http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
+2.18.0
