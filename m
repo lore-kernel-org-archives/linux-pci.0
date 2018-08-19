@@ -1,180 +1,130 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mga12.intel.com ([192.55.52.136]:14083 "EHLO mga12.intel.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1727405AbeIABeq (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Fri, 31 Aug 2018 21:34:46 -0400
-From: Keith Busch <keith.busch@intel.com>
-To: Linux PCI <linux-pci@vger.kernel.org>,
-        Bjorn Helgaas <bhelgaas@google.com>
-Cc: Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-        Sinan Kaya <okaya@kernel.org>,
-        Thomas Tai <thomas.tai@oracle.com>, poza@codeaurora.org,
-        Lukas Wunner <lukas@wunner.de>,
-        Keith Busch <keith.busch@intel.com>
-Subject: [PATCH 07/16] PCI/ERR: Always use the first downstream port
-Date: Fri, 31 Aug 2018 15:26:30 -0600
-Message-Id: <20180831212639.10196-8-keith.busch@intel.com>
-In-Reply-To: <20180831212639.10196-1-keith.busch@intel.com>
-References: <20180831212639.10196-1-keith.busch@intel.com>
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <SRS0=dBQP=LC=wunner.de=lukas@kernel.org>
+Return-Path: <SRS0=dBQP=LC=wunner.de=lukas@kernel.org>
+Message-Id: <3805ffe4d30d931084394b5eb3f1967be967d332.1534686485.git.lukas@wunner.de>
+In-Reply-To: <cover.1534686484.git.lukas@wunner.de>
+References: <cover.1534686484.git.lukas@wunner.de>
+From: Lukas Wunner <lukas@wunner.de>
+Date: Sun, 19 Aug 2018 16:29:00 +0200
+Subject: [PATCH 9/9] PCI: hotplug: Document TODOs
+To: Bjorn Helgaas <helgaas@kernel.org>, linux-pci@vger.kernel.org, Sinan Kaya <okaya@kernel.org>, Mika Westerberg <mika.westerberg@linux.intel.com>
+Cc: Greg Kroah-Hartman <gregkh@linuxfoundation.org>, Scott Murray <scott@spiteful.org>, Dan Zink <dan.zink@hpe.com>, Prarit Bhargava <prarit@redhat.com>
 List-ID: <linux-pci.vger.kernel.org>
 
-The link reset always used the first bridge device, but AER broadcast
-error handling may have reported an end device. This means the reset may
-hit devices that were never notified of the impending error recovery.
+While refactoring the PCI hotplug core's API, I noticed a significant
+amount of technical debt in some of the hotplug drivers.  Document the
+issues that caught my eye for starters.
 
-This patch uses the first downstream port in the hierarchy considered
-reliable. An error detected by a  switch upstream port detected should
-mean it occurred on its upstream link, so the patch selects the parent
-device if the error is not a root or downstream port.
+I do not have hardware at my disposal that utilizes the listed drivers
+and I think that's a prerequisite to work on them to ensure that no
+regressions sneak in.  But some of this hardware is so old that it may be
+hard to come by.  Obviously, it is fine to support old hardware, but the
+drivers need to be maintained.
 
-This allows two other clean-ups. First, error handling can only run on
-bridges so this patch removes checks and branches for end devices. Second,
-the first accessible port does not inherit the channel error state since
-we can access it, so the special cases for error detect and resume are
-no longer necessary.
+If noone steps up, perhaps we should consider sunsetting a few drivers
+by moving them to staging.  Based on my findings, ibmphp would be the
+first candidate.  I've found it fairly difficult to apply my API
+refactorings to it and have listed some obvious bugs in the driver.
+cpqphp is also in need of a modernization and would be a second
+candidate for relegation to staging.
 
-Signed-off-by: Keith Busch <keith.busch@intel.com>
+shpchp was introduced in the same commit as pciehp but hasn't benefited
+from the same amount of refactoring due to the decline of conventional
+PCI's relevance.  Yet hardware supporting it may be more prevalent than
+for the proprietary hotplug methods.
+
+Per Documentation/process/2.Process.rst, "a TODO file should be present"
+for drivers in staging.  The file introduced by the present commit may
+serve as a basis for this.
+
+Signed-off-by: Lukas Wunner <lukas@wunner.de>
+Cc: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
+Cc: Scott Murray <scott@spiteful.org>
+Cc: Dan Zink <dan.zink@hpe.com>
+Cc: Prarit Bhargava <prarit@redhat.com>
 ---
- drivers/pci/pcie/err.c | 85 +++++++++++++-------------------------------------
- 1 file changed, 21 insertions(+), 64 deletions(-)
+ drivers/pci/hotplug/TODO | 74 ++++++++++++++++++++++++++++++++++++++++
+ 1 file changed, 74 insertions(+)
+ create mode 100644 drivers/pci/hotplug/TODO
 
-diff --git a/drivers/pci/pcie/err.c b/drivers/pci/pcie/err.c
-index 45f574954fd6..efef4c4ce7b2 100644
---- a/drivers/pci/pcie/err.c
-+++ b/drivers/pci/pcie/err.c
-@@ -63,30 +63,12 @@ static int report_error_detected(struct pci_dev *dev, void *data)
- 	if (!dev->driver ||
- 		!dev->driver->err_handler ||
- 		!dev->driver->err_handler->error_detected) {
--		if (result_data->state == pci_channel_io_frozen &&
--			dev->hdr_type != PCI_HEADER_TYPE_BRIDGE) {
--			/*
--			 * In case of fatal recovery, if one of down-
--			 * stream device has no driver. We might be
--			 * unable to recover because a later insmod
--			 * of a driver for this device is unaware of
--			 * its hw state.
--			 */
--			pci_printk(KERN_DEBUG, dev, "device has %s\n",
--				   dev->driver ?
--				   "no AER-aware driver" : "no driver");
--		}
--
- 		/*
--		 * If there's any device in the subtree that does not
--		 * have an error_detected callback, returning
--		 * PCI_ERS_RESULT_NO_AER_DRIVER prevents calling of
--		 * the subsequent mmio_enabled/slot_reset/resume
--		 * callbacks of "any" device in the subtree. All the
--		 * devices in the subtree are left in the error state
--		 * without recovery.
-+		 * If any device in the subtree does not have an error_detected
-+		 * callback, PCI_ERS_RESULT_NO_AER_DRIVER prevents subsequent
-+		 * erronr callbacks of "any" device in the subtree, and will
-+		 * exit in the disconnected error state.
- 		 */
--
- 		if (dev->hdr_type != PCI_HEADER_TYPE_BRIDGE)
- 			vote = PCI_ERS_RESULT_NO_AER_DRIVER;
- 		else
-@@ -193,34 +175,23 @@ static pci_ers_result_t default_reset_link(struct pci_dev *dev)
- 
- static pci_ers_result_t reset_link(struct pci_dev *dev, u32 service)
- {
--	struct pci_dev *udev;
- 	pci_ers_result_t status;
- 	struct pcie_port_service_driver *driver = NULL;
- 
--	if (dev->hdr_type == PCI_HEADER_TYPE_BRIDGE) {
--		/* Reset this port for all subordinates */
--		udev = dev;
--	} else {
--		/* Reset the upstream component (likely downstream port) */
--		udev = dev->bus->self;
--	}
--
--	/* Use the aer driver of the component firstly */
--	driver = pcie_port_find_service(udev, service);
--
-+	driver = pcie_port_find_service(dev, service);
- 	if (driver && driver->reset_link) {
--		status = driver->reset_link(udev);
--	} else if (udev->has_secondary_link) {
--		status = default_reset_link(udev);
-+		status = driver->reset_link(dev);
-+	} else if (dev->has_secondary_link) {
-+		status = default_reset_link(dev);
- 	} else {
- 		pci_printk(KERN_DEBUG, dev, "no link-reset support at upstream device %s\n",
--			pci_name(udev));
-+			pci_name(dev));
- 		return PCI_ERS_RESULT_DISCONNECT;
- 	}
- 
- 	if (status != PCI_ERS_RESULT_RECOVERED) {
- 		pci_printk(KERN_DEBUG, dev, "link reset at upstream device %s failed\n",
--			pci_name(udev));
-+			pci_name(dev));
- 		return PCI_ERS_RESULT_DISCONNECT;
- 	}
- 
-@@ -252,31 +223,7 @@ static pci_ers_result_t broadcast_error_message(struct pci_dev *dev,
- 	else
- 		result_data.result = PCI_ERS_RESULT_RECOVERED;
- 
--	if (dev->hdr_type == PCI_HEADER_TYPE_BRIDGE) {
--		/*
--		 * If the error is reported by a bridge, we think this error
--		 * is related to the downstream link of the bridge, so we
--		 * do error recovery on all subordinates of the bridge instead
--		 * of the bridge and clear the error status of the bridge.
--		 */
--		if (cb == report_error_detected)
--			dev->error_state = state;
--		pci_walk_bus(dev->subordinate, cb, &result_data);
--		if (cb == report_resume) {
--			pci_aer_clear_device_status(dev);
--			pci_cleanup_aer_uncorrect_error_status(dev);
--			dev->error_state = pci_channel_io_normal;
--		}
--	} else {
--		/*
--		 * If the error is reported by an end point, we think this
--		 * error is related to the upstream link of the end point.
--		 * The error is non fatal so the bus is ok; just invoke
--		 * the callback for the function that logged the error.
--		 */
--		cb(dev, &result_data);
--	}
--
-+	pci_walk_bus(dev->subordinate, cb, &result_data);
- 	return result_data.result;
- }
- 
-@@ -313,6 +260,14 @@ static void pcie_do_recovery(struct pci_dev *dev, enum pci_channel_state state,
- {
- 	pci_ers_result_t status;
- 
-+	/*
-+	 * Error recovery runs on all subordinates of the first downstream port.
-+	 * If the downstream port detected the error, it is cleared at the end.
-+	 */
-+	if (!(pci_pcie_type(dev) == PCI_EXP_TYPE_ROOT_PORT ||
-+	      pci_pcie_type(dev) == PCI_EXP_TYPE_DOWNSTREAM))
-+		dev = dev->bus->self;
+diff --git a/drivers/pci/hotplug/TODO b/drivers/pci/hotplug/TODO
+new file mode 100644
+index 000000000000..a32070be5adf
+--- /dev/null
++++ b/drivers/pci/hotplug/TODO
+@@ -0,0 +1,74 @@
++Contributions are solicited in particular to remedy the following issues:
 +
- 	status = broadcast_error_message(dev,
- 			state,
- 			"error_detected",
-@@ -348,6 +303,8 @@ static void pcie_do_recovery(struct pci_dev *dev, enum pci_channel_state state,
- 				"resume",
- 				report_resume);
- 
-+	pci_aer_clear_device_status(dev);
-+	pci_cleanup_aer_uncorrect_error_status(dev);
- 	pci_info(dev, "AER: Device recovery successful\n");
- 	return;
- failed:
++cpcihp:
++
++* There are no implementations of the ->hardware_test, ->get_power and
++  ->set_power callbacks in struct cpci_hp_controller_ops.  Why were they
++  introduced?  Can they be removed from the struct?
++
++cpqphp:
++
++* The driver spawns a kthread cpqhp_event_thread() which is woken by the
++  hardirq handler cpqhp_ctrl_intr().  Convert this to threaded IRQ handling.
++  The kthread is also woken from the timer pushbutton_helper_thread(),
++  convert it to call irq_wake_thread().  Use pciehp as a template.
++
++* A large portion of cpqphp_ctrl.c and cpqphp_pci.c concerns resource
++  management.  Doesn't this duplicate functionality in the core?
++
++ibmphp:
++
++* Implementations of hotplug_slot_ops callbacks such as get_adapter_present()
++  in ibmphp_core.c create a copy of the struct slot on the stack, then perform
++  the actual operation on that copy.  Determine if this overhead is necessary,
++  delete it if not.  The functions also perform a NULL pointer check on the
++  struct hotplug_slot, this seems superfluous.
++
++* Several functions access the pci_slot member in struct hotplug_slot even
++  though pci_hotplug.h declares it private.  See get_max_bus_speed() for an
++  example.  Either the pci_slot member should no longer be declared private
++  or ibmphp should store a pointer to its bus in struct slot.  Probably the
++  former.
++
++* The functions get_max_adapter_speed() and get_bus_name() are commented out.
++  Can they be deleted?  There are also forward declarations at the top of
++  ibmphp_core.c as well as pointers in ibmphp_hotplug_slot_ops, likewise
++  commented out.
++
++* ibmphp_init_devno() takes a struct slot **, it could instead take a
++  struct slot *.
++
++* The return value of pci_hp_register() is not checked.
++
++* iounmap(io_mem) is called in the error path of ebda_rsrc_controller()
++  and once more in the error path of its caller ibmphp_access_ebda().
++
++* The various slot data structures are difficult to follow and need to be
++  simplified.  A lot of functions are too large and too complex, they need
++  to be broken up into smaller, manageable pieces.  Negative examples are
++  ebda_rsrc_controller() and configure_bridge().
++
++* A large portion of ibmphp_res.c and ibmphp_pci.c concerns resource
++  management.  Doesn't this duplicate functionality in the core?
++
++sgi_hotplug:
++
++* Several functions access the pci_slot member in struct hotplug_slot even
++  though pci_hotplug.h declares it private.  See sn_hp_destroy() for an
++  example.  Either the pci_slot member should no longer be declared private
++  or sgi_hotplug should store a pointer to it in struct slot.  Probably the
++  former.
++
++shpchp:
++
++* There is only a single implementation of struct hpc_ops.  Can the struct be
++  removed and its functions invoked directly?  This has already been done in
++  pciehp with commit 82a9e79ef132 ("PCI: pciehp: remove hpc_ops").  Clarify
++  if there was a specific reason not to apply the same change to shpchp.
++
++* The ->get_mode1_ECC_cap callback in shpchp_hpc_ops is never invoked.
++  Why was it introduced?  Can it be removed?
++
++* The hardirq handler shpc_isr() queues events on a workqueue.  It can be
++  simplified by converting it to threaded IRQ handling.  Use pciehp as a
++  template.
 -- 
-2.14.4
+2.18.0
