@@ -1,73 +1,83 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-yw1-f65.google.com ([209.85.161.65]:35326 "EHLO
-        mail-yw1-f65.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1731432AbeHFV5S (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Mon, 6 Aug 2018 17:57:18 -0400
-Received: by mail-yw1-f65.google.com with SMTP id s68-v6so1039057ywg.2
-        for <linux-pci@vger.kernel.org>; Mon, 06 Aug 2018 12:46:41 -0700 (PDT)
-MIME-Version: 1.0
-References: <20180718215359.GG128988@bhelgaas-glaptop.roam.corp.google.com>
- <20180723200339.23943-1-mr.nuke.me@gmail.com> <20180723140143.1a46902f@cakuba.netronome.com>
- <b9a6b3b8-56cf-8bb5-2568-071ccd8a4f28@mellanox.com> <fc04618a-3b3b-58bd-edd5-cbde11638d7b@mellanox.com>
- <1b914780-e342-6aee-ffb2-ef81ac3ddd29@gmail.com> <7424c5ba-ae44-3d8d-9dd5-360e17b6e3b9@mellanox.com>
- <c0f2f79b1fe1491287b35e70ba76902a@ausx13mps321.AMER.DELL.COM>
-In-Reply-To: <c0f2f79b1fe1491287b35e70ba76902a@ausx13mps321.AMER.DELL.COM>
-From: Bjorn Helgaas <bhelgaas@google.com>
-Date: Mon, 6 Aug 2018 14:46:28 -0500
-Message-ID: <CAErSpo4PK+SQLNfdkLNt9eLc7bpbxbkZCsa8T-tQpid601n0SQ@mail.gmail.com>
-Subject: Re: [PATCH v5] PCI: Check for PCIe downtraining conditions
-To: Alex_Gagniuc@dellteam.com
-Cc: Tal Gilboa <talgi@mellanox.com>, mr.nuke.me@gmail.com,
-        jakub.kicinski@netronome.com, linux-pci@vger.kernel.org,
-        Keith Busch <keith.busch@intel.com>, Austin.Bolen@dell.com,
-        Shyam.Iyer@dell.com,
-        "Kirsher, Jeffrey T" <jeffrey.t.kirsher@intel.com>,
-        ariel.elior@cavium.com, michael.chan@broadcom.com,
-        ganeshgr@chelsio.com, tariqt@mellanox.com,
-        Dave Airlie <airlied@gmail.com>,
-        Alex Deucher <alexander.deucher@amd.com>,
-        "Marciniszyn, Mike" <mike.marciniszyn@intel.com>,
-        Linux Kernel Mailing List <linux-kernel@vger.kernel.org>
-Content-Type: text/plain; charset="UTF-8"
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <SRS0=dBQP=LC=wunner.de=lukas@kernel.org>
+Return-Path: <SRS0=dBQP=LC=wunner.de=lukas@kernel.org>
+Message-Id: <cover.1534686484.git.lukas@wunner.de>
+From: Lukas Wunner <lukas@wunner.de>
+Date: Sun, 19 Aug 2018 16:29:00 +0200
+Subject: [PATCH 0/9] PCI hotplug diet
+To: Bjorn Helgaas <helgaas@kernel.org>, linux-pci@vger.kernel.org, Sinan Kaya <okaya@kernel.org>, Mika Westerberg <mika.westerberg@linux.intel.com>
+Cc: Keith Busch <keith.busch@intel.com>, Oza Pawandeep <poza@codeaurora.org>, Benjamin Herrenschmidt <benh@kernel.crashing.org>, "Rafael J. Wysocki" <rjw@rjwysocki.net>, Len Brown <lenb@kernel.org>, Scott Murray <scott@spiteful.org>, Paul Mackerras <paulus@samba.org>, Michael Ellerman <mpe@ellerman.id.au>, Gavin Shan <gwshan@linux.vnet.ibm.com>, Sebastian Ott <sebott@linux.vnet.ibm.com>, Gerald Schaefer <gerald.schaefer@de.ibm.com>, Corentin Chary <corentin.chary@gmail.com>, Darren Hart <dvhart@infradead.org>, Andy Shevchenko <andy@infradead.org>, Greg Kroah-Hartman <gregkh@linuxfoundation.org>, Scott Murray <scott@spiteful.org>, Dan Zink <dan.zink@hpe.com>, Jyoti Shah <jshah@us.ibm.com>, Irene Zubarev <zubarev@us.ibm.com>, Prarit Bhargava <prarit@redhat.com>, linux-acpi@vger.kernel.org, linux-s390@vger.kernel.org, platform-driver-x86@vger.kernel.org, acpi4asus-user@lists.sourceforge.net, linuxppc-dev@lists.ozlabs.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Mon, Aug 6, 2018 at 1:39 PM <Alex_Gagniuc@dellteam.com> wrote:
->
-> On 08/05/2018 02:06 AM, Tal Gilboa wrote:
-> > On 7/31/2018 6:10 PM, Alex G. wrote:
-> >> On 07/31/2018 01:40 AM, Tal Gilboa wrote:
-> >> [snip]
-> >>>>>> @@ -2240,6 +2258,9 @@ static void pci_init_capabilities(struct
-> >>>>>> pci_dev *dev)
-> >>>>>>        /* Advanced Error Reporting */
-> >>>>>>        pci_aer_init(dev);
-> >>>>>> +    /* Check link and detect downtrain errors */
-> >>>>>> +    pcie_check_upstream_link(dev);
-> >>>>
-> >>>> This is called for every PCIe device right? Won't there be a
-> >>>> duplicated print in case a device loads with lower PCIe bandwidth
-> >>>> than needed?
-> >>>
-> >>> Alex, can you comment on this please?
-> >>
-> >> Of course I can.
-> >>
-> >> There's one print at probe() time, which happens if bandwidth < max. I
-> >> would think that's fine. There is a way to duplicate it, and that is if
-> >> the driver also calls print_link_status(). A few driver maintainers who
-> >> call it have indicated they'd be fine with removing it from the driver,
-> >> and leaving it in the core PCI.
-> >
-> > We would be fine with that as well. Please include the removal in your
-> > patches.
->
-> What's the proper procedure? Do I wait for confirmation from Bjorn
-> before knocking on maintainer's doors, or do I William Wallace into
-> their trees and demand they merge the removal (pending Bjorn's approval
-> on the other side) ?
+Here's PCI hotplug material I've prepared for v4.20:
 
-Post a v4 series that does the PCI core stuff as well as removing the
-driver code.
+Patches [1/9] to [8/9] reduce the code by 488 lines.  There should be no
+loss of functionality and no new features, just less and simpler code.
 
-Bjorn
+Patch [9/9] collects TODOs for hotplug drivers to spur contributions.
+
+
+I've assumed that my patch "PCI: pciehp: Differentiate between surprise
+and safe removal" (submitted July 31) gets merged before this series:
+https://patchwork.ozlabs.org/patch/951386/
+
+If that patch is not accepted or other pciehp-related patches are merged
+before this series, I'll have to rebase patch [4/9] ("PCI: pciehp: Unify
+controller and slot structs").  No big deal, just a heads-up.
+
+Thanks,
+
+Lukas
+
+
+Lukas Wunner (9):
+  PCI: Simplify disconnected marking
+  PCI: pciehp: Drop unnecessary includes
+  PCI: pciehp: Drop hotplug_slot_ops wrappers
+  PCI: pciehp: Unify controller and slot structs
+  PCI: pciehp: Reshuffle controller struct for clarity
+  PCI: hotplug: Constify hotplug_slot_ops
+  PCI: hotplug: Drop hotplug_slot_info
+  PCI: hotplug: Embed hotplug_slot
+  PCI: hotplug: Document TODOs
+
+ arch/powerpc/include/asm/pnv-pci.h      |   2 +-
+ drivers/pci/hotplug/TODO                |  74 +++++++
+ drivers/pci/hotplug/acpiphp.h           |  10 +-
+ drivers/pci/hotplug/acpiphp_core.c      |  36 +---
+ drivers/pci/hotplug/acpiphp_ibm.c       |   2 +-
+ drivers/pci/hotplug/cpci_hotplug.h      |  11 +-
+ drivers/pci/hotplug/cpci_hotplug_core.c | 105 +++-------
+ drivers/pci/hotplug/cpci_hotplug_pci.c  |   6 +-
+ drivers/pci/hotplug/cpqphp.h            |   9 +-
+ drivers/pci/hotplug/cpqphp_core.c       |  59 ++----
+ drivers/pci/hotplug/cpqphp_ctrl.c       |  31 +--
+ drivers/pci/hotplug/ibmphp.h            |   9 +-
+ drivers/pci/hotplug/ibmphp_core.c       | 121 ++++-------
+ drivers/pci/hotplug/ibmphp_ebda.c       |  70 +------
+ drivers/pci/hotplug/pci_hotplug_core.c  |  53 ++---
+ drivers/pci/hotplug/pciehp.h            | 138 ++++++-------
+ drivers/pci/hotplug/pciehp_core.c       | 127 +++---------
+ drivers/pci/hotplug/pciehp_ctrl.c       | 255 +++++++++++-------------
+ drivers/pci/hotplug/pciehp_hpc.c        | 127 ++++--------
+ drivers/pci/hotplug/pciehp_pci.c        |  24 +--
+ drivers/pci/hotplug/pnv_php.c           |  35 ++--
+ drivers/pci/hotplug/rpaphp.h            |  10 +-
+ drivers/pci/hotplug/rpaphp_core.c       |  20 +-
+ drivers/pci/hotplug/rpaphp_pci.c        |  11 +-
+ drivers/pci/hotplug/rpaphp_slot.c       |  22 +-
+ drivers/pci/hotplug/s390_pci_hpc.c      |  44 ++--
+ drivers/pci/hotplug/sgi_hotplug.c       |  63 +++---
+ drivers/pci/hotplug/shpchp.h            |   8 +-
+ drivers/pci/hotplug/shpchp_core.c       |  48 ++---
+ drivers/pci/hotplug/shpchp_ctrl.c       |  21 +-
+ drivers/pci/pci.c                       |   4 +-
+ drivers/pci/pcie/err.c                  |   8 +-
+ drivers/pci/slot.c                      |   2 +-
+ drivers/platform/x86/asus-wmi.c         |  39 +---
+ drivers/platform/x86/eeepc-laptop.c     |  43 ++--
+ include/linux/pci_hotplug.h             |  43 +---
+ 36 files changed, 638 insertions(+), 1052 deletions(-)
+ create mode 100644 drivers/pci/hotplug/TODO
+
+-- 
+2.18.0
