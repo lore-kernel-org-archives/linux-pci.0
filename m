@@ -1,46 +1,41 @@
-Return-Path: <SRS0=FW5r=KZ=deltatee.com=logang@kernel.org>
-Return-Path: <SRS0=FW5r=KZ=deltatee.com=logang@kernel.org>
-To: Dave Jiang <dave.jiang@intel.com>, Kit Chow <kchow@gigaio.com>,
- Eric Pilmore <epilmore@gigaio.com>, Bjorn Helgaas <helgaas@kernel.org>
-Cc: "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
- David Woodhouse <dwmw2@infradead.org>,
- Alex Williamson <alex.williamson@redhat.com>,
- "iommu@lists.linux-foundation.org" <iommu@lists.linux-foundation.org>
-References: <CAOQPn8soxubJxb=vp7kz+AM6LbPH5y+_Nx0Vzv7rjV_nMMqEmA@mail.gmail.com>
- <20180809184331.GB113140@bhelgaas-glaptop.roam.corp.google.com>
- <CAOQPn8uPYKai49WYPqZp2wNd5of=0hUvPOHEtqP56RZu-hcjuw@mail.gmail.com>
- <b54899a8-a144-e8e0-9880-1800c4657b95@deltatee.com>
- <95e53520-b05f-4be4-e694-463d717453a8@gigaio.com>
- <cdd9245f-eb23-9e10-1755-8f396a2cd255@deltatee.com>
- <b278c1e5-6f08-c879-a27d-7fc172645fd5@gigaio.com>
- <f04fae39-645e-3c6e-07c0-b194260bf5de@deltatee.com>
- <3f503940-db6a-ec75-ed15-1db99d5d48ef@gigaio.com>
- <112A412BB11A1242B37129D931BCE5348382CFB2@fmsmsx117.amr.corp.intel.com>
- <b8af340c-d40b-cb8c-987f-b394f1d6ec3e@gigaio.com>
- <adf51c74-36fa-b61d-8497-27bd75178ba4@deltatee.com>
- <aa9c3f41-efc9-8c68-a517-2736c8986621@gigaio.com>
- <1170c096-a749-6ee3-32d4-ebba1d12adff@gigaio.com>
- <929f3dfa-fbff-c582-3be5-c368f11feb7e@deltatee.com>
- <460cc47f-6a8e-67b0-01a0-02f0c51df258@intel.com>
- <0f653f8f-c7ae-831d-e238-2742590d9ea1@deltatee.com>
- <6525fa4d-7d9b-0136-7206-f8351230af46@intel.com>
-From: Logan Gunthorpe <logang@deltatee.com>
-Message-ID: <f22c565e-ba49-c83d-3e51-7967664c7136@deltatee.com>
-Date: Fri, 10 Aug 2018 11:15:50 -0600
+Return-Path: <okaya@kernel.org>
+Return-Path: <okaya@kernel.org>
+Subject: Re: [PATCH 1/1] PCI/AER: prevent pcie_do_fatal_recovery from using
+ device after it is removed
+To: Bjorn Helgaas <helgaas@kernel.org>,
+ Benjamin Herrenschmidt <benh@kernel.crashing.org>
+Cc: poza@codeaurora.org, Thomas Tai <thomas.tai@oracle.com>,
+ bhelgaas@google.com, keith.busch@intel.com, linux-pci@vger.kernel.org,
+ linux-pci-owner@vger.kernel.org, Sam Bobroff <sam.bobroff@au1.ibm.com>
+References: <1534179088-44219-1-git-send-email-thomas.tai@oracle.com>
+ <1534179088-44219-2-git-send-email-thomas.tai@oracle.com>
+ <51f4b387d9bd96a42d526a6a029fc43b@codeaurora.org>
+ <b0104a716319d76e734c307cb4bedd9d@codeaurora.org>
+ <903394c04d6ad468ed06dc0a779200e7555345a7.camel@kernel.crashing.org>
+ <6cb069038530757f31f3dd60328c7e30@codeaurora.org>
+ <e931bc7a7e468e8bb2ee3766b3fcf96f1800f552.camel@kernel.crashing.org>
+ <bf7ceabb6fe51398e0f4eebd9c4fe4ac1ec2b8a4.camel@kernel.crashing.org>
+ <20180819021922.GE128050@bhelgaas-glaptop.roam.corp.google.com>
+From: Sinan Kaya <okaya@kernel.org>
+Message-ID: <fe891b63-12c7-61ab-a59a-ae24ad766754@kernel.org>
+Date: Sun, 19 Aug 2018 17:41:32 -0400
 MIME-Version: 1.0
-In-Reply-To: <6525fa4d-7d9b-0136-7206-f8351230af46@intel.com>
-Content-Type: text/plain; charset=utf-8
-Subject: Re: IOAT DMA w/IOMMU
+In-Reply-To: <20180819021922.GE128050@bhelgaas-glaptop.roam.corp.google.com>
+Content-Type: text/plain; charset=utf-8; format=flowed
 List-ID: <linux-pci.vger.kernel.org>
 
+On 8/18/2018 10:19 PM, Bjorn Helgaas wrote:
+>> Bjorn, please revert all of those changes.
+> Please send the appropriate patches and we'll go from there.
+> 
 
+I'm also catching up on this thread.
 
-On 10/08/18 11:01 AM, Dave Jiang wrote:
-> Or if the BIOS has provided mapping for the Intel NTB device
-> specifically? Is that a possibility? NTB does go through the IOMMU.
+I don't think revert is the way to go. There is certainly value in Oza's
+code to make error handling common.
 
-I don't know but if the BIOS is doing it, but that would only at best
-work for Intel NTB.... I see no hope in getting the BIOS to map the MW
-for a Switchtec NTB device...
+We started by following the existing error handling scheme and then
+moved onto the stop/remove behavior based on Bjorn's feedback.
 
-Logan
+The right thing is for Oza to rework the code to go back to original
+error handling callback mechanism. That should be a trivial change.
