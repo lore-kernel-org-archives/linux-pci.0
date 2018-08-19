@@ -1,141 +1,402 @@
 Return-Path: <SRS0=dBQP=LC=wunner.de=lukas@kernel.org>
 Return-Path: <SRS0=dBQP=LC=wunner.de=lukas@kernel.org>
-Message-Id: <193526253c60c453f771824407c2fe05794e1060.1534686485.git.lukas@wunner.de>
+Message-Id: <40b17d029c4fbf099535f989b1d6dd013f708a73.1534686485.git.lukas@wunner.de>
 In-Reply-To: <cover.1534686484.git.lukas@wunner.de>
 References: <cover.1534686484.git.lukas@wunner.de>
 From: Lukas Wunner <lukas@wunner.de>
 Date: Sun, 19 Aug 2018 16:29:00 +0200
-Subject: [PATCH 2/9] PCI: pciehp: Drop unnecessary includes
+Subject: [PATCH 6/9] PCI: hotplug: Constify hotplug_slot_ops
 To: Bjorn Helgaas <helgaas@kernel.org>, linux-pci@vger.kernel.org, Sinan Kaya <okaya@kernel.org>, Mika Westerberg <mika.westerberg@linux.intel.com>
+Cc: "Rafael J. Wysocki" <rjw@rjwysocki.net>, Len Brown <lenb@kernel.org>, Scott Murray <scott@spiteful.org>, Benjamin Herrenschmidt <benh@kernel.crashing.org>, Paul Mackerras <paulus@samba.org>, Michael Ellerman <mpe@ellerman.id.au>, Gavin Shan <gwshan@linux.vnet.ibm.com>, Sebastian Ott <sebott@linux.vnet.ibm.com>, Gerald Schaefer <gerald.schaefer@de.ibm.com>, Corentin Chary <corentin.chary@gmail.com>, Darren Hart <dvhart@infradead.org>, Andy Shevchenko <andy@infradead.org>, Greg Kroah-Hartman <gregkh@linuxfoundation.org>, linux-acpi@vger.kernel.org, linux-s390@vger.kernel.org, platform-driver-x86@vger.kernel.org, acpi4asus-user@lists.sourceforge.net, linuxppc-dev@lists.ozlabs.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Drop the following includes from pciehp source files which no longer use
-any of the included symbols:
+Hotplug drivers cannot declare their hotplug_slot_ops const, making them
+attractive targets for attackers, because upon registration of a hotplug
+slot, __pci_hp_initialize() writes to the "owner" and "mod_name" members
+in that struct.
 
-* <linux/sched/signal.h> in pciehp.h
-  <linux/signal.h> in pciehp_hpc.c
-  Added by commit de25968cc87c ("fix more missing includes") to
-  accommodate for a call to signal_pending().
-  The call was removed by commit 262303fe329a ("pciehp: fix wait command
-  completion").
+Fix by moving these members to struct hotplug_slot and constify every
+driver's hotplug_slot_ops except for pciehp.
 
-* <linux/interrupt.h> in pciehp_core.c
-  Added by historic commit f308a2dfbe63 ("PCI: add PCI Express Port Bus
-  Driver subsystem") to accommodate for a call to free_irq():
-  https://git.kernel.org/tglx/history/c/f308a2dfbe63
-  The call was removed by commit 407f452b05f9 ("pciehp: remove
-  unnecessary free_irq").
-
-* <linux/time.h> in pciehp_core.c and pciehp_hpc.c
-  Added by commit 34d03419f03b ("PCIEHP: Add Electro Mechanical
-  Interlock (EMI) support to the PCIE hotplug driver."),
-  which was reverted by commit bd3d99c17039 ("PCI: Remove untested
-  Electromechanical Interlock (EMI) support in pciehp.").
-
-* <linux/module.h> in pciehp_ctrl.c, pciehp_hpc.c and pciehp_pci.c
-  Added by historic commit c16b4b14d980 ("PCI Hotplug: Add SHPC and PCI
-  Express hot-plug drivers"):
-  https://git.kernel.org/tglx/history/c/c16b4b14d980
-  Module-related symbols were neither used back then in those files,
-  nor are they used today.
-
-* <linux/slab.h> in pciehp_ctrl.c
-  Added by commit 5a0e3ad6af86 ("include cleanup: Update gfp.h and
-  slab.h includes to prepare for breaking implicit slab.h inclusion from
-  percpu.h") to accommodate for calls to kmalloc().
-  The calls were removed by commit 0e94916e6091 ("PCI: pciehp: Handle
-  events synchronously").
-
-* "../pci.h" in pciehp_ctrl.c
-  Added by historic commit 67f4660b72f2 ("PCI: ASPM patch for") to
-  accommodate for usage of the global variable pcie_mch_quirk:
-  https://git.kernel.org/tglx/history/c/67f4660b72f2
-  The global variable was removed by commit 0ba379ec0fb1 ("PCI: Simplify
-  hotplug mch quirk").
+pciehp constructs its hotplug_slot_ops at runtime based on the PCIe
+port's capabilities, hence cannot declare them const.  It can be
+converted to __write_rarely once that's mainlined:
+http://www.openwall.com/lists/kernel-hardening/2016/11/16/3
 
 Signed-off-by: Lukas Wunner <lukas@wunner.de>
+Cc: Rafael J. Wysocki <rjw@rjwysocki.net>
+Cc: Len Brown <lenb@kernel.org>
+Cc: Scott Murray <scott@spiteful.org>
+Cc: Benjamin Herrenschmidt <benh@kernel.crashing.org>
+Cc: Paul Mackerras <paulus@samba.org>
+Cc: Michael Ellerman <mpe@ellerman.id.au>
+Cc: Gavin Shan <gwshan@linux.vnet.ibm.com>
+Cc: Sebastian Ott <sebott@linux.vnet.ibm.com>
+Cc: Gerald Schaefer <gerald.schaefer@de.ibm.com>
+Cc: Corentin Chary <corentin.chary@gmail.com>
+Cc: Darren Hart <dvhart@infradead.org>
+Cc: Andy Shevchenko <andy@infradead.org>
 ---
- drivers/pci/hotplug/pciehp.h      | 1 -
- drivers/pci/hotplug/pciehp_core.c | 2 --
- drivers/pci/hotplug/pciehp_ctrl.c | 3 ---
- drivers/pci/hotplug/pciehp_hpc.c  | 3 ---
- drivers/pci/hotplug/pciehp_pci.c  | 1 -
- 5 files changed, 10 deletions(-)
+ drivers/pci/hotplug/acpiphp_core.c      |  2 +-
+ drivers/pci/hotplug/cpci_hotplug_core.c |  2 +-
+ drivers/pci/hotplug/cpqphp_core.c       |  2 +-
+ drivers/pci/hotplug/ibmphp.h            |  2 +-
+ drivers/pci/hotplug/ibmphp_core.c       |  2 +-
+ drivers/pci/hotplug/pci_hotplug_core.c  | 27 +++++++++++++------------
+ drivers/pci/hotplug/pnv_php.c           |  2 +-
+ drivers/pci/hotplug/rpaphp.h            |  2 +-
+ drivers/pci/hotplug/rpaphp_core.c       |  2 +-
+ drivers/pci/hotplug/s390_pci_hpc.c      |  2 +-
+ drivers/pci/hotplug/sgi_hotplug.c       |  2 +-
+ drivers/pci/hotplug/shpchp_core.c       |  2 +-
+ drivers/pci/pci.c                       |  4 ++--
+ drivers/pci/slot.c                      |  2 +-
+ drivers/platform/x86/asus-wmi.c         |  3 +--
+ drivers/platform/x86/eeepc-laptop.c     |  3 +--
+ include/linux/pci_hotplug.h             | 10 ++++-----
+ 17 files changed, 35 insertions(+), 36 deletions(-)
 
-diff --git a/drivers/pci/hotplug/pciehp.h b/drivers/pci/hotplug/pciehp.h
-index 39c9c8815a35..337f2a5a303f 100644
---- a/drivers/pci/hotplug/pciehp.h
-+++ b/drivers/pci/hotplug/pciehp.h
-@@ -19,7 +19,6 @@
- #include <linux/pci.h>
- #include <linux/pci_hotplug.h>
- #include <linux/delay.h>
--#include <linux/sched/signal.h>		/* signal_pending() */
- #include <linux/mutex.h>
- #include <linux/rwsem.h>
- #include <linux/workqueue.h>
-diff --git a/drivers/pci/hotplug/pciehp_core.c b/drivers/pci/hotplug/pciehp_core.c
-index ec48c9433ae5..e77e17106f52 100644
---- a/drivers/pci/hotplug/pciehp_core.c
-+++ b/drivers/pci/hotplug/pciehp_core.c
-@@ -23,8 +23,6 @@
- #include <linux/types.h>
- #include <linux/pci.h>
- #include "pciehp.h"
--#include <linux/interrupt.h>
--#include <linux/time.h>
+diff --git a/drivers/pci/hotplug/acpiphp_core.c b/drivers/pci/hotplug/acpiphp_core.c
+index ad32ffbc4b91..e883cef0f3bc 100644
+--- a/drivers/pci/hotplug/acpiphp_core.c
++++ b/drivers/pci/hotplug/acpiphp_core.c
+@@ -57,7 +57,7 @@ static int get_attention_status(struct hotplug_slot *slot, u8 *value);
+ static int get_latch_status(struct hotplug_slot *slot, u8 *value);
+ static int get_adapter_status(struct hotplug_slot *slot, u8 *value);
  
- #include "../pci.h"
+-static struct hotplug_slot_ops acpi_hotplug_slot_ops = {
++static const struct hotplug_slot_ops acpi_hotplug_slot_ops = {
+ 	.enable_slot		= enable_slot,
+ 	.disable_slot		= disable_slot,
+ 	.set_attention_status	= set_attention_status,
+diff --git a/drivers/pci/hotplug/cpci_hotplug_core.c b/drivers/pci/hotplug/cpci_hotplug_core.c
+index 52a339baf06c..97c32e4c74c8 100644
+--- a/drivers/pci/hotplug/cpci_hotplug_core.c
++++ b/drivers/pci/hotplug/cpci_hotplug_core.c
+@@ -57,7 +57,7 @@ static int get_attention_status(struct hotplug_slot *slot, u8 *value);
+ static int get_adapter_status(struct hotplug_slot *slot, u8 *value);
+ static int get_latch_status(struct hotplug_slot *slot, u8 *value);
  
-diff --git a/drivers/pci/hotplug/pciehp_ctrl.c b/drivers/pci/hotplug/pciehp_ctrl.c
-index c283253d2cd7..ffaf0976e6af 100644
---- a/drivers/pci/hotplug/pciehp_ctrl.c
-+++ b/drivers/pci/hotplug/pciehp_ctrl.c
-@@ -13,13 +13,10 @@
-  *
+-static struct hotplug_slot_ops cpci_hotplug_slot_ops = {
++static const struct hotplug_slot_ops cpci_hotplug_slot_ops = {
+ 	.enable_slot = enable_slot,
+ 	.disable_slot = disable_slot,
+ 	.set_attention_status = set_attention_status,
+diff --git a/drivers/pci/hotplug/cpqphp_core.c b/drivers/pci/hotplug/cpqphp_core.c
+index 5a06636e910a..3409b62fceac 100644
+--- a/drivers/pci/hotplug/cpqphp_core.c
++++ b/drivers/pci/hotplug/cpqphp_core.c
+@@ -560,7 +560,7 @@ static int get_adapter_status(struct hotplug_slot *hotplug_slot, u8 *value)
+ 	return 0;
+ }
+ 
+-static struct hotplug_slot_ops cpqphp_hotplug_slot_ops = {
++static const struct hotplug_slot_ops cpqphp_hotplug_slot_ops = {
+ 	.set_attention_status =	set_attention_status,
+ 	.enable_slot =		process_SI,
+ 	.disable_slot =		process_SS,
+diff --git a/drivers/pci/hotplug/ibmphp.h b/drivers/pci/hotplug/ibmphp.h
+index fddb78606c74..db387e10581e 100644
+--- a/drivers/pci/hotplug/ibmphp.h
++++ b/drivers/pci/hotplug/ibmphp.h
+@@ -740,7 +740,7 @@ int ibmphp_do_disable_slot(struct slot *slot_cur);
+ int ibmphp_update_slot_info(struct slot *);	/* This function is called from HPC, so we need it to not be be static */
+ int ibmphp_configure_card(struct pci_func *, u8);
+ int ibmphp_unconfigure_card(struct slot **, int);
+-extern struct hotplug_slot_ops ibmphp_hotplug_slot_ops;
++extern const struct hotplug_slot_ops ibmphp_hotplug_slot_ops;
+ 
+ #endif				//__IBMPHP_H
+ 
+diff --git a/drivers/pci/hotplug/ibmphp_core.c b/drivers/pci/hotplug/ibmphp_core.c
+index 4ea57e9019f1..b82fdc17040d 100644
+--- a/drivers/pci/hotplug/ibmphp_core.c
++++ b/drivers/pci/hotplug/ibmphp_core.c
+@@ -1259,7 +1259,7 @@ int ibmphp_do_disable_slot(struct slot *slot_cur)
+ 	goto exit;
+ }
+ 
+-struct hotplug_slot_ops ibmphp_hotplug_slot_ops = {
++const struct hotplug_slot_ops ibmphp_hotplug_slot_ops = {
+ 	.set_attention_status =		set_attention_status,
+ 	.enable_slot =			enable_slot,
+ 	.disable_slot =			ibmphp_disable_slot,
+diff --git a/drivers/pci/hotplug/pci_hotplug_core.c b/drivers/pci/hotplug/pci_hotplug_core.c
+index 90fde5f106d8..ede2ed6f4ce0 100644
+--- a/drivers/pci/hotplug/pci_hotplug_core.c
++++ b/drivers/pci/hotplug/pci_hotplug_core.c
+@@ -49,15 +49,15 @@ static DEFINE_MUTEX(pci_hp_mutex);
+ #define GET_STATUS(name, type)	\
+ static int get_##name(struct hotplug_slot *slot, type *value)		\
+ {									\
+-	struct hotplug_slot_ops *ops = slot->ops;			\
++	const struct hotplug_slot_ops *ops = slot->ops;			\
+ 	int retval = 0;							\
+-	if (!try_module_get(ops->owner))				\
++	if (!try_module_get(slot->owner))				\
+ 		return -ENODEV;						\
+ 	if (ops->get_##name)						\
+ 		retval = ops->get_##name(slot, value);			\
+ 	else								\
+ 		*value = slot->info->name;				\
+-	module_put(ops->owner);						\
++	module_put(slot->owner);					\
+ 	return retval;							\
+ }
+ 
+@@ -90,7 +90,7 @@ static ssize_t power_write_file(struct pci_slot *pci_slot, const char *buf,
+ 	power = (u8)(lpower & 0xff);
+ 	dbg("power = %d\n", power);
+ 
+-	if (!try_module_get(slot->ops->owner)) {
++	if (!try_module_get(slot->owner)) {
+ 		retval = -ENODEV;
+ 		goto exit;
+ 	}
+@@ -109,7 +109,7 @@ static ssize_t power_write_file(struct pci_slot *pci_slot, const char *buf,
+ 		err("Illegal value specified for power\n");
+ 		retval = -EINVAL;
+ 	}
+-	module_put(slot->ops->owner);
++	module_put(slot->owner);
+ 
+ exit:
+ 	if (retval)
+@@ -138,7 +138,8 @@ static ssize_t attention_read_file(struct pci_slot *pci_slot, char *buf)
+ static ssize_t attention_write_file(struct pci_slot *pci_slot, const char *buf,
+ 				    size_t count)
+ {
+-	struct hotplug_slot_ops *ops = pci_slot->hotplug->ops;
++	struct hotplug_slot *slot = pci_slot->hotplug;
++	const struct hotplug_slot_ops *ops = slot->ops;
+ 	unsigned long lattention;
+ 	u8 attention;
+ 	int retval = 0;
+@@ -147,13 +148,13 @@ static ssize_t attention_write_file(struct pci_slot *pci_slot, const char *buf,
+ 	attention = (u8)(lattention & 0xff);
+ 	dbg(" - attention = %d\n", attention);
+ 
+-	if (!try_module_get(ops->owner)) {
++	if (!try_module_get(slot->owner)) {
+ 		retval = -ENODEV;
+ 		goto exit;
+ 	}
+ 	if (ops->set_attention_status)
+-		retval = ops->set_attention_status(pci_slot->hotplug, attention);
+-	module_put(ops->owner);
++		retval = ops->set_attention_status(slot, attention);
++	module_put(slot->owner);
+ 
+ exit:
+ 	if (retval)
+@@ -213,13 +214,13 @@ static ssize_t test_write_file(struct pci_slot *pci_slot, const char *buf,
+ 	test = (u32)(ltest & 0xffffffff);
+ 	dbg("test = %d\n", test);
+ 
+-	if (!try_module_get(slot->ops->owner)) {
++	if (!try_module_get(slot->owner)) {
+ 		retval = -ENODEV;
+ 		goto exit;
+ 	}
+ 	if (slot->ops->hardware_test)
+ 		retval = slot->ops->hardware_test(slot, test);
+-	module_put(slot->ops->owner);
++	module_put(slot->owner);
+ 
+ exit:
+ 	if (retval)
+@@ -447,8 +448,8 @@ int __pci_hp_initialize(struct hotplug_slot *slot, struct pci_bus *bus,
+ 	if ((slot->info == NULL) || (slot->ops == NULL))
+ 		return -EINVAL;
+ 
+-	slot->ops->owner = owner;
+-	slot->ops->mod_name = mod_name;
++	slot->owner = owner;
++	slot->mod_name = mod_name;
+ 
+ 	/*
+ 	 * No problems if we call this interface from both ACPI_PCI_SLOT
+diff --git a/drivers/pci/hotplug/pnv_php.c b/drivers/pci/hotplug/pnv_php.c
+index 3276a5e4c430..12b92a0ff688 100644
+--- a/drivers/pci/hotplug/pnv_php.c
++++ b/drivers/pci/hotplug/pnv_php.c
+@@ -530,7 +530,7 @@ static int pnv_php_disable_slot(struct hotplug_slot *slot)
+ 	return ret;
+ }
+ 
+-static struct hotplug_slot_ops php_slot_ops = {
++static const struct hotplug_slot_ops php_slot_ops = {
+ 	.get_power_status	= pnv_php_get_power_state,
+ 	.get_adapter_status	= pnv_php_get_adapter_state,
+ 	.set_attention_status	= pnv_php_set_attention_state,
+diff --git a/drivers/pci/hotplug/rpaphp.h b/drivers/pci/hotplug/rpaphp.h
+index c8311724bd76..f83347819f7b 100644
+--- a/drivers/pci/hotplug/rpaphp.h
++++ b/drivers/pci/hotplug/rpaphp.h
+@@ -70,7 +70,7 @@ struct slot {
+ 	struct hotplug_slot *hotplug_slot;
+ };
+ 
+-extern struct hotplug_slot_ops rpaphp_hotplug_slot_ops;
++extern const struct hotplug_slot_ops rpaphp_hotplug_slot_ops;
+ extern struct list_head rpaphp_slot_head;
+ 
+ /* function prototypes */
+diff --git a/drivers/pci/hotplug/rpaphp_core.c b/drivers/pci/hotplug/rpaphp_core.c
+index 857c358b727b..8620a3f8c987 100644
+--- a/drivers/pci/hotplug/rpaphp_core.c
++++ b/drivers/pci/hotplug/rpaphp_core.c
+@@ -477,7 +477,7 @@ static int disable_slot(struct hotplug_slot *hotplug_slot)
+ 	return 0;
+ }
+ 
+-struct hotplug_slot_ops rpaphp_hotplug_slot_ops = {
++const struct hotplug_slot_ops rpaphp_hotplug_slot_ops = {
+ 	.enable_slot = enable_slot,
+ 	.disable_slot = disable_slot,
+ 	.set_attention_status = set_attention_status,
+diff --git a/drivers/pci/hotplug/s390_pci_hpc.c b/drivers/pci/hotplug/s390_pci_hpc.c
+index 93b5341d282c..5bd45fd4a92a 100644
+--- a/drivers/pci/hotplug/s390_pci_hpc.c
++++ b/drivers/pci/hotplug/s390_pci_hpc.c
+@@ -130,7 +130,7 @@ static int get_adapter_status(struct hotplug_slot *hotplug_slot, u8 *value)
+ 	return 0;
+ }
+ 
+-static struct hotplug_slot_ops s390_hotplug_slot_ops = {
++static const struct hotplug_slot_ops s390_hotplug_slot_ops = {
+ 	.enable_slot =		enable_slot,
+ 	.disable_slot =		disable_slot,
+ 	.get_power_status =	get_power_status,
+diff --git a/drivers/pci/hotplug/sgi_hotplug.c b/drivers/pci/hotplug/sgi_hotplug.c
+index babd23409f61..af4c28c574dd 100644
+--- a/drivers/pci/hotplug/sgi_hotplug.c
++++ b/drivers/pci/hotplug/sgi_hotplug.c
+@@ -80,7 +80,7 @@ static int enable_slot(struct hotplug_slot *slot);
+ static int disable_slot(struct hotplug_slot *slot);
+ static inline int get_power_status(struct hotplug_slot *slot, u8 *value);
+ 
+-static struct hotplug_slot_ops sn_hotplug_slot_ops = {
++static const struct hotplug_slot_ops sn_hotplug_slot_ops = {
+ 	.enable_slot            = enable_slot,
+ 	.disable_slot           = disable_slot,
+ 	.get_power_status       = get_power_status,
+diff --git a/drivers/pci/hotplug/shpchp_core.c b/drivers/pci/hotplug/shpchp_core.c
+index 97cee23f3d51..26cbea04237c 100644
+--- a/drivers/pci/hotplug/shpchp_core.c
++++ b/drivers/pci/hotplug/shpchp_core.c
+@@ -51,7 +51,7 @@ static int get_attention_status(struct hotplug_slot *slot, u8 *value);
+ static int get_latch_status(struct hotplug_slot *slot, u8 *value);
+ static int get_adapter_status(struct hotplug_slot *slot, u8 *value);
+ 
+-static struct hotplug_slot_ops shpchp_hotplug_slot_ops = {
++static const struct hotplug_slot_ops shpchp_hotplug_slot_ops = {
+ 	.set_attention_status =	set_attention_status,
+ 	.enable_slot =		enable_slot,
+ 	.disable_slot =		disable_slot,
+diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
+index 29ff9619b5fa..3f00130c7ae9 100644
+--- a/drivers/pci/pci.c
++++ b/drivers/pci/pci.c
+@@ -4570,13 +4570,13 @@ static int pci_reset_hotplug_slot(struct hotplug_slot *hotplug, int probe)
+ {
+ 	int rc = -ENOTTY;
+ 
+-	if (!hotplug || !try_module_get(hotplug->ops->owner))
++	if (!hotplug || !try_module_get(hotplug->owner))
+ 		return rc;
+ 
+ 	if (hotplug->ops->reset_slot)
+ 		rc = hotplug->ops->reset_slot(hotplug, probe);
+ 
+-	module_put(hotplug->ops->owner);
++	module_put(hotplug->owner);
+ 
+ 	return rc;
+ }
+diff --git a/drivers/pci/slot.c b/drivers/pci/slot.c
+index e634229ece89..145cd953b518 100644
+--- a/drivers/pci/slot.c
++++ b/drivers/pci/slot.c
+@@ -371,7 +371,7 @@ void pci_hp_create_module_link(struct pci_slot *pci_slot)
+ 
+ 	if (!slot || !slot->ops)
+ 		return;
+-	kobj = kset_find_obj(module_kset, slot->ops->mod_name);
++	kobj = kset_find_obj(module_kset, slot->mod_name);
+ 	if (!kobj)
+ 		return;
+ 	ret = sysfs_create_link(&pci_slot->kobj, kobj, "module");
+diff --git a/drivers/platform/x86/asus-wmi.c b/drivers/platform/x86/asus-wmi.c
+index d67f32a29bb4..d05ac442e4ec 100644
+--- a/drivers/platform/x86/asus-wmi.c
++++ b/drivers/platform/x86/asus-wmi.c
+@@ -858,8 +858,7 @@ static int asus_get_adapter_status(struct hotplug_slot *hotplug_slot,
+ 	return 0;
+ }
+ 
+-static struct hotplug_slot_ops asus_hotplug_slot_ops = {
+-	.owner = THIS_MODULE,
++static const struct hotplug_slot_ops asus_hotplug_slot_ops = {
+ 	.get_adapter_status = asus_get_adapter_status,
+ 	.get_power_status = asus_get_adapter_status,
+ };
+diff --git a/drivers/platform/x86/eeepc-laptop.c b/drivers/platform/x86/eeepc-laptop.c
+index a4bbf6ecd1f0..41a364376e91 100644
+--- a/drivers/platform/x86/eeepc-laptop.c
++++ b/drivers/platform/x86/eeepc-laptop.c
+@@ -726,8 +726,7 @@ static int eeepc_get_adapter_status(struct hotplug_slot *hotplug_slot,
+ 	return 0;
+ }
+ 
+-static struct hotplug_slot_ops eeepc_hotplug_slot_ops = {
+-	.owner = THIS_MODULE,
++static const struct hotplug_slot_ops eeepc_hotplug_slot_ops = {
+ 	.get_adapter_status = eeepc_get_adapter_status,
+ 	.get_power_status = eeepc_get_adapter_status,
+ };
+diff --git a/include/linux/pci_hotplug.h b/include/linux/pci_hotplug.h
+index a6d6650a0490..372dbe95c207 100644
+--- a/include/linux/pci_hotplug.h
++++ b/include/linux/pci_hotplug.h
+@@ -16,8 +16,6 @@
+ 
+ /**
+  * struct hotplug_slot_ops -the callbacks that the hotplug pci core can use
+- * @owner: The module owner of this structure
+- * @mod_name: The module name (KBUILD_MODNAME) of this structure
+  * @enable_slot: Called when the user wants to enable a specific pci slot
+  * @disable_slot: Called when the user wants to disable a specific pci slot
+  * @set_attention_status: Called to set the specific slot's attention LED to
+@@ -46,8 +44,6 @@
+  * set an LED, enable / disable power, etc.)
   */
- 
--#include <linux/module.h>
- #include <linux/kernel.h>
- #include <linux/types.h>
--#include <linux/slab.h>
- #include <linux/pm_runtime.h>
- #include <linux/pci.h>
--#include "../pci.h"
- #include "pciehp.h"
- 
- /* The following routines constitute the bulk of the
-diff --git a/drivers/pci/hotplug/pciehp_hpc.c b/drivers/pci/hotplug/pciehp_hpc.c
-index 7136e3430925..16a56aa20a6b 100644
---- a/drivers/pci/hotplug/pciehp_hpc.c
-+++ b/drivers/pci/hotplug/pciehp_hpc.c
-@@ -13,15 +13,12 @@
+ struct hotplug_slot_ops {
+-	struct module *owner;
+-	const char *mod_name;
+ 	int (*enable_slot)		(struct hotplug_slot *slot);
+ 	int (*disable_slot)		(struct hotplug_slot *slot);
+ 	int (*set_attention_status)	(struct hotplug_slot *slot, u8 value);
+@@ -82,15 +78,19 @@ struct hotplug_slot_info {
+  * this slot.
+  * @private: used by the hotplug pci controller driver to store whatever it
+  * needs.
++ * @owner: The module owner of this structure
++ * @mod_name: The module name (KBUILD_MODNAME) of this structure
   */
+ struct hotplug_slot {
+-	struct hotplug_slot_ops		*ops;
++	const struct hotplug_slot_ops	*ops;
+ 	struct hotplug_slot_info	*info;
+ 	void				*private;
  
- #include <linux/kernel.h>
--#include <linux/module.h>
- #include <linux/types.h>
--#include <linux/signal.h>
- #include <linux/jiffies.h>
- #include <linux/kthread.h>
- #include <linux/pci.h>
- #include <linux/pm_runtime.h>
- #include <linux/interrupt.h>
--#include <linux/time.h>
- #include <linux/slab.h>
+ 	/* Variables below this are for use only by the hotplug pci core. */
+ 	struct list_head		slot_list;
+ 	struct pci_slot			*pci_slot;
++	struct module			*owner;
++	const char			*mod_name;
+ };
  
- #include "../pci.h"
-diff --git a/drivers/pci/hotplug/pciehp_pci.c b/drivers/pci/hotplug/pciehp_pci.c
-index 0322bd4f0a7a..8da87931bd45 100644
---- a/drivers/pci/hotplug/pciehp_pci.c
-+++ b/drivers/pci/hotplug/pciehp_pci.c
-@@ -13,7 +13,6 @@
-  *
-  */
- 
--#include <linux/module.h>
- #include <linux/kernel.h>
- #include <linux/types.h>
- #include <linux/pci.h>
+ static inline const char *hotplug_slot_name(const struct hotplug_slot *slot)
 -- 
 2.18.0
