@@ -1,151 +1,117 @@
-Return-Path: <linux-acpi-owner@vger.kernel.org>
-MIME-Version: 1.0
-References: <20180817102645.3839621-1-arnd@arndb.de> <20180817102645.3839621-8-arnd@arndb.de>
-In-Reply-To: <20180817102645.3839621-8-arnd@arndb.de>
-From: "Rafael J. Wysocki" <rafael@kernel.org>
-Date: Mon, 20 Aug 2018 10:23:13 +0200
-Message-ID: <CAJZ5v0iCgQxxuoCB9B4-Ho3xeLwb4v99Xyw-9e-tT53mRD+YVQ@mail.gmail.com>
-Subject: Re: [RFC 07/15] PCI/ACPI: clean up acpi_pci_root_create()
-To: Arnd Bergmann <arnd@arndb.de>
-Cc: Linux PCI <linux-pci@vger.kernel.org>,
-        Bjorn Helgaas <bhelgaas@google.com>,
-        Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
-        Christoph Hellwig <hch@infradead.org>,
-        Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
-        Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-        linuxppc-dev <linuxppc-dev@lists.ozlabs.org>,
-        ACPI Devel Maling List <linux-acpi@vger.kernel.org>
+Return-Path: <SRS0=HZd4=LD=kernel.crashing.org=benh@kernel.org>
+Return-Path: <SRS0=HZd4=LD=kernel.crashing.org=benh@kernel.org>
+Message-ID: <fa217fe562df74980febdd57e8e3361c2ece2ae2.camel@kernel.crashing.org>
+Subject: PATCH] Partial revert of "PCI/AER: Handle ERR_FATAL with removal
+ and re-enumeration of devices"
+From: Benjamin Herrenschmidt <benh@kernel.crashing.org>
+To: Bjorn Helgaas <helgaas@kernel.org>
+Cc: poza@codeaurora.org, Thomas Tai <thomas.tai@oracle.com>,
+        bhelgaas@google.com, keith.busch@intel.com, linux-pci@vger.kernel.org,
+        linux-pci-owner@vger.kernel.org, Sam Bobroff <sam.bobroff@au1.ibm.com>
+Date: Mon, 20 Aug 2018 14:39:04 +1000
+In-Reply-To: <20180819021922.GE128050@bhelgaas-glaptop.roam.corp.google.com>
+References: <1534179088-44219-1-git-send-email-thomas.tai@oracle.com>
+	 <1534179088-44219-2-git-send-email-thomas.tai@oracle.com>
+	 <51f4b387d9bd96a42d526a6a029fc43b@codeaurora.org>
+	 <b0104a716319d76e734c307cb4bedd9d@codeaurora.org>
+	 <903394c04d6ad468ed06dc0a779200e7555345a7.camel@kernel.crashing.org>
+	 <6cb069038530757f31f3dd60328c7e30@codeaurora.org>
+	 <e931bc7a7e468e8bb2ee3766b3fcf96f1800f552.camel@kernel.crashing.org>
+	 <bf7ceabb6fe51398e0f4eebd9c4fe4ac1ec2b8a4.camel@kernel.crashing.org>
+	 <20180819021922.GE128050@bhelgaas-glaptop.roam.corp.google.com>
 Content-Type: text/plain; charset="UTF-8"
-Sender: linux-acpi-owner@vger.kernel.org
+Mime-Version: 1.0
 List-ID: <linux-pci.vger.kernel.org>
 
-On Fri, Aug 17, 2018 at 12:33 PM Arnd Bergmann <arnd@arndb.de> wrote:
->
-> The acpi_pci_create_root_bus() can be fully integrated into
-> acpi_pci_root_create(), improving a few things:
->
-> * We can call pci_scan_root_bus_bridge(), which registers and
->   scans the bridge in one step.
-> * After a failure in pci_register_host_bridge(), we correctly
->   clean up the resources.
-> * The bridge settings (release function, flags, operations etc)
->   can get set up before registering the bridge.
-> * Further cleanup would be possible, removing duplication between
->   pci_host_bridge and some ACPI structures.
->
-> Signed-off-by: Arnd Bergmann <arnd@arndb.de>
-> ---
->  drivers/acpi/pci_root.c | 68 +++++++++++++++--------------------------
->  1 file changed, 24 insertions(+), 44 deletions(-)
->
-> diff --git a/drivers/acpi/pci_root.c b/drivers/acpi/pci_root.c
-> index 85dbcf47015b..5f73de3b67c8 100644
-> --- a/drivers/acpi/pci_root.c
-> +++ b/drivers/acpi/pci_root.c
-> @@ -873,34 +873,6 @@ static void acpi_pci_root_release_info(struct pci_host_bridge *bridge)
->         __acpi_pci_root_release_info(bridge->release_data);
->  }
->
-> -static struct pci_bus *acpi_pci_create_root_bus(struct device *parent, int bus,
-> -               struct pci_ops *ops, void *sysdata, struct list_head *resources)
-> -{
-> -       int error;
-> -       struct pci_host_bridge *bridge;
-> -
-> -       bridge = pci_alloc_host_bridge(0);
-> -       if (!bridge)
-> -               return NULL;
-> -
-> -       bridge->dev.parent = parent;
-> -
-> -       list_splice_init(resources, &bridge->windows);
-> -       bridge->sysdata = sysdata;
-> -       bridge->busnr = bus;
-> -       bridge->ops = ops;
-> -
-> -       error = pci_register_host_bridge(bridge);
-> -       if (error < 0)
-> -               goto err_out;
-> -
-> -       return bridge->bus;
-> -
-> -err_out:
-> -       kfree(bridge);
-> -       return NULL;
-> -}
-> -
->  struct pci_bus *acpi_pci_root_create(struct acpi_pci_root *root,
->                                      struct acpi_pci_root_ops *ops,
->                                      struct acpi_pci_root_info *info,
-> @@ -909,8 +881,7 @@ struct pci_bus *acpi_pci_root_create(struct acpi_pci_root *root,
->         int ret, busnum = root->secondary.start;
->         struct acpi_device *device = root->device;
->         int node = acpi_get_node(device->handle);
-> -       struct pci_bus *bus;
-> -       struct pci_host_bridge *host_bridge;
-> +       struct pci_host_bridge *bridge;
+This partially reverts commit 7e9084b36740b2ec263ea35efb203001f755e1d8.
 
-Why "bridge" and not "host" or even something to stand for "root complex"?
+This only reverts the Documentation/PCI/pci-error-recovery.txt changes
 
-Or maybe it can still be "host_bridge"?
+Those changes are incorrect, they change the documentation to adapt
+to the (imho incorrect) AER implementation, and as a result making
+it no longer match the EEH implementation.
 
->
->         info->root = root;
->         info->bridge = device;
-> @@ -930,30 +901,39 @@ struct pci_bus *acpi_pci_root_create(struct acpi_pci_root *root,
->
->         pci_acpi_root_add_resources(info);
->         pci_add_resource(&info->resources, &root->secondary);
-> -       bus = acpi_pci_create_root_bus(NULL, busnum, ops->pci_ops,
-> -                                 sysdata, &info->resources);
-> -       if (!bus)
-> +
-> +       bridge = pci_alloc_host_bridge(0);
-> +       if (!bridge)
->                 goto out_release_info;
->
-> -       host_bridge = to_pci_host_bridge(bus->bridge);
-> +       list_splice_init(&info->resources, &bridge->windows);
-> +       bridge->sysdata = sysdata;
-> +       bridge->busnr = busnum;
-> +       bridge->ops = ops->pci_ops;
-> +       pci_set_host_bridge_release(bridge, acpi_pci_root_release_info,
-> +                                   info);
-> +
->         if (!(root->osc_control_set & OSC_PCI_EXPRESS_NATIVE_HP_CONTROL))
-> -               host_bridge->native_pcie_hotplug = 0;
-> +               bridge->native_pcie_hotplug = 0;
->         if (!(root->osc_control_set & OSC_PCI_SHPC_NATIVE_HP_CONTROL))
-> -               host_bridge->native_shpc_hotplug = 0;
-> +               bridge->native_shpc_hotplug = 0;
->         if (!(root->osc_control_set & OSC_PCI_EXPRESS_AER_CONTROL))
-> -               host_bridge->native_aer = 0;
-> +               bridge->native_aer = 0;
->         if (!(root->osc_control_set & OSC_PCI_EXPRESS_PME_CONTROL))
-> -               host_bridge->native_pme = 0;
-> +               bridge->native_pme = 0;
->         if (!(root->osc_control_set & OSC_PCI_EXPRESS_LTR_CONTROL))
-> -               host_bridge->native_ltr = 0;
-> +               bridge->native_ltr = 0;
-> +
-> +       ret = pci_scan_root_bus_bridge(bridge);
-> +       if (ret < 0)
-> +               goto out_release_bridge;
->
-> -       pci_scan_child_bus(bus);
-> -       pci_set_host_bridge_release(host_bridge, acpi_pci_root_release_info,
-> -                                   info);
->         if (node != NUMA_NO_NODE)
-> -               dev_printk(KERN_DEBUG, &bus->dev, "on NUMA node %d\n", node);
-> -       return bus;
-> +               dev_printk(KERN_DEBUG, &bridge->bus->dev, "on NUMA node %d\n", node);
-> +       return bridge->bus;
->
-> +out_release_bridge:
-> +       pci_free_host_bridge(bridge);
->  out_release_info:
->         __acpi_pci_root_release_info(info);
->         return NULL;
-> --
-> 2.18.0
->
+I believe the policy described originally in this document is what
+should be implemented by everybody and the changes done by that commit
+would compromise, among others, the ability to recover from errors with
+storage devices.
+
+Signed-off-by: Benjamin Herrenschmidt <benh@kernel.crashing.org>
+---
+ Documentation/PCI/pci-error-recovery.txt | 35 +++++++-----------------
+ 1 file changed, 10 insertions(+), 25 deletions(-)
+
+diff --git a/Documentation/PCI/pci-error-recovery.txt b/Documentation/PCI/pci-error-recovery.txt
+index 688b69121e82..0b6bb3ef449e 100644
+--- a/Documentation/PCI/pci-error-recovery.txt
++++ b/Documentation/PCI/pci-error-recovery.txt
+@@ -110,7 +110,7 @@ The actual steps taken by a platform to recover from a PCI error
+ event will be platform-dependent, but will follow the general
+ sequence described below.
+ 
+-STEP 0: Error Event: ERR_NONFATAL
++STEP 0: Error Event
+ -------------------
+ A PCI bus error is detected by the PCI hardware.  On powerpc, the slot
+ is isolated, in that all I/O is blocked: all reads return 0xffffffff,
+@@ -228,7 +228,13 @@ proceeds to either STEP3 (Link Reset) or to STEP 5 (Resume Operations).
+ If any driver returned PCI_ERS_RESULT_NEED_RESET, then the platform
+ proceeds to STEP 4 (Slot Reset)
+ 
+-STEP 3: Slot Reset
++STEP 3: Link Reset
++------------------
++The platform resets the link.  This is a PCI-Express specific step
++and is done whenever a fatal error has been detected that can be
++"solved" by resetting the link.
++
++STEP 4: Slot Reset
+ ------------------
+ 
+ In response to a return value of PCI_ERS_RESULT_NEED_RESET, the
+@@ -314,7 +320,7 @@ Failure).
+ >>> However, it probably should.
+ 
+ 
+-STEP 4: Resume Operations
++STEP 5: Resume Operations
+ -------------------------
+ The platform will call the resume() callback on all affected device
+ drivers if all drivers on the segment have returned
+@@ -326,7 +332,7 @@ a result code.
+ At this point, if a new error happens, the platform will restart
+ a new error recovery sequence.
+ 
+-STEP 5: Permanent Failure
++STEP 6: Permanent Failure
+ -------------------------
+ A "permanent failure" has occurred, and the platform cannot recover
+ the device.  The platform will call error_detected() with a
+@@ -349,27 +355,6 @@ errors. See the discussion in powerpc/eeh-pci-error-recovery.txt
+ for additional detail on real-life experience of the causes of
+ software errors.
+ 
+-STEP 0: Error Event: ERR_FATAL
+--------------------
+-PCI bus error is detected by the PCI hardware. On powerpc, the slot is
+-isolated, in that all I/O is blocked: all reads return 0xffffffff, all
+-writes are ignored.
+-
+-STEP 1: Remove devices
+---------------------
+-Platform removes the devices depending on the error agent, it could be
+-this port for all subordinates or upstream component (likely downstream
+-port)
+-
+-STEP 2: Reset link
+---------------------
+-The platform resets the link.  This is a PCI-Express specific step and is
+-done whenever a fatal error has been detected that can be "solved" by
+-resetting the link.
+-
+-STEP 3: Re-enumerate the devices
+---------------------
+-Initiates the re-enumeration.
+ 
+ Conclusion; General Remarks
+ ---------------------------
