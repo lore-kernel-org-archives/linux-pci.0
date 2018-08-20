@@ -1,73 +1,75 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-pg1-f194.google.com ([209.85.215.194]:33224 "EHLO
-        mail-pg1-f194.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726881AbeHUXaB (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Tue, 21 Aug 2018 19:30:01 -0400
-Received: by mail-pg1-f194.google.com with SMTP id t14-v6so2233924pgf.0
-        for <linux-pci@vger.kernel.org>; Tue, 21 Aug 2018 13:08:25 -0700 (PDT)
-Date: Tue, 21 Aug 2018 13:08:24 -0700 (PDT)
-Subject: Re: [PATCH] microblaze/PCI: Remove stale pcibios_align_resource() comment
-In-Reply-To: <90363c9d-4084-dd2f-9956-42de2841bfc6@monstr.eu>
-CC: lorenzo.pieralisi@arm.com, linux-kernel@vger.kernel.org,
-        linux-pci@vger.kernel.org, bhelgaas@google.com, bharatku@xilinx.com
-From: Palmer Dabbelt <palmer@dabbelt.com>
-To: monstr@monstr.eu
-Message-ID: <mhng-f16f3cf1-f440-47b7-b1b7-a73836ab1c58@palmer-si-x1c4>
-Mime-Version: 1.0 (MHng)
-Content-Type: text/plain; charset=utf-8; format=flowed
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <SRS0=iFA6=LD=gmail.com=rjwysocki@kernel.org>
+Return-Path: <SRS0=iFA6=LD=gmail.com=rjwysocki@kernel.org>
+MIME-Version: 1.0
+References: <cover.1534686484.git.lukas@wunner.de> <40b17d029c4fbf099535f989b1d6dd013f708a73.1534686485.git.lukas@wunner.de>
+In-Reply-To: <40b17d029c4fbf099535f989b1d6dd013f708a73.1534686485.git.lukas@wunner.de>
+From: "Rafael J. Wysocki" <rafael@kernel.org>
+Date: Mon, 20 Aug 2018 10:10:19 +0200
+Message-ID: <CAJZ5v0i5ibrVf=KVvPsG5DVV3JeRKTwjiToir7=VHK7zqxMmeA@mail.gmail.com>
+Subject: Re: [PATCH 6/9] PCI: hotplug: Constify hotplug_slot_ops
+To: Lukas Wunner <lukas@wunner.de>
+Cc: Bjorn Helgaas <helgaas@kernel.org>, Linux PCI <linux-pci@vger.kernel.org>, okaya@kernel.org,
+	Mika Westerberg <mika.westerberg@linux.intel.com>, "Rafael J. Wysocki" <rjw@rjwysocki.net>,
+	Len Brown <lenb@kernel.org>, scott@spiteful.org,
+	Benjamin Herrenschmidt <benh@kernel.crashing.org>, Paul Mackerras <paulus@samba.org>,
+	Michael Ellerman <mpe@ellerman.id.au>, gwshan@linux.vnet.ibm.com, sebott@linux.vnet.ibm.com,
+	gerald.schaefer@de.ibm.com, Corentin Chary <corentin.chary@gmail.com>,
+	Darren Hart <dvhart@infradead.org>, Andy Shevchenko <andy@infradead.org>,
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+	ACPI Devel Maling List <linux-acpi@vger.kernel.org>, linux-s390@vger.kernel.org,
+	Platform Driver <platform-driver-x86@vger.kernel.org>, acpi4asus-user@lists.sourceforge.net,
+	linuxppc-dev <linuxppc-dev@lists.ozlabs.org>
+Content-Type: text/plain; charset="UTF-8"
 List-ID: <linux-pci.vger.kernel.org>
 
-On Mon, 20 Aug 2018 23:24:53 PDT (-0700), monstr@monstr.eu wrote:
-> On 20.8.2018 11:47, Lorenzo Pieralisi wrote:
->> commit 01cf9d524ff0 ("microblaze/PCI: Support generic Xilinx AXI PCIe Host
->> Bridge IP driver")
->>
->> and
->>
->> commit ecf677c8dcaa ("PCI: Add a generic weak pcibios_align_resource()")
->>
->> first patched then removed pcibios_align_resource() from the microblaze
->> architecture code but failed to remove the comment that was added to
->> it.
->>
->> Remove it since it has now become stale and it is quite confusing.
->>
->> Signed-off-by: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
->> Cc: Palmer Dabbelt <palmer@dabbelt.com>
->> Cc: Bjorn Helgaas <bhelgaas@google.com>
->> Cc: Bharat Kumar Gogada <bharatku@xilinx.com>
->> Cc: Michal Simek <monstr@monstr.eu>
->> ---
->>  arch/microblaze/pci/pci-common.c | 13 -------------
->>  1 file changed, 13 deletions(-)
->>
->> diff --git a/arch/microblaze/pci/pci-common.c b/arch/microblaze/pci/pci-common.c
->> index f34346d56095..2ffd171af8b6 100644
->> --- a/arch/microblaze/pci/pci-common.c
->> +++ b/arch/microblaze/pci/pci-common.c
->> @@ -597,19 +597,6 @@ static void pcibios_fixup_resources(struct pci_dev *dev)
->>  }
->>  DECLARE_PCI_FIXUP_HEADER(PCI_ANY_ID, PCI_ANY_ID, pcibios_fixup_resources);
->>
->> -/*
->> - * We need to avoid collisions with `mirrored' VGA ports
->> - * and other strange ISA hardware, so we always want the
->> - * addresses to be allocated in the 0x000-0x0ff region
->> - * modulo 0x400.
->> - *
->> - * Why? Because some silly external IO cards only decode
->> - * the low 10 bits of the IO address. The 0x00-0xff region
->> - * is reserved for motherboard devices that decode all 16
->> - * bits, so it's ok to allocate at, say, 0x2800-0x28ff,
->> - * but we want to try to avoid allocating at 0x2900-0x2bff
->> - * which might have be mirrored at 0x0100-0x03ff..
->> - */
->>  int pcibios_add_device(struct pci_dev *dev)
->>  {
->>  	dev->irq = of_irq_parse_and_map_pci(dev, 0, 0);
->>
+On Sun, Aug 19, 2018 at 4:36 PM Lukas Wunner <lukas@wunner.de> wrote:
 >
-> Applied.
+> Hotplug drivers cannot declare their hotplug_slot_ops const, making them
+> attractive targets for attackers, because upon registration of a hotplug
+> slot, __pci_hp_initialize() writes to the "owner" and "mod_name" members
+> in that struct.
+>
+> Fix by moving these members to struct hotplug_slot and constify every
+> driver's hotplug_slot_ops except for pciehp.
+>
+> pciehp constructs its hotplug_slot_ops at runtime based on the PCIe
+> port's capabilities, hence cannot declare them const.  It can be
+> converted to __write_rarely once that's mainlined:
+> http://www.openwall.com/lists/kernel-hardening/2016/11/16/3
+>
+> Signed-off-by: Lukas Wunner <lukas@wunner.de>
+> Cc: Rafael J. Wysocki <rjw@rjwysocki.net>
+> Cc: Len Brown <lenb@kernel.org>
+> Cc: Scott Murray <scott@spiteful.org>
+> Cc: Benjamin Herrenschmidt <benh@kernel.crashing.org>
+> Cc: Paul Mackerras <paulus@samba.org>
+> Cc: Michael Ellerman <mpe@ellerman.id.au>
+> Cc: Gavin Shan <gwshan@linux.vnet.ibm.com>
+> Cc: Sebastian Ott <sebott@linux.vnet.ibm.com>
+> Cc: Gerald Schaefer <gerald.schaefer@de.ibm.com>
+> Cc: Corentin Chary <corentin.chary@gmail.com>
+> Cc: Darren Hart <dvhart@infradead.org>
+> Cc: Andy Shevchenko <andy@infradead.org>
+> ---
+>  drivers/pci/hotplug/acpiphp_core.c      |  2 +-
+>  drivers/pci/hotplug/cpci_hotplug_core.c |  2 +-
+>  drivers/pci/hotplug/cpqphp_core.c       |  2 +-
+>  drivers/pci/hotplug/ibmphp.h            |  2 +-
+>  drivers/pci/hotplug/ibmphp_core.c       |  2 +-
+>  drivers/pci/hotplug/pci_hotplug_core.c  | 27 +++++++++++++------------
+>  drivers/pci/hotplug/pnv_php.c           |  2 +-
+>  drivers/pci/hotplug/rpaphp.h            |  2 +-
+>  drivers/pci/hotplug/rpaphp_core.c       |  2 +-
+>  drivers/pci/hotplug/s390_pci_hpc.c      |  2 +-
+>  drivers/pci/hotplug/sgi_hotplug.c       |  2 +-
+>  drivers/pci/hotplug/shpchp_core.c       |  2 +-
+>  drivers/pci/pci.c                       |  4 ++--
+>  drivers/pci/slot.c                      |  2 +-
+>  drivers/platform/x86/asus-wmi.c         |  3 +--
+>  drivers/platform/x86/eeepc-laptop.c     |  3 +--
+>  include/linux/pci_hotplug.h             | 10 ++++-----
+>  17 files changed, 35 insertions(+), 36 deletions(-)
 
-Sorry, I missed this.  Thanks for the fix!
+Nice!
+
+Reviewed-by: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
