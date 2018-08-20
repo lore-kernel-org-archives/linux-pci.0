@@ -1,39 +1,91 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.29.99]:47782 "EHLO mail.kernel.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1729292AbeHPQpO (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Thu, 16 Aug 2018 12:45:14 -0400
-Subject: Re: [PATCH 1/1] PCI/AER: prevent pcie_do_fatal_recovery from using
- device after it is removed
-To: poza@codeaurora.org,
-        Benjamin Herrenschmidt <benh@kernel.crashing.org>
-Cc: Thomas Tai <thomas.tai@oracle.com>, bhelgaas@google.com,
-        keith.busch@intel.com, linux-pci@vger.kernel.org,
-        linux-pci-owner@vger.kernel.org,
-        Sam Bobroff <sam.bobroff@au1.ibm.com>
-References: <1534179088-44219-1-git-send-email-thomas.tai@oracle.com>
- <1534179088-44219-2-git-send-email-thomas.tai@oracle.com>
- <51f4b387d9bd96a42d526a6a029fc43b@codeaurora.org>
- <b0104a716319d76e734c307cb4bedd9d@codeaurora.org>
- <903394c04d6ad468ed06dc0a779200e7555345a7.camel@kernel.crashing.org>
- <6cb069038530757f31f3dd60328c7e30@codeaurora.org>
- <e931bc7a7e468e8bb2ee3766b3fcf96f1800f552.camel@kernel.crashing.org>
- <bf7ceabb6fe51398e0f4eebd9c4fe4ac1ec2b8a4.camel@kernel.crashing.org>
- <42bd39aef30fe24bfc48d378e1f5d35d@codeaurora.org>
- <54d19e0e3d44bedf247853144c6bbfed5561a125.camel@kernel.crashing.org>
- <f022581a9ecb88e5501a09bdcdc62954@codeaurora.org>
-From: Sinan Kaya <okaya@kernel.org>
-Message-ID: <1d5b1157-2f78-5fab-78f0-5828892fc739@kernel.org>
-Date: Thu, 16 Aug 2018 09:46:29 -0400
+Return-Path: <SRS0=ey29=LD=broadcom.com=hari.vyas@kernel.org>
+Return-Path: <SRS0=ey29=LD=broadcom.com=hari.vyas@kernel.org>
 MIME-Version: 1.0
-In-Reply-To: <f022581a9ecb88e5501a09bdcdc62954@codeaurora.org>
-Content-Type: text/plain; charset=utf-8; format=flowed
-Sender: linux-pci-owner@vger.kernel.org
+In-Reply-To: <4d777ed8c17b479e59b16cc0b4e9a3f6537f9884.camel@kernel.crashing.org>
+References: <20180817044902.31420-1-benh@kernel.crashing.org>
+ <20180817044902.31420-2-benh@kernel.crashing.org> <20180817154431.GC128050@bhelgaas-glaptop.roam.corp.google.com>
+ <06c1233b71dea08b1fc32334acefc48c32c46557.camel@kernel.crashing.org>
+ <20180819022440.GG128050@bhelgaas-glaptop.roam.corp.google.com> <4d777ed8c17b479e59b16cc0b4e9a3f6537f9884.camel@kernel.crashing.org>
+From: Hari Vyas <hari.vyas@broadcom.com>
+Date: Mon, 20 Aug 2018 11:55:09 +0530
+Message-ID: <CAM5rFu_dsfAiQtVnM58631tFUxYyzXrA5tgz8_v0=or3Lv8YbA@mail.gmail.com>
+Subject: Re: [RFC PATCH 1/6] Revert "PCI: Fix is_added/is_busmaster race condition"
+To: Benjamin Herrenschmidt <benh@kernel.crashing.org>
+Cc: Bjorn Helgaas <helgaas@kernel.org>, linux-pci@vger.kernel.org,
+	Ray Jui <ray.jui@broadcom.com>, Srinath Mannam <srinath.mannam@broadcom.com>,
+	Guenter Roeck <linux@roeck-us.net>, Jens Axboe <axboe@kernel.dk>, Lukas Wunner <lukas@wunner.de>,
+	Konstantin Khlebnikov <khlebnikov@yandex-team.ru>, Marta Rybczynska <mrybczyn@kalray.eu>,
+	Pierre-Yves Kerbrat <pkerbrat@kalray.eu>, linux-kernel@vger.kernel.org
+Content-Type: text/plain; charset="UTF-8"
 List-ID: <linux-pci.vger.kernel.org>
 
-On 8/16/2018 4:22 AM, poza@codeaurora.org wrote:
-> we can catch up on webex, (Sinan is going to be there in Plumber's 
-> conference, I might not be able to join there, as we have bring-up coming)
+On Mon, Aug 20, 2018 at 7:40 AM, Benjamin Herrenschmidt
+<benh@kernel.crashing.org> wrote:
+> On Sat, 2018-08-18 at 21:24 -0500, Bjorn Helgaas wrote:
+>> On Sat, Aug 18, 2018 at 01:24:51PM +1000, Benjamin Herrenschmidt wrote:
+>> > On Fri, 2018-08-17 at 10:44 -0500, Bjorn Helgaas wrote:
+>> > > On Fri, Aug 17, 2018 at 02:48:57PM +1000, Benjamin Herrenschmidt wrote:
+>> > > > This reverts commit 44bda4b7d26e9fffed6d7152d98a2e9edaeb2a76.
+>> > >
+>> > > Just to be clear, if I understand correctly, this is a pure revert of
+>> > > 44bda4b7d26e and as such it reintroduces the problem solved by that
+>> > > commit.
+>> > >
+>> > > If your solution turns out to be better, that's great, but it would be
+>> > > nice to avoid the bisection hole of reintroducing the problem, then
+>> > > fixing it again later.
+>> >
+>> > There is no way to do that other than merging the revert and the fix
+>> > into one. That said, the race is sufficiently hard to hit that I
+>> > wouldn't worry too much about it.
+>>
+>> OK, then at least mention that in the changelog.
+>
+> Sure will do. This is just RFC at this stage :-)
+>
+> As for the race with enable, what's your take on my approach ? The
+> basic premise is that we need some kind of mutex to make the updates to
+> enable_cnt and the actual config space changes atomic. While at it we
+> can fold pci_set_master vs. is_busmaster as well as those are racy too.
+>
+> I chose to create a new mutex which we should be able to address other
+> similar races if we find them. The other solutions that I dismissed
+> were:
+>
+>  - Using the device_lock. A explained previously, this is tricky, I
+> prefer not using this for anything other than locking against
+> concurrent add/remove. The main issue is that drivers will be sometimes
+> called in context where that's already held, so we can't take it inside
+> pci_enable_device() and I'd rather not add new constraints such as
+> "pci_enable_device() must be only called from probe() unless you also
+> take the device lock". It would be tricky to audit everybody...
+>
+>  - Using a global mutex. We could move the bridge lock from AER to core
+> code for example, and use that. But it doesn't buy us much, and
+> slightly redecuces parallelism. It also makes it a little bit more
+> messy to walk up the bridge chain, we'd have to do a
+> pci_enable_device_unlocked or something, messy.
+>
+> So are you ok with the approach ? Do you prefer one of the above
+> regardless ? Something else ?
+>
+> Cheers,
+> Ben.
+>
+>
+Some concern was raised about race situation so just to be more clear
+about race condition.
+Situation is described in Bug 200283 - PCI: Data corruption happening
+due to a race condition.
+Issue was discovered by our broadcom QA team.
+Initially commit was to use one separate lock only for avoiding race
+condition but after review, approach was slightly changed to move
+is_added  to pci_dev private flags as it was completely
+internal/private variable of pci core driver.
+Powerpc legacy arch code was using is_added flag directly which looks
+bit strange so  ../../ type of inclusion of pci.h was required. I know
+it looks ugly but it is being used in some legacy code still.
+Anyway, as stated earlier too, problem should be just solved in better way.
 
-My plumbers conference attendance is not confirmed yet. I'm trying to
-combine it with a business trip. I did not get an ACK yet from my boss.
+Regards,
+hari
