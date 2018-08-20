@@ -1,143 +1,82 @@
-Return-Path: <linux-nvme-bounces+bjorn=helgaas.com@lists.infradead.org>
-Return-Path: <linux-nvme-bounces+bjorn=helgaas.com@lists.infradead.org>
-Date: Fri, 31 Aug 2018 17:19:06 +0100
-From: Jonathan Cameron <jonathan.cameron@huawei.com>
-To: Logan Gunthorpe <logang@deltatee.com>
-Subject: Re: [PATCH v5 01/13] PCI/P2PDMA: Support peer-to-peer memory
-Message-ID: <20180831171906.00002751@huawei.com>
-In-Reply-To: <20180830185352.3369-2-logang@deltatee.com>
-References: <20180830185352.3369-1-logang@deltatee.com>
- <20180830185352.3369-2-logang@deltatee.com>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail.kernel.org ([198.145.29.99]:55140 "EHLO mail.kernel.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1726197AbeHTWB0 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Mon, 20 Aug 2018 18:01:26 -0400
+Date: Mon, 20 Aug 2018 13:44:38 -0500
+From: Bjorn Helgaas <helgaas@kernel.org>
+To: Heiner Kallweit <hkallweit1@gmail.com>
+Cc: David Miller <davem@davemloft.net>, jian-hong@endlessm.com,
+        nic_swsd@realtek.com, netdev@vger.kernel.org,
+        linux-kernel@vger.kernel.org, linux@endlessm.com,
+        linux-pci@vger.kernel.org, Marc Zyngier <marc.zyngier@arm.com>,
+        Thomas Gleixner <tglx@linutronix.de>,
+        Christoph Hellwig <hch@lst.de>
+Subject: Re: [PATCH] r8169: don't use MSI-X on RTL8106e
+Message-ID: <20180820184438.GA154536@bhelgaas-glaptop.roam.corp.google.com>
+References: <20180815062110.16155-1-jian-hong@endlessm.com>
+ <20180816.122131.604270853620318143.davem@davemloft.net>
+ <458efbf9-5971-653a-e7cd-8c56ba055648@gmail.com>
+ <20180816.123958.750435252621963789.davem@davemloft.net>
+ <ac30d4e6-6411-09e6-1205-96e3e8e29f6f@gmail.com>
 MIME-Version: 1.0
-List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-nvme>,
- <mailto:linux-nvme-request@lists.infradead.org?subject=unsubscribe>
-List-Archive: <http://lists.infradead.org/pipermail/linux-nvme/>
-List-Post: <mailto:linux-nvme@lists.infradead.org>
-List-Help: <mailto:linux-nvme-request@lists.infradead.org?subject=help>
-List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-nvme>,
- <mailto:linux-nvme-request@lists.infradead.org?subject=subscribe>
-Cc: Keith Busch <keith.busch@intel.com>,
- Alex Williamson <alex.williamson@redhat.com>, Sagi Grimberg <sagi@grimberg.me>,
- linux-nvdimm@lists.01.org, linux-rdma@vger.kernel.org,
- linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
- linux-nvme@lists.infradead.org, Stephen Bates <sbates@raithlin.com>,
- linux-block@vger.kernel.org,
- =?ISO-8859-1?Q?J=E9r=F4me?= Glisse <jglisse@redhat.com>,
- Jason Gunthorpe <jgg@mellanox.com>,
- Christian =?ISO-8859-1?Q?K=F6nig?= <christian.koenig@amd.com>, Benjamin
- Herrenschmidt <benh@kernel.crashing.org>, Bjorn Helgaas <bhelgaas@google.com>,
- Max Gurtovoy <maxg@mellanox.com>, Dan Williams <dan.j.williams@intel.com>,
- Christoph Hellwig <hch@lst.de>
-Content-Type: text/plain; charset="us-ascii"
-Sender: "Linux-nvme" <linux-nvme-bounces@lists.infradead.org>
-Errors-To: linux-nvme-bounces+bjorn=helgaas.com@lists.infradead.org
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <ac30d4e6-6411-09e6-1205-96e3e8e29f6f@gmail.com>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Thu, 30 Aug 2018 12:53:40 -0600
-Logan Gunthorpe <logang@deltatee.com> wrote:
+[+cc Marc, Thomas, Christoph, linux-pci)
+(beginning of thread at [1])
 
-> Some PCI devices may have memory mapped in a BAR space that's
-> intended for use in peer-to-peer transactions. In order to enable
-> such transactions the memory must be registered with ZONE_DEVICE pages
-> so it can be used by DMA interfaces in existing drivers.
-> 
-> Add an interface for other subsystems to find and allocate chunks of P2P
-> memory as necessary to facilitate transfers between two PCI peers:
-> 
-> int pci_p2pdma_add_client();
-> struct pci_dev *pci_p2pmem_find();
-> void *pci_alloc_p2pmem();
-> 
-> The new interface requires a driver to collect a list of client devices
-> involved in the transaction with the pci_p2pmem_add_client*() functions
-> then call pci_p2pmem_find() to obtain any suitable P2P memory. Once
-> this is done the list is bound to the memory and the calling driver is
-> free to add and remove clients as necessary (adding incompatible clients
-> will fail). With a suitable p2pmem device, memory can then be
-> allocated with pci_alloc_p2pmem() for use in DMA transactions.
-> 
-> Depending on hardware, using peer-to-peer memory may reduce the bandwidth
-> of the transfer but can significantly reduce pressure on system memory.
-> This may be desirable in many cases: for example a system could be designed
-> with a small CPU connected to a PCIe switch by a small number of lanes
-> which would maximize the number of lanes available to connect to NVMe
-> devices.
-> 
-> The code is designed to only utilize the p2pmem device if all the devices
-> involved in a transfer are behind the same PCI bridge. This is because we
-> have no way of knowing whether peer-to-peer routing between PCIe Root Ports
-> is supported (PCIe r4.0, sec 1.3.1). Additionally, the benefits of P2P
-> transfers that go through the RC is limited to only reducing DRAM usage
-> and, in some cases, coding convenience. The PCI-SIG may be exploring
-> adding a new capability bit to advertise whether this is possible for
-> future hardware.
-> 
-> This commit includes significant rework and feedback from Christoph
-> Hellwig.
-> 
-> Signed-off-by: Christoph Hellwig <hch@lst.de>
-> Signed-off-by: Logan Gunthorpe <logang@deltatee.com>
+On Thu, Aug 16, 2018 at 09:50:48PM +0200, Heiner Kallweit wrote:
+> On 16.08.2018 21:39, David Miller wrote:
+> > From: Heiner Kallweit <hkallweit1@gmail.com>
+> > Date: Thu, 16 Aug 2018 21:37:31 +0200
+> > 
+> >> On 16.08.2018 21:21, David Miller wrote:
+> >>> From: <jian-hong@endlessm.com>
+> >>> Date: Wed, 15 Aug 2018 14:21:10 +0800
+> >>>
+> >>>> Found the ethernet network on ASUS X441UAR doesn't come back on resume
+> >>>> from suspend when using MSI-X.  The chip is RTL8106e - version 39.
+> >>>
+> >>> Heiner, please take a look at this.
+> >>>
+> >>> You recently disabled MSI-X on RTL8168g for similar reasons.
+> >>>
+> >>> Now that we've seen two chips like this, maybe there is some other
+> >>> problem afoot.
+> >>>
+> >> Thanks for the hint. I saw it already and just contacted Realtek
+> >> whether they are aware of any MSI-X issues with particular chip
+> >> versions. With the chip versions I have access to MSI-X works fine.
+> >>
+> >> There's also the theoretical option that the issues are caused by
+> >> broken BIOS's. But so far only chip versions have been reported
+> >> which are very similar, at least with regard to version number
+> >> (2x VER_40, 1x VER_39). So they may share some buggy component.
+> >>
+> >> Let's see whether Realtek can provide some hint.
+> >> If more chip versions are reported having problems with MSI-X,
+> >> then we could switch to a whitelist or disable MSI-X in general.
+> > 
+> > It could be that we need to reprogram some register(s) on resume,
+> > which normally might not be needed, and that is what is causing the
+> > problem with some chips.
+> > 
+> Indeed. That's what I'm checking with Realtek.
+> In the register list in the r8169 driver there's one entry which
+> seems to indicate that there are MSI-X specific settings.
+> However this register isn't used, and the r8168 vendor driver
+> uses only MSI. And there are no public datasheets.
 
-Apologies for being a late entrant to this conversation so I may be asking
-about a topic that has been covered in detail in earlier patches!
-> ---
-...
+Do we have any information about these chip versions in other systems?
+Or other devices using MSI-X in the same ASUS system?  It seems
+possible that there's some PCI core or suspend/resume issue with MSI-X
+and this patch just avoids it without fixing the root cause.
 
-> +/*
-> + * Find the distance through the nearest common upstream bridge between
-> + * two PCI devices.
-> + *
-> + * If the two devices are the same device then 0 will be returned.
-> + *
-> + * If there are two virtual functions of the same device behind the same
-> + * bridge port then 2 will be returned (one step down to the PCIe switch,
-> + * then one step back to the same device).
-> + *
-> + * In the case where two devices are connected to the same PCIe switch, the
-> + * value 4 will be returned. This corresponds to the following PCI tree:
-> + *
-> + *     -+  Root Port
-> + *      \+ Switch Upstream Port
-> + *       +-+ Switch Downstream Port
-> + *       + \- Device A
-> + *       \-+ Switch Downstream Port
-> + *         \- Device B
-> + *
-> + * The distance is 4 because we traverse from Device A through the downstream
-> + * port of the switch, to the common upstream port, back up to the second
-> + * downstream port and then to Device B.
-> + *
-> + * Any two devices that don't have a common upstream bridge will return -1.
-> + * In this way devices on separate PCIe root ports will be rejected, which
-> + * is what we want for peer-to-peer seeing each PCIe root port defines a
-> + * separate hierarchy domain and there's no way to determine whether the root
-> + * complex supports forwarding between them.
-> + *
-> + * In the case where two devices are connected to different PCIe switches,
-> + * this function will still return a positive distance as long as both
-> + * switches evenutally have a common upstream bridge. Note this covers
-> + * the case of using multiple PCIe switches to achieve a desired level of
-> + * fan-out from a root port. The exact distance will be a function of the
-> + * number of switches between Device A and Device B.
+It might be useful to have a kernel.org bugzilla with the complete
+dmesg, "sudo lspci -vv" output, and /proc/interrupts contents archived
+for future reference.
 
-This feels like a somewhat simplistic starting point rather than a
-generally correct estimate to use.  Should we be taking the bandwidth of
-those links into account for example, or any discoverable latencies?
-Not all PCIe switches are alike - particularly when it comes to P2P.
-
-I guess that can be a topic for future development if it turns out people
-have horrible mixed systems.
-
-> + *
-> + * If a bridge which has any ACS redirection bits set is in the path
-> + * then this functions will return -2. This is so we reject any
-> + * cases where the TLPs are forwarded up into the root complex.
-> + * In this case, a list of all infringing bridge addresses will be
-> + * populated in acs_list (assuming it's non-null) for printk purposes.
-> + */
-
-
-_______________________________________________
-Linux-nvme mailing list
-Linux-nvme@lists.infradead.org
-http://lists.infradead.org/mailman/listinfo/linux-nvme
+[1] https://lkml.kernel.org/r/20180815062110.16155-1-jian-hong@endlessm.com
