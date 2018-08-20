@@ -1,49 +1,35 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-sh2.amlogic.com ([58.32.228.45]:27897 "EHLO
-        mail-sh2.amlogic.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726818AbeHXLGO (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Fri, 24 Aug 2018 07:06:14 -0400
-From: Hanjie Lin <hanjie.lin@amlogic.com>
-To: Kishon Vijay Abraham I <kishon@ti.com>
-CC: Hanjie Lin <hanjie.lin@amlogic.com>,
-        <linux-amlogic@lists.infradead.org>, <linux-pci@vger.kernel.org>,
-        <linux-arm-kernel@lists.infradead.org>,
-        Kevin Hilman <khilman@baylibre.com>,
-        Carlo Caione <carlo@caione.org>, Rob Herring <robh@kernel.org>,
-        Yixun Lan <yixun.lan@amlogic.com>,
-        Liang Yang <liang.yang@amlogic.com>,
-        Jianxin Pan <jianxin.pan@amlogic.com>,
-        Qiufang Dai <qiufang.dai@amlogic.com>,
-        Jian Hu <jian.hu@amlogic.com>, <devicetree@vger.kernel.org>
-Subject: [PATCH v2 0/2] add the Amlogic Meson PCIe phy driver
-Date: Fri, 24 Aug 2018 15:33:24 +0800
-Message-ID: <1535096006-152091-1-git-send-email-hanjie.lin@amlogic.com>
+Return-Path: <SRS0=xK5x=LD=h08.hostsharing.net=foo00@kernel.org>
+Return-Path: <SRS0=xK5x=LD=h08.hostsharing.net=foo00@kernel.org>
+Date: Mon, 20 Aug 2018 11:09:53 +0200
+From: Lukas Wunner <lukas@wunner.de>
+To: Sinan Kaya <okaya@kernel.org>
+Cc: Bjorn Helgaas <helgaas@kernel.org>, linux-pci@vger.kernel.org,
+	Mika Westerberg <mika.westerberg@linux.intel.com>
+Subject: Re: [PATCH 4/9] PCI: pciehp: Unify controller and slot structs
+Message-ID: <20180820090953.sbvgxc2ednxaq73s@wunner.de>
+References: <cover.1534686484.git.lukas@wunner.de>
+ <2d4b1ed51a1c90fb6e1ef6282ab0c28f6c62cab1.1534686485.git.lukas@wunner.de>
+ <c8e76de1-a2c3-b725-2e86-733dd0267d55@kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain
-Sender: linux-pci-owner@vger.kernel.org
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <c8e76de1-a2c3-b725-2e86-733dd0267d55@kernel.org>
 List-ID: <linux-pci.vger.kernel.org>
 
-This patcheset add the driver and dt-bindings for
-the Meson-PCIE-PHY controller.
+On Sun, Aug 19, 2018 at 05:59:33PM -0400, Sinan Kaya wrote:
+> On 8/19/2018 10:29 AM, Lukas Wunner wrote:
+> > Simplify the driver by merging struct slot into struct controller.
+> > Merge the slot constructor pcie_init_slot() and the destructor
+> > pcie_cleanup_slot() into the controller counterparts.  Rename the slot
+> > struct's "lock" member to "state_lock" and rename "work" to "button_work"
+> > for clarity.
+> 
+> please split this into multiple pieces.
 
-Changes since v1: [0]
- - move 'apb' and 'port' reset to ctrl driver
- - format correcting
+Hm, you mean split out the renaming of the "lock" and "work" members?
 
-[0] : https://lkml.org/lkml/2018/8/14/66 
+The unification of the two structs needs to happen in a single commit
+to avoid breaking the build for people doing a git bisect.
 
-Yue Wang (2):
-  dt-bindings: phy: add DT bindings for Amlogic Meson PCIe Phy
-    controller
-  PCI: meson: add the Amlogic Meson PCIe phy driver
+Thanks,
 
- .../bindings/phy/amlogic,meson-pcie-phy.txt        |  21 ++++
- drivers/phy/amlogic/Kconfig                        |   8 ++
- drivers/phy/amlogic/Makefile                       |   1 +
- drivers/phy/amlogic/phy-meson-axg-pcie.c           | 124 +++++++++++++++++++++
- 4 files changed, 154 insertions(+)
- create mode 100644 Documentation/devicetree/bindings/phy/amlogic,meson-pcie-phy.txt
- create mode 100644 drivers/phy/amlogic/phy-meson-axg-pcie.c
-
--- 
-2.7.4
+Lukas
