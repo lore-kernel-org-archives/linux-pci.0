@@ -1,107 +1,45 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-it0-f66.google.com ([209.85.214.66]:53753 "EHLO
-        mail-it0-f66.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1727062AbeHHSyW (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Wed, 8 Aug 2018 14:54:22 -0400
-Subject: Re: [PATCH v6 8/9] net/mlx5: Do not call pcie_print_link_status()
-To: Tal Gilboa <talgi@mellanox.com>, Leon Romanovsky <leon@kernel.org>
-Cc: linux-pci@vger.kernel.org, bhelgaas@google.com,
-        jakub.kicinski@netronome.com, keith.busch@intel.com,
-        alex_gagniuc@dellteam.com, austin_bolen@dell.com,
-        shyam_iyer@dell.com, Ariel Elior <ariel.elior@cavium.com>,
-        everest-linux-l2@cavium.com,
-        "David S. Miller" <davem@davemloft.net>,
-        Michael Chan <michael.chan@broadcom.com>,
-        Ganesh Goudar <ganeshgr@chelsio.com>,
-        Jeff Kirsher <jeffrey.t.kirsher@intel.com>,
-        Tariq Toukan <tariqt@mellanox.com>,
-        Saeed Mahameed <saeedm@mellanox.com>,
-        Dirk van der Merwe <dirk.vandermerwe@netronome.com>,
-        netdev@vger.kernel.org, linux-kernel@vger.kernel.org,
-        intel-wired-lan@lists.osuosl.org, linux-rdma@vger.kernel.org,
-        oss-drivers@netronome.com
-References: <CAErSpo4PK+SQLNfdkLNt9eLc7bpbxbkZCsa8T-tQpid601n0SQ@mail.gmail.com>
- <20180806232600.25694-1-mr.nuke.me@gmail.com>
- <20180806232600.25694-8-mr.nuke.me@gmail.com>
- <20180808060848.GQ13378@mtr-leonro.mtl.com>
- <05056a70-ee78-ea3c-0b9b-6d64a8663b11@mellanox.com>
- <20180808154142.GZ13378@mtr-leonro.mtl.com>
- <5578cd9a-e4f0-85ab-4a86-bfa23eec136c@mellanox.com>
-From: "Alex G." <mr.nuke.me@gmail.com>
-Message-ID: <79264a38-e3e4-d270-95df-a09047f7a15e@gmail.com>
-Date: Wed, 8 Aug 2018 11:33:51 -0500
+Received: from mail-qt0-f193.google.com ([209.85.216.193]:46453 "EHLO
+        mail-qt0-f193.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726060AbeHTOfS (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Mon, 20 Aug 2018 10:35:18 -0400
 MIME-Version: 1.0
-In-Reply-To: <5578cd9a-e4f0-85ab-4a86-bfa23eec136c@mellanox.com>
-Content-Type: text/plain; charset=windows-1252; format=flowed
+References: <20180817102645.3839621-1-arnd@arndb.de> <20180817102645.3839621-8-arnd@arndb.de>
+ <CAJZ5v0iCgQxxuoCB9B4-Ho3xeLwb4v99Xyw-9e-tT53mRD+YVQ@mail.gmail.com>
+In-Reply-To: <CAJZ5v0iCgQxxuoCB9B4-Ho3xeLwb4v99Xyw-9e-tT53mRD+YVQ@mail.gmail.com>
+From: Arnd Bergmann <arnd@arndb.de>
+Date: Mon, 20 Aug 2018 13:19:48 +0200
+Message-ID: <CAK8P3a31Ds14Ke1qLoMapK1Wq1M4tR6n+nL1VOKzR8+oN0eOBw@mail.gmail.com>
+Subject: Re: [RFC 07/15] PCI/ACPI: clean up acpi_pci_root_create()
+To: Rafael Wysocki <rafael@kernel.org>
+Cc: linux-pci <linux-pci@vger.kernel.org>,
+        Bjorn Helgaas <bhelgaas@google.com>,
+        Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
+        Christoph Hellwig <hch@infradead.org>,
+        Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
+        Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+        linuxppc-dev <linuxppc-dev@lists.ozlabs.org>,
+        ACPI Devel Maling List <linux-acpi@vger.kernel.org>
+Content-Type: text/plain; charset="UTF-8"
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
+On Mon, Aug 20, 2018 at 10:23 AM Rafael J. Wysocki <rafael@kernel.org> wrote:
+> On Fri, Aug 17, 2018 at 12:33 PM Arnd Bergmann <arnd@arndb.de> wrote:
+> > @@ -909,8 +881,7 @@ struct pci_bus *acpi_pci_root_create(struct acpi_pci_root *root,
+> >         int ret, busnum = root->secondary.start;
+> >         struct acpi_device *device = root->device;
+> >         int node = acpi_get_node(device->handle);
+> > -       struct pci_bus *bus;
+> > -       struct pci_host_bridge *host_bridge;
+> > +       struct pci_host_bridge *bridge;
+>
+> Why "bridge" and not "host" or even something to stand for "root complex"?
+>
+> Or maybe it can still be "host_bridge"?
 
+I did this for consistency with the naming in drivers/pci/probe.c,
+which always declares the local variable as 'struct pci_host_bridge *bridge'.
+It's easy to change here if you feel strongly about it (I don't).
 
-On 08/08/2018 10:56 AM, Tal Gilboa wrote:
-> On 8/8/2018 6:41 PM, Leon Romanovsky wrote:
->> On Wed, Aug 08, 2018 at 05:23:12PM +0300, Tal Gilboa wrote:
->>> On 8/8/2018 9:08 AM, Leon Romanovsky wrote:
->>>> On Mon, Aug 06, 2018 at 06:25:42PM -0500, Alexandru Gagniuc wrote:
->>>>> This is now done by the PCI core to warn of sub-optimal bandwidth.
->>>>>
->>>>> Signed-off-by: Alexandru Gagniuc <mr.nuke.me@gmail.com>
->>>>> ---
->>>>>    drivers/net/ethernet/mellanox/mlx5/core/main.c | 4 ----
->>>>>    1 file changed, 4 deletions(-)
->>>>>
->>>>
->>>> Thanks,
->>>> Reviewed-by: Leon Romanovsky <leonro@mellanox.com>
->>>>
->>>
->>> Alex,
->>> I loaded mlx5 driver with and without these series. The report in 
->>> dmesg is
->>> now missing. From what I understood, the status should be reported at 
->>> least
->>> once, even if everything is in order.
->>
->> It is not what this series is doing and it removes prints completely if
->> fabric can deliver more than card is capable.
->>
->>> We need this functionality to stay.
->>
->> I'm not sure that you need this information in driver's dmesg output,
->> but most probably something globally visible and accessible per-pci
->> device.
-> 
-> Currently we have users that look for it. If we remove the dmesg print 
-> we need this to be reported elsewhere. Adding it to sysfs for example 
-> should be a valid solution for our case.
-
-I think a stop-gap measure is to leave the pcie_print_link_status() call 
-in drivers that really need it for whatever reason. Implementing a 
-reliable reporting through sysfs might take some tinkering, and I don't 
-think it's a sufficient reason to block the heart of this series -- 
-being able to detect bottlenecks and link downtraining.
-
-Alex
-
->>
->>>
->>> net-next (dmesg output for 07:00.0):
->>> [270498.625351] mlx5_core 0000:07:00.0: firmware version: 14.22.4020
->>> [270498.632130] mlx5_core 0000:07:00.0: 63.008 Gb/s available PCIe 
->>> bandwidth
->>> (8 GT/s x8 link)
->>> [270499.169533] (0000:07:00.0): E-Switch: Total vports 9, per vport: max
->>> uc(1024) max mc(16384)
->>> [270499.182358] mlx5_core 0000:07:00.0: Port module event: module 0, 
->>> Cable
->>> plugged
->>>
->>> net-next + patches (dmesg output for 07:00.0):
->>> [  331.608472] mlx5_core 0000:07:00.0: firmware version: 14.22.4020
->>> [  332.564938] (0000:07:00.0): E-Switch: Total vports 9, per vport: max
->>> uc(1024) max mc(16384)
->>> [  332.616271] mlx5_core 0000:07:00.0: Port module event: module 0, 
->>> Cable
->>> plugged
->>>
->>>
+        Arnd
