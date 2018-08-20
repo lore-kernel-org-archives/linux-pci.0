@@ -1,69 +1,51 @@
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Date: Wed, 8 Aug 2018 10:12:27 -0400 (EDT)
-From: Mikulas Patocka <mpatocka@redhat.com>
-To: Catalin Marinas <catalin.marinas@arm.com>
-Subject: Re: framebuffer corruption due to overlapping stp instructions on
- arm64
-In-Reply-To: <20180808113927.GA24736@iMac.local>
-Message-ID: <alpine.LRH.2.02.1808081011110.9997@file01.intranet.prod.int.rdu2.redhat.com>
-References: <alpine.LRH.2.02.1808021242320.31834@file01.intranet.prod.int.rdu2.redhat.com>
- <CAHCPf3tFGqkYEcWNN4LaWThw_rVqT316pzLv6T7RfxwO-eZ0EA@mail.gmail.com>
- <alpine.LRH.2.02.1808030212340.17672@file01.intranet.prod.int.rdu2.redhat.com>
- <CAKv+Gu8DeuksZhk1g3q_msSKV_hSY_2e1uzVten9-oGO3j9Sqg@mail.gmail.com>
- <20180803094129.GB17798@arm.com>
- <alpine.LRH.2.02.1808031235410.31584@file01.intranet.prod.int.rdu2.redhat.com>
- <20180808113927.GA24736@iMac.local>
+Return-Path: <linux-acpi-owner@vger.kernel.org>
 MIME-Version: 1.0
-List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
-List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
-List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
-List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
-List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
-Cc: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>,
- Joao Pinto <Joao.Pinto@synopsys.com>, libc-alpha@sourceware.org,
- Ard Biesheuvel <ard.biesheuvel@linaro.org>, Jingoo Han <jingoohan1@gmail.com>,
- Will Deacon <will.deacon@arm.com>, Russell King <linux@armlinux.org.uk>,
- Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
- Matt Sealey <neko@bakuhatsu.net>, linux-pci@vger.kernel.org,
- linux-arm-kernel <linux-arm-kernel@lists.infradead.org>
-Content-Type: text/plain; charset="us-ascii"
-Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
-Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
+References: <20180817102645.3839621-1-arnd@arndb.de> <20180817102645.3839621-9-arnd@arndb.de>
+ <CAJZ5v0jjZx3xCbPK5vfx-OCRNtMt59WQOxCYkWNj33Js_2Xi=A@mail.gmail.com>
+In-Reply-To: <CAJZ5v0jjZx3xCbPK5vfx-OCRNtMt59WQOxCYkWNj33Js_2Xi=A@mail.gmail.com>
+From: Arnd Bergmann <arnd@arndb.de>
+Date: Mon, 20 Aug 2018 13:16:55 +0200
+Message-ID: <CAK8P3a1KWn0=xwrqZ+sF27O-WE6paDxQPg6PPZFcgCrgXGaX2A@mail.gmail.com>
+Subject: Re: [RFC 08/15] x86: PCI: clean up pcibios_scan_root()
+To: Rafael Wysocki <rafael@kernel.org>
+Cc: linux-pci <linux-pci@vger.kernel.org>,
+        Bjorn Helgaas <bhelgaas@google.com>,
+        Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
+        Christoph Hellwig <hch@infradead.org>,
+        Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
+        Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+        linuxppc-dev <linuxppc-dev@lists.ozlabs.org>,
+        ACPI Devel Maling List <linux-acpi@vger.kernel.org>
+Content-Type: text/plain; charset="UTF-8"
+Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
+On Mon, Aug 20, 2018 at 10:31 AM Rafael J. Wysocki <rafael@kernel.org> wrote:
+> On Fri, Aug 17, 2018 at 12:32 PM Arnd Bergmann <arnd@arndb.de> wrote:
 
+> > -static struct pci_bus *pci_scan_root_bus(struct device *parent, int bus,
+> > -               struct pci_ops *ops, void *sysdata, struct list_head *resources)
+> > +void pcibios_scan_root(int busnum)
+> >  {
+> > +       struct pci_sysdata *sd;
+> >         struct pci_host_bridge *bridge;
+> >         int error;
+> >
+> > -       bridge = pci_alloc_host_bridge(0);
+> > -       if (!bridge)
+> > -               return NULL;
+> > +       bridge = pci_alloc_host_bridge(sizeof(sd));
+> > +       if (!bridge) {
+> > +               printk(KERN_ERR "PCI: OOM, skipping PCI bus %02x\n", busnum);
+> > +               return;
+> > +       }
+> > +       sd = pci_host_bridge_priv(bridge);
+>
+> This looks fishy, as bridge->private is not set at this point AFAICS,
+> unless one of the previous patches changes that.
 
-On Wed, 8 Aug 2018, Catalin Marinas wrote:
+bridge->private what comes after the bridge structure, and it's allocated
+by pci_alloc_host_bridge() passing the size of the structure we want
+for this private area.
 
-> On Fri, Aug 03, 2018 at 01:09:02PM -0400, Mikulas Patocka wrote:
-> > 	while (1) {
-> > 		start = (unsigned)random() % (LEN + 1);
-> > 		end = (unsigned)random() % (LEN + 1);
-> > 		if (start > end)
-> > 			continue;
-> > 		for (i = start; i < end; i++)
-> > 			data[i] = val++;
-> > 		memcpy(map + start, data + start, end - start);
-> > 		if (memcmp(map, data, LEN)) {
-> 
-> It may be worth trying to do a memcmp(map+start, data+start, end-start)
-> here to see whether the hazard logic fails when the writes are unaligned
-> but the reads are not.
-> 
-> This problem may as well appear if you do byte writes and read longs
-> back (and I consider this a hardware problem on this specific board).
-
-I triad to insert usleep(10000) between the memcpy and memcmp, but the 
-same corruption occurs. So, it can't be read-after-write hazard. It is 
-caused by the improper handling of hazard between the overlapping writes 
-inside memcpy.
-
-Mikulas
-
-_______________________________________________
-linux-arm-kernel mailing list
-linux-arm-kernel@lists.infradead.org
-http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
+         Arnd
