@@ -1,148 +1,121 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from aserp2130.oracle.com ([141.146.126.79]:51142 "EHLO
-        aserp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1732667AbeHNQiq (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Tue, 14 Aug 2018 12:38:46 -0400
-Subject: Re: [PATCH 1/1] PCI/AER: prevent pcie_do_fatal_recovery from using
- device after it is removed
-To: poza@codeaurora.org
-Cc: bhelgaas@google.com, keith.busch@intel.com,
-        linux-pci@vger.kernel.org, linux-pci-owner@vger.kernel.org
-References: <1534179088-44219-1-git-send-email-thomas.tai@oracle.com>
- <1534179088-44219-2-git-send-email-thomas.tai@oracle.com>
- <51f4b387d9bd96a42d526a6a029fc43b@codeaurora.org>
- <b0104a716319d76e734c307cb4bedd9d@codeaurora.org>
-From: Thomas Tai <thomas.tai@oracle.com>
-Message-ID: <8b8db3c5-e884-d697-6193-b409276f9638@oracle.com>
-Date: Tue, 14 Aug 2018 09:51:24 -0400
+Return-Path: <linux-acpi-owner@vger.kernel.org>
 MIME-Version: 1.0
-In-Reply-To: <b0104a716319d76e734c307cb4bedd9d@codeaurora.org>
-Content-Type: text/plain; charset=utf-8; format=flowed
-Sender: linux-pci-owner@vger.kernel.org
+References: <20180817102645.3839621-1-arnd@arndb.de> <20180817102645.3839621-9-arnd@arndb.de>
+In-Reply-To: <20180817102645.3839621-9-arnd@arndb.de>
+From: "Rafael J. Wysocki" <rafael@kernel.org>
+Date: Mon, 20 Aug 2018 10:31:38 +0200
+Message-ID: <CAJZ5v0jjZx3xCbPK5vfx-OCRNtMt59WQOxCYkWNj33Js_2Xi=A@mail.gmail.com>
+Subject: Re: [RFC 08/15] x86: PCI: clean up pcibios_scan_root()
+To: Arnd Bergmann <arnd@arndb.de>
+Cc: Linux PCI <linux-pci@vger.kernel.org>,
+        Bjorn Helgaas <bhelgaas@google.com>,
+        Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
+        Christoph Hellwig <hch@infradead.org>,
+        Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
+        Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+        linuxppc-dev <linuxppc-dev@lists.ozlabs.org>,
+        ACPI Devel Maling List <linux-acpi@vger.kernel.org>
+Content-Type: text/plain; charset="UTF-8"
+Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 08/14/2018 05:22 AM, poza@codeaurora.org wrote:
-> On 2018-08-14 14:46, poza@codeaurora.org wrote:
->> On 2018-08-13 22:21, Thomas Tai wrote:
->>> In order to prevent the pcie_do_fatal_recovery() from
->>> using the device after it is removed, the device's
->>> domain:bus:devfn is stored at the entry of
->>> pcie_do_fatal_recovery(). After rescanning the bus, the
->>> stored domain:bus:devfn is used to find the device and
->>> uses to report pci_info. The original issue only happens
->>> on an non-bridge device, a local variable is used instead
->>> of checking the device's header type.
->>>
->>> Signed-off-by: Thomas Tai <thomas.tai@oracle.com>
->>> ---
->>>  drivers/pci/pcie/err.c | 33 +++++++++++++++++++++++----------
->>>  1 file changed, 23 insertions(+), 10 deletions(-)
->>>
->>> diff --git a/drivers/pci/pcie/err.c b/drivers/pci/pcie/err.c
->>> index f02e334..3414445 100644
->>> --- a/drivers/pci/pcie/err.c
->>> +++ b/drivers/pci/pcie/err.c
->>> @@ -287,15 +287,20 @@ void pcie_do_fatal_recovery(struct pci_dev *dev,
->>> u32 service)
->>>      struct pci_bus *parent;
->>>      struct pci_dev *pdev, *temp;
->>>      pci_ers_result_t result;
->>> +    bool is_bridge_device = false;
->>> +    u16 domain = pci_domain_nr(dev->bus);
->>> +    u8 bus = dev->bus->number;
->>> +    u8 devfn = dev->devfn;
->>>
->>> -    if (dev->hdr_type == PCI_HEADER_TYPE_BRIDGE)
->>> +    if (dev->hdr_type == PCI_HEADER_TYPE_BRIDGE) {
->>> +        is_bridge_device = true;
->>>          udev = dev;
->>> -    else
->>> +    } else {
->>>          udev = dev->bus->self;
->>> +    }
->>>
->>>      parent = udev->subordinate;
->>>      pci_lock_rescan_remove();
->>> -    pci_dev_get(dev);
->>>      list_for_each_entry_safe_reverse(pdev, temp, &parent->devices,
->>>                       bus_list) {
->>>          pci_dev_get(pdev);
->>> @@ -309,27 +314,35 @@ void pcie_do_fatal_recovery(struct pci_dev *dev,
->>> u32 service)
->>>
->>>      result = reset_link(udev, service);
->>>
->>> -    if ((service == PCIE_PORT_SERVICE_AER) &&
->>> -        (dev->hdr_type == PCI_HEADER_TYPE_BRIDGE)) {
->>> +    if (service == PCIE_PORT_SERVICE_AER && is_bridge_device) {
->>>          /*
->>>           * If the error is reported by a bridge, we think this error
->>>           * is related to the downstream link of the bridge, so we
->>>           * do error recovery on all subordinates of the bridge instead
->>>           * of the bridge and clear the error status of the bridge.
->>>           */
->>> -        pci_cleanup_aer_uncorrect_error_status(dev);
->>> +        pci_cleanup_aer_uncorrect_error_status(udev);
->>>      }
->>>
->>>      if (result == PCI_ERS_RESULT_RECOVERED) {
->>>          if (pcie_wait_for_link(udev, true))
->>>              pci_rescan_bus(udev->bus);
->>> -        pci_info(dev, "Device recovery from fatal error successful\n");
->>> +        /* find the pci_dev after rescanning the bus */
->>> +        dev = pci_get_domain_bus_and_slot(domain, bus, devfn);
->> one of the motivations was to remove and re-enumerate rather then
->> going thorugh driver's recovery sequence
->> was; it might be possible that hotplug capable bridge, the device
->> might have changed.
->> hence this check will fail
+On Fri, Aug 17, 2018 at 12:32 PM Arnd Bergmann <arnd@arndb.de> wrote:
+>
+> pcibios_scan_root() is now just a wrapper around pci_scan_root_bus(),
+> and merging the two into one makes it shorter and more readable.
+>
+> We can also take advantage of pci_alloc_host_bridge() doing the
+> allocation of the sysdata for us, which helps if we ever want to
+> allow hot-unplugging the host bridge itself.
+>
+> We might be able to simplify it further using pci_host_probe(),
+> but I wasn't sure about the resource registration there.
+>
+> Signed-off-by: Arnd Bergmann <arnd@arndb.de>
+> ---
+>  arch/x86/pci/common.c | 53 ++++++++++++++-----------------------------
+>  1 file changed, 17 insertions(+), 36 deletions(-)
+>
+> diff --git a/arch/x86/pci/common.c b/arch/x86/pci/common.c
+> index e740d9aa4024..920d0885434c 100644
+> --- a/arch/x86/pci/common.c
+> +++ b/arch/x86/pci/common.c
+> @@ -453,54 +453,35 @@ void __init dmi_check_pciprobe(void)
+>         dmi_check_system(pciprobe_dmi_table);
+>  }
+>
+> -static struct pci_bus *pci_scan_root_bus(struct device *parent, int bus,
+> -               struct pci_ops *ops, void *sysdata, struct list_head *resources)
+> +void pcibios_scan_root(int busnum)
+>  {
+> +       struct pci_sysdata *sd;
+>         struct pci_host_bridge *bridge;
+>         int error;
+>
+> -       bridge = pci_alloc_host_bridge(0);
+> -       if (!bridge)
+> -               return NULL;
+> +       bridge = pci_alloc_host_bridge(sizeof(sd));
+> +       if (!bridge) {
+> +               printk(KERN_ERR "PCI: OOM, skipping PCI bus %02x\n", busnum);
+> +               return;
+> +       }
+> +       sd = pci_host_bridge_priv(bridge);
 
-Thanks Oza for your information. Instead of searching for the dev_pci, 
-should I just use the stored domain:bus:devfn to printout the info?
+This looks fishy, as bridge->private is not set at this point AFAICS,
+unless one of the previous patches changes that.
 
->>> +        if (dev)
->>> +            pci_info(dev, "Device recovery from fatal error 
->>> successful\n");
->>> +        else
->>> +            pr_err("AER: Can not find pci_dev for %04x:%02x:%02x.%x\n",
->>> +                   domain, bus,
->>> +                   PCI_SLOT(devfn), PCI_FUNC(devfn));
->>> +        pci_dev_put(dev);
-
-That is, replace above with:
-	
-	pr_info("AER: Device %04x:%02x:%02x.%x recover from fatal error 
-successful\n", domain, bus, PCI_SLOT(devfn), PCI_FUNC(devfn));
-
-
->>>      } else {
->>> -        pci_uevent_ers(dev, PCI_ERS_RESULT_DISCONNECT);
->>> -        pci_info(dev, "Device recovery from fatal error failed\n");
->>> +        if (is_bridge_device)
->> previously there was no condition.. why is this required now ?
->> and it was doing on "dev" while you are doing it on "udev"
-> is that the reason we dont watnt o use dev after it is removed ? instead 
-> do pci_uevent_ers on bridge ?
-
-
-Yes, that's exactly the reason. I should have written down the reason in 
-the commit log. Here is the details explanation for the benefit of 
-others. If the failing device is a bridge device, udev is equal to dev. 
-So we can use udev in the pci_uevent_ers. But for non bridge device the 
-device is already removed from the bus and thus can't send pci_uevent_ers.
-
-Thank you,
-Thomas
-
->>> +            pci_uevent_ers(udev, PCI_ERS_RESULT_DISCONNECT);
->>> +        pr_err("AER: Device %04x:%02x:%02x.%x recovery from fatal 
->>> error failed\n",
->>> +               domain, bus, PCI_SLOT(devfn), PCI_FUNC(devfn));
->>>      }
->>>
->>> -    pci_dev_put(dev);
->>>      pci_unlock_rescan_remove();
->>>  }
->>
->> Regards,
->> Oza.
+>
+> -       list_splice_init(resources, &bridge->windows);
+> -       bridge->dev.parent = parent;
+> -       bridge->sysdata = sysdata;
+> -       bridge->busnr = bus;
+> -       bridge->ops = ops;
+> +       sd->node = x86_pci_root_bus_node(busnum);
+> +       x86_pci_root_bus_resources(busnum, &bridge->windows);
+> +       bridge->sysdata = sd;
+> +       bridge->busnr = busnum;
+> +       bridge->ops = &pci_root_ops;
+>
+> +       printk(KERN_DEBUG "PCI: Probing PCI hardware (bus %02x)\n", busnum);
+>         error = pci_scan_root_bus_bridge(bridge);
+>         if (error < 0)
+>                 goto err_out;
+>
+> -       return bridge->bus;
+> +       pci_bus_add_devices(bridge->bus);
+> +       return;
+>
+>  err_out:
+> -       kfree(bridge);
+> -       return NULL;
+> -}
+> -
+> -void pcibios_scan_root(int busnum)
+> -{
+> -       struct pci_bus *bus;
+> -       struct pci_sysdata *sd;
+> -       LIST_HEAD(resources);
+> -
+> -       sd = kzalloc(sizeof(*sd), GFP_KERNEL);
+> -       if (!sd) {
+> -               printk(KERN_ERR "PCI: OOM, skipping PCI bus %02x\n", busnum);
+> -               return;
+> -       }
+> -       sd->node = x86_pci_root_bus_node(busnum);
+> -       x86_pci_root_bus_resources(busnum, &resources);
+> -       printk(KERN_DEBUG "PCI: Probing PCI hardware (bus %02x)\n", busnum);
+> -       bus = pci_scan_root_bus(NULL, busnum, &pci_root_ops, sd, &resources);
+> -       if (!bus) {
+> -               pci_free_resource_list(&resources);
+> -               kfree(sd);
+> -               return;
+> -       }
+> -       pci_bus_add_devices(bus);
+> +       pci_free_host_bridge(bridge);
+>  }
+>
+>  void __init pcibios_set_cache_line_size(void)
+> --
+> 2.18.0
+>
