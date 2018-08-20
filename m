@@ -1,85 +1,48 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mga05.intel.com ([192.55.52.43]:59297 "EHLO mga05.intel.com"
+Received: from mail.kernel.org ([198.145.29.99]:49024 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1726275AbeHaVmq (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Fri, 31 Aug 2018 17:42:46 -0400
-Subject: [PATCH for-rc 2/2] IB/hfi1,PCI: Allow bus reset while probing
-From: Dennis Dalessandro <dennis.dalessandro@intel.com>
-To: bhelgaas@google.com, jgg@ziepe.ca, dledford@redhat.com
-Cc: Sinan Kaya <okaya@codeaurora.org>,
-        "Michael J. Ruhl" <michael.j.ruhl@intel.com>,
-        linux-pci@vger.kernel.org, linux-rdma@vger.kernel.org
-Date: Fri, 31 Aug 2018 10:34:14 -0700
-Message-ID: <20180831173411.21741.65388.stgit@scvm10.sc.intel.com>
-In-Reply-To: <20180831173132.21741.25892.stgit@scvm10.sc.intel.com>
-References: <20180831173132.21741.25892.stgit@scvm10.sc.intel.com>
+        id S1726667AbeHUCYA (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Mon, 20 Aug 2018 22:24:00 -0400
+Date: Mon, 20 Aug 2018 18:06:24 -0500
+From: Bjorn Helgaas <helgaas@kernel.org>
+To: linux-pci@vger.kernel.org
+Cc: Lukas Wunner <lukas@wunner.de>, linux-kernel@vger.kernel.org,
+        mmyangfl@gmail.com
+Subject: Enumeration issue with QCA9005 AR9462
+Message-ID: <20180820230624.GB154536@bhelgaas-glaptop.roam.corp.google.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Calling into the new API to reset the secondary bus results in a
-deadlock. This occurs because the device/bus is already locked at
-probe time. Reverting back to the old behavior while the API is
-improved.
+mmyangfl@gmail.com reported a problem [1]: on v4.17, a QCA9005 AR9462
+wifi device was present at boot, but disappeared after suspend/resume.
 
-Fixes: c6a44ba950d1 ("PCI: Rename pci_try_reset_bus() to pci_reset_bus()")
-Fixes: 409888e0966e ("IB/hfi1: Use pci_try_reset_bus() for initiating PCI Secondary Bus Reset")
-Cc: Sinan Kaya <okaya@codeaurora.org>
-Reviewed-by: Michael J. Ruhl <michael.j.ruhl@intel.com>
-Signed-off-by: Dennis Dalessandro <dennis.dalessandro@intel.com>
----
- drivers/infiniband/hw/hfi1/pcie.c |   11 ++++-------
- drivers/pci/pci.c                 |    1 +
- include/linux/pci.h               |    3 +++
- 3 files changed, 8 insertions(+), 7 deletions(-)
+He/she also tested a recent kernel (5c60a7389d79, from Thu Aug 16),
+where the suspend/resume problem doesn't seem to happen, but the wifi
+device isn't enumerated correctly at boot-time.
 
-diff --git a/drivers/infiniband/hw/hfi1/pcie.c b/drivers/infiniband/hw/hfi1/pcie.c
-index eec8375..6c967dd 100644
---- a/drivers/infiniband/hw/hfi1/pcie.c
-+++ b/drivers/infiniband/hw/hfi1/pcie.c
-@@ -893,14 +893,11 @@ static int trigger_sbr(struct hfi1_devdata *dd)
- 		}
- 
- 	/*
--	 * A secondary bus reset (SBR) issues a hot reset to our device.
--	 * The following routine does a 1s wait after the reset is dropped
--	 * per PCI Trhfa (recovery time).  PCIe 3.0 section 6.6.1 -
--	 * Conventional Reset, paragraph 3, line 35 also says that a 1s
--	 * delay after a reset is required.  Per spec requirements,
--	 * the link is either working or not after that point.
-+	 * This is an end around to do an SBR during probe time. A new API needs
-+	 * to be implemented to have cleaner interface but this fixes the
-+	 * current brokenness
- 	 */
--	return pci_reset_bus(dev);
-+	return pci_bridge_secondary_bus_reset(dev->bus->self);
- }
- 
- /*
-diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
-index 30b2603..1835f3a 100644
---- a/drivers/pci/pci.c
-+++ b/drivers/pci/pci.c
-@@ -4547,6 +4547,7 @@ int pci_bridge_secondary_bus_reset(struct pci_dev *dev)
- 
- 	return pci_dev_wait(dev, "bus reset", PCIE_RESET_READY_POLL_MS);
- }
-+EXPORT_SYMBOL_GPL(pci_bridge_secondary_bus_reset);
- 
- static int pci_parent_bus_reset(struct pci_dev *dev, int probe)
- {
-diff --git a/include/linux/pci.h b/include/linux/pci.h
-index e72ca8d..6925828 100644
---- a/include/linux/pci.h
-+++ b/include/linux/pci.h
-@@ -1235,6 +1235,9 @@ void pci_bus_add_resource(struct pci_bus *bus, struct resource *res,
- int devm_request_pci_bus_resources(struct device *dev,
- 				   struct list_head *resources);
- 
-+/* Temporary until new and working PCI SBR API in place */
-+int pci_bridge_secondary_bus_reset(struct pci_dev *dev);
-+
- #define pci_bus_for_each_resource(bus, res, i)				\
- 	for (i = 0;							\
- 	    (res = pci_bus_resource_n(bus, i)) || i < PCI_BRIDGE_RESOURCE_NUM; \
+  pci 0000:00:1c.3: PCIe Root Port to [bus 03-07]
+  pci 0000:03:00.0: [1ae9:0101] PCIe Switch Upstream Port to [bus 04-07]
+  pci 0000:04:00.0: [1ae9:0200] PCIe Switch Downstream Port to [bus 05]
+  pci 0000:05:00.0: [168c:0034] QCA9005 AR9462 wifi NIC
+
+These messages are extracted from [2]:
+
+[    0.928714] pciehp 0000:04:00.0:pcie204: Slot #0 AttnBtn- PwrCtrl- MRL- AttnInd- PwrInd- HotPlug+ Surprise+ Interlock- NoCompl- LLActRep+
+[    0.928752] pciehp 0000:04:00.0:pcie204: Slot(0-1): Card not present
+[    0.928811] pciehp 0000:04:00.0:pcie204: Slot(0-1): Link Up
+[    0.928815] pciehp 0000:04:00.0:pcie204: Slot(0-1): No adapter
+
+After manually executing:
+
+  echo 1 > /sys/devices/pci0000\:00/0000\:00\:1c.3/0000\:03\:00.0/0000\:04\:00.0/rescan
+
+the wifi NIC is discovered correctly:
+
+[  114.649896] pci 0000:05:00.0: [168c:0034] type 00 class 0x028000
+[  114.649977] pci 0000:05:00.0: reg 0x10: [mem 0xf7400000-0xf747ffff 64bit]
+[  114.650090] pci 0000:05:00.0: reg 0x30: [mem 0xf7480000-0xf748ffff pref]
+
+[1] https://bugzilla.kernel.org/show_bug.cgi?id=200839
+[2] https://bugzilla.kernel.org/attachment.cgi?id=277923
