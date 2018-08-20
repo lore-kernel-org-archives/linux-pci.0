@@ -1,50 +1,63 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.29.99]:46736 "EHLO mail.kernel.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1727541AbeHFRQV (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Mon, 6 Aug 2018 13:16:21 -0400
-Subject: Re: [PATCH v7 1/1] PCI: pciehp: Ignore link events when there is a
- fatal error pending
-From: Sinan Kaya <okaya@kernel.org>
-To: poza@codeaurora.org, Lukas Wunner <lukas@wunner.de>
-Cc: linux-pci@vger.kernel.org, Bjorn Helgaas <bhelgaas@google.com>,
-        Mika Westerberg <mika.westerberg@linux.intel.com>,
-        Keith Busch <keith.busch@intel.com>,
-        linux-pci-owner@vger.kernel.org
-References: <20180805225136.5800-1-okaya@kernel.org>
- <20180805225136.5800-2-okaya@kernel.org>
- <c1cfff22c63f6d3d6285575721a2a3e8@codeaurora.org>
- <20180806092614.GA28462@wunner.de>
- <2b4c23a2e97f61a124c95c49d604a853@codeaurora.org>
- <3d491f25-1d59-f257-1125-302e2d50e960@kernel.org>
-Message-ID: <22ce7172-b028-c0b1-d117-8096e016b15b@kernel.org>
-Date: Mon, 6 Aug 2018 11:06:48 -0400
+Return-Path: <SRS0=xK5x=LD=h08.hostsharing.net=foo00@kernel.org>
+Return-Path: <SRS0=xK5x=LD=h08.hostsharing.net=foo00@kernel.org>
+Date: Mon, 20 Aug 2018 09:17:03 +0200
+From: Lukas Wunner <lukas@wunner.de>
+To: Benjamin Herrenschmidt <benh@kernel.crashing.org>
+Cc: Bjorn Helgaas <helgaas@kernel.org>, linux-pci@vger.kernel.org,
+	Hari Vyas <hari.vyas@broadcom.com>, Ray Jui <ray.jui@broadcom.com>,
+	Srinath Mannam <srinath.mannam@broadcom.com>,
+	Guenter Roeck <linux@roeck-us.net>, Jens Axboe <axboe@kernel.dk>,
+	Konstantin Khlebnikov <khlebnikov@yandex-team.ru>,
+	Marta Rybczynska <mrybczyn@kalray.eu>,
+	Pierre-Yves Kerbrat <pkerbrat@kalray.eu>,
+	linux-kernel@vger.kernel.org
+Subject: Re: [RFC PATCH 1/6] Revert "PCI: Fix is_added/is_busmaster race
+ condition"
+Message-ID: <20180820071703.hnsyhb5pz4svb7jg@wunner.de>
+References: <20180817044902.31420-1-benh@kernel.crashing.org>
+ <20180817044902.31420-2-benh@kernel.crashing.org>
+ <20180817154431.GC128050@bhelgaas-glaptop.roam.corp.google.com>
+ <06c1233b71dea08b1fc32334acefc48c32c46557.camel@kernel.crashing.org>
+ <20180819022440.GG128050@bhelgaas-glaptop.roam.corp.google.com>
+ <4d777ed8c17b479e59b16cc0b4e9a3f6537f9884.camel@kernel.crashing.org>
 MIME-Version: 1.0
-In-Reply-To: <3d491f25-1d59-f257-1125-302e2d50e960@kernel.org>
-Content-Type: text/plain; charset=utf-8; format=flowed
-Sender: linux-pci-owner@vger.kernel.org
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <4d777ed8c17b479e59b16cc0b4e9a3f6537f9884.camel@kernel.crashing.org>
 List-ID: <linux-pci.vger.kernel.org>
 
-On 8/6/2018 11:04 AM, Sinan Kaya wrote:
->> Either AER or DPC would get triggered, not both.
->> in that case, if AER is disabled, then this code will return false 
->> thinking HP needs to handle it.
->> but it might be that DPC would be triggering as well.
->> but I dont see DPC check anywhere, rather we are relying on 
->> PCI_EXP_DEVSTA
->> and following condition:
->> if (!pdev->aer_cap)
->>        return false;
->> so here we dont check anything with respect to DPC capability 
->> (although there is no such thing as dpc_cap)
->> (except If I missed something)
+On Mon, Aug 20, 2018 at 12:10:59PM +1000, Benjamin Herrenschmidt wrote:
+> I chose to create a new mutex which we should be able to address other
+> similar races if we find them. The other solutions that I dismissed
+> were:
 > 
-> That's true. We either need to go poll every single source (AER/DPC) for
-> an error or rely on the DEVSTA. For ease of implementation, I suggest
-> DEVSTA. Something like this:
+>  - Using the device_lock. A explained previously, this is tricky, I
+> prefer not using this for anything other than locking against
+> concurrent add/remove. The main issue is that drivers will be sometimes
+> called in context where that's already held, so we can't take it inside
+> pci_enable_device() and I'd rather not add new constraints such as
+> "pci_enable_device() must be only called from probe() unless you also
+> take the device lock". It would be tricky to audit everybody...
+> 
+>  - Using a global mutex. We could move the bridge lock from AER to core
+> code for example, and use that. But it doesn't buy us much, and
+> slightly redecuces parallelism. It also makes it a little bit more
+> messy to walk up the bridge chain, we'd have to do a
+> pci_enable_device_unlocked or something, messy.
 
-Hmm. Too quick...
++1 from my side for adding a struct mutex to struct pci_dev to protect
+state changes.
 
-Reduced set doesn't help. Surprise Link Down is also a fatal error.
-That's what I was trying to exclude. We'll have to poll the error
-source.
+The device_lock() primarily protects binding / unbinding of the device
+and pci_dev state may have to be changed while binding / unbinding.
+
+A global lock invites deadlocks if multiple devices are added / removed
+concurrently where one is a parent of the other.  (Think hot-removal of
+multiple devices on a Thunderbolt daisy-chain.)
+
+As said I'd also welcome folding PCI_DEV_DISCONNECTED into enum
+pci_channel_state, either as an additional state or by using
+pci_channel_io_perm_failure.
+
+Thanks,
+
+Lukas
