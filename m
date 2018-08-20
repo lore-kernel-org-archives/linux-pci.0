@@ -1,169 +1,66 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.29.99]:56542 "EHLO mail.kernel.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1730151AbeHHXoy (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Wed, 8 Aug 2018 19:44:54 -0400
-Date: Wed, 8 Aug 2018 16:23:22 -0500
-From: Bjorn Helgaas <helgaas@kernel.org>
-To: joeyli <jlee@suse.com>
-Cc: "Lee, Chun-Yi" <joeyli.kernel@gmail.com>,
-        Bjorn Helgaas <bhelgaas@google.com>,
-        Thomas Gleixner <tglx@linutronix.de>,
-        Ingo Molnar <mingo@redhat.com>,
-        "H . Peter Anvin" <hpa@zytor.com>, x86@kernel.org,
-        linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org
-Subject: Re: [PATCH] x86/PCI: Claim the resources of firmware enabled IOAPIC
- before children bus
-Message-ID: <20180808212322.GF49411@bhelgaas-glaptop.roam.corp.google.com>
-References: <20180724110144.16442-1-jlee@suse.com>
- <20180806214807.GE30691@bhelgaas-glaptop.roam.corp.google.com>
- <20180808155318.GE13767@linux-l9pv.suse>
+Return-Path: <okaya@kernel.org>
+Return-Path: <okaya@kernel.org>
+Subject: Re: [PATCH 1/1] PCI/AER: prevent pcie_do_fatal_recovery from using
+ device after it is removed
+To: Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+ Keith Busch <keith.busch@intel.com>
+Cc: poza@codeaurora.org, Bjorn Helgaas <helgaas@kernel.org>,
+ Thomas Tai <thomas.tai@oracle.com>, bhelgaas@google.com,
+ linux-pci@vger.kernel.org, linux-pci-owner@vger.kernel.org,
+ Sam Bobroff <sam.bobroff@au1.ibm.com>
+References: <6cb069038530757f31f3dd60328c7e30@codeaurora.org>
+ <e931bc7a7e468e8bb2ee3766b3fcf96f1800f552.camel@kernel.crashing.org>
+ <bf7ceabb6fe51398e0f4eebd9c4fe4ac1ec2b8a4.camel@kernel.crashing.org>
+ <20180819021922.GE128050@bhelgaas-glaptop.roam.corp.google.com>
+ <fe891b63-12c7-61ab-a59a-ae24ad766754@kernel.org>
+ <ab5cb5b277f1c1c1362ef597ca7b8c6a2cd32cdf.camel@kernel.crashing.org>
+ <908ff33ded8f31830f95a8889d8540f1@codeaurora.org>
+ <5027d857bb59edfd33442003aa618ece1bc9cd52.camel@kernel.crashing.org>
+ <b2e2ac5c92d8a91d00606754d1046578@codeaurora.org>
+ <2ecd1fd6d763810d45697f846fa876b58a193b1b.camel@kernel.crashing.org>
+ <20180820155325.GA16148@localhost.localdomain>
+ <cf6de256280be7a2948db6dd2b5bfae92e70e12f.camel@kernel.crashing.org>
+From: Sinan Kaya <okaya@kernel.org>
+Message-ID: <6aa71d74-e4dc-c627-1496-981278388bce@kernel.org>
+Date: Mon, 20 Aug 2018 17:21:30 -0400
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20180808155318.GE13767@linux-l9pv.suse>
-Sender: linux-pci-owner@vger.kernel.org
+In-Reply-To: <cf6de256280be7a2948db6dd2b5bfae92e70e12f.camel@kernel.crashing.org>
+Content-Type: text/plain; charset=utf-8; format=flowed
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wed, Aug 08, 2018 at 11:53:18PM +0800, joeyli wrote:
-> Hi Bjorn,
+On 8/20/2018 5:05 PM, Benjamin Herrenschmidt wrote:
+> On Mon, 2018-08-20 at 09:53 -0600, Keith Busch wrote:
+>> On Mon, Aug 20, 2018 at 09:22:27PM +1000, Benjamin Herrenschmidt wrote:
+>>> The main problem with unplug/replug (as I mentioned earlier) is that it
+>>> just does NOT work for storage controllers (or similar type of
+>>> devices). The links between the storage controller and the mounted
+>>> filesystems is lost permanently, you'll most likely have to reboot the
+>>> machine.
+>>
+>> You probably shouldn't mount raw storage devices if they can be hot
+>> added/removed. There are device mappers for that! :)
 > 
-> First, thanks for your review!
+> This is not about hot adding/removing, it's about error recovery.
 > 
-> On Mon, Aug 06, 2018 at 04:48:07PM -0500, Bjorn Helgaas wrote:
-> > On Tue, Jul 24, 2018 at 07:01:44PM +0800, Lee, Chun-Yi wrote:
-> > > I got a machine that the resource of firmware enabled IOAPIC conflicts
-> > > with the resource of a children bus when the PCI host bus be hotplug.
-> > > 
-> > > [ 3182.243325] PCI host bridge to bus 0001:40
-> > > [ 3182.243328] pci_bus 0001:40: root bus resource [io  0xc000-0xdfff window]
-> > > [ 3182.243330] pci_bus 0001:40: root bus resource [mem 0xdc000000-0xebffffff window]
-> > > [ 3182.243331] pci_bus 0001:40: root bus resource [mem 0x212400000000-0x2125ffffffff window]
-> > > [ 3182.243334] pci_bus 0001:40: root bus resource [bus 40-7e]
-> > > ...
-> > > [ 3182.244737] pci 0001:40:05.4: [8086:6f2c] type 00 class 0x080020
-> > > [ 3182.244746] pci 0001:40:05.4: reg 0x10: [mem 0xdc000000-0xdc000fff]
-> > > ...
-> > > [ 3182.246697] pci 0001:40:02.0: PCI bridge to [bus 41]
-> > > [ 3182.246702] pci 0001:40:02.0:   bridge window [mem 0xdc000000-0xdc7fffff]
-> > > ...
-> > > pci 0001:40:05.4: can't claim BAR 0 [mem 0xdc000000-0xdc000fff]: address conflict with PCI Bus 0001:41 [mem 0xdc000000-0xdc7fffff]
-> > > 
-> > > The bus topology:
-> > > 
-> > >  +-[0001:40]-+-02.0-[41]--
-> > >  |           +-03.0-[41]--
-> > >  |           +-03.2-[41]--+-00.0  Intel Corporation I350 Gigabit Network Connection
-> > >  |           |            +-00.1  Intel Corporation I350 Gigabit Network Connection
-> > >  |           |            +-00.2  Intel Corporation I350 Gigabit Network Connection
-> > >  |           |            \-00.3  Intel Corporation I350 Gigabit Network Connection
-> > >  |           +-05.0  Intel Corporation Xeon E7 v4/Xeon E5 v4/Xeon E3 v4/Xeon D Map/VTd_Misc/System Management
-> > >  |           +-05.1  Intel Corporation Xeon E7 v4/Xeon E5 v4/Xeon E3 v4/Xeon D IIO Hot Plug
-> > >  |           +-05.2  Intel Corporation Xeon E7 v4/Xeon E5 v4/Xeon E3 v4/Xeon D IIO RAS/Control Status/Global Errors
-> > >  |           \-05.4  Intel Corporation Xeon E7 v4/Xeon E5 v4/Xeon E3 v4/Xeon D I/O APIC
-> > > 
-> > > This problem causes that the NIC behine the child bus was not available
-> > > after PCI host bridge hotpluged.
-> > > 
-> > > Kernel does not want to change resource of firmware enabled IOAPIC, but
-> > > the priority of children bus's resources are higher than any other devices.
-> > > So this conflict can not be handled by the reassigning logic of kernel.
+>> And you can't just change DPC device removal. A DPC event triggers
+>> the link down, and that will trigger pciehp to disconnect the subtree
+>> anyway. Having DPC do it too just means you get the same behavior with
+>> or without enabling STLCTL.DLLSC.
 > 
-> Sorry for my description is not clear. The "priority" is for resources
-> clamining, not for the address decoding.
+> This is wrong. EEH can trigger a link down to and we don't remove the
+> subtree in that case. We allow the drivers to recover.
 > 
-> > I don't understand this paragraph.  AFAIK, if two devices on a bus
-> > both decode the same address, as the IOAPIC and the bridge do here,
-> > the only real "priority" in PCI would be subtractive decode.  But I
-> > don't think that applies here since the bridge is using a positive
-> > decode window.
+
+I have a patch to solve this issue.
+
+https://lkml.org/lkml/2018/8/19/124
+
+Hotplug driver removes the devices on link down events and re-enumerates
+on insertion.
+
+I am trying to separate fatal error handling from hotplug.
+
+> Ben.
 > 
-> Sorry for I didn't understand... How could you know the bridge doesn't
-> apply subtractive decode?
-
-A subtractive decode bridge forwards anything appearing on its primary
-bus to its secondary bus.  In conventional PCI, it only does this if
-no other agent on the primary bus asserts DEVSEL# (PCI r3.0, sec
-3.6.1).  In PCIe, the primary "bus" is a link and there's only one
-device on it, so a subtractive decode bridge could forward anything it
-sees.  If the subtractive decode bridge is part of a multi-function
-device, I assume that multi-function device would have to determine
-internally whether the subtractive decode bridge or another function
-should claim the transaction.
-
-Either way, a subtractive decode bridge can forward anything that
-appears on its primary bus, so a subtractive decode window effectively
-contains everything the upstream bridge passes down.  In this case you
-have:
-
-  pci_bus 0001:40: root bus resource [mem 0xdc000000-0xebffffff window]
-  pci_bus 0001:40: root bus resource [mem 0x212400000000-0x2125ffffffff window]
-  pci 0001:40:02.0: PCI bridge to [bus 41]
-  pci 0001:40:02.0:   bridge window [mem 0xdc000000-0xdc7fffff]
-
-The 40:02.0 bridge could see [mem 0xdc000000-0xebffffff] or [mem
-0x212400000000-0x2125ffffffff] on its primary bus, so if it were a
-subtractive decode bridge, its "window" would contain both of those
-regions, and we should label them as "(subtractive decode)" in the
-dmesg log.
-
-Since [mem 0xdc000000-0xdc7fffff] is only part of the first root bus
-resource, I infer that it must be a positively decoded window.
-"lspci -vv" would tell you for sure.
-
-> > I would expect that a read to the [mem 0xdc000000-0xdc000fff] range
-> > would potentially receive two read completions, which would cause an
-> > Unexpected Completion error.
 > 
-> Thanks for your information. The I350 NIC doesn't work after hotplug.
-> So it may causes by Unexpected Completion error as you mentioned.
->  
-> > Maybe you mean that we don't want to change the IOAPIC resources, but
-> > it's OK if we move the bridge window, so in that sense, the IOAPIC is
-> > "higher priority" than the bridge window?  This is the reverse of what
-> > your paragraph seems to say.
 > 
-> Yes, this is what I mean. Sorry for my paragraph causes confusing. 
-> 
-> The memory decoder bit in the command register of 0001:40:05.4 IOAPIC
-> is raised by firmware after hotplug. So kernel treats it as a
-> _firmware enabled_ IOAPIC. Because kernel don't want to change the IOAPIC
-> resources, so my patch try to claim the IOAPIC resources before all
-> bridges. It can workaround the hotplug problem on issue machine.
-> 
-> But, actually I am not sure that this hacking makes sense. And, I also
-> don't know why the memory decoder bit is raised by firmware when hotplug.
-> Maybe this is a firmware problem.
-
-That's a good point.  It's fine for firmware to enable the IOAPIC
-memory decode.  But the address conflict:
-
-  [ 3906.092119] pci 0001:40:05.4: reg 0x10: [mem 0xdc000000-0xdc000fff]
-  [ 3906.093898] pci 0001:40:02.0: PCI bridge to [bus 41]
-  [ 3906.093902] pci 0001:40:02.0:   bridge window [mem 0xdc000000-0xdc7fffff]
-
-is not so fine.  That looks like a firmware bug to me.  These devices
-should power up with zeroes in their BARs, so the addresses must have
-been assigned by firmware before it sent the ACPI hotplug notification
-to Linux.
-
-In principle, Linux *should* be able to recover from that by moving
-the IOAPIC or the bridge window, but obviously we don't.
-
-What are the chances of getting a firmware fix?  Has this firmware
-already shipped to customers?
-
-> > > This patch claims the resources of firmware enabled IOAPIC before
-> > > children bus. Then kernel gets a chance to reassign the resources of
-> > > children bus to avoid the conflict.
-> > 
-> > Can you open a report at https://bugzilla.kernel.org, attach the
-> > before and after dmesg logs, and include the URL in the commit log?
-> 
-> OK, I have filed a bug on kernel bugzilla and also attached dmesg
-> log:
-> 	https://bugzilla.kernel.org/show_bug.cgi?id=200765
-
-Thanks.  Please include this URL in the changelog if you post an
-updated patch.
-
-Bjorn
