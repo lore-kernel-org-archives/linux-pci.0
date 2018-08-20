@@ -1,75 +1,161 @@
-Return-Path: <SRS0=Awgj=LE=renesas.com=phil.edworthy@kernel.org>
-Return-Path: <SRS0=Awgj=LE=renesas.com=phil.edworthy@kernel.org>
-From: Phil Edworthy <phil.edworthy@renesas.com>
-To: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
-CC: Marek Vasut <marek.vasut@gmail.com>, Bjorn Helgaas <helgaas@kernel.org>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>, Marek Vasut
-	<marek.vasut+renesas@gmail.com>, Geert Uytterhoeven
-	<geert+renesas@glider.be>, Simon Horman <horms+renesas@verge.net.au>, Wolfram
- Sang <wsa@the-dreams.de>, "linux-renesas-soc@vger.kernel.org"
-	<linux-renesas-soc@vger.kernel.org>
-Subject: RE: [PATCH V2 4/5] PCI: rcar: Support runtime PM, link state L1
- handling
-Date: Tue, 21 Aug 2018 08:58:38 +0000
-Message-ID: 
- <TY1PR01MB1769D7656974C9EF15948159F5310@TY1PR01MB1769.jpnprd01.prod.outlook.com>
-References: <20171117174906.GB22599@red-moon>
- <3e0bc374-d296-675c-f290-256cc530feb7@gmail.com>
- <20180611135912.GD75679@bhelgaas-glaptop.roam.corp.google.com>
- <77d1eaf8-e180-f5f5-50f0-34c45e72c553@gmail.com>
- <20180613135308.GB201807@bhelgaas-glaptop.roam.corp.google.com>
- <20180613155252.GA12210@e107981-ln.cambridge.arm.com>
- <20180613172559.GC201807@bhelgaas-glaptop.roam.corp.google.com>
- <1d543b91-ac4f-7b61-4b2c-d8865e06d31e@gmail.com>
- <9b91bbd9-64df-764e-e553-a37463549a92@gmail.com>
- <TY1PR01MB176994051783997958BAB14AF5320@TY1PR01MB1769.jpnprd01.prod.outlook.com>
- <20180820144733.GA24413@red-moon>
-In-Reply-To: <20180820144733.GA24413@red-moon>
-Content-Type: text/plain; charset="utf-8"
+Return-Path: <SRS0=J3+B=LD=codeaurora.org=poza@kernel.org>
+Return-Path: <SRS0=J3+B=LD=codeaurora.org=poza@kernel.org>
 MIME-Version: 1.0
+Content-Type: text/plain; charset=US-ASCII;
+ format=flowed
+Date: Mon, 20 Aug 2018 13:26:01 +0530
+From: poza@codeaurora.org
+To: Benjamin Herrenschmidt <benh@kernel.crashing.org>
+Cc: Sinan Kaya <okaya@kernel.org>, Bjorn Helgaas <helgaas@kernel.org>,
+ Thomas Tai <thomas.tai@oracle.com>, bhelgaas@google.com,
+ keith.busch@intel.com, linux-pci@vger.kernel.org,
+ linux-pci-owner@vger.kernel.org, Sam Bobroff <sam.bobroff@au1.ibm.com>
+Subject: Re: [PATCH 1/1] PCI/AER: prevent pcie_do_fatal_recovery from using
+ device after it is removed
+In-Reply-To: <5027d857bb59edfd33442003aa618ece1bc9cd52.camel@kernel.crashing.org>
+References: <1534179088-44219-1-git-send-email-thomas.tai@oracle.com>
+ <1534179088-44219-2-git-send-email-thomas.tai@oracle.com>
+ <51f4b387d9bd96a42d526a6a029fc43b@codeaurora.org>
+ <b0104a716319d76e734c307cb4bedd9d@codeaurora.org>
+ <903394c04d6ad468ed06dc0a779200e7555345a7.camel@kernel.crashing.org>
+ <6cb069038530757f31f3dd60328c7e30@codeaurora.org>
+ <e931bc7a7e468e8bb2ee3766b3fcf96f1800f552.camel@kernel.crashing.org>
+ <bf7ceabb6fe51398e0f4eebd9c4fe4ac1ec2b8a4.camel@kernel.crashing.org>
+ <20180819021922.GE128050@bhelgaas-glaptop.roam.corp.google.com>
+ <fe891b63-12c7-61ab-a59a-ae24ad766754@kernel.org>
+ <ab5cb5b277f1c1c1362ef597ca7b8c6a2cd32cdf.camel@kernel.crashing.org>
+ <908ff33ded8f31830f95a8889d8540f1@codeaurora.org>
+ <5027d857bb59edfd33442003aa618ece1bc9cd52.camel@kernel.crashing.org>
+Message-ID: <b2e2ac5c92d8a91d00606754d1046578@codeaurora.org>
 List-ID: <linux-pci.vger.kernel.org>
 
-SGkgTG9yZW56bywNCg0KT24gMjAgQXVndXN0IDIwMTggMTU6NDggTG9yZW56byBQaWVyYWxpc2kg
-d3JvdGU6DQo+IE9uIE1vbiwgQXVnIDIwLCAyMDE4IGF0IDAxOjQ0OjQ4UE0gKzAwMDAsIFBoaWwg
-RWR3b3J0aHkgd3JvdGU6DQo+IA0KPiBbLi4uXQ0KPiANCj4gPiBIb3dldmVyLCBib3RoIGJlZm9y
-ZSBhbmQgYWZ0ZXIgdGhpcyBwYXRjaCwgdGhlIFJQIGRvZXMgbm90IHRyYW5zaXRpb24NCj4gPiBM
-MSB3aGVuIHRoZSBlbmRwb2ludHMgY2hhbmdlIHRvIEwxLg0KPiA+IFRoaXMgcGF0Y2ggb25seSB0
-cmFuc2l0aW9ucyB0aGUgUlAgdG8gTDEgZHVyaW5nIGFjY2Vzc2luZyBhIGNhcmQncw0KPiA+IGNv
-bmZpZyByZWdpc3RlcnMsIGlmIHRoZSBSUCBpcyBub3QgaW4gTDEgbGluayBzdGF0ZSBhbmQgaGFz
-IHJlY2VpdmVkDQo+ID4gUE1fRU5URVJfTDEgRExMUCAoZS5nLiByZXN1bWUpLiBBZnRlciB0aGlz
-LCB0aGUgaGFyZHdhcmUgd2lsbCBoYW5kbGUNCj4gPiB0aGUgdHJhbnNpdGlvbiBvdXQgb2YgTDEu
-DQo+ID4NCj4gPiBUaGUgcmVsZXZhbnQgcGFydCBvZiB0aGUgcmNhciBtYW51YWwgc2F5czogIkFm
-dGVyIGEgcmVjb3ZlcnkgdG8gTDAsIGlmDQo+ID4gdGhlIGRldmljZSBpcyBpbiB0aGUgTm9uLUQw
-IHN0YXRlIGFuZCBQTV9FbnRlcl9MMSBETExQIGlzIHRyYW5zbWl0dGVkDQo+ID4gZnJvbSB0aGUg
-ZG93bnN0cmVhbSBkZXZpY2UsIHNvZnR3YXJlIHNob3VsZCBjb25maXJtIHRoYXQgaGFyZHdhcmUg
-aXMNCj4gPiBpbiB0aGUgTDAgc3RhdGUgKFBNU1IuUE1TVEFURSA9IEwwKSBhbmQgaW5pdGlhdGUg
-dGhlIEwxIHRyYW5zaXRpb24NCj4gPiBzZXF1ZW5jZSBhZ2FpbiAod3JpdGUgMSB0byBQTUNUTFIu
-TDFJQVROKS4gSW4gdGhpcyBjYXNlLCB0aGUgc2VxdWVuY2UNCj4gPiBpczogTDAg4oaSIEwxIOKG
-kiBMMCByZWNvdmVyeSDihpIgTDEgYWdhaW4uIg0KPiANCj4gQ2FuIHlvdSBtYXAgdGhlc2UgRlNN
-IHN0ZXBzIHRvIHRoaXMgcGF0Y2ggY29kZSBwbGVhc2UgPyBJIHdvdWxkIGxpa2UgdG8NCj4gdW5k
-ZXJzdGFuZCB3aGF0IExpbmsgc3RhdGUgbWFwcyB0byB3aGljaCBjb21tYW5kIHdyaXR0ZW4gYW5k
-IHdoZW4uDQpJIGRvbuKAmXQgdGhpbmsgSSBjYW4gYmVjYXVzZSB3ZSBhcmUgbm90IGluaXRpYWxs
-eSBlbnRlcmluZyBMMS4gTG9va2luZyBhdCB0aGlzDQphZ2FpbiwgSSB0aGluayB0aGlzIHNlY3Rp
-b24gb2YgdGhlIG1hbnVhbCBvbmx5IGhlbHBzIGluIGluZGljYXRpbmcgaG93IHRvIA0KZGV0ZWN0
-IHdlIHNob3VsZCBoYXZlIGdvbmUgaW50byBMMSBhbmQgaG93IHRvIHBva2UgdGhlIEhXIHRvIGlu
-aXRpYXRlIHRoZQ0KdHJhbnNpdGlvbiB0byBMMS4NCg0KT24gc3lzdGVtIHN1c3BlbmQsIHRoZSBF
-UCBzZW5kcyBQTV9FbnRlcl9MMSBETExQIGFuZCBlbnRlcnMgTDEgc3RhdGUuDQpUaGUgcmNhciBS
-UCBjYW5ub3QgZW50ZXIgTDEgYnkgSFcgYWxvbmUsIHNvIGlzIHN0aWxsIGluIEwwLiBUaGUgb25s
-eSB3YXkgb3V0DQpvZiB0aGlzIGZyb20gdGhlIFBDSWUgc3BlYyBGU00gaXMgZm9yIGJvdGggRVAg
-YW5kIFJQIHRvIGVudGVyIHRoZSBSZWNvdmVyeQ0Kc3RhdGUuDQpUaGUgcGF0Y2ggc2ltcGx5IGRl
-dGVjdHMgdGhhdCB3ZSBzaG91bGQgaGF2ZSBnb25lIGludG8gTDEsIGFuZCBzbyBpbml0aWF0ZXMN
-CnRoYXQgc3RhdGUgY2hhbmdlLCBhbmQgdGhlIEhXIHdpbGwgdGhlbiBoYW5kbGUgdGhlIHRyYW5z
-aXRpb24gZnJvbSBMMSB0bw0KUmVjb3ZlcnkgYW5kIHRoZW4gb24gdG8gTDAuDQoNCg0KPiA+IEkg
-ZG9u4oCZdCB0aGluayB0aGUgcG90ZW50aWFsIGlzc3VlIHRoYXQgQmpvcm4gdGFsa2VkIGFib3V0
-IGNhbiBoYXBwZW4NCj4gPiBiZWNhdXNlIHRoZSBSUCBkb2VzIGdvIGludG8gTDEuIEkgY291bGQg
-YmUgd3JvbmcgdGhvdWdoLi4uDQo+IA0KPiBJIGRvIG5vdCB1bmRlcnN0YW5kIHRoaXMgcGFyYWdy
-YXBoLCBtaW5kIGVsYWJvcmF0aW5nIG9uIGl0ID8NCkFzIHJjYXIgUlAgb25seSBzdXBwb3J0cyBE
-MCBhbmQgRDNob3QvY29sZCwgKHRoZSBtYW51YWwgc2F5cyBpdCBzdXBwb3J0cw0KRDNjb2xkLCBi
-dXQgSSBjYW5ub3Qgc2VlIGhvdyBpZiBpdCBkb2VzbuKAmXQgc3VwcG9ydCBMMiBvciBMMyBzdGF0
-ZXMpLCBpZiB5b3UNCmZvcmNlIHRoZSBsaW5rIHRvIEQzLCB3ZSBjYW4gb25seSBiZSBpbiBMMSBz
-dGF0ZS4NCg0KDQo+ID4gVGhlIGRyaXZlciBzaG91bGQgYWxzbyBoYXZlIGEgcnVudGltZS1QTSBo
-b29rIHRvIHRyYW5zaXRpb24gdG8gTDEgb24NCj4gPiBzdXNwZW5kIGluIG9yZGVyIHRvIHNhdmUg
-cG93ZXIuIEhvd2V2ZXIsIHRoYXQgaXMgc29tZXdoYXQgc2VwYXJhdGUgdG8NCj4gPiB0aGUgcHJv
-YmxlbSB0aGUgcGF0Y2ggZml4ZXMuDQo+IA0KPiBZZXMgdGhhdCdzIGEgc2VwYXJhdGUgcGF0Y2gu
-DQo+IA0KPiBUaGFua3MgZm9yIGNoaW1pbmcgaW4sIGxldCdzIHRyeSB0byBnZXQgdG8gdGhlIGJv
-dHRvbSBvZiB0aGlzIHRocmVhZC4NCj4gDQo+IExvcmVuem8NCg0KVGhhbmtzDQpQaGlsDQo=
+On 2018-08-20 11:03, Benjamin Herrenschmidt wrote:
+> On Mon, 2018-08-20 at 10:49 +0530, poza@codeaurora.org wrote:
+>> 
+>> Reverting spec/Documentation which is fine by me.
+>> 
+>> But the good thing has happened now is; we can have very clear
+>> definition for the framework to go forward.
+>> e.g. how the errors have to be handled.
+>> 
+>> Because of those patches, the whole error framework is under common 
+>> code
+>> base and now has become independent of service e.g. AER, DPC etc..
+> 
+> Well, EEH isn't yet :-) But then the EEH code is a real mess buried in
+> arch/powerpc. Sam (CC) is trying to improve that situation and I might
+> step in as well to help if we think we can make things more common, it
+> would definitely help.
+> 
+>> That enables us to define or extend policies in more clearly defined 
+>> way
+>> irrespective of what services are running.
+>> 
+>> Now it is just that we have to change in err.c and walk away with the
+>> policies what we want to enforce.
+>> 
+>> let me know how this sounds Ben.
+> 
+> So for now, I've sent a revert patch for the Documentation/ bit to
+> Bjorn, and I have no (not yet at least) beef in what you do in
+> drivers/pci/* ... however, that said, I think it would be great to move
+> EEH toward having a bulk of the policy use common code as well.
+> 
+
+In my opinion, I think revert patch can wait, because again we might 
+need to change it according to improvements we bring.
+
+> It will be long road, in part due to the historical crappyness of our
+> EEH code, so my thinking is we should:
+> 
+>  - First agree on what we want the policy to be. I need to read a bit
+> more about DPC since that's new to me, it seems to be similar to what
+> our EEH does, with slighty less granularity (we can freeze access to
+> individual functions for example).
+> 
+>  - Rework err.c to implement that policy with the existing AER and DPC
+> code.
+> 
+
+I went through eeh-pci-error-recovery.txt
+If I pick up folowing
+
+"
+If the OS or device driver suspects that a PCI slot has been 
+EEH-isolated, there is a firmware call it can make to determine if this 
+is the case. If so, then the device driver should put itself into a 
+consistent state (given that it won't be able to complete any pending 
+work) and start recovery of the card.  Recovery normally would consist 
+of resetting the PCI device (holding the PCI #RST line high for two 
+seconds), followed by setting up the device config space (the base 
+address registers (BAR's), latency timer, cache line size, interrupt 
+line, and so on).  This is followed by a reinitialization of the device 
+driver.  In a worst-case scenario, the power to the card can be toggled, 
+at least on hot-plug-capable slots.  In principle, layers far above the 
+device driver probably do not need to know that the PCI card has been 
+"rebooted" in this way; ideally, there should be at most a pause in 
+Ethernet/disk/USB I/O while the card is being reset.
+
+If the card cannot be recovered after three or four resets, the 
+kernel/device driver should assume the worst-case scenario, that the 
+card has died completely, and report this error to the sysadmin. In 
+addition, error messages are reported through RTAS and also through 
+syslogd (/var/log/messages) to alert the sysadmin of PCI resets. The 
+correct way to deal with failed adapters is to use the standard PCI 
+hotplug tools to remove and replace the dead card.
+"
+
+some differences: I find is:
+Current framework does not attempt recovery 3-4 times.
+
+Besides If I grasp eeh-pci-error-recovery.txt correctly, (although I 
+could be easily wrong),
+mainly the difference is coming how we reset the device.
+
+Linux uses SBR, while EEH seems to be using #PERST.
+PERST signal implementation might be board specific, e.g. we have 
+io-port-expander sitting on i2c to drive #PERST.
+we rely on SBR. and SBR also should be a good way to bring hotreset of 
+device.
+"All Lanes in the configured Link transmit TS1 Ordered Sets with the Hot 
+Reset bit 15 asserted and the configured Link and Lane numbers."
+although I am not sure between #PERST and SBR is there is any subtle 
+differences such as some sticky bits might not be affected by SBR.
+but so far SBR has served well for us.
+
+Also I see that eeh-pci-error-recovery.txt does not seem to distinguish 
+between fatal and nonfatal errors, is the behavior same for both type of 
+errors in EEH ?
+
+I would like to mention is that there should nto be any need to reset 
+the card in case of NONFATAL because by definition link is functional, 
+only the particular transaction
+had a problem. so not sure how EEH deals with ERR_NONFATAL.
+
+Also I am very much interested in knowing original intention of DPC 
+driver to unplug/plug devices,
+all I remember in some conversation was:
+hotplug capable bridge might have see devices changed, so it is safer to 
+remove/unplug the devices and during which .shutdown methods of driver 
+is called, in case of ERR_FATAL.
+although DPC is HW recovery while AER is sw recovery both should 
+fundamentally act in the same way as far as device drivers callbacks are 
+concerned.
+(again I really dont know real motivation behind this)
+
+
+Regards,
+Oza.
+
+>  - Figure out what hooks might be needed to be able to plumb EEH into
+> it, possibly removing a bunch of crap in arch/powerpc (yay !)
+> 
+> I don't think having a webex will be that practical with the timezones
+> involved. I'm trying to get approval to go to Plumbers in which case we
+> could setup a BOF but I have no guarantee at this point that I can make
+> it happen.
+> 
+> So let's try using email as much possible for now.
+> 
+> Cheers,
+> Ben.
