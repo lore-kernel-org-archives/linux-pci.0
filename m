@@ -1,202 +1,52 @@
-Return-Path: <SRS0=R/z1=LC=hygon.cn=puwen@kernel.org>
-Return-Path: <SRS0=R/z1=LC=hygon.cn=puwen@kernel.org>
-From: Pu Wen <puwen@hygon.cn>
-To: tglx@linutronix.de,
-	mingo@redhat.com,
-	hpa@zytor.com,
-	x86@kernel.org,
-	thomas.lendacky@amd.com,
-	bp@alien8.de,
-	pbonzini@redhat.com,
-	helgaas@kernel.org
-Cc: linux-kernel@vger.kernel.org,
-	linux-arch@vger.kernel.org,
-	linux-pci@vger.kernel.org,
-	Pu Wen <puwen@hygon.cn>
-Subject: [PATCH v4 07/16] x86/pci: add Hygon PCI vendor and northbridge support
-Date: Mon, 20 Aug 2018 00:10:50 +0800
-Message-Id: <1d82940cdf78f1318ccf4d30eb768039511bc9ee.1534599097.git.puwen@hygon.cn>
-In-Reply-To: <cover.1534599097.git.puwen@hygon.cn>
-References: <cover.1534599097.git.puwen@hygon.cn>
+Return-Path: <SRS0=HZd4=LD=kernel.crashing.org=benh@kernel.org>
+Return-Path: <SRS0=HZd4=LD=kernel.crashing.org=benh@kernel.org>
+Message-ID: <cf6de256280be7a2948db6dd2b5bfae92e70e12f.camel@kernel.crashing.org>
+Subject: Re: [PATCH 1/1] PCI/AER: prevent pcie_do_fatal_recovery from using
+ device after it is removed
+From: Benjamin Herrenschmidt <benh@kernel.crashing.org>
+To: Keith Busch <keith.busch@intel.com>
+Cc: poza@codeaurora.org, Sinan Kaya <okaya@kernel.org>,
+        Bjorn Helgaas
+ <helgaas@kernel.org>,
+        Thomas Tai <thomas.tai@oracle.com>, bhelgaas@google.com,
+        linux-pci@vger.kernel.org, linux-pci-owner@vger.kernel.org,
+        Sam Bobroff <sam.bobroff@au1.ibm.com>
+Date: Tue, 21 Aug 2018 07:05:52 +1000
+In-Reply-To: <20180820155325.GA16148@localhost.localdomain>
+References: <6cb069038530757f31f3dd60328c7e30@codeaurora.org>
+	 <e931bc7a7e468e8bb2ee3766b3fcf96f1800f552.camel@kernel.crashing.org>
+	 <bf7ceabb6fe51398e0f4eebd9c4fe4ac1ec2b8a4.camel@kernel.crashing.org>
+	 <20180819021922.GE128050@bhelgaas-glaptop.roam.corp.google.com>
+	 <fe891b63-12c7-61ab-a59a-ae24ad766754@kernel.org>
+	 <ab5cb5b277f1c1c1362ef597ca7b8c6a2cd32cdf.camel@kernel.crashing.org>
+	 <908ff33ded8f31830f95a8889d8540f1@codeaurora.org>
+	 <5027d857bb59edfd33442003aa618ece1bc9cd52.camel@kernel.crashing.org>
+	 <b2e2ac5c92d8a91d00606754d1046578@codeaurora.org>
+	 <2ecd1fd6d763810d45697f846fa876b58a193b1b.camel@kernel.crashing.org>
+	 <20180820155325.GA16148@localhost.localdomain>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 List-ID: <linux-pci.vger.kernel.org>
 
-As Hygon register its PCI Vendor ID as a new one "0x1d94", so add a new
-definition PCI_VENDOR_ID_HYGON in include/linux/pci_ids.h.
+On Mon, 2018-08-20 at 09:53 -0600, Keith Busch wrote:
+> On Mon, Aug 20, 2018 at 09:22:27PM +1000, Benjamin Herrenschmidt wrote:
+> > The main problem with unplug/replug (as I mentioned earlier) is that it
+> > just does NOT work for storage controllers (or similar type of
+> > devices). The links between the storage controller and the mounted
+> > filesystems is lost permanently, you'll most likely have to reboot the
+> > machine.
+> 
+> You probably shouldn't mount raw storage devices if they can be hot
+> added/removed. There are device mappers for that! :)
 
-Also Hygon PCI Device ID(0x1450/0x1463/0x1464) for Host bridge is added
-to amd_nb.c. And it need to define new arrays for Hygon:
-hygon_root_ids[], hygon_nb_misc_ids[], hygon_nb_link_ids[].
+This is not about hot adding/removing, it's about error recovery.
 
-To enable Hygon north bridge support, add new variable root_ids, and
-assign its value based on whether CPU vendor is AMD or Hygon. Modify
-the CONFIG_AMD_NB to depends on either AMD or Hygon.
+> And you can't just change DPC device removal. A DPC event triggers
+> the link down, and that will trigger pciehp to disconnect the subtree
+> anyway. Having DPC do it too just means you get the same behavior with
+> or without enabling STLCTL.DLLSC.
 
-Add Hygon support in amd_postcore_init(), early_root_info_init().
+This is wrong. EEH can trigger a link down to and we don't remove the
+subtree in that case. We allow the drivers to recover.
 
-Acked-by: Bjorn Helgaas <bhelgaas@google.com>	# pci_ids.h
-Signed-off-by: Pu Wen <puwen@hygon.cn>
----
- arch/x86/Kconfig         |  2 +-
- arch/x86/kernel/amd_nb.c | 51 ++++++++++++++++++++++++++++++++++++++++++------
- arch/x86/pci/amd_bus.c   |  6 ++++--
- include/linux/pci_ids.h  |  2 ++
- 4 files changed, 52 insertions(+), 9 deletions(-)
-
-diff --git a/arch/x86/Kconfig b/arch/x86/Kconfig
-index 6b8065d..34d05cd 100644
---- a/arch/x86/Kconfig
-+++ b/arch/x86/Kconfig
-@@ -2823,7 +2823,7 @@ endif # X86_32
- 
- config AMD_NB
- 	def_bool y
--	depends on CPU_SUP_AMD && PCI
-+	depends on (CPU_SUP_AMD || CPU_SUP_HYGON) && PCI
- 
- source "drivers/pcmcia/Kconfig"
- 
-diff --git a/arch/x86/kernel/amd_nb.c b/arch/x86/kernel/amd_nb.c
-index b481b95..d9867b2 100644
---- a/arch/x86/kernel/amd_nb.c
-+++ b/arch/x86/kernel/amd_nb.c
-@@ -20,6 +20,10 @@
- #define PCI_DEVICE_ID_AMD_17H_M10H_DF_F3 0x15eb
- #define PCI_DEVICE_ID_AMD_17H_M10H_DF_F4 0x15ec
- 
-+#define PCI_DEVICE_ID_HYGON_18H_ROOT     0x1450
-+#define PCI_DEVICE_ID_HYGON_18H_DF_F3    0x1463
-+#define PCI_DEVICE_ID_HYGON_18H_DF_F4    0x1464
-+
- /* Protect the PCI config register pairs used for SMN and DF indirect access. */
- static DEFINE_MUTEX(smn_mutex);
- 
-@@ -61,6 +65,21 @@ static const struct pci_device_id amd_nb_link_ids[] = {
- 	{}
- };
- 
-+static const struct pci_device_id hygon_root_ids[] = {
-+	{ PCI_DEVICE(PCI_VENDOR_ID_HYGON, PCI_DEVICE_ID_HYGON_18H_ROOT) },
-+	{}
-+};
-+
-+const struct pci_device_id hygon_nb_misc_ids[] = {
-+	{ PCI_DEVICE(PCI_VENDOR_ID_HYGON, PCI_DEVICE_ID_HYGON_18H_DF_F3) },
-+	{}
-+};
-+
-+static const struct pci_device_id hygon_nb_link_ids[] = {
-+	{ PCI_DEVICE(PCI_VENDOR_ID_HYGON, PCI_DEVICE_ID_HYGON_18H_DF_F4) },
-+	{}
-+};
-+
- const struct amd_nb_bus_dev_range amd_nb_bus_dev_ranges[] __initconst = {
- 	{ 0x00, 0x18, 0x20 },
- 	{ 0xff, 0x00, 0x20 },
-@@ -197,12 +216,25 @@ int amd_cache_northbridges(void)
- 	u16 i = 0;
- 	struct amd_northbridge *nb;
- 	struct pci_dev *root, *misc, *link;
-+	const struct pci_device_id *root_ids = NULL;
-+	const struct pci_device_id *misc_ids = NULL;
-+	const struct pci_device_id *link_ids = NULL;
-+
-+	if (boot_cpu_data.x86_vendor == X86_VENDOR_AMD) {
-+		root_ids = amd_root_ids;
-+		misc_ids = amd_nb_misc_ids;
-+		link_ids = amd_nb_link_ids;
-+	} else if (boot_cpu_data.x86_vendor == X86_VENDOR_HYGON) {
-+		root_ids = hygon_root_ids;
-+		misc_ids = hygon_nb_misc_ids;
-+		link_ids = hygon_nb_link_ids;
-+	}
- 
- 	if (amd_northbridges.num)
- 		return 0;
- 
- 	misc = NULL;
--	while ((misc = next_northbridge(misc, amd_nb_misc_ids)) != NULL)
-+	while ((misc = next_northbridge(misc, misc_ids)) != NULL)
- 		i++;
- 
- 	if (!i)
-@@ -218,11 +250,11 @@ int amd_cache_northbridges(void)
- 	link = misc = root = NULL;
- 	for (i = 0; i != amd_northbridges.num; i++) {
- 		node_to_amd_nb(i)->root = root =
--			next_northbridge(root, amd_root_ids);
-+			next_northbridge(root, root_ids);
- 		node_to_amd_nb(i)->misc = misc =
--			next_northbridge(misc, amd_nb_misc_ids);
-+			next_northbridge(misc, misc_ids);
- 		node_to_amd_nb(i)->link = link =
--			next_northbridge(link, amd_nb_link_ids);
-+			next_northbridge(link, link_ids);
- 	}
- 
- 	if (amd_gart_present())
-@@ -263,9 +295,15 @@ bool __init early_is_amd_nb(u32 device)
- {
- 	const struct pci_device_id *id;
- 	u32 vendor = device & 0xffff;
-+	const struct pci_device_id *misc_ids = NULL;
-+
-+	if (boot_cpu_data.x86_vendor == X86_VENDOR_AMD)
-+		misc_ids = amd_nb_misc_ids;
-+	else if (boot_cpu_data.x86_vendor == X86_VENDOR_HYGON)
-+		misc_ids = hygon_nb_misc_ids;
- 
- 	device >>= 16;
--	for (id = amd_nb_misc_ids; id->vendor; id++)
-+	for (id = misc_ids; id->vendor; id++)
- 		if (vendor == id->vendor && device == id->device)
- 			return true;
- 	return false;
-@@ -277,7 +315,8 @@ struct resource *amd_get_mmconfig_range(struct resource *res)
- 	u64 base, msr;
- 	unsigned int segn_busn_bits;
- 
--	if (boot_cpu_data.x86_vendor != X86_VENDOR_AMD)
-+	if (boot_cpu_data.x86_vendor != X86_VENDOR_AMD &&
-+	    boot_cpu_data.x86_vendor != X86_VENDOR_HYGON)
- 		return NULL;
- 
- 	/* assume all cpus from fam10h have mmconfig */
-diff --git a/arch/x86/pci/amd_bus.c b/arch/x86/pci/amd_bus.c
-index 649bdde..bfa50e6 100644
---- a/arch/x86/pci/amd_bus.c
-+++ b/arch/x86/pci/amd_bus.c
-@@ -93,7 +93,8 @@ static int __init early_root_info_init(void)
- 		vendor = id & 0xffff;
- 		device = (id>>16) & 0xffff;
- 
--		if (vendor != PCI_VENDOR_ID_AMD)
-+		if (vendor != PCI_VENDOR_ID_AMD &&
-+		    vendor != PCI_VENDOR_ID_HYGON)
- 			continue;
- 
- 		if (hb_probes[i].device == device) {
-@@ -390,7 +391,8 @@ static int __init pci_io_ecs_init(void)
- 
- static int __init amd_postcore_init(void)
- {
--	if (boot_cpu_data.x86_vendor != X86_VENDOR_AMD)
-+	if (boot_cpu_data.x86_vendor != X86_VENDOR_AMD &&
-+	    boot_cpu_data.x86_vendor != X86_VENDOR_HYGON)
- 		return 0;
- 
- 	early_root_info_init();
-diff --git a/include/linux/pci_ids.h b/include/linux/pci_ids.h
-index 2950223..87883cf 100644
---- a/include/linux/pci_ids.h
-+++ b/include/linux/pci_ids.h
-@@ -2559,6 +2559,8 @@
- 
- #define PCI_VENDOR_ID_AMAZON		0x1d0f
- 
-+#define PCI_VENDOR_ID_HYGON		0x1d94
-+
- #define PCI_VENDOR_ID_TEKRAM		0x1de1
- #define PCI_DEVICE_ID_TEKRAM_DC290	0xdc29
- 
--- 
-2.7.4
+Ben.
