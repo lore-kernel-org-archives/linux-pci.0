@@ -1,54 +1,46 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.29.99]:42792 "EHLO mail.kernel.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1733247AbeHFSoS (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Mon, 6 Aug 2018 14:44:18 -0400
-Subject: Re: [PATCH v7 1/1] PCI: pciehp: Ignore link events when there is a
- fatal error pending
-To: poza@codeaurora.org
-Cc: Lukas Wunner <lukas@wunner.de>, linux-pci@vger.kernel.org,
-        Bjorn Helgaas <bhelgaas@google.com>,
-        Mika Westerberg <mika.westerberg@linux.intel.com>,
-        Keith Busch <keith.busch@intel.com>,
-        linux-pci-owner@vger.kernel.org
-References: <20180805225136.5800-1-okaya@kernel.org>
- <20180805225136.5800-2-okaya@kernel.org>
- <c1cfff22c63f6d3d6285575721a2a3e8@codeaurora.org>
- <20180806092614.GA28462@wunner.de>
- <2b4c23a2e97f61a124c95c49d604a853@codeaurora.org>
- <3d491f25-1d59-f257-1125-302e2d50e960@kernel.org>
- <22ce7172-b028-c0b1-d117-8096e016b15b@kernel.org>
- <16b40dfd99c37c67e3d103f6fb7738ef@codeaurora.org>
+Return-Path: <okaya@kernel.org>
+Return-Path: <okaya@kernel.org>
+Subject: Re: [PATCH 1/1] PCI/AER: prevent pcie_do_fatal_recovery from using
+ device after it is removed
+To: Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+ Keith Busch <keith.busch@intel.com>
+Cc: poza@codeaurora.org, Bjorn Helgaas <helgaas@kernel.org>,
+ Thomas Tai <thomas.tai@oracle.com>, bhelgaas@google.com,
+ linux-pci@vger.kernel.org, linux-pci-owner@vger.kernel.org,
+ Sam Bobroff <sam.bobroff@au1.ibm.com>
+References: <20180819021922.GE128050@bhelgaas-glaptop.roam.corp.google.com>
+ <fe891b63-12c7-61ab-a59a-ae24ad766754@kernel.org>
+ <ab5cb5b277f1c1c1362ef597ca7b8c6a2cd32cdf.camel@kernel.crashing.org>
+ <908ff33ded8f31830f95a8889d8540f1@codeaurora.org>
+ <5027d857bb59edfd33442003aa618ece1bc9cd52.camel@kernel.crashing.org>
+ <b2e2ac5c92d8a91d00606754d1046578@codeaurora.org>
+ <2ecd1fd6d763810d45697f846fa876b58a193b1b.camel@kernel.crashing.org>
+ <20180820155325.GA16148@localhost.localdomain>
+ <cf6de256280be7a2948db6dd2b5bfae92e70e12f.camel@kernel.crashing.org>
+ <6aa71d74-e4dc-c627-1496-981278388bce@kernel.org>
+ <20180820213544.GA16805@localhost.localdomain>
+ <0193e0c5a52d8f2e93958f0683f3acc81cef2bc9.camel@kernel.crashing.org>
 From: Sinan Kaya <okaya@kernel.org>
-Message-ID: <1ee81bca-3b64-3977-4a89-5ff924fe117d@kernel.org>
-Date: Mon, 6 Aug 2018 12:34:23 -0400
+Message-ID: <fd538f20-0754-f127-ceb9-693fec90b4af@kernel.org>
+Date: Mon, 20 Aug 2018 18:02:57 -0400
 MIME-Version: 1.0
-In-Reply-To: <16b40dfd99c37c67e3d103f6fb7738ef@codeaurora.org>
+In-Reply-To: <0193e0c5a52d8f2e93958f0683f3acc81cef2bc9.camel@kernel.crashing.org>
 Content-Type: text/plain; charset=utf-8; format=flowed
-Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 8/6/2018 11:12 AM, poza@codeaurora.org wrote:
->>> That's true. We either need to go poll every single source (AER/DPC) for
->>> an error or rely on the DEVSTA. For ease of implementation, I suggest
->>> DEVSTA. Something like this:
->>
->> Hmm. Too quick...
->>
->> Reduced set doesn't help. Surprise Link Down is also a fatal error.
->> That's what I was trying to exclude. We'll have to poll the error
->> source.
+On 8/20/2018 5:53 PM, Benjamin Herrenschmidt wrote:
+>>> Hotplug driver removes the devices on link down events and re-enumerates
+>>> on insertion.
+>>>
+>>> I am trying to separate fatal error handling from hotplug.
+>> I'll try to take a look. We can't always count on pciehp to do the
+>> removal when a removal occurs, though. The PCIe specification contains
+>> an implementation note that DPC may be used in place of hotplug surprise.
+> Can't you use the presence detect to differenciate ?
 > 
-> 
-> How about using pcie_port_find_service() ?
+> Also, I don't have the specs at hand right now, but does the hotplug
+> brigde have a way to "latch' the change in presence detect so we can
+> see if it has transitioned even if it's back on ?
 
-pcie_port_find_service() tells you that there is an active driver. We
-could potentially use it like follows to query the register themselves.
-
-if ((pcie_port_find_service(AER)) {
-	check AER registers
-}
-
-if ((pcie_port_find_service(DPC)) {
-	check DPC registers
-}
+There is only presence detect change and link layer change. No actual
+state information.
