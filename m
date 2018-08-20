@@ -1,79 +1,52 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-sn1nam02on0054.outbound.protection.outlook.com ([104.47.36.54]:52838
-        "EHLO NAM02-SN1-obe.outbound.protection.outlook.com"
-        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1729363AbeHOQjp (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Wed, 15 Aug 2018 12:39:45 -0400
-From: Alan Douglas <adouglas@cadence.com>
-To: <bhelgaas@google.com>
-CC: <kishon@ti.com>, <lorenzo.pieralisi@arm.com>,
-        <linux-pci@vger.kernel.org>, <gustavo.pimentel@synopsys.com>,
-        <cyrille.pitchen@bootlin.com>, <stelford@cadence.com>,
-        Alan Douglas <adouglas@cadence.com>
-Subject: [PATCH v2 1/5] PCI: cadence: Use AXI region 0 to signal interrupts from EP
-Date: Wed, 15 Aug 2018 14:47:11 +0100
-Message-ID: <1534340831-20634-1-git-send-email-adouglas@cadence.com>
+Return-Path: <SRS0=Hy8D=LD=intel.com=keith.busch@kernel.org>
+Return-Path: <SRS0=Hy8D=LD=intel.com=keith.busch@kernel.org>
+Date: Mon, 20 Aug 2018 10:32:10 -0600
+From: Keith Busch <keith.busch@intel.com>
+To: poza@codeaurora.org
+Cc: Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	Sinan Kaya <okaya@kernel.org>, Bjorn Helgaas <helgaas@kernel.org>,
+	Thomas Tai <thomas.tai@oracle.com>, bhelgaas@google.com,
+	linux-pci@vger.kernel.org, linux-pci-owner@vger.kernel.org,
+	Sam Bobroff <sam.bobroff@au1.ibm.com>
+Subject: Re: [PATCH 1/1] PCI/AER: prevent pcie_do_fatal_recovery from using
+ device after it is removed
+Message-ID: <20180820163210.GA16275@localhost.localdomain>
+References: <bf7ceabb6fe51398e0f4eebd9c4fe4ac1ec2b8a4.camel@kernel.crashing.org>
+ <20180819021922.GE128050@bhelgaas-glaptop.roam.corp.google.com>
+ <fe891b63-12c7-61ab-a59a-ae24ad766754@kernel.org>
+ <ab5cb5b277f1c1c1362ef597ca7b8c6a2cd32cdf.camel@kernel.crashing.org>
+ <908ff33ded8f31830f95a8889d8540f1@codeaurora.org>
+ <5027d857bb59edfd33442003aa618ece1bc9cd52.camel@kernel.crashing.org>
+ <b2e2ac5c92d8a91d00606754d1046578@codeaurora.org>
+ <2ecd1fd6d763810d45697f846fa876b58a193b1b.camel@kernel.crashing.org>
+ <20180820155325.GA16148@localhost.localdomain>
+ <b88127708aa9322371c69c5094fcb0f5@codeaurora.org>
 MIME-Version: 1.0
-Content-Type: text/plain
-Sender: linux-pci-owner@vger.kernel.org
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <b88127708aa9322371c69c5094fcb0f5@codeaurora.org>
 List-ID: <linux-pci.vger.kernel.org>
 
-The IRQ physical address is allocated from region 0, rather than
-the highest region.  Update the driver to reserve this region in
-the bitmap, and to use region 0 for all types of interrupt.
+On Mon, Aug 20, 2018 at 09:43:48PM +0530, poza@codeaurora.org wrote:
+> On 2018-08-20 21:23, Keith Busch wrote:
+> > On Mon, Aug 20, 2018 at 09:22:27PM +1000, Benjamin Herrenschmidt wrote:
+> > > The main problem with unplug/replug (as I mentioned earlier) is that
+> > > it
+> > > just does NOT work for storage controllers (or similar type of
+> > > devices). The links between the storage controller and the mounted
+> > > filesystems is lost permanently, you'll most likely have to reboot the
+> > > machine.
+> > 
+> > You probably shouldn't mount raw storage devices if they can be hot
+> > added/removed. There are device mappers for that! :)
+> > 
+> > And you can't just change DPC device removal. A DPC event triggers
+> > the link down, and that will trigger pciehp to disconnect the subtree
+> > anyway. Having DPC do it too just means you get the same behavior with
+> > or without enabling STLCTL.DLLSC.
+> 
+> Hi Keith,
+> 
+> what about the bridges which are not hotplug capable ?
 
-This corrects a problem which prevents the interrupt being
-signalled correctly if using the first address in the AXI region,
-since an offset of zero will always be mapped to region 0.
-
-Fixes: 37dddf14f1ae ("PCI: cadence: Add EndPoint Controller driver for Cadence PCIe controller")
-Signed-off-by: Alan Douglas <adouglas@cadence.com>
----
- drivers/pci/controller/pcie-cadence-ep.c | 11 ++++++-----
- 1 file changed, 6 insertions(+), 5 deletions(-)
-
-diff --git a/drivers/pci/controller/pcie-cadence-ep.c b/drivers/pci/controller/pcie-cadence-ep.c
-index e3fe412..a67dc91 100644
---- a/drivers/pci/controller/pcie-cadence-ep.c
-+++ b/drivers/pci/controller/pcie-cadence-ep.c
-@@ -259,7 +259,6 @@ static void cdns_pcie_ep_assert_intx(struct cdns_pcie_ep *ep, u8 fn,
- 				     u8 intx, bool is_asserted)
- {
- 	struct cdns_pcie *pcie = &ep->pcie;
--	u32 r = ep->max_regions - 1;
- 	u32 offset;
- 	u16 status;
- 	u8 msg_code;
-@@ -269,8 +268,8 @@ static void cdns_pcie_ep_assert_intx(struct cdns_pcie_ep *ep, u8 fn,
- 	/* Set the outbound region if needed. */
- 	if (unlikely(ep->irq_pci_addr != CDNS_PCIE_EP_IRQ_PCI_ADDR_LEGACY ||
- 		     ep->irq_pci_fn != fn)) {
--		/* Last region was reserved for IRQ writes. */
--		cdns_pcie_set_outbound_region_for_normal_msg(pcie, fn, r,
-+		/* First region was reserved for IRQ writes. */
-+		cdns_pcie_set_outbound_region_for_normal_msg(pcie, fn, 0,
- 							     ep->irq_phys_addr);
- 		ep->irq_pci_addr = CDNS_PCIE_EP_IRQ_PCI_ADDR_LEGACY;
- 		ep->irq_pci_fn = fn;
-@@ -348,8 +347,8 @@ static int cdns_pcie_ep_send_msi_irq(struct cdns_pcie_ep *ep, u8 fn,
- 	/* Set the outbound region if needed. */
- 	if (unlikely(ep->irq_pci_addr != (pci_addr & ~pci_addr_mask) ||
- 		     ep->irq_pci_fn != fn)) {
--		/* Last region was reserved for IRQ writes. */
--		cdns_pcie_set_outbound_region(pcie, fn, ep->max_regions - 1,
-+		/* First region was reserved for IRQ writes. */
-+		cdns_pcie_set_outbound_region(pcie, fn, 0,
- 					      false,
- 					      ep->irq_phys_addr,
- 					      pci_addr & ~pci_addr_mask,
-@@ -510,6 +509,8 @@ static int cdns_pcie_ep_probe(struct platform_device *pdev)
- 		goto free_epc_mem;
- 	}
- 	ep->irq_pci_addr = CDNS_PCIE_EP_IRQ_PCI_ADDR_NONE;
-+	/* Reserve region 0 for IRQs */
-+	set_bit(0, &ep->ob_region_map);
- 
- 	return 0;
- 
--- 
-1.9.0
+That would have to mean SLTCTL.DLSSC isn't enabled. The point was to
+make DPC control behave the same regardless of slot control.
