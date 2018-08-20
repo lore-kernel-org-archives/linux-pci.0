@@ -1,38 +1,65 @@
-Return-Path: <SRS0=+/yS=LN=intel.com=keith.busch@kernel.org>
-Return-Path: <SRS0=+/yS=LN=intel.com=keith.busch@kernel.org>
-Date: Wed, 29 Aug 2018 18:46:47 -0600
-From: Keith Busch <keith.busch@intel.com>
-To: Sinan Kaya <okaya@kernel.org>
-Cc: Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	"poza@codeaurora.org" <poza@codeaurora.org>,
-	Bjorn Helgaas <helgaas@kernel.org>,
-	Thomas Tai <thomas.tai@oracle.com>,
-	"bhelgaas@google.com" <bhelgaas@google.com>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	"linux-pci-owner@vger.kernel.org" <linux-pci-owner@vger.kernel.org>,
-	Sam Bobroff <sam.bobroff@au1.ibm.com>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from gate.crashing.org ([63.228.1.57]:36178 "EHLO gate.crashing.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1725926AbeHTFgl (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Mon, 20 Aug 2018 01:36:41 -0400
+Message-ID: <ab5cb5b277f1c1c1362ef597ca7b8c6a2cd32cdf.camel@kernel.crashing.org>
 Subject: Re: [PATCH 1/1] PCI/AER: prevent pcie_do_fatal_recovery from using
  device after it is removed
-Message-ID: <20180830004646.GA5946@localhost.localdomain>
-References: <a149d9657ca83b41c724b0ddd319c6fb@codeaurora.org>
- <512e0e11c3ba462c1d033f8b0e768fa27489731c.camel@kernel.crashing.org>
- <ad23b16cf7ff1f3b51961fda59533892@codeaurora.org>
- <2742bdba5ae8ccc420234b6e6b0224919367ed4c.camel@kernel.crashing.org>
- <20180821143751.GA18477@localhost.localdomain>
- <277b7056aa7af8e98d5cd912838e582783943aa9.camel@kernel.crashing.org>
- <20180821220456.GC18612@localhost.localdomain>
- <5d69daf9918878b95b6df3265fc4c3d5b52f9baa.camel@kernel.crashing.org>
- <20180830000100.GA5841@localhost.localdomain>
- <3e39e860-95a6-ae17-cc89-ac9550ffca40@kernel.org>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <3e39e860-95a6-ae17-cc89-ac9550ffca40@kernel.org>
+From: Benjamin Herrenschmidt <benh@kernel.crashing.org>
+To: Sinan Kaya <okaya@kernel.org>, Bjorn Helgaas <helgaas@kernel.org>
+Cc: poza@codeaurora.org, Thomas Tai <thomas.tai@oracle.com>,
+        bhelgaas@google.com, keith.busch@intel.com,
+        linux-pci@vger.kernel.org, linux-pci-owner@vger.kernel.org,
+        Sam Bobroff <sam.bobroff@au1.ibm.com>
+Date: Mon, 20 Aug 2018 12:03:24 +1000
+In-Reply-To: <fe891b63-12c7-61ab-a59a-ae24ad766754@kernel.org>
+References: <1534179088-44219-1-git-send-email-thomas.tai@oracle.com>
+         <1534179088-44219-2-git-send-email-thomas.tai@oracle.com>
+         <51f4b387d9bd96a42d526a6a029fc43b@codeaurora.org>
+         <b0104a716319d76e734c307cb4bedd9d@codeaurora.org>
+         <903394c04d6ad468ed06dc0a779200e7555345a7.camel@kernel.crashing.org>
+         <6cb069038530757f31f3dd60328c7e30@codeaurora.org>
+         <e931bc7a7e468e8bb2ee3766b3fcf96f1800f552.camel@kernel.crashing.org>
+         <bf7ceabb6fe51398e0f4eebd9c4fe4ac1ec2b8a4.camel@kernel.crashing.org>
+         <20180819021922.GE128050@bhelgaas-glaptop.roam.corp.google.com>
+         <fe891b63-12c7-61ab-a59a-ae24ad766754@kernel.org>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wed, Aug 29, 2018 at 05:10:53PM -0700, Sinan Kaya wrote:
-> Why does hotplug operations cause a fatal error? DPC driver is only monitoring
-> fatal errors today.
+On Sun, 2018-08-19 at 17:41 -0400, Sinan Kaya wrote:
+> On 8/18/2018 10:19 PM, Bjorn Helgaas wrote:
+> > > Bjorn, please revert all of those changes.
+> > 
+> > Please send the appropriate patches and we'll go from there.
+> > 
+> 
+> I'm also catching up on this thread.
+> 
+> I don't think revert is the way to go. There is certainly value in Oza's
+> code to make error handling common.
 
-Oh, not considering DPC capabilities; just AER. A hotplug capable
-switch only suppresses Suprise Link Down, but its possible other link
-or transaction errors occur along with the event.
+The revert of the Documentation change must happen though. It's
+completely wrong. The documentation documents what EEH implements so by
+making it match what I argue is a broken implementation in AER, you are
+in fact breaking us.
+
+> We started by following the existing error handling scheme and then
+> moved onto the stop/remove behavior based on Bjorn's feedback.
+
+Whish is utterly wrong.
+
+> The right thing is for Oza to rework the code to go back to original
+> error handling callback mechanism. That should be a trivial change.
+
+At this stage I'm only asking to revert the documentation updatgae.
+I'll send a patch to that effect.
+
+As for figuring out where to go from there, I agree we should discuss
+this further, I would love to be able to make more of the code common
+with EEH as well.
+
+Cheers,
+Ben.
