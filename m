@@ -1,85 +1,88 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.29.99]:44818 "EHLO mail.kernel.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1727515AbeHJBag (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Thu, 9 Aug 2018 21:30:36 -0400
-Date: Thu, 9 Aug 2018 18:03:32 -0500
-From: Bjorn Helgaas <helgaas@kernel.org>
-To: Logan Gunthorpe <logang@deltatee.com>
-Cc: linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
-        linux-doc@vger.kernel.org, Stephen Bates <sbates@raithlin.com>,
-        Christoph Hellwig <hch@lst.de>,
-        Bjorn Helgaas <bhelgaas@google.com>,
-        Jonathan Corbet <corbet@lwn.net>,
-        Ingo Molnar <mingo@kernel.org>,
-        Thomas Gleixner <tglx@linutronix.de>,
-        "Paul E. McKenney" <paulmck@linux.vnet.ibm.com>,
-        Marc Zyngier <marc.zyngier@arm.com>,
-        Kai-Heng Feng <kai.heng.feng@canonical.com>,
-        Frederic Weisbecker <frederic@kernel.org>,
-        Dan Williams <dan.j.williams@intel.com>,
-        =?iso-8859-1?B?Suly9G1l?= Glisse <jglisse@redhat.com>,
-        Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-        Alex Williamson <alex.williamson@redhat.com>,
-        Christian =?iso-8859-1?Q?K=F6nig?= <christian.koenig@amd.com>,
-        Matthew Wilcox <willy@infradead.org>
-Subject: Re: [PATCH v8 0/4] Add parameter for disabling ACS redirection for
- P2P
-Message-ID: <20180809230332.GH113140@bhelgaas-glaptop.roam.corp.google.com>
-References: <20180730161840.13733-1-logang@deltatee.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20180730161840.13733-1-logang@deltatee.com>
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <SRS0=HZd4=LD=kernel.crashing.org=benh@kernel.org>
+Return-Path: <SRS0=HZd4=LD=kernel.crashing.org=benh@kernel.org>
+Message-ID: <61e3dfcf831fab4443b86579f39d4f08c6200c41.camel@kernel.crashing.org>
+Subject: Re: [RFC PATCH 1/6] Revert "PCI: Fix is_added/is_busmaster race
+ condition"
+From: Benjamin Herrenschmidt <benh@kernel.crashing.org>
+To: Lukas Wunner <lukas@wunner.de>
+Cc: Bjorn Helgaas <helgaas@kernel.org>, linux-pci@vger.kernel.org,
+        Hari Vyas
+ <hari.vyas@broadcom.com>, Ray Jui <ray.jui@broadcom.com>,
+        Srinath Mannam
+ <srinath.mannam@broadcom.com>,
+        Guenter Roeck <linux@roeck-us.net>, Jens
+ Axboe <axboe@kernel.dk>,
+        Konstantin Khlebnikov <khlebnikov@yandex-team.ru>,
+        Marta Rybczynska <mrybczyn@kalray.eu>,
+        Pierre-Yves Kerbrat
+ <pkerbrat@kalray.eu>,
+        linux-kernel@vger.kernel.org
+Date: Mon, 20 Aug 2018 21:12:07 +1000
+In-Reply-To: <20180820071703.hnsyhb5pz4svb7jg@wunner.de>
+References: <20180817044902.31420-1-benh@kernel.crashing.org>
+	 <20180817044902.31420-2-benh@kernel.crashing.org>
+	 <20180817154431.GC128050@bhelgaas-glaptop.roam.corp.google.com>
+	 <06c1233b71dea08b1fc32334acefc48c32c46557.camel@kernel.crashing.org>
+	 <20180819022440.GG128050@bhelgaas-glaptop.roam.corp.google.com>
+	 <4d777ed8c17b479e59b16cc0b4e9a3f6537f9884.camel@kernel.crashing.org>
+	 <20180820071703.hnsyhb5pz4svb7jg@wunner.de>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 List-ID: <linux-pci.vger.kernel.org>
 
-On Mon, Jul 30, 2018 at 10:18:36AM -0600, Logan Gunthorpe wrote:
-> Changes since v6:
-> * Fixed order of operations for device specific disable function as
->   noticed by Alex
-> * Rebased onto v4.18-rc5 (no conflicts)
+On Mon, 2018-08-20 at 09:17 +0200, Lukas Wunner wrote:
+> On Mon, Aug 20, 2018 at 12:10:59PM +1000, Benjamin Herrenschmidt wrote:
+> > I chose to create a new mutex which we should be able to address other
+> > similar races if we find them. The other solutions that I dismissed
+> > were:
+> > 
+> >  - Using the device_lock. A explained previously, this is tricky, I
+> > prefer not using this for anything other than locking against
+> > concurrent add/remove. The main issue is that drivers will be sometimes
+> > called in context where that's already held, so we can't take it inside
+> > pci_enable_device() and I'd rather not add new constraints such as
+> > "pci_enable_device() must be only called from probe() unless you also
+> > take the device lock". It would be tricky to audit everybody...
+> > 
+> >  - Using a global mutex. We could move the bridge lock from AER to core
+> > code for example, and use that. But it doesn't buy us much, and
+> > slightly redecuces parallelism. It also makes it a little bit more
+> > messy to walk up the bridge chain, we'd have to do a
+> > pci_enable_device_unlocked or something, messy.
 > 
-> Changes since v5:
-> * Add a quirk to handle the Intel SPT PCH case (as pointed out by Alex)
-> * Warn in the case that we try to disable ACS redirect on a device
->   that doesn't have the ACS capability (also suggested by Alex)
-> * Collect reviewed-by tag from Alex
-> * Rebased onto v4.18-rc4 (no conflicts)
-> 
-> Changes since v4:
-> * Fixed a couple documentation mistakes spotted by Randy
-> 
-> Changes since v3:
-> * Removed some of the cruft that was copied from the resource_alignment
->   paramater (per Alex)
-> * A number of docuemntation fixes as noticed by Alex and Willy
-> 
-> Changes since v2:
-> * Rebased onto v4.18-rc1 (no conflicts)
-> * Minor tweaks to the documentation per Andy
-> * Removed the "path:" prefix and use the path parsing code
->   for simple devices (as it works the same). Per a suggestion from Alex
-> 
-> Changes since v1:
-> * Reworked pci_dev_str_match_path using strrchr as suggested by Alex
-> * Collected Christian's Acks
-> 
-> 
-> Logan Gunthorpe (4):
->   PCI: Make specifying PCI devices in kernel parameters reusable
->   PCI: Allow specifying devices using a base bus and path of devfns
->   PCI: Introduce disable_acs_redir quirk
->   PCI: Introduce the disable_acs_redir parameter
-> 
->  Documentation/admin-guide/kernel-parameters.txt |  41 +++-
->  drivers/pci/pci.c                               | 310 +++++++++++++++++++-----
->  drivers/pci/quirks.c                            |  78 +++++-
->  include/linux/pci.h                             |   5 +
->  4 files changed, 361 insertions(+), 73 deletions(-)
+> +1 from my side for adding a struct mutex to struct pci_dev to protect
+> state changes.
 
-I reorganized this a bit and split the quirk code into a couple
-patches an put the result on my pci/peer-to-peer branch for v4.19.
+Ok thanks. This is what my patch proposes. We can use it later to
+protect more things if we wish to do so.
 
-I think the result is equivalent, but let me know if I made a mistake.
+> The device_lock() primarily protects binding / unbinding of the device
+> and pci_dev state may have to be changed while binding / unbinding.
 
-Bjorn
+Yup, precisely.
+
+> A global lock invites deadlocks if multiple devices are added / removed
+> concurrently where one is a parent of the other.  (Think hot-removal of
+> multiple devices on a Thunderbolt daisy-chain.)
+
+Yes.
+
+> As said I'd also welcome folding PCI_DEV_DISCONNECTED into enum
+> pci_channel_state, either as an additional state or by using
+> pci_channel_io_perm_failure.
+
+Ok. I have that in my tentative series but I think for robustness, I
+should make the error_state field atomically updated in order to ensure
+that no transition out of "disconnected" can happen while racing with
+concurrent error_state updates at interrupt time (at least with EEH, it
+can be updated from any read{b,w,l,q}).
+
+I'll do a bit more work on the patches this week as time permits and
+send a non-RFC series.
+
+Cheers,
+Ben. 
+
+> Thanks,
+> 
+> Lukas
