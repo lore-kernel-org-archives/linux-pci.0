@@ -1,28 +1,135 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.29.99]:60242 "EHLO mail.kernel.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1727167AbeHJEm4 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Fri, 10 Aug 2018 00:42:56 -0400
-Subject: Re: [PATCH 1/2] PCI/ACPI: correct error message for ASPM disabling
-To: Joe Perches <joe@perches.com>, linux-pci@vger.kernel.org
-Cc: Bjorn Helgaas <bhelgaas@google.com>,
-        "Rafael J. Wysocki" <rjw@rjwysocki.net>,
-        Len Brown <lenb@kernel.org>,
-        "open list:ACPI" <linux-acpi@vger.kernel.org>,
-        open list <linux-kernel@vger.kernel.org>
-References: <1533840383-7841-1-git-send-email-okaya@kernel.org>
- <307063ff7bbdcc0c3896f027b09245e542764f48.camel@perches.com>
-From: Sinan Kaya <okaya@kernel.org>
-Message-ID: <2a8b5c60-45ba-1fc4-d261-fcfbd7f16910@kernel.org>
-Date: Thu, 9 Aug 2018 22:15:09 -0400
+Return-Path: <SRS0=ey29=LD=broadcom.com=hari.vyas@kernel.org>
+Return-Path: <SRS0=ey29=LD=broadcom.com=hari.vyas@kernel.org>
 MIME-Version: 1.0
-In-Reply-To: <307063ff7bbdcc0c3896f027b09245e542764f48.camel@perches.com>
-Content-Type: text/plain; charset=utf-8; format=flowed
-Sender: linux-pci-owner@vger.kernel.org
+In-Reply-To: <21451a6ba97eada5d4a8a49b2726edde58266817.camel@kernel.crashing.org>
+References: <20180817044902.31420-1-benh@kernel.crashing.org>
+ <20180817044902.31420-2-benh@kernel.crashing.org> <20180817154431.GC128050@bhelgaas-glaptop.roam.corp.google.com>
+ <06c1233b71dea08b1fc32334acefc48c32c46557.camel@kernel.crashing.org>
+ <20180819022440.GG128050@bhelgaas-glaptop.roam.corp.google.com>
+ <4d777ed8c17b479e59b16cc0b4e9a3f6537f9884.camel@kernel.crashing.org>
+ <CAM5rFu_dsfAiQtVnM58631tFUxYyzXrA5tgz8_v0=or3Lv8YbA@mail.gmail.com> <21451a6ba97eada5d4a8a49b2726edde58266817.camel@kernel.crashing.org>
+From: Hari Vyas <hari.vyas@broadcom.com>
+Date: Mon, 20 Aug 2018 17:13:40 +0530
+Message-ID: <CAM5rFu-e7N0AseqjmiAOd1uEMjL8Kvupw7YK08ogYQh_6C5F6A@mail.gmail.com>
+Subject: Re: [RFC PATCH 1/6] Revert "PCI: Fix is_added/is_busmaster race condition"
+To: Benjamin Herrenschmidt <benh@kernel.crashing.org>
+Cc: Bjorn Helgaas <helgaas@kernel.org>, linux-pci@vger.kernel.org,
+	Ray Jui <ray.jui@broadcom.com>, Srinath Mannam <srinath.mannam@broadcom.com>,
+	Guenter Roeck <linux@roeck-us.net>, Jens Axboe <axboe@kernel.dk>, Lukas Wunner <lukas@wunner.de>,
+	Konstantin Khlebnikov <khlebnikov@yandex-team.ru>, Marta Rybczynska <mrybczyn@kalray.eu>,
+	Pierre-Yves Kerbrat <pkerbrat@kalray.eu>, linux-kernel@vger.kernel.org
+Content-Type: text/plain; charset="UTF-8"
 List-ID: <linux-pci.vger.kernel.org>
 
-On 8/9/2018 8:27 PM, Joe Perches wrote:
-> I think this would read better not using a temporary and
-> using a ternary instead.
+On Mon, Aug 20, 2018 at 4:39 PM, Benjamin Herrenschmidt
+<benh@kernel.crashing.org> wrote:
+> On Mon, 2018-08-20 at 11:55 +0530, Hari Vyas wrote:
+>> On Mon, Aug 20, 2018 at 7:40 AM, Benjamin Herrenschmidt
+>> <benh@kernel.crashing.org> wrote:
+>> > On Sat, 2018-08-18 at 21:24 -0500, Bjorn Helgaas wrote:
+>> > > On Sat, Aug 18, 2018 at 01:24:51PM +1000, Benjamin Herrenschmidt wrote:
+>> > > > On Fri, 2018-08-17 at 10:44 -0500, Bjorn Helgaas wrote:
+>> > > > > On Fri, Aug 17, 2018 at 02:48:57PM +1000, Benjamin Herrenschmidt wrote:
+>> > > > > > This reverts commit 44bda4b7d26e9fffed6d7152d98a2e9edaeb2a76.
+>> > > > >
+>> > > > > Just to be clear, if I understand correctly, this is a pure revert of
+>> > > > > 44bda4b7d26e and as such it reintroduces the problem solved by that
+>> > > > > commit.
+>> > > > >
+>> > > > > If your solution turns out to be better, that's great, but it would be
+>> > > > > nice to avoid the bisection hole of reintroducing the problem, then
+>> > > > > fixing it again later.
+>> > > >
+>> > > > There is no way to do that other than merging the revert and the fix
+>> > > > into one. That said, the race is sufficiently hard to hit that I
+>> > > > wouldn't worry too much about it.
+>> > >
+>> > > OK, then at least mention that in the changelog.
+>> >
+>> > Sure will do. This is just RFC at this stage :-)
+>> >
+>> > As for the race with enable, what's your take on my approach ? The
+>> > basic premise is that we need some kind of mutex to make the updates to
+>> > enable_cnt and the actual config space changes atomic. While at it we
+>> > can fold pci_set_master vs. is_busmaster as well as those are racy too.
+>> >
+>> > I chose to create a new mutex which we should be able to address other
+>> > similar races if we find them. The other solutions that I dismissed
+>> > were:
+>> >
+>> >  - Using the device_lock. A explained previously, this is tricky, I
+>> > prefer not using this for anything other than locking against
+>> > concurrent add/remove. The main issue is that drivers will be sometimes
+>> > called in context where that's already held, so we can't take it inside
+>> > pci_enable_device() and I'd rather not add new constraints such as
+>> > "pci_enable_device() must be only called from probe() unless you also
+>> > take the device lock". It would be tricky to audit everybody...
+>> >
+>> >  - Using a global mutex. We could move the bridge lock from AER to core
+>> > code for example, and use that. But it doesn't buy us much, and
+>> > slightly redecuces parallelism. It also makes it a little bit more
+>> > messy to walk up the bridge chain, we'd have to do a
+>> > pci_enable_device_unlocked or something, messy.
+>> >
+>> > So are you ok with the approach ? Do you prefer one of the above
+>> > regardless ? Something else ?
+>> >
+>> > Cheers,
+>> > Ben.
+>> >
+>> >
+>>
+>> Some concern was raised about race situation so just to be more clear
+>> about race condition.
+>
+> This is not what the above discussion is about.
+>
+> The race with is is_added is due to the fact that the bit is set too
+> later as discussed previously and in my changelog.
+>
+> The race I'm talking about here is the race related to multiple
+> subtrees trying to simultaneously enable a parent bridge.
+>
+>> Situation is described in Bug 200283 - PCI: Data corruption happening
+>> due to a race condition.
+>> Issue was discovered by our broadcom QA team.
+>> Initially commit was to use one separate lock only for avoiding race
+>> condition but after review, approach was slightly changed to move
+>> is_added  to pci_dev private flags as it was completely
+>> internal/private variable of pci core driver.
+>> Powerpc legacy arch code was using is_added flag directly which looks
+>> bit strange so  ../../ type of inclusion of pci.h was required. I know
+>> it looks ugly but it is being used in some legacy code still.
+>> Anyway, as stated earlier too, problem should be just solved in better way.
+>
+> The is_added race can be fixed with a 3 lines patch moving is_added up
+> to before device_attach() I believe. I yet have to find a scenario
+> where doing so would break something but it's possible that I missed a
+> case.
+>
+> At this stage, I'm more intested however in us agreeing how to fix the
+> other race, the one with enabling. As I wrote above, I proposed an
+> approach based on a mutex in pci_dev, and this is what I would like
+> discussed.
+>
+> This race is currently causing our large systems to randomly error out
+> at boot time when probing some PCIe devices. I'm putting a band-aid in
+> the powerpc code for now to pre-enable bridges at boot, but I'd rather
+> have the race fixed in the generic code.
+>
+> Ben.
+>
+>
+I was initially using spin lock in
+"PATCH v1] PCI: Data corruption happening due to race condition" and didn't
+face  issue at-least in our environment for our race condition.
+Anyway, we can leave this minor is_added issue time-being and concentrate on
+current pci bridge concern. Could you re-share your latest patch in
+your environment
+and your first doubt where race situation could happen. May be forum
+can suggest
+some-thing good.
 
-Makes sense.
+
+Regard,
+hari.
