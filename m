@@ -1,136 +1,85 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mga12.intel.com ([192.55.52.136]:14103 "EHLO mga12.intel.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1727442AbeIABeu (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Fri, 31 Aug 2018 21:34:50 -0400
-From: Keith Busch <keith.busch@intel.com>
-To: Linux PCI <linux-pci@vger.kernel.org>,
-        Bjorn Helgaas <bhelgaas@google.com>
-Cc: Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-        Sinan Kaya <okaya@kernel.org>,
-        Thomas Tai <thomas.tai@oracle.com>, poza@codeaurora.org,
-        Lukas Wunner <lukas@wunner.de>,
-        Keith Busch <keith.busch@intel.com>
-Subject: [PATCH 13/16] PCI/pciehp: Implement error handling callbacks
-Date: Fri, 31 Aug 2018 15:26:36 -0600
-Message-Id: <20180831212639.10196-14-keith.busch@intel.com>
-In-Reply-To: <20180831212639.10196-1-keith.busch@intel.com>
-References: <20180831212639.10196-1-keith.busch@intel.com>
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <SRS0=aAte=LD=gmail.com=hkallweit1@kernel.org>
+Return-Path: <SRS0=aAte=LD=gmail.com=hkallweit1@kernel.org>
+Subject: Re: [PATCH] r8169: don't use MSI-X on RTL8106e
+To: Bjorn Helgaas <helgaas@kernel.org>
+Cc: David Miller <davem@davemloft.net>, jian-hong@endlessm.com,
+ nic_swsd@realtek.com, netdev@vger.kernel.org, linux-kernel@vger.kernel.org,
+ linux@endlessm.com, linux-pci@vger.kernel.org,
+ Marc Zyngier <marc.zyngier@arm.com>, Thomas Gleixner <tglx@linutronix.de>,
+ Christoph Hellwig <hch@lst.de>
+References: <20180815062110.16155-1-jian-hong@endlessm.com>
+ <20180816.122131.604270853620318143.davem@davemloft.net>
+ <458efbf9-5971-653a-e7cd-8c56ba055648@gmail.com>
+ <20180816.123958.750435252621963789.davem@davemloft.net>
+ <ac30d4e6-6411-09e6-1205-96e3e8e29f6f@gmail.com>
+ <20180820184438.GA154536@bhelgaas-glaptop.roam.corp.google.com>
+From: Heiner Kallweit <hkallweit1@gmail.com>
+Message-ID: <9d7d960a-6c55-dc4b-7969-f5cf46bff0ce@gmail.com>
+Date: Mon, 20 Aug 2018 22:46:48 +0200
+MIME-Version: 1.0
+In-Reply-To: <20180820184438.GA154536@bhelgaas-glaptop.roam.corp.google.com>
+Content-Type: text/plain; charset=utf-8
 List-ID: <linux-pci.vger.kernel.org>
 
-Error handling may trigger spurious link events, which may trigger
-hotplug handling to re-enumerate the topology. This patch temporarily
-disables notification during such error handling and checks the topology
-for changes after reset.
+On 20.08.2018 20:44, Bjorn Helgaas wrote:
+> [+cc Marc, Thomas, Christoph, linux-pci)
+> (beginning of thread at [1])
+> 
+> On Thu, Aug 16, 2018 at 09:50:48PM +0200, Heiner Kallweit wrote:
+>> On 16.08.2018 21:39, David Miller wrote:
+>>> From: Heiner Kallweit <hkallweit1@gmail.com>
+>>> Date: Thu, 16 Aug 2018 21:37:31 +0200
+>>>
+>>>> On 16.08.2018 21:21, David Miller wrote:
+>>>>> From: <jian-hong@endlessm.com>
+>>>>> Date: Wed, 15 Aug 2018 14:21:10 +0800
+>>>>>
+>>>>>> Found the ethernet network on ASUS X441UAR doesn't come back on resume
+>>>>>> from suspend when using MSI-X.  The chip is RTL8106e - version 39.
+>>>>>
+>>>>> Heiner, please take a look at this.
+>>>>>
+>>>>> You recently disabled MSI-X on RTL8168g for similar reasons.
+>>>>>
+>>>>> Now that we've seen two chips like this, maybe there is some other
+>>>>> problem afoot.
+>>>>>
+>>>> Thanks for the hint. I saw it already and just contacted Realtek
+>>>> whether they are aware of any MSI-X issues with particular chip
+>>>> versions. With the chip versions I have access to MSI-X works fine.
+>>>>
+>>>> There's also the theoretical option that the issues are caused by
+>>>> broken BIOS's. But so far only chip versions have been reported
+>>>> which are very similar, at least with regard to version number
+>>>> (2x VER_40, 1x VER_39). So they may share some buggy component.
+>>>>
+>>>> Let's see whether Realtek can provide some hint.
+>>>> If more chip versions are reported having problems with MSI-X,
+>>>> then we could switch to a whitelist or disable MSI-X in general.
+>>>
+>>> It could be that we need to reprogram some register(s) on resume,
+>>> which normally might not be needed, and that is what is causing the
+>>> problem with some chips.
+>>>
+>> Indeed. That's what I'm checking with Realtek.
+>> In the register list in the r8169 driver there's one entry which
+>> seems to indicate that there are MSI-X specific settings.
+>> However this register isn't used, and the r8168 vendor driver
+>> uses only MSI. And there are no public datasheets.
+> 
+> Do we have any information about these chip versions in other systems?
+> Or other devices using MSI-X in the same ASUS system?  It seems
+> possible that there's some PCI core or suspend/resume issue with MSI-X
+> and this patch just avoids it without fixing the root cause.
+> 
+I'm in contact with Realtek and according to them few chip versions
+seem to clear MSI-X table entries on resume from suspend. Checking
+with them how this could be fixed / worked around.
+Worst case we may have to disable MSI-X in general.
 
-Signed-off-by: Keith Busch <keith.busch@intel.com>
----
- drivers/pci/hotplug/pciehp.h      |  1 +
- drivers/pci/hotplug/pciehp_core.c | 51 +++++++++++++++++++++++++++++++++++++++
- drivers/pci/hotplug/pciehp_hpc.c  |  9 +++++++
- 3 files changed, 61 insertions(+)
-
-diff --git a/drivers/pci/hotplug/pciehp.h b/drivers/pci/hotplug/pciehp.h
-index 811cf83f956d..27abfb504b35 100644
---- a/drivers/pci/hotplug/pciehp.h
-+++ b/drivers/pci/hotplug/pciehp.h
-@@ -195,6 +195,7 @@ void pciehp_get_attention_status(struct slot *slot, u8 *status);
- void pciehp_set_attention_status(struct slot *slot, u8 status);
- void pciehp_get_latch_status(struct slot *slot, u8 *status);
- void pciehp_get_adapter_status(struct slot *slot, u8 *status);
-+void pciehp_get_adapter_changed(struct slot *slot, u8 *changed);
- int pciehp_query_power_fault(struct slot *slot);
- void pciehp_green_led_on(struct slot *slot);
- void pciehp_green_led_off(struct slot *slot);
-diff --git a/drivers/pci/hotplug/pciehp_core.c b/drivers/pci/hotplug/pciehp_core.c
-index ec48c9433ae5..acb4d864b4e7 100644
---- a/drivers/pci/hotplug/pciehp_core.c
-+++ b/drivers/pci/hotplug/pciehp_core.c
-@@ -301,6 +301,55 @@ static void pciehp_remove(struct pcie_device *dev)
- 	pciehp_release_ctrl(ctrl);
- }
- 
-+static void pciehp_error_detected(struct pci_dev *dev)
-+{
-+	struct controller *ctrl;
-+	struct pcie_device *pcie_dev;
-+	struct device *device = pcie_port_find_device(dev, PCIE_PORT_SERVICE_HP);
-+
-+	if (!device)
-+		return;
-+
-+	pcie_dev = to_pcie_device(device);
-+	ctrl = get_service_data(pcie_dev);
-+
-+	/*
-+	 * Shutdown notification to ignore hotplug events during error
-+	 * handling. We'll recheck the status when error handling completes.
-+	 *
-+	 * It is possible link event related to this error handling may have
-+	 * triggered a the hotplug interrupt ahead of this notification, but we
-+	 * can't do anything about that race.
-+	 */
-+	pcie_shutdown_notification(ctrl);
-+}
-+
-+static void pciehp_slot_reset(struct pci_dev *dev)
-+{
-+	u8 changed;
-+	struct controller *ctrl;
-+	struct pcie_device *pcie_dev;
-+	struct device *device = pcie_port_find_device(dev, PCIE_PORT_SERVICE_HP);
-+
-+	if (!device)
-+		return;
-+
-+	pcie_dev = to_pcie_device(device);
-+	ctrl = get_service_data(pcie_dev);
-+
-+	/*
-+	 * Cache presence detect change, but ignore other hotplug events that
-+	 * may occur during error handling. Ports that implement only in-band
-+	 * presence detection may inadvertently believe the device has changed,
-+	 * so those devices will have to be re-enumerated.
-+	 */
-+	pciehp_get_adapter_changed(ctrl->slot, &changed);
-+	pcie_clear_hotplug_events(ctrl);
-+	if (changed)
-+		pciehp_request(ctrl, PCI_EXP_SLTSTA_PDC);
-+	pcie_init_notification(ctrl);
-+}
-+
- #ifdef CONFIG_PM
- static int pciehp_suspend(struct pcie_device *dev)
- {
-@@ -340,6 +389,8 @@ static struct pcie_port_service_driver hpdriver_portdrv = {
- 
- 	.probe		= pciehp_probe,
- 	.remove		= pciehp_remove,
-+	.error_detected	= pciehp_error_detected,
-+	.slot_reset	= pciehp_slot_reset,
- 
- #ifdef	CONFIG_PM
- 	.suspend	= pciehp_suspend,
-diff --git a/drivers/pci/hotplug/pciehp_hpc.c b/drivers/pci/hotplug/pciehp_hpc.c
-index c6116e516e1e..7c43336e08ba 100644
---- a/drivers/pci/hotplug/pciehp_hpc.c
-+++ b/drivers/pci/hotplug/pciehp_hpc.c
-@@ -398,6 +398,15 @@ void pciehp_get_adapter_status(struct slot *slot, u8 *status)
- 	*status = !!(slot_status & PCI_EXP_SLTSTA_PDS);
- }
- 
-+void pciehp_get_adapter_changed(struct slot *slot, u8 *changed)
-+{
-+	struct pci_dev *pdev = ctrl_dev(slot->ctrl);
-+	u16 slot_status;
-+
-+	pcie_capability_read_word(pdev, PCI_EXP_SLTSTA, &slot_status);
-+	*changed = !!(slot_status & PCI_EXP_SLTSTA_PDC);
-+}
-+
- int pciehp_query_power_fault(struct slot *slot)
- {
- 	struct pci_dev *pdev = ctrl_dev(slot->ctrl);
--- 
-2.14.4
+> It might be useful to have a kernel.org bugzilla with the complete
+> dmesg, "sudo lspci -vv" output, and /proc/interrupts contents archived
+> for future reference.
+> 
+> [1] https://lkml.kernel.org/r/20180815062110.16155-1-jian-hong@endlessm.com
+> 
