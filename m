@@ -1,33 +1,42 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.29.99]:34240 "EHLO mail.kernel.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1727247AbeIAC1q (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Fri, 31 Aug 2018 22:27:46 -0400
-Subject: Re: [PATCH 14/16] pciehp: Ignore link events during DPC event
-To: Keith Busch <keith.busch@intel.com>,
-        Linux PCI <linux-pci@vger.kernel.org>,
-        Bjorn Helgaas <bhelgaas@google.com>
-Cc: Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-        Thomas Tai <thomas.tai@oracle.com>, poza@codeaurora.org,
-        Lukas Wunner <lukas@wunner.de>
-References: <20180831212639.10196-1-keith.busch@intel.com>
- <20180831212639.10196-15-keith.busch@intel.com>
-From: Sinan Kaya <okaya@kernel.org>
-Message-ID: <01398ef7-88a8-cac1-3e15-ef68c165f7a4@kernel.org>
-Date: Fri, 31 Aug 2018 15:18:15 -0700
+Return-Path: <SRS0=Hy8D=LD=intel.com=keith.busch@kernel.org>
+Return-Path: <SRS0=Hy8D=LD=intel.com=keith.busch@kernel.org>
+Date: Mon, 20 Aug 2018 09:53:25 -0600
+From: Keith Busch <keith.busch@intel.com>
+To: Benjamin Herrenschmidt <benh@kernel.crashing.org>
+Cc: poza@codeaurora.org, Sinan Kaya <okaya@kernel.org>,
+	Bjorn Helgaas <helgaas@kernel.org>,
+	Thomas Tai <thomas.tai@oracle.com>, bhelgaas@google.com,
+	linux-pci@vger.kernel.org, linux-pci-owner@vger.kernel.org,
+	Sam Bobroff <sam.bobroff@au1.ibm.com>
+Subject: Re: [PATCH 1/1] PCI/AER: prevent pcie_do_fatal_recovery from using
+ device after it is removed
+Message-ID: <20180820155325.GA16148@localhost.localdomain>
+References: <6cb069038530757f31f3dd60328c7e30@codeaurora.org>
+ <e931bc7a7e468e8bb2ee3766b3fcf96f1800f552.camel@kernel.crashing.org>
+ <bf7ceabb6fe51398e0f4eebd9c4fe4ac1ec2b8a4.camel@kernel.crashing.org>
+ <20180819021922.GE128050@bhelgaas-glaptop.roam.corp.google.com>
+ <fe891b63-12c7-61ab-a59a-ae24ad766754@kernel.org>
+ <ab5cb5b277f1c1c1362ef597ca7b8c6a2cd32cdf.camel@kernel.crashing.org>
+ <908ff33ded8f31830f95a8889d8540f1@codeaurora.org>
+ <5027d857bb59edfd33442003aa618ece1bc9cd52.camel@kernel.crashing.org>
+ <b2e2ac5c92d8a91d00606754d1046578@codeaurora.org>
+ <2ecd1fd6d763810d45697f846fa876b58a193b1b.camel@kernel.crashing.org>
 MIME-Version: 1.0
-In-Reply-To: <20180831212639.10196-15-keith.busch@intel.com>
-Content-Type: text/plain; charset=utf-8; format=flowed
-Sender: linux-pci-owner@vger.kernel.org
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <2ecd1fd6d763810d45697f846fa876b58a193b1b.camel@kernel.crashing.org>
 List-ID: <linux-pci.vger.kernel.org>
 
-On 8/31/2018 2:26 PM, Keith Busch wrote:
-> This is safe because the pciehp and DPC drivers share the same
-> interrupt. The DPC driver sets the bus state in the top-half interrupt
-> context, and the pciehp driver checks and masks off link events in its
-> bottom-half error handler.
+On Mon, Aug 20, 2018 at 09:22:27PM +1000, Benjamin Herrenschmidt wrote:
+> The main problem with unplug/replug (as I mentioned earlier) is that it
+> just does NOT work for storage controllers (or similar type of
+> devices). The links between the storage controller and the mounted
+> filesystems is lost permanently, you'll most likely have to reboot the
+> machine.
 
-Where is this coming from? Is there a spec reference?
+You probably shouldn't mount raw storage devices if they can be hot
+added/removed. There are device mappers for that! :)
 
-DPC and HP interrupts can be implemented as MSI-x interrupts and could
-be unrelated interrupt IDs?
+And you can't just change DPC device removal. A DPC event triggers
+the link down, and that will trigger pciehp to disconnect the subtree
+anyway. Having DPC do it too just means you get the same behavior with
+or without enabling STLCTL.DLLSC.
