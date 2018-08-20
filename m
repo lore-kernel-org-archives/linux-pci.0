@@ -1,72 +1,64 @@
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-From: Thomas Petazzoni <thomas.petazzoni@bootlin.com>
-To: Bjorn Helgaas <bhelgaas@google.com>,
- Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>, linux-pci@vger.kernel.org
-Subject: [PATCH v2 3/6] PCI: mvebu: only remap I/O space if configured
-Date: Fri,  3 Aug 2018 16:38:45 +0200
-Message-Id: <20180803143848.21551-4-thomas.petazzoni@bootlin.com>
-In-Reply-To: <20180803143848.21551-1-thomas.petazzoni@bootlin.com>
-References: <20180803143848.21551-1-thomas.petazzoni@bootlin.com>
-List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
-List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
-List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
-List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
-List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
-Cc: Antoine Tenart <antoine.tenart@bootlin.com>,
- Gregory Clement <gregory.clement@bootlin.com>,
- Maxime Chevallier <maxime.chevallier@bootlin.com>,
- Nadav Haklai <nadavh@marvell.com>,
- Thomas Petazzoni <thomas.petazzoni@bootlin.com>,
- =?UTF-8?q?Miqu=C3=A8l=20Raynal?= <miquel.raynal@bootlin.com>,
- linux-arm-kernel@lists.infradead.org
+Return-Path: <SRS0=Hy8D=LD=intel.com=keith.busch@kernel.org>
+Return-Path: <SRS0=Hy8D=LD=intel.com=keith.busch@kernel.org>
+Date: Mon, 20 Aug 2018 15:35:45 -0600
+From: Keith Busch <keith.busch@intel.com>
+To: Sinan Kaya <okaya@kernel.org>
+Cc: Benjamin Herrenschmidt <benh@kernel.crashing.org>, poza@codeaurora.org,
+	Bjorn Helgaas <helgaas@kernel.org>,
+	Thomas Tai <thomas.tai@oracle.com>, bhelgaas@google.com,
+	linux-pci@vger.kernel.org, linux-pci-owner@vger.kernel.org,
+	Sam Bobroff <sam.bobroff@au1.ibm.com>
+Subject: Re: [PATCH 1/1] PCI/AER: prevent pcie_do_fatal_recovery from using
+ device after it is removed
+Message-ID: <20180820213544.GA16805@localhost.localdomain>
+References: <20180819021922.GE128050@bhelgaas-glaptop.roam.corp.google.com>
+ <fe891b63-12c7-61ab-a59a-ae24ad766754@kernel.org>
+ <ab5cb5b277f1c1c1362ef597ca7b8c6a2cd32cdf.camel@kernel.crashing.org>
+ <908ff33ded8f31830f95a8889d8540f1@codeaurora.org>
+ <5027d857bb59edfd33442003aa618ece1bc9cd52.camel@kernel.crashing.org>
+ <b2e2ac5c92d8a91d00606754d1046578@codeaurora.org>
+ <2ecd1fd6d763810d45697f846fa876b58a193b1b.camel@kernel.crashing.org>
+ <20180820155325.GA16148@localhost.localdomain>
+ <cf6de256280be7a2948db6dd2b5bfae92e70e12f.camel@kernel.crashing.org>
+ <6aa71d74-e4dc-c627-1496-981278388bce@kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
-Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <6aa71d74-e4dc-c627-1496-981278388bce@kernel.org>
 List-ID: <linux-pci.vger.kernel.org>
 
-If there is no PCI I/O aperture configured in the Device Tree, it does
-not make sense to create the virtual mapping for the PCI I/O space,
-since we will anyway not create the MBus window that will allow to
-access it. Therefore, do the pci_ioremap_io() only if necessary.
+On Mon, Aug 20, 2018 at 05:21:30PM -0400, Sinan Kaya wrote:
+> On 8/20/2018 5:05 PM, Benjamin Herrenschmidt wrote:
+> > On Mon, 2018-08-20 at 09:53 -0600, Keith Busch wrote:
+> > > On Mon, Aug 20, 2018 at 09:22:27PM +1000, Benjamin Herrenschmidt wrote:
+> > > > The main problem with unplug/replug (as I mentioned earlier) is that it
+> > > > just does NOT work for storage controllers (or similar type of
+> > > > devices). The links between the storage controller and the mounted
+> > > > filesystems is lost permanently, you'll most likely have to reboot the
+> > > > machine.
+> > > 
+> > > You probably shouldn't mount raw storage devices if they can be hot
+> > > added/removed. There are device mappers for that! :)
+> > 
+> > This is not about hot adding/removing, it's about error recovery.
+> > 
+> > > And you can't just change DPC device removal. A DPC event triggers
+> > > the link down, and that will trigger pciehp to disconnect the subtree
+> > > anyway. Having DPC do it too just means you get the same behavior with
+> > > or without enabling STLCTL.DLLSC.
+> > 
+> > This is wrong. EEH can trigger a link down to and we don't remove the
+> > subtree in that case. We allow the drivers to recover.
+> > 
+> 
+> I have a patch to solve this issue.
+> 
+> https://lkml.org/lkml/2018/8/19/124
+> 
+> Hotplug driver removes the devices on link down events and re-enumerates
+> on insertion.
+> 
+> I am trying to separate fatal error handling from hotplug.
 
-Signed-off-by: Thomas Petazzoni <thomas.petazzoni@bootlin.com>
----
- drivers/pci/controller/pci-mvebu.c | 6 +++---
- 1 file changed, 3 insertions(+), 3 deletions(-)
-
-diff --git a/drivers/pci/controller/pci-mvebu.c b/drivers/pci/controller/pci-mvebu.c
-index a195592723c2..9aa224f2f009 100644
---- a/drivers/pci/controller/pci-mvebu.c
-+++ b/drivers/pci/controller/pci-mvebu.c
-@@ -1220,6 +1220,9 @@ static int mvebu_pcie_probe(struct platform_device *pdev)
- 		pcie->realio.end = min_t(resource_size_t,
- 					 IO_SPACE_LIMIT,
- 					 resource_size(&pcie->io) - 1);
-+
-+		for (i = 0; i < (IO_SPACE_LIMIT - SZ_64K); i += SZ_64K)
-+			pci_ioremap_io(i, pcie->io.start + i);
- 	} else
- 		pcie->realio = pcie->io;
- 
-@@ -1278,9 +1281,6 @@ static int mvebu_pcie_probe(struct platform_device *pdev)
- 
- 	pcie->nports = i;
- 
--	for (i = 0; i < (IO_SPACE_LIMIT - SZ_64K); i += SZ_64K)
--		pci_ioremap_io(i, pcie->io.start + i);
--
- 	mvebu_pcie_enable(pcie);
- 
- 	return 0;
--- 
-2.14.4
-
-
-_______________________________________________
-linux-arm-kernel mailing list
-linux-arm-kernel@lists.infradead.org
-http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
+I'll try to take a look. We can't always count on pciehp to do the
+removal when a removal occurs, though. The PCIe specification contains
+an implementation note that DPC may be used in place of hotplug surprise.
