@@ -1,117 +1,70 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from smtprelay.synopsys.com ([198.182.60.111]:53050 "EHLO
-        smtprelay.synopsys.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1728694AbeHVNMw (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Wed, 22 Aug 2018 09:12:52 -0400
-Subject: Re: [PATCH v2] PCI: dwc: fix scheduling while atomic issues
-To: Jisheng Zhang <Jisheng.Zhang@synaptics.com>,
-        Jingoo Han <jingoohan1@gmail.com>,
-        Joao Pinto <Joao.Pinto@synopsys.com>,
-        "Lorenzo Pieralisi" <lorenzo.pieralisi@arm.com>,
-        Bjorn Helgaas <bhelgaas@google.com>
-CC: "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-        "linux-arm-kernel@lists.infradead.org"
-        <linux-arm-kernel@lists.infradead.org>
-References: <20180821141512.368e3df2@xhacker.debian>
-From: Gustavo Pimentel <Gustavo.Pimentel@synopsys.com>
-Message-ID: <ae663623-6af5-9c53-0e4b-f48b9c517a46@synopsys.com>
-Date: Wed, 22 Aug 2018 10:45:46 +0100
+Return-Path: <SRS0=Hy8D=LD=intel.com=keith.busch@kernel.org>
+Return-Path: <SRS0=Hy8D=LD=intel.com=keith.busch@kernel.org>
+Date: Mon, 20 Aug 2018 16:13:51 -0600
+From: Keith Busch <keith.busch@intel.com>
+To: Benjamin Herrenschmidt <benh@kernel.crashing.org>
+Cc: Sinan Kaya <okaya@kernel.org>, poza@codeaurora.org,
+	Bjorn Helgaas <helgaas@kernel.org>,
+	Thomas Tai <thomas.tai@oracle.com>, bhelgaas@google.com,
+	linux-pci@vger.kernel.org, linux-pci-owner@vger.kernel.org,
+	Sam Bobroff <sam.bobroff@au1.ibm.com>
+Subject: Re: [PATCH 1/1] PCI/AER: prevent pcie_do_fatal_recovery from using
+ device after it is removed
+Message-ID: <20180820221351.GA16932@localhost.localdomain>
+References: <5027d857bb59edfd33442003aa618ece1bc9cd52.camel@kernel.crashing.org>
+ <b2e2ac5c92d8a91d00606754d1046578@codeaurora.org>
+ <2ecd1fd6d763810d45697f846fa876b58a193b1b.camel@kernel.crashing.org>
+ <20180820155325.GA16148@localhost.localdomain>
+ <cf6de256280be7a2948db6dd2b5bfae92e70e12f.camel@kernel.crashing.org>
+ <6aa71d74-e4dc-c627-1496-981278388bce@kernel.org>
+ <20180820213544.GA16805@localhost.localdomain>
+ <0193e0c5a52d8f2e93958f0683f3acc81cef2bc9.camel@kernel.crashing.org>
+ <fd538f20-0754-f127-ceb9-693fec90b4af@kernel.org>
+ <44195c0d7159ce4cd01b660002b2f5af5d53678b.camel@kernel.crashing.org>
 MIME-Version: 1.0
-In-Reply-To: <20180821141512.368e3df2@xhacker.debian>
-Content-Type: text/plain; charset="utf-8"
-Sender: linux-pci-owner@vger.kernel.org
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <44195c0d7159ce4cd01b660002b2f5af5d53678b.camel@kernel.crashing.org>
 List-ID: <linux-pci.vger.kernel.org>
 
-Hi Jisheng
+On Tue, Aug 21, 2018 at 08:04:46AM +1000, Benjamin Herrenschmidt wrote:
+> On Mon, 2018-08-20 at 18:02 -0400, Sinan Kaya wrote:
+> > On 8/20/2018 5:53 PM, Benjamin Herrenschmidt wrote:
+> > > > > Hotplug driver removes the devices on link down events and re-enumerates
+> > > > > on insertion.
+> > > > > 
+> > > > > I am trying to separate fatal error handling from hotplug.
+> > > > 
+> > > > I'll try to take a look. We can't always count on pciehp to do the
+> > > > removal when a removal occurs, though. The PCIe specification contains
+> > > > an implementation note that DPC may be used in place of hotplug surprise.
+> > > 
+> > > Can't you use the presence detect to differenciate ?
+> > > 
+> > > Also, I don't have the specs at hand right now, but does the hotplug
+> > > brigde have a way to "latch' the change in presence detect so we can
+> > > see if it has transitioned even if it's back on ?
+> > 
+> > There is only presence detect change and link layer change. No actual
+> > state information.
+> 
+> It does latch that it has changed tho right ? So if presence detect
+> hasn't changed, we can assume it's an error and not an unplug ?
+> 
+> We could discriminate that way to reduce the risk of doing a recovery
+> without unbind on something that was actually removed and replaced.
 
-On 21/08/2018 07:15, Jisheng Zhang wrote:
-> When programming inbound/outbound atu, we call usleep_range() after
-> each checking PCIE_ATU_ENABLE bit. Unfortunately, the atu programming
-> can be called in atomic context:
-> 
-> inbound atu programming could be called through
-> pci_epc_write_header()
->   =>dw_pcie_ep_write_header()
->     =>dw_pcie_prog_inbound_atu()
-> 
-> outbound atu programming could be called through
-> pci_bus_read_config_dword()
->   =>dw_pcie_rd_conf()
->     =>dw_pcie_prog_outbound_atu()
-> 
-> Fix this issue by calling mdelay() instead.
+There might be some potential here.
 
-Makes sense. Thanks.
+There actualy is a Slot Status Presence Detect State (PDS), but it isn't
+latched. The link and presence change (PDC) are latched.
 
-Acked-by: Gustavo Pimentel <gustavo.pimentel@synopsys.com>
+A potential problem may be a PDC event handling observes PDS set to the
+last known state if the remove + add happens fast enough, and then no
+action is taken in the current implementation.
 
-Regards,
-Gustavo
+The DPC capability learned from such issues, and they will latch the
+status until acknowledged so those sorts of races are not possible.
 
-> 
-> Signed-off-by: Jisheng Zhang <Jisheng.Zhang@synaptics.com>
-> ---
-> 
-> Since v1
->  - use mdelay() instead of udelay() to avoid __bad_udelay()
-> 
->  drivers/pci/controller/dwc/pcie-designware.c | 8 ++++----
->  drivers/pci/controller/dwc/pcie-designware.h | 3 +--
->  2 files changed, 5 insertions(+), 6 deletions(-)
-> 
-> diff --git a/drivers/pci/controller/dwc/pcie-designware.c b/drivers/pci/controller/dwc/pcie-designware.c
-> index 778c4f76a884..2153956a0b20 100644
-> --- a/drivers/pci/controller/dwc/pcie-designware.c
-> +++ b/drivers/pci/controller/dwc/pcie-designware.c
-> @@ -135,7 +135,7 @@ static void dw_pcie_prog_outbound_atu_unroll(struct dw_pcie *pci, int index,
->  		if (val & PCIE_ATU_ENABLE)
->  			return;
->  
-> -		usleep_range(LINK_WAIT_IATU_MIN, LINK_WAIT_IATU_MAX);
-> +		mdelay(LINK_WAIT_IATU);
->  	}
->  	dev_err(pci->dev, "Outbound iATU is not being enabled\n");
->  }
-> @@ -178,7 +178,7 @@ void dw_pcie_prog_outbound_atu(struct dw_pcie *pci, int index, int type,
->  		if (val & PCIE_ATU_ENABLE)
->  			return;
->  
-> -		usleep_range(LINK_WAIT_IATU_MIN, LINK_WAIT_IATU_MAX);
-> +		mdelay(LINK_WAIT_IATU);
->  	}
->  	dev_err(pci->dev, "Outbound iATU is not being enabled\n");
->  }
-> @@ -236,7 +236,7 @@ static int dw_pcie_prog_inbound_atu_unroll(struct dw_pcie *pci, int index,
->  		if (val & PCIE_ATU_ENABLE)
->  			return 0;
->  
-> -		usleep_range(LINK_WAIT_IATU_MIN, LINK_WAIT_IATU_MAX);
-> +		mdelay(LINK_WAIT_IATU);
->  	}
->  	dev_err(pci->dev, "Inbound iATU is not being enabled\n");
->  
-> @@ -282,7 +282,7 @@ int dw_pcie_prog_inbound_atu(struct dw_pcie *pci, int index, int bar,
->  		if (val & PCIE_ATU_ENABLE)
->  			return 0;
->  
-> -		usleep_range(LINK_WAIT_IATU_MIN, LINK_WAIT_IATU_MAX);
-> +		mdelay(LINK_WAIT_IATU);
->  	}
->  	dev_err(pci->dev, "Inbound iATU is not being enabled\n");
->  
-> diff --git a/drivers/pci/controller/dwc/pcie-designware.h b/drivers/pci/controller/dwc/pcie-designware.h
-> index 96126fd8403c..9f1a5e399b70 100644
-> --- a/drivers/pci/controller/dwc/pcie-designware.h
-> +++ b/drivers/pci/controller/dwc/pcie-designware.h
-> @@ -26,8 +26,7 @@
->  
->  /* Parameters for the waiting for iATU enabled routine */
->  #define LINK_WAIT_MAX_IATU_RETRIES	5
-> -#define LINK_WAIT_IATU_MIN		9000
-> -#define LINK_WAIT_IATU_MAX		10000
-> +#define LINK_WAIT_IATU			9
->  
->  /* Synopsys-specific PCIe configuration registers */
->  #define PCIE_PORT_LINK_CONTROL		0x710
->
+But anyway, maybe we can change pciehp to ignore PDS and always
+re-enumerate when PDC is observed, and that may very well simplify a lot
+of this.
