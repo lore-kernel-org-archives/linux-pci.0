@@ -1,127 +1,80 @@
-Return-Path: <SRS0=Mh2n=LA=broadcom.com=hari.vyas@kernel.org>
-Return-Path: <SRS0=Mh2n=LA=broadcom.com=hari.vyas@kernel.org>
+Return-Path: <okaya@kernel.org>
+Return-Path: <okaya@kernel.org>
+Subject: Re: [PATCH 1/1] PCI/AER: prevent pcie_do_fatal_recovery from using
+ device after it is removed
+To: Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+ Keith Busch <keith.busch@intel.com>
+Cc: poza@codeaurora.org, Bjorn Helgaas <helgaas@kernel.org>,
+ Thomas Tai <thomas.tai@oracle.com>, bhelgaas@google.com,
+ linux-pci@vger.kernel.org, linux-pci-owner@vger.kernel.org,
+ Sam Bobroff <sam.bobroff@au1.ibm.com>
+References: <20180819021922.GE128050@bhelgaas-glaptop.roam.corp.google.com>
+ <fe891b63-12c7-61ab-a59a-ae24ad766754@kernel.org>
+ <ab5cb5b277f1c1c1362ef597ca7b8c6a2cd32cdf.camel@kernel.crashing.org>
+ <908ff33ded8f31830f95a8889d8540f1@codeaurora.org>
+ <5027d857bb59edfd33442003aa618ece1bc9cd52.camel@kernel.crashing.org>
+ <b2e2ac5c92d8a91d00606754d1046578@codeaurora.org>
+ <2ecd1fd6d763810d45697f846fa876b58a193b1b.camel@kernel.crashing.org>
+ <20180820155325.GA16148@localhost.localdomain>
+ <cf6de256280be7a2948db6dd2b5bfae92e70e12f.camel@kernel.crashing.org>
+ <6aa71d74-e4dc-c627-1496-981278388bce@kernel.org>
+ <20180820213544.GA16805@localhost.localdomain>
+ <0193e0c5a52d8f2e93958f0683f3acc81cef2bc9.camel@kernel.crashing.org>
+ <fd538f20-0754-f127-ceb9-693fec90b4af@kernel.org>
+ <44195c0d7159ce4cd01b660002b2f5af5d53678b.camel@kernel.crashing.org>
+From: Sinan Kaya <okaya@kernel.org>
+Message-ID: <184814fb-0caf-b260-4415-8f96fbdf4831@kernel.org>
+Date: Mon, 20 Aug 2018 18:13:03 -0400
 MIME-Version: 1.0
-In-Reply-To: <1ffafe01887e3b760f84488b06339aba64f586e5.camel@kernel.crashing.org>
-References: <20180817044902.31420-1-benh@kernel.crashing.org>
- <20180817044902.31420-6-benh@kernel.crashing.org> <66577784.13494160.1534493390262.JavaMail.zimbra@kalray.eu>
- <1ffafe01887e3b760f84488b06339aba64f586e5.camel@kernel.crashing.org>
-From: Hari Vyas <hari.vyas@broadcom.com>
-Date: Fri, 17 Aug 2018 14:30:16 +0530
-Message-ID: <CAM5rFu-h25j-vfvybKbKr4huhBgpV3Rusj8E2JyaoG1YnokeMw@mail.gmail.com>
-Subject: Re: [RFC PATCH 5/6] pci: Protect the enable/disable state of pci_dev
- using the state mutex
-To: Benjamin Herrenschmidt <benh@kernel.crashing.org>
-Cc: Marta Rybczynska <mrybczyn@kalray.eu>, Bjorn Helgaas <helgaas@kernel.org>, linux-pci@vger.kernel.org,
-	Ray Jui <ray.jui@broadcom.com>, Srinath Mannam <srinath.mannam@broadcom.com>,
-	Guenter Roeck <linux@roeck-us.net>, Jens Axboe <axboe@kernel.dk>, Lukas Wunner <lukas@wunner.de>,
-	Konstantin Khlebnikov <khlebnikov@yandex-team.ru>, Pierre-Yves Kerbrat <pkerbrat@kalray.eu>,
-	linux-kernel@vger.kernel.org
-Content-Type: text/plain; charset="UTF-8"
+In-Reply-To: <44195c0d7159ce4cd01b660002b2f5af5d53678b.camel@kernel.crashing.org>
+Content-Type: text/plain; charset=utf-8; format=flowed
 List-ID: <linux-pci.vger.kernel.org>
 
-On Fri, Aug 17, 2018 at 2:00 PM, Benjamin Herrenschmidt
-<benh@kernel.crashing.org> wrote:
-> On Fri, 2018-08-17 at 10:09 +0200, Marta Rybczynska wrote:
+On 8/20/2018 6:04 PM, Benjamin Herrenschmidt wrote:
+> On Mon, 2018-08-20 at 18:02 -0400, Sinan Kaya wrote:
+>> On 8/20/2018 5:53 PM, Benjamin Herrenschmidt wrote:
+>>>>> Hotplug driver removes the devices on link down events and re-enumerates
+>>>>> on insertion.
+>>>>>
+>>>>> I am trying to separate fatal error handling from hotplug.
+>>>>
+>>>> I'll try to take a look. We can't always count on pciehp to do the
+>>>> removal when a removal occurs, though. The PCIe specification contains
+>>>> an implementation note that DPC may be used in place of hotplug surprise.
+>>>
+>>> Can't you use the presence detect to differenciate ?
+>>>
+>>> Also, I don't have the specs at hand right now, but does the hotplug
+>>> brigde have a way to "latch' the change in presence detect so we can
+>>> see if it has transitioned even if it's back on ?
 >>
->> ----- On 17 Aug, 2018, at 06:49, Benjamin Herrenschmidt benh@kernel.crashing.org wrote:
->>
->> > This protects enable/disable operations using the state mutex to
->> > avoid races with, for example, concurrent enables on a bridge.
->> >
->> > The bus hierarchy is walked first before taking the lock to
->> > avoid lock nesting (though it would be ok if we ensured that
->> > we always nest them bottom-up, it is better to just avoid the
->> > issue alltogether, especially as we might find cases where
->> > we want to take it top-down later).
->> >
->> > Signed-off-by: Benjamin Herrenschmidt <benh@kernel.crashing.org>
->>
->>
->> >
->> > static void pci_enable_bridge(struct pci_dev *dev)
->> > {
->> >     struct pci_dev *bridge;
->> > -   int retval;
->> > +   int retval, enabled;
->> >
->> >     bridge = pci_upstream_bridge(dev);
->> >     if (bridge)
->> >             pci_enable_bridge(bridge);
->> >
->> > -   if (pci_is_enabled(dev)) {
->> > -           if (!dev->is_busmaster)
->> > -                   pci_set_master(dev);
->> > +   /* Already enabled ? */
->> > +   pci_dev_state_lock(dev);
->> > +   enabled = pci_is_enabled(dev);
->> > +   if (enabled && !dev->is_busmaster)
->> > +           pci_set_master(dev);
->> > +   pci_dev_state_unlock(dev);
->> > +   if (enabled)
->> >             return;
->> > -   }
->> >
->>
->> This looks complicated too me especially with the double locking. What do you
->> think about a function doing that check that used an unlocked version of
->> pcie_set_master?
->>
->> Like:
->>
->>         dev_state_lock(dev);
->>         enabled = pci_is_enabled(dev);
->>         if (enabled &&  !dev->is_busmaster)
->>                 pci_set_master_unlocked();
->>         pci_dev_state_unlock(dev);
->>
->> BTW If I remember correctly the code today can set bus mastering multiple
->> times without checking if already done.
->
-> I don't mind but I tend to dislike all those _unlocked() suffixes, I
-> suppose my generation is typing adverse enough that we call these
-> __something instead :)
->
-> As for setting multiple times, yes pci_set_master() doesn't check but
-> look at the "-" hunks of my patch, I'm not changing the existing test
-> here. Not that it matters much, it's an optimization.
->
-> In fact my original version just completely removed the whole lot
-> and just unconditionally did pci_enable_device() + pci_set_master(),
-> just ignoring the existing state :-)
->
-> But I decided to keep the patch functionally equivalent so I added it
-> back.
->
+>> There is only presence detect change and link layer change. No actual
+>> state information.
+> 
+> It does latch that it has changed tho right ? So if presence detect
+> hasn't changed, we can assume it's an error and not an unplug ?
+> 
+> We could discriminate that way to reduce the risk of doing a recovery
+> without unbind on something that was actually removed and replaced.
+> 
+
+I proposed this as one of the possible solutions but presence detect is
+optional and also presence detect interrupt can be delivered after
+link layer interrupt as well. No guarantees with respect to the order of
+link layer interrupt and presence detect interrupts delivery.
+
+I instead look at fatal error pending bit in device status register to
+decide if the link down was initiated due to a pending fatal error or
+somebody actually removed the card.
+
+If fatal error is pending, wait until it is cleared. If link is healthy,
+return gracefully.
+
+Otherwise, proceed with the hotplug removal.
+
+
 > Cheers,
 > Ben.
->
->
-So many mail threads for common issues going so just trying to
-summarize concern from my side.
-1) HW level
-PCI Config data overwritten (ex: PCI_COMMAND bits etc) was happening
-at lower layer so from my
-perspective, it is best to handle concern at lower level with locking
-mechanism and that is what
-I proposed in my upcoming patch. Without that, I guess, we may end up
-in issues later with some weird scenario
-which may not be known today  and we will again be fine tuning stuff
-here and there.
-2) SW level(internal data structure):
-About is_added,is_busmaster: These all are bit fields so infact I too
-suggested to remove those bit fields and
-make separate variables in pci_dev structure. This will avoid all
-data-overwritten,concurrency issues but ofcourse
-at the level of space cost.
-Other possibility will be either to use atomic or locking mechanism
-for these. My point here is also same, better
-avoid fine tuning later stage.
-Moving is_added up and down doesn't look like good as we are just
-shifting issue up and down.
-
-Please check and decide accordingly. I will hold my to-be-submitted
-modify() patch about handling hw level
-over-written case with locking around read-write operation.
-
-Regards,
-hari
+> 
+> 
+> 
