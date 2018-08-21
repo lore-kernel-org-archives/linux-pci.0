@@ -1,62 +1,69 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from bombadil.infradead.org ([198.137.202.133]:50238 "EHLO
-        bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S2389611AbeHARAZ (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Wed, 1 Aug 2018 13:00:25 -0400
-From: Christoph Hellwig <hch@lst.de>
-To: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
-        Bjorn Helgaas <bhelgaas@google.com>
-Cc: Palmer Dabbelt <palmer@dabbelt.com>,
-        "Wesley W . Terpstra" <wesley@sifive.com>,
-        Arnd Bergmann <arnd@arndb.de>, linux-pci@vger.kernel.org,
-        linux-riscv@lists.infradead.org
-Subject: [PATCH 2/3] PCI/xilinx: Work-around for hardware DMA limit (32 bits)
-Date: Wed,  1 Aug 2018 17:14:02 +0200
-Message-Id: <20180801151403.20660-3-hch@lst.de>
-In-Reply-To: <20180801151403.20660-1-hch@lst.de>
-References: <20180801151403.20660-1-hch@lst.de>
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <SRS0=rJmd=LE=h08.hostsharing.net=foo00@kernel.org>
+Return-Path: <SRS0=rJmd=LE=h08.hostsharing.net=foo00@kernel.org>
+Date: Tue, 21 Aug 2018 09:25:41 +0200
+From: Lukas Wunner <lukas@wunner.de>
+To: Bjorn Helgaas <helgaas@kernel.org>
+Cc: linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
+	mmyangfl@gmail.com
+Subject: Re: Enumeration issue with QCA9005 AR9462
+Message-ID: <20180821072541.tcdg5fkk4zrwxahj@wunner.de>
+References: <20180820230624.GB154536@bhelgaas-glaptop.roam.corp.google.com>
+ <20180821054704.jlqk5zrlbbsjsd4g@wunner.de>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20180821054704.jlqk5zrlbbsjsd4g@wunner.de>
 List-ID: <linux-pci.vger.kernel.org>
 
-This PCIe bridge only has a 32 bit bus master interface, thus truncating
-the DMA capability of all PCIe devices attached beneath it. This caps
-the child device capability so that these devices work on systems with
-physical memory beyond the 4GiB threshold.
+On Tue, Aug 21, 2018 at 07:47:04AM +0200, Lukas Wunner wrote:
+> On Mon, Aug 20, 2018 at 06:06:24PM -0500, Bjorn Helgaas wrote:
+> > mmyangfl@gmail.com reported a problem [1]: on v4.17, a QCA9005 AR9462
+> > wifi device was present at boot, but disappeared after suspend/resume.
+> > 
+> > He also tested a recent kernel (5c60a7389d79, from Thu Aug 16),
+> > where the suspend/resume problem doesn't seem to happen, but the wifi
+> > device isn't enumerated correctly at boot-time.
+> > 
+> > [    0.928714] pciehp 0000:04:00.0:pcie204: Slot #0 AttnBtn- PwrCtrl- MRL- AttnInd- PwrInd- HotPlug+ Surprise+ Interlock- NoCompl- LLActRep+
+> > [    0.928752] pciehp 0000:04:00.0:pcie204: Slot(0-1): Card not present
+> > [    0.928811] pciehp 0000:04:00.0:pcie204: Slot(0-1): Link Up
+> > [    0.928815] pciehp 0000:04:00.0:pcie204: Slot(0-1): No adapter
+> > 
+> > [1] https://bugzilla.kernel.org/show_bug.cgi?id=200839
+> > [2] https://bugzilla.kernel.org/attachment.cgi?id=277923
+> 
+> The hardware appears to be broken in that the Presence Detect State bit
+> in the Slot Status register is 0 (Slot Empty) even though the slot is
+> occupied.
+[...]
+> Possible solutions:
+> 
+> (a) Be lenient towards broken hardware and accept DLActive+ as a proxy
+>     for PresDet+.
+> 
+> (b) Add a blacklist to pciehp such that it doesn't bind to [1ae9:0200].
+>     The bug reporter writes that "it's a single Half Mini PCIe card,
+>     with two chipsets (Wil6110? + AR9462) combined by a PCIe hub".
+>     This sounds like it's not really hotpluggable.
+>     (Is Mini PCIe hotplug capable at all?)
+> 
+> Let me go through the driver and see if (a) is feasible and how intrusive
+> it would be.
 
-Based on an earlier patch from Wesley W. Terpstra <wesley@sifive.com>.
+So (a) would seem to be feasible, we could add a quirk for devices like
+this to call pciehp_check_link_active() in pciehp_get_adapter_status().
 
-Signed-off-by: Christoph Hellwig <hch@lst.de>
----
- drivers/pci/controller/pcie-xilinx.c | 10 ++++++++++
- 1 file changed, 10 insertions(+)
+Alternatively, we could generally add a call to pciehp_check_link_active()
+in get_adapter_status(), pciehp_check_presence() and pcie_init() and thus
+avoid a quirk for this specific device.
+The existing call in __pciehp_enable_slot() could actually be removed,
+this code path is only entered if either PDS or DLLLA is set.
 
-diff --git a/drivers/pci/controller/pcie-xilinx.c b/drivers/pci/controller/pcie-xilinx.c
-index 7b1389d8e2a5..da65b18aa45e 100644
---- a/drivers/pci/controller/pcie-xilinx.c
-+++ b/drivers/pci/controller/pcie-xilinx.c
-@@ -197,6 +197,15 @@ static void __iomem *xilinx_pcie_map_bus(struct pci_bus *bus,
- 	return port->reg_base + relbus + where;
- }
- 
-+/*
-+ * This PCIe bridge only has a 32 bit bus master interface, thus truncating
-+ * the DMA capability of all PCIe devices attached beneath it.
-+ */
-+static void xilinx_pcie_add_dev(struct pci_dev *pdev)
-+{
-+	pdev->dev.bus_dma_mask = DMA_BIT_MASK(32);
-+}
-+
- /* PCIe operations */
- static struct pci_ops xilinx_pcie_ops = {
- 	.map_bus = xilinx_pcie_map_bus,
-@@ -665,6 +674,7 @@ static int xilinx_pcie_probe(struct platform_device *pdev)
- 	bridge->ops = &xilinx_pcie_ops;
- 	bridge->map_irq = of_irq_parse_and_map_pci;
- 	bridge->swizzle_irq = pci_common_swizzle;
-+	bridge->add_dev = xilinx_pcie_add_dev;
- 
- #ifdef CONFIG_PCI_MSI
- 	xilinx_pcie_msi_chip.dev = dev;
--- 
-2.18.0
+And the third option would be to add a quirk like quirk_hotplug_bridge()
+which sets is_hotplug_bridge = 0 on this broken device such that pciehp
+doesn't bind to it in the first place.
+
+Bjorn, please let me know which of these options you'd prefer.
+
+Thanks,
+
+Lukas
