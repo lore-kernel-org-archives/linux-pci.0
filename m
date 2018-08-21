@@ -1,85 +1,108 @@
-Return-Path: <linux-acpi-owner@vger.kernel.org>
-Date: Fri, 17 Aug 2018 14:43:54 +0900 (JST)
-Message-Id: <20180817.144354.2288619657950222607.teika@gmx.com>
-To: rjw@rjwysocki.net
-Cc: linux-pci@vger.kernel.org, bhelgaas@google.com,
-        linux-kernel@vger.kernel.org, linux-acpi@vger.kernel.org,
-        linux-pm@vger.kernel.org, mika.westerberg@linux.intel.com
-Subject: Re: [PATCH] PCI / ACPI / PM: Resume all bridges on suspend-to-RAM
-From: Teika Kazura <teika@gmx.com>
-In-Reply-To: <6401388.2t0qD3iTOr@aspire.rjw.lan>
-References: <6401388.2t0qD3iTOr@aspire.rjw.lan>
-Mime-Version: 1.0
-Content-Type: Text/Plain; charset=utf-8
-Sender: linux-acpi-owner@vger.kernel.org
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Date: Tue, 21 Aug 2018 10:44:33 +0800
+From: Jisheng Zhang <Jisheng.Zhang@synaptics.com>
+To: Jingoo Han <jingoohan1@gmail.com>, Joao Pinto <Joao.Pinto@synopsys.com>,
+ Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>, Bjorn Helgaas
+ <bhelgaas@google.com>
+Subject: [PATCH] PCI: dwc: fix scheduling while atomic issues
+Message-ID: <20180821104433.1c408d7e@xhacker.debian>
+MIME-Version: 1.0
+List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
+List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
+List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
+List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
+List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
+Cc: linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
+ linux-arm-kernel@lists.infradead.org
+Content-Type: text/plain; charset="us-ascii"
+Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
+Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Rm9yIHRoZSByZWNvcmQsIGFib3V0IHRoZSBleGFjdG5lc3Mgb2YgdGhlIHBhdGNoIGRlc2NyaXB0
-aW9uLg0KDQpUaGUgcGF0Y2ggbWVudGlvbnMgdGhlIHJlZ3Jlc3Npb24gYnkgdGhlIGNvbW1pdCBj
-NjJlYzQ2MTBjNDAsIGJ1dCBpdCBpcyBub3QgdGhlIGNhdXNlIG9mIHRoZSBidWcgKGh0dHBzOi8v
-YnVnemlsbGEua2VybmVsLm9yZy9zaG93X2J1Zy5jZ2k/aWQ9MjAwNjcpIHJlcG9ydGVkIGJ5IG1l
-OyBJIHJldmVydGVkIGM2MmVjNDYxMGM0MCBvbiBsaW51eC00LjE3LjEzLCBhbmQgdGhlIGJ1ZyBy
-ZW1haW5lZC4NCg0KIyBTb21lIGRldGFpbHM6IG15IGJ1ZyB3YXMgaW50cm9kdWNlZCBieSB0aGUg
-Y29tbWl0IChpKSA4NzdiMzcyOWNhMCBvbiBKYW4gMy4gVGhlIGNvbW1pdCAoaWkpIGM2MmVjNDYx
-MGM0MCB3YXMgb24gTWF5IDIyLiBUaGUgY29tbWl0IChpaWkpIDI2MTEyZGRjMjU0YyBvbiBKdW4g
-MzAgZml4ZXMgb25lIHByb2JsZW0gY2F1c2VkIGJ5IGM2MmVjNDYxMGM0MC4gVGhlIHByZXNlbnQg
-cGF0Y2ggbW9kaWZpZXMgdGhlIGNvZGUgb2YgdGhlIGNvbW1pdCAoaWlpKSwgc28gaXQgY2FuIGJl
-IHNhaWQgYXMgdGhlIGNvbXBsZXRpb24gb2YgdGhlIGNvbW1pdCAoaWlpKS4gSXQgYXQgdGhlIHNh
-bWUgdGltZSBmaXhlcyBteSBidWcsIHRvby4NCg0KVGhpcyBzdWdnZXN0cyB0aGUgcHJlc2VudCBw
-YXRjaCBwb3NzaWJseSBmaXhlcyBvdGhlciB1bmtub3duIFBNIHByb2JsZW1zOyBmb3JtZXIga2Vy
-bmVscyBoYWQgc29tZSBsb29zZSBlbmQocykuIE5vdyB0aGlzIHBhdGNoIHB1dHMgdGhlIGtlcm5l
-bCBpbiBhIGJldHRlciBwb3NpdGlvbi4NCg0KSSdtIGEgbGF5IExpbnV4IHVzZXIsIGFuZCBkb24n
-dCBrbm93IGlmIHRoaXMgcG9zdCBoZWxwcy4gSWYgaXQgZG9lcywgaXQgbWF5IGJlIHdvcnRoIG1l
-bnRpb25pbmcgaXQgaW4gdGhlIGFib3ZlIGJ1Z3ppbGxhIGVudHJ5Lg0KDQpEemnEmWt1asSZICh0
-aGFua3MpLCBrZXJuZWwgZGV2ZWxvcGVycy4gQmVzdCByZWdhcmRzLA0KVGVpa2EgKFRlaWthIGth
-enVyYSkNCg0KRnJvbTogIlJhZmFlbCBKLiBXeXNvY2tpIiA8cmp3QHJqd3lzb2NraS5uZXQ+DQpT
-dWJqZWN0OiBbUEFUQ0hdIFBDSSAvIEFDUEkgLyBQTTogUmVzdW1lIGFsbCBicmlkZ2VzIG9uIHN1
-c3BlbmQtdG8tUkFNDQpEYXRlOiBUaHUsIDE2IEF1ZyAyMDE4IDEyOjU2OjQ2ICswMjAwDQoNCj4g
-RnJvbTogUmFmYWVsIEouIFd5c29ja2kgPHJhZmFlbC5qLnd5c29ja2lAaW50ZWwuY29tPg0KPiAN
-Cj4gQ29tbWl0IDI2MTEyZGRjMjU0YyAoUENJIC8gQUNQSSAvIFBNOiBSZXN1bWUgYnJpZGdlcyB3
-L28gZHJpdmVycyBvbg0KPiBzdXNwZW5kLXRvLVJBTSkgYXR0ZW1wdGVkIHRvIGZpeCBhIGZ1bmN0
-aW9uYWwgcmVncmVzc2lvbiByZXN1bHRpbmcNCj4gZnJvbSBjb21taXQgYzYyZWM0NjEwYzQwIChQ
-TSAvIGNvcmU6IEZpeCBkaXJlY3RfY29tcGxldGUgaGFuZGxpbmcNCj4gZm9yIGRldmljZXMgd2l0
-aCBubyBjYWxsYmFja3MpIGJ5IHJlc3VtaW5nIFBDSSBicmlkZ2VzIHdpdGhvdXQNCj4gZHJpdmVy
-cyAodGhhdCBpcywgInBhcmFsbGVsIFBDSSIgb25lcykgZHVyaW5nIHN5c3RlbS13aWRlIHN1c3Bl
-bmQgaWYNCj4gdGhlIHRhcmdldCBzeXN0ZW0gc3RhdGUgaXMgbm90IEFDUEkgUzAgKHdvcmtpbmcg
-c3RhdGUpLg0KPiANCj4gVGhhdCB0dXJucyBvdXQgaW5zdWZmaWNpZW50LCBob3dldmVyLCBhcyBp
-dCBpcyByZXBvcnRlZCB0aGF0LCBhdA0KPiBsZWFzdCBpbiBvbmUgY2FzZSwgdGhlIHBsYXRmb3Jt
-IGZpcm13YXJlIGdldHMgY29uZnVzZWQgaWYgYSBQQ0llDQo+IHJvb3QgcG9ydCBpcyBzdXNwZW5k
-ZWQgYmVmb3JlIGVudGVyaW5nIHRoZSBBQ1BJIFMzIHNsZWVwIHN0YXRlLg0KPiANCj4gRm9yIHRo
-aXMgcmVhc29uLCBkcm9wIHRoZSBkcml2ZXIgY2hlY2sgZnJvbSBhY3BpX3BjaV9uZWVkX3Jlc3Vt
-ZSgpDQo+IGFuZCByZXN1bWUgYWxsIGJyaWRnZXMgKGluY2x1ZGluZyBQQ0llIHBvcnRzIHdpdGgg
-ZHJpdmVycykgZHVyaW5nDQo+IHN5c3RlbS13aWRlIHN1c3BlbmQgaWYgdGhlIHRhcmdldCBzeXN0
-ZW0gc3RhdGUgaXMgbm90IEFDUEkgUzAuDQo+IA0KPiBbSWYgdGhlIHRhcmdldCBzeXN0ZW0gc3Rh
-dGUgaXMgQUNQSSBTMCwgaXQgbWVhbnMgc3VzcGVuZC10by1pZGxlDQo+ICBhbmQgdGhlIHBsYXRm
-b3JtIGZpcm13YXJlIGlzIG5vdCBnb2luZyB0byBiZSBpbnZva2VkIHRvIGFjdHVhbGx5DQo+ICBz
-dXNwZW5kIHRoZSBzeXN0ZW0sIHNvIHRoZXJlIGlzIG5vIG5lZWQgdG8gcmVzdW1lIHRoZSBicmlk
-Z2VzIGluDQo+ICB0aGF0IGNhc2UuXQ0KPiANCj4gRml4ZXM6IGM2MmVjNDYxMGM0MCAoUE0gLyBj
-b3JlOiBGaXggZGlyZWN0X2NvbXBsZXRlIGhhbmRsaW5nIGZvciBkZXZpY2VzIHdpdGggbm8gY2Fs
-bGJhY2tzKQ0KPiBSZXBvcnRlZC1ieTogdGVpa2Ega2F6dXJhIDx0ZWlrYUBnbXguY29tPg0KPiBU
-ZXN0ZWQtYnk6IHRlaWthIGthenVyYSA8dGVpa2FAZ214LmNvbT4NCj4gTGluazogaHR0cHM6Ly9i
-dWd6aWxsYS5rZXJuZWwub3JnL3Nob3dfYnVnLmNnaT9pZD0yMDA2NzUNCj4gQ2M6IDQuMTUrIDxz
-dGFibGVAdmdlci5rZXJuZWwub3JnPiAjIDQuMTUrOiAyNjExMmRkYzI1NGMgKFBDSSAvIEFDUEkg
-LyBQTTogUmVzdW1lIGJyaWRnZXMgLi4uKQ0KPiBTaWduZWQtb2ZmLWJ5OiBSYWZhZWwgSi4gV3lz
-b2NraSA8cmFmYWVsLmoud3lzb2NraUBpbnRlbC5jb20+DQo+IC0tLQ0KPiAgZHJpdmVycy9wY2kv
-cGNpLWFjcGkuYyB8ICAgIDYgKystLS0tDQo+ICAxIGZpbGUgY2hhbmdlZCwgMiBpbnNlcnRpb25z
-KCspLCA0IGRlbGV0aW9ucygtKQ0KPiANCj4gSW5kZXg6IGxpbnV4LXBtL2RyaXZlcnMvcGNpL3Bj
-aS1hY3BpLmMNCj4gPT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09
-PT09PT09PT09PT09PT09PT09PT09PQ0KPiAtLS0gbGludXgtcG0ub3JpZy9kcml2ZXJzL3BjaS9w
-Y2ktYWNwaS5jDQo+ICsrKyBsaW51eC1wbS9kcml2ZXJzL3BjaS9wY2ktYWNwaS5jDQo+IEBAIC02
-MzIsMTMgKzYzMiwxMSBAQCBzdGF0aWMgYm9vbCBhY3BpX3BjaV9uZWVkX3Jlc3VtZShzdHJ1Y3QN
-Cj4gIAkvKg0KPiAgCSAqIEluIHNvbWUgY2FzZXMgKGVnLiBTYW1zdW5nIDMwNVY0QSkgbGVhdmlu
-ZyBhIGJyaWRnZSBpbiBzdXNwZW5kIG92ZXINCj4gIAkgKiBzeXN0ZW0td2lkZSBzdXNwZW5kL3Jl
-c3VtZSBjb25mdXNlcyB0aGUgcGxhdGZvcm0gZmlybXdhcmUsIHNvIGF2b2lkDQo+IC0JICogZG9p
-bmcgdGhhdCwgdW5sZXNzIHRoZSBicmlkZ2UgaGFzIGEgZHJpdmVyIHRoYXQgc2hvdWxkIHRha2Ug
-Y2FyZSBvZg0KPiAtCSAqIHRoZSBQTSBoYW5kbGluZy4gIEFjY29yZGluZyB0byBTZWN0aW9uIDE2
-LjEuNiBvZiBBQ1BJIDYuMiwgZW5kcG9pbnQNCj4gKwkgKiBkb2luZyB0aGF0LiAgQWNjb3JkaW5n
-IHRvIFNlY3Rpb24gMTYuMS42IG9mIEFDUEkgNi4yLCBlbmRwb2ludA0KPiAgCSAqIGRldmljZXMg
-YXJlIGV4cGVjdGVkIHRvIGJlIGluIEQzIGJlZm9yZSBpbnZva2luZyB0aGUgUzMgZW50cnkgcGF0
-aA0KPiAgCSAqIGZyb20gdGhlIGZpcm13YXJlLCBzbyB0aGV5IHNob3VsZCBub3QgYmUgYWZmZWN0
-ZWQgYnkgdGhpcyBpc3N1ZS4NCj4gIAkgKi8NCj4gLQlpZiAocGNpX2lzX2JyaWRnZShkZXYpICYm
-ICFkZXYtPmRyaXZlciAmJg0KPiAtCSAgICBhY3BpX3RhcmdldF9zeXN0ZW1fc3RhdGUoKSAhPSBB
-Q1BJX1NUQVRFX1MwKQ0KPiArCWlmIChwY2lfaXNfYnJpZGdlKGRldikgJiYgYWNwaV90YXJnZXRf
-c3lzdGVtX3N0YXRlKCkgIT0gQUNQSV9TVEFURV9TMCkNCj4gIAkJcmV0dXJuIHRydWU7DQo+ICAN
-Cj4gIAlpZiAoIWFkZXYgfHwgIWFjcGlfZGV2aWNlX3Bvd2VyX21hbmFnZWFibGUoYWRldikpDQo+
-IA0K
+When programming inbound/outbound atu, we call usleep_range() after
+each checking PCIE_ATU_ENABLE bit. Unfortunately, the atu programming
+can be called in atomic context:
+
+inbound atu programming could be called through
+pci_epc_write_header()
+  =>dw_pcie_ep_write_header()
+    =>dw_pcie_prog_inbound_atu()
+
+outbound atu programming could be called through
+pci_bus_read_config_dword()
+  =>dw_pcie_rd_conf()
+    =>dw_pcie_prog_outbound_atu()
+
+Fix this issue by calling udelay() instead.
+
+Signed-off-by: Jisheng Zhang <Jisheng.Zhang@synaptics.com>
+---
+ drivers/pci/controller/dwc/pcie-designware.c | 8 ++++----
+ drivers/pci/controller/dwc/pcie-designware.h | 3 +--
+ 2 files changed, 5 insertions(+), 6 deletions(-)
+
+diff --git a/drivers/pci/controller/dwc/pcie-designware.c b/drivers/pci/controller/dwc/pcie-designware.c
+index 778c4f76a884..4c15929d9c79 100644
+--- a/drivers/pci/controller/dwc/pcie-designware.c
++++ b/drivers/pci/controller/dwc/pcie-designware.c
+@@ -135,7 +135,7 @@ static void dw_pcie_prog_outbound_atu_unroll(struct dw_pcie *pci, int index,
+ 		if (val & PCIE_ATU_ENABLE)
+ 			return;
+ 
+-		usleep_range(LINK_WAIT_IATU_MIN, LINK_WAIT_IATU_MAX);
++		udelay(LINK_WAIT_IATU);
+ 	}
+ 	dev_err(pci->dev, "Outbound iATU is not being enabled\n");
+ }
+@@ -178,7 +178,7 @@ void dw_pcie_prog_outbound_atu(struct dw_pcie *pci, int index, int type,
+ 		if (val & PCIE_ATU_ENABLE)
+ 			return;
+ 
+-		usleep_range(LINK_WAIT_IATU_MIN, LINK_WAIT_IATU_MAX);
++		udelay(LINK_WAIT_IATU);
+ 	}
+ 	dev_err(pci->dev, "Outbound iATU is not being enabled\n");
+ }
+@@ -236,7 +236,7 @@ static int dw_pcie_prog_inbound_atu_unroll(struct dw_pcie *pci, int index,
+ 		if (val & PCIE_ATU_ENABLE)
+ 			return 0;
+ 
+-		usleep_range(LINK_WAIT_IATU_MIN, LINK_WAIT_IATU_MAX);
++		udelay(LINK_WAIT_IATU);
+ 	}
+ 	dev_err(pci->dev, "Inbound iATU is not being enabled\n");
+ 
+@@ -282,7 +282,7 @@ int dw_pcie_prog_inbound_atu(struct dw_pcie *pci, int index, int bar,
+ 		if (val & PCIE_ATU_ENABLE)
+ 			return 0;
+ 
+-		usleep_range(LINK_WAIT_IATU_MIN, LINK_WAIT_IATU_MAX);
++		udelay(LINK_WAIT_IATU);
+ 	}
+ 	dev_err(pci->dev, "Inbound iATU is not being enabled\n");
+ 
+diff --git a/drivers/pci/controller/dwc/pcie-designware.h b/drivers/pci/controller/dwc/pcie-designware.h
+index 96126fd8403c..8bab329c5cd3 100644
+--- a/drivers/pci/controller/dwc/pcie-designware.h
++++ b/drivers/pci/controller/dwc/pcie-designware.h
+@@ -26,8 +26,7 @@
+ 
+ /* Parameters for the waiting for iATU enabled routine */
+ #define LINK_WAIT_MAX_IATU_RETRIES	5
+-#define LINK_WAIT_IATU_MIN		9000
+-#define LINK_WAIT_IATU_MAX		10000
++#define LINK_WAIT_IATU			9000
+ 
+ /* Synopsys-specific PCIe configuration registers */
+ #define PCIE_PORT_LINK_CONTROL		0x710
+-- 
+2.18.0
+
+
+_______________________________________________
+linux-arm-kernel mailing list
+linux-arm-kernel@lists.infradead.org
+http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
