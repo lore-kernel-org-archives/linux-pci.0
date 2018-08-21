@@ -1,62 +1,76 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.29.99]:46316 "EHLO mail.kernel.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1732377AbeHFROK (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Mon, 6 Aug 2018 13:14:10 -0400
-Subject: Re: [PATCH v7 1/1] PCI: pciehp: Ignore link events when there is a
- fatal error pending
-To: poza@codeaurora.org, Lukas Wunner <lukas@wunner.de>
-Cc: linux-pci@vger.kernel.org, Bjorn Helgaas <bhelgaas@google.com>,
-        Mika Westerberg <mika.westerberg@linux.intel.com>,
-        Keith Busch <keith.busch@intel.com>,
-        linux-pci-owner@vger.kernel.org
-References: <20180805225136.5800-1-okaya@kernel.org>
- <20180805225136.5800-2-okaya@kernel.org>
- <c1cfff22c63f6d3d6285575721a2a3e8@codeaurora.org>
- <20180806092614.GA28462@wunner.de>
- <2b4c23a2e97f61a124c95c49d604a853@codeaurora.org>
-From: Sinan Kaya <okaya@kernel.org>
-Message-ID: <3d491f25-1d59-f257-1125-302e2d50e960@kernel.org>
-Date: Mon, 6 Aug 2018 11:04:37 -0400
+Return-Path: <SRS0=hyej=LE=deltatee.com=logang@kernel.org>
+Return-Path: <SRS0=hyej=LE=deltatee.com=logang@kernel.org>
+To: Eric Pilmore <epilmore@gigaio.com>
+Cc: Kit Chow <kchow@gigaio.com>, Bjorn Helgaas <helgaas@kernel.org>,
+ linux-pci@vger.kernel.org, David Woodhouse <dwmw2@infradead.org>,
+ Alex Williamson <alex.williamson@redhat.com>,
+ iommu@lists.linux-foundation.org
+References: <CAOQPn8soxubJxb=vp7kz+AM6LbPH5y+_Nx0Vzv7rjV_nMMqEmA@mail.gmail.com>
+ <20180809184331.GB113140@bhelgaas-glaptop.roam.corp.google.com>
+ <CAOQPn8uPYKai49WYPqZp2wNd5of=0hUvPOHEtqP56RZu-hcjuw@mail.gmail.com>
+ <b54899a8-a144-e8e0-9880-1800c4657b95@deltatee.com>
+ <CAOQPn8tSNN+3igN-kMcQH46w_a9p6T+S7=c8CLREMLxr1kaTXQ@mail.gmail.com>
+ <7068db44-af31-4462-f966-2dd2340ba0f0@deltatee.com>
+ <695826a6-e10c-5a30-a51f-7cc61ba6e640@gigaio.com>
+ <0d3f48c3-8c4f-4dfb-e883-23c168f12b9b@deltatee.com>
+ <14db6acb-da4f-9604-7359-1671210fcb8b@gigaio.com>
+ <ad2cd3f2-eb41-d4c2-7614-379c2e458352@deltatee.com>
+ <CAOQPn8uuTEcmdQdZB9-A7FT+YWtxSuruGFwmwCPApffTJNs9Vg@mail.gmail.com>
+ <41419ada-7f16-0028-1e43-3b4a6c6960b6@deltatee.com>
+ <CAOQPn8uyozbmEV0Ww3LW4XDcaY1ZwV0yazsPxPQC0AfLNUhKYw@mail.gmail.com>
+From: Logan Gunthorpe <logang@deltatee.com>
+Message-ID: <dd918b52-7ddc-662c-5980-edf3e96ebca2@deltatee.com>
+Date: Tue, 21 Aug 2018 17:35:00 -0600
 MIME-Version: 1.0
-In-Reply-To: <2b4c23a2e97f61a124c95c49d604a853@codeaurora.org>
-Content-Type: text/plain; charset=utf-8; format=flowed
-Sender: linux-pci-owner@vger.kernel.org
+In-Reply-To: <CAOQPn8uyozbmEV0Ww3LW4XDcaY1ZwV0yazsPxPQC0AfLNUhKYw@mail.gmail.com>
+Content-Type: text/plain; charset=utf-8
+Subject: Re: IOAT DMA w/IOMMU
 List-ID: <linux-pci.vger.kernel.org>
 
-On 8/6/2018 10:55 AM, poza@codeaurora.org wrote:
->>
+
+
+On 21/08/18 05:28 PM, Eric Pilmore wrote:
 > 
-> Either AER or DPC would get triggered, not both.
-> in that case, if AER is disabled, then this code will return false 
-> thinking HP needs to handle it.
-> but it might be that DPC would be triggering as well.
-> but I dont see DPC check anywhere, rather we are relying on PCI_EXP_DEVSTA
-> and following condition:
-> if (!pdev->aer_cap)
->        return false;
-> so here we dont check anything with respect to DPC capability (although 
-> there is no such thing as dpc_cap)
-> (except If I missed something)
+> 
+> On Tue, Aug 21, 2018 at 4:20 PM, Logan Gunthorpe <logang@deltatee.com
+> <mailto:logang@deltatee.com>> wrote:
+> 
+> 
+> 
+>     On 21/08/18 05:18 PM, Eric Pilmore wrote:
+>     > We have been running locally with Kit's change for dma_map_resource and its
+>     > incorporation in ntb_async_tx_submit for the destination address and
+>     > it runs fine
+>     > under "load" (iperf) on a Xeon (Xeon(R) CPU E5-2680 v4 @ 2.40GHz) based system,
+>     > regardless of whether the DMA engine being used is IOAT or a PLX
+>     > device sitting in
+>     > the PCIe tree. However, when we go back to a i7 (i7-7700K CPU @ 4.20GHz) based
+>     > system it seems to run into issues, specifically when put under a
+>     > load. In this case,
+>     > just having a load using a single ping command with an interval=0, i.e. no delay
+>     > between ping packets, after a few thousand packets the system just hangs. No
+>     > panic or watchdogs.  Note that in this scenario I can only use a PLX DMA engine.
+> 
+>     This is just my best guess: but it sounds to me like a bug in the PLX
+>     DMA driver or hardware.
+> 
+> 
+> The PLX DMA driver?  But the PLX driver isn't really even involved in
+> the mapping
+> stage.  Are you thinking maybe the stage at which the DMA descriptor is
+> freed and
+> the PLX DMA driver does a dma_descriptor_unmap?
 
-That's true. We either need to go poll every single source (AER/DPC) for
-an error or rely on the DEVSTA. For ease of implementation, I suggest
-DEVSTA. Something like this:
+Hmm, well what would make you think the hang is during
+mapping/unmapping? I would expect a hang to be in handling completions
+from the DMA engine or something like that.
 
-+bool pcie_fatal_error_pending(struct pci_dev *pdev, u32 usrmask)
-+{
-+	u16 err_status = 0;
-+	u32 status, mask, severity;
-+	int rc;
-+
-+	if (!pci_is_pcie(pdev))
-+		return false;
-+
-+	rc = pcie_capability_read_word(pdev, PCI_EXP_DEVSTA, &err_status);
-+	if (rc)
-+		return false;
-+
-+	if (!(err_status & PCI_EXP_DEVSTA_FED))
-+		return false;
-+	return true;
-+}
+> Again, PLX did not exhibit any issues on the Xeon system.
+
+Oh, I missed that. That puts a crinkle in my theory but, as you say, it
+could be a timing issue.
+
+Also, it's VERY strange that it would hang the entire system. That makes
+things very hard to debug...
+
+Logan
