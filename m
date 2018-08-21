@@ -1,84 +1,76 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-qt0-f195.google.com ([209.85.216.195]:35657 "EHLO
-        mail-qt0-f195.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1730419AbeHIRXN (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Thu, 9 Aug 2018 13:23:13 -0400
-Received: by mail-qt0-f195.google.com with SMTP id r21-v6so6842116qtm.2
-        for <linux-pci@vger.kernel.org>; Thu, 09 Aug 2018 07:57:57 -0700 (PDT)
-Subject: Re: [RFC] ARM64, PCIe, annd ACPI
-To: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
-Cc: Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org,
-        Tomasz Nowicki <tn@semihalf.com>,
-        Vladimir Olovyannikov <vladimir.olovyannikov@broadcom.com>,
-        BCM Kernel Feedback <bcm-kernel-feedback-list@broadcom.com>
-References: <89484aa0-08c4-0cff-500d-407d21e2f5fd@broadcom.com>
- <20180808093822.GA25150@e107981-ln.cambridge.arm.com>
- <a32a8761-f49f-f0cf-928b-0c323c2b540e@broadcom.com>
- <20180809085923.GA13428@e107981-ln.cambridge.arm.com>
-From: Ray Jui <ray.jui@broadcom.com>
-Message-ID: <9b5b5918-1492-df65-5b63-678b4a35ecb9@broadcom.com>
-Date: Thu, 9 Aug 2018 07:57:52 -0700
+Return-Path: <linux-acpi-owner@vger.kernel.org>
 MIME-Version: 1.0
-In-Reply-To: <20180809085923.GA13428@e107981-ln.cambridge.arm.com>
-Content-Type: text/plain; charset=utf-8; format=flowed
-Sender: linux-pci-owner@vger.kernel.org
+References: <20180817102645.3839621-1-arnd@arndb.de> <20180821061451.GB481@infradead.org>
+In-Reply-To: <20180821061451.GB481@infradead.org>
+From: Arnd Bergmann <arnd@arndb.de>
+Date: Tue, 21 Aug 2018 12:07:40 +0200
+Message-ID: <CAK8P3a1_VbhLteRiJe2WDk2FgcPFMLTXv_t5oi2zZ1ywh63cZg@mail.gmail.com>
+Subject: Re: [RFC 00/15] PCI: turn some __weak functions into callbacks
+To: Christoph Hellwig <hch@infradead.org>
+Cc: linux-pci <linux-pci@vger.kernel.org>,
+        Bjorn Helgaas <bhelgaas@google.com>,
+        Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
+        Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
+        Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+        linuxppc-dev <linuxppc-dev@lists.ozlabs.org>,
+        ACPI Devel Maling List <linux-acpi@vger.kernel.org>
+Content-Type: text/plain; charset="UTF-8"
+Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hi Lorenzo,
+On Tue, Aug 21, 2018 at 8:14 AM Christoph Hellwig <hch@infradead.org> wrote:
+>
+> On Fri, Aug 17, 2018 at 12:26:30PM +0200, Arnd Bergmann wrote:
+> > Hi Bjorn and others,
+> >
+> > Triggered by Christoph's patches, I had another go at converting
+> > all of the remaining pci host bridge implementations to be based
+> > on pci_alloc_host_bridge and a separate registration function.
+>
+> I really like the idea behind this series.
+>
+> > I'm adding a bit of duplication into the less maintained code
+> > here, but it makes everything more consistent, and gives an
+> > easy place to hook up callback functions etc.
+>
+> I wonder if there is a way to avoid some of that by adding a few
+> more helpers, but even without the helpers that approach looks
+> ok to me.
 
-On 8/9/2018 1:59 AM, Lorenzo Pieralisi wrote:
-> On Wed, Aug 08, 2018 at 11:49:46AM -0700, Ray Jui wrote:
->>
->>
->> On 8/8/2018 2:38 AM, Lorenzo Pieralisi wrote:
->>> On Tue, Aug 07, 2018 at 05:10:15PM -0700, Ray Jui wrote:
->>>> Hi Lorenzo/Bjorn,
->>>>
->>>> I have a question on PCIe controller APCI support on ARM64 based systems.
->>>>
->>>> If my understanding of the implementation of "pci_acpi_scan_root" under
->>>> "arch/arm64/kernel/pci.c" is correct, it appears
->>>> "pci_acpi_setup_ecam_mapping" is called within "pci_acpi_scan_root".
->>>>
->>>> Does that mean for a PCIe host controller on ARM64 to support ACPI, it needs
->>>> to support ECAM and MMIO based access to the configuration space registers?
->>>>
->>>> If the above statement is true, does it imply that any PCIe controller on
->>>> ARM64 that does not support MMIO based access to the config space register
->>>> cannot have ACPI support?
->>>
->>> Yes and it is not just MMIO, config space must be ECAM compliant as described
->>> in the PCI firmware specification and enforced here:
->>>
->>> http://infocenter.arm.com/help/topic/com.arm.doc.den0029b/Server_Base_System_Architecture_v5_0_ARM_DEN_0029B.pdf
->>>
->>
->> Okay, got it, the SBSA spec makes it very clear that the PCIe controller
->> needs to support ECAM.
->>
->>> In short: what's in the mainline (+ adequate PCI controller firmware
->>> configuration) must be sufficient to bootstrap your PCI subsystem in
->>> ACPI, it is a very simple litmus test and we won't add anything that
->>> deviates from that to the mainline kernel ARM64 ACPI PCI code support.
->>>
->>
->> It sounds like I'll have to look into ways to work around this at the driver
->> level as Bjorn pointed out with some other examples.
-> 
-> As I said ARM64 ACPI PCI kernel support is in the mainline today and I
-> am not willing to merge any more MCFG quirks at driver level - the
-> information is out there, it is public and must be followed, either
-> designers do that or no ACPI PCI support on your platform, sorry.
-> 
-> Lorenzo
-> 
+Ok, thanks for taking a first look.
 
-I just want to make sure I interpret this properly. This means if the 
-PCIe controller hardware does not support ECAM, there's pretty much no 
-way around it with SW based workaround going forward with mainline kernel?
+One core part that gets duplicated a lot (also in existing drivers)
+is the chunk that could be handled by this:
 
-What about for the PCIe controller that was designed a few years back?
+int pci_host_bridge_init(struct pci_host_bridge *bridge,
+                   struct device *parent, int bus,
+                   struct pci_ops *ops, void *sysdata,
+                   struct list_head *resource_list)
+{
+       if (resources)
+              list_splice_init(resources, &bridge->windows);
+       bridge->dev.parent = parent;
+       bridge->sysdata = sysdata;
+       bridge->busnr = bus;
+       bridge->ops = ops;
+}
 
-Thanks,
+That would probably help, but we should think carefully about
+the set of fields that we want pass here, specifically because the
+idea of splitting the probing into two parts was to avoid having
+to come up with a new interface every time that list changes
+due to some rework.
 
-Ray
+For instance, the numa node is something that might get passed
+here, and if we decide to split out the operations into a separate
+pci_host_bridge_ops structure, the pointer to that would also
+be something we'd want to pass this way.
+
+> Do you have a git tree somewhere to play around with the changes?
+
+I now uploaded it (with fixes incorporated) to
+
+https://git.kernel.org/pub/scm/linux/kernel/git/arnd/playground.git
+pci-probe-rework
+
+       arnd
