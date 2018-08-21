@@ -1,83 +1,99 @@
-Return-Path: <SRS0=fEc7=KY=gigaio.com=kchow@kernel.org>
-Return-Path: <SRS0=fEc7=KY=gigaio.com=kchow@kernel.org>
-Subject: Re: IOAT DMA w/IOMMU
-To: "Jiang, Dave" <dave.jiang@intel.com>,
- Logan Gunthorpe <logang@deltatee.com>, Eric Pilmore <epilmore@gigaio.com>,
- Bjorn Helgaas <helgaas@kernel.org>
-Cc: "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
- David Woodhouse <dwmw2@infradead.org>,
- Alex Williamson <alex.williamson@redhat.com>,
- "iommu@lists.linux-foundation.org" <iommu@lists.linux-foundation.org>
-References: <CAOQPn8soxubJxb=vp7kz+AM6LbPH5y+_Nx0Vzv7rjV_nMMqEmA@mail.gmail.com>
- <20180809184331.GB113140@bhelgaas-glaptop.roam.corp.google.com>
- <CAOQPn8uPYKai49WYPqZp2wNd5of=0hUvPOHEtqP56RZu-hcjuw@mail.gmail.com>
- <b54899a8-a144-e8e0-9880-1800c4657b95@deltatee.com>
- <95e53520-b05f-4be4-e694-463d717453a8@gigaio.com>
- <cdd9245f-eb23-9e10-1755-8f396a2cd255@deltatee.com>
- <b278c1e5-6f08-c879-a27d-7fc172645fd5@gigaio.com>
- <f04fae39-645e-3c6e-07c0-b194260bf5de@deltatee.com>
- <3f503940-db6a-ec75-ed15-1db99d5d48ef@gigaio.com>
- <112A412BB11A1242B37129D931BCE5348382CFB2@fmsmsx117.amr.corp.intel.com>
-From: Kit Chow <kchow@gigaio.com>
-Message-ID: <b8af340c-d40b-cb8c-987f-b394f1d6ec3e@gigaio.com>
-Date: Thu, 9 Aug 2018 15:48:27 -0700
+Return-Path: <SRS0=Bsgf=LE=linux.vnet.ibm.com=tyreld@kernel.org>
+Return-Path: <SRS0=Bsgf=LE=linux.vnet.ibm.com=tyreld@kernel.org>
+Subject: Re: [PATCH 7/9] PCI: hotplug: Drop hotplug_slot_info
+To: Lukas Wunner <lukas@wunner.de>, Bjorn Helgaas <helgaas@kernel.org>,
+        linux-pci@vger.kernel.org, Sinan Kaya <okaya@kernel.org>,
+        Mika Westerberg <mika.westerberg@linux.intel.com>
+Cc: Scott Murray <scott@spiteful.org>, linux-s390@vger.kernel.org,
+        Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+        acpi4asus-user@lists.sourceforge.net,
+        "Rafael J. Wysocki"
+ <rjw@rjwysocki.net>,
+        Gavin Shan <gwshan@linux.vnet.ibm.com>,
+        platform-driver-x86@vger.kernel.org, linux-acpi@vger.kernel.org,
+        Paul Mackerras <paulus@samba.org>,
+        Sebastian Ott
+ <sebott@linux.vnet.ibm.com>,
+        Corentin Chary <corentin.chary@gmail.com>,
+        Darren Hart <dvhart@infradead.org>, linuxppc-dev@lists.ozlabs.org,
+        Andy Shevchenko <andy@infradead.org>,
+        Gerald Schaefer <gerald.schaefer@de.ibm.com>,
+        Len Brown <lenb@kernel.org>
+References: <cover.1534686484.git.lukas@wunner.de>
+ <a364bcc959e01f2ebab27cefc5b87ff01633275c.1534686485.git.lukas@wunner.de>
+From: Tyrel Datwyler <tyreld@linux.vnet.ibm.com>
+Date: Mon, 20 Aug 2018 17:41:58 -0700
 MIME-Version: 1.0
-In-Reply-To: <112A412BB11A1242B37129D931BCE5348382CFB2@fmsmsx117.amr.corp.intel.com>
-Content-Type: text/plain; charset=utf-8; format=flowed
+In-Reply-To: <a364bcc959e01f2ebab27cefc5b87ff01633275c.1534686485.git.lukas@wunner.de>
+Content-Type: text/plain; charset=utf-8
+Message-Id: <a3cb1919-6796-ae68-718d-d5c13caef3f1@linux.vnet.ibm.com>
 List-ID: <linux-pci.vger.kernel.org>
 
+On 08/19/2018 07:29 AM, Lukas Wunner wrote:
+> Ever since the PCI hotplug core was introduced in 2002, drivers had to
+> allocate and register a struct hotplug_slot_info for every slot:
+> https://git.kernel.org/tglx/history/c/a8a2069f432c
+> 
+> Apparently the idea was that drivers furnish the hotplug core with an
+> up-to-date card presence status, power status, latch status and
+> attention indicator status as well as notify the hotplug core of changes
+> thereof.  However only 4 out of 12 hotplug drivers bother to notify the
+> hotplug core with pci_hp_change_slot_info() and the hotplug core never
+> made any use of the information:  There is just a single macro in
+> pci_hotplug_core.c, GET_STATUS(), which uses the hotplug_slot_info if
+> the driver lacks the corresponding callback in hotplug_slot_ops.  The
+> macro is called when the user reads the attribute via sysfs.
+> 
+> Now, if the callback isn't defined, the attribute isn't exposed in sysfs
+> in the first place (see e.g. has_power_file()).  There are only two
+> situations when the hotplug_slot_info would actually be accessed:
+> 
+> * If the driver defines ->enable_slot or ->disable_slot but not
+>   ->get_power_status.
+> 
+> * If the driver defines ->set_attention_status but not
+>   ->get_attention_status.
+> 
+> There is no driver doing the former and just a single driver doing the
+> latter, namely pnv_php.c.  Amend it with a ->get_attention_status
+> callback.  With that, the hotplug_slot_info becomes completely unused by
+> the PCI hotplug core.  But a few drivers use it internally as a cache:
+> 
+> cpcihp uses it to cache the latch_status and adapter_status.
+> cpqhp uses it to cache the adapter_status.
+> pnv_php and rpaphp use it to cache the attention_status.
+> shpchp uses it to cache all four values.
+> 
+> Amend these drivers to cache the information in their private slot
+> struct.  shpchp's slot struct already contains members to cache the
+> power_status and adapter_status, so additional members are only needed
+> for the other two values.  In the case of cpqphp, the cached value is
+> only accessed in a single place, so instead of caching it, read the
+> current value from the hardware.
+> 
+> Caution:  acpiphp, cpci, cpqhp, shpchp, asus-wmi and eeepc-laptop
+> populate the hotplug_slot_info with initial values on probe.  That code
+> is herewith removed.  There is a theoretical chance that the code has
+> side effects without which the driver fails to function, e.g. if the
+> ACPI method to read the adapter status needs to be executed at least
+> once on probe.  That seems unlikely to me, still maintainers should
+> review the changes carefully for this possibility.
+> 
+> Signed-off-by: Lukas Wunner <lukas@wunner.de>
+> Cc: Rafael J. Wysocki <rjw@rjwysocki.net>
+> Cc: Len Brown <lenb@kernel.org>
+> Cc: Scott Murray <scott@spiteful.org>
+> Cc: Benjamin Herrenschmidt <benh@kernel.crashing.org>
+> Cc: Paul Mackerras <paulus@samba.org>
+> Cc: Michael Ellerman <mpe@ellerman.id.au>
+> Cc: Gavin Shan <gwshan@linux.vnet.ibm.com>
+> Cc: Sebastian Ott <sebott@linux.vnet.ibm.com>
+> Cc: Gerald Schaefer <gerald.schaefer@de.ibm.com>
+> Cc: Corentin Chary <corentin.chary@gmail.com>
+> Cc: Darren Hart <dvhart@infradead.org>
+> Cc: Andy Shevchenko <andy@infradead.org>
+> ---
 
+With regards to driver/pci/hotplug/rpa*
 
-On 08/09/2018 03:40 PM, Jiang, Dave wrote:
->> -----Original Message-----
->> From: linux-pci-owner@vger.kernel.org [mailto:linux-pci-owner@vger.kernel.org] On Behalf Of Kit Chow
->> Sent: Thursday, August 9, 2018 2:48 PM
->> To: Logan Gunthorpe <logang@deltatee.com>; Eric Pilmore <epilmore@gigaio.com>; Bjorn Helgaas <helgaas@kernel.org>
->> Cc: linux-pci@vger.kernel.org; David Woodhouse <dwmw2@infradead.org>; Alex Williamson <alex.williamson@redhat.com>;
->> iommu@lists.linux-foundation.org
->> Subject: Re: IOAT DMA w/IOMMU
->>
->>
->>
->> On 08/09/2018 02:11 PM, Logan Gunthorpe wrote:
->>> On 09/08/18 02:57 PM, Kit Chow wrote:
->>>> On 08/09/2018 01:11 PM, Logan Gunthorpe wrote:
->>>>> On 09/08/18 01:47 PM, Kit Chow wrote:
->>>>>>> I haven't tested this scenario but my guess would be that IOAT would
->>>>>>> indeed go through the IOMMU and the PCI BAR address would need to be
->>>>>>> properly mapped into the IOAT's IOVA. The fact that you see DMAR errors
->>>>>>> is probably a good indication that this is the case. I really don't know
->>>>>>> why you'd want to DMA something without mapping it.
->>>>>> I have experimented with changing ntb_async_tx_submit to dma_map the PCI
->>>>>> BAR
->>>>>> address. With this, I get a different DMAR error:
->>>>> What code did you use to do this?
->>>> If you mean version of linux, it is 4.15.7.  Or specific dma_map call, I
->>>> believe it was dma_map_single.
->>> I mean the complete code you use to do the mapping so we can see if it's
->>> correct. dma_map_single() seems like an odd choice, I expected to see
->>> dma_map_resource().
->> Thanks for the suggestion!  Will try out dma_map_resource and report back.
->>
->> Kit
-> Kit, I was able to try this on the Skylake Xeon platform with Intel NTB and ioatdma and I did not encounter any issues. Unfortunately I do not have my pre-Skylake platform to test anymore to verify.
-We are expecting to get skylakes within a couple of weeks and I'll have 
-a chance to give it a go on there.
-
-Based on Logan's comments, I am very hopeful that the dma_map_resource 
-will make things work on the older platforms...
-
-Thanks
-Kit
-
-
->>>>>> DMAR: [DMA Write] Request device [07:00.4] fault addr ffd00000
->>>>>> [fault reason 12] non-zero reserved fields in PTE
->>>>> Also, what device corresponds to 07:00.4 on your system?
->>>> I believe 07.00.4 was the PLX dma device. I get the same error with ioat.
->>> Using the mapping with the PLX dma device likely converts it from a pure
->>> P2P request to one where the TLPs pass through the IOMMU. So the fact
->>> that you get the same error with both means IOAT almost certainly goes
->>> through the IOMMU and there's something wrong with the mapping setup.
->>>
->>> Logan
+Acked-by: Tyrel Datwyler <tyreld@linux.vnet.ibm.com>
