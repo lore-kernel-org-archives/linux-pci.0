@@ -1,71 +1,101 @@
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Date: Fri, 10 Aug 2018 16:13:41 +0100
-From: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
-To: Leonard Crestez <leonard.crestez@nxp.com>
-Subject: Re: [PATCH v3 0/2] PCI: imx: Initial imx7d pm support
-Message-ID: <20180810151341.GA6863@e107981-ln.cambridge.arm.com>
-References: <cover.1532448745.git.leonard.crestez@nxp.com>
- <bac2cb70b16d81f589915fc0900126b516414243.camel@nxp.com>
- <20180808111429.GC25150@e107981-ln.cambridge.arm.com>
- <a5556be9a5f62ea0472a1a2336bce8d71df0dcaa.camel@nxp.com>
- <20180808141938.GA30428@e107981-ln.cambridge.arm.com>
- <efd9c1d560cae84e2a4ee7585a4c61d5d40ba755.camel@nxp.com>
- <20180808152741.GA31808@e107981-ln.cambridge.arm.com>
- <52ee6376fa15d3a9a62bcfa5d87173e454ccc024.camel@nxp.com>
+Return-Path: <SRS0=brxM=LE=codeaurora.org=poza@kernel.org>
+Return-Path: <SRS0=brxM=LE=codeaurora.org=poza@kernel.org>
 MIME-Version: 1.0
-In-Reply-To: <52ee6376fa15d3a9a62bcfa5d87173e454ccc024.camel@nxp.com>
-List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
-List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
-List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
-List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
-List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
-Cc: "A.s. Dong" <aisheng.dong@nxp.com>,
- "Joao.Pinto@synopsys.com" <Joao.Pinto@synopsys.com>,
- Richard Zhu <hongxing.zhu@nxp.com>,
- "kernel@pengutronix.de" <kernel@pengutronix.de>,
- Anson Huang <anson.huang@nxp.com>,
- "andrew.smirnov@gmail.com" <andrew.smirnov@gmail.com>,
- "jingoohan1@gmail.com" <jingoohan1@gmail.com>,
- "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
- "bhelgaas@google.com" <bhelgaas@google.com>, dl-linux-imx <linux-imx@nxp.com>,
- "p.zabel@pengutronix.de" <p.zabel@pengutronix.de>,
- "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
- Fabio Estevam <fabio.estevam@nxp.com>,
- "shawnguo@kernel.org" <shawnguo@kernel.org>,
- "linux-arm-kernel@lists.infradead.org" <linux-arm-kernel@lists.infradead.org>,
- "l.stach@pengutronix.de" <l.stach@pengutronix.de>
-Content-Type: text/plain; charset="us-ascii"
-Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
-Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
+Content-Type: text/plain; charset=US-ASCII;
+ format=flowed
+Date: Tue, 21 Aug 2018 21:00:13 +0530
+From: poza@codeaurora.org
+To: Keith Busch <keith.busch@intel.com>
+Cc: Benjamin Herrenschmidt <benh@kernel.crashing.org>, Sinan Kaya
+ <okaya@kernel.org>, Bjorn Helgaas <helgaas@kernel.org>, Thomas Tai
+ <thomas.tai@oracle.com>, bhelgaas@google.com, linux-pci@vger.kernel.org,
+ linux-pci-owner@vger.kernel.org, Sam Bobroff <sam.bobroff@au1.ibm.com>
+Subject: Re: [PATCH 1/1] PCI/AER: prevent pcie_do_fatal_recovery from using
+ device after it is removed
+In-Reply-To: <20180821143751.GA18477@localhost.localdomain>
+References: <fe891b63-12c7-61ab-a59a-ae24ad766754@kernel.org>
+ <ab5cb5b277f1c1c1362ef597ca7b8c6a2cd32cdf.camel@kernel.crashing.org>
+ <908ff33ded8f31830f95a8889d8540f1@codeaurora.org>
+ <5027d857bb59edfd33442003aa618ece1bc9cd52.camel@kernel.crashing.org>
+ <b2e2ac5c92d8a91d00606754d1046578@codeaurora.org>
+ <2ecd1fd6d763810d45697f846fa876b58a193b1b.camel@kernel.crashing.org>
+ <a149d9657ca83b41c724b0ddd319c6fb@codeaurora.org>
+ <512e0e11c3ba462c1d033f8b0e768fa27489731c.camel@kernel.crashing.org>
+ <ad23b16cf7ff1f3b51961fda59533892@codeaurora.org>
+ <2742bdba5ae8ccc420234b6e6b0224919367ed4c.camel@kernel.crashing.org>
+ <20180821143751.GA18477@localhost.localdomain>
+Message-ID: <5839a8643dedd459fc55e327d1ad5217@codeaurora.org>
 List-ID: <linux-pci.vger.kernel.org>
 
-On Fri, Aug 10, 2018 at 11:11:55AM +0000, Leonard Crestez wrote:
-
-[...]
-
-> This needs further clarification: without the reset patch this will
-> hang on imx7 suspend/resume but this is the current behavior anyway.
+On 2018-08-21 20:07, Keith Busch wrote:
+> On Tue, Aug 21, 2018 at 04:06:30PM +1000, Benjamin Herrenschmidt wrote:
+>> On Tue, 2018-08-21 at 10:44 +0530, poza@codeaurora.org wrote:
+>> >
+>> > Ok Let me summarize the so far discussed things.
+>> >
+>> > It would be nice if we all (Bjorn, Keith, Ben, Sinan) can hold consensus
+>> > on this.
+>> >
+>> > 1) Right now AER and DPC both calls pcie_do_fatal_recovery(), I majorly
+>> > see DPC as error handling and recovery agent rather than being used for
+>> > hotplug.
+>> >     so in my opinion, both AER and DPC should have same error handling
+>> > and recovery mechanism
+>> 
+>> Yes.
+>> 
+>> >     so if there is a way to figure out that in absence of pcihp, if DPC
+>> > is being used to support hotplug then we fall back to original DPC
+>> > mechanism (which is remove devices)
+>> 
+>> Not exactly. If the presence detect change indicates it was a hotplug
+>> event rather.
 > 
-> Both patches are required for imx7 pci suspend and including them out
-> of order shouldn't break unrelated functionality.
+> The actions associated with error recovery will trigger link state 
+> changes
+> for a lot of existing hardware. PCIEHP currently does the same removal
+> sequence for both link state change (DLLSC) and presence detect change
+> (PDC) events.
 > 
-> So it should actually be fine to just include the pci changes now,
-> right?
+> It sounds like you want pciehp to do nothing on the DLLSC events that 
+> it
+> currently handles, and instead do the board removal only on PDC.  If 
+> that
+> is the case, is the desire to not remove devices downstream a 
+> permanently
+> disabled link, or does that responsibility fall onto some other 
+> component?
 
-It is a bit late for v4.19 but before considering that, this series
-is actually a set of fixes, correct ? If that's the case I think
-Shawn can send them upstream for a v4.19-rc*, I can ACK them if that
-sounds reasonable.
+Keith
 
-Patch (2) subject must make clear you are actually fixing a problem if
-we choose this course of action.
+Are you in agreement with following ?
 
-Lorenzo
+"
+Right now AER and DPC both calls pcie_do_fatal_recovery(), I majorly see 
+DPC as error handling and recovery agent rather than being used for 
+hotplug.
+    so in my opinion, both AER and DPC should have same error handling 
+and recovery mechanism
 
-_______________________________________________
-linux-arm-kernel mailing list
-linux-arm-kernel@lists.infradead.org
-http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
+    so if there is a way to figure out that in absence of pcihp, if DPC 
+is being used to support hotplug then we fall back to original DPC 
+mechanism (which is remove devices)
+    otherwise, we fall back to drivers callbacks.
+
+    Spec 6.7.5 Async Removal
+    "
+    The Surprise Down error resulting from async removal may trigger 
+Downstream Port Containment (See Section 6.2.10).
+    Downstream Port Containment following an async removal may be 
+utilized to hold the Link of a
+    Downstream Port in the Disabled LTSSM state while host software 
+recovers from the side effects of an async removal.
+    "
+
+    I think above is implementation specific. but there has to be some 
+way to kow if we are using DPC for hotplug or not !
+    otherwise it is assumed to be used for error handling and recovery
+
+    pcie_do_fatal_recovery should take care of above. so that we support 
+both error handling and async removal from DPC point of view.
+"
