@@ -1,50 +1,89 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-it0-f54.google.com ([209.85.214.54]:37272 "EHLO
-        mail-it0-f54.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1725836AbeH3XPA (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Thu, 30 Aug 2018 19:15:00 -0400
-Received: by mail-it0-f54.google.com with SMTP id h20-v6so4163117itf.2
-        for <linux-pci@vger.kernel.org>; Thu, 30 Aug 2018 12:11:22 -0700 (PDT)
-Subject: Re: [PATCH v5 07/13] block: Add PCI P2P flag for request queue and
- check support for requests
-To: Logan Gunthorpe <logang@deltatee.com>,
-        linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
-        linux-nvme@lists.infradead.org, linux-rdma@vger.kernel.org,
-        linux-nvdimm@lists.01.org, linux-block@vger.kernel.org
-Cc: Stephen Bates <sbates@raithlin.com>,
-        Christoph Hellwig <hch@lst.de>,
-        Keith Busch <keith.busch@intel.com>,
-        Sagi Grimberg <sagi@grimberg.me>,
-        Bjorn Helgaas <bhelgaas@google.com>,
-        Jason Gunthorpe <jgg@mellanox.com>,
-        Max Gurtovoy <maxg@mellanox.com>,
-        Dan Williams <dan.j.williams@intel.com>,
-        =?UTF-8?B?SsOpcsO0bWUgR2xpc3Nl?= <jglisse@redhat.com>,
-        Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-        Alex Williamson <alex.williamson@redhat.com>,
-        =?UTF-8?Q?Christian_K=c3=b6nig?= <christian.koenig@amd.com>
-References: <20180830185352.3369-1-logang@deltatee.com>
- <20180830185352.3369-8-logang@deltatee.com>
-From: Jens Axboe <axboe@kernel.dk>
-Message-ID: <b5ab8fa3-34ac-3117-fa0d-5206c3939435@kernel.dk>
-Date: Thu, 30 Aug 2018 13:11:18 -0600
+Return-Path: <SRS0=35td=LE=gigaio.com=epilmore@kernel.org>
+Return-Path: <SRS0=35td=LE=gigaio.com=epilmore@kernel.org>
 MIME-Version: 1.0
-In-Reply-To: <20180830185352.3369-8-logang@deltatee.com>
-Content-Type: text/plain; charset=utf-8
-Sender: linux-pci-owner@vger.kernel.org
+In-Reply-To: <dd918b52-7ddc-662c-5980-edf3e96ebca2@deltatee.com>
+References: <CAOQPn8soxubJxb=vp7kz+AM6LbPH5y+_Nx0Vzv7rjV_nMMqEmA@mail.gmail.com>
+ <20180809184331.GB113140@bhelgaas-glaptop.roam.corp.google.com>
+ <CAOQPn8uPYKai49WYPqZp2wNd5of=0hUvPOHEtqP56RZu-hcjuw@mail.gmail.com>
+ <b54899a8-a144-e8e0-9880-1800c4657b95@deltatee.com> <CAOQPn8tSNN+3igN-kMcQH46w_a9p6T+S7=c8CLREMLxr1kaTXQ@mail.gmail.com>
+ <7068db44-af31-4462-f966-2dd2340ba0f0@deltatee.com> <695826a6-e10c-5a30-a51f-7cc61ba6e640@gigaio.com>
+ <0d3f48c3-8c4f-4dfb-e883-23c168f12b9b@deltatee.com> <14db6acb-da4f-9604-7359-1671210fcb8b@gigaio.com>
+ <ad2cd3f2-eb41-d4c2-7614-379c2e458352@deltatee.com> <CAOQPn8uuTEcmdQdZB9-A7FT+YWtxSuruGFwmwCPApffTJNs9Vg@mail.gmail.com>
+ <41419ada-7f16-0028-1e43-3b4a6c6960b6@deltatee.com> <CAOQPn8uyozbmEV0Ww3LW4XDcaY1ZwV0yazsPxPQC0AfLNUhKYw@mail.gmail.com>
+ <dd918b52-7ddc-662c-5980-edf3e96ebca2@deltatee.com>
+From: Eric Pilmore <epilmore@gigaio.com>
+Date: Tue, 21 Aug 2018 16:45:20 -0700
+Message-ID: <CAOQPn8vO7wP2XGwyJALxkyeBFG6fkTAFgF8QcGiiJF0fOMBa4Q@mail.gmail.com>
+Subject: Re: IOAT DMA w/IOMMU
+To: Logan Gunthorpe <logang@deltatee.com>
+Cc: Kit Chow <kchow@gigaio.com>, Bjorn Helgaas <helgaas@kernel.org>, linux-pci@vger.kernel.org,
+	David Woodhouse <dwmw2@infradead.org>, Alex Williamson <alex.williamson@redhat.com>,
+	iommu@lists.linux-foundation.org
+Content-Type: text/plain; charset="UTF-8"
 List-ID: <linux-pci.vger.kernel.org>
 
-On 8/30/18 12:53 PM, Logan Gunthorpe wrote:
-> QUEUE_FLAG_PCI_P2P is introduced meaning a driver's request queue
-> supports targeting P2P memory.
-> 
-> When a request is submitted we check if PCI P2PDMA memory is assigned
-> to the first page in the bio. If it is, we ensure the queue it's
-> submitted to supports it, and enforce REQ_NOMERGE.
+On Tue, Aug 21, 2018 at 4:35 PM, Logan Gunthorpe <logang@deltatee.com> wrote:
+>
+>
+> On 21/08/18 05:28 PM, Eric Pilmore wrote:
+>>
+>>
+>> On Tue, Aug 21, 2018 at 4:20 PM, Logan Gunthorpe <logang@deltatee.com
+>> <mailto:logang@deltatee.com>> wrote:
+>>
+>>
+>>
+>>     On 21/08/18 05:18 PM, Eric Pilmore wrote:
+>>     > We have been running locally with Kit's change for dma_map_resource and its
+>>     > incorporation in ntb_async_tx_submit for the destination address and
+>>     > it runs fine
+>>     > under "load" (iperf) on a Xeon (Xeon(R) CPU E5-2680 v4 @ 2.40GHz) based system,
+>>     > regardless of whether the DMA engine being used is IOAT or a PLX
+>>     > device sitting in
+>>     > the PCIe tree. However, when we go back to a i7 (i7-7700K CPU @ 4.20GHz) based
+>>     > system it seems to run into issues, specifically when put under a
+>>     > load. In this case,
+>>     > just having a load using a single ping command with an interval=0, i.e. no delay
+>>     > between ping packets, after a few thousand packets the system just hangs. No
+>>     > panic or watchdogs.  Note that in this scenario I can only use a PLX DMA engine.
+>>
+>>     This is just my best guess: but it sounds to me like a bug in the PLX
+>>     DMA driver or hardware.
+>>
+>>
+>> The PLX DMA driver?  But the PLX driver isn't really even involved in
+>> the mapping
+>> stage.  Are you thinking maybe the stage at which the DMA descriptor is
+>> freed and
+>> the PLX DMA driver does a dma_descriptor_unmap?
+>
+> Hmm, well what would make you think the hang is during
+> mapping/unmapping?
 
-I think this belongs in the caller - both the validity check, and
-passing in NOMERGE for this type of request. I don't want to impose
-this overhead on everything, for a pretty niche case.
+Well, the only difference between success and failure is running with the
+call to dma_map_resource for the destination address, which is a PCI BAR
+address. Prior to Kit introducing this call, we never created a mapping for the
+destination PCI BAR address and it worked fine on all systems when using
+PLX DMA. It was only when we went to a Xeon system and attempted to use
+IOAT DMA that we found we needed a mapping for that destination PCI BAR
+address.
 
--- 
-Jens Axboe
+The only thing the PLX driver does related to "mappings" is a call to
+dma_descriptor_unmap when the descriptor is freed, however that is more
+of an administrative step to clean up the unmap-data data structure used
+when the mapping was originally established.
+
+> I would expect a hang to be in handling completions
+> from the DMA engine or something like that.
+>
+>> Again, PLX did not exhibit any issues on the Xeon system.
+>
+> Oh, I missed that. That puts a crinkle in my theory but, as you say, it
+> could be a timing issue.
+>
+> Also, it's VERY strange that it would hang the entire system. That makes
+> things very hard to debug...
+
+Tell me about it!  ;-)
+
+Eric
