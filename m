@@ -1,143 +1,56 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-wm0-f67.google.com ([74.125.82.67]:35947 "EHLO
-        mail-wm0-f67.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1728075AbeH2QhI (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Wed, 29 Aug 2018 12:37:08 -0400
-Received: by mail-wm0-f67.google.com with SMTP id j192-v6so5394970wmj.1
-        for <linux-pci@vger.kernel.org>; Wed, 29 Aug 2018 05:40:22 -0700 (PDT)
+Return-Path: <SRS0=35td=LE=gigaio.com=epilmore@kernel.org>
+Return-Path: <SRS0=35td=LE=gigaio.com=epilmore@kernel.org>
 MIME-Version: 1.0
-In-Reply-To: <CAD8Lp45D6=pqsgr_tXS08pE0dbG1XhcwnDB3mGZQ=P3ETxywzw@mail.gmail.com>
-References: <CAD8Lp46Y2eOR7WE28xToUL8s-aYiqPa0nS=1GSD0AxkddXq6+A@mail.gmail.com>
- <20180824154212.GB8601@al> <CAD8Lp45D6=pqsgr_tXS08pE0dbG1XhcwnDB3mGZQ=P3ETxywzw@mail.gmail.com>
-From: Karol Herbst <kherbst@redhat.com>
-Date: Wed, 29 Aug 2018 14:40:21 +0200
-Message-ID: <CACO55tsoOYfrA2Wqf38JA6n83yz8YGxzvfLun+kOisWN6pjb8A@mail.gmail.com>
-Subject: Re: [Nouveau] Rewriting Intel PCI bridge prefetch base address bits
- solves nvidia graphics issues
-To: Daniel Drake <drake@endlessm.com>
-Cc: Peter Wu <peter@lekensteyn.nl>, linux-pci@vger.kernel.org,
-        Linux PM <linux-pm@vger.kernel.org>,
-        Endless Linux Upstreaming Team <linux@endlessm.com>,
-        nouveau <nouveau@lists.freedesktop.org>
+In-Reply-To: <41419ada-7f16-0028-1e43-3b4a6c6960b6@deltatee.com>
+References: <CAOQPn8soxubJxb=vp7kz+AM6LbPH5y+_Nx0Vzv7rjV_nMMqEmA@mail.gmail.com>
+ <20180809184331.GB113140@bhelgaas-glaptop.roam.corp.google.com>
+ <CAOQPn8uPYKai49WYPqZp2wNd5of=0hUvPOHEtqP56RZu-hcjuw@mail.gmail.com>
+ <b54899a8-a144-e8e0-9880-1800c4657b95@deltatee.com> <CAOQPn8tSNN+3igN-kMcQH46w_a9p6T+S7=c8CLREMLxr1kaTXQ@mail.gmail.com>
+ <7068db44-af31-4462-f966-2dd2340ba0f0@deltatee.com> <695826a6-e10c-5a30-a51f-7cc61ba6e640@gigaio.com>
+ <0d3f48c3-8c4f-4dfb-e883-23c168f12b9b@deltatee.com> <14db6acb-da4f-9604-7359-1671210fcb8b@gigaio.com>
+ <ad2cd3f2-eb41-d4c2-7614-379c2e458352@deltatee.com> <CAOQPn8uuTEcmdQdZB9-A7FT+YWtxSuruGFwmwCPApffTJNs9Vg@mail.gmail.com>
+ <41419ada-7f16-0028-1e43-3b4a6c6960b6@deltatee.com>
+From: Eric Pilmore <epilmore@gigaio.com>
+Date: Tue, 21 Aug 2018 16:30:26 -0700
+Message-ID: <CAOQPn8tNKqAjEwa9vdys7v=bvv7SL=+W=CNwPjPmHnifYuRPyA@mail.gmail.com>
+Subject: Re: IOAT DMA w/IOMMU
+To: Logan Gunthorpe <logang@deltatee.com>
+Cc: Kit Chow <kchow@gigaio.com>, Bjorn Helgaas <helgaas@kernel.org>, linux-pci@vger.kernel.org,
+	David Woodhouse <dwmw2@infradead.org>, Alex Williamson <alex.williamson@redhat.com>,
+	iommu@lists.linux-foundation.org
 Content-Type: text/plain; charset="UTF-8"
-Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tue, Aug 28, 2018 at 4:23 AM, Daniel Drake <drake@endlessm.com> wrote:
-> On Fri, Aug 24, 2018 at 11:42 PM, Peter Wu <peter@lekensteyn.nl> wrote:
->> Are these systems also affected through runtime power management? For
->> example:
->>
->>     modprobe nouveau    # should enable runtime PM
->>     sleep 6             # wait for runtime suspend to kick in
->>     lspci -s1:          # runtime resume by reading PCI config space
->>
->> On laptops from about 2015-2016 with a GTX 9xxM this sequence results in
->> hangs on various laptops
->> (https://bugzilla.kernel.org/show_bug.cgi?id=156341).
+On Tue, Aug 21, 2018 at 4:20 PM, Logan Gunthorpe <logang@deltatee.com> wrote:
 >
-> This works fine here. I'm facing a different issue.
 >
->>> After a lot of experimentation I found a workaround: during resume,
->>> set the value of PCI_PREF_BASE_UPPER32 to 0 on the parent PCI bridge.
->>> Easily done in drivers/pci/quirks.c. Now all nvidia stuff works fine.
->>
->> I am curious, how did you discover this? While this could work, perhaps
->> there are alternative workarounds/fixes?
+> On 21/08/18 05:18 PM, Eric Pilmore wrote:
+>> We have been running locally with Kit's change for dma_map_resource and its
+>> incorporation in ntb_async_tx_submit for the destination address and
+>> it runs fine
+>> under "load" (iperf) on a Xeon (Xeon(R) CPU E5-2680 v4 @ 2.40GHz) based system,
+>> regardless of whether the DMA engine being used is IOAT or a PLX
+>> device sitting in
+>> the PCIe tree. However, when we go back to a i7 (i7-7700K CPU @ 4.20GHz) based
+>> system it seems to run into issues, specifically when put under a
+>> load. In this case,
+>> just having a load using a single ping command with an interval=0, i.e. no delay
+>> between ping packets, after a few thousand packets the system just hangs. No
+>> panic or watchdogs.  Note that in this scenario I can only use a PLX DMA engine.
 >
-> Based on the observation that the following procedure works fine (note
-> the addition of step 3):
+> This is just my best guess: but it sounds to me like a bug in the PLX
+> DMA driver or hardware.
 >
-> 1. Boot
-> 2. Suspend/resume
-> 3. echo rescan > /sys/bus/pci/devices/0000:00:1c.0/rescan
-> 4. Load nouveau driver
-> 5. Start X
->
-> I worked through the rescan codepath until I had isolated the specific
-> code which magically makes things work (in pci_bridge_check_ranges).
->
-> Having found that, step 3 in the above test procedure can be replaced
-> with a simple:
->    setpci -s 00:1c.0 0x28.l=0
->
->> When you say "parent PCI" bridge, is that actually the device you see in
->> "lspci -tv"? On a Dell XPS 9560, the GPU is under a different device:
->>
->>   -[0000:00]-+-00.0  Intel Corporation Xeon E3-1200 v6/7th Gen Core Processor Host Bridge/DRAM Registers
->>              +-01.0-[01]----00.0  NVIDIA Corporation GP107M [GeForce GTX 1050 Mobile]
->>
->>  00:01.0 PCI bridge [0604]: Intel Corporation Xeon E3-1200 v5/E3-1500 v5/6th Gen Core Processor PCIe Controller (x16) [8086:1901] (rev 05)
->
-> Yes, it's the parent bridge shown by lspci. The address of this varies
-> from system to system.
->
->>> 1. Is the Intel PCI bridge misbehaving here? Why does writing the same
->>> value of PCI_PREF_BASE_UPPER32 make any difference at all?
->>
->> At what point in the suspend code path did you insert this write? It is
->> possible that the write somehow acted as a fence/memory barrier?
->
-> static void quirk_pref_base_upper32(struct pci_dev *dev)
-> {
->        u32 pref_base_upper32;
->        pci_read_config_dword(dev, PCI_PREF_BASE_UPPER32, &pref_base_upper32);
->        pci_write_config_dword(dev, PCI_PREF_BASE_UPPER32, pref_base_upper32);
-> }
-> DECLARE_PCI_FIXUP_RESUME(PCI_VENDOR_ID_INTEL,  0x9d10, quirk_pref_base_upper32);
->
+> Logan
 
-this workaround fixes runtime suspend/resume on my laptop as well...
-but what baffles me most is, unloading nouveau does as well. I will
-see what bits are exactly "fixing" it in the nouveau unloading path
-and maybe we can get around this issue inside nouveau. It would be
-still nice to get to the root cause of all of this as there are three
-known workarounds (at least on my system):
-1. unload nouveau
-2. skip setting the D3 power state via PCI config space (and still do
-the ACPI bits)
-3. write value of PCI_PREF_BASE_UPPER32
+(sorry, html in last response.  resending..)
 
-> I don't think it's acting as a barrier. I tried changing this code to
-> rewrite other registers such as PCI_PREF_MEMORY_BASE and that makes
-> the bug come back.
->
->>> 2. Who is responsible for saving and restoring PCI bridge
->>> configuration during suspend and resume? Linux? ACPI? BIOS?
->>
->> Not sure about PCI bridges, but at least for the PCI Express Capability
->> registers, it is in control of the OS when control is granted via the
->> ACPI _OSC method.
->
-> I guess you are referring to pci_save_pcie_state(). I can't see
-> anything equivalent for the bridge registers.
->
->> As Windows is probably not affected by this issue, a change must be
->> possible to make Linux more compatible with Windows. Though I am not
->> sure what change is needed.
->
-> I agree. There's a definite difference with Windows here and it would
-> be great to find a fix along those lines.
->
->> I recently compared PCI configuration space access and ACPI method
->> invocation using QEMU + VFIO with Linux 4.18, Windows 7 and Windows 10
->> (1803). There were differences like disabling MSI/interrupts before
->> suspend, setting the Enable Clock Power Management bit in PCI Express
->> Link Control and more, but applying these changes were so far not really
->> successful.
->
-> Interesting. Do you know any way that I could spy on Windows' accesses
-> to the PCI bridge registers?
-> Looking at at https://wiki.archlinux.org/index.php/PCI_passthrough_via_OVMF
-> I suspect VFIO would not help me here.
-> It says:
->     Note: If they are grouped with other devices in this manner, pci
-> root ports and bridges should neither be bound to vfio at boot, nor be
-> added to the VM.
->
-> Thanks
-> Daniel
-> _______________________________________________
-> Nouveau mailing list
-> Nouveau@lists.freedesktop.org
-> https://lists.freedesktop.org/mailman/listinfo/nouveau
+The PLX DMA driver?  But the PLX driver isn't really even involved in
+the mapping
+stage.  Are you thinking maybe the stage at which the DMA descriptor
+is freed and
+the PLX DMA driver does a dma_descriptor_unmap?
+
+Again, PLX did not exhibit any issues on the Xeon system.
+
+Eric
