@@ -1,49 +1,66 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from foss.arm.com ([217.140.101.70]:36364 "EHLO foss.arm.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1726875AbeHHL5W (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Wed, 8 Aug 2018 07:57:22 -0400
-Date: Wed, 8 Aug 2018 10:38:22 +0100
-From: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
-To: Ray Jui <ray.jui@broadcom.com>
-Cc: Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org,
-        Tomasz Nowicki <tn@semihalf.com>,
-        Vladimir Olovyannikov <vladimir.olovyannikov@broadcom.com>,
-        BCM Kernel Feedback <bcm-kernel-feedback-list@broadcom.com>
-Subject: Re: [RFC] ARM64, PCIe, annd ACPI
-Message-ID: <20180808093822.GA25150@e107981-ln.cambridge.arm.com>
-References: <89484aa0-08c4-0cff-500d-407d21e2f5fd@broadcom.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <89484aa0-08c4-0cff-500d-407d21e2f5fd@broadcom.com>
+Received: from mx0a-001b2d01.pphosted.com ([148.163.156.1]:35058 "EHLO
+        mx0a-001b2d01.pphosted.com" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1726104AbeHUEij (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Tue, 21 Aug 2018 00:38:39 -0400
+Received: from pps.filterd (m0098404.ppops.net [127.0.0.1])
+        by mx0a-001b2d01.pphosted.com (8.16.0.22/8.16.0.22) with SMTP id w7L1IocK007232
+        for <linux-pci@vger.kernel.org>; Mon, 20 Aug 2018 21:20:42 -0400
+Received: from e31.co.us.ibm.com (e31.co.us.ibm.com [32.97.110.149])
+        by mx0a-001b2d01.pphosted.com with ESMTP id 2m055aeyu5-1
+        (version=TLSv1.2 cipher=AES256-GCM-SHA384 bits=256 verify=NOT)
+        for <linux-pci@vger.kernel.org>; Mon, 20 Aug 2018 21:20:42 -0400
+Received: from localhost
+        by e31.co.us.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
+        for <linux-pci@vger.kernel.org> from <tyreld@linux.vnet.ibm.com>;
+        Mon, 20 Aug 2018 19:20:41 -0600
+From: Tyrel Datwyler <tyreld@linux.vnet.ibm.com>
+To: mpe@ellerman.id.au
+Cc: benh@kernel.crashing.org, linuxppc-dev@lists.ozlabs.org,
+        nfont@linux.vnet.ibm.com, linux-pci@vger.kernel.org,
+        bhelgaas@google.com, linux-kernel@vger.kernel.org,
+        Tyrel Datwyler <tyreld@linux.vnet.ibm.com>
+Subject: [PATCH] MAINTAINERS: add maintainer entries for RPA pci hotplug drivers
+Date: Mon, 20 Aug 2018 18:20:31 -0700
+Message-Id: <1534814431-20112-1-git-send-email-tyreld@linux.vnet.ibm.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tue, Aug 07, 2018 at 05:10:15PM -0700, Ray Jui wrote:
-> Hi Lorenzo/Bjorn,
-> 
-> I have a question on PCIe controller APCI support on ARM64 based systems.
-> 
-> If my understanding of the implementation of "pci_acpi_scan_root" under
-> "arch/arm64/kernel/pci.c" is correct, it appears
-> "pci_acpi_setup_ecam_mapping" is called within "pci_acpi_scan_root".
-> 
-> Does that mean for a PCIe host controller on ARM64 to support ACPI, it needs
-> to support ECAM and MMIO based access to the configuration space registers?
-> 
-> If the above statement is true, does it imply that any PCIe controller on
-> ARM64 that does not support MMIO based access to the config space register
-> cannot have ACPI support?
+Adding myself as maintiner of the IBM RPA hotplug modules located in
+drivers/pci/hotplug directory. These modules provide kernel interfaces
+for support of Dynamic Logical Partitioning (DLPAR) of Logical and
+Physical IO slots, and hotplug of physical PCI slots of a PHB on
+RPA-compliant ppc64 platforms (pseries).
 
-Yes and it is not just MMIO, config space must be ECAM compliant as described
-in the PCI firmware specification and enforced here:
+Signed-off-by: Tyrel Datwyler <tyreld@linux.vnet.ibm.com>
+---
+ MAINTAINERS | 14 ++++++++++++++
+ 1 file changed, 14 insertions(+)
 
-http://infocenter.arm.com/help/topic/com.arm.doc.den0029b/Server_Base_System_Architecture_v5_0_ARM_DEN_0029B.pdf
-
-In short: what's in the mainline (+ adequate PCI controller firmware
-configuration) must be sufficient to bootstrap your PCI subsystem in
-ACPI, it is a very simple litmus test and we won't add anything that
-deviates from that to the mainline kernel ARM64 ACPI PCI code support.
-
-Thanks,
-Lorenzo
+diff --git a/MAINTAINERS b/MAINTAINERS
+index 5df1b36..7b5dc3f 100644
+--- a/MAINTAINERS
++++ b/MAINTAINERS
+@@ -6984,6 +6984,20 @@ F:	drivers/crypto/vmx/aes*
+ F:	drivers/crypto/vmx/ghash*
+ F:	drivers/crypto/vmx/ppc-xlate.pl
+ 
++IBM Power PCI Hotplug Driver for RPA-compliant PPC64 platform
++M:	Tyrel Datwyler <tyreld@linux.vnet.ibm.com>
++L:	linux-pci@vger.kernel.org
++L:	linuxppc-dev@lists.ozlabs.org
++S:	Supported
++F:	drivers/pci/hotplug/rpaphp*
++
++IBM Power IO DLPAR Driver for RPA-compliant PPC64 platform
++M:	Tyrel Datwyler <tyreld@linux.vnet.ibm.com>
++L:	linux-pci@vger.kernel.org
++L:	linuxppc-dev@lists.ozlabs.org
++S:	Supported
++F:	drivers/pci/hotplug/rpadlpar*
++
+ IBM ServeRAID RAID DRIVER
+ S:	Orphan
+ F:	drivers/scsi/ips.*
+-- 
+1.8.3.1
