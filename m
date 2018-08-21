@@ -1,60 +1,75 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.bootlin.com ([62.4.15.54]:50355 "EHLO mail.bootlin.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1732374AbeHCQfc (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Fri, 3 Aug 2018 12:35:32 -0400
-From: Thomas Petazzoni <thomas.petazzoni@bootlin.com>
-To: Bjorn Helgaas <bhelgaas@google.com>,
-        Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
-        linux-pci@vger.kernel.org
-Cc: Nadav Haklai <nadavh@marvell.com>,
-        Gregory Clement <gregory.clement@bootlin.com>,
-        =?UTF-8?q?Miqu=C3=A8l=20Raynal?= <miquel.raynal@bootlin.com>,
-        Maxime Chevallier <maxime.chevallier@bootlin.com>,
-        Antoine Tenart <antoine.tenart@bootlin.com>,
-        linux-arm-kernel@lists.infradead.org,
-        Thomas Petazzoni <thomas.petazzoni@bootlin.com>
-Subject: [PATCH v2 4/6] PCI: mvebu: use resource_size() to remap I/O space
-Date: Fri,  3 Aug 2018 16:38:46 +0200
-Message-Id: <20180803143848.21551-5-thomas.petazzoni@bootlin.com>
-In-Reply-To: <20180803143848.21551-1-thomas.petazzoni@bootlin.com>
-References: <20180803143848.21551-1-thomas.petazzoni@bootlin.com>
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <SRS0=Awgj=LE=renesas.com=phil.edworthy@kernel.org>
+Return-Path: <SRS0=Awgj=LE=renesas.com=phil.edworthy@kernel.org>
+From: Phil Edworthy <phil.edworthy@renesas.com>
+To: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
+CC: Marek Vasut <marek.vasut@gmail.com>, Bjorn Helgaas <helgaas@kernel.org>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>, Marek Vasut
+	<marek.vasut+renesas@gmail.com>, Geert Uytterhoeven
+	<geert+renesas@glider.be>, Simon Horman <horms+renesas@verge.net.au>, Wolfram
+ Sang <wsa@the-dreams.de>, "linux-renesas-soc@vger.kernel.org"
+	<linux-renesas-soc@vger.kernel.org>
+Subject: RE: [PATCH V2 4/5] PCI: rcar: Support runtime PM, link state L1
+ handling
+Date: Tue, 21 Aug 2018 08:58:38 +0000
+Message-ID: 
+ <TY1PR01MB1769D7656974C9EF15948159F5310@TY1PR01MB1769.jpnprd01.prod.outlook.com>
+References: <20171117174906.GB22599@red-moon>
+ <3e0bc374-d296-675c-f290-256cc530feb7@gmail.com>
+ <20180611135912.GD75679@bhelgaas-glaptop.roam.corp.google.com>
+ <77d1eaf8-e180-f5f5-50f0-34c45e72c553@gmail.com>
+ <20180613135308.GB201807@bhelgaas-glaptop.roam.corp.google.com>
+ <20180613155252.GA12210@e107981-ln.cambridge.arm.com>
+ <20180613172559.GC201807@bhelgaas-glaptop.roam.corp.google.com>
+ <1d543b91-ac4f-7b61-4b2c-d8865e06d31e@gmail.com>
+ <9b91bbd9-64df-764e-e553-a37463549a92@gmail.com>
+ <TY1PR01MB176994051783997958BAB14AF5320@TY1PR01MB1769.jpnprd01.prod.outlook.com>
+ <20180820144733.GA24413@red-moon>
+In-Reply-To: <20180820144733.GA24413@red-moon>
+Content-Type: text/plain; charset="utf-8"
+MIME-Version: 1.0
 List-ID: <linux-pci.vger.kernel.org>
 
-Instead of hardcoding the remapping of IO_SPACE_LIMIT - SZ_64K, use
-resource_size(), as suggested by Lorenzo Pieralisi.
-
-However, we cannot use just IO_SPACE_LIMIT, because pci_ioremap_io()
-has a bug (which will be fixed separately) and doesn't allow remapping
-the last 64 KB before IO_SPACE_LIMIT, so we ensure that we do not
-exceed this limit. A separate patch will be sent to fix the
-pci_ioremap_io() issue, and once it is merged, we will be able to drop
-this work-around. Note that this workaround already existed, since we
-were mapping only up to IO_SPACE_LIMIT - SZ_64K.
-
-Suggested-by: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
-Signed-off-by: Thomas Petazzoni <thomas.petazzoni@bootlin.com>
----
- drivers/pci/controller/pci-mvebu.c | 4 ++--
- 1 file changed, 2 insertions(+), 2 deletions(-)
-
-diff --git a/drivers/pci/controller/pci-mvebu.c b/drivers/pci/controller/pci-mvebu.c
-index 9aa224f2f009..05f863435e5e 100644
---- a/drivers/pci/controller/pci-mvebu.c
-+++ b/drivers/pci/controller/pci-mvebu.c
-@@ -1218,10 +1218,10 @@ static int mvebu_pcie_probe(struct platform_device *pdev)
- 		pcie->realio.flags = pcie->io.flags;
- 		pcie->realio.start = PCIBIOS_MIN_IO;
- 		pcie->realio.end = min_t(resource_size_t,
--					 IO_SPACE_LIMIT,
-+					 IO_SPACE_LIMIT - SZ_64K,
- 					 resource_size(&pcie->io) - 1);
- 
--		for (i = 0; i < (IO_SPACE_LIMIT - SZ_64K); i += SZ_64K)
-+		for (i = 0; i < resource_size(&pcie->realio); i += SZ_64K)
- 			pci_ioremap_io(i, pcie->io.start + i);
- 	} else
- 		pcie->realio = pcie->io;
--- 
-2.14.4
+SGkgTG9yZW56bywNCg0KT24gMjAgQXVndXN0IDIwMTggMTU6NDggTG9yZW56byBQaWVyYWxpc2kg
+d3JvdGU6DQo+IE9uIE1vbiwgQXVnIDIwLCAyMDE4IGF0IDAxOjQ0OjQ4UE0gKzAwMDAsIFBoaWwg
+RWR3b3J0aHkgd3JvdGU6DQo+IA0KPiBbLi4uXQ0KPiANCj4gPiBIb3dldmVyLCBib3RoIGJlZm9y
+ZSBhbmQgYWZ0ZXIgdGhpcyBwYXRjaCwgdGhlIFJQIGRvZXMgbm90IHRyYW5zaXRpb24NCj4gPiBM
+MSB3aGVuIHRoZSBlbmRwb2ludHMgY2hhbmdlIHRvIEwxLg0KPiA+IFRoaXMgcGF0Y2ggb25seSB0
+cmFuc2l0aW9ucyB0aGUgUlAgdG8gTDEgZHVyaW5nIGFjY2Vzc2luZyBhIGNhcmQncw0KPiA+IGNv
+bmZpZyByZWdpc3RlcnMsIGlmIHRoZSBSUCBpcyBub3QgaW4gTDEgbGluayBzdGF0ZSBhbmQgaGFz
+IHJlY2VpdmVkDQo+ID4gUE1fRU5URVJfTDEgRExMUCAoZS5nLiByZXN1bWUpLiBBZnRlciB0aGlz
+LCB0aGUgaGFyZHdhcmUgd2lsbCBoYW5kbGUNCj4gPiB0aGUgdHJhbnNpdGlvbiBvdXQgb2YgTDEu
+DQo+ID4NCj4gPiBUaGUgcmVsZXZhbnQgcGFydCBvZiB0aGUgcmNhciBtYW51YWwgc2F5czogIkFm
+dGVyIGEgcmVjb3ZlcnkgdG8gTDAsIGlmDQo+ID4gdGhlIGRldmljZSBpcyBpbiB0aGUgTm9uLUQw
+IHN0YXRlIGFuZCBQTV9FbnRlcl9MMSBETExQIGlzIHRyYW5zbWl0dGVkDQo+ID4gZnJvbSB0aGUg
+ZG93bnN0cmVhbSBkZXZpY2UsIHNvZnR3YXJlIHNob3VsZCBjb25maXJtIHRoYXQgaGFyZHdhcmUg
+aXMNCj4gPiBpbiB0aGUgTDAgc3RhdGUgKFBNU1IuUE1TVEFURSA9IEwwKSBhbmQgaW5pdGlhdGUg
+dGhlIEwxIHRyYW5zaXRpb24NCj4gPiBzZXF1ZW5jZSBhZ2FpbiAod3JpdGUgMSB0byBQTUNUTFIu
+TDFJQVROKS4gSW4gdGhpcyBjYXNlLCB0aGUgc2VxdWVuY2UNCj4gPiBpczogTDAg4oaSIEwxIOKG
+kiBMMCByZWNvdmVyeSDihpIgTDEgYWdhaW4uIg0KPiANCj4gQ2FuIHlvdSBtYXAgdGhlc2UgRlNN
+IHN0ZXBzIHRvIHRoaXMgcGF0Y2ggY29kZSBwbGVhc2UgPyBJIHdvdWxkIGxpa2UgdG8NCj4gdW5k
+ZXJzdGFuZCB3aGF0IExpbmsgc3RhdGUgbWFwcyB0byB3aGljaCBjb21tYW5kIHdyaXR0ZW4gYW5k
+IHdoZW4uDQpJIGRvbuKAmXQgdGhpbmsgSSBjYW4gYmVjYXVzZSB3ZSBhcmUgbm90IGluaXRpYWxs
+eSBlbnRlcmluZyBMMS4gTG9va2luZyBhdCB0aGlzDQphZ2FpbiwgSSB0aGluayB0aGlzIHNlY3Rp
+b24gb2YgdGhlIG1hbnVhbCBvbmx5IGhlbHBzIGluIGluZGljYXRpbmcgaG93IHRvIA0KZGV0ZWN0
+IHdlIHNob3VsZCBoYXZlIGdvbmUgaW50byBMMSBhbmQgaG93IHRvIHBva2UgdGhlIEhXIHRvIGlu
+aXRpYXRlIHRoZQ0KdHJhbnNpdGlvbiB0byBMMS4NCg0KT24gc3lzdGVtIHN1c3BlbmQsIHRoZSBF
+UCBzZW5kcyBQTV9FbnRlcl9MMSBETExQIGFuZCBlbnRlcnMgTDEgc3RhdGUuDQpUaGUgcmNhciBS
+UCBjYW5ub3QgZW50ZXIgTDEgYnkgSFcgYWxvbmUsIHNvIGlzIHN0aWxsIGluIEwwLiBUaGUgb25s
+eSB3YXkgb3V0DQpvZiB0aGlzIGZyb20gdGhlIFBDSWUgc3BlYyBGU00gaXMgZm9yIGJvdGggRVAg
+YW5kIFJQIHRvIGVudGVyIHRoZSBSZWNvdmVyeQ0Kc3RhdGUuDQpUaGUgcGF0Y2ggc2ltcGx5IGRl
+dGVjdHMgdGhhdCB3ZSBzaG91bGQgaGF2ZSBnb25lIGludG8gTDEsIGFuZCBzbyBpbml0aWF0ZXMN
+CnRoYXQgc3RhdGUgY2hhbmdlLCBhbmQgdGhlIEhXIHdpbGwgdGhlbiBoYW5kbGUgdGhlIHRyYW5z
+aXRpb24gZnJvbSBMMSB0bw0KUmVjb3ZlcnkgYW5kIHRoZW4gb24gdG8gTDAuDQoNCg0KPiA+IEkg
+ZG9u4oCZdCB0aGluayB0aGUgcG90ZW50aWFsIGlzc3VlIHRoYXQgQmpvcm4gdGFsa2VkIGFib3V0
+IGNhbiBoYXBwZW4NCj4gPiBiZWNhdXNlIHRoZSBSUCBkb2VzIGdvIGludG8gTDEuIEkgY291bGQg
+YmUgd3JvbmcgdGhvdWdoLi4uDQo+IA0KPiBJIGRvIG5vdCB1bmRlcnN0YW5kIHRoaXMgcGFyYWdy
+YXBoLCBtaW5kIGVsYWJvcmF0aW5nIG9uIGl0ID8NCkFzIHJjYXIgUlAgb25seSBzdXBwb3J0cyBE
+MCBhbmQgRDNob3QvY29sZCwgKHRoZSBtYW51YWwgc2F5cyBpdCBzdXBwb3J0cw0KRDNjb2xkLCBi
+dXQgSSBjYW5ub3Qgc2VlIGhvdyBpZiBpdCBkb2VzbuKAmXQgc3VwcG9ydCBMMiBvciBMMyBzdGF0
+ZXMpLCBpZiB5b3UNCmZvcmNlIHRoZSBsaW5rIHRvIEQzLCB3ZSBjYW4gb25seSBiZSBpbiBMMSBz
+dGF0ZS4NCg0KDQo+ID4gVGhlIGRyaXZlciBzaG91bGQgYWxzbyBoYXZlIGEgcnVudGltZS1QTSBo
+b29rIHRvIHRyYW5zaXRpb24gdG8gTDEgb24NCj4gPiBzdXNwZW5kIGluIG9yZGVyIHRvIHNhdmUg
+cG93ZXIuIEhvd2V2ZXIsIHRoYXQgaXMgc29tZXdoYXQgc2VwYXJhdGUgdG8NCj4gPiB0aGUgcHJv
+YmxlbSB0aGUgcGF0Y2ggZml4ZXMuDQo+IA0KPiBZZXMgdGhhdCdzIGEgc2VwYXJhdGUgcGF0Y2gu
+DQo+IA0KPiBUaGFua3MgZm9yIGNoaW1pbmcgaW4sIGxldCdzIHRyeSB0byBnZXQgdG8gdGhlIGJv
+dHRvbSBvZiB0aGlzIHRocmVhZC4NCj4gDQo+IExvcmVuem8NCg0KVGhhbmtzDQpQaGlsDQo=
