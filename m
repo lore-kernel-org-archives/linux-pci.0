@@ -1,135 +1,57 @@
-Return-Path: <SRS0=fEc7=KY=gigaio.com=kchow@kernel.org>
-Return-Path: <SRS0=fEc7=KY=gigaio.com=kchow@kernel.org>
-Subject: Re: IOAT DMA w/IOMMU
-To: Logan Gunthorpe <logang@deltatee.com>, "Jiang, Dave"
- <dave.jiang@intel.com>, Eric Pilmore <epilmore@gigaio.com>,
- Bjorn Helgaas <helgaas@kernel.org>
-Cc: "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
- David Woodhouse <dwmw2@infradead.org>,
- Alex Williamson <alex.williamson@redhat.com>,
- "iommu@lists.linux-foundation.org" <iommu@lists.linux-foundation.org>
-References: <CAOQPn8soxubJxb=vp7kz+AM6LbPH5y+_Nx0Vzv7rjV_nMMqEmA@mail.gmail.com>
- <20180809184331.GB113140@bhelgaas-glaptop.roam.corp.google.com>
- <CAOQPn8uPYKai49WYPqZp2wNd5of=0hUvPOHEtqP56RZu-hcjuw@mail.gmail.com>
- <b54899a8-a144-e8e0-9880-1800c4657b95@deltatee.com>
- <95e53520-b05f-4be4-e694-463d717453a8@gigaio.com>
- <cdd9245f-eb23-9e10-1755-8f396a2cd255@deltatee.com>
- <b278c1e5-6f08-c879-a27d-7fc172645fd5@gigaio.com>
- <f04fae39-645e-3c6e-07c0-b194260bf5de@deltatee.com>
- <3f503940-db6a-ec75-ed15-1db99d5d48ef@gigaio.com>
- <112A412BB11A1242B37129D931BCE5348382CFB2@fmsmsx117.amr.corp.intel.com>
- <b8af340c-d40b-cb8c-987f-b394f1d6ec3e@gigaio.com>
- <adf51c74-36fa-b61d-8497-27bd75178ba4@deltatee.com>
-From: Kit Chow <kchow@gigaio.com>
-Message-ID: <aa9c3f41-efc9-8c68-a517-2736c8986621@gigaio.com>
-Date: Thu, 9 Aug 2018 16:00:00 -0700
+Return-Path: <SRS0=uSZ2=LE=intel.com=keith.busch@kernel.org>
+Return-Path: <SRS0=uSZ2=LE=intel.com=keith.busch@kernel.org>
+Date: Tue, 21 Aug 2018 09:29:21 -0600
+From: Keith Busch <keith.busch@intel.com>
+To: Sinan Kaya <okaya@kernel.org>
+Cc: Benjamin Herrenschmidt <benh@kernel.crashing.org>, poza@codeaurora.org,
+	Bjorn Helgaas <helgaas@kernel.org>,
+	Thomas Tai <thomas.tai@oracle.com>, bhelgaas@google.com,
+	linux-pci@vger.kernel.org, linux-pci-owner@vger.kernel.org,
+	Sam Bobroff <sam.bobroff@au1.ibm.com>
+Subject: Re: [PATCH 1/1] PCI/AER: prevent pcie_do_fatal_recovery from using
+ device after it is removed
+Message-ID: <20180821152920.GA18612@localhost.localdomain>
+References: <908ff33ded8f31830f95a8889d8540f1@codeaurora.org>
+ <5027d857bb59edfd33442003aa618ece1bc9cd52.camel@kernel.crashing.org>
+ <b2e2ac5c92d8a91d00606754d1046578@codeaurora.org>
+ <2ecd1fd6d763810d45697f846fa876b58a193b1b.camel@kernel.crashing.org>
+ <a149d9657ca83b41c724b0ddd319c6fb@codeaurora.org>
+ <512e0e11c3ba462c1d033f8b0e768fa27489731c.camel@kernel.crashing.org>
+ <ad23b16cf7ff1f3b51961fda59533892@codeaurora.org>
+ <2742bdba5ae8ccc420234b6e6b0224919367ed4c.camel@kernel.crashing.org>
+ <20180821143751.GA18477@localhost.localdomain>
+ <621f599b-8a87-5bde-5a9f-ecb5bdbcf716@kernel.org>
 MIME-Version: 1.0
-In-Reply-To: <adf51c74-36fa-b61d-8497-27bd75178ba4@deltatee.com>
-Content-Type: text/plain; charset=utf-8; format=flowed
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <621f599b-8a87-5bde-5a9f-ecb5bdbcf716@kernel.org>
 List-ID: <linux-pci.vger.kernel.org>
 
+On Tue, Aug 21, 2018 at 11:07:31AM -0400, Sinan Kaya wrote:
+> On 8/21/2018 10:37 AM, Keith Busch wrote:
+> > The actions associated with error recovery will trigger link state changes
+> > for a lot of existing hardware. PCIEHP currently does the same removal
+> > sequence for both link state change (DLLSC) and presence detect change
+> > (PDC) events.
+> > 
+> > It sounds like you want pciehp to do nothing on the DLLSC events that it
+> > currently handles, and instead do the board removal only on PDC.  If that
+> > is the case, is the desire to not remove devices downstream a permanently
+> > disabled link, or does that responsibility fall onto some other component?
+> > 
+> 
+> Looking at PDC is not enough. Hotplug driver handles both physical
+> removal as well as the link going down due to signal integrity issues today.
+> 
+> If the link went down because of a pending FATAL error, AER/DPC recovers
+> the link automatically. There is no need for hotplug to be involved in
+> fatal error work.
+> 
+> Hotplug driver needs to handle both physical removal as well as intermittent
+> link down issues though.
 
-
-On 08/09/2018 03:50 PM, Logan Gunthorpe wrote:
->
-> On 09/08/18 04:48 PM, Kit Chow wrote:
->> Based on Logan's comments, I am very hopeful that the dma_map_resource
->> will make things work on the older platforms...
-> Well, I *think* dma_map_single() would still work. So I'm not that
-> confident that's the root of your problem. I'd still like to see the
-> actual code snippet you are using.
->
-> Logan
-Here's the code snippet - (ntbdebug & 4) path does dma_map_resource of 
-the pci bar address.
-
-It was:
-                 unmap->addr[1] = dma_map_single(device->dev, (void 
-*)dest, len,
-                     DMA_TO_DEVICE);
-
-Kit
----
-
-
-static int ntb_async_tx_submit(struct ntb_transport_qp *qp,
-                                struct ntb_queue_entry *entry)
-{
-         struct dma_async_tx_descriptor *txd;
-         struct dma_chan *chan = qp->tx_dma_chan;
-         struct dma_device *device;
-         size_t len = entry->len;
-         void *buf = entry->buf;
-         size_t dest_off, buff_off;
-         struct dmaengine_unmap_data *unmap;
-         dma_addr_t dest;
-         dma_cookie_t cookie;
-         int     unmapcnt;
-
-         device = chan->device;
-
-         dest = qp->tx_mw_phys + qp->tx_max_frame * entry->tx_index;
-
-         buff_off = (size_t)buf & ~PAGE_MASK;
-         dest_off = (size_t)dest & ~PAGE_MASK;
-
-         if (!is_dma_copy_aligned(device, buff_off, dest_off, len))
-                 goto err;
-
-
-         if (ntbdebug & 0x4) {
-                 unmapcnt = 2;
-         } else {
-                 unmapcnt = 1;
-         }
-
-         unmap = dmaengine_get_unmap_data(device->dev, unmapcnt, 
-GFP_NOWAIT);
-         if (!unmap)
-                 goto err;
-
-         unmap->len = len;
-         unmap->addr[0] = dma_map_page(device->dev, virt_to_page(buf),
-                                       buff_off, len, DMA_TO_DEVICE);
-         if (dma_mapping_error(device->dev, unmap->addr[0]))
-                 goto err_get_unmap;
-
-         if (ntbdebug & 0x4) {
-                 unmap->addr[1] = dma_map_resource(device->dev,
-                     (phys_addr_t)dest, len, DMA_TO_DEVICE, 0);
-                 if (dma_mapping_error(device->dev, unmap->addr[1]))
-                         goto err_get_unmap;
-                 unmap->to_cnt = 2;
-         } else {
-                 unmap->addr[1] = dest;
-                 unmap->to_cnt = 1;
-         }
-
-         txd = device->device_prep_dma_memcpy(chan, unmap->addr[1],
-             unmap->addr[0], len, DMA_PREP_INTERRUPT);
-
-         if (!txd)
-                 goto err_get_unmap;
-
-         txd->callback_result = ntb_tx_copy_callback;
-         txd->callback_param = entry;
-         dma_set_unmap(txd, unmap);
-
-         cookie = dmaengine_submit(txd);
-         if (dma_submit_error(cookie))
-                 goto err_set_unmap;
-
-         dmaengine_unmap_put(unmap);
-
-         dma_async_issue_pending(chan);
-
-         return 0;
-
-err_set_unmap:
-         dma_descriptor_unmap(txd);
-         txd->desc_free(txd);
-err_get_unmap:
-         dmaengine_unmap_put(unmap);
-err:
-         return -ENXIO;
-}
+Back to your patch you linked to earlier, your proposal is to have
+pciehp wait for DEVSTS.FED before deciding if it needs to handle the
+DLLSC event. That might be a start, but it isn't enough since that
+status isn't set if the downstream device reported ERR_FATAL. I think
+you'd need to check the secondary status register for a Received System
+Error.
