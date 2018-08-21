@@ -1,197 +1,70 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:45560 "EHLO
-        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1725735AbeHFJ6x (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Mon, 6 Aug 2018 05:58:53 -0400
+Return-Path: <SRS0=uSZ2=LE=intel.com=keith.busch@kernel.org>
+Return-Path: <SRS0=uSZ2=LE=intel.com=keith.busch@kernel.org>
+Date: Tue, 21 Aug 2018 16:04:56 -0600
+From: Keith Busch <keith.busch@intel.com>
+To: Benjamin Herrenschmidt <benh@kernel.crashing.org>
+Cc: poza@codeaurora.org, Sinan Kaya <okaya@kernel.org>,
+	Bjorn Helgaas <helgaas@kernel.org>,
+	Thomas Tai <thomas.tai@oracle.com>, bhelgaas@google.com,
+	linux-pci@vger.kernel.org, linux-pci-owner@vger.kernel.org,
+	Sam Bobroff <sam.bobroff@au1.ibm.com>
+Subject: Re: [PATCH 1/1] PCI/AER: prevent pcie_do_fatal_recovery from using
+ device after it is removed
+Message-ID: <20180821220456.GC18612@localhost.localdomain>
+References: <908ff33ded8f31830f95a8889d8540f1@codeaurora.org>
+ <5027d857bb59edfd33442003aa618ece1bc9cd52.camel@kernel.crashing.org>
+ <b2e2ac5c92d8a91d00606754d1046578@codeaurora.org>
+ <2ecd1fd6d763810d45697f846fa876b58a193b1b.camel@kernel.crashing.org>
+ <a149d9657ca83b41c724b0ddd319c6fb@codeaurora.org>
+ <512e0e11c3ba462c1d033f8b0e768fa27489731c.camel@kernel.crashing.org>
+ <ad23b16cf7ff1f3b51961fda59533892@codeaurora.org>
+ <2742bdba5ae8ccc420234b6e6b0224919367ed4c.camel@kernel.crashing.org>
+ <20180821143751.GA18477@localhost.localdomain>
+ <277b7056aa7af8e98d5cd912838e582783943aa9.camel@kernel.crashing.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII;
- format=flowed
-Date: Mon, 06 Aug 2018 13:21:03 +0530
-From: poza@codeaurora.org
-To: Sinan Kaya <okaya@kernel.org>
-Cc: linux-pci@vger.kernel.org, Bjorn Helgaas <bhelgaas@google.com>,
-        Lukas Wunner <lukas@wunner.de>,
-        Mika Westerberg <mika.westerberg@linux.intel.com>,
-        "Gustavo A. R. Silva" <gustavo@embeddedor.com>,
-        Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-        Keith Busch <keith.busch@intel.com>
-Subject: Re: [PATCH v7 1/1] PCI: pciehp: Ignore link events when there is a
- fatal error pending
-In-Reply-To: <20180805225136.5800-2-okaya@kernel.org>
-References: <20180805225136.5800-1-okaya@kernel.org>
- <20180805225136.5800-2-okaya@kernel.org>
-Message-ID: <c1cfff22c63f6d3d6285575721a2a3e8@codeaurora.org>
-Sender: linux-pci-owner@vger.kernel.org
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <277b7056aa7af8e98d5cd912838e582783943aa9.camel@kernel.crashing.org>
 List-ID: <linux-pci.vger.kernel.org>
 
-On 2018-08-06 04:21, Sinan Kaya wrote:
-> AER/DPC reset is known as warm-resets. HP link recovery is known as
-> cold-reset via power-off and power-on command to the PCI slot.
+On Wed, Aug 22, 2018 at 07:14:32AM +1000, Benjamin Herrenschmidt wrote:
+> On Tue, 2018-08-21 at 08:37 -0600, Keith Busch wrote:
+> > > 
+> > > >      so if there is a way to figure out that in absence of pcihp, if DPC 
+> > > > is being used to support hotplug then we fall back to original DPC 
+> > > > mechanism (which is remove devices)
+> > > 
+> > > Not exactly. If the presence detect change indicates it was a hotplug
+> > > event rather.
+> > 
+> > The actions associated with error recovery will trigger link state changes
+> > for a lot of existing hardware. PCIEHP currently does the same removal
+> > sequence for both link state change (DLLSC) and presence detect change
+> > (PDC) events.
+> > 
+> > It sounds like you want pciehp to do nothing on the DLLSC events that it
+> > currently handles, and instead do the board removal only on PDC.  If that
+> > is the case, is the desire to not remove devices downstream a permanently
+> > disabled link, or does that responsibility fall onto some other component?
 > 
-> In the middle of a warm-reset operation (AER/DPC), we are:
+> I think there need to be some coordination between pciehb and DPC on
+> link state change yes.
 > 
-> 1. turning off the slow power. Slot power needs to be kept on in order
-> for recovery to succeed.
+> We could still remove the device if recovery fails. For example on EEH
+> we have a threshold and if a device fails more than N times within the
+> last M minutes (I don't remember the exact numbers and I'm not in front
+> of the code right now) we give up.
 > 
-> 2. performing a cold reset causing Fatal Error recovery to fail.
+> Also under some circumstances, the link will change as a result of the
+> error handling doing a hot reset.
 > 
-> If link goes down due to a DPC event, it should be recovered by DPC
-> status trigger. Injecting a cold reset in the middle can cause a HW
-> lockup as it is an undefined behavior.
+> For example, if the error happens in a parent bridge and that gets
+> reset, the entire hierarchy underneath does too.
 > 
-> Similarly, If link goes down due to an AER secondary bus reset issue,
-> it should be recovered by HW. Injecting a cold reset in the middle of a
-> secondary bus reset can cause a HW lockup as it is an undefined 
-> behavior.
-> 
-> 1. HP ISR observes link down interrupt.
-> 2. HP ISR checks that there is a fatal error pending, it doesn't touch
-> the link.
-> 3. HP ISR waits until link recovery happens.
-> 4. HP ISR calls the read vendor id function.
-> 5. If all fails, try the cold-reset approach.
-> 
-> If fatal error is pending and a fatal error service such as DPC or AER
-> is running, it is the responsibility of the fatal error service to
-> recover the link.
-> 
-> Signed-off-by: Sinan Kaya <okaya@kernel.org>
-> ---
->  drivers/pci/hotplug/pciehp_ctrl.c | 19 ++++++++++
->  drivers/pci/pci.h                 |  2 ++
->  drivers/pci/pcie/err.c            | 60 +++++++++++++++++++++++++++++++
->  3 files changed, 81 insertions(+)
-> 
-> diff --git a/drivers/pci/hotplug/pciehp_ctrl.c
-> b/drivers/pci/hotplug/pciehp_ctrl.c
-> index da7c72372ffc..ba8dd51a3f0f 100644
-> --- a/drivers/pci/hotplug/pciehp_ctrl.c
-> +++ b/drivers/pci/hotplug/pciehp_ctrl.c
-> @@ -222,9 +222,28 @@ void pciehp_handle_disable_request(struct slot 
-> *slot)
->  void pciehp_handle_presence_or_link_change(struct slot *slot, u32 
-> events)
->  {
->  	struct controller *ctrl = slot->ctrl;
-> +	struct pci_dev *pdev = ctrl->pcie->port;
->  	bool link_active;
->  	u8 present;
-> 
-> +	/* If a fatal error is pending, wait for AER or DPC to handle it. */
-> +	if (pcie_fatal_error_pending(pdev, PCI_ERR_UNC_SURPDN)) {
-> +		bool recovered;
-> +
-> +		recovered = pcie_wait_fatal_error_clear(pdev,
-> +						PCI_ERR_UNC_SURPDN);
-> +
-> +		/* If the fatal error is gone and the link is up, return */
-> +		if (recovered && pcie_wait_for_link(pdev, true)) {
-> +			ctrl_info(ctrl, "Slot(%s): Ignoring Link event due to successful
-> fatal error recovery\n",
-> +				  slot_name(slot));
-> +			return;
-> +		}
-> +
-> +		ctrl_info(ctrl, "Slot(%s): Fatal error recovery failed for Link
-> event, tryig hotplug reset\n",
-> +			  slot_name(slot));
-> +	}
-> +
->  	/*
->  	 * If the slot is on and presence or link has changed, turn it off.
->  	 * Even if it's occupied again, we cannot assume the card is the 
-> same.
-> diff --git a/drivers/pci/pci.h b/drivers/pci/pci.h
-> index c358e7a07f3f..2ebb05338368 100644
-> --- a/drivers/pci/pci.h
-> +++ b/drivers/pci/pci.h
-> @@ -356,6 +356,8 @@ void pci_enable_acs(struct pci_dev *dev);
->  /* PCI error reporting and recovery */
->  void pcie_do_fatal_recovery(struct pci_dev *dev, u32 service);
->  void pcie_do_nonfatal_recovery(struct pci_dev *dev);
-> +bool pcie_fatal_error_pending(struct pci_dev *pdev, u32 usrmask);
-> +bool pcie_wait_fatal_error_clear(struct pci_dev *pdev, u32 usrmask);
-> 
->  bool pcie_wait_for_link(struct pci_dev *pdev, bool active);
->  #ifdef CONFIG_PCIEASPM
-> diff --git a/drivers/pci/pcie/err.c b/drivers/pci/pcie/err.c
-> index f7ce0cb0b0b7..8ea012dbf063 100644
-> --- a/drivers/pci/pcie/err.c
-> +++ b/drivers/pci/pcie/err.c
-> @@ -16,6 +16,7 @@
->  #include <linux/kernel.h>
->  #include <linux/errno.h>
->  #include <linux/aer.h>
-> +#include <linux/delay.h>
->  #include "portdrv.h"
->  #include "../pci.h"
-> 
-> @@ -386,3 +387,62 @@ void pcie_do_nonfatal_recovery(struct pci_dev 
-> *dev)
->  	/* TODO: Should kernel panic here? */
->  	pci_info(dev, "AER: Device recovery failed\n");
->  }
-> +
-> +bool pcie_fatal_error_pending(struct pci_dev *pdev, u32 usrmask)
-> +{
-> +	u16 err_status = 0;
-> +	u32 status, mask, severity;
-> +	int rc;
-> +
-> +	if (!pci_is_pcie(pdev))
-> +		return false;
-> +
-> +	rc = pcie_capability_read_word(pdev, PCI_EXP_DEVSTA, &err_status);
-> +	if (rc)
-> +		return false;
-> +
-> +	if (!(err_status & PCI_EXP_DEVSTA_FED))
-> +		return false;
-> +
-> +	if (!pdev->aer_cap)
-> +		return false;
-> +
-> +	rc = pci_read_config_dword(pdev, pdev->aer_cap + 
-> PCI_ERR_UNCOR_STATUS,
-> +				   &status);
-> +	if (rc)
-> +		return false;
-> +
-> +	rc = pci_read_config_dword(pdev, pdev->aer_cap + PCI_ERR_UNCOR_MASK,
-> +				   &mask);
-> +	if (rc)
-> +		return false;
-> +
-> +	rc = pci_read_config_dword(pdev, pdev->aer_cap + PCI_ERR_UNCOR_SEVER,
-> +				   &severity);
-> +	if (rc)
-> +		return false;
-> +
-> +	status &= mask;
-> +	status &= ~usrmask;
-> +	status &= severity;
-> +
-> +	return !!status;
-> +}
-> +
-> +bool pcie_wait_fatal_error_clear(struct pci_dev *pdev, u32 usrmask)
-> +{
-> +	int timeout = 1000;
-> +	bool ret;
-> +
-> +	for (;;) {
-> +		ret = pcie_fatal_error_pending(pdev, usrmask);
-> +		if (ret == false)
-> +			return true;
-> +		if (timeout <= 0)
-> +			break;
-> +		msleep(20);
-> +		timeout -= 20;
-I assume that this timeout will come into effect if
-1) AER/DPC takes longer time than 1 sec for recovery.
-2) Lets us say both AER and DPC are disabled....are we going to wait for 
-this timeout before HP can take over ?
-> +	}
-> +
-> +	return false;
-> +}
+> We need to save/restore the state of all bridges and devices (BARs
+> etc...) below that.
+
+That's not good enough. You'd at least need to check SLTSTS.PDC on all
+bridge DSP's beneath the parent *before* you try to restore the state
+of devices beneath them. Those races are primarily why DPC currently
+removes and reenumerates instead, because that's not something that can
+be readily coordinated today.
