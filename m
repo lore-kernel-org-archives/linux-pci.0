@@ -1,61 +1,65 @@
-Return-Path: <SRS0=dvAb=KQ=bootlin.com=thomas.petazzoni@kernel.org>
-Return-Path: <SRS0=dvAb=KQ=bootlin.com=thomas.petazzoni@kernel.org>
-Date: Wed, 1 Aug 2018 13:13:14 +0200
-From: Thomas Petazzoni <thomas.petazzoni@bootlin.com>
-To: Bjorn Helgaas <helgaas@kernel.org>
-Cc: Bjorn Helgaas <bhelgaas@google.com>, Lorenzo Pieralisi
- <lorenzo.pieralisi@arm.com>, linux-pci@vger.kernel.org, Russell King
- <linux@arm.linux.org.uk>, Antoine Tenart <antoine.tenart@bootlin.com>,
- Gregory Clement <gregory.clement@bootlin.com>, Maxime Chevallier
- <maxime.chevallier@bootlin.com>, Nadav Haklai <nadavh@marvell.com>, Victor
- Gu <xigu@marvell.com>, =?UTF-8?B?TWlxdcOobA==?= Raynal
- <miquel.raynal@bootlin.com>, Zachary Zhang <zhangzg@marvell.com>, Wilson
- Ding <dingwei@marvell.com>, linux-arm-kernel@lists.infradead.org, Ray Jui
- <ray.jui@broadcom.com>, Ley Foon Tan <lftan@altera.com>, Simon Horman
- <horms@verge.net.au>
-Subject: Re: [PATCH 1/3] PCI: Introduce PCI software bridge common logic
-Message-ID: <20180801131314.360c9454@windsurf>
-In-Reply-To: <20180801104957.1b01b847@windsurf>
-References: <20180629092231.32207-1-thomas.petazzoni@bootlin.com>
-	<20180629092231.32207-2-thomas.petazzoni@bootlin.com>
-	<20180712195802.GC28466@bhelgaas-glaptop.roam.corp.google.com>
-	<20180801104957.1b01b847@windsurf>
+Return-Path: <SRS0=uSZ2=LE=intel.com=keith.busch@kernel.org>
+Return-Path: <SRS0=uSZ2=LE=intel.com=keith.busch@kernel.org>
+Date: Tue, 21 Aug 2018 16:33:03 -0600
+From: Keith Busch <keith.busch@intel.com>
+To: Benjamin Herrenschmidt <benh@kernel.crashing.org>
+Cc: poza@codeaurora.org, Sinan Kaya <okaya@kernel.org>,
+	Bjorn Helgaas <helgaas@kernel.org>,
+	Thomas Tai <thomas.tai@oracle.com>, bhelgaas@google.com,
+	linux-pci@vger.kernel.org, linux-pci-owner@vger.kernel.org,
+	Sam Bobroff <sam.bobroff@au1.ibm.com>
+Subject: Re: [PATCH 1/1] PCI/AER: prevent pcie_do_fatal_recovery from using
+ device after it is removed
+Message-ID: <20180821223303.GA19320@localhost.localdomain>
+References: <5027d857bb59edfd33442003aa618ece1bc9cd52.camel@kernel.crashing.org>
+ <b2e2ac5c92d8a91d00606754d1046578@codeaurora.org>
+ <2ecd1fd6d763810d45697f846fa876b58a193b1b.camel@kernel.crashing.org>
+ <a149d9657ca83b41c724b0ddd319c6fb@codeaurora.org>
+ <512e0e11c3ba462c1d033f8b0e768fa27489731c.camel@kernel.crashing.org>
+ <ad23b16cf7ff1f3b51961fda59533892@codeaurora.org>
+ <2742bdba5ae8ccc420234b6e6b0224919367ed4c.camel@kernel.crashing.org>
+ <20180821143751.GA18477@localhost.localdomain>
+ <277b7056aa7af8e98d5cd912838e582783943aa9.camel@kernel.crashing.org>
+ <20180821220456.GC18612@localhost.localdomain>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20180821220456.GC18612@localhost.localdomain>
 List-ID: <linux-pci.vger.kernel.org>
 
-Bjorn,
-
-On Wed, 1 Aug 2018 10:49:57 +0200, Thomas Petazzoni wrote:
-
-> > I wonder if there's a way to use a common helper function to do this.  
+On Tue, Aug 21, 2018 at 04:04:56PM -0600, Keith Busch wrote:
+> > For example, if the error happens in a parent bridge and that gets
+> > reset, the entire hierarchy underneath does too.
+> > 
+> > We need to save/restore the state of all bridges and devices (BARs
+> > etc...) below that.
 > 
-> Yes, this small bit of logic is duplicated all over the place. I'll see
-> if I can come up with some reasonable helpers for that.
+> That's not good enough. You'd at least need to check SLTSTS.PDC on all
+> bridge DSP's beneath the parent *before* you try to restore the state
+> of devices beneath them. Those races are primarily why DPC currently
+> removes and reenumerates instead, because that's not something that can
+> be readily coordinated today.
 
-Here is an attempt at doing this:
+A picture of a real scenario to go with the above comments:
 
- - Introduce some helpers
+                    ----------------
+  --------          |              |
+  |      |       -------        -------       --------------
+  |  RP  | <---> | USP | SWITCH | DSP | <---> | END DEVICE |
+  |      |       ------         -------       --------------
+  --------          |              |
+                    ----------------
 
-   https://github.com/MISL-EBU-System-SW/mainline-public/commit/55543d2050d9aa3abe297569be830bde8680e1e9
+The downstream port (DSP) is hotplug capable, and the root port (RP)
+has DPC enabled.
 
- - Use them in drivers/pci/access.c
+Lets say you hot swap END DEVICE at a time with an inflight posted
+transaction such that the RP triggers a CTO, starting a DPC event.
+If you treat the RP's DPC event as just "error handling" and restore
+the state after containment is released, we are in undefined behavior
+because of the mistaken idententy of the device below the SWITCH DSP.
 
-   https://github.com/MISL-EBU-System-SW/mainline-public/commit/ce6158d5c6a039e0cddf5ee6840dadeb46c5fc4b
-
- - Use them in PCI host controller drivers
-
-   https://github.com/MISL-EBU-System-SW/mainline-public/commit/df4d0b5272ea3b4c3226c96466e5360c5a89253f
-
-I'm not a big fan of the naming though. Let me know what you think, if
-you think it's worth it, I'll submit the patches.
-
-Note: the whole thing is compile-tested only for now.
-
-Best regards,
-
-Thomas
--- 
-Thomas Petazzoni, CTO, Bootlin (formerly Free Electrons)
-Embedded Linux and Kernel engineering
-https://bootlin.com
+Re-enumerating the topology is easy since it has no races like that. I
+understand re-enumeration is problematic for some scenarios, so if we
+really need to avoid re-enumeration except when absolutely necessary,
+it should be possible if we can detangle the necessary coordination
+between the port service drivers.
