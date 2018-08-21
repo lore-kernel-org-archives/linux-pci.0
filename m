@@ -1,62 +1,60 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mga03.intel.com ([134.134.136.65]:63023 "EHLO mga03.intel.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1726392AbeHPJGa (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Thu, 16 Aug 2018 05:06:30 -0400
-Date: Thu, 16 Aug 2018 09:10:15 +0300
-From: Mika Westerberg <mika.westerberg@linux.intel.com>
-To: Alex Williamson <alex.williamson@redhat.com>
-Cc: Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org
-Subject: Re: [PATCH] PCI: Add ACS quirk for Intel 300 series chipset
-Message-ID: <20180816061015.GD2343@lahna.fi.intel.com>
-References: <20180427104423.2203-1-mika.westerberg@linux.intel.com>
- <20180815152139.4e469fd4@t450s.home>
- <20180815164308.6ad5dd39@t450s.home>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20180815164308.6ad5dd39@t450s.home>
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <SRS0=z17J=LE=kernel.crashing.org=benh@kernel.org>
+Return-Path: <SRS0=z17J=LE=kernel.crashing.org=benh@kernel.org>
+Message-ID: <5d69daf9918878b95b6df3265fc4c3d5b52f9baa.camel@kernel.crashing.org>
+Subject: Re: [PATCH 1/1] PCI/AER: prevent pcie_do_fatal_recovery from using
+ device after it is removed
+From: Benjamin Herrenschmidt <benh@kernel.crashing.org>
+To: Keith Busch <keith.busch@intel.com>
+Cc: poza@codeaurora.org, Sinan Kaya <okaya@kernel.org>,
+        Bjorn Helgaas
+ <helgaas@kernel.org>,
+        Thomas Tai <thomas.tai@oracle.com>, bhelgaas@google.com,
+        linux-pci@vger.kernel.org, linux-pci-owner@vger.kernel.org,
+        Sam Bobroff <sam.bobroff@au1.ibm.com>
+Date: Wed, 22 Aug 2018 09:06:57 +1000
+In-Reply-To: <20180821220456.GC18612@localhost.localdomain>
+References: <908ff33ded8f31830f95a8889d8540f1@codeaurora.org>
+	 <5027d857bb59edfd33442003aa618ece1bc9cd52.camel@kernel.crashing.org>
+	 <b2e2ac5c92d8a91d00606754d1046578@codeaurora.org>
+	 <2ecd1fd6d763810d45697f846fa876b58a193b1b.camel@kernel.crashing.org>
+	 <a149d9657ca83b41c724b0ddd319c6fb@codeaurora.org>
+	 <512e0e11c3ba462c1d033f8b0e768fa27489731c.camel@kernel.crashing.org>
+	 <ad23b16cf7ff1f3b51961fda59533892@codeaurora.org>
+	 <2742bdba5ae8ccc420234b6e6b0224919367ed4c.camel@kernel.crashing.org>
+	 <20180821143751.GA18477@localhost.localdomain>
+	 <277b7056aa7af8e98d5cd912838e582783943aa9.camel@kernel.crashing.org>
+	 <20180821220456.GC18612@localhost.localdomain>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wed, Aug 15, 2018 at 04:43:08PM -0600, Alex Williamson wrote:
-> Sorry for the self follow-up, but another user pointed me to these:
+On Tue, 2018-08-21 at 16:04 -0600, Keith Busch wrote:
+> > I think there need to be some coordination between pciehb and DPC on
+> > link state change yes.
+> > 
+> > We could still remove the device if recovery fails. For example on EEH
+> > we have a threshold and if a device fails more than N times within the
+> > last M minutes (I don't remember the exact numbers and I'm not in front
+> > of the code right now) we give up.
+> > 
+> > Also under some circumstances, the link will change as a result of the
+> > error handling doing a hot reset.
+> > 
+> > For example, if the error happens in a parent bridge and that gets
+> > reset, the entire hierarchy underneath does too.
+> > 
+> > We need to save/restore the state of all bridges and devices (BARs
+> > etc...) below that.
 > 
-> https://www.intel.com/content/dam/www/public/us/en/documents/datasheets/300-series-chipset-pch-datasheet-vol-1.pdf
-> https://www.intel.com/content/dam/www/public/us/en/documents/specification-updates/300-series-c240-series-chipset-pch-spec-update.pdf
-> 
-> And the device IDs match and the errata is #3 in the second link, yet:
-> 
-> 00:1c.0 PCI bridge [0604]: Intel Corporation Device [8086:a338] (rev f0) (prog-if 00 [Normal decode])
-> 00:1c.2 PCI bridge [0604]: Intel Corporation Device [8086:a33a] (rev f0) (prog-if 00 [Normal decode])
-> 	Capabilities: [140 v1] Access Control Services
-> 		ACSCap:	SrcValid+ TransBlk+ ReqRedir+ CmpltRedir+ UpstreamFwd- EgressCtrl- DirectTrans-
-> 		ACSCtl:	SrcValid+ TransBlk- ReqRedir+ CmpltRedir+ UpstreamFwd- EgressCtrl- DirectTrans-
-> 00:1c.5 PCI bridge [0604]: Intel Corporation Device [8086:a33d] (rev f0) (prog-if 00 [Normal decode])
-> 	Capabilities: [140 v1] Access Control Services
-> 		ACSCap:	SrcValid+ TransBlk+ ReqRedir+ CmpltRedir+ UpstreamFwd- EgressCtrl- DirectTrans-
-> 		ACSCtl:	SrcValid+ TransBlk- ReqRedir+ CmpltRedir+ UpstreamFwd- EgressCtrl- DirectTrans-
-> 00:1c.6 PCI bridge [0604]: Intel Corporation Device [8086:a33e] (rev f0) (prog-if 00 [Normal decode])
-> 	Capabilities: [140 v1] Access Control Services
-> 		ACSCap:	SrcValid+ TransBlk+ ReqRedir+ CmpltRedir+ UpstreamFwd- EgressCtrl- DirectTrans-
-> 		ACSCtl:	SrcValid+ TransBlk- ReqRedir+ CmpltRedir+ UpstreamFwd- EgressCtrl- DirectTrans-
-> 00:1c.7 PCI bridge [0604]: Intel Corporation Device [8086:a33f] (rev f0) (prog-if 00 [Normal decode])
-> 	Capabilities: [140 v1] Access Control Services
-> 		ACSCap:	SrcValid+ TransBlk+ ReqRedir+ CmpltRedir+ UpstreamFwd- EgressCtrl- DirectTrans-
-> 		ACSCtl:	SrcValid+ TransBlk- ReqRedir+ CmpltRedir+ UpstreamFwd- EgressCtrl- DirectTrans-
-> 
-> And the dump of config space is (1c.2):
-> 
-> 140: 0d 00 01 15 0f 00 0d 00 00 00 00 00 00 00 00 00
->                  ^^^^^ ^^^^^
->                   Cap   Ctl
+> That's not good enough. You'd at least need to check SLTSTS.PDC on all
+> bridge DSP's beneath the parent *before* you try to restore the state
+> of devices beneath them. Those races are primarily why DPC currently
+> removes and reenumerates instead, because that's not something that can
+> be readily coordinated today.
 
-It certainly looks like so.
+It can be probably done by a simple test & skip as you go down
+restoring state, then handling the removals after the dance is
+complete.
 
-> So it sure seems like the quirk shouldn't apply here.  Note that the
-> user calls this a C246 chipset, though this isn't a directly addressed
-> product SKU in either document.  The LPC device ID is a309, which also
-> is not directly addressed by the above datasheet.  Has Intel fixed this
-> in some SKUs, but not others, both using the same root port device
-> IDs?  Thanks,
-
-Let me ask around and see if someone here can explain this.
+Cheers,
+Ben.
