@@ -1,48 +1,73 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from gate.crashing.org ([63.228.1.57]:47089 "EHLO gate.crashing.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1725949AbeHQC2Y (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Thu, 16 Aug 2018 22:28:24 -0400
-Message-ID: <c7b996e0856cbea16cbb94287225bf2083158f02.camel@kernel.crashing.org>
+Return-Path: <okaya@kernel.org>
+Return-Path: <okaya@kernel.org>
 Subject: Re: [PATCH 1/1] PCI/AER: prevent pcie_do_fatal_recovery from using
  device after it is removed
-From: Benjamin Herrenschmidt <benh@kernel.crashing.org>
-To: Sinan Kaya <okaya@kernel.org>, poza@codeaurora.org
-Cc: Thomas Tai <thomas.tai@oracle.com>, bhelgaas@google.com,
-        keith.busch@intel.com, linux-pci@vger.kernel.org,
-        linux-pci-owner@vger.kernel.org,
-        Sam Bobroff <sam.bobroff@au1.ibm.com>
-Date: Fri, 17 Aug 2018 09:27:03 +1000
-In-Reply-To: <1d5b1157-2f78-5fab-78f0-5828892fc739@kernel.org>
-References: <1534179088-44219-1-git-send-email-thomas.tai@oracle.com>
-         <1534179088-44219-2-git-send-email-thomas.tai@oracle.com>
-         <51f4b387d9bd96a42d526a6a029fc43b@codeaurora.org>
-         <b0104a716319d76e734c307cb4bedd9d@codeaurora.org>
-         <903394c04d6ad468ed06dc0a779200e7555345a7.camel@kernel.crashing.org>
-         <6cb069038530757f31f3dd60328c7e30@codeaurora.org>
-         <e931bc7a7e468e8bb2ee3766b3fcf96f1800f552.camel@kernel.crashing.org>
-         <bf7ceabb6fe51398e0f4eebd9c4fe4ac1ec2b8a4.camel@kernel.crashing.org>
-         <42bd39aef30fe24bfc48d378e1f5d35d@codeaurora.org>
-         <54d19e0e3d44bedf247853144c6bbfed5561a125.camel@kernel.crashing.org>
-         <f022581a9ecb88e5501a09bdcdc62954@codeaurora.org>
-         <1d5b1157-2f78-5fab-78f0-5828892fc739@kernel.org>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
-Sender: linux-pci-owner@vger.kernel.org
+To: Keith Busch <keith.busch@intel.com>,
+ Benjamin Herrenschmidt <benh@kernel.crashing.org>
+Cc: poza@codeaurora.org, Bjorn Helgaas <helgaas@kernel.org>,
+ Thomas Tai <thomas.tai@oracle.com>, bhelgaas@google.com,
+ linux-pci@vger.kernel.org, linux-pci-owner@vger.kernel.org,
+ Sam Bobroff <sam.bobroff@au1.ibm.com>
+References: <fe891b63-12c7-61ab-a59a-ae24ad766754@kernel.org>
+ <ab5cb5b277f1c1c1362ef597ca7b8c6a2cd32cdf.camel@kernel.crashing.org>
+ <908ff33ded8f31830f95a8889d8540f1@codeaurora.org>
+ <5027d857bb59edfd33442003aa618ece1bc9cd52.camel@kernel.crashing.org>
+ <b2e2ac5c92d8a91d00606754d1046578@codeaurora.org>
+ <2ecd1fd6d763810d45697f846fa876b58a193b1b.camel@kernel.crashing.org>
+ <a149d9657ca83b41c724b0ddd319c6fb@codeaurora.org>
+ <512e0e11c3ba462c1d033f8b0e768fa27489731c.camel@kernel.crashing.org>
+ <ad23b16cf7ff1f3b51961fda59533892@codeaurora.org>
+ <2742bdba5ae8ccc420234b6e6b0224919367ed4c.camel@kernel.crashing.org>
+ <20180821143751.GA18477@localhost.localdomain>
+From: Sinan Kaya <okaya@kernel.org>
+Message-ID: <621f599b-8a87-5bde-5a9f-ecb5bdbcf716@kernel.org>
+Date: Tue, 21 Aug 2018 11:07:31 -0400
+MIME-Version: 1.0
+In-Reply-To: <20180821143751.GA18477@localhost.localdomain>
+Content-Type: text/plain; charset=utf-8; format=flowed
 List-ID: <linux-pci.vger.kernel.org>
 
-On Thu, 2018-08-16 at 09:46 -0400, Sinan Kaya wrote:
-> On 8/16/2018 4:22 AM, poza@codeaurora.org wrote:
-> > we can catch up on webex, (Sinan is going to be there in Plumber's 
-> > conference, I might not be able to join there, as we have bring-up coming)
+On 8/21/2018 10:37 AM, Keith Busch wrote:
+> On Tue, Aug 21, 2018 at 04:06:30PM +1000, Benjamin Herrenschmidt wrote:
+>> On Tue, 2018-08-21 at 10:44 +0530, poza@codeaurora.org wrote:
+>>>
+>>> Ok Let me summarize the so far discussed things.
+>>>
+>>> It would be nice if we all (Bjorn, Keith, Ben, Sinan) can hold consensus
+>>> on this.
+>>>
+>>> 1) Right now AER and DPC both calls pcie_do_fatal_recovery(), I majorly
+>>> see DPC as error handling and recovery agent rather than being used for
+>>> hotplug.
+>>>      so in my opinion, both AER and DPC should have same error handling
+>>> and recovery mechanism
+>>
+>> Yes.
+>>
+>>>      so if there is a way to figure out that in absence of pcihp, if DPC
+>>> is being used to support hotplug then we fall back to original DPC
+>>> mechanism (which is remove devices)
+>>
+>> Not exactly. If the presence detect change indicates it was a hotplug
+>> event rather.
 > 
-> My plumbers conference attendance is not confirmed yet. I'm trying to
-> combine it with a business trip. I did not get an ACK yet from my boss.
+> The actions associated with error recovery will trigger link state changes
+> for a lot of existing hardware. PCIEHP currently does the same removal
+> sequence for both link state change (DLLSC) and presence detect change
+> (PDC) events.
+> 
+> It sounds like you want pciehp to do nothing on the DLLSC events that it
+> currently handles, and instead do the board removal only on PDC.  If that
+> is the case, is the desire to not remove devices downstream a permanently
+> disabled link, or does that responsibility fall onto some other component?
+> 
 
-Ok, I'll collect the names and will propose a time/date early next
-week, I'm a bit caught up until monday.
+Looking at PDC is not enough. Hotplug driver handles both physical
+removal as well as the link going down due to signal integrity issues today.
 
-Bjorn, are you available as well ?
+If the link went down because of a pending FATAL error, AER/DPC recovers
+the link automatically. There is no need for hotplug to be involved in
+fatal error work.
 
-Cheers,
-Ben.
+Hotplug driver needs to handle both physical removal as well as 
+intermittent link down issues though.
