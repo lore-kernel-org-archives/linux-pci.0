@@ -1,101 +1,36 @@
-Return-Path: <SRS0=6E4e=KR=h08.hostsharing.net=foo00@kernel.org>
-Return-Path: <SRS0=6E4e=KR=h08.hostsharing.net=foo00@kernel.org>
-Date: Thu, 2 Aug 2018 17:07:49 +0200
-From: Lukas Wunner <lukas@wunner.de>
-To: gokul cg <gokuljnpr@gmail.com>, Thomas Tai <thomas.tai@oracle.com>
-Cc: Mika Westerberg <mika.westerberg@linux.intel.com>,
-	Bjorn Helgaas <helgaas@kernel.org>, Ashok Raj <ashok.raj@intel.com>,
-	Keith Busch <keith.busch@intel.com>,
-	Yinghai Lu <yinghai@kernel.org>, Sinan Kaya <okaya@kernel.org>,
-	linux-pci@vger.kernel.org, Alexandru Gagniuc <mr.nuke.me@gmail.com>
-Subject: Re: [PATCH] PCI: pciehp: Differentiate between surprise and safe
- removal
-Message-ID: <20180802150749.GA31683@wunner.de>
-References: <dac488604766f3dcb948e702210ecc381c4f907b.1533015755.git.lukas@wunner.de>
- <20180801164358.GI2534@lahna.fi.intel.com>
- <20180801171512.GA28440@wunner.de>
- <20180802072036.GN2534@lahna.fi.intel.com>
- <CAFP4jM8AYG7hmkC_rYgXAfLoJmkJuW0e1UbgiayGrCPbb_yw8A@mail.gmail.com>
- <20180802084657.GA21267@wunner.de>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20180802084657.GA21267@wunner.de>
+Return-Path: <SRS0=4L79=LE=davemloft.net=davem@kernel.org>
+Return-Path: <SRS0=4L79=LE=davemloft.net=davem@kernel.org>
+Date: Tue, 21 Aug 2018 12:31:08 -0700 (PDT)
+Message-Id: <20180821.123108.89921430801253333.davem@davemloft.net>
+To: hkallweit1@gmail.com
+Cc: helgaas@kernel.org, jian-hong@endlessm.com, nic_swsd@realtek.com,
+ netdev@vger.kernel.org, linux-kernel@vger.kernel.org, linux@endlessm.com,
+ linux-pci@vger.kernel.org, marc.zyngier@arm.com, tglx@linutronix.de,
+ hch@lst.de
+Subject: Re: [PATCH] r8169: don't use MSI-X on RTL8106e
+From: David Miller <davem@davemloft.net>
+In-Reply-To: <9d7d960a-6c55-dc4b-7969-f5cf46bff0ce@gmail.com>
+References: <ac30d4e6-6411-09e6-1205-96e3e8e29f6f@gmail.com>
+	<20180820184438.GA154536@bhelgaas-glaptop.roam.corp.google.com>
+	<9d7d960a-6c55-dc4b-7969-f5cf46bff0ce@gmail.com>
+Mime-Version: 1.0
+Content-Type: Text/Plain; charset=us-ascii
 List-ID: <linux-pci.vger.kernel.org>
 
-[cc += Thomas Tai]
+From: Heiner Kallweit <hkallweit1@gmail.com>
+Date: Mon, 20 Aug 2018 22:46:48 +0200
 
-On Thu, Aug 02, 2018 at 10:46:57AM +0200, Lukas Wunner wrote:
-> On Thu, Aug 02, 2018 at 12:59:18PM +0530, gokul cg wrote:
-> > I am suspecting a possible race condition in the kernel between PCI driver
-> > and AER handling.
-> 
-> The solution is to acquire a ref on each device in add_error_device().
-> Then release the ref aer_process_err_devices() by calling pci_dev_put().
+> I'm in contact with Realtek and according to them few chip versions
+> seem to clear MSI-X table entries on resume from suspend. Checking
+> with them how this could be fixed / worked around.
+> Worst case we may have to disable MSI-X in general.
 
-So in case it wasn't clear, the below is what I had in mind.
-Completely untested though.  Does this work for you?
+I worry that if the chip does this, and somehow MSI-X is enabled and
+an interrupt is generated, the chip will write to the cleared out
+MSI-X address.  This will either write garbage into memory or cause
+a bus error and require PCI error recovery.
 
-For v3.10 compatibility, cherry-pick 89ee9f768003 (or alternatively
-cherry-pick 8496e85c20e7 and replace pci_dev_is_disconnected(dev)
-with !pci_device_is_present(dev)).
+It also looks like your test patch doesn't fix things for people who
+have tested it.
 
--- >8 --
-Subject: [PATCH] PCI/AER: Fix use-after-free on surprise removal
-
-The work item to consume errors, aer_isr(), walks the hierarchy using
-pci_walk_bus() and stores a pointer to PCI devices which reported an
-error in an array.  As long as pci_walk_bus() runs, those pointers are
-valid because pci_bus_sem is held.  But once pci_walk_bus() finishes,
-nothing prevents the pointers from becoming invalid, e.g. through
-unplugging of the PCI devices.  The unprotected pointers are then
-dereferenced in aer_process_err_devices(), which may oops:
-
-  #5  general_protection at ffffffff8176cdf2
-      [exception RIP: pci_bus_read_config_dword+100]
-  #6  pci_find_next_ext_capability at ffffffff81345d7b
-  #7  pci_find_ext_capability at ffffffff81347225
-  #8  get_device_error_info at ffffffff81356c4d
-  #9  aer_isr at ffffffff81357a38
-
-Fix by holding a ref on the devices until they have been processed.
-Skip processing of unplugged devices.
-
-Reported-by: gokul cg <gokuljnpr@gmail.com>
-Signed-off-by: Lukas Wunner <lukas@wunner.de>
----
- drivers/pci/pcie/aer.c | 6 +++++-
- 1 file changed, 5 insertions(+), 1 deletion(-)
-
-diff --git a/drivers/pci/pcie/aer.c b/drivers/pci/pcie/aer.c
-index a2e8838..937592e 100644
---- a/drivers/pci/pcie/aer.c
-+++ b/drivers/pci/pcie/aer.c
-@@ -657,7 +657,7 @@ void cper_print_aer(struct pci_dev *dev, int aer_severity,
- static int add_error_device(struct aer_err_info *e_info, struct pci_dev *dev)
- {
- 	if (e_info->error_dev_num < AER_MAX_MULTI_ERR_DEVICES) {
--		e_info->dev[e_info->error_dev_num] = dev;
-+		e_info->dev[e_info->error_dev_num] = pci_dev_get(dev);
- 		e_info->error_dev_num++;
- 		return 0;
- 	}
-@@ -898,6 +898,9 @@ static int get_device_error_info(struct pci_dev *dev, struct aer_err_info *info)
- 	if (!pos)
- 		return 0;
- 
-+	if (pci_dev_is_disconnected(dev))
-+		return 0;
-+
- 	if (info->severity == AER_CORRECTABLE) {
- 		pci_read_config_dword(dev, pos + PCI_ERR_COR_STATUS,
- 			&info->status);
-@@ -948,6 +951,7 @@ static inline void aer_process_err_devices(struct aer_err_info *e_info)
- 	for (i = 0; i < e_info->error_dev_num && e_info->dev[i]; i++) {
- 		if (get_device_error_info(e_info->dev[i], e_info))
- 			handle_error_source(e_info->dev[i], e_info);
-+		pci_dev_put(e_info->dev[i]);
- 	}
- }
- 
--- 
-2.18.0
+Hmmm...
