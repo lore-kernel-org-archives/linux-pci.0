@@ -1,88 +1,139 @@
-Return-Path: <SRS0=XYHn=K2=gigaio.com=kchow@kernel.org>
-Return-Path: <SRS0=XYHn=K2=gigaio.com=kchow@kernel.org>
-Subject: Re: IOAT DMA w/IOMMU
-To: Dave Jiang <dave.jiang@intel.com>, Logan Gunthorpe <logang@deltatee.com>,
- Eric Pilmore <epilmore@gigaio.com>, Bjorn Helgaas <helgaas@kernel.org>
-Cc: "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
- David Woodhouse <dwmw2@infradead.org>,
- Alex Williamson <alex.williamson@redhat.com>,
- "iommu@lists.linux-foundation.org" <iommu@lists.linux-foundation.org>
-References: <CAOQPn8soxubJxb=vp7kz+AM6LbPH5y+_Nx0Vzv7rjV_nMMqEmA@mail.gmail.com>
- <b54899a8-a144-e8e0-9880-1800c4657b95@deltatee.com>
- <95e53520-b05f-4be4-e694-463d717453a8@gigaio.com>
- <cdd9245f-eb23-9e10-1755-8f396a2cd255@deltatee.com>
- <b278c1e5-6f08-c879-a27d-7fc172645fd5@gigaio.com>
- <f04fae39-645e-3c6e-07c0-b194260bf5de@deltatee.com>
- <3f503940-db6a-ec75-ed15-1db99d5d48ef@gigaio.com>
- <112A412BB11A1242B37129D931BCE5348382CFB2@fmsmsx117.amr.corp.intel.com>
- <b8af340c-d40b-cb8c-987f-b394f1d6ec3e@gigaio.com>
- <adf51c74-36fa-b61d-8497-27bd75178ba4@deltatee.com>
- <aa9c3f41-efc9-8c68-a517-2736c8986621@gigaio.com>
- <1170c096-a749-6ee3-32d4-ebba1d12adff@gigaio.com>
- <929f3dfa-fbff-c582-3be5-c368f11feb7e@deltatee.com>
- <460cc47f-6a8e-67b0-01a0-02f0c51df258@intel.com>
- <0f653f8f-c7ae-831d-e238-2742590d9ea1@deltatee.com>
- <6525fa4d-7d9b-0136-7206-f8351230af46@intel.com>
- <f22c565e-ba49-c83d-3e51-7967664c7136@deltatee.com>
- <499934e7-3734-1aee-37dd-b42a5d2a2608@intel.com>
-From: Kit Chow <kchow@gigaio.com>
-Message-ID: <9d135f61-20c2-e966-4d7d-3e154384ea08@gigaio.com>
-Date: Fri, 10 Aug 2018 17:53:23 -0700
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail.kernel.org ([198.145.29.99]:57056 "EHLO mail.kernel.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1726628AbeHUXVL (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Tue, 21 Aug 2018 19:21:11 -0400
+Date: Tue, 21 Aug 2018 14:50:23 -0500
+From: Bjorn Helgaas <helgaas@kernel.org>
+To: Benjamin Herrenschmidt <benh@kernel.crashing.org>
+Cc: poza@codeaurora.org, Thomas Tai <thomas.tai@oracle.com>,
+        bhelgaas@google.com, keith.busch@intel.com,
+        linux-pci@vger.kernel.org, linux-pci-owner@vger.kernel.org,
+        Sam Bobroff <sam.bobroff@au1.ibm.com>
+Subject: Re: PATCH] Partial revert of "PCI/AER: Handle ERR_FATAL with removal
+ and re-enumeration of devices"
+Message-ID: <20180821195023.GD154536@bhelgaas-glaptop.roam.corp.google.com>
+References: <1534179088-44219-1-git-send-email-thomas.tai@oracle.com>
+ <1534179088-44219-2-git-send-email-thomas.tai@oracle.com>
+ <51f4b387d9bd96a42d526a6a029fc43b@codeaurora.org>
+ <b0104a716319d76e734c307cb4bedd9d@codeaurora.org>
+ <903394c04d6ad468ed06dc0a779200e7555345a7.camel@kernel.crashing.org>
+ <6cb069038530757f31f3dd60328c7e30@codeaurora.org>
+ <e931bc7a7e468e8bb2ee3766b3fcf96f1800f552.camel@kernel.crashing.org>
+ <bf7ceabb6fe51398e0f4eebd9c4fe4ac1ec2b8a4.camel@kernel.crashing.org>
+ <20180819021922.GE128050@bhelgaas-glaptop.roam.corp.google.com>
+ <fa217fe562df74980febdd57e8e3361c2ece2ae2.camel@kernel.crashing.org>
 MIME-Version: 1.0
-In-Reply-To: <499934e7-3734-1aee-37dd-b42a5d2a2608@intel.com>
-Content-Type: text/plain; charset=utf-8; format=flowed
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <fa217fe562df74980febdd57e8e3361c2ece2ae2.camel@kernel.crashing.org>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Success!
+On Mon, Aug 20, 2018 at 02:39:04PM +1000, Benjamin Herrenschmidt wrote:
+> This partially reverts commit 7e9084b36740b2ec263ea35efb203001f755e1d8.
+> 
+> This only reverts the Documentation/PCI/pci-error-recovery.txt changes
+> 
+> Those changes are incorrect, they change the documentation to adapt
+> to the (imho incorrect) AER implementation, and as a result making
+> it no longer match the EEH implementation.
+> 
+> I believe the policy described originally in this document is what
+> should be implemented by everybody and the changes done by that commit
+> would compromise, among others, the ability to recover from errors with
+> storage devices.
 
-I've implemented a new intel_map_resource (and intel_unmap_resource) 
-routine which is called by dma_map_resource. As mentioned previously, 
-the primary job of dma_map_resource/intel_map_resource is to call the 
-intel iommu internal mapping routine (__intel_map_single) without 
-translating the pci bar address into a page and then back to a phys addr 
-as dma_map_page and dma_map_single are doing.
+I think we should align EEH, AER, and DPC as much as possible,
+including making this documentation match the code.
 
-With the new dma_map_resource routine mapping the pci bar address in 
-ntb_transport_tx_submit, I was still getting the "PTE Write access is 
-not set" error.
+Because of its name, this file *looks* like it should match the code
+in the PCI core, i.e., drivers/pci/...  So I think it would be
+confusing to simply apply this revert without making a more direct
+connection between this documentation and the powerpc-specific EEH
+code.
 
-The __intel_map_single routine sets prot based on the DMA direction.
+If we can change AER & DPC to correspond to EEH, then I think it would
+make sense to apply this revert along with those AER & DPC changes so
+the documentation stays in step with the code.
 
-         if (dir == DMA_TO_DEVICE || dir == DMA_BIDIRECTIONAL || \
-                         !cap_zlr(iommu->cap))
-                 prot |= DMA_PTE_READ;
-         if (dir == DMA_FROM_DEVICE || dir == DMA_BIDIRECTIONAL)
-                 prot |= DMA_PTE_WRITE;
-
-I was able to finally succeed in doing the dma transfers over ioat only 
-when prot has DMA_PTE_WRITE set by setting the direction to either 
-DMA_FROM_DEVICE or DMA_BIDIRECTIONAL. Any ideas if the prot settings 
-need to be changed? Are there any bad side effects if I used 
-DMA_BIDIRECTIONAL?
-
-Given that using the pci bar address as is without getting an iommu 
-address results in the same "PTE Write access" error, I wonder if there 
-is some internal 'prot' associated with the non-translated pci bar 
-address that just needs to be tweaked to include DMA_PTE_WRITE???
-
-Thanks!
-
-
-
-
-On 08/10/2018 10:46 AM, Dave Jiang wrote:
->
-> On 08/10/2018 10:15 AM, Logan Gunthorpe wrote:
->>
->> On 10/08/18 11:01 AM, Dave Jiang wrote:
->>> Or if the BIOS has provided mapping for the Intel NTB device
->>> specifically? Is that a possibility? NTB does go through the IOMMU.
->> I don't know but if the BIOS is doing it, but that would only at best
->> work for Intel NTB.... I see no hope in getting the BIOS to map the MW
->> for a Switchtec NTB device...
-> Right. I'm just speculating why it may possibly work. But yes, I think
-> kernel will need appropriate mapping if it's not happening right now.
-> Hopefully Kit is onto something.
->
->> Logan
->>
+> Signed-off-by: Benjamin Herrenschmidt <benh@kernel.crashing.org>
+> ---
+>  Documentation/PCI/pci-error-recovery.txt | 35 +++++++-----------------
+>  1 file changed, 10 insertions(+), 25 deletions(-)
+> 
+> diff --git a/Documentation/PCI/pci-error-recovery.txt b/Documentation/PCI/pci-error-recovery.txt
+> index 688b69121e82..0b6bb3ef449e 100644
+> --- a/Documentation/PCI/pci-error-recovery.txt
+> +++ b/Documentation/PCI/pci-error-recovery.txt
+> @@ -110,7 +110,7 @@ The actual steps taken by a platform to recover from a PCI error
+>  event will be platform-dependent, but will follow the general
+>  sequence described below.
+>  
+> -STEP 0: Error Event: ERR_NONFATAL
+> +STEP 0: Error Event
+>  -------------------
+>  A PCI bus error is detected by the PCI hardware.  On powerpc, the slot
+>  is isolated, in that all I/O is blocked: all reads return 0xffffffff,
+> @@ -228,7 +228,13 @@ proceeds to either STEP3 (Link Reset) or to STEP 5 (Resume Operations).
+>  If any driver returned PCI_ERS_RESULT_NEED_RESET, then the platform
+>  proceeds to STEP 4 (Slot Reset)
+>  
+> -STEP 3: Slot Reset
+> +STEP 3: Link Reset
+> +------------------
+> +The platform resets the link.  This is a PCI-Express specific step
+> +and is done whenever a fatal error has been detected that can be
+> +"solved" by resetting the link.
+> +
+> +STEP 4: Slot Reset
+>  ------------------
+>  
+>  In response to a return value of PCI_ERS_RESULT_NEED_RESET, the
+> @@ -314,7 +320,7 @@ Failure).
+>  >>> However, it probably should.
+>  
+>  
+> -STEP 4: Resume Operations
+> +STEP 5: Resume Operations
+>  -------------------------
+>  The platform will call the resume() callback on all affected device
+>  drivers if all drivers on the segment have returned
+> @@ -326,7 +332,7 @@ a result code.
+>  At this point, if a new error happens, the platform will restart
+>  a new error recovery sequence.
+>  
+> -STEP 5: Permanent Failure
+> +STEP 6: Permanent Failure
+>  -------------------------
+>  A "permanent failure" has occurred, and the platform cannot recover
+>  the device.  The platform will call error_detected() with a
+> @@ -349,27 +355,6 @@ errors. See the discussion in powerpc/eeh-pci-error-recovery.txt
+>  for additional detail on real-life experience of the causes of
+>  software errors.
+>  
+> -STEP 0: Error Event: ERR_FATAL
+> --------------------
+> -PCI bus error is detected by the PCI hardware. On powerpc, the slot is
+> -isolated, in that all I/O is blocked: all reads return 0xffffffff, all
+> -writes are ignored.
+> -
+> -STEP 1: Remove devices
+> ---------------------
+> -Platform removes the devices depending on the error agent, it could be
+> -this port for all subordinates or upstream component (likely downstream
+> -port)
+> -
+> -STEP 2: Reset link
+> ---------------------
+> -The platform resets the link.  This is a PCI-Express specific step and is
+> -done whenever a fatal error has been detected that can be "solved" by
+> -resetting the link.
+> -
+> -STEP 3: Re-enumerate the devices
+> ---------------------
+> -Initiates the re-enumeration.
+>  
+>  Conclusion; General Remarks
+>  ---------------------------
+> 
+> 
