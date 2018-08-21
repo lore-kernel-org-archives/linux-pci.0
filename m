@@ -1,44 +1,42 @@
-Return-Path: <linux-acpi-owner@vger.kernel.org>
+Return-Path: <SRS0=35td=LE=gigaio.com=epilmore@kernel.org>
+Return-Path: <SRS0=35td=LE=gigaio.com=epilmore@kernel.org>
 MIME-Version: 1.0
-References: <20180817102645.3839621-1-arnd@arndb.de> <20180817102645.3839621-8-arnd@arndb.de>
- <CAJZ5v0iCgQxxuoCB9B4-Ho3xeLwb4v99Xyw-9e-tT53mRD+YVQ@mail.gmail.com> <CAK8P3a31Ds14Ke1qLoMapK1Wq1M4tR6n+nL1VOKzR8+oN0eOBw@mail.gmail.com>
-In-Reply-To: <CAK8P3a31Ds14Ke1qLoMapK1Wq1M4tR6n+nL1VOKzR8+oN0eOBw@mail.gmail.com>
-From: "Rafael J. Wysocki" <rafael@kernel.org>
-Date: Mon, 20 Aug 2018 13:24:20 +0200
-Message-ID: <CAJZ5v0gu_agFQBS7UjTMY3FR7woPPN-riJ6frwk1QoetGoVjfA@mail.gmail.com>
-Subject: Re: [RFC 07/15] PCI/ACPI: clean up acpi_pci_root_create()
-To: Arnd Bergmann <arnd@arndb.de>
-Cc: "Rafael J. Wysocki" <rafael@kernel.org>,
-        Linux PCI <linux-pci@vger.kernel.org>,
-        Bjorn Helgaas <bhelgaas@google.com>,
-        Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
-        Christoph Hellwig <hch@infradead.org>,
-        Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
-        Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-        linuxppc-dev <linuxppc-dev@lists.ozlabs.org>,
-        ACPI Devel Maling List <linux-acpi@vger.kernel.org>
+In-Reply-To: <b62adad7-6f39-8bb2-9aca-258cbf909d4d@deltatee.com>
+References: <CAOQPn8soxubJxb=vp7kz+AM6LbPH5y+_Nx0Vzv7rjV_nMMqEmA@mail.gmail.com>
+ <20180809184331.GB113140@bhelgaas-glaptop.roam.corp.google.com>
+ <CAOQPn8uPYKai49WYPqZp2wNd5of=0hUvPOHEtqP56RZu-hcjuw@mail.gmail.com>
+ <b54899a8-a144-e8e0-9880-1800c4657b95@deltatee.com> <CAOQPn8tSNN+3igN-kMcQH46w_a9p6T+S7=c8CLREMLxr1kaTXQ@mail.gmail.com>
+ <7068db44-af31-4462-f966-2dd2340ba0f0@deltatee.com> <695826a6-e10c-5a30-a51f-7cc61ba6e640@gigaio.com>
+ <0d3f48c3-8c4f-4dfb-e883-23c168f12b9b@deltatee.com> <14db6acb-da4f-9604-7359-1671210fcb8b@gigaio.com>
+ <ad2cd3f2-eb41-d4c2-7614-379c2e458352@deltatee.com> <CAOQPn8uuTEcmdQdZB9-A7FT+YWtxSuruGFwmwCPApffTJNs9Vg@mail.gmail.com>
+ <41419ada-7f16-0028-1e43-3b4a6c6960b6@deltatee.com> <CAOQPn8uyozbmEV0Ww3LW4XDcaY1ZwV0yazsPxPQC0AfLNUhKYw@mail.gmail.com>
+ <dd918b52-7ddc-662c-5980-edf3e96ebca2@deltatee.com> <CAOQPn8vO7wP2XGwyJALxkyeBFG6fkTAFgF8QcGiiJF0fOMBa4Q@mail.gmail.com>
+ <b62adad7-6f39-8bb2-9aca-258cbf909d4d@deltatee.com>
+From: Eric Pilmore <epilmore@gigaio.com>
+Date: Tue, 21 Aug 2018 16:59:08 -0700
+Message-ID: <CAOQPn8unksJgKiG2fnJf8u6K8wOcC10MKBvAsKpZs+fDrVsOQg@mail.gmail.com>
+Subject: Re: IOAT DMA w/IOMMU
+To: Logan Gunthorpe <logang@deltatee.com>
+Cc: Kit Chow <kchow@gigaio.com>, Bjorn Helgaas <helgaas@kernel.org>, linux-pci@vger.kernel.org,
+	David Woodhouse <dwmw2@infradead.org>, Alex Williamson <alex.williamson@redhat.com>,
+	iommu@lists.linux-foundation.org
 Content-Type: text/plain; charset="UTF-8"
-Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Mon, Aug 20, 2018 at 1:20 PM Arnd Bergmann <arnd@arndb.de> wrote:
+On Tue, Aug 21, 2018 at 4:53 PM, Logan Gunthorpe <logang@deltatee.com> wrote:
 >
-> On Mon, Aug 20, 2018 at 10:23 AM Rafael J. Wysocki <rafael@kernel.org> wrote:
-> > On Fri, Aug 17, 2018 at 12:33 PM Arnd Bergmann <arnd@arndb.de> wrote:
-> > > @@ -909,8 +881,7 @@ struct pci_bus *acpi_pci_root_create(struct acpi_pci_root *root,
-> > >         int ret, busnum = root->secondary.start;
-> > >         struct acpi_device *device = root->device;
-> > >         int node = acpi_get_node(device->handle);
-> > > -       struct pci_bus *bus;
-> > > -       struct pci_host_bridge *host_bridge;
-> > > +       struct pci_host_bridge *bridge;
-> >
-> > Why "bridge" and not "host" or even something to stand for "root complex"?
-> >
-> > Or maybe it can still be "host_bridge"?
+> CPUs don't always have good support for routing PCI P2P transactions.
+> However, I would have expected a relatively new i7 CPU to support it
+> well. It may simply be that this CPU does not have good support, however
+>  that comes as a bit of a surprise to me. Our plans for the P2P
+> patch-set was to have a white-list for CPUs that work.
 >
-> I did this for consistency with the naming in drivers/pci/probe.c,
-> which always declares the local variable as 'struct pci_host_bridge *bridge'.
-> It's easy to change here if you feel strongly about it (I don't).
+> If you can, it would be worth hooking up a PCI analyzer to see what's
+> happening to the TLPs in both cases.
 
-I would leave host_bridge here.  It would make the patch smaller too I think.
+We do have one, but it will be a bit of a logistical effort to get it set-up
+in this config. Will be a while before I can gather that data. Will forward
+along when I do.
+
+Thanks,
+Eric
