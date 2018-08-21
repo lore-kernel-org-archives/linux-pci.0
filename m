@@ -1,66 +1,62 @@
-Return-Path: <SRS0=ZLZ+=K4=gigaio.com=kchow@kernel.org>
-Return-Path: <SRS0=ZLZ+=K4=gigaio.com=kchow@kernel.org>
-Subject: Re: IOAT DMA w/IOMMU
-To: Logan Gunthorpe <logang@deltatee.com>, Robin Murphy
- <robin.murphy@arm.com>, Dave Jiang <dave.jiang@intel.com>,
- Eric Pilmore <epilmore@gigaio.com>, Bjorn Helgaas <helgaas@kernel.org>
-Cc: "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
- Alex Williamson <alex.williamson@redhat.com>,
- David Woodhouse <dwmw2@infradead.org>,
- "iommu@lists.linux-foundation.org" <iommu@lists.linux-foundation.org>
-References: <CAOQPn8soxubJxb=vp7kz+AM6LbPH5y+_Nx0Vzv7rjV_nMMqEmA@mail.gmail.com>
- <b8af340c-d40b-cb8c-987f-b394f1d6ec3e@gigaio.com>
- <adf51c74-36fa-b61d-8497-27bd75178ba4@deltatee.com>
- <aa9c3f41-efc9-8c68-a517-2736c8986621@gigaio.com>
- <1170c096-a749-6ee3-32d4-ebba1d12adff@gigaio.com>
- <929f3dfa-fbff-c582-3be5-c368f11feb7e@deltatee.com>
- <460cc47f-6a8e-67b0-01a0-02f0c51df258@intel.com>
- <0f653f8f-c7ae-831d-e238-2742590d9ea1@deltatee.com>
- <6525fa4d-7d9b-0136-7206-f8351230af46@intel.com>
- <f22c565e-ba49-c83d-3e51-7967664c7136@deltatee.com>
- <499934e7-3734-1aee-37dd-b42a5d2a2608@intel.com>
- <9d135f61-20c2-e966-4d7d-3e154384ea08@gigaio.com>
- <0a9fa9c3-dbe4-6451-9c1a-06b662702f61@deltatee.com>
- <a2391f6c-d73b-c140-edad-8cd6584dd437@gigaio.com>
- <c8d69f9b-b3a6-76ee-1a90-b3dbaaa9b82b@arm.com>
- <3772d88a-e9ad-465a-c91f-df8f9c6219be@gigaio.com>
- <dd18cf79-aa10-9801-bf95-192f0b86b6d9@gigaio.com>
- <0e839acf-5948-42aa-2ad6-72ca0d84a8c3@deltatee.com>
-From: Kit Chow <kchow@gigaio.com>
-Message-ID: <bcfc8738-cbf6-7124-3d79-a1bdfe161d36@gigaio.com>
-Date: Mon, 13 Aug 2018 16:48:34 -0700
+Return-Path: <SRS0=uSZ2=LE=intel.com=keith.busch@kernel.org>
+Return-Path: <SRS0=uSZ2=LE=intel.com=keith.busch@kernel.org>
+Date: Tue, 21 Aug 2018 17:13:08 -0600
+From: Keith Busch <keith.busch@intel.com>
+To: Benjamin Herrenschmidt <benh@kernel.crashing.org>
+Cc: poza@codeaurora.org, Sinan Kaya <okaya@kernel.org>,
+	Bjorn Helgaas <helgaas@kernel.org>,
+	Thomas Tai <thomas.tai@oracle.com>, bhelgaas@google.com,
+	linux-pci@vger.kernel.org, linux-pci-owner@vger.kernel.org,
+	Sam Bobroff <sam.bobroff@au1.ibm.com>
+Subject: Re: [PATCH 1/1] PCI/AER: prevent pcie_do_fatal_recovery from using
+ device after it is removed
+Message-ID: <20180821231308.GB19320@localhost.localdomain>
+References: <b2e2ac5c92d8a91d00606754d1046578@codeaurora.org>
+ <2ecd1fd6d763810d45697f846fa876b58a193b1b.camel@kernel.crashing.org>
+ <a149d9657ca83b41c724b0ddd319c6fb@codeaurora.org>
+ <512e0e11c3ba462c1d033f8b0e768fa27489731c.camel@kernel.crashing.org>
+ <ad23b16cf7ff1f3b51961fda59533892@codeaurora.org>
+ <2742bdba5ae8ccc420234b6e6b0224919367ed4c.camel@kernel.crashing.org>
+ <20180821143751.GA18477@localhost.localdomain>
+ <277b7056aa7af8e98d5cd912838e582783943aa9.camel@kernel.crashing.org>
+ <20180821220456.GC18612@localhost.localdomain>
+ <5d69daf9918878b95b6df3265fc4c3d5b52f9baa.camel@kernel.crashing.org>
 MIME-Version: 1.0
-In-Reply-To: <0e839acf-5948-42aa-2ad6-72ca0d84a8c3@deltatee.com>
-Content-Type: text/plain; charset=utf-8; format=flowed
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <5d69daf9918878b95b6df3265fc4c3d5b52f9baa.camel@kernel.crashing.org>
 List-ID: <linux-pci.vger.kernel.org>
 
+On Wed, Aug 22, 2018 at 09:06:57AM +1000, Benjamin Herrenschmidt wrote:
+> On Tue, 2018-08-21 at 16:04 -0600, Keith Busch wrote:
+> > > I think there need to be some coordination between pciehb and DPC on
+> > > link state change yes.
+> > > 
+> > > We could still remove the device if recovery fails. For example on EEH
+> > > we have a threshold and if a device fails more than N times within the
+> > > last M minutes (I don't remember the exact numbers and I'm not in front
+> > > of the code right now) we give up.
+> > > 
+> > > Also under some circumstances, the link will change as a result of the
+> > > error handling doing a hot reset.
+> > > 
+> > > For example, if the error happens in a parent bridge and that gets
+> > > reset, the entire hierarchy underneath does too.
+> > > 
+> > > We need to save/restore the state of all bridges and devices (BARs
+> > > etc...) below that.
+> > 
+> > That's not good enough. You'd at least need to check SLTSTS.PDC on all
+> > bridge DSP's beneath the parent *before* you try to restore the state
+> > of devices beneath them. Those races are primarily why DPC currently
+> > removes and reenumerates instead, because that's not something that can
+> > be readily coordinated today.
+> 
+> It can be probably done by a simple test & skip as you go down
+> restoring state, then handling the removals after the dance is
+> complete.
 
-
-On 08/13/2018 04:39 PM, Logan Gunthorpe wrote:
->
-> On 13/08/18 05:30 PM, Kit Chow wrote:
->> In arch/x86/include/asm/page.h, there is the following comment in
->> regards to validating the virtual address.
->>
->> /*
->>   * virt_to_page(kaddr) returns a valid pointer if and only if
->>   * virt_addr_valid(kaddr) returns true.
->>   */
->> #define virt_to_page(kaddr)     pfn_to_page(__pa(kaddr) >> PAGE_SHIFT)
->>
->> So it looks like the validation by virt_addr_valid was somehow dropped
->> from the virt_to_page code path. Does anyone have any ideas what
->> happended to it?
-> I don't think it was ever validated (though I haven't been around long
-> enough to say for certain). What the comment is saying is that you
-> shouldn't rely on virt_to_page() unless you know virt_addr_valid() is
-> true (which in most cases you can without the extra check). virt_to_page
-> is meant to be really fast so adding an extra validation would probably
-> be a significant performance regression for the entire kernel.
->
-> The fact that this can happen through dma_map_single() is non-ideal at
-> best. It assumes the caller is mapping regular memory and doesn't check
-> this at all. It may make sense to fix that but I think people expect
-> dma_map_single() to be as fast as possible as well...
->
-Perhaps include the validation with some debug turned on?
+You can't just test the states in config space. You're racing with
+pciehp's ISR, which clears those states. You'd need to fundamentally
+change pciehp to (1) not process such events until some currently
+undefined criteria is established, and (2) save and export the previously
+latched states while pciehp bottom half processing is stalled.
