@@ -1,57 +1,117 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-ed1-f44.google.com ([209.85.208.44]:46103 "EHLO
-        mail-ed1-f44.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1729955AbeHNPx2 (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Tue, 14 Aug 2018 11:53:28 -0400
+Received: from smtprelay.synopsys.com ([198.182.60.111]:53050 "EHLO
+        smtprelay.synopsys.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1728694AbeHVNMw (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Wed, 22 Aug 2018 09:12:52 -0400
+Subject: Re: [PATCH v2] PCI: dwc: fix scheduling while atomic issues
+To: Jisheng Zhang <Jisheng.Zhang@synaptics.com>,
+        Jingoo Han <jingoohan1@gmail.com>,
+        Joao Pinto <Joao.Pinto@synopsys.com>,
+        "Lorenzo Pieralisi" <lorenzo.pieralisi@arm.com>,
+        Bjorn Helgaas <bhelgaas@google.com>
+CC: "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+        "linux-arm-kernel@lists.infradead.org"
+        <linux-arm-kernel@lists.infradead.org>
+References: <20180821141512.368e3df2@xhacker.debian>
+From: Gustavo Pimentel <Gustavo.Pimentel@synopsys.com>
+Message-ID: <ae663623-6af5-9c53-0e4b-f48b9c517a46@synopsys.com>
+Date: Wed, 22 Aug 2018 10:45:46 +0100
 MIME-Version: 1.0
-References: <CA+Kvs9kZKt0tvsB-YqomM7grvRyDr=B-HPWUNv1ZcKi8w9ms-A@mail.gmail.com>
- <cdc09cf9-27dd-7838-34e7-12d63571e770@ti.com> <CA+Kvs9mV3u045acfBa2pEiUcVDyYroVrobtsKKBpDAfX+Os5iQ@mail.gmail.com>
- <3ffbd957-a62f-b1ec-63b9-4ab3e03c8873@ti.com>
-In-Reply-To: <3ffbd957-a62f-b1ec-63b9-4ab3e03c8873@ti.com>
-From: Ramon Fried <ramon.fried@gmail.com>
-Date: Tue, 14 Aug 2018 14:06:09 +0100
-Message-ID: <CA+Kvs9nSyB0t8DKnf3AQrke5rh1N7O8E8mFKOkOOoHCYbHC+=A@mail.gmail.com>
-Subject: Re: PCI Endpoint - Missing inbound mapping ops ?
-To: kishon@ti.com
-Cc: lorenzo.pieralisi@arm.com, bhelgaas@google.com,
-        linux-pci@vger.kernel.org, open list <linux-kernel@vger.kernel.org>
-Content-Type: text/plain; charset="UTF-8"
+In-Reply-To: <20180821141512.368e3df2@xhacker.debian>
+Content-Type: text/plain; charset="utf-8"
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tue, Aug 14, 2018 at 2:04 PM Kishon Vijay Abraham I <kishon@ti.com> wrote:
+Hi Jisheng
+
+On 21/08/2018 07:15, Jisheng Zhang wrote:
+> When programming inbound/outbound atu, we call usleep_range() after
+> each checking PCIE_ATU_ENABLE bit. Unfortunately, the atu programming
+> can be called in atomic context:
+> 
+> inbound atu programming could be called through
+> pci_epc_write_header()
+>   =>dw_pcie_ep_write_header()
+>     =>dw_pcie_prog_inbound_atu()
+> 
+> outbound atu programming could be called through
+> pci_bus_read_config_dword()
+>   =>dw_pcie_rd_conf()
+>     =>dw_pcie_prog_outbound_atu()
+> 
+> Fix this issue by calling mdelay() instead.
+
+Makes sense. Thanks.
+
+Acked-by: Gustavo Pimentel <gustavo.pimentel@synopsys.com>
+
+Regards,
+Gustavo
+
+> 
+> Signed-off-by: Jisheng Zhang <Jisheng.Zhang@synaptics.com>
+> ---
+> 
+> Since v1
+>  - use mdelay() instead of udelay() to avoid __bad_udelay()
+> 
+>  drivers/pci/controller/dwc/pcie-designware.c | 8 ++++----
+>  drivers/pci/controller/dwc/pcie-designware.h | 3 +--
+>  2 files changed, 5 insertions(+), 6 deletions(-)
+> 
+> diff --git a/drivers/pci/controller/dwc/pcie-designware.c b/drivers/pci/controller/dwc/pcie-designware.c
+> index 778c4f76a884..2153956a0b20 100644
+> --- a/drivers/pci/controller/dwc/pcie-designware.c
+> +++ b/drivers/pci/controller/dwc/pcie-designware.c
+> @@ -135,7 +135,7 @@ static void dw_pcie_prog_outbound_atu_unroll(struct dw_pcie *pci, int index,
+>  		if (val & PCIE_ATU_ENABLE)
+>  			return;
+>  
+> -		usleep_range(LINK_WAIT_IATU_MIN, LINK_WAIT_IATU_MAX);
+> +		mdelay(LINK_WAIT_IATU);
+>  	}
+>  	dev_err(pci->dev, "Outbound iATU is not being enabled\n");
+>  }
+> @@ -178,7 +178,7 @@ void dw_pcie_prog_outbound_atu(struct dw_pcie *pci, int index, int type,
+>  		if (val & PCIE_ATU_ENABLE)
+>  			return;
+>  
+> -		usleep_range(LINK_WAIT_IATU_MIN, LINK_WAIT_IATU_MAX);
+> +		mdelay(LINK_WAIT_IATU);
+>  	}
+>  	dev_err(pci->dev, "Outbound iATU is not being enabled\n");
+>  }
+> @@ -236,7 +236,7 @@ static int dw_pcie_prog_inbound_atu_unroll(struct dw_pcie *pci, int index,
+>  		if (val & PCIE_ATU_ENABLE)
+>  			return 0;
+>  
+> -		usleep_range(LINK_WAIT_IATU_MIN, LINK_WAIT_IATU_MAX);
+> +		mdelay(LINK_WAIT_IATU);
+>  	}
+>  	dev_err(pci->dev, "Inbound iATU is not being enabled\n");
+>  
+> @@ -282,7 +282,7 @@ int dw_pcie_prog_inbound_atu(struct dw_pcie *pci, int index, int bar,
+>  		if (val & PCIE_ATU_ENABLE)
+>  			return 0;
+>  
+> -		usleep_range(LINK_WAIT_IATU_MIN, LINK_WAIT_IATU_MAX);
+> +		mdelay(LINK_WAIT_IATU);
+>  	}
+>  	dev_err(pci->dev, "Inbound iATU is not being enabled\n");
+>  
+> diff --git a/drivers/pci/controller/dwc/pcie-designware.h b/drivers/pci/controller/dwc/pcie-designware.h
+> index 96126fd8403c..9f1a5e399b70 100644
+> --- a/drivers/pci/controller/dwc/pcie-designware.h
+> +++ b/drivers/pci/controller/dwc/pcie-designware.h
+> @@ -26,8 +26,7 @@
+>  
+>  /* Parameters for the waiting for iATU enabled routine */
+>  #define LINK_WAIT_MAX_IATU_RETRIES	5
+> -#define LINK_WAIT_IATU_MIN		9000
+> -#define LINK_WAIT_IATU_MAX		10000
+> +#define LINK_WAIT_IATU			9
+>  
+>  /* Synopsys-specific PCIe configuration registers */
+>  #define PCIE_PORT_LINK_CONTROL		0x710
 >
-> Hi,
->
-> On Tuesday 14 August 2018 06:25 PM, Ramon Fried wrote:
-> > On Tue, Aug 14, 2018 at 1:53 PM Kishon Vijay Abraham I <kishon@ti.com> wrote:
-> >>
-> >> Hi,
-> >>
-> >> On Tuesday 14 August 2018 06:19 PM, Ramon Fried wrote:
-> >>> Hi.
-> >>> I recently saw that the PCI endpoint API only supports outbound memory
-> >>> mapping: (AXI -> PCI) through the map_addr op.
-> >>> Why inbound mapping is missing (PCI->AXI) is missing ?
-> >>> In almost all of the PCI EP controllers I've worked with there was a
-> >>> need to map complete BARS or part of BARS to mmio/aperature regions on
-> >>> the device.
-> >>
-> >> pci_epc_set_bar() is used for mapping BAR.
-> > Thanks Kishon.
-> > what about address mapping ? Synopsys has this functionality if I
-> > recall correctly.
->
-> The addresses that the RC will put in BAR's is not known while we initialize
-> the endpoint. So we really can't map BAR's PCI address to an inbound address
-> while EP initialization.
->
-> I think some older version of Synopsys had this (and didn't have BAR mapping).
-> Actually TI's K2G had this IP. However the ATU registers here are mapped to
-> BAR0. So the host side PCI driver can program the PCI address (that the RC has
-> allocated for BARs) in ATU.
-Yes. you're right.
-Thanks for the clarification.
->
-> Thanks
-> Kishon
