@@ -1,243 +1,211 @@
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-From: Hanjie Lin <hanjie.lin@amlogic.com>
-To: Kishon Vijay Abraham I <kishon@ti.com>
-Subject: [PATCH 2/2] PCI: meson: add the Amlogic Meson PCIe phy driver
-Date: Tue, 14 Aug 2018 02:12:14 -0400
-Message-ID: <1534227134-151584-3-git-send-email-hanjie.lin@amlogic.com>
-In-Reply-To: <1534227134-151584-1-git-send-email-hanjie.lin@amlogic.com>
-References: <1534227134-151584-1-git-send-email-hanjie.lin@amlogic.com>
+Return-Path: <SRS0=gWbn=LF=codeaurora.org=poza@kernel.org>
+Return-Path: <SRS0=gWbn=LF=codeaurora.org=poza@kernel.org>
 MIME-Version: 1.0
-List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
-List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
-List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
-List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
-List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
-Cc: Rob Herring <robh@kernel.org>, Hanjie Lin <hanjie.lin@amlogic.com>,
- linux-pci@vger.kernel.org, shawn.lin@rock-chips.com,
- linux-kernel@vger.kernel.org, Yue Wang <yue.wang@amlogic.com>, Kevin
- Hilman <khilman@baylibre.com>, Carlo Caione <carlo@caione.org>,
- linux-amlogic@lists.infradead.org, linux-arm-kernel@lists.infradead.org
-Content-Type: text/plain; charset="us-ascii"
-Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
-Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
+Content-Type: text/plain; charset=US-ASCII;
+ format=flowed
+Date: Wed, 22 Aug 2018 10:05:56 +0530
+From: poza@codeaurora.org
+To: Bjorn Helgaas <helgaas@kernel.org>
+Cc: Benjamin Herrenschmidt <benh@kernel.crashing.org>, Thomas Tai
+ <thomas.tai@oracle.com>, bhelgaas@google.com, keith.busch@intel.com,
+ linux-pci@vger.kernel.org, linux-pci-owner@vger.kernel.org, Sam Bobroff
+ <sam.bobroff@au1.ibm.com>
+Subject: Re: PATCH] Partial revert of "PCI/AER: Handle ERR_FATAL with removal
+ and re-enumeration of devices"
+In-Reply-To: <20180821195023.GD154536@bhelgaas-glaptop.roam.corp.google.com>
+References: <1534179088-44219-1-git-send-email-thomas.tai@oracle.com>
+ <1534179088-44219-2-git-send-email-thomas.tai@oracle.com>
+ <51f4b387d9bd96a42d526a6a029fc43b@codeaurora.org>
+ <b0104a716319d76e734c307cb4bedd9d@codeaurora.org>
+ <903394c04d6ad468ed06dc0a779200e7555345a7.camel@kernel.crashing.org>
+ <6cb069038530757f31f3dd60328c7e30@codeaurora.org>
+ <e931bc7a7e468e8bb2ee3766b3fcf96f1800f552.camel@kernel.crashing.org>
+ <bf7ceabb6fe51398e0f4eebd9c4fe4ac1ec2b8a4.camel@kernel.crashing.org>
+ <20180819021922.GE128050@bhelgaas-glaptop.roam.corp.google.com>
+ <fa217fe562df74980febdd57e8e3361c2ece2ae2.camel@kernel.crashing.org>
+ <20180821195023.GD154536@bhelgaas-glaptop.roam.corp.google.com>
+Message-ID: <5b7b16598ecd480de32e5a5b2e673910@codeaurora.org>
 List-ID: <linux-pci.vger.kernel.org>
 
-From: Yue Wang <yue.wang@amlogic.com>
+On 2018-08-22 01:20, Bjorn Helgaas wrote:
+> On Mon, Aug 20, 2018 at 02:39:04PM +1000, Benjamin Herrenschmidt wrote:
+>> This partially reverts commit 
+>> 7e9084b36740b2ec263ea35efb203001f755e1d8.
+>> 
+>> This only reverts the Documentation/PCI/pci-error-recovery.txt changes
+>> 
+>> Those changes are incorrect, they change the documentation to adapt
+>> to the (imho incorrect) AER implementation, and as a result making
+>> it no longer match the EEH implementation.
+>> 
+>> I believe the policy described originally in this document is what
+>> should be implemented by everybody and the changes done by that commit
+>> would compromise, among others, the ability to recover from errors 
+>> with
+>> storage devices.
+> 
+> I think we should align EEH, AER, and DPC as much as possible,
+> including making this documentation match the code.
+> 
+> Because of its name, this file *looks* like it should match the code
+> in the PCI core, i.e., drivers/pci/...  So I think it would be
+> confusing to simply apply this revert without making a more direct
+> connection between this documentation and the powerpc-specific EEH
+> code.
+> 
+> If we can change AER & DPC to correspond to EEH, then I think it would
+> make sense to apply this revert along with those AER & DPC changes so
+> the documentation stays in step with the code.
 
-The Meson-PCIE-PHY controller supports the 5-Gbps data rate
-of the PCI Express Gen 2 specification and is backwardcompatible
-with the 2.5-Gbps Gen 1.1 specification with only
-inferred idle detection supported on AMLOGIC SoCs.
+I agree with you Bjorn, but it looks like we are far from holding some 
+consensus on the behavior.
+the other mail-chain [PCI/AER: prevent pcie_do_fatal_recovery from using 
+device after it is removed]
+has gone long enough, and touched lot of things all together. hence I 
+would like to just use this mail-chain just to discuss
+about AER, DPC behaviour.
 
-Signed-off-by: Yue Wang <yue.wang@amlogic.com>
-Signed-off-by: Hanjie Lin <hanjie.lin@amlogic.com>
----
- drivers/phy/amlogic/Kconfig              |   8 ++
- drivers/phy/amlogic/Makefile             |   1 +
- drivers/phy/amlogic/phy-meson-axg-pcie.c | 160 +++++++++++++++++++++++++++++++
- 3 files changed, 169 insertions(+)
- create mode 100644 drivers/phy/amlogic/phy-meson-axg-pcie.c
+let me put forward the proposal here to this mail-chain.
 
-diff --git a/drivers/phy/amlogic/Kconfig b/drivers/phy/amlogic/Kconfig
-index 23fe1cd..3ab07f9 100644
---- a/drivers/phy/amlogic/Kconfig
-+++ b/drivers/phy/amlogic/Kconfig
-@@ -36,3 +36,11 @@ config PHY_MESON_GXL_USB3
- 	  Enable this to support the Meson USB3 PHY and OTG detection
- 	  IP block found in Meson GXL and GXM SoCs.
- 	  If unsure, say N.
-+
-+config PHY_MESON_AXG_PCIE
-+	bool "Meson AXG PCIe PHY driver"
-+	depends on OF && (ARCH_MESON || COMPILE_TEST)
-+	select GENERIC_PHY
-+	help
-+	  Enable PCIe PHY support for Meson AXG SoC series.
-+	  This driver provides PHY interface for Meson PCIe controller.
-\ No newline at end of file
-diff --git a/drivers/phy/amlogic/Makefile b/drivers/phy/amlogic/Makefile
-index 4fd8848..5ab8578 100644
---- a/drivers/phy/amlogic/Makefile
-+++ b/drivers/phy/amlogic/Makefile
-@@ -1,3 +1,4 @@
- obj-$(CONFIG_PHY_MESON8B_USB2)		+= phy-meson8b-usb2.o
- obj-$(CONFIG_PHY_MESON_GXL_USB2)	+= phy-meson-gxl-usb2.o
- obj-$(CONFIG_PHY_MESON_GXL_USB3)	+= phy-meson-gxl-usb3.o
-+obj-$(CONFIG_PHY_MESON_AXG_PCIE)	+= phy-meson-axg-pcie.o
-diff --git a/drivers/phy/amlogic/phy-meson-axg-pcie.c b/drivers/phy/amlogic/phy-meson-axg-pcie.c
-new file mode 100644
-index 0000000..8bc5c49
---- /dev/null
-+++ b/drivers/phy/amlogic/phy-meson-axg-pcie.c
-@@ -0,0 +1,160 @@
-+// SPDX-License-Identifier: (GPL-2.0+ or MIT)
-+/*
-+ * Amlogic MESON SoC series PCIe PHY driver
-+ *
-+ * Phy provider for PCIe controller on MESON SoC series
-+ *
-+ * Copyright (c) 2018 Amlogic, inc.
-+ * Yue Wang <yue.wang@amlogic.com>
-+ */
-+
-+#include <linux/delay.h>
-+#include <linux/io.h>
-+#include <linux/of.h>
-+#include <linux/of_platform.h>
-+#include <linux/platform_device.h>
-+#include <linux/phy/phy.h>
-+#include <linux/reset.h>
-+
-+struct meson_pcie_phy_data {
-+	const struct phy_ops	*ops;
-+};
-+
-+struct meson_pcie_reset {
-+	struct reset_control	*port_a;
-+	struct reset_control	*port_b;
-+	struct reset_control	*phy;
-+	struct reset_control	*apb;
-+};
-+
-+struct meson_pcie_phy {
-+	const struct meson_pcie_phy_data	*data;
-+	struct meson_pcie_reset	reset;
-+	void __iomem	*phy_base;
-+};
-+
-+static int meson_pcie_phy_init(struct phy *phy)
-+{
-+	struct meson_pcie_phy *mphy = phy_get_drvdata(phy);
-+	struct meson_pcie_reset *mrst = &mphy->reset;
-+
-+	writel(0x1c, mphy->phy_base);
-+	reset_control_assert(mrst->port_a);
-+	reset_control_assert(mrst->port_b);
-+	reset_control_assert(mrst->phy);
-+	reset_control_assert(mrst->apb);
-+	udelay(400);
-+	reset_control_deassert(mrst->port_a);
-+	reset_control_deassert(mrst->port_b);
-+	reset_control_deassert(mrst->phy);
-+	reset_control_deassert(mrst->apb);
-+	udelay(500);
-+
-+	return 0;
-+}
-+
-+static const struct phy_ops meson_phy_ops = {
-+	.init		= meson_pcie_phy_init,
-+	.owner		= THIS_MODULE,
-+};
-+
-+static const struct meson_pcie_phy_data meson_pcie_phy_data = {
-+	.ops		= &meson_phy_ops,
-+};
-+
-+static const struct of_device_id meson_pcie_phy_match[] = {
-+	{
-+		.compatible = "amlogic,axg-pcie-phy",
-+		.data = &meson_pcie_phy_data,
-+	},
-+	{},
-+};
-+
-+static int meson_pcie_phy_probe(struct platform_device *pdev)
-+{
-+	struct device *dev = &pdev->dev;
-+	struct meson_pcie_phy *mphy;
-+	struct meson_pcie_reset *mrst;
-+	struct phy *generic_phy;
-+	struct phy_provider *phy_provider;
-+	struct resource *res;
-+	const struct meson_pcie_phy_data *data;
-+
-+	data = of_device_get_match_data(dev);
-+	if (!data)
-+		return -ENODEV;
-+
-+	mphy = devm_kzalloc(dev, sizeof(*mphy), GFP_KERNEL);
-+	if (!mphy)
-+		return -ENOMEM;
-+	res = platform_get_resource(pdev, IORESOURCE_MEM, 0);
-+	mphy->phy_base = devm_ioremap_resource(dev, res);
-+	if (IS_ERR(mphy->phy_base))
-+		return PTR_ERR(mphy->phy_base);
-+
-+	mrst = &mphy->reset;
-+
-+	mrst->port_a = devm_reset_control_get_shared(dev, "port_a");
-+	if (IS_ERR(mrst->port_a)) {
-+		if (PTR_ERR(mrst->port_a) != -EPROBE_DEFER)
-+			dev_err(dev, "couldn't get port a reset %ld\n",
-+				PTR_ERR(mrst->port_a));
-+
-+		return PTR_ERR(mrst->port_a);
-+	}
-+
-+	mrst->port_b = devm_reset_control_get_shared(dev, "port_b");
-+	if (IS_ERR(mrst->port_b)) {
-+		if (PTR_ERR(mrst->port_b) != -EPROBE_DEFER)
-+			dev_err(dev, "couldn't get port b reset %ld\n",
-+				PTR_ERR(mrst->port_b));
-+
-+		return PTR_ERR(mrst->port_b);
-+	}
-+
-+	mrst->phy = devm_reset_control_get_shared(dev, "phy");
-+	if (IS_ERR(mrst->phy)) {
-+		if (PTR_ERR(mrst->phy) != -EPROBE_DEFER)
-+			dev_err(dev, "couldn't get phy reset\n");
-+
-+		return PTR_ERR(mrst->phy);
-+	}
-+
-+	mrst->apb = devm_reset_control_get_shared(dev, "apb");
-+	if (IS_ERR(mrst->apb)) {
-+		if (PTR_ERR(mrst->apb) != -EPROBE_DEFER)
-+			dev_err(dev, "couldn't get apb reset\n");
-+
-+		return PTR_ERR(mrst->apb);
-+	}
-+
-+	reset_control_deassert(mrst->port_a);
-+	reset_control_deassert(mrst->port_b);
-+	reset_control_deassert(mrst->phy);
-+	reset_control_deassert(mrst->apb);
-+
-+	mphy->data = data;
-+
-+	generic_phy = devm_phy_create(dev, dev->of_node, mphy->data->ops);
-+	if (IS_ERR(generic_phy)) {
-+		if (PTR_ERR(generic_phy) != -EPROBE_DEFER)
-+			dev_err(dev, "failed to create PHY\n");
-+
-+		return PTR_ERR(generic_phy);
-+	}
-+
-+	phy_set_drvdata(generic_phy, mphy);
-+	phy_provider = devm_of_phy_provider_register(dev, of_phy_simple_xlate);
-+
-+	return PTR_ERR_OR_ZERO(phy_provider);
-+}
-+
-+static struct platform_driver meson_pcie_phy_driver = {
-+	.probe	= meson_pcie_phy_probe,
-+	.driver = {
-+		.of_match_table	= meson_pcie_phy_match,
-+		.name		= "meson-pcie-phy",
-+	}
-+};
-+
-+builtin_platform_driver(meson_pcie_phy_driver);
--- 
-2.7.4
+1) Right now AER and DPC both calls pcie_do_fatal_recovery(), I majorly 
+see DPC as error handling and recovery agent rather than being used for 
+hotplug.
+    so in my opinion, both AER and DPC should have same error handling 
+and recovery mechanism
+
+    so if there is a way to figure out that in absence of pcihp, if DPC 
+is being used to support hotplug then we fall back to original DPC 
+mechanism (which
+    is remove devices)
+    otherwise, we fall back to drivers callbacks.
+
+    Spec 6.7.5 Async Removal
+    "
+    The Surprise Down error resulting from async removal may trigger 
+Downstream Port Containment (See Section 6.2.10).
+    Downstream Port Containment following an async removal may be 
+utilized to hold the Link of a
+    Downstream Port in the Disabled LTSSM state while host software 
+recovers from the side effects of an async removal.
+    "
+    pcie_do_fatal_recovery should take care of above. so that we support 
+both error handling and async removal from DPC point of view.
 
 
-_______________________________________________
-linux-arm-kernel mailing list
-linux-arm-kernel@lists.infradead.org
-http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
+2) pci_channel_io_frozen is the one which should be used from framework 
+to communicate driver that this is ERR_FATAL, the it is left to the 
+driver(s) to see if they want reset of the link (SBR).
+
+3) pcie_do_nonfatal_recovery; we sould actually reset the link e.g. SBR 
+if driver requests the reset of link.  (there is already TDO note 
+anyway).
+    if (status == PCI_ERS_RESULT_NEED_RESET) {
+         /*
+          * TODO: Should call platform-specific
+          * functions to reset slot before calling
+          * drivers' slot_reset callbacks?
+          */
+         status = broadcast_error_message(dev,
+                 state,
+                 "slot_reset",
+                 report_slot_reset);
+     }
+
+
+Regards,
+Oza.
+
+
+> 
+>> Signed-off-by: Benjamin Herrenschmidt <benh@kernel.crashing.org>
+>> ---
+>>  Documentation/PCI/pci-error-recovery.txt | 35 
+>> +++++++-----------------
+>>  1 file changed, 10 insertions(+), 25 deletions(-)
+>> 
+>> diff --git a/Documentation/PCI/pci-error-recovery.txt 
+>> b/Documentation/PCI/pci-error-recovery.txt
+>> index 688b69121e82..0b6bb3ef449e 100644
+>> --- a/Documentation/PCI/pci-error-recovery.txt
+>> +++ b/Documentation/PCI/pci-error-recovery.txt
+>> @@ -110,7 +110,7 @@ The actual steps taken by a platform to recover 
+>> from a PCI error
+>>  event will be platform-dependent, but will follow the general
+>>  sequence described below.
+>> 
+>> -STEP 0: Error Event: ERR_NONFATAL
+>> +STEP 0: Error Event
+>>  -------------------
+>>  A PCI bus error is detected by the PCI hardware.  On powerpc, the 
+>> slot
+>>  is isolated, in that all I/O is blocked: all reads return 0xffffffff,
+>> @@ -228,7 +228,13 @@ proceeds to either STEP3 (Link Reset) or to STEP 
+>> 5 (Resume Operations).
+>>  If any driver returned PCI_ERS_RESULT_NEED_RESET, then the platform
+>>  proceeds to STEP 4 (Slot Reset)
+>> 
+>> -STEP 3: Slot Reset
+>> +STEP 3: Link Reset
+>> +------------------
+>> +The platform resets the link.  This is a PCI-Express specific step
+>> +and is done whenever a fatal error has been detected that can be
+>> +"solved" by resetting the link.
+>> +
+>> +STEP 4: Slot Reset
+>>  ------------------
+>> 
+>>  In response to a return value of PCI_ERS_RESULT_NEED_RESET, the
+>> @@ -314,7 +320,7 @@ Failure).
+>>  >>> However, it probably should.
+>> 
+>> 
+>> -STEP 4: Resume Operations
+>> +STEP 5: Resume Operations
+>>  -------------------------
+>>  The platform will call the resume() callback on all affected device
+>>  drivers if all drivers on the segment have returned
+>> @@ -326,7 +332,7 @@ a result code.
+>>  At this point, if a new error happens, the platform will restart
+>>  a new error recovery sequence.
+>> 
+>> -STEP 5: Permanent Failure
+>> +STEP 6: Permanent Failure
+>>  -------------------------
+>>  A "permanent failure" has occurred, and the platform cannot recover
+>>  the device.  The platform will call error_detected() with a
+>> @@ -349,27 +355,6 @@ errors. See the discussion in 
+>> powerpc/eeh-pci-error-recovery.txt
+>>  for additional detail on real-life experience of the causes of
+>>  software errors.
+>> 
+>> -STEP 0: Error Event: ERR_FATAL
+>> --------------------
+>> -PCI bus error is detected by the PCI hardware. On powerpc, the slot 
+>> is
+>> -isolated, in that all I/O is blocked: all reads return 0xffffffff, 
+>> all
+>> -writes are ignored.
+>> -
+>> -STEP 1: Remove devices
+>> ---------------------
+>> -Platform removes the devices depending on the error agent, it could 
+>> be
+>> -this port for all subordinates or upstream component (likely 
+>> downstream
+>> -port)
+>> -
+>> -STEP 2: Reset link
+>> ---------------------
+>> -The platform resets the link.  This is a PCI-Express specific step 
+>> and is
+>> -done whenever a fatal error has been detected that can be "solved" by
+>> -resetting the link.
+>> -
+>> -STEP 3: Re-enumerate the devices
+>> ---------------------
+>> -Initiates the re-enumeration.
+>> 
+>>  Conclusion; General Remarks
+>>  ---------------------------
+>> 
+>> 
