@@ -1,143 +1,38 @@
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Subject: Re: [PATCH v2 1/2] dt-bindings: PCI: meson: add DT bindings for
- Amlogic Meson PCIe controller
-To: Rob Herring <robh@kernel.org>
-References: <1535096165-45827-1-git-send-email-hanjie.lin@amlogic.com>
- <1535096165-45827-2-git-send-email-hanjie.lin@amlogic.com>
- <8c48964151d24758298ba935da336c0829e2b287.camel@baylibre.com>
- <11d7547b-feb4-6ecb-cef3-db46ce8ee2ef@amlogic.com>
- <20180829004122.GA25928@bogus>
- <84d5399c-67d4-f8a4-3613-00d91f21292f@amlogic.com>
- <CAL_JsqJPzfp1OimYXa26tEqTexyiuKMeKszveobHN3rKP8+RYQ@mail.gmail.com>
-From: Hanjie Lin <hanjie.lin@amlogic.com>
-Message-ID: <12ce60a8-accc-3c8f-4d38-9bf31346b775@amlogic.com>
-Date: Fri, 31 Aug 2018 09:47:09 +0800
+Return-Path: <SRS0=RagP=LF=intel.com=keith.busch@kernel.org>
+Return-Path: <SRS0=RagP=LF=intel.com=keith.busch@kernel.org>
+Date: Wed, 22 Aug 2018 08:38:53 -0600
+From: Keith Busch <keith.busch@intel.com>
+To: Lukas Wunner <lukas@wunner.de>
+Cc: Sinan Kaya <okaya@kernel.org>,
+	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	poza@codeaurora.org, Bjorn Helgaas <helgaas@kernel.org>,
+	Thomas Tai <thomas.tai@oracle.com>, bhelgaas@google.com,
+	linux-pci@vger.kernel.org, linux-pci-owner@vger.kernel.org,
+	Sam Bobroff <sam.bobroff@au1.ibm.com>
+Subject: Re: [PATCH 1/1] PCI/AER: prevent pcie_do_fatal_recovery from using
+ device after it is removed
+Message-ID: <20180822143853.GC19320@localhost.localdomain>
+References: <2ecd1fd6d763810d45697f846fa876b58a193b1b.camel@kernel.crashing.org>
+ <20180820155325.GA16148@localhost.localdomain>
+ <cf6de256280be7a2948db6dd2b5bfae92e70e12f.camel@kernel.crashing.org>
+ <6aa71d74-e4dc-c627-1496-981278388bce@kernel.org>
+ <20180820213544.GA16805@localhost.localdomain>
+ <0193e0c5a52d8f2e93958f0683f3acc81cef2bc9.camel@kernel.crashing.org>
+ <fd538f20-0754-f127-ceb9-693fec90b4af@kernel.org>
+ <44195c0d7159ce4cd01b660002b2f5af5d53678b.camel@kernel.crashing.org>
+ <184814fb-0caf-b260-4415-8f96fbdf4831@kernel.org>
+ <20180822091333.rre2okhnrot44dyq@wunner.de>
 MIME-Version: 1.0
-In-Reply-To: <CAL_JsqJPzfp1OimYXa26tEqTexyiuKMeKszveobHN3rKP8+RYQ@mail.gmail.com>
-List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
-List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
-List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
-List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
-List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
-Cc: devicetree@vger.kernel.org, Jianxin Pan <jianxin.pan@amlogic.com>,
- Kevin Hilman <khilman@baylibre.com>, Yixun Lan <yixun.lan@amlogic.com>,
- "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
- Yue Wang <yue.wang@amlogic.com>, Qiufang Dai <qiufang.dai@amlogic.com>,
- Liang Yang <liang.yang@amlogic.com>, Jian Hu <jian.hu@amlogic.com>,
- linux-pci@vger.kernel.org, Bjorn Helgaas <bhelgaas@google.com>,
- linux-amlogic@lists.infradead.org, "moderated list:ARM/FREESCALE IMX / MXC ARM
- ARCHITECTURE" <linux-arm-kernel@lists.infradead.org>,
- Jerome Brunet <jbrunet@baylibre.com>
-Content-Type: text/plain; charset="us-ascii"
-Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
-Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20180822091333.rre2okhnrot44dyq@wunner.de>
 List-ID: <linux-pci.vger.kernel.org>
 
-
-
-On 2018/8/30 21:59, Rob Herring wrote:
-> On Thu, Aug 30, 2018 at 2:37 AM Hanjie Lin <hanjie.lin@amlogic.com> wrote:
->>
->>
->>
->> On 2018/8/29 8:41, Rob Herring wrote:
->>> On Mon, Aug 27, 2018 at 04:55:20PM +0800, Hanjie Lin wrote:
->>>>
->>>>
->>>> On 2018/8/24 16:22, Jerome Brunet wrote:
->>>>> On Fri, 2018-08-24 at 15:36 +0800, Hanjie Lin wrote:
->>>>>> From: Yue Wang <yue.wang@amlogic.com>
->>>>>>
->>>>>> The Amlogic Meson PCIe host controller is based on the Synopsys DesignWare
->>>>>> PCI core. This patch adds documentation for the DT bindings in Meson PCIe
->>>>>> controller.
->>>>>>
->>>>>> Signed-off-by: Yue Wang <yue.wang@amlogic.com>
->>>>>> Signed-off-by: Hanjie Lin <hanjie.lin@amlogic.com>
->>>>>> ---
->>>>>>  .../devicetree/bindings/pci/amlogic,meson-pcie.txt | 63 ++++++++++++++++++++++
->>>>>>  1 file changed, 63 insertions(+)
->>>>>>  create mode 100644 Documentation/devicetree/bindings/pci/amlogic,meson-pcie.txt
->>>>>>
->>>>>> diff --git a/Documentation/devicetree/bindings/pci/amlogic,meson-pcie.txt b/Documentation/devicetree/bindings/pci/amlogic,meson-pcie.txt
->>>>>> new file mode 100644
->>>>>> index 0000000..8a831d1
->>>>>> --- /dev/null
->>>>>> +++ b/Documentation/devicetree/bindings/pci/amlogic,meson-pcie.txt
->>>>>> @@ -0,0 +1,63 @@
->>>>>> +Amlogic Meson AXG DWC PCIE SoC controller
->>>>>> +
->>>>>> +Amlogic Meson PCIe host controller is based on the Synopsys DesignWare PCI core.
->>>>>> +It shares common functions with the PCIe DesignWare core driver and
->>>>>> +inherits common properties defined in
->>>>>> +Documentation/devicetree/bindings/pci/designware-pci.txt.
->>>>>> +
->>>>>> +Additional properties are described here:
->>>>>> +
->>>>>> +Required properties:
->>>>>> +- compatible:
->>>>>> +  should contain "amlogic,axg-pcie" to identify the core.
->>>>>> +- reg:
->>>>>> +  Should contain the configuration address space.
->>>>>> +- reg-names: Must be
->>>>>> +  - "elbi"        External local bus interface registers
->>>>>> +  - "cfg"         Meson specific registers
->>>>>> +  - "config"      PCIe configuration space
->>>>>> +- reset-gpios: The GPIO to generate PCIe PERST# assert and deassert signal.
->>>>>> +- clocks: Must contain an entry for each entry in clock-names.
->>>>>> +- clock-names: Must include the following entries:
->>>>>> +  - "pclk"       PCIe GEN 100M PLL clock
->>>>>> +  - "port"       PCIe_x(A or B) RC clock gate
->>>>>> +  - "general"    PCIe Phy clock
->>>>>> +  - "mipi"       PCIe_x(A or B) 100M ref clock gate
->>>>>> +- resets: phandle to the reset lines.
->>>>>> +- reset-names: must contain "phy" and "peripheral"
->>>>>> +       - "port" Port A or B reset
->>>>>> +       - "apb" APB reset
->>>>>
->>>>> The above description is not coherent (phy <=> port)
->>>>>
->>>>
->>>> Yes, this should be port and apb here.
->>>> We'll integrate phy driver into ctrl driver, and move phy reset to here also.
->>>
->>> Why? That's the wrong thing to do if they are separate h/w blocks. You
->>> can do whatever you like in the drivers, but the DT should reflect the
->>> h/w.
->>>
->>> Rob
->>>
->>> .
->>>
->>
->> We have the dedicated phy driver which only process reset job,
->> and we consider that it's too overkill to do just these things .
->> So we will integrate phy reset job into the controller driver int the next version.
+On Wed, Aug 22, 2018 at 11:13:33AM +0200, Lukas Wunner wrote:
+> On Mon, Aug 20, 2018 at 06:13:03PM -0400, Sinan Kaya wrote:
+> > presence detect is optional
 > 
-> What's in the separate register space you had for the phy?
-> 
-> Rob
-> 
-> .
-> 
+> Hm, how so?  Do you have a spec reference for that?
 
-As described with 'phy' reg in ctrl patch v3 thread [0]
-
-- reg-names: Must be
-	- "elbi"	External local bus interface registers
-	- "cfg"		Meson specific registers
-	- "phy"		Meson PCIE PHY registers
-	- "config"	PCIe configuration space
-
-When each controller driver probe, we powerup phy by write phy register like below: 
-writel(MESON_PCIE_PHY_POWERUP, mp->mem_res.phy_base);
-
-[0] https://lkml.kernel.org/r/1535616829-167936-1-git-send-email-hanjie.lin@amlogic.com
-
-_______________________________________________
-linux-arm-kernel mailing list
-linux-arm-kernel@lists.infradead.org
-http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
+Yeah, presence detect state and change are required if the slot supports
+hot plug. If the slot doesn't support these, error handling becomes a
+lot simpler.
