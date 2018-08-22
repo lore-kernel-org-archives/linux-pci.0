@@ -1,38 +1,22 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from economist.com ([74.63.245.245]:39261 "EHLO worldtraveler.com"
-        rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1726383AbeH1UFB (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Tue, 28 Aug 2018 16:05:01 -0400
-To: linux-pci@vger.kernel.org
-Subject: Your reply
-Message-ID: <5ebcf5ab8c3dfd6da30e5eeb9c65f156@gulfcoastavionics.com>
-Date: Tue, 28 Aug 2018 16:25:05 +0200
-From: "Ruby" <inffo@quiettechnologies.com>
-Reply-To: rokevkunt@yandex.com
+Received: from 51.153.195.120.static.js.chinamobile.com ([120.195.153.51]:21091
+        "EHLO infinit-mail.inf-technology.com" rhost-flags-OK-FAIL-OK-FAIL)
+        by vger.kernel.org with ESMTP id S1726581AbeHWANG (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Wed, 22 Aug 2018 20:13:06 -0400
+Content-Type: text/plain; charset="iso-8859-1"
 MIME-Version: 1.0
-Content-Type: text/plain; format=flowed; charset="UTF-8"
+Subject: Your reply is needed....   120.195.153.51
+To: Recipients <contact@inf-technology.com>
+From: "Mr. Samuel" <contact@inf-technology.com>
+Date: Wed, 22 Aug 2018 16:46:23 -0400
+Reply-To: mrsamadjei8@gmail.com
+Message-ID: <e2201079-7876-4a84-8cd5-938820a1b1f7@infinit-mail.inf-technology.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-We provide photoshop services to some of the companies from around the
-world.
-We have worked on tons of images ever since our team establishment in 2009.
+I am Mr. Samuel Adjei, I seek for your consent to know if you are capable of investing with me in your country to very profitable business.Any Knowledge of business interest in the following sectors: Real Estate, Stock speculation, Mining and Oil, Transportation and Tobacco.
 
-Many online retail companies use our services for retouching electronics,
-jewelry, apparels, furniture
-etc. by getting the images of their products enhanced.
+I'm open to have a good business relationship with you.kindly contact me back for more details.
 
-Here are the details of what we provide:
-Clipping path;
-Deep etch process
-Image masking
-Remove background
-Portrait retouching
-Jewelry retouching
-Fashion retouching
 
-Please reply back for further info.
-We can provide testing for your photos if needed.
-
-Thanks,
-Ruby
+Mr. Samuel Adjei
