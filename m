@@ -1,64 +1,42 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:33574 "EHLO
-        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S2388154AbeHPLEo (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Thu, 16 Aug 2018 07:04:44 -0400
-MIME-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII;
- format=flowed
-Date: Thu, 16 Aug 2018 13:37:58 +0530
-From: poza@codeaurora.org
-To: Benjamin Herrenschmidt <benh@kernel.crashing.org>
-Cc: Thomas Tai <thomas.tai@oracle.com>, bhelgaas@google.com,
-        keith.busch@intel.com, linux-pci@vger.kernel.org,
-        linux-pci-owner@vger.kernel.org
+Return-Path: <okaya@kernel.org>
+Return-Path: <okaya@kernel.org>
 Subject: Re: [PATCH 1/1] PCI/AER: prevent pcie_do_fatal_recovery from using
  device after it is removed
-In-Reply-To: <5bd99bcacb772b588771fce62c61a59fdeb167f3.camel@kernel.crashing.org>
-References: <1534179088-44219-1-git-send-email-thomas.tai@oracle.com>
- <1534179088-44219-2-git-send-email-thomas.tai@oracle.com>
- <51f4b387d9bd96a42d526a6a029fc43b@codeaurora.org>
- <b0104a716319d76e734c307cb4bedd9d@codeaurora.org>
- <903394c04d6ad468ed06dc0a779200e7555345a7.camel@kernel.crashing.org>
- <6cb069038530757f31f3dd60328c7e30@codeaurora.org>
- <e931bc7a7e468e8bb2ee3766b3fcf96f1800f552.camel@kernel.crashing.org>
- <5bd99bcacb772b588771fce62c61a59fdeb167f3.camel@kernel.crashing.org>
-Message-ID: <290750445f084c479963f54dd36af63a@codeaurora.org>
-Sender: linux-pci-owner@vger.kernel.org
+To: Keith Busch <keith.busch@intel.com>, Lukas Wunner <lukas@wunner.de>
+Cc: Benjamin Herrenschmidt <benh@kernel.crashing.org>, poza@codeaurora.org,
+ Bjorn Helgaas <helgaas@kernel.org>, Thomas Tai <thomas.tai@oracle.com>,
+ bhelgaas@google.com, linux-pci@vger.kernel.org,
+ linux-pci-owner@vger.kernel.org, Sam Bobroff <sam.bobroff@au1.ibm.com>
+References: <2ecd1fd6d763810d45697f846fa876b58a193b1b.camel@kernel.crashing.org>
+ <20180820155325.GA16148@localhost.localdomain>
+ <cf6de256280be7a2948db6dd2b5bfae92e70e12f.camel@kernel.crashing.org>
+ <6aa71d74-e4dc-c627-1496-981278388bce@kernel.org>
+ <20180820213544.GA16805@localhost.localdomain>
+ <0193e0c5a52d8f2e93958f0683f3acc81cef2bc9.camel@kernel.crashing.org>
+ <fd538f20-0754-f127-ceb9-693fec90b4af@kernel.org>
+ <44195c0d7159ce4cd01b660002b2f5af5d53678b.camel@kernel.crashing.org>
+ <184814fb-0caf-b260-4415-8f96fbdf4831@kernel.org>
+ <20180822091333.rre2okhnrot44dyq@wunner.de>
+ <20180822143853.GC19320@localhost.localdomain>
+From: Sinan Kaya <okaya@kernel.org>
+Message-ID: <1e83e715-4a7c-05c7-9720-35e3d81cf157@kernel.org>
+Date: Wed, 22 Aug 2018 10:51:57 -0400
+MIME-Version: 1.0
+In-Reply-To: <20180822143853.GC19320@localhost.localdomain>
+Content-Type: text/plain; charset=utf-8; format=flowed
 List-ID: <linux-pci.vger.kernel.org>
 
-On 2018-08-16 12:29, Benjamin Herrenschmidt wrote:
-> On Thu, 2018-08-16 at 16:51 +1000, Benjamin Herrenschmidt wrote:
->> > refering Sepc: 6.2.2.2.1 Fatal Errors, where link is unreliable and it
->> > might need AER style reset of link or DPC style HW recovery
->> > In both cases, the shutdown callbacks are expected to be called,
->> 
->> No, this is wrong and not the intent of the error handling.
->> 
->> You seem to be applying PCIe specific concepts brain-farted at Intel
->> that are way way away from what we care about in practice and in 
->> Linux.
->> 
->> > e.g.  some driver handle errors ERR_NONFATAL or FATAL in similar ways
->> > e.g.
->> > ioat_pcie_error_detected();  calls  ioat_shutdown(); in case of
->> > ERR_NONFATAL
->> > otherwise ioat_shutdown() in case of ERR_FATAL.
->> 
->> Since when the error handling callbacks even have the concept of FATAL
->> vs. non-fatal ? This doesn't appear anyhwhere in the prototype of the
->> struct pci_error_handlers and shouldn't.
+On 8/22/2018 10:38 AM, Keith Busch wrote:
+> On Wed, Aug 22, 2018 at 11:13:33AM +0200, Lukas Wunner wrote:
+>> On Mon, Aug 20, 2018 at 06:13:03PM -0400, Sinan Kaya wrote:
+>>> presence detect is optional
+>>
+>> Hm, how so?  Do you have a spec reference for that?
 > 
-> In fact looking at pcie_do_nonfatal_recovery() it's indeed completely
-> broken. It tells the driver that the slot was reset without actually
-> resetting anything... Ugh.
+> Yeah, presence detect state and change are required if the slot supports
+> hot plug. If the slot doesn't support these, error handling becomes a
+> lot simpler.
 > 
-> Ben.
 
-pcie_do_nonfatal_recovery() exhibit the same behavior with or without 
-the patch-series.
-in short, there was no functional change brought in to 
-pcie_do_nonfatal_recovery()
-
-Regards,
-Oza.
+I double checked the slot capabilities register. You are right, it is
+required.
