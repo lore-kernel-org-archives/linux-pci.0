@@ -1,32 +1,58 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from verein.lst.de ([213.95.11.211]:48077 "EHLO newverein.lst.de"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1726532AbeHDMIJ (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Sat, 4 Aug 2018 08:08:09 -0400
-Date: Sat, 4 Aug 2018 12:12:53 +0200
-From: Christoph Hellwig <hch@lst.de>
-To: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
-Cc: Christoph Hellwig <hch@lst.de>,
-        Bjorn Helgaas <bhelgaas@google.com>,
-        Palmer Dabbelt <palmer@dabbelt.com>,
-        "Wesley W . Terpstra" <wesley@sifive.com>,
-        Arnd Bergmann <arnd@arndb.de>, linux-pci@vger.kernel.org,
-        linux-riscv@lists.infradead.org
-Subject: Re: [PATCH 3/3] PCI/xilinx: Depend on OF instead of the ARCH
-Message-ID: <20180804101253.GB12948@lst.de>
-References: <20180801151403.20660-1-hch@lst.de> <20180801151403.20660-4-hch@lst.de> <20180802165623.GB13725@red-moon>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20180802165623.GB13725@red-moon>
+Received: from smtprelay2.synopsys.com ([198.182.60.111]:54348 "EHLO
+        smtprelay.synopsys.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726246AbeHWPEU (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Thu, 23 Aug 2018 11:04:20 -0400
+From: Gustavo Pimentel <gustavo.pimentel@synopsys.com>
+To: bhelgaas@google.com, lorenzo.pieralisi@arm.com, kishon@ti.com
+Cc: linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
+        Gustavo Pimentel <gustavo.pimentel@synopsys.com>
+Subject: [PATCH] tools/pci: Fix compilation warnings
+Date: Thu, 23 Aug 2018 13:34:53 +0200
+Message-Id: <b2433aaac6ace7b1b9843b520242d9e9185d3685.1535024080.git.gustavo.pimentel@synopsys.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Thu, Aug 02, 2018 at 05:56:23PM +0100, Lorenzo Pieralisi wrote:
-> I could have taken it for this merge window but unfortunately it is a
-> bit late (ie PCI patches queue is close), I can certainly queue it up
-> for v4.20 though.
+Fix compilation warnings:
+ - remove unused variables
+ - change function return from int to void, since it's not used
 
-It is a little sad that we can't take a trivial kconfig patch more than a
-week before the end of the merge window.  But then against given how long
-a version of this patch has been around and not submitted who am I to
-complain..
+Signed-off-by: Gustavo Pimentel <gustavo.pimentel@synopsys.com>
+---
+ tools/pci/pcitest.c | 7 ++-----
+ 1 file changed, 2 insertions(+), 5 deletions(-)
+
+diff --git a/tools/pci/pcitest.c b/tools/pci/pcitest.c
+index 9074b47..8ca1c62 100644
+--- a/tools/pci/pcitest.c
++++ b/tools/pci/pcitest.c
+@@ -23,7 +23,6 @@
+ #include <stdio.h>
+ #include <stdlib.h>
+ #include <sys/ioctl.h>
+-#include <time.h>
+ #include <unistd.h>
+ 
+ #include <linux/pcitest.h>
+@@ -43,17 +42,15 @@ struct pci_test {
+ 	unsigned long	size;
+ };
+ 
+-static int run_test(struct pci_test *test)
++static void run_test(struct pci_test *test)
+ {
+ 	long ret;
+ 	int fd;
+-	struct timespec start, end;
+-	double time;
+ 
+ 	fd = open(test->device, O_RDWR);
+ 	if (fd < 0) {
+ 		perror("can't open PCI Endpoint Test device");
+-		return fd;
++		return;
+ 	}
+ 
+ 	if (test->barnum >= 0 && test->barnum <= 5) {
+-- 
+2.7.4
