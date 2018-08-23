@@ -1,100 +1,256 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.29.99]:40040 "EHLO mail.kernel.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1727592AbeHOVnt (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Wed, 15 Aug 2018 17:43:49 -0400
-Date: Wed, 15 Aug 2018 13:50:28 -0500
-From: Bjorn Helgaas <helgaas@kernel.org>
-To: Benjamin Herrenschmidt <benh@kernel.crashing.org>
-Cc: Hari Vyas <hari.vyas@broadcom.com>, bhelgaas@google.com,
-        linux-pci@vger.kernel.org, ray.jui@broadcom.com
-Subject: Re: PCIe enable device races (Was: [PATCH v3] PCI: Data corruption
- happening due to race condition)
-Message-ID: <20180815185027.GE28888@bhelgaas-glaptop.roam.corp.google.com>
-References: <1530608741-30664-1-git-send-email-hari.vyas@broadcom.com>
- <20180731163727.GK45322@bhelgaas-glaptop.roam.corp.google.com>
- <ecaed7664b46d73888d2494065905f8e108fc0f4.camel@kernel.crashing.org>
+Return-Path: <SRS0=4AP1=LG=endlessm.com=jian-hong@kernel.org>
+Return-Path: <SRS0=4AP1=LG=endlessm.com=jian-hong@kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <ecaed7664b46d73888d2494065905f8e108fc0f4.camel@kernel.crashing.org>
-Sender: linux-pci-owner@vger.kernel.org
+In-Reply-To: <36bd086d-8d26-5162-ae24-95b259571221@gmail.com>
+References: <ac30d4e6-6411-09e6-1205-96e3e8e29f6f@gmail.com>
+ <20180820184438.GA154536@bhelgaas-glaptop.roam.corp.google.com>
+ <9d7d960a-6c55-dc4b-7969-f5cf46bff0ce@gmail.com> <20180821.123108.89921430801253333.davem@davemloft.net>
+ <da97e198-7683-e0ff-92a9-3b1b22da3757@gmail.com> <alpine.DEB.2.21.1808221222260.2514@nanos.tec.linutronix.de>
+ <36bd086d-8d26-5162-ae24-95b259571221@gmail.com>
+From: Jian-Hong Pan <jian-hong@endlessm.com>
+Date: Thu, 23 Aug 2018 18:46:28 +0800
+Message-ID: <CAPpJ_edz3H81EqRSg5jeOXoULt7AKwcTpNFL6Ntt8rhQBPFBFQ@mail.gmail.com>
+Subject: Re: [PATCH] r8169: don't use MSI-X on RTL8106e
+To: Heiner Kallweit <hkallweit1@gmail.com>
+Cc: Thomas Gleixner <tglx@linutronix.de>, David Miller <davem@davemloft.net>, helgaas@kernel.org,
+	Realtek linux nic maintainers <nic_swsd@realtek.com>, netdev@vger.kernel.org,
+	Linux Kernel <linux-kernel@vger.kernel.org>, Linux Upstreaming Team <linux@endlessm.com>,
+	linux-pci@vger.kernel.org, marc.zyngier@arm.com, hch@lst.de
+Content-Type: text/plain; charset="UTF-8"
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wed, Aug 15, 2018 at 01:35:16PM +1000, Benjamin Herrenschmidt wrote:
-> On Tue, 2018-07-31 at 11:37 -0500, Bjorn Helgaas wrote:
-> > On Tue, Jul 03, 2018 at 02:35:40PM +0530, Hari Vyas wrote:
-> > > Changes in v3:
-> > > 	As per review comments from Lukas Wunner <lukas@wunner.de>,
-> > > 	squashed 3 commits to single commit. Without this build breaks.
-> > > 	Also clubbed set and clear function for is_added bits to a
-> > > 	single assign function. This optimizes code and reduce LoC.
-> > > 	Removed one wrongly added blank line in pci.c
-> > > 	 
-> > > Changes in v2:
-> > >         To avoid race condition while updating is_added and is_busmaster
-> > >         bits, is_added is moved to a private flag variable.
-> > >         is_added updation is handled in atomic manner also.
-> > > 
-> > > Hari Vyas (1):
-> > >   PCI: Data corruption happening due to race condition
-> 
-> Sooo .... I was chasing a different problem which makes me think we
-> have a deeper problem here.
-> 
-> In my case, I have a system with >70 nvme devices behind layers of
-> switches.
-> 
-> What I think is happening is all the nvme devices are probed in
-> parallel (the machine has about 40 CPU cores).
-> 
-> They all call pci_enable_device() around the same time.
-> 
-> This will walk up the bridge/switch chain and try to enable every
-> switch along the way. However there is *no* locking at the switch level
-> at all that I can see. Or am I missing something subtle ?
-> 
-> So here's an example simplified scenario:
-> 
-> 	Bridge
-> 	/    \
->      dev A   dev B
-> 
-> Both dev A and B hit pci_enable_device() simultaneously, thus both
-> call pci_enable_bridge() at the same time: This does (simplified):
-> 
-> 	if (pci_is_enabled(dev)) {
-> 		if (!dev->is_busmaster)
-> 			pci_set_master(dev);
-> 		return;
-> 	}
-> 
-> 	retval = pci_enable_device(dev);
-> 	if (retval)
-> 		pci_err(dev, "Error enabling bridge (%d), continuing\n",
-> 			retval);
-> 	pci_set_master(dev);
-> 
-> Now the pci_is_enabled() just checks dev->enable_cnt and pci_enable_device()
-> increments it *before* enabling the device.
-> 
-> So it's possible that pci_is_enabled() returns true for the bridge for dev B
-> because dev A just did the atomic_inc_return(), but hasn't actually enabled
-> the bridge yet (hasnt yet hit the config space).
-> 
-> At that point, driver for dev B hits an MMIO and gets an UR response from
-> the bridge.
-> 
-> I need to setup a rig to verify my theory but I think this is racy. The same
-> race is also present with dev->is_busmaster. Using bitmaps won't help.
-> 
-> What's really needed is a per device mutex covering all those operations
-> on a given device. (This would also allow to get rid of those games with
-> atomics).
+2018-08-23 3:49 GMT+08:00 Heiner Kallweit <hkallweit1@gmail.com>:
+> On 22.08.2018 13:44, Thomas Gleixner wrote:
+>> On Tue, 21 Aug 2018, Heiner Kallweit wrote:
+>>> On 21.08.2018 21:31, David Miller wrote:
+>>>> From: Heiner Kallweit <hkallweit1@gmail.com>
+>>>> Date: Mon, 20 Aug 2018 22:46:48 +0200
+>>>>
+>>>>> I'm in contact with Realtek and according to them few chip versions
+>>>>> seem to clear MSI-X table entries on resume from suspend. Checking
+>>>>> with them how this could be fixed / worked around.
+>>>>> Worst case we may have to disable MSI-X in general.
+>>>>
+>>>> I worry that if the chip does this, and somehow MSI-X is enabled and
+>>>> an interrupt is generated, the chip will write to the cleared out
+>>>> MSI-X address.  This will either write garbage into memory or cause
+>>>> a bus error and require PCI error recovery.
+>>>>
+>>>> It also looks like your test patch doesn't fix things for people who
+>>>> have tested it.
+>>>>
+>>> The test patch was based on the first info from Realtek which made me
+>>> think that the base address of the MSI-X table is cleared, what
+>>> obviously is not the case.
+>>>
+>>> After some further tests it seems that the solution isn't as simple
+>>> as storing the MSI-X table entries on suspend and restore them on
+>>> resume. On my system (where MSI-X works fine) MSI-X table entries
+>>> on resume are partially different from the ones on suspend.
+>>
+>> Which is not a surprise. Please don't try to fiddle with that at the driver
+>> level. The irq and PCI core code are the ones in charge and if you'd
+>> restore at the wrong point then hell breaks lose.
+>>
+> Instead of spending a lot of effort on a workaround which may not be
+> acceptable, it may be better to fall back to MSI on all affected chip
+> versions. For two chip versions which were reported to have this issues
+> we're doing this already. I asked Realtek whether they have an overview
+> which chip versions are affected, let's see ..
+>
+> The Realtek chips provide an alternative, register-based way to access
+> the MSI-X table, and their Windows driver seems to use it. See here:
+> https://patchwork.kernel.org/patch/4149171/
+>
+> But as we handle all MSI-X basics in the PCI core, this isn't an option.
+>
+>
+>> Can you please do the following:
 
-Yes, this is definitely broken.  Some folks have tried to fix it in
-the past, but it hasn't quite happened yet.  We actually merged one
-patch, 40f11adc7cd9 ("PCI: Avoid race while enabling upstream
-bridges"), but had to revert it after we found issues:
+Tested on ASUS X441AUR equipped with RTL8106e.
+This is the laptop whose ethernet does not come back after resume, if
+it does not fallback to MSI.
 
-https://lkml.kernel.org/r/1501858648-22228-1-git-send-email-srinath.mannam@broadcom.com
-https://lkml.kernel.org/r/20170915072352.10453.31977.stgit@bhelgaas-glaptop.roam.corp.google.com
+Here is the full dmesg:
+https://gist.github.com/starnight/e65a97c9bf2d558926895ab76974687e
+
+>>  1) Store the PCI config space at suspend time
+
+Before suspend:
+
+dev@endless:~$ sudo lspci -xnnvvs 02:00.0
+02:00.0 Ethernet controller [0200]: Realtek Semiconductor Co., Ltd.
+RTL8101/2/6E PCI Express Fast/Gigabit Ethernet controller [10ec:8136]
+(rev 07)
+Subsystem: ASUSTeK Computer Inc. RTL810xE PCI Express Fast Ethernet
+controller [1043:200f]
+Control: I/O+ Mem+ BusMaster+ SpecCycle- MemWINV- VGASnoop- ParErr-
+Stepping- SERR- FastB2B- DisINTx+
+Status: Cap+ 66MHz- UDF- FastB2B- ParErr- DEVSEL=fast >TAbort-
+<TAbort- <MAbort- >SERR- <PERR- INTx-
+Latency: 0, Cache Line Size: 64 bytes
+Interrupt: pin A routed to IRQ 16
+Region 0: I/O ports at e000 [size=256]
+Region 2: Memory at ef100000 (64-bit, non-prefetchable) [size=4K]
+Region 4: Memory at e0000000 (64-bit, prefetchable) [size=16K]
+Capabilities: [40] Power Management version 3
+Flags: PMEClk- DSI- D1+ D2+ AuxCurrent=375mA PME(D0+,D1+,D2+,D3hot+,D3cold+)
+Status: D0 NoSoftRst+ PME-Enable- DSel=0 DScale=0 PME-
+Capabilities: [50] MSI: Enable- Count=1/1 Maskable- 64bit+
+Address: 0000000000000000  Data: 0000
+Capabilities: [70] Express (v2) Endpoint, MSI 01
+DevCap: MaxPayload 128 bytes, PhantFunc 0, Latency L0s unlimited, L1 <64us
+ExtTag- AttnBtn- AttnInd- PwrInd- RBE+ FLReset- SlotPowerLimit 10.000W
+DevCtl: Report errors: Correctable- Non-Fatal- Fatal- Unsupported-
+RlxdOrd+ ExtTag- PhantFunc- AuxPwr- NoSnoop-
+MaxPayload 128 bytes, MaxReadReq 512 bytes
+DevSta: CorrErr- UncorrErr- FatalErr- UnsuppReq- AuxPwr+ TransPend-
+LnkCap: Port #0, Speed 2.5GT/s, Width x1, ASPM L0s L1, Exit Latency
+L0s unlimited, L1 <64us
+ClockPM+ Surprise- LLActRep- BwNot- ASPMOptComp+
+LnkCtl: ASPM L1 Enabled; RCB 64 bytes Disabled- CommClk+
+ExtSynch- ClockPM+ AutWidDis- BWInt- AutBWInt-
+LnkSta: Speed 2.5GT/s, Width x1, TrErr- Train- SlotClk+ DLActive-
+BWMgmt- ABWMgmt-
+DevCap2: Completion Timeout: Range ABCD, TimeoutDis+, LTR+, OBFF Via
+message/WAKE#
+DevCtl2: Completion Timeout: 50us to 50ms, TimeoutDis-, LTR+, OBFF Disabled
+LnkCtl2: Target Link Speed: 2.5GT/s, EnterCompliance- SpeedDis-
+Transmit Margin: Normal Operating Range, EnterModifiedCompliance- ComplianceSOS-
+Compliance De-emphasis: -6dB
+LnkSta2: Current De-emphasis Level: -6dB, EqualizationComplete-,
+EqualizationPhase1-
+EqualizationPhase2-, EqualizationPhase3-, LinkEqualizationRequest-
+Capabilities: [b0] MSI-X: Enable+ Count=4 Masked-
+Vector table: BAR=4 offset=00000000
+PBA: BAR=4 offset=00000800
+Capabilities: [d0] Vital Product Data
+pcilib: sysfs_read_vpd: read failed: Input/output error
+Not readable
+Capabilities: [100 v1] Advanced Error Reporting
+UESta: DLP- SDES- TLP- FCP- CmpltTO- CmpltAbrt- UnxCmplt- RxOF-
+MalfTLP- ECRC- UnsupReq- ACSViol-
+UEMsk: DLP- SDES- TLP- FCP- CmpltTO- CmpltAbrt- UnxCmplt- RxOF-
+MalfTLP- ECRC- UnsupReq- ACSViol-
+UESvrt: DLP+ SDES+ TLP- FCP+ CmpltTO- CmpltAbrt- UnxCmplt- RxOF+
+MalfTLP+ ECRC- UnsupReq- ACSViol-
+CESta: RxErr- BadTLP- BadDLLP- Rollover- Timeout- NonFatalErr-
+CEMsk: RxErr- BadTLP- BadDLLP- Rollover- Timeout- NonFatalErr+
+AERCap: First Error Pointer: 00, GenCap+ CGenEn- ChkCap+ ChkEn-
+Capabilities: [140 v1] Virtual Channel
+Caps: LPEVC=0 RefClk=100ns PATEntryBits=1
+Arb: Fixed- WRR32- WRR64- WRR128-
+Ctrl: ArbSelect=Fixed
+Status: InProgress-
+VC0: Caps: PATOffset=00 MaxTimeSlots=1 RejSnoopTrans-
+Arb: Fixed- WRR32- WRR64- WRR128- TWRR128- WRR256-
+Ctrl: Enable+ ID=0 ArbSelect=Fixed TC/VC=ff
+Status: NegoPending- InProgress-
+Capabilities: [160 v1] Device Serial Number 01-00-00-00-36-4c-e0-00
+Capabilities: [170 v1] Latency Tolerance Reporting
+Max snoop latency: 3145728ns
+Max no snoop latency: 3145728ns
+Kernel driver in use: r8169
+Kernel modules: r8169
+00: ec 10 36 81 07 04 10 00 07 00 00 02 10 00 00 00
+10: 01 e0 00 00 00 00 00 00 04 00 10 ef 00 00 00 00
+20: 0c 00 00 e0 00 00 00 00 00 00 00 00 43 10 0f 20
+30: 00 00 00 00 40 00 00 00 00 00 00 00 ff 01 00 00
+
+>>  2) Compare the PCI config space at resume time and print the difference
+
+After resume:
+
+dev@endless:~$ sudo lspci -xnnvvs 02:00.0
+02:00.0 Ethernet controller [0200]: Realtek Semiconductor Co., Ltd.
+RTL8101/2/6E PCI Express Fast/Gigabit Ethernet controller [10ec:8136]
+(rev 07)
+Subsystem: ASUSTeK Computer Inc. RTL810xE PCI Express Fast Ethernet
+controller [1043:200f]
+Control: I/O+ Mem+ BusMaster+ SpecCycle- MemWINV- VGASnoop- ParErr-
+Stepping- SERR- FastB2B- DisINTx+
+Status: Cap+ 66MHz- UDF- FastB2B- ParErr- DEVSEL=fast >TAbort-
+<TAbort- <MAbort- >SERR- <PERR- INTx-
+Latency: 0, Cache Line Size: 64 bytes
+Interrupt: pin A routed to IRQ 16
+Region 0: I/O ports at e000 [size=256]
+Region 2: Memory at ef100000 (64-bit, non-prefetchable) [size=4K]
+Region 4: Memory at e0000000 (64-bit, prefetchable) [size=16K]
+Capabilities: [40] Power Management version 3
+Flags: PMEClk- DSI- D1+ D2+ AuxCurrent=375mA PME(D0+,D1+,D2+,D3hot+,D3cold+)
+Status: D0 NoSoftRst+ PME-Enable- DSel=0 DScale=0 PME-
+Capabilities: [50] MSI: Enable- Count=1/1 Maskable- 64bit+
+Address: 0000000000000000  Data: 0000
+Capabilities: [70] Express (v2) Endpoint, MSI 01
+DevCap: MaxPayload 128 bytes, PhantFunc 0, Latency L0s unlimited, L1 <64us
+ExtTag- AttnBtn- AttnInd- PwrInd- RBE+ FLReset- SlotPowerLimit 10.000W
+DevCtl: Report errors: Correctable- Non-Fatal- Fatal- Unsupported-
+RlxdOrd+ ExtTag- PhantFunc- AuxPwr- NoSnoop-
+MaxPayload 128 bytes, MaxReadReq 512 bytes
+DevSta: CorrErr- UncorrErr- FatalErr- UnsuppReq- AuxPwr+ TransPend-
+LnkCap: Port #0, Speed 2.5GT/s, Width x1, ASPM L0s L1, Exit Latency
+L0s unlimited, L1 <64us
+ClockPM+ Surprise- LLActRep- BwNot- ASPMOptComp+
+LnkCtl: ASPM L1 Enabled; RCB 64 bytes Disabled- CommClk+
+ExtSynch- ClockPM+ AutWidDis- BWInt- AutBWInt-
+LnkSta: Speed 2.5GT/s, Width x1, TrErr- Train- SlotClk+ DLActive-
+BWMgmt- ABWMgmt-
+DevCap2: Completion Timeout: Range ABCD, TimeoutDis+, LTR+, OBFF Via
+message/WAKE#
+DevCtl2: Completion Timeout: 50us to 50ms, TimeoutDis-, LTR+, OBFF Disabled
+LnkCtl2: Target Link Speed: 2.5GT/s, EnterCompliance- SpeedDis-
+Transmit Margin: Normal Operating Range, EnterModifiedCompliance- ComplianceSOS-
+Compliance De-emphasis: -6dB
+LnkSta2: Current De-emphasis Level: -6dB, EqualizationComplete-,
+EqualizationPhase1-
+EqualizationPhase2-, EqualizationPhase3-, LinkEqualizationRequest-
+Capabilities: [b0] MSI-X: Enable+ Count=4 Masked-
+Vector table: BAR=4 offset=00000000
+PBA: BAR=4 offset=00000800
+Capabilities: [d0] Vital Product Data
+pcilib: sysfs_read_vpd: read failed: Input/output error
+Not readable
+Capabilities: [100 v1] Advanced Error Reporting
+UESta: DLP- SDES- TLP- FCP- CmpltTO- CmpltAbrt- UnxCmplt- RxOF-
+MalfTLP- ECRC- UnsupReq- ACSViol-
+UEMsk: DLP- SDES- TLP- FCP- CmpltTO- CmpltAbrt- UnxCmplt- RxOF-
+MalfTLP- ECRC- UnsupReq- ACSViol-
+UESvrt: DLP+ SDES+ TLP- FCP+ CmpltTO- CmpltAbrt- UnxCmplt- RxOF+
+MalfTLP+ ECRC- UnsupReq- ACSViol-
+CESta: RxErr- BadTLP- BadDLLP- Rollover- Timeout- NonFatalErr-
+CEMsk: RxErr- BadTLP- BadDLLP- Rollover- Timeout- NonFatalErr+
+AERCap: First Error Pointer: 00, GenCap+ CGenEn- ChkCap+ ChkEn-
+Capabilities: [140 v1] Virtual Channel
+Caps: LPEVC=0 RefClk=100ns PATEntryBits=1
+Arb: Fixed- WRR32- WRR64- WRR128-
+Ctrl: ArbSelect=Fixed
+Status: InProgress-
+VC0: Caps: PATOffset=00 MaxTimeSlots=1 RejSnoopTrans-
+Arb: Fixed- WRR32- WRR64- WRR128- TWRR128- WRR256-
+Ctrl: Enable+ ID=0 ArbSelect=Fixed TC/VC=ff
+Status: NegoPending- InProgress-
+Capabilities: [160 v1] Device Serial Number 01-00-00-00-36-4c-e0-00
+Capabilities: [170 v1] Latency Tolerance Reporting
+Max snoop latency: 3145728ns
+Max no snoop latency: 3145728ns
+Kernel driver in use: r8169
+Kernel modules: r8169
+00: ec 10 36 81 07 04 10 00 07 00 00 02 10 00 00 00
+10: 01 e0 00 00 00 00 00 00 04 00 10 ef 00 00 00 00
+20: 0c 00 00 e0 00 00 00 00 00 00 00 00 43 10 0f 20
+30: 00 00 00 00 40 00 00 00 00 00 00 00 ff 01 00 00
+
+After comparing, there is no difference between before suspend and after resume.
+
+Regards,
+Jian-Hong Pan
+
+>> Do that on a working and a non-working version of Realtek NICs.
+>>
+>> Thanks,
+>>
+>>       tglx
+>>
+>>
+>>
+>
