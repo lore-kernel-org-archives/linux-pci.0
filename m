@@ -1,57 +1,65 @@
-Return-Path: <SRS0=uSZ2=LE=intel.com=keith.busch@kernel.org>
-Return-Path: <SRS0=uSZ2=LE=intel.com=keith.busch@kernel.org>
-Date: Tue, 21 Aug 2018 09:29:21 -0600
-From: Keith Busch <keith.busch@intel.com>
-To: Sinan Kaya <okaya@kernel.org>
-Cc: Benjamin Herrenschmidt <benh@kernel.crashing.org>, poza@codeaurora.org,
-	Bjorn Helgaas <helgaas@kernel.org>,
-	Thomas Tai <thomas.tai@oracle.com>, bhelgaas@google.com,
-	linux-pci@vger.kernel.org, linux-pci-owner@vger.kernel.org,
-	Sam Bobroff <sam.bobroff@au1.ibm.com>
-Subject: Re: [PATCH 1/1] PCI/AER: prevent pcie_do_fatal_recovery from using
- device after it is removed
-Message-ID: <20180821152920.GA18612@localhost.localdomain>
-References: <908ff33ded8f31830f95a8889d8540f1@codeaurora.org>
- <5027d857bb59edfd33442003aa618ece1bc9cd52.camel@kernel.crashing.org>
- <b2e2ac5c92d8a91d00606754d1046578@codeaurora.org>
- <2ecd1fd6d763810d45697f846fa876b58a193b1b.camel@kernel.crashing.org>
- <a149d9657ca83b41c724b0ddd319c6fb@codeaurora.org>
- <512e0e11c3ba462c1d033f8b0e768fa27489731c.camel@kernel.crashing.org>
- <ad23b16cf7ff1f3b51961fda59533892@codeaurora.org>
- <2742bdba5ae8ccc420234b6e6b0224919367ed4c.camel@kernel.crashing.org>
- <20180821143751.GA18477@localhost.localdomain>
- <621f599b-8a87-5bde-5a9f-ecb5bdbcf716@kernel.org>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail.kernel.org ([198.145.29.99]:43440 "EHLO mail.kernel.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1731028AbeHWRHx (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Thu, 23 Aug 2018 13:07:53 -0400
+Date: Thu, 23 Aug 2018 08:38:05 -0500
+From: Bjorn Helgaas <helgaas@kernel.org>
+To: Jian-Hong Pan <jian-hong@endlessm.com>
+Cc: Heiner Kallweit <hkallweit1@gmail.com>,
+        Thomas Gleixner <tglx@linutronix.de>,
+        David Miller <davem@davemloft.net>,
+        Realtek linux nic maintainers <nic_swsd@realtek.com>,
+        netdev@vger.kernel.org,
+        Linux Kernel <linux-kernel@vger.kernel.org>,
+        Linux Upstreaming Team <linux@endlessm.com>,
+        linux-pci@vger.kernel.org, marc.zyngier@arm.com, hch@lst.de
+Subject: Re: [PATCH] r8169: don't use MSI-X on RTL8106e
+Message-ID: <20180823133805.GE154536@bhelgaas-glaptop.roam.corp.google.com>
+References: <ac30d4e6-6411-09e6-1205-96e3e8e29f6f@gmail.com>
+ <20180820184438.GA154536@bhelgaas-glaptop.roam.corp.google.com>
+ <9d7d960a-6c55-dc4b-7969-f5cf46bff0ce@gmail.com>
+ <20180821.123108.89921430801253333.davem@davemloft.net>
+ <da97e198-7683-e0ff-92a9-3b1b22da3757@gmail.com>
+ <alpine.DEB.2.21.1808221222260.2514@nanos.tec.linutronix.de>
+ <36bd086d-8d26-5162-ae24-95b259571221@gmail.com>
+ <CAPpJ_edz3H81EqRSg5jeOXoULt7AKwcTpNFL6Ntt8rhQBPFBFQ@mail.gmail.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <621f599b-8a87-5bde-5a9f-ecb5bdbcf716@kernel.org>
+In-Reply-To: <CAPpJ_edz3H81EqRSg5jeOXoULt7AKwcTpNFL6Ntt8rhQBPFBFQ@mail.gmail.com>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tue, Aug 21, 2018 at 11:07:31AM -0400, Sinan Kaya wrote:
-> On 8/21/2018 10:37 AM, Keith Busch wrote:
-> > The actions associated with error recovery will trigger link state changes
-> > for a lot of existing hardware. PCIEHP currently does the same removal
-> > sequence for both link state change (DLLSC) and presence detect change
-> > (PDC) events.
-> > 
-> > It sounds like you want pciehp to do nothing on the DLLSC events that it
-> > currently handles, and instead do the board removal only on PDC.  If that
-> > is the case, is the desire to not remove devices downstream a permanently
-> > disabled link, or does that responsibility fall onto some other component?
-> > 
+On Thu, Aug 23, 2018 at 06:46:28PM +0800, Jian-Hong Pan wrote:
+> > On 22.08.2018 13:44, Thomas Gleixner wrote:
+> >> Can you please do the following:
 > 
-> Looking at PDC is not enough. Hotplug driver handles both physical
-> removal as well as the link going down due to signal integrity issues today.
-> 
-> If the link went down because of a pending FATAL error, AER/DPC recovers
-> the link automatically. There is no need for hotplug to be involved in
-> fatal error work.
-> 
-> Hotplug driver needs to handle both physical removal as well as intermittent
-> link down issues though.
+> Tested on ASUS X441AUR equipped with RTL8106e.
+> This is the laptop whose ethernet does not come back after resume, if
+> it does not fallback to MSI.
+> ...
 
-Back to your patch you linked to earlier, your proposal is to have
-pciehp wait for DEVSTS.FED before deciding if it needs to handle the
-DLLSC event. That might be a start, but it isn't enough since that
-status isn't set if the downstream device reported ERR_FATAL. I think
-you'd need to check the secondary status register for a Received System
-Error.
+> dev@endless:~$ sudo lspci -xnnvvs 02:00.0
+> ...
+> 00: ec 10 36 81 07 04 10 00 07 00 00 02 10 00 00 00
+> 10: 01 e0 00 00 00 00 00 00 04 00 10 ef 00 00 00 00
+> 20: 0c 00 00 e0 00 00 00 00 00 00 00 00 43 10 0f 20
+> 30: 00 00 00 00 40 00 00 00 00 00 00 00 ff 01 00 00
+> 
+> After comparing, there is no difference between before suspend and
+> after resume.
+
+It'd be better to compare the hex data directly and ignore the lspci
+decoding, since lspci doesn't decode everything.  You only dumped the
+first 0x40 bytes of config space, and all capabilities, including the
+MSI and MSI-X capabilities, are past that:
+
+> Capabilities: [50] MSI: Enable- Count=1/1 Maskable- 64bit+
+> Capabilities: [b0] MSI-X: Enable+ Count=4 Masked-
+> Vector table: BAR=4 offset=00000000
+> PBA: BAR=4 offset=00000800
+
+In addition, some of the MSI-X information for this device is in BAR
+4.  "lspci -xxx" will dump all config space, and you can use a tool
+like http://cmp.felk.cvut.cz/~pisa/linux/rdwrmem.c or
+https://github.com/billfarrow/pcimem to dump the BAR contents.
