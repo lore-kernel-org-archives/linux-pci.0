@@ -1,54 +1,51 @@
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Date: Tue, 14 Aug 2018 19:45:18 +0800
-From: kbuild test robot <lkp@intel.com>
-To: Hanjie Lin <hanjie.lin@amlogic.com>
-Subject: Re: [PATCH 2/2] PCI: meson: add the Amlogic Meson PCIe controller
- driver
-Message-ID: <201808141947.vOJGIxXg%fengguang.wu@intel.com>
-References: <1534227522-186798-3-git-send-email-hanjie.lin@amlogic.com>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail-sh2.amlogic.com ([58.32.228.45]:31486 "EHLO
+        mail-sh2.amlogic.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726471AbeHXLIq (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Fri, 24 Aug 2018 07:08:46 -0400
+From: Hanjie Lin <hanjie.lin@amlogic.com>
+To: Bjorn Helgaas <bhelgaas@google.com>
+CC: Hanjie Lin <hanjie.lin@amlogic.com>,
+        Kevin Hilman <khilman@baylibre.com>,
+        Rob Herring <robh@kernel.org>, <linux-kernel@vger.kernel.org>,
+        <linux-pci@vger.kernel.org>,
+        <linux-arm-kernel@lists.infradead.org>,
+        <linux-amlogic@lists.infradead.org>,
+        Yixun Lan <yixun.lan@amlogic.com>,
+        Liang Yang <liang.yang@amlogic.com>,
+        Jianxin Pan <jianxin.pan@amlogic.com>,
+        Qiufang Dai <qiufang.dai@amlogic.com>,
+        Jian Hu <jian.hu@amlogic.com>, <devicetree@vger.kernel.org>
+Subject: [PATCH v2 0/2] add the Amlogic Meson PCIe controller driver. 
+Date: Fri, 24 Aug 2018 15:36:02 +0800
+Message-ID: <1535096165-45827-1-git-send-email-hanjie.lin@amlogic.com>
 MIME-Version: 1.0
-In-Reply-To: <1534227522-186798-3-git-send-email-hanjie.lin@amlogic.com>
-List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
-List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
-List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
-List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
-List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
-Cc: Rob Herring <robh@kernel.org>, Hanjie Lin <hanjie.lin@amlogic.com>,
- Kevin Hilman <khilman@baylibre.com>, linux-kernel@vger.kernel.org,
- Yue Wang <yue.wang@amlogic.com>, kbuild-all@01.org, linux-pci@vger.kernel.org,
- Bjorn Helgaas <bhelgaas@google.com>, linux-amlogic@lists.infradead.org,
- linux-arm-kernel@lists.infradead.org
-Content-Type: text/plain; charset="us-ascii"
-Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
-Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
+Content-Type: text/plain
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hi Yue,
+The Amlogic Meson PCIe host controller is based on the Synopsys DesignWare
+PCI core. This patchset add the driver and dt-bindings of the controller.
 
-Thank you for the patch! Perhaps something to improve:
+Changes since v1: [0]
+ - use gpio lib instead open code
+ - move 'apb' and 'port' reset from phy driver
+ - format correcting
 
-[auto build test WARNING on pci/next]
-[also build test WARNING on v4.18 next-20180813]
-[if your patch is applied to the wrong git tree, please drop us a note to help improve the system]
+[0] : https://lkml.org/lkml/2018/8/14/70
 
-url:    https://github.com/0day-ci/linux/commits/Hanjie-Lin/dt-bindings-PCI-meson-add-DT-bindings-for-Amlogic-Meson-PCIe-controller/20180814-180019
-base:   https://git.kernel.org/pub/scm/linux/kernel/git/helgaas/pci.git next
+Yue Wang (2):
+  dt-bindings: PCI: meson: add DT bindings for Amlogic Meson PCIe
+    controller
+  PCI: meson: add the Amlogic Meson PCIe controller driver
 
+ .../devicetree/bindings/pci/amlogic,meson-pcie.txt |  63 +++
+ drivers/pci/controller/dwc/Kconfig                 |  12 +
+ drivers/pci/controller/dwc/Makefile                |   1 +
+ drivers/pci/controller/dwc/pci-meson.c             | 613 +++++++++++++++++++++
+ 4 files changed, 689 insertions(+)
+ create mode 100644 Documentation/devicetree/bindings/pci/amlogic,meson-pcie.txt
+ create mode 100644 drivers/pci/controller/dwc/pci-meson.c
 
-coccinelle warnings: (new ones prefixed by >>)
-
->> drivers/pci/controller/dwc/pci-meson.c:121:1-3: WARNING: PTR_ERR_OR_ZERO can be used
-
-Please review and possibly fold the followup patch.
-
----
-0-DAY kernel test infrastructure                Open Source Technology Center
-https://lists.01.org/pipermail/kbuild-all                   Intel Corporation
-
-_______________________________________________
-linux-arm-kernel mailing list
-linux-arm-kernel@lists.infradead.org
-http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
+-- 
+2.7.4
