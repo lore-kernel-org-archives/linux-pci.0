@@ -1,93 +1,118 @@
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Date: Wed, 8 Aug 2018 14:40:16 -0400 (EDT)
-From: Mikulas Patocka <mpatocka@redhat.com>
-To: Catalin Marinas <catalin.marinas@arm.com>
-Subject: Re: framebuffer corruption due to overlapping stp instructions on
- arm64
-In-Reply-To: <20180808142852.GD24736@iMac.local>
-Message-ID: <alpine.LRH.2.02.1808081437260.18198@file01.intranet.prod.int.rdu2.redhat.com>
-References: <alpine.LRH.2.02.1808021242320.31834@file01.intranet.prod.int.rdu2.redhat.com>
- <CAHCPf3tFGqkYEcWNN4LaWThw_rVqT316pzLv6T7RfxwO-eZ0EA@mail.gmail.com>
- <alpine.LRH.2.02.1808030212340.17672@file01.intranet.prod.int.rdu2.redhat.com>
- <CAKv+Gu8DeuksZhk1g3q_msSKV_hSY_2e1uzVten9-oGO3j9Sqg@mail.gmail.com>
- <20180803094129.GB17798@arm.com>
- <alpine.LRH.2.02.1808031235410.31584@file01.intranet.prod.int.rdu2.redhat.com>
- <20180808113927.GA24736@iMac.local>
- <alpine.LRH.2.02.1808081011110.9997@file01.intranet.prod.int.rdu2.redhat.com>
- <20180808142852.GD24736@iMac.local>
-MIME-Version: 1.0
-List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
-List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
-List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
-List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
-List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
-Cc: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>,
- Joao Pinto <Joao.Pinto@synopsys.com>, libc-alpha@sourceware.org,
- Ard Biesheuvel <ard.biesheuvel@linaro.org>, Jingoo Han <jingoohan1@gmail.com>,
- Will Deacon <will.deacon@arm.com>, Russell King <linux@armlinux.org.uk>,
- Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
- Matt Sealey <neko@bakuhatsu.net>, linux-pci@vger.kernel.org,
- linux-arm-kernel <linux-arm-kernel@lists.infradead.org>
-Content-Type: text/plain; charset="us-ascii"
-Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
-Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+Message-ID: <8c48964151d24758298ba935da336c0829e2b287.camel@baylibre.com>
+Subject: Re: [PATCH v2 1/2] dt-bindings: PCI: meson: add DT bindings for
+ Amlogic Meson PCIe controller
+From: Jerome Brunet <jbrunet@baylibre.com>
+To: Hanjie Lin <hanjie.lin@amlogic.com>,
+        Bjorn Helgaas <bhelgaas@google.com>
+Cc: Yue Wang <yue.wang@amlogic.com>,
+        Kevin Hilman <khilman@baylibre.com>,
+        Rob Herring <robh@kernel.org>, linux-kernel@vger.kernel.org,
+        linux-pci@vger.kernel.org, linux-arm-kernel@lists.infradead.org,
+        linux-amlogic@lists.infradead.org,
+        Yixun Lan <yixun.lan@amlogic.com>,
+        Liang Yang <liang.yang@amlogic.com>,
+        Jianxin Pan <jianxin.pan@amlogic.com>,
+        Qiufang Dai <qiufang.dai@amlogic.com>,
+        Jian Hu <jian.hu@amlogic.com>, devicetree@vger.kernel.org
+Date: Fri, 24 Aug 2018 10:22:55 +0200
+In-Reply-To: <1535096165-45827-2-git-send-email-hanjie.lin@amlogic.com>
+References: <1535096165-45827-1-git-send-email-hanjie.lin@amlogic.com>
+         <1535096165-45827-2-git-send-email-hanjie.lin@amlogic.com>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-
-
-On Wed, 8 Aug 2018, Catalin Marinas wrote:
-
-> On Wed, Aug 08, 2018 at 10:12:27AM -0400, Mikulas Patocka wrote:
-> > On Wed, 8 Aug 2018, Catalin Marinas wrote:
-> > > On Fri, Aug 03, 2018 at 01:09:02PM -0400, Mikulas Patocka wrote:
-> > > > 	while (1) {
-> > > > 		start = (unsigned)random() % (LEN + 1);
-> > > > 		end = (unsigned)random() % (LEN + 1);
-> > > > 		if (start > end)
-> > > > 			continue;
-> > > > 		for (i = start; i < end; i++)
-> > > > 			data[i] = val++;
-> > > > 		memcpy(map + start, data + start, end - start);
-> > > > 		if (memcmp(map, data, LEN)) {
-> > > 
-> > > It may be worth trying to do a memcmp(map+start, data+start, end-start)
-> > > here to see whether the hazard logic fails when the writes are unaligned
-> > > but the reads are not.
-> > > 
-> > > This problem may as well appear if you do byte writes and read longs
-> > > back (and I consider this a hardware problem on this specific board).
-> > 
-> > I triad to insert usleep(10000) between the memcpy and memcmp, but the 
-> > same corruption occurs. So, it can't be read-after-write hazard. It is 
-> > caused by the improper handling of hazard between the overlapping writes 
-> > inside memcpy.
+On Fri, 2018-08-24 at 15:36 +0800, Hanjie Lin wrote:
+> From: Yue Wang <yue.wang@amlogic.com>
 > 
-> It could get it wrong between subsequent writes to the same 64-bit range
-> (e.g. the address & ~63 is the same but the data strobes for which bytes
-> to write are different). If it somehow thinks that it's a
-> write-after-write hazard even though the strobes are different, it could
-> cancel one of the writes.
+> The Amlogic Meson PCIe host controller is based on the Synopsys DesignWare
+> PCI core. This patch adds documentation for the DT bindings in Meson PCIe
+> controller.
+> 
+> Signed-off-by: Yue Wang <yue.wang@amlogic.com>
+> Signed-off-by: Hanjie Lin <hanjie.lin@amlogic.com>
+> ---
+>  .../devicetree/bindings/pci/amlogic,meson-pcie.txt | 63 ++++++++++++++++++++++
+>  1 file changed, 63 insertions(+)
+>  create mode 100644 Documentation/devicetree/bindings/pci/amlogic,meson-pcie.txt
+> 
+> diff --git a/Documentation/devicetree/bindings/pci/amlogic,meson-pcie.txt b/Documentation/devicetree/bindings/pci/amlogic,meson-pcie.txt
+> new file mode 100644
+> index 0000000..8a831d1
+> --- /dev/null
+> +++ b/Documentation/devicetree/bindings/pci/amlogic,meson-pcie.txt
+> @@ -0,0 +1,63 @@
+> +Amlogic Meson AXG DWC PCIE SoC controller
+> +
+> +Amlogic Meson PCIe host controller is based on the Synopsys DesignWare PCI core.
+> +It shares common functions with the PCIe DesignWare core driver and
+> +inherits common properties defined in
+> +Documentation/devicetree/bindings/pci/designware-pci.txt.
+> +
+> +Additional properties are described here:
+> +
+> +Required properties:
+> +- compatible:
+> +	should contain "amlogic,axg-pcie" to identify the core.
+> +- reg:
+> +	Should contain the configuration address space.
+> +- reg-names: Must be
+> +	- "elbi"	External local bus interface registers
+> +	- "cfg"		Meson specific registers
+> +	- "config"	PCIe configuration space
+> +- reset-gpios: The GPIO to generate PCIe PERST# assert and deassert signal.
+> +- clocks: Must contain an entry for each entry in clock-names.
+> +- clock-names: Must include the following entries:
+> +	- "pclk"       PCIe GEN 100M PLL clock
+> +	- "port"       PCIe_x(A or B) RC clock gate
+> +	- "general"    PCIe Phy clock
+> +	- "mipi"       PCIe_x(A or B) 100M ref clock gate
+> +- resets: phandle to the reset lines.
+> +- reset-names: must contain "phy" and "peripheral"
+> +       - "port" Port A or B reset
+> +       - "apb" APB reset
 
-I believe that the SoC has logic for write-after-write detection, but the 
-logic is broken and corrupts data.
+The above description is not coherent (phy <=> port)
 
-If I insert "dmb sy" between the overlapping writes, there's no corruption 
-(the PCIe controller won't see any overlapping writes in that case).
+> +
+> +Example configuration:
+> +
+> +	pcie: pcie@f9800000 {
+> +			compatible = "amlogic,axg-pcie", "snps,dw-pcie";
+> +			reg = <0x0 0xf9800000 0x0 0x400000
+> +					0x0 0xff646000 0x0 0x2000
+> +					0x0 0xf9f00000 0x0 0x100000>;
+> +			reg-names = "elbi", "cfg", "config";
+> +			reset-gpios = <&gpio GPIOX_19 GPIO_ACTIVE_HIGH>;
+> +			interrupts = <GIC_SPI 177 IRQ_TYPE_EDGE_RISING>;
+> +			#interrupt-cells = <1>;
+> +			interrupt-map-mask = <0 0 0 0>;
+> +			interrupt-map = <0 0 0 0 &gic GIC_SPI 179 IRQ_TYPE_EDGE_RISING>;
+> +			bus-range = <0x0 0xff>;
+> +			#address-cells = <3>;
+> +			#size-cells = <2>;
+> +			device_type = "pci";
 
-> It may be worth trying with a byte-only memcpy() function while keeping
-> the default memcmp().
+Not described above - is it even used ?
 
-I tried that and byte-only memcpy works without any corruption.
+> +			phys = <&pcie_phy>;
 
-> -- 
-> Catalin
+Not documented and not necessary. Please remove this.
 
-Mikulas
-
-_______________________________________________
-linux-arm-kernel mailing list
-linux-arm-kernel@lists.infradead.org
-http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
+> +			ranges = <0x82000000 0 0 0x0 0xf9c00000 0 0x00300000>;
+> +
+> +			clocks = <&clkc CLKID_USB
+> +					&clkc CLKID_MIPI_ENABLE
+> +					&clkc CLKID_PCIE_A
+> +					&clkc CLKID_PCIE_CML_EN0>;
+> +			clock-names = "general",
+> +					"mipi",
+> +					"pclk",
+> +					"port";
+> +			resets = <&reset RESET_PCIE_A>,
+> +				<&reset RESET_PCIE_APB>;
+> +			reset-names = "port",
+> +					"apb";
+> +	};
