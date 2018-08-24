@@ -1,68 +1,200 @@
-Return-Path: <linux-acpi-owner@vger.kernel.org>
-From: "Rafael J. Wysocki" <rjw@rjwysocki.net>
-To: Linux PCI <linux-pci@vger.kernel.org>
-Cc: teika kazura <teika@gmx.com>, Bjorn Helgaas <bhelgaas@google.com>,
-        LKML <linux-kernel@vger.kernel.org>,
-        Linux ACPI <linux-acpi@vger.kernel.org>,
-        Linux PM <linux-pm@vger.kernel.org>,
-        Mika Westerberg <mika.westerberg@linux.intel.com>
-Subject: [PATCH] PCI / ACPI / PM: Resume all bridges on suspend-to-RAM
-Date: Thu, 16 Aug 2018 12:56:46 +0200
-Message-ID: <6401388.2t0qD3iTOr@aspire.rjw.lan>
-MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Sender: linux-acpi-owner@vger.kernel.org
+Return-Path: <SRS0=9eyF=LH=h08.hostsharing.net=foo00@kernel.org>
+Return-Path: <SRS0=9eyF=LH=h08.hostsharing.net=foo00@kernel.org>
+Message-Id: <ffbda841dccaa47bee25deb22a7bef6863893a57.1535117718.git.lukas@wunner.de>
+From: Lukas Wunner <lukas@wunner.de>
+Date: Fri, 24 Aug 2018 15:45:10 +0200
+Subject: [PATCH] PCI: pciehp: Tolerate Presence Detect hardwired to zero
+To: Bjorn Helgaas <helgaas@kernel.org>
+Cc: linux-pci@vger.kernel.org, David Yang <mmyangfl@gmail.com>, Ashok Raj <ashok.raj@intel.com>, Rajat Jain <rajatja@google.com>
 List-ID: <linux-pci.vger.kernel.org>
 
-From: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
+The WiGig Bus Extension (WBE) specification allows tunneling PCIe over
+IEEE 802.11.  A product implementing this spec is the wil6210 from
+Wilocity (now part of Qualcomm Atheros).  It integrates a PCIe switch
+with a wireless network adapter:
 
-Commit 26112ddc254c (PCI / ACPI / PM: Resume bridges w/o drivers on
-suspend-to-RAM) attempted to fix a functional regression resulting
-from commit c62ec4610c40 (PM / core: Fix direct_complete handling
-for devices with no callbacks) by resuming PCI bridges without
-drivers (that is, "parallel PCI" ones) during system-wide suspend if
-the target system state is not ACPI S0 (working state).
+00.0-+              [1ae9:0101]  Upstream Port
+     +-00.0-+       [1ae9:0200]  Downstream Port
+     |      +-00.0  [168c:0034]  Atheros AR9462 Wireless Network Adapter
+     +-02.0         [1ae9:0201]  Downstream Port
+     +-03.0         [1ae9:0201]  Downstream Port
 
-That turns out insufficient, however, as it is reported that, at
-least in one case, the platform firmware gets confused if a PCIe
-root port is suspended before entering the ACPI S3 sleep state.
+Wirelessly attached devices presumably appear below the hotplug ports
+with device ID [1ae9:0201].  Oddly, the Downstream Port [1ae9:0200]
+leading to the wireless network adapter is likewise Hotplug Capable,
+but has its Presence Detect State bit hardwired to zero.  Even if the
+Link Active bit is set, Presence Detect is zero, so this cannot be
+caused by in-band presence detection but only by broken hardware.
 
-For this reason, drop the driver check from acpi_pci_need_resume()
-and resume all bridges (including PCIe ports with drivers) during
-system-wide suspend if the target system state is not ACPI S0.
+pciehp assumes an empty slot if Presence Detect State is zero,
+regardless of Link Active being one.  Consequently, up until v4.18 it
+removes the wireless network adapter in pciehp_resume().  From v4.19 it
+already does so in pciehp_probe().
 
-[If the target system state is ACPI S0, it means suspend-to-idle
- and the platform firmware is not going to be invoked to actually
- suspend the system, so there is no need to resume the bridges in
- that case.]
+Be lenient towards broken hardware and assume the slot is occupied if
+Link Active is set:  Introduce pciehp_card_present_or_link_active()
+and use it in lieu of pciehp_get_adapter_status() everywhere, except
+in pciehp_handle_presence_or_link_change(), whose log messages depend
+on which of Presence Detect State or Link Active is set.
 
-Fixes: c62ec4610c40 (PM / core: Fix direct_complete handling for devices with no callbacks)
-Reported-by: teika kazura <teika@gmx.com>
-Tested-by: teika kazura <teika@gmx.com>
-Link: https://bugzilla.kernel.org/show_bug.cgi?id=200675
-Cc: 4.15+ <stable@vger.kernel.org> # 4.15+: 26112ddc254c (PCI / ACPI / PM: Resume bridges ...)
-Signed-off-by: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
+Remove the Presence Detect State check from __pciehp_enable_slot()
+because it is only called if either of Presence Detect State or Link
+Active is set.
+
+Link: https://bugzilla.kernel.org/show_bug.cgi?id=200839
+Reported-and-tested-by: David Yang <mmyangfl@gmail.com>
+Signed-off-by: Lukas Wunner <lukas@wunner.de>
+Cc: Rajat Jain <rajatja@google.com>
+Cc: Ashok Raj <ashok.raj@intel.com>
 ---
- drivers/pci/pci-acpi.c |    6 ++----
- 1 file changed, 2 insertions(+), 4 deletions(-)
+This depends on patch "PCI: pciehp: Differentiate between surprise and
+safe removal" (submitted July 31):
+https://patchwork.ozlabs.org/patch/951386/
 
-Index: linux-pm/drivers/pci/pci-acpi.c
-===================================================================
---- linux-pm.orig/drivers/pci/pci-acpi.c
-+++ linux-pm/drivers/pci/pci-acpi.c
-@@ -632,13 +632,11 @@ static bool acpi_pci_need_resume(struct
- 	/*
- 	 * In some cases (eg. Samsung 305V4A) leaving a bridge in suspend over
- 	 * system-wide suspend/resume confuses the platform firmware, so avoid
--	 * doing that, unless the bridge has a driver that should take care of
--	 * the PM handling.  According to Section 16.1.6 of ACPI 6.2, endpoint
-+	 * doing that.  According to Section 16.1.6 of ACPI 6.2, endpoint
- 	 * devices are expected to be in D3 before invoking the S3 entry path
- 	 * from the firmware, so they should not be affected by this issue.
- 	 */
--	if (pci_is_bridge(dev) && !dev->driver &&
--	    acpi_target_system_state() != ACPI_STATE_S0)
-+	if (pci_is_bridge(dev) && acpi_target_system_state() != ACPI_STATE_S0)
- 		return true;
+The patch removes one call to pciehp_get_adapter_status(), and that
+function is in turn removed by the present patch.
+
+ drivers/pci/hotplug/pciehp.h      |  3 ++-
+ drivers/pci/hotplug/pciehp_core.c |  6 +++---
+ drivers/pci/hotplug/pciehp_ctrl.c | 10 ++--------
+ drivers/pci/hotplug/pciehp_hpc.c  | 25 +++++++++++++++++++------
+ 4 files changed, 26 insertions(+), 18 deletions(-)
+
+diff --git a/drivers/pci/hotplug/pciehp.h b/drivers/pci/hotplug/pciehp.h
+index 39c9c88..a4b294f 100644
+--- a/drivers/pci/hotplug/pciehp.h
++++ b/drivers/pci/hotplug/pciehp.h
+@@ -194,11 +194,12 @@ struct controller {
  
- 	if (!adev || !acpi_device_power_manageable(adev))
+ void pciehp_set_attention_status(struct slot *slot, u8 status);
+ void pciehp_get_latch_status(struct slot *slot, u8 *status);
+-void pciehp_get_adapter_status(struct slot *slot, u8 *status);
+ int pciehp_query_power_fault(struct slot *slot);
+ void pciehp_green_led_on(struct slot *slot);
+ void pciehp_green_led_off(struct slot *slot);
+ void pciehp_green_led_blink(struct slot *slot);
++bool pciehp_card_present(struct controller *ctrl);
++bool pciehp_card_present_or_link_active(struct controller *ctrl);
+ int pciehp_check_link_status(struct controller *ctrl);
+ bool pciehp_check_link_active(struct controller *ctrl);
+ void pciehp_release_ctrl(struct controller *ctrl);
+diff --git a/drivers/pci/hotplug/pciehp_core.c b/drivers/pci/hotplug/pciehp_core.c
+index ec48c943..fddd376 100644
+--- a/drivers/pci/hotplug/pciehp_core.c
++++ b/drivers/pci/hotplug/pciehp_core.c
+@@ -188,7 +188,7 @@ static int get_adapter_status(struct hotplug_slot *hotplug_slot, u8 *value)
+ 	struct pci_dev *pdev = slot->ctrl->pcie->port;
+ 
+ 	pci_config_pm_runtime_get(pdev);
+-	pciehp_get_adapter_status(slot, value);
++	*value = pciehp_card_present_or_link_active(slot->ctrl);
+ 	pci_config_pm_runtime_put(pdev);
+ 	return 0;
+ }
+@@ -213,12 +213,12 @@ static int reset_slot(struct hotplug_slot *hotplug_slot, int probe)
+ static void pciehp_check_presence(struct controller *ctrl)
+ {
+ 	struct slot *slot = ctrl->slot;
+-	u8 occupied;
++	bool occupied;
+ 
+ 	down_read(&ctrl->reset_lock);
+ 	mutex_lock(&slot->lock);
+ 
+-	pciehp_get_adapter_status(slot, &occupied);
++	occupied = pciehp_card_present_or_link_active(ctrl);
+ 	if ((occupied && (slot->state == OFF_STATE ||
+ 			  slot->state == BLINKINGON_STATE)) ||
+ 	    (!occupied && (slot->state == ON_STATE ||
+diff --git a/drivers/pci/hotplug/pciehp_ctrl.c b/drivers/pci/hotplug/pciehp_ctrl.c
+index c283253..1fb9ba0 100644
+--- a/drivers/pci/hotplug/pciehp_ctrl.c
++++ b/drivers/pci/hotplug/pciehp_ctrl.c
+@@ -226,8 +226,7 @@ void pciehp_handle_disable_request(struct slot *slot)
+ void pciehp_handle_presence_or_link_change(struct slot *slot, u32 events)
+ {
+ 	struct controller *ctrl = slot->ctrl;
+-	bool link_active;
+-	u8 present;
++	bool present, link_active;
+ 
+ 	/*
+ 	 * If the slot is on and presence or link has changed, turn it off.
+@@ -256,7 +255,7 @@ void pciehp_handle_presence_or_link_change(struct slot *slot, u32 events)
+ 
+ 	/* Turn the slot on if it's occupied or link is up */
+ 	mutex_lock(&slot->lock);
+-	pciehp_get_adapter_status(slot, &present);
++	present = pciehp_card_present(ctrl);
+ 	link_active = pciehp_check_link_active(ctrl);
+ 	if (!present && !link_active) {
+ 		mutex_unlock(&slot->lock);
+@@ -289,11 +288,6 @@ static int __pciehp_enable_slot(struct slot *p_slot)
+ 	u8 getstatus = 0;
+ 	struct controller *ctrl = p_slot->ctrl;
+ 
+-	pciehp_get_adapter_status(p_slot, &getstatus);
+-	if (!getstatus) {
+-		ctrl_info(ctrl, "Slot(%s): No adapter\n", slot_name(p_slot));
+-		return -ENODEV;
+-	}
+ 	if (MRL_SENS(p_slot->ctrl)) {
+ 		pciehp_get_latch_status(p_slot, &getstatus);
+ 		if (getstatus) {
+diff --git a/drivers/pci/hotplug/pciehp_hpc.c b/drivers/pci/hotplug/pciehp_hpc.c
+index 7136e34..23aa385 100644
+--- a/drivers/pci/hotplug/pciehp_hpc.c
++++ b/drivers/pci/hotplug/pciehp_hpc.c
+@@ -389,13 +389,27 @@ void pciehp_get_latch_status(struct slot *slot, u8 *status)
+ 	*status = !!(slot_status & PCI_EXP_SLTSTA_MRLSS);
+ }
+ 
+-void pciehp_get_adapter_status(struct slot *slot, u8 *status)
++bool pciehp_card_present(struct controller *ctrl)
+ {
+-	struct pci_dev *pdev = ctrl_dev(slot->ctrl);
++	struct pci_dev *pdev = ctrl_dev(ctrl);
+ 	u16 slot_status;
+ 
+ 	pcie_capability_read_word(pdev, PCI_EXP_SLTSTA, &slot_status);
+-	*status = !!(slot_status & PCI_EXP_SLTSTA_PDS);
++	return slot_status & PCI_EXP_SLTSTA_PDS;
++}
++
++/**
++ * pciehp_card_present_or_link_active() - whether given slot is occupied
++ * @ctrl: PCIe hotplug controller
++ *
++ * Unlike pciehp_card_present(), which determines presence solely from the
++ * Presence Detect State bit, this helper also returns true if the Link Active
++ * bit is set.  This is a concession to broken hotplug ports which hardwire
++ * Presence Detect State to zero, such as Wilocity's [1ae9:0200].
++ */
++bool pciehp_card_present_or_link_active(struct controller *ctrl)
++{
++	return pciehp_card_present(ctrl) || pciehp_check_link_active(ctrl);
+ }
+ 
+ int pciehp_query_power_fault(struct slot *slot)
+@@ -857,7 +871,7 @@ struct controller *pcie_init(struct pcie_device *dev)
+ {
+ 	struct controller *ctrl;
+ 	u32 slot_cap, link_cap;
+-	u8 occupied, poweron;
++	u8 poweron;
+ 	struct pci_dev *pdev = dev->port;
+ 
+ 	ctrl = kzalloc(sizeof(*ctrl), GFP_KERNEL);
+@@ -917,9 +931,8 @@ struct controller *pcie_init(struct pcie_device *dev)
+ 	 * requested yet, so avoid triggering a notification with this command.
+ 	 */
+ 	if (POWER_CTRL(ctrl)) {
+-		pciehp_get_adapter_status(ctrl->slot, &occupied);
+ 		pciehp_get_power_status(ctrl->slot, &poweron);
+-		if (!occupied && poweron) {
++		if (!pciehp_card_present_or_link_active(ctrl) && poweron) {
+ 			pcie_disable_notification(ctrl);
+ 			pciehp_power_off_slot(ctrl->slot);
+ 		}
+-- 
+2.18.0
