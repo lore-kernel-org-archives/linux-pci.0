@@ -1,40 +1,64 @@
-Return-Path: <SRS0=a9CN=LA=kernel.crashing.org=benh@kernel.org>
-Return-Path: <SRS0=a9CN=LA=kernel.crashing.org=benh@kernel.org>
-From: Benjamin Herrenschmidt <benh@kernel.crashing.org>
-To: Bjorn Helgaas <helgaas@kernel.org>, linux-pci@vger.kernel.org
-Cc: Hari Vyas <hari.vyas@broadcom.com>, Ray Jui <ray.jui@broadcom.com>,
-        Srinath Mannam <srinath.mannam@broadcom.com>,
-        Guenter Roeck <linux@roeck-us.net>, Jens Axboe <axboe@kernel.dk>,
-        Lukas Wunner <lukas@wunner.de>,
-        Konstantin Khlebnikov <khlebnikov@yandex-team.ru>,
-        Marta Rybczynska <mrybczyn@kalray.eu>,
-        Pierre-Yves Kerbrat <pkerbrat@kalray.eu>, linux-kernel@vger.kernel.org
-Subject: [RFC PATCH 0/6] pci: Rework is_added race fix and address bridge enable races
-Date: Fri, 17 Aug 2018 14:48:56 +1000
-Message-Id: <20180817044902.31420-1-benh@kernel.crashing.org>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mga05.intel.com ([192.55.52.43]:5497 "EHLO mga05.intel.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1726958AbeH1AhG (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Mon, 27 Aug 2018 20:37:06 -0400
+Subject: Re: bug in pci_try_reset_bus
+To: Sinan Kaya <okaya@codeaurora.org>, bhelgaas@google.com,
+        linux-pci@vger.kernel.org
+References: <3d3d78fb-f1f2-ec4f-38f9-0b0d14564f53@intel.com>
+ <323b3bbe-d255-8a5d-2a9c-d64e1f86cb64@codeaurora.org>
+ <bd7dbd5a-eebc-9142-f9a2-3b5ff8de9b8b@intel.com>
+ <d437400c-7eed-19d3-9cf2-b8a42217136b@codeaurora.org>
+ <2f0fb394-f1c9-d782-ffec-dac04b1ac0a9@intel.com>
+ <84484c45-64ff-ca2d-39dd-ee579e28558e@codeaurora.org>
+ <8bc2c143-5938-33ed-d852-7f039bde7a13@intel.com>
+ <4bf1a54c-4622-0472-7a43-a6d6ff049322@codeaurora.org>
+From: Dennis Dalessandro <dennis.dalessandro@intel.com>
+Message-ID: <980dc79b-a1b7-08ab-294f-1cb318d996fe@intel.com>
+Date: Mon, 27 Aug 2018 16:48:50 -0400
+MIME-Version: 1.0
+In-Reply-To: <4bf1a54c-4622-0472-7a43-a6d6ff049322@codeaurora.org>
+Content-Type: text/plain; charset=utf-8; format=flowed
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-This is really two series but since they conflict a bit separately
-here they are in one:
+On 8/27/2018 4:18 PM, Sinan Kaya wrote:
+> On 8/27/2018 3:52 PM, Dennis Dalessandro wrote:
+>>>
+>>> can you please confirm?
+>>
+>> Ah yes, silly me. pci_bus_reset() returns 0 and it does go on but 
+>> doesn't make it to the trylock, it gets hung calling 
+>> pci_bus_save_and_disable().
+>>
+> 
+> OK. That makes sense now. pci_bus_save_and_disable() is also trying to
+> obtain a device lock via pci_dev_lock().
+> 
+> Since you are calling this from probe time, you are getting dead lock
+> because device is locked.
+> 
+> Is it possible to defer this secondary bus reset operation to post probe?
 
-First we undo the mess of those atomic priv_flags. The atomicity
-doesn't provide any security since there's no locking against
-the other state pertaining to those flags, it only protects the
-flags themselves.
+I don't think so. We need to do a gen3 bump at probe. I don't know that 
+there is any other hardware that does is so probably why it hasn't been 
+noticed.
 
-The is_added mess is fixed much more simply by moving the assignment
-of the flag to before we start the driver. This is in line with the
-rest of the PCI code: until bound to the device model, we are essentially
-assuming a single threaded environment. is_added is a flag that is
-logically owned by that part of the PCI code, and thus should be set
-and cleared within that "safer" environment.
+> Possible solutions are:
+> 1. introduce a locked reset API > 2. skip lock during probe
+> 3. bring back raw reset API even though it is undesirable.
 
-This removes the horrid relative includes in the powerpc code as well.
+I think the first option is the cleanest. I can put together a patch and 
+post it soon.
 
-The second part aims at fixing the enable/disable/set_master races,
-and does so by providing a framework for future device state locking
-issues.
+> Other opinions?
+> 
+> BTW, please file a bugzilla and capture your email details there so that we
+> can have record of what we are doing?
 
-It introduces a pci_dev->state_mutex which is used at a lower level
-than the device_lock (the device lock isn't suitable, as explained
-in the cset comments) and uses it to protect enablement and set_master.
+I can certainly do that.
+
+Thanks for your help on this!
+
+-Denny
