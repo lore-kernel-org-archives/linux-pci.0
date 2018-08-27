@@ -1,66 +1,145 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from gate.crashing.org ([63.228.1.57]:35116 "EHLO gate.crashing.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1727882AbeHPKML (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Thu, 16 Aug 2018 06:12:11 -0400
-Message-ID: <3f454ec4e96842286e1bfeba960f9f37bfcfaf6f.camel@kernel.crashing.org>
-Subject: Re: [PATCH 1/1] PCI/AER: prevent pcie_do_fatal_recovery from using
- device after it is removed
-From: Benjamin Herrenschmidt <benh@kernel.crashing.org>
-To: poza@codeaurora.org
-Cc: Thomas Tai <thomas.tai@oracle.com>, bhelgaas@google.com,
-        keith.busch@intel.com, linux-pci@vger.kernel.org,
-        linux-pci-owner@vger.kernel.org,
-        Sam Bobroff <sam.bobroff@au1.ibm.com>
-Date: Thu, 16 Aug 2018 17:15:26 +1000
-In-Reply-To: <bf7ceabb6fe51398e0f4eebd9c4fe4ac1ec2b8a4.camel@kernel.crashing.org>
-References: <1534179088-44219-1-git-send-email-thomas.tai@oracle.com>
-         <1534179088-44219-2-git-send-email-thomas.tai@oracle.com>
-         <51f4b387d9bd96a42d526a6a029fc43b@codeaurora.org>
-         <b0104a716319d76e734c307cb4bedd9d@codeaurora.org>
-         <903394c04d6ad468ed06dc0a779200e7555345a7.camel@kernel.crashing.org>
-         <6cb069038530757f31f3dd60328c7e30@codeaurora.org>
-         <e931bc7a7e468e8bb2ee3766b3fcf96f1800f552.camel@kernel.crashing.org>
-         <bf7ceabb6fe51398e0f4eebd9c4fe4ac1ec2b8a4.camel@kernel.crashing.org>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+Received: from mail-sh2.amlogic.com ([58.32.228.45]:55062 "EHLO
+        mail-sh2.amlogic.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726785AbeH0Mku (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Mon, 27 Aug 2018 08:40:50 -0400
+Subject: Re: [PATCH v2 1/2] dt-bindings: PCI: meson: add DT bindings for
+ Amlogic Meson PCIe controller
+To: Jerome Brunet <jbrunet@baylibre.com>,
+        Bjorn Helgaas <bhelgaas@google.com>
+CC: Yue Wang <yue.wang@amlogic.com>,
+        Kevin Hilman <khilman@baylibre.com>,
+        Rob Herring <robh@kernel.org>, <linux-kernel@vger.kernel.org>,
+        <linux-pci@vger.kernel.org>,
+        <linux-arm-kernel@lists.infradead.org>,
+        <linux-amlogic@lists.infradead.org>,
+        Yixun Lan <yixun.lan@amlogic.com>,
+        Liang Yang <liang.yang@amlogic.com>,
+        Jianxin Pan <jianxin.pan@amlogic.com>,
+        Qiufang Dai <qiufang.dai@amlogic.com>,
+        Jian Hu <jian.hu@amlogic.com>, <devicetree@vger.kernel.org>
+References: <1535096165-45827-1-git-send-email-hanjie.lin@amlogic.com>
+ <1535096165-45827-2-git-send-email-hanjie.lin@amlogic.com>
+ <8c48964151d24758298ba935da336c0829e2b287.camel@baylibre.com>
+From: Hanjie Lin <hanjie.lin@amlogic.com>
+Message-ID: <11d7547b-feb4-6ecb-cef3-db46ce8ee2ef@amlogic.com>
+Date: Mon, 27 Aug 2018 16:55:20 +0800
+MIME-Version: 1.0
+In-Reply-To: <8c48964151d24758298ba935da336c0829e2b287.camel@baylibre.com>
+Content-Type: text/plain; charset="utf-8"
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Thu, 2018-08-16 at 17:05 +1000, Benjamin Herrenschmidt wrote:
-> Those changes are utterly broken.
+
+
+On 2018/8/24 16:22, Jerome Brunet wrote:
+> On Fri, 2018-08-24 at 15:36 +0800, Hanjie Lin wrote:
+>> From: Yue Wang <yue.wang@amlogic.com>
+>>
+>> The Amlogic Meson PCIe host controller is based on the Synopsys DesignWare
+>> PCI core. This patch adds documentation for the DT bindings in Meson PCIe
+>> controller.
+>>
+>> Signed-off-by: Yue Wang <yue.wang@amlogic.com>
+>> Signed-off-by: Hanjie Lin <hanjie.lin@amlogic.com>
+>> ---
+>>  .../devicetree/bindings/pci/amlogic,meson-pcie.txt | 63 ++++++++++++++++++++++
+>>  1 file changed, 63 insertions(+)
+>>  create mode 100644 Documentation/devicetree/bindings/pci/amlogic,meson-pcie.txt
+>>
+>> diff --git a/Documentation/devicetree/bindings/pci/amlogic,meson-pcie.txt b/Documentation/devicetree/bindings/pci/amlogic,meson-pcie.txt
+>> new file mode 100644
+>> index 0000000..8a831d1
+>> --- /dev/null
+>> +++ b/Documentation/devicetree/bindings/pci/amlogic,meson-pcie.txt
+>> @@ -0,0 +1,63 @@
+>> +Amlogic Meson AXG DWC PCIE SoC controller
+>> +
+>> +Amlogic Meson PCIe host controller is based on the Synopsys DesignWare PCI core.
+>> +It shares common functions with the PCIe DesignWare core driver and
+>> +inherits common properties defined in
+>> +Documentation/devicetree/bindings/pci/designware-pci.txt.
+>> +
+>> +Additional properties are described here:
+>> +
+>> +Required properties:
+>> +- compatible:
+>> +	should contain "amlogic,axg-pcie" to identify the core.
+>> +- reg:
+>> +	Should contain the configuration address space.
+>> +- reg-names: Must be
+>> +	- "elbi"	External local bus interface registers
+>> +	- "cfg"		Meson specific registers
+>> +	- "config"	PCIe configuration space
+>> +- reset-gpios: The GPIO to generate PCIe PERST# assert and deassert signal.
+>> +- clocks: Must contain an entry for each entry in clock-names.
+>> +- clock-names: Must include the following entries:
+>> +	- "pclk"       PCIe GEN 100M PLL clock
+>> +	- "port"       PCIe_x(A or B) RC clock gate
+>> +	- "general"    PCIe Phy clock
+>> +	- "mipi"       PCIe_x(A or B) 100M ref clock gate
+>> +- resets: phandle to the reset lines.
+>> +- reset-names: must contain "phy" and "peripheral"
+>> +       - "port" Port A or B reset
+>> +       - "apb" APB reset
 > 
-> The basic premise of the design that we woudl do that unplug/replug
-> trick if and ONLY IF the driver doesn't have the appropriate callbacks.
+> The above description is not coherent (phy <=> port)
 > 
-> We are also now looking at replacing this with an ubind/re-bind because
-> in practice, the unplugging is causing us all sort of problems. Sam
-> (CC) can elaborate.
+
+Yes, this should be port and apb here.
+We'll integrate phy driver into ctrl driver, and move phy reset to here also.
+
+>> +
+>> +Example configuration:
+>> +
+>> +	pcie: pcie@f9800000 {
+>> +			compatible = "amlogic,axg-pcie", "snps,dw-pcie";
+>> +			reg = <0x0 0xf9800000 0x0 0x400000
+>> +					0x0 0xff646000 0x0 0x2000
+>> +					0x0 0xf9f00000 0x0 0x100000>;
+>> +			reg-names = "elbi", "cfg", "config";
+>> +			reset-gpios = <&gpio GPIOX_19 GPIO_ACTIVE_HIGH>;
+>> +			interrupts = <GIC_SPI 177 IRQ_TYPE_EDGE_RISING>;
+>> +			#interrupt-cells = <1>;
+>> +			interrupt-map-mask = <0 0 0 0>;
+>> +			interrupt-map = <0 0 0 0 &gic GIC_SPI 179 IRQ_TYPE_EDGE_RISING>;
+>> +			bus-range = <0x0 0xff>;
+>> +			#address-cells = <3>;
+>> +			#size-cells = <2>;
+>> +			device_type = "pci";
 > 
-> Bjorn, we are the main authors of that spec (Linas wrote it under my
-> supervision) and created those callbacks for EEH. AER picked them up
-> only later. Those changes must be at the very least acked by us before
-> going upstream.
+> Not described above - is it even used ?
+> 
 
-Also I had a quick look at the DPC spec, it looks like a subset of our
-EEH capability.
+It's necessary, specified in designware-pcie.txt:
+ - device_type:
+  Usage: required
+  Value type: <string>
+  Definition: Should be "pci". 
 
-Again, the code in Linux was written without concertation with us,
-misunderstands/misuses the driver callbacks, does unplugs when it
-shouldn't etc... 
+>> +			phys = <&pcie_phy>;
+> 
+> Not documented and not necessary. Please remove this.
+> 
 
-It's all very broken.
+We'll remove phy driver and this also.
 
-Please, at the very least revert the spec changes. They are utterly
-wrong.
-
-The driver MUST remain active during the recovery process *including*
-fatal errors.
-
-Only if the recovery fails and the driver gives us may you chose to
-unplug the device (though there is little point).
-
-What you have designed will work fine for network drivers but will not
-work for storage.
-
-Ben.
+>> +			ranges = <0x82000000 0 0 0x0 0xf9c00000 0 0x00300000>;
+>> +
+>> +			clocks = <&clkc CLKID_USB
+>> +					&clkc CLKID_MIPI_ENABLE
+>> +					&clkc CLKID_PCIE_A
+>> +					&clkc CLKID_PCIE_CML_EN0>;
+>> +			clock-names = "general",
+>> +					"mipi",
+>> +					"pclk",
+>> +					"port";
+>> +			resets = <&reset RESET_PCIE_A>,
+>> +				<&reset RESET_PCIE_APB>;
+>> +			reset-names = "port",
+>> +					"apb";
+>> +	};
+> 
+> 
+> .
+> 
