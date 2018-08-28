@@ -1,167 +1,112 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from aserp2130.oracle.com ([141.146.126.79]:39984 "EHLO
-        aserp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1729125AbeHORyr (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Wed, 15 Aug 2018 13:54:47 -0400
-Subject: Re: [PATCH 1/1] PCI/AER: prevent pcie_do_fatal_recovery from using
- device after it is removed
-To: poza@codeaurora.org
-Cc: bhelgaas@google.com, keith.busch@intel.com,
-        linux-pci@vger.kernel.org, linux-pci-owner@vger.kernel.org
-References: <1534179088-44219-1-git-send-email-thomas.tai@oracle.com>
- <1534179088-44219-2-git-send-email-thomas.tai@oracle.com>
- <51f4b387d9bd96a42d526a6a029fc43b@codeaurora.org>
- <b0104a716319d76e734c307cb4bedd9d@codeaurora.org>
- <8b8db3c5-e884-d697-6193-b409276f9638@oracle.com>
- <fa97a363892f757203ec7209f374a220@codeaurora.org>
-From: Thomas Tai <thomas.tai@oracle.com>
-Message-ID: <08462817-7a4f-2d8a-a329-e856c9e702c9@oracle.com>
-Date: Wed, 15 Aug 2018 11:02:05 -0400
+Received: from mail.kernel.org ([198.145.29.99]:48678 "EHLO mail.kernel.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1726996AbeH1X22 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Tue, 28 Aug 2018 19:28:28 -0400
+Date: Tue, 28 Aug 2018 14:35:17 -0500
+From: Bjorn Helgaas <helgaas@kernel.org>
+To: Zihan Yang <whois.zihan.yang@gmail.com>
+Cc: linux-pci@vger.kernel.org,
+        Mauro Carvalho Chehab <mchehab@kernel.org>,
+        Borislav Petkov <bp@alien8.de>,
+        Tony Luck <tony.luck@intel.com>, linux-edac@vger.kernel.org,
+        linux-kernel@vger.kernel.org
+Subject: Re: Peer bridge fixup issue under multiple pci domain
+Message-ID: <20180828193517.GA158292@bhelgaas-glaptop.roam.corp.google.com>
+References: <CAKwiv-gK1wxw57TVK7GXe3bfkr=0eCS9zn7F_mZRYUL+2Ovr9w@mail.gmail.com>
 MIME-Version: 1.0
-In-Reply-To: <fa97a363892f757203ec7209f374a220@codeaurora.org>
-Content-Type: text/plain; charset=utf-8; format=flowed
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <CAKwiv-gK1wxw57TVK7GXe3bfkr=0eCS9zn7F_mZRYUL+2Ovr9w@mail.gmail.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
+[+cc EDAC folks, LKML]
 
-
-On 08/15/2018 10:57 AM, poza@codeaurora.org wrote:
-> On 2018-08-14 19:21, Thomas Tai wrote:
->> On 08/14/2018 05:22 AM, poza@codeaurora.org wrote:
->>> On 2018-08-14 14:46, poza@codeaurora.org wrote:
->>>> On 2018-08-13 22:21, Thomas Tai wrote:
->>>>> In order to prevent the pcie_do_fatal_recovery() from
->>>>> using the device after it is removed, the device's
->>>>> domain:bus:devfn is stored at the entry of
->>>>> pcie_do_fatal_recovery(). After rescanning the bus, the
->>>>> stored domain:bus:devfn is used to find the device and
->>>>> uses to report pci_info. The original issue only happens
->>>>> on an non-bridge device, a local variable is used instead
->>>>> of checking the device's header type.
->>>>>
->>>>> Signed-off-by: Thomas Tai <thomas.tai@oracle.com>
->>>>> ---
->>>>>  drivers/pci/pcie/err.c | 33 +++++++++++++++++++++++----------
->>>>>  1 file changed, 23 insertions(+), 10 deletions(-)
->>>>>
->>>>> diff --git a/drivers/pci/pcie/err.c b/drivers/pci/pcie/err.c
->>>>> index f02e334..3414445 100644
->>>>> --- a/drivers/pci/pcie/err.c
->>>>> +++ b/drivers/pci/pcie/err.c
->>>>> @@ -287,15 +287,20 @@ void pcie_do_fatal_recovery(struct pci_dev *dev,
->>>>> u32 service)
->>>>>      struct pci_bus *parent;
->>>>>      struct pci_dev *pdev, *temp;
->>>>>      pci_ers_result_t result;
->>>>> +    bool is_bridge_device = false;
->>>>> +    u16 domain = pci_domain_nr(dev->bus);
->>>>> +    u8 bus = dev->bus->number;
->>>>> +    u8 devfn = dev->devfn;
->>>>>
->>>>> -    if (dev->hdr_type == PCI_HEADER_TYPE_BRIDGE)
->>>>> +    if (dev->hdr_type == PCI_HEADER_TYPE_BRIDGE) {
->>>>> +        is_bridge_device = true;
->>>>>          udev = dev;
->>>>> -    else
->>>>> +    } else {
->>>>>          udev = dev->bus->self;
->>>>> +    }
->>>>>
->>>>>      parent = udev->subordinate;
->>>>>      pci_lock_rescan_remove();
->>>>> -    pci_dev_get(dev);
->>>>>      list_for_each_entry_safe_reverse(pdev, temp, &parent->devices,
->>>>>                       bus_list) {
->>>>>          pci_dev_get(pdev);
->>>>> @@ -309,27 +314,35 @@ void pcie_do_fatal_recovery(struct pci_dev *dev,
->>>>> u32 service)
->>>>>
->>>>>      result = reset_link(udev, service);
->>>>>
->>>>> -    if ((service == PCIE_PORT_SERVICE_AER) &&
->>>>> -        (dev->hdr_type == PCI_HEADER_TYPE_BRIDGE)) {
->>>>> +    if (service == PCIE_PORT_SERVICE_AER && is_bridge_device) {
->>>>>          /*
->>>>>           * If the error is reported by a bridge, we think this error
->>>>>           * is related to the downstream link of the bridge, so we
->>>>>           * do error recovery on all subordinates of the bridge 
->>>>> instead
->>>>>           * of the bridge and clear the error status of the bridge.
->>>>>           */
->>>>> -        pci_cleanup_aer_uncorrect_error_status(dev);
->>>>> +        pci_cleanup_aer_uncorrect_error_status(udev);
->>>>>      }
->>>>>
->>>>>      if (result == PCI_ERS_RESULT_RECOVERED) {
->>>>>          if (pcie_wait_for_link(udev, true))
->>>>>              pci_rescan_bus(udev->bus);
->>>>> -        pci_info(dev, "Device recovery from fatal error 
->>>>> successful\n");
->>>>> +        /* find the pci_dev after rescanning the bus */
->>>>> +        dev = pci_get_domain_bus_and_slot(domain, bus, devfn);
->>>> one of the motivations was to remove and re-enumerate rather then
->>>> going thorugh driver's recovery sequence
->>>> was; it might be possible that hotplug capable bridge, the device
->>>> might have changed.
->>>> hence this check will fail
->>
->> Thanks Oza for your information. Instead of searching for the dev_pci,
->> should I just use the stored domain:bus:devfn to printout the info?
->>
->>>>> +        if (dev)
->>>>> +            pci_info(dev, "Device recovery from fatal error 
->>>>> successful\n");
->>>>> +        else
->>>>> +            pr_err("AER: Can not find pci_dev for 
->>>>> %04x:%02x:%02x.%x\n",
->>>>> +                   domain, bus,
->>>>> +                   PCI_SLOT(devfn), PCI_FUNC(devfn));
->>>>> +        pci_dev_put(dev);
->>
->> That is, replace above with:
->>
->>     pr_info("AER: Device %04x:%02x:%02x.%x recover from fatal error
->> successful\n", domain, bus, PCI_SLOT(devfn), PCI_FUNC(devfn));
->>
-> is this not sufficient to print ?  which is there already.
-> pci_info(dev, "Device recovery from fatal error successful\n");
-
-Unfortunately, I can't use "dev" because as you said I can't 
-pci_get_domain_slot to search for it after rescanning.
-
--T
-
+On Sat, Aug 25, 2018 at 10:58:57PM +0800, Zihan Yang wrote:
+> Hi all,
 > 
->>
->>>>>      } else {
->>>>> -        pci_uevent_ers(dev, PCI_ERS_RESULT_DISCONNECT);
->>>>> -        pci_info(dev, "Device recovery from fatal error failed\n");
->>>>> +        if (is_bridge_device)
->>>> previously there was no condition.. why is this required now ?
->>>> and it was doing on "dev" while you are doing it on "udev"
->>> is that the reason we dont watnt o use dev after it is removed ? 
->>> instead do pci_uevent_ers on bridge ?
->>
->>
->> Yes, that's exactly the reason. I should have written down the reason
->> in the commit log. Here is the details explanation for the benefit of
->> others. If the failing device is a bridge device, udev is equal to
->> dev. So we can use udev in the pci_uevent_ers. But for non bridge
->> device the device is already removed from the bus and thus can't send
->> pci_uevent_ers.
->>
->> Thank you,
->> Thomas
->>
->>>>> +            pci_uevent_ers(udev, PCI_ERS_RESULT_DISCONNECT);
->>>>> +        pr_err("AER: Device %04x:%02x:%02x.%x recovery from fatal 
->>>>> error failed\n",
->>>>> +               domain, bus, PCI_SLOT(devfn), PCI_FUNC(devfn));
->>>>>      }
->>>>>
->>>>> -    pci_dev_put(dev);
->>>>>      pci_unlock_rescan_remove();
->>>>>  }
->>>>
->>>> Regards,
->>>> Oza.
+> I'm trying to use multiple pci domain in qemu q35, but I find there
+> might be some issues in peer bridge fixup.
+> 
+> In short, pcibios_fixup_peer_bridges function assumes only one pci
+> domain (0) by default. This is OK when as qemu by default uses only
+> one pci domain too. However, if I add another host bridge which is
+> put into pci domain 1 by using _SEG, and a pcie_pci_bridge is attached
+> to the bus 1 under this new pci domain 1 rather than domain 0, the
+> kernel will recognize the bus 01 differently.
+> 
+> More specifically, pcibios_fixup_peer_bridges only reads all the buses
+> under domain 0 but it can read the pci bus 01 in pci domain 1 and treat
+> it as a peer bus of 0000:00. The consequence is this 01 bus is recognized
+> as 0000:01, but it should have been recognized as 0001:01.
+> 
+> The host bus 0001:00 can be recognized so I guess pcibios_fixup_peer_bridges
+> needs updating to take care of multiple domains? Or is it just an bios issue?
+> I'm not quite sure and I'm open to any suggestions.
+
+Is there something that actually does not work, or is this just a
+concern that the code looks wrong?
+
+pcibios_fixup_peer_bridges() is ancient history from before x86 used
+the ACPI namespace to discover host bridges.  It blindly probes for
+devices on buses 0-255, but as you say, only in domain 0.
+
+Using multiple PCI domains really requires ACPI support so we know
+what the other domains are (_SEG) and how to access their config space
+(MCFG).  When we do have ACPI support in the platform and the kernel,
+drivers/acpi/pci_root.c discovers all the host bridges in all domains
+via PNP0A03 or PNP0A08 devices in the ACPI namespace, and in most
+cases pcibios_fixup_peer_bridges() will do nothing.
+
+However, there *are* systems where the firmware does not expose all
+host bridges and in those cases, pcibios_fixup_peer_bridges() can be a
+problem.  For example, Intel processors often have management devices
+on bus 7f or ff.  If the ACPI namespace doesn't have a host bridge to
+those buses, pci_root.c won't find them, but
+pcibios_fixup_peer_bridges() *will*.
+
+This leads to several problems.  Here's a dmesg sample from [1]
+(found by googling for 'dmesg log "PCI: discovered peer bus ff"'):
+
+  ACPI: PCI Root Bridge [PCI0] (domain 0000 [bus 00-ff])
+  PCI: Discovered peer bus fe
+  pci_bus 0000:fe: root bus resource [io  0x0000-0xffff]
+  pci_bus 0000:fe: root bus resource [mem 0x00000000-0xffffffffff]
+  pci 0000:fe:03.0: [8086:2d98] type 00 class 0x060000
+  PCI: Discovered peer bus ff
+  pci_bus 0000:ff: root bus resource [io  0x0000-0xffff]
+  pci_bus 0000:ff: root bus resource [mem 0x00000000-0xffffffffff]
+  pci 0000:ff:03.0: [8086:2d98] type 00 class 0x060000
+  EDAC MC1: Giving out device to module i7core_edac.c controller i7 core #1: DEV 0000:fe:03.0 (INTERRUPT)
+  EDAC PCI0: Giving out device to module i7core_edac controller EDAC PCI controller: DEV 0000:fe:03.0 (POLLED)
+  EDAC MC0: Giving out device to module i7core_edac.c controller i7 core #0: DEV 0000:ff:03.0 (INTERRUPT)
+  EDAC PCI1: Giving out device to module i7core_edac controller EDAC PCI controller: DEV 0000:ff:03.0 (POLLED)
+
+Some of the problems are:
+
+  - Firmware may have omitted the host bridges to [bus fe] and
+    [bus ff] from the ACPI namespace because *it* is using those
+    management devices, so EDAC blindly using them is a potential
+    conflict.
+
+  - pcibios_fixup_peer_bridges() only scans domain 0, so if this
+    system had multiple domains, EDAC would only work on things in
+    domain 0, ignoring other domains.
+
+  - The PCI core can't do bus number assignment correctly for devices
+    behind bridge PCI0.  The firmware told us [bus 00-ff] was
+    available, so the core may assign bus number fe to some deep
+    switch hierarchy.  But bus fe conflicts with the devices on the
+    "peer bus fe".  This part is a firmware bug: it should have told
+    us that PCI0 leads to [bus 00-fd], not [bus 00-ff].
+
+  - The PCI core can't do resource assignment correctly for devices on
+    [bus fe] and [bus ff].  It has no information about what MMIO and
+    I/O port are routed to those buses, so it assumes *all* memory and
+    I/O ports are routed there, which is clearly incorrect.  This part
+    is a Linux bug; we really shouldn't be poking around for buses
+    that ACPI didn't tell us about.
+
+Bjorn
+
+[1] https://bugs.freedesktop.org/attachment.cgi?id=136529
