@@ -1,53 +1,77 @@
-Return-Path: <SRS0=/dXs=K6=kernel.crashing.org=benh@kernel.org>
-Return-Path: <SRS0=/dXs=K6=kernel.crashing.org=benh@kernel.org>
-Message-ID: <e3316c91ad722434360b4018b17cbfe265e97801.camel@kernel.crashing.org>
-Subject: Re: PCIe enable device races (Was: [PATCH v3] PCI: Data corruption
- happening due to race condition)
-From: Benjamin Herrenschmidt <benh@kernel.crashing.org>
-To: Bjorn Helgaas <helgaas@kernel.org>
-Cc: Hari Vyas <hari.vyas@broadcom.com>, bhelgaas@google.com,
-        linux-pci@vger.kernel.org, ray.jui@broadcom.com,
-        Konstantin Khlebnikov
-	 <khlebnikov@yandex-team.ru>,
-        Jens Axboe <axboe@kernel.dk>
-Date: Thu, 16 Aug 2018 07:52:06 +1000
-In-Reply-To: <20180815185027.GE28888@bhelgaas-glaptop.roam.corp.google.com>
-References: <1530608741-30664-1-git-send-email-hari.vyas@broadcom.com>
-	 <20180731163727.GK45322@bhelgaas-glaptop.roam.corp.google.com>
-	 <ecaed7664b46d73888d2494065905f8e108fc0f4.camel@kernel.crashing.org>
-	 <20180815185027.GE28888@bhelgaas-glaptop.roam.corp.google.com>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+MIME-Version: 1.0
+References: <1535453838-12154-1-git-send-email-sunil.kovvuri@gmail.com>
+ <1535453838-12154-11-git-send-email-sunil.kovvuri@gmail.com>
+ <CAK8P3a1Vdy-VsLWJMer-Z96E4Trhi0WJXJ3fTzyOGny2Mn6RAA@mail.gmail.com>
+ <CA+sq2Cf2BLKsV=gY-MPnygV1ufpvmnw6ETh90JX_uKQBk3Sduw@mail.gmail.com>
+In-Reply-To: <CA+sq2Cf2BLKsV=gY-MPnygV1ufpvmnw6ETh90JX_uKQBk3Sduw@mail.gmail.com>
+From: Arnd Bergmann <arnd@arndb.de>
+Date: Tue, 28 Aug 2018 14:57:05 +0200
+Message-ID: <CAK8P3a0+zJRxEYWZpYShRJo-3oqMaC9TJADugaRTiBnjw7ssPA@mail.gmail.com>
+Subject: Re: [PATCH 10/15] soc: octeontx2: Reconfig MSIX base with IOVA
+To: Sunil Kovvuri <sunil.kovvuri@gmail.com>
+List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
+List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
+List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
+List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
+List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
+Cc: Jason Cooper <jason@lakedaemon.net>, Marc Zyngier <marc.zyngier@arm.com>,
+ linux-pci <linux-pci@vger.kernel.org>,
+ Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
+ Linux ARM <linux-arm-kernel@lists.infradead.org>,
+ Olof Johansson <olof@lixom.net>, Thomas Gleixner <tglx@linutronix.de>,
+ linux-soc@vger.kernel.org, gakula@marvell.com, sgoutham@marvell.com
+Content-Type: text/plain; charset="us-ascii"
+Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
+Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wed, 2018-08-15 at 13:50 -0500, Bjorn Helgaas wrote:
-> Yes, this is definitely broken.  Some folks have tried to fix it in
-> the past, but it hasn't quite happened yet.  We actually merged one
-> patch, 40f11adc7cd9 ("PCI: Avoid race while enabling upstream
-> bridges"), but had to revert it after we found issues:
-> 
-> https://lkml.kernel.org/r/1501858648-22228-1-git-send-email-srinath.mannam@broadcom.com
-> https://lkml.kernel.org/r/20170915072352.10453.31977.stgit@bhelgaas-glaptop.roam.corp.google.com
+On Tue, Aug 28, 2018 at 2:42 PM Sunil Kovvuri <sunil.kovvuri@gmail.com> wrote:
+>
+> On Tue, Aug 28, 2018 at 5:39 PM Arnd Bergmann <arnd@arndb.de> wrote:
+> >
+> > On Tue, Aug 28, 2018 at 12:58 PM <sunil.kovvuri@gmail.com> wrote:
+> > >
+> > > From: Geetha sowjanya <gakula@marvell.com>
+> > >
+> > > HW interprets RVU_AF_MSIXTR_BASE address as an IOVA, hence
+> > > create a IOMMU mapping for the physcial address configured by
+> > > firmware and reconfig RVU_AF_MSIXTR_BASE with IOVA.
+> > >
+> > > Signed-off-by: Geetha sowjanya <gakula@marvell.com>
+> > > Signed-off-by: Sunil Goutham <sgoutham@marvell.com>
+> >
+> > I think this needs some more explanation. What is the difference between
+> > the MSI-X support in this driver and every other one? Are you working
+> > around a hardware bug, or is there something odd in the implementation
+> > of your irqchip driver? Do you use a GIC to handle the MSI interrupts
+> > or something else?
+>
+> This admin function is a PCI device which is capable of provisioning
+> HW blocks to other PCIe SRIOV devices in the system. Each HW block
+> (eg memory buffer pools, NIC dewscriptors, crypto engines e.t.c) needs
+> certain no of MSIX vectors. Admin function has a set of 32K MSIX vectors
+> in memory (not on-chip) which based on HW block provisioning to a PCI device
+> attaches the required number of vectors to that device. Some part of this
+> configuration is done by low level firmware.
+>
+> RVU_AF_MSIXTR_BASE points to the memory region allocated for 32K MSIX
+> vectors. If kernel is booted with IOMMU enabled and admin function device
+> is attached to SMMU, HW will go through translation to access this MSIX
+> vector memory region. Hence the mapping done in this patch.
 
-Ok so I had a look at this previous patch and it adds yet anothe use of
-some global mutex to protect part of the operation which makes me
-cringe a bit, we have too many of these.
+Do you mean this is not a regular PCIe MSI-X interrupt to the GIC, but
+something internal to your device that gets routed through the IOMMU
+back into the device?
 
-What do you think of the one I sent yesterday ? (I can't find it in the
-archives yet)
+I'm still confused.
 
-[RFC PATCH] pci: Proof of concept at fixing pci_enable_device/bridge races
+       Arnd
 
-The patch itself needs splitting etc... but the basic idea is to move away
-from those global mutexes in a number of places and have one in the pci_dev
-struct itself to protect its state.
-
-I would also like to use this rather than the bitmap atomics for is_added
-etc... (Hari's fix) in the long run. Atomics aren't significantly cheaper
-and imho makes thing even messier.
-
-Jens, Konstantin, any chance you can test if the above also breaks iwlwifi
-(I don't see why it would but ...)
-
-Cheers,
-Ben.
+_______________________________________________
+linux-arm-kernel mailing list
+linux-arm-kernel@lists.infradead.org
+http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
