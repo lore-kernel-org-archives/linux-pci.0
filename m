@@ -1,35 +1,98 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from bombadil.infradead.org ([198.137.202.133]:50010 "EHLO
-        bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S2389550AbeHARAU (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Wed, 1 Aug 2018 13:00:20 -0400
-From: Christoph Hellwig <hch@lst.de>
-To: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
-        Bjorn Helgaas <bhelgaas@google.com>
-Cc: Palmer Dabbelt <palmer@dabbelt.com>,
-        "Wesley W . Terpstra" <wesley@sifive.com>,
-        Arnd Bergmann <arnd@arndb.de>, linux-pci@vger.kernel.org,
-        linux-riscv@lists.infradead.org
-Subject: add support for Xilinx PCIe root ports on RISC-V v2
-Date: Wed,  1 Aug 2018 17:14:00 +0200
-Message-Id: <20180801151403.20660-1-hch@lst.de>
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+MIME-Version: 1.0
+References: <1535453838-12154-1-git-send-email-sunil.kovvuri@gmail.com>
+ <1535453838-12154-11-git-send-email-sunil.kovvuri@gmail.com>
+ <CAK8P3a1Vdy-VsLWJMer-Z96E4Trhi0WJXJ3fTzyOGny2Mn6RAA@mail.gmail.com>
+ <CA+sq2Cf2BLKsV=gY-MPnygV1ufpvmnw6ETh90JX_uKQBk3Sduw@mail.gmail.com>
+ <CAK8P3a0+zJRxEYWZpYShRJo-3oqMaC9TJADugaRTiBnjw7ssPA@mail.gmail.com>
+In-Reply-To: <CAK8P3a0+zJRxEYWZpYShRJo-3oqMaC9TJADugaRTiBnjw7ssPA@mail.gmail.com>
+From: Sunil Kovvuri <sunil.kovvuri@gmail.com>
+Date: Tue, 28 Aug 2018 18:47:30 +0530
+Message-ID: <CA+sq2Cfd_jk=JzcLmPYiW1iGqKrJRrv5vrsmeZfY4W+qi5GLgw@mail.gmail.com>
+Subject: Re: [PATCH 10/15] soc: octeontx2: Reconfig MSIX base with IOVA
+To: Arnd Bergmann <arnd@arndb.de>
+List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
+List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
+List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
+List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
+List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
+Cc: jason@lakedaemon.net, Marc Zyngier <marc.zyngier@arm.com>,
+ linux-pci <linux-pci@vger.kernel.org>, LKML <linux-kernel@vger.kernel.org>,
+ LAKML <linux-arm-kernel@lists.infradead.org>, olof@lixom.net,
+ tglx@linutronix.de, linux-soc@vger.kernel.org,
+ Geetha sowjanya <gakula@marvell.com>, Sunil Goutham <sgoutham@marvell.com>
+Content-Type: text/plain; charset="us-ascii"
+Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
+Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hi all,
+On Tue, Aug 28, 2018 at 6:27 PM Arnd Bergmann <arnd@arndb.de> wrote:
+>
+> On Tue, Aug 28, 2018 at 2:42 PM Sunil Kovvuri <sunil.kovvuri@gmail.com> wrote:
+> >
+> > On Tue, Aug 28, 2018 at 5:39 PM Arnd Bergmann <arnd@arndb.de> wrote:
+> > >
+> > > On Tue, Aug 28, 2018 at 12:58 PM <sunil.kovvuri@gmail.com> wrote:
+> > > >
+> > > > From: Geetha sowjanya <gakula@marvell.com>
+> > > >
+> > > > HW interprets RVU_AF_MSIXTR_BASE address as an IOVA, hence
+> > > > create a IOMMU mapping for the physcial address configured by
+> > > > firmware and reconfig RVU_AF_MSIXTR_BASE with IOVA.
+> > > >
+> > > > Signed-off-by: Geetha sowjanya <gakula@marvell.com>
+> > > > Signed-off-by: Sunil Goutham <sgoutham@marvell.com>
+> > >
+> > > I think this needs some more explanation. What is the difference between
+> > > the MSI-X support in this driver and every other one? Are you working
+> > > around a hardware bug, or is there something odd in the implementation
+> > > of your irqchip driver? Do you use a GIC to handle the MSI interrupts
+> > > or something else?
+> >
+> > This admin function is a PCI device which is capable of provisioning
+> > HW blocks to other PCIe SRIOV devices in the system. Each HW block
+> > (eg memory buffer pools, NIC dewscriptors, crypto engines e.t.c) needs
+> > certain no of MSIX vectors. Admin function has a set of 32K MSIX vectors
+> > in memory (not on-chip) which based on HW block provisioning to a PCI device
+> > attaches the required number of vectors to that device. Some part of this
+> > configuration is done by low level firmware.
+> >
+> > RVU_AF_MSIXTR_BASE points to the memory region allocated for 32K MSIX
+> > vectors. If kernel is booted with IOMMU enabled and admin function device
+> > is attached to SMMU, HW will go through translation to access this MSIX
+> > vector memory region. Hence the mapping done in this patch.
+>
+> Do you mean this is not a regular PCIe MSI-X interrupt to the GIC, but
+> something internal to your device that gets routed through the IOMMU
+> back into the device?
+>
+> I'm still confused.
+>
+>        Arnd
 
-this series with patches originally from Palmer and Wesley adds support
-for the pcie-xilinx host driver on RISC-V boards.  The interesting part
-about that is that the IP blocks is limited to 32-bit DMA internally,
-which didn't seem to be an issue with the existing users, but shows
-up easily with the Sifive RISC-V boards that have physical memory
-wired up above 4G.
+This is a regular PCIe MSI-X interrupt, the difference is that the
+bunch of PCI devices
+here doesn't have a fixed set of MSIX vectors. Admin function has a
+memory region with
+32K MSIX vectors which it provisions to PCI devices based on the HW
+functional blocks
+attached to them. A PCI device which works as a ethernet device needs
+X number of vectors
+and a crypto device needs Y number of vectors.
 
-Note that patches 1 and 2 depend on changes in the dma-mapping tree
-to add the bus_dma_mask field to struct device and would have to merge
-through the dma-mapping tree or a shared stable branch.  Patch 3 could
-be merged independently.
+Since the admin function owns the whole MSIX vector region, HW uses
+this device's stream ID
+to access the vectors. Hence the IOMMU mapping. Once MSIX vectors are
+provisioned to
+a PCI device they work as normal MSIX interrupt like any other device.
 
-Changes since v1:
- - move the add_dev method to struct pci_host_bridge
- - use the new bus_dma_mask field
+Thanks,
+Sunil.
+
+_______________________________________________
+linux-arm-kernel mailing list
+linux-arm-kernel@lists.infradead.org
+http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
