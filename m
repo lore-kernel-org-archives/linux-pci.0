@@ -1,105 +1,38 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-bl2nam02on0048.outbound.protection.outlook.com ([104.47.38.48]:12211
-        "EHLO NAM02-BL2-obe.outbound.protection.outlook.com"
-        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1732937AbeHARyC (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Wed, 1 Aug 2018 13:54:02 -0400
-From: Bharat Kumar Gogada <bharatku@xilinx.com>
-To: Bjorn Helgaas <helgaas@kernel.org>
-CC: "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-        "bhelgaas@google.com" <bhelgaas@google.com>,
-        Ravikiran Gummaluri <rgummal@xilinx.com>
-Subject: RE: [PATCH] PCI/AER: Enable SERR# forwarding in non ACPI flow
-Date: Wed, 1 Aug 2018 16:07:32 +0000
-Message-ID: <BL0PR02MB48498160C3F18B81DC1ED6C1A52D0@BL0PR02MB4849.namprd02.prod.outlook.com>
-References: <1531406719-18606-1-git-send-email-bharat.kumar.gogada@xilinx.com>
- <20180731224706.GO45322@bhelgaas-glaptop.roam.corp.google.com>
-In-Reply-To: <20180731224706.GO45322@bhelgaas-glaptop.roam.corp.google.com>
-Content-Type: text/plain; charset="us-ascii"
+Received: from smtp.codeaurora.org ([198.145.29.96]:47178 "EHLO
+        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1727212AbeH1RRW (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Tue, 28 Aug 2018 13:17:22 -0400
+Subject: Re: bug in pci_try_reset_bus
+To: Dennis Dalessandro <dennis.dalessandro@intel.com>,
+        bhelgaas@google.com, linux-pci@vger.kernel.org
+References: <3d3d78fb-f1f2-ec4f-38f9-0b0d14564f53@intel.com>
+ <323b3bbe-d255-8a5d-2a9c-d64e1f86cb64@codeaurora.org>
+ <bd7dbd5a-eebc-9142-f9a2-3b5ff8de9b8b@intel.com>
+ <d437400c-7eed-19d3-9cf2-b8a42217136b@codeaurora.org>
+ <2f0fb394-f1c9-d782-ffec-dac04b1ac0a9@intel.com>
+ <84484c45-64ff-ca2d-39dd-ee579e28558e@codeaurora.org>
+ <8bc2c143-5938-33ed-d852-7f039bde7a13@intel.com>
+ <4bf1a54c-4622-0472-7a43-a6d6ff049322@codeaurora.org>
+ <980dc79b-a1b7-08ab-294f-1cb318d996fe@intel.com>
+From: Sinan Kaya <okaya@codeaurora.org>
+Message-ID: <401a24b3-c7bb-03ee-8753-0c94d8aee79c@codeaurora.org>
+Date: Tue, 28 Aug 2018 09:25:40 -0400
 MIME-Version: 1.0
+In-Reply-To: <980dc79b-a1b7-08ab-294f-1cb318d996fe@intel.com>
+Content-Type: text/plain; charset=utf-8; format=flowed
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hi Bjorn,
+On 8/27/2018 4:48 PM, Dennis Dalessandro wrote:
+>> Possible solutions are:
+>> 1. introduce a locked reset API > 2. skip lock during probe
+>> 3. bring back raw reset API even though it is undesirable.
+> 
+> I think the first option is the cleanest. I can put together a patch and 
+> post it soon.
 
-> Subject: Re: [PATCH] PCI/AER: Enable SERR# forwarding in non ACPI flow
->=20
-> On Thu, Jul 12, 2018 at 08:15:19PM +0530, Bharat Kumar Gogada wrote:
-> > Currently PCI_BRIDGE_CTL_SERR is being enabled only in ACPI flow.
-> > This bit is required for forwarding errors reported by EP devices to
-> > upstream device.
-> > This patch enables SERR# for Type-1 PCI device.
->=20
-> This does seem broken.
->=20
-> Figure 6-3 in PCIe r4.0, sec 6.2.6, would be a helpful reference to inclu=
-de in
-> the commit log.
-Yes, will include it.
->=20
-> Semi-related question: there are about 40 drivers that call
-> pci_enable_pcie_error_reporting() and
-> pci_disable_pcie_error_reporting().  I see that the PCI core calls
-> pci_enable_pcie_error_reporting() for Root Ports and Switch Ports in this
-> path:
->=20
->   aer_probe                     # for root ports only
->     aer_enable_rootport
->       set_downstream_devices_error_reporting
->         set_device_error_reporting
->           if (ROOT_PORT || UPSTREAM || DOWNSTREAM)
->             pci_enable_pcie_error_reporting
->         pci_walk_bus(..., set_device_error_reporting)
->=20
-> But the core doesn't call pci_enable_pcie_error_reporting() for endpoints=
-.  I
-> wonder why not.  Could we?  And then remove the calls from those drivers?
-Yes, enabling error reporting on endpoints by AER driver makes sense as thi=
-s is=20
-not an optional feature like AER capability.=20
-> If PCI_EXP_AER_FLAGS should only be set if the driver is prepared, the
-> pci_driver.err_handler would be a good hint.
-> But I suspect we could do something sensible and at least report errors e=
-ven
-> if the driver doesn't have err_handler callbacks.
-Yes, at least reporting errors irrespective of err_handler is acceptable.=20
-As you mentioned not all drivers are calling pci_enable_pcie_error_reportin=
-g ,
-if AER service enable's this independent of err_handler,
-this would be useful for old endpoint device drivers which are not calling =
-this.
-PCI_EXP_AER_FLAGS can be set if pci_dev.driver independent of err_handler.
->=20
-> On MIPS Octeon, it looks like pcibios_plat_dev_init() does already set
-> PCI_EXP_AER_FLAGS for every device.
->=20
-> But this question is obviously far beyond the scope of this current patch=
-.
->=20
-> > Signed-off-by: Bharat Kumar Gogada <bharat.kumar.gogada@xilinx.com>
-> > ---
-> >  drivers/pci/pcie/aer.c |   23 +++++++++++++++++++++++
-> >  1 files changed, 23 insertions(+), 0 deletions(-)
-> >
-> > diff --git a/drivers/pci/pcie/aer.c b/drivers/pci/pcie/aer.c index
-> > a2e8838..943e084 100644
-> > --- a/drivers/pci/pcie/aer.c
-> > +++ b/drivers/pci/pcie/aer.c
-> > @@ -343,6 +343,19 @@ int pci_enable_pcie_error_reporting(struct
-> pci_dev *dev)
-> >  	if (!dev->aer_cap)
-> >  		return -EIO;
-> >
-> > +	if (!IS_ENABLED(CONFIG_ACPI) &&
-> > +	    dev->hdr_type =3D=3D PCI_HEADER_TYPE_BRIDGE) {
->=20
-> I think this test needs to be refined a little bit.  If the kernel happen=
-s to be
-> built with CONFIG_ACPI=3Dy but the current platform doesn't support ACPI,=
- we
-> still want to set PCI_BRIDGE_CTL_SERR, don't we?
-Agreed, will refine it and resend.
-
-Thanks,
-Bharat
+I was thinking about this. These locked API are getting out of control. It could
+be a simpler solution to change the mutex type of device_lock such that it can
+be locked twice. I think I have seen some examples of how to do this in the
+NVMe driver.
