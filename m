@@ -1,161 +1,123 @@
-Return-Path: <linux-acpi-owner@vger.kernel.org>
-From: Punit Agrawal <punit.agrawal@arm.com>
-To: Bjorn Helgaas <bhelgaas@google.com>
-Cc: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
-        Jeremy Linton <jeremy.linton@arm.com>,
-        linux-arm <linux-arm-kernel@lists.infradead.org>,
-        Catalin Marinas <catalin.marinas@arm.com>,
-        Will Deacon <will.deacon@arm.com>,
-        Jiang Liu <jiang.liu@linux.intel.com>,
-        linux-pci@vger.kernel.org,
-        Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
-        linux-acpi@vger.kernel.org, linux-mm@kvack.org
-Subject: Re: [PATCH] arm64: PCI: Remove node-local allocations when initialising host controller
-References: <20180801173132.19739-1-punit.agrawal@arm.com>
-        <38ad03ba-2658-98c8-1888-0aa3bfb59bd4@arm.com>
-        <20180802143319.GA13512@red-moon>
-        <CAErSpo5i7AAXq4vmfsH2WjheXpzzM1iaehdeM24eQZjzYY39Rg@mail.gmail.com>
-Date: Wed, 08 Aug 2018 15:44:03 +0100
-In-Reply-To: <CAErSpo5i7AAXq4vmfsH2WjheXpzzM1iaehdeM24eQZjzYY39Rg@mail.gmail.com>
-        (Bjorn Helgaas's message of "Wed, 8 Aug 2018 08:54:28 -0500")
-Message-ID: <87eff85364.fsf@e105922-lin.cambridge.arm.com>
-MIME-Version: 1.0
-Content-Type: text/plain
-Sender: linux-acpi-owner@vger.kernel.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail-pl1-f193.google.com ([209.85.214.193]:40526 "EHLO
+        mail-pl1-f193.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1729189AbeH2UWn (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Wed, 29 Aug 2018 16:22:43 -0400
+Received: by mail-pl1-f193.google.com with SMTP id s17-v6so2512780plp.7
+        for <linux-pci@vger.kernel.org>; Wed, 29 Aug 2018 09:25:02 -0700 (PDT)
+From: Stephen Hemminger <stephen@networkplumber.org>
+To: kys@microsoft.com, haiyangz@microsoft.com, sthemmin@microsoft.com
+Cc: devel@linuxdriverproject.org, netdev@vger.kernel.org,
+        linux-pci@vger.kernel.org
+Subject: [PATCH net-next 1/2] PCI: hv: support reporting serial number as slot information
+Date: Wed, 29 Aug 2018 09:24:51 -0700
+Message-Id: <20180829162452.25805-2-sthemmin@microsoft.com>
+In-Reply-To: <20180829162452.25805-1-sthemmin@microsoft.com>
+References: <20180829162452.25805-1-sthemmin@microsoft.com>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-[+cc linux-acpi, linux-mm]
+The Hyper-V host API for PCI provides a unique "serial number" which
+can be used as basis for sysfs PCI slot table. This can be useful
+for cases where userspace wants to find the PCI device based on
+serial number.
 
-Bjorn Helgaas <bhelgaas@google.com> writes:
+When an SR-IOV NIC is added, the host sends an attach message
+with serial number. The kernel doesn't use the serial number, but
+it is useful when doing the same thing in a userspace driver such
+as the DPDK. By having /sys/bus/pci/slots/N it provides a direct
+way to find the matching PCI device.
 
-> [+cc linux-pci, linux-kernel]
->
-> On Thu, Aug 2, 2018 at 9:33 AM Lorenzo Pieralisi
-> <lorenzo.pieralisi@arm.com> wrote:
->>
->> On Wed, Aug 01, 2018 at 02:38:51PM -0500, Jeremy Linton wrote:
->> > Hi,
->> >
->> > +CC Jiang Lui
->>
->> Jiang Liu does not work on the kernel anymore so we won't know
->> anytime soon the reasoning behind commit 965cd0e4a5e5
->>
->> > On 08/01/2018 12:31 PM, Punit Agrawal wrote:
->> > >Memory for host controller data structures is allocated local to the
->> > >node to which the controller is associated with. This has been the
->> > >behaviour since support for ACPI was added in
->> > >commit 0cb0786bac15 ("ARM64: PCI: Support ACPI-based PCI host controller").
->> >
->> > Which was apparently influenced by:
->> >
->> > 965cd0e4a5e5 x86, PCI, ACPI: Use kmalloc_node() to optimize for performance
->> >
->> > Was there an actual use-case behind that change?
->> >
->> > I think this fixes the immediate boot problem, but if there is any
->> > perf advantage it seems wise to keep it... Particularly since x86
->> > seems to be doing the node sanitation in pci_acpi_root_get_node().
->>
->> I am struggling to see the perf advantage of allocating a struct
->> that the PCI controller will never read/write from a NUMA node that
->> is local to the PCI controller, happy to be corrected if there is
->> a sound rationale behind that.
->
-> If there is no reason to use kzalloc_node() here, we shouldn't use it.
->
-> But we should use it (or not use it) consistently across arches.  I do
-> not believe there is an arch-specific reason to be different.
-> Currently, pci_acpi_scan_root() uses kzalloc_node() on x86 and arm64,
-> but kzalloc() on ia64.  They all ought to be the same.
+There may be some cases where serial number is not unique such
+as when using GPU's. But the PCI slot infrastructure will handle
+that by adding suffix "2-1" etc.
 
->From my understanding, arm64 use of kzalloc_node() was derived from the
-x86 version. Maybe somebody familiar with behaviour on x86 can provide
-input here.
+This has a side effect which may also be useful. The common udev
+network device naming policy uses the slot information (rather
+than PCI address). This causes udev to give shorter network device
+names for VF devices.  It does not break applications or startup
+because the VF device must never be configured directly.
 
->
->> > >Drop the node local allocation as there is no benefit from doing so -
->> > >the usage of these structures is independent from where the controller
->> > >is located. It also causes problem during probe if the associated numa
->> > >node hasn't been initialised due to booting with restricted cpus via
->> > >kernel command line or where the node doesn't have cpus or memory
->> > >associated with it.
->
-> I do not support the avoidance of kzalloc_node() as a means of working
-> around the problem of a NUMA node not being initialized correctly.
+Signed-off-by: Stephen Hemminger <sthemmin@microsoft.com>
+---
+ drivers/pci/controller/pci-hyperv.c | 30 +++++++++++++++++++++++++++++
+ 1 file changed, 30 insertions(+)
 
-Agreed.
-
-The patch is not meant as a work around for uninitialised NUMA nodes. I
-mention it in the commit log as the context where this was
-discovered. It seems to cause conflation of the issue addressed by the
-patch - I'll drop it in future postings.
-
-> We got that node number from acpi_get_node().  I think we should be
-> able to pass it to kzalloc_node() and expect something reasonable,
-> i.e., either a successful allocation from the desired node (or from a
-> node that is present) or an error return.  I don't think the caller is
-> in a position to figure out whether it's safe to use kzalloc_node() or
-> not.
-
-The problem is that acpi_get_node() just maps the proximity domain to a
-node id, without initialising the node pglist_data or setting up the
-zonelists. This happens in the case when the proximity domain is not
-present in the SRAT (proximity domain has no attached cpus or memory)
-but first encountered as part of _PXM() method for a device.
-
-One approach to solve this problem would be to create
-acpi_get_online_node() which attempts to online a NUMA node if it isn't
-already or at the least return NUMA_NO_NODE.
-
-Another would be to have kzalloc_node() perform the checks for online
-node and return error if not.
-
-It's not clear what the preferred approach is.
-
->
->> > >Signed-off-by: Punit Agrawal <punit.agrawal@arm.com>
->> > >Cc: Catalin Marinas <catalin.marinas@arm.com>
->> > >Cc: Will Deacon <will.deacon@arm.com>
->> > >Cc: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
->> > >---
->> > >Hi,
->> > >
->> > >This came up in the context of investigating the boot issues reported
->> > >due to restricted cpus or buggy firmware. Part of the problem is fixed
->> > >by Lorenzo's rework of NUMA initialisation[0].
->> > >
->> > >But there also doesn't seem to be any justification for using
->> > >node-local allocation to begin with.
->> > >
->> > >Thanks,
->> > >Punit
->> > >
->> > >[0] https://patchwork.kernel.org/patch/10486001/
->> > >
->> > >  arch/arm64/kernel/pci.c | 5 ++---
->> > >  1 file changed, 2 insertions(+), 3 deletions(-)
->> > >
->> > >diff --git a/arch/arm64/kernel/pci.c b/arch/arm64/kernel/pci.c
->> > >index 0e2ea1c78542..bb85e2f4603f 100644
->> > >--- a/arch/arm64/kernel/pci.c
->> > >+++ b/arch/arm64/kernel/pci.c
->> > >@@ -165,16 +165,15 @@ static void pci_acpi_generic_release_info(struct acpi_pci_root_info *ci)
->> > >  /* Interface called from ACPI code to setup PCI host controller */
->> > >  struct pci_bus *pci_acpi_scan_root(struct acpi_pci_root *root)
->> > >  {
->> > >-    int node = acpi_get_node(root->device->handle);
->> > >     struct acpi_pci_generic_root_info *ri;
->> > >     struct pci_bus *bus, *child;
->> > >     struct acpi_pci_root_ops *root_ops;
->> > >-    ri = kzalloc_node(sizeof(*ri), GFP_KERNEL, node);
->> > >+    ri = kzalloc(sizeof(*ri), GFP_KERNEL);
->> > >     if (!ri)
->> > >             return NULL;
->> > >-    root_ops = kzalloc_node(sizeof(*root_ops), GFP_KERNEL, node);
->> > >+    root_ops = kzalloc(sizeof(*root_ops), GFP_KERNEL);
->> > >     if (!root_ops) {
->> > >             kfree(ri);
->> > >             return NULL;
->> > >
->> >
+diff --git a/drivers/pci/controller/pci-hyperv.c b/drivers/pci/controller/pci-hyperv.c
+index c00f82cc54aa..e6a6c1146a41 100644
+--- a/drivers/pci/controller/pci-hyperv.c
++++ b/drivers/pci/controller/pci-hyperv.c
+@@ -89,6 +89,8 @@ static enum pci_protocol_version_t pci_protocol_version;
+ 
+ #define STATUS_REVISION_MISMATCH 0xC0000059
+ 
++#define SLOT_NAME_SIZE 21
++
+ /*
+  * Message Types
+  */
+@@ -494,6 +496,7 @@ struct hv_pci_dev {
+ 	struct list_head list_entry;
+ 	refcount_t refs;
+ 	enum hv_pcichild_state state;
++	struct pci_slot *pci_slot;
+ 	struct pci_function_description desc;
+ 	bool reported_missing;
+ 	struct hv_pcibus_device *hbus;
+@@ -1457,6 +1460,28 @@ static void prepopulate_bars(struct hv_pcibus_device *hbus)
+ 	spin_unlock_irqrestore(&hbus->device_list_lock, flags);
+ }
+ 
++static void hv_pci_assign_slots(struct hv_pcibus_device *hbus)
++{
++	struct hv_pci_dev *hpdev;
++	char name[SLOT_NAME_SIZE];
++	unsigned long flags;
++	int slot_nr;
++
++	spin_lock_irqsave(&hbus->device_list_lock, flags);
++	list_for_each_entry(hpdev, &hbus->children, list_entry) {
++		if (hpdev->pci_slot)
++			continue;
++
++		slot_nr = PCI_SLOT(wslot_to_devfn(hpdev->desc.win_slot.slot));
++		snprintf(name, SLOT_NAME_SIZE, "%u", hpdev->desc.ser);
++		hpdev->pci_slot = pci_create_slot(hbus->pci_bus, slot_nr,
++					  name, NULL);
++		if (!hpdev->pci_slot)
++			pr_warn("pci_create slot %s failed\n", name);
++	}
++	spin_unlock_irqrestore(&hbus->device_list_lock, flags);
++}
++
+ /**
+  * create_root_hv_pci_bus() - Expose a new root PCI bus
+  * @hbus:	Root PCI bus, as understood by this driver
+@@ -1480,6 +1505,7 @@ static int create_root_hv_pci_bus(struct hv_pcibus_device *hbus)
+ 	pci_lock_rescan_remove();
+ 	pci_scan_child_bus(hbus->pci_bus);
+ 	pci_bus_assign_resources(hbus->pci_bus);
++	hv_pci_assign_slots(hbus);
+ 	pci_bus_add_devices(hbus->pci_bus);
+ 	pci_unlock_rescan_remove();
+ 	hbus->state = hv_pcibus_installed;
+@@ -1742,6 +1768,7 @@ static void pci_devices_present_work(struct work_struct *work)
+ 		 */
+ 		pci_lock_rescan_remove();
+ 		pci_scan_child_bus(hbus->pci_bus);
++		hv_pci_assign_slots(hbus);
+ 		pci_unlock_rescan_remove();
+ 		break;
+ 
+@@ -1858,6 +1885,9 @@ static void hv_eject_device_work(struct work_struct *work)
+ 	list_del(&hpdev->list_entry);
+ 	spin_unlock_irqrestore(&hpdev->hbus->device_list_lock, flags);
+ 
++	if (hpdev->pci_slot)
++		pci_destroy_slot(hpdev->pci_slot);
++
+ 	memset(&ctxt, 0, sizeof(ctxt));
+ 	ejct_pkt = (struct pci_eject_response *)&ctxt.pkt.message;
+ 	ejct_pkt->message_type.type = PCI_EJECTION_COMPLETE;
+-- 
+2.18.0
