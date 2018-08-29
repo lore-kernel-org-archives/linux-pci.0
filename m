@@ -1,111 +1,135 @@
-Return-Path: <SRS0=SupU=LB=h08.hostsharing.net=foo00@kernel.org>
-Return-Path: <SRS0=SupU=LB=h08.hostsharing.net=foo00@kernel.org>
-Date: Sat, 18 Aug 2018 11:22:14 +0200
-From: Lukas Wunner <lukas@wunner.de>
-To: Benjamin Herrenschmidt <benh@kernel.crashing.org>
-Cc: Bjorn Helgaas <helgaas@kernel.org>, Hari Vyas <hari.vyas@broadcom.com>,
-	linux-pci@vger.kernel.org, ray.jui@broadcom.com,
-	Konstantin Khlebnikov <khlebnikov@yandex-team.ru>,
-	Jens Axboe <axboe@kernel.dk>, mr.nuke.me@gmail.com,
-	keith.busch@intel.com
-Subject: Re: PCIe enable device races (Was: [PATCH v3] PCI: Data corruption
- happening due to race condition)
-Message-ID: <20180818092214.jjodm4mtxea53b2p@wunner.de>
-References: <1530608741-30664-1-git-send-email-hari.vyas@broadcom.com>
- <20180731163727.GK45322@bhelgaas-glaptop.roam.corp.google.com>
- <ecaed7664b46d73888d2494065905f8e108fc0f4.camel@kernel.crashing.org>
- <20180815185027.GE28888@bhelgaas-glaptop.roam.corp.google.com>
- <e3316c91ad722434360b4018b17cbfe265e97801.camel@kernel.crashing.org>
- <20180816122807.6xof2u3hbhv57ua5@wunner.de>
- <6b610ee94bcef718db97600ae0ee931de3501e40.camel@kernel.crashing.org>
- <6ce65522aee9a2edbc6c116624b1b0b60a7b79d8.camel@kernel.crashing.org>
- <20180817163919.wxrk5bnexqplgm7z@wunner.de>
- <535f823d185b6c17b90bab326df268a56db0af36.camel@kernel.crashing.org>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <535f823d185b6c17b90bab326df268a56db0af36.camel@kernel.crashing.org>
+Return-Path: <linux-arch-owner@vger.kernel.org>
+From: Pu Wen <puwen@hygon.cn>
+To: tglx@linutronix.de, mingo@redhat.com, hpa@zytor.com,
+        x86@kernel.org, thomas.lendacky@amd.com, bp@alien8.de,
+        pbonzini@redhat.com, tony.luck@intel.com, rkrcmar@redhat.com,
+        boris.ostrovsky@oracle.com, jgross@suse.com, rjw@rjwysocki.net,
+        lenb@kernel.org, viresh.kumar@linaro.org, mchehab@kernel.org,
+        trenn@suse.com, shuah@kernel.org
+Cc: linux-kernel@vger.kernel.org, linux-arch@vger.kernel.org,
+        linux-pci@vger.kernel.org, linux-acpi@vger.kernel.org,
+        linux-edac@vger.kernel.org, linux-pm@vger.kernel.org,
+        kvm@vger.kernel.org, xen-devel@lists.xenproject.org,
+        Pu Wen <puwen@hygon.cn>
+Subject: [PATCH v5 00/16] Add support for Hygon Dhyana Family 18h processor
+Date: Wed, 29 Aug 2018 20:42:15 +0800
+Message-Id: <cover.1535459012.git.puwen@hygon.cn>
+Sender: linux-arch-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Sat, Aug 18, 2018 at 01:37:35PM +1000, Benjamin Herrenschmidt wrote:
-> As-is, what you have is a bit that is private to drivers/pci (why ?
-> devices might be interested in knowing the device has been
-> disconnected...)
+As a new x86 CPU Vendor, Chengdu Haiguang IC Design Co., Ltd (Hygon)
+is a Joint Venture between AMD and Haiguang Information Technology Co.,
+Ltd., and aims at providing high performance x86 processor for China
+server market.
 
-It is private to drivers/pci because Greg wanted it so:
+The first generation Hygon's processor(Dhyana) originates from AMD
+technology and shares most of the architecture with AMD's family 17h,
+but with different CPU Vendor ID("HygonGenuine")/PCIE Device Vendor ID
+(0x1D94)/Family series number (Family 18h).
 
-   "> The flag is not intended for a device specific driver to use.
-    > The intention is for the pci bus driver to use it, so no additional
-    > work for other drivers.
-    But the driver can see this in the structure, so it will get used..."
-    https://spinics.net/lists/linux-pci/msg57744.html
+To enable the support of Linux kernel to Hygon's CPU, we added a new
+vendor type (X86_VENDOR_HYGON, with value of 9) in arch/x86/include/
+asm/processor.h, and shared most of kernel support codes with AMD
+family 17h.
 
-   "I applaud your attempt to make this "private" to the pci core, just
-    don't know if it really will work, or if it is worth it entirely..."
-    https://spinics.net/lists/linux-pci/msg58017.html
-
-Greg is of the opinion that drivers should check for themselves whether
-a device has been removed and he was happy that they are barred from
-using PCI_DEV_DISCONNECTED.  He believes that drivers should verify
-for every read of mmio and config space that that the read value is not
-0xffffffff (if that is an invalid value) and consider the device removed
-if so:
-
-   "If you are worried about your device going away (and you have to),
-    then just check all reads and be fine with it.  If you have values
-    that can be all 0xff, then just accept that as a valid value and
-    move to the next read where it can't be valid."
-    https://spinics.net/lists/linux-pci/msg70793.html
-
-However Alex Gagniuc recently countered:
-
-   "The discussion is based on the wrong assumptions that reads are 
-    symmetrical wrt to a device being present or not. However, completion 
-    timeouts and unsupported requests blow that assumption right out of the 
-    water. Best case scenario, you just waste a little more time waiting for 
-    hardware IO. More common is to end up crashing the machine.
-
-    Greg's ideas work in a perfect world where PCI and PCIe are equivalent 
-    at every level. And in that case, PCI_DEV_DISCONNECTED would have been 
-    pure, 100% genuine Redmond bloatware. We wouldn't have gotten complaints 
-    from Facebook and other industry players that it takes too damn long to 
-    remove a device. We probably also wouldn't be seeing machines crash on 
-    PCIe removal."
-    https://spinics.net/lists/linux-pci/msg74864.html
-
-The reason I'm interested in PCI_DEV_DISCONNECTED is because hot-removing
-an Apple Thunderbolt Ethernet adapter locks up the machine a due to the tg3
-driver trying to access the removed device.
-
-Now, tg3 does call pci_channel_offline() and refrains from accessing the
-device if that returns true.  If I make PCI_DEV_DISCONNECTED public and
-check its value in pci_channel_offline(), I can hot-remove the Thunderbolt
-Ethernet adapter without problems.  I posted a patch for that 2 years ago:
-https://spinics.net/lists/linux-pci/msg55601.html
-
-Thus, I'd be more than happy if the PCI_DEV_DISCONNECTED state could be
-folded into enum pci_channel_state as it would immediately fix Thunderbolt
-hot-removal.
+This patch series have been applied and tested successfully in Hygon's
+Dhyana SoC silicon. Also tested on AMD's EPYC (Family 17h) processor
+works fine and makes no harm to existing codes.
 
 
-> Fundamentally both mean, from a driver perspective, two things.
-> 
->  - One very important: break out of a loop that waits for a HW state to
-> change because it won't
-> 
->  - One an optimisation: don't bother with all those register updates
-> bcs they're never going to reach your HW.
+v4->v5:
+  - Rebased on 4.19-rc1 and tested against it.
+  - Add Reviewed-by from Boris Ostrovsky for Xen.
+  - Rework EDAC patch without vendor checking for minimal modification.
 
-Right.  PCI_DEV_DISCONNECTED was introduced by Intel on behalf of
-Facebook.  See slides 13 to 16 of this slide deck for the details:
-http://files.opencompute.org/oc/public.php?service=files&t=4ff50715e3c1e273e02b694757b80d25&download
+v3->v4:
+  - Rebased on 4.18.3 and tested against it.
+  - Merge patchs 05/17 perfctr and 10/17 events in v3 to patch 05/16
+    PMU for better patch function group.
+  - Add hygon_get_topology_early() in patch 01/16.
+  - Rework vendor checking and refine coding style.
+  - Add Acked-by from Bjorn Helgaas for pci.
+  - Add Acked-by from Rafael J. Wysocki for cpufreq and acpi.
 
-There's a graph on slide 16 showing the speedup achieved by
-PCI_DEV_DISCONNECTED.
+v2->v3:
+  - Rebased on 4.18-rc8 and tested against it.
+  - Rework vendor checking codes to improve consistency.
 
-There's also a recording of that talk, the relevant segment is just
-10 minutes:
-https://youtu.be/GJ6B0xzgvlM?t=926
+v1->v2:
+  - Rebased on 4.18-rc6 and tested against it.
+  - Split the patchset to small series of patches.
+  - Rework patch descriptions.
+  - Create a separated arch/x86/kernel/cpu/hygon.c for Dhyana CPU
+    initialization to reduce long-term maintenance effort.
 
-Thanks,
 
-Lukas
+Pu Wen (16):
+  x86/cpu: create Dhyana init file and register new cpu_dev to system
+  x86/cache: get cache size/leaves and setup cache cpumap for Dhyana
+  x86/mtrr: get MTRR number and support TOP_MEM2
+  x86/smpboot: smp init nodelay and no flush caches before sleep
+  x86/pmu: enable Hygon support to PMU infrastructure
+  x86/nops: init ideal_nops for Hygon
+  x86/pci: add Hygon PCI vendor and northbridge support
+  x86/apic: add modern APIC support for Hygon
+  x86/bugs: add lfence mitigation to spectre v2 and no meltdown for
+    Hygon
+  x86/mce: enable Hygon support to MCE infrastructure
+  x86/kvm: enable Hygon support to KVM infrastructure
+  x86/xen: enable Hygon support to Xen
+  driver/acpi: enable Hygon support to ACPI driver
+  driver/cpufreq: enable Hygon support to cpufreq driver
+  driver/edac: enable Hygon support to AMD64 EDAC driver
+  tools/cpupower: enable Hygon support to cpupower tool
+
+ MAINTAINERS                                        |   6 +
+ arch/x86/Kconfig                                   |   2 +-
+ arch/x86/Kconfig.cpu                               |  13 +
+ arch/x86/events/amd/core.c                         |   6 +
+ arch/x86/events/amd/uncore.c                       |  15 +-
+ arch/x86/events/core.c                             |   4 +
+ arch/x86/include/asm/cacheinfo.h                   |   1 +
+ arch/x86/include/asm/kvm_emulate.h                 |   4 +
+ arch/x86/include/asm/mce.h                         |   5 +
+ arch/x86/include/asm/nospec-branch.h               |   4 +-
+ arch/x86/include/asm/processor.h                   |   3 +-
+ arch/x86/include/asm/virtext.h                     |   5 +-
+ arch/x86/kernel/alternative.c                      |   4 +
+ arch/x86/kernel/amd_nb.c                           |  51 ++-
+ arch/x86/kernel/apic/apic.c                        |  19 +-
+ arch/x86/kernel/apic/probe_32.c                    |   1 +
+ arch/x86/kernel/cpu/Makefile                       |   1 +
+ arch/x86/kernel/cpu/bugs.c                         |  28 +-
+ arch/x86/kernel/cpu/cacheinfo.c                    |  31 +-
+ arch/x86/kernel/cpu/common.c                       |   1 +
+ arch/x86/kernel/cpu/cpu.h                          |   1 +
+ arch/x86/kernel/cpu/hygon.c                        | 411 +++++++++++++++++++++
+ arch/x86/kernel/cpu/mcheck/mce-severity.c          |   3 +-
+ arch/x86/kernel/cpu/mcheck/mce.c                   |  21 +-
+ arch/x86/kernel/cpu/mtrr/cleanup.c                 |   3 +-
+ arch/x86/kernel/cpu/mtrr/generic.c                 |   5 +-
+ arch/x86/kernel/cpu/mtrr/mtrr.c                    |   2 +-
+ arch/x86/kernel/cpu/perfctr-watchdog.c             |   2 +
+ arch/x86/kernel/smpboot.c                          |   4 +-
+ arch/x86/kvm/emulate.c                             |  11 +-
+ arch/x86/pci/amd_bus.c                             |   6 +-
+ arch/x86/xen/pmu.c                                 |  12 +-
+ drivers/acpi/acpi_pad.c                            |   1 +
+ drivers/acpi/processor_idle.c                      |   1 +
+ drivers/cpufreq/acpi-cpufreq.c                     |   5 +
+ drivers/cpufreq/amd_freq_sensitivity.c             |   9 +-
+ drivers/edac/amd64_edac.c                          |  20 +-
+ drivers/edac/amd64_edac.h                          |   4 +
+ drivers/edac/mce_amd.c                             |   4 +-
+ include/linux/pci_ids.h                            |   2 +
+ tools/power/cpupower/utils/cpufreq-info.c          |   6 +-
+ tools/power/cpupower/utils/helpers/amd.c           |   6 +-
+ tools/power/cpupower/utils/helpers/cpuid.c         |   8 +-
+ tools/power/cpupower/utils/helpers/helpers.h       |   2 +-
+ tools/power/cpupower/utils/helpers/misc.c          |   3 +-
+ .../cpupower/utils/idle_monitor/mperf_monitor.c    |   3 +-
+ 46 files changed, 690 insertions(+), 69 deletions(-)
+ create mode 100644 arch/x86/kernel/cpu/hygon.c
+
+-- 
+2.7.4
