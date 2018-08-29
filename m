@@ -1,100 +1,131 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from foss.arm.com ([217.140.101.70]:40770 "EHLO foss.arm.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1727069AbeHHRr7 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Wed, 8 Aug 2018 13:47:59 -0400
-Date: Wed, 8 Aug 2018 16:27:41 +0100
-From: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
-To: Leonard Crestez <leonard.crestez@nxp.com>
-Cc: "p.zabel@pengutronix.de" <p.zabel@pengutronix.de>,
-        dl-linux-imx <linux-imx@nxp.com>,
-        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-        Richard Zhu <hongxing.zhu@nxp.com>,
-        "jingoohan1@gmail.com" <jingoohan1@gmail.com>,
-        "A.s. Dong" <aisheng.dong@nxp.com>,
-        Fabio Estevam <fabio.estevam@nxp.com>,
-        "Joao.Pinto@synopsys.com" <Joao.Pinto@synopsys.com>,
-        "shawnguo@kernel.org" <shawnguo@kernel.org>,
-        "linux-arm-kernel@lists.infradead.org"
-        <linux-arm-kernel@lists.infradead.org>,
-        "andrew.smirnov@gmail.com" <andrew.smirnov@gmail.com>,
-        Anson Huang <anson.huang@nxp.com>,
-        "bhelgaas@google.com" <bhelgaas@google.com>,
-        "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-        "l.stach@pengutronix.de" <l.stach@pengutronix.de>,
-        "kernel@pengutronix.de" <kernel@pengutronix.de>
-Subject: Re: [PATCH v3 0/2] PCI: imx: Initial imx7d pm support
-Message-ID: <20180808152741.GA31808@e107981-ln.cambridge.arm.com>
-References: <cover.1532448745.git.leonard.crestez@nxp.com>
- <bac2cb70b16d81f589915fc0900126b516414243.camel@nxp.com>
- <20180808111429.GC25150@e107981-ln.cambridge.arm.com>
- <a5556be9a5f62ea0472a1a2336bce8d71df0dcaa.camel@nxp.com>
- <20180808141938.GA30428@e107981-ln.cambridge.arm.com>
- <efd9c1d560cae84e2a4ee7585a4c61d5d40ba755.camel@nxp.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <efd9c1d560cae84e2a4ee7585a4c61d5d40ba755.camel@nxp.com>
+Received: from mail-pl1-f195.google.com ([209.85.214.195]:34540 "EHLO
+        mail-pl1-f195.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1729262AbeH2UWo (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Wed, 29 Aug 2018 16:22:44 -0400
+Received: by mail-pl1-f195.google.com with SMTP id f6-v6so2532025plo.1
+        for <linux-pci@vger.kernel.org>; Wed, 29 Aug 2018 09:25:03 -0700 (PDT)
+From: Stephen Hemminger <stephen@networkplumber.org>
+To: kys@microsoft.com, haiyangz@microsoft.com, sthemmin@microsoft.com
+Cc: devel@linuxdriverproject.org, netdev@vger.kernel.org,
+        linux-pci@vger.kernel.org
+Subject: [PATCH net-next 2/2] hv_netvsc: pair VF based on serial number
+Date: Wed, 29 Aug 2018 09:24:52 -0700
+Message-Id: <20180829162452.25805-3-sthemmin@microsoft.com>
+In-Reply-To: <20180829162452.25805-1-sthemmin@microsoft.com>
+References: <20180829162452.25805-1-sthemmin@microsoft.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wed, Aug 08, 2018 at 02:58:15PM +0000, Leonard Crestez wrote:
-> On Wed, 2018-08-08 at 15:19 +0100, Lorenzo Pieralisi wrote:
-> > On Wed, Aug 08, 2018 at 11:37:14AM +0000, Leonard Crestez wrote:
-> > > On Wed, 2018-08-08 at 12:14 +0100, Lorenzo Pieralisi wrote:
-> > > > On Wed, Aug 08, 2018 at 10:53:52AM +0000, Leonard Crestez wrote:
-> > > > > On Tue, 2018-07-24 at 19:14 +0300, Leonard Crestez wrote:
-> > > > > > Changes since v2:
-> > > > > >  * Print with dev_info if link fails on resume (Lucas)
-> > > > > >  * Add a comment on imx7d pci irq mappings (Andrey)
-> > > > > >  * Make imx6_pcie_ltssm_disable print an error on IMX6Q (Lucas)
-> > > > > > 
-> > > > > > The ltssm_disable does not return an error because it can't be usefully
-> > > > > > handled, reversing partial suspend is a nightmare and unlikely to work.
-> > > > > > 
-> > > > > >  * Drop "reset: imx7: Fix always writing bits as 0 (accepted by Philipp)
-> > > > > > 
-> > > > > > Series is against linux-next tag next-20180724 where the reset patch was
-> > > > > > already accepted. The imx7d.dtsi patch is also useful standalone.
-> > > > > 
-> > > > > This is a gentle reminder that this series was reviewed by Lucas two
-> > > > > weeks ago but not yet included.
-> > > > 
-> > > > Does this series have a functional dependency on the reset fix ? If yes
-> > > > we can have a bisection proplem depending on which tree gets merged
-> > > > first.
-> > > 
-> > > Yes, without the reset fix I expect hangs.
-> > > 
-> > > Maybe the reset fix should be pulled in the pci tree? I don't know how
-> > > these issues are sorted out.
-> > 
-> > Well either I pull that fix into the PCI tree (but it is already -rc8
-> > and I can't guarantee v4.19 inclusion - I shall try) or I can ack these
-> > patches and Philippe will send them upstream on my behalf, atop the
-> > reset fix above.
-> > 
-> > When will the reset fix will be sent to Linus ? Please let me know
-> > how you want to proceed.
-> 
-> I have some other unsent changes for imx pci+dts+reset standing by.
-> Since these changes qualify more as "pm features" than fixes I don't
-> really mind skipping 4.19.
+Matching network device based on MAC address is problematic
+since a non-VF network device can be created with a duplicate MAC
+address causing confusion and problems.  The VMBus API provides
+a serial number that is a better matching method.
 
-OK that's fine by me, resend this series and the new patches at
-v4.19-rc1 and I will pull the changes into the pci tree then.
+Signed-off-by: Stephen Hemminger <sthemmin@microsoft.com>
+---
+ drivers/net/hyperv/netvsc.c     |  3 ++
+ drivers/net/hyperv/netvsc_drv.c | 58 +++++++++++++++++++--------------
+ 2 files changed, 36 insertions(+), 25 deletions(-)
 
-> Pulling pci features into the reset tree doesn't make much sense to me.
-
-I was just giving you an option.
-
-> Maybe this kind of stuff could go through Shawn's tree? There shouldn't
-> be any interaction with non-imx stuff.
-
-As I said, I can ack the changes for Shawn to pick them up but if
-Shawn's tree goes to Linus via eg arm-soc we are back to square
-one, it is just too late.
-
-I have no problem taking these changes in the PCI tree for v4.20 as long
-as we plan the dependencies in advance.
-
-Lorenzo
+diff --git a/drivers/net/hyperv/netvsc.c b/drivers/net/hyperv/netvsc.c
+index 31c3d77b4733..fe01e141c8f8 100644
+--- a/drivers/net/hyperv/netvsc.c
++++ b/drivers/net/hyperv/netvsc.c
+@@ -1203,6 +1203,9 @@ static void netvsc_send_vf(struct net_device *ndev,
+ 
+ 	net_device_ctx->vf_alloc = nvmsg->msg.v4_msg.vf_assoc.allocated;
+ 	net_device_ctx->vf_serial = nvmsg->msg.v4_msg.vf_assoc.serial;
++	netdev_info(ndev, "VF slot %u %s\n",
++		    net_device_ctx->vf_serial,
++		    net_device_ctx->vf_alloc ? "added" : "removed");
+ }
+ 
+ static  void netvsc_receive_inband(struct net_device *ndev,
+diff --git a/drivers/net/hyperv/netvsc_drv.c b/drivers/net/hyperv/netvsc_drv.c
+index 1121a1ec407c..9dedc1463e88 100644
+--- a/drivers/net/hyperv/netvsc_drv.c
++++ b/drivers/net/hyperv/netvsc_drv.c
+@@ -1894,20 +1894,6 @@ static void netvsc_link_change(struct work_struct *w)
+ 	rtnl_unlock();
+ }
+ 
+-static struct net_device *get_netvsc_bymac(const u8 *mac)
+-{
+-	struct net_device_context *ndev_ctx;
+-
+-	list_for_each_entry(ndev_ctx, &netvsc_dev_list, list) {
+-		struct net_device *dev = hv_get_drvdata(ndev_ctx->device_ctx);
+-
+-		if (ether_addr_equal(mac, dev->perm_addr))
+-			return dev;
+-	}
+-
+-	return NULL;
+-}
+-
+ static struct net_device *get_netvsc_byref(struct net_device *vf_netdev)
+ {
+ 	struct net_device_context *net_device_ctx;
+@@ -2036,26 +2022,48 @@ static void netvsc_vf_setup(struct work_struct *w)
+ 	rtnl_unlock();
+ }
+ 
++/* Find netvsc by VMBus serial number.
++ * The PCI hyperv controller records the serial number as the slot.
++ */
++static struct net_device *get_netvsc_byslot(const struct net_device *vf_netdev)
++{
++	struct device *parent = vf_netdev->dev.parent;
++	struct net_device_context *ndev_ctx;
++	struct pci_dev *pdev;
++
++	if (!parent || !dev_is_pci(parent))
++		return NULL; /* not a PCI device */
++
++	pdev = to_pci_dev(parent);
++	if (!pdev->slot) {
++		netdev_notice(vf_netdev, "no PCI slot information\n");
++		return NULL;
++	}
++
++	list_for_each_entry(ndev_ctx, &netvsc_dev_list, list) {
++		if (!ndev_ctx->vf_alloc)
++			continue;
++
++		if (ndev_ctx->vf_serial == pdev->slot->number)
++			return hv_get_drvdata(ndev_ctx->device_ctx);
++	}
++
++	netdev_notice(vf_netdev,
++		      "no netdev found for slot %u\n", pdev->slot->number);
++	return NULL;
++}
++
+ static int netvsc_register_vf(struct net_device *vf_netdev)
+ {
+-	struct net_device *ndev;
+ 	struct net_device_context *net_device_ctx;
+-	struct device *pdev = vf_netdev->dev.parent;
+ 	struct netvsc_device *netvsc_dev;
++	struct net_device *ndev;
+ 	int ret;
+ 
+ 	if (vf_netdev->addr_len != ETH_ALEN)
+ 		return NOTIFY_DONE;
+ 
+-	if (!pdev || !dev_is_pci(pdev) || dev_is_pf(pdev))
+-		return NOTIFY_DONE;
+-
+-	/*
+-	 * We will use the MAC address to locate the synthetic interface to
+-	 * associate with the VF interface. If we don't find a matching
+-	 * synthetic interface, move on.
+-	 */
+-	ndev = get_netvsc_bymac(vf_netdev->perm_addr);
++	ndev = get_netvsc_byslot(vf_netdev);
+ 	if (!ndev)
+ 		return NOTIFY_DONE;
+ 
+-- 
+2.18.0
