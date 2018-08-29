@@ -1,93 +1,202 @@
-Return-Path: <SRS0=ut0H=K7=broadcom.com=hari.vyas@kernel.org>
-Return-Path: <SRS0=ut0H=K7=broadcom.com=hari.vyas@kernel.org>
-MIME-Version: 1.0
-In-Reply-To: <6f76eb5f54fdc780dac744773d836214d7844346.camel@kernel.crashing.org>
-References: <1530608741-30664-1-git-send-email-hari.vyas@broadcom.com>
- <20180731163727.GK45322@bhelgaas-glaptop.roam.corp.google.com>
- <ecaed7664b46d73888d2494065905f8e108fc0f4.camel@kernel.crashing.org>
- <20180815185027.GE28888@bhelgaas-glaptop.roam.corp.google.com>
- <e3316c91ad722434360b4018b17cbfe265e97801.camel@kernel.crashing.org>
- <fa218ce2-c337-e776-d958-f1f8a1129c9a@yandex-team.ru> <6f76eb5f54fdc780dac744773d836214d7844346.camel@kernel.crashing.org>
-From: Hari Vyas <hari.vyas@broadcom.com>
-Date: Thu, 16 Aug 2018 14:52:04 +0530
-Message-ID: <CAM5rFu-QCBq9TdoiFtvfNENUaS5Tpay5f0H9_BenEqK8nDgoNg@mail.gmail.com>
-Subject: Re: PCIe enable device races (Was: [PATCH v3] PCI: Data corruption
- happening due to race condition)
-To: Benjamin Herrenschmidt <benh@kernel.crashing.org>
-Cc: Konstantin Khlebnikov <khlebnikov@yandex-team.ru>, Bjorn Helgaas <helgaas@kernel.org>,
-	Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org,
-	Ray Jui <ray.jui@broadcom.com>, Jens Axboe <axboe@kernel.dk>
-Content-Type: text/plain; charset="UTF-8"
+Return-Path: <SRS0=NI06=LM=hygon.cn=puwen@kernel.org>
+Return-Path: <SRS0=NI06=LM=hygon.cn=puwen@kernel.org>
+From: Pu Wen <puwen@hygon.cn>
+To: tglx@linutronix.de,
+	mingo@redhat.com,
+	hpa@zytor.com,
+	x86@kernel.org,
+	thomas.lendacky@amd.com,
+	bp@alien8.de,
+	pbonzini@redhat.com,
+	helgaas@kernel.org
+Cc: linux-kernel@vger.kernel.org,
+	linux-arch@vger.kernel.org,
+	linux-pci@vger.kernel.org,
+	Pu Wen <puwen@hygon.cn>
+Subject: [PATCH v5 07/16] x86/pci: add Hygon PCI vendor and northbridge support
+Date: Wed, 29 Aug 2018 20:44:18 +0800
+Message-Id: <ecd62b5b5e8f406598f2354892929caa87cf7deb.1535459013.git.puwen@hygon.cn>
+In-Reply-To: <cover.1535459012.git.puwen@hygon.cn>
+References: <cover.1535459012.git.puwen@hygon.cn>
 List-ID: <linux-pci.vger.kernel.org>
 
-On Thu, Aug 16, 2018 at 1:32 PM, Benjamin Herrenschmidt
-<benh@kernel.crashing.org> wrote:
-> On Thu, 2018-08-16 at 10:58 +0300, Konstantin Khlebnikov wrote:
->> On 16.08.2018 00:52, Benjamin Herrenschmidt wrote:
->> > On Wed, 2018-08-15 at 13:50 -0500, Bjorn Helgaas wrote:
->> > > Yes, this is definitely broken.  Some folks have tried to fix it in
->> > > the past, but it hasn't quite happened yet.  We actually merged one
->> > > patch, 40f11adc7cd9 ("PCI: Avoid race while enabling upstream
->> > > bridges"), but had to revert it after we found issues:
->> > >
->> > > https://lkml.kernel.org/r/1501858648-22228-1-git-send-email-srinath.mannam@broadcom.com
->> > > https://lkml.kernel.org/r/20170915072352.10453.31977.stgit@bhelgaas-glaptop.roam.corp.google.com
->> >
->> > Ok so I had a look at this previous patch and it adds yet anothe use of
->> > some global mutex to protect part of the operation which makes me
->> > cringe a bit, we have too many of these.
->> >
->> > What do you think of the one I sent yesterday ? (I can't find it in the
->> > archives yet)
->> >
->> > [RFC PATCH] pci: Proof of concept at fixing pci_enable_device/bridge races
->> >
->> > The patch itself needs splitting etc... but the basic idea is to move away
->> > from those global mutexes in a number of places and have one in the pci_dev
->> > struct itself to protect its state.
->> >
->> > I would also like to use this rather than the bitmap atomics for is_added
->> > etc... (Hari's fix) in the long run. Atomics aren't significantly cheaper
->> > and imho makes thing even messier.
->> >
->> > Jens, Konstantin, any chance you can test if the above also breaks iwlwifi
->> > (I don't see why it would but ...)
->> >
->>
->> I suppose original race was discovered between enabling bridge and device as described here
->>
->> https://lore.kernel.org/lkml/150547971091.977464.16294045866179907260.stgit@buzz/T/#u
->>
->> I barely can remember what I ever posted this, so I couldn't reproduce for sure.
->
-> Ok. Well, my patch fixes it for my repro-case at least and seems to not
-> break anyhting on my thinkpad so ...
->
-> Bjorn, are you ok with the approach ? If yes, I'll start breaking up
-> that patch into a few smaller bits in case something goes wrong and we
-> want to bisect (such as the changes I did to tracking is_busmaster
-> etc...)
->
-> Cheers,
-> ben.
->
->
-There was an issue reported by my colleague srinath while enabling pci
-bridge and a race
-condition was happening while setting memory and master bits i.e. bits
-were over-written.
-As per my understanding is_busmaster and is_added bit race issue was
-at internal data
-management and is quite different from pci bridge enabling issue.
-Am I missing some thing ? Would be interested to know what exactly was
-affected due to
-is_busmaster fix.
+As Hygon register its PCI Vendor ID as a new one "0x1d94", so add a new
+definition PCI_VENDOR_ID_HYGON in include/linux/pci_ids.h.
 
-In any case, one bug is already filed and may propose a patch soon
-about pci bridge enabling
-scenario. In summary, bit manipulation is not working fine due to race
-conditions in SMP
-environment.
+Also Hygon PCI Device ID(0x1450/0x1463/0x1464) for Host bridge is added
+to amd_nb.c. And it need to define new arrays for Hygon:
+hygon_root_ids[], hygon_nb_misc_ids[], hygon_nb_link_ids[].
 
-Regards,
-hari
+To enable Hygon north bridge support, add new variable root_ids, and
+assign its value based on whether CPU vendor is AMD or Hygon. Modify
+the CONFIG_AMD_NB to depends on either AMD or Hygon.
+
+Add Hygon support in amd_postcore_init(), early_root_info_init().
+
+Acked-by: Bjorn Helgaas <bhelgaas@google.com>	# pci_ids.h
+Signed-off-by: Pu Wen <puwen@hygon.cn>
+---
+ arch/x86/Kconfig         |  2 +-
+ arch/x86/kernel/amd_nb.c | 51 ++++++++++++++++++++++++++++++++++++++++++------
+ arch/x86/pci/amd_bus.c   |  6 ++++--
+ include/linux/pci_ids.h  |  2 ++
+ 4 files changed, 52 insertions(+), 9 deletions(-)
+
+diff --git a/arch/x86/Kconfig b/arch/x86/Kconfig
+index c5ff296..733f1ec 100644
+--- a/arch/x86/Kconfig
++++ b/arch/x86/Kconfig
+@@ -2818,7 +2818,7 @@ endif # X86_32
+ 
+ config AMD_NB
+ 	def_bool y
+-	depends on CPU_SUP_AMD && PCI
++	depends on (CPU_SUP_AMD || CPU_SUP_HYGON) && PCI
+ 
+ source "drivers/pcmcia/Kconfig"
+ 
+diff --git a/arch/x86/kernel/amd_nb.c b/arch/x86/kernel/amd_nb.c
+index b481b95..d9867b2 100644
+--- a/arch/x86/kernel/amd_nb.c
++++ b/arch/x86/kernel/amd_nb.c
+@@ -20,6 +20,10 @@
+ #define PCI_DEVICE_ID_AMD_17H_M10H_DF_F3 0x15eb
+ #define PCI_DEVICE_ID_AMD_17H_M10H_DF_F4 0x15ec
+ 
++#define PCI_DEVICE_ID_HYGON_18H_ROOT     0x1450
++#define PCI_DEVICE_ID_HYGON_18H_DF_F3    0x1463
++#define PCI_DEVICE_ID_HYGON_18H_DF_F4    0x1464
++
+ /* Protect the PCI config register pairs used for SMN and DF indirect access. */
+ static DEFINE_MUTEX(smn_mutex);
+ 
+@@ -61,6 +65,21 @@ static const struct pci_device_id amd_nb_link_ids[] = {
+ 	{}
+ };
+ 
++static const struct pci_device_id hygon_root_ids[] = {
++	{ PCI_DEVICE(PCI_VENDOR_ID_HYGON, PCI_DEVICE_ID_HYGON_18H_ROOT) },
++	{}
++};
++
++const struct pci_device_id hygon_nb_misc_ids[] = {
++	{ PCI_DEVICE(PCI_VENDOR_ID_HYGON, PCI_DEVICE_ID_HYGON_18H_DF_F3) },
++	{}
++};
++
++static const struct pci_device_id hygon_nb_link_ids[] = {
++	{ PCI_DEVICE(PCI_VENDOR_ID_HYGON, PCI_DEVICE_ID_HYGON_18H_DF_F4) },
++	{}
++};
++
+ const struct amd_nb_bus_dev_range amd_nb_bus_dev_ranges[] __initconst = {
+ 	{ 0x00, 0x18, 0x20 },
+ 	{ 0xff, 0x00, 0x20 },
+@@ -197,12 +216,25 @@ int amd_cache_northbridges(void)
+ 	u16 i = 0;
+ 	struct amd_northbridge *nb;
+ 	struct pci_dev *root, *misc, *link;
++	const struct pci_device_id *root_ids = NULL;
++	const struct pci_device_id *misc_ids = NULL;
++	const struct pci_device_id *link_ids = NULL;
++
++	if (boot_cpu_data.x86_vendor == X86_VENDOR_AMD) {
++		root_ids = amd_root_ids;
++		misc_ids = amd_nb_misc_ids;
++		link_ids = amd_nb_link_ids;
++	} else if (boot_cpu_data.x86_vendor == X86_VENDOR_HYGON) {
++		root_ids = hygon_root_ids;
++		misc_ids = hygon_nb_misc_ids;
++		link_ids = hygon_nb_link_ids;
++	}
+ 
+ 	if (amd_northbridges.num)
+ 		return 0;
+ 
+ 	misc = NULL;
+-	while ((misc = next_northbridge(misc, amd_nb_misc_ids)) != NULL)
++	while ((misc = next_northbridge(misc, misc_ids)) != NULL)
+ 		i++;
+ 
+ 	if (!i)
+@@ -218,11 +250,11 @@ int amd_cache_northbridges(void)
+ 	link = misc = root = NULL;
+ 	for (i = 0; i != amd_northbridges.num; i++) {
+ 		node_to_amd_nb(i)->root = root =
+-			next_northbridge(root, amd_root_ids);
++			next_northbridge(root, root_ids);
+ 		node_to_amd_nb(i)->misc = misc =
+-			next_northbridge(misc, amd_nb_misc_ids);
++			next_northbridge(misc, misc_ids);
+ 		node_to_amd_nb(i)->link = link =
+-			next_northbridge(link, amd_nb_link_ids);
++			next_northbridge(link, link_ids);
+ 	}
+ 
+ 	if (amd_gart_present())
+@@ -263,9 +295,15 @@ bool __init early_is_amd_nb(u32 device)
+ {
+ 	const struct pci_device_id *id;
+ 	u32 vendor = device & 0xffff;
++	const struct pci_device_id *misc_ids = NULL;
++
++	if (boot_cpu_data.x86_vendor == X86_VENDOR_AMD)
++		misc_ids = amd_nb_misc_ids;
++	else if (boot_cpu_data.x86_vendor == X86_VENDOR_HYGON)
++		misc_ids = hygon_nb_misc_ids;
+ 
+ 	device >>= 16;
+-	for (id = amd_nb_misc_ids; id->vendor; id++)
++	for (id = misc_ids; id->vendor; id++)
+ 		if (vendor == id->vendor && device == id->device)
+ 			return true;
+ 	return false;
+@@ -277,7 +315,8 @@ struct resource *amd_get_mmconfig_range(struct resource *res)
+ 	u64 base, msr;
+ 	unsigned int segn_busn_bits;
+ 
+-	if (boot_cpu_data.x86_vendor != X86_VENDOR_AMD)
++	if (boot_cpu_data.x86_vendor != X86_VENDOR_AMD &&
++	    boot_cpu_data.x86_vendor != X86_VENDOR_HYGON)
+ 		return NULL;
+ 
+ 	/* assume all cpus from fam10h have mmconfig */
+diff --git a/arch/x86/pci/amd_bus.c b/arch/x86/pci/amd_bus.c
+index 649bdde..bfa50e6 100644
+--- a/arch/x86/pci/amd_bus.c
++++ b/arch/x86/pci/amd_bus.c
+@@ -93,7 +93,8 @@ static int __init early_root_info_init(void)
+ 		vendor = id & 0xffff;
+ 		device = (id>>16) & 0xffff;
+ 
+-		if (vendor != PCI_VENDOR_ID_AMD)
++		if (vendor != PCI_VENDOR_ID_AMD &&
++		    vendor != PCI_VENDOR_ID_HYGON)
+ 			continue;
+ 
+ 		if (hb_probes[i].device == device) {
+@@ -390,7 +391,8 @@ static int __init pci_io_ecs_init(void)
+ 
+ static int __init amd_postcore_init(void)
+ {
+-	if (boot_cpu_data.x86_vendor != X86_VENDOR_AMD)
++	if (boot_cpu_data.x86_vendor != X86_VENDOR_AMD &&
++	    boot_cpu_data.x86_vendor != X86_VENDOR_HYGON)
+ 		return 0;
+ 
+ 	early_root_info_init();
+diff --git a/include/linux/pci_ids.h b/include/linux/pci_ids.h
+index 99d366c..d2d281f 100644
+--- a/include/linux/pci_ids.h
++++ b/include/linux/pci_ids.h
+@@ -2561,6 +2561,8 @@
+ 
+ #define PCI_VENDOR_ID_AMAZON		0x1d0f
+ 
++#define PCI_VENDOR_ID_HYGON		0x1d94
++
+ #define PCI_VENDOR_ID_TEKRAM		0x1de1
+ #define PCI_DEVICE_ID_TEKRAM_DC290	0xdc29
+ 
+-- 
+2.7.4
