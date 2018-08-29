@@ -1,60 +1,101 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.29.99]:46024 "EHLO mail.kernel.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1726158AbeHHE1n (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Wed, 8 Aug 2018 00:27:43 -0400
-Date: Tue, 7 Aug 2018 21:10:25 -0500
-From: Bjorn Helgaas <helgaas@kernel.org>
-To: Ray Jui <ray.jui@broadcom.com>
-Cc: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
-        Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org,
-        Tomasz Nowicki <tn@semihalf.com>,
-        Vladimir Olovyannikov <vladimir.olovyannikov@broadcom.com>,
-        BCM Kernel Feedback <bcm-kernel-feedback-list@broadcom.com>
-Subject: Re: [RFC] ARM64, PCIe, annd ACPI
-Message-ID: <20180808021025.GC49411@bhelgaas-glaptop.roam.corp.google.com>
-References: <89484aa0-08c4-0cff-500d-407d21e2f5fd@broadcom.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <89484aa0-08c4-0cff-500d-407d21e2f5fd@broadcom.com>
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Message-ID: <c21a2e25c934d19f913f625542f505cf45754f23.camel@baylibre.com>
+Subject: Re: [PATCH v2 2/2] PCI: meson: add the Amlogic Meson PCIe phy driver
+From: Jerome Brunet <jbrunet@baylibre.com>
+To: Hanjie Lin <hanjie.lin@amlogic.com>, Kishon Vijay Abraham I <kishon@ti.com>
+Date: Wed, 29 Aug 2018 17:57:43 +0200
+In-Reply-To: <1535096006-152091-3-git-send-email-hanjie.lin@amlogic.com>
+References: <1535096006-152091-1-git-send-email-hanjie.lin@amlogic.com>
+ <1535096006-152091-3-git-send-email-hanjie.lin@amlogic.com>
+Mime-Version: 1.0
+List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
+List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
+List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
+List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
+List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
+Cc: Rob Herring <robh@kernel.org>, Jianxin Pan <jianxin.pan@amlogic.com>,
+ linux-pci@vger.kernel.org, Yixun Lan <yixun.lan@amlogic.com>,
+ Yue Wang <yue.wang@amlogic.com>, Qiufang Dai <qiufang.dai@amlogic.com>,
+ Jian Hu <jian.hu@amlogic.com>, Kevin Hilman <khilman@baylibre.com>,
+ Carlo Caione <carlo@caione.org>, linux-amlogic@lists.infradead.org,
+ Liang Yang <liang.yang@amlogic.com>, linux-arm-kernel@lists.infradead.org
+Content-Type: text/plain; charset="us-ascii"
+Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
+Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tue, Aug 07, 2018 at 05:10:15PM -0700, Ray Jui wrote:
-> Hi Lorenzo/Bjorn,
-> 
-> I have a question on PCIe controller APCI support on ARM64 based systems.
-> 
-> If my understanding of the implementation of "pci_acpi_scan_root" under
-> "arch/arm64/kernel/pci.c" is correct, it appears
-> "pci_acpi_setup_ecam_mapping" is called within "pci_acpi_scan_root".
-> 
-> Does that mean for a PCIe host controller on ARM64 to support ACPI, it needs
-> to support ECAM and MMIO based access to the configuration space registers?
- 
-Yes.  In my opinion, a PCIe host controller is generally required to
-support ECAM even if the platform doesn't support ACPI.  I base this
-on PCIe r4.0, sec 7.2.2:
+On Fri, 2018-08-24 at 15:33 +0800, Hanjie Lin wrote:
+> +static int meson_pcie_phy_probe(struct platform_device *pdev)
+> +{
+> +       struct device *dev = &pdev->dev;
+> +       struct meson_pcie_phy *mphy;
+> +       struct meson_pcie_reset *mrst;
+> +       struct phy *generic_phy;
+> +       struct phy_provider *phy_provider;
+> +       struct resource *res;
+> +       const struct meson_pcie_phy_data *data;
+> +
+> +       data = of_device_get_match_data(dev);
+> +       if (!data)
+> +               return -ENODEV;
+> +
+> +       mphy = devm_kzalloc(dev, sizeof(*mphy), GFP_KERNEL);
+> +       if (!mphy)
+> +               return -ENOMEM;
+> +       res = platform_get_resource(pdev, IORESOURCE_MEM, 0);
+> +       mphy->phy_base = devm_ioremap_resource(dev, res);
+> +       if (IS_ERR(mphy->phy_base))
+> +               return PTR_ERR(mphy->phy_base);
+> +
+> +       mrst = &mphy->reset;
+> +
+> +       mrst->phy = devm_reset_control_get_shared(dev, "phy");
 
-  For systems that are PC-compatible, or that do not implement a
-  processor-architecture-specific firmware interface standard that
-  allows access to the Configuration Space, the ECAM is required as
-  defined in this section.
+I thought you said there was only phy on this platform.
+If that's the case, what is this reset shared with ?
 
-> If the above statement is true, does it imply that any PCIe controller on
-> ARM64 that does not support MMIO based access to the config space register
-> cannot have ACPI support?
+> +       if (IS_ERR(mrst->phy)) {
+> +               if (PTR_ERR(mrst->phy) != -EPROBE_DEFER)
+> +                       dev_err(dev, "couldn't get phy reset\n");
+> +
+> +               return PTR_ERR(mrst->phy);
+> +       }
+> +
+> +       reset_control_deassert(mrst->phy);
 
-We would treat that as a non-compliant platform that requires special
-quirks to work around the problem.  That does mean we have to add
-platform-specific quirks, which of course means we can't run an old
-kernel on a new platform that lacks standard ECAM.  There are several
-existing systems like this.
+Is it really necessary before init() is called by the consumer ?
 
-The notes and examples here should be a place to start:
+> +
+> +       mphy->data = data;
+> +
+> +       generic_phy = devm_phy_create(dev, dev->of_node, mphy->data->ops);
+> +       if (IS_ERR(generic_phy)) {
+> +               if (PTR_ERR(generic_phy) != -EPROBE_DEFER)
+> +                       dev_err(dev, "failed to create PHY\n");
+> +
+> +               return PTR_ERR(generic_phy);
+> +       }
+> +
+> +       phy_set_drvdata(generic_phy, mphy);
+> +       phy_provider = devm_of_phy_provider_register(dev, of_phy_simple_xlate);
+> +
+> +       return PTR_ERR_OR_ZERO(phy_provider);
+> +}
+> +
+> +static struct platform_driver meson_pcie_phy_driver = {
+> +       .probe  = meson_pcie_phy_probe,
+> +       .driver = {
+> +               .of_match_table = meson_pcie_phy_match,
+> +               .name           = "meson-pcie-phy",
+> +       }
+> +};
 
-  drivers/pci/controller/Makefile
-  drivers/pci/controller/dwc/Makefile
-  drivers/acpi/pci_mcfg.c
 
-Bjorn
+
+_______________________________________________
+linux-arm-kernel mailing list
+linux-arm-kernel@lists.infradead.org
+http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
