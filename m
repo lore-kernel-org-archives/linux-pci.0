@@ -1,46 +1,112 @@
-Return-Path: <linux-acpi-owner@vger.kernel.org>
+Return-Path: <SRS0=JeCf=LN=gmail.com=andy.shevchenko@kernel.org>
+Return-Path: <SRS0=JeCf=LN=gmail.com=andy.shevchenko@kernel.org>
 MIME-Version: 1.0
-References: <6401388.2t0qD3iTOr@aspire.rjw.lan> <20180817.144354.2288619657950222607.teika@gmx.com>
-In-Reply-To: <20180817.144354.2288619657950222607.teika@gmx.com>
-From: "Rafael J. Wysocki" <rafael@kernel.org>
-Date: Fri, 17 Aug 2018 09:50:52 +0200
-Message-ID: <CAJZ5v0gueiBtbAS00LQ0yp15=OmvZe-i2ETzxaPvVD5wuZGV7Q@mail.gmail.com>
-Subject: Re: [PATCH] PCI / ACPI / PM: Resume all bridges on suspend-to-RAM
-To: teika@gmx.com
-Cc: "Rafael J. Wysocki" <rjw@rjwysocki.net>,
-        Linux PCI <linux-pci@vger.kernel.org>,
-        Bjorn Helgaas <bhelgaas@google.com>,
-        Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
-        ACPI Devel Maling List <linux-acpi@vger.kernel.org>,
-        Linux PM <linux-pm@vger.kernel.org>,
-        Mika Westerberg <mika.westerberg@linux.intel.com>
+References: <cover.1534686484.git.lukas@wunner.de>
+In-Reply-To: <cover.1534686484.git.lukas@wunner.de>
+From: Andy Shevchenko <andy.shevchenko@gmail.com>
+Date: Thu, 30 Aug 2018 11:50:13 +0300
+Message-ID: <CAHp75Veby=mo5s7QvfEhVLjGYBEL9GDDD_CfBmgS3Y+sxRzwSA@mail.gmail.com>
+Subject: Re: [PATCH 0/9] PCI hotplug diet
+To: Lukas Wunner <lukas@wunner.de>
+Cc: Bjorn Helgaas <helgaas@kernel.org>, linux-pci@vger.kernel.org, okaya@kernel.org,
+	Mika Westerberg <mika.westerberg@linux.intel.com>, Keith Busch <keith.busch@intel.com>,
+	Oza Pawandeep <poza@codeaurora.org>, Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	"Rafael J. Wysocki" <rjw@rjwysocki.net>, Len Brown <lenb@kernel.org>, scott@spiteful.org,
+	Paul Mackerras <paulus@samba.org>, Michael Ellerman <mpe@ellerman.id.au>, gwshan@linux.vnet.ibm.com,
+	Sebastian Ott <sebott@linux.vnet.ibm.com>, gerald.schaefer@de.ibm.com,
+	Corentin Chary <corentin.chary@gmail.com>, Darren Hart <dvhart@infradead.org>,
+	Andy Shevchenko <andy@infradead.org>, Greg Kroah-Hartman <gregkh@linuxfoundation.org>, dan.zink@hpe.com,
+	jshah@us.ibm.com, zubarev@us.ibm.com, prarit@redhat.com,
+	ACPI Devel Maling List <linux-acpi@vger.kernel.org>, linux-s390@vger.kernel.org,
+	Platform Driver <platform-driver-x86@vger.kernel.org>,
+	acpi4asus-user <acpi4asus-user@lists.sourceforge.net>,
+	"open list:LINUX FOR POWERPC PA SEMI PWRFICIENT" <linuxppc-dev@lists.ozlabs.org>
 Content-Type: text/plain; charset="UTF-8"
-Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Fri, Aug 17, 2018 at 7:45 AM Teika Kazura <teika@gmx.com> wrote:
+On Sun, Aug 19, 2018 at 5:35 PM Lukas Wunner <lukas@wunner.de> wrote:
 >
-> For the record, about the exactness of the patch description.
+> Here's PCI hotplug material I've prepared for v4.20:
 >
-> The patch mentions the regression by the commit c62ec4610c40, but it is not the cause of the bug (https://bugzilla.kernel.org/show_bug.cgi?id=20067)
-> reported by me; I reverted c62ec4610c40 on linux-4.17.13, and the bug remained.
+> Patches [1/9] to [8/9] reduce the code by 488 lines.  There should be no
+> loss of functionality and no new features, just less and simpler code.
 >
-> # Some details: my bug was introduced by the commit (i) 877b3729ca0 on Jan 3. The commit (ii) c62ec4610c40 was on May 22. The commit (iii) 26112ddc254c
-> on Jun 30 fixes one problem caused by c62ec4610c40. The present patch modifies the code of the commit (iii), so it can be said as the completion of the
-> commit (iii). It at the same time fixes my bug, too.
-
-You are right, commit 877b3729ca0 introduced the issue for you, but it
-did that by exposing the same functional problem in the firmware that
-was previously addressed by commit 26112ddc254c in a different case.
-
-> This suggests the present patch possibly fixes other unknown PM problems; former kernels had some loose end(s). Now this patch puts the kernel in a better position.
+> Patch [9/9] collects TODOs for hotplug drivers to spur contributions.
 >
-> I'm a lay Linux user, and don't know if this post helps. If it does, it may be worth mentioning it in the above bugzilla entry.
+>
+> I've assumed that my patch "PCI: pciehp: Differentiate between surprise
+> and safe removal" (submitted July 31) gets merged before this series:
+> https://patchwork.ozlabs.org/patch/951386/
+>
+> If that patch is not accepted or other pciehp-related patches are merged
+> before this series, I'll have to rebase patch [4/9] ("PCI: pciehp: Unify
+> controller and slot structs").  No big deal, just a heads-up.
+>
 
-Yes, it does, thanks!
+Acked-by: Andy Shevchenko <andy.shevchenko@gmail.com>
 
-I have updated the tags and the commit log of this patch according to
-the information above.
+for PDx86 bits
 
-Cheers,
-Rafael
+> Thanks,
+>
+> Lukas
+>
+>
+> Lukas Wunner (9):
+>   PCI: Simplify disconnected marking
+>   PCI: pciehp: Drop unnecessary includes
+>   PCI: pciehp: Drop hotplug_slot_ops wrappers
+>   PCI: pciehp: Unify controller and slot structs
+>   PCI: pciehp: Reshuffle controller struct for clarity
+>   PCI: hotplug: Constify hotplug_slot_ops
+>   PCI: hotplug: Drop hotplug_slot_info
+>   PCI: hotplug: Embed hotplug_slot
+>   PCI: hotplug: Document TODOs
+>
+>  arch/powerpc/include/asm/pnv-pci.h      |   2 +-
+>  drivers/pci/hotplug/TODO                |  74 +++++++
+>  drivers/pci/hotplug/acpiphp.h           |  10 +-
+>  drivers/pci/hotplug/acpiphp_core.c      |  36 +---
+>  drivers/pci/hotplug/acpiphp_ibm.c       |   2 +-
+>  drivers/pci/hotplug/cpci_hotplug.h      |  11 +-
+>  drivers/pci/hotplug/cpci_hotplug_core.c | 105 +++-------
+>  drivers/pci/hotplug/cpci_hotplug_pci.c  |   6 +-
+>  drivers/pci/hotplug/cpqphp.h            |   9 +-
+>  drivers/pci/hotplug/cpqphp_core.c       |  59 ++----
+>  drivers/pci/hotplug/cpqphp_ctrl.c       |  31 +--
+>  drivers/pci/hotplug/ibmphp.h            |   9 +-
+>  drivers/pci/hotplug/ibmphp_core.c       | 121 ++++-------
+>  drivers/pci/hotplug/ibmphp_ebda.c       |  70 +------
+>  drivers/pci/hotplug/pci_hotplug_core.c  |  53 ++---
+>  drivers/pci/hotplug/pciehp.h            | 138 ++++++-------
+>  drivers/pci/hotplug/pciehp_core.c       | 127 +++---------
+>  drivers/pci/hotplug/pciehp_ctrl.c       | 255 +++++++++++-------------
+>  drivers/pci/hotplug/pciehp_hpc.c        | 127 ++++--------
+>  drivers/pci/hotplug/pciehp_pci.c        |  24 +--
+>  drivers/pci/hotplug/pnv_php.c           |  35 ++--
+>  drivers/pci/hotplug/rpaphp.h            |  10 +-
+>  drivers/pci/hotplug/rpaphp_core.c       |  20 +-
+>  drivers/pci/hotplug/rpaphp_pci.c        |  11 +-
+>  drivers/pci/hotplug/rpaphp_slot.c       |  22 +-
+>  drivers/pci/hotplug/s390_pci_hpc.c      |  44 ++--
+>  drivers/pci/hotplug/sgi_hotplug.c       |  63 +++---
+>  drivers/pci/hotplug/shpchp.h            |   8 +-
+>  drivers/pci/hotplug/shpchp_core.c       |  48 ++---
+>  drivers/pci/hotplug/shpchp_ctrl.c       |  21 +-
+>  drivers/pci/pci.c                       |   4 +-
+>  drivers/pci/pcie/err.c                  |   8 +-
+>  drivers/pci/slot.c                      |   2 +-
+>  drivers/platform/x86/asus-wmi.c         |  39 +---
+>  drivers/platform/x86/eeepc-laptop.c     |  43 ++--
+>  include/linux/pci_hotplug.h             |  43 +---
+>  36 files changed, 638 insertions(+), 1052 deletions(-)
+>  create mode 100644 drivers/pci/hotplug/TODO
+>
+> --
+> 2.18.0
+>
+
+
+-- 
+With Best Regards,
+Andy Shevchenko
