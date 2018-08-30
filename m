@@ -1,108 +1,80 @@
-Return-Path: <SRS0=81jy=LO=intel.com=jonathan.derrick@kernel.org>
-Return-Path: <SRS0=81jy=LO=intel.com=jonathan.derrick@kernel.org>
-From: Jon Derrick <jonathan.derrick@intel.com>
-To: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
-Cc: Bjorn Helgaas <helgaas@kernel.org>,
-	Keith Busch <keith.busch@intel.com>,
-	<linux-pci@vger.kernel.org>,
-	Jon Derrick <jonathan.derrick@intel.com>
-Subject: [PATCH] PCI/VMD: Set up firmware first if capable
-Date: Thu, 30 Aug 2018 18:30:03 -0600
-Message-Id: <1535675403-2903-2-git-send-email-jonathan.derrick@intel.com>
-In-Reply-To: <1535675403-2903-1-git-send-email-jonathan.derrick@intel.com>
-References: <1535675403-2903-1-git-send-email-jonathan.derrick@intel.com>
+Return-Path: <SRS0=xLx8=LN=gmail.com=alexander.duyck@kernel.org>
+Return-Path: <SRS0=xLx8=LN=gmail.com=alexander.duyck@kernel.org>
+MIME-Version: 1.0
+References: <CAKgT0Uf64TJrK7sEzj-vHb-7kci_-RtcM_ykTw-0gPgd53_9Pw@mail.gmail.com>
+ <2d84340e-0703-0bc7-4917-3b18979b2aa5@mellanox.com> <b8b1444f-ee31-b6c1-a5e2-aa0d2e08d2e5@mellanox.com>
+ <CAKgT0UdT5yPESZd2U=K-n47pDpAjH4Ed08KKrK-Hf9F=N1hm_Q@mail.gmail.com> <5206dd74-432d-3342-2a48-3cdd1be8b5cb@mellanox.com>
+In-Reply-To: <5206dd74-432d-3342-2a48-3cdd1be8b5cb@mellanox.com>
+From: Alexander Duyck <alexander.duyck@gmail.com>
+Date: Thu, 30 Aug 2018 08:39:56 -0700
+Message-ID: <CAKgT0UfyFqEyYibVAJzeuNcCy4LDepxm3n_qdfyPBbmvvEZFVw@mail.gmail.com>
+Subject: Re: [pull request][net-next 00/10] Mellanox, mlx5 and devlink updates 2018-07-31
+To: valex@mellanox.com
+Cc: Erez Shitrit <erezsh@mellanox.com>, Saeed Mahameed <saeedm@dev.mellanox.co.il>,
+	Saeed Mahameed <saeedm@mellanox.com>, David Miller <davem@davemloft.net>,
+	Netdev <netdev@vger.kernel.org>, Jiri Pirko <jiri@mellanox.com>,
+	Jakub Kicinski <jakub.kicinski@netronome.com>, Bjorn Helgaas <helgaas@kernel.org>,
+	linux-pci <linux-pci@vger.kernel.org>
+Content-Type: text/plain; charset="UTF-8"
 List-ID: <linux-pci.vger.kernel.org>
 
-Some VMD devices will want to use firmware first error-handling on the
-entire domain. This is detected by the BIOS setting the VMD endpoint's
-interface to 0x1.
+I'm dropping all the old comments since the conversation was flattened
+and only has one level of marks for everything.
 
-Detect this condition and propogate it to the entire domain.
+On Thu, Aug 30, 2018 at 7:43 AM Alex Vesker <valex@mellanox.com> wrote:
 
-Signed-off-by: Jon Derrick <jonathan.derrick@intel.com>
----
- arch/x86/pci/common.c        | 17 ++++++++++++++++-
- drivers/pci/controller/vmd.c | 25 ++++++++++++++++++++++++-
- 2 files changed, 40 insertions(+), 2 deletions(-)
+<snip>
 
-diff --git a/arch/x86/pci/common.c b/arch/x86/pci/common.c
-index d4ec117..f07f2e4 100644
---- a/arch/x86/pci/common.c
-+++ b/arch/x86/pci/common.c
-@@ -663,8 +663,23 @@ static void set_dma_domain_ops(struct pci_dev *pdev) {}
- 
- static void set_dev_domain_options(struct pci_dev *pdev)
- {
--	if (is_vmd(pdev->bus))
-+	if (is_vmd(pdev->bus)) {
-+		struct pci_host_bridge *hb;
-+		struct pci_dev *vmd;
-+
- 		pdev->hotplug_user_indicators = 1;
-+
-+		/*
-+		 * The VMD endpoint is not PCIe, so will fail
-+		 * pcie_aer_get_firmware_first(). Set and get the raw member
-+		 * instead.
-+		 */
-+		hb = pci_find_host_bridge(pdev->bus);
-+		vmd = to_pci_dev(hb->dev.parent);
-+
-+		pdev->__aer_firmware_first = vmd->__aer_firmware_first;
-+		pdev->__aer_firmware_first_valid = vmd->__aer_firmware_first_valid;
-+	}
- }
- 
- int pcibios_add_device(struct pci_dev *dev)
-diff --git a/drivers/pci/controller/vmd.c b/drivers/pci/controller/vmd.c
-index fd2dbd7..74a1a04 100644
---- a/drivers/pci/controller/vmd.c
-+++ b/drivers/pci/controller/vmd.c
-@@ -44,6 +44,11 @@ enum vmd_features {
- 	 * bus numbering
- 	 */
- 	VMD_FEAT_HAS_BUS_RESTRICTIONS	= (1 << 1),
-+
-+	/*
-+	 * Device may request firmware first error-handling on the domain
-+	 */
-+	VMD_FEAT_HAS_FIRMWARE_FIRST	= (1 << 2),
- };
- 
- /*
-@@ -633,6 +638,23 @@ static int vmd_enable_domain(struct vmd_dev *vmd, unsigned long features)
- 			busn_start = 128;
- 	}
- 
-+	/*
-+	 * Certain VMD devices may request firmware first error-handling
-+	 * support on the domain. These domains are virtual and not described
-+	 * by ACPI, so we must set it explicitly. This sets firmware first on
-+	 * the endpoint and has a corresponding domain setting in
-+	 * arch/x86/pci/common.c
-+	 */
-+	if (features & VMD_FEAT_HAS_FIRMWARE_FIRST) {
-+		u8 interface;
-+
-+		pci_read_config_byte(vmd->dev, PCI_CLASS_PROG, &interface);
-+		if (interface == 0x1) {
-+			vmd->dev->__aer_firmware_first = 1;
-+			vmd->dev->__aer_firmware_first_valid = 1;
-+		}
-+	}
-+
- 	res = &vmd->dev->resource[VMD_CFGBAR];
- 	vmd->resources[0] = (struct resource) {
- 		.name  = "VMD CFGBAR",
-@@ -860,7 +882,8 @@ static int vmd_resume(struct device *dev)
- 	{PCI_DEVICE(PCI_VENDOR_ID_INTEL, PCI_DEVICE_ID_INTEL_VMD_201D),},
- 	{PCI_DEVICE(PCI_VENDOR_ID_INTEL, PCI_DEVICE_ID_INTEL_VMD_28C0),
- 		.driver_data = VMD_FEAT_HAS_MEMBAR_SHADOW |
--				VMD_FEAT_HAS_BUS_RESTRICTIONS,},
-+				VMD_FEAT_HAS_BUS_RESTRICTIONS |
-+				VMD_FEAT_HAS_FIRMWARE_FIRST,},
- 	{0,}
- };
- MODULE_DEVICE_TABLE(pci, vmd_ids);
--- 
-1.8.3.1
+> To which devlink interfaces are you referring?
+
+All of them. Not just the ones in this patch. If you are exposing an
+interface to the user you should have documentation for it somewhere.
+You should probably look at adding a patch to make certain you have
+all the existing devlink interfaces in the driver documented.
+
+I would like to see something added to the documentation folder that
+explains what all the DEVLINK_PARAM_GENERIC interfaces are expected to
+do, and maybe why I would use them. Then in addition I would like to
+see per-driver documentation added for the DEVLINK_PARAM_DRIVER calls.
+So for example I can't find any documentation in the kernel on what
+enable_64b_cqe_eqe or enable_4k_uar do in mlx4 or why I would need
+them, but you have them exposed as interfaces to userspace.
+
+> There are 3 patches here that provide the crdump capability,
+> these are the patches I would like to resubmit.
+>
+> net/mlx5: Add Vendor Specific Capability access gateway:
+>     This is needed to read from the VSC by only the driver to collect a dump
+
+You should probably work with the linux-pci mailing list on this bit
+since you are exposing a new capability and they can probably point
+you in the direction of how they want to deal with any potential races
+in terms of access to the device versus your capability which you are
+adding support for dumping via devlink.
+
+> net/mlx5: Add Crdump FW snapshot support
+>     This is code that collects the dump and registers a region called crdump
+> net/mlx5: Use devlink region_snapshot parameter
+>     Here I use an already implemented global param that specifies whether
+>     snapshots are supported.
+>
+> The devlink region feature is well documented.
+
+Where?
+
+> can it be that you referring to devlink region called "crdump" which mlx5 exposes?
+
+I don't care about the internals. I care about user available
+documentation for the interface that is exposed. How do you expect the
+user to use this functionality? That is what I want documented.
+
+<snip>
+
+> Will it be sufficient to prevent setcpi access using "pci_cfg_access_lock -
+> any userspace reads or writes to config space and concurrent lock requests will sleep"
+> otherwise do you have a different solution?
+
+That sounds like a step in the right direction, but that is something
+you should work with the linux-pci list on. My main concern is that I
+don't want us being able to come at this interface from multiple
+directions and screw things up.
