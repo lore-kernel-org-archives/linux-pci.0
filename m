@@ -1,39 +1,48 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from verein.lst.de ([213.95.11.211]:55603 "EHLO newverein.lst.de"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1731128AbeHFOjJ (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Mon, 6 Aug 2018 10:39:09 -0400
-Date: Mon, 6 Aug 2018 14:35:27 +0200
-From: Christoph Hellwig <hch@lst.de>
-To: Wesley Terpstra <wesley@sifive.com>
-Cc: Christoph Hellwig <hch@lst.de>,
-        Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
-        Bjorn Helgaas <bhelgaas@google.com>,
-        Palmer Dabbelt <palmer@dabbelt.com>,
-        Arnd Bergmann <arnd@arndb.de>, linux-pci@vger.kernel.org,
-        linux-riscv@lists.infradead.org
-Subject: Re: [PATCH 2/3] PCI/xilinx: Work-around for hardware DMA limit (32
-        bits)
-Message-ID: <20180806123527.GB6997@lst.de>
-References: <20180804101402.10022-1-hch@lst.de> <20180804101402.10022-3-hch@lst.de> <CAMgXwTgr572J_HH396tfvT7Zj8Jj0fefKOSmVw2+Gwn8qcPR1g@mail.gmail.com>
+Return-Path: <SRS0=pfCT=LM=intel.com=keith.busch@kernel.org>
+Return-Path: <SRS0=pfCT=LM=intel.com=keith.busch@kernel.org>
+Date: Wed, 29 Aug 2018 18:01:01 -0600
+From: Keith Busch <keith.busch@intel.com>
+To: Benjamin Herrenschmidt <benh@kernel.crashing.org>
+Cc: poza@codeaurora.org, Sinan Kaya <okaya@kernel.org>,
+	Bjorn Helgaas <helgaas@kernel.org>,
+	Thomas Tai <thomas.tai@oracle.com>, bhelgaas@google.com,
+	linux-pci@vger.kernel.org, linux-pci-owner@vger.kernel.org,
+	Sam Bobroff <sam.bobroff@au1.ibm.com>
+Subject: Re: [PATCH 1/1] PCI/AER: prevent pcie_do_fatal_recovery from using
+ device after it is removed
+Message-ID: <20180830000100.GA5841@localhost.localdomain>
+References: <b2e2ac5c92d8a91d00606754d1046578@codeaurora.org>
+ <2ecd1fd6d763810d45697f846fa876b58a193b1b.camel@kernel.crashing.org>
+ <a149d9657ca83b41c724b0ddd319c6fb@codeaurora.org>
+ <512e0e11c3ba462c1d033f8b0e768fa27489731c.camel@kernel.crashing.org>
+ <ad23b16cf7ff1f3b51961fda59533892@codeaurora.org>
+ <2742bdba5ae8ccc420234b6e6b0224919367ed4c.camel@kernel.crashing.org>
+ <20180821143751.GA18477@localhost.localdomain>
+ <277b7056aa7af8e98d5cd912838e582783943aa9.camel@kernel.crashing.org>
+ <20180821220456.GC18612@localhost.localdomain>
+ <5d69daf9918878b95b6df3265fc4c3d5b52f9baa.camel@kernel.crashing.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <CAMgXwTgr572J_HH396tfvT7Zj8Jj0fefKOSmVw2+Gwn8qcPR1g@mail.gmail.com>
-Sender: linux-pci-owner@vger.kernel.org
+In-Reply-To: <5d69daf9918878b95b6df3265fc4c3d5b52f9baa.camel@kernel.crashing.org>
 List-ID: <linux-pci.vger.kernel.org>
 
-On Sun, Aug 05, 2018 at 01:02:58PM -0700, Wesley Terpstra wrote:
-> FYI, This Xilinx PCIe IP 32-bit cap only applies to SOME instances of
-> the IP. The Ultrascale+ version of Xilinx PCIe hard IP does support
-> 64-bit or 32-bit. The Virtex7 version only supports 32-bit. The
-> pcie-xilinx driver woks with both of these root complexes. So probably
-> there should be a conditional hook in the DTS that triggers the
-> work-around behaviour.
+On Wed, Aug 22, 2018 at 09:06:57AM +1000, Benjamin Herrenschmidt wrote:
+> It can be probably done by a simple test & skip as you go down
+> restoring state, then handling the removals after the dance is
+> complete.
 
-Either we'll need to able to detect which version we use based on
-registrs, or we will indeed need firmware information.
+I tested on a variety of hardware, and there are mixed results. The spec
+captures the crux of the problem with checking PDC (7.5.3.11):
 
-Note that we already have the mechanism for firmware directed dma limits
-in place, it is called the dma-ranges DT property.  If we can get the
-SiFive firmware to set it up properly the RISC-V swiotlb code will
-just do the right thing.
+  Note that the in-band presence detect mechanism requires that power be
+  applied to an adapter for its presence to be detected. Consequently,
+  form factors that require a power controller for hot-plug must implement
+  a physical pin presence detect mechanism.
+
+Many slots don't implement power controllers, so a secondary bus reset
+always triggers a PDC. We can't really ignore PDC during fatal error
+handling since hot plugs are the types of actions that often trigger
+fatal errors..
+
+Does it sound okay to trust PDC anyway? It's no worse than what would
+happen currently, and it doesn't affect non-hotplug slots.
