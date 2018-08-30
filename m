@@ -1,91 +1,87 @@
-Return-Path: <SRS0=ey29=LD=broadcom.com=hari.vyas@kernel.org>
-Return-Path: <SRS0=ey29=LD=broadcom.com=hari.vyas@kernel.org>
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
 MIME-Version: 1.0
-In-Reply-To: <4d777ed8c17b479e59b16cc0b4e9a3f6537f9884.camel@kernel.crashing.org>
-References: <20180817044902.31420-1-benh@kernel.crashing.org>
- <20180817044902.31420-2-benh@kernel.crashing.org> <20180817154431.GC128050@bhelgaas-glaptop.roam.corp.google.com>
- <06c1233b71dea08b1fc32334acefc48c32c46557.camel@kernel.crashing.org>
- <20180819022440.GG128050@bhelgaas-glaptop.roam.corp.google.com> <4d777ed8c17b479e59b16cc0b4e9a3f6537f9884.camel@kernel.crashing.org>
-From: Hari Vyas <hari.vyas@broadcom.com>
-Date: Mon, 20 Aug 2018 11:55:09 +0530
-Message-ID: <CAM5rFu_dsfAiQtVnM58631tFUxYyzXrA5tgz8_v0=or3Lv8YbA@mail.gmail.com>
-Subject: Re: [RFC PATCH 1/6] Revert "PCI: Fix is_added/is_busmaster race condition"
-To: Benjamin Herrenschmidt <benh@kernel.crashing.org>
-Cc: Bjorn Helgaas <helgaas@kernel.org>, linux-pci@vger.kernel.org,
-	Ray Jui <ray.jui@broadcom.com>, Srinath Mannam <srinath.mannam@broadcom.com>,
-	Guenter Roeck <linux@roeck-us.net>, Jens Axboe <axboe@kernel.dk>, Lukas Wunner <lukas@wunner.de>,
-	Konstantin Khlebnikov <khlebnikov@yandex-team.ru>, Marta Rybczynska <mrybczyn@kalray.eu>,
-	Pierre-Yves Kerbrat <pkerbrat@kalray.eu>, linux-kernel@vger.kernel.org
-Content-Type: text/plain; charset="UTF-8"
+References: <1535453838-12154-1-git-send-email-sunil.kovvuri@gmail.com>
+ <1535453838-12154-11-git-send-email-sunil.kovvuri@gmail.com>
+ <CAK8P3a1Vdy-VsLWJMer-Z96E4Trhi0WJXJ3fTzyOGny2Mn6RAA@mail.gmail.com>
+ <CA+sq2Cf2BLKsV=gY-MPnygV1ufpvmnw6ETh90JX_uKQBk3Sduw@mail.gmail.com>
+ <CAK8P3a0+zJRxEYWZpYShRJo-3oqMaC9TJADugaRTiBnjw7ssPA@mail.gmail.com>
+ <CA+sq2Cfd_jk=JzcLmPYiW1iGqKrJRrv5vrsmeZfY4W+qi5GLgw@mail.gmail.com>
+In-Reply-To: <CA+sq2Cfd_jk=JzcLmPYiW1iGqKrJRrv5vrsmeZfY4W+qi5GLgw@mail.gmail.com>
+From: Arnd Bergmann <arnd@arndb.de>
+Date: Thu, 30 Aug 2018 15:53:25 +0200
+Message-ID: <CAK8P3a1BRvhQ9iQWP2hTrJOu+Z+vmmek-Uobw6zX0dM4zFe_gQ@mail.gmail.com>
+Subject: Re: [PATCH 10/15] soc: octeontx2: Reconfig MSIX base with IOVA
+To: Sunil Kovvuri <sunil.kovvuri@gmail.com>
+List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
+List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
+List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
+List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
+List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
+Cc: Jason Cooper <jason@lakedaemon.net>, Marc Zyngier <marc.zyngier@arm.com>,
+ linux-pci <linux-pci@vger.kernel.org>,
+ Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
+ Linux ARM <linux-arm-kernel@lists.infradead.org>,
+ Olof Johansson <olof@lixom.net>, Thomas Gleixner <tglx@linutronix.de>,
+ linux-soc@vger.kernel.org, gakula@marvell.com, sgoutham@marvell.com
+Content-Type: text/plain; charset="us-ascii"
+Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
+Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Mon, Aug 20, 2018 at 7:40 AM, Benjamin Herrenschmidt
-<benh@kernel.crashing.org> wrote:
-> On Sat, 2018-08-18 at 21:24 -0500, Bjorn Helgaas wrote:
->> On Sat, Aug 18, 2018 at 01:24:51PM +1000, Benjamin Herrenschmidt wrote:
->> > On Fri, 2018-08-17 at 10:44 -0500, Bjorn Helgaas wrote:
->> > > On Fri, Aug 17, 2018 at 02:48:57PM +1000, Benjamin Herrenschmidt wrote:
->> > > > This reverts commit 44bda4b7d26e9fffed6d7152d98a2e9edaeb2a76.
->> > >
->> > > Just to be clear, if I understand correctly, this is a pure revert of
->> > > 44bda4b7d26e and as such it reintroduces the problem solved by that
->> > > commit.
->> > >
->> > > If your solution turns out to be better, that's great, but it would be
->> > > nice to avoid the bisection hole of reintroducing the problem, then
->> > > fixing it again later.
->> >
->> > There is no way to do that other than merging the revert and the fix
->> > into one. That said, the race is sufficiently hard to hit that I
->> > wouldn't worry too much about it.
->>
->> OK, then at least mention that in the changelog.
+On Tue, Aug 28, 2018 at 3:17 PM Sunil Kovvuri <sunil.kovvuri@gmail.com> wrote:
+> On Tue, Aug 28, 2018 at 6:27 PM Arnd Bergmann <arnd@arndb.de> wrote:
+> > On Tue, Aug 28, 2018 at 2:42 PM Sunil Kovvuri <sunil.kovvuri@gmail.com> wrote:
+> > > On Tue, Aug 28, 2018 at 5:39 PM Arnd Bergmann <arnd@arndb.de> wrote:
+> > > > On Tue, Aug 28, 2018 at 12:58 PM <sunil.kovvuri@gmail.com> wrote:
+> > >
+> > > This admin function is a PCI device which is capable of provisioning
+> > > HW blocks to other PCIe SRIOV devices in the system. Each HW block
+> > > (eg memory buffer pools, NIC dewscriptors, crypto engines e.t.c) needs
+> > > certain no of MSIX vectors. Admin function has a set of 32K MSIX vectors
+> > > in memory (not on-chip) which based on HW block provisioning to a PCI device
+> > > attaches the required number of vectors to that device. Some part of this
+> > > configuration is done by low level firmware.
+> > >
+> > > RVU_AF_MSIXTR_BASE points to the memory region allocated for 32K MSIX
+> > > vectors. If kernel is booted with IOMMU enabled and admin function device
+> > > is attached to SMMU, HW will go through translation to access this MSIX
+> > > vector memory region. Hence the mapping done in this patch.
+> >
+> > Do you mean this is not a regular PCIe MSI-X interrupt to the GIC, but
+> > something internal to your device that gets routed through the IOMMU
+> > back into the device?
+> >
 >
-> Sure will do. This is just RFC at this stage :-)
+> This is a regular PCIe MSI-X interrupt, the difference is that the
+> bunch of PCI devices
+> here doesn't have a fixed set of MSIX vectors. Admin function has a
+> memory region with
+> 32K MSIX vectors which it provisions to PCI devices based on the HW
+> functional blocks
+> attached to them. A PCI device which works as a ethernet device needs
+> X number of vectors
+> and a crypto device needs Y number of vectors.
 >
-> As for the race with enable, what's your take on my approach ? The
-> basic premise is that we need some kind of mutex to make the updates to
-> enable_cnt and the actual config space changes atomic. While at it we
-> can fold pci_set_master vs. is_busmaster as well as those are racy too.
->
-> I chose to create a new mutex which we should be able to address other
-> similar races if we find them. The other solutions that I dismissed
-> were:
->
->  - Using the device_lock. A explained previously, this is tricky, I
-> prefer not using this for anything other than locking against
-> concurrent add/remove. The main issue is that drivers will be sometimes
-> called in context where that's already held, so we can't take it inside
-> pci_enable_device() and I'd rather not add new constraints such as
-> "pci_enable_device() must be only called from probe() unless you also
-> take the device lock". It would be tricky to audit everybody...
->
->  - Using a global mutex. We could move the bridge lock from AER to core
-> code for example, and use that. But it doesn't buy us much, and
-> slightly redecuces parallelism. It also makes it a little bit more
-> messy to walk up the bridge chain, we'd have to do a
-> pci_enable_device_unlocked or something, messy.
->
-> So are you ok with the approach ? Do you prefer one of the above
-> regardless ? Something else ?
->
-> Cheers,
-> Ben.
->
->
-Some concern was raised about race situation so just to be more clear
-about race condition.
-Situation is described in Bug 200283 - PCI: Data corruption happening
-due to a race condition.
-Issue was discovered by our broadcom QA team.
-Initially commit was to use one separate lock only for avoiding race
-condition but after review, approach was slightly changed to move
-is_added  to pci_dev private flags as it was completely
-internal/private variable of pci core driver.
-Powerpc legacy arch code was using is_added flag directly which looks
-bit strange so  ../../ type of inclusion of pci.h was required. I know
-it looks ugly but it is being used in some legacy code still.
-Anyway, as stated earlier too, problem should be just solved in better way.
+> Since the admin function owns the whole MSIX vector region, HW uses
+> this device's stream ID
+> to access the vectors. Hence the IOMMU mapping. Once MSIX vectors are
+> provisioned to
+> a PCI device they work as normal MSIX interrupt like any other device.
 
-Regards,
-hari
+Ok, I think I got it now, just to confirm: the MSIX vectors you allocate
+in the admin device refer to memory backing the BAR that contains
+the MSI-X entries of the other functions, right?
+
+I was a bit confused here and assumed that you were mapping
+the MMIO area of an interrupt controller that receives the interupt
+transactions.
+
+         Arnd
+
+_______________________________________________
+linux-arm-kernel mailing list
+linux-arm-kernel@lists.infradead.org
+http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
