@@ -1,73 +1,111 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-ed1-f65.google.com ([209.85.208.65]:41407 "EHLO
-        mail-ed1-f65.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1725833AbeHQHLG (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Fri, 17 Aug 2018 03:11:06 -0400
-Received: by mail-ed1-f65.google.com with SMTP id s24-v6so3807377edr.8
-        for <linux-pci@vger.kernel.org>; Thu, 16 Aug 2018 21:09:18 -0700 (PDT)
+Received: from mail-sh2.amlogic.com ([58.32.228.45]:16601 "EHLO
+        mail-sh2.amlogic.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1727098AbeH3LiT (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Thu, 30 Aug 2018 07:38:19 -0400
+Subject: Re: [PATCH v2 1/2] dt-bindings: PCI: meson: add DT bindings for
+ Amlogic Meson PCIe controller
+To: Rob Herring <robh@kernel.org>
+CC: Jerome Brunet <jbrunet@baylibre.com>,
+        Bjorn Helgaas <bhelgaas@google.com>,
+        Yue Wang <yue.wang@amlogic.com>,
+        Kevin Hilman <khilman@baylibre.com>,
+        <linux-kernel@vger.kernel.org>, <linux-pci@vger.kernel.org>,
+        <linux-arm-kernel@lists.infradead.org>,
+        <linux-amlogic@lists.infradead.org>,
+        Yixun Lan <yixun.lan@amlogic.com>,
+        Liang Yang <liang.yang@amlogic.com>,
+        Jianxin Pan <jianxin.pan@amlogic.com>,
+        Qiufang Dai <qiufang.dai@amlogic.com>,
+        Jian Hu <jian.hu@amlogic.com>, <devicetree@vger.kernel.org>
+References: <1535096165-45827-1-git-send-email-hanjie.lin@amlogic.com>
+ <1535096165-45827-2-git-send-email-hanjie.lin@amlogic.com>
+ <8c48964151d24758298ba935da336c0829e2b287.camel@baylibre.com>
+ <11d7547b-feb4-6ecb-cef3-db46ce8ee2ef@amlogic.com>
+ <20180829004122.GA25928@bogus>
+From: Hanjie Lin <hanjie.lin@amlogic.com>
+Message-ID: <84d5399c-67d4-f8a4-3613-00d91f21292f@amlogic.com>
+Date: Thu, 30 Aug 2018 15:37:30 +0800
 MIME-Version: 1.0
-References: <1534340781-19194-1-git-send-email-adouglas@cadence.com>
- <615023FB-D8BA-4F12-BC2B-EDDBBDA39148@gmail.com> <MWHPR07MB3502DD2C6CAADBA52D56166CD83E0@MWHPR07MB3502.namprd07.prod.outlook.com>
- <CA+Kvs9m=jECCcy6RCrtKvJOAwt5Fr8XFFkkijMy3MFe9trav5g@mail.gmail.com>
-In-Reply-To: <CA+Kvs9m=jECCcy6RCrtKvJOAwt5Fr8XFFkkijMy3MFe9trav5g@mail.gmail.com>
-From: Ramon Fried <ramon.fried@gmail.com>
-Date: Fri, 17 Aug 2018 07:09:05 +0300
-Message-ID: <CA+Kvs9=YMSNCC-vAREQNDAQaUBVs+eewXAEyWwVpqCbjo4LS3g@mail.gmail.com>
-Subject: Re: [PATCH v2 0/5] Add MSI-X support for cadence EP driver
-To: Alan Douglas <adouglas@cadence.com>
-Cc: Bjorn Helgaas <bhelgaas@google.com>, kishon@ti.com,
-        lorenzo.pieralisi@arm.com, linux-pci@vger.kernel.org,
-        gustavo.pimentel@synopsys.com, cyrille.pitchen@bootlin.com,
-        stelford@cadence.com
-Content-Type: text/plain; charset="UTF-8"
+In-Reply-To: <20180829004122.GA25928@bogus>
+Content-Type: text/plain; charset="windows-1252"
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Fri, Aug 17, 2018 at 7:05 AM Ramon Fried <ramon.fried@gmail.com> wrote:
->
->
->
-> On Thu, Aug 16, 2018 at 5:28 PM Alan Douglas <adouglas@cadence.com> wrote:
+
+
+On 2018/8/29 8:41, Rob Herring wrote:
+> On Mon, Aug 27, 2018 at 04:55:20PM +0800, Hanjie Lin wrote:
 >>
->> Hi Ramon,
 >>
->> On 15 August 2018 17:56, Ramon Fried wrote:
->> > On August 15, 2018 4:46:21 PM GMT+03:00, Alan Douglas <adouglas@cadence.com> wrote:
->> > >The patch implements MSI-X support in the cadence endpoint driver.
->> > >
->> > >This patch depends on on Gustavo Pimentel's patch series adding MSI-X
->> > >support for EP ("Add MSI-X support on pcitest tool")
->> > >
->> > >It also adds fixes for MSI issues discovered during testing of MSI-X
->> > >  - Use AXI region 0 for interrupt signalling
->> > >  - Write MSI and MSI-X with 32bit value rather than 16bit
->> > >  - Check for masking before sending MSI or MSI-X
->> > >  - Check link is up before sending IRQ
->> > >
->> > Hi.
->> > AFAIK the BIOS allocates physical memory for the bars. Assuming that the MSIx bar is only mapped after kernel boots on the endpoint,
->> > could it be too late?
->> >
->> > Do we need to trigger re-enumeration of the PCI bus from host side when working with this as an endpoint?
->> It depends on how you are using it.  PF0 is always enabled in the cadence HW, so will be enumerated at boot,
->> as long as the EP HW is out of reset and PHY is enabled.
->> The PCIe EP hardware can be initialized so that BARs are enabled by default, before the kernel boots on the
->> endpoint, and so they will be found and mapped during the initial enumeration and you don't need to
->> re-enumerate.  The MSI-X vectors can't be written to the BAR until the EP kernel has booted and the EP driver
->> has mapped the BAR to local EP memory though (unless  you also configure this in the PCIe EP hardware, or in
->> EP pre-boot, but in that case you are probably not using the EP driver framework.)
+>> On 2018/8/24 16:22, Jerome Brunet wrote:
+>>> On Fri, 2018-08-24 at 15:36 +0800, Hanjie Lin wrote:
+>>>> From: Yue Wang <yue.wang@amlogic.com>
+>>>>
+>>>> The Amlogic Meson PCIe host controller is based on the Synopsys DesignWare
+>>>> PCI core. This patch adds documentation for the DT bindings in Meson PCIe
+>>>> controller.
+>>>>
+>>>> Signed-off-by: Yue Wang <yue.wang@amlogic.com>
+>>>> Signed-off-by: Hanjie Lin <hanjie.lin@amlogic.com>
+>>>> ---
+>>>>  .../devicetree/bindings/pci/amlogic,meson-pcie.txt | 63 ++++++++++++++++++++++
+>>>>  1 file changed, 63 insertions(+)
+>>>>  create mode 100644 Documentation/devicetree/bindings/pci/amlogic,meson-pcie.txt
+>>>>
+>>>> diff --git a/Documentation/devicetree/bindings/pci/amlogic,meson-pcie.txt b/Documentation/devicetree/bindings/pci/amlogic,meson-pcie.txt
+>>>> new file mode 100644
+>>>> index 0000000..8a831d1
+>>>> --- /dev/null
+>>>> +++ b/Documentation/devicetree/bindings/pci/amlogic,meson-pcie.txt
+>>>> @@ -0,0 +1,63 @@
+>>>> +Amlogic Meson AXG DWC PCIE SoC controller
+>>>> +
+>>>> +Amlogic Meson PCIe host controller is based on the Synopsys DesignWare PCI core.
+>>>> +It shares common functions with the PCIe DesignWare core driver and
+>>>> +inherits common properties defined in
+>>>> +Documentation/devicetree/bindings/pci/designware-pci.txt.
+>>>> +
+>>>> +Additional properties are described here:
+>>>> +
+>>>> +Required properties:
+>>>> +- compatible:
+>>>> +	should contain "amlogic,axg-pcie" to identify the core.
+>>>> +- reg:
+>>>> +	Should contain the configuration address space.
+>>>> +- reg-names: Must be
+>>>> +	- "elbi"	External local bus interface registers
+>>>> +	- "cfg"		Meson specific registers
+>>>> +	- "config"	PCIe configuration space
+>>>> +- reset-gpios: The GPIO to generate PCIe PERST# assert and deassert signal.
+>>>> +- clocks: Must contain an entry for each entry in clock-names.
+>>>> +- clock-names: Must include the following entries:
+>>>> +	- "pclk"       PCIe GEN 100M PLL clock
+>>>> +	- "port"       PCIe_x(A or B) RC clock gate
+>>>> +	- "general"    PCIe Phy clock
+>>>> +	- "mipi"       PCIe_x(A or B) 100M ref clock gate
+>>>> +- resets: phandle to the reset lines.
+>>>> +- reset-names: must contain "phy" and "peripheral"
+>>>> +       - "port" Port A or B reset
+>>>> +       - "apb" APB reset
+>>>
+>>> The above description is not coherent (phy <=> port)
+>>>
 >>
->> The EP driver framework does, in my understanding, generally expect re-enumeration after the
->> EP kernel has booted and the driver has been initialized, since it allows configuration of device ID, BAR
->> sizes etc., and if you change any of these from the HW defaults at boot you will need to re-enumerate.
->>
-This basically means that this driver is for hobbyist / enthusiast,
-you can't base a real product expecting
-re-enumeration of the bus. right ?
->
->> All tests I have done for the EP driver have been without BIOS enumeration, and triggering re-enumeration
->> after initializing the BAR sizes etc. via the EP driver
->>
->> Regards,
->> Alan
->>
+>> Yes, this should be port and apb here.
+>> We'll integrate phy driver into ctrl driver, and move phy reset to here also.
+> 
+> Why? That's the wrong thing to do if they are separate h/w blocks. You 
+> can do whatever you like in the drivers, but the DT should reflect the 
+> h/w.
+> 
+> Rob
+> 
+> .
+> 
+
+We have the dedicated phy driver which only process reset job,
+and we consider that it's too overkill to do just these things .
+So we will integrate phy reset job into the controller driver int the next version.  
+
+thanks. 
