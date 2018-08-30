@@ -1,53 +1,50 @@
-Return-Path: <SRS0=Ly/z=KY=deltatee.com=logang@kernel.org>
-Return-Path: <SRS0=Ly/z=KY=deltatee.com=logang@kernel.org>
-To: Eric Pilmore <epilmore@gigaio.com>, Bjorn Helgaas <helgaas@kernel.org>
-Cc: linux-pci@vger.kernel.org, David Woodhouse <dwmw2@infradead.org>,
- Alex Williamson <alex.williamson@redhat.com>,
- iommu@lists.linux-foundation.org
-References: <CAOQPn8soxubJxb=vp7kz+AM6LbPH5y+_Nx0Vzv7rjV_nMMqEmA@mail.gmail.com>
- <20180809184331.GB113140@bhelgaas-glaptop.roam.corp.google.com>
- <CAOQPn8uPYKai49WYPqZp2wNd5of=0hUvPOHEtqP56RZu-hcjuw@mail.gmail.com>
-From: Logan Gunthorpe <logang@deltatee.com>
-Message-ID: <b54899a8-a144-e8e0-9880-1800c4657b95@deltatee.com>
-Date: Thu, 9 Aug 2018 13:35:07 -0600
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail-it0-f54.google.com ([209.85.214.54]:37272 "EHLO
+        mail-it0-f54.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1725836AbeH3XPA (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Thu, 30 Aug 2018 19:15:00 -0400
+Received: by mail-it0-f54.google.com with SMTP id h20-v6so4163117itf.2
+        for <linux-pci@vger.kernel.org>; Thu, 30 Aug 2018 12:11:22 -0700 (PDT)
+Subject: Re: [PATCH v5 07/13] block: Add PCI P2P flag for request queue and
+ check support for requests
+To: Logan Gunthorpe <logang@deltatee.com>,
+        linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
+        linux-nvme@lists.infradead.org, linux-rdma@vger.kernel.org,
+        linux-nvdimm@lists.01.org, linux-block@vger.kernel.org
+Cc: Stephen Bates <sbates@raithlin.com>,
+        Christoph Hellwig <hch@lst.de>,
+        Keith Busch <keith.busch@intel.com>,
+        Sagi Grimberg <sagi@grimberg.me>,
+        Bjorn Helgaas <bhelgaas@google.com>,
+        Jason Gunthorpe <jgg@mellanox.com>,
+        Max Gurtovoy <maxg@mellanox.com>,
+        Dan Williams <dan.j.williams@intel.com>,
+        =?UTF-8?B?SsOpcsO0bWUgR2xpc3Nl?= <jglisse@redhat.com>,
+        Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+        Alex Williamson <alex.williamson@redhat.com>,
+        =?UTF-8?Q?Christian_K=c3=b6nig?= <christian.koenig@amd.com>
+References: <20180830185352.3369-1-logang@deltatee.com>
+ <20180830185352.3369-8-logang@deltatee.com>
+From: Jens Axboe <axboe@kernel.dk>
+Message-ID: <b5ab8fa3-34ac-3117-fa0d-5206c3939435@kernel.dk>
+Date: Thu, 30 Aug 2018 13:11:18 -0600
 MIME-Version: 1.0
-In-Reply-To: <CAOQPn8uPYKai49WYPqZp2wNd5of=0hUvPOHEtqP56RZu-hcjuw@mail.gmail.com>
+In-Reply-To: <20180830185352.3369-8-logang@deltatee.com>
 Content-Type: text/plain; charset=utf-8
-Subject: Re: IOAT DMA w/IOMMU
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hey,
-
-On 09/08/18 12:51 PM, Eric Pilmore wrote:
->>> Was wondering if anybody here has used IOAT DMA engines with an
->>> IOMMU turned on (Xeon based system)? My specific question is really
->>> whether it is possible to DMA (w/IOAT) to a PCI BAR address as the
->>> destination without having to map that address to the IOVA space of
->>> the DMA engine first (assuming the IOMMU is on)?
-
-I haven't tested this scenario but my guess would be that IOAT would
-indeed go through the IOMMU and the PCI BAR address would need to be
-properly mapped into the IOAT's IOVA. The fact that you see DMAR errors
-is probably a good indication that this is the case. I really don't know
-why you'd want to DMA something without mapping it.
-
->> So is this a peer-to-peer DMA scenario?  You mention DMA, which would
->> be a transaction initiated by a PCI device, to a PCI BAR address, so
->> it doesn't sound like system memory is involved.
+On 8/30/18 12:53 PM, Logan Gunthorpe wrote:
+> QUEUE_FLAG_PCI_P2P is introduced meaning a driver's request queue
+> supports targeting P2P memory.
 > 
-> No, not peer-to-peer.  This is from system memory (e.g. SKB buffer which
-> has had an IOMMU mapping created) to a PCI BAR address.
+> When a request is submitted we check if PCI P2PDMA memory is assigned
+> to the first page in the bio. If it is, we ensure the queue it's
+> submitted to supports it, and enforce REQ_NOMERGE.
 
-It's definitely peer-to-peer in the case where you are using a DMA
-engine in the PCI tree. You have the DMA PCI device sending TLPs
-directly to the PCI BAR device. So, if everything is done right, the
-TLPs will avoid the root complex completely. (Though, ACS settings could
-also prevent this from working and you'd either get similar DMAR errors
-or they'd disappear into a black hole).
+I think this belongs in the caller - both the validity check, and
+passing in NOMERGE for this type of request. I don't want to impose
+this overhead on everything, for a pretty niche case.
 
-When using the IOAT, it is part of the CPU so I wouldn't say it's really
-peer-to-peer. But an argument could be made that it is. Though, this is
-exactly what the existing ntb_transport is doing: DMAing from system
-memory to a PCI BAR and vice versa using IOAT.
-
-Logan
+-- 
+Jens Axboe
