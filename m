@@ -1,135 +1,246 @@
-Return-Path: <SRS0=8IOG=KX=gmail.com=marek.vasut@kernel.org>
-Return-Path: <SRS0=8IOG=KX=gmail.com=marek.vasut@kernel.org>
-Subject: Re: [PATCH V2 4/5] PCI: rcar: Support runtime PM, link state L1
- handling
-To: Bjorn Helgaas <helgaas@kernel.org>,
- Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
-Cc: linux-pci@vger.kernel.org, Phil Edworthy <phil.edworthy@renesas.com>,
- Marek Vasut <marek.vasut+renesas@gmail.com>,
- Geert Uytterhoeven <geert+renesas@glider.be>,
- Simon Horman <horms+renesas@verge.net.au>, Wolfram Sang <wsa@the-dreams.de>,
- linux-renesas-soc@vger.kernel.org
-References: <20171110215843.432-1-marek.vasut+renesas@gmail.com>
- <20171110215843.432-5-marek.vasut+renesas@gmail.com>
- <20171117174906.GB22599@red-moon>
- <3e0bc374-d296-675c-f290-256cc530feb7@gmail.com>
- <20180611135912.GD75679@bhelgaas-glaptop.roam.corp.google.com>
- <77d1eaf8-e180-f5f5-50f0-34c45e72c553@gmail.com>
- <20180613135308.GB201807@bhelgaas-glaptop.roam.corp.google.com>
- <20180613155252.GA12210@e107981-ln.cambridge.arm.com>
- <20180613172559.GC201807@bhelgaas-glaptop.roam.corp.google.com>
- <1d543b91-ac4f-7b61-4b2c-d8865e06d31e@gmail.com>
-From: Marek Vasut <marek.vasut@gmail.com>
-Message-ID: <9b91bbd9-64df-764e-e553-a37463549a92@gmail.com>
-Date: Wed, 8 Aug 2018 15:29:59 +0200
+Return-Path: <linux-nvme-bounces+bjorn=helgaas.com@lists.infradead.org>
+Return-Path: <linux-nvme-bounces+bjorn=helgaas.com@lists.infradead.org>
+From: Logan Gunthorpe <logang@deltatee.com>
+To: linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
+ linux-nvme@lists.infradead.org, linux-rdma@vger.kernel.org,
+ linux-nvdimm@lists.01.org, linux-block@vger.kernel.org
+Date: Thu, 30 Aug 2018 12:53:45 -0600
+Message-Id: <20180830185352.3369-7-logang@deltatee.com>
+In-Reply-To: <20180830185352.3369-1-logang@deltatee.com>
+References: <20180830185352.3369-1-logang@deltatee.com>
+Subject: [PATCH v5 06/13] PCI/P2PDMA: Add P2P DMA driver writer's documentation
+List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-nvme>,
+ <mailto:linux-nvme-request@lists.infradead.org?subject=unsubscribe>
+List-Archive: <http://lists.infradead.org/pipermail/linux-nvme/>
+List-Post: <mailto:linux-nvme@lists.infradead.org>
+List-Help: <mailto:linux-nvme-request@lists.infradead.org?subject=help>
+List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-nvme>,
+ <mailto:linux-nvme-request@lists.infradead.org?subject=subscribe>
+Cc: Sagi Grimberg <sagi@grimberg.me>,
+ =?UTF-8?q?Christian=20K=C3=B6nig?= <christian.koenig@amd.com>,
+ Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+ Jonathan Corbet <corbet@lwn.net>, Alex Williamson <alex.williamson@redhat.com>,
+ Stephen Bates <sbates@raithlin.com>, Keith Busch <keith.busch@intel.com>,
+ =?UTF-8?q?J=C3=A9r=C3=B4me=20Glisse?= <jglisse@redhat.com>,
+ Jason Gunthorpe <jgg@mellanox.com>, Bjorn Helgaas <bhelgaas@google.com>,
+ Max Gurtovoy <maxg@mellanox.com>, Dan Williams <dan.j.williams@intel.com>,
+ Logan Gunthorpe <logang@deltatee.com>, Christoph Hellwig <hch@lst.de>
 MIME-Version: 1.0
-In-Reply-To: <1d543b91-ac4f-7b61-4b2c-d8865e06d31e@gmail.com>
-Content-Type: text/plain; charset=utf-8
+Content-Type: text/plain; charset="us-ascii"
+Sender: "Linux-nvme" <linux-nvme-bounces@lists.infradead.org>
+Errors-To: linux-nvme-bounces+bjorn=helgaas.com@lists.infradead.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 07/25/2018 11:08 PM, Marek Vasut wrote:
-> On 06/13/2018 07:25 PM, Bjorn Helgaas wrote:
->> On Wed, Jun 13, 2018 at 04:52:52PM +0100, Lorenzo Pieralisi wrote:
->>> On Wed, Jun 13, 2018 at 08:53:08AM -0500, Bjorn Helgaas wrote:
->>>> On Wed, Jun 13, 2018 at 01:54:51AM +0200, Marek Vasut wrote:
->>>>> On 06/11/2018 03:59 PM, Bjorn Helgaas wrote:
->>>>>> On Sun, Jun 10, 2018 at 03:57:10PM +0200, Marek Vasut wrote:
->>>>>>> On 11/17/2017 06:49 PM, Lorenzo Pieralisi wrote:
->>>>>>>> On Fri, Nov 10, 2017 at 10:58:42PM +0100, Marek Vasut wrote:
->>>>>>>>> From: Phil Edworthy <phil.edworthy@renesas.com>
->>>>>>>>>
->>>>>>>>> Most PCIe host controllers support L0s and L1 power states via ASPM.
->>>>>>>>> The R-Car hardware only supports L0s, so when the system suspends and
->>>>>>>>> resumes we have to manually handle L1.
->>>>>>>>> When the system suspends, cards can put themselves into L1 and send a
->>>>>>>>
->>>>>>>> I assumed L1 entry has to be negotiated depending upon the PCIe
->>>>>>>> hierarchy capabilities, I would appreciate if you can explain to
->>>>>>>> me what's the root cause of the issue please.
->>>>>>>
->>>>>>> You should probably ignore the suspend/resume part altogether. The issue
->>>>>>> here is that the cards can enter L1 state, while the controller won't do
->>>>>>> that automatically, it can only detect that the link went into L1 state.
->>>>>>> If that happens,the driver must manually put the controller to L1 state.
->>>>>>> The controller can transition out of L1 state automatically though.
->>>>>>
->>>>>> From earlier discussion I thought the R-Car root port did not
->>>>>> advertise L1 support.
->>>>>
->>>>> Which discussion ? This one or somewhere else ?
->>>>
->>>> https://lkml.kernel.org/r/HK2PR0601MB1393D917D343E6363484CA68F5CB0@HK2PR0601MB1393.apcprd06.prod.outlook.com
->>>>
->>>> Re-reading that, I think I see my misunderstanding.  I was only
->>>> considering L1 in the ASPM context.  I didn't realize the L1
->>>> implications of devices being in states other than D0.
->>>>
->>>> Obviously L1 support for ASPM is optional and advertised via Link
->>>> Capabilities.  But per PCIe r4.0, sec 5.2, L1 support is required for
->>>> PCI-PM compatible power management, and is entered "whenever all
->>>> Functions ... are programmed to a D-state other than D0."
->>>>
->>>> So I guess this means *every* device is supposed to support L1 when it
->>>> is in a non-D0 power state.  I think *this* is the case you're
->>>> solving.
->>>>
->>>> A little more of this detail, e.g., that this issue has nothing to do
->>>> with ASPM, it's probably an R-Car erratum that the RC can't transition
->>>> from L1 to L0, etc., in the changelog would really help clear things
->>>> up for me.
->>>
->>> I think that the issue is related to the L0->L1 transition upon system
->>> suspend (ie the kernel must force the controller into L1 when all
->>> devices are in a sleep state) and for this specific reason I still think
->>> that checking for a PM_Enter_L1 DLLP reception and doing the L0->L1
->>> transition within a config access is wrong and prone to error (what's
->>> the rationale behind that ?), this ought to be done using PM methods in
->>> the host controller driver.
->>
->> But doesn't the problem happen whenever the link goes to L1, for any
->> reason?  E.g., runtime power management might put an endpoint in D3
->> even if we're not doing a whole system suspend.  A user could even
->> force the endpoint to D3 by writing to PCI_PM_CTRL with "setpci".  If
->> that's the case, I don't think the host controller PM methods will be
->> enough to work around the issue.
-> 
-> I think so, it's the link that goes into L1 state and this can happen
-> without any action from the controller side.
-> 
->> The comment in the patch ("If we are not in L1 link state and we have
->> received PM_ENTER_L1 DLLP, transition to L1 link state") suggests that
->> the R-Car host doesn't handle step 10 in PCIe r4.0, sec 5.3.2.1
->> correctly, i.e., it doesn't complete the transition of the link to L1.
->>
->> Putting this workaround in the config accessor makes sense to me
->> because in this situation the endpoint thinks it's in L1 and it won't
->> receive TLPs for config accesses.  Apparently forcing the RP to L1
->> completes the L1 entry, and the RP correctly handles the "Exit from L1
->> State" (sec 5.3.2.2) that's required when the RP needs to send a TLP
->> to the endpoint.
->>
->> I think there's still a potential issue if the endpoint goes to a
->> non-D0 state, the link is stuck in this transitional state (endpoint
->> thinks it's L1, RP thinks it's L0), and the *endpoint* wants to exit
->> L1, e.g., so it can send a PME message for a wakeup.  I don't know
->> what happens then.
-> 
-> Is there some hardware which I can use to simulate this situation ?
-> 
->> If there were a real erratum writeup for this, it would probably
->> discuss this situation.
-> 
-> I went through the latest errata sheet and don't see anything. The
-> datasheet only mentions that L0/L0s/L1 is supported and L2 is not supported.
-> 
-> Maybe Phil can comment on this too ?
+Add a restructured text file describing how to write drivers
+with support for P2P DMA transactions. The document describes
+how to use the APIs that were added in the previous few
+commits.
 
-Bump ?
+Also adds an index for the PCI documentation tree even though this
+is the only PCI document that has been converted to restructured text
+at this time.
 
-> [...]
-> 
+Signed-off-by: Logan Gunthorpe <logang@deltatee.com>
+Cc: Jonathan Corbet <corbet@lwn.net>
+---
+ Documentation/driver-api/pci/index.rst  |   1 +
+ Documentation/driver-api/pci/p2pdma.rst | 170 ++++++++++++++++++++++++++++++++
+ 2 files changed, 171 insertions(+)
+ create mode 100644 Documentation/driver-api/pci/p2pdma.rst
 
-
+diff --git a/Documentation/driver-api/pci/index.rst b/Documentation/driver-api/pci/index.rst
+index eaf20b24bf7d..ecc7416c523b 100644
+--- a/Documentation/driver-api/pci/index.rst
++++ b/Documentation/driver-api/pci/index.rst
+@@ -11,6 +11,7 @@ The Linux PCI driver implementer's API guide
+    :maxdepth: 2
+ 
+    pci
++   p2pdma
+ 
+ .. only::  subproject and html
+ 
+diff --git a/Documentation/driver-api/pci/p2pdma.rst b/Documentation/driver-api/pci/p2pdma.rst
+new file mode 100644
+index 000000000000..ac857450d53f
+--- /dev/null
++++ b/Documentation/driver-api/pci/p2pdma.rst
+@@ -0,0 +1,170 @@
++.. SPDX-License-Identifier: GPL-2.0
++
++============================
++PCI Peer-to-Peer DMA Support
++============================
++
++The PCI bus has pretty decent support for performing DMA transfers
++between two devices on the bus. This type of transaction is henceforth
++called Peer-to-Peer (or P2P). However, there are a number of issues that
++make P2P transactions tricky to do in a perfectly safe way.
++
++One of the biggest issues is that PCI doesn't require forwarding
++transactions between hierarchy domains, and in PCIe, each Root Port
++defines a separate hierarchy domain. To make things worse, there is no
++simple way to determine if a given Root Complex supports this or not.
++(See PCIe r4.0, sec 1.3.1). Therefore, as of this writing, the kernel
++only supports doing P2P when the endpoints involved are all behind the
++same PCI bridge, as such devices are all in the same PCI hierarchy
++domain, and the spec guarantees that all transacations within the
++hierarchy will be routable, but it does not require routing
++between hierarchies.
++
++The second issue is that to make use of existing interfaces in Linux,
++memory that is used for P2P transactions needs to be backed by struct
++pages. However, PCI BARs are not typically cache coherent so there are
++a few corner case gotchas with these pages so developers need to
++be careful about what they do with them.
++
++
++Driver Writer's Guide
++=====================
++
++In a given P2P implementation there may be three or more different
++types of kernel drivers in play:
++
++* Provider - A driver which provides or publishes P2P resources like
++  memory or doorbell registers to other drivers.
++* Client - A driver which makes use of a resource by setting up a
++  DMA transaction to or from it.
++* Orchestrator - A driver which orchestrates the flow of data between
++  clients and providers
++
++In many cases there could be overlap between these three types (i.e.,
++it may be typical for a driver to be both a provider and a client).
++
++For example, in the NVMe Target Copy Offload implementation:
++
++* The NVMe PCI driver is both a client, provider and orchestrator
++  in that it exposes any CMB (Controller Memory Buffer) as a P2P memory
++  resource (provider), it accepts P2P memory pages as buffers in requests
++  to be used directly (client) and it can also make use the CMB as
++  submission queue entries.
++* The RDMA driver is a client in this arrangement so that an RNIC
++  can DMA directly to the memory exposed by the NVMe device.
++* The NVMe Target driver (nvmet) can orchestrate the data from the RNIC
++  to the P2P memory (CMB) and then to the NVMe device (and vice versa).
++
++This is currently the only arrangement supported by the kernel but
++one could imagine slight tweaks to this that would allow for the same
++functionality. For example, if a specific RNIC added a BAR with some
++memory behind it, its driver could add support as a P2P provider and
++then the NVMe Target could use the RNIC's memory instead of the CMB
++in cases where the NVMe cards in use do not have CMB support.
++
++
++Provider Drivers
++----------------
++
++A provider simply needs to register a BAR (or a portion of a BAR)
++as a P2P DMA resource using :c:func:`pci_p2pdma_add_resource()`.
++This will register struct pages for all the specified memory.
++
++After that it may optionally publish all of its resources as
++P2P memory using :c:func:`pci_p2pmem_publish()`. This will allow
++any orchestrator drivers to find and use the memory. When marked in
++this way, the resource must be regular memory with no side effects.
++
++For the time being this is fairly rudimentary in that all resources
++are typically going to be P2P memory. Future work will likely expand
++this to include other types of resources like doorbells.
++
++
++Client Drivers
++--------------
++
++A client driver typically only has to conditionally change its DMA map
++routine to use the mapping function :c:func:`pci_p2pdma_map_sg()` instead
++of the usual :c:func:`dma_map_sg()` function. Memory mapped in this
++way does not need to be unmapped.
++
++The client may also, optionally, make use of
++:c:func:`is_pci_p2pdma_page()` to determine when to use the P2P mapping
++functions and when to use the regular mapping functions. In some
++situations, it may be more appropriate to use a flag to indicate a
++given request is P2P memory and map appropriately (for example the
++block layer uses a flag to keep P2P memory out of queues that do not
++have P2P client support). It is important to ensure that struct pages that
++back P2P memory stay out of code that does not have support for them.
++
++
++Orchestrator Drivers
++--------------------
++
++The first task an orchestrator driver must do is compile a list of
++all client devices that will be involved in a given transaction. For
++example, the NVMe Target driver creates a list including all NVMe
++devices and the RNIC in use. The list is stored as an anonymous struct
++list_head which must be initialized with the usual INIT_LIST_HEAD.
++The following functions may then be used to add to, remove from and free
++the list of clients with the functions :c:func:`pci_p2pdma_add_client()`,
++:c:func:`pci_p2pdma_remove_client()` and
++:c:func:`pci_p2pdma_client_list_free()`.
++
++With the client list in hand, the orchestrator may then call
++:c:func:`pci_p2pmem_find()` to obtain a published P2P memory provider
++that is supported (behind the same root port) as all the clients. If more
++than one provider is supported, the one nearest to all the clients will
++be chosen first. If there are more than one provider is an equal distance
++away, the one returned will be chosen at random. This function returns the PCI
++device to use for the provider with a reference taken and therefore
++when it's no longer needed it should be returned with pci_dev_put().
++
++Alternatively, if the orchestrator knows (via some other means)
++which provider it wants to use it may use :c:func:`pci_has_p2pmem()`
++to determine if it has P2P memory and :c:func:`pci_p2pdma_distance()`
++to determine the cumulative distance between it and a potential
++list of clients.
++
++With a supported provider in hand, the driver can then call
++:c:func:`pci_p2pdma_assign_provider()` to assign the provider
++to the client list. This function returns false if any of the
++clients are unsupported by the provider.
++
++Once a provider is assigned to a client list via either
++:c:func:`pci_p2pmem_find()` or :c:func:`pci_p2pdma_assign_provider()`,
++the list is permanently bound to the provider such that any new clients
++added to the list must be supported by the already selected provider.
++If they are not supported, :c:func:`pci_p2pdma_add_client()` will return
++an error. In this way, orchestrators are free to add and remove devices
++without having to recheck support or tear down existing transfers to
++change P2P providers.
++
++Once a provider is selected, the orchestrator can then use
++:c:func:`pci_alloc_p2pmem()` and :c:func:`pci_free_p2pmem()` to
++allocate P2P memory from the provider. :c:func:`pci_p2pmem_alloc_sgl()`
++and :c:func:`pci_p2pmem_free_sgl()` are convenience functions for
++allocating scatter-gather lists with P2P memory.
++
++Struct Page Caveats
++-------------------
++
++Driver writers should be very careful about not passing these special
++struct pages to code that isn't prepared for it. At this time, the kernel
++interfaces do not have any checks for ensuring this. This obviously
++precludes passing these pages to userspace.
++
++P2P memory is also technically IO memory but should never have any side
++effects behind it. Thus, the order of loads and stores should not be important
++and ioreadX(), iowriteX() and friends should not be necessary.
++However, as the memory is not cache coherent, if access ever needs to
++be protected by a spinlock then :c:func:`mmiowb()` must be used before
++unlocking the lock. (See ACQUIRES VS I/O ACCESSES in
++Documentation/memory-barriers.txt)
++
++
++P2P DMA Support Library
++=====================
++
++.. kernel-doc:: drivers/pci/p2pdma.c
++   :export:
 -- 
-Best regards,
-Marek Vasut
+2.11.0
+
+
+_______________________________________________
+Linux-nvme mailing list
+Linux-nvme@lists.infradead.org
+http://lists.infradead.org/mailman/listinfo/linux-nvme
