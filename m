@@ -1,79 +1,118 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-by2nam03on0048.outbound.protection.outlook.com ([104.47.42.48]:50971
-        "EHLO NAM03-BY2-obe.outbound.protection.outlook.com"
-        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1726349AbeHQLei (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Fri, 17 Aug 2018 07:34:38 -0400
-From: Alan Douglas <adouglas@cadence.com>
-To: Ramon Fried <ramon.fried@gmail.com>
-CC: Bjorn Helgaas <bhelgaas@google.com>,
-        "kishon@ti.com" <kishon@ti.com>,
-        "lorenzo.pieralisi@arm.com" <lorenzo.pieralisi@arm.com>,
-        "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-        "gustavo.pimentel@synopsys.com" <gustavo.pimentel@synopsys.com>,
-        "cyrille.pitchen@bootlin.com" <cyrille.pitchen@bootlin.com>,
-        Scott Telford <stelford@cadence.com>
-Subject: RE: [PATCH v2 0/5] Add MSI-X support for cadence EP driver
-Date: Fri, 17 Aug 2018 08:32:03 +0000
-Message-ID: <MWHPR07MB3502630540660CC0E120DC09D83D0@MWHPR07MB3502.namprd07.prod.outlook.com>
-References: <1534340781-19194-1-git-send-email-adouglas@cadence.com>
- <615023FB-D8BA-4F12-BC2B-EDDBBDA39148@gmail.com>
- <MWHPR07MB3502DD2C6CAADBA52D56166CD83E0@MWHPR07MB3502.namprd07.prod.outlook.com>
- <CA+Kvs9m=jECCcy6RCrtKvJOAwt5Fr8XFFkkijMy3MFe9trav5g@mail.gmail.com>
- <CA+Kvs9=YMSNCC-vAREQNDAQaUBVs+eewXAEyWwVpqCbjo4LS3g@mail.gmail.com>
-In-Reply-To: <CA+Kvs9=YMSNCC-vAREQNDAQaUBVs+eewXAEyWwVpqCbjo4LS3g@mail.gmail.com>
-Content-Type: text/plain; charset="utf-8"
-MIME-Version: 1.0
+Received: from mail-wm0-f65.google.com ([74.125.82.65]:34445 "EHLO
+        mail-wm0-f65.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1727089AbeH3MxX (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Thu, 30 Aug 2018 08:53:23 -0400
+Received: by mail-wm0-f65.google.com with SMTP id j25-v6so329053wmc.1
+        for <linux-pci@vger.kernel.org>; Thu, 30 Aug 2018 01:52:15 -0700 (PDT)
+Message-ID: <186a782b20053c42ca8311c421925617d83ffa07.camel@baylibre.com>
+Subject: Re: [PATCH v2 1/2] dt-bindings: PCI: meson: add DT bindings for
+ Amlogic Meson PCIe controller
+From: Jerome Brunet <jbrunet@baylibre.com>
+To: Hanjie Lin <hanjie.lin@amlogic.com>, Rob Herring <robh@kernel.org>
+Cc: Bjorn Helgaas <bhelgaas@google.com>,
+        Yue Wang <yue.wang@amlogic.com>,
+        Kevin Hilman <khilman@baylibre.com>,
+        linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
+        linux-arm-kernel@lists.infradead.org,
+        linux-amlogic@lists.infradead.org,
+        Yixun Lan <yixun.lan@amlogic.com>,
+        Liang Yang <liang.yang@amlogic.com>,
+        Jianxin Pan <jianxin.pan@amlogic.com>,
+        Qiufang Dai <qiufang.dai@amlogic.com>,
+        Jian Hu <jian.hu@amlogic.com>, devicetree@vger.kernel.org
+Date: Thu, 30 Aug 2018 10:52:12 +0200
+In-Reply-To: <84d5399c-67d4-f8a4-3613-00d91f21292f@amlogic.com>
+References: <1535096165-45827-1-git-send-email-hanjie.lin@amlogic.com>
+         <1535096165-45827-2-git-send-email-hanjie.lin@amlogic.com>
+         <8c48964151d24758298ba935da336c0829e2b287.camel@baylibre.com>
+         <11d7547b-feb4-6ecb-cef3-db46ce8ee2ef@amlogic.com>
+         <20180829004122.GA25928@bogus>
+         <84d5399c-67d4-f8a4-3613-00d91f21292f@amlogic.com>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-SGkgUmFtb24sDQoNCk9uIDE3IEF1Z3VzdCAyMDE4IDA1OjA5LCBSYW1vbiBGcmllZCB3cm90ZToN
-Cj4gT24gRnJpLCBBdWcgMTcsIDIwMTggYXQgNzowNSBBTSBSYW1vbiBGcmllZCA8cmFtb24uZnJp
-ZWRAZ21haWwuY29tPiB3cm90ZToNCj4gPiBPbiBUaHUsIEF1ZyAxNiwgMjAxOCBhdCA1OjI4IFBN
-IEFsYW4gRG91Z2xhcyA8YWRvdWdsYXNAY2FkZW5jZS5jb20+IHdyb3RlOg0KPiA+PiBPbiAxNSBB
-dWd1c3QgMjAxOCAxNzo1NiwgUmFtb24gRnJpZWQgd3JvdGU6DQo+ID4+ID4gT24gQXVndXN0IDE1
-LCAyMDE4IDQ6NDY6MjEgUE0gR01UKzAzOjAwLCBBbGFuIERvdWdsYXMgPGFkb3VnbGFzQGNhZGVu
-Y2UuY29tPiB3cm90ZToNCj4gPj4gPiA+VGhlIHBhdGNoIGltcGxlbWVudHMgTVNJLVggc3VwcG9y
-dCBpbiB0aGUgY2FkZW5jZSBlbmRwb2ludCBkcml2ZXIuDQo+ID4+ID4gPg0KPiA+PiA+ID5UaGlz
-IHBhdGNoIGRlcGVuZHMgb24gb24gR3VzdGF2byBQaW1lbnRlbCdzIHBhdGNoIHNlcmllcyBhZGRp
-bmcgTVNJLVgNCj4gPj4gPiA+c3VwcG9ydCBmb3IgRVAgKCJBZGQgTVNJLVggc3VwcG9ydCBvbiBw
-Y2l0ZXN0IHRvb2wiKQ0KPiA+PiA+ID4NCj4gPj4gPiA+SXQgYWxzbyBhZGRzIGZpeGVzIGZvciBN
-U0kgaXNzdWVzIGRpc2NvdmVyZWQgZHVyaW5nIHRlc3Rpbmcgb2YgTVNJLVgNCj4gPj4gPiA+ICAt
-IFVzZSBBWEkgcmVnaW9uIDAgZm9yIGludGVycnVwdCBzaWduYWxsaW5nDQo+ID4+ID4gPiAgLSBX
-cml0ZSBNU0kgYW5kIE1TSS1YIHdpdGggMzJiaXQgdmFsdWUgcmF0aGVyIHRoYW4gMTZiaXQNCj4g
-Pj4gPiA+ICAtIENoZWNrIGZvciBtYXNraW5nIGJlZm9yZSBzZW5kaW5nIE1TSSBvciBNU0ktWA0K
-PiA+PiA+ID4gIC0gQ2hlY2sgbGluayBpcyB1cCBiZWZvcmUgc2VuZGluZyBJUlENCj4gPj4gPiA+
-DQo+ID4+ID4gSGkuDQo+ID4+ID4gQUZBSUsgdGhlIEJJT1MgYWxsb2NhdGVzIHBoeXNpY2FsIG1l
-bW9yeSBmb3IgdGhlIGJhcnMuIEFzc3VtaW5nIHRoYXQgdGhlIE1TSXggYmFyIGlzIG9ubHkgbWFw
-cGVkIGFmdGVyIGtlcm5lbCBib290cyBvbiB0aGUNCj4gZW5kcG9pbnQsDQo+ID4+ID4gY291bGQg
-aXQgYmUgdG9vIGxhdGU/DQo+ID4+ID4NCj4gPj4gPiBEbyB3ZSBuZWVkIHRvIHRyaWdnZXIgcmUt
-ZW51bWVyYXRpb24gb2YgdGhlIFBDSSBidXMgZnJvbSBob3N0IHNpZGUgd2hlbiB3b3JraW5nIHdp
-dGggdGhpcyBhcyBhbiBlbmRwb2ludD8NCj4gPj4gSXQgZGVwZW5kcyBvbiBob3cgeW91IGFyZSB1
-c2luZyBpdC4gIFBGMCBpcyBhbHdheXMgZW5hYmxlZCBpbiB0aGUgY2FkZW5jZSBIVywgc28gd2ls
-bCBiZSBlbnVtZXJhdGVkIGF0IGJvb3QsDQo+ID4+IGFzIGxvbmcgYXMgdGhlIEVQIEhXIGlzIG91
-dCBvZiByZXNldCBhbmQgUEhZIGlzIGVuYWJsZWQuDQo+ID4+IFRoZSBQQ0llIEVQIGhhcmR3YXJl
-IGNhbiBiZSBpbml0aWFsaXplZCBzbyB0aGF0IEJBUnMgYXJlIGVuYWJsZWQgYnkgZGVmYXVsdCwg
-YmVmb3JlIHRoZSBrZXJuZWwgYm9vdHMgb24gdGhlDQo+ID4+IGVuZHBvaW50LCBhbmQgc28gdGhl
-eSB3aWxsIGJlIGZvdW5kIGFuZCBtYXBwZWQgZHVyaW5nIHRoZSBpbml0aWFsIGVudW1lcmF0aW9u
-IGFuZCB5b3UgZG9uJ3QgbmVlZCB0bw0KPiA+PiByZS1lbnVtZXJhdGUuICBUaGUgTVNJLVggdmVj
-dG9ycyBjYW4ndCBiZSB3cml0dGVuIHRvIHRoZSBCQVIgdW50aWwgdGhlIEVQIGtlcm5lbCBoYXMg
-Ym9vdGVkIGFuZCB0aGUgRVAgZHJpdmVyDQo+ID4+IGhhcyBtYXBwZWQgdGhlIEJBUiB0byBsb2Nh
-bCBFUCBtZW1vcnkgdGhvdWdoICh1bmxlc3MgIHlvdSBhbHNvIGNvbmZpZ3VyZSB0aGlzIGluIHRo
-ZSBQQ0llIEVQIGhhcmR3YXJlLCBvciBpbg0KPiA+PiBFUCBwcmUtYm9vdCwgYnV0IGluIHRoYXQg
-Y2FzZSB5b3UgYXJlIHByb2JhYmx5IG5vdCB1c2luZyB0aGUgRVAgZHJpdmVyIGZyYW1ld29yay4p
-DQo+ID4+DQo+ID4+IFRoZSBFUCBkcml2ZXIgZnJhbWV3b3JrIGRvZXMsIGluIG15IHVuZGVyc3Rh
-bmRpbmcsIGdlbmVyYWxseSBleHBlY3QgcmUtZW51bWVyYXRpb24gYWZ0ZXIgdGhlDQo+ID4+IEVQ
-IGtlcm5lbCBoYXMgYm9vdGVkIGFuZCB0aGUgZHJpdmVyIGhhcyBiZWVuIGluaXRpYWxpemVkLCBz
-aW5jZSBpdCBhbGxvd3MgY29uZmlndXJhdGlvbiBvZiBkZXZpY2UgSUQsIEJBUg0KPiA+PiBzaXpl
-cyBldGMuLCBhbmQgaWYgeW91IGNoYW5nZSBhbnkgb2YgdGhlc2UgZnJvbSB0aGUgSFcgZGVmYXVs
-dHMgYXQgYm9vdCB5b3Ugd2lsbCBuZWVkIHRvIHJlLWVudW1lcmF0ZS4NCj4gPj4NCj4gVGhpcyBi
-YXNpY2FsbHkgbWVhbnMgdGhhdCB0aGlzIGRyaXZlciBpcyBmb3IgaG9iYnlpc3QgLyBlbnRodXNp
-YXN0LA0KPiB5b3UgY2FuJ3QgYmFzZSBhIHJlYWwgcHJvZHVjdCBleHBlY3RpbmcNCj4gcmUtZW51
-bWVyYXRpb24gb2YgdGhlIGJ1cy4gcmlnaHQgPw0KSXQgZGVwZW5kcyB3aGF0IHlvdSBtZWFuIGJ5
-IGEgcmVhbCBwcm9kdWN0LCBidXQgeWVzIGl0J3Mgbm90IGludGVuZGVkIGZvciB1c2UgaW4gYSB0
-eXBpY2FsIFBDSWUgZGV2aWNlLg0KVGhlcmUgYXJlIGEgd2lkZSB2YXJpZXR5IG9mIHVzZSBjYXNl
-cyBmb3IgdGhlIEVQIGRyaXZlciBmcmFtZXdvcmssIG5vdCBuZWNlc3NhcmlseSBob2JieWlzdC9l
-bnRodXNpYXN0Lg0KVGhlIGRvY3VtZW50YXRpb24gaGVyZTogaHR0cHM6Ly93d3cua2VybmVsLm9y
-Zy9kb2MvRG9jdW1lbnRhdGlvbi9QQ0kvZW5kcG9pbnQvcGNpLWVuZHBvaW50LnR4dA0KbWVudGlv
-bnMgdGVzdGluZyBvciB2YWxpZGF0aW9uLCBjby1wcm9jZXNzb3IgYWNjZWxlcmF0b3IsIGV0Yy4g
-YXMgcG9zc2libGUgdXNlIGNhc2VzLg0KDQpSZWdhcmRzLA0KQWxhbg0K
+On Thu, 2018-08-30 at 15:37 +0800, Hanjie Lin wrote:
+> 
+> On 2018/8/29 8:41, Rob Herring wrote:
+> > On Mon, Aug 27, 2018 at 04:55:20PM +0800, Hanjie Lin wrote:
+> > > 
+> > > 
+> > > On 2018/8/24 16:22, Jerome Brunet wrote:
+> > > > On Fri, 2018-08-24 at 15:36 +0800, Hanjie Lin wrote:
+> > > > > From: Yue Wang <yue.wang@amlogic.com>
+> > > > > 
+> > > > > The Amlogic Meson PCIe host controller is based on the Synopsys DesignWare
+> > > > > PCI core. This patch adds documentation for the DT bindings in Meson PCIe
+> > > > > controller.
+> > > > > 
+> > > > > Signed-off-by: Yue Wang <yue.wang@amlogic.com>
+> > > > > Signed-off-by: Hanjie Lin <hanjie.lin@amlogic.com>
+> > > > > ---
+> > > > >  .../devicetree/bindings/pci/amlogic,meson-pcie.txt | 63 ++++++++++++++++++++++
+> > > > >  1 file changed, 63 insertions(+)
+> > > > >  create mode 100644 Documentation/devicetree/bindings/pci/amlogic,meson-pcie.txt
+> > > > > 
+> > > > > diff --git a/Documentation/devicetree/bindings/pci/amlogic,meson-pcie.txt b/Documentation/devicetree/bindings/pci/amlogic,meson-pcie.txt
+> > > > > new file mode 100644
+> > > > > index 0000000..8a831d1
+> > > > > --- /dev/null
+> > > > > +++ b/Documentation/devicetree/bindings/pci/amlogic,meson-pcie.txt
+> > > > > @@ -0,0 +1,63 @@
+> > > > > +Amlogic Meson AXG DWC PCIE SoC controller
+> > > > > +
+> > > > > +Amlogic Meson PCIe host controller is based on the Synopsys DesignWare PCI core.
+> > > > > +It shares common functions with the PCIe DesignWare core driver and
+> > > > > +inherits common properties defined in
+> > > > > +Documentation/devicetree/bindings/pci/designware-pci.txt.
+> > > > > +
+> > > > > +Additional properties are described here:
+> > > > > +
+> > > > > +Required properties:
+> > > > > +- compatible:
+> > > > > +	should contain "amlogic,axg-pcie" to identify the core.
+> > > > > +- reg:
+> > > > > +	Should contain the configuration address space.
+> > > > > +- reg-names: Must be
+> > > > > +	- "elbi"	External local bus interface registers
+> > > > > +	- "cfg"		Meson specific registers
+> > > > > +	- "config"	PCIe configuration space
+> > > > > +- reset-gpios: The GPIO to generate PCIe PERST# assert and deassert signal.
+> > > > > +- clocks: Must contain an entry for each entry in clock-names.
+> > > > > +- clock-names: Must include the following entries:
+> > > > > +	- "pclk"       PCIe GEN 100M PLL clock
+> > > > > +	- "port"       PCIe_x(A or B) RC clock gate
+> > > > > +	- "general"    PCIe Phy clock
+> > > > > +	- "mipi"       PCIe_x(A or B) 100M ref clock gate
+> > > > > +- resets: phandle to the reset lines.
+> > > > > +- reset-names: must contain "phy" and "peripheral"
+> > > > > +       - "port" Port A or B reset
+> > > > > +       - "apb" APB reset
+> > > > 
+> > > > The above description is not coherent (phy <=> port)
+> > > > 
+> > > 
+> > > Yes, this should be port and apb here.
+> > > We'll integrate phy driver into ctrl driver, and move phy reset to here also.
+> > 
+> > Why? That's the wrong thing to do if they are separate h/w blocks. You 
+> > can do whatever you like in the drivers, but the DT should reflect the 
+> > h/w.
+> > 
+> > Rob
+> > 
+> > .
+> > 
+> 
+> We have the dedicated phy driver which only process reset job,
+> and we consider that it's too overkill to do just these things .
+> So we will integrate phy reset job into the controller driver int the next version.
+
+Rob has a point there. Even if overkill, it does model the HW as it is.
++ I spotted in your v2 that there is also a register access, so not only the
+reset
+
+> 
+> thanks. 
