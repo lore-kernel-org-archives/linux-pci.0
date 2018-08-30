@@ -1,60 +1,178 @@
-Return-Path: <SRS0=fEc7=KY=gigaio.com=kchow@kernel.org>
-Return-Path: <SRS0=fEc7=KY=gigaio.com=kchow@kernel.org>
-Subject: Re: IOAT DMA w/IOMMU
-To: Logan Gunthorpe <logang@deltatee.com>, Eric Pilmore
- <epilmore@gigaio.com>, Bjorn Helgaas <helgaas@kernel.org>
-Cc: linux-pci@vger.kernel.org, David Woodhouse <dwmw2@infradead.org>,
- Alex Williamson <alex.williamson@redhat.com>,
- iommu@lists.linux-foundation.org
-References: <CAOQPn8soxubJxb=vp7kz+AM6LbPH5y+_Nx0Vzv7rjV_nMMqEmA@mail.gmail.com>
- <20180809184331.GB113140@bhelgaas-glaptop.roam.corp.google.com>
- <CAOQPn8uPYKai49WYPqZp2wNd5of=0hUvPOHEtqP56RZu-hcjuw@mail.gmail.com>
- <b54899a8-a144-e8e0-9880-1800c4657b95@deltatee.com>
- <95e53520-b05f-4be4-e694-463d717453a8@gigaio.com>
- <cdd9245f-eb23-9e10-1755-8f396a2cd255@deltatee.com>
- <b278c1e5-6f08-c879-a27d-7fc172645fd5@gigaio.com>
- <f04fae39-645e-3c6e-07c0-b194260bf5de@deltatee.com>
-From: Kit Chow <kchow@gigaio.com>
-Message-ID: <3f503940-db6a-ec75-ed15-1db99d5d48ef@gigaio.com>
-Date: Thu, 9 Aug 2018 14:47:36 -0700
-MIME-Version: 1.0
-In-Reply-To: <f04fae39-645e-3c6e-07c0-b194260bf5de@deltatee.com>
-Content-Type: text/plain; charset=utf-8; format=flowed
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from ale.deltatee.com ([207.54.116.67]:40128 "EHLO ale.deltatee.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1727965AbeH3W5o (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Thu, 30 Aug 2018 18:57:44 -0400
+From: Logan Gunthorpe <logang@deltatee.com>
+To: linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
+        linux-nvme@lists.infradead.org, linux-rdma@vger.kernel.org,
+        linux-nvdimm@lists.01.org, linux-block@vger.kernel.org
+Cc: Stephen Bates <sbates@raithlin.com>,
+        Christoph Hellwig <hch@lst.de>,
+        Keith Busch <keith.busch@intel.com>,
+        Sagi Grimberg <sagi@grimberg.me>,
+        Bjorn Helgaas <bhelgaas@google.com>,
+        Jason Gunthorpe <jgg@mellanox.com>,
+        Max Gurtovoy <maxg@mellanox.com>,
+        Dan Williams <dan.j.williams@intel.com>,
+        =?UTF-8?q?J=C3=A9r=C3=B4me=20Glisse?= <jglisse@redhat.com>,
+        Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+        Alex Williamson <alex.williamson@redhat.com>,
+        =?UTF-8?q?Christian=20K=C3=B6nig?= <christian.koenig@amd.com>,
+        Logan Gunthorpe <logang@deltatee.com>
+Date: Thu, 30 Aug 2018 12:53:43 -0600
+Message-Id: <20180830185352.3369-5-logang@deltatee.com>
+In-Reply-To: <20180830185352.3369-1-logang@deltatee.com>
+References: <20180830185352.3369-1-logang@deltatee.com>
+Subject: [PATCH v5 04/13] PCI/P2PDMA: Introduce configfs/sysfs enable attribute helpers
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
+Users of the P2PDMA infrastructure will typically need a way for
+the user to tell the kernel to use P2P resources. Typically
+this will be a simple on/off boolean operation but sometimes
+it may be desirable for the user to specify the exact device to
+use for the P2P operation.
 
+Add new helpers for attributes which take a boolean or a PCI device.
+Any boolean, or the word 'auto' turn P2P on or off. Specifying a full
+PCI device name/BDF will select the specific device.
 
-On 08/09/2018 02:11 PM, Logan Gunthorpe wrote:
->
-> On 09/08/18 02:57 PM, Kit Chow wrote:
->>
->> On 08/09/2018 01:11 PM, Logan Gunthorpe wrote:
->>> On 09/08/18 01:47 PM, Kit Chow wrote:
->>>>> I haven't tested this scenario but my guess would be that IOAT would
->>>>> indeed go through the IOMMU and the PCI BAR address would need to be
->>>>> properly mapped into the IOAT's IOVA. The fact that you see DMAR errors
->>>>> is probably a good indication that this is the case. I really don't know
->>>>> why you'd want to DMA something without mapping it.
->>>> I have experimented with changing ntb_async_tx_submit to dma_map the PCI
->>>> BAR
->>>> address. With this, I get a different DMAR error:
->>> What code did you use to do this?
->> If you mean version of linux, it is 4.15.7.  Or specific dma_map call, I
->> believe it was dma_map_single.
-> I mean the complete code you use to do the mapping so we can see if it's
-> correct. dma_map_single() seems like an odd choice, I expected to see
-> dma_map_resource().
-Thanks for the suggestion!  Will try out dma_map_resource and report back.
+Signed-off-by: Logan Gunthorpe <logang@deltatee.com>
+---
+ drivers/pci/p2pdma.c       | 83 ++++++++++++++++++++++++++++++++++++++++++++++
+ include/linux/pci-p2pdma.h | 15 +++++++++
+ 2 files changed, 98 insertions(+)
 
-Kit
-
->>>> DMAR: [DMA Write] Request device [07:00.4] fault addr ffd00000
->>>> [fault reason 12] non-zero reserved fields in PTE
->>> Also, what device corresponds to 07:00.4 on your system?
->> I believe 07.00.4 was the PLX dma device. I get the same error with ioat.
-> Using the mapping with the PLX dma device likely converts it from a pure
-> P2P request to one where the TLPs pass through the IOMMU. So the fact
-> that you get the same error with both means IOAT almost certainly goes
-> through the IOMMU and there's something wrong with the mapping setup.
->
-> Logan
+diff --git a/drivers/pci/p2pdma.c b/drivers/pci/p2pdma.c
+index 29bd40a87768..3da848f3fe72 100644
+--- a/drivers/pci/p2pdma.c
++++ b/drivers/pci/p2pdma.c
+@@ -9,6 +9,7 @@
+  */
+ 
+ #define pr_fmt(fmt) "pci-p2pdma: " fmt
++#include <linux/ctype.h>
+ #include <linux/pci-p2pdma.h>
+ #include <linux/module.h>
+ #include <linux/slab.h>
+@@ -856,3 +857,85 @@ int pci_p2pdma_map_sg(struct device *dev, struct scatterlist *sg, int nents,
+ 	return nents;
+ }
+ EXPORT_SYMBOL_GPL(pci_p2pdma_map_sg);
++
++/**
++ * pci_p2pdma_enable_store - parse a configfs/sysfs attribute store
++ *		to enable p2pdma
++ * @page: contents of the value to be stored
++ * @p2p_dev: returns the PCI device that was selected to be used
++ *		(if 'auto', 'none or a boolean isn't the store value)
++ * @use_p2pdma: returns whether to enable p2pdma or not
++ *
++ * Parses an attribute value to decide whether to enable p2pdma.
++ * The value can select a PCI device (using it's full BDF device
++ * name), a boolean, or 'auto'. 'auto' and a true boolean value
++ * have the same meaning. A false value disables p2pdma and
++ * a PCI device enables it to use a specific device as the
++ * backing provider.
++ *
++ * pci_p2pdma_enable_show() should be used as the show operation for
++ * the attribute.
++ *
++ * Returns 0 on success
++ */
++int pci_p2pdma_enable_store(const char *page, struct pci_dev **p2p_dev,
++			    bool *use_p2pdma)
++{
++	struct device *dev;
++
++	dev = bus_find_device_by_name(&pci_bus_type, NULL, page);
++	if (dev) {
++		*use_p2pdma = true;
++		*p2p_dev = to_pci_dev(dev);
++
++		if (!pci_has_p2pmem(*p2p_dev)) {
++			pr_err("PCI device has no peer-to-peer memory: %s\n",
++			       page);
++			pci_dev_put(*p2p_dev);
++			return -ENODEV;
++		}
++
++		return 0;
++	} else if (sysfs_streq(page, "auto")) {
++		*use_p2pdma = true;
++		return 0;
++	} else if ((page[0] == '0' || page[0] == '1') && !iscntrl(page[1])) {
++		/*
++		 * If the user enters a PCI device that  doesn't exist
++		 * like "0000:01:00.1", we don't want strtobool to think
++		 * it's a '0' when it's clearly not what the user wanted.
++		 * So we require 0's and 1's to be exactly one character.
++		 */
++	} else if (!strtobool(page, use_p2pdma)) {
++		return 0;
++	}
++
++	pr_err("No such PCI device: %.*s\n", (int)strcspn(page, "\n"), page);
++	return -ENODEV;
++}
++EXPORT_SYMBOL_GPL(pci_p2pdma_enable_store);
++
++/**
++ * pci_p2pdma_enable_show - show a configfs/sysfs attribute indicating
++ *		whether p2pdma is enabled
++ * @page: contents of the stored value
++ * @p2p_dev: the selected p2p device (NULL if no device is selected)
++ * @use_p2pdma: whether p2pdme has been enabled
++ *
++ * Attributes that use pci_p2pdma_enable_store() should use this function
++ * to show the value of the attribute.
++ *
++ * Returns 0 on success
++ */
++ssize_t pci_p2pdma_enable_show(char *page, struct pci_dev *p2p_dev,
++			       bool use_p2pdma)
++{
++	if (!use_p2pdma)
++		return sprintf(page, "none\n");
++
++	if (!p2p_dev)
++		return sprintf(page, "auto\n");
++
++	return sprintf(page, "%s\n", pci_name(p2p_dev));
++}
++EXPORT_SYMBOL_GPL(pci_p2pdma_enable_show);
+diff --git a/include/linux/pci-p2pdma.h b/include/linux/pci-p2pdma.h
+index 2f03dbbf5af6..377de4d73767 100644
+--- a/include/linux/pci-p2pdma.h
++++ b/include/linux/pci-p2pdma.h
+@@ -38,6 +38,10 @@ void pci_p2pmem_free_sgl(struct pci_dev *pdev, struct scatterlist *sgl);
+ void pci_p2pmem_publish(struct pci_dev *pdev, bool publish);
+ int pci_p2pdma_map_sg(struct device *dev, struct scatterlist *sg, int nents,
+ 		      enum dma_data_direction dir);
++int pci_p2pdma_enable_store(const char *page, struct pci_dev **p2p_dev,
++			    bool *use_p2pdma);
++ssize_t pci_p2pdma_enable_show(char *page, struct pci_dev *p2p_dev,
++			       bool use_p2pdma);
+ #else /* CONFIG_PCI_P2PDMA */
+ static inline int pci_p2pdma_add_resource(struct pci_dev *pdev, int bar,
+ 		size_t size, u64 offset)
+@@ -105,5 +109,16 @@ static inline int pci_p2pdma_map_sg(struct device *dev,
+ {
+ 	return 0;
+ }
++static inline int pci_p2pdma_enable_store(const char *page,
++		struct pci_dev **p2p_dev, bool *use_p2pdma)
++{
++	*use_p2pdma = false;
++	return 0;
++}
++static inline ssize_t pci_p2pdma_enable_show(char *page,
++		struct pci_dev *p2p_dev, bool use_p2pdma)
++{
++	return sprintf(page, "none\n");
++}
+ #endif /* CONFIG_PCI_P2PDMA */
+ #endif /* _LINUX_PCI_P2P_H */
+-- 
+2.11.0
