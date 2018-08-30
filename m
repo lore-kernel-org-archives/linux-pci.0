@@ -1,48 +1,92 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.29.99]:55524 "EHLO mail.kernel.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1728349AbeHFTTh (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Mon, 6 Aug 2018 15:19:37 -0400
-Subject: Re: [PATCH v7 1/1] PCI: pciehp: Ignore link events when there is a
- fatal error pending
-To: Lukas Wunner <lukas@wunner.de>
-Cc: poza@codeaurora.org, linux-pci@vger.kernel.org,
-        Bjorn Helgaas <bhelgaas@google.com>,
-        Mika Westerberg <mika.westerberg@linux.intel.com>,
-        Keith Busch <keith.busch@intel.com>,
-        linux-pci-owner@vger.kernel.org
-References: <20180805225136.5800-1-okaya@kernel.org>
- <20180805225136.5800-2-okaya@kernel.org>
- <c1cfff22c63f6d3d6285575721a2a3e8@codeaurora.org>
- <20180806092614.GA28462@wunner.de>
- <2b4c23a2e97f61a124c95c49d604a853@codeaurora.org>
- <3d491f25-1d59-f257-1125-302e2d50e960@kernel.org>
- <22ce7172-b028-c0b1-d117-8096e016b15b@kernel.org>
- <20180806164445.GA28786@wunner.de>
- <1b59eb4b-e1f5-899c-cdfb-191c1bb915db@kernel.org>
- <20180806170503.GA30662@wunner.de>
-From: Sinan Kaya <okaya@kernel.org>
-Message-ID: <9f1444bf-3853-a904-4594-1af7382cc9e0@kernel.org>
-Date: Mon, 6 Aug 2018 13:09:34 -0400
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
 MIME-Version: 1.0
-In-Reply-To: <20180806170503.GA30662@wunner.de>
-Content-Type: text/plain; charset=utf-8; format=flowed
-Sender: linux-pci-owner@vger.kernel.org
+References: <1535453838-12154-1-git-send-email-sunil.kovvuri@gmail.com>
+ <1535453838-12154-11-git-send-email-sunil.kovvuri@gmail.com>
+ <CAK8P3a1Vdy-VsLWJMer-Z96E4Trhi0WJXJ3fTzyOGny2Mn6RAA@mail.gmail.com>
+ <CA+sq2Cf2BLKsV=gY-MPnygV1ufpvmnw6ETh90JX_uKQBk3Sduw@mail.gmail.com>
+ <CAK8P3a0+zJRxEYWZpYShRJo-3oqMaC9TJADugaRTiBnjw7ssPA@mail.gmail.com>
+ <CA+sq2Cfd_jk=JzcLmPYiW1iGqKrJRrv5vrsmeZfY4W+qi5GLgw@mail.gmail.com>
+ <CAK8P3a1BRvhQ9iQWP2hTrJOu+Z+vmmek-Uobw6zX0dM4zFe_gQ@mail.gmail.com>
+In-Reply-To: <CAK8P3a1BRvhQ9iQWP2hTrJOu+Z+vmmek-Uobw6zX0dM4zFe_gQ@mail.gmail.com>
+From: Sunil Kovvuri <sunil.kovvuri@gmail.com>
+Date: Fri, 31 Aug 2018 00:09:04 +0530
+Message-ID: <CA+sq2CepUamZzjc8XS7gPALW3=19W2uv3hq=SUa86+i-oGsGnw@mail.gmail.com>
+Subject: Re: [PATCH 10/15] soc: octeontx2: Reconfig MSIX base with IOVA
+To: Arnd Bergmann <arnd@arndb.de>
+List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
+List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
+List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
+List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
+List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
+Cc: jason@lakedaemon.net, Marc Zyngier <marc.zyngier@arm.com>,
+ linux-pci <linux-pci@vger.kernel.org>, LKML <linux-kernel@vger.kernel.org>,
+ LAKML <linux-arm-kernel@lists.infradead.org>, olof@lixom.net,
+ tglx@linutronix.de, linux-soc@vger.kernel.org,
+ Geetha sowjanya <gakula@marvell.com>, Sunil Goutham <sgoutham@marvell.com>
+Content-Type: text/plain; charset="us-ascii"
+Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
+Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 8/6/2018 1:05 PM, Lukas Wunner wrote:
-> On Mon, Aug 06, 2018 at 12:49:04PM -0400, Sinan Kaya wrote:
->> On 8/6/2018 12:44 PM, Lukas Wunner wrote:
->>> On Mon, Aug 06, 2018 at 11:06:48AM -0400, Sinan Kaya wrote:
->>>> Surprise Link Down is also a fatal error.
->>> Seriously?  On a Downstream Port which has the Hot-Plug Surprise bit
->>> in the Slot Capabilities register set, Surprise Link Down is a fatal
->>> error?  That would seem somewhat contradictory.  Do you have a
->>> section number in the PCIe Base Spec for this?
->> Spec 3.0. 7.10.2. Uncorrectable Error Status Register (Offset 04h)
->> bit 5 Surprise Down Error Status (Optional).
-> Okay, thanks.  Can we always mask out this bit on a hotplug port
-> with surprise removal capability?  Doesn't make sense to me to let
-> AER/DPC spring to action in that case.
+On Thu, Aug 30, 2018 at 7:23 PM Arnd Bergmann <arnd@arndb.de> wrote:
+>
+> On Tue, Aug 28, 2018 at 3:17 PM Sunil Kovvuri <sunil.kovvuri@gmail.com> wrote:
+> > On Tue, Aug 28, 2018 at 6:27 PM Arnd Bergmann <arnd@arndb.de> wrote:
+> > > On Tue, Aug 28, 2018 at 2:42 PM Sunil Kovvuri <sunil.kovvuri@gmail.com> wrote:
+> > > > On Tue, Aug 28, 2018 at 5:39 PM Arnd Bergmann <arnd@arndb.de> wrote:
+> > > > > On Tue, Aug 28, 2018 at 12:58 PM <sunil.kovvuri@gmail.com> wrote:
+> > > >
+> > > > This admin function is a PCI device which is capable of provisioning
+> > > > HW blocks to other PCIe SRIOV devices in the system. Each HW block
+> > > > (eg memory buffer pools, NIC dewscriptors, crypto engines e.t.c) needs
+> > > > certain no of MSIX vectors. Admin function has a set of 32K MSIX vectors
+> > > > in memory (not on-chip) which based on HW block provisioning to a PCI device
+> > > > attaches the required number of vectors to that device. Some part of this
+> > > > configuration is done by low level firmware.
+> > > >
+> > > > RVU_AF_MSIXTR_BASE points to the memory region allocated for 32K MSIX
+> > > > vectors. If kernel is booted with IOMMU enabled and admin function device
+> > > > is attached to SMMU, HW will go through translation to access this MSIX
+> > > > vector memory region. Hence the mapping done in this patch.
+> > >
+> > > Do you mean this is not a regular PCIe MSI-X interrupt to the GIC, but
+> > > something internal to your device that gets routed through the IOMMU
+> > > back into the device?
+> > >
+> >
+> > This is a regular PCIe MSI-X interrupt, the difference is that the
+> > bunch of PCI devices
+> > here doesn't have a fixed set of MSIX vectors. Admin function has a
+> > memory region with
+> > 32K MSIX vectors which it provisions to PCI devices based on the HW
+> > functional blocks
+> > attached to them. A PCI device which works as a ethernet device needs
+> > X number of vectors
+> > and a crypto device needs Y number of vectors.
+> >
+> > Since the admin function owns the whole MSIX vector region, HW uses
+> > this device's stream ID
+> > to access the vectors. Hence the IOMMU mapping. Once MSIX vectors are
+> > provisioned to
+> > a PCI device they work as normal MSIX interrupt like any other device.
+>
+> Ok, I think I got it now, just to confirm: the MSIX vectors you allocate
+> in the admin device refer to memory backing the BAR that contains
+> the MSI-X entries of the other functions, right?
 
-Yep, good idea.
+Yes, that's correct.
+
+>
+> I was a bit confused here and assumed that you were mapping
+> the MMIO area of an interrupt controller that receives the interupt
+> transactions.
+>
+>          Arnd
+
+_______________________________________________
+linux-arm-kernel mailing list
+linux-arm-kernel@lists.infradead.org
+http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
