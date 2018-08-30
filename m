@@ -1,42 +1,81 @@
-Return-Path: <SRS0=Hy8D=LD=intel.com=keith.busch@kernel.org>
-Return-Path: <SRS0=Hy8D=LD=intel.com=keith.busch@kernel.org>
-Date: Mon, 20 Aug 2018 09:53:25 -0600
-From: Keith Busch <keith.busch@intel.com>
-To: Benjamin Herrenschmidt <benh@kernel.crashing.org>
-Cc: poza@codeaurora.org, Sinan Kaya <okaya@kernel.org>,
-	Bjorn Helgaas <helgaas@kernel.org>,
-	Thomas Tai <thomas.tai@oracle.com>, bhelgaas@google.com,
-	linux-pci@vger.kernel.org, linux-pci-owner@vger.kernel.org,
-	Sam Bobroff <sam.bobroff@au1.ibm.com>
-Subject: Re: [PATCH 1/1] PCI/AER: prevent pcie_do_fatal_recovery from using
- device after it is removed
-Message-ID: <20180820155325.GA16148@localhost.localdomain>
-References: <6cb069038530757f31f3dd60328c7e30@codeaurora.org>
- <e931bc7a7e468e8bb2ee3766b3fcf96f1800f552.camel@kernel.crashing.org>
- <bf7ceabb6fe51398e0f4eebd9c4fe4ac1ec2b8a4.camel@kernel.crashing.org>
- <20180819021922.GE128050@bhelgaas-glaptop.roam.corp.google.com>
- <fe891b63-12c7-61ab-a59a-ae24ad766754@kernel.org>
- <ab5cb5b277f1c1c1362ef597ca7b8c6a2cd32cdf.camel@kernel.crashing.org>
- <908ff33ded8f31830f95a8889d8540f1@codeaurora.org>
- <5027d857bb59edfd33442003aa618ece1bc9cd52.camel@kernel.crashing.org>
- <b2e2ac5c92d8a91d00606754d1046578@codeaurora.org>
- <2ecd1fd6d763810d45697f846fa876b58a193b1b.camel@kernel.crashing.org>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <2ecd1fd6d763810d45697f846fa876b58a193b1b.camel@kernel.crashing.org>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from ale.deltatee.com ([207.54.116.67]:40060 "EHLO ale.deltatee.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1727359AbeH3W5l (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Thu, 30 Aug 2018 18:57:41 -0400
+From: Logan Gunthorpe <logang@deltatee.com>
+To: linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
+        linux-nvme@lists.infradead.org, linux-rdma@vger.kernel.org,
+        linux-nvdimm@lists.01.org, linux-block@vger.kernel.org
+Cc: Stephen Bates <sbates@raithlin.com>,
+        Christoph Hellwig <hch@lst.de>,
+        Keith Busch <keith.busch@intel.com>,
+        Sagi Grimberg <sagi@grimberg.me>,
+        Bjorn Helgaas <bhelgaas@google.com>,
+        Jason Gunthorpe <jgg@mellanox.com>,
+        Max Gurtovoy <maxg@mellanox.com>,
+        Dan Williams <dan.j.williams@intel.com>,
+        =?UTF-8?q?J=C3=A9r=C3=B4me=20Glisse?= <jglisse@redhat.com>,
+        Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+        Alex Williamson <alex.williamson@redhat.com>,
+        =?UTF-8?q?Christian=20K=C3=B6nig?= <christian.koenig@amd.com>,
+        Logan Gunthorpe <logang@deltatee.com>
+Date: Thu, 30 Aug 2018 12:53:47 -0600
+Message-Id: <20180830185352.3369-9-logang@deltatee.com>
+In-Reply-To: <20180830185352.3369-1-logang@deltatee.com>
+References: <20180830185352.3369-1-logang@deltatee.com>
+Subject: [PATCH v5 08/13] IB/core: Ensure we map P2P memory correctly in rdma_rw_ctx_[init|destroy]()
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Mon, Aug 20, 2018 at 09:22:27PM +1000, Benjamin Herrenschmidt wrote:
-> The main problem with unplug/replug (as I mentioned earlier) is that it
-> just does NOT work for storage controllers (or similar type of
-> devices). The links between the storage controller and the mounted
-> filesystems is lost permanently, you'll most likely have to reboot the
-> machine.
+In order to use PCI P2P memory the pci_p2pmem_map_sg() function must be
+called to map the correct PCI bus address.
 
-You probably shouldn't mount raw storage devices if they can be hot
-added/removed. There are device mappers for that! :)
+To do this, check the first page in the scatter list to see if it is P2P
+memory or not. At the moment, scatter lists that contain P2P memory must
+be homogeneous so if the first page is P2P the entire SGL should be P2P.
 
-And you can't just change DPC device removal. A DPC event triggers
-the link down, and that will trigger pciehp to disconnect the subtree
-anyway. Having DPC do it too just means you get the same behavior with
-or without enabling STLCTL.DLLSC.
+Signed-off-by: Logan Gunthorpe <logang@deltatee.com>
+Reviewed-by: Christoph Hellwig <hch@lst.de>
+---
+ drivers/infiniband/core/rw.c | 11 +++++++++--
+ 1 file changed, 9 insertions(+), 2 deletions(-)
+
+diff --git a/drivers/infiniband/core/rw.c b/drivers/infiniband/core/rw.c
+index 683e6d11a564..d22c4a2ebac6 100644
+--- a/drivers/infiniband/core/rw.c
++++ b/drivers/infiniband/core/rw.c
+@@ -12,6 +12,7 @@
+  */
+ #include <linux/moduleparam.h>
+ #include <linux/slab.h>
++#include <linux/pci-p2pdma.h>
+ #include <rdma/mr_pool.h>
+ #include <rdma/rw.h>
+ 
+@@ -280,7 +281,11 @@ int rdma_rw_ctx_init(struct rdma_rw_ctx *ctx, struct ib_qp *qp, u8 port_num,
+ 	struct ib_device *dev = qp->pd->device;
+ 	int ret;
+ 
+-	ret = ib_dma_map_sg(dev, sg, sg_cnt, dir);
++	if (is_pci_p2pdma_page(sg_page(sg)))
++		ret = pci_p2pdma_map_sg(dev->dma_device, sg, sg_cnt, dir);
++	else
++		ret = ib_dma_map_sg(dev, sg, sg_cnt, dir);
++
+ 	if (!ret)
+ 		return -ENOMEM;
+ 	sg_cnt = ret;
+@@ -602,7 +607,9 @@ void rdma_rw_ctx_destroy(struct rdma_rw_ctx *ctx, struct ib_qp *qp, u8 port_num,
+ 		break;
+ 	}
+ 
+-	ib_dma_unmap_sg(qp->pd->device, sg, sg_cnt, dir);
++	/* P2PDMA contexts do not need to be unmapped */
++	if (!is_pci_p2pdma_page(sg_page(sg)))
++		ib_dma_unmap_sg(qp->pd->device, sg, sg_cnt, dir);
+ }
+ EXPORT_SYMBOL(rdma_rw_ctx_destroy);
+ 
+-- 
+2.11.0
