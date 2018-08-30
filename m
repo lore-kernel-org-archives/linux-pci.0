@@ -1,89 +1,141 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from fllv0015.ext.ti.com ([198.47.19.141]:42880 "EHLO
-        fllv0015.ext.ti.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726181AbeHJMf6 (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Fri, 10 Aug 2018 08:35:58 -0400
-From: Vignesh R <vigneshr@ti.com>
-Subject: Re: [PATCH v3 0/4] pci-dra7xx: Enable errata i870 workaround for RC
- mode
-To: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
-CC: Tony Lindgren <tony@atomide.com>,
-        KISHON VIJAY ABRAHAM <kishon@ti.com>,
+Received: from ale.deltatee.com ([207.54.116.67]:40112 "EHLO ale.deltatee.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1727345AbeH3W5n (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Thu, 30 Aug 2018 18:57:43 -0400
+From: Logan Gunthorpe <logang@deltatee.com>
+To: linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
+        linux-nvme@lists.infradead.org, linux-rdma@vger.kernel.org,
+        linux-nvdimm@lists.01.org, linux-block@vger.kernel.org
+Cc: Stephen Bates <sbates@raithlin.com>,
+        Christoph Hellwig <hch@lst.de>,
+        Keith Busch <keith.busch@intel.com>,
+        Sagi Grimberg <sagi@grimberg.me>,
         Bjorn Helgaas <bhelgaas@google.com>,
-        Rob Herring <robh+dt@kernel.org>,
-        "linux-omap@vger.kernel.org" <linux-omap@vger.kernel.org>,
-        "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-        "devicetree@vger.kernel.org" <devicetree@vger.kernel.org>,
-        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
-References: <20180724173150.2701-1-vigneshr@ti.com>
- <20180808165700.GB486@e107981-ln.cambridge.arm.com>
-Message-ID: <ba428a15-77bf-e09c-3bd7-b5a0eae7ee13@ti.com>
-Date: Fri, 10 Aug 2018 15:37:28 +0530
-MIME-Version: 1.0
-In-Reply-To: <20180808165700.GB486@e107981-ln.cambridge.arm.com>
-Content-Type: text/plain; charset="utf-8"
+        Jason Gunthorpe <jgg@mellanox.com>,
+        Max Gurtovoy <maxg@mellanox.com>,
+        Dan Williams <dan.j.williams@intel.com>,
+        =?UTF-8?q?J=C3=A9r=C3=B4me=20Glisse?= <jglisse@redhat.com>,
+        Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+        Alex Williamson <alex.williamson@redhat.com>,
+        =?UTF-8?q?Christian=20K=C3=B6nig?= <christian.koenig@amd.com>,
+        Logan Gunthorpe <logang@deltatee.com>
+Date: Thu, 30 Aug 2018 12:53:42 -0600
+Message-Id: <20180830185352.3369-4-logang@deltatee.com>
+In-Reply-To: <20180830185352.3369-1-logang@deltatee.com>
+References: <20180830185352.3369-1-logang@deltatee.com>
+Subject: [PATCH v5 03/13] PCI/P2PDMA: Add PCI p2pmem DMA mappings to adjust the bus offset
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
+The DMA address used when mapping PCI P2P memory must be the PCI bus
+address. Thus, introduce pci_p2pmem_map_sg() to map the correct
+addresses when using P2P memory. Memory mapped in this way does not
+need to be unmapped.
 
+For this, we assume that an SGL passed to these functions contain all
+P2P memory or no P2P memory.
 
-On Wednesday 08 August 2018 10:27 PM, Lorenzo Pieralisi wrote:
-> On Tue, Jul 24, 2018 at 11:01:46PM +0530, Vignesh R wrote:
->> Make workaround for errata i870 applicable in Host mode as
->> well(previously it was enabled only for EP mode) as per errata
->> documentation: http://www.ti.com/lit/er/sprz450/sprz450.pdf
->>
->> Tested on DRA72 EVM
->>
->> Tony,
->>
->> If you are okay with the series, could you pick this via omap tree?
->> All ACKs are in place and Lorenzo is okay with PCIe bits to go along with
->> rest of DTS changes.
-> 
-> I think we have missed the v4.19 merge window by now - 
+Signed-off-by: Logan Gunthorpe <logang@deltatee.com>
+---
+ drivers/pci/p2pdma.c       | 43 +++++++++++++++++++++++++++++++++++++++++++
+ include/linux/memremap.h   |  1 +
+ include/linux/pci-p2pdma.h |  7 +++++++
+ 3 files changed, 51 insertions(+)
 
-Right. I didn't get any response from Tony.
-
-> please let me know if I can drop this series from the PCI patch queue.
-> 
-
-Ok, I will resend the patch after 4.19-rc. Thanks!
-
-Regards
-Vignesh
-
-
-> Thanks,
-> Lorenzo
-> 
->> Regards
->> Vignesh
->>
->>
->> Changes since v2:
->> Reorder patch 2 to appear at the last.
->> Collect all the ACKs
->>
->> Changes since v1:
->> Drop IRQ handling rework (will be sent out separately)
->>
->> v2: https://patchwork.ozlabs.org/cover/935454/
->> v1: https://lkml.org/lkml/2017/12/1/59
->>
->>
->> Vignesh R (4):
->>   dt-bindings: PCI: dra7xx: Add bindings for unaligned access in host
->>     mode
->>   ARM: dts: dra7: Enable workaround for errata i870 in PCIe host mode
->>   ARM: dts: dra7: Fix up unaligned access setting for PCIe EP
->>   pci: dwc: pci-dra7xx: Enable errata i870 for both EP and RC mode
->>
->>  Documentation/devicetree/bindings/pci/ti-pci.txt |  5 +++++
->>  arch/arm/boot/dts/dra7.dtsi                      |  4 +++-
->>  drivers/pci/controller/dwc/pci-dra7xx.c          | 12 ++++++------
->>  3 files changed, 14 insertions(+), 7 deletions(-)
->>
->> -- 
->> 2.18.0
->>
+diff --git a/drivers/pci/p2pdma.c b/drivers/pci/p2pdma.c
+index 67c1daf1189e..29bd40a87768 100644
+--- a/drivers/pci/p2pdma.c
++++ b/drivers/pci/p2pdma.c
+@@ -191,6 +191,8 @@ int pci_p2pdma_add_resource(struct pci_dev *pdev, int bar, size_t size,
+ 	pgmap->res.flags = pci_resource_flags(pdev, bar);
+ 	pgmap->ref = &pdev->p2pdma->devmap_ref;
+ 	pgmap->type = MEMORY_DEVICE_PCI_P2PDMA;
++	pgmap->pci_p2pdma_bus_offset = pci_bus_address(pdev, bar) -
++		pci_resource_start(pdev, bar);
+ 
+ 	addr = devm_memremap_pages(&pdev->dev, pgmap);
+ 	if (IS_ERR(addr)) {
+@@ -813,3 +815,44 @@ void pci_p2pmem_publish(struct pci_dev *pdev, bool publish)
+ 	pdev->p2pdma->p2pmem_published = publish;
+ }
+ EXPORT_SYMBOL_GPL(pci_p2pmem_publish);
++
++/**
++ * pci_p2pdma_map_sg - map a PCI peer-to-peer scatterlist for DMA
++ * @dev: device doing the DMA request
++ * @sg: scatter list to map
++ * @nents: elements in the scatterlist
++ * @dir: DMA direction
++ *
++ * Scatterlists mapped with this function should not be unmapped in any way.
++ *
++ * Returns the number of SG entries mapped or 0 on error.
++ */
++int pci_p2pdma_map_sg(struct device *dev, struct scatterlist *sg, int nents,
++		      enum dma_data_direction dir)
++{
++	struct dev_pagemap *pgmap;
++	struct scatterlist *s;
++	phys_addr_t paddr;
++	int i;
++
++	/*
++	 * p2pdma mappings are not compatible with devices that use
++	 * dma_virt_ops. If the upper layers do the right thing
++	 * this should never happen because it will be prevented
++	 * by the check in pci_p2pdma_add_client()
++	 */
++	if (WARN_ON_ONCE(IS_ENABLED(CONFIG_DMA_VIRT_OPS) &&
++			 dev->dma_ops == &dma_virt_ops))
++		return 0;
++
++	for_each_sg(sg, s, nents, i) {
++		pgmap = sg_page(s)->pgmap;
++		paddr = sg_phys(s);
++
++		s->dma_address = paddr - pgmap->pci_p2pdma_bus_offset;
++		sg_dma_len(s) = s->length;
++	}
++
++	return nents;
++}
++EXPORT_SYMBOL_GPL(pci_p2pdma_map_sg);
+diff --git a/include/linux/memremap.h b/include/linux/memremap.h
+index 9553370ebdad..0ac69ddf5fc4 100644
+--- a/include/linux/memremap.h
++++ b/include/linux/memremap.h
+@@ -125,6 +125,7 @@ struct dev_pagemap {
+ 	struct device *dev;
+ 	void *data;
+ 	enum memory_type type;
++	u64 pci_p2pdma_bus_offset;
+ };
+ 
+ #ifdef CONFIG_ZONE_DEVICE
+diff --git a/include/linux/pci-p2pdma.h b/include/linux/pci-p2pdma.h
+index 7b2b0f547528..2f03dbbf5af6 100644
+--- a/include/linux/pci-p2pdma.h
++++ b/include/linux/pci-p2pdma.h
+@@ -36,6 +36,8 @@ struct scatterlist *pci_p2pmem_alloc_sgl(struct pci_dev *pdev,
+ 					 unsigned int *nents, u32 length);
+ void pci_p2pmem_free_sgl(struct pci_dev *pdev, struct scatterlist *sgl);
+ void pci_p2pmem_publish(struct pci_dev *pdev, bool publish);
++int pci_p2pdma_map_sg(struct device *dev, struct scatterlist *sg, int nents,
++		      enum dma_data_direction dir);
+ #else /* CONFIG_PCI_P2PDMA */
+ static inline int pci_p2pdma_add_resource(struct pci_dev *pdev, int bar,
+ 		size_t size, u64 offset)
+@@ -98,5 +100,10 @@ static inline void pci_p2pmem_free_sgl(struct pci_dev *pdev,
+ static inline void pci_p2pmem_publish(struct pci_dev *pdev, bool publish)
+ {
+ }
++static inline int pci_p2pdma_map_sg(struct device *dev,
++		struct scatterlist *sg, int nents, enum dma_data_direction dir)
++{
++	return 0;
++}
+ #endif /* CONFIG_PCI_P2PDMA */
+ #endif /* _LINUX_PCI_P2P_H */
+-- 
+2.11.0
