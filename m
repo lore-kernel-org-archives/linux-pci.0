@@ -1,98 +1,127 @@
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Return-Path: <linux-nvme-bounces+bjorn=helgaas.com@lists.infradead.org>
+Return-Path: <linux-nvme-bounces+bjorn=helgaas.com@lists.infradead.org>
+From: Logan Gunthorpe <logang@deltatee.com>
+To: linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
+ linux-nvme@lists.infradead.org, linux-rdma@vger.kernel.org,
+ linux-nvdimm@lists.01.org, linux-block@vger.kernel.org
+Date: Thu, 30 Aug 2018 12:53:49 -0600
+Message-Id: <20180830185352.3369-11-logang@deltatee.com>
+In-Reply-To: <20180830185352.3369-1-logang@deltatee.com>
+References: <20180830185352.3369-1-logang@deltatee.com>
+Subject: [PATCH v5 10/13] nvme-pci: Add support for P2P memory in requests
+List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-nvme>,
+ <mailto:linux-nvme-request@lists.infradead.org?subject=unsubscribe>
+List-Archive: <http://lists.infradead.org/pipermail/linux-nvme/>
+List-Post: <mailto:linux-nvme@lists.infradead.org>
+List-Help: <mailto:linux-nvme-request@lists.infradead.org?subject=help>
+List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-nvme>,
+ <mailto:linux-nvme-request@lists.infradead.org?subject=subscribe>
+Cc: Sagi Grimberg <sagi@grimberg.me>,
+ =?UTF-8?q?Christian=20K=C3=B6nig?= <christian.koenig@amd.com>,
+ Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+ Alex Williamson <alex.williamson@redhat.com>,
+ Stephen Bates <sbates@raithlin.com>, Keith Busch <keith.busch@intel.com>,
+ =?UTF-8?q?J=C3=A9r=C3=B4me=20Glisse?= <jglisse@redhat.com>,
+ Jason Gunthorpe <jgg@mellanox.com>, Bjorn Helgaas <bhelgaas@google.com>,
+ Max Gurtovoy <maxg@mellanox.com>, Dan Williams <dan.j.williams@intel.com>,
+ Logan Gunthorpe <logang@deltatee.com>, Christoph Hellwig <hch@lst.de>
 MIME-Version: 1.0
-References: <1535453838-12154-1-git-send-email-sunil.kovvuri@gmail.com>
- <1535453838-12154-11-git-send-email-sunil.kovvuri@gmail.com>
- <CAK8P3a1Vdy-VsLWJMer-Z96E4Trhi0WJXJ3fTzyOGny2Mn6RAA@mail.gmail.com>
- <CA+sq2Cf2BLKsV=gY-MPnygV1ufpvmnw6ETh90JX_uKQBk3Sduw@mail.gmail.com>
- <CAK8P3a0+zJRxEYWZpYShRJo-3oqMaC9TJADugaRTiBnjw7ssPA@mail.gmail.com>
-In-Reply-To: <CAK8P3a0+zJRxEYWZpYShRJo-3oqMaC9TJADugaRTiBnjw7ssPA@mail.gmail.com>
-From: Sunil Kovvuri <sunil.kovvuri@gmail.com>
-Date: Tue, 28 Aug 2018 18:47:30 +0530
-Message-ID: <CA+sq2Cfd_jk=JzcLmPYiW1iGqKrJRrv5vrsmeZfY4W+qi5GLgw@mail.gmail.com>
-Subject: Re: [PATCH 10/15] soc: octeontx2: Reconfig MSIX base with IOVA
-To: Arnd Bergmann <arnd@arndb.de>
-List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
-List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
-List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
-List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
-List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
-Cc: jason@lakedaemon.net, Marc Zyngier <marc.zyngier@arm.com>,
- linux-pci <linux-pci@vger.kernel.org>, LKML <linux-kernel@vger.kernel.org>,
- LAKML <linux-arm-kernel@lists.infradead.org>, olof@lixom.net,
- tglx@linutronix.de, linux-soc@vger.kernel.org,
- Geetha sowjanya <gakula@marvell.com>, Sunil Goutham <sgoutham@marvell.com>
 Content-Type: text/plain; charset="us-ascii"
-Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
-Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
+Sender: "Linux-nvme" <linux-nvme-bounces@lists.infradead.org>
+Errors-To: linux-nvme-bounces+bjorn=helgaas.com@lists.infradead.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tue, Aug 28, 2018 at 6:27 PM Arnd Bergmann <arnd@arndb.de> wrote:
->
-> On Tue, Aug 28, 2018 at 2:42 PM Sunil Kovvuri <sunil.kovvuri@gmail.com> wrote:
-> >
-> > On Tue, Aug 28, 2018 at 5:39 PM Arnd Bergmann <arnd@arndb.de> wrote:
-> > >
-> > > On Tue, Aug 28, 2018 at 12:58 PM <sunil.kovvuri@gmail.com> wrote:
-> > > >
-> > > > From: Geetha sowjanya <gakula@marvell.com>
-> > > >
-> > > > HW interprets RVU_AF_MSIXTR_BASE address as an IOVA, hence
-> > > > create a IOMMU mapping for the physcial address configured by
-> > > > firmware and reconfig RVU_AF_MSIXTR_BASE with IOVA.
-> > > >
-> > > > Signed-off-by: Geetha sowjanya <gakula@marvell.com>
-> > > > Signed-off-by: Sunil Goutham <sgoutham@marvell.com>
-> > >
-> > > I think this needs some more explanation. What is the difference between
-> > > the MSI-X support in this driver and every other one? Are you working
-> > > around a hardware bug, or is there something odd in the implementation
-> > > of your irqchip driver? Do you use a GIC to handle the MSI interrupts
-> > > or something else?
-> >
-> > This admin function is a PCI device which is capable of provisioning
-> > HW blocks to other PCIe SRIOV devices in the system. Each HW block
-> > (eg memory buffer pools, NIC dewscriptors, crypto engines e.t.c) needs
-> > certain no of MSIX vectors. Admin function has a set of 32K MSIX vectors
-> > in memory (not on-chip) which based on HW block provisioning to a PCI device
-> > attaches the required number of vectors to that device. Some part of this
-> > configuration is done by low level firmware.
-> >
-> > RVU_AF_MSIXTR_BASE points to the memory region allocated for 32K MSIX
-> > vectors. If kernel is booted with IOMMU enabled and admin function device
-> > is attached to SMMU, HW will go through translation to access this MSIX
-> > vector memory region. Hence the mapping done in this patch.
->
-> Do you mean this is not a regular PCIe MSI-X interrupt to the GIC, but
-> something internal to your device that gets routed through the IOMMU
-> back into the device?
->
-> I'm still confused.
->
->        Arnd
+For P2P requests, we must use the pci_p2pmem_map_sg() function
+instead of the dma_map_sg functions.
 
-This is a regular PCIe MSI-X interrupt, the difference is that the
-bunch of PCI devices
-here doesn't have a fixed set of MSIX vectors. Admin function has a
-memory region with
-32K MSIX vectors which it provisions to PCI devices based on the HW
-functional blocks
-attached to them. A PCI device which works as a ethernet device needs
-X number of vectors
-and a crypto device needs Y number of vectors.
+With that, we can then indicate PCI_P2P support in the request queue.
+For this, we create an NVME_F_PCI_P2P flag which tells the core to
+set QUEUE_FLAG_PCI_P2P in the request queue.
 
-Since the admin function owns the whole MSIX vector region, HW uses
-this device's stream ID
-to access the vectors. Hence the IOMMU mapping. Once MSIX vectors are
-provisioned to
-a PCI device they work as normal MSIX interrupt like any other device.
+Signed-off-by: Logan Gunthorpe <logang@deltatee.com>
+Reviewed-by: Sagi Grimberg <sagi@grimberg.me>
+Reviewed-by: Christoph Hellwig <hch@lst.de>
+---
+ drivers/nvme/host/core.c |  4 ++++
+ drivers/nvme/host/nvme.h |  1 +
+ drivers/nvme/host/pci.c  | 17 +++++++++++++----
+ 3 files changed, 18 insertions(+), 4 deletions(-)
 
-Thanks,
-Sunil.
+diff --git a/drivers/nvme/host/core.c b/drivers/nvme/host/core.c
+index dd8ec1dd9219..6033ce2fd3e9 100644
+--- a/drivers/nvme/host/core.c
++++ b/drivers/nvme/host/core.c
+@@ -3051,7 +3051,11 @@ static void nvme_alloc_ns(struct nvme_ctrl *ctrl, unsigned nsid)
+ 	ns->queue = blk_mq_init_queue(ctrl->tagset);
+ 	if (IS_ERR(ns->queue))
+ 		goto out_free_ns;
++
+ 	blk_queue_flag_set(QUEUE_FLAG_NONROT, ns->queue);
++	if (ctrl->ops->flags & NVME_F_PCI_P2PDMA)
++		blk_queue_flag_set(QUEUE_FLAG_PCI_P2PDMA, ns->queue);
++
+ 	ns->queue->queuedata = ns;
+ 	ns->ctrl = ctrl;
+ 
+diff --git a/drivers/nvme/host/nvme.h b/drivers/nvme/host/nvme.h
+index bb4a2003c097..4030743c90aa 100644
+--- a/drivers/nvme/host/nvme.h
++++ b/drivers/nvme/host/nvme.h
+@@ -343,6 +343,7 @@ struct nvme_ctrl_ops {
+ 	unsigned int flags;
+ #define NVME_F_FABRICS			(1 << 0)
+ #define NVME_F_METADATA_SUPPORTED	(1 << 1)
++#define NVME_F_PCI_P2PDMA		(1 << 2)
+ 	int (*reg_read32)(struct nvme_ctrl *ctrl, u32 off, u32 *val);
+ 	int (*reg_write32)(struct nvme_ctrl *ctrl, u32 off, u32 val);
+ 	int (*reg_read64)(struct nvme_ctrl *ctrl, u32 off, u64 *val);
+diff --git a/drivers/nvme/host/pci.c b/drivers/nvme/host/pci.c
+index 2902585c6ddf..bb2120d30e39 100644
+--- a/drivers/nvme/host/pci.c
++++ b/drivers/nvme/host/pci.c
+@@ -737,8 +737,13 @@ static blk_status_t nvme_map_data(struct nvme_dev *dev, struct request *req,
+ 		goto out;
+ 
+ 	ret = BLK_STS_RESOURCE;
+-	nr_mapped = dma_map_sg_attrs(dev->dev, iod->sg, iod->nents, dma_dir,
+-			DMA_ATTR_NO_WARN);
++
++	if (is_pci_p2pdma_page(sg_page(iod->sg)))
++		nr_mapped = pci_p2pdma_map_sg(dev->dev, iod->sg, iod->nents,
++					  dma_dir);
++	else
++		nr_mapped = dma_map_sg_attrs(dev->dev, iod->sg, iod->nents,
++					     dma_dir,  DMA_ATTR_NO_WARN);
+ 	if (!nr_mapped)
+ 		goto out;
+ 
+@@ -780,7 +785,10 @@ static void nvme_unmap_data(struct nvme_dev *dev, struct request *req)
+ 			DMA_TO_DEVICE : DMA_FROM_DEVICE;
+ 
+ 	if (iod->nents) {
+-		dma_unmap_sg(dev->dev, iod->sg, iod->nents, dma_dir);
++		/* P2PDMA requests do not need to be unmapped */
++		if (!is_pci_p2pdma_page(sg_page(iod->sg)))
++			dma_unmap_sg(dev->dev, iod->sg, iod->nents, dma_dir);
++
+ 		if (blk_integrity_rq(req))
+ 			dma_unmap_sg(dev->dev, &iod->meta_sg, 1, dma_dir);
+ 	}
+@@ -2392,7 +2400,8 @@ static int nvme_pci_get_address(struct nvme_ctrl *ctrl, char *buf, int size)
+ static const struct nvme_ctrl_ops nvme_pci_ctrl_ops = {
+ 	.name			= "pcie",
+ 	.module			= THIS_MODULE,
+-	.flags			= NVME_F_METADATA_SUPPORTED,
++	.flags			= NVME_F_METADATA_SUPPORTED |
++				  NVME_F_PCI_P2PDMA,
+ 	.reg_read32		= nvme_pci_reg_read32,
+ 	.reg_write32		= nvme_pci_reg_write32,
+ 	.reg_read64		= nvme_pci_reg_read64,
+-- 
+2.11.0
+
 
 _______________________________________________
-linux-arm-kernel mailing list
-linux-arm-kernel@lists.infradead.org
-http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
+Linux-nvme mailing list
+Linux-nvme@lists.infradead.org
+http://lists.infradead.org/mailman/listinfo/linux-nvme
