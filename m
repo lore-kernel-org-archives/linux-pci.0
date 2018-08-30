@@ -1,83 +1,67 @@
-Return-Path: <SRS0=dBQP=LC=wunner.de=lukas@kernel.org>
-Return-Path: <SRS0=dBQP=LC=wunner.de=lukas@kernel.org>
-Message-Id: <cover.1534686484.git.lukas@wunner.de>
-From: Lukas Wunner <lukas@wunner.de>
-Date: Sun, 19 Aug 2018 16:29:00 +0200
-Subject: [PATCH 0/9] PCI hotplug diet
-To: Bjorn Helgaas <helgaas@kernel.org>, linux-pci@vger.kernel.org, Sinan Kaya <okaya@kernel.org>, Mika Westerberg <mika.westerberg@linux.intel.com>
-Cc: Keith Busch <keith.busch@intel.com>, Oza Pawandeep <poza@codeaurora.org>, Benjamin Herrenschmidt <benh@kernel.crashing.org>, "Rafael J. Wysocki" <rjw@rjwysocki.net>, Len Brown <lenb@kernel.org>, Scott Murray <scott@spiteful.org>, Paul Mackerras <paulus@samba.org>, Michael Ellerman <mpe@ellerman.id.au>, Gavin Shan <gwshan@linux.vnet.ibm.com>, Sebastian Ott <sebott@linux.vnet.ibm.com>, Gerald Schaefer <gerald.schaefer@de.ibm.com>, Corentin Chary <corentin.chary@gmail.com>, Darren Hart <dvhart@infradead.org>, Andy Shevchenko <andy@infradead.org>, Greg Kroah-Hartman <gregkh@linuxfoundation.org>, Scott Murray <scott@spiteful.org>, Dan Zink <dan.zink@hpe.com>, Jyoti Shah <jshah@us.ibm.com>, Irene Zubarev <zubarev@us.ibm.com>, Prarit Bhargava <prarit@redhat.com>, linux-acpi@vger.kernel.org, linux-s390@vger.kernel.org, platform-driver-x86@vger.kernel.org, acpi4asus-user@lists.sourceforge.net, linuxppc-dev@lists.ozlabs.org
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+From: Hanjie Lin <hanjie.lin@amlogic.com>
+To: Bjorn Helgaas <bhelgaas@google.com>
+Subject: [PATCH v3 0/2] add the Amlogic Meson PCIe controller driver
+Date: Thu, 30 Aug 2018 16:13:47 +0800
+Message-ID: <1535616829-167936-1-git-send-email-hanjie.lin@amlogic.com>
+MIME-Version: 1.0
+List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
+List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
+List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
+List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
+List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
+Cc: Rob Herring <robh@kernel.org>, Hanjie Lin <hanjie.lin@amlogic.com>,
+ Jianxin Pan <jianxin.pan@amlogic.com>, devicetree@vger.kernel.org,
+ Kevin Hilman <khilman@baylibre.com>, Yixun Lan <yixun.lan@amlogic.com>,
+ linux-kernel@vger.kernel.org, Liang Yang <liang.yang@amlogic.com>,
+ Jian Hu <jian.hu@amlogic.com>, linux-pci@vger.kernel.org,
+ Qiufang Dai <qiufang.dai@amlogic.com>, linux-amlogic@lists.infradead.org,
+ linux-arm-kernel@lists.infradead.org, Jerome Brunet <jbrunet@baylibre.com>
+Content-Type: text/plain; charset="us-ascii"
+Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
+Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Here's PCI hotplug material I've prepared for v4.20:
+The Amlogic Meson PCIe host controller is based on the Synopsys DesignWare
+PCI core. This patchset add the driver and dt-bindings of the controller.
 
-Patches [1/9] to [8/9] reduce the code by 488 lines.  There should be no
-loss of functionality and no new features, just less and simpler code.
+Till patch v2, we have a dedicated phy driver which only process reset job.
+It's too overkill so we integrate phy driver into the controller.
 
-Patch [9/9] collects TODOs for hotplug drivers to spur contributions.
+Changes since v2: [1]
+ - abandon phy driver, move reset to the controller
+ - use devm_add_action_or_reset() to use clock res
+ - format correcting
 
+Changes since v1: [0]
+ - use gpio lib instead open code 
+ - move 'apb' and 'port' reset from phy driver
+ - format correcting
 
-I've assumed that my patch "PCI: pciehp: Differentiate between surprise
-and safe removal" (submitted July 31) gets merged before this series:
-https://patchwork.ozlabs.org/patch/951386/
+[0] :  https://lkml.kernel.org/r/1534227522-186798-1-git-send-email-hanjie.lin@amlogic.com
+[1] :  https://lkml.kernel.org/r/1535096165-45827-1-git-send-email-hanjie.lin@amlogic.com 
 
-If that patch is not accepted or other pciehp-related patches are merged
-before this series, I'll have to rebase patch [4/9] ("PCI: pciehp: Unify
-controller and slot structs").  No big deal, just a heads-up.
+Yue Wang (2):
+  dt-bindings: PCI: meson: add DT bindings for Amlogic Meson PCIe
+    controller
+  PCI: meson: add the Amlogic Meson PCIe controller driver
 
-Thanks,
-
-Lukas
-
-
-Lukas Wunner (9):
-  PCI: Simplify disconnected marking
-  PCI: pciehp: Drop unnecessary includes
-  PCI: pciehp: Drop hotplug_slot_ops wrappers
-  PCI: pciehp: Unify controller and slot structs
-  PCI: pciehp: Reshuffle controller struct for clarity
-  PCI: hotplug: Constify hotplug_slot_ops
-  PCI: hotplug: Drop hotplug_slot_info
-  PCI: hotplug: Embed hotplug_slot
-  PCI: hotplug: Document TODOs
-
- arch/powerpc/include/asm/pnv-pci.h      |   2 +-
- drivers/pci/hotplug/TODO                |  74 +++++++
- drivers/pci/hotplug/acpiphp.h           |  10 +-
- drivers/pci/hotplug/acpiphp_core.c      |  36 +---
- drivers/pci/hotplug/acpiphp_ibm.c       |   2 +-
- drivers/pci/hotplug/cpci_hotplug.h      |  11 +-
- drivers/pci/hotplug/cpci_hotplug_core.c | 105 +++-------
- drivers/pci/hotplug/cpci_hotplug_pci.c  |   6 +-
- drivers/pci/hotplug/cpqphp.h            |   9 +-
- drivers/pci/hotplug/cpqphp_core.c       |  59 ++----
- drivers/pci/hotplug/cpqphp_ctrl.c       |  31 +--
- drivers/pci/hotplug/ibmphp.h            |   9 +-
- drivers/pci/hotplug/ibmphp_core.c       | 121 ++++-------
- drivers/pci/hotplug/ibmphp_ebda.c       |  70 +------
- drivers/pci/hotplug/pci_hotplug_core.c  |  53 ++---
- drivers/pci/hotplug/pciehp.h            | 138 ++++++-------
- drivers/pci/hotplug/pciehp_core.c       | 127 +++---------
- drivers/pci/hotplug/pciehp_ctrl.c       | 255 +++++++++++-------------
- drivers/pci/hotplug/pciehp_hpc.c        | 127 ++++--------
- drivers/pci/hotplug/pciehp_pci.c        |  24 +--
- drivers/pci/hotplug/pnv_php.c           |  35 ++--
- drivers/pci/hotplug/rpaphp.h            |  10 +-
- drivers/pci/hotplug/rpaphp_core.c       |  20 +-
- drivers/pci/hotplug/rpaphp_pci.c        |  11 +-
- drivers/pci/hotplug/rpaphp_slot.c       |  22 +-
- drivers/pci/hotplug/s390_pci_hpc.c      |  44 ++--
- drivers/pci/hotplug/sgi_hotplug.c       |  63 +++---
- drivers/pci/hotplug/shpchp.h            |   8 +-
- drivers/pci/hotplug/shpchp_core.c       |  48 ++---
- drivers/pci/hotplug/shpchp_ctrl.c       |  21 +-
- drivers/pci/pci.c                       |   4 +-
- drivers/pci/pcie/err.c                  |   8 +-
- drivers/pci/slot.c                      |   2 +-
- drivers/platform/x86/asus-wmi.c         |  39 +---
- drivers/platform/x86/eeepc-laptop.c     |  43 ++--
- include/linux/pci_hotplug.h             |  43 +---
- 36 files changed, 638 insertions(+), 1052 deletions(-)
- create mode 100644 drivers/pci/hotplug/TODO
+ .../devicetree/bindings/pci/amlogic,meson-pcie.txt |  70 +++
+ drivers/pci/controller/dwc/Kconfig                 |  12 +
+ drivers/pci/controller/dwc/Makefile                |   1 +
+ drivers/pci/controller/dwc/pci-meson.c             | 617 +++++++++++++++++++++
+ 4 files changed, 700 insertions(+)
+ create mode 100644 Documentation/devicetree/bindings/pci/amlogic,meson-pcie.txt
+ create mode 100644 drivers/pci/controller/dwc/pci-meson.c
 
 -- 
-2.18.0
+2.7.4
+
+
+_______________________________________________
+linux-arm-kernel mailing list
+linux-arm-kernel@lists.infradead.org
+http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
