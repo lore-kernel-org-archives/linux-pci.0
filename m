@@ -1,82 +1,133 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-qt0-f194.google.com ([209.85.216.194]:34799 "EHLO
-        mail-qt0-f194.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1730634AbeHISa3 (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Thu, 9 Aug 2018 14:30:29 -0400
-Received: by mail-qt0-f194.google.com with SMTP id m13-v6so7099051qth.1
-        for <linux-pci@vger.kernel.org>; Thu, 09 Aug 2018 09:04:56 -0700 (PDT)
-Subject: Re: [RFC] ARM64, PCIe, annd ACPI
-To: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
-Cc: Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org,
-        Tomasz Nowicki <tn@semihalf.com>,
-        Vladimir Olovyannikov <vladimir.olovyannikov@broadcom.com>,
-        BCM Kernel Feedback <bcm-kernel-feedback-list@broadcom.com>
-References: <89484aa0-08c4-0cff-500d-407d21e2f5fd@broadcom.com>
- <20180808093822.GA25150@e107981-ln.cambridge.arm.com>
- <a32a8761-f49f-f0cf-928b-0c323c2b540e@broadcom.com>
- <20180809085923.GA13428@e107981-ln.cambridge.arm.com>
- <9b5b5918-1492-df65-5b63-678b4a35ecb9@broadcom.com>
- <20180809154151.GB20329@red-moon>
- <27e3dd65-50d9-08a2-9639-b7d229f48227@broadcom.com>
- <20180809160035.GC20329@red-moon>
-From: Ray Jui <ray.jui@broadcom.com>
-Message-ID: <a73ff84c-0fe1-4c13-e021-b41945f8e46a@broadcom.com>
-Date: Thu, 9 Aug 2018 09:04:52 -0700
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+From: Nipun Gupta <nipun.gupta@nxp.com>
+To: "robin.murphy@arm.com" <robin.murphy@arm.com>, "will.deacon@arm.com"
+ <will.deacon@arm.com>, "robh+dt@kernel.org" <robh+dt@kernel.org>,
+ "robh@kernel.org" <robh@kernel.org>, "mark.rutland@arm.com"
+ <mark.rutland@arm.com>, "catalin.marinas@arm.com" <catalin.marinas@arm.com>,
+ "gregkh@linuxfoundation.org" <gregkh@linuxfoundation.org>, Laurentiu Tudor
+ <laurentiu.tudor@nxp.com>, "bhelgaas@google.com" <bhelgaas@google.com>,
+ "hch@lst.de" <hch@lst.de>
+Subject: RE: [PATCH 0/7 v6] Support for fsl-mc bus and its devices in SMMU
+Date: Fri, 31 Aug 2018 11:57:48 +0000
+Message-ID: <VI1PR04MB4480D192810E7DEB38895F0AE60F0@VI1PR04MB4480.eurprd04.prod.outlook.com>
+References: <1531135103-10699-1-git-send-email-nipun.gupta@nxp.com>
+In-Reply-To: <1531135103-10699-1-git-send-email-nipun.gupta@nxp.com>
 MIME-Version: 1.0
-In-Reply-To: <20180809160035.GC20329@red-moon>
-Content-Type: text/plain; charset=utf-8; format=flowed
-Sender: linux-pci-owner@vger.kernel.org
+List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
+List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
+List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
+List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
+List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
+Cc: "devicetree@vger.kernel.org" <devicetree@vger.kernel.org>,
+ "stuyoder@gmail.com" <stuyoder@gmail.com>,
+ Bharat Bhushan <bharat.bhushan@nxp.com>,
+ "shawnguo@kernel.org" <shawnguo@kernel.org>,
+ "joro@8bytes.org" <joro@8bytes.org>,
+ "linuxppc-dev@lists.ozlabs.org" <linuxppc-dev@lists.ozlabs.org>,
+ "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+ Leo Li <leoyang.li@nxp.com>,
+ "iommu@lists.linux-foundation.org" <iommu@lists.linux-foundation.org>,
+ "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+ "frowand.list@gmail.com" <frowand.list@gmail.com>,
+ "linux-arm-kernel@lists.infradead.org" <linux-arm-kernel@lists.infradead.org>,
+ "m.szyprowski@samsung.com" <m.szyprowski@samsung.com>
+Content-Type: text/plain; charset="us-ascii"
+Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
+Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hi Lorenzo,
+Hi Joerg/Robin,
 
-On 8/9/2018 9:00 AM, Lorenzo Pieralisi wrote:
-> On Thu, Aug 09, 2018 at 08:44:34AM -0700, Ray Jui wrote:
->> Hi Lorenzo,
->>
->> On 8/9/2018 8:41 AM, Lorenzo Pieralisi wrote:
->>> On Thu, Aug 09, 2018 at 07:57:52AM -0700, Ray Jui wrote:
->>>
->>> [...]
->>>
->>>>> As I said ARM64 ACPI PCI kernel support is in the mainline today and I
->>>>> am not willing to merge any more MCFG quirks at driver level - the
->>>>> information is out there, it is public and must be followed, either
->>>>> designers do that or no ACPI PCI support on your platform, sorry.
->>>>>
->>>>> Lorenzo
->>>>>
->>>>
->>>> I just want to make sure I interpret this properly. This means if
->>>> the PCIe controller hardware does not support ECAM, there's pretty
->>>> much no way around it with SW based workaround going forward with
->>>> mainline kernel?
->>>
->>> Yes.
->>>
->>>> What about for the PCIe controller that was designed a few years back?
->>>
->>> It will bootstrap with DT :)
->>
->> Okay, one more quick question, what about for distributions that
->> will eventually disable DT and force ACPI?
-> 
-> ACPI PCI support revolves around a FW model that requires, among other
-> things, ECAM and its firmware description, MCFG table, to work.
-> 
-> If the host controller is not ECAM compliant it is not PCI firmware
-> compliant, so it is not ACPI compliant, you can't run ACPI only
-> distributions on it.
-> 
-> It is a model that has been run for decades in basically all
-> ACPI based systems out there and there is not a reason to
-> deviate from it, I understand the frustration but that's the
-> way it is, sorry.
-> 
-> Thanks,
-> Lorenzo
-> 
+Can you please let me know when these patches will be applied onto the tree.
+Is there anything else pending from my side.
 
-Okay that draws the line. Thanks for confirming.
+Thanks,
+Nipun
 
-Ray
+> -----Original Message-----
+> From: Nipun Gupta
+> Sent: Monday, July 9, 2018 4:48 PM
+> To: robin.murphy@arm.com; will.deacon@arm.com; robh+dt@kernel.org;
+> robh@kernel.org; mark.rutland@arm.com; catalin.marinas@arm.com;
+> gregkh@linuxfoundation.org; Laurentiu Tudor <laurentiu.tudor@nxp.com>;
+> bhelgaas@google.com; hch@lst.de
+> Cc: joro@8bytes.org; m.szyprowski@samsung.com; shawnguo@kernel.org;
+> frowand.list@gmail.com; iommu@lists.linux-foundation.org; linux-
+> kernel@vger.kernel.org; devicetree@vger.kernel.org; linux-arm-
+> kernel@lists.infradead.org; linuxppc-dev@lists.ozlabs.org; linux-
+> pci@vger.kernel.org; Bharat Bhushan <bharat.bhushan@nxp.com>;
+> stuyoder@gmail.com; Leo Li <leoyang.li@nxp.com>; Nipun Gupta
+> <nipun.gupta@nxp.com>
+> Subject: [PATCH 0/7 v6] Support for fsl-mc bus and its devices in SMMU
+> 
+> This patchset defines IOMMU DT binding for fsl-mc bus and adds
+> support in SMMU for fsl-mc bus.
+> 
+> The patch series is based on top of dma-mapping tree (for-next branch):
+> http://git.infradead.org/users/hch/dma-mapping.git
+> 
+> These patches
+>   - Define property 'iommu-map' for fsl-mc bus (patch 1)
+>   - Integrates the fsl-mc bus with the SMMU using this
+>     IOMMU binding (patch 2,3,4)
+>   - Adds the dma configuration support for fsl-mc bus (patch 5, 6)
+>   - Updates the fsl-mc device node with iommu/dma related changes (patch 7)
+> 
+> Changes in v2:
+>   - use iommu-map property for fsl-mc bus
+>   - rebase over patchset https://patchwork.kernel.org/patch/10317337/
+>     and make corresponding changes for dma configuration of devices on
+>     fsl-mc bus
+> 
+> Changes in v3:
+>   - move of_map_rid in drivers/of/address.c
+> 
+> Changes in v4:
+>   - move of_map_rid in drivers/of/base.c
+> 
+> Changes in v5:
+>   - break patch 5 in two separate patches (now patch 5/7 and patch 6/7)
+>   - add changelog text in patch 3/7 and patch 5/7
+>   - typo fix
+> 
+> Changes in v6:
+>   - Updated fsl_mc_device_group() API to be more rational
+>   - Added dma-coherent property in the LS2 smmu device node
+>   - Minor fixes in the device-tree documentation
+> 
+> Nipun Gupta (7):
+>   Documentation: fsl-mc: add iommu-map device-tree binding for fsl-mc
+>     bus
+>   iommu/of: make of_pci_map_rid() available for other devices too
+>   iommu/of: support iommu configuration for fsl-mc devices
+>   iommu/arm-smmu: Add support for the fsl-mc bus
+>   bus: fsl-mc: support dma configure for devices on fsl-mc bus
+>   bus: fsl-mc: set coherent dma mask for devices on fsl-mc bus
+>   arm64: dts: ls208xa: comply with the iommu map binding for fsl_mc
+> 
+>  .../devicetree/bindings/misc/fsl,qoriq-mc.txt      |  39 ++++++++
+>  arch/arm64/boot/dts/freescale/fsl-ls208xa.dtsi     |   7 +-
+>  drivers/bus/fsl-mc/fsl-mc-bus.c                    |  16 +++-
+>  drivers/iommu/arm-smmu.c                           |   7 ++
+>  drivers/iommu/iommu.c                              |  13 +++
+>  drivers/iommu/of_iommu.c                           |  25 ++++-
+>  drivers/of/base.c                                  | 102 +++++++++++++++++++++
+>  drivers/of/irq.c                                   |   5 +-
+>  drivers/pci/of.c                                   | 101 --------------------
+>  include/linux/fsl/mc.h                             |   8 ++
+>  include/linux/iommu.h                              |   2 +
+>  include/linux/of.h                                 |  11 +++
+>  include/linux/of_pci.h                             |  10 --
+>  13 files changed, 224 insertions(+), 122 deletions(-)
+> 
+> --
+> 1.9.1
+
+
+_______________________________________________
+linux-arm-kernel mailing list
+linux-arm-kernel@lists.infradead.org
+http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
