@@ -1,81 +1,59 @@
-Return-Path: <SRS0=iFA6=LD=gmail.com=rjwysocki@kernel.org>
-Return-Path: <SRS0=iFA6=LD=gmail.com=rjwysocki@kernel.org>
+Return-Path: <linux-nvme-bounces+bjorn=helgaas.com@lists.infradead.org>
+Return-Path: <linux-nvme-bounces+bjorn=helgaas.com@lists.infradead.org>
+To: Randy Dunlap <rdunlap@infradead.org>, linux-kernel@vger.kernel.org,
+ linux-pci@vger.kernel.org, linux-nvme@lists.infradead.org,
+ linux-rdma@vger.kernel.org, linux-nvdimm@lists.01.org,
+ linux-block@vger.kernel.org
+References: <20180830185352.3369-1-logang@deltatee.com>
+ <20180830185352.3369-7-logang@deltatee.com>
+ <382af881-0ae1-0274-4628-0137071125b1@infradead.org>
+From: Logan Gunthorpe <logang@deltatee.com>
+Message-ID: <f0edec85-02d1-4592-5bce-629fb5e0ceae@deltatee.com>
+Date: Fri, 31 Aug 2018 09:44:53 -0600
 MIME-Version: 1.0
-References: <cover.1534686484.git.lukas@wunner.de> <a364bcc959e01f2ebab27cefc5b87ff01633275c.1534686485.git.lukas@wunner.de>
-In-Reply-To: <a364bcc959e01f2ebab27cefc5b87ff01633275c.1534686485.git.lukas@wunner.de>
-From: "Rafael J. Wysocki" <rafael@kernel.org>
-Date: Mon, 20 Aug 2018 10:14:55 +0200
-Message-ID: <CAJZ5v0hRFXPmGH_etMM1UHRsPL8HqOStvts1zgsyyXKCOCp1Aw@mail.gmail.com>
-Subject: Re: [PATCH 7/9] PCI: hotplug: Drop hotplug_slot_info
-To: Lukas Wunner <lukas@wunner.de>
-Cc: Bjorn Helgaas <helgaas@kernel.org>, Linux PCI <linux-pci@vger.kernel.org>, okaya@kernel.org,
-	Mika Westerberg <mika.westerberg@linux.intel.com>, "Rafael J. Wysocki" <rjw@rjwysocki.net>,
-	Len Brown <lenb@kernel.org>, scott@spiteful.org,
-	Benjamin Herrenschmidt <benh@kernel.crashing.org>, Paul Mackerras <paulus@samba.org>,
-	Michael Ellerman <mpe@ellerman.id.au>, gwshan@linux.vnet.ibm.com, sebott@linux.vnet.ibm.com,
-	gerald.schaefer@de.ibm.com, Corentin Chary <corentin.chary@gmail.com>,
-	Darren Hart <dvhart@infradead.org>, Andy Shevchenko <andy@infradead.org>,
-	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-	ACPI Devel Maling List <linux-acpi@vger.kernel.org>, linux-s390@vger.kernel.org,
-	Platform Driver <platform-driver-x86@vger.kernel.org>, acpi4asus-user@lists.sourceforge.net,
-	linuxppc-dev <linuxppc-dev@lists.ozlabs.org>
-Content-Type: text/plain; charset="UTF-8"
+In-Reply-To: <382af881-0ae1-0274-4628-0137071125b1@infradead.org>
+Subject: Re: [PATCH v5 06/13] PCI/P2PDMA: Add P2P DMA driver writer's
+ documentation
+List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-nvme>,
+ <mailto:linux-nvme-request@lists.infradead.org?subject=unsubscribe>
+List-Archive: <http://lists.infradead.org/pipermail/linux-nvme/>
+List-Post: <mailto:linux-nvme@lists.infradead.org>
+List-Help: <mailto:linux-nvme-request@lists.infradead.org?subject=help>
+List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-nvme>,
+ <mailto:linux-nvme-request@lists.infradead.org?subject=subscribe>
+Cc: Sagi Grimberg <sagi@grimberg.me>,
+ =?UTF-8?Q?Christian_K=c3=b6nig?= <christian.koenig@amd.com>,
+ Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+ Jonathan Corbet <corbet@lwn.net>, Alex Williamson <alex.williamson@redhat.com>,
+ Stephen Bates <sbates@raithlin.com>, Keith Busch <keith.busch@intel.com>,
+ =?UTF-8?B?SsOpcsO0bWUgR2xpc3Nl?= <jglisse@redhat.com>,
+ Jason Gunthorpe <jgg@mellanox.com>, Bjorn Helgaas <bhelgaas@google.com>,
+ Max Gurtovoy <maxg@mellanox.com>, Dan Williams <dan.j.williams@intel.com>,
+ Christoph Hellwig <hch@lst.de>
+Content-Type: text/plain; charset="us-ascii"
+Sender: "Linux-nvme" <linux-nvme-bounces@lists.infradead.org>
+Errors-To: linux-nvme-bounces+bjorn=helgaas.com@lists.infradead.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Sun, Aug 19, 2018 at 4:43 PM Lukas Wunner <lukas@wunner.de> wrote:
->
-> Ever since the PCI hotplug core was introduced in 2002, drivers had to
-> allocate and register a struct hotplug_slot_info for every slot:
-> https://git.kernel.org/tglx/history/c/a8a2069f432c
->
-> Apparently the idea was that drivers furnish the hotplug core with an
-> up-to-date card presence status, power status, latch status and
-> attention indicator status as well as notify the hotplug core of changes
-> thereof.  However only 4 out of 12 hotplug drivers bother to notify the
-> hotplug core with pci_hp_change_slot_info() and the hotplug core never
-> made any use of the information:  There is just a single macro in
-> pci_hotplug_core.c, GET_STATUS(), which uses the hotplug_slot_info if
-> the driver lacks the corresponding callback in hotplug_slot_ops.  The
-> macro is called when the user reads the attribute via sysfs.
->
-> Now, if the callback isn't defined, the attribute isn't exposed in sysfs
-> in the first place (see e.g. has_power_file()).  There are only two
-> situations when the hotplug_slot_info would actually be accessed:
->
-> * If the driver defines ->enable_slot or ->disable_slot but not
->   ->get_power_status.
->
-> * If the driver defines ->set_attention_status but not
->   ->get_attention_status.
->
-> There is no driver doing the former and just a single driver doing the
-> latter, namely pnv_php.c.  Amend it with a ->get_attention_status
-> callback.  With that, the hotplug_slot_info becomes completely unused by
-> the PCI hotplug core.  But a few drivers use it internally as a cache:
->
-> cpcihp uses it to cache the latch_status and adapter_status.
-> cpqhp uses it to cache the adapter_status.
-> pnv_php and rpaphp use it to cache the attention_status.
-> shpchp uses it to cache all four values.
->
-> Amend these drivers to cache the information in their private slot
-> struct.  shpchp's slot struct already contains members to cache the
-> power_status and adapter_status, so additional members are only needed
-> for the other two values.  In the case of cpqphp, the cached value is
-> only accessed in a single place, so instead of caching it, read the
-> current value from the hardware.
->
-> Caution:  acpiphp, cpci, cpqhp, shpchp, asus-wmi and eeepc-laptop
-> populate the hotplug_slot_info with initial values on probe.  That code
-> is herewith removed.  There is a theoretical chance that the code has
-> side effects without which the driver fails to function, e.g. if the
-> ACPI method to read the adapter status needs to be executed at least
-> once on probe.  That seems unlikely to me, still maintainers should
-> review the changes carefully for this possibility.
+Hey,
 
-I'm not aware of any case in which it will break anything, so
+Thanks for the review. I'll make the fixes for the next version.
 
-Reviewed-by: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
+On 30/08/18 06:34 PM, Randy Dunlap wrote:
+>> +With the client list in hand, the orchestrator may then call> +:c:func:`pci_p2pmem_find()` to obtain a published P2P memory provider
+>> +that is supported (behind the same root port) as all the clients. If more
+>> +than one provider is supported, the one nearest to all the clients will
+>> +be chosen first. If there are more than one provider is an equal distance
+>> +away, the one returned will be chosen at random. This function returns the PCI
+> 
+> random or just arbitrarily?
 
-but if that happens, it may be necessary to add the execution of the
-control methods in question directly to the initialization part.
+Randomly. See pci_p2pmem_find() in patch 1. We use prandom_u32_max() to
+select any of the supported devices.
+
+Logan
+
+_______________________________________________
+Linux-nvme mailing list
+Linux-nvme@lists.infradead.org
+http://lists.infradead.org/mailman/listinfo/linux-nvme
