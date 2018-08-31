@@ -1,23 +1,35 @@
-Return-Path: <okaya@kernel.org>
-Return-Path: <okaya@kernel.org>
-Subject: Re: [PATCH 4/9] PCI: pciehp: Unify controller and slot structs
-To: Lukas Wunner <lukas@wunner.de>, Bjorn Helgaas <helgaas@kernel.org>,
- linux-pci@vger.kernel.org, Mika Westerberg <mika.westerberg@linux.intel.com>
-References: <cover.1534686484.git.lukas@wunner.de>
- <2d4b1ed51a1c90fb6e1ef6282ab0c28f6c62cab1.1534686485.git.lukas@wunner.de>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail.kernel.org ([198.145.29.99]:43098 "EHLO mail.kernel.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1728087AbeIADNT (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Fri, 31 Aug 2018 23:13:19 -0400
+To: Alex Williamson <alex.williamson@redhat.com>,
+        Bjorn Helgaas <bhelgaas@google.com>,
+        Dennis Dalessandro <dennis.dalessandro@intel.com>
+Cc: Linux PCI <linux-pci@vger.kernel.org>
 From: Sinan Kaya <okaya@kernel.org>
-Message-ID: <c8e76de1-a2c3-b725-2e86-733dd0267d55@kernel.org>
-Date: Sun, 19 Aug 2018 17:59:33 -0400
+Subject: RFC on PCI Device Lock
+Message-ID: <87682473-6ffe-f7df-e8f8-3d00e8247621@kernel.org>
+Date: Fri, 31 Aug 2018 16:03:38 -0700
 MIME-Version: 1.0
-In-Reply-To: <2d4b1ed51a1c90fb6e1ef6282ab0c28f6c62cab1.1534686485.git.lukas@wunner.de>
 Content-Type: text/plain; charset=utf-8; format=flowed
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 8/19/2018 10:29 AM, Lukas Wunner wrote:
-> Simplify the driver by merging struct slot into struct controller.
-> Merge the slot constructor pcie_init_slot() and the destructor
-> pcie_cleanup_slot() into the controller counterparts.  Rename the slot
-> struct's "lock" member to "state_lock" and rename "work" to "button_work"
-> for clarity.
+Hi Bjorn, Alex;
 
-please split this into multiple pieces.
+Since my recent series to relocate secondary bus reset code into the PCI core,
+we hit a deadlock while trying to obtain a device lock during probe since
+device lock is already held.
+
+https://bugzilla.kernel.org/show_bug.cgi?id=200985
+
+I posted a patch into the bugzilla so that we skip locks if we are probing
+to follow the same strategy found in other lock routines in pci.c.
+
+https://bugzilla.kernel.org/attachment.cgi?id=278221
+
+I wanted to hear some opinions since this is a regression and need to find
+a solution and also waiting for test feedback
+
+Sinan
