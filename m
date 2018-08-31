@@ -1,47 +1,38 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mslow2.mail.gandi.net ([217.70.178.242]:36710 "EHLO
-        mslow2.mail.gandi.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726009AbeHYNkE (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Sat, 25 Aug 2018 09:40:04 -0400
-Received: from relay1-d.mail.gandi.net (unknown [217.70.183.193])
-        by mslow2.mail.gandi.net (Postfix) with ESMTP id 1B7453AA327
-        for <linux-pci@vger.kernel.org>; Sat, 25 Aug 2018 11:43:41 +0200 (CEST)
+Received: from 107-174-235-237-host.colocrossing.com ([107.174.235.237]:54528
+        "EHLO etennisonline.com" rhost-flags-OK-FAIL-OK-FAIL)
+        by vger.kernel.org with ESMTP id S1727418AbeHaXU7 (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Fri, 31 Aug 2018 19:20:59 -0400
+To: linux-pci@vger.kernel.org
+Subject: Images processing
+Message-ID: <b794db63cb08d0a6c3ddfe21eefa9cfd@kohls.com>
+Date: Fri, 31 Aug 2018 13:04:06 +0200
+From: "Jimmy Wilson" <keffdeislarsadta@email.jp>
+Reply-To: heztermine@sina.com
 MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8;
- format=flowed
-Date: Sat, 25 Aug 2018 11:43:31 +0200
-From: KELLY ALAN <kellyalan@servicescourrier.club>
-To: kellyalan@servicescourrier.club
-Subject: TRADING  ACCOUNT
-Reply-To: kellyalan@cfmeareongines.com
-Message-ID: <3ab0b52d6cdd69dc694dbfa0087adc57@servicescourrier.club>
+Content-Type: text/plain; format=flowed; charset="UTF-8"
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
+Hi,
 
-Dear sir ,
+Have you received my email from last week?
 
-I KELLY ALAN  purchasing and sales manager of CFM INTERNATIONAL .Our 
-Company specialised in Supplying computer hardware and Electronic .We 
-want to extend our supplier list because of concurrency in prices on the 
-international market. We are seeking a supplier with whom we can to have 
-  partnered long-term in order to have competitive prices . we are 
-interested to buy the products you sell and want to place an order with 
-you in big quantities.
-Can you give us payment facilities ( 14 , 30 or 60 days payment terms ) 
-?
-What is the procedure for our account opening  and credit line 
-application ?
+I would like to speak with the person who manage your photos for your
+company?
 
-Cordially
+We are here to provide you all kinds of imaging editing.
 
-  KELLY ALAN
+What we can provide you:
+Cutting out for photos
+Clipping path for photos
+Masking for photos
+Retouching for your photos
+Retouching for the Beauty Model and Portraits.
 
-CFM INTERNATIONAL
-2 BOULEVARD DU GAL MARTIAL VALIN
-75015 PARIS
-REG N° 302 527 700
-VAT N° FR90 302527700
-TEL +33171025367
-FAX +33177759149
-https://www.cfmaeroengines.com
+We have 20 staffs in house and daily basis 1000 images can be processed.
+
+We give testing for your photos.
+
+Thanks,
+Jimmy Wilson
