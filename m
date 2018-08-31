@@ -1,76 +1,60 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mga14.intel.com ([192.55.52.115]:7837 "EHLO mga14.intel.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1727155AbeHGUHV (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Tue, 7 Aug 2018 16:07:21 -0400
-Message-ID: <5c5e532859f4322cd6f8d15af1fad47231aaf95e.camel@intel.com>
-Subject: Re: [PATCH v6 6/9] ixgbe: Do not call pcie_print_link_status()
-From: Jeff Kirsher <jeffrey.t.kirsher@intel.com>
-Reply-To: jeffrey.t.kirsher@intel.com
-To: Alexandru Gagniuc <mr.nuke.me@gmail.com>,
-        linux-pci@vger.kernel.org, bhelgaas@google.com,
-        jakub.kicinski@netronome.com
-Cc: keith.busch@intel.com, alex_gagniuc@dellteam.com,
-        austin_bolen@dell.com, shyam_iyer@dell.com,
-        Ariel Elior <ariel.elior@cavium.com>,
-        everest-linux-l2@cavium.com,
-        "David S. Miller" <davem@davemloft.net>,
-        Michael Chan <michael.chan@broadcom.com>,
-        Ganesh Goudar <ganeshgr@chelsio.com>,
-        Tariq Toukan <tariqt@mellanox.com>,
-        Saeed Mahameed <saeedm@mellanox.com>,
-        Leon Romanovsky <leon@kernel.org>,
-        Dirk van der Merwe <dirk.vandermerwe@netronome.com>,
-        netdev@vger.kernel.org, linux-kernel@vger.kernel.org,
-        intel-wired-lan@lists.osuosl.org, linux-rdma@vger.kernel.org,
-        oss-drivers@netronome.com
-Date: Tue, 07 Aug 2018 10:51:49 -0700
-In-Reply-To: <20180806232600.25694-6-mr.nuke.me@gmail.com>
-References: <CAErSpo4PK+SQLNfdkLNt9eLc7bpbxbkZCsa8T-tQpid601n0SQ@mail.gmail.com>
-         <20180806232600.25694-1-mr.nuke.me@gmail.com>
-         <20180806232600.25694-6-mr.nuke.me@gmail.com>
-Content-Type: multipart/signed; micalg="pgp-sha256";
-        protocol="application/pgp-signature"; boundary="=-pPzt0jonzh3gyG7n0GJr"
-Mime-Version: 1.0
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-nvme-bounces+bjorn=helgaas.com@lists.infradead.org>
+Return-Path: <linux-nvme-bounces+bjorn=helgaas.com@lists.infradead.org>
+Subject: Re: [PATCH v5 13/13] nvmet: Optionally use PCI P2P memory
+To: Logan Gunthorpe <logang@deltatee.com>, linux-kernel@vger.kernel.org,
+ linux-pci@vger.kernel.org, linux-nvme@lists.infradead.org,
+ linux-rdma@vger.kernel.org, linux-nvdimm@lists.01.org,
+ linux-block@vger.kernel.org
+References: <20180830185352.3369-1-logang@deltatee.com>
+ <20180830185352.3369-14-logang@deltatee.com>
+From: Sagi Grimberg <sagi@grimberg.me>
+Message-ID: <ecbb669a-2e84-1333-7e0d-1560cf014750@grimberg.me>
+Date: Thu, 30 Aug 2018 17:25:09 -0700
+MIME-Version: 1.0
+In-Reply-To: <20180830185352.3369-14-logang@deltatee.com>
+List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-nvme>,
+ <mailto:linux-nvme-request@lists.infradead.org?subject=unsubscribe>
+List-Archive: <http://lists.infradead.org/pipermail/linux-nvme/>
+List-Post: <mailto:linux-nvme@lists.infradead.org>
+List-Help: <mailto:linux-nvme-request@lists.infradead.org?subject=help>
+List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-nvme>,
+ <mailto:linux-nvme-request@lists.infradead.org?subject=subscribe>
+Cc: =?UTF-8?Q?Christian_K=c3=b6nig?= <christian.koenig@amd.com>,
+ Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+ Steve Wise <swise@opengridcomputing.com>,
+ Alex Williamson <alex.williamson@redhat.com>,
+ Stephen Bates <sbates@raithlin.com>, Keith Busch <keith.busch@intel.com>,
+ =?UTF-8?B?SsOpcsO0bWUgR2xpc3Nl?= <jglisse@redhat.com>,
+ Jason Gunthorpe <jgg@mellanox.com>, Bjorn Helgaas <bhelgaas@google.com>,
+ Max Gurtovoy <maxg@mellanox.com>, Dan Williams <dan.j.williams@intel.com>,
+ Christoph Hellwig <hch@lst.de>
+Content-Type: text/plain; charset="utf-8"; Format="flowed"
+Sender: "Linux-nvme" <linux-nvme-bounces@lists.infradead.org>
+Errors-To: linux-nvme-bounces+bjorn=helgaas.com@lists.infradead.org
 List-ID: <linux-pci.vger.kernel.org>
 
-
---=-pPzt0jonzh3gyG7n0GJr
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
-
-On Mon, 2018-08-06 at 18:25 -0500, Alexandru Gagniuc wrote:
-> This is now done by the PCI core to warn of sub-optimal bandwidth.
->=20
-> Signed-off-by: Alexandru Gagniuc <mr.nuke.me@gmail.com>
-> ---
->  drivers/net/ethernet/intel/ixgbe/ixgbe_main.c | 26 ---------------
-> ----
->  1 file changed, 26 deletions(-)
-
-Acked-by: Jeff Kirsher <jeffrey.t.kirsher@intel.com>
-
---=-pPzt0jonzh3gyG7n0GJr
-Content-Type: application/pgp-signature; name="signature.asc"
-Content-Description: This is a digitally signed message part
-Content-Transfer-Encoding: 7bit
-
------BEGIN PGP SIGNATURE-----
-
-iQIzBAABCAAdFiEEiTyZWz+nnTrOJ1LZ5W/vlVpL7c4FAltp3DUACgkQ5W/vlVpL
-7c5JQw/9Fo7T4k0FAjGAyShZDwDb7xKB9kdLlyat5WsUfbW1EYdHwfc0U0nd3KeB
-QGUyMPIwqDi6tSTCJmIyHozKALqwY4ukd7ei6Thkap3NN8AKlUbiAuZtbFbpvbp/
-3lOEph9Qqsu2ECAz8YYrpd3cEiyPdPmSaPOJCC6evWd9NKeWE5LQ/oqxR4I9+nVx
-zjnUfyiUuhdwQpPVyo61V4b/OeQZJK2vhWjFzSFU4AJpm1Ieb+e9dZnZE/rTbXN6
-pT4BonB7lB0LNLi5tuYTIODkYWoh/aOfjP1oPXApQRvUlw7KaUYVWCkIhta4R1Kh
-gPstjHJe2nn8vYsAeId9m5+t+g0G6RfpD9KtVDidsCCDAZe0gOW4SzA4aE3pBGb2
-DwArJ93VxqhGdNc+Ll1GyuMRBB4quwoaAAQDdDd18OwXivYZ1kHrZIOpjj9rANia
-wGRyimWjpEmLg9OZbvHypsUc5bC8Nd36WeZJeEMNtcLaCJRBoxeoaRgwVTGqNYiU
-/EGMNnKE5OuLlwfHt8t0rFwz+4BAVIm+SKwYN5SXN6EjC2y0HlXE8OmdPkXLf7oL
-S0FEm3v6TB0KeQJpxZ7WBjAKK9TBoXMvf7M169DtQKJ18M2OnOhUQ8pIC+/vnGh1
-ALsptbV/M0dQiHEL8fj2DtchOLS9p1D3ccQ6VWMPtE2hTAEwtmI=
-=iqdT
------END PGP SIGNATURE-----
-
---=-pPzt0jonzh3gyG7n0GJr--
+Cj4gKy8qCj4gKyAqIElmIGFsbG93X3AycG1lbSBpcyBzZXQsIHdlIHdpbGwgdHJ5IHRvIHVzZSBQ
+MlAgbWVtb3J5IGZvciB0aGUgU0dMIGxpc3RzIGZvcgo+ICsgKiDOmS9PIGNvbW1hbmRzLiBUaGlz
+IHJlcXVpcmVzIHRoZSBQQ0kgcDJwIGRldmljZSB0byBiZSBjb21wYXRpYmxlIHdpdGggdGhlCj4g
+KyAqIGJhY2tpbmcgZGV2aWNlIGZvciBldmVyeSBuYW1lc3BhY2Ugb24gdGhpcyBjb250cm9sbGVy
+Lgo+ICsgKi8KPiArc3RhdGljIHZvaWQgbnZtZXRfc2V0dXBfcDJwbWVtKHN0cnVjdCBudm1ldF9j
+dHJsICpjdHJsLCBzdHJ1Y3QgbnZtZXRfcmVxICpyZXEpCj4gK3sKPiArCXN0cnVjdCBudm1ldF9u
+cyAqbnM7Cj4gKwlpbnQgcmV0Owo+ICsKPiArCWlmICghcmVxLT5wb3J0LT51c2VfcDJwbWVtIHx8
+ICFyZXEtPnAycF9jbGllbnQpCj4gKwkJcmV0dXJuOwo+ICsKPiArCW11dGV4X2xvY2soJmN0cmwt
+PnN1YnN5cy0+bG9jayk7Cj4gKwo+ICsJcmV0ID0gcGNpX3AycGRtYV9hZGRfY2xpZW50KCZjdHJs
+LT5wMnBfY2xpZW50cywgcmVxLT5wMnBfY2xpZW50KTsKPiArCWlmIChyZXQpIHsKPiArCQlwcl9l
+cnIoImZhaWxlZCBhZGRpbmcgcGVlci10by1wZWVyIERNQSBjbGllbnQgJXM6ICVkXG4iLAo+ICsJ
+CSAgICAgICBkZXZfbmFtZShyZXEtPnAycF9jbGllbnQpLCByZXQpOwo+ICsJCWdvdG8gZnJlZV9k
+ZXZpY2VzOwo+ICsJfQo+ICsKPiArCWxpc3RfZm9yX2VhY2hfZW50cnlfcmN1KG5zLCAmY3RybC0+
+c3Vic3lzLT5uYW1lc3BhY2VzLCBkZXZfbGluaykgewo+ICsJCXJldCA9IG52bWV0X3AycGRtYV9h
+ZGRfY2xpZW50KGN0cmwsIG5zKTsKPiArCQlpZiAocmV0KQo+ICsJCQlnb3RvIGZyZWVfZGV2aWNl
+czsKPiArCX0KPiArCj4gKwlpZiAocmVxLT5wb3J0LT5wMnBfZGV2KSB7Cj4gKwkJaWYgKCFwY2lf
+cDJwZG1hX2Fzc2lnbl9wcm92aWRlcihyZXEtPnBvcnQtPnAycF9kZXYsCj4gKwkJCQkJCSZjdHJs
+LT5wMnBfY2xpZW50cykpIHsKPiArCQkJcHJfaW5mbygicGVlci10by1wZWVyIG1lbW9yeSBvbiAl
+cyBpcyBub3Qgc3VwcG9ydGVkXG4iLAo+ICsJCQkJcGNpX25hbWUocmVxLT5wb3J0LT5wMnBfZGV2
+KSk7Cj4gKwkJCWdvdG8gZnJlZV9kZXZpY2VzOwo+ICsJCX0KPiArCQljdHJsLT5wMnBfZGV2ID0g
+cGNpX2Rldl9nZXQocmVxLT5wb3J0LT5wMnBfZGV2KTsKPiArCX0gZWxzZSB7CgpXaGVuIGlzIHBv
+cnQtPnAycF9kZXYgPT0gTlVMTD8gYSBsaXR0bGUgbW9yZSBkb2N1bWVudGF0aW9uIHdvdWxkIGhl
+bHAgCmhlcmUuLi4KCl9fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19f
+X19fCkxpbnV4LW52bWUgbWFpbGluZyBsaXN0CkxpbnV4LW52bWVAbGlzdHMuaW5mcmFkZWFkLm9y
+ZwpodHRwOi8vbGlzdHMuaW5mcmFkZWFkLm9yZy9tYWlsbWFuL2xpc3RpbmZvL2xpbnV4LW52bWUK
