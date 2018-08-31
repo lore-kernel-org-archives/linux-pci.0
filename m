@@ -1,109 +1,144 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-From: Hanjie Lin <hanjie.lin@amlogic.com>
-To: Bjorn Helgaas <bhelgaas@google.com>
-CC: Yue Wang <yue.wang@amlogic.com>,
-        Hanjie Lin <hanjie.lin@amlogic.com>,
-        Kevin Hilman <khilman@baylibre.com>,
-        Rob Herring <robh@kernel.org>, <linux-kernel@vger.kernel.org>,
-        <linux-pci@vger.kernel.org>,
-        <linux-arm-kernel@lists.infradead.org>,
-        <linux-amlogic@lists.infradead.org>,
-        Yixun Lan <yixun.lan@amlogic.com>,
-        Liang Yang <liang.yang@amlogic.com>,
-        Jianxin Pan <jianxin.pan@amlogic.com>,
-        Qiufang Dai <qiufang.dai@amlogic.com>,
-        Jian Hu <jian.hu@amlogic.com>, <devicetree@vger.kernel.org>
-Subject: [PATCH v2 1/2] dt-bindings: PCI: meson: add DT bindings for Amlogic Meson PCIe controller
-Date: Fri, 24 Aug 2018 15:36:03 +0800
-Message-ID: <1535096165-45827-2-git-send-email-hanjie.lin@amlogic.com>
-In-Reply-To: <1535096165-45827-1-git-send-email-hanjie.lin@amlogic.com>
-References: <1535096165-45827-1-git-send-email-hanjie.lin@amlogic.com>
+Return-Path: <linux-nvme-bounces+bjorn=helgaas.com@lists.infradead.org>
+Return-Path: <linux-nvme-bounces+bjorn=helgaas.com@lists.infradead.org>
+Subject: Re: [PATCH v5 06/13] PCI/P2PDMA: Add P2P DMA driver writer's
+ documentation
+To: Logan Gunthorpe <logang@deltatee.com>, linux-kernel@vger.kernel.org,
+ linux-pci@vger.kernel.org, linux-nvme@lists.infradead.org,
+ linux-rdma@vger.kernel.org, linux-nvdimm@lists.01.org,
+ linux-block@vger.kernel.org
+References: <20180830185352.3369-1-logang@deltatee.com>
+ <20180830185352.3369-7-logang@deltatee.com>
+From: Randy Dunlap <rdunlap@infradead.org>
+Message-ID: <382af881-0ae1-0274-4628-0137071125b1@infradead.org>
+Date: Thu, 30 Aug 2018 17:34:32 -0700
 MIME-Version: 1.0
-Content-Type: text/plain
-Sender: linux-kernel-owner@vger.kernel.org
+In-Reply-To: <20180830185352.3369-7-logang@deltatee.com>
+List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-nvme>,
+ <mailto:linux-nvme-request@lists.infradead.org?subject=unsubscribe>
+List-Archive: <http://lists.infradead.org/pipermail/linux-nvme/>
+List-Post: <mailto:linux-nvme@lists.infradead.org>
+List-Help: <mailto:linux-nvme-request@lists.infradead.org?subject=help>
+List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-nvme>,
+ <mailto:linux-nvme-request@lists.infradead.org?subject=subscribe>
+Cc: Sagi Grimberg <sagi@grimberg.me>,
+ =?UTF-8?Q?Christian_K=c3=b6nig?= <christian.koenig@amd.com>,
+ Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+ Jonathan Corbet <corbet@lwn.net>, Alex Williamson <alex.williamson@redhat.com>,
+ Stephen Bates <sbates@raithlin.com>, Keith Busch <keith.busch@intel.com>,
+ =?UTF-8?B?SsOpcsO0bWUgR2xpc3Nl?= <jglisse@redhat.com>,
+ Jason Gunthorpe <jgg@mellanox.com>, Bjorn Helgaas <bhelgaas@google.com>,
+ Max Gurtovoy <maxg@mellanox.com>, Dan Williams <dan.j.williams@intel.com>,
+ Christoph Hellwig <hch@lst.de>
+Content-Type: text/plain; charset="us-ascii"
+Sender: "Linux-nvme" <linux-nvme-bounces@lists.infradead.org>
+Errors-To: linux-nvme-bounces+bjorn=helgaas.com@lists.infradead.org
 List-ID: <linux-pci.vger.kernel.org>
 
-From: Yue Wang <yue.wang@amlogic.com>
+Hi,
 
-The Amlogic Meson PCIe host controller is based on the Synopsys DesignWare
-PCI core. This patch adds documentation for the DT bindings in Meson PCIe
-controller.
+I have a few comments below...
 
-Signed-off-by: Yue Wang <yue.wang@amlogic.com>
-Signed-off-by: Hanjie Lin <hanjie.lin@amlogic.com>
----
- .../devicetree/bindings/pci/amlogic,meson-pcie.txt | 63 ++++++++++++++++++++++
- 1 file changed, 63 insertions(+)
- create mode 100644 Documentation/devicetree/bindings/pci/amlogic,meson-pcie.txt
+On 08/30/2018 11:53 AM, Logan Gunthorpe wrote:
+> 
+> Signed-off-by: Logan Gunthorpe <logang@deltatee.com>
+> Cc: Jonathan Corbet <corbet@lwn.net>
+> ---
+>  Documentation/driver-api/pci/index.rst  |   1 +
+>  Documentation/driver-api/pci/p2pdma.rst | 170 ++++++++++++++++++++++++++++++++
+>  2 files changed, 171 insertions(+)
+>  create mode 100644 Documentation/driver-api/pci/p2pdma.rst
 
-diff --git a/Documentation/devicetree/bindings/pci/amlogic,meson-pcie.txt b/Documentation/devicetree/bindings/pci/amlogic,meson-pcie.txt
-new file mode 100644
-index 0000000..8a831d1
---- /dev/null
-+++ b/Documentation/devicetree/bindings/pci/amlogic,meson-pcie.txt
-@@ -0,0 +1,63 @@
-+Amlogic Meson AXG DWC PCIE SoC controller
-+
-+Amlogic Meson PCIe host controller is based on the Synopsys DesignWare PCI core.
-+It shares common functions with the PCIe DesignWare core driver and
-+inherits common properties defined in
-+Documentation/devicetree/bindings/pci/designware-pci.txt.
-+
-+Additional properties are described here:
-+
-+Required properties:
-+- compatible:
-+	should contain "amlogic,axg-pcie" to identify the core.
-+- reg:
-+	Should contain the configuration address space.
-+- reg-names: Must be
-+	- "elbi"	External local bus interface registers
-+	- "cfg"		Meson specific registers
-+	- "config"	PCIe configuration space
-+- reset-gpios: The GPIO to generate PCIe PERST# assert and deassert signal.
-+- clocks: Must contain an entry for each entry in clock-names.
-+- clock-names: Must include the following entries:
-+	- "pclk"       PCIe GEN 100M PLL clock
-+	- "port"       PCIe_x(A or B) RC clock gate
-+	- "general"    PCIe Phy clock
-+	- "mipi"       PCIe_x(A or B) 100M ref clock gate
-+- resets: phandle to the reset lines.
-+- reset-names: must contain "phy" and "peripheral"
-+       - "port" Port A or B reset
-+       - "apb" APB reset
-+
-+Example configuration:
-+
-+	pcie: pcie@f9800000 {
-+			compatible = "amlogic,axg-pcie", "snps,dw-pcie";
-+			reg = <0x0 0xf9800000 0x0 0x400000
-+					0x0 0xff646000 0x0 0x2000
-+					0x0 0xf9f00000 0x0 0x100000>;
-+			reg-names = "elbi", "cfg", "config";
-+			reset-gpios = <&gpio GPIOX_19 GPIO_ACTIVE_HIGH>;
-+			interrupts = <GIC_SPI 177 IRQ_TYPE_EDGE_RISING>;
-+			#interrupt-cells = <1>;
-+			interrupt-map-mask = <0 0 0 0>;
-+			interrupt-map = <0 0 0 0 &gic GIC_SPI 179 IRQ_TYPE_EDGE_RISING>;
-+			bus-range = <0x0 0xff>;
-+			#address-cells = <3>;
-+			#size-cells = <2>;
-+			device_type = "pci";
-+			phys = <&pcie_phy>;
-+			ranges = <0x82000000 0 0 0x0 0xf9c00000 0 0x00300000>;
-+
-+			clocks = <&clkc CLKID_USB
-+					&clkc CLKID_MIPI_ENABLE
-+					&clkc CLKID_PCIE_A
-+					&clkc CLKID_PCIE_CML_EN0>;
-+			clock-names = "general",
-+					"mipi",
-+					"pclk",
-+					"port";
-+			resets = <&reset RESET_PCIE_A>,
-+				<&reset RESET_PCIE_APB>;
-+			reset-names = "port",
-+					"apb";
-+	};
+> diff --git a/Documentation/driver-api/pci/p2pdma.rst b/Documentation/driver-api/pci/p2pdma.rst
+> new file mode 100644
+> index 000000000000..ac857450d53f
+> --- /dev/null
+> +++ b/Documentation/driver-api/pci/p2pdma.rst
+> @@ -0,0 +1,170 @@
+> +.. SPDX-License-Identifier: GPL-2.0
+> +
+> +============================
+> +PCI Peer-to-Peer DMA Support
+> +============================
+> +
+> +The PCI bus has pretty decent support for performing DMA transfers
+> +between two devices on the bus. This type of transaction is henceforth
+> +called Peer-to-Peer (or P2P). However, there are a number of issues that
+> +make P2P transactions tricky to do in a perfectly safe way.
+> +
+> +One of the biggest issues is that PCI doesn't require forwarding
+> +transactions between hierarchy domains, and in PCIe, each Root Port
+> +defines a separate hierarchy domain. To make things worse, there is no
+> +simple way to determine if a given Root Complex supports this or not.
+> +(See PCIe r4.0, sec 1.3.1). Therefore, as of this writing, the kernel
+> +only supports doing P2P when the endpoints involved are all behind the
+> +same PCI bridge, as such devices are all in the same PCI hierarchy
+> +domain, and the spec guarantees that all transacations within the
+
+                                            transactions
+
+> +hierarchy will be routable, but it does not require routing
+> +between hierarchies.
+> +
+> +The second issue is that to make use of existing interfaces in Linux,
+> +memory that is used for P2P transactions needs to be backed by struct
+> +pages. However, PCI BARs are not typically cache coherent so there are
+> +a few corner case gotchas with these pages so developers need to
+> +be careful about what they do with them.
+> +
+> +
+> +Driver Writer's Guide
+> +=====================
+> +
+> +In a given P2P implementation there may be three or more different
+> +types of kernel drivers in play:
+> +
+> +* Provider - A driver which provides or publishes P2P resources like
+> +  memory or doorbell registers to other drivers.
+> +* Client - A driver which makes use of a resource by setting up a
+> +  DMA transaction to or from it.
+> +* Orchestrator - A driver which orchestrates the flow of data between
+> +  clients and providers
+
+Might as well end that last one with a period since the other 2 are.
+
+> +
+> +In many cases there could be overlap between these three types (i.e.,
+> +it may be typical for a driver to be both a provider and a client).
+> +
+
+[snip]
+
+> +
+> +Orchestrator Drivers
+> +--------------------
+> +
+> +The first task an orchestrator driver must do is compile a list of
+> +all client devices that will be involved in a given transaction. For
+> +example, the NVMe Target driver creates a list including all NVMe
+> +devices and the RNIC in use. The list is stored as an anonymous struct
+> +list_head which must be initialized with the usual INIT_LIST_HEAD.
+> +The following functions may then be used to add to, remove from and free
+> +the list of clients with the functions :c:func:`pci_p2pdma_add_client()`,
+> +:c:func:`pci_p2pdma_remove_client()` and
+> +:c:func:`pci_p2pdma_client_list_free()`.
+> +
+> +With the client list in hand, the orchestrator may then call> +:c:func:`pci_p2pmem_find()` to obtain a published P2P memory provider
+> +that is supported (behind the same root port) as all the clients. If more
+> +than one provider is supported, the one nearest to all the clients will
+> +be chosen first. If there are more than one provider is an equal distance
+> +away, the one returned will be chosen at random. This function returns the PCI
+
+random or just arbitrarily?
+
+> +device to use for the provider with a reference taken and therefore
+> +when it's no longer needed it should be returned with pci_dev_put().
+
+
+thanks,
 -- 
-2.7.4
+~Randy
+
+_______________________________________________
+Linux-nvme mailing list
+Linux-nvme@lists.infradead.org
+http://lists.infradead.org/mailman/listinfo/linux-nvme
