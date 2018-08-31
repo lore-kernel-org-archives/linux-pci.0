@@ -1,153 +1,430 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:59002 "EHLO
-        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1729249AbeHOSwV (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Wed, 15 Aug 2018 14:52:21 -0400
+Received: from mail.kernel.org ([198.145.29.99]:55552 "EHLO mail.kernel.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1727495AbeHaXVT (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Fri, 31 Aug 2018 19:21:19 -0400
+Date: Fri, 31 Aug 2018 14:12:25 -0500
+From: Bjorn Helgaas <helgaas@kernel.org>
+To: Daniel Drake <drake@endlessm.com>
+Cc: bhelgaas@google.com, linux-pci@vger.kernel.org, linux@endlessm.com,
+        nouveau@lists.freedesktop.org, linux-pm@vger.kernel.org,
+        peter@lekensteyn.nl, kherbst@redhat.com,
+        Andy Shevchenko <andriy.shevchenko@linux.intel.com>,
+        "Rafael J. Wysocki" <rafael.j.wysocki@intel.com>,
+        Keith Busch <keith.busch@intel.com>,
+        Mika Westerberg <mika.westerberg@linux.intel.com>,
+        Jon Derrick <jonathan.derrick@intel.com>
+Subject: Re: [PATCH] PCI: add prefetch quirk to work around Asus/Nvidia
+ suspend issues
+Message-ID: <20180831191225.GA43106@bhelgaas-glaptop.roam.corp.google.com>
+References: <20180831073057.14626-1-drake@endlessm.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8;
- format=flowed
-Date: Wed, 15 Aug 2018 21:29:37 +0530
-From: poza@codeaurora.org
-To: Thomas Tai <thomas.tai@oracle.com>
-Cc: bhelgaas@google.com, keith.busch@intel.com,
-        linux-pci@vger.kernel.org, linux-pci-owner@vger.kernel.org
-Subject: Re: [PATCH 1/1] PCI/AER: prevent pcie_do_fatal_recovery from using
- device after it is removed
-In-Reply-To: <a23efe6f-4341-edaa-a230-c2f1c93ff0ce@oracle.com>
-References: <1534179088-44219-1-git-send-email-thomas.tai@oracle.com>
- <1534179088-44219-2-git-send-email-thomas.tai@oracle.com>
- <51f4b387d9bd96a42d526a6a029fc43b@codeaurora.org>
- <b0104a716319d76e734c307cb4bedd9d@codeaurora.org>
- <8b8db3c5-e884-d697-6193-b409276f9638@oracle.com>
- <fa97a363892f757203ec7209f374a220@codeaurora.org>
- <08462817-7a4f-2d8a-a329-e856c9e702c9@oracle.com>
- <9215fe3c62c2f15d7da221bb77bd5680@codeaurora.org>
- <a23efe6f-4341-edaa-a230-c2f1c93ff0ce@oracle.com>
-Message-ID: <3c5fe7896f5d558fef9d37f8b7156a3b@codeaurora.org>
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20180831073057.14626-1-drake@endlessm.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 2018-08-15 21:13, Thomas Tai wrote:
-> [ ... ]>>>>>>> +        if (dev)
->>>>>>>> +            pci_info(dev, "Device recovery from fatal error 
->>>>>>>> successful\n");
->>>>>>>> +        else
->>>>>>>> +            pr_err("AER: Can not find pci_dev for 
->>>>>>>> %04x:%02x:%02x.%x\n",
->>>>>>>> +                   domain, bus,
->>>>>>>> +                   PCI_SLOT(devfn), PCI_FUNC(devfn));
->>>>>>>> +        pci_dev_put(dev);
->>>>> 
->>>>> That is, replace above with:
->>>>> 
->>>>>     pr_info("AER: Device %04x:%02x:%02x.%x recover from fatal error
->>>>> successful\n", domain, bus, PCI_SLOT(devfn), PCI_FUNC(devfn));
->>>>> 
->>>> is this not sufficient to print ?  which is there already.
->>>> pci_info(dev, "Device recovery from fatal error successful\n");
->>> 
->>> Unfortunately, I can't use "dev" because as you said I can't
->>> pci_get_domain_slot to search for it after rescanning.
->>> 
->>> -T
->> 
->> If I understood the patch correctly,
->> 1) it is restructuring of pci_dev_put(dev);
->> 2) now we are sending uevent only if it is bridge.
->> 3) the other logic where you store and compare bdf is not required, 
->> although we have to fix following.
->> pci_info(dev, "Device recovery from fatal error successful\n");
->> 
->> 
->> probably 1) and 2) could be a separate patch.
+[+cc Intel folks]
+
+On Fri, Aug 31, 2018 at 03:30:57PM +0800, Daniel Drake wrote:
+> On over 40 Intel-based Asus products, the nvidia GPU becomes unusable
+> after S3 suspend/resume. The affected products include multiple
+> generations of nvidia GPUs and Intel SoCs. After resume, nouveau logs
+> many errors such as:
 > 
-> Yes Oza. I will separate 1) and 2) and fix the pci_info(dev, "...") to
-> use domain:bus:devfn
-
-Thanks Thomas,
-although I am not sure on 3)  by doing following.
-
-  dev = pci_get_domain_bus_and_slot(domain, bus, devfn);
-      if (dev)
-         pci_info(dev, "Device recovery from fatal error successful\n");
-
-but also it may be the case that device is removed and there is no new 
-device which would match BDF
-so in any case recovery has happened as far as PCIe link is concerned.
-
-surprisingly in my case followin also went fine
-pci_info(dev, "Device recovery from fatal error successful\n");
-I guess probably after re-enumeration, I got the sane dev back !!  
-(since it enumerated the same device)
-
-how about something like this
-
-dev = pci_get_domain_bus_and_slot(domain, bus, devfn);
-      if (dev)
-         pci_info(dev, "Device recovery from fatal error successful\n");
-       else
-          pr_ifo ("AER: Device recovery from fatal error successful")
-
-Regards,
-Oza.
-
+>     fifo: fault 00 [READ] at 0000005555555000 engine 00 [GR] client 04 [HUB/FE] reason 4a [] on channel -1 [007fa91000 unknown]
+>     DRM: failed to idle channel 0 [DRM]
 > 
->> 
->> by the way,
->> In my testing even after removing device the call pci_uevent_ers(dev, 
->> PCI_ERS_RESULT_DISCONNECT); did not create any problem.
+> Similarly, the nvidia proprietary driver also fails after resume
+> (black screen, 100% CPU usage in Xorg process). We shipped a sample
+> to Nvidia for diagnosis, and their response indicated that it's a
+> problem with the parent PCI bridge (on the Intel SoC), not the GPU.
 > 
-> I think that is dangerous, if we restructure pci_dev_put(dev), ie
-> revert commit bd91b56cb3b27492963caeb5fccefe20a986ca8d. The dev
-> structure is freed and we shouldn't really use it to send
-> pci_uevent_ers(). Although pci_uevent_ers() may be smart enough to
-> figure out to avoid crash, we should only use it when the dev is not
-> removed.
+> We found a workaround: on resume, rewrite the Intel PCI bridge
+> 'Prefetchable Base Upper 32 Bits' register. In the cases that I checked,
+> this register has value 0 and we just have to rewrite that value.
 > 
+> It's very strange that rewriting the exact same register value
+> makes a difference, but it definitely makes the issue go away.
+> It's not just acting as some kind of memory barrier, because rewriting
+> other bridge registers does not work around the issue. There's something
+> magic in this particular register.
 
-I Agree.
+If true, this sounds like some sort of erratum, so it would be good to
+get some input from Intel, and I cc'd a few Intel folks.
 
-> Thanks,
-> Thomas
+It's interesting that all the systems below are from Asus.  That makes
+me think there's some BIOS or SMM connection, e.g., SMM traps the
+register write and does something magic.
+
+Does this problem happen after a full system suspend/resume, or does
+it happen after runtime suspend of only the GPU?  Or runtime suspend
+of only the GPU and the upstream bridge?
+
+Can we tell whether Windows rewrites this register unconditionally at
+resume-time?  If so, it may be more robust for Linux to do the same.
+The whole thing is black magic, which I hate, but if it's our only
+choice, it may be better to have this applied everywhere so we don't
+keep stubbing our toes on new systems that require the quirk.
+
+> We examined our database of Asus hardware and identified 43 products
+> that we believe are affected. Checking the nvidia GPU parent PCI bridge
+> on each one, in total 5 Intel PCI bridges need quirking as below.
+> The quirk will run on bridges even where no nvidia GPU is connected,
+> but it should be harmless, and we at least limit it to only running
+> on Asus products.
 > 
->>> 
->> 
->>> 
->>>> 
->>>>> 
->>>>>>>>      } else {
->>>>>>>> -        pci_uevent_ers(dev, PCI_ERS_RESULT_DISCONNECT);
->>>>>>>> -        pci_info(dev, "Device recovery from fatal error 
->>>>>>>> failed\n");
->>>>>>>> +        if (is_bridge_device)
->>>>>>> previously there was no condition.. why is this required now ?
->>>>>>> and it was doing on "dev" while you are doing it on "udev"
->>>>>> is that the reason we dont watnt o use dev after it is removed ? 
->>>>>> instead do pci_uevent_ers on bridge ?
->>>>> 
->>>>> 
->>>>> Yes, that's exactly the reason. I should have written down the 
->>>>> reason
->>>>> in the commit log. Here is the details explanation for the benefit 
->>>>> of
->>>>> others. If the failing device is a bridge device, udev is equal to
->>>>> dev. So we can use udev in the pci_uevent_ers. But for non bridge
->>>>> device the device is already removed from the bus and thus can't 
->>>>> send
->>>>> pci_uevent_ers.
->>>>> 
->>>>> Thank you,
->>>>> Thomas
->>>>> 
->>>>>>>> +            pci_uevent_ers(udev, PCI_ERS_RESULT_DISCONNECT);
->>>>>>>> +        pr_err("AER: Device %04x:%02x:%02x.%x recovery from 
->>>>>>>> fatal error failed\n",
->>>>>>>> +               domain, bus, PCI_SLOT(devfn), PCI_FUNC(devfn));
->>>>>>>>      }
->>>>>>>> 
->>>>>>>> -    pci_dev_put(dev);
->>>>>>>>      pci_unlock_rescan_remove();
->>>>>>>>  }
->>>>>>> 
->>>>>>> Regards,
->>>>>>> Oza.
+> This fix was tested on all the affected models that we have in hands
+> (X542UQ, UX533FD, X530UN, V272UN).
+> 
+> Signed-off-by: Daniel Drake <drake@endlessm.com>
+> ---
+> 
+> Notes:
+>     If anyone has ideas for why writing this register makes a difference, or
+>     suggestions for other approaches then I'm all ears...
+>     
+>     Here is some basic info of the 43 products believed to be affected:
+>     basic DMI data, nvidia GPU PCI info, parent PCI bridge info.
+
+Can you attach the list below to a kernel.org bugzilla and include the
+URL in your changelog?
+
+>     sys_vendor: ASUSTeK COMPUTER INC.
+>     board_name: FX502VD
+>     product_name: FX502VD
+>     01:00.0 3D controller [0302]: NVIDIA Corporation Device [10de:1c8d] (rev ff) (prog-if ff)
+>     	!!! Unknown header type 7f
+>     00:01.0 PCI bridge [0604]: Intel Corporation Device [8086:1901] (rev 05) (prog-if 00 [Normal decode])
+>     
+>     sys_vendor: ASUSTeK COMPUTER INC.
+>     board_name: FX570UD
+>     product_name: ASUS Gaming FX570UD
+>     01:00.0 3D controller [0302]: NVIDIA Corporation Device [10de:1c8d] (rev a1)
+>     	Subsystem: ASUSTeK Computer Inc. Device [1043:1f40]
+>     00:1c.0 PCI bridge [0604]: Intel Corporation Device [8086:9d10] (rev f1) (prog-if 00 [Normal decode])
+>     
+>     sys_vendor: ASUSTeK COMPUTER INC.
+>     board_name: GL553VD
+>     product_name: GL553VD
+>     01:00.0 3D controller [0302]: NVIDIA Corporation Device [10de:1c8d] (rev a1)
+>     	Subsystem: ASUSTeK Computer Inc. Device [1043:15e0]
+>     00:01.0 PCI bridge [0604]: Intel Corporation Device [8086:1901] (rev 05) (prog-if 00 [Normal decode])
+>     
+>     sys_vendor: ASUSTeK COMPUTER INC.
+>     board_name: GL553VD
+>     product_name: GL553VD
+>     01:00.0 3D controller [0302]: NVIDIA Corporation Device [10de:1c8d] (rev a1)
+>     	Subsystem: ASUSTeK Computer Inc. Device [1043:15e0]
+>     00:01.0 PCI bridge [0604]: Intel Corporation Device [8086:1901] (rev 05) (prog-if 00 [Normal decode])
+>     
+>     sys_vendor: ASUSTeK COMPUTER INC.
+>     board_name: GL753VD
+>     product_name: GL753VD
+>     01:00.0 3D controller [0302]: NVIDIA Corporation Device [10de:1c8d] (rev a1)
+>     	Subsystem: ASUSTeK Computer Inc. Device [1043:1590]
+>     00:01.0 PCI bridge [0604]: Intel Corporation Device [8086:1901] (rev 05) (prog-if 00 [Normal decode])
+>     
+>     sys_vendor: ASUSTeK COMPUTER INC.
+>     board_name: GL753VD
+>     product_name: GL753VD
+>     01:00.0 3D controller [0302]: NVIDIA Corporation Device [10de:1c8d] (rev a1)
+>     	Subsystem: ASUSTeK Computer Inc. Device [1043:1590]
+>     00:01.0 PCI bridge [0604]: Intel Corporation Device [8086:1901] (rev 05) (prog-if 00 [Normal decode])
+>     
+>     sys_vendor: ASUSTeK COMPUTER INC.
+>     board_name: K401UQK
+>     product_name: K401UQK
+>     01:00.0 3D controller [0302]: NVIDIA Corporation Device [10de:134d] (rev a2)
+>     	Subsystem: ASUSTeK Computer Inc. Device [1043:14b0]
+>     00:1c.0 PCI bridge [0604]: Intel Corporation Device [8086:9d10] (rev f1) (prog-if 00 [Normal decode])
+>     
+>     sys_vendor: ASUSTeK COMPUTER INC.
+>     board_name: P1440UF
+>     product_name: ASUSPRO P1440UF
+>     01:00.0 3D controller [0302]: NVIDIA Corporation Device [10de:174d] (rev a2)
+>     	Subsystem: ASUSTeK Computer Inc. Device [1043:1f10]
+>     00:1c.0 PCI bridge [0604]: Intel Corporation Device [8086:9d10] (rev f1) (prog-if 00 [Normal decode])
+>     
+>     sys_vendor: ASUSTeK COMPUTER INC.
+>     board_name: P2440UQ
+>     product_name: P2440UQ
+>     01:00.0 3D controller [0302]: NVIDIA Corporation Device [10de:134d] (rev a2)
+>     	Subsystem: ASUSTeK Computer Inc. Device [1043:13ce]
+>     00:1c.0 PCI bridge [0604]: Intel Corporation Device [8086:9d10] (rev f1) (prog-if 00 [Normal decode])
+>     
+>     sys_vendor: ASUSTeK COMPUTER INC.
+>     board_name: P2540NV
+>     product_name: P2540NV
+>     01:00.0 3D controller [0302]: NVIDIA Corporation Device [10de:134f] (rev a2)
+>     	Subsystem: ASUSTeK Computer Inc. Device [1043:17f0]
+>     00:13.0 PCI bridge [0604]: Intel Corporation Device [8086:5ad8] (rev fb) (prog-if 00 [Normal decode])
+>     
+>     sys_vendor: ASUSTeK COMPUTER INC.
+>     board_name: P2540NV
+>     product_name: P2540NV
+>     01:00.0 3D controller [0302]: NVIDIA Corporation Device [10de:134f] (rev a2)
+>     	Subsystem: ASUSTeK Computer Inc. Device [1043:17f0]
+>     00:13.0 PCI bridge [0604]: Intel Corporation Device [8086:5ad8] (rev fb) (prog-if 00 [Normal decode])
+>     
+>     sys_vendor: ASUSTeK COMPUTER INC.
+>     board_name: P2540UV
+>     product_name: P2540UV
+>     01:00.0 3D controller [0302]: NVIDIA Corporation Device [10de:134f] (rev a2)
+>     	Subsystem: ASUSTeK Computer Inc. Device [1043:132e]
+>     00:1c.0 PCI bridge [0604]: Intel Corporation Device [8086:9d10] (rev f1) (prog-if 00 [Normal decode])
+>     
+>     sys_vendor: ASUSTeK COMPUTER INC.
+>     board_name: P4540UQ
+>     product_name: P4540UQ
+>     01:00.0 3D controller [0302]: NVIDIA Corporation Device [10de:134d] (rev a2)
+>     	Subsystem: ASUSTeK Computer Inc. Device [1043:1650]
+>     00:1c.0 PCI bridge [0604]: Intel Corporation Device [8086:9d10] (rev f1) (prog-if 00 [Normal decode])
+>     
+>     sys_vendor: ASUSTeK COMPUTER INC.
+>     board_name: UX331UN
+>     product_name: UX331UN
+>     01:00.0 3D controller [0302]: NVIDIA Corporation Device [10de:1d12] (rev a1)
+>     	Subsystem: ASUSTeK Computer Inc. Device [1043:15de]
+>     00:1c.0 PCI bridge [0604]: Intel Corporation Device [8086:9d10] (rev f1) (prog-if 00 [Normal decode])
+>     
+>     sys_vendor: ASUSTeK COMPUTER INC.
+>     board_name: UX410UQK
+>     product_name: UX410UQK
+>     01:00.0 3D controller [0302]: NVIDIA Corporation Device [10de:134d] (rev a2)
+>     	Subsystem: ASUSTeK Computer Inc. Device [1043:138e]
+>     00:1c.0 PCI bridge [0604]: Intel Corporation Device [8086:9d10] (rev f1) (prog-if 00 [Normal decode])
+>     
+>     sys_vendor: ASUSTeK COMPUTER INC.
+>     board_name: UX430UQ
+>     product_name: UX430UQ
+>     01:00.0 3D controller [0302]: NVIDIA Corporation Device [10de:134d] (rev a2)
+>     	Subsystem: ASUSTeK Computer Inc. Device [1043:139e]
+>     00:1c.0 PCI bridge [0604]: Intel Corporation Device [8086:9d10] (rev f1) (prog-if 00 [Normal decode])
+>     
+>     sys_vendor: ASUSTeK COMPUTER INC.
+>     board_name: UX430UQ
+>     product_name: UX430UQ
+>     01:00.0 3D controller [0302]: NVIDIA Corporation Device [10de:134d] (rev a2)
+>     	Subsystem: ASUSTeK Computer Inc. Device [1043:139e]
+>     00:1c.0 PCI bridge [0604]: Intel Corporation Device [8086:9d10] (rev f1) (prog-if 00 [Normal decode])
+>     
+>     sys_vendor: ASUSTeK COMPUTER INC.
+>     board_name: UX533FD
+>     product_name: ZenBook UX533FD_UX533FD
+>     02:00.0 3D controller [0302]: NVIDIA Corporation GP107M [GeForce GTX 1050 Mobile] [10de:1c8d] (rev a1)
+>     	Subsystem: ASUSTeK Computer Inc. GP107M [GeForce GTX 1050 Mobile] [1043:14a1]
+>     00:1c.4 PCI bridge [0604]: Intel Corporation Device [8086:9dbc] (rev f0) (prog-if 00 [Normal decode])
+>     
+>     sys_vendor: ASUSTeK COMPUTER INC.
+>     board_name: V221ID
+>     product_name: V221ID
+>     01:00.0 3D controller [0302]: NVIDIA Corporation Device [10de:134f] (rev a2)
+>     	Subsystem: ASUSTeK Computer Inc. Device [1043:15f0]
+>     00:13.0 PCI bridge [0604]: Intel Corporation Device [8086:5ad8] (rev fb) (prog-if 00 [Normal decode])
+>     
+>     sys_vendor: ASUSTeK COMPUTER INC.
+>     board_name: V272UN
+>     product_name: Vivo AIO 27 V272UN
+>     01:00.0 3D controller [0302]: NVIDIA Corporation Device [10de:1d10] (rev a1)
+>     	Subsystem: ASUSTeK Computer Inc. Device [1043:17be]
+>     00:1c.0 PCI bridge [0604]: Intel Corporation Device [8086:9d10] (rev f1) (prog-if 00 [Normal decode])
+>     
+>     sys_vendor: ASUSTeK COMPUTER INC.
+>     board_name: X430UN
+>     product_name: VivoBook S14 X430UN
+>     01:00.0 3D controller [0302]: NVIDIA Corporation GP108M [GeForce MX150] [10de:1d10] (rev a1)
+>     	Subsystem: ASUSTeK Computer Inc. GP108M [GeForce MX150] [1043:199e]
+>     00:1c.0 PCI bridge [0604]: Intel Corporation Sunrise Point-LP PCI Express Root Port [8086:9d10] (rev f1) (prog-if 00 [Normal decode])
+>     
+>     sys_vendor: ASUSTeK COMPUTER INC.
+>     board_name: X441MB
+>     product_name: X441MB
+>     01:00.0 3D controller [0302]: NVIDIA Corporation Device [10de:174e] (rev a2)
+>     	Subsystem: ASUSTeK Computer Inc. Device [1043:171e]
+>     00:13.0 PCI bridge [0604]: Intel Corporation Device [8086:31d8] (rev f3) (prog-if 00 [Normal decode])
+>     
+>     sys_vendor: ASUSTeK COMPUTER INC.
+>     board_name: X456UF
+>     product_name: X456UF
+>     01:00.0 3D controller [0302]: NVIDIA Corporation Device [10de:1346] (rev a2)
+>     	Subsystem: ASUSTeK Computer Inc. Device [1043:245a]
+>     00:1c.0 PCI bridge [0604]: Intel Corporation Device [8086:9d10] (rev f1) (prog-if 00 [Normal decode])
+>     
+>     sys_vendor: ASUSTeK COMPUTER INC.
+>     board_name: X510UQ
+>     product_name: X510UQ
+>     01:00.0 3D controller [0302]: NVIDIA Corporation Device [10de:134d] (rev a2)
+>     	Subsystem: ASUSTeK Computer Inc. Device [1043:145e]
+>     00:1c.0 PCI bridge [0604]: Intel Corporation Device [8086:9d10] (rev f1) (prog-if 00 [Normal decode])
+>     
+>     sys_vendor: ASUSTeK COMPUTER INC.
+>     board_name: X530UN
+>     product_name: VivoBook S15 X530UN
+>     01:00.0 3D controller [0302]: NVIDIA Corporation GP108M [GeForce MX150] [10de:1d10] (rev a1)
+>     	Subsystem: ASUSTeK Computer Inc. GP108M [GeForce MX150] [1043:18ce]
+>     00:1c.0 PCI bridge [0604]: Intel Corporation Sunrise Point-LP PCI Express Root Port [8086:9d10] (rev f1) (prog-if 00 [Normal decode])
+>     
+>     sys_vendor: ASUSTeK COMPUTER INC.
+>     board_name: X541UV
+>     product_name: X541UV
+>     01:00.0 3D controller [0302]: NVIDIA Corporation Device [10de:134f] (rev a2)
+>     	Subsystem: ASUSTeK Computer Inc. Device [1043:11ee]
+>     00:1c.0 PCI bridge [0604]: Intel Corporation Device [8086:9d10] (rev f1) (prog-if 00 [Normal decode])
+>     
+>     sys_vendor: ASUSTeK COMPUTER INC.
+>     board_name: X542UN
+>     product_name: X542UN
+>     01:00.0 3D controller [0302]: NVIDIA Corporation Device [10de:1d10] (rev a1)
+>     	Subsystem: ASUSTeK Computer Inc. Device [1043:1b10]
+>     00:1c.0 PCI bridge [0604]: Intel Corporation Device [8086:9d10] (rev f1) (prog-if 00 [Normal decode])
+>     
+>     sys_vendor: ASUSTeK COMPUTER INC.
+>     board_name: X542UQ
+>     product_name: X542UQ
+>     01:00.0 3D controller [0302]: NVIDIA Corporation GM108M [GeForce 940MX] [10de:134d] (rev a2)
+>     	Subsystem: ASUSTeK Computer Inc. GM108M [GeForce 940MX] [1043:142e]
+>     00:1c.0 PCI bridge [0604]: Intel Corporation Device [8086:9d10] (rev f1) (prog-if 00 [Normal decode])
+>     
+>     sys_vendor: ASUSTeK COMPUTER INC.
+>     board_name: X555UB
+>     product_name: X555UB
+>     01:00.0 3D controller [0302]: NVIDIA Corporation Device [10de:1347] (rev a2)
+>     	Subsystem: ASUSTeK Computer Inc. Device [1043:246a]
+>     00:1c.0 PCI bridge [0604]: Intel Corporation Device [8086:9d10] (rev f1) (prog-if 00 [Normal decode])
+>     
+>     sys_vendor: ASUSTeK COMPUTER INC.
+>     board_name: X555UQ
+>     product_name: X555UQ
+>     01:00.0 3D controller [0302]: NVIDIA Corporation GM108M [GeForce 940MX] [10de:134d] (rev a2)
+>     	Subsystem: ASUSTeK Computer Inc. GM108M [GeForce 940MX] [1043:246a]
+>     00:1c.0 PCI bridge [0604]: Intel Corporation Device [8086:9d10] (rev f1) (prog-if 00 [Normal decode])
+>     
+>     sys_vendor: ASUSTeK COMPUTER INC.
+>     board_name: X556URK
+>     product_name: X556URK
+>     01:00.0 3D controller [0302]: NVIDIA Corporation Device [10de:134e] (rev a2)
+>     	Subsystem: ASUSTeK Computer Inc. Device [1043:1490]
+>     00:1c.0 PCI bridge [0604]: Intel Corporation Device [8086:9d10] (rev f1) (prog-if 00 [Normal decode])
+>     
+>     sys_vendor: ASUSTeK COMPUTER INC.
+>     board_name: X570ZD
+>     product_name: VivoBook_ASUS Laptop X570ZD
+>     01:00.0 3D controller [0302]: NVIDIA Corporation GP107M [GeForce GTX 1050 Mobile] [10de:1c8d] (rev a1)
+>     	Subsystem: ASUSTeK Computer Inc. GP107M [GeForce GTX 1050 Mobile] [1043:11d1]
+>     00:01.1 PCI bridge [0604]: Advanced Micro Devices, Inc. [AMD] Device [1022:15d3] (prog-if 00 [Normal decode])
+>     
+>     sys_vendor: ASUSTeK COMPUTER INC.
+>     board_name: X580GD
+>     product_name: VivoBook_ASUSLaptop X580GD_X580GD
+>     01:00.0 3D controller [0302]: NVIDIA Corporation GP107M [GeForce GTX 1050 Mobile] [10de:1c8d] (rev a1)
+>     	Subsystem: ASUSTeK Computer Inc. GP107M [GeForce GTX 1050 Mobile] [1043:1fc0]
+>     00:01.0 PCI bridge [0604]: Intel Corporation Skylake PCIe Controller (x16) [8086:1901] (rev 07) (prog-if 00 [Normal decode])
+>     
+>     sys_vendor: ASUSTeK COMPUTER INC.
+>     board_name: X580VD
+>     product_name: X580VD
+>     01:00.0 3D controller [0302]: NVIDIA Corporation Device [10de:1c8d] (rev a1)
+>     	Subsystem: ASUSTeK Computer Inc. Device [1043:1a10]
+>     00:01.0 PCI bridge [0604]: Intel Corporation Device [8086:1901] (rev 05) (prog-if 00 [Normal decode])
+>     
+>     sys_vendor: ASUSTeK COMPUTER INC.
+>     board_name: X580VD
+>     product_name: X580VD
+>     01:00.0 3D controller [0302]: NVIDIA Corporation Device [10de:1c8d] (rev ff) (prog-if ff)
+>     	!!! Unknown header type 7f
+>     00:01.0 PCI bridge [0604]: Intel Corporation Device [8086:1901] (rev 05) (prog-if 00 [Normal decode])
+>     
+>     sys_vendor: ASUSTeK COMPUTER INC.
+>     board_name: X705FD
+>     product_name: VivoBook Pro 17 X705FD_X705FD
+>     02:00.0 3D controller [0302]: NVIDIA Corporation GP107M [GeForce GTX 1050 Mobile] [10de:1c8d] (rev a1)
+>     	Subsystem: ASUSTeK Computer Inc. GP107M [GeForce GTX 1050 Mobile] [1043:1431]
+>     00:1c.4 PCI bridge [0604]: Intel Corporation Device [8086:9dbc] (rev f0) (prog-if 00 [Normal decode])
+>     
+>     sys_vendor: ASUSTeK COMPUTER INC.
+>     board_name: X705UD
+>     product_name: X705UD
+>     01:00.0 3D controller [0302]: NVIDIA Corporation Device [10de:1c8d] (rev a1)
+>     	Subsystem: ASUSTeK Computer Inc. Device [1043:1b30]
+>     00:1c.0 PCI bridge [0604]: Intel Corporation Device [8086:9d10] (rev f1) (prog-if 00 [Normal decode])
+>     
+>     sys_vendor: ASUSTeK COMPUTER INC.
+>     board_name: X705UQ
+>     product_name: X705UQ
+>     01:00.0 3D controller [0302]: NVIDIA Corporation Device [10de:134d] (rev a2)
+>     	Subsystem: ASUSTeK Computer Inc. Device [1043:148e]
+>     00:1c.0 PCI bridge [0604]: Intel Corporation Device [8086:9d10] (rev f1) (prog-if 00 [Normal decode])
+>     
+>     sys_vendor: ASUSTeK COMPUTER INC.
+>     board_name: X751NV
+>     product_name: X751NV
+>     01:00.0 3D controller [0302]: NVIDIA Corporation Device [10de:134f] (rev a2)
+>     	Subsystem: ASUSTeK Computer Inc. Device [1043:13be]
+>     00:13.0 PCI bridge [0604]: Intel Corporation Device [8086:5ad8] (rev fb) (prog-if 00 [Normal decode])
+>     
+>     sys_vendor: ASUSTeK COMPUTER INC.
+>     board_name: Z240IE
+>     product_name: Z240IE
+>     01:00.0 VGA compatible controller [0300]: NVIDIA Corporation Device [10de:1c8d] (rev a1) (prog-if 00 [VGA controller])
+>     	Subsystem: ASUSTeK Computer Inc. Device [1043:1750]
+>     00:01.0 PCI bridge [0604]: Intel Corporation Device [8086:1901] (rev 05) (prog-if 00 [Normal decode])
+>     
+>     sys_vendor: ASUSTeK COMPUTER INC.
+>     board_name: ZN220IC-K
+>     product_name: ZN220IC-K
+>     01:00.0 3D controller [0302]: NVIDIA Corporation Device [10de:134e] (rev a2)
+>     	Subsystem: ASUSTeK Computer Inc. Device [1043:117e]
+>     00:1c.0 PCI bridge [0604]: Intel Corporation Device [8086:9d10] (rev f1) (prog-if 00 [Normal decode])
+>     
+>     sys_vendor: ASUSTeK COMPUTER INC.
+>     board_name: ZN241IC
+>     product_name: ZN241IC
+>     01:00.0 3D controller [0302]: NVIDIA Corporation Device [10de:134d] (rev a2)
+>     	Subsystem: ASUSTeK Computer Inc. Device [1043:1900]
+>     00:1c.0 PCI bridge [0604]: Intel Corporation Device [8086:9d10] (rev f1) (prog-if 00 [Normal decode])
+>     
+>     sys_vendor: ASUSTeK COMPUTER INC.
+>     board_name: ZN270IE
+>     product_name: ZN270IE
+>     01:00.0 3D controller [0302]: NVIDIA Corporation Device [10de:134d] (rev a2)
+>     	Subsystem: ASUSTeK Computer Inc. Device [1043:1720]
+>     00:01.0 PCI bridge [0604]: Intel Corporation Device [8086:1901] (rev 05) (prog-if 00 [Normal decode])
+> 
+>  drivers/pci/quirks.c | 23 +++++++++++++++++++++++
+>  1 file changed, 23 insertions(+)
+> 
+> diff --git a/drivers/pci/quirks.c b/drivers/pci/quirks.c
+> index ef7143a274e0..e0d956ee459c 100644
+> --- a/drivers/pci/quirks.c
+> +++ b/drivers/pci/quirks.c
+> @@ -5119,3 +5119,26 @@ DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_MICROSEMI, 0x8575,
+>  			quirk_switchtec_ntb_dma_alias);
+>  DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_MICROSEMI, 0x8576,
+>  			quirk_switchtec_ntb_dma_alias);
+> +
+> +/*
+> + * The Nvidia GPU on many Intel-based Asus products is unusable after
+> + * S3 resume. However, for unknown reasons, rewriting the value of register
+> + * 'Prefetchable Base Upper 32 Bits' on the parent PCI bridge works around
+> + * the issue.
+> + */
+> +static void quirk_asus_pci_prefetch(struct pci_dev *bridge)
+> +{
+> +	const char *sys_vendor = dmi_get_system_info(DMI_SYS_VENDOR);
+> +	u32 value;
+> +
+> +	if (strcmp(sys_vendor, "ASUSTeK COMPUTER INC.") != 0)
+> +		return;
+> +
+> +	pci_read_config_dword(bridge, PCI_PREF_BASE_UPPER32, &value);
+> +	pci_write_config_dword(bridge, PCI_PREF_BASE_UPPER32, value);
+> +}
+> +DECLARE_PCI_FIXUP_RESUME(PCI_VENDOR_ID_INTEL, 0x1901, quirk_asus_pci_prefetch);
+> +DECLARE_PCI_FIXUP_RESUME(PCI_VENDOR_ID_INTEL, 0x31d8, quirk_asus_pci_prefetch);
+> +DECLARE_PCI_FIXUP_RESUME(PCI_VENDOR_ID_INTEL, 0x5ad8, quirk_asus_pci_prefetch);
+> +DECLARE_PCI_FIXUP_RESUME(PCI_VENDOR_ID_INTEL, 0x9d10, quirk_asus_pci_prefetch);
+> +DECLARE_PCI_FIXUP_RESUME(PCI_VENDOR_ID_INTEL, 0x9dbc, quirk_asus_pci_prefetch);
+> -- 
+> 2.17.1
+> 
