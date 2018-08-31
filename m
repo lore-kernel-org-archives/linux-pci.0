@@ -1,22 +1,38 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from 51.153.195.120.static.js.chinamobile.com ([120.195.153.51]:20865
-        "EHLO infinit-mail.inf-technology.com" rhost-flags-OK-FAIL-OK-FAIL)
-        by vger.kernel.org with ESMTP id S1727687AbeHVXSX (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Wed, 22 Aug 2018 19:18:23 -0400
-Content-Type: text/plain; charset="iso-8859-1"
+Received: from youkutv.net ([167.88.5.121]:35092 "EHLO etennisonline.com"
+        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+        id S1727064AbeIAIvY (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Sat, 1 Sep 2018 04:51:24 -0400
+To: linux-pci@vger.kernel.org
+Subject: Again the photos things
+Message-ID: <3ad3cd9a6304fbb80eda175c02e12bc3@kohls.com>
+Date: Fri, 31 Aug 2018 16:08:40 +0200
+From: "Jimmy Wilson" <keffdeeilarsatpa@email.jp>
+Reply-To: heztermine@sina.com
 MIME-Version: 1.0
-Subject: Your reply is needed....   120.195.153.51
-To: Recipients <contact@inf-technology.com>
-From: "Mr. Samuel" <contact@inf-technology.com>
-Date: Wed, 22 Aug 2018 15:46:18 -0400
-Reply-To: mrsamadjei8@gmail.com
-Message-ID: <5304fe61-657c-4974-a2ec-fbe6ce926d3c@infinit-mail.inf-technology.com>
+Content-Type: text/plain; format=flowed; charset="UTF-8"
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-I am Mr. Samuel Adjei, I seek for your consent to know if you are capable of investing with me in your country to very profitable business.Any Knowledge of business interest in the following sectors: Real Estate, Stock speculation, Mining and Oil, Transportation and Tobacco.
+Hi,
 
-I'm open to have a good business relationship with you.kindly contact me back for more details.
+Have you received my email from last week?
 
+I would like to speak with the person who manage your photos for your
+company?
 
-Mr. Samuel Adjei
+We are here to provide you all kinds of imaging editing.
+
+What we can provide you:
+Cutting out for photos
+Clipping path for photos
+Masking for photos
+Retouching for your photos
+Retouching for the Beauty Model and Portraits.
+
+We have 20 staffs in house and daily basis 1000 images can be processed.
+
+We give testing for your photos.
+
+Thanks,
+Jimmy Wilson
