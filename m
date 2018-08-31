@@ -1,56 +1,34 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-From: Alexandru Gagniuc <mr.nuke.me@gmail.com>
-To: linux-pci@vger.kernel.org, bhelgaas@google.com,
-        jakub.kicinski@netronome.com
-Cc: keith.busch@intel.com, alex_gagniuc@dellteam.com,
-        austin_bolen@dell.com, shyam_iyer@dell.com,
-        Alexandru Gagniuc <mr.nuke.me@gmail.com>,
-        Ariel Elior <ariel.elior@cavium.com>,
-        everest-linux-l2@cavium.com,
-        "David S. Miller" <davem@davemloft.net>,
-        Michael Chan <michael.chan@broadcom.com>,
-        Ganesh Goudar <ganeshgr@chelsio.com>,
-        Jeff Kirsher <jeffrey.t.kirsher@intel.com>,
-        Tariq Toukan <tariqt@mellanox.com>,
-        Saeed Mahameed <saeedm@mellanox.com>,
-        Leon Romanovsky <leon@kernel.org>,
-        Dirk van der Merwe <dirk.vandermerwe@netronome.com>,
-        netdev@vger.kernel.org, linux-kernel@vger.kernel.org,
-        intel-wired-lan@lists.osuosl.org, linux-rdma@vger.kernel.org,
-        oss-drivers@netronome.com
-Subject: [PATCH v6 7/9] net/mlx4: Do not call pcie_print_link_status()
-Date: Mon,  6 Aug 2018 18:25:41 -0500
-Message-Id: <20180806232600.25694-7-mr.nuke.me@gmail.com>
-In-Reply-To: <20180806232600.25694-1-mr.nuke.me@gmail.com>
-References: <CAErSpo4PK+SQLNfdkLNt9eLc7bpbxbkZCsa8T-tQpid601n0SQ@mail.gmail.com>
- <20180806232600.25694-1-mr.nuke.me@gmail.com>
-Sender: linux-kernel-owner@vger.kernel.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail.kernel.org ([198.145.29.99]:54618 "EHLO mail.kernel.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1727232AbeIACBw (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Fri, 31 Aug 2018 22:01:52 -0400
+Subject: Re: [PATCH 02/16] PCI: Fix pci_reset_bus
+To: Keith Busch <keith.busch@intel.com>,
+        Linux PCI <linux-pci@vger.kernel.org>,
+        Bjorn Helgaas <bhelgaas@google.com>
+Cc: Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+        Thomas Tai <thomas.tai@oracle.com>, poza@codeaurora.org,
+        Lukas Wunner <lukas@wunner.de>
+References: <20180831212639.10196-1-keith.busch@intel.com>
+ <20180831212639.10196-3-keith.busch@intel.com>
+From: Sinan Kaya <okaya@kernel.org>
+Message-ID: <dad1e661-679d-eb4b-8c87-b65afd5eb838@kernel.org>
+Date: Fri, 31 Aug 2018 14:52:25 -0700
+MIME-Version: 1.0
+In-Reply-To: <20180831212639.10196-3-keith.busch@intel.com>
+Content-Type: text/plain; charset=utf-8; format=flowed
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-This is now done by the PCI core to warn of sub-optimal bandwidth.
+On 8/31/2018 2:26 PM, Keith Busch wrote:
+> The check for slot reset capable, pci_probe_reset_slot, returns 0 when
+> slot reset is possible, but pci_reset_bus was proceeding to reset the
+> slot when the probe returned an error. This patch reverses the check to
+> fix that logic.
+> 
+> Signed-off-by: Keith Busch<keith.busch@intel.com>
 
-Signed-off-by: Alexandru Gagniuc <mr.nuke.me@gmail.com>
----
- drivers/net/ethernet/mellanox/mlx4/main.c | 7 -------
- 1 file changed, 7 deletions(-)
+Thanks, dennis.dalessandro@intel.com just posted the same patch.
 
-diff --git a/drivers/net/ethernet/mellanox/mlx4/main.c b/drivers/net/ethernet/mellanox/mlx4/main.c
-index 872014702fc1..da4d54195853 100644
---- a/drivers/net/ethernet/mellanox/mlx4/main.c
-+++ b/drivers/net/ethernet/mellanox/mlx4/main.c
-@@ -3398,13 +3398,6 @@ static int mlx4_load_one(struct pci_dev *pdev, int pci_dev_data,
- 		}
- 	}
- 
--	/* check if the device is functioning at its maximum possible speed.
--	 * No return code for this call, just warn the user in case of PCI
--	 * express device capabilities are under-satisfied by the bus.
--	 */
--	if (!mlx4_is_slave(dev))
--		pcie_print_link_status(dev->persist->pdev);
--
- 	/* In master functions, the communication channel must be initialized
- 	 * after obtaining its address from fw */
- 	if (mlx4_is_master(dev)) {
--- 
-2.17.1
+Reviewed-by: Sinan Kaya <okaya@kernel.org>
