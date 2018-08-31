@@ -1,103 +1,143 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-From: Logan Gunthorpe <logang@deltatee.com>
-To: linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
-        linux-nvme@lists.infradead.org, linux-rdma@vger.kernel.org,
-        linux-nvdimm@lists.01.org, linux-block@vger.kernel.org
-Cc: Stephen Bates <sbates@raithlin.com>,
-        Christoph Hellwig <hch@lst.de>,
-        Keith Busch <keith.busch@intel.com>,
-        Sagi Grimberg <sagi@grimberg.me>,
-        Bjorn Helgaas <bhelgaas@google.com>,
-        Jason Gunthorpe <jgg@mellanox.com>,
-        Max Gurtovoy <maxg@mellanox.com>,
-        Dan Williams <dan.j.williams@intel.com>,
-        =?UTF-8?q?J=C3=A9r=C3=B4me=20Glisse?= <jglisse@redhat.com>,
-        Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-        Alex Williamson <alex.williamson@redhat.com>,
-        =?UTF-8?q?Christian=20K=C3=B6nig?= <christian.koenig@amd.com>,
-        Logan Gunthorpe <logang@deltatee.com>,
-        Jonathan Corbet <corbet@lwn.net>,
-        Mauro Carvalho Chehab <mchehab@kernel.org>,
-        Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-        Vinod Koul <vinod.koul@intel.com>,
-        Linus Walleij <linus.walleij@linaro.org>,
-        Thierry Reding <treding@nvidia.com>,
-        Sanyog Kale <sanyog.r.kale@intel.com>,
-        Sagar Dharia <sdharia@codeaurora.org>
-Date: Thu, 30 Aug 2018 12:53:44 -0600
-Message-Id: <20180830185352.3369-6-logang@deltatee.com>
-In-Reply-To: <20180830185352.3369-1-logang@deltatee.com>
+Return-Path: <linux-nvme-bounces+bjorn=helgaas.com@lists.infradead.org>
+Return-Path: <linux-nvme-bounces+bjorn=helgaas.com@lists.infradead.org>
+Date: Fri, 31 Aug 2018 17:19:06 +0100
+From: Jonathan Cameron <jonathan.cameron@huawei.com>
+To: Logan Gunthorpe <logang@deltatee.com>
+Subject: Re: [PATCH v5 01/13] PCI/P2PDMA: Support peer-to-peer memory
+Message-ID: <20180831171906.00002751@huawei.com>
+In-Reply-To: <20180830185352.3369-2-logang@deltatee.com>
 References: <20180830185352.3369-1-logang@deltatee.com>
-Subject: [PATCH v5 05/13] docs-rst: Add a new directory for PCI documentation
-Sender: linux-kernel-owner@vger.kernel.org
+ <20180830185352.3369-2-logang@deltatee.com>
+MIME-Version: 1.0
+List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-nvme>,
+ <mailto:linux-nvme-request@lists.infradead.org?subject=unsubscribe>
+List-Archive: <http://lists.infradead.org/pipermail/linux-nvme/>
+List-Post: <mailto:linux-nvme@lists.infradead.org>
+List-Help: <mailto:linux-nvme-request@lists.infradead.org?subject=help>
+List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-nvme>,
+ <mailto:linux-nvme-request@lists.infradead.org?subject=subscribe>
+Cc: Keith Busch <keith.busch@intel.com>,
+ Alex Williamson <alex.williamson@redhat.com>, Sagi Grimberg <sagi@grimberg.me>,
+ linux-nvdimm@lists.01.org, linux-rdma@vger.kernel.org,
+ linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
+ linux-nvme@lists.infradead.org, Stephen Bates <sbates@raithlin.com>,
+ linux-block@vger.kernel.org,
+ =?ISO-8859-1?Q?J=E9r=F4me?= Glisse <jglisse@redhat.com>,
+ Jason Gunthorpe <jgg@mellanox.com>,
+ Christian =?ISO-8859-1?Q?K=F6nig?= <christian.koenig@amd.com>, Benjamin
+ Herrenschmidt <benh@kernel.crashing.org>, Bjorn Helgaas <bhelgaas@google.com>,
+ Max Gurtovoy <maxg@mellanox.com>, Dan Williams <dan.j.williams@intel.com>,
+ Christoph Hellwig <hch@lst.de>
+Content-Type: text/plain; charset="us-ascii"
+Sender: "Linux-nvme" <linux-nvme-bounces@lists.infradead.org>
+Errors-To: linux-nvme-bounces+bjorn=helgaas.com@lists.infradead.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Add a new directory in the driver API guide for PCI specific
-documentation.
+On Thu, 30 Aug 2018 12:53:40 -0600
+Logan Gunthorpe <logang@deltatee.com> wrote:
 
-This is in preparation for adding a new PCI P2P DMA driver writers
-guide which will go in this directory.
+> Some PCI devices may have memory mapped in a BAR space that's
+> intended for use in peer-to-peer transactions. In order to enable
+> such transactions the memory must be registered with ZONE_DEVICE pages
+> so it can be used by DMA interfaces in existing drivers.
+> 
+> Add an interface for other subsystems to find and allocate chunks of P2P
+> memory as necessary to facilitate transfers between two PCI peers:
+> 
+> int pci_p2pdma_add_client();
+> struct pci_dev *pci_p2pmem_find();
+> void *pci_alloc_p2pmem();
+> 
+> The new interface requires a driver to collect a list of client devices
+> involved in the transaction with the pci_p2pmem_add_client*() functions
+> then call pci_p2pmem_find() to obtain any suitable P2P memory. Once
+> this is done the list is bound to the memory and the calling driver is
+> free to add and remove clients as necessary (adding incompatible clients
+> will fail). With a suitable p2pmem device, memory can then be
+> allocated with pci_alloc_p2pmem() for use in DMA transactions.
+> 
+> Depending on hardware, using peer-to-peer memory may reduce the bandwidth
+> of the transfer but can significantly reduce pressure on system memory.
+> This may be desirable in many cases: for example a system could be designed
+> with a small CPU connected to a PCIe switch by a small number of lanes
+> which would maximize the number of lanes available to connect to NVMe
+> devices.
+> 
+> The code is designed to only utilize the p2pmem device if all the devices
+> involved in a transfer are behind the same PCI bridge. This is because we
+> have no way of knowing whether peer-to-peer routing between PCIe Root Ports
+> is supported (PCIe r4.0, sec 1.3.1). Additionally, the benefits of P2P
+> transfers that go through the RC is limited to only reducing DRAM usage
+> and, in some cases, coding convenience. The PCI-SIG may be exploring
+> adding a new capability bit to advertise whether this is possible for
+> future hardware.
+> 
+> This commit includes significant rework and feedback from Christoph
+> Hellwig.
+> 
+> Signed-off-by: Christoph Hellwig <hch@lst.de>
+> Signed-off-by: Logan Gunthorpe <logang@deltatee.com>
 
-Signed-off-by: Logan Gunthorpe <logang@deltatee.com>
-Cc: Jonathan Corbet <corbet@lwn.net>
-Cc: Mauro Carvalho Chehab <mchehab@kernel.org>
-Cc: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
-Cc: Vinod Koul <vinod.koul@intel.com>
-Cc: Linus Walleij <linus.walleij@linaro.org>
-Cc: Logan Gunthorpe <logang@deltatee.com>
-Cc: Thierry Reding <treding@nvidia.com>
-Cc: Sanyog Kale <sanyog.r.kale@intel.com>
-Cc: Sagar Dharia <sdharia@codeaurora.org>
----
- Documentation/driver-api/index.rst         |  2 +-
- Documentation/driver-api/pci/index.rst     | 20 ++++++++++++++++++++
- Documentation/driver-api/{ => pci}/pci.rst |  0
- 3 files changed, 21 insertions(+), 1 deletion(-)
- create mode 100644 Documentation/driver-api/pci/index.rst
- rename Documentation/driver-api/{ => pci}/pci.rst (100%)
+Apologies for being a late entrant to this conversation so I may be asking
+about a topic that has been covered in detail in earlier patches!
+> ---
+...
 
-diff --git a/Documentation/driver-api/index.rst b/Documentation/driver-api/index.rst
-index 6d9f2f9fe20e..e9e7d24169cf 100644
---- a/Documentation/driver-api/index.rst
-+++ b/Documentation/driver-api/index.rst
-@@ -29,7 +29,7 @@ available subsections can be seen below.
-    iio/index
-    input
-    usb/index
--   pci
-+   pci/index
-    spi
-    i2c
-    hsi
-diff --git a/Documentation/driver-api/pci/index.rst b/Documentation/driver-api/pci/index.rst
-new file mode 100644
-index 000000000000..eaf20b24bf7d
---- /dev/null
-+++ b/Documentation/driver-api/pci/index.rst
-@@ -0,0 +1,20 @@
-+.. SPDX-License-Identifier: GPL-2.0
-+============================================
-+The Linux PCI driver implementer's API guide
-+============================================
-+
-+.. class:: toc-title
-+
-+	   Table of contents
-+
-+.. toctree::
-+   :maxdepth: 2
-+
-+   pci
-+
-+.. only::  subproject and html
-+
-+   Indices
-+   =======
-+
-+   * :ref:`genindex`
-diff --git a/Documentation/driver-api/pci.rst b/Documentation/driver-api/pci/pci.rst
-similarity index 100%
-rename from Documentation/driver-api/pci.rst
-rename to Documentation/driver-api/pci/pci.rst
--- 
-2.11.0
+> +/*
+> + * Find the distance through the nearest common upstream bridge between
+> + * two PCI devices.
+> + *
+> + * If the two devices are the same device then 0 will be returned.
+> + *
+> + * If there are two virtual functions of the same device behind the same
+> + * bridge port then 2 will be returned (one step down to the PCIe switch,
+> + * then one step back to the same device).
+> + *
+> + * In the case where two devices are connected to the same PCIe switch, the
+> + * value 4 will be returned. This corresponds to the following PCI tree:
+> + *
+> + *     -+  Root Port
+> + *      \+ Switch Upstream Port
+> + *       +-+ Switch Downstream Port
+> + *       + \- Device A
+> + *       \-+ Switch Downstream Port
+> + *         \- Device B
+> + *
+> + * The distance is 4 because we traverse from Device A through the downstream
+> + * port of the switch, to the common upstream port, back up to the second
+> + * downstream port and then to Device B.
+> + *
+> + * Any two devices that don't have a common upstream bridge will return -1.
+> + * In this way devices on separate PCIe root ports will be rejected, which
+> + * is what we want for peer-to-peer seeing each PCIe root port defines a
+> + * separate hierarchy domain and there's no way to determine whether the root
+> + * complex supports forwarding between them.
+> + *
+> + * In the case where two devices are connected to different PCIe switches,
+> + * this function will still return a positive distance as long as both
+> + * switches evenutally have a common upstream bridge. Note this covers
+> + * the case of using multiple PCIe switches to achieve a desired level of
+> + * fan-out from a root port. The exact distance will be a function of the
+> + * number of switches between Device A and Device B.
+
+This feels like a somewhat simplistic starting point rather than a
+generally correct estimate to use.  Should we be taking the bandwidth of
+those links into account for example, or any discoverable latencies?
+Not all PCIe switches are alike - particularly when it comes to P2P.
+
+I guess that can be a topic for future development if it turns out people
+have horrible mixed systems.
+
+> + *
+> + * If a bridge which has any ACS redirection bits set is in the path
+> + * then this functions will return -2. This is so we reject any
+> + * cases where the TLPs are forwarded up into the root complex.
+> + * In this case, a list of all infringing bridge addresses will be
+> + * populated in acs_list (assuming it's non-null) for printk purposes.
+> + */
+
+
+_______________________________________________
+Linux-nvme mailing list
+Linux-nvme@lists.infradead.org
+http://lists.infradead.org/mailman/listinfo/linux-nvme
