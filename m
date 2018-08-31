@@ -1,107 +1,63 @@
-Return-Path: <linux-acpi-owner@vger.kernel.org>
-From: Arnd Bergmann <arnd@arndb.de>
-To: linux-pci@vger.kernel.org, Bjorn Helgaas <bhelgaas@google.com>
-Cc: linux-kernel@vger.kernel.org,
-        Christoph Hellwig <hch@infradead.org>,
-        Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
-        Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-        linuxppc-dev@lists.ozlabs.org, linux-acpi@vger.kernel.org,
-        Arnd Bergmann <arnd@arndb.de>
-Subject: [RFC 13/15] PCI: turn pcibios_alloc_irq into a callback
-Date: Fri, 17 Aug 2018 12:26:43 +0200
-Message-Id: <20180817102645.3839621-14-arnd@arndb.de>
-In-Reply-To: <20180817102645.3839621-1-arnd@arndb.de>
-References: <20180817102645.3839621-1-arnd@arndb.de>
-Sender: linux-acpi-owner@vger.kernel.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mga12.intel.com ([192.55.52.136]:14083 "EHLO mga12.intel.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1727203AbeIABeo (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Fri, 31 Aug 2018 21:34:44 -0400
+From: Keith Busch <keith.busch@intel.com>
+To: Linux PCI <linux-pci@vger.kernel.org>,
+        Bjorn Helgaas <bhelgaas@google.com>
+Cc: Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+        Sinan Kaya <okaya@kernel.org>,
+        Thomas Tai <thomas.tai@oracle.com>, poza@codeaurora.org,
+        Lukas Wunner <lukas@wunner.de>,
+        Keith Busch <keith.busch@intel.com>
+Subject: [PATCH 03/16] PCI/AER: Remove dead code
+Date: Fri, 31 Aug 2018 15:26:26 -0600
+Message-Id: <20180831212639.10196-4-keith.busch@intel.com>
+In-Reply-To: <20180831212639.10196-1-keith.busch@intel.com>
+References: <20180831212639.10196-1-keith.busch@intel.com>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Weak functions are a bit confusing, and we can better deal with
-this using a callback function. pcibios_free_irq() is actually
-completely unused, but it seems better to treat it the same way
-as the allocation, unless we want to remove it completely.
+The error recovery callbacks are only run on child devices. A root port
+is never a child device, so this error resume callback was never
+invoked.
 
-Signed-off-by: Arnd Bergmann <arnd@arndb.de>
+Signed-off-by: Keith Busch <keith.busch@intel.com>
 ---
- arch/arm64/kernel/pci.c  | 16 +++-------------
- drivers/pci/pci-driver.c | 13 +++++++++++--
- include/linux/pci.h      |  2 ++
- 3 files changed, 16 insertions(+), 15 deletions(-)
+ drivers/pci/pcie/aer.c | 13 -------------
+ 1 file changed, 13 deletions(-)
 
-diff --git a/arch/arm64/kernel/pci.c b/arch/arm64/kernel/pci.c
-index 0e2ea1c78542..3d196c68e362 100644
---- a/arch/arm64/kernel/pci.c
-+++ b/arch/arm64/kernel/pci.c
-@@ -22,19 +22,6 @@
- #include <linux/pci-ecam.h>
- #include <linux/slab.h>
+diff --git a/drivers/pci/pcie/aer.c b/drivers/pci/pcie/aer.c
+index 83180edd6ed4..a95ceba977bb 100644
+--- a/drivers/pci/pcie/aer.c
++++ b/drivers/pci/pcie/aer.c
+@@ -1541,18 +1541,6 @@ static pci_ers_result_t aer_root_reset(struct pci_dev *dev)
+ 	return rc ? PCI_ERS_RESULT_DISCONNECT : PCI_ERS_RESULT_RECOVERED;
+ }
  
--#ifdef CONFIG_ACPI
--/*
-- * Try to assign the IRQ number when probing a new device
+-/**
+- * aer_error_resume - clean up corresponding error status bits
+- * @dev: pointer to Root Port's pci_dev data structure
+- *
+- * Invoked by Port Bus driver during nonfatal recovery.
 - */
--int pcibios_alloc_irq(struct pci_dev *dev)
+-static void aer_error_resume(struct pci_dev *dev)
 -{
--	if (!acpi_disabled)
--		acpi_pci_irq_enable(dev);
--
--	return 0;
+-	pci_aer_clear_device_status(dev);
+-	pci_cleanup_aer_uncorrect_error_status(dev);
 -}
--#endif
 -
- /*
-  * raw_pci_read/write - Platform-specific PCI config space access.
-  */
-@@ -93,6 +80,9 @@ int pcibios_root_bridge_prepare(struct pci_host_bridge *bridge)
+ static struct pcie_port_service_driver aerdriver = {
+ 	.name		= "aer",
+ 	.port_type	= PCI_EXP_TYPE_ROOT_PORT,
+@@ -1560,7 +1548,6 @@ static struct pcie_port_service_driver aerdriver = {
  
- 		ACPI_COMPANION_SET(&bridge->dev, adev);
- 		set_dev_node(bus_dev, acpi_get_node(acpi_device_handle(adev)));
-+
-+		/* Try to assign the IRQ number when probing a new device */
-+		bridge->alloc_irq = acpi_pci_irq_enable;
- 	}
+ 	.probe		= aer_probe,
+ 	.remove		= aer_remove,
+-	.error_resume	= aer_error_resume,
+ 	.reset_link	= aer_root_reset,
+ };
  
- 	return 0;
-diff --git a/drivers/pci/pci-driver.c b/drivers/pci/pci-driver.c
-index bef17c3fca67..c96bc7bd56da 100644
---- a/drivers/pci/pci-driver.c
-+++ b/drivers/pci/pci-driver.c
-@@ -387,13 +387,22 @@ static int __pci_device_probe(struct pci_driver *drv, struct pci_dev *pci_dev)
- 	return error;
- }
- 
--int __weak pcibios_alloc_irq(struct pci_dev *dev)
-+int pcibios_alloc_irq(struct pci_dev *dev)
- {
-+	struct pci_host_bridge *bridge = pci_find_host_bridge(dev->bus);
-+
-+	if (bridge->alloc_irq)
-+		return bridge->alloc_irq(dev);
-+
- 	return 0;
- }
- 
--void __weak pcibios_free_irq(struct pci_dev *dev)
-+void pcibios_free_irq(struct pci_dev *dev)
- {
-+	struct pci_host_bridge *bridge = pci_find_host_bridge(dev->bus);
-+
-+	if (bridge->free_irq)
-+		bridge->free_irq(dev);
- }
- 
- #ifdef CONFIG_PCI_IOV
-diff --git a/include/linux/pci.h b/include/linux/pci.h
-index d1072690cb4f..1296d9fcc5da 100644
---- a/include/linux/pci.h
-+++ b/include/linux/pci.h
-@@ -476,6 +476,8 @@ struct pci_host_bridge {
- 	int (*map_irq)(const struct pci_dev *, u8, u8);
- 	void (*release_fn)(struct pci_host_bridge *);
- 	void (*bus_add_device)(struct pci_dev *pdev);
-+	int (*alloc_irq)(struct pci_dev *);
-+	int (*free_irq)(struct pci_dev *);
- 	void		*release_data;
- 	struct msi_controller *msi;
- 	unsigned int	ignore_reset_delay:1;	/* For entire hierarchy */
 -- 
-2.18.0
+2.14.4
