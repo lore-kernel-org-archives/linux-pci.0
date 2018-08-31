@@ -1,57 +1,180 @@
-Return-Path: <SRS0=Ly/z=KY=deltatee.com=logang@kernel.org>
-Return-Path: <SRS0=Ly/z=KY=deltatee.com=logang@kernel.org>
-To: Eric Pilmore <epilmore@gigaio.com>
-Cc: Bjorn Helgaas <helgaas@kernel.org>, linux-pci@vger.kernel.org,
- David Woodhouse <dwmw2@infradead.org>,
- Alex Williamson <alex.williamson@redhat.com>,
- iommu@lists.linux-foundation.org
-References: <CAOQPn8soxubJxb=vp7kz+AM6LbPH5y+_Nx0Vzv7rjV_nMMqEmA@mail.gmail.com>
- <20180809184331.GB113140@bhelgaas-glaptop.roam.corp.google.com>
- <CAOQPn8uPYKai49WYPqZp2wNd5of=0hUvPOHEtqP56RZu-hcjuw@mail.gmail.com>
- <b54899a8-a144-e8e0-9880-1800c4657b95@deltatee.com>
- <CAOQPn8tSNN+3igN-kMcQH46w_a9p6T+S7=c8CLREMLxr1kaTXQ@mail.gmail.com>
-From: Logan Gunthorpe <logang@deltatee.com>
-Message-ID: <7068db44-af31-4462-f966-2dd2340ba0f0@deltatee.com>
-Date: Thu, 9 Aug 2018 15:36:30 -0600
-MIME-Version: 1.0
-In-Reply-To: <CAOQPn8tSNN+3igN-kMcQH46w_a9p6T+S7=c8CLREMLxr1kaTXQ@mail.gmail.com>
-Content-Type: text/plain; charset=utf-8
-Subject: Re: IOAT DMA w/IOMMU
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mga12.intel.com ([192.55.52.136]:14083 "EHLO mga12.intel.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1727405AbeIABeq (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Fri, 31 Aug 2018 21:34:46 -0400
+From: Keith Busch <keith.busch@intel.com>
+To: Linux PCI <linux-pci@vger.kernel.org>,
+        Bjorn Helgaas <bhelgaas@google.com>
+Cc: Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+        Sinan Kaya <okaya@kernel.org>,
+        Thomas Tai <thomas.tai@oracle.com>, poza@codeaurora.org,
+        Lukas Wunner <lukas@wunner.de>,
+        Keith Busch <keith.busch@intel.com>
+Subject: [PATCH 07/16] PCI/ERR: Always use the first downstream port
+Date: Fri, 31 Aug 2018 15:26:30 -0600
+Message-Id: <20180831212639.10196-8-keith.busch@intel.com>
+In-Reply-To: <20180831212639.10196-1-keith.busch@intel.com>
+References: <20180831212639.10196-1-keith.busch@intel.com>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
+The link reset always used the first bridge device, but AER broadcast
+error handling may have reported an end device. This means the reset may
+hit devices that were never notified of the impending error recovery.
 
+This patch uses the first downstream port in the hierarchy considered
+reliable. An error detected by a  switch upstream port detected should
+mean it occurred on its upstream link, so the patch selects the parent
+device if the error is not a root or downstream port.
 
-On 09/08/18 03:31 PM, Eric Pilmore wrote:
-> On Thu, Aug 9, 2018 at 12:35 PM, Logan Gunthorpe <logang@deltatee.com> wrote:
->> Hey,
->>
->> On 09/08/18 12:51 PM, Eric Pilmore wrote:
->>>>> Was wondering if anybody here has used IOAT DMA engines with an
->>>>> IOMMU turned on (Xeon based system)? My specific question is really
->>>>> whether it is possible to DMA (w/IOAT) to a PCI BAR address as the
->>>>> destination without having to map that address to the IOVA space of
->>>>> the DMA engine first (assuming the IOMMU is on)?
->>
->> I haven't tested this scenario but my guess would be that IOAT would
->> indeed go through the IOMMU and the PCI BAR address would need to be
->> properly mapped into the IOAT's IOVA. The fact that you see DMAR errors
->> is probably a good indication that this is the case. I really don't know
->> why you'd want to DMA something without mapping it.
-> 
-> The thought was to avoid paying the price of having to go through yet another
-> translation and also because it was not believed to be necessary anyway since
-> the DMA device could go straight to a PCI BAR address without the need for a
-> mapping.  We have been playing with two DMA engines, IOAT and PLX. The
-> PLX does not have any issues going straight to the PCI BAR address, but unlike
-> IOAT, PLX is sitting "in the PCI tree".
+This allows two other clean-ups. First, error handling can only run on
+bridges so this patch removes checks and branches for end devices. Second,
+the first accessible port does not inherit the channel error state since
+we can access it, so the special cases for error detect and resume are
+no longer necessary.
 
-Yes, you can do true P2P transactions with the PLX DMA engine. (Though
-you do have to be careful as technically you need to translate to a PCI
-bus address not the CPU physical address which are the same on x86; and
-you need to watch that ACS doesn't mess it up).
+Signed-off-by: Keith Busch <keith.busch@intel.com>
+---
+ drivers/pci/pcie/err.c | 85 +++++++++++++-------------------------------------
+ 1 file changed, 21 insertions(+), 64 deletions(-)
 
-It doesn't sound like it's possible to avoid the IOMMU when using the
-IOAT so you need the mapping. I would not expect the extra translation
-in the IOMMU to be noticeable, performance wise.
-
-Logan
+diff --git a/drivers/pci/pcie/err.c b/drivers/pci/pcie/err.c
+index 45f574954fd6..efef4c4ce7b2 100644
+--- a/drivers/pci/pcie/err.c
++++ b/drivers/pci/pcie/err.c
+@@ -63,30 +63,12 @@ static int report_error_detected(struct pci_dev *dev, void *data)
+ 	if (!dev->driver ||
+ 		!dev->driver->err_handler ||
+ 		!dev->driver->err_handler->error_detected) {
+-		if (result_data->state == pci_channel_io_frozen &&
+-			dev->hdr_type != PCI_HEADER_TYPE_BRIDGE) {
+-			/*
+-			 * In case of fatal recovery, if one of down-
+-			 * stream device has no driver. We might be
+-			 * unable to recover because a later insmod
+-			 * of a driver for this device is unaware of
+-			 * its hw state.
+-			 */
+-			pci_printk(KERN_DEBUG, dev, "device has %s\n",
+-				   dev->driver ?
+-				   "no AER-aware driver" : "no driver");
+-		}
+-
+ 		/*
+-		 * If there's any device in the subtree that does not
+-		 * have an error_detected callback, returning
+-		 * PCI_ERS_RESULT_NO_AER_DRIVER prevents calling of
+-		 * the subsequent mmio_enabled/slot_reset/resume
+-		 * callbacks of "any" device in the subtree. All the
+-		 * devices in the subtree are left in the error state
+-		 * without recovery.
++		 * If any device in the subtree does not have an error_detected
++		 * callback, PCI_ERS_RESULT_NO_AER_DRIVER prevents subsequent
++		 * erronr callbacks of "any" device in the subtree, and will
++		 * exit in the disconnected error state.
+ 		 */
+-
+ 		if (dev->hdr_type != PCI_HEADER_TYPE_BRIDGE)
+ 			vote = PCI_ERS_RESULT_NO_AER_DRIVER;
+ 		else
+@@ -193,34 +175,23 @@ static pci_ers_result_t default_reset_link(struct pci_dev *dev)
+ 
+ static pci_ers_result_t reset_link(struct pci_dev *dev, u32 service)
+ {
+-	struct pci_dev *udev;
+ 	pci_ers_result_t status;
+ 	struct pcie_port_service_driver *driver = NULL;
+ 
+-	if (dev->hdr_type == PCI_HEADER_TYPE_BRIDGE) {
+-		/* Reset this port for all subordinates */
+-		udev = dev;
+-	} else {
+-		/* Reset the upstream component (likely downstream port) */
+-		udev = dev->bus->self;
+-	}
+-
+-	/* Use the aer driver of the component firstly */
+-	driver = pcie_port_find_service(udev, service);
+-
++	driver = pcie_port_find_service(dev, service);
+ 	if (driver && driver->reset_link) {
+-		status = driver->reset_link(udev);
+-	} else if (udev->has_secondary_link) {
+-		status = default_reset_link(udev);
++		status = driver->reset_link(dev);
++	} else if (dev->has_secondary_link) {
++		status = default_reset_link(dev);
+ 	} else {
+ 		pci_printk(KERN_DEBUG, dev, "no link-reset support at upstream device %s\n",
+-			pci_name(udev));
++			pci_name(dev));
+ 		return PCI_ERS_RESULT_DISCONNECT;
+ 	}
+ 
+ 	if (status != PCI_ERS_RESULT_RECOVERED) {
+ 		pci_printk(KERN_DEBUG, dev, "link reset at upstream device %s failed\n",
+-			pci_name(udev));
++			pci_name(dev));
+ 		return PCI_ERS_RESULT_DISCONNECT;
+ 	}
+ 
+@@ -252,31 +223,7 @@ static pci_ers_result_t broadcast_error_message(struct pci_dev *dev,
+ 	else
+ 		result_data.result = PCI_ERS_RESULT_RECOVERED;
+ 
+-	if (dev->hdr_type == PCI_HEADER_TYPE_BRIDGE) {
+-		/*
+-		 * If the error is reported by a bridge, we think this error
+-		 * is related to the downstream link of the bridge, so we
+-		 * do error recovery on all subordinates of the bridge instead
+-		 * of the bridge and clear the error status of the bridge.
+-		 */
+-		if (cb == report_error_detected)
+-			dev->error_state = state;
+-		pci_walk_bus(dev->subordinate, cb, &result_data);
+-		if (cb == report_resume) {
+-			pci_aer_clear_device_status(dev);
+-			pci_cleanup_aer_uncorrect_error_status(dev);
+-			dev->error_state = pci_channel_io_normal;
+-		}
+-	} else {
+-		/*
+-		 * If the error is reported by an end point, we think this
+-		 * error is related to the upstream link of the end point.
+-		 * The error is non fatal so the bus is ok; just invoke
+-		 * the callback for the function that logged the error.
+-		 */
+-		cb(dev, &result_data);
+-	}
+-
++	pci_walk_bus(dev->subordinate, cb, &result_data);
+ 	return result_data.result;
+ }
+ 
+@@ -313,6 +260,14 @@ static void pcie_do_recovery(struct pci_dev *dev, enum pci_channel_state state,
+ {
+ 	pci_ers_result_t status;
+ 
++	/*
++	 * Error recovery runs on all subordinates of the first downstream port.
++	 * If the downstream port detected the error, it is cleared at the end.
++	 */
++	if (!(pci_pcie_type(dev) == PCI_EXP_TYPE_ROOT_PORT ||
++	      pci_pcie_type(dev) == PCI_EXP_TYPE_DOWNSTREAM))
++		dev = dev->bus->self;
++
+ 	status = broadcast_error_message(dev,
+ 			state,
+ 			"error_detected",
+@@ -348,6 +303,8 @@ static void pcie_do_recovery(struct pci_dev *dev, enum pci_channel_state state,
+ 				"resume",
+ 				report_resume);
+ 
++	pci_aer_clear_device_status(dev);
++	pci_cleanup_aer_uncorrect_error_status(dev);
+ 	pci_info(dev, "AER: Device recovery successful\n");
+ 	return;
+ failed:
+-- 
+2.14.4
