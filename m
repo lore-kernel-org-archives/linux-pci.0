@@ -1,57 +1,143 @@
-Return-Path: <SRS0=yCvU=LB=kernel.crashing.org=benh@kernel.org>
-Return-Path: <SRS0=yCvU=LB=kernel.crashing.org=benh@kernel.org>
-Message-ID: <20490639ea65ae09bec4ed33cf07a69b61935959.camel@kernel.crashing.org>
-Subject: Re: [RFC PATCH 2/6] pci: Set pci_dev->is_added before calling
- device_add
-From: Benjamin Herrenschmidt <benh@kernel.crashing.org>
-To: Lukas Wunner <lukas@wunner.de>, Bjorn Helgaas <helgaas@kernel.org>
-Cc: linux-pci@vger.kernel.org, Hari Vyas <hari.vyas@broadcom.com>,
-        Ray Jui
- <ray.jui@broadcom.com>,
-        Srinath Mannam <srinath.mannam@broadcom.com>,
-        Guenter Roeck <linux@roeck-us.net>, Jens Axboe <axboe@kernel.dk>,
-        Konstantin Khlebnikov <khlebnikov@yandex-team.ru>,
-        Marta Rybczynska
- <mrybczyn@kalray.eu>,
-        Pierre-Yves Kerbrat <pkerbrat@kalray.eu>, linux-kernel@vger.kernel.org
-Date: Sat, 18 Aug 2018 13:41:02 +1000
-In-Reply-To: <20180817181501.m4j7jibzsrgljmlj@wunner.de>
-References: <20180817044902.31420-1-benh@kernel.crashing.org>
-	 <20180817044902.31420-3-benh@kernel.crashing.org>
-	 <20180817162534.GD128050@bhelgaas-glaptop.roam.corp.google.com>
-	 <20180817181501.m4j7jibzsrgljmlj@wunner.de>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Subject: Re: [PATCH v2 1/2] dt-bindings: PCI: meson: add DT bindings for
+ Amlogic Meson PCIe controller
+To: Rob Herring <robh@kernel.org>
+References: <1535096165-45827-1-git-send-email-hanjie.lin@amlogic.com>
+ <1535096165-45827-2-git-send-email-hanjie.lin@amlogic.com>
+ <8c48964151d24758298ba935da336c0829e2b287.camel@baylibre.com>
+ <11d7547b-feb4-6ecb-cef3-db46ce8ee2ef@amlogic.com>
+ <20180829004122.GA25928@bogus>
+ <84d5399c-67d4-f8a4-3613-00d91f21292f@amlogic.com>
+ <CAL_JsqJPzfp1OimYXa26tEqTexyiuKMeKszveobHN3rKP8+RYQ@mail.gmail.com>
+From: Hanjie Lin <hanjie.lin@amlogic.com>
+Message-ID: <12ce60a8-accc-3c8f-4d38-9bf31346b775@amlogic.com>
+Date: Fri, 31 Aug 2018 09:47:09 +0800
+MIME-Version: 1.0
+In-Reply-To: <CAL_JsqJPzfp1OimYXa26tEqTexyiuKMeKszveobHN3rKP8+RYQ@mail.gmail.com>
+List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
+List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
+List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
+List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
+List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
+Cc: devicetree@vger.kernel.org, Jianxin Pan <jianxin.pan@amlogic.com>,
+ Kevin Hilman <khilman@baylibre.com>, Yixun Lan <yixun.lan@amlogic.com>,
+ "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+ Yue Wang <yue.wang@amlogic.com>, Qiufang Dai <qiufang.dai@amlogic.com>,
+ Liang Yang <liang.yang@amlogic.com>, Jian Hu <jian.hu@amlogic.com>,
+ linux-pci@vger.kernel.org, Bjorn Helgaas <bhelgaas@google.com>,
+ linux-amlogic@lists.infradead.org, "moderated list:ARM/FREESCALE IMX / MXC ARM
+ ARCHITECTURE" <linux-arm-kernel@lists.infradead.org>,
+ Jerome Brunet <jbrunet@baylibre.com>
+Content-Type: text/plain; charset="us-ascii"
+Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
+Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Fri, 2018-08-17 at 20:15 +0200, Lukas Wunner wrote:
+
+
+On 2018/8/30 21:59, Rob Herring wrote:
+> On Thu, Aug 30, 2018 at 2:37 AM Hanjie Lin <hanjie.lin@amlogic.com> wrote:
+>>
+>>
+>>
+>> On 2018/8/29 8:41, Rob Herring wrote:
+>>> On Mon, Aug 27, 2018 at 04:55:20PM +0800, Hanjie Lin wrote:
+>>>>
+>>>>
+>>>> On 2018/8/24 16:22, Jerome Brunet wrote:
+>>>>> On Fri, 2018-08-24 at 15:36 +0800, Hanjie Lin wrote:
+>>>>>> From: Yue Wang <yue.wang@amlogic.com>
+>>>>>>
+>>>>>> The Amlogic Meson PCIe host controller is based on the Synopsys DesignWare
+>>>>>> PCI core. This patch adds documentation for the DT bindings in Meson PCIe
+>>>>>> controller.
+>>>>>>
+>>>>>> Signed-off-by: Yue Wang <yue.wang@amlogic.com>
+>>>>>> Signed-off-by: Hanjie Lin <hanjie.lin@amlogic.com>
+>>>>>> ---
+>>>>>>  .../devicetree/bindings/pci/amlogic,meson-pcie.txt | 63 ++++++++++++++++++++++
+>>>>>>  1 file changed, 63 insertions(+)
+>>>>>>  create mode 100644 Documentation/devicetree/bindings/pci/amlogic,meson-pcie.txt
+>>>>>>
+>>>>>> diff --git a/Documentation/devicetree/bindings/pci/amlogic,meson-pcie.txt b/Documentation/devicetree/bindings/pci/amlogic,meson-pcie.txt
+>>>>>> new file mode 100644
+>>>>>> index 0000000..8a831d1
+>>>>>> --- /dev/null
+>>>>>> +++ b/Documentation/devicetree/bindings/pci/amlogic,meson-pcie.txt
+>>>>>> @@ -0,0 +1,63 @@
+>>>>>> +Amlogic Meson AXG DWC PCIE SoC controller
+>>>>>> +
+>>>>>> +Amlogic Meson PCIe host controller is based on the Synopsys DesignWare PCI core.
+>>>>>> +It shares common functions with the PCIe DesignWare core driver and
+>>>>>> +inherits common properties defined in
+>>>>>> +Documentation/devicetree/bindings/pci/designware-pci.txt.
+>>>>>> +
+>>>>>> +Additional properties are described here:
+>>>>>> +
+>>>>>> +Required properties:
+>>>>>> +- compatible:
+>>>>>> +  should contain "amlogic,axg-pcie" to identify the core.
+>>>>>> +- reg:
+>>>>>> +  Should contain the configuration address space.
+>>>>>> +- reg-names: Must be
+>>>>>> +  - "elbi"        External local bus interface registers
+>>>>>> +  - "cfg"         Meson specific registers
+>>>>>> +  - "config"      PCIe configuration space
+>>>>>> +- reset-gpios: The GPIO to generate PCIe PERST# assert and deassert signal.
+>>>>>> +- clocks: Must contain an entry for each entry in clock-names.
+>>>>>> +- clock-names: Must include the following entries:
+>>>>>> +  - "pclk"       PCIe GEN 100M PLL clock
+>>>>>> +  - "port"       PCIe_x(A or B) RC clock gate
+>>>>>> +  - "general"    PCIe Phy clock
+>>>>>> +  - "mipi"       PCIe_x(A or B) 100M ref clock gate
+>>>>>> +- resets: phandle to the reset lines.
+>>>>>> +- reset-names: must contain "phy" and "peripheral"
+>>>>>> +       - "port" Port A or B reset
+>>>>>> +       - "apb" APB reset
+>>>>>
+>>>>> The above description is not coherent (phy <=> port)
+>>>>>
+>>>>
+>>>> Yes, this should be port and apb here.
+>>>> We'll integrate phy driver into ctrl driver, and move phy reset to here also.
+>>>
+>>> Why? That's the wrong thing to do if they are separate h/w blocks. You
+>>> can do whatever you like in the drivers, but the DT should reflect the
+>>> h/w.
+>>>
+>>> Rob
+>>>
+>>> .
+>>>
+>>
+>> We have the dedicated phy driver which only process reset job,
+>> and we consider that it's too overkill to do just these things .
+>> So we will integrate phy reset job into the controller driver int the next version.
 > 
-> The two steps (enumeration and driver attachment) are protected by
-> pci_lock_rescan_remove().  Initially, when a pci_dev is newly allocated
-> with kzalloc(), is_added is 0.  The transition from 0 to 1 happens while
-> under pci_lock_rescan_remove().  When that lock is released, is_added is
-> always 1, barring a device_attach() error, in which case it will remain
-> at 0.
+> What's in the separate register space you had for the phy?
 > 
-> AFAICS, there is no second mutex needed to ensure synchronization of
-> is_added, the existing mutex should be sufficient and the only problem
-> are RMW races when accessing adjacent flags. Those were correctly addressed
-> by Hari's patch.  Benjamin seems to be alleging that concurrency issues
-> exist beyond the RMW races, I fail to see them, sorry.
+> Rob
+> 
+> .
+> 
 
-Im saying that fixing those issues using atomic bitops is a generally
-unsafe practice even if it happens to work in a specific case.
+As described with 'phy' reg in ctrl patch v3 thread [0]
 
-In this one, I argue that the root problem was simply that is_added was
-set in the wrong place. The "fix" from Hari touches 9 files, adds
-horrible relative includes to an architecture and generally bloats
-things while a single 3 liner would have been sufficient.
+- reg-names: Must be
+	- "elbi"	External local bus interface registers
+	- "cfg"		Meson specific registers
+	- "phy"		Meson PCIE PHY registers
+	- "config"	PCIe configuration space
 
-The current use of is_added is asymetric (it's cleared during
-device_attach but set during detach) which is bogus and the entire race
-stems from the fact that it is set after device_attach returns.
+When each controller driver probe, we powerup phy by write phy register like below: 
+writel(MESON_PCIE_PHY_POWERUP, mp->mem_res.phy_base);
 
-So setting it early is, imho, the right fix, is much simpler, and fixes
-the odd imbalance we have to begin with.
+[0] https://lkml.kernel.org/r/1535616829-167936-1-git-send-email-hanjie.lin@amlogic.com
 
-Ben.
+_______________________________________________
+linux-arm-kernel mailing list
+linux-arm-kernel@lists.infradead.org
+http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
