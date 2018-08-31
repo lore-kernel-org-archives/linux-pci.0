@@ -1,76 +1,74 @@
-Return-Path: <SRS0=6E4e=KR=h08.hostsharing.net=foo00@kernel.org>
-Return-Path: <SRS0=6E4e=KR=h08.hostsharing.net=foo00@kernel.org>
-Date: Thu, 2 Aug 2018 10:46:57 +0200
-From: Lukas Wunner <lukas@wunner.de>
-To: gokul cg <gokuljnpr@gmail.com>
-Cc: Mika Westerberg <mika.westerberg@linux.intel.com>,
-	Bjorn Helgaas <helgaas@kernel.org>, Ashok Raj <ashok.raj@intel.com>,
-	Keith Busch <keith.busch@intel.com>,
-	Yinghai Lu <yinghai@kernel.org>, Sinan Kaya <okaya@kernel.org>,
-	linux-pci@vger.kernel.org, Alexandru Gagniuc <mr.nuke.me@gmail.com>
-Subject: Re: [PATCH] PCI: pciehp: Differentiate between surprise and safe
- removal
-Message-ID: <20180802084657.GA21267@wunner.de>
-References: <dac488604766f3dcb948e702210ecc381c4f907b.1533015755.git.lukas@wunner.de>
- <20180801164358.GI2534@lahna.fi.intel.com>
- <20180801171512.GA28440@wunner.de>
- <20180802072036.GN2534@lahna.fi.intel.com>
- <CAFP4jM8AYG7hmkC_rYgXAfLoJmkJuW0e1UbgiayGrCPbb_yw8A@mail.gmail.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <CAFP4jM8AYG7hmkC_rYgXAfLoJmkJuW0e1UbgiayGrCPbb_yw8A@mail.gmail.com>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mga12.intel.com ([192.55.52.136]:14083 "EHLO mga12.intel.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1726987AbeIABem (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Fri, 31 Aug 2018 21:34:42 -0400
+From: Keith Busch <keith.busch@intel.com>
+To: Linux PCI <linux-pci@vger.kernel.org>,
+        Bjorn Helgaas <bhelgaas@google.com>
+Cc: Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+        Sinan Kaya <okaya@kernel.org>,
+        Thomas Tai <thomas.tai@oracle.com>, poza@codeaurora.org,
+        Lukas Wunner <lukas@wunner.de>,
+        Keith Busch <keith.busch@intel.com>
+Subject: [PATCH 00/16] PCI, error handling and hot plug
+Date: Fri, 31 Aug 2018 15:26:23 -0600
+Message-Id: <20180831212639.10196-1-keith.busch@intel.com>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Thu, Aug 02, 2018 at 12:59:18PM +0530, gokul cg wrote:
-> I am suspecting a possible race condition in the kernel between PCI driver
-> and AER handling.
-> 
-> Because of the same kernel panic happens from worker thread which handles
-> bottom half of aer irq.
-> 
-> I am seeing this issue when I suddenly power off PCI card which
-> supports/enabled PCIE AER error reporting.
-> 
-> While powering off PCI device, AER driver will get AER IRQ for the device,
-> from AER IRQ handler, it will cache AER error code and schedule worker
-> thread to handle error.
-> 
-> The PCIe device will get removed from PCI tree before worker thread
-> completes its task and kernel panic is  happening when worker thread tries
-> to access PCI device's config space.
-> 
-> #5 [ffff88027469fc70] general_protection at ffffffff8176cdf2
->     [exception RIP: pci_bus_read_config_dword+100]
-> #6 [ffff88027469fd50] pci_find_next_ext_capability at ffffffff81345d7b
-> #7 [ffff88027469fd90] pci_find_ext_capability at ffffffff81347225
-> #8 [ffff88027469fda0] get_device_error_info at ffffffff81356c4d
-> #9 [ffff88027469fdd0] aer_isr at ffffffff81357a38
-> #10 [ffff88027469fe28] process_one_work at ffffffff8105d4c0
-> #11 [ffff88027469fe70] worker_thread at ffffffff8105e251
-> #12 [ffff88027469fed0] kthread at ffffffff81064260
-> #13 [ffff88027469ff50] ret_from_fork at ffffffff81773a38
-> 
-> I have tested it on kernel 3.10 . But from source i could see that this
-> case is still relevant for latest Linux source .
+This series is all about error handling and hot plug. It should get the
+AER fatal handling much like how it was before where we don't always
+tear down and re-enumerate the topology, but even better in taht it
+won't trigger hotplug events to the extent possibe to suppress link
+events that occur from the secondary bus reset.
 
-I'm not really familiar with the AER driver, but the problem is
-actually easy to spot:
+Ports that do not implement an out-of-band presence detection mechanism
+may still have their device removed on the DPC and AER error handling,
+but at least error handling for non-hot pluggable ports won't experience
+removals anymore.
 
-find_source_device() walks the hierarchy and saves a pointer to
-pci_dev's in an array.  That array is later traversed and the
-pci_dev's are accessed.
+Some of these are simple bug fixes, some are more complicated. Patch
+11 fixes a long-standing issue where a RP detected fatal error never
+restored the downstream bridges, making recovery of end devices below
+those switches bound to fail after a secondary bus reset resets the
+bridge's config memory and bus windows.
 
-The solution is to acquire a ref on each device in add_error_device():
+Comments welcomed!
 
--	e_info->dev[e_info->error_dev_num] = dev;
-+	e_info->dev[e_info->error_dev_num] = pci_dev_get(dev);
+Keith Busch (15):
+  PCI: Fix pci_reset_bus
+  PCI/AER: Remove dead code
+  PCI/ERR: Use slot reset if available
+  PCI/ERR: Handle fatal error recovery
+  PCI/ERR: Remove devices on recovery failure
+  PCI/ERR: Always use the first downstream port
+  PCI/ERR: Simplify broadcast callouts
+  PCI/ERR: Report current recovery status for udev
+  PCI/portdrv: Provide pci error callbacks
+  PCI/portdrv: Restore pci state on slot reset
+  PCI/pciehp: Fix powerfault detection order
+  PCI/pciehp: Implement error handling callbacks
+  PCI/pciehp: Ignore link events during DPC event
+  PCI/DPC: Wait for reset complete
+  PCI: Unify device inaccessible
 
-Then release the ref aer_process_err_devices() by calling pci_dev_put().
+Lukas Wunner (1):
+  PCI: Simplify disconnected marking
 
-I believe there's an ongoing refactoring of the AER driver and the
-issue may be addressed in the course of it, but as a quick fix for
-an ancient v3.10 kernel, the above should do the trick.
+ drivers/pci/hotplug/pciehp.h      |   1 +
+ drivers/pci/hotplug/pciehp_core.c |  51 +++++++
+ drivers/pci/hotplug/pciehp_hpc.c  |  34 +++--
+ drivers/pci/hotplug/pciehp_pci.c  |   9 +-
+ drivers/pci/pci.c                 |  32 ++++-
+ drivers/pci/pci.h                 |  12 +-
+ drivers/pci/pcie/aer.c            |  15 +-
+ drivers/pci/pcie/dpc.c            |  40 ++++--
+ drivers/pci/pcie/err.c            | 293 ++++++++++++++------------------------
+ drivers/pci/pcie/portdrv.h        |   6 +
+ drivers/pci/pcie/portdrv_pci.c    |  37 ++++-
+ include/linux/pci.h               |   6 +
+ 12 files changed, 299 insertions(+), 237 deletions(-)
 
-HTH,
-
-Lukas
+-- 
+2.14.4
