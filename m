@@ -1,123 +1,48 @@
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail.kernel.org ([198.145.29.99]:43546 "EHLO mail.kernel.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1727175AbeIADRU (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Fri, 31 Aug 2018 23:17:20 -0400
+Subject: Re: [PATCH 14/16] pciehp: Ignore link events during DPC event
+To: Keith Busch <keith.busch@intel.com>
+Cc: Linux PCI <linux-pci@vger.kernel.org>,
+        Bjorn Helgaas <bhelgaas@google.com>,
+        Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+        Thomas Tai <thomas.tai@oracle.com>, poza@codeaurora.org,
+        Lukas Wunner <lukas@wunner.de>
+References: <20180831212639.10196-1-keith.busch@intel.com>
+ <20180831212639.10196-15-keith.busch@intel.com>
+ <01398ef7-88a8-cac1-3e15-ef68c165f7a4@kernel.org>
+ <20180831223352.GE9677@localhost.localdomain>
+ <1ad6771a-f396-452b-9697-b407b95643bf@kernel.org>
+ <20180831225948.GF9677@localhost.localdomain>
+From: Sinan Kaya <okaya@kernel.org>
+Message-ID: <4e4ed7cd-3ec4-3271-04f7-623a2d4b4cfe@kernel.org>
+Date: Fri, 31 Aug 2018 16:07:37 -0700
 MIME-Version: 1.0
-References: <1535096165-45827-1-git-send-email-hanjie.lin@amlogic.com>
- <1535096165-45827-2-git-send-email-hanjie.lin@amlogic.com>
- <8c48964151d24758298ba935da336c0829e2b287.camel@baylibre.com>
- <11d7547b-feb4-6ecb-cef3-db46ce8ee2ef@amlogic.com>
- <20180829004122.GA25928@bogus>
- <84d5399c-67d4-f8a4-3613-00d91f21292f@amlogic.com>
-In-Reply-To: <84d5399c-67d4-f8a4-3613-00d91f21292f@amlogic.com>
-From: Rob Herring <robh@kernel.org>
-Date: Thu, 30 Aug 2018 08:59:19 -0500
-Message-ID: <CAL_JsqJPzfp1OimYXa26tEqTexyiuKMeKszveobHN3rKP8+RYQ@mail.gmail.com>
-Subject: Re: [PATCH v2 1/2] dt-bindings: PCI: meson: add DT bindings for
- Amlogic Meson PCIe controller
-To: Hanjie Lin <hanjie.lin@amlogic.com>
-List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
-List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
-List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
-List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
-List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
-Cc: devicetree@vger.kernel.org, Jianxin Pan <jianxin.pan@amlogic.com>,
- Kevin Hilman <khilman@baylibre.com>, Yixun Lan <yixun.lan@amlogic.com>,
- "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
- Yue Wang <yue.wang@amlogic.com>, Qiufang Dai <qiufang.dai@amlogic.com>,
- Liang Yang <liang.yang@amlogic.com>, Jian Hu <jian.hu@amlogic.com>,
- linux-pci@vger.kernel.org, Bjorn Helgaas <bhelgaas@google.com>,
- linux-amlogic@lists.infradead.org,
- "moderated list:ARM/FREESCALE IMX / MXC ARM ARCHITECTURE"
- <linux-arm-kernel@lists.infradead.org>, Jerome Brunet <jbrunet@baylibre.com>
-Content-Type: text/plain; charset="us-ascii"
-Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
-Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
+In-Reply-To: <20180831225948.GF9677@localhost.localdomain>
+Content-Type: text/plain; charset=utf-8; format=flowed
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Thu, Aug 30, 2018 at 2:37 AM Hanjie Lin <hanjie.lin@amlogic.com> wrote:
->
->
->
-> On 2018/8/29 8:41, Rob Herring wrote:
-> > On Mon, Aug 27, 2018 at 04:55:20PM +0800, Hanjie Lin wrote:
-> >>
-> >>
-> >> On 2018/8/24 16:22, Jerome Brunet wrote:
-> >>> On Fri, 2018-08-24 at 15:36 +0800, Hanjie Lin wrote:
-> >>>> From: Yue Wang <yue.wang@amlogic.com>
-> >>>>
-> >>>> The Amlogic Meson PCIe host controller is based on the Synopsys DesignWare
-> >>>> PCI core. This patch adds documentation for the DT bindings in Meson PCIe
-> >>>> controller.
-> >>>>
-> >>>> Signed-off-by: Yue Wang <yue.wang@amlogic.com>
-> >>>> Signed-off-by: Hanjie Lin <hanjie.lin@amlogic.com>
-> >>>> ---
-> >>>>  .../devicetree/bindings/pci/amlogic,meson-pcie.txt | 63 ++++++++++++++++++++++
-> >>>>  1 file changed, 63 insertions(+)
-> >>>>  create mode 100644 Documentation/devicetree/bindings/pci/amlogic,meson-pcie.txt
-> >>>>
-> >>>> diff --git a/Documentation/devicetree/bindings/pci/amlogic,meson-pcie.txt b/Documentation/devicetree/bindings/pci/amlogic,meson-pcie.txt
-> >>>> new file mode 100644
-> >>>> index 0000000..8a831d1
-> >>>> --- /dev/null
-> >>>> +++ b/Documentation/devicetree/bindings/pci/amlogic,meson-pcie.txt
-> >>>> @@ -0,0 +1,63 @@
-> >>>> +Amlogic Meson AXG DWC PCIE SoC controller
-> >>>> +
-> >>>> +Amlogic Meson PCIe host controller is based on the Synopsys DesignWare PCI core.
-> >>>> +It shares common functions with the PCIe DesignWare core driver and
-> >>>> +inherits common properties defined in
-> >>>> +Documentation/devicetree/bindings/pci/designware-pci.txt.
-> >>>> +
-> >>>> +Additional properties are described here:
-> >>>> +
-> >>>> +Required properties:
-> >>>> +- compatible:
-> >>>> +  should contain "amlogic,axg-pcie" to identify the core.
-> >>>> +- reg:
-> >>>> +  Should contain the configuration address space.
-> >>>> +- reg-names: Must be
-> >>>> +  - "elbi"        External local bus interface registers
-> >>>> +  - "cfg"         Meson specific registers
-> >>>> +  - "config"      PCIe configuration space
-> >>>> +- reset-gpios: The GPIO to generate PCIe PERST# assert and deassert signal.
-> >>>> +- clocks: Must contain an entry for each entry in clock-names.
-> >>>> +- clock-names: Must include the following entries:
-> >>>> +  - "pclk"       PCIe GEN 100M PLL clock
-> >>>> +  - "port"       PCIe_x(A or B) RC clock gate
-> >>>> +  - "general"    PCIe Phy clock
-> >>>> +  - "mipi"       PCIe_x(A or B) 100M ref clock gate
-> >>>> +- resets: phandle to the reset lines.
-> >>>> +- reset-names: must contain "phy" and "peripheral"
-> >>>> +       - "port" Port A or B reset
-> >>>> +       - "apb" APB reset
-> >>>
-> >>> The above description is not coherent (phy <=> port)
-> >>>
-> >>
-> >> Yes, this should be port and apb here.
-> >> We'll integrate phy driver into ctrl driver, and move phy reset to here also.
-> >
-> > Why? That's the wrong thing to do if they are separate h/w blocks. You
-> > can do whatever you like in the drivers, but the DT should reflect the
-> > h/w.
-> >
-> > Rob
-> >
-> > .
-> >
->
-> We have the dedicated phy driver which only process reset job,
-> and we consider that it's too overkill to do just these things .
-> So we will integrate phy reset job into the controller driver int the next version.
+On 8/31/2018 3:59 PM, Keith Busch wrote:
+> On Fri, Aug 31, 2018 at 03:55:58PM -0700, Sinan Kaya wrote:
+>> On 8/31/2018 3:33 PM, Keith Busch wrote:
+>>> Darn, you're right. The kernel allocates up to 32 vectors and the port is
+>>> free to divvy them up however it wants amont its supported services. It
+>>> just so happened most of the ports I tested used the same one. There's
+>>> no way to really close this race if they are separate vectors though,
+>>> so maybe just leave this as  a 'best effort' approach and update the
+>>> change log accodingly.
+>>
+>> or take the big hammer and move them into a single workqueue?
+> 
+> That wouldn't really help if they're different interrupt vectors since
+> they could happen in either order with a delay between the CPU seeing
+> each of them.
+> 
 
-What's in the separate register space you had for the phy?
+I was trying to make it look like single interrupt in software even though
+they are sourced from different interrupt handlers.
 
-Rob
-
-_______________________________________________
-linux-arm-kernel mailing list
-linux-arm-kernel@lists.infradead.org
-http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
+But, you are right. Interrupts can arrive in arbitrary order.
