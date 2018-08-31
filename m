@@ -1,88 +1,47 @@
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-From: Hanjie Lin <hanjie.lin@amlogic.com>
-To: Kishon Vijay Abraham I <kishon@ti.com>
-Subject: [PATCH 1/2] dt-bindings: PCI: meson: add DT bindings for Amlogic
- Meson PCIe Phy controller
-Date: Tue, 14 Aug 2018 02:12:13 -0400
-Message-ID: <1534227134-151584-2-git-send-email-hanjie.lin@amlogic.com>
-In-Reply-To: <1534227134-151584-1-git-send-email-hanjie.lin@amlogic.com>
-References: <1534227134-151584-1-git-send-email-hanjie.lin@amlogic.com>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mga14.intel.com ([192.55.52.115]:61315 "EHLO mga14.intel.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1726275AbeHaVmo (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Fri, 31 Aug 2018 17:42:44 -0400
+Subject: [PATCH for-rc 1/2] PCI: Fix faulty logic in pci_reset_bus()
+From: Dennis Dalessandro <dennis.dalessandro@intel.com>
+To: bhelgaas@google.com, jgg@ziepe.ca, dledford@redhat.com
+Cc: Sinan Kaya <okaya@codeaurora.org>,
+        "Michael J. Ruhl" <michael.j.ruhl@intel.com>,
+        linux-pci@vger.kernel.org, linux-rdma@vger.kernel.org
+Date: Fri, 31 Aug 2018 10:34:05 -0700
+Message-ID: <20180831173359.21741.61944.stgit@scvm10.sc.intel.com>
+In-Reply-To: <20180831173132.21741.25892.stgit@scvm10.sc.intel.com>
+References: <20180831173132.21741.25892.stgit@scvm10.sc.intel.com>
 MIME-Version: 1.0
-List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
-List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
-List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
-List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
-List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
-Cc: Rob Herring <robh@kernel.org>, Hanjie Lin <hanjie.lin@amlogic.com>,
- devicetree@vger.kernel.org, linux-pci@vger.kernel.org,
- shawn.lin@rock-chips.com, linux-kernel@vger.kernel.org,
- Yue Wang <yue.wang@amlogic.com>, Kevin
- Hilman <khilman@baylibre.com>, Carlo Caione <carlo@caione.org>,
- linux-amlogic@lists.infradead.org, linux-arm-kernel@lists.infradead.org
-Content-Type: text/plain; charset="us-ascii"
-Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
-Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
+Content-Type: text/plain; charset="utf-8"
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-From: Yue Wang <yue.wang@amlogic.com>
+The pci_rest_bus() function calls into pci_probe_reset_slot() to determine
+whether to call the slot or bus reset. The check has faulty logic in that
+it does not account for pci_probe_reset_slot() being able to return an
+errno. Fix by only calling the slot reset when the function returns 0.
+Treat < 1 and > 1 the same.
 
-The Meson-PCIE-PHY controller supports the 5-Gbps data rate
-of the PCI Express Gen 2 specification and is backwardcompatible
-with the 2.5-Gbps Gen 1.1 specification with only
-inferred idle detection supported on AMLOGIC SoCs.
-
-Signed-off-by: Hanjie Lin <hanjie.lin@amlogic.com>
-Signed-off-by: Yue Wang <yue.wang@amlogic.com>
+Cc: Sinan Kaya <okaya@codeaurora.org>
+Fixes: 811c5cb37df4 ("PCI: Unify try slot and bus reset API")
+Reviewed-by: Michael J. Ruhl <michael.j.ruhl@intel.com>
+Signed-off-by: Dennis Dalessandro <dennis.dalessandro@intel.com>
 ---
- .../bindings/phy/amlogic,meson-pcie-phy.txt        | 31 ++++++++++++++++++++++
- 1 file changed, 31 insertions(+)
- create mode 100644 Documentation/devicetree/bindings/phy/amlogic,meson-pcie-phy.txt
+ drivers/pci/pci.c |    2 +-
+ 1 files changed, 1 insertions(+), 1 deletions(-)
 
-diff --git a/Documentation/devicetree/bindings/phy/amlogic,meson-pcie-phy.txt b/Documentation/devicetree/bindings/phy/amlogic,meson-pcie-phy.txt
-new file mode 100644
-index 0000000..db99085
---- /dev/null
-+++ b/Documentation/devicetree/bindings/phy/amlogic,meson-pcie-phy.txt
-@@ -0,0 +1,31 @@
-+* Amlogic Meson AXG PCIE PHY binding
-+
-+Required properties:
-+- compatible:	Should be
-+	- "amlogic,axg-pcie-phy"
-+- #phys-cells:	must be 0 (see phy-bindings.txt in this directory)
-+- reg:		The base address and length of the registers
-+- resets:	phandle to the reset lines
-+- reset-names:	must contain "phy" and "peripheral"
-+	- "port_a" Port A reset
-+	- "port_b" Port B reset
-+	- "phy"	PHY reset
-+	- "apb"	APB reset
-+Optional properties:
-+- phy-supply:	see phy-bindings.txt in this directory
-+
-+Example:
-+	pcie_phy: pcie-phy@ff644000 {
-+		#phy-cells = <0>;
-+		compatible = "amlogic,axg-pcie-phy";
-+		reg = <0x0 0xff644000 0x0 0x2000>;
-+		resets = <&reset RESET_PCIE_A>,
-+				<&reset RESET_PCIE_B>,
-+				<&reset RESET_PCIE_PHY>,
-+				<&reset RESET_PCIE_APB>;
-+		reset-names =
-+				"port_a",
-+				"port_b",
-+				"phy",
-+				"apb";
-+	};
--- 
-2.7.4
-
-
-_______________________________________________
-linux-arm-kernel mailing list
-linux-arm-kernel@lists.infradead.org
-http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
+diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
+index 29ff961..30b2603 100644
+--- a/drivers/pci/pci.c
++++ b/drivers/pci/pci.c
+@@ -5200,7 +5200,7 @@ static int __pci_reset_bus(struct pci_bus *bus)
+  */
+ int pci_reset_bus(struct pci_dev *pdev)
+ {
+-	return pci_probe_reset_slot(pdev->slot) ?
++	return (!pci_probe_reset_slot(pdev->slot)) ?
+ 	    __pci_reset_slot(pdev->slot) : __pci_reset_bus(pdev->bus);
+ }
+ EXPORT_SYMBOL_GPL(pci_reset_bus);
