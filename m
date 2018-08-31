@@ -1,19 +1,18 @@
 Return-Path: <linux-nvme-bounces+bjorn=helgaas.com@lists.infradead.org>
 Return-Path: <linux-nvme-bounces+bjorn=helgaas.com@lists.infradead.org>
-To: Jens Axboe <axboe@kernel.dk>, linux-kernel@vger.kernel.org,
+Subject: Re: [PATCH v5 06/13] PCI/P2PDMA: Add P2P DMA driver writer's
+ documentation
+To: Logan Gunthorpe <logang@deltatee.com>, linux-kernel@vger.kernel.org,
  linux-pci@vger.kernel.org, linux-nvme@lists.infradead.org,
  linux-rdma@vger.kernel.org, linux-nvdimm@lists.01.org,
  linux-block@vger.kernel.org
 References: <20180830185352.3369-1-logang@deltatee.com>
- <20180830185352.3369-8-logang@deltatee.com>
- <b5ab8fa3-34ac-3117-fa0d-5206c3939435@kernel.dk>
-From: Logan Gunthorpe <logang@deltatee.com>
-Message-ID: <7c5b9d2c-d94e-582c-f1d7-0827dbb7df7c@deltatee.com>
-Date: Thu, 30 Aug 2018 13:17:40 -0600
+ <20180830185352.3369-7-logang@deltatee.com>
+From: =?UTF-8?Q?Christian_K=c3=b6nig?= <christian.koenig@amd.com>
+Message-ID: <98bff500-4e4c-3a34-6762-16ef4b076d90@amd.com>
+Date: Fri, 31 Aug 2018 10:08:11 +0200
 MIME-Version: 1.0
-In-Reply-To: <b5ab8fa3-34ac-3117-fa0d-5206c3939435@kernel.dk>
-Subject: Re: [PATCH v5 07/13] block: Add PCI P2P flag for request queue and
- check support for requests
+In-Reply-To: <20180830185352.3369-7-logang@deltatee.com>
 List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-nvme>,
  <mailto:linux-nvme-request@lists.infradead.org?subject=unsubscribe>
 List-Archive: <http://lists.infradead.org/pipermail/linux-nvme/>
@@ -21,8 +20,7 @@ List-Post: <mailto:linux-nvme@lists.infradead.org>
 List-Help: <mailto:linux-nvme-request@lists.infradead.org?subject=help>
 List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-nvme>,
  <mailto:linux-nvme-request@lists.infradead.org?subject=subscribe>
-Cc: Sagi Grimberg <sagi@grimberg.me>,
- =?UTF-8?Q?Christian_K=c3=b6nig?= <christian.koenig@amd.com>,
+Cc: Sagi Grimberg <sagi@grimberg.me>, Jonathan Corbet <corbet@lwn.net>,
  Benjamin Herrenschmidt <benh@kernel.crashing.org>,
  Alex Williamson <alex.williamson@redhat.com>,
  Stephen Bates <sbates@raithlin.com>, Keith Busch <keith.busch@intel.com>,
@@ -30,38 +28,41 @@ Cc: Sagi Grimberg <sagi@grimberg.me>,
  Jason Gunthorpe <jgg@mellanox.com>, Bjorn Helgaas <bhelgaas@google.com>,
  Max Gurtovoy <maxg@mellanox.com>, Dan Williams <dan.j.williams@intel.com>,
  Christoph Hellwig <hch@lst.de>
-Content-Type: text/plain; charset="us-ascii"
+Content-Type: text/plain; charset="us-ascii"; Format="flowed"
 Sender: "Linux-nvme" <linux-nvme-bounces@lists.infradead.org>
 Errors-To: linux-nvme-bounces+bjorn=helgaas.com@lists.infradead.org
 List-ID: <linux-pci.vger.kernel.org>
 
+Am 30.08.2018 um 20:53 schrieb Logan Gunthorpe:
+> [SNIP]
+> +============================
+> +PCI Peer-to-Peer DMA Support
+> +============================
+> +
+> +The PCI bus has pretty decent support for performing DMA transfers
+> +between two devices on the bus. This type of transaction is henceforth
+> +called Peer-to-Peer (or P2P). However, there are a number of issues that
+> +make P2P transactions tricky to do in a perfectly safe way.
+> +
+> +One of the biggest issues is that PCI doesn't require forwarding
+> +transactions between hierarchy domains, and in PCIe, each Root Port
+> +defines a separate hierarchy domain. To make things worse, there is no
+> +simple way to determine if a given Root Complex supports this or not.
+> +(See PCIe r4.0, sec 1.3.1). Therefore, as of this writing, the kernel
+> +only supports doing P2P when the endpoints involved are all behind the
+> +same PCI bridge, as such devices are all in the same PCI hierarchy
+> +domain, and the spec guarantees that all transacations within the
+> +hierarchy will be routable, but it does not require routing
+> +between hierarchies.
 
+Can we add a kernel command line switch and a whitelist to enable P2P 
+between separate hierarchies?
 
-On 30/08/18 01:11 PM, Jens Axboe wrote:
-> On 8/30/18 12:53 PM, Logan Gunthorpe wrote:
->> QUEUE_FLAG_PCI_P2P is introduced meaning a driver's request queue
->> supports targeting P2P memory.
->>
->> When a request is submitted we check if PCI P2PDMA memory is assigned
->> to the first page in the bio. If it is, we ensure the queue it's
->> submitted to supports it, and enforce REQ_NOMERGE.
-> 
-> I think this belongs in the caller - both the validity check, and
-> passing in NOMERGE for this type of request. I don't want to impose
-> this overhead on everything, for a pretty niche case.
+At least all newer AMD chipsets supports this and I'm pretty sure that 
+Intel has a list with PCI-IDs of the root hubs for this as well.
 
-Well, the point was to prevent driver writers from doing the wrong
-thing. The WARN_ON would be a bit pointless in the driver if we rely on
-the driver to either do the right thing or add the WARN_ON themselves.
-
-If I'm going to change anything I'd drop the warning entirely and move
-the NO_MERGE back into the caller...
-
-Note: the check will be compiled out if the kernel does not support PCI P2P.
-
-Logan
-
-
+Regards,
+Christian.
 
 _______________________________________________
 Linux-nvme mailing list
