@@ -1,127 +1,51 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from cloudserver094114.home.pl ([79.96.170.134]:58217 "EHLO
-        cloudserver094114.home.pl" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726722AbeIKN61 (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Tue, 11 Sep 2018 09:58:27 -0400
-From: "Rafael J. Wysocki" <rjw@rjwysocki.net>
-To: Mika Westerberg <mika.westerberg@linux.intel.com>
-Cc: Bjorn Helgaas <bhelgaas@google.com>, Len Brown <lenb@kernel.org>,
-        Lukas Wunner <lukas@wunner.de>,
-        Keith Busch <keith.busch@intel.com>,
-        Ashok Raj <ashok.raj@intel.com>, Mario.Limonciello@dell.com,
-        Anthony Wong <anthony.wong@canonical.com>,
-        "D . J . Bernstein" <djb@cr.yp.to>,
-        Linus Walleij <linus.walleij@linaro.org>,
-        linux-pci@vger.kernel.org, linux-acpi@vger.kernel.org
-Subject: Re: [PATCH 06/10] PCI: portdrv: Add runtime PM hooks for port service drivers
-Date: Tue, 11 Sep 2018 10:57:27 +0200
-Message-ID: <56924042.c0IVva5Hay@aspire.rjw.lan>
-In-Reply-To: <20180906155020.51700-7-mika.westerberg@linux.intel.com>
-References: <20180906155020.51700-1-mika.westerberg@linux.intel.com> <20180906155020.51700-7-mika.westerberg@linux.intel.com>
+Return-Path: <linux-nvme-bounces+bjorn=helgaas.com@lists.infradead.org>
+Return-Path: <linux-nvme-bounces+bjorn=helgaas.com@lists.infradead.org>
+Date: Sat, 1 Sep 2018 10:28:12 +0200
+From: Christoph Hellwig <hch@lst.de>
+To: Jens Axboe <axboe@kernel.dk>
+Subject: Re: [PATCH v5 07/13] block: Add PCI P2P flag for request queue and
+ check support for requests
+Message-ID: <20180901082812.GB670@lst.de>
+References: <20180830185352.3369-1-logang@deltatee.com>
+ <20180830185352.3369-8-logang@deltatee.com>
+ <b5ab8fa3-34ac-3117-fa0d-5206c3939435@kernel.dk>
 MIME-Version: 1.0
+In-Reply-To: <b5ab8fa3-34ac-3117-fa0d-5206c3939435@kernel.dk>
+List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-nvme>,
+ <mailto:linux-nvme-request@lists.infradead.org?subject=unsubscribe>
+List-Archive: <http://lists.infradead.org/pipermail/linux-nvme/>
+List-Post: <mailto:linux-nvme@lists.infradead.org>
+List-Help: <mailto:linux-nvme-request@lists.infradead.org?subject=help>
+List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-nvme>,
+ <mailto:linux-nvme-request@lists.infradead.org?subject=subscribe>
+Cc: Keith Busch <keith.busch@intel.com>,
+ Alex Williamson <alex.williamson@redhat.com>, Sagi Grimberg <sagi@grimberg.me>,
+ linux-nvdimm@lists.01.org, linux-rdma@vger.kernel.org,
+ linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
+ linux-nvme@lists.infradead.org, Stephen Bates <sbates@raithlin.com>,
+ linux-block@vger.kernel.org,
+ =?iso-8859-1?B?Suly9G1l?= Glisse <jglisse@redhat.com>,
+ Jason Gunthorpe <jgg@mellanox.com>,
+ Christian =?iso-8859-1?Q?K=F6nig?= <christian.koenig@amd.com>,
+ Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+ Bjorn Helgaas <bhelgaas@google.com>, Max Gurtovoy <maxg@mellanox.com>,
+ Dan Williams <dan.j.williams@intel.com>, Logan Gunthorpe <logang@deltatee.com>,
+ Christoph Hellwig <hch@lst.de>
 Content-Type: text/plain; charset="us-ascii"
-Sender: linux-pci-owner@vger.kernel.org
+Sender: "Linux-nvme" <linux-nvme-bounces@lists.infradead.org>
+Errors-To: linux-nvme-bounces+bjorn=helgaas.com@lists.infradead.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Thursday, September 6, 2018 5:50:16 PM CEST Mika Westerberg wrote:
-> When PCIe port is runtime suspended/resumed some extra steps might be
-> needed to be executed from the port service driver side. For instance we
-> may need to disable PCIe hotplug interrupt to prevent it from triggering
-> immediately when PCIe link to the downstream component goes down.
-> 
-> To make the above possible add optional ->runtime_suspend() and
-> ->runtime_resume() callbacks to struct pcie_port_service_driver and call
-> them for each port service in runtime suspend/resume callbacks of portdrv.
-> 
-> Signed-off-by: Mika Westerberg <mika.westerberg@linux.intel.com>
-> ---
->  drivers/pci/pcie/portdrv.h      |  4 ++++
->  drivers/pci/pcie/portdrv_core.c | 20 ++++++++++++++++++++
->  drivers/pci/pcie/portdrv_pci.c  | 10 ++++------
->  3 files changed, 28 insertions(+), 6 deletions(-)
-> 
-> diff --git a/drivers/pci/pcie/portdrv.h b/drivers/pci/pcie/portdrv.h
-> index d59afa42fc14..72fa132060e5 100644
-> --- a/drivers/pci/pcie/portdrv.h
-> +++ b/drivers/pci/pcie/portdrv.h
-> @@ -52,6 +52,8 @@ struct pcie_port_service_driver {
->  	int (*suspend) (struct pcie_device *dev);
->  	int (*resume_noirq) (struct pcie_device *dev);
->  	int (*resume) (struct pcie_device *dev);
-> +	int (*runtime_suspend) (struct pcie_device *dev);
-> +	int (*runtime_resume) (struct pcie_device *dev);
->  
->  	/* Device driver may resume normal operations */
->  	void (*error_resume)(struct pci_dev *dev);
-> @@ -85,6 +87,8 @@ int pcie_port_device_register(struct pci_dev *dev);
->  int pcie_port_device_suspend(struct device *dev);
->  int pcie_port_device_resume_noirq(struct device *dev);
->  int pcie_port_device_resume(struct device *dev);
-> +int pcie_port_device_runtime_suspend(struct device *dev);
-> +int pcie_port_device_runtime_resume(struct device *dev);
->  #endif
->  void pcie_port_device_remove(struct pci_dev *dev);
->  int __must_check pcie_port_bus_register(void);
-> diff --git a/drivers/pci/pcie/portdrv_core.c b/drivers/pci/pcie/portdrv_core.c
-> index 7c37d815229e..6542c48c7f59 100644
-> --- a/drivers/pci/pcie/portdrv_core.c
-> +++ b/drivers/pci/pcie/portdrv_core.c
-> @@ -395,6 +395,26 @@ int pcie_port_device_resume(struct device *dev)
->  	size_t off = offsetof(struct pcie_port_service_driver, resume);
->  	return device_for_each_child(dev, &off, pm_iter);
->  }
-> +
-> +/**
-> + * pcie_port_device_runtime_suspend - runtime suspend port services
-> + * @dev: PCI Express port to handle
-> + */
-> +int pcie_port_device_runtime_suspend(struct device *dev)
-> +{
-> +	size_t off = offsetof(struct pcie_port_service_driver, runtime_suspend);
-> +	return device_for_each_child(dev, &off, pm_iter);
-> +}
-> +
-> +/**
-> + * pcie_port_device_runtime_resume - runtime resume port services
-> + * @dev: PCI Express port to handle
-> + */
-> +int pcie_port_device_runtime_resume(struct device *dev)
-> +{
-> +	size_t off = offsetof(struct pcie_port_service_driver, runtime_resume);
-> +	return device_for_each_child(dev, &off, pm_iter);
-> +}
->  #endif /* PM */
->  
->  static int remove_iter(struct device *dev, void *data)
-> diff --git a/drivers/pci/pcie/portdrv_pci.c b/drivers/pci/pcie/portdrv_pci.c
-> index 74761f660a30..d018633694e0 100644
-> --- a/drivers/pci/pcie/portdrv_pci.c
-> +++ b/drivers/pci/pcie/portdrv_pci.c
-> @@ -60,12 +60,10 @@ int pcie_port_prepare(struct device *dev)
->  
->  static int pcie_port_runtime_suspend(struct device *dev)
->  {
-> -	return to_pci_dev(dev)->bridge_d3 ? 0 : -EBUSY;
-> -}
-> +	if (!to_pci_dev(dev)->bridge_d3)
-> +		return -EBUSY;
->  
-> -static int pcie_port_runtime_resume(struct device *dev)
-> -{
-> -	return 0;
-> +	return pcie_port_device_runtime_suspend(dev);
->  }
->  
->  static int pcie_port_runtime_idle(struct device *dev)
-> @@ -89,7 +87,7 @@ static const struct dev_pm_ops pcie_portdrv_pm_ops = {
->  	.restore_noirq	= pcie_port_device_resume_noirq,
->  	.restore	= pcie_port_device_resume,
->  	.runtime_suspend = pcie_port_runtime_suspend,
-> -	.runtime_resume	= pcie_port_runtime_resume,
-> +	.runtime_resume	= pcie_port_device_runtime_resume,
->  	.runtime_idle	= pcie_port_runtime_idle,
->  };
->  
-> 
+On Thu, Aug 30, 2018 at 01:11:18PM -0600, Jens Axboe wrote:
+> I think this belongs in the caller - both the validity check, and
+> passing in NOMERGE for this type of request. I don't want to impose
+> this overhead on everything, for a pretty niche case.
 
-Reviewed-by: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
+It is just a single branch, which will be predicted as not taken
+for non-P2P users.  The benefit is that we get proper error checking
+by doing it in the block code.
+
+_______________________________________________
+Linux-nvme mailing list
+Linux-nvme@lists.infradead.org
+http://lists.infradead.org/mailman/listinfo/linux-nvme
