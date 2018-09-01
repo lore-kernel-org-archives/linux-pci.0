@@ -1,67 +1,36 @@
-Return-Path: <linux-nvme-bounces+bjorn=helgaas.com@lists.infradead.org>
-Return-Path: <linux-nvme-bounces+bjorn=helgaas.com@lists.infradead.org>
-To: Jens Axboe <axboe@kernel.dk>, Christoph Hellwig <hch@lst.de>
-References: <20180830185352.3369-1-logang@deltatee.com>
- <20180830185352.3369-8-logang@deltatee.com>
- <b5ab8fa3-34ac-3117-fa0d-5206c3939435@kernel.dk>
- <20180901082812.GB670@lst.de>
- <5f79c012-c6e1-56bb-62fd-0689181fb2c9@deltatee.com>
- <59b28977-8f2a-6228-2050-03fae6bdbedd@kernel.dk>
-From: Logan Gunthorpe <logang@deltatee.com>
-Message-ID: <1b4283da-44df-4a02-3167-e295243cef78@deltatee.com>
-Date: Wed, 5 Sep 2018 13:33:23 -0600
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from bombadil.infradead.org ([198.137.202.133]:33644 "EHLO
+        bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1725973AbeIAMmi (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Sat, 1 Sep 2018 08:42:38 -0400
+Date: Sat, 1 Sep 2018 01:31:21 -0700
+From: Christoph Hellwig <hch@infradead.org>
+To: Keith Busch <keith.busch@intel.com>
+Cc: Linux PCI <linux-pci@vger.kernel.org>,
+        Bjorn Helgaas <bhelgaas@google.com>,
+        Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+        Sinan Kaya <okaya@kernel.org>,
+        Thomas Tai <thomas.tai@oracle.com>, poza@codeaurora.org,
+        Lukas Wunner <lukas@wunner.de>
+Subject: Re: [PATCH 05/16] PCI/ERR: Handle fatal error recovery
+Message-ID: <20180901083121.GA32164@infradead.org>
+References: <20180831212639.10196-1-keith.busch@intel.com>
+ <20180831212639.10196-6-keith.busch@intel.com>
 MIME-Version: 1.0
-In-Reply-To: <59b28977-8f2a-6228-2050-03fae6bdbedd@kernel.dk>
-Subject: Re: [PATCH v5 07/13] block: Add PCI P2P flag for request queue and
- check support for requests
-List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-nvme>,
- <mailto:linux-nvme-request@lists.infradead.org?subject=unsubscribe>
-List-Archive: <http://lists.infradead.org/pipermail/linux-nvme/>
-List-Post: <mailto:linux-nvme@lists.infradead.org>
-List-Help: <mailto:linux-nvme-request@lists.infradead.org?subject=help>
-List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-nvme>,
- <mailto:linux-nvme-request@lists.infradead.org?subject=subscribe>
-Cc: Keith Busch <keith.busch@intel.com>,
- Alex Williamson <alex.williamson@redhat.com>, Sagi Grimberg <sagi@grimberg.me>,
- linux-nvdimm@lists.01.org, linux-rdma@vger.kernel.org,
- linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
- linux-nvme@lists.infradead.org, Stephen Bates <sbates@raithlin.com>,
- linux-block@vger.kernel.org,
- =?UTF-8?B?SsOpcsO0bWUgR2xpc3Nl?= <jglisse@redhat.com>,
- Jason Gunthorpe <jgg@mellanox.com>,
- Benjamin Herrenschmidt <benh@kernel.crashing.org>,
- Bjorn Helgaas <bhelgaas@google.com>, Max Gurtovoy <maxg@mellanox.com>,
- Dan Williams <dan.j.williams@intel.com>,
- =?UTF-8?Q?Christian_K=c3=b6nig?= <christian.koenig@amd.com>
-Content-Type: text/plain; charset="us-ascii"
-Sender: "Linux-nvme" <linux-nvme-bounces@lists.infradead.org>
-Errors-To: linux-nvme-bounces+bjorn=helgaas.com@lists.infradead.org
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20180831212639.10196-6-keith.busch@intel.com>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
+> +void pcie_do_fatal_recovery(struct pci_dev *dev, u32 service)
+> +{
+> +	pcie_do_recovery(dev, pci_channel_io_frozen, service);
+> +}
+> +
+> +void pcie_do_nonfatal_recovery(struct pci_dev *dev)
+> +{
+> +	pcie_do_recovery(dev, pci_channel_io_normal, PCIE_PORT_SERVICE_AER);
+> +}
 
-
-On 05/09/18 01:26 PM, Jens Axboe wrote:
-> On 9/3/18 4:26 PM, Logan Gunthorpe wrote:
->> I personally agree with Christoph. But if there's consensus in the other
->> direction or this is a real blocker moving this forward, I can remove it
->> for the next version.
-> 
-> It's a simple branch because the check isn't exhaustive. It just checks
-> the first page. At that point you may as well just require the caller to
-> flag the bio/rq as being P2P, and then do a check for P2P compatibility
-> with the queue.
-
-Hmm, we had something like that in v4[1] but it just seemed redundant to
-create a flag when the information was already in the bio and kind of
-ugly for the caller to check for, then set, the flag. I'm not _that_
-averse to going back to that though...
-
-Logan
-
-[1]
-https://lore.kernel.org/lkml/20180423233046.21476-8-logang@deltatee.com/T/#u
-
-_______________________________________________
-Linux-nvme mailing list
-Linux-nvme@lists.infradead.org
-http://lists.infradead.org/mailman/listinfo/linux-nvme
+Is there any good reason to not just expose pcie_do_recovery
+directly and skip these wrappers?
