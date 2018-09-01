@@ -1,78 +1,113 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from bmailout1.hostsharing.net ([83.223.95.100]:60847 "EHLO
+        bmailout1.hostsharing.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726934AbeIATbA (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Sat, 1 Sep 2018 15:31:00 -0400
+Date: Sat, 1 Sep 2018 17:18:36 +0200
+From: Lukas Wunner <lukas@wunner.de>
+To: Keith Busch <keith.busch@intel.com>
+Cc: Linux PCI <linux-pci@vger.kernel.org>,
+        Bjorn Helgaas <bhelgaas@google.com>,
+        Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+        Sinan Kaya <okaya@kernel.org>,
+        Thomas Tai <thomas.tai@oracle.com>, poza@codeaurora.org
+Subject: Re: [PATCH 12/16] PCI/pciehp: Fix powerfault detection order
+Message-ID: <20180901151836.oceptz267wy33bes@wunner.de>
+References: <20180831212639.10196-1-keith.busch@intel.com>
+ <20180831212639.10196-13-keith.busch@intel.com>
 MIME-Version: 1.0
-References: <1536266581-7308-1-git-send-email-jim2101024@gmail.com>
- <1536266581-7308-8-git-send-email-jim2101024@gmail.com> <20180906214549.y4xpleiukzw5rmqs@pburton-laptop>
-In-Reply-To: <20180906214549.y4xpleiukzw5rmqs@pburton-laptop>
-From: Jim Quinlan <jim2101024@gmail.com>
-Date: Mon, 10 Sep 2018 10:42:43 -0400
-Message-ID: <CANCKTBsuEaeW=95tpjOPF2RecfTbdUP+C7a1QwFdvOBFG6o8Vg@mail.gmail.com>
-Subject: Re: [PATCH v5 07/12] PCI/MSI: enable PCI_MSI_IRQ_DOMAIN support for MIPS
-To: paul.burton@mips.com
-Cc: linux-kernel@vger.kernel.org, Bjorn Helgaas <bhelgaas@google.com>,
-        Rob Herring <robh+dt@kernel.org>,
-        Mark Rutland <mark.rutland@arm.com>,
-        Brian Norris <computersforpeace@gmail.com>,
-        Gregory Fong <gregory.0xf0@gmail.com>,
-        Florian Fainelli <f.fainelli@gmail.com>,
-        bcm-kernel-feedback-list <bcm-kernel-feedback-list@broadcom.com>,
-        linux@armlinux.org.uk, Ray Jui <ray.jui@broadcom.com>,
-        Scott Branden <scott.branden@broadcom.com>,
-        Catalin Marinas <catalin.marinas@arm.com>,
-        Will Deacon <will.deacon@arm.com>,
-        Ralf Baechle <ralf@linux-mips.org>, jhogan@kernel.org,
-        Kevin Cernekee <cernekee@gmail.com>,
-        Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
-        yamada.masahiro@socionext.com, Arnd Bergmann <arnd@arndb.de>,
-        nicolas.pitre@linaro.org, keescook@chromium.org,
-        jinb.park7@gmail.com, vladimir.murzin@arm.com,
-        alexandre.belloni@bootlin.com, palmer@sifive.com, stefan@agner.ch,
-        eric@anholt.net, horms+renesas@verge.net.au, tony@atomide.com,
-        stefan.wahren@i2se.com,
-        Marek Szyprowski <m.szyprowski@samsung.com>,
-        martin.blumenstingl@googlemail.com, olof@lixom.net,
-        thellstrom@vmware.com, alexander.deucher@amd.com, dirk@hohndel.org,
-        tglx@linutronix.de, pombredanne@nexb.com,
-        kstewart@linuxfoundation.org, gregkh@linuxfoundation.org,
-        Robin Murphy <robin.murphy@arm.com>, justinpopo6@gmail.com,
-        markus.mayer@broadcom.com, gpowell@broadcom.com, opendmb@gmail.com,
-        linux-pci <linux-pci@vger.kernel.org>,
-        "open list:OPEN FIRMWARE AND FLATTENED DEVICE TREE BINDINGS"
-        <devicetree@vger.kernel.org>,
-        "moderated list:ARM/FREESCALE IMX / MXC ARM ARCHITECTURE"
-        <linux-arm-kernel@lists.infradead.org>,
-        Linux-MIPS <linux-mips@linux-mips.org>,
-        Christoph Hellwig <hch@lst.de>
-Content-Type: text/plain; charset="UTF-8"
-Sender: linux-kernel-owner@vger.kernel.org
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20180831212639.10196-13-keith.busch@intel.com>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Thu, Sep 6, 2018 at 5:46 PM Paul Burton <paul.burton@mips.com> wrote:
->
-> Hi Jim,
->
-> On Thu, Sep 06, 2018 at 04:42:56PM -0400, Jim Quinlan wrote:
-> > Add MIPS as an arch that supports PCI_MSI_IRQ_DOMAIN and add
-> > generation of msi.h in the MIPS arch.
->
-> I guess the second part of this probably became untrue after rebasing
-> atop something including commit 34a4399f196c ("mips: use asm-generic
-> version of msi.h"), and ought to be removed.
-Hi Paul,
+On Fri, Aug 31, 2018 at 03:26:35PM -0600, Keith Busch wrote:
+> A device add in a power controller controlled slot will power on and
+> clear power fault slot events, but this was happening before the interrupt
+> handler attempted to set the sticky status and attention indicators. The
+> wrong status will be set if a hot-add and power fault are handled in
+> one interrupt. This patch fixes that by checking for power faults before
+> checking for new devices.
+> 
+> Signed-off-by: Keith Busch <keith.busch@intel.com>
 
-Yes, the second clause of this commit message will be removed.
+Reviewed-by: Lukas Wunner <lukas@wunner.de>
+
+I think this should go in as a fix for v4.19, right?
+
+Thanks for catching this, I missed it during my pciehp refactoring
+because Thunderbolt doesn't have a power controller.
+
+Actually I have further power controller related questions, maybe you
+can help me out there:
+
+* In pcie_enable_notification() there's a code comment:
+  "TBD: Power fault detected software notification support"
+  Is there really anything left to be done or can this code comment be
+  deleted?  AFAICS, a power fault *is* detected and acted upon, then
+  has to be cleared by the user, either through enablement via sysfs
+  or by physically replacing the card.
+
+* In pciehp_ist(), the if-condition to check for a power fault also
+  checks for "&& !ctrl->power_fault_detected".  The check seems
+  superfluous to me because pciehp_isr() clears the PCI_EXP_SLTSTA_PFD
+  bit in the pending events if ctrl->power_fault_detected is true.
+  Can the additional check be removed from the if-condition in
+  pciehp_ist()?
+
+* In pciehp_ist(), we call pciehp_green_led_off() if a power fault is
+  detected.  However my (limited) understanding is that a power fault
+  always results in a Link Down, and when bringing down the slot in
+  response to that, we already call pciehp_green_led_off() in
+  remove_board().  Can the call to pciehp_green_led_off() be removed
+  from pciehp_ist()?  Or does the link not necessarily go down on a
+  power fault and we should rather bring the slot down when a power
+  fault is detected?  Is that the "TBD" mentioned in the code comment?
+  Or is this just an intentional cosmetic behavior that we turn off
+  the green LED as early as possible once we detect the slot is off?
 
 Thanks,
-Jim
 
->
-> > Signed-off-by: Jim Quinlan <jim2101024@gmail.com>
-> > ---
-> >  drivers/pci/Kconfig | 2 +-
-> >  1 file changed, 1 insertion(+), 1 deletion(-)
->
-> Otherwise this looks fine:
->
->     Acked-by: Paul Burton <paul.burton@mips.com>
->
-> Thanks,
->     Paul
+Lukas
+
+> ---
+>  drivers/pci/hotplug/pciehp_hpc.c | 16 ++++++++--------
+>  1 file changed, 8 insertions(+), 8 deletions(-)
+> 
+> diff --git a/drivers/pci/hotplug/pciehp_hpc.c b/drivers/pci/hotplug/pciehp_hpc.c
+> index 7136e3430925..c6116e516e1e 100644
+> --- a/drivers/pci/hotplug/pciehp_hpc.c
+> +++ b/drivers/pci/hotplug/pciehp_hpc.c
+> @@ -646,6 +646,14 @@ static irqreturn_t pciehp_ist(int irq, void *dev_id)
+>  		pciehp_handle_button_press(slot);
+>  	}
+>  
+> +	/* Check Power Fault Detected */
+> +	if ((events & PCI_EXP_SLTSTA_PFD) && !ctrl->power_fault_detected) {
+> +		ctrl->power_fault_detected = 1;
+> +		ctrl_err(ctrl, "Slot(%s): Power fault\n", slot_name(slot));
+> +		pciehp_set_attention_status(slot, 1);
+> +		pciehp_green_led_off(slot);
+> +	}
+> +
+>  	/*
+>  	 * Disable requests have higher priority than Presence Detect Changed
+>  	 * or Data Link Layer State Changed events.
+> @@ -657,14 +665,6 @@ static irqreturn_t pciehp_ist(int irq, void *dev_id)
+>  		pciehp_handle_presence_or_link_change(slot, events);
+>  	up_read(&ctrl->reset_lock);
+>  
+> -	/* Check Power Fault Detected */
+> -	if ((events & PCI_EXP_SLTSTA_PFD) && !ctrl->power_fault_detected) {
+> -		ctrl->power_fault_detected = 1;
+> -		ctrl_err(ctrl, "Slot(%s): Power fault\n", slot_name(slot));
+> -		pciehp_set_attention_status(slot, 1);
+> -		pciehp_green_led_off(slot);
+> -	}
+> -
+>  	pci_config_pm_runtime_put(pdev);
+>  	wake_up(&ctrl->requester);
+>  	return IRQ_HANDLED;
+> -- 
+> 2.14.4
+> 
