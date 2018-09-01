@@ -1,57 +1,90 @@
-Return-Path: <SRS0=LihV=K5=netronome.com=jakub.kicinski@kernel.org>
-Return-Path: <SRS0=LihV=K5=netronome.com=jakub.kicinski@kernel.org>
-From: Jakub Kicinski <jakub.kicinski@netronome.com>
-To: Bjorn Helgaas <helgaas@kernel.org>
-Cc: Bjorn Helgaas <bhelgaas@google.com>,
-	linux-pci@vger.kernel.org,
-	oss-drivers@netronome.com,
-	Jakub Kicinski <jakub.kicinski@netronome.com>
-Subject: [PATCH] PCI: limit config space size for Netronome NFP5000
-Date: Tue, 14 Aug 2018 16:48:50 -0700
-Message-Id: <20180814234850.27447-1-jakub.kicinski@netronome.com>
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Subject: Re: [PATCH v2 13/40] vfio: Add support for Shared Virtual Addressing
+To: Jean-Philippe Brucker <jean-philippe.brucker@arm.com>,
+ <linux-arm-kernel@lists.infradead.org>, <linux-pci@vger.kernel.org>,
+ <linux-acpi@vger.kernel.org>, <devicetree@vger.kernel.org>,
+ <iommu@lists.linux-foundation.org>, <kvm@vger.kernel.org>,
+ <linux-mm@kvack.org>
+References: <20180511190641.23008-1-jean-philippe.brucker@arm.com>
+ <20180511190641.23008-14-jean-philippe.brucker@arm.com>
+ <5B83B11E.7010807@huawei.com> <1d5b6529-4e5a-723c-3f1b-dd5a9adb490c@arm.com>
+From: Xu Zaibo <xuzaibo@huawei.com>
+Message-ID: <5B89F818.7060300@huawei.com>
+Date: Sat, 1 Sep 2018 10:23:20 +0800
+MIME-Version: 1.0
+In-Reply-To: <1d5b6529-4e5a-723c-3f1b-dd5a9adb490c@arm.com>
+List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
+List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
+List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
+List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
+List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
+Cc: xieyisheng1@huawei.com, liubo95@huawei.com, thunder.leizhen@huawei.com,
+ will.deacon@arm.com, okaya@codeaurora.org, liguozhu <liguozhu@hisilicon.com>,
+ fanghao11 <fanghao11@huawei.com>, yi.l.liu@intel.com, ashok.raj@intel.com,
+ tn@semihalf.com, joro@8bytes.org, wangzhou1 <wangzhou1@hisilicon.com>,
+ bharatku@xilinx.com, liudongdong3@huawei.com, rfranz@cavium.com,
+ kevin.tian@intel.com, jacob.jun.pan@linux.intel.com, jcrouse@codeaurora.org,
+ rgummal@xilinx.com, jonathan.cameron@huawei.com,
+ =?UTF-8?B?57Gz57Gz?= <kenneth-lee-2012@foxmail.com>,
+ shunyong.yang@hxt-semitech.com, dwmw2@infradead.org,
+ ilias.apalodimas@linaro.org, alex.williamson@redhat.com, robdclark@gmail.com,
+ robin.murphy@arm.com, christian.koenig@amd.com, nwatters@codeaurora.org,
+ baolu.lu@linux.intel.com
+Content-Type: text/plain; charset="us-ascii"; Format="flowed"
+Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
+Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Like the NFP4000 and NFP6000, the NFP5000 as an erratum where reading/
-writing to PCI config space addresses above 0x600 can cause the NFP
-to generate PCIe completion timeouts.
+Hi Jean,
 
-Limit the NFP5000's PF's config space size to 0x600 bytes as is already
-done for the NFP4000 and NFP6000.
+On 2018/8/31 21:34, Jean-Philippe Brucker wrote:
+> On 27/08/18 09:06, Xu Zaibo wrote:
+>>> +struct vfio_iommu_type1_bind_process {
+>>> +    __u32    flags;
+>>> +#define VFIO_IOMMU_BIND_PID        (1 << 0)
+>>> +    __u32    pasid;
+>> As I am doing some works on the SVA patch set. I just consider why the
+>> user space need this pasid.
+>> Maybe, is it much more reasonable to set the pasid into all devices
+>> under the vfio container by
+>> a call back function from 'vfio_devices'  while
+>> 'VFIO_IOMMU_BIND_PROCESS' CMD is executed
+>> in kernel land? I am not sure because there exists no suitable call back
+>> in 'vfio_device' at present.
+> When using vfio-pci, the kernel doesn't know how to program the PASID
+> into the device because the only kernel driver for the device is the
+> generic vfio-pci module. The PCI specification doesn't describe a way of
+> setting up the PASID, it's vendor-specific. Only the userspace
+> application owning the device (and calling VFIO_IOMMU_BIND) knows how to
+> do it, so we return the allocated PASID.
+>
+> Note that unlike vfio-mdev where applications share slices of a
+> function, with vfio-pci one application owns the whole function so it's
+> safe to let userspace set the PASID in hardware. With vfio-mdev it's the
+> kernel driver that should be in charge of setting the PASID as you
+> described, and we wouldn't have a reason to return the PASID in the
+> vfio_iommu_type1_bind_process structure.
+Understood. But I still get the following confusion:
 
-The NFP5000's VF is 0x6003 (PCI_DEVICE_ID_NETRONOME_NFP6000_VF), the same
-device ID as the NFP6000's VF.  Thus, its config space is already limited
-by the existing use of quirk_nfp6000().
+As one application takes a whole function while using VFIO-PCI, why do 
+the application and the
+function need to enable PASID capability? (Since just one I/O page table 
+is enough for them.)
 
-Signed-off-by: Jakub Kicinski <jakub.kicinski@netronome.com>
-Reviewed-by: Tony Egan <tony.egan@netronome.com>
----
- drivers/pci/quirks.c    | 1 +
- include/linux/pci_ids.h | 1 +
- 2 files changed, 2 insertions(+)
+Maybe I misunderstood, hope you can help me clear it. Thank you very much.
 
-diff --git a/drivers/pci/quirks.c b/drivers/pci/quirks.c
-index f439de848658..bf899184d07c 100644
---- a/drivers/pci/quirks.c
-+++ b/drivers/pci/quirks.c
-@@ -460,6 +460,7 @@ static void quirk_nfp6000(struct pci_dev *dev)
- }
- DECLARE_PCI_FIXUP_HEADER(PCI_VENDOR_ID_NETRONOME,	PCI_DEVICE_ID_NETRONOME_NFP4000,	quirk_nfp6000);
- DECLARE_PCI_FIXUP_HEADER(PCI_VENDOR_ID_NETRONOME,	PCI_DEVICE_ID_NETRONOME_NFP6000,	quirk_nfp6000);
-+DECLARE_PCI_FIXUP_HEADER(PCI_VENDOR_ID_NETRONOME,	PCI_DEVICE_ID_NETRONOME_NFP5000,	quirk_nfp6000);
- DECLARE_PCI_FIXUP_HEADER(PCI_VENDOR_ID_NETRONOME,	PCI_DEVICE_ID_NETRONOME_NFP6000_VF,	quirk_nfp6000);
- 
- /*  On IBM Crocodile ipr SAS adapters, expand BAR to system page size */
-diff --git a/include/linux/pci_ids.h b/include/linux/pci_ids.h
-index 29502238e510..381fc009551d 100644
---- a/include/linux/pci_ids.h
-+++ b/include/linux/pci_ids.h
-@@ -2541,6 +2541,7 @@
- #define PCI_DEVICE_ID_NETRONOME_NFP3200	0x3200
- #define PCI_DEVICE_ID_NETRONOME_NFP3240	0x3240
- #define PCI_DEVICE_ID_NETRONOME_NFP4000	0x4000
-+#define PCI_DEVICE_ID_NETRONOME_NFP5000	0x5000
- #define PCI_DEVICE_ID_NETRONOME_NFP6000	0x6000
- #define PCI_DEVICE_ID_NETRONOME_NFP6000_VF	0x6003
- 
--- 
-2.17.1
+Thanks,
+Zaibo
+
+.
+
+
+
+
+_______________________________________________
+linux-arm-kernel mailing list
+linux-arm-kernel@lists.infradead.org
+http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
