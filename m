@@ -1,63 +1,49 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from bmailout1.hostsharing.net ([83.223.95.100]:46941 "EHLO
-        bmailout1.hostsharing.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726657AbeIJWDx (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Mon, 10 Sep 2018 18:03:53 -0400
-Date: Mon, 10 Sep 2018 19:08:48 +0200
-From: Lukas Wunner <lukas@wunner.de>
-To: Keith Busch <keith.busch@intel.com>
-Cc: Linux PCI <linux-pci@vger.kernel.org>,
-        Bjorn Helgaas <bhelgaas@google.com>,
-        Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-        Sinan Kaya <okaya@kernel.org>,
-        Thomas Tai <thomas.tai@oracle.com>,
-        "poza@codeaurora.org" <poza@codeaurora.org>,
-        Christoph Hellwig <hch@lst.de>
-Subject: Re: [PATCHv2 16/20] PCI/pciehp: Implement error handling callbacks
-Message-ID: <20180910170848.7q2qii2mm655eghw@wunner.de>
-References: <20180905203546.21921-1-keith.busch@intel.com>
- <20180905203546.21921-17-keith.busch@intel.com>
- <20180910132033.ei5nk4iibt7pesd5@wunner.de>
- <20180910145641.GA7466@localhost.localdomain>
- <20180910160926.7grtfdyw3iv2xg4x@wunner.de>
- <20180910164528.GC7466@localhost.localdomain>
+Return-Path: <linux-nvme-bounces+bjorn=helgaas.com@lists.infradead.org>
+Return-Path: <linux-nvme-bounces+bjorn=helgaas.com@lists.infradead.org>
+Date: Sat, 1 Sep 2018 10:27:03 +0200
+From: Christoph Hellwig <hch@lst.de>
+To: Logan Gunthorpe <logang@deltatee.com>
+Subject: Re: [PATCH v5 01/13] PCI/P2PDMA: Support peer-to-peer memory
+Message-ID: <20180901082703.GA670@lst.de>
+References: <20180830185352.3369-1-logang@deltatee.com>
+ <20180830185352.3369-2-logang@deltatee.com>
+ <2711b3a7-f582-0dda-8ac2-530be7bda1bb@amd.com>
+ <439181bb-6cd6-0ab2-bca6-fc820845166e@deltatee.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20180910164528.GC7466@localhost.localdomain>
-Sender: linux-pci-owner@vger.kernel.org
+In-Reply-To: <439181bb-6cd6-0ab2-bca6-fc820845166e@deltatee.com>
+List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-nvme>,
+ <mailto:linux-nvme-request@lists.infradead.org?subject=unsubscribe>
+List-Archive: <http://lists.infradead.org/pipermail/linux-nvme/>
+List-Post: <mailto:linux-nvme@lists.infradead.org>
+List-Help: <mailto:linux-nvme-request@lists.infradead.org?subject=help>
+List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-nvme>,
+ <mailto:linux-nvme-request@lists.infradead.org?subject=subscribe>
+Cc: Keith Busch <keith.busch@intel.com>,
+ Alex Williamson <alex.williamson@redhat.com>, Sagi Grimberg <sagi@grimberg.me>,
+ linux-nvdimm@lists.01.org, linux-rdma@vger.kernel.org,
+ linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
+ linux-nvme@lists.infradead.org, Stephen Bates <sbates@raithlin.com>,
+ linux-block@vger.kernel.org,
+ =?iso-8859-1?B?Suly9G1l?= Glisse <jglisse@redhat.com>,
+ Jason Gunthorpe <jgg@mellanox.com>,
+ Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+ Bjorn Helgaas <bhelgaas@google.com>, Max Gurtovoy <maxg@mellanox.com>,
+ Dan Williams <dan.j.williams@intel.com>, Christoph Hellwig <hch@lst.de>,
+ Christian =?iso-8859-1?Q?K=F6nig?= <christian.koenig@amd.com>
+Content-Type: text/plain; charset="utf-8"
+Sender: "Linux-nvme" <linux-nvme-bounces@lists.infradead.org>
+Errors-To: linux-nvme-bounces+bjorn=helgaas.com@lists.infradead.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Mon, Sep 10, 2018 at 10:45:28AM -0600, Keith Busch wrote:
-> On Mon, Sep 10, 2018 at 06:09:26PM +0200, Lukas Wunner wrote:
-> > On Mon, Sep 10, 2018 at 08:56:42AM -0600, Keith Busch wrote:
-> > > The sysfs entries still function. Their actions are only temporarily
-> > > stalled during error handling. Once the slot reset is called, the
-> > > ctrl->pending_events is queried to take requested actions.
-> > 
-> > Okay I see.  Still, releasing the IRQ and requesting it again seems fairly
-> > heavy-wheight.  Why not just acquire ctrl->reset_lock?
-> 
-> That was looking like a nice way to handle it, but it introduces
-> circular locking between ctrl->reset_lock and pci_bus_sem:
-> 
-> CPU A                               CPU B
-> ---------------------------------   ------------------------
-> pci_walk_bus                        pciehp_ist
->  down_read(&pci_bus_sem)             down_read(&ctrl->reset_lock);
->   pcie_portdrv_error_detected         pciehp_handle_presence_or_link_change
->    pciehp_error_detected               pciehp_unconfigure_device
->     down_write(&ctrl->reset_lock)       pci_stop_and_remove_bus_devicea
->                                          down_write(&pci_bus_sem);
-
-Why is pciehp bringing down the slot?  Is that in reaction to a
-Link Down caused by the error?  Can this be solved with Sinan's
-approach to check in pciehp whether PCI_EXP_DEVSTA_FED is set
-and if so, waiting for it to be handled?
-
-FWIW you can use synchronize_irq() in pciehp_error_detected()
-if you need to wait for the IRQ thread to stop before taking
-the reset_lock.
-
-Thanks,
-
-Lukas
+T24gRnJpLCBBdWcgMzEsIDIwMTggYXQgMDk6NDg6NDBBTSAtMDYwMCwgTG9nYW4gR3VudGhvcnBl
+IHdyb3RlOgo+IFByZXR0eSBlYXN5LiBQMlAgZGV0ZWN0aW9uIGlzIHByZXR0eSBtdWNoIGp1c3Qg
+cGNpX3AycGRtYV9kaXN0YW5jZSgpICwKPiB3aGljaCBoYXMgbm90aGluZyB0byBkbyB3aXRoIHRo
+ZSBaT05FX0RFVklDRSBzdXBwb3J0Lgo+IAo+IChBbmQgdGhlIGRpc3RhbmNlIGZ1bmN0aW9uIG1h
+a2VzIHVzZSBvZiBhIG51bWJlciBvZiBzdGF0aWMgZnVuY3Rpb25zCj4gd2hpY2ggY291bGQgYmUg
+Y29tYmluZWQgaW50byBhIHNpbXBsZXIgaW50ZXJmYWNlLCBzaG91bGQgd2UgbmVlZCBpdC4pCgpJ
+J2Qg0ZVheSBsZXRzIGdldCB0aGluZ3MgbWVyZ2VkIGFzLWlzLCBzbyB0aGF0IHdlIGNhbiByZXZp
+ZXcgdGhlCm5vbi1aT05FX0RFVklDRSB1c2Vycy4gIEknbSBhIGxpdHRsZSBjdXJpb3VzIGhvdyB0
+aGF0IGlzIGdvaW5nIHRvIHdvcmssCnNvIGhhdmluZyBpdCBhcyBhIGZ1bGwgc2VyaWVzIHdvdWxk
+IGJlIHVzZWZ1bC4KCl9fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19f
+X19fCkxpbnV4LW52bWUgbWFpbGluZyBsaXN0CkxpbnV4LW52bWVAbGlzdHMuaW5mcmFkZWFkLm9y
+ZwpodHRwOi8vbGlzdHMuaW5mcmFkZWFkLm9yZy9tYWlsbWFuL2xpc3RpbmZvL2xpbnV4LW52bWUK
