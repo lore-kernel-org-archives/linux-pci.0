@@ -1,147 +1,140 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.29.99]:59190 "EHLO mail.kernel.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1726341AbeIHJAw (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Sat, 8 Sep 2018 05:00:52 -0400
-From: Sinan Kaya <okaya@kernel.org>
-To: linux-pci@vger.kernel.org
-Cc: Sinan Kaya <okaya@kernel.org>,
-        Srinivas Pandruvada <srinivas.pandruvada@linux.intel.com>,
-        Jiri Kosina <jikos@kernel.org>,
-        Benjamin Tissoires <benjamin.tissoires@redhat.com>,
-        Frank Haverkamp <haver@linux.vnet.ibm.com>,
-        "Guilherme G. Piccoli" <gpiccoli@linux.vnet.ibm.com>,
-        Arnd Bergmann <arnd@arndb.de>,
-        Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-        Harish Patil <harish.patil@cavium.com>,
-        Manish Chopra <manish.chopra@cavium.com>,
-        Dept-GELinuxNICDev@cavium.com,
-        "David S. Miller" <davem@davemloft.net>,
-        Solarflare linux maintainers <linux-net-drivers@solarflare.com>,
-        Edward Cree <ecree@solarflare.com>,
-        Bert Kenward <bkenward@solarflare.com>,
-        Bjorn Helgaas <bhelgaas@google.com>,
-        Anton Vasilyev <vasilyev@ispras.ru>
-Subject: [PATCH 1/4] PCI: Expose reset_type to users of pci_reset_function()
-Date: Sat,  8 Sep 2018 04:16:24 +0000
-Message-Id: <20180908041632.22252-1-okaya@kernel.org>
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <SRS0=ok0h=LR=redhat.com=ptalbert@kernel.org>
+Return-Path: <SRS0=ok0h=LR=redhat.com=ptalbert@kernel.org>
+MIME-Version: 1.0
+References: <CAPRrrxWVYJpRqKLmDQLnCUQdkcxhHzmD+S8pxnvi_+-2VUcbPA@mail.gmail.com>
+ <20180810211308.GK113140@bhelgaas-glaptop.roam.corp.google.com>
+In-Reply-To: <20180810211308.GK113140@bhelgaas-glaptop.roam.corp.google.com>
+From: Patrick Talbert <ptalbert@redhat.com>
+Date: Mon, 3 Sep 2018 10:00:58 +0200
+Message-ID: <CAPRrrxVSFv-SQxY5Hbd1-5TPOs5R1eRGZ9XXsToh=xLLzENk5A@mail.gmail.com>
+Subject: Re: Should pcie_aspm_init_link_state() run when FADT ASPM disable bit
+ is set?
+To: helgaas@kernel.org
+Cc: linux-pci@vger.kernel.org, Myron Stowe <mstowe@redhat.com>, fred@fredlawl.com
+Content-Type: text/plain; charset="UTF-8"
 List-ID: <linux-pci.vger.kernel.org>
 
-Looking to have more control between the users of the API vs. what the API
-can do internally. The new reset_type tells the PCI core about the bounds
-of the request.
+Hello Bjorn,
 
-Signed-off-by: Sinan Kaya <okaya@kernel.org>
----
- drivers/hid/intel-ish-hid/ipc/ipc.c             | 2 +-
- drivers/misc/genwqe/card_base.c                 | 2 +-
- drivers/net/ethernet/qlogic/qlcnic/qlcnic_ctx.c | 2 +-
- drivers/net/ethernet/sfc/mcdi.c                 | 2 +-
- drivers/pci/pci-sysfs.c                         | 2 +-
- drivers/pci/pci.c                               | 4 ++--
- include/linux/pci.h                             | 2 +-
- 7 files changed, 8 insertions(+), 8 deletions(-)
+Sorry for the late reply, but thank you for looking at this.
 
-diff --git a/drivers/hid/intel-ish-hid/ipc/ipc.c b/drivers/hid/intel-ish-hid/ipc/ipc.c
-index bfbca7ec54ce..18312969f1b3 100644
---- a/drivers/hid/intel-ish-hid/ipc/ipc.c
-+++ b/drivers/hid/intel-ish-hid/ipc/ipc.c
-@@ -754,7 +754,7 @@ static int _ish_hw_reset(struct ishtp_device *dev)
- 	if (!pdev)
- 		return	-ENODEV;
- 
--	rv = pci_reset_function(pdev);
-+	rv = pci_reset_function(pdev, PCI_RESET_ANY);
- 	if (!rv)
- 		dev->dev_state = ISHTP_DEV_RESETTING;
- 
-diff --git a/drivers/misc/genwqe/card_base.c b/drivers/misc/genwqe/card_base.c
-index c7cd3675bcd1..cc78ef28ee38 100644
---- a/drivers/misc/genwqe/card_base.c
-+++ b/drivers/misc/genwqe/card_base.c
-@@ -201,7 +201,7 @@ static int genwqe_bus_reset(struct genwqe_dev *cd)
- 	 * restored by the pci_reset_function().
- 	 */
- 	dev_dbg(&pci_dev->dev, "[%s] pci_reset function ...\n", __func__);
--	rc = pci_reset_function(pci_dev);
-+	rc = pci_reset_function(pci_dev, PCI_RESET_ANY);
- 	if (rc) {
- 		dev_err(&pci_dev->dev,
- 			"[%s] err: failed reset func (rc %d)\n", __func__, rc);
-diff --git a/drivers/net/ethernet/qlogic/qlcnic/qlcnic_ctx.c b/drivers/net/ethernet/qlogic/qlcnic/qlcnic_ctx.c
-index d344e9d43832..bb737725f175 100644
---- a/drivers/net/ethernet/qlogic/qlcnic/qlcnic_ctx.c
-+++ b/drivers/net/ethernet/qlogic/qlcnic/qlcnic_ctx.c
-@@ -629,7 +629,7 @@ int qlcnic_fw_create_ctx(struct qlcnic_adapter *dev)
- 	int i, err, ring;
- 
- 	if (dev->flags & QLCNIC_NEED_FLR) {
--		pci_reset_function(dev->pdev);
-+		pci_reset_function(dev->pdev, PCI_RESET_ANY);
- 		dev->flags &= ~QLCNIC_NEED_FLR;
- 	}
- 
-diff --git a/drivers/net/ethernet/sfc/mcdi.c b/drivers/net/ethernet/sfc/mcdi.c
-index dfad93fca0a6..7f95e17b8a48 100644
---- a/drivers/net/ethernet/sfc/mcdi.c
-+++ b/drivers/net/ethernet/sfc/mcdi.c
-@@ -1862,7 +1862,7 @@ int efx_mcdi_reset(struct efx_nic *efx, enum reset_type method)
- 
- 	/* If MCDI is down, we can't handle_assertion */
- 	if (method == RESET_TYPE_MCDI_TIMEOUT) {
--		rc = pci_reset_function(efx->pci_dev);
-+		rc = pci_reset_function(efx->pci_dev, PCI_RESET_ANY);
- 		if (rc)
- 			return rc;
- 		/* Re-enable polled MCDI completion */
-diff --git a/drivers/pci/pci-sysfs.c b/drivers/pci/pci-sysfs.c
-index 9ecfe13157c0..9569664ec4b2 100644
---- a/drivers/pci/pci-sysfs.c
-+++ b/drivers/pci/pci-sysfs.c
-@@ -1449,7 +1449,7 @@ static ssize_t reset_store(struct device *dev, struct device_attribute *attr,
- 		return -EINVAL;
- 
- 	pm_runtime_get_sync(dev);
--	result = pci_reset_function(pdev);
-+	result = pci_reset_function(pdev, PCI_RESET_ANY);
- 	pm_runtime_put(dev);
- 	if (result < 0)
- 		return result;
-diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
-index 43a4b0969153..a6295f85a1bd 100644
---- a/drivers/pci/pci.c
-+++ b/drivers/pci/pci.c
-@@ -4792,7 +4792,7 @@ int pci_probe_reset_function(struct pci_dev *dev)
-  * Returns 0 if the device function was successfully reset or negative if the
-  * device doesn't support resetting a single function.
-  */
--int pci_reset_function(struct pci_dev *dev)
-+int pci_reset_function(struct pci_dev *dev, u32 reset_type)
- {
- 	int rc;
- 
-@@ -4802,7 +4802,7 @@ int pci_reset_function(struct pci_dev *dev)
- 	pci_dev_lock(dev);
- 	pci_dev_save_and_disable(dev);
- 
--	rc = __pci_reset_function_locked(dev, PCI_RESET_ANY);
-+	rc = __pci_reset_function_locked(dev, reset_type);
- 
- 	pci_dev_restore(dev);
- 	pci_dev_unlock(dev);
-diff --git a/include/linux/pci.h b/include/linux/pci.h
-index 6924d837c959..43d00e9e54f7 100644
---- a/include/linux/pci.h
-+++ b/include/linux/pci.h
-@@ -1123,7 +1123,7 @@ void pcie_print_link_status(struct pci_dev *dev);
- bool pcie_has_flr(struct pci_dev *dev);
- int pcie_flr(struct pci_dev *dev);
- int __pci_reset_function_locked(struct pci_dev *dev, u32 reset_type);
--int pci_reset_function(struct pci_dev *dev);
-+int pci_reset_function(struct pci_dev *dev, u32 reset_type);
- int pci_reset_function_locked(struct pci_dev *dev);
- int pci_try_reset_function(struct pci_dev *dev);
- int pci_probe_reset_slot(struct pci_slot *slot);
--- 
-2.18.0
+I filed a bug at kernel.org: https://bugzilla.kernel.org/show_bug.cgi?id=201001
+
+We can carry on there....
+
+
+Patrick
+On Fri, Aug 10, 2018 at 11:13 PM Bjorn Helgaas <helgaas@kernel.org> wrote:
+>
+> [+cc Fred]
+>
+> On Thu, Aug 09, 2018 at 09:25:20AM +0200, Patrick Talbert wrote:
+> > Hello,
+> >
+> > I think there may be a logic issue with ASPM but I am not so familiar
+> > with this area so maybe I misunderstand.
+> >
+> > acpi_pci_init() checks ACPI FADT method for the ACPI_FADT_NO_ASPM flag
+> > and will disable ASPM support if it is set. It calls pcie_no_aspm() to
+> > do this. pcie_no_aspm() sets the global aspm_disabled = 1 to indicate
+> > this state:
+> >
+> > 365 static int __init acpi_pci_init(void)
+> > 366 {
+> > 367         int ret;
+> > 368
+> > 369         if (acpi_gbl_FADT.boot_flags & ACPI_FADT_NO_MSI) {
+> > 370                 pr_info("ACPI FADT declares the system doesn't
+> > support MSI, so disable it\n");
+> > 371                 pci_no_msi();
+> > 372         }
+> > 373
+> > 374         if (acpi_gbl_FADT.boot_flags & ACPI_FADT_NO_ASPM) {
+> > 375                 pr_info("ACPI FADT declares the system doesn't
+> > support PCIe ASPM, so disable it\n");
+> > 376                 pcie_no_aspm();
+> > 377         }
+> > 378
+> > 379         ret = register_acpi_bus_type(&acpi_pci_bus);
+> > 380         if (ret)
+> > 381                 return 0;
+> > 382
+> > 383         pci_set_platform_pm(&acpi_pci_platform_pm);
+> > 384         acpi_pci_slot_init();
+> > 385         acpiphp_init();
+> > 386
+> > 387         return 0;
+> > 388 }
+> > 389 arch_initcall(acpi_pci_init);
+> >
+> > 973 void pcie_no_aspm(void)
+> > 974 {
+> > 975         /*
+> > 976          * Disabling ASPM is intended to prevent the kernel from modifying
+> > 977          * existing hardware state, not to clear existing state.
+> > To that end:
+> > 978          * (a) set policy to POLICY_DEFAULT in order to avoid changing state
+> > 979          * (b) prevent userspace from changing policy
+> > 980          */
+> > 981         if (!aspm_force) {
+> > 982                 aspm_policy = POLICY_DEFAULT;
+> > 983                 aspm_disabled = 1;
+> > 984         }
+> > 985 }
+> >
+> > But then later on, during individual initialization of PCI devices,
+> > pci_scan_slot() will call pcie_aspm_init_link_state().
+> > pcie_aspm_init_link_state() does its work unless global
+> > aspm_support_enabled is false.
+> >
+> > But, shouldn't pcie_aspm_init_link_state() also check aspm_disabled ?
+> > Something like:
+> >
+> > diff --git a/drivers/pci/pcie/aspm.c b/drivers/pci/pcie/aspm.c
+> > index 8b56dad..5491dbf 100644
+> > --- a/drivers/pci/pcie/aspm.c
+> > +++ b/drivers/pci/pcie/aspm.c
+> > @@ -574,7 +574,7 @@ void pcie_aspm_init_link_state(struct pci_dev *pdev)
+> >         struct pcie_link_state *link;
+> >         int blacklist = !!pcie_aspm_sanity_check(pdev);
+> >
+> > -       if (!aspm_support_enabled)
+> > +       if (!aspm_support_enabled || aspm_disabled)
+> >                 return;
+> >
+> >         if (pdev->link_state)
+> >
+> >
+> > In "387d375 PCI: Don't clear ASPM bits when the FADT declares it's
+> > unsupported" the message says:
+> >
+> >     Communications with a hardware vendor confirm that the expected behaviour
+> >     on systems that set the FADT ASPM disable bit but which still grant full
+> >     PCIe control is for the OS to leave any BIOS configuration intact and
+> >     refuse to touch the ASPM bits.  This mimics the behaviour of Windows.
+> >
+> >
+> > I apologize, but I do not immediately understand the distinction
+> > between the meaning of aspm_support_enabled and aspm_disabled so I am
+> > likely missing some key point.
+>
+> Don't apologize, this code confuses everybody who looks at it, which
+> is a clear signal that it needs some love :)
+>
+> > But anyway, this query comes about because a host which reports the
+> > ACPI_FADT_NO_ASPM bit set hangs on boot unless pcie_aspm=off is set.
+>
+> That's a terrible situation and very difficult to debug.  How did you
+> figure out that this was related to ASPM?  Can you tell anything about
+> where the hang is?
+>
+> Is there any chance you could collect a complete dmesg log and output
+> of "sudo lspci -vvv" from that system (obviously you'd have to boot
+> with "pcie_aspm=off" or your patch, so we could attach it to a
+> bugzilla.kernel.org report that could be mentioned in the patch?
+>
+> I assume this system works with Windows.  I agree that based on the
+> 387d37577fdd changelog, we probably shouldn't be doing anything in
+> pcie_aspm_init_link_state().
+>
+> Bjorn
