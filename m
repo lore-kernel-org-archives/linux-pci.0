@@ -1,56 +1,59 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mga18.intel.com ([134.134.136.126]:16008 "EHLO mga18.intel.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1726015AbeIDTAK (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Tue, 4 Sep 2018 15:00:10 -0400
-Date: Tue, 4 Sep 2018 08:36:13 -0600
-From: Keith Busch <keith.busch@intel.com>
-To: Lukas Wunner <lukas@wunner.de>
-Cc: Linux PCI <linux-pci@vger.kernel.org>,
-        Bjorn Helgaas <bhelgaas@google.com>,
-        Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-        Sinan Kaya <okaya@kernel.org>,
-        Thomas Tai <thomas.tai@oracle.com>,
-        "poza@codeaurora.org" <poza@codeaurora.org>
-Subject: Re: [PATCH 11/16] PCI/portdrv: Restore pci state on slot reset
-Message-ID: <20180904143612.GA18241@localhost.localdomain>
-References: <20180831212639.10196-1-keith.busch@intel.com>
- <20180831212639.10196-12-keith.busch@intel.com>
- <20180902093402.rgeb5ioig7h5hoxf@wunner.de>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20180902093402.rgeb5ioig7h5hoxf@wunner.de>
+Received: from mail-oi0-f65.google.com ([209.85.218.65]:37550 "EHLO
+        mail-oi0-f65.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1727271AbeICWYz (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Mon, 3 Sep 2018 18:24:55 -0400
+From: Alexandru Gagniuc <mr.nuke.me@gmail.com>
+To: linux-pci@vger.kernel.org, bhelgaas@google.com
+Cc: keith.busch@intel.com, alex_gagniuc@dellteam.com,
+        austin_bolen@dell.com, shyam_iyer@dell.com,
+        Alexandru Gagniuc <mr.nuke.me@gmail.com>,
+        Ariel Elior <ariel.elior@cavium.com>,
+        everest-linux-l2@cavium.com,
+        "David S. Miller" <davem@davemloft.net>,
+        Michael Chan <michael.chan@broadcom.com>,
+        Ganesh Goudar <ganeshgr@chelsio.com>,
+        Jeff Kirsher <jeffrey.t.kirsher@intel.com>,
+        Tariq Toukan <tariqt@mellanox.com>,
+        Saeed Mahameed <saeedm@mellanox.com>,
+        Leon Romanovsky <leon@kernel.org>,
+        Jakub Kicinski <jakub.kicinski@netronome.com>,
+        Dirk van der Merwe <dirk.vandermerwe@netronome.com>,
+        netdev@vger.kernel.org, linux-kernel@vger.kernel.org,
+        intel-wired-lan@lists.osuosl.org, linux-rdma@vger.kernel.org,
+        oss-drivers@netronome.com
+Subject: [PATCH 7/9] net/mlx4: Do not call pcie_print_link_status()
+Date: Mon,  3 Sep 2018 13:02:34 -0500
+Message-Id: <20180903180242.14504-8-mr.nuke.me@gmail.com>
+In-Reply-To: <20180903180242.14504-1-mr.nuke.me@gmail.com>
+References: <20180903180242.14504-1-mr.nuke.me@gmail.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Sun, Sep 02, 2018 at 02:34:02AM -0700, Lukas Wunner wrote:
-> On Fri, Aug 31, 2018 at 03:26:34PM -0600, Keith Busch wrote:
-> > --- a/drivers/pci/pcie/portdrv_pci.c
-> > +++ b/drivers/pci/pcie/portdrv_pci.c
-> > @@ -174,7 +174,9 @@ static int slot_reset_iter(struct device *device, void *data)
-> >  
-> >  static pci_ers_result_t pcie_portdrv_slot_reset(struct pci_dev *dev)
-> >  {
-> > +	pci_restore_state(dev);
-> >  	device_for_each_child(&dev->dev, dev, slot_reset_iter);
-> > +	pci_save_state(dev);
-> >  	return PCI_ERS_RESULT_RECOVERED;
-> >  }
-> 
-> Shouldn't this be the other way round, i.e. save, reset, restore?
+This is now done by the PCI core to warn of sub-optimal bandwidth.
 
-No, this is the correct order. The state is originally saved in
-pcie_portdrv_probe, and we need to restore to that state in the slot
-reset callback. Once the slot has been restored through all the child
-drivers, then we need to save the state again for any future error
-handling.
+Signed-off-by: Alexandru Gagniuc <mr.nuke.me@gmail.com>
+---
+ drivers/net/ethernet/mellanox/mlx4/main.c | 7 -------
+ 1 file changed, 7 deletions(-)
+
+diff --git a/drivers/net/ethernet/mellanox/mlx4/main.c b/drivers/net/ethernet/mellanox/mlx4/main.c
+index d2d59444f562..9902fa3a2c13 100644
+--- a/drivers/net/ethernet/mellanox/mlx4/main.c
++++ b/drivers/net/ethernet/mellanox/mlx4/main.c
+@@ -3525,13 +3525,6 @@ static int mlx4_load_one(struct pci_dev *pdev, int pci_dev_data,
+ 		}
+ 	}
  
-> Also, the function pcie_portdrv_slot_reset() was introduced in the prior
-> patch, so it seems this is a fix for that other patch and the two should
-> be squashed together.
-
-I guess they could be squashed, but the problems they're addressing seemed
-different enough to warrant separate change logs. The previous patch
-just set up the infrastructure for port error callbacks and chaining to
-child drivers. This patch is fixing a specific problem to restore the
-slot to a usable state.
+-	/* check if the device is functioning at its maximum possible speed.
+-	 * No return code for this call, just warn the user in case of PCI
+-	 * express device capabilities are under-satisfied by the bus.
+-	 */
+-	if (!mlx4_is_slave(dev))
+-		pcie_print_link_status(dev->persist->pdev);
+-
+ 	/* In master functions, the communication channel must be initialized
+ 	 * after obtaining its address from fw */
+ 	if (mlx4_is_master(dev)) {
+-- 
+2.17.1
