@@ -1,179 +1,75 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mga14.intel.com ([192.55.52.115]:7927 "EHLO mga14.intel.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1728163AbeISFeA (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Wed, 19 Sep 2018 01:34:00 -0400
-From: Keith Busch <keith.busch@intel.com>
-To: Linux PCI <linux-pci@vger.kernel.org>,
-        Bjorn Helgaas <bhelgaas@google.com>
-Cc: Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+Return-Path: <SRS0=dYm5=LR=linux.ibm.com=sebott@kernel.org>
+Return-Path: <SRS0=dYm5=LR=linux.ibm.com=sebott@kernel.org>
+Date: Mon, 3 Sep 2018 19:54:49 +0200 (CEST)
+From: Sebastian Ott <sebott@linux.ibm.com>
+To: Lukas Wunner <lukas@wunner.de>
+cc: Bjorn Helgaas <helgaas@kernel.org>, linux-pci@vger.kernel.org,
         Sinan Kaya <okaya@kernel.org>,
-        Thomas Tai <thomas.tai@oracle.com>, poza@codeaurora.org,
-        Lukas Wunner <lukas@wunner.de>, Christoph Hellwig <hch@lst.de>,
         Mika Westerberg <mika.westerberg@linux.intel.com>,
-        Keith Busch <keith.busch@intel.com>
-Subject: [PATCH 07/12] PCI/AER: Use kfifo for tracking events
-Date: Tue, 18 Sep 2018 17:58:43 -0600
-Message-Id: <20180918235848.26694-8-keith.busch@intel.com>
-In-Reply-To: <20180918235848.26694-1-keith.busch@intel.com>
-References: <20180918235848.26694-1-keith.busch@intel.com>
-Sender: linux-pci-owner@vger.kernel.org
+        "Rafael J. Wysocki" <rjw@rjwysocki.net>, Len Brown <lenb@kernel.org>,
+        Scott Murray <scott@spiteful.org>,
+        Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+        Paul Mackerras <paulus@samba.org>,
+        Michael Ellerman <mpe@ellerman.id.au>,
+        Gavin Shan <gwshan@linux.vnet.ibm.com>,
+        Sebastian Ott <sebott@linux.vnet.ibm.com>,
+        Gerald Schaefer <gerald.schaefer@de.ibm.com>,
+        Corentin Chary <corentin.chary@gmail.com>,
+        Darren Hart <dvhart@infradead.org>,
+        Andy Shevchenko <andy@infradead.org>,
+        Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+        linux-acpi@vger.kernel.org, linux-s390@vger.kernel.org,
+        platform-driver-x86@vger.kernel.org,
+        acpi4asus-user@lists.sourceforge.net, linuxppc-dev@lists.ozlabs.org
+Subject: Re: [PATCH 8/9] PCI: hotplug: Embed hotplug_slot
+In-Reply-To: <9918fbca94bcfc03d1560b191d138d3e6664cc86.1534686485.git.lukas@wunner.de>
+References: <cover.1534686484.git.lukas@wunner.de>  <9918fbca94bcfc03d1560b191d138d3e6664cc86.1534686485.git.lukas@wunner.de>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=US-ASCII
+Message-Id: <alpine.LFD.2.21.1809031953000.1716@schleppi>
 List-ID: <linux-pci.vger.kernel.org>
 
-The kernel provides a generic fifo implementation, so no need to reinvent
-that capability in a driver. This patch replaces the aer specific
-implementation with the kernel provided kfifo. Since the interrupt
-handler producer and work queue consumer run single threaded, there is
-no need for additional locking, so this patch removes that lock too.
+On Sun, 19 Aug 2018, Lukas Wunner wrote:
+> When the PCI hotplug core and its first user, cpqphp, were introduced in
+> February 2002 with historic commit a8a2069f432c, cpqphp allocated a slot
+> struct for its internal use plus a hotplug_slot struct to be registered
+> with the hotplug core and linked the two with pointers:
+> https://git.kernel.org/tglx/history/c/a8a2069f432c
+> 
+> Nowadays, the predominant pattern in the tree is to embed ("subclass")
+> such structures in one another and cast to the containing struct with
+> container_of().  But it wasn't until July 2002 that container_of() was
+> introduced with historic commit ec4f214232cf:
+> https://git.kernel.org/tglx/history/c/ec4f214232cf
+> 
+> pnv_php, introduced in 2016, did the right thing and embedded struct
+> hotplug_slot in its internal struct pnv_php_slot, but all other drivers
+> cargo-culted cpqphp's design and linked separate structs with pointers.
+> 
+> Embedding structs is preferrable to linking them with pointers because
+> it requires fewer allocations, thereby reducing overhead and simplifying
+> error paths.  Casting an embedded struct to the containing struct
+> becomes a cheap subtraction rather than a dereference.  And having fewer
+> pointers reduces the risk of them pointing nowhere either accidentally
+> or due to an attack.
+> 
+> Convert all drivers to embed struct hotplug_slot in their internal slot
+> struct.  The "private" pointer in struct hotplug_slot thereby becomes
+> unused, so drop it.
+> 
+> Signed-off-by: Lukas Wunner <lukas@wunner.de>
+> Cc: Rafael J. Wysocki <rjw@rjwysocki.net>
+> Cc: Len Brown <lenb@kernel.org>
+> Cc: Scott Murray <scott@spiteful.org>
+> Cc: Benjamin Herrenschmidt <benh@kernel.crashing.org>
+> Cc: Paul Mackerras <paulus@samba.org>
+> Cc: Michael Ellerman <mpe@ellerman.id.au>
+> Cc: Gavin Shan <gwshan@linux.vnet.ibm.com>
+> Cc: Sebastian Ott <sebott@linux.vnet.ibm.com>
+> Cc: Gerald Schaefer <gerald.schaefer@de.ibm.com>
+> Cc: Corentin Chary <corentin.chary@gmail.com>
+> Cc: Darren Hart <dvhart@infradead.org>
+> Cc: Andy Shevchenko <andy@infradead.org>
 
-Signed-off-by: Keith Busch <keith.busch@intel.com>
----
- drivers/pci/pcie/aer.c | 88 +++++++-------------------------------------------
- 1 file changed, 11 insertions(+), 77 deletions(-)
-
-diff --git a/drivers/pci/pcie/aer.c b/drivers/pci/pcie/aer.c
-index 72f8b4d6be32..813b5dd6fe68 100644
---- a/drivers/pci/pcie/aer.c
-+++ b/drivers/pci/pcie/aer.c
-@@ -30,7 +30,7 @@
- #include "../pci.h"
- #include "portdrv.h"
- 
--#define AER_ERROR_SOURCES_MAX		100
-+#define AER_ERROR_SOURCES_MAX		128
- 
- #define AER_MAX_TYPEOF_COR_ERRS		16	/* as per PCI_ERR_COR_STATUS */
- #define AER_MAX_TYPEOF_UNCOR_ERRS	26	/* as per PCI_ERR_UNCOR_STATUS*/
-@@ -43,14 +43,8 @@ struct aer_err_source {
- struct aer_rpc {
- 	struct pci_dev *rpd;		/* Root Port device */
- 	struct work_struct dpc_handler;
--	struct aer_err_source e_sources[AER_ERROR_SOURCES_MAX];
--	unsigned short prod_idx;	/* Error Producer Index */
--	unsigned short cons_idx;	/* Error Consumer Index */
-+	DECLARE_KFIFO(aer_fifo, struct aer_err_source, AER_ERROR_SOURCES_MAX);
- 	int isr;
--	spinlock_t e_lock;		/*
--					 * Lock access to Error Status/ID Regs
--					 * and error producer/consumer index
--					 */
- 	struct mutex rpc_mutex;		/*
- 					 * only one thread could do
- 					 * recovery on the same
-@@ -1216,35 +1210,6 @@ static void aer_isr_one_error(struct aer_rpc *rpc,
- 	}
- }
- 
--/**
-- * get_e_source - retrieve an error source
-- * @rpc: pointer to the root port which holds an error
-- * @e_src: pointer to store retrieved error source
-- *
-- * Return 1 if an error source is retrieved, otherwise 0.
-- *
-- * Invoked by DPC handler to consume an error.
-- */
--static int get_e_source(struct aer_rpc *rpc, struct aer_err_source *e_src)
--{
--	unsigned long flags;
--
--	/* Lock access to Root error producer/consumer index */
--	spin_lock_irqsave(&rpc->e_lock, flags);
--	if (rpc->prod_idx == rpc->cons_idx) {
--		spin_unlock_irqrestore(&rpc->e_lock, flags);
--		return 0;
--	}
--
--	*e_src = rpc->e_sources[rpc->cons_idx];
--	rpc->cons_idx++;
--	if (rpc->cons_idx == AER_ERROR_SOURCES_MAX)
--		rpc->cons_idx = 0;
--	spin_unlock_irqrestore(&rpc->e_lock, flags);
--
--	return 1;
--}
--
- /**
-  * aer_isr - consume errors detected by root port
-  * @work: definition of this work item
-@@ -1257,7 +1222,7 @@ static void aer_isr(struct work_struct *work)
- 	struct aer_err_source uninitialized_var(e_src);
- 
- 	mutex_lock(&rpc->rpc_mutex);
--	while (get_e_source(rpc, &e_src))
-+	while (kfifo_get(&rpc->aer_fifo, &e_src))
- 		aer_isr_one_error(rpc, &e_src);
- 	mutex_unlock(&rpc->rpc_mutex);
- }
-@@ -1271,51 +1236,23 @@ static void aer_isr(struct work_struct *work)
-  */
- static irqreturn_t aer_irq(int irq, void *context)
- {
--	unsigned int status, id;
- 	struct pcie_device *pdev = (struct pcie_device *)context;
- 	struct aer_rpc *rpc = get_service_data(pdev);
--	int next_prod_idx;
--	unsigned long flags;
--	int pos;
--
--	pos = pdev->port->aer_cap;
--	/*
--	 * Must lock access to Root Error Status Reg, Root Error ID Reg,
--	 * and Root error producer/consumer index
--	 */
--	spin_lock_irqsave(&rpc->e_lock, flags);
-+	struct pci_dev *rp = rpc->rpd;
-+	struct aer_err_source e_src = {};
-+	int pos = rp->aer_cap;
- 
--	/* Read error status */
--	pci_read_config_dword(pdev->port, pos + PCI_ERR_ROOT_STATUS, &status);
--	if (!(status & (PCI_ERR_ROOT_UNCOR_RCV|PCI_ERR_ROOT_COR_RCV))) {
--		spin_unlock_irqrestore(&rpc->e_lock, flags);
-+	pci_read_config_dword(rp, pos + PCI_ERR_ROOT_STATUS, &e_src.status);
-+	if (!(e_src.status & (PCI_ERR_ROOT_UNCOR_RCV|PCI_ERR_ROOT_COR_RCV)))
- 		return IRQ_NONE;
--	}
- 
--	/* Read error source and clear error status */
--	pci_read_config_dword(pdev->port, pos + PCI_ERR_ROOT_ERR_SRC, &id);
--	pci_write_config_dword(pdev->port, pos + PCI_ERR_ROOT_STATUS, status);
-+	pci_read_config_dword(rp, pos + PCI_ERR_ROOT_ERR_SRC, &e_src.id);
-+	pci_write_config_dword(rp, pos + PCI_ERR_ROOT_STATUS, e_src.status);
- 
--	/* Store error source for later DPC handler */
--	next_prod_idx = rpc->prod_idx + 1;
--	if (next_prod_idx == AER_ERROR_SOURCES_MAX)
--		next_prod_idx = 0;
--	if (next_prod_idx == rpc->cons_idx) {
--		/*
--		 * Error Storm Condition - possibly the same error occurred.
--		 * Drop the error.
--		 */
--		spin_unlock_irqrestore(&rpc->e_lock, flags);
-+	if (!kfifo_put(&rpc->aer_fifo, e_src))
- 		return IRQ_HANDLED;
--	}
--	rpc->e_sources[rpc->prod_idx].status =  status;
--	rpc->e_sources[rpc->prod_idx].id = id;
--	rpc->prod_idx = next_prod_idx;
--	spin_unlock_irqrestore(&rpc->e_lock, flags);
- 
--	/*  Invoke DPC handler */
- 	schedule_work(&rpc->dpc_handler);
--
- 	return IRQ_HANDLED;
- }
- 
-@@ -1439,9 +1376,6 @@ static struct aer_rpc *aer_alloc_rpc(struct pcie_device *dev)
- 	if (!rpc)
- 		return NULL;
- 
--	/* Initialize Root lock access, e_lock, to Root Error Status Reg */
--	spin_lock_init(&rpc->e_lock);
--
- 	rpc->rpd = dev->port;
- 	INIT_WORK(&rpc->dpc_handler, aer_isr);
- 	mutex_init(&rpc->rpc_mutex);
--- 
-2.14.4
+for s390_pci_hpc.c:
+Acked-by: Sebastian Ott <sebott@linux.ibm.com>
