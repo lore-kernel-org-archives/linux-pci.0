@@ -1,54 +1,53 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from usa-sjc-mx-foss1.foss.arm.com ([217.140.101.70]:42214 "EHLO
-        foss.arm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1727667AbeIRQSe (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Tue, 18 Sep 2018 12:18:34 -0400
-Date: Tue, 18 Sep 2018 11:46:29 +0100
-From: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
-To: "Gustavo A. R. Silva" <gustavo@embeddedor.com>
-Cc: Ryder Lee <ryder.lee@mediatek.com>,
-        Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org,
-        linux-mediatek@lists.infradead.org, linux-kernel@vger.kernel.org
-Subject: Re: [PATCH] PCI: mediatek: Fix unchecked return value
-Message-ID: <20180918104629.GC26886@e107981-ln.cambridge.arm.com>
-References: <20180720150158.GA10922@embeddedor.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20180720150158.GA10922@embeddedor.com>
+Received: from mail-oi0-f68.google.com ([209.85.218.68]:45196 "EHLO
+        mail-oi0-f68.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1727271AbeICWZH (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Mon, 3 Sep 2018 18:25:07 -0400
+From: Alexandru Gagniuc <mr.nuke.me@gmail.com>
+To: linux-pci@vger.kernel.org, bhelgaas@google.com
+Cc: keith.busch@intel.com, alex_gagniuc@dellteam.com,
+        austin_bolen@dell.com, shyam_iyer@dell.com,
+        Alexandru Gagniuc <mr.nuke.me@gmail.com>,
+        Ariel Elior <ariel.elior@cavium.com>,
+        everest-linux-l2@cavium.com,
+        "David S. Miller" <davem@davemloft.net>,
+        Michael Chan <michael.chan@broadcom.com>,
+        Ganesh Goudar <ganeshgr@chelsio.com>,
+        Jeff Kirsher <jeffrey.t.kirsher@intel.com>,
+        Tariq Toukan <tariqt@mellanox.com>,
+        Saeed Mahameed <saeedm@mellanox.com>,
+        Leon Romanovsky <leon@kernel.org>,
+        Jakub Kicinski <jakub.kicinski@netronome.com>,
+        Dirk van der Merwe <dirk.vandermerwe@netronome.com>,
+        netdev@vger.kernel.org, linux-kernel@vger.kernel.org,
+        intel-wired-lan@lists.osuosl.org, linux-rdma@vger.kernel.org,
+        oss-drivers@netronome.com
+Subject: [PATCH 9/9] nfp: Do not call pcie_print_link_status()
+Date: Mon,  3 Sep 2018 13:02:36 -0500
+Message-Id: <20180903180242.14504-10-mr.nuke.me@gmail.com>
+In-Reply-To: <20180903180242.14504-1-mr.nuke.me@gmail.com>
+References: <20180903180242.14504-1-mr.nuke.me@gmail.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Fri, Jul 20, 2018 at 10:01:58AM -0500, Gustavo A. R. Silva wrote:
-> Check return value of devm_pci_remap_iospace.
-> 
-> Notice that, currently, all instances of devm_pci_remap_iospace
-> are being checked.
-> 
-> Addresses-Coverity-ID: 1471965 ("Unchecked return value")
-> Signed-off-by: Gustavo A. R. Silva <gustavo@embeddedor.com>
-> ---
->  drivers/pci/controller/pcie-mediatek.c | 4 +++-
->  1 file changed, 3 insertions(+), 1 deletion(-)
+This is now done by the PCI core to warn of sub-optimal bandwidth.
 
-Applied to pci/mediatek for v4.20, thanks.
+Signed-off-by: Alexandru Gagniuc <mr.nuke.me@gmail.com>
+---
+ drivers/net/ethernet/netronome/nfp/nfpcore/nfp6000_pcie.c | 1 -
+ 1 file changed, 1 deletion(-)
 
-Lorenzo
-
-> diff --git a/drivers/pci/controller/pcie-mediatek.c b/drivers/pci/controller/pcie-mediatek.c
-> index 861dda6..1477939 100644
-> --- a/drivers/pci/controller/pcie-mediatek.c
-> +++ b/drivers/pci/controller/pcie-mediatek.c
-> @@ -1109,7 +1109,9 @@ static int mtk_pcie_request_resources(struct mtk_pcie *pcie)
->  	if (err < 0)
->  		return err;
->  
-> -	devm_pci_remap_iospace(dev, &pcie->pio, pcie->io.start);
-> +	err = devm_pci_remap_iospace(dev, &pcie->pio, pcie->io.start);
-> +	if (err)
-> +		return err;
->  
->  	return 0;
->  }
-> -- 
-> 2.7.4
-> 
+diff --git a/drivers/net/ethernet/netronome/nfp/nfpcore/nfp6000_pcie.c b/drivers/net/ethernet/netronome/nfp/nfpcore/nfp6000_pcie.c
+index c8d0b1016a64..87dde0f787e9 100644
+--- a/drivers/net/ethernet/netronome/nfp/nfpcore/nfp6000_pcie.c
++++ b/drivers/net/ethernet/netronome/nfp/nfpcore/nfp6000_pcie.c
+@@ -1328,7 +1328,6 @@ struct nfp_cpp *nfp_cpp_from_nfp6000_pcie(struct pci_dev *pdev)
+ 	/*  Finished with card initialization. */
+ 	dev_info(&pdev->dev,
+ 		 "Netronome Flow Processor NFP4000/NFP6000 PCIe Card Probe\n");
+-	pcie_print_link_status(pdev);
+ 
+ 	nfp = kzalloc(sizeof(*nfp), GFP_KERNEL);
+ 	if (!nfp) {
+-- 
+2.17.1
