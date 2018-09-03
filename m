@@ -1,42 +1,49 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-qk1-f195.google.com ([209.85.222.195]:33726 "EHLO
-        mail-qk1-f195.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1732265AbeISULV (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Wed, 19 Sep 2018 16:11:21 -0400
-From: Jim Quinlan <jim2101024@gmail.com>
-To: linux-kernel@vger.kernel.org
-Cc: Jim Quinlan <jim2101024@gmail.com>,
-        Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org,
-        bcm-kernel-feedback-list@broadcom.com,
-        Christoph Hellwig <hch@lst.de>
-Subject: [PATCH v5 07/12] PCI/MSI: enable PCI_MSI_IRQ_DOMAIN support for MIPS
-Date: Wed, 19 Sep 2018 10:32:02 -0400
-Message-Id: <1537367527-20773-8-git-send-email-jim2101024@gmail.com>
-In-Reply-To: <1537367527-20773-1-git-send-email-jim2101024@gmail.com>
-References: <1537367527-20773-1-git-send-email-jim2101024@gmail.com>
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+From: Alexandru Gagniuc <mr.nuke.me@gmail.com>
+To: linux-pci@vger.kernel.org, bhelgaas@google.com
+Cc: keith.busch@intel.com, alex_gagniuc@dellteam.com,
+        austin_bolen@dell.com, shyam_iyer@dell.com,
+        Alexandru Gagniuc <mr.nuke.me@gmail.com>,
+        Ariel Elior <ariel.elior@cavium.com>,
+        everest-linux-l2@cavium.com,
+        "David S. Miller" <davem@davemloft.net>,
+        Michael Chan <michael.chan@broadcom.com>,
+        Ganesh Goudar <ganeshgr@chelsio.com>,
+        Jeff Kirsher <jeffrey.t.kirsher@intel.com>,
+        Tariq Toukan <tariqt@mellanox.com>,
+        Saeed Mahameed <saeedm@mellanox.com>,
+        Leon Romanovsky <leon@kernel.org>,
+        Jakub Kicinski <jakub.kicinski@netronome.com>,
+        Dirk van der Merwe <dirk.vandermerwe@netronome.com>,
+        netdev@vger.kernel.org, linux-kernel@vger.kernel.org,
+        intel-wired-lan@lists.osuosl.org, linux-rdma@vger.kernel.org,
+        oss-drivers@netronome.com
+Subject: [PATCH 3/9] bnxt_en: Do not call pcie_print_link_status()
+Date: Mon,  3 Sep 2018 13:02:30 -0500
+Message-Id: <20180903180242.14504-4-mr.nuke.me@gmail.com>
+In-Reply-To: <20180903180242.14504-1-mr.nuke.me@gmail.com>
+References: <20180903180242.14504-1-mr.nuke.me@gmail.com>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Add MIPS as an arch that supports PCI_MSI_IRQ_DOMAIN and add
-generation of msi.h in the MIPS arch.
+This is now done by the PCI core to warn of sub-optimal bandwidth.
 
-Signed-off-by: Jim Quinlan <jim2101024@gmail.com>
+Signed-off-by: Alexandru Gagniuc <mr.nuke.me@gmail.com>
 ---
- drivers/pci/Kconfig | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+ drivers/net/ethernet/broadcom/bnxt/bnxt.c | 1 -
+ 1 file changed, 1 deletion(-)
 
-diff --git a/drivers/pci/Kconfig b/drivers/pci/Kconfig
-index 56ff8f6..61a9539 100644
---- a/drivers/pci/Kconfig
-+++ b/drivers/pci/Kconfig
-@@ -22,7 +22,7 @@ config PCI_MSI
- 	   If you don't know what to do here, say Y.
+diff --git a/drivers/net/ethernet/broadcom/bnxt/bnxt.c b/drivers/net/ethernet/broadcom/bnxt/bnxt.c
+index 8bb1e38b1681..246f33d2cc9c 100644
+--- a/drivers/net/ethernet/broadcom/bnxt/bnxt.c
++++ b/drivers/net/ethernet/broadcom/bnxt/bnxt.c
+@@ -9046,7 +9046,6 @@ static int bnxt_init_one(struct pci_dev *pdev, const struct pci_device_id *ent)
+ 	netdev_info(dev, "%s found at mem %lx, node addr %pM\n",
+ 		    board_info[ent->driver_data].name,
+ 		    (long)pci_resource_start(pdev, 0), dev->dev_addr);
+-	pcie_print_link_status(pdev);
  
- config PCI_MSI_IRQ_DOMAIN
--	def_bool ARC || ARM || ARM64 || X86
-+	def_bool ARC || ARM || ARM64 || MIPS || X86
- 	depends on PCI_MSI
- 	select GENERIC_MSI_IRQ_DOMAIN
+ 	return 0;
  
 -- 
-1.9.0.138.g2de3478
+2.17.1
