@@ -1,47 +1,133 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.29.99]:54778 "EHLO mail.kernel.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1726189AbeIEUi7 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Wed, 5 Sep 2018 16:38:59 -0400
-From: Sinan Kaya <okaya@kernel.org>
-To: linux-pci@vger.kernel.org
-Cc: Dennis Dalessandro <dennis.dalessandro@intel.com>,
-        Sinan Kaya <okaya@codeaurora.org>,
-        Bjorn Helgaas <bhelgaas@google.com>
-Subject: [PATCH for-rc v2 1/3] PCI: Fix faulty logic in pci_reset_bus()
-Date: Wed,  5 Sep 2018 16:08:03 +0000
-Message-Id: <20180905160805.5680-1-okaya@kernel.org>
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <SRS0=vwu3=LR=gmail.com=whois.zihan.yang@kernel.org>
+Return-Path: <SRS0=vwu3=LR=gmail.com=whois.zihan.yang@kernel.org>
+MIME-Version: 1.0
+References: <CAKwiv-gK1wxw57TVK7GXe3bfkr=0eCS9zn7F_mZRYUL+2Ovr9w@mail.gmail.com>
+ <20180828193517.GA158292@bhelgaas-glaptop.roam.corp.google.com>
+In-Reply-To: <20180828193517.GA158292@bhelgaas-glaptop.roam.corp.google.com>
+From: Zihan Yang <whois.zihan.yang@gmail.com>
+Date: Mon, 3 Sep 2018 09:51:18 +0800
+Message-ID: <CAKwiv-gOy3mhuYm7vEy74t9=hQp24RFRXwVzoaE-37X_nuAHww@mail.gmail.com>
+Subject: Re: Peer bridge fixup issue under multiple pci domain
+To: helgaas@kernel.org
+Cc: linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
+	mchehab@kernel.org, tony.luck@intel.com, bp@alien8.de,
+	linux-edac@vger.kernel.org
+Content-Type: text/plain; charset="UTF-8"
 List-ID: <linux-pci.vger.kernel.org>
 
-From: Dennis Dalessandro <dennis.dalessandro@intel.com>
+Bjorn Helgaas <helgaas@kernel.org> =E4=BA=8E2018=E5=B9=B48=E6=9C=8828=E6=97=
+=A5=E5=91=A8=E4=BA=8C =E4=B8=8B=E5=8D=887:35=E5=86=99=E9=81=93=EF=BC=9A
+>
+> [+cc EDAC folks, LKML]
+>
+> On Sat, Aug 25, 2018 at 10:58:57PM +0800, Zihan Yang wrote:
+> > Hi all,
+> >
+> > I'm trying to use multiple pci domain in qemu q35, but I find there
+> > might be some issues in peer bridge fixup.
+> >
+> > In short, pcibios_fixup_peer_bridges function assumes only one pci
+> > domain (0) by default. This is OK when as qemu by default uses only
+> > one pci domain too. However, if I add another host bridge which is
+> > put into pci domain 1 by using _SEG, and a pcie_pci_bridge is attached
+> > to the bus 1 under this new pci domain 1 rather than domain 0, the
+> > kernel will recognize the bus 01 differently.
+> >
+> > More specifically, pcibios_fixup_peer_bridges only reads all the buses
+> > under domain 0 but it can read the pci bus 01 in pci domain 1 and treat
+> > it as a peer bus of 0000:00. The consequence is this 01 bus is recogniz=
+ed
+> > as 0000:01, but it should have been recognized as 0001:01.
+> >
+> > The host bus 0001:00 can be recognized so I guess pcibios_fixup_peer_br=
+idges
+> > needs updating to take care of multiple domains? Or is it just an bios =
+issue?
+> > I'm not quite sure and I'm open to any suggestions.
+>
+> Is there something that actually does not work, or is this just a
+> concern that the code looks wrong?
 
-The pci_rest_bus() function calls into pci_probe_reset_slot() to determine
-whether to call the slot or bus reset. The check has faulty logic in that
-it does not account for pci_probe_reset_slot() being able to return an
-errno. Fix by only calling the slot reset when the function returns 0.
-Treat < 1 and > 1 the same.
+Sorry for the late reply, currently it is just a concern because the
+qemu part is
+still ongoing and I'm not quite sure about the root cause. But my disussion=
+ with
+qemu developers indicate my issue might originates from incorrect AML, whic=
+h
+includes _SEG, _BBN and _CRS as you state below. I will try to locate the r=
+eal
+cause recently.
 
-Cc: Sinan Kaya <okaya@codeaurora.org>
-Fixes: 811c5cb37df4 ("PCI: Unify try slot and bus reset API")
-Reviewed-by: Michael J. Ruhl <michael.j.ruhl@intel.com>
-Signed-off-by: Dennis Dalessandro <dennis.dalessandro@intel.com>
----
- drivers/pci/pci.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+> pcibios_fixup_peer_bridges() is ancient history from before x86 used
+> the ACPI namespace to discover host bridges.  It blindly probes for
+> devices on buses 0-255, but as you say, only in domain 0.
+>
+> Using multiple PCI domains really requires ACPI support so we know
+> what the other domains are (_SEG) and how to access their config space
+> (MCFG).  When we do have ACPI support in the platform and the kernel,
+> drivers/acpi/pci_root.c discovers all the host bridges in all domains
+> via PNP0A03 or PNP0A08 devices in the ACPI namespace, and in most
+> cases pcibios_fixup_peer_bridges() will do nothing.
+>
+> However, there *are* systems where the firmware does not expose all
+> host bridges and in those cases, pcibios_fixup_peer_bridges() can be a
+> problem.  For example, Intel processors often have management devices
+> on bus 7f or ff.  If the ACPI namespace doesn't have a host bridge to
+> those buses, pci_root.c won't find them, but
+> pcibios_fixup_peer_bridges() *will*.
 
-diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
-index 29ff9619b5fa..30b260332a10 100644
---- a/drivers/pci/pci.c
-+++ b/drivers/pci/pci.c
-@@ -5200,7 +5200,7 @@ static int __pci_reset_bus(struct pci_bus *bus)
-  */
- int pci_reset_bus(struct pci_dev *pdev)
- {
--	return pci_probe_reset_slot(pdev->slot) ?
-+	return (!pci_probe_reset_slot(pdev->slot)) ?
- 	    __pci_reset_slot(pdev->slot) : __pci_reset_bus(pdev->bus);
- }
- EXPORT_SYMBOL_GPL(pci_reset_bus);
--- 
-2.18.0
+Thanks for clarifying, does it only affect bus 7f/ff, or does it
+affect other busses
+as well? If only management devices are affected, then I think it is
+not the cause
+of my issue. But thanks a lot for your detailed reply.
+
+> This leads to several problems.  Here's a dmesg sample from [1]
+> (found by googling for 'dmesg log "PCI: discovered peer bus ff"'):
+>
+>   ACPI: PCI Root Bridge [PCI0] (domain 0000 [bus 00-ff])
+>   PCI: Discovered peer bus fe
+>   pci_bus 0000:fe: root bus resource [io  0x0000-0xffff]
+>   pci_bus 0000:fe: root bus resource [mem 0x00000000-0xffffffffff]
+>   pci 0000:fe:03.0: [8086:2d98] type 00 class 0x060000
+>   PCI: Discovered peer bus ff
+>   pci_bus 0000:ff: root bus resource [io  0x0000-0xffff]
+>   pci_bus 0000:ff: root bus resource [mem 0x00000000-0xffffffffff]
+>   pci 0000:ff:03.0: [8086:2d98] type 00 class 0x060000
+>   EDAC MC1: Giving out device to module i7core_edac.c controller i7 core =
+#1: DEV 0000:fe:03.0 (INTERRUPT)
+>   EDAC PCI0: Giving out device to module i7core_edac controller EDAC PCI =
+controller: DEV 0000:fe:03.0 (POLLED)
+>   EDAC MC0: Giving out device to module i7core_edac.c controller i7 core =
+#0: DEV 0000:ff:03.0 (INTERRUPT)
+>   EDAC PCI1: Giving out device to module i7core_edac controller EDAC PCI =
+controller: DEV 0000:ff:03.0 (POLLED)
+>
+> Some of the problems are:
+>
+>   - Firmware may have omitted the host bridges to [bus fe] and
+>     [bus ff] from the ACPI namespace because *it* is using those
+>     management devices, so EDAC blindly using them is a potential
+>     conflict.
+>
+>   - pcibios_fixup_peer_bridges() only scans domain 0, so if this
+>     system had multiple domains, EDAC would only work on things in
+>     domain 0, ignoring other domains.
+>
+>   - The PCI core can't do bus number assignment correctly for devices
+>     behind bridge PCI0.  The firmware told us [bus 00-ff] was
+>     available, so the core may assign bus number fe to some deep
+>     switch hierarchy.  But bus fe conflicts with the devices on the
+>     "peer bus fe".  This part is a firmware bug: it should have told
+>     us that PCI0 leads to [bus 00-fd], not [bus 00-ff].
+>
+>   - The PCI core can't do resource assignment correctly for devices on
+>     [bus fe] and [bus ff].  It has no information about what MMIO and
+>     I/O port are routed to those buses, so it assumes *all* memory and
+>     I/O ports are routed there, which is clearly incorrect.  This part
+>     is a Linux bug; we really shouldn't be poking around for buses
+>     that ACPI didn't tell us about.
+>
+> Bjorn
+>
+> [1] https://bugs.freedesktop.org/attachment.cgi?id=3D136529
