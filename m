@@ -1,103 +1,73 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from esa6.microchip.iphmx.com ([216.71.154.253]:15218 "EHLO
-        esa6.microchip.iphmx.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726642AbeILN6z (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Wed, 12 Sep 2018 09:58:55 -0400
-From: <Wesley.Sheng@microchip.com>
-To: <kurt.schwemmer@microsemi.com>, <logang@deltatee.com>,
-        <bhelgaas@google.com>, <corbet@lwn.net>
-CC: <linux-pci@vger.kernel.org>, <linux-doc@vger.kernel.org>,
-        <linux-kernel@vger.kernel.org>, <Wesley.Sheng@microchip.com>
-Subject: [PATCH] NTB: ntb_hw_switchtec: add pre-requisites for NTB driver and
- misc updates
-Date: Wed, 12 Sep 2018 08:55:18 +0000
-Message-ID: <DM2PR11MB0105A882E34348BC85F8EE79951B0@DM2PR11MB0105.namprd11.prod.outlook.com>
-References: <DM2PR11MB0105BF7DD2EFB7F3874EB457951B0@DM2PR11MB0105.namprd11.prod.outlook.com>
-In-Reply-To: <DM2PR11MB0105BF7DD2EFB7F3874EB457951B0@DM2PR11MB0105.namprd11.prod.outlook.com>
-Content-Type: text/plain; charset="us-ascii"
+Received: from mail.kernel.org ([198.145.29.99]:45708 "EHLO mail.kernel.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1726157AbeIDRQM (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Tue, 4 Sep 2018 13:16:12 -0400
+Date: Tue, 4 Sep 2018 15:51:08 +0300
+From: Leon Romanovsky <leon@kernel.org>
+To: Alexandru Gagniuc <mr.nuke.me@gmail.com>
+Cc: linux-pci@vger.kernel.org, bhelgaas@google.com,
+        keith.busch@intel.com, alex_gagniuc@dellteam.com,
+        austin_bolen@dell.com, shyam_iyer@dell.com,
+        Ariel Elior <ariel.elior@cavium.com>,
+        everest-linux-l2@cavium.com,
+        "David S. Miller" <davem@davemloft.net>,
+        Michael Chan <michael.chan@broadcom.com>,
+        Ganesh Goudar <ganeshgr@chelsio.com>,
+        Jeff Kirsher <jeffrey.t.kirsher@intel.com>,
+        Tariq Toukan <tariqt@mellanox.com>,
+        Saeed Mahameed <saeedm@mellanox.com>,
+        Jakub Kicinski <jakub.kicinski@netronome.com>,
+        Dirk van der Merwe <dirk.vandermerwe@netronome.com>,
+        netdev@vger.kernel.org, linux-kernel@vger.kernel.org,
+        intel-wired-lan@lists.osuosl.org, linux-rdma@vger.kernel.org,
+        oss-drivers@netronome.com
+Subject: Re: [PATCH 7/9] net/mlx4: Do not call pcie_print_link_status()
+Message-ID: <20180904125108.GE2796@mtr-leonro.mtl.com>
+References: <20180903180242.14504-1-mr.nuke.me@gmail.com>
+ <20180903180242.14504-8-mr.nuke.me@gmail.com>
 MIME-Version: 1.0
+Content-Type: multipart/signed; micalg=pgp-sha1;
+        protocol="application/pgp-signature"; boundary="utUizcr4eQAkV3Ky"
+In-Reply-To: <20180903180242.14504-8-mr.nuke.me@gmail.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-From: Wesley Sheng <Wesley.Sheng@microchip.com>
 
-1.add pre-requisites for NTB driver
-2.misc updates
-  change ntb hardware driver name to ntb_hw_switchtec
-  update the description of 2 partitions limit
-  add reference to Linux Documentation/ntb.txt
-  add use of term 'Command ID'
-  add use of term 'Command Return Value'
-  add a missing ')'
+--utUizcr4eQAkV3Ky
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
 
-Signed-off-by: Kelvin Cao <kelvin.cao@microchip.com>
-Signed-off-by: Wesley Yung <Wesley.Yung@microchip.com>
----
- Documentation/switchtec.txt | 30 ++++++++++++++--------
- 1 file changed, 20 insertions(+), 10 deletions(-)
+On Mon, Sep 03, 2018 at 01:02:34PM -0500, Alexandru Gagniuc wrote:
+> This is now done by the PCI core to warn of sub-optimal bandwidth.
+>
+> Signed-off-by: Alexandru Gagniuc <mr.nuke.me@gmail.com>
+> ---
+>  drivers/net/ethernet/mellanox/mlx4/main.c | 7 -------
+>  1 file changed, 7 deletions(-)
+>
 
-diff --git a/Documentation/switchtec.txt b/Documentation/switchtec.txt inde=
-x f788264..40e839d 100644
---- a/Documentation/switchtec.txt
-+++ b/Documentation/switchtec.txt
-@@ -23,7 +23,7 @@ The primary means of communicating with the Switchtec man=
-agement firmware is  through the Memory-mapped Remote Procedure Call (MRPC)=
- interface.
- Commands are submitted to the interface with a 4-byte command  identifier =
-and up to 1KB of command specific data. The firmware will -respond with a 4=
- bytes return code and up to 1KB of command specific
-+respond with a 4-byte return code and up to 1KB of command specific
- data. The interface only processes a single command at a time.
-=20
-=20
-@@ -36,8 +36,8 @@ device: /dev/switchtec#, one for each management endpoint=
- in the system.
- The char device has the following semantics:
-=20
- * A write must consist of at least 4 bytes and no more than 1028 bytes.
--  The first four bytes will be interpreted as the command to run and
--  the remainder will be used as the input data. A write will send the
-+  The first 4 bytes will be interpreted as the Command ID and the =20
-+ remainder will be used as the input data. A write will send the
-   command to the firmware to begin processing.
-=20
- * Each write must be followed by exactly one read. Any double write will @=
-@ -45,9 +45,9 @@ The char device has the following semantics:
-   produce an error.
-=20
- * A read will block until the firmware completes the command and return
--  the four bytes of status plus up to 1024 bytes of output data. (The
--  length will be specified by the size parameter of the read call --
--  reading less than 4 bytes will produce an error.
-+  the 4-byte Command Return Value plus up to 1024 bytes of output =20
-+ data. (The length will be specified by the size parameter of the read =20
-+ call -- reading less than 4 bytes will produce an error.)
-=20
- * The poll call will also be supported for userspace applications that
-   need to do other things while waiting for the command to complete.
-@@ -83,10 +83,20 @@ The following IOCTLs are also supported by the device:
- Non-Transparent Bridge (NTB) Driver
- =3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=
-=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D
-=20
--An NTB driver is provided for the switchtec hardware in switchtec_ntb.
--Currently, it only supports switches configured with exactly 2 -partitions=
-. It also requires the following configuration settings:
-+An NTB hardware driver is provided for the switchtec hardware in=20
-+ntb_hw_switchtec. Currently, it only supports switches configured with=20
-+exactly 2 NT partitions and zero or more non-NT partitions. It also=20
-+requires the following configuration settings:
-=20
--* Both partitions must be able to access each other's GAS spaces.
-+* Both NT partitions must be able to access each other's GAS spaces.
-   Thus, the bits in the GAS Access Vector under Management Settings
-   must be set to support this.
-+* Kernel configuration MUST include support for NTB (CONFIG_NTB needs
-+  to be set)
-+
-+NT EP BAR 2 will be dynamically configured as a Direct Window, and the=20
-+configuration file does not need to configure it explicitly.
-+
-+Please refer to Documentation/ntb.txt in Linux source tree for an=20
-+overall understanding of the Linux NTB stack. ntb_hw_switchtec works as=20
-+an NTB Hardware Driver in this stack.
+Thanks,
+Acked-by: Leon Romanovsky <leonro@mellanox.com>
+
+--utUizcr4eQAkV3Ky
+Content-Type: application/pgp-signature; name="signature.asc"
+
+-----BEGIN PGP SIGNATURE-----
+
+iQIcBAEBAgAGBQJbjn+8AAoJEORje4g2clinjGkP/jCPp9UzQgvYbqPCf4Gse/bM
+v4sDzUw1p4vsseeu+tUvImwsGaOKBdXLBXh0yyx0DEePtXAnA+Y9l2ZECBAnqRze
+x88FJOZiut8n/OZCXuh34d9UgUuK4nZel9l+R5V6OE1Bw7Hvd5CDN+DELpawQxQS
+RW1CI9A0gyzNZuVaquR8ZIPPH03HJPAvY8xSWum1u7D+mQC1s3PvBAHo/1U+f9tO
+zWYo3ohY5TEC0ug0IENE1Y10PhAMkF8W4W+y9DO2/FYbycbP73rOpmO8k+sWZ9QS
+l02bTVuCEnSzTamZ4s3Rz0uURBCdrq6mjluKRiVbDqArJ2l5APsXjptsjDfP9Dox
+BblZ+oc4LfEOzpb2dYHWhSbFJWzIn9p+DkS9Y4ur/5HXAQsHmE4CkY03U0UE6H0k
+Xn6lOJD6QkZ3hZu6M+y4iU+eZGOX4cH+K93AvLMtReXrQHJIxKd8Iyk14jpNc4JO
+AnDhiDjSURIISQwEBWVx8EselbI7S4o2DzWic4lDJhPjFjYhtDcsH9D65eB1IIVR
+4c+OGQ+lYHgUVxshx+XM+VlTjxev72ZE9vS+tOzZdCND01c2uUDQeCDZTJW6VFnn
+u9B+NQ77G035Yn186RhLQkbIJHBGRF8nvX4KTEjRErry5BD+yqrgKz115P8y6F3X
+PhbXQE6O7fllfTO/Vqe/
+=LxEI
+-----END PGP SIGNATURE-----
+
+--utUizcr4eQAkV3Ky--
