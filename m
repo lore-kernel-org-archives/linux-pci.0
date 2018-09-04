@@ -1,65 +1,73 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from smtp.eu.citrix.com ([185.25.65.24]:18745 "EHLO
-        SMTP.EU.CITRIX.COM" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1727820AbeISOos (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Wed, 19 Sep 2018 10:44:48 -0400
-Date: Wed, 19 Sep 2018 11:05:26 +0200
-From: Roger Pau =?utf-8?B?TW9ubsOp?= <roger.pau@citrix.com>
-To: Boris Ostrovsky <boris.ostrovsky@oracle.com>
-CC: George Dunlap <George.Dunlap@citrix.com>,
-        Pasi =?utf-8?B?S8Okcmtrw6RpbmVu?= <pasik@iki.fi>,
-        Jan Beulich <JBeulich@suse.com>,
-        Juergen Gross <jgross@suse.com>,
-        "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-        "bhelgaas@google.com" <bhelgaas@google.com>,
-        xen-devel <xen-devel@lists.xenproject.org>,
-        Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>
-Subject: Re: [Xen-devel] [PATCH V3 2/2] Xen/PCIback: Implement PCI
- flr/slot/bus reset with 'reset' SysFS attribute
-Message-ID: <20180919090526.s3ahnemrt2ik2tx3@mac.bytemobile.com>
-References: <5A2A6AB10200007800195D4F@prv-mh.provo.novell.com>
- <8a3bc517-1255-4547-d244-5c400e44cc77@Oracle.COM>
- <f19dbb09-ef22-2cf4-fb38-2a7c42b5dc48@Oracle.COM>
- <5A377E020200007800197FFA@prv-mh.provo.novell.com>
- <559ffd12-b541-8a69-60bd-fbe10e3dc159@oracle.com>
- <20180916114306.GF18222@reaktio.net>
- <a726840b-8a5c-0890-73c6-3a95a7205153@oracle.com>
- <20180918071519.GG18222@reaktio.net>
- <5E7DDB68-4E68-48A5-AEEC-EE1B21A50E9E@citrix.com>
- <352310b3-ec9b-2ceb-83f0-4550718120c3@oracle.com>
+Received: from mail.kernel.org ([198.145.29.99]:45856 "EHLO mail.kernel.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1727390AbeIDRQ3 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Tue, 4 Sep 2018 13:16:29 -0400
+Date: Tue, 4 Sep 2018 15:51:25 +0300
+From: Leon Romanovsky <leon@kernel.org>
+To: Alexandru Gagniuc <mr.nuke.me@gmail.com>
+Cc: linux-pci@vger.kernel.org, bhelgaas@google.com,
+        keith.busch@intel.com, alex_gagniuc@dellteam.com,
+        austin_bolen@dell.com, shyam_iyer@dell.com,
+        Ariel Elior <ariel.elior@cavium.com>,
+        everest-linux-l2@cavium.com,
+        "David S. Miller" <davem@davemloft.net>,
+        Michael Chan <michael.chan@broadcom.com>,
+        Ganesh Goudar <ganeshgr@chelsio.com>,
+        Jeff Kirsher <jeffrey.t.kirsher@intel.com>,
+        Tariq Toukan <tariqt@mellanox.com>,
+        Saeed Mahameed <saeedm@mellanox.com>,
+        Jakub Kicinski <jakub.kicinski@netronome.com>,
+        Dirk van der Merwe <dirk.vandermerwe@netronome.com>,
+        netdev@vger.kernel.org, linux-kernel@vger.kernel.org,
+        intel-wired-lan@lists.osuosl.org, linux-rdma@vger.kernel.org,
+        oss-drivers@netronome.com
+Subject: Re: [PATCH 8/9] net/mlx5: Do not call pcie_print_link_status()
+Message-ID: <20180904125125.GF2796@mtr-leonro.mtl.com>
+References: <20180903180242.14504-1-mr.nuke.me@gmail.com>
+ <20180903180242.14504-9-mr.nuke.me@gmail.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="iso-8859-1"
-In-Reply-To: <352310b3-ec9b-2ceb-83f0-4550718120c3@oracle.com>
+Content-Type: multipart/signed; micalg=pgp-sha1;
+        protocol="application/pgp-signature"; boundary="zKD0QXBepZ0ysD7Q"
+In-Reply-To: <20180903180242.14504-9-mr.nuke.me@gmail.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tue, Sep 18, 2018 at 02:09:53PM -0400, Boris Ostrovsky wrote:
-> On 9/18/18 5:32 AM, George Dunlap wrote:
-> >
-> >> On Sep 18, 2018, at 8:15 AM, Pasi Kärkkäinen <pasik@iki.fi> wrote:
-> >>
-> >> Hi,
-> >>
-> >> On Mon, Sep 17, 2018 at 02:06:02PM -0400, Boris Ostrovsky wrote:
-> >>> What about the toolstack changes? Have they been accepted? I vaguely
-> >>> recall there was a discussion about those changes but don't remember how
-> >>> it ended.
-> >>>
-> >> I don't think toolstack/libxl patch has been applied yet either.
-> >>
-> >>
-> >> "[PATCH V1 0/1] Xen/Tools: PCI reset using 'reset' SysFS attribute":
-> >> https://lists.xen.org/archives/html/xen-devel/2017-12/msg00664.html
-> >>
-> >> "[PATCH V1 1/1] Xen/libxl: Perform PCI reset using 'reset' SysFS attribute":
-> >> https://lists.xen.org/archives/html/xen-devel/2017-12/msg00663.html
-> 
-> 
-> Will this patch work for *BSD? Roger?
 
-At least FreeBSD don't support pci-passthrough, so none of this works
-ATM. There's no sysfs on BSD, so much of what's in libxl_pci.c will
-have to be moved to libxl_linux.c when BSD support is added.
+--zKD0QXBepZ0ysD7Q
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
 
-Thanks, Roger.
+On Mon, Sep 03, 2018 at 01:02:35PM -0500, Alexandru Gagniuc wrote:
+> This is now done by the PCI core to warn of sub-optimal bandwidth.
+>
+> Signed-off-by: Alexandru Gagniuc <mr.nuke.me@gmail.com>
+> ---
+>  drivers/net/ethernet/mellanox/mlx5/core/main.c | 4 ----
+>  1 file changed, 4 deletions(-)
+>
+
+Thanks,
+Acked-by: Leon Romanovsky <leonro@mellanox.com>
+
+--zKD0QXBepZ0ysD7Q
+Content-Type: application/pgp-signature; name="signature.asc"
+
+-----BEGIN PGP SIGNATURE-----
+
+iQIcBAEBAgAGBQJbjn/NAAoJEORje4g2clinvdIP/1XmGCCJjlghx2pUotnL9h17
+mR3f+K0cueebvFKq6dvEnK7HwzxU0FZ7dLxgkBcNzEGmT2wHU2sqAjOPGQDJAm8j
+i08jEixwBvkt18wJgBaIszwThxDVCqeMIygsdeVKJ1cz5KyWjJ2S3k2S7k3OVP1W
+zJgJx5pYiGgaMDuM/NAgWNn+Vq0Ra/rrVtYVxxcfpZ5P0Pvw0FC+nFqrtpkyra3f
+VROx2cxjIco9QaukhPan65dV6GTVQkVmOjxj7S+4gGuTAFcpWknpKE33QujPprEP
+YIwvql4uaJ1UDitfj6iiKHPH+1BK4uEQycvX5I0XeZQVkY04NcmcQEYi2WJSFmGu
+vqf1W974lKR08cEwsmJSo4FRZSpBtWO51bcuGI9/DsU4KxbjrlX5OvxmsEiStBh4
+fLeaSLRolCfUZD0aEa2/GcYxxmnVcDujt8UeQbUqGY+BkdZZaUTVi/vh2JaSaMis
+SIbR6UN1E0BKutTPmBiG1XWNyr6SDF9rkVZInvTbEfofT/aFsbCxVeSD6QdbysJJ
+cr0ylqouKVWat5m5FgAL86QYyno9NNDfOKgjRI/Q6FdgglHh2G2mYc7jUlgNuvCj
+B7jOdxO12I46ql2DNbnmdyHjlJH/aRgrnGpdTxH6lhtl81Z/GlENm+HIX0PuVmN7
+7DzWa4DghmRtb3Dq/L5A
+=qx2/
+-----END PGP SIGNATURE-----
+
+--zKD0QXBepZ0ysD7Q--
