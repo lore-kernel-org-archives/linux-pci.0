@@ -1,79 +1,113 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from bmailout2.hostsharing.net ([83.223.90.240]:40679 "EHLO
-        bmailout2.hostsharing.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726108AbeIDOGz (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Tue, 4 Sep 2018 10:06:55 -0400
-Date: Tue, 4 Sep 2018 11:42:34 +0200
-From: Lukas Wunner <lukas@wunner.de>
-To: Sreekanth Reddy <sreekanth.reddy@broadcom.com>
-Cc: Suganath Prabu Subramani <suganath-prabu.subramani@broadcom.com>,
-        Andy Shevchenko <andy.shevchenko@gmail.com>,
-        linux-scsi <linux-scsi@vger.kernel.org>,
-        Sathya Prakash <Sathya.Prakash@broadcom.com>,
-        linux-pci@vger.kernel.org,
-        Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-        Keith Busch <keith.busch@intel.com>
-Subject: Re: [Patch v1 0/7] mpt3sas: Hot-Plug Surprise removal support on IOC.
-Message-ID: <20180904094234.jm5je5sfpagdf6dz@wunner.de>
-References: <1535690081-16116-1-git-send-email-suganath-prabu.subramani@broadcom.com>
- <CAHp75VfC8GN3oEzSFJYfMr0iqBTYUJ=WPoLS9Oh5NgVcFmnBkw@mail.gmail.com>
- <20180831085534.n6eikj5cw522ihhe@wunner.de>
- <CAK=zhgrzNYDeUFN0YWVJLdGR0nA443su0xydwSHFQzhouhZBuw@mail.gmail.com>
+Return-Path: <linux-nvme-bounces+bjorn=helgaas.com@lists.infradead.org>
+Return-Path: <linux-nvme-bounces+bjorn=helgaas.com@lists.infradead.org>
+Date: Tue, 4 Sep 2018 09:16:38 -0600
+From: Jason Gunthorpe <jgg@mellanox.com>
+To: Logan Gunthorpe <logang@deltatee.com>
+Subject: Re: [PATCH v5 10/13] nvme-pci: Add support for P2P memory in requests
+Message-ID: <20180904151638.GL335@mellanox.com>
+References: <20180830185352.3369-1-logang@deltatee.com>
+ <20180830185352.3369-11-logang@deltatee.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <CAK=zhgrzNYDeUFN0YWVJLdGR0nA443su0xydwSHFQzhouhZBuw@mail.gmail.com>
-Sender: linux-pci-owner@vger.kernel.org
+In-Reply-To: <20180830185352.3369-11-logang@deltatee.com>
+List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-nvme>,
+ <mailto:linux-nvme-request@lists.infradead.org?subject=unsubscribe>
+List-Archive: <http://lists.infradead.org/pipermail/linux-nvme/>
+List-Post: <mailto:linux-nvme@lists.infradead.org>
+List-Help: <mailto:linux-nvme-request@lists.infradead.org?subject=help>
+List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-nvme>,
+ <mailto:linux-nvme-request@lists.infradead.org?subject=subscribe>
+Cc: Keith Busch <keith.busch@intel.com>,
+ Alex Williamson <alex.williamson@redhat.com>, Sagi Grimberg <sagi@grimberg.me>,
+ linux-nvdimm@lists.01.org, linux-rdma@vger.kernel.org,
+ linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
+ linux-nvme@lists.infradead.org, Stephen Bates <sbates@raithlin.com>,
+ linux-block@vger.kernel.org,
+ =?utf-8?B?SsOpcsO0bWU=?= Glisse <jglisse@redhat.com>,
+ Christian =?utf-8?B?S8O2bmln?= <christian.koenig@amd.com>,
+ Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+ Bjorn Helgaas <bhelgaas@google.com>, Max Gurtovoy <maxg@mellanox.com>,
+ Dan Williams <dan.j.williams@intel.com>, Christoph Hellwig <hch@lst.de>
+Content-Type: text/plain; charset="us-ascii"
+Sender: "Linux-nvme" <linux-nvme-bounces@lists.infradead.org>
+Errors-To: linux-nvme-bounces+bjorn=helgaas.com@lists.infradead.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tue, Sep 04, 2018 at 11:19:04AM +0530, Sreekanth Reddy wrote:
-> On Fri, Aug 31, 2018 at 2:25 PM, Lukas Wunner <lukas@wunner.de> wrote:
-> > * Just reading the vendor ID may not be sufficient to detect unplug,
-> >   it may also read as "all ones" if the link is down due to error
-> >   recovery by DPC.
+On Thu, Aug 30, 2018 at 12:53:49PM -0600, Logan Gunthorpe wrote:
+> For P2P requests, we must use the pci_p2pmem_map_sg() function
+> instead of the dma_map_sg functions.
 > 
-> So, is their any other way to detect pci device unplug apart from
-> reading the vendor ID, I mean we have check any other flags, etc?
-
-Many scsi drivers call pci_channel_offline() to detect inaccessibility
-of the device due to a PCI error:
-https://elixir.bootlin.com/linux/v4.19-rc2/ident/pci_channel_offline
-
-A patch is pending such that surprise removal can also be queried
-with that same function:
-https://www.spinics.net/lists/linux-pci/msg75722.html
-
-
-> > * I don't see why you need to poll for the device's removal from a
-> >   watchdog thread.  pciehp will invoke your driver's ->remove hook
-> >   once the device is gone.
+> With that, we can then indicate PCI_P2P support in the request queue.
+> For this, we create an NVME_F_PCI_P2P flag which tells the core to
+> set QUEUE_FLAG_PCI_P2P in the request queue.
 > 
-> If we have some three to four PCI devices and all pci devices are hot
-> unplugged simultaneously, then we observed that driver's-remove hook
-> is called sequentially. So it takes some time to call fourth PCI
-> device driver's->remove hook. so during this time we want all the
-> outstanding commands to be gracefully terminated and hence we added
-> this watchdog thread to quickly detect the hba unplug and take
-> necessary steps such as gracefully terminate the outstanding IOs and
-> stop receiving further IOs on it. At later time when PCI subsystem
-> calls driver's-remove hook then driver can quickly release the
-> resources allocated for this unplugged device.
+> Signed-off-by: Logan Gunthorpe <logang@deltatee.com>
+> Reviewed-by: Sagi Grimberg <sagi@grimberg.me>
+> Reviewed-by: Christoph Hellwig <hch@lst.de>
+>  drivers/nvme/host/core.c |  4 ++++
+>  drivers/nvme/host/nvme.h |  1 +
+>  drivers/nvme/host/pci.c  | 17 +++++++++++++----
+>  3 files changed, 18 insertions(+), 4 deletions(-)
+> 
+> diff --git a/drivers/nvme/host/core.c b/drivers/nvme/host/core.c
+> index dd8ec1dd9219..6033ce2fd3e9 100644
+> +++ b/drivers/nvme/host/core.c
+> @@ -3051,7 +3051,11 @@ static void nvme_alloc_ns(struct nvme_ctrl *ctrl, unsigned nsid)
+>  	ns->queue = blk_mq_init_queue(ctrl->tagset);
+>  	if (IS_ERR(ns->queue))
+>  		goto out_free_ns;
+> +
+>  	blk_queue_flag_set(QUEUE_FLAG_NONROT, ns->queue);
+> +	if (ctrl->ops->flags & NVME_F_PCI_P2PDMA)
+> +		blk_queue_flag_set(QUEUE_FLAG_PCI_P2PDMA, ns->queue);
+> +
+>  	ns->queue->queuedata = ns;
+>  	ns->ctrl = ctrl;
+>  
+> diff --git a/drivers/nvme/host/nvme.h b/drivers/nvme/host/nvme.h
+> index bb4a2003c097..4030743c90aa 100644
+> +++ b/drivers/nvme/host/nvme.h
+> @@ -343,6 +343,7 @@ struct nvme_ctrl_ops {
+>  	unsigned int flags;
+>  #define NVME_F_FABRICS			(1 << 0)
+>  #define NVME_F_METADATA_SUPPORTED	(1 << 1)
+> +#define NVME_F_PCI_P2PDMA		(1 << 2)
+>  	int (*reg_read32)(struct nvme_ctrl *ctrl, u32 off, u32 *val);
+>  	int (*reg_write32)(struct nvme_ctrl *ctrl, u32 off, u32 val);
+>  	int (*reg_read64)(struct nvme_ctrl *ctrl, u32 off, u64 *val);
+> diff --git a/drivers/nvme/host/pci.c b/drivers/nvme/host/pci.c
+> index 2902585c6ddf..bb2120d30e39 100644
+> +++ b/drivers/nvme/host/pci.c
+> @@ -737,8 +737,13 @@ static blk_status_t nvme_map_data(struct nvme_dev *dev, struct request *req,
+>  		goto out;
+>  
+>  	ret = BLK_STS_RESOURCE;
+> -	nr_mapped = dma_map_sg_attrs(dev->dev, iod->sg, iod->nents, dma_dir,
+> -			DMA_ATTR_NO_WARN);
+> +
+> +	if (is_pci_p2pdma_page(sg_page(iod->sg)))
+> +		nr_mapped = pci_p2pdma_map_sg(dev->dev, iod->sg, iod->nents,
+> +					  dma_dir);
+> +	else
+> +		nr_mapped = dma_map_sg_attrs(dev->dev, iod->sg, iod->nents,
+> +					     dma_dir,  DMA_ATTR_NO_WARN);
+>  	if (!nr_mapped)
+>  		goto out;
+>  
+> @@ -780,7 +785,10 @@ static void nvme_unmap_data(struct nvme_dev *dev, struct request *req)
+>  			DMA_TO_DEVICE : DMA_FROM_DEVICE;
+>  
+>  	if (iod->nents) {
+> -		dma_unmap_sg(dev->dev, iod->sg, iod->nents, dma_dir);
+> +		/* P2PDMA requests do not need to be unmapped */
+> +		if (!is_pci_p2pdma_page(sg_page(iod->sg)))
+> +			dma_unmap_sg(dev->dev, iod->sg, iod->nents, dma_dir);
 
-pciehp does the following as soon as the surprise removal event is handled:
+This seems like a poor direction, if we add IOMMU hairpin support we
+will need unmapping.
 
-	pci_dev_set_disconnected(dev, NULL);
-	if (pci_has_subordinate(dev))
-		pci_walk_bus(dev->subordinate, pci_dev_set_disconnected, NULL);
+Jason
 
-Thus, once the above-linked patch lands, you'll be able to detect
-surprise removal by calling pci_channel_offline() or checking
-pdev->error_state == pci_channel_io_perm_failure, obviating the
-need to poll for surprise removal from a kthread.
-
-There's another patch pending to move pci_walk_bus() out of the
-pci_lock_rescan_remove() so that it runs even earlier, without
-pointlessly waiting for a lock:
-https://www.spinics.net/lists/linux-pci/msg75438.html
-
-Thanks,
-
-Lukas
+_______________________________________________
+Linux-nvme mailing list
+Linux-nvme@lists.infradead.org
+http://lists.infradead.org/mailman/listinfo/linux-nvme
