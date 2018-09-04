@@ -1,70 +1,51 @@
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-From: Andrew Murray <andrew.murray@arm.com>
-To: Arnd Bergmann <arnd@arndb.de>, Will Deacon <will.deacon@arm.com>,
- yuanzhichang@hisilicon.com, dann.frazier@canonical.com,
- gabriele.paoloni@huawei.com, bhelgaas@google.com, andy.shevchenko@gmail.com
-Subject: [PATCH] asm-generic: io: Fix ioport_map() for !CONFIG_GENERIC_IOMAP
- && CONFIG_INDIRECT_PIO
-Date: Thu, 13 Sep 2018 13:48:27 +0100
-Message-Id: <1536842907-51732-1-git-send-email-andrew.murray@arm.com>
-List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
-List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
-List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
-List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
-List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
-Cc: jean-philippe.brucker@arm.com, linux-pci@vger.kernel.org,
- linux-kernel@vger.kernel.org, linux-arm-kernel@lists.infradead.org,
- suzuki.poulose@arm.com
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail.kernel.org ([198.145.29.99]:37702 "EHLO mail.kernel.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1726208AbeIDRtv (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Tue, 4 Sep 2018 13:49:51 -0400
+Date: Tue, 4 Sep 2018 08:24:42 -0500
+From: Bjorn Helgaas <helgaas@kernel.org>
+To: Punit Agrawal <punit.agrawal@arm.com>
+Cc: bhelgaas@google.com, linux-pci@vger.kernel.org, x86@kernel.org,
+        will.deacon@arm.com, linux-kernel@vger.kernel.org,
+        lorenzo.pieralisi@arm.com, linux-arm-kernel@lists.infradead.org
+Subject: Re: [PATCH 0/2] Drop node-local allocation during host controller
+ initialisation
+Message-ID: <20180904132442.GB107892@bhelgaas-glaptop.roam.corp.google.com>
+References: <20180828150513.32458-1-punit.agrawal@arm.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
-Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20180828150513.32458-1-punit.agrawal@arm.com>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-The !CONFIG_GENERIC_IOMAP version of ioport_map uses MMIO_UPPER_LIMIT to
-prevent users from making I/O accesses outside the expected I/O range -
-however it erroneously treats MMIO_UPPER_LIMIT as a mask which is
-contradictory to its other users.
+On Tue, Aug 28, 2018 at 04:05:11PM +0100, Punit Agrawal wrote:
+> Hi Bjorn,
+> 
+> As discussed before[0], here are a couple of patches to drop
+> node-local allocations during host contoller initialisation. This set
+> covers both arm64 and x86.
+> 
+> I'm posting early to give the patches time on the list as well in next
+> in case there are issues we've missed.
+> 
+> The patches are based on v4.19-rc1 and has been boot tested on arm64
+> and compile tested on x86.
+> 
+> Thanks,
+> Punit
+> 
+> [0] https://www.spinics.net/lists/arm-kernel/msg669746.html
+> 
+> Punit Agrawal (2):
+>   arm64: PCI: Remove node-local allocations when initialising host
+>     controller
+>   x86/PCI: Remove node-local allocation when initialising host
+>     controller
+> 
+>  arch/arm64/kernel/pci.c | 5 ++---
+>  arch/x86/pci/acpi.c     | 2 +-
+>  2 files changed, 3 insertions(+), 4 deletions(-)
 
-The introduction of CONFIG_INDIRECT_PIO, which subtracts an arbitrary
-amount from IO_SPACE_LIMIT to form MMIO_UPPER_LIMIT, results in ioport_map
-mangling the given port rather than capping it.
-
-We address this by aligning more closely with the CONFIG_GENERIC_IOMAP
-implementation of ioport_map by using the comparison operator and
-returning NULL where the port exceeds MMIO_UPPER_LIMIT. Though note that
-we preserve the existing behavior of masking with IO_SPACE_LIMIT such that
-we don't break existing buggy drivers that somehow rely on this masking.
-
-Fixes: 5745392e0c2b ("PCI: Apply the new generic I/O management on PCI IO hosts")
-Reported-by: Will Deacon <will.deacon@arm.com>
-Signed-off-by: Andrew Murray <andrew.murray@arm.com>
----
- include/asm-generic/io.h | 3 ++-
- 1 file changed, 2 insertions(+), 1 deletion(-)
-
-diff --git a/include/asm-generic/io.h b/include/asm-generic/io.h
-index 66d1d45..d356f80 100644
---- a/include/asm-generic/io.h
-+++ b/include/asm-generic/io.h
-@@ -1026,7 +1026,8 @@ static inline void __iomem *ioremap_wt(phys_addr_t offset, size_t size)
- #define ioport_map ioport_map
- static inline void __iomem *ioport_map(unsigned long port, unsigned int nr)
- {
--	return PCI_IOBASE + (port & MMIO_UPPER_LIMIT);
-+	port &= IO_SPACE_LIMIT;
-+	return (port > MMIO_UPPER_LIMIT) ? NULL : PCI_IOBASE + port;
- }
- #endif
- 
--- 
-2.7.4
-
-
-_______________________________________________
-linux-arm-kernel mailing list
-linux-arm-kernel@lists.infradead.org
-http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
+Applied with Will's ack on the arm64 patch to pci/enumeration for v4.20,
+thanks!
