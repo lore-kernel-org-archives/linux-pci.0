@@ -1,245 +1,76 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:50234 "EHLO mx1.redhat.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1728024AbeIODnm (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Fri, 14 Sep 2018 23:43:42 -0400
-Date: Fri, 14 Sep 2018 16:27:14 -0600
-From: Alex Williamson <alex.williamson@redhat.com>
-To: Sinan Kaya <okaya@kernel.org>
-Cc: linux-pci@vger.kernel.org,
-        Derek Chickles <derek.chickles@caviumnetworks.com>,
-        Satanand Burla <satananda.burla@caviumnetworks.com>,
-        Felix Manlunas <felix.manlunas@caviumnetworks.com>,
-        Raghu Vatsavayi <raghu.vatsavayi@caviumnetworks.com>,
-        "David S. Miller" <davem@davemloft.net>,
-        Bjorn Helgaas <bhelgaas@google.com>,
-        Boris Ostrovsky <boris.ostrovsky@oracle.com>,
-        Juergen Gross <jgross@suse.com>,
-        Jia-Ju Bai <baijiaju1990@gmail.com>
-Subject: Re: [PATCH v2 1/6] PCI: Expose reset_type to users of
- __pci_reset_function_locked()
-Message-ID: <20180914162714.59b3837e@t450s.home>
-In-Reply-To: <20180914211808.2564-2-okaya@kernel.org>
-References: <20180914211808.2564-1-okaya@kernel.org>
-        <20180914211808.2564-2-okaya@kernel.org>
+Return-Path: <SRS0=/8CB=LS=alien8.de=bp@kernel.org>
+Return-Path: <SRS0=/8CB=LS=alien8.de=bp@kernel.org>
+Date: Tue, 4 Sep 2018 16:52:55 +0200
+From: Borislav Petkov <bp@alien8.de>
+To: Pu Wen <puwen@hygon.cn>
+Cc: tglx@linutronix.de, mingo@redhat.com, hpa@zytor.com, x86@kernel.org,
+	thomas.lendacky@amd.com, pbonzini@redhat.com, helgaas@kernel.org,
+	linux-kernel@vger.kernel.org, linux-arch@vger.kernel.org,
+	linux-pci@vger.kernel.org
+Subject: Re: [PATCH v5 07/16] x86/pci: add Hygon PCI vendor and northbridge
+ support
+Message-ID: <20180904145255.GI32615@zn.tnic>
+References: <cover.1535459012.git.puwen@hygon.cn>
+ <ecd62b5b5e8f406598f2354892929caa87cf7deb.1535459013.git.puwen@hygon.cn>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Sender: linux-pci-owner@vger.kernel.org
+Content-Type: text/plain; charset=utf-8
+In-Reply-To: <ecd62b5b5e8f406598f2354892929caa87cf7deb.1535459013.git.puwen@hygon.cn>
 List-ID: <linux-pci.vger.kernel.org>
 
-On Fri, 14 Sep 2018 21:18:03 +0000
-Sinan Kaya <okaya@kernel.org> wrote:
+On Wed, Aug 29, 2018 at 08:44:18PM +0800, Pu Wen wrote:
+> As Hygon register its PCI Vendor ID as a new one "0x1d94", so add a new
+> definition PCI_VENDOR_ID_HYGON in include/linux/pci_ids.h.
+> 
+> Also Hygon PCI Device ID(0x1450/0x1463/0x1464) for Host bridge is added
+> to amd_nb.c. And it need to define new arrays for Hygon:
+> hygon_root_ids[], hygon_nb_misc_ids[], hygon_nb_link_ids[].
+> 
+> To enable Hygon north bridge support, add new variable root_ids, and
+> assign its value based on whether CPU vendor is AMD or Hygon. Modify
+> the CONFIG_AMD_NB to depends on either AMD or Hygon.
+> 
+> Add Hygon support in amd_postcore_init(), early_root_info_init().
 
-> We need a contract between the reset API users and the PCI core about the
-> types of reset that a user needs vs. what PCI core can do internally.
-> If a platform supports hotplug, we need to do hotplug reset as an example.
-> 
-> Expose the reset types to the drivers and try different reset types based
-> on the new reset_type parameter.
-> 
-> Most users are expected to use PCI_RESET_ANY, PCI_RESET_FUNC or
-> PCI_RESET_LINK parameters.
-> 
-> Suggested-by: Alex Williamson <alex.williamson@redhat.com>
-> Signed-off-by: Sinan Kaya <okaya@kernel.org>
+This whole commit message needs to not say *what* the patch does.
+
+> Acked-by: Bjorn Helgaas <bhelgaas@google.com>	# pci_ids.h
+> Signed-off-by: Pu Wen <puwen@hygon.cn>
 > ---
->  .../net/ethernet/cavium/liquidio/lio_main.c   |  2 +-
->  drivers/pci/pci.c                             | 59 ++++++++++++-------
->  drivers/xen/xen-pciback/pci_stub.c            |  6 +-
->  include/linux/pci.h                           | 13 +++-
->  4 files changed, 55 insertions(+), 25 deletions(-)
+>  arch/x86/Kconfig         |  2 +-
+>  arch/x86/kernel/amd_nb.c | 51 ++++++++++++++++++++++++++++++++++++++++++------
+>  arch/x86/pci/amd_bus.c   |  6 ++++--
+>  include/linux/pci_ids.h  |  2 ++
+>  4 files changed, 52 insertions(+), 9 deletions(-)
 > 
-> diff --git a/drivers/net/ethernet/cavium/liquidio/lio_main.c b/drivers/net/ethernet/cavium/liquidio/lio_main.c
-> index 6fb13fa73b27..0ff76722734d 100644
-> --- a/drivers/net/ethernet/cavium/liquidio/lio_main.c
-> +++ b/drivers/net/ethernet/cavium/liquidio/lio_main.c
-> @@ -989,7 +989,7 @@ static void octeon_pci_flr(struct octeon_device *oct)
->  	pci_write_config_word(oct->pci_dev, PCI_COMMAND,
->  			      PCI_COMMAND_INTX_DISABLE);
+> diff --git a/arch/x86/Kconfig b/arch/x86/Kconfig
+> index c5ff296..733f1ec 100644
+> --- a/arch/x86/Kconfig
+> +++ b/arch/x86/Kconfig
+> @@ -2818,7 +2818,7 @@ endif # X86_32
 >  
-> -	rc = __pci_reset_function_locked(oct->pci_dev);
-> +	rc = __pci_reset_function_locked(oct->pci_dev, PCI_RESET_ANY);
+>  config AMD_NB
+>  	def_bool y
+> -	depends on CPU_SUP_AMD && PCI
+> +	depends on (CPU_SUP_AMD || CPU_SUP_HYGON) && PCI
 >  
->  	if (rc != 0)
->  		dev_err(&oct->pci_dev->dev, "Error %d resetting PCI function %d\n",
-> diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
-> index 1835f3a7aa8d..8912c8ba3b2b 100644
-> --- a/drivers/pci/pci.c
-> +++ b/drivers/pci/pci.c
-> @@ -4673,6 +4673,7 @@ static void pci_dev_restore(struct pci_dev *dev)
->   * __pci_reset_function_locked - reset a PCI device function while holding
->   * the @dev mutex lock.
->   * @dev: PCI device to reset
-> + * @reset_type: reset mask to try
->   *
->   * Some devices allow an individual function to be reset without affecting
->   * other functions in the same device.  The PCI device must be responsive
-> @@ -4688,9 +4689,9 @@ static void pci_dev_restore(struct pci_dev *dev)
->   * Returns 0 if the device function was successfully reset or negative if the
->   * device doesn't support resetting a single function.
->   */
-> -int __pci_reset_function_locked(struct pci_dev *dev)
-> +int __pci_reset_function_locked(struct pci_dev *dev, u32 reset_type)
->  {
-> -	int rc;
-> +	int rc = 0;
+>  source "drivers/pcmcia/Kconfig"
+>  
+> diff --git a/arch/x86/kernel/amd_nb.c b/arch/x86/kernel/amd_nb.c
+> index b481b95..d9867b2 100644
+> --- a/arch/x86/kernel/amd_nb.c
+> +++ b/arch/x86/kernel/amd_nb.c
+> @@ -20,6 +20,10 @@
+>  #define PCI_DEVICE_ID_AMD_17H_M10H_DF_F3 0x15eb
+>  #define PCI_DEVICE_ID_AMD_17H_M10H_DF_F4 0x15ec
+>  
+> +#define PCI_DEVICE_ID_HYGON_18H_ROOT     0x1450
+> +#define PCI_DEVICE_ID_HYGON_18H_DF_F3    0x1463
+> +#define PCI_DEVICE_ID_HYGON_18H_DF_F4    0x1464
 
-What's the proper return value when a user passes zero for reset_type?
-It seems to currently be: user provided no options, therefore we tried
-none, therefore success.  I'm torn whether that's entirely bogus to the
-point of that we should WARN_ON (ie. caller bug), or simply return
--EINVAL, which the caller can ignore, or if there's some value to allow
-the behavior here. Thanks,
+Why are you adding those if you can use the AMD f17h ones? They're the same.
 
-Alex
+-- 
+Regards/Gruss,
+    Boris.
 
->  
->  	might_sleep();
->  
-> @@ -4702,24 +4703,42 @@ int __pci_reset_function_locked(struct pci_dev *dev)
->  	 * other error, we're also finished: this indicates that further
->  	 * reset mechanisms might be broken on the device.
->  	 */
-> -	rc = pci_dev_specific_reset(dev, 0);
-> -	if (rc != -ENOTTY)
-> -		return rc;
-> -	if (pcie_has_flr(dev)) {
-> -		rc = pcie_flr(dev);
-> +	if (reset_type & PCI_RESET_DEV_SPECIFIC) {
-> +		rc = pci_dev_specific_reset(dev, 0);
->  		if (rc != -ENOTTY)
->  			return rc;
->  	}
-> -	rc = pci_af_flr(dev, 0);
-> -	if (rc != -ENOTTY)
-> -		return rc;
-> -	rc = pci_pm_reset(dev, 0);
-> -	if (rc != -ENOTTY)
-> -		return rc;
-> -	rc = pci_dev_reset_slot_function(dev, 0);
-> -	if (rc != -ENOTTY)
-> -		return rc;
-> -	return pci_parent_bus_reset(dev, 0);
-> +
-> +	if (reset_type & PCI_RESET_FLR) {
-> +		if (pcie_has_flr(dev)) {
-> +			rc = pcie_flr(dev);
-> +			if (rc != -ENOTTY)
-> +				return rc;
-> +		}
-> +		rc = pci_af_flr(dev, 0);
-> +		if (rc != -ENOTTY)
-> +			return rc;
-> +	}
-> +
-> +	if (reset_type & PCI_RESET_PM) {
-> +		rc = pci_pm_reset(dev, 0);
-> +		if (rc != -ENOTTY)
-> +			return rc;
-> +	}
-> +
-> +	if (reset_type & PCI_RESET_SLOT) {
-> +		rc = pci_dev_reset_slot_function(dev, 0);
-> +		if (rc != -ENOTTY)
-> +			return rc;
-> +	}
-> +
-> +	if (reset_type & PCI_RESET_BUS) {
-> +		rc = pci_parent_bus_reset(dev, 0);
-> +		if (rc != -ENOTTY)
-> +			return rc;
-> +	}
-> +
-> +	return rc;
->  }
->  EXPORT_SYMBOL_GPL(__pci_reset_function_locked);
->  
-> @@ -4784,7 +4803,7 @@ int pci_reset_function(struct pci_dev *dev)
->  	pci_dev_lock(dev);
->  	pci_dev_save_and_disable(dev);
->  
-> -	rc = __pci_reset_function_locked(dev);
-> +	rc = __pci_reset_function_locked(dev, PCI_RESET_ANY);
->  
->  	pci_dev_restore(dev);
->  	pci_dev_unlock(dev);
-> @@ -4819,7 +4838,7 @@ int pci_reset_function_locked(struct pci_dev *dev)
->  
->  	pci_dev_save_and_disable(dev);
->  
-> -	rc = __pci_reset_function_locked(dev);
-> +	rc = __pci_reset_function_locked(dev, PCI_RESET_ANY);
->  
->  	pci_dev_restore(dev);
->  
-> @@ -4844,7 +4863,7 @@ int pci_try_reset_function(struct pci_dev *dev)
->  		return -EAGAIN;
->  
->  	pci_dev_save_and_disable(dev);
-> -	rc = __pci_reset_function_locked(dev);
-> +	rc = __pci_reset_function_locked(dev, PCI_RESET_ANY);
->  	pci_dev_restore(dev);
->  	pci_dev_unlock(dev);
->  
-> diff --git a/drivers/xen/xen-pciback/pci_stub.c b/drivers/xen/xen-pciback/pci_stub.c
-> index 59661db144e5..6dfb805bcb19 100644
-> --- a/drivers/xen/xen-pciback/pci_stub.c
-> +++ b/drivers/xen/xen-pciback/pci_stub.c
-> @@ -105,7 +105,7 @@ static void pcistub_device_release(struct kref *kref)
->  	/* Call the reset function which does not take lock as this
->  	 * is called from "unbind" which takes a device_lock mutex.
->  	 */
-> -	__pci_reset_function_locked(dev);
-> +	__pci_reset_function_locked(dev, PCI_RESET_ANY);
->  	if (pci_load_and_free_saved_state(dev, &dev_data->pci_saved_state))
->  		dev_info(&dev->dev, "Could not reload PCI state\n");
->  	else
-> @@ -283,7 +283,7 @@ void pcistub_put_pci_dev(struct pci_dev *dev)
->  	 * (so it's ready for the next domain)
->  	 */
->  	device_lock_assert(&dev->dev);
-> -	__pci_reset_function_locked(dev);
-> +	__pci_reset_function_locked(dev, PCI_RESET_ANY);
->  
->  	dev_data = pci_get_drvdata(dev);
->  	ret = pci_load_saved_state(dev, dev_data->pci_saved_state);
-> @@ -417,7 +417,7 @@ static int pcistub_init_device(struct pci_dev *dev)
->  		dev_err(&dev->dev, "Could not store PCI conf saved state!\n");
->  	else {
->  		dev_dbg(&dev->dev, "resetting (FLR, D3, etc) the device\n");
-> -		__pci_reset_function_locked(dev);
-> +		__pci_reset_function_locked(dev, PCI_RESET_ANY);
->  		pci_restore_state(dev);
->  	}
->  	/* Now disable the device (this also ensures some private device
-> diff --git a/include/linux/pci.h b/include/linux/pci.h
-> index 6925828f9f25..d2e0a8c8177b 100644
-> --- a/include/linux/pci.h
-> +++ b/include/linux/pci.h
-> @@ -849,6 +849,17 @@ enum {
->  	PCI_SCAN_ALL_PCIE_DEVS	= 0x00000040,	/* Scan all, not just dev 0 */
->  };
->  
-> +#define PCI_RESET_DEV_SPECIFIC	(1 << 0)
-> +#define PCI_RESET_FLR		(1 << 1)
-> +#define PCI_RESET_PM		(1 << 2)
-> +#define PCI_RESET_SLOT		(1 << 3)
-> +#define PCI_RESET_BUS		(1 << 4)
-> +
-> +#define PCI_RESET_ANY		(~0)
-> +#define PCI_RESET_FUNC		(PCI_RESET_DEV_SPECIFIC | \
-> +				 PCI_RESET_FLR | PCI_RESET_PM)
-> +#define PCI_RESET_LINK		(PCI_RESET_SLOT | PCI_RESET_BUS)
-> +
->  /* These external functions are only available when PCI support is enabled */
->  #ifdef CONFIG_PCI
->  
-> @@ -1111,7 +1122,7 @@ u32 pcie_bandwidth_available(struct pci_dev *dev, struct pci_dev **limiting_dev,
->  void pcie_print_link_status(struct pci_dev *dev);
->  bool pcie_has_flr(struct pci_dev *dev);
->  int pcie_flr(struct pci_dev *dev);
-> -int __pci_reset_function_locked(struct pci_dev *dev);
-> +int __pci_reset_function_locked(struct pci_dev *dev, u32 reset_type);
->  int pci_reset_function(struct pci_dev *dev);
->  int pci_reset_function_locked(struct pci_dev *dev);
->  int pci_try_reset_function(struct pci_dev *dev);
+Good mailing practices for 400: avoid top-posting and trim the reply.
