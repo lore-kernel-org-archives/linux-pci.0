@@ -1,129 +1,117 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mga09.intel.com ([134.134.136.24]:47546 "EHLO mga09.intel.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1730291AbeIFU0c (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Thu, 6 Sep 2018 16:26:32 -0400
+Return-Path: <SRS0=19xT=LS=linux.intel.com=mika.westerberg@kernel.org>
+Return-Path: <SRS0=19xT=LS=linux.intel.com=mika.westerberg@kernel.org>
+Date: Tue, 4 Sep 2018 09:43:07 +0300
 From: Mika Westerberg <mika.westerberg@linux.intel.com>
-To: Bjorn Helgaas <bhelgaas@google.com>,
-        "Rafael J. Wysocki" <rjw@rjwysocki.net>
-Cc: Len Brown <lenb@kernel.org>, Lukas Wunner <lukas@wunner.de>,
-        Keith Busch <keith.busch@intel.com>,
-        Ashok Raj <ashok.raj@intel.com>, Mario.Limonciello@dell.com,
-        Anthony Wong <anthony.wong@canonical.com>,
-        "D . J . Bernstein" <djb@cr.yp.to>,
-        Linus Walleij <linus.walleij@linaro.org>,
-        Mika Westerberg <mika.westerberg@linux.intel.com>,
-        linux-pci@vger.kernel.org, linux-acpi@vger.kernel.org
-Subject: [PATCH 03/10] PCI: pciehp: Disable hotplug interrupt during suspend
-Date: Thu,  6 Sep 2018 18:50:13 +0300
-Message-Id: <20180906155020.51700-4-mika.westerberg@linux.intel.com>
-In-Reply-To: <20180906155020.51700-1-mika.westerberg@linux.intel.com>
-References: <20180906155020.51700-1-mika.westerberg@linux.intel.com>
-Sender: linux-pci-owner@vger.kernel.org
+To: Daniel Drake <drake@endlessm.com>
+Cc: Bjorn Helgaas <helgaas@kernel.org>, Bjorn Helgaas <bhelgaas@google.com>,
+	linux-pci@vger.kernel.org,
+	Linux Upstreaming Team <linux@endlessm.com>,
+	nouveau@lists.freedesktop.org, Linux PM <linux-pm@vger.kernel.org>,
+	Peter Wu <peter@lekensteyn.nl>, kherbst@redhat.com,
+	Andy Shevchenko <andriy.shevchenko@linux.intel.com>,
+	"Rafael J. Wysocki" <rafael.j.wysocki@intel.com>,
+	Keith Busch <keith.busch@intel.com>,
+	Jon Derrick <jonathan.derrick@intel.com>
+Subject: Re: [PATCH] PCI: add prefetch quirk to work around Asus/Nvidia
+ suspend issues
+Message-ID: <20180904064307.GM2283@lahna.fi.intel.com>
+References: <20180831073057.14626-1-drake@endlessm.com>
+ <20180831191225.GA43106@bhelgaas-glaptop.roam.corp.google.com>
+ <CAD8Lp45CKCHxTg91zF9bWztqbAwLzgAUpNEHQ6ouKu2PkJT8SQ@mail.gmail.com>
+ <20180903121209.GC2283@lahna.fi.intel.com>
+ <CAD8Lp46M-raneN+6bjGakTq_yd6wGjuPiKDyOoqpO8VXyDBrfQ@mail.gmail.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <CAD8Lp46M-raneN+6bjGakTq_yd6wGjuPiKDyOoqpO8VXyDBrfQ@mail.gmail.com>
 List-ID: <linux-pci.vger.kernel.org>
 
-When PCIe hotplug port is transitioned into D3hot link to the downstream
-component will go down. If hotplug interrupt generation is enabled when
-that happens it will trigger immediately waking up the system and
-bringing the link back up.
+On Tue, Sep 04, 2018 at 09:52:02AM +0800, Daniel Drake wrote:
+> # cat /proc/mtrr
+> reg00: base=0x0c0000000 ( 3072MB), size= 1024MB, count=1: uncachable
+> reg01: base=0x0a0000000 ( 2560MB), size=  512MB, count=1: uncachable
+> reg02: base=0x090000000 ( 2304MB), size=  256MB, count=1: uncachable
+> reg03: base=0x08c000000 ( 2240MB), size=   64MB, count=1: uncachable
+> reg04: base=0x08b800000 ( 2232MB), size=    8MB, count=1: uncachable
+> 
+> # cat /sys/kernel/debug/x86/pat_memtype_list
+> PAT memtype list:
+> write-back @ 0x84a23000-0x84a24000
+> write-back @ 0x8ad34000-0x8ad60000
+> write-back @ 0x8ad5f000-0x8ad66000
+> write-back @ 0x8ad5f000-0x8ad60000
+> write-back @ 0x8ad65000-0x8ad6a000
+> write-back @ 0x8ad69000-0x8ad6b000
+> write-back @ 0x8ad6a000-0x8ad6c000
+> write-back @ 0x8ad6b000-0x8ad6e000
+> write-back @ 0x8ad9c000-0x8ad9d000
+> write-back @ 0x8adce000-0x8adcf000
+> write-back @ 0x8adcf000-0x8add0000
+> write-back @ 0x8adcf000-0x8add2000
+> write-back @ 0x8add3000-0x8add4000
+> write-back @ 0x8ae04000-0x8ae05000
+> write-back @ 0x8b208000-0x8b209000
+> write-combining @ 0xc0000000-0xd0000000
+> write-combining @ 0xd0000000-0xe0000000
+> write-combining @ 0xe0000000-0xe0040000
+> write-combining @ 0xe0040000-0xe0050000
+> write-combining @ 0xe0050000-0xe0051000
+> write-combining @ 0xe0051000-0xe0151000
+> write-combining @ 0xe0151000-0xe0191000
+> write-combining @ 0xe0191000-0xe01a1000
+> write-combining @ 0xe01a1000-0xe01b1000
+> write-combining @ 0xe01b1000-0xe01c1000
+> write-combining @ 0xe01c1000-0xe01c3000
+> write-combining @ 0xe01c3000-0xe01c5000
+> write-combining @ 0xe01c5000-0xe01cd000
+> write-combining @ 0xe01cd000-0xe01d5000
+> write-combining @ 0xe01d5000-0xe01dd000
+> write-combining @ 0xe01dd000-0xe01e5000
+> write-combining @ 0xe01e5000-0xe01ed000
+> write-combining @ 0xe01ed000-0xe01f5000
+> write-combining @ 0xe01f5000-0xe01fd000
+> write-combining @ 0xe01fd000-0xe0205000
+> write-combining @ 0xe0205000-0xe020d000
+> write-combining @ 0xe020d000-0xe0215000
+> uncached-minus @ 0xed000000-0xed200000
+> write-combining @ 0xed800000-0xee000000
+> uncached-minus @ 0xee000000-0xef000000
+> uncached-minus @ 0xef200000-0xef400000
+> uncached-minus @ 0xef400000-0xef401000
+> uncached-minus @ 0xef404000-0xef405000
+> uncached-minus @ 0xef510000-0xef520000
+> uncached-minus @ 0xef528000-0xef52c000
+> uncached-minus @ 0xef533000-0xef534000
+> uncached-minus @ 0xef533000-0xef534000
+> uncached-minus @ 0xef533000-0xef534000
+> uncached-minus @ 0xef534000-0xef535000
+> uncached-minus @ 0xef534000-0xef535000
+> uncached-minus @ 0xef534000-0xef535000
+> uncached-minus @ 0xef535000-0xef536000
+> uncached-minus @ 0xef537000-0xef538000
+> uncached-minus @ 0xef538000-0xef539000
+> uncached-minus @ 0xef538000-0xef539000
+> uncached-minus @ 0xef538000-0xef539000
+> uncached-minus @ 0xef539000-0xef53a000
+> uncached-minus @ 0xef539000-0xef53a000
+> uncached-minus @ 0xef539000-0xef53a000
+> uncached-minus @ 0xef53a000-0xef53b000
+> uncached-minus @ 0xf0000000-0xf8000000
+> uncached-minus @ 0xf00e0000-0xf00e1000
+> uncached-minus @ 0xf0100000-0xf0101000
+> uncached-minus @ 0xf0101000-0xf0102000
+> uncached-minus @ 0xfdac0000-0xfdad0000
+> uncached-minus @ 0xfdae0000-0xfdaf0000
+> uncached-minus @ 0xfdaf0000-0xfdb00000
+> uncached-minus @ 0xfdc43000-0xfdc44000
+> uncached-minus @ 0xfe000000-0xfe001000
+> uncached-minus @ 0xfe000000-0xfe001000
+> uncached-minus @ 0xfed00000-0xfed01000
+> uncached-minus @ 0xfed15000-0xfed16000
+> uncached-minus @ 0xfed40000-0xfed41000
+> uncached-minus @ 0xfed90000-0xfed91000
+> uncached-minus @ 0xfed91000-0xfed92000
+> 
+> Is that the info you were looking for?
 
-To prevent this disable hotplug interrupt generation when system suspend
-is entered. This does not prevent wakeup from low power states according
-to PCIe 4.0 spec section 6.7.3.4:
-
-  Software enables a hot-plug event to generate a wakeup event by
-  enabling software notification of the event as described in Section
-  6.7.3.1. Note that in order for software to disable interrupt generation
-  while keeping wakeup generation enabled, the Hot-Plug Interrupt Enable
-  bit must be cleared.
-
-So as long as we have set the slot event mask accordingly wakeup should
-work even if slot interrupt is disabled. The port should trigger wake
-and then send PME to the root port when the PCIe hierarchy is brought
-back up.
-
-Limit this to systems using native PME mechanism to make sure older
-Apple systems depending on commit e3354628c376 ("PCI: pciehp: Support
-interrupts sent from D3hot") still continue working.
-
-Signed-off-by: Mika Westerberg <mika.westerberg@linux.intel.com>
----
- drivers/pci/hotplug/pciehp.h      |  2 ++
- drivers/pci/hotplug/pciehp_core.c | 18 ++++++++++++++++++
- drivers/pci/hotplug/pciehp_hpc.c  | 10 ++++++++++
- 3 files changed, 30 insertions(+)
-
-diff --git a/drivers/pci/hotplug/pciehp.h b/drivers/pci/hotplug/pciehp.h
-index 811cf83f956d..58bddeb3c5a9 100644
---- a/drivers/pci/hotplug/pciehp.h
-+++ b/drivers/pci/hotplug/pciehp.h
-@@ -187,6 +187,8 @@ struct controller *pcie_init(struct pcie_device *dev);
- int pcie_init_notification(struct controller *ctrl);
- void pcie_shutdown_notification(struct controller *ctrl);
- void pcie_clear_hotplug_events(struct controller *ctrl);
-+void pcie_enable_interrupt(struct controller *ctrl);
-+void pcie_disable_interrupt(struct controller *ctrl);
- int pciehp_power_on_slot(struct slot *slot);
- void pciehp_power_off_slot(struct slot *slot);
- void pciehp_get_power_status(struct slot *slot, u8 *status);
-diff --git a/drivers/pci/hotplug/pciehp_core.c b/drivers/pci/hotplug/pciehp_core.c
-index ec48c9433ae5..c9cf9c3b5f7f 100644
---- a/drivers/pci/hotplug/pciehp_core.c
-+++ b/drivers/pci/hotplug/pciehp_core.c
-@@ -302,8 +302,23 @@ static void pciehp_remove(struct pcie_device *dev)
- }
- 
- #ifdef CONFIG_PM
-+static bool pme_is_native(struct pcie_device *dev)
-+{
-+	const struct pci_host_bridge *host;
-+
-+	host = pci_find_host_bridge(dev->port->bus);
-+	return pcie_ports_native || host->native_pme;
-+}
-+
- static int pciehp_suspend(struct pcie_device *dev)
- {
-+	/*
-+	 * Disable hotplug interrupt so that it does not trigger
-+	 * immediately when the downstream link goes down.
-+	 */
-+	if (pme_is_native(dev))
-+		pcie_disable_interrupt(get_service_data(dev));
-+
- 	return 0;
- }
- 
-@@ -327,6 +342,9 @@ static int pciehp_resume(struct pcie_device *dev)
- {
- 	struct controller *ctrl = get_service_data(dev);
- 
-+	if (pme_is_native(dev))
-+		pcie_enable_interrupt(ctrl);
-+
- 	pciehp_check_presence(ctrl);
- 
- 	return 0;
-diff --git a/drivers/pci/hotplug/pciehp_hpc.c b/drivers/pci/hotplug/pciehp_hpc.c
-index 7136e3430925..2249c4d06efd 100644
---- a/drivers/pci/hotplug/pciehp_hpc.c
-+++ b/drivers/pci/hotplug/pciehp_hpc.c
-@@ -748,6 +748,16 @@ void pcie_clear_hotplug_events(struct controller *ctrl)
- 				   PCI_EXP_SLTSTA_PDC | PCI_EXP_SLTSTA_DLLSC);
- }
- 
-+void pcie_enable_interrupt(struct controller *ctrl)
-+{
-+	pcie_write_cmd(ctrl, PCI_EXP_SLTCTL_HPIE, PCI_EXP_SLTCTL_HPIE);
-+}
-+
-+void pcie_disable_interrupt(struct controller *ctrl)
-+{
-+	pcie_write_cmd(ctrl, 0, PCI_EXP_SLTCTL_HPIE);
-+}
-+
- /*
-  * pciehp has a 1:1 bus:slot relationship so we ultimately want a secondary
-  * bus reset of the bridge, but at the same time we want to ensure that it is
--- 
-2.18.0
+Yes, can you check if the failing device BAR is included in any of the
+above entries? If not then it is probably not related.
