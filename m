@@ -1,81 +1,62 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-From: Alexandru Gagniuc <mr.nuke.me@gmail.com>
-To: linux-pci@vger.kernel.org, bhelgaas@google.com
-Cc: keith.busch@intel.com, alex_gagniuc@dellteam.com,
-        austin_bolen@dell.com, shyam_iyer@dell.com,
-        Alexandru Gagniuc <mr.nuke.me@gmail.com>,
-        Ariel Elior <ariel.elior@cavium.com>,
-        everest-linux-l2@cavium.com,
-        "David S. Miller" <davem@davemloft.net>,
-        Michael Chan <michael.chan@broadcom.com>,
-        Ganesh Goudar <ganeshgr@chelsio.com>,
-        Jeff Kirsher <jeffrey.t.kirsher@intel.com>,
-        Tariq Toukan <tariqt@mellanox.com>,
-        Saeed Mahameed <saeedm@mellanox.com>,
-        Leon Romanovsky <leon@kernel.org>,
-        Jakub Kicinski <jakub.kicinski@netronome.com>,
-        Dirk van der Merwe <dirk.vandermerwe@netronome.com>,
-        netdev@vger.kernel.org, linux-kernel@vger.kernel.org,
-        intel-wired-lan@lists.osuosl.org, linux-rdma@vger.kernel.org,
-        oss-drivers@netronome.com
-Subject: [PATCH 6/9] ixgbe: Do not call pcie_print_link_status()
-Date: Mon,  3 Sep 2018 13:02:33 -0500
-Message-Id: <20180903180242.14504-7-mr.nuke.me@gmail.com>
-In-Reply-To: <20180903180242.14504-1-mr.nuke.me@gmail.com>
-References: <20180903180242.14504-1-mr.nuke.me@gmail.com>
-Sender: linux-kernel-owner@vger.kernel.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from cust-95-128-94-82.breedbanddelft.nl ([95.128.94.82]:41602 "EHLO
+        cust-95-128-94-82.breedbanddelft.nl" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1726094AbeIDMEp (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Tue, 4 Sep 2018 08:04:45 -0400
+Date: Tue, 4 Sep 2018 09:40:51 +0200
+From: Rogier Wolff <R.E.Wolff@BitWizard.nl>
+To: Alan Cox <gnomes@lxorguk.ukuu.org.uk>
+Cc: linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org
+Subject: Re: IRQ number question.
+Message-ID: <20180904074051.GG11854@BitWizard.nl>
+References: <20180903171639.GC16262@BitWizard.nl>
+ <20180903190903.290fff01@alans-desktop>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20180903190903.290fff01@alans-desktop>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-This is now done by the PCI core to warn of sub-optimal bandwidth.
+On Mon, Sep 03, 2018 at 07:09:03PM +0100, Alan Cox wrote:
 
-Signed-off-by: Alexandru Gagniuc <mr.nuke.me@gmail.com>
----
- drivers/net/ethernet/intel/ixgbe/ixgbe_main.c | 26 -------------------
- 1 file changed, 26 deletions(-)
+> The IRQ number in the PCI configuration space is just a label really for
+> legacy OS stuff. Nothing actually routes interrupts according to it (*).
+> If it's coming up as 14 that looks more like the BIOS mislabelled it.
+> Legacy PCI interrupts care about lines and pins not irq numbers.
 
-diff --git a/drivers/net/ethernet/intel/ixgbe/ixgbe_main.c b/drivers/net/ethernet/intel/ixgbe/ixgbe_main.c
-index 9a23d33a47ed..9663419e0ceb 100644
---- a/drivers/net/ethernet/intel/ixgbe/ixgbe_main.c
-+++ b/drivers/net/ethernet/intel/ixgbe/ixgbe_main.c
-@@ -241,28 +241,6 @@ static inline bool ixgbe_pcie_from_parent(struct ixgbe_hw *hw)
- 	}
- }
- 
--static void ixgbe_check_minimum_link(struct ixgbe_adapter *adapter,
--				     int expected_gts)
--{
--	struct ixgbe_hw *hw = &adapter->hw;
--	struct pci_dev *pdev;
--
--	/* Some devices are not connected over PCIe and thus do not negotiate
--	 * speed. These devices do not have valid bus info, and thus any report
--	 * we generate may not be correct.
--	 */
--	if (hw->bus.type == ixgbe_bus_type_internal)
--		return;
--
--	/* determine whether to use the parent device */
--	if (ixgbe_pcie_from_parent(&adapter->hw))
--		pdev = adapter->pdev->bus->parent->self;
--	else
--		pdev = adapter->pdev;
--
--	pcie_print_link_status(pdev);
--}
--
- static void ixgbe_service_event_schedule(struct ixgbe_adapter *adapter)
- {
- 	if (!test_bit(__IXGBE_DOWN, &adapter->state) &&
-@@ -10792,10 +10770,6 @@ static int ixgbe_probe(struct pci_dev *pdev, const struct pci_device_id *ent)
- 		break;
- 	}
- 
--	/* don't check link if we failed to enumerate functions */
--	if (expected_gts > 0)
--		ixgbe_check_minimum_link(adapter, expected_gts);
--
- 	err = ixgbe_read_pba_string_generic(hw, part_str, sizeof(part_str));
- 	if (err)
- 		strlcpy(part_str, "Unknown", sizeof(part_str));
+Yeah, on ISA there are lines marked IRQ3, IRQ4 and you pull on such a
+line and the CPU gets interrupted.
+
+On PCI there are lines marked IRQA, IRQB... IRQD and you yan one line
+and the CPU gets interrupted.
+
+Usually IRQA on the first slot gets wired to IRQB on the second slot
+and so on. This is because cards are expected to require only one IRQ,
+but /can/ have upto four.
+
+the IRQ register in the PCI configuration space is just an 8bit
+register that is required to be able to remember those 8 bits nothing
+else.
+
+The BIOS is expected to know which SLOTx INTy line goes where in the
+hardware. And then it should store the resulting interrupt number in
+that 8-bit register.
+
+Now when Linux knows enough about the hardware (interrupt controller)
+to reroute interrupts on an interrupt controller, I would have liked
+it to also note the result in the interrupt register in the affected
+card. Apparently it doesn't. 
+
+Anyway. Yesterday I was: "OK, I'll have to make it into a real
+PCI-device-driver", and today I'm thinking: "Now I know how this comes
+about, I can make it nicer if I have time left", on to other stuff for
+the time being.
+
+	Roger. 
+
 -- 
-2.17.1
+** R.E.Wolff@BitWizard.nl ** http://www.BitWizard.nl/ ** +31-15-2600998 **
+**    Delftechpark 26 2628 XH  Delft, The Netherlands. KVK: 27239233    **
+*-- BitWizard writes Linux device drivers for any device you may have! --*
+The plan was simple, like my brother-in-law Phil. But unlike
+Phil, this plan just might work.
