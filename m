@@ -1,85 +1,121 @@
-Return-Path: <SRS0=hNZt=LU=socionext.com=hayashi.kunihiko@kernel.org>
-Return-Path: <SRS0=hNZt=LU=socionext.com=hayashi.kunihiko@kernel.org>
-Date: Thu, 06 Sep 2018 10:38:08 +0900
-From: Kunihiko Hayashi <hayashi.kunihiko@socionext.com>
-To: Bjorn Helgaas <helgaas@kernel.org>
-Subject: Re: [PATCH 1/2] dt-bindings: pci: add UniPhier PCIe host controller description
-Cc: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
- Bjorn Helgaas <bhelgaas@google.com>,
- Rob Herring <robh+dt@kernel.org>,
- Mark Rutland <mark.rutland@arm.com>,
- Masahiro Yamada <yamada.masahiro@socionext.com>,
- devicetree@vger.kernel.org,
- Masami Hiramatsu <masami.hiramatsu@linaro.org>,
- linux-pci@vger.kernel.org,
- linux-kernel@vger.kernel.org,
- Jassi Brar <jaswinder.singh@linaro.org>,
- linux-arm-kernel@lists.infradead.org
-In-Reply-To: <20180905172118.GN107892@bhelgaas-glaptop.roam.corp.google.com>
-References: <1536114731-28630-2-git-send-email-hayashi.kunihiko@socionext.com> <20180905172118.GN107892@bhelgaas-glaptop.roam.corp.google.com>
-Message-Id: <20180906103808.2529.4A936039@socionext.com>
+Return-Path: <SRS0=ALKf=LS=endlessm.com=drake@kernel.org>
+Return-Path: <SRS0=ALKf=LS=endlessm.com=drake@kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="US-ASCII"
+In-Reply-To: <20180903121209.GC2283@lahna.fi.intel.com>
+References: <20180831073057.14626-1-drake@endlessm.com> <20180831191225.GA43106@bhelgaas-glaptop.roam.corp.google.com>
+ <CAD8Lp45CKCHxTg91zF9bWztqbAwLzgAUpNEHQ6ouKu2PkJT8SQ@mail.gmail.com> <20180903121209.GC2283@lahna.fi.intel.com>
+From: Daniel Drake <drake@endlessm.com>
+Date: Tue, 4 Sep 2018 09:52:02 +0800
+Message-ID: <CAD8Lp46M-raneN+6bjGakTq_yd6wGjuPiKDyOoqpO8VXyDBrfQ@mail.gmail.com>
+Subject: Re: [PATCH] PCI: add prefetch quirk to work around Asus/Nvidia
+ suspend issues
+To: Mika Westerberg <mika.westerberg@linux.intel.com>
+Cc: Bjorn Helgaas <helgaas@kernel.org>, Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org,
+	Linux Upstreaming Team <linux@endlessm.com>, nouveau@lists.freedesktop.org,
+	Linux PM <linux-pm@vger.kernel.org>, Peter Wu <peter@lekensteyn.nl>, kherbst@redhat.com,
+	Andy Shevchenko <andriy.shevchenko@linux.intel.com>,
+	"Rafael J. Wysocki" <rafael.j.wysocki@intel.com>, Keith Busch <keith.busch@intel.com>,
+	Jon Derrick <jonathan.derrick@intel.com>
+Content-Type: text/plain; charset="UTF-8"
 List-ID: <linux-pci.vger.kernel.org>
 
-Hi Bjorn,
+On Mon, Sep 3, 2018 at 8:12 PM, Mika Westerberg
+<mika.westerberg@linux.intel.com> wrote:
+> We have seen one similar issue with LPSS devices when BIOS assigns
+> device BARs above 4G (which is not the case here) and it turned out to
+> be misconfigured MTRR register or something like that. It may not be
+> related at all but it could be worth a try to dump out MTRR registers of
+> one of the affected systems and see if the memory areas are listed there
+> (and if the attributes are somehow wrong if found).
 
-Thank you for reviewing.
+>From Asus X542UQ:
 
-On Wed, 5 Sep 2018 12:21:18 -0500 <helgaas@kernel.org> wrote:
+# cat /proc/mtrr
+reg00: base=0x0c0000000 ( 3072MB), size= 1024MB, count=1: uncachable
+reg01: base=0x0a0000000 ( 2560MB), size=  512MB, count=1: uncachable
+reg02: base=0x090000000 ( 2304MB), size=  256MB, count=1: uncachable
+reg03: base=0x08c000000 ( 2240MB), size=   64MB, count=1: uncachable
+reg04: base=0x08b800000 ( 2232MB), size=    8MB, count=1: uncachable
 
-> 
-> Please follow the capitalization convention, i.e.,
-> 
->   $ git log --oneline --no-merges Documentaon/devicetree/bindings/pci/ | grep -i pci
->   82dfbd27c837 dt-bindings: PCI: cadence: Add DT bindings for optional PHYs
->   92f9ccca4c08 PCI: mobiveil: Add Mobiveil PCIe Host Bridge IP driver DT bindings
->   71918e24cb49 dt-bindings: PCI: designware: Add support for EP in DesignWare driver
->   467c7a737642 dt-bindings: PCI: designware: Example update
->   1dca7a636933 dt-bindings: PCI: rockchip: Add DT bindings for Rockchip PCIe EP driver
->   2ca25bd7472f dt-bindings: PCI: rockchip: Rename rockchip-pcie.txt to rockchip-pcie-host.txt
-> 
-> On Wed, Sep 05, 2018 at 11:32:10AM +0900, Kunihiko Hayashi wrote:
-> > Add DT bindings for PCIe controller implemented in UniPhier SoCs when
-> > configured in Root Complex (host) mode. This controller is based on
-> > the Designware PCIe Core.
-> 
-> s/Designware/DesignWare/
-> s/Core/core/
+# cat /sys/kernel/debug/x86/pat_memtype_list
+PAT memtype list:
+write-back @ 0x84a23000-0x84a24000
+write-back @ 0x8ad34000-0x8ad60000
+write-back @ 0x8ad5f000-0x8ad66000
+write-back @ 0x8ad5f000-0x8ad60000
+write-back @ 0x8ad65000-0x8ad6a000
+write-back @ 0x8ad69000-0x8ad6b000
+write-back @ 0x8ad6a000-0x8ad6c000
+write-back @ 0x8ad6b000-0x8ad6e000
+write-back @ 0x8ad9c000-0x8ad9d000
+write-back @ 0x8adce000-0x8adcf000
+write-back @ 0x8adcf000-0x8add0000
+write-back @ 0x8adcf000-0x8add2000
+write-back @ 0x8add3000-0x8add4000
+write-back @ 0x8ae04000-0x8ae05000
+write-back @ 0x8b208000-0x8b209000
+write-combining @ 0xc0000000-0xd0000000
+write-combining @ 0xd0000000-0xe0000000
+write-combining @ 0xe0000000-0xe0040000
+write-combining @ 0xe0040000-0xe0050000
+write-combining @ 0xe0050000-0xe0051000
+write-combining @ 0xe0051000-0xe0151000
+write-combining @ 0xe0151000-0xe0191000
+write-combining @ 0xe0191000-0xe01a1000
+write-combining @ 0xe01a1000-0xe01b1000
+write-combining @ 0xe01b1000-0xe01c1000
+write-combining @ 0xe01c1000-0xe01c3000
+write-combining @ 0xe01c3000-0xe01c5000
+write-combining @ 0xe01c5000-0xe01cd000
+write-combining @ 0xe01cd000-0xe01d5000
+write-combining @ 0xe01d5000-0xe01dd000
+write-combining @ 0xe01dd000-0xe01e5000
+write-combining @ 0xe01e5000-0xe01ed000
+write-combining @ 0xe01ed000-0xe01f5000
+write-combining @ 0xe01f5000-0xe01fd000
+write-combining @ 0xe01fd000-0xe0205000
+write-combining @ 0xe0205000-0xe020d000
+write-combining @ 0xe020d000-0xe0215000
+uncached-minus @ 0xed000000-0xed200000
+write-combining @ 0xed800000-0xee000000
+uncached-minus @ 0xee000000-0xef000000
+uncached-minus @ 0xef200000-0xef400000
+uncached-minus @ 0xef400000-0xef401000
+uncached-minus @ 0xef404000-0xef405000
+uncached-minus @ 0xef510000-0xef520000
+uncached-minus @ 0xef528000-0xef52c000
+uncached-minus @ 0xef533000-0xef534000
+uncached-minus @ 0xef533000-0xef534000
+uncached-minus @ 0xef533000-0xef534000
+uncached-minus @ 0xef534000-0xef535000
+uncached-minus @ 0xef534000-0xef535000
+uncached-minus @ 0xef534000-0xef535000
+uncached-minus @ 0xef535000-0xef536000
+uncached-minus @ 0xef537000-0xef538000
+uncached-minus @ 0xef538000-0xef539000
+uncached-minus @ 0xef538000-0xef539000
+uncached-minus @ 0xef538000-0xef539000
+uncached-minus @ 0xef539000-0xef53a000
+uncached-minus @ 0xef539000-0xef53a000
+uncached-minus @ 0xef539000-0xef53a000
+uncached-minus @ 0xef53a000-0xef53b000
+uncached-minus @ 0xf0000000-0xf8000000
+uncached-minus @ 0xf00e0000-0xf00e1000
+uncached-minus @ 0xf0100000-0xf0101000
+uncached-minus @ 0xf0101000-0xf0102000
+uncached-minus @ 0xfdac0000-0xfdad0000
+uncached-minus @ 0xfdae0000-0xfdaf0000
+uncached-minus @ 0xfdaf0000-0xfdb00000
+uncached-minus @ 0xfdc43000-0xfdc44000
+uncached-minus @ 0xfe000000-0xfe001000
+uncached-minus @ 0xfe000000-0xfe001000
+uncached-minus @ 0xfed00000-0xfed01000
+uncached-minus @ 0xfed15000-0xfed16000
+uncached-minus @ 0xfed40000-0xfed41000
+uncached-minus @ 0xfed90000-0xfed91000
+uncached-minus @ 0xfed91000-0xfed92000
 
-Okay, I'll fix capitalization conventions in all the descriptions
-according to the previous commits.
+Is that the info you were looking for?
 
-> > 
-> > Signed-off-by: Kunihiko Hayashi <hayashi.kunihiko@socionext.com>
-> > ---
-> >  .../devicetree/bindings/pci/uniphier-pcie.txt      | 78 ++++++++++++++++++++++
-> >  1 file changed, 78 insertions(+)
-> >  create mode 100644 Documentation/devicetree/bindings/pci/uniphier-pcie.txt
-> > 
-> > diff --git a/Documentation/devicetree/bindings/pci/uniphier-pcie.txt b/Documentation/devicetree/bindings/pci/uniphier-pcie.txt
-> > new file mode 100644
-> > index 0000000..ea63f78
-> > --- /dev/null
-> > +++ b/Documentation/devicetree/bindings/pci/uniphier-pcie.txt
-> > @@ -0,0 +1,78 @@
-> > +Socionext UniPhier PCI-express host controller bindings
-> 
-> s/PCI-express/PCIe/ (also in other occurrences below)
->
-> > +
-> > +This describes the devicetree bindings for PCI-express host controller
-> > +implemented on Socionext UniPhier SoCs.
-> > +
-> > +UniPhier PCI-express host controller is based on the Synopsys DesignWare
-> > +PCI core. It shares common functions with the PCIe DesignWare core driver
-> > +and inherits common properties defined in
-> > +Documentation/devicetree/bindings/pci/designware-pcie.txt.
-
-Indeed, there are descriptions of inconsistency. I'll fix them.
-
-Thank you,
-
----
-Best Regards,
-Kunihiko Hayashi
+Thanks
+Daniel
