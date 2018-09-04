@@ -1,61 +1,76 @@
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mga04.intel.com ([192.55.52.120]:28142 "EHLO mga04.intel.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1727072AbeIDSnW (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Tue, 4 Sep 2018 14:43:22 -0400
+Date: Tue, 4 Sep 2018 08:19:02 -0600
+From: Keith Busch <keith.busch@intel.com>
+To: Lukas Wunner <lukas@wunner.de>
+Cc: Linux PCI <linux-pci@vger.kernel.org>,
+        Bjorn Helgaas <bhelgaas@google.com>,
+        Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+        Sinan Kaya <okaya@kernel.org>,
+        Thomas Tai <thomas.tai@oracle.com>, poza@codeaurora.org
+Subject: Re: [PATCH 13/16] PCI/pciehp: Implement error handling callbacks
+Message-ID: <20180904141902.GH9677@localhost.localdomain>
+References: <20180831212639.10196-1-keith.busch@intel.com>
+ <20180831212639.10196-14-keith.busch@intel.com>
+ <20180902103955.563lmxzzq52eo26q@wunner.de>
 MIME-Version: 1.0
-References: <1536842907-51732-1-git-send-email-andrew.murray@arm.com>
-In-Reply-To: <1536842907-51732-1-git-send-email-andrew.murray@arm.com>
-From: Arnd Bergmann <arnd@arndb.de>
-Date: Thu, 13 Sep 2018 16:00:54 +0200
-Message-ID: <CAK8P3a27Qx=A9zNheYNF2oZaRUQm-4h_8nPUF2xTdL+kqFrV5g@mail.gmail.com>
-Subject: Re: [PATCH] asm-generic: io: Fix ioport_map() for
- !CONFIG_GENERIC_IOMAP && CONFIG_INDIRECT_PIO
-To: andrew.murray@arm.com
-List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
-List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
-List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
-List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
-List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
-Cc: Gabriele Paoloni <gabriele.paoloni@huawei.com>,
- Suzuki K Poulose <suzuki.poulose@arm.com>, jean-philippe.brucker@arm.com,
- dann.frazier@canonical.com, Will Deacon <will.deacon@arm.com>,
- Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
- "zhichang.yuan" <yuanzhichang@hisilicon.com>,
- Andy Shevchenko <andy.shevchenko@gmail.com>,
- linux-pci <linux-pci@vger.kernel.org>, Bjorn Helgaas <bhelgaas@google.com>,
- Linux ARM <linux-arm-kernel@lists.infradead.org>
-Content-Type: text/plain; charset="us-ascii"
-Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
-Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20180902103955.563lmxzzq52eo26q@wunner.de>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Thu, Sep 13, 2018 at 2:48 PM Andrew Murray <andrew.murray@arm.com> wrote:
->
-> The !CONFIG_GENERIC_IOMAP version of ioport_map uses MMIO_UPPER_LIMIT to
-> prevent users from making I/O accesses outside the expected I/O range -
-> however it erroneously treats MMIO_UPPER_LIMIT as a mask which is
-> contradictory to its other users.
->
-> The introduction of CONFIG_INDIRECT_PIO, which subtracts an arbitrary
-> amount from IO_SPACE_LIMIT to form MMIO_UPPER_LIMIT, results in ioport_map
-> mangling the given port rather than capping it.
->
-> We address this by aligning more closely with the CONFIG_GENERIC_IOMAP
-> implementation of ioport_map by using the comparison operator and
-> returning NULL where the port exceeds MMIO_UPPER_LIMIT. Though note that
-> we preserve the existing behavior of masking with IO_SPACE_LIMIT such that
-> we don't break existing buggy drivers that somehow rely on this masking.
->
-> Fixes: 5745392e0c2b ("PCI: Apply the new generic I/O management on PCI IO hosts")
-> Reported-by: Will Deacon <will.deacon@arm.com>
-> Signed-off-by: Andrew Murray <andrew.murray@arm.com>
+On Sun, Sep 02, 2018 at 12:39:55PM +0200, Lukas Wunner wrote:
+> On Fri, Aug 31, 2018 at 03:26:36PM -0600, Keith Busch wrote:
+> > +	/*
+> > +	 * Shutdown notification to ignore hotplug events during error
+> > +	 * handling. We'll recheck the status when error handling completes.
+> > +	 *
+> > +	 * It is possible link event related to this error handling may have
+> > +	 * triggered a the hotplug interrupt ahead of this notification, but we
+> > +	 * can't do anything about that race.
+> > +	 */
+> > +	pcie_shutdown_notification(ctrl);
+> 
+> No, if you look at pciehp_remove() you'll notice that I call pci_hp_del()
+> before pcie_shutdown_notification().  The IRQ thread is needed to respond
+> to user requests to enable/disable the slot.  If you just release the IRQ,
+> the sysfs interface is still there but will no longer function while the
+> reset is handled.  Not good.
+> 
+> I think what you want to do instead is "down_write(&ctrl->reset_lock)",
+> see commit 5b3f7b7d062b ("PCI: pciehp: Avoid slot access during reset").
+> And possibly mask PDCE/DLLSCE like pciehp_reset_slot() does.
+> 
+> 
+> > +static void pciehp_slot_reset(struct pci_dev *dev)
+> [...]
+> > +	/*
+> > +	 * Cache presence detect change, but ignore other hotplug events that
+> > +	 * may occur during error handling. Ports that implement only in-band
+> > +	 * presence detection may inadvertently believe the device has changed,
+> > +	 * so those devices will have to be re-enumerated.
+> > +	 */
+> > +	pciehp_get_adapter_changed(ctrl->slot, &changed);
+> > +	pcie_clear_hotplug_events(ctrl);
+> > +	if (changed)
+> > +		pciehp_request(ctrl, PCI_EXP_SLTSTA_PDC);
+> > +	pcie_init_notification(ctrl);
+> > +}
+> 
+> Hm, can we be certain that error handling does not affect PDC?
 
-Looks good to me,
-Reviewed-by: Arnd Bergmann <arnd@arndb.de>
+No, I'm actually saying exactly the opposite in the code comments. The
+error handling may affect PDC if the port doesn't have an out-of-band
+presence detection capability.
 
-Can you take this through the arm64 tree?
+> Because pciehp_reset_slot() does mask it and Sinan once said that in-band
+> presence detect may cause presence to flap as well during reset:
+> https://lkml.org/lkml/2018/7/3/693
 
-_______________________________________________
-linux-arm-kernel mailing list
-linux-arm-kernel@lists.infradead.org
-http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
+Right, but how do you know which PDC is okay to ignore and which one
+isn't? Hotplug events freqently trigger other error handling so we can't
+just ignore hot plug during error handling. Link events should be safe
+to ignore, though.
