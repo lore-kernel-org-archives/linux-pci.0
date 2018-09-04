@@ -1,105 +1,87 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mga01.intel.com ([192.55.52.88]:26317 "EHLO mga01.intel.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1727477AbeIFBGe (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Wed, 5 Sep 2018 21:06:34 -0400
-From: Keith Busch <keith.busch@intel.com>
-To: Linux PCI <linux-pci@vger.kernel.org>,
-        Bjorn Helgaas <bhelgaas@google.com>
-Cc: Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-        Sinan Kaya <okaya@kernel.org>,
-        Thomas Tai <thomas.tai@oracle.com>, poza@codeaurora.org,
-        Lukas Wunner <lukas@wunner.de>, Christoph Hellwig <hch@lst.de>,
-        Keith Busch <keith.busch@intel.com>
-Subject: [PATCHv2 00/20] PCI, error handling and hot plug
-Date: Wed,  5 Sep 2018 14:35:26 -0600
-Message-Id: <20180905203546.21921-1-keith.busch@intel.com>
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <SRS0=19xT=LS=linux.intel.com=mika.westerberg@kernel.org>
+Return-Path: <SRS0=19xT=LS=linux.intel.com=mika.westerberg@kernel.org>
+Date: Tue, 4 Sep 2018 12:36:31 +0300
+From: Mika Westerberg <mika.westerberg@linux.intel.com>
+To: Daniel Drake <drake@endlessm.com>
+Cc: Bjorn Helgaas <helgaas@kernel.org>, Bjorn Helgaas <bhelgaas@google.com>,
+	linux-pci@vger.kernel.org,
+	Linux Upstreaming Team <linux@endlessm.com>,
+	nouveau@lists.freedesktop.org, Linux PM <linux-pm@vger.kernel.org>,
+	Peter Wu <peter@lekensteyn.nl>, kherbst@redhat.com,
+	Andy Shevchenko <andriy.shevchenko@linux.intel.com>,
+	"Rafael J. Wysocki" <rafael.j.wysocki@intel.com>,
+	Keith Busch <keith.busch@intel.com>,
+	Jon Derrick <jonathan.derrick@intel.com>
+Subject: Re: [PATCH] PCI: add prefetch quirk to work around Asus/Nvidia
+ suspend issues
+Message-ID: <20180904093631.GN2283@lahna.fi.intel.com>
+References: <20180831073057.14626-1-drake@endlessm.com>
+ <20180831191225.GA43106@bhelgaas-glaptop.roam.corp.google.com>
+ <CAD8Lp45CKCHxTg91zF9bWztqbAwLzgAUpNEHQ6ouKu2PkJT8SQ@mail.gmail.com>
+ <20180903121209.GC2283@lahna.fi.intel.com>
+ <CAD8Lp46M-raneN+6bjGakTq_yd6wGjuPiKDyOoqpO8VXyDBrfQ@mail.gmail.com>
+ <20180904064307.GM2283@lahna.fi.intel.com>
+ <CAD8Lp45iPkYRD9-vDi0k61PW6W=i184xD6TEAPoZXh+hnGLW5g@mail.gmail.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <CAD8Lp45iPkYRD9-vDi0k61PW6W=i184xD6TEAPoZXh+hnGLW5g@mail.gmail.com>
 List-ID: <linux-pci.vger.kernel.org>
 
-v1 -> v2:
+On Tue, Sep 04, 2018 at 03:07:52PM +0800, Daniel Drake wrote:
+> On Tue, Sep 4, 2018 at 2:43 PM, Mika Westerberg
+> <mika.westerberg@linux.intel.com> wrote:
+> > Yes, can you check if the failing device BAR is included in any of the
+> > above entries? If not then it is probably not related.
+> 
+> mtrr again for reference:
+> reg00: base=0x0c0000000 ( 3072MB), size= 1024MB, count=1: uncachable
+> reg01: base=0x0a0000000 ( 2560MB), size=  512MB, count=1: uncachable
+> reg02: base=0x090000000 ( 2304MB), size=  256MB, count=1: uncachable
+> reg03: base=0x08c000000 ( 2240MB), size=   64MB, count=1: uncachable
+> reg04: base=0x08b800000 ( 2232MB), size=    8MB, count=1: uncachable
+> 
+> 
+> The PCI bridge is:
+> 00:1c.0 PCI bridge: Intel Corporation Sunrise Point-LP PCI Express
+> Root Port (rev f1) (prog-if 00 [Normal decode])
+>     Control: I/O+ Mem+ BusMaster+ SpecCycle- MemWINV- VGASnoop-
+> ParErr- Stepping- SERR- FastB2B- DisINTx+
+>     Status: Cap+ 66MHz- UDF- FastB2B- ParErr- DEVSEL=fast >TAbort-
+> <TAbort- <MAbort- >SERR- <PERR- INTx-
+>     Latency: 0, Cache Line Size: 64 bytes
+>     Interrupt: pin A routed to IRQ 122
+>     Bus: primary=00, secondary=01, subordinate=01, sec-latency=0
+>     I/O behind bridge: 0000e000-0000efff
+>     Memory behind bridge: ee000000-ef0fffff
+>     Prefetchable memory behind bridge: 00000000d0000000-00000000e1ffffff
+> 
+> The memory behind bridge at ee000000 is included in the mtrr region
+> reg00 which is 0xc0000000 to 0xffffffff.
+> Same for the prefetchable memory behind bridge.
 
-  * Use Dennis' patch for the incorrect slot reset detection since he
-    posted that fix first
+Yeah and it is uncachable so it should be fine.
 
-  * I found some DPC and HPC capable ports (PLX Device 9781 to be
-    specific) that don't have data-link active reporting capabilities,
-    so I added another patch to handle that
+> The nvidia GPU which becomes unresponsive is:
+> 
+> 01:00.0 3D controller: NVIDIA Corporation GM108M [GeForce 940MX] (rev a2)
+>     Subsystem: ASUSTeK Computer Inc. GM108M [GeForce 940MX]
+>     Control: I/O+ Mem+ BusMaster+ SpecCycle- MemWINV- VGASnoop-
+> ParErr- Stepping- SERR- FastB2B- DisINTx+
+>     Status: Cap+ 66MHz- UDF- FastB2B- ParErr- DEVSEL=fast >TAbort-
+> <TAbort- <MAbort- >SERR- <PERR- INTx-
+>     Latency: 0, Cache Line Size: 64 bytes
+>     Interrupt: pin A routed to IRQ 133
+>     Region 0: Memory at ee000000 (32-bit, non-prefetchable) [size=16M]
+>     Region 1: Memory at d0000000 (64-bit, prefetchable) [size=256M]
+>     Region 3: Memory at e0000000 (64-bit, prefetchable) [size=32M]
+>     Region 5: I/O ports at e000 [size=128]
+>     Expansion ROM at ef000000 [disabled] [size=512K]
+> 
+> Region 0, 1, 3 and the expansion ROM are all included in the mtrr region reg00.
+> 
+> 
+> The magic register that we write to workaround the issue is in PCI
+> bridge config space - not in a BAR.
 
-  * If the recovery determines the precence detection has changed during
-    error handling, we need to prevent the downstream driver from
-    accessing the device under its old context. This was a little tricky
-    because of a circular dependency on the pci_bus_sem, so there is a
-    prep patch to allow recursive pci bus walking, and then we use it
-    from pciehp's slot_reset callback.
-
-  * Make error handling not able to change the error state away from
-    pci_channel_state_perm_failure so that hotplug and error handling
-    may use the same state (suggested by Benjamin Herrenschmidt)
-
-  * Moved the link active wait requirements into generic code
-    (suggested by Sinan Kaya)
-
-  * Check for successful secondary bus reset on recovery failure
-    (suggested by Sinan Kaya)
-
-  * Use pcie_device for service driver error callbacks (suggested by
-    Lukas Wunner)
-
-  * Hold pci_slot_lock when doing a slot reset (suggested by
-    Lukas Wunner)
-
-  * Fixed processing user orderly hotplug requests during error handling
-    suggested by Lukas Wunner)
-
-  * Various code cleanups (suggested by Christoph Hellwig)
-
-  * Split dpc code cleanup into separate patch
-
-  * Changelog grammer fixes and wording clarity
-
-Dennis Dalessandro (1):
-  PCI: Fix faulty logic in pci_reset_bus()
-
-Keith Busch (18):
-  PCI: Add required waits on link active
-  PCI/AER: Remove dead code
-  PCI/ERR: Use slot reset if available
-  PCI/ERR: Handle fatal error recovery
-  PCI/ERR: Always use the first downstream port
-  PCI/ERR: Simplify broadcast callouts
-  PCI/ERR: Report current recovery status for udev
-  PCI/ERR: Remove devices on recovery failure
-  PCI/portdrv: Provide pci error callbacks
-  PCI/portdrv: Restore pci state on slot reset
-  PCI: Make link active reporting detection generic
-  PCI: Create recursive bus walk
-  PCI/pciehp: Fix powerfault detection order
-  PCI/pciehp: Implement error handling callbacks
-  PCI/pciehp: Ignore link events during DPC event
-  PCI/DPC: Wait for link active after reset
-  PCI/DPC: Link reset code cleanup
-  PCI: Unify device inaccessible
-
-Lukas Wunner (1):
-  PCI: Simplify disconnected marking
-
- drivers/pci/bus.c                 |  14 +-
- drivers/pci/hotplug/pciehp.h      |   2 +-
- drivers/pci/hotplug/pciehp_core.c |  39 +++++
- drivers/pci/hotplug/pciehp_hpc.c  |  56 +++----
- drivers/pci/hotplug/pciehp_pci.c  |   9 +-
- drivers/pci/pci.c                 |  68 +++++++-
- drivers/pci/pci.h                 |  17 +-
- drivers/pci/pcie/aer.c            |  27 ++--
- drivers/pci/pcie/dpc.c            |  37 +++--
- drivers/pci/pcie/err.c            | 327 +++++++++++++-------------------------
- drivers/pci/pcie/portdrv.h        |  10 +-
- drivers/pci/pcie/portdrv_pci.c    |  45 +++++-
- drivers/pci/probe.c               |   1 +
- drivers/pci/slot.c                |   2 +-
- include/linux/pci.h               |  10 ++
- 15 files changed, 353 insertions(+), 311 deletions(-)
-
--- 
-2.14.4
+OK, I just wanted to rule out MTRR misconfiguration but I guess it is
+not the case here.
