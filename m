@@ -1,178 +1,86 @@
-Return-Path: <linux-acpi-owner@vger.kernel.org>
-From: "Rafael J. Wysocki" <rjw@rjwysocki.net>
-To: Mika Westerberg <mika.westerberg@linux.intel.com>
-Cc: Bjorn Helgaas <bhelgaas@google.com>, Len Brown <lenb@kernel.org>,
-        Lukas Wunner <lukas@wunner.de>,
-        Keith Busch <keith.busch@intel.com>,
-        Ashok Raj <ashok.raj@intel.com>, Mario.Limonciello@dell.com,
-        Anthony Wong <anthony.wong@canonical.com>,
-        "D . J . Bernstein" <djb@cr.yp.to>,
-        Linus Walleij <linus.walleij@linaro.org>,
-        linux-pci@vger.kernel.org, linux-acpi@vger.kernel.org
-Subject: Re: [PATCH 10/10] PCI / ACPI: Whitelist D3 for more PCIe hotplug ports
-Date: Tue, 11 Sep 2018 11:01:27 +0200
-Message-ID: <1783231.zbE0DC02F3@aspire.rjw.lan>
-In-Reply-To: <20180906155020.51700-11-mika.westerberg@linux.intel.com>
-References: <20180906155020.51700-1-mika.westerberg@linux.intel.com> <20180906155020.51700-11-mika.westerberg@linux.intel.com>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mx1.redhat.com ([209.132.183.28]:52762 "EHLO mx1.redhat.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1726050AbeIEHOq (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Wed, 5 Sep 2018 03:14:46 -0400
+Date: Tue, 4 Sep 2018 20:46:49 -0600
+From: Alex Williamson <alex.williamson@redhat.com>
+To: Sinan Kaya <okaya@kernel.org>
+Cc: Bjorn Helgaas <bhelgaas@google.com>,
+        Dennis Dalessandro <dennis.dalessandro@intel.com>,
+        Linux PCI <linux-pci@vger.kernel.org>
+Subject: Re: RFC on PCI Device Lock
+Message-ID: <20180904204649.415491f8@t450s.home>
+In-Reply-To: <17720f56-2caa-2d2e-b655-867debf55934@kernel.org>
+References: <87682473-6ffe-f7df-e8f8-3d00e8247621@kernel.org>
+        <20180904165202.4e5bb59d@t450s.home>
+        <17720f56-2caa-2d2e-b655-867debf55934@kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Sender: linux-acpi-owner@vger.kernel.org
+Content-Type: text/plain; charset=US-ASCII
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Thursday, September 6, 2018 5:50:20 PM CEST Mika Westerberg wrote:
-> In order to have better power management for Thunderbolt PCIe chains,
-> Windows enables power management for native PCIe hotplug ports if there
-> is following ACPI _DSD attached to the root port:
-> 
->   Name (_DSD, Package () {
->       ToUUID ("6211e2c0-58a3-4af3-90e1-927a4e0c55a4"),
->       Package () {
->           Package () {"HotPlugSupportInD3", 1}
->       }
->   })
-> 
-> This is also documented in:
-> 
->   https://docs.microsoft.com/en-us/windows-hardware/drivers/pci/dsd-for-pcie-root-ports#identifying-pcie-root-ports-supporting-hot-plug-in-d3
-> 
-> Do the same in Linux by introducing new firmware PM callback (->bridge_d3())
-> and then implement it for ACPI based systems so that the above property is
-> checked.
-> 
-> There is one catch, though. The initial pci_dev->bridge_d3 is set before
-> the root port has ACPI companion bound (the device is not added to the
-> PCI bus either) so we need to look up the ACPI companion manually in
-> that case in acpi_pci_bridge_d3().
-> 
-> Signed-off-by: Mika Westerberg <mika.westerberg@linux.intel.com>
-> ---
->  drivers/acpi/property.c |  3 +++
->  drivers/pci/pci-acpi.c  | 41 +++++++++++++++++++++++++++++++++++++++++
->  drivers/pci/pci.c       |  9 +++++++++
->  drivers/pci/pci.h       |  3 +++
->  4 files changed, 56 insertions(+)
-> 
-> diff --git a/drivers/acpi/property.c b/drivers/acpi/property.c
-> index f3ddb279d2de..f9d63ee9f623 100644
-> --- a/drivers/acpi/property.c
-> +++ b/drivers/acpi/property.c
-> @@ -28,6 +28,9 @@ static const guid_t prp_guids[] = {
->  	/* ACPI _DSD device properties GUID: daffd814-6eba-4d8c-8a91-bc9bbf4aa301 */
->  	GUID_INIT(0xdaffd814, 0x6eba, 0x4d8c,
->  		  0x8a, 0x91, 0xbc, 0x9b, 0xbf, 0x4a, 0xa3, 0x01),
-> +	/* Hotplug in D3 GUID: 6211e2c0-58a3-4af3-90e1-927a4e0c55a4 */
-> +	GUID_INIT(0x6211e2c0, 0x58a3, 0x4af3,
-> +		  0x90, 0xe1, 0x92, 0x7a, 0x4e, 0x0c, 0x55, 0xa4),
->  };
->  
->  static const guid_t ads_guid =
-> diff --git a/drivers/pci/pci-acpi.c b/drivers/pci/pci-acpi.c
-> index a4a8c02deaa0..c0394232fd93 100644
-> --- a/drivers/pci/pci-acpi.c
-> +++ b/drivers/pci/pci-acpi.c
-> @@ -519,6 +519,46 @@ static pci_power_t acpi_pci_choose_state(struct pci_dev *pdev)
->  	return PCI_POWER_ERROR;
->  }
->  
-> +static struct acpi_device *acpi_pci_find_companion(struct device *dev);
-> +
-> +static bool acpi_pci_bridge_d3(struct pci_dev *dev)
-> +{
-> +	const struct fwnode_handle *fwnode;
-> +	struct acpi_device *adev;
-> +	struct pci_dev *root;
-> +	u8 val;
-> +
-> +	if (!dev->is_hotplug_bridge)
-> +		return false;
-> +
-> +	/*
-> +	 * Look for a special _DSD property for the root port and if it
-> +	 * is set we know the hierarchy behind it supports D3 just fine.
-> +	 */
-> +	root = pci_find_pcie_root_port(dev);
-> +	if (!root)
-> +		return false;
-> +
-> +	adev = ACPI_COMPANION(&root->dev);
-> +	if (root == dev) {
-> +		/*
-> +		 * It is possible that the ACPI companion is not yet bound
-> +		 * for the root port so look it up manually here.
-> +		 */
-> +		if (!adev && !pci_dev_is_added(root))
-> +			adev = acpi_pci_find_companion(&root->dev);
-> +	}
-> +
-> +	if (!adev)
-> +		return false;
-> +
-> +	fwnode = acpi_fwnode_handle(adev);
-> +	if (fwnode_property_read_u8(fwnode, "HotPlugSupportInD3", &val))
-> +		return false;
-> +
-> +	return val == 1;
-> +}
-> +
->  static bool acpi_pci_power_manageable(struct pci_dev *dev)
->  {
->  	struct acpi_device *adev = ACPI_COMPANION(&dev->dev);
-> @@ -635,6 +675,7 @@ static bool acpi_pci_need_resume(struct pci_dev *dev)
->  }
->  
->  static const struct pci_platform_pm_ops acpi_pci_platform_pm = {
-> +	.bridge_d3 = acpi_pci_bridge_d3,
->  	.is_manageable = acpi_pci_power_manageable,
->  	.set_state = acpi_pci_set_power_state,
->  	.get_state = acpi_pci_get_power_state,
-> diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
-> index 074f3f0253f9..ce212eb10be9 100644
-> --- a/drivers/pci/pci.c
-> +++ b/drivers/pci/pci.c
-> @@ -791,6 +791,11 @@ static inline bool platform_pci_need_resume(struct pci_dev *dev)
->  	return pci_platform_pm ? pci_platform_pm->need_resume(dev) : false;
->  }
->  
-> +static inline bool platform_pci_bridge_d3(struct pci_dev *dev)
-> +{
-> +	return pci_platform_pm ? pci_platform_pm->bridge_d3(dev) : false;
-> +}
-> +
->  /**
->   * pci_raw_set_power_state - Use PCI PM registers to set the power state of
->   *                           given PCI device
-> @@ -2513,6 +2518,10 @@ bool pci_bridge_d3_possible(struct pci_dev *bridge)
->  		if (bridge->is_thunderbolt)
->  			return true;
->  
-> +		/* Platform might know better if the bridge supports D3 */
-> +		if (platform_pci_bridge_d3(bridge))
-> +			return true;
-> +
->  		/*
->  		 * Hotplug ports handled natively by the OS were not validated
->  		 * by vendors for runtime D3 at least until 2018 because there
-> diff --git a/drivers/pci/pci.h b/drivers/pci/pci.h
-> index 6e0d1528d471..66fd5c1bf71b 100644
-> --- a/drivers/pci/pci.h
-> +++ b/drivers/pci/pci.h
-> @@ -39,6 +39,8 @@ int pci_bridge_secondary_bus_reset(struct pci_dev *dev);
->  /**
->   * struct pci_platform_pm_ops - Firmware PM callbacks
->   *
-> + * @bridge_d3: Does the bridge allow entering into D3
-> + *
->   * @is_manageable: returns 'true' if given device is power manageable by the
->   *		   platform firmware
->   *
-> @@ -60,6 +62,7 @@ int pci_bridge_secondary_bus_reset(struct pci_dev *dev);
->   * these callbacks are mandatory.
->   */
->  struct pci_platform_pm_ops {
-> +	bool (*bridge_d3)(struct pci_dev *dev);
->  	bool (*is_manageable)(struct pci_dev *dev);
->  	int (*set_state)(struct pci_dev *dev, pci_power_t state);
->  	pci_power_t (*get_state)(struct pci_dev *dev);
-> 
+On Tue, 4 Sep 2018 18:12:16 -0700
+Sinan Kaya <okaya@kernel.org> wrote:
 
-Reviewed-by: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
+> On 9/4/2018 3:52 PM, Alex Williamson wrote:
+> > I won't deny that we're getting a little sloppy with some of the reset
+> > interfaces and I'd love to solve the device lock issue more generally,
+> > but trying to abstract slot vs bus and hide the lower level interfaces
+> > from drivers doesn't seem like it's really working here.  Thanks,  
+> 
+> Counter argument is that drivers need to know about bus/slot distinction
+> and call two different API for hotplug capable systems. I think that's
+> too much to ask.
+> 
+> The motivation for original patch was that hotplug information was leaking
+> and we could do a better job about it. But, you are right; I partially
+> covered VFIO needs as it seemed to be doing more work than a simple
+> reset due to ownership dependencies.
+
+Maybe let's clarify what is the actual leak of the hotplug API to the
+driver.  I think vfio assumes full responsibility here, it needs to
+know the scope of the reset in order to determine whether the user has
+ownership of all the devices affected by the reset.  In that case it's
+even preferable that we have control of specifying which type of reset
+is performed or else we open ourselves for the possibility that vfio-pci
+and PCI-core could diverge and we don't get the reset we expect.  I
+think that's a point against this sort of blind, unified reset
+interface.
+
+The hfi1 driver previously didn't care about hotplug slots, but the
+case I see where they should have is if the slot enabled surprise
+hotplug.  In that case their direct call to
+pci_reset_bridge_secondary_bus might have triggered such an event;
+surprise!  They also go to the trouble to manually save and restore
+config space around the reset and make sure they're the only device
+affected by the reset, so this really starts to sound like a place
+where we should use a pci_reset_function type interface (though they
+have quite a bit of setup working towards the SBR, so it may not be
+trivial to convert).  In fact, we've even got and exported
+__pci_reset_function_locked() which can already handle the device_lock
+being held, but it will prefer function level resets before it gets to
+the bus/slot resets that this driver wants.
+
+It seems a common theme here is that the driver wants some degree of
+control of the type of reset used, vfio specifically wants to specify a
+bus or slot reset while hfi1 just wants to specify that the link is
+reset and doesn't care if it's a bus or slot reset that accomplishes
+that.  So maybe the right "unified" interface is one that takes a
+parameter allowing the caller to specify the scope or type of reset
+with aliases so drivers can ignore the hotplug interface if they wish.
+An ugly version of that might be based around something like:
+
+#define PCI_RESET_DEV_SPECIFIC	(1 << 0)
+#define PCI_RESET_FLR		(1 << 1)
+#define PCI_RESET_PM		(1 << 2)
+#define PCI_RESET_SLOT		(1 << 3)
+#define PCI_RESET_BUS		(1 << 4)
+
+#define PCI_RESET_ANY		(~0)
+#define PCI_RESET_FUNC		(PCI_RESET_DEV_SPECIFIC | \
+				 PCI_RESET_FLR | PCI_RESET_PM)
+#define PCI_RESET_LINK		(PCI_RESET_SLOT | PCI_RESET_BUS)
+
+Thanks,
+Alex
