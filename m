@@ -1,182 +1,69 @@
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Date: Thu, 13 Sep 2018 15:51:30 +0100
-From: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
-To: Rob Herring <robh@kernel.org>
-Subject: Re: [PATCH] PCI: remove unnecessary check of device_type == pci
-Message-ID: <20180913145130.GA5756@e107981-ln.cambridge.arm.com>
-References: <20180829183440.13601-1-robh@kernel.org>
+Return-Path: <linux-nvme-bounces+bjorn=helgaas.com@lists.infradead.org>
+Return-Path: <linux-nvme-bounces+bjorn=helgaas.com@lists.infradead.org>
+Subject: Re: [PATCH v5 07/13] block: Add PCI P2P flag for request queue and
+ check support for requests
+To: Logan Gunthorpe <logang@deltatee.com>, Christoph Hellwig <hch@lst.de>
+References: <20180830185352.3369-1-logang@deltatee.com>
+ <20180830185352.3369-8-logang@deltatee.com>
+ <b5ab8fa3-34ac-3117-fa0d-5206c3939435@kernel.dk>
+ <20180901082812.GB670@lst.de>
+ <5f79c012-c6e1-56bb-62fd-0689181fb2c9@deltatee.com>
+From: Jens Axboe <axboe@kernel.dk>
+Message-ID: <59b28977-8f2a-6228-2050-03fae6bdbedd@kernel.dk>
+Date: Wed, 5 Sep 2018 13:26:51 -0600
 MIME-Version: 1.0
-In-Reply-To: <20180829183440.13601-1-robh@kernel.org>
-List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
-List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
-List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
-List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
-List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
-Cc: linux-pci@vger.kernel.org,
- Subrahmanya Lingappa <l.subrahmanya@mobiveil.co.in>,
- Will Deacon <will.deacon@arm.com>, linux-kernel@vger.kernel.org,
- Michal Simek <michal.simek@xilinx.com>, Alan Douglas <adouglas@cadence.com>,
- Bjorn Helgaas <bhelgaas@google.com>, linux-arm-kernel@lists.infradead.org
+In-Reply-To: <5f79c012-c6e1-56bb-62fd-0689181fb2c9@deltatee.com>
+List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-nvme>,
+ <mailto:linux-nvme-request@lists.infradead.org?subject=unsubscribe>
+List-Archive: <http://lists.infradead.org/pipermail/linux-nvme/>
+List-Post: <mailto:linux-nvme@lists.infradead.org>
+List-Help: <mailto:linux-nvme-request@lists.infradead.org?subject=help>
+List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-nvme>,
+ <mailto:linux-nvme-request@lists.infradead.org?subject=subscribe>
+Cc: Keith Busch <keith.busch@intel.com>,
+ Alex Williamson <alex.williamson@redhat.com>, Sagi Grimberg <sagi@grimberg.me>,
+ linux-nvdimm@lists.01.org, linux-rdma@vger.kernel.org,
+ linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
+ linux-nvme@lists.infradead.org, Stephen Bates <sbates@raithlin.com>,
+ linux-block@vger.kernel.org,
+ =?UTF-8?B?SsOpcsO0bWUgR2xpc3Nl?= <jglisse@redhat.com>,
+ Jason Gunthorpe <jgg@mellanox.com>,
+ Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+ Bjorn Helgaas <bhelgaas@google.com>, Max Gurtovoy <maxg@mellanox.com>,
+ Dan Williams <dan.j.williams@intel.com>,
+ =?UTF-8?Q?Christian_K=c3=b6nig?= <christian.koenig@amd.com>
 Content-Type: text/plain; charset="us-ascii"
-Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
-Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
+Sender: "Linux-nvme" <linux-nvme-bounces@lists.infradead.org>
+Errors-To: linux-nvme-bounces+bjorn=helgaas.com@lists.infradead.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wed, Aug 29, 2018 at 01:34:40PM -0500, Rob Herring wrote:
-> PCI host drivers have already matched on compatible strings, so checking
-> device_type is redundant. Also, device_type is considered deprecated for
-> FDT though we've still been requiring it for PCI hosts as it is useful
-> for finding PCI buses.
-
-Hi Rob,
-
-I have no problem with the patch per-se, I can't parse though the second
-paragraph, in particular what you mean by "useful for finding PCI
-buses".
-
-What about the corresponding dts files ? I suspect we had better leave
-them alone lest we can trigger regressions with new dts and older
-kernels.
-
-Thanks,
-Lorenzo
-
-> Cc: Will Deacon <will.deacon@arm.com>
-> Cc: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
-> Cc: Bjorn Helgaas <bhelgaas@google.com>
-> Cc: Alan Douglas <adouglas@cadence.com>
-> Cc: Subrahmanya Lingappa <l.subrahmanya@mobiveil.co.in>
-> Cc: Michal Simek <michal.simek@xilinx.com>
-> Cc: linux-pci@vger.kernel.org
-> Cc: linux-arm-kernel@lists.infradead.org
-> Signed-off-by: Rob Herring <robh@kernel.org>
-> ---
->  drivers/pci/controller/pci-host-common.c   | 8 --------
->  drivers/pci/controller/pcie-cadence-host.c | 7 -------
->  drivers/pci/controller/pcie-mobiveil.c     | 7 -------
->  drivers/pci/controller/pcie-xilinx-nwl.c   | 9 ---------
->  drivers/pci/controller/pcie-xilinx.c       | 7 -------
->  5 files changed, 38 deletions(-)
+On 9/3/18 4:26 PM, Logan Gunthorpe wrote:
 > 
-> diff --git a/drivers/pci/controller/pci-host-common.c b/drivers/pci/controller/pci-host-common.c
-> index d8f10451f273..c742881b5061 100644
-> --- a/drivers/pci/controller/pci-host-common.c
-> +++ b/drivers/pci/controller/pci-host-common.c
-> @@ -58,9 +58,7 @@ static struct pci_config_window *gen_pci_init(struct device *dev,
->  int pci_host_common_probe(struct platform_device *pdev,
->  			  struct pci_ecam_ops *ops)
->  {
-> -	const char *type;
->  	struct device *dev = &pdev->dev;
-> -	struct device_node *np = dev->of_node;
->  	struct pci_host_bridge *bridge;
->  	struct pci_config_window *cfg;
->  	struct list_head resources;
-> @@ -70,12 +68,6 @@ int pci_host_common_probe(struct platform_device *pdev,
->  	if (!bridge)
->  		return -ENOMEM;
->  
-> -	type = of_get_property(np, "device_type", NULL);
-> -	if (!type || strcmp(type, "pci")) {
-> -		dev_err(dev, "invalid \"device_type\" %s\n", type);
-> -		return -EINVAL;
-> -	}
-> -
->  	of_pci_check_probe_only();
->  
->  	/* Parse and map our Configuration Space windows */
-> diff --git a/drivers/pci/controller/pcie-cadence-host.c b/drivers/pci/controller/pcie-cadence-host.c
-> index ec394f6a19c8..97e251090b4f 100644
-> --- a/drivers/pci/controller/pcie-cadence-host.c
-> +++ b/drivers/pci/controller/pcie-cadence-host.c
-> @@ -235,7 +235,6 @@ static int cdns_pcie_host_init(struct device *dev,
->  
->  static int cdns_pcie_host_probe(struct platform_device *pdev)
->  {
-> -	const char *type;
->  	struct device *dev = &pdev->dev;
->  	struct device_node *np = dev->of_node;
->  	struct pci_host_bridge *bridge;
-> @@ -268,12 +267,6 @@ static int cdns_pcie_host_probe(struct platform_device *pdev)
->  	rc->device_id = 0xffff;
->  	of_property_read_u16(np, "device-id", &rc->device_id);
->  
-> -	type = of_get_property(np, "device_type", NULL);
-> -	if (!type || strcmp(type, "pci")) {
-> -		dev_err(dev, "invalid \"device_type\" %s\n", type);
-> -		return -EINVAL;
-> -	}
-> -
->  	res = platform_get_resource_byname(pdev, IORESOURCE_MEM, "reg");
->  	pcie->reg_base = devm_ioremap_resource(dev, res);
->  	if (IS_ERR(pcie->reg_base)) {
-> diff --git a/drivers/pci/controller/pcie-mobiveil.c b/drivers/pci/controller/pcie-mobiveil.c
-> index a939e8d31735..77052a0712d0 100644
-> --- a/drivers/pci/controller/pcie-mobiveil.c
-> +++ b/drivers/pci/controller/pcie-mobiveil.c
-> @@ -301,13 +301,6 @@ static int mobiveil_pcie_parse_dt(struct mobiveil_pcie *pcie)
->  	struct platform_device *pdev = pcie->pdev;
->  	struct device_node *node = dev->of_node;
->  	struct resource *res;
-> -	const char *type;
-> -
-> -	type = of_get_property(node, "device_type", NULL);
-> -	if (!type || strcmp(type, "pci")) {
-> -		dev_err(dev, "invalid \"device_type\" %s\n", type);
-> -		return -EINVAL;
-> -	}
->  
->  	/* map config resource */
->  	res = platform_get_resource_byname(pdev, IORESOURCE_MEM,
-> diff --git a/drivers/pci/controller/pcie-xilinx-nwl.c b/drivers/pci/controller/pcie-xilinx-nwl.c
-> index fb32840ce8e6..81538d77f790 100644
-> --- a/drivers/pci/controller/pcie-xilinx-nwl.c
-> +++ b/drivers/pci/controller/pcie-xilinx-nwl.c
-> @@ -777,16 +777,7 @@ static int nwl_pcie_parse_dt(struct nwl_pcie *pcie,
->  			     struct platform_device *pdev)
->  {
->  	struct device *dev = pcie->dev;
-> -	struct device_node *node = dev->of_node;
->  	struct resource *res;
-> -	const char *type;
-> -
-> -	/* Check for device type */
-> -	type = of_get_property(node, "device_type", NULL);
-> -	if (!type || strcmp(type, "pci")) {
-> -		dev_err(dev, "invalid \"device_type\" %s\n", type);
-> -		return -EINVAL;
-> -	}
->  
->  	res = platform_get_resource_byname(pdev, IORESOURCE_MEM, "breg");
->  	pcie->breg_base = devm_ioremap_resource(dev, res);
-> diff --git a/drivers/pci/controller/pcie-xilinx.c b/drivers/pci/controller/pcie-xilinx.c
-> index 7b1389d8e2a5..9bd1a35cd5d8 100644
-> --- a/drivers/pci/controller/pcie-xilinx.c
-> +++ b/drivers/pci/controller/pcie-xilinx.c
-> @@ -574,15 +574,8 @@ static int xilinx_pcie_parse_dt(struct xilinx_pcie_port *port)
->  	struct device *dev = port->dev;
->  	struct device_node *node = dev->of_node;
->  	struct resource regs;
-> -	const char *type;
->  	int err;
->  
-> -	type = of_get_property(node, "device_type", NULL);
-> -	if (!type || strcmp(type, "pci")) {
-> -		dev_err(dev, "invalid \"device_type\" %s\n", type);
-> -		return -EINVAL;
-> -	}
-> -
->  	err = of_address_to_resource(node, 0, &regs);
->  	if (err) {
->  		dev_err(dev, "missing \"reg\" property\n");
-> -- 
-> 2.17.1
 > 
+> On 01/09/18 02:28 AM, Christoph Hellwig wrote:
+>> On Thu, Aug 30, 2018 at 01:11:18PM -0600, Jens Axboe wrote:
+>>> I think this belongs in the caller - both the validity check, and
+>>> passing in NOMERGE for this type of request. I don't want to impose
+>>> this overhead on everything, for a pretty niche case.
+>>
+>> It is just a single branch, which will be predicted as not taken
+>> for non-P2P users.  The benefit is that we get proper error checking
+>> by doing it in the block code.
+> 
+> I personally agree with Christoph. But if there's consensus in the other
+> direction or this is a real blocker moving this forward, I can remove it
+> for the next version.
+
+It's a simple branch because the check isn't exhaustive. It just checks
+the first page. At that point you may as well just require the caller to
+flag the bio/rq as being P2P, and then do a check for P2P compatibility
+with the queue.
+
+-- 
+Jens Axboe
+
 
 _______________________________________________
-linux-arm-kernel mailing list
-linux-arm-kernel@lists.infradead.org
-http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
+Linux-nvme mailing list
+Linux-nvme@lists.infradead.org
+http://lists.infradead.org/mailman/listinfo/linux-nvme
