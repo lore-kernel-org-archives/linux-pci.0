@@ -1,65 +1,65 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:52894 "EHLO mx1.redhat.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1727340AbeIEDTS (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Tue, 4 Sep 2018 23:19:18 -0400
-Date: Tue, 4 Sep 2018 16:52:02 -0600
-From: Alex Williamson <alex.williamson@redhat.com>
-To: Sinan Kaya <okaya@kernel.org>
-Cc: Bjorn Helgaas <bhelgaas@google.com>,
-        Dennis Dalessandro <dennis.dalessandro@intel.com>,
-        Linux PCI <linux-pci@vger.kernel.org>
-Subject: Re: RFC on PCI Device Lock
-Message-ID: <20180904165202.4e5bb59d@t450s.home>
-In-Reply-To: <87682473-6ffe-f7df-e8f8-3d00e8247621@kernel.org>
-References: <87682473-6ffe-f7df-e8f8-3d00e8247621@kernel.org>
+Return-Path: <SRS0=VtLq=LT=linux.intel.com=felipe.balbi@kernel.org>
+Return-Path: <SRS0=VtLq=LT=linux.intel.com=felipe.balbi@kernel.org>
+From: Felipe Balbi <felipe.balbi@linux.intel.com>
+To: Bjorn Helgaas <helgaas@kernel.org>, Sinan Kaya <okaya@kernel.org>
+Cc: Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org
+Subject: Re: [RFC] PCI: add support for Immediate Readiness
+In-Reply-To: <87va7kbjqu.fsf@linux.intel.com>
+References: <20180802113635.7097-1-felipe.balbi@linux.intel.com> <15a43051-6b0f-1545-dc8f-b56b1513897b@kernel.org> <874lgcufsu.fsf@linux.intel.com> <407fa9ef-dcbe-e803-f72e-cbea468592bf@kernel.org> <20180904181126.GG107892@bhelgaas-glaptop.roam.corp.google.com> <87y3cgbjyf.fsf@linux.intel.com> <87va7kbjqu.fsf@linux.intel.com>
+Date: Wed, 05 Sep 2018 08:29:56 +0300
+Message-ID: <87sh2objfv.fsf@linux.intel.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Sender: linux-pci-owner@vger.kernel.org
+Content-Type: multipart/signed; boundary="=-=-=";
+	micalg=pgp-sha256; protocol="application/pgp-signature"
 List-ID: <linux-pci.vger.kernel.org>
 
-On Fri, 31 Aug 2018 16:03:38 -0700
-Sinan Kaya <okaya@kernel.org> wrote:
+--=-=-=
+Content-Type: text/plain
+Content-Transfer-Encoding: quoted-printable
 
-> Hi Bjorn, Alex;
-> 
-> Since my recent series to relocate secondary bus reset code into the PCI core,
-> we hit a deadlock while trying to obtain a device lock during probe since
-> device lock is already held.
-> 
-> https://bugzilla.kernel.org/show_bug.cgi?id=200985
-> 
-> I posted a patch into the bugzilla so that we skip locks if we are probing
-> to follow the same strategy found in other lock routines in pci.c.
-> 
-> https://bugzilla.kernel.org/attachment.cgi?id=278221
-> 
-> I wanted to hear some opinions since this is a regression and need to find
-> a solution and also waiting for test feedback
 
-TBH, I'm having a hard time seeing the value in the original series.
-Commit 811c5cb37df4 is fiddling with two drivers, hfi1 and vfio-pci.
-In the case of hfi1 the comment before the call is specifically talking
-about performing a secondary bus reset, so all they're looking for is
-bouncing the link, it seems they don't even necessarily want a slot
-reset, which might entail a full power cycle. In the case of vfio-pci,
-we're looking for whatever gets the device closest to a power on state,
-so by all means we want the slot reset if we can get it.  So really
-there's only one driver here looking for a slot reset and this commit
-doesn't do anything to abstract bus vs slot reset because vfio-pci
-needs to collect all the devices affected by the reset, which can be
-different depending on whether it's a slot or bus (think conventional
-PCI).  So all the logic in vfio-pci to figure out which it is still
-exists, we just no longer have control over which option PCI-core uses.
+Hi,
 
-Commit 409888e0966e switches hfi1 to use pci_try_reset_bus(), which of
-course does the device save and restore, but the hfi1 driver still has
-their own logic for all of that and of course it doesn't rely on device
-lock and doesn't need to because they're within their own probe path.
+Felipe Balbi <felipe.balbi@linux.intel.com> writes:
+> Felipe Balbi <felipe.balbi@linux.intel.com> writes:
+>>> Since this applies to all resets, I think you also need to get rid of
+>>>> waits following different reset types in step #2 and return immediatel=
+y.
+>>>> I suggest you review callers of pci_dev_wait() and tap in there.
+>>>
+>>> I agree; I think we should be able to skip the delays in pcie_flr(),
+>>> pci_af_flr(), etc.
+>>
+>> but that's why I put the code in pci_dev_wait(). Both pcie_flr() and
+>> pci_af_flr() call pci_dev_wait(); or are you saying that the msleep(100)
+>> call in pci_af_flr() can also be removed if (dev->imm_ready)?
+>
+> What about moving that msleep() to pci_dev_wait() itself?
 
-I won't deny that we're getting a little sloppy with some of the reset
-interfaces and I'd love to solve the device lock issue more generally,
-but trying to abstract slot vs bus and hide the lower level interfaces
-from drivers doesn't seem like it's really working here.  Thanks,
+this will incur and extra 100ms delay on D3->D0 transitions and bus
+reset. Is that acceptable or would you prefer to add another check on
+pcie_flr() and pci_af_flr()?
 
-Alex
+=2D=20
+balbi
+
+--=-=-=
+Content-Type: application/pgp-signature; name="signature.asc"
+
+-----BEGIN PGP SIGNATURE-----
+
+iQIzBAEBCAAdFiEElLzh7wn96CXwjh2IzL64meEamQYFAluPadQACgkQzL64meEa
+mQZpjQ/+Jaahh8BjQUVUdCeI3GGhIp7JwY61+XtH/pKTrwS+PWXpb9NINO1QOPGg
+T5b+u0JnIhERJjUAu3CGi5w3PFtECQvBLTt2oKp4l+PoGdrOWYDjJetgNsqm3zB/
+z9x+p7AjZ67/SZsapWSkXjxBQq3leo6kJ4WSznwJzgEtiTA8fBGBzNtAI0PQUx0M
+beOgEvcifJVz/FdjY2Cv0NBRl3qBLk6kaVf/R/9iZo0hHB09gSlslxlQAOGbi1Rl
+JEAxcbAmQKaTtMJCiHLvJJR7AyLPtNHbkCydLD41vmEOhOo5xFu+WBxq94nsTusp
+KlwWAFelNK4q1iKt+m7GKfVcYVEqiEA9DzJslTUM/rHn48wtCaGIXUOnnDrh2bZF
+0ORM2FM0E7WL1y2j2FR6eaeAiQeXiEwrXRVIdszrHlj4dDooRgbJ0sT5DyUUMJNV
+Tjtd47TH5fkeRlmU1BQZEYcNi7gt22K9HAusMdKtAcdxS1Ccv7l5XcuBcuAD7Bvk
+4PCgWfJwio54TWmfWIxIBZtQY6zNg8mP5pEW2+vg6zHNSse06SAWRLDaiNreMbz8
+pnUpqU1y4TLS3rS7Y46I1bAdRzn00NTVR8tiRHeCrt0m3Ye10dBgcJxv8MXiNMQg
+rEwU/FQfPAwQyxdpSExn8wn/6Xh2pCZJ0kiX1XoN44bxWQpFVQY=
+=kyQC
+-----END PGP SIGNATURE-----
+--=-=-=--
