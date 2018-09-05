@@ -1,83 +1,116 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-From: Nathan Chancellor <natechancellor@gmail.com>
-To: Xiaowei Song <songxiaowei@hisilicon.com>,
-        Binghui Wang <wangbinghui@hisilicon.com>,
-        Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
-        Bjorn Helgaas <bhelgaas@google.com>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail.kernel.org ([198.145.29.99]:35958 "EHLO mail.kernel.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1727254AbeIFAgX (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Wed, 5 Sep 2018 20:36:23 -0400
+Date: Wed, 5 Sep 2018 15:04:34 -0500
+From: Bjorn Helgaas <helgaas@kernel.org>
+To: Bharat Kumar Gogada <bharat.kumar.gogada@xilinx.com>
 Cc: linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
-        Nick Desaulniers <ndesaulniers@google.com>,
-        Nathan Chancellor <natechancellor@gmail.com>
-Subject: [PATCH v2] PCI: kirin: Fix section mismatch warning
-Date: Wed, 19 Sep 2018 11:53:42 -0700
-Message-Id: <20180919185341.31298-1-natechancellor@gmail.com>
+        bhelgaas@google.com, rgummal@xilinx.com
+Subject: Re: [PATCH v2] PCI/AER: Enable SERR# forwarding in non ACPI flow
+Message-ID: <20180905200434.GP107892@bhelgaas-glaptop.roam.corp.google.com>
+References: <1533826657-24552-1-git-send-email-bharat.kumar.gogada@xilinx.com>
 MIME-Version: 1.0
-Sender: linux-kernel-owner@vger.kernel.org
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1533826657-24552-1-git-send-email-bharat.kumar.gogada@xilinx.com>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-WARNING: vmlinux.o(.text+0x4758cc): Section mismatch in reference from
-the function kirin_pcie_probe() to the function
-.init.text:kirin_add_pcie_port()
-The function kirin_pcie_probe() references
-the function __init kirin_add_pcie_port().
-This is often because kirin_pcie_probe lacks a __init
-annotation or the annotation of kirin_add_pcie_port is wrong.
+On Thu, Aug 09, 2018 at 08:27:37PM +0530, Bharat Kumar Gogada wrote:
+> As per Figure 6-3 in PCIe r4.0, sec 6.2.6, ERR_ messages
+> will be forwarded from the secondary interface to the primary interface,
+> if the SERR# Enable bit in the Bridge Control register is set.
+> Currently PCI_BRIDGE_CTL_SERR is being enabled only in
+> ACPI flow.
+> This patch enables PCI_BRIDGE_CTL_SERR for Type-1 PCI device.
 
-Add the __init annotation to both kirin_pcie_probe and
-kirin_pcie_add_msi then use builtin_platform_driver_probe
-instead of builtin_platform_driver + .probe to avoid a section
-mismatch warning with kirin_pcie_driver.
+I agree this is a problem.  We should not depend on how firmware set
+PCI_BRIDGE_CTL_SERR.
 
-Fixes: fc5165db245a ("PCI: kirin: Add HiSilicon Kirin SoC PCIe controller driver")
-Reported-by: Nick Desaulniers <ndesaulniers@google.com>
-Suggested-by: Nick Desaulniers <ndesaulniers@google.com>
-Signed-off-by: Nathan Chancellor <natechancellor@gmail.com>
----
+I would prefer to set it in the pci_configure_device() path so we
+always do it the same way for every device, independent of whether AER
+is enabled.
 
-v1 -> v2:
+Some platform firmware must already enable PCI_BRIDGE_CTL_SERR, even
+though it can't know whether the OS will support AER, so it should be
+safe for the OS to enable it unconditionally.
 
-Instead of removing the annotation on kirin_add_pcie_port, add it to
-kirin_pcie_add_msi and kirin_pcie_probe. To avoid a warning with this
-configuration, use builtin_platform_driver_probe.
+The code in program_hpp_type0() that sets PCI_BRIDGE_CTL_SERR is based
+on 40abb96c51bb ("[PATCH] pciehp: Fix programming hotplug
+parameters") [1], but I think it is incorrect.
 
- drivers/pci/controller/dwc/pcie-kirin.c | 9 ++++-----
- 1 file changed, 4 insertions(+), 5 deletions(-)
+ACPI v6.0, sec 6.2.9.1, (_HPX PCI Setting Record) says:
 
-diff --git a/drivers/pci/controller/dwc/pcie-kirin.c b/drivers/pci/controller/dwc/pcie-kirin.c
-index 5352e0c3be82..f64fed12de51 100644
---- a/drivers/pci/controller/dwc/pcie-kirin.c
-+++ b/drivers/pci/controller/dwc/pcie-kirin.c
-@@ -448,8 +448,8 @@ static const struct dw_pcie_host_ops kirin_pcie_host_ops = {
- 	.host_init = kirin_pcie_host_init,
- };
- 
--static int kirin_pcie_add_msi(struct dw_pcie *pci,
--				struct platform_device *pdev)
-+static int __init kirin_pcie_add_msi(struct dw_pcie *pci,
-+				     struct platform_device *pdev)
- {
- 	int irq;
- 
-@@ -481,7 +481,7 @@ static int __init kirin_add_pcie_port(struct dw_pcie *pci,
- 	return dw_pcie_host_init(&pci->pp);
- }
- 
--static int kirin_pcie_probe(struct platform_device *pdev)
-+static int __init kirin_pcie_probe(struct platform_device *pdev)
- {
- 	struct device *dev = &pdev->dev;
- 	struct kirin_pcie *kirin_pcie;
-@@ -533,11 +533,10 @@ static const struct of_device_id kirin_pcie_match[] = {
- };
- 
- static struct platform_driver kirin_pcie_driver = {
--	.probe			= kirin_pcie_probe,
- 	.driver			= {
- 		.name			= "kirin-pcie",
- 		.of_match_table = kirin_pcie_match,
- 		.suppress_bind_attrs = true,
- 	},
- };
--builtin_platform_driver(kirin_pcie_driver);
-+builtin_platform_driver_probe(kirin_pcie_driver, kirin_pcie_probe);
--- 
-2.19.0
+  If the hot plug device includes bridge(s) in the hierarchy, the
+  above settings apply to the primary side (command register) of the
+  hot plugged bridge(s). The settings for the secondary side of the
+  bridge(s) (Bridge Control Register) are assumed to be provided by
+  the bridge driver.
+
+Sec 6.2.8 (for the old _HPP method) doesn't contain that text, but it
+has the same description of the contents:
+
+  Enable SERR    When set to 1, indicates that action must be
+		 performed to enable SERR in the command register.
+
+Both sections talk about enabling SERR in the *command* register (not
+the bridge control register) and the _HPX section is explicit about
+the fact that "Enable SERR" does not apply to the bridge control
+register.
+
+So I think pci_configure_device() should unconditionally set
+PCI_BRIDGE_CTL_SERR for all bridge devices.  And we should remove the
+corresponding code from program_hpp_type0().
+
+[1] http://git.kernel.org/cgit/linux/kernel/git/torvalds/linux.git/commit/?id=40abb96c51bb
+
+> Signed-off-by: Bharat Kumar Gogada <bharat.kumar.gogada@xilinx.com>
+> ---
+>  drivers/pci/pcie/aer.c |   23 +++++++++++++++++++++++
+>  1 files changed, 23 insertions(+), 0 deletions(-)
+> 
+> diff --git a/drivers/pci/pcie/aer.c b/drivers/pci/pcie/aer.c
+> index a2e8838..4fb0d24 100644
+> --- a/drivers/pci/pcie/aer.c
+> +++ b/drivers/pci/pcie/aer.c
+> @@ -343,6 +343,20 @@ int pci_enable_pcie_error_reporting(struct pci_dev *dev)
+>  	if (!dev->aer_cap)
+>  		return -EIO;
+>  
+> +	if (dev->hdr_type == PCI_HEADER_TYPE_BRIDGE) {
+> +		u16 control;
+> +
+> +		/*
+> +		 * A Type-1 PCI bridge will not forward ERR_ messages coming
+> +		 * from an endpoint if SERR# forwarding is not enabled.
+> +		 */
+> +		pci_read_config_word(dev, PCI_BRIDGE_CONTROL, &control);
+> +		if (!(control & PCI_BRIDGE_CTL_SERR)) {
+> +			control |= PCI_BRIDGE_CTL_SERR;
+> +			pci_write_config_word(dev, PCI_BRIDGE_CONTROL, control);
+> +		}
+> +	}
+> +
+>  	return pcie_capability_set_word(dev, PCI_EXP_DEVCTL, PCI_EXP_AER_FLAGS);
+>  }
+>  EXPORT_SYMBOL_GPL(pci_enable_pcie_error_reporting);
+> @@ -352,6 +366,15 @@ int pci_disable_pcie_error_reporting(struct pci_dev *dev)
+>  	if (pcie_aer_get_firmware_first(dev))
+>  		return -EIO;
+>  
+> +	if (dev->hdr_type == PCI_HEADER_TYPE_BRIDGE) {
+> +		u16 control;
+> +
+> +		/* Clear SERR Forwarding */
+> +		pci_read_config_word(dev, PCI_BRIDGE_CONTROL, &control);
+> +		control &= ~PCI_BRIDGE_CTL_SERR;
+> +		pci_write_config_word(dev, PCI_BRIDGE_CONTROL, control);
+> +	}
+> +
+>  	return pcie_capability_clear_word(dev, PCI_EXP_DEVCTL,
+>  					  PCI_EXP_AER_FLAGS);
+>  }
+> -- 
+> 1.7.1
+> 
