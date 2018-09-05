@@ -1,59 +1,92 @@
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Date: Wed, 19 Sep 2018 16:41:19 +0200
-From: Christoph Hellwig <hch@lst.de>
-To: Jim Quinlan <jim2101024@gmail.com>
-Subject: Re: [PATCH v5 11/12] ARM64: add dma remap for BrcmSTB PCIe
-Message-ID: <20180919144119.GB29096@lst.de>
-References: <1537367527-20773-1-git-send-email-jim2101024@gmail.com>
- <1537367527-20773-12-git-send-email-jim2101024@gmail.com>
-MIME-Version: 1.0
-In-Reply-To: <1537367527-20773-12-git-send-email-jim2101024@gmail.com>
-List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
-List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
-List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
-List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
-List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
-Cc: Florian Fainelli <f.fainelli@gmail.com>, linux-pci@vger.kernel.org,
- linux-kernel@vger.kernel.org, Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
- bcm-kernel-feedback-list@broadcom.com, Gregory Fong <gregory.0xf0@gmail.com>,
- Bjorn Helgaas <bhelgaas@google.com>,
- Brian Norris <computersforpeace@gmail.com>, Christoph Hellwig <hch@lst.de>,
- linux-arm-kernel@lists.infradead.org
-Content-Type: text/plain; charset="us-ascii"
-Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
-Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mga06.intel.com ([134.134.136.31]:58562 "EHLO mga06.intel.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1727645AbeIFBIZ (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Wed, 5 Sep 2018 21:08:25 -0400
+From: Keith Busch <keith.busch@intel.com>
+To: Linux PCI <linux-pci@vger.kernel.org>,
+        Bjorn Helgaas <bhelgaas@google.com>
+Cc: Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+        Sinan Kaya <okaya@kernel.org>,
+        Thomas Tai <thomas.tai@oracle.com>, poza@codeaurora.org,
+        Lukas Wunner <lukas@wunner.de>, Christoph Hellwig <hch@lst.de>,
+        Keith Busch <keith.busch@intel.com>
+Subject: [PATCHv2 10/20] PCI/ERR: Remove devices on recovery failure
+Date: Wed,  5 Sep 2018 14:35:36 -0600
+Message-Id: <20180905203546.21921-11-keith.busch@intel.com>
+In-Reply-To: <20180905203546.21921-1-keith.busch@intel.com>
+References: <20180905203546.21921-1-keith.busch@intel.com>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wed, Sep 19, 2018 at 10:32:06AM -0400, Jim Quinlan wrote:
-> +#if defined(CONFIG_ARM64)
+This patch removes devices connected through a bus that can't recover from
+an error. After removing everything, one final enumeration from scratch
+will be attempted if the bridge and its downstream link appear accessible.
 
-Please use plain #ifdef where possible.
+Signed-off-by: Keith Busch <keith.busch@intel.com>
+---
+ drivers/pci/pcie/err.c | 42 ++++++++++++++++++++++++++++++++++++++----
+ 1 file changed, 38 insertions(+), 4 deletions(-)
 
-> +dma_addr_t __phys_to_dma(struct device *dev, phys_addr_t paddr)
-> +{
-> +	return brcm_phys_to_dma(dev, paddr);
-> +}
-> +
-> +phys_addr_t __dma_to_phys(struct device *dev, dma_addr_t dev_addr)
-> +{
-> +	return brcm_dma_to_phys(dev, dev_addr);
-> +}
-> +#endif
-
-How is this going to work for a kernel with BrcmSTB built in, but running
-on a more standard arm64 SOC?
-
-I suspect we really just want a set of ranges hanging off struct device
-(conditional on a config option).  Each SoC can then fill it at boot
-time, and if it is non-NULL the DMA code will use it instead of
-calling __phys_to_dma and __dma_to_phys.  In fact the single range
-version could probably just replace the existing dma_pfn_offset
-field.
-
-_______________________________________________
-linux-arm-kernel mailing list
-linux-arm-kernel@lists.infradead.org
-http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
+diff --git a/drivers/pci/pcie/err.c b/drivers/pci/pcie/err.c
+index 31e8a4314384..2264001f695b 100644
+--- a/drivers/pci/pcie/err.c
++++ b/drivers/pci/pcie/err.c
+@@ -145,6 +145,41 @@ static int report_resume(struct pci_dev *dev, void *data)
+ 	return 0;
+ }
+ 
++static int report_disconnect(struct pci_dev *dev, void *data)
++{
++	device_lock(&dev->dev);
++	pci_dev_set_disconnected(dev, NULL);
++	pci_uevent_ers(dev, PCI_ERS_RESULT_DISCONNECT);
++	device_unlock(&dev->dev);
++	return 0;
++}
++
++/**
++ * pcie_disconnect- Called when error handling ends with
++* 		    PCI_ERS_RESULT_DISCONNECT status.
++ *
++ * Reaching here means error handling has irrevocably failed. This function
++ * will ungracefully disconnect all the devices below the bus that has
++ * experienced the unrecoverable error.
++ *
++ * If the link is active after the removing all devices on the bus, this will
++ * attempt to re-enumerate the bus from scratch.
++ */
++static void pcie_disconnect(struct pci_dev *dev)
++{
++	struct pci_bus *bus = dev->subordinate;
++	struct pci_dev *child, *tmp;
++
++	pci_lock_rescan_remove();
++	list_for_each_entry_safe(child, tmp, &bus->devices, bus_list)
++		pci_stop_and_remove_bus_device(child);
++
++	if (pci_bridge_secondary_bus_reset(dev) == 0 &&
++	    pcie_wait_for_link(dev, true))
++		pci_rescan_bus(bus);
++	pci_unlock_rescan_remove();
++}
++
+ /**
+  * default_reset_link - default reset function
+  * @dev: pointer to pci_dev data structure
+@@ -238,10 +273,9 @@ void pcie_do_recovery(struct pci_dev *dev, enum pci_channel_state state,
+ 	pci_cleanup_aer_uncorrect_error_status(dev);
+ 	pci_info(dev, "AER: Device recovery successful\n");
+ 	return;
+-
+ failed:
+-	pci_uevent_ers(dev, PCI_ERS_RESULT_DISCONNECT);
+-
+-	/* TODO: Should kernel panic here? */
+ 	pci_info(dev, "AER: Device recovery failed\n");
++	pci_dbg(dev, "broadcast disconnect message\n");
++	pci_walk_bus(bus, report_disconnect, &status);
++	pcie_disconnect(dev);
+ }
+-- 
+2.14.4
