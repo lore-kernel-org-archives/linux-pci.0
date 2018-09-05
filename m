@@ -1,62 +1,107 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.29.99]:37070 "EHLO mail.kernel.org"
+Received: from mga06.intel.com ([134.134.136.31]:58826 "EHLO mga06.intel.com"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1725798AbeILWEM (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Wed, 12 Sep 2018 18:04:12 -0400
-Date: Wed, 12 Sep 2018 11:58:46 -0500
-From: Bjorn Helgaas <helgaas@kernel.org>
-To: linux-pci@vger.kernel.org, Russell Currey <ruscur@russell.cc>,
-        linuxppc-dev@lists.ozlabs.org
+        id S1727477AbeIFBKp (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Wed, 5 Sep 2018 21:10:45 -0400
+From: Keith Busch <keith.busch@intel.com>
+To: Linux PCI <linux-pci@vger.kernel.org>,
+        Bjorn Helgaas <bhelgaas@google.com>
 Cc: Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-        Paul Mackerras <paulus@samba.org>,
-        Michael Ellerman <mpe@ellerman.id.au>,
-        linux-kernel@vger.kernel.org
-Subject: Re: [PATCH] MAINTAINERS: Add PPC contacts for PCI core error handling
-Message-ID: <20180912165846.GH118330@bhelgaas-glaptop.roam.corp.google.com>
-References: <153677132617.23091.12307288405707171077.stgit@bhelgaas-glaptop.roam.corp.google.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <153677132617.23091.12307288405707171077.stgit@bhelgaas-glaptop.roam.corp.google.com>
+        Sinan Kaya <okaya@kernel.org>,
+        Thomas Tai <thomas.tai@oracle.com>, poza@codeaurora.org,
+        Lukas Wunner <lukas@wunner.de>, Christoph Hellwig <hch@lst.de>,
+        Keith Busch <keith.busch@intel.com>
+Subject: [PATCHv2 17/20] PCI/pciehp: Ignore link events during DPC event
+Date: Wed,  5 Sep 2018 14:35:43 -0600
+Message-Id: <20180905203546.21921-18-keith.busch@intel.com>
+In-Reply-To: <20180905203546.21921-1-keith.busch@intel.com>
+References: <20180905203546.21921-1-keith.busch@intel.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wed, Sep 12, 2018 at 11:55:26AM -0500, Bjorn Helgaas wrote:
-> From: Bjorn Helgaas <bhelgaas@google.com>
-> 
-> The original PCI error recovery functionality was for the powerpc-specific
-> IBM EEH feature.  PCIe subsequently added some similar features, including
-> AER and DPC, that can be used on any architecture.
-> 
-> We want the generic PCI core error handling support to work with all of
-> these features.  Driver error recovery callbacks should be independent of
-> which feature the platform provides.
-> 
-> Add the generic PCI core error recovery files to the powerpc EEH
-> MAINTAINERS entry so the powerpc folks will be copied on changes to the
-> generic PCI error handling strategy.
+This patch adds a channel state to a subordinate bus. When a DPC event is
+triggered, the DPC driver will set the channel state to frozen, and the
+pciehp driver will ignore link events if the subordinate bus is being
+managed by DPC error handling.
 
-I really want to make sure the powerpc folks are plugged into any PCI core
-error handling discussions.  Please let me know if there's a better way
-than this patch, or if there are other people who should be added.
+Depending on the order port interrupts are processed, it is possible the
+pciehp may not observe the status, either starting after DPC handling
+completes, or before DPC interrupt was started. If this happens, the
+link down will be processed as normal.
 
-> Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
-> ---
->  MAINTAINERS |    4 ++++
->  1 file changed, 4 insertions(+)
-> 
-> diff --git a/MAINTAINERS b/MAINTAINERS
-> index 7e10ba65bfe4..d6699597fd89 100644
-> --- a/MAINTAINERS
-> +++ b/MAINTAINERS
-> @@ -11202,6 +11202,10 @@ PCI ENHANCED ERROR HANDLING (EEH) FOR POWERPC
->  M:	Russell Currey <ruscur@russell.cc>
->  L:	linuxppc-dev@lists.ozlabs.org
->  S:	Supported
-> +F:	Documentation/PCI/pci-error-recovery.txt
-> +F:	drivers/pci/pcie/aer.c
-> +F:	drivers/pci/pcie/dpc.c
-> +F:	drivers/pci/pcie/err.c
->  F:	Documentation/powerpc/eeh-pci-error-recovery.txt
->  F:	arch/powerpc/kernel/eeh*.c
->  F:	arch/powerpc/platforms/*/eeh*.c
-> 
+Signed-off-by: Keith Busch <keith.busch@intel.com>
+---
+ drivers/pci/hotplug/pciehp_hpc.c | 9 +++++++++
+ drivers/pci/pcie/dpc.c           | 8 ++++++--
+ include/linux/pci.h              | 6 ++++++
+ 3 files changed, 21 insertions(+), 2 deletions(-)
+
+diff --git a/drivers/pci/hotplug/pciehp_hpc.c b/drivers/pci/hotplug/pciehp_hpc.c
+index 5ec2bc871a9c..3487a1c3f280 100644
+--- a/drivers/pci/hotplug/pciehp_hpc.c
++++ b/drivers/pci/hotplug/pciehp_hpc.c
+@@ -627,6 +627,15 @@ static irqreturn_t pciehp_ist(int irq, void *dev_id)
+ 
+ 	synchronize_hardirq(irq);
+ 	events = atomic_xchg(&ctrl->pending_events, 0);
++
++	/*
++	 * Ignore link events on the suborinate bus if error handling is
++	 * active, as link down may be expected. We'll continue to handle
++	 * presence detect changes.
++	 */
++	if (pdev->subordinate && pci_bus_offline(pdev->subordinate))
++		events &= ~PCI_EXP_SLTSTA_DLLSC;
++
+ 	if (!events) {
+ 		pci_config_pm_runtime_put(pdev);
+ 		return IRQ_NONE;
+diff --git a/drivers/pci/pcie/dpc.c b/drivers/pci/pcie/dpc.c
+index b7dfb4988931..70cb1e65a311 100644
+--- a/drivers/pci/pcie/dpc.c
++++ b/drivers/pci/pcie/dpc.c
+@@ -92,7 +92,8 @@ static pci_ers_result_t dpc_reset_link(struct pci_dev *pdev)
+ 
+ 	pci_write_config_word(pdev, cap + PCI_EXP_DPC_STATUS,
+ 			      PCI_EXP_DPC_STATUS_TRIGGER);
+-
++	if (pdev->subordinate)
++		pdev->subordinate->error_state = pci_channel_io_normal;
+ 	return PCI_ERS_RESULT_RECOVERED;
+ }
+ 
+@@ -204,8 +205,11 @@ static irqreturn_t dpc_irq(int irq, void *context)
+ 
+ 	pci_write_config_word(pdev, cap + PCI_EXP_DPC_STATUS,
+ 			      PCI_EXP_DPC_STATUS_INTERRUPT);
+-	if (status & PCI_EXP_DPC_STATUS_TRIGGER)
++	if (status & PCI_EXP_DPC_STATUS_TRIGGER) {
++		if (pdev->subordinate)
++			pdev->subordinate->error_state = pci_channel_io_frozen;
+ 		return IRQ_WAKE_THREAD;
++	}
+ 	return IRQ_HANDLED;
+ }
+ 
+diff --git a/include/linux/pci.h b/include/linux/pci.h
+index 47cdb30df55e..4667cc26939a 100644
+--- a/include/linux/pci.h
++++ b/include/linux/pci.h
+@@ -574,9 +574,15 @@ struct pci_bus {
+ 	struct device		dev;
+ 	struct bin_attribute	*legacy_io;	/* Legacy I/O for this bus */
+ 	struct bin_attribute	*legacy_mem;	/* Legacy mem */
++	pci_channel_state_t error_state;	/* Current connectivity state */
+ 	unsigned int		is_added:1;
+ };
+ 
++static inline int pci_bus_offline(struct pci_bus *bus)
++{
++	return (bus->error_state != pci_channel_io_normal);
++}
++
+ #define to_pci_bus(n)	container_of(n, struct pci_bus, dev)
+ 
+ /*
+-- 
+2.14.4
