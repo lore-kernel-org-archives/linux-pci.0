@@ -1,88 +1,61 @@
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-References: <61fdfd69-2bb6-478c-b0d5-69d8744adae3@cesnet.cz>
- <87zhwm4kl6.fsf@tkos.co.il> <20180912231050.GX30658@n2100.armlinux.org.uk>
-From: Baruch Siach <baruch@tkos.co.il>
-To: Russell King - ARM Linux <linux@armlinux.org.uk>
-Subject: Re: [BISECTED] Regression: Solidrun Clearfog Base won't boot since
- "PCI: mvebu: Only remap I/O space if configured"
-In-reply-to: <20180912231050.GX30658@n2100.armlinux.org.uk>
-Date: Thu, 13 Sep 2018 06:19:54 +0300
-Message-ID: <87y3c63wyt.fsf@tkos.co.il>
+Return-Path: <linux-nvme-bounces+bjorn=helgaas.com@lists.infradead.org>
+Return-Path: <linux-nvme-bounces+bjorn=helgaas.com@lists.infradead.org>
+Date: Wed, 5 Sep 2018 21:22:52 +0200
+From: Christoph Hellwig <hch@lst.de>
+To: Logan Gunthorpe <logang@deltatee.com>
+Subject: Re: [PATCH v5 10/13] nvme-pci: Add support for P2P memory in requests
+Message-ID: <20180905192252.GA888@lst.de>
+References: <20180830185352.3369-1-logang@deltatee.com>
+ <20180830185352.3369-11-logang@deltatee.com>
+ <20180904151638.GL335@mellanox.com>
+ <d5548f5d-59df-f38e-255d-59b46a17a219@deltatee.com>
 MIME-Version: 1.0
-List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
-List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
-List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
-List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
-List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
-Cc: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
- Jason Cooper <jason@lakedaemon.net>, linux-pci@vger.kernel.org,
- linux-kernel@vger.kernel.org, Thomas Petazzoni <thomas.petazzoni@bootlin.com>,
- Bjorn Helgaas <bhelgaas@google.com>,
- Jan =?utf-8?Q?Kundr=C3=A1t?= <jan.kundrat@cesnet.cz>,
- linux-arm-kernel@lists.infradead.org
+In-Reply-To: <d5548f5d-59df-f38e-255d-59b46a17a219@deltatee.com>
+List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-nvme>,
+ <mailto:linux-nvme-request@lists.infradead.org?subject=unsubscribe>
+List-Archive: <http://lists.infradead.org/pipermail/linux-nvme/>
+List-Post: <mailto:linux-nvme@lists.infradead.org>
+List-Help: <mailto:linux-nvme-request@lists.infradead.org?subject=help>
+List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-nvme>,
+ <mailto:linux-nvme-request@lists.infradead.org?subject=subscribe>
+Cc: Keith Busch <keith.busch@intel.com>,
+ Alex Williamson <alex.williamson@redhat.com>, Sagi Grimberg <sagi@grimberg.me>,
+ linux-nvdimm@lists.01.org, linux-rdma@vger.kernel.org,
+ linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
+ linux-nvme@lists.infradead.org, Stephen Bates <sbates@raithlin.com>,
+ linux-block@vger.kernel.org,
+ =?iso-8859-1?B?Suly9G1l?= Glisse <jglisse@redhat.com>,
+ Jason Gunthorpe <jgg@mellanox.com>,
+ Christian =?iso-8859-1?Q?K=F6nig?= <christian.koenig@amd.com>,
+ Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+ Bjorn Helgaas <bhelgaas@google.com>, Max Gurtovoy <maxg@mellanox.com>,
+ Dan Williams <dan.j.williams@intel.com>, Christoph Hellwig <hch@lst.de>
 Content-Type: text/plain; charset="us-ascii"
-Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
-Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
+Sender: "Linux-nvme" <linux-nvme-bounces@lists.infradead.org>
+Errors-To: linux-nvme-bounces+bjorn=helgaas.com@lists.infradead.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hi Russell,
+On Tue, Sep 04, 2018 at 09:47:07AM -0600, Logan Gunthorpe wrote:
+> 
+> 
+> On 04/09/18 09:16 AM, Jason Gunthorpe wrote:
+> >>  	if (iod->nents) {
+> >> -		dma_unmap_sg(dev->dev, iod->sg, iod->nents, dma_dir);
+> >> +		/* P2PDMA requests do not need to be unmapped */
+> >> +		if (!is_pci_p2pdma_page(sg_page(iod->sg)))
+> >> +			dma_unmap_sg(dev->dev, iod->sg, iod->nents, dma_dir);
+> > 
+> > This seems like a poor direction, if we add IOMMU hairpin support we
+> > will need unmapping.
+> 
+> It can always be added later. In any case, you'll have to convince
+> Christoph who requested the change; I'm not that invested in this decision.
 
-Russell King - ARM Linux writes:
-> On Wed, Sep 12, 2018 at 09:49:41PM +0300, Baruch Siach wrote:
->> I reproduced the same Oops on Clearfog Base without any taint:
->> 
->> [    1.476401] Internal error: Oops - undefined instruction: 0 [#1] SMP ARM
-> ...
->> [    1.855954] Code: e2844004 e5972000 e3520000 0affffee (e7f001f2)
->
-> That is a BUG().  Please turn on verbose bug reporting to get more
-> information about the cause.
->
-> There are two possibilities:
->
->         BUG_ON(addr >= end);
->
-> and
->
->                 BUG_ON(!pte_none(*pte));
->
-> It's probably the latter - the region is probably already mapped, that
-> being the PCI IO region.
-
-That is the one. Enabling CONFIG_DEBUG_BUGVERBOSE shows:
-
-[    1.481927] kernel BUG at lib/ioremap.c:72!
-[    1.486118] Internal error: Oops - BUG: 0 [#1] SMP ARM
-[    1.491269] CPU: 0 PID: 1246 Comm: kworker/0:2 Not tainted 4.19.0-rc3 #146
-...
-
-baruch
-
-> The original driver was setup to call pci_ioremap_io() as the very
-> last thing - and as the driver is non-removable, we were guaranteed
-> to never tear down this mapping (which is sensible, it's published
-> to userspace.)
->
-> However, the current code calls pci_ioremap_io() much earlier, in
-> a path where probe failures can occur.  This breaks pci_ioremap_io()'s
-> requirements - it must not be called more than once.  So:
->
-> ee1604381a37 ("PCI: mvebu: Only remap I/O space if configured")
->
-> is basically incorrect - pci_ioremap_io() needs to move back to a
-> place where it is only called in a path which will never fail.
-> However, looking at the generic host bits, I'm not sure such a place
-> exists in the new effort to make stuff more generic.
-
--- 
-     http://baruch.siach.name/blog/                  ~. .~   Tk Open Systems
-=}------------------------------------------------ooO--U--Ooo------------{=
-   - baruch@tkos.co.il - tel: +972.52.368.4656, http://www.tkos.co.il -
+Yes, no point to add dead code here.  In the long run we should
+aim for hiding the p2p address translation behind the normal DMA API
+anyway, but we're not quite ready for it yet.
 
 _______________________________________________
-linux-arm-kernel mailing list
-linux-arm-kernel@lists.infradead.org
-http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
+Linux-nvme mailing list
+Linux-nvme@lists.infradead.org
+http://lists.infradead.org/mailman/listinfo/linux-nvme
