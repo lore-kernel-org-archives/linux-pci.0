@@ -1,75 +1,36 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.29.99]:57542 "EHLO mail.kernel.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1727069AbeIFBai (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Wed, 5 Sep 2018 21:30:38 -0400
-Date: Wed, 5 Sep 2018 15:58:40 -0500
-From: Bjorn Helgaas <helgaas@kernel.org>
-To: Keith Busch <keith.busch@intel.com>
-Cc: Linux PCI <linux-pci@vger.kernel.org>,
-        Bjorn Helgaas <bhelgaas@google.com>,
-        Lukas Wunner <lukas@wunner.de>
-Subject: Re: [PATCH] pci/sriov: Hold rescan lock while enumerating
-Message-ID: <20180905205840.GR107892@bhelgaas-glaptop.roam.corp.google.com>
-References: <20180809163356.18650-1-keith.busch@intel.com>
+Return-Path: <okaya@kernel.org>
+Return-Path: <okaya@kernel.org>
+Subject: Re: [RFC] PCI: add support for Immediate Readiness
+To: Bjorn Helgaas <helgaas@kernel.org>,
+ Felipe Balbi <felipe.balbi@linux.intel.com>
+Cc: Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org
+References: <20180802113635.7097-1-felipe.balbi@linux.intel.com>
+ <15a43051-6b0f-1545-dc8f-b56b1513897b@kernel.org>
+ <874lgcufsu.fsf@linux.intel.com>
+ <407fa9ef-dcbe-e803-f72e-cbea468592bf@kernel.org>
+ <20180904181126.GG107892@bhelgaas-glaptop.roam.corp.google.com>
+ <87y3cgbjyf.fsf@linux.intel.com>
+ <20180905164909.GJ107892@bhelgaas-glaptop.roam.corp.google.com>
+From: Sinan Kaya <okaya@kernel.org>
+Message-ID: <f837db48-065f-4394-5512-a74716a52e8e@kernel.org>
+Date: Wed, 5 Sep 2018 09:54:10 -0700
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20180809163356.18650-1-keith.busch@intel.com>
-Sender: linux-pci-owner@vger.kernel.org
+In-Reply-To: <20180905164909.GJ107892@bhelgaas-glaptop.roam.corp.google.com>
+Content-Type: text/plain; charset=utf-8; format=flowed
 List-ID: <linux-pci.vger.kernel.org>
 
-[+cc Lukas, -stable]
-
-On Thu, Aug 09, 2018 at 10:33:56AM -0600, Keith Busch wrote:
-> PCI enumeration/de-enumeration needs to run single threaded to prevent
-> race conditions with other threads changing the topology. Altering the
-> number of virtual functions was not taking the rescan/remove lock hile
-> adding or removing those virtual functions, so this patch adds that.
+On 9/5/2018 9:49 AM, Bjorn Helgaas wrote:
+> pci_dev_wait() is connected with CRS.  There's some reason that
+> function doesn't actually looks for CRS responses, which I can't
+> remember right now.  But you can look it up in the changelogs.
 > 
-> Reported-by: Krzysztof Wierzbicki <krzysztof.wierzbicki@intel.com>
-> Cc: stable@vger.kernel.org
-> Signed-off-by: Keith Busch <keith.busch@intel.com>
-> ---
->  drivers/pci/pci-sysfs.c | 2 ++
->  1 file changed, 2 insertions(+)
-> 
-> diff --git a/drivers/pci/pci-sysfs.c b/drivers/pci/pci-sysfs.c
-> index 9ecfe13157c0..611abe220b6f 100644
-> --- a/drivers/pci/pci-sysfs.c
-> +++ b/drivers/pci/pci-sysfs.c
-> @@ -591,6 +591,7 @@ static ssize_t sriov_numvfs_store(struct device *dev,
->  	if (num_vfs > pci_sriov_get_totalvfs(pdev))
->  		return -ERANGE;
->  
-> +	pci_lock_rescan_remove();
 
-I assume the usual path is something like this, where we end up in
-pci_enable_sriov():
+We wanted to be able to support virtual functions (that can't read
+vendor id) as well as systems without CRS visibility support. That
+was the reason why we are polling a well known register such as
+command status against ~0 rather than the vendor id register.
 
-  sriov_numvfs_store
-+   pci_lock_rescan_remove
-    pdev->driver->sriov_configure
-      ...
-        pci_enable_sriov
-          sriov_enable
-            pci_iov_add_virtfn
-              pci_alloc_dev
-              pci_device_add
+> So I don't think we should put the Immediate Readiness check in
+> pci_dev_wait().
 
-But what about the other paths leading to pci_iov_add_virtfn()?  Don't
-we need similar locking for all of them?  
-
->  	device_lock(&pdev->dev);
->  
->  	if (num_vfs == pdev->sriov->num_VFs)
-> @@ -627,6 +628,7 @@ static ssize_t sriov_numvfs_store(struct device *dev,
->  
->  exit:
->  	device_unlock(&pdev->dev);
-> +	pci_unlock_rescan_remove();
->  
->  	if (ret < 0)
->  		return ret;
-> -- 
-> 2.14.4
-> 
+I agree, it should be outside of pci_dev_wait()
