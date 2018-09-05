@@ -1,64 +1,54 @@
-Return-Path: <SRS0=bliZ=LV=h08.hostsharing.net=foo00@kernel.org>
-Return-Path: <SRS0=bliZ=LV=h08.hostsharing.net=foo00@kernel.org>
-Date: Fri, 7 Sep 2018 22:26:31 +0200
-From: Lukas Wunner <lukas@wunner.de>
-To: Bjorn Helgaas <helgaas@kernel.org>
-Cc: Keith Busch <keith.busch@intel.com>,
-	Linux PCI <linux-pci@vger.kernel.org>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	Sinan Kaya <okaya@kernel.org>, Thomas Tai <thomas.tai@oracle.com>,
-	poza@codeaurora.org, Christoph Hellwig <hch@lst.de>
-Subject: Re: [PATCHv2 15/20] PCI/pciehp: Fix powerfault detection order
-Message-ID: <20180907202631.dppe6dv3pcsct5zl@wunner.de>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mga18.intel.com ([134.134.136.126]:27539 "EHLO mga18.intel.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1727364AbeIFBHG (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Wed, 5 Sep 2018 21:07:06 -0400
+From: Keith Busch <keith.busch@intel.com>
+To: Linux PCI <linux-pci@vger.kernel.org>,
+        Bjorn Helgaas <bhelgaas@google.com>
+Cc: Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+        Sinan Kaya <okaya@kernel.org>,
+        Thomas Tai <thomas.tai@oracle.com>, poza@codeaurora.org,
+        Lukas Wunner <lukas@wunner.de>, Christoph Hellwig <hch@lst.de>,
+        Dennis Dalessandro <dennis.dalessandro@intel.com>,
+        Sinan Kaya <okaya@codeaurora.org>
+Subject: [PATCHv2 02/20] PCI: Fix faulty logic in pci_reset_bus()
+Date: Wed,  5 Sep 2018 14:35:28 -0600
+Message-Id: <20180905203546.21921-3-keith.busch@intel.com>
+In-Reply-To: <20180905203546.21921-1-keith.busch@intel.com>
 References: <20180905203546.21921-1-keith.busch@intel.com>
- <20180905203546.21921-16-keith.busch@intel.com>
- <20180906193657.GH214747@bhelgaas-glaptop.roam.corp.google.com>
- <20180906195047.GD31024@localhost.localdomain>
- <20180907165352.GA250890@bhelgaas-glaptop.roam.corp.google.com>
- <20180907200332.GB250890@bhelgaas-glaptop.roam.corp.google.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20180907200332.GB250890@bhelgaas-glaptop.roam.corp.google.com>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Fri, Sep 07, 2018 at 03:03:32PM -0500, Bjorn Helgaas wrote:
-> I applied this to for-linus with the following changelog.  Let me know
-> if I didn't understand this correctly.  I changed the comment in
-> pciehp_power_on_slot() so it doesn't say "sticky" to avoid confusion
-> with the PCI spec concept of sticky register bits (ROS, RWS, RW1CS).
+From: Dennis Dalessandro <dennis.dalessandro@intel.com>
 
-The edited changelog and patch look perfectly fine to me, thanks a lot
-and sorry for missing this when doing the rework.  (I missed it because
-Thunderbolt doesn't have a power controller, hence can't signal a power
-fault.)
+The pci_rest_bus() function calls into pci_probe_reset_slot() to determine
+whether to call the slot or bus reset. The check has faulty logic in that
+it does not account for pci_probe_reset_slot() being able to return an
+errno. Fix by only calling the slot reset when the function returns 0.
+Treat < 1 and > 1 the same.
 
-The "sticky" refers to the property that if a power fault occurs and
-the Power Fault Detected bit is cleared to acknowledge receipt of the
-event, and if the power fault persists, the bit is immediately set
-again and another interrupt is signaled.  In that sense, the bit is
-"sticky" and that's what the code comment was referring to.  It's
-basically level-triggered as long as the power fault persists.
+Cc: Sinan Kaya <okaya@codeaurora.org>
+Fixes: 811c5cb37df4 ("PCI: Unify try slot and bus reset API")
+Reviewed-by: Michael J. Ruhl <michael.j.ruhl@intel.com>
+Reviewed-by: Keith Busch <keith.busch@intel.com>
+Signed-off-by: Dennis Dalessandro <dennis.dalessandro@intel.com>
+---
+ drivers/pci/pci.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-pciehp does not clear the bit on receipt of a PFD event, but only sets
-a flag in its internal struct.  This avoids an interrupt storm.
-Both the bit and the internal flag are cleared when attempting to bring
-the slot up again, either through an unplug-replug operation by the user
-or an enable request via sysfs or an Attention Button press.  In either
-case user intervention is required.  If the power fault is still not gone,
-bringup of the slot is aborted.
-
-The problem here was not only that the LED is turned off despite the slot
-being brought up, but that the internal flag ctrl->power_fault_detected
-was incorrectly set to 1 even though it had just been set to 0 when
-successfully bringing up the slot.
-
-There are some oddities with the power fault handling code, such as a
-"TBD" code comment in pcie_enable_notification() where it's unclear if
-there's really anything left "to be done".  I collected this and other
-oddities in this e-mail:
-https://www.spinics.net/lists/linux-pci/msg75743.html
-
-Thanks,
-
-Lukas
+diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
+index 29ff9619b5fa..30b260332a10 100644
+--- a/drivers/pci/pci.c
++++ b/drivers/pci/pci.c
+@@ -5200,7 +5200,7 @@ static int __pci_reset_bus(struct pci_bus *bus)
+  */
+ int pci_reset_bus(struct pci_dev *pdev)
+ {
+-	return pci_probe_reset_slot(pdev->slot) ?
++	return (!pci_probe_reset_slot(pdev->slot)) ?
+ 	    __pci_reset_slot(pdev->slot) : __pci_reset_bus(pdev->bus);
+ }
+ EXPORT_SYMBOL_GPL(pci_reset_bus);
+-- 
+2.14.4
