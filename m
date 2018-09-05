@@ -1,124 +1,75 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.29.99]:58234 "EHLO mail.kernel.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1732216AbeISWJo (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Wed, 19 Sep 2018 18:09:44 -0400
-From: Sinan Kaya <okaya@kernel.org>
-To: linux-pci@vger.kernel.org
-Cc: alex.williamson@redhat.com, Sinan Kaya <okaya@kernel.org>,
-        Bjorn Helgaas <bhelgaas@google.com>,
-        Alexey Kardashevskiy <aik@ozlabs.ru>,
-        Peter Xu <peterx@redhat.com>,
-        "Gustavo A. R. Silva" <gustavo@embeddedor.com>,
-        Eric Auger <eric.auger@redhat.com>
-Subject: [PATCH v4 4/6] PCI: Expose reset type to users of pci_try_reset_function()
-Date: Wed, 19 Sep 2018 16:30:35 +0000
-Message-Id: <20180919163037.13497-5-okaya@kernel.org>
-In-Reply-To: <20180919163037.13497-1-okaya@kernel.org>
-References: <20180919163037.13497-1-okaya@kernel.org>
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-nvme-bounces+bjorn=helgaas.com@lists.infradead.org>
+Return-Path: <linux-nvme-bounces+bjorn=helgaas.com@lists.infradead.org>
+Subject: Re: [PATCH v5 07/13] block: Add PCI P2P flag for request queue and
+ check support for requests
+To: Logan Gunthorpe <logang@deltatee.com>, Christoph Hellwig <hch@lst.de>
+References: <20180830185352.3369-1-logang@deltatee.com>
+ <20180830185352.3369-8-logang@deltatee.com>
+ <b5ab8fa3-34ac-3117-fa0d-5206c3939435@kernel.dk>
+ <20180901082812.GB670@lst.de>
+ <5f79c012-c6e1-56bb-62fd-0689181fb2c9@deltatee.com>
+ <59b28977-8f2a-6228-2050-03fae6bdbedd@kernel.dk>
+ <1b4283da-44df-4a02-3167-e295243cef78@deltatee.com>
+From: Jens Axboe <axboe@kernel.dk>
+Message-ID: <09258b9b-3aed-9890-b31a-bd70a133966c@kernel.dk>
+Date: Wed, 5 Sep 2018 13:45:04 -0600
+MIME-Version: 1.0
+In-Reply-To: <1b4283da-44df-4a02-3167-e295243cef78@deltatee.com>
+List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-nvme>,
+ <mailto:linux-nvme-request@lists.infradead.org?subject=unsubscribe>
+List-Archive: <http://lists.infradead.org/pipermail/linux-nvme/>
+List-Post: <mailto:linux-nvme@lists.infradead.org>
+List-Help: <mailto:linux-nvme-request@lists.infradead.org?subject=help>
+List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-nvme>,
+ <mailto:linux-nvme-request@lists.infradead.org?subject=subscribe>
+Cc: Keith Busch <keith.busch@intel.com>,
+ Alex Williamson <alex.williamson@redhat.com>, Sagi Grimberg <sagi@grimberg.me>,
+ linux-nvdimm@lists.01.org, linux-rdma@vger.kernel.org,
+ linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
+ linux-nvme@lists.infradead.org, Stephen Bates <sbates@raithlin.com>,
+ linux-block@vger.kernel.org,
+ =?UTF-8?B?SsOpcsO0bWUgR2xpc3Nl?= <jglisse@redhat.com>,
+ Jason Gunthorpe <jgg@mellanox.com>,
+ Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+ Bjorn Helgaas <bhelgaas@google.com>, Max Gurtovoy <maxg@mellanox.com>,
+ Dan Williams <dan.j.williams@intel.com>,
+ =?UTF-8?Q?Christian_K=c3=b6nig?= <christian.koenig@amd.com>
+Content-Type: text/plain; charset="us-ascii"
+Sender: "Linux-nvme" <linux-nvme-bounces@lists.infradead.org>
+Errors-To: linux-nvme-bounces+bjorn=helgaas.com@lists.infradead.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Looking to have more control between the users of the API vs. what the API
-can do internally. The new reset_type tells the PCI core about the bounds
-of the request.
+On 9/5/18 1:33 PM, Logan Gunthorpe wrote:
+> 
+> 
+> On 05/09/18 01:26 PM, Jens Axboe wrote:
+>> On 9/3/18 4:26 PM, Logan Gunthorpe wrote:
+>>> I personally agree with Christoph. But if there's consensus in the other
+>>> direction or this is a real blocker moving this forward, I can remove it
+>>> for the next version.
+>>
+>> It's a simple branch because the check isn't exhaustive. It just checks
+>> the first page. At that point you may as well just require the caller to
+>> flag the bio/rq as being P2P, and then do a check for P2P compatibility
+>> with the queue.
+> 
+> Hmm, we had something like that in v4[1] but it just seemed redundant to
+> create a flag when the information was already in the bio and kind of
+> ugly for the caller to check for, then set, the flag. I'm not _that_
+> averse to going back to that though...
 
-Signed-off-by: Sinan Kaya <okaya@kernel.org>
----
- drivers/pci/pci.c                  | 4 ++--
- drivers/vfio/pci/vfio_pci.c        | 7 ++++---
- drivers/vfio/pci/vfio_pci_config.c | 4 ++--
- include/linux/pci.h                | 2 +-
- 4 files changed, 9 insertions(+), 8 deletions(-)
+The point is that the caller doesn't necessarily know where the bio
+will end up, hence the caller can't fully check if the whole stack
+supports P2P.
 
-diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
-index 63b5930d8fb1..4edf70a4d528 100644
---- a/drivers/pci/pci.c
-+++ b/drivers/pci/pci.c
-@@ -4852,7 +4852,7 @@ EXPORT_SYMBOL_GPL(pci_reset_function_locked);
-  *
-  * Same as above, except return -EAGAIN if unable to lock device.
-  */
--int pci_try_reset_function(struct pci_dev *dev)
-+int pci_try_reset_function(struct pci_dev *dev, u32 reset_type)
- {
- 	int rc;
- 
-@@ -4863,7 +4863,7 @@ int pci_try_reset_function(struct pci_dev *dev)
- 		return -EAGAIN;
- 
- 	pci_dev_save_and_disable(dev);
--	rc = __pci_reset_function_locked(dev, PCI_RESET_ANY);
-+	rc = __pci_reset_function_locked(dev, reset_type);
- 	pci_dev_restore(dev);
- 	pci_dev_unlock(dev);
- 
-diff --git a/drivers/vfio/pci/vfio_pci.c b/drivers/vfio/pci/vfio_pci.c
-index cddb453a1ba5..fe7ada997c51 100644
---- a/drivers/vfio/pci/vfio_pci.c
-+++ b/drivers/vfio/pci/vfio_pci.c
-@@ -228,7 +228,7 @@ static int vfio_pci_enable(struct vfio_pci_device *vdev)
- 		return ret;
- 
- 	/* If reset fails because of the device lock, fail this path entirely */
--	ret = pci_try_reset_function(pdev);
-+	ret = pci_try_reset_function(pdev, PCI_RESET_ANY);
- 	if (ret == -EAGAIN) {
- 		pci_disable_device(pdev);
- 		return ret;
-@@ -376,7 +376,7 @@ static void vfio_pci_disable(struct vfio_pci_device *vdev)
- 	 * Try to reset the device.  The success of this is dependent on
- 	 * being able to lock the device, which is not always possible.
- 	 */
--	if (vdev->reset_works && !pci_try_reset_function(pdev))
-+	if (vdev->reset_works && !pci_try_reset_function(pdev, PCI_RESET_ANY))
- 		vdev->needs_reset = false;
- 
- 	pci_restore_state(pdev);
-@@ -844,7 +844,8 @@ static long vfio_pci_ioctl(void *device_data,
- 
- 	} else if (cmd == VFIO_DEVICE_RESET) {
- 		return vdev->reset_works ?
--			pci_try_reset_function(vdev->pdev) : -EINVAL;
-+			pci_try_reset_function(vdev->pdev, PCI_RESET_ANY) :
-+			 -EINVAL;
- 
- 	} else if (cmd == VFIO_DEVICE_GET_PCI_HOT_RESET_INFO) {
- 		struct vfio_pci_hot_reset_info hdr;
-diff --git a/drivers/vfio/pci/vfio_pci_config.c b/drivers/vfio/pci/vfio_pci_config.c
-index 115a36f6f403..0d66bac66211 100644
---- a/drivers/vfio/pci/vfio_pci_config.c
-+++ b/drivers/vfio/pci/vfio_pci_config.c
-@@ -831,7 +831,7 @@ static int vfio_exp_config_write(struct vfio_pci_device *vdev, int pos,
- 						 &cap);
- 
- 		if (!ret && (cap & PCI_EXP_DEVCAP_FLR))
--			pci_try_reset_function(vdev->pdev);
-+			pci_try_reset_function(vdev->pdev, PCI_RESET_ANY);
- 	}
- 
- 	/*
-@@ -910,7 +910,7 @@ static int vfio_af_config_write(struct vfio_pci_device *vdev, int pos,
- 						&cap);
- 
- 		if (!ret && (cap & PCI_AF_CAP_FLR) && (cap & PCI_AF_CAP_TP))
--			pci_try_reset_function(vdev->pdev);
-+			pci_try_reset_function(vdev->pdev, PCI_RESET_ANY);
- 	}
- 
- 	return count;
-diff --git a/include/linux/pci.h b/include/linux/pci.h
-index 09aa99dd1c1b..4fdddcb85066 100644
---- a/include/linux/pci.h
-+++ b/include/linux/pci.h
-@@ -1125,7 +1125,7 @@ int pcie_flr(struct pci_dev *dev);
- int __pci_reset_function_locked(struct pci_dev *dev, u32 reset_type);
- int pci_reset_function(struct pci_dev *dev, u32 reset_type);
- int pci_reset_function_locked(struct pci_dev *dev, u32 reset_type);
--int pci_try_reset_function(struct pci_dev *dev);
-+int pci_try_reset_function(struct pci_dev *dev, u32 reset_type);
- int pci_probe_reset_slot(struct pci_slot *slot);
- int pci_probe_reset_bus(struct pci_bus *bus);
- int pci_reset_bus(struct pci_dev *dev);
+What happens if a P2P request ends up with a driver that doesn't
+support it?
+
 -- 
-2.18.0
+Jens Axboe
+
+
+_______________________________________________
+Linux-nvme mailing list
+Linux-nvme@lists.infradead.org
+http://lists.infradead.org/mailman/listinfo/linux-nvme
