@@ -1,34 +1,41 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.29.99]:37658 "EHLO mail.kernel.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1725939AbeIEHi7 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Wed, 5 Sep 2018 03:38:59 -0400
-Subject: Re: RFC on PCI Device Lock
-To: Dennis Dalessandro <dennis.dalessandro@intel.com>,
-        Alex Williamson <alex.williamson@redhat.com>
-Cc: Bjorn Helgaas <bhelgaas@google.com>,
-        Linux PCI <linux-pci@vger.kernel.org>
-References: <87682473-6ffe-f7df-e8f8-3d00e8247621@kernel.org>
- <20180904165202.4e5bb59d@t450s.home>
- <3428a4e6-0095-3eb8-a6d2-c889e201ab98@intel.com>
-From: Sinan Kaya <okaya@kernel.org>
-Message-ID: <b85dab5a-62f0-78b0-0b7c-29af362784d9@kernel.org>
-Date: Tue, 4 Sep 2018 20:10:57 -0700
-MIME-Version: 1.0
-In-Reply-To: <3428a4e6-0095-3eb8-a6d2-c889e201ab98@intel.com>
-Content-Type: text/plain; charset=utf-8; format=flowed
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <SRS0=aNPy=LT=intel.com=jonathan.derrick@kernel.org>
+Return-Path: <SRS0=aNPy=LT=intel.com=jonathan.derrick@kernel.org>
+From: Jon Derrick <jonathan.derrick@intel.com>
+To: Bjorn Helgaas <helgaas@kernel.org>
+Cc: Keith Busch <keith.busch@intel.com>,
+	Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
+	<linux-pci@vger.kernel.org>,
+	Jon Derrick <jonathan.derrick@intel.com>
+Subject: [PATCH 1/2] PCI/VMD: Detach resources after stopping root bus
+Date: Tue,  4 Sep 2018 19:09:50 -0600
+Message-Id: <1536109791-2672-1-git-send-email-jonathan.derrick@intel.com>
 List-ID: <linux-pci.vger.kernel.org>
 
-On 9/4/2018 7:59 PM, Dennis Dalessandro wrote:
-> It sounds like all that is being done is put a band-aid on things and there is 
-> some redesign work needed. Perhaps the best thing to do is back this out for 
-> 4.19 and revisit with a more general solution for 4.20. That's a call for you 
-> folks to make. My concern is getting our HW functioning again with 4.19 and 
-> Sinan's patch along with my 1/1 seems to allow that at least.
+Fixes the ugly warning:
+[  181.940162] Trying to free nonexistent resource <e5a10000-e5a13fff>
 
-Alex proposed another solution. That looks better IMO.
-I think we can close this issue shortly. We have not exhausted bug fixing window
-unless Bjorn thinks otherwise.
+Signed-off-by: Jon Derrick <jonathan.derrick@intel.com>
+---
+ drivers/pci/controller/vmd.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-I'll upload another patch to bugzilla soon.
+diff --git a/drivers/pci/controller/vmd.c b/drivers/pci/controller/vmd.c
+index fd2dbd7..46ed80f 100644
+--- a/drivers/pci/controller/vmd.c
++++ b/drivers/pci/controller/vmd.c
+@@ -813,12 +813,12 @@ static void vmd_remove(struct pci_dev *dev)
+ {
+ 	struct vmd_dev *vmd = pci_get_drvdata(dev);
+ 
+-	vmd_detach_resources(vmd);
+ 	sysfs_remove_link(&vmd->dev->dev.kobj, "domain");
+ 	pci_stop_root_bus(vmd->bus);
+ 	pci_remove_root_bus(vmd->bus);
+ 	vmd_cleanup_srcu(vmd);
+ 	vmd_teardown_dma_ops(vmd);
++	vmd_detach_resources(vmd);
+ 	irq_domain_remove(vmd->irq_domain);
+ }
+ 
+-- 
+1.8.3.1
