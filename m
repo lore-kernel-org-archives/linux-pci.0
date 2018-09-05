@@ -1,68 +1,45 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from bmailout3.hostsharing.net ([176.9.242.62]:44691 "EHLO
-        bmailout3.hostsharing.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726006AbeIBOzQ (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Sun, 2 Sep 2018 10:55:16 -0400
-Date: Sun, 2 Sep 2018 12:39:55 +0200
-From: Lukas Wunner <lukas@wunner.de>
-To: Keith Busch <keith.busch@intel.com>
-Cc: Linux PCI <linux-pci@vger.kernel.org>,
+Received: from aserp2120.oracle.com ([141.146.126.78]:52130 "EHLO
+        aserp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1727623AbeIFDjL (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Wed, 5 Sep 2018 23:39:11 -0400
+Subject: Re: [PATCH for-rc v2 2/3] PCI: Request reset type as part of function
+ reset
+To: Sinan Kaya <okaya@kernel.org>, linux-pci@vger.kernel.org
+Cc: Derek Chickles <derek.chickles@caviumnetworks.com>,
+        Satanand Burla <satananda.burla@caviumnetworks.com>,
+        Felix Manlunas <felix.manlunas@caviumnetworks.com>,
+        Raghu Vatsavayi <raghu.vatsavayi@caviumnetworks.com>,
+        "David S. Miller" <davem@davemloft.net>,
         Bjorn Helgaas <bhelgaas@google.com>,
-        Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-        Sinan Kaya <okaya@kernel.org>,
-        Thomas Tai <thomas.tai@oracle.com>, poza@codeaurora.org
-Subject: Re: [PATCH 13/16] PCI/pciehp: Implement error handling callbacks
-Message-ID: <20180902103955.563lmxzzq52eo26q@wunner.de>
-References: <20180831212639.10196-1-keith.busch@intel.com>
- <20180831212639.10196-14-keith.busch@intel.com>
+        Juergen Gross <jgross@suse.com>,
+        Jia-Ju Bai <baijiaju1990@gmail.com>
+References: <20180905160805.5680-1-okaya@kernel.org>
+ <20180905160805.5680-2-okaya@kernel.org>
+From: Boris Ostrovsky <boris.ostrovsky@oracle.com>
+Message-ID: <74681de4-4f08-0df3-a0ba-430ffa54c36f@oracle.com>
+Date: Wed, 5 Sep 2018 19:07:53 -0400
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20180831212639.10196-14-keith.busch@intel.com>
+In-Reply-To: <20180905160805.5680-2-okaya@kernel.org>
+Content-Type: text/plain; charset=utf-8
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Fri, Aug 31, 2018 at 03:26:36PM -0600, Keith Busch wrote:
-> +	/*
-> +	 * Shutdown notification to ignore hotplug events during error
-> +	 * handling. We'll recheck the status when error handling completes.
-> +	 *
-> +	 * It is possible link event related to this error handling may have
-> +	 * triggered a the hotplug interrupt ahead of this notification, but we
-> +	 * can't do anything about that race.
-> +	 */
-> +	pcie_shutdown_notification(ctrl);
-
-No, if you look at pciehp_remove() you'll notice that I call pci_hp_del()
-before pcie_shutdown_notification().  The IRQ thread is needed to respond
-to user requests to enable/disable the slot.  If you just release the IRQ,
-the sysfs interface is still there but will no longer function while the
-reset is handled.  Not good.
-
-I think what you want to do instead is "down_write(&ctrl->reset_lock)",
-see commit 5b3f7b7d062b ("PCI: pciehp: Avoid slot access during reset").
-And possibly mask PDCE/DLLSCE like pciehp_reset_slot() does.
+On 09/05/2018 12:08 PM, Sinan Kaya wrote:
+> We need a contract between the reset API users and the PCI core about the
+> types of reset that a user needs vs. what PCI core can do internally.
+> If a platform supports hotplug, we need to do hotplug reset as an example.
+>
+> Expose the reset types to the drivers and try different reset types based
+> on the new reset_type parameter.
+>
+> Most users are expected to use PCI_RESET_ANY, PCI_RESET_FUNC or
+> PCI_RESET_LINK parameters.
+>
+> Fixes: 811c5cb37df4 ("PCI: Unify try slot and bus reset API")
+> Link: https://bugzilla.kernel.org/show_bug.cgi?id=200985
+> Suggested-by: Alex Williamson <alex.williamson@redhat.com>
+> Signed-off-by: Sinan Kaya <okaya@kernel.org>
 
 
-> +static void pciehp_slot_reset(struct pci_dev *dev)
-[...]
-> +	/*
-> +	 * Cache presence detect change, but ignore other hotplug events that
-> +	 * may occur during error handling. Ports that implement only in-band
-> +	 * presence detection may inadvertently believe the device has changed,
-> +	 * so those devices will have to be re-enumerated.
-> +	 */
-> +	pciehp_get_adapter_changed(ctrl->slot, &changed);
-> +	pcie_clear_hotplug_events(ctrl);
-> +	if (changed)
-> +		pciehp_request(ctrl, PCI_EXP_SLTSTA_PDC);
-> +	pcie_init_notification(ctrl);
-> +}
-
-Hm, can we be certain that error handling does not affect PDC?
-Because pciehp_reset_slot() does mask it and Sinan once said that in-band
-presence detect may cause presence to flap as well during reset:
-https://lkml.org/lkml/2018/7/3/693
-
-Thanks,
-
-Lukas
+Reviewed-by: Boris Ostrovsky <boris.ostrovsky@oracle.com>
