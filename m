@@ -1,86 +1,49 @@
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Message-ID: <5b9f3f71.1c69fb81.46bcf.b351@mx.google.com>
-From: Rob Herring <robh@kernel.org>
-To: Lubomir Rintel <lkundrak@v3.sk>
-Subject: Re: [PATCH 1/5] dt-bindings: spi/spi-pxa2xx: add PXA2xx SSP SPI
- Controller
-References: <20180910115935.163121-1-lkundrak@v3.sk>
- <20180910115935.163121-2-lkundrak@v3.sk>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail.kernel.org ([198.145.29.99]:56352 "EHLO mail.kernel.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1725825AbeIEIJ2 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Wed, 5 Sep 2018 04:09:28 -0400
+Subject: Re: RFC on PCI Device Lock
+From: Sinan Kaya <okaya@kernel.org>
+To: Alex Williamson <alex.williamson@redhat.com>
+Cc: Bjorn Helgaas <bhelgaas@google.com>,
+        Dennis Dalessandro <dennis.dalessandro@intel.com>,
+        Linux PCI <linux-pci@vger.kernel.org>
+References: <87682473-6ffe-f7df-e8f8-3d00e8247621@kernel.org>
+ <20180904165202.4e5bb59d@t450s.home>
+ <17720f56-2caa-2d2e-b655-867debf55934@kernel.org>
+ <20180904204649.415491f8@t450s.home>
+ <571b8341-f6fd-d92a-7091-f4fb02a2aadf@kernel.org>
+Message-ID: <7087eeca-e004-1b15-0ea6-103722399fd0@kernel.org>
+Date: Tue, 4 Sep 2018 20:41:20 -0700
 MIME-Version: 1.0
-In-Reply-To: <20180910115935.163121-2-lkundrak@v3.sk>
-Date: Sun, 16 Sep 2018 22:00:14 -0500
-List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
-List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
-List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
-List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
-List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
-Cc: Mark Rutland <mark.rutland@arm.com>, devicetree@vger.kernel.org,
- Eric Miao <eric.y.miao@gmail.com>, linux-pci@vger.kernel.org,
- linux-kernel@vger.kernel.org, Haojian Zhuang <haojian.zhuang@gmail.com>,
- linux-spi@vger.kernel.org, Mark Brown <broonie@kernel.org>,
- Daniel Mack <daniel@zonque.org>, Bjorn Helgaas <bhelgaas@google.com>,
- Robert Jarzmik <robert.jarzmik@free.fr>, linux-arm-kernel@lists.infradead.org
-Content-Type: text/plain; charset="us-ascii"
-Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
-Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
+In-Reply-To: <571b8341-f6fd-d92a-7091-f4fb02a2aadf@kernel.org>
+Content-Type: text/plain; charset=utf-8; format=flowed
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Mon, Sep 10, 2018 at 01:59:31PM +0200, Lubomir Rintel wrote:
-> This is the SPI controller found on Marvel MMP2 and perhaps more
-> platforms.
+On 9/4/2018 8:09 PM, Sinan Kaya wrote:
+> On 9/4/2018 7:46 PM, Alex Williamson wrote:
+>> #define PCI_RESET_DEV_SPECIFIC    (1 << 0)
+>> #define PCI_RESET_FLR        (1 << 1)
+>> #define PCI_RESET_PM        (1 << 2)
+>> #define PCI_RESET_SLOT        (1 << 3)
+>> #define PCI_RESET_BUS        (1 << 4)
+>>
+>> #define PCI_RESET_ANY        (~0)
+>> #define PCI_RESET_FUNC        (PCI_RESET_DEV_SPECIFIC | \
+>>                  PCI_RESET_FLR | PCI_RESET_PM)
+>> #define PCI_RESET_LINK        (PCI_RESET_SLOT | PCI_RESET_BUS)
 > 
-> Signed-off-by: Lubomir Rintel <lkundrak@v3.sk>
-> ---
->  .../devicetree/bindings/spi/spi-pxa2xx.txt    | 24 +++++++++++++++++++
->  1 file changed, 24 insertions(+)
->  create mode 100644 Documentation/devicetree/bindings/spi/spi-pxa2xx.txt
+> I should be able to put something together using __pci_reset_function_locked()
+> shortly.
 > 
-> diff --git a/Documentation/devicetree/bindings/spi/spi-pxa2xx.txt b/Documentation/devicetree/bindings/spi/spi-pxa2xx.txt
-> new file mode 100644
-> index 000000000000..75be87cf9909
-> --- /dev/null
-> +++ b/Documentation/devicetree/bindings/spi/spi-pxa2xx.txt
-> @@ -0,0 +1,24 @@
-> +PXA2xx SSP SPI Controller
-> +
-> +Required properties:
-> +- compatible: Must be "marvell,mmp2-ssp".
-> +- reg: Offset and length of the device's register set.
-> +- interrupts: Should be the interrupt number.
-> +- clocks: Should contain a single entry describing the clock input.
-> +- #address-cells:  Number of cells required to define a chip select address.
-> +- #size-cells: Should be zero.
-> +
-> +Optional properties:
-> +- cs-gpios: list of GPIO chip selects. See the SPI bus bindings,
-> +  Documentation/devicetree/bindings/spi/spi-bus.txt
-> +
-> +Child nodes represent devices on the SPI bus
-> +  See ../spi/spi-bus.txt
-> +
-> +Example:
-> +	ssp1: ssp@d4035000 {
-
-spi@...
-
-Otherwise,
-
-Reviewed-by: Rob Herring <robh@kernel.org>
-
-> +		compatible = "marvell,mmp2-ssp";
-> +		reg = <0xd4035000 0x1000>;
-> +		clocks = <&soc_clocks MMP2_CLK_SSP0>;
-> +		interrupts = <0>;
-> +	};
-> -- 
-> 2.17.1
+> This is not that difficult to implement.
 > 
 
+I posted these
 
-_______________________________________________
-linux-arm-kernel mailing list
-linux-arm-kernel@lists.infradead.org
-http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
+https://bugzilla.kernel.org/attachment.cgi?id=278297
+https://bugzilla.kernel.org/attachment.cgi?id=278299
+
+Let me know if I misunderstood you. I'll again wait for test feedback first.
