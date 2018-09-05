@@ -1,142 +1,71 @@
-Return-Path: <linux-acpi-owner@vger.kernel.org>
-From: Pu Wen <puwen@hygon.cn>
-To: tglx@linutronix.de, mingo@redhat.com, hpa@zytor.com,
-        x86@kernel.org, thomas.lendacky@amd.com, bp@alien8.de,
-        pbonzini@redhat.com, tony.luck@intel.com, rkrcmar@redhat.com,
-        boris.ostrovsky@oracle.com, jgross@suse.com, rjw@rjwysocki.net,
-        lenb@kernel.org, viresh.kumar@linaro.org, mchehab@kernel.org,
-        trenn@suse.com, shuah@kernel.org
-Cc: linux-kernel@vger.kernel.org, linux-arch@vger.kernel.org,
-        linux-pci@vger.kernel.org, linux-acpi@vger.kernel.org,
-        linux-edac@vger.kernel.org, linux-pm@vger.kernel.org,
-        kvm@vger.kernel.org, xen-devel@lists.xenproject.org,
-        Pu Wen <puwen@hygon.cn>
-Subject: [PATCH v6 00/16] Add support for Hygon Dhyana Family 18h processor
-Date: Mon, 10 Sep 2018 21:15:03 +0800
-Message-Id: <cover.1536550549.git.puwen@hygon.cn>
-Sender: linux-acpi-owner@vger.kernel.org
+Return-Path: <linux-nvme-bounces+bjorn=helgaas.com@lists.infradead.org>
+Return-Path: <linux-nvme-bounces+bjorn=helgaas.com@lists.infradead.org>
+Subject: Re: [PATCH v5 07/13] block: Add PCI P2P flag for request queue and
+ check support for requests
+To: Logan Gunthorpe <logang@deltatee.com>, Christoph Hellwig <hch@lst.de>
+References: <20180830185352.3369-1-logang@deltatee.com>
+ <20180830185352.3369-8-logang@deltatee.com>
+ <b5ab8fa3-34ac-3117-fa0d-5206c3939435@kernel.dk>
+ <20180901082812.GB670@lst.de>
+ <5f79c012-c6e1-56bb-62fd-0689181fb2c9@deltatee.com>
+ <59b28977-8f2a-6228-2050-03fae6bdbedd@kernel.dk>
+ <1b4283da-44df-4a02-3167-e295243cef78@deltatee.com>
+ <09258b9b-3aed-9890-b31a-bd70a133966c@kernel.dk>
+ <20180905195647.GA1626@lst.de>
+ <bcc1b3cf-2fd9-fa61-9cfb-b0e4d84e5d94@kernel.dk>
+ <20180905201152.GA1893@lst.de>
+ <eb42fb94-9da6-955b-8524-0a0f5ac4bd19@deltatee.com>
+ <2a3394bd-5f13-4818-43f4-dfc61f501e05@kernel.dk>
+ <e3ef26e6-6c8d-25b8-fa64-14594a51263c@deltatee.com>
+From: Jens Axboe <axboe@kernel.dk>
+Message-ID: <3af4d1d4-da07-c0a6-8464-9ddc1378f2f4@kernel.dk>
+Date: Wed, 5 Sep 2018 14:19:39 -0600
+MIME-Version: 1.0
+In-Reply-To: <e3ef26e6-6c8d-25b8-fa64-14594a51263c@deltatee.com>
+List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-nvme>,
+ <mailto:linux-nvme-request@lists.infradead.org?subject=unsubscribe>
+List-Archive: <http://lists.infradead.org/pipermail/linux-nvme/>
+List-Post: <mailto:linux-nvme@lists.infradead.org>
+List-Help: <mailto:linux-nvme-request@lists.infradead.org?subject=help>
+List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-nvme>,
+ <mailto:linux-nvme-request@lists.infradead.org?subject=subscribe>
+Cc: Keith Busch <keith.busch@intel.com>,
+ Alex Williamson <alex.williamson@redhat.com>, Sagi Grimberg <sagi@grimberg.me>,
+ linux-nvdimm@lists.01.org, linux-rdma@vger.kernel.org,
+ linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
+ linux-nvme@lists.infradead.org, Stephen Bates <sbates@raithlin.com>,
+ linux-block@vger.kernel.org,
+ =?UTF-8?B?SsOpcsO0bWUgR2xpc3Nl?= <jglisse@redhat.com>,
+ Jason Gunthorpe <jgg@mellanox.com>,
+ Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+ Bjorn Helgaas <bhelgaas@google.com>, Max Gurtovoy <maxg@mellanox.com>,
+ Dan Williams <dan.j.williams@intel.com>,
+ =?UTF-8?Q?Christian_K=c3=b6nig?= <christian.koenig@amd.com>
+Content-Type: text/plain; charset="us-ascii"
+Sender: "Linux-nvme" <linux-nvme-bounces@lists.infradead.org>
+Errors-To: linux-nvme-bounces+bjorn=helgaas.com@lists.infradead.org
 List-ID: <linux-pci.vger.kernel.org>
 
-As a new x86 CPU Vendor, Chengdu Haiguang IC Design Co., Ltd (Hygon)
-is a Joint Venture between AMD and Haiguang Information Technology Co.,
-Ltd., and aims at providing high performance x86 processor for China
-server market.
+On 9/5/18 2:18 PM, Logan Gunthorpe wrote:
+> 
+> 
+> On 05/09/18 02:14 PM, Jens Axboe wrote:
+>> But if the caller must absolutely know where the bio will end up, then
+>> it seems super redundant. So I'd vote for killing this check, it buys
+>> us absolutely nothing and isn't even exhaustive in its current form.
+> 
+> 
+> Ok, I'll remove it for v6.
 
-The first generation Hygon's processor(Dhyana) originates from AMD
-technology and shares most of the architecture with AMD's family 17h,
-but with different CPU Vendor ID("HygonGenuine")/PCIE Device Vendor ID
-(0x1D94)/Family series number (Family 18h).
-
-To enable the support of Linux kernel to Hygon's CPU, we added a new
-vendor type (X86_VENDOR_HYGON, with value of 9) in arch/x86/include/
-asm/processor.h, and shared most of kernel support codes with AMD
-family 17h.
-
-As Hygon will negotiate with AMD to make sure that only Hygon will
-use family 18h, so try to minimize code modification and share most
-codes with AMD under this consideration.
-
-This patch series have been applied and tested successfully on Hygon
-Dhyana SoC silicon. Also tested on AMD EPYC (Family 17h) processor,
-it works fine and makes no harm to the existing codes.
-
-
-v5->v6:
-  - Rebased on 4.19-rc3 and tested against it.
-  - Add Reviewed-by from Borislav Petkov for cacheinfo, smpboot,
-    alternative and kvm.
-  - Rework the patch subjects and patch descriptions.
-  - Rework vendor checking for some patches to minimize the code
-    modification.
-
-v4->v5:
-  - Rebased on 4.19-rc1 and tested against it.
-  - Add Reviewed-by from Boris Ostrovsky for Xen.
-  - Rework EDAC patch without vendor checking for minimal modification.
-
-v3->v4:
-  - Rebased on 4.18.3 and tested against it.
-  - Merge patchs 05/17 perfctr and 10/17 events in v3 to patch 05/16
-    PMU for better patch function group.
-  - Add hygon_get_topology_early() in patch 01/16.
-  - Rework vendor checking and refine coding style.
-  - Add Acked-by from Bjorn Helgaas for pci.
-  - Add Acked-by from Rafael J. Wysocki for cpufreq and acpi.
-
-v2->v3:
-  - Rebased on 4.18-rc8 and tested against it.
-  - Rework vendor checking codes to improve consistency.
-
-v1->v2:
-  - Rebased on 4.18-rc6 and tested against it.
-  - Split the patchset to small series of patches.
-  - Rework patch descriptions.
-  - Create a separated arch/x86/kernel/cpu/hygon.c for Dhyana CPU
-    initialization to reduce long-term maintenance effort.
-
-
-Pu Wen (16):
-  x86/cpu: Create Hygon Dhyana architecture support file
-  x86/cpu: Get cache info and setup cache cpumap for Hygon Dhyana
-  x86/cpu/mtrr: Support TOP_MEM2 and get MTRR number
-  x86/smpboot: SMP init nodelay and not flush caches before sleep
-  perf/x86: Add Hygon Dhyana support to PMU infrastructure
-  x86/alternative: Init ideal_nops for Hygon Dhyana
-  x86/pci: Add Hygon Dhyana support to PCI and north bridge
-  x86/apic: Add Hygon Dhyana support to APIC
-  x86/bugs: Add mitigation to spectre and no meltdown for Hygon Dhyana
-  x86/mce: Add Hygon Dhyana support to MCE infrastructure
-  x86/kvm: Add Hygon Dhyana support to KVM infrastructure
-  x86/xen: Add Hygon Dhyana support to Xen
-  ACPI, x86: Add Hygon Dhyana support
-  cpufreq, x86: Add Hygon Dhyana support
-  EDAC, amd64: Add Hygon Dhyana support
-  cpupower, x86: Add Hygon Dhyana support
-
- MAINTAINERS                                        |   6 +
- arch/x86/Kconfig.cpu                               |  14 +
- arch/x86/events/amd/core.c                         |   4 +
- arch/x86/events/amd/uncore.c                       |  20 +-
- arch/x86/events/core.c                             |   4 +
- arch/x86/include/asm/cacheinfo.h                   |   1 +
- arch/x86/include/asm/kvm_emulate.h                 |   4 +
- arch/x86/include/asm/mce.h                         |   2 +
- arch/x86/include/asm/processor.h                   |   3 +-
- arch/x86/include/asm/virtext.h                     |   5 +-
- arch/x86/kernel/alternative.c                      |   4 +
- arch/x86/kernel/amd_nb.c                           |  47 ++-
- arch/x86/kernel/apic/apic.c                        |  13 +-
- arch/x86/kernel/apic/probe_32.c                    |   1 +
- arch/x86/kernel/cpu/Makefile                       |   1 +
- arch/x86/kernel/cpu/bugs.c                         |   6 +-
- arch/x86/kernel/cpu/cacheinfo.c                    |  31 +-
- arch/x86/kernel/cpu/common.c                       |   1 +
- arch/x86/kernel/cpu/cpu.h                          |   1 +
- arch/x86/kernel/cpu/hygon.c                        | 411 +++++++++++++++++++++
- arch/x86/kernel/cpu/mcheck/mce-severity.c          |   3 +-
- arch/x86/kernel/cpu/mcheck/mce.c                   |  20 +-
- arch/x86/kernel/cpu/mtrr/cleanup.c                 |   3 +-
- arch/x86/kernel/cpu/mtrr/mtrr.c                    |   2 +-
- arch/x86/kernel/cpu/perfctr-watchdog.c             |   2 +
- arch/x86/kernel/smpboot.c                          |   4 +-
- arch/x86/kvm/emulate.c                             |  11 +-
- arch/x86/pci/amd_bus.c                             |   6 +-
- arch/x86/xen/pmu.c                                 |  12 +-
- drivers/acpi/acpi_pad.c                            |   1 +
- drivers/acpi/processor_idle.c                      |   1 +
- drivers/cpufreq/acpi-cpufreq.c                     |   5 +
- drivers/cpufreq/amd_freq_sensitivity.c             |   9 +-
- drivers/edac/amd64_edac.c                          |   8 +-
- drivers/edac/mce_amd.c                             |   4 +-
- include/linux/pci_ids.h                            |   2 +
- tools/power/cpupower/utils/cpufreq-info.c          |   6 +-
- tools/power/cpupower/utils/helpers/amd.c           |   4 +-
- tools/power/cpupower/utils/helpers/cpuid.c         |   8 +-
- tools/power/cpupower/utils/helpers/helpers.h       |   2 +-
- tools/power/cpupower/utils/helpers/misc.c          |   2 +-
- .../cpupower/utils/idle_monitor/mperf_monitor.c    |   3 +-
- 42 files changed, 646 insertions(+), 51 deletions(-)
- create mode 100644 arch/x86/kernel/cpu/hygon.c
+Since the drivers needs to know it's doing it right, it might not
+hurt to add a sanity check helper for that. Just have the driver
+call it, and don't add it in the normal IO submission path.
 
 -- 
-2.7.4
+Jens Axboe
+
+
+_______________________________________________
+Linux-nvme mailing list
+Linux-nvme@lists.infradead.org
+http://lists.infradead.org/mailman/listinfo/linux-nvme
