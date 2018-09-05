@@ -1,75 +1,131 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.29.99]:37758 "EHLO mail.kernel.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1729611AbeIRTTY (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Tue, 18 Sep 2018 15:19:24 -0400
-Date: Tue, 18 Sep 2018 08:46:42 -0500
-From: Bjorn Helgaas <helgaas@kernel.org>
-To: Tonghao Zhang <xiangxia.m.yue@gmail.com>
-Cc: linux-pci@vger.kernel.org, hch@lst.de
-Subject: Re: kernel panic becase pci register more than once
-Message-ID: <20180918134642.GB254348@bhelgaas-glaptop.roam.corp.google.com>
-References: <CAMDZJNV6D_NCn5_n2DAnPH25DONAKRcc-GWwGbCXX098E+EJ1Q@mail.gmail.com>
- <20180917191503.GA54859@bhelgaas-glaptop.roam.corp.google.com>
- <CAMDZJNUg+d6um2tp20OwyhSYG4WW8jSbwLhDAU8qOsqfkO=EfQ@mail.gmail.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <CAMDZJNUg+d6um2tp20OwyhSYG4WW8jSbwLhDAU8qOsqfkO=EfQ@mail.gmail.com>
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <SRS0=aNPy=LT=intel.com=jonathan.derrick@kernel.org>
+Return-Path: <SRS0=aNPy=LT=intel.com=jonathan.derrick@kernel.org>
+From: Jon Derrick <jonathan.derrick@intel.com>
+To: Bjorn Helgaas <helgaas@kernel.org>
+Cc: Keith Busch <keith.busch@intel.com>,
+	Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
+	<linux-pci@vger.kernel.org>,
+	Jon Derrick <jonathan.derrick@intel.com>
+Subject: [PATCH 2/2] PCI/VMD: Expose VMD host-bridge
+Date: Tue,  4 Sep 2018 19:09:51 -0600
+Message-Id: <1536109791-2672-2-git-send-email-jonathan.derrick@intel.com>
+In-Reply-To: <1536109791-2672-1-git-send-email-jonathan.derrick@intel.com>
+References: <1536109791-2672-1-git-send-email-jonathan.derrick@intel.com>
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tue, Sep 18, 2018 at 10:00:11AM +0800, Tonghao Zhang wrote:
-> On Tue, Sep 18, 2018 at 3:15 AM Bjorn Helgaas <helgaas@kernel.org> wrote:
-> > On Sun, Sep 09, 2018 at 04:26:37PM +0800, Tonghao Zhang wrote:
-> > > When I enable pci msi or msix more than once, the kernel will
-> > > panic.  Now we just use the WARN_ON, should we add check for
-> > > that has been enabled.
+In preparation for kernel host-bridge enhancements, and to take
+advantage of pci_host_probe()'s calling of
+pcie_bus_configure_settings(), convert the VMD driver to expose a host
+bridge rather than a root bus.
 
-> > A WARN_ON() shouldn't cause the kernel to panic.  Do you mean that
-> > it causes a backtrace?  I think that's the intended behavior,
-> > because calling this twice would be a driver bug, and we want to
-> > find and fix those bugs.
+Signed-off-by: Jon Derrick <jonathan.derrick@intel.com>
+---
+ drivers/pci/controller/vmd.c | 54 ++++++++++++++++++++++++++++----------------
+ 1 file changed, 34 insertions(+), 20 deletions(-)
 
-> Yes, you are right, but we can return error code when drivers call
-> this twice.
-
-That's possible.  We need a clear explanation for why we're making the
-change, and that starts with a clear description of the problem, i.e.,
-is the problem that the kernel crashes and a reboot is required, or is
-the problem some messages in the dmesg log that look alarming but are
-otherwise harmless?  I think the latter.
-
-If we decide that an error return is better than the WARN_ON(), we
-need to look at where the check is done.  For example, you currently
-check in __pci_enable_msix(), which is only called from
-__pci_enable_msix_range().  We should check for simple errors like
-this as early as possible, which probably means
-__pci_enable_msix_range().
-
-> > > diff --git a/drivers/pci/msi.c b/drivers/pci/msi.c
-> > > index f2ef896..324840f 100644
-> > > --- a/drivers/pci/msi.c
-> > > +++ b/drivers/pci/msi.c
-> > > @@ -958,7 +958,9 @@ static int __pci_enable_msix(struct pci_dev *dev,
-> > > struct msix_entry *entries,
-> > >                         }
-> > >                 }
-> > >         }
-> > > -       WARN_ON(!!dev->msix_enabled);
-> > > +
-> > > +       if (dev->msix_enabled)
-> > > +               return -EINVAL;
-> > >
-> > >         /* Check whether driver already requested for MSI irq */
-> > >         if (dev->msi_enabled) {
-> > > @@ -1028,7 +1030,8 @@ static int __pci_enable_msi_range(struct pci_dev
-> > > *dev, int minvec, int maxvec,
-> > >         if (!pci_msi_supported(dev, minvec))
-> > >                 return -EINVAL;
-> > >
-> > > -       WARN_ON(!!dev->msi_enabled);
-> > > +       if (dev->msi_enabled)
-> > > +               return -EINVAL;
-> > >
-> > >         /* Check whether driver already requested MSI-X irqs */
-> > >         if (dev->msix_enabled) {
+diff --git a/drivers/pci/controller/vmd.c b/drivers/pci/controller/vmd.c
+index 46ed80f..ca05679 100644
+--- a/drivers/pci/controller/vmd.c
++++ b/drivers/pci/controller/vmd.c
+@@ -93,7 +93,7 @@ struct vmd_dev {
+ 	struct pci_sysdata	sysdata;
+ 	struct resource		resources[3];
+ 	struct irq_domain	*irq_domain;
+-	struct pci_bus		*bus;
++	struct pci_host_bridge	*host;
+ 
+ #ifdef CONFIG_X86_DEV_DMA_OPS
+ 	struct dma_map_ops	dma_ops;
+@@ -582,7 +582,6 @@ static int vmd_find_free_domain(void)
+ static int vmd_enable_domain(struct vmd_dev *vmd, unsigned long features)
+ {
+ 	struct pci_sysdata *sd = &vmd->sysdata;
+-	struct fwnode_handle *fn;
+ 	struct resource *res;
+ 	u32 upper_bits;
+ 	unsigned long flags;
+@@ -690,37 +689,51 @@ static int vmd_enable_domain(struct vmd_dev *vmd, unsigned long features)
+ 		return sd->domain;
+ 
+ 	sd->node = pcibus_to_node(vmd->dev->bus);
+-
+-	fn = irq_domain_alloc_named_id_fwnode("VMD-MSI", vmd->sysdata.domain);
+-	if (!fn)
++	sd->fwnode = irq_domain_alloc_named_id_fwnode("VMD-MSI",
++						      vmd->sysdata.domain);
++	if (!sd->fwnode)
+ 		return -ENODEV;
+ 
+-	vmd->irq_domain = pci_msi_create_irq_domain(fn, &vmd_msi_domain_info,
++	vmd->irq_domain = pci_msi_create_irq_domain(sd->fwnode,
++						    &vmd_msi_domain_info,
+ 						    x86_vector_domain);
+-	irq_domain_free_fwnode(fn);
+ 	if (!vmd->irq_domain)
+-		return -ENODEV;
++		goto free_fwnode;
+ 
++	vmd->irq_domain->fwnode = sd->fwnode;
+ 	pci_add_resource(&resources, &vmd->resources[0]);
+ 	pci_add_resource_offset(&resources, &vmd->resources[1], offset[0]);
+ 	pci_add_resource_offset(&resources, &vmd->resources[2], offset[1]);
+ 
+-	vmd->bus = pci_create_root_bus(&vmd->dev->dev, busn_start, &vmd_ops,
+-				       sd, &resources);
+-	if (!vmd->bus) {
+-		pci_free_resource_list(&resources);
+-		irq_domain_remove(vmd->irq_domain);
+-		return -ENODEV;
+-	}
++	vmd->host = devm_pci_alloc_host_bridge(&vmd->dev->dev, 0);
++	if (!vmd->host)
++		goto free_irqdomain;
++
++	list_splice_init(&resources, &vmd->host->windows);
++	vmd->host->busnr = busn_start;
++	vmd->host->dev.parent = &vmd->dev->dev;
++	vmd->host->ops = &vmd_ops;
++	vmd->host->sysdata = sd;
+ 
+ 	vmd_attach_resources(vmd);
+ 	vmd_setup_dma_ops(vmd);
+-	dev_set_msi_domain(&vmd->bus->dev, vmd->irq_domain);
+-	pci_rescan_bus(vmd->bus);
++	dev_set_msi_domain(&vmd->host->dev, vmd->irq_domain);
++	if (pci_host_probe(vmd->host))
++		goto detach_resources;
+ 
+-	WARN(sysfs_create_link(&vmd->dev->dev.kobj, &vmd->bus->dev.kobj,
++	WARN(sysfs_create_link(&vmd->dev->dev.kobj, &vmd->host->bus->dev.kobj,
+ 			       "domain"), "Can't create symlink to domain\n");
+ 	return 0;
++
++detach_resources:
++	vmd_detach_resources(vmd);
++free_fwnode:
++	irq_domain_free_fwnode(vmd->irq_domain->fwnode);
++free_irqdomain:
++	pci_free_resource_list(&resources);
++	irq_domain_remove(vmd->irq_domain);
++
++	return -ENODEV;
+ }
+ 
+ static irqreturn_t vmd_irq(int irq, void *data)
+@@ -814,11 +827,12 @@ static void vmd_remove(struct pci_dev *dev)
+ 	struct vmd_dev *vmd = pci_get_drvdata(dev);
+ 
+ 	sysfs_remove_link(&vmd->dev->dev.kobj, "domain");
+-	pci_stop_root_bus(vmd->bus);
+-	pci_remove_root_bus(vmd->bus);
++	pci_stop_root_bus(vmd->host->bus);
++	pci_remove_root_bus(vmd->host->bus);
+ 	vmd_cleanup_srcu(vmd);
+ 	vmd_teardown_dma_ops(vmd);
+ 	vmd_detach_resources(vmd);
++	irq_domain_free_fwnode(vmd->irq_domain->fwnode);
+ 	irq_domain_remove(vmd->irq_domain);
+ }
+ 
+-- 
+1.8.3.1
