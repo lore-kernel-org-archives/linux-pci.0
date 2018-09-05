@@ -1,45 +1,39 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-pg1-f193.google.com ([209.85.215.193]:44826 "EHLO
-        mail-pg1-f193.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1727160AbeIOBLC (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Fri, 14 Sep 2018 21:11:02 -0400
-Received: by mail-pg1-f193.google.com with SMTP id r1-v6so4857186pgp.11
-        for <linux-pci@vger.kernel.org>; Fri, 14 Sep 2018 12:55:05 -0700 (PDT)
-From: Stephen Hemminger <stephen@networkplumber.org>
-To: kys@microsoft.com, haiyangz@microsoft.com, sthemmin@microsoft.com
-Cc: devel@linuxdriverproject.org, netdev@vger.kernel.org,
-        linux-pci@vger.kernel.org
-Subject: [PATCH v2 0/2] hv_netvsc: associate VF and PV device by serial number
-Date: Fri, 14 Sep 2018 12:54:55 -0700
-Message-Id: <20180914195457.20433-1-sthemmin@microsoft.com>
+Received: from mail.kernel.org ([198.145.29.99]:37196 "EHLO mail.kernel.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1726211AbeIEHhR (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Wed, 5 Sep 2018 03:37:17 -0400
+Subject: Re: RFC on PCI Device Lock
+To: Alex Williamson <alex.williamson@redhat.com>
+Cc: Bjorn Helgaas <bhelgaas@google.com>,
+        Dennis Dalessandro <dennis.dalessandro@intel.com>,
+        Linux PCI <linux-pci@vger.kernel.org>
+References: <87682473-6ffe-f7df-e8f8-3d00e8247621@kernel.org>
+ <20180904165202.4e5bb59d@t450s.home>
+ <17720f56-2caa-2d2e-b655-867debf55934@kernel.org>
+ <20180904204649.415491f8@t450s.home>
+From: Sinan Kaya <okaya@kernel.org>
+Message-ID: <571b8341-f6fd-d92a-7091-f4fb02a2aadf@kernel.org>
+Date: Tue, 4 Sep 2018 20:09:16 -0700
+MIME-Version: 1.0
+In-Reply-To: <20180904204649.415491f8@t450s.home>
+Content-Type: text/plain; charset=utf-8; format=flowed
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-The Hyper-V implementation of PCI controller has concept of 32 bit serial number
-(not to be confused with PCI-E serial number).  This value is sent in the protocol
-from the host to indicate SR-IOV VF device is attached to a synthetic NIC.
+On 9/4/2018 7:46 PM, Alex Williamson wrote:
+> #define PCI_RESET_DEV_SPECIFIC	(1 << 0)
+> #define PCI_RESET_FLR		(1 << 1)
+> #define PCI_RESET_PM		(1 << 2)
+> #define PCI_RESET_SLOT		(1 << 3)
+> #define PCI_RESET_BUS		(1 << 4)
+> 
+> #define PCI_RESET_ANY		(~0)
+> #define PCI_RESET_FUNC		(PCI_RESET_DEV_SPECIFIC | \
+> 				 PCI_RESET_FLR | PCI_RESET_PM)
+> #define PCI_RESET_LINK		(PCI_RESET_SLOT | PCI_RESET_BUS)
 
-Using the serial number (instead of MAC address) to associate the two devices
-avoids lots of potential problems when there are duplicate MAC addresses from
-tunnels or layered devices.
+I should be able to put something together using __pci_reset_function_locked()
+shortly.
 
-The patch set is broken into two parts, one is for the PCI controller
-and the other is for the netvsc device. Normally, these go through different
-trees but sending them together here for better review. The PCI changes
-were submitted previously, but the main review comment was "why do you
-need this?". This is why.
-
-v2 - slot name can be shorter.
-     remove locking when creating pci_slots; see comment for explaination
-
-Stephen Hemminger (2):
-  PCI: hv: support reporting serial number as slot information
-  hv_netvsc: pair VF based on serial number
-
- drivers/net/hyperv/netvsc.c         |  3 ++
- drivers/net/hyperv/netvsc_drv.c     | 58 ++++++++++++++++-------------
- drivers/pci/controller/pci-hyperv.c | 37 ++++++++++++++++++
- 3 files changed, 73 insertions(+), 25 deletions(-)
-
--- 
-2.18.0
+This is not that difficult to implement.
