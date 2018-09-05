@@ -1,75 +1,75 @@
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-From: Leonard Crestez <leonard.crestez@nxp.com>
-To: "lorenzo.pieralisi@arm.com" <lorenzo.pieralisi@arm.com>
-Subject: Re: [RESEND] PCI: imx: Initial imx7d pm support
-Date: Mon, 3 Sep 2018 13:52:13 +0000
-Message-ID: <29a8f58b4efe3e3671eec1ee78b566d69034db61.camel@nxp.com>
-References: <d577303de61fb060aa428898f5df1d0bc9be89b8.1535369231.git.leonard.crestez@nxp.com>
- <20180828100758.GA27217@e107981-ln.cambridge.arm.com>
- <efcb160f08bb53620ba0570e55dbb9190275aeb0.camel@nxp.com>
- <20180828145511.GA32352@e107981-ln.cambridge.arm.com>
-In-Reply-To: <20180828145511.GA32352@e107981-ln.cambridge.arm.com>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail-it0-f53.google.com ([209.85.214.53]:38182 "EHLO
+        mail-it0-f53.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1727599AbeIFAqi (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Wed, 5 Sep 2018 20:46:38 -0400
+Received: by mail-it0-f53.google.com with SMTP id p129-v6so11174986ite.3
+        for <linux-pci@vger.kernel.org>; Wed, 05 Sep 2018 13:14:51 -0700 (PDT)
+Subject: Re: [PATCH v5 07/13] block: Add PCI P2P flag for request queue and
+ check support for requests
+To: Logan Gunthorpe <logang@deltatee.com>,
+        Christoph Hellwig <hch@lst.de>
+Cc: linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
+        linux-nvme@lists.infradead.org, linux-rdma@vger.kernel.org,
+        linux-nvdimm@lists.01.org, linux-block@vger.kernel.org,
+        Stephen Bates <sbates@raithlin.com>,
+        Keith Busch <keith.busch@intel.com>,
+        Sagi Grimberg <sagi@grimberg.me>,
+        Bjorn Helgaas <bhelgaas@google.com>,
+        Jason Gunthorpe <jgg@mellanox.com>,
+        Max Gurtovoy <maxg@mellanox.com>,
+        Dan Williams <dan.j.williams@intel.com>,
+        =?UTF-8?B?SsOpcsO0bWUgR2xpc3Nl?= <jglisse@redhat.com>,
+        Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+        Alex Williamson <alex.williamson@redhat.com>,
+        =?UTF-8?Q?Christian_K=c3=b6nig?= <christian.koenig@amd.com>
+References: <20180830185352.3369-1-logang@deltatee.com>
+ <20180830185352.3369-8-logang@deltatee.com>
+ <b5ab8fa3-34ac-3117-fa0d-5206c3939435@kernel.dk>
+ <20180901082812.GB670@lst.de>
+ <5f79c012-c6e1-56bb-62fd-0689181fb2c9@deltatee.com>
+ <59b28977-8f2a-6228-2050-03fae6bdbedd@kernel.dk>
+ <1b4283da-44df-4a02-3167-e295243cef78@deltatee.com>
+ <09258b9b-3aed-9890-b31a-bd70a133966c@kernel.dk>
+ <20180905195647.GA1626@lst.de>
+ <bcc1b3cf-2fd9-fa61-9cfb-b0e4d84e5d94@kernel.dk>
+ <20180905201152.GA1893@lst.de>
+ <eb42fb94-9da6-955b-8524-0a0f5ac4bd19@deltatee.com>
+From: Jens Axboe <axboe@kernel.dk>
+Message-ID: <2a3394bd-5f13-4818-43f4-dfc61f501e05@kernel.dk>
+Date: Wed, 5 Sep 2018 14:14:48 -0600
 MIME-Version: 1.0
-List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
-List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
-List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
-List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
-List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
-Cc: "A.s. Dong" <aisheng.dong@nxp.com>,
- "Joao.Pinto@synopsys.com" <Joao.Pinto@synopsys.com>,
- Richard Zhu <hongxing.zhu@nxp.com>,
- "kernel@pengutronix.de" <kernel@pengutronix.de>,
- Anson Huang <anson.huang@nxp.com>,
- "andrew.smirnov@gmail.com" <andrew.smirnov@gmail.com>,
- "jingoohan1@gmail.com" <jingoohan1@gmail.com>,
- "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
- "bhelgaas@google.com" <bhelgaas@google.com>, dl-linux-imx <linux-imx@nxp.com>,
- "p.zabel@pengutronix.de" <p.zabel@pengutronix.de>,
- "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
- Fabio Estevam <fabio.estevam@nxp.com>,
- "linux-arm-kernel@lists.infradead.org" <linux-arm-kernel@lists.infradead.org>,
- "l.stach@pengutronix.de" <l.stach@pengutronix.de>
-Content-Type: text/plain; charset="us-ascii"
-Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
-Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
+In-Reply-To: <eb42fb94-9da6-955b-8524-0a0f5ac4bd19@deltatee.com>
+Content-Type: text/plain; charset=utf-8
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tue, 2018-08-28 at 15:55 +0100, Lorenzo Pieralisi wrote:
-> On Tue, Aug 28, 2018 at 01:00:02PM +0000, Leonard Crestez wrote:
-> > On Tue, 2018-08-28 at 11:07 +0100, Lorenzo Pieralisi wrote:
-> > > On Mon, Aug 27, 2018 at 02:28:37PM +0300, Leonard Crestez wrote:
-> > > > On imx7d the pcie-phy power domain is turned off in suspend and this can
-> > > > make the system hang after resume when attempting any read from PCI.
-> > > > 
-> > > > Fix this by adding minimal suspend/resume code from the nxp internal
-> > > > tree. This will prepare for powering down on suspend and reset the block
-> > > > on resume.
-> > > > 
-> > > > Code is only for imx7d but a very similar sequence can be used for
-> > > > other socs.
-> > > > 
-> > > > The original author is mostly Richard Zhu <hongxing.zhu@nxp.com>, this
-> > > > patch adjusts the code to the upstream imx7d implemention using reset
-> > > > controls and power domains.
-> > > 
-> > > I will add a Suggested-by: replacing this paragraph, it is always better
-> > > to add proper tags rather than credit hidden in commit logs messages.
-> > 
-> > Isn't "Originally-by:" a better tag for this?
+On 9/5/18 2:09 PM, Logan Gunthorpe wrote:
 > 
-> We can add that, yes or add Richard as patch author, as you prefer to
-> give him credit.
+> 
+> On 05/09/18 02:11 PM, Christoph Hellwig wrote:
+>> On Wed, Sep 05, 2018 at 01:54:31PM -0600, Jens Axboe wrote:
+>>> On 9/5/18 1:56 PM, Christoph Hellwig wrote:
+>>>> On Wed, Sep 05, 2018 at 01:45:04PM -0600, Jens Axboe wrote:
+>>>>> The point is that the caller doesn't necessarily know where the bio
+>>>>> will end up, hence the caller can't fully check if the whole stack
+>>>>> supports P2P.
+>>>>
+>>>> The caller must necessarily know where the bio will end up, as for P2P
+>>>> support we need to query if the bio target is P2P capable vs the
+>>>> source of the P2P memory.
+>>>
+>>> Then what's the point of having the check at all?
+>>
+>> Just an additional little safe guard.  If you think it isn't worth
+>> it I guess we can just drop it for now.
+> 
+> Yes, the point is to prevent driver writers from doing the wrong thing
+> by not doing the necessary checks before submitting to the queue.
 
-I think "Originally-by:" is a better fit because there is no
-clear correspondence with patches from the vendor tree.
+But if the caller must absolutely know where the bio will end up, then
+it seems super redundant. So I'd vote for killing this check, it buys
+us absolutely nothing and isn't even exhaustive in its current form.
 
---
-Regards,
-Leonard
-_______________________________________________
-linux-arm-kernel mailing list
-linux-arm-kernel@lists.infradead.org
-http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
+-- 
+Jens Axboe
