@@ -1,73 +1,75 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-qt0-f194.google.com ([209.85.216.194]:38436 "EHLO
-        mail-qt0-f194.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1727977AbeIGMqG (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Fri, 7 Sep 2018 08:46:06 -0400
-Received: by mail-qt0-f194.google.com with SMTP id x7-v6so15358690qtk.5
-        for <linux-pci@vger.kernel.org>; Fri, 07 Sep 2018 01:06:20 -0700 (PDT)
+Received: from mail.kernel.org ([198.145.29.99]:57542 "EHLO mail.kernel.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1727069AbeIFBai (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Wed, 5 Sep 2018 21:30:38 -0400
+Date: Wed, 5 Sep 2018 15:58:40 -0500
+From: Bjorn Helgaas <helgaas@kernel.org>
+To: Keith Busch <keith.busch@intel.com>
+Cc: Linux PCI <linux-pci@vger.kernel.org>,
+        Bjorn Helgaas <bhelgaas@google.com>,
+        Lukas Wunner <lukas@wunner.de>
+Subject: Re: [PATCH] pci/sriov: Hold rescan lock while enumerating
+Message-ID: <20180905205840.GR107892@bhelgaas-glaptop.roam.corp.google.com>
+References: <20180809163356.18650-1-keith.busch@intel.com>
 MIME-Version: 1.0
-In-Reply-To: <3b37e4fd-c793-bd52-7d70-950f846a7d5a@kernel.org>
-References: <20180907053614.6540-1-drake@endlessm.com> <3b37e4fd-c793-bd52-7d70-950f846a7d5a@kernel.org>
-From: Daniel Drake <drake@endlessm.com>
-Date: Fri, 7 Sep 2018 16:06:19 +0800
-Message-ID: <CAD8Lp466EffdgL5zVZi-L+s78Yxa9+FryB8ch1=UAwwCPqu9Ag@mail.gmail.com>
-Subject: Re: [PATCH] PCI: Reprogram bridge prefetch registers on resume
-To: Sinan Kaya <okaya@kernel.org>
-Cc: Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org,
-        Linux Upstreaming Team <linux@endlessm.com>,
-        nouveau@lists.freedesktop.org, Linux PM <linux-pm@vger.kernel.org>,
-        Peter Wu <peter@lekensteyn.nl>, kherbst@redhat.com,
-        Andy Shevchenko <andriy.shevchenko@linux.intel.com>,
-        "Wysocki, Rafael J" <rafael.j.wysocki@intel.com>,
-        Keith Busch <keith.busch@intel.com>,
-        Mika Westerberg <mika.westerberg@linux.intel.com>,
-        Jon Derrick <jonathan.derrick@intel.com>,
-        Thomas Martitz <kugel@rockbox.org>, davem@davemloft.net,
-        hkallweit1@gmail.com, netdev@vger.kernel.org, nic_swsd@realtek.com
-Content-Type: text/plain; charset="UTF-8"
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20180809163356.18650-1-keith.busch@intel.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Fri, Sep 7, 2018 at 2:40 PM, Sinan Kaya <okaya@kernel.org> wrote:
-> On 9/6/2018 10:36 PM, Daniel Drake wrote:
->>
->> +       if (pci_dev->class == PCI_CLASS_BRIDGE_PCI << 8)
->> +               pci_setup_bridge_mmio_pref(pci_dev);
->
->
-> This should probably some kind of a quirk rather than default
-> for the listed card as it sounds like you are dealing with
-> broken hardware.
+[+cc Lukas, -stable]
 
-With that approach there's a sizeable list that your quirk list is
-incomplete or out of date.
+On Thu, Aug 09, 2018 at 10:33:56AM -0600, Keith Busch wrote:
+> PCI enumeration/de-enumeration needs to run single threaded to prevent
+> race conditions with other threads changing the topology. Altering the
+> number of virtual functions was not taking the rescan/remove lock hile
+> adding or removing those virtual functions, so this patch adds that.
+> 
+> Reported-by: Krzysztof Wierzbicki <krzysztof.wierzbicki@intel.com>
+> Cc: stable@vger.kernel.org
+> Signed-off-by: Keith Busch <keith.busch@intel.com>
+> ---
+>  drivers/pci/pci-sysfs.c | 2 ++
+>  1 file changed, 2 insertions(+)
+> 
+> diff --git a/drivers/pci/pci-sysfs.c b/drivers/pci/pci-sysfs.c
+> index 9ecfe13157c0..611abe220b6f 100644
+> --- a/drivers/pci/pci-sysfs.c
+> +++ b/drivers/pci/pci-sysfs.c
+> @@ -591,6 +591,7 @@ static ssize_t sriov_numvfs_store(struct device *dev,
+>  	if (num_vfs > pci_sriov_get_totalvfs(pdev))
+>  		return -ERANGE;
+>  
+> +	pci_lock_rescan_remove();
 
-And when the bug bites, it's extremely cryptic. We've spent months
-working on this issue and only found this magic register write mostly
-through a stroke of good luck. Separately there's been a flurry of
-mails around the r8169 MSI-X problem but as far as I can see nobody
-suggested even looking at the values of the parent bridge prefetch
-registers. And even if they did, they'd probably have said "values are
-fine, nothing to see here" (exactly as we did 4 months ago when Nvidia
-mentioned these registers as a possible cause - oops!).
+I assume the usual path is something like this, where we end up in
+pci_enable_sriov():
 
-So here I'm instead following a suggestion from Bjorn, after also
-having confirmed the windows behaviour:
+  sriov_numvfs_store
++   pci_lock_rescan_remove
+    pdev->driver->sriov_configure
+      ...
+        pci_enable_sriov
+          sriov_enable
+            pci_iov_add_virtfn
+              pci_alloc_dev
+              pci_device_add
 
-https://marc.info/?l=linux-pci&m=153574276126484&w=2
-> Can we tell whether Windows rewrites this register unconditionally at
-> resume-time?  If so, it may be more robust for Linux to do the same.
-> The whole thing is black magic, which I hate, but if it's our only
-> choice, it may be better to have this applied everywhere so we don't
-> keep stubbing our toes on new systems that require the quirk.
+But what about the other paths leading to pci_iov_add_virtfn()?  Don't
+we need similar locking for all of them?  
 
-Also, we just spoke to Asus BIOS engineers who told us that the BIOS
-does already restore the PCI bridge prefetch registers on resume. I
-guess this is why the other registers like the (non-zero) prefetch
-base address lower 32 bits do have the right value on resume even
-before my patch. It sounds like a more subtle bug related to register
-write timing or sequence, in that case it will be harder to define who
-is responsible for the breakage and hence under which conditions the
-quirk should apply.
-
-Daniel
+>  	device_lock(&pdev->dev);
+>  
+>  	if (num_vfs == pdev->sriov->num_VFs)
+> @@ -627,6 +628,7 @@ static ssize_t sriov_numvfs_store(struct device *dev,
+>  
+>  exit:
+>  	device_unlock(&pdev->dev);
+> +	pci_unlock_rescan_remove();
+>  
+>  	if (ret < 0)
+>  		return ret;
+> -- 
+> 2.14.4
+> 
