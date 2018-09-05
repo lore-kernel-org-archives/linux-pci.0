@@ -1,50 +1,77 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from fllv0016.ext.ti.com ([198.47.19.142]:52908 "EHLO
-        fllv0016.ext.ti.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1727052AbeIQXea (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Mon, 17 Sep 2018 19:34:30 -0400
-From: Vignesh R <vigneshr@ti.com>
-To: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
-CC: Kishon Vijay Abraham I <kishon@ti.com>,
-        Bjorn Helgaas <bhelgaas@google.com>,
-        Rob Herring <robh+dt@kernel.org>, <linux-omap@vger.kernel.org>,
-        <linux-pci@vger.kernel.org>, <devicetree@vger.kernel.org>,
-        <linux-kernel@vger.kernel.org>, Vignesh R <vigneshr@ti.com>
-Subject: [PATCH v4 1/2] dt-bindings: PCI: dra7xx: Add bindings for unaligned access in host mode
-Date: Mon, 17 Sep 2018 23:36:34 +0530
-Message-ID: <20180917180635.26996-2-vigneshr@ti.com>
-In-Reply-To: <20180917180635.26996-1-vigneshr@ti.com>
-References: <20180917180635.26996-1-vigneshr@ti.com>
+Received: from mail-sn1nam02on0087.outbound.protection.outlook.com ([104.47.36.87]:47264
+        "EHLO NAM02-SN1-obe.outbound.protection.outlook.com"
+        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+        id S1726463AbeIEUwc (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Wed, 5 Sep 2018 16:52:32 -0400
+From: Alan Douglas <adouglas@cadence.com>
+To: <bhelgaas@google.com>
+CC: <kishon@ti.com>, <lorenzo.pieralisi@arm.com>,
+        <linux-pci@vger.kernel.org>, <cyrille.pitchen@bootlin.com>,
+        Alan Douglas <adouglas@cadence.com>
+Subject: [PATCH] pci: cadence: Correct probe behaviour when failing to get PHY
+Date: Wed, 5 Sep 2018 17:20:08 +0100
+Message-ID: <1536164408-10959-1-git-send-email-adouglas@cadence.com>
 MIME-Version: 1.0
 Content-Type: text/plain
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Update device tree binding documentation of TI's dra7xx PCI controller
-for enabling unaligned mem access as applicable not just in EP mode but
-in host mode as well.
+Test the correct value to see whether the PHY get failed.
+Use devm_phy_get() instead of devm_phy_optional_get(), since it is
+only called if phy name is given in devicetree and so should exist.
+If failure when getting or linking PHY, put any PHYs which were
+already got and unlink them.
 
-Signed-off-by: Vignesh R <vigneshr@ti.com>
-Reviewed-by: Rob Herring <robh@kernel.org>
+Fixes: dfb80534692ddc5b ("PCI: cadence: Add generic PHY support to host and EP drivers")
+Signed-off-by: Alan Douglas <adouglas@cadence.com>
 ---
- Documentation/devicetree/bindings/pci/ti-pci.txt | 5 +++++
- 1 file changed, 5 insertions(+)
+ drivers/pci/controller/pcie-cadence.c | 18 +++++++++++-------
+ 1 file changed, 11 insertions(+), 7 deletions(-)
 
-diff --git a/Documentation/devicetree/bindings/pci/ti-pci.txt b/Documentation/devicetree/bindings/pci/ti-pci.txt
-index 7f7af3044016..452fe48c4fdd 100644
---- a/Documentation/devicetree/bindings/pci/ti-pci.txt
-+++ b/Documentation/devicetree/bindings/pci/ti-pci.txt
-@@ -26,6 +26,11 @@ HOST MODE
-    ranges,
-    interrupt-map-mask,
-    interrupt-map : as specified in ../designware-pcie.txt
-+ - ti,syscon-unaligned-access: phandle to the syscon DT node. The 1st argument
-+			       should contain the register offset within syscon
-+			       and the 2nd argument should contain the bit field
-+			       for setting the bit to enable unaligned
-+			       access.
+diff --git a/drivers/pci/controller/pcie-cadence.c b/drivers/pci/controller/pcie-cadence.c
+index 86f1b00..67d2f98 100644
+--- a/drivers/pci/controller/pcie-cadence.c
++++ b/drivers/pci/controller/pcie-cadence.c
+@@ -190,14 +190,16 @@ int cdns_pcie_init_phy(struct device *dev, struct cdns_pcie *pcie)
  
- DEVICE MODE
- ===========
+ 	for (i = 0; i < phy_count; i++) {
+ 		of_property_read_string_index(np, "phy-names", i, &name);
+-		phy[i] = devm_phy_optional_get(dev, name);
+-		if (IS_ERR(phy))
+-			return PTR_ERR(phy);
+-
++		phy[i] = devm_phy_get(dev, name);
++		if (IS_ERR(phy[i])) {
++			ret = PTR_ERR(phy[i]);
++			goto err_phy;
++		}
+ 		link[i] = device_link_add(dev, &phy[i]->dev, DL_FLAG_STATELESS);
+ 		if (!link[i]) {
++			devm_phy_put(dev, phy[i]);
+ 			ret = -EINVAL;
+-			goto err_link;
++			goto err_phy;
+ 		}
+ 	}
+ 
+@@ -207,13 +209,15 @@ int cdns_pcie_init_phy(struct device *dev, struct cdns_pcie *pcie)
+ 
+ 	ret =  cdns_pcie_enable_phy(pcie);
+ 	if (ret)
+-		goto err_link;
++		goto err_phy;
+ 
+ 	return 0;
+ 
+-err_link:
++err_phy:
+ 	while (--i >= 0)
+ 		device_link_del(link[i]);
++	while (--i >= 0)
++		devm_phy_put(dev, phy[i]);
+ 
+ 	return ret;
+ }
 -- 
-2.19.0
+1.9.0
