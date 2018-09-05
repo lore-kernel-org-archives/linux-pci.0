@@ -1,61 +1,73 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.29.99]:55768 "EHLO mail.kernel.org"
+Received: from mail.kernel.org ([198.145.29.99]:36214 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1728826AbeIFXmF (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Thu, 6 Sep 2018 19:42:05 -0400
-Date: Thu, 6 Sep 2018 14:05:13 -0500
+        id S1727257AbeIFCBw (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Wed, 5 Sep 2018 22:01:52 -0400
+Date: Wed, 5 Sep 2018 16:29:47 -0500
 From: Bjorn Helgaas <helgaas@kernel.org>
-To: Andy Shevchenko <andriy.shevchenko@linux.intel.com>
-Cc: Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org
-Subject: Re: [PATCH v1] PCI: Switch to bitmap_zalloc()
-Message-ID: <20180906190513.GE214747@bhelgaas-glaptop.roam.corp.google.com>
-References: <20180830103236.60736-1-andriy.shevchenko@linux.intel.com>
+To: "Gustavo A. R. Silva" <gustavo@embeddedor.com>
+Cc: Kurt Schwemmer <kurt.schwemmer@microsemi.com>,
+        Logan Gunthorpe <logang@deltatee.com>,
+        Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org,
+        linux-kernel@vger.kernel.org
+Subject: Re: [PATCH] switchtec: Fix potential Spectre v1
+Message-ID: <20180905212947.GU107892@bhelgaas-glaptop.roam.corp.google.com>
+References: <20180816190646.GA9610@embeddedor.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20180830103236.60736-1-andriy.shevchenko@linux.intel.com>
+In-Reply-To: <20180816190646.GA9610@embeddedor.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Thu, Aug 30, 2018 at 01:32:36PM +0300, Andy Shevchenko wrote:
-> Switch to bitmap_zalloc() to show clearly what we are allocating.
-> Besides that it returns pointer of bitmap type instead of opaque void *.
+On Thu, Aug 16, 2018 at 02:06:46PM -0500, Gustavo A. R. Silva wrote:
+> p.port can is indirectly controlled by user-space, hence leading to
+> a potential exploitation of the Spectre variant 1 vulnerability.
 > 
-> Signed-off-by: Andy Shevchenko <andriy.shevchenko@linux.intel.com>
+> This issue was detected with the help of Smatch:
+> 
+> drivers/pci/switch/switchtec.c:912 ioctl_port_to_pff() warn: potential
+> spectre issue 'pcfg->dsp_pff_inst_id' [r]
+> 
+> Fix this by sanitizing p.port before using it to index
+> pcfg->dsp_pff_inst_id
+> 
+> Notice that given that speculation windows are large, the policy is
+> to kill the speculation on the first load and not worry if it can be
+> completed with a dependent load/store [1].
+> 
+> [1] https://marc.info/?l=linux-kernel&m=152449131114778&w=2
+> 
+> Cc: stable@vger.kernel.org
+> Signed-off-by: Gustavo A. R. Silva <gustavo@embeddedor.com>
 
-Applied to pci/misc for v4.20, thanks!
+Applied with Logan's ack to for-linus for v4.19, thanks!
 
 > ---
->  drivers/pci/pci.c   | 3 +--
->  drivers/pci/probe.c | 2 +-
->  2 files changed, 2 insertions(+), 3 deletions(-)
+>  drivers/pci/switch/switchtec.c | 4 ++++
+>  1 file changed, 4 insertions(+)
 > 
-> diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
-> index 29ff9619b5fa..c6de7e0dd3fa 100644
-> --- a/drivers/pci/pci.c
-> +++ b/drivers/pci/pci.c
-> @@ -5689,8 +5689,7 @@ int pci_set_vga_state(struct pci_dev *dev, bool decode,
->  void pci_add_dma_alias(struct pci_dev *dev, u8 devfn)
->  {
->  	if (!dev->dma_alias_mask)
-> -		dev->dma_alias_mask = kcalloc(BITS_TO_LONGS(U8_MAX),
-> -					      sizeof(long), GFP_KERNEL);
-> +		dev->dma_alias_mask = bitmap_zalloc(U8_MAX, GFP_KERNEL);
->  	if (!dev->dma_alias_mask) {
->  		pci_warn(dev, "Unable to allocate DMA alias mask\n");
->  		return;
-> diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
-> index ec784009a36b..b6465a59aeb1 100644
-> --- a/drivers/pci/probe.c
-> +++ b/drivers/pci/probe.c
-> @@ -2140,7 +2140,7 @@ static void pci_release_dev(struct device *dev)
->  	pcibios_release_device(pci_dev);
->  	pci_bus_put(pci_dev->bus);
->  	kfree(pci_dev->driver_override);
-> -	kfree(pci_dev->dma_alias_mask);
-> +	bitmap_free(pci_dev->dma_alias_mask);
->  	kfree(pci_dev);
->  }
+> diff --git a/drivers/pci/switch/switchtec.c b/drivers/pci/switch/switchtec.c
+> index 9940cc7..54a8b30 100644
+> --- a/drivers/pci/switch/switchtec.c
+> +++ b/drivers/pci/switch/switchtec.c
+> @@ -14,6 +14,8 @@
+>  #include <linux/poll.h>
+>  #include <linux/wait.h>
 >  
+> +#include <linux/nospec.h>
+> +
+>  MODULE_DESCRIPTION("Microsemi Switchtec(tm) PCIe Management Driver");
+>  MODULE_VERSION("0.1");
+>  MODULE_LICENSE("GPL");
+> @@ -909,6 +911,8 @@ static int ioctl_port_to_pff(struct switchtec_dev *stdev,
+>  	default:
+>  		if (p.port > ARRAY_SIZE(pcfg->dsp_pff_inst_id))
+>  			return -EINVAL;
+> +		p.port = array_index_nospec(p.port,
+> +					ARRAY_SIZE(pcfg->dsp_pff_inst_id) + 1);
+>  		p.pff = ioread32(&pcfg->dsp_pff_inst_id[p.port - 1]);
+>  		break;
+>  	}
 > -- 
-> 2.18.0
+> 2.7.4
 > 
