@@ -1,55 +1,53 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:40164 "EHLO mx1.redhat.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1727009AbeIODtx (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Fri, 14 Sep 2018 23:49:53 -0400
-Date: Fri, 14 Sep 2018 16:33:21 -0600
-From: Alex Williamson <alex.williamson@redhat.com>
-To: Sinan Kaya <okaya@kernel.org>
-Cc: linux-pci@vger.kernel.org, Bjorn Helgaas <bhelgaas@google.com>,
-        Alexey Kardashevskiy <aik@ozlabs.ru>,
-        Peter Xu <peterx@redhat.com>,
-        "Gustavo A. R. Silva" <gustavo@embeddedor.com>
-Subject: Re: [PATCH v2 6/6] PCI: Expose reset type to users of
- pci_reset_bus()
-Message-ID: <20180914163321.2abba9fa@t450s.home>
-In-Reply-To: <20180914211808.2564-7-okaya@kernel.org>
-References: <20180914211808.2564-1-okaya@kernel.org>
-        <20180914211808.2564-7-okaya@kernel.org>
+Received: from mail-qk1-f173.google.com ([209.85.222.173]:45354 "EHLO
+        mail-qk1-f173.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726272AbeIEKza (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Wed, 5 Sep 2018 06:55:30 -0400
+Received: by mail-qk1-f173.google.com with SMTP id z125-v6so4139436qkb.12
+        for <linux-pci@vger.kernel.org>; Tue, 04 Sep 2018 23:26:52 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+In-Reply-To: <20180828095722.GA8820@al>
+References: <CAD8Lp46Y2eOR7WE28xToUL8s-aYiqPa0nS=1GSD0AxkddXq6+A@mail.gmail.com>
+ <20180824154212.GB8601@al> <CAD8Lp45D6=pqsgr_tXS08pE0dbG1XhcwnDB3mGZQ=P3ETxywzw@mail.gmail.com>
+ <20180828095722.GA8820@al>
+From: Daniel Drake <drake@endlessm.com>
+Date: Wed, 5 Sep 2018 14:26:51 +0800
+Message-ID: <CAD8Lp461TW7KvSv2N-k=_vkg54F-AYixHr+uAsCo+Gh=0zEPNQ@mail.gmail.com>
+Subject: Re: [Nouveau] Rewriting Intel PCI bridge prefetch base address bits
+ solves nvidia graphics issues
+To: Peter Wu <peter@lekensteyn.nl>
+Cc: linux-pci@vger.kernel.org, nouveau@lists.freedesktop.org,
+        Linux PM <linux-pm@vger.kernel.org>,
+        Endless Linux Upstreaming Team <linux@endlessm.com>
+Content-Type: text/plain; charset="UTF-8"
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Fri, 14 Sep 2018 21:18:08 +0000
-Sinan Kaya <okaya@kernel.org> wrote:
-> diff --git a/drivers/vfio/pci/vfio_pci.c b/drivers/vfio/pci/vfio_pci.c
-> index fe7ada997c51..754f08286bb1 100644
-> --- a/drivers/vfio/pci/vfio_pci.c
-> +++ b/drivers/vfio/pci/vfio_pci.c
-> @@ -1015,7 +1015,7 @@ static long vfio_pci_ioctl(void *device_data,
->  						    &info, slot);
->  		if (!ret)
->  			/* User has access, do the reset */
-> -			ret = pci_reset_bus(vdev->pdev);
-> +			ret = pci_reset_bus(vdev->pdev, PCI_RESET_LINK);
+On Tue, Aug 28, 2018 at 5:57 PM, Peter Wu <peter@lekensteyn.nl> wrote:
+> Only non-bridge devices can be passed to a guest, but perhaps logging
+> access to the emulated bridge is already sufficient. The Prefetchable
+> Base Upper 32 Bits register is at offset 0x28.
+>
+> In a trace where the Nvidia device is disabled/enabled via Device
+> Manager, I see writes on the enable path:
+>
+>     2571@1535108904.593107:rp_write_config (ioh3420, @0x28, 0x0, len=0x4)
 
-This should have switched back the control we had prior to 811c5cb37df4
-with something like:
+Did you do anything special to get an emulated bridge included in this setup?
 
-	ret = pci_reset_bus(vdev->pdev,
-			slot ? PCI_RESET_SLOT :	PCI_RESET_BUS);
+Folllowing the instructions at
+https://wiki.archlinux.org/index.php/PCI_passthrough_via_OVMF I can
+successfully pass through devices to windows running under
+virt-manager. In the nvidia GPU case I haven't got passed the driver
+installation failure, but I can pass through other devices OK and
+install their drivers.
 
->  
->  hot_reset_release:
->  		for (i--; i >= 0; i--)
-> @@ -1390,7 +1390,7 @@ static void vfio_pci_try_bus_reset(struct vfio_pci_device *vdev)
->  	}
->  
->  	if (needs_reset)
-> -		ret = pci_reset_bus(vdev->pdev);
-> +		ret = pci_reset_bus(vdev->pdev, PCI_RESET_LINK);
+However I do not end up with any PCI-to-PCI bridges in this setup. The
+passed through device sits at address 00:08.0, parent is the PCI host
+bridge 00:00.0.
 
-Same here.  Thanks,
+(I'm trying to spy if Windows appears to restore or reset the PCI
+bridge prefetch registers upon resume)
 
-Alex
+Thanks
+Daniel
