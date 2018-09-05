@@ -1,64 +1,74 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from usa-sjc-mx-foss1.foss.arm.com ([217.140.101.70]:33660 "EHLO
-        foss.arm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1726911AbeISVpS (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Wed, 19 Sep 2018 17:45:18 -0400
-From: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
-To: linux-pci@vger.kernel.org
-Cc: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
-        Bjorn Helgaas <bhelgaas@google.com>,
-        Subrahmanya Lingappa <l.subrahmanya@mobiveil.co.in>
-Subject: [PATCH] MAINTAINERS: Move mobiveil PCI driver entry where it belongs
-Date: Wed, 19 Sep 2018 17:06:36 +0100
-Message-Id: <20180919160636.21312-1-lorenzo.pieralisi@arm.com>
+Received: from mga01.intel.com ([192.55.52.88]:26317 "EHLO mga01.intel.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1728015AbeIFBGe (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Wed, 5 Sep 2018 21:06:34 -0400
+From: Keith Busch <keith.busch@intel.com>
+To: Linux PCI <linux-pci@vger.kernel.org>,
+        Bjorn Helgaas <bhelgaas@google.com>
+Cc: Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+        Sinan Kaya <okaya@kernel.org>,
+        Thomas Tai <thomas.tai@oracle.com>, poza@codeaurora.org,
+        Lukas Wunner <lukas@wunner.de>, Christoph Hellwig <hch@lst.de>
+Subject: [PATCHv2 01/20] PCI: Simplify disconnected marking
+Date: Wed,  5 Sep 2018 14:35:27 -0600
+Message-Id: <20180905203546.21921-2-keith.busch@intel.com>
+In-Reply-To: <20180905203546.21921-1-keith.busch@intel.com>
+References: <20180905203546.21921-1-keith.busch@intel.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Commit 92f9ccca4c08 ("PCI: mobiveil: Add Mobiveil PCIe Host Bridge IP
-driver DT bindings") managed to add a MAINTAINERS entry where it does
-not really belong (ie in the middle of a totally unrelated series of
-entries and in the wrong alphabetical order).
+From: Lukas Wunner <lukas@wunner.de>
 
-Fix it.
+Commit 89ee9f768003 ("PCI: Add device disconnected state") iterates over
+the devices on a parent bus, marks each as disconnected, then marks
+each device's children as disconnected using pci_walk_bus().
 
-Signed-off-by: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
-Cc: Bjorn Helgaas <bhelgaas@google.com>
-Cc: Subrahmanya Lingappa <l.subrahmanya@mobiveil.co.in>
+The same can be achieved more succinctly by calling pci_walk_bus() on
+the parent bus.  Moreover, this does not need to wait until acquiring
+pci_lock_rescan_remove(), so move it out of that critical section.
+
+The critical section in err.c contains a pci_dev_get() / pci_dev_put()
+pair which was apparently copy-pasted from pciehp_pci.c.  In the latter
+it serves the purpose of holding the struct pci_dev in place until the
+Command register is updated.  err.c doesn't do anything like that, hence
+the pair is unnecessary.  Remove it.
+
+Signed-off-by: Lukas Wunner <lukas@wunner.de>
+Reviewed-by: Keith Busch <keith.busch@intel.com>
+Cc: Oza Pawandeep <poza@codeaurora.org>
+Cc: Sinan Kaya <okaya@kernel.org>
+Cc: Benjamin Herrenschmidt <benh@kernel.crashing.org>
 ---
- MAINTAINERS | 14 +++++++-------
- 1 file changed, 7 insertions(+), 7 deletions(-)
+ drivers/pci/hotplug/pciehp_pci.c | 9 +++------
+ 1 file changed, 3 insertions(+), 6 deletions(-)
 
-diff --git a/MAINTAINERS b/MAINTAINERS
-index 4ece30f15777..fb0474d7da61 100644
---- a/MAINTAINERS
-+++ b/MAINTAINERS
-@@ -9716,13 +9716,6 @@ Q:	http://patchwork.linuxtv.org/project/linux-media/list/
- S:	Maintained
- F:	drivers/media/dvb-frontends/mn88473*
+diff --git a/drivers/pci/hotplug/pciehp_pci.c b/drivers/pci/hotplug/pciehp_pci.c
+index 18f83e554c73..0322bd4f0a7a 100644
+--- a/drivers/pci/hotplug/pciehp_pci.c
++++ b/drivers/pci/hotplug/pciehp_pci.c
+@@ -91,6 +91,9 @@ void pciehp_unconfigure_device(struct slot *p_slot, bool presence)
+ 	ctrl_dbg(ctrl, "%s: domain:bus:dev = %04x:%02x:00\n",
+ 		 __func__, pci_domain_nr(parent), parent->number);
  
--PCI DRIVER FOR MOBIVEIL PCIE IP
--M:	Subrahmanya Lingappa <l.subrahmanya@mobiveil.co.in>
--L:	linux-pci@vger.kernel.org
--S:	Supported
--F:	Documentation/devicetree/bindings/pci/mobiveil-pcie.txt
--F:	drivers/pci/controller/pcie-mobiveil.c
--
- MODULE SUPPORT
- M:	Jessica Yu <jeyu@kernel.org>
- T:	git git://git.kernel.org/pub/scm/linux/kernel/git/jeyu/linux.git modules-next
-@@ -11137,6 +11130,13 @@ F:	include/uapi/linux/switchtec_ioctl.h
- F:	include/linux/switchtec.h
- F:	drivers/ntb/hw/mscc/
- 
-+PCI DRIVER FOR MOBIVEIL PCIE IP
-+M:	Subrahmanya Lingappa <l.subrahmanya@mobiveil.co.in>
-+L:	linux-pci@vger.kernel.org
-+S:	Supported
-+F:	Documentation/devicetree/bindings/pci/mobiveil-pcie.txt
-+F:	drivers/pci/controller/pcie-mobiveil.c
++	if (!presence)
++		pci_walk_bus(parent, pci_dev_set_disconnected, NULL);
 +
- PCI DRIVER FOR MVEBU (Marvell Armada 370 and Armada XP SOC support)
- M:	Thomas Petazzoni <thomas.petazzoni@free-electrons.com>
- M:	Jason Cooper <jason@lakedaemon.net>
+ 	pci_lock_rescan_remove();
+ 
+ 	/*
+@@ -102,12 +105,6 @@ void pciehp_unconfigure_device(struct slot *p_slot, bool presence)
+ 	list_for_each_entry_safe_reverse(dev, temp, &parent->devices,
+ 					 bus_list) {
+ 		pci_dev_get(dev);
+-		if (!presence) {
+-			pci_dev_set_disconnected(dev, NULL);
+-			if (pci_has_subordinate(dev))
+-				pci_walk_bus(dev->subordinate,
+-					     pci_dev_set_disconnected, NULL);
+-		}
+ 		pci_stop_and_remove_bus_device(dev);
+ 		/*
+ 		 * Ensure that no new Requests will be generated from
 -- 
-2.15.0
+2.14.4
