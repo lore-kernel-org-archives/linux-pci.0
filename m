@@ -1,97 +1,150 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-pf1-f195.google.com ([209.85.210.195]:38632 "EHLO
-        mail-pf1-f195.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1728131AbeIQXUs (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Mon, 17 Sep 2018 19:20:48 -0400
-Received: by mail-pf1-f195.google.com with SMTP id x17-v6so7917609pfh.5
-        for <linux-pci@vger.kernel.org>; Mon, 17 Sep 2018 10:52:23 -0700 (PDT)
-Date: Mon, 17 Sep 2018 19:52:19 +0200
-From: Niklas Cassel <niklas.cassel@linaro.org>
-To: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
-Cc: Andy Gross <andy.gross@linaro.org>,
-        David Brown <david.brown@linaro.org>,
-        Rob Herring <robh+dt@kernel.org>,
-        Mark Rutland <mark.rutland@arm.com>, linux-pci@vger.kernel.org,
-        linux-arm-msm@vger.kernel.org, linux-soc@vger.kernel.org,
-        devicetree@vger.kernel.org, linux-kernel@vger.kernel.org
-Subject: Re: [PATCH] ARM: dts: qcom-apq8064: use correct pci address for
- address translation
-Message-ID: <20180917175219.GA4157@centauri>
-References: <20180509120135.25940-1-niklas.cassel@linaro.org>
- <20180917112149.GE7239@e107981-ln.cambridge.arm.com>
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Subject: Re: [PATCH v2 04/40] iommu/sva: Add a mm_exit callback for device
+ drivers
+To: Jean-Philippe Brucker <jean-philippe.brucker@arm.com>,
+ linux-arm-kernel@lists.infradead.org, linux-pci@vger.kernel.org,
+ linux-acpi@vger.kernel.org, devicetree@vger.kernel.org,
+ iommu@lists.linux-foundation.org, kvm@vger.kernel.org, linux-mm@kvack.org
+References: <20180511190641.23008-1-jean-philippe.brucker@arm.com>
+ <20180511190641.23008-5-jean-philippe.brucker@arm.com>
+From: Auger Eric <eric.auger@redhat.com>
+Message-ID: <d1dc28c4-7742-9c41-3f91-3fbcb8b13c1c@redhat.com>
+Date: Wed, 5 Sep 2018 15:23:34 +0200
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20180917112149.GE7239@e107981-ln.cambridge.arm.com>
-Sender: linux-pci-owner@vger.kernel.org
+In-Reply-To: <20180511190641.23008-5-jean-philippe.brucker@arm.com>
+List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
+List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
+List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
+List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
+List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
+Cc: xieyisheng1@huawei.com, ilias.apalodimas@linaro.org, xuzaibo@huawei.com,
+ thunder.leizhen@huawei.com, will.deacon@arm.com, okaya@codeaurora.org,
+ yi.l.liu@intel.com, ashok.raj@intel.com, tn@semihalf.com, joro@8bytes.org,
+ bharatku@xilinx.com, liudongdong3@huawei.com, rfranz@cavium.com,
+ kevin.tian@intel.com, jacob.jun.pan@linux.intel.com,
+ alex.williamson@redhat.com, rgummal@xilinx.com, jonathan.cameron@huawei.com,
+ shunyong.yang@hxt-semitech.com, dwmw2@infradead.org, liubo95@huawei.com,
+ jcrouse@codeaurora.org, robdclark@gmail.com, robin.murphy@arm.com,
+ christian.koenig@amd.com, nwatters@codeaurora.org, baolu.lu@linux.intel.com
+Content-Type: text/plain; charset="us-ascii"
+Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
+Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Mon, Sep 17, 2018 at 12:21:49PM +0100, Lorenzo Pieralisi wrote:
-> On Wed, May 09, 2018 at 02:01:34PM +0200, Niklas Cassel wrote:
-> > For PCI, the second and third cell in ranges specifies the upper and
-> > lower target address for address translation. This target address will
-> > be used to program the internal address translation unit (iATU).
-> > 
-> > The current device tree configuration will program the iATU to translate
-> > CPU accesses to 0x08000000 to PCI address 0x0 (with TLP type MEM).
-> > The device tree configuration also specifies that CPU acesses to
-> > 0x0fe00000 will be translated to PCI address 0x0 (with TLP type I/O).
-> > 
-> > We cannot have both I/O space and memory space at PCI address 0x0.
-> > 
-> > The PCI code already uses the CPU address when assigning addresses to
-> > memory BARs, so for memory space the PCI address should be the same as
-> > the CPU address. This also matches how all other device trees using
-> > snps,dw-pcie are configured.
-> > 
-> > The existing configuration appears to work, even if it is incorrect.
-> > For some reason the iATU doesn't obey the existing configuration,
-> > and doesn't translate CPU accesses from 0x08000000 to PCI address 0x0.
-> > 
-> > The reason why the existing configuration works at all is probably
-> > because the default behavior, when there is no match, is to use the
-> > untranslated address. This happens to work for memory space, since
-> > it's a 1:1 mapping. However, instead of relying on this behavior,
-> > let's configure the iATU correctly.
-> > 
-> > Signed-off-by: Niklas Cassel <niklas.cassel@linaro.org>
-> > ---
-> >  arch/arm/boot/dts/qcom-apq8064.dtsi | 2 +-
-> >  1 file changed, 1 insertion(+), 1 deletion(-)
+Hi Jean-Philippe,
+
+On 05/11/2018 09:06 PM, Jean-Philippe Brucker wrote:
+> When an mm exits, devices that were bound to it must stop performing DMA
+> on its PASID. Let device drivers register a callback to be notified on mm
+> exit. Add the callback to the sva_param structure attached to struct
+> device.
 > 
-> Hi Niklas,
+> Signed-off-by: Jean-Philippe Brucker <jean-philippe.brucker@arm.com>
 > 
-> what's this patch status ? Please let me know if I have to keep
-> it in the PCI tree queue, I think, if ACKed, it should probably
-> go via the arm-soc tree.
-
-Hello Lorenzo,
-
-This patch has been merged and is included in v4.18.
-
-I CC:ed PCI just to get more eyes on it.
-
-
-Kind regards,
-Niklas
-
-
+> ---
+> v1->v2: use iommu_sva_device_init instead of a separate function
+> ---
+>  drivers/iommu/iommu-sva.c | 11 ++++++++++-
+>  include/linux/iommu.h     |  9 +++++++--
+>  2 files changed, 17 insertions(+), 3 deletions(-)
 > 
-> Thanks,
-> Lorenzo
+> diff --git a/drivers/iommu/iommu-sva.c b/drivers/iommu/iommu-sva.c
+> index 6ac679c48f3c..0700893c679d 100644
+> --- a/drivers/iommu/iommu-sva.c
+> +++ b/drivers/iommu/iommu-sva.c
+> @@ -303,6 +303,7 @@ static void io_mm_detach_locked(struct iommu_bond *bond)
+>   * @dev: the device
+>   * @features: bitmask of features that need to be initialized
+>   * @max_pasid: max PASID value supported by the device
+> + * @mm_exit: callback to notify the device driver of an mm exiting
+>   *
+>   * Users of the bind()/unbind() API must call this function to initialize all
+>   * features required for SVA.
+> @@ -313,13 +314,20 @@ static void io_mm_detach_locked(struct iommu_bond *bond)
+>   * description. Setting @max_pasid to a non-zero value smaller than this limit
+>   * overrides it.
+>   *
+> + * If the driver intends to share process address spaces, it should pass a valid
+> + * @mm_exit handler. Otherwise @mm_exit can be NULL.
+I don't get case where mm_exit is allowed to be NULL.
+
+Thanks
+
+Eric
+ After @mm_exit returns, the
+> + * device must not issue any more transaction with the PASID given as argument.
+> + * The handler gets an opaque pointer corresponding to the drvdata passed as
+> + * argument of bind().
+> + *
+>   * The device should not be performing any DMA while this function is running,
+>   * otherwise the behavior is undefined.
+>   *
+>   * Return 0 if initialization succeeded, or an error.
+>   */
+>  int iommu_sva_device_init(struct device *dev, unsigned long features,
+> -			  unsigned int max_pasid)
+> +			  unsigned int max_pasid,
+> +			  iommu_mm_exit_handler_t mm_exit)
+>  {
+>  	int ret;
+>  	struct iommu_sva_param *param;
+> @@ -337,6 +345,7 @@ int iommu_sva_device_init(struct device *dev, unsigned long features,
+>  
+>  	param->features		= features;
+>  	param->max_pasid	= max_pasid;
+> +	param->mm_exit		= mm_exit;
+>  	INIT_LIST_HEAD(&param->mm_list);
+>  
+>  	/*
+> diff --git a/include/linux/iommu.h b/include/linux/iommu.h
+> index d5f21719a5a0..439c8fffd836 100644
+> --- a/include/linux/iommu.h
+> +++ b/include/linux/iommu.h
+> @@ -61,6 +61,7 @@ struct iommu_fault_event;
+>  typedef int (*iommu_fault_handler_t)(struct iommu_domain *,
+>  			struct device *, unsigned long, int, void *);
+>  typedef int (*iommu_dev_fault_handler_t)(struct iommu_fault_event *, void *);
+> +typedef int (*iommu_mm_exit_handler_t)(struct device *dev, int pasid, void *);
+>  
+>  struct iommu_domain_geometry {
+>  	dma_addr_t aperture_start; /* First address that can be mapped    */
+> @@ -231,6 +232,7 @@ struct iommu_sva_param {
+>  	unsigned int min_pasid;
+>  	unsigned int max_pasid;
+>  	struct list_head mm_list;
+> +	iommu_mm_exit_handler_t mm_exit;
+>  };
+>  
+>  /**
+> @@ -980,17 +982,20 @@ static inline int iommu_sva_unbind_device(struct device *dev, int pasid)
+>  
+>  #ifdef CONFIG_IOMMU_SVA
+>  extern int iommu_sva_device_init(struct device *dev, unsigned long features,
+> -				 unsigned int max_pasid);
+> +				 unsigned int max_pasid,
+> +				 iommu_mm_exit_handler_t mm_exit);
+>  extern int iommu_sva_device_shutdown(struct device *dev);
+>  extern int __iommu_sva_bind_device(struct device *dev, struct mm_struct *mm,
+>  				   int *pasid, unsigned long flags,
+>  				   void *drvdata);
+>  extern int __iommu_sva_unbind_device(struct device *dev, int pasid);
+>  extern void __iommu_sva_unbind_dev_all(struct device *dev);
+> +
+>  #else /* CONFIG_IOMMU_SVA */
+>  static inline int iommu_sva_device_init(struct device *dev,
+>  					unsigned long features,
+> -					unsigned int max_pasid)
+> +					unsigned int max_pasid,
+> +					iommu_mm_exit_handler_t mm_exit)
+>  {
+>  	return -ENODEV;
+>  }
 > 
-> > diff --git a/arch/arm/boot/dts/qcom-apq8064.dtsi b/arch/arm/boot/dts/qcom-apq8064.dtsi
-> > index 5341a39c0392..148cf7e565f6 100644
-> > --- a/arch/arm/boot/dts/qcom-apq8064.dtsi
-> > +++ b/arch/arm/boot/dts/qcom-apq8064.dtsi
-> > @@ -1417,7 +1417,7 @@
-> >  			#address-cells = <3>;
-> >  			#size-cells = <2>;
-> >  			ranges = <0x81000000 0 0 0x0fe00000 0 0x00100000   /* I/O */
-> > -				  0x82000000 0 0 0x08000000 0 0x07e00000>; /* memory */
-> > +				  0x82000000 0 0x08000000 0x08000000 0 0x07e00000>; /* memory */
-> >  			interrupts = <GIC_SPI 238 IRQ_TYPE_NONE>;
-> >  			interrupt-names = "msi";
-> >  			#interrupt-cells = <1>;
-> > -- 
-> > 2.17.0
-> > 
+
+_______________________________________________
+linux-arm-kernel mailing list
+linux-arm-kernel@lists.infradead.org
+http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
