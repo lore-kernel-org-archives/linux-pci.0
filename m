@@ -1,130 +1,51 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mx0b-001b2d01.pphosted.com ([148.163.158.5]:51982 "EHLO
-        mx0a-001b2d01.pphosted.com" rhost-flags-OK-OK-OK-FAIL)
-        by vger.kernel.org with ESMTP id S1726758AbeILRij (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Wed, 12 Sep 2018 13:38:39 -0400
-Received: from pps.filterd (m0098417.ppops.net [127.0.0.1])
-        by mx0a-001b2d01.pphosted.com (8.16.0.22/8.16.0.22) with SMTP id w8CCUJGM016718
-        for <linux-pci@vger.kernel.org>; Wed, 12 Sep 2018 08:34:19 -0400
-Received: from e06smtp04.uk.ibm.com (e06smtp04.uk.ibm.com [195.75.94.100])
-        by mx0a-001b2d01.pphosted.com with ESMTP id 2mf1n0uhp2-1
-        (version=TLSv1.2 cipher=AES256-GCM-SHA384 bits=256 verify=NOT)
-        for <linux-pci@vger.kernel.org>; Wed, 12 Sep 2018 08:34:19 -0400
-Received: from localhost
-        by e06smtp04.uk.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
-        for <linux-pci@vger.kernel.org> from <sebott@linux.ibm.com>;
-        Wed, 12 Sep 2018 13:34:17 +0100
-From: Sebastian Ott <sebott@linux.ibm.com>
-To: Bjorn Helgaas <bhelgaas@google.com>
-Cc: linux-pci@vger.kernel.org
-Subject: [PATCH 1/2] pci: provide pcibios_sriov_add_vfs
-Date: Wed, 12 Sep 2018 14:34:10 +0200
-In-Reply-To: <20180912123411.23229-1-sebott@linux.ibm.com>
-References: <20180912123411.23229-1-sebott@linux.ibm.com>
-Message-Id: <20180912123411.23229-2-sebott@linux.ibm.com>
+Received: from mail.kernel.org ([198.145.29.99]:41600 "EHLO mail.kernel.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1726046AbeIES5T (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Wed, 5 Sep 2018 14:57:19 -0400
+Subject: Re: RFC on PCI Device Lock
+To: Alex Williamson <alex.williamson@redhat.com>
+Cc: Bjorn Helgaas <bhelgaas@google.com>,
+        Dennis Dalessandro <dennis.dalessandro@intel.com>,
+        Linux PCI <linux-pci@vger.kernel.org>
+References: <87682473-6ffe-f7df-e8f8-3d00e8247621@kernel.org>
+ <20180904165202.4e5bb59d@t450s.home>
+ <17720f56-2caa-2d2e-b655-867debf55934@kernel.org>
+ <20180904204649.415491f8@t450s.home>
+ <571b8341-f6fd-d92a-7091-f4fb02a2aadf@kernel.org>
+ <7087eeca-e004-1b15-0ea6-103722399fd0@kernel.org>
+ <20180904221302.3031f952@t450s.home>
+From: Sinan Kaya <okaya@kernel.org>
+Message-ID: <9e130f04-c570-b4ee-e040-b02c9ff80755@kernel.org>
+Date: Wed, 5 Sep 2018 07:26:52 -0700
+MIME-Version: 1.0
+In-Reply-To: <20180904221302.3031f952@t450s.home>
+Content-Type: text/plain; charset=utf-8; format=flowed
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Move vf detection and device creation code to weak functions
-such that architectures can provide a different implementation.
+On 9/4/2018 9:13 PM, Alex Williamson wrote:
+>> Let me know if I misunderstood you. I'll again wait for test feedback first.
+> Yep, that's essentially it.  I assume we'd want to trickle this through
+> other interfaces and the hfi1 folks can look at whether they want to
+> drop their custom config save/restore in favor of using
+> pci_reset_function_locked(), which would do that for them.
+> pci_reset_bus() should also allow the caller to set a mask so vfio
+> doesn't worry about defaults changing in the core.  Thanks,
+The testing was successful.
 
-Signed-off-by: Sebastian Ott <sebott@linux.ibm.com>
----
- drivers/pci/iov.c   | 43 +++++++++++++++++++++++++++++++------------
- include/linux/pci.h |  2 ++
- 2 files changed, 33 insertions(+), 12 deletions(-)
+"--- Comment #15 from Dennis (dennis.dalessandro@intel.com) ---
+I have tested the two new patches applied on top of 4.19-rc1 and they seem to
+be working as well."
 
-diff --git a/drivers/pci/iov.c b/drivers/pci/iov.c
-index c5f3cd4ed766..6452cb8f397f 100644
---- a/drivers/pci/iov.c
-+++ b/drivers/pci/iov.c
-@@ -251,6 +251,33 @@ int __weak pcibios_sriov_disable(struct pci_dev *pdev)
- 	return 0;
- }
- 
-+int __weak pcibios_sriov_add_vfs(struct pci_dev *dev, u16 num_vfs)
-+{
-+	unsigned int i;
-+	int rc;
-+
-+	for (i = 0; i < num_vfs; i++) {
-+		rc = pci_iov_add_virtfn(dev, i);
-+		if (rc)
-+			goto failed;
-+	}
-+	return 0;
-+failed:
-+	while (i--)
-+		pci_iov_remove_virtfn(dev, i);
-+
-+	return rc;
-+}
-+
-+void __weak pcibios_sriov_del_vfs(struct pci_dev *dev)
-+{
-+	struct pci_sriov *iov = dev->sriov;
-+	int i;
-+
-+	for (i = 0; i < iov->num_VFs; i++)
-+		pci_iov_remove_virtfn(dev, i);
-+}
-+
- static int sriov_enable(struct pci_dev *dev, int nr_virtfn)
- {
- 	int rc;
-@@ -336,21 +363,15 @@ static int sriov_enable(struct pci_dev *dev, int nr_virtfn)
- 	msleep(100);
- 	pci_cfg_access_unlock(dev);
- 
--	for (i = 0; i < initial; i++) {
--		rc = pci_iov_add_virtfn(dev, i);
--		if (rc)
--			goto failed;
--	}
-+	rc = pcibios_sriov_add_vfs(dev, initial);
-+	if (rc)
-+		goto err_pcibios;
- 
- 	kobject_uevent(&dev->dev.kobj, KOBJ_CHANGE);
- 	iov->num_VFs = nr_virtfn;
- 
- 	return 0;
- 
--failed:
--	while (i--)
--		pci_iov_remove_virtfn(dev, i);
--
- err_pcibios:
- 	iov->ctrl &= ~(PCI_SRIOV_CTRL_VFE | PCI_SRIOV_CTRL_MSE);
- 	pci_cfg_access_lock(dev);
-@@ -369,14 +390,12 @@ static int sriov_enable(struct pci_dev *dev, int nr_virtfn)
- 
- static void sriov_disable(struct pci_dev *dev)
- {
--	int i;
- 	struct pci_sriov *iov = dev->sriov;
- 
- 	if (!iov->num_VFs)
- 		return;
- 
--	for (i = 0; i < iov->num_VFs; i++)
--		pci_iov_remove_virtfn(dev, i);
-+	pcibios_sriov_del_vfs(dev);
- 
- 	iov->ctrl &= ~(PCI_SRIOV_CTRL_VFE | PCI_SRIOV_CTRL_MSE);
- 	pci_cfg_access_lock(dev);
-diff --git a/include/linux/pci.h b/include/linux/pci.h
-index e72ca8dd6241..76ff5b70f9a7 100644
---- a/include/linux/pci.h
-+++ b/include/linux/pci.h
-@@ -1989,6 +1989,8 @@ void pci_vf_drivers_autoprobe(struct pci_dev *dev, bool probe);
- /* Arch may override these (weak) */
- int pcibios_sriov_enable(struct pci_dev *pdev, u16 num_vfs);
- int pcibios_sriov_disable(struct pci_dev *pdev);
-+int pcibios_sriov_add_vfs(struct pci_dev *dev, u16 num_vfs);
-+void pcibios_sriov_del_vfs(struct pci_dev *dev);
- resource_size_t pcibios_iov_resource_alignment(struct pci_dev *dev, int resno);
- #else
- static inline int pci_iov_virtfn_bus(struct pci_dev *dev, int id)
--- 
-2.13.4
+Before I post the code on the list, I want to make sure I capture your
+request correctly.
+
+You are asking for more APIs to have the mask feature. I can add
+slot and bus reset options to pci_reset_bus().
+
+If there are other functions that need mask feature, we can deal
+with them later as I want to focus on the regression short term.
+
+Though, it would be good to enumerate the functions with needed masks
+to start the conversation.
