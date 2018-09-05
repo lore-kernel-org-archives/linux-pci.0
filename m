@@ -1,123 +1,36 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.29.99]:37718 "EHLO mail.kernel.org"
+Received: from mga06.intel.com ([134.134.136.31]:49532 "EHLO mga06.intel.com"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1728198AbeIOCeo (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Fri, 14 Sep 2018 22:34:44 -0400
-From: Sinan Kaya <okaya@kernel.org>
-To: linux-pci@vger.kernel.org
-Cc: alex.williamson@redhat.com, Sinan Kaya <okaya@kernel.org>,
-        Bjorn Helgaas <bhelgaas@google.com>
-Subject: [PATCH v2 5/6] PCI: Expose reset type to users of pci_probe_reset_function()
-Date: Fri, 14 Sep 2018 21:18:07 +0000
-Message-Id: <20180914211808.2564-6-okaya@kernel.org>
-In-Reply-To: <20180914211808.2564-1-okaya@kernel.org>
-References: <20180914211808.2564-1-okaya@kernel.org>
+        id S1727575AbeIEO22 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Wed, 5 Sep 2018 10:28:28 -0400
+Date: Wed, 5 Sep 2018 12:58:47 +0300
+From: Mika Westerberg <mika.westerberg@linux.intel.com>
+To: Alex Williamson <alex.williamson@redhat.com>
+Cc: Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org
+Subject: Re: [PATCH] PCI: Add ACS quirk for Intel 300 series chipset
+Message-ID: <20180905095847.GJ2283@lahna.fi.intel.com>
+References: <20180427104423.2203-1-mika.westerberg@linux.intel.com>
+ <20180815152139.4e469fd4@t450s.home>
+ <20180815164308.6ad5dd39@t450s.home>
+ <20180816061015.GD2343@lahna.fi.intel.com>
+ <20180816091303.69ce8e45@t450s.home>
+ <20180816192805.GN2343@lahna.fi.intel.com>
+ <20180816142504.4e3d121c@t450s.home>
+ <20180817093716.GS2343@lahna.fi.intel.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20180817093716.GS2343@lahna.fi.intel.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Looking to have more control between the users of the API vs. what the API
-can do internally. The new reset_type tells the PCI core about the bounds
-of the request.
+On Fri, Aug 17, 2018 at 12:37:16PM +0300, Mika Westerberg wrote:
+> Before going there, I would like to get some definitive answer from our
+> PCIe people regarding this (currently waiting for their reply).
 
-Signed-off-by: Sinan Kaya <okaya@kernel.org>
----
- drivers/pci/pci.c   | 51 ++++++++++++++++++++++++++++++---------------
- drivers/pci/pci.h   |  2 +-
- drivers/pci/probe.c |  2 +-
- 3 files changed, 36 insertions(+), 19 deletions(-)
+Sorry for the delay.
 
-diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
-index c216ab56dbcc..32b367937cc1 100644
---- a/drivers/pci/pci.c
-+++ b/drivers/pci/pci.c
-@@ -4753,28 +4753,45 @@ EXPORT_SYMBOL_GPL(__pci_reset_function_locked);
-  * Returns 0 if the device function can be reset or negative if the
-  * device doesn't support resetting a single function.
-  */
--int pci_probe_reset_function(struct pci_dev *dev)
-+int pci_probe_reset_function(struct pci_dev *dev, u32 reset_type)
- {
--	int rc;
-+	int rc = 0;
- 
- 	might_sleep();
- 
--	rc = pci_dev_specific_reset(dev, 1);
--	if (rc != -ENOTTY)
--		return rc;
--	if (pcie_has_flr(dev))
--		return 0;
--	rc = pci_af_flr(dev, 1);
--	if (rc != -ENOTTY)
--		return rc;
--	rc = pci_pm_reset(dev, 1);
--	if (rc != -ENOTTY)
--		return rc;
--	rc = pci_dev_reset_slot_function(dev, 1);
--	if (rc != -ENOTTY)
--		return rc;
-+	if (reset_type & PCI_RESET_DEV_SPECIFIC) {
-+		rc = pci_dev_specific_reset(dev, 1);
-+		if (rc != -ENOTTY)
-+			return rc;
-+	}
-+
-+	if (reset_type & PCI_RESET_FLR) {
-+		if (pcie_has_flr(dev))
-+			return 0;
-+		rc = pci_af_flr(dev, 1);
-+		if (rc != -ENOTTY)
-+			return rc;
-+	}
- 
--	return pci_parent_bus_reset(dev, 1);
-+	if (reset_type & PCI_RESET_PM) {
-+		rc = pci_pm_reset(dev, 1);
-+		if (rc != -ENOTTY)
-+			return rc;
-+	}
-+
-+	if (reset_type & PCI_RESET_SLOT) {
-+		rc = pci_dev_reset_slot_function(dev, 1);
-+		if (rc != -ENOTTY)
-+			return rc;
-+	}
-+
-+	if (reset_type & PCI_RESET_BUS) {
-+		rc = pci_parent_bus_reset(dev, 1);
-+		if (rc != -ENOTTY)
-+			return rc;
-+	}
-+
-+	return rc;
- }
- 
- /**
-diff --git a/drivers/pci/pci.h b/drivers/pci/pci.h
-index 6e0d1528d471..0444bfa51b52 100644
---- a/drivers/pci/pci.h
-+++ b/drivers/pci/pci.h
-@@ -33,7 +33,7 @@ enum pci_mmap_api {
- int pci_mmap_fits(struct pci_dev *pdev, int resno, struct vm_area_struct *vmai,
- 		  enum pci_mmap_api mmap_api);
- 
--int pci_probe_reset_function(struct pci_dev *dev);
-+int pci_probe_reset_function(struct pci_dev *dev, u32 reset_type);
- int pci_bridge_secondary_bus_reset(struct pci_dev *dev);
- 
- /**
-diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
-index ec784009a36b..cbce5420431b 100644
---- a/drivers/pci/probe.c
-+++ b/drivers/pci/probe.c
-@@ -2332,7 +2332,7 @@ static void pci_init_capabilities(struct pci_dev *dev)
- 
- 	pcie_report_downtraining(dev);
- 
--	if (pci_probe_reset_function(dev) == 0)
-+	if (pci_probe_reset_function(dev, PCI_RESET_ANY) == 0)
- 		dev->reset_fn = 1;
- }
- 
--- 
-2.18.0
+I finally got confirmation and indeed this issue is fixed in 300 series
+chipset. The datasheet has outdated information but it will be fixed as
+well.
+
+I will send a revert soon.
