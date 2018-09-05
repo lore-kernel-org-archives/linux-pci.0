@@ -1,59 +1,63 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mx0a-001b2d01.pphosted.com ([148.163.156.1]:45384 "EHLO
-        mx0a-001b2d01.pphosted.com" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1726670AbeILRij (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Wed, 12 Sep 2018 13:38:39 -0400
-Received: from pps.filterd (m0098399.ppops.net [127.0.0.1])
-        by mx0a-001b2d01.pphosted.com (8.16.0.22/8.16.0.22) with SMTP id w8CCU0Ox141822
-        for <linux-pci@vger.kernel.org>; Wed, 12 Sep 2018 08:34:20 -0400
-Received: from e06smtp03.uk.ibm.com (e06smtp03.uk.ibm.com [195.75.94.99])
-        by mx0a-001b2d01.pphosted.com with ESMTP id 2mf1jmm23k-1
-        (version=TLSv1.2 cipher=AES256-GCM-SHA384 bits=256 verify=NOT)
-        for <linux-pci@vger.kernel.org>; Wed, 12 Sep 2018 08:34:19 -0400
-Received: from localhost
-        by e06smtp03.uk.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
-        for <linux-pci@vger.kernel.org> from <sebott@linux.ibm.com>;
-        Wed, 12 Sep 2018 13:34:17 +0100
-From: Sebastian Ott <sebott@linux.ibm.com>
-To: Bjorn Helgaas <bhelgaas@google.com>
-Cc: linux-pci@vger.kernel.org
-Subject: [PATCH 2/2] s390/pci: handle function enumeration after sriov enablement
-Date: Wed, 12 Sep 2018 14:34:11 +0200
-In-Reply-To: <20180912123411.23229-1-sebott@linux.ibm.com>
-References: <20180912123411.23229-1-sebott@linux.ibm.com>
-Message-Id: <20180912123411.23229-3-sebott@linux.ibm.com>
+Received: from mga11.intel.com ([192.55.52.93]:25628 "EHLO mga11.intel.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1727599AbeIFBHR (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Wed, 5 Sep 2018 21:07:17 -0400
+From: Keith Busch <keith.busch@intel.com>
+To: Linux PCI <linux-pci@vger.kernel.org>,
+        Bjorn Helgaas <bhelgaas@google.com>
+Cc: Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+        Sinan Kaya <okaya@kernel.org>,
+        Thomas Tai <thomas.tai@oracle.com>, poza@codeaurora.org,
+        Lukas Wunner <lukas@wunner.de>, Christoph Hellwig <hch@lst.de>,
+        Keith Busch <keith.busch@intel.com>
+Subject: [PATCHv2 04/20] PCI/AER: Remove dead code
+Date: Wed,  5 Sep 2018 14:35:30 -0600
+Message-Id: <20180905203546.21921-5-keith.busch@intel.com>
+In-Reply-To: <20180905203546.21921-1-keith.busch@intel.com>
+References: <20180905203546.21921-1-keith.busch@intel.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Implement pcibios_sriov_{add|del}_vfs as empty functions. VF
-creation will be triggered by the hotplug code.
+The error recovery callbacks are only run on child devices. A root port
+is never a child device, so this error resume callback was never
+invoked.
 
-Signed-off-by: Sebastian Ott <sebott@linux.ibm.com>
+Signed-off-by: Keith Busch <keith.busch@intel.com>
 ---
- arch/s390/pci/pci.c | 11 +++++++++++
- 1 file changed, 11 insertions(+)
+ drivers/pci/pcie/aer.c | 13 -------------
+ 1 file changed, 13 deletions(-)
 
-diff --git a/arch/s390/pci/pci.c b/arch/s390/pci/pci.c
-index 9f6f392a4461..b5f8db652bf5 100644
---- a/arch/s390/pci/pci.c
-+++ b/arch/s390/pci/pci.c
-@@ -731,6 +731,17 @@ struct dev_pm_ops pcibios_pm_ops = {
- };
- #endif /* CONFIG_HIBERNATE_CALLBACKS */
+diff --git a/drivers/pci/pcie/aer.c b/drivers/pci/pcie/aer.c
+index 83180edd6ed4..a95ceba977bb 100644
+--- a/drivers/pci/pcie/aer.c
++++ b/drivers/pci/pcie/aer.c
+@@ -1541,18 +1541,6 @@ static pci_ers_result_t aer_root_reset(struct pci_dev *dev)
+ 	return rc ? PCI_ERS_RESULT_DISCONNECT : PCI_ERS_RESULT_RECOVERED;
+ }
  
-+#ifdef CONFIG_PCI_IOV
-+int pcibios_sriov_add_vfs(struct pci_dev *pdev, u16 num_vfs)
-+{
-+	return 0;
-+}
-+
-+void pcibios_sriov_del_vfs(struct pci_dev *pdev)
-+{
-+}
-+#endif
-+
- static int zpci_alloc_domain(struct zpci_dev *zdev)
- {
- 	if (zpci_unique_uid) {
+-/**
+- * aer_error_resume - clean up corresponding error status bits
+- * @dev: pointer to Root Port's pci_dev data structure
+- *
+- * Invoked by Port Bus driver during nonfatal recovery.
+- */
+-static void aer_error_resume(struct pci_dev *dev)
+-{
+-	pci_aer_clear_device_status(dev);
+-	pci_cleanup_aer_uncorrect_error_status(dev);
+-}
+-
+ static struct pcie_port_service_driver aerdriver = {
+ 	.name		= "aer",
+ 	.port_type	= PCI_EXP_TYPE_ROOT_PORT,
+@@ -1560,7 +1548,6 @@ static struct pcie_port_service_driver aerdriver = {
+ 
+ 	.probe		= aer_probe,
+ 	.remove		= aer_remove,
+-	.error_resume	= aer_error_resume,
+ 	.reset_link	= aer_root_reset,
+ };
+ 
 -- 
-2.13.4
+2.14.4
