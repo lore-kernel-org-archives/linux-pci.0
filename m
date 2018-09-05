@@ -1,147 +1,88 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mailgw02.mediatek.com ([210.61.82.184]:24439 "EHLO
-        mailgw02.mediatek.com" rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org
-        with ESMTP id S1727411AbeIJOnu (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Mon, 10 Sep 2018 10:43:50 -0400
-From: <honghui.zhang@mediatek.com>
-To: <lorenzo.pieralisi@arm.com>, <marc.zyngier@arm.com>,
-        <bhelgaas@google.com>, <matthias.bgg@gmail.com>,
-        <linux-arm-kernel@lists.infradead.org>,
-        <linux-mediatek@lists.infradead.org>, <linux-pci@vger.kernel.org>,
-        <linux-kernel@vger.kernel.org>, <devicetree@vger.kernel.org>,
-        <yingjoe.chen@mediatek.com>, <eddie.huang@mediatek.com>,
-        <ryder.lee@mediatek.com>
-CC: <ulf.hansson@linaro.org>, <honghui.zhang@mediatek.com>,
-        <hongkun.cao@mediatek.com>, <youlin.pei@mediatek.com>,
-        <yong.wu@mediatek.com>, <yt.shen@mediatek.com>,
-        <sean.wang@mediatek.com>, <xinping.qian@mediatek.com>
-Subject: [PATCH v4 3/4] PCI: mediatek: Add system pm support for MT2712 and MT7622
-Date: Mon, 10 Sep 2018 17:50:22 +0800
-Message-ID: <1536573023-6720-4-git-send-email-honghui.zhang@mediatek.com>
-In-Reply-To: <1536573023-6720-1-git-send-email-honghui.zhang@mediatek.com>
-References: <1536573023-6720-1-git-send-email-honghui.zhang@mediatek.com>
+Received: from bmailout1.hostsharing.net ([83.223.95.100]:35003 "EHLO
+        bmailout1.hostsharing.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726386AbeIEMHL (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Wed, 5 Sep 2018 08:07:11 -0400
+Date: Wed, 5 Sep 2018 09:38:16 +0200
+From: Lukas Wunner <lukas@wunner.de>
+To: Sreekanth Reddy <sreekanth.reddy@broadcom.com>
+Cc: Suganath Prabu Subramani <suganath-prabu.subramani@broadcom.com>,
+        Andy Shevchenko <andy.shevchenko@gmail.com>,
+        linux-scsi <linux-scsi@vger.kernel.org>,
+        Sathya Prakash <Sathya.Prakash@broadcom.com>,
+        linux-pci@vger.kernel.org,
+        Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+        Keith Busch <keith.busch@intel.com>
+Subject: Re: [Patch v1 0/7] mpt3sas: Hot-Plug Surprise removal support on IOC.
+Message-ID: <20180905073816.jcrct2xcpucb6bkn@wunner.de>
+References: <1535690081-16116-1-git-send-email-suganath-prabu.subramani@broadcom.com>
+ <CAHp75VfC8GN3oEzSFJYfMr0iqBTYUJ=WPoLS9Oh5NgVcFmnBkw@mail.gmail.com>
+ <20180831085534.n6eikj5cw522ihhe@wunner.de>
+ <CAK=zhgrzNYDeUFN0YWVJLdGR0nA443su0xydwSHFQzhouhZBuw@mail.gmail.com>
+ <20180904094234.jm5je5sfpagdf6dz@wunner.de>
+ <CAK=zhgprkzcF-UZeeqg_qN0xFLR=BfzkRNRZKA=DJyf7aMPmeg@mail.gmail.com>
 MIME-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <CAK=zhgprkzcF-UZeeqg_qN0xFLR=BfzkRNRZKA=DJyf7aMPmeg@mail.gmail.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-From: Honghui Zhang <honghui.zhang@mediatek.com>
+On Wed, Sep 05, 2018 at 11:45:45AM +0530, Sreekanth Reddy wrote:
+> On Tue, Sep 4, 2018 at 3:12 PM, Lukas Wunner <lukas@wunner.de> wrote:
+> > Many scsi drivers call pci_channel_offline() to detect inaccessibility
+> > of the device due to a PCI error:
+> > https://elixir.bootlin.com/linux/v4.19-rc2/ident/pci_channel_offline
+> >
+> > A patch is pending such that surprise removal can also be queried
+> > with that same function:
+> > https://www.spinics.net/lists/linux-pci/msg75722.html
+> 
+> Lukas, thanks for pointing to this pci_dev_is_disconnected() API. So
+> we can use this API directly instead of reading the vendor Id and
+> checking for all one's once this patch get accepted?
 
-The MTCMOS of PCIe Host for MT2712 and MT7622 will be off when system
-suspend, and all the internal control register will be reset after system
-resume. The PCIe link should be re-established and the related control
-register values should be re-set after system resume.
+Yes, except pci_dev_is_disconnected() is private to the PCI core,
+but dev->error_state and pci_channel_offline() is public.
 
-Signed-off-by: Honghui Zhang <honghui.zhang@mediatek.com>
----
- drivers/pci/controller/pcie-mediatek.c | 62 ++++++++++++++++++++++++++++++++++
- 1 file changed, 62 insertions(+)
 
-diff --git a/drivers/pci/controller/pcie-mediatek.c b/drivers/pci/controller/pcie-mediatek.c
-index 5aba43a..bcc77bc 100644
---- a/drivers/pci/controller/pcie-mediatek.c
-+++ b/drivers/pci/controller/pcie-mediatek.c
-@@ -134,12 +134,14 @@ struct mtk_pcie_port;
- /**
-  * struct mtk_pcie_soc - differentiate between host generations
-  * @need_fix_class_id: whether this host's class ID needed to be fixed or not
-+ * @pm_support: whether the host's MTCMOS will be off when suspend
-  * @ops: pointer to configuration access functions
-  * @startup: pointer to controller setting functions
-  * @setup_irq: pointer to initialize IRQ functions
-  */
- struct mtk_pcie_soc {
- 	bool need_fix_class_id;
-+	bool pm_support;
- 	struct pci_ops *ops;
- 	int (*startup)(struct mtk_pcie_port *port);
- 	int (*setup_irq)(struct mtk_pcie_port *port, struct device_node *node);
-@@ -1197,12 +1199,70 @@ static int mtk_pcie_probe(struct platform_device *pdev)
- 	return err;
- }
- 
-+static int __maybe_unused mtk_pcie_suspend_noirq(struct device *dev)
-+{
-+	struct mtk_pcie *pcie = dev_get_drvdata(dev);
-+	const struct mtk_pcie_soc *soc = pcie->soc;
-+	struct mtk_pcie_port *port;
-+
-+	if (!soc->pm_support)
-+		return 0;
-+
-+	if (list_empty(&pcie->ports))
-+		return 0;
-+
-+	list_for_each_entry(port, &pcie->ports, list) {
-+		clk_disable_unprepare(port->pipe_ck);
-+		clk_disable_unprepare(port->obff_ck);
-+		clk_disable_unprepare(port->axi_ck);
-+		clk_disable_unprepare(port->aux_ck);
-+		clk_disable_unprepare(port->ahb_ck);
-+		clk_disable_unprepare(port->sys_ck);
-+		phy_power_off(port->phy);
-+		phy_exit(port->phy);
-+	}
-+
-+	clk_disable_unprepare(pcie->free_ck);
-+
-+	return 0;
-+}
-+
-+static int __maybe_unused mtk_pcie_resume_noirq(struct device *dev)
-+{
-+	struct mtk_pcie *pcie = dev_get_drvdata(dev);
-+	const struct mtk_pcie_soc *soc = pcie->soc;
-+	struct mtk_pcie_port *port, *tmp;
-+
-+	if (!soc->pm_support)
-+		return 0;
-+
-+	if (list_empty(&pcie->ports))
-+		return 0;
-+
-+	clk_prepare_enable(pcie->free_ck);
-+
-+	list_for_each_entry_safe(port, tmp, &pcie->ports, list)
-+		mtk_pcie_enable_port(port);
-+
-+	/* In case of EP was removed while system suspend. */
-+	if (list_empty(&pcie->ports))
-+		clk_disable_unprepare(pcie->free_ck);
-+
-+	return 0;
-+}
-+
-+static const struct dev_pm_ops mtk_pcie_pm_ops = {
-+	SET_NOIRQ_SYSTEM_SLEEP_PM_OPS(mtk_pcie_suspend_noirq,
-+				      mtk_pcie_resume_noirq)
-+};
-+
- static const struct mtk_pcie_soc mtk_pcie_soc_v1 = {
- 	.ops = &mtk_pcie_ops,
- 	.startup = mtk_pcie_startup_port,
- };
- 
- static const struct mtk_pcie_soc mtk_pcie_soc_mt2712 = {
-+	.pm_support = true,
- 	.ops = &mtk_pcie_ops_v2,
- 	.startup = mtk_pcie_startup_port_v2,
- 	.setup_irq = mtk_pcie_setup_irq,
-@@ -1210,6 +1270,7 @@ static const struct mtk_pcie_soc mtk_pcie_soc_mt2712 = {
- 
- static const struct mtk_pcie_soc mtk_pcie_soc_mt7622 = {
- 	.need_fix_class_id = true,
-+	.pm_support = true,
- 	.ops = &mtk_pcie_ops_v2,
- 	.startup = mtk_pcie_startup_port_v2,
- 	.setup_irq = mtk_pcie_setup_irq,
-@@ -1229,6 +1290,7 @@ static struct platform_driver mtk_pcie_driver = {
- 		.name = "mtk-pcie",
- 		.of_match_table = mtk_pcie_ids,
- 		.suppress_bind_attrs = true,
-+		.pm = &mtk_pcie_pm_ops,
- 	},
- };
- builtin_platform_driver(mtk_pcie_driver);
--- 
-2.6.4
+> I have one more instance where still we need this poll kthread, i.e
+> during the device probe time we have some commands which has more
+> timeout value (e.g. 300 seconds), so if user has unplugged this device
+> just after sending this more time-out valued command then driver has
+> to wait until this time-out value expires. i.e. this device is still
+> visible in lspci output until this 300 seconds timeout value expires
+> even though device is unplugged. if we have a poll kthread (which will
+> poll for every one second) then driver can early detect the unplugged
+> state and can terminate the outstanding commands and hence probe
+> operation can be completed quickly.
+
+The only instances I can see in your driver where it waits for 300 s
+is in _base_diag_reset(), which does an msleep(256) in a loop for up
+to 300 s, and scsih_scan_finished(), which is called in a loop with an
+msleep(10) by do_scsi_scan_host().
+
+Any harm in simply checking for removal of the device in those loops
+and bailing out if so?  Instead of the poll kthread to achieve the same?
+
+
+> Also whether we need to wait for below patches get accepted? so that
+> we can post the new set of patches accommodating according to your
+> suggestions,
+> https://www.spinics.net/lists/linux-pci/msg75722.html
+> https://www.spinics.net/lists/linux-pci/msg75438.html
+
+I can't tell you whether and when those patches get accepted, that's
+for Bjorn Helgaas to decide.  Also, what does get accepted might differ.
+E.g. the first patch uses the existing pci_channel_io_perm_failure
+state for removal.  There was debate whether to introduce a new state
+for removed devices to avoid overloading the existing state, which is
+used for error recovery.
+
+All I can recommend is to follow linux-pci, test the patches that have
+already been brought forward to ascertain they fulfil your needs,
+and generally participate in the debate so that your use cases are
+covered.
+
+Thanks,
+
+Lukas
