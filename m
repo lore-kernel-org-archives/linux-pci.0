@@ -1,45 +1,65 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.29.99]:37538 "EHLO mail.kernel.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1727716AbeIOCea (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Fri, 14 Sep 2018 22:34:30 -0400
-From: Sinan Kaya <okaya@kernel.org>
-To: linux-pci@vger.kernel.org
-Cc: alex.williamson@redhat.com, Sinan Kaya <okaya@kernel.org>
-Subject: [PATCH v2 0/6] PCI: Add reset type parameter to PCI reset functions
-Date: Fri, 14 Sep 2018 21:18:02 +0000
-Message-Id: <20180914211808.2564-1-okaya@kernel.org>
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-nvme-bounces+bjorn=helgaas.com@lists.infradead.org>
+Return-Path: <linux-nvme-bounces+bjorn=helgaas.com@lists.infradead.org>
+Date: Wed, 5 Sep 2018 22:11:52 +0200
+From: Christoph Hellwig <hch@lst.de>
+To: Jens Axboe <axboe@kernel.dk>
+Subject: Re: [PATCH v5 07/13] block: Add PCI P2P flag for request queue and
+ check support for requests
+Message-ID: <20180905201152.GA1893@lst.de>
+References: <20180830185352.3369-1-logang@deltatee.com>
+ <20180830185352.3369-8-logang@deltatee.com>
+ <b5ab8fa3-34ac-3117-fa0d-5206c3939435@kernel.dk>
+ <20180901082812.GB670@lst.de>
+ <5f79c012-c6e1-56bb-62fd-0689181fb2c9@deltatee.com>
+ <59b28977-8f2a-6228-2050-03fae6bdbedd@kernel.dk>
+ <1b4283da-44df-4a02-3167-e295243cef78@deltatee.com>
+ <09258b9b-3aed-9890-b31a-bd70a133966c@kernel.dk>
+ <20180905195647.GA1626@lst.de>
+ <bcc1b3cf-2fd9-fa61-9cfb-b0e4d84e5d94@kernel.dk>
+MIME-Version: 1.0
+In-Reply-To: <bcc1b3cf-2fd9-fa61-9cfb-b0e4d84e5d94@kernel.dk>
+List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-nvme>,
+ <mailto:linux-nvme-request@lists.infradead.org?subject=unsubscribe>
+List-Archive: <http://lists.infradead.org/pipermail/linux-nvme/>
+List-Post: <mailto:linux-nvme@lists.infradead.org>
+List-Help: <mailto:linux-nvme-request@lists.infradead.org?subject=help>
+List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-nvme>,
+ <mailto:linux-nvme-request@lists.infradead.org?subject=subscribe>
+Cc: Keith Busch <keith.busch@intel.com>,
+ Alex Williamson <alex.williamson@redhat.com>, Sagi Grimberg <sagi@grimberg.me>,
+ linux-nvdimm@lists.01.org, linux-rdma@vger.kernel.org,
+ linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
+ linux-nvme@lists.infradead.org, Stephen Bates <sbates@raithlin.com>,
+ linux-block@vger.kernel.org,
+ =?iso-8859-1?B?Suly9G1l?= Glisse <jglisse@redhat.com>,
+ Jason Gunthorpe <jgg@mellanox.com>,
+ Christian =?iso-8859-1?Q?K=F6nig?= <christian.koenig@amd.com>,
+ Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+ Bjorn Helgaas <bhelgaas@google.com>, Max Gurtovoy <maxg@mellanox.com>,
+ Dan Williams <dan.j.williams@intel.com>, Logan Gunthorpe <logang@deltatee.com>,
+ Christoph Hellwig <hch@lst.de>
+Content-Type: text/plain; charset="us-ascii"
+Sender: "Linux-nvme" <linux-nvme-bounces@lists.infradead.org>
+Errors-To: linux-nvme-bounces+bjorn=helgaas.com@lists.infradead.org
 List-ID: <linux-pci.vger.kernel.org>
 
-We want more control over what kind of reset PCI core can apply. Have the
-application explicitly requested allowed reset types.
+On Wed, Sep 05, 2018 at 01:54:31PM -0600, Jens Axboe wrote:
+> On 9/5/18 1:56 PM, Christoph Hellwig wrote:
+> > On Wed, Sep 05, 2018 at 01:45:04PM -0600, Jens Axboe wrote:
+> >> The point is that the caller doesn't necessarily know where the bio
+> >> will end up, hence the caller can't fully check if the whole stack
+> >> supports P2P.
+> > 
+> > The caller must necessarily know where the bio will end up, as for P2P
+> > support we need to query if the bio target is P2P capable vs the
+> > source of the P2P memory.
+> 
+> Then what's the point of having the check at all?
 
-differences from v1:
-Add reset type to pci_reset_bus() per feedbeck from Alex.
+Just an additional little safe guard.  If you think it isn't worth
+it I guess we can just drop it for now.
 
-Sinan Kaya (6):
-  PCI: Expose reset_type to users of __pci_reset_function_locked()
-  PCI: Expose reset_type to users of pci_reset_function()
-  PCI: Expose reset_type to users of pci_reset_function_locked()
-  PCI: Expose reset type to users of pci_try_reset_function()
-  PCI: Expose reset type to users of pci_probe_reset_function()
-  PCI: Expose reset type to users of pci_reset_bus()
-
- drivers/hid/intel-ish-hid/ipc/ipc.c           |   2 +-
- drivers/misc/genwqe/card_base.c               |   2 +-
- .../net/ethernet/cavium/liquidio/lio_main.c   |   2 +-
- .../net/ethernet/qlogic/qlcnic/qlcnic_ctx.c   |   2 +-
- drivers/net/ethernet/sfc/mcdi.c               |   2 +-
- drivers/pci/pci-sysfs.c                       |   2 +-
- drivers/pci/pci.c                             | 134 ++++++++++++------
- drivers/pci/pci.h                             |   2 +-
- drivers/pci/probe.c                           |   2 +-
- drivers/vfio/pci/vfio_pci.c                   |  11 +-
- drivers/vfio/pci/vfio_pci_config.c            |   4 +-
- drivers/xen/xen-pciback/pci_stub.c            |   6 +-
- include/linux/pci.h                           |  21 ++-
- 13 files changed, 126 insertions(+), 66 deletions(-)
-
--- 
-2.18.0
+_______________________________________________
+Linux-nvme mailing list
+Linux-nvme@lists.infradead.org
+http://lists.infradead.org/mailman/listinfo/linux-nvme
