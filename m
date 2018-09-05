@@ -1,62 +1,95 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mga04.intel.com ([192.55.52.120]:15111 "EHLO mga04.intel.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1726170AbeIECDi (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Tue, 4 Sep 2018 22:03:38 -0400
-Date: Tue, 4 Sep 2018 15:38:04 -0600
-From: Keith Busch <keith.busch@intel.com>
-To: Lukas Wunner <lukas@wunner.de>
-Cc: Linux PCI <linux-pci@vger.kernel.org>,
-        Bjorn Helgaas <bhelgaas@google.com>,
-        Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-        Sinan Kaya <okaya@kernel.org>,
-        Thomas Tai <thomas.tai@oracle.com>, poza@codeaurora.org
-Subject: Re: [PATCH 10/16] PCI/portdrv: Provide pci error callbacks
-Message-ID: <20180904213804.GD18331@localhost.localdomain>
-References: <20180831212639.10196-1-keith.busch@intel.com>
- <20180831212639.10196-11-keith.busch@intel.com>
- <20180902101641.v25o44om2ed2sf2a@wunner.de>
+Return-Path: <linux-acpi-owner@vger.kernel.org>
+Subject: Re: [PATCH v2 13/40] vfio: Add support for Shared Virtual Addressing
+To: Xu Zaibo <xuzaibo@huawei.com>,
+        "linux-arm-kernel@lists.infradead.org"
+        <linux-arm-kernel@lists.infradead.org>,
+        "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+        "linux-acpi@vger.kernel.org" <linux-acpi@vger.kernel.org>,
+        "devicetree@vger.kernel.org" <devicetree@vger.kernel.org>,
+        "iommu@lists.linux-foundation.org" <iommu@lists.linux-foundation.org>,
+        "kvm@vger.kernel.org" <kvm@vger.kernel.org>,
+        "linux-mm@kvack.org" <linux-mm@kvack.org>
+Cc: "joro@8bytes.org" <joro@8bytes.org>,
+        Will Deacon <Will.Deacon@arm.com>,
+        Robin Murphy <Robin.Murphy@arm.com>,
+        "alex.williamson@redhat.com" <alex.williamson@redhat.com>,
+        "tn@semihalf.com" <tn@semihalf.com>,
+        "thunder.leizhen@huawei.com" <thunder.leizhen@huawei.com>,
+        "ilias.apalodimas@linaro.org" <ilias.apalodimas@linaro.org>,
+        "jonathan.cameron@huawei.com" <jonathan.cameron@huawei.com>,
+        "liudongdong3@huawei.com" <liudongdong3@huawei.com>,
+        "shunyong.yang@hxt-semitech.com" <shunyong.yang@hxt-semitech.com>,
+        "nwatters@codeaurora.org" <nwatters@codeaurora.org>,
+        "okaya@codeaurora.org" <okaya@codeaurora.org>,
+        "jcrouse@codeaurora.org" <jcrouse@codeaurora.org>,
+        "rfranz@cavium.com" <rfranz@cavium.com>,
+        "dwmw2@infradead.org" <dwmw2@infradead.org>,
+        "jacob.jun.pan@linux.intel.com" <jacob.jun.pan@linux.intel.com>,
+        "yi.l.liu@intel.com" <yi.l.liu@intel.com>,
+        "ashok.raj@intel.com" <ashok.raj@intel.com>,
+        "kevin.tian@intel.com" <kevin.tian@intel.com>,
+        "baolu.lu@linux.intel.com" <baolu.lu@linux.intel.com>,
+        "robdclark@gmail.com" <robdclark@gmail.com>,
+        "christian.koenig@amd.com" <christian.koenig@amd.com>,
+        "bharatku@xilinx.com" <bharatku@xilinx.com>,
+        "rgummal@xilinx.com" <rgummal@xilinx.com>,
+        =?UTF-8?B?57Gz57Gz?= <kenneth-lee-2012@foxmail.com>,
+        wangzhou1 <wangzhou1@hisilicon.com>,
+        "liguozhu@hisilicon.com" <liguozhu@hisilicon.com>,
+        fanghao11 <fanghao11@huawei.com>
+References: <20180511190641.23008-1-jean-philippe.brucker@arm.com>
+ <20180511190641.23008-14-jean-philippe.brucker@arm.com>
+ <5B83B11E.7010807@huawei.com> <1d5b6529-4e5a-723c-3f1b-dd5a9adb490c@arm.com>
+ <5B89F818.7060300@huawei.com> <3a961aff-e830-64bb-b6a9-14e08de1abf5@arm.com>
+ <5B8DEA15.7020404@huawei.com> <bc27f902-4d12-21b7-b9e9-18bcae170503@arm.com>
+ <5B8F4A59.20004@huawei.com>
+From: Jean-Philippe Brucker <jean-philippe.brucker@arm.com>
+Message-ID: <b51107b8-a525-13ce-f4c3-d423b8502c27@arm.com>
+Date: Wed, 5 Sep 2018 12:02:29 +0100
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20180902101641.v25o44om2ed2sf2a@wunner.de>
-Sender: linux-pci-owner@vger.kernel.org
+In-Reply-To: <5B8F4A59.20004@huawei.com>
+Content-Type: text/plain; charset=utf-8
+Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Sun, Sep 02, 2018 at 12:16:41PM +0200, Lukas Wunner wrote:
-> On Fri, Aug 31, 2018 at 03:26:33PM -0600, Keith Busch wrote:
-> > --- a/drivers/pci/pcie/portdrv_pci.c
-> > +++ b/drivers/pci/pcie/portdrv_pci.c
-> > @@ -139,13 +139,45 @@ static void pcie_portdrv_remove(struct pci_dev *dev)
-> >  	pcie_port_device_remove(dev);
-> >  }
-> >  
-> > +static int detected_iter(struct device *device, void *data)
-> > +{
-> > +	struct pci_dev *pdev = data;
-> > +	struct pcie_port_service_driver *driver;
-> > +
-> > +	if (device->bus == &pcie_port_bus_type && device->driver) {
-> > +		driver = to_service_driver(device->driver);
-> > +		if (driver && driver->error_detected)
-> > +			driver->error_detected(pdev);
-> > +	}
-> > +	return 0;
-> > +}
-> 
-> You're passing a pci_dev to the ->error_detected callback and this
-> forces the callback to laboriously find its own pcie port service device,
-> as visible in patch [13/16], where pciehp_error_detected() contains:
-> 
-> 	struct device *device = pcie_port_find_device(dev, PCIE_PORT_SERVICE_HP);
-> 	if (!device)
-> 		return;
-> 	pcie_dev = to_pcie_device(device);
-> 
-> This seems backwards, the callbacks should be passed a pcie_device
-> instead of a pci_dev.
-> 
-> Same for the ->slot_reset callback iterator added in this patch.
+On 05/09/2018 04:15, Xu Zaibo wrote:
+>>>       1. While the series are finished well, VFIO-PCI device can be held
+>>> by only one process
+>>>           through binding IOCTL command without PASID (without PASID
+>>> being exposed user space).
+>> It could, but isn't supported at the moment. In addition to adding
+>> support in the I/O page fault code, we'd also need to update the VFIO
+>> API. Currently a VFIO_TYPE1 domain always supports the MAP/UNMAP ioctl.
+>> The case you describe isn't compatible with MAP/UNMAP, since the process
+>> manages the shared address space with mmap or malloc. We'd probably need
+>> to introduce a new VFIO IOMMU type, in which case the bind could be
+>> performed implicitly when the process does VFIO_SET_IOMMU. Then the
+>> process wouldn't need to send an additional BIND IOCTL.
+> ok. got it.  This is the legacy mode, so all the VFIO APIs are kept 
+> unchanged?
 
-I agree that is better. I was only trying to stick with the existing
-pattern, but I can change that as a prep patch preceeding adding these
-error callbacks, no problem.
+Yes, existing VFIO semantics are preserved
+
+>>>       2. While using VFIO-PCI device to support multiple processes with
+>>> SVA series, a primary
+>>>           process with multiple secondary processes must be deployed just
+>>> like DPDK(https://www.dpdk.org/).
+>>>           And, the PASID still has to be exposed to user land.
+>> Right. A third case, also implemented by this patch (and complete), is
+>> the primary process simply doing a BIND for itself, and using the
+>> returned PASID to share its own address space with the device.
+>>
+> ok. But I am worried that the sulotion of one primary processes with 
+> several secondary ones
+> 
+> is a little bit limited. Maybe, users don't want to depend on the 
+> primary process. :)
+
+I don't see a better way for vfio-pci, though. But more importantly, I
+don't know of any users :) While the feature is great for testing new
+hardware, and I've been using it for all kinds of stress testing, I
+haven't received feedback from possible users in production settings
+(DPDK etc) and can't speculate about what they'd prefer.
+
+Thanks,
+Jean
