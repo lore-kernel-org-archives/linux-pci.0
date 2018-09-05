@@ -1,123 +1,67 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.29.99]:58252 "EHLO mail.kernel.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1732450AbeISWJo (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Wed, 19 Sep 2018 18:09:44 -0400
-From: Sinan Kaya <okaya@kernel.org>
-To: linux-pci@vger.kernel.org
-Cc: alex.williamson@redhat.com, Sinan Kaya <okaya@kernel.org>,
-        Bjorn Helgaas <bhelgaas@google.com>
-Subject: [PATCH v4 5/6] PCI: Expose reset type to users of pci_probe_reset_function()
-Date: Wed, 19 Sep 2018 16:30:36 +0000
-Message-Id: <20180919163037.13497-6-okaya@kernel.org>
-In-Reply-To: <20180919163037.13497-1-okaya@kernel.org>
-References: <20180919163037.13497-1-okaya@kernel.org>
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-nvme-bounces+bjorn=helgaas.com@lists.infradead.org>
+Return-Path: <linux-nvme-bounces+bjorn=helgaas.com@lists.infradead.org>
+To: Jens Axboe <axboe@kernel.dk>, Christoph Hellwig <hch@lst.de>
+References: <20180830185352.3369-1-logang@deltatee.com>
+ <20180830185352.3369-8-logang@deltatee.com>
+ <b5ab8fa3-34ac-3117-fa0d-5206c3939435@kernel.dk>
+ <20180901082812.GB670@lst.de>
+ <5f79c012-c6e1-56bb-62fd-0689181fb2c9@deltatee.com>
+ <59b28977-8f2a-6228-2050-03fae6bdbedd@kernel.dk>
+From: Logan Gunthorpe <logang@deltatee.com>
+Message-ID: <1b4283da-44df-4a02-3167-e295243cef78@deltatee.com>
+Date: Wed, 5 Sep 2018 13:33:23 -0600
+MIME-Version: 1.0
+In-Reply-To: <59b28977-8f2a-6228-2050-03fae6bdbedd@kernel.dk>
+Subject: Re: [PATCH v5 07/13] block: Add PCI P2P flag for request queue and
+ check support for requests
+List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-nvme>,
+ <mailto:linux-nvme-request@lists.infradead.org?subject=unsubscribe>
+List-Archive: <http://lists.infradead.org/pipermail/linux-nvme/>
+List-Post: <mailto:linux-nvme@lists.infradead.org>
+List-Help: <mailto:linux-nvme-request@lists.infradead.org?subject=help>
+List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-nvme>,
+ <mailto:linux-nvme-request@lists.infradead.org?subject=subscribe>
+Cc: Keith Busch <keith.busch@intel.com>,
+ Alex Williamson <alex.williamson@redhat.com>, Sagi Grimberg <sagi@grimberg.me>,
+ linux-nvdimm@lists.01.org, linux-rdma@vger.kernel.org,
+ linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
+ linux-nvme@lists.infradead.org, Stephen Bates <sbates@raithlin.com>,
+ linux-block@vger.kernel.org,
+ =?UTF-8?B?SsOpcsO0bWUgR2xpc3Nl?= <jglisse@redhat.com>,
+ Jason Gunthorpe <jgg@mellanox.com>,
+ Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+ Bjorn Helgaas <bhelgaas@google.com>, Max Gurtovoy <maxg@mellanox.com>,
+ Dan Williams <dan.j.williams@intel.com>,
+ =?UTF-8?Q?Christian_K=c3=b6nig?= <christian.koenig@amd.com>
+Content-Type: text/plain; charset="us-ascii"
+Sender: "Linux-nvme" <linux-nvme-bounces@lists.infradead.org>
+Errors-To: linux-nvme-bounces+bjorn=helgaas.com@lists.infradead.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Looking to have more control between the users of the API vs. what the API
-can do internally. The new reset_type tells the PCI core about the bounds
-of the request.
 
-Signed-off-by: Sinan Kaya <okaya@kernel.org>
----
- drivers/pci/pci.c   | 51 ++++++++++++++++++++++++++++++---------------
- drivers/pci/pci.h   |  2 +-
- drivers/pci/probe.c |  2 +-
- 3 files changed, 36 insertions(+), 19 deletions(-)
 
-diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
-index 4edf70a4d528..b4f14419bd51 100644
---- a/drivers/pci/pci.c
-+++ b/drivers/pci/pci.c
-@@ -4753,28 +4753,45 @@ EXPORT_SYMBOL_GPL(__pci_reset_function_locked);
-  * Returns 0 if the device function can be reset or negative if the
-  * device doesn't support resetting a single function.
-  */
--int pci_probe_reset_function(struct pci_dev *dev)
-+int pci_probe_reset_function(struct pci_dev *dev, u32 reset_type)
- {
--	int rc;
-+	int rc = 0;
- 
- 	might_sleep();
- 
--	rc = pci_dev_specific_reset(dev, 1);
--	if (rc != -ENOTTY)
--		return rc;
--	if (pcie_has_flr(dev))
--		return 0;
--	rc = pci_af_flr(dev, 1);
--	if (rc != -ENOTTY)
--		return rc;
--	rc = pci_pm_reset(dev, 1);
--	if (rc != -ENOTTY)
--		return rc;
--	rc = pci_dev_reset_slot_function(dev, 1);
--	if (rc != -ENOTTY)
--		return rc;
-+	if (reset_type & PCI_RESET_DEV_SPECIFIC) {
-+		rc = pci_dev_specific_reset(dev, 1);
-+		if (rc != -ENOTTY)
-+			return rc;
-+	}
-+
-+	if (reset_type & PCI_RESET_FLR) {
-+		if (pcie_has_flr(dev))
-+			return 0;
-+		rc = pci_af_flr(dev, 1);
-+		if (rc != -ENOTTY)
-+			return rc;
-+	}
- 
--	return pci_parent_bus_reset(dev, 1);
-+	if (reset_type & PCI_RESET_PM) {
-+		rc = pci_pm_reset(dev, 1);
-+		if (rc != -ENOTTY)
-+			return rc;
-+	}
-+
-+	if (reset_type & PCI_RESET_SLOT) {
-+		rc = pci_dev_reset_slot_function(dev, 1);
-+		if (rc != -ENOTTY)
-+			return rc;
-+	}
-+
-+	if (reset_type & PCI_RESET_BUS) {
-+		rc = pci_parent_bus_reset(dev, 1);
-+		if (rc != -ENOTTY)
-+			return rc;
-+	}
-+
-+	return rc;
- }
- 
- /**
-diff --git a/drivers/pci/pci.h b/drivers/pci/pci.h
-index 6e0d1528d471..0444bfa51b52 100644
---- a/drivers/pci/pci.h
-+++ b/drivers/pci/pci.h
-@@ -33,7 +33,7 @@ enum pci_mmap_api {
- int pci_mmap_fits(struct pci_dev *pdev, int resno, struct vm_area_struct *vmai,
- 		  enum pci_mmap_api mmap_api);
- 
--int pci_probe_reset_function(struct pci_dev *dev);
-+int pci_probe_reset_function(struct pci_dev *dev, u32 reset_type);
- int pci_bridge_secondary_bus_reset(struct pci_dev *dev);
- 
- /**
-diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
-index ec784009a36b..cbce5420431b 100644
---- a/drivers/pci/probe.c
-+++ b/drivers/pci/probe.c
-@@ -2332,7 +2332,7 @@ static void pci_init_capabilities(struct pci_dev *dev)
- 
- 	pcie_report_downtraining(dev);
- 
--	if (pci_probe_reset_function(dev) == 0)
-+	if (pci_probe_reset_function(dev, PCI_RESET_ANY) == 0)
- 		dev->reset_fn = 1;
- }
- 
--- 
-2.18.0
+On 05/09/18 01:26 PM, Jens Axboe wrote:
+> On 9/3/18 4:26 PM, Logan Gunthorpe wrote:
+>> I personally agree with Christoph. But if there's consensus in the other
+>> direction or this is a real blocker moving this forward, I can remove it
+>> for the next version.
+> 
+> It's a simple branch because the check isn't exhaustive. It just checks
+> the first page. At that point you may as well just require the caller to
+> flag the bio/rq as being P2P, and then do a check for P2P compatibility
+> with the queue.
+
+Hmm, we had something like that in v4[1] but it just seemed redundant to
+create a flag when the information was already in the bio and kind of
+ugly for the caller to check for, then set, the flag. I'm not _that_
+averse to going back to that though...
+
+Logan
+
+[1]
+https://lore.kernel.org/lkml/20180423233046.21476-8-logang@deltatee.com/T/#u
+
+_______________________________________________
+Linux-nvme mailing list
+Linux-nvme@lists.infradead.org
+http://lists.infradead.org/mailman/listinfo/linux-nvme
