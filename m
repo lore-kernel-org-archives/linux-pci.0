@@ -1,40 +1,47 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.29.99]:40646 "EHLO mail.kernel.org"
+Received: from mail.kernel.org ([198.145.29.99]:54778 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1726304AbeIDWol (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Tue, 4 Sep 2018 18:44:41 -0400
-Date: Tue, 4 Sep 2018 13:18:24 -0500
-From: Bjorn Helgaas <helgaas@kernel.org>
-To: Sinan Kaya <okaya@kernel.org>
-Cc: linux-pci@vger.kernel.org
-Subject: Re: [PATCH v7 0/1] PCI: Handle conflict between hotplug and error
- handling
-Message-ID: <20180904181824.GH107892@bhelgaas-glaptop.roam.corp.google.com>
-References: <20180805225136.5800-1-okaya@kernel.org>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20180805225136.5800-1-okaya@kernel.org>
+        id S1726189AbeIEUi7 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Wed, 5 Sep 2018 16:38:59 -0400
+From: Sinan Kaya <okaya@kernel.org>
+To: linux-pci@vger.kernel.org
+Cc: Dennis Dalessandro <dennis.dalessandro@intel.com>,
+        Sinan Kaya <okaya@codeaurora.org>,
+        Bjorn Helgaas <bhelgaas@google.com>
+Subject: [PATCH for-rc v2 1/3] PCI: Fix faulty logic in pci_reset_bus()
+Date: Wed,  5 Sep 2018 16:08:03 +0000
+Message-Id: <20180905160805.5680-1-okaya@kernel.org>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Sun, Aug 05, 2018 at 03:51:35PM -0700, Sinan Kaya wrote:
-> Lukas:
-> 'Your patch "[PATCH v6 1/1] PCI: pciehp: Ignore link events when there
-> is a fatal error pending" only checks once for a pending fatal error,
-> it should poll until either the fatal error is gone or a timeout is
-> hit.  If the fatal error is gone and the link is up, you can just return
-> from pciehp_handle_presence_or_link_change().  Else (in the timeout case)
-> fall back to the normal handling of a Link Down, i.e. let it bring down
-> the slot.'
-> 
-> 
-> Sinan Kaya (1):
->   PCI: pciehp: Ignore link events when there is a fatal error pending
-> 
->  drivers/pci/hotplug/pciehp_ctrl.c | 19 ++++++++++
->  drivers/pci/pci.h                 |  2 ++
->  drivers/pci/pcie/err.c            | 60 +++++++++++++++++++++++++++++++
->  3 files changed, 81 insertions(+)
+From: Dennis Dalessandro <dennis.dalessandro@intel.com>
 
-Dropping for now because it sounds like you intend to mask out the
-error for hotplug ports.
+The pci_rest_bus() function calls into pci_probe_reset_slot() to determine
+whether to call the slot or bus reset. The check has faulty logic in that
+it does not account for pci_probe_reset_slot() being able to return an
+errno. Fix by only calling the slot reset when the function returns 0.
+Treat < 1 and > 1 the same.
+
+Cc: Sinan Kaya <okaya@codeaurora.org>
+Fixes: 811c5cb37df4 ("PCI: Unify try slot and bus reset API")
+Reviewed-by: Michael J. Ruhl <michael.j.ruhl@intel.com>
+Signed-off-by: Dennis Dalessandro <dennis.dalessandro@intel.com>
+---
+ drivers/pci/pci.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
+index 29ff9619b5fa..30b260332a10 100644
+--- a/drivers/pci/pci.c
++++ b/drivers/pci/pci.c
+@@ -5200,7 +5200,7 @@ static int __pci_reset_bus(struct pci_bus *bus)
+  */
+ int pci_reset_bus(struct pci_dev *pdev)
+ {
+-	return pci_probe_reset_slot(pdev->slot) ?
++	return (!pci_probe_reset_slot(pdev->slot)) ?
+ 	    __pci_reset_slot(pdev->slot) : __pci_reset_bus(pdev->bus);
+ }
+ EXPORT_SYMBOL_GPL(pci_reset_bus);
+-- 
+2.18.0
