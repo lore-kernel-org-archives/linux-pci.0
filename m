@@ -1,51 +1,102 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.29.99]:41600 "EHLO mail.kernel.org"
+Received: from mga07.intel.com ([134.134.136.100]:35063 "EHLO mga07.intel.com"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1726046AbeIES5T (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Wed, 5 Sep 2018 14:57:19 -0400
-Subject: Re: RFC on PCI Device Lock
-To: Alex Williamson <alex.williamson@redhat.com>
-Cc: Bjorn Helgaas <bhelgaas@google.com>,
-        Dennis Dalessandro <dennis.dalessandro@intel.com>,
-        Linux PCI <linux-pci@vger.kernel.org>
-References: <87682473-6ffe-f7df-e8f8-3d00e8247621@kernel.org>
- <20180904165202.4e5bb59d@t450s.home>
- <17720f56-2caa-2d2e-b655-867debf55934@kernel.org>
- <20180904204649.415491f8@t450s.home>
- <571b8341-f6fd-d92a-7091-f4fb02a2aadf@kernel.org>
- <7087eeca-e004-1b15-0ea6-103722399fd0@kernel.org>
- <20180904221302.3031f952@t450s.home>
-From: Sinan Kaya <okaya@kernel.org>
-Message-ID: <9e130f04-c570-b4ee-e040-b02c9ff80755@kernel.org>
-Date: Wed, 5 Sep 2018 07:26:52 -0700
-MIME-Version: 1.0
-In-Reply-To: <20180904221302.3031f952@t450s.home>
-Content-Type: text/plain; charset=utf-8; format=flowed
+        id S1727477AbeIFBL1 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Wed, 5 Sep 2018 21:11:27 -0400
+From: Keith Busch <keith.busch@intel.com>
+To: Linux PCI <linux-pci@vger.kernel.org>,
+        Bjorn Helgaas <bhelgaas@google.com>
+Cc: Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+        Sinan Kaya <okaya@kernel.org>,
+        Thomas Tai <thomas.tai@oracle.com>, poza@codeaurora.org,
+        Lukas Wunner <lukas@wunner.de>, Christoph Hellwig <hch@lst.de>,
+        Keith Busch <keith.busch@intel.com>
+Subject: [PATCHv2 20/20] PCI: Unify device inaccessible
+Date: Wed,  5 Sep 2018 14:35:46 -0600
+Message-Id: <20180905203546.21921-21-keith.busch@intel.com>
+In-Reply-To: <20180905203546.21921-1-keith.busch@intel.com>
+References: <20180905203546.21921-1-keith.busch@intel.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 9/4/2018 9:13 PM, Alex Williamson wrote:
->> Let me know if I misunderstood you. I'll again wait for test feedback first.
-> Yep, that's essentially it.  I assume we'd want to trickle this through
-> other interfaces and the hfi1 folks can look at whether they want to
-> drop their custom config save/restore in favor of using
-> pci_reset_function_locked(), which would do that for them.
-> pci_reset_bus() should also allow the caller to set a mask so vfio
-> doesn't worry about defaults changing in the core.  Thanks,
-The testing was successful.
+This patch brings surprise removals and permanent failures together so
+we no longer need separate flags. The error handling will not be able to
+override a surprise removal's permanent channel failure by doing an atomic
+compare and exchange operation on the error state.
 
-"--- Comment #15 from Dennis (dennis.dalessandro@intel.com) ---
-I have tested the two new patches applied on top of 4.19-rc1 and they seem to
-be working as well."
+Signed-off-by: Keith Busch <keith.busch@intel.com>
+---
+ drivers/pci/pci.h      | 11 +++++------
+ drivers/pci/pcie/err.c | 15 +++++++++++----
+ 2 files changed, 16 insertions(+), 10 deletions(-)
 
-Before I post the code on the list, I want to make sure I capture your
-request correctly.
-
-You are asking for more APIs to have the mask feature. I can add
-slot and bus reset options to pci_reset_bus().
-
-If there are other functions that need mask feature, we can deal
-with them later as I want to focus on the regression short term.
-
-Though, it would be good to enumerate the functions with needed masks
-to start the conversation.
+diff --git a/drivers/pci/pci.h b/drivers/pci/pci.h
+index 5a96978d3403..1ac43621adad 100644
+--- a/drivers/pci/pci.h
++++ b/drivers/pci/pci.h
+@@ -295,21 +295,20 @@ struct pci_sriov {
+ 	bool		drivers_autoprobe; /* Auto probing of VFs by driver */
+ };
+ 
+-/* pci_dev priv_flags */
+-#define PCI_DEV_DISCONNECTED 0
+-#define PCI_DEV_ADDED 1
+-
+ static inline int pci_dev_set_disconnected(struct pci_dev *dev, void *unused)
+ {
+-	set_bit(PCI_DEV_DISCONNECTED, &dev->priv_flags);
++	dev->error_state = pci_channel_io_perm_failure;
+ 	return 0;
+ }
+ 
+ static inline bool pci_dev_is_disconnected(const struct pci_dev *dev)
+ {
+-	return test_bit(PCI_DEV_DISCONNECTED, &dev->priv_flags);
++	return dev->error_state == pci_channel_io_perm_failure;
+ }
+ 
++/* pci_dev priv_flags */
++#define PCI_DEV_ADDED 0
++
+ static inline void pci_dev_assign_added(struct pci_dev *dev, bool added)
+ {
+ 	assign_bit(PCI_DEV_ADDED, &dev->priv_flags, added);
+diff --git a/drivers/pci/pcie/err.c b/drivers/pci/pcie/err.c
+index 2264001f695b..1ee7206689b5 100644
+--- a/drivers/pci/pcie/err.c
++++ b/drivers/pci/pcie/err.c
+@@ -52,9 +52,9 @@ static int report_error_detected(struct pci_dev *dev,
+ 	const struct pci_error_handlers *err_handler;
+ 
+ 	device_lock(&dev->dev);
+-	dev->error_state = state;
+ 
+-	if (!dev->driver ||
++	if (!cmpxchg(&dev->error_state, state, pci_channel_io_normal) ||
++		!dev->driver ||
+ 		!dev->driver->err_handler ||
+ 		!dev->driver->err_handler->error_detected) {
+ 		/*
+@@ -130,11 +130,18 @@ static int report_resume(struct pci_dev *dev, void *data)
+ 	const struct pci_error_handlers *err_handler;
+ 
+ 	device_lock(&dev->dev);
+-	dev->error_state = pci_channel_io_normal;
+ 
++	cmpxchg(&dev->error_state, pci_channel_io_normal,
++		pci_channel_io_frozen);
++
++	/*
++	 * If channel is offline, hotplug handling is taking care of this
++	 * device.
++	 */
+ 	if (!dev->driver ||
+ 		!dev->driver->err_handler ||
+-		!dev->driver->err_handler->resume)
++		!dev->driver->err_handler->resume ||
++		pci_channel_offline(dev))
+ 		goto out;
+ 
+ 	err_handler = dev->driver->err_handler;
+-- 
+2.14.4
