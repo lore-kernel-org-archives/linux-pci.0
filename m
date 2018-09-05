@@ -1,46 +1,97 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.29.99]:60394 "EHLO mail.kernel.org"
+Received: from mail.kernel.org ([198.145.29.99]:58464 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1727641AbeIFDCs (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Wed, 5 Sep 2018 23:02:48 -0400
-Date: Wed, 5 Sep 2018 17:30:16 -0500
+        id S1727836AbeIFCp4 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Wed, 5 Sep 2018 22:45:56 -0400
+Date: Wed, 5 Sep 2018 17:13:40 -0500
 From: Bjorn Helgaas <helgaas@kernel.org>
-To: Sinan Kaya <okaya@kernel.org>
-Cc: Lukas Wunner <lukas@wunner.de>, linux-pci@vger.kernel.org,
-        Mika Westerberg <mika.westerberg@linux.intel.com>
-Subject: Re: [PATCH 4/9] PCI: pciehp: Unify controller and slot structs
-Message-ID: <20180905223016.GA214747@bhelgaas-glaptop.roam.corp.google.com>
-References: <cover.1534686484.git.lukas@wunner.de>
- <2d4b1ed51a1c90fb6e1ef6282ab0c28f6c62cab1.1534686485.git.lukas@wunner.de>
- <c8e76de1-a2c3-b725-2e86-733dd0267d55@kernel.org>
- <20180820090953.sbvgxc2ednxaq73s@wunner.de>
- <05c7fadf-82ef-5ee0-601d-850583eefb0f@kernel.org>
+To: Keith Busch <keith.busch@intel.com>
+Cc: Linux PCI <linux-pci@vger.kernel.org>,
+        Bjorn Helgaas <bhelgaas@google.com>,
+        Lukas Wunner <lukas@wunner.de>
+Subject: Re: [PATCH] pci/sriov: Hold rescan lock while enumerating
+Message-ID: <20180905221340.GV107892@bhelgaas-glaptop.roam.corp.google.com>
+References: <20180809163356.18650-1-keith.busch@intel.com>
+ <20180905205840.GR107892@bhelgaas-glaptop.roam.corp.google.com>
+ <20180905211241.GA22152@localhost.localdomain>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <05c7fadf-82ef-5ee0-601d-850583eefb0f@kernel.org>
+In-Reply-To: <20180905211241.GA22152@localhost.localdomain>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Mon, Aug 20, 2018 at 01:34:48PM -0400, Sinan Kaya wrote:
-> On 8/20/2018 5:09 AM, Lukas Wunner wrote:
-> > On Sun, Aug 19, 2018 at 05:59:33PM -0400, Sinan Kaya wrote:
-> > > On 8/19/2018 10:29 AM, Lukas Wunner wrote:
-> > > > Simplify the driver by merging struct slot into struct controller.
-> > > > Merge the slot constructor pcie_init_slot() and the destructor
-> > > > pcie_cleanup_slot() into the controller counterparts.  Rename the slot
-> > > > struct's "lock" member to "state_lock" and rename "work" to "button_work"
-> > > > for clarity.
+On Wed, Sep 05, 2018 at 03:12:41PM -0600, Keith Busch wrote:
+> On Wed, Sep 05, 2018 at 03:58:40PM -0500, Bjorn Helgaas wrote:
+> > [+cc Lukas, -stable]
+> > 
+> > On Thu, Aug 09, 2018 at 10:33:56AM -0600, Keith Busch wrote:
+> > > PCI enumeration/de-enumeration needs to run single threaded to prevent
+> > > race conditions with other threads changing the topology. Altering the
+> > > number of virtual functions was not taking the rescan/remove lock hile
+> > > adding or removing those virtual functions, so this patch adds that.
 > > > 
-> > > please split this into multiple pieces.
+> > > Reported-by: Krzysztof Wierzbicki <krzysztof.wierzbicki@intel.com>
+> > > Cc: stable@vger.kernel.org
+> > > Signed-off-by: Keith Busch <keith.busch@intel.com>
+> > > ---
+> > >  drivers/pci/pci-sysfs.c | 2 ++
+> > >  1 file changed, 2 insertions(+)
+> > > 
+> > > diff --git a/drivers/pci/pci-sysfs.c b/drivers/pci/pci-sysfs.c
+> > > index 9ecfe13157c0..611abe220b6f 100644
+> > > --- a/drivers/pci/pci-sysfs.c
+> > > +++ b/drivers/pci/pci-sysfs.c
+> > > @@ -591,6 +591,7 @@ static ssize_t sriov_numvfs_store(struct device *dev,
+> > >  	if (num_vfs > pci_sriov_get_totalvfs(pdev))
+> > >  		return -ERANGE;
+> > >  
+> > > +	pci_lock_rescan_remove();
 > > 
-> > Hm, you mean split out the renaming of the "lock" and "work" members?
+> > I assume the usual path is something like this, where we end up in
+> > pci_enable_sriov():
 > > 
-> > The unification of the two structs needs to happen in a single commit
-> > to avoid breaking the build for people doing a git bisect.
+> >   sriov_numvfs_store
+> > +   pci_lock_rescan_remove
+> >     pdev->driver->sriov_configure
+> >       ...
+> >         pci_enable_sriov
+> >           sriov_enable
+> >             pci_iov_add_virtfn
+> >               pci_alloc_dev
+> >               pci_device_add
+> > 
+> > But what about the other paths leading to pci_iov_add_virtfn()?  Don't
+> > we need similar locking for all of them?  
 > 
-> I was thinking of the rename.
+> Good point. It looks like the only other path to pci_iov_add_virtfn is
+> through PPC eeh_reset_device, which coincidently enough already holds
+> pci_lock_rescan_remove.
 
-Could the rename be done in a separate patch before the unification?
-If so, that would be nice.
+There are a few .probe() methods that call pci_enable_sriov(), which leads
+to pci_iov_add_virtfn():
 
-Bjorn
+  cavium_rng_probe
+  cpt_probe
+  enic_probe
+  be_probe -> be_setup -> be_vf_setup
+  igb_probe -> igb_sw_init -> igb_probe_vfs -> igb_enable_sriov
+  ...
+
+> It's not just pci_iov_add_virtfn, though. We also need to hold it during
+> pci_iov_remove_virtfn. PPC eeh_rmv_device is not holding the lock in
+> that path. I'll never be able to test with that h/w, but I'll look at it.
+> 
+> > >  	device_lock(&pdev->dev);
+> > >  
+> > >  	if (num_vfs == pdev->sriov->num_VFs)
+> > > @@ -627,6 +628,7 @@ static ssize_t sriov_numvfs_store(struct device *dev,
+> > >  
+> > >  exit:
+> > >  	device_unlock(&pdev->dev);
+> > > +	pci_unlock_rescan_remove();
+> > >  
+> > >  	if (ret < 0)
+> > >  		return ret;
+> > > -- 
+> > > 2.14.4
+> > > 
