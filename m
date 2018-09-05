@@ -1,123 +1,113 @@
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Subject: Re: [PATCH v2 01/40] iommu: Introduce Shared Virtual Addressing API
-To: Jean-Philippe Brucker <jean-philippe.brucker@arm.com>,
- Auger Eric <eric.auger@redhat.com>, linux-arm-kernel@lists.infradead.org,
- linux-pci@vger.kernel.org, linux-acpi@vger.kernel.org,
- devicetree@vger.kernel.org, iommu@lists.linux-foundation.org,
- kvm@vger.kernel.org, linux-mm@kvack.org
-References: <20180511190641.23008-1-jean-philippe.brucker@arm.com>
- <20180511190641.23008-2-jean-philippe.brucker@arm.com>
- <bf42affd-e9d0-e4fc-6d28-f3c3f7795348@redhat.com>
- <03d31ba5-1eda-ea86-8c0c-91d14c86fe83@arm.com>
-From: =?UTF-8?Q?Christian_K=c3=b6nig?= <christian.koenig@amd.com>
-Message-ID: <ed39159c-087e-7e56-7d29-d1de9fa1677f@amd.com>
-Date: Thu, 6 Sep 2018 13:12:42 +0200
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail-pl1-f196.google.com ([209.85.214.196]:38196 "EHLO
+        mail-pl1-f196.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726309AbeIEKoV (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Wed, 5 Sep 2018 06:44:21 -0400
+Received: by mail-pl1-f196.google.com with SMTP id u11-v6so2782499plq.5
+        for <linux-pci@vger.kernel.org>; Tue, 04 Sep 2018 23:15:46 -0700 (PDT)
 MIME-Version: 1.0
-In-Reply-To: <03d31ba5-1eda-ea86-8c0c-91d14c86fe83@arm.com>
-List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
-List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
-List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
-List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
-List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
-Cc: xieyisheng1@huawei.com, ilias.apalodimas@linaro.org, xuzaibo@huawei.com,
- thunder.leizhen@huawei.com, will.deacon@arm.com, okaya@codeaurora.org,
- yi.l.liu@intel.com, ashok.raj@intel.com, tn@semihalf.com, joro@8bytes.org,
- bharatku@xilinx.com, liudongdong3@huawei.com, rfranz@cavium.com,
- kevin.tian@intel.com, jacob.jun.pan@linux.intel.com,
- alex.williamson@redhat.com, rgummal@xilinx.com, jonathan.cameron@huawei.com,
- shunyong.yang@hxt-semitech.com, dwmw2@infradead.org, liubo95@huawei.com,
- jcrouse@codeaurora.org, robdclark@gmail.com, robin.murphy@arm.com,
- nwatters@codeaurora.org, baolu.lu@linux.intel.com
-Content-Type: text/plain; charset="us-ascii"; Format="flowed"
-Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
-Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
+In-Reply-To: <20180904094234.jm5je5sfpagdf6dz@wunner.de>
+References: <1535690081-16116-1-git-send-email-suganath-prabu.subramani@broadcom.com>
+ <CAHp75VfC8GN3oEzSFJYfMr0iqBTYUJ=WPoLS9Oh5NgVcFmnBkw@mail.gmail.com>
+ <20180831085534.n6eikj5cw522ihhe@wunner.de> <CAK=zhgrzNYDeUFN0YWVJLdGR0nA443su0xydwSHFQzhouhZBuw@mail.gmail.com>
+ <20180904094234.jm5je5sfpagdf6dz@wunner.de>
+From: Sreekanth Reddy <sreekanth.reddy@broadcom.com>
+Date: Wed, 5 Sep 2018 11:45:45 +0530
+Message-ID: <CAK=zhgprkzcF-UZeeqg_qN0xFLR=BfzkRNRZKA=DJyf7aMPmeg@mail.gmail.com>
+Subject: Re: [Patch v1 0/7] mpt3sas: Hot-Plug Surprise removal support on IOC.
+To: Lukas Wunner <lukas@wunner.de>
+Cc: Suganath Prabu Subramani <suganath-prabu.subramani@broadcom.com>,
+        Andy Shevchenko <andy.shevchenko@gmail.com>,
+        linux-scsi <linux-scsi@vger.kernel.org>,
+        Sathya Prakash <Sathya.Prakash@broadcom.com>,
+        linux-pci@vger.kernel.org,
+        Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+        Keith Busch <keith.busch@intel.com>
+Content-Type: text/plain; charset="UTF-8"
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Am 06.09.2018 um 13:09 schrieb Jean-Philippe Brucker:
-> Hi Eric,
->
-> Thanks for reviewing
->
-> On 05/09/2018 12:29, Auger Eric wrote:
->>> +int iommu_sva_device_init(struct device *dev, unsigned long features,
->>> +			  unsigned int max_pasid)
->> what about min_pasid?
-> No one asked for it... The max_pasid parameter is here for drivers that
-> have vendor-specific PASID size limits, such as AMD KFD (see
-> kfd_iommu_device_init and
-> https://patchwork.kernel.org/patch/9989307/#21389571). But in most cases
-> the PASID size will only depend on the PCI PASID capability and the
-> IOMMU limits, both known by the IOMMU driver, so device drivers won't
-> have to set max_pasid.
->
-> IOMMU drivers need to set min_pasid in the sva_device_init callback
-> because it may be either 1 (e.g. Arm where PASID #0 is reserved) or 0
-> (Intel Vt-d rev2), but at the moment I can't see a reason for device
-> drivers to override min_pasid
+l
 
-Sorry to ruin your day, but if I'm not completely mistaken PASID zero is 
-reserved in the AMD KFD as well.
 
-Regards,
-Christian.
+On Tue, Sep 4, 2018 at 3:12 PM, Lukas Wunner <lukas@wunner.de> wrote:
+> On Tue, Sep 04, 2018 at 11:19:04AM +0530, Sreekanth Reddy wrote:
+>> On Fri, Aug 31, 2018 at 2:25 PM, Lukas Wunner <lukas@wunner.de> wrote:
+>> > * Just reading the vendor ID may not be sufficient to detect unplug,
+>> >   it may also read as "all ones" if the link is down due to error
+>> >   recovery by DPC.
+>>
+>> So, is their any other way to detect pci device unplug apart from
+>> reading the vendor ID, I mean we have check any other flags, etc?
+>
+> Many scsi drivers call pci_channel_offline() to detect inaccessibility
+> of the device due to a PCI error:
+> https://elixir.bootlin.com/linux/v4.19-rc2/ident/pci_channel_offline
+>
+> A patch is pending such that surprise removal can also be queried
+> with that same function:
+> https://www.spinics.net/lists/linux-pci/msg75722.html
+
+Lukas, thanks for pointing to this pci_dev_is_disconnected() API. So
+we can use this API directly instead of reading the vendor Id and
+checking for all one's once this patch get accepted?
 
 >
->>> +	/*
->>> +	 * IOMMU driver updates the limits depending on the IOMMU and device
->>> +	 * capabilities.
->>> +	 */
->>> +	ret = domain->ops->sva_device_init(dev, param);
->>> +	if (ret)
->>> +		goto err_free_param;
->> So you are likely to call sva_device_init even if it was already called
->> (ie. dev->iommu_param->sva_param is already set). Can't you test whether
->> dev->iommu_param->sva_param is already set first?
-> Right, that's probably better
 >
->>> +/**
->>> + * iommu_sva_device_shutdown() - Shutdown Shared Virtual Addressing for a device
->>> + * @dev: the device
->>> + *
->>> + * Disable SVA. Device driver should ensure that the device isn't performing any
->>> + * DMA while this function is running.
->>> + */
->>> +int iommu_sva_device_shutdown(struct device *dev)
->> Not sure the returned value is required for a shutdown operation.
-> I don't know either. I like them because they help me debug, but are
-> otherwise rather useless if we don't describe precise semantics. The
-> caller cannot do anything with it. Given that the corresponding IOMMU op
-> is already void, I can change this function to void as well
+>> > * I don't see why you need to poll for the device's removal from a
+>> >   watchdog thread.  pciehp will invoke your driver's ->remove hook
+>> >   once the device is gone.
+>>
+>> If we have some three to four PCI devices and all pci devices are hot
+>> unplugged simultaneously, then we observed that driver's-remove hook
+>> is called sequentially. So it takes some time to call fourth PCI
+>> device driver's->remove hook. so during this time we want all the
+>> outstanding commands to be gracefully terminated and hence we added
+>> this watchdog thread to quickly detect the hba unplug and take
+>> necessary steps such as gracefully terminate the outstanding IOs and
+>> stop receiving further IOs on it. At later time when PCI subsystem
+>> calls driver's-remove hook then driver can quickly release the
+>> resources allocated for this unplugged device.
 >
->>> +struct iommu_sva_param {
->> What are the feature values?
-> At the moment only IOMMU_SVA_FEAT_IOPF, introduced by patch 09
+> pciehp does the following as soon as the surprise removal event is handled:
 >
->>> +	unsigned long features;
->>> +	unsigned int min_pasid;
->>> +	unsigned int max_pasid;
->>> +};
->>> +
->>>   /**
->>>    * struct iommu_ops - iommu ops and capabilities
->>>    * @capable: check capability
->>> @@ -219,6 +225,8 @@ struct page_response_msg {
->>>    * @domain_free: free iommu domain
->>>    * @attach_dev: attach device to an iommu domain
->>>    * @detach_dev: detach device from an iommu domain
->>> + * @sva_device_init: initialize Shared Virtual Adressing for a device
->> Addressing
->>> + * @sva_device_shutdown: shutdown Shared Virtual Adressing for a device
->> Addressing
-> Nice catch
+>         pci_dev_set_disconnected(dev, NULL);
+>         if (pci_has_subordinate(dev))
+>                 pci_walk_bus(dev->subordinate, pci_dev_set_disconnected, NULL);
+>
+> Thus, once the above-linked patch lands, you'll be able to detect
+> surprise removal by calling pci_channel_offline() or checking
+> pdev->error_state == pci_channel_io_perm_failure, obviating the
+> need to poll for surprise removal from a kthread.
+>
+> There's another patch pending to move pci_walk_bus() out of the
+> pci_lock_rescan_remove() so that it runs even earlier, without
+> pointlessly waiting for a lock:
+> https://www.spinics.net/lists/linux-pci/msg75438.html
+
+Yes due to this pci_lock_rescan_remove() lock, we observed that
+driver's->remove hook called sequentially even though multiple HBA
+devices are hot unplugged simultaneously.
+
+I have one more instance where still we need this poll kthread, i.e
+during the device probe time we have some commands which has more
+timeout value (e.g. 300 seconds), so if user has unplugged this device
+just after sending this more time-out valued command then driver has
+to wait until this time-out value expires. i.e. this device is still
+visible in lspci output until this 300 seconds timeout value expires
+even though device is unplugged. if we have a poll kthread (which will
+poll for every one second) then driver can early detect the unplugged
+state and can terminate the outstanding commands and hence probe
+operation can be completed quickly.
+
+
+Also whether we need to wait for below patches get accepted? so that
+we can post the new set of patches accommodating according to your
+suggestions,
+https://www.spinics.net/lists/linux-pci/msg75722.html
+https://www.spinics.net/lists/linux-pci/msg75438.html
+
 >
 > Thanks,
-> Jean
-
-
-_______________________________________________
-linux-arm-kernel mailing list
-linux-arm-kernel@lists.infradead.org
-http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
+>
+> Lukas
