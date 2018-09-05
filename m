@@ -1,54 +1,49 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-sn1nam01on0058.outbound.protection.outlook.com ([104.47.32.58]:30460
-        "EHLO NAM01-SN1-obe.outbound.protection.outlook.com"
-        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1728340AbeIKAXh (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Mon, 10 Sep 2018 20:23:37 -0400
-From: Felix Kuehling <Felix.Kuehling@amd.com>
-To: linux-pci@vger.kernel.org
-Cc: okaya@codeaurora.org, bhelgaas@google.com,
-        Felix Kuehling <Felix.Kuehling@amd.com>
-Subject: [PATCH for-rc] PCI: Fix enabling of PASID on RC integrated endpoints
-Date: Mon, 10 Sep 2018 15:27:42 -0400
-Message-Id: <1536607662-11690-1-git-send-email-Felix.Kuehling@amd.com>
-MIME-Version: 1.0
-Content-Type: text/plain
+Received: from mga01.intel.com ([192.55.52.88]:26855 "EHLO mga01.intel.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1727477AbeIFBK7 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Wed, 5 Sep 2018 21:10:59 -0400
+From: Keith Busch <keith.busch@intel.com>
+To: Linux PCI <linux-pci@vger.kernel.org>,
+        Bjorn Helgaas <bhelgaas@google.com>
+Cc: Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+        Sinan Kaya <okaya@kernel.org>,
+        Thomas Tai <thomas.tai@oracle.com>, poza@codeaurora.org,
+        Lukas Wunner <lukas@wunner.de>, Christoph Hellwig <hch@lst.de>,
+        Keith Busch <keith.busch@intel.com>
+Subject: [PATCHv2 18/20] PCI/DPC: Wait for link active after reset
+Date: Wed,  5 Sep 2018 14:35:44 -0600
+Message-Id: <20180905203546.21921-19-keith.busch@intel.com>
+In-Reply-To: <20180905203546.21921-1-keith.busch@intel.com>
+References: <20180905203546.21921-1-keith.busch@intel.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Set the eetlp_prefix_path on PCIE_EXP_TYPE_RC_END devices to allow PASID
-to be enabled on them. This fixes IOMMUv2 initialization on AMD Carrizo
-APUs.
+The DPC service only provides error handling now, so we don't get to
+rely on the PCIe hotplug driver to handling the timing requirements for
+when it is okay access the downstream devices. This patch adds the check
+for the active link before returning control to the pcie error handler
+after the slot reset completes.
 
-Fixes: 7ce3f912ae ("PCI: Enable PASID only if entire path supports End-End TLP prefixes")
-Link: https://bugzilla.kernel.org/show_bug.cgi?id=201079
-Signed-off-by: Felix Kuehling <Felix.Kuehling@amd.com>
+Signed-off-by: Keith Busch <keith.busch@intel.com>
 ---
- drivers/pci/probe.c | 5 ++++-
- 1 file changed, 4 insertions(+), 1 deletion(-)
+ drivers/pci/pcie/dpc.c | 4 ++++
+ 1 file changed, 4 insertions(+)
 
-diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
-index ec78400..201f9e5 100644
---- a/drivers/pci/probe.c
-+++ b/drivers/pci/probe.c
-@@ -2074,6 +2074,7 @@ static void pci_configure_eetlp_prefix(struct pci_dev *dev)
- {
- #ifdef CONFIG_PCI_PASID
- 	struct pci_dev *bridge;
-+	int pcie_type;
- 	u32 cap;
+diff --git a/drivers/pci/pcie/dpc.c b/drivers/pci/pcie/dpc.c
+index 70cb1e65a311..0aa0d01562bf 100644
+--- a/drivers/pci/pcie/dpc.c
++++ b/drivers/pci/pcie/dpc.c
+@@ -92,6 +92,10 @@ static pci_ers_result_t dpc_reset_link(struct pci_dev *pdev)
  
- 	if (!pci_is_pcie(dev))
-@@ -2083,7 +2084,9 @@ static void pci_configure_eetlp_prefix(struct pci_dev *dev)
- 	if (!(cap & PCI_EXP_DEVCAP2_EE_PREFIX))
- 		return;
- 
--	if (pci_pcie_type(dev) == PCI_EXP_TYPE_ROOT_PORT)
-+	pcie_type = pci_pcie_type(dev);
-+	if (pcie_type == PCI_EXP_TYPE_ROOT_PORT ||
-+	    pcie_type == PCI_EXP_TYPE_RC_END)
- 		dev->eetlp_prefix_path = 1;
- 	else {
- 		bridge = pci_upstream_bridge(dev);
+ 	pci_write_config_word(pdev, cap + PCI_EXP_DPC_STATUS,
+ 			      PCI_EXP_DPC_STATUS_TRIGGER);
++
++	if (!pcie_wait_for_link(pdev, true))
++		return PCI_ERS_RESULT_DISCONNECT;
++
+ 	if (pdev->subordinate)
+ 		pdev->subordinate->error_state = pci_channel_io_normal;
+ 	return PCI_ERS_RESULT_RECOVERED;
 -- 
-2.7.4
+2.14.4
