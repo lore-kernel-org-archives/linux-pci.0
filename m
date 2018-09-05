@@ -1,69 +1,100 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mta-01.yadro.com ([89.207.88.251]:60246 "EHLO mta-01.yadro.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1728178AbeINVgo (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Fri, 14 Sep 2018 17:36:44 -0400
-From: Sergey Miroshnichenko <s.miroshnichenko@yadro.com>
-To: <linux-pci@vger.kernel.org>
-CC: Bjorn Helgaas <bhelgaas@google.com>, <linux@yadro.com>,
-        Sergey Miroshnichenko <s.miroshnichenko@yadro.com>
-Subject: [PATCH RFC 3/4] PCI: Invalidate the released BAR resources
-Date: Fri, 14 Sep 2018 19:14:03 +0300
-Message-ID: <20180914161404.4685-4-s.miroshnichenko@yadro.com>
-In-Reply-To: <20180914161404.4685-1-s.miroshnichenko@yadro.com>
-References: <20180914161404.4685-1-s.miroshnichenko@yadro.com>
+Return-Path: <linux-nvme-bounces+bjorn=helgaas.com@lists.infradead.org>
+Return-Path: <linux-nvme-bounces+bjorn=helgaas.com@lists.infradead.org>
+Subject: Re: [PATCH v5 07/13] block: Add PCI P2P flag for request queue and
+ check support for requests
+To: Logan Gunthorpe <logang@deltatee.com>, Christoph Hellwig <hch@lst.de>
+References: <20180830185352.3369-1-logang@deltatee.com>
+ <20180830185352.3369-8-logang@deltatee.com>
+ <b5ab8fa3-34ac-3117-fa0d-5206c3939435@kernel.dk>
+ <20180901082812.GB670@lst.de>
+ <5f79c012-c6e1-56bb-62fd-0689181fb2c9@deltatee.com>
+ <59b28977-8f2a-6228-2050-03fae6bdbedd@kernel.dk>
+ <1b4283da-44df-4a02-3167-e295243cef78@deltatee.com>
+ <09258b9b-3aed-9890-b31a-bd70a133966c@kernel.dk>
+ <20180905195647.GA1626@lst.de>
+ <bcc1b3cf-2fd9-fa61-9cfb-b0e4d84e5d94@kernel.dk>
+ <20180905201152.GA1893@lst.de>
+ <eb42fb94-9da6-955b-8524-0a0f5ac4bd19@deltatee.com>
+ <2a3394bd-5f13-4818-43f4-dfc61f501e05@kernel.dk>
+ <e3ef26e6-6c8d-25b8-fa64-14594a51263c@deltatee.com>
+ <3af4d1d4-da07-c0a6-8464-9ddc1378f2f4@kernel.dk>
+ <f9e660cd-b597-bb6e-56a2-82fe71cb3649@deltatee.com>
+From: Jens Axboe <axboe@kernel.dk>
+Message-ID: <34d9b2f7-9e6d-4a0a-77e5-ec0e99610f5c@kernel.dk>
+Date: Wed, 5 Sep 2018 14:36:56 -0600
 MIME-Version: 1.0
-Content-Type: text/plain
-Sender: linux-pci-owner@vger.kernel.org
+In-Reply-To: <f9e660cd-b597-bb6e-56a2-82fe71cb3649@deltatee.com>
+List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-nvme>,
+ <mailto:linux-nvme-request@lists.infradead.org?subject=unsubscribe>
+List-Archive: <http://lists.infradead.org/pipermail/linux-nvme/>
+List-Post: <mailto:linux-nvme@lists.infradead.org>
+List-Help: <mailto:linux-nvme-request@lists.infradead.org?subject=help>
+List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-nvme>,
+ <mailto:linux-nvme-request@lists.infradead.org?subject=subscribe>
+Cc: Keith Busch <keith.busch@intel.com>,
+ Alex Williamson <alex.williamson@redhat.com>, Sagi Grimberg <sagi@grimberg.me>,
+ linux-nvdimm@lists.01.org, linux-rdma@vger.kernel.org,
+ linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
+ linux-nvme@lists.infradead.org, Stephen Bates <sbates@raithlin.com>,
+ linux-block@vger.kernel.org,
+ =?UTF-8?B?SsOpcsO0bWUgR2xpc3Nl?= <jglisse@redhat.com>,
+ Jason Gunthorpe <jgg@mellanox.com>,
+ Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+ Bjorn Helgaas <bhelgaas@google.com>, Max Gurtovoy <maxg@mellanox.com>,
+ Dan Williams <dan.j.williams@intel.com>,
+ =?UTF-8?Q?Christian_K=c3=b6nig?= <christian.koenig@amd.com>
+Content-Type: text/plain; charset="us-ascii"
+Sender: "Linux-nvme" <linux-nvme-bounces@lists.infradead.org>
+Errors-To: linux-nvme-bounces+bjorn=helgaas.com@lists.infradead.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Otherwise after release_child_resources() there can be resources
-with the IORESOURCE_STARTALIGN flag remaining, but with start
-dropped to zero, that makes them not valid for re-assigning.
+On 9/5/18 2:32 PM, Logan Gunthorpe wrote:
+> 
+> 
+> On 05/09/18 02:19 PM, Jens Axboe wrote:
+>> On 9/5/18 2:18 PM, Logan Gunthorpe wrote:
+>>>
+>>>
+>>> On 05/09/18 02:14 PM, Jens Axboe wrote:
+>>>> But if the caller must absolutely know where the bio will end up, then
+>>>> it seems super redundant. So I'd vote for killing this check, it buys
+>>>> us absolutely nothing and isn't even exhaustive in its current form.
+>>>
+>>>
+>>> Ok, I'll remove it for v6.
+>>
+>> Since the drivers needs to know it's doing it right, it might not
+>> hurt to add a sanity check helper for that. Just have the driver
+>> call it, and don't add it in the normal IO submission path.
+> 
+> I'm not sure I really see the value in that. It's the same principle in
+> asking the driver to do the WARN: if the developer knew enough to use
+> the special helper, they probably knew well enough to do the rest correctly.
 
-Signed-off-by: Sergey Miroshnichenko <s.miroshnichenko@yadro.com>
----
- drivers/pci/setup-bus.c | 21 ++++++++++++++++++++-
- 1 file changed, 20 insertions(+), 1 deletion(-)
+I don't agree with that at all. It's a "is my request valid" helper,
+it's not some obscure and rarely used functionality. You're making up
+this API right now, if you really want it done for every IO, make it
+part of the p2p submission process. You could even hide it behind a
+debug thing, if you like.
 
-diff --git a/drivers/pci/setup-bus.c b/drivers/pci/setup-bus.c
-index fd5675bb501f..ec88461462b8 100644
---- a/drivers/pci/setup-bus.c
-+++ b/drivers/pci/setup-bus.c
-@@ -1521,7 +1521,7 @@ static void __pci_bridge_assign_resources(const struct pci_dev *bridge,
- static void pci_bridge_release_resources(struct pci_bus *bus,
- 					  unsigned long type)
- {
--	struct pci_dev *dev = bus->self;
-+	struct pci_dev *dev = bus->self, *child_dev;
- 	struct resource *r;
- 	unsigned old_flags = 0;
- 	struct resource *b_res;
-@@ -1564,6 +1564,25 @@ static void pci_bridge_release_resources(struct pci_bus *bus,
- 	 *  all
- 	 */
- 	release_child_resources(r);
-+	list_for_each_entry(child_dev, &bus->devices, bus_list) {
-+		int i;
-+
-+		if (child_dev->subordinate)
-+			continue;
-+
-+		for (i = 0; i <= PCI_ROM_RESOURCE; i++) {
-+			struct resource *res = &child_dev->resource[i];
-+			resource_size_t size = resource_size(res);
-+
-+			if (!res->flags)
-+				continue;
-+
-+			res->end = size - 1;
-+			res->start = 0;
-+			res->flags &= ~IORESOURCE_STARTALIGN;
-+			res->flags |= IORESOURCE_SIZEALIGN;
-+		}
-+	}
- 	if (!release_resource(r)) {
- 		type = old_flags = r->flags & PCI_RES_TYPE_MASK;
- 		pci_printk(KERN_DEBUG, dev, "resource %d %pR released\n",
+> I guess one other thing to point out is that, on x86, if a driver
+> submits P2P pages to a PCI device that doesn't have kernel support,
+> everything will likely just work. Even though the driver isn't doing any
+> of the work correctly and the requests are not being mapped with
+> pci_p2pdma_map() functions. Such code on other arches would likely
+> break. So developers may be lulled into thinking they're doing the
+> correct thing when in fact they are not and the WARN in the common code
+> would prevent that.
+
+If you're adamant about having it in common code, put it in your
+common submission code. Most folks aren't going to care about P2P, let the
+ones that do have the checks.
+
 -- 
-2.17.1
+Jens Axboe
+
+
+_______________________________________________
+Linux-nvme mailing list
+Linux-nvme@lists.infradead.org
+http://lists.infradead.org/mailman/listinfo/linux-nvme
