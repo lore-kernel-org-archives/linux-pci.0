@@ -1,37 +1,36 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.29.99]:57780 "EHLO mail.kernel.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1732061AbeISWH5 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Wed, 19 Sep 2018 18:07:57 -0400
-Subject: Re: [PATCH 11/12] PCI/AER: Use managed resource allocations
-To: Keith Busch <keith.busch@intel.com>,
-        Linux PCI <linux-pci@vger.kernel.org>,
-        Bjorn Helgaas <bhelgaas@google.com>
-Cc: Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-        Thomas Tai <thomas.tai@oracle.com>, poza@codeaurora.org,
-        Lukas Wunner <lukas@wunner.de>, Christoph Hellwig <hch@lst.de>,
-        Mika Westerberg <mika.westerberg@linux.intel.com>
-References: <20180918235848.26694-1-keith.busch@intel.com>
- <20180918235848.26694-12-keith.busch@intel.com>
-From: Sinan Kaya <okaya@kernel.org>
-Message-ID: <5b3f6bf5-2511-6a71-3410-a4f4ced4fb8c@kernel.org>
-Date: Wed, 19 Sep 2018 12:29:15 -0400
+Return-Path: <SRS0=KSw6=LT=linux.intel.com=mika.westerberg@kernel.org>
+Return-Path: <SRS0=KSw6=LT=linux.intel.com=mika.westerberg@kernel.org>
+Date: Wed, 5 Sep 2018 20:01:06 +0300
+From: Mika Westerberg <mika.westerberg@linux.intel.com>
+To: Bjorn Helgaas <helgaas@kernel.org>
+Cc: Bjorn Helgaas <bhelgaas@google.com>,
+	Alex Williamson <alex.williamson@redhat.com>,
+	linux-pci@vger.kernel.org
+Subject: Re: [PATCH] Revert "PCI: Add ACS quirk for Intel 300 series"
+Message-ID: <20180905170106.GO2283@lahna.fi.intel.com>
+References: <20180905110954.61990-1-mika.westerberg@linux.intel.com>
+ <20180905165526.GK107892@bhelgaas-glaptop.roam.corp.google.com>
 MIME-Version: 1.0
-In-Reply-To: <20180918235848.26694-12-keith.busch@intel.com>
-Content-Type: text/plain; charset=utf-8; format=flowed
-Sender: linux-pci-owner@vger.kernel.org
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20180905165526.GK107892@bhelgaas-glaptop.roam.corp.google.com>
 List-ID: <linux-pci.vger.kernel.org>
 
-On 9/18/2018 7:58 PM, Keith Busch wrote:
->   	if (status) {
->   		dev_printk(KERN_DEBUG, device, "request AER IRQ %d failed\n",
->   			   dev->irq);
-> -		aer_remove(dev);
->   		return status;
->   	}
->   
+On Wed, Sep 05, 2018 at 11:55:26AM -0500, Bjorn Helgaas wrote:
+> On Wed, Sep 05, 2018 at 02:09:54PM +0300, Mika Westerberg wrote:
+> > This reverts commit f154a718e6cc0d834f5ac4dc4c3b174e65f3659e.
+> > 
+> > It turns out that errata "PCH PCIe* Controller Root Port (ACSCTLR)
+> > Appear As Read Only" has been fixed in 300 series chipsets even if the
+> > datasheet [1] claims otherwise. To make ACS working properly on 300
+> > series root ports, revert the faulty commit.
+> 
+> So just to confirm, f154a718e6cc ("PCI: Add ACS quirk for Intel 300
+> series") was done based on the faulty datasheet, right?
+> 
+> If somebody actually reported a problem with a 300 series chipset, and
+> f154a718e6cc resolved it, we wouldn't want to revert it.  But I don't see
+> anything like that in the f154a718e6cc changelog, so I assume it was just
+> based on the faulty datasheet.
 
-Don't we still need to call aer_remove() here?
-
-Old code would call aer_disable_rootport(rpc) via aer_remove() on IRQ allocation
-failure. We are no longer doing this.
+Yes, that's correct. I used the information in the datasheet and that
+turned out to be wrong.
