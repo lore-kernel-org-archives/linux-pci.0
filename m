@@ -1,157 +1,50 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from ale.deltatee.com ([207.54.116.67]:38604 "EHLO ale.deltatee.com"
+Received: from mga14.intel.com ([192.55.52.115]:5453 "EHLO mga14.intel.com"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1727754AbeIMFTB (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Thu, 13 Sep 2018 01:19:01 -0400
-From: Logan Gunthorpe <logang@deltatee.com>
-To: linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
-        linux-nvme@lists.infradead.org, linux-rdma@vger.kernel.org,
-        linux-nvdimm@lists.01.org, linux-block@vger.kernel.org
-Cc: Stephen Bates <sbates@raithlin.com>,
-        Christoph Hellwig <hch@lst.de>,
-        Keith Busch <keith.busch@intel.com>,
-        Sagi Grimberg <sagi@grimberg.me>,
-        Bjorn Helgaas <bhelgaas@google.com>,
-        Jason Gunthorpe <jgg@mellanox.com>,
-        Max Gurtovoy <maxg@mellanox.com>,
-        Dan Williams <dan.j.williams@intel.com>,
-        =?UTF-8?q?J=C3=A9r=C3=B4me=20Glisse?= <jglisse@redhat.com>,
-        Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-        Alex Williamson <alex.williamson@redhat.com>,
-        =?UTF-8?q?Christian=20K=C3=B6nig?= <christian.koenig@amd.com>,
-        Jens Axboe <axboe@kernel.dk>,
-        Logan Gunthorpe <logang@deltatee.com>
-Date: Wed, 12 Sep 2018 18:11:55 -0600
-Message-Id: <20180913001156.4115-13-logang@deltatee.com>
-In-Reply-To: <20180913001156.4115-1-logang@deltatee.com>
-References: <20180913001156.4115-1-logang@deltatee.com>
+        id S1727518AbeIESsZ (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Wed, 5 Sep 2018 14:48:25 -0400
+Date: Wed, 5 Sep 2018 08:17:13 -0600
+From: Keith Busch <keith.busch@intel.com>
+To: Lukas Wunner <lukas@wunner.de>
+Cc: Sreekanth Reddy <sreekanth.reddy@broadcom.com>,
+        Suganath Prabu Subramani
+        <suganath-prabu.subramani@broadcom.com>,
+        Andy Shevchenko <andy.shevchenko@gmail.com>,
+        linux-scsi <linux-scsi@vger.kernel.org>,
+        Sathya Prakash <Sathya.Prakash@broadcom.com>,
+        linux-pci@vger.kernel.org,
+        Benjamin Herrenschmidt <benh@kernel.crashing.org>
+Subject: Re: [Patch v1 0/7] mpt3sas: Hot-Plug Surprise removal support on IOC.
+Message-ID: <20180905141712.GA19005@localhost.localdomain>
+References: <1535690081-16116-1-git-send-email-suganath-prabu.subramani@broadcom.com>
+ <CAHp75VfC8GN3oEzSFJYfMr0iqBTYUJ=WPoLS9Oh5NgVcFmnBkw@mail.gmail.com>
+ <20180831085534.n6eikj5cw522ihhe@wunner.de>
+ <CAK=zhgrzNYDeUFN0YWVJLdGR0nA443su0xydwSHFQzhouhZBuw@mail.gmail.com>
+ <20180904094234.jm5je5sfpagdf6dz@wunner.de>
+ <CAK=zhgprkzcF-UZeeqg_qN0xFLR=BfzkRNRZKA=DJyf7aMPmeg@mail.gmail.com>
+ <20180905073816.jcrct2xcpucb6bkn@wunner.de>
 MIME-Version: 1.0
-Subject: [PATCH v6 12/13] nvmet: Introduce helper functions to allocate and free request SGLs
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20180905073816.jcrct2xcpucb6bkn@wunner.de>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Add helpers to allocate and free the SGL in a struct nvmet_req:
+On Wed, Sep 05, 2018 at 09:38:16AM +0200, Lukas Wunner wrote:
+> On Wed, Sep 05, 2018 at 11:45:45AM +0530, Sreekanth Reddy wrote:
+> > On Tue, Sep 4, 2018 at 3:12 PM, Lukas Wunner <lukas@wunner.de> wrote:
+> > > Many scsi drivers call pci_channel_offline() to detect inaccessibility
+> > > of the device due to a PCI error:
+> > > https://elixir.bootlin.com/linux/v4.19-rc2/ident/pci_channel_offline
+> > >
+> > > A patch is pending such that surprise removal can also be queried
+> > > with that same function:
+> > > https://www.spinics.net/lists/linux-pci/msg75722.html
+> > 
+> > Lukas, thanks for pointing to this pci_dev_is_disconnected() API. So
+> > we can use this API directly instead of reading the vendor Id and
+> > checking for all one's once this patch get accepted?
+> 
+> Yes, except pci_dev_is_disconnected() is private to the PCI core,
+> but dev->error_state and pci_channel_offline() is public.
 
-int nvmet_req_alloc_sgl(struct nvmet_req *req, struct nvmet_sq *sq)
-void nvmet_req_free_sgl(struct nvmet_req *req)
-
-This will be expanded in a future patch to implement peer-to-peer
-memory DMAs and should be common with all target drivers. The presently
-unused 'sq' argument in the alloc function will be necessary to
-decide whether to use peer-to-peer memory and obtain the correct
-provider to allocate the memory.
-
-The new helpers are used in nvmet-rdma. Seeing we use req.transfer_len
-as the length of the SGL it is set earlier and cleared on any error.
-It also seems to be unnecessary to accumulate the length as the map_sgl
-functions should only ever be called once per request.
-
-Signed-off-by: Logan Gunthorpe <logang@deltatee.com>
-Acked-by: Sagi Grimberg <sagi@grimberg.me>
-Cc: Christoph Hellwig <hch@lst.de>
----
- drivers/nvme/target/core.c  | 18 ++++++++++++++++++
- drivers/nvme/target/nvmet.h |  2 ++
- drivers/nvme/target/rdma.c  | 20 ++++++++++++--------
- 3 files changed, 32 insertions(+), 8 deletions(-)
-
-diff --git a/drivers/nvme/target/core.c b/drivers/nvme/target/core.c
-index b5ec96abd048..bddd1599b826 100644
---- a/drivers/nvme/target/core.c
-+++ b/drivers/nvme/target/core.c
-@@ -725,6 +725,24 @@ void nvmet_req_execute(struct nvmet_req *req)
- }
- EXPORT_SYMBOL_GPL(nvmet_req_execute);
- 
-+int nvmet_req_alloc_sgl(struct nvmet_req *req, struct nvmet_sq *sq)
-+{
-+	req->sg = sgl_alloc(req->transfer_len, GFP_KERNEL, &req->sg_cnt);
-+	if (!req->sg)
-+		return -ENOMEM;
-+
-+	return 0;
-+}
-+EXPORT_SYMBOL_GPL(nvmet_req_alloc_sgl);
-+
-+void nvmet_req_free_sgl(struct nvmet_req *req)
-+{
-+	sgl_free(req->sg);
-+	req->sg = NULL;
-+	req->sg_cnt = 0;
-+}
-+EXPORT_SYMBOL_GPL(nvmet_req_free_sgl);
-+
- static inline bool nvmet_cc_en(u32 cc)
- {
- 	return (cc >> NVME_CC_EN_SHIFT) & 0x1;
-diff --git a/drivers/nvme/target/nvmet.h b/drivers/nvme/target/nvmet.h
-index ec9af4ee03b6..7d6cb61021e4 100644
---- a/drivers/nvme/target/nvmet.h
-+++ b/drivers/nvme/target/nvmet.h
-@@ -336,6 +336,8 @@ bool nvmet_req_init(struct nvmet_req *req, struct nvmet_cq *cq,
- void nvmet_req_uninit(struct nvmet_req *req);
- void nvmet_req_execute(struct nvmet_req *req);
- void nvmet_req_complete(struct nvmet_req *req, u16 status);
-+int nvmet_req_alloc_sgl(struct nvmet_req *req, struct nvmet_sq *sq);
-+void nvmet_req_free_sgl(struct nvmet_req *req);
- 
- void nvmet_cq_setup(struct nvmet_ctrl *ctrl, struct nvmet_cq *cq, u16 qid,
- 		u16 size);
-diff --git a/drivers/nvme/target/rdma.c b/drivers/nvme/target/rdma.c
-index 3533e918ea37..e148dee72ba5 100644
---- a/drivers/nvme/target/rdma.c
-+++ b/drivers/nvme/target/rdma.c
-@@ -489,7 +489,7 @@ static void nvmet_rdma_release_rsp(struct nvmet_rdma_rsp *rsp)
- 	}
- 
- 	if (rsp->req.sg != rsp->cmd->inline_sg)
--		sgl_free(rsp->req.sg);
-+		nvmet_req_free_sgl(&rsp->req);
- 
- 	if (unlikely(!list_empty_careful(&queue->rsp_wr_wait_list)))
- 		nvmet_rdma_process_wr_wait_list(queue);
-@@ -638,24 +638,24 @@ static u16 nvmet_rdma_map_sgl_keyed(struct nvmet_rdma_rsp *rsp,
- {
- 	struct rdma_cm_id *cm_id = rsp->queue->cm_id;
- 	u64 addr = le64_to_cpu(sgl->addr);
--	u32 len = get_unaligned_le24(sgl->length);
- 	u32 key = get_unaligned_le32(sgl->key);
- 	int ret;
- 
-+	rsp->req.transfer_len = get_unaligned_le24(sgl->length);
-+
- 	/* no data command? */
--	if (!len)
-+	if (!rsp->req.transfer_len)
- 		return 0;
- 
--	rsp->req.sg = sgl_alloc(len, GFP_KERNEL, &rsp->req.sg_cnt);
--	if (!rsp->req.sg)
--		return NVME_SC_INTERNAL;
-+	ret = nvmet_req_alloc_sgl(&rsp->req, &rsp->queue->nvme_sq);
-+	if (ret < 0)
-+		goto error_out;
- 
- 	ret = rdma_rw_ctx_init(&rsp->rw, cm_id->qp, cm_id->port_num,
- 			rsp->req.sg, rsp->req.sg_cnt, 0, addr, key,
- 			nvmet_data_dir(&rsp->req));
- 	if (ret < 0)
--		return NVME_SC_INTERNAL;
--	rsp->req.transfer_len += len;
-+		goto error_out;
- 	rsp->n_rdma += ret;
- 
- 	if (invalidate) {
-@@ -664,6 +664,10 @@ static u16 nvmet_rdma_map_sgl_keyed(struct nvmet_rdma_rsp *rsp,
- 	}
- 
- 	return 0;
-+
-+error_out:
-+	rsp->req.transfer_len = 0;
-+	return NVME_SC_INTERNAL;
- }
- 
- static u16 nvmet_rdma_map_sgl(struct nvmet_rdma_rsp *rsp)
--- 
-2.19.0
+The exported function to call is pci_device_is_present().
