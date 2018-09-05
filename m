@@ -1,130 +1,141 @@
-Return-Path: <SRS0=Zo3Z=LW=wunner.de=lukas@kernel.org>
-Return-Path: <SRS0=Zo3Z=LW=wunner.de=lukas@kernel.org>
-Message-Id: <25396c1290e120913d44d0b9e4b83f1e4fefcc7c.1536341821.git.lukas@wunner.de>
-In-Reply-To: <cover.1536341821.git.lukas@wunner.de>
-References: <cover.1536341821.git.lukas@wunner.de>
-From: Lukas Wunner <lukas@wunner.de>
-Date: Sat, 8 Sep 2018 09:59:01 +0200
-Subject: [PATCH v2 8/8] PCI: hotplug: Document TODOs
-To: Bjorn Helgaas <helgaas@kernel.org>, linux-pci@vger.kernel.org
-Cc: Sinan Kaya <okaya@kernel.org>, Mika Westerberg <mika.westerberg@linux.intel.com>, Keith Busch <keith.busch@intel.com>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mga05.intel.com ([192.55.52.43]:45689 "EHLO mga05.intel.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1727674AbeIFBIn (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Wed, 5 Sep 2018 21:08:43 -0400
+From: Keith Busch <keith.busch@intel.com>
+To: Linux PCI <linux-pci@vger.kernel.org>,
+        Bjorn Helgaas <bhelgaas@google.com>
+Cc: Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+        Sinan Kaya <okaya@kernel.org>,
+        Thomas Tai <thomas.tai@oracle.com>, poza@codeaurora.org,
+        Lukas Wunner <lukas@wunner.de>, Christoph Hellwig <hch@lst.de>,
+        Keith Busch <keith.busch@intel.com>
+Subject: [PATCHv2 11/20] PCI/portdrv: Provide pci error callbacks
+Date: Wed,  5 Sep 2018 14:35:37 -0600
+Message-Id: <20180905203546.21921-12-keith.busch@intel.com>
+In-Reply-To: <20180905203546.21921-1-keith.busch@intel.com>
+References: <20180905203546.21921-1-keith.busch@intel.com>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-While refactoring the PCI hotplug core's API, I noticed a significant
-amount of technical debt in some of the hotplug drivers.  Document the
-issues that caught my eye for starters.
+The error notification walks the whole bus, and some ports may need to
+do something to prepare for error handling and recover after slot resets
+too. This patch chains the error notification to the port services that
+register this callback.
 
-I do not have hardware at my disposal that utilizes the listed drivers
-and I think that's a prerequisite to work on them to ensure that no
-regressions sneak in.  But some of this hardware is so old that it may be
-hard to come by.  Obviously, it is fine to support old hardware, but the
-drivers need to be maintained.
+Since the callback is service specific, the patch is also changing the
+callback data from the generic 'struct pci_dev' to the service specific
+'struct pcie_device'. This is so the service doesn't need to search for
+its service specific data, and the callback can always reference the
+port if they only wanted the generic pci_dev.
 
-If noone steps up, perhaps we should consider sunsetting a few drivers
-by moving them to staging.  Based on my findings, ibmphp would be the
-first candidate.  I've found it fairly difficult to apply my API
-refactorings to it and have listed some obvious bugs in the driver.
-cpqphp is also in need of a modernization and would be a second
-candidate for relegation to staging.
+And while we're here, remove the misleading comments referring to AER
+root ports in the generic port services driver, as the port may be
+involved with other services.
 
-shpchp was introduced in the same commit as pciehp but hasn't benefited
-from the same amount of refactoring due to the decline of conventional
-PCI's relevance.  Yet hardware supporting it may be more prevalent than
-for the proprietary hotplug methods.
-
-Per Documentation/process/2.Process.rst, "a TODO file should be present"
-for drivers in staging.  The file introduced by the present commit may
-serve as a basis for this.
-
-Signed-off-by: Lukas Wunner <lukas@wunner.de>
-Cc: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
-Cc: Scott Murray <scott@spiteful.org>
-Cc: Dan Zink <dan.zink@hpe.com>
-Cc: Prarit Bhargava <prarit@redhat.com>
+Signed-off-by: Keith Busch <keith.busch@intel.com>
 ---
- drivers/pci/hotplug/TODO | 74 ++++++++++++++++++++++++++++++++++++++++
- 1 file changed, 74 insertions(+)
- create mode 100644 drivers/pci/hotplug/TODO
+ drivers/pci/pcie/portdrv.h     | 10 ++++++++--
+ drivers/pci/pcie/portdrv_pci.c | 43 ++++++++++++++++++++++++++++++++++++++----
+ 2 files changed, 47 insertions(+), 6 deletions(-)
 
-diff --git a/drivers/pci/hotplug/TODO b/drivers/pci/hotplug/TODO
-new file mode 100644
-index 000000000000..a32070be5adf
---- /dev/null
-+++ b/drivers/pci/hotplug/TODO
-@@ -0,0 +1,74 @@
-+Contributions are solicited in particular to remedy the following issues:
+diff --git a/drivers/pci/pcie/portdrv.h b/drivers/pci/pcie/portdrv.h
+index d59afa42fc14..36b6e7fb199f 100644
+--- a/drivers/pci/pcie/portdrv.h
++++ b/drivers/pci/pcie/portdrv.h
+@@ -53,10 +53,16 @@ struct pcie_port_service_driver {
+ 	int (*resume_noirq) (struct pcie_device *dev);
+ 	int (*resume) (struct pcie_device *dev);
+ 
++	/* Device driver notification of error handling */
++	void (*error_detected)(struct pcie_device *dev);
 +
-+cpcihp:
++	/* Device driver notification of slot reset */
++	void (*slot_reset)(struct pcie_device *dev);
 +
-+* There are no implementations of the ->hardware_test, ->get_power and
-+  ->set_power callbacks in struct cpci_hp_controller_ops.  Why were they
-+  introduced?  Can they be removed from the struct?
+ 	/* Device driver may resume normal operations */
+-	void (*error_resume)(struct pci_dev *dev);
++	void (*error_resume)(struct pcie_device *dev);
+ 
+-	/* Link Reset Capability - AER service driver specific */
++	/* Link Reset Capability - service driver specific */
+ 	pci_ers_result_t (*reset_link) (struct pci_dev *dev);
+ 
+ 	int port_type;  /* Type of the port this driver can handle */
+diff --git a/drivers/pci/pcie/portdrv_pci.c b/drivers/pci/pcie/portdrv_pci.c
+index eef22dc29140..93ab8be21a64 100644
+--- a/drivers/pci/pcie/portdrv_pci.c
++++ b/drivers/pci/pcie/portdrv_pci.c
+@@ -139,13 +139,49 @@ static void pcie_portdrv_remove(struct pci_dev *dev)
+ 	pcie_port_device_remove(dev);
+ }
+ 
++static int detected_iter(struct device *device, void *data)
++{
++	struct pcie_device *pcie_device;
++	struct pcie_port_service_driver *driver;
 +
-+cpqphp:
++	if (device->bus == &pcie_port_bus_type && device->driver) {
++		driver = to_service_driver(device->driver);
++		if (driver && driver->error_detected) {
++			pcie_device = to_pcie_device(device);
++			driver->error_detected(pcie_device);
++		}
++	}
++	return 0;
++}
 +
-+* The driver spawns a kthread cpqhp_event_thread() which is woken by the
-+  hardirq handler cpqhp_ctrl_intr().  Convert this to threaded IRQ handling.
-+  The kthread is also woken from the timer pushbutton_helper_thread(),
-+  convert it to call irq_wake_thread().  Use pciehp as a template.
+ static pci_ers_result_t pcie_portdrv_error_detected(struct pci_dev *dev,
+ 					enum pci_channel_state error)
+ {
+-	/* Root Port has no impact. Always recovers. */
++	device_for_each_child(&dev->dev, dev, detected_iter);
+ 	return PCI_ERS_RESULT_CAN_RECOVER;
+ }
+ 
++static int slot_reset_iter(struct device *device, void *data)
++{
++	struct pcie_device *pcie_device;
++	struct pcie_port_service_driver *driver;
 +
-+* A large portion of cpqphp_ctrl.c and cpqphp_pci.c concerns resource
-+  management.  Doesn't this duplicate functionality in the core?
++	if (device->bus == &pcie_port_bus_type && device->driver) {
++		driver = to_service_driver(device->driver);
++		if (driver && driver->slot_reset) {
++			pcie_device = to_pcie_device(device);
++			driver->slot_reset(pcie_device);
++		}
++	}
++	return 0;
++}
 +
-+ibmphp:
++static pci_ers_result_t pcie_portdrv_slot_reset(struct pci_dev *dev)
++{
++	device_for_each_child(&dev->dev, dev, slot_reset_iter);
++	return PCI_ERS_RESULT_RECOVERED;
++}
 +
-+* Implementations of hotplug_slot_ops callbacks such as get_adapter_present()
-+  in ibmphp_core.c create a copy of the struct slot on the stack, then perform
-+  the actual operation on that copy.  Determine if this overhead is necessary,
-+  delete it if not.  The functions also perform a NULL pointer check on the
-+  struct hotplug_slot, this seems superfluous.
-+
-+* Several functions access the pci_slot member in struct hotplug_slot even
-+  though pci_hotplug.h declares it private.  See get_max_bus_speed() for an
-+  example.  Either the pci_slot member should no longer be declared private
-+  or ibmphp should store a pointer to its bus in struct slot.  Probably the
-+  former.
-+
-+* The functions get_max_adapter_speed() and get_bus_name() are commented out.
-+  Can they be deleted?  There are also forward declarations at the top of
-+  ibmphp_core.c as well as pointers in ibmphp_hotplug_slot_ops, likewise
-+  commented out.
-+
-+* ibmphp_init_devno() takes a struct slot **, it could instead take a
-+  struct slot *.
-+
-+* The return value of pci_hp_register() is not checked.
-+
-+* iounmap(io_mem) is called in the error path of ebda_rsrc_controller()
-+  and once more in the error path of its caller ibmphp_access_ebda().
-+
-+* The various slot data structures are difficult to follow and need to be
-+  simplified.  A lot of functions are too large and too complex, they need
-+  to be broken up into smaller, manageable pieces.  Negative examples are
-+  ebda_rsrc_controller() and configure_bridge().
-+
-+* A large portion of ibmphp_res.c and ibmphp_pci.c concerns resource
-+  management.  Doesn't this duplicate functionality in the core?
-+
-+sgi_hotplug:
-+
-+* Several functions access the pci_slot member in struct hotplug_slot even
-+  though pci_hotplug.h declares it private.  See sn_hp_destroy() for an
-+  example.  Either the pci_slot member should no longer be declared private
-+  or sgi_hotplug should store a pointer to it in struct slot.  Probably the
-+  former.
-+
-+shpchp:
-+
-+* There is only a single implementation of struct hpc_ops.  Can the struct be
-+  removed and its functions invoked directly?  This has already been done in
-+  pciehp with commit 82a9e79ef132 ("PCI: pciehp: remove hpc_ops").  Clarify
-+  if there was a specific reason not to apply the same change to shpchp.
-+
-+* The ->get_mode1_ECC_cap callback in shpchp_hpc_ops is never invoked.
-+  Why was it introduced?  Can it be removed?
-+
-+* The hardirq handler shpc_isr() queues events on a workqueue.  It can be
-+  simplified by converting it to threaded IRQ handling.  Use pciehp as a
-+  template.
+ static pci_ers_result_t pcie_portdrv_mmio_enabled(struct pci_dev *dev)
+ {
+ 	return PCI_ERS_RESULT_RECOVERED;
+@@ -160,9 +196,7 @@ static int resume_iter(struct device *device, void *data)
+ 		driver = to_service_driver(device->driver);
+ 		if (driver && driver->error_resume) {
+ 			pcie_device = to_pcie_device(device);
+-
+-			/* Forward error message to service drivers */
+-			driver->error_resume(pcie_device->port);
++			driver->error_resume(pcie_device);
+ 		}
+ 	}
+ 
+@@ -185,6 +219,7 @@ static const struct pci_device_id port_pci_ids[] = { {
+ 
+ static const struct pci_error_handlers pcie_portdrv_err_handler = {
+ 	.error_detected = pcie_portdrv_error_detected,
++	.slot_reset = pcie_portdrv_slot_reset,
+ 	.mmio_enabled = pcie_portdrv_mmio_enabled,
+ 	.resume = pcie_portdrv_err_resume,
+ };
 -- 
-2.18.0
+2.14.4
