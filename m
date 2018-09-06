@@ -1,65 +1,52 @@
 Return-Path: <linux-acpi-owner@vger.kernel.org>
-From: "Tian, Kevin" <kevin.tian@intel.com>
-To: =?utf-8?B?Q2hyaXN0aWFuIEvDtm5pZw==?= <christian.koenig@amd.com>,
-        Jean-Philippe Brucker <jean-philippe.brucker@arm.com>,
-        Auger Eric <eric.auger@redhat.com>,
-        "linux-arm-kernel@lists.infradead.org"
-        <linux-arm-kernel@lists.infradead.org>,
-        "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-        "linux-acpi@vger.kernel.org" <linux-acpi@vger.kernel.org>,
-        "devicetree@vger.kernel.org" <devicetree@vger.kernel.org>,
-        "iommu@lists.linux-foundation.org" <iommu@lists.linux-foundation.org>,
-        "kvm@vger.kernel.org" <kvm@vger.kernel.org>,
-        "linux-mm@kvack.org" <linux-mm@kvack.org>
-CC: "xieyisheng1@huawei.com" <xieyisheng1@huawei.com>,
-        "ilias.apalodimas@linaro.org" <ilias.apalodimas@linaro.org>,
-        "will.deacon@arm.com" <will.deacon@arm.com>,
-        "okaya@codeaurora.org" <okaya@codeaurora.org>,
-        "Raj, Ashok" <ashok.raj@intel.com>,
-        "rfranz@cavium.com" <rfranz@cavium.com>,
-        "alex.williamson@redhat.com" <alex.williamson@redhat.com>,
-        "rgummal@xilinx.com" <rgummal@xilinx.com>,
-        "dwmw2@infradead.org" <dwmw2@infradead.org>,
-        "liubo95@huawei.com" <liubo95@huawei.com>,
-        "robin.murphy@arm.com" <robin.murphy@arm.com>
-Subject: RE: [PATCH v2 01/40] iommu: Introduce Shared Virtual Addressing API
-Date: Thu, 13 Sep 2018 07:26:30 +0000
-Message-ID: <AADFC41AFE54684AB9EE6CBC0274A5D191301D0A@SHSMSX101.ccr.corp.intel.com>
-References: <20180511190641.23008-1-jean-philippe.brucker@arm.com>
-        <20180511190641.23008-2-jean-philippe.brucker@arm.com>
-        <bf42affd-e9d0-e4fc-6d28-f3c3f7795348@redhat.com>
-        <03d31ba5-1eda-ea86-8c0c-91d14c86fe83@arm.com>
-        <ed39159c-087e-7e56-7d29-d1de9fa1677f@amd.com>
-        <f0b317d5-e2e9-5478-952c-05e8b97bd68b@arm.com>
- <2fd4a0a1-1a35-bf82-df84-b995cce011d9@amd.com>
-In-Reply-To: <2fd4a0a1-1a35-bf82-df84-b995cce011d9@amd.com>
-Content-Type: text/plain; charset="utf-8"
-MIME-Version: 1.0
+From: Mika Westerberg <mika.westerberg@linux.intel.com>
+To: Bjorn Helgaas <bhelgaas@google.com>,
+        "Rafael J. Wysocki" <rjw@rjwysocki.net>
+Cc: Len Brown <lenb@kernel.org>, Lukas Wunner <lukas@wunner.de>,
+        Keith Busch <keith.busch@intel.com>,
+        Ashok Raj <ashok.raj@intel.com>, Mario.Limonciello@dell.com,
+        Anthony Wong <anthony.wong@canonical.com>,
+        "D . J . Bernstein" <djb@cr.yp.to>,
+        Linus Walleij <linus.walleij@linaro.org>,
+        Mika Westerberg <mika.westerberg@linux.intel.com>,
+        linux-pci@vger.kernel.org, linux-acpi@vger.kernel.org
+Subject: [PATCH 04/10] PCI: pciehp: Do not handle events if interrupts are masked
+Date: Thu,  6 Sep 2018 18:50:14 +0300
+Message-Id: <20180906155020.51700-5-mika.westerberg@linux.intel.com>
+In-Reply-To: <20180906155020.51700-1-mika.westerberg@linux.intel.com>
+References: <20180906155020.51700-1-mika.westerberg@linux.intel.com>
 Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-PiBGcm9tOiBDaHJpc3RpYW4gS8O2bmlnDQo+IFNlbnQ6IEZyaWRheSwgU2VwdGVtYmVyIDcsIDIw
-MTggNDo1NiBQTQ0KPiANCj4gNS4gSXQgd291bGQgYmUgbmljZSB0byBoYXZlIHRvIGFsbG9jYXRl
-IG11bHRpcGxlIFBBU0lEcyBmb3IgdGhlIHNhbWUNCj4gcHJvY2VzcyBhZGRyZXNzIHNwYWNlLg0K
-PiAgwqDCoMKgIMKgwqDCoCBFLmcuIHNvbWUgdGVhbXMgYXQgQU1EIHdhbnQgdG8gdXNlIGEgc2Vw
-YXJhdGUgR1BVIGFkZHJlc3Mgc3BhY2UNCj4gZm9yIHRoZWlyIHVzZXJzcGFjZSBjbGllbnQgbGli
-cmFyeS4gSSdtIHN0aWxsIHRyeWluZyB0byBhdm9pZCB0aGF0LCBidXQNCj4gaXQgaXMgcGVyZmVj
-dGx5IHBvc3NpYmxlIHRoYXQgd2UgYXJlIGdvaW5nIHRvIG5lZWQgdGhhdC4NCj4gIMKgwqDCoCDC
-oMKgwqAgQWRkaXRpb25hbCB0byB0aGF0IGl0IGlzIHNvbWV0aW1lcyBxdWl0ZSB1c2VmdWwgZm9y
-IGRlYnVnZ2luZw0KPiB0byBpc29sYXRlIHdoZXJlIGV4YWN0bHkgYW4gaW5jb3JyZWN0IGFjY2Vz
-cyAoc2VnZmF1bHQpIGlzIGNvbWluZyBmcm9tLg0KPiANCj4gTGV0IG1lIGtub3cgaWYgdGhlcmUg
-YXJlIHNvbWUgcHJvYmxlbXMgd2l0aCB0aGF0LCBlc3BlY2lhbGx5IEkgd2FudCB0bw0KPiBrbm93
-IGlmIHRoZXJlIGlzIHB1c2hiYWNrIG9uICM1IHNvIHRoYXQgSSBjYW4gZm9yd2FyZCB0aGF0IDop
-DQo+IA0KDQpXZSBoYXZlIHNpbWlsYXIgcmVxdWlyZW1lbnQsIGV4Y2VwdCB0aGF0IGl0IGlzICJt
-dWx0aXBsZSBQQVNJRHMgZm9yDQpzYW1lIHByb2Nlc3MiIGluc3RlYWQgb2YgImZvciBzYW1lIHBy
-b2Nlc3MgYWRkcmVzcyBzcGFjZSIuDQoNCkludGVsIFZULWQgZ29lcyB0byBhICd0cnVlJyBzeXN0
-ZW0td2lkZSBQQVNJRCBhbGxvY2F0aW9uIHBvbGljeSwgDQpjcm9zcyBib3RoIGhvc3QgcHJvY2Vz
-c2VzIGFuZCBndWVzdCBwcm9jZXNzZXMuIEFzIEphY29iIGV4cGxhaW5zLA0KdGhlcmUgd2lsbCBi
-ZSBhIHZpcnR1YWwgY21kIHJlZ2lzdGVyIG9uIHZpcnR1YWwgdnRkLCB0aHJvdWdoIHdoaWNoDQpn
-dWVzdCBJT01NVSBkcml2ZXIgcmVxdWVzdHMgdG8gZ2V0IHN5c3RlbS13aWRlIFBBU0lEcyBhbGxv
-Y2F0ZWQNCmJ5IGhvc3QgSU9NTVUgZHJpdmVyLg0KDQp3aXRoIHRoYXQgZGVzaWduLCBRZW11IHJl
-cHJlc2VudHMgYWxsIGd1ZXN0IHByb2Nlc3NlcyBpbiBob3N0DQpzaWRlLCB0aHVzIHdpbGwgZ2V0
-ICJtdWx0aXBsZSBQQVNJRHMgYWxsb2NhdGVkIGZvciBzYW1lIHByb2Nlc3MiLg0KSG93ZXZlciBp
-bnN0ZWFkIG9mIGJpbmRpbmcgYWxsIFBBU0lEcyB0byBzYW1lIGhvc3QgYWRkcmVzcyBzcGFjZQ0K
-b2YgIFFlbXUsIGVhY2ggb2YgUEFTSUQgZW50cnkgcG9pbnRzIHRvIGd1ZXN0IGFkZHJlc3Mgc3Bh
-Y2UgaWYgDQp1c2VkIGJ5IGd1ZXN0IHByb2Nlc3MuDQoNClRoYW5rcw0KS2V2aW4NCg==
+PCIe native hotplug shares MSI vector with native PME so the interrupt
+handler might get called even the hotplug interrupt is masked. In that
+case we should not handle any events because the interrupt was not meant
+for us. Modify the PCIe hotplug interrupt handler to check this
+accordingly and bail out if it finds out that the interrupt was not
+about hotplug.
+
+Signed-off-by: Mika Westerberg <mika.westerberg@linux.intel.com>
+---
+ drivers/pci/hotplug/pciehp_hpc.c | 6 ++++--
+ 1 file changed, 4 insertions(+), 2 deletions(-)
+
+diff --git a/drivers/pci/hotplug/pciehp_hpc.c b/drivers/pci/hotplug/pciehp_hpc.c
+index 2249c4d06efd..19ed13d44b8f 100644
+--- a/drivers/pci/hotplug/pciehp_hpc.c
++++ b/drivers/pci/hotplug/pciehp_hpc.c
+@@ -533,9 +533,11 @@ static irqreturn_t pciehp_isr(int irq, void *dev_id)
+ 	u16 status, events;
+ 
+ 	/*
+-	 * Interrupts only occur in D3hot or shallower (PCIe r4.0, sec 6.7.3.4).
++	 * Interrupts only occur in D3hot or shallower and only if enabled
++	 * in the Slot Control register (PCIe r4.0, sec 6.7.3.4).
+ 	 */
+-	if (pdev->current_state == PCI_D3cold)
++	if (pdev->current_state == PCI_D3cold ||
++	    !(ctrl->slot_ctrl & PCI_EXP_SLTCTL_HPIE))
+ 		return IRQ_NONE;
+ 
+ 	/*
+-- 
+2.18.0
