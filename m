@@ -1,107 +1,74 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mga06.intel.com ([134.134.136.31]:58826 "EHLO mga06.intel.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1727477AbeIFBKp (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Wed, 5 Sep 2018 21:10:45 -0400
-From: Keith Busch <keith.busch@intel.com>
-To: Linux PCI <linux-pci@vger.kernel.org>,
-        Bjorn Helgaas <bhelgaas@google.com>
-Cc: Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-        Sinan Kaya <okaya@kernel.org>,
-        Thomas Tai <thomas.tai@oracle.com>, poza@codeaurora.org,
-        Lukas Wunner <lukas@wunner.de>, Christoph Hellwig <hch@lst.de>,
-        Keith Busch <keith.busch@intel.com>
-Subject: [PATCHv2 17/20] PCI/pciehp: Ignore link events during DPC event
-Date: Wed,  5 Sep 2018 14:35:43 -0600
-Message-Id: <20180905203546.21921-18-keith.busch@intel.com>
-In-Reply-To: <20180905203546.21921-1-keith.busch@intel.com>
-References: <20180905203546.21921-1-keith.busch@intel.com>
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <SRS0=V+wt=LU=h08.hostsharing.net=foo00@kernel.org>
+Return-Path: <SRS0=V+wt=LU=h08.hostsharing.net=foo00@kernel.org>
+Date: Thu, 6 Sep 2018 09:38:26 +0200
+From: Lukas Wunner <lukas@wunner.de>
+To: Bjorn Helgaas <helgaas@kernel.org>
+Cc: Sinan Kaya <okaya@kernel.org>, linux-pci@vger.kernel.org,
+	Mika Westerberg <mika.westerberg@linux.intel.com>,
+	Keith Busch <keith.busch@intel.com>
+Subject: Re: [PATCH 4/9] PCI: pciehp: Unify controller and slot structs
+Message-ID: <20180906073826.43xonlbyoahji7hr@wunner.de>
+References: <cover.1534686484.git.lukas@wunner.de>
+ <2d4b1ed51a1c90fb6e1ef6282ab0c28f6c62cab1.1534686485.git.lukas@wunner.de>
+ <c8e76de1-a2c3-b725-2e86-733dd0267d55@kernel.org>
+ <20180820090953.sbvgxc2ednxaq73s@wunner.de>
+ <05c7fadf-82ef-5ee0-601d-850583eefb0f@kernel.org>
+ <20180905223016.GA214747@bhelgaas-glaptop.roam.corp.google.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20180905223016.GA214747@bhelgaas-glaptop.roam.corp.google.com>
 List-ID: <linux-pci.vger.kernel.org>
 
-This patch adds a channel state to a subordinate bus. When a DPC event is
-triggered, the DPC driver will set the channel state to frozen, and the
-pciehp driver will ignore link events if the subordinate bus is being
-managed by DPC error handling.
+On Wed, Sep 05, 2018 at 05:30:16PM -0500, Bjorn Helgaas wrote:
+> > > > On 8/19/2018 10:29 AM, Lukas Wunner wrote:
+> > > > > Simplify the driver by merging struct slot into struct controller.
+> > > > > Merge the slot constructor pcie_init_slot() and the destructor
+> > > > > pcie_cleanup_slot() into the controller counterparts.
+> > > > > Rename the slot struct's "lock" member to "state_lock" and rename
+> > > > > "work" to "button_work" for clarity.
+> 
+> Could the rename be done in a separate patch before the unification?
+> If so, that would be nice.
 
-Depending on the order port interrupts are processed, it is possible the
-pciehp may not observe the status, either starting after DPC handling
-completes, or before DPC interrupt was started. If this happens, the
-link down will be processed as normal.
+Okay, I've already reworked my internal development branch to do the
+unification first, then the rename, but can easily turn the order around,
+no problem at all.
 
-Signed-off-by: Keith Busch <keith.busch@intel.com>
----
- drivers/pci/hotplug/pciehp_hpc.c | 9 +++++++++
- drivers/pci/pcie/dpc.c           | 8 ++++++--
- include/linux/pci.h              | 6 ++++++
- 3 files changed, 21 insertions(+), 2 deletions(-)
+The preceding patches 1 to 3 of this series could be merged independently,
+or would you prefer me to resend them?  The first one is also included in
+Keith's error handling rework series (posted yesterday):
 
-diff --git a/drivers/pci/hotplug/pciehp_hpc.c b/drivers/pci/hotplug/pciehp_hpc.c
-index 5ec2bc871a9c..3487a1c3f280 100644
---- a/drivers/pci/hotplug/pciehp_hpc.c
-+++ b/drivers/pci/hotplug/pciehp_hpc.c
-@@ -627,6 +627,15 @@ static irqreturn_t pciehp_ist(int irq, void *dev_id)
- 
- 	synchronize_hardirq(irq);
- 	events = atomic_xchg(&ctrl->pending_events, 0);
-+
-+	/*
-+	 * Ignore link events on the suborinate bus if error handling is
-+	 * active, as link down may be expected. We'll continue to handle
-+	 * presence detect changes.
-+	 */
-+	if (pdev->subordinate && pci_bus_offline(pdev->subordinate))
-+		events &= ~PCI_EXP_SLTSTA_DLLSC;
-+
- 	if (!events) {
- 		pci_config_pm_runtime_put(pdev);
- 		return IRQ_NONE;
-diff --git a/drivers/pci/pcie/dpc.c b/drivers/pci/pcie/dpc.c
-index b7dfb4988931..70cb1e65a311 100644
---- a/drivers/pci/pcie/dpc.c
-+++ b/drivers/pci/pcie/dpc.c
-@@ -92,7 +92,8 @@ static pci_ers_result_t dpc_reset_link(struct pci_dev *pdev)
- 
- 	pci_write_config_word(pdev, cap + PCI_EXP_DPC_STATUS,
- 			      PCI_EXP_DPC_STATUS_TRIGGER);
--
-+	if (pdev->subordinate)
-+		pdev->subordinate->error_state = pci_channel_io_normal;
- 	return PCI_ERS_RESULT_RECOVERED;
- }
- 
-@@ -204,8 +205,11 @@ static irqreturn_t dpc_irq(int irq, void *context)
- 
- 	pci_write_config_word(pdev, cap + PCI_EXP_DPC_STATUS,
- 			      PCI_EXP_DPC_STATUS_INTERRUPT);
--	if (status & PCI_EXP_DPC_STATUS_TRIGGER)
-+	if (status & PCI_EXP_DPC_STATUS_TRIGGER) {
-+		if (pdev->subordinate)
-+			pdev->subordinate->error_state = pci_channel_io_frozen;
- 		return IRQ_WAKE_THREAD;
-+	}
- 	return IRQ_HANDLED;
- }
- 
-diff --git a/include/linux/pci.h b/include/linux/pci.h
-index 47cdb30df55e..4667cc26939a 100644
---- a/include/linux/pci.h
-+++ b/include/linux/pci.h
-@@ -574,9 +574,15 @@ struct pci_bus {
- 	struct device		dev;
- 	struct bin_attribute	*legacy_io;	/* Legacy I/O for this bus */
- 	struct bin_attribute	*legacy_mem;	/* Legacy mem */
-+	pci_channel_state_t error_state;	/* Current connectivity state */
- 	unsigned int		is_added:1;
- };
- 
-+static inline int pci_bus_offline(struct pci_bus *bus)
-+{
-+	return (bus->error_state != pci_channel_io_normal);
-+}
-+
- #define to_pci_bus(n)	container_of(n, struct pci_bus, dev)
- 
- /*
--- 
-2.14.4
+[1/9] PCI: Simplify disconnected marking
+      https://patchwork.ozlabs.org/patch/959373/
+[2/9] PCI: pciehp: Drop unnecessary includes
+      https://patchwork.ozlabs.org/patch/959376/
+[3/9] [3/9] PCI: pciehp: Drop hotplug_slot_ops wrappers
+      https://patchwork.ozlabs.org/patch/959377/
+
+Important side note:  Keith's series includes a pciehp fix which should
+probably go into 4.19:
+
+[PATCHv2,15/20] PCI/pciehp: Fix powerfault detection order
+https://patchwork.ozlabs.org/patch/966678/
+
+Now, if that patch goes into, say, 4.19-rc3, the pci/hotplug branch would
+have to be rebased on top of 4.19-rc3 to avoid conflicts during the 4.20
+merge window.
+
+The problem with unification of the controller and slot structs in pciehp
+is that it's a fairly intrusive patch.  Any pciehp patches that are pending
+now would need to be rebased on top of it.  Right now the only pending
+pciehp patches are Keith's series posted yesterday and this patch from me
+(which would be 4.20 material):
+
+PCI: pciehp: Tolerate Presence Detect hardwired to zero diffmboxseries
+https://patchwork.ozlabs.org/patch/961860/
+
+I can rebase all the patches as often as necessary, no problem.
+Just let me know when it is most convenient for you to merge what
+and I'll accommodate.  I'm sorry for the somewhat complicated
+merging situation.
+
+Thanks,
+
+Lukas
