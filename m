@@ -1,145 +1,123 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.29.99]:33736 "EHLO mail.kernel.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1730260AbeISDHQ (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Tue, 18 Sep 2018 23:07:16 -0400
-Date: Tue, 18 Sep 2018 16:32:44 -0500
-From: Bjorn Helgaas <helgaas@kernel.org>
-To: Daniel Drake <drake@endlessm.com>
-Cc: bhelgaas@google.com, linux-pci@vger.kernel.org, linux@endlessm.com,
-        nouveau@lists.freedesktop.org, linux-pm@vger.kernel.org,
-        peter@lekensteyn.nl, kherbst@redhat.com,
-        andy.shevchenko@linux.intel.com, rafael.j.wysocki@intel.com,
-        keith.busch@intel.com, jonathan.derrick@intel.com,
-        kugel@rockbox.org, davem@davemloft.net, hkallweit1@gmail.com,
-        netdev@vger.kernel.org, nic_swsd@realtek.com, rchang@marvell.com
-Subject: Re: [PATCH v3] PCI: Reprogram bridge prefetch registers on resume
-Message-ID: <20180918213244.GE13616@bhelgaas-glaptop.roam.corp.google.com>
-References: <20180913033745.11178-1-drake@endlessm.com>
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Subject: Re: [PATCH v2 01/40] iommu: Introduce Shared Virtual Addressing API
+To: Jean-Philippe Brucker <jean-philippe.brucker@arm.com>,
+ Auger Eric <eric.auger@redhat.com>, linux-arm-kernel@lists.infradead.org,
+ linux-pci@vger.kernel.org, linux-acpi@vger.kernel.org,
+ devicetree@vger.kernel.org, iommu@lists.linux-foundation.org,
+ kvm@vger.kernel.org, linux-mm@kvack.org
+References: <20180511190641.23008-1-jean-philippe.brucker@arm.com>
+ <20180511190641.23008-2-jean-philippe.brucker@arm.com>
+ <bf42affd-e9d0-e4fc-6d28-f3c3f7795348@redhat.com>
+ <03d31ba5-1eda-ea86-8c0c-91d14c86fe83@arm.com>
+From: =?UTF-8?Q?Christian_K=c3=b6nig?= <christian.koenig@amd.com>
+Message-ID: <ed39159c-087e-7e56-7d29-d1de9fa1677f@amd.com>
+Date: Thu, 6 Sep 2018 13:12:42 +0200
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20180913033745.11178-1-drake@endlessm.com>
-Sender: linux-pci-owner@vger.kernel.org
+In-Reply-To: <03d31ba5-1eda-ea86-8c0c-91d14c86fe83@arm.com>
+List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
+List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
+List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
+List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
+List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
+Cc: xieyisheng1@huawei.com, ilias.apalodimas@linaro.org, xuzaibo@huawei.com,
+ thunder.leizhen@huawei.com, will.deacon@arm.com, okaya@codeaurora.org,
+ yi.l.liu@intel.com, ashok.raj@intel.com, tn@semihalf.com, joro@8bytes.org,
+ bharatku@xilinx.com, liudongdong3@huawei.com, rfranz@cavium.com,
+ kevin.tian@intel.com, jacob.jun.pan@linux.intel.com,
+ alex.williamson@redhat.com, rgummal@xilinx.com, jonathan.cameron@huawei.com,
+ shunyong.yang@hxt-semitech.com, dwmw2@infradead.org, liubo95@huawei.com,
+ jcrouse@codeaurora.org, robdclark@gmail.com, robin.murphy@arm.com,
+ nwatters@codeaurora.org, baolu.lu@linux.intel.com
+Content-Type: text/plain; charset="us-ascii"; Format="flowed"
+Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
+Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Thu, Sep 13, 2018 at 11:37:45AM +0800, Daniel Drake wrote:
-> On 38+ Intel-based Asus products, the nvidia GPU becomes unusable
-> after S3 suspend/resume. The affected products include multiple
-> generations of nvidia GPUs and Intel SoCs. After resume, nouveau logs
-> many errors such as:
-> 
->     fifo: fault 00 [READ] at 0000005555555000 engine 00 [GR] client 04
->           [HUB/FE] reason 4a [] on channel -1 [007fa91000 unknown]
->     DRM: failed to idle channel 0 [DRM]
-> 
-> Similarly, the nvidia proprietary driver also fails after resume
-> (black screen, 100% CPU usage in Xorg process). We shipped a sample
-> to Nvidia for diagnosis, and their response indicated that it's a
-> problem with the parent PCI bridge (on the Intel SoC), not the GPU.
-> 
-> Runtime suspend/resume works fine, only S3 suspend is affected.
-> 
-> We found a workaround: on resume, rewrite the Intel PCI bridge
-> 'Prefetchable Base Upper 32 Bits' register (PCI_PREF_BASE_UPPER32). In
-> the cases that I checked, this register has value 0 and we just have to
-> rewrite that value.
-> 
-> Linux already saves and restores PCI config space during suspend/resume,
-> but this register was being skipped because upon resume, it already
-> has value 0 (the correct, pre-suspend value).
-> 
-> Intel appear to have previously acknowledged this behaviour and the
-> requirement to rewrite this register.
-> https://bugzilla.kernel.org/show_bug.cgi?id=116851#c23
-> 
-> Based on that, rewrite the prefetch register values even when that
-> appears unnecessary.
-> 
-> We have confirmed this solution on all the affected models we have
-> in-hands (X542UQ, UX533FD, X530UN, V272UN).
-> 
-> Additionally, this solves an issue where r8169 MSI-X interrupts were
-> broken after S3 suspend/resume on Asus X441UAR. This issue was recently
-> worked around in commit 7bb05b85bc2d ("r8169: don't use MSI-X on
-> RTL8106e"). It also fixes the same issue on RTL6186evl/8111evl on an
-> Aimfor-tech laptop that we had not yet patched. I suspect it will also
-> fix the issue that was worked around in commit 7c53a722459c ("r8169:
-> don't use MSI-X on RTL8168g").
-> 
-> Thomas Martitz reports that this change also solves an issue where
-> the AMD Radeon Polaris 10 GPU on the HP Zbook 14u G5 is unresponsive
-> after S3 suspend/resume.
-> 
-> Link: https://bugzilla.kernel.org/show_bug.cgi?id=201069
-> Signed-off-by: Daniel Drake <drake@endlessm.com>
+Am 06.09.2018 um 13:09 schrieb Jean-Philippe Brucker:
+> Hi Eric,
+>
+> Thanks for reviewing
+>
+> On 05/09/2018 12:29, Auger Eric wrote:
+>>> +int iommu_sva_device_init(struct device *dev, unsigned long features,
+>>> +			  unsigned int max_pasid)
+>> what about min_pasid?
+> No one asked for it... The max_pasid parameter is here for drivers that
+> have vendor-specific PASID size limits, such as AMD KFD (see
+> kfd_iommu_device_init and
+> https://patchwork.kernel.org/patch/9989307/#21389571). But in most cases
+> the PASID size will only depend on the PCI PASID capability and the
+> IOMMU limits, both known by the IOMMU driver, so device drivers won't
+> have to set max_pasid.
+>
+> IOMMU drivers need to set min_pasid in the sva_device_init callback
+> because it may be either 1 (e.g. Arm where PASID #0 is reserved) or 0
+> (Intel Vt-d rev2), but at the moment I can't see a reason for device
+> drivers to override min_pasid
 
-Applied with Rafael's and Peter's reviewed-by to pci/enumeration for v4.20.
-Thanks for the the huge investigative effort!
+Sorry to ruin your day, but if I'm not completely mistaken PASID zero is 
+reserved in the AMD KFD as well.
 
-> ---
->  drivers/pci/pci.c | 25 +++++++++++++++++--------
->  1 file changed, 17 insertions(+), 8 deletions(-)
-> 
-> diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
-> index 29ff9619b5fa..5d58220b6997 100644
-> --- a/drivers/pci/pci.c
-> +++ b/drivers/pci/pci.c
-> @@ -1289,12 +1289,12 @@ int pci_save_state(struct pci_dev *dev)
->  EXPORT_SYMBOL(pci_save_state);
->  
->  static void pci_restore_config_dword(struct pci_dev *pdev, int offset,
-> -				     u32 saved_val, int retry)
-> +				     u32 saved_val, int retry, bool force)
->  {
->  	u32 val;
->  
->  	pci_read_config_dword(pdev, offset, &val);
-> -	if (val == saved_val)
-> +	if (!force && val == saved_val)
->  		return;
->  
->  	for (;;) {
-> @@ -1313,25 +1313,34 @@ static void pci_restore_config_dword(struct pci_dev *pdev, int offset,
->  }
->  
->  static void pci_restore_config_space_range(struct pci_dev *pdev,
-> -					   int start, int end, int retry)
-> +					   int start, int end, int retry,
-> +					   bool force)
->  {
->  	int index;
->  
->  	for (index = end; index >= start; index--)
->  		pci_restore_config_dword(pdev, 4 * index,
->  					 pdev->saved_config_space[index],
-> -					 retry);
-> +					 retry, force);
->  }
->  
->  static void pci_restore_config_space(struct pci_dev *pdev)
->  {
->  	if (pdev->hdr_type == PCI_HEADER_TYPE_NORMAL) {
-> -		pci_restore_config_space_range(pdev, 10, 15, 0);
-> +		pci_restore_config_space_range(pdev, 10, 15, 0, false);
->  		/* Restore BARs before the command register. */
-> -		pci_restore_config_space_range(pdev, 4, 9, 10);
-> -		pci_restore_config_space_range(pdev, 0, 3, 0);
-> +		pci_restore_config_space_range(pdev, 4, 9, 10, false);
-> +		pci_restore_config_space_range(pdev, 0, 3, 0, false);
-> +	} else if (pdev->hdr_type == PCI_HEADER_TYPE_BRIDGE) {
-> +		pci_restore_config_space_range(pdev, 12, 15, 0, false);
-> +		/* Force rewriting of prefetch registers to avoid
-> +		 * S3 resume issues on Intel PCI bridges that occur when
-> +		 * these registers are not explicitly written.
-> +		 */
-> +		pci_restore_config_space_range(pdev, 9, 11, 0, true);
-> +		pci_restore_config_space_range(pdev, 0, 8, 0, false);
->  	} else {
-> -		pci_restore_config_space_range(pdev, 0, 15, 0);
-> +		pci_restore_config_space_range(pdev, 0, 15, 0, false);
->  	}
->  }
->  
-> -- 
-> 2.17.1
-> 
+Regards,
+Christian.
+
+>
+>>> +	/*
+>>> +	 * IOMMU driver updates the limits depending on the IOMMU and device
+>>> +	 * capabilities.
+>>> +	 */
+>>> +	ret = domain->ops->sva_device_init(dev, param);
+>>> +	if (ret)
+>>> +		goto err_free_param;
+>> So you are likely to call sva_device_init even if it was already called
+>> (ie. dev->iommu_param->sva_param is already set). Can't you test whether
+>> dev->iommu_param->sva_param is already set first?
+> Right, that's probably better
+>
+>>> +/**
+>>> + * iommu_sva_device_shutdown() - Shutdown Shared Virtual Addressing for a device
+>>> + * @dev: the device
+>>> + *
+>>> + * Disable SVA. Device driver should ensure that the device isn't performing any
+>>> + * DMA while this function is running.
+>>> + */
+>>> +int iommu_sva_device_shutdown(struct device *dev)
+>> Not sure the returned value is required for a shutdown operation.
+> I don't know either. I like them because they help me debug, but are
+> otherwise rather useless if we don't describe precise semantics. The
+> caller cannot do anything with it. Given that the corresponding IOMMU op
+> is already void, I can change this function to void as well
+>
+>>> +struct iommu_sva_param {
+>> What are the feature values?
+> At the moment only IOMMU_SVA_FEAT_IOPF, introduced by patch 09
+>
+>>> +	unsigned long features;
+>>> +	unsigned int min_pasid;
+>>> +	unsigned int max_pasid;
+>>> +};
+>>> +
+>>>   /**
+>>>    * struct iommu_ops - iommu ops and capabilities
+>>>    * @capable: check capability
+>>> @@ -219,6 +225,8 @@ struct page_response_msg {
+>>>    * @domain_free: free iommu domain
+>>>    * @attach_dev: attach device to an iommu domain
+>>>    * @detach_dev: detach device from an iommu domain
+>>> + * @sva_device_init: initialize Shared Virtual Adressing for a device
+>> Addressing
+>>> + * @sva_device_shutdown: shutdown Shared Virtual Adressing for a device
+>> Addressing
+> Nice catch
+>
+> Thanks,
+> Jean
+
+
+_______________________________________________
+linux-arm-kernel mailing list
+linux-arm-kernel@lists.infradead.org
+http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
