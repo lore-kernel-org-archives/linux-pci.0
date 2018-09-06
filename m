@@ -1,56 +1,68 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-oi0-f66.google.com ([209.85.218.66]:41612 "EHLO
-        mail-oi0-f66.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1727271AbeICWZA (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Mon, 3 Sep 2018 18:25:00 -0400
-From: Alexandru Gagniuc <mr.nuke.me@gmail.com>
-To: linux-pci@vger.kernel.org, bhelgaas@google.com
-Cc: keith.busch@intel.com, alex_gagniuc@dellteam.com,
-        austin_bolen@dell.com, shyam_iyer@dell.com,
-        Alexandru Gagniuc <mr.nuke.me@gmail.com>,
-        Ariel Elior <ariel.elior@cavium.com>,
-        everest-linux-l2@cavium.com,
-        "David S. Miller" <davem@davemloft.net>,
-        Michael Chan <michael.chan@broadcom.com>,
-        Ganesh Goudar <ganeshgr@chelsio.com>,
-        Jeff Kirsher <jeffrey.t.kirsher@intel.com>,
-        Tariq Toukan <tariqt@mellanox.com>,
-        Saeed Mahameed <saeedm@mellanox.com>,
-        Leon Romanovsky <leon@kernel.org>,
-        Jakub Kicinski <jakub.kicinski@netronome.com>,
-        Dirk van der Merwe <dirk.vandermerwe@netronome.com>,
-        netdev@vger.kernel.org, linux-kernel@vger.kernel.org,
-        intel-wired-lan@lists.osuosl.org, linux-rdma@vger.kernel.org,
-        oss-drivers@netronome.com
-Subject: [PATCH 8/9] net/mlx5: Do not call pcie_print_link_status()
-Date: Mon,  3 Sep 2018 13:02:35 -0500
-Message-Id: <20180903180242.14504-9-mr.nuke.me@gmail.com>
-In-Reply-To: <20180903180242.14504-1-mr.nuke.me@gmail.com>
-References: <20180903180242.14504-1-mr.nuke.me@gmail.com>
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-acpi-owner@vger.kernel.org>
+From: Mika Westerberg <mika.westerberg@linux.intel.com>
+To: Bjorn Helgaas <bhelgaas@google.com>,
+        "Rafael J. Wysocki" <rjw@rjwysocki.net>
+Cc: Len Brown <lenb@kernel.org>, Lukas Wunner <lukas@wunner.de>,
+        Keith Busch <keith.busch@intel.com>,
+        Ashok Raj <ashok.raj@intel.com>, Mario.Limonciello@dell.com,
+        Anthony Wong <anthony.wong@canonical.com>,
+        "D . J . Bernstein" <djb@cr.yp.to>,
+        Linus Walleij <linus.walleij@linaro.org>,
+        Mika Westerberg <mika.westerberg@linux.intel.com>,
+        linux-pci@vger.kernel.org, linux-acpi@vger.kernel.org
+Subject: [PATCH 07/10] PCI: pciehp: Implement runtime PM callbacks
+Date: Thu,  6 Sep 2018 18:50:17 +0300
+Message-Id: <20180906155020.51700-8-mika.westerberg@linux.intel.com>
+In-Reply-To: <20180906155020.51700-1-mika.westerberg@linux.intel.com>
+References: <20180906155020.51700-1-mika.westerberg@linux.intel.com>
+Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-This is now done by the PCI core to warn of sub-optimal bandwidth.
+Basically we need to do the same thing when runtime suspending than with
+system sleep so re-use those operations here. This makes sure hotplug
+interrupt does not trigger immediately when the link goes down.
 
-Signed-off-by: Alexandru Gagniuc <mr.nuke.me@gmail.com>
+Signed-off-by: Mika Westerberg <mika.westerberg@linux.intel.com>
 ---
- drivers/net/ethernet/mellanox/mlx5/core/main.c | 4 ----
- 1 file changed, 4 deletions(-)
+ drivers/pci/hotplug/pciehp_core.c | 19 +++++++++++++++++++
+ 1 file changed, 19 insertions(+)
 
-diff --git a/drivers/net/ethernet/mellanox/mlx5/core/main.c b/drivers/net/ethernet/mellanox/mlx5/core/main.c
-index cf3e4a659052..888af98694f8 100644
---- a/drivers/net/ethernet/mellanox/mlx5/core/main.c
-+++ b/drivers/net/ethernet/mellanox/mlx5/core/main.c
-@@ -1056,10 +1056,6 @@ static int mlx5_load_one(struct mlx5_core_dev *dev, struct mlx5_priv *priv,
- 	dev_info(&pdev->dev, "firmware version: %d.%d.%d\n", fw_rev_maj(dev),
- 		 fw_rev_min(dev), fw_rev_sub(dev));
+diff --git a/drivers/pci/hotplug/pciehp_core.c b/drivers/pci/hotplug/pciehp_core.c
+index c9cf9c3b5f7f..25b2ea9f9242 100644
+--- a/drivers/pci/hotplug/pciehp_core.c
++++ b/drivers/pci/hotplug/pciehp_core.c
+@@ -349,6 +349,23 @@ static int pciehp_resume(struct pcie_device *dev)
  
--	/* Only PFs hold the relevant PCIe information for this query */
--	if (mlx5_core_is_pf(dev))
--		pcie_print_link_status(dev->pdev);
--
- 	/* on load removing any previous indication of internal error, device is
- 	 * up
- 	 */
+ 	return 0;
+ }
++
++static int pciehp_runtime_resume(struct pcie_device *dev)
++{
++	struct controller *ctrl = get_service_data(dev);
++	struct slot *slot = ctrl->slot;
++
++	/* pci_restore_state() just wrote to the Slot Control register */
++	ctrl->cmd_started = jiffies;
++	ctrl->cmd_busy = true;
++
++	/* clear spurious events from rediscovery of inserted card */
++	if ((slot->state == ON_STATE || slot->state == BLINKINGOFF_STATE) &&
++	     pme_is_native(dev))
++		pcie_clear_hotplug_events(ctrl);
++
++	return pciehp_resume(dev);
++}
+ #endif /* PM */
+ 
+ static struct pcie_port_service_driver hpdriver_portdrv = {
+@@ -363,6 +380,8 @@ static struct pcie_port_service_driver hpdriver_portdrv = {
+ 	.suspend	= pciehp_suspend,
+ 	.resume_noirq	= pciehp_resume_noirq,
+ 	.resume		= pciehp_resume,
++	.runtime_suspend = pciehp_suspend,
++	.runtime_resume	= pciehp_runtime_resume,
+ #endif	/* PM */
+ };
+ 
 -- 
-2.17.1
+2.18.0
