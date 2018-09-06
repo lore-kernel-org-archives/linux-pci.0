@@ -1,99 +1,60 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mx0b-0014ca01.pphosted.com ([208.86.201.193]:44584 "EHLO
-        mx0a-0014ca01.pphosted.com" rhost-flags-OK-OK-OK-FAIL)
-        by vger.kernel.org with ESMTP id S1726894AbeIQWcS (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Mon, 17 Sep 2018 18:32:18 -0400
-From: Alan Douglas <adouglas@cadence.com>
-To: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
-CC: Kishon Vijay Abraham I <kishon@ti.com>,
-        "bhelgaas@google.com" <bhelgaas@google.com>,
-        "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-        "gustavo.pimentel@synopsys.com" <gustavo.pimentel@synopsys.com>,
-        "cyrille.pitchen@bootlin.com" <cyrille.pitchen@bootlin.com>,
-        Scott Telford <stelford@cadence.com>
-Subject: RE: [PATCH v2 5/5] PCI: cadence: Add MSI-X capability to EP driver
-Date: Mon, 17 Sep 2018 15:55:49 +0000
-Message-ID: <MWHPR07MB3502D6EF11136AF4D0EA03A9D81E0@MWHPR07MB3502.namprd07.prod.outlook.com>
-References: <1534340948-24093-1-git-send-email-adouglas@cadence.com>
- <daa340ff-1860-dec4-a814-a0ba63227748@ti.com>
- <MWHPR07MB3502C39FD5E4455C2E89CAC0D8030@MWHPR07MB3502.namprd07.prod.outlook.com>
- <20180917152602.GI7239@e107981-ln.cambridge.arm.com>
-In-Reply-To: <20180917152602.GI7239@e107981-ln.cambridge.arm.com>
-Content-Type: text/plain; charset="utf-8"
+Received: from mga04.intel.com ([192.55.52.120]:27926 "EHLO mga04.intel.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1729183AbeIFTTU (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Thu, 6 Sep 2018 15:19:20 -0400
+Date: Thu, 6 Sep 2018 08:44:56 -0600
+From: Keith Busch <keith.busch@intel.com>
+To: Lukas Wunner <lukas@wunner.de>
+Cc: Linux PCI <linux-pci@vger.kernel.org>,
+        Bjorn Helgaas <bhelgaas@google.com>,
+        Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+        Sinan Kaya <okaya@kernel.org>,
+        Thomas Tai <thomas.tai@oracle.com>, poza@codeaurora.org,
+        Christoph Hellwig <hch@lst.de>
+Subject: Re: [PATCHv2 03/20] PCI: Add required waits on link active
+Message-ID: <20180906144455.GA30714@localhost.localdomain>
+References: <20180905203546.21921-1-keith.busch@intel.com>
+ <20180905203546.21921-4-keith.busch@intel.com>
+ <20180906114215.jkz547ykg756pq4o@wunner.de>
 MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20180906114215.jkz547ykg756pq4o@wunner.de>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-SGkgTG9yZW56bywNCg0KT24gMTcgU2VwdGVtYmVyIDIwMTggMTY6MjYgTG9yZW56byBQaWVyYWxp
-c2kgd3JvdGU6DQo+IE9uIFR1ZSwgU2VwIDA0LCAyMDE4IGF0IDA5OjMyOjU2QU0gKzAwMDAsIEFs
-YW4gRG91Z2xhcyB3cm90ZToNCj4gPiBIaSwNCj4gPiBPbiAwNCBTZXB0ZW1iZXIgMjAxOCAwNTo0
-NiwgS2lzaG9uIFZpamF5IEFicmFoYW0gSSB3cm90ZToNCj4gPiA+IE9uIFdlZG5lc2RheSAxNSBB
-dWd1c3QgMjAxOCAwNzoxOSBQTSwgQWxhbiBEb3VnbGFzIHdyb3RlOg0KPiA+ID4gPiBBZGQgc2V0
-X21zaXggYW5kIGdldF9tc2l4IGZ1bmN0aW9ucyB0byBkcml2ZXIsIGFuZCBoYW5kbGUNCj4gPiA+
-ID4gUENJX0VQQ19JUlFfTVNJWCByZXF1ZXN0IGluIHJhaXNlX2lycS4gIEJBUjUgaXMgdXNlZCBm
-b3INCj4gPiA+ID4gdGhlIE1TSS1YIHZlY3RvcnMuDQo+ID4gPiA+DQo+ID4gPiA+IFNpZ25lZC1v
-ZmYtYnk6IEFsYW4gRG91Z2xhcyA8YWRvdWdsYXNAY2FkZW5jZS5jb20+DQo+ID4gPiA+IC0tLQ0K
-PiA+ID4gPiAgIGRyaXZlcnMvcGNpL2NvbnRyb2xsZXIvcGNpZS1jYWRlbmNlLWVwLmMgfCAxMDcg
-KysrKysrKysrKysrKysrKysrKysrKysrKysrKysrLQ0KPiA+ID4gPiAgIGRyaXZlcnMvcGNpL2Nv
-bnRyb2xsZXIvcGNpZS1jYWRlbmNlLmggICAgfCAgIDEgKw0KPiA+ID4gPiAgIDIgZmlsZXMgY2hh
-bmdlZCwgMTA3IGluc2VydGlvbnMoKyksIDEgZGVsZXRpb24oLSkNCj4gPiA+ID4NCj4gPiA+ID4g
-ZGlmZiAtLWdpdCBhL2RyaXZlcnMvcGNpL2NvbnRyb2xsZXIvcGNpZS1jYWRlbmNlLWVwLmMgYi9k
-cml2ZXJzL3BjaS9jb250cm9sbGVyL3BjaWUtY2FkZW5jZS1lcC5jDQo+ID4gPiA+IGluZGV4IDEy
-NDhkNzUuLjI1OWI5YTYgMTAwNjQ0DQo+ID4gPiA+IC0tLSBhL2RyaXZlcnMvcGNpL2NvbnRyb2xs
-ZXIvcGNpZS1jYWRlbmNlLWVwLmMNCj4gPiA+ID4gKysrIGIvZHJpdmVycy9wY2kvY29udHJvbGxl
-ci9wY2llLWNhZGVuY2UtZXAuYw0KPiA+ID4gPiBAQCAtMTYsNiArMTYsNyBAQA0KPiA+ID4gPiAg
-ICNkZWZpbmUgQ0ROU19QQ0lFX0VQX01JTl9BUEVSVFVSRQkJMTI4CS8qIDEyOCBieXRlcyAqLw0K
-PiA+ID4gPiAgICNkZWZpbmUgQ0ROU19QQ0lFX0VQX0lSUV9QQ0lfQUREUl9OT05FCQkweDENCj4g
-PiA+ID4gICAjZGVmaW5lIENETlNfUENJRV9FUF9JUlFfUENJX0FERFJfTEVHQUNZCTB4Mw0KPiA+
-ID4gPiArI2RlZmluZSBDRE5TX1BDSUVfRVBfTVNJWF9CQVIJCQkweDUNCj4gPiA+ID4NCj4gPiA+
-ID4gICAvKioNCj4gPiA+ID4gICAgKiBzdHJ1Y3QgY2Ruc19wY2llX2VwIC0gcHJpdmF0ZSBkYXRh
-IGZvciB0aGlzIFBDSWUgZW5kcG9pbnQgY29udHJvbGxlciBkcml2ZXINCj4gPiA+ID4gQEAgLTI1
-NSw2ICsyNTYsNDMgQEAgc3RhdGljIGludCBjZG5zX3BjaWVfZXBfZ2V0X21zaShzdHJ1Y3QgcGNp
-X2VwYyAqZXBjLCB1OCBmbikNCj4gPiA+ID4gICAJcmV0dXJuIG1tZTsNCj4gPiA+ID4gICB9DQo+
-ID4gPiA+DQo+ID4gPiA+ICtzdGF0aWMgaW50IGNkbnNfcGNpZV9lcF9nZXRfbXNpeChzdHJ1Y3Qg
-cGNpX2VwYyAqZXBjLCB1OCBmdW5jX25vKQ0KPiA+ID4gPiArew0KPiA+ID4gPiArCXN0cnVjdCBj
-ZG5zX3BjaWVfZXAgKmVwID0gZXBjX2dldF9kcnZkYXRhKGVwYyk7DQo+ID4gPiA+ICsJc3RydWN0
-IGNkbnNfcGNpZSAqcGNpZSA9ICZlcC0+cGNpZTsNCj4gPiA+ID4gKwl1MzIgY2FwID0gQ0ROU19Q
-Q0lFX0VQX0ZVTkNfTVNJWF9DQVBfT0ZGU0VUOw0KPiA+ID4gPiArCXUzMiB2YWwsIHJlZzsNCj4g
-PiA+ID4gKw0KPiA+ID4gPiArCXJlZyA9IGNhcCArIFBDSV9NU0lYX0ZMQUdTOw0KPiA+ID4gPiAr
-CXZhbCA9IGNkbnNfcGNpZV9lcF9mbl9yZWFkdyhwY2llLCBmdW5jX25vLCByZWcpOw0KPiA+ID4g
-PiArCWlmICghKHZhbCAmIFBDSV9NU0lYX0ZMQUdTX0VOQUJMRSkpDQo+ID4gPiA+ICsJCXJldHVy
-biAtRUlOVkFMOw0KPiA+ID4gPiArDQo+ID4gPiA+ICsJdmFsICY9IFBDSV9NU0lYX0ZMQUdTX1FT
-SVpFOw0KPiA+ID4gPiArDQo+ID4gPiA+ICsJcmV0dXJuIHZhbDsNCj4gPiA+ID4gK30NCj4gPiA+
-ID4gKw0KPiA+ID4gPiArc3RhdGljIGludCBjZG5zX3BjaWVfZXBfc2V0X21zaXgoc3RydWN0IHBj
-aV9lcGMgKmVwYywgdTggZm4sIHUxNiBpbnRlcnJ1cHRzKQ0KPiA+ID4gPiArew0KPiA+ID4gPiAr
-CXN0cnVjdCBjZG5zX3BjaWVfZXAgKmVwID0gZXBjX2dldF9kcnZkYXRhKGVwYyk7DQo+ID4gPiA+
-ICsJc3RydWN0IGNkbnNfcGNpZSAqcGNpZSA9ICZlcC0+cGNpZTsNCj4gPiA+ID4gKwl1MzIgY2Fw
-ID0gQ0ROU19QQ0lFX0VQX0ZVTkNfTVNJWF9DQVBfT0ZGU0VUOw0KPiA+ID4gPiArCXUzMiB2YWws
-IHJlZzsNCj4gPiA+ID4gKw0KPiA+ID4gPiArCXJlZyA9IGNhcCArIFBDSV9NU0lYX0ZMQUdTOw0K
-PiA+ID4gPiArCXZhbCA9IGNkbnNfcGNpZV9lcF9mbl9yZWFkdyhwY2llLCBmbiwgcmVnKTsNCj4g
-PiA+ID4gKwl2YWwgJj0gflBDSV9NU0lYX0ZMQUdTX1FTSVpFOw0KPiA+ID4gPiArCXZhbCB8PSBp
-bnRlcnJ1cHRzOw0KPiA+ID4gPiArCWNkbnNfcGNpZV9lcF9mbl93cml0ZXcocGNpZSwgZm4sIHJl
-ZywgdmFsKTsNCj4gPiA+ID4gKwkvKiBTZXQgTVNJWCBCQVIgYW5kIG9mZnNldCAqLw0KPiA+ID4g
-PiArCWNkbnNfcGNpZV9lcF9mbl93cml0ZWwocGNpZSwgZm4sIDB4YjQsIENETlNfUENJRV9FUF9N
-U0lYX0JBUik7DQo+ID4gPg0KPiA+ID4gUGxlYXNlIGFkZCBhIG1hY3JvIGZvciBNU0lYIHRhYmxl
-IG9mZnNldC4NCj4gPiA+IEkgdGhpbmsgaXQgcmVsaWVzIG9uIGVuZHBvaW50IGZ1bmN0aW9uIGRy
-aXZlciB0byBpbnZva2Ugc2V0X2JhciBmb3INCj4gPiA+IEJBUjU/IEl0J3MgcG9zc2libGUgYSBm
-dW5jdGlvbiBkcml2ZXIgY2FuIGludm9rZSBzZXRfbXNpeCB3aXRob3V0IHNldF9iYXIuDQo+ID4g
-Pg0KPiA+IEknbGwgYWRkIGEgbWFjcm8gZm9yIE1TSVggdGFibGUgb2Zmc2V0Lg0KPiA+IFllcywg
-aXQgcmVsaWVzIG9uIHRoZSBCQVIgYmVpbmcgc2V0IHVwIGFscmVhZHkuICBJJ2xsIGFkZCBjb2Rl
-IHRvIGNoZWNrIEJBUg0KPiA+IGV4aXN0cyBhbmQgaXMgbGFyZ2UgZW5vdWdoLCBhbmQgY3JlYXRl
-IGl0IGlmIG5vdC4NCj4gPg0KPiA+ID4gPiArCS8qIFNldCBQQkEgQkFSIGFuZCBvZmZzZXQuICBC
-QVIgbXVzdCBtYXRjaCBNU0lYIEJBUiAqLw0KPiA+ID4gPiArCWNkbnNfcGNpZV9lcF9mbl93cml0
-ZWwocGNpZSwgZm4sIDB4YjgsIDB4MTAwMDAgfCBDRE5TX1BDSUVfRVBfTVNJWF9CQVIpOw0KPiA+
-ID4NCj4gPiA+IEhlcmUgdG9vIGFkZCBhIG1hY3JvIGZvciBQQkEuDQo+ID4gPiBIb3cgZGlkIHlv
-dSBnZXQgdGhlIDB4MTAwMDA/DQo+ID4gSSdsbCBhZGQgYSBtYWNybyBmb3IgUEJBLg0KPiA+IFRo
-ZSAweDEwMDAwICgzMioyMDQ4KSBpcyB0byBhbGxvdyBzcGFjZSBpbiB0aGUgQkFSIGZvciAyMDQ4
-IE1TSS1YIHZlY3RvcnMgYmVuZWF0aA0KPiA+IHRoZSBQQkEuIEFjdHVhbGx5LCBJIGNvdWxkIGNo
-YW5nZSB0aGlzIHRvIDMyKmludGVycnVwdHMgc28gdGhhdCB0aGUgQkFSIHNpemUgY2FuIGJlDQo+
-ID4gbWluaW1pemVkIGRlcGVuZGluZyBvbiB0aGUgbnVtYmVyIG9mIE1TSS1YIHByb2dyYW1tZWQu
-DQo+ID4NCj4gPiBUaGFua3MgZm9yIHlvdXIgY29tbWVudHMsDQo+ID4gQWxhbg0KPiANCj4gSGkg
-QWxhbiwNCj4gDQo+IHNob3VsZCBJIGV4cGVjdCBhIHYzIGZvciB0aGlzIHNlcmllcyB0byBhZGRy
-ZXNzIEtpc2hvbidzIGNvbW1lbnRzID8NCj4gUGxlYXNlIGxldCBtZSBrbm93LCB0aGUgcHJldmlv
-dXMgZml4ZXMgbG9vayBPSyB0byBtZS4NCj4gDQpJJ20gcHJlcGFyaW5nIGEgdjMgd2hpY2ggd2ls
-bCBjaGVjayB0aGF0IHRoZSBCQVIgdG8gYmUgdXNlZCBmb3IgTVNJLVgNCmhhcyBiZWVuIHNldCB1
-cCwgYW5kIHdpbGwgcmV0dXJuIC1FSU5WQUwgaWYgbm90LiAgSSBjb3VsZG4ndCBmaW5kIGENCnN1
-aXRhYmxlIHdheSB0byBhbGxvY2F0ZSB0aGUgQkFSIGluc2lkZSB0aGUgc2V0X21zaXggZnVuY3Rp
-b24uDQpJdCB3aWxsIGFsc28gYWRkcmVzcyBLaXNob24ncyBvdGhlciBjb21tZW50cy4NCg0KSSBl
-eHBlY3QgdG8gc2VuZCBpdCB0b21vcnJvdywganVzdCBiYWNrIGZyb20gaG9saWRheSB0b2RheS4N
-Cg0KUmVnYXJkcywNCkFsYW4NCiANCg==
+On Thu, Sep 06, 2018 at 01:42:15PM +0200, Lukas Wunner wrote:
+> On Wed, Sep 05, 2018 at 02:35:29PM -0600, Keith Busch wrote:
+> > --- a/drivers/pci/pci.c
+> > +++ b/drivers/pci/pci.c
+> > @@ -4485,21 +4485,33 @@ bool pcie_wait_for_link(struct pci_dev *pdev, bool active)
+> >  	bool ret;
+> >  	u16 lnk_status;
+> >  
+> > +	/*
+> > +	 * PCIe 4.0r1 6.6.1, a component must enter LTSSM Detect within 20ms,
+> > +	 * after which we should expect an link active if the reset was
+> > +	 * successful. If so, software must wait a minimum 100ms before sending
+> > +	 * configuration requests to devices downstream this port.
+> > +	 *
+> > +	 * If the link fails to activate, either the device was physically
+> > +	 * removed or the link is permanently failed.
+> > +	 */
+> > +	if (active)
+> > +		msleep(20);
+> 
+> This function is also called by pciehp when bringing up the slot,
+> yet I assume the above delay only applies to a Fundamental Reset,
+> not hotplug?
+
+Should be any conventional reset, which includes the "cold reset" applying
+power to a hot add component.
+ 
+> > +	if (active && ret)
+> > +		msleep(100);
+> 
+> This delay is already observed by pciehp_check_link_status()
+> after calling pcie_wait_link_active().
+
+Yeah, that's gone in patch 13. This series became larger than I
+originally expected, and there might be a more logical shuffling.
