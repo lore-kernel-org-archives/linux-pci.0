@@ -1,35 +1,58 @@
-Return-Path: <SRS0=/8CB=LS=alien8.de=bp@kernel.org>
-Return-Path: <SRS0=/8CB=LS=alien8.de=bp@kernel.org>
-Date: Tue, 4 Sep 2018 18:03:10 +0200
-From: Borislav Petkov <bp@alien8.de>
-To: Pu Wen <puwen@hygon.cn>
-Cc: tglx@linutronix.de, mingo@redhat.com, hpa@zytor.com, x86@kernel.org,
-	thomas.lendacky@amd.com, pbonzini@redhat.com, helgaas@kernel.org,
-	linux-kernel@vger.kernel.org, linux-arch@vger.kernel.org,
-	linux-pci@vger.kernel.org
-Subject: Re: [PATCH v5 07/16] x86/pci: add Hygon PCI vendor and northbridge
- support
-Message-ID: <20180904160310.GJ32615@zn.tnic>
-References: <cover.1535459012.git.puwen@hygon.cn>
- <ecd62b5b5e8f406598f2354892929caa87cf7deb.1535459013.git.puwen@hygon.cn>
- <20180904145255.GI32615@zn.tnic>
- <5c6b1493-ee20-ed3f-a558-331c0cb65556@hygon.cn>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mga04.intel.com ([192.55.52.120]:51503 "EHLO mga04.intel.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1728354AbeIFWp0 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Thu, 6 Sep 2018 18:45:26 -0400
+Date: Thu, 6 Sep 2018 21:08:31 +0300
+From: Mika Westerberg <mika.westerberg@linux.intel.com>
+To: Lukas Wunner <lukas@wunner.de>
+Cc: Bjorn Helgaas <bhelgaas@google.com>,
+        "Rafael J. Wysocki" <rafael.j.wysocki@intel.com>,
+        Ashok Raj <ashok.raj@intel.com>,
+        Keith Busch <keith.busch@intel.com>,
+        Yinghai Lu <yinghai@kernel.org>, Sinan Kaya <okaya@kernel.org>,
+        linux-pci@vger.kernel.org
+Subject: Re: [PATCH 03/32] PCI: pciehp: Fix deadlock on unplug
+Message-ID: <20180906180831.GC14465@lahna.fi.intel.com>
+References: <cover.1529173804.git.lukas@wunner.de>
+ <4c882e25194ba8282b78fe963fec8faae7cf23eb.1529173804.git.lukas@wunner.de>
+ <20180906160100.GQ2283@lahna.fi.intel.com>
+ <20180906162634.ylyp3ydwujf5wuxx@wunner.de>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-In-Reply-To: <5c6b1493-ee20-ed3f-a558-331c0cb65556@hygon.cn>
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20180906162634.ylyp3ydwujf5wuxx@wunner.de>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tue, Sep 04, 2018 at 11:45:02PM +0800, Pu Wen wrote:
-> I add these definitions to indicate that there are Hygon PCI device IDs.
-> You are right, I can just use the AMD f17h ones here.
+On Thu, Sep 06, 2018 at 06:26:34PM +0200, Lukas Wunner wrote:
+> I asked for it to be dropped because while it fixes the problem,
+> it's not a good solution, it would just add technical debt to the
+> code base and come back to haunt us later.
+> 
+> Xiongfeng Wang found a similar race a few months ago that wouldn't
+> be fixed by my patch:
+> https://patchwork.ozlabs.org/patch/877835/
+> 
+> The PCI core nicely separates unbinding of drivers from destruction
+> of the pci_dev (pci_stop_bus_device() + pci_remove_bus_device()).
+> Problem is we currently protect both steps with pci_lock_rescan_remove().
+> We should only be protecting the second step.  The first step (unbinding)
+> needs to run lockless.
+> 
+> As a start, I've moved the call to pcie_aspm_exit_link_state() out
+> of pci_stop_dev().  This also fixes an ASPM bug.  Bjorn merged it
+> the day before yesterday:
+> https://git.kernel.org/pub/scm/linux/kernel/git/helgaas/pci.git/commit/?h=pci/aspm&id=1f3934b1d5e5
+> 
+> The call to device_release_driver() already uses locking internally
+> and can be run lockless.  The calls to pci_proc_detach_device() and
+> pci_remove_sysfs_dev_files() need to be amended with locking, I've
+> got some preliminary patches for this on my development branch that
+> I'll have to rework.  This is very hairy, historically grown code
+> that requires great care to avoid breakage.  It'll take a little
+> more time I'm afraid.
 
-Right, if this is a small piece where they're all together in a single
-compilation unit - like in this case - I don't see an issue with using
-the AMD ones. Later, when you start splitting functionality, you can do
-proper defines.
+OK, thanks for the explanation. I see you have a good plan going forward
+with this.
 
--- 
-Regards/Gruss,
-    Boris.
-
-Good mailing practices for 400: avoid top-posting and trim the reply.
+I can reproduce the issue easily so can assist in testing if needed.
