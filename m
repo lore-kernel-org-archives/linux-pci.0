@@ -1,97 +1,75 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.29.99]:52510 "EHLO mail.kernel.org"
+Received: from mail.kernel.org ([198.145.29.99]:52604 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1727010AbeIMCe5 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Wed, 12 Sep 2018 22:34:57 -0400
-Date: Wed, 12 Sep 2018 16:28:32 -0500
+        id S1729170AbeIFXbh (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Thu, 6 Sep 2018 19:31:37 -0400
+Date: Thu, 6 Sep 2018 13:54:47 -0500
 From: Bjorn Helgaas <helgaas@kernel.org>
-To: Alexandru Gagniuc <mr.nuke.me@gmail.com>
-Cc: linux-pci@vger.kernel.org, bhelgaas@google.com,
-        keith.busch@intel.com, alex_gagniuc@dellteam.com,
-        austin_bolen@dell.com, shyam_iyer@dell.com, Narendra_K@Dell.com,
-        Stuart_Hayes@Dell.com, lukas@wunner.de,
-        linux-kernel@vger.kernel.org
-Subject: Re: [PATCH] PCI/MSI: Don't touch MSI bits when the PCI device is
- disconnected
-Message-ID: <20180912212831.GM118330@bhelgaas-glaptop.roam.corp.google.com>
-References: <20180730212146.31909-1-mr.nuke.me@gmail.com>
+To: Lukas Wunner <lukas@wunner.de>
+Cc: Sinan Kaya <okaya@kernel.org>, linux-pci@vger.kernel.org,
+        Mika Westerberg <mika.westerberg@linux.intel.com>,
+        Keith Busch <keith.busch@intel.com>
+Subject: Re: [PATCH 4/9] PCI: pciehp: Unify controller and slot structs
+Message-ID: <20180906185447.GD214747@bhelgaas-glaptop.roam.corp.google.com>
+References: <cover.1534686484.git.lukas@wunner.de>
+ <2d4b1ed51a1c90fb6e1ef6282ab0c28f6c62cab1.1534686485.git.lukas@wunner.de>
+ <c8e76de1-a2c3-b725-2e86-733dd0267d55@kernel.org>
+ <20180820090953.sbvgxc2ednxaq73s@wunner.de>
+ <05c7fadf-82ef-5ee0-601d-850583eefb0f@kernel.org>
+ <20180905223016.GA214747@bhelgaas-glaptop.roam.corp.google.com>
+ <20180906073826.43xonlbyoahji7hr@wunner.de>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20180730212146.31909-1-mr.nuke.me@gmail.com>
+In-Reply-To: <20180906073826.43xonlbyoahji7hr@wunner.de>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Mon, Jul 30, 2018 at 04:21:44PM -0500, Alexandru Gagniuc wrote:
-> When a PCI device is gone, we don't want to send IO to it if we can
-> avoid it. We expose functionality via the irq_chip structure. As
-> users of that structure may not know about the underlying PCI device,
-> it's our responsibility to guard against removed devices.
-
-I'm pretty ambivalent about pci_dev_is_disconnected() in general, but
-I think I'll take this, given a couple minor changelog clarifications:
-
-> irq_write_msi_msg is already guarded. pci_msi_(un)mask_irq are not.
-> Guard them for completeness.
-
-By the irq_write_msi_msg() guard, I guess you mean this path:
-
-  pci_msi_domain_write_msg       # irq_chip.irq_write_msi_msg
-    __pci_write_msi_msg
-      if (dev->current_state != PCI_D0 || pci_dev_is_disconnected(dev))
-        /* don't touch */
-
-pci_msi_(un)mask_irq() may be irq_chip.irq_mask, .irq_unmask, etc
-pointers.  So these are parallel because they're all irq_chip function
-pointers, but the changelog isn't (yet) parallel because it uses the
-irq_chip pointer name for .irq_write_msi_msg but not for mask/unmask.
-
-> For example, surprise removal of a PCIe device triggers teardown. This
-> touches the irq_chips ops some point to disable the interrupts. I/O
-> generated here can crash the system on machines with buggy firmware.
-> Not triggering the IO in the first place eliminates the problem.
-
-It doesn't eliminate the problem completely because .irq_mask() and
-.irq_unmask() may be called for reasons other than surprise removal,
-and if a surprise removal happens after the pci_dev_is_disconnected()
-check but before the readl(), we will still generate I/O to a device
-that's gone.  I'd be OK if you said it "reduces" the problem.
-
-One reason I'm ambivalent about pci_dev_is_disconnected() is that in
-cases like this, it turns a reproducible problem into a very
-hard-to-reproduce problem, which reduces the likelihood that the buggy
-firmware will be fixed.
-
-Do you have information about known platforms with this buggy firmware
-and the signature of the crash?  If you do, it's always nice to be
-able to connect a patch with the user-visible problem it fixes.
-
-> Signed-off-by: Alexandru Gagniuc <mr.nuke.me@gmail.com>
-> ---
+On Thu, Sep 06, 2018 at 09:38:26AM +0200, Lukas Wunner wrote:
+> On Wed, Sep 05, 2018 at 05:30:16PM -0500, Bjorn Helgaas wrote:
+> > > > > On 8/19/2018 10:29 AM, Lukas Wunner wrote:
+> > > > > > Simplify the driver by merging struct slot into struct controller.
+> > > > > > Merge the slot constructor pcie_init_slot() and the destructor
+> > > > > > pcie_cleanup_slot() into the controller counterparts.
+> > > > > > Rename the slot struct's "lock" member to "state_lock" and rename
+> > > > > > "work" to "button_work" for clarity.
+> > 
+> > Could the rename be done in a separate patch before the unification?
+> > If so, that would be nice.
 > 
-> There's another patch by Lukas Wunner that is needed (not yet published)
-> in order to fully block IO on SURPRISE!!! removal. The existing code only
-> sets the PCI_DEV_DISCONNECTED bit in an unreasonably narrow set of
-> circumstances. Lukas' patch fixes that.
+> Okay, I've already reworked my internal development branch to do the
+> unification first, then the rename, but can easily turn the order around,
+> no problem at all.
+
+I don't care which order they're in.  I just wasn't sure if the
+unification was possible without the renaming.
+
+> The preceding patches 1 to 3 of this series could be merged independently,
+> or would you prefer me to resend them?  The first one is also included in
+> Keith's error handling rework series (posted yesterday):
 > 
-> However, this change is otherwise fully independent, and enjoy!
+> [1/9] PCI: Simplify disconnected marking
+>       https://patchwork.ozlabs.org/patch/959373/
+> [2/9] PCI: pciehp: Drop unnecessary includes
+>       https://patchwork.ozlabs.org/patch/959376/
+> [3/9] [3/9] PCI: pciehp: Drop hotplug_slot_ops wrappers
+>       https://patchwork.ozlabs.org/patch/959377/
+
+I applied patches 1-3 to pci/hotplug.  If you could rebase what's left
+on top of that, it would be great.
+
+> Important side note:  Keith's series includes a pciehp fix which should
+> probably go into 4.19:
 > 
->  drivers/pci/msi.c | 3 +++
->  1 file changed, 3 insertions(+)
-> 
-> diff --git a/drivers/pci/msi.c b/drivers/pci/msi.c
-> index 4d88afdfc843..5f47b5cb0401 100644
-> --- a/drivers/pci/msi.c
-> +++ b/drivers/pci/msi.c
-> @@ -227,6 +227,9 @@ static void msi_set_mask_bit(struct irq_data *data, u32 flag)
->  {
->  	struct msi_desc *desc = irq_data_get_msi_desc(data);
->  
-> +	if (pci_dev_is_disconnected(msi_desc_to_pci_dev(desc)))
-> +		return;
-> +
->  	if (desc->msi_attrib.is_msix) {
->  		msix_mask_irq(desc, flag);
->  		readl(desc->mask_base);		/* Flush write to device */
-> -- 
-> 2.17.1
-> 
+> [PATCHv2,15/20] PCI/pciehp: Fix powerfault detection order
+> https://patchwork.ozlabs.org/patch/966678/
+
+Thanks for the heads-up; I probably wouldn't have picked that out.
+
+> Now, if that patch goes into, say, 4.19-rc3, the pci/hotplug branch would
+> have to be rebased on top of 4.19-rc3 to avoid conflicts during the 4.20
+> merge window.
+
+I'll try to remember to do this.  I have no problem rebasing my branches to
+-rc3.
+
+Bjorn
