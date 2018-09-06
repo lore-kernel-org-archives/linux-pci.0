@@ -1,46 +1,99 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mga17.intel.com ([192.55.52.151]:42824 "EHLO mga17.intel.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1728568AbeIOHFw (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Sat, 15 Sep 2018 03:05:52 -0400
-Message-ID: <5bce81814b002c66f3d96e28ba3b3d73098418da.camel@linux.intel.com>
-Subject: Re: [PATCH v2 2/6] PCI: Expose reset_type to users of
- pci_reset_function()
-From: Srinivas Pandruvada <srinivas.pandruvada@linux.intel.com>
-To: Sinan Kaya <okaya@kernel.org>, linux-pci@vger.kernel.org
-Cc: alex.williamson@redhat.com, Jiri Kosina <jikos@kernel.org>,
-        Benjamin Tissoires <benjamin.tissoires@redhat.com>,
-        Frank Haverkamp <haver@linux.vnet.ibm.com>,
-        "Guilherme G. Piccoli" <gpiccoli@linux.vnet.ibm.com>,
-        Arnd Bergmann <arnd@arndb.de>,
-        Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-        Harish Patil <harish.patil@cavium.com>,
-        Manish Chopra <manish.chopra@cavium.com>,
-        Dept-GELinuxNICDev@cavium.com,
-        "David S. Miller" <davem@davemloft.net>,
-        Solarflare linux maintainers <linux-net-drivers@solarflare.com>,
-        Edward Cree <ecree@solarflare.com>,
-        Bert Kenward <bkenward@solarflare.com>,
-        Bjorn Helgaas <bhelgaas@google.com>,
-        Anton Vasilyev <vasilyev@ispras.ru>
-Date: Fri, 14 Sep 2018 18:48:47 -0700
-In-Reply-To: <32331f85-0971-647e-17aa-8549cd1751d6@kernel.org>
-References: <20180914211808.2564-1-okaya@kernel.org>
-         <20180914211808.2564-3-okaya@kernel.org>
-         <be6c6d59e1a199eea4b9a1b406d78a8ce0dc67e5.camel@linux.intel.com>
-         <32331f85-0971-647e-17aa-8549cd1751d6@kernel.org>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-acpi-owner@vger.kernel.org>
+Subject: Re: [PATCH v2 13/40] vfio: Add support for Shared Virtual Addressing
+To: Jean-Philippe Brucker <jean-philippe.brucker@arm.com>,
+        "linux-arm-kernel@lists.infradead.org"
+        <linux-arm-kernel@lists.infradead.org>,
+        "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+        "linux-acpi@vger.kernel.org" <linux-acpi@vger.kernel.org>,
+        "devicetree@vger.kernel.org" <devicetree@vger.kernel.org>,
+        "iommu@lists.linux-foundation.org" <iommu@lists.linux-foundation.org>,
+        "kvm@vger.kernel.org" <kvm@vger.kernel.org>,
+        "linux-mm@kvack.org" <linux-mm@kvack.org>
+References: <20180511190641.23008-1-jean-philippe.brucker@arm.com>
+ <20180511190641.23008-14-jean-philippe.brucker@arm.com>
+ <5B83B11E.7010807@huawei.com> <1d5b6529-4e5a-723c-3f1b-dd5a9adb490c@arm.com>
+ <5B89F818.7060300@huawei.com> <3a961aff-e830-64bb-b6a9-14e08de1abf5@arm.com>
+ <5B8DEA15.7020404@huawei.com> <bc27f902-4d12-21b7-b9e9-18bcae170503@arm.com>
+ <5B8F4A59.20004@huawei.com> <b51107b8-a525-13ce-f4c3-d423b8502c27@arm.com>
+CC: "joro@8bytes.org" <joro@8bytes.org>,
+        Will Deacon <Will.Deacon@arm.com>,
+        Robin Murphy <Robin.Murphy@arm.com>,
+        "alex.williamson@redhat.com" <alex.williamson@redhat.com>,
+        "tn@semihalf.com" <tn@semihalf.com>,
+        "thunder.leizhen@huawei.com" <thunder.leizhen@huawei.com>,
+        "ilias.apalodimas@linaro.org" <ilias.apalodimas@linaro.org>,
+        "jonathan.cameron@huawei.com" <jonathan.cameron@huawei.com>,
+        "liudongdong3@huawei.com" <liudongdong3@huawei.com>,
+        "shunyong.yang@hxt-semitech.com" <shunyong.yang@hxt-semitech.com>,
+        "nwatters@codeaurora.org" <nwatters@codeaurora.org>,
+        "okaya@codeaurora.org" <okaya@codeaurora.org>,
+        "jcrouse@codeaurora.org" <jcrouse@codeaurora.org>,
+        "rfranz@cavium.com" <rfranz@cavium.com>,
+        "dwmw2@infradead.org" <dwmw2@infradead.org>,
+        "jacob.jun.pan@linux.intel.com" <jacob.jun.pan@linux.intel.com>,
+        "yi.l.liu@intel.com" <yi.l.liu@intel.com>,
+        "ashok.raj@intel.com" <ashok.raj@intel.com>,
+        "kevin.tian@intel.com" <kevin.tian@intel.com>,
+        "baolu.lu@linux.intel.com" <baolu.lu@linux.intel.com>,
+        "robdclark@gmail.com" <robdclark@gmail.com>,
+        "christian.koenig@amd.com" <christian.koenig@amd.com>,
+        "bharatku@xilinx.com" <bharatku@xilinx.com>,
+        "rgummal@xilinx.com" <rgummal@xilinx.com>,
+        =?UTF-8?B?57Gz57Gz?= <kenneth-lee-2012@foxmail.com>,
+        wangzhou1 <wangzhou1@hisilicon.com>,
+        "liguozhu@hisilicon.com" <liguozhu@hisilicon.com>,
+        fanghao11 <fanghao11@huawei.com>
+From: Xu Zaibo <xuzaibo@huawei.com>
+Message-ID: <5B90D6B0.300@huawei.com>
+Date: Thu, 6 Sep 2018 15:26:40 +0800
+MIME-Version: 1.0
+In-Reply-To: <b51107b8-a525-13ce-f4c3-d423b8502c27@arm.com>
+Content-Type: text/plain; charset="utf-8"; format=flowed
+Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Fri, 2018-09-14 at 19:20 -0400, Sinan Kaya wrote:
-> On 9/14/2018 5:52 PM, Srinivas Pandruvada wrote:
-> > > Signed-off-by: Sinan Kaya<okaya@kernel.org>
-> > > ---
-> > >   drivers/hid/intel-ish-hid/ipc/ipc.c             | 2 +-
-> > 
-> > For intel-ish-hid, change looks fine.
-> 
-> Is this an ACK or reviewed-by?
-Acked-by: Srinivas Pandruvada <srinivas.pandruvada@linux.intel.com>
+
+On 2018/9/5 19:02, Jean-Philippe Brucker wrote:
+> On 05/09/2018 04:15, Xu Zaibo wrote:
+>>>>        1. While the series are finished well, VFIO-PCI device can be held
+>>>> by only one process
+>>>>            through binding IOCTL command without PASID (without PASID
+>>>> being exposed user space).
+>>> It could, but isn't supported at the moment. In addition to adding
+>>> support in the I/O page fault code, we'd also need to update the VFIO
+>>> API. Currently a VFIO_TYPE1 domain always supports the MAP/UNMAP ioctl.
+>>> The case you describe isn't compatible with MAP/UNMAP, since the process
+>>> manages the shared address space with mmap or malloc. We'd probably need
+>>> to introduce a new VFIO IOMMU type, in which case the bind could be
+>>> performed implicitly when the process does VFIO_SET_IOMMU. Then the
+>>> process wouldn't need to send an additional BIND IOCTL.
+>> ok. got it.  This is the legacy mode, so all the VFIO APIs are kept
+>> unchanged?
+> Yes, existing VFIO semantics are preserved
+>
+>>>>        2. While using VFIO-PCI device to support multiple processes with
+>>>> SVA series, a primary
+>>>>            process with multiple secondary processes must be deployed just
+>>>> like DPDK(https://www.dpdk.org/).
+>>>>            And, the PASID still has to be exposed to user land.
+>>> Right. A third case, also implemented by this patch (and complete), is
+>>> the primary process simply doing a BIND for itself, and using the
+>>> returned PASID to share its own address space with the device.
+>>>
+>> ok. But I am worried that the sulotion of one primary processes with
+>> several secondary ones
+>>
+>> is a little bit limited. Maybe, users don't want to depend on the
+>> primary process. :)
+> I don't see a better way for vfio-pci, though. But more importantly, I
+> don't know of any users :) While the feature is great for testing new
+> hardware, and I've been using it for all kinds of stress testing, I
+> haven't received feedback from possible users in production settings
+> (DPDK etc) and can't speculate about what they'd prefer.
+>
+At present, It seems no other way existing while being compatible with 
+current logic.
+Thank you.
+
+Thanks,
+Zaibo
