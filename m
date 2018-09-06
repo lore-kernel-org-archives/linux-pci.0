@@ -1,113 +1,96 @@
-Return-Path: <linux-nvme-bounces+bjorn=helgaas.com@lists.infradead.org>
-Return-Path: <linux-nvme-bounces+bjorn=helgaas.com@lists.infradead.org>
-Date: Tue, 4 Sep 2018 09:16:38 -0600
-From: Jason Gunthorpe <jgg@mellanox.com>
-To: Logan Gunthorpe <logang@deltatee.com>
-Subject: Re: [PATCH v5 10/13] nvme-pci: Add support for P2P memory in requests
-Message-ID: <20180904151638.GL335@mellanox.com>
-References: <20180830185352.3369-1-logang@deltatee.com>
- <20180830185352.3369-11-logang@deltatee.com>
-MIME-Version: 1.0
-In-Reply-To: <20180830185352.3369-11-logang@deltatee.com>
-List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-nvme>,
- <mailto:linux-nvme-request@lists.infradead.org?subject=unsubscribe>
-List-Archive: <http://lists.infradead.org/pipermail/linux-nvme/>
-List-Post: <mailto:linux-nvme@lists.infradead.org>
-List-Help: <mailto:linux-nvme-request@lists.infradead.org?subject=help>
-List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-nvme>,
- <mailto:linux-nvme-request@lists.infradead.org?subject=subscribe>
-Cc: Keith Busch <keith.busch@intel.com>,
- Alex Williamson <alex.williamson@redhat.com>, Sagi Grimberg <sagi@grimberg.me>,
- linux-nvdimm@lists.01.org, linux-rdma@vger.kernel.org,
- linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
- linux-nvme@lists.infradead.org, Stephen Bates <sbates@raithlin.com>,
- linux-block@vger.kernel.org,
- =?utf-8?B?SsOpcsO0bWU=?= Glisse <jglisse@redhat.com>,
- Christian =?utf-8?B?S8O2bmln?= <christian.koenig@amd.com>,
- Benjamin Herrenschmidt <benh@kernel.crashing.org>,
- Bjorn Helgaas <bhelgaas@google.com>, Max Gurtovoy <maxg@mellanox.com>,
- Dan Williams <dan.j.williams@intel.com>, Christoph Hellwig <hch@lst.de>
-Content-Type: text/plain; charset="us-ascii"
-Sender: "Linux-nvme" <linux-nvme-bounces@lists.infradead.org>
-Errors-To: linux-nvme-bounces+bjorn=helgaas.com@lists.infradead.org
+Return-Path: <linux-acpi-owner@vger.kernel.org>
+From: Mika Westerberg <mika.westerberg@linux.intel.com>
+To: Bjorn Helgaas <bhelgaas@google.com>,
+        "Rafael J. Wysocki" <rjw@rjwysocki.net>
+Cc: Len Brown <lenb@kernel.org>, Lukas Wunner <lukas@wunner.de>,
+        Keith Busch <keith.busch@intel.com>,
+        Ashok Raj <ashok.raj@intel.com>, Mario.Limonciello@dell.com,
+        Anthony Wong <anthony.wong@canonical.com>,
+        "D . J . Bernstein" <djb@cr.yp.to>,
+        Linus Walleij <linus.walleij@linaro.org>,
+        Mika Westerberg <mika.westerberg@linux.intel.com>,
+        linux-pci@vger.kernel.org, linux-acpi@vger.kernel.org
+Subject: [PATCH 05/10] PCI: portdrv: Resume upon exit from system suspend if left runtime suspended
+Date: Thu,  6 Sep 2018 18:50:15 +0300
+Message-Id: <20180906155020.51700-6-mika.westerberg@linux.intel.com>
+In-Reply-To: <20180906155020.51700-1-mika.westerberg@linux.intel.com>
+References: <20180906155020.51700-1-mika.westerberg@linux.intel.com>
+Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Thu, Aug 30, 2018 at 12:53:49PM -0600, Logan Gunthorpe wrote:
-> For P2P requests, we must use the pci_p2pmem_map_sg() function
-> instead of the dma_map_sg functions.
-> 
-> With that, we can then indicate PCI_P2P support in the request queue.
-> For this, we create an NVME_F_PCI_P2P flag which tells the core to
-> set QUEUE_FLAG_PCI_P2P in the request queue.
-> 
-> Signed-off-by: Logan Gunthorpe <logang@deltatee.com>
-> Reviewed-by: Sagi Grimberg <sagi@grimberg.me>
-> Reviewed-by: Christoph Hellwig <hch@lst.de>
->  drivers/nvme/host/core.c |  4 ++++
->  drivers/nvme/host/nvme.h |  1 +
->  drivers/nvme/host/pci.c  | 17 +++++++++++++----
->  3 files changed, 18 insertions(+), 4 deletions(-)
-> 
-> diff --git a/drivers/nvme/host/core.c b/drivers/nvme/host/core.c
-> index dd8ec1dd9219..6033ce2fd3e9 100644
-> +++ b/drivers/nvme/host/core.c
-> @@ -3051,7 +3051,11 @@ static void nvme_alloc_ns(struct nvme_ctrl *ctrl, unsigned nsid)
->  	ns->queue = blk_mq_init_queue(ctrl->tagset);
->  	if (IS_ERR(ns->queue))
->  		goto out_free_ns;
-> +
->  	blk_queue_flag_set(QUEUE_FLAG_NONROT, ns->queue);
-> +	if (ctrl->ops->flags & NVME_F_PCI_P2PDMA)
-> +		blk_queue_flag_set(QUEUE_FLAG_PCI_P2PDMA, ns->queue);
-> +
->  	ns->queue->queuedata = ns;
->  	ns->ctrl = ctrl;
->  
-> diff --git a/drivers/nvme/host/nvme.h b/drivers/nvme/host/nvme.h
-> index bb4a2003c097..4030743c90aa 100644
-> +++ b/drivers/nvme/host/nvme.h
-> @@ -343,6 +343,7 @@ struct nvme_ctrl_ops {
->  	unsigned int flags;
->  #define NVME_F_FABRICS			(1 << 0)
->  #define NVME_F_METADATA_SUPPORTED	(1 << 1)
-> +#define NVME_F_PCI_P2PDMA		(1 << 2)
->  	int (*reg_read32)(struct nvme_ctrl *ctrl, u32 off, u32 *val);
->  	int (*reg_write32)(struct nvme_ctrl *ctrl, u32 off, u32 val);
->  	int (*reg_read64)(struct nvme_ctrl *ctrl, u32 off, u64 *val);
-> diff --git a/drivers/nvme/host/pci.c b/drivers/nvme/host/pci.c
-> index 2902585c6ddf..bb2120d30e39 100644
-> +++ b/drivers/nvme/host/pci.c
-> @@ -737,8 +737,13 @@ static blk_status_t nvme_map_data(struct nvme_dev *dev, struct request *req,
->  		goto out;
->  
->  	ret = BLK_STS_RESOURCE;
-> -	nr_mapped = dma_map_sg_attrs(dev->dev, iod->sg, iod->nents, dma_dir,
-> -			DMA_ATTR_NO_WARN);
-> +
-> +	if (is_pci_p2pdma_page(sg_page(iod->sg)))
-> +		nr_mapped = pci_p2pdma_map_sg(dev->dev, iod->sg, iod->nents,
-> +					  dma_dir);
-> +	else
-> +		nr_mapped = dma_map_sg_attrs(dev->dev, iod->sg, iod->nents,
-> +					     dma_dir,  DMA_ATTR_NO_WARN);
->  	if (!nr_mapped)
->  		goto out;
->  
-> @@ -780,7 +785,10 @@ static void nvme_unmap_data(struct nvme_dev *dev, struct request *req)
->  			DMA_TO_DEVICE : DMA_FROM_DEVICE;
->  
->  	if (iod->nents) {
-> -		dma_unmap_sg(dev->dev, iod->sg, iod->nents, dma_dir);
-> +		/* P2PDMA requests do not need to be unmapped */
-> +		if (!is_pci_p2pdma_page(sg_page(iod->sg)))
-> +			dma_unmap_sg(dev->dev, iod->sg, iod->nents, dma_dir);
+Currently we try to keep PCIe ports runtime suspended over system
+suspend if possible. This mostly happens when entering suspend-to-idle
+because there is no need to re-configure wake settings.
 
-This seems like a poor direction, if we add IOMMU hairpin support we
-will need unmapping.
+This causes problems if the parent port goes into D3cold and it gets
+resumed upon exit from system suspend. This may happen for example if
+the port is part of PCIe switch and the same switch is connected to a
+PCIe endpoint that needs to be resumed. The way exit from D3cold works
+according PCIe 4.0 spec 5.3.1.4.2 is that power is restored and cold
+reset is signaled. After this the device is in D0unitialized state
+keeping PME context if it supports wake from D3cold.
 
-Jason
+The problem occurs when a PCIe hotplug port is left suspended and the
+parent port goes into D3cold and back to D0, the port keeps its PME
+context but since everything else is reset back to defaults
+(D0unitialized) it is not set to detect hotplug events anymore.
 
-_______________________________________________
-Linux-nvme mailing list
-Linux-nvme@lists.infradead.org
-http://lists.infradead.org/mailman/listinfo/linux-nvme
+For this reason change the PCIe portdrv power management logic so that
+it is fine to keep the port runtime suspended over system suspend but it
+needs to be resumed upon exit to make sure it gets properly re-initialized.
+The custom ->prepare() hook with DPM_FLAG_SMART_PREPARE is needed
+because otherwise pci_pm_prepare() instructs the PM core to go directly
+to pci_pm_complete() on resume and this skips resuming the port.
+
+Signed-off-by: Mika Westerberg <mika.westerberg@linux.intel.com>
+---
+ drivers/pci/pcie/portdrv_pci.c | 20 ++++++++++++++++++--
+ 1 file changed, 18 insertions(+), 2 deletions(-)
+
+diff --git a/drivers/pci/pcie/portdrv_pci.c b/drivers/pci/pcie/portdrv_pci.c
+index eef22dc29140..74761f660a30 100644
+--- a/drivers/pci/pcie/portdrv_pci.c
++++ b/drivers/pci/pcie/portdrv_pci.c
+@@ -43,6 +43,21 @@ __setup("pcie_ports=", pcie_port_setup);
+ /* global data */
+ 
+ #ifdef CONFIG_PM
++int pcie_port_prepare(struct device *dev)
++{
++	/*
++	 * Return 0 here to indicate PCI core that:
++	 *   - Direct complete path should be avoided
++	 *   - It is OK to leave the port runtime suspended over system
++	 *     suspend
++	 *
++	 * However, the port needs to be resumed afterwards because it may
++	 * have been in D3cold in which case we need to re-initialize the
++	 * hardware as it is in D0uninitialized in that case.
++	 */
++	return 0;
++}
++
+ static int pcie_port_runtime_suspend(struct device *dev)
+ {
+ 	return to_pci_dev(dev)->bridge_d3 ? 0 : -EBUSY;
+@@ -64,6 +79,7 @@ static int pcie_port_runtime_idle(struct device *dev)
+ }
+ 
+ static const struct dev_pm_ops pcie_portdrv_pm_ops = {
++	.prepare	= pcie_port_prepare,
+ 	.suspend	= pcie_port_device_suspend,
+ 	.resume_noirq	= pcie_port_device_resume_noirq,
+ 	.resume		= pcie_port_device_resume,
+@@ -109,8 +125,8 @@ static int pcie_portdrv_probe(struct pci_dev *dev,
+ 
+ 	pci_save_state(dev);
+ 
+-	dev_pm_set_driver_flags(&dev->dev, DPM_FLAG_SMART_SUSPEND |
+-					   DPM_FLAG_LEAVE_SUSPENDED);
++	dev_pm_set_driver_flags(&dev->dev, DPM_FLAG_SMART_PREPARE |
++					   DPM_FLAG_SMART_SUSPEND);
+ 
+ 	if (pci_bridge_d3_possible(dev)) {
+ 		/*
+-- 
+2.18.0
