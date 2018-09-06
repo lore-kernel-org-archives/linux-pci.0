@@ -1,80 +1,111 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.29.99]:33884 "EHLO mail.kernel.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1726147AbeIHDJz (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Fri, 7 Sep 2018 23:09:55 -0400
-Date: Fri, 7 Sep 2018 17:26:47 -0500
-From: Bjorn Helgaas <helgaas@kernel.org>
-To: Peter Wu <peter@lekensteyn.nl>
-Cc: Daniel Drake <drake@endlessm.com>, bhelgaas@google.com,
-        linux-pci@vger.kernel.org, linux@endlessm.com,
-        nouveau@lists.freedesktop.org, linux-pm@vger.kernel.org,
-        kherbst@redhat.com, andriy.shevchenko@linux.intel.com,
-        rafael.j.wysocki@intel.com, keith.busch@intel.com,
-        mika.westerberg@linux.intel.com, jonathan.derrick@intel.com,
-        kugel@rockbox.org, davem@davemloft.net, hkallweit1@gmail.com,
-        netdev@vger.kernel.org, nic_swsd@realtek.com,
-        linux-kernel@vger.kernel.org, Dave Jones <davej@codemonkey.org.uk>,
-        Luming Yu <luming.yu@intel.com>
-Subject: Re: [PATCH] PCI: Reprogram bridge prefetch registers on resume
-Message-ID: <20180907222647.GD250890@bhelgaas-glaptop.roam.corp.google.com>
-References: <20180907053614.6540-1-drake@endlessm.com>
- <20180907150515.GA28739@al>
+Return-Path: <SRS0=3eBm=LU=xilinx.com=bharatku@kernel.org>
+Return-Path: <SRS0=3eBm=LU=xilinx.com=bharatku@kernel.org>
+From: Bharat Kumar Gogada <bharatku@xilinx.com>
+To: Bjorn Helgaas <helgaas@kernel.org>
+CC: "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	"bhelgaas@google.com" <bhelgaas@google.com>, Ravikiran Gummaluri
+	<rgummal@xilinx.com>
+Subject: RE: [PATCH 3/4] PCI/portdrv: Check platform supported service IRQ's
+Date: Thu, 6 Sep 2018 15:34:44 +0000
+Message-ID: 
+ <BN6PR02MB27724845B839B1DC26B5530BA5010@BN6PR02MB2772.namprd02.prod.outlook.com>
+References: <1533915580-31805-1-git-send-email-bharat.kumar.gogada@xilinx.com>
+ <1533915580-31805-4-git-send-email-bharat.kumar.gogada@xilinx.com>
+ <20180904141227.GD107892@bhelgaas-glaptop.roam.corp.google.com>
+In-Reply-To: <20180904141227.GD107892@bhelgaas-glaptop.roam.corp.google.com>
+Content-Type: text/plain; charset="us-ascii"
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20180907150515.GA28739@al>
-Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-[+cc LKML, Dave, Luming]
+> Subject: Re: [PATCH 3/4] PCI/portdrv: Check platform supported service IR=
+Q's
+>=20
+> On Fri, Aug 10, 2018 at 09:09:39PM +0530, Bharat Kumar Gogada wrote:
+> > Platforms may have dedicated IRQ lines for PCIe services like AER/PME
+> > etc., check for such IRQ lines.
+> > Check mask and fill legacy irq line for services other than
+>=20
+> Capitalize "IRQ" consistently in English text like this.
+>=20
+> Insert blank lines between paragraphs.
+>=20
+> Add a reference to the relevant spec sections.  PCIe r4.0, sec 6.2.4.1.2,=
+ 6.2.6,
+> 7.5.3.12 seem pertinent.
+>=20
+Agreed, will do in next patch.
+> > platform supported service IRQ number.
+> >
+> > Signed-off-by: Bharat Kumar Gogada <bharat.kumar.gogada@xilinx.com>
+> > ---
+> >  drivers/pci/pcie/portdrv_core.c |   19 +++++++++++++++++--
+> >  1 files changed, 17 insertions(+), 2 deletions(-)
+> >
+> > diff --git a/drivers/pci/pcie/portdrv_core.c
+> > b/drivers/pci/pcie/portdrv_core.c index e0261ad..a7d024c 100644
+> > --- a/drivers/pci/pcie/portdrv_core.c
+> > +++ b/drivers/pci/pcie/portdrv_core.c
+> > @@ -166,6 +166,19 @@ static int pcie_init_service_irqs(struct pci_dev
+> *dev, int *irqs, int mask)
+> >  		irqs[i] =3D -1;
+> >
+> >  	/*
+> > +	 * Some platforms have dedicated interrupt line from root complex
+> to
+> > +	 * interrupt controller for PCIe services like AER/PME etc., check
+> > +	 * if platform registered with any such IRQ.
+> > +	 */
+> > +	if (pci_pcie_type(dev) =3D=3D PCI_EXP_TYPE_ROOT_PORT) {
+> > +		int plat_mask;
+> > +
+> > +		plat_mask =3D pci_check_platform_service_irqs(dev, irqs,
+> mask);
+> > +		if (plat_mask > 0)
+>=20
+> Masks should be unsigned and tested for zero or "mask & bit".  The rest o=
+f
+> this file uses "int", which is sloppy because it does the wrong thing if =
+we
+> happen to use the high-order bit in the mask.
+>=20
+> > +			mask =3D mask & plat_mask;
+> > +	}
+>=20
+> I think these platform IRQs are neither MSI-X/MSI nor PCI INTx wires.
+> But as written, I think this patch executes pcie_port_enable_irq_vec(), w=
+hich
+> only does MSI-X/MSI stuff.  So this must rely on that failing?
+>=20
+> And then we fall through to run pci_alloc_irq_vectors(), which is for PCI=
+ INTx
+> interrupts, which doesn't seem appropriate either.
+>=20
+> It seems like this platform IRQ case should be completely separated from =
+the
+> other MSI/INTx cases, i.e., set irqs[PCIE_PORT_SERVICE_AER_SHIFT] directl=
+y
+> (I think you already do this inside pci_check_platform_service_irqs()) an=
+d
+> immediately return.
+> Then I think you wouldn't need the other hunk below.
+Agreed if we check platform service irqs here we need to deal with differen=
+t combination
+of service IRQ's like AER MSI, pme platform .. and change code accordingly =
+to fill irqs[i].
+yes it is better to call platform IRQ separately to avoid code changes in d=
+ifferent scenarios and=20
+chunk below.
 
-On Fri, Sep 07, 2018 at 05:05:15PM +0200, Peter Wu wrote:
-> On Fri, Sep 07, 2018 at 01:36:14PM +0800, Daniel Drake wrote:
-> <..>
-> > Thomas Martitz reports that this workaround also solves an issue where
-> > the AMD Radeon Polaris 10 GPU on the HP Zbook 14u G5 is unresponsive
-> > after S3 suspend/resume.
-> 
-> Where was this claimed? It is not stated in the linked bug:
-> (https://bugs.freedesktop.org/show_bug.cgi?id=105760
-> 
-> > On resume, reprogram the PCI bridge prefetch registers, including the
-> > magic register mentioned above.
-> > 
-> > This matches Win10 behaviour, which also rewrites these registers
-> > during S3 resume (checked with qemu tracing).
-> 
-> Windows 10 unconditionally rewrites these registers (BAR, I/O Base +
-> Limit, Memory Base + Limit, etc. from top to bottom), see annotations:
-> https://www.spinics.net/lists/linux-pci/msg75856.html
-> 
-> Linux has a generic "restore" operation that works backwards from the
-> end of the PCI config space to the beginning, see
-> pci_restore_config_space. Do you have a dmesg where you see the
-> "restoring config space at offset" messages?
-> 
-> Would it be reasonable to unconditionally write these registers in
-> pci_restore_config_dword, like Windows does?
+Can we do the following code flow:=20
+int pcie_port_device_register(struct pci_dev *dev)
+{
+ ...=20
+status =3D pcie_init_service_irqs(dev, irqs, capabilities);
+        if (status) {
+...
+}
+pci_check_platform_service_irqs(dev, irqs, capabilities);
 
-That sounds reasonable to me.
-
-We did write them unconditionally, prior to 04d9c1a1100b ("[PATCH]
-PCI: Improve PCI config space writeback") [1].  That commit apparently
-fixed suspend on some laptop.
-
-But at that time, we restored the config space in order of dword 0, 1,
-2, ... 15, which means we restored the command register before the
-BARs and windows, and it's conceivable that the problem was the
-ordering, not the rewriting of the same value.
-
-Only a week later, we reversed the order with 8b8c8d280ab2 ("[PATCH]
-PCI: reverse pci config space restore order") [2], which seems like a
-good idea and even includes a spec reference.  I found similar
-language in the Intel ICH 10 datasheet, sec 14.1.3 [3].
-
-So it seems reasonable to me to try writing them unconditionally in
-reverse order (the same order we use today).
-
-[1] http://git.kernel.org/cgit/linux/kernel/git/torvalds/linux.git/commit/?id=04d9c1a1100b
-[2] http://git.kernel.org/cgit/linux/kernel/git/torvalds/linux.git/commit/?id=8b8c8d280ab2
-[3] Intel ICH 10 IBL 373635
+Thanks,
+Bharat
