@@ -1,38 +1,96 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from bombadil.infradead.org ([198.137.202.133]:33676 "EHLO
-        bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1725973AbeIAMo7 (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Sat, 1 Sep 2018 08:44:59 -0400
-Date: Sat, 1 Sep 2018 01:33:46 -0700
-From: Christoph Hellwig <hch@infradead.org>
-To: Keith Busch <keith.busch@intel.com>
-Cc: Linux PCI <linux-pci@vger.kernel.org>,
-        Bjorn Helgaas <bhelgaas@google.com>,
-        Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-        Sinan Kaya <okaya@kernel.org>,
-        Thomas Tai <thomas.tai@oracle.com>, poza@codeaurora.org,
-        Lukas Wunner <lukas@wunner.de>
-Subject: Re: [PATCH 08/16] PCI/ERR: Simplify broadcast callouts
-Message-ID: <20180901083346.GB32164@infradead.org>
-References: <20180831212639.10196-1-keith.busch@intel.com>
- <20180831212639.10196-9-keith.busch@intel.com>
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Subject: Re: [PATCH v2 03/40] iommu/sva: Manage process address spaces
+To: Jacob Pan <jacob.jun.pan@linux.intel.com>,
+ Auger Eric <eric.auger@redhat.com>
+References: <20180511190641.23008-1-jean-philippe.brucker@arm.com>
+ <20180511190641.23008-4-jean-philippe.brucker@arm.com>
+ <d785ec89-6743-d0f1-1a7f-85599a033e5b@redhat.com>
+ <20180905111835.7f3ae40e@jacob-builder>
+From: Jean-Philippe Brucker <jean-philippe.brucker@arm.com>
+Message-ID: <574a1792-7ac5-e4db-6eae-16ef700cba02@arm.com>
+Date: Thu, 6 Sep 2018 18:40:49 +0100
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20180831212639.10196-9-keith.busch@intel.com>
-Sender: linux-pci-owner@vger.kernel.org
+In-Reply-To: <20180905111835.7f3ae40e@jacob-builder>
+List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
+List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
+List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
+List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
+List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
+Cc: "xieyisheng1@huawei.com" <xieyisheng1@huawei.com>,
+ "ilias.apalodimas@linaro.org" <ilias.apalodimas@linaro.org>,
+ "kvm@vger.kernel.org" <kvm@vger.kernel.org>,
+ "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+ "xuzaibo@huawei.com" <xuzaibo@huawei.com>,
+ "jonathan.cameron@huawei.com" <jonathan.cameron@huawei.com>,
+ Will Deacon <Will.Deacon@arm.com>,
+ "okaya@codeaurora.org" <okaya@codeaurora.org>,
+ "linux-mm@kvack.org" <linux-mm@kvack.org>,
+ "yi.l.liu@intel.com" <yi.l.liu@intel.com>,
+ "ashok.raj@intel.com" <ashok.raj@intel.com>,
+ "tn@semihalf.com" <tn@semihalf.com>, "joro@8bytes.org" <joro@8bytes.org>,
+ "robdclark@gmail.com" <robdclark@gmail.com>,
+ "bharatku@xilinx.com" <bharatku@xilinx.com>,
+ "linux-acpi@vger.kernel.org" <linux-acpi@vger.kernel.org>,
+ "liudongdong3@huawei.com" <liudongdong3@huawei.com>,
+ "rfranz@cavium.com" <rfranz@cavium.com>,
+ "devicetree@vger.kernel.org" <devicetree@vger.kernel.org>,
+ "kevin.tian@intel.com" <kevin.tian@intel.com>,
+ "jcrouse@codeaurora.org" <jcrouse@codeaurora.org>,
+ "rgummal@xilinx.com" <rgummal@xilinx.com>,
+ "thunder.leizhen@huawei.com" <thunder.leizhen@huawei.com>,
+ "linux-arm-kernel@lists.infradead.org" <linux-arm-kernel@lists.infradead.org>,
+ "shunyong.yang@hxt-semitech.com" <shunyong.yang@hxt-semitech.com>,
+ "dwmw2@infradead.org" <dwmw2@infradead.org>,
+ "liubo95@huawei.com" <liubo95@huawei.com>,
+ "alex.williamson@redhat.com" <alex.williamson@redhat.com>,
+ "iommu@lists.linux-foundation.org" <iommu@lists.linux-foundation.org>,
+ Robin Murphy <Robin.Murphy@arm.com>,
+ "christian.koenig@amd.com" <christian.koenig@amd.com>,
+ "nwatters@codeaurora.org" <nwatters@codeaurora.org>,
+ "baolu.lu@linux.intel.com" <baolu.lu@linux.intel.com>
+Content-Type: text/plain; charset="us-ascii"
+Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
+Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
 List-ID: <linux-pci.vger.kernel.org>
 
-> +static int report_forzen_detected(struct pci_dev *dev, void *data)
+On 05/09/2018 19:18, Jacob Pan wrote:
+> On Wed, 5 Sep 2018 14:14:12 +0200
+> Auger Eric <eric.auger@redhat.com> wrote:
+> 
+>>> + *
+>>> + * On Arm and AMD IOMMUs, entry 0 of the PASID table can be used
+>>> to hold
+>>> + * non-PASID translations. In this case PASID 0 is reserved and
+>>> entry 0 points
+>>> + * to the io_pgtable base. On Intel IOMMU, the io_pgtable base
+>>> would be held in
+>>> + * the device table and PASID 0 would be available to the
+>>> allocator.
+>>> + */  
+>> very nice explanation
+> With the new Vt-d 3.0 spec., 2nd level IO page table base is no longer
+> held in the device context table. Instead it is held in the PASID table
+> entry pointed by the RID_PASID field in the device context entry. If
+> RID_PASID = 0, then it is the same as ARM and AMD IOMMUs.
+> You can refer to ch3.4.3 of the VT-d spec.
 
-s/forzen/frozen/ ?
+I could simplify that paragraph by removing the specific implementations:
 
->  static pci_ers_result_t broadcast_error_message(struct pci_dev *dev,
-> +				pci_ers_result_t result, char *error_mesg,
-> +				int (*cb)(struct pci_dev *, void *))
->  {
->  	pci_printk(KERN_DEBUG, dev, "broadcast %s message\n", error_mesg);
-> +	pci_walk_bus(dev->subordinate, cb, &result);
-> +	return result;
->  }
+"In some IOMMUs, entry 0 of the PASID table can be used to hold
+non-PASID translations. In this case PASID 0 is reserved and entry 0
+points to the io_pgtable base. In other IOMMUs the io_pgtable base is
+held in the device table and PASID 0 is available to the allocator."
 
-Is there any point in keeping this helper?
+I guess in Linux there isn't any reason to set RID_PASID to a non-zero
+value? Otherwise the iommu-sva allocator will need minor changes.
+
+Thanks,
+Jean
+
+_______________________________________________
+linux-arm-kernel mailing list
+linux-arm-kernel@lists.infradead.org
+http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
