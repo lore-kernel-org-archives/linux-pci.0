@@ -1,120 +1,133 @@
-Return-Path: <linux-acpi-owner@vger.kernel.org>
-From: Mika Westerberg <mika.westerberg@linux.intel.com>
-To: Bjorn Helgaas <bhelgaas@google.com>,
-        "Rafael J. Wysocki" <rjw@rjwysocki.net>
-Cc: Len Brown <lenb@kernel.org>, Lukas Wunner <lukas@wunner.de>,
-        Keith Busch <keith.busch@intel.com>,
-        Ashok Raj <ashok.raj@intel.com>, Mario.Limonciello@dell.com,
-        Anthony Wong <anthony.wong@canonical.com>,
-        "D . J . Bernstein" <djb@cr.yp.to>,
-        Linus Walleij <linus.walleij@linaro.org>,
-        Mika Westerberg <mika.westerberg@linux.intel.com>,
-        linux-pci@vger.kernel.org, linux-acpi@vger.kernel.org
-Subject: [PATCH 06/10] PCI: portdrv: Add runtime PM hooks for port service drivers
-Date: Thu,  6 Sep 2018 18:50:16 +0300
-Message-Id: <20180906155020.51700-7-mika.westerberg@linux.intel.com>
-In-Reply-To: <20180906155020.51700-1-mika.westerberg@linux.intel.com>
-References: <20180906155020.51700-1-mika.westerberg@linux.intel.com>
-Sender: linux-acpi-owner@vger.kernel.org
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+From: Kunihiko Hayashi <hayashi.kunihiko@socionext.com>
+To: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
+ Bjorn Helgaas <bhelgaas@google.com>, Rob Herring <robh+dt@kernel.org>,
+ Mark Rutland <mark.rutland@arm.com>,
+ Masahiro Yamada <yamada.masahiro@socionext.com>
+Subject: [PATCH v2 1/2] dt-bindings: PCI: add UniPhier PCIe host controller
+ description
+Date: Thu,  6 Sep 2018 18:40:31 +0900
+Message-Id: <1536226832-5089-2-git-send-email-hayashi.kunihiko@socionext.com>
+In-Reply-To: <1536226832-5089-1-git-send-email-hayashi.kunihiko@socionext.com>
+References: <1536226832-5089-1-git-send-email-hayashi.kunihiko@socionext.com>
+List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
+List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
+List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
+List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
+List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
+Cc: devicetree@vger.kernel.org,
+ Kunihiko Hayashi <hayashi.kunihiko@socionext.com>,
+ Masami Hiramatsu <masami.hiramatsu@linaro.org>, linux-pci@vger.kernel.org,
+ linux-kernel@vger.kernel.org, Jassi Brar <jaswinder.singh@linaro.org>,
+ linux-arm-kernel@lists.infradead.org
+MIME-Version: 1.0
+Content-Type: text/plain; charset="us-ascii"
+Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
+Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
 List-ID: <linux-pci.vger.kernel.org>
 
-When PCIe port is runtime suspended/resumed some extra steps might be
-needed to be executed from the port service driver side. For instance we
-may need to disable PCIe hotplug interrupt to prevent it from triggering
-immediately when PCIe link to the downstream component goes down.
+Add DT bindings for PCIe controller implemented in UniPhier SoCs when
+configured in Root Complex (host) mode. This controller is based on
+the DesignWare PCIe core.
 
-To make the above possible add optional ->runtime_suspend() and
-->runtime_resume() callbacks to struct pcie_port_service_driver and call
-them for each port service in runtime suspend/resume callbacks of portdrv.
-
-Signed-off-by: Mika Westerberg <mika.westerberg@linux.intel.com>
+Signed-off-by: Kunihiko Hayashi <hayashi.kunihiko@socionext.com>
 ---
- drivers/pci/pcie/portdrv.h      |  4 ++++
- drivers/pci/pcie/portdrv_core.c | 20 ++++++++++++++++++++
- drivers/pci/pcie/portdrv_pci.c  | 10 ++++------
- 3 files changed, 28 insertions(+), 6 deletions(-)
+ .../devicetree/bindings/pci/uniphier-pcie.txt      | 78 ++++++++++++++++++++++
+ 1 file changed, 78 insertions(+)
+ create mode 100644 Documentation/devicetree/bindings/pci/uniphier-pcie.txt
 
-diff --git a/drivers/pci/pcie/portdrv.h b/drivers/pci/pcie/portdrv.h
-index d59afa42fc14..72fa132060e5 100644
---- a/drivers/pci/pcie/portdrv.h
-+++ b/drivers/pci/pcie/portdrv.h
-@@ -52,6 +52,8 @@ struct pcie_port_service_driver {
- 	int (*suspend) (struct pcie_device *dev);
- 	int (*resume_noirq) (struct pcie_device *dev);
- 	int (*resume) (struct pcie_device *dev);
-+	int (*runtime_suspend) (struct pcie_device *dev);
-+	int (*runtime_resume) (struct pcie_device *dev);
- 
- 	/* Device driver may resume normal operations */
- 	void (*error_resume)(struct pci_dev *dev);
-@@ -85,6 +87,8 @@ int pcie_port_device_register(struct pci_dev *dev);
- int pcie_port_device_suspend(struct device *dev);
- int pcie_port_device_resume_noirq(struct device *dev);
- int pcie_port_device_resume(struct device *dev);
-+int pcie_port_device_runtime_suspend(struct device *dev);
-+int pcie_port_device_runtime_resume(struct device *dev);
- #endif
- void pcie_port_device_remove(struct pci_dev *dev);
- int __must_check pcie_port_bus_register(void);
-diff --git a/drivers/pci/pcie/portdrv_core.c b/drivers/pci/pcie/portdrv_core.c
-index 7c37d815229e..6542c48c7f59 100644
---- a/drivers/pci/pcie/portdrv_core.c
-+++ b/drivers/pci/pcie/portdrv_core.c
-@@ -395,6 +395,26 @@ int pcie_port_device_resume(struct device *dev)
- 	size_t off = offsetof(struct pcie_port_service_driver, resume);
- 	return device_for_each_child(dev, &off, pm_iter);
- }
+diff --git a/Documentation/devicetree/bindings/pci/uniphier-pcie.txt b/Documentation/devicetree/bindings/pci/uniphier-pcie.txt
+new file mode 100644
+index 0000000..a34e167
+--- /dev/null
++++ b/Documentation/devicetree/bindings/pci/uniphier-pcie.txt
+@@ -0,0 +1,78 @@
++Socionext UniPhier PCIe host controller bindings
 +
-+/**
-+ * pcie_port_device_runtime_suspend - runtime suspend port services
-+ * @dev: PCI Express port to handle
-+ */
-+int pcie_port_device_runtime_suspend(struct device *dev)
-+{
-+	size_t off = offsetof(struct pcie_port_service_driver, runtime_suspend);
-+	return device_for_each_child(dev, &off, pm_iter);
-+}
++This describes the devicetree bindings for PCIe host controller implemented
++on Socionext UniPhier SoCs.
 +
-+/**
-+ * pcie_port_device_runtime_resume - runtime resume port services
-+ * @dev: PCI Express port to handle
-+ */
-+int pcie_port_device_runtime_resume(struct device *dev)
-+{
-+	size_t off = offsetof(struct pcie_port_service_driver, runtime_resume);
-+	return device_for_each_child(dev, &off, pm_iter);
-+}
- #endif /* PM */
- 
- static int remove_iter(struct device *dev, void *data)
-diff --git a/drivers/pci/pcie/portdrv_pci.c b/drivers/pci/pcie/portdrv_pci.c
-index 74761f660a30..d018633694e0 100644
---- a/drivers/pci/pcie/portdrv_pci.c
-+++ b/drivers/pci/pcie/portdrv_pci.c
-@@ -60,12 +60,10 @@ int pcie_port_prepare(struct device *dev)
- 
- static int pcie_port_runtime_suspend(struct device *dev)
- {
--	return to_pci_dev(dev)->bridge_d3 ? 0 : -EBUSY;
--}
-+	if (!to_pci_dev(dev)->bridge_d3)
-+		return -EBUSY;
- 
--static int pcie_port_runtime_resume(struct device *dev)
--{
--	return 0;
-+	return pcie_port_device_runtime_suspend(dev);
- }
- 
- static int pcie_port_runtime_idle(struct device *dev)
-@@ -89,7 +87,7 @@ static const struct dev_pm_ops pcie_portdrv_pm_ops = {
- 	.restore_noirq	= pcie_port_device_resume_noirq,
- 	.restore	= pcie_port_device_resume,
- 	.runtime_suspend = pcie_port_runtime_suspend,
--	.runtime_resume	= pcie_port_runtime_resume,
-+	.runtime_resume	= pcie_port_device_runtime_resume,
- 	.runtime_idle	= pcie_port_runtime_idle,
- };
- 
++UniPhier PCIe host controller is based on the Synopsys DesignWare PCI core.
++It shares common functions with the PCIe DesignWare core driver and inherits
++common properties defined in
++Documentation/devicetree/bindings/pci/designware-pcie.txt.
++
++Required properties:
++- compatible: Should be "socionext,uniphier-pcie".
++- reg: Specifies offset and length of the register set for the device.
++	According to the reg-names, appropriate register sets are required.
++- reg-names: Must include the following entries:
++    "dbi"    - controller configuration registers
++    "link"   - SoC-specific glue layer registers
++    "config" - PCIe configuration space
++- clocks: A phandle to the clock gate for PCIe glue layer including
++	the host controller.
++- resets: A phandle to the reset line for PCIe glue layer including
++	the host controller.
++- interrupts: A list of interrupt specifiers. According to the
++	interrupt-names, appropriate interrupts are required.
++- interrupt-names: Must include the following entries:
++    "dma"    - DMA interrupt
++    "msi"    - MSI interrupt
++    "intx"   - Legacy INTA/B/C/D interrupt
++
++Optional properties:
++- phys: A phandle to generic PCIe PHY. According to the phy-names, appropriate
++	phys are required.
++- phy-names: Must be "pcie-phy".
++
++Required sub-node:
++- interrupt-controller: Specifies interrupt controller for legacy PCI
++	interrupts. The node name isn't important.
++
++Required properties for interrupt-controller:
++- interrupt-controller: identifies the node as an interrupt controller.
++- #interrupt-cells: specifies the number of cells needed to encode an
++	interrupt source. The value must be 1.
++
++Example:
++
++	pcie: pcie@66000000 {
++		compatible = "socionext,uniphier-pcie", "snps,dw-pcie";
++		status = "disabled";
++		reg-names = "dbi", "link", "config";
++		reg = <0x66000000 0x1000>, <0x66010000 0x10000>,
++		      <0x2fff0000 0x10000>;
++		#address-cells = <3>;
++		#size-cells = <2>;
++		clocks = <&sys_clk 24>;
++		resets = <&sys_rst 24>;
++		num-lanes = <1>;
++		num-viewport = <1>;
++		bus-range = <0x0 0xff>;
++		device_type = "pci";
++		ranges =
++		/* downstream I/O */
++			<0x81000000 0 0x00000000  0x2ffe0000  0 0x00010000
++		/* non-prefetchable memory */
++			 0x82000000 0 0x00000000  0x20000000  0 0x0ffe0000>;
++		#interrupt-cells = <1>;
++		interrupt-names = "dma", "msi", "intx";
++		interrupts = <0 224 4>, <0 225 4>, <0 226 4>;
++		interrupt-map-mask = <0 0 0  7>;
++		interrupt-map = <0 0 0  1  &pcie_intc 0>,	/* INTA */
++				<0 0 0  2  &pcie_intc 1>,	/* INTB */
++				<0 0 0  3  &pcie_intc 2>,	/* INTC */
++				<0 0 0  4  &pcie_intc 3>;	/* INTD */
++
++		pcie_intc: interrupt-controller {
++			interrupt-controller;
++			#interrupt-cells = <1>;
++		};
++	};
 -- 
-2.18.0
+2.7.4
+
+
+_______________________________________________
+linux-arm-kernel mailing list
+linux-arm-kernel@lists.infradead.org
+http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
