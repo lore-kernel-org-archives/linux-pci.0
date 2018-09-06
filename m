@@ -1,53 +1,31 @@
-Return-Path: <linux-acpi-owner@vger.kernel.org>
-From: Mika Westerberg <mika.westerberg@linux.intel.com>
-To: Bjorn Helgaas <bhelgaas@google.com>,
-        "Rafael J. Wysocki" <rjw@rjwysocki.net>
-Cc: Len Brown <lenb@kernel.org>, Lukas Wunner <lukas@wunner.de>,
-        Keith Busch <keith.busch@intel.com>,
-        Ashok Raj <ashok.raj@intel.com>, Mario.Limonciello@dell.com,
-        Anthony Wong <anthony.wong@canonical.com>,
-        Linus Walleij <linus.walleij@linaro.org>,
-        Sakari Ailus <sakari.ailus@iki.fi>,
-        Mika Westerberg <mika.westerberg@linux.intel.com>,
-        linux-pci@vger.kernel.org, linux-acpi@vger.kernel.org
-Subject: [PATCH v2 04/10] PCI: pciehp: Do not handle events if interrupts are masked
-Date: Thu, 13 Sep 2018 17:33:16 +0300
-Message-Id: <20180913143322.77953-5-mika.westerberg@linux.intel.com>
-In-Reply-To: <20180913143322.77953-1-mika.westerberg@linux.intel.com>
-References: <20180913143322.77953-1-mika.westerberg@linux.intel.com>
-Sender: linux-acpi-owner@vger.kernel.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mga17.intel.com ([192.55.52.151]:42143 "EHLO mga17.intel.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1728106AbeIFWLb (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Thu, 6 Sep 2018 18:11:31 -0400
+Date: Thu, 6 Sep 2018 11:36:28 -0600
+From: Keith Busch <keith.busch@intel.com>
+To: Thomas Tai <thomas.tai@oracle.com>
+Cc: Linux PCI <linux-pci@vger.kernel.org>,
+        Bjorn Helgaas <bhelgaas@google.com>,
+        Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+        Sinan Kaya <okaya@kernel.org>, poza@codeaurora.org,
+        Lukas Wunner <lukas@wunner.de>, Christoph Hellwig <hch@lst.de>
+Subject: Re: [PATCHv2 00/20] PCI, error handling and hot plug
+Message-ID: <20180906173628.GA31024@localhost.localdomain>
+References: <20180905203546.21921-1-keith.busch@intel.com>
+ <81a2db94-f4a9-73a6-6853-16d31fa749b9@oracle.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <81a2db94-f4a9-73a6-6853-16d31fa749b9@oracle.com>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-PCIe native hotplug shares MSI vector with native PME so the interrupt
-handler might get called even the hotplug interrupt is masked. In that
-case we should not handle any events because the interrupt was not meant
-for us. Modify the PCIe hotplug interrupt handler to check this
-accordingly and bail out if it finds out that the interrupt was not
-about hotplug.
+On Thu, Sep 06, 2018 at 01:30:47PM -0400, Thomas Tai wrote:
+> Hi Keith,
+> Which tag or branch is your patch based on? I can't apply it on the master
+> branch of https://git.kernel.org/pub/scm/linux/kernel/git/helgaas/pci.git
 
-Signed-off-by: Mika Westerberg <mika.westerberg@linux.intel.com>
-Reviewed-by: Lukas Wunner <lukas@wunner.de>
----
- drivers/pci/hotplug/pciehp_hpc.c | 6 ++++--
- 1 file changed, 4 insertions(+), 2 deletions(-)
+Sure, it was built on the pci/hotplug branch:
 
-diff --git a/drivers/pci/hotplug/pciehp_hpc.c b/drivers/pci/hotplug/pciehp_hpc.c
-index 02fb6e367e2a..26598a03e84b 100644
---- a/drivers/pci/hotplug/pciehp_hpc.c
-+++ b/drivers/pci/hotplug/pciehp_hpc.c
-@@ -533,9 +533,11 @@ static irqreturn_t pciehp_isr(int irq, void *dev_id)
- 	u16 status, events;
- 
- 	/*
--	 * Interrupts only occur in D3hot or shallower (PCIe r4.0, sec 6.7.3.4).
-+	 * Interrupts only occur in D3hot or shallower and only if enabled
-+	 * in the Slot Control register (PCIe r4.0, sec 6.7.3.4).
- 	 */
--	if (pdev->current_state == PCI_D3cold)
-+	if (pdev->current_state == PCI_D3cold ||
-+	    (!(ctrl->slot_ctrl & PCI_EXP_SLTCTL_HPIE) && !pciehp_poll_mode))
- 		return IRQ_NONE;
- 
- 	/*
--- 
-2.18.0
+https://git.kernel.org/pub/scm/linux/kernel/git/helgaas/pci.git/log/?h=pci/hotplug
