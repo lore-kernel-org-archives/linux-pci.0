@@ -1,73 +1,57 @@
-Return-Path: <linux-nvme-bounces+bjorn=helgaas.com@lists.infradead.org>
-Return-Path: <linux-nvme-bounces+bjorn=helgaas.com@lists.infradead.org>
-To: Christoph Hellwig <hch@lst.de>, Jens Axboe <axboe@kernel.dk>
-References: <20180830185352.3369-1-logang@deltatee.com>
- <20180830185352.3369-8-logang@deltatee.com>
- <b5ab8fa3-34ac-3117-fa0d-5206c3939435@kernel.dk>
- <20180901082812.GB670@lst.de>
- <5f79c012-c6e1-56bb-62fd-0689181fb2c9@deltatee.com>
- <59b28977-8f2a-6228-2050-03fae6bdbedd@kernel.dk>
- <1b4283da-44df-4a02-3167-e295243cef78@deltatee.com>
- <09258b9b-3aed-9890-b31a-bd70a133966c@kernel.dk>
- <20180905195647.GA1626@lst.de>
- <bcc1b3cf-2fd9-fa61-9cfb-b0e4d84e5d94@kernel.dk>
- <20180905201152.GA1893@lst.de>
-From: Logan Gunthorpe <logang@deltatee.com>
-Message-ID: <eb42fb94-9da6-955b-8524-0a0f5ac4bd19@deltatee.com>
-Date: Wed, 5 Sep 2018 14:09:55 -0600
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from bmailout2.hostsharing.net ([83.223.90.240]:44671 "EHLO
+        bmailout2.hostsharing.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1725919AbeIFQRU (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Thu, 6 Sep 2018 12:17:20 -0400
+Date: Thu, 6 Sep 2018 13:42:15 +0200
+From: Lukas Wunner <lukas@wunner.de>
+To: Keith Busch <keith.busch@intel.com>
+Cc: Linux PCI <linux-pci@vger.kernel.org>,
+        Bjorn Helgaas <bhelgaas@google.com>,
+        Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+        Sinan Kaya <okaya@kernel.org>,
+        Thomas Tai <thomas.tai@oracle.com>, poza@codeaurora.org,
+        Christoph Hellwig <hch@lst.de>
+Subject: Re: [PATCHv2 03/20] PCI: Add required waits on link active
+Message-ID: <20180906114215.jkz547ykg756pq4o@wunner.de>
+References: <20180905203546.21921-1-keith.busch@intel.com>
+ <20180905203546.21921-4-keith.busch@intel.com>
 MIME-Version: 1.0
-In-Reply-To: <20180905201152.GA1893@lst.de>
-Subject: Re: [PATCH v5 07/13] block: Add PCI P2P flag for request queue and
- check support for requests
-List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-nvme>,
- <mailto:linux-nvme-request@lists.infradead.org?subject=unsubscribe>
-List-Archive: <http://lists.infradead.org/pipermail/linux-nvme/>
-List-Post: <mailto:linux-nvme@lists.infradead.org>
-List-Help: <mailto:linux-nvme-request@lists.infradead.org?subject=help>
-List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-nvme>,
- <mailto:linux-nvme-request@lists.infradead.org?subject=subscribe>
-Cc: Keith Busch <keith.busch@intel.com>,
- Alex Williamson <alex.williamson@redhat.com>, Sagi Grimberg <sagi@grimberg.me>,
- linux-nvdimm@lists.01.org, linux-rdma@vger.kernel.org,
- linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
- linux-nvme@lists.infradead.org, Stephen Bates <sbates@raithlin.com>,
- linux-block@vger.kernel.org,
- =?UTF-8?B?SsOpcsO0bWUgR2xpc3Nl?= <jglisse@redhat.com>,
- Jason Gunthorpe <jgg@mellanox.com>,
- Benjamin Herrenschmidt <benh@kernel.crashing.org>,
- Bjorn Helgaas <bhelgaas@google.com>, Max Gurtovoy <maxg@mellanox.com>,
- Dan Williams <dan.j.williams@intel.com>,
- =?UTF-8?Q?Christian_K=c3=b6nig?= <christian.koenig@amd.com>
-Content-Type: text/plain; charset="us-ascii"
-Sender: "Linux-nvme" <linux-nvme-bounces@lists.infradead.org>
-Errors-To: linux-nvme-bounces+bjorn=helgaas.com@lists.infradead.org
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20180905203546.21921-4-keith.busch@intel.com>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
+On Wed, Sep 05, 2018 at 02:35:29PM -0600, Keith Busch wrote:
+> --- a/drivers/pci/pci.c
+> +++ b/drivers/pci/pci.c
+> @@ -4485,21 +4485,33 @@ bool pcie_wait_for_link(struct pci_dev *pdev, bool active)
+>  	bool ret;
+>  	u16 lnk_status;
+>  
+> +	/*
+> +	 * PCIe 4.0r1 6.6.1, a component must enter LTSSM Detect within 20ms,
+> +	 * after which we should expect an link active if the reset was
+> +	 * successful. If so, software must wait a minimum 100ms before sending
+> +	 * configuration requests to devices downstream this port.
+> +	 *
+> +	 * If the link fails to activate, either the device was physically
+> +	 * removed or the link is permanently failed.
+> +	 */
+> +	if (active)
+> +		msleep(20);
+
+This function is also called by pciehp when bringing up the slot,
+yet I assume the above delay only applies to a Fundamental Reset,
+not hotplug?
 
 
-On 05/09/18 02:11 PM, Christoph Hellwig wrote:
-> On Wed, Sep 05, 2018 at 01:54:31PM -0600, Jens Axboe wrote:
->> On 9/5/18 1:56 PM, Christoph Hellwig wrote:
->>> On Wed, Sep 05, 2018 at 01:45:04PM -0600, Jens Axboe wrote:
->>>> The point is that the caller doesn't necessarily know where the bio
->>>> will end up, hence the caller can't fully check if the whole stack
->>>> supports P2P.
->>>
->>> The caller must necessarily know where the bio will end up, as for P2P
->>> support we need to query if the bio target is P2P capable vs the
->>> source of the P2P memory.
->>
->> Then what's the point of having the check at all?
-> 
-> Just an additional little safe guard.  If you think it isn't worth
-> it I guess we can just drop it for now.
+> +	if (active && ret)
+> +		msleep(100);
 
-Yes, the point is to prevent driver writers from doing the wrong thing
-by not doing the necessary checks before submitting to the queue.
+This delay is already observed by pciehp_check_link_status()
+after calling pcie_wait_link_active().
 
-Logan
+Thanks,
 
-_______________________________________________
-Linux-nvme mailing list
-Linux-nvme@lists.infradead.org
-http://lists.infradead.org/mailman/listinfo/linux-nvme
+Lukas
