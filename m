@@ -1,98 +1,65 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from usa-sjc-mx-foss1.foss.arm.com ([217.140.101.70]:41944 "EHLO
-        foss.arm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1727667AbeIRPrx (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Tue, 18 Sep 2018 11:47:53 -0400
-Date: Tue, 18 Sep 2018 11:15:55 +0100
-From: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
-To: Marek Vasut <marek.vasut@gmail.com>
-Cc: linux-pci@vger.kernel.org,
-        Phil Edworthy <phil.edworthy@renesas.com>,
-        Marek Vasut <marek.vasut+renesas@gmail.com>,
-        Arnd Bergmann <arnd@arndb.de>,
-        Geert Uytterhoeven <geert+renesas@glider.be>,
-        Simon Horman <horms+renesas@verge.net.au>,
-        Wolfram Sang <wsa@the-dreams.de>,
-        linux-renesas-soc@vger.kernel.org
-Subject: Re: [PATCH][RFC] PCI: rcar: Add bus notifier so we can limit the DMA
- range
-Message-ID: <20180918101555.GB26886@e107981-ln.cambridge.arm.com>
-References: <20180521220514.30256-1-marek.vasut+renesas@gmail.com>
+Received: from mail.kernel.org ([198.145.29.99]:57682 "EHLO mail.kernel.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1729596AbeIFXyO (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Thu, 6 Sep 2018 19:54:14 -0400
+Date: Thu, 6 Sep 2018 14:17:20 -0500
+From: Bjorn Helgaas <helgaas@kernel.org>
+To: Tyrel Datwyler <tyreld@linux.vnet.ibm.com>
+Cc: mpe@ellerman.id.au, benh@kernel.crashing.org,
+        linuxppc-dev@lists.ozlabs.org, nfont@linux.vnet.ibm.com,
+        linux-pci@vger.kernel.org, bhelgaas@google.com,
+        linux-kernel@vger.kernel.org
+Subject: Re: [PATCH] MAINTAINERS: add maintainer entries for RPA pci hotplug
+ drivers
+Message-ID: <20180906191720.GG214747@bhelgaas-glaptop.roam.corp.google.com>
+References: <1534814431-20112-1-git-send-email-tyreld@linux.vnet.ibm.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20180521220514.30256-1-marek.vasut+renesas@gmail.com>
+In-Reply-To: <1534814431-20112-1-git-send-email-tyreld@linux.vnet.ibm.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tue, May 22, 2018 at 12:05:14AM +0200, Marek Vasut wrote:
-> From: Phil Edworthy <phil.edworthy@renesas.com>
+On Mon, Aug 20, 2018 at 06:20:31PM -0700, Tyrel Datwyler wrote:
+> Adding myself as maintiner of the IBM RPA hotplug modules located in
+> drivers/pci/hotplug directory. These modules provide kernel interfaces
+> for support of Dynamic Logical Partitioning (DLPAR) of Logical and
+> Physical IO slots, and hotplug of physical PCI slots of a PHB on
+> RPA-compliant ppc64 platforms (pseries).
 > 
-> The PCIe DMA controller on RCar Gen2 and earlier is on 32bit bus,
-> so limit the DMA range to 32bit.
+> Signed-off-by: Tyrel Datwyler <tyreld@linux.vnet.ibm.com>
+
+Applied to for-linus for v4.19, thanks!
+
+> ---
+>  MAINTAINERS | 14 ++++++++++++++
+>  1 file changed, 14 insertions(+)
 > 
-> Signed-off-by: Phil Edworthy <phil.edworthy@renesas.com>
-> Signed-off-by: Marek Vasut <marek.vasut+renesas@gmail.com>
-> Cc: Arnd Bergmann <arnd@arndb.de>
-> Cc: Geert Uytterhoeven <geert+renesas@glider.be>
-> Cc: Phil Edworthy <phil.edworthy@renesas.com>
-> Cc: Simon Horman <horms+renesas@verge.net.au>
-> Cc: Wolfram Sang <wsa@the-dreams.de>
-> Cc: linux-renesas-soc@vger.kernel.org
-> To: linux-pci@vger.kernel.org
-> ---
-> NOTE: I'm aware of https://patchwork.kernel.org/patch/9495895/ , but the
->       discussion seems to have gone way off, so I'm sending this as a
->       RFC. Any feedback on how to do this limiting properly would be nice.
-> ---
->  drivers/pci/host/pcie-rcar.c | 28 ++++++++++++++++++++++++++++
->  1 file changed, 28 insertions(+)
-
-The issue solved by this patch was solved in a more generic way through
-this series:
-
-https://lists.linuxfoundation.org/pipermail/iommu/2018-July/028792.html
-
-I will therefore drop this patch from the PCI patch queue.
-
-Thanks,
-Lorenzo
-
-> diff --git a/drivers/pci/host/pcie-rcar.c b/drivers/pci/host/pcie-rcar.c
-> index c3eab0b95290..db2b16f40bc1 100644
-> --- a/drivers/pci/host/pcie-rcar.c
-> +++ b/drivers/pci/host/pcie-rcar.c
-> @@ -1325,3 +1325,31 @@ static struct platform_driver rcar_pcie_driver = {
->  	.probe = rcar_pcie_probe,
->  };
->  builtin_platform_driver(rcar_pcie_driver);
+> diff --git a/MAINTAINERS b/MAINTAINERS
+> index 5df1b36..7b5dc3f 100644
+> --- a/MAINTAINERS
+> +++ b/MAINTAINERS
+> @@ -6984,6 +6984,20 @@ F:	drivers/crypto/vmx/aes*
+>  F:	drivers/crypto/vmx/ghash*
+>  F:	drivers/crypto/vmx/ppc-xlate.pl
+>  
+> +IBM Power PCI Hotplug Driver for RPA-compliant PPC64 platform
+> +M:	Tyrel Datwyler <tyreld@linux.vnet.ibm.com>
+> +L:	linux-pci@vger.kernel.org
+> +L:	linuxppc-dev@lists.ozlabs.org
+> +S:	Supported
+> +F:	drivers/pci/hotplug/rpaphp*
 > +
-> +static int rcar_pcie_pci_notifier(struct notifier_block *nb,
-> +			    unsigned long action, void *data)
-> +{
-> +	struct device *dev = data;
+> +IBM Power IO DLPAR Driver for RPA-compliant PPC64 platform
+> +M:	Tyrel Datwyler <tyreld@linux.vnet.ibm.com>
+> +L:	linux-pci@vger.kernel.org
+> +L:	linuxppc-dev@lists.ozlabs.org
+> +S:	Supported
+> +F:	drivers/pci/hotplug/rpadlpar*
 > +
-> +	switch (action) {
-> +	case BUS_NOTIFY_BOUND_DRIVER:
-> +		/* Force the DMA mask to lower 32-bits */
-> +		dma_set_mask_and_coherent(dev, DMA_BIT_MASK(32));
-> +		break;
-> +	default:
-> +		return NOTIFY_DONE;
-> +	}
-> +
-> +	return NOTIFY_OK;
-> +}
-> +
-> +static struct notifier_block device_nb = {
-> +	.notifier_call = rcar_pcie_pci_notifier,
-> +};
-> +
-> +static int __init register_rcar_pcie_pci_notifier(void)
-> +{
-> +	return bus_register_notifier(&pci_bus_type, &device_nb);
-> +}
-> +
-> +arch_initcall(register_rcar_pcie_pci_notifier);
+>  IBM ServeRAID RAID DRIVER
+>  S:	Orphan
+>  F:	drivers/scsi/ips.*
 > -- 
-> 2.16.2
+> 1.8.3.1
 > 
