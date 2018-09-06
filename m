@@ -1,171 +1,140 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mailgw02.mediatek.com ([210.61.82.184]:24439 "EHLO
-        mailgw02.mediatek.com" rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org
-        with ESMTP id S1727261AbeIJOnw (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Mon, 10 Sep 2018 10:43:52 -0400
-From: <honghui.zhang@mediatek.com>
-To: <lorenzo.pieralisi@arm.com>, <marc.zyngier@arm.com>,
-        <bhelgaas@google.com>, <matthias.bgg@gmail.com>,
-        <linux-arm-kernel@lists.infradead.org>,
-        <linux-mediatek@lists.infradead.org>, <linux-pci@vger.kernel.org>,
-        <linux-kernel@vger.kernel.org>, <devicetree@vger.kernel.org>,
-        <yingjoe.chen@mediatek.com>, <eddie.huang@mediatek.com>,
-        <ryder.lee@mediatek.com>
-CC: <ulf.hansson@linaro.org>, <honghui.zhang@mediatek.com>,
-        <hongkun.cao@mediatek.com>, <youlin.pei@mediatek.com>,
-        <yong.wu@mediatek.com>, <yt.shen@mediatek.com>,
-        <sean.wang@mediatek.com>, <xinping.qian@mediatek.com>
-Subject: [PATCH v4 4/4] PCI: mediatek: Add loadable kernel module support
-Date: Mon, 10 Sep 2018 17:50:23 +0800
-Message-ID: <1536573023-6720-5-git-send-email-honghui.zhang@mediatek.com>
-In-Reply-To: <1536573023-6720-1-git-send-email-honghui.zhang@mediatek.com>
-References: <1536573023-6720-1-git-send-email-honghui.zhang@mediatek.com>
+Return-Path: <SRS0=97HT=LU=linux.intel.com=felipe.balbi@kernel.org>
+Return-Path: <SRS0=97HT=LU=linux.intel.com=felipe.balbi@kernel.org>
+From: Felipe Balbi <felipe.balbi@linux.intel.com>
+To: Bjorn Helgaas <helgaas@kernel.org>
+Cc: Sinan Kaya <okaya@kernel.org>, Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org
+Subject: Re: [RFC] PCI: add support for Immediate Readiness
+In-Reply-To: <20180905164909.GJ107892@bhelgaas-glaptop.roam.corp.google.com>
+References: <20180802113635.7097-1-felipe.balbi@linux.intel.com> <15a43051-6b0f-1545-dc8f-b56b1513897b@kernel.org> <874lgcufsu.fsf@linux.intel.com> <407fa9ef-dcbe-e803-f72e-cbea468592bf@kernel.org> <20180904181126.GG107892@bhelgaas-glaptop.roam.corp.google.com> <87y3cgbjyf.fsf@linux.intel.com> <20180905164909.GJ107892@bhelgaas-glaptop.roam.corp.google.com>
+Date: Thu, 06 Sep 2018 09:02:56 +0300
+Message-ID: <87tvn3w4bz.fsf@linux.intel.com>
 MIME-Version: 1.0
 Content-Type: text/plain
-Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-From: Honghui Zhang <honghui.zhang@mediatek.com>
 
-Implement remove callback function for Mediatek PCIe driver to add
-loadable kernel module support.
+Hi,
 
-Signed-off-by: Honghui Zhang <honghui.zhang@mediatek.com>
-Reviewed-by: Ryder Lee <ryder.lee@mediatek.com>
----
- drivers/pci/controller/Kconfig         |  2 +-
- drivers/pci/controller/pcie-mediatek.c | 60 +++++++++++++++++++++++++++++++---
- 2 files changed, 57 insertions(+), 5 deletions(-)
+Bjorn Helgaas <helgaas@kernel.org> writes:
+>> >> I think the patch is touching the wrong places. pci_dev_wait() is there
+>> >> to wait for CRS response to finish following reset.
+>> >> 
+>> >> Typical sequences are:
+>> >> 1. Do some kind of reset in another routine
+>> >> 2. Wait reset specific wait time (1sec for secondary bus reset as an
+>> >> example and 100ms for d3-d0 transition)
+>> >> 3. call pci_dev_wait() after reset to see if device can accept config
+>> >> transactions.
+>> >> 
+>> >> Since this applies to all resets, I think you also need to get rid of
+>> >> waits following different reset types in step #2 and return immediately.
+>> >> I suggest you review callers of pci_dev_wait() and tap in there.
+>> >
+>> > I agree; I think we should be able to skip the delays in pcie_flr(),
+>> > pci_af_flr(), etc.
+>> 
+>> but that's why I put the code in pci_dev_wait(). Both pcie_flr() and
+>> pci_af_flr() call pci_dev_wait(); or are you saying that the msleep(100)
+>> call in pci_af_flr() can also be removed if (dev->imm_ready)?
+>
+> Yes.  The spec says (PCIe r4.0, sec 7.5.1.1.4):
+>
+>   When this bit is Set, for accesses to this Function, software is
+>   exempt from all requirements to delay configuration accesses
+>   following any type of reset, including but not limited to the timing
+>   requirements defined in Section 6.6.
+>
+> Sec 6.6 contains various references to waiting 100ms after different
+> types of resets, and I think those correspond to the msleep(100)
+> calls.  So I think we can skip those delays if the device supports
+> Immediate Readiness.
+>
+> pci_dev_wait() is connected with CRS.  There's some reason that
+> function doesn't actually looks for CRS responses, which I can't
+> remember right now.  But you can look it up in the changelogs.
+>
+> So I don't think we should put the Immediate Readiness check in
+> pci_dev_wait().
 
-diff --git a/drivers/pci/controller/Kconfig b/drivers/pci/controller/Kconfig
-index 028b287..465790f 100644
---- a/drivers/pci/controller/Kconfig
-+++ b/drivers/pci/controller/Kconfig
-@@ -231,7 +231,7 @@ config PCIE_ROCKCHIP_EP
- 	  available to support GEN2 with 4 slots.
- 
- config PCIE_MEDIATEK
--	bool "MediaTek PCIe controller"
-+	tristate "MediaTek PCIe controller"
- 	depends on ARCH_MEDIATEK || COMPILE_TEST
- 	depends on OF
- 	depends on PCI_MSI_IRQ_DOMAIN
-diff --git a/drivers/pci/controller/pcie-mediatek.c b/drivers/pci/controller/pcie-mediatek.c
-index bcc77bc..9d54fc9 100644
---- a/drivers/pci/controller/pcie-mediatek.c
-+++ b/drivers/pci/controller/pcie-mediatek.c
-@@ -15,6 +15,7 @@
- #include <linux/irqdomain.h>
- #include <linux/kernel.h>
- #include <linux/msi.h>
-+#include <linux/module.h>
- #include <linux/of_address.h>
- #include <linux/of_pci.h>
- #include <linux/of_platform.h>
-@@ -184,6 +185,7 @@ struct mtk_pcie_port {
- 	struct phy *phy;
- 	u32 lane;
- 	u32 slot;
-+	int irq;
- 	struct irq_domain *irq_domain;
- 	struct irq_domain *inner_domain;
- 	struct irq_domain *msi_domain;
-@@ -538,6 +540,27 @@ static void mtk_pcie_enable_msi(struct mtk_pcie_port *port)
- 	writel(val, port->base + PCIE_INT_MASK);
- }
- 
-+static void mtk_pcie_irq_teardown(struct mtk_pcie *pcie)
-+{
-+	struct mtk_pcie_port *port, *tmp;
-+
-+	list_for_each_entry_safe(port, tmp, &pcie->ports, list) {
-+		irq_set_chained_handler_and_data(port->irq, NULL, NULL);
-+
-+		if (port->irq_domain)
-+			irq_domain_remove(port->irq_domain);
-+
-+		if (IS_ENABLED(CONFIG_PCI_MSI)) {
-+			if (port->msi_domain)
-+				irq_domain_remove(port->msi_domain);
-+			if (port->inner_domain)
-+				irq_domain_remove(port->inner_domain);
-+		}
-+
-+		irq_dispose_mapping(port->irq);
-+	}
-+}
-+
- static int mtk_pcie_intx_map(struct irq_domain *domain, unsigned int irq,
- 			     irq_hw_number_t hwirq)
+IOW, you want something like below? If that's the case, I can send
+another version shortly.
+
+diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
+index 29ff9619b5fa..61be196db92b 100644
+--- a/drivers/pci/pci.c
++++ b/drivers/pci/pci.c
+@@ -999,7 +999,7 @@ static void __pci_start_power_transition(struct pci_dev *dev, pci_power_t state)
+ 		 * because have already delayed for the bridge.
+ 		 */
+ 		if (dev->runtime_d3cold) {
+-			if (dev->d3cold_delay)
++			if (dev->d3cold_delay && !dev->imm_ready)
+ 				msleep(dev->d3cold_delay);
+ 			/*
+ 			 * When powering on a bridge from D3cold, the
+@@ -2644,6 +2644,7 @@ EXPORT_SYMBOL_GPL(pci_d3cold_disable);
+ void pci_pm_init(struct pci_dev *dev)
  {
-@@ -628,7 +651,7 @@ static int mtk_pcie_setup_irq(struct mtk_pcie_port *port,
- 	struct mtk_pcie *pcie = port->pcie;
- 	struct device *dev = pcie->dev;
- 	struct platform_device *pdev = to_platform_device(dev);
--	int err, irq;
-+	int err;
+ 	int pm;
++	u16 status;
+ 	u16 pmc;
  
- 	err = mtk_pcie_init_irq_domain(port, node);
- 	if (err) {
-@@ -636,8 +659,9 @@ static int mtk_pcie_setup_irq(struct mtk_pcie_port *port,
- 		return err;
+ 	pm_runtime_forbid(&dev->dev);
+@@ -2706,6 +2707,9 @@ void pci_pm_init(struct pci_dev *dev)
+ 		/* Disable the PME# generation functionality */
+ 		pci_pme_active(dev, false);
  	}
- 
--	irq = platform_get_irq(pdev, port->slot);
--	irq_set_chained_handler_and_data(irq, mtk_pcie_intr_handler, port);
-+	port->irq = platform_get_irq(pdev, port->slot);
-+	irq_set_chained_handler_and_data(port->irq,
-+					 mtk_pcie_intr_handler, port);
- 
- 	return 0;
- }
-@@ -1199,6 +1223,32 @@ static int mtk_pcie_probe(struct platform_device *pdev)
- 	return err;
++
++	pci_read_config_word(dev, PCI_STATUS, &status);
++	dev->imm_ready = status & PCI_STATUS_IMMEDIATE;
  }
  
-+
-+static void mtk_pcie_free_resources(struct mtk_pcie *pcie)
-+{
-+	struct pci_host_bridge *host = pci_host_bridge_from_priv(pcie);
-+	struct list_head *windows = &host->windows;
-+
-+	pci_unmap_iospace(&pcie->pio);
-+	pci_free_resource_list(windows);
-+}
-+
-+static int mtk_pcie_remove(struct platform_device *pdev)
-+{
-+	struct mtk_pcie *pcie = platform_get_drvdata(pdev);
-+	struct pci_host_bridge *host = pci_host_bridge_from_priv(pcie);
-+
-+	pci_stop_root_bus(host->bus);
-+	pci_remove_root_bus(host->bus);
-+	mtk_pcie_free_resources(pcie);
-+
-+	mtk_pcie_irq_teardown(pcie);
-+
-+	mtk_pcie_put_resources(pcie);
-+
-+	return 0;
-+}
-+
- static int __maybe_unused mtk_pcie_suspend_noirq(struct device *dev)
- {
- 	struct mtk_pcie *pcie = dev_get_drvdata(dev);
-@@ -1286,6 +1336,7 @@ static const struct of_device_id mtk_pcie_ids[] = {
+ static unsigned long pci_ea_flags(struct pci_dev *dev, u8 prop)
+@@ -4376,6 +4380,9 @@ int pcie_flr(struct pci_dev *dev)
  
- static struct platform_driver mtk_pcie_driver = {
- 	.probe = mtk_pcie_probe,
-+	.remove = mtk_pcie_remove,
- 	.driver = {
- 		.name = "mtk-pcie",
- 		.of_match_table = mtk_pcie_ids,
-@@ -1293,4 +1344,5 @@ static struct platform_driver mtk_pcie_driver = {
- 		.pm = &mtk_pcie_pm_ops,
- 	},
- };
--builtin_platform_driver(mtk_pcie_driver);
-+module_platform_driver(mtk_pcie_driver);
-+MODULE_LICENSE("GPL v2");
+ 	pcie_capability_set_word(dev, PCI_EXP_DEVCTL, PCI_EXP_DEVCTL_BCR_FLR);
+ 
++	if (dev->imm_ready)
++		return 0;
++
+ 	/*
+ 	 * Per PCIe r4.0, sec 6.6.2, a device must complete an FLR within
+ 	 * 100ms, but may silently discard requests while the FLR is in
+@@ -4417,6 +4424,9 @@ static int pci_af_flr(struct pci_dev *dev, int probe)
+ 
+ 	pci_write_config_byte(dev, pos + PCI_AF_CTRL, PCI_AF_CTRL_FLR);
+ 
++	if (dev->imm_ready)
++		return 0;
++
+ 	/*
+ 	 * Per Advanced Capabilities for Conventional PCI ECN, 13 April 2006,
+ 	 * updated 27 July 2006; a device must complete an FLR within
+diff --git a/include/linux/pci.h b/include/linux/pci.h
+index e72ca8dd6241..7eed464e844a 100644
+--- a/include/linux/pci.h
++++ b/include/linux/pci.h
+@@ -325,6 +325,7 @@ struct pci_dev {
+ 	pci_power_t	current_state;	/* Current operating state. In ACPI,
+ 					   this is D0-D3, D0 being fully
+ 					   functional, and D3 being off. */
++	unsigned int	imm_ready:1;	/* Supports Immediate Readiness */
+ 	u8		pm_cap;		/* PM capability offset */
+ 	unsigned int	pme_support:5;	/* Bitmask of states from which PME#
+ 					   can be generated */
+diff --git a/include/uapi/linux/pci_regs.h b/include/uapi/linux/pci_regs.h
+index ee556ccc93f4..b5cf51a06cae 100644
+--- a/include/uapi/linux/pci_regs.h
++++ b/include/uapi/linux/pci_regs.h
+@@ -52,6 +52,7 @@
+ #define  PCI_COMMAND_INTX_DISABLE 0x400 /* INTx Emulation Disable */
+ 
+ #define PCI_STATUS		0x06	/* 16 bits */
++#define  PCI_STATUS_IMMEDIATE	0x01	/* Immediate Readiness */
+ #define  PCI_STATUS_INTERRUPT	0x08	/* Interrupt status */
+ #define  PCI_STATUS_CAP_LIST	0x10	/* Support Capability List */
+ #define  PCI_STATUS_66MHZ	0x20	/* Support 66 MHz PCI 2.1 bus */
+
+
 -- 
-2.6.4
+balbi
