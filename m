@@ -1,137 +1,63 @@
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-From: Jean-Philippe Brucker <jean-philippe.brucker@arm.com>
-Subject: Re: [PATCH v2 03/40] iommu/sva: Manage process address spaces
-To: Auger Eric <eric.auger@redhat.com>, linux-arm-kernel@lists.infradead.org,
- linux-pci@vger.kernel.org, linux-acpi@vger.kernel.org,
- devicetree@vger.kernel.org, iommu@lists.linux-foundation.org,
- kvm@vger.kernel.org, linux-mm@kvack.org
-References: <20180511190641.23008-1-jean-philippe.brucker@arm.com>
- <20180511190641.23008-4-jean-philippe.brucker@arm.com>
- <d785ec89-6743-d0f1-1a7f-85599a033e5b@redhat.com>
-Message-ID: <ec209a7f-dfc4-c762-3ad8-491eeb8e8744@arm.com>
-Date: Thu, 6 Sep 2018 12:10:14 +0100
+Return-Path: <SRS0=x0pv=LU=endlessm.com=drake@kernel.org>
+Return-Path: <SRS0=x0pv=LU=endlessm.com=drake@kernel.org>
 MIME-Version: 1.0
-In-Reply-To: <d785ec89-6743-d0f1-1a7f-85599a033e5b@redhat.com>
-List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
-List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
-List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
-List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
-List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
-Cc: xieyisheng1@huawei.com, ilias.apalodimas@linaro.org, xuzaibo@huawei.com,
- thunder.leizhen@huawei.com, will.deacon@arm.com, okaya@codeaurora.org,
- yi.l.liu@intel.com, ashok.raj@intel.com, tn@semihalf.com, joro@8bytes.org,
- bharatku@xilinx.com, liudongdong3@huawei.com, rfranz@cavium.com,
- kevin.tian@intel.com, jacob.jun.pan@linux.intel.com,
- alex.williamson@redhat.com, rgummal@xilinx.com, jonathan.cameron@huawei.com,
- shunyong.yang@hxt-semitech.com, dwmw2@infradead.org, liubo95@huawei.com,
- jcrouse@codeaurora.org, robdclark@gmail.com, robin.murphy@arm.com,
- christian.koenig@amd.com, nwatters@codeaurora.org, baolu.lu@linux.intel.com
-Content-Type: text/plain; charset="us-ascii"
-Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
-Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
+In-Reply-To: <20180831191225.GA43106@bhelgaas-glaptop.roam.corp.google.com>
+References: <20180831073057.14626-1-drake@endlessm.com> <20180831191225.GA43106@bhelgaas-glaptop.roam.corp.google.com>
+From: Daniel Drake <drake@endlessm.com>
+Date: Thu, 6 Sep 2018 17:02:39 +0800
+Message-ID: <CAD8Lp45z-rGaZeh8Cu6eMF03RCVtKdz4Z8+L4QQzO1+JX-L1yg@mail.gmail.com>
+Subject: Re: [PATCH] PCI: add prefetch quirk to work around Asus/Nvidia
+ suspend issues
+To: Bjorn Helgaas <helgaas@kernel.org>
+Cc: Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org,
+	Linux Upstreaming Team <linux@endlessm.com>, nouveau@lists.freedesktop.org,
+	Linux PM <linux-pm@vger.kernel.org>, Peter Wu <peter@lekensteyn.nl>, kherbst@redhat.com,
+	Andy Shevchenko <andriy.shevchenko@linux.intel.com>,
+	"Rafael J. Wysocki" <rafael.j.wysocki@intel.com>, Keith Busch <keith.busch@intel.com>,
+	Mika Westerberg <mika.westerberg@linux.intel.com>, Jon Derrick <jonathan.derrick@intel.com>
+Content-Type: text/plain; charset="UTF-8"
 List-ID: <linux-pci.vger.kernel.org>
 
-On 05/09/2018 13:14, Auger Eric wrote:
->> +static struct io_mm *
->> +io_mm_alloc(struct iommu_domain *domain, struct device *dev,
->> +	    struct mm_struct *mm, unsigned long flags)
->> +{
->> +	int ret;
->> +	int pasid;
->> +	struct io_mm *io_mm;
->> +	struct iommu_sva_param *param = dev->iommu_param->sva_param;
->> +
-> don't you need to check param != NULL and flags are compatible with
-> those set at init?
+On Sat, Sep 1, 2018 at 3:12 AM, Bjorn Helgaas <helgaas@kernel.org> wrote:
+> Can we tell whether Windows rewrites this register unconditionally at
+> resume-time?  If so, it may be more robust for Linux to do the same.
+> The whole thing is black magic, which I hate, but if it's our only
+> choice, it may be better to have this applied everywhere so we don't
+> keep stubbing our toes on new systems that require the quirk.
 
-It would be redundant, parameters are already checked by bind().
-Following your comment below I think this function should also be called
-under iommu_param->lock
+Checked this with qemu adding a PCI-to-PCI bridge (ioh3420).
 
->> +	idr_preload(GFP_KERNEL);
->> +	spin_lock(&iommu_sva_lock);
->> +	pasid = idr_alloc(&iommu_pasid_idr, io_mm, param->min_pasid,
->> +			  param->max_pasid + 1, GFP_ATOMIC);
-> isn't it param->max_pasid - 1?
+$ qemu-system-x86_64 -enable-kvm -M q35,accel=kvm -m 2G -vga qxl -cpu
+host -hda testimg.img -device
+ioh3420,id=rp1,bus=pcie.0,addr=1c.0,port=1 -trace events=events.txt
 
-max_pasid is the last allocatable PASID, and the 'end' parameter of
-idr_alloc is exclusive, so this needs to be max_pasid + 1.
+events.txt has:
+pci_cfg_read
+pci_cfg_write
 
->> +static int io_mm_attach(struct iommu_domain *domain, struct device *dev,
->> +			struct io_mm *io_mm, void *drvdata)
->> +{
->> +	int ret;
->> +	bool attach_domain = true;
->> +	int pasid = io_mm->pasid;
->> +	struct iommu_bond *bond, *tmp;
->> +	struct iommu_sva_param *param = dev->iommu_param->sva_param;
->> +
->> +	if (!domain->ops->mm_attach || !domain->ops->mm_detach)
->> +		return -ENODEV;
-> don't you need to check param is not NULL?
+Logged cfg space accesses during boot:
+https://gist.github.com/dsd/135fb255cb2b237567d8ea2d6bfc6917#file-boot-txt
 
-As mm_alloc, this is called by bind() which already performs argument checks
+Suspend:
+https://gist.github.com/dsd/135fb255cb2b237567d8ea2d6bfc6917#file-suspend-txt
 
->> +
->> +	if (pasid > param->max_pasid || pasid < param->min_pasid)
-> pasid >= param->max_pasid ?
+Resume:
+https://gist.github.com/dsd/135fb255cb2b237567d8ea2d6bfc6917#file-resume-txt
 
-max_pasid is inclusive
+Notably during resume, the prefetch-related registers get rewritten:
+  pci_cfg_write ioh3420 28:0 @0x24 <- 0xfeb0fea0
+  pci_cfg_write ioh3420 28:0 @0x28 <- 0x0
+  pci_cfg_write ioh3420 28:0 @0x2c <- 0x0
 
->> +	ret = domain->ops->mm_attach(domain, dev, io_mm, attach_domain);
-> the fact the mm_attach/detach() must not sleep may be documented in the
-> API doc.
+This happened even though there was nothing behind the bridge.
+Windows failed to resume in this test (black screen) but the traced
+register writes seem indicative enough.
 
-Ok
+Peter Wu confirms the same results in a similar experiment:
+https://marc.info/?l=linux-pci&m=153616336225386&w=2
 
->>  int __iommu_sva_bind_device(struct device *dev, struct mm_struct *mm,
->>  			    int *pasid, unsigned long flags, void *drvdata)
->>  {
->> -	return -ENOSYS; /* TODO */
->> +	int i, ret = 0;
->> +	struct io_mm *io_mm = NULL;
->> +	struct iommu_domain *domain;
->> +	struct iommu_bond *bond = NULL, *tmp;
->> +	struct iommu_sva_param *param = dev->iommu_param->sva_param;
->> +
->> +	domain = iommu_get_domain_for_dev(dev);
->> +	if (!domain)
->> +		return -EINVAL;
->> +
->> +	/*
->> +	 * The device driver does not call sva_device_init/shutdown and
->> +	 * bind/unbind concurrently, so no need to take the param lock.
->> +	 */
-> what does guarantee that?
+I'll look into creating a new patch that unconditionally reprograms
+the PCI bridge prefetch stuff on resume.
 
-The doc for iommu_sva_bind_device mandates that iommu_sva_device_init()
-is called before bind(), but nothing is said about unbind and shutdown.
-I think that was just based on the assumption that the device driver
-doesn't have any reason to call unbind and shutdown concurrently, but
-taking the lock here and in unbind is probably safer.
-
->> +	ret = io_mm_attach(domain, dev, io_mm, drvdata);
->> +	if (ret)
->> +		io_mm_put(io_mm);
-> dont't you want to free the io_mm if just allocated?
-
-We do: if the io_mm has just been allocated, it has a single reference
-so io_mm_put frees it.
-
->> + * @mm_attach: attach io_mm to a device. Install PASID entry if necessary
->> + * @mm_detach: detach io_mm from a device. Remove PASID entry and
->> + *             flush associated TLB entries.
-> if necessary too?
-
-Right
-
-Thanks,
-Jean
-
-_______________________________________________
-linux-arm-kernel mailing list
-linux-arm-kernel@lists.infradead.org
-http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
+Thanks
+Daniel
