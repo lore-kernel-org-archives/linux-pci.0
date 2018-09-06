@@ -1,205 +1,88 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from shell.v3.sk ([90.176.6.54]:36043 "EHLO shell.v3.sk"
+Received: from mail.kernel.org ([198.145.29.99]:42118 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1728372AbeIJQxw (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Mon, 10 Sep 2018 12:53:52 -0400
-From: Lubomir Rintel <lkundrak@v3.sk>
-To: linux-kernel@vger.kernel.org
-Cc: linux-arm-kernel@lists.infradead.org, linux-pci@vger.kernel.org,
-        linux-spi@vger.kernel.org, devicetree@vger.kernel.org,
-        Mark Brown <broonie@kernel.org>,
-        Rob Herring <robh+dt@kernel.org>,
-        Mark Rutland <mark.rutland@arm.com>,
-        Eric Miao <eric.y.miao@gmail.com>,
-        Haojian Zhuang <haojian.zhuang@gmail.com>,
-        Daniel Mack <daniel@zonque.org>,
-        Robert Jarzmik <robert.jarzmik@free.fr>,
+        id S1727529AbeIGANz (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Thu, 6 Sep 2018 20:13:55 -0400
+Date: Thu, 6 Sep 2018 14:36:57 -0500
+From: Bjorn Helgaas <helgaas@kernel.org>
+To: Keith Busch <keith.busch@intel.com>
+Cc: Linux PCI <linux-pci@vger.kernel.org>,
         Bjorn Helgaas <bhelgaas@google.com>,
-        Lubomir Rintel <lkundrak@v3.sk>
-Subject: [PATCH 4/5] spi: pxa2xx: add devicetree support
-Date: Mon, 10 Sep 2018 13:59:34 +0200
-Message-Id: <20180910115935.163121-5-lkundrak@v3.sk>
-In-Reply-To: <20180910115935.163121-1-lkundrak@v3.sk>
-References: <20180910115935.163121-1-lkundrak@v3.sk>
+        Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+        Sinan Kaya <okaya@kernel.org>,
+        Thomas Tai <thomas.tai@oracle.com>, poza@codeaurora.org,
+        Lukas Wunner <lukas@wunner.de>, Christoph Hellwig <hch@lst.de>
+Subject: Re: [PATCHv2 15/20] PCI/pciehp: Fix powerfault detection order
+Message-ID: <20180906193657.GH214747@bhelgaas-glaptop.roam.corp.google.com>
+References: <20180905203546.21921-1-keith.busch@intel.com>
+ <20180905203546.21921-16-keith.busch@intel.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20180905203546.21921-16-keith.busch@intel.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-The MMP2 platform, that uses device tree, has this controller. Let's add
-devicetree alongside platform & PCI.
+On Wed, Sep 05, 2018 at 02:35:41PM -0600, Keith Busch wrote:
+> A device add in a power controller controlled slot will power on and
+> clear power fault slot events, but this was happening before the interrupt
+> handler attempted to set the sticky status and attention indicators. The
+> wrong status will be set if a hot-add and power fault are handled in
+> one interrupt. This patch fixes that by checking for power faults before
+> checking for new devices.
 
-Signed-off-by: Lubomir Rintel <lkundrak@v3.sk>
----
- drivers/spi/spi-pxa2xx.c   | 73 +++++++++++++++++++++++---------------
- include/linux/pxa2xx_ssp.h |  1 +
- 2 files changed, 45 insertions(+), 29 deletions(-)
+Can you clarify the part about "the interrupt handler attempting to set the
+sticky status and attention indicators"?  My first impression is that
+you're talking about bits in the Slot Status register, but that's
+obviously wrong because those bits are set by hardware (not the interrupt
+handler) and they're RW1C so software clears them by writing 1 to them.
 
-diff --git a/drivers/spi/spi-pxa2xx.c b/drivers/spi/spi-pxa2xx.c
-index f674541675bb..58554c765a87 100644
---- a/drivers/spi/spi-pxa2xx.c
-+++ b/drivers/spi/spi-pxa2xx.c
-@@ -33,6 +33,7 @@
- #include <linux/clk.h>
- #include <linux/pm_runtime.h>
- #include <linux/acpi.h>
-+#include <linux/of_device.h>
- 
- #include "spi-pxa2xx.h"
- 
-@@ -1333,9 +1334,6 @@ static void cleanup(struct spi_device *spi)
- 	kfree(chip);
- }
- 
--#ifdef CONFIG_PCI
--#ifdef CONFIG_ACPI
--
- static const struct acpi_device_id pxa2xx_spi_acpi_match[] = {
- 	{ "INT33C0", LPSS_LPT_SSP },
- 	{ "INT33C1", LPSS_LPT_SSP },
-@@ -1347,23 +1345,6 @@ static const struct acpi_device_id pxa2xx_spi_acpi_match[] = {
- };
- MODULE_DEVICE_TABLE(acpi, pxa2xx_spi_acpi_match);
- 
--static int pxa2xx_spi_get_port_id(struct acpi_device *adev)
--{
--	unsigned int devid;
--	int port_id = -1;
--
--	if (adev && adev->pnp.unique_id &&
--	    !kstrtouint(adev->pnp.unique_id, 0, &devid))
--		port_id = devid;
--	return port_id;
--}
--#else /* !CONFIG_ACPI */
--static int pxa2xx_spi_get_port_id(struct acpi_device *adev)
--{
--	return -1;
--}
--#endif
--
- /*
-  * PCI IDs of compound devices that integrate both host controller and private
-  * integrated DMA engine. Please note these are not used in module
-@@ -1410,6 +1391,37 @@ static const struct pci_device_id pxa2xx_spi_pci_compound_match[] = {
- 	{ },
- };
- 
-+static const struct of_device_id pxa2xx_spi_of_match[] = {
-+	{ .compatible = "marvell,mmp2-ssp", .data = (void *)MMP2_SSP },
-+	{},
-+};
-+MODULE_DEVICE_TABLE(of, pxa2xx_spi_of_match);
-+
-+#ifdef CONFIG_ACPI
-+
-+static int pxa2xx_spi_get_port_id(struct acpi_device *adev)
-+{
-+	unsigned int devid;
-+	int port_id = -1;
-+
-+	if (adev && adev->pnp.unique_id &&
-+	    !kstrtouint(adev->pnp.unique_id, 0, &devid))
-+		port_id = devid;
-+	return port_id;
-+}
-+
-+#else /* !CONFIG_ACPI */
-+
-+static int pxa2xx_spi_get_port_id(struct acpi_device *adev)
-+{
-+	return -1;
-+}
-+
-+#endif /* CONFIG_ACPI */
-+
-+
-+#ifdef CONFIG_PCI
-+
- static bool pxa2xx_spi_idma_filter(struct dma_chan *chan, void *param)
- {
- 	struct device *dev = param;
-@@ -1420,6 +1432,8 @@ static bool pxa2xx_spi_idma_filter(struct dma_chan *chan, void *param)
- 	return true;
- }
- 
-+#endif /* CONFIG_PCI */
-+
- static struct pxa2xx_spi_master *
- pxa2xx_spi_init_pdata(struct platform_device *pdev)
- {
-@@ -1429,11 +1443,15 @@ pxa2xx_spi_init_pdata(struct platform_device *pdev)
- 	struct resource *res;
- 	const struct acpi_device_id *adev_id = NULL;
- 	const struct pci_device_id *pcidev_id = NULL;
-+	const struct of_device_id *of_id = NULL;
- 	enum pxa_ssp_type type;
- 
- 	adev = ACPI_COMPANION(&pdev->dev);
- 
--	if (dev_is_pci(pdev->dev.parent))
-+	if (pdev->dev.of_node)
-+		of_id = of_match_device(pdev->dev.driver->of_match_table,
-+					&pdev->dev);
-+	else if (dev_is_pci(pdev->dev.parent))
- 		pcidev_id = pci_match_id(pxa2xx_spi_pci_compound_match,
- 					 to_pci_dev(pdev->dev.parent));
- 	else if (adev)
-@@ -1446,6 +1464,8 @@ pxa2xx_spi_init_pdata(struct platform_device *pdev)
- 		type = (enum pxa_ssp_type)adev_id->driver_data;
- 	else if (pcidev_id)
- 		type = (enum pxa_ssp_type)pcidev_id->driver_data;
-+	else if (of_id)
-+		type = (enum pxa_ssp_type)of_id->data;
- 	else
- 		return NULL;
- 
-@@ -1464,11 +1484,13 @@ pxa2xx_spi_init_pdata(struct platform_device *pdev)
- 	if (IS_ERR(ssp->mmio_base))
- 		return NULL;
- 
-+#ifdef CONFIG_PCI
- 	if (pcidev_id) {
- 		pdata->tx_param = pdev->dev.parent;
- 		pdata->rx_param = pdev->dev.parent;
- 		pdata->dma_filter = pxa2xx_spi_idma_filter;
- 	}
-+#endif
- 
- 	ssp->clk = devm_clk_get(&pdev->dev, NULL);
- 	ssp->irq = platform_get_irq(pdev, 0);
-@@ -1482,14 +1504,6 @@ pxa2xx_spi_init_pdata(struct platform_device *pdev)
- 	return pdata;
- }
- 
--#else /* !CONFIG_PCI */
--static inline struct pxa2xx_spi_master *
--pxa2xx_spi_init_pdata(struct platform_device *pdev)
--{
--	return NULL;
--}
--#endif
--
- static int pxa2xx_spi_fw_translate_cs(struct spi_controller *master,
- 				      unsigned int cs)
- {
-@@ -1848,6 +1862,7 @@ static struct platform_driver driver = {
- 		.name	= "pxa2xx-spi",
- 		.pm	= &pxa2xx_spi_pm_ops,
- 		.acpi_match_table = ACPI_PTR(pxa2xx_spi_acpi_match),
-+		.of_match_table = of_match_ptr(pxa2xx_spi_of_match),
- 	},
- 	.probe = pxa2xx_spi_probe,
- 	.remove = pxa2xx_spi_remove,
-diff --git a/include/linux/pxa2xx_ssp.h b/include/linux/pxa2xx_ssp.h
-index 262e1f318836..979087e021f3 100644
---- a/include/linux/pxa2xx_ssp.h
-+++ b/include/linux/pxa2xx_ssp.h
-@@ -196,6 +196,7 @@ enum pxa_ssp_type {
- 	PXA27x_SSP,
- 	PXA3xx_SSP,
- 	PXA168_SSP,
-+	MMP2_SSP,
- 	PXA910_SSP,
- 	CE4100_SSP,
- 	QUARK_X1000_SSP,
--- 
-2.17.1
+Lukas suggests that this patch should be in v4.19.  Do you agree, and if
+so, can you help me justify it by describing the user-visible effect of
+this?  I'm not sure what "setting the wrong status" means to a user, e.g.,
+does this result in a non-functional device, an incorrect status LED on the
+slot, something else?  Does it fix a regression or something we merged for
+v4.19?
+
+> Signed-off-by: Keith Busch <keith.busch@intel.com>
+> Reviewed-by: Lukas Wunner <lukas@wunner.de>
+> ---
+>  drivers/pci/hotplug/pciehp_hpc.c | 16 ++++++++--------
+>  1 file changed, 8 insertions(+), 8 deletions(-)
+> 
+> diff --git a/drivers/pci/hotplug/pciehp_hpc.c b/drivers/pci/hotplug/pciehp_hpc.c
+> index 9eb28a06cac6..52a18a7ec2a2 100644
+> --- a/drivers/pci/hotplug/pciehp_hpc.c
+> +++ b/drivers/pci/hotplug/pciehp_hpc.c
+> @@ -630,6 +630,14 @@ static irqreturn_t pciehp_ist(int irq, void *dev_id)
+>  		pciehp_handle_button_press(slot);
+>  	}
+>  
+> +	/* Check Power Fault Detected */
+> +	if ((events & PCI_EXP_SLTSTA_PFD) && !ctrl->power_fault_detected) {
+> +		ctrl->power_fault_detected = 1;
+> +		ctrl_err(ctrl, "Slot(%s): Power fault\n", slot_name(slot));
+> +		pciehp_set_attention_status(slot, 1);
+> +		pciehp_green_led_off(slot);
+> +	}
+> +
+>  	/*
+>  	 * Disable requests have higher priority than Presence Detect Changed
+>  	 * or Data Link Layer State Changed events.
+> @@ -641,14 +649,6 @@ static irqreturn_t pciehp_ist(int irq, void *dev_id)
+>  		pciehp_handle_presence_or_link_change(slot, events);
+>  	up_read(&ctrl->reset_lock);
+>  
+> -	/* Check Power Fault Detected */
+> -	if ((events & PCI_EXP_SLTSTA_PFD) && !ctrl->power_fault_detected) {
+> -		ctrl->power_fault_detected = 1;
+> -		ctrl_err(ctrl, "Slot(%s): Power fault\n", slot_name(slot));
+> -		pciehp_set_attention_status(slot, 1);
+> -		pciehp_green_led_off(slot);
+> -	}
+> -
+>  	pci_config_pm_runtime_put(pdev);
+>  	wake_up(&ctrl->requester);
+>  	return IRQ_HANDLED;
+> -- 
+> 2.14.4
+> 
