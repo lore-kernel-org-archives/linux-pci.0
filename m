@@ -1,57 +1,61 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mga05.intel.com ([192.55.52.43]:41687 "EHLO mga05.intel.com"
+Received: from mail.kernel.org ([198.145.29.99]:55768 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1726219AbeIEPjw (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Wed, 5 Sep 2018 11:39:52 -0400
-From: Mika Westerberg <mika.westerberg@linux.intel.com>
-To: Bjorn Helgaas <bhelgaas@google.com>
-Cc: Alex Williamson <alex.williamson@redhat.com>,
-        Mika Westerberg <mika.westerberg@linux.intel.com>,
-        linux-pci@vger.kernel.org
-Subject: [PATCH] Revert "PCI: Add ACS quirk for Intel 300 series"
-Date: Wed,  5 Sep 2018 14:09:54 +0300
-Message-Id: <20180905110954.61990-1-mika.westerberg@linux.intel.com>
+        id S1728826AbeIFXmF (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Thu, 6 Sep 2018 19:42:05 -0400
+Date: Thu, 6 Sep 2018 14:05:13 -0500
+From: Bjorn Helgaas <helgaas@kernel.org>
+To: Andy Shevchenko <andriy.shevchenko@linux.intel.com>
+Cc: Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org
+Subject: Re: [PATCH v1] PCI: Switch to bitmap_zalloc()
+Message-ID: <20180906190513.GE214747@bhelgaas-glaptop.roam.corp.google.com>
+References: <20180830103236.60736-1-andriy.shevchenko@linux.intel.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20180830103236.60736-1-andriy.shevchenko@linux.intel.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-This reverts commit f154a718e6cc0d834f5ac4dc4c3b174e65f3659e.
+On Thu, Aug 30, 2018 at 01:32:36PM +0300, Andy Shevchenko wrote:
+> Switch to bitmap_zalloc() to show clearly what we are allocating.
+> Besides that it returns pointer of bitmap type instead of opaque void *.
+> 
+> Signed-off-by: Andy Shevchenko <andriy.shevchenko@linux.intel.com>
 
-It turns out that errata "PCH PCIe* Controller Root Port (ACSCTLR)
-Appear As Read Only" has been fixed in 300 series chipsets even if the
-datasheet [1] claims otherwise. To make ACS working properly on 300
-series root ports, revert the faulty commit.
+Applied to pci/misc for v4.20, thanks!
 
-[1] https://www.intel.com/content/dam/www/public/us/en/documents/specification-updates/300-series-c240-series-chipset-pch-spec-update.pdf
-
-Signed-off-by: Mika Westerberg <mika.westerberg@linux.intel.com>
-Cc: stable@vger.kernel.org
----
- drivers/pci/quirks.c | 6 ------
- 1 file changed, 6 deletions(-)
-
-diff --git a/drivers/pci/quirks.c b/drivers/pci/quirks.c
-index ef7143a274e0..6bc27b7fd452 100644
---- a/drivers/pci/quirks.c
-+++ b/drivers/pci/quirks.c
-@@ -4355,11 +4355,6 @@ static int pci_quirk_qcom_rp_acs(struct pci_dev *dev, u16 acs_flags)
-  *
-  * 0x9d10-0x9d1b PCI Express Root port #{1-12}
-  *
-- * The 300 series chipset suffers from the same bug so include those root
-- * ports here as well.
-- *
-- * 0xa32c-0xa343 PCI Express Root port #{0-24}
-- *
-  * [1] http://www.intel.com/content/www/us/en/chipsets/100-series-chipset-datasheet-vol-2.html
-  * [2] http://www.intel.com/content/www/us/en/chipsets/100-series-chipset-datasheet-vol-1.html
-  * [3] http://www.intel.com/content/www/us/en/chipsets/100-series-chipset-spec-update.html
-@@ -4377,7 +4372,6 @@ static bool pci_quirk_intel_spt_pch_acs_match(struct pci_dev *dev)
- 	case 0xa110 ... 0xa11f: case 0xa167 ... 0xa16a: /* Sunrise Point */
- 	case 0xa290 ... 0xa29f: case 0xa2e7 ... 0xa2ee: /* Union Point */
- 	case 0x9d10 ... 0x9d1b: /* 7th & 8th Gen Mobile */
--	case 0xa32c ... 0xa343:				/* 300 series */
- 		return true;
- 	}
- 
--- 
-2.18.0
+> ---
+>  drivers/pci/pci.c   | 3 +--
+>  drivers/pci/probe.c | 2 +-
+>  2 files changed, 2 insertions(+), 3 deletions(-)
+> 
+> diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
+> index 29ff9619b5fa..c6de7e0dd3fa 100644
+> --- a/drivers/pci/pci.c
+> +++ b/drivers/pci/pci.c
+> @@ -5689,8 +5689,7 @@ int pci_set_vga_state(struct pci_dev *dev, bool decode,
+>  void pci_add_dma_alias(struct pci_dev *dev, u8 devfn)
+>  {
+>  	if (!dev->dma_alias_mask)
+> -		dev->dma_alias_mask = kcalloc(BITS_TO_LONGS(U8_MAX),
+> -					      sizeof(long), GFP_KERNEL);
+> +		dev->dma_alias_mask = bitmap_zalloc(U8_MAX, GFP_KERNEL);
+>  	if (!dev->dma_alias_mask) {
+>  		pci_warn(dev, "Unable to allocate DMA alias mask\n");
+>  		return;
+> diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
+> index ec784009a36b..b6465a59aeb1 100644
+> --- a/drivers/pci/probe.c
+> +++ b/drivers/pci/probe.c
+> @@ -2140,7 +2140,7 @@ static void pci_release_dev(struct device *dev)
+>  	pcibios_release_device(pci_dev);
+>  	pci_bus_put(pci_dev->bus);
+>  	kfree(pci_dev->driver_override);
+> -	kfree(pci_dev->dma_alias_mask);
+> +	bitmap_free(pci_dev->dma_alias_mask);
+>  	kfree(pci_dev);
+>  }
+>  
+> -- 
+> 2.18.0
+> 
