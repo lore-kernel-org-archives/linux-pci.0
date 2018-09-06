@@ -1,113 +1,62 @@
-Return-Path: <SRS0=Pbmb=L4=linux.ibm.com=sbobroff@kernel.org>
-Return-Path: <SRS0=Pbmb=L4=linux.ibm.com=sbobroff@kernel.org>
-Date: Fri, 14 Sep 2018 10:05:20 +1000
-From: Sam Bobroff <sbobroff@linux.ibm.com>
-To: Russell Currey <ruscur@russell.cc>
-Cc: Bjorn Helgaas <helgaas@kernel.org>, linux-pci@vger.kernel.org,
-        linuxppc-dev@lists.ozlabs.org,
-        Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-        Paul Mackerras <paulus@samba.org>,
-        Michael Ellerman <mpe@ellerman.id.au>, linux-kernel@vger.kernel.org,
-        oohall@gmail.com
-Subject: Re: [PATCH] MAINTAINERS: Add PPC contacts for PCI core error handling
-References: <153677132617.23091.12307288405707171077.stgit@bhelgaas-glaptop.roam.corp.google.com>
- <20180912165846.GH118330@bhelgaas-glaptop.roam.corp.google.com>
- <94b8929d44af6dd965600b7d159458312d500582.camel@russell.cc>
-MIME-Version: 1.0
-Content-Type: multipart/signed; micalg=pgp-sha256;
-	protocol="application/pgp-signature"; boundary="+QahgC5+KEYLbs62"
-In-Reply-To: <94b8929d44af6dd965600b7d159458312d500582.camel@russell.cc>
-Message-Id: <20180914000520.GA7655@tungsten.ozlabs.ibm.com>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mga17.intel.com ([192.55.52.151]:29854 "EHLO mga17.intel.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1730291AbeIFU0f (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Thu, 6 Sep 2018 16:26:35 -0400
+From: Mika Westerberg <mika.westerberg@linux.intel.com>
+To: Bjorn Helgaas <bhelgaas@google.com>,
+        "Rafael J. Wysocki" <rjw@rjwysocki.net>
+Cc: Len Brown <lenb@kernel.org>, Lukas Wunner <lukas@wunner.de>,
+        Keith Busch <keith.busch@intel.com>,
+        Ashok Raj <ashok.raj@intel.com>, Mario.Limonciello@dell.com,
+        Anthony Wong <anthony.wong@canonical.com>,
+        "D . J . Bernstein" <djb@cr.yp.to>,
+        Linus Walleij <linus.walleij@linaro.org>,
+        Mika Westerberg <mika.westerberg@linux.intel.com>,
+        linux-pci@vger.kernel.org, linux-acpi@vger.kernel.org
+Subject: [PATCH 01/10] PCI: Do not skip power managed bridges in pci_enable_wake()
+Date: Thu,  6 Sep 2018 18:50:11 +0300
+Message-Id: <20180906155020.51700-2-mika.westerberg@linux.intel.com>
+In-Reply-To: <20180906155020.51700-1-mika.westerberg@linux.intel.com>
+References: <20180906155020.51700-1-mika.westerberg@linux.intel.com>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
+Commit baecc470d5fd ("PCI / PM: Skip bridges in pci_enable_wake()")
+changed pci_enable_wake() so that all bridges are skipped when wakeup is
+enabled (or disabled) with the reasoning that bridges can only signal
+wakeup on behalf of their subordinate devices.
 
---+QahgC5+KEYLbs62
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-Content-Transfer-Encoding: quoted-printable
+However, there are bridges that can signal wakeup itself. For example
+PCIe downstream and root ports supporting hotplug may signal wakeup upon
+hotplug event.
 
-On Thu, Sep 13, 2018 at 12:26:55PM +1000, Russell Currey wrote:
-> On Wed, 2018-09-12 at 11:58 -0500, Bjorn Helgaas wrote:
-> > On Wed, Sep 12, 2018 at 11:55:26AM -0500, Bjorn Helgaas wrote:
-> > > From: Bjorn Helgaas <bhelgaas@google.com>
-> > >=20
-> > > The original PCI error recovery functionality was for the powerpc-spe=
-cific
-> > > IBM EEH feature.  PCIe subsequently added some similar features, incl=
-uding
-> > > AER and DPC, that can be used on any architecture.
-> > >=20
-> > > We want the generic PCI core error handling support to work with all =
-of
-> > > these features.  Driver error recovery callbacks should be independen=
-t of
-> > > which feature the platform provides.
-> > >=20
-> > > Add the generic PCI core error recovery files to the powerpc EEH
-> > > MAINTAINERS entry so the powerpc folks will be copied on changes to t=
-he
-> > > generic PCI error handling strategy.
-> >=20
-> > I really want to make sure the powerpc folks are plugged into any PCI c=
-ore
-> > error handling discussions.  Please let me know if there's a better way
-> > than this patch, or if there are other people who should be added.
->=20
-> I think this patch is definitely a good idea.
->=20
-> Alongside this (whether you want to include it in your patch or not, Bjor=
-n),
-> Sam Bobroff should replace myself as maintainer.  He's been very active i=
-n fixing,
-> reworking and reviewing in EEH land and will probably do a better job of =
-keeping
-> his finger on the pulse of the generic PCI error handling code than I did.
->=20
-> - Russell
+For this reason change pci_enable_wake() so that it skips all bridges
+except those that we power manage (->bridge_d3 is set). Those are the
+ones that can go into low power states and may need to signal wakeup.
 
-That's fine with me. You can add me or let me know if I should send a
-patch.
+Signed-off-by: Mika Westerberg <mika.westerberg@linux.intel.com>
+---
+ drivers/pci/pci.c | 6 ++++--
+ 1 file changed, 4 insertions(+), 2 deletions(-)
 
-Sam.
-
->=20
-> >=20
-> > > Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
-> > > ---
-> > >  MAINTAINERS |    4 ++++
-> > >  1 file changed, 4 insertions(+)
-> > >=20
-> > > diff --git a/MAINTAINERS b/MAINTAINERS
-> > > index 7e10ba65bfe4..d6699597fd89 100644
-> > > --- a/MAINTAINERS
-> > > +++ b/MAINTAINERS
-> > > @@ -11202,6 +11202,10 @@ PCI ENHANCED ERROR HANDLING (EEH) FOR POWERPC
-> > >  M:	Russell Currey <ruscur@russell.cc>
-> > >  L:	linuxppc-dev@lists.ozlabs.org
-> > >  S:	Supported
-> > > +F:	Documentation/PCI/pci-error-recovery.txt
-> > > +F:	drivers/pci/pcie/aer.c
-> > > +F:	drivers/pci/pcie/dpc.c
-> > > +F:	drivers/pci/pcie/err.c
-> > >  F:	Documentation/powerpc/eeh-pci-error-recovery.txt
-> > >  F:	arch/powerpc/kernel/eeh*.c
-> > >  F:	arch/powerpc/platforms/*/eeh*.c
-> > >=20
->=20
-
---+QahgC5+KEYLbs62
-Content-Type: application/pgp-signature; name="signature.asc"
-
------BEGIN PGP SIGNATURE-----
-
-iQEzBAABCAAdFiEELWWF8pdtWK5YQRohMX8w6AQl/iIFAlua+zEACgkQMX8w6AQl
-/iKOcQf+JdfQFAngmcHC2C0vnnnEQQqLURa4IOJ1v4MhPTFoPBNoAaFuXXTeCC/L
-6UEq5ZWULO+9LjgcDrXyzB30dFLv3o+Vdy/atZqogaiAFdFn77IQoO2IQJkZyA1v
-oS1Vd5YbepFuJyxSX1lSlV5aljuUQkcc7QRQ93w3j/j6KsRqJiyjCpI782ANZFtY
-CvomFGtSfdQgEVC/4VfXSIs4ZSbvB8LmprXWnIVmPTuw7gnkVJGpLACmmsLcwuvf
-bRZmVvveTvoyfVzJV9PCifKLJhojr1mfgtIbmQ9UWdWfjELnvKle9zAnilrppBmL
-+iPh3HV5N0DSOfeYraEGzM5F7DQO0A==
-=fTc4
------END PGP SIGNATURE-----
-
---+QahgC5+KEYLbs62--
+diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
+index 29ff9619b5fa..074f3f0253f9 100644
+--- a/drivers/pci/pci.c
++++ b/drivers/pci/pci.c
+@@ -2134,9 +2134,11 @@ static int __pci_enable_wake(struct pci_dev *dev, pci_power_t state, bool enable
+ 
+ 	/*
+ 	 * Bridges can only signal wakeup on behalf of subordinate devices,
+-	 * but that is set up elsewhere, so skip them.
++	 * but that is set up elsewhere, so skip them. With the exception
++	 * of bridges that we power manage. These can signal wake for
++	 * example on a hotplug event.
+ 	 */
+-	if (pci_has_subordinate(dev))
++	if (!pci_power_manageable(dev))
+ 		return 0;
+ 
+ 	/* Don't do the same thing twice in a row for one device. */
+-- 
+2.18.0
