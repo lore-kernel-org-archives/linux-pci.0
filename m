@@ -1,43 +1,40 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mta-01.yadro.com ([89.207.88.251]:60238 "EHLO mta-01.yadro.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1726845AbeINVgo (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Fri, 14 Sep 2018 17:36:44 -0400
-From: Sergey Miroshnichenko <s.miroshnichenko@yadro.com>
-To: <linux-pci@vger.kernel.org>
-CC: Bjorn Helgaas <bhelgaas@google.com>, <linux@yadro.com>,
-        Sergey Miroshnichenko <s.miroshnichenko@yadro.com>
-Subject: [PATCH RFC 4/4] PCI: Fix writing invalid BARs during pci_restore_state()
-Date: Fri, 14 Sep 2018 19:14:04 +0300
-Message-ID: <20180914161404.4685-5-s.miroshnichenko@yadro.com>
-In-Reply-To: <20180914161404.4685-1-s.miroshnichenko@yadro.com>
-References: <20180914161404.4685-1-s.miroshnichenko@yadro.com>
+Return-Path: <SRS0=xLzV=LU=gmail.com=rjwysocki@kernel.org>
+Return-Path: <SRS0=xLzV=LU=gmail.com=rjwysocki@kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain
-Sender: linux-pci-owner@vger.kernel.org
+References: <1533875532-24954-1-git-send-email-okaya@kernel.org> <20180905212028.GS107892@bhelgaas-glaptop.roam.corp.google.com>
+In-Reply-To: <20180905212028.GS107892@bhelgaas-glaptop.roam.corp.google.com>
+From: "Rafael J. Wysocki" <rafael@kernel.org>
+Date: Thu, 6 Sep 2018 11:05:48 +0200
+Message-ID: <CAJZ5v0jA5ibsHseygjOrG_Azw_Xj7y0=TAMks7x-i-yT4+E9QQ@mail.gmail.com>
+Subject: Re: [PATCH v2 1/2] PCI/ACPI: correct error message for ASPM disabling
+To: Bjorn Helgaas <helgaas@kernel.org>
+Cc: okaya@kernel.org, Linux PCI <linux-pci@vger.kernel.org>,
+	Bjorn Helgaas <bhelgaas@google.com>, "Rafael J. Wysocki" <rjw@rjwysocki.net>, Len Brown <lenb@kernel.org>,
+	ACPI Devel Maling List <linux-acpi@vger.kernel.org>,
+	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>
+Content-Type: text/plain; charset="UTF-8"
 List-ID: <linux-pci.vger.kernel.org>
 
-If BAR movement has happened (due to PCIe hotplug) after pci_save_state(),
-the saved addresses will become outdated. Restore them the most recently
-calculated values, not the ones stored in an arbitrary moment.
+On Wed, Sep 5, 2018 at 11:20 PM Bjorn Helgaas <helgaas@kernel.org> wrote:
+>
+> On Fri, Aug 10, 2018 at 04:32:11AM +0000, Sinan Kaya wrote:
+> > If _OSC execution fails today for platforms without an _OSC
+> > entry, code is printing a misleading message saying disabling
+> > ASPM as follows:
+> >
+> > acpi PNP0A03:00: _OSC failed (AE_NOT_FOUND); disabling ASPM
+> >
+> > We need to ensure that platform supports ASPM to begin with.
+> >
+> > Signed-off-by: Sinan Kaya <okaya@kernel.org>
+> > Reported-by: Michael Kelley <mikelley@microsoft.com>
+>
+> Tentatively applied both to pci/aspm for v4.20, thanks!
+>
+> Rafael, let me know if you object or would rather put these through your tree.
 
-Signed-off-by: Sergey Miroshnichenko <s.miroshnichenko@yadro.com>
----
- drivers/pci/pci.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+I have no problems with these and they can go in via the PCI tree as
+far as I'm concerned.
 
-diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
-index 5f07a59b5924..154130959443 100644
---- a/drivers/pci/pci.c
-+++ b/drivers/pci/pci.c
-@@ -1328,7 +1328,7 @@ static void pci_restore_config_space(struct pci_dev *pdev)
- 	if (pdev->hdr_type == PCI_HEADER_TYPE_NORMAL) {
- 		pci_restore_config_space_range(pdev, 10, 15, 0);
- 		/* Restore BARs before the command register. */
--		pci_restore_config_space_range(pdev, 4, 9, 10);
-+		pci_restore_bars(pdev);
- 		pci_restore_config_space_range(pdev, 0, 3, 0);
- 	} else {
- 		pci_restore_config_space_range(pdev, 0, 15, 0);
--- 
-2.17.1
+Thanks,
+Rafael
