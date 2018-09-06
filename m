@@ -1,71 +1,54 @@
-Return-Path: <linux-nvme-bounces+bjorn=helgaas.com@lists.infradead.org>
-Return-Path: <linux-nvme-bounces+bjorn=helgaas.com@lists.infradead.org>
-Subject: Re: [PATCH v5 07/13] block: Add PCI P2P flag for request queue and
- check support for requests
-To: Logan Gunthorpe <logang@deltatee.com>, Christoph Hellwig <hch@lst.de>
-References: <20180830185352.3369-1-logang@deltatee.com>
- <20180830185352.3369-8-logang@deltatee.com>
- <b5ab8fa3-34ac-3117-fa0d-5206c3939435@kernel.dk>
- <20180901082812.GB670@lst.de>
- <5f79c012-c6e1-56bb-62fd-0689181fb2c9@deltatee.com>
- <59b28977-8f2a-6228-2050-03fae6bdbedd@kernel.dk>
- <1b4283da-44df-4a02-3167-e295243cef78@deltatee.com>
- <09258b9b-3aed-9890-b31a-bd70a133966c@kernel.dk>
- <20180905195647.GA1626@lst.de>
- <bcc1b3cf-2fd9-fa61-9cfb-b0e4d84e5d94@kernel.dk>
- <20180905201152.GA1893@lst.de>
- <eb42fb94-9da6-955b-8524-0a0f5ac4bd19@deltatee.com>
- <2a3394bd-5f13-4818-43f4-dfc61f501e05@kernel.dk>
- <e3ef26e6-6c8d-25b8-fa64-14594a51263c@deltatee.com>
-From: Jens Axboe <axboe@kernel.dk>
-Message-ID: <3af4d1d4-da07-c0a6-8464-9ddc1378f2f4@kernel.dk>
-Date: Wed, 5 Sep 2018 14:19:39 -0600
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+From: Jean-Philippe Brucker <jean-philippe.brucker@arm.com>
+Subject: Re: [PATCH v2 04/40] iommu/sva: Add a mm_exit callback for device
+ drivers
+To: Auger Eric <eric.auger@redhat.com>, linux-arm-kernel@lists.infradead.org,
+ linux-pci@vger.kernel.org, linux-acpi@vger.kernel.org,
+ devicetree@vger.kernel.org, iommu@lists.linux-foundation.org,
+ kvm@vger.kernel.org, linux-mm@kvack.org
+References: <20180511190641.23008-1-jean-philippe.brucker@arm.com>
+ <20180511190641.23008-5-jean-philippe.brucker@arm.com>
+ <d1dc28c4-7742-9c41-3f91-3fbcb8b13c1c@redhat.com>
+Message-ID: <27b964dc-68c4-3bb3-288c-166c25864e45@arm.com>
+Date: Thu, 6 Sep 2018 12:10:58 +0100
 MIME-Version: 1.0
-In-Reply-To: <e3ef26e6-6c8d-25b8-fa64-14594a51263c@deltatee.com>
-List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-nvme>,
- <mailto:linux-nvme-request@lists.infradead.org?subject=unsubscribe>
-List-Archive: <http://lists.infradead.org/pipermail/linux-nvme/>
-List-Post: <mailto:linux-nvme@lists.infradead.org>
-List-Help: <mailto:linux-nvme-request@lists.infradead.org?subject=help>
-List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-nvme>,
- <mailto:linux-nvme-request@lists.infradead.org?subject=subscribe>
-Cc: Keith Busch <keith.busch@intel.com>,
- Alex Williamson <alex.williamson@redhat.com>, Sagi Grimberg <sagi@grimberg.me>,
- linux-nvdimm@lists.01.org, linux-rdma@vger.kernel.org,
- linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
- linux-nvme@lists.infradead.org, Stephen Bates <sbates@raithlin.com>,
- linux-block@vger.kernel.org,
- =?UTF-8?B?SsOpcsO0bWUgR2xpc3Nl?= <jglisse@redhat.com>,
- Jason Gunthorpe <jgg@mellanox.com>,
- Benjamin Herrenschmidt <benh@kernel.crashing.org>,
- Bjorn Helgaas <bhelgaas@google.com>, Max Gurtovoy <maxg@mellanox.com>,
- Dan Williams <dan.j.williams@intel.com>,
- =?UTF-8?Q?Christian_K=c3=b6nig?= <christian.koenig@amd.com>
+In-Reply-To: <d1dc28c4-7742-9c41-3f91-3fbcb8b13c1c@redhat.com>
+List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
+List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
+List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
+List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
+List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
+Cc: xieyisheng1@huawei.com, ilias.apalodimas@linaro.org, xuzaibo@huawei.com,
+ thunder.leizhen@huawei.com, will.deacon@arm.com, okaya@codeaurora.org,
+ yi.l.liu@intel.com, ashok.raj@intel.com, tn@semihalf.com, joro@8bytes.org,
+ bharatku@xilinx.com, liudongdong3@huawei.com, rfranz@cavium.com,
+ kevin.tian@intel.com, jacob.jun.pan@linux.intel.com,
+ alex.williamson@redhat.com, rgummal@xilinx.com, jonathan.cameron@huawei.com,
+ shunyong.yang@hxt-semitech.com, dwmw2@infradead.org, liubo95@huawei.com,
+ jcrouse@codeaurora.org, robdclark@gmail.com, robin.murphy@arm.com,
+ christian.koenig@amd.com, nwatters@codeaurora.org, baolu.lu@linux.intel.com
 Content-Type: text/plain; charset="us-ascii"
-Sender: "Linux-nvme" <linux-nvme-bounces@lists.infradead.org>
-Errors-To: linux-nvme-bounces+bjorn=helgaas.com@lists.infradead.org
+Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
+Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 9/5/18 2:18 PM, Logan Gunthorpe wrote:
-> 
-> 
-> On 05/09/18 02:14 PM, Jens Axboe wrote:
->> But if the caller must absolutely know where the bio will end up, then
->> it seems super redundant. So I'd vote for killing this check, it buys
->> us absolutely nothing and isn't even exhaustive in its current form.
-> 
-> 
-> Ok, I'll remove it for v6.
+On 05/09/2018 14:23, Auger Eric wrote:
+>> + * If the driver intends to share process address spaces, it should pass a valid
+>> + * @mm_exit handler. Otherwise @mm_exit can be NULL.
+> I don't get case where mm_exit is allowed to be NULL.
 
-Since the drivers needs to know it's doing it right, it might not
-hurt to add a sanity check helper for that. Just have the driver
-call it, and don't add it in the normal IO submission path.
+Right, this comment is a bit premature. Next version adds a "private
+PASID" patch to allocate private address spaces per PASID (modifiable
+with map/unmap). That mode doesn't require mm_exit, and I can move the
+comment there
 
--- 
-Jens Axboe
-
+Thanks,
+Jean
 
 _______________________________________________
-Linux-nvme mailing list
-Linux-nvme@lists.infradead.org
-http://lists.infradead.org/mailman/listinfo/linux-nvme
+linux-arm-kernel mailing list
+linux-arm-kernel@lists.infradead.org
+http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
