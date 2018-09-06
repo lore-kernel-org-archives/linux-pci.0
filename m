@@ -1,79 +1,85 @@
-Return-Path: <linux-acpi-owner@vger.kernel.org>
-Date: Tue, 11 Sep 2018 11:26:30 +0200
-From: Lukas Wunner <lukas@wunner.de>
-To: Mika Westerberg <mika.westerberg@linux.intel.com>
-Cc: Bjorn Helgaas <bhelgaas@google.com>,
-        "Rafael J. Wysocki" <rjw@rjwysocki.net>,
-        Len Brown <lenb@kernel.org>,
-        Keith Busch <keith.busch@intel.com>,
-        Ashok Raj <ashok.raj@intel.com>, Mario.Limonciello@dell.com,
-        Anthony Wong <anthony.wong@canonical.com>,
-        "D . J . Bernstein" <djb@cr.yp.to>,
-        Linus Walleij <linus.walleij@linaro.org>,
-        linux-pci@vger.kernel.org, linux-acpi@vger.kernel.org
-Subject: Re: [PATCH 05/10] PCI: portdrv: Resume upon exit from system suspend
- if left runtime suspended
-Message-ID: <20180911092630.ibn36j54zamhrcoh@wunner.de>
-References: <20180906155020.51700-1-mika.westerberg@linux.intel.com>
- <20180906155020.51700-6-mika.westerberg@linux.intel.com>
- <20180911082935.gwcwqnk7ohwencui@wunner.de>
- <20180911090817.GS14465@lahna.fi.intel.com>
+Return-Path: <SRS0=hNZt=LU=socionext.com=hayashi.kunihiko@kernel.org>
+Return-Path: <SRS0=hNZt=LU=socionext.com=hayashi.kunihiko@kernel.org>
+Date: Thu, 06 Sep 2018 10:38:08 +0900
+From: Kunihiko Hayashi <hayashi.kunihiko@socionext.com>
+To: Bjorn Helgaas <helgaas@kernel.org>
+Subject: Re: [PATCH 1/2] dt-bindings: pci: add UniPhier PCIe host controller description
+Cc: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
+ Bjorn Helgaas <bhelgaas@google.com>,
+ Rob Herring <robh+dt@kernel.org>,
+ Mark Rutland <mark.rutland@arm.com>,
+ Masahiro Yamada <yamada.masahiro@socionext.com>,
+ devicetree@vger.kernel.org,
+ Masami Hiramatsu <masami.hiramatsu@linaro.org>,
+ linux-pci@vger.kernel.org,
+ linux-kernel@vger.kernel.org,
+ Jassi Brar <jaswinder.singh@linaro.org>,
+ linux-arm-kernel@lists.infradead.org
+In-Reply-To: <20180905172118.GN107892@bhelgaas-glaptop.roam.corp.google.com>
+References: <1536114731-28630-2-git-send-email-hayashi.kunihiko@socionext.com> <20180905172118.GN107892@bhelgaas-glaptop.roam.corp.google.com>
+Message-Id: <20180906103808.2529.4A936039@socionext.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20180911090817.GS14465@lahna.fi.intel.com>
-Sender: linux-acpi-owner@vger.kernel.org
+Content-Type: text/plain; charset="US-ASCII"
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tue, Sep 11, 2018 at 12:08:17PM +0300, Mika Westerberg wrote:
-> On Tue, Sep 11, 2018 at 10:29:35AM +0200, Lukas Wunner wrote:
-> > On Thu, Sep 06, 2018 at 06:50:15PM +0300, Mika Westerberg wrote:
-> > > Currently we try to keep PCIe ports runtime suspended over system
-> > > suspend if possible. This mostly happens when entering suspend-to-idle
-> > > because there is no need to re-configure wake settings.
-> > > 
-> > > This causes problems if the parent port goes into D3cold and it gets
-> > > resumed upon exit from system suspend. This may happen for example if
-> > > the port is part of PCIe switch and the same switch is connected to a
-> > > PCIe endpoint that needs to be resumed. The way exit from D3cold works
-> > > according PCIe 4.0 spec 5.3.1.4.2 is that power is restored and cold
-> > > reset is signaled. After this the device is in D0unitialized state
-> > > keeping PME context if it supports wake from D3cold.
-> > > 
-> > > The problem occurs when a PCIe hotplug port is left suspended and the
-> > > parent port goes into D3cold and back to D0, the port keeps its PME
-> > > context but since everything else is reset back to defaults
-> > > (D0unitialized) it is not set to detect hotplug events anymore.
-> > 
-> > We call pci_wakeup_bus() in __pci_start_power_transition() for this
-> > reason.  Why isn't that sufficient in your use case?
+Hi Bjorn,
+
+Thank you for reviewing.
+
+On Wed, 5 Sep 2018 12:21:18 -0500 <helgaas@kernel.org> wrote:
+
 > 
-> It would otherwise but __pci_start_power_transition() is never called
-> because the bridge is left suspended.
-
-You write above that the parent goes to D0, now you say it is left
-suspended.  Which one is it?
-
-
-> > > For this reason change the PCIe portdrv power management logic so that
-> > > it is fine to keep the port runtime suspended over system suspend but it
-> > > needs to be resumed upon exit to make sure it gets properly re-initialized.
-> > > The custom ->prepare() hook with DPM_FLAG_SMART_PREPARE is needed
-> > > because otherwise pci_pm_prepare() instructs the PM core to go directly
-> > > to pci_pm_complete() on resume and this skips resuming the port.
-> > 
-> > On Macs, if no Thunderbolt device is attached, it is perfectly okay to
-> > use direct complete and it is also perfectly okay to leave the entire
-> > controller (including all its PCIe ports) in D3cold when coming out of
-> > system sleep.  In fact it would be unnecessary and undesirable to
-> > runtime resume the controller, it would just waste energy for no reason.
+> Please follow the capitalization convention, i.e.,
 > 
-> I'm surprised if it works like that because both PCIe spec and
-> conventional PCI spec both require reset after D3cold and the only state
-> for a function after that is D0uninitialized.
+>   $ git log --oneline --no-merges Documentaon/devicetree/bindings/pci/ | grep -i pci
+>   82dfbd27c837 dt-bindings: PCI: cadence: Add DT bindings for optional PHYs
+>   92f9ccca4c08 PCI: mobiveil: Add Mobiveil PCIe Host Bridge IP driver DT bindings
+>   71918e24cb49 dt-bindings: PCI: designware: Add support for EP in DesignWare driver
+>   467c7a737642 dt-bindings: PCI: designware: Example update
+>   1dca7a636933 dt-bindings: PCI: rockchip: Add DT bindings for Rockchip PCIe EP driver
+>   2ca25bd7472f dt-bindings: PCI: rockchip: Rename rockchip-pcie.txt to rockchip-pcie-host.txt
+> 
+> On Wed, Sep 05, 2018 at 11:32:10AM +0900, Kunihiko Hayashi wrote:
+> > Add DT bindings for PCIe controller implemented in UniPhier SoCs when
+> > configured in Root Complex (host) mode. This controller is based on
+> > the Designware PCIe Core.
+> 
+> s/Designware/DesignWare/
+> s/Core/core/
 
-The controller is in D3cold when coming out of system sleep if it was in
-D3cold when sytem sleep commenced.
+Okay, I'll fix capitalization conventions in all the descriptions
+according to the previous commits.
 
-Thanks,
+> > 
+> > Signed-off-by: Kunihiko Hayashi <hayashi.kunihiko@socionext.com>
+> > ---
+> >  .../devicetree/bindings/pci/uniphier-pcie.txt      | 78 ++++++++++++++++++++++
+> >  1 file changed, 78 insertions(+)
+> >  create mode 100644 Documentation/devicetree/bindings/pci/uniphier-pcie.txt
+> > 
+> > diff --git a/Documentation/devicetree/bindings/pci/uniphier-pcie.txt b/Documentation/devicetree/bindings/pci/uniphier-pcie.txt
+> > new file mode 100644
+> > index 0000000..ea63f78
+> > --- /dev/null
+> > +++ b/Documentation/devicetree/bindings/pci/uniphier-pcie.txt
+> > @@ -0,0 +1,78 @@
+> > +Socionext UniPhier PCI-express host controller bindings
+> 
+> s/PCI-express/PCIe/ (also in other occurrences below)
+>
+> > +
+> > +This describes the devicetree bindings for PCI-express host controller
+> > +implemented on Socionext UniPhier SoCs.
+> > +
+> > +UniPhier PCI-express host controller is based on the Synopsys DesignWare
+> > +PCI core. It shares common functions with the PCIe DesignWare core driver
+> > +and inherits common properties defined in
+> > +Documentation/devicetree/bindings/pci/designware-pcie.txt.
 
-Lukas
+Indeed, there are descriptions of inconsistency. I'll fix them.
+
+Thank you,
+
+---
+Best Regards,
+Kunihiko Hayashi
