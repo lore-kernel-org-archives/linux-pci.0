@@ -1,137 +1,57 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-db5eur01on0061.outbound.protection.outlook.com ([104.47.2.61]:34336
-        "EHLO EUR01-DB5-obe.outbound.protection.outlook.com"
-        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1728635AbeIJSpB (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Mon, 10 Sep 2018 14:45:01 -0400
-From: Nipun Gupta <nipun.gupta@nxp.com>
-To: joro@8bytes.org, robin.murphy@arm.com, will.deacon@arm.com,
-        robh+dt@kernel.org, robh@kernel.org, mark.rutland@arm.com,
-        catalin.marinas@arm.com, gregkh@linuxfoundation.org,
-        laurentiu.tudor@nxp.com, bhelgaas@google.com, hch@lst.de
-Cc: m.szyprowski@samsung.com, shawnguo@kernel.org,
-        frowand.list@gmail.com, iommu@lists.linux-foundation.org,
-        linux-kernel@vger.kernel.org, devicetree@vger.kernel.org,
-        linux-arm-kernel@lists.infradead.org,
-        linuxppc-dev@lists.ozlabs.org, linux-pci@vger.kernel.org,
-        bharat.bhushan@nxp.com, stuyoder@gmail.com, leoyang.li@nxp.com,
-        Nipun Gupta <nipun.gupta@nxp.com>
-Subject: [PATCH 4/7 v7] iommu/arm-smmu: Add support for the fsl-mc bus
-Date: Mon, 10 Sep 2018 19:19:18 +0530
-Message-Id: <1536587361-11047-5-git-send-email-nipun.gupta@nxp.com>
-In-Reply-To: <1536587361-11047-1-git-send-email-nipun.gupta@nxp.com>
-References: <1536587361-11047-1-git-send-email-nipun.gupta@nxp.com>
-MIME-Version: 1.0
-Content-Type: text/plain
+Received: from gate.crashing.org ([63.228.1.57]:55286 "EHLO gate.crashing.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1725804AbeIFIyk (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Thu, 6 Sep 2018 04:54:40 -0400
+Message-ID: <74f9bd788d4c3d659eade8d30c4db5070fff9f6e.camel@kernel.crashing.org>
+Subject: Re: [PATCHv2 20/20] PCI: Unify device inaccessible
+From: Benjamin Herrenschmidt <benh@kernel.crashing.org>
+To: Keith Busch <keith.busch@intel.com>,
+        Linux PCI <linux-pci@vger.kernel.org>,
+        Bjorn Helgaas <bhelgaas@google.com>
+Cc: Sinan Kaya <okaya@kernel.org>, Thomas Tai <thomas.tai@oracle.com>,
+        poza@codeaurora.org, Lukas Wunner <lukas@wunner.de>,
+        Christoph Hellwig <hch@lst.de>,
+        Russell Currey <ruscur@au1.ibm.com>,
+        Oliver OHalloran <oliveroh@au1.ibm.com>,
+        Sam Bobroff <sam.bobroff@au1.ibm.com>
+Date: Thu, 06 Sep 2018 14:20:35 +1000
+In-Reply-To: <20180905203546.21921-21-keith.busch@intel.com>
+References: <20180905203546.21921-1-keith.busch@intel.com>
+         <20180905203546.21921-21-keith.busch@intel.com>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Implement bus specific support for the fsl-mc bus including
-registering arm_smmu_ops and bus specific device add operations.
+On Wed, 2018-09-05 at 14:35 -0600, Keith Busch wrote:
+> diff --git a/drivers/pci/pcie/err.c b/drivers/pci/pcie/err.c
+> index 2264001f695b..1ee7206689b5 100644
+> --- a/drivers/pci/pcie/err.c
+> +++ b/drivers/pci/pcie/err.c
+> @@ -52,9 +52,9 @@ static int report_error_detected(struct pci_dev *dev,
+>         const struct pci_error_handlers *err_handler;
+>  
+>         device_lock(&dev->dev);
+> -       dev->error_state = state;
+>  
+> -       if (!dev->driver ||
+> +       if (!cmpxchg(&dev->error_state, state, pci_channel_io_normal) ||
+> +               !dev->driver ||
+>                 !dev->driver->err_handler ||
+>                 !dev->driver->err_handler->error_detected) {
+>                 /*
 
-Signed-off-by: Nipun Gupta <nipun.gupta@nxp.com>
-Reviewed-by: Robin Murphy <robin.murphy@arm.com>
----
- drivers/iommu/arm-smmu.c |  7 +++++++
- drivers/iommu/iommu.c    | 13 +++++++++++++
- include/linux/fsl/mc.h   |  8 ++++++++
- include/linux/iommu.h    |  2 ++
- 4 files changed, 30 insertions(+)
+(CC some of our folks)
 
-diff --git a/drivers/iommu/arm-smmu.c b/drivers/iommu/arm-smmu.c
-index f7a96bc..a011bb6 100644
---- a/drivers/iommu/arm-smmu.c
-+++ b/drivers/iommu/arm-smmu.c
-@@ -52,6 +52,7 @@
- #include <linux/spinlock.h>
- 
- #include <linux/amba/bus.h>
-+#include <linux/fsl/mc.h>
- 
- #include "io-pgtable.h"
- #include "arm-smmu-regs.h"
-@@ -1459,6 +1460,8 @@ static struct iommu_group *arm_smmu_device_group(struct device *dev)
- 
- 	if (dev_is_pci(dev))
- 		group = pci_device_group(dev);
-+	else if (dev_is_fsl_mc(dev))
-+		group = fsl_mc_device_group(dev);
- 	else
- 		group = generic_device_group(dev);
- 
-@@ -2037,6 +2040,10 @@ static void arm_smmu_bus_init(void)
- 		bus_set_iommu(&pci_bus_type, &arm_smmu_ops);
- 	}
- #endif
-+#ifdef CONFIG_FSL_MC_BUS
-+	if (!iommu_present(&fsl_mc_bus_type))
-+		bus_set_iommu(&fsl_mc_bus_type, &arm_smmu_ops);
-+#endif
- }
- 
- static int arm_smmu_device_probe(struct platform_device *pdev)
-diff --git a/drivers/iommu/iommu.c b/drivers/iommu/iommu.c
-index d227b86..df2f49e 100644
---- a/drivers/iommu/iommu.c
-+++ b/drivers/iommu/iommu.c
-@@ -32,6 +32,7 @@
- #include <linux/pci.h>
- #include <linux/bitops.h>
- #include <linux/property.h>
-+#include <linux/fsl/mc.h>
- #include <trace/events/iommu.h>
- 
- static struct kset *iommu_group_kset;
-@@ -988,6 +989,18 @@ struct iommu_group *pci_device_group(struct device *dev)
- 	return iommu_group_alloc();
- }
- 
-+/* Get the IOMMU group for device on fsl-mc bus */
-+struct iommu_group *fsl_mc_device_group(struct device *dev)
-+{
-+	struct device *cont_dev = fsl_mc_cont_dev(dev);
-+	struct iommu_group *group;
-+
-+	group = iommu_group_get(cont_dev);
-+	if (!group)
-+		group = iommu_group_alloc();
-+	return group;
-+}
-+
- /**
-  * iommu_group_get_for_dev - Find or create the IOMMU group for a device
-  * @dev: target device
-diff --git a/include/linux/fsl/mc.h b/include/linux/fsl/mc.h
-index f27cb14..dddaca1 100644
---- a/include/linux/fsl/mc.h
-+++ b/include/linux/fsl/mc.h
-@@ -351,6 +351,14 @@ struct fsl_mc_io {
- #define dev_is_fsl_mc(_dev) (0)
- #endif
- 
-+/* Macro to check if a device is a container device */
-+#define fsl_mc_is_cont_dev(_dev) (to_fsl_mc_device(_dev)->flags & \
-+	FSL_MC_IS_DPRC)
-+
-+/* Macro to get the container device of a MC device */
-+#define fsl_mc_cont_dev(_dev) (fsl_mc_is_cont_dev(_dev) ? \
-+	(_dev) : (_dev)->parent)
-+
- /*
-  * module_fsl_mc_driver() - Helper macro for drivers that don't do
-  * anything special in module init/exit.  This eliminates a lot of
-diff --git a/include/linux/iommu.h b/include/linux/iommu.h
-index 7447b0b..209891d 100644
---- a/include/linux/iommu.h
-+++ b/include/linux/iommu.h
-@@ -389,6 +389,8 @@ static inline size_t iommu_map_sg(struct iommu_domain *domain,
- extern struct iommu_group *pci_device_group(struct device *dev);
- /* Generic device grouping function */
- extern struct iommu_group *generic_device_group(struct device *dev);
-+/* FSL-MC device grouping function */
-+struct iommu_group *fsl_mc_device_group(struct device *dev);
- 
- /**
-  * struct iommu_fwspec - per-device IOMMU instance data
--- 
-1.9.1
+Should we make this some kind of helper (pci_set_channel_state) ? We
+should then use it in EEH and powerpc PAPR specific hotplug as well.
+
+We could also implement the rule about the valid transition in the 
+helper itself.
+
+(Feel free to merge this patch as-is, what I suggest can be done on top
+of this).
+
+Cheers,
+Ben.
