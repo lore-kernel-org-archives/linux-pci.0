@@ -1,65 +1,83 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.29.99]:33494 "EHLO mail.kernel.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1725778AbeISEaa (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Wed, 19 Sep 2018 00:30:30 -0400
-Date: Tue, 18 Sep 2018 17:55:39 -0500
-From: Bjorn Helgaas <helgaas@kernel.org>
-To: Lukas Wunner <lukas@wunner.de>
-Cc: linux-pci@vger.kernel.org, Sinan Kaya <okaya@kernel.org>,
-        Mika Westerberg <mika.westerberg@linux.intel.com>,
+Received: from bmailout3.hostsharing.net ([176.9.242.62]:37655 "EHLO
+        bmailout3.hostsharing.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1725999AbeIFVCv (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Thu, 6 Sep 2018 17:02:51 -0400
+Date: Thu, 6 Sep 2018 18:26:34 +0200
+From: Lukas Wunner <lukas@wunner.de>
+To: Mika Westerberg <mika.westerberg@linux.intel.com>
+Cc: Bjorn Helgaas <bhelgaas@google.com>,
+        "Rafael J. Wysocki" <rafael.j.wysocki@intel.com>,
+        Ashok Raj <ashok.raj@intel.com>,
         Keith Busch <keith.busch@intel.com>,
-        David Yang <mmyangfl@gmail.com>
-Subject: Re: [PATCH v2 0/8] PCI hotplug diet
-Message-ID: <20180918225539.GI13616@bhelgaas-glaptop.roam.corp.google.com>
-References: <cover.1536341821.git.lukas@wunner.de>
+        Yinghai Lu <yinghai@kernel.org>, Sinan Kaya <okaya@kernel.org>,
+        linux-pci@vger.kernel.org
+Subject: Re: [PATCH 03/32] PCI: pciehp: Fix deadlock on unplug
+Message-ID: <20180906162634.ylyp3ydwujf5wuxx@wunner.de>
+References: <cover.1529173804.git.lukas@wunner.de>
+ <4c882e25194ba8282b78fe963fec8faae7cf23eb.1529173804.git.lukas@wunner.de>
+ <20180906160100.GQ2283@lahna.fi.intel.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <cover.1536341821.git.lukas@wunner.de>
+In-Reply-To: <20180906160100.GQ2283@lahna.fi.intel.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Sat, Sep 08, 2018 at 09:59:01AM +0200, Lukas Wunner wrote:
-> Rebase of my PCI hotplug material for the next merge window on current
-> pci/hotplug branch:
+On Thu, Sep 06, 2018 at 07:01:00PM +0300, Mika Westerberg wrote:
+> On Sat, Jun 16, 2018 at 09:25:00PM +0200, Lukas Wunner wrote:
+> > When pciehp was conceived it apparently wasn't considered that one
+> > hotplug port may be the parent of another, but with Thunderbolt this is
+> > par for the course.
+> > 
+> > If the sysfs interface is used to initiate a simultaneous card removal
+> > of two hotplug ports where one is a parent of the other, or if the two
+> > ports simultaneously signal interrupts, e.g. because a link or presence
+> > change was detected on both, a deadlock may occur if:
+> > 
+> > - The parent acquires pci_lock_rescan_remove(), starts removal of the
+> >   child and waits for it to be unbound.
+> > - The child waits to acquire pci_lock_rescan_remove() in order to
+> >   service the pending sysfs command or interrupt before it can unbind.
+> > 
+> > Fix by using pci_dev_is_disconnected() as an indicator whether a parent
+> > is removing the child, and avoid acquiring the lock in the child if so.
+> > Should the child happen to acquire the lock first, there's no deadlock.
 > 
-> * Patch [1/8] makes pciehp work with broken hardware which hardwires
->   Presence Detect to zero.  Originally submitted August 24 in response
->   to a user report:
->   https://patchwork.ozlabs.org/patch/961860/
+> This patch got dropped from your pciehp series but I wonder if you have
+> any plans to re-send it or rework it?
 > 
-> * Patches [2/8] to [8/8] contain cleanups and code reduction.
->   Originally submitted August 19:
->   https://patchwork.ozlabs.org/project/linux-pci/list/?series=61434&state=*
-> 
-> 
-> Changes since v1:
-> 
-> * Separate struct unification from renaming of struct members in
->   patches [2/8] and [3/8]. (Sinan Kaya)
-> 
-> * Do not change unsigned int to bool in patch [4/8] per commit
->   d729593e492e ("checkpatch: add a --strict test for structs with
->   bool member definitions").  For the same reason use unsigned int
->   instead of bool in patch [6/8] for newly added latch_status and
->   adapter_status members in cpci_hotplug.h.
-> 
-> * Add all collected Acked-by and Reviewed-by tags.
-> 
-> 
-> Lukas Wunner (8):
->   PCI: pciehp: Tolerate Presence Detect hardwired to zero
->   PCI: pciehp: Unify controller and slot structs
->   PCI: pciehp: Rename controller struct members for clarity
->   PCI: pciehp: Reshuffle controller struct for clarity
->   PCI: hotplug: Constify hotplug_slot_ops
->   PCI: hotplug: Drop hotplug_slot_info
->   PCI: hotplug: Embed hotplug_slot
->   PCI: hotplug: Document TODOs
+> I'm asking because this is pretty real issue if you have longer chains
+> of devices and I've been using this patch to make the issue go away. So
+> even if this is not solving all possible problems, I think it may be
+> good idea to get included.
 
-This is fantastic, thank you very much!
+I asked for it to be dropped because while it fixes the problem,
+it's not a good solution, it would just add technical debt to the
+code base and come back to haunt us later.
 
-Applied (with updated [2/8] "PCI: pciehp: Unify controller and slot
-structs" from [1]) to pci/hotplug for v4.20.
+Xiongfeng Wang found a similar race a few months ago that wouldn't
+be fixed by my patch:
+https://patchwork.ozlabs.org/patch/877835/
 
-[1] https://lkml.kernel.org/r/20180918194617.x7ab5kilj4ipghuv@wunner.de
+The PCI core nicely separates unbinding of drivers from destruction
+of the pci_dev (pci_stop_bus_device() + pci_remove_bus_device()).
+Problem is we currently protect both steps with pci_lock_rescan_remove().
+We should only be protecting the second step.  The first step (unbinding)
+needs to run lockless.
+
+As a start, I've moved the call to pcie_aspm_exit_link_state() out
+of pci_stop_dev().  This also fixes an ASPM bug.  Bjorn merged it
+the day before yesterday:
+https://git.kernel.org/pub/scm/linux/kernel/git/helgaas/pci.git/commit/?h=pci/aspm&id=1f3934b1d5e5
+
+The call to device_release_driver() already uses locking internally
+and can be run lockless.  The calls to pci_proc_detach_device() and
+pci_remove_sysfs_dev_files() need to be amended with locking, I've
+got some preliminary patches for this on my development branch that
+I'll have to rework.  This is very hairy, historically grown code
+that requires great care to avoid breakage.  It'll take a little
+more time I'm afraid.
+
+Thanks,
+
+Lukas
