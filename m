@@ -1,34 +1,60 @@
-Return-Path: <linux-acpi-owner@vger.kernel.org>
-Date: Fri, 14 Sep 2018 11:16:33 +0300
-From: Mika Westerberg <mika.westerberg@linux.intel.com>
-To: "Rafael J. Wysocki" <rafael@kernel.org>
-Cc: "Rafael J. Wysocki" <rjw@rjwysocki.net>,
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+Date: Fri, 7 Sep 2018 10:00:09 -0700
+From: Tony Lindgren <tony@atomide.com>
+To: Vignesh R <vigneshr@ti.com>
+Cc: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
+        KISHON VIJAY ABRAHAM <kishon@ti.com>,
         Bjorn Helgaas <bhelgaas@google.com>,
-        Len Brown <lenb@kernel.org>, Lukas Wunner <lukas@wunner.de>,
-        Keith Busch <keith.busch@intel.com>,
-        "Raj, Ashok" <ashok.raj@intel.com>,
-        Mario Limonciello <Mario.Limonciello@dell.com>,
-        Anthony Wong <anthony.wong@canonical.com>,
-        Linus Walleij <linus.walleij@linaro.org>,
-        Sakari Ailus <sakari.ailus@iki.fi>,
-        Linux PCI <linux-pci@vger.kernel.org>,
-        ACPI Devel Maling List <linux-acpi@vger.kernel.org>
-Subject: Re: [PATCH v2 01/10] PCI: Do not skip power managed bridges in
- pci_enable_wake()
-Message-ID: <20180914081633.GU14465@lahna.fi.intel.com>
-References: <20180913143322.77953-1-mika.westerberg@linux.intel.com>
- <20180913143322.77953-2-mika.westerberg@linux.intel.com>
- <153688100.j3IOAyprJL@aspire.rjw.lan>
- <20180914080621.GT14465@lahna.fi.intel.com>
- <CAJZ5v0gzacxkV+6gbY+paq6=h71KWpRM4pG5ko-Fu3ROdJ2AXQ@mail.gmail.com>
+        Rob Herring <robh+dt@kernel.org>,
+        "linux-omap@vger.kernel.org" <linux-omap@vger.kernel.org>,
+        "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+        "devicetree@vger.kernel.org" <devicetree@vger.kernel.org>,
+        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
+Subject: Re: [PATCH v3 0/4] pci-dra7xx: Enable errata i870 workaround for RC
+ mode
+Message-ID: <20180907170009.GJ5662@atomide.com>
+References: <20180724173150.2701-1-vigneshr@ti.com>
+ <20180808165700.GB486@e107981-ln.cambridge.arm.com>
+ <ba428a15-77bf-e09c-3bd7-b5a0eae7ee13@ti.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <CAJZ5v0gzacxkV+6gbY+paq6=h71KWpRM4pG5ko-Fu3ROdJ2AXQ@mail.gmail.com>
-Sender: linux-acpi-owner@vger.kernel.org
+In-Reply-To: <ba428a15-77bf-e09c-3bd7-b5a0eae7ee13@ti.com>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Fri, Sep 14, 2018 at 10:11:25AM +0200, Rafael J. Wysocki wrote:
-> You may need to resend for Patchwork to pick it up, though.  Depends
-> on Bjorn I suppose.
+* Vignesh R <vigneshr@ti.com> [180810 10:10]:
+> 
+> 
+> On Wednesday 08 August 2018 10:27 PM, Lorenzo Pieralisi wrote:
+> > On Tue, Jul 24, 2018 at 11:01:46PM +0530, Vignesh R wrote:
+> >> Make workaround for errata i870 applicable in Host mode as
+> >> well(previously it was enabled only for EP mode) as per errata
+> >> documentation: http://www.ti.com/lit/er/sprz450/sprz450.pdf
+> >>
+> >> Tested on DRA72 EVM
+> >>
+> >> Tony,
+> >>
+> >> If you are okay with the series, could you pick this via omap tree?
+> >> All ACKs are in place and Lorenzo is okay with PCIe bits to go along with
+> >> rest of DTS changes.
+> > 
+> > I think we have missed the v4.19 merge window by now - 
+> 
+> Right. I didn't get any response from Tony.
 
-OK, I'll resend it just in case :)
+Sorry catching up with pending mails.. I try hard to not touch
+anything except fixes around -rc6 time.
+
+> > please let me know if I can drop this series from the PCI patch queue.
+> > 
+> 
+> Ok, I will resend the patch after 4.19-rc. Thanks!
+
+FYI, I'm untagging this thread too. Please post the dts
+changes separately once the dependencies (if any) have
+cleared.
+
+Regards,
+
+Tony
