@@ -1,65 +1,80 @@
-Return-Path: <linux-acpi-owner@vger.kernel.org>
-Date: Tue, 11 Sep 2018 10:29:35 +0200
-From: Lukas Wunner <lukas@wunner.de>
-To: Mika Westerberg <mika.westerberg@linux.intel.com>
-Cc: Bjorn Helgaas <bhelgaas@google.com>,
-        "Rafael J. Wysocki" <rjw@rjwysocki.net>,
-        Len Brown <lenb@kernel.org>,
-        Keith Busch <keith.busch@intel.com>,
-        Ashok Raj <ashok.raj@intel.com>, Mario.Limonciello@dell.com,
-        Anthony Wong <anthony.wong@canonical.com>,
-        "D . J . Bernstein" <djb@cr.yp.to>,
-        Linus Walleij <linus.walleij@linaro.org>,
-        linux-pci@vger.kernel.org, linux-acpi@vger.kernel.org
-Subject: Re: [PATCH 05/10] PCI: portdrv: Resume upon exit from system suspend
- if left runtime suspended
-Message-ID: <20180911082935.gwcwqnk7ohwencui@wunner.de>
-References: <20180906155020.51700-1-mika.westerberg@linux.intel.com>
- <20180906155020.51700-6-mika.westerberg@linux.intel.com>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail.kernel.org ([198.145.29.99]:33884 "EHLO mail.kernel.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1726147AbeIHDJz (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Fri, 7 Sep 2018 23:09:55 -0400
+Date: Fri, 7 Sep 2018 17:26:47 -0500
+From: Bjorn Helgaas <helgaas@kernel.org>
+To: Peter Wu <peter@lekensteyn.nl>
+Cc: Daniel Drake <drake@endlessm.com>, bhelgaas@google.com,
+        linux-pci@vger.kernel.org, linux@endlessm.com,
+        nouveau@lists.freedesktop.org, linux-pm@vger.kernel.org,
+        kherbst@redhat.com, andriy.shevchenko@linux.intel.com,
+        rafael.j.wysocki@intel.com, keith.busch@intel.com,
+        mika.westerberg@linux.intel.com, jonathan.derrick@intel.com,
+        kugel@rockbox.org, davem@davemloft.net, hkallweit1@gmail.com,
+        netdev@vger.kernel.org, nic_swsd@realtek.com,
+        linux-kernel@vger.kernel.org, Dave Jones <davej@codemonkey.org.uk>,
+        Luming Yu <luming.yu@intel.com>
+Subject: Re: [PATCH] PCI: Reprogram bridge prefetch registers on resume
+Message-ID: <20180907222647.GD250890@bhelgaas-glaptop.roam.corp.google.com>
+References: <20180907053614.6540-1-drake@endlessm.com>
+ <20180907150515.GA28739@al>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20180906155020.51700-6-mika.westerberg@linux.intel.com>
-Sender: linux-acpi-owner@vger.kernel.org
+In-Reply-To: <20180907150515.GA28739@al>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Thu, Sep 06, 2018 at 06:50:15PM +0300, Mika Westerberg wrote:
-> Currently we try to keep PCIe ports runtime suspended over system
-> suspend if possible. This mostly happens when entering suspend-to-idle
-> because there is no need to re-configure wake settings.
+[+cc LKML, Dave, Luming]
+
+On Fri, Sep 07, 2018 at 05:05:15PM +0200, Peter Wu wrote:
+> On Fri, Sep 07, 2018 at 01:36:14PM +0800, Daniel Drake wrote:
+> <..>
+> > Thomas Martitz reports that this workaround also solves an issue where
+> > the AMD Radeon Polaris 10 GPU on the HP Zbook 14u G5 is unresponsive
+> > after S3 suspend/resume.
 > 
-> This causes problems if the parent port goes into D3cold and it gets
-> resumed upon exit from system suspend. This may happen for example if
-> the port is part of PCIe switch and the same switch is connected to a
-> PCIe endpoint that needs to be resumed. The way exit from D3cold works
-> according PCIe 4.0 spec 5.3.1.4.2 is that power is restored and cold
-> reset is signaled. After this the device is in D0unitialized state
-> keeping PME context if it supports wake from D3cold.
+> Where was this claimed? It is not stated in the linked bug:
+> (https://bugs.freedesktop.org/show_bug.cgi?id=105760
 > 
-> The problem occurs when a PCIe hotplug port is left suspended and the
-> parent port goes into D3cold and back to D0, the port keeps its PME
-> context but since everything else is reset back to defaults
-> (D0unitialized) it is not set to detect hotplug events anymore.
+> > On resume, reprogram the PCI bridge prefetch registers, including the
+> > magic register mentioned above.
+> > 
+> > This matches Win10 behaviour, which also rewrites these registers
+> > during S3 resume (checked with qemu tracing).
+> 
+> Windows 10 unconditionally rewrites these registers (BAR, I/O Base +
+> Limit, Memory Base + Limit, etc. from top to bottom), see annotations:
+> https://www.spinics.net/lists/linux-pci/msg75856.html
+> 
+> Linux has a generic "restore" operation that works backwards from the
+> end of the PCI config space to the beginning, see
+> pci_restore_config_space. Do you have a dmesg where you see the
+> "restoring config space at offset" messages?
+> 
+> Would it be reasonable to unconditionally write these registers in
+> pci_restore_config_dword, like Windows does?
 
-We call pci_wakeup_bus() in __pci_start_power_transition() for this
-reason.  Why isn't that sufficient in your use case?
+That sounds reasonable to me.
 
+We did write them unconditionally, prior to 04d9c1a1100b ("[PATCH]
+PCI: Improve PCI config space writeback") [1].  That commit apparently
+fixed suspend on some laptop.
 
-> For this reason change the PCIe portdrv power management logic so that
-> it is fine to keep the port runtime suspended over system suspend but it
-> needs to be resumed upon exit to make sure it gets properly re-initialized.
-> The custom ->prepare() hook with DPM_FLAG_SMART_PREPARE is needed
-> because otherwise pci_pm_prepare() instructs the PM core to go directly
-> to pci_pm_complete() on resume and this skips resuming the port.
+But at that time, we restored the config space in order of dword 0, 1,
+2, ... 15, which means we restored the command register before the
+BARs and windows, and it's conceivable that the problem was the
+ordering, not the rewriting of the same value.
 
-On Macs, if no Thunderbolt device is attached, it is perfectly okay to
-use direct complete and it is also perfectly okay to leave the entire
-controller (including all its PCIe ports) in D3cold when coming out of
-system sleep.  In fact it would be unnecessary and undesirable to
-runtime resume the controller, it would just waste energy for no reason.
+Only a week later, we reversed the order with 8b8c8d280ab2 ("[PATCH]
+PCI: reverse pci config space restore order") [2], which seems like a
+good idea and even includes a spec reference.  I found similar
+language in the Intel ICH 10 datasheet, sec 14.1.3 [3].
 
-Can you make sure that ports stay runtime suspended after system sleep
-in that case?
+So it seems reasonable to me to try writing them unconditionally in
+reverse order (the same order we use today).
 
-Thanks,
-
-Lukas
+[1] http://git.kernel.org/cgit/linux/kernel/git/torvalds/linux.git/commit/?id=04d9c1a1100b
+[2] http://git.kernel.org/cgit/linux/kernel/git/torvalds/linux.git/commit/?id=8b8c8d280ab2
+[3] Intel ICH 10 IBL 373635
