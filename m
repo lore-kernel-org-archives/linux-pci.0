@@ -1,109 +1,138 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from smtp.eu.citrix.com ([185.25.65.24]:9556 "EHLO
-        SMTP.EU.CITRIX.COM" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1729578AbeIRPD6 (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Tue, 18 Sep 2018 11:03:58 -0400
-From: George Dunlap <George.Dunlap@citrix.com>
-To: =?utf-8?B?UGFzaSBLw6Rya2vDpGluZW4=?= <pasik@iki.fi>
-CC: Boris Ostrovsky <boris.ostrovsky@oracle.com>,
-        Jan Beulich <JBeulich@suse.com>,
-        Juergen Gross <jgross@suse.com>,
-        "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-        "bhelgaas@google.com" <bhelgaas@google.com>,
-        xen-devel <xen-devel@lists.xenproject.org>,
-        Roger Pau Monne <roger.pau@citrix.com>,
-        Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>,
-        George Dunlap <George.Dunlap@citrix.com>
-Subject: Re: [Xen-devel] [PATCH V3 2/2] Xen/PCIback: Implement PCI
- flr/slot/bus reset with 'reset' SysFS attribute
-Date: Tue, 18 Sep 2018 09:32:09 +0000
-Message-ID: <5E7DDB68-4E68-48A5-AEEC-EE1B21A50E9E@citrix.com>
-References: <20171207222145.9769-1-Govinda.Tatti@Oracle.COM>
- <20171207222145.9769-3-Govinda.Tatti@Oracle.COM>
- <5A2A6AB10200007800195D4F@prv-mh.provo.novell.com>
- <8a3bc517-1255-4547-d244-5c400e44cc77@Oracle.COM>
- <f19dbb09-ef22-2cf4-fb38-2a7c42b5dc48@Oracle.COM>
- <5A377E020200007800197FFA@prv-mh.provo.novell.com>
- <559ffd12-b541-8a69-60bd-fbe10e3dc159@oracle.com>
- <20180916114306.GF18222@reaktio.net>
- <a726840b-8a5c-0890-73c6-3a95a7205153@oracle.com>
- <20180918071519.GG18222@reaktio.net>
-In-Reply-To: <20180918071519.GG18222@reaktio.net>
-Content-Type: text/plain; charset="utf-8"
+Received: from mail.kernel.org ([198.145.29.99]:60940 "EHLO mail.kernel.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1726248AbeIGVfn (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Fri, 7 Sep 2018 17:35:43 -0400
+Date: Fri, 7 Sep 2018 11:53:52 -0500
+From: Bjorn Helgaas <helgaas@kernel.org>
+To: Keith Busch <keith.busch@intel.com>
+Cc: Linux PCI <linux-pci@vger.kernel.org>,
+        Bjorn Helgaas <bhelgaas@google.com>,
+        Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+        Sinan Kaya <okaya@kernel.org>,
+        Thomas Tai <thomas.tai@oracle.com>, poza@codeaurora.org,
+        Lukas Wunner <lukas@wunner.de>, Christoph Hellwig <hch@lst.de>
+Subject: Re: [PATCHv2 15/20] PCI/pciehp: Fix powerfault detection order
+Message-ID: <20180907165352.GA250890@bhelgaas-glaptop.roam.corp.google.com>
+References: <20180905203546.21921-1-keith.busch@intel.com>
+ <20180905203546.21921-16-keith.busch@intel.com>
+ <20180906193657.GH214747@bhelgaas-glaptop.roam.corp.google.com>
+ <20180906195047.GD31024@localhost.localdomain>
 MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20180906195047.GD31024@localhost.localdomain>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-DQoNCj4gT24gU2VwIDE4LCAyMDE4LCBhdCA4OjE1IEFNLCBQYXNpIEvDpHJra8OkaW5lbiA8cGFz
-aWtAaWtpLmZpPiB3cm90ZToNCj4gDQo+IEhpLA0KPiANCj4gT24gTW9uLCBTZXAgMTcsIDIwMTgg
-YXQgMDI6MDY6MDJQTSAtMDQwMCwgQm9yaXMgT3N0cm92c2t5IHdyb3RlOg0KPj4gT24gOS8xNi8x
-OCA3OjQzIEFNLCBQYXNpIEvDpHJra8OkaW5lbiB3cm90ZToNCj4+PiBIaSwNCj4+PiANCj4+PiBP
-biBNb24sIERlYyAxOCwgMjAxNyBhdCAxMjozMjoxMVBNIC0wNTAwLCBCb3JpcyBPc3Ryb3Zza3kg
-d3JvdGU6DQo+Pj4+IE9uIDEyLzE4LzIwMTcgMDI6MzYgQU0sIEphbiBCZXVsaWNoIHdyb3RlOg0K
-Pj4+Pj4+Pj4gT24gMTUuMTIuMTcgYXQgMjA6NTIsIDxHb3ZpbmRhLlRhdHRpQE9yYWNsZS5DT00+
-IHdyb3RlOg0KPj4+Pj4+Pj4+ICtzdGF0aWMgaW50IHBjaXN0dWJfZGV2aWNlX3Jlc2V0KHN0cnVj
-dCBwY2lfZGV2ICpkZXYpDQo+Pj4+Pj4+Pj4gK3sNCj4+Pj4+Pj4+PiArCXN0cnVjdCB4ZW5fcGNp
-YmtfZGV2X2RhdGEgKmRldl9kYXRhOw0KPj4+Pj4+Pj4+ICsJYm9vbCBzbG90ID0gZmFsc2UsIGJ1
-cyA9IGZhbHNlOw0KPj4+Pj4+Pj4+ICsJc3RydWN0IHBjaXN0dWJfYXJncyBhcmcgPSB7fTsNCj4+
-Pj4+Pj4+PiArDQo+Pj4+Pj4+Pj4gKwlpZiAoIWRldikNCj4+Pj4+Pj4+PiArCQlyZXR1cm4gLUVJ
-TlZBTDsNCj4+Pj4+Pj4+PiArDQo+Pj4+Pj4+Pj4gKwlkZXZfZGJnKCZkZXYtPmRldiwgIlslc11c
-biIsIF9fZnVuY19fKTsNCj4+Pj4+Pj4+PiArDQo+Pj4+Pj4+Pj4gKwkvKiBGaXJzdCBjaGVjayBh
-bmQgdHJ5IEZMUiAqLw0KPj4+Pj4+Pj4+ICsJaWYgKHBjaWVfaGFzX2ZscihkZXYpKSB7DQo+Pj4+
-Pj4+Pj4gKwkJZGV2X2RiZygmZGV2LT5kZXYsICJyZXNldHRpbmcgJXMgZGV2aWNlIHVzaW5nIEZM
-UlxuIiwNCj4+Pj4+Pj4+PiArCQkJcGNpX25hbWUoZGV2KSk7DQo+Pj4+Pj4+Pj4gKwkJcGNpZV9m
-bHIoZGV2KTsNCj4+Pj4+Pj4+IFRoZSBsYWNrIG9mIGVycm9yIGNoZWNrIGhlcmUgcHV6emxlZCBt
-ZSwgYnV0IEkgc2VlIHRoZSBmdW5jdGlvbg0KPj4+Pj4+Pj4gaW5kZWVkIHJldHVybnMgdm9pZCBy
-aWdodCBub3cuIEkgdGhpbmsgdGhlIHByZXJlcSBwYXRjaCBzaG91bGQNCj4+Pj4+Pj4+IGNoYW5n
-ZSB0aGlzIGFsb25nIHdpdGggZXhwb3J0aW5nIHRoZSBmdW5jdGlvbiAtIHlvdSByZWFsbHkgZG9u
-J3QNCj4+Pj4+Pj4+IHdhbnQgdGhlIGRldmljZSB0byBiZSBoYW5kZWQgdG8gYSBndWVzdCB3aGVu
-IHRoZSBGTFIgdGltZWQNCj4+Pj4+Pj4+IG91dC4NCj4+Pj4+Pj4gV2Ugd2lsbCBjaGFuZ2UgcGNp
-ZV9mbHIoKSB0byByZXR1cm4gZXJyb3IgY29kZS4gSSB3aWxsIG1ha2UgdGhpcyBjaGFuZ2UNCj4+
-Pj4+Pj4gaW4gdGhlIG5leHQgdmVyc2lvbiBvZiB0aGlzIHBhdGNoLg0KPj4+Pj4+IEkgZXhjaGFu
-Z2VkIHNvbWUgZW1haWxzIHdpdGggQmpvcm4vQ2hyaXN0b3BoIGFuZCBpdCBsb29rcyBsaWtlIENo
-cmlzdG9waA0KPj4+Pj4+IGFzIHNvbWUgcGxhbnRvIHJlc3RydWN0dXJlIHBjaWUgZmxyIHNwZWNp
-ZmljIGZ1bmN0aW9ucyBidXQgSSBkb24ndCBrbm93DQo+Pj4+Pj4gdGhlIGV4YWN0IHRpbWUtZnJh
-bWUuIEZvciBub3csSSBhbSBwbGFubmluZyB0byB1c2UgZXhpc3RpbmcgcGNpZV9mbHIoKQ0KPj4+
-Pj4+IGFmdGVyIGNoZWNraW5nIEZMUiBjYXBhYmlsaXR5LiBXZSB3aWxsIHN3aXRjaHRvIHJldmlz
-ZWQgcGNpZV9mbHIoKSBvbmNlDQo+Pj4+Pj4gaXQgaXMgYXZhaWxhYmxlLg0KPj4+Pj4+IA0KPj4+
-Pj4+IEkgaG9wZSB5b3UgYXJlIGZpbmUgd2l0aCB0aGlzIGFwcHJvYWNoLiBQbGVhc2UgbGV0IG1l
-IGtub3cuIFRoYW5rcy4NCj4+Pj4+IEkndmUgc2VlbiB0aGF0IG90aGVyIGRpc2N1c3Npb24uIEkg
-ZG9uJ3QgdGhpbmsgdGhlIGNoYW5nZSBoZXJlDQo+Pj4+PiBzaG91bGQgYmUgZG9uZSBwcmlvciB0
-byB0aGUgZXJyb3IgcmVwb3J0aW5nIGJlaW5nIHB1dCBpbiBwbGFjZSwNCj4+Pj4+IGZvciBzZWN1
-cml0eSByZWFzb25zLiBCdXQgaW4gdGhlIGVuZCBpdCdsbCBiZSBLb25yYWQgYXMgdGhlDQo+Pj4+
-PiBtYWludGFpbmVyIHRvIGp1ZGdlLg0KPj4+Pj4gDQo+Pj4+PiBPciB3YWl0LCBsb29rcyBsaWtl
-IHRoZXJlJ3Mgc29tZSBjb25mdXNpb24gaW4gLi9NQUlOVEFJTkVSUzoNCj4+Pj4+IEtvbnJhZCBp
-cyBsaXN0ZWQgYXMgbWFpbnRhaW5lciBmb3IgIlhFTiBQQ0kgU1VCU1lTVEVNIiwgYnV0IHRoZQ0K
-Pj4+Pj4gbGlzdCBvZiBmaWxlcyBkb2Vzbid0IGluY2x1ZGUgcGNpYmFjay4gU28gaXQgd291bGQg
-aW5zdGVhZCBiZSBCb3Jpcw0KPj4+Pj4gb3IgSsO8cmdlbiB0byBnaXZlIHlvdSBhIGZpbmFsIHdv
-cmQuDQo+Pj4+IA0KPj4+PiBUaGlzIGlzIG5vdyA0LjE2IG1hdGVyaWFsIHNvIHdlIGNhbiBhdCBs
-ZWFzdCB3YWl0IHVudGlsIGNsb3NlciB0bw0KPj4+PiBvcGVuaW5nIG9mIHRoZSBtZXJnZSB3aW5k
-b3cgd2hlbiB3ZSBtYXkgaGF2ZSB0aGUgUENJIHVwZGF0ZXMuIChBbmQgSQ0KPj4+PiBqdXN0IG5v
-dGljZWQgdGhhdCB5b3UgcmVzcG9uZGVkIHRvIENocmlzdG9waC4pDQo+Pj4+IA0KPj4+PiBCZXNp
-ZGVzLCB3ZSBkb24ndCB3YW50IHRvIG1ha2Uga2VybmVsIGNoYW5nZXMgdW50aWwgdGhlIGludGVy
-ZmFjZSBpcw0KPj4+PiBzZXR0bGVkIChpLmUgdGhlIHRvb2xzdGFjayBjaGFuZ2VzIGFyZSBhY2Nl
-cHRlZCkuDQo+Pj4+IA0KPj4+IEl0IHNlZW1zIEdvdmluZGEncyBlbWFpbCBhZGRyZXNzIGlzIGdp
-dmluZyBhbiBlcnJvciwgc28gSSBhc3N1bWUgc29tZW9uZSBlbHNlIG5lZWRzIHRvIHBpY2sgdXAg
-dGhpcyBwY2liYWNrICdyZXNldCcgZmVhdHVyZS4NCj4+PiBJcyBpdCBsaWtlbHkgc29tZW9uZSBl
-bHNlIGZyb20gT3JhY2xlIGNhbi93aWxsIHBpY2sgdXAgYW5kIHJlZnJlc2ggdGhpcyBwYXRjaCwg
-d2l0aCB0aGUgcmV2aWV3IGNvbW1lbnRzIGFkZHJlc3NlZD8NCj4+IA0KPj4gDQo+PiBHb3ZpbmRh
-IGlzIG5vIGxvbmdlciBhdCBPcmFjbGUuDQo+PiANCj4gDQo+IFllcCwgdGhvdWdodCBzby4gUmVt
-b3ZlZCBmcm9tIENDIGxpc3QuDQo+IA0KPiANCj4+IFdoYXQgYWJvdXQgdGhlIHRvb2xzdGFjayBj
-aGFuZ2VzPyBIYXZlIHRoZXkgYmVlbiBhY2NlcHRlZD8gSSB2YWd1ZWx5DQo+PiByZWNhbGwgdGhl
-cmUgd2FzIGEgZGlzY3Vzc2lvbiBhYm91dCB0aG9zZSBjaGFuZ2VzIGJ1dCBkb24ndCByZW1lbWJl
-ciBob3cNCj4+IGl0IGVuZGVkLg0KPj4gDQo+IA0KPiBJIGRvbid0IHRoaW5rIHRvb2xzdGFjay9s
-aWJ4bCBwYXRjaCBoYXMgYmVlbiBhcHBsaWVkIHlldCBlaXRoZXIuDQo+IA0KPiANCj4gIltQQVRD
-SCBWMSAwLzFdIFhlbi9Ub29sczogUENJIHJlc2V0IHVzaW5nICdyZXNldCcgU3lzRlMgYXR0cmli
-dXRlIjoNCj4gaHR0cHM6Ly9saXN0cy54ZW4ub3JnL2FyY2hpdmVzL2h0bWwveGVuLWRldmVsLzIw
-MTctMTIvbXNnMDA2NjQuaHRtbA0KPiANCj4gIltQQVRDSCBWMSAxLzFdIFhlbi9saWJ4bDogUGVy
-Zm9ybSBQQ0kgcmVzZXQgdXNpbmcgJ3Jlc2V0JyBTeXNGUyBhdHRyaWJ1dGUiOg0KPiBodHRwczov
-L2xpc3RzLnhlbi5vcmcvYXJjaGl2ZXMvaHRtbC94ZW4tZGV2ZWwvMjAxNy0xMi9tc2cwMDY2My5o
-dG1sDQo+IA0KPiBHZW9yZ2UgYXNrZWQgZm9yIHNvbWUgY2xhcmlmaWNhdGlvbnM6DQo+IGh0dHBz
-Oi8vbGlzdHMueGVuLm9yZy9hcmNoaXZlcy9odG1sL3hlbi1kZXZlbC8yMDE3LTEyL21zZzAxMDQ0
-Lmh0bWwNCj4gaHR0cHM6Ly9saXN0cy54ZW4ub3JnL2FyY2hpdmVzL2h0bWwveGVuLWRldmVsLzIw
-MTctMTIvbXNnMDExMTYuaHRtbA0KDQpSaWdodCwgdGhlIGRlc2NyaXB0aW9uIG9mIHRoZSBwYXRj
-aCBkaWRu4oCZdCBhY3R1YWxseSB0ZWxsIHlvdSB3aGF0IHdhcyBnb2luZyBvbi4gIEl0IHNob3Vs
-ZCBoYXZlIHNhaWQgc29tZXRoaW5nIGxpa2UsIOKAnHhsIGN1cnJlbnRseSBhdHRlbXB0cyB0byBy
-ZXNldCBhIGRldmljZSB1c2luZyBYOyBidXQgdGhhdOKAmXMgbmV2ZXIgYmVlbiBpbXBsZW1lbnRl
-ZCBpbiBMaW51eC4gIEluc3RlYWQsIHVzZSBZLCB3aGljaCBbaXMgYmV0dGVyIGZvciB3aGF0ZXZl
-ciByZWFzb25d4oCdLg0KDQogLUdlb3JnZQ0KDQo=
+On Thu, Sep 06, 2018 at 01:50:47PM -0600, Keith Busch wrote:
+> On Thu, Sep 06, 2018 at 02:36:57PM -0500, Bjorn Helgaas wrote:
+> > On Wed, Sep 05, 2018 at 02:35:41PM -0600, Keith Busch wrote:
+> > > A device add in a power controller controlled slot will power on and
+> > > clear power fault slot events, but this was happening before the interrupt
+> > > handler attempted to set the sticky status and attention indicators. The
+> > > wrong status will be set if a hot-add and power fault are handled in
+> > > one interrupt. This patch fixes that by checking for power faults before
+> > > checking for new devices.
+> > 
+> > Can you clarify the part about "the interrupt handler attempting to set the
+> > sticky status and attention indicators"?  My first impression is that
+> > you're talking about bits in the Slot Status register, but that's
+> > obviously wrong because those bits are set by hardware (not the interrupt
+> > handler) and they're RW1C so software clears them by writing 1 to them.
+> 
+> The sticky status being the pciehp driver's "power_fault_detected"
+> field. We set it on the first observation of a slot's PFD and do not
+> clear it until we have a successful board_added event.
+> 
+> > Lukas suggests that this patch should be in v4.19.  Do you agree, and if
+> > so, can you help me justify it by describing the user-visible effect of
+> > this?  I'm not sure what "setting the wrong status" means to a user, e.g.,
+> > does this result in a non-functional device, an incorrect status LED on the
+> > slot, something else?  Does it fix a regression or something we merged for
+> > v4.19?
+> 
+> From a user point of view, it is possible the attention LED light could be
+> on after a successful hot add.
+
+Great, thanks!  Also, it looks like the power LED will be off even though
+the power is actually on.
+
+    pciehp_ist
+      if (events & (PDC | DLLSC))
+        pciehp_handle_presence_or_link_change
+          case OFF_STATE:
+            pciehp_enable_slot
+              __pciehp_enable_slot
+                board_added
+                  pciehp_power_on_slot
+                    ctrl->power_fault_detected = 0
+                    pcie_write_cmd(ctrl, PCI_EXP_SLTCTL_PWR_ON, PCI_EXP_SLTCTL_PCC)
+      if (PFD && !ctrl->power_fault_detected)
+        ctrl->power_fault_detected = 1
+        pciehp_set_attention_status(slot, 1)     # attention LED on
+        pciehp_green_led_off(slot)               # power LED off
+
+
+Tangent: how annoying that the spec refers to "Power Indicator" and
+"Attention Indicator", but (a) we call them the "green_led" and
+"attention_status", and (b) both can be on/off/blinking, but the interfaces
+are totally different.
+
+> The only reason this was successful before was how everything was chained
+> through work queues, the work order being:
+> 
+>   INT_PRESENCE_ON -> INT_POWER_FAULT -> ENABLE_REQ
+> 
+> The ENABLE_REQ cleared the power fault at the end, but now everything
+> is handled inline with the interrupt thread (which was a great change,
+> IMO), such that the work ENABLE_REQ was doing happens before power
+> fault handling now.
+> 
+> The commit that changed that order:
+> 
+>   https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/commit?id=0e94916e6091f48391b65110e71c87c583021640
+> 
+>  
+> > > Signed-off-by: Keith Busch <keith.busch@intel.com>
+> > > Reviewed-by: Lukas Wunner <lukas@wunner.de>
+> > > ---
+> > >  drivers/pci/hotplug/pciehp_hpc.c | 16 ++++++++--------
+> > >  1 file changed, 8 insertions(+), 8 deletions(-)
+> > > 
+> > > diff --git a/drivers/pci/hotplug/pciehp_hpc.c b/drivers/pci/hotplug/pciehp_hpc.c
+> > > index 9eb28a06cac6..52a18a7ec2a2 100644
+> > > --- a/drivers/pci/hotplug/pciehp_hpc.c
+> > > +++ b/drivers/pci/hotplug/pciehp_hpc.c
+> > > @@ -630,6 +630,14 @@ static irqreturn_t pciehp_ist(int irq, void *dev_id)
+> > >  		pciehp_handle_button_press(slot);
+> > >  	}
+> > >  
+> > > +	/* Check Power Fault Detected */
+> > > +	if ((events & PCI_EXP_SLTSTA_PFD) && !ctrl->power_fault_detected) {
+> > > +		ctrl->power_fault_detected = 1;
+> > > +		ctrl_err(ctrl, "Slot(%s): Power fault\n", slot_name(slot));
+> > > +		pciehp_set_attention_status(slot, 1);
+> > > +		pciehp_green_led_off(slot);
+> > > +	}
+> > > +
+> > >  	/*
+> > >  	 * Disable requests have higher priority than Presence Detect Changed
+> > >  	 * or Data Link Layer State Changed events.
+> > > @@ -641,14 +649,6 @@ static irqreturn_t pciehp_ist(int irq, void *dev_id)
+> > >  		pciehp_handle_presence_or_link_change(slot, events);
+> > >  	up_read(&ctrl->reset_lock);
+> > >  
+> > > -	/* Check Power Fault Detected */
+> > > -	if ((events & PCI_EXP_SLTSTA_PFD) && !ctrl->power_fault_detected) {
+> > > -		ctrl->power_fault_detected = 1;
+> > > -		ctrl_err(ctrl, "Slot(%s): Power fault\n", slot_name(slot));
+> > > -		pciehp_set_attention_status(slot, 1);
+> > > -		pciehp_green_led_off(slot);
+> > > -	}
+> > > -
+> > >  	pci_config_pm_runtime_put(pdev);
+> > >  	wake_up(&ctrl->requester);
+> > >  	return IRQ_HANDLED;
+> > > -- 
+> > > 2.14.4
+> > > 
