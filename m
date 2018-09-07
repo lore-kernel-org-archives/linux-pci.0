@@ -1,87 +1,169 @@
-Return-Path: <SRS0=19xT=LS=linux.intel.com=mika.westerberg@kernel.org>
-Return-Path: <SRS0=19xT=LS=linux.intel.com=mika.westerberg@kernel.org>
-Date: Tue, 4 Sep 2018 12:36:31 +0300
-From: Mika Westerberg <mika.westerberg@linux.intel.com>
-To: Daniel Drake <drake@endlessm.com>
-Cc: Bjorn Helgaas <helgaas@kernel.org>, Bjorn Helgaas <bhelgaas@google.com>,
-	linux-pci@vger.kernel.org,
-	Linux Upstreaming Team <linux@endlessm.com>,
-	nouveau@lists.freedesktop.org, Linux PM <linux-pm@vger.kernel.org>,
-	Peter Wu <peter@lekensteyn.nl>, kherbst@redhat.com,
-	Andy Shevchenko <andriy.shevchenko@linux.intel.com>,
-	"Rafael J. Wysocki" <rafael.j.wysocki@intel.com>,
-	Keith Busch <keith.busch@intel.com>,
-	Jon Derrick <jonathan.derrick@intel.com>
-Subject: Re: [PATCH] PCI: add prefetch quirk to work around Asus/Nvidia
- suspend issues
-Message-ID: <20180904093631.GN2283@lahna.fi.intel.com>
-References: <20180831073057.14626-1-drake@endlessm.com>
- <20180831191225.GA43106@bhelgaas-glaptop.roam.corp.google.com>
- <CAD8Lp45CKCHxTg91zF9bWztqbAwLzgAUpNEHQ6ouKu2PkJT8SQ@mail.gmail.com>
- <20180903121209.GC2283@lahna.fi.intel.com>
- <CAD8Lp46M-raneN+6bjGakTq_yd6wGjuPiKDyOoqpO8VXyDBrfQ@mail.gmail.com>
- <20180904064307.GM2283@lahna.fi.intel.com>
- <CAD8Lp45iPkYRD9-vDi0k61PW6W=i184xD6TEAPoZXh+hnGLW5g@mail.gmail.com>
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Subject: Re: [PATCH v2 01/40] iommu: Introduce Shared Virtual Addressing API
+To: Jean-Philippe Brucker <jean-philippe.brucker@arm.com>,
+ Auger Eric <eric.auger@redhat.com>, "linux-arm-kernel@lists.infradead.org"
+ <linux-arm-kernel@lists.infradead.org>,
+ "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+ "linux-acpi@vger.kernel.org" <linux-acpi@vger.kernel.org>,
+ "devicetree@vger.kernel.org" <devicetree@vger.kernel.org>,
+ "iommu@lists.linux-foundation.org" <iommu@lists.linux-foundation.org>,
+ "kvm@vger.kernel.org" <kvm@vger.kernel.org>,
+ "linux-mm@kvack.org" <linux-mm@kvack.org>
+References: <20180511190641.23008-1-jean-philippe.brucker@arm.com>
+ <20180511190641.23008-2-jean-philippe.brucker@arm.com>
+ <bf42affd-e9d0-e4fc-6d28-f3c3f7795348@redhat.com>
+ <03d31ba5-1eda-ea86-8c0c-91d14c86fe83@arm.com>
+ <ed39159c-087e-7e56-7d29-d1de9fa1677f@amd.com>
+ <f0b317d5-e2e9-5478-952c-05e8b97bd68b@arm.com>
+ <2fd4a0a1-1a35-bf82-df84-b995cce011d9@amd.com>
+ <65e7accd-4446-19f5-c667-c6407e89cfa6@arm.com>
+From: =?UTF-8?Q?Christian_K=c3=b6nig?= <christian.koenig@amd.com>
+Message-ID: <5bbc0332-b94b-75cc-ca42-a9b196811daf@amd.com>
+Date: Fri, 7 Sep 2018 20:02:54 +0200
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <CAD8Lp45iPkYRD9-vDi0k61PW6W=i184xD6TEAPoZXh+hnGLW5g@mail.gmail.com>
+In-Reply-To: <65e7accd-4446-19f5-c667-c6407e89cfa6@arm.com>
+List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
+List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
+List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
+List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
+List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
+Cc: "xieyisheng1@huawei.com" <xieyisheng1@huawei.com>,
+ "ilias.apalodimas@linaro.org" <ilias.apalodimas@linaro.org>,
+ "xuzaibo@huawei.com" <xuzaibo@huawei.com>,
+ "thunder.leizhen@huawei.com" <thunder.leizhen@huawei.com>,
+ Will Deacon <Will.Deacon@arm.com>, Michal Hocko <mhocko@kernel.org>,
+ "okaya@codeaurora.org" <okaya@codeaurora.org>,
+ "yi.l.liu@intel.com" <yi.l.liu@intel.com>,
+ "ashok.raj@intel.com" <ashok.raj@intel.com>,
+ "tn@semihalf.com" <tn@semihalf.com>, "joro@8bytes.org" <joro@8bytes.org>,
+ "bharatku@xilinx.com" <bharatku@xilinx.com>,
+ "liudongdong3@huawei.com" <liudongdong3@huawei.com>,
+ "rfranz@cavium.com" <rfranz@cavium.com>,
+ "kevin.tian@intel.com" <kevin.tian@intel.com>,
+ "jacob.jun.pan@linux.intel.com" <jacob.jun.pan@linux.intel.com>,
+ "alex.williamson@redhat.com" <alex.williamson@redhat.com>,
+ "rgummal@xilinx.com" <rgummal@xilinx.com>,
+ "jonathan.cameron@huawei.com" <jonathan.cameron@huawei.com>,
+ "shunyong.yang@hxt-semitech.com" <shunyong.yang@hxt-semitech.com>,
+ "dwmw2@infradead.org" <dwmw2@infradead.org>,
+ "liubo95@huawei.com" <liubo95@huawei.com>,
+ "jcrouse@codeaurora.org" <jcrouse@codeaurora.org>,
+ "robdclark@gmail.com" <robdclark@gmail.com>,
+ Robin Murphy <Robin.Murphy@arm.com>,
+ "nwatters@codeaurora.org" <nwatters@codeaurora.org>,
+ "baolu.lu@linux.intel.com" <baolu.lu@linux.intel.com>
+Content-Type: text/plain; charset="utf-8"; Format="flowed"
+Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
+Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tue, Sep 04, 2018 at 03:07:52PM +0800, Daniel Drake wrote:
-> On Tue, Sep 4, 2018 at 2:43 PM, Mika Westerberg
-> <mika.westerberg@linux.intel.com> wrote:
-> > Yes, can you check if the failing device BAR is included in any of the
-> > above entries? If not then it is probably not related.
-> 
-> mtrr again for reference:
-> reg00: base=0x0c0000000 ( 3072MB), size= 1024MB, count=1: uncachable
-> reg01: base=0x0a0000000 ( 2560MB), size=  512MB, count=1: uncachable
-> reg02: base=0x090000000 ( 2304MB), size=  256MB, count=1: uncachable
-> reg03: base=0x08c000000 ( 2240MB), size=   64MB, count=1: uncachable
-> reg04: base=0x08b800000 ( 2232MB), size=    8MB, count=1: uncachable
-> 
-> 
-> The PCI bridge is:
-> 00:1c.0 PCI bridge: Intel Corporation Sunrise Point-LP PCI Express
-> Root Port (rev f1) (prog-if 00 [Normal decode])
->     Control: I/O+ Mem+ BusMaster+ SpecCycle- MemWINV- VGASnoop-
-> ParErr- Stepping- SERR- FastB2B- DisINTx+
->     Status: Cap+ 66MHz- UDF- FastB2B- ParErr- DEVSEL=fast >TAbort-
-> <TAbort- <MAbort- >SERR- <PERR- INTx-
->     Latency: 0, Cache Line Size: 64 bytes
->     Interrupt: pin A routed to IRQ 122
->     Bus: primary=00, secondary=01, subordinate=01, sec-latency=0
->     I/O behind bridge: 0000e000-0000efff
->     Memory behind bridge: ee000000-ef0fffff
->     Prefetchable memory behind bridge: 00000000d0000000-00000000e1ffffff
-> 
-> The memory behind bridge at ee000000 is included in the mtrr region
-> reg00 which is 0xc0000000 to 0xffffffff.
-> Same for the prefetchable memory behind bridge.
-
-Yeah and it is uncachable so it should be fine.
-
-> The nvidia GPU which becomes unresponsive is:
-> 
-> 01:00.0 3D controller: NVIDIA Corporation GM108M [GeForce 940MX] (rev a2)
->     Subsystem: ASUSTeK Computer Inc. GM108M [GeForce 940MX]
->     Control: I/O+ Mem+ BusMaster+ SpecCycle- MemWINV- VGASnoop-
-> ParErr- Stepping- SERR- FastB2B- DisINTx+
->     Status: Cap+ 66MHz- UDF- FastB2B- ParErr- DEVSEL=fast >TAbort-
-> <TAbort- <MAbort- >SERR- <PERR- INTx-
->     Latency: 0, Cache Line Size: 64 bytes
->     Interrupt: pin A routed to IRQ 133
->     Region 0: Memory at ee000000 (32-bit, non-prefetchable) [size=16M]
->     Region 1: Memory at d0000000 (64-bit, prefetchable) [size=256M]
->     Region 3: Memory at e0000000 (64-bit, prefetchable) [size=32M]
->     Region 5: I/O ports at e000 [size=128]
->     Expansion ROM at ef000000 [disabled] [size=512K]
-> 
-> Region 0, 1, 3 and the expansion ROM are all included in the mtrr region reg00.
-> 
-> 
-> The magic register that we write to workaround the issue is in PCI
-> bridge config space - not in a BAR.
-
-OK, I just wanted to rule out MTRR misconfiguration but I guess it is
-not the case here.
+QW0gMDcuMDkuMjAxOCB1bSAxNzo0NSBzY2hyaWViIEplYW4tUGhpbGlwcGUgQnJ1Y2tlcjoKPiBP
+biAwNy8wOS8yMDE4IDA5OjU1LCBDaHJpc3RpYW4gS8O2bmlnIHdyb3RlOgo+PiBJIHdpbGwgdGFr
+ZSB0aGlzIGFzIGFuIG9wcG9ydHVuaXR5IHRvIHN1bW1hcml6ZSBzb21lIG9mIHRoZSByZXF1aXJl
+bWVudHMKPj4gd2UgaGF2ZSBmb3IgUEFTSUQgbWFuYWdlbWVudCBmcm9tIHRoZSBhbWRncHUgZHJp
+dmVyIHBvaW50IG9mIHZpZXc6Cj4gVGhhdCdzIGluY3JlZGlibHkgdXNlZnVsLCB0aGFua3MgOikK
+Pgo+PiAxLiBXZSBuZWVkIHRvIGJlIGFibGUgdG8gYWxsb2NhdGUgUEFTSUQgYmV0d2VlbiAxIGFu
+ZCBzb21lIG1heGltdW0uIFplcm8KPj4gaXMgcmVzZXJ2ZWQgYXMgZmFyIGFzIEkga25vdywgYnV0
+IHdlIGRvbid0IG5lY2Vzc2FyeSBuZWVkIGEgbWluaW11bS4KPiBTaG91bGQgYmUgZmluZS4gVGhl
+IFBBU0lEIHJhbmdlIGlzIHJlc3RyaWN0ZWQgYnkgdGhlIFBDSSBQQVNJRAo+IGNhcGFiaWxpdHks
+IGZpcm13YXJlIGRlc2NyaXB0aW9uIChmb3Igbm9uLVBDSSBkZXZpY2VzKSwgdGhlIElPTU1VCj4g
+Y2FwYWNpdHksIGFuZCB3aGF0IHRoZSBkZXZpY2UgZHJpdmVyIHBhc3NlcyB0byBpb21tdV9zdmFf
+ZGV2aWNlX2luaXQuCj4gTm90IGFsbCBJT01NVXMgcmVzZXJ2ZSBQQVNJRCAwIChBTUQgSU9NTVUg
+d2l0aG91dCBHSW9TdXAgZG9lc24ndCwgaWYgSSdtCj4gbm90IG1pc3Rha2VuKSwgc28gdGhlIEtG
+RCBkcml2ZXIgd2lsbCBuZWVkIHRvIHBhc3MgbWluX3Bhc2lkPTEgdG8gbWFrZQo+IHN1cmUgdGhh
+dCAwIGlzbid0IGFsbG9jYXRlZC4KPgo+PiAyLiBXZSBuZWVkIHRvIGJlIGFibGUgdG8gYWxsb2Nh
+dGUgUEFTSURzIHdpdGhvdXQgYSBwcm9jZXNzIGFkZHJlc3Mgc3BhY2UKPj4gYmFja2luZyBpdC4g
+RS5nLiBvdXIgaGFyZHdhcmUgdXNlcyBQQVNJRHMgZXZlbiB3aXRob3V0IFNoYXJlZCBWaXJ0dWFs
+Cj4+IEFkZHJlc3NpbmcgZW5hYmxlZCB0byBkaXN0aW5jdCBjbGllbnRzIGZyb20gZWFjaCBvdGhl
+ci4KPj4gICDCoMKgwqAgwqDCoMKgIFdvdWxkIGJlIGEgcGl0eSBpZiB3ZSBuZWVkIHRvIHN0aWxs
+IGhhdmUgYSBzZXBhcmF0ZSBQQVNJRAo+PiBoYW5kbGluZyBiZWNhdXNlIHRoZSBzeXN0ZW0gd2lk
+ZSBpcyBvbmx5IGF2YWlsYWJsZSB3aGVuIElPTU1VIGlzIHR1cm5lZCBvbi4KPiBJJ20gc3RpbGwg
+bm90IHN1cmUgYWJvdXQgdGhpcyBvbmUuIEZyb20gbXkgcG9pbnQgb2YgdmlldyB3ZSBzaG91bGRu
+J3QKPiBhZGQgdG8gdGhlIElPTU1VIHN1YnN5c3RlbSBoZWxwZXJzIGZvciBkZXZpY2VzIHdpdGhv
+dXQgYW4gSU9NTVUuCgpJIGFncmVlIG9uIHRoYXQuCgo+IGlvbW11LXN2YSBleHBlY3RzIGV2ZXJ5
+d2hlcmUgdGhhdCB0aGUgZGV2aWNlIGhhcyBhbiBpb21tdV9kb21haW4sIGl0J3MKPiB0aGUgZmly
+c3QgdGhpbmcgd2UgY2hlY2sgb24gZW50cnkuIEJ5cGFzc2luZyBhbGwgb2YgdGhpcyB3b3VsZCBj
+YWxsCj4gaWRyX2FsbG9jKCkgZGlyZWN0bHksIGFuZCB3b3VsZG4ndCBoYXZlIGFueSBjb2RlIGlu
+IGNvbW1vbiB3aXRoIHRoZQo+IGN1cnJlbnQgaW9tbXUtc3ZhLiBTbyBpdCBzZWVtcyBsaWtlIHlv
+dSBuZWVkIGEgbGF5ZXIgb24gdG9wIG9mIGlvbW11LXN2YQo+IGNhbGxpbmcgaWRyX2FsbG9jKCkg
+d2hlbiBhbiBJT01NVSBpc24ndCBwcmVzZW50LCBidXQgSSBkb24ndCB0aGluayBpdAo+IHNob3Vs
+ZCBiZSBpbiBkcml2ZXJzL2lvbW11LwoKSW4gdGhpcyBjYXNlIEkgcXVlc3Rpb24gaWYgdGhlIFBB
+U0lEIGhhbmRsaW5nIHNob3VsZCBiZSB1bmRlciAKZHJpdmVycy9pb21tdSBhdCBhbGwuCgpTZWUg
+SSBjYW4gaGF2ZSBhIG1peCBvZiBWTSBjb250ZXh0IHdoaWNoIGFyZSBib3VuZCB0byBwcm9jZXNz
+ZXMgKHNvbWUgCmZldykgYW5kIFZNIGNvbnRleHRzIHdoaWNoIGFyZSBzdGFuZGFsb25lIGFuZCBk
+b2Vzbid0IGNhcmUgZm9yIGEgcHJvY2VzcyAKYWRkcmVzcyBzcGFjZS4gQnV0IGZvciBlYWNoIFZN
+IGNvbnRleHQgSSBuZWVkIGEgZGlzdGluY3QgUEFTSUQgZm9yIHRoZSAKaGFyZHdhcmUgdG8gd29y
+ay4KCkkgY2FuIGxpdmUgaWYgd2Ugc2F5IGlmIElPTU1VIGlzIGNvbXBsZXRlbHkgZGlzYWJsZWQg
+d2UgdXNlIGEgc2ltcGxlIGlkYSAKdG8gYWxsb2NhdGUgdGhlbSwgYnV0IHdoZW4gSU9NTVUgaXMg
+ZW5hYmxlZCBJIGNlcnRhaW5seSBuZWVkIGEgd2F5IHRvIApyZXNlcnZlIGEgUEFTSUQgd2l0aG91
+dCBhbiBhc3NvY2lhdGVkIHByb2Nlc3MuCgo+PiAzLiBFdmVuIGFmdGVyIGRlc3RydWN0aW9uIG9m
+IGEgcHJvY2VzcyBhZGRyZXNzIHNwYWNlIHdlIG5lZWQgc29tZSBncmFjZQo+PiBwZXJpb2QgYmVm
+b3JlIGEgUEFTSUQgaXMgcmV1c2VkIGJlY2F1c2UgaXQgY2FuIGJlIHRoYXQgdGhlIHNwZWNpZmlj
+Cj4+IFBBU0lEIGlzIHN0aWxsIGluIHNvbWUgaGFyZHdhcmUgcXVldWVzIGV0Yy4uLgo+PiAgIMKg
+wqDCoCDCoMKgwqAgQXQgYmFyZSBtaW5pbXVtIGFsbCBkZXZpY2UgZHJpdmVycyB1c2luZyBwcm9j
+ZXNzIGJpbmRpbmcgbmVlZAo+PiB0byBleHBsaWNpdGx5IG5vdGUgdG8gdGhlIGNvcmUgd2hlbiB0
+aGV5IGFyZSBkb25lIHdpdGggYSBQQVNJRC4KPiBSaWdodCwgbXVjaCBvZiB0aGUgaG9ycmlibGVu
+ZXNzIGluIGlvbW11LXN2YSBkZWFscyB3aXRoIHRoaXM6Cj4KPiBUaGUgcHJvY2VzcyBkaWVzLCBp
+b21tdS1zdmEgaXMgbm90aWZpZWQgYW5kIGNhbGxzIHRoZSBtbV9leGl0KCkgZnVuY3Rpb24KPiBw
+YXNzZWQgYnkgdGhlIGRldmljZSBkcml2ZXIgdG8gaW9tbXVfc3ZhX2RldmljZV9pbml0KCkuIElu
+IG1tX2V4aXQoKSB0aGUKPiBkZXZpY2UgZHJpdmVyIG5lZWRzIHRvIGNsZWFyIGFueSByZWZlcmVu
+Y2UgdG8gdGhlIFBBU0lEIGluIGhhcmR3YXJlIGFuZAo+IGluIGl0cyBvd24gc3RydWN0dXJlcy4g
+V2hlbiB0aGUgZGV2aWNlIGRyaXZlciByZXR1cm5zIGZyb20gbW1fZXhpdCgpLCBpdAo+IGVmZmVj
+dGl2ZWx5IHRlbGxzIHRoZSBjb3JlIHRoYXQgaXQgaGFzIGZpbmlzaGVkIHVzaW5nIHRoZSBQQVNJ
+RCwgYW5kCj4gaW9tbXUtc3ZhIGNhbiByZXVzZSB0aGUgUEFTSUQgZm9yIGFub3RoZXIgcHJvY2Vz
+cy4gbW1fZXhpdCgpIGlzIGFsbG93ZWQKPiB0byBibG9jaywgc28gdGhlIGRldmljZSBkcml2ZXIg
+aGFzIHRpbWUgdG8gY2xlYW4gdXAgYW5kIGZsdXNoIHRoZSBxdWV1ZXMuCj4KPiBJZiB0aGUgZGV2
+aWNlIGRyaXZlciBmaW5pc2hlcyB1c2luZyB0aGUgUEFTSUQgYmVmb3JlIHRoZSBwcm9jZXNzIGV4
+aXRzLAo+IGl0IGp1c3QgY2FsbHMgdW5iaW5kKCkuCgpFeGFjdGx5IHRoYXQncyB3aGF0IE1pY2hh
+bCBIb2NrbyBpcyBwcm9iYWJseSBnb2luZyB0byBub3QgbGlrZSBhdCBhbGwuCgpDYW4gd2UgaGF2
+ZSBhIGRpZmZlcmVudCBhcHByb2FjaCB3aGVyZSBlYWNoIGRyaXZlciBpcyBpbmZvcm1lZCBieSB0
+aGUgCm1tX2V4aXQoKSwgYnV0IG5lZWRzIHRvIGV4cGxpY2l0bHkgY2FsbCB1bmJpbmQoKSBiZWZv
+cmUgYSBQQVNJRCBpcyByZXVzZWQ/CgpEdXJpbmcgdGhhdCB0ZWFyZG93biB0cmFuc2l0aW9uIGl0
+IHdvdWxkIGJlIGlkZWFsIGlmIHRoYXQgUEFTSUQgb25seSAKcG9pbnRzIHRvIGEgZHVtbXkgcm9v
+dCBwYWdlIGRpcmVjdG9yeSB3aXRoIG9ubHkgaW52YWxpZCBlbnRyaWVzLgoKPgo+PiA0LiBJdCB3
+b3VsZCBiZSBuaWNlIHRvIGhhdmUgdG8gYmUgYWJsZSB0byBzZXQgYSAidm9pZCAqIiBmb3IgZWFj
+aAo+PiBQQVNJRC9kZXZpY2UgY29tYmluYXRpb24gd2hpbGUgYmluZGluZyB0byBhIHByb2Nlc3Mg
+d2hpY2ggdGhlbiBjYW4gYmUKPj4gcXVlcmllZCBsYXRlciBvbiBiYXNlZCBvbiB0aGUgUEFTSUQu
+Cj4+ICAgwqDCoMKgIMKgwqDCoCBFLmcuIHdoZW4geW91IGhhdmUgYSBwZXIgUEFTSUQvZGV2aWNl
+IHN0cnVjdHVyZSBhcm91bmQgYW55d2F5LAo+PiBqdXN0IGFkZCBhbiBleHRyYSBmaWVsZC4KPiBp
+b21tdV9zdmFfYmluZF9kZXZpY2UoKSB0YWtlcyBhICJkcnZkYXRhIiBwb2ludGVyIHRoYXQgaXMg
+c3RvcmVkCj4gaW50ZXJuYWxseSBmb3IgdGhlIFBBU0lEL2RldmljZSBjb21iaW5hdGlvbiAoaW9t
+bXVfYm9uZCkuIEl0IGlzIHBhc3NlZAo+IHRvIG1tX2V4aXQoKSwgYnV0IEkgaGF2ZW4ndCBhZGRl
+ZCBhbnl0aGluZyBmb3IgdGhlIGRldmljZSBkcml2ZXIgdG8KPiBxdWVyeSBpdCBiYWNrLgoKTmlj
+ZSEgTG9va3MgbGlrZSBhbGwgd2UgbmVlZCBhZGRpdGlvbmFsbHkgaXMgYSBmdW5jdGlvbiB0byBy
+ZXRyaWV2ZSB0aGF0IApiYXNlZCBvbiB0aGUgUEFTSUQuCgo+PiA1LiBJdCB3b3VsZCBiZSBuaWNl
+IHRvIGhhdmUgdG8gYWxsb2NhdGUgbXVsdGlwbGUgUEFTSURzIGZvciB0aGUgc2FtZQo+PiBwcm9j
+ZXNzIGFkZHJlc3Mgc3BhY2UuCj4+ICAgwqDCoMKgIMKgwqDCoCBFLmcuIHNvbWUgdGVhbXMgYXQg
+QU1EIHdhbnQgdG8gdXNlIGEgc2VwYXJhdGUgR1BVIGFkZHJlc3Mgc3BhY2UKPj4gZm9yIHRoZWly
+IHVzZXJzcGFjZSBjbGllbnQgbGlicmFyeS4gSSdtIHN0aWxsIHRyeWluZyB0byBhdm9pZCB0aGF0
+LCBidXQKPj4gaXQgaXMgcGVyZmVjdGx5IHBvc3NpYmxlIHRoYXQgd2UgYXJlIGdvaW5nIHRvIG5l
+ZWQgdGhhdC4KPiBUd28gUEFTSURzIHBvaW50aW5nIHRvIHRoZSBzYW1lIHByb2Nlc3MgcGdkPyBB
+dCBmaXJzdCBnbGFuY2UgaXQgc2VlbXMKPiBmZWFzaWJsZSwgbWF5YmUgd2l0aCBhIGZsYWcgcGFz
+c2VkIHRvIGJpbmQoKSBhbmQgYSBmZXcgY2hhbmdlcyB0bwo+IGludGVybmFsIHN0cnVjdHVyZXMu
+IEl0IHdpbGwgZHVwbGljYXRlIEFUQyBpbnZhbGlkYXRpb24gY29tbWFuZHMgZm9yCj4gZWFjaCBw
+cm9jZXNzIGFkZHJlc3Mgc3BhY2UgY2hhbmdlIChtdW5tYXAgZXRjKSBzbyB5b3UgbWlnaHQgdGFr
+ZSBhCj4gcGVyZm9ybWFuY2UgaGl0Lgo+Cj4gSW50ZWwncyBTVk0gY29kZSBoYXMgdGhlIFNWTV9G
+TEFHX1BSSVZBVEVfUEFTSUQgd2hpY2ggc2VlbXMgc2ltaWxhciB0bwo+IHdoYXQgeW91IGRlc2Ny
+aWJlLCBidXQgSSBkb24ndCBwbGFuIHRvIHN1cHBvcnQgaXQgaW4gdGhpcyBzZXJpZXMgKHRoZQo+
+IGlvX21tIG1vZGVsIGlzIGFscmVhZHkgcHJldHR5IGNvbXBsaWNhdGVkKS4gSSB0aGluayBpdCBj
+YW4gYmUgYWRkZWQKPiB3aXRob3V0IHRvbyBtdWNoIGVmZm9ydCBpbiBhIGZ1dHVyZSBzZXJpZXMs
+IHRob3VnaCB3aXRoIGEgZGlmZmVyZW50IGZsYWcKPiBuYW1lIHNpbmNlIHdlJ2QgbGlrZSB0byB1
+c2UgInByaXZhdGUgUEFTSUQiIGZvciBzb21ldGhpbmcgZWxzZQo+IChodHRwczovL3d3dy5zcGlu
+aWNzLm5ldC9saXN0cy9kcmktZGV2ZWwvbXNnMTc3MDA3Lmh0bWwpLgoKVG8gYmUgaG9uZXN0IEkg
+aG9wZWQgdGhhdCB5b3Ugd291bGQgc2F5OiBObyBuZXZlciEgU28gdGhhdCBJIGhhdmUgYSBnb29k
+IAphcmd1bWVudCB0byBwdXNoYmFjayBvbiBzdWNoIHJlcXVpcmVtZW50cyA6KQoKQnV0IGlmIGl0
+J3MgZG9hYmxlIGl0IHdvdWxkIGJlIGF0IGxlYXN0IG5pY2UgdG8gaGF2ZSBmb3IgZGVidWdnaW5n
+LgoKVGhhbmtzIGEgbG90IGZvciB3b3JraW5nIG9uIHRoYXQsCkNocmlzdGlhbi4KCj4KPiBUaGFu
+a3MsCj4gSmVhbgo+Cj4+ICAgwqDCoMKgIMKgwqDCoCBBZGRpdGlvbmFsIHRvIHRoYXQgaXQgaXMg
+c29tZXRpbWVzIHF1aXRlIHVzZWZ1bCBmb3IgZGVidWdnaW5nCj4+IHRvIGlzb2xhdGUgd2hlcmUg
+ZXhhY3RseSBhbiBpbmNvcnJlY3QgYWNjZXNzIChzZWdmYXVsdCkgaXMgY29taW5nIGZyb20uCj4+
+Cj4+IExldCBtZSBrbm93IGlmIHRoZXJlIGFyZSBzb21lIHByb2JsZW1zIHdpdGggdGhhdCwgZXNw
+ZWNpYWxseSBJIHdhbnQgdG8KPj4ga25vdyBpZiB0aGVyZSBpcyBwdXNoYmFjayBvbiAjNSBzbyB0
+aGF0IEkgY2FuIGZvcndhcmQgdGhhdCA6KQo+Pgo+PiBUaGFua3MsCj4+IENocmlzdGlhbi4KPj4K
+Pj4+IFRoYW5rcywKPj4+IEplYW4KCgpfX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19f
+X19fX19fX19fX19fXwpsaW51eC1hcm0ta2VybmVsIG1haWxpbmcgbGlzdApsaW51eC1hcm0ta2Vy
+bmVsQGxpc3RzLmluZnJhZGVhZC5vcmcKaHR0cDovL2xpc3RzLmluZnJhZGVhZC5vcmcvbWFpbG1h
+bi9saXN0aW5mby9saW51eC1hcm0ta2VybmVsCg==
