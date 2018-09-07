@@ -1,87 +1,53 @@
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-From: Jean-Philippe Brucker <jean-philippe.brucker@arm.com>
-Subject: Re: [PATCH v2 02/40] iommu/sva: Bind process address spaces to devices
-To: Auger Eric <eric.auger@redhat.com>, linux-arm-kernel@lists.infradead.org,
- linux-pci@vger.kernel.org, linux-acpi@vger.kernel.org,
- devicetree@vger.kernel.org, iommu@lists.linux-foundation.org,
- kvm@vger.kernel.org, linux-mm@kvack.org
-References: <20180511190641.23008-1-jean-philippe.brucker@arm.com>
- <20180511190641.23008-3-jean-philippe.brucker@arm.com>
- <471873d4-a1a6-1a3a-cf17-1e686b4ade96@redhat.com>
-Message-ID: <fbe7615d-2236-8080-c54f-f53da8118f93@arm.com>
-Date: Thu, 6 Sep 2018 12:09:42 +0100
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from lekensteyn.nl ([178.21.112.251]:57727 "EHLO lekensteyn.nl"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1727862AbeIGTql (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Fri, 7 Sep 2018 15:46:41 -0400
+Date: Fri, 7 Sep 2018 17:05:15 +0200
+From: Peter Wu <peter@lekensteyn.nl>
+To: Daniel Drake <drake@endlessm.com>
+Cc: bhelgaas@google.com, linux-pci@vger.kernel.org, linux@endlessm.com,
+        nouveau@lists.freedesktop.org, linux-pm@vger.kernel.org,
+        kherbst@redhat.com, andriy.shevchenko@linux.intel.com,
+        rafael.j.wysocki@intel.com, keith.busch@intel.com,
+        mika.westerberg@linux.intel.com, jonathan.derrick@intel.com,
+        kugel@rockbox.org, davem@davemloft.net, hkallweit1@gmail.com,
+        netdev@vger.kernel.org, nic_swsd@realtek.com
+Subject: Re: [PATCH] PCI: Reprogram bridge prefetch registers on resume
+Message-ID: <20180907150515.GA28739@al>
+References: <20180907053614.6540-1-drake@endlessm.com>
 MIME-Version: 1.0
-In-Reply-To: <471873d4-a1a6-1a3a-cf17-1e686b4ade96@redhat.com>
-List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
-List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
-List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
-List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
-List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
-Cc: xieyisheng1@huawei.com, ilias.apalodimas@linaro.org, xuzaibo@huawei.com,
- thunder.leizhen@huawei.com, will.deacon@arm.com, okaya@codeaurora.org,
- yi.l.liu@intel.com, ashok.raj@intel.com, tn@semihalf.com, joro@8bytes.org,
- bharatku@xilinx.com, liudongdong3@huawei.com, rfranz@cavium.com,
- kevin.tian@intel.com, jacob.jun.pan@linux.intel.com,
- alex.williamson@redhat.com, rgummal@xilinx.com, jonathan.cameron@huawei.com,
- shunyong.yang@hxt-semitech.com, dwmw2@infradead.org, liubo95@huawei.com,
- jcrouse@codeaurora.org, robdclark@gmail.com, robin.murphy@arm.com,
- christian.koenig@amd.com, nwatters@codeaurora.org, baolu.lu@linux.intel.com
-Content-Type: text/plain; charset="us-ascii"
-Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
-Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20180907053614.6540-1-drake@endlessm.com>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 05/09/2018 12:29, Auger Eric wrote:
->> +/**
->> + * iommu_sva_bind_device() - Bind a process address space to a device
->> + * @dev: the device
->> + * @mm: the mm to bind, caller must hold a reference to it
->> + * @pasid: valid address where the PASID will be stored
->> + * @flags: bond properties
->> + * @drvdata: private data passed to the mm exit handler
->> + *
->> + * Create a bond between device and task, allowing the device to access the mm
->> + * using the returned PASID. If unbind() isn't called first, a subsequent bind()
->> + * for the same device and mm fails with -EEXIST.
->> + *
->> + * iommu_sva_device_init() must be called first, to initialize the required SVA
->> + * features. @flags is a subset of these features.
-> @flags must be a subset of these features?
+On Fri, Sep 07, 2018 at 01:36:14PM +0800, Daniel Drake wrote:
+<..>
+> Thomas Martitz reports that this workaround also solves an issue where
+> the AMD Radeon Polaris 10 GPU on the HP Zbook 14u G5 is unresponsive
+> after S3 suspend/resume.
 
-Ok
+Where was this claimed? It is not stated in the linked bug:
+(https://bugs.freedesktop.org/show_bug.cgi?id=105760
 
-> don't you want to check flags is a subset of
-> dev->iommu_param->sva_param->features?
+> On resume, reprogram the PCI bridge prefetch registers, including the
+> magic register mentioned above.
+> 
+> This matches Win10 behaviour, which also rewrites these registers
+> during S3 resume (checked with qemu tracing).
 
-Yes, that will be in next version
+Windows 10 unconditionally rewrites these registers (BAR, I/O Base +
+Limit, Memory Base + Limit, etc. from top to bottom), see annotations:
+https://www.spinics.net/lists/linux-pci/msg75856.html
 
->> +/**
->> + * iommu_sva_unbind_device() - Remove a bond created with iommu_sva_bind_device
->> + * @dev: the device
->> + * @pasid: the pasid returned by bind()
->> + *
->> + * Remove bond between device and address space identified by @pasid. Users
->> + * should not call unbind() if the corresponding mm exited (as the PASID might
->> + * have been reallocated for another process).
->> + *
->> + * The device must not be issuing any more transaction for this PASID. All
->> + * outstanding page requests for this PASID must have been flushed to the IOMMU.
->> + *
->> + * Returns 0 on success, or an error value
->> + */
->> +int iommu_sva_unbind_device(struct device *dev, int pasid)
-> returned value needed?
+Linux has a generic "restore" operation that works backwards from the
+end of the PCI config space to the beginning, see
+pci_restore_config_space. Do you have a dmesg where you see the
+"restoring config space at offset" messages?
 
-I'd rather keep this one, since it already pointed out some of my bugs
-during regression testing.
+Would it be reasonable to unconditionally write these registers in
+pci_restore_config_dword, like Windows does?
 
-Thanks,
-Jean
-
-_______________________________________________
-linux-arm-kernel mailing list
-linux-arm-kernel@lists.infradead.org
-http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
+Kind regards,
+Peter
