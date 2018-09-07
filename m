@@ -1,64 +1,177 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from gate.crashing.org ([63.228.1.57]:53925 "EHLO gate.crashing.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1725780AbeICE4L (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Mon, 3 Sep 2018 00:56:11 -0400
-Message-ID: <0065b46df3c9c6fc535a747b05a02eaac50bbb56.camel@kernel.crashing.org>
-Subject: Re: [PATCH 16/16] PCI: Unify device inaccessible
-From: Benjamin Herrenschmidt <benh@kernel.crashing.org>
-To: Lukas Wunner <lukas@wunner.de>, Keith Busch <keith.busch@intel.com>
-Cc: Linux PCI <linux-pci@vger.kernel.org>,
-        Bjorn Helgaas <bhelgaas@google.com>,
-        Sinan Kaya <okaya@kernel.org>,
-        Thomas Tai <thomas.tai@oracle.com>, poza@codeaurora.org
-Date: Mon, 03 Sep 2018 10:38:08 +1000
-In-Reply-To: <20180902143937.utebcv4cqw6zbb4q@wunner.de>
-References: <20180831212639.10196-1-keith.busch@intel.com>
-         <20180831212639.10196-17-keith.busch@intel.com>
-         <20180902143937.utebcv4cqw6zbb4q@wunner.de>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Date: Fri, 7 Sep 2018 14:25:04 -0700
+From: Jacob Pan <jacob.jun.pan@linux.intel.com>
+To: Christian =?UTF-8?B?S8O2bmln?= <christian.koenig@amd.com>
+Subject: Re: [PATCH v2 01/40] iommu: Introduce Shared Virtual Addressing API
+Message-ID: <20180907142504.5034351e@jacob-builder>
+In-Reply-To: <5bbc0332-b94b-75cc-ca42-a9b196811daf@amd.com>
+References: <20180511190641.23008-1-jean-philippe.brucker@arm.com>
+ <20180511190641.23008-2-jean-philippe.brucker@arm.com>
+ <bf42affd-e9d0-e4fc-6d28-f3c3f7795348@redhat.com>
+ <03d31ba5-1eda-ea86-8c0c-91d14c86fe83@arm.com>
+ <ed39159c-087e-7e56-7d29-d1de9fa1677f@amd.com>
+ <f0b317d5-e2e9-5478-952c-05e8b97bd68b@arm.com>
+ <2fd4a0a1-1a35-bf82-df84-b995cce011d9@amd.com>
+ <65e7accd-4446-19f5-c667-c6407e89cfa6@arm.com>
+ <5bbc0332-b94b-75cc-ca42-a9b196811daf@amd.com>
+MIME-Version: 1.0
+List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
+List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
+List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
+List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
+List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
+Cc: "xieyisheng1@huawei.com" <xieyisheng1@huawei.com>,
+ "ilias.apalodimas@linaro.org" <ilias.apalodimas@linaro.org>,
+ "kvm@vger.kernel.org" <kvm@vger.kernel.org>,
+ "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+ "xuzaibo@huawei.com" <xuzaibo@huawei.com>,
+ "jonathan.cameron@huawei.com" <jonathan.cameron@huawei.com>,
+ Will Deacon <Will.Deacon@arm.com>, Michal Hocko <mhocko@kernel.org>,
+ "okaya@codeaurora.org" <okaya@codeaurora.org>,
+ "linux-mm@kvack.org" <linux-mm@kvack.org>,
+ "yi.l.liu@intel.com" <yi.l.liu@intel.com>,
+ "ashok.raj@intel.com" <ashok.raj@intel.com>,
+ Jean-Philippe Brucker <jean-philippe.brucker@arm.com>,
+ "tn@semihalf.com" <tn@semihalf.com>, "joro@8bytes.org" <joro@8bytes.org>,
+ "robdclark@gmail.com" <robdclark@gmail.com>,
+ "bharatku@xilinx.com" <bharatku@xilinx.com>,
+ "linux-acpi@vger.kernel.org" <linux-acpi@vger.kernel.org>,
+ "liudongdong3@huawei.com" <liudongdong3@huawei.com>,
+ "rfranz@cavium.com" <rfranz@cavium.com>,
+ "devicetree@vger.kernel.org" <devicetree@vger.kernel.org>,
+ "kevin.tian@intel.com" <kevin.tian@intel.com>, jacob.jun.pan@linux.intel.com,
+ Auger Eric <eric.auger@redhat.com>,
+ "jcrouse@codeaurora.org" <jcrouse@codeaurora.org>,
+ "rgummal@xilinx.com" <rgummal@xilinx.com>,
+ "thunder.leizhen@huawei.com" <thunder.leizhen@huawei.com>,
+ "linux-arm-kernel@lists.infradead.org" <linux-arm-kernel@lists.infradead.org>,
+ "shunyong.yang@hxt-semitech.com" <shunyong.yang@hxt-semitech.com>,
+ "dwmw2@infradead.org" <dwmw2@infradead.org>,
+ "liubo95@huawei.com" <liubo95@huawei.com>,
+ "alex.williamson@redhat.com" <alex.williamson@redhat.com>,
+ "iommu@lists.linux-foundation.org" <iommu@lists.linux-foundation.org>,
+ Robin Murphy <Robin.Murphy@arm.com>,
+ "nwatters@codeaurora.org" <nwatters@codeaurora.org>,
+ "baolu.lu@linux.intel.com" <baolu.lu@linux.intel.com>
+Content-Type: text/plain; charset="utf-8"
+Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
+Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Sun, 2018-09-02 at 16:39 +0200, Lukas Wunner wrote:
-> On Fri, Aug 31, 2018 at 03:26:39PM -0600, Keith Busch wrote:
-> > --- a/drivers/pci/pci.h
-> > +++ b/drivers/pci/pci.h
-> > @@ -294,21 +294,20 @@ struct pci_sriov {
-> >  static inline int pci_dev_set_disconnected(struct pci_dev *dev, void *unused)
-> >  {
-> > -	set_bit(PCI_DEV_DISCONNECTED, &dev->priv_flags);
-> > +	dev->error_state = pci_channel_io_perm_failure;
-> >  	return 0;
-> >  }
-> 
-> Back in 2016 when I floated the idea of using error_state to store
-> that the device has been removed, you responded:
-
-Wow, lots of activity while I wasn't looking :-) Unfortunately I'll be
-away for a few weeks...
-
-A quick note:
-
->    "I'd be happy if we can reuse that, but concerned about overloading
->     error_state's intended purpose for AER. The conditions under which an
->     'is_removed' may be set can also create AER events, and the aer driver
->     overrides the error_state."
->     https://spinics.net/lists/linux-pci/msg55417.html
-> 
-> Is it guaranteed that AER refrains from writing a different value to
-> error_state once it has been set to pci_channel_io_perm_failure due
-> to removal?  If so I'm happy with this patch.
-
-My suggestion to avoid that problem (we have a similar one in theory
-with EEH which can set error_state from interrupts) is to make
-error_state an atomic by having the "set" function use cmpxchg to
-enforce that there is no valid transition from perm_failure.
-
-I was hoping to cookup some patches along the line of the RFC I already
-sent factoring the above, but a number of things here got in the way
-and I'm about to head out of the country for 3 weeks.
-
-Cheers,
-Ben.
+T24gRnJpLCA3IFNlcCAyMDE4IDIwOjAyOjU0ICswMjAwCkNocmlzdGlhbiBLw7ZuaWcgPGNocmlz
+dGlhbi5rb2VuaWdAYW1kLmNvbT4gd3JvdGU6Cgo+IEFtIDA3LjA5LjIwMTggdW0gMTc6NDUgc2No
+cmllYiBKZWFuLVBoaWxpcHBlIEJydWNrZXI6Cj4gPiBPbiAwNy8wOS8yMDE4IDA5OjU1LCBDaHJp
+c3RpYW4gS8O2bmlnIHdyb3RlOiAgCj4gPj4gSSB3aWxsIHRha2UgdGhpcyBhcyBhbiBvcHBvcnR1
+bml0eSB0byBzdW1tYXJpemUgc29tZSBvZiB0aGUKPiA+PiByZXF1aXJlbWVudHMgd2UgaGF2ZSBm
+b3IgUEFTSUQgbWFuYWdlbWVudCBmcm9tIHRoZSBhbWRncHUgZHJpdmVyCj4gPj4gcG9pbnQgb2Yg
+dmlldzogIAo+ID4gVGhhdCdzIGluY3JlZGlibHkgdXNlZnVsLCB0aGFua3MgOikKPiA+ICAKPiA+
+PiAxLiBXZSBuZWVkIHRvIGJlIGFibGUgdG8gYWxsb2NhdGUgUEFTSUQgYmV0d2VlbiAxIGFuZCBz
+b21lCj4gPj4gbWF4aW11bS4gWmVybyBpcyByZXNlcnZlZCBhcyBmYXIgYXMgSSBrbm93LCBidXQg
+d2UgZG9uJ3QgbmVjZXNzYXJ5Cj4gPj4gbmVlZCBhIG1pbmltdW0uICAKPiAgWy4uLl0gIAo+ID4+
+IDIuIFdlIG5lZWQgdG8gYmUgYWJsZSB0byBhbGxvY2F0ZSBQQVNJRHMgd2l0aG91dCBhIHByb2Nl
+c3MgYWRkcmVzcwo+ID4+IHNwYWNlIGJhY2tpbmcgaXQuIEUuZy4gb3VyIGhhcmR3YXJlIHVzZXMg
+UEFTSURzIGV2ZW4gd2l0aG91dAo+ID4+IFNoYXJlZCBWaXJ0dWFsIEFkZHJlc3NpbmcgZW5hYmxl
+ZCB0byBkaXN0aW5jdCBjbGllbnRzIGZyb20gZWFjaAo+ID4+IG90aGVyLiBXb3VsZCBiZSBhIHBp
+dHkgaWYgd2UgbmVlZCB0byBzdGlsbCBoYXZlIGEgc2VwYXJhdGUgUEFTSUQKPiA+PiBoYW5kbGlu
+ZyBiZWNhdXNlIHRoZSBzeXN0ZW0gd2lkZSBpcyBvbmx5IGF2YWlsYWJsZSB3aGVuIElPTU1VIGlz
+Cj4gPj4gdHVybmVkIG9uLiAgCj4gIFsuLi5dICAKPiAKPiBJIGFncmVlIG9uIHRoYXQuCj4gCj4g
+PiBpb21tdS1zdmEgZXhwZWN0cyBldmVyeXdoZXJlIHRoYXQgdGhlIGRldmljZSBoYXMgYW4gaW9t
+bXVfZG9tYWluLAo+ID4gaXQncyB0aGUgZmlyc3QgdGhpbmcgd2UgY2hlY2sgb24gZW50cnkuIEJ5
+cGFzc2luZyBhbGwgb2YgdGhpcyB3b3VsZAo+ID4gY2FsbCBpZHJfYWxsb2MoKSBkaXJlY3RseSwg
+YW5kIHdvdWxkbid0IGhhdmUgYW55IGNvZGUgaW4gY29tbW9uCj4gPiB3aXRoIHRoZSBjdXJyZW50
+IGlvbW11LXN2YS4gU28gaXQgc2VlbXMgbGlrZSB5b3UgbmVlZCBhIGxheWVyIG9uCj4gPiB0b3Ag
+b2YgaW9tbXUtc3ZhIGNhbGxpbmcgaWRyX2FsbG9jKCkgd2hlbiBhbiBJT01NVSBpc24ndCBwcmVz
+ZW50LAo+ID4gYnV0IEkgZG9uJ3QgdGhpbmsgaXQgc2hvdWxkIGJlIGluIGRyaXZlcnMvaW9tbXUv
+ICAKPiAKPiBJbiB0aGlzIGNhc2UgSSBxdWVzdGlvbiBpZiB0aGUgUEFTSUQgaGFuZGxpbmcgc2hv
+dWxkIGJlIHVuZGVyIAo+IGRyaXZlcnMvaW9tbXUgYXQgYWxsLgo+IAo+IFNlZSBJIGNhbiBoYXZl
+IGEgbWl4IG9mIFZNIGNvbnRleHQgd2hpY2ggYXJlIGJvdW5kIHRvIHByb2Nlc3NlcyAoc29tZSAK
+PiBmZXcpIGFuZCBWTSBjb250ZXh0cyB3aGljaCBhcmUgc3RhbmRhbG9uZSBhbmQgZG9lc24ndCBj
+YXJlIGZvciBhCj4gcHJvY2VzcyBhZGRyZXNzIHNwYWNlLiBCdXQgZm9yIGVhY2ggVk0gY29udGV4
+dCBJIG5lZWQgYSBkaXN0aW5jdAo+IFBBU0lEIGZvciB0aGUgaGFyZHdhcmUgdG8gd29yay4KPiAK
+PiBJIGNhbiBsaXZlIGlmIHdlIHNheSBpZiBJT01NVSBpcyBjb21wbGV0ZWx5IGRpc2FibGVkIHdl
+IHVzZSBhIHNpbXBsZQo+IGlkYSB0byBhbGxvY2F0ZSB0aGVtLCBidXQgd2hlbiBJT01NVSBpcyBl
+bmFibGVkIEkgY2VydGFpbmx5IG5lZWQgYQo+IHdheSB0byByZXNlcnZlIGEgUEFTSUQgd2l0aG91
+dCBhbiBhc3NvY2lhdGVkIHByb2Nlc3MuCj4gClZULWQgd291bGQgYWxzbyBoYXZlIHN1Y2ggcmVx
+dWlyZW1lbnQuIFRoZXJlIGlzIGEgdmlydHVhbCBjb21tYW5kCnJlZ2lzdGVyIGZvciBhbGxvY2F0
+ZSBhbmQgZnJlZSBQQVNJRCBmb3IgVk0gdXNlLiBXaGVuIHRoYXQgUEFTSUQKYWxsb2NhdGlvbiBy
+ZXF1ZXN0IGdldHMgcHJvcGFnYXRlZCB0byB0aGUgaG9zdCBJT01NVSBkcml2ZXIsIHdlIG5lZWQg
+dG8KYWxsb2NhdGUgUEFTSUQgdy9vIG1tLgoKSWYgdGhlIFBBU0lEIGFsbG9jYXRpb24gaXMgZG9u
+ZSB2aWEgVkZJTywgY2FuIHdlIGhhdmUgRkQgdG8gdHJhY2sgUEFTSUQKbGlmZSBjeWNsZSBpbnN0
+ZWFkIG9mIG1tX2V4aXQoKT8gaS5lLiBhbGwgRkRzIGdldCBjbG9zZWQgYmVmb3JlCm1tX2V4aXQs
+IEkgYXNzdW1lPwoKPiA+PiAzLiBFdmVuIGFmdGVyIGRlc3RydWN0aW9uIG9mIGEgcHJvY2VzcyBh
+ZGRyZXNzIHNwYWNlIHdlIG5lZWQgc29tZQo+ID4+IGdyYWNlIHBlcmlvZCBiZWZvcmUgYSBQQVNJ
+RCBpcyByZXVzZWQgYmVjYXVzZSBpdCBjYW4gYmUgdGhhdCB0aGUKPiA+PiBzcGVjaWZpYyBQQVNJ
+RCBpcyBzdGlsbCBpbiBzb21lIGhhcmR3YXJlIHF1ZXVlcyBldGMuLi4KPiA+PiAgIMKgwqDCoCDC
+oMKgwqAgQXQgYmFyZSBtaW5pbXVtIGFsbCBkZXZpY2UgZHJpdmVycyB1c2luZyBwcm9jZXNzIGJp
+bmRpbmcKPiA+PiBuZWVkIHRvIGV4cGxpY2l0bHkgbm90ZSB0byB0aGUgY29yZSB3aGVuIHRoZXkg
+YXJlIGRvbmUgd2l0aCBhCj4gPj4gUEFTSUQuICAKPiA+IFJpZ2h0LCBtdWNoIG9mIHRoZSBob3Jy
+aWJsZW5lc3MgaW4gaW9tbXUtc3ZhIGRlYWxzIHdpdGggdGhpczoKPiA+Cj4gPiBUaGUgcHJvY2Vz
+cyBkaWVzLCBpb21tdS1zdmEgaXMgbm90aWZpZWQgYW5kIGNhbGxzIHRoZSBtbV9leGl0KCkKPiA+
+IGZ1bmN0aW9uIHBhc3NlZCBieSB0aGUgZGV2aWNlIGRyaXZlciB0byBpb21tdV9zdmFfZGV2aWNl
+X2luaXQoKS4gSW4KPiA+IG1tX2V4aXQoKSB0aGUgZGV2aWNlIGRyaXZlciBuZWVkcyB0byBjbGVh
+ciBhbnkgcmVmZXJlbmNlIHRvIHRoZQo+ID4gUEFTSUQgaW4gaGFyZHdhcmUgYW5kIGluIGl0cyBv
+d24gc3RydWN0dXJlcy4gV2hlbiB0aGUgZGV2aWNlIGRyaXZlcgo+ID4gcmV0dXJucyBmcm9tIG1t
+X2V4aXQoKSwgaXQgZWZmZWN0aXZlbHkgdGVsbHMgdGhlIGNvcmUgdGhhdCBpdCBoYXMKPiA+IGZp
+bmlzaGVkIHVzaW5nIHRoZSBQQVNJRCwgYW5kIGlvbW11LXN2YSBjYW4gcmV1c2UgdGhlIFBBU0lE
+IGZvcgo+ID4gYW5vdGhlciBwcm9jZXNzLiBtbV9leGl0KCkgaXMgYWxsb3dlZCB0byBibG9jaywg
+c28gdGhlIGRldmljZQo+ID4gZHJpdmVyIGhhcyB0aW1lIHRvIGNsZWFuIHVwIGFuZCBmbHVzaCB0
+aGUgcXVldWVzLgo+ID4KPiA+IElmIHRoZSBkZXZpY2UgZHJpdmVyIGZpbmlzaGVzIHVzaW5nIHRo
+ZSBQQVNJRCBiZWZvcmUgdGhlIHByb2Nlc3MKPiA+IGV4aXRzLCBpdCBqdXN0IGNhbGxzIHVuYmlu
+ZCgpLiAgCj4gCj4gRXhhY3RseSB0aGF0J3Mgd2hhdCBNaWNoYWwgSG9ja28gaXMgcHJvYmFibHkg
+Z29pbmcgdG8gbm90IGxpa2UgYXQgYWxsLgo+IAo+IENhbiB3ZSBoYXZlIGEgZGlmZmVyZW50IGFw
+cHJvYWNoIHdoZXJlIGVhY2ggZHJpdmVyIGlzIGluZm9ybWVkIGJ5IHRoZSAKPiBtbV9leGl0KCks
+IGJ1dCBuZWVkcyB0byBleHBsaWNpdGx5IGNhbGwgdW5iaW5kKCkgYmVmb3JlIGEgUEFTSUQgaXMK
+PiByZXVzZWQ/Cj4gCj4gRHVyaW5nIHRoYXQgdGVhcmRvd24gdHJhbnNpdGlvbiBpdCB3b3VsZCBi
+ZSBpZGVhbCBpZiB0aGF0IFBBU0lEIG9ubHkgCj4gcG9pbnRzIHRvIGEgZHVtbXkgcm9vdCBwYWdl
+IGRpcmVjdG9yeSB3aXRoIG9ubHkgaW52YWxpZCBlbnRyaWVzLgo+IApJIGd1ZXNzIHRoaXMgY2Fu
+IGJlIHZlbmRvciBzcGVjaWZpYywgSW4gVlQtZCBJIHBsYW4gdG8gbWFyayBQQVNJRAplbnRyeSBu
+b3QgcHJlc2VudCBhbmQgZGlzYWJsZSBmYXVsdCByZXBvcnRpbmcgd2hpbGUgZHJhaW5pbmcgcmVt
+YWluaW5nCmFjdGl2aXRpZXMuCgo+ID4gIAo+ID4+IDQuIEl0IHdvdWxkIGJlIG5pY2UgdG8gaGF2
+ZSB0byBiZSBhYmxlIHRvIHNldCBhICJ2b2lkICoiIGZvciBlYWNoCj4gPj4gUEFTSUQvZGV2aWNl
+IGNvbWJpbmF0aW9uIHdoaWxlIGJpbmRpbmcgdG8gYSBwcm9jZXNzIHdoaWNoIHRoZW4gY2FuCj4g
+Pj4gYmUgcXVlcmllZCBsYXRlciBvbiBiYXNlZCBvbiB0aGUgUEFTSUQuCj4gPj4gICDCoMKgwqAg
+wqDCoMKgIEUuZy4gd2hlbiB5b3UgaGF2ZSBhIHBlciBQQVNJRC9kZXZpY2Ugc3RydWN0dXJlIGFy
+b3VuZAo+ID4+IGFueXdheSwganVzdCBhZGQgYW4gZXh0cmEgZmllbGQuICAKPiA+IGlvbW11X3N2
+YV9iaW5kX2RldmljZSgpIHRha2VzIGEgImRydmRhdGEiIHBvaW50ZXIgdGhhdCBpcyBzdG9yZWQK
+PiA+IGludGVybmFsbHkgZm9yIHRoZSBQQVNJRC9kZXZpY2UgY29tYmluYXRpb24gKGlvbW11X2Jv
+bmQpLiBJdCBpcwo+ID4gcGFzc2VkIHRvIG1tX2V4aXQoKSwgYnV0IEkgaGF2ZW4ndCBhZGRlZCBh
+bnl0aGluZyBmb3IgdGhlIGRldmljZQo+ID4gZHJpdmVyIHRvIHF1ZXJ5IGl0IGJhY2suICAKPiAK
+PiBOaWNlISBMb29rcyBsaWtlIGFsbCB3ZSBuZWVkIGFkZGl0aW9uYWxseSBpcyBhIGZ1bmN0aW9u
+IHRvIHJldHJpZXZlCj4gdGhhdCBiYXNlZCBvbiB0aGUgUEFTSUQuCj4gCj4gPj4gNS4gSXQgd291
+bGQgYmUgbmljZSB0byBoYXZlIHRvIGFsbG9jYXRlIG11bHRpcGxlIFBBU0lEcyBmb3IgdGhlCj4g
+Pj4gc2FtZSBwcm9jZXNzIGFkZHJlc3Mgc3BhY2UuCj4gPj4gICDCoMKgwqAgwqDCoMKgIEUuZy4g
+c29tZSB0ZWFtcyBhdCBBTUQgd2FudCB0byB1c2UgYSBzZXBhcmF0ZSBHUFUKPiA+PiBhZGRyZXNz
+IHNwYWNlIGZvciB0aGVpciB1c2Vyc3BhY2UgY2xpZW50IGxpYnJhcnkuIEknbSBzdGlsbCB0cnlp
+bmcKPiA+PiB0byBhdm9pZCB0aGF0LCBidXQgaXQgaXMgcGVyZmVjdGx5IHBvc3NpYmxlIHRoYXQg
+d2UgYXJlIGdvaW5nIHRvCj4gPj4gbmVlZCB0aGF0LiAgCj4gPiBUd28gUEFTSURzIHBvaW50aW5n
+IHRvIHRoZSBzYW1lIHByb2Nlc3MgcGdkPyBBdCBmaXJzdCBnbGFuY2UgaXQKPiA+IHNlZW1zIGZl
+YXNpYmxlLCBtYXliZSB3aXRoIGEgZmxhZyBwYXNzZWQgdG8gYmluZCgpIGFuZCBhIGZldwo+ID4g
+Y2hhbmdlcyB0byBpbnRlcm5hbCBzdHJ1Y3R1cmVzLiBJdCB3aWxsIGR1cGxpY2F0ZSBBVEMgaW52
+YWxpZGF0aW9uCj4gPiBjb21tYW5kcyBmb3IgZWFjaCBwcm9jZXNzIGFkZHJlc3Mgc3BhY2UgY2hh
+bmdlIChtdW5tYXAgZXRjKSBzbyB5b3UKPiA+IG1pZ2h0IHRha2UgYSBwZXJmb3JtYW5jZSBoaXQu
+Cj4gPgo+ID4gSW50ZWwncyBTVk0gY29kZSBoYXMgdGhlIFNWTV9GTEFHX1BSSVZBVEVfUEFTSUQg
+d2hpY2ggc2VlbXMgc2ltaWxhcgo+ID4gdG8gd2hhdCB5b3UgZGVzY3JpYmUsIGJ1dCBJIGRvbid0
+IHBsYW4gdG8gc3VwcG9ydCBpdCBpbiB0aGlzIHNlcmllcwo+ID4gKHRoZSBpb19tbSBtb2RlbCBp
+cyBhbHJlYWR5IHByZXR0eSBjb21wbGljYXRlZCkuIEkgdGhpbmsgaXQgY2FuIGJlCj4gPiBhZGRl
+ZCB3aXRob3V0IHRvbyBtdWNoIGVmZm9ydCBpbiBhIGZ1dHVyZSBzZXJpZXMsIHRob3VnaCB3aXRo
+IGEKPiA+IGRpZmZlcmVudCBmbGFnIG5hbWUgc2luY2Ugd2UnZCBsaWtlIHRvIHVzZSAicHJpdmF0
+ZSBQQVNJRCIgZm9yCj4gPiBzb21ldGhpbmcgZWxzZQo+ID4gKGh0dHBzOi8vd3d3LnNwaW5pY3Mu
+bmV0L2xpc3RzL2RyaS1kZXZlbC9tc2cxNzcwMDcuaHRtbCkuICAKPiAKPiBUbyBiZSBob25lc3Qg
+SSBob3BlZCB0aGF0IHlvdSB3b3VsZCBzYXk6IE5vIG5ldmVyISBTbyB0aGF0IEkgaGF2ZSBhCj4g
+Z29vZCBhcmd1bWVudCB0byBwdXNoYmFjayBvbiBzdWNoIHJlcXVpcmVtZW50cyA6KQo+IAo+IEJ1
+dCBpZiBpdCdzIGRvYWJsZSBpdCB3b3VsZCBiZSBhdCBsZWFzdCBuaWNlIHRvIGhhdmUgZm9yIGRl
+YnVnZ2luZy4KPiAKPiBUaGFua3MgYSBsb3QgZm9yIHdvcmtpbmcgb24gdGhhdCwKPiBDaHJpc3Rp
+YW4uCj4gCj4gPgo+ID4gVGhhbmtzLAo+ID4gSmVhbgo+ID4gIAo+ID4+ICAgwqDCoMKgIMKgwqDC
+oCBBZGRpdGlvbmFsIHRvIHRoYXQgaXQgaXMgc29tZXRpbWVzIHF1aXRlIHVzZWZ1bCBmb3IKPiA+
+PiBkZWJ1Z2dpbmcgdG8gaXNvbGF0ZSB3aGVyZSBleGFjdGx5IGFuIGluY29ycmVjdCBhY2Nlc3Mg
+KHNlZ2ZhdWx0KQo+ID4+IGlzIGNvbWluZyBmcm9tLgo+ID4+Cj4gPj4gTGV0IG1lIGtub3cgaWYg
+dGhlcmUgYXJlIHNvbWUgcHJvYmxlbXMgd2l0aCB0aGF0LCBlc3BlY2lhbGx5IEkKPiA+PiB3YW50
+IHRvIGtub3cgaWYgdGhlcmUgaXMgcHVzaGJhY2sgb24gIzUgc28gdGhhdCBJIGNhbiBmb3J3YXJk
+Cj4gPj4gdGhhdCA6KQo+ID4+Cj4gPj4gVGhhbmtzLAo+ID4+IENocmlzdGlhbi4KPiA+PiAgCj4g
+Pj4+IFRoYW5rcywKPiA+Pj4gSmVhbiAgCj4gCgpbSmFjb2IgUGFuXQoKX19fX19fX19fX19fX19f
+X19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX18KbGludXgtYXJtLWtlcm5lbCBtYWlsaW5n
+IGxpc3QKbGludXgtYXJtLWtlcm5lbEBsaXN0cy5pbmZyYWRlYWQub3JnCmh0dHA6Ly9saXN0cy5p
+bmZyYWRlYWQub3JnL21haWxtYW4vbGlzdGluZm8vbGludXgtYXJtLWtlcm5lbAo=
