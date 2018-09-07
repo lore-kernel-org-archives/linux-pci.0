@@ -1,166 +1,57 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.29.99]:50004 "EHLO mail.kernel.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1728124AbeITBT5 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Wed, 19 Sep 2018 21:19:57 -0400
-Date: Wed, 19 Sep 2018 14:40:29 -0500
-From: Bjorn Helgaas <helgaas@kernel.org>
-To: Keith Busch <keith.busch@intel.com>
-Cc: Linux PCI <linux-pci@vger.kernel.org>,
-        Bjorn Helgaas <bhelgaas@google.com>,
-        Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-        Sinan Kaya <okaya@kernel.org>,
-        Thomas Tai <thomas.tai@oracle.com>, poza@codeaurora.org,
-        Lukas Wunner <lukas@wunner.de>, Christoph Hellwig <hch@lst.de>,
-        Mika Westerberg <mika.westerberg@linux.intel.com>
-Subject: Re: [PATCHv3 01/10] PCI/portdrv: Use subsys_init for service drivers
-Message-ID: <20180919194029.GA261184@bhelgaas-glaptop.roam.corp.google.com>
-References: <20180918235702.26573-1-keith.busch@intel.com>
- <20180918235702.26573-2-keith.busch@intel.com>
- <20180919162846.GB243610@bhelgaas-glaptop.roam.corp.google.com>
- <20180919180003.GC28310@localhost.localdomain>
+Return-Path: <SRS0=v2Pr=LV=socionext.com=hayashi.kunihiko@kernel.org>
+Return-Path: <SRS0=v2Pr=LV=socionext.com=hayashi.kunihiko@kernel.org>
+Date: Fri, 07 Sep 2018 13:11:27 +0900
+From: Kunihiko Hayashi <hayashi.kunihiko@socionext.com>
+To: Bjorn Helgaas <helgaas@kernel.org>
+Subject: Re: [PATCH 2/2] pci: dwc: add UniPhier PCIe host controller support
+Cc: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
+ Bjorn Helgaas <bhelgaas@google.com>,
+ Rob Herring <robh+dt@kernel.org>,
+ Mark Rutland <mark.rutland@arm.com>,
+ Masahiro Yamada <yamada.masahiro@socionext.com>,
+ linux-pci@vger.kernel.org,
+ devicetree@vger.kernel.org,
+ linux-arm-kernel@lists.infradead.org,
+ linux-kernel@vger.kernel.org,
+ Masami Hiramatsu <masami.hiramatsu@linaro.org>,
+ Jassi Brar <jaswinder.singh@linaro.org>
+In-Reply-To: <20180906140926.GB214747@bhelgaas-glaptop.roam.corp.google.com>
+References: <20180906103819.252A.4A936039@socionext.com> <20180906140926.GB214747@bhelgaas-glaptop.roam.corp.google.com>
+Message-Id: <20180907131126.FACD.4A936039@socionext.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20180919180003.GC28310@localhost.localdomain>
-Sender: linux-pci-owner@vger.kernel.org
+Content-Type: text/plain; charset="US-ASCII"
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wed, Sep 19, 2018 at 12:00:03PM -0600, Keith Busch wrote:
-> On Wed, Sep 19, 2018 at 11:28:46AM -0500, Bjorn Helgaas wrote:
-> > On Tue, Sep 18, 2018 at 05:56:53PM -0600, Keith Busch wrote:
-> > Since none of the service drivers can be modules, I don't think it
-> > buys us much to make their init functions initcalls.  Can we
-> > explicitly call them from the pcie_portdrv_probe() path?
+Hi Bjorn,
+
+On Thu, 6 Sep 2018 09:09:27 -0500 <helgaas@kernel.org> wrote:
+
+> On Thu, Sep 06, 2018 at 10:38:20AM +0900, Kunihiko Hayashi wrote:
+> > > > +++ b/drivers/pci/controller/dwc/pcie-uniphier.c
+> > > > @@ -0,0 +1,464 @@
+> > > > +// SPDX-License-Identifier: GPL-2.0
+> > > > +//
+> > > > +// PCI-express host controller driver for UniPhier SoCs
+> > > > +// Copyright 2018 Socionext Inc.
+> > > > +// Author: Kunihiko Hayashi <hayashi.kunihiko@socionext.com>
+> > > 
+> > > Use /* ... */ comments except for the SPDX line.
+> > 
+> > Okay, although I wondered which way to put, I'll replace the header next.
 > 
-> It's actually during pcie_portdrv_init that the services need to be
-> initialized if we're going this way. Do you think the following is
-> better? The initialization order should be more clear to the reader at
-> the cost of more code than init call magic, but I'm okay having this
-> done either way.
+> The easiest thing is to look at similar files already in the tree and
+> follow their style.  The details are here:
+> 
+> https://git.kernel.org/cgit/linux/kernel/git/torvalds/linux.git/tree/Documentation/process/coding-style.rst#n540
+> https://git.kernel.org/cgit/linux/kernel/git/torvalds/linux.git/tree/Documentation/process/license-rules.rst#n74
 
-Yes.  More code, less magic seems like the right tradeoff to me.
+Thanks for your advice.
+Although I've found both styles in some sub-systems, these are helpful for me.
 
-> ---
-> diff --git a/drivers/pci/hotplug/pciehp_core.c b/drivers/pci/hotplug/pciehp_core.c
-> index 68b20e667764..944047976569 100644
-> --- a/drivers/pci/hotplug/pciehp_core.c
-> +++ b/drivers/pci/hotplug/pciehp_core.c
-> @@ -287,7 +287,7 @@ static struct pcie_port_service_driver hpdriver_portdrv = {
->  #endif	/* PM */
->  };
->  
-> -static int __init pcied_init(void)
-> +int __init pcie_hp_init(void)
->  {
->  	int retval = 0;
->  
-> @@ -298,4 +298,3 @@ static int __init pcied_init(void)
->  
->  	return retval;
->  }
-> -device_initcall(pcied_init);
-> diff --git a/drivers/pci/pcie/aer.c b/drivers/pci/pcie/aer.c
-> index 83180edd6ed4..637d638f73da 100644
-> --- a/drivers/pci/pcie/aer.c
-> +++ b/drivers/pci/pcie/aer.c
-> @@ -1569,10 +1569,9 @@ static struct pcie_port_service_driver aerdriver = {
->   *
->   * Invoked when AER root service driver is loaded.
->   */
-> -static int __init aer_service_init(void)
-> +int __init pcie_aer_init(void)
->  {
->  	if (!pci_aer_available() || aer_acpi_firmware_first())
->  		return -ENXIO;
->  	return pcie_port_service_register(&aerdriver);
->  }
-> -device_initcall(aer_service_init);
-> diff --git a/drivers/pci/pcie/dpc.c b/drivers/pci/pcie/dpc.c
-> index f03279fc87cd..a1fd16bf1cab 100644
-> --- a/drivers/pci/pcie/dpc.c
-> +++ b/drivers/pci/pcie/dpc.c
-> @@ -282,8 +282,7 @@ static struct pcie_port_service_driver dpcdriver = {
->  	.reset_link	= dpc_reset_link,
->  };
->  
-> -static int __init dpc_service_init(void)
-> +int __init pcie_dpc_init(void)
->  {
->  	return pcie_port_service_register(&dpcdriver);
->  }
-> -device_initcall(dpc_service_init);
-> diff --git a/drivers/pci/pcie/pme.c b/drivers/pci/pcie/pme.c
-> index 3ed67676ea2a..1a8b85051b1b 100644
-> --- a/drivers/pci/pcie/pme.c
-> +++ b/drivers/pci/pcie/pme.c
-> @@ -446,8 +446,7 @@ static struct pcie_port_service_driver pcie_pme_driver = {
->  /**
->   * pcie_pme_service_init - Register the PCIe PME service driver.
->   */
-> -static int __init pcie_pme_service_init(void)
-> +int __init pcie_pme_init(void)
->  {
->  	return pcie_port_service_register(&pcie_pme_driver);
->  }
-> -device_initcall(pcie_pme_service_init);
-> diff --git a/drivers/pci/pcie/portdrv.h b/drivers/pci/pcie/portdrv.h
-> index d59afa42fc14..2498b2d34009 100644
-> --- a/drivers/pci/pcie/portdrv.h
-> +++ b/drivers/pci/pcie/portdrv.h
-> @@ -23,6 +23,30 @@
->  
->  #define PCIE_PORT_DEVICE_MAXSERVICES   4
->  
-> +#ifdef CONFIG_PCIEAER
-> +int pcie_aer_init(void);
-> +#else
-> +static inline int pcie_aer_init(void) { return 0; }
-> +#endif
-> +
-> +#ifdef CONFIG_HOTPLUG_PCI_PCIE
-> +int pcie_hp_init(void);
-> +#else
-> +static inline int pcie_hp_init(void) { return 0; }
-> +#endif
-> +
-> +#ifdef CONFIG_PCIE_PME
-> +int pcie_pme_init(void);
-> +#else
-> +static inline int pcie_pme_init(void) { return 0; }
-> +#endif
-> +
-> +#ifdef CONFIG_PCIE_DPC
-> +int pcie_dpc_init(void);
-> +#else
-> +static inline int pcie_dpc_init(void) { return 0; }
-> +#endif
-> +
->  /* Port Type */
->  #define PCIE_ANY_PORT			(~0)
->  
-> diff --git a/drivers/pci/pcie/portdrv_pci.c b/drivers/pci/pcie/portdrv_pci.c
-> index eef22dc29140..23a5a0c2c3fe 100644
-> --- a/drivers/pci/pcie/portdrv_pci.c
-> +++ b/drivers/pci/pcie/portdrv_pci.c
-> @@ -226,11 +226,20 @@ static const struct dmi_system_id pcie_portdrv_dmi_table[] __initconst = {
->  	 {}
->  };
->  
-> +static void __init pcie_init_services(void)
-> +{
-> +	pcie_aer_init();
-> +	pcie_pme_init();
-> +	pcie_dpc_init();
-> +	pcie_hp_init();
-> +}
-> +
->  static int __init pcie_portdrv_init(void)
->  {
->  	if (pcie_ports_disabled)
->  		return -EACCES;
->  
-> +	pcie_init_services();
->  	dmi_check_system(pcie_portdrv_dmi_table);
->  
->  	return pci_register_driver(&pcie_portdriver);
-> --
+I replaced it in posted v2.
+
+Thank you,
+
+---
+Best Regards,
+Kunihiko Hayashi
