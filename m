@@ -1,88 +1,115 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from bmailout1.hostsharing.net ([83.223.95.100]:35003 "EHLO
-        bmailout1.hostsharing.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726386AbeIEMHL (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Wed, 5 Sep 2018 08:07:11 -0400
-Date: Wed, 5 Sep 2018 09:38:16 +0200
-From: Lukas Wunner <lukas@wunner.de>
-To: Sreekanth Reddy <sreekanth.reddy@broadcom.com>
-Cc: Suganath Prabu Subramani <suganath-prabu.subramani@broadcom.com>,
-        Andy Shevchenko <andy.shevchenko@gmail.com>,
-        linux-scsi <linux-scsi@vger.kernel.org>,
-        Sathya Prakash <Sathya.Prakash@broadcom.com>,
-        linux-pci@vger.kernel.org,
-        Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-        Keith Busch <keith.busch@intel.com>
-Subject: Re: [Patch v1 0/7] mpt3sas: Hot-Plug Surprise removal support on IOC.
-Message-ID: <20180905073816.jcrct2xcpucb6bkn@wunner.de>
-References: <1535690081-16116-1-git-send-email-suganath-prabu.subramani@broadcom.com>
- <CAHp75VfC8GN3oEzSFJYfMr0iqBTYUJ=WPoLS9Oh5NgVcFmnBkw@mail.gmail.com>
- <20180831085534.n6eikj5cw522ihhe@wunner.de>
- <CAK=zhgrzNYDeUFN0YWVJLdGR0nA443su0xydwSHFQzhouhZBuw@mail.gmail.com>
- <20180904094234.jm5je5sfpagdf6dz@wunner.de>
- <CAK=zhgprkzcF-UZeeqg_qN0xFLR=BfzkRNRZKA=DJyf7aMPmeg@mail.gmail.com>
+Return-Path: <SRS0=wnmn=LV=intel.com=keith.busch@kernel.org>
+Return-Path: <SRS0=wnmn=LV=intel.com=keith.busch@kernel.org>
+Date: Fri, 7 Sep 2018 14:18:19 -0600
+From: Keith Busch <keith.busch@intel.com>
+To: Bjorn Helgaas <helgaas@kernel.org>
+Cc: Linux PCI <linux-pci@vger.kernel.org>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	Sinan Kaya <okaya@kernel.org>, Thomas Tai <thomas.tai@oracle.com>,
+	poza@codeaurora.org, Lukas Wunner <lukas@wunner.de>,
+	Christoph Hellwig <hch@lst.de>
+Subject: Re: [PATCHv2 15/20] PCI/pciehp: Fix powerfault detection order
+Message-ID: <20180907201819.GA1341@localhost.localdomain>
+References: <20180905203546.21921-1-keith.busch@intel.com>
+ <20180905203546.21921-16-keith.busch@intel.com>
+ <20180906193657.GH214747@bhelgaas-glaptop.roam.corp.google.com>
+ <20180906195047.GD31024@localhost.localdomain>
+ <20180907165352.GA250890@bhelgaas-glaptop.roam.corp.google.com>
+ <20180907200332.GB250890@bhelgaas-glaptop.roam.corp.google.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <CAK=zhgprkzcF-UZeeqg_qN0xFLR=BfzkRNRZKA=DJyf7aMPmeg@mail.gmail.com>
-Sender: linux-pci-owner@vger.kernel.org
+In-Reply-To: <20180907200332.GB250890@bhelgaas-glaptop.roam.corp.google.com>
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wed, Sep 05, 2018 at 11:45:45AM +0530, Sreekanth Reddy wrote:
-> On Tue, Sep 4, 2018 at 3:12 PM, Lukas Wunner <lukas@wunner.de> wrote:
-> > Many scsi drivers call pci_channel_offline() to detect inaccessibility
-> > of the device due to a PCI error:
-> > https://elixir.bootlin.com/linux/v4.19-rc2/ident/pci_channel_offline
-> >
-> > A patch is pending such that surprise removal can also be queried
-> > with that same function:
-> > https://www.spinics.net/lists/linux-pci/msg75722.html
+On Fri, Sep 07, 2018 at 03:03:32PM -0500, Bjorn Helgaas wrote:
+> I applied this to for-linus with the following changelog.  Let me know
+> if I didn't understand this correctly.  I changed the comment in
+> pciehp_power_on_slot() so it doesn't say "sticky" to avoid confusion
+> with the PCI spec concept of sticky register bits (ROS, RWS, RW1CS).
+
+Perfect! Thanks for queueing this up. I'll drop this one from the rest
+of the series, which will need at least a v3 to fix a dumb mistake in
+pointed out in review, and I'll get the order to better sense (or maybe
+split into independent patch sets).
+ 
+> commit 342227b42fe849eb2edac38342702aff12a5491d
+> Author: Keith Busch <keith.busch@intel.com>
+> Date:   Wed Sep 5 14:35:41 2018 -0600
 > 
-> Lukas, thanks for pointing to this pci_dev_is_disconnected() API. So
-> we can use this API directly instead of reading the vendor Id and
-> checking for all one's once this patch get accepted?
-
-Yes, except pci_dev_is_disconnected() is private to the PCI core,
-but dev->error_state and pci_channel_offline() is public.
-
-
-> I have one more instance where still we need this poll kthread, i.e
-> during the device probe time we have some commands which has more
-> timeout value (e.g. 300 seconds), so if user has unplugged this device
-> just after sending this more time-out valued command then driver has
-> to wait until this time-out value expires. i.e. this device is still
-> visible in lspci output until this 300 seconds timeout value expires
-> even though device is unplugged. if we have a poll kthread (which will
-> poll for every one second) then driver can early detect the unplugged
-> state and can terminate the outstanding commands and hence probe
-> operation can be completed quickly.
-
-The only instances I can see in your driver where it waits for 300 s
-is in _base_diag_reset(), which does an msleep(256) in a loop for up
-to 300 s, and scsih_scan_finished(), which is called in a loop with an
-msleep(10) by do_scsi_scan_host().
-
-Any harm in simply checking for removal of the device in those loops
-and bailing out if so?  Instead of the poll kthread to achieve the same?
-
-
-> Also whether we need to wait for below patches get accepted? so that
-> we can post the new set of patches accommodating according to your
-> suggestions,
-> https://www.spinics.net/lists/linux-pci/msg75722.html
-> https://www.spinics.net/lists/linux-pci/msg75438.html
-
-I can't tell you whether and when those patches get accepted, that's
-for Bjorn Helgaas to decide.  Also, what does get accepted might differ.
-E.g. the first patch uses the existing pci_channel_io_perm_failure
-state for removal.  There was debate whether to introduce a new state
-for removed devices to avoid overloading the existing state, which is
-used for error recovery.
-
-All I can recommend is to follow linux-pci, test the patches that have
-already been brought forward to ascertain they fulfil your needs,
-and generally participate in the debate so that your use cases are
-covered.
-
-Thanks,
-
-Lukas
+>     PCI: pciehp: Fix hot-add vs powerfault detection order
+>     
+>     If both hot-add and power fault were observed in a single interrupt, we
+>     handled the hot-add first, then the power fault, in this path:
+>     
+>       pciehp_ist
+>         if (events & (PDC | DLLSC))
+>           pciehp_handle_presence_or_link_change
+>             case OFF_STATE:
+>               pciehp_enable_slot
+>                 __pciehp_enable_slot
+>                   board_added
+>                     pciehp_power_on_slot
+>                       ctrl->power_fault_detected = 0
+>                       pcie_write_cmd(ctrl, PCI_EXP_SLTCTL_PWR_ON, PCI_EXP_SLTCTL_PCC)
+>                     pciehp_green_led_on(p_slot)             # power LED on
+>                     pciehp_set_attention_status(p_slot, 0)  # attention LED off
+>         if ((events & PFD) && !ctrl->power_fault_detected)
+>           ctrl->power_fault_detected = 1
+>           pciehp_set_attention_status(1)                    # attention LED on
+>           pciehp_green_led_off(slot)                        # power LED off
+>     
+>     This left the attention indicator on (even though the hot-add succeeded)
+>     and the power indicator off (even though the slot power was on).
+>     
+>     Fix this by checking for power faults before checking for new devices.
+>     
+>     Fixes: 0e94916e6091 ("PCI: pciehp: Handle events synchronously")
+>     Signed-off-by: Keith Busch <keith.busch@intel.com>
+>     [bhelgaas: changelog]
+>     Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
+>     Reviewed-by: Lukas Wunner <lukas@wunner.de>
+> 
+> diff --git a/drivers/pci/hotplug/pciehp_hpc.c b/drivers/pci/hotplug/pciehp_hpc.c
+> index 7136e3430925..a938abdb41ce 100644
+> --- a/drivers/pci/hotplug/pciehp_hpc.c
+> +++ b/drivers/pci/hotplug/pciehp_hpc.c
+> @@ -496,7 +496,7 @@ int pciehp_power_on_slot(struct slot *slot)
+>  	u16 slot_status;
+>  	int retval;
+>  
+> -	/* Clear sticky power-fault bit from previous power failures */
+> +	/* Clear power-fault bit from previous power failures */
+>  	pcie_capability_read_word(pdev, PCI_EXP_SLTSTA, &slot_status);
+>  	if (slot_status & PCI_EXP_SLTSTA_PFD)
+>  		pcie_capability_write_word(pdev, PCI_EXP_SLTSTA,
+> @@ -646,6 +646,14 @@ static irqreturn_t pciehp_ist(int irq, void *dev_id)
+>  		pciehp_handle_button_press(slot);
+>  	}
+>  
+> +	/* Check Power Fault Detected */
+> +	if ((events & PCI_EXP_SLTSTA_PFD) && !ctrl->power_fault_detected) {
+> +		ctrl->power_fault_detected = 1;
+> +		ctrl_err(ctrl, "Slot(%s): Power fault\n", slot_name(slot));
+> +		pciehp_set_attention_status(slot, 1);
+> +		pciehp_green_led_off(slot);
+> +	}
+> +
+>  	/*
+>  	 * Disable requests have higher priority than Presence Detect Changed
+>  	 * or Data Link Layer State Changed events.
+> @@ -657,14 +665,6 @@ static irqreturn_t pciehp_ist(int irq, void *dev_id)
+>  		pciehp_handle_presence_or_link_change(slot, events);
+>  	up_read(&ctrl->reset_lock);
+>  
+> -	/* Check Power Fault Detected */
+> -	if ((events & PCI_EXP_SLTSTA_PFD) && !ctrl->power_fault_detected) {
+> -		ctrl->power_fault_detected = 1;
+> -		ctrl_err(ctrl, "Slot(%s): Power fault\n", slot_name(slot));
+> -		pciehp_set_attention_status(slot, 1);
+> -		pciehp_green_led_off(slot);
+> -	}
+> -
+>  	pci_config_pm_runtime_put(pdev);
+>  	wake_up(&ctrl->requester);
+>  	return IRQ_HANDLED;
