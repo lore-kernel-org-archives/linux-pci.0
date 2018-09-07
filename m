@@ -1,57 +1,69 @@
-Return-Path: <SRS0=v2Pr=LV=socionext.com=hayashi.kunihiko@kernel.org>
-Return-Path: <SRS0=v2Pr=LV=socionext.com=hayashi.kunihiko@kernel.org>
-Date: Fri, 07 Sep 2018 13:11:27 +0900
-From: Kunihiko Hayashi <hayashi.kunihiko@socionext.com>
-To: Bjorn Helgaas <helgaas@kernel.org>
-Subject: Re: [PATCH 2/2] pci: dwc: add UniPhier PCIe host controller support
-Cc: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
- Bjorn Helgaas <bhelgaas@google.com>,
- Rob Herring <robh+dt@kernel.org>,
- Mark Rutland <mark.rutland@arm.com>,
- Masahiro Yamada <yamada.masahiro@socionext.com>,
- linux-pci@vger.kernel.org,
- devicetree@vger.kernel.org,
- linux-arm-kernel@lists.infradead.org,
- linux-kernel@vger.kernel.org,
- Masami Hiramatsu <masami.hiramatsu@linaro.org>,
- Jassi Brar <jaswinder.singh@linaro.org>
-In-Reply-To: <20180906140926.GB214747@bhelgaas-glaptop.roam.corp.google.com>
-References: <20180906103819.252A.4A936039@socionext.com> <20180906140926.GB214747@bhelgaas-glaptop.roam.corp.google.com>
-Message-Id: <20180907131126.FACD.4A936039@socionext.com>
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Date: Fri, 7 Sep 2018 18:41:40 +0100
+From: Will Deacon <will.deacon@arm.com>
+To: yuanzhichang@hisilicon.com, dann.frazier@canonical.com,
+ gabriele.paoloni@huawei.com, arnd@arndb.de, bhelgaas@google.com,
+ andy.shevchenko@gmail.com
+Subject: [REGRESSION] Commit 5745392e0c2b ("PCI: Apply the new generic I/O
+ management on PCI IO hosts") breaks PCI for legacy virtio devices with
+ kvmtool on arm64
+Message-ID: <20180907174140.GI12788@arm.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="US-ASCII"
+List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
+List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
+List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
+List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
+List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
+Cc: jean-philippe.brucker@arm.com, linux-pci@vger.kernel.org,
+ linux-kernel@vger.kernel.org, linux-arm-kernel@lists.infradead.org,
+ suzuki.poulose@arm.com
+Content-Type: text/plain; charset="us-ascii"
+Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
+Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hi Bjorn,
+Hi all,
 
-On Thu, 6 Sep 2018 09:09:27 -0500 <helgaas@kernel.org> wrote:
+I'm seeing a regression in Linux guests since 4.17 under kvmtool, where
+legacy virtio devices using the PCI transport fail to probe. Legacy virtio
+PCI devices must be accessed via "I/O space" (e.g. BAR0, which is
+IORESOURCE_IO) and kvmtool assigns this to the guest physical range
+0x0 - 0x10000.
 
-> On Thu, Sep 06, 2018 at 10:38:20AM +0900, Kunihiko Hayashi wrote:
-> > > > +++ b/drivers/pci/controller/dwc/pcie-uniphier.c
-> > > > @@ -0,0 +1,464 @@
-> > > > +// SPDX-License-Identifier: GPL-2.0
-> > > > +//
-> > > > +// PCI-express host controller driver for UniPhier SoCs
-> > > > +// Copyright 2018 Socionext Inc.
-> > > > +// Author: Kunihiko Hayashi <hayashi.kunihiko@socionext.com>
-> > > 
-> > > Use /* ... */ comments except for the SPDX line.
-> > 
-> > Okay, although I wondered which way to put, I'll replace the header next.
-> 
-> The easiest thing is to look at similar files already in the tree and
-> follow their style.  The details are here:
-> 
-> https://git.kernel.org/cgit/linux/kernel/git/torvalds/linux.git/tree/Documentation/process/coding-style.rst#n540
-> https://git.kernel.org/cgit/linux/kernel/git/torvalds/linux.git/tree/Documentation/process/license-rules.rst#n74
+On arm64, when the virtio legacy PCI driver calls pci_iomap() for this BAR,
+it expands to ioport_map():
 
-Thanks for your advice.
-Although I've found both styles in some sub-systems, these are helpful for me.
+  static inline void __iomem *ioport_map(unsigned long port, unsigned int nr)
+  {
+  	return PCI_IOBASE + (port & MMIO_UPPER_LIMIT);
+  }
 
-I replaced it in posted v2.
+Since the indirect PIO changes, MMIO_UPPER_LIMIT is defined as:
 
-Thank you,
+  /*
+   * We reserve 0x4000 bytes for Indirect IO as so far this library is only
+   * used by the HiSilicon LPC Host. If needed, we can reserve a wider IO
+   * area by redefining the macro below.
+   */
+  #define PIO_INDIRECT_SIZE 0x4000
+  #define MMIO_UPPER_LIMIT (IO_SPACE_LIMIT - PIO_INDIRECT_SIZE)
 
----
-Best Regards,
-Kunihiko Hayashi
+which corrupts the BAR address. For example, kvmtool has the BAR pointing
+at 0x6200 on my system, but pci_iomap() actually maps offset 0x2200.
+Changing PIO_INDIRECT_SIZE to 0 gets things working again.
+
+Since this stuff doesn't revert nicely, I'm not sure how to proceed. Any
+thoughts? Generally, having a per-platform magic constant hardcoded in
+the PCI mapping code makes me feel slightly ill...
+
+Cheers,
+
+Will
+
+_______________________________________________
+linux-arm-kernel mailing list
+linux-arm-kernel@lists.infradead.org
+http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
