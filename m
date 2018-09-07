@@ -1,80 +1,50 @@
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Date: Wed, 5 Sep 2018 12:21:18 -0500
-From: Bjorn Helgaas <helgaas@kernel.org>
-To: Kunihiko Hayashi <hayashi.kunihiko@socionext.com>
-Subject: Re: [PATCH 1/2] dt-bindings: pci: add UniPhier PCIe host controller
- description
-Message-ID: <20180905172118.GN107892@bhelgaas-glaptop.roam.corp.google.com>
-References: <1536114731-28630-1-git-send-email-hayashi.kunihiko@socionext.com>
- <1536114731-28630-2-git-send-email-hayashi.kunihiko@socionext.com>
-MIME-Version: 1.0
-In-Reply-To: <1536114731-28630-2-git-send-email-hayashi.kunihiko@socionext.com>
-List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
-List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
-List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
-List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
-List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
-Cc: Mark Rutland <mark.rutland@arm.com>, devicetree@vger.kernel.org,
- Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
- Masami Hiramatsu <masami.hiramatsu@linaro.org>,
- Jassi Brar <jaswinder.singh@linaro.org>, linux-pci@vger.kernel.org,
- linux-kernel@vger.kernel.org, Masahiro Yamada <yamada.masahiro@socionext.com>,
- Rob Herring <robh+dt@kernel.org>, Bjorn Helgaas <bhelgaas@google.com>,
- linux-arm-kernel@lists.infradead.org
-Content-Type: text/plain; charset="us-ascii"
-Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
-Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
+Return-Path: <SRS0=uotX=LV=intel.com=jonathan.derrick@kernel.org>
+Return-Path: <SRS0=uotX=LV=intel.com=jonathan.derrick@kernel.org>
+From: Jon Derrick <jonathan.derrick@intel.com>
+To: Bjorn Helgaas <helgaas@kernel.org>
+Cc: Thomas Gleixner <tglx@linutronix.de>,
+	Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
+	<linux-pci@vger.kernel.org>,
+	Keith Busch <keith.busch@intel.com>,
+	Jon Derrick <jonathan.derrick@intel.com>
+Subject: [PATCH] x86/PCI: Apply VMD's AERSID fixup generically
+Date: Fri,  7 Sep 2018 13:22:30 -0600
+Message-Id: <1536348150-3535-1-git-send-email-jonathan.derrick@intel.com>
 List-ID: <linux-pci.vger.kernel.org>
 
+A root port device-id changed between simulation and production. Rather
+than match device-ids which may not be future-proof if left
+unmaintained, match all root ports which exist in a VMD-domain
 
-Please follow the capitalization convention, i.e.,
+Signed-off-by: Jon Derrick <jonathan.derrick@intel.com>
+---
+ arch/x86/pci/fixup.c | 12 +++---------
+ 1 file changed, 3 insertions(+), 9 deletions(-)
 
-  $ git log --oneline --no-merges Documentaon/devicetree/bindings/pci/ | grep -i pci
-  82dfbd27c837 dt-bindings: PCI: cadence: Add DT bindings for optional PHYs
-  92f9ccca4c08 PCI: mobiveil: Add Mobiveil PCIe Host Bridge IP driver DT bindings
-  71918e24cb49 dt-bindings: PCI: designware: Add support for EP in DesignWare driver
-  467c7a737642 dt-bindings: PCI: designware: Example update
-  1dca7a636933 dt-bindings: PCI: rockchip: Add DT bindings for Rockchip PCIe EP driver
-  2ca25bd7472f dt-bindings: PCI: rockchip: Rename rockchip-pcie.txt to rockchip-pcie-host.txt
-
-On Wed, Sep 05, 2018 at 11:32:10AM +0900, Kunihiko Hayashi wrote:
-> Add DT bindings for PCIe controller implemented in UniPhier SoCs when
-> configured in Root Complex (host) mode. This controller is based on
-> the Designware PCIe Core.
-
-s/Designware/DesignWare/
-s/Core/core/
-
-> 
-> Signed-off-by: Kunihiko Hayashi <hayashi.kunihiko@socionext.com>
-> ---
->  .../devicetree/bindings/pci/uniphier-pcie.txt      | 78 ++++++++++++++++++++++
->  1 file changed, 78 insertions(+)
->  create mode 100644 Documentation/devicetree/bindings/pci/uniphier-pcie.txt
-> 
-> diff --git a/Documentation/devicetree/bindings/pci/uniphier-pcie.txt b/Documentation/devicetree/bindings/pci/uniphier-pcie.txt
-> new file mode 100644
-> index 0000000..ea63f78
-> --- /dev/null
-> +++ b/Documentation/devicetree/bindings/pci/uniphier-pcie.txt
-> @@ -0,0 +1,78 @@
-> +Socionext UniPhier PCI-express host controller bindings
-
-s/PCI-express/PCIe/ (also in other occurrences below)
-
-> +
-> +This describes the devicetree bindings for PCI-express host controller
-> +implemented on Socionext UniPhier SoCs.
-> +
-> +UniPhier PCI-express host controller is based on the Synopsys DesignWare
-> +PCI core. It shares common functions with the PCIe DesignWare core driver
-> +and inherits common properties defined in
-> +Documentation/devicetree/bindings/pci/designware-pcie.txt.
-
-_______________________________________________
-linux-arm-kernel mailing list
-linux-arm-kernel@lists.infradead.org
-http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
+diff --git a/arch/x86/pci/fixup.c b/arch/x86/pci/fixup.c
+index 13f4485..30a5111 100644
+--- a/arch/x86/pci/fixup.c
++++ b/arch/x86/pci/fixup.c
+@@ -629,17 +629,11 @@ static void quirk_apple_mbp_poweroff(struct pci_dev *pdev)
+ static void quirk_no_aersid(struct pci_dev *pdev)
+ {
+ 	/* VMD Domain */
+-	if (is_vmd(pdev->bus))
++	if (is_vmd(pdev->bus) && pci_is_root_bus(pdev->bus))
+ 		pdev->bus->bus_flags |= PCI_BUS_FLAGS_NO_AERSID;
+ }
+-DECLARE_PCI_FIXUP_EARLY(PCI_VENDOR_ID_INTEL, 0x2030, quirk_no_aersid);
+-DECLARE_PCI_FIXUP_EARLY(PCI_VENDOR_ID_INTEL, 0x2031, quirk_no_aersid);
+-DECLARE_PCI_FIXUP_EARLY(PCI_VENDOR_ID_INTEL, 0x2032, quirk_no_aersid);
+-DECLARE_PCI_FIXUP_EARLY(PCI_VENDOR_ID_INTEL, 0x2033, quirk_no_aersid);
+-DECLARE_PCI_FIXUP_EARLY(PCI_VENDOR_ID_INTEL, 0x334a, quirk_no_aersid);
+-DECLARE_PCI_FIXUP_EARLY(PCI_VENDOR_ID_INTEL, 0x334b, quirk_no_aersid);
+-DECLARE_PCI_FIXUP_EARLY(PCI_VENDOR_ID_INTEL, 0x334c, quirk_no_aersid);
+-DECLARE_PCI_FIXUP_EARLY(PCI_VENDOR_ID_INTEL, 0x334d, quirk_no_aersid);
++DECLARE_PCI_FIXUP_CLASS_EARLY(PCI_VENDOR_ID_INTEL, PCI_ANY_ID,
++			      PCI_CLASS_BRIDGE_PCI, 8, quirk_no_aersid);
+ 
+ #ifdef CONFIG_PHYS_ADDR_T_64BIT
+ 
+-- 
+1.8.3.1
