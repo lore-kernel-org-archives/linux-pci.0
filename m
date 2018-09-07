@@ -1,176 +1,102 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-From: Logan Gunthorpe <logang@deltatee.com>
-To: linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
-        linux-nvme@lists.infradead.org, linux-rdma@vger.kernel.org,
-        linux-nvdimm@lists.01.org, linux-block@vger.kernel.org
-Cc: Stephen Bates <sbates@raithlin.com>,
-        Christoph Hellwig <hch@lst.de>,
-        Keith Busch <keith.busch@intel.com>,
-        Sagi Grimberg <sagi@grimberg.me>,
-        Bjorn Helgaas <bhelgaas@google.com>,
-        Jason Gunthorpe <jgg@mellanox.com>,
-        Max Gurtovoy <maxg@mellanox.com>,
-        Dan Williams <dan.j.williams@intel.com>,
-        =?UTF-8?q?J=C3=A9r=C3=B4me=20Glisse?= <jglisse@redhat.com>,
-        Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-        Alex Williamson <alex.williamson@redhat.com>,
-        =?UTF-8?q?Christian=20K=C3=B6nig?= <christian.koenig@amd.com>,
-        Jens Axboe <axboe@kernel.dk>,
-        Logan Gunthorpe <logang@deltatee.com>
-Date: Wed, 12 Sep 2018 18:11:47 -0600
-Message-Id: <20180913001156.4115-5-logang@deltatee.com>
-In-Reply-To: <20180913001156.4115-1-logang@deltatee.com>
-References: <20180913001156.4115-1-logang@deltatee.com>
+Return-Path: <linux-acpi-owner@vger.kernel.org>
+Subject: Re: [PATCH v2 01/40] iommu: Introduce Shared Virtual Addressing API
+To: Jean-Philippe Brucker <jean-philippe.brucker@arm.com>,
+        Auger Eric <eric.auger@redhat.com>,
+        linux-arm-kernel@lists.infradead.org, linux-pci@vger.kernel.org,
+        linux-acpi@vger.kernel.org, devicetree@vger.kernel.org,
+        iommu@lists.linux-foundation.org, kvm@vger.kernel.org,
+        linux-mm@kvack.org
+Cc: xieyisheng1@huawei.com, liubo95@huawei.com, xuzaibo@huawei.com,
+        thunder.leizhen@huawei.com, will.deacon@arm.com,
+        okaya@codeaurora.org, yi.l.liu@intel.com, ashok.raj@intel.com,
+        tn@semihalf.com, joro@8bytes.org, bharatku@xilinx.com,
+        liudongdong3@huawei.com, rfranz@cavium.com, kevin.tian@intel.com,
+        jacob.jun.pan@linux.intel.com, jcrouse@codeaurora.org,
+        rgummal@xilinx.com, jonathan.cameron@huawei.com,
+        shunyong.yang@hxt-semitech.com, robin.murphy@arm.com,
+        ilias.apalodimas@linaro.org, alex.williamson@redhat.com,
+        robdclark@gmail.com, dwmw2@infradead.org, nwatters@codeaurora.org,
+        baolu.lu@linux.intel.com
+References: <20180511190641.23008-1-jean-philippe.brucker@arm.com>
+ <20180511190641.23008-2-jean-philippe.brucker@arm.com>
+ <bf42affd-e9d0-e4fc-6d28-f3c3f7795348@redhat.com>
+ <03d31ba5-1eda-ea86-8c0c-91d14c86fe83@arm.com>
+ <ed39159c-087e-7e56-7d29-d1de9fa1677f@amd.com>
+ <f0b317d5-e2e9-5478-952c-05e8b97bd68b@arm.com>
+From: =?UTF-8?Q?Christian_K=c3=b6nig?= <christian.koenig@amd.com>
+Message-ID: <2fd4a0a1-1a35-bf82-df84-b995cce011d9@amd.com>
+Date: Fri, 7 Sep 2018 10:55:31 +0200
 MIME-Version: 1.0
-Subject: [PATCH v6 04/13] PCI/P2PDMA: Introduce configfs/sysfs enable attribute helpers
-Sender: linux-kernel-owner@vger.kernel.org
+In-Reply-To: <f0b317d5-e2e9-5478-952c-05e8b97bd68b@arm.com>
+Content-Type: text/plain; charset=utf-8; format=flowed
+Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Users of the P2PDMA infrastructure will typically need a way for
-the user to tell the kernel to use P2P resources. Typically
-this will be a simple on/off boolean operation but sometimes
-it may be desirable for the user to specify the exact device to
-use for the P2P operation.
+Am 06.09.2018 um 14:45 schrieb Jean-Philippe Brucker:
+> On 06/09/2018 12:12, Christian König wrote:
+>> Am 06.09.2018 um 13:09 schrieb Jean-Philippe Brucker:
+>>> Hi Eric,
+>>>
+>>> Thanks for reviewing
+>>>
+>>> On 05/09/2018 12:29, Auger Eric wrote:
+>>>>> +int iommu_sva_device_init(struct device *dev, unsigned long features,
+>>>>> +              unsigned int max_pasid)
+>>>> what about min_pasid?
+>>> No one asked for it... The max_pasid parameter is here for drivers that
+>>> have vendor-specific PASID size limits, such as AMD KFD (see
+>>> kfd_iommu_device_init and
+>>> https://patchwork.kernel.org/patch/9989307/#21389571). But in most cases
+>>> the PASID size will only depend on the PCI PASID capability and the
+>>> IOMMU limits, both known by the IOMMU driver, so device drivers won't
+>>> have to set max_pasid.
+>>>
+>>> IOMMU drivers need to set min_pasid in the sva_device_init callback
+>>> because it may be either 1 (e.g. Arm where PASID #0 is reserved) or 0
+>>> (Intel Vt-d rev2), but at the moment I can't see a reason for device
+>>> drivers to override min_pasid
+>> Sorry to ruin your day, but if I'm not completely mistaken PASID zero is
+>> reserved in the AMD KFD as well.
+> Heh, fair enough. I'll add the min_pasid parameter
 
-Add new helpers for attributes which take a boolean or a PCI device.
-Any boolean, or the word 'auto' turn P2P on or off. Specifying a full
-PCI device name/BDF will select the specific device.
+I will take this as an opportunity to summarize some of the requirements 
+we have for PASID management from the amdgpu driver point of view:
 
-Signed-off-by: Logan Gunthorpe <logang@deltatee.com>
----
- drivers/pci/p2pdma.c       | 83 ++++++++++++++++++++++++++++++++++++++
- include/linux/pci-p2pdma.h | 15 +++++++
- 2 files changed, 98 insertions(+)
+1. We need to be able to allocate PASID between 1 and some maximum. Zero 
+is reserved as far as I know, but we don't necessary need a minimum.
 
-diff --git a/drivers/pci/p2pdma.c b/drivers/pci/p2pdma.c
-index 29bd40a87768..3da848f3fe72 100644
---- a/drivers/pci/p2pdma.c
-+++ b/drivers/pci/p2pdma.c
-@@ -9,6 +9,7 @@
-  */
- 
- #define pr_fmt(fmt) "pci-p2pdma: " fmt
-+#include <linux/ctype.h>
- #include <linux/pci-p2pdma.h>
- #include <linux/module.h>
- #include <linux/slab.h>
-@@ -856,3 +857,85 @@ int pci_p2pdma_map_sg(struct device *dev, struct scatterlist *sg, int nents,
- 	return nents;
- }
- EXPORT_SYMBOL_GPL(pci_p2pdma_map_sg);
-+
-+/**
-+ * pci_p2pdma_enable_store - parse a configfs/sysfs attribute store
-+ *		to enable p2pdma
-+ * @page: contents of the value to be stored
-+ * @p2p_dev: returns the PCI device that was selected to be used
-+ *		(if 'auto', 'none or a boolean isn't the store value)
-+ * @use_p2pdma: returns whether to enable p2pdma or not
-+ *
-+ * Parses an attribute value to decide whether to enable p2pdma.
-+ * The value can select a PCI device (using it's full BDF device
-+ * name), a boolean, or 'auto'. 'auto' and a true boolean value
-+ * have the same meaning. A false value disables p2pdma and
-+ * a PCI device enables it to use a specific device as the
-+ * backing provider.
-+ *
-+ * pci_p2pdma_enable_show() should be used as the show operation for
-+ * the attribute.
-+ *
-+ * Returns 0 on success
-+ */
-+int pci_p2pdma_enable_store(const char *page, struct pci_dev **p2p_dev,
-+			    bool *use_p2pdma)
-+{
-+	struct device *dev;
-+
-+	dev = bus_find_device_by_name(&pci_bus_type, NULL, page);
-+	if (dev) {
-+		*use_p2pdma = true;
-+		*p2p_dev = to_pci_dev(dev);
-+
-+		if (!pci_has_p2pmem(*p2p_dev)) {
-+			pr_err("PCI device has no peer-to-peer memory: %s\n",
-+			       page);
-+			pci_dev_put(*p2p_dev);
-+			return -ENODEV;
-+		}
-+
-+		return 0;
-+	} else if (sysfs_streq(page, "auto")) {
-+		*use_p2pdma = true;
-+		return 0;
-+	} else if ((page[0] == '0' || page[0] == '1') && !iscntrl(page[1])) {
-+		/*
-+		 * If the user enters a PCI device that  doesn't exist
-+		 * like "0000:01:00.1", we don't want strtobool to think
-+		 * it's a '0' when it's clearly not what the user wanted.
-+		 * So we require 0's and 1's to be exactly one character.
-+		 */
-+	} else if (!strtobool(page, use_p2pdma)) {
-+		return 0;
-+	}
-+
-+	pr_err("No such PCI device: %.*s\n", (int)strcspn(page, "\n"), page);
-+	return -ENODEV;
-+}
-+EXPORT_SYMBOL_GPL(pci_p2pdma_enable_store);
-+
-+/**
-+ * pci_p2pdma_enable_show - show a configfs/sysfs attribute indicating
-+ *		whether p2pdma is enabled
-+ * @page: contents of the stored value
-+ * @p2p_dev: the selected p2p device (NULL if no device is selected)
-+ * @use_p2pdma: whether p2pdme has been enabled
-+ *
-+ * Attributes that use pci_p2pdma_enable_store() should use this function
-+ * to show the value of the attribute.
-+ *
-+ * Returns 0 on success
-+ */
-+ssize_t pci_p2pdma_enable_show(char *page, struct pci_dev *p2p_dev,
-+			       bool use_p2pdma)
-+{
-+	if (!use_p2pdma)
-+		return sprintf(page, "none\n");
-+
-+	if (!p2p_dev)
-+		return sprintf(page, "auto\n");
-+
-+	return sprintf(page, "%s\n", pci_name(p2p_dev));
-+}
-+EXPORT_SYMBOL_GPL(pci_p2pdma_enable_show);
-diff --git a/include/linux/pci-p2pdma.h b/include/linux/pci-p2pdma.h
-index 2f03dbbf5af6..377de4d73767 100644
---- a/include/linux/pci-p2pdma.h
-+++ b/include/linux/pci-p2pdma.h
-@@ -38,6 +38,10 @@ void pci_p2pmem_free_sgl(struct pci_dev *pdev, struct scatterlist *sgl);
- void pci_p2pmem_publish(struct pci_dev *pdev, bool publish);
- int pci_p2pdma_map_sg(struct device *dev, struct scatterlist *sg, int nents,
- 		      enum dma_data_direction dir);
-+int pci_p2pdma_enable_store(const char *page, struct pci_dev **p2p_dev,
-+			    bool *use_p2pdma);
-+ssize_t pci_p2pdma_enable_show(char *page, struct pci_dev *p2p_dev,
-+			       bool use_p2pdma);
- #else /* CONFIG_PCI_P2PDMA */
- static inline int pci_p2pdma_add_resource(struct pci_dev *pdev, int bar,
- 		size_t size, u64 offset)
-@@ -105,5 +109,16 @@ static inline int pci_p2pdma_map_sg(struct device *dev,
- {
- 	return 0;
- }
-+static inline int pci_p2pdma_enable_store(const char *page,
-+		struct pci_dev **p2p_dev, bool *use_p2pdma)
-+{
-+	*use_p2pdma = false;
-+	return 0;
-+}
-+static inline ssize_t pci_p2pdma_enable_show(char *page,
-+		struct pci_dev *p2p_dev, bool use_p2pdma)
-+{
-+	return sprintf(page, "none\n");
-+}
- #endif /* CONFIG_PCI_P2PDMA */
- #endif /* _LINUX_PCI_P2P_H */
--- 
-2.19.0
+2. We need to be able to allocate PASIDs without a process address space 
+backing it. E.g. our hardware uses PASIDs even without Shared Virtual 
+Addressing enabled to distinct clients from each other.
+         Would be a pity if we need to still have a separate PASID 
+handling because the system wide is only available when IOMMU is turned on.
+
+3. Even after destruction of a process address space we need some grace 
+period before a PASID is reused because it can be that the specific 
+PASID is still in some hardware queues etc...
+         At bare minimum all device drivers using process binding need 
+to explicitly note to the core when they are done with a PASID.
+
+4. It would be nice to have to be able to set a "void *" for each 
+PASID/device combination while binding to a process which then can be 
+queried later on based on the PASID.
+         E.g. when you have a per PASID/device structure around anyway, 
+just add an extra field.
+
+5. It would be nice to have to allocate multiple PASIDs for the same 
+process address space.
+         E.g. some teams at AMD want to use a separate GPU address space 
+for their userspace client library. I'm still trying to avoid that, but 
+it is perfectly possible that we are going to need that.
+         Additional to that it is sometimes quite useful for debugging 
+to isolate where exactly an incorrect access (segfault) is coming from.
+
+Let me know if there are some problems with that, especially I want to 
+know if there is pushback on #5 so that I can forward that :)
+
+Thanks,
+Christian.
+
+>
+> Thanks,
+> Jean
