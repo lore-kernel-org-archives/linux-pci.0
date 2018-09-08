@@ -1,89 +1,122 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mta-01.yadro.com ([89.207.88.251]:39182 "EHLO mta-01.yadro.com"
+Received: from mail.kernel.org ([198.145.29.99]:59292 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1730089AbeIRWle (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Tue, 18 Sep 2018 18:41:34 -0400
-Subject: Re: [PATCH RFC 0/4] PCI: Allow BAR movement during hotplug
-To: David Laight <David.Laight@ACULAB.COM>
-CC: "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-        Bjorn Helgaas <bhelgaas@google.com>,
-        "linux@yadro.com" <linux@yadro.com>
-References: <20180914161404.4685-1-s.miroshnichenko@yadro.com>
- <f7c1e5d0006f4161b5e0b0370a0e25c6@AcuMS.aculab.com>
-From: Sergey Miroshnichenko <s.miroshnichenko@yadro.com>
-Message-ID: <a9863b73-c2b4-5b56-63c4-d32b4a5a4a83@yadro.com>
-Date: Tue, 18 Sep 2018 20:07:56 +0300
-MIME-Version: 1.0
-In-Reply-To: <f7c1e5d0006f4161b5e0b0370a0e25c6@AcuMS.aculab.com>
-Content-Type: text/plain; charset="utf-8"
+        id S1726283AbeIHJBA (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Sat, 8 Sep 2018 05:01:00 -0400
+From: Sinan Kaya <okaya@kernel.org>
+To: linux-pci@vger.kernel.org
+Cc: Sinan Kaya <okaya@kernel.org>, Bjorn Helgaas <bhelgaas@google.com>
+Subject: [PATCH 4/4] PCI: Expose reset type to users of pci_probe_reset_function()
+Date: Sat,  8 Sep 2018 04:16:27 +0000
+Message-Id: <20180908041632.22252-4-okaya@kernel.org>
+In-Reply-To: <20180908041632.22252-1-okaya@kernel.org>
+References: <20180908041632.22252-1-okaya@kernel.org>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
+Looking to have more control between the users of the API vs. what the API
+can do internally. The new reset_type tells the PCI core about the bounds
+of the request.
 
-On 9/18/18 2:16 PM, David Laight wrote:
-> From: Sergey Miroshnichenko
->> Sent: 14 September 2018 17:14
->>
->> If the firmware or kernel has arranged memory for PCIe devices in a way that doesn't
->> provide enough space for BARs of a new hotplugged device, the kernel can pause the
->> drivers of the "obstructing" devices and move their BARs, so new BARs can fit into the
->> created hole.
->>
->> When a driver is un-paused by the kernel after the PCIe rescan, it should check if its
->> BARs had changed and ioremap() them if needed.
->>
->> BARs are moved not directly, but by releasing bridge resources, then sorting and
->> assigning them back, similarly to the initial PCIe topology scan during system boot
->> (when pci=realloc is passed).
->>
->> Pausing drivers is performed via reset_prepare() and reset_done() callbacks of struct
->> pci_error_handlers. Drivers should pause during rescan not only because of potential
->> movement of their BARs, but also because of possible updating of the bridge windows.
-> ...
-> 
-> You are restricting this to GPL drivers (unless someone has opened up the error
-> handling functions since I last looked).
-> 
+Signed-off-by: Sinan Kaya <okaya@kernel.org>
+---
+ drivers/pci/pci.c   | 51 ++++++++++++++++++++++++++++++---------------
+ drivers/pci/pci.h   |  2 +-
+ drivers/pci/probe.c |  2 +-
+ 3 files changed, 36 insertions(+), 19 deletions(-)
 
-The only GPL-related restrictions I was aware of are functions exported
-with EXPORT_SYMBOL_GPL().
-
-> I also suspect you need something to indicate that the driver is willing for
-> all this to happen.
-> 
-
-I'm thinking about new callbacks in the struct pci_driver, would they
-met the same restrictions?
-
-> An error return from reset_prepare() will all be too late - other drivers
-> might have been stopped even though it is impossible to actually perform
-> the reorganisation.
-> 
-> There will also be drivers/devices that can handle being moved by a full
-> remove/rescan sequence, particularly if there are no current users of the
-> device.
-> 
-
-The implementation is going to be changed a bit:
- - if a device's driver doesn't have these callbacks (and so it can't
-pause), its BARs are marked as immovable;
- - for every "movable" device that was working before the hotplug event,
-it is guaranteed to arrange BARs;
- - if there is not enough memory or if the memory is too fragmented by
-"immovable" devices, the BAR allocation for hotplugged devices can fail,
-in this case the only way is to convert drivers to "movable".
-
-The remove+rescan trick for unused "immovable" devices could be used as
-a fallback, if BAR allocation has failed, but I'm not sure yet - what if
-there are devices that are expected to do some job even without being
-explicitly open()'ed?
-
-> 	David
-> 
-> -
-> Registered Address Lakeside, Bramley Road, Mount Farm, Milton Keynes, MK1 1PT, UK
-> Registration No: 1397386 (Wales)
-> 
-
-Best regards,
-Serge
+diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
+index d319a2febe64..761c39f0b953 100644
+--- a/drivers/pci/pci.c
++++ b/drivers/pci/pci.c
+@@ -4752,28 +4752,45 @@ EXPORT_SYMBOL_GPL(__pci_reset_function_locked);
+  * Returns 0 if the device function can be reset or negative if the
+  * device doesn't support resetting a single function.
+  */
+-int pci_probe_reset_function(struct pci_dev *dev)
++int pci_probe_reset_function(struct pci_dev *dev, u32 reset_type)
+ {
+-	int rc;
++	int rc = 0;
+ 
+ 	might_sleep();
+ 
+-	rc = pci_dev_specific_reset(dev, 1);
+-	if (rc != -ENOTTY)
+-		return rc;
+-	if (pcie_has_flr(dev))
+-		return 0;
+-	rc = pci_af_flr(dev, 1);
+-	if (rc != -ENOTTY)
+-		return rc;
+-	rc = pci_pm_reset(dev, 1);
+-	if (rc != -ENOTTY)
+-		return rc;
+-	rc = pci_dev_reset_slot_function(dev, 1);
+-	if (rc != -ENOTTY)
+-		return rc;
++	if (reset_type & PCI_RESET_DEV_SPECIFIC) {
++		rc = pci_dev_specific_reset(dev, 1);
++		if (rc != -ENOTTY)
++			return rc;
++	}
++
++	if (reset_type & PCI_RESET_FLR) {
++		if (pcie_has_flr(dev))
++			return 0;
++		rc = pci_af_flr(dev, 1);
++		if (rc != -ENOTTY)
++			return rc;
++	}
+ 
+-	return pci_parent_bus_reset(dev, 1);
++	if (reset_type & PCI_RESET_PM) {
++		rc = pci_pm_reset(dev, 1);
++		if (rc != -ENOTTY)
++			return rc;
++	}
++
++	if (reset_type & PCI_RESET_SLOT) {
++		rc = pci_dev_reset_slot_function(dev, 1);
++		if (rc != -ENOTTY)
++			return rc;
++	}
++
++	if (reset_type & PCI_RESET_BUS) {
++		rc = pci_parent_bus_reset(dev, 1);
++		if (rc != -ENOTTY)
++			return rc;
++	}
++
++	return rc;
+ }
+ 
+ /**
+diff --git a/drivers/pci/pci.h b/drivers/pci/pci.h
+index 6e0d1528d471..0444bfa51b52 100644
+--- a/drivers/pci/pci.h
++++ b/drivers/pci/pci.h
+@@ -33,7 +33,7 @@ enum pci_mmap_api {
+ int pci_mmap_fits(struct pci_dev *pdev, int resno, struct vm_area_struct *vmai,
+ 		  enum pci_mmap_api mmap_api);
+ 
+-int pci_probe_reset_function(struct pci_dev *dev);
++int pci_probe_reset_function(struct pci_dev *dev, u32 reset_type);
+ int pci_bridge_secondary_bus_reset(struct pci_dev *dev);
+ 
+ /**
+diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
+index ec784009a36b..cbce5420431b 100644
+--- a/drivers/pci/probe.c
++++ b/drivers/pci/probe.c
+@@ -2332,7 +2332,7 @@ static void pci_init_capabilities(struct pci_dev *dev)
+ 
+ 	pcie_report_downtraining(dev);
+ 
+-	if (pci_probe_reset_function(dev) == 0)
++	if (pci_probe_reset_function(dev, PCI_RESET_ANY) == 0)
+ 		dev->reset_fn = 1;
+ }
+ 
+-- 
+2.18.0
