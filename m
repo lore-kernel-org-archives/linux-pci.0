@@ -1,106 +1,63 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mga14.intel.com ([192.55.52.115]:48485 "EHLO mga14.intel.com"
+Received: from mail.kernel.org ([198.145.29.99]:59224 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1730291AbeIFU0b (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Thu, 6 Sep 2018 16:26:31 -0400
-From: Mika Westerberg <mika.westerberg@linux.intel.com>
-To: Bjorn Helgaas <bhelgaas@google.com>,
-        "Rafael J. Wysocki" <rjw@rjwysocki.net>
-Cc: Len Brown <lenb@kernel.org>, Lukas Wunner <lukas@wunner.de>,
-        Keith Busch <keith.busch@intel.com>,
-        Ashok Raj <ashok.raj@intel.com>, Mario.Limonciello@dell.com,
-        Anthony Wong <anthony.wong@canonical.com>,
-        "D . J . Bernstein" <djb@cr.yp.to>,
-        Linus Walleij <linus.walleij@linaro.org>,
-        Mika Westerberg <mika.westerberg@linux.intel.com>,
-        linux-pci@vger.kernel.org, linux-acpi@vger.kernel.org
-Subject: [PATCH 00/10] PCI: Allow D3cold for PCIe hierarchies
-Date: Thu,  6 Sep 2018 18:50:10 +0300
-Message-Id: <20180906155020.51700-1-mika.westerberg@linux.intel.com>
+        id S1726346AbeIHJAx (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Sat, 8 Sep 2018 05:00:53 -0400
+From: Sinan Kaya <okaya@kernel.org>
+To: linux-pci@vger.kernel.org
+Cc: Sinan Kaya <okaya@kernel.org>, Bjorn Helgaas <bhelgaas@google.com>
+Subject: [PATCH 2/4] PCI: Expose reset_type to users of pci_reset_function_locked()
+Date: Sat,  8 Sep 2018 04:16:25 +0000
+Message-Id: <20180908041632.22252-2-okaya@kernel.org>
+In-Reply-To: <20180908041632.22252-1-okaya@kernel.org>
+References: <20180908041632.22252-1-okaya@kernel.org>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hi all,
+Looking to have more control between the users of the API vs. what the API
+can do internally. The new reset_type tells the PCI core about the bounds
+of the request.
 
-This patch series aims to allow PCIe hierarchies enter D3cold both during
-system sleep and runtime, including PCIe hotplug ports.
+Signed-off-by: Sinan Kaya <okaya@kernel.org>
+---
+ drivers/pci/pci.c   | 4 ++--
+ include/linux/pci.h | 2 +-
+ 2 files changed, 3 insertions(+), 3 deletions(-)
 
-The motivation of this series are recent systems such as Lenovo Thinkpad X1
-Carbon 6th gen and upcoming Dell laptops where the Thunderbolt controller
-is always present in the system (pretty much like what Apple systems have
-been doing for years). Because it is always present it consumes energy so
-it is important to power it off when idle.
-
-The PCIe root port hosting the Thunderbolt controller and all the connected
-external PCIe devices includes a standard ACPI power resource and related
-methods _PR3, _PR0, _PRW and _DSW that take care of the actual transition
-to D3cold and back to D0.
-
-With current kernels entering system sleep states leaves the root port into
-D3hot which means the ACPI power resource is still on. This is bad when
-system enters suspend-to-idle (all these systems are s2idle only) because
-the BIOS is not involved and the devices are effectively left on, consuming
-battery unnecessarily.
-
-Patches 1-4 add D3cold support for system sleep and the subsequent patches
-do the same for runtime PM.
-
-In case someone wants to try out runtime PM, the xHCI controller that is
-part of the PCIe switch below the root port needs to have runtime PM
-"unblocked" manually (this will be automatic in future).
-
-For Thinkpad:
-
-  # echo auto > /sys/bus/pci/devices/0000:3b:00.0/power/control
-
-For Dell:
-
-  # echo auto > /sys/bus/pci/devices/0000:39:00.0/power/control
-
-Note if the root port enters D3cold, running things like 'lspci' brings it
-back t0 D0 (because PCI config space is not accessible in D3cold) so if one
-wants to check out the power state without accidentally bringing the device
-back into D0 needs to do that indirectly. If the root port is 1d.0 power
-state can be checked:
-
-  # cat /sys/bus/pci/devices/0000:00:1d.0/power/runtime_status
-  suspended
-  # cat /sys/bus/pci/devices/0000:00:1d.0/firmware_node/real_power_state
-  D3cold
-
-Even if this again revolves around Thunderbolt I think these apply to any
-PCIe system supporting D3cold.
-
-These patches apply on top of pci.git pci/hotplug.
-
-Mika Westerberg (10):
-  PCI: Do not skip power managed bridges in pci_enable_wake()
-  PCI / ACPI: Enable wake automatically for power managed bridges
-  PCI: pciehp: Disable hotplug interrupt during suspend
-  PCI: pciehp: Do not handle events if interrupts are masked
-  PCI: portdrv: Resume upon exit from system suspend if left runtime suspended
-  PCI: portdrv: Add runtime PM hooks for port service drivers
-  PCI: pciehp: Implement runtime PM callbacks
-  PCI/PME: Implement runtime PM callbacks
-  ACPI / property: Allow multiple property compatible _DSD entries
-  PCI / ACPI: Whitelist D3 for more PCIe hotplug ports
-
- drivers/acpi/property.c           | 97 ++++++++++++++++++++++---------
- drivers/acpi/x86/apple.c          |  2 +-
- drivers/gpio/gpiolib-acpi.c       |  2 +-
- drivers/pci/hotplug/pciehp.h      |  2 +
- drivers/pci/hotplug/pciehp_core.c | 37 ++++++++++++
- drivers/pci/hotplug/pciehp_hpc.c  | 16 ++++-
- drivers/pci/pci-acpi.c            | 56 +++++++++++++++++-
- drivers/pci/pci.c                 | 15 ++++-
- drivers/pci/pci.h                 |  3 +
- drivers/pci/pcie/pme.c            | 27 +++++++++
- drivers/pci/pcie/portdrv.h        |  4 ++
- drivers/pci/pcie/portdrv_core.c   | 20 +++++++
- drivers/pci/pcie/portdrv_pci.c    | 28 ++++++---
- include/acpi/acpi_bus.h           |  8 ++-
- include/linux/acpi.h              |  9 +++
- 15 files changed, 285 insertions(+), 41 deletions(-)
-
+diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
+index a6295f85a1bd..89c45effb4f4 100644
+--- a/drivers/pci/pci.c
++++ b/drivers/pci/pci.c
+@@ -4828,7 +4828,7 @@ EXPORT_SYMBOL_GPL(pci_reset_function);
+  * Returns 0 if the device function was successfully reset or negative if the
+  * device doesn't support resetting a single function.
+  */
+-int pci_reset_function_locked(struct pci_dev *dev)
++int pci_reset_function_locked(struct pci_dev *dev, u32 reset_type)
+ {
+ 	int rc;
+ 
+@@ -4837,7 +4837,7 @@ int pci_reset_function_locked(struct pci_dev *dev)
+ 
+ 	pci_dev_save_and_disable(dev);
+ 
+-	rc = __pci_reset_function_locked(dev, PCI_RESET_ANY);
++	rc = __pci_reset_function_locked(dev, reset_type);
+ 
+ 	pci_dev_restore(dev);
+ 
+diff --git a/include/linux/pci.h b/include/linux/pci.h
+index 43d00e9e54f7..fa852ebdf197 100644
+--- a/include/linux/pci.h
++++ b/include/linux/pci.h
+@@ -1124,7 +1124,7 @@ bool pcie_has_flr(struct pci_dev *dev);
+ int pcie_flr(struct pci_dev *dev);
+ int __pci_reset_function_locked(struct pci_dev *dev, u32 reset_type);
+ int pci_reset_function(struct pci_dev *dev, u32 reset_type);
+-int pci_reset_function_locked(struct pci_dev *dev);
++int pci_reset_function_locked(struct pci_dev *dev, u32 reset_type);
+ int pci_try_reset_function(struct pci_dev *dev);
+ int pci_probe_reset_slot(struct pci_slot *slot);
+ int pci_probe_reset_bus(struct pci_bus *bus);
 -- 
 2.18.0
