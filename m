@@ -1,61 +1,202 @@
-Return-Path: <linux-nvme-bounces+bjorn=helgaas.com@lists.infradead.org>
-Return-Path: <linux-nvme-bounces+bjorn=helgaas.com@lists.infradead.org>
-To: Jens Axboe <axboe@kernel.dk>, linux-kernel@vger.kernel.org,
- linux-pci@vger.kernel.org, linux-nvme@lists.infradead.org,
- linux-rdma@vger.kernel.org, linux-nvdimm@lists.01.org,
- linux-block@vger.kernel.org
-References: <20180913001156.4115-1-logang@deltatee.com>
- <20180913001156.4115-8-logang@deltatee.com>
- <0118d3d8-a2f5-047f-6627-04ac3d0371ad@kernel.dk>
-From: Logan Gunthorpe <logang@deltatee.com>
-Message-ID: <5998a8c3-697e-82ac-91d4-a648455a21e9@deltatee.com>
-Date: Thu, 13 Sep 2018 10:14:02 -0600
-MIME-Version: 1.0
-In-Reply-To: <0118d3d8-a2f5-047f-6627-04ac3d0371ad@kernel.dk>
-Subject: Re: [PATCH v6 07/13] block: Add PCI P2P flag for request queue and
- check support for requests
-List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-nvme>,
- <mailto:linux-nvme-request@lists.infradead.org?subject=unsubscribe>
-List-Archive: <http://lists.infradead.org/pipermail/linux-nvme/>
-List-Post: <mailto:linux-nvme@lists.infradead.org>
-List-Help: <mailto:linux-nvme-request@lists.infradead.org?subject=help>
-List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-nvme>,
- <mailto:linux-nvme-request@lists.infradead.org?subject=subscribe>
-Cc: Sagi Grimberg <sagi@grimberg.me>,
- =?UTF-8?Q?Christian_K=c3=b6nig?= <christian.koenig@amd.com>,
- Benjamin Herrenschmidt <benh@kernel.crashing.org>,
- Alex Williamson <alex.williamson@redhat.com>,
- Stephen Bates <sbates@raithlin.com>, Keith Busch <keith.busch@intel.com>,
- =?UTF-8?B?SsOpcsO0bWUgR2xpc3Nl?= <jglisse@redhat.com>,
- Jason Gunthorpe <jgg@mellanox.com>, Bjorn Helgaas <bhelgaas@google.com>,
- Max Gurtovoy <maxg@mellanox.com>, Dan Williams <dan.j.williams@intel.com>,
- Christoph Hellwig <hch@lst.de>
-Content-Type: text/plain; charset="us-ascii"
-Sender: "Linux-nvme" <linux-nvme-bounces@lists.infradead.org>
-Errors-To: linux-nvme-bounces+bjorn=helgaas.com@lists.infradead.org
+Return-Path: <SRS0=Zo3Z=LW=wunner.de=lukas@kernel.org>
+Return-Path: <SRS0=Zo3Z=LW=wunner.de=lukas@kernel.org>
+Message-Id: <025747a4036f5eae9333889ac6721018eec25d78.1536341821.git.lukas@wunner.de>
+In-Reply-To: <cover.1536341821.git.lukas@wunner.de>
+References: <cover.1536341821.git.lukas@wunner.de>
+From: Lukas Wunner <lukas@wunner.de>
+Date: Sat, 8 Sep 2018 09:59:01 +0200
+Subject: [PATCH v2 1/8] PCI: pciehp: Tolerate Presence Detect hardwired to
+ zero
+To: Bjorn Helgaas <helgaas@kernel.org>, linux-pci@vger.kernel.org
+Cc: Sinan Kaya <okaya@kernel.org>, Mika Westerberg <mika.westerberg@linux.intel.com>, Keith Busch <keith.busch@intel.com>, David Yang <mmyangfl@gmail.com>
 List-ID: <linux-pci.vger.kernel.org>
 
+The WiGig Bus Extension (WBE) specification allows tunneling PCIe over
+IEEE 802.11.  A product implementing this spec is the wil6210 from
+Wilocity (now part of Qualcomm Atheros).  It integrates a PCIe switch
+with a wireless network adapter:
 
+00.0-+              [1ae9:0101]  Upstream Port
+     +-00.0-+       [1ae9:0200]  Downstream Port
+     |      +-00.0  [168c:0034]  Atheros AR9462 Wireless Network Adapter
+     +-02.0         [1ae9:0201]  Downstream Port
+     +-03.0         [1ae9:0201]  Downstream Port
 
-On 12/09/18 06:28 PM, Jens Axboe wrote:
-> On 9/12/18 6:11 PM, Logan Gunthorpe wrote:
->> QUEUE_FLAG_PCI_P2P is introduced meaning a driver's request queue
->> supports targeting P2P memory.
->>
->> When a request is submitted we check if PCI P2PDMA memory is assigned
->> to the first page in the bio. If it is, we ensure the queue it's
->> submitted to supports it, and enforce REQ_NOMERGE.
-> 
-> This changelog is no longer accurate.
+Wirelessly attached devices presumably appear below the hotplug ports
+with device ID [1ae9:0201].  Oddly, the Downstream Port [1ae9:0200]
+leading to the wireless network adapter is likewise Hotplug Capable,
+but has its Presence Detect State bit hardwired to zero.  Even if the
+Link Active bit is set, Presence Detect is zero, so this cannot be
+caused by in-band presence detection but only by broken hardware.
 
+pciehp assumes an empty slot if Presence Detect State is zero,
+regardless of Link Active being one.  Consequently, up until v4.18 it
+removes the wireless network adapter in pciehp_resume().  From v4.19 it
+already does so in pciehp_probe().
 
-Oops, I'll fix this for v7.
+Be lenient towards broken hardware and assume the slot is occupied if
+Link Active is set:  Introduce pciehp_card_present_or_link_active()
+and use it in lieu of pciehp_get_adapter_status() everywhere, except
+in pciehp_handle_presence_or_link_change() whose log messages depend
+on which of Presence Detect State or Link Active is set.
 
-Thanks,
+Remove the Presence Detect State check from __pciehp_enable_slot()
+because it is only called if either of Presence Detect State or Link
+Active is set.
 
-Logan
+Caution: There is a possibility that broken hardware exists which has
+working Presence Detect but hardwires Link Active to one.  On such
+hardware the slot will now incorrectly be considered always occupied.
+If such hardware is discovered, this commit can be rolled back and a
+quirk can be added which sets is_hotplug_bridge = 0 for [1ae9:0200].
 
-_______________________________________________
-Linux-nvme mailing list
-Linux-nvme@lists.infradead.org
-http://lists.infradead.org/mailman/listinfo/linux-nvme
+Link: https://bugzilla.kernel.org/show_bug.cgi?id=200839
+Reported-and-tested-by: David Yang <mmyangfl@gmail.com>
+Signed-off-by: Lukas Wunner <lukas@wunner.de>
+Cc: Rajat Jain <rajatja@google.com>
+Cc: Ashok Raj <ashok.raj@intel.com>
+---
+ drivers/pci/hotplug/pciehp.h      |  3 ++-
+ drivers/pci/hotplug/pciehp_core.c |  6 +++---
+ drivers/pci/hotplug/pciehp_ctrl.c | 10 ++--------
+ drivers/pci/hotplug/pciehp_hpc.c  | 25 +++++++++++++++++++------
+ 4 files changed, 26 insertions(+), 18 deletions(-)
+
+diff --git a/drivers/pci/hotplug/pciehp.h b/drivers/pci/hotplug/pciehp.h
+index 8131c08b21e5..b9204ef3ecd7 100644
+--- a/drivers/pci/hotplug/pciehp.h
++++ b/drivers/pci/hotplug/pciehp.h
+@@ -190,11 +190,12 @@ void pciehp_get_power_status(struct slot *slot, u8 *status);
+ 
+ void pciehp_set_attention_status(struct slot *slot, u8 status);
+ void pciehp_get_latch_status(struct slot *slot, u8 *status);
+-void pciehp_get_adapter_status(struct slot *slot, u8 *status);
+ int pciehp_query_power_fault(struct slot *slot);
+ void pciehp_green_led_on(struct slot *slot);
+ void pciehp_green_led_off(struct slot *slot);
+ void pciehp_green_led_blink(struct slot *slot);
++bool pciehp_card_present(struct controller *ctrl);
++bool pciehp_card_present_or_link_active(struct controller *ctrl);
+ int pciehp_check_link_status(struct controller *ctrl);
+ bool pciehp_check_link_active(struct controller *ctrl);
+ void pciehp_release_ctrl(struct controller *ctrl);
+diff --git a/drivers/pci/hotplug/pciehp_core.c b/drivers/pci/hotplug/pciehp_core.c
+index ccaf01e6eced..d24875102b1f 100644
+--- a/drivers/pci/hotplug/pciehp_core.c
++++ b/drivers/pci/hotplug/pciehp_core.c
+@@ -158,7 +158,7 @@ static int get_adapter_status(struct hotplug_slot *hotplug_slot, u8 *value)
+ 	struct pci_dev *pdev = slot->ctrl->pcie->port;
+ 
+ 	pci_config_pm_runtime_get(pdev);
+-	pciehp_get_adapter_status(slot, value);
++	*value = pciehp_card_present_or_link_active(slot->ctrl);
+ 	pci_config_pm_runtime_put(pdev);
+ 	return 0;
+ }
+@@ -176,12 +176,12 @@ static int get_adapter_status(struct hotplug_slot *hotplug_slot, u8 *value)
+ static void pciehp_check_presence(struct controller *ctrl)
+ {
+ 	struct slot *slot = ctrl->slot;
+-	u8 occupied;
++	bool occupied;
+ 
+ 	down_read(&ctrl->reset_lock);
+ 	mutex_lock(&slot->lock);
+ 
+-	pciehp_get_adapter_status(slot, &occupied);
++	occupied = pciehp_card_present_or_link_active(ctrl);
+ 	if ((occupied && (slot->state == OFF_STATE ||
+ 			  slot->state == BLINKINGON_STATE)) ||
+ 	    (!occupied && (slot->state == ON_STATE ||
+diff --git a/drivers/pci/hotplug/pciehp_ctrl.c b/drivers/pci/hotplug/pciehp_ctrl.c
+index c4d0f902f1d2..1fda6ea96fdc 100644
+--- a/drivers/pci/hotplug/pciehp_ctrl.c
++++ b/drivers/pci/hotplug/pciehp_ctrl.c
+@@ -223,8 +223,7 @@ void pciehp_handle_disable_request(struct slot *slot)
+ void pciehp_handle_presence_or_link_change(struct slot *slot, u32 events)
+ {
+ 	struct controller *ctrl = slot->ctrl;
+-	bool link_active;
+-	u8 present;
++	bool present, link_active;
+ 
+ 	/*
+ 	 * If the slot is on and presence or link has changed, turn it off.
+@@ -253,7 +252,7 @@ void pciehp_handle_presence_or_link_change(struct slot *slot, u32 events)
+ 
+ 	/* Turn the slot on if it's occupied or link is up */
+ 	mutex_lock(&slot->lock);
+-	pciehp_get_adapter_status(slot, &present);
++	present = pciehp_card_present(ctrl);
+ 	link_active = pciehp_check_link_active(ctrl);
+ 	if (!present && !link_active) {
+ 		mutex_unlock(&slot->lock);
+@@ -286,11 +285,6 @@ static int __pciehp_enable_slot(struct slot *p_slot)
+ 	u8 getstatus = 0;
+ 	struct controller *ctrl = p_slot->ctrl;
+ 
+-	pciehp_get_adapter_status(p_slot, &getstatus);
+-	if (!getstatus) {
+-		ctrl_info(ctrl, "Slot(%s): No adapter\n", slot_name(p_slot));
+-		return -ENODEV;
+-	}
+ 	if (MRL_SENS(p_slot->ctrl)) {
+ 		pciehp_get_latch_status(p_slot, &getstatus);
+ 		if (getstatus) {
+diff --git a/drivers/pci/hotplug/pciehp_hpc.c b/drivers/pci/hotplug/pciehp_hpc.c
+index 017161c03a4d..e5fed74c392a 100644
+--- a/drivers/pci/hotplug/pciehp_hpc.c
++++ b/drivers/pci/hotplug/pciehp_hpc.c
+@@ -389,13 +389,27 @@ void pciehp_get_latch_status(struct slot *slot, u8 *status)
+ 	*status = !!(slot_status & PCI_EXP_SLTSTA_MRLSS);
+ }
+ 
+-void pciehp_get_adapter_status(struct slot *slot, u8 *status)
++bool pciehp_card_present(struct controller *ctrl)
+ {
+-	struct pci_dev *pdev = ctrl_dev(slot->ctrl);
++	struct pci_dev *pdev = ctrl_dev(ctrl);
+ 	u16 slot_status;
+ 
+ 	pcie_capability_read_word(pdev, PCI_EXP_SLTSTA, &slot_status);
+-	*status = !!(slot_status & PCI_EXP_SLTSTA_PDS);
++	return slot_status & PCI_EXP_SLTSTA_PDS;
++}
++
++/**
++ * pciehp_card_present_or_link_active() - whether given slot is occupied
++ * @ctrl: PCIe hotplug controller
++ *
++ * Unlike pciehp_card_present(), which determines presence solely from the
++ * Presence Detect State bit, this helper also returns true if the Link Active
++ * bit is set.  This is a concession to broken hotplug ports which hardwire
++ * Presence Detect State to zero, such as Wilocity's [1ae9:0200].
++ */
++bool pciehp_card_present_or_link_active(struct controller *ctrl)
++{
++	return pciehp_card_present(ctrl) || pciehp_check_link_active(ctrl);
+ }
+ 
+ int pciehp_query_power_fault(struct slot *slot)
+@@ -858,7 +872,7 @@ struct controller *pcie_init(struct pcie_device *dev)
+ {
+ 	struct controller *ctrl;
+ 	u32 slot_cap, link_cap;
+-	u8 occupied, poweron;
++	u8 poweron;
+ 	struct pci_dev *pdev = dev->port;
+ 
+ 	ctrl = kzalloc(sizeof(*ctrl), GFP_KERNEL);
+@@ -918,9 +932,8 @@ struct controller *pcie_init(struct pcie_device *dev)
+ 	 * requested yet, so avoid triggering a notification with this command.
+ 	 */
+ 	if (POWER_CTRL(ctrl)) {
+-		pciehp_get_adapter_status(ctrl->slot, &occupied);
+ 		pciehp_get_power_status(ctrl->slot, &poweron);
+-		if (!occupied && poweron) {
++		if (!pciehp_card_present_or_link_active(ctrl) && poweron) {
+ 			pcie_disable_notification(ctrl);
+ 			pciehp_power_off_slot(ctrl->slot);
+ 		}
+-- 
+2.18.0
