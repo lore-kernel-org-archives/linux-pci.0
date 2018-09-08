@@ -1,74 +1,44 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-From: Alexandru Gagniuc <mr.nuke.me@gmail.com>
-To: linux-pci@vger.kernel.org, bhelgaas@google.com
-Cc: keith.busch@intel.com, alex_gagniuc@dellteam.com,
-        austin_bolen@dell.com, shyam_iyer@dell.com,
-        Alexandru Gagniuc <mr.nuke.me@gmail.com>,
-        Ariel Elior <ariel.elior@cavium.com>,
-        everest-linux-l2@cavium.com,
-        "David S. Miller" <davem@davemloft.net>,
-        Michael Chan <michael.chan@broadcom.com>,
-        Ganesh Goudar <ganeshgr@chelsio.com>,
-        Jeff Kirsher <jeffrey.t.kirsher@intel.com>,
-        Tariq Toukan <tariqt@mellanox.com>,
-        Saeed Mahameed <saeedm@mellanox.com>,
-        Leon Romanovsky <leon@kernel.org>,
-        Jakub Kicinski <jakub.kicinski@netronome.com>,
-        Dirk van der Merwe <dirk.vandermerwe@netronome.com>,
-        netdev@vger.kernel.org, linux-kernel@vger.kernel.org,
-        intel-wired-lan@lists.osuosl.org, linux-rdma@vger.kernel.org,
-        oss-drivers@netronome.com
-Subject: [PATCH 1/9] PCI: sysfs: Export available PCIe bandwidth
-Date: Mon,  3 Sep 2018 13:02:28 -0500
-Message-Id: <20180903180242.14504-2-mr.nuke.me@gmail.com>
-In-Reply-To: <20180903180242.14504-1-mr.nuke.me@gmail.com>
-References: <20180903180242.14504-1-mr.nuke.me@gmail.com>
-Sender: linux-kernel-owner@vger.kernel.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mx2.mailbox.org ([80.241.60.215]:10868 "EHLO mx2.mailbox.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1726315AbeIHPu6 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Sat, 8 Sep 2018 11:50:58 -0400
+Subject: Re: [PATCH] PCI: Reprogram bridge prefetch registers on resume
+To: Peter Wu <peter@lekensteyn.nl>, Daniel Drake <drake@endlessm.com>
+Cc: bhelgaas@google.com, linux-pci@vger.kernel.org, linux@endlessm.com,
+        nouveau@lists.freedesktop.org, linux-pm@vger.kernel.org,
+        kherbst@redhat.com, andriy.shevchenko@linux.intel.com,
+        rafael.j.wysocki@intel.com, keith.busch@intel.com,
+        mika.westerberg@linux.intel.com, jonathan.derrick@intel.com,
+        davem@davemloft.net, hkallweit1@gmail.com, netdev@vger.kernel.org,
+        nic_swsd@realtek.com
+References: <20180907053614.6540-1-drake@endlessm.com>
+ <20180907150515.GA28739@al>
+From: Thomas Martitz <kugel@rockbox.org>
+Message-ID: <cd2f572a-9c1f-41c1-6e95-759cfec501d9@rockbox.org>
+Date: Sat, 8 Sep 2018 13:05:11 +0200
+MIME-Version: 1.0
+In-Reply-To: <20180907150515.GA28739@al>
+Content-Type: text/plain; charset=utf-8; format=flowed
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-For certain bandwidth-critical devices (e.g. multi-port network cards)
-it is useful to know the available bandwidth to the root complex. This
-information is only available via the system log, which doesn't
-account for link degradation after probing.
+Am 07.09.18 um 17:05 schrieb Peter Wu:
+> On Fri, Sep 07, 2018 at 01:36:14PM +0800, Daniel Drake wrote:
+> <..>
+>> Thomas Martitz reports that this workaround also solves an issue where
+>> the AMD Radeon Polaris 10 GPU on the HP Zbook 14u G5 is unresponsive
+>> after S3 suspend/resume.
+> 
+> Where was this claimed? It is not stated in the linked bug:
+> (https://bugs.freedesktop.org/show_bug.cgi?id=105760
+> 
 
-With a sysfs attribute, we can computes the bandwidth on-demand, and
-will detect degraded links.
 
-Signed-off-by: Alexandru Gagniuc <mr.nuke.me@gmail.com>
----
- drivers/pci/pci-sysfs.c | 13 +++++++++++++
- 1 file changed, 13 insertions(+)
+Actually, I reported that https://patchwork.kernel.org/patch/10583229/ 
+works. I updated the bug now, I didn't do so yet because it's closed.
 
-diff --git a/drivers/pci/pci-sysfs.c b/drivers/pci/pci-sysfs.c
-index 9ecfe13157c0..6658e927b1f5 100644
---- a/drivers/pci/pci-sysfs.c
-+++ b/drivers/pci/pci-sysfs.c
-@@ -218,6 +218,18 @@ static ssize_t current_link_width_show(struct device *dev,
- }
- static DEVICE_ATTR_RO(current_link_width);
- 
-+static ssize_t available_bandwidth_show(struct device *dev,
-+				       struct device_attribute *attr, char *buf)
-+{
-+	struct pci_dev *pci_dev = to_pci_dev(dev);
-+	u32 bw_avail;
-+
-+	bw_avail = pcie_bandwidth_available(pci_dev, NULL, NULL, NULL);
-+
-+	return sprintf(buf, "%u.%03u Gb/s\n", bw_avail / 1000, bw_avail % 1000);
-+}
-+static DEVICE_ATTR_RO(available_bandwidth);
-+
- static ssize_t secondary_bus_number_show(struct device *dev,
- 					 struct device_attribute *attr,
- 					 char *buf)
-@@ -786,6 +798,7 @@ static struct attribute *pcie_dev_attrs[] = {
- 	&dev_attr_current_link_width.attr,
- 	&dev_attr_max_link_width.attr,
- 	&dev_attr_max_link_speed.attr,
-+	&dev_attr_available_bandwidth.attr,
- 	NULL,
- };
- 
--- 
-2.17.1
+However, I did not actually test the exact patch *this* thread is about. 
+Do you want me to give it a spin?
+
+Best regards.
