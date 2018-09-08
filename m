@@ -1,128 +1,147 @@
-Return-Path: <linux-acpi-owner@vger.kernel.org>
-From: "Rafael J. Wysocki" <rjw@rjwysocki.net>
-To: Mika Westerberg <mika.westerberg@linux.intel.com>
-Cc: Bjorn Helgaas <bhelgaas@google.com>, Len Brown <lenb@kernel.org>,
-        Lukas Wunner <lukas@wunner.de>,
-        Keith Busch <keith.busch@intel.com>,
-        Ashok Raj <ashok.raj@intel.com>, Mario.Limonciello@dell.com,
-        Anthony Wong <anthony.wong@canonical.com>,
-        "D . J . Bernstein" <djb@cr.yp.to>,
-        Linus Walleij <linus.walleij@linaro.org>,
-        linux-pci@vger.kernel.org, linux-acpi@vger.kernel.org
-Subject: Re: [PATCH 03/10] PCI: pciehp: Disable hotplug interrupt during suspend
-Date: Tue, 11 Sep 2018 10:55:13 +0200
-Message-ID: <512229552.sYoMAcyA8j@aspire.rjw.lan>
-In-Reply-To: <20180906155020.51700-4-mika.westerberg@linux.intel.com>
-References: <20180906155020.51700-1-mika.westerberg@linux.intel.com> <20180906155020.51700-4-mika.westerberg@linux.intel.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Sender: linux-acpi-owner@vger.kernel.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail.kernel.org ([198.145.29.99]:59190 "EHLO mail.kernel.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1726341AbeIHJAw (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Sat, 8 Sep 2018 05:00:52 -0400
+From: Sinan Kaya <okaya@kernel.org>
+To: linux-pci@vger.kernel.org
+Cc: Sinan Kaya <okaya@kernel.org>,
+        Srinivas Pandruvada <srinivas.pandruvada@linux.intel.com>,
+        Jiri Kosina <jikos@kernel.org>,
+        Benjamin Tissoires <benjamin.tissoires@redhat.com>,
+        Frank Haverkamp <haver@linux.vnet.ibm.com>,
+        "Guilherme G. Piccoli" <gpiccoli@linux.vnet.ibm.com>,
+        Arnd Bergmann <arnd@arndb.de>,
+        Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+        Harish Patil <harish.patil@cavium.com>,
+        Manish Chopra <manish.chopra@cavium.com>,
+        Dept-GELinuxNICDev@cavium.com,
+        "David S. Miller" <davem@davemloft.net>,
+        Solarflare linux maintainers <linux-net-drivers@solarflare.com>,
+        Edward Cree <ecree@solarflare.com>,
+        Bert Kenward <bkenward@solarflare.com>,
+        Bjorn Helgaas <bhelgaas@google.com>,
+        Anton Vasilyev <vasilyev@ispras.ru>
+Subject: [PATCH 1/4] PCI: Expose reset_type to users of pci_reset_function()
+Date: Sat,  8 Sep 2018 04:16:24 +0000
+Message-Id: <20180908041632.22252-1-okaya@kernel.org>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Thursday, September 6, 2018 5:50:13 PM CEST Mika Westerberg wrote:
-> When PCIe hotplug port is transitioned into D3hot link to the downstream
-> component will go down. If hotplug interrupt generation is enabled when
-> that happens it will trigger immediately waking up the system and
-> bringing the link back up.
-> 
-> To prevent this disable hotplug interrupt generation when system suspend
-> is entered. This does not prevent wakeup from low power states according
-> to PCIe 4.0 spec section 6.7.3.4:
-> 
->   Software enables a hot-plug event to generate a wakeup event by
->   enabling software notification of the event as described in Section
->   6.7.3.1. Note that in order for software to disable interrupt generation
->   while keeping wakeup generation enabled, the Hot-Plug Interrupt Enable
->   bit must be cleared.
-> 
-> So as long as we have set the slot event mask accordingly wakeup should
-> work even if slot interrupt is disabled. The port should trigger wake
-> and then send PME to the root port when the PCIe hierarchy is brought
-> back up.
-> 
-> Limit this to systems using native PME mechanism to make sure older
-> Apple systems depending on commit e3354628c376 ("PCI: pciehp: Support
-> interrupts sent from D3hot") still continue working.
-> 
-> Signed-off-by: Mika Westerberg <mika.westerberg@linux.intel.com>
-> ---
->  drivers/pci/hotplug/pciehp.h      |  2 ++
->  drivers/pci/hotplug/pciehp_core.c | 18 ++++++++++++++++++
->  drivers/pci/hotplug/pciehp_hpc.c  | 10 ++++++++++
->  3 files changed, 30 insertions(+)
-> 
-> diff --git a/drivers/pci/hotplug/pciehp.h b/drivers/pci/hotplug/pciehp.h
-> index 811cf83f956d..58bddeb3c5a9 100644
-> --- a/drivers/pci/hotplug/pciehp.h
-> +++ b/drivers/pci/hotplug/pciehp.h
-> @@ -187,6 +187,8 @@ struct controller *pcie_init(struct pcie_device *dev);
->  int pcie_init_notification(struct controller *ctrl);
->  void pcie_shutdown_notification(struct controller *ctrl);
->  void pcie_clear_hotplug_events(struct controller *ctrl);
-> +void pcie_enable_interrupt(struct controller *ctrl);
-> +void pcie_disable_interrupt(struct controller *ctrl);
->  int pciehp_power_on_slot(struct slot *slot);
->  void pciehp_power_off_slot(struct slot *slot);
->  void pciehp_get_power_status(struct slot *slot, u8 *status);
-> diff --git a/drivers/pci/hotplug/pciehp_core.c b/drivers/pci/hotplug/pciehp_core.c
-> index ec48c9433ae5..c9cf9c3b5f7f 100644
-> --- a/drivers/pci/hotplug/pciehp_core.c
-> +++ b/drivers/pci/hotplug/pciehp_core.c
-> @@ -302,8 +302,23 @@ static void pciehp_remove(struct pcie_device *dev)
->  }
->  
->  #ifdef CONFIG_PM
-> +static bool pme_is_native(struct pcie_device *dev)
-> +{
-> +	const struct pci_host_bridge *host;
-> +
-> +	host = pci_find_host_bridge(dev->port->bus);
-> +	return pcie_ports_native || host->native_pme;
-> +}
-> +
->  static int pciehp_suspend(struct pcie_device *dev)
->  {
-> +	/*
-> +	 * Disable hotplug interrupt so that it does not trigger
-> +	 * immediately when the downstream link goes down.
-> +	 */
-> +	if (pme_is_native(dev))
-> +		pcie_disable_interrupt(get_service_data(dev));
-> +
->  	return 0;
->  }
->  
-> @@ -327,6 +342,9 @@ static int pciehp_resume(struct pcie_device *dev)
->  {
->  	struct controller *ctrl = get_service_data(dev);
->  
-> +	if (pme_is_native(dev))
-> +		pcie_enable_interrupt(ctrl);
-> +
->  	pciehp_check_presence(ctrl);
->  
->  	return 0;
-> diff --git a/drivers/pci/hotplug/pciehp_hpc.c b/drivers/pci/hotplug/pciehp_hpc.c
-> index 7136e3430925..2249c4d06efd 100644
-> --- a/drivers/pci/hotplug/pciehp_hpc.c
-> +++ b/drivers/pci/hotplug/pciehp_hpc.c
-> @@ -748,6 +748,16 @@ void pcie_clear_hotplug_events(struct controller *ctrl)
->  				   PCI_EXP_SLTSTA_PDC | PCI_EXP_SLTSTA_DLLSC);
->  }
->  
-> +void pcie_enable_interrupt(struct controller *ctrl)
-> +{
-> +	pcie_write_cmd(ctrl, PCI_EXP_SLTCTL_HPIE, PCI_EXP_SLTCTL_HPIE);
-> +}
-> +
-> +void pcie_disable_interrupt(struct controller *ctrl)
-> +{
-> +	pcie_write_cmd(ctrl, 0, PCI_EXP_SLTCTL_HPIE);
-> +}
-> +
->  /*
->   * pciehp has a 1:1 bus:slot relationship so we ultimately want a secondary
->   * bus reset of the bridge, but at the same time we want to ensure that it is
-> 
+Looking to have more control between the users of the API vs. what the API
+can do internally. The new reset_type tells the PCI core about the bounds
+of the request.
 
-Reviewed-by: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
+Signed-off-by: Sinan Kaya <okaya@kernel.org>
+---
+ drivers/hid/intel-ish-hid/ipc/ipc.c             | 2 +-
+ drivers/misc/genwqe/card_base.c                 | 2 +-
+ drivers/net/ethernet/qlogic/qlcnic/qlcnic_ctx.c | 2 +-
+ drivers/net/ethernet/sfc/mcdi.c                 | 2 +-
+ drivers/pci/pci-sysfs.c                         | 2 +-
+ drivers/pci/pci.c                               | 4 ++--
+ include/linux/pci.h                             | 2 +-
+ 7 files changed, 8 insertions(+), 8 deletions(-)
+
+diff --git a/drivers/hid/intel-ish-hid/ipc/ipc.c b/drivers/hid/intel-ish-hid/ipc/ipc.c
+index bfbca7ec54ce..18312969f1b3 100644
+--- a/drivers/hid/intel-ish-hid/ipc/ipc.c
++++ b/drivers/hid/intel-ish-hid/ipc/ipc.c
+@@ -754,7 +754,7 @@ static int _ish_hw_reset(struct ishtp_device *dev)
+ 	if (!pdev)
+ 		return	-ENODEV;
+ 
+-	rv = pci_reset_function(pdev);
++	rv = pci_reset_function(pdev, PCI_RESET_ANY);
+ 	if (!rv)
+ 		dev->dev_state = ISHTP_DEV_RESETTING;
+ 
+diff --git a/drivers/misc/genwqe/card_base.c b/drivers/misc/genwqe/card_base.c
+index c7cd3675bcd1..cc78ef28ee38 100644
+--- a/drivers/misc/genwqe/card_base.c
++++ b/drivers/misc/genwqe/card_base.c
+@@ -201,7 +201,7 @@ static int genwqe_bus_reset(struct genwqe_dev *cd)
+ 	 * restored by the pci_reset_function().
+ 	 */
+ 	dev_dbg(&pci_dev->dev, "[%s] pci_reset function ...\n", __func__);
+-	rc = pci_reset_function(pci_dev);
++	rc = pci_reset_function(pci_dev, PCI_RESET_ANY);
+ 	if (rc) {
+ 		dev_err(&pci_dev->dev,
+ 			"[%s] err: failed reset func (rc %d)\n", __func__, rc);
+diff --git a/drivers/net/ethernet/qlogic/qlcnic/qlcnic_ctx.c b/drivers/net/ethernet/qlogic/qlcnic/qlcnic_ctx.c
+index d344e9d43832..bb737725f175 100644
+--- a/drivers/net/ethernet/qlogic/qlcnic/qlcnic_ctx.c
++++ b/drivers/net/ethernet/qlogic/qlcnic/qlcnic_ctx.c
+@@ -629,7 +629,7 @@ int qlcnic_fw_create_ctx(struct qlcnic_adapter *dev)
+ 	int i, err, ring;
+ 
+ 	if (dev->flags & QLCNIC_NEED_FLR) {
+-		pci_reset_function(dev->pdev);
++		pci_reset_function(dev->pdev, PCI_RESET_ANY);
+ 		dev->flags &= ~QLCNIC_NEED_FLR;
+ 	}
+ 
+diff --git a/drivers/net/ethernet/sfc/mcdi.c b/drivers/net/ethernet/sfc/mcdi.c
+index dfad93fca0a6..7f95e17b8a48 100644
+--- a/drivers/net/ethernet/sfc/mcdi.c
++++ b/drivers/net/ethernet/sfc/mcdi.c
+@@ -1862,7 +1862,7 @@ int efx_mcdi_reset(struct efx_nic *efx, enum reset_type method)
+ 
+ 	/* If MCDI is down, we can't handle_assertion */
+ 	if (method == RESET_TYPE_MCDI_TIMEOUT) {
+-		rc = pci_reset_function(efx->pci_dev);
++		rc = pci_reset_function(efx->pci_dev, PCI_RESET_ANY);
+ 		if (rc)
+ 			return rc;
+ 		/* Re-enable polled MCDI completion */
+diff --git a/drivers/pci/pci-sysfs.c b/drivers/pci/pci-sysfs.c
+index 9ecfe13157c0..9569664ec4b2 100644
+--- a/drivers/pci/pci-sysfs.c
++++ b/drivers/pci/pci-sysfs.c
+@@ -1449,7 +1449,7 @@ static ssize_t reset_store(struct device *dev, struct device_attribute *attr,
+ 		return -EINVAL;
+ 
+ 	pm_runtime_get_sync(dev);
+-	result = pci_reset_function(pdev);
++	result = pci_reset_function(pdev, PCI_RESET_ANY);
+ 	pm_runtime_put(dev);
+ 	if (result < 0)
+ 		return result;
+diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
+index 43a4b0969153..a6295f85a1bd 100644
+--- a/drivers/pci/pci.c
++++ b/drivers/pci/pci.c
+@@ -4792,7 +4792,7 @@ int pci_probe_reset_function(struct pci_dev *dev)
+  * Returns 0 if the device function was successfully reset or negative if the
+  * device doesn't support resetting a single function.
+  */
+-int pci_reset_function(struct pci_dev *dev)
++int pci_reset_function(struct pci_dev *dev, u32 reset_type)
+ {
+ 	int rc;
+ 
+@@ -4802,7 +4802,7 @@ int pci_reset_function(struct pci_dev *dev)
+ 	pci_dev_lock(dev);
+ 	pci_dev_save_and_disable(dev);
+ 
+-	rc = __pci_reset_function_locked(dev, PCI_RESET_ANY);
++	rc = __pci_reset_function_locked(dev, reset_type);
+ 
+ 	pci_dev_restore(dev);
+ 	pci_dev_unlock(dev);
+diff --git a/include/linux/pci.h b/include/linux/pci.h
+index 6924d837c959..43d00e9e54f7 100644
+--- a/include/linux/pci.h
++++ b/include/linux/pci.h
+@@ -1123,7 +1123,7 @@ void pcie_print_link_status(struct pci_dev *dev);
+ bool pcie_has_flr(struct pci_dev *dev);
+ int pcie_flr(struct pci_dev *dev);
+ int __pci_reset_function_locked(struct pci_dev *dev, u32 reset_type);
+-int pci_reset_function(struct pci_dev *dev);
++int pci_reset_function(struct pci_dev *dev, u32 reset_type);
+ int pci_reset_function_locked(struct pci_dev *dev);
+ int pci_try_reset_function(struct pci_dev *dev);
+ int pci_probe_reset_slot(struct pci_slot *slot);
+-- 
+2.18.0
