@@ -1,183 +1,311 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.29.99]:50968 "EHLO mail.kernel.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1729736AbeISCW4 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Tue, 18 Sep 2018 22:22:56 -0400
-Date: Tue, 18 Sep 2018 15:48:34 -0500
-From: Bjorn Helgaas <helgaas@kernel.org>
-To: Daniel Walker <danielwa@cisco.com>
-Cc: linux-pci@vger.kernel.org, Yinghai Lu <yinghai@kernel.org>,
-        Bjorn Helgaas <bhelgaas@google.com>,
-        Rob Herring <robh+dt@kernel.org>,
-        Frank Rowand <frowand.list@gmail.com>,
-        devicetree@vger.kernel.org
-Subject: Re: PCI: Enforce bus address limits in resource allocation
-Message-ID: <20180918204834.GB13616@bhelgaas-glaptop.roam.corp.google.com>
-References: <abb9aa39-3128-3a4d-01f7-d0614d63f37e@cisco.com>
- <20180918132056.GA254348@bhelgaas-glaptop.roam.corp.google.com>
- <b5883e58-861a-807e-f4c8-3745b006ce0d@cisco.com>
- <20180918184706.GA13616@bhelgaas-glaptop.roam.corp.google.com>
- <b6281224-18cf-50af-aa38-6b048d741854@cisco.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <b6281224-18cf-50af-aa38-6b048d741854@cisco.com>
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <SRS0=Zo3Z=LW=wunner.de=lukas@kernel.org>
+Return-Path: <SRS0=Zo3Z=LW=wunner.de=lukas@kernel.org>
+Message-Id: <a617aee639ddab671ae378390146279bf205f5a7.1536341821.git.lukas@wunner.de>
+In-Reply-To: <cover.1536341821.git.lukas@wunner.de>
+References: <cover.1536341821.git.lukas@wunner.de>
+From: Lukas Wunner <lukas@wunner.de>
+Date: Sat, 8 Sep 2018 09:59:01 +0200
+Subject: [PATCH v2 3/8] PCI: pciehp: Rename controller struct members for
+ clarity
+To: Bjorn Helgaas <helgaas@kernel.org>, linux-pci@vger.kernel.org
+Cc: Sinan Kaya <okaya@kernel.org>, Mika Westerberg <mika.westerberg@linux.intel.com>, Keith Busch <keith.busch@intel.com>
 List-ID: <linux-pci.vger.kernel.org>
 
-[+cc Rob, Frank, devicetree list,
+Of the members which were just moved from pciehp's slot struct to the
+controller struct, rename "lock" to "state_lock" and rename "work" to
+"button_work" for clarity.  Perform the rename separately to the
+unification of the two structs per Sinan's request.
 
-thread starts here:
-https://lkml.kernel.org/r/abb9aa39-3128-3a4d-01f7-d0614d63f37e@cisco.com
+No functional change intended.
 
-dmesg snippets here:
-https://lkml.kernel.org/r/20180918184706.GA13616@bhelgaas-glaptop.roam.corp.google.com]
+Signed-off-by: Lukas Wunner <lukas@wunner.de>
+Cc: Sinan Kaya <okaya@kernel.org>
+---
+ drivers/pci/hotplug/pciehp.h      | 10 +++---
+ drivers/pci/hotplug/pciehp_core.c |  4 +--
+ drivers/pci/hotplug/pciehp_ctrl.c | 58 +++++++++++++++----------------
+ drivers/pci/hotplug/pciehp_hpc.c  |  6 ++--
+ 4 files changed, 39 insertions(+), 39 deletions(-)
 
-On Tue, Sep 18, 2018 at 11:56:20AM -0700, Daniel Walker wrote:
-> On 09/18/2018 11:47 AM, Bjorn Helgaas wrote:
-> > On Tue, Sep 18, 2018 at 07:24:02AM -0700, Daniel Walker wrote:
-> > > On 09/18/2018 06:20 AM, Bjorn Helgaas wrote:
-> > > > On Fri, Sep 14, 2018 at 08:16:35AM -0700, Daniel Walker wrote:
-> > > > > I have a powerpc system with PCI, and some devices attached to
-> > > > > the PCI bus.  In 3.10 everything worked fine, then we moved to
-> > > > > 4.9 and we had some issues.  I was able to bisect the issue down
-> > > > > to the patch in the subject line.
-> > > > > 
-> > > > > f75b99d PCI: Enforce bus address limits in resource allocation
-> > > > > 
-> > > > >   From 3.10 here is part of the PCI initialization,
-> > > > > 
-> > > > > |pci 0001:0e:00.0: BAR 0: assigned [mem 0xfc0000000-0xfc00fffff pref]|
-> > > > > |pci 0001:07:09.0: PCI bridge to [bus 0e]|
-> > > > > |pci 0001:07:09.0: bridge window [mem 0xfc0000000-0xfc00fffff 64bit pref]|
-> > > > >                   |||In this section the memory resource for the bridge is
-> > > > > 64bit, and the device "BAR 0" gets a 64bit range. However, it seems the
-> > > > > device is 32bit.|
-> > 
-> > > > > |Now fast forward to 4.9 we get this,|
-> > > > 
-> > > > > pci 0001:0e:00.0: BAR 0: no space for [mem size 0x00100000 pref]
-> > > > > pci 0001:0e:00.0: BAR 0: failed to assign [mem size 0x00100000 pref]
-> > > > > pci 0001:07:09.0: PCI bridge to [bus 0e]
-> > > > > pci 0001:07:09.0: bridge window [mem 0xfc0000000-0xfc00fffff 64bit pref]
-> > > > > 
-> > > > > |Here it seems to have a larger size, I'm not sure where the size is coming
-> > > > > from.
-> > > > 
-> > > > The size is 0x00100000 (1MB), which is the same size as
-> > > > [mem 0xfc0000000-0xfc00fffff pref].
-> > > > 
-> > > > The size is normally discovered by probing the BAR (write all 1's to
-> > > > the BAR then read it back to find which bits are writable and which
-> > > > are read-only).  On powerpc we might learn it from DT instead.  But in
-> > > > any case, we to get the same 1MB size, which is the same size as the
-> > > > bridge window.  So this should still work unless there are other BARs
-> > > > in that window.
-> > > 
-> > > As far as I know there is only one BAR connected to this window.
-> > > 
-> > > It kind of strikes me as an off-by-one problem because it says "no space"
-> > > but the window is the same size as what's requested. With the patch removed
-> > > you get the whole window assigned.
-> > > 
-> > > In the context of the patch if you change the pci_32_bit to pci_64_bit for
-> > > the region when calling pci_bus_alloc_from_region() in the 32bit case this
-> > > problem disappears. I do have CONFIG_ARCH_DMA_ADDR_T_64BIT enabled in my
-> > > config.
-> > > 
-> > > > > I was able to work around the issue by setting IORESOURCE_MEM_64 on
-> > > > > the resource for this device. I also was able to work around it by setting
-> > > > > "max = avail.end" to "max = (-1);" inside pci_bus_alloc_resource(). |
-> > > > > ||
-> > > > > ||I don't know if the problem is the patch, or something else inside our
-> > > > > system, but any thoughts are appreciated.
-> > > > 
-> > > > It seems like we think the bridge window contains only 64-bit space
-> > > > and therefore contains nothing usable by the 32-bit BAR.
-> > > > 
-> > > > You said later that the same problem exists on v4.19-rc4.  Can you
-> > > > collect the complete dmesg log with that kernel?  That should tell us
-> > > > about any host bridge address translation.
-> > > 
-> > > Sure. I have attached the dmesg.
-> > 
-> > The relevant parts are below.  I think your DT is incorrect.  Either
-> > it neglects to describe the host bridge address translation for the
-> > ffb240000.pcie and ffb250000.pcie bridges, or it incorrectly describes
-> > the BARs of devices below those bridges as 32-bit BARs when they are
-> > really 64-bit BARs.
-> 
-> I don't know if the DTS is correct, it very well could be incorrect. Here
-> are the relevant parts of the DTS. The BAR at issue is connected to PCI1.
-
-The DTS matches what I pointed out in the dmesg log.  I think you need
-to reconcile it with your hardware and firmware, which I don't know
-anything about, so I don't know what else I can do at this point.  I
-copied some DT folks in case they have advice.
-
->         pci0: pcie@ffb240000 {
->                 compatible = "fsl,t1040-pcie", "fsl,qoriq-pcie-v2.4",
-> "fsl,qoriq-pcie";
->                 device_type = "pci";
->                 #size-cells = <2>;
->                 #address-cells = <3>;
->                 bus-range = <0x0 0xff>;
->                 interrupts = <20 2 0 0>;
->                 fsl,iommu-parent = <&pamu0>;
->                 reg = <0xf 0xfb240000 0 0x10000>;
->                 ranges = <0x03000000 0xf 0xe0000000 0xf 0xe0000000 0
-> 0x01000000>;
-> 
->                 pcie@0 {
->                         reg = <0 0 0 0 0>;
->                         #size-cells = <2>;
->                         #address-cells = <3>;
->                         device_type = "pci";
->                 };
->         };
-> 
->         pci1: pcie@ffb250000 {
->                 compatible = "fsl,t1040-pcie", "fsl,qoriq-pcie-v2.4",
-> "fsl,qoriq-pcie";
->                 device_type = "pci";
->                 #size-cells = <2>;
->                 #address-cells = <3>;
->                 bus-range = <0 0xff>;
->                 interrupts = <21 2 0 0>;
->                 fsl,iommu-parent = <&pamu0>;
->                 reg = <0xf 0xfb250000 0 0x10000>;
-> 
->                 ranges = <0x03000000 0x4 0x00000000 0x4 0x00000000 0xc
-> 0x00000000>;
-> 
->                 pcie@0 {
->                         reg = <0 0 0 0 0>;
->                         #size-cells = <2>;
->                         #address-cells = <3>;
->                         device_type = "pci";
->                 };
->         };
-> 
->         pci3: pcie@ffb270000 {
->                 compatible = "fsl,t1040-pcie", "fsl,qoriq-pcie-v2.4",
-> "fsl,qoriq-pcie";
->                 device_type = "pci";
->                 #size-cells = <2>;
->                 #address-cells = <3>;
->                 bus-range = <0x0 0xff>;
->                 interrupts = <23 2 0 0>;
->                 fsl,iommu-parent = <&pamu0>;
->                 reg = <0xf 0xfb270000 0 0x10000>;
->                 ranges = <0x03000000 0x0 0xe2000000 0xf 0xe2000000 0
-> 0x00100000>;
-> 
->                 pcie@0 {
->                         reg = <0 0 0 0 0>;
->                         #size-cells = <2>;
->                         #address-cells = <3>;
->                         device_type = "pci";
->                 };
->         };
-> 
-> 
-> 
-> Daniel
+diff --git a/drivers/pci/hotplug/pciehp.h b/drivers/pci/hotplug/pciehp.h
+index df9308f6dafa..39b97e2384c3 100644
+--- a/drivers/pci/hotplug/pciehp.h
++++ b/drivers/pci/hotplug/pciehp.h
+@@ -87,9 +87,9 @@ do {									\
+  * @pending_events: used by the IRQ handler to save events retrieved from the
+  *	Slot Status register for later consumption by the IRQ thread
+  * @state: current state machine position
+- * @lock: protects reads and writes of @state;
+- *	protects scheduling, execution and cancellation of @work
+- * @work: work item to turn the slot on or off after 5 seconds
++ * @state_lock: protects reads and writes of @state;
++ *	protects scheduling, execution and cancellation of @button_work
++ * @button_work: work item to turn the slot on or off after 5 seconds
+  *	in response to an Attention Button press
+  * @hotplug_slot: pointer to the structure registered with the PCI hotplug core
+  * @request_result: result of last user request submitted to the IRQ thread
+@@ -114,8 +114,8 @@ struct controller {
+ 	unsigned int power_fault_detected;
+ 	atomic_t pending_events;
+ 	u8 state;
+-	struct mutex lock;
+-	struct delayed_work work;
++	struct mutex state_lock;
++	struct delayed_work button_work;
+ 	struct hotplug_slot *hotplug_slot;
+ 	int request_result;
+ 	wait_queue_head_t requester;
+diff --git a/drivers/pci/hotplug/pciehp_core.c b/drivers/pci/hotplug/pciehp_core.c
+index 4a371ef80842..80cc7ba534bf 100644
+--- a/drivers/pci/hotplug/pciehp_core.c
++++ b/drivers/pci/hotplug/pciehp_core.c
+@@ -177,7 +177,7 @@ static void pciehp_check_presence(struct controller *ctrl)
+ 	bool occupied;
+ 
+ 	down_read(&ctrl->reset_lock);
+-	mutex_lock(&ctrl->lock);
++	mutex_lock(&ctrl->state_lock);
+ 
+ 	occupied = pciehp_card_present_or_link_active(ctrl);
+ 	if ((occupied && (ctrl->state == OFF_STATE ||
+@@ -186,7 +186,7 @@ static void pciehp_check_presence(struct controller *ctrl)
+ 			   ctrl->state == BLINKINGOFF_STATE)))
+ 		pciehp_request(ctrl, PCI_EXP_SLTSTA_PDC);
+ 
+-	mutex_unlock(&ctrl->lock);
++	mutex_unlock(&ctrl->state_lock);
+ 	up_read(&ctrl->reset_lock);
+ }
+ 
+diff --git a/drivers/pci/hotplug/pciehp_ctrl.c b/drivers/pci/hotplug/pciehp_ctrl.c
+index cd0541d80946..04f7ad9fffe1 100644
+--- a/drivers/pci/hotplug/pciehp_ctrl.c
++++ b/drivers/pci/hotplug/pciehp_ctrl.c
+@@ -134,9 +134,9 @@ void pciehp_request(struct controller *ctrl, int action)
+ void pciehp_queue_pushbutton_work(struct work_struct *work)
+ {
+ 	struct controller *ctrl = container_of(work, struct controller,
+-					       work.work);
++					       button_work.work);
+ 
+-	mutex_lock(&ctrl->lock);
++	mutex_lock(&ctrl->state_lock);
+ 	switch (ctrl->state) {
+ 	case BLINKINGOFF_STATE:
+ 		pciehp_request(ctrl, DISABLE_SLOT);
+@@ -147,12 +147,12 @@ void pciehp_queue_pushbutton_work(struct work_struct *work)
+ 	default:
+ 		break;
+ 	}
+-	mutex_unlock(&ctrl->lock);
++	mutex_unlock(&ctrl->state_lock);
+ }
+ 
+ void pciehp_handle_button_press(struct controller *ctrl)
+ {
+-	mutex_lock(&ctrl->lock);
++	mutex_lock(&ctrl->state_lock);
+ 	switch (ctrl->state) {
+ 	case OFF_STATE:
+ 	case ON_STATE:
+@@ -168,7 +168,7 @@ void pciehp_handle_button_press(struct controller *ctrl)
+ 		/* blink green LED and turn off amber */
+ 		pciehp_green_led_blink(ctrl);
+ 		pciehp_set_attention_status(ctrl, 0);
+-		schedule_delayed_work(&ctrl->work, 5 * HZ);
++		schedule_delayed_work(&ctrl->button_work, 5 * HZ);
+ 		break;
+ 	case BLINKINGOFF_STATE:
+ 	case BLINKINGON_STATE:
+@@ -178,7 +178,7 @@ void pciehp_handle_button_press(struct controller *ctrl)
+ 		 * expires to cancel hot-add or hot-remove
+ 		 */
+ 		ctrl_info(ctrl, "Slot(%s): Button cancel\n", slot_name(ctrl));
+-		cancel_delayed_work(&ctrl->work);
++		cancel_delayed_work(&ctrl->button_work);
+ 		if (ctrl->state == BLINKINGOFF_STATE) {
+ 			ctrl->state = ON_STATE;
+ 			pciehp_green_led_on(ctrl);
+@@ -195,20 +195,20 @@ void pciehp_handle_button_press(struct controller *ctrl)
+ 			 slot_name(ctrl), ctrl->state);
+ 		break;
+ 	}
+-	mutex_unlock(&ctrl->lock);
++	mutex_unlock(&ctrl->state_lock);
+ }
+ 
+ void pciehp_handle_disable_request(struct controller *ctrl)
+ {
+-	mutex_lock(&ctrl->lock);
++	mutex_lock(&ctrl->state_lock);
+ 	switch (ctrl->state) {
+ 	case BLINKINGON_STATE:
+ 	case BLINKINGOFF_STATE:
+-		cancel_delayed_work(&ctrl->work);
++		cancel_delayed_work(&ctrl->button_work);
+ 		break;
+ 	}
+ 	ctrl->state = POWEROFF_STATE;
+-	mutex_unlock(&ctrl->lock);
++	mutex_unlock(&ctrl->state_lock);
+ 
+ 	ctrl->request_result = pciehp_disable_slot(ctrl, SAFE_REMOVAL);
+ }
+@@ -221,14 +221,14 @@ void pciehp_handle_presence_or_link_change(struct controller *ctrl, u32 events)
+ 	 * If the slot is on and presence or link has changed, turn it off.
+ 	 * Even if it's occupied again, we cannot assume the card is the same.
+ 	 */
+-	mutex_lock(&ctrl->lock);
++	mutex_lock(&ctrl->state_lock);
+ 	switch (ctrl->state) {
+ 	case BLINKINGOFF_STATE:
+-		cancel_delayed_work(&ctrl->work);
++		cancel_delayed_work(&ctrl->button_work);
+ 		/* fall through */
+ 	case ON_STATE:
+ 		ctrl->state = POWEROFF_STATE;
+-		mutex_unlock(&ctrl->lock);
++		mutex_unlock(&ctrl->state_lock);
+ 		if (events & PCI_EXP_SLTSTA_DLLSC)
+ 			ctrl_info(ctrl, "Slot(%s): Link Down\n",
+ 				  slot_name(ctrl));
+@@ -238,26 +238,26 @@ void pciehp_handle_presence_or_link_change(struct controller *ctrl, u32 events)
+ 		pciehp_disable_slot(ctrl, SURPRISE_REMOVAL);
+ 		break;
+ 	default:
+-		mutex_unlock(&ctrl->lock);
++		mutex_unlock(&ctrl->state_lock);
+ 		break;
+ 	}
+ 
+ 	/* Turn the slot on if it's occupied or link is up */
+-	mutex_lock(&ctrl->lock);
++	mutex_lock(&ctrl->state_lock);
+ 	present = pciehp_card_present(ctrl);
+ 	link_active = pciehp_check_link_active(ctrl);
+ 	if (!present && !link_active) {
+-		mutex_unlock(&ctrl->lock);
++		mutex_unlock(&ctrl->state_lock);
+ 		return;
+ 	}
+ 
+ 	switch (ctrl->state) {
+ 	case BLINKINGON_STATE:
+-		cancel_delayed_work(&ctrl->work);
++		cancel_delayed_work(&ctrl->button_work);
+ 		/* fall through */
+ 	case OFF_STATE:
+ 		ctrl->state = POWERON_STATE;
+-		mutex_unlock(&ctrl->lock);
++		mutex_unlock(&ctrl->state_lock);
+ 		if (present)
+ 			ctrl_info(ctrl, "Slot(%s): Card present\n",
+ 				  slot_name(ctrl));
+@@ -267,7 +267,7 @@ void pciehp_handle_presence_or_link_change(struct controller *ctrl, u32 events)
+ 		ctrl->request_result = pciehp_enable_slot(ctrl);
+ 		break;
+ 	default:
+-		mutex_unlock(&ctrl->lock);
++		mutex_unlock(&ctrl->state_lock);
+ 		break;
+ 	}
+ }
+@@ -307,9 +307,9 @@ static int pciehp_enable_slot(struct controller *ctrl)
+ 		pciehp_green_led_off(ctrl); /* may be blinking */
+ 	pm_runtime_put(&ctrl->pcie->port->dev);
+ 
+-	mutex_lock(&ctrl->lock);
++	mutex_lock(&ctrl->state_lock);
+ 	ctrl->state = ret ? OFF_STATE : ON_STATE;
+-	mutex_unlock(&ctrl->lock);
++	mutex_unlock(&ctrl->state_lock);
+ 
+ 	return ret;
+ }
+@@ -339,9 +339,9 @@ static int pciehp_disable_slot(struct controller *ctrl, bool safe_removal)
+ 	ret = __pciehp_disable_slot(ctrl, safe_removal);
+ 	pm_runtime_put(&ctrl->pcie->port->dev);
+ 
+-	mutex_lock(&ctrl->lock);
++	mutex_lock(&ctrl->state_lock);
+ 	ctrl->state = OFF_STATE;
+-	mutex_unlock(&ctrl->lock);
++	mutex_unlock(&ctrl->state_lock);
+ 
+ 	return ret;
+ }
+@@ -350,11 +350,11 @@ int pciehp_sysfs_enable_slot(struct hotplug_slot *hotplug_slot)
+ {
+ 	struct controller *ctrl = hotplug_slot->private;
+ 
+-	mutex_lock(&ctrl->lock);
++	mutex_lock(&ctrl->state_lock);
+ 	switch (ctrl->state) {
+ 	case BLINKINGON_STATE:
+ 	case OFF_STATE:
+-		mutex_unlock(&ctrl->lock);
++		mutex_unlock(&ctrl->state_lock);
+ 		/*
+ 		 * The IRQ thread becomes a no-op if the user pulls out the
+ 		 * card before the thread wakes up, so initialize to -ENODEV.
+@@ -379,7 +379,7 @@ int pciehp_sysfs_enable_slot(struct hotplug_slot *hotplug_slot)
+ 			 slot_name(ctrl), ctrl->state);
+ 		break;
+ 	}
+-	mutex_unlock(&ctrl->lock);
++	mutex_unlock(&ctrl->state_lock);
+ 
+ 	return -ENODEV;
+ }
+@@ -388,11 +388,11 @@ int pciehp_sysfs_disable_slot(struct hotplug_slot *hotplug_slot)
+ {
+ 	struct controller *ctrl = hotplug_slot->private;
+ 
+-	mutex_lock(&ctrl->lock);
++	mutex_lock(&ctrl->state_lock);
+ 	switch (ctrl->state) {
+ 	case BLINKINGOFF_STATE:
+ 	case ON_STATE:
+-		mutex_unlock(&ctrl->lock);
++		mutex_unlock(&ctrl->state_lock);
+ 		pciehp_request(ctrl, DISABLE_SLOT);
+ 		wait_event(ctrl->requester,
+ 			   !atomic_read(&ctrl->pending_events));
+@@ -412,7 +412,7 @@ int pciehp_sysfs_disable_slot(struct hotplug_slot *hotplug_slot)
+ 			 slot_name(ctrl), ctrl->state);
+ 		break;
+ 	}
+-	mutex_unlock(&ctrl->lock);
++	mutex_unlock(&ctrl->state_lock);
+ 
+ 	return -ENODEV;
+ }
+diff --git a/drivers/pci/hotplug/pciehp_hpc.c b/drivers/pci/hotplug/pciehp_hpc.c
+index 65e4185b62dc..4d3e6fe06595 100644
+--- a/drivers/pci/hotplug/pciehp_hpc.c
++++ b/drivers/pci/hotplug/pciehp_hpc.c
+@@ -852,11 +852,11 @@ struct controller *pcie_init(struct pcie_device *dev)
+ 
+ 	ctrl->slot_cap = slot_cap;
+ 	mutex_init(&ctrl->ctrl_lock);
+-	mutex_init(&ctrl->lock);
++	mutex_init(&ctrl->state_lock);
+ 	init_rwsem(&ctrl->reset_lock);
+ 	init_waitqueue_head(&ctrl->requester);
+ 	init_waitqueue_head(&ctrl->queue);
+-	INIT_DELAYED_WORK(&ctrl->work, pciehp_queue_pushbutton_work);
++	INIT_DELAYED_WORK(&ctrl->button_work, pciehp_queue_pushbutton_work);
+ 	dbg_ctrl(ctrl);
+ 
+ 	down_read(&pci_bus_sem);
+@@ -905,7 +905,7 @@ struct controller *pcie_init(struct pcie_device *dev)
+ 
+ void pciehp_release_ctrl(struct controller *ctrl)
+ {
+-	cancel_delayed_work_sync(&ctrl->work);
++	cancel_delayed_work_sync(&ctrl->button_work);
+ 	kfree(ctrl);
+ }
+ 
+-- 
+2.18.0
