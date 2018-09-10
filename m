@@ -1,92 +1,67 @@
-Return-Path: <linux-acpi-owner@vger.kernel.org>
-From: "Rafael J. Wysocki" <rjw@rjwysocki.net>
-To: Mika Westerberg <mika.westerberg@linux.intel.com>
-Cc: Bjorn Helgaas <bhelgaas@google.com>, Len Brown <lenb@kernel.org>,
-        Lukas Wunner <lukas@wunner.de>,
-        Keith Busch <keith.busch@intel.com>,
-        Ashok Raj <ashok.raj@intel.com>, Mario.Limonciello@dell.com,
-        Anthony Wong <anthony.wong@canonical.com>,
-        "D . J . Bernstein" <djb@cr.yp.to>,
-        Linus Walleij <linus.walleij@linaro.org>,
-        linux-pci@vger.kernel.org, linux-acpi@vger.kernel.org
-Subject: Re: [PATCH 02/10] PCI / ACPI: Enable wake automatically for power managed bridges
-Date: Tue, 11 Sep 2018 10:50:18 +0200
-Message-ID: <1654330.M3KingDFxV@aspire.rjw.lan>
-In-Reply-To: <20180906155020.51700-3-mika.westerberg@linux.intel.com>
-References: <20180906155020.51700-1-mika.westerberg@linux.intel.com> <20180906155020.51700-3-mika.westerberg@linux.intel.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Sender: linux-acpi-owner@vger.kernel.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from shell.v3.sk ([90.176.6.54]:36033 "EHLO shell.v3.sk"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1728177AbeIJQxq (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Mon, 10 Sep 2018 12:53:46 -0400
+From: Lubomir Rintel <lkundrak@v3.sk>
+To: linux-kernel@vger.kernel.org
+Cc: linux-arm-kernel@lists.infradead.org, linux-pci@vger.kernel.org,
+        linux-spi@vger.kernel.org, devicetree@vger.kernel.org,
+        Mark Brown <broonie@kernel.org>,
+        Rob Herring <robh+dt@kernel.org>,
+        Mark Rutland <mark.rutland@arm.com>,
+        Eric Miao <eric.y.miao@gmail.com>,
+        Haojian Zhuang <haojian.zhuang@gmail.com>,
+        Daniel Mack <daniel@zonque.org>,
+        Robert Jarzmik <robert.jarzmik@free.fr>,
+        Bjorn Helgaas <bhelgaas@google.com>,
+        Lubomir Rintel <lkundrak@v3.sk>
+Subject: [PATCH 1/5] dt-bindings: spi/spi-pxa2xx: add PXA2xx SSP SPI Controller
+Date: Mon, 10 Sep 2018 13:59:31 +0200
+Message-Id: <20180910115935.163121-2-lkundrak@v3.sk>
+In-Reply-To: <20180910115935.163121-1-lkundrak@v3.sk>
+References: <20180910115935.163121-1-lkundrak@v3.sk>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Thursday, September 6, 2018 5:50:12 PM CEST Mika Westerberg wrote:
-> We enable power management automatically for bridges where
-> pci_bridge_d3_possible() returns true. However, these bridges may have
-> ACPI methods such as _DSW that need to be called before D3 entry. For
-> example in Lenovo Thinkpad X1 Carbon 6th _DSW method is used to prepare
-> D3cold for the PCIe root port hosting Thunderbolt chain. Because wake is
-> not enabled _DSW method is never called and the port does not enter
-> D3cold properly consuming more power than necessary.
-> 
-> Users can work this around by writing "enabled" to "wakeup" sysfs file
-> under the device in question but that is not something an ordinary user
-> is expected to do.
-> 
-> Since we already automatically enable power management for PCIe ports
-> with ->bridge_d3 set extend that to enable wake for them as well,
-> assuming the port has any ACPI wakeup related objects implemented in the
-> namespace (adev->wakeup.flags.valid is true). This ensures the necessary
-> ACPI methods get called at appropriate times and allows the root port in
-> Thinkpad X1 Carbon 6th to go into D3cold.
-> 
-> Signed-off-by: Mika Westerberg <mika.westerberg@linux.intel.com>
-> ---
->  drivers/pci/pci-acpi.c | 15 ++++++++++++++-
->  1 file changed, 14 insertions(+), 1 deletion(-)
-> 
-> diff --git a/drivers/pci/pci-acpi.c b/drivers/pci/pci-acpi.c
-> index c2ab57705043..a4a8c02deaa0 100644
-> --- a/drivers/pci/pci-acpi.c
-> +++ b/drivers/pci/pci-acpi.c
-> @@ -762,19 +762,32 @@ static void pci_acpi_setup(struct device *dev)
->  		return;
->  
->  	device_set_wakeup_capable(dev, true);
-> +	/*
-> +	 * For bridges that can do D3 we enable wake automatically (as
-> +	 * we do for the power management itself in that case). The
-> +	 * reason is that the bridge may have additional methods such as
-> +	 * _DSW that need to be called.
-> +	 */
-> +	if (pci_dev->bridge_d3)
-> +		device_wakeup_enable(dev);
-> +
->  	acpi_pci_wakeup(pci_dev, false);
->  }
->  
->  static void pci_acpi_cleanup(struct device *dev)
->  {
->  	struct acpi_device *adev = ACPI_COMPANION(dev);
-> +	struct pci_dev *pci_dev = to_pci_dev(dev);
->  
->  	if (!adev)
->  		return;
->  
->  	pci_acpi_remove_pm_notifier(adev);
-> -	if (adev->wakeup.flags.valid)
-> +	if (adev->wakeup.flags.valid) {
-> +		if (pci_dev->bridge_d3)
-> +			device_wakeup_disable(dev);
+This is the SPI controller found on Marvel MMP2 and perhaps more
+platforms.
 
-Add an empty line here?
+Signed-off-by: Lubomir Rintel <lkundrak@v3.sk>
+---
+ .../devicetree/bindings/spi/spi-pxa2xx.txt    | 24 +++++++++++++++++++
+ 1 file changed, 24 insertions(+)
+ create mode 100644 Documentation/devicetree/bindings/spi/spi-pxa2xx.txt
 
->  		device_set_wakeup_capable(dev, false);
-> +	}
->  }
->  
->  static bool pci_acpi_bus_match(struct device *dev)
-> 
-
-Apart from the above nit this is fine by me:
-
-Reviewed-by: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
+diff --git a/Documentation/devicetree/bindings/spi/spi-pxa2xx.txt b/Documentation/devicetree/bindings/spi/spi-pxa2xx.txt
+new file mode 100644
+index 000000000000..75be87cf9909
+--- /dev/null
++++ b/Documentation/devicetree/bindings/spi/spi-pxa2xx.txt
+@@ -0,0 +1,24 @@
++PXA2xx SSP SPI Controller
++
++Required properties:
++- compatible: Must be "marvell,mmp2-ssp".
++- reg: Offset and length of the device's register set.
++- interrupts: Should be the interrupt number.
++- clocks: Should contain a single entry describing the clock input.
++- #address-cells:  Number of cells required to define a chip select address.
++- #size-cells: Should be zero.
++
++Optional properties:
++- cs-gpios: list of GPIO chip selects. See the SPI bus bindings,
++  Documentation/devicetree/bindings/spi/spi-bus.txt
++
++Child nodes represent devices on the SPI bus
++  See ../spi/spi-bus.txt
++
++Example:
++	ssp1: ssp@d4035000 {
++		compatible = "marvell,mmp2-ssp";
++		reg = <0xd4035000 0x1000>;
++		clocks = <&soc_clocks MMP2_CLK_SSP0>;
++		interrupts = <0>;
++	};
+-- 
+2.17.1
