@@ -1,368 +1,129 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-db5eur01on0061.outbound.protection.outlook.com ([104.47.2.61]:34336
-        "EHLO EUR01-DB5-obe.outbound.protection.outlook.com"
-        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1728635AbeIJSoy (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Mon, 10 Sep 2018 14:44:54 -0400
-From: Nipun Gupta <nipun.gupta@nxp.com>
-To: joro@8bytes.org, robin.murphy@arm.com, will.deacon@arm.com,
-        robh+dt@kernel.org, robh@kernel.org, mark.rutland@arm.com,
-        catalin.marinas@arm.com, gregkh@linuxfoundation.org,
-        laurentiu.tudor@nxp.com, bhelgaas@google.com, hch@lst.de
-Cc: m.szyprowski@samsung.com, shawnguo@kernel.org,
-        frowand.list@gmail.com, iommu@lists.linux-foundation.org,
-        linux-kernel@vger.kernel.org, devicetree@vger.kernel.org,
-        linux-arm-kernel@lists.infradead.org,
-        linuxppc-dev@lists.ozlabs.org, linux-pci@vger.kernel.org,
-        bharat.bhushan@nxp.com, stuyoder@gmail.com, leoyang.li@nxp.com,
-        Nipun Gupta <nipun.gupta@nxp.com>
-Subject: [PATCH 2/7 v7] iommu/of: make of_pci_map_rid() available for other devices too
-Date: Mon, 10 Sep 2018 19:19:16 +0530
-Message-Id: <1536587361-11047-3-git-send-email-nipun.gupta@nxp.com>
-In-Reply-To: <1536587361-11047-1-git-send-email-nipun.gupta@nxp.com>
-References: <1536587361-11047-1-git-send-email-nipun.gupta@nxp.com>
+Received: from mx2.mailbox.org ([80.241.60.215]:55484 "EHLO mx2.mailbox.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1726906AbeIKAxR (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Mon, 10 Sep 2018 20:53:17 -0400
+Subject: Re: [PATCH] PCI: Reprogram bridge prefetch registers on resume
+To: Daniel Drake <drake@endlessm.com>, bhelgaas@google.com
+Cc: linux-pci@vger.kernel.org, linux@endlessm.com,
+        nouveau@lists.freedesktop.org, linux-pm@vger.kernel.org,
+        peter@lekensteyn.nl, kherbst@redhat.com,
+        andriy.shevchenko@linux.intel.com, rafael.j.wysocki@intel.com,
+        keith.busch@intel.com, mika.westerberg@linux.intel.com,
+        jonathan.derrick@intel.com, davem@davemloft.net,
+        hkallweit1@gmail.com, netdev@vger.kernel.org, nic_swsd@realtek.com
+References: <20180907053614.6540-1-drake@endlessm.com>
+From: Thomas Martitz <kugel@rockbox.org>
+Message-ID: <46fe10f6-e778-1808-2a58-663901ed7748@rockbox.org>
+Date: Mon, 10 Sep 2018 21:57:11 +0200
 MIME-Version: 1.0
-Content-Type: text/plain
+In-Reply-To: <20180907053614.6540-1-drake@endlessm.com>
+Content-Type: text/plain; charset=utf-8; format=flowed
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-iommu-map property is also used by devices with fsl-mc. This
-patch moves the of_pci_map_rid to generic location, so that it
-can be used by other busses too.
+Hello Daniel,
 
-'of_pci_map_rid' is renamed here to 'of_map_rid' and there is no
-functional change done in the API.
+Am 07.09.18 um 07:36 schrieb Daniel Drake:
+> On 38+ Intel-based Asus products, the nvidia GPU becomes unusable
+> after S3 suspend/resume. The affected products include multiple
+> generations of nvidia GPUs and Intel SoCs. After resume, nouveau logs
+> many errors such as:
+> 
+>      fifo: fault 00 [READ] at 0000005555555000 engine 00 [GR] client 04 [HUB/FE] reason 4a [] on channel -1 [007fa91000 unknown]
+>      DRM: failed to idle channel 0 [DRM]
+> 
+> Similarly, the nvidia proprietary driver also fails after resume
+> (black screen, 100% CPU usage in Xorg process). We shipped a sample
+> to Nvidia for diagnosis, and their response indicated that it's a
+> problem with the parent PCI bridge (on the Intel SoC), not the GPU.
+> 
+> Runtime suspend/resume works fine, only S3 suspend is affected.
+> 
+> We found a workaround: on resume, rewrite the Intel PCI bridge
+> 'Prefetchable Base Upper 32 Bits' register (PCI_PREF_BASE_UPPER32). In
+> the cases that I checked, this register has value 0 and we just have to
+> rewrite that value.
+> 
+> It's very strange that rewriting the exact same register value
+> makes a difference, but it definitely makes the issue go away.
+> It's not just acting as some kind of memory barrier, because rewriting
+> other bridge registers does not work around the issue. There's something
+> magic in this particular register. We have confirmed this on all
+> the affected models we have in-hands (X542UQ, UX533FD, X530UN, V272UN).
+> 
+> Additionally, this workaround solves an issue where r8169 MSI-X
+> interrupts were broken after S3 suspend/resume on Asus X441UAR. This
+> issue was recently worked around in commit 7bb05b85bc2d ("r8169:
+> don't use MSI-X on RTL8106e"). It also fixes the same issue on
+> RTL6186evl/8111evl on an Aimfor-tech laptop that we had not yet
+> patched. I suspect it will also fix the issue that was worked around in
+> commit 7c53a722459c ("r8169: don't use MSI-X on RTL8168g").
+> 
+> Thomas Martitz reports that this workaround also solves an issue where
+> the AMD Radeon Polaris 10 GPU on the HP Zbook 14u G5 is unresponsive
+> after S3 suspend/resume.
 
-Signed-off-by: Nipun Gupta <nipun.gupta@nxp.com>
-Reviewed-by: Rob Herring <robh@kernel.org>
-Reviewed-by: Robin Murphy <robin.murphy@arm.com>
-Acked-by: Bjorn Helgaas <bhelgaas@google.com>
----
- drivers/iommu/of_iommu.c |   5 +--
- drivers/of/base.c        | 102 +++++++++++++++++++++++++++++++++++++++++++++++
- drivers/of/irq.c         |   5 +--
- drivers/pci/of.c         | 101 ----------------------------------------------
- include/linux/of.h       |  11 +++++
- include/linux/of_pci.h   |  10 -----
- 6 files changed, 117 insertions(+), 117 deletions(-)
 
-diff --git a/drivers/iommu/of_iommu.c b/drivers/iommu/of_iommu.c
-index 5c36a8b..811e160 100644
---- a/drivers/iommu/of_iommu.c
-+++ b/drivers/iommu/of_iommu.c
-@@ -149,9 +149,8 @@ static int of_pci_iommu_init(struct pci_dev *pdev, u16 alias, void *data)
- 	struct of_phandle_args iommu_spec = { .args_count = 1 };
- 	int err;
- 
--	err = of_pci_map_rid(info->np, alias, "iommu-map",
--			     "iommu-map-mask", &iommu_spec.np,
--			     iommu_spec.args);
-+	err = of_map_rid(info->np, alias, "iommu-map", "iommu-map-mask",
-+			 &iommu_spec.np, iommu_spec.args);
- 	if (err)
- 		return err == -ENODEV ? NO_IOMMU : err;
- 
-diff --git a/drivers/of/base.c b/drivers/of/base.c
-index 848f549..c7aac81 100644
---- a/drivers/of/base.c
-+++ b/drivers/of/base.c
-@@ -1995,3 +1995,105 @@ int of_find_last_cache_level(unsigned int cpu)
- 
- 	return cache_level;
- }
-+
-+/**
-+ * of_map_rid - Translate a requester ID through a downstream mapping.
-+ * @np: root complex device node.
-+ * @rid: device requester ID to map.
-+ * @map_name: property name of the map to use.
-+ * @map_mask_name: optional property name of the mask to use.
-+ * @target: optional pointer to a target device node.
-+ * @id_out: optional pointer to receive the translated ID.
-+ *
-+ * Given a device requester ID, look up the appropriate implementation-defined
-+ * platform ID and/or the target device which receives transactions on that
-+ * ID, as per the "iommu-map" and "msi-map" bindings. Either of @target or
-+ * @id_out may be NULL if only the other is required. If @target points to
-+ * a non-NULL device node pointer, only entries targeting that node will be
-+ * matched; if it points to a NULL value, it will receive the device node of
-+ * the first matching target phandle, with a reference held.
-+ *
-+ * Return: 0 on success or a standard error code on failure.
-+ */
-+int of_map_rid(struct device_node *np, u32 rid,
-+	       const char *map_name, const char *map_mask_name,
-+	       struct device_node **target, u32 *id_out)
-+{
-+	u32 map_mask, masked_rid;
-+	int map_len;
-+	const __be32 *map = NULL;
-+
-+	if (!np || !map_name || (!target && !id_out))
-+		return -EINVAL;
-+
-+	map = of_get_property(np, map_name, &map_len);
-+	if (!map) {
-+		if (target)
-+			return -ENODEV;
-+		/* Otherwise, no map implies no translation */
-+		*id_out = rid;
-+		return 0;
-+	}
-+
-+	if (!map_len || map_len % (4 * sizeof(*map))) {
-+		pr_err("%pOF: Error: Bad %s length: %d\n", np,
-+			map_name, map_len);
-+		return -EINVAL;
-+	}
-+
-+	/* The default is to select all bits. */
-+	map_mask = 0xffffffff;
-+
-+	/*
-+	 * Can be overridden by "{iommu,msi}-map-mask" property.
-+	 * If of_property_read_u32() fails, the default is used.
-+	 */
-+	if (map_mask_name)
-+		of_property_read_u32(np, map_mask_name, &map_mask);
-+
-+	masked_rid = map_mask & rid;
-+	for ( ; map_len > 0; map_len -= 4 * sizeof(*map), map += 4) {
-+		struct device_node *phandle_node;
-+		u32 rid_base = be32_to_cpup(map + 0);
-+		u32 phandle = be32_to_cpup(map + 1);
-+		u32 out_base = be32_to_cpup(map + 2);
-+		u32 rid_len = be32_to_cpup(map + 3);
-+
-+		if (rid_base & ~map_mask) {
-+			pr_err("%pOF: Invalid %s translation - %s-mask (0x%x) ignores rid-base (0x%x)\n",
-+				np, map_name, map_name,
-+				map_mask, rid_base);
-+			return -EFAULT;
-+		}
-+
-+		if (masked_rid < rid_base || masked_rid >= rid_base + rid_len)
-+			continue;
-+
-+		phandle_node = of_find_node_by_phandle(phandle);
-+		if (!phandle_node)
-+			return -ENODEV;
-+
-+		if (target) {
-+			if (*target)
-+				of_node_put(phandle_node);
-+			else
-+				*target = phandle_node;
-+
-+			if (*target != phandle_node)
-+				continue;
-+		}
-+
-+		if (id_out)
-+			*id_out = masked_rid - rid_base + out_base;
-+
-+		pr_debug("%pOF: %s, using mask %08x, rid-base: %08x, out-base: %08x, length: %08x, rid: %08x -> %08x\n",
-+			np, map_name, map_mask, rid_base, out_base,
-+			rid_len, rid, masked_rid - rid_base + out_base);
-+		return 0;
-+	}
-+
-+	pr_err("%pOF: Invalid %s translation - no match for rid 0x%x on %pOF\n",
-+		np, map_name, rid, target && *target ? *target : NULL);
-+	return -EFAULT;
-+}
-+EXPORT_SYMBOL_GPL(of_map_rid);
-diff --git a/drivers/of/irq.c b/drivers/of/irq.c
-index 02ad93a..e1f6f39 100644
---- a/drivers/of/irq.c
-+++ b/drivers/of/irq.c
-@@ -22,7 +22,6 @@
- #include <linux/module.h>
- #include <linux/of.h>
- #include <linux/of_irq.h>
--#include <linux/of_pci.h>
- #include <linux/string.h>
- #include <linux/slab.h>
- 
-@@ -588,8 +587,8 @@ static u32 __of_msi_map_rid(struct device *dev, struct device_node **np,
- 	 * "msi-map" property.
- 	 */
- 	for (parent_dev = dev; parent_dev; parent_dev = parent_dev->parent)
--		if (!of_pci_map_rid(parent_dev->of_node, rid_in, "msi-map",
--				    "msi-map-mask", np, &rid_out))
-+		if (!of_map_rid(parent_dev->of_node, rid_in, "msi-map",
-+				"msi-map-mask", np, &rid_out))
- 			break;
- 	return rid_out;
- }
-diff --git a/drivers/pci/of.c b/drivers/pci/of.c
-index d088c91..91600e0 100644
---- a/drivers/pci/of.c
-+++ b/drivers/pci/of.c
-@@ -357,107 +357,6 @@ int devm_of_pci_get_host_bridge_resources(struct device *dev,
- EXPORT_SYMBOL_GPL(devm_of_pci_get_host_bridge_resources);
- #endif /* CONFIG_OF_ADDRESS */
- 
--/**
-- * of_pci_map_rid - Translate a requester ID through a downstream mapping.
-- * @np: root complex device node.
-- * @rid: PCI requester ID to map.
-- * @map_name: property name of the map to use.
-- * @map_mask_name: optional property name of the mask to use.
-- * @target: optional pointer to a target device node.
-- * @id_out: optional pointer to receive the translated ID.
-- *
-- * Given a PCI requester ID, look up the appropriate implementation-defined
-- * platform ID and/or the target device which receives transactions on that
-- * ID, as per the "iommu-map" and "msi-map" bindings. Either of @target or
-- * @id_out may be NULL if only the other is required. If @target points to
-- * a non-NULL device node pointer, only entries targeting that node will be
-- * matched; if it points to a NULL value, it will receive the device node of
-- * the first matching target phandle, with a reference held.
-- *
-- * Return: 0 on success or a standard error code on failure.
-- */
--int of_pci_map_rid(struct device_node *np, u32 rid,
--		   const char *map_name, const char *map_mask_name,
--		   struct device_node **target, u32 *id_out)
--{
--	u32 map_mask, masked_rid;
--	int map_len;
--	const __be32 *map = NULL;
--
--	if (!np || !map_name || (!target && !id_out))
--		return -EINVAL;
--
--	map = of_get_property(np, map_name, &map_len);
--	if (!map) {
--		if (target)
--			return -ENODEV;
--		/* Otherwise, no map implies no translation */
--		*id_out = rid;
--		return 0;
--	}
--
--	if (!map_len || map_len % (4 * sizeof(*map))) {
--		pr_err("%pOF: Error: Bad %s length: %d\n", np,
--			map_name, map_len);
--		return -EINVAL;
--	}
--
--	/* The default is to select all bits. */
--	map_mask = 0xffffffff;
--
--	/*
--	 * Can be overridden by "{iommu,msi}-map-mask" property.
--	 * If of_property_read_u32() fails, the default is used.
--	 */
--	if (map_mask_name)
--		of_property_read_u32(np, map_mask_name, &map_mask);
--
--	masked_rid = map_mask & rid;
--	for ( ; map_len > 0; map_len -= 4 * sizeof(*map), map += 4) {
--		struct device_node *phandle_node;
--		u32 rid_base = be32_to_cpup(map + 0);
--		u32 phandle = be32_to_cpup(map + 1);
--		u32 out_base = be32_to_cpup(map + 2);
--		u32 rid_len = be32_to_cpup(map + 3);
--
--		if (rid_base & ~map_mask) {
--			pr_err("%pOF: Invalid %s translation - %s-mask (0x%x) ignores rid-base (0x%x)\n",
--				np, map_name, map_name,
--				map_mask, rid_base);
--			return -EFAULT;
--		}
--
--		if (masked_rid < rid_base || masked_rid >= rid_base + rid_len)
--			continue;
--
--		phandle_node = of_find_node_by_phandle(phandle);
--		if (!phandle_node)
--			return -ENODEV;
--
--		if (target) {
--			if (*target)
--				of_node_put(phandle_node);
--			else
--				*target = phandle_node;
--
--			if (*target != phandle_node)
--				continue;
--		}
--
--		if (id_out)
--			*id_out = masked_rid - rid_base + out_base;
--
--		pr_debug("%pOF: %s, using mask %08x, rid-base: %08x, out-base: %08x, length: %08x, rid: %08x -> %08x\n",
--			np, map_name, map_mask, rid_base, out_base,
--			rid_len, rid, masked_rid - rid_base + out_base);
--		return 0;
--	}
--
--	pr_err("%pOF: Invalid %s translation - no match for rid 0x%x on %pOF\n",
--		np, map_name, rid, target && *target ? *target : NULL);
--	return -EFAULT;
--}
--
- #if IS_ENABLED(CONFIG_OF_IRQ)
- /**
-  * of_irq_parse_pci - Resolve the interrupt for a PCI device
-diff --git a/include/linux/of.h b/include/linux/of.h
-index 4d25e4f..f4251c3 100644
---- a/include/linux/of.h
-+++ b/include/linux/of.h
-@@ -545,6 +545,10 @@ const __be32 *of_prop_next_u32(struct property *prop, const __be32 *cur,
- 
- extern int of_cpu_node_to_id(struct device_node *np);
- 
-+int of_map_rid(struct device_node *np, u32 rid,
-+	       const char *map_name, const char *map_mask_name,
-+	       struct device_node **target, u32 *id_out);
-+
- #else /* CONFIG_OF */
- 
- static inline void of_core_init(void)
-@@ -931,6 +935,13 @@ static inline int of_cpu_node_to_id(struct device_node *np)
- 	return -ENODEV;
- }
- 
-+static inline int of_map_rid(struct device_node *np, u32 rid,
-+			     const char *map_name, const char *map_mask_name,
-+			     struct device_node **target, u32 *id_out)
-+{
-+	return -EINVAL;
-+}
-+
- #define of_match_ptr(_ptr)	NULL
- #define of_match_node(_matches, _node)	NULL
- #endif /* CONFIG_OF */
-diff --git a/include/linux/of_pci.h b/include/linux/of_pci.h
-index e83d87f..21a89c4 100644
---- a/include/linux/of_pci.h
-+++ b/include/linux/of_pci.h
-@@ -14,9 +14,6 @@ struct device_node *of_pci_find_child_device(struct device_node *parent,
- 					     unsigned int devfn);
- int of_pci_get_devfn(struct device_node *np);
- void of_pci_check_probe_only(void);
--int of_pci_map_rid(struct device_node *np, u32 rid,
--		   const char *map_name, const char *map_mask_name,
--		   struct device_node **target, u32 *id_out);
- #else
- static inline struct device_node *of_pci_find_child_device(struct device_node *parent,
- 					     unsigned int devfn)
-@@ -29,13 +26,6 @@ static inline int of_pci_get_devfn(struct device_node *np)
- 	return -EINVAL;
- }
- 
--static inline int of_pci_map_rid(struct device_node *np, u32 rid,
--			const char *map_name, const char *map_mask_name,
--			struct device_node **target, u32 *id_out)
--{
--	return -EINVAL;
--}
--
- static inline void of_pci_check_probe_only(void) { }
- #endif
- 
--- 
-1.9.1
+I can confirm that this exact patch also helps on my HP Zbook. Thanks 
+for your work on this, resume has been a real pain until now.
+
+
+
+> 
+>   drivers/pci/pci-driver.c | 14 ++++++++++++++
+>   drivers/pci/setup-bus.c  |  2 +-
+>   include/linux/pci.h      |  1 +
+>   3 files changed, 16 insertions(+), 1 deletion(-)
+> 
+> diff --git a/drivers/pci/pci-driver.c b/drivers/pci/pci-driver.c
+> index bef17c3fca67..034f816570ad 100644
+> --- a/drivers/pci/pci-driver.c
+> +++ b/drivers/pci/pci-driver.c
+> @@ -524,6 +524,20 @@ static void pci_pm_default_resume_early(struct pci_dev *pci_dev)
+>   	pci_power_up(pci_dev);
+>   	pci_restore_state(pci_dev);
+>   	pci_pme_restore(pci_dev);
+> +
+> +	/*
+> +	 * Redo the PCI bridge prefetch register setup.
+> +	 *
+> +	 * This works around an Intel PCI bridge issue seen on Asus and HP
+> +	 * laptops, where the GPU is not usable after S3 resume.
+> +	 * Even though PCI bridge register contents appear to be intact
+> +	 * at resume time, rewriting the value of PREF_BASE_UPPER32 is
+> +	 * required to make the GPU work.
+> +	 * Windows 10 also reprograms these registers during S3 resume.
+> +	 */
+> +	if (pci_dev->class == PCI_CLASS_BRIDGE_PCI << 8)
+> +		pci_setup_bridge_mmio_pref(pci_dev);
+> +
+>   	pci_fixup_device(pci_fixup_resume_early, pci_dev);
+>   }
+>   
+> diff --git a/drivers/pci/setup-bus.c b/drivers/pci/setup-bus.c
+> index 79b1824e83b4..cb88288d2a69 100644
+> --- a/drivers/pci/setup-bus.c
+> +++ b/drivers/pci/setup-bus.c
+> @@ -630,7 +630,7 @@ static void pci_setup_bridge_mmio(struct pci_dev *bridge)
+>   	pci_write_config_dword(bridge, PCI_MEMORY_BASE, l);
+>   }
+>   
+> -static void pci_setup_bridge_mmio_pref(struct pci_dev *bridge)
+> +void pci_setup_bridge_mmio_pref(struct pci_dev *bridge)
+>   {
+>   	struct resource *res;
+>   	struct pci_bus_region region;
+> diff --git a/include/linux/pci.h b/include/linux/pci.h
+> index e72ca8dd6241..b15828fc26a4 100644
+> --- a/include/linux/pci.h
+> +++ b/include/linux/pci.h
+> @@ -934,6 +934,7 @@ struct pci_dev *pci_scan_single_device(struct pci_bus *bus, int devfn);
+>   void pci_device_add(struct pci_dev *dev, struct pci_bus *bus);
+>   unsigned int pci_scan_child_bus(struct pci_bus *bus);
+>   void pci_bus_add_device(struct pci_dev *dev);
+> +void pci_setup_bridge_mmio_pref(struct pci_dev *bridge);
+>   void pci_read_bridge_bases(struct pci_bus *child);
+>   struct resource *pci_find_parent_resource(const struct pci_dev *dev,
+>   					  struct resource *res);
+> 
