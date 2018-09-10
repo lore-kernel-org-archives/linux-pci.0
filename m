@@ -1,114 +1,247 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from avon.wwwdotorg.org ([104.237.132.123]:57150 "EHLO
-        avon.wwwdotorg.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1727329AbeIRDLW (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Mon, 17 Sep 2018 23:11:22 -0400
-From: Stephen Warren <swarren@wwwdotorg.org>
-Subject: Explicit IOVA management from a PCIe endpoint driver
-To: Christoph Hellwig <hch@lst.de>,
-        Marek Szyprowski <m.szyprowski@samsung.com>,
-        Robin Murphy <robin.murphy@arm.com>,
-        Joerg Roedel <joro@8bytes.org>
-Cc: Kishon Vijay Abraham I <kishon@ti.com>,
-        Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
-        linux-pci@vger.kernel.org, Bjorn Helgaas <bhelgaas@google.com>,
-        Vidya Sagar <vidyas@nvidia.com>,
-        "iommu@lists.linux-foundation.org" <iommu@lists.linux-foundation.org>,
-        Jingoo Han <jingoohan1@gmail.com>,
-        Joao Pinto <Joao.Pinto@synopsys.com>
-Message-ID: <3e9950c5-4986-6b0d-74c8-97014530c132@wwwdotorg.org>
-Date: Mon, 17 Sep 2018 15:36:46 -0600
+Received: from mailgw01.mediatek.com ([210.61.82.183]:47199 "EHLO
+        mailgw01.mediatek.com" rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org
+        with ESMTP id S1727261AbeIJOgH (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Mon, 10 Sep 2018 10:36:07 -0400
+Message-ID: <1536572566.31406.64.camel@mhfsdcap03>
+Subject: Re: [PATCH v3 3/4] PCI: mediatek: Add system pm support for MT2712
+ and MT7622
+From: Honghui Zhang <honghui.zhang@mediatek.com>
+To: Ulf Hansson <ulf.hansson@linaro.org>
+CC: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
+        <linux-mediatek@lists.infradead.org>,
+        Linux PCI <linux-pci@vger.kernel.org>,
+        Ryder Lee <ryder.lee@mediatek.com>
+Date: Mon, 10 Sep 2018 17:42:46 +0800
+In-Reply-To: <CAPDyKFpFpR_NhtNW6rChMFw4KLweut8zC3x2V1ZBbdrV05iuTQ@mail.gmail.com>
+References: <1530518264-6125-1-git-send-email-honghui.zhang@mediatek.com>
+         <1530518264-6125-4-git-send-email-honghui.zhang@mediatek.com>
+         <CAPDyKFpFpR_NhtNW6rChMFw4KLweut8zC3x2V1ZBbdrV05iuTQ@mail.gmail.com>
+Content-Type: text/plain; charset="UTF-8"
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8; format=flowed
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Joerg, Christoph, Marek, Robin,
+On Fri, 2018-09-07 at 14:33 +0200, Ulf Hansson wrote:
+> -trimmed cc-list
+> 
+> On 2 July 2018 at 09:57,  <honghui.zhang@mediatek.com> wrote:
+> > From: Honghui Zhang <honghui.zhang@mediatek.com>
+> >
+> > The MTCMOS of PCIe Host for MT2712 and MT7622 will be off when system
+> > suspend, and all the internal control register will be reset after system
+> > resume. The PCIe link should be re-established and the related control
+> > register values should be re-set after system resume.
+> 
+> Sounds very familiar as what is implemented in
+> drivers/mmc/host/sdhci-xenon.c. Please have a look, possibly you can
+> get inspired to use the similar pattern.
+> 
+> A few comments below. However, please note, I am not an expert in PCIe
+> so I may overlook some obvious things. I am relying on Lorenzo or some
+> other PCIe expert, to fill in.
+> 
+Hi, Ulf, thanks very much for your comments, replied below.
 
-I believe that the driver for our PCIe endpoint controller hardware will 
-need to explicitly manage its IOVA space more than current APIs allow. 
-I'd like to discuss how to make that possible.
+> >
+> > Signed-off-by: Honghui Zhang <honghui.zhang@mediatek.com>
+> > Acked-by: Ryder Lee <ryder.lee@mediatek.com>
+> > ---
+> >  drivers/pci/controller/pcie-mediatek.c | 67 ++++++++++++++++++++++++++++++++++
+> >  1 file changed, 67 insertions(+)
+> >
+> > diff --git a/drivers/pci/controller/pcie-mediatek.c b/drivers/pci/controller/pcie-mediatek.c
+> > index 86918d4..175d7b6 100644
+> > --- a/drivers/pci/controller/pcie-mediatek.c
+> > +++ b/drivers/pci/controller/pcie-mediatek.c
+> > @@ -134,12 +134,14 @@ struct mtk_pcie_port;
+> >  /**
+> >   * struct mtk_pcie_soc - differentiate between host generations
+> >   * @need_fix_class_id: whether this host's class ID needed to be fixed or not
+> > + * @pm_support: whether the host's MTCMOS will be off when suspend
+> >   * @ops: pointer to configuration access functions
+> >   * @startup: pointer to controller setting functions
+> >   * @setup_irq: pointer to initialize IRQ functions
+> >   */
+> >  struct mtk_pcie_soc {
+> >         bool need_fix_class_id;
+> > +       bool pm_support;
+> >         struct pci_ops *ops;
+> >         int (*startup)(struct mtk_pcie_port *port);
+> >         int (*setup_irq)(struct mtk_pcie_port *port, struct device_node *node);
+> > @@ -1197,12 +1199,75 @@ static int mtk_pcie_probe(struct platform_device *pdev)
+> >         return err;
+> >  }
+> >
+> > +static int __maybe_unused mtk_pcie_suspend_noirq(struct device *dev)
+> 
+> I am not sure I understand why you need to suspend the device in the
+> "noirq" phase. Isn't it fine to do that in the regular suspend phase?
 
-First some background on our hardware:
+PCIe device's configuration space values should be saved/restored in
+system suspend/resume flow, and PCIe framework will take care of that in
+the suspend_noirq phase. Suspend device in the "noirq" phase will spare
+device driver from that.
 
-NVIDIA's Xavier SoC contains a Synopsis Designware PCIe controller. This 
-can operate in either root port or endpoint mode. I'm particularly 
-interested in endpoint mode.
+> 
+> > +{
+> > +       struct mtk_pcie *pcie = dev_get_drvdata(dev);
+> > +       const struct mtk_pcie_soc *soc = pcie->soc;
+> > +       struct mtk_pcie_port *port;
+> > +
+> > +       if (!soc->pm_support)
+> > +               return 0;
+> > +
+> > +       if (list_empty(&pcie->ports))
+> > +               return 0;
+> > +
+> > +       list_for_each_entry(port, &pcie->ports, list) {
+> > +               clk_disable_unprepare(port->pipe_ck);
+> > +               clk_disable_unprepare(port->obff_ck);
+> > +               clk_disable_unprepare(port->axi_ck);
+> > +               clk_disable_unprepare(port->aux_ck);
+> > +               clk_disable_unprepare(port->ahb_ck);
+> > +               clk_disable_unprepare(port->sys_ck);
+> > +               phy_power_off(port->phy);
+> > +               phy_exit(port->phy);
+> > +       }
+> > +
+> > +       mtk_pcie_subsys_powerdown(pcie);
+> 
+> Why not gate clocks, unconditionally not depending on if pm_support is
+> set or not, during system suspend?
+> 
+> I understand that you for some SoCs needs also to restore registers
+> during system resume, but that's a different thing, isn't it?
+> 
 
-Our particular instantiation of this controller exposes a single 
-function with a single software-controlled PCIe BAR to the PCIe bus 
-(there are also BARs for access to DMA controller registers and outbound 
-MSI configuration, which can both be enabled/disabled but not used for 
-any other purpose). When a transaction is received from the PCIe bus, 
-the following happens:
+Well, current host driver support different SoCs like mt7623, mt7622 and
+mt2712. mt7623 need quite special take care of when system suspend. This
+patch just add the suspend/resume support for mt7622&mt2712, while
+mt7623 was excluded. This "pm_support" maybe removed after we have a
+solution for mt7623 SoC of the system suspend.
 
-1) Transaction is matched against the BAR base/size (in PCIe address 
-space) to determine whether it "hits" this BAR or not.
+> > +
+> > +       return 0;
+> > +}
+> > +
+> > +static int __maybe_unused mtk_pcie_resume_noirq(struct device *dev)
+> > +{
+> > +       struct mtk_pcie *pcie = dev_get_drvdata(dev);
+> > +       const struct mtk_pcie_soc *soc = pcie->soc;
+> > +       struct mtk_pcie_port *port, *tmp;
+> > +
+> > +       if (!soc->pm_support)
+> > +               return 0;
+> > +
+> > +       if (list_empty(&pcie->ports))
+> > +               return 0;
+> > +
+> > +       if (dev->pm_domain) {
+> > +               pm_runtime_enable(dev);
+> > +               pm_runtime_get_sync(dev);
+> 
+> I noticed, Lorenzo wanted me to comment on this, so here it goes.
+> 
+> I guess the reason to why you make these pm_runtime_*() calls, is
+> because you want to restore the actions taken during
+> mtk_pcie_suspend_noirq() (which calls mtk_pcie_subsys_powerdown ->
+> pm_runtime_disable|put*())?
 
-2) The transaction's address is processed by the PCIe controller's ATU 
-(Address Translation Unit), which can re-write the address that the 
-transaction accesses.
+Yes, that's what am I want to do.
 
-Our particular instantiation of the hardware only has 2 entries in the 
-ATU mapping table, which gives very little flexibility in setting up a 
-mapping.
+> 
+> If that's the case, I would rather avoid calling pm_runtime_disable()
+> and pm_runtime_put() via mtk_pcie_suspend_noirq(), simply because it
+> isn't needed.
 
-As an FYI, ATU entries can match PCIe transactions either:
-a) Any transaction received on a particular BAR.
-b) Any transaction received within a single contiguous window of PCIe 
-address space. This kind of mapping entry obviously has to be set up 
-after device enumeration is complete so that it can match the correct 
-PCIe address.
+> Of course, another option is to follow the pattern in
+> drivers/mmc/host/sdhci-xenon.c.
+> 
 
-Each ATU entry maps a single contiguous set of PCIe addresses to a 
-single contiguous set of IOVAs which are passed to the IOMMU. 
-Transactions can pass through the ATU without being translated if desired.
+Thanks.
+I take a look at the drivers/mmc/sdhci-xenon.c's implement, it has add
+system suspend callbacks and set the device status to "PRM_SUSPENDED"
+through the pm_runtime_force_suspend() interface.
+I noticed that pm_runtime_put_sync will put the device status to
+"PRM_SUSPENDED" status in some certain condition.
+And I did not found the pci framework setting the status to
+"PRM_SUSPENDED". So I add the pm_runtime_put_sync/disable in
+suspend_noirq phase.
 
-3) The transaction is passed to the IOMMU, which can again re-write the 
-address that the transaction accesses.
+According to my understanding of PM, the system suspend flow does not
+care about the runtime PM status. The runtime pm is responsible for the
+CMOS gate, if the device want to gated it's CMOS, it need to call the
+runtime pm interface obviously.
 
-4) The transaction is passed to the memory controller and reads/writes DRAM.
+But I found that the PCIe framework will still operate with the device
+after device driver suspend_noirq executed like save the configuration
+space values through pci_save_state, So I guess the cmos could not be
+gated at the suspend_noirq phase. I will update the patchset to remove
+the pm runtime operations in the suspend_noirq phase.
 
-In general, we want to be able to expose a large and dynamic set of data 
-buffers to the PCIe bus; certainly /far/ more than two separate buffers 
-(the number of ATU table entries). With current Linux APIs, these 
-buffers will not be located in contiguous or adjacent physical (DRAM) or 
-virtual (IOVA) addresses, nor in any particular window of physical or 
-IOVA addresses. However, the ATU's mapping from PCIe to IOVA can only 
-expose one or two contiguous ranges of IOVA space. These two sets of 
-requirements are at odds!
+> Overall, I am also wondering why only runtime PM is used when there is
+> a PM domain attached to the device? That seems to make the logic in
+> the driver, unnecessary complicated. Why not use runtime
+> unconditionally and thus enable it during ->probe()?
 
-So, I'd like to propose some new APIs that the PCIe endpoint driver can use:
+I'm not sure, I thought that if there's no "power-domains = " property
+in device node, that means the device has no PM domain. Some of the SoCs
+does not have independent CMOS domain. So does that means it will leave
+the dev->pm_domain as NULL or assign it as the genpd->pm_domain?
 
-1) Allocate/reserve an IOVA range of specified size, but don't map 
-anything into the IOVA range.
+I need to do some homework to figure this out and will send a new patch
+to fix this if needed.
 
-2) De-allocate the IOVA range allocated in (1).
-
-3) Map a specific set (scatter-gather list I suppose) of 
-already-allocated/extant physical addresses into part of an IOVA range 
-allocated in (1).
-
-4) Unmap a portion of an IOVA range that was mapped by (3).
-
-One final note:
-
-The memory controller can translate accesses to a small region of DRAM 
-address space into accesses to an interrupt generation module. This 
-allows devices attached to the PCIe bus to generate interrupts to 
-software running on the system with the PCIe endpoint controller. Thus I 
-deliberately described API 3 above as mapping a specific physical 
-address into IOVA space, as opposed to mapping an existing DRAM 
-allocation into IOVA space, in order to allow mapping this interrupt 
-generation address space into IOVA space. If we needed separate APIs to 
-map physical addresses vs. DRAM allocations into IOVA space, that would 
-likely be fine too.
-
-Does this API proposal sound reasonable?
-
-I have heard from some NVIDIA developers that the above APIs rather go 
-against the principle that individual drivers should not be aware of the 
-presence/absence of an IOMMU, and hence direct management of IOVA 
-allocation/layout is deliberately avoided, and hence there hasn't been a 
-need/desire for this kind of API in the past. However, I think our 
-current hardware design and use-case rather requires it. Do you agree?
+> 
+> > +       }
+> > +
+> > +       clk_prepare_enable(pcie->free_ck);
+> > +
+> > +       list_for_each_entry_safe(port, tmp, &pcie->ports, list)
+> > +               mtk_pcie_enable_port(port);
+> > +
+> > +       /* In case of EP was removed while system suspend. */
+> > +       if (list_empty(&pcie->ports))
+> > +               mtk_pcie_subsys_powerdown(pcie);
+> > +
+> > +       return 0;
+> > +}
+> > +
+> > +static const struct dev_pm_ops mtk_pcie_pm_ops = {
+> > +       SET_NOIRQ_SYSTEM_SLEEP_PM_OPS(mtk_pcie_suspend_noirq,
+> > +                                     mtk_pcie_resume_noirq)
+> > +};
+> > +
+> >  static const struct mtk_pcie_soc mtk_pcie_soc_v1 = {
+> >         .ops = &mtk_pcie_ops,
+> >         .startup = mtk_pcie_startup_port,
+> >  };
+> >
+> >  static const struct mtk_pcie_soc mtk_pcie_soc_mt2712 = {
+> > +       .pm_support = true,
+> >         .ops = &mtk_pcie_ops_v2,
+> >         .startup = mtk_pcie_startup_port_v2,
+> >         .setup_irq = mtk_pcie_setup_irq,
+> > @@ -1210,6 +1275,7 @@ static const struct mtk_pcie_soc mtk_pcie_soc_mt2712 = {
+> >
+> >  static const struct mtk_pcie_soc mtk_pcie_soc_mt7622 = {
+> >         .need_fix_class_id = true,
+> > +       .pm_support = true,
+> >         .ops = &mtk_pcie_ops_v2,
+> >         .startup = mtk_pcie_startup_port_v2,
+> >         .setup_irq = mtk_pcie_setup_irq,
+> > @@ -1229,6 +1295,7 @@ static struct platform_driver mtk_pcie_driver = {
+> >                 .name = "mtk-pcie",
+> >                 .of_match_table = mtk_pcie_ids,
+> >                 .suppress_bind_attrs = true,
+> > +               .pm = &mtk_pcie_pm_ops,
+> >         },
+> >  };
+> >  builtin_platform_driver(mtk_pcie_driver);
+> > --
+> > 2.6.4
+> >
+> 
+> Kind regards
+> Uffe
