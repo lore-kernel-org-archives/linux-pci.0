@@ -1,41 +1,97 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mga18.intel.com ([134.134.136.126]:17439 "EHLO mga18.intel.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1728339AbeISXC2 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Wed, 19 Sep 2018 19:02:28 -0400
-Date: Wed, 19 Sep 2018 11:25:27 -0600
-From: Keith Busch <keith.busch@intel.com>
-To: Sinan Kaya <okaya@kernel.org>
-Cc: Linux PCI <linux-pci@vger.kernel.org>,
-        Bjorn Helgaas <bhelgaas@google.com>,
-        Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-        Thomas Tai <thomas.tai@oracle.com>, poza@codeaurora.org,
-        Lukas Wunner <lukas@wunner.de>, Christoph Hellwig <hch@lst.de>,
-        Mika Westerberg <mika.westerberg@linux.intel.com>
-Subject: Re: [PATCH 11/12] PCI/AER: Use managed resource allocations
-Message-ID: <20180919172526.GB28310@localhost.localdomain>
-References: <20180918235848.26694-1-keith.busch@intel.com>
- <20180918235848.26694-12-keith.busch@intel.com>
- <5b3f6bf5-2511-6a71-3410-a4f4ced4fb8c@kernel.org>
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+From: Nipun Gupta <nipun.gupta@nxp.com>
+To: joro@8bytes.org, robin.murphy@arm.com, will.deacon@arm.com,
+ robh+dt@kernel.org, robh@kernel.org, mark.rutland@arm.com,
+ catalin.marinas@arm.com, gregkh@linuxfoundation.org,
+ laurentiu.tudor@nxp.com, bhelgaas@google.com, hch@lst.de
+Subject: [PATCH 0/7 v7] Support for fsl-mc bus and its devices in SMMU
+Date: Mon, 10 Sep 2018 19:19:14 +0530
+Message-Id: <1536587361-11047-1-git-send-email-nipun.gupta@nxp.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <5b3f6bf5-2511-6a71-3410-a4f4ced4fb8c@kernel.org>
-Sender: linux-pci-owner@vger.kernel.org
+List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
+List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
+List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
+List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
+List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
+Cc: devicetree@vger.kernel.org, stuyoder@gmail.com, bharat.bhushan@nxp.com,
+ shawnguo@kernel.org, linuxppc-dev@lists.ozlabs.org,
+ linux-kernel@vger.kernel.org, leoyang.li@nxp.com,
+ iommu@lists.linux-foundation.org, Nipun Gupta <nipun.gupta@nxp.com>,
+ linux-pci@vger.kernel.org, frowand.list@gmail.com,
+ linux-arm-kernel@lists.infradead.org, m.szyprowski@samsung.com
+Content-Type: text/plain; charset="us-ascii"
+Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
+Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wed, Sep 19, 2018 at 12:29:15PM -0400, Sinan Kaya wrote:
-> On 9/18/2018 7:58 PM, Keith Busch wrote:
-> >   	if (status) {
-> >   		dev_printk(KERN_DEBUG, device, "request AER IRQ %d failed\n",
-> >   			   dev->irq);
-> > -		aer_remove(dev);
-> >   		return status;
-> >   	}
-> 
-> Don't we still need to call aer_remove() here?
-> 
-> Old code would call aer_disable_rootport(rpc) via aer_remove() on IRQ allocation
-> failure. We are no longer doing this.
+This patchset defines IOMMU DT binding for fsl-mc bus and adds
+support in SMMU for fsl-mc bus.
 
-We need to call aer_disable_rootport only if aer_enable_rootport was
-called, but that happens *after* irq allocation.
+These patches
+  - Define property 'iommu-map' for fsl-mc bus (patch 1)
+  - Integrates the fsl-mc bus with the SMMU using this
+    IOMMU binding (patch 2,3,4)
+  - Adds the dma configuration support for fsl-mc bus (patch 5, 6)
+  - Updates the fsl-mc device node with iommu/dma related changes (patch 7)
+
+Changes in v2:
+  - use iommu-map property for fsl-mc bus
+  - rebase over patchset https://patchwork.kernel.org/patch/10317337/
+    and make corresponding changes for dma configuration of devices on
+    fsl-mc bus
+
+Changes in v3:
+  - move of_map_rid in drivers/of/address.c
+
+Changes in v4:
+  - move of_map_rid in drivers/of/base.c
+
+Changes in v5:
+  - break patch 5 in two separate patches (now patch 5/7 and patch 6/7)
+  - add changelog text in patch 3/7 and patch 5/7
+  - typo fix
+
+Changes in v6:
+  - Updated fsl_mc_device_group() API to be more rational
+  - Added dma-coherent property in the LS2 smmu device node
+  - Minor fixes in the device-tree documentation
+
+Changes in v7:
+  - Rebased over linux 4.19
+
+Nipun Gupta (7):
+  Documentation: fsl-mc: add iommu-map device-tree binding for fsl-mc
+    bus
+  iommu/of: make of_pci_map_rid() available for other devices too
+  iommu/of: support iommu configuration for fsl-mc devices
+  iommu/arm-smmu: Add support for the fsl-mc bus
+  bus: fsl-mc: support dma configure for devices on fsl-mc bus
+  bus: fsl-mc: set coherent dma mask for devices on fsl-mc bus
+  arm64: dts: ls208xa: comply with the iommu map binding for fsl_mc
+
+ .../devicetree/bindings/misc/fsl,qoriq-mc.txt      |  39 ++++++++
+ arch/arm64/boot/dts/freescale/fsl-ls208xa.dtsi     |   7 +-
+ drivers/bus/fsl-mc/fsl-mc-bus.c                    |  16 +++-
+ drivers/iommu/arm-smmu.c                           |   7 ++
+ drivers/iommu/iommu.c                              |  13 +++
+ drivers/iommu/of_iommu.c                           |  25 ++++-
+ drivers/of/base.c                                  | 102 +++++++++++++++++++++
+ drivers/of/irq.c                                   |   5 +-
+ drivers/pci/of.c                                   | 101 --------------------
+ include/linux/fsl/mc.h                             |   8 ++
+ include/linux/iommu.h                              |   2 +
+ include/linux/of.h                                 |  11 +++
+ include/linux/of_pci.h                             |  10 --
+ 13 files changed, 224 insertions(+), 122 deletions(-)
+
+-- 
+1.9.1
+
+
+_______________________________________________
+linux-arm-kernel mailing list
+linux-arm-kernel@lists.infradead.org
+http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
