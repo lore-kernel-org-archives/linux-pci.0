@@ -1,52 +1,76 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-ot1-f66.google.com ([209.85.210.66]:43408 "EHLO
-        mail-ot1-f66.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1728266AbeISDtv (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Tue, 18 Sep 2018 23:49:51 -0400
-From: Alexandru Gagniuc <mr.nuke.me@gmail.com>
-To: linux-pci@vger.kernel.org, bhelgaas@google.com
-Cc: keith.busch@intel.com, alex_gagniuc@dellteam.com,
-        austin_bolen@dell.com, shyam_iyer@dell.com,
-        Alexandru Gagniuc <mr.nuke.me@gmail.com>,
-        linux-kernel@vger.kernel.org
-Subject: [PATCH v2] PCI/MSI: Don't touch MSI bits when the PCI device is disconnected
-Date: Tue, 18 Sep 2018 17:15:00 -0500
-Message-Id: <20180918221501.13112-1-mr.nuke.me@gmail.com>
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+From: Nipun Gupta <nipun.gupta@nxp.com>
+To: joro@8bytes.org, robin.murphy@arm.com, will.deacon@arm.com,
+        robh+dt@kernel.org, robh@kernel.org, mark.rutland@arm.com,
+        catalin.marinas@arm.com, gregkh@linuxfoundation.org,
+        laurentiu.tudor@nxp.com, bhelgaas@google.com, hch@lst.de
+Cc: m.szyprowski@samsung.com, shawnguo@kernel.org,
+        frowand.list@gmail.com, iommu@lists.linux-foundation.org,
+        linux-kernel@vger.kernel.org, devicetree@vger.kernel.org,
+        linux-arm-kernel@lists.infradead.org,
+        linuxppc-dev@lists.ozlabs.org, linux-pci@vger.kernel.org,
+        bharat.bhushan@nxp.com, stuyoder@gmail.com, leoyang.li@nxp.com,
+        Nipun Gupta <nipun.gupta@nxp.com>
+Subject: [PATCH 5/7 v7] bus/fsl-mc: support dma configure for devices on fsl-mc bus
+Date: Mon, 10 Sep 2018 19:19:19 +0530
+Message-Id: <1536587361-11047-6-git-send-email-nipun.gupta@nxp.com>
+In-Reply-To: <1536587361-11047-1-git-send-email-nipun.gupta@nxp.com>
+References: <1536587361-11047-1-git-send-email-nipun.gupta@nxp.com>
+MIME-Version: 1.0
+Content-Type: text/plain
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-When a PCI device is gone, we don't want to send IO to it if we can
-avoid it. We expose functionality via the irq_chip structure. As
-users of that structure may not know about the underlying PCI device,
-it's our responsibility to guard against removed devices.
+This patch adds support of dma configuration for devices on fsl-mc
+bus using 'dma_configure' callback for busses. Also, directly calling
+arch_setup_dma_ops is removed from the fsl-mc bus.
 
-.irq_write_msi_msg() is already guarded inside __pci_write_msi_msg().
-.irq_mask/unmask() are not. Guard them for completeness.
-
-For example, surprise removal of a PCIe device triggers teardown. This
-touches the irq_chips ops some point to disable the interrupts. I/O
-generated here can crash the system on firmware-first machines.
-Not triggering the IO in the first place greatly reduces the
-possibility of the problem occurring.
-
-Signed-off-by: Alexandru Gagniuc <mr.nuke.me@gmail.com>
+Signed-off-by: Nipun Gupta <nipun.gupta@nxp.com>
+Reviewed-by: Laurentiu Tudor <laurentiu.tudor@nxp.com>
+Reviewed-by: Robin Murphy <robin.murphy@arm.com>
 ---
- drivers/pci/msi.c | 3 +++
- 1 file changed, 3 insertions(+)
+ drivers/bus/fsl-mc/fsl-mc-bus.c | 15 +++++++++++----
+ 1 file changed, 11 insertions(+), 4 deletions(-)
 
-diff --git a/drivers/pci/msi.c b/drivers/pci/msi.c
-index f2ef896464b3..f31058fd2260 100644
---- a/drivers/pci/msi.c
-+++ b/drivers/pci/msi.c
-@@ -227,6 +227,9 @@ static void msi_set_mask_bit(struct irq_data *data, u32 flag)
- {
- 	struct msi_desc *desc = irq_data_get_msi_desc(data);
+diff --git a/drivers/bus/fsl-mc/fsl-mc-bus.c b/drivers/bus/fsl-mc/fsl-mc-bus.c
+index 5d8266c..fa43c7d 100644
+--- a/drivers/bus/fsl-mc/fsl-mc-bus.c
++++ b/drivers/bus/fsl-mc/fsl-mc-bus.c
+@@ -127,6 +127,16 @@ static int fsl_mc_bus_uevent(struct device *dev, struct kobj_uevent_env *env)
+ 	return 0;
+ }
  
-+	if (pci_dev_is_disconnected(msi_desc_to_pci_dev(desc)))
-+		return;
++static int fsl_mc_dma_configure(struct device *dev)
++{
++	struct device *dma_dev = dev;
 +
- 	if (desc->msi_attrib.is_msix) {
- 		msix_mask_irq(desc, flag);
- 		readl(desc->mask_base);		/* Flush write to device */
++	while (dev_is_fsl_mc(dma_dev))
++		dma_dev = dma_dev->parent;
++
++	return of_dma_configure(dev, dma_dev->of_node, 0);
++}
++
+ static ssize_t modalias_show(struct device *dev, struct device_attribute *attr,
+ 			     char *buf)
+ {
+@@ -148,6 +158,7 @@ struct bus_type fsl_mc_bus_type = {
+ 	.name = "fsl-mc",
+ 	.match = fsl_mc_bus_match,
+ 	.uevent = fsl_mc_bus_uevent,
++	.dma_configure  = fsl_mc_dma_configure,
+ 	.dev_groups = fsl_mc_dev_groups,
+ };
+ EXPORT_SYMBOL_GPL(fsl_mc_bus_type);
+@@ -633,10 +644,6 @@ int fsl_mc_device_add(struct fsl_mc_obj_desc *obj_desc,
+ 			goto error_cleanup_dev;
+ 	}
+ 
+-	/* Objects are coherent, unless 'no shareability' flag set. */
+-	if (!(obj_desc->flags & FSL_MC_OBJ_FLAG_NO_MEM_SHAREABILITY))
+-		arch_setup_dma_ops(&mc_dev->dev, 0, 0, NULL, true);
+-
+ 	/*
+ 	 * The device-specific probe callback will get invoked by device_add()
+ 	 */
 -- 
-2.17.1
+1.9.1
