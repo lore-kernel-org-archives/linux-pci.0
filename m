@@ -1,77 +1,128 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mx0b-0014ca01.pphosted.com ([208.86.201.193]:16271 "EHLO
-        mx0a-0014ca01.pphosted.com" rhost-flags-OK-OK-OK-FAIL)
-        by vger.kernel.org with ESMTP id S1727756AbeIRUtL (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Tue, 18 Sep 2018 16:49:11 -0400
-From: Alan Douglas <adouglas@cadence.com>
-To: <lorenzo.pieralisi@arm.com>
-CC: <kishon@ti.com>, <bhelgaas@google.com>,
-        <linux-pci@vger.kernel.org>, <gustavo.pimentel@synopsys.com>,
-        <cyrille.pitchen@bootlin.com>, Alan Douglas <adouglas@cadence.com>
-Subject: [PATCH v3 1/5] PCI: cadence: Use AXI region 0 to signal interrupts from EP
-Date: Tue, 18 Sep 2018 16:15:47 +0100
-Message-ID: <1537283747-12589-1-git-send-email-adouglas@cadence.com>
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Date: Mon, 10 Sep 2018 16:57:22 +0800
+From: Jisheng Zhang <Jisheng.Zhang@synaptics.com>
+To: Jingoo Han <jingoohan1@gmail.com>, Joao Pinto <Joao.Pinto@synopsys.com>,
+ Bjorn Helgaas <bhelgaas@google.com>, Lorenzo Pieralisi
+ <lorenzo.pieralisi@arm.com>, <linux-pci@vger.kernel.org>,
+ <linux-kernel@vger.kernel.org>, <linux-arm-kernel@lists.infradead.org>
+Subject: Re: [PATCH v3] PCI: dwc: fix scheduling while atomic issues
+Message-ID: <20180910165722.38218779@xhacker.debian>
+In-Reply-To: <20180829110408.556c3622@xhacker.debian>
+References: <20180829110408.556c3622@xhacker.debian>
 MIME-Version: 1.0
-Content-Type: text/plain
-Sender: linux-pci-owner@vger.kernel.org
+List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
+List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
+List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
+List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
+List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
+Content-Type: text/plain; charset="us-ascii"
+Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
+Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
 List-ID: <linux-pci.vger.kernel.org>
 
-The IRQ physical address is allocated from region 0, rather than
-the highest region.  Update the driver to reserve this region in
-the bitmap, and to use region 0 for all types of interrupt.
+Hi all,
 
-This corrects a problem which prevents the interrupt being
-signalled correctly if using the first address in the AXI region,
-since an offset of zero will always be mapped to region 0.
+On Wed, 29 Aug 2018 11:04:08 +0800 Jisheng Zhang wrote:
 
-Fixes: 37dddf14f1ae ("PCI: cadence: Add EndPoint Controller driver for Cadence PCIe controller")
-Signed-off-by: Alan Douglas <adouglas@cadence.com>
----
- drivers/pci/controller/pcie-cadence-ep.c | 11 ++++++-----
- 1 file changed, 6 insertions(+), 5 deletions(-)
+> When programming inbound/outbound atu, we call usleep_range() after
+> each checking PCIE_ATU_ENABLE bit. Unfortunately, the atu programming
+> can be called in atomic context:
+> 
+> inbound atu programming could be called through
+> pci_epc_write_header()
+>   =>dw_pcie_ep_write_header()
+>     =>dw_pcie_prog_inbound_atu()  
+> 
+> outbound atu programming could be called through
+> pci_bus_read_config_dword()
+>   =>dw_pcie_rd_conf()
+>     =>dw_pcie_prog_outbound_atu()  
+> 
+> Fix this issue by calling mdelay() instead.
 
-diff --git a/drivers/pci/controller/pcie-cadence-ep.c b/drivers/pci/controller/pcie-cadence-ep.c
-index e3fe412..a67dc91 100644
---- a/drivers/pci/controller/pcie-cadence-ep.c
-+++ b/drivers/pci/controller/pcie-cadence-ep.c
-@@ -259,7 +259,6 @@ static void cdns_pcie_ep_assert_intx(struct cdns_pcie_ep *ep, u8 fn,
- 				     u8 intx, bool is_asserted)
- {
- 	struct cdns_pcie *pcie = &ep->pcie;
--	u32 r = ep->max_regions - 1;
- 	u32 offset;
- 	u16 status;
- 	u8 msg_code;
-@@ -269,8 +268,8 @@ static void cdns_pcie_ep_assert_intx(struct cdns_pcie_ep *ep, u8 fn,
- 	/* Set the outbound region if needed. */
- 	if (unlikely(ep->irq_pci_addr != CDNS_PCIE_EP_IRQ_PCI_ADDR_LEGACY ||
- 		     ep->irq_pci_fn != fn)) {
--		/* Last region was reserved for IRQ writes. */
--		cdns_pcie_set_outbound_region_for_normal_msg(pcie, fn, r,
-+		/* First region was reserved for IRQ writes. */
-+		cdns_pcie_set_outbound_region_for_normal_msg(pcie, fn, 0,
- 							     ep->irq_phys_addr);
- 		ep->irq_pci_addr = CDNS_PCIE_EP_IRQ_PCI_ADDR_LEGACY;
- 		ep->irq_pci_fn = fn;
-@@ -348,8 +347,8 @@ static int cdns_pcie_ep_send_msi_irq(struct cdns_pcie_ep *ep, u8 fn,
- 	/* Set the outbound region if needed. */
- 	if (unlikely(ep->irq_pci_addr != (pci_addr & ~pci_addr_mask) ||
- 		     ep->irq_pci_fn != fn)) {
--		/* Last region was reserved for IRQ writes. */
--		cdns_pcie_set_outbound_region(pcie, fn, ep->max_regions - 1,
-+		/* First region was reserved for IRQ writes. */
-+		cdns_pcie_set_outbound_region(pcie, fn, 0,
- 					      false,
- 					      ep->irq_phys_addr,
- 					      pci_addr & ~pci_addr_mask,
-@@ -510,6 +509,8 @@ static int cdns_pcie_ep_probe(struct platform_device *pdev)
- 		goto free_epc_mem;
- 	}
- 	ep->irq_pci_addr = CDNS_PCIE_EP_IRQ_PCI_ADDR_NONE;
-+	/* Reserve region 0 for IRQs */
-+	set_bit(0, &ep->ob_region_map);
- 
- 	return 0;
- 
--- 
-1.9.0
+Any comments about this patch?
+
+Thanks,
+Jisheng
+
+> 
+> Fixes: f8aed6ec624f ("PCI: dwc: designware: Add EP mode support")
+> Fixes: d8bbeb39fbf3 ("PCI: designware: Wait for iATU enable")
+> Signed-off-by: Jisheng Zhang <Jisheng.Zhang@synaptics.com>
+> Acked-by: Gustavo Pimentel <gustavo.pimentel@synopsys.com>
+> ---
+> 
+> since v2:
+>  - Add Fixes tag
+>  - Add Gustavo's Ack
+> 
+> since v1:
+>  - use mdelay() instead of udelay() to avoid __bad_udelay()
+> 
+>  drivers/pci/controller/dwc/pcie-designware.c | 8 ++++----
+>  drivers/pci/controller/dwc/pcie-designware.h | 3 +--
+>  2 files changed, 5 insertions(+), 6 deletions(-)
+> 
+> diff --git a/drivers/pci/controller/dwc/pcie-designware.c b/drivers/pci/controller/dwc/pcie-designware.c
+> index 778c4f76a884..2153956a0b20 100644
+> --- a/drivers/pci/controller/dwc/pcie-designware.c
+> +++ b/drivers/pci/controller/dwc/pcie-designware.c
+> @@ -135,7 +135,7 @@ static void dw_pcie_prog_outbound_atu_unroll(struct dw_pcie *pci, int index,
+>  		if (val & PCIE_ATU_ENABLE)
+>  			return;
+>  
+> -		usleep_range(LINK_WAIT_IATU_MIN, LINK_WAIT_IATU_MAX);
+> +		mdelay(LINK_WAIT_IATU);
+>  	}
+>  	dev_err(pci->dev, "Outbound iATU is not being enabled\n");
+>  }
+> @@ -178,7 +178,7 @@ void dw_pcie_prog_outbound_atu(struct dw_pcie *pci, int index, int type,
+>  		if (val & PCIE_ATU_ENABLE)
+>  			return;
+>  
+> -		usleep_range(LINK_WAIT_IATU_MIN, LINK_WAIT_IATU_MAX);
+> +		mdelay(LINK_WAIT_IATU);
+>  	}
+>  	dev_err(pci->dev, "Outbound iATU is not being enabled\n");
+>  }
+> @@ -236,7 +236,7 @@ static int dw_pcie_prog_inbound_atu_unroll(struct dw_pcie *pci, int index,
+>  		if (val & PCIE_ATU_ENABLE)
+>  			return 0;
+>  
+> -		usleep_range(LINK_WAIT_IATU_MIN, LINK_WAIT_IATU_MAX);
+> +		mdelay(LINK_WAIT_IATU);
+>  	}
+>  	dev_err(pci->dev, "Inbound iATU is not being enabled\n");
+>  
+> @@ -282,7 +282,7 @@ int dw_pcie_prog_inbound_atu(struct dw_pcie *pci, int index, int bar,
+>  		if (val & PCIE_ATU_ENABLE)
+>  			return 0;
+>  
+> -		usleep_range(LINK_WAIT_IATU_MIN, LINK_WAIT_IATU_MAX);
+> +		mdelay(LINK_WAIT_IATU);
+>  	}
+>  	dev_err(pci->dev, "Inbound iATU is not being enabled\n");
+>  
+> diff --git a/drivers/pci/controller/dwc/pcie-designware.h b/drivers/pci/controller/dwc/pcie-designware.h
+> index 96126fd8403c..9f1a5e399b70 100644
+> --- a/drivers/pci/controller/dwc/pcie-designware.h
+> +++ b/drivers/pci/controller/dwc/pcie-designware.h
+> @@ -26,8 +26,7 @@
+>  
+>  /* Parameters for the waiting for iATU enabled routine */
+>  #define LINK_WAIT_MAX_IATU_RETRIES	5
+> -#define LINK_WAIT_IATU_MIN		9000
+> -#define LINK_WAIT_IATU_MAX		10000
+> +#define LINK_WAIT_IATU			9
+>  
+>  /* Synopsys-specific PCIe configuration registers */
+>  #define PCIE_PORT_LINK_CONTROL		0x710
+
+
+_______________________________________________
+linux-arm-kernel mailing list
+linux-arm-kernel@lists.infradead.org
+http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
