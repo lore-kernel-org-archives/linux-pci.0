@@ -1,126 +1,69 @@
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Date: Thu, 13 Sep 2018 16:05:54 +0100
-From: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
-To: Jisheng Zhang <Jisheng.Zhang@synaptics.com>
-Subject: Re: [PATCH v3] PCI: dwc: fix scheduling while atomic issues
-Message-ID: <20180913150543.GA6199@e107981-ln.cambridge.arm.com>
-References: <20180829110408.556c3622@xhacker.debian>
+Return-Path: <SRS0=tax9=LY=iki.fi=pasik@kernel.org>
+Return-Path: <SRS0=tax9=LY=iki.fi=pasik@kernel.org>
+Date: Mon, 10 Sep 2018 12:52:31 +0300
+From: Pasi =?iso-8859-1?Q?K=E4rkk=E4inen?= <pasik@iki.fi>
+To: Sinan Kaya <okaya@kernel.org>
+Cc: Christoph Hellwig <hch@infradead.org>,
+	Bjorn Helgaas <helgaas@kernel.org>, jgross@suse.com,
+	Sinan Kaya <okaya@codeaurora.org>,
+	Govinda Tatti <Govinda.Tatti@Oracle.COM>,
+	Herbert Xu <herbert@gondor.apana.org.au>,
+	Satanand Burla <satananda.burla@caviumnetworks.com>,
+	linux-pci@vger.kernel.org,
+	Felix Manlunas <felix.manlunas@caviumnetworks.com>,
+	linux-kernel@vger.kernel.org,
+	Derek Chickles <derek.chickles@caviumnetworks.com>,
+	Srikanth Jampala <Jampala.Srikanth@cavium.com>, JBeulich@suse.com,
+	Russell Currey <ruscur@russell.cc>, bhelgaas@google.com,
+	xen-devel@lists.xenproject.org, boris.ostrovsky@Oracle.COM,
+	Raghu Vatsavayi <raghu.vatsavayi@caviumnetworks.com>,
+	roger.pau@citrix.com
+Subject: Re: [Xen-devel] [PATCH V3 1/2] Drivers/PCI: Export pcie_has_flr()
+ interface
+Message-ID: <20180910095231.GD18222@reaktio.net>
+References: <20171208202424.GC12367@bhelgaas-glaptop.roam.corp.google.com>
+ <426eeeab-0dcd-8de3-9c5f-a166acf2c130@Oracle.COM>
+ <20171212005919.GB30595@bhelgaas-glaptop.roam.corp.google.com>
+ <49956aaf-5fd5-939d-5fc7-231ffdb98b70@Oracle.COM>
+ <20171213212420.GH30595@bhelgaas-glaptop.roam.corp.google.com>
+ <fea075cf-fe6f-0d0b-11e4-4279fbfc280a@Oracle.COM>
+ <20171215181801.GU30595@bhelgaas-glaptop.roam.corp.google.com>
+ <20171218122629.GA18423@infradead.org>
+ <20180909185944.GC18222@reaktio.net>
+ <9ffe43d2-a44b-974c-85c9-9923d71c5dba@kernel.org>
 MIME-Version: 1.0
-In-Reply-To: <20180829110408.556c3622@xhacker.debian>
-List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
-List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
-List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
-List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
-List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
-Cc: Joao Pinto <Joao.Pinto@synopsys.com>, Jingoo Han <jingoohan1@gmail.com>,
- linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
- Bjorn Helgaas <bhelgaas@google.com>, linux-arm-kernel@lists.infradead.org
-Content-Type: text/plain; charset="us-ascii"
-Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
-Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
+Content-Type: text/plain; charset=iso-8859-1
+In-Reply-To: <9ffe43d2-a44b-974c-85c9-9923d71c5dba@kernel.org>
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wed, Aug 29, 2018 at 11:04:08AM +0800, Jisheng Zhang wrote:
-> When programming inbound/outbound atu, we call usleep_range() after
-> each checking PCIE_ATU_ENABLE bit. Unfortunately, the atu programming
-> can be called in atomic context:
-> 
-> inbound atu programming could be called through
-> pci_epc_write_header()
->   =>dw_pcie_ep_write_header()
->     =>dw_pcie_prog_inbound_atu()
-> 
-> outbound atu programming could be called through
-> pci_bus_read_config_dword()
->   =>dw_pcie_rd_conf()
->     =>dw_pcie_prog_outbound_atu()
-> 
-> Fix this issue by calling mdelay() instead.
-> 
-> Fixes: f8aed6ec624f ("PCI: dwc: designware: Add EP mode support")
-> Fixes: d8bbeb39fbf3 ("PCI: designware: Wait for iATU enable")
-> Signed-off-by: Jisheng Zhang <Jisheng.Zhang@synaptics.com>
-> Acked-by: Gustavo Pimentel <gustavo.pimentel@synopsys.com>
-> ---
+Hi,
 
-Applied to pci/controller-fixes aiming at one of the upcoming -rc*.
+On Sun, Sep 09, 2018 at 10:33:02PM -0400, Sinan Kaya wrote:
+> On 9/9/2018 2:59 PM, Pasi Kärkkäinen wrote:
+> >I noticed pcie_has_flr() has been recently exported in upstream Linux:
+> >https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/commit/?id=2d2917f7747805a1f4188672f308d82a8ba01700
+> >
+> >Are there more changes / cleanups planned to these interfaces, as mentioned last year?
+> >
+> >(context: xen-pciback reset/do_flr features upstreaming, which kind of stalled last year when pcie_has_flr() wasn't exported at the time)
+> 
+> Exporting pcie_has_flr() is a very simple change which could have been done
+> by the XEN porting effort.
+> 
+> Maybe, the right question is what is so special about XEN reset?
+> 
+> What feature PCI core is missing to support XEN FLR reset that caused
+> the effort to stall?
+>
+
+Well one of the reasons probably was because Christoph was planning to deprecate the pcie_has_flr() functionality..
+
+https://lists.xen.org/archives/html/xen-devel/2017-12/msg01057.html
+https://lists.xen.org/archives/html/xen-devel/2017-12/msg01252.html
+
+But now that pcie_has_flr() is exported and available I guess it's fine to continue using it also for xen-pciback :)
+
 
 Thanks,
-Lorenzo
 
-> since v2:
->  - Add Fixes tag
->  - Add Gustavo's Ack
-> 
-> since v1:
->  - use mdelay() instead of udelay() to avoid __bad_udelay()
-> 
->  drivers/pci/controller/dwc/pcie-designware.c | 8 ++++----
->  drivers/pci/controller/dwc/pcie-designware.h | 3 +--
->  2 files changed, 5 insertions(+), 6 deletions(-)
-> 
-> diff --git a/drivers/pci/controller/dwc/pcie-designware.c b/drivers/pci/controller/dwc/pcie-designware.c
-> index 778c4f76a884..2153956a0b20 100644
-> --- a/drivers/pci/controller/dwc/pcie-designware.c
-> +++ b/drivers/pci/controller/dwc/pcie-designware.c
-> @@ -135,7 +135,7 @@ static void dw_pcie_prog_outbound_atu_unroll(struct dw_pcie *pci, int index,
->  		if (val & PCIE_ATU_ENABLE)
->  			return;
->  
-> -		usleep_range(LINK_WAIT_IATU_MIN, LINK_WAIT_IATU_MAX);
-> +		mdelay(LINK_WAIT_IATU);
->  	}
->  	dev_err(pci->dev, "Outbound iATU is not being enabled\n");
->  }
-> @@ -178,7 +178,7 @@ void dw_pcie_prog_outbound_atu(struct dw_pcie *pci, int index, int type,
->  		if (val & PCIE_ATU_ENABLE)
->  			return;
->  
-> -		usleep_range(LINK_WAIT_IATU_MIN, LINK_WAIT_IATU_MAX);
-> +		mdelay(LINK_WAIT_IATU);
->  	}
->  	dev_err(pci->dev, "Outbound iATU is not being enabled\n");
->  }
-> @@ -236,7 +236,7 @@ static int dw_pcie_prog_inbound_atu_unroll(struct dw_pcie *pci, int index,
->  		if (val & PCIE_ATU_ENABLE)
->  			return 0;
->  
-> -		usleep_range(LINK_WAIT_IATU_MIN, LINK_WAIT_IATU_MAX);
-> +		mdelay(LINK_WAIT_IATU);
->  	}
->  	dev_err(pci->dev, "Inbound iATU is not being enabled\n");
->  
-> @@ -282,7 +282,7 @@ int dw_pcie_prog_inbound_atu(struct dw_pcie *pci, int index, int bar,
->  		if (val & PCIE_ATU_ENABLE)
->  			return 0;
->  
-> -		usleep_range(LINK_WAIT_IATU_MIN, LINK_WAIT_IATU_MAX);
-> +		mdelay(LINK_WAIT_IATU);
->  	}
->  	dev_err(pci->dev, "Inbound iATU is not being enabled\n");
->  
-> diff --git a/drivers/pci/controller/dwc/pcie-designware.h b/drivers/pci/controller/dwc/pcie-designware.h
-> index 96126fd8403c..9f1a5e399b70 100644
-> --- a/drivers/pci/controller/dwc/pcie-designware.h
-> +++ b/drivers/pci/controller/dwc/pcie-designware.h
-> @@ -26,8 +26,7 @@
->  
->  /* Parameters for the waiting for iATU enabled routine */
->  #define LINK_WAIT_MAX_IATU_RETRIES	5
-> -#define LINK_WAIT_IATU_MIN		9000
-> -#define LINK_WAIT_IATU_MAX		10000
-> +#define LINK_WAIT_IATU			9
->  
->  /* Synopsys-specific PCIe configuration registers */
->  #define PCIE_PORT_LINK_CONTROL		0x710
-> -- 
-> 2.18.0
-> 
-
-_______________________________________________
-linux-arm-kernel mailing list
-linux-arm-kernel@lists.infradead.org
-http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
+-- Pasi
