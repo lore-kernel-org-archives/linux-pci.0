@@ -1,54 +1,116 @@
-Return-Path: <SRS0=vJbf=MA=intel.com=keith.busch@kernel.org>
-Return-Path: <SRS0=vJbf=MA=intel.com=keith.busch@kernel.org>
-Date: Tue, 18 Sep 2018 16:11:42 -0600
-From: Keith Busch <keith.busch@intel.com>
-To: Bjorn Helgaas <helgaas@kernel.org>
-Cc: Linux PCI <linux-pci@vger.kernel.org>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	Sinan Kaya <okaya@kernel.org>, Thomas Tai <thomas.tai@oracle.com>,
-	"poza@codeaurora.org" <poza@codeaurora.org>,
-	Lukas Wunner <lukas@wunner.de>, Christoph Hellwig <hch@lst.de>
-Subject: Re: [PATCHv2 15/20] PCI/pciehp: Fix powerfault detection order
-Message-ID: <20180918221141.GA26372@localhost.localdomain>
-References: <20180905203546.21921-1-keith.busch@intel.com>
- <20180905203546.21921-16-keith.busch@intel.com>
- <20180906193657.GH214747@bhelgaas-glaptop.roam.corp.google.com>
- <20180906195047.GD31024@localhost.localdomain>
- <20180907165352.GA250890@bhelgaas-glaptop.roam.corp.google.com>
- <20180907200332.GB250890@bhelgaas-glaptop.roam.corp.google.com>
- <20180907201819.GA1341@localhost.localdomain>
- <20180918214650.GG13616@bhelgaas-glaptop.roam.corp.google.com>
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+From: Nipun Gupta <nipun.gupta@nxp.com>
+To: joro@8bytes.org, robin.murphy@arm.com, will.deacon@arm.com,
+ robh+dt@kernel.org, robh@kernel.org, mark.rutland@arm.com,
+ catalin.marinas@arm.com, gregkh@linuxfoundation.org,
+ laurentiu.tudor@nxp.com, bhelgaas@google.com, hch@lst.de
+Subject: [PATCH 1/7 v7] Documentation: fsl-mc: add iommu-map device-tree
+ binding for fsl-mc bus
+Date: Mon, 10 Sep 2018 19:19:15 +0530
+Message-Id: <1536587361-11047-2-git-send-email-nipun.gupta@nxp.com>
+In-Reply-To: <1536587361-11047-1-git-send-email-nipun.gupta@nxp.com>
+References: <1536587361-11047-1-git-send-email-nipun.gupta@nxp.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20180918214650.GG13616@bhelgaas-glaptop.roam.corp.google.com>
+List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
+List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
+List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
+List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
+List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
+Cc: devicetree@vger.kernel.org, stuyoder@gmail.com, bharat.bhushan@nxp.com,
+ shawnguo@kernel.org, linuxppc-dev@lists.ozlabs.org,
+ linux-kernel@vger.kernel.org, leoyang.li@nxp.com,
+ iommu@lists.linux-foundation.org, Nipun Gupta <nipun.gupta@nxp.com>,
+ linux-pci@vger.kernel.org, frowand.list@gmail.com,
+ linux-arm-kernel@lists.infradead.org, m.szyprowski@samsung.com
+Content-Type: text/plain; charset="us-ascii"
+Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
+Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tue, Sep 18, 2018 at 02:46:50PM -0700, Bjorn Helgaas wrote:
-> On Fri, Sep 07, 2018 at 02:18:19PM -0600, Keith Busch wrote:
-> > On Fri, Sep 07, 2018 at 03:03:32PM -0500, Bjorn Helgaas wrote:
-> > > I applied this to for-linus with the following changelog.  Let me know
-> > > if I didn't understand this correctly.  I changed the comment in
-> > > pciehp_power_on_slot() so it doesn't say "sticky" to avoid confusion
-> > > with the PCI spec concept of sticky register bits (ROS, RWS, RW1CS).
-> > 
-> > Perfect! Thanks for queueing this up. I'll drop this one from the rest
-> > of the series, which will need at least a v3 to fix a dumb mistake in
-> > pointed out in review, and I'll get the order to better sense (or maybe
-> > split into independent patch sets).
-> 
-> Are you still planning a v3?  I really want to get this in for v4.20
-> and I think there's probably some integration to be done with Lukas'
-> series (which I haven't applied yet either).
-> 
-> I rebased my branches to v4.19-rc4 to avoid a merge conflict Lukas
-> pointed out.
+The existing IOMMU bindings cannot be used to specify the relationship
+between fsl-mc devices and IOMMUs. This patch adds a generic binding for
+mapping fsl-mc devices to IOMMUs, using iommu-map property.
 
-I'll send something out today, and I think I'll split it into multiple
-independent sets.
+Signed-off-by: Nipun Gupta <nipun.gupta@nxp.com>
+Reviewed-by: Rob Herring <robh@kernel.org>
+Acked-by: Robin Murphy <robin.murphy@arm.com>
+---
+ .../devicetree/bindings/misc/fsl,qoriq-mc.txt      | 39 ++++++++++++++++++++++
+ 1 file changed, 39 insertions(+)
 
-I had to trim down what this is trying to accomplish due to existing
-deadlocking bugs I've found in testing: there are several circular
-dependencies on tasks holding the single pci_rescan_remove_lock. I don't
-think I'll be able to fix that in time for 4.20, but I'll send the parts
-that I believe are an improvement that don't break anything else.
+diff --git a/Documentation/devicetree/bindings/misc/fsl,qoriq-mc.txt b/Documentation/devicetree/bindings/misc/fsl,qoriq-mc.txt
+index 6611a7c..01fdc33 100644
+--- a/Documentation/devicetree/bindings/misc/fsl,qoriq-mc.txt
++++ b/Documentation/devicetree/bindings/misc/fsl,qoriq-mc.txt
+@@ -9,6 +9,25 @@ blocks that can be used to create functional hardware objects/devices
+ such as network interfaces, crypto accelerator instances, L2 switches,
+ etc.
+ 
++For an overview of the DPAA2 architecture and fsl-mc bus see:
++Documentation/networking/dpaa2/overview.rst
++
++As described in the above overview, all DPAA2 objects in a DPRC share the
++same hardware "isolation context" and a 10-bit value called an ICID
++(isolation context id) is expressed by the hardware to identify
++the requester.
++
++The generic 'iommus' property is insufficient to describe the relationship
++between ICIDs and IOMMUs, so an iommu-map property is used to define
++the set of possible ICIDs under a root DPRC and how they map to
++an IOMMU.
++
++For generic IOMMU bindings, see
++Documentation/devicetree/bindings/iommu/iommu.txt.
++
++For arm-smmu binding, see:
++Documentation/devicetree/bindings/iommu/arm,smmu.txt.
++
+ Required properties:
+ 
+     - compatible
+@@ -88,14 +107,34 @@ Sub-nodes:
+               Value type: <phandle>
+               Definition: Specifies the phandle to the PHY device node associated
+                           with the this dpmac.
++Optional properties:
++
++- iommu-map: Maps an ICID to an IOMMU and associated iommu-specifier
++  data.
++
++  The property is an arbitrary number of tuples of
++  (icid-base,iommu,iommu-base,length).
++
++  Any ICID i in the interval [icid-base, icid-base + length) is
++  associated with the listed IOMMU, with the iommu-specifier
++  (i - icid-base + iommu-base).
+ 
+ Example:
+ 
++        smmu: iommu@5000000 {
++               compatible = "arm,mmu-500";
++               #iommu-cells = <1>;
++               stream-match-mask = <0x7C00>;
++               ...
++        };
++
+         fsl_mc: fsl-mc@80c000000 {
+                 compatible = "fsl,qoriq-mc";
+                 reg = <0x00000008 0x0c000000 0 0x40>,    /* MC portal base */
+                       <0x00000000 0x08340000 0 0x40000>; /* MC control reg */
+                 msi-parent = <&its>;
++                /* define map for ICIDs 23-64 */
++                iommu-map = <23 &smmu 23 41>;
+                 #address-cells = <3>;
+                 #size-cells = <1>;
+ 
+-- 
+1.9.1
+
+
+_______________________________________________
+linux-arm-kernel mailing list
+linux-arm-kernel@lists.infradead.org
+http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
