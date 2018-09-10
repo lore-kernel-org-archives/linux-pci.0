@@ -1,47 +1,72 @@
 Return-Path: <linux-kernel-owner@vger.kernel.org>
-Date: Tue, 11 Sep 2018 08:48:17 -0500
-From: Bjorn Helgaas <helgaas@kernel.org>
-To: Joao Pinto <Joao.Pinto@synopsys.com>
-Cc: bhelgaas@google.com, lorenzo.pieralisi@arm.com,
-        gustavo.pimentel@synopsys.com, jingoohan1@gmail.com,
-        linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org
-Subject: Re: [PATCH] PCI: designware: Change maintainer to Gustavo Pimentel
-Message-ID: <20180911134817.GE250890@bhelgaas-glaptop.roam.corp.google.com>
-References: <aa29f3f8dbae3a2c8523ddfd74d11505600bc47f.1536659938.git.jpinto@synopsys.com>
+From: <honghui.zhang@mediatek.com>
+To: <lorenzo.pieralisi@arm.com>, <marc.zyngier@arm.com>,
+        <bhelgaas@google.com>, <matthias.bgg@gmail.com>,
+        <linux-arm-kernel@lists.infradead.org>,
+        <linux-mediatek@lists.infradead.org>, <linux-pci@vger.kernel.org>,
+        <linux-kernel@vger.kernel.org>, <devicetree@vger.kernel.org>,
+        <yingjoe.chen@mediatek.com>, <eddie.huang@mediatek.com>,
+        <ryder.lee@mediatek.com>
+CC: <ulf.hansson@linaro.org>, <honghui.zhang@mediatek.com>,
+        <hongkun.cao@mediatek.com>, <youlin.pei@mediatek.com>,
+        <yong.wu@mediatek.com>, <yt.shen@mediatek.com>,
+        <sean.wang@mediatek.com>, <xinping.qian@mediatek.com>
+Subject: [PATCH v4 0/4] PCI: mediatek: fixup find_port, enable_msi and add pm, module support
+Date: Mon, 10 Sep 2018 17:50:19 +0800
+Message-ID: <1536573023-6720-1-git-send-email-honghui.zhang@mediatek.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <aa29f3f8dbae3a2c8523ddfd74d11505600bc47f.1536659938.git.jpinto@synopsys.com>
+Content-Type: text/plain
 Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tue, Sep 11, 2018 at 01:06:30PM +0100, Joao Pinto wrote:
-> Currently I am managing the Synopsys drivers & tools team (full-time) and so I
-> am passing the pcie-designware maintenance to Gustavo.
-> 
-> Signed-off-by: Joao Pinto <jpinto@synopsys.com>
-> CC: Gustavo Pimentel <gustavo.pimentel@synopsys.com>
-> CC: Jingoo Han <jingoohan1@gmail.com>
+From: Honghui Zhang <honghui.zhang@mediatek.com>
 
-Applied to for-linus for v4.19, thanks!
+This patchset includes misc patchs:
 
-> ---
->  MAINTAINERS | 2 +-
->  1 file changed, 1 insertion(+), 1 deletion(-)
-> 
-> diff --git a/MAINTAINERS b/MAINTAINERS
-> index a5b256b..e5e8984 100644
-> --- a/MAINTAINERS
-> +++ b/MAINTAINERS
-> @@ -11153,7 +11153,7 @@ F:	drivers/pci/controller/dwc/pci-exynos.c
->  
->  PCI DRIVER FOR SYNOPSYS DESIGNWARE
->  M:	Jingoo Han <jingoohan1@gmail.com>
-> -M:	Joao Pinto <Joao.Pinto@synopsys.com>
-> +M:	Gustavo Pimentel <gustavo.pimentel@synopsys.com>
->  L:	linux-pci@vger.kernel.org
->  S:	Maintained
->  F:	Documentation/devicetree/bindings/pci/designware-pcie.txt
-> -- 
-> 2.9.3
-> 
-> 
+The first patch fixup the mtk_pcie_find_port logical which will cause system
+could not touch the EP's configuration space which was connected to PCIe slot 1.
+
+The second patch fixup the enable msi logical, the operation to enable msi
+should be after system clock is enabled. The function of mtk_pcie_startup_port_v2's
+define location is re-arranged to avoid mtk_pcie_enable_msi's forward declaration.
+And call mtk_pcie_enable_msi in mtk_pcie_startup_port_v2 since the clock was all
+enabled at that time.
+
+The third patch was rebased and refactor of the v4 patch[1], changes are:
+ -Add PM support for MT7622.
+ -Using mtk_pcie_enable_port to re-establish the link when resumed.
+ -Rebase on the previous two patches.
+
+The fourth patch add loadable kernel module support.
+
+Some of those patches was already reviewed-by Ryder Lee <ryder.lee@mediatek.com>,
+so I just add the Reviewed-by tags in those patches.
+
+[1] https://patchwork.kernel.org/patch/10479079
+
+Change since v3:
+ - Remove pm_runtime_XXX ops in suspend and resume callbacks in the third patch.
+ - Rebase to 4.19-rc1.
+
+Change since v2:
+ - Fix the list_for_each_entry_safe parameter error.
+ - Add Ryder's Acked-by flag.
+
+Change since v1:
+ - A bit of code refact of the first patch suggested by Andy Shevchenko, and
+   commit message updated.
+ - Using __maybe_unused.
+ - Remove the redundant list_empty check of the fourth patch.
+
+Honghui Zhang (4):
+  PCI: mediatek: fixup mtk_pcie_find_port logical
+  PCI: mediatek: enable msi after clock enabled
+  PCI: mediatek: Add system pm support for MT2712 and MT7622
+  PCI: mediatek: Add loadable kernel module support
+
+ drivers/pci/controller/Kconfig         |   2 +-
+ drivers/pci/controller/pcie-mediatek.c | 284 ++++++++++++++++++++++++---------
+ 2 files changed, 208 insertions(+), 78 deletions(-)
+
+-- 
+2.6.4
