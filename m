@@ -1,57 +1,101 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mga02.intel.com ([134.134.136.20]:47633 "EHLO mga02.intel.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1727818AbeISFa3 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Wed, 19 Sep 2018 01:30:29 -0400
-From: Keith Busch <keith.busch@intel.com>
-To: Linux PCI <linux-pci@vger.kernel.org>,
-        Bjorn Helgaas <bhelgaas@google.com>
-Cc: Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+Received: from bmailout1.hostsharing.net ([83.223.95.100]:47743 "EHLO
+        bmailout1.hostsharing.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1727674AbeIJVEP (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Mon, 10 Sep 2018 17:04:15 -0400
+Date: Mon, 10 Sep 2018 18:09:26 +0200
+From: Lukas Wunner <lukas@wunner.de>
+To: Keith Busch <keith.busch@intel.com>
+Cc: Linux PCI <linux-pci@vger.kernel.org>,
+        Bjorn Helgaas <bhelgaas@google.com>,
+        Benjamin Herrenschmidt <benh@kernel.crashing.org>,
         Sinan Kaya <okaya@kernel.org>,
-        Thomas Tai <thomas.tai@oracle.com>, poza@codeaurora.org,
-        Lukas Wunner <lukas@wunner.de>, Christoph Hellwig <hch@lst.de>,
-        Mika Westerberg <mika.westerberg@linux.intel.com>,
-        Keith Busch <keith.busch@intel.com>
-Subject: [PATCHv3 00/10] PCI error handling
-Date: Tue, 18 Sep 2018 17:56:52 -0600
-Message-Id: <20180918235702.26573-1-keith.busch@intel.com>
+        Thomas Tai <thomas.tai@oracle.com>,
+        "poza@codeaurora.org" <poza@codeaurora.org>,
+        Christoph Hellwig <hch@lst.de>
+Subject: Re: [PATCHv2 16/20] PCI/pciehp: Implement error handling callbacks
+Message-ID: <20180910160926.7grtfdyw3iv2xg4x@wunner.de>
+References: <20180905203546.21921-1-keith.busch@intel.com>
+ <20180905203546.21921-17-keith.busch@intel.com>
+ <20180910132033.ei5nk4iibt7pesd5@wunner.de>
+ <20180910145641.GA7466@localhost.localdomain>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20180910145641.GA7466@localhost.localdomain>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-This version is reduced in scope from the previous. The more ambitious
-handling from the previous version exacerbates other pre-existing
-deadlocking issues that are taking some time to fix.
+On Mon, Sep 10, 2018 at 08:56:42AM -0600, Keith Busch wrote:
+> On Mon, Sep 10, 2018 at 06:20:33AM -0700, Lukas Wunner wrote:
+> > On Wed, Sep 05, 2018 at 02:35:42PM -0600, Keith Busch wrote:
+> > > +static void pciehp_error_detected(struct pcie_device *dev)
+> > > +{
+> > > +	struct controller *ctrl = get_service_data(dev);
+> > > +
+> > > +	/*
+> > > +	 * Shutdown notification to ignore hotplug events during error
+> > > +	 * handling. We'll recheck the status when error handling completes.
+> > > +	 *
+> > > +	 * It is possible link event related to this error handling may have
+> > > +	 * triggered a the hotplug interrupt ahead of this notification, but we
+> > > +	 * can't do anything about that race.
+> > > +	 */
+> > > +	pcie_shutdown_notification(ctrl);
+> > 
+> > Unfortunately this patch does not take into account my comment on
+> > patch [13/16] in v1 of this series that pcie_shutdown_notification()
+> > can't be used here because the sysfs user interface to enable/disable
+> > the slot is still present but no longer functions once the IRQ is
+> > released:
+> > https://patchwork.ozlabs.org/patch/964715/
+> > 
+> > My suggestion was:
+> > 
+> >    "I think what you want to do instead is "down_write(&ctrl->reset_lock)",
+> >     see commit 5b3f7b7d062b ("PCI: pciehp: Avoid slot access during reset").
+> >     And possibly mask PDCE/DLLSCE like pciehp_reset_slot() does."
+> 
+> The sysfs entries still function. Their actions are only temporarily
+> stalled during error handling. Once the slot reset is called, the
+> ctrl->pending_events is queried to take requested actions.
 
-This is mostly a reduced set from v2, but slightly reordered. There is
-one prep patch that fixes the bridges pci state when it is initially
-saved, and one AER patch that fixes a use-after free.
+Okay I see.  Still, releasing the IRQ and requesting it again seems fairly
+heavy-wheight.  Why not just acquire ctrl->reset_lock?
 
-Keith Busch (10):
-  PCI/portdrv: Use subsys_init for service drivers
-  PCI/portdrv: Restore pci state on slot reset
-  PCI/AER: Take reference on error devices
-  PCI/ERR: Use slot reset if available
-  PCI/ERR: Handle fatal error recovery
-  PCI/ERR: Always use the first downstream port
-  PCI/ERR: Simplify broadcast callouts
-  PCI/ERR: Report current recovery status for udev
-  PCI: Unify device inaccessible
-  PCI: Make link active reporting detection generic
 
- drivers/pci/hotplug/pciehp.h      |   6 -
- drivers/pci/hotplug/pciehp_core.c |   2 +-
- drivers/pci/hotplug/pciehp_hpc.c  |  22 +--
- drivers/pci/pci.c                 |  66 ++++++++-
- drivers/pci/pci.h                 |  66 ++++++++-
- drivers/pci/pcie/aer.c            |  19 ++-
- drivers/pci/pcie/dpc.c            |  10 +-
- drivers/pci/pcie/err.c            | 276 ++++++++++----------------------------
- drivers/pci/pcie/pme.c            |   2 +-
- drivers/pci/pcie/portdrv_pci.c    |   8 ++
- drivers/pci/probe.c               |   1 +
- drivers/pci/slot.c                |   2 +-
- include/linux/pci.h               |   1 +
- 13 files changed, 220 insertions(+), 261 deletions(-)
+> > > +static void pciehp_slot_reset(struct pcie_device *dev)
+> > > +{
+> > > +	struct controller *ctrl = get_service_data(dev);
+> > > +	u8 changed;
+> > > +
+> > > +	/*
+> > > +	 * Cache presence detect change, but ignore other hotplug events that
+> > > +	 * may occur during error handling. Ports that implement only in-band
+> > > +	 * presence detection may inadvertently believe the device has changed,
+> > > +	 * so those devices will have to be re-enumerated.
+> > > +	 */
+> > > +	pciehp_get_adapter_changed(ctrl->slot, &changed);
+> > > +	pcie_clear_hotplug_events(ctrl);
+> > > +	pcie_init_notification(ctrl);
+> > > +
+> > > +	if (changed) {
+> > > +		pciehp_request(ctrl, PCI_EXP_SLTSTA_PDC);
+> > > +		__pci_walk_bus(parent, pci_dev_set_disconnected, NULL);
+> > 
+> > The __pci_walk_bus() seems superfluous because the devices are also
+> > marked disconnected when bringing down the slot as a result of the
+> > synthesized PCI_EXP_SLTSTA_PDC event.
+> 
+> Right, but we can't do that inline with the slot reset because of the
+> circular locks that creates with the pci_bus_sem. We still want to
+> fence off drivers for downstream devices from mucking with config space
+> in a topology that is reported to be different than the one we're
+> recoverying from. You can get undefined results that way.
 
--- 
-2.14.4
+I don't quite follow.  I meant that __pci_walk_bus() is unnecessary
+because the pciehp_request() call indirectly triggers it.  So the
+devices are marked disconnected twice.
+
+Thanks,
+
+Lukas
