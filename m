@@ -1,130 +1,212 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:33586 "EHLO mx1.redhat.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1731250AbeITAkJ (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Wed, 19 Sep 2018 20:40:09 -0400
-Date: Wed, 19 Sep 2018 13:00:38 -0600
-From: Alex Williamson <alex.williamson@redhat.com>
-To: Sinan Kaya <okaya@kernel.org>
-Cc: linux-pci@vger.kernel.org, Bjorn Helgaas <bhelgaas@google.com>,
-        Alexey Kardashevskiy <aik@ozlabs.ru>,
-        Peter Xu <peterx@redhat.com>,
-        "Gustavo A. R. Silva" <gustavo@embeddedor.com>,
-        Eric Auger <eric.auger@redhat.com>
-Subject: Re: [PATCH v4 4/6] PCI: Expose reset type to users of
- pci_try_reset_function()
-Message-ID: <20180919130038.0d5a152b@t450s.home>
-In-Reply-To: <20180919163037.13497-5-okaya@kernel.org>
-References: <20180919163037.13497-1-okaya@kernel.org>
-        <20180919163037.13497-5-okaya@kernel.org>
+Received: from mailgw02.mediatek.com ([210.61.82.184]:63466 "EHLO
+        mailgw02.mediatek.com" rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org
+        with ESMTP id S1727353AbeIJOnv (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Mon, 10 Sep 2018 10:43:51 -0400
+From: <honghui.zhang@mediatek.com>
+To: <lorenzo.pieralisi@arm.com>, <marc.zyngier@arm.com>,
+        <bhelgaas@google.com>, <matthias.bgg@gmail.com>,
+        <linux-arm-kernel@lists.infradead.org>,
+        <linux-mediatek@lists.infradead.org>, <linux-pci@vger.kernel.org>,
+        <linux-kernel@vger.kernel.org>, <devicetree@vger.kernel.org>,
+        <yingjoe.chen@mediatek.com>, <eddie.huang@mediatek.com>,
+        <ryder.lee@mediatek.com>
+CC: <ulf.hansson@linaro.org>, <honghui.zhang@mediatek.com>,
+        <hongkun.cao@mediatek.com>, <youlin.pei@mediatek.com>,
+        <yong.wu@mediatek.com>, <yt.shen@mediatek.com>,
+        <sean.wang@mediatek.com>, <xinping.qian@mediatek.com>
+Subject: [PATCH v4 2/4] PCI: mediatek: enable msi after clock enabled
+Date: Mon, 10 Sep 2018 17:50:21 +0800
+Message-ID: <1536573023-6720-3-git-send-email-honghui.zhang@mediatek.com>
+In-Reply-To: <1536573023-6720-1-git-send-email-honghui.zhang@mediatek.com>
+References: <1536573023-6720-1-git-send-email-honghui.zhang@mediatek.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+Content-Type: text/plain
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wed, 19 Sep 2018 16:30:35 +0000
-Sinan Kaya <okaya@kernel.org> wrote:
+From: Honghui Zhang <honghui.zhang@mediatek.com>
 
-> Looking to have more control between the users of the API vs. what the API
-> can do internally. The new reset_type tells the PCI core about the bounds
-> of the request.
-> 
-> Signed-off-by: Sinan Kaya <okaya@kernel.org>
-> ---
->  drivers/pci/pci.c                  | 4 ++--
->  drivers/vfio/pci/vfio_pci.c        | 7 ++++---
->  drivers/vfio/pci/vfio_pci_config.c | 4 ++--
->  include/linux/pci.h                | 2 +-
->  4 files changed, 9 insertions(+), 8 deletions(-)
+The clocks was not enabled when enable MSI. This patch fix this
+issue by calling mtk_pcie_enable_msi in mtk_pcie_startup_port_v2
+since the clock was all enabled at that time.
 
-Acked-by: Alex Williamson <alex.williamson@redhat.com>
+The function of mtk_pcie_startup_port_v2's define location is
+re-arranged to avoid mtk_pcie_enable_msi's forward declaration.
 
-> diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
-> index 63b5930d8fb1..4edf70a4d528 100644
-> --- a/drivers/pci/pci.c
-> +++ b/drivers/pci/pci.c
-> @@ -4852,7 +4852,7 @@ EXPORT_SYMBOL_GPL(pci_reset_function_locked);
->   *
->   * Same as above, except return -EAGAIN if unable to lock device.
->   */
-> -int pci_try_reset_function(struct pci_dev *dev)
-> +int pci_try_reset_function(struct pci_dev *dev, u32 reset_type)
->  {
->  	int rc;
->  
-> @@ -4863,7 +4863,7 @@ int pci_try_reset_function(struct pci_dev *dev)
->  		return -EAGAIN;
->  
->  	pci_dev_save_and_disable(dev);
-> -	rc = __pci_reset_function_locked(dev, PCI_RESET_ANY);
-> +	rc = __pci_reset_function_locked(dev, reset_type);
->  	pci_dev_restore(dev);
->  	pci_dev_unlock(dev);
->  
-> diff --git a/drivers/vfio/pci/vfio_pci.c b/drivers/vfio/pci/vfio_pci.c
-> index cddb453a1ba5..fe7ada997c51 100644
-> --- a/drivers/vfio/pci/vfio_pci.c
-> +++ b/drivers/vfio/pci/vfio_pci.c
-> @@ -228,7 +228,7 @@ static int vfio_pci_enable(struct vfio_pci_device *vdev)
->  		return ret;
->  
->  	/* If reset fails because of the device lock, fail this path entirely */
-> -	ret = pci_try_reset_function(pdev);
-> +	ret = pci_try_reset_function(pdev, PCI_RESET_ANY);
->  	if (ret == -EAGAIN) {
->  		pci_disable_device(pdev);
->  		return ret;
-> @@ -376,7 +376,7 @@ static void vfio_pci_disable(struct vfio_pci_device *vdev)
->  	 * Try to reset the device.  The success of this is dependent on
->  	 * being able to lock the device, which is not always possible.
->  	 */
-> -	if (vdev->reset_works && !pci_try_reset_function(pdev))
-> +	if (vdev->reset_works && !pci_try_reset_function(pdev, PCI_RESET_ANY))
->  		vdev->needs_reset = false;
->  
->  	pci_restore_state(pdev);
-> @@ -844,7 +844,8 @@ static long vfio_pci_ioctl(void *device_data,
->  
->  	} else if (cmd == VFIO_DEVICE_RESET) {
->  		return vdev->reset_works ?
-> -			pci_try_reset_function(vdev->pdev) : -EINVAL;
-> +			pci_try_reset_function(vdev->pdev, PCI_RESET_ANY) :
-> +			 -EINVAL;
->  
->  	} else if (cmd == VFIO_DEVICE_GET_PCI_HOT_RESET_INFO) {
->  		struct vfio_pci_hot_reset_info hdr;
-> diff --git a/drivers/vfio/pci/vfio_pci_config.c b/drivers/vfio/pci/vfio_pci_config.c
-> index 115a36f6f403..0d66bac66211 100644
-> --- a/drivers/vfio/pci/vfio_pci_config.c
-> +++ b/drivers/vfio/pci/vfio_pci_config.c
-> @@ -831,7 +831,7 @@ static int vfio_exp_config_write(struct vfio_pci_device *vdev, int pos,
->  						 &cap);
->  
->  		if (!ret && (cap & PCI_EXP_DEVCAP_FLR))
-> -			pci_try_reset_function(vdev->pdev);
-> +			pci_try_reset_function(vdev->pdev, PCI_RESET_ANY);
->  	}
->  
->  	/*
-> @@ -910,7 +910,7 @@ static int vfio_af_config_write(struct vfio_pci_device *vdev, int pos,
->  						&cap);
->  
->  		if (!ret && (cap & PCI_AF_CAP_FLR) && (cap & PCI_AF_CAP_TP))
-> -			pci_try_reset_function(vdev->pdev);
-> +			pci_try_reset_function(vdev->pdev, PCI_RESET_ANY);
->  	}
->  
->  	return count;
-> diff --git a/include/linux/pci.h b/include/linux/pci.h
-> index 09aa99dd1c1b..4fdddcb85066 100644
-> --- a/include/linux/pci.h
-> +++ b/include/linux/pci.h
-> @@ -1125,7 +1125,7 @@ int pcie_flr(struct pci_dev *dev);
->  int __pci_reset_function_locked(struct pci_dev *dev, u32 reset_type);
->  int pci_reset_function(struct pci_dev *dev, u32 reset_type);
->  int pci_reset_function_locked(struct pci_dev *dev, u32 reset_type);
-> -int pci_try_reset_function(struct pci_dev *dev);
-> +int pci_try_reset_function(struct pci_dev *dev, u32 reset_type);
->  int pci_probe_reset_slot(struct pci_slot *slot);
->  int pci_probe_reset_bus(struct pci_bus *bus);
->  int pci_reset_bus(struct pci_dev *dev);
+Signed-off-by: Honghui Zhang <honghui.zhang@mediatek.com>
+Reviewed-by: Ryder Lee <ryder.lee@mediatek.com>
+---
+ drivers/pci/controller/pcie-mediatek.c | 143 +++++++++++++++++----------------
+ 1 file changed, 72 insertions(+), 71 deletions(-)
+
+diff --git a/drivers/pci/controller/pcie-mediatek.c b/drivers/pci/controller/pcie-mediatek.c
+index 20b9088..5aba43a 100644
+--- a/drivers/pci/controller/pcie-mediatek.c
++++ b/drivers/pci/controller/pcie-mediatek.c
+@@ -398,75 +398,6 @@ static struct pci_ops mtk_pcie_ops_v2 = {
+ 	.write = mtk_pcie_config_write,
+ };
+ 
+-static int mtk_pcie_startup_port_v2(struct mtk_pcie_port *port)
+-{
+-	struct mtk_pcie *pcie = port->pcie;
+-	struct resource *mem = &pcie->mem;
+-	const struct mtk_pcie_soc *soc = port->pcie->soc;
+-	u32 val;
+-	size_t size;
+-	int err;
+-
+-	/* MT7622 platforms need to enable LTSSM and ASPM from PCIe subsys */
+-	if (pcie->base) {
+-		val = readl(pcie->base + PCIE_SYS_CFG_V2);
+-		val |= PCIE_CSR_LTSSM_EN(port->slot) |
+-		       PCIE_CSR_ASPM_L1_EN(port->slot);
+-		writel(val, pcie->base + PCIE_SYS_CFG_V2);
+-	}
+-
+-	/* Assert all reset signals */
+-	writel(0, port->base + PCIE_RST_CTRL);
+-
+-	/*
+-	 * Enable PCIe link down reset, if link status changed from link up to
+-	 * link down, this will reset MAC control registers and configuration
+-	 * space.
+-	 */
+-	writel(PCIE_LINKDOWN_RST_EN, port->base + PCIE_RST_CTRL);
+-
+-	/* De-assert PHY, PE, PIPE, MAC and configuration reset	*/
+-	val = readl(port->base + PCIE_RST_CTRL);
+-	val |= PCIE_PHY_RSTB | PCIE_PERSTB | PCIE_PIPE_SRSTB |
+-	       PCIE_MAC_SRSTB | PCIE_CRSTB;
+-	writel(val, port->base + PCIE_RST_CTRL);
+-
+-	/* Set up vendor ID and class code */
+-	if (soc->need_fix_class_id) {
+-		val = PCI_VENDOR_ID_MEDIATEK;
+-		writew(val, port->base + PCIE_CONF_VEND_ID);
+-
+-		val = PCI_CLASS_BRIDGE_HOST;
+-		writew(val, port->base + PCIE_CONF_CLASS_ID);
+-	}
+-
+-	/* 100ms timeout value should be enough for Gen1/2 training */
+-	err = readl_poll_timeout(port->base + PCIE_LINK_STATUS_V2, val,
+-				 !!(val & PCIE_PORT_LINKUP_V2), 20,
+-				 100 * USEC_PER_MSEC);
+-	if (err)
+-		return -ETIMEDOUT;
+-
+-	/* Set INTx mask */
+-	val = readl(port->base + PCIE_INT_MASK);
+-	val &= ~INTX_MASK;
+-	writel(val, port->base + PCIE_INT_MASK);
+-
+-	/* Set AHB to PCIe translation windows */
+-	size = mem->end - mem->start;
+-	val = lower_32_bits(mem->start) | AHB2PCIE_SIZE(fls(size));
+-	writel(val, port->base + PCIE_AHB_TRANS_BASE0_L);
+-
+-	val = upper_32_bits(mem->start);
+-	writel(val, port->base + PCIE_AHB_TRANS_BASE0_H);
+-
+-	/* Set PCIe to AXI translation memory space.*/
+-	val = fls(0xffffffff) | WIN_ENABLE;
+-	writel(val, port->base + PCIE_AXI_WINDOW0);
+-
+-	return 0;
+-}
+-
+ static void mtk_compose_msi_msg(struct irq_data *data, struct msi_msg *msg)
+ {
+ 	struct mtk_pcie_port *port = irq_data_get_irq_chip_data(data);
+@@ -643,8 +574,6 @@ static int mtk_pcie_init_irq_domain(struct mtk_pcie_port *port,
+ 		ret = mtk_pcie_allocate_msi_domains(port);
+ 		if (ret)
+ 			return ret;
+-
+-		mtk_pcie_enable_msi(port);
+ 	}
+ 
+ 	return 0;
+@@ -711,6 +640,78 @@ static int mtk_pcie_setup_irq(struct mtk_pcie_port *port,
+ 	return 0;
+ }
+ 
++static int mtk_pcie_startup_port_v2(struct mtk_pcie_port *port)
++{
++	struct mtk_pcie *pcie = port->pcie;
++	struct resource *mem = &pcie->mem;
++	const struct mtk_pcie_soc *soc = port->pcie->soc;
++	u32 val;
++	size_t size;
++	int err;
++
++	/* MT7622 platforms need to enable LTSSM and ASPM from PCIe subsys */
++	if (pcie->base) {
++		val = readl(pcie->base + PCIE_SYS_CFG_V2);
++		val |= PCIE_CSR_LTSSM_EN(port->slot) |
++		       PCIE_CSR_ASPM_L1_EN(port->slot);
++		writel(val, pcie->base + PCIE_SYS_CFG_V2);
++	}
++
++	/* Assert all reset signals */
++	writel(0, port->base + PCIE_RST_CTRL);
++
++	/*
++	 * Enable PCIe link down reset, if link status changed from link up to
++	 * link down, this will reset MAC control registers and configuration
++	 * space.
++	 */
++	writel(PCIE_LINKDOWN_RST_EN, port->base + PCIE_RST_CTRL);
++
++	/* De-assert PHY, PE, PIPE, MAC and configuration reset	*/
++	val = readl(port->base + PCIE_RST_CTRL);
++	val |= PCIE_PHY_RSTB | PCIE_PERSTB | PCIE_PIPE_SRSTB |
++	       PCIE_MAC_SRSTB | PCIE_CRSTB;
++	writel(val, port->base + PCIE_RST_CTRL);
++
++	/* Set up vendor ID and class code */
++	if (soc->need_fix_class_id) {
++		val = PCI_VENDOR_ID_MEDIATEK;
++		writew(val, port->base + PCIE_CONF_VEND_ID);
++
++		val = PCI_CLASS_BRIDGE_HOST;
++		writew(val, port->base + PCIE_CONF_CLASS_ID);
++	}
++
++	/* 100ms timeout value should be enough for Gen1/2 training */
++	err = readl_poll_timeout(port->base + PCIE_LINK_STATUS_V2, val,
++				 !!(val & PCIE_PORT_LINKUP_V2), 20,
++				 100 * USEC_PER_MSEC);
++	if (err)
++		return -ETIMEDOUT;
++
++	/* Set INTx mask */
++	val = readl(port->base + PCIE_INT_MASK);
++	val &= ~INTX_MASK;
++	writel(val, port->base + PCIE_INT_MASK);
++
++	if (IS_ENABLED(CONFIG_PCI_MSI))
++		mtk_pcie_enable_msi(port);
++
++	/* Set AHB to PCIe translation windows */
++	size = mem->end - mem->start;
++	val = lower_32_bits(mem->start) | AHB2PCIE_SIZE(fls(size));
++	writel(val, port->base + PCIE_AHB_TRANS_BASE0_L);
++
++	val = upper_32_bits(mem->start);
++	writel(val, port->base + PCIE_AHB_TRANS_BASE0_H);
++
++	/* Set PCIe to AXI translation memory space.*/
++	val = fls(0xffffffff) | WIN_ENABLE;
++	writel(val, port->base + PCIE_AXI_WINDOW0);
++
++	return 0;
++}
++
+ static void __iomem *mtk_pcie_map_bus(struct pci_bus *bus,
+ 				      unsigned int devfn, int where)
+ {
+-- 
+2.6.4
