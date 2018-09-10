@@ -1,65 +1,59 @@
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Return-Path: <linux-nvme-bounces+bjorn=helgaas.com@lists.infradead.org>
+Return-Path: <linux-nvme-bounces+bjorn=helgaas.com@lists.infradead.org>
+Date: Mon, 10 Sep 2018 18:41:44 +0200
+From: Christoph Hellwig <hch@lst.de>
+To: Logan Gunthorpe <logang@deltatee.com>
+Subject: Re: [PATCH v5 07/13] block: Add PCI P2P flag for request queue and
+ check support for requests
+Message-ID: <20180910164144.GA24591@lst.de>
+References: <20180905195647.GA1626@lst.de>
+ <bcc1b3cf-2fd9-fa61-9cfb-b0e4d84e5d94@kernel.dk>
+ <20180905201152.GA1893@lst.de>
+ <eb42fb94-9da6-955b-8524-0a0f5ac4bd19@deltatee.com>
+ <2a3394bd-5f13-4818-43f4-dfc61f501e05@kernel.dk>
+ <e3ef26e6-6c8d-25b8-fa64-14594a51263c@deltatee.com>
+ <3af4d1d4-da07-c0a6-8464-9ddc1378f2f4@kernel.dk>
+ <f9e660cd-b597-bb6e-56a2-82fe71cb3649@deltatee.com>
+ <34d9b2f7-9e6d-4a0a-77e5-ec0e99610f5c@kernel.dk>
+ <c41c802c-9235-5383-2dfa-af9c1553f11b@deltatee.com>
 MIME-Version: 1.0
-References: <20180829183440.13601-1-robh@kernel.org>
- <20180913145130.GA5756@e107981-ln.cambridge.arm.com>
-In-Reply-To: <20180913145130.GA5756@e107981-ln.cambridge.arm.com>
-From: Rob Herring <robh@kernel.org>
-Date: Tue, 18 Sep 2018 12:05:40 -0700
-Message-ID: <CAL_JsqKoOJigMkiWqoG77+nstr-6=qiAeTePZkSThcfbVAtEQQ@mail.gmail.com>
-Subject: Re: [PATCH] PCI: remove unnecessary check of device_type == pci
-To: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
-List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
-List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
-List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
-List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
-List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
-Cc: linux-pci@vger.kernel.org,
- Subrahmanya Lingappa <l.subrahmanya@mobiveil.co.in>,
- Will Deacon <will.deacon@arm.com>,
- "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
- Michal Simek <michal.simek@xilinx.com>, Alan Douglas <adouglas@cadence.com>,
- Bjorn Helgaas <bhelgaas@google.com>,
- "moderated list:ARM/FREESCALE IMX / MXC ARM ARCHITECTURE"
- <linux-arm-kernel@lists.infradead.org>
+In-Reply-To: <c41c802c-9235-5383-2dfa-af9c1553f11b@deltatee.com>
+List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-nvme>,
+ <mailto:linux-nvme-request@lists.infradead.org?subject=unsubscribe>
+List-Archive: <http://lists.infradead.org/pipermail/linux-nvme/>
+List-Post: <mailto:linux-nvme@lists.infradead.org>
+List-Help: <mailto:linux-nvme-request@lists.infradead.org?subject=help>
+List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-nvme>,
+ <mailto:linux-nvme-request@lists.infradead.org?subject=subscribe>
+Cc: Jens Axboe <axboe@kernel.dk>, Keith Busch <keith.busch@intel.com>,
+ Alex Williamson <alex.williamson@redhat.com>, Sagi Grimberg <sagi@grimberg.me>,
+ linux-nvdimm@lists.01.org, linux-rdma@vger.kernel.org,
+ linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
+ linux-nvme@lists.infradead.org, Stephen Bates <sbates@raithlin.com>,
+ linux-block@vger.kernel.org,
+ =?iso-8859-1?B?Suly9G1l?= Glisse <jglisse@redhat.com>,
+ Jason Gunthorpe <jgg@mellanox.com>,
+ Christian =?iso-8859-1?Q?K=F6nig?= <christian.koenig@amd.com>,
+ Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+ Bjorn Helgaas <bhelgaas@google.com>, Max Gurtovoy <maxg@mellanox.com>,
+ Dan Williams <dan.j.williams@intel.com>, Christoph Hellwig <hch@lst.de>
 Content-Type: text/plain; charset="us-ascii"
-Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
-Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
+Sender: "Linux-nvme" <linux-nvme-bounces@lists.infradead.org>
+Errors-To: linux-nvme-bounces+bjorn=helgaas.com@lists.infradead.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Thu, Sep 13, 2018 at 7:51 AM Lorenzo Pieralisi
-<lorenzo.pieralisi@arm.com> wrote:
->
-> On Wed, Aug 29, 2018 at 01:34:40PM -0500, Rob Herring wrote:
-> > PCI host drivers have already matched on compatible strings, so checking
-> > device_type is redundant. Also, device_type is considered deprecated for
-> > FDT though we've still been requiring it for PCI hosts as it is useful
-> > for finding PCI buses.
->
-> Hi Rob,
->
-> I have no problem with the patch per-se, I can't parse though the second
-> paragraph, in particular what you mean by "useful for finding PCI
-> buses".
+On Wed, Sep 05, 2018 at 03:03:18PM -0600, Logan Gunthorpe wrote:
+> There is no special p2p submission process. In the nvme-of case we are
+> using the existing process and with the code in blk-core it didn't
+> change it's process at all. Creating a helper will create one and I can
+> look at making a pci_p2pdma_submit_bio() for v6; but if the developer
+> screws up and still calls the regular submit_bio() things will only be
+> very subtly broken and that won't be obvious.
 
-Device_type is the only generic way we can identify PCI buses which is
-useful for dtc for example to do PCI binding checks. Maybe we can use
-the node name which is what I'm doing for cpu nodes, but we've been
-less consistent about that for PCI.
-
->
-> What about the corresponding dts files ? I suspect we had better leave
-> them alone lest we can trigger regressions with new dts and older
-> kernels.
-
-Yes. it will take some time before we can remove from dts files. Or
-maybe only new ones change.
-
-Rob
+I just saw you added that "helper" in your tree.  Please don't, it is
+a negative value add as it doesn't help anything with the checking.
 
 _______________________________________________
-linux-arm-kernel mailing list
-linux-arm-kernel@lists.infradead.org
-http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
+Linux-nvme mailing list
+Linux-nvme@lists.infradead.org
+http://lists.infradead.org/mailman/listinfo/linux-nvme
