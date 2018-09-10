@@ -1,58 +1,48 @@
-Return-Path: <linux-acpi-owner@vger.kernel.org>
-Date: Wed, 5 Sep 2018 16:20:28 -0500
-From: Bjorn Helgaas <helgaas@kernel.org>
-To: Sinan Kaya <okaya@kernel.org>
-Cc: linux-pci@vger.kernel.org, Bjorn Helgaas <bhelgaas@google.com>,
-        "Rafael J. Wysocki" <rjw@rjwysocki.net>,
-        Len Brown <lenb@kernel.org>,
-        "open list:ACPI" <linux-acpi@vger.kernel.org>,
-        open list <linux-kernel@vger.kernel.org>
-Subject: Re: [PATCH v2 1/2] PCI/ACPI: correct error message for ASPM disabling
-Message-ID: <20180905212028.GS107892@bhelgaas-glaptop.roam.corp.google.com>
-References: <1533875532-24954-1-git-send-email-okaya@kernel.org>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mga03.intel.com ([134.134.136.65]:2181 "EHLO mga03.intel.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1727674AbeIJVLU (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Mon, 10 Sep 2018 17:11:20 -0400
+Date: Mon, 10 Sep 2018 10:18:06 -0600
+From: Keith Busch <keith.busch@intel.com>
+To: Lukas Wunner <lukas@wunner.de>
+Cc: Linux PCI <linux-pci@vger.kernel.org>,
+        Bjorn Helgaas <bhelgaas@google.com>,
+        Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+        Sinan Kaya <okaya@kernel.org>,
+        Thomas Tai <thomas.tai@oracle.com>,
+        "poza@codeaurora.org" <poza@codeaurora.org>,
+        Christoph Hellwig <hch@lst.de>
+Subject: Re: [PATCHv2 16/20] PCI/pciehp: Implement error handling callbacks
+Message-ID: <20180910161806.GB7466@localhost.localdomain>
+References: <20180905203546.21921-1-keith.busch@intel.com>
+ <20180905203546.21921-17-keith.busch@intel.com>
+ <20180910132033.ei5nk4iibt7pesd5@wunner.de>
+ <20180910145641.GA7466@localhost.localdomain>
+ <20180910160926.7grtfdyw3iv2xg4x@wunner.de>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1533875532-24954-1-git-send-email-okaya@kernel.org>
-Sender: linux-acpi-owner@vger.kernel.org
+In-Reply-To: <20180910160926.7grtfdyw3iv2xg4x@wunner.de>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Fri, Aug 10, 2018 at 04:32:11AM +0000, Sinan Kaya wrote:
-> If _OSC execution fails today for platforms without an _OSC
-> entry, code is printing a misleading message saying disabling
-> ASPM as follows:
+On Mon, Sep 10, 2018 at 06:09:26PM +0200, Lukas Wunner wrote:
+> On Mon, Sep 10, 2018 at 08:56:42AM -0600, Keith Busch wrote:
+> > On Mon, Sep 10, 2018 at 06:20:33AM -0700, Lukas Wunner wrote:
+> > > The __pci_walk_bus() seems superfluous because the devices are also
+> > > marked disconnected when bringing down the slot as a result of the
+> > > synthesized PCI_EXP_SLTSTA_PDC event.
+> > 
+> > Right, but we can't do that inline with the slot reset because of the
+> > circular locks that creates with the pci_bus_sem. We still want to
+> > fence off drivers for downstream devices from mucking with config space
+> > in a topology that is reported to be different than the one we're
+> > recoverying from. You can get undefined results that way.
 > 
-> acpi PNP0A03:00: _OSC failed (AE_NOT_FOUND); disabling ASPM
-> 
-> We need to ensure that platform supports ASPM to begin with.
-> 
-> Signed-off-by: Sinan Kaya <okaya@kernel.org>
-> Reported-by: Michael Kelley <mikelley@microsoft.com>
+> I don't quite follow.  I meant that __pci_walk_bus() is unnecessary
+> because the pciehp_request() call indirectly triggers it.  So the
+> devices are marked disconnected twice.
 
-Tentatively applied both to pci/aspm for v4.20, thanks!
-
-Rafael, let me know if you object or would rather put these through your
-tree.
-
-> ---
->  drivers/acpi/pci_root.c | 5 +++--
->  1 file changed, 3 insertions(+), 2 deletions(-)
-> 
-> diff --git a/drivers/acpi/pci_root.c b/drivers/acpi/pci_root.c
-> index 7433035..e465e72 100644
-> --- a/drivers/acpi/pci_root.c
-> +++ b/drivers/acpi/pci_root.c
-> @@ -455,8 +455,9 @@ static void negotiate_os_control(struct acpi_pci_root *root, int *no_aspm)
->  	decode_osc_support(root, "OS supports", support);
->  	status = acpi_pci_osc_support(root, support);
->  	if (ACPI_FAILURE(status)) {
-> -		dev_info(&device->dev, "_OSC failed (%s); disabling ASPM\n",
-> -			 acpi_format_exception(status));
-> +		dev_info(&device->dev, "_OSC failed (%s)%s\n",
-> +			 acpi_format_exception(status),
-> +			 pcie_aspm_support_enabled() ? "; disabling ASPM" : "");
->  		*no_aspm = 1;
->  		return;
->  	}
-> -- 
-> 2.7.4
-> 
+Right, but pciehhp_request handling happens too late to fence off drivers
+bound to devices downstream this hotplug port. The disconnect setting
+needs to happen before pciehp's slot_reset returns.
