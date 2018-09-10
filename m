@@ -1,86 +1,78 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mga02.intel.com ([134.134.136.20]:47633 "EHLO mga02.intel.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1730633AbeISFaa (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Wed, 19 Sep 2018 01:30:30 -0400
-From: Keith Busch <keith.busch@intel.com>
-To: Linux PCI <linux-pci@vger.kernel.org>,
-        Bjorn Helgaas <bhelgaas@google.com>
-Cc: Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-        Sinan Kaya <okaya@kernel.org>,
-        Thomas Tai <thomas.tai@oracle.com>, poza@codeaurora.org,
-        Lukas Wunner <lukas@wunner.de>, Christoph Hellwig <hch@lst.de>,
-        Mika Westerberg <mika.westerberg@linux.intel.com>,
-        Keith Busch <keith.busch@intel.com>
-Subject: [PATCHv3 01/10] PCI/portdrv: Use subsys_init for service drivers
-Date: Tue, 18 Sep 2018 17:56:53 -0600
-Message-Id: <20180918235702.26573-2-keith.busch@intel.com>
-In-Reply-To: <20180918235702.26573-1-keith.busch@intel.com>
-References: <20180918235702.26573-1-keith.busch@intel.com>
+Received: from mail-db5eur01on0061.outbound.protection.outlook.com ([104.47.2.61]:34336
+        "EHLO EUR01-DB5-obe.outbound.protection.outlook.com"
+        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+        id S1728174AbeIJSpI (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Mon, 10 Sep 2018 14:45:08 -0400
+From: Nipun Gupta <nipun.gupta@nxp.com>
+To: joro@8bytes.org, robin.murphy@arm.com, will.deacon@arm.com,
+        robh+dt@kernel.org, robh@kernel.org, mark.rutland@arm.com,
+        catalin.marinas@arm.com, gregkh@linuxfoundation.org,
+        laurentiu.tudor@nxp.com, bhelgaas@google.com, hch@lst.de
+Cc: m.szyprowski@samsung.com, shawnguo@kernel.org,
+        frowand.list@gmail.com, iommu@lists.linux-foundation.org,
+        linux-kernel@vger.kernel.org, devicetree@vger.kernel.org,
+        linux-arm-kernel@lists.infradead.org,
+        linuxppc-dev@lists.ozlabs.org, linux-pci@vger.kernel.org,
+        bharat.bhushan@nxp.com, stuyoder@gmail.com, leoyang.li@nxp.com,
+        Nipun Gupta <nipun.gupta@nxp.com>
+Subject: [PATCH 7/7 v7] arm64: dts: ls208xa: comply with the iommu map binding for fsl_mc
+Date: Mon, 10 Sep 2018 19:19:21 +0530
+Message-Id: <1536587361-11047-8-git-send-email-nipun.gupta@nxp.com>
+In-Reply-To: <1536587361-11047-1-git-send-email-nipun.gupta@nxp.com>
+References: <1536587361-11047-1-git-send-email-nipun.gupta@nxp.com>
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-The PCI port driver saves the PCI state after initializing all the
-service devices. This was, however, before the service drivers were even
-registered. The config space state that the service drivers were setting
-up were not being saved.
+fsl-mc bus support the new iommu-map property. Comply to this binding
+for fsl_mc bus.
 
-This patch fixes this by changing the service drivers use the
-subsys_init, which gets the service drivers registered after the pci bus
-system is initialized, but before the pci devices are probed. This gets
-the state saved as expected.
-
-Note, 70626d88385 ("PCI: pciehp: Make explicitly non-modular") already
-mentioned this exact change should be done, but declined to at the time
-until there was a real need for it.
-
-Signed-off-by: Keith Busch <keith.busch@intel.com>
+Signed-off-by: Nipun Gupta <nipun.gupta@nxp.com>
+Reviewed-by: Laurentiu Tudor <laurentiu.tudor@nxp.com>
 ---
- drivers/pci/hotplug/pciehp_core.c | 2 +-
- drivers/pci/pcie/aer.c            | 2 +-
- drivers/pci/pcie/dpc.c            | 2 +-
- drivers/pci/pcie/pme.c            | 2 +-
- 4 files changed, 4 insertions(+), 4 deletions(-)
+ arch/arm64/boot/dts/freescale/fsl-ls208xa.dtsi | 7 ++++++-
+ 1 file changed, 6 insertions(+), 1 deletion(-)
 
-diff --git a/drivers/pci/hotplug/pciehp_core.c b/drivers/pci/hotplug/pciehp_core.c
-index ccaf01e6eced..334044814dbe 100644
---- a/drivers/pci/hotplug/pciehp_core.c
-+++ b/drivers/pci/hotplug/pciehp_core.c
-@@ -322,4 +322,4 @@ static int __init pcied_init(void)
+diff --git a/arch/arm64/boot/dts/freescale/fsl-ls208xa.dtsi b/arch/arm64/boot/dts/freescale/fsl-ls208xa.dtsi
+index 137ef4d..3d5e049 100644
+--- a/arch/arm64/boot/dts/freescale/fsl-ls208xa.dtsi
++++ b/arch/arm64/boot/dts/freescale/fsl-ls208xa.dtsi
+@@ -184,6 +184,7 @@
+ 		#address-cells = <2>;
+ 		#size-cells = <2>;
+ 		ranges;
++		dma-ranges = <0x0 0x0 0x0 0x0 0x10000 0x00000000>;
  
- 	return retval;
- }
--device_initcall(pcied_init);
-+subsys_initcall(pcied_init);
-diff --git a/drivers/pci/pcie/aer.c b/drivers/pci/pcie/aer.c
-index 83180edd6ed4..1d2159409b01 100644
---- a/drivers/pci/pcie/aer.c
-+++ b/drivers/pci/pcie/aer.c
-@@ -1575,4 +1575,4 @@ static int __init aer_service_init(void)
- 		return -ENXIO;
- 	return pcie_port_service_register(&aerdriver);
- }
--device_initcall(aer_service_init);
-+subsys_initcall(aer_service_init);
-diff --git a/drivers/pci/pcie/dpc.c b/drivers/pci/pcie/dpc.c
-index f03279fc87cd..aacfb50eccfc 100644
---- a/drivers/pci/pcie/dpc.c
-+++ b/drivers/pci/pcie/dpc.c
-@@ -286,4 +286,4 @@ static int __init dpc_service_init(void)
- {
- 	return pcie_port_service_register(&dpcdriver);
- }
--device_initcall(dpc_service_init);
-+subsys_initcall(dpc_service_init);
-diff --git a/drivers/pci/pcie/pme.c b/drivers/pci/pcie/pme.c
-index 3ed67676ea2a..cd8c1adb9b0a 100644
---- a/drivers/pci/pcie/pme.c
-+++ b/drivers/pci/pcie/pme.c
-@@ -450,4 +450,4 @@ static int __init pcie_pme_service_init(void)
- {
- 	return pcie_port_service_register(&pcie_pme_driver);
- }
--device_initcall(pcie_pme_service_init);
-+subsys_initcall(pcie_pme_service_init);
+ 		clockgen: clocking@1300000 {
+ 			compatible = "fsl,ls2080a-clockgen";
+@@ -357,6 +358,8 @@
+ 			reg = <0x00000008 0x0c000000 0 0x40>,	 /* MC portal base */
+ 			      <0x00000000 0x08340000 0 0x40000>; /* MC control reg */
+ 			msi-parent = <&its>;
++			iommu-map = <0 &smmu 0 0>;	/* This is fixed-up by u-boot */
++			dma-coherent;
+ 			#address-cells = <3>;
+ 			#size-cells = <1>;
+ 
+@@ -460,6 +463,9 @@
+ 			compatible = "arm,mmu-500";
+ 			reg = <0 0x5000000 0 0x800000>;
+ 			#global-interrupts = <12>;
++			#iommu-cells = <1>;
++			stream-match-mask = <0x7C00>;
++			dma-coherent;
+ 			interrupts = <0 13 4>, /* global secure fault */
+ 				     <0 14 4>, /* combined secure interrupt */
+ 				     <0 15 4>, /* global non-secure fault */
+@@ -502,7 +508,6 @@
+ 				     <0 204 4>, <0 205 4>,
+ 				     <0 206 4>, <0 207 4>,
+ 				     <0 208 4>, <0 209 4>;
+-			mmu-masters = <&fsl_mc 0x300 0>;
+ 		};
+ 
+ 		dspi: dspi@2100000 {
 -- 
-2.14.4
+1.9.1
