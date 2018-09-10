@@ -1,79 +1,48 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mga05.intel.com ([192.55.52.43]:41235 "EHLO mga05.intel.com"
+Received: from mga05.intel.com ([192.55.52.43]:1813 "EHLO mga05.intel.com"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1727818AbeISFd7 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Wed, 19 Sep 2018 01:33:59 -0400
+        id S1727758AbeIJVis (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Mon, 10 Sep 2018 17:38:48 -0400
+Date: Mon, 10 Sep 2018 10:45:28 -0600
 From: Keith Busch <keith.busch@intel.com>
-To: Linux PCI <linux-pci@vger.kernel.org>,
-        Bjorn Helgaas <bhelgaas@google.com>
-Cc: Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+To: Lukas Wunner <lukas@wunner.de>
+Cc: Linux PCI <linux-pci@vger.kernel.org>,
+        Bjorn Helgaas <bhelgaas@google.com>,
+        Benjamin Herrenschmidt <benh@kernel.crashing.org>,
         Sinan Kaya <okaya@kernel.org>,
-        Thomas Tai <thomas.tai@oracle.com>, poza@codeaurora.org,
-        Lukas Wunner <lukas@wunner.de>, Christoph Hellwig <hch@lst.de>,
-        Mika Westerberg <mika.westerberg@linux.intel.com>,
-        Keith Busch <keith.busch@intel.com>
-Subject: [PATCH 11/12] PCI/AER: Use managed resource allocations
-Date: Tue, 18 Sep 2018 17:58:47 -0600
-Message-Id: <20180918235848.26694-12-keith.busch@intel.com>
-In-Reply-To: <20180918235848.26694-1-keith.busch@intel.com>
-References: <20180918235848.26694-1-keith.busch@intel.com>
+        Thomas Tai <thomas.tai@oracle.com>,
+        "poza@codeaurora.org" <poza@codeaurora.org>,
+        Christoph Hellwig <hch@lst.de>
+Subject: Re: [PATCHv2 16/20] PCI/pciehp: Implement error handling callbacks
+Message-ID: <20180910164528.GC7466@localhost.localdomain>
+References: <20180905203546.21921-1-keith.busch@intel.com>
+ <20180905203546.21921-17-keith.busch@intel.com>
+ <20180910132033.ei5nk4iibt7pesd5@wunner.de>
+ <20180910145641.GA7466@localhost.localdomain>
+ <20180910160926.7grtfdyw3iv2xg4x@wunner.de>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20180910160926.7grtfdyw3iv2xg4x@wunner.de>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-This uses the managed device resource allocations for the service data
-so that the aer driver doesn't need to manage it, further simplifying
-this driver.
+On Mon, Sep 10, 2018 at 06:09:26PM +0200, Lukas Wunner wrote:
+> On Mon, Sep 10, 2018 at 08:56:42AM -0600, Keith Busch wrote:
+> > The sysfs entries still function. Their actions are only temporarily
+> > stalled during error handling. Once the slot reset is called, the
+> > ctrl->pending_events is queried to take requested actions.
+> 
+> Okay I see.  Still, releasing the IRQ and requesting it again seems fairly
+> heavy-wheight.  Why not just acquire ctrl->reset_lock?
 
-Signed-off-by: Keith Busch <keith.busch@intel.com>
----
- drivers/pci/pcie/aer.c | 17 +++++------------
- 1 file changed, 5 insertions(+), 12 deletions(-)
+That was looking like a nice way to handle it, but it introduces
+circular locking between ctrl->reset_lock and pci_bus_sem:
 
-diff --git a/drivers/pci/pcie/aer.c b/drivers/pci/pcie/aer.c
-index 1878d9d7760b..7ecad011458d 100644
---- a/drivers/pci/pcie/aer.c
-+++ b/drivers/pci/pcie/aer.c
-@@ -1366,11 +1366,7 @@ static void aer_remove(struct pcie_device *dev)
- {
- 	struct aer_rpc *rpc = get_service_data(dev);
- 
--	if (rpc) {
--		aer_disable_rootport(rpc);
--		kfree(rpc);
--		set_service_data(dev, NULL);
--	}
-+	aer_disable_rootport(rpc);
- }
- 
- /**
-@@ -1383,10 +1379,9 @@ static int aer_probe(struct pcie_device *dev)
- {
- 	int status;
- 	struct aer_rpc *rpc;
--	struct device *device = &dev->port->device;
-+	struct device *device = &dev->device;
- 
--	/* Alloc rpc data structure */
--	rpc = kzalloc(sizeof(struct aer_rpc), GFP_KERNEL);
-+	rpc = devm_kzalloc(device, sizeof(struct aer_rpc), GFP_KERNEL);
- 	if (!rpc) {
- 		dev_printk(KERN_DEBUG, device, "alloc AER rpc failed\n");
- 		return -ENOMEM;
-@@ -1394,13 +1389,11 @@ static int aer_probe(struct pcie_device *dev)
- 	rpc->rpd = dev->port;
- 	set_service_data(dev, rpc);
- 
--	/* Request IRQ ISR */
--	status = request_threaded_irq(dev->irq, aer_irq, aer_isr,
--				      IRQF_SHARED, "aerdrv", dev);
-+	status = devm_request_threaded_irq(device, dev->irq, aer_irq, aer_isr,
-+					   IRQF_SHARED, "aerdrv", dev);
- 	if (status) {
- 		dev_printk(KERN_DEBUG, device, "request AER IRQ %d failed\n",
- 			   dev->irq);
--		aer_remove(dev);
- 		return status;
- 	}
- 
--- 
-2.14.4
+CPU A                               CPU B
+---------------------------------   ------------------------
+pci_walk_bus                        pciehp_ist
+ down_read(&pci_bus_sem)             down_read(&ctrl->reset_lock);
+  pcie_portdrv_error_detected         pciehp_handle_presence_or_link_change
+   pciehp_error_detected               pciehp_unconfigure_device
+    down_write(&ctrl->reset_lock)       pci_stop_and_remove_bus_devicea
+                                         down_write(&pci_bus_sem);
