@@ -1,140 +1,150 @@
-Return-Path: <SRS0=ok0h=LR=redhat.com=ptalbert@kernel.org>
-Return-Path: <SRS0=ok0h=LR=redhat.com=ptalbert@kernel.org>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from m12-18.163.com ([220.181.12.18]:60846 "EHLO m12-18.163.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1726601AbeIKQSL (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Tue, 11 Sep 2018 12:18:11 -0400
+Subject: Re: [PATCH] pci: dwc: pcie_designware: Fix a sleep-in-atomic-context
+ bug in dw_pcie_prog_outbound_atu
+To: Gustavo Pimentel <Gustavo.Pimentel@synopsys.com>,
+        Jia-Ju Bai <baijiaju1990@gmail.com>,
+        "jingoohan1@gmail.com" <jingoohan1@gmail.com>,
+        "Joao.Pinto@synopsys.com" <Joao.Pinto@synopsys.com>,
+        "lorenzo.pieralisi@arm.com" <lorenzo.pieralisi@arm.com>,
+        "bhelgaas@google.com" <bhelgaas@google.com>
+Cc: "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
+References: <20180902033811.26858-1-baijiaju1990@gmail.com>
+ <a21f3cc1-d593-edf7-19d1-3917cf5d5c98@synopsys.com>
+From: Jia-Ju Bai <baijiaju1990@163.com>
+Message-ID: <ba4cc984-48c7-f940-f1ea-903113ace1d2@163.com>
+Date: Tue, 11 Sep 2018 19:18:38 +0800
 MIME-Version: 1.0
-References: <CAPRrrxWVYJpRqKLmDQLnCUQdkcxhHzmD+S8pxnvi_+-2VUcbPA@mail.gmail.com>
- <20180810211308.GK113140@bhelgaas-glaptop.roam.corp.google.com>
-In-Reply-To: <20180810211308.GK113140@bhelgaas-glaptop.roam.corp.google.com>
-From: Patrick Talbert <ptalbert@redhat.com>
-Date: Mon, 3 Sep 2018 10:00:58 +0200
-Message-ID: <CAPRrrxVSFv-SQxY5Hbd1-5TPOs5R1eRGZ9XXsToh=xLLzENk5A@mail.gmail.com>
-Subject: Re: Should pcie_aspm_init_link_state() run when FADT ASPM disable bit
- is set?
-To: helgaas@kernel.org
-Cc: linux-pci@vger.kernel.org, Myron Stowe <mstowe@redhat.com>, fred@fredlawl.com
-Content-Type: text/plain; charset="UTF-8"
+In-Reply-To: <a21f3cc1-d593-edf7-19d1-3917cf5d5c98@synopsys.com>
+Content-Type: text/plain; charset=utf-8; format=flowed
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hello Bjorn,
-
-Sorry for the late reply, but thank you for looking at this.
-
-I filed a bug at kernel.org: https://bugzilla.kernel.org/show_bug.cgi?id=201001
-
-We can carry on there....
 
 
-Patrick
-On Fri, Aug 10, 2018 at 11:13 PM Bjorn Helgaas <helgaas@kernel.org> wrote:
+On 2018/9/11 16:40, Gustavo Pimentel wrote:
+> Hi Jia,
 >
-> [+cc Fred]
+> On 02/09/2018 04:38, Jia-Ju Bai wrote:
+>> The driver may sleep with holding a spinlock and in an interupt handler.
+>>
+>> The function call paths (from bottom to top) in Linux-4.16 are:
+>>
+>> [FUNC] usleep_range
+>> drivers/pci/dwc/pcie-designware.c, 181:
+>> 	usleep_range in dw_pcie_prog_outbound_atu
+>> drivers/pci/dwc/pcie-designware-host.c, 479:
+>> 	dw_pcie_prog_outbound_atu in dw_pcie_rd_other_conf
+>> drivers/pci/dwc/pcie-designware-host.c, 561:
+>> 	dw_pcie_rd_other_conf in dw_pcie_rd_conf
+>> drivers/pci/access.c, 66:
+>> 	[FUNC_PTR]dw_pcie_rd_conf in pci_bus_read_config_word
+>> drivers/pci/access.c, 918:
+>> 	pci_bus_read_config_word in pci_read_config_word
+>> drivers/block/umem.c, 630:
+>> 	pci_read_config_word in mm_interrupt (interrupt handler)
+>>
+>> [FUNC] usleep_range
+>> drivers/pci/dwc/pcie-designware.c, 181:
+>> 	usleep_range in dw_pcie_prog_outbound_atu
+>> drivers/pci/dwc/pcie-designware-host.c, 479:
+>> 	dw_pcie_prog_outbound_atu in dw_pcie_rd_other_conf
+>> drivers/pci/dwc/pcie-designware-host.c, 561:
+>> 	dw_pcie_rd_other_conf in dw_pcie_rd_conf
+>> drivers/pci/access.c, 66:
+>> 	[FUNC_PTR]dw_pcie_rd_conf in pci_bus_read_config_word
+>> drivers/pci/access.c, 918:
+>> 	pci_bus_read_config_word in pci_read_config_word
+>> drivers/ata/pata_efar.c, 115:
+>> 	pci_read_config_word in efar_set_piomode
+>> drivers/ata/pata_efar.c, 113:
+>> 	_raw_spin_lock_irqsave in efar_set_piomod
+>>
+>> [FUNC] usleep_range
+>> drivers/pci/dwc/pcie-designware.c, 181:
+>> 	usleep_range in dw_pcie_prog_outbound_atu
+>> drivers/pci/dwc/pcie-designware-host.c, 479:
+>> 	dw_pcie_prog_outbound_atu in dw_pcie_rd_other_conf
+>> drivers/pci/dwc/pcie-designware-host.c, 561:
+>> 	dw_pcie_rd_other_conf in dw_pcie_rd_conf
+>> drivers/pci/access.c, 66:
+>> 	[FUNC_PTR]dw_pcie_rd_conf in pci_bus_read_config_word
+>> drivers/pci/access.c, 918:
+>> 	pci_bus_read_config_word in pci_read_config_word
+>> drivers/block/mtip32xx/mtip32xx.c, 158:
+>> 	pci_read_config_word in mtip_check_surprise_removal
+>> drivers/block/mtip32xx/mtip32xx.c, 843:
+>> 	mtip_check_surprise_removal in mtip_handle_irq
+>> drivers/block/mtip32xx/mtip32xx.c, 879:
+>> 	mtip_handle_irq in mtip_irq_handler (interrupt handler)
+>>
+>> [FUNC] usleep_range
+>> drivers/pci/dwc/pcie-designware.c, 181:
+>> 	usleep_range in dw_pcie_prog_outbound_atu
+>> drivers/pci/dwc/pcie-designware-host.c, 479:
+>> 	dw_pcie_prog_outbound_atu in dw_pcie_rd_other_conf
+>> drivers/pci/dwc/pcie-designware-host.c, 561:
+>> 	dw_pcie_rd_other_conf in dw_pcie_rd_conf
+>> drivers/pci/access.c, 66:
+>> 	[FUNC_PTR]dw_pcie_rd_conf in pci_bus_read_config_word
+>> drivers/pci/access.c, 918:
+>> 	pci_bus_read_config_word in pci_read_config_word
+>> drivers/gpu/vga/vgaarb.c, 645:
+>> 	pci_read_config_word in vga_arbiter_add_pci_device
+>> drivers/gpu/vga/vgaarb.c, 629:
+>> 	_raw_spin_lock_irqsave in vga_arbiter_add_pci_device
+>>
+>> [FUNC] usleep_range
+>> drivers/pci/dwc/pcie-designware.c, 181:
+>> 	usleep_range in dw_pcie_prog_outbound_atu
+>> drivers/pci/dwc/pcie-designware-host.c, 479:
+>> 	dw_pcie_prog_outbound_atu in dw_pcie_rd_other_conf
+>> drivers/pci/dwc/pcie-designware-host.c, 561:
+>> 	dw_pcie_rd_other_conf in dw_pcie_rd_conf
+>> drivers/pci/access.c, 66:
+>> 	[FUNC_PTR]dw_pcie_rd_conf in pci_bus_read_config_word
+>> drivers/pci/access.c, 918:
+>> 	pci_bus_read_config_word in pci_read_config_word
+>> drivers/pci/ats.c, 139:
+>> 	pci_read_config_word in pci_ats_queue_depth
+>> drivers/iommu/intel-iommu.c, 1519:
+>> 	pci_ats_queue_depth in iommu_enable_dev_iotlb
+>> drivers/iommu/intel-iommu.c, 5295:
+>> 	iommu_enable_dev_iotlb in intel_iommu_enable_pasid
+>> drivers/iommu/intel-iommu.c, 5241:
+>> 	_raw_spin_lock_irqsave in intel_iommu_enable_pasid
+>>
+>> To fix this bug, usleep_range() is replaced with udelay().
+>>
+>> This bug is found by my static analysis tool DSAC.
+>>
+>> Signed-off-by: Jia-Ju Bai <baijiaju1990@gmail.com>
+>> ---
+>>   drivers/pci/controller/dwc/pcie-designware.c | 2 +-
+>>   1 file changed, 1 insertion(+), 1 deletion(-)
+>>
+>> diff --git a/drivers/pci/controller/dwc/pcie-designware.c b/drivers/pci/controller/dwc/pcie-designware.c
+>> index 778c4f76a884..7f50f7e51543 100644
+>> --- a/drivers/pci/controller/dwc/pcie-designware.c
+>> +++ b/drivers/pci/controller/dwc/pcie-designware.c
+>> @@ -135,7 +135,7 @@ static void dw_pcie_prog_outbound_atu_unroll(struct dw_pcie *pci, int index,
+>>   		if (val & PCIE_ATU_ENABLE)
+>>   			return;
+>>   
+>> -		usleep_range(LINK_WAIT_IATU_MIN, LINK_WAIT_IATU_MAX);
+>> +		udelay(LINK_WAIT_IATU_MAX);
+> You might use the mdelay instead of udelay, however this fix and others were
+> already made on patch on [1]
 >
-> On Thu, Aug 09, 2018 at 09:25:20AM +0200, Patrick Talbert wrote:
-> > Hello,
-> >
-> > I think there may be a logic issue with ASPM but I am not so familiar
-> > with this area so maybe I misunderstand.
-> >
-> > acpi_pci_init() checks ACPI FADT method for the ACPI_FADT_NO_ASPM flag
-> > and will disable ASPM support if it is set. It calls pcie_no_aspm() to
-> > do this. pcie_no_aspm() sets the global aspm_disabled = 1 to indicate
-> > this state:
-> >
-> > 365 static int __init acpi_pci_init(void)
-> > 366 {
-> > 367         int ret;
-> > 368
-> > 369         if (acpi_gbl_FADT.boot_flags & ACPI_FADT_NO_MSI) {
-> > 370                 pr_info("ACPI FADT declares the system doesn't
-> > support MSI, so disable it\n");
-> > 371                 pci_no_msi();
-> > 372         }
-> > 373
-> > 374         if (acpi_gbl_FADT.boot_flags & ACPI_FADT_NO_ASPM) {
-> > 375                 pr_info("ACPI FADT declares the system doesn't
-> > support PCIe ASPM, so disable it\n");
-> > 376                 pcie_no_aspm();
-> > 377         }
-> > 378
-> > 379         ret = register_acpi_bus_type(&acpi_pci_bus);
-> > 380         if (ret)
-> > 381                 return 0;
-> > 382
-> > 383         pci_set_platform_pm(&acpi_pci_platform_pm);
-> > 384         acpi_pci_slot_init();
-> > 385         acpiphp_init();
-> > 386
-> > 387         return 0;
-> > 388 }
-> > 389 arch_initcall(acpi_pci_init);
-> >
-> > 973 void pcie_no_aspm(void)
-> > 974 {
-> > 975         /*
-> > 976          * Disabling ASPM is intended to prevent the kernel from modifying
-> > 977          * existing hardware state, not to clear existing state.
-> > To that end:
-> > 978          * (a) set policy to POLICY_DEFAULT in order to avoid changing state
-> > 979          * (b) prevent userspace from changing policy
-> > 980          */
-> > 981         if (!aspm_force) {
-> > 982                 aspm_policy = POLICY_DEFAULT;
-> > 983                 aspm_disabled = 1;
-> > 984         }
-> > 985 }
-> >
-> > But then later on, during individual initialization of PCI devices,
-> > pci_scan_slot() will call pcie_aspm_init_link_state().
-> > pcie_aspm_init_link_state() does its work unless global
-> > aspm_support_enabled is false.
-> >
-> > But, shouldn't pcie_aspm_init_link_state() also check aspm_disabled ?
-> > Something like:
-> >
-> > diff --git a/drivers/pci/pcie/aspm.c b/drivers/pci/pcie/aspm.c
-> > index 8b56dad..5491dbf 100644
-> > --- a/drivers/pci/pcie/aspm.c
-> > +++ b/drivers/pci/pcie/aspm.c
-> > @@ -574,7 +574,7 @@ void pcie_aspm_init_link_state(struct pci_dev *pdev)
-> >         struct pcie_link_state *link;
-> >         int blacklist = !!pcie_aspm_sanity_check(pdev);
-> >
-> > -       if (!aspm_support_enabled)
-> > +       if (!aspm_support_enabled || aspm_disabled)
-> >                 return;
-> >
-> >         if (pdev->link_state)
-> >
-> >
-> > In "387d375 PCI: Don't clear ASPM bits when the FADT declares it's
-> > unsupported" the message says:
-> >
-> >     Communications with a hardware vendor confirm that the expected behaviour
-> >     on systems that set the FADT ASPM disable bit but which still grant full
-> >     PCIe control is for the OS to leave any BIOS configuration intact and
-> >     refuse to touch the ASPM bits.  This mimics the behaviour of Windows.
-> >
-> >
-> > I apologize, but I do not immediately understand the distinction
-> > between the meaning of aspm_support_enabled and aspm_disabled so I am
-> > likely missing some key point.
+> [1] https://lkml.org/lkml/2018/9/10/284
 >
-> Don't apologize, this code confuses everybody who looks at it, which
-> is a clear signal that it needs some love :)
->
-> > But anyway, this query comes about because a host which reports the
-> > ACPI_FADT_NO_ASPM bit set hangs on boot unless pcie_aspm=off is set.
->
-> That's a terrible situation and very difficult to debug.  How did you
-> figure out that this was related to ASPM?  Can you tell anything about
-> where the hang is?
->
-> Is there any chance you could collect a complete dmesg log and output
-> of "sudo lspci -vvv" from that system (obviously you'd have to boot
-> with "pcie_aspm=off" or your patch, so we could attach it to a
-> bugzilla.kernel.org report that could be mentioned in the patch?
->
-> I assume this system works with Windows.  I agree that based on the
-> 387d37577fdd changelog, we probably shouldn't be doing anything in
-> pcie_aspm_init_link_state().
->
-> Bjorn
+
+Okay, that is good.
+
+
+Best wishes,
+Jia-Ju Bai
