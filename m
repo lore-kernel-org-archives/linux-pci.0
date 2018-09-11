@@ -1,51 +1,147 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from zeniv.linux.org.uk ([195.92.253.2]:42968 "EHLO
-        ZenIV.linux.org.uk" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1727416AbeIOCOJ (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Fri, 14 Sep 2018 22:14:09 -0400
-Date: Fri, 14 Sep 2018 21:57:48 +0100
-From: Al Viro <viro@ZenIV.linux.org.uk>
-To: Darren Hart <dvhart@infradead.org>
-Cc: Arnd Bergmann <arnd@arndb.de>, linux-fsdevel@vger.kernel.org,
-        Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-        "David S. Miller" <davem@davemloft.net>,
-        devel@driverdev.osuosl.org, linux-kernel@vger.kernel.org,
-        qat-linux@intel.com, linux-crypto@vger.kernel.org,
-        linux-media@vger.kernel.org, dri-devel@lists.freedesktop.org,
-        linaro-mm-sig@lists.linaro.org, amd-gfx@lists.freedesktop.org,
-        linux-input@vger.kernel.org, linux-iio@vger.kernel.org,
-        linux-rdma@vger.kernel.org, linux-nvdimm@lists.01.org,
-        linux-nvme@lists.infradead.org, linux-pci@vger.kernel.org,
-        platform-driver-x86@vger.kernel.org,
-        linux-remoteproc@vger.kernel.org, sparclinux@vger.kernel.org,
-        linux-scsi@vger.kernel.org, linux-usb@vger.kernel.org,
-        linux-fbdev@vger.kernel.org, linuxppc-dev@lists.ozlabs.org,
-        linux-btrfs@vger.kernel.org, ceph-devel@vger.kernel.org,
-        linux-wireless@vger.kernel.org, netdev@vger.kernel.org
-Subject: Re: [PATCH v2 05/17] compat_ioctl: move more drivers to
- generic_compat_ioctl_ptrarg
-Message-ID: <20180914205748.GC19965@ZenIV.linux.org.uk>
-References: <20180912150142.157913-1-arnd@arndb.de>
- <20180912151134.436719-1-arnd@arndb.de>
- <20180914203506.GE35251@wrath>
+Received: from us01smtprelay-2.synopsys.com ([198.182.47.9]:43872 "EHLO
+        smtprelay.synopsys.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726488AbeIKNlc (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Tue, 11 Sep 2018 09:41:32 -0400
+Subject: Re: [PATCH] pci: dwc: pcie_designware: Fix a sleep-in-atomic-context
+ bug in dw_pcie_prog_outbound_atu
+To: Jia-Ju Bai <baijiaju1990@gmail.com>,
+        "jingoohan1@gmail.com" <jingoohan1@gmail.com>,
+        "Joao.Pinto@synopsys.com" <Joao.Pinto@synopsys.com>,
+        "lorenzo.pieralisi@arm.com" <lorenzo.pieralisi@arm.com>,
+        "bhelgaas@google.com" <bhelgaas@google.com>
+CC: "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
+References: <20180902033811.26858-1-baijiaju1990@gmail.com>
+From: Gustavo Pimentel <Gustavo.Pimentel@synopsys.com>
+Message-ID: <a21f3cc1-d593-edf7-19d1-3917cf5d5c98@synopsys.com>
+Date: Tue, 11 Sep 2018 09:40:12 +0100
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20180914203506.GE35251@wrath>
+In-Reply-To: <20180902033811.26858-1-baijiaju1990@gmail.com>
+Content-Type: text/plain; charset="utf-8"
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Fri, Sep 14, 2018 at 01:35:06PM -0700, Darren Hart wrote:
- 
-> Acked-by: Darren Hart (VMware) <dvhart@infradead.org>
+Hi Jia,
+
+On 02/09/2018 04:38, Jia-Ju Bai wrote:
+> The driver may sleep with holding a spinlock and in an interupt handler.
 > 
-> As for a longer term solution, would it be possible to init fops in such
-> a way that the compat_ioctl call defaults to generic_compat_ioctl_ptrarg
-> so we don't have to duplicate this boilerplate for every ioctl fops
-> structure?
+> The function call paths (from bottom to top) in Linux-4.16 are:
+> 
+> [FUNC] usleep_range
+> drivers/pci/dwc/pcie-designware.c, 181: 
+> 	usleep_range in dw_pcie_prog_outbound_atu
+> drivers/pci/dwc/pcie-designware-host.c, 479: 
+> 	dw_pcie_prog_outbound_atu in dw_pcie_rd_other_conf
+> drivers/pci/dwc/pcie-designware-host.c, 561: 
+> 	dw_pcie_rd_other_conf in dw_pcie_rd_conf
+> drivers/pci/access.c, 66: 
+> 	[FUNC_PTR]dw_pcie_rd_conf in pci_bus_read_config_word
+> drivers/pci/access.c, 918: 
+> 	pci_bus_read_config_word in pci_read_config_word
+> drivers/block/umem.c, 630: 
+> 	pci_read_config_word in mm_interrupt (interrupt handler)
+> 
+> [FUNC] usleep_range
+> drivers/pci/dwc/pcie-designware.c, 181: 
+> 	usleep_range in dw_pcie_prog_outbound_atu
+> drivers/pci/dwc/pcie-designware-host.c, 479: 
+> 	dw_pcie_prog_outbound_atu in dw_pcie_rd_other_conf
+> drivers/pci/dwc/pcie-designware-host.c, 561: 
+> 	dw_pcie_rd_other_conf in dw_pcie_rd_conf
+> drivers/pci/access.c, 66: 
+> 	[FUNC_PTR]dw_pcie_rd_conf in pci_bus_read_config_word
+> drivers/pci/access.c, 918: 
+> 	pci_bus_read_config_word in pci_read_config_word
+> drivers/ata/pata_efar.c, 115: 
+> 	pci_read_config_word in efar_set_piomode
+> drivers/ata/pata_efar.c, 113: 
+> 	_raw_spin_lock_irqsave in efar_set_piomod
+> 
+> [FUNC] usleep_range
+> drivers/pci/dwc/pcie-designware.c, 181: 
+> 	usleep_range in dw_pcie_prog_outbound_atu
+> drivers/pci/dwc/pcie-designware-host.c, 479: 
+> 	dw_pcie_prog_outbound_atu in dw_pcie_rd_other_conf
+> drivers/pci/dwc/pcie-designware-host.c, 561: 
+> 	dw_pcie_rd_other_conf in dw_pcie_rd_conf
+> drivers/pci/access.c, 66: 
+> 	[FUNC_PTR]dw_pcie_rd_conf in pci_bus_read_config_word
+> drivers/pci/access.c, 918: 
+> 	pci_bus_read_config_word in pci_read_config_word
+> drivers/block/mtip32xx/mtip32xx.c, 158: 
+> 	pci_read_config_word in mtip_check_surprise_removal
+> drivers/block/mtip32xx/mtip32xx.c, 843: 
+> 	mtip_check_surprise_removal in mtip_handle_irq
+> drivers/block/mtip32xx/mtip32xx.c, 879: 
+> 	mtip_handle_irq in mtip_irq_handler (interrupt handler)
+> 
+> [FUNC] usleep_range
+> drivers/pci/dwc/pcie-designware.c, 181: 
+> 	usleep_range in dw_pcie_prog_outbound_atu
+> drivers/pci/dwc/pcie-designware-host.c, 479: 
+> 	dw_pcie_prog_outbound_atu in dw_pcie_rd_other_conf
+> drivers/pci/dwc/pcie-designware-host.c, 561: 
+> 	dw_pcie_rd_other_conf in dw_pcie_rd_conf
+> drivers/pci/access.c, 66: 
+> 	[FUNC_PTR]dw_pcie_rd_conf in pci_bus_read_config_word
+> drivers/pci/access.c, 918: 
+> 	pci_bus_read_config_word in pci_read_config_word
+> drivers/gpu/vga/vgaarb.c, 645: 
+> 	pci_read_config_word in vga_arbiter_add_pci_device
+> drivers/gpu/vga/vgaarb.c, 629: 
+> 	_raw_spin_lock_irqsave in vga_arbiter_add_pci_device
+> 
+> [FUNC] usleep_range
+> drivers/pci/dwc/pcie-designware.c, 181: 
+> 	usleep_range in dw_pcie_prog_outbound_atu
+> drivers/pci/dwc/pcie-designware-host.c, 479: 
+> 	dw_pcie_prog_outbound_atu in dw_pcie_rd_other_conf
+> drivers/pci/dwc/pcie-designware-host.c, 561: 
+> 	dw_pcie_rd_other_conf in dw_pcie_rd_conf
+> drivers/pci/access.c, 66: 
+> 	[FUNC_PTR]dw_pcie_rd_conf in pci_bus_read_config_word
+> drivers/pci/access.c, 918: 
+> 	pci_bus_read_config_word in pci_read_config_word
+> drivers/pci/ats.c, 139: 
+> 	pci_read_config_word in pci_ats_queue_depth
+> drivers/iommu/intel-iommu.c, 1519: 
+> 	pci_ats_queue_depth in iommu_enable_dev_iotlb
+> drivers/iommu/intel-iommu.c, 5295: 
+> 	iommu_enable_dev_iotlb in intel_iommu_enable_pasid
+> drivers/iommu/intel-iommu.c, 5241: 
+> 	_raw_spin_lock_irqsave in intel_iommu_enable_pasid
+> 
+> To fix this bug, usleep_range() is replaced with udelay().
+> 
+> This bug is found by my static analysis tool DSAC.
+> 
+> Signed-off-by: Jia-Ju Bai <baijiaju1990@gmail.com>
+> ---
+>  drivers/pci/controller/dwc/pcie-designware.c | 2 +-
+>  1 file changed, 1 insertion(+), 1 deletion(-)
+> 
+> diff --git a/drivers/pci/controller/dwc/pcie-designware.c b/drivers/pci/controller/dwc/pcie-designware.c
+> index 778c4f76a884..7f50f7e51543 100644
+> --- a/drivers/pci/controller/dwc/pcie-designware.c
+> +++ b/drivers/pci/controller/dwc/pcie-designware.c
+> @@ -135,7 +135,7 @@ static void dw_pcie_prog_outbound_atu_unroll(struct dw_pcie *pci, int index,
+>  		if (val & PCIE_ATU_ENABLE)
+>  			return;
+>  
+> -		usleep_range(LINK_WAIT_IATU_MIN, LINK_WAIT_IATU_MAX);
+> +		udelay(LINK_WAIT_IATU_MAX);
 
-	Bad idea, that...  Because several years down the road somebody will add
-an ioctl that takes an unsigned int for argument.  Without so much as looking
-at your magical mystery macro being used to initialize file_operations.
+You might use the mdelay instead of udelay, however this fix and others were
+already made on patch on [1]
 
-	FWIW, I would name that helper in more blunt way - something like
-compat_ioctl_only_compat_pointer_ioctls_here()...
+[1] https://lkml.org/lkml/2018/9/10/284
+
+Regards,
+Gustavo
+
+>  	}
+>  	dev_err(pci->dev, "Outbound iATU is not being enabled\n");
+>  }
+> 
