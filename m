@@ -1,95 +1,65 @@
-Return-Path: <SRS0=adwl=MA=arm.com=lorenzo.pieralisi@kernel.org>
-Return-Path: <SRS0=adwl=MA=arm.com=lorenzo.pieralisi@kernel.org>
-Date: Tue, 18 Sep 2018 11:57:59 +0100
-From: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
-To: Bjorn Helgaas <helgaas@kernel.org>
-Cc: Alan Douglas <adouglas@cadence.com>, bhelgaas@google.com, kishon@ti.com,
-	linux-pci@vger.kernel.org, cyrille.pitchen@bootlin.com
-Subject: Re: [PATCH] pci: cadence: Correct probe behaviour when failing to
- get PHY
-Message-ID: <20180918105759.GD26886@e107981-ln.cambridge.arm.com>
-References: <1536164408-10959-1-git-send-email-adouglas@cadence.com>
- <20180905171008.GM107892@bhelgaas-glaptop.roam.corp.google.com>
+Return-Path: <linux-acpi-owner@vger.kernel.org>
+Date: Tue, 11 Sep 2018 10:29:35 +0200
+From: Lukas Wunner <lukas@wunner.de>
+To: Mika Westerberg <mika.westerberg@linux.intel.com>
+Cc: Bjorn Helgaas <bhelgaas@google.com>,
+        "Rafael J. Wysocki" <rjw@rjwysocki.net>,
+        Len Brown <lenb@kernel.org>,
+        Keith Busch <keith.busch@intel.com>,
+        Ashok Raj <ashok.raj@intel.com>, Mario.Limonciello@dell.com,
+        Anthony Wong <anthony.wong@canonical.com>,
+        "D . J . Bernstein" <djb@cr.yp.to>,
+        Linus Walleij <linus.walleij@linaro.org>,
+        linux-pci@vger.kernel.org, linux-acpi@vger.kernel.org
+Subject: Re: [PATCH 05/10] PCI: portdrv: Resume upon exit from system suspend
+ if left runtime suspended
+Message-ID: <20180911082935.gwcwqnk7ohwencui@wunner.de>
+References: <20180906155020.51700-1-mika.westerberg@linux.intel.com>
+ <20180906155020.51700-6-mika.westerberg@linux.intel.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20180905171008.GM107892@bhelgaas-glaptop.roam.corp.google.com>
+In-Reply-To: <20180906155020.51700-6-mika.westerberg@linux.intel.com>
+Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wed, Sep 05, 2018 at 12:10:08PM -0500, Bjorn Helgaas wrote:
-> On Wed, Sep 05, 2018 at 05:20:08PM +0100, Alan Douglas wrote:
-> > Test the correct value to see whether the PHY get failed.
+On Thu, Sep 06, 2018 at 06:50:15PM +0300, Mika Westerberg wrote:
+> Currently we try to keep PCIe ports runtime suspended over system
+> suspend if possible. This mostly happens when entering suspend-to-idle
+> because there is no need to re-configure wake settings.
 > 
-> If you intended a new paragraph here, please insert a blank line.
+> This causes problems if the parent port goes into D3cold and it gets
+> resumed upon exit from system suspend. This may happen for example if
+> the port is part of PCIe switch and the same switch is connected to a
+> PCIe endpoint that needs to be resumed. The way exit from D3cold works
+> according PCIe 4.0 spec 5.3.1.4.2 is that power is restored and cold
+> reset is signaled. After this the device is in D0unitialized state
+> keeping PME context if it supports wake from D3cold.
 > 
-> > Use devm_phy_get() instead of devm_phy_optional_get(), since it is
-> > only called if phy name is given in devicetree and so should exist.
-> > If failure when getting or linking PHY, put any PHYs which were
-> > already got and unlink them.
-> > 
-> > Fixes: dfb80534692ddc5b ("PCI: cadence: Add generic PHY support to host and EP drivers")
-> > Signed-off-by: Alan Douglas <adouglas@cadence.com>
-> 
-> Lorenzo will probably take care of this for you, but if you repost this for
-> any reason, please follow the capitalization convention:
-> 
->   $ git log --oneline --follow drivers/pci/controller/pcie-cadence.c
->   ee12c9efe685 PCI: cadence: Add Power Management ops for host and EP
->   dfb80534692d PCI: cadence: Add generic PHY support to host and EP drivers
->   6e0832fa432e PCI: Collect all native drivers under drivers/pci/controller/
->   37dddf14f1ae PCI: cadence: Add EndPoint Controller driver for Cadence PCIe controller
+> The problem occurs when a PCIe hotplug port is left suspended and the
+> parent port goes into D3cold and back to D0, the port keeps its PME
+> context but since everything else is reset back to defaults
+> (D0unitialized) it is not set to detect hotplug events anymore.
 
-Done, updated the log and pushed to pci/cadence for v4.20, thanks.
+We call pci_wakeup_bus() in __pci_start_power_transition() for this
+reason.  Why isn't that sufficient in your use case?
 
-Lorenzo
 
-> > ---
-> >  drivers/pci/controller/pcie-cadence.c | 18 +++++++++++-------
-> >  1 file changed, 11 insertions(+), 7 deletions(-)
-> > 
-> > diff --git a/drivers/pci/controller/pcie-cadence.c b/drivers/pci/controller/pcie-cadence.c
-> > index 86f1b00..67d2f98 100644
-> > --- a/drivers/pci/controller/pcie-cadence.c
-> > +++ b/drivers/pci/controller/pcie-cadence.c
-> > @@ -190,14 +190,16 @@ int cdns_pcie_init_phy(struct device *dev, struct cdns_pcie *pcie)
-> >  
-> >  	for (i = 0; i < phy_count; i++) {
-> >  		of_property_read_string_index(np, "phy-names", i, &name);
-> > -		phy[i] = devm_phy_optional_get(dev, name);
-> > -		if (IS_ERR(phy))
-> > -			return PTR_ERR(phy);
-> > -
-> > +		phy[i] = devm_phy_get(dev, name);
-> > +		if (IS_ERR(phy[i])) {
-> > +			ret = PTR_ERR(phy[i]);
-> > +			goto err_phy;
-> > +		}
-> >  		link[i] = device_link_add(dev, &phy[i]->dev, DL_FLAG_STATELESS);
-> >  		if (!link[i]) {
-> > +			devm_phy_put(dev, phy[i]);
-> >  			ret = -EINVAL;
-> > -			goto err_link;
-> > +			goto err_phy;
-> >  		}
-> >  	}
-> >  
-> > @@ -207,13 +209,15 @@ int cdns_pcie_init_phy(struct device *dev, struct cdns_pcie *pcie)
-> >  
-> >  	ret =  cdns_pcie_enable_phy(pcie);
-> >  	if (ret)
-> > -		goto err_link;
-> > +		goto err_phy;
-> >  
-> >  	return 0;
-> >  
-> > -err_link:
-> > +err_phy:
-> >  	while (--i >= 0)
-> >  		device_link_del(link[i]);
-> > +	while (--i >= 0)
-> > +		devm_phy_put(dev, phy[i]);
-> >  
-> >  	return ret;
-> >  }
-> > -- 
-> > 1.9.0
-> > 
+> For this reason change the PCIe portdrv power management logic so that
+> it is fine to keep the port runtime suspended over system suspend but it
+> needs to be resumed upon exit to make sure it gets properly re-initialized.
+> The custom ->prepare() hook with DPM_FLAG_SMART_PREPARE is needed
+> because otherwise pci_pm_prepare() instructs the PM core to go directly
+> to pci_pm_complete() on resume and this skips resuming the port.
+
+On Macs, if no Thunderbolt device is attached, it is perfectly okay to
+use direct complete and it is also perfectly okay to leave the entire
+controller (including all its PCIe ports) in D3cold when coming out of
+system sleep.  In fact it would be unnecessary and undesirable to
+runtime resume the controller, it would just waste energy for no reason.
+
+Can you make sure that ports stay runtime suspended after system sleep
+in that case?
+
+Thanks,
+
+Lukas
