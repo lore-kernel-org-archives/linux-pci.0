@@ -1,28 +1,31 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from 107-172-0-11-host.colocrossing.com ([107.172.0.11]:46863 "EHLO
-        denon.com" rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1727665AbeIEThn (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Wed, 5 Sep 2018 15:37:43 -0400
+Received: from apexinds.com ([74.63.245.249]:45301 "EHLO curiox.com"
+        rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org with ESMTP
+        id S1727645AbeIKV3T (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Tue, 11 Sep 2018 17:29:19 -0400
 To: linux-pci@vger.kernel.org
-Subject: Photo replacing
-Message-ID: <8348ac6c7aa09fa1816eb7c919a7a868@floralsupply.com>
-Date: Wed, 05 Sep 2018 13:12:05 +0200
-From: "Jesse Kurtz" <zoepdeiilarsaozs@email.jp>
-Reply-To: hongloudo@sina.com
+Subject: Editing 4
+Message-ID: <024ad907598379d32a89094c166c0e21@everydropwater.com>
+Date: Tue, 11 Sep 2018 07:47:20 +0200
+From: "Aaron" <lufinteevrpasnlop@aol.jp>
+Reply-To: ludosanke@yandex.com
 MIME-Version: 1.0
 Content-Type: text/plain; format=flowed; charset="UTF-8"
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Just want to check with you to see if you have any photos for editing?
+Hi,
 
-We are providing below services to you.
-Clipping path for the images.
-Cut out for the photos
-Masking for the images
-All kinds of retouching for the beauty and model.
+If you have photos for editing, please send email to: hansrekan@outlook.com
 
-We provide testing for your photos if you need.
+We have 12 in house image editors and we can help you for cutting out your
+photos, or path the photos.
+Includes retouching if needed.
+
+Used for products photos or portrait photos, catalog photos.
+
+You may drop us one photo, we can send you the testing work.
 
 Thanks,
-Jesse
+Aaron Williams
+Email: hansrekan@outlook.com
