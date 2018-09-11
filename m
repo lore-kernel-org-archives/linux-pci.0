@@ -1,79 +1,128 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mx2.mailbox.org ([80.241.60.215]:58840 "EHLO mx2.mailbox.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1726980AbeIFSLA (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Thu, 6 Sep 2018 14:11:00 -0400
-Subject: Re: [Nouveau] [PATCH] PCI: add prefetch quirk to work around
- Asus/Nvidia suspend issues
-To: Daniel Drake <drake@endlessm.com>, bhelgaas@google.com,
-        peter@lekensteyn.nl, alexdeucher@gmail.com
-Cc: linux-pm@vger.kernel.org, linux-pci@vger.kernel.org,
-        nouveau@lists.freedesktop.org, linux@endlessm.com
-References: <20180831073057.14626-1-drake@endlessm.com>
-From: Thomas Martitz <kugel@rockbox.org>
-Message-ID: <2848f50b-d0c6-12ec-8f24-8461209c13b4@rockbox.org>
-Date: Thu, 6 Sep 2018 15:35:12 +0200
+Return-Path: <linux-acpi-owner@vger.kernel.org>
+From: "Rafael J. Wysocki" <rjw@rjwysocki.net>
+To: Mika Westerberg <mika.westerberg@linux.intel.com>
+Cc: Bjorn Helgaas <bhelgaas@google.com>, Len Brown <lenb@kernel.org>,
+        Lukas Wunner <lukas@wunner.de>,
+        Keith Busch <keith.busch@intel.com>,
+        Ashok Raj <ashok.raj@intel.com>, Mario.Limonciello@dell.com,
+        Anthony Wong <anthony.wong@canonical.com>,
+        "D . J . Bernstein" <djb@cr.yp.to>,
+        Linus Walleij <linus.walleij@linaro.org>,
+        linux-pci@vger.kernel.org, linux-acpi@vger.kernel.org
+Subject: Re: [PATCH 03/10] PCI: pciehp: Disable hotplug interrupt during suspend
+Date: Tue, 11 Sep 2018 10:55:13 +0200
+Message-ID: <512229552.sYoMAcyA8j@aspire.rjw.lan>
+In-Reply-To: <20180906155020.51700-4-mika.westerberg@linux.intel.com>
+References: <20180906155020.51700-1-mika.westerberg@linux.intel.com> <20180906155020.51700-4-mika.westerberg@linux.intel.com>
 MIME-Version: 1.0
-In-Reply-To: <20180831073057.14626-1-drake@endlessm.com>
-Content-Type: text/plain; charset=utf-8; format=flowed
-Sender: linux-pci-owner@vger.kernel.org
+Content-Type: text/plain; charset="us-ascii"
+Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Am 31.08.2018 um 09:30 schrieb Daniel Drake:
-> On over 40 Intel-based Asus products, the nvidia GPU becomes unusable
-> after S3 suspend/resume. The affected products include multiple
-> generations of nvidia GPUs and Intel SoCs. After resume, nouveau logs
-> many errors such as:
->
->      fifo: fault 00 [READ] at 0000005555555000 engine 00 [GR] client 04 [HUB/FE] reason 4a [] on channel -1 [007fa91000 unknown]
->      DRM: failed to idle channel 0 [DRM]
->
-> Similarly, the nvidia proprietary driver also fails after resume
-> (black screen, 100% CPU usage in Xorg process). We shipped a sample
-> to Nvidia for diagnosis, and their response indicated that it's a
-> problem with the parent PCI bridge (on the Intel SoC), not the GPU.
->
-> We found a workaround: on resume, rewrite the Intel PCI bridge
-> 'Prefetchable Base Upper 32 Bits' register. In the cases that I checked,
-> this register has value 0 and we just have to rewrite that value.
->
-> It's very strange that rewriting the exact same register value
-> makes a difference, but it definitely makes the issue go away.
-> It's not just acting as some kind of memory barrier, because rewriting
-> other bridge registers does not work around the issue. There's something
-> magic in this particular register.
->
-> We examined our database of Asus hardware and identified 43 products
-> that we believe are affected. Checking the nvidia GPU parent PCI bridge
-> on each one, in total 5 Intel PCI bridges need quirking as below.
-> The quirk will run on bridges even where no nvidia GPU is connected,
-> but it should be harmless, and we at least limit it to only running
-> on Asus products.
->
-> This fix was tested on all the affected models that we have in hands
-> (X542UQ, UX533FD, X530UN, V272UN).
+On Thursday, September 6, 2018 5:50:13 PM CEST Mika Westerberg wrote:
+> When PCIe hotplug port is transitioned into D3hot link to the downstream
+> component will go down. If hotplug interrupt generation is enabled when
+> that happens it will trigger immediately waking up the system and
+> bringing the link back up.
+> 
+> To prevent this disable hotplug interrupt generation when system suspend
+> is entered. This does not prevent wakeup from low power states according
+> to PCIe 4.0 spec section 6.7.3.4:
+> 
+>   Software enables a hot-plug event to generate a wakeup event by
+>   enabling software notification of the event as described in Section
+>   6.7.3.1. Note that in order for software to disable interrupt generation
+>   while keeping wakeup generation enabled, the Hot-Plug Interrupt Enable
+>   bit must be cleared.
+> 
+> So as long as we have set the slot event mask accordingly wakeup should
+> work even if slot interrupt is disabled. The port should trigger wake
+> and then send PME to the root port when the PCIe hierarchy is brought
+> back up.
+> 
+> Limit this to systems using native PME mechanism to make sure older
+> Apple systems depending on commit e3354628c376 ("PCI: pciehp: Support
+> interrupts sent from D3hot") still continue working.
+> 
+> Signed-off-by: Mika Westerberg <mika.westerberg@linux.intel.com>
+> ---
+>  drivers/pci/hotplug/pciehp.h      |  2 ++
+>  drivers/pci/hotplug/pciehp_core.c | 18 ++++++++++++++++++
+>  drivers/pci/hotplug/pciehp_hpc.c  | 10 ++++++++++
+>  3 files changed, 30 insertions(+)
+> 
+> diff --git a/drivers/pci/hotplug/pciehp.h b/drivers/pci/hotplug/pciehp.h
+> index 811cf83f956d..58bddeb3c5a9 100644
+> --- a/drivers/pci/hotplug/pciehp.h
+> +++ b/drivers/pci/hotplug/pciehp.h
+> @@ -187,6 +187,8 @@ struct controller *pcie_init(struct pcie_device *dev);
+>  int pcie_init_notification(struct controller *ctrl);
+>  void pcie_shutdown_notification(struct controller *ctrl);
+>  void pcie_clear_hotplug_events(struct controller *ctrl);
+> +void pcie_enable_interrupt(struct controller *ctrl);
+> +void pcie_disable_interrupt(struct controller *ctrl);
+>  int pciehp_power_on_slot(struct slot *slot);
+>  void pciehp_power_off_slot(struct slot *slot);
+>  void pciehp_get_power_status(struct slot *slot, u8 *status);
+> diff --git a/drivers/pci/hotplug/pciehp_core.c b/drivers/pci/hotplug/pciehp_core.c
+> index ec48c9433ae5..c9cf9c3b5f7f 100644
+> --- a/drivers/pci/hotplug/pciehp_core.c
+> +++ b/drivers/pci/hotplug/pciehp_core.c
+> @@ -302,8 +302,23 @@ static void pciehp_remove(struct pcie_device *dev)
+>  }
+>  
+>  #ifdef CONFIG_PM
+> +static bool pme_is_native(struct pcie_device *dev)
+> +{
+> +	const struct pci_host_bridge *host;
+> +
+> +	host = pci_find_host_bridge(dev->port->bus);
+> +	return pcie_ports_native || host->native_pme;
+> +}
+> +
+>  static int pciehp_suspend(struct pcie_device *dev)
+>  {
+> +	/*
+> +	 * Disable hotplug interrupt so that it does not trigger
+> +	 * immediately when the downstream link goes down.
+> +	 */
+> +	if (pme_is_native(dev))
+> +		pcie_disable_interrupt(get_service_data(dev));
+> +
+>  	return 0;
+>  }
+>  
+> @@ -327,6 +342,9 @@ static int pciehp_resume(struct pcie_device *dev)
+>  {
+>  	struct controller *ctrl = get_service_data(dev);
+>  
+> +	if (pme_is_native(dev))
+> +		pcie_enable_interrupt(ctrl);
+> +
+>  	pciehp_check_presence(ctrl);
+>  
+>  	return 0;
+> diff --git a/drivers/pci/hotplug/pciehp_hpc.c b/drivers/pci/hotplug/pciehp_hpc.c
+> index 7136e3430925..2249c4d06efd 100644
+> --- a/drivers/pci/hotplug/pciehp_hpc.c
+> +++ b/drivers/pci/hotplug/pciehp_hpc.c
+> @@ -748,6 +748,16 @@ void pcie_clear_hotplug_events(struct controller *ctrl)
+>  				   PCI_EXP_SLTSTA_PDC | PCI_EXP_SLTSTA_DLLSC);
+>  }
+>  
+> +void pcie_enable_interrupt(struct controller *ctrl)
+> +{
+> +	pcie_write_cmd(ctrl, PCI_EXP_SLTCTL_HPIE, PCI_EXP_SLTCTL_HPIE);
+> +}
+> +
+> +void pcie_disable_interrupt(struct controller *ctrl)
+> +{
+> +	pcie_write_cmd(ctrl, 0, PCI_EXP_SLTCTL_HPIE);
+> +}
+> +
+>  /*
+>   * pciehp has a 1:1 bus:slot relationship so we ultimately want a secondary
+>   * bus reset of the bridge, but at the same time we want to ensure that it is
+> 
 
-Hello,
-
-this patch helps on my HP Zbook 14u G5 which otherwise fails to resume 
-the dGPU after suspend. In this case it's a radeon gpu (polaris 10). Of 
-course I had to remove the check for ASUS, but made no other changes.
-
-With this patch I can successfully run "DRI_PRIME=1 glxinfo | grep -i 
-renderer" and see the radeon, as well as "DRI_PRIME=1 glxgears", after 
-resuming from suspend. Attemting that without the patch makes the system 
-hang for a few seconds followed by lots of powerplay errors in dmesg. 
-glxinfo/gears sometimes use the Intel graphics or show a blank window.
-
-FWIW, this problem was discussed a lot in bug 
-https://bugs.freedesktop.org/show_bug.cgi?id=105760 (it's closed only 
-because the original bug crash is solved but the root problem is still 
-unfixed). Therefore I add Peter Wu and Alex Deucher who attempted to 
-help me out already.
-
-I think this supports your other mail where you suggest it should be 
-done unconditionally.
-
-Thanks for the patch!
-
-Best regards
+Reviewed-by: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
