@@ -1,88 +1,92 @@
-Return-Path: <SRS0=kLRq=MA=gmail.com=thierry.reding@kernel.org>
-Return-Path: <SRS0=kLRq=MA=gmail.com=thierry.reding@kernel.org>
-Date: Tue, 18 Sep 2018 16:47:37 +0200
-From: Thierry Reding <thierry.reding@gmail.com>
-To: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
-Cc: kbuild test robot <fengguang.wu@intel.com>,
-	Shawn Lin <shawn.lin@rock-chips.com>, kbuild-all@01.org,
-	linux-kernel@vger.kernel.org, Bjorn Helgaas <helgaas@kernel.org>,
-	Jonathan Hunter <jonathanh@nvidia.com>, linux-tegra@vger.kernel.org,
-	linux-pci@vger.kernel.org
-Subject: Re: [PATCH] PCI: fix ptr_ret.cocci warnings
-Message-ID: <20180918144737.GA30386@ulmo>
-References: <201807120738.oIXXb65q%fengguang.wu@intel.com>
- <20180711233041.GA39597@lkp-sbx04>
- <20180918141838.GA32243@e107981-ln.cambridge.arm.com>
+Return-Path: <linux-acpi-owner@vger.kernel.org>
+From: "Rafael J. Wysocki" <rjw@rjwysocki.net>
+To: Mika Westerberg <mika.westerberg@linux.intel.com>
+Cc: Bjorn Helgaas <bhelgaas@google.com>, Len Brown <lenb@kernel.org>,
+        Lukas Wunner <lukas@wunner.de>,
+        Keith Busch <keith.busch@intel.com>,
+        Ashok Raj <ashok.raj@intel.com>, Mario.Limonciello@dell.com,
+        Anthony Wong <anthony.wong@canonical.com>,
+        "D . J . Bernstein" <djb@cr.yp.to>,
+        Linus Walleij <linus.walleij@linaro.org>,
+        linux-pci@vger.kernel.org, linux-acpi@vger.kernel.org
+Subject: Re: [PATCH 02/10] PCI / ACPI: Enable wake automatically for power managed bridges
+Date: Tue, 11 Sep 2018 10:50:18 +0200
+Message-ID: <1654330.M3KingDFxV@aspire.rjw.lan>
+In-Reply-To: <20180906155020.51700-3-mika.westerberg@linux.intel.com>
+References: <20180906155020.51700-1-mika.westerberg@linux.intel.com> <20180906155020.51700-3-mika.westerberg@linux.intel.com>
 MIME-Version: 1.0
-Content-Type: multipart/signed; micalg=pgp-sha256;
-	protocol="application/pgp-signature"; boundary="cNdxnHkX5QqsyA0e"
-In-Reply-To: <20180918141838.GA32243@e107981-ln.cambridge.arm.com>
+Content-Type: text/plain; charset="us-ascii"
+Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
+On Thursday, September 6, 2018 5:50:12 PM CEST Mika Westerberg wrote:
+> We enable power management automatically for bridges where
+> pci_bridge_d3_possible() returns true. However, these bridges may have
+> ACPI methods such as _DSW that need to be called before D3 entry. For
+> example in Lenovo Thinkpad X1 Carbon 6th _DSW method is used to prepare
+> D3cold for the PCIe root port hosting Thunderbolt chain. Because wake is
+> not enabled _DSW method is never called and the port does not enter
+> D3cold properly consuming more power than necessary.
+> 
+> Users can work this around by writing "enabled" to "wakeup" sysfs file
+> under the device in question but that is not something an ordinary user
+> is expected to do.
+> 
+> Since we already automatically enable power management for PCIe ports
+> with ->bridge_d3 set extend that to enable wake for them as well,
+> assuming the port has any ACPI wakeup related objects implemented in the
+> namespace (adev->wakeup.flags.valid is true). This ensures the necessary
+> ACPI methods get called at appropriate times and allows the root port in
+> Thinkpad X1 Carbon 6th to go into D3cold.
+> 
+> Signed-off-by: Mika Westerberg <mika.westerberg@linux.intel.com>
+> ---
+>  drivers/pci/pci-acpi.c | 15 ++++++++++++++-
+>  1 file changed, 14 insertions(+), 1 deletion(-)
+> 
+> diff --git a/drivers/pci/pci-acpi.c b/drivers/pci/pci-acpi.c
+> index c2ab57705043..a4a8c02deaa0 100644
+> --- a/drivers/pci/pci-acpi.c
+> +++ b/drivers/pci/pci-acpi.c
+> @@ -762,19 +762,32 @@ static void pci_acpi_setup(struct device *dev)
+>  		return;
+>  
+>  	device_set_wakeup_capable(dev, true);
+> +	/*
+> +	 * For bridges that can do D3 we enable wake automatically (as
+> +	 * we do for the power management itself in that case). The
+> +	 * reason is that the bridge may have additional methods such as
+> +	 * _DSW that need to be called.
+> +	 */
+> +	if (pci_dev->bridge_d3)
+> +		device_wakeup_enable(dev);
+> +
+>  	acpi_pci_wakeup(pci_dev, false);
+>  }
+>  
+>  static void pci_acpi_cleanup(struct device *dev)
+>  {
+>  	struct acpi_device *adev = ACPI_COMPANION(dev);
+> +	struct pci_dev *pci_dev = to_pci_dev(dev);
+>  
+>  	if (!adev)
+>  		return;
+>  
+>  	pci_acpi_remove_pm_notifier(adev);
+> -	if (adev->wakeup.flags.valid)
+> +	if (adev->wakeup.flags.valid) {
+> +		if (pci_dev->bridge_d3)
+> +			device_wakeup_disable(dev);
 
---cNdxnHkX5QqsyA0e
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-Content-Transfer-Encoding: quoted-printable
+Add an empty line here?
 
-On Tue, Sep 18, 2018 at 03:18:38PM +0100, Lorenzo Pieralisi wrote:
-> On Thu, Jul 12, 2018 at 07:30:41AM +0800, kbuild test robot wrote:
-> > From: kbuild test robot <fengguang.wu@intel.com>
-> >=20
-> > drivers/pci/controller/pci-tegra.c:1132:1-3: WARNING: PTR_ERR_OR_ZERO c=
-an be used
-> >=20
-> >=20
-> >  Use PTR_ERR_OR_ZERO rather than if(IS_ERR(...)) + PTR_ERR
-> >=20
-> > Generated by: scripts/coccinelle/api/ptr_ret.cocci
-> >=20
-> > Fixes: 6e0832fa432e ("PCI: Collect all native drivers under drivers/pci=
-/controller/")
-> > CC: Shawn Lin <shawn.lin@rock-chips.com>
-> > Signed-off-by: kbuild test robot <fengguang.wu@intel.com>
-> > ---
-> >=20
-> >  pci-tegra.c |    5 +----
-> >  1 file changed, 1 insertion(+), 4 deletions(-)
->=20
-> Thierry,
->=20
-> are you OK with this change ? I will remove the Fixes: tag since
-> this does not fix anything AFAICS.
+>  		device_set_wakeup_capable(dev, false);
+> +	}
+>  }
+>  
+>  static bool pci_acpi_bus_match(struct device *dev)
+> 
 
-This has been proposed several times in the past and each time Bjorn and
-I have agreed that we'd rather not merge that change. I think the
-original is clearer and allows the code to be more easily extended.
+Apart from the above nit this is fine by me:
 
-I don't know if there's a way to "whitelist" certain drivers or sub-
-systems where these kinds of changes are known not to be desired. Or
-perhaps there's some way to trick coccinelle into not recognizing this
-particular instance.
-
-Then again, it seems wrong to have to work around over-ambitious
-semantic patches...
-
-Thierry
-
---cNdxnHkX5QqsyA0e
-Content-Type: application/pgp-signature; name="signature.asc"
-
------BEGIN PGP SIGNATURE-----
-
-iQIzBAABCAAdFiEEiOrDCAFJzPfAjcif3SOs138+s6EFAluhEAYACgkQ3SOs138+
-s6HSCA/8D3HAVyXRzXB8VImac6wJpL026qaKKkszs5W6STpjFG609Puz9iptCx4d
-7SZXc/48zKgs6KQBW+08IT2QBHY/WWUiZiSu0dq2Q/ldd/uJWd7SN9nb98+EKPOy
-Ckbx6h2l2ZSfqd+l0ViXvNDIcAlR6z/Lu4GOyzeJq+XWL8HSg2xJ1Ht4bfVfK9+0
-RQ0Sxb+M1/ilVcQLd1nfrK/0iPRP132UpASx8NVNlC97l/wrUezUbN942FeMyp7D
-a9j8v4vVmVobQJH0Wko/Uo5bhg1SdFkx3pwnJj2Toj+LhmZklcplHLs5QcjyGljw
-WkFKeWDy2P6WGvKgt8fCPXpK8CxpV+WrZ8/vmFr3Df+F0iqlEQu4yQPXPTb88quq
-0FyUZK1DAPm/VCJWgY7jz19TzNta8kRINbLTXKnNcDKsh4AA3ldoAcmfd57CiC8w
-WkJcPyqbjc+Zxu33lxV2gAL1o18cj58OvYJUbW2jds97Yi0reW1cdA1EYEuO8ZQG
-V2ii1kXvFnpcnAnPIjmUjLG/7FqKF0z5Z5hIPvSsWAr4pLszRsZ2Cj/TaxY/Bnib
-KtwFs+5m1x2VYjwzqe+0dvWENxke1cRyhu2brm2jhzdRkhrpkxwjBQBEG0sB6367
-4pw5tq2uWQv7/03eyFnpfKp0rzRgY+qbOHWz1FYrVPWFkcm0ods=
-=Lanw
------END PGP SIGNATURE-----
-
---cNdxnHkX5QqsyA0e--
+Reviewed-by: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
