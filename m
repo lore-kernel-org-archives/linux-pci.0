@@ -1,93 +1,67 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.29.99]:52744 "EHLO mail.kernel.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1726487AbeIEVlQ (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Wed, 5 Sep 2018 17:41:16 -0400
-Date: Wed, 5 Sep 2018 12:10:08 -0500
-From: Bjorn Helgaas <helgaas@kernel.org>
-To: Alan Douglas <adouglas@cadence.com>
-Cc: bhelgaas@google.com, kishon@ti.com, lorenzo.pieralisi@arm.com,
-        linux-pci@vger.kernel.org, cyrille.pitchen@bootlin.com
-Subject: Re: [PATCH] pci: cadence: Correct probe behaviour when failing to
- get PHY
-Message-ID: <20180905171008.GM107892@bhelgaas-glaptop.roam.corp.google.com>
-References: <1536164408-10959-1-git-send-email-adouglas@cadence.com>
+Return-Path: <linux-acpi-owner@vger.kernel.org>
+From: "Rafael J. Wysocki" <rjw@rjwysocki.net>
+To: Mika Westerberg <mika.westerberg@linux.intel.com>
+Cc: Bjorn Helgaas <bhelgaas@google.com>, Len Brown <lenb@kernel.org>,
+        Lukas Wunner <lukas@wunner.de>,
+        Keith Busch <keith.busch@intel.com>,
+        Ashok Raj <ashok.raj@intel.com>, Mario.Limonciello@dell.com,
+        Anthony Wong <anthony.wong@canonical.com>,
+        "D . J . Bernstein" <djb@cr.yp.to>,
+        Linus Walleij <linus.walleij@linaro.org>,
+        linux-pci@vger.kernel.org, linux-acpi@vger.kernel.org
+Subject: Re: [PATCH 01/10] PCI: Do not skip power managed bridges in pci_enable_wake()
+Date: Tue, 11 Sep 2018 10:47:55 +0200
+Message-ID: <6060673.ioIVnQPhoN@aspire.rjw.lan>
+In-Reply-To: <20180906155020.51700-2-mika.westerberg@linux.intel.com>
+References: <20180906155020.51700-1-mika.westerberg@linux.intel.com> <20180906155020.51700-2-mika.westerberg@linux.intel.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1536164408-10959-1-git-send-email-adouglas@cadence.com>
-Sender: linux-pci-owner@vger.kernel.org
+Content-Type: text/plain; charset="us-ascii"
+Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wed, Sep 05, 2018 at 05:20:08PM +0100, Alan Douglas wrote:
-> Test the correct value to see whether the PHY get failed.
-
-If you intended a new paragraph here, please insert a blank line.
-
-> Use devm_phy_get() instead of devm_phy_optional_get(), since it is
-> only called if phy name is given in devicetree and so should exist.
-> If failure when getting or linking PHY, put any PHYs which were
-> already got and unlink them.
+On Thursday, September 6, 2018 5:50:11 PM CEST Mika Westerberg wrote:
+> Commit baecc470d5fd ("PCI / PM: Skip bridges in pci_enable_wake()")
+> changed pci_enable_wake() so that all bridges are skipped when wakeup is
+> enabled (or disabled) with the reasoning that bridges can only signal
+> wakeup on behalf of their subordinate devices.
 > 
-> Fixes: dfb80534692ddc5b ("PCI: cadence: Add generic PHY support to host and EP drivers")
-> Signed-off-by: Alan Douglas <adouglas@cadence.com>
-
-Lorenzo will probably take care of this for you, but if you repost this for
-any reason, please follow the capitalization convention:
-
-  $ git log --oneline --follow drivers/pci/controller/pcie-cadence.c
-  ee12c9efe685 PCI: cadence: Add Power Management ops for host and EP
-  dfb80534692d PCI: cadence: Add generic PHY support to host and EP drivers
-  6e0832fa432e PCI: Collect all native drivers under drivers/pci/controller/
-  37dddf14f1ae PCI: cadence: Add EndPoint Controller driver for Cadence PCIe controller
-
+> However, there are bridges that can signal wakeup itself. For example
+> PCIe downstream and root ports supporting hotplug may signal wakeup upon
+> hotplug event.
+> 
+> For this reason change pci_enable_wake() so that it skips all bridges
+> except those that we power manage (->bridge_d3 is set). Those are the
+> ones that can go into low power states and may need to signal wakeup.
+> 
+> Signed-off-by: Mika Westerberg <mika.westerberg@linux.intel.com>
 > ---
->  drivers/pci/controller/pcie-cadence.c | 18 +++++++++++-------
->  1 file changed, 11 insertions(+), 7 deletions(-)
+>  drivers/pci/pci.c | 6 ++++--
+>  1 file changed, 4 insertions(+), 2 deletions(-)
 > 
-> diff --git a/drivers/pci/controller/pcie-cadence.c b/drivers/pci/controller/pcie-cadence.c
-> index 86f1b00..67d2f98 100644
-> --- a/drivers/pci/controller/pcie-cadence.c
-> +++ b/drivers/pci/controller/pcie-cadence.c
-> @@ -190,14 +190,16 @@ int cdns_pcie_init_phy(struct device *dev, struct cdns_pcie *pcie)
+> diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
+> index 29ff9619b5fa..074f3f0253f9 100644
+> --- a/drivers/pci/pci.c
+> +++ b/drivers/pci/pci.c
+> @@ -2134,9 +2134,11 @@ static int __pci_enable_wake(struct pci_dev *dev, pci_power_t state, bool enable
 >  
->  	for (i = 0; i < phy_count; i++) {
->  		of_property_read_string_index(np, "phy-names", i, &name);
-> -		phy[i] = devm_phy_optional_get(dev, name);
-> -		if (IS_ERR(phy))
-> -			return PTR_ERR(phy);
-> -
-> +		phy[i] = devm_phy_get(dev, name);
-> +		if (IS_ERR(phy[i])) {
-> +			ret = PTR_ERR(phy[i]);
-> +			goto err_phy;
-> +		}
->  		link[i] = device_link_add(dev, &phy[i]->dev, DL_FLAG_STATELESS);
->  		if (!link[i]) {
-> +			devm_phy_put(dev, phy[i]);
->  			ret = -EINVAL;
-> -			goto err_link;
-> +			goto err_phy;
->  		}
->  	}
+>  	/*
+>  	 * Bridges can only signal wakeup on behalf of subordinate devices,
+> -	 * but that is set up elsewhere, so skip them.
+> +	 * but that is set up elsewhere, so skip them. With the exception
+> +	 * of bridges that we power manage. These can signal wake for
+> +	 * example on a hotplug event.
+>  	 */
+
+I would change the comment even more, to something like:
+
+"Bridges that are not power-manageable directly only signal wakeup on behalf
+of subordinate devices which is set up elsewhere, so skip them.  However,
+bridges that are power-manageable may signal wakeup for themselves (for example,
+on a hotplug event) and they need to be covered here."
+
+> -	if (pci_has_subordinate(dev))
+> +	if (!pci_power_manageable(dev))
+>  		return 0;
 >  
-> @@ -207,13 +209,15 @@ int cdns_pcie_init_phy(struct device *dev, struct cdns_pcie *pcie)
->  
->  	ret =  cdns_pcie_enable_phy(pcie);
->  	if (ret)
-> -		goto err_link;
-> +		goto err_phy;
->  
->  	return 0;
->  
-> -err_link:
-> +err_phy:
->  	while (--i >= 0)
->  		device_link_del(link[i]);
-> +	while (--i >= 0)
-> +		devm_phy_put(dev, phy[i]);
->  
->  	return ret;
->  }
-> -- 
-> 1.9.0
+>  	/* Don't do the same thing twice in a row for one device. */
 > 
