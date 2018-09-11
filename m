@@ -1,140 +1,40 @@
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Date: Mon, 17 Sep 2018 11:31:42 +0100
-From: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
-To: Lucas Stach <l.stach@pengutronix.de>
-Subject: Re: [PATCH] PCI: imx6: support MPLL reconfiguration for 100MHz and
- 200MHz refclock
-Message-ID: <20180917103142.GB7239@e107981-ln.cambridge.arm.com>
-References: <20180731102149.8537-1-l.stach@pengutronix.de>
+Return-Path: <SRS0=EDvo=LZ=alien8.de=bp@kernel.org>
+Return-Path: <SRS0=EDvo=LZ=alien8.de=bp@kernel.org>
+Date: Tue, 11 Sep 2018 12:07:57 +0200
+From: Borislav Petkov <bp@alien8.de>
+To: Pu Wen <puwen@hygon.cn>
+Cc: tglx@linutronix.de, mingo@redhat.com, hpa@zytor.com, x86@kernel.org,
+	thomas.lendacky@amd.com, pbonzini@redhat.com, helgaas@kernel.org,
+	linux-kernel@vger.kernel.org, linux-arch@vger.kernel.org,
+	linux-pci@vger.kernel.org
+Subject: Re: [PATCH v6 07/16] x86/pci: Add Hygon Dhyana support to PCI and
+ north bridge
+Message-ID: <20180911100757.GD12094@zn.tnic>
+References: <cover.1536550549.git.puwen@hygon.cn>
+ <035e5d0a4f2a0edf68ca0f1019e47b878eaa5da6.1536550550.git.puwen@hygon.cn>
 MIME-Version: 1.0
-In-Reply-To: <20180731102149.8537-1-l.stach@pengutronix.de>
-List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
-List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
-List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
-List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
-List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
-Cc: linux-pci@vger.kernel.org, Richard Zhu <hongxing.zhu@nxp.com>,
- kernel@pengutronix.de, linux-arm-kernel@lists.infradead.org,
- patchwork-lst@pengutronix.de
-Content-Type: text/plain; charset="us-ascii"
-Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
-Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
+Content-Type: text/plain; charset=utf-8
+In-Reply-To: <035e5d0a4f2a0edf68ca0f1019e47b878eaa5da6.1536550550.git.puwen@hygon.cn>
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tue, Jul 31, 2018 at 12:21:49PM +0200, Lucas Stach wrote:
-> The power up defaults of the MPLL are designed for the standard 125MHz
-> refclock derived from the ENET PLL. As this clock has a jitter that
-> violates the PCIe Gen2 timing requirements, some board designs use
-> an external reference clock generator. Those clock generators may
-> output a clock at a different rate than what the MPLL expects
-> (usually a 100MHz clock, to re-use the PCIe bus clock).
+On Mon, Sep 10, 2018 at 09:17:11PM +0800, Pu Wen wrote:
+> As Hygon registered its PCI Vendor ID as a new one 0x1d94, and there
+> are PCI Devices 0x1450/0x1463/0x1464 for Host bridge on Hygon Dhyana
+> platforms, so add Hygon Dhyana support to the PCI and north bridge
+> subsystem by using the code path of AMD family 17h.
 > 
-> In that case the MPLL must be reconfigured via overrides to use
-> different refclock dividers and loop multipliers. The i.MX6
-> reference manual lists both 100MHz and 200MHz as supported refclock
-> rates and the associated mult and div values.
-> 
-> Only the 100MHz setup has been tested on a real board, but since the
-> 200MHz setup only differs in the used pre-divider it seems safe to
-> add it now.
-> 
-> Signed-off-by: Lucas Stach <l.stach@pengutronix.de>
+> Acked-by: Bjorn Helgaas <bhelgaas@google.com>	# pci_ids.h
+> Signed-off-by: Pu Wen <puwen@hygon.cn>
 > ---
->  drivers/pci/controller/dwc/pci-imx6.c | 55 +++++++++++++++++++++++++++
->  1 file changed, 55 insertions(+)
+>  arch/x86/kernel/amd_nb.c | 47 +++++++++++++++++++++++++++++++++++++++++------
+>  arch/x86/pci/amd_bus.c   |  6 ++++--
+>  include/linux/pci_ids.h  |  2 ++
+>  3 files changed, 47 insertions(+), 8 deletions(-)
 
-Applied to pci/dwc for v4.20, thanks.
+Reviewed-by: Borislav Petkov <bp@suse.de>
 
-Lorenzo
+-- 
+Regards/Gruss,
+    Boris.
 
-> diff --git a/drivers/pci/controller/dwc/pci-imx6.c b/drivers/pci/controller/dwc/pci-imx6.c
-> index 80f604602783..c481c61a41b8 100644
-> --- a/drivers/pci/controller/dwc/pci-imx6.c
-> +++ b/drivers/pci/controller/dwc/pci-imx6.c
-> @@ -97,6 +97,16 @@ struct imx6_pcie {
->  #define PORT_LOGIC_SPEED_CHANGE		(0x1 << 17)
->  
->  /* PHY registers (not memory-mapped) */
-> +#define PCIE_PHY_ATEOVRD			0x10
-> +#define  PCIE_PHY_ATEOVRD_EN			(0x1 << 2)
-> +#define  PCIE_PHY_ATEOVRD_REF_CLKDIV_SHIFT	0
-> +#define  PCIE_PHY_ATEOVRD_REF_CLKDIV_MASK	0x1
-> +
-> +#define PCIE_PHY_MPLL_OVRD_IN_LO		0x11
-> +#define  PCIE_PHY_MPLL_MULTIPLIER_SHIFT		2
-> +#define  PCIE_PHY_MPLL_MULTIPLIER_MASK		0x7f
-> +#define  PCIE_PHY_MPLL_MULTIPLIER_OVRD		(0x1 << 9)
-> +
->  #define PCIE_PHY_RX_ASIC_OUT 0x100D
->  #define PCIE_PHY_RX_ASIC_OUT_VALID	(1 << 0)
->  
-> @@ -508,6 +518,50 @@ static void imx6_pcie_init_phy(struct imx6_pcie *imx6_pcie)
->  			IMX6Q_GPR12_DEVICE_TYPE, PCI_EXP_TYPE_ROOT_PORT << 12);
->  }
->  
-> +static int imx6_setup_phy_mpll(struct imx6_pcie *imx6_pcie)
-> +{
-> +	unsigned long phy_rate = clk_get_rate(imx6_pcie->pcie_phy);
-> +	int mult, div;
-> +	u32 val;
-> +
-> +	switch (phy_rate) {
-> +	case 125000000:
-> +		/*
-> +		 * The default settings of the MPLL are for a 125MHz input
-> +		 * clock, so no need to reconfigure anything in that case.
-> +		 */
-> +		return 0;
-> +	case 100000000:
-> +		mult = 25;
-> +		div = 0;
-> +		break;
-> +	case 200000000:
-> +		mult = 25;
-> +		div = 1;
-> +		break;
-> +	default:
-> +		dev_err(imx6_pcie->pci->dev,
-> +			"Unsupported PHY reference clock rate %lu\n", phy_rate);
-> +		return -EINVAL;
-> +	}
-> +
-> +	pcie_phy_read(imx6_pcie, PCIE_PHY_MPLL_OVRD_IN_LO, &val);
-> +	val &= ~(PCIE_PHY_MPLL_MULTIPLIER_MASK <<
-> +		 PCIE_PHY_MPLL_MULTIPLIER_SHIFT);
-> +	val |= mult << PCIE_PHY_MPLL_MULTIPLIER_SHIFT;
-> +	val |= PCIE_PHY_MPLL_MULTIPLIER_OVRD;
-> +	pcie_phy_write(imx6_pcie, PCIE_PHY_MPLL_OVRD_IN_LO, val);
-> +
-> +	pcie_phy_read(imx6_pcie, PCIE_PHY_ATEOVRD, &val);
-> +	val &= ~(PCIE_PHY_ATEOVRD_REF_CLKDIV_MASK <<
-> +		 PCIE_PHY_ATEOVRD_REF_CLKDIV_SHIFT);
-> +	val |= div << PCIE_PHY_ATEOVRD_REF_CLKDIV_SHIFT;
-> +	val |= PCIE_PHY_ATEOVRD_EN;
-> +	pcie_phy_write(imx6_pcie, PCIE_PHY_ATEOVRD, val);
-> +
-> +	return 0;
-> +}
-> +
->  static int imx6_pcie_wait_for_link(struct imx6_pcie *imx6_pcie)
->  {
->  	struct dw_pcie *pci = imx6_pcie->pci;
-> @@ -632,6 +686,7 @@ static int imx6_pcie_host_init(struct pcie_port *pp)
->  	imx6_pcie_assert_core_reset(imx6_pcie);
->  	imx6_pcie_init_phy(imx6_pcie);
->  	imx6_pcie_deassert_core_reset(imx6_pcie);
-> +	imx6_setup_phy_mpll(imx6_pcie);
->  	dw_pcie_setup_rc(pp);
->  	imx6_pcie_establish_link(imx6_pcie);
->  
-> -- 
-> 2.18.0
-> 
-
-_______________________________________________
-linux-arm-kernel mailing list
-linux-arm-kernel@lists.infradead.org
-http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
+Good mailing practices for 400: avoid top-posting and trim the reply.
