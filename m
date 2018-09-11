@@ -1,124 +1,41 @@
-Return-Path: <linux-acpi-owner@vger.kernel.org>
-From: Jean-Philippe Brucker <jean-philippe.brucker@arm.com>
-Subject: Re: [PATCH v2 01/40] iommu: Introduce Shared Virtual Addressing API
-To: =?UTF-8?Q?Christian_K=c3=b6nig?= <christian.koenig@amd.com>,
-        Jacob Pan <jacob.jun.pan@linux.intel.com>
-Cc: Auger Eric <eric.auger@redhat.com>,
-        "linux-arm-kernel@lists.infradead.org"
-        <linux-arm-kernel@lists.infradead.org>,
-        "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-        "linux-acpi@vger.kernel.org" <linux-acpi@vger.kernel.org>,
-        "devicetree@vger.kernel.org" <devicetree@vger.kernel.org>,
-        "iommu@lists.linux-foundation.org" <iommu@lists.linux-foundation.org>,
-        "kvm@vger.kernel.org" <kvm@vger.kernel.org>,
-        "linux-mm@kvack.org" <linux-mm@kvack.org>,
-        "xieyisheng1@huawei.com" <xieyisheng1@huawei.com>,
-        "liubo95@huawei.com" <liubo95@huawei.com>,
-        "xuzaibo@huawei.com" <xuzaibo@huawei.com>,
-        "thunder.leizhen@huawei.com" <thunder.leizhen@huawei.com>,
-        Will Deacon <Will.Deacon@arm.com>,
-        "okaya@codeaurora.org" <okaya@codeaurora.org>,
-        "yi.l.liu@intel.com" <yi.l.liu@intel.com>,
-        "ashok.raj@intel.com" <ashok.raj@intel.com>,
-        "tn@semihalf.com" <tn@semihalf.com>,
-        "joro@8bytes.org" <joro@8bytes.org>,
-        "bharatku@xilinx.com" <bharatku@xilinx.com>,
-        "liudongdong3@huawei.com" <liudongdong3@huawei.com>,
-        "rfranz@cavium.com" <rfranz@cavium.com>,
-        "kevin.tian@intel.com" <kevin.tian@intel.com>,
-        "jcrouse@codeaurora.org" <jcrouse@codeaurora.org>,
-        "rgummal@xilinx.com" <rgummal@xilinx.com>,
-        "jonathan.cameron@huawei.com" <jonathan.cameron@huawei.com>,
-        "shunyong.yang@hxt-semitech.com" <shunyong.yang@hxt-semitech.com>,
-        Robin Murphy <Robin.Murphy@arm.com>,
-        "ilias.apalodimas@linaro.org" <ilias.apalodimas@linaro.org>,
-        "alex.williamson@redhat.com" <alex.williamson@redhat.com>,
-        "robdclark@gmail.com" <robdclark@gmail.com>,
-        "dwmw2@infradead.org" <dwmw2@infradead.org>,
-        "nwatters@codeaurora.org" <nwatters@codeaurora.org>,
-        "baolu.lu@linux.intel.com" <baolu.lu@linux.intel.com>,
-        Michal Hocko <mhocko@kernel.org>
-References: <20180511190641.23008-1-jean-philippe.brucker@arm.com>
- <20180511190641.23008-2-jean-philippe.brucker@arm.com>
- <bf42affd-e9d0-e4fc-6d28-f3c3f7795348@redhat.com>
- <03d31ba5-1eda-ea86-8c0c-91d14c86fe83@arm.com>
- <ed39159c-087e-7e56-7d29-d1de9fa1677f@amd.com>
- <f0b317d5-e2e9-5478-952c-05e8b97bd68b@arm.com>
- <2fd4a0a1-1a35-bf82-df84-b995cce011d9@amd.com>
- <65e7accd-4446-19f5-c667-c6407e89cfa6@arm.com>
- <5bbc0332-b94b-75cc-ca42-a9b196811daf@amd.com>
- <20180907142504.5034351e@jacob-builder>
- <3e3a6797-a233-911b-3a7d-d9b549160960@amd.com>
-Message-ID: <9445a0be-fb5b-d195-4fdf-7ad6cb36ef4f@arm.com>
-Date: Wed, 12 Sep 2018 13:40:43 +0100
-MIME-Version: 1.0
-In-Reply-To: <3e3a6797-a233-911b-3a7d-d9b549160960@amd.com>
-Content-Type: text/plain; charset=utf-8
-Sender: linux-acpi-owner@vger.kernel.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from smtprelay2.synopsys.com ([198.182.60.111]:50584 "EHLO
+        smtprelay.synopsys.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726612AbeIKRFi (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Tue, 11 Sep 2018 13:05:38 -0400
+From: Joao Pinto <Joao.Pinto@synopsys.com>
+To: bhelgaas@google.com, lorenzo.pieralisi@arm.com
+Cc: gustavo.pimentel@synopsys.com, jingoohan1@gmail.com,
+        linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
+        Joao Pinto <Joao.Pinto@synopsys.com>
+Subject: [PATCH] PCI: designware: Change maintainer to Gustavo Pimentel
+Date: Tue, 11 Sep 2018 13:06:30 +0100
+Message-Id: <aa29f3f8dbae3a2c8523ddfd74d11505600bc47f.1536659938.git.jpinto@synopsys.com>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 08/09/2018 08:29, Christian König wrote:
-> Yes, exactly. I just need a PASID which is never used by the OS for a 
-> process and we can easily give that back when the last FD reference is 
-> closed.
+Currently I am managing the Synopsys drivers & tools team (full-time) and so I
+am passing the pcie-designware maintenance to Gustavo.
 
-Alright, iommu-sva can get its PASID from this external allocator as
-well, as long as it has an interface similar to idr. Where would it go,
-drivers/base/, mm/, kernel/...?
+Signed-off-by: Joao Pinto <jpinto@synopsys.com>
+CC: Gustavo Pimentel <gustavo.pimentel@synopsys.com>
+CC: Jingoo Han <jingoohan1@gmail.com>
+---
+ MAINTAINERS | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
->>>> The process dies, iommu-sva is notified and calls the mm_exit()
->>>> function passed by the device driver to iommu_sva_device_init(). In
->>>> mm_exit() the device driver needs to clear any reference to the
->>>> PASID in hardware and in its own structures. When the device driver
->>>> returns from mm_exit(), it effectively tells the core that it has
->>>> finished using the PASID, and iommu-sva can reuse the PASID for
->>>> another process. mm_exit() is allowed to block, so the device
->>>> driver has time to clean up and flush the queues.
->>>>
->>>> If the device driver finishes using the PASID before the process
->>>> exits, it just calls unbind().
->>> Exactly that's what Michal Hocko is probably going to not like at all.
->>>
->>> Can we have a different approach where each driver is informed by the
->>> mm_exit(), but needs to explicitly call unbind() before a PASID is
->>> reused?
-
-It's awful from the IOMMU driver perspective. In addition to "enabled"
-and "disabled" PASID states, you add "disabled but DMA still running
-normally". Between that new state and "disabled", the IOMMU will be
-flooded by translation faults (non-recoverable ones), which it needs to
-ignore instead of reporting to the kernel. Not all IOMMUs can deal with
-this in hardware (SMMU and VT-d can quiesce translation faults
-per-PASID, but I don't think AMD IOMMU can.) Some drivers will have to
-filter fault events themselves, depending on the PASID state.
-
->>> During that teardown transition it would be ideal if that PASID only
->>> points to a dummy root page directory with only invalid entries.
->>>
->> I guess this can be vendor specific, In VT-d I plan to mark PASID
->> entry not present and disable fault reporting while draining remaining
->> activities.
->
-> Sounds good to me.
-> 
-> Point is at least in the case where the process was killed by the OOM 
-> killer we should not block in mm_exit().
->
-> Instead operations issued by the process to a device driver which uses 
-> SVA needs to be terminated as soon as possible to make sure that the OOM 
-> killer can advance.
-
-I don't see how we're preventing the OOM killer from advancing, so I'm
-looking for a stronger argument that justifies adding this complexity to
-IOMMU drivers. Time limit of the release MMU notifier, locking
-requirement, a concrete example where things break, even a comment
-somewhere in mm/ would do...
-
-In my tests I can't manage to disturb the OOM killer, but I could be
-missing some special case. Even if the mm_exit() callback
-(unrealistically) sleeps for 60 seconds, the OOM killer isn't affected
-because oom_reap_task_mm() wipes the victim's address space in another
-thread, either before or while the release notifier is running.
-
-Thanks,
-Jean
+diff --git a/MAINTAINERS b/MAINTAINERS
+index a5b256b..e5e8984 100644
+--- a/MAINTAINERS
++++ b/MAINTAINERS
+@@ -11153,7 +11153,7 @@ F:	drivers/pci/controller/dwc/pci-exynos.c
+ 
+ PCI DRIVER FOR SYNOPSYS DESIGNWARE
+ M:	Jingoo Han <jingoohan1@gmail.com>
+-M:	Joao Pinto <Joao.Pinto@synopsys.com>
++M:	Gustavo Pimentel <gustavo.pimentel@synopsys.com>
+ L:	linux-pci@vger.kernel.org
+ S:	Maintained
+ F:	Documentation/devicetree/bindings/pci/designware-pcie.txt
+-- 
+2.9.3
