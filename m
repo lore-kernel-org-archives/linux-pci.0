@@ -1,169 +1,98 @@
-Return-Path: <SRS0=NKZ9=LY=hygon.cn=puwen@kernel.org>
-Return-Path: <SRS0=NKZ9=LY=hygon.cn=puwen@kernel.org>
-From: Pu Wen <puwen@hygon.cn>
-To: tglx@linutronix.de,
-	mingo@redhat.com,
-	hpa@zytor.com,
-	x86@kernel.org,
-	thomas.lendacky@amd.com,
-	bp@alien8.de,
-	pbonzini@redhat.com,
-	helgaas@kernel.org
-Cc: linux-kernel@vger.kernel.org,
-	linux-arch@vger.kernel.org,
-	linux-pci@vger.kernel.org,
-	Pu Wen <puwen@hygon.cn>
-Subject: [PATCH v6 07/16] x86/pci: Add Hygon Dhyana support to PCI and north bridge
-Date: Mon, 10 Sep 2018 21:17:11 +0800
-Message-Id: <035e5d0a4f2a0edf68ca0f1019e47b878eaa5da6.1536550550.git.puwen@hygon.cn>
-In-Reply-To: <cover.1536550549.git.puwen@hygon.cn>
-References: <cover.1536550549.git.puwen@hygon.cn>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mga02.intel.com ([134.134.136.20]:38185 "EHLO mga02.intel.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1726556AbeIKONu (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Tue, 11 Sep 2018 10:13:50 -0400
+Date: Tue, 11 Sep 2018 12:15:20 +0300
+From: Mika Westerberg <mika.westerberg@linux.intel.com>
+To: "Rafael J. Wysocki" <rafael@kernel.org>
+Cc: Bjorn Helgaas <bhelgaas@google.com>,
+        "Rafael J. Wysocki" <rjw@rjwysocki.net>,
+        Len Brown <lenb@kernel.org>, Lukas Wunner <lukas@wunner.de>,
+        Keith Busch <keith.busch@intel.com>,
+        "Raj, Ashok" <ashok.raj@intel.com>,
+        Mario Limonciello <Mario.Limonciello@dell.com>,
+        anthony.wong@canonical.com, djb@cr.yp.to,
+        Linus Walleij <linus.walleij@linaro.org>,
+        Linux PCI <linux-pci@vger.kernel.org>,
+        ACPI Devel Maling List <linux-acpi@vger.kernel.org>
+Subject: Re: [PATCH 05/10] PCI: portdrv: Resume upon exit from system suspend
+ if left runtime suspended
+Message-ID: <20180911091520.GU14465@lahna.fi.intel.com>
+References: <20180906155020.51700-1-mika.westerberg@linux.intel.com>
+ <20180906155020.51700-6-mika.westerberg@linux.intel.com>
+ <CAJZ5v0imJOe25MxUiutOg+55xX4+ZwY5VULk8WKP3G8Diz+=8w@mail.gmail.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <CAJZ5v0imJOe25MxUiutOg+55xX4+ZwY5VULk8WKP3G8Diz+=8w@mail.gmail.com>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-As Hygon registered its PCI Vendor ID as a new one 0x1d94, and there
-are PCI Devices 0x1450/0x1463/0x1464 for Host bridge on Hygon Dhyana
-platforms, so add Hygon Dhyana support to the PCI and north bridge
-subsystem by using the code path of AMD family 17h.
+On Tue, Sep 11, 2018 at 10:00:07AM +0200, Rafael J. Wysocki wrote:
+> On Thu, Sep 6, 2018 at 5:50 PM Mika Westerberg
+> <mika.westerberg@linux.intel.com> wrote:
+> >
+> > Currently we try to keep PCIe ports runtime suspended over system
+> > suspend if possible. This mostly happens when entering suspend-to-idle
+> > because there is no need to re-configure wake settings.
+> >
+> > This causes problems if the parent port goes into D3cold and it gets
+> > resumed upon exit from system suspend. This may happen for example if
+> > the port is part of PCIe switch and the same switch is connected to a
+> > PCIe endpoint that needs to be resumed. The way exit from D3cold works
+> > according PCIe 4.0 spec 5.3.1.4.2 is that power is restored and cold
+> > reset is signaled. After this the device is in D0unitialized state
+> > keeping PME context if it supports wake from D3cold.
+> >
+> > The problem occurs when a PCIe hotplug port is left suspended and the
+> > parent port goes into D3cold and back to D0, the port keeps its PME
+> > context but since everything else is reset back to defaults
+> > (D0unitialized) it is not set to detect hotplug events anymore.
+> >
+> > For this reason change the PCIe portdrv power management logic so that
+> > it is fine to keep the port runtime suspended over system suspend but it
+> > needs to be resumed upon exit to make sure it gets properly re-initialized.
+> > The custom ->prepare() hook with DPM_FLAG_SMART_PREPARE is needed
+> > because otherwise pci_pm_prepare() instructs the PM core to go directly
+> > to pci_pm_complete() on resume and this skips resuming the port.
+> 
+> Thanks for the detailed explanation, it helps quite a bit!
+> 
+> > Signed-off-by: Mika Westerberg <mika.westerberg@linux.intel.com>
+> > ---
+> >  drivers/pci/pcie/portdrv_pci.c | 20 ++++++++++++++++++--
+> >  1 file changed, 18 insertions(+), 2 deletions(-)
+> >
+> > diff --git a/drivers/pci/pcie/portdrv_pci.c b/drivers/pci/pcie/portdrv_pci.c
+> > index eef22dc29140..74761f660a30 100644
+> > --- a/drivers/pci/pcie/portdrv_pci.c
+> > +++ b/drivers/pci/pcie/portdrv_pci.c
+> > @@ -43,6 +43,21 @@ __setup("pcie_ports=", pcie_port_setup);
+> >  /* global data */
+> >
+> >  #ifdef CONFIG_PM
+> > +int pcie_port_prepare(struct device *dev)
+> > +{
+> > +       /*
+> > +        * Return 0 here to indicate PCI core that:
+> > +        *   - Direct complete path should be avoided
+> > +        *   - It is OK to leave the port runtime suspended over system
+> > +        *     suspend
+> > +        *
+> > +        * However, the port needs to be resumed afterwards because it may
+> > +        * have been in D3cold in which case we need to re-initialize the
+> > +        * hardware as it is in D0uninitialized in that case.
+> > +        */
+> > +       return 0;
+> > +}
+> 
+> You wouldn't need this if you passed DPM_FLAG_NEVER_SKIP to
+> dev_pm_set_driver_flags() (instead of DPM_FLAG_SMART_SUSPEND), would
+> you?
 
-Acked-by: Bjorn Helgaas <bhelgaas@google.com>	# pci_ids.h
-Signed-off-by: Pu Wen <puwen@hygon.cn>
----
- arch/x86/kernel/amd_nb.c | 47 +++++++++++++++++++++++++++++++++++++++++------
- arch/x86/pci/amd_bus.c   |  6 ++++--
- include/linux/pci_ids.h  |  2 ++
- 3 files changed, 47 insertions(+), 8 deletions(-)
+Yes, I think it would work. I did not use it here because I thought it
+would be better to leave the port runtime suspended during system
+suspend (to idle) but in both cases we end up resuming them at some
+point (before or after system suspend).
 
-diff --git a/arch/x86/kernel/amd_nb.c b/arch/x86/kernel/amd_nb.c
-index b481b95..3e2ea18 100644
---- a/arch/x86/kernel/amd_nb.c
-+++ b/arch/x86/kernel/amd_nb.c
-@@ -61,6 +61,21 @@ static const struct pci_device_id amd_nb_link_ids[] = {
- 	{}
- };
- 
-+static const struct pci_device_id hygon_root_ids[] = {
-+	{ PCI_DEVICE(PCI_VENDOR_ID_HYGON, PCI_DEVICE_ID_AMD_17H_ROOT) },
-+	{}
-+};
-+
-+const struct pci_device_id hygon_nb_misc_ids[] = {
-+	{ PCI_DEVICE(PCI_VENDOR_ID_HYGON, PCI_DEVICE_ID_AMD_17H_DF_F3) },
-+	{}
-+};
-+
-+static const struct pci_device_id hygon_nb_link_ids[] = {
-+	{ PCI_DEVICE(PCI_VENDOR_ID_HYGON, PCI_DEVICE_ID_AMD_17H_DF_F4) },
-+	{}
-+};
-+
- const struct amd_nb_bus_dev_range amd_nb_bus_dev_ranges[] __initconst = {
- 	{ 0x00, 0x18, 0x20 },
- 	{ 0xff, 0x00, 0x20 },
-@@ -197,12 +212,25 @@ int amd_cache_northbridges(void)
- 	u16 i = 0;
- 	struct amd_northbridge *nb;
- 	struct pci_dev *root, *misc, *link;
-+	const struct pci_device_id *root_ids = NULL;
-+	const struct pci_device_id *misc_ids = NULL;
-+	const struct pci_device_id *link_ids = NULL;
-+
-+	if (boot_cpu_data.x86_vendor == X86_VENDOR_AMD) {
-+		root_ids = amd_root_ids;
-+		misc_ids = amd_nb_misc_ids;
-+		link_ids = amd_nb_link_ids;
-+	} else if (boot_cpu_data.x86_vendor == X86_VENDOR_HYGON) {
-+		root_ids = hygon_root_ids;
-+		misc_ids = hygon_nb_misc_ids;
-+		link_ids = hygon_nb_link_ids;
-+	}
- 
- 	if (amd_northbridges.num)
- 		return 0;
- 
- 	misc = NULL;
--	while ((misc = next_northbridge(misc, amd_nb_misc_ids)) != NULL)
-+	while ((misc = next_northbridge(misc, misc_ids)) != NULL)
- 		i++;
- 
- 	if (!i)
-@@ -218,11 +246,11 @@ int amd_cache_northbridges(void)
- 	link = misc = root = NULL;
- 	for (i = 0; i != amd_northbridges.num; i++) {
- 		node_to_amd_nb(i)->root = root =
--			next_northbridge(root, amd_root_ids);
-+			next_northbridge(root, root_ids);
- 		node_to_amd_nb(i)->misc = misc =
--			next_northbridge(misc, amd_nb_misc_ids);
-+			next_northbridge(misc, misc_ids);
- 		node_to_amd_nb(i)->link = link =
--			next_northbridge(link, amd_nb_link_ids);
-+			next_northbridge(link, link_ids);
- 	}
- 
- 	if (amd_gart_present())
-@@ -263,9 +291,15 @@ bool __init early_is_amd_nb(u32 device)
- {
- 	const struct pci_device_id *id;
- 	u32 vendor = device & 0xffff;
-+	const struct pci_device_id *misc_ids = NULL;
-+
-+	if (boot_cpu_data.x86_vendor == X86_VENDOR_AMD)
-+		misc_ids = amd_nb_misc_ids;
-+	else if (boot_cpu_data.x86_vendor == X86_VENDOR_HYGON)
-+		misc_ids = hygon_nb_misc_ids;
- 
- 	device >>= 16;
--	for (id = amd_nb_misc_ids; id->vendor; id++)
-+	for (id = misc_ids; id->vendor; id++)
- 		if (vendor == id->vendor && device == id->device)
- 			return true;
- 	return false;
-@@ -277,7 +311,8 @@ struct resource *amd_get_mmconfig_range(struct resource *res)
- 	u64 base, msr;
- 	unsigned int segn_busn_bits;
- 
--	if (boot_cpu_data.x86_vendor != X86_VENDOR_AMD)
-+	if (boot_cpu_data.x86_vendor != X86_VENDOR_AMD &&
-+	    boot_cpu_data.x86_vendor != X86_VENDOR_HYGON)
- 		return NULL;
- 
- 	/* assume all cpus from fam10h have mmconfig */
-diff --git a/arch/x86/pci/amd_bus.c b/arch/x86/pci/amd_bus.c
-index 649bdde..bfa50e6 100644
---- a/arch/x86/pci/amd_bus.c
-+++ b/arch/x86/pci/amd_bus.c
-@@ -93,7 +93,8 @@ static int __init early_root_info_init(void)
- 		vendor = id & 0xffff;
- 		device = (id>>16) & 0xffff;
- 
--		if (vendor != PCI_VENDOR_ID_AMD)
-+		if (vendor != PCI_VENDOR_ID_AMD &&
-+		    vendor != PCI_VENDOR_ID_HYGON)
- 			continue;
- 
- 		if (hb_probes[i].device == device) {
-@@ -390,7 +391,8 @@ static int __init pci_io_ecs_init(void)
- 
- static int __init amd_postcore_init(void)
- {
--	if (boot_cpu_data.x86_vendor != X86_VENDOR_AMD)
-+	if (boot_cpu_data.x86_vendor != X86_VENDOR_AMD &&
-+	    boot_cpu_data.x86_vendor != X86_VENDOR_HYGON)
- 		return 0;
- 
- 	early_root_info_init();
-diff --git a/include/linux/pci_ids.h b/include/linux/pci_ids.h
-index d157983..8a0841c 100644
---- a/include/linux/pci_ids.h
-+++ b/include/linux/pci_ids.h
-@@ -2561,6 +2561,8 @@
- 
- #define PCI_VENDOR_ID_AMAZON		0x1d0f
- 
-+#define PCI_VENDOR_ID_HYGON		0x1d94
-+
- #define PCI_VENDOR_ID_TEKRAM		0x1de1
- #define PCI_DEVICE_ID_TEKRAM_DC290	0xdc29
- 
--- 
-2.7.4
+DPM_FLAG_NEVER_SKIP would result a cleaner patch, I think.
