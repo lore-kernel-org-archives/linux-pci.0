@@ -1,69 +1,106 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from aserp2120.oracle.com ([141.146.126.78]:40868 "EHLO
-        aserp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1729689AbeIRXma (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Tue, 18 Sep 2018 19:42:30 -0400
-Subject: Re: [Xen-devel] [PATCH V3 2/2] Xen/PCIback: Implement PCI
- flr/slot/bus reset with 'reset' SysFS attribute
-To: George Dunlap <George.Dunlap@citrix.com>,
-        =?UTF-8?B?UGFzaSBLw6Rya2vDpGlu?= =?UTF-8?Q?en?= <pasik@iki.fi>,
-        Roger Pau Monne <roger.pau@citrix.com>
-Cc: Jan Beulich <JBeulich@suse.com>, Juergen Gross <jgross@suse.com>,
-        "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-        "bhelgaas@google.com" <bhelgaas@google.com>,
-        xen-devel <xen-devel@lists.xenproject.org>,
-        Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>
-References: <20171207222145.9769-1-Govinda.Tatti@Oracle.COM>
- <20171207222145.9769-3-Govinda.Tatti@Oracle.COM>
- <5A2A6AB10200007800195D4F@prv-mh.provo.novell.com>
- <8a3bc517-1255-4547-d244-5c400e44cc77@Oracle.COM>
- <f19dbb09-ef22-2cf4-fb38-2a7c42b5dc48@Oracle.COM>
- <5A377E020200007800197FFA@prv-mh.provo.novell.com>
- <559ffd12-b541-8a69-60bd-fbe10e3dc159@oracle.com>
- <20180916114306.GF18222@reaktio.net>
- <a726840b-8a5c-0890-73c6-3a95a7205153@oracle.com>
- <20180918071519.GG18222@reaktio.net>
- <5E7DDB68-4E68-48A5-AEEC-EE1B21A50E9E@citrix.com>
-From: Boris Ostrovsky <boris.ostrovsky@oracle.com>
-Message-ID: <352310b3-ec9b-2ceb-83f0-4550718120c3@oracle.com>
-Date: Tue, 18 Sep 2018 14:09:53 -0400
+Return-Path: <linux-acpi-owner@vger.kernel.org>
+Date: Tue, 11 Sep 2018 13:41:35 +0300
+From: Mika Westerberg <mika.westerberg@linux.intel.com>
+To: "Rafael J. Wysocki" <rjw@rjwysocki.net>
+Cc: Linus Walleij <linus.walleij@linaro.org>,
+        Bjorn Helgaas <bhelgaas@google.com>,
+        Len Brown <lenb@kernel.org>, Lukas Wunner <lukas@wunner.de>,
+        Keith Busch <keith.busch@intel.com>,
+        "Raj, Ashok" <ashok.raj@intel.com>,
+        Mario Limonciello <Mario.Limonciello@dell.com>,
+        anthony.wong@canonical.com, Linux PCI <linux-pci@vger.kernel.org>,
+        ACPI Devel Maling List <linux-acpi@vger.kernel.org>
+Subject: Re: [PATCH 05/10] PCI: portdrv: Resume upon exit from system suspend
+ if left runtime suspended
+Message-ID: <20180911104135.GA14465@lahna.fi.intel.com>
+References: <20180906155020.51700-1-mika.westerberg@linux.intel.com>
+ <CAJZ5v0imJOe25MxUiutOg+55xX4+ZwY5VULk8WKP3G8Diz+=8w@mail.gmail.com>
+ <20180911091520.GU14465@lahna.fi.intel.com>
+ <32705784.9lXRHuq49d@aspire.rjw.lan>
 MIME-Version: 1.0
-In-Reply-To: <5E7DDB68-4E68-48A5-AEEC-EE1B21A50E9E@citrix.com>
-Content-Type: text/plain; charset=utf-8
-Sender: linux-pci-owner@vger.kernel.org
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <32705784.9lXRHuq49d@aspire.rjw.lan>
+Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 9/18/18 5:32 AM, George Dunlap wrote:
->
->> On Sep 18, 2018, at 8:15 AM, Pasi Kärkkäinen <pasik@iki.fi> wrote:
->>
->> Hi,
->>
->> On Mon, Sep 17, 2018 at 02:06:02PM -0400, Boris Ostrovsky wrote:
->>> What about the toolstack changes? Have they been accepted? I vaguely
->>> recall there was a discussion about those changes but don't remember how
->>> it ended.
->>>
->> I don't think toolstack/libxl patch has been applied yet either.
->>
->>
->> "[PATCH V1 0/1] Xen/Tools: PCI reset using 'reset' SysFS attribute":
->> https://lists.xen.org/archives/html/xen-devel/2017-12/msg00664.html
->>
->> "[PATCH V1 1/1] Xen/libxl: Perform PCI reset using 'reset' SysFS attribute":
->> https://lists.xen.org/archives/html/xen-devel/2017-12/msg00663.html
+On Tue, Sep 11, 2018 at 12:33:46PM +0200, Rafael J. Wysocki wrote:
+> On Tuesday, September 11, 2018 11:15:20 AM CEST Mika Westerberg wrote:
+> > On Tue, Sep 11, 2018 at 10:00:07AM +0200, Rafael J. Wysocki wrote:
+> > > On Thu, Sep 6, 2018 at 5:50 PM Mika Westerberg
+> > > <mika.westerberg@linux.intel.com> wrote:
+> > > >
+> > > > Currently we try to keep PCIe ports runtime suspended over system
+> > > > suspend if possible. This mostly happens when entering suspend-to-idle
+> > > > because there is no need to re-configure wake settings.
+> > > >
+> > > > This causes problems if the parent port goes into D3cold and it gets
+> > > > resumed upon exit from system suspend. This may happen for example if
+> > > > the port is part of PCIe switch and the same switch is connected to a
+> > > > PCIe endpoint that needs to be resumed. The way exit from D3cold works
+> > > > according PCIe 4.0 spec 5.3.1.4.2 is that power is restored and cold
+> > > > reset is signaled. After this the device is in D0unitialized state
+> > > > keeping PME context if it supports wake from D3cold.
+> > > >
+> > > > The problem occurs when a PCIe hotplug port is left suspended and the
+> > > > parent port goes into D3cold and back to D0, the port keeps its PME
+> > > > context but since everything else is reset back to defaults
+> > > > (D0unitialized) it is not set to detect hotplug events anymore.
+> > > >
+> > > > For this reason change the PCIe portdrv power management logic so that
+> > > > it is fine to keep the port runtime suspended over system suspend but it
+> > > > needs to be resumed upon exit to make sure it gets properly re-initialized.
+> > > > The custom ->prepare() hook with DPM_FLAG_SMART_PREPARE is needed
+> > > > because otherwise pci_pm_prepare() instructs the PM core to go directly
+> > > > to pci_pm_complete() on resume and this skips resuming the port.
+> > > 
+> > > Thanks for the detailed explanation, it helps quite a bit!
+> > > 
+> > > > Signed-off-by: Mika Westerberg <mika.westerberg@linux.intel.com>
+> > > > ---
+> > > >  drivers/pci/pcie/portdrv_pci.c | 20 ++++++++++++++++++--
+> > > >  1 file changed, 18 insertions(+), 2 deletions(-)
+> > > >
+> > > > diff --git a/drivers/pci/pcie/portdrv_pci.c b/drivers/pci/pcie/portdrv_pci.c
+> > > > index eef22dc29140..74761f660a30 100644
+> > > > --- a/drivers/pci/pcie/portdrv_pci.c
+> > > > +++ b/drivers/pci/pcie/portdrv_pci.c
+> > > > @@ -43,6 +43,21 @@ __setup("pcie_ports=", pcie_port_setup);
+> > > >  /* global data */
+> > > >
+> > > >  #ifdef CONFIG_PM
+> > > > +int pcie_port_prepare(struct device *dev)
+> > > > +{
+> > > > +       /*
+> > > > +        * Return 0 here to indicate PCI core that:
+> > > > +        *   - Direct complete path should be avoided
+> > > > +        *   - It is OK to leave the port runtime suspended over system
+> > > > +        *     suspend
+> > > > +        *
+> > > > +        * However, the port needs to be resumed afterwards because it may
+> > > > +        * have been in D3cold in which case we need to re-initialize the
+> > > > +        * hardware as it is in D0uninitialized in that case.
+> > > > +        */
+> > > > +       return 0;
+> > > > +}
+> > > 
+> > > You wouldn't need this if you passed DPM_FLAG_NEVER_SKIP to
+> > > dev_pm_set_driver_flags() (instead of DPM_FLAG_SMART_SUSPEND), would
+> 
+> I whould have said "instead of DPM_FLAG_SMART_PREPARE" here, sorry.
+> 
+> > > you?
+> > 
+> > Yes, I think it would work. I did not use it here because I thought it
+> > would be better to leave the port runtime suspended during system
+> > suspend (to idle) but in both cases we end up resuming them at some
+> > point (before or after system suspend).
+> 
+> DPM_FLAG_NEVER_SKIP only affects the direct-complete optimization.
 
+I did not know that. Thanks for the clarification. :)
 
-Will this patch work for *BSD? Roger?
+> It has no effect on the other behavior, so it is valid to have both
+> DPM_FLAG_NEVER_SKIP and DPM_FLAG_SMART_SUSPEND set at the same time
+> which I think is what you want.
 
-
->>
->> George asked for some clarifications:
->> https://lists.xen.org/archives/html/xen-devel/2017-12/msg01044.html
->> https://lists.xen.org/archives/html/xen-devel/2017-12/msg01116.html
-> Right, the description of the patch didn’t actually tell you what was going on.  It should have said something like, “xl currently attempts to reset a device using X; but that’s never been implemented in Linux.  Instead, use Y, which [is better for whatever reason]”.
-
-Yes, the description can be tightened a bit ;-)
-
--boris
+Indeed, that sounds like the right combination of flags.
