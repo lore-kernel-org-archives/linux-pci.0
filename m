@@ -1,74 +1,176 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mga01.intel.com ([192.55.52.88]:26317 "EHLO mga01.intel.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1728015AbeIFBGe (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Wed, 5 Sep 2018 21:06:34 -0400
-From: Keith Busch <keith.busch@intel.com>
-To: Linux PCI <linux-pci@vger.kernel.org>,
-        Bjorn Helgaas <bhelgaas@google.com>
-Cc: Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-        Sinan Kaya <okaya@kernel.org>,
-        Thomas Tai <thomas.tai@oracle.com>, poza@codeaurora.org,
-        Lukas Wunner <lukas@wunner.de>, Christoph Hellwig <hch@lst.de>
-Subject: [PATCHv2 01/20] PCI: Simplify disconnected marking
-Date: Wed,  5 Sep 2018 14:35:27 -0600
-Message-Id: <20180905203546.21921-2-keith.busch@intel.com>
-In-Reply-To: <20180905203546.21921-1-keith.busch@intel.com>
-References: <20180905203546.21921-1-keith.busch@intel.com>
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+MIME-Version: 1.0
+References: <20180829183440.13601-1-robh@kernel.org>
+In-Reply-To: <20180829183440.13601-1-robh@kernel.org>
+From: Subrahmanya Lingappa <l.subrahmanya@mobiveil.co.in>
+Date: Tue, 11 Sep 2018 12:56:24 +0530
+Message-ID: <CAFZiPx18GLf5QypztjtMgb0uDF86PG9ky5mj6eOdyHNsqUpirA@mail.gmail.com>
+Subject: Re: [PATCH] PCI: remove unnecessary check of device_type == pci
+To: robh@kernel.org
+List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
+List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
+List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
+List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
+List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
+Cc: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>, linux-pci@vger.kernel.org,
+ will.deacon@arm.com, linux-kernel@vger.kernel.org,
+ Michal Simek <michal.simek@xilinx.com>, adouglas@cadence.com,
+ Bjorn Helgaas <bhelgaas@google.com>, linux-arm-kernel@lists.infradead.org
+Content-Type: text/plain; charset="us-ascii"
+Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
+Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
 List-ID: <linux-pci.vger.kernel.org>
 
-From: Lukas Wunner <lukas@wunner.de>
+Hi,
 
-Commit 89ee9f768003 ("PCI: Add device disconnected state") iterates over
-the devices on a parent bus, marks each as disconnected, then marks
-each device's children as disconnected using pci_walk_bus().
+with regards to : drivers/pci/controller/pcie-mobiveil.c
+Acked-by: Subrahmaya Lingappa <l.subrahmanya@mobiveil.co.in>
 
-The same can be achieved more succinctly by calling pci_walk_bus() on
-the parent bus.  Moreover, this does not need to wait until acquiring
-pci_lock_rescan_remove(), so move it out of that critical section.
+Thanks.
 
-The critical section in err.c contains a pci_dev_get() / pci_dev_put()
-pair which was apparently copy-pasted from pciehp_pci.c.  In the latter
-it serves the purpose of holding the struct pci_dev in place until the
-Command register is updated.  err.c doesn't do anything like that, hence
-the pair is unnecessary.  Remove it.
+On Thu, Aug 30, 2018 at 12:04 AM Rob Herring <robh@kernel.org> wrote:
+>
+> PCI host drivers have already matched on compatible strings, so checking
+> device_type is redundant. Also, device_type is considered deprecated for
+> FDT though we've still been requiring it for PCI hosts as it is useful
+> for finding PCI buses.
+>
+> Cc: Will Deacon <will.deacon@arm.com>
+> Cc: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
+> Cc: Bjorn Helgaas <bhelgaas@google.com>
+> Cc: Alan Douglas <adouglas@cadence.com>
+> Cc: Subrahmanya Lingappa <l.subrahmanya@mobiveil.co.in>
+> Cc: Michal Simek <michal.simek@xilinx.com>
+> Cc: linux-pci@vger.kernel.org
+> Cc: linux-arm-kernel@lists.infradead.org
+> Signed-off-by: Rob Herring <robh@kernel.org>
+> ---
+>  drivers/pci/controller/pci-host-common.c   | 8 --------
+>  drivers/pci/controller/pcie-cadence-host.c | 7 -------
+>  drivers/pci/controller/pcie-mobiveil.c     | 7 -------
+>  drivers/pci/controller/pcie-xilinx-nwl.c   | 9 ---------
+>  drivers/pci/controller/pcie-xilinx.c       | 7 -------
+>  5 files changed, 38 deletions(-)
+>
+> diff --git a/drivers/pci/controller/pci-host-common.c b/drivers/pci/controller/pci-host-common.c
+> index d8f10451f273..c742881b5061 100644
+> --- a/drivers/pci/controller/pci-host-common.c
+> +++ b/drivers/pci/controller/pci-host-common.c
+> @@ -58,9 +58,7 @@ static struct pci_config_window *gen_pci_init(struct device *dev,
+>  int pci_host_common_probe(struct platform_device *pdev,
+>                           struct pci_ecam_ops *ops)
+>  {
+> -       const char *type;
+>         struct device *dev = &pdev->dev;
+> -       struct device_node *np = dev->of_node;
+>         struct pci_host_bridge *bridge;
+>         struct pci_config_window *cfg;
+>         struct list_head resources;
+> @@ -70,12 +68,6 @@ int pci_host_common_probe(struct platform_device *pdev,
+>         if (!bridge)
+>                 return -ENOMEM;
+>
+> -       type = of_get_property(np, "device_type", NULL);
+> -       if (!type || strcmp(type, "pci")) {
+> -               dev_err(dev, "invalid \"device_type\" %s\n", type);
+> -               return -EINVAL;
+> -       }
+> -
+>         of_pci_check_probe_only();
+>
+>         /* Parse and map our Configuration Space windows */
+> diff --git a/drivers/pci/controller/pcie-cadence-host.c b/drivers/pci/controller/pcie-cadence-host.c
+> index ec394f6a19c8..97e251090b4f 100644
+> --- a/drivers/pci/controller/pcie-cadence-host.c
+> +++ b/drivers/pci/controller/pcie-cadence-host.c
+> @@ -235,7 +235,6 @@ static int cdns_pcie_host_init(struct device *dev,
+>
+>  static int cdns_pcie_host_probe(struct platform_device *pdev)
+>  {
+> -       const char *type;
+>         struct device *dev = &pdev->dev;
+>         struct device_node *np = dev->of_node;
+>         struct pci_host_bridge *bridge;
+> @@ -268,12 +267,6 @@ static int cdns_pcie_host_probe(struct platform_device *pdev)
+>         rc->device_id = 0xffff;
+>         of_property_read_u16(np, "device-id", &rc->device_id);
+>
+> -       type = of_get_property(np, "device_type", NULL);
+> -       if (!type || strcmp(type, "pci")) {
+> -               dev_err(dev, "invalid \"device_type\" %s\n", type);
+> -               return -EINVAL;
+> -       }
+> -
+>         res = platform_get_resource_byname(pdev, IORESOURCE_MEM, "reg");
+>         pcie->reg_base = devm_ioremap_resource(dev, res);
+>         if (IS_ERR(pcie->reg_base)) {
+> diff --git a/drivers/pci/controller/pcie-mobiveil.c b/drivers/pci/controller/pcie-mobiveil.c
+> index a939e8d31735..77052a0712d0 100644
+> --- a/drivers/pci/controller/pcie-mobiveil.c
+> +++ b/drivers/pci/controller/pcie-mobiveil.c
+> @@ -301,13 +301,6 @@ static int mobiveil_pcie_parse_dt(struct mobiveil_pcie *pcie)
+>         struct platform_device *pdev = pcie->pdev;
+>         struct device_node *node = dev->of_node;
+>         struct resource *res;
+> -       const char *type;
+> -
+> -       type = of_get_property(node, "device_type", NULL);
+> -       if (!type || strcmp(type, "pci")) {
+> -               dev_err(dev, "invalid \"device_type\" %s\n", type);
+> -               return -EINVAL;
+> -       }
+>
+>         /* map config resource */
+>         res = platform_get_resource_byname(pdev, IORESOURCE_MEM,
+> diff --git a/drivers/pci/controller/pcie-xilinx-nwl.c b/drivers/pci/controller/pcie-xilinx-nwl.c
+> index fb32840ce8e6..81538d77f790 100644
+> --- a/drivers/pci/controller/pcie-xilinx-nwl.c
+> +++ b/drivers/pci/controller/pcie-xilinx-nwl.c
+> @@ -777,16 +777,7 @@ static int nwl_pcie_parse_dt(struct nwl_pcie *pcie,
+>                              struct platform_device *pdev)
+>  {
+>         struct device *dev = pcie->dev;
+> -       struct device_node *node = dev->of_node;
+>         struct resource *res;
+> -       const char *type;
+> -
+> -       /* Check for device type */
+> -       type = of_get_property(node, "device_type", NULL);
+> -       if (!type || strcmp(type, "pci")) {
+> -               dev_err(dev, "invalid \"device_type\" %s\n", type);
+> -               return -EINVAL;
+> -       }
+>
+>         res = platform_get_resource_byname(pdev, IORESOURCE_MEM, "breg");
+>         pcie->breg_base = devm_ioremap_resource(dev, res);
+> diff --git a/drivers/pci/controller/pcie-xilinx.c b/drivers/pci/controller/pcie-xilinx.c
+> index 7b1389d8e2a5..9bd1a35cd5d8 100644
+> --- a/drivers/pci/controller/pcie-xilinx.c
+> +++ b/drivers/pci/controller/pcie-xilinx.c
+> @@ -574,15 +574,8 @@ static int xilinx_pcie_parse_dt(struct xilinx_pcie_port *port)
+>         struct device *dev = port->dev;
+>         struct device_node *node = dev->of_node;
+>         struct resource regs;
+> -       const char *type;
+>         int err;
+>
+> -       type = of_get_property(node, "device_type", NULL);
+> -       if (!type || strcmp(type, "pci")) {
+> -               dev_err(dev, "invalid \"device_type\" %s\n", type);
+> -               return -EINVAL;
+> -       }
+> -
+>         err = of_address_to_resource(node, 0, &regs);
+>         if (err) {
+>                 dev_err(dev, "missing \"reg\" property\n");
+> --
+> 2.17.1
+>
 
-Signed-off-by: Lukas Wunner <lukas@wunner.de>
-Reviewed-by: Keith Busch <keith.busch@intel.com>
-Cc: Oza Pawandeep <poza@codeaurora.org>
-Cc: Sinan Kaya <okaya@kernel.org>
-Cc: Benjamin Herrenschmidt <benh@kernel.crashing.org>
----
- drivers/pci/hotplug/pciehp_pci.c | 9 +++------
- 1 file changed, 3 insertions(+), 6 deletions(-)
-
-diff --git a/drivers/pci/hotplug/pciehp_pci.c b/drivers/pci/hotplug/pciehp_pci.c
-index 18f83e554c73..0322bd4f0a7a 100644
---- a/drivers/pci/hotplug/pciehp_pci.c
-+++ b/drivers/pci/hotplug/pciehp_pci.c
-@@ -91,6 +91,9 @@ void pciehp_unconfigure_device(struct slot *p_slot, bool presence)
- 	ctrl_dbg(ctrl, "%s: domain:bus:dev = %04x:%02x:00\n",
- 		 __func__, pci_domain_nr(parent), parent->number);
- 
-+	if (!presence)
-+		pci_walk_bus(parent, pci_dev_set_disconnected, NULL);
-+
- 	pci_lock_rescan_remove();
- 
- 	/*
-@@ -102,12 +105,6 @@ void pciehp_unconfigure_device(struct slot *p_slot, bool presence)
- 	list_for_each_entry_safe_reverse(dev, temp, &parent->devices,
- 					 bus_list) {
- 		pci_dev_get(dev);
--		if (!presence) {
--			pci_dev_set_disconnected(dev, NULL);
--			if (pci_has_subordinate(dev))
--				pci_walk_bus(dev->subordinate,
--					     pci_dev_set_disconnected, NULL);
--		}
- 		pci_stop_and_remove_bus_device(dev);
- 		/*
- 		 * Ensure that no new Requests will be generated from
--- 
-2.14.4
+_______________________________________________
+linux-arm-kernel mailing list
+linux-arm-kernel@lists.infradead.org
+http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
