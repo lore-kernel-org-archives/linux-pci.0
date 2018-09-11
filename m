@@ -1,109 +1,71 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:44724 "EHLO mx1.redhat.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1731528AbeITAju (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Wed, 19 Sep 2018 20:39:50 -0400
-Date: Wed, 19 Sep 2018 13:00:33 -0600
-From: Alex Williamson <alex.williamson@redhat.com>
-To: Sinan Kaya <okaya@kernel.org>
-Cc: linux-pci@vger.kernel.org, Bjorn Helgaas <bhelgaas@google.com>,
-        Alexey Kardashevskiy <aik@ozlabs.ru>,
-        Peter Xu <peterx@redhat.com>,
-        "Gustavo A. R. Silva" <gustavo@embeddedor.com>
-Subject: Re: [PATCH v4 6/6] PCI: Expose reset type to users of
- pci_reset_bus()
-Message-ID: <20180919130033.5f65b1c8@t450s.home>
-In-Reply-To: <20180919163037.13497-7-okaya@kernel.org>
-References: <20180919163037.13497-1-okaya@kernel.org>
-        <20180919163037.13497-7-okaya@kernel.org>
+Return-Path: <linux-acpi-owner@vger.kernel.org>
+From: "Rafael J. Wysocki" <rjw@rjwysocki.net>
+To: Mika Westerberg <mika.westerberg@linux.intel.com>
+Cc: Bjorn Helgaas <bhelgaas@google.com>, Len Brown <lenb@kernel.org>,
+        Lukas Wunner <lukas@wunner.de>,
+        Keith Busch <keith.busch@intel.com>,
+        Ashok Raj <ashok.raj@intel.com>, Mario.Limonciello@dell.com,
+        Anthony Wong <anthony.wong@canonical.com>,
+        "D . J . Bernstein" <djb@cr.yp.to>,
+        Linus Walleij <linus.walleij@linaro.org>,
+        linux-pci@vger.kernel.org, linux-acpi@vger.kernel.org
+Subject: Re: [PATCH 07/10] PCI: pciehp: Implement runtime PM callbacks
+Date: Tue, 11 Sep 2018 10:58:24 +0200
+Message-ID: <1917369.xW3dCdYxfb@aspire.rjw.lan>
+In-Reply-To: <20180906155020.51700-8-mika.westerberg@linux.intel.com>
+References: <20180906155020.51700-1-mika.westerberg@linux.intel.com> <20180906155020.51700-8-mika.westerberg@linux.intel.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Sender: linux-pci-owner@vger.kernel.org
+Content-Type: text/plain; charset="us-ascii"
+Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wed, 19 Sep 2018 16:30:37 +0000
-Sinan Kaya <okaya@kernel.org> wrote:
-
-> Looking to have more control between the users of the API vs. what the API
-> can do internally. The new reset_type tells the PCI core about the bounds
-> of the request.
+On Thursday, September 6, 2018 5:50:17 PM CEST Mika Westerberg wrote:
+> Basically we need to do the same thing when runtime suspending than with
+> system sleep so re-use those operations here. This makes sure hotplug
+> interrupt does not trigger immediately when the link goes down.
 > 
-> Signed-off-by: Sinan Kaya <okaya@kernel.org>
+> Signed-off-by: Mika Westerberg <mika.westerberg@linux.intel.com>
 > ---
->  drivers/pci/pci.c           | 18 +++++++++++++++---
->  drivers/vfio/pci/vfio_pci.c |  6 ++++--
->  include/linux/pci.h         |  2 +-
->  3 files changed, 20 insertions(+), 6 deletions(-)
-
-Acked-by: Alex Williamson <alex.williamson@redhat.com>
-
-> diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
-> index b4f14419bd51..f11d29f32119 100644
-> --- a/drivers/pci/pci.c
-> +++ b/drivers/pci/pci.c
-> @@ -5232,13 +5232,25 @@ static int __pci_reset_bus(struct pci_bus *bus)
->  /**
->   * pci_reset_bus - Try to reset a PCI bus
->   * @pdev: top level PCI device to reset via slot/bus
-> + * @reset_type: resets to try
->   *
->   * Same as above except return -EAGAIN if the bus cannot be locked
->   */
-> -int pci_reset_bus(struct pci_dev *pdev)
-> +int pci_reset_bus(struct pci_dev *pdev, u32 reset_type)
->  {
-> -	return (!pci_probe_reset_slot(pdev->slot)) ?
-> -	    __pci_reset_slot(pdev->slot) : __pci_reset_bus(pdev->bus);
-> +	if (reset_type & PCI_RESET_LINK) {
-> +		return (!pci_probe_reset_slot(pdev->slot)) ?
-> +				__pci_reset_slot(pdev->slot) :
-> +				__pci_reset_bus(pdev->bus);
-> +	}
-> +
-> +	if (reset_type & PCI_RESET_BUS)
-> +		return __pci_reset_bus(pdev->bus);
-> +
-> +	if (reset_type & PCI_RESET_SLOT)
-> +		return __pci_reset_slot(pdev->slot);
-> +
-> +	return -EINVAL;
+>  drivers/pci/hotplug/pciehp_core.c | 19 +++++++++++++++++++
+>  1 file changed, 19 insertions(+)
+> 
+> diff --git a/drivers/pci/hotplug/pciehp_core.c b/drivers/pci/hotplug/pciehp_core.c
+> index c9cf9c3b5f7f..25b2ea9f9242 100644
+> --- a/drivers/pci/hotplug/pciehp_core.c
+> +++ b/drivers/pci/hotplug/pciehp_core.c
+> @@ -349,6 +349,23 @@ static int pciehp_resume(struct pcie_device *dev)
+>  
+>  	return 0;
 >  }
->  EXPORT_SYMBOL_GPL(pci_reset_bus);
+> +
+> +static int pciehp_runtime_resume(struct pcie_device *dev)
+> +{
+> +	struct controller *ctrl = get_service_data(dev);
+> +	struct slot *slot = ctrl->slot;
+> +
+> +	/* pci_restore_state() just wrote to the Slot Control register */
+> +	ctrl->cmd_started = jiffies;
+> +	ctrl->cmd_busy = true;
+> +
+> +	/* clear spurious events from rediscovery of inserted card */
+> +	if ((slot->state == ON_STATE || slot->state == BLINKINGOFF_STATE) &&
+> +	     pme_is_native(dev))
+> +		pcie_clear_hotplug_events(ctrl);
+> +
+> +	return pciehp_resume(dev);
+> +}
+>  #endif /* PM */
 >  
-> diff --git a/drivers/vfio/pci/vfio_pci.c b/drivers/vfio/pci/vfio_pci.c
-> index fe7ada997c51..0e80c72b1eaa 100644
-> --- a/drivers/vfio/pci/vfio_pci.c
-> +++ b/drivers/vfio/pci/vfio_pci.c
-> @@ -1015,7 +1015,8 @@ static long vfio_pci_ioctl(void *device_data,
->  						    &info, slot);
->  		if (!ret)
->  			/* User has access, do the reset */
-> -			ret = pci_reset_bus(vdev->pdev);
-> +			ret = pci_reset_bus(vdev->pdev,
-> +				slot ? PCI_RESET_SLOT :	PCI_RESET_BUS);
+>  static struct pcie_port_service_driver hpdriver_portdrv = {
+> @@ -363,6 +380,8 @@ static struct pcie_port_service_driver hpdriver_portdrv = {
+>  	.suspend	= pciehp_suspend,
+>  	.resume_noirq	= pciehp_resume_noirq,
+>  	.resume		= pciehp_resume,
+> +	.runtime_suspend = pciehp_suspend,
+> +	.runtime_resume	= pciehp_runtime_resume,
+>  #endif	/* PM */
+>  };
 >  
->  hot_reset_release:
->  		for (i--; i >= 0; i--)
-> @@ -1390,7 +1391,8 @@ static void vfio_pci_try_bus_reset(struct vfio_pci_device *vdev)
->  	}
->  
->  	if (needs_reset)
-> -		ret = pci_reset_bus(vdev->pdev);
-> +		ret = pci_reset_bus(vdev->pdev,
-> +				slot ? PCI_RESET_SLOT :	PCI_RESET_BUS);
->  
->  put_devs:
->  	for (i = 0; i < devs.cur_index; i++) {
-> diff --git a/include/linux/pci.h b/include/linux/pci.h
-> index 4fdddcb85066..85f48e156753 100644
-> --- a/include/linux/pci.h
-> +++ b/include/linux/pci.h
-> @@ -1128,7 +1128,7 @@ int pci_reset_function_locked(struct pci_dev *dev, u32 reset_type);
->  int pci_try_reset_function(struct pci_dev *dev, u32 reset_type);
->  int pci_probe_reset_slot(struct pci_slot *slot);
->  int pci_probe_reset_bus(struct pci_bus *bus);
-> -int pci_reset_bus(struct pci_dev *dev);
-> +int pci_reset_bus(struct pci_dev *dev, u32 reset_type);
->  void pci_reset_secondary_bus(struct pci_dev *dev);
->  void pcibios_reset_secondary_bus(struct pci_dev *dev);
->  void pci_update_resource(struct pci_dev *dev, int resno);
+> 
+
+Reviewed-by: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
