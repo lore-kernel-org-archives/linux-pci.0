@@ -1,98 +1,105 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.29.99]:55662 "EHLO mail.kernel.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1726956AbeIDShq (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Tue, 4 Sep 2018 14:37:46 -0400
-Date: Tue, 4 Sep 2018 09:12:27 -0500
-From: Bjorn Helgaas <helgaas@kernel.org>
-To: Bharat Kumar Gogada <bharat.kumar.gogada@xilinx.com>
-Cc: linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
-        bhelgaas@google.com, rgummal@xilinx.com
-Subject: Re: [PATCH 3/4] PCI/portdrv: Check platform supported service IRQ's
-Message-ID: <20180904141227.GD107892@bhelgaas-glaptop.roam.corp.google.com>
-References: <1533915580-31805-1-git-send-email-bharat.kumar.gogada@xilinx.com>
- <1533915580-31805-4-git-send-email-bharat.kumar.gogada@xilinx.com>
+Return-Path: <linux-acpi-owner@vger.kernel.org>
+From: "Rafael J. Wysocki" <rjw@rjwysocki.net>
+To: Mika Westerberg <mika.westerberg@linux.intel.com>,
+        Linus Walleij <linus.walleij@linaro.org>
+Cc: Bjorn Helgaas <bhelgaas@google.com>, Len Brown <lenb@kernel.org>,
+        Lukas Wunner <lukas@wunner.de>,
+        Keith Busch <keith.busch@intel.com>,
+        "Raj, Ashok" <ashok.raj@intel.com>,
+        Mario Limonciello <Mario.Limonciello@dell.com>,
+        anthony.wong@canonical.com, Linux PCI <linux-pci@vger.kernel.org>,
+        ACPI Devel Maling List <linux-acpi@vger.kernel.org>
+Subject: Re: [PATCH 05/10] PCI: portdrv: Resume upon exit from system suspend if left runtime suspended
+Date: Tue, 11 Sep 2018 12:33:46 +0200
+Message-ID: <32705784.9lXRHuq49d@aspire.rjw.lan>
+In-Reply-To: <20180911091520.GU14465@lahna.fi.intel.com>
+References: <20180906155020.51700-1-mika.westerberg@linux.intel.com> <CAJZ5v0imJOe25MxUiutOg+55xX4+ZwY5VULk8WKP3G8Diz+=8w@mail.gmail.com> <20180911091520.GU14465@lahna.fi.intel.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1533915580-31805-4-git-send-email-bharat.kumar.gogada@xilinx.com>
-Sender: linux-pci-owner@vger.kernel.org
+Content-Type: text/plain; charset="us-ascii"
+Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Fri, Aug 10, 2018 at 09:09:39PM +0530, Bharat Kumar Gogada wrote:
-> Platforms may have dedicated IRQ lines for PCIe services like
-> AER/PME etc., check for such IRQ lines.
-> Check mask and fill legacy irq line for services other than
+On Tuesday, September 11, 2018 11:15:20 AM CEST Mika Westerberg wrote:
+> On Tue, Sep 11, 2018 at 10:00:07AM +0200, Rafael J. Wysocki wrote:
+> > On Thu, Sep 6, 2018 at 5:50 PM Mika Westerberg
+> > <mika.westerberg@linux.intel.com> wrote:
+> > >
+> > > Currently we try to keep PCIe ports runtime suspended over system
+> > > suspend if possible. This mostly happens when entering suspend-to-idle
+> > > because there is no need to re-configure wake settings.
+> > >
+> > > This causes problems if the parent port goes into D3cold and it gets
+> > > resumed upon exit from system suspend. This may happen for example if
+> > > the port is part of PCIe switch and the same switch is connected to a
+> > > PCIe endpoint that needs to be resumed. The way exit from D3cold works
+> > > according PCIe 4.0 spec 5.3.1.4.2 is that power is restored and cold
+> > > reset is signaled. After this the device is in D0unitialized state
+> > > keeping PME context if it supports wake from D3cold.
+> > >
+> > > The problem occurs when a PCIe hotplug port is left suspended and the
+> > > parent port goes into D3cold and back to D0, the port keeps its PME
+> > > context but since everything else is reset back to defaults
+> > > (D0unitialized) it is not set to detect hotplug events anymore.
+> > >
+> > > For this reason change the PCIe portdrv power management logic so that
+> > > it is fine to keep the port runtime suspended over system suspend but it
+> > > needs to be resumed upon exit to make sure it gets properly re-initialized.
+> > > The custom ->prepare() hook with DPM_FLAG_SMART_PREPARE is needed
+> > > because otherwise pci_pm_prepare() instructs the PM core to go directly
+> > > to pci_pm_complete() on resume and this skips resuming the port.
+> > 
+> > Thanks for the detailed explanation, it helps quite a bit!
+> > 
+> > > Signed-off-by: Mika Westerberg <mika.westerberg@linux.intel.com>
+> > > ---
+> > >  drivers/pci/pcie/portdrv_pci.c | 20 ++++++++++++++++++--
+> > >  1 file changed, 18 insertions(+), 2 deletions(-)
+> > >
+> > > diff --git a/drivers/pci/pcie/portdrv_pci.c b/drivers/pci/pcie/portdrv_pci.c
+> > > index eef22dc29140..74761f660a30 100644
+> > > --- a/drivers/pci/pcie/portdrv_pci.c
+> > > +++ b/drivers/pci/pcie/portdrv_pci.c
+> > > @@ -43,6 +43,21 @@ __setup("pcie_ports=", pcie_port_setup);
+> > >  /* global data */
+> > >
+> > >  #ifdef CONFIG_PM
+> > > +int pcie_port_prepare(struct device *dev)
+> > > +{
+> > > +       /*
+> > > +        * Return 0 here to indicate PCI core that:
+> > > +        *   - Direct complete path should be avoided
+> > > +        *   - It is OK to leave the port runtime suspended over system
+> > > +        *     suspend
+> > > +        *
+> > > +        * However, the port needs to be resumed afterwards because it may
+> > > +        * have been in D3cold in which case we need to re-initialize the
+> > > +        * hardware as it is in D0uninitialized in that case.
+> > > +        */
+> > > +       return 0;
+> > > +}
+> > 
+> > You wouldn't need this if you passed DPM_FLAG_NEVER_SKIP to
+> > dev_pm_set_driver_flags() (instead of DPM_FLAG_SMART_SUSPEND), would
 
-Capitalize "IRQ" consistently in English text like this.
+I whould have said "instead of DPM_FLAG_SMART_PREPARE" here, sorry.
 
-Insert blank lines between paragraphs.
-
-Add a reference to the relevant spec sections.  PCIe r4.0, sec
-6.2.4.1.2, 6.2.6, 7.5.3.12 seem pertinent.
-
-> platform supported service IRQ number.
+> > you?
 > 
-> Signed-off-by: Bharat Kumar Gogada <bharat.kumar.gogada@xilinx.com>
-> ---
->  drivers/pci/pcie/portdrv_core.c |   19 +++++++++++++++++--
->  1 files changed, 17 insertions(+), 2 deletions(-)
+> Yes, I think it would work. I did not use it here because I thought it
+> would be better to leave the port runtime suspended during system
+> suspend (to idle) but in both cases we end up resuming them at some
+> point (before or after system suspend).
+
+DPM_FLAG_NEVER_SKIP only affects the direct-complete optimization.
+
+It has no effect on the other behavior, so it is valid to have both
+DPM_FLAG_NEVER_SKIP and DPM_FLAG_SMART_SUSPEND set at the same time
+which I think is what you want.
+
+[On the other hand, if DPM_FLAG_NEVER_SKIP is set, DPM_FLAG_SMART_PREPARE
+has no effect.]
+
+> DPM_FLAG_NEVER_SKIP would result a cleaner patch, I think.
 > 
-> diff --git a/drivers/pci/pcie/portdrv_core.c b/drivers/pci/pcie/portdrv_core.c
-> index e0261ad..a7d024c 100644
-> --- a/drivers/pci/pcie/portdrv_core.c
-> +++ b/drivers/pci/pcie/portdrv_core.c
-> @@ -166,6 +166,19 @@ static int pcie_init_service_irqs(struct pci_dev *dev, int *irqs, int mask)
->  		irqs[i] = -1;
->  
->  	/*
-> +	 * Some platforms have dedicated interrupt line from root complex to
-> +	 * interrupt controller for PCIe services like AER/PME etc., check
-> +	 * if platform registered with any such IRQ.
-> +	 */
-> +	if (pci_pcie_type(dev) == PCI_EXP_TYPE_ROOT_PORT) {
-> +		int plat_mask;
-> +
-> +		plat_mask = pci_check_platform_service_irqs(dev, irqs, mask);
-> +		if (plat_mask > 0)
 
-Masks should be unsigned and tested for zero or "mask & bit".  The
-rest of this file uses "int", which is sloppy because it does the
-wrong thing if we happen to use the high-order bit in the mask.
-
-> +			mask = mask & plat_mask;
-> +	}
-
-I think these platform IRQs are neither MSI-X/MSI nor PCI INTx wires.
-But as written, I think this patch executes pcie_port_enable_irq_vec(),
-which only does MSI-X/MSI stuff.  So this must rely on that failing?
-
-And then we fall through to run pci_alloc_irq_vectors(), which is for
-PCI INTx interrupts, which doesn't seem appropriate either.
-
-It seems like this platform IRQ case should be completely separated
-from the other MSI/INTx cases, i.e., set
-irqs[PCIE_PORT_SERVICE_AER_SHIFT] directly (I think you already do
-this inside pci_check_platform_service_irqs()) and immediately return.
-Then I think you wouldn't need the other hunk below.
-
-> +
-> +	/*
->  	 * If we support PME but can't use MSI/MSI-X for it, we have to
->  	 * fall back to INTx or other interrupts, e.g., a system shared
->  	 * interrupt.
-> @@ -183,8 +196,10 @@ static int pcie_init_service_irqs(struct pci_dev *dev, int *irqs, int mask)
->  	if (ret < 0)
->  		return -ENODEV;
->  
-> -	for (i = 0; i < PCIE_PORT_DEVICE_MAXSERVICES; i++)
-> -		irqs[i] = pci_irq_vector(dev, 0);
-> +	for (i = 0; i < PCIE_PORT_DEVICE_MAXSERVICES; i++) {
-> +		if (mask & (1 << i))
-> +			irqs[i] = pci_irq_vector(dev, 0);
-> +	}
->  
->  	return 0;
->  }
-> -- 
-> 1.7.1
-> 
+Well, that's my point. :-)
