@@ -1,64 +1,91 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.29.99]:58194 "EHLO mail.kernel.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1732676AbeISWJi (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Wed, 19 Sep 2018 18:09:38 -0400
-From: Sinan Kaya <okaya@kernel.org>
-To: linux-pci@vger.kernel.org
-Cc: alex.williamson@redhat.com, Sinan Kaya <okaya@kernel.org>,
-        Bjorn Helgaas <bhelgaas@google.com>
-Subject: [PATCH v4 3/6] PCI: Expose reset_type to users of pci_reset_function_locked()
-Date: Wed, 19 Sep 2018 16:30:34 +0000
-Message-Id: <20180919163037.13497-4-okaya@kernel.org>
-In-Reply-To: <20180919163037.13497-1-okaya@kernel.org>
-References: <20180919163037.13497-1-okaya@kernel.org>
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-acpi-owner@vger.kernel.org>
+Date: Tue, 11 Sep 2018 12:41:44 +0300
+From: Mika Westerberg <mika.westerberg@linux.intel.com>
+To: Lukas Wunner <lukas@wunner.de>
+Cc: Bjorn Helgaas <bhelgaas@google.com>,
+        "Rafael J. Wysocki" <rjw@rjwysocki.net>,
+        Len Brown <lenb@kernel.org>,
+        Keith Busch <keith.busch@intel.com>,
+        Ashok Raj <ashok.raj@intel.com>, Mario.Limonciello@dell.com,
+        Anthony Wong <anthony.wong@canonical.com>,
+        Linus Walleij <linus.walleij@linaro.org>,
+        linux-pci@vger.kernel.org, linux-acpi@vger.kernel.org
+Subject: Re: [PATCH 05/10] PCI: portdrv: Resume upon exit from system suspend
+ if left runtime suspended
+Message-ID: <20180911094144.GX14465@lahna.fi.intel.com>
+References: <20180906155020.51700-1-mika.westerberg@linux.intel.com>
+ <20180906155020.51700-6-mika.westerberg@linux.intel.com>
+ <20180911082935.gwcwqnk7ohwencui@wunner.de>
+ <20180911090817.GS14465@lahna.fi.intel.com>
+ <20180911092630.ibn36j54zamhrcoh@wunner.de>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20180911092630.ibn36j54zamhrcoh@wunner.de>
+Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Looking to have more control between the users of the API vs. what the API
-can do internally. The new reset_type tells the PCI core about the bounds
-of the request.
+On Tue, Sep 11, 2018 at 11:26:30AM +0200, Lukas Wunner wrote:
+> On Tue, Sep 11, 2018 at 12:08:17PM +0300, Mika Westerberg wrote:
+> > On Tue, Sep 11, 2018 at 10:29:35AM +0200, Lukas Wunner wrote:
+> > > On Thu, Sep 06, 2018 at 06:50:15PM +0300, Mika Westerberg wrote:
+> > > > Currently we try to keep PCIe ports runtime suspended over system
+> > > > suspend if possible. This mostly happens when entering suspend-to-idle
+> > > > because there is no need to re-configure wake settings.
+> > > > 
+> > > > This causes problems if the parent port goes into D3cold and it gets
+> > > > resumed upon exit from system suspend. This may happen for example if
+> > > > the port is part of PCIe switch and the same switch is connected to a
+> > > > PCIe endpoint that needs to be resumed. The way exit from D3cold works
+> > > > according PCIe 4.0 spec 5.3.1.4.2 is that power is restored and cold
+> > > > reset is signaled. After this the device is in D0unitialized state
+> > > > keeping PME context if it supports wake from D3cold.
+> > > > 
+> > > > The problem occurs when a PCIe hotplug port is left suspended and the
+> > > > parent port goes into D3cold and back to D0, the port keeps its PME
+> > > > context but since everything else is reset back to defaults
+> > > > (D0unitialized) it is not set to detect hotplug events anymore.
+> > > 
+> > > We call pci_wakeup_bus() in __pci_start_power_transition() for this
+> > > reason.  Why isn't that sufficient in your use case?
+> > 
+> > It would otherwise but __pci_start_power_transition() is never called
+> > because the bridge is left suspended.
+> 
+> You write above that the parent goes to D0, now you say it is left
+> suspended.  Which one is it?
 
-Signed-off-by: Sinan Kaya <okaya@kernel.org>
----
- drivers/pci/pci.c   | 4 ++--
- include/linux/pci.h | 2 +-
- 2 files changed, 3 insertions(+), 3 deletions(-)
+The port below the parent is left suspended -- the hotplug port.
 
-diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
-index 04fd40472a93..63b5930d8fb1 100644
---- a/drivers/pci/pci.c
-+++ b/drivers/pci/pci.c
-@@ -4829,7 +4829,7 @@ EXPORT_SYMBOL_GPL(pci_reset_function);
-  * Returns 0 if the device function was successfully reset or negative if the
-  * device doesn't support resetting a single function.
-  */
--int pci_reset_function_locked(struct pci_dev *dev)
-+int pci_reset_function_locked(struct pci_dev *dev, u32 reset_type)
- {
- 	int rc;
- 
-@@ -4838,7 +4838,7 @@ int pci_reset_function_locked(struct pci_dev *dev)
- 
- 	pci_dev_save_and_disable(dev);
- 
--	rc = __pci_reset_function_locked(dev, PCI_RESET_ANY);
-+	rc = __pci_reset_function_locked(dev, reset_type);
- 
- 	pci_dev_restore(dev);
- 
-diff --git a/include/linux/pci.h b/include/linux/pci.h
-index 1a1a76130e91..09aa99dd1c1b 100644
---- a/include/linux/pci.h
-+++ b/include/linux/pci.h
-@@ -1124,7 +1124,7 @@ bool pcie_has_flr(struct pci_dev *dev);
- int pcie_flr(struct pci_dev *dev);
- int __pci_reset_function_locked(struct pci_dev *dev, u32 reset_type);
- int pci_reset_function(struct pci_dev *dev, u32 reset_type);
--int pci_reset_function_locked(struct pci_dev *dev);
-+int pci_reset_function_locked(struct pci_dev *dev, u32 reset_type);
- int pci_try_reset_function(struct pci_dev *dev);
- int pci_probe_reset_slot(struct pci_slot *slot);
- int pci_probe_reset_bus(struct pci_bus *bus);
--- 
-2.18.0
+Once the upstream port of a PCIe switch is resumed to D0 it will be
+reset and that reset is propagated to other ports in that switch so it
+makes the hotplug port go to D0uninitialized as well.
+
+> > > > For this reason change the PCIe portdrv power management logic so that
+> > > > it is fine to keep the port runtime suspended over system suspend but it
+> > > > needs to be resumed upon exit to make sure it gets properly re-initialized.
+> > > > The custom ->prepare() hook with DPM_FLAG_SMART_PREPARE is needed
+> > > > because otherwise pci_pm_prepare() instructs the PM core to go directly
+> > > > to pci_pm_complete() on resume and this skips resuming the port.
+> > > 
+> > > On Macs, if no Thunderbolt device is attached, it is perfectly okay to
+> > > use direct complete and it is also perfectly okay to leave the entire
+> > > controller (including all its PCIe ports) in D3cold when coming out of
+> > > system sleep.  In fact it would be unnecessary and undesirable to
+> > > runtime resume the controller, it would just waste energy for no reason.
+> > 
+> > I'm surprised if it works like that because both PCIe spec and
+> > conventional PCI spec both require reset after D3cold and the only state
+> > for a function after that is D0uninitialized.
+> 
+> The controller is in D3cold when coming out of system sleep if it was in
+> D3cold when sytem sleep commenced.
+
+In that case if the whole chain is left in D3cold over system sleep
+there is no issue. But at least with the Thunderbolt controllers I've
+been dealing with, the xHCI (or the USB stack) that is part of the PCIe
+switch wants to resume the controller and that also resumes the upstream
+port and the root port which leads to this situation. I did not check
+Apple systems, though but I thought they also include xHCI.
+
+I guess the point is if there is any device in the hierarchy that needs
+to be resumed, we end up in this situation.
