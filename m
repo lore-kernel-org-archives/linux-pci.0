@@ -1,129 +1,178 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mx2.mailbox.org ([80.241.60.215]:55484 "EHLO mx2.mailbox.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1726906AbeIKAxR (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Mon, 10 Sep 2018 20:53:17 -0400
-Subject: Re: [PATCH] PCI: Reprogram bridge prefetch registers on resume
-To: Daniel Drake <drake@endlessm.com>, bhelgaas@google.com
-Cc: linux-pci@vger.kernel.org, linux@endlessm.com,
-        nouveau@lists.freedesktop.org, linux-pm@vger.kernel.org,
-        peter@lekensteyn.nl, kherbst@redhat.com,
-        andriy.shevchenko@linux.intel.com, rafael.j.wysocki@intel.com,
-        keith.busch@intel.com, mika.westerberg@linux.intel.com,
-        jonathan.derrick@intel.com, davem@davemloft.net,
-        hkallweit1@gmail.com, netdev@vger.kernel.org, nic_swsd@realtek.com
-References: <20180907053614.6540-1-drake@endlessm.com>
-From: Thomas Martitz <kugel@rockbox.org>
-Message-ID: <46fe10f6-e778-1808-2a58-663901ed7748@rockbox.org>
-Date: Mon, 10 Sep 2018 21:57:11 +0200
+Return-Path: <linux-acpi-owner@vger.kernel.org>
+From: "Rafael J. Wysocki" <rjw@rjwysocki.net>
+To: Mika Westerberg <mika.westerberg@linux.intel.com>
+Cc: Bjorn Helgaas <bhelgaas@google.com>, Len Brown <lenb@kernel.org>,
+        Lukas Wunner <lukas@wunner.de>,
+        Keith Busch <keith.busch@intel.com>,
+        Ashok Raj <ashok.raj@intel.com>, Mario.Limonciello@dell.com,
+        Anthony Wong <anthony.wong@canonical.com>,
+        "D . J . Bernstein" <djb@cr.yp.to>,
+        Linus Walleij <linus.walleij@linaro.org>,
+        linux-pci@vger.kernel.org, linux-acpi@vger.kernel.org
+Subject: Re: [PATCH 10/10] PCI / ACPI: Whitelist D3 for more PCIe hotplug ports
+Date: Tue, 11 Sep 2018 11:01:27 +0200
+Message-ID: <1783231.zbE0DC02F3@aspire.rjw.lan>
+In-Reply-To: <20180906155020.51700-11-mika.westerberg@linux.intel.com>
+References: <20180906155020.51700-1-mika.westerberg@linux.intel.com> <20180906155020.51700-11-mika.westerberg@linux.intel.com>
 MIME-Version: 1.0
-In-Reply-To: <20180907053614.6540-1-drake@endlessm.com>
-Content-Type: text/plain; charset=utf-8; format=flowed
-Sender: linux-pci-owner@vger.kernel.org
+Content-Type: text/plain; charset="us-ascii"
+Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hello Daniel,
-
-Am 07.09.18 um 07:36 schrieb Daniel Drake:
-> On 38+ Intel-based Asus products, the nvidia GPU becomes unusable
-> after S3 suspend/resume. The affected products include multiple
-> generations of nvidia GPUs and Intel SoCs. After resume, nouveau logs
-> many errors such as:
+On Thursday, September 6, 2018 5:50:20 PM CEST Mika Westerberg wrote:
+> In order to have better power management for Thunderbolt PCIe chains,
+> Windows enables power management for native PCIe hotplug ports if there
+> is following ACPI _DSD attached to the root port:
 > 
->      fifo: fault 00 [READ] at 0000005555555000 engine 00 [GR] client 04 [HUB/FE] reason 4a [] on channel -1 [007fa91000 unknown]
->      DRM: failed to idle channel 0 [DRM]
+>   Name (_DSD, Package () {
+>       ToUUID ("6211e2c0-58a3-4af3-90e1-927a4e0c55a4"),
+>       Package () {
+>           Package () {"HotPlugSupportInD3", 1}
+>       }
+>   })
 > 
-> Similarly, the nvidia proprietary driver also fails after resume
-> (black screen, 100% CPU usage in Xorg process). We shipped a sample
-> to Nvidia for diagnosis, and their response indicated that it's a
-> problem with the parent PCI bridge (on the Intel SoC), not the GPU.
+> This is also documented in:
 > 
-> Runtime suspend/resume works fine, only S3 suspend is affected.
+>   https://docs.microsoft.com/en-us/windows-hardware/drivers/pci/dsd-for-pcie-root-ports#identifying-pcie-root-ports-supporting-hot-plug-in-d3
 > 
-> We found a workaround: on resume, rewrite the Intel PCI bridge
-> 'Prefetchable Base Upper 32 Bits' register (PCI_PREF_BASE_UPPER32). In
-> the cases that I checked, this register has value 0 and we just have to
-> rewrite that value.
+> Do the same in Linux by introducing new firmware PM callback (->bridge_d3())
+> and then implement it for ACPI based systems so that the above property is
+> checked.
 > 
-> It's very strange that rewriting the exact same register value
-> makes a difference, but it definitely makes the issue go away.
-> It's not just acting as some kind of memory barrier, because rewriting
-> other bridge registers does not work around the issue. There's something
-> magic in this particular register. We have confirmed this on all
-> the affected models we have in-hands (X542UQ, UX533FD, X530UN, V272UN).
+> There is one catch, though. The initial pci_dev->bridge_d3 is set before
+> the root port has ACPI companion bound (the device is not added to the
+> PCI bus either) so we need to look up the ACPI companion manually in
+> that case in acpi_pci_bridge_d3().
 > 
-> Additionally, this workaround solves an issue where r8169 MSI-X
-> interrupts were broken after S3 suspend/resume on Asus X441UAR. This
-> issue was recently worked around in commit 7bb05b85bc2d ("r8169:
-> don't use MSI-X on RTL8106e"). It also fixes the same issue on
-> RTL6186evl/8111evl on an Aimfor-tech laptop that we had not yet
-> patched. I suspect it will also fix the issue that was worked around in
-> commit 7c53a722459c ("r8169: don't use MSI-X on RTL8168g").
+> Signed-off-by: Mika Westerberg <mika.westerberg@linux.intel.com>
+> ---
+>  drivers/acpi/property.c |  3 +++
+>  drivers/pci/pci-acpi.c  | 41 +++++++++++++++++++++++++++++++++++++++++
+>  drivers/pci/pci.c       |  9 +++++++++
+>  drivers/pci/pci.h       |  3 +++
+>  4 files changed, 56 insertions(+)
 > 
-> Thomas Martitz reports that this workaround also solves an issue where
-> the AMD Radeon Polaris 10 GPU on the HP Zbook 14u G5 is unresponsive
-> after S3 suspend/resume.
-
-
-I can confirm that this exact patch also helps on my HP Zbook. Thanks 
-for your work on this, resume has been a real pain until now.
-
-
-
-> 
->   drivers/pci/pci-driver.c | 14 ++++++++++++++
->   drivers/pci/setup-bus.c  |  2 +-
->   include/linux/pci.h      |  1 +
->   3 files changed, 16 insertions(+), 1 deletion(-)
-> 
-> diff --git a/drivers/pci/pci-driver.c b/drivers/pci/pci-driver.c
-> index bef17c3fca67..034f816570ad 100644
-> --- a/drivers/pci/pci-driver.c
-> +++ b/drivers/pci/pci-driver.c
-> @@ -524,6 +524,20 @@ static void pci_pm_default_resume_early(struct pci_dev *pci_dev)
->   	pci_power_up(pci_dev);
->   	pci_restore_state(pci_dev);
->   	pci_pme_restore(pci_dev);
+> diff --git a/drivers/acpi/property.c b/drivers/acpi/property.c
+> index f3ddb279d2de..f9d63ee9f623 100644
+> --- a/drivers/acpi/property.c
+> +++ b/drivers/acpi/property.c
+> @@ -28,6 +28,9 @@ static const guid_t prp_guids[] = {
+>  	/* ACPI _DSD device properties GUID: daffd814-6eba-4d8c-8a91-bc9bbf4aa301 */
+>  	GUID_INIT(0xdaffd814, 0x6eba, 0x4d8c,
+>  		  0x8a, 0x91, 0xbc, 0x9b, 0xbf, 0x4a, 0xa3, 0x01),
+> +	/* Hotplug in D3 GUID: 6211e2c0-58a3-4af3-90e1-927a4e0c55a4 */
+> +	GUID_INIT(0x6211e2c0, 0x58a3, 0x4af3,
+> +		  0x90, 0xe1, 0x92, 0x7a, 0x4e, 0x0c, 0x55, 0xa4),
+>  };
+>  
+>  static const guid_t ads_guid =
+> diff --git a/drivers/pci/pci-acpi.c b/drivers/pci/pci-acpi.c
+> index a4a8c02deaa0..c0394232fd93 100644
+> --- a/drivers/pci/pci-acpi.c
+> +++ b/drivers/pci/pci-acpi.c
+> @@ -519,6 +519,46 @@ static pci_power_t acpi_pci_choose_state(struct pci_dev *pdev)
+>  	return PCI_POWER_ERROR;
+>  }
+>  
+> +static struct acpi_device *acpi_pci_find_companion(struct device *dev);
+> +
+> +static bool acpi_pci_bridge_d3(struct pci_dev *dev)
+> +{
+> +	const struct fwnode_handle *fwnode;
+> +	struct acpi_device *adev;
+> +	struct pci_dev *root;
+> +	u8 val;
+> +
+> +	if (!dev->is_hotplug_bridge)
+> +		return false;
 > +
 > +	/*
-> +	 * Redo the PCI bridge prefetch register setup.
-> +	 *
-> +	 * This works around an Intel PCI bridge issue seen on Asus and HP
-> +	 * laptops, where the GPU is not usable after S3 resume.
-> +	 * Even though PCI bridge register contents appear to be intact
-> +	 * at resume time, rewriting the value of PREF_BASE_UPPER32 is
-> +	 * required to make the GPU work.
-> +	 * Windows 10 also reprograms these registers during S3 resume.
+> +	 * Look for a special _DSD property for the root port and if it
+> +	 * is set we know the hierarchy behind it supports D3 just fine.
 > +	 */
-> +	if (pci_dev->class == PCI_CLASS_BRIDGE_PCI << 8)
-> +		pci_setup_bridge_mmio_pref(pci_dev);
+> +	root = pci_find_pcie_root_port(dev);
+> +	if (!root)
+> +		return false;
 > +
->   	pci_fixup_device(pci_fixup_resume_early, pci_dev);
->   }
->   
-> diff --git a/drivers/pci/setup-bus.c b/drivers/pci/setup-bus.c
-> index 79b1824e83b4..cb88288d2a69 100644
-> --- a/drivers/pci/setup-bus.c
-> +++ b/drivers/pci/setup-bus.c
-> @@ -630,7 +630,7 @@ static void pci_setup_bridge_mmio(struct pci_dev *bridge)
->   	pci_write_config_dword(bridge, PCI_MEMORY_BASE, l);
->   }
->   
-> -static void pci_setup_bridge_mmio_pref(struct pci_dev *bridge)
-> +void pci_setup_bridge_mmio_pref(struct pci_dev *bridge)
->   {
->   	struct resource *res;
->   	struct pci_bus_region region;
-> diff --git a/include/linux/pci.h b/include/linux/pci.h
-> index e72ca8dd6241..b15828fc26a4 100644
-> --- a/include/linux/pci.h
-> +++ b/include/linux/pci.h
-> @@ -934,6 +934,7 @@ struct pci_dev *pci_scan_single_device(struct pci_bus *bus, int devfn);
->   void pci_device_add(struct pci_dev *dev, struct pci_bus *bus);
->   unsigned int pci_scan_child_bus(struct pci_bus *bus);
->   void pci_bus_add_device(struct pci_dev *dev);
-> +void pci_setup_bridge_mmio_pref(struct pci_dev *bridge);
->   void pci_read_bridge_bases(struct pci_bus *child);
->   struct resource *pci_find_parent_resource(const struct pci_dev *dev,
->   					  struct resource *res);
+> +	adev = ACPI_COMPANION(&root->dev);
+> +	if (root == dev) {
+> +		/*
+> +		 * It is possible that the ACPI companion is not yet bound
+> +		 * for the root port so look it up manually here.
+> +		 */
+> +		if (!adev && !pci_dev_is_added(root))
+> +			adev = acpi_pci_find_companion(&root->dev);
+> +	}
+> +
+> +	if (!adev)
+> +		return false;
+> +
+> +	fwnode = acpi_fwnode_handle(adev);
+> +	if (fwnode_property_read_u8(fwnode, "HotPlugSupportInD3", &val))
+> +		return false;
+> +
+> +	return val == 1;
+> +}
+> +
+>  static bool acpi_pci_power_manageable(struct pci_dev *dev)
+>  {
+>  	struct acpi_device *adev = ACPI_COMPANION(&dev->dev);
+> @@ -635,6 +675,7 @@ static bool acpi_pci_need_resume(struct pci_dev *dev)
+>  }
+>  
+>  static const struct pci_platform_pm_ops acpi_pci_platform_pm = {
+> +	.bridge_d3 = acpi_pci_bridge_d3,
+>  	.is_manageable = acpi_pci_power_manageable,
+>  	.set_state = acpi_pci_set_power_state,
+>  	.get_state = acpi_pci_get_power_state,
+> diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
+> index 074f3f0253f9..ce212eb10be9 100644
+> --- a/drivers/pci/pci.c
+> +++ b/drivers/pci/pci.c
+> @@ -791,6 +791,11 @@ static inline bool platform_pci_need_resume(struct pci_dev *dev)
+>  	return pci_platform_pm ? pci_platform_pm->need_resume(dev) : false;
+>  }
+>  
+> +static inline bool platform_pci_bridge_d3(struct pci_dev *dev)
+> +{
+> +	return pci_platform_pm ? pci_platform_pm->bridge_d3(dev) : false;
+> +}
+> +
+>  /**
+>   * pci_raw_set_power_state - Use PCI PM registers to set the power state of
+>   *                           given PCI device
+> @@ -2513,6 +2518,10 @@ bool pci_bridge_d3_possible(struct pci_dev *bridge)
+>  		if (bridge->is_thunderbolt)
+>  			return true;
+>  
+> +		/* Platform might know better if the bridge supports D3 */
+> +		if (platform_pci_bridge_d3(bridge))
+> +			return true;
+> +
+>  		/*
+>  		 * Hotplug ports handled natively by the OS were not validated
+>  		 * by vendors for runtime D3 at least until 2018 because there
+> diff --git a/drivers/pci/pci.h b/drivers/pci/pci.h
+> index 6e0d1528d471..66fd5c1bf71b 100644
+> --- a/drivers/pci/pci.h
+> +++ b/drivers/pci/pci.h
+> @@ -39,6 +39,8 @@ int pci_bridge_secondary_bus_reset(struct pci_dev *dev);
+>  /**
+>   * struct pci_platform_pm_ops - Firmware PM callbacks
+>   *
+> + * @bridge_d3: Does the bridge allow entering into D3
+> + *
+>   * @is_manageable: returns 'true' if given device is power manageable by the
+>   *		   platform firmware
+>   *
+> @@ -60,6 +62,7 @@ int pci_bridge_secondary_bus_reset(struct pci_dev *dev);
+>   * these callbacks are mandatory.
+>   */
+>  struct pci_platform_pm_ops {
+> +	bool (*bridge_d3)(struct pci_dev *dev);
+>  	bool (*is_manageable)(struct pci_dev *dev);
+>  	int (*set_state)(struct pci_dev *dev, pci_power_t state);
+>  	pci_power_t (*get_state)(struct pci_dev *dev);
 > 
+
+Reviewed-by: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
