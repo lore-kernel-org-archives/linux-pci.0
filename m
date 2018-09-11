@@ -1,144 +1,169 @@
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Subject: Re: [PATCH v2 01/40] iommu: Introduce Shared Virtual Addressing API
-To: =?UTF-8?Q?Christian_K=c3=b6nig?= <christian.koenig@amd.com>,
- Auger Eric <eric.auger@redhat.com>, "linux-arm-kernel@lists.infradead.org"
- <linux-arm-kernel@lists.infradead.org>,
- "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
- "linux-acpi@vger.kernel.org" <linux-acpi@vger.kernel.org>,
- "devicetree@vger.kernel.org" <devicetree@vger.kernel.org>,
- "iommu@lists.linux-foundation.org" <iommu@lists.linux-foundation.org>,
- "kvm@vger.kernel.org" <kvm@vger.kernel.org>,
- "linux-mm@kvack.org" <linux-mm@kvack.org>
-References: <20180511190641.23008-1-jean-philippe.brucker@arm.com>
- <20180511190641.23008-2-jean-philippe.brucker@arm.com>
- <bf42affd-e9d0-e4fc-6d28-f3c3f7795348@redhat.com>
- <03d31ba5-1eda-ea86-8c0c-91d14c86fe83@arm.com>
- <ed39159c-087e-7e56-7d29-d1de9fa1677f@amd.com>
- <f0b317d5-e2e9-5478-952c-05e8b97bd68b@arm.com>
- <2fd4a0a1-1a35-bf82-df84-b995cce011d9@amd.com>
-From: Jean-Philippe Brucker <jean-philippe.brucker@arm.com>
-Message-ID: <65e7accd-4446-19f5-c667-c6407e89cfa6@arm.com>
-Date: Fri, 7 Sep 2018 16:45:02 +0100
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mailgw02.mediatek.com ([210.61.82.184]:36690 "EHLO
+        mailgw02.mediatek.com" rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org
+        with ESMTP id S1726720AbeIKPWo (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Tue, 11 Sep 2018 11:22:44 -0400
+Message-ID: <1536661436.31406.75.camel@mhfsdcap03>
+Subject: Re: [PATCH v3 3/4] PCI: mediatek: Add system pm support for MT2712
+ and MT7622
+From: Honghui Zhang <honghui.zhang@mediatek.com>
+To: Ulf Hansson <ulf.hansson@linaro.org>
+CC: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
+        <linux-mediatek@lists.infradead.org>,
+        Linux PCI <linux-pci@vger.kernel.org>,
+        Ryder Lee <ryder.lee@mediatek.com>
+Date: Tue, 11 Sep 2018 18:23:56 +0800
+In-Reply-To: <CAPDyKFqvs6St1oTvx=_0dYSOXweW03PUZ=EAkgpL3XP-Sgg-sw@mail.gmail.com>
+References: <1530518264-6125-1-git-send-email-honghui.zhang@mediatek.com>
+         <1530518264-6125-4-git-send-email-honghui.zhang@mediatek.com>
+         <CAPDyKFpFpR_NhtNW6rChMFw4KLweut8zC3x2V1ZBbdrV05iuTQ@mail.gmail.com>
+         <1536572566.31406.64.camel@mhfsdcap03>
+         <CAPDyKFqvs6St1oTvx=_0dYSOXweW03PUZ=EAkgpL3XP-Sgg-sw@mail.gmail.com>
+Content-Type: text/plain; charset="UTF-8"
 MIME-Version: 1.0
-In-Reply-To: <2fd4a0a1-1a35-bf82-df84-b995cce011d9@amd.com>
-List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
-List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
-List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
-List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
-List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
-Cc: "xieyisheng1@huawei.com" <xieyisheng1@huawei.com>,
- "ilias.apalodimas@linaro.org" <ilias.apalodimas@linaro.org>,
- "xuzaibo@huawei.com" <xuzaibo@huawei.com>,
- "thunder.leizhen@huawei.com" <thunder.leizhen@huawei.com>,
- Will Deacon <Will.Deacon@arm.com>,
- "okaya@codeaurora.org" <okaya@codeaurora.org>,
- "yi.l.liu@intel.com" <yi.l.liu@intel.com>,
- "ashok.raj@intel.com" <ashok.raj@intel.com>,
- "tn@semihalf.com" <tn@semihalf.com>, "joro@8bytes.org" <joro@8bytes.org>,
- "bharatku@xilinx.com" <bharatku@xilinx.com>,
- "liudongdong3@huawei.com" <liudongdong3@huawei.com>,
- "rfranz@cavium.com" <rfranz@cavium.com>,
- "kevin.tian@intel.com" <kevin.tian@intel.com>,
- "jacob.jun.pan@linux.intel.com" <jacob.jun.pan@linux.intel.com>,
- "alex.williamson@redhat.com" <alex.williamson@redhat.com>,
- "rgummal@xilinx.com" <rgummal@xilinx.com>,
- "jonathan.cameron@huawei.com" <jonathan.cameron@huawei.com>,
- "shunyong.yang@hxt-semitech.com" <shunyong.yang@hxt-semitech.com>,
- "dwmw2@infradead.org" <dwmw2@infradead.org>,
- "liubo95@huawei.com" <liubo95@huawei.com>,
- "jcrouse@codeaurora.org" <jcrouse@codeaurora.org>,
- "robdclark@gmail.com" <robdclark@gmail.com>,
- Robin Murphy <Robin.Murphy@arm.com>,
- "nwatters@codeaurora.org" <nwatters@codeaurora.org>,
- "baolu.lu@linux.intel.com" <baolu.lu@linux.intel.com>
-Content-Type: text/plain; charset="utf-8"
-Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
-Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-T24gMDcvMDkvMjAxOCAwOTo1NSwgQ2hyaXN0aWFuIEvDtm5pZyB3cm90ZToKPiBJIHdpbGwgdGFr
-ZSB0aGlzIGFzIGFuIG9wcG9ydHVuaXR5IHRvIHN1bW1hcml6ZSBzb21lIG9mIHRoZSByZXF1aXJl
-bWVudHMgCj4gd2UgaGF2ZSBmb3IgUEFTSUQgbWFuYWdlbWVudCBmcm9tIHRoZSBhbWRncHUgZHJp
-dmVyIHBvaW50IG9mIHZpZXc6CgpUaGF0J3MgaW5jcmVkaWJseSB1c2VmdWwsIHRoYW5rcyA6KQoK
-PiAxLiBXZSBuZWVkIHRvIGJlIGFibGUgdG8gYWxsb2NhdGUgUEFTSUQgYmV0d2VlbiAxIGFuZCBz
-b21lIG1heGltdW0uIFplcm8gCj4gaXMgcmVzZXJ2ZWQgYXMgZmFyIGFzIEkga25vdywgYnV0IHdl
-IGRvbid0IG5lY2Vzc2FyeSBuZWVkIGEgbWluaW11bS4KClNob3VsZCBiZSBmaW5lLiBUaGUgUEFT
-SUQgcmFuZ2UgaXMgcmVzdHJpY3RlZCBieSB0aGUgUENJIFBBU0lECmNhcGFiaWxpdHksIGZpcm13
-YXJlIGRlc2NyaXB0aW9uIChmb3Igbm9uLVBDSSBkZXZpY2VzKSwgdGhlIElPTU1VCmNhcGFjaXR5
-LCBhbmQgd2hhdCB0aGUgZGV2aWNlIGRyaXZlciBwYXNzZXMgdG8gaW9tbXVfc3ZhX2RldmljZV9p
-bml0LgpOb3QgYWxsIElPTU1VcyByZXNlcnZlIFBBU0lEIDAgKEFNRCBJT01NVSB3aXRob3V0IEdJ
-b1N1cCBkb2Vzbid0LCBpZiBJJ20Kbm90IG1pc3Rha2VuKSwgc28gdGhlIEtGRCBkcml2ZXIgd2ls
-bCBuZWVkIHRvIHBhc3MgbWluX3Bhc2lkPTEgdG8gbWFrZQpzdXJlIHRoYXQgMCBpc24ndCBhbGxv
-Y2F0ZWQuCgo+IDIuIFdlIG5lZWQgdG8gYmUgYWJsZSB0byBhbGxvY2F0ZSBQQVNJRHMgd2l0aG91
-dCBhIHByb2Nlc3MgYWRkcmVzcyBzcGFjZSAKPiBiYWNraW5nIGl0LiBFLmcuIG91ciBoYXJkd2Fy
-ZSB1c2VzIFBBU0lEcyBldmVuIHdpdGhvdXQgU2hhcmVkIFZpcnR1YWwgCj4gQWRkcmVzc2luZyBl
-bmFibGVkIHRvIGRpc3RpbmN0IGNsaWVudHMgZnJvbSBlYWNoIG90aGVyLgo+ICDCoMKgwqAgwqDC
-oMKgIFdvdWxkIGJlIGEgcGl0eSBpZiB3ZSBuZWVkIHRvIHN0aWxsIGhhdmUgYSBzZXBhcmF0ZSBQ
-QVNJRCAKPiBoYW5kbGluZyBiZWNhdXNlIHRoZSBzeXN0ZW0gd2lkZSBpcyBvbmx5IGF2YWlsYWJs
-ZSB3aGVuIElPTU1VIGlzIHR1cm5lZCBvbi4KCkknbSBzdGlsbCBub3Qgc3VyZSBhYm91dCB0aGlz
-IG9uZS4gRnJvbSBteSBwb2ludCBvZiB2aWV3IHdlIHNob3VsZG4ndAphZGQgdG8gdGhlIElPTU1V
-IHN1YnN5c3RlbSBoZWxwZXJzIGZvciBkZXZpY2VzIHdpdGhvdXQgYW4gSU9NTVUuCmlvbW11LXN2
-YSBleHBlY3RzIGV2ZXJ5d2hlcmUgdGhhdCB0aGUgZGV2aWNlIGhhcyBhbiBpb21tdV9kb21haW4s
-IGl0J3MKdGhlIGZpcnN0IHRoaW5nIHdlIGNoZWNrIG9uIGVudHJ5LiBCeXBhc3NpbmcgYWxsIG9m
-IHRoaXMgd291bGQgY2FsbAppZHJfYWxsb2MoKSBkaXJlY3RseSwgYW5kIHdvdWxkbid0IGhhdmUg
-YW55IGNvZGUgaW4gY29tbW9uIHdpdGggdGhlCmN1cnJlbnQgaW9tbXUtc3ZhLiBTbyBpdCBzZWVt
-cyBsaWtlIHlvdSBuZWVkIGEgbGF5ZXIgb24gdG9wIG9mIGlvbW11LXN2YQpjYWxsaW5nIGlkcl9h
-bGxvYygpIHdoZW4gYW4gSU9NTVUgaXNuJ3QgcHJlc2VudCwgYnV0IEkgZG9uJ3QgdGhpbmsgaXQK
-c2hvdWxkIGJlIGluIGRyaXZlcnMvaW9tbXUvCgo+IDMuIEV2ZW4gYWZ0ZXIgZGVzdHJ1Y3Rpb24g
-b2YgYSBwcm9jZXNzIGFkZHJlc3Mgc3BhY2Ugd2UgbmVlZCBzb21lIGdyYWNlIAo+IHBlcmlvZCBi
-ZWZvcmUgYSBQQVNJRCBpcyByZXVzZWQgYmVjYXVzZSBpdCBjYW4gYmUgdGhhdCB0aGUgc3BlY2lm
-aWMgCj4gUEFTSUQgaXMgc3RpbGwgaW4gc29tZSBoYXJkd2FyZSBxdWV1ZXMgZXRjLi4uCj4gIMKg
-wqDCoCDCoMKgwqAgQXQgYmFyZSBtaW5pbXVtIGFsbCBkZXZpY2UgZHJpdmVycyB1c2luZyBwcm9j
-ZXNzIGJpbmRpbmcgbmVlZCAKPiB0byBleHBsaWNpdGx5IG5vdGUgdG8gdGhlIGNvcmUgd2hlbiB0
-aGV5IGFyZSBkb25lIHdpdGggYSBQQVNJRC4KClJpZ2h0LCBtdWNoIG9mIHRoZSBob3JyaWJsZW5l
-c3MgaW4gaW9tbXUtc3ZhIGRlYWxzIHdpdGggdGhpczoKClRoZSBwcm9jZXNzIGRpZXMsIGlvbW11
-LXN2YSBpcyBub3RpZmllZCBhbmQgY2FsbHMgdGhlIG1tX2V4aXQoKSBmdW5jdGlvbgpwYXNzZWQg
-YnkgdGhlIGRldmljZSBkcml2ZXIgdG8gaW9tbXVfc3ZhX2RldmljZV9pbml0KCkuIEluIG1tX2V4
-aXQoKSB0aGUKZGV2aWNlIGRyaXZlciBuZWVkcyB0byBjbGVhciBhbnkgcmVmZXJlbmNlIHRvIHRo
-ZSBQQVNJRCBpbiBoYXJkd2FyZSBhbmQKaW4gaXRzIG93biBzdHJ1Y3R1cmVzLiBXaGVuIHRoZSBk
-ZXZpY2UgZHJpdmVyIHJldHVybnMgZnJvbSBtbV9leGl0KCksIGl0CmVmZmVjdGl2ZWx5IHRlbGxz
-IHRoZSBjb3JlIHRoYXQgaXQgaGFzIGZpbmlzaGVkIHVzaW5nIHRoZSBQQVNJRCwgYW5kCmlvbW11
-LXN2YSBjYW4gcmV1c2UgdGhlIFBBU0lEIGZvciBhbm90aGVyIHByb2Nlc3MuIG1tX2V4aXQoKSBp
-cyBhbGxvd2VkCnRvIGJsb2NrLCBzbyB0aGUgZGV2aWNlIGRyaXZlciBoYXMgdGltZSB0byBjbGVh
-biB1cCBhbmQgZmx1c2ggdGhlIHF1ZXVlcy4KCklmIHRoZSBkZXZpY2UgZHJpdmVyIGZpbmlzaGVz
-IHVzaW5nIHRoZSBQQVNJRCBiZWZvcmUgdGhlIHByb2Nlc3MgZXhpdHMsCml0IGp1c3QgY2FsbHMg
-dW5iaW5kKCkuCgo+IDQuIEl0IHdvdWxkIGJlIG5pY2UgdG8gaGF2ZSB0byBiZSBhYmxlIHRvIHNl
-dCBhICJ2b2lkICoiIGZvciBlYWNoIAo+IFBBU0lEL2RldmljZSBjb21iaW5hdGlvbiB3aGlsZSBi
-aW5kaW5nIHRvIGEgcHJvY2VzcyB3aGljaCB0aGVuIGNhbiBiZSAKPiBxdWVyaWVkIGxhdGVyIG9u
-IGJhc2VkIG9uIHRoZSBQQVNJRC4KPiAgwqDCoMKgIMKgwqDCoCBFLmcuIHdoZW4geW91IGhhdmUg
-YSBwZXIgUEFTSUQvZGV2aWNlIHN0cnVjdHVyZSBhcm91bmQgYW55d2F5LCAKPiBqdXN0IGFkZCBh
-biBleHRyYSBmaWVsZC4KCmlvbW11X3N2YV9iaW5kX2RldmljZSgpIHRha2VzIGEgImRydmRhdGEi
-IHBvaW50ZXIgdGhhdCBpcyBzdG9yZWQKaW50ZXJuYWxseSBmb3IgdGhlIFBBU0lEL2RldmljZSBj
-b21iaW5hdGlvbiAoaW9tbXVfYm9uZCkuIEl0IGlzIHBhc3NlZAp0byBtbV9leGl0KCksIGJ1dCBJ
-IGhhdmVuJ3QgYWRkZWQgYW55dGhpbmcgZm9yIHRoZSBkZXZpY2UgZHJpdmVyIHRvCnF1ZXJ5IGl0
-IGJhY2suCgo+IDUuIEl0IHdvdWxkIGJlIG5pY2UgdG8gaGF2ZSB0byBhbGxvY2F0ZSBtdWx0aXBs
-ZSBQQVNJRHMgZm9yIHRoZSBzYW1lIAo+IHByb2Nlc3MgYWRkcmVzcyBzcGFjZS4KPiAgwqDCoMKg
-IMKgwqDCoCBFLmcuIHNvbWUgdGVhbXMgYXQgQU1EIHdhbnQgdG8gdXNlIGEgc2VwYXJhdGUgR1BV
-IGFkZHJlc3Mgc3BhY2UgCj4gZm9yIHRoZWlyIHVzZXJzcGFjZSBjbGllbnQgbGlicmFyeS4gSSdt
-IHN0aWxsIHRyeWluZyB0byBhdm9pZCB0aGF0LCBidXQgCj4gaXQgaXMgcGVyZmVjdGx5IHBvc3Np
-YmxlIHRoYXQgd2UgYXJlIGdvaW5nIHRvIG5lZWQgdGhhdC4KClR3byBQQVNJRHMgcG9pbnRpbmcg
-dG8gdGhlIHNhbWUgcHJvY2VzcyBwZ2Q/IEF0IGZpcnN0IGdsYW5jZSBpdCBzZWVtcwpmZWFzaWJs
-ZSwgbWF5YmUgd2l0aCBhIGZsYWcgcGFzc2VkIHRvIGJpbmQoKSBhbmQgYSBmZXcgY2hhbmdlcyB0
-bwppbnRlcm5hbCBzdHJ1Y3R1cmVzLiBJdCB3aWxsIGR1cGxpY2F0ZSBBVEMgaW52YWxpZGF0aW9u
-IGNvbW1hbmRzIGZvcgplYWNoIHByb2Nlc3MgYWRkcmVzcyBzcGFjZSBjaGFuZ2UgKG11bm1hcCBl
-dGMpIHNvIHlvdSBtaWdodCB0YWtlIGEKcGVyZm9ybWFuY2UgaGl0LgoKSW50ZWwncyBTVk0gY29k
-ZSBoYXMgdGhlIFNWTV9GTEFHX1BSSVZBVEVfUEFTSUQgd2hpY2ggc2VlbXMgc2ltaWxhciB0bwp3
-aGF0IHlvdSBkZXNjcmliZSwgYnV0IEkgZG9uJ3QgcGxhbiB0byBzdXBwb3J0IGl0IGluIHRoaXMg
-c2VyaWVzICh0aGUKaW9fbW0gbW9kZWwgaXMgYWxyZWFkeSBwcmV0dHkgY29tcGxpY2F0ZWQpLiBJ
-IHRoaW5rIGl0IGNhbiBiZSBhZGRlZAp3aXRob3V0IHRvbyBtdWNoIGVmZm9ydCBpbiBhIGZ1dHVy
-ZSBzZXJpZXMsIHRob3VnaCB3aXRoIGEgZGlmZmVyZW50IGZsYWcKbmFtZSBzaW5jZSB3ZSdkIGxp
-a2UgdG8gdXNlICJwcml2YXRlIFBBU0lEIiBmb3Igc29tZXRoaW5nIGVsc2UKKGh0dHBzOi8vd3d3
-LnNwaW5pY3MubmV0L2xpc3RzL2RyaS1kZXZlbC9tc2cxNzcwMDcuaHRtbCkuCgpUaGFua3MsCkpl
-YW4KCj4gIMKgwqDCoCDCoMKgwqAgQWRkaXRpb25hbCB0byB0aGF0IGl0IGlzIHNvbWV0aW1lcyBx
-dWl0ZSB1c2VmdWwgZm9yIGRlYnVnZ2luZyAKPiB0byBpc29sYXRlIHdoZXJlIGV4YWN0bHkgYW4g
-aW5jb3JyZWN0IGFjY2VzcyAoc2VnZmF1bHQpIGlzIGNvbWluZyBmcm9tLgo+IAo+IExldCBtZSBr
-bm93IGlmIHRoZXJlIGFyZSBzb21lIHByb2JsZW1zIHdpdGggdGhhdCwgZXNwZWNpYWxseSBJIHdh
-bnQgdG8gCj4ga25vdyBpZiB0aGVyZSBpcyBwdXNoYmFjayBvbiAjNSBzbyB0aGF0IEkgY2FuIGZv
-cndhcmQgdGhhdCA6KQo+IAo+IFRoYW5rcywKPiBDaHJpc3RpYW4uCj4gCj4+Cj4+IFRoYW5rcywK
-Pj4gSmVhbgo+IAoKCl9fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19f
-X19fCmxpbnV4LWFybS1rZXJuZWwgbWFpbGluZyBsaXN0CmxpbnV4LWFybS1rZXJuZWxAbGlzdHMu
-aW5mcmFkZWFkLm9yZwpodHRwOi8vbGlzdHMuaW5mcmFkZWFkLm9yZy9tYWlsbWFuL2xpc3RpbmZv
-L2xpbnV4LWFybS1rZXJuZWwK
+On Mon, 2018-09-10 at 13:25 +0200, Ulf Hansson wrote:
+> On 10 September 2018 at 11:42, Honghui Zhang <honghui.zhang@mediatek.com> wrote:
+[...]
+
+> >> > +               clk_disable_unprepare(port->sys_ck);
+> >> > +               phy_power_off(port->phy);
+> >> > +               phy_exit(port->phy);
+> >> > +       }
+> >> > +
+> >> > +       mtk_pcie_subsys_powerdown(pcie);
+> >>
+> >> Why not gate clocks, unconditionally not depending on if pm_support is
+> >> set or not, during system suspend?
+> >>
+> >> I understand that you for some SoCs needs also to restore registers
+> >> during system resume, but that's a different thing, isn't it?
+> >>
+> >
+> > Well, current host driver support different SoCs like mt7623, mt7622 and
+> > mt2712. mt7623 need quite special take care of when system suspend. This
+> > patch just add the suspend/resume support for mt7622&mt2712, while
+> > mt7623 was excluded. This "pm_support" maybe removed after we have a
+> > solution for mt7623 SoC of the system suspend.
+> 
+> Okay. So you simply want to take small steps, that works!
+> 
+> >
+> >> > +
+> >> > +       return 0;
+> >> > +}
+> >> > +
+> >> > +static int __maybe_unused mtk_pcie_resume_noirq(struct device *dev)
+> >> > +{
+> >> > +       struct mtk_pcie *pcie = dev_get_drvdata(dev);
+> >> > +       const struct mtk_pcie_soc *soc = pcie->soc;
+> >> > +       struct mtk_pcie_port *port, *tmp;
+> >> > +
+> >> > +       if (!soc->pm_support)
+> >> > +               return 0;
+> >> > +
+> >> > +       if (list_empty(&pcie->ports))
+> >> > +               return 0;
+> >> > +
+> >> > +       if (dev->pm_domain) {
+> >> > +               pm_runtime_enable(dev);
+> >> > +               pm_runtime_get_sync(dev);
+> >>
+> >> I noticed, Lorenzo wanted me to comment on this, so here it goes.
+> >>
+> >> I guess the reason to why you make these pm_runtime_*() calls, is
+> >> because you want to restore the actions taken during
+> >> mtk_pcie_suspend_noirq() (which calls mtk_pcie_subsys_powerdown ->
+> >> pm_runtime_disable|put*())?
+> >
+> > Yes, that's what am I want to do.
+> >
+> >>
+> >> If that's the case, I would rather avoid calling pm_runtime_disable()
+> >> and pm_runtime_put() via mtk_pcie_suspend_noirq(), simply because it
+> >> isn't needed.
+> >
+> >> Of course, another option is to follow the pattern in
+> >> drivers/mmc/host/sdhci-xenon.c.
+> >>
+> >
+> > Thanks.
+> > I take a look at the drivers/mmc/sdhci-xenon.c's implement, it has add
+> > system suspend callbacks and set the device status to "PRM_SUSPENDED"
+> > through the pm_runtime_force_suspend() interface.
+> > I noticed that pm_runtime_put_sync will put the device status to
+> > "PRM_SUSPENDED" status in some certain condition.
+> > And I did not found the pci framework setting the status to
+> > "PRM_SUSPENDED". So I add the pm_runtime_put_sync/disable in
+> > suspend_noirq phase.
+> >
+> > According to my understanding of PM, the system suspend flow does not
+> > care about the runtime PM status. The runtime pm is responsible for the
+> > CMOS gate, if the device want to gated it's CMOS, it need to call the
+> > runtime pm interface obviously.
+> 
+> Well, during system suspend, the PM core disables runtime PM for all
+> devices. See __device_suspend_late().
+> 
+> Additionally, the PM core prevents devices from being runtime
+> suspended. See device_prepare(), as it calls
+> pm_runtime_get_noresume().
+> 
+> In other words, drivers can not rely on calling pm_runtime_put_sync()
+> from a ->suspend_noirq() callback to put its device into low power
+> state.
+> 
+Thanks for your explain, that's a great help for me with the
+understanding the PM logical.
+
+> >
+> > But I found that the PCIe framework will still operate with the device
+> > after device driver suspend_noirq executed like save the configuration
+> > space values through pci_save_state, So I guess the cmos could not be
+> > gated at the suspend_noirq phase. I will update the patchset to remove
+> > the pm runtime operations in the suspend_noirq phase.
+> 
+> That's doesn't sound correct to me. Although, I am not a PCI expert.
+> 
+Never mind, per my understanding, after the driver's suspend_noirq
+callback executed, the CMOS should not be gated, since the PCI framework
+still got work to do with the device.
+
+> >
+> >> Overall, I am also wondering why only runtime PM is used when there is
+> >> a PM domain attached to the device? That seems to make the logic in
+> >> the driver, unnecessary complicated. Why not use runtime
+> >> unconditionally and thus enable it during ->probe()?
+> >
+> > I'm not sure, I thought that if there's no "power-domains = " property
+> > in device node, that means the device has no PM domain. Some of the SoCs
+> > does not have independent CMOS domain. So does that means it will leave
+> > the dev->pm_domain as NULL or assign it as the genpd->pm_domain?
+> 
+> My point is, that no matter if there is a PM domain assigned or not,
+> the PCIe driver can still enable/use runtime PM. It shouldn't hurt.
+> 
+
+Thanks, I will try and propose another patch for this.
+
+> >
+> > I need to do some homework to figure this out and will send a new patch
+> > to fix this if needed.
+> 
+> I did some more re-search and maybe the easiest thing for you to do is
+> to follow the pattern in the tegra PCIe controller driver.
+> drivers/pci/controller/pci-tegra.c.
+> 
+> That should definitely work for your case as well.
+
+Thanks, most of the PCIe host driver does not set the RUNTIME_PM_OPS for
+suspend except pci-tegra.c. So my V4 version patch has followed majority
+driver.
+
+> 
+> [...]
+> 
+> Kind regards
+> Uffe
