@@ -1,77 +1,44 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-sn1nam02on0087.outbound.protection.outlook.com ([104.47.36.87]:47264
-        "EHLO NAM02-SN1-obe.outbound.protection.outlook.com"
-        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1726463AbeIEUwc (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Wed, 5 Sep 2018 16:52:32 -0400
-From: Alan Douglas <adouglas@cadence.com>
-To: <bhelgaas@google.com>
-CC: <kishon@ti.com>, <lorenzo.pieralisi@arm.com>,
-        <linux-pci@vger.kernel.org>, <cyrille.pitchen@bootlin.com>,
-        Alan Douglas <adouglas@cadence.com>
-Subject: [PATCH] pci: cadence: Correct probe behaviour when failing to get PHY
-Date: Wed, 5 Sep 2018 17:20:08 +0100
-Message-ID: <1536164408-10959-1-git-send-email-adouglas@cadence.com>
+Received: from office2.cesnet.cz ([195.113.144.244]:51358 "EHLO
+        office2.cesnet.cz" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1727626AbeIMAGb (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Wed, 12 Sep 2018 20:06:31 -0400
+From: =?iso-8859-1?Q?Jan_Kundr=E1t?= <jan.kundrat@cesnet.cz>
+To: Thomas Petazzoni <thomas.petazzoni@bootlin.com>,
+        Baruch Siach <baruch@tkos.co.il>
+Cc: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
+        Jason Cooper <jason@lakedaemon.net>,
+        <linux-pci@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
+        Bjorn Helgaas <bhelgaas@google.com>,
+        <linux-arm-kernel@lists.infradead.org>,
+        Russell King <linux@armlinux.org.uk>
+Subject: Re: [BISECTED] Regression: Solidrun Clearfog Base won't boot since =?iso-8859-1?Q?"PCI:_mvebu:_Only_remap_I/O_space_if_configured"?=
+Date: Wed, 12 Sep 2018 21:00:35 +0200
 MIME-Version: 1.0
-Content-Type: text/plain
+Message-ID: <7745d264-5d11-42a1-b491-95887a807894@cesnet.cz>
+In-Reply-To: <20180912205052.19de01a0@windsurf>
+References: <61fdfd69-2bb6-478c-b0d5-69d8744adae3@cesnet.cz>
+ <87zhwm4kl6.fsf@tkos.co.il> <20180912205052.19de01a0@windsurf>
+Content-Type: text/plain; charset=utf-8; format=flowed
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Test the correct value to see whether the PHY get failed.
-Use devm_phy_get() instead of devm_phy_optional_get(), since it is
-only called if phy name is given in devicetree and so should exist.
-If failure when getting or linking PHY, put any PHYs which were
-already got and unlink them.
+>> You mean '4.19-rc3', right?
 
-Fixes: dfb80534692ddc5b ("PCI: cadence: Add generic PHY support to host and EP drivers")
-Signed-off-by: Alan Douglas <adouglas@cadence.com>
----
- drivers/pci/controller/pcie-cadence.c | 18 +++++++++++-------
- 1 file changed, 11 insertions(+), 7 deletions(-)
+Right, sorry.
 
-diff --git a/drivers/pci/controller/pcie-cadence.c b/drivers/pci/controller/pcie-cadence.c
-index 86f1b00..67d2f98 100644
---- a/drivers/pci/controller/pcie-cadence.c
-+++ b/drivers/pci/controller/pcie-cadence.c
-@@ -190,14 +190,16 @@ int cdns_pcie_init_phy(struct device *dev, struct cdns_pcie *pcie)
- 
- 	for (i = 0; i < phy_count; i++) {
- 		of_property_read_string_index(np, "phy-names", i, &name);
--		phy[i] = devm_phy_optional_get(dev, name);
--		if (IS_ERR(phy))
--			return PTR_ERR(phy);
--
-+		phy[i] = devm_phy_get(dev, name);
-+		if (IS_ERR(phy[i])) {
-+			ret = PTR_ERR(phy[i]);
-+			goto err_phy;
-+		}
- 		link[i] = device_link_add(dev, &phy[i]->dev, DL_FLAG_STATELESS);
- 		if (!link[i]) {
-+			devm_phy_put(dev, phy[i]);
- 			ret = -EINVAL;
--			goto err_link;
-+			goto err_phy;
- 		}
- 	}
- 
-@@ -207,13 +209,15 @@ int cdns_pcie_init_phy(struct device *dev, struct cdns_pcie *pcie)
- 
- 	ret =  cdns_pcie_enable_phy(pcie);
- 	if (ret)
--		goto err_link;
-+		goto err_phy;
- 
- 	return 0;
- 
--err_link:
-+err_phy:
- 	while (--i >= 0)
- 		device_link_del(link[i]);
-+	while (--i >= 0)
-+		devm_phy_put(dev, phy[i]);
- 
- 	return ret;
- }
--- 
-1.9.0
+>>>> [    1.741458] Internal error: Oops - undefined instruction:=20
+>>>> 0 [#1] SMP ARM
+>>>> [    1.748182] CPU: 1 PID: 72 Comm: kworker/1:2 Tainted: G  =20
+>>>>      W         4.19.0-rc3 #1 =20
+>>=20
+>> The 'W' taint means that there was a kernel warning before. Which
+>> warning was that?
+
+I have "spidev" listed in my DT, and the kernel complains about that;=20
+that's a harmelss warning. (I sent a patch which adds my particular device=20=
+
+into the spidev driver some time ago.)=20
+
+With kind regards,
+Jan
