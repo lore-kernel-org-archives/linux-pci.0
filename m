@@ -1,247 +1,154 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mailgw01.mediatek.com ([210.61.82.183]:47199 "EHLO
-        mailgw01.mediatek.com" rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org
-        with ESMTP id S1727261AbeIJOgH (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Mon, 10 Sep 2018 10:36:07 -0400
-Message-ID: <1536572566.31406.64.camel@mhfsdcap03>
-Subject: Re: [PATCH v3 3/4] PCI: mediatek: Add system pm support for MT2712
- and MT7622
-From: Honghui Zhang <honghui.zhang@mediatek.com>
-To: Ulf Hansson <ulf.hansson@linaro.org>
-CC: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
-        <linux-mediatek@lists.infradead.org>,
-        Linux PCI <linux-pci@vger.kernel.org>,
-        Ryder Lee <ryder.lee@mediatek.com>
-Date: Mon, 10 Sep 2018 17:42:46 +0800
-In-Reply-To: <CAPDyKFpFpR_NhtNW6rChMFw4KLweut8zC3x2V1ZBbdrV05iuTQ@mail.gmail.com>
-References: <1530518264-6125-1-git-send-email-honghui.zhang@mediatek.com>
-         <1530518264-6125-4-git-send-email-honghui.zhang@mediatek.com>
-         <CAPDyKFpFpR_NhtNW6rChMFw4KLweut8zC3x2V1ZBbdrV05iuTQ@mail.gmail.com>
-Content-Type: text/plain; charset="UTF-8"
+Received: from mail.kernel.org ([198.145.29.99]:45060 "EHLO mail.kernel.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1726686AbeILHBf (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Wed, 12 Sep 2018 03:01:35 -0400
+Date: Tue, 11 Sep 2018 20:59:27 -0500
+From: Bjorn Helgaas <helgaas@kernel.org>
+To: Sinan Kaya <okaya@kernel.org>
+Cc: linux-pci@vger.kernel.org,
+        Mike Marciniszyn <mike.marciniszyn@intel.com>,
+        Dennis Dalessandro <dennis.dalessandro@intel.com>,
+        Doug Ledford <dledford@redhat.com>,
+        Jason Gunthorpe <jgg@ziepe.ca>,
+        Alex Williamson <alex.williamson@redhat.com>
+Subject: Re: [PATCH for-rc v2 3/3] IB/hfi1: Prefer new
+ __pci_reset_function_locked() API with reset type
+Message-ID: <20180912015927.GB118330@bhelgaas-glaptop.roam.corp.google.com>
+References: <20180905160805.5680-1-okaya@kernel.org>
+ <20180905160805.5680-3-okaya@kernel.org>
+ <20180912010929.GA118330@bhelgaas-glaptop.roam.corp.google.com>
+ <c0f524c3-5b3f-f796-6a6b-3040db4462a3@kernel.org>
 MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <c0f524c3-5b3f-f796-6a6b-3040db4462a3@kernel.org>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Fri, 2018-09-07 at 14:33 +0200, Ulf Hansson wrote:
-> -trimmed cc-list
-> 
-> On 2 July 2018 at 09:57,  <honghui.zhang@mediatek.com> wrote:
-> > From: Honghui Zhang <honghui.zhang@mediatek.com>
-> >
-> > The MTCMOS of PCIe Host for MT2712 and MT7622 will be off when system
-> > suspend, and all the internal control register will be reset after system
-> > resume. The PCIe link should be re-established and the related control
-> > register values should be re-set after system resume.
-> 
-> Sounds very familiar as what is implemented in
-> drivers/mmc/host/sdhci-xenon.c. Please have a look, possibly you can
-> get inspired to use the similar pattern.
-> 
-> A few comments below. However, please note, I am not an expert in PCIe
-> so I may overlook some obvious things. I am relying on Lorenzo or some
-> other PCIe expert, to fill in.
-> 
-Hi, Ulf, thanks very much for your comments, replied below.
+Thanks for the quick response (and sorry for my late one).
 
-> >
-> > Signed-off-by: Honghui Zhang <honghui.zhang@mediatek.com>
-> > Acked-by: Ryder Lee <ryder.lee@mediatek.com>
-> > ---
-> >  drivers/pci/controller/pcie-mediatek.c | 67 ++++++++++++++++++++++++++++++++++
-> >  1 file changed, 67 insertions(+)
-> >
-> > diff --git a/drivers/pci/controller/pcie-mediatek.c b/drivers/pci/controller/pcie-mediatek.c
-> > index 86918d4..175d7b6 100644
-> > --- a/drivers/pci/controller/pcie-mediatek.c
-> > +++ b/drivers/pci/controller/pcie-mediatek.c
-> > @@ -134,12 +134,14 @@ struct mtk_pcie_port;
-> >  /**
-> >   * struct mtk_pcie_soc - differentiate between host generations
-> >   * @need_fix_class_id: whether this host's class ID needed to be fixed or not
-> > + * @pm_support: whether the host's MTCMOS will be off when suspend
-> >   * @ops: pointer to configuration access functions
-> >   * @startup: pointer to controller setting functions
-> >   * @setup_irq: pointer to initialize IRQ functions
-> >   */
-> >  struct mtk_pcie_soc {
-> >         bool need_fix_class_id;
-> > +       bool pm_support;
-> >         struct pci_ops *ops;
-> >         int (*startup)(struct mtk_pcie_port *port);
-> >         int (*setup_irq)(struct mtk_pcie_port *port, struct device_node *node);
-> > @@ -1197,12 +1199,75 @@ static int mtk_pcie_probe(struct platform_device *pdev)
-> >         return err;
-> >  }
-> >
-> > +static int __maybe_unused mtk_pcie_suspend_noirq(struct device *dev)
+On Tue, Sep 11, 2018 at 09:23:31PM -0400, Sinan Kaya wrote:
+> On 9/11/2018 9:09 PM, Bjorn Helgaas wrote:
+> > On Wed, Sep 05, 2018 at 04:08:05PM +0000, Sinan Kaya wrote:
+> > > pci_reset_bus() is being called from the probe context and causes
+> > > a deadlock since pci_reset_bus() also tries to obtain kernel lock.
+> > 
+> > This doesn't tell me what the deadlock is.
 > 
-> I am not sure I understand why you need to suspend the device in the
-> "noirq" phase. Isn't it fine to do that in the regular suspend phase?
-
-PCIe device's configuration space values should be saved/restored in
-system suspend/resume flow, and PCIe framework will take care of that in
-the suspend_noirq phase. Suspend device in the "noirq" phase will spare
-device driver from that.
-
+> Sorry, let me try to set the context.
 > 
-> > +{
-> > +       struct mtk_pcie *pcie = dev_get_drvdata(dev);
-> > +       const struct mtk_pcie_soc *soc = pcie->soc;
-> > +       struct mtk_pcie_port *port;
-> > +
-> > +       if (!soc->pm_support)
-> > +               return 0;
-> > +
-> > +       if (list_empty(&pcie->ports))
-> > +               return 0;
-> > +
-> > +       list_for_each_entry(port, &pcie->ports, list) {
-> > +               clk_disable_unprepare(port->pipe_ck);
-> > +               clk_disable_unprepare(port->obff_ck);
-> > +               clk_disable_unprepare(port->axi_ck);
-> > +               clk_disable_unprepare(port->aux_ck);
-> > +               clk_disable_unprepare(port->ahb_ck);
-> > +               clk_disable_unprepare(port->sys_ck);
-> > +               phy_power_off(port->phy);
-> > +               phy_exit(port->phy);
-> > +       }
-> > +
-> > +       mtk_pcie_subsys_powerdown(pcie);
+> Driver probe routine is being called with pci_dev_lock() held.
 > 
-> Why not gate clocks, unconditionally not depending on if pm_support is
-> set or not, during system suspend?
+> pci_reset_bus() tries to obtain the pci_dev_lock() via this path one
+> more time while holding the lock.
 > 
-> I understand that you for some SoCs needs also to restore registers
-> during system resume, but that's a different thing, isn't it?
+> pci_dev_lock()
+> 	enter driver probe()
+> 	pci_reset_bus()
+> 		 __pci_reset_bus()
+> 			pci_bus_save_and_disable()
+> 				pci_dev_lock()
 > 
-
-Well, current host driver support different SoCs like mt7623, mt7622 and
-mt2712. mt7623 need quite special take care of when system suspend. This
-patch just add the suspend/resume support for mt7622&mt2712, while
-mt7623 was excluded. This "pm_support" maybe removed after we have a
-solution for mt7623 SoC of the system suspend.
-
-> > +
-> > +       return 0;
-> > +}
-> > +
-> > +static int __maybe_unused mtk_pcie_resume_noirq(struct device *dev)
-> > +{
-> > +       struct mtk_pcie *pcie = dev_get_drvdata(dev);
-> > +       const struct mtk_pcie_soc *soc = pcie->soc;
-> > +       struct mtk_pcie_port *port, *tmp;
-> > +
-> > +       if (!soc->pm_support)
-> > +               return 0;
-> > +
-> > +       if (list_empty(&pcie->ports))
-> > +               return 0;
-> > +
-> > +       if (dev->pm_domain) {
-> > +               pm_runtime_enable(dev);
-> > +               pm_runtime_get_sync(dev);
+> 	exit driver probe()
+> pci_dev_unlock()
 > 
-> I noticed, Lorenzo wanted me to comment on this, so here it goes.
 > 
-> I guess the reason to why you make these pm_runtime_*() calls, is
-> because you want to restore the actions taken during
-> mtk_pcie_suspend_noirq() (which calls mtk_pcie_subsys_powerdown ->
-> pm_runtime_disable|put*())?
-
-Yes, that's what am I want to do.
-
+> > 
+> > > Use __pci_reset_function_locked() that provides locking guarantees.
+> > 
+> > And the previous patch that adds the "reset_type" parameter doesn't
+> > tell me anything about what locking guarantees it provides.
 > 
-> If that's the case, I would rather avoid calling pm_runtime_disable()
-> and pm_runtime_put() via mtk_pcie_suspend_noirq(), simply because it
-> isn't needed.
+> This is sort of implied.
 
-> Of course, another option is to follow the pattern in
-> drivers/mmc/host/sdhci-xenon.c.
+Uhh, maybe, but the implication is too subtle for me.  It adds a
+"reset_type" that can be FLR, PM, SLOT, BUS, etc.  Those are different
+types of resets, but those types say nothing about locking.
+
+> As the name of the function is __pci_reset_function_locked(), it is
+> assumed that the caller is responsible for obtaining the necessary
+> locks before calling this function.
 > 
-
-Thanks.
-I take a look at the drivers/mmc/sdhci-xenon.c's implement, it has add
-system suspend callbacks and set the device status to "PRM_SUSPENDED"
-through the pm_runtime_force_suspend() interface.
-I noticed that pm_runtime_put_sync will put the device status to
-"PRM_SUSPENDED" status in some certain condition.
-And I did not found the pci framework setting the status to
-"PRM_SUSPENDED". So I add the pm_runtime_put_sync/disable in
-suspend_noirq phase.
-
-According to my understanding of PM, the system suspend flow does not
-care about the runtime PM status. The runtime pm is responsible for the
-CMOS gate, if the device want to gated it's CMOS, it need to call the
-runtime pm interface obviously.
-
-But I found that the PCIe framework will still operate with the device
-after device driver suspend_noirq executed like save the configuration
-space values through pci_save_state, So I guess the cmos could not be
-gated at the suspend_noirq phase. I will update the patchset to remove
-the pm runtime operations in the suspend_noirq phase.
-
-> Overall, I am also wondering why only runtime PM is used when there is
-> a PM domain attached to the device? That seems to make the logic in
-> the driver, unnecessary complicated. Why not use runtime
-> unconditionally and thus enable it during ->probe()?
-
-I'm not sure, I thought that if there's no "power-domains = " property
-in device node, that means the device has no PM domain. Some of the SoCs
-does not have independent CMOS domain. So does that means it will leave
-the dev->pm_domain as NULL or assign it as the genpd->pm_domain?
-
-I need to do some homework to figure this out and will send a new patch
-to fix this if needed.
-
+> > 
+> > I want to merge minimal changes for v4.19 to fix the known problems.
+> > 
+> > It's not clear to me what actually broke hfi1.  You mention a deadlock
+> > above, so I assume some locking change broke it, but 811c5cb37df4 isn't
+> > obviously related to locking.
 > 
-> > +       }
-> > +
-> > +       clk_prepare_enable(pcie->free_ck);
-> > +
-> > +       list_for_each_entry_safe(port, tmp, &pcie->ports, list)
-> > +               mtk_pcie_enable_port(port);
-> > +
-> > +       /* In case of EP was removed while system suspend. */
-> > +       if (list_empty(&pcie->ports))
-> > +               mtk_pcie_subsys_powerdown(pcie);
-> > +
-> > +       return 0;
-> > +}
-> > +
-> > +static const struct dev_pm_ops mtk_pcie_pm_ops = {
-> > +       SET_NOIRQ_SYSTEM_SLEEP_PM_OPS(mtk_pcie_suspend_noirq,
-> > +                                     mtk_pcie_resume_noirq)
-> > +};
-> > +
-> >  static const struct mtk_pcie_soc mtk_pcie_soc_v1 = {
-> >         .ops = &mtk_pcie_ops,
-> >         .startup = mtk_pcie_startup_port,
-> >  };
-> >
-> >  static const struct mtk_pcie_soc mtk_pcie_soc_mt2712 = {
-> > +       .pm_support = true,
-> >         .ops = &mtk_pcie_ops_v2,
-> >         .startup = mtk_pcie_startup_port_v2,
-> >         .setup_irq = mtk_pcie_setup_irq,
-> > @@ -1210,6 +1275,7 @@ static const struct mtk_pcie_soc mtk_pcie_soc_mt2712 = {
-> >
-> >  static const struct mtk_pcie_soc mtk_pcie_soc_mt7622 = {
-> >         .need_fix_class_id = true,
-> > +       .pm_support = true,
-> >         .ops = &mtk_pcie_ops_v2,
-> >         .startup = mtk_pcie_startup_port_v2,
-> >         .setup_irq = mtk_pcie_setup_irq,
-> > @@ -1229,6 +1295,7 @@ static struct platform_driver mtk_pcie_driver = {
-> >                 .name = "mtk-pcie",
-> >                 .of_match_table = mtk_pcie_ids,
-> >                 .suppress_bind_attrs = true,
-> > +               .pm = &mtk_pcie_pm_ops,
-> >         },
-> >  };
-> >  builtin_platform_driver(mtk_pcie_driver);
-> > --
-> > 2.6.4
-> >
+> Previous code was calling secondary bus reset function directly. With the
+
+Ah, so it looks like 409888e0966e ("IB/hfi1: Use pci_try_reset_bus()
+for initiating PCI Secondary Bus Reset") is an essential part of the
+picture here.  That should probably be part of one of these
+changelogs.
+
+409888e0966e is where the locking change happened.  trigger_sbr()
+previously called pci_reset_bridge_secondary_bus(), but after
+409888e0966e, it calls pci_try_reset_bus(), which at the time called
+pci_bus_trylock() *before* calling pci_reset_bridge_secondary_bus().
+
+Can we just move the pci_bridge_secondary_bus_reset() decl back to
+include/linux/pci.h temporarily and have trigger_sbr() call that
+again?  I'd rather do that than try to squeeze some API rework into an
+-rc.
+
+> generalization of the code, we are going through device save and restore
+> as follows:
 > 
-> Kind regards
-> Uffe
+> 1. obtain device lock
+> 2. save device state
+> 3. release device lock
+> 4. perform secondary bus reset
+> 5. obtain device lock
+> 6. restore device state
+> 7. release device lock
+> 
+> We have introduced the locks in step #1, #3, #5 and #7 into the existing
+> code path.
+> 
+> > 
+> > It's obvious that 811c5cb37df4 tested the return value of
+> > pci_probe_reset_slot() incorrectly, so there's no problem with patch 1/1.
+> > 
+> 
+> yup.
+> 
+> > But patches 2 & 3:
+> > 
+> >    PCI: Request reset type as part of function reset
+> >    IB/hfi1: Prefer new __pci_reset_function_locked() API with reset type
+> > 
+> > do not connect the dots for me.
+> 
+> I hope the above explanation helps. The consensus after conversation with Alex
+> was to reuse the locked API but add masks so that requester can selectively
+> request a slot reset without any locks.
+
+I'm not buying this yet.  There's nothing in that API that says to me
+"requesting certain types of resets doesn't acquire locks".
+
+> > > Fixes: 811c5cb37df4 ("PCI: Unify try slot and bus reset API")
+> > > Link: https://bugzilla.kernel.org/show_bug.cgi?id=200985
+> > > Signed-off-by: Sinan Kaya <okaya@kernel.org>
+> > > ---
+> > >   drivers/infiniband/hw/hfi1/pcie.c | 2 +-
+> > >   1 file changed, 1 insertion(+), 1 deletion(-)
+> > > 
+> > > diff --git a/drivers/infiniband/hw/hfi1/pcie.c b/drivers/infiniband/hw/hfi1/pcie.c
+> > > index eec83757d55f..13162289b748 100644
+> > > --- a/drivers/infiniband/hw/hfi1/pcie.c
+> > > +++ b/drivers/infiniband/hw/hfi1/pcie.c
+> > > @@ -900,7 +900,7 @@ static int trigger_sbr(struct hfi1_devdata *dd)
+> > >   	 * delay after a reset is required.  Per spec requirements,
+> > >   	 * the link is either working or not after that point.
+> > >   	 */
+> > > -	return pci_reset_bus(dev);
+> > > +	return __pci_reset_function_locked(dev, PCI_RESET_LINK);
+> > >   }
+> > >   /*
+> > > -- 
+> > > 2.18.0
+> > > 
+> > 
+> 
