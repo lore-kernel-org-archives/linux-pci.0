@@ -1,52 +1,175 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mga12.intel.com ([192.55.52.136]:23680 "EHLO mga12.intel.com"
+Received: from lekensteyn.nl ([178.21.112.251]:54185 "EHLO lekensteyn.nl"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1730278AbeIFUhO (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Thu, 6 Sep 2018 16:37:14 -0400
-Date: Thu, 6 Sep 2018 19:01:00 +0300
-From: Mika Westerberg <mika.westerberg@linux.intel.com>
-To: Lukas Wunner <lukas@wunner.de>
-Cc: Bjorn Helgaas <bhelgaas@google.com>,
-        "Rafael J. Wysocki" <rafael.j.wysocki@intel.com>,
-        Ashok Raj <ashok.raj@intel.com>,
-        Keith Busch <keith.busch@intel.com>,
-        Yinghai Lu <yinghai@kernel.org>, Sinan Kaya <okaya@kernel.org>,
-        linux-pci@vger.kernel.org
-Subject: Re: [PATCH 03/32] PCI: pciehp: Fix deadlock on unplug
-Message-ID: <20180906160100.GQ2283@lahna.fi.intel.com>
-References: <cover.1529173804.git.lukas@wunner.de>
- <4c882e25194ba8282b78fe963fec8faae7cf23eb.1529173804.git.lukas@wunner.de>
+        id S1726552AbeILPKk (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Wed, 12 Sep 2018 11:10:40 -0400
+Date: Wed, 12 Sep 2018 12:06:39 +0200
+From: Peter Wu <peter@lekensteyn.nl>
+To: Daniel Drake <drake@endlessm.com>
+Cc: bhelgaas@google.com, linux-pci@vger.kernel.org, linux@endlessm.com,
+        nouveau@lists.freedesktop.org, linux-pm@vger.kernel.org,
+        kherbst@redhat.com, andy.shevchenko@linux.intel.com,
+        rafael.j.wysocki@intel.com, keith.busch@intel.com,
+        mika.westerberg@linux.intel.com, jonathan.derrick@intel.com,
+        kugel@rockbox.org, davem@davemloft.net, hkallweit1@gmail.com,
+        netdev@vger.kernel.org, nic_swsd@realtek.com, rchang@marvell.com
+Subject: Re: [PATCH v2] PCI: Reprogram bridge prefetch registers on resume
+Message-ID: <20180912100639.GA9459@al>
+References: <20180912064523.9599-1-drake@endlessm.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <4c882e25194ba8282b78fe963fec8faae7cf23eb.1529173804.git.lukas@wunner.de>
+In-Reply-To: <20180912064523.9599-1-drake@endlessm.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hi Lukas,
-
-On Sat, Jun 16, 2018 at 09:25:00PM +0200, Lukas Wunner wrote:
-> When pciehp was conceived it apparently wasn't considered that one
-> hotplug port may be the parent of another, but with Thunderbolt this is
-> par for the course.
+On Wed, Sep 12, 2018 at 02:45:23PM +0800, Daniel Drake wrote:
+> On 38+ Intel-based Asus products, the nvidia GPU becomes unusable
+> after S3 suspend/resume. The affected products include multiple
+> generations of nvidia GPUs and Intel SoCs. After resume, nouveau logs
+> many errors such as:
 > 
-> If the sysfs interface is used to initiate a simultaneous card removal
-> of two hotplug ports where one is a parent of the other, or if the two
-> ports simultaneously signal interrupts, e.g. because a link or presence
-> change was detected on both, a deadlock may occur if:
+>     fifo: fault 00 [READ] at 0000005555555000 engine 00 [GR] client 04 [HUB/FE] reason 4a [] on channel -1 [007fa91000 unknown]
+>     DRM: failed to idle channel 0 [DRM]
 > 
-> - The parent acquires pci_lock_rescan_remove(), starts removal of the
->   child and waits for it to be unbound.
-> - The child waits to acquire pci_lock_rescan_remove() in order to
->   service the pending sysfs command or interrupt before it can unbind.
+> Similarly, the nvidia proprietary driver also fails after resume
+> (black screen, 100% CPU usage in Xorg process). We shipped a sample
+> to Nvidia for diagnosis, and their response indicated that it's a
+> problem with the parent PCI bridge (on the Intel SoC), not the GPU.
 > 
-> Fix by using pci_dev_is_disconnected() as an indicator whether a parent
-> is removing the child, and avoid acquiring the lock in the child if so.
-> Should the child happen to acquire the lock first, there's no deadlock.
+> Runtime suspend/resume works fine, only S3 suspend is affected.
+> 
+> We found a workaround: on resume, rewrite the Intel PCI bridge
+> 'Prefetchable Base Upper 32 Bits' register (PCI_PREF_BASE_UPPER32). In
+> the cases that I checked, this register has value 0 and we just have to
+> rewrite that value.
+> 
+> Linux already saves and restores PCI config space during suspend/resume,
+> but this register was being skipped because upon resume, it already
+> has value 0 (the correct, pre-suspend value).
+> 
+> Intel appear to have previously acknowledged this behaviour and the
+> requirement to rewrite this register.
+> https://bugzilla.kernel.org/show_bug.cgi?id=116851#c23
+> 
+> Based on that, rewrite the prefetch register values even when that
+> appears unnecessary.
+> 
+> We have confirmed this solution on all the affected models we have
+> in-hands (X542UQ, UX533FD, X530UN, V272UN).
+> 
+> Additionally, this solves an issue where r8169 MSI-X interrupts were
+> broken after S3 suspend/resume on Asus X441UAR. This issue was recently
+> worked around in commit 7bb05b85bc2d ("r8169: don't use MSI-X on
+> RTL8106e"). It also fixes the same issue on RTL6186evl/8111evl on an
+> Aimfor-tech laptop that we had not yet patched. I suspect it will also
+> fix the issue that was worked around in commit 7c53a722459c ("r8169:
+> don't use MSI-X on RTL8168g").
+> 
+> Thomas Martitz reports that this change also solves an issue where
+> the AMD Radeon Polaris 10 GPU on the HP Zbook 14u G5 is unresponsive
+> after S3 suspend/resume.
+> 
+> Link: https://bugzilla.kernel.org/show_bug.cgi?id=201069
+> Signed-off-by: Daniel Drake <drake@endlessm.com>
+> ---
+> 
+> Notes:
+>     Replaces patch:
+>        PCI: add prefetch quirk to work around Asus/Nvidia suspend issues
+>     
+>     Some of the more verbose info was moved to bugzilla:
+>     https://bugzilla.kernel.org/show_bug.cgi?id=201069
+>     
+>     This patch is aimed at v4.19 (and maybe v4.18-stable); we may follow
+>     up with more intrusive improvements for v4.20+.
+>     
+>     v2: reimplement the register restore within the existing
+>         pci_restore_config_space() code.
+> 
+>  drivers/pci/pci.c | 31 +++++++++++++++++++++----------
+>  1 file changed, 21 insertions(+), 10 deletions(-)
+> 
+> diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
+> index 29ff9619b5fa..e1704100e72d 100644
+> --- a/drivers/pci/pci.c
+> +++ b/drivers/pci/pci.c
+> @@ -1289,13 +1289,15 @@ int pci_save_state(struct pci_dev *dev)
+>  EXPORT_SYMBOL(pci_save_state);
+>  
+>  static void pci_restore_config_dword(struct pci_dev *pdev, int offset,
+> -				     u32 saved_val, int retry)
+> +				     u32 saved_val, int retry, bool force)
+>  {
+>  	u32 val;
+>  
+> -	pci_read_config_dword(pdev, offset, &val);
+> -	if (val == saved_val)
+> -		return;
+> +	if (!force) {
+> +		pci_read_config_dword(pdev, offset, &val);
+> +		if (val == saved_val)
+> +			return;
+> +	}
+>  
+>  	for (;;) {
+>  		pci_dbg(pdev, "restoring config space at offset %#x (was %#x, writing %#x)\n",
 
-This patch got dropped from your pciehp series but I wonder if you have
-any plans to re-send it or rework it?
+"val" is uninitialized and used in this debug message.
 
-I'm asking because this is pretty real issue if you have longer chains
-of devices and I've been using this patch to make the issue go away. So
-even if this is not solving all possible problems, I think it may be
-good idea to get included.
+To avoid adding another parameter and changing unrelated lines below,
+what about:
+
+    force = pdev->header_type == PCI_HEADER_TYPE_BRIDGE &&
+        0x24 <= start && start <= 0x2c;
+
+(or start == 0x28 || start == 0x24 || start == 0x28 if you want to be
+very explicit). This would reduce in a smaller diff for this temporary
+solution.
+
+Kind regards,
+Peter
+
+> @@ -1313,25 +1315,34 @@ static void pci_restore_config_dword(struct pci_dev *pdev, int offset,
+>  }
+>  
+>  static void pci_restore_config_space_range(struct pci_dev *pdev,
+> -					   int start, int end, int retry)
+> +					   int start, int end, int retry,
+> +					   bool force)
+>  {
+>  	int index;
+>  
+>  	for (index = end; index >= start; index--)
+>  		pci_restore_config_dword(pdev, 4 * index,
+>  					 pdev->saved_config_space[index],
+> -					 retry);
+> +					 retry, force);
+>  }
+>  
+>  static void pci_restore_config_space(struct pci_dev *pdev)
+>  {
+>  	if (pdev->hdr_type == PCI_HEADER_TYPE_NORMAL) {
+> -		pci_restore_config_space_range(pdev, 10, 15, 0);
+> +		pci_restore_config_space_range(pdev, 10, 15, 0, false);
+>  		/* Restore BARs before the command register. */
+> -		pci_restore_config_space_range(pdev, 4, 9, 10);
+> -		pci_restore_config_space_range(pdev, 0, 3, 0);
+> +		pci_restore_config_space_range(pdev, 4, 9, 10, false);
+> +		pci_restore_config_space_range(pdev, 0, 3, 0, false);
+> +	} else if (pdev->hdr_type == PCI_HEADER_TYPE_BRIDGE) {
+> +		pci_restore_config_space_range(pdev, 12, 15, 0, false);
+> +		/* Force rewriting of prefetch registers to avoid
+> +		 * S3 resume issues on Intel PCI bridges that occur when
+> +		 * these registers are not explicitly written.
+> +		 */
+> +		pci_restore_config_space_range(pdev, 9, 11, 0, true);
+> +		pci_restore_config_space_range(pdev, 0, 8, 0, false);
+>  	} else {
+> -		pci_restore_config_space_range(pdev, 0, 15, 0);
+> +		pci_restore_config_space_range(pdev, 0, 15, 0, false);
+>  	}
+>  }
+>  
+> -- 
+> 2.17.1
+> 
