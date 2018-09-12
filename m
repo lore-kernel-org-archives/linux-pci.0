@@ -1,161 +1,103 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from ale.deltatee.com ([207.54.116.67]:38686 "EHLO ale.deltatee.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1727995AbeIMFTE (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Thu, 13 Sep 2018 01:19:04 -0400
-From: Logan Gunthorpe <logang@deltatee.com>
-To: linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
-        linux-nvme@lists.infradead.org, linux-rdma@vger.kernel.org,
-        linux-nvdimm@lists.01.org, linux-block@vger.kernel.org
-Cc: Stephen Bates <sbates@raithlin.com>,
-        Christoph Hellwig <hch@lst.de>,
-        Keith Busch <keith.busch@intel.com>,
-        Sagi Grimberg <sagi@grimberg.me>,
-        Bjorn Helgaas <bhelgaas@google.com>,
-        Jason Gunthorpe <jgg@mellanox.com>,
-        Max Gurtovoy <maxg@mellanox.com>,
-        Dan Williams <dan.j.williams@intel.com>,
-        =?UTF-8?q?J=C3=A9r=C3=B4me=20Glisse?= <jglisse@redhat.com>,
-        Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-        Alex Williamson <alex.williamson@redhat.com>,
-        =?UTF-8?q?Christian=20K=C3=B6nig?= <christian.koenig@amd.com>,
-        Jens Axboe <axboe@kernel.dk>,
-        Logan Gunthorpe <logang@deltatee.com>
-Date: Wed, 12 Sep 2018 18:11:45 -0600
-Message-Id: <20180913001156.4115-3-logang@deltatee.com>
-In-Reply-To: <20180913001156.4115-1-logang@deltatee.com>
-References: <20180913001156.4115-1-logang@deltatee.com>
+Received: from esa6.microchip.iphmx.com ([216.71.154.253]:15218 "EHLO
+        esa6.microchip.iphmx.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726642AbeILN6z (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Wed, 12 Sep 2018 09:58:55 -0400
+From: <Wesley.Sheng@microchip.com>
+To: <kurt.schwemmer@microsemi.com>, <logang@deltatee.com>,
+        <bhelgaas@google.com>, <corbet@lwn.net>
+CC: <linux-pci@vger.kernel.org>, <linux-doc@vger.kernel.org>,
+        <linux-kernel@vger.kernel.org>, <Wesley.Sheng@microchip.com>
+Subject: [PATCH] NTB: ntb_hw_switchtec: add pre-requisites for NTB driver and
+ misc updates
+Date: Wed, 12 Sep 2018 08:55:18 +0000
+Message-ID: <DM2PR11MB0105A882E34348BC85F8EE79951B0@DM2PR11MB0105.namprd11.prod.outlook.com>
+References: <DM2PR11MB0105BF7DD2EFB7F3874EB457951B0@DM2PR11MB0105.namprd11.prod.outlook.com>
+In-Reply-To: <DM2PR11MB0105BF7DD2EFB7F3874EB457951B0@DM2PR11MB0105.namprd11.prod.outlook.com>
+Content-Type: text/plain; charset="us-ascii"
 MIME-Version: 1.0
-Subject: [PATCH v6 02/13] PCI/P2PDMA: Add sysfs group to display p2pmem stats
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Add a sysfs group to display statistics about P2P memory that is
-registered in each PCI device.
+From: Wesley Sheng <Wesley.Sheng@microchip.com>
 
-Attributes in the group display the total amount of P2P memory, the
-amount available and whether it is published or not.
+1.add pre-requisites for NTB driver
+2.misc updates
+  change ntb hardware driver name to ntb_hw_switchtec
+  update the description of 2 partitions limit
+  add reference to Linux Documentation/ntb.txt
+  add use of term 'Command ID'
+  add use of term 'Command Return Value'
+  add a missing ')'
 
-Signed-off-by: Logan Gunthorpe <logang@deltatee.com>
+Signed-off-by: Kelvin Cao <kelvin.cao@microchip.com>
+Signed-off-by: Wesley Yung <Wesley.Yung@microchip.com>
 ---
- Documentation/ABI/testing/sysfs-bus-pci | 25 ++++++++++++
- drivers/pci/p2pdma.c                    | 54 +++++++++++++++++++++++++
- 2 files changed, 79 insertions(+)
+ Documentation/switchtec.txt | 30 ++++++++++++++--------
+ 1 file changed, 20 insertions(+), 10 deletions(-)
 
-diff --git a/Documentation/ABI/testing/sysfs-bus-pci b/Documentation/ABI/testing/sysfs-bus-pci
-index 44d4b2be92fd..044812c816d0 100644
---- a/Documentation/ABI/testing/sysfs-bus-pci
-+++ b/Documentation/ABI/testing/sysfs-bus-pci
-@@ -323,3 +323,28 @@ Description:
- 
- 		This is similar to /sys/bus/pci/drivers_autoprobe, but
- 		affects only the VFs associated with a specific PF.
+diff --git a/Documentation/switchtec.txt b/Documentation/switchtec.txt inde=
+x f788264..40e839d 100644
+--- a/Documentation/switchtec.txt
++++ b/Documentation/switchtec.txt
+@@ -23,7 +23,7 @@ The primary means of communicating with the Switchtec man=
+agement firmware is  through the Memory-mapped Remote Procedure Call (MRPC)=
+ interface.
+ Commands are submitted to the interface with a 4-byte command  identifier =
+and up to 1KB of command specific data. The firmware will -respond with a 4=
+ bytes return code and up to 1KB of command specific
++respond with a 4-byte return code and up to 1KB of command specific
+ data. The interface only processes a single command at a time.
+=20
+=20
+@@ -36,8 +36,8 @@ device: /dev/switchtec#, one for each management endpoint=
+ in the system.
+ The char device has the following semantics:
+=20
+ * A write must consist of at least 4 bytes and no more than 1028 bytes.
+-  The first four bytes will be interpreted as the command to run and
+-  the remainder will be used as the input data. A write will send the
++  The first 4 bytes will be interpreted as the Command ID and the =20
++ remainder will be used as the input data. A write will send the
+   command to the firmware to begin processing.
+=20
+ * Each write must be followed by exactly one read. Any double write will @=
+@ -45,9 +45,9 @@ The char device has the following semantics:
+   produce an error.
+=20
+ * A read will block until the firmware completes the command and return
+-  the four bytes of status plus up to 1024 bytes of output data. (The
+-  length will be specified by the size parameter of the read call --
+-  reading less than 4 bytes will produce an error.
++  the 4-byte Command Return Value plus up to 1024 bytes of output =20
++ data. (The length will be specified by the size parameter of the read =20
++ call -- reading less than 4 bytes will produce an error.)
+=20
+ * The poll call will also be supported for userspace applications that
+   need to do other things while waiting for the command to complete.
+@@ -83,10 +83,20 @@ The following IOCTLs are also supported by the device:
+ Non-Transparent Bridge (NTB) Driver
+ =3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=
+=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D
+=20
+-An NTB driver is provided for the switchtec hardware in switchtec_ntb.
+-Currently, it only supports switches configured with exactly 2 -partitions=
+. It also requires the following configuration settings:
++An NTB hardware driver is provided for the switchtec hardware in=20
++ntb_hw_switchtec. Currently, it only supports switches configured with=20
++exactly 2 NT partitions and zero or more non-NT partitions. It also=20
++requires the following configuration settings:
+=20
+-* Both partitions must be able to access each other's GAS spaces.
++* Both NT partitions must be able to access each other's GAS spaces.
+   Thus, the bits in the GAS Access Vector under Management Settings
+   must be set to support this.
++* Kernel configuration MUST include support for NTB (CONFIG_NTB needs
++  to be set)
 +
-+What:		/sys/bus/pci/devices/.../p2pmem/available
-+Date:		November 2017
-+Contact:	Logan Gunthorpe <logang@deltatee.com>
-+Description:
-+		If the device has any Peer-to-Peer memory registered, this
-+	        file contains the amount of memory that has not been
-+		allocated (in decimal).
++NT EP BAR 2 will be dynamically configured as a Direct Window, and the=20
++configuration file does not need to configure it explicitly.
 +
-+What:		/sys/bus/pci/devices/.../p2pmem/size
-+Date:		November 2017
-+Contact:	Logan Gunthorpe <logang@deltatee.com>
-+Description:
-+		If the device has any Peer-to-Peer memory registered, this
-+	        file contains the total amount of memory that the device
-+		provides (in decimal).
-+
-+What:		/sys/bus/pci/devices/.../p2pmem/published
-+Date:		November 2017
-+Contact:	Logan Gunthorpe <logang@deltatee.com>
-+Description:
-+		If the device has any Peer-to-Peer memory registered, this
-+	        file contains a '1' if the memory has been published for
-+		use inside the kernel or a '0' if it is only intended
-+		for use within the driver that published it.
-diff --git a/drivers/pci/p2pdma.c b/drivers/pci/p2pdma.c
-index 88aaec5351cd..67c1daf1189e 100644
---- a/drivers/pci/p2pdma.c
-+++ b/drivers/pci/p2pdma.c
-@@ -25,6 +25,54 @@ struct pci_p2pdma {
- 	bool p2pmem_published;
- };
- 
-+static ssize_t size_show(struct device *dev, struct device_attribute *attr,
-+			 char *buf)
-+{
-+	struct pci_dev *pdev = to_pci_dev(dev);
-+	size_t size = 0;
-+
-+	if (pdev->p2pdma->pool)
-+		size = gen_pool_size(pdev->p2pdma->pool);
-+
-+	return snprintf(buf, PAGE_SIZE, "%zd\n", size);
-+}
-+static DEVICE_ATTR_RO(size);
-+
-+static ssize_t available_show(struct device *dev, struct device_attribute *attr,
-+			      char *buf)
-+{
-+	struct pci_dev *pdev = to_pci_dev(dev);
-+	size_t avail = 0;
-+
-+	if (pdev->p2pdma->pool)
-+		avail = gen_pool_avail(pdev->p2pdma->pool);
-+
-+	return snprintf(buf, PAGE_SIZE, "%zd\n", avail);
-+}
-+static DEVICE_ATTR_RO(available);
-+
-+static ssize_t published_show(struct device *dev, struct device_attribute *attr,
-+			      char *buf)
-+{
-+	struct pci_dev *pdev = to_pci_dev(dev);
-+
-+	return snprintf(buf, PAGE_SIZE, "%d\n",
-+			pdev->p2pdma->p2pmem_published);
-+}
-+static DEVICE_ATTR_RO(published);
-+
-+static struct attribute *p2pmem_attrs[] = {
-+	&dev_attr_size.attr,
-+	&dev_attr_available.attr,
-+	&dev_attr_published.attr,
-+	NULL,
-+};
-+
-+static const struct attribute_group p2pmem_group = {
-+	.attrs = p2pmem_attrs,
-+	.name = "p2pmem",
-+};
-+
- static void pci_p2pdma_percpu_release(struct percpu_ref *ref)
- {
- 	struct pci_p2pdma *p2p =
-@@ -54,6 +102,7 @@ static void pci_p2pdma_release(void *data)
- 	percpu_ref_exit(&pdev->p2pdma->devmap_ref);
- 
- 	gen_pool_destroy(pdev->p2pdma->pool);
-+	sysfs_remove_group(&pdev->dev.kobj, &p2pmem_group);
- 	pdev->p2pdma = NULL;
- }
- 
-@@ -84,9 +133,14 @@ static int pci_p2pdma_setup(struct pci_dev *pdev)
- 
- 	pdev->p2pdma = p2p;
- 
-+	error = sysfs_create_group(&pdev->dev.kobj, &p2pmem_group);
-+	if (error)
-+		goto out_pool_destroy;
-+
- 	return 0;
- 
- out_pool_destroy:
-+	pdev->p2pdma = NULL;
- 	gen_pool_destroy(p2p->pool);
- out:
- 	devm_kfree(&pdev->dev, p2p);
--- 
-2.19.0
++Please refer to Documentation/ntb.txt in Linux source tree for an=20
++overall understanding of the Linux NTB stack. ntb_hw_switchtec works as=20
++an NTB Hardware Driver in this stack.
