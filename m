@@ -1,62 +1,59 @@
-Return-Path: <SRS0=hNZt=LU=socionext.com=hayashi.kunihiko@kernel.org>
-Return-Path: <SRS0=hNZt=LU=socionext.com=hayashi.kunihiko@kernel.org>
-Date: Thu, 06 Sep 2018 10:38:20 +0900
-From: Kunihiko Hayashi <hayashi.kunihiko@socionext.com>
-To: Bjorn Helgaas <helgaas@kernel.org>
-Subject: Re: [PATCH 2/2] pci: dwc: add UniPhier PCIe host controller support
-Cc: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
- Bjorn Helgaas <bhelgaas@google.com>,
- Rob Herring <robh+dt@kernel.org>,
- Mark Rutland <mark.rutland@arm.com>,
- Masahiro Yamada <yamada.masahiro@socionext.com>,
- linux-pci@vger.kernel.org,
- devicetree@vger.kernel.org,
- linux-arm-kernel@lists.infradead.org,
- linux-kernel@vger.kernel.org,
- Masami Hiramatsu <masami.hiramatsu@linaro.org>,
- Jassi Brar <jaswinder.singh@linaro.org>
-In-Reply-To: <20180905172529.GO107892@bhelgaas-glaptop.roam.corp.google.com>
-References: <1536114731-28630-3-git-send-email-hayashi.kunihiko@socionext.com> <20180905172529.GO107892@bhelgaas-glaptop.roam.corp.google.com>
-Message-Id: <20180906103819.252A.4A936039@socionext.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset="US-ASCII"
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mx0a-001b2d01.pphosted.com ([148.163.156.1]:45384 "EHLO
+        mx0a-001b2d01.pphosted.com" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1726670AbeILRij (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Wed, 12 Sep 2018 13:38:39 -0400
+Received: from pps.filterd (m0098399.ppops.net [127.0.0.1])
+        by mx0a-001b2d01.pphosted.com (8.16.0.22/8.16.0.22) with SMTP id w8CCU0Ox141822
+        for <linux-pci@vger.kernel.org>; Wed, 12 Sep 2018 08:34:20 -0400
+Received: from e06smtp03.uk.ibm.com (e06smtp03.uk.ibm.com [195.75.94.99])
+        by mx0a-001b2d01.pphosted.com with ESMTP id 2mf1jmm23k-1
+        (version=TLSv1.2 cipher=AES256-GCM-SHA384 bits=256 verify=NOT)
+        for <linux-pci@vger.kernel.org>; Wed, 12 Sep 2018 08:34:19 -0400
+Received: from localhost
+        by e06smtp03.uk.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
+        for <linux-pci@vger.kernel.org> from <sebott@linux.ibm.com>;
+        Wed, 12 Sep 2018 13:34:17 +0100
+From: Sebastian Ott <sebott@linux.ibm.com>
+To: Bjorn Helgaas <bhelgaas@google.com>
+Cc: linux-pci@vger.kernel.org
+Subject: [PATCH 2/2] s390/pci: handle function enumeration after sriov enablement
+Date: Wed, 12 Sep 2018 14:34:11 +0200
+In-Reply-To: <20180912123411.23229-1-sebott@linux.ibm.com>
+References: <20180912123411.23229-1-sebott@linux.ibm.com>
+Message-Id: <20180912123411.23229-3-sebott@linux.ibm.com>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hi Bjorn,
+Implement pcibios_sriov_{add|del}_vfs as empty functions. VF
+creation will be triggered by the hotplug code.
 
-On Wed, 5 Sep 2018 12:25:29 -0500 <helgaas@kernel.org> wrote:
-
-> Follow capitalization conventions for subject.
-> 
-> On Wed, Sep 05, 2018 at 11:32:11AM +0900, Kunihiko Hayashi wrote:
-> > This introduces specific glue layer for UniPhier platform to support
-> > PCIe host controller that is based on the Designware PCIe Core, and
-> > this driver supports Root Complex (host) mode.
-> 
-> s/Designware/DesignWare/
-> s/Core/core/
-
-I'll fix them like [1/2].
-
-> 
-> > diff --git a/drivers/pci/controller/dwc/pcie-uniphier.c b/drivers/pci/controller/dwc/pcie-uniphier.c
-> > new file mode 100644
-> > index 0000000..13ce02e
-> > --- /dev/null
-> > +++ b/drivers/pci/controller/dwc/pcie-uniphier.c
-> > @@ -0,0 +1,464 @@
-> > +// SPDX-License-Identifier: GPL-2.0
-> > +//
-> > +// PCI-express host controller driver for UniPhier SoCs
-> > +// Copyright 2018 Socionext Inc.
-> > +// Author: Kunihiko Hayashi <hayashi.kunihiko@socionext.com>
-> 
-> Use /* ... */ comments except for the SPDX line.
-
-Okay, although I wondered which way to put, I'll replace the header next.
-
-Thank you,
-
+Signed-off-by: Sebastian Ott <sebott@linux.ibm.com>
 ---
-Best Regards,
-Kunihiko Hayashi
+ arch/s390/pci/pci.c | 11 +++++++++++
+ 1 file changed, 11 insertions(+)
+
+diff --git a/arch/s390/pci/pci.c b/arch/s390/pci/pci.c
+index 9f6f392a4461..b5f8db652bf5 100644
+--- a/arch/s390/pci/pci.c
++++ b/arch/s390/pci/pci.c
+@@ -731,6 +731,17 @@ struct dev_pm_ops pcibios_pm_ops = {
+ };
+ #endif /* CONFIG_HIBERNATE_CALLBACKS */
+ 
++#ifdef CONFIG_PCI_IOV
++int pcibios_sriov_add_vfs(struct pci_dev *pdev, u16 num_vfs)
++{
++	return 0;
++}
++
++void pcibios_sriov_del_vfs(struct pci_dev *pdev)
++{
++}
++#endif
++
+ static int zpci_alloc_domain(struct zpci_dev *zdev)
+ {
+ 	if (zpci_unique_uid) {
+-- 
+2.13.4
