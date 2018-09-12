@@ -1,76 +1,36 @@
-Return-Path: <SRS0=/8CB=LS=alien8.de=bp@kernel.org>
-Return-Path: <SRS0=/8CB=LS=alien8.de=bp@kernel.org>
-Date: Tue, 4 Sep 2018 16:52:55 +0200
-From: Borislav Petkov <bp@alien8.de>
-To: Pu Wen <puwen@hygon.cn>
-Cc: tglx@linutronix.de, mingo@redhat.com, hpa@zytor.com, x86@kernel.org,
-	thomas.lendacky@amd.com, pbonzini@redhat.com, helgaas@kernel.org,
-	linux-kernel@vger.kernel.org, linux-arch@vger.kernel.org,
-	linux-pci@vger.kernel.org
-Subject: Re: [PATCH v5 07/16] x86/pci: add Hygon PCI vendor and northbridge
- support
-Message-ID: <20180904145255.GI32615@zn.tnic>
-References: <cover.1535459012.git.puwen@hygon.cn>
- <ecd62b5b5e8f406598f2354892929caa87cf7deb.1535459013.git.puwen@hygon.cn>
+Return-Path: <SRS0=XCBo=L2=intel.com=dennis.dalessandro@kernel.org>
+Return-Path: <SRS0=XCBo=L2=intel.com=dennis.dalessandro@kernel.org>
+Subject: Re: [PATCH for-rc v2 3/3] IB/hfi1: Prefer new
+ __pci_reset_function_locked() API with reset type
+To: Bjorn Helgaas <helgaas@kernel.org>, Sinan Kaya <okaya@kernel.org>
+Cc: linux-pci@vger.kernel.org, Mike Marciniszyn <mike.marciniszyn@intel.com>,
+ Doug Ledford <dledford@redhat.com>, Jason Gunthorpe <jgg@ziepe.ca>,
+ Alex Williamson <alex.williamson@redhat.com>
+References: <20180905160805.5680-1-okaya@kernel.org>
+ <20180905160805.5680-3-okaya@kernel.org>
+ <20180912010929.GA118330@bhelgaas-glaptop.roam.corp.google.com>
+ <c0f524c3-5b3f-f796-6a6b-3040db4462a3@kernel.org>
+ <20180912015927.GB118330@bhelgaas-glaptop.roam.corp.google.com>
+From: Dennis Dalessandro <dennis.dalessandro@intel.com>
+Message-ID: <d4fd0617-202f-b144-a281-771fc41b795a@intel.com>
+Date: Tue, 11 Sep 2018 22:23:32 -0400
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-In-Reply-To: <ecd62b5b5e8f406598f2354892929caa87cf7deb.1535459013.git.puwen@hygon.cn>
+In-Reply-To: <20180912015927.GB118330@bhelgaas-glaptop.roam.corp.google.com>
+Content-Type: text/plain; charset=utf-8; format=flowed
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wed, Aug 29, 2018 at 08:44:18PM +0800, Pu Wen wrote:
-> As Hygon register its PCI Vendor ID as a new one "0x1d94", so add a new
-> definition PCI_VENDOR_ID_HYGON in include/linux/pci_ids.h.
+On 9/11/2018 9:59 PM, Bjorn Helgaas wrote:
+> Can we just move the pci_bridge_secondary_bus_reset() decl back to
+> include/linux/pci.h temporarily and have trigger_sbr() call that
+> again?  I'd rather do that than try to squeeze some API rework into an
+> -rc.
 > 
-> Also Hygon PCI Device ID(0x1450/0x1463/0x1464) for Host bridge is added
-> to amd_nb.c. And it need to define new arrays for Hygon:
-> hygon_root_ids[], hygon_nb_misc_ids[], hygon_nb_link_ids[].
-> 
-> To enable Hygon north bridge support, add new variable root_ids, and
-> assign its value based on whether CPU vendor is AMD or Hygon. Modify
-> the CONFIG_AMD_NB to depends on either AMD or Hygon.
-> 
-> Add Hygon support in amd_postcore_init(), early_root_info_init().
 
-This whole commit message needs to not say *what* the patch does.
+That was what I was initially hoping for [1]. Just get things back to 
+working for now, especially since we are approaching the later -rc's. 
+That being said, I have reviewed and tested Sinan's patch. So far so 
+good, but I do see the concern.
 
-> Acked-by: Bjorn Helgaas <bhelgaas@google.com>	# pci_ids.h
-> Signed-off-by: Pu Wen <puwen@hygon.cn>
-> ---
->  arch/x86/Kconfig         |  2 +-
->  arch/x86/kernel/amd_nb.c | 51 ++++++++++++++++++++++++++++++++++++++++++------
->  arch/x86/pci/amd_bus.c   |  6 ++++--
->  include/linux/pci_ids.h  |  2 ++
->  4 files changed, 52 insertions(+), 9 deletions(-)
-> 
-> diff --git a/arch/x86/Kconfig b/arch/x86/Kconfig
-> index c5ff296..733f1ec 100644
-> --- a/arch/x86/Kconfig
-> +++ b/arch/x86/Kconfig
-> @@ -2818,7 +2818,7 @@ endif # X86_32
->  
->  config AMD_NB
->  	def_bool y
-> -	depends on CPU_SUP_AMD && PCI
-> +	depends on (CPU_SUP_AMD || CPU_SUP_HYGON) && PCI
->  
->  source "drivers/pcmcia/Kconfig"
->  
-> diff --git a/arch/x86/kernel/amd_nb.c b/arch/x86/kernel/amd_nb.c
-> index b481b95..d9867b2 100644
-> --- a/arch/x86/kernel/amd_nb.c
-> +++ b/arch/x86/kernel/amd_nb.c
-> @@ -20,6 +20,10 @@
->  #define PCI_DEVICE_ID_AMD_17H_M10H_DF_F3 0x15eb
->  #define PCI_DEVICE_ID_AMD_17H_M10H_DF_F4 0x15ec
->  
-> +#define PCI_DEVICE_ID_HYGON_18H_ROOT     0x1450
-> +#define PCI_DEVICE_ID_HYGON_18H_DF_F3    0x1463
-> +#define PCI_DEVICE_ID_HYGON_18H_DF_F4    0x1464
+[1] https://marc.info/?l=linux-pci&m=153573732824788&w=2
 
-Why are you adding those if you can use the AMD f17h ones? They're the same.
-
--- 
-Regards/Gruss,
-    Boris.
-
-Good mailing practices for 400: avoid top-posting and trim the reply.
+-Denny
