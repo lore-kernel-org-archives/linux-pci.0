@@ -1,137 +1,122 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-pg1-f196.google.com ([209.85.215.196]:34364 "EHLO
-        mail-pg1-f196.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726427AbeIMIp2 (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Thu, 13 Sep 2018 04:45:28 -0400
-Received: by mail-pg1-f196.google.com with SMTP id d19-v6so2084477pgv.1
-        for <linux-pci@vger.kernel.org>; Wed, 12 Sep 2018 20:37:54 -0700 (PDT)
-From: Daniel Drake <drake@endlessm.com>
-To: bhelgaas@google.com
-Cc: linux-pci@vger.kernel.org, linux@endlessm.com,
-        nouveau@lists.freedesktop.org, linux-pm@vger.kernel.org,
-        peter@lekensteyn.nl, kherbst@redhat.com,
-        andy.shevchenko@linux.intel.com, rafael.j.wysocki@intel.com,
-        keith.busch@intel.com, jonathan.derrick@intel.com,
-        kugel@rockbox.org, davem@davemloft.net, hkallweit1@gmail.com,
-        netdev@vger.kernel.org, nic_swsd@realtek.com, rchang@marvell.com
-Subject: [PATCH v3] PCI: Reprogram bridge prefetch registers on resume
-Date: Thu, 13 Sep 2018 11:37:45 +0800
-Message-Id: <20180913033745.11178-1-drake@endlessm.com>
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <okaya@kernel.org>
+Return-Path: <okaya@kernel.org>
+Subject: Re: [PATCH for-rc v2 3/3] IB/hfi1: Prefer new
+ __pci_reset_function_locked() API with reset type
+To: Bjorn Helgaas <helgaas@kernel.org>
+Cc: linux-pci@vger.kernel.org, Mike Marciniszyn <mike.marciniszyn@intel.com>,
+ Dennis Dalessandro <dennis.dalessandro@intel.com>,
+ Doug Ledford <dledford@redhat.com>, Jason Gunthorpe <jgg@ziepe.ca>,
+ Alex Williamson <alex.williamson@redhat.com>
+References: <20180905160805.5680-1-okaya@kernel.org>
+ <20180905160805.5680-3-okaya@kernel.org>
+ <20180912010929.GA118330@bhelgaas-glaptop.roam.corp.google.com>
+From: Sinan Kaya <okaya@kernel.org>
+Message-ID: <c0f524c3-5b3f-f796-6a6b-3040db4462a3@kernel.org>
+Date: Tue, 11 Sep 2018 21:23:31 -0400
+MIME-Version: 1.0
+In-Reply-To: <20180912010929.GA118330@bhelgaas-glaptop.roam.corp.google.com>
+Content-Type: text/plain; charset=utf-8; format=flowed
 List-ID: <linux-pci.vger.kernel.org>
 
-On 38+ Intel-based Asus products, the nvidia GPU becomes unusable
-after S3 suspend/resume. The affected products include multiple
-generations of nvidia GPUs and Intel SoCs. After resume, nouveau logs
-many errors such as:
+On 9/11/2018 9:09 PM, Bjorn Helgaas wrote:
+> On Wed, Sep 05, 2018 at 04:08:05PM +0000, Sinan Kaya wrote:
+>> pci_reset_bus() is being called from the probe context and causes
+>> a deadlock since pci_reset_bus() also tries to obtain kernel lock.
+> 
+> This doesn't tell me what the deadlock is.
 
-    fifo: fault 00 [READ] at 0000005555555000 engine 00 [GR] client 04
-          [HUB/FE] reason 4a [] on channel -1 [007fa91000 unknown]
-    DRM: failed to idle channel 0 [DRM]
+Sorry, let me try to set the context.
 
-Similarly, the nvidia proprietary driver also fails after resume
-(black screen, 100% CPU usage in Xorg process). We shipped a sample
-to Nvidia for diagnosis, and their response indicated that it's a
-problem with the parent PCI bridge (on the Intel SoC), not the GPU.
+Driver probe routine is being called with pci_dev_lock() held.
 
-Runtime suspend/resume works fine, only S3 suspend is affected.
+pci_reset_bus() tries to obtain the pci_dev_lock() via this path one
+more time while holding the lock.
 
-We found a workaround: on resume, rewrite the Intel PCI bridge
-'Prefetchable Base Upper 32 Bits' register (PCI_PREF_BASE_UPPER32). In
-the cases that I checked, this register has value 0 and we just have to
-rewrite that value.
+pci_dev_lock()
+	enter driver probe()
+	pci_reset_bus()
+		 __pci_reset_bus()
+			pci_bus_save_and_disable()
+				pci_dev_lock()
 
-Linux already saves and restores PCI config space during suspend/resume,
-but this register was being skipped because upon resume, it already
-has value 0 (the correct, pre-suspend value).
+	exit driver probe()
+pci_dev_unlock()
 
-Intel appear to have previously acknowledged this behaviour and the
-requirement to rewrite this register.
-https://bugzilla.kernel.org/show_bug.cgi?id=116851#c23
 
-Based on that, rewrite the prefetch register values even when that
-appears unnecessary.
+> 
+>> Use __pci_reset_function_locked() that provides locking guarantees.
+> 
+> And the previous patch that adds the "reset_type" parameter doesn't
+> tell me anything about what locking guarantees it provides.
 
-We have confirmed this solution on all the affected models we have
-in-hands (X542UQ, UX533FD, X530UN, V272UN).
+This is sort of implied.
 
-Additionally, this solves an issue where r8169 MSI-X interrupts were
-broken after S3 suspend/resume on Asus X441UAR. This issue was recently
-worked around in commit 7bb05b85bc2d ("r8169: don't use MSI-X on
-RTL8106e"). It also fixes the same issue on RTL6186evl/8111evl on an
-Aimfor-tech laptop that we had not yet patched. I suspect it will also
-fix the issue that was worked around in commit 7c53a722459c ("r8169:
-don't use MSI-X on RTL8168g").
+As the name of the function is __pci_reset_function_locked(), it is
+assumed that the caller is responsible for obtaining the necessary
+locks before calling this function.
 
-Thomas Martitz reports that this change also solves an issue where
-the AMD Radeon Polaris 10 GPU on the HP Zbook 14u G5 is unresponsive
-after S3 suspend/resume.
+> 
+> I want to merge minimal changes for v4.19 to fix the known problems.
+> 
+> It's not clear to me what actually broke hfi1.  You mention a deadlock
+> above, so I assume some locking change broke it, but 811c5cb37df4 isn't
+> obviously related to locking.
 
-Link: https://bugzilla.kernel.org/show_bug.cgi?id=201069
-Signed-off-by: Daniel Drake <drake@endlessm.com>
----
- drivers/pci/pci.c | 25 +++++++++++++++++--------
- 1 file changed, 17 insertions(+), 8 deletions(-)
+Previous code was calling secondary bus reset function directly. With the
+generalization of the code, we are going through device save and restore
+as follows:
 
-diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
-index 29ff9619b5fa..5d58220b6997 100644
---- a/drivers/pci/pci.c
-+++ b/drivers/pci/pci.c
-@@ -1289,12 +1289,12 @@ int pci_save_state(struct pci_dev *dev)
- EXPORT_SYMBOL(pci_save_state);
- 
- static void pci_restore_config_dword(struct pci_dev *pdev, int offset,
--				     u32 saved_val, int retry)
-+				     u32 saved_val, int retry, bool force)
- {
- 	u32 val;
- 
- 	pci_read_config_dword(pdev, offset, &val);
--	if (val == saved_val)
-+	if (!force && val == saved_val)
- 		return;
- 
- 	for (;;) {
-@@ -1313,25 +1313,34 @@ static void pci_restore_config_dword(struct pci_dev *pdev, int offset,
- }
- 
- static void pci_restore_config_space_range(struct pci_dev *pdev,
--					   int start, int end, int retry)
-+					   int start, int end, int retry,
-+					   bool force)
- {
- 	int index;
- 
- 	for (index = end; index >= start; index--)
- 		pci_restore_config_dword(pdev, 4 * index,
- 					 pdev->saved_config_space[index],
--					 retry);
-+					 retry, force);
- }
- 
- static void pci_restore_config_space(struct pci_dev *pdev)
- {
- 	if (pdev->hdr_type == PCI_HEADER_TYPE_NORMAL) {
--		pci_restore_config_space_range(pdev, 10, 15, 0);
-+		pci_restore_config_space_range(pdev, 10, 15, 0, false);
- 		/* Restore BARs before the command register. */
--		pci_restore_config_space_range(pdev, 4, 9, 10);
--		pci_restore_config_space_range(pdev, 0, 3, 0);
-+		pci_restore_config_space_range(pdev, 4, 9, 10, false);
-+		pci_restore_config_space_range(pdev, 0, 3, 0, false);
-+	} else if (pdev->hdr_type == PCI_HEADER_TYPE_BRIDGE) {
-+		pci_restore_config_space_range(pdev, 12, 15, 0, false);
-+		/* Force rewriting of prefetch registers to avoid
-+		 * S3 resume issues on Intel PCI bridges that occur when
-+		 * these registers are not explicitly written.
-+		 */
-+		pci_restore_config_space_range(pdev, 9, 11, 0, true);
-+		pci_restore_config_space_range(pdev, 0, 8, 0, false);
- 	} else {
--		pci_restore_config_space_range(pdev, 0, 15, 0);
-+		pci_restore_config_space_range(pdev, 0, 15, 0, false);
- 	}
- }
- 
--- 
-2.17.1
+1. obtain device lock
+2. save device state
+3. release device lock
+4. perform secondary bus reset
+5. obtain device lock
+6. restore device state
+7. release device lock
+
+We have introduced the locks in step #1, #3, #5 and #7 into the existing
+code path.
+
+> 
+> It's obvious that 811c5cb37df4 tested the return value of
+> pci_probe_reset_slot() incorrectly, so there's no problem with patch 1/1.
+> 
+
+yup.
+
+> But patches 2 & 3:
+> 
+>    PCI: Request reset type as part of function reset
+>    IB/hfi1: Prefer new __pci_reset_function_locked() API with reset type
+> 
+> do not connect the dots for me.
+
+I hope the above explanation helps. The consensus after conversation with Alex
+was to reuse the locked API but add masks so that requester can selectively
+request a slot reset without any locks.
+
+> 
+>> Fixes: 811c5cb37df4 ("PCI: Unify try slot and bus reset API")
+>> Link: https://bugzilla.kernel.org/show_bug.cgi?id=200985
+>> Signed-off-by: Sinan Kaya <okaya@kernel.org>
+>> ---
+>>   drivers/infiniband/hw/hfi1/pcie.c | 2 +-
+>>   1 file changed, 1 insertion(+), 1 deletion(-)
+>>
+>> diff --git a/drivers/infiniband/hw/hfi1/pcie.c b/drivers/infiniband/hw/hfi1/pcie.c
+>> index eec83757d55f..13162289b748 100644
+>> --- a/drivers/infiniband/hw/hfi1/pcie.c
+>> +++ b/drivers/infiniband/hw/hfi1/pcie.c
+>> @@ -900,7 +900,7 @@ static int trigger_sbr(struct hfi1_devdata *dd)
+>>   	 * delay after a reset is required.  Per spec requirements,
+>>   	 * the link is either working or not after that point.
+>>   	 */
+>> -	return pci_reset_bus(dev);
+>> +	return __pci_reset_function_locked(dev, PCI_RESET_LINK);
+>>   }
+>>   
+>>   /*
+>> -- 
+>> 2.18.0
+>>
+> 
