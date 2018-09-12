@@ -1,63 +1,100 @@
-Return-Path: <SRS0=x0pv=LU=endlessm.com=drake@kernel.org>
-Return-Path: <SRS0=x0pv=LU=endlessm.com=drake@kernel.org>
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+From: Thomas Petazzoni <thomas.petazzoni@bootlin.com>
+To: Bjorn Helgaas <bhelgaas@google.com>,
+ Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
+ Russell King <linux@arm.linux.org.uk>
+Subject: [PATCHv2 0/3] PCI: emulated PCI bridge config space
+Date: Wed, 12 Sep 2018 17:48:28 +0200
+Message-Id: <20180912154831.2220-1-thomas.petazzoni@bootlin.com>
+List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
+List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
+List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
+List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
+List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
+Cc: Antoine Tenart <antoine.tenart@bootlin.com>, linux-pci@vger.kernel.org,
+ Gregory Clement <gregory.clement@bootlin.com>,
+ Maxime Chevallier <maxime.chevallier@bootlin.com>,
+ Nadav Haklai <nadavh@marvell.com>,
+ Thomas Petazzoni <thomas.petazzoni@bootlin.com>,
+ =?UTF-8?q?Miqu=C3=A8l=20Raynal?= <miquel.raynal@bootlin.com>,
+ linux-arm-kernel@lists.infradead.org
 MIME-Version: 1.0
-In-Reply-To: <20180831191225.GA43106@bhelgaas-glaptop.roam.corp.google.com>
-References: <20180831073057.14626-1-drake@endlessm.com> <20180831191225.GA43106@bhelgaas-glaptop.roam.corp.google.com>
-From: Daniel Drake <drake@endlessm.com>
-Date: Thu, 6 Sep 2018 17:02:39 +0800
-Message-ID: <CAD8Lp45z-rGaZeh8Cu6eMF03RCVtKdz4Z8+L4QQzO1+JX-L1yg@mail.gmail.com>
-Subject: Re: [PATCH] PCI: add prefetch quirk to work around Asus/Nvidia
- suspend issues
-To: Bjorn Helgaas <helgaas@kernel.org>
-Cc: Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org,
-	Linux Upstreaming Team <linux@endlessm.com>, nouveau@lists.freedesktop.org,
-	Linux PM <linux-pm@vger.kernel.org>, Peter Wu <peter@lekensteyn.nl>, kherbst@redhat.com,
-	Andy Shevchenko <andriy.shevchenko@linux.intel.com>,
-	"Rafael J. Wysocki" <rafael.j.wysocki@intel.com>, Keith Busch <keith.busch@intel.com>,
-	Mika Westerberg <mika.westerberg@linux.intel.com>, Jon Derrick <jonathan.derrick@intel.com>
-Content-Type: text/plain; charset="UTF-8"
+Content-Type: text/plain; charset="us-ascii"
+Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
+Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Sat, Sep 1, 2018 at 3:12 AM, Bjorn Helgaas <helgaas@kernel.org> wrote:
-> Can we tell whether Windows rewrites this register unconditionally at
-> resume-time?  If so, it may be more robust for Linux to do the same.
-> The whole thing is black magic, which I hate, but if it's our only
-> choice, it may be better to have this applied everywhere so we don't
-> keep stubbing our toes on new systems that require the quirk.
+Hello,
 
-Checked this with qemu adding a PCI-to-PCI bridge (ioh3420).
+The pci-mvebu driver already contains some logic to emulate a root
+port PCI bridge configuration space. It turns out that we have a
+similar need for the pci-aardvark driver. Instead of duplicating the
+same logic in two drivers, this patch series starts by adding a small
+common infrastructure that helps emulate a root port PCI bridge config
+space, converts pci-mvebu to use it, and finally extends pci-aardvark
+to use it as well.
 
-$ qemu-system-x86_64 -enable-kvm -M q35,accel=kvm -m 2G -vga qxl -cpu
-host -hda testimg.img -device
-ioh3420,id=rp1,bus=pcie.0,addr=1c.0,port=1 -trace events=events.txt
+Thanks to this, Marvell Armada 3720 based systems, which use the
+Aarkvark PCI controller, will have better PCI support, by having a
+root port PCI bridge exposed.
 
-events.txt has:
-pci_cfg_read
-pci_cfg_write
+The emulated PCI bridge common logic is a proposal, I very much
+welcome comments and suggestions. Also, if you feel that adding a
+common logic for only two drivers is too early, I'm fine with
+duplicating a bit of code betwen pci-mvebu and pci-aardvark.
 
-Logged cfg space accesses during boot:
-https://gist.github.com/dsd/135fb255cb2b237567d8ea2d6bfc6917#file-boot-txt
+In this version 2, I have (hopefully) taken into account the comments
+from Bjorn Helgaas and Russell King. Here are the changes:
 
-Suspend:
-https://gist.github.com/dsd/135fb255cb2b237567d8ea2d6bfc6917#file-suspend-txt
+ - Rebased to 4.19-rc1
 
-Resume:
-https://gist.github.com/dsd/135fb255cb2b237567d8ea2d6bfc6917#file-resume-txt
+ - The functions implementing the config space read/write emulation
+   now have the knowledge of which registers/bits are read-only,
+   read-write, reserved and write-1-to-clear, and behave according to
+   this information.
 
-Notably during resume, the prefetch-related registers get rewritten:
-  pci_cfg_write ioh3420 28:0 @0x24 <- 0xfeb0fea0
-  pci_cfg_write ioh3420 28:0 @0x28 <- 0x0
-  pci_cfg_write ioh3420 28:0 @0x2c <- 0x0
+ - I have renamed the function to use conf_read() and conf_write()
+   suffixes, as suggested by Bjorn.
 
-This happened even though there was nothing behind the bridge.
-Windows failed to resume in this test (black screen) but the traced
-register writes seem indicative enough.
+ - The whole thing is now named pci-bridge-emul instead of
+   pci-sw-bridge (and of course all functions, types and macros were
+   changed accordingly), as Bjorn wasn't happy about pci-sw-bridge.
 
-Peter Wu confirms the same results in a similar experiment:
-https://marc.info/?l=linux-pci&m=153616336225386&w=2
+ - The header file was moved into drivers/pci (instead of being in
+   include/linux).
 
-I'll look into creating a new patch that unconditionally reprograms
-the PCI bridge prefetch stuff on resume.
+Thanks a lot in advance for your review and feedback.
 
-Thanks
-Daniel
+Best regards,
+
+Thomas Petazzoni
+
+Thomas Petazzoni (2):
+  PCI: Introduce PCI bridge emulated config space common logic
+  PCI: mvebu: Convert to PCI emulated bridge config space
+
+Zachary Zhang (1):
+  PCI: aardvark: Implement emulated root PCI bridge config space
+
+ drivers/pci/Kconfig                   |   3 +
+ drivers/pci/Makefile                  |   1 +
+ drivers/pci/controller/Kconfig        |   2 +
+ drivers/pci/controller/pci-aardvark.c | 129 ++++++++++-
+ drivers/pci/controller/pci-mvebu.c    | 375 +++++++++----------------------
+ drivers/pci/pci-bridge-emul.c         | 408 ++++++++++++++++++++++++++++++++++
+ drivers/pci/pci-bridge-emul.h         | 124 +++++++++++
+ 7 files changed, 770 insertions(+), 272 deletions(-)
+ create mode 100644 drivers/pci/pci-bridge-emul.c
+ create mode 100644 drivers/pci/pci-bridge-emul.h
+
+-- 
+2.14.4
+
+
+_______________________________________________
+linux-arm-kernel mailing list
+linux-arm-kernel@lists.infradead.org
+http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
