@@ -1,91 +1,56 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-bn3nam01on0086.outbound.protection.outlook.com ([104.47.33.86]:23670
-        "EHLO NAM01-BN3-obe.outbound.protection.outlook.com"
-        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1729991AbeIFUDr (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Thu, 6 Sep 2018 16:03:47 -0400
-From: Bharat Kumar Gogada <bharatku@xilinx.com>
-To: Bjorn Helgaas <helgaas@kernel.org>
-CC: "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-        "bhelgaas@google.com" <bhelgaas@google.com>,
-        Ravikiran Gummaluri <rgummal@xilinx.com>
-Subject: RE: [PATCH 4/4] PCI: xilinx-nwl: Add method to
- setup_platform_service_irq hook
-Date: Thu, 6 Sep 2018 15:27:40 +0000
-Message-ID: <BN6PR02MB2772814D31D45FB093183458A5010@BN6PR02MB2772.namprd02.prod.outlook.com>
-References: <1533915580-31805-1-git-send-email-bharat.kumar.gogada@xilinx.com>
- <1533915580-31805-5-git-send-email-bharat.kumar.gogada@xilinx.com>
- <20180904134859.GC107892@bhelgaas-glaptop.roam.corp.google.com>
-In-Reply-To: <20180904134859.GC107892@bhelgaas-glaptop.roam.corp.google.com>
-Content-Type: text/plain; charset="us-ascii"
-MIME-Version: 1.0
+Received: from mx0b-001b2d01.pphosted.com ([148.163.158.5]:52450 "EHLO
+        mx0a-001b2d01.pphosted.com" rhost-flags-OK-OK-OK-FAIL)
+        by vger.kernel.org with ESMTP id S1726670AbeILRii (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Wed, 12 Sep 2018 13:38:38 -0400
+Received: from pps.filterd (m0098421.ppops.net [127.0.0.1])
+        by mx0a-001b2d01.pphosted.com (8.16.0.22/8.16.0.22) with SMTP id w8CCUA2v049374
+        for <linux-pci@vger.kernel.org>; Wed, 12 Sep 2018 08:34:18 -0400
+Received: from e06smtp04.uk.ibm.com (e06smtp04.uk.ibm.com [195.75.94.100])
+        by mx0a-001b2d01.pphosted.com with ESMTP id 2mf1pubea0-1
+        (version=TLSv1.2 cipher=AES256-GCM-SHA384 bits=256 verify=NOT)
+        for <linux-pci@vger.kernel.org>; Wed, 12 Sep 2018 08:34:17 -0400
+Received: from localhost
+        by e06smtp04.uk.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
+        for <linux-pci@vger.kernel.org> from <sebott@linux.ibm.com>;
+        Wed, 12 Sep 2018 13:34:16 +0100
+From: Sebastian Ott <sebott@linux.ibm.com>
+To: Bjorn Helgaas <bhelgaas@google.com>
+Cc: linux-pci@vger.kernel.org
+Subject: [PATCH 0/2] sriov enablement on s390
+Date: Wed, 12 Sep 2018 14:34:09 +0200
+Message-Id: <20180912123411.23229-1-sebott@linux.ibm.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-> Subject: Re: [PATCH 4/4] PCI: xilinx-nwl: Add method to
-> setup_platform_service_irq hook
->=20
-> On Fri, Aug 10, 2018 at 09:09:40PM +0530, Bharat Kumar Gogada wrote:
-> > Add nwl_setup_service_irqs hook to setup_platform_service_irq IRQs to
-> > register platform provided IRQ number to kernel AER service.
-> >
-> > Signed-off-by: Bharat Kumar Gogada <bharat.kumar.gogada@xilinx.com>
-> > ---
-> >  drivers/pci/controller/pcie-xilinx-nwl.c |   16 ++++++++++++++++
-> >  1 files changed, 16 insertions(+), 0 deletions(-)
-> >
-> > diff --git a/drivers/pci/controller/pcie-xilinx-nwl.c
-> > b/drivers/pci/controller/pcie-xilinx-nwl.c
-> > index fb32840..285647b 100644
-> > --- a/drivers/pci/controller/pcie-xilinx-nwl.c
-> > +++ b/drivers/pci/controller/pcie-xilinx-nwl.c
-> > @@ -22,6 +22,7 @@
-> >  #include <linux/irqchip/chained_irq.h>
-> >
-> >  #include "../pci.h"
-> > +#include "../pcie/portdrv.h"
-> >
-> >  /* Bridge core config registers */
-> >  #define BRCFG_PCIE_RX0			0x00000000
-> > @@ -819,6 +820,20 @@ static int nwl_pcie_parse_dt(struct nwl_pcie *pcie=
-,
-> >  	return 0;
-> >  }
-> >
-> > +int nwl_setup_service_irqs(struct pci_host_bridge *bridge, int *irqs,
-> > +			   int plat_mask)
-> > +{
-> > +	struct nwl_pcie *pcie;
-> > +
-> > +	pcie =3D pci_host_bridge_priv(bridge);
-> > +	if (plat_mask & PCIE_PORT_SERVICE_AER) {
-> > +		irqs[PCIE_PORT_SERVICE_AER_SHIFT] =3D pcie->irq_misc;
-> > +		plat_mask &=3D ~(1 << PCIE_PORT_SERVICE_AER_SHIFT);
-> > +	}
->=20
-> If I understand correctly, this ultimately results in pcie->irq_misc bein=
-g
-> hooked up to aer_irq() via the aer_probe() path.  We already have pcie-
-> >irq_misc being hooked up to nwl_pcie_misc_handler() via
-> nwl_pcie_bridge_init().
->=20
-> We can't rely on the ordering of the two handlers.  Is it safe if
-> nwl_pcie_misc_handler() runs first, followed by aer_irq()?  It looks like
-> nwl_pcie_misc_handler() might log messages and clear AER-related errors. =
- If
-> that's the case aer_irq() might not find anything to do.
->=20
-Hi Bjorn, the nwl_pcie_misc_handler() prints all pcie errors along with AER=
- and then clears=20
-controller register (MSGF_MISC_STATUS) in which these status bits are set.=
-=20
-But clearing this controller register will not effect any bits in AER capab=
-ilities.
-So in our case we need  to clear controller register and also handle AER as=
- per spec.
-This will not cause any ordering issue as both paths are accessing differen=
-t set of registers.
+Hello Bjorn,
 
-Thanks,
-Bharat
+On s390 we currently handle SRIOV within firmware. Which means
+that the PF is under firmware control and not visible to operating
+systems. SRIOV enablement happens within firmware and VFs are
+passed through to logical partitions.
+
+I'm working on a new mode were the PF is under operating system
+control (including SRIOV enablement). However we still need
+firmware support to access the VFs. The way this is supposed
+to work is that when firmware traps the SRIOV enablement it
+will present machine checks to the logical partition that
+triggered the SRIOV enablement and provide the VFs via hotplug
+events.
+
+The problem I'm faced with is that the VF detection code in
+sriov_enable leads to unusable functions in s390.
+
+Would you consider the following patches?
+
+Sebastian Ott (2):
+  pci: provide pcibios_sriov_add_vfs
+  s390/pci: handle function enumeration after sriov enablement
+
+ arch/s390/pci/pci.c | 11 +++++++++++
+ drivers/pci/iov.c   | 43 +++++++++++++++++++++++++++++++------------
+ include/linux/pci.h |  2 ++
+ 3 files changed, 44 insertions(+), 12 deletions(-)
+
+-- 
+2.13.4
