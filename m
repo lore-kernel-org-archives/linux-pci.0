@@ -1,78 +1,66 @@
-Return-Path: <linux-acpi-owner@vger.kernel.org>
-From: Mika Westerberg <mika.westerberg@linux.intel.com>
-To: Bjorn Helgaas <bhelgaas@google.com>,
-        "Rafael J. Wysocki" <rjw@rjwysocki.net>
-Cc: Len Brown <lenb@kernel.org>, Lukas Wunner <lukas@wunner.de>,
-        Keith Busch <keith.busch@intel.com>,
-        Ashok Raj <ashok.raj@intel.com>, Mario.Limonciello@dell.com,
-        Anthony Wong <anthony.wong@canonical.com>,
-        Linus Walleij <linus.walleij@linaro.org>,
-        Sakari Ailus <sakari.ailus@iki.fi>,
-        Mika Westerberg <mika.westerberg@linux.intel.com>,
-        linux-pci@vger.kernel.org, linux-acpi@vger.kernel.org
-Subject: [PATCH v2 08/10] PCI/PME: Implement runtime PM callbacks
-Date: Thu, 13 Sep 2018 17:33:20 +0300
-Message-Id: <20180913143322.77953-9-mika.westerberg@linux.intel.com>
-In-Reply-To: <20180913143322.77953-1-mika.westerberg@linux.intel.com>
-References: <20180913143322.77953-1-mika.westerberg@linux.intel.com>
-Sender: linux-acpi-owner@vger.kernel.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail.kernel.org ([198.145.29.99]:54606 "EHLO mail.kernel.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1726491AbeILSGc (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Wed, 12 Sep 2018 14:06:32 -0400
+Date: Wed, 12 Sep 2018 08:02:05 -0500
+From: Bjorn Helgaas <helgaas@kernel.org>
+To: Sebastian Ott <sebott@linux.ibm.com>
+Cc: Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org,
+        Arnd Bergmann <arnd@arndb.de>,
+        Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+        Paul Mackerras <paulus@samba.org>,
+        Michael Ellerman <mpe@ellerman.id.au>,
+        Russell Currey <ruscur@russell.cc>,
+        linuxppc-dev@lists.ozlabs.org
+Subject: Re: [PATCH 0/2] sriov enablement on s390
+Message-ID: <20180912130205.GG118330@bhelgaas-glaptop.roam.corp.google.com>
+References: <20180912123411.23229-1-sebott@linux.ibm.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20180912123411.23229-1-sebott@linux.ibm.com>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Basically we need to do the same steps than what we do when system sleep
-is entered and disable PME interrupt when the root port is runtime
-suspended. This prevents spurious wakeups immediately when the port is
-transitioned into D3cold.
+[+cc Arnd, powerpc folks]
 
-Signed-off-by: Mika Westerberg <mika.westerberg@linux.intel.com>
-Reviewed-by: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
----
- drivers/pci/pcie/pme.c | 27 +++++++++++++++++++++++++++
- 1 file changed, 27 insertions(+)
+On Wed, Sep 12, 2018 at 02:34:09PM +0200, Sebastian Ott wrote:
+> Hello Bjorn,
+> 
+> On s390 we currently handle SRIOV within firmware. Which means
+> that the PF is under firmware control and not visible to operating
+> systems. SRIOV enablement happens within firmware and VFs are
+> passed through to logical partitions.
+> 
+> I'm working on a new mode were the PF is under operating system
+> control (including SRIOV enablement). However we still need
+> firmware support to access the VFs. The way this is supposed
+> to work is that when firmware traps the SRIOV enablement it
+> will present machine checks to the logical partition that
+> triggered the SRIOV enablement and provide the VFs via hotplug
+> events.
+> 
+> The problem I'm faced with is that the VF detection code in
+> sriov_enable leads to unusable functions in s390.
 
-diff --git a/drivers/pci/pcie/pme.c b/drivers/pci/pcie/pme.c
-index 3ed67676ea2a..62fe122f030a 100644
---- a/drivers/pci/pcie/pme.c
-+++ b/drivers/pci/pcie/pme.c
-@@ -432,6 +432,31 @@ static void pcie_pme_remove(struct pcie_device *srv)
- 	kfree(get_service_data(srv));
- }
- 
-+static int pcie_pme_runtime_suspend(struct pcie_device *srv)
-+{
-+	struct pcie_pme_service_data *data = get_service_data(srv);
-+
-+	spin_lock_irq(&data->lock);
-+	pcie_pme_interrupt_enable(srv->port, false);
-+	pcie_clear_root_pme_status(srv->port);
-+	data->noirq = true;
-+	spin_unlock_irq(&data->lock);
-+
-+	return 0;
-+}
-+
-+static int pcie_pme_runtime_resume(struct pcie_device *srv)
-+{
-+	struct pcie_pme_service_data *data = get_service_data(srv);
-+
-+	spin_lock_irq(&data->lock);
-+	pcie_pme_interrupt_enable(srv->port, true);
-+	data->noirq = false;
-+	spin_unlock_irq(&data->lock);
-+
-+	return 0;
-+}
-+
- static struct pcie_port_service_driver pcie_pme_driver = {
- 	.name		= "pcie_pme",
- 	.port_type	= PCI_EXP_TYPE_ROOT_PORT,
-@@ -439,6 +464,8 @@ static struct pcie_port_service_driver pcie_pme_driver = {
- 
- 	.probe		= pcie_pme_probe,
- 	.suspend	= pcie_pme_suspend,
-+	.runtime_suspend = pcie_pme_runtime_suspend,
-+	.runtime_resume	= pcie_pme_runtime_resume,
- 	.resume		= pcie_pme_resume,
- 	.remove		= pcie_pme_remove,
- };
--- 
-2.18.0
+We're moving away from the weak function implementation style.  Can
+you take a look at Arnd's work here, which uses pci_host_bridge
+callbacks instead?
+
+  https://lkml.kernel.org/r/20180817102645.3839621-1-arnd@arndb.de
+
+I cc'd some powerpc folks because they also have a fair amount of
+arch-specific SR-IOV code that might one day move in this direction.
+
+> Sebastian Ott (2):
+>   pci: provide pcibios_sriov_add_vfs
+>   s390/pci: handle function enumeration after sriov enablement
+> 
+>  arch/s390/pci/pci.c | 11 +++++++++++
+>  drivers/pci/iov.c   | 43 +++++++++++++++++++++++++++++++------------
+>  include/linux/pci.h |  2 ++
+>  3 files changed, 44 insertions(+), 12 deletions(-)
+> 
+> -- 
+> 2.13.4
+> 
