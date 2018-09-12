@@ -1,44 +1,42 @@
-Return-Path: <SRS0=eoip=LT=redhat.com=ptalbert@kernel.org>
-Return-Path: <SRS0=eoip=LT=redhat.com=ptalbert@kernel.org>
-From: Patrick Talbert <ptalbert@redhat.com>
-To: linux-pci@vger.kernel.org
-Cc: helgaas@kernel.org
-Subject: [[v1]] PCI/ASPM: Do not initialize link state when aspm_disabled is set
-Date: Wed,  5 Sep 2018 09:12:53 +0200
-Message-Id: <1536131573-15087-1-git-send-email-ptalbert@redhat.com>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail-qk1-f195.google.com ([209.85.222.195]:38924 "EHLO
+        mail-qk1-f195.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726677AbeILOlV (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Wed, 12 Sep 2018 10:41:21 -0400
+Received: by mail-qk1-f195.google.com with SMTP id b19-v6so676846qkc.6
+        for <linux-pci@vger.kernel.org>; Wed, 12 Sep 2018 02:37:38 -0700 (PDT)
+MIME-Version: 1.0
+In-Reply-To: <CAJZ5v0j6VcFbO_R3fGLi2Ec1DmWsVA-0mzDG3LrA-3D5CrsPbw@mail.gmail.com>
+References: <20180912064523.9599-1-drake@endlessm.com> <CAJZ5v0j6VcFbO_R3fGLi2Ec1DmWsVA-0mzDG3LrA-3D5CrsPbw@mail.gmail.com>
+From: Daniel Drake <drake@endlessm.com>
+Date: Wed, 12 Sep 2018 17:37:37 +0800
+Message-ID: <CAD8Lp474=_Yy62O6SX4_jGvJLUJyeMBkircyPeDG+NkGA7EhqQ@mail.gmail.com>
+Subject: Re: [PATCH v2] PCI: Reprogram bridge prefetch registers on resume
+To: "Rafael J. Wysocki" <rafael@kernel.org>
+Cc: Bjorn Helgaas <bhelgaas@google.com>,
+        Linux PCI <linux-pci@vger.kernel.org>,
+        Linux Upstreaming Team <linux@endlessm.com>,
+        nouveau@lists.freedesktop.org, Linux PM <linux-pm@vger.kernel.org>,
+        Peter Wu <peter@lekensteyn.nl>, kherbst@redhat.com,
+        Rafael Wysocki <rafael.j.wysocki@intel.com>,
+        Keith Busch <keith.busch@intel.com>,
+        Mika Westerberg <mika.westerberg@linux.intel.com>,
+        Jon Derrick <jonathan.derrick@intel.com>,
+        Thomas Martitz <kugel@rockbox.org>,
+        David Miller <davem@davemloft.net>,
+        Heiner Kallweit <hkallweit1@gmail.com>,
+        netdev <netdev@vger.kernel.org>, nic_swsd@realtek.com,
+        rchang@marvell.com
+Content-Type: text/plain; charset="UTF-8"
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Now that ASPM is configured for *all* PCIE devices at boot, a problem is seen
-with systems that set the FADT NO_ASPM bit. This bit indicates that the OS
-should not alter the ASPM state, but when pcie_aspm_init_link_state() runs it
-only checks for !aspm_support_enabled. This misses the ACPI_FADT_NO_ASPM case
-because that is setting aspm_disabled.
+On Wed, Sep 12, 2018 at 5:05 PM, Rafael J. Wysocki <rafael@kernel.org> wrote:
+> Passing the extra bool around is somewhat clumsy, but I haven't found
+> a cleaner way to do it, so
 
-The result is systems may hang at boot after 1302fcf; avoidable if they boot
-with pcie_aspm=off (sets !aspm_support_enabled).
+Thanks, according to your suggestion (which I plan to follow after
+this) we will remove this parameter for v4.20+ and have all the
+register writes be forced regardless of current value.
 
-Fix this by having aspm_init_link_state() check for either !aspm_support_enabled
-or acpm_disabled.
-
-Fixes: 1302fcf ("PCI: Configure *all* devices, not just hot-added ones")
-Link: https://bugzilla.kernel.org/show_bug.cgi?id=201001
-Signed-off-by: Patrick Talbert <ptalbert@redhat.com>
----
- drivers/pci/pcie/aspm.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
-
-diff --git a/drivers/pci/pcie/aspm.c b/drivers/pci/pcie/aspm.c
-index 53269167..4feb8ba 100644
---- a/drivers/pci/pcie/aspm.c
-+++ b/drivers/pci/pcie/aspm.c
-@@ -895,7 +895,7 @@ void pcie_aspm_init_link_state(struct pci_dev *pdev)
- 	struct pcie_link_state *link;
- 	int blacklist = !!pcie_aspm_sanity_check(pdev);
- 
--	if (!aspm_support_enabled)
-+	if (!aspm_support_enabled || aspm_disabled)
- 		return;
- 
- 	if (pdev->link_state)
--- 
-1.8.3.1
+Daniel
