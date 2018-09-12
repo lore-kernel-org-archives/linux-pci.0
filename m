@@ -1,154 +1,121 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.29.99]:45060 "EHLO mail.kernel.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1726686AbeILHBf (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Wed, 12 Sep 2018 03:01:35 -0400
-Date: Tue, 11 Sep 2018 20:59:27 -0500
-From: Bjorn Helgaas <helgaas@kernel.org>
-To: Sinan Kaya <okaya@kernel.org>
-Cc: linux-pci@vger.kernel.org,
-        Mike Marciniszyn <mike.marciniszyn@intel.com>,
-        Dennis Dalessandro <dennis.dalessandro@intel.com>,
-        Doug Ledford <dledford@redhat.com>,
-        Jason Gunthorpe <jgg@ziepe.ca>,
-        Alex Williamson <alex.williamson@redhat.com>
-Subject: Re: [PATCH for-rc v2 3/3] IB/hfi1: Prefer new
- __pci_reset_function_locked() API with reset type
-Message-ID: <20180912015927.GB118330@bhelgaas-glaptop.roam.corp.google.com>
-References: <20180905160805.5680-1-okaya@kernel.org>
- <20180905160805.5680-3-okaya@kernel.org>
- <20180912010929.GA118330@bhelgaas-glaptop.roam.corp.google.com>
- <c0f524c3-5b3f-f796-6a6b-3040db4462a3@kernel.org>
+Received: from mail-pg1-f193.google.com ([209.85.215.193]:34183 "EHLO
+        mail-pg1-f193.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726913AbeILVBu (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Wed, 12 Sep 2018 17:01:50 -0400
+Received: by mail-pg1-f193.google.com with SMTP id d19-v6so1292771pgv.1
+        for <linux-pci@vger.kernel.org>; Wed, 12 Sep 2018 08:56:42 -0700 (PDT)
+Date: Wed, 12 Sep 2018 09:56:39 -0600
+From: Jason Gunthorpe <jgg@ziepe.ca>
+To: Arnd Bergmann <arnd@arndb.de>
+Cc: viro@zeniv.linux.org.uk, linux-fsdevel@vger.kernel.org,
+        Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+        "David S. Miller" <davem@davemloft.net>,
+        devel@driverdev.osuosl.org, linux-kernel@vger.kernel.org,
+        qat-linux@intel.com, linux-crypto@vger.kernel.org,
+        linux-media@vger.kernel.org, dri-devel@lists.freedesktop.org,
+        linaro-mm-sig@lists.linaro.org, amd-gfx@lists.freedesktop.org,
+        linux-input@vger.kernel.org, linux-iio@vger.kernel.org,
+        linux-rdma@vger.kernel.org, linux-nvdimm@lists.01.org,
+        linux-nvme@lists.infradead.org, linux-pci@vger.kernel.org,
+        platform-driver-x86@vger.kernel.org,
+        linux-remoteproc@vger.kernel.org, sparclinux@vger.kernel.org,
+        linux-scsi@vger.kernel.org, linux-usb@vger.kernel.org,
+        linux-fbdev@vger.kernel.org, linuxppc-dev@lists.ozlabs.org,
+        linux-btrfs@vger.kernel.org, ceph-devel@vger.kernel.org,
+        linux-wireless@vger.kernel.org, netdev@vger.kernel.org
+Subject: Re: [PATCH v2 05/17] compat_ioctl: move more drivers to
+ generic_compat_ioctl_ptrarg
+Message-ID: <20180912155639.GF5633@ziepe.ca>
+References: <20180912150142.157913-1-arnd@arndb.de>
+ <20180912151134.436719-1-arnd@arndb.de>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <c0f524c3-5b3f-f796-6a6b-3040db4462a3@kernel.org>
+In-Reply-To: <20180912151134.436719-1-arnd@arndb.de>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Thanks for the quick response (and sorry for my late one).
+On Wed, Sep 12, 2018 at 05:08:52PM +0200, Arnd Bergmann wrote:
+> The .ioctl and .compat_ioctl file operations have the same prototype so
+> they can both point to the same function, which works great almost all
+> the time when all the commands are compatible.
+> 
+> One exception is the s390 architecture, where a compat pointer is only
+> 31 bit wide, and converting it into a 64-bit pointer requires calling
+> compat_ptr(). Most drivers here will ever run in s390, but since we now
+> have a generic helper for it, it's easy enough to use it consistently.
+> 
+> I double-checked all these drivers to ensure that all ioctl arguments
+> are used as pointers or are ignored, but are not interpreted as integer
+> values.
+> 
+> Signed-off-by: Arnd Bergmann <arnd@arndb.de>
+>  drivers/android/binder.c                    | 2 +-
+>  drivers/crypto/qat/qat_common/adf_ctl_drv.c | 2 +-
+>  drivers/dma-buf/dma-buf.c                   | 4 +---
+>  drivers/dma-buf/sw_sync.c                   | 2 +-
+>  drivers/dma-buf/sync_file.c                 | 2 +-
+>  drivers/gpu/drm/amd/amdkfd/kfd_chardev.c    | 2 +-
+>  drivers/hid/hidraw.c                        | 4 +---
+>  drivers/iio/industrialio-core.c             | 2 +-
+>  drivers/infiniband/core/uverbs_main.c       | 4 ++--
+>  drivers/media/rc/lirc_dev.c                 | 4 +---
+>  drivers/mfd/cros_ec_dev.c                   | 4 +---
+>  drivers/misc/vmw_vmci/vmci_host.c           | 2 +-
+>  drivers/nvdimm/bus.c                        | 4 ++--
+>  drivers/nvme/host/core.c                    | 2 +-
+>  drivers/pci/switch/switchtec.c              | 2 +-
+>  drivers/platform/x86/wmi.c                  | 2 +-
+>  drivers/rpmsg/rpmsg_char.c                  | 4 ++--
+>  drivers/sbus/char/display7seg.c             | 2 +-
+>  drivers/sbus/char/envctrl.c                 | 4 +---
+>  drivers/scsi/3w-xxxx.c                      | 4 +---
+>  drivers/scsi/cxlflash/main.c                | 2 +-
+>  drivers/scsi/esas2r/esas2r_main.c           | 2 +-
+>  drivers/scsi/pmcraid.c                      | 4 +---
+>  drivers/staging/android/ion/ion.c           | 4 +---
+>  drivers/staging/vme/devices/vme_user.c      | 2 +-
+>  drivers/tee/tee_core.c                      | 2 +-
+>  drivers/usb/class/cdc-wdm.c                 | 2 +-
+>  drivers/usb/class/usbtmc.c                  | 4 +---
+>  drivers/video/fbdev/ps3fb.c                 | 2 +-
+>  drivers/virt/fsl_hypervisor.c               | 2 +-
+>  fs/btrfs/super.c                            | 2 +-
+>  fs/ceph/dir.c                               | 2 +-
+>  fs/ceph/file.c                              | 2 +-
+>  fs/fuse/dev.c                               | 2 +-
+>  fs/notify/fanotify/fanotify_user.c          | 2 +-
+>  fs/userfaultfd.c                            | 2 +-
+>  net/rfkill/core.c                           | 2 +-
+>  37 files changed, 40 insertions(+), 58 deletions(-)
 
-On Tue, Sep 11, 2018 at 09:23:31PM -0400, Sinan Kaya wrote:
-> On 9/11/2018 9:09 PM, Bjorn Helgaas wrote:
-> > On Wed, Sep 05, 2018 at 04:08:05PM +0000, Sinan Kaya wrote:
-> > > pci_reset_bus() is being called from the probe context and causes
-> > > a deadlock since pci_reset_bus() also tries to obtain kernel lock.
-> > 
-> > This doesn't tell me what the deadlock is.
-> 
-> Sorry, let me try to set the context.
-> 
-> Driver probe routine is being called with pci_dev_lock() held.
-> 
-> pci_reset_bus() tries to obtain the pci_dev_lock() via this path one
-> more time while holding the lock.
-> 
-> pci_dev_lock()
-> 	enter driver probe()
-> 	pci_reset_bus()
-> 		 __pci_reset_bus()
-> 			pci_bus_save_and_disable()
-> 				pci_dev_lock()
-> 
-> 	exit driver probe()
-> pci_dev_unlock()
-> 
-> 
-> > 
-> > > Use __pci_reset_function_locked() that provides locking guarantees.
-> > 
-> > And the previous patch that adds the "reset_type" parameter doesn't
-> > tell me anything about what locking guarantees it provides.
-> 
-> This is sort of implied.
+> diff --git a/drivers/infiniband/core/uverbs_main.c b/drivers/infiniband/core/uverbs_main.c
+> index 823beca448e1..f4755c1c9cfa 100644
+> +++ b/drivers/infiniband/core/uverbs_main.c
+> @@ -930,7 +930,7 @@ static const struct file_operations uverbs_fops = {
+>  	.release = ib_uverbs_close,
+>  	.llseek	 = no_llseek,
+>  	.unlocked_ioctl = ib_uverbs_ioctl,
+> -	.compat_ioctl = ib_uverbs_ioctl,
+> +	.compat_ioctl = generic_compat_ioctl_ptrarg,
+>  };
+>  
+>  static const struct file_operations uverbs_mmap_fops = {
+> @@ -941,7 +941,7 @@ static const struct file_operations uverbs_mmap_fops = {
+>  	.release = ib_uverbs_close,
+>  	.llseek	 = no_llseek,
+>  	.unlocked_ioctl = ib_uverbs_ioctl,
+> -	.compat_ioctl = ib_uverbs_ioctl,
+> +	.compat_ioctl = generic_compat_ioctl_ptrarg,
+>  };
+>  
+>  static struct ib_client uverbs_client = {
 
-Uhh, maybe, but the implication is too subtle for me.  It adds a
-"reset_type" that can be FLR, PM, SLOT, BUS, etc.  Those are different
-types of resets, but those types say nothing about locking.
+For uverbs:
 
-> As the name of the function is __pci_reset_function_locked(), it is
-> assumed that the caller is responsible for obtaining the necessary
-> locks before calling this function.
-> 
-> > 
-> > I want to merge minimal changes for v4.19 to fix the known problems.
-> > 
-> > It's not clear to me what actually broke hfi1.  You mention a deadlock
-> > above, so I assume some locking change broke it, but 811c5cb37df4 isn't
-> > obviously related to locking.
-> 
-> Previous code was calling secondary bus reset function directly. With the
+Acked-by: Jason Gunthorpe <jgg@mellanox.com>
 
-Ah, so it looks like 409888e0966e ("IB/hfi1: Use pci_try_reset_bus()
-for initiating PCI Secondary Bus Reset") is an essential part of the
-picture here.  That should probably be part of one of these
-changelogs.
+It is very strange, this patch did not appear in the RDMA patchworks,
+I almost missed it  :|
 
-409888e0966e is where the locking change happened.  trigger_sbr()
-previously called pci_reset_bridge_secondary_bus(), but after
-409888e0966e, it calls pci_try_reset_bus(), which at the time called
-pci_bus_trylock() *before* calling pci_reset_bridge_secondary_bus().
-
-Can we just move the pci_bridge_secondary_bus_reset() decl back to
-include/linux/pci.h temporarily and have trigger_sbr() call that
-again?  I'd rather do that than try to squeeze some API rework into an
--rc.
-
-> generalization of the code, we are going through device save and restore
-> as follows:
-> 
-> 1. obtain device lock
-> 2. save device state
-> 3. release device lock
-> 4. perform secondary bus reset
-> 5. obtain device lock
-> 6. restore device state
-> 7. release device lock
-> 
-> We have introduced the locks in step #1, #3, #5 and #7 into the existing
-> code path.
-> 
-> > 
-> > It's obvious that 811c5cb37df4 tested the return value of
-> > pci_probe_reset_slot() incorrectly, so there's no problem with patch 1/1.
-> > 
-> 
-> yup.
-> 
-> > But patches 2 & 3:
-> > 
-> >    PCI: Request reset type as part of function reset
-> >    IB/hfi1: Prefer new __pci_reset_function_locked() API with reset type
-> > 
-> > do not connect the dots for me.
-> 
-> I hope the above explanation helps. The consensus after conversation with Alex
-> was to reuse the locked API but add masks so that requester can selectively
-> request a slot reset without any locks.
-
-I'm not buying this yet.  There's nothing in that API that says to me
-"requesting certain types of resets doesn't acquire locks".
-
-> > > Fixes: 811c5cb37df4 ("PCI: Unify try slot and bus reset API")
-> > > Link: https://bugzilla.kernel.org/show_bug.cgi?id=200985
-> > > Signed-off-by: Sinan Kaya <okaya@kernel.org>
-> > > ---
-> > >   drivers/infiniband/hw/hfi1/pcie.c | 2 +-
-> > >   1 file changed, 1 insertion(+), 1 deletion(-)
-> > > 
-> > > diff --git a/drivers/infiniband/hw/hfi1/pcie.c b/drivers/infiniband/hw/hfi1/pcie.c
-> > > index eec83757d55f..13162289b748 100644
-> > > --- a/drivers/infiniband/hw/hfi1/pcie.c
-> > > +++ b/drivers/infiniband/hw/hfi1/pcie.c
-> > > @@ -900,7 +900,7 @@ static int trigger_sbr(struct hfi1_devdata *dd)
-> > >   	 * delay after a reset is required.  Per spec requirements,
-> > >   	 * the link is either working or not after that point.
-> > >   	 */
-> > > -	return pci_reset_bus(dev);
-> > > +	return __pci_reset_function_locked(dev, PCI_RESET_LINK);
-> > >   }
-> > >   /*
-> > > -- 
-> > > 2.18.0
-> > > 
-> > 
-> 
+Jason
