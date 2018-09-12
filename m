@@ -1,67 +1,61 @@
-Return-Path: <linux-acpi-owner@vger.kernel.org>
-From: "Rafael J. Wysocki" <rjw@rjwysocki.net>
-To: Mika Westerberg <mika.westerberg@linux.intel.com>
-Cc: Bjorn Helgaas <bhelgaas@google.com>, Len Brown <lenb@kernel.org>,
-        Lukas Wunner <lukas@wunner.de>,
-        Keith Busch <keith.busch@intel.com>,
-        Ashok Raj <ashok.raj@intel.com>, Mario.Limonciello@dell.com,
-        Anthony Wong <anthony.wong@canonical.com>,
-        "D . J . Bernstein" <djb@cr.yp.to>,
-        Linus Walleij <linus.walleij@linaro.org>,
-        linux-pci@vger.kernel.org, linux-acpi@vger.kernel.org
-Subject: Re: [PATCH 01/10] PCI: Do not skip power managed bridges in pci_enable_wake()
-Date: Tue, 11 Sep 2018 10:47:55 +0200
-Message-ID: <6060673.ioIVnQPhoN@aspire.rjw.lan>
-In-Reply-To: <20180906155020.51700-2-mika.westerberg@linux.intel.com>
-References: <20180906155020.51700-1-mika.westerberg@linux.intel.com> <20180906155020.51700-2-mika.westerberg@linux.intel.com>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail.kernel.org ([198.145.29.99]:56334 "EHLO mail.kernel.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1726686AbeILHud (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Wed, 12 Sep 2018 03:50:33 -0400
+Date: Tue, 11 Sep 2018 21:48:17 -0500
+From: Bjorn Helgaas <helgaas@kernel.org>
+To: Felix Kuehling <Felix.Kuehling@amd.com>
+Cc: linux-pci@vger.kernel.org, okaya@codeaurora.org,
+        bhelgaas@google.com
+Subject: Re: [PATCH for-rc] PCI: Fix enabling of PASID on RC integrated
+ endpoints
+Message-ID: <20180912024817.GD118330@bhelgaas-glaptop.roam.corp.google.com>
+References: <1536607662-11690-1-git-send-email-Felix.Kuehling@amd.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Sender: linux-acpi-owner@vger.kernel.org
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1536607662-11690-1-git-send-email-Felix.Kuehling@amd.com>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Thursday, September 6, 2018 5:50:11 PM CEST Mika Westerberg wrote:
-> Commit baecc470d5fd ("PCI / PM: Skip bridges in pci_enable_wake()")
-> changed pci_enable_wake() so that all bridges are skipped when wakeup is
-> enabled (or disabled) with the reasoning that bridges can only signal
-> wakeup on behalf of their subordinate devices.
+On Mon, Sep 10, 2018 at 03:27:42PM -0400, Felix Kuehling wrote:
+> Set the eetlp_prefix_path on PCIE_EXP_TYPE_RC_END devices to allow PASID
+> to be enabled on them. This fixes IOMMUv2 initialization on AMD Carrizo
+> APUs.
 > 
-> However, there are bridges that can signal wakeup itself. For example
-> PCIe downstream and root ports supporting hotplug may signal wakeup upon
-> hotplug event.
-> 
-> For this reason change pci_enable_wake() so that it skips all bridges
-> except those that we power manage (->bridge_d3 is set). Those are the
-> ones that can go into low power states and may need to signal wakeup.
-> 
-> Signed-off-by: Mika Westerberg <mika.westerberg@linux.intel.com>
+> Fixes: 7ce3f912ae ("PCI: Enable PASID only if entire path supports End-End TLP prefixes")
+> Link: https://bugzilla.kernel.org/show_bug.cgi?id=201079
+> Signed-off-by: Felix Kuehling <Felix.Kuehling@amd.com>
+
+Applied to for-linus for v4.19, thanks!
+
 > ---
->  drivers/pci/pci.c | 6 ++++--
->  1 file changed, 4 insertions(+), 2 deletions(-)
+>  drivers/pci/probe.c | 5 ++++-
+>  1 file changed, 4 insertions(+), 1 deletion(-)
 > 
-> diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
-> index 29ff9619b5fa..074f3f0253f9 100644
-> --- a/drivers/pci/pci.c
-> +++ b/drivers/pci/pci.c
-> @@ -2134,9 +2134,11 @@ static int __pci_enable_wake(struct pci_dev *dev, pci_power_t state, bool enable
+> diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
+> index ec78400..201f9e5 100644
+> --- a/drivers/pci/probe.c
+> +++ b/drivers/pci/probe.c
+> @@ -2074,6 +2074,7 @@ static void pci_configure_eetlp_prefix(struct pci_dev *dev)
+>  {
+>  #ifdef CONFIG_PCI_PASID
+>  	struct pci_dev *bridge;
+> +	int pcie_type;
+>  	u32 cap;
 >  
->  	/*
->  	 * Bridges can only signal wakeup on behalf of subordinate devices,
-> -	 * but that is set up elsewhere, so skip them.
-> +	 * but that is set up elsewhere, so skip them. With the exception
-> +	 * of bridges that we power manage. These can signal wake for
-> +	 * example on a hotplug event.
->  	 */
-
-I would change the comment even more, to something like:
-
-"Bridges that are not power-manageable directly only signal wakeup on behalf
-of subordinate devices which is set up elsewhere, so skip them.  However,
-bridges that are power-manageable may signal wakeup for themselves (for example,
-on a hotplug event) and they need to be covered here."
-
-> -	if (pci_has_subordinate(dev))
-> +	if (!pci_power_manageable(dev))
->  		return 0;
+>  	if (!pci_is_pcie(dev))
+> @@ -2083,7 +2084,9 @@ static void pci_configure_eetlp_prefix(struct pci_dev *dev)
+>  	if (!(cap & PCI_EXP_DEVCAP2_EE_PREFIX))
+>  		return;
 >  
->  	/* Don't do the same thing twice in a row for one device. */
+> -	if (pci_pcie_type(dev) == PCI_EXP_TYPE_ROOT_PORT)
+> +	pcie_type = pci_pcie_type(dev);
+> +	if (pcie_type == PCI_EXP_TYPE_ROOT_PORT ||
+> +	    pcie_type == PCI_EXP_TYPE_RC_END)
+>  		dev->eetlp_prefix_path = 1;
+>  	else {
+>  		bridge = pci_upstream_bridge(dev);
+> -- 
+> 2.7.4
 > 
