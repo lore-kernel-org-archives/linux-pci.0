@@ -1,75 +1,117 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.29.99]:34082 "EHLO mail.kernel.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1726686AbeILGL2 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Wed, 12 Sep 2018 02:11:28 -0400
-Date: Tue, 11 Sep 2018 20:09:29 -0500
-From: Bjorn Helgaas <helgaas@kernel.org>
-To: Sinan Kaya <okaya@kernel.org>
-Cc: linux-pci@vger.kernel.org,
-        Mike Marciniszyn <mike.marciniszyn@intel.com>,
-        Dennis Dalessandro <dennis.dalessandro@intel.com>,
-        Doug Ledford <dledford@redhat.com>,
-        Jason Gunthorpe <jgg@ziepe.ca>,
-        Alex Williamson <alex.williamson@redhat.com>
-Subject: Re: [PATCH for-rc v2 3/3] IB/hfi1: Prefer new
- __pci_reset_function_locked() API with reset type
-Message-ID: <20180912010929.GA118330@bhelgaas-glaptop.roam.corp.google.com>
-References: <20180905160805.5680-1-okaya@kernel.org>
- <20180905160805.5680-3-okaya@kernel.org>
+Received: from mail-pf1-f194.google.com ([209.85.210.194]:38498 "EHLO
+        mail-pf1-f194.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726644AbeILPE5 (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Wed, 12 Sep 2018 11:04:57 -0400
+Received: by mail-pf1-f194.google.com with SMTP id x17-v6so769768pfh.5
+        for <linux-pci@vger.kernel.org>; Wed, 12 Sep 2018 03:01:08 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20180905160805.5680-3-okaya@kernel.org>
+In-Reply-To: <20180905073816.jcrct2xcpucb6bkn@wunner.de>
+References: <1535690081-16116-1-git-send-email-suganath-prabu.subramani@broadcom.com>
+ <CAHp75VfC8GN3oEzSFJYfMr0iqBTYUJ=WPoLS9Oh5NgVcFmnBkw@mail.gmail.com>
+ <20180831085534.n6eikj5cw522ihhe@wunner.de> <CAK=zhgrzNYDeUFN0YWVJLdGR0nA443su0xydwSHFQzhouhZBuw@mail.gmail.com>
+ <20180904094234.jm5je5sfpagdf6dz@wunner.de> <CAK=zhgprkzcF-UZeeqg_qN0xFLR=BfzkRNRZKA=DJyf7aMPmeg@mail.gmail.com>
+ <20180905073816.jcrct2xcpucb6bkn@wunner.de>
+From: Sreekanth Reddy <sreekanth.reddy@broadcom.com>
+Date: Wed, 12 Sep 2018 15:31:07 +0530
+Message-ID: <CAK=zhgoy8qfKmjM+ypAmbZ1aXALdGwHSS5ND1G9HBt6h4hTheg@mail.gmail.com>
+Subject: Re: [Patch v1 0/7] mpt3sas: Hot-Plug Surprise removal support on IOC.
+To: Lukas Wunner <lukas@wunner.de>
+Cc: Suganath Prabu Subramani <suganath-prabu.subramani@broadcom.com>,
+        Andy Shevchenko <andy.shevchenko@gmail.com>,
+        linux-scsi <linux-scsi@vger.kernel.org>,
+        Sathya Prakash <Sathya.Prakash@broadcom.com>,
+        linux-pci@vger.kernel.org,
+        Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+        Keith Busch <keith.busch@intel.com>
+Content-Type: text/plain; charset="UTF-8"
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wed, Sep 05, 2018 at 04:08:05PM +0000, Sinan Kaya wrote:
-> pci_reset_bus() is being called from the probe context and causes
-> a deadlock since pci_reset_bus() also tries to obtain kernel lock.
+On Wed, Sep 5, 2018 at 1:08 PM, Lukas Wunner <lukas@wunner.de> wrote:
+> On Wed, Sep 05, 2018 at 11:45:45AM +0530, Sreekanth Reddy wrote:
+>> On Tue, Sep 4, 2018 at 3:12 PM, Lukas Wunner <lukas@wunner.de> wrote:
+>> > Many scsi drivers call pci_channel_offline() to detect inaccessibility
+>> > of the device due to a PCI error:
+>> > https://elixir.bootlin.com/linux/v4.19-rc2/ident/pci_channel_offline
+>> >
+>> > A patch is pending such that surprise removal can also be queried
+>> > with that same function:
+>> > https://www.spinics.net/lists/linux-pci/msg75722.html
+>>
+>> Lukas, thanks for pointing to this pci_dev_is_disconnected() API. So
+>> we can use this API directly instead of reading the vendor Id and
+>> checking for all one's once this patch get accepted?
+>
+> Yes, except pci_dev_is_disconnected() is private to the PCI core,
+> but dev->error_state and pci_channel_offline() is public.
 
-This doesn't tell me what the deadlock is.
 
-> Use __pci_reset_function_locked() that provides locking guarantees.
+As Busch suggested, we will use pci_device_is_present() API.
+We have tested HBA hot-unplug operations with this API and the things
+are working fine.
 
-And the previous patch that adds the "reset_type" parameter doesn't
-tell me anything about what locking guarantees it provides.
+>
+>
+>> I have one more instance where still we need this poll kthread, i.e
+>> during the device probe time we have some commands which has more
+>> timeout value (e.g. 300 seconds), so if user has unplugged this device
+>> just after sending this more time-out valued command then driver has
+>> to wait until this time-out value expires. i.e. this device is still
+>> visible in lspci output until this 300 seconds timeout value expires
+>> even though device is unplugged. if we have a poll kthread (which will
+>> poll for every one second) then driver can early detect the unplugged
+>> state and can terminate the outstanding commands and hence probe
+>> operation can be completed quickly.
+>
+> The only instances I can see in your driver where it waits for 300 s
+> is in _base_diag_reset(), which does an msleep(256) in a loop for up
+> to 300 s, and scsih_scan_finished(), which is called in a loop with an
+> msleep(10) by do_scsi_scan_host().
+>
+> Any harm in simply checking for removal of the device in those loops
+> and bailing out if so?  Instead of the poll kthread to achieve the same?
+we can do for this port enable request but still we have other
+requests where we don't have this type of loops and used
+wait_for_completion_timeout () API where we can't bailout the request
+in-between and we have to wait until the timeout value expires. For
+these types of request terminating it though watchdog thread will be
+simple.
 
-I want to merge minimal changes for v4.19 to fix the known problems.
+[PATCH 2/7] mpt3sas: Add HBA hot plug watchdog thread:
+https://www.spinics.net/lists/linux-scsi/msg122963.html
 
-It's not clear to me what actually broke hfi1.  You mention a deadlock
-above, so I assume some locking change broke it, but 811c5cb37df4 isn't
-obviously related to locking.
+In the above patch and in the worker thread function we are just
+setting ioc->remove_host flag,
+Apart from resetting this flag we have to terminate all the
+outstanding commands at the HBA level and that is missing in the above
+patch. we will post new set of patches.
 
-It's obvious that 811c5cb37df4 tested the return value of
-pci_probe_reset_slot() incorrectly, so there's no problem with patch 1/1.
+We feel that this watch dog thread is needed, as we need to gracefully
+terminate all the outstanding command at the HBA level apart from stop
+receiving the new commands. With watch dog thread we can easily
+terminate all the outstanding commands.
 
-But patches 2 & 3:
-
-  PCI: Request reset type as part of function reset
-  IB/hfi1: Prefer new __pci_reset_function_locked() API with reset type
-
-do not connect the dots for me.
-
-> Fixes: 811c5cb37df4 ("PCI: Unify try slot and bus reset API")
-> Link: https://bugzilla.kernel.org/show_bug.cgi?id=200985
-> Signed-off-by: Sinan Kaya <okaya@kernel.org>
-> ---
->  drivers/infiniband/hw/hfi1/pcie.c | 2 +-
->  1 file changed, 1 insertion(+), 1 deletion(-)
-> 
-> diff --git a/drivers/infiniband/hw/hfi1/pcie.c b/drivers/infiniband/hw/hfi1/pcie.c
-> index eec83757d55f..13162289b748 100644
-> --- a/drivers/infiniband/hw/hfi1/pcie.c
-> +++ b/drivers/infiniband/hw/hfi1/pcie.c
-> @@ -900,7 +900,7 @@ static int trigger_sbr(struct hfi1_devdata *dd)
->  	 * delay after a reset is required.  Per spec requirements,
->  	 * the link is either working or not after that point.
->  	 */
-> -	return pci_reset_bus(dev);
-> +	return __pci_reset_function_locked(dev, PCI_RESET_LINK);
->  }
->  
->  /*
-> -- 
-> 2.18.0
-> 
+>
+>
+>> Also whether we need to wait for below patches get accepted? so that
+>> we can post the new set of patches accommodating according to your
+>> suggestions,
+>> https://www.spinics.net/lists/linux-pci/msg75722.html
+>> https://www.spinics.net/lists/linux-pci/msg75438.html
+>
+> I can't tell you whether and when those patches get accepted, that's
+> for Bjorn Helgaas to decide.  Also, what does get accepted might differ.
+> E.g. the first patch uses the existing pci_channel_io_perm_failure
+> state for removal.  There was debate whether to introduce a new state
+> for removed devices to avoid overloading the existing state, which is
+> used for error recovery.
+>
+> All I can recommend is to follow linux-pci, test the patches that have
+> already been brought forward to ascertain they fulfil your needs,
+> and generally participate in the debate so that your use cases are
+> covered.
+>
+> Thanks,
+>
+> Lukas
