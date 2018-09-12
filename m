@@ -1,92 +1,62 @@
-Return-Path: <linux-acpi-owner@vger.kernel.org>
-Date: Wed, 12 Sep 2018 12:32:58 -0500
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail.kernel.org ([198.145.29.99]:37070 "EHLO mail.kernel.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1725798AbeILWEM (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Wed, 12 Sep 2018 18:04:12 -0400
+Date: Wed, 12 Sep 2018 11:58:46 -0500
 From: Bjorn Helgaas <helgaas@kernel.org>
-To: Jonathan Cameron <Jonathan.Cameron@huawei.com>
-Cc: bhelgaas@google.com, lorenzo.pieralisi@arm.com,
-        linux-pci@vger.kernel.org, linuxarm@huawei.com,
-        "Rafael J. Wysocki" <rjw@rjwysocki.net>,
-        Len Brown <lenb@kernel.org>, linux-acpi@vger.kernel.org,
+To: linux-pci@vger.kernel.org, Russell Currey <ruscur@russell.cc>,
+        linuxppc-dev@lists.ozlabs.org
+Cc: Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+        Paul Mackerras <paulus@samba.org>,
+        Michael Ellerman <mpe@ellerman.id.au>,
         linux-kernel@vger.kernel.org
-Subject: Re: [PATCH 1/1] pci: Pick up the acpi numa node value if it is
- specified at the device level.
-Message-ID: <20180912173258.GJ118330@bhelgaas-glaptop.roam.corp.google.com>
-References: <20180912152140.3676-1-Jonathan.Cameron@huawei.com>
- <20180912152140.3676-2-Jonathan.Cameron@huawei.com>
+Subject: Re: [PATCH] MAINTAINERS: Add PPC contacts for PCI core error handling
+Message-ID: <20180912165846.GH118330@bhelgaas-glaptop.roam.corp.google.com>
+References: <153677132617.23091.12307288405707171077.stgit@bhelgaas-glaptop.roam.corp.google.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20180912152140.3676-2-Jonathan.Cameron@huawei.com>
-Sender: linux-acpi-owner@vger.kernel.org
+In-Reply-To: <153677132617.23091.12307288405707171077.stgit@bhelgaas-glaptop.roam.corp.google.com>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-[+cc ACPI folks, LKML]
-
-On Wed, Sep 12, 2018 at 04:21:40PM +0100, Jonathan Cameron wrote:
-> The ACPI specification allows you to provide _PXM entries for devices based
-> on their location on a particular bus.  Let us use that if it is provided
-> rather than just assuming it makes sense to put the device into the proximity
-> domain of the root.
+On Wed, Sep 12, 2018 at 11:55:26AM -0500, Bjorn Helgaas wrote:
+> From: Bjorn Helgaas <bhelgaas@google.com>
 > 
-> An example DSDT entry that will supply this is:
+> The original PCI error recovery functionality was for the powerpc-specific
+> IBM EEH feature.  PCIe subsequently added some similar features, including
+> AER and DPC, that can be used on any architecture.
 > 
->   Device (PCI2)
->   {
->     Name (_HID, "PNP0A08") // PCI Express Root Bridge
->     Name (_CID, "PNP0A03") // Compatible PCI Root Bridge
->     Name(_SEG, 2) // Segment of this Root complex
->     Name(_BBN, 0xF8) // Base Bus Number
->     Name(_CCA, 1)
->     Method (_PXM, 0, NotSerialized) {
->       Return(0x00)
->     }
+> We want the generic PCI core error handling support to work with all of
+> these features.  Driver error recovery callbacks should be independent of
+> which feature the platform provides.
 > 
-> ...
->     Device (BRI0) {
->       Name (_HID, "19E51610")
->       Name (_ADR, 0)
->       Name (_BBN, 0xF9)
->       Device (CAR0) {
->         Name (_HID, "97109912")
->         Name (_ADR, 0)
->         Method (_PXM, 0, NotSerialized) {
->           Return(0x02)
->         }
->       }
->     }
->   }
-> 
-> Signed-off-by: Jonathan Cameron <Jonathan.Cameron@huawei.com>
+> Add the generic PCI core error recovery files to the powerpc EEH
+> MAINTAINERS entry so the powerpc folks will be copied on changes to the
+> generic PCI error handling strategy.
 
-Applied with subject:
+I really want to make sure the powerpc folks are plugged into any PCI core
+error handling discussions.  Please let me know if there's a better way
+than this patch, or if there are other people who should be added.
 
-  ACPI/PCI: Pay attention to device-specific _PXM node values
-
-to pci/enumeration for v4.20, thanks!
-
+> Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
 > ---
->  drivers/pci/pci-acpi.c | 5 +++++
->  1 file changed, 5 insertions(+)
+>  MAINTAINERS |    4 ++++
+>  1 file changed, 4 insertions(+)
 > 
-> diff --git a/drivers/pci/pci-acpi.c b/drivers/pci/pci-acpi.c
-> index 738e3546abb1..f2f5f0ddd60e 100644
-> --- a/drivers/pci/pci-acpi.c
-> +++ b/drivers/pci/pci-acpi.c
-> @@ -753,10 +753,15 @@ static void pci_acpi_setup(struct device *dev)
->  {
->  	struct pci_dev *pci_dev = to_pci_dev(dev);
->  	struct acpi_device *adev = ACPI_COMPANION(dev);
-> +	int node;
->  
->  	if (!adev)
->  		return;
->  
-> +	node = acpi_get_node(adev->handle);
-> +	if (node != NUMA_NO_NODE)
-> +		set_dev_node(dev, node);
-> +	
->  	pci_acpi_optimize_delay(pci_dev, adev->handle);
->  
->  	pci_acpi_add_pm_notifier(adev, pci_dev);
-> -- 
-> 2.18.0
-> 
+> diff --git a/MAINTAINERS b/MAINTAINERS
+> index 7e10ba65bfe4..d6699597fd89 100644
+> --- a/MAINTAINERS
+> +++ b/MAINTAINERS
+> @@ -11202,6 +11202,10 @@ PCI ENHANCED ERROR HANDLING (EEH) FOR POWERPC
+>  M:	Russell Currey <ruscur@russell.cc>
+>  L:	linuxppc-dev@lists.ozlabs.org
+>  S:	Supported
+> +F:	Documentation/PCI/pci-error-recovery.txt
+> +F:	drivers/pci/pcie/aer.c
+> +F:	drivers/pci/pcie/dpc.c
+> +F:	drivers/pci/pcie/err.c
+>  F:	Documentation/powerpc/eeh-pci-error-recovery.txt
+>  F:	arch/powerpc/kernel/eeh*.c
+>  F:	arch/powerpc/platforms/*/eeh*.c
 > 
