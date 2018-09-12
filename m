@@ -1,67 +1,66 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from foss.arm.com ([217.140.101.70]:57336 "EHLO foss.arm.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1728059AbeISQHH (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Wed, 19 Sep 2018 12:07:07 -0400
-Date: Wed, 19 Sep 2018 11:29:44 +0100
-From: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
-To: Nathan Chancellor <natechancellor@gmail.com>,
-        Xiaowei Song <songxiaowei@hisilicon.com>,
-        Binghui Wang <wangbinghui@hisilicon.com>
+Return-Path: <SRS0=uuMr=L2=kernel.crashing.org=benh@kernel.org>
+Return-Path: <SRS0=uuMr=L2=kernel.crashing.org=benh@kernel.org>
+Message-ID: <867d7f0f47766e42d5fb1a479209fef406cf5fc2.camel@kernel.crashing.org>
+Subject: Re: [PATCH 0/2] sriov enablement on s390
+From: Benjamin Herrenschmidt <benh@kernel.crashing.org>
+To: Bjorn Helgaas <helgaas@kernel.org>, Sebastian Ott <sebott@linux.ibm.com>
 Cc: Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org,
-        linux-kernel@vger.kernel.org,
-        Nick Desaulniers <ndesaulniers@google.com>
-Subject: Re: [PATCH] PCI: kirin: Fix section mismatch warning
-Message-ID: <20180919102944.GA15014@e107981-ln.cambridge.arm.com>
-References: <20180919053829.4858-1-natechancellor@gmail.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20180919053829.4858-1-natechancellor@gmail.com>
-Sender: linux-pci-owner@vger.kernel.org
+        Arnd
+ Bergmann <arnd@arndb.de>, Paul Mackerras <paulus@samba.org>,
+        Michael
+ Ellerman <mpe@ellerman.id.au>,
+        Russell Currey <ruscur@russell.cc>, linuxppc-dev@lists.ozlabs.org,
+        Oliver OHalloran <oliveroh@au1.ibm.com>
+Date: Wed, 12 Sep 2018 16:40:28 +0200
+In-Reply-To: <20180912130205.GG118330@bhelgaas-glaptop.roam.corp.google.com>
+References: <20180912123411.23229-1-sebott@linux.ibm.com>
+	 <20180912130205.GG118330@bhelgaas-glaptop.roam.corp.google.com>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 List-ID: <linux-pci.vger.kernel.org>
 
-Xiaowei, Binghui,
+On Wed, 2018-09-12 at 08:02 -0500, Bjorn Helgaas wrote:
+> [+cc Arnd, powerpc folks]
 
-On Tue, Sep 18, 2018 at 10:38:29PM -0700, Nathan Chancellor wrote:
-> WARNING: vmlinux.o(.text+0x4758cc): Section mismatch in reference from
-> the function kirin_pcie_probe() to the function
-> .init.text:kirin_add_pcie_port()
-> The function kirin_pcie_probe() references
-> the function __init kirin_add_pcie_port().
-> This is often because kirin_pcie_probe lacks a __init
-> annotation or the annotation of kirin_add_pcie_port is wrong.
+[+Oliver]
+
+> On Wed, Sep 12, 2018 at 02:34:09PM +0200, Sebastian Ott wrote:
+> > Hello Bjorn,
+> > 
+> > On s390 we currently handle SRIOV within firmware. Which means
+> > that the PF is under firmware control and not visible to operating
+> > systems. SRIOV enablement happens within firmware and VFs are
+> > passed through to logical partitions.
+> > 
+> > I'm working on a new mode were the PF is under operating system
+> > control (including SRIOV enablement). However we still need
+> > firmware support to access the VFs. The way this is supposed
+> > to work is that when firmware traps the SRIOV enablement it
+> > will present machine checks to the logical partition that
+> > triggered the SRIOV enablement and provide the VFs via hotplug
+> > events.
+> > 
+> > The problem I'm faced with is that the VF detection code in
+> > sriov_enable leads to unusable functions in s390.
 > 
-> Remove '__init' from kirin_add_pcie_port so there is no mismatch.
-
-I think that instead of removing __init section tag we should add
-it to kirin_pcie_probe().
-
-Please let me know and ACK accordingly.
-
-Lorenzo
-
-> Fixes: fc5165db245a ("PCI: kirin: Add HiSilicon Kirin SoC PCIe controller driver")
-> Reported-by: Nick Desaulniers <ndesaulniers@google.com>
-> Signed-off-by: Nathan Chancellor <natechancellor@gmail.com>
-> ---
->  drivers/pci/controller/dwc/pcie-kirin.c | 4 ++--
->  1 file changed, 2 insertions(+), 2 deletions(-)
+> We're moving away from the weak function implementation style.  Can
+> you take a look at Arnd's work here, which uses pci_host_bridge
+> callbacks instead?
 > 
-> diff --git a/drivers/pci/controller/dwc/pcie-kirin.c b/drivers/pci/controller/dwc/pcie-kirin.c
-> index 5352e0c3be82..9b599296205d 100644
-> --- a/drivers/pci/controller/dwc/pcie-kirin.c
-> +++ b/drivers/pci/controller/dwc/pcie-kirin.c
-> @@ -467,8 +467,8 @@ static int kirin_pcie_add_msi(struct dw_pcie *pci,
->  	return 0;
->  }
->  
-> -static int __init kirin_add_pcie_port(struct dw_pcie *pci,
-> -				      struct platform_device *pdev)
-> +static int kirin_add_pcie_port(struct dw_pcie *pci,
-> +			       struct platform_device *pdev)
->  {
->  	int ret;
->  
-> -- 
-> 2.19.0
+>   https://lkml.kernel.org/r/20180817102645.3839621-1-arnd@arndb.de
 > 
+> I cc'd some powerpc folks because they also have a fair amount of
+> arch-specific SR-IOV code that might one day move in this direction.
+> 
+> > Sebastian Ott (2):
+> >   pci: provide pcibios_sriov_add_vfs
+> >   s390/pci: handle function enumeration after sriov enablement
+> > 
+> >  arch/s390/pci/pci.c | 11 +++++++++++
+> >  drivers/pci/iov.c   | 43 +++++++++++++++++++++++++++++++------------
+> >  include/linux/pci.h |  2 ++
+> >  3 files changed, 44 insertions(+), 12 deletions(-)
+> > 
+> > -- 
+> > 2.13.4
+> > 
