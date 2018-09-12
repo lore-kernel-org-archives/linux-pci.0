@@ -1,37 +1,78 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.29.99]:41438 "EHLO mail.kernel.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1728460AbeIQBcc (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Sun, 16 Sep 2018 21:32:32 -0400
-Subject: Re: [PATCH v3 1/6] PCI: Expose reset_type to users of
- __pci_reset_function_locked()
-To: linux-pci@vger.kernel.org
-Cc: alex.williamson@redhat.com,
-        Derek Chickles <derek.chickles@caviumnetworks.com>,
-        Satanand Burla <satananda.burla@caviumnetworks.com>,
-        Felix Manlunas <felix.manlunas@caviumnetworks.com>,
-        Raghu Vatsavayi <raghu.vatsavayi@caviumnetworks.com>,
-        "David S. Miller" <davem@davemloft.net>,
-        Bjorn Helgaas <bhelgaas@google.com>,
-        Boris Ostrovsky <boris.ostrovsky@oracle.com>,
-        Juergen Gross <jgross@suse.com>,
-        Jia-Ju Bai <baijiaju1990@gmail.com>
-References: <20180916200439.21960-1-okaya@kernel.org>
- <20180916200439.21960-2-okaya@kernel.org>
-From: Sinan Kaya <okaya@kernel.org>
-Message-ID: <a266c436-b53e-4069-73ad-a2ac276ce36e@kernel.org>
-Date: Sun, 16 Sep 2018 16:08:23 -0400
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Date: Wed, 12 Sep 2018 13:53:55 -0500
+From: Bjorn Helgaas <helgaas@kernel.org>
+To: Thomas Petazzoni <thomas.petazzoni@bootlin.com>
+Subject: Re: [PATCHv2 1/3] PCI: Introduce PCI bridge emulated config space
+ common logic
+Message-ID: <20180912185355.GK118330@bhelgaas-glaptop.roam.corp.google.com>
+References: <20180912154831.2220-1-thomas.petazzoni@bootlin.com>
+ <20180912154831.2220-2-thomas.petazzoni@bootlin.com>
 MIME-Version: 1.0
-In-Reply-To: <20180916200439.21960-2-okaya@kernel.org>
-Content-Type: text/plain; charset=utf-8; format=flowed
-Sender: linux-pci-owner@vger.kernel.org
+In-Reply-To: <20180912154831.2220-2-thomas.petazzoni@bootlin.com>
+List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
+List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
+List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
+List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
+List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
+Cc: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
+ Russell King <linux@arm.linux.org.uk>,
+ Antoine Tenart <antoine.tenart@bootlin.com>, linux-pci@vger.kernel.org,
+ Gregory Clement <gregory.clement@bootlin.com>,
+ Maxime Chevallier <maxime.chevallier@bootlin.com>,
+ Nadav Haklai <nadavh@marvell.com>,
+ =?iso-8859-1?Q?Miqu=E8l?= Raynal <miquel.raynal@bootlin.com>,
+ Bjorn Helgaas <bhelgaas@google.com>, linux-arm-kernel@lists.infradead.org
+Content-Type: text/plain; charset="us-ascii"
+Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
+Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 9/16/2018 4:04 PM, Sinan Kaya wrote:
-> +int __pci_reset_function_locked(struct pci_dev *dev, u32 reset_type)
->   {
-> -	int rc;
-> +	int rc = 0;
+On Wed, Sep 12, 2018 at 05:48:29PM +0200, Thomas Petazzoni wrote:
+> Some PCI host controllers do not expose a configuration space for the
+> root port PCI bridge. Due to this, the Marvell Armada 370/38x/XP PCI
+> controller driver (pci-mvebu) emulates a root port PCI bridge
+> configuration space, and uses that to (among other things) dynamically
+> create the memory windows that correspond to the PCI MEM and I/O
+> regions.
+> 
+> Since we now need to add a very similar logic for the Marvell Armada
+> 37xx PCI controller driver (pci-aardvark), instead of duplicating the
+> code, we create in this commit a common logic called pci-bridge-emul.
+> 
+> The idea of this logic is to emulate a root port PCI bridge
+> configuration space by providing configuration space read/write
+> operations, and faking behind the scenes the configuration space of a
+> PCI bridge. A PCI host controller driver simply has to call
+> pci_bridge_emul_conf_read() and pci_bridge_emul_conf_write() to
+> read/write the configuration space of the bridge.
+> 
+> By default, the PCI bridge configuration space is simply emulated by a
+> chunk of memory, but the PCI host controller can override the behavior
+> of the read and write operations on a per-register basis to do
+> additional actions if needed. We take care of complying with the
+> behavior of the PCI configuration space registers in terms of bits
+> that are read-write, read-only, reserved and write-1-to-clear.
+> 
+> Signed-off-by: Thomas Petazzoni <thomas.petazzoni@bootlin.com>
 
-I forgot about this. I'll wait a couple of more days before when I spin a new 
-version.
+Acked-by: Bjorn Helgaas <bhelgaas@google.com>
+
+Looks nice!  Lorenzo, if/when you're happy with these, please merge them
+all through your tree.
+
+> +#define PCI_BRIDGE_CONF_END	(PCI_BRIDGE_CONTROL + 2)
+
+I think PCI_STD_HEADER_SIZEOF might be a better base than
+PCI_BRIDGE_CONTROL, since there's no connection between
+the location of PCI_BRIDGE_CONTROL and anything else.
+
+> +#define PCI_CAP_PCIE_START	PCI_BRIDGE_CONF_END
+> +#define PCI_CAP_PCIE_END	(PCI_CAP_PCIE_START + PCI_EXP_SLTSTA2 + 2)
+
+_______________________________________________
+linux-arm-kernel mailing list
+linux-arm-kernel@lists.infradead.org
+http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
