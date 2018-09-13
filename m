@@ -1,57 +1,59 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mga07.intel.com ([134.134.136.100]:34685 "EHLO mga07.intel.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1727645AbeIFBIP (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Wed, 5 Sep 2018 21:08:15 -0400
-From: Keith Busch <keith.busch@intel.com>
-To: Linux PCI <linux-pci@vger.kernel.org>,
-        Bjorn Helgaas <bhelgaas@google.com>
-Cc: Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-        Sinan Kaya <okaya@kernel.org>,
-        Thomas Tai <thomas.tai@oracle.com>, poza@codeaurora.org,
-        Lukas Wunner <lukas@wunner.de>, Christoph Hellwig <hch@lst.de>,
-        Keith Busch <keith.busch@intel.com>
-Subject: [PATCHv2 09/20] PCI/ERR: Report current recovery status for udev
-Date: Wed,  5 Sep 2018 14:35:35 -0600
-Message-Id: <20180905203546.21921-10-keith.busch@intel.com>
-In-Reply-To: <20180905203546.21921-1-keith.busch@intel.com>
-References: <20180905203546.21921-1-keith.busch@intel.com>
+Received: from esa6.microchip.iphmx.com ([216.71.154.253]:62993 "EHLO
+        esa6.microchip.iphmx.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726733AbeIMLvd (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Thu, 13 Sep 2018 07:51:33 -0400
+From: <Wesley.Sheng@microchip.com>
+To: <kurt.schwemmer@microsemi.com>, <Kurt.Schwemmer@microchip.com>,
+        <logang@deltatee.com>, <bhelgaas@google.com>
+CC: <linux-pci@vger.kernel.org>, <linux-kernel@vger.kernel.org>
+Subject: [PATCH] switchtec: Remove immediate status check after submit a MRPC
+ command
+Date: Thu, 13 Sep 2018 06:43:21 +0000
+Message-ID: <DM2PR11MB0105EC547AFBB2DFA9D05A17951A0@DM2PR11MB0105.namprd11.prod.outlook.com>
+Content-Type: text/plain; charset="utf-8"
+MIME-Version: 1.0
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-A device still participates in error recovery even if it doesn't have
-the error callbacks. This patch provides the status for user event
-watchers.
-
-Signed-off-by: Keith Busch <keith.busch@intel.com>
----
- drivers/pci/pcie/err.c | 5 ++---
- 1 file changed, 2 insertions(+), 3 deletions(-)
-
-diff --git a/drivers/pci/pcie/err.c b/drivers/pci/pcie/err.c
-index 362a717c831a..31e8a4314384 100644
---- a/drivers/pci/pcie/err.c
-+++ b/drivers/pci/pcie/err.c
-@@ -70,9 +70,8 @@ static int report_error_detected(struct pci_dev *dev,
- 	} else {
- 		err_handler = dev->driver->err_handler;
- 		vote = err_handler->error_detected(dev, state);
--		pci_uevent_ers(dev, PCI_ERS_RESULT_NONE);
- 	}
--
-+	pci_uevent_ers(dev, vote);
- 	*result = merge_result(*result, vote);
- 	device_unlock(&dev->dev);
- 	return 0;
-@@ -140,8 +139,8 @@ static int report_resume(struct pci_dev *dev, void *data)
- 
- 	err_handler = dev->driver->err_handler;
- 	err_handler->resume(dev);
--	pci_uevent_ers(dev, PCI_ERS_RESULT_RECOVERED);
- out:
-+	pci_uevent_ers(dev, PCI_ERS_RESULT_RECOVERED);
- 	device_unlock(&dev->dev);
- 	return 0;
- }
--- 
-2.14.4
+RnJvbTogV2VzbGV5IFNoZW5nIDxXZXNsZXkuU2hlbmdAbWljcm9jaGlwLmNvbT4NCg0KQWZ0ZXIg
+c3VibWl0IGEgRmlybXdhcmUgRG93bmxvYWQgKERvd25sb2FkIHN1Yi1jb21tYW5kKQ0KTVJQQyBj
+b21tYW5kLCBzd2l0Y2h0ZWMgZmlybXdhcmUgcmVmdXNlcyB0byByZXNwb25zZQ0KYW55IG1hbmFn
+ZW1lbnQgRVAncyBCQVIgYWNjZXNzIHVudGlsIGN1cnJlbnQgZmxhc2gNCnByb2dyYW1taW5nIGZp
+bmlzaGVkLg0KDQpEdXJpbmcgdGhpcyB0aW1lLCBhIFJFQUQgVExQIHRvIHRoZSBnYXMgYXJlYSBp
+biB0aGUgQkFSIG9mDQp0aGUgbWFuYWdlbWVudCBFUCB3aWxsIGNvbXBsZXRlIHdpdGggc2lnbmlm
+aWNhbnQgZGVsYXkgbGlrZQ0KbW9yZSB0aGFuIDEwbXMuDQoNCkl0J3MgYSBzd2l0Y2h0ZWMgZmly
+bXdhcmUgbGltaXRhdGlvbiB0aGF0IFJFQUQgcmVxdWVzdHMNCmNhbm5vdCBnZXQgcHJvbXB0IHNl
+cnZpY2UgZHVyaW5nIGZpcm13YXJlIGRvd25sb2FkLg0KDQpUaGUgZGVsYXllZCBjb21wbGV0aW9u
+IG9mIFJFQUQgVExQIHdvdWxkIGJlIGEgcHJvYmxlbSBvbg0Kc29tZSBzeXN0ZW0gd2hpY2ggaXMg
+c2Vuc2l0aXZlIHRvIFJFQUQgdGltZW91dC4NCg0KQ3VycmVudCBkcml2ZXIgY2hlY2sgc3RhdHVz
+IGltbWVkaWF0ZWx5IGFmdGVyIHN1Ym1pdCBhDQpNUlBDIGNvbW1hbmQsIHdoaWNoIHRyaWdnZXJz
+IFJFQUQgVExQIHRvIHRoZSBnYXMgYXJlYSBpbg0KdGhlIEJBUiBvZiB0aGUgbWFuYWdlbWVudCBF
+UC4gQWxzbywgb3RoZXIgcHJvY2Vzc2VzIG9yDQpmdW5jdGlvbnMsIGxpa2UgTlRCLCB3b3VsZCBh
+bHNvIHRyaWdnZXIgUkVBRCBUTFAgYnkgYWNjZXNzaW5nDQp0aGUgR0FTLg0KDQpUbyBhdm9pZCB0
+aGlzLCB0aGUgaW1tZWRpYXRlIGNoZWNrIG9mIHN0YXR1cyBpcyByZW1vdmVkDQppbiB0aGlzIHBh
+dGNoLCBhbmQgZHJpdmVyIGRlbGF5cyB0aGUgc3RhdHVzIGNoZWNrIHRvIHRoZQ0Kb2NjdXJyZW5j
+ZSBvZiBNU0l4IG9yIE1SUEMgdGltZW91dC4gSW4gdGhlIG1lYW53aGlsZSwgdXNlcg0KbXVzdCBu
+b3QgaW5pdGlhdGUgYW55IGdhcyBhY2Nlc3MgZHVyaW5nIGEgZmlybXdhcmUgZG93bmxvYWQuDQoN
+CkFsc28sIGFueSBwcm9jZXNzIHRoYXQgaXNzdWVzIE1SUEMgY29tbWFuZCB3aWxsIGJlIGFmZmVj
+dGVkDQpieSB0aGUgZGVsYXkgaW4gdGhpcyBwYXRjaC4NCg0KSG93ZXZlciwgdGhpcyBpcyBvbmx5
+IGEgc29mdHdhcmUgd29ya2Fyb3VuZCB0byB0aGUgUkVBRA0KaXNzdWUgaW4gZmlybXdhcmUgZG93
+bmxvYWQuIEEgY29tcGxldGUgZml4IG9mIHRoaXMgc2hvdWxkDQpoYXBwZW4gaW4gZmlybXdhcmUu
+DQoNCk5vdGU6IEZvciBOVEIgZnVuY3Rpb24sIHRoZSBtZW1vcnkgd2luZG93IGFjY2VzcyBpcyBo
+YW5kbGVkDQpieSBzd2l0Y2h0ZWMgaGFyZHdhcmUuIFNvIGl0J3Mgbm90IGFmZmVjdGVkIGJ5IHRo
+aXMgZmlybXdhcmUNCmxpbWl0YXRpb24uIEJ1dCB0aGUgR0FTIGFjY2Vzc2VzLCBsaWtlIGZvciBk
+b29yYmVsbCByZWdpc3RlcnMsDQppbiB0aGUgTlRCIGZ1bmN0aW9uIGFyZSBhZmZlY3RlZCBieSB0
+aGlzIGZpcm13YXJlIGxpbWl0YXRpb24uDQoNClNpZ25lZC1vZmYtYnk6IEtlbHZpbiBDYW8gPEtl
+bHZpbi5DYW9AbWljcm9jaGlwLmNvbT4NCi0tLQ0KIGRyaXZlcnMvcGNpL3N3aXRjaC9zd2l0Y2h0
+ZWMuYyB8IDQgLS0tLQ0KIDEgZmlsZSBjaGFuZ2VkLCA0IGRlbGV0aW9ucygtKQ0KDQpkaWZmIC0t
+Z2l0IGEvZHJpdmVycy9wY2kvc3dpdGNoL3N3aXRjaHRlYy5jIGIvZHJpdmVycy9wY2kvc3dpdGNo
+L3N3aXRjaHRlYy5jDQppbmRleCA0NTkxZjE1Li5iNzU5MjI4IDEwMDY0NA0KLS0tIGEvZHJpdmVy
+cy9wY2kvc3dpdGNoL3N3aXRjaHRlYy5jDQorKysgYi9kcml2ZXJzL3BjaS9zd2l0Y2gvc3dpdGNo
+dGVjLmMNCkBAIC0xNDIsMTAgKzE0Miw2IEBAIHN0YXRpYyB2b2lkIG1ycGNfY21kX3N1Ym1pdChz
+dHJ1Y3Qgc3dpdGNodGVjX2RldiAqc3RkZXYpDQogCQkgICAgc3R1c2VyLT5kYXRhLCBzdHVzZXIt
+PmRhdGFfbGVuKTsNCiAJaW93cml0ZTMyKHN0dXNlci0+Y21kLCAmc3RkZXYtPm1taW9fbXJwYy0+
+Y21kKTsNCiANCi0Jc3R1c2VyLT5zdGF0dXMgPSBpb3JlYWQzMigmc3RkZXYtPm1taW9fbXJwYy0+
+c3RhdHVzKTsNCi0JaWYgKHN0dXNlci0+c3RhdHVzICE9IFNXSVRDSFRFQ19NUlBDX1NUQVRVU19J
+TlBST0dSRVNTKQ0KLQkJbXJwY19jb21wbGV0ZV9jbWQoc3RkZXYpOw0KLQ0KIAlzY2hlZHVsZV9k
+ZWxheWVkX3dvcmsoJnN0ZGV2LT5tcnBjX3RpbWVvdXQsDQogCQkJICAgICAgbXNlY3NfdG9famlm
+Zmllcyg1MDApKTsNCiB9DQotLSANCjIuNy40DQo=
