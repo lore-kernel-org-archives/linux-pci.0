@@ -1,72 +1,56 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-pl1-f196.google.com ([209.85.214.196]:35342 "EHLO
-        mail-pl1-f196.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1730638AbeIRXdi (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Tue, 18 Sep 2018 19:33:38 -0400
-Received: by mail-pl1-f196.google.com with SMTP id g2-v6so1374393plo.2
-        for <linux-pci@vger.kernel.org>; Tue, 18 Sep 2018 10:59:55 -0700 (PDT)
-Date: Tue, 18 Sep 2018 11:59:52 -0600
-From: Jason Gunthorpe <jgg@ziepe.ca>
-To: Darren Hart <dvhart@infradead.org>
-Cc: Al Viro <viro@zeniv.linux.org.uk>, Arnd Bergmann <arnd@arndb.de>,
-        linux-fsdevel@vger.kernel.org,
-        Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-        "David S. Miller" <davem@davemloft.net>,
-        devel@driverdev.osuosl.org, linux-kernel@vger.kernel.org,
-        qat-linux@intel.com, linux-crypto@vger.kernel.org,
-        linux-media@vger.kernel.org, dri-devel@lists.freedesktop.org,
-        linaro-mm-sig@lists.linaro.org, amd-gfx@lists.freedesktop.org,
-        linux-input@vger.kernel.org, linux-iio@vger.kernel.org,
-        linux-rdma@vger.kernel.org, linux-nvdimm@lists.01.org,
-        linux-nvme@lists.infradead.org, linux-pci@vger.kernel.org,
-        platform-driver-x86@vger.kernel.org,
-        linux-remoteproc@vger.kernel.org, sparclinux@vger.kernel.org,
-        linux-scsi@vger.kernel.org, linux-usb@vger.kernel.org,
-        linux-fbdev@vger.kernel.org, linuxppc-dev@lists.ozlabs.org,
-        linux-btrfs@vger.kernel.org, ceph-devel@vger.kernel.org,
-        linux-wireless@vger.kernel.org, netdev@vger.kernel.org
-Subject: Re: [PATCH v2 05/17] compat_ioctl: move more drivers to
- generic_compat_ioctl_ptrarg
-Message-ID: <20180918175952.GJ11367@ziepe.ca>
-References: <20180912150142.157913-1-arnd@arndb.de>
- <20180912151134.436719-1-arnd@arndb.de>
- <20180914203506.GE35251@wrath>
- <20180914205748.GC19965@ZenIV.linux.org.uk>
- <20180918175108.GF35251@wrath>
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Date: Thu, 13 Sep 2018 10:42:41 +0200
+From: Thomas Petazzoni <thomas.petazzoni@bootlin.com>
+To: Jan =?UTF-8?B?S3VuZHLDoXQ=?= <jan.kundrat@cesnet.cz>
+Subject: Re: [BISECTED] Regression: Solidrun Clearfog Base won't boot since
+ "PCI: mvebu: Only remap I/O space if configured"
+Message-ID: <20180913104241.65db8243@windsurf>
+In-Reply-To: <5ad46fec-a71a-477a-b23f-d20aacfb481d@cesnet.cz>
+References: <61fdfd69-2bb6-478c-b0d5-69d8744adae3@cesnet.cz>
+ <87zhwm4kl6.fsf@tkos.co.il>
+ <20180912231050.GX30658@n2100.armlinux.org.uk>
+ <20180913094515.351967bb@windsurf>
+ <5ad46fec-a71a-477a-b23f-d20aacfb481d@cesnet.cz>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20180918175108.GF35251@wrath>
-Sender: linux-pci-owner@vger.kernel.org
+List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
+List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
+List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
+List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
+List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
+Cc: Baruch Siach <baruch@tkos.co.il>,
+ Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
+ Jason Cooper <jason@lakedaemon.net>, linux-pci@vger.kernel.org,
+ Russell King - ARM Linux <linux@armlinux.org.uk>, linux-kernel@vger.kernel.org,
+ Bjorn Helgaas <bhelgaas@google.com>, linux-arm-kernel@lists.infradead.org
+Content-Type: text/plain; charset="utf-8"
+Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
+Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tue, Sep 18, 2018 at 10:51:08AM -0700, Darren Hart wrote:
-> On Fri, Sep 14, 2018 at 09:57:48PM +0100, Al Viro wrote:
-> > On Fri, Sep 14, 2018 at 01:35:06PM -0700, Darren Hart wrote:
-> >  
-> > > Acked-by: Darren Hart (VMware) <dvhart@infradead.org>
-> > > 
-> > > As for a longer term solution, would it be possible to init fops in such
-> > > a way that the compat_ioctl call defaults to generic_compat_ioctl_ptrarg
-> > > so we don't have to duplicate this boilerplate for every ioctl fops
-> > > structure?
-> > 
-> > 	Bad idea, that...  Because several years down the road somebody will add
-> > an ioctl that takes an unsigned int for argument.  Without so much as looking
-> > at your magical mystery macro being used to initialize file_operations.
-> 
-> Fair, being explicit in the declaration as it is currently may be
-> preferable then.
-
-It would be much cleaner and safer if you could arrange things to add
-something like this to struct file_operations:
-
-  long (*ptr_ioctl) (struct file *, unsigned int, void __user *);
-
-Where the core code automatically converts the unsigned long to the
-void __user * as appropriate.
-
-Then it just works right always and the compiler will help address
-Al's concern down the road.
-
-Cheers,
-Jason
+SGVsbG8sCgpPbiBUaHUsIDEzIFNlcCAyMDE4IDEwOjIwOjQ1ICswMjAwLCBKYW4gS3VuZHLDoXQg
+d3JvdGU6Cj4gT24gxI10dnJ0ZWsgMTMuIHrDocWZw60gMjAxOCA5OjQ1OjE1IENFU1QsIFRob21h
+cyBQZXRhenpvbmkgd3JvdGU6Cj4gPiBXaGF0IGFib3V0IHNvbWV0aGluZyBsaWtlIHRoZSBiZWxv
+dy4gSSB0ZXN0ZWQgaXQsIGluY2x1ZGluZyB0aGUgZXJyb3IKPiA+IGNhc2UgYnkgZm9yY2luZyBh
+biAtRVBST0JFX0RFRkVSLiBUaGUgbmV3IHBjaV91bm1hcF9pbygpIGlzIG1vZGVsZWQKPiA+IGFm
+dGVyIHBjaV91bm1hcF9pb3NwYWNlKCkuIEFjdHVhbGx5LCBJIHdvdWxkIHByZWZlciB0byB1c2UK
+PiA+IHBjaV9yZW1hcF9pb3NwYWNlKCkgYW5kIHBjaV91bm1hcF9pb3NwYWNlKCkgYnV0IGZvciBu
+b3cgdGhpcyBBUEkKPiA+IGRvZXNuJ3QgYWxsb3cgb3ZlcmxvYWRpbmcgdGhlIG1lbW9yeSB0eXBl
+IHVzZWQgZm9yIHRoZSBtYXBwaW5nLiAgCj4gCj4gVGhhbmtzIGZvciBwcm92aWRpbmcgdGhpcyBm
+aXggc28gcXVpY2tseSwgVGhvbWFzLiBJIGNhbiBjb25maXJtIHRoYXQgdGhpcyAKPiBwYXRjaCAt
+LSB0ZXN0ZWQgb24gdG9wIG9mIDU0ZWRhOWRmMTdmMzIxNWI5ZWQxNjYyOWVlNzFlYTA3NDEzZWZk
+YWYgKCJNZXJnZSAKPiB0YWcgJ3BjaS12NC4xOS1maXhlcy0xJyBvZiAKPiBnaXQ6Ly9naXQua2Vy
+bmVsLm9yZy9wdWIvc2NtL2xpbnV4L2tlcm5lbC9naXQvaGVsZ2Fhcy9wY2kiKS4gRGlzY2xhaW1l
+cjogSSAKPiBoYXZlIHplcm8gZmFtaWxpYXJpdHkgd2l0aCBMaW51eCcgUENJIGNvZGUuCj4gCj4g
+VGVzdGVkLWJ5OiBKYW4gS3VuZHLDoXQgPGphbi5rdW5kcmF0QGNlc25ldC5jej4KClRoYW5rcyBm
+b3IgdGhlIHRlc3RpbmcuIEknbGwgd2FpdCBmb3IgUnVzc2VsbCB0byBzYXkgaWYgaGUgaXMgaGFw
+cHkKKG9yIG5vdCkgd2l0aCB0aGUgYWRkaXRpb24gb2YgcGNpX3VubWFwX2lvKCkgaW4gdGhlIEFS
+TSBjb2RlLCBpZiB0aGF0J3MKdGhlIGNhc2UsIEknbGwgc2VuZCBhIHByb3BlciBwYXRjaCB0byBm
+aXggdGhlIGlzc3VlLgoKQmVzdCByZWdhcmRzLAoKVGhvbWFzCi0tIApUaG9tYXMgUGV0YXp6b25p
+LCBDVE8sIEJvb3RsaW4KRW1iZWRkZWQgTGludXggYW5kIEtlcm5lbCBlbmdpbmVlcmluZwpodHRw
+czovL2Jvb3RsaW4uY29tCgpfX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19f
+X19fX19fXwpsaW51eC1hcm0ta2VybmVsIG1haWxpbmcgbGlzdApsaW51eC1hcm0ta2VybmVsQGxp
+c3RzLmluZnJhZGVhZC5vcmcKaHR0cDovL2xpc3RzLmluZnJhZGVhZC5vcmcvbWFpbG1hbi9saXN0
+aW5mby9saW51eC1hcm0ta2VybmVsCg==
