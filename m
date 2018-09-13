@@ -1,70 +1,35 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-oi0-f68.google.com ([209.85.218.68]:40247 "EHLO
-        mail-oi0-f68.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1727271AbeICWYL (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Mon, 3 Sep 2018 18:24:11 -0400
-From: Alexandru Gagniuc <mr.nuke.me@gmail.com>
-To: linux-pci@vger.kernel.org, bhelgaas@google.com
-Cc: keith.busch@intel.com, alex_gagniuc@dellteam.com,
-        austin_bolen@dell.com, shyam_iyer@dell.com,
-        Alexandru Gagniuc <mr.nuke.me@gmail.com>,
-        Ariel Elior <ariel.elior@cavium.com>,
-        everest-linux-l2@cavium.com,
-        "David S. Miller" <davem@davemloft.net>,
-        Michael Chan <michael.chan@broadcom.com>,
-        Ganesh Goudar <ganeshgr@chelsio.com>,
-        Jeff Kirsher <jeffrey.t.kirsher@intel.com>,
-        Tariq Toukan <tariqt@mellanox.com>,
-        Saeed Mahameed <saeedm@mellanox.com>,
-        Leon Romanovsky <leon@kernel.org>,
-        Jakub Kicinski <jakub.kicinski@netronome.com>,
-        Dirk van der Merwe <dirk.vandermerwe@netronome.com>,
-        netdev@vger.kernel.org, linux-kernel@vger.kernel.org,
-        intel-wired-lan@lists.osuosl.org, linux-rdma@vger.kernel.org,
-        oss-drivers@netronome.com
-Subject: [PATCH 0/9] Export PCIe bandwidth via sysfs
-Date: Mon,  3 Sep 2018 13:02:27 -0500
-Message-Id: <20180903180242.14504-1-mr.nuke.me@gmail.com>
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <SRS0=OqJQ=L3=kernel.crashing.org=benh@kernel.org>
+Return-Path: <SRS0=OqJQ=L3=kernel.crashing.org=benh@kernel.org>
+Message-ID: <d51126f75116534ec6ba6caee907b9db82363cc7.camel@kernel.crashing.org>
+Subject: Re: [PATCH] MAINTAINERS: Add PPC contacts for PCI core error
+ handling
+From: Benjamin Herrenschmidt <benh@kernel.crashing.org>
+To: Bjorn Helgaas <helgaas@kernel.org>, linux-pci@vger.kernel.org,
+        Russell
+	Currey <ruscur@russell.cc>, linuxppc-dev@lists.ozlabs.org
+Cc: Paul Mackerras <paulus@samba.org>, Michael Ellerman
+ <mpe@ellerman.id.au>,
+        linux-kernel@vger.kernel.org, Oliver OHalloran
+ <oliveroh@au1.ibm.com>
+Date: Thu, 13 Sep 2018 10:35:38 +0200
+In-Reply-To: <20180912165846.GH118330@bhelgaas-glaptop.roam.corp.google.com>
+References: 
+	<153677132617.23091.12307288405707171077.stgit@bhelgaas-glaptop.roam.corp.google.com>
+	 <20180912165846.GH118330@bhelgaas-glaptop.roam.corp.google.com>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 List-ID: <linux-pci.vger.kernel.org>
 
-This is a follow-on series to
-Commit 2d1ce5ec2117 ("PCI: Check for PCIe Link downtraining")
+On Wed, 2018-09-12 at 11:58 -0500, Bjorn Helgaas wrote:
+> > Add the generic PCI core error recovery files to the powerpc EEH
+> > MAINTAINERS entry so the powerpc folks will be copied on changes to the
+> > generic PCI error handling strategy.
+> 
+> I really want to make sure the powerpc folks are plugged into any PCI core
+> error handling discussions.  Please let me know if there's a better way
+> than this patch, or if there are other people who should be added.
 
-The remaining issues was that some pcie drivers print link status directly,
-sometimes resulting in duplicate system log messages with degraded links.
+Sounds good. Oliver, you want to be looped in as well ?
 
->From my understanding, the maintainers of these drivers are fine with
-removing the duplicate prints as long as the bandwidth information is
-readily available. sysfs seemed to be the consensus.
-
-Example:
-
-	$ cat /sys/bus/pci/devices/0000:b1:00.0/available_bandwidth
-	7.876 Gb/s
-
-
-Alexandru Gagniuc (9):
-  PCI: sysfs: Export available PCIe bandwidth
-  bnx2x: Do not call pcie_print_link_status()
-  bnxt_en: Do not call pcie_print_link_status()
-  cxgb4: Do not call pcie_print_link_status()
-  fm10k: Do not call pcie_print_link_status()
-  ixgbe: Do not call pcie_print_link_status()
-  net/mlx4: Do not call pcie_print_link_status()
-  net/mlx5: Do not call pcie_print_link_status()
-  nfp: Do not call pcie_print_link_status()
-
- .../net/ethernet/broadcom/bnx2x/bnx2x_main.c  |  1 -
- drivers/net/ethernet/broadcom/bnxt/bnxt.c     |  1 -
- .../net/ethernet/chelsio/cxgb4/cxgb4_main.c   |  3 ---
- drivers/net/ethernet/intel/fm10k/fm10k_pci.c  |  3 ---
- drivers/net/ethernet/intel/ixgbe/ixgbe_main.c | 26 -------------------
- drivers/net/ethernet/mellanox/mlx4/main.c     |  7 -----
- .../net/ethernet/mellanox/mlx5/core/main.c    |  4 ---
- .../netronome/nfp/nfpcore/nfp6000_pcie.c      |  1 -
- drivers/pci/pci-sysfs.c                       | 13 ++++++++++
- 9 files changed, 13 insertions(+), 46 deletions(-)
-
--- 
-2.17.1
+Cheers,
+Ben.
