@@ -1,113 +1,66 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-pl1-f196.google.com ([209.85.214.196]:38196 "EHLO
-        mail-pl1-f196.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726309AbeIEKoV (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Wed, 5 Sep 2018 06:44:21 -0400
-Received: by mail-pl1-f196.google.com with SMTP id u11-v6so2782499plq.5
-        for <linux-pci@vger.kernel.org>; Tue, 04 Sep 2018 23:15:46 -0700 (PDT)
+Return-Path: <linux-acpi-owner@vger.kernel.org>
+From: "Rafael J. Wysocki" <rjw@rjwysocki.net>
+To: Mika Westerberg <mika.westerberg@linux.intel.com>
+Cc: Bjorn Helgaas <bhelgaas@google.com>, Len Brown <lenb@kernel.org>,
+        Lukas Wunner <lukas@wunner.de>,
+        Keith Busch <keith.busch@intel.com>,
+        Ashok Raj <ashok.raj@intel.com>, Mario.Limonciello@dell.com,
+        Anthony Wong <anthony.wong@canonical.com>,
+        Linus Walleij <linus.walleij@linaro.org>,
+        Sakari Ailus <sakari.ailus@iki.fi>, linux-pci@vger.kernel.org,
+        linux-acpi@vger.kernel.org
+Subject: Re: [PATCH v2 05/10] PCI: portdrv: Resume upon exit from system suspend if left runtime suspended
+Date: Thu, 13 Sep 2018 16:35:13 +0200
+Message-ID: <7427571.lO1OYF3hGm@aspire.rjw.lan>
+In-Reply-To: <20180913143322.77953-6-mika.westerberg@linux.intel.com>
+References: <20180913143322.77953-1-mika.westerberg@linux.intel.com> <20180913143322.77953-6-mika.westerberg@linux.intel.com>
 MIME-Version: 1.0
-In-Reply-To: <20180904094234.jm5je5sfpagdf6dz@wunner.de>
-References: <1535690081-16116-1-git-send-email-suganath-prabu.subramani@broadcom.com>
- <CAHp75VfC8GN3oEzSFJYfMr0iqBTYUJ=WPoLS9Oh5NgVcFmnBkw@mail.gmail.com>
- <20180831085534.n6eikj5cw522ihhe@wunner.de> <CAK=zhgrzNYDeUFN0YWVJLdGR0nA443su0xydwSHFQzhouhZBuw@mail.gmail.com>
- <20180904094234.jm5je5sfpagdf6dz@wunner.de>
-From: Sreekanth Reddy <sreekanth.reddy@broadcom.com>
-Date: Wed, 5 Sep 2018 11:45:45 +0530
-Message-ID: <CAK=zhgprkzcF-UZeeqg_qN0xFLR=BfzkRNRZKA=DJyf7aMPmeg@mail.gmail.com>
-Subject: Re: [Patch v1 0/7] mpt3sas: Hot-Plug Surprise removal support on IOC.
-To: Lukas Wunner <lukas@wunner.de>
-Cc: Suganath Prabu Subramani <suganath-prabu.subramani@broadcom.com>,
-        Andy Shevchenko <andy.shevchenko@gmail.com>,
-        linux-scsi <linux-scsi@vger.kernel.org>,
-        Sathya Prakash <Sathya.Prakash@broadcom.com>,
-        linux-pci@vger.kernel.org,
-        Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-        Keith Busch <keith.busch@intel.com>
-Content-Type: text/plain; charset="UTF-8"
-Sender: linux-pci-owner@vger.kernel.org
+Content-Type: text/plain; charset="us-ascii"
+Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-l
+On Thursday, September 13, 2018 4:33:17 PM CEST Mika Westerberg wrote:
+> Currently we try to keep PCIe ports runtime suspended over system
+> suspend if possible. This mostly happens when entering suspend-to-idle
+> because there is no need to re-configure wake settings.
+> 
+> This causes problems if the parent port goes into D3cold and it gets
+> resumed upon exit from system suspend. This may happen for example if
+> the port is part of PCIe switch and the same switch is connected to a
+> PCIe endpoint that needs to be resumed. The way exit from D3cold works
+> according PCIe 4.0 spec 5.3.1.4.2 is that power is restored and cold
+> reset is signaled. After this the device is in D0unitialized state
+> keeping PME context if it supports wake from D3cold.
+> 
+> The problem occurs when a PCIe hotplug port is left suspended and the
+> parent port goes into D3cold and back to D0, the port keeps its PME
+> context but since everything else is reset back to defaults
+> (D0unitialized) it is not set to detect hotplug events anymore.
+> 
+> For this reason change the PCIe portdrv power management logic so that
+> it is fine to keep the port runtime suspended over system suspend but it
+> needs to be resumed upon exit to make sure it gets properly re-initialized.
+> 
+> Signed-off-by: Mika Westerberg <mika.westerberg@linux.intel.com>
+> ---
+>  drivers/pci/pcie/portdrv_pci.c | 4 ++--
+>  1 file changed, 2 insertions(+), 2 deletions(-)
+> 
+> diff --git a/drivers/pci/pcie/portdrv_pci.c b/drivers/pci/pcie/portdrv_pci.c
+> index eef22dc29140..629d5fe4c9b5 100644
+> --- a/drivers/pci/pcie/portdrv_pci.c
+> +++ b/drivers/pci/pcie/portdrv_pci.c
+> @@ -109,8 +109,8 @@ static int pcie_portdrv_probe(struct pci_dev *dev,
+>  
+>  	pci_save_state(dev);
+>  
+> -	dev_pm_set_driver_flags(&dev->dev, DPM_FLAG_SMART_SUSPEND |
+> -					   DPM_FLAG_LEAVE_SUSPENDED);
+> +	dev_pm_set_driver_flags(&dev->dev, DPM_FLAG_NEVER_SKIP |
+> +					   DPM_FLAG_SMART_SUSPEND);
+>  
+>  	if (pci_bridge_d3_possible(dev)) {
+>  		/*
+> 
 
-
-On Tue, Sep 4, 2018 at 3:12 PM, Lukas Wunner <lukas@wunner.de> wrote:
-> On Tue, Sep 04, 2018 at 11:19:04AM +0530, Sreekanth Reddy wrote:
->> On Fri, Aug 31, 2018 at 2:25 PM, Lukas Wunner <lukas@wunner.de> wrote:
->> > * Just reading the vendor ID may not be sufficient to detect unplug,
->> >   it may also read as "all ones" if the link is down due to error
->> >   recovery by DPC.
->>
->> So, is their any other way to detect pci device unplug apart from
->> reading the vendor ID, I mean we have check any other flags, etc?
->
-> Many scsi drivers call pci_channel_offline() to detect inaccessibility
-> of the device due to a PCI error:
-> https://elixir.bootlin.com/linux/v4.19-rc2/ident/pci_channel_offline
->
-> A patch is pending such that surprise removal can also be queried
-> with that same function:
-> https://www.spinics.net/lists/linux-pci/msg75722.html
-
-Lukas, thanks for pointing to this pci_dev_is_disconnected() API. So
-we can use this API directly instead of reading the vendor Id and
-checking for all one's once this patch get accepted?
-
->
->
->> > * I don't see why you need to poll for the device's removal from a
->> >   watchdog thread.  pciehp will invoke your driver's ->remove hook
->> >   once the device is gone.
->>
->> If we have some three to four PCI devices and all pci devices are hot
->> unplugged simultaneously, then we observed that driver's-remove hook
->> is called sequentially. So it takes some time to call fourth PCI
->> device driver's->remove hook. so during this time we want all the
->> outstanding commands to be gracefully terminated and hence we added
->> this watchdog thread to quickly detect the hba unplug and take
->> necessary steps such as gracefully terminate the outstanding IOs and
->> stop receiving further IOs on it. At later time when PCI subsystem
->> calls driver's-remove hook then driver can quickly release the
->> resources allocated for this unplugged device.
->
-> pciehp does the following as soon as the surprise removal event is handled:
->
->         pci_dev_set_disconnected(dev, NULL);
->         if (pci_has_subordinate(dev))
->                 pci_walk_bus(dev->subordinate, pci_dev_set_disconnected, NULL);
->
-> Thus, once the above-linked patch lands, you'll be able to detect
-> surprise removal by calling pci_channel_offline() or checking
-> pdev->error_state == pci_channel_io_perm_failure, obviating the
-> need to poll for surprise removal from a kthread.
->
-> There's another patch pending to move pci_walk_bus() out of the
-> pci_lock_rescan_remove() so that it runs even earlier, without
-> pointlessly waiting for a lock:
-> https://www.spinics.net/lists/linux-pci/msg75438.html
-
-Yes due to this pci_lock_rescan_remove() lock, we observed that
-driver's->remove hook called sequentially even though multiple HBA
-devices are hot unplugged simultaneously.
-
-I have one more instance where still we need this poll kthread, i.e
-during the device probe time we have some commands which has more
-timeout value (e.g. 300 seconds), so if user has unplugged this device
-just after sending this more time-out valued command then driver has
-to wait until this time-out value expires. i.e. this device is still
-visible in lspci output until this 300 seconds timeout value expires
-even though device is unplugged. if we have a poll kthread (which will
-poll for every one second) then driver can early detect the unplugged
-state and can terminate the outstanding commands and hence probe
-operation can be completed quickly.
-
-
-Also whether we need to wait for below patches get accepted? so that
-we can post the new set of patches accommodating according to your
-suggestions,
-https://www.spinics.net/lists/linux-pci/msg75722.html
-https://www.spinics.net/lists/linux-pci/msg75438.html
-
->
-> Thanks,
->
-> Lukas
+Reviewed-by: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
