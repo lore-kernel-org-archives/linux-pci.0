@@ -1,78 +1,180 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-db5eur01on0061.outbound.protection.outlook.com ([104.47.2.61]:34336
-        "EHLO EUR01-DB5-obe.outbound.protection.outlook.com"
-        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1728174AbeIJSpI (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Mon, 10 Sep 2018 14:45:08 -0400
-From: Nipun Gupta <nipun.gupta@nxp.com>
-To: joro@8bytes.org, robin.murphy@arm.com, will.deacon@arm.com,
-        robh+dt@kernel.org, robh@kernel.org, mark.rutland@arm.com,
-        catalin.marinas@arm.com, gregkh@linuxfoundation.org,
-        laurentiu.tudor@nxp.com, bhelgaas@google.com, hch@lst.de
-Cc: m.szyprowski@samsung.com, shawnguo@kernel.org,
-        frowand.list@gmail.com, iommu@lists.linux-foundation.org,
-        linux-kernel@vger.kernel.org, devicetree@vger.kernel.org,
-        linux-arm-kernel@lists.infradead.org,
-        linuxppc-dev@lists.ozlabs.org, linux-pci@vger.kernel.org,
-        bharat.bhushan@nxp.com, stuyoder@gmail.com, leoyang.li@nxp.com,
-        Nipun Gupta <nipun.gupta@nxp.com>
-Subject: [PATCH 7/7 v7] arm64: dts: ls208xa: comply with the iommu map binding for fsl_mc
-Date: Mon, 10 Sep 2018 19:19:21 +0530
-Message-Id: <1536587361-11047-8-git-send-email-nipun.gupta@nxp.com>
-In-Reply-To: <1536587361-11047-1-git-send-email-nipun.gupta@nxp.com>
-References: <1536587361-11047-1-git-send-email-nipun.gupta@nxp.com>
-MIME-Version: 1.0
-Content-Type: text/plain
+Received: from mga11.intel.com ([192.55.52.93]:9544 "EHLO mga11.intel.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1727774AbeIMTn3 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Thu, 13 Sep 2018 15:43:29 -0400
+From: Mika Westerberg <mika.westerberg@linux.intel.com>
+To: Bjorn Helgaas <bhelgaas@google.com>,
+        "Rafael J. Wysocki" <rjw@rjwysocki.net>
+Cc: Len Brown <lenb@kernel.org>, Lukas Wunner <lukas@wunner.de>,
+        Keith Busch <keith.busch@intel.com>,
+        Ashok Raj <ashok.raj@intel.com>, Mario.Limonciello@dell.com,
+        Anthony Wong <anthony.wong@canonical.com>,
+        Linus Walleij <linus.walleij@linaro.org>,
+        Sakari Ailus <sakari.ailus@iki.fi>,
+        Mika Westerberg <mika.westerberg@linux.intel.com>,
+        linux-pci@vger.kernel.org, linux-acpi@vger.kernel.org
+Subject: [PATCH v2 10/10] PCI / ACPI: Whitelist D3 for more PCIe hotplug ports
+Date: Thu, 13 Sep 2018 17:33:22 +0300
+Message-Id: <20180913143322.77953-11-mika.westerberg@linux.intel.com>
+In-Reply-To: <20180913143322.77953-1-mika.westerberg@linux.intel.com>
+References: <20180913143322.77953-1-mika.westerberg@linux.intel.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-fsl-mc bus support the new iommu-map property. Comply to this binding
-for fsl_mc bus.
+In order to have better power management for Thunderbolt PCIe chains,
+Windows enables power management for native PCIe hotplug ports if there
+is following ACPI _DSD attached to the root port:
 
-Signed-off-by: Nipun Gupta <nipun.gupta@nxp.com>
-Reviewed-by: Laurentiu Tudor <laurentiu.tudor@nxp.com>
+  Name (_DSD, Package () {
+      ToUUID ("6211e2c0-58a3-4af3-90e1-927a4e0c55a4"),
+      Package () {
+          Package () {"HotPlugSupportInD3", 1}
+      }
+  })
+
+This is also documented in:
+
+  https://docs.microsoft.com/en-us/windows-hardware/drivers/pci/dsd-for-pcie-root-ports#identifying-pcie-root-ports-supporting-hot-plug-in-d3
+
+Do the same in Linux by introducing new firmware PM callback (->bridge_d3())
+and then implement it for ACPI based systems so that the above property is
+checked.
+
+There is one catch, though. The initial pci_dev->bridge_d3 is set before
+the root port has ACPI companion bound (the device is not added to the
+PCI bus either) so we need to look up the ACPI companion manually in
+that case in acpi_pci_bridge_d3().
+
+Signed-off-by: Mika Westerberg <mika.westerberg@linux.intel.com>
+Reviewed-by: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
 ---
- arch/arm64/boot/dts/freescale/fsl-ls208xa.dtsi | 7 ++++++-
- 1 file changed, 6 insertions(+), 1 deletion(-)
+ drivers/acpi/property.c |  3 +++
+ drivers/pci/pci-acpi.c  | 41 +++++++++++++++++++++++++++++++++++++++++
+ drivers/pci/pci.c       |  9 +++++++++
+ drivers/pci/pci.h       |  3 +++
+ 4 files changed, 56 insertions(+)
 
-diff --git a/arch/arm64/boot/dts/freescale/fsl-ls208xa.dtsi b/arch/arm64/boot/dts/freescale/fsl-ls208xa.dtsi
-index 137ef4d..3d5e049 100644
---- a/arch/arm64/boot/dts/freescale/fsl-ls208xa.dtsi
-+++ b/arch/arm64/boot/dts/freescale/fsl-ls208xa.dtsi
-@@ -184,6 +184,7 @@
- 		#address-cells = <2>;
- 		#size-cells = <2>;
- 		ranges;
-+		dma-ranges = <0x0 0x0 0x0 0x0 0x10000 0x00000000>;
+diff --git a/drivers/acpi/property.c b/drivers/acpi/property.c
+index 90ba9371bae6..8c7c4583b52d 100644
+--- a/drivers/acpi/property.c
++++ b/drivers/acpi/property.c
+@@ -28,6 +28,9 @@ static const guid_t prp_guids[] = {
+ 	/* ACPI _DSD device properties GUID: daffd814-6eba-4d8c-8a91-bc9bbf4aa301 */
+ 	GUID_INIT(0xdaffd814, 0x6eba, 0x4d8c,
+ 		  0x8a, 0x91, 0xbc, 0x9b, 0xbf, 0x4a, 0xa3, 0x01),
++	/* Hotplug in D3 GUID: 6211e2c0-58a3-4af3-90e1-927a4e0c55a4 */
++	GUID_INIT(0x6211e2c0, 0x58a3, 0x4af3,
++		  0x90, 0xe1, 0x92, 0x7a, 0x4e, 0x0c, 0x55, 0xa4),
+ };
  
- 		clockgen: clocking@1300000 {
- 			compatible = "fsl,ls2080a-clockgen";
-@@ -357,6 +358,8 @@
- 			reg = <0x00000008 0x0c000000 0 0x40>,	 /* MC portal base */
- 			      <0x00000000 0x08340000 0 0x40000>; /* MC control reg */
- 			msi-parent = <&its>;
-+			iommu-map = <0 &smmu 0 0>;	/* This is fixed-up by u-boot */
-+			dma-coherent;
- 			#address-cells = <3>;
- 			#size-cells = <1>;
+ static const guid_t ads_guid =
+diff --git a/drivers/pci/pci-acpi.c b/drivers/pci/pci-acpi.c
+index f8436d1c4d45..c8d0549580f4 100644
+--- a/drivers/pci/pci-acpi.c
++++ b/drivers/pci/pci-acpi.c
+@@ -519,6 +519,46 @@ static pci_power_t acpi_pci_choose_state(struct pci_dev *pdev)
+ 	return PCI_POWER_ERROR;
+ }
  
-@@ -460,6 +463,9 @@
- 			compatible = "arm,mmu-500";
- 			reg = <0 0x5000000 0 0x800000>;
- 			#global-interrupts = <12>;
-+			#iommu-cells = <1>;
-+			stream-match-mask = <0x7C00>;
-+			dma-coherent;
- 			interrupts = <0 13 4>, /* global secure fault */
- 				     <0 14 4>, /* combined secure interrupt */
- 				     <0 15 4>, /* global non-secure fault */
-@@ -502,7 +508,6 @@
- 				     <0 204 4>, <0 205 4>,
- 				     <0 206 4>, <0 207 4>,
- 				     <0 208 4>, <0 209 4>;
--			mmu-masters = <&fsl_mc 0x300 0>;
- 		};
++static struct acpi_device *acpi_pci_find_companion(struct device *dev);
++
++static bool acpi_pci_bridge_d3(struct pci_dev *dev)
++{
++	const struct fwnode_handle *fwnode;
++	struct acpi_device *adev;
++	struct pci_dev *root;
++	u8 val;
++
++	if (!dev->is_hotplug_bridge)
++		return false;
++
++	/*
++	 * Look for a special _DSD property for the root port and if it
++	 * is set we know the hierarchy behind it supports D3 just fine.
++	 */
++	root = pci_find_pcie_root_port(dev);
++	if (!root)
++		return false;
++
++	adev = ACPI_COMPANION(&root->dev);
++	if (root == dev) {
++		/*
++		 * It is possible that the ACPI companion is not yet bound
++		 * for the root port so look it up manually here.
++		 */
++		if (!adev && !pci_dev_is_added(root))
++			adev = acpi_pci_find_companion(&root->dev);
++	}
++
++	if (!adev)
++		return false;
++
++	fwnode = acpi_fwnode_handle(adev);
++	if (fwnode_property_read_u8(fwnode, "HotPlugSupportInD3", &val))
++		return false;
++
++	return val == 1;
++}
++
+ static bool acpi_pci_power_manageable(struct pci_dev *dev)
+ {
+ 	struct acpi_device *adev = ACPI_COMPANION(&dev->dev);
+@@ -635,6 +675,7 @@ static bool acpi_pci_need_resume(struct pci_dev *dev)
+ }
  
- 		dspi: dspi@2100000 {
+ static const struct pci_platform_pm_ops acpi_pci_platform_pm = {
++	.bridge_d3 = acpi_pci_bridge_d3,
+ 	.is_manageable = acpi_pci_power_manageable,
+ 	.set_state = acpi_pci_set_power_state,
+ 	.get_state = acpi_pci_get_power_state,
+diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
+index 1af6f1887986..b1b3052f15dc 100644
+--- a/drivers/pci/pci.c
++++ b/drivers/pci/pci.c
+@@ -791,6 +791,11 @@ static inline bool platform_pci_need_resume(struct pci_dev *dev)
+ 	return pci_platform_pm ? pci_platform_pm->need_resume(dev) : false;
+ }
+ 
++static inline bool platform_pci_bridge_d3(struct pci_dev *dev)
++{
++	return pci_platform_pm ? pci_platform_pm->bridge_d3(dev) : false;
++}
++
+ /**
+  * pci_raw_set_power_state - Use PCI PM registers to set the power state of
+  *                           given PCI device
+@@ -2514,6 +2519,10 @@ bool pci_bridge_d3_possible(struct pci_dev *bridge)
+ 		if (bridge->is_thunderbolt)
+ 			return true;
+ 
++		/* Platform might know better if the bridge supports D3 */
++		if (platform_pci_bridge_d3(bridge))
++			return true;
++
+ 		/*
+ 		 * Hotplug ports handled natively by the OS were not validated
+ 		 * by vendors for runtime D3 at least until 2018 because there
+diff --git a/drivers/pci/pci.h b/drivers/pci/pci.h
+index 6e0d1528d471..66fd5c1bf71b 100644
+--- a/drivers/pci/pci.h
++++ b/drivers/pci/pci.h
+@@ -39,6 +39,8 @@ int pci_bridge_secondary_bus_reset(struct pci_dev *dev);
+ /**
+  * struct pci_platform_pm_ops - Firmware PM callbacks
+  *
++ * @bridge_d3: Does the bridge allow entering into D3
++ *
+  * @is_manageable: returns 'true' if given device is power manageable by the
+  *		   platform firmware
+  *
+@@ -60,6 +62,7 @@ int pci_bridge_secondary_bus_reset(struct pci_dev *dev);
+  * these callbacks are mandatory.
+  */
+ struct pci_platform_pm_ops {
++	bool (*bridge_d3)(struct pci_dev *dev);
+ 	bool (*is_manageable)(struct pci_dev *dev);
+ 	int (*set_state)(struct pci_dev *dev, pci_power_t state);
+ 	pci_power_t (*get_state)(struct pci_dev *dev);
 -- 
-1.9.1
+2.18.0
