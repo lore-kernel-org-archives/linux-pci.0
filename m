@@ -1,94 +1,63 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.29.99]:35250 "EHLO mail.kernel.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1726080AbeIMIjW (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Thu, 13 Sep 2018 04:39:22 -0400
-Date: Wed, 12 Sep 2018 22:31:47 -0500
-From: Bjorn Helgaas <helgaas@kernel.org>
-To: Linus Torvalds <torvalds@linux-foundation.org>
-Cc: linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
-        Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
-        Felix Kuehling <Felix.Kuehling@amd.com>,
-        Dennis Dalessandro <dennis.dalessandro@intel.com>,
+Return-Path: <linux-acpi-owner@vger.kernel.org>
+From: Mika Westerberg <mika.westerberg@linux.intel.com>
+To: Bjorn Helgaas <bhelgaas@google.com>,
+        "Rafael J. Wysocki" <rjw@rjwysocki.net>
+Cc: Len Brown <lenb@kernel.org>, Lukas Wunner <lukas@wunner.de>,
         Keith Busch <keith.busch@intel.com>,
-        "Gustavo A. R. Silva" <gustavo@embeddedor.com>,
+        Ashok Raj <ashok.raj@intel.com>, Mario.Limonciello@dell.com,
+        Anthony Wong <anthony.wong@canonical.com>,
+        Linus Walleij <linus.walleij@linaro.org>,
+        Sakari Ailus <sakari.ailus@iki.fi>,
         Mika Westerberg <mika.westerberg@linux.intel.com>,
-        Joao Pinto <Joao.Pinto@synopsys.com>,
-        Gustavo Pimentel <gustavo.pimentel@synopsys.com>,
-        Tyrel Datwyler <tyreld@linux.vnet.ibm.com>
-Subject: [GIT PULL] PCI fixes for v4.19
-Message-ID: <20180913033147.GA73412@bhelgaas-glaptop.roam.corp.google.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Sender: linux-pci-owner@vger.kernel.org
+        linux-pci@vger.kernel.org, linux-acpi@vger.kernel.org
+Subject: [PATCH v2 05/10] PCI: portdrv: Resume upon exit from system suspend if left runtime suspended
+Date: Thu, 13 Sep 2018 17:33:17 +0300
+Message-Id: <20180913143322.77953-6-mika.westerberg@linux.intel.com>
+In-Reply-To: <20180913143322.77953-1-mika.westerberg@linux.intel.com>
+References: <20180913143322.77953-1-mika.westerberg@linux.intel.com>
+Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-PCI fixes:
+Currently we try to keep PCIe ports runtime suspended over system
+suspend if possible. This mostly happens when entering suspend-to-idle
+because there is no need to re-configure wake settings.
 
-  - Add Tyrel Datwyler as maintainer for PPC64 RPA hotplug (Tyrel Datwyler)
+This causes problems if the parent port goes into D3cold and it gets
+resumed upon exit from system suspend. This may happen for example if
+the port is part of PCIe switch and the same switch is connected to a
+PCIe endpoint that needs to be resumed. The way exit from D3cold works
+according PCIe 4.0 spec 5.3.1.4.2 is that power is restored and cold
+reset is signaled. After this the device is in D0unitialized state
+keeping PME context if it supports wake from D3cold.
 
-  - Add Gustavo Pimentel as DesignWare PCI maintainer (Joao Pinto)
+The problem occurs when a PCIe hotplug port is left suspended and the
+parent port goes into D3cold and back to D0, the port keeps its PME
+context but since everything else is reset back to defaults
+(D0unitialized) it is not set to detect hotplug events anymore.
 
-  - Fix a Switchtec Spectre v1 vulnerability (Gustavo A. R. Silva)
+For this reason change the PCIe portdrv power management logic so that
+it is fine to keep the port runtime suspended over system suspend but it
+needs to be resumed upon exit to make sure it gets properly re-initialized.
 
-  - Revert an unnecessary Intel 300 ACS quirk (Mika Westerberg)
+Signed-off-by: Mika Westerberg <mika.westerberg@linux.intel.com>
+---
+ drivers/pci/pcie/portdrv_pci.c | 4 ++--
+ 1 file changed, 2 insertions(+), 2 deletions(-)
 
-  - Fix pciehp hot-add/powerfault detection that left indicators in wrong
-    state (Keith Busch)
-
-  - Fix pci_reset_bus() logic error (Dennis Dalessandro)
-
-  - Revert IB/hfi1 PCI reset change that caused a deadlock (Dennis
-    Dalessandro)
-
-  - Allow enabling PASID on Root Complex Integrated Endpoints (Felix
-    Kuehling)
-
-
-The following changes since commit 5b394b2ddf0347bef56e50c69a58773c94343ff3:
-
-  Linux 4.19-rc1 (2018-08-26 14:11:59 -0700)
-
-are available in the Git repository at:
-
-  ssh://git@gitolite.kernel.org/pub/scm/linux/kernel/git/helgaas/pci.git tags/pci-v4.19-fixes-1
-
-for you to fetch changes up to 9d27e39d309c93025ae6aa97236af15bef2a5f1f:
-
-  PCI: Fix enabling of PASID on RC integrated endpoints (2018-09-11 21:46:49 -0500)
-
-----------------------------------------------------------------
-pci-v4.19-fixes-1
-
-----------------------------------------------------------------
-Dennis Dalessandro (2):
-      PCI: Fix faulty logic in pci_reset_bus()
-      IB/hfi1,PCI: Allow bus reset while probing
-
-Felix Kuehling (1):
-      PCI: Fix enabling of PASID on RC integrated endpoints
-
-Gustavo A. R. Silva (1):
-      switchtec: Fix Spectre v1 vulnerability
-
-Joao Pinto (1):
-      MAINTAINERS: Add Gustavo Pimentel as DesignWare PCI maintainer
-
-Keith Busch (1):
-      PCI: pciehp: Fix hot-add vs powerfault detection order
-
-Mika Westerberg (1):
-      Revert "PCI: Add ACS quirk for Intel 300 series"
-
-Tyrel Datwyler (1):
-      MAINTAINERS: Add entries for PPC64 RPA PCI hotplug drivers
-
- MAINTAINERS                       | 16 +++++++++++++++-
- drivers/infiniband/hw/hfi1/pcie.c | 11 ++++-------
- drivers/pci/hotplug/pciehp_hpc.c  | 18 +++++++++---------
- drivers/pci/pci.c                 |  3 ++-
- drivers/pci/probe.c               |  5 ++++-
- drivers/pci/quirks.c              |  6 ------
- drivers/pci/switch/switchtec.c    |  4 ++++
- include/linux/pci.h               |  3 +++
- 8 files changed, 41 insertions(+), 25 deletions(-)
+diff --git a/drivers/pci/pcie/portdrv_pci.c b/drivers/pci/pcie/portdrv_pci.c
+index eef22dc29140..629d5fe4c9b5 100644
+--- a/drivers/pci/pcie/portdrv_pci.c
++++ b/drivers/pci/pcie/portdrv_pci.c
+@@ -109,8 +109,8 @@ static int pcie_portdrv_probe(struct pci_dev *dev,
+ 
+ 	pci_save_state(dev);
+ 
+-	dev_pm_set_driver_flags(&dev->dev, DPM_FLAG_SMART_SUSPEND |
+-					   DPM_FLAG_LEAVE_SUSPENDED);
++	dev_pm_set_driver_flags(&dev->dev, DPM_FLAG_NEVER_SKIP |
++					   DPM_FLAG_SMART_SUSPEND);
+ 
+ 	if (pci_bridge_d3_possible(dev)) {
+ 		/*
+-- 
+2.18.0
