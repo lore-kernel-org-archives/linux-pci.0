@@ -1,80 +1,76 @@
-Return-Path: <SRS0=myDI=LT=intel.com=keith.busch@kernel.org>
-Return-Path: <SRS0=myDI=LT=intel.com=keith.busch@kernel.org>
-Date: Wed, 5 Sep 2018 15:12:41 -0600
-From: Keith Busch <keith.busch@intel.com>
-To: Bjorn Helgaas <helgaas@kernel.org>
-Cc: Linux PCI <linux-pci@vger.kernel.org>,
-	Bjorn Helgaas <bhelgaas@google.com>, Lukas Wunner <lukas@wunner.de>
-Subject: Re: [PATCH] pci/sriov: Hold rescan lock while enumerating
-Message-ID: <20180905211241.GA22152@localhost.localdomain>
-References: <20180809163356.18650-1-keith.busch@intel.com>
- <20180905205840.GR107892@bhelgaas-glaptop.roam.corp.google.com>
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Date: Thu, 13 Sep 2018 14:02:14 +0100
+From: Will Deacon <will.deacon@arm.com>
+To: Andrew Murray <andrew.murray@arm.com>
+Subject: Re: [PATCH] asm-generic: io: Fix ioport_map() for
+ !CONFIG_GENERIC_IOMAP && CONFIG_INDIRECT_PIO
+Message-ID: <20180913130214.GA13242@arm.com>
+References: <1536842907-51732-1-git-send-email-andrew.murray@arm.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20180905205840.GR107892@bhelgaas-glaptop.roam.corp.google.com>
+In-Reply-To: <1536842907-51732-1-git-send-email-andrew.murray@arm.com>
+List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
+List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
+List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
+List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
+List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
+Cc: Arnd Bergmann <arnd@arndb.de>, gabriele.paoloni@huawei.com,
+ suzuki.poulose@arm.com, jean-philippe.brucker@arm.com,
+ dann.frazier@canonical.com, linux-kernel@vger.kernel.org,
+ yuanzhichang@hisilicon.com, andy.shevchenko@gmail.com,
+ linux-pci@vger.kernel.org, bhelgaas@google.com,
+ linux-arm-kernel@lists.infradead.org
+Content-Type: text/plain; charset="us-ascii"
+Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
+Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wed, Sep 05, 2018 at 03:58:40PM -0500, Bjorn Helgaas wrote:
-> [+cc Lukas, -stable]
+On Thu, Sep 13, 2018 at 01:48:27PM +0100, Andrew Murray wrote:
+> The !CONFIG_GENERIC_IOMAP version of ioport_map uses MMIO_UPPER_LIMIT to
+> prevent users from making I/O accesses outside the expected I/O range -
+> however it erroneously treats MMIO_UPPER_LIMIT as a mask which is
+> contradictory to its other users.
 > 
-> On Thu, Aug 09, 2018 at 10:33:56AM -0600, Keith Busch wrote:
-> > PCI enumeration/de-enumeration needs to run single threaded to prevent
-> > race conditions with other threads changing the topology. Altering the
-> > number of virtual functions was not taking the rescan/remove lock hile
-> > adding or removing those virtual functions, so this patch adds that.
-> > 
-> > Reported-by: Krzysztof Wierzbicki <krzysztof.wierzbicki@intel.com>
-> > Cc: stable@vger.kernel.org
-> > Signed-off-by: Keith Busch <keith.busch@intel.com>
-> > ---
-> >  drivers/pci/pci-sysfs.c | 2 ++
-> >  1 file changed, 2 insertions(+)
-> > 
-> > diff --git a/drivers/pci/pci-sysfs.c b/drivers/pci/pci-sysfs.c
-> > index 9ecfe13157c0..611abe220b6f 100644
-> > --- a/drivers/pci/pci-sysfs.c
-> > +++ b/drivers/pci/pci-sysfs.c
-> > @@ -591,6 +591,7 @@ static ssize_t sriov_numvfs_store(struct device *dev,
-> >  	if (num_vfs > pci_sriov_get_totalvfs(pdev))
-> >  		return -ERANGE;
-> >  
-> > +	pci_lock_rescan_remove();
+> The introduction of CONFIG_INDIRECT_PIO, which subtracts an arbitrary
+> amount from IO_SPACE_LIMIT to form MMIO_UPPER_LIMIT, results in ioport_map
+> mangling the given port rather than capping it.
 > 
-> I assume the usual path is something like this, where we end up in
-> pci_enable_sriov():
+> We address this by aligning more closely with the CONFIG_GENERIC_IOMAP
+> implementation of ioport_map by using the comparison operator and
+> returning NULL where the port exceeds MMIO_UPPER_LIMIT. Though note that
+> we preserve the existing behavior of masking with IO_SPACE_LIMIT such that
+> we don't break existing buggy drivers that somehow rely on this masking.
 > 
->   sriov_numvfs_store
-> +   pci_lock_rescan_remove
->     pdev->driver->sriov_configure
->       ...
->         pci_enable_sriov
->           sriov_enable
->             pci_iov_add_virtfn
->               pci_alloc_dev
->               pci_device_add
+> Fixes: 5745392e0c2b ("PCI: Apply the new generic I/O management on PCI IO hosts")
+> Reported-by: Will Deacon <will.deacon@arm.com>
+> Signed-off-by: Andrew Murray <andrew.murray@arm.com>
+> ---
+>  include/asm-generic/io.h | 3 ++-
+>  1 file changed, 2 insertions(+), 1 deletion(-)
 > 
-> But what about the other paths leading to pci_iov_add_virtfn()?  Don't
-> we need similar locking for all of them?  
+> diff --git a/include/asm-generic/io.h b/include/asm-generic/io.h
+> index 66d1d45..d356f80 100644
+> --- a/include/asm-generic/io.h
+> +++ b/include/asm-generic/io.h
+> @@ -1026,7 +1026,8 @@ static inline void __iomem *ioremap_wt(phys_addr_t offset, size_t size)
+>  #define ioport_map ioport_map
+>  static inline void __iomem *ioport_map(unsigned long port, unsigned int nr)
+>  {
+> -	return PCI_IOBASE + (port & MMIO_UPPER_LIMIT);
+> +	port &= IO_SPACE_LIMIT;
+> +	return (port > MMIO_UPPER_LIMIT) ? NULL : PCI_IOBASE + port;
+>  }
+>  #endif
 
-Good point. It looks like the only other path to pci_iov_add_virtfn is
-through PPC eeh_reset_device, which coincidently enough already holds
-pci_lock_rescan_remove.
+Thanks, that fixes legacy virtio PCI devices under kvmtool, so:
 
-It's not just pci_iov_add_virtfn, though. We also need to hold it during
-pci_iov_remove_virtfn. PPC eeh_rmv_device is not holding the lock in
-that path. I'll never be able to test with that h/w, but I'll look at it.
+Tested-by: Will Deacon <will.deacon@arm.com>
 
-> >  	device_lock(&pdev->dev);
-> >  
-> >  	if (num_vfs == pdev->sriov->num_VFs)
-> > @@ -627,6 +628,7 @@ static ssize_t sriov_numvfs_store(struct device *dev,
-> >  
-> >  exit:
-> >  	device_unlock(&pdev->dev);
-> > +	pci_unlock_rescan_remove();
-> >  
-> >  	if (ret < 0)
-> >  		return ret;
-> > -- 
-> > 2.14.4
-> > 
+Will
+
+_______________________________________________
+linux-arm-kernel mailing list
+linux-arm-kernel@lists.infradead.org
+http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
