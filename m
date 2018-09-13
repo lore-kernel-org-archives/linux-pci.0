@@ -1,111 +1,156 @@
-Return-Path: <SRS0=3eBm=LU=xilinx.com=bharatku@kernel.org>
-Return-Path: <SRS0=3eBm=LU=xilinx.com=bharatku@kernel.org>
-From: Bharat Kumar Gogada <bharatku@xilinx.com>
-To: Bjorn Helgaas <helgaas@kernel.org>
-CC: "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	"bhelgaas@google.com" <bhelgaas@google.com>, Ravikiran Gummaluri
-	<rgummal@xilinx.com>
-Subject: RE: [PATCH 3/4] PCI/portdrv: Check platform supported service IRQ's
-Date: Thu, 6 Sep 2018 15:34:44 +0000
-Message-ID: 
- <BN6PR02MB27724845B839B1DC26B5530BA5010@BN6PR02MB2772.namprd02.prod.outlook.com>
-References: <1533915580-31805-1-git-send-email-bharat.kumar.gogada@xilinx.com>
- <1533915580-31805-4-git-send-email-bharat.kumar.gogada@xilinx.com>
- <20180904141227.GD107892@bhelgaas-glaptop.roam.corp.google.com>
-In-Reply-To: <20180904141227.GD107892@bhelgaas-glaptop.roam.corp.google.com>
-Content-Type: text/plain; charset="us-ascii"
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from lekensteyn.nl ([178.21.112.251]:34223 "EHLO lekensteyn.nl"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1726835AbeIMMv6 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Thu, 13 Sep 2018 08:51:58 -0400
+Date: Thu, 13 Sep 2018 09:43:28 +0200
+From: Peter Wu <peter@lekensteyn.nl>
+To: "Rafael J. Wysocki" <rafael@kernel.org>
+Cc: Daniel Drake <drake@endlessm.com>,
+        Bjorn Helgaas <bhelgaas@google.com>,
+        Linux PCI <linux-pci@vger.kernel.org>,
+        Linux Upstreaming Team <linux@endlessm.com>,
+        nouveau@lists.freedesktop.org, Linux PM <linux-pm@vger.kernel.org>,
+        kherbst@redhat.com, Rafael Wysocki <rafael.j.wysocki@intel.com>,
+        Keith Busch <keith.busch@intel.com>,
+        jonathan.derrick@intel.com, Thomas Martitz <kugel@rockbox.org>,
+        David Miller <davem@davemloft.net>,
+        Heiner Kallweit <hkallweit1@gmail.com>,
+        netdev <netdev@vger.kernel.org>, nic_swsd@realtek.com,
+        rchang@marvell.com
+Subject: Re: [PATCH v3] PCI: Reprogram bridge prefetch registers on resume
+Message-ID: <20180913074328.GA28376@al>
+References: <20180913033745.11178-1-drake@endlessm.com>
+ <CAJZ5v0iBt+mYy4K9YNavqyQkivNqwBp3zyK5QmqGR+kWGsRO4g@mail.gmail.com>
 MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <CAJZ5v0iBt+mYy4K9YNavqyQkivNqwBp3zyK5QmqGR+kWGsRO4g@mail.gmail.com>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-> Subject: Re: [PATCH 3/4] PCI/portdrv: Check platform supported service IR=
-Q's
->=20
-> On Fri, Aug 10, 2018 at 09:09:39PM +0530, Bharat Kumar Gogada wrote:
-> > Platforms may have dedicated IRQ lines for PCIe services like AER/PME
-> > etc., check for such IRQ lines.
-> > Check mask and fill legacy irq line for services other than
->=20
-> Capitalize "IRQ" consistently in English text like this.
->=20
-> Insert blank lines between paragraphs.
->=20
-> Add a reference to the relevant spec sections.  PCIe r4.0, sec 6.2.4.1.2,=
- 6.2.6,
-> 7.5.3.12 seem pertinent.
->=20
-Agreed, will do in next patch.
-> > platform supported service IRQ number.
+On Thu, Sep 13, 2018 at 08:52:29AM +0200, Rafael J. Wysocki wrote:
+> On Thu, Sep 13, 2018 at 5:37 AM Daniel Drake <drake@endlessm.com> wrote:
 > >
-> > Signed-off-by: Bharat Kumar Gogada <bharat.kumar.gogada@xilinx.com>
+> > On 38+ Intel-based Asus products, the nvidia GPU becomes unusable
+> > after S3 suspend/resume. The affected products include multiple
+> > generations of nvidia GPUs and Intel SoCs. After resume, nouveau logs
+> > many errors such as:
+> >
+> >     fifo: fault 00 [READ] at 0000005555555000 engine 00 [GR] client 04
+> >           [HUB/FE] reason 4a [] on channel -1 [007fa91000 unknown]
+> >     DRM: failed to idle channel 0 [DRM]
+> >
+> > Similarly, the nvidia proprietary driver also fails after resume
+> > (black screen, 100% CPU usage in Xorg process). We shipped a sample
+> > to Nvidia for diagnosis, and their response indicated that it's a
+> > problem with the parent PCI bridge (on the Intel SoC), not the GPU.
+> >
+> > Runtime suspend/resume works fine, only S3 suspend is affected.
+> >
+> > We found a workaround: on resume, rewrite the Intel PCI bridge
+> > 'Prefetchable Base Upper 32 Bits' register (PCI_PREF_BASE_UPPER32). In
+> > the cases that I checked, this register has value 0 and we just have to
+> > rewrite that value.
+> >
+> > Linux already saves and restores PCI config space during suspend/resume,
+> > but this register was being skipped because upon resume, it already
+> > has value 0 (the correct, pre-suspend value).
+> >
+> > Intel appear to have previously acknowledged this behaviour and the
+> > requirement to rewrite this register.
+> > https://bugzilla.kernel.org/show_bug.cgi?id=116851#c23
+> >
+> > Based on that, rewrite the prefetch register values even when that
+> > appears unnecessary.
+> >
+> > We have confirmed this solution on all the affected models we have
+> > in-hands (X542UQ, UX533FD, X530UN, V272UN).
+> >
+> > Additionally, this solves an issue where r8169 MSI-X interrupts were
+> > broken after S3 suspend/resume on Asus X441UAR. This issue was recently
+> > worked around in commit 7bb05b85bc2d ("r8169: don't use MSI-X on
+> > RTL8106e"). It also fixes the same issue on RTL6186evl/8111evl on an
+> > Aimfor-tech laptop that we had not yet patched. I suspect it will also
+> > fix the issue that was worked around in commit 7c53a722459c ("r8169:
+> > don't use MSI-X on RTL8168g").
+> >
+> > Thomas Martitz reports that this change also solves an issue where
+> > the AMD Radeon Polaris 10 GPU on the HP Zbook 14u G5 is unresponsive
+> > after S3 suspend/resume.
+> >
+> > Link: https://bugzilla.kernel.org/show_bug.cgi?id=201069
+> > Signed-off-by: Daniel Drake <drake@endlessm.com>
+> 
+> Still
+> 
+> Reviewed-by: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
+
+Reviewed-By: Peter Wu <peter@lekensteyn.nl>
+
 > > ---
-> >  drivers/pci/pcie/portdrv_core.c |   19 +++++++++++++++++--
-> >  1 files changed, 17 insertions(+), 2 deletions(-)
+> >  drivers/pci/pci.c | 25 +++++++++++++++++--------
+> >  1 file changed, 17 insertions(+), 8 deletions(-)
 > >
-> > diff --git a/drivers/pci/pcie/portdrv_core.c
-> > b/drivers/pci/pcie/portdrv_core.c index e0261ad..a7d024c 100644
-> > --- a/drivers/pci/pcie/portdrv_core.c
-> > +++ b/drivers/pci/pcie/portdrv_core.c
-> > @@ -166,6 +166,19 @@ static int pcie_init_service_irqs(struct pci_dev
-> *dev, int *irqs, int mask)
-> >  		irqs[i] =3D -1;
+> > diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
+> > index 29ff9619b5fa..5d58220b6997 100644
+> > --- a/drivers/pci/pci.c
+> > +++ b/drivers/pci/pci.c
+> > @@ -1289,12 +1289,12 @@ int pci_save_state(struct pci_dev *dev)
+> >  EXPORT_SYMBOL(pci_save_state);
 > >
-> >  	/*
-> > +	 * Some platforms have dedicated interrupt line from root complex
-> to
-> > +	 * interrupt controller for PCIe services like AER/PME etc., check
-> > +	 * if platform registered with any such IRQ.
-> > +	 */
-> > +	if (pci_pcie_type(dev) =3D=3D PCI_EXP_TYPE_ROOT_PORT) {
-> > +		int plat_mask;
-> > +
-> > +		plat_mask =3D pci_check_platform_service_irqs(dev, irqs,
-> mask);
-> > +		if (plat_mask > 0)
->=20
-> Masks should be unsigned and tested for zero or "mask & bit".  The rest o=
-f
-> this file uses "int", which is sloppy because it does the wrong thing if =
-we
-> happen to use the high-order bit in the mask.
->=20
-> > +			mask =3D mask & plat_mask;
-> > +	}
->=20
-> I think these platform IRQs are neither MSI-X/MSI nor PCI INTx wires.
-> But as written, I think this patch executes pcie_port_enable_irq_vec(), w=
-hich
-> only does MSI-X/MSI stuff.  So this must rely on that failing?
->=20
-> And then we fall through to run pci_alloc_irq_vectors(), which is for PCI=
- INTx
-> interrupts, which doesn't seem appropriate either.
->=20
-> It seems like this platform IRQ case should be completely separated from =
-the
-> other MSI/INTx cases, i.e., set irqs[PCIE_PORT_SERVICE_AER_SHIFT] directl=
-y
-> (I think you already do this inside pci_check_platform_service_irqs()) an=
-d
-> immediately return.
-> Then I think you wouldn't need the other hunk below.
-Agreed if we check platform service irqs here we need to deal with differen=
-t combination
-of service IRQ's like AER MSI, pme platform .. and change code accordingly =
-to fill irqs[i].
-yes it is better to call platform IRQ separately to avoid code changes in d=
-ifferent scenarios and=20
-chunk below.
-
-Can we do the following code flow:=20
-int pcie_port_device_register(struct pci_dev *dev)
-{
- ...=20
-status =3D pcie_init_service_irqs(dev, irqs, capabilities);
-        if (status) {
-...
-}
-pci_check_platform_service_irqs(dev, irqs, capabilities);
-
-Thanks,
-Bharat
+> >  static void pci_restore_config_dword(struct pci_dev *pdev, int offset,
+> > -                                    u32 saved_val, int retry)
+> > +                                    u32 saved_val, int retry, bool force)
+> >  {
+> >         u32 val;
+> >
+> >         pci_read_config_dword(pdev, offset, &val);
+> > -       if (val == saved_val)
+> > +       if (!force && val == saved_val)
+> >                 return;
+> >
+> >         for (;;) {
+> > @@ -1313,25 +1313,34 @@ static void pci_restore_config_dword(struct pci_dev *pdev, int offset,
+> >  }
+> >
+> >  static void pci_restore_config_space_range(struct pci_dev *pdev,
+> > -                                          int start, int end, int retry)
+> > +                                          int start, int end, int retry,
+> > +                                          bool force)
+> >  {
+> >         int index;
+> >
+> >         for (index = end; index >= start; index--)
+> >                 pci_restore_config_dword(pdev, 4 * index,
+> >                                          pdev->saved_config_space[index],
+> > -                                        retry);
+> > +                                        retry, force);
+> >  }
+> >
+> >  static void pci_restore_config_space(struct pci_dev *pdev)
+> >  {
+> >         if (pdev->hdr_type == PCI_HEADER_TYPE_NORMAL) {
+> > -               pci_restore_config_space_range(pdev, 10, 15, 0);
+> > +               pci_restore_config_space_range(pdev, 10, 15, 0, false);
+> >                 /* Restore BARs before the command register. */
+> > -               pci_restore_config_space_range(pdev, 4, 9, 10);
+> > -               pci_restore_config_space_range(pdev, 0, 3, 0);
+> > +               pci_restore_config_space_range(pdev, 4, 9, 10, false);
+> > +               pci_restore_config_space_range(pdev, 0, 3, 0, false);
+> > +       } else if (pdev->hdr_type == PCI_HEADER_TYPE_BRIDGE) {
+> > +               pci_restore_config_space_range(pdev, 12, 15, 0, false);
+> > +               /* Force rewriting of prefetch registers to avoid
+> > +                * S3 resume issues on Intel PCI bridges that occur when
+> > +                * these registers are not explicitly written.
+> > +                */
+> > +               pci_restore_config_space_range(pdev, 9, 11, 0, true);
+> > +               pci_restore_config_space_range(pdev, 0, 8, 0, false);
+> >         } else {
+> > -               pci_restore_config_space_range(pdev, 0, 15, 0);
+> > +               pci_restore_config_space_range(pdev, 0, 15, 0, false);
+> >         }
+> >  }
+> >
+> > --
+> > 2.17.1
+> >
