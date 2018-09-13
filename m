@@ -1,103 +1,75 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.29.99]:39784 "EHLO mail.kernel.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1728340AbeIQB3H (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Sun, 16 Sep 2018 21:29:07 -0400
-From: Sinan Kaya <okaya@kernel.org>
-To: linux-pci@vger.kernel.org
-Cc: alex.williamson@redhat.com, Sinan Kaya <okaya@kernel.org>,
-        Bjorn Helgaas <bhelgaas@google.com>,
-        Alexey Kardashevskiy <aik@ozlabs.ru>,
-        Peter Xu <peterx@redhat.com>,
-        "Gustavo A. R. Silva" <gustavo@embeddedor.com>
-Subject: [PATCH v3 6/6] PCI: Expose reset type to users of pci_reset_bus()
-Date: Sun, 16 Sep 2018 20:04:39 +0000
-Message-Id: <20180916200439.21960-7-okaya@kernel.org>
-In-Reply-To: <20180916200439.21960-1-okaya@kernel.org>
-References: <20180916200439.21960-1-okaya@kernel.org>
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-nvme-bounces+bjorn=helgaas.com@lists.infradead.org>
+Return-Path: <linux-nvme-bounces+bjorn=helgaas.com@lists.infradead.org>
+From: Logan Gunthorpe <logang@deltatee.com>
+To: linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
+ linux-nvme@lists.infradead.org, linux-rdma@vger.kernel.org,
+ linux-nvdimm@lists.01.org, linux-block@vger.kernel.org
+Date: Wed, 12 Sep 2018 18:11:50 -0600
+Message-Id: <20180913001156.4115-8-logang@deltatee.com>
+In-Reply-To: <20180913001156.4115-1-logang@deltatee.com>
+References: <20180913001156.4115-1-logang@deltatee.com>
+MIME-Version: 1.0
+Subject: [PATCH v6 07/13] block: Add PCI P2P flag for request queue and check
+ support for requests
+List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-nvme>,
+ <mailto:linux-nvme-request@lists.infradead.org?subject=unsubscribe>
+List-Archive: <http://lists.infradead.org/pipermail/linux-nvme/>
+List-Post: <mailto:linux-nvme@lists.infradead.org>
+List-Help: <mailto:linux-nvme-request@lists.infradead.org?subject=help>
+List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-nvme>,
+ <mailto:linux-nvme-request@lists.infradead.org?subject=subscribe>
+Cc: Jens Axboe <axboe@kernel.dk>, Sagi Grimberg <sagi@grimberg.me>,
+ =?UTF-8?q?Christian=20K=C3=B6nig?= <christian.koenig@amd.com>,
+ Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+ Alex Williamson <alex.williamson@redhat.com>,
+ Stephen Bates <sbates@raithlin.com>, Keith Busch <keith.busch@intel.com>,
+ =?UTF-8?q?J=C3=A9r=C3=B4me=20Glisse?= <jglisse@redhat.com>,
+ Jason Gunthorpe <jgg@mellanox.com>, Bjorn Helgaas <bhelgaas@google.com>,
+ Max Gurtovoy <maxg@mellanox.com>, Dan Williams <dan.j.williams@intel.com>,
+ Logan Gunthorpe <logang@deltatee.com>, Christoph Hellwig <hch@lst.de>
+Content-Type: text/plain; charset="us-ascii"
+Sender: "Linux-nvme" <linux-nvme-bounces@lists.infradead.org>
+Errors-To: linux-nvme-bounces+bjorn=helgaas.com@lists.infradead.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Looking to have more control between the users of the API vs. what the API
-can do internally. The new reset_type tells the PCI core about the bounds
-of the request.
+QUEUE_FLAG_PCI_P2P is introduced meaning a driver's request queue
+supports targeting P2P memory.
 
-Signed-off-by: Sinan Kaya <okaya@kernel.org>
+When a request is submitted we check if PCI P2PDMA memory is assigned
+to the first page in the bio. If it is, we ensure the queue it's
+submitted to supports it, and enforce REQ_NOMERGE.
+
+Signed-off-by: Logan Gunthorpe <logang@deltatee.com>
 ---
- drivers/pci/pci.c           | 18 +++++++++++++++---
- drivers/vfio/pci/vfio_pci.c |  6 ++++--
- include/linux/pci.h         |  2 +-
- 3 files changed, 20 insertions(+), 6 deletions(-)
+ include/linux/blkdev.h | 3 +++
+ 1 file changed, 3 insertions(+)
 
-diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
-index 32b367937cc1..7192cd460db4 100644
---- a/drivers/pci/pci.c
-+++ b/drivers/pci/pci.c
-@@ -5232,13 +5232,25 @@ static int __pci_reset_bus(struct pci_bus *bus)
- /**
-  * pci_reset_bus - Try to reset a PCI bus
-  * @pdev: top level PCI device to reset via slot/bus
-+ * @reset_type: resets to try
-  *
-  * Same as above except return -EAGAIN if the bus cannot be locked
-  */
--int pci_reset_bus(struct pci_dev *pdev)
-+int pci_reset_bus(struct pci_dev *pdev, u32 reset_type)
- {
--	return (!pci_probe_reset_slot(pdev->slot)) ?
--	    __pci_reset_slot(pdev->slot) : __pci_reset_bus(pdev->bus);
-+	if (reset_type & PCI_RESET_LINK) {
-+		return (!pci_probe_reset_slot(pdev->slot)) ?
-+				__pci_reset_slot(pdev->slot) :
-+				__pci_reset_bus(pdev->bus);
-+	}
-+
-+	if (reset_type & PCI_RESET_BUS)
-+		return __pci_reset_bus(pdev->bus);
-+
-+	if (reset_type & PCI_RESET_SLOT)
-+		return __pci_reset_slot(pdev->slot);
-+
-+	return -EINVAL;
- }
- EXPORT_SYMBOL_GPL(pci_reset_bus);
+diff --git a/include/linux/blkdev.h b/include/linux/blkdev.h
+index d6869e0e2b64..7bf80ca802e1 100644
+--- a/include/linux/blkdev.h
++++ b/include/linux/blkdev.h
+@@ -699,6 +699,7 @@ struct request_queue {
+ #define QUEUE_FLAG_SCSI_PASSTHROUGH 27	/* queue supports SCSI commands */
+ #define QUEUE_FLAG_QUIESCED    28	/* queue has been quiesced */
+ #define QUEUE_FLAG_PREEMPT_ONLY	29	/* only process REQ_PREEMPT requests */
++#define QUEUE_FLAG_PCI_P2PDMA  30	/* device supports pci p2p requests */
  
-diff --git a/drivers/vfio/pci/vfio_pci.c b/drivers/vfio/pci/vfio_pci.c
-index fe7ada997c51..0e80c72b1eaa 100644
---- a/drivers/vfio/pci/vfio_pci.c
-+++ b/drivers/vfio/pci/vfio_pci.c
-@@ -1015,7 +1015,8 @@ static long vfio_pci_ioctl(void *device_data,
- 						    &info, slot);
- 		if (!ret)
- 			/* User has access, do the reset */
--			ret = pci_reset_bus(vdev->pdev);
-+			ret = pci_reset_bus(vdev->pdev,
-+				slot ? PCI_RESET_SLOT :	PCI_RESET_BUS);
+ #define QUEUE_FLAG_DEFAULT	((1 << QUEUE_FLAG_IO_STAT) |		\
+ 				 (1 << QUEUE_FLAG_SAME_COMP)	|	\
+@@ -731,6 +732,8 @@ bool blk_queue_flag_test_and_clear(unsigned int flag, struct request_queue *q);
+ #define blk_queue_dax(q)	test_bit(QUEUE_FLAG_DAX, &(q)->queue_flags)
+ #define blk_queue_scsi_passthrough(q)	\
+ 	test_bit(QUEUE_FLAG_SCSI_PASSTHROUGH, &(q)->queue_flags)
++#define blk_queue_pci_p2pdma(q)	\
++	test_bit(QUEUE_FLAG_PCI_P2PDMA, &(q)->queue_flags)
  
- hot_reset_release:
- 		for (i--; i >= 0; i--)
-@@ -1390,7 +1391,8 @@ static void vfio_pci_try_bus_reset(struct vfio_pci_device *vdev)
- 	}
- 
- 	if (needs_reset)
--		ret = pci_reset_bus(vdev->pdev);
-+		ret = pci_reset_bus(vdev->pdev,
-+				slot ? PCI_RESET_SLOT :	PCI_RESET_BUS);
- 
- put_devs:
- 	for (i = 0; i < devs.cur_index; i++) {
-diff --git a/include/linux/pci.h b/include/linux/pci.h
-index 4fdddcb85066..85f48e156753 100644
---- a/include/linux/pci.h
-+++ b/include/linux/pci.h
-@@ -1128,7 +1128,7 @@ int pci_reset_function_locked(struct pci_dev *dev, u32 reset_type);
- int pci_try_reset_function(struct pci_dev *dev, u32 reset_type);
- int pci_probe_reset_slot(struct pci_slot *slot);
- int pci_probe_reset_bus(struct pci_bus *bus);
--int pci_reset_bus(struct pci_dev *dev);
-+int pci_reset_bus(struct pci_dev *dev, u32 reset_type);
- void pci_reset_secondary_bus(struct pci_dev *dev);
- void pcibios_reset_secondary_bus(struct pci_dev *dev);
- void pci_update_resource(struct pci_dev *dev, int resno);
+ #define blk_noretry_request(rq) \
+ 	((rq)->cmd_flags & (REQ_FAILFAST_DEV|REQ_FAILFAST_TRANSPORT| \
 -- 
-2.18.0
+2.19.0
+
+
+_______________________________________________
+Linux-nvme mailing list
+Linux-nvme@lists.infradead.org
+http://lists.infradead.org/mailman/listinfo/linux-nvme
