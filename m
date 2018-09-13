@@ -1,96 +1,54 @@
-Return-Path: <SRS0=dYm5=LR=linux.ibm.com=sebott@kernel.org>
-Return-Path: <SRS0=dYm5=LR=linux.ibm.com=sebott@kernel.org>
-Date: Mon, 3 Sep 2018 19:52:51 +0200 (CEST)
-From: Sebastian Ott <sebott@linux.ibm.com>
-To: Lukas Wunner <lukas@wunner.de>
-cc: Bjorn Helgaas <helgaas@kernel.org>, linux-pci@vger.kernel.org,
-        Sinan Kaya <okaya@kernel.org>,
-        Mika Westerberg <mika.westerberg@linux.intel.com>,
-        "Rafael J. Wysocki" <rjw@rjwysocki.net>, Len Brown <lenb@kernel.org>,
-        Scott Murray <scott@spiteful.org>,
-        Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-        Paul Mackerras <paulus@samba.org>,
-        Michael Ellerman <mpe@ellerman.id.au>,
-        Gavin Shan <gwshan@linux.vnet.ibm.com>,
-        Gerald Schaefer <gerald.schaefer@de.ibm.com>,
-        Corentin Chary <corentin.chary@gmail.com>,
-        Darren Hart <dvhart@infradead.org>,
-        Andy Shevchenko <andy@infradead.org>,
-        Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-        linux-acpi@vger.kernel.org, linux-s390@vger.kernel.org,
-        platform-driver-x86@vger.kernel.org,
-        acpi4asus-user@lists.sourceforge.net, linuxppc-dev@lists.ozlabs.org
-Subject: Re: [PATCH 7/9] PCI: hotplug: Drop hotplug_slot_info
-In-Reply-To: <a364bcc959e01f2ebab27cefc5b87ff01633275c.1534686485.git.lukas@wunner.de>
-References: <cover.1534686484.git.lukas@wunner.de>  <a364bcc959e01f2ebab27cefc5b87ff01633275c.1534686485.git.lukas@wunner.de>
+Return-Path: <linux-nvme-bounces+bjorn=helgaas.com@lists.infradead.org>
+Return-Path: <linux-nvme-bounces+bjorn=helgaas.com@lists.infradead.org>
+Subject: Re: [PATCH v6 07/13] block: Add PCI P2P flag for request queue and
+ check support for requests
+To: Logan Gunthorpe <logang@deltatee.com>, linux-kernel@vger.kernel.org,
+ linux-pci@vger.kernel.org, linux-nvme@lists.infradead.org,
+ linux-rdma@vger.kernel.org, linux-nvdimm@lists.01.org,
+ linux-block@vger.kernel.org
+References: <20180913001156.4115-1-logang@deltatee.com>
+ <20180913001156.4115-8-logang@deltatee.com>
+From: Jens Axboe <axboe@kernel.dk>
+Message-ID: <0118d3d8-a2f5-047f-6627-04ac3d0371ad@kernel.dk>
+Date: Wed, 12 Sep 2018 18:28:50 -0600
 MIME-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Message-Id: <alpine.LFD.2.21.1809031950100.1716@schleppi>
+In-Reply-To: <20180913001156.4115-8-logang@deltatee.com>
+List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-nvme>,
+ <mailto:linux-nvme-request@lists.infradead.org?subject=unsubscribe>
+List-Archive: <http://lists.infradead.org/pipermail/linux-nvme/>
+List-Post: <mailto:linux-nvme@lists.infradead.org>
+List-Help: <mailto:linux-nvme-request@lists.infradead.org?subject=help>
+List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-nvme>,
+ <mailto:linux-nvme-request@lists.infradead.org?subject=subscribe>
+Cc: Sagi Grimberg <sagi@grimberg.me>,
+ =?UTF-8?Q?Christian_K=c3=b6nig?= <christian.koenig@amd.com>,
+ Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+ Alex Williamson <alex.williamson@redhat.com>,
+ Stephen Bates <sbates@raithlin.com>, Keith Busch <keith.busch@intel.com>,
+ =?UTF-8?B?SsOpcsO0bWUgR2xpc3Nl?= <jglisse@redhat.com>,
+ Jason Gunthorpe <jgg@mellanox.com>, Bjorn Helgaas <bhelgaas@google.com>,
+ Max Gurtovoy <maxg@mellanox.com>, Dan Williams <dan.j.williams@intel.com>,
+ Christoph Hellwig <hch@lst.de>
+Content-Type: text/plain; charset="us-ascii"
+Sender: "Linux-nvme" <linux-nvme-bounces@lists.infradead.org>
+Errors-To: linux-nvme-bounces+bjorn=helgaas.com@lists.infradead.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Sun, 19 Aug 2018, Lukas Wunner wrote:
-> Ever since the PCI hotplug core was introduced in 2002, drivers had to
-> allocate and register a struct hotplug_slot_info for every slot:
-> https://git.kernel.org/tglx/history/c/a8a2069f432c
+On 9/12/18 6:11 PM, Logan Gunthorpe wrote:
+> QUEUE_FLAG_PCI_P2P is introduced meaning a driver's request queue
+> supports targeting P2P memory.
 > 
-> Apparently the idea was that drivers furnish the hotplug core with an
-> up-to-date card presence status, power status, latch status and
-> attention indicator status as well as notify the hotplug core of changes
-> thereof.  However only 4 out of 12 hotplug drivers bother to notify the
-> hotplug core with pci_hp_change_slot_info() and the hotplug core never
-> made any use of the information:  There is just a single macro in
-> pci_hotplug_core.c, GET_STATUS(), which uses the hotplug_slot_info if
-> the driver lacks the corresponding callback in hotplug_slot_ops.  The
-> macro is called when the user reads the attribute via sysfs.
-> 
-> Now, if the callback isn't defined, the attribute isn't exposed in sysfs
-> in the first place (see e.g. has_power_file()).  There are only two
-> situations when the hotplug_slot_info would actually be accessed:
-> 
-> * If the driver defines ->enable_slot or ->disable_slot but not
->   ->get_power_status.
-> 
-> * If the driver defines ->set_attention_status but not
->   ->get_attention_status.
-> 
-> There is no driver doing the former and just a single driver doing the
-> latter, namely pnv_php.c.  Amend it with a ->get_attention_status
-> callback.  With that, the hotplug_slot_info becomes completely unused by
-> the PCI hotplug core.  But a few drivers use it internally as a cache:
-> 
-> cpcihp uses it to cache the latch_status and adapter_status.
-> cpqhp uses it to cache the adapter_status.
-> pnv_php and rpaphp use it to cache the attention_status.
-> shpchp uses it to cache all four values.
-> 
-> Amend these drivers to cache the information in their private slot
-> struct.  shpchp's slot struct already contains members to cache the
-> power_status and adapter_status, so additional members are only needed
-> for the other two values.  In the case of cpqphp, the cached value is
-> only accessed in a single place, so instead of caching it, read the
-> current value from the hardware.
-> 
-> Caution:  acpiphp, cpci, cpqhp, shpchp, asus-wmi and eeepc-laptop
-> populate the hotplug_slot_info with initial values on probe.  That code
-> is herewith removed.  There is a theoretical chance that the code has
-> side effects without which the driver fails to function, e.g. if the
-> ACPI method to read the adapter status needs to be executed at least
-> once on probe.  That seems unlikely to me, still maintainers should
-> review the changes carefully for this possibility.
-> 
-> Signed-off-by: Lukas Wunner <lukas@wunner.de>
-> Cc: Rafael J. Wysocki <rjw@rjwysocki.net>
-> Cc: Len Brown <lenb@kernel.org>
-> Cc: Scott Murray <scott@spiteful.org>
-> Cc: Benjamin Herrenschmidt <benh@kernel.crashing.org>
-> Cc: Paul Mackerras <paulus@samba.org>
-> Cc: Michael Ellerman <mpe@ellerman.id.au>
-> Cc: Gavin Shan <gwshan@linux.vnet.ibm.com>
-> Cc: Sebastian Ott <sebott@linux.vnet.ibm.com>
-> Cc: Gerald Schaefer <gerald.schaefer@de.ibm.com>
-> Cc: Corentin Chary <corentin.chary@gmail.com>
-> Cc: Darren Hart <dvhart@infradead.org>
-> Cc: Andy Shevchenko <andy@infradead.org>
+> When a request is submitted we check if PCI P2PDMA memory is assigned
+> to the first page in the bio. If it is, we ensure the queue it's
+> submitted to supports it, and enforce REQ_NOMERGE.
 
-for s390_pci_hpc.c:
-Acked-by: Sebastian Ott <sebott@linux.ibm.com>
+This changelog is no longer accurate.
+
+-- 
+Jens Axboe
+
+
+_______________________________________________
+Linux-nvme mailing list
+Linux-nvme@lists.infradead.org
+http://lists.infradead.org/mailman/listinfo/linux-nvme
