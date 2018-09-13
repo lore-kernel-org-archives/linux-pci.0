@@ -1,36 +1,69 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mga06.intel.com ([134.134.136.31]:49532 "EHLO mga06.intel.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1727575AbeIEO22 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Wed, 5 Sep 2018 10:28:28 -0400
-Date: Wed, 5 Sep 2018 12:58:47 +0300
+Return-Path: <linux-acpi-owner@vger.kernel.org>
 From: Mika Westerberg <mika.westerberg@linux.intel.com>
-To: Alex Williamson <alex.williamson@redhat.com>
-Cc: Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org
-Subject: Re: [PATCH] PCI: Add ACS quirk for Intel 300 series chipset
-Message-ID: <20180905095847.GJ2283@lahna.fi.intel.com>
-References: <20180427104423.2203-1-mika.westerberg@linux.intel.com>
- <20180815152139.4e469fd4@t450s.home>
- <20180815164308.6ad5dd39@t450s.home>
- <20180816061015.GD2343@lahna.fi.intel.com>
- <20180816091303.69ce8e45@t450s.home>
- <20180816192805.GN2343@lahna.fi.intel.com>
- <20180816142504.4e3d121c@t450s.home>
- <20180817093716.GS2343@lahna.fi.intel.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20180817093716.GS2343@lahna.fi.intel.com>
-Sender: linux-pci-owner@vger.kernel.org
+To: Bjorn Helgaas <bhelgaas@google.com>,
+        "Rafael J. Wysocki" <rjw@rjwysocki.net>
+Cc: Len Brown <lenb@kernel.org>, Lukas Wunner <lukas@wunner.de>,
+        Keith Busch <keith.busch@intel.com>,
+        Ashok Raj <ashok.raj@intel.com>, Mario.Limonciello@dell.com,
+        Anthony Wong <anthony.wong@canonical.com>,
+        Linus Walleij <linus.walleij@linaro.org>,
+        Sakari Ailus <sakari.ailus@iki.fi>,
+        Mika Westerberg <mika.westerberg@linux.intel.com>,
+        linux-pci@vger.kernel.org, linux-acpi@vger.kernel.org
+Subject: [PATCH v2 07/10] PCI: pciehp: Implement runtime PM callbacks
+Date: Thu, 13 Sep 2018 17:33:19 +0300
+Message-Id: <20180913143322.77953-8-mika.westerberg@linux.intel.com>
+In-Reply-To: <20180913143322.77953-1-mika.westerberg@linux.intel.com>
+References: <20180913143322.77953-1-mika.westerberg@linux.intel.com>
+Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Fri, Aug 17, 2018 at 12:37:16PM +0300, Mika Westerberg wrote:
-> Before going there, I would like to get some definitive answer from our
-> PCIe people regarding this (currently waiting for their reply).
+Basically we need to do the same thing when runtime suspending than with
+system sleep so re-use those operations here. This makes sure hotplug
+interrupt does not trigger immediately when the link goes down.
 
-Sorry for the delay.
+Signed-off-by: Mika Westerberg <mika.westerberg@linux.intel.com>
+Reviewed-by: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
+---
+ drivers/pci/hotplug/pciehp_core.c | 19 +++++++++++++++++++
+ 1 file changed, 19 insertions(+)
 
-I finally got confirmation and indeed this issue is fixed in 300 series
-chipset. The datasheet has outdated information but it will be fixed as
-well.
-
-I will send a revert soon.
+diff --git a/drivers/pci/hotplug/pciehp_core.c b/drivers/pci/hotplug/pciehp_core.c
+index 940c64fdcaae..203610478d55 100644
+--- a/drivers/pci/hotplug/pciehp_core.c
++++ b/drivers/pci/hotplug/pciehp_core.c
+@@ -312,6 +312,23 @@ static int pciehp_resume(struct pcie_device *dev)
+ 
+ 	return 0;
+ }
++
++static int pciehp_runtime_resume(struct pcie_device *dev)
++{
++	struct controller *ctrl = get_service_data(dev);
++	struct slot *slot = ctrl->slot;
++
++	/* pci_restore_state() just wrote to the Slot Control register */
++	ctrl->cmd_started = jiffies;
++	ctrl->cmd_busy = true;
++
++	/* clear spurious events from rediscovery of inserted card */
++	if ((slot->state == ON_STATE || slot->state == BLINKINGOFF_STATE) &&
++	     pme_is_native(dev))
++		pcie_clear_hotplug_events(ctrl);
++
++	return pciehp_resume(dev);
++}
+ #endif /* PM */
+ 
+ static struct pcie_port_service_driver hpdriver_portdrv = {
+@@ -326,6 +343,8 @@ static struct pcie_port_service_driver hpdriver_portdrv = {
+ 	.suspend	= pciehp_suspend,
+ 	.resume_noirq	= pciehp_resume_noirq,
+ 	.resume		= pciehp_resume,
++	.runtime_suspend = pciehp_suspend,
++	.runtime_resume	= pciehp_runtime_resume,
+ #endif	/* PM */
+ };
+ 
+-- 
+2.18.0
