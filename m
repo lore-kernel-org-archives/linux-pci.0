@@ -1,64 +1,161 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.29.99]:39654 "EHLO mail.kernel.org"
+Received: from ale.deltatee.com ([207.54.116.67]:38686 "EHLO ale.deltatee.com"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1728511AbeIQB25 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Sun, 16 Sep 2018 21:28:57 -0400
-From: Sinan Kaya <okaya@kernel.org>
-To: linux-pci@vger.kernel.org
-Cc: alex.williamson@redhat.com, Sinan Kaya <okaya@kernel.org>,
-        Bjorn Helgaas <bhelgaas@google.com>
-Subject: [PATCH v3 3/6] PCI: Expose reset_type to users of pci_reset_function_locked()
-Date: Sun, 16 Sep 2018 20:04:36 +0000
-Message-Id: <20180916200439.21960-4-okaya@kernel.org>
-In-Reply-To: <20180916200439.21960-1-okaya@kernel.org>
-References: <20180916200439.21960-1-okaya@kernel.org>
+        id S1727995AbeIMFTE (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Thu, 13 Sep 2018 01:19:04 -0400
+From: Logan Gunthorpe <logang@deltatee.com>
+To: linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
+        linux-nvme@lists.infradead.org, linux-rdma@vger.kernel.org,
+        linux-nvdimm@lists.01.org, linux-block@vger.kernel.org
+Cc: Stephen Bates <sbates@raithlin.com>,
+        Christoph Hellwig <hch@lst.de>,
+        Keith Busch <keith.busch@intel.com>,
+        Sagi Grimberg <sagi@grimberg.me>,
+        Bjorn Helgaas <bhelgaas@google.com>,
+        Jason Gunthorpe <jgg@mellanox.com>,
+        Max Gurtovoy <maxg@mellanox.com>,
+        Dan Williams <dan.j.williams@intel.com>,
+        =?UTF-8?q?J=C3=A9r=C3=B4me=20Glisse?= <jglisse@redhat.com>,
+        Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+        Alex Williamson <alex.williamson@redhat.com>,
+        =?UTF-8?q?Christian=20K=C3=B6nig?= <christian.koenig@amd.com>,
+        Jens Axboe <axboe@kernel.dk>,
+        Logan Gunthorpe <logang@deltatee.com>
+Date: Wed, 12 Sep 2018 18:11:45 -0600
+Message-Id: <20180913001156.4115-3-logang@deltatee.com>
+In-Reply-To: <20180913001156.4115-1-logang@deltatee.com>
+References: <20180913001156.4115-1-logang@deltatee.com>
+MIME-Version: 1.0
+Subject: [PATCH v6 02/13] PCI/P2PDMA: Add sysfs group to display p2pmem stats
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Looking to have more control between the users of the API vs. what the API
-can do internally. The new reset_type tells the PCI core about the bounds
-of the request.
+Add a sysfs group to display statistics about P2P memory that is
+registered in each PCI device.
 
-Signed-off-by: Sinan Kaya <okaya@kernel.org>
+Attributes in the group display the total amount of P2P memory, the
+amount available and whether it is published or not.
+
+Signed-off-by: Logan Gunthorpe <logang@deltatee.com>
 ---
- drivers/pci/pci.c   | 4 ++--
- include/linux/pci.h | 2 +-
- 2 files changed, 3 insertions(+), 3 deletions(-)
+ Documentation/ABI/testing/sysfs-bus-pci | 25 ++++++++++++
+ drivers/pci/p2pdma.c                    | 54 +++++++++++++++++++++++++
+ 2 files changed, 79 insertions(+)
 
-diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
-index 2b1e2b4893f3..3046c202bfea 100644
---- a/drivers/pci/pci.c
-+++ b/drivers/pci/pci.c
-@@ -4829,7 +4829,7 @@ EXPORT_SYMBOL_GPL(pci_reset_function);
-  * Returns 0 if the device function was successfully reset or negative if the
-  * device doesn't support resetting a single function.
-  */
--int pci_reset_function_locked(struct pci_dev *dev)
-+int pci_reset_function_locked(struct pci_dev *dev, u32 reset_type)
+diff --git a/Documentation/ABI/testing/sysfs-bus-pci b/Documentation/ABI/testing/sysfs-bus-pci
+index 44d4b2be92fd..044812c816d0 100644
+--- a/Documentation/ABI/testing/sysfs-bus-pci
++++ b/Documentation/ABI/testing/sysfs-bus-pci
+@@ -323,3 +323,28 @@ Description:
+ 
+ 		This is similar to /sys/bus/pci/drivers_autoprobe, but
+ 		affects only the VFs associated with a specific PF.
++
++What:		/sys/bus/pci/devices/.../p2pmem/available
++Date:		November 2017
++Contact:	Logan Gunthorpe <logang@deltatee.com>
++Description:
++		If the device has any Peer-to-Peer memory registered, this
++	        file contains the amount of memory that has not been
++		allocated (in decimal).
++
++What:		/sys/bus/pci/devices/.../p2pmem/size
++Date:		November 2017
++Contact:	Logan Gunthorpe <logang@deltatee.com>
++Description:
++		If the device has any Peer-to-Peer memory registered, this
++	        file contains the total amount of memory that the device
++		provides (in decimal).
++
++What:		/sys/bus/pci/devices/.../p2pmem/published
++Date:		November 2017
++Contact:	Logan Gunthorpe <logang@deltatee.com>
++Description:
++		If the device has any Peer-to-Peer memory registered, this
++	        file contains a '1' if the memory has been published for
++		use inside the kernel or a '0' if it is only intended
++		for use within the driver that published it.
+diff --git a/drivers/pci/p2pdma.c b/drivers/pci/p2pdma.c
+index 88aaec5351cd..67c1daf1189e 100644
+--- a/drivers/pci/p2pdma.c
++++ b/drivers/pci/p2pdma.c
+@@ -25,6 +25,54 @@ struct pci_p2pdma {
+ 	bool p2pmem_published;
+ };
+ 
++static ssize_t size_show(struct device *dev, struct device_attribute *attr,
++			 char *buf)
++{
++	struct pci_dev *pdev = to_pci_dev(dev);
++	size_t size = 0;
++
++	if (pdev->p2pdma->pool)
++		size = gen_pool_size(pdev->p2pdma->pool);
++
++	return snprintf(buf, PAGE_SIZE, "%zd\n", size);
++}
++static DEVICE_ATTR_RO(size);
++
++static ssize_t available_show(struct device *dev, struct device_attribute *attr,
++			      char *buf)
++{
++	struct pci_dev *pdev = to_pci_dev(dev);
++	size_t avail = 0;
++
++	if (pdev->p2pdma->pool)
++		avail = gen_pool_avail(pdev->p2pdma->pool);
++
++	return snprintf(buf, PAGE_SIZE, "%zd\n", avail);
++}
++static DEVICE_ATTR_RO(available);
++
++static ssize_t published_show(struct device *dev, struct device_attribute *attr,
++			      char *buf)
++{
++	struct pci_dev *pdev = to_pci_dev(dev);
++
++	return snprintf(buf, PAGE_SIZE, "%d\n",
++			pdev->p2pdma->p2pmem_published);
++}
++static DEVICE_ATTR_RO(published);
++
++static struct attribute *p2pmem_attrs[] = {
++	&dev_attr_size.attr,
++	&dev_attr_available.attr,
++	&dev_attr_published.attr,
++	NULL,
++};
++
++static const struct attribute_group p2pmem_group = {
++	.attrs = p2pmem_attrs,
++	.name = "p2pmem",
++};
++
+ static void pci_p2pdma_percpu_release(struct percpu_ref *ref)
  {
- 	int rc;
+ 	struct pci_p2pdma *p2p =
+@@ -54,6 +102,7 @@ static void pci_p2pdma_release(void *data)
+ 	percpu_ref_exit(&pdev->p2pdma->devmap_ref);
  
-@@ -4838,7 +4838,7 @@ int pci_reset_function_locked(struct pci_dev *dev)
+ 	gen_pool_destroy(pdev->p2pdma->pool);
++	sysfs_remove_group(&pdev->dev.kobj, &p2pmem_group);
+ 	pdev->p2pdma = NULL;
+ }
  
- 	pci_dev_save_and_disable(dev);
+@@ -84,9 +133,14 @@ static int pci_p2pdma_setup(struct pci_dev *pdev)
  
--	rc = __pci_reset_function_locked(dev, PCI_RESET_ANY);
-+	rc = __pci_reset_function_locked(dev, reset_type);
+ 	pdev->p2pdma = p2p;
  
- 	pci_dev_restore(dev);
++	error = sysfs_create_group(&pdev->dev.kobj, &p2pmem_group);
++	if (error)
++		goto out_pool_destroy;
++
+ 	return 0;
  
-diff --git a/include/linux/pci.h b/include/linux/pci.h
-index 1a1a76130e91..09aa99dd1c1b 100644
---- a/include/linux/pci.h
-+++ b/include/linux/pci.h
-@@ -1124,7 +1124,7 @@ bool pcie_has_flr(struct pci_dev *dev);
- int pcie_flr(struct pci_dev *dev);
- int __pci_reset_function_locked(struct pci_dev *dev, u32 reset_type);
- int pci_reset_function(struct pci_dev *dev, u32 reset_type);
--int pci_reset_function_locked(struct pci_dev *dev);
-+int pci_reset_function_locked(struct pci_dev *dev, u32 reset_type);
- int pci_try_reset_function(struct pci_dev *dev);
- int pci_probe_reset_slot(struct pci_slot *slot);
- int pci_probe_reset_bus(struct pci_bus *bus);
+ out_pool_destroy:
++	pdev->p2pdma = NULL;
+ 	gen_pool_destroy(p2p->pool);
+ out:
+ 	devm_kfree(&pdev->dev, p2p);
 -- 
-2.18.0
+2.19.0
