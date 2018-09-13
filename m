@@ -1,114 +1,129 @@
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Date: Mon, 17 Sep 2018 16:19:17 +0100
-From: Andrew Murray <andrew.murray@arm.com>
-To: John Garry <john.garry@huawei.com>
-Subject: Re: [PATCH] asm-generic: io: Fix ioport_map() for
- !CONFIG_GENERIC_IOMAP && CONFIG_INDIRECT_PIO
-Message-ID: <20180917151917.GB5390@e119886-lin.cambridge.arm.com>
-References: <1536842907-51732-1-git-send-email-andrew.murray@arm.com>
- <464e07ab-797e-971a-0839-5fd55e3e2ad3@huawei.com>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from usa-sjc-mx-foss1.foss.arm.com ([217.140.101.70]:43720 "EHLO
+        foss.arm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1726832AbeIMOYO (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Thu, 13 Sep 2018 10:24:14 -0400
+Date: Thu, 13 Sep 2018 10:15:34 +0100
+From: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
+To: Jisheng Zhang <Jisheng.Zhang@synaptics.com>
+Cc: Jingoo Han <jingoohan1@gmail.com>,
+        Joao Pinto <Joao.Pinto@synopsys.com>,
+        Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org,
+        linux-kernel@vger.kernel.org, linux-arm-kernel@lists.infradead.org
+Subject: Re: [PATCH v3] PCI: dwc: fix scheduling while atomic issues
+Message-ID: <20180913091534.GB32721@e107981-ln.cambridge.arm.com>
+References: <20180829110408.556c3622@xhacker.debian>
+ <20180910165722.38218779@xhacker.debian>
 MIME-Version: 1.0
-In-Reply-To: <464e07ab-797e-971a-0839-5fd55e3e2ad3@huawei.com>
-List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
-List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
-List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
-List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
-List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
-Cc: Arnd Bergmann <arnd@arndb.de>, suzuki.poulose@arm.com,
- jean-philippe.brucker@arm.com, dann.frazier@canonical.com,
- Will Deacon <will.deacon@arm.com>, Linuxarm <linuxarm@huawei.com>,
- linux-kernel@vger.kernel.org, andy.shevchenko@gmail.com,
- linux-pci@vger.kernel.org, bhelgaas@google.com,
- linux-arm-kernel@lists.infradead.org
-Content-Type: text/plain; charset="us-ascii"
-Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
-Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20180910165722.38218779@xhacker.debian>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Mon, Sep 17, 2018 at 03:42:32PM +0100, John Garry wrote:
-> - dead e-mail addresses (Zhichang, Gabriele)
+On Mon, Sep 10, 2018 at 04:57:22PM +0800, Jisheng Zhang wrote:
+> Hi all,
 > 
-> On 13/09/2018 13:48, Andrew Murray wrote:
+> On Wed, 29 Aug 2018 11:04:08 +0800 Jisheng Zhang wrote:
 > 
-> Hi Andrew,
-> 
-> > The !CONFIG_GENERIC_IOMAP version of ioport_map uses MMIO_UPPER_LIMIT to
-> > prevent users from making I/O accesses outside the expected I/O range -
-> > however it erroneously treats MMIO_UPPER_LIMIT as a mask which is
-> > contradictory to its other users.
+> > When programming inbound/outbound atu, we call usleep_range() after
+> > each checking PCIE_ATU_ENABLE bit. Unfortunately, the atu programming
+> > can be called in atomic context:
 > > 
-> > The introduction of CONFIG_INDIRECT_PIO, which subtracts an arbitrary
-> > amount from IO_SPACE_LIMIT to form MMIO_UPPER_LIMIT, results in ioport_map
-> > mangling the given port rather than capping it.
+> > inbound atu programming could be called through
+> > pci_epc_write_header()
+> >   =>dw_pcie_ep_write_header()
+> >     =>dw_pcie_prog_inbound_atu()  
 > > 
-> > We address this by aligning more closely with the CONFIG_GENERIC_IOMAP
-> > implementation of ioport_map by using the comparison operator and
-> > returning NULL where the port exceeds MMIO_UPPER_LIMIT. Though note that
-> > we preserve the existing behavior of masking with IO_SPACE_LIMIT such that
-> > we don't break existing buggy drivers that somehow rely on this masking.
+> > outbound atu programming could be called through
+> > pci_bus_read_config_dword()
+> >   =>dw_pcie_rd_conf()
+> >     =>dw_pcie_prog_outbound_atu()  
+> > 
+> > Fix this issue by calling mdelay() instead.
 > 
-> I wouldn't say any drivers rely on this - for the only device driver which
-> uses the "Indirect" IO space region above MMIO_UPPER_LIMIT (HiSilicon LPC),
-> no child device driver for that host uses ioport_map() [those being ipmi si
-> and 8250 generic+of drivers].
-
-I was really referring to the existing !CONFIG_GENERIC_IOMAP && 
-!CONFIG_INDIRECT_PIO use cases where there may be drivers (however unlikely)
-that provide ioport_map an incorrect address which, due to the masking, gets
-converted into a valid address. Returning NULL for these would result in new
-run-time errors therefore it seemed safer to change this to support the new
-"indirect IO" whilst not breaking existing bad drivers.
-
-A more correct implementation would always return NULL if
-port > IO_SPACE_LIMIT - it would fully align it with the CONFIG_GENERIC_IOMAP
-implementation - in my view these two implementations should behave the same
-with respect to error handling - at the moment they don't.
-
-
+> Any comments about this patch?
 > 
-> Regardless of that, it seems better to return NULL when the port is
-> out-of-range, rather than masking it.
-> 
-> Cheers
+> Thanks,
+> Jisheng
 > 
 > > 
-> > Fixes: 5745392e0c2b ("PCI: Apply the new generic I/O management on PCI IO hosts")
-> > Reported-by: Will Deacon <will.deacon@arm.com>
-> > Signed-off-by: Andrew Murray <andrew.murray@arm.com>
-> 
-> Reviewed-by: John Garry <john.garry@huawei.com>
+> > Fixes: f8aed6ec624f ("PCI: dwc: designware: Add EP mode support")
+> > Fixes: d8bbeb39fbf3 ("PCI: designware: Wait for iATU enable")
 
-Thanks for the review.
+Can you split it into two patches and repost it please ? It will make
+everyone's life easier to backport it if there is need, I will apply
+then.
 
-Andrew Murray
+Thanks,
+Lorenzo
 
-> 
+> > Signed-off-by: Jisheng Zhang <Jisheng.Zhang@synaptics.com>
+> > Acked-by: Gustavo Pimentel <gustavo.pimentel@synopsys.com>
 > > ---
-> >  include/asm-generic/io.h | 3 ++-
-> >  1 file changed, 2 insertions(+), 1 deletion(-)
 > > 
-> > diff --git a/include/asm-generic/io.h b/include/asm-generic/io.h
-> > index 66d1d45..d356f80 100644
-> > --- a/include/asm-generic/io.h
-> > +++ b/include/asm-generic/io.h
-> > @@ -1026,7 +1026,8 @@ static inline void __iomem *ioremap_wt(phys_addr_t offset, size_t size)
-> >  #define ioport_map ioport_map
-> >  static inline void __iomem *ioport_map(unsigned long port, unsigned int nr)
-> >  {
-> > -	return PCI_IOBASE + (port & MMIO_UPPER_LIMIT);
-> > +	port &= IO_SPACE_LIMIT;
-> > +	return (port > MMIO_UPPER_LIMIT) ? NULL : PCI_IOBASE + port;
+> > since v2:
+> >  - Add Fixes tag
+> >  - Add Gustavo's Ack
+> > 
+> > since v1:
+> >  - use mdelay() instead of udelay() to avoid __bad_udelay()
+> > 
+> >  drivers/pci/controller/dwc/pcie-designware.c | 8 ++++----
+> >  drivers/pci/controller/dwc/pcie-designware.h | 3 +--
+> >  2 files changed, 5 insertions(+), 6 deletions(-)
+> > 
+> > diff --git a/drivers/pci/controller/dwc/pcie-designware.c b/drivers/pci/controller/dwc/pcie-designware.c
+> > index 778c4f76a884..2153956a0b20 100644
+> > --- a/drivers/pci/controller/dwc/pcie-designware.c
+> > +++ b/drivers/pci/controller/dwc/pcie-designware.c
+> > @@ -135,7 +135,7 @@ static void dw_pcie_prog_outbound_atu_unroll(struct dw_pcie *pci, int index,
+> >  		if (val & PCIE_ATU_ENABLE)
+> >  			return;
+> >  
+> > -		usleep_range(LINK_WAIT_IATU_MIN, LINK_WAIT_IATU_MAX);
+> > +		mdelay(LINK_WAIT_IATU);
+> >  	}
+> >  	dev_err(pci->dev, "Outbound iATU is not being enabled\n");
 > >  }
-> >  #endif
-> > 
-> > 
+> > @@ -178,7 +178,7 @@ void dw_pcie_prog_outbound_atu(struct dw_pcie *pci, int index, int type,
+> >  		if (val & PCIE_ATU_ENABLE)
+> >  			return;
+> >  
+> > -		usleep_range(LINK_WAIT_IATU_MIN, LINK_WAIT_IATU_MAX);
+> > +		mdelay(LINK_WAIT_IATU);
+> >  	}
+> >  	dev_err(pci->dev, "Outbound iATU is not being enabled\n");
+> >  }
+> > @@ -236,7 +236,7 @@ static int dw_pcie_prog_inbound_atu_unroll(struct dw_pcie *pci, int index,
+> >  		if (val & PCIE_ATU_ENABLE)
+> >  			return 0;
+> >  
+> > -		usleep_range(LINK_WAIT_IATU_MIN, LINK_WAIT_IATU_MAX);
+> > +		mdelay(LINK_WAIT_IATU);
+> >  	}
+> >  	dev_err(pci->dev, "Inbound iATU is not being enabled\n");
+> >  
+> > @@ -282,7 +282,7 @@ int dw_pcie_prog_inbound_atu(struct dw_pcie *pci, int index, int bar,
+> >  		if (val & PCIE_ATU_ENABLE)
+> >  			return 0;
+> >  
+> > -		usleep_range(LINK_WAIT_IATU_MIN, LINK_WAIT_IATU_MAX);
+> > +		mdelay(LINK_WAIT_IATU);
+> >  	}
+> >  	dev_err(pci->dev, "Inbound iATU is not being enabled\n");
+> >  
+> > diff --git a/drivers/pci/controller/dwc/pcie-designware.h b/drivers/pci/controller/dwc/pcie-designware.h
+> > index 96126fd8403c..9f1a5e399b70 100644
+> > --- a/drivers/pci/controller/dwc/pcie-designware.h
+> > +++ b/drivers/pci/controller/dwc/pcie-designware.h
+> > @@ -26,8 +26,7 @@
+> >  
+> >  /* Parameters for the waiting for iATU enabled routine */
+> >  #define LINK_WAIT_MAX_IATU_RETRIES	5
+> > -#define LINK_WAIT_IATU_MIN		9000
+> > -#define LINK_WAIT_IATU_MAX		10000
+> > +#define LINK_WAIT_IATU			9
+> >  
+> >  /* Synopsys-specific PCIe configuration registers */
+> >  #define PCIE_PORT_LINK_CONTROL		0x710
 > 
-> 
-
-_______________________________________________
-linux-arm-kernel mailing list
-linux-arm-kernel@lists.infradead.org
-http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
