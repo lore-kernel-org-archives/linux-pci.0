@@ -1,75 +1,47 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from shell.v3.sk ([90.176.6.54]:36055 "EHLO shell.v3.sk"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1728177AbeIJQxu (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Mon, 10 Sep 2018 12:53:50 -0400
-From: Lubomir Rintel <lkundrak@v3.sk>
-To: linux-kernel@vger.kernel.org
-Cc: linux-arm-kernel@lists.infradead.org, linux-pci@vger.kernel.org,
-        linux-spi@vger.kernel.org, devicetree@vger.kernel.org,
-        Mark Brown <broonie@kernel.org>,
-        Rob Herring <robh+dt@kernel.org>,
-        Mark Rutland <mark.rutland@arm.com>,
-        Eric Miao <eric.y.miao@gmail.com>,
-        Haojian Zhuang <haojian.zhuang@gmail.com>,
-        Daniel Mack <daniel@zonque.org>,
-        Robert Jarzmik <robert.jarzmik@free.fr>,
-        Bjorn Helgaas <bhelgaas@google.com>,
-        Lubomir Rintel <lkundrak@v3.sk>
-Subject: [PATCH 5/5] DT: marvell,mmp2: add SSP1 and SSP3
-Date: Mon, 10 Sep 2018 13:59:35 +0200
-Message-Id: <20180910115935.163121-6-lkundrak@v3.sk>
-In-Reply-To: <20180910115935.163121-1-lkundrak@v3.sk>
-References: <20180910115935.163121-1-lkundrak@v3.sk>
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+From: =?iso-8859-1?Q?Jan_Kundr=E1t?= <jan.kundrat@cesnet.cz>
+To: Thomas Petazzoni <thomas.petazzoni@bootlin.com>
+Subject: Re: [BISECTED] Regression: Solidrun Clearfog Base won't boot since
+ =?iso-8859-1?Q?"PCI:_mvebu:_Only_remap_I/O_space_if_configured"?=
+Date: Thu, 13 Sep 2018 10:20:45 +0200
+MIME-Version: 1.0
+Message-ID: <5ad46fec-a71a-477a-b23f-d20aacfb481d@cesnet.cz>
+In-Reply-To: <20180913094515.351967bb@windsurf>
+References: <61fdfd69-2bb6-478c-b0d5-69d8744adae3@cesnet.cz>
+ <87zhwm4kl6.fsf@tkos.co.il> <20180912231050.GX30658@n2100.armlinux.org.uk>
+ <20180913094515.351967bb@windsurf>
+List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
+List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
+List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
+List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
+List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
+Cc: Baruch Siach <baruch@tkos.co.il>,
+ Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
+ Jason Cooper <jason@lakedaemon.net>, linux-pci@vger.kernel.org,
+ Russell King - ARM Linux <linux@armlinux.org.uk>, linux-kernel@vger.kernel.org,
+ Bjorn Helgaas <bhelgaas@google.com>, linux-arm-kernel@lists.infradead.org
+Content-Type: text/plain; charset="utf-8"; Format="flowed"
+Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
+Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
 List-ID: <linux-pci.vger.kernel.org>
 
-There seem to be SSP2, SSP4 and perhaps SSP5 too, but Marvel keeps their
-base addresses secret.
-
-The SSP1 and SSP3 addresses were taken from OLPC 1.75, OpenFirmware and
-kernel respectively.
-
-Signed-off-by: Lubomir Rintel <lkundrak@v3.sk>
----
- arch/arm/boot/dts/mmp2.dtsi | 18 ++++++++++++++++++
- 1 file changed, 18 insertions(+)
-
-diff --git a/arch/arm/boot/dts/mmp2.dtsi b/arch/arm/boot/dts/mmp2.dtsi
-index 766bbb8495b6..ba55d6483ed0 100644
---- a/arch/arm/boot/dts/mmp2.dtsi
-+++ b/arch/arm/boot/dts/mmp2.dtsi
-@@ -18,6 +18,8 @@
- 		serial3 = &uart4;
- 		i2c0 = &twsi1;
- 		i2c1 = &twsi2;
-+		spi0 = &ssp1;
-+		spi3 = &ssp3;
- 	};
- 
- 	soc {
-@@ -239,6 +241,22 @@
- 				resets = <&soc_clocks MMP2_CLK_RTC>;
- 				status = "disabled";
- 			};
-+
-+			ssp1: ssp@d4035000 {
-+				compatible = "marvell,mmp2-ssp";
-+				reg = <0xd4035000 0x1000>;
-+				clocks = <&soc_clocks MMP2_CLK_SSP0>;
-+				interrupts = <0>;
-+				status = "disabled";
-+			};
-+
-+			ssp3: ssp@d4037000 {
-+				compatible = "marvell,mmp2-ssp";
-+				reg = <0xd4037000 0x1000>;
-+				clocks = <&soc_clocks MMP2_CLK_SSP2>;
-+				interrupts = <20>;
-+				status = "disabled";
-+			};
- 		};
- 
- 		soc_clocks: clocks{
--- 
-2.17.1
+T24gxI10dnJ0ZWsgMTMuIHrDocWZw60gMjAxOCA5OjQ1OjE1IENFU1QsIFRob21hcyBQZXRhenpv
+bmkgd3JvdGU6Cj4gV2hhdCBhYm91dCBzb21ldGhpbmcgbGlrZSB0aGUgYmVsb3cuIEkgdGVzdGVk
+IGl0LCBpbmNsdWRpbmcgdGhlIGVycm9yCj4gY2FzZSBieSBmb3JjaW5nIGFuIC1FUFJPQkVfREVG
+RVIuIFRoZSBuZXcgcGNpX3VubWFwX2lvKCkgaXMgbW9kZWxlZAo+IGFmdGVyIHBjaV91bm1hcF9p
+b3NwYWNlKCkuIEFjdHVhbGx5LCBJIHdvdWxkIHByZWZlciB0byB1c2UKPiBwY2lfcmVtYXBfaW9z
+cGFjZSgpIGFuZCBwY2lfdW5tYXBfaW9zcGFjZSgpIGJ1dCBmb3Igbm93IHRoaXMgQVBJCj4gZG9l
+c24ndCBhbGxvdyBvdmVybG9hZGluZyB0aGUgbWVtb3J5IHR5cGUgdXNlZCBmb3IgdGhlIG1hcHBp
+bmcuCgpUaGFua3MgZm9yIHByb3ZpZGluZyB0aGlzIGZpeCBzbyBxdWlja2x5LCBUaG9tYXMuIEkg
+Y2FuIGNvbmZpcm0gdGhhdCB0aGlzIApwYXRjaCAtLSB0ZXN0ZWQgb24gdG9wIG9mIDU0ZWRhOWRm
+MTdmMzIxNWI5ZWQxNjYyOWVlNzFlYTA3NDEzZWZkYWYgKCJNZXJnZSAKdGFnICdwY2ktdjQuMTkt
+Zml4ZXMtMScgb2YgCmdpdDovL2dpdC5rZXJuZWwub3JnL3B1Yi9zY20vbGludXgva2VybmVsL2dp
+dC9oZWxnYWFzL3BjaSIpLiBEaXNjbGFpbWVyOiBJIApoYXZlIHplcm8gZmFtaWxpYXJpdHkgd2l0
+aCBMaW51eCcgUENJIGNvZGUuCgpUZXN0ZWQtYnk6IEphbiBLdW5kcsOhdCA8amFuLmt1bmRyYXRA
+Y2VzbmV0LmN6PgoKV2l0aCBraW5kIHJlZ2FyZHMsCkphbgoKX19fX19fX19fX19fX19fX19fX19f
+X19fX19fX19fX19fX19fX19fX19fX19fX18KbGludXgtYXJtLWtlcm5lbCBtYWlsaW5nIGxpc3QK
+bGludXgtYXJtLWtlcm5lbEBsaXN0cy5pbmZyYWRlYWQub3JnCmh0dHA6Ly9saXN0cy5pbmZyYWRl
+YWQub3JnL21haWxtYW4vbGlzdGluZm8vbGludXgtYXJtLWtlcm5lbAo=
