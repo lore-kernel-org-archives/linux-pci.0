@@ -1,163 +1,89 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mga05.intel.com ([192.55.52.43]:41235 "EHLO mga05.intel.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1728185AbeISFeA (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Wed, 19 Sep 2018 01:34:00 -0400
-From: Keith Busch <keith.busch@intel.com>
-To: Linux PCI <linux-pci@vger.kernel.org>,
-        Bjorn Helgaas <bhelgaas@google.com>
-Cc: Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-        Sinan Kaya <okaya@kernel.org>,
-        Thomas Tai <thomas.tai@oracle.com>, poza@codeaurora.org,
-        Lukas Wunner <lukas@wunner.de>, Christoph Hellwig <hch@lst.de>,
-        Mika Westerberg <mika.westerberg@linux.intel.com>,
-        Keith Busch <keith.busch@intel.com>
-Subject: [PATCH 10/12] PCI/AER: Use threaded IRQ for bottom half
-Date: Tue, 18 Sep 2018 17:58:46 -0600
-Message-Id: <20180918235848.26694-11-keith.busch@intel.com>
-In-Reply-To: <20180918235848.26694-1-keith.busch@intel.com>
-References: <20180918235848.26694-1-keith.busch@intel.com>
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Date: Thu, 13 Sep 2018 11:49:14 +0100
+From: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
+To: Jisheng Zhang <Jisheng.Zhang@synaptics.com>
+Subject: Re: [PATCH v3] PCI: dwc: fix scheduling while atomic issues
+Message-ID: <20180913104914.GA2051@e107981-ln.cambridge.arm.com>
+References: <20180829110408.556c3622@xhacker.debian>
+ <20180910165722.38218779@xhacker.debian>
+ <20180913091534.GB32721@e107981-ln.cambridge.arm.com>
+ <20180913182926.365d155b@xhacker.debian>
+MIME-Version: 1.0
+In-Reply-To: <20180913182926.365d155b@xhacker.debian>
+List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
+List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
+List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
+List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
+List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
+Cc: Joao Pinto <Joao.Pinto@synopsys.com>, Jingoo Han <jingoohan1@gmail.com>,
+ linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
+ Bjorn Helgaas <bhelgaas@google.com>, linux-arm-kernel@lists.infradead.org
+Content-Type: text/plain; charset="us-ascii"
+Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
+Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
 List-ID: <linux-pci.vger.kernel.org>
 
-The threaded IRQ is naturally single threaded as desired, so use that
-to simplify the aer bottom half handler. Since the root port structure
-is has much less to do now, this patch removes the rpc construction
-helper routine.
+On Thu, Sep 13, 2018 at 06:29:54PM +0800, Jisheng Zhang wrote:
+> Hi Lorenzo,
+> 
+> On Thu, 13 Sep 2018 10:15:34 +0100 Lorenzo Pieralisi wrote:
+> 
+> > On Mon, Sep 10, 2018 at 04:57:22PM +0800, Jisheng Zhang wrote:
+> > > Hi all,
+> > > 
+> > > On Wed, 29 Aug 2018 11:04:08 +0800 Jisheng Zhang wrote:
+> > >   
+> > > > When programming inbound/outbound atu, we call usleep_range() after
+> > > > each checking PCIE_ATU_ENABLE bit. Unfortunately, the atu programming
+> > > > can be called in atomic context:
+> > > > 
+> > > > inbound atu programming could be called through
+> > > > pci_epc_write_header()  
+> > > >   =>dw_pcie_ep_write_header()
+> > > >     =>dw_pcie_prog_inbound_atu()    
+> > > > 
+> > > > outbound atu programming could be called through
+> > > > pci_bus_read_config_dword()  
+> > > >   =>dw_pcie_rd_conf()
+> > > >     =>dw_pcie_prog_outbound_atu()    
+> > > > 
+> > > > Fix this issue by calling mdelay() instead.  
+> > > 
+> > > Any comments about this patch?
+> > > 
+> > > Thanks,
+> > > Jisheng
+> > >   
+> > > > 
+> > > > Fixes: f8aed6ec624f ("PCI: dwc: designware: Add EP mode support")
+> > > > Fixes: d8bbeb39fbf3 ("PCI: designware: Wait for iATU enable")  
+> > 
+> > Can you split it into two patches and repost it please ? It will make
+> > everyone's life easier to backport it if there is need, I will apply
+> > then.
+> 
+> IIUC, the purpose of this split is to make the backport to stable easier. If
+> so, I realise that the Fixes tags were not enough, we missed:
+> 
+> Fixes: edd45e396829 ("PCI: dwc: designware: Move _unroll configurations to a
+> separate function")
+> 
+> I'm not sure how to handle this case. From another side, the issue to be
+> fixed is the same: call sleep in atomic context in the same driver, is it
+> better to use one patch?
+> 
+> As for stable tree, I could send out separate patches instead. What do you
+> think?
 
-Signed-off-by: Keith Busch <keith.busch@intel.com>
----
- drivers/pci/pcie/aer.c | 62 ++++++++++++--------------------------------------
- 1 file changed, 14 insertions(+), 48 deletions(-)
+OK, I will merge the patch as-is and we will handle the stable backports
+when Greg sends the patches out.
 
-diff --git a/drivers/pci/pcie/aer.c b/drivers/pci/pcie/aer.c
-index 41c36916d46c..1878d9d7760b 100644
---- a/drivers/pci/pcie/aer.c
-+++ b/drivers/pci/pcie/aer.c
-@@ -42,14 +42,7 @@ struct aer_err_source {
- 
- struct aer_rpc {
- 	struct pci_dev *rpd;		/* Root Port device */
--	struct work_struct dpc_handler;
- 	DECLARE_KFIFO(aer_fifo, struct aer_err_source, AER_ERROR_SOURCES_MAX);
--	int isr;
--	struct mutex rpc_mutex;		/*
--					 * only one thread could do
--					 * recovery on the same
--					 * root port hierarchy
--					 */
- };
- 
- /* AER stats for the device */
-@@ -1215,15 +1208,18 @@ static void aer_isr_one_error(struct aer_rpc *rpc,
-  *
-  * Invoked, as DPC, when root port records new detected error
-  */
--static void aer_isr(struct work_struct *work)
-+static irqreturn_t aer_isr(int irq, void *context)
- {
--	struct aer_rpc *rpc = container_of(work, struct aer_rpc, dpc_handler);
-+	struct pcie_device *dev = (struct pcie_device *)context;
-+	struct aer_rpc *rpc = get_service_data(dev);
- 	struct aer_err_source uninitialized_var(e_src);
- 
--	mutex_lock(&rpc->rpc_mutex);
-+	if (kfifo_is_empty(&rpc->aer_fifo))
-+		return IRQ_NONE;
-+
- 	while (kfifo_get(&rpc->aer_fifo, &e_src))
- 		aer_isr_one_error(rpc, &e_src);
--	mutex_unlock(&rpc->rpc_mutex);
-+	return IRQ_HANDLED;
- }
- 
- /**
-@@ -1251,8 +1247,7 @@ static irqreturn_t aer_irq(int irq, void *context)
- 	if (!kfifo_put(&rpc->aer_fifo, e_src))
- 		return IRQ_HANDLED;
- 
--	schedule_work(&rpc->dpc_handler);
--	return IRQ_HANDLED;
-+	return IRQ_WAKE_THREAD;
- }
- 
- static int set_device_error_reporting(struct pci_dev *dev, void *data)
-@@ -1361,30 +1356,6 @@ static void aer_disable_rootport(struct aer_rpc *rpc)
- 	pci_write_config_dword(pdev, pos + PCI_ERR_ROOT_STATUS, reg32);
- }
- 
--/**
-- * aer_alloc_rpc - allocate Root Port data structure
-- * @dev: pointer to the pcie_dev data structure
-- *
-- * Invoked when Root Port's AER service is loaded.
-- */
--static struct aer_rpc *aer_alloc_rpc(struct pcie_device *dev)
--{
--	struct aer_rpc *rpc;
--
--	rpc = kzalloc(sizeof(struct aer_rpc), GFP_KERNEL);
--	if (!rpc)
--		return NULL;
--
--	rpc->rpd = dev->port;
--	INIT_WORK(&rpc->dpc_handler, aer_isr);
--	mutex_init(&rpc->rpc_mutex);
--
--	/* Use PCIe bus function to store rpc into PCIe device */
--	set_service_data(dev, rpc);
--
--	return rpc;
--}
--
- /**
-  * aer_remove - clean up resources
-  * @dev: pointer to the pcie_dev data structure
-@@ -1396,11 +1367,6 @@ static void aer_remove(struct pcie_device *dev)
- 	struct aer_rpc *rpc = get_service_data(dev);
- 
- 	if (rpc) {
--		/* If register interrupt service, it must be free. */
--		if (rpc->isr)
--			free_irq(dev->irq, dev);
--
--		flush_work(&rpc->dpc_handler);
- 		aer_disable_rootport(rpc);
- 		kfree(rpc);
- 		set_service_data(dev, NULL);
-@@ -1417,18 +1383,20 @@ static int aer_probe(struct pcie_device *dev)
- {
- 	int status;
- 	struct aer_rpc *rpc;
--	struct device *device = &dev->port->dev;
-+	struct device *device = &dev->port->device;
- 
- 	/* Alloc rpc data structure */
--	rpc = aer_alloc_rpc(dev);
-+	rpc = kzalloc(sizeof(struct aer_rpc), GFP_KERNEL);
- 	if (!rpc) {
- 		dev_printk(KERN_DEBUG, device, "alloc AER rpc failed\n");
--		aer_remove(dev);
- 		return -ENOMEM;
- 	}
-+	rpc->rpd = dev->port;
-+	set_service_data(dev, rpc);
- 
- 	/* Request IRQ ISR */
--	status = request_irq(dev->irq, aer_irq, IRQF_SHARED, "aerdrv", dev);
-+	status = request_threaded_irq(dev->irq, aer_irq, aer_isr,
-+				      IRQF_SHARED, "aerdrv", dev);
- 	if (status) {
- 		dev_printk(KERN_DEBUG, device, "request AER IRQ %d failed\n",
- 			   dev->irq);
-@@ -1436,8 +1404,6 @@ static int aer_probe(struct pcie_device *dev)
- 		return status;
- 	}
- 
--	rpc->isr = 1;
--
- 	aer_enable_rootport(rpc);
- 	dev_info(device, "AER enabled with IRQ %d\n", dev->irq);
- 	return 0;
--- 
-2.14.4
+Lorenzo
+
+_______________________________________________
+linux-arm-kernel mailing list
+linux-arm-kernel@lists.infradead.org
+http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
