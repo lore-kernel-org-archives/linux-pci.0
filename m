@@ -1,87 +1,182 @@
-Return-Path: <SRS0=Zo3Z=LW=wunner.de=lukas@kernel.org>
-Return-Path: <SRS0=Zo3Z=LW=wunner.de=lukas@kernel.org>
-Message-Id: <cover.1536341821.git.lukas@wunner.de>
-From: Lukas Wunner <lukas@wunner.de>
-Date: Sat, 8 Sep 2018 09:59:01 +0200
-Subject: [PATCH v2 0/8] PCI hotplug diet
-To: Bjorn Helgaas <helgaas@kernel.org>, linux-pci@vger.kernel.org
-Cc: Sinan Kaya <okaya@kernel.org>, Mika Westerberg <mika.westerberg@linux.intel.com>, Keith Busch <keith.busch@intel.com>, David Yang <mmyangfl@gmail.com>
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Date: Thu, 13 Sep 2018 15:51:30 +0100
+From: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
+To: Rob Herring <robh@kernel.org>
+Subject: Re: [PATCH] PCI: remove unnecessary check of device_type == pci
+Message-ID: <20180913145130.GA5756@e107981-ln.cambridge.arm.com>
+References: <20180829183440.13601-1-robh@kernel.org>
+MIME-Version: 1.0
+In-Reply-To: <20180829183440.13601-1-robh@kernel.org>
+List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
+List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
+List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
+List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
+List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
+Cc: linux-pci@vger.kernel.org,
+ Subrahmanya Lingappa <l.subrahmanya@mobiveil.co.in>,
+ Will Deacon <will.deacon@arm.com>, linux-kernel@vger.kernel.org,
+ Michal Simek <michal.simek@xilinx.com>, Alan Douglas <adouglas@cadence.com>,
+ Bjorn Helgaas <bhelgaas@google.com>, linux-arm-kernel@lists.infradead.org
+Content-Type: text/plain; charset="us-ascii"
+Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
+Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Rebase of my PCI hotplug material for the next merge window on current
-pci/hotplug branch:
+On Wed, Aug 29, 2018 at 01:34:40PM -0500, Rob Herring wrote:
+> PCI host drivers have already matched on compatible strings, so checking
+> device_type is redundant. Also, device_type is considered deprecated for
+> FDT though we've still been requiring it for PCI hosts as it is useful
+> for finding PCI buses.
 
-* Patch [1/8] makes pciehp work with broken hardware which hardwires
-  Presence Detect to zero.  Originally submitted August 24 in response
-  to a user report:
-  https://patchwork.ozlabs.org/patch/961860/
+Hi Rob,
 
-* Patches [2/8] to [8/8] contain cleanups and code reduction.
-  Originally submitted August 19:
-  https://patchwork.ozlabs.org/project/linux-pci/list/?series=61434&state=*
+I have no problem with the patch per-se, I can't parse though the second
+paragraph, in particular what you mean by "useful for finding PCI
+buses".
 
+What about the corresponding dts files ? I suspect we had better leave
+them alone lest we can trigger regressions with new dts and older
+kernels.
 
-Changes since v1:
+Thanks,
+Lorenzo
 
-* Separate struct unification from renaming of struct members in
-  patches [2/8] and [3/8]. (Sinan Kaya)
+> Cc: Will Deacon <will.deacon@arm.com>
+> Cc: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
+> Cc: Bjorn Helgaas <bhelgaas@google.com>
+> Cc: Alan Douglas <adouglas@cadence.com>
+> Cc: Subrahmanya Lingappa <l.subrahmanya@mobiveil.co.in>
+> Cc: Michal Simek <michal.simek@xilinx.com>
+> Cc: linux-pci@vger.kernel.org
+> Cc: linux-arm-kernel@lists.infradead.org
+> Signed-off-by: Rob Herring <robh@kernel.org>
+> ---
+>  drivers/pci/controller/pci-host-common.c   | 8 --------
+>  drivers/pci/controller/pcie-cadence-host.c | 7 -------
+>  drivers/pci/controller/pcie-mobiveil.c     | 7 -------
+>  drivers/pci/controller/pcie-xilinx-nwl.c   | 9 ---------
+>  drivers/pci/controller/pcie-xilinx.c       | 7 -------
+>  5 files changed, 38 deletions(-)
+> 
+> diff --git a/drivers/pci/controller/pci-host-common.c b/drivers/pci/controller/pci-host-common.c
+> index d8f10451f273..c742881b5061 100644
+> --- a/drivers/pci/controller/pci-host-common.c
+> +++ b/drivers/pci/controller/pci-host-common.c
+> @@ -58,9 +58,7 @@ static struct pci_config_window *gen_pci_init(struct device *dev,
+>  int pci_host_common_probe(struct platform_device *pdev,
+>  			  struct pci_ecam_ops *ops)
+>  {
+> -	const char *type;
+>  	struct device *dev = &pdev->dev;
+> -	struct device_node *np = dev->of_node;
+>  	struct pci_host_bridge *bridge;
+>  	struct pci_config_window *cfg;
+>  	struct list_head resources;
+> @@ -70,12 +68,6 @@ int pci_host_common_probe(struct platform_device *pdev,
+>  	if (!bridge)
+>  		return -ENOMEM;
+>  
+> -	type = of_get_property(np, "device_type", NULL);
+> -	if (!type || strcmp(type, "pci")) {
+> -		dev_err(dev, "invalid \"device_type\" %s\n", type);
+> -		return -EINVAL;
+> -	}
+> -
+>  	of_pci_check_probe_only();
+>  
+>  	/* Parse and map our Configuration Space windows */
+> diff --git a/drivers/pci/controller/pcie-cadence-host.c b/drivers/pci/controller/pcie-cadence-host.c
+> index ec394f6a19c8..97e251090b4f 100644
+> --- a/drivers/pci/controller/pcie-cadence-host.c
+> +++ b/drivers/pci/controller/pcie-cadence-host.c
+> @@ -235,7 +235,6 @@ static int cdns_pcie_host_init(struct device *dev,
+>  
+>  static int cdns_pcie_host_probe(struct platform_device *pdev)
+>  {
+> -	const char *type;
+>  	struct device *dev = &pdev->dev;
+>  	struct device_node *np = dev->of_node;
+>  	struct pci_host_bridge *bridge;
+> @@ -268,12 +267,6 @@ static int cdns_pcie_host_probe(struct platform_device *pdev)
+>  	rc->device_id = 0xffff;
+>  	of_property_read_u16(np, "device-id", &rc->device_id);
+>  
+> -	type = of_get_property(np, "device_type", NULL);
+> -	if (!type || strcmp(type, "pci")) {
+> -		dev_err(dev, "invalid \"device_type\" %s\n", type);
+> -		return -EINVAL;
+> -	}
+> -
+>  	res = platform_get_resource_byname(pdev, IORESOURCE_MEM, "reg");
+>  	pcie->reg_base = devm_ioremap_resource(dev, res);
+>  	if (IS_ERR(pcie->reg_base)) {
+> diff --git a/drivers/pci/controller/pcie-mobiveil.c b/drivers/pci/controller/pcie-mobiveil.c
+> index a939e8d31735..77052a0712d0 100644
+> --- a/drivers/pci/controller/pcie-mobiveil.c
+> +++ b/drivers/pci/controller/pcie-mobiveil.c
+> @@ -301,13 +301,6 @@ static int mobiveil_pcie_parse_dt(struct mobiveil_pcie *pcie)
+>  	struct platform_device *pdev = pcie->pdev;
+>  	struct device_node *node = dev->of_node;
+>  	struct resource *res;
+> -	const char *type;
+> -
+> -	type = of_get_property(node, "device_type", NULL);
+> -	if (!type || strcmp(type, "pci")) {
+> -		dev_err(dev, "invalid \"device_type\" %s\n", type);
+> -		return -EINVAL;
+> -	}
+>  
+>  	/* map config resource */
+>  	res = platform_get_resource_byname(pdev, IORESOURCE_MEM,
+> diff --git a/drivers/pci/controller/pcie-xilinx-nwl.c b/drivers/pci/controller/pcie-xilinx-nwl.c
+> index fb32840ce8e6..81538d77f790 100644
+> --- a/drivers/pci/controller/pcie-xilinx-nwl.c
+> +++ b/drivers/pci/controller/pcie-xilinx-nwl.c
+> @@ -777,16 +777,7 @@ static int nwl_pcie_parse_dt(struct nwl_pcie *pcie,
+>  			     struct platform_device *pdev)
+>  {
+>  	struct device *dev = pcie->dev;
+> -	struct device_node *node = dev->of_node;
+>  	struct resource *res;
+> -	const char *type;
+> -
+> -	/* Check for device type */
+> -	type = of_get_property(node, "device_type", NULL);
+> -	if (!type || strcmp(type, "pci")) {
+> -		dev_err(dev, "invalid \"device_type\" %s\n", type);
+> -		return -EINVAL;
+> -	}
+>  
+>  	res = platform_get_resource_byname(pdev, IORESOURCE_MEM, "breg");
+>  	pcie->breg_base = devm_ioremap_resource(dev, res);
+> diff --git a/drivers/pci/controller/pcie-xilinx.c b/drivers/pci/controller/pcie-xilinx.c
+> index 7b1389d8e2a5..9bd1a35cd5d8 100644
+> --- a/drivers/pci/controller/pcie-xilinx.c
+> +++ b/drivers/pci/controller/pcie-xilinx.c
+> @@ -574,15 +574,8 @@ static int xilinx_pcie_parse_dt(struct xilinx_pcie_port *port)
+>  	struct device *dev = port->dev;
+>  	struct device_node *node = dev->of_node;
+>  	struct resource regs;
+> -	const char *type;
+>  	int err;
+>  
+> -	type = of_get_property(node, "device_type", NULL);
+> -	if (!type || strcmp(type, "pci")) {
+> -		dev_err(dev, "invalid \"device_type\" %s\n", type);
+> -		return -EINVAL;
+> -	}
+> -
+>  	err = of_address_to_resource(node, 0, &regs);
+>  	if (err) {
+>  		dev_err(dev, "missing \"reg\" property\n");
+> -- 
+> 2.17.1
+> 
 
-* Do not change unsigned int to bool in patch [4/8] per commit
-  d729593e492e ("checkpatch: add a --strict test for structs with
-  bool member definitions").  For the same reason use unsigned int
-  instead of bool in patch [6/8] for newly added latch_status and
-  adapter_status members in cpci_hotplug.h.
-
-* Add all collected Acked-by and Reviewed-by tags.
-
-
-Lukas Wunner (8):
-  PCI: pciehp: Tolerate Presence Detect hardwired to zero
-  PCI: pciehp: Unify controller and slot structs
-  PCI: pciehp: Rename controller struct members for clarity
-  PCI: pciehp: Reshuffle controller struct for clarity
-  PCI: hotplug: Constify hotplug_slot_ops
-  PCI: hotplug: Drop hotplug_slot_info
-  PCI: hotplug: Embed hotplug_slot
-  PCI: hotplug: Document TODOs
-
- arch/powerpc/include/asm/pnv-pci.h      |   2 +-
- drivers/pci/hotplug/TODO                |  74 +++++++
- drivers/pci/hotplug/acpiphp.h           |  10 +-
- drivers/pci/hotplug/acpiphp_core.c      |  36 +---
- drivers/pci/hotplug/acpiphp_ibm.c       |   2 +-
- drivers/pci/hotplug/cpci_hotplug.h      |  11 +-
- drivers/pci/hotplug/cpci_hotplug_core.c | 105 +++-------
- drivers/pci/hotplug/cpci_hotplug_pci.c  |   6 +-
- drivers/pci/hotplug/cpqphp.h            |   9 +-
- drivers/pci/hotplug/cpqphp_core.c       |  59 ++----
- drivers/pci/hotplug/cpqphp_ctrl.c       |  31 +--
- drivers/pci/hotplug/ibmphp.h            |   9 +-
- drivers/pci/hotplug/ibmphp_core.c       | 121 ++++-------
- drivers/pci/hotplug/ibmphp_ebda.c       |  70 +------
- drivers/pci/hotplug/pci_hotplug_core.c  |  53 ++---
- drivers/pci/hotplug/pciehp.h            | 128 ++++++------
- drivers/pci/hotplug/pciehp_core.c       |  84 +++-----
- drivers/pci/hotplug/pciehp_ctrl.c       | 254 +++++++++++-------------
- drivers/pci/hotplug/pciehp_hpc.c        | 139 +++++--------
- drivers/pci/hotplug/pciehp_pci.c        |  14 +-
- drivers/pci/hotplug/pnv_php.c           |  35 ++--
- drivers/pci/hotplug/rpaphp.h            |  10 +-
- drivers/pci/hotplug/rpaphp_core.c       |  20 +-
- drivers/pci/hotplug/rpaphp_pci.c        |  11 +-
- drivers/pci/hotplug/rpaphp_slot.c       |  22 +-
- drivers/pci/hotplug/s390_pci_hpc.c      |  44 ++--
- drivers/pci/hotplug/sgi_hotplug.c       |  63 +++---
- drivers/pci/hotplug/shpchp.h            |   8 +-
- drivers/pci/hotplug/shpchp_core.c       |  48 ++---
- drivers/pci/hotplug/shpchp_ctrl.c       |  21 +-
- drivers/pci/pci.c                       |   4 +-
- drivers/pci/slot.c                      |   2 +-
- drivers/platform/x86/asus-wmi.c         |  39 +---
- drivers/platform/x86/eeepc-laptop.c     |  43 ++--
- include/linux/pci_hotplug.h             |  43 +---
- 35 files changed, 635 insertions(+), 995 deletions(-)
- create mode 100644 drivers/pci/hotplug/TODO
-
--- 
-2.18.0
+_______________________________________________
+linux-arm-kernel mailing list
+linux-arm-kernel@lists.infradead.org
+http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
