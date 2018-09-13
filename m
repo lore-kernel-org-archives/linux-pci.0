@@ -1,103 +1,176 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.29.99]:58274 "EHLO mail.kernel.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1732450AbeISWJr (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Wed, 19 Sep 2018 18:09:47 -0400
-From: Sinan Kaya <okaya@kernel.org>
-To: linux-pci@vger.kernel.org
-Cc: alex.williamson@redhat.com, Sinan Kaya <okaya@kernel.org>,
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+From: Logan Gunthorpe <logang@deltatee.com>
+To: linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
+        linux-nvme@lists.infradead.org, linux-rdma@vger.kernel.org,
+        linux-nvdimm@lists.01.org, linux-block@vger.kernel.org
+Cc: Stephen Bates <sbates@raithlin.com>,
+        Christoph Hellwig <hch@lst.de>,
+        Keith Busch <keith.busch@intel.com>,
+        Sagi Grimberg <sagi@grimberg.me>,
         Bjorn Helgaas <bhelgaas@google.com>,
-        Alexey Kardashevskiy <aik@ozlabs.ru>,
-        Peter Xu <peterx@redhat.com>,
-        "Gustavo A. R. Silva" <gustavo@embeddedor.com>
-Subject: [PATCH v4 6/6] PCI: Expose reset type to users of pci_reset_bus()
-Date: Wed, 19 Sep 2018 16:30:37 +0000
-Message-Id: <20180919163037.13497-7-okaya@kernel.org>
-In-Reply-To: <20180919163037.13497-1-okaya@kernel.org>
-References: <20180919163037.13497-1-okaya@kernel.org>
-Sender: linux-pci-owner@vger.kernel.org
+        Jason Gunthorpe <jgg@mellanox.com>,
+        Max Gurtovoy <maxg@mellanox.com>,
+        Dan Williams <dan.j.williams@intel.com>,
+        =?UTF-8?q?J=C3=A9r=C3=B4me=20Glisse?= <jglisse@redhat.com>,
+        Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+        Alex Williamson <alex.williamson@redhat.com>,
+        =?UTF-8?q?Christian=20K=C3=B6nig?= <christian.koenig@amd.com>,
+        Jens Axboe <axboe@kernel.dk>,
+        Logan Gunthorpe <logang@deltatee.com>
+Date: Wed, 12 Sep 2018 18:11:47 -0600
+Message-Id: <20180913001156.4115-5-logang@deltatee.com>
+In-Reply-To: <20180913001156.4115-1-logang@deltatee.com>
+References: <20180913001156.4115-1-logang@deltatee.com>
+MIME-Version: 1.0
+Subject: [PATCH v6 04/13] PCI/P2PDMA: Introduce configfs/sysfs enable attribute helpers
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Looking to have more control between the users of the API vs. what the API
-can do internally. The new reset_type tells the PCI core about the bounds
-of the request.
+Users of the P2PDMA infrastructure will typically need a way for
+the user to tell the kernel to use P2P resources. Typically
+this will be a simple on/off boolean operation but sometimes
+it may be desirable for the user to specify the exact device to
+use for the P2P operation.
 
-Signed-off-by: Sinan Kaya <okaya@kernel.org>
+Add new helpers for attributes which take a boolean or a PCI device.
+Any boolean, or the word 'auto' turn P2P on or off. Specifying a full
+PCI device name/BDF will select the specific device.
+
+Signed-off-by: Logan Gunthorpe <logang@deltatee.com>
 ---
- drivers/pci/pci.c           | 18 +++++++++++++++---
- drivers/vfio/pci/vfio_pci.c |  6 ++++--
- include/linux/pci.h         |  2 +-
- 3 files changed, 20 insertions(+), 6 deletions(-)
+ drivers/pci/p2pdma.c       | 83 ++++++++++++++++++++++++++++++++++++++
+ include/linux/pci-p2pdma.h | 15 +++++++
+ 2 files changed, 98 insertions(+)
 
-diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
-index b4f14419bd51..f11d29f32119 100644
---- a/drivers/pci/pci.c
-+++ b/drivers/pci/pci.c
-@@ -5232,13 +5232,25 @@ static int __pci_reset_bus(struct pci_bus *bus)
- /**
-  * pci_reset_bus - Try to reset a PCI bus
-  * @pdev: top level PCI device to reset via slot/bus
-+ * @reset_type: resets to try
-  *
-  * Same as above except return -EAGAIN if the bus cannot be locked
+diff --git a/drivers/pci/p2pdma.c b/drivers/pci/p2pdma.c
+index 29bd40a87768..3da848f3fe72 100644
+--- a/drivers/pci/p2pdma.c
++++ b/drivers/pci/p2pdma.c
+@@ -9,6 +9,7 @@
   */
--int pci_reset_bus(struct pci_dev *pdev)
-+int pci_reset_bus(struct pci_dev *pdev, u32 reset_type)
- {
--	return (!pci_probe_reset_slot(pdev->slot)) ?
--	    __pci_reset_slot(pdev->slot) : __pci_reset_bus(pdev->bus);
-+	if (reset_type & PCI_RESET_LINK) {
-+		return (!pci_probe_reset_slot(pdev->slot)) ?
-+				__pci_reset_slot(pdev->slot) :
-+				__pci_reset_bus(pdev->bus);
+ 
+ #define pr_fmt(fmt) "pci-p2pdma: " fmt
++#include <linux/ctype.h>
+ #include <linux/pci-p2pdma.h>
+ #include <linux/module.h>
+ #include <linux/slab.h>
+@@ -856,3 +857,85 @@ int pci_p2pdma_map_sg(struct device *dev, struct scatterlist *sg, int nents,
+ 	return nents;
+ }
+ EXPORT_SYMBOL_GPL(pci_p2pdma_map_sg);
++
++/**
++ * pci_p2pdma_enable_store - parse a configfs/sysfs attribute store
++ *		to enable p2pdma
++ * @page: contents of the value to be stored
++ * @p2p_dev: returns the PCI device that was selected to be used
++ *		(if 'auto', 'none or a boolean isn't the store value)
++ * @use_p2pdma: returns whether to enable p2pdma or not
++ *
++ * Parses an attribute value to decide whether to enable p2pdma.
++ * The value can select a PCI device (using it's full BDF device
++ * name), a boolean, or 'auto'. 'auto' and a true boolean value
++ * have the same meaning. A false value disables p2pdma and
++ * a PCI device enables it to use a specific device as the
++ * backing provider.
++ *
++ * pci_p2pdma_enable_show() should be used as the show operation for
++ * the attribute.
++ *
++ * Returns 0 on success
++ */
++int pci_p2pdma_enable_store(const char *page, struct pci_dev **p2p_dev,
++			    bool *use_p2pdma)
++{
++	struct device *dev;
++
++	dev = bus_find_device_by_name(&pci_bus_type, NULL, page);
++	if (dev) {
++		*use_p2pdma = true;
++		*p2p_dev = to_pci_dev(dev);
++
++		if (!pci_has_p2pmem(*p2p_dev)) {
++			pr_err("PCI device has no peer-to-peer memory: %s\n",
++			       page);
++			pci_dev_put(*p2p_dev);
++			return -ENODEV;
++		}
++
++		return 0;
++	} else if (sysfs_streq(page, "auto")) {
++		*use_p2pdma = true;
++		return 0;
++	} else if ((page[0] == '0' || page[0] == '1') && !iscntrl(page[1])) {
++		/*
++		 * If the user enters a PCI device that  doesn't exist
++		 * like "0000:01:00.1", we don't want strtobool to think
++		 * it's a '0' when it's clearly not what the user wanted.
++		 * So we require 0's and 1's to be exactly one character.
++		 */
++	} else if (!strtobool(page, use_p2pdma)) {
++		return 0;
 +	}
 +
-+	if (reset_type & PCI_RESET_BUS)
-+		return __pci_reset_bus(pdev->bus);
++	pr_err("No such PCI device: %.*s\n", (int)strcspn(page, "\n"), page);
++	return -ENODEV;
++}
++EXPORT_SYMBOL_GPL(pci_p2pdma_enable_store);
 +
-+	if (reset_type & PCI_RESET_SLOT)
-+		return __pci_reset_slot(pdev->slot);
++/**
++ * pci_p2pdma_enable_show - show a configfs/sysfs attribute indicating
++ *		whether p2pdma is enabled
++ * @page: contents of the stored value
++ * @p2p_dev: the selected p2p device (NULL if no device is selected)
++ * @use_p2pdma: whether p2pdme has been enabled
++ *
++ * Attributes that use pci_p2pdma_enable_store() should use this function
++ * to show the value of the attribute.
++ *
++ * Returns 0 on success
++ */
++ssize_t pci_p2pdma_enable_show(char *page, struct pci_dev *p2p_dev,
++			       bool use_p2pdma)
++{
++	if (!use_p2pdma)
++		return sprintf(page, "none\n");
 +
-+	return -EINVAL;
++	if (!p2p_dev)
++		return sprintf(page, "auto\n");
++
++	return sprintf(page, "%s\n", pci_name(p2p_dev));
++}
++EXPORT_SYMBOL_GPL(pci_p2pdma_enable_show);
+diff --git a/include/linux/pci-p2pdma.h b/include/linux/pci-p2pdma.h
+index 2f03dbbf5af6..377de4d73767 100644
+--- a/include/linux/pci-p2pdma.h
++++ b/include/linux/pci-p2pdma.h
+@@ -38,6 +38,10 @@ void pci_p2pmem_free_sgl(struct pci_dev *pdev, struct scatterlist *sgl);
+ void pci_p2pmem_publish(struct pci_dev *pdev, bool publish);
+ int pci_p2pdma_map_sg(struct device *dev, struct scatterlist *sg, int nents,
+ 		      enum dma_data_direction dir);
++int pci_p2pdma_enable_store(const char *page, struct pci_dev **p2p_dev,
++			    bool *use_p2pdma);
++ssize_t pci_p2pdma_enable_show(char *page, struct pci_dev *p2p_dev,
++			       bool use_p2pdma);
+ #else /* CONFIG_PCI_P2PDMA */
+ static inline int pci_p2pdma_add_resource(struct pci_dev *pdev, int bar,
+ 		size_t size, u64 offset)
+@@ -105,5 +109,16 @@ static inline int pci_p2pdma_map_sg(struct device *dev,
+ {
+ 	return 0;
  }
- EXPORT_SYMBOL_GPL(pci_reset_bus);
- 
-diff --git a/drivers/vfio/pci/vfio_pci.c b/drivers/vfio/pci/vfio_pci.c
-index fe7ada997c51..0e80c72b1eaa 100644
---- a/drivers/vfio/pci/vfio_pci.c
-+++ b/drivers/vfio/pci/vfio_pci.c
-@@ -1015,7 +1015,8 @@ static long vfio_pci_ioctl(void *device_data,
- 						    &info, slot);
- 		if (!ret)
- 			/* User has access, do the reset */
--			ret = pci_reset_bus(vdev->pdev);
-+			ret = pci_reset_bus(vdev->pdev,
-+				slot ? PCI_RESET_SLOT :	PCI_RESET_BUS);
- 
- hot_reset_release:
- 		for (i--; i >= 0; i--)
-@@ -1390,7 +1391,8 @@ static void vfio_pci_try_bus_reset(struct vfio_pci_device *vdev)
- 	}
- 
- 	if (needs_reset)
--		ret = pci_reset_bus(vdev->pdev);
-+		ret = pci_reset_bus(vdev->pdev,
-+				slot ? PCI_RESET_SLOT :	PCI_RESET_BUS);
- 
- put_devs:
- 	for (i = 0; i < devs.cur_index; i++) {
-diff --git a/include/linux/pci.h b/include/linux/pci.h
-index 4fdddcb85066..85f48e156753 100644
---- a/include/linux/pci.h
-+++ b/include/linux/pci.h
-@@ -1128,7 +1128,7 @@ int pci_reset_function_locked(struct pci_dev *dev, u32 reset_type);
- int pci_try_reset_function(struct pci_dev *dev, u32 reset_type);
- int pci_probe_reset_slot(struct pci_slot *slot);
- int pci_probe_reset_bus(struct pci_bus *bus);
--int pci_reset_bus(struct pci_dev *dev);
-+int pci_reset_bus(struct pci_dev *dev, u32 reset_type);
- void pci_reset_secondary_bus(struct pci_dev *dev);
- void pcibios_reset_secondary_bus(struct pci_dev *dev);
- void pci_update_resource(struct pci_dev *dev, int resno);
++static inline int pci_p2pdma_enable_store(const char *page,
++		struct pci_dev **p2p_dev, bool *use_p2pdma)
++{
++	*use_p2pdma = false;
++	return 0;
++}
++static inline ssize_t pci_p2pdma_enable_show(char *page,
++		struct pci_dev *p2p_dev, bool use_p2pdma)
++{
++	return sprintf(page, "none\n");
++}
+ #endif /* CONFIG_PCI_P2PDMA */
+ #endif /* _LINUX_PCI_P2P_H */
 -- 
-2.18.0
+2.19.0
