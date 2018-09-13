@@ -1,46 +1,61 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mx0b-0014ca01.pphosted.com ([208.86.201.193]:57653 "EHLO
-        mx0a-0014ca01.pphosted.com" rhost-flags-OK-OK-OK-FAIL)
-        by vger.kernel.org with ESMTP id S1728982AbeIRUwo (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Tue, 18 Sep 2018 16:52:44 -0400
-From: Alan Douglas <adouglas@cadence.com>
-To: <lorenzo.pieralisi@arm.com>
-CC: <kishon@ti.com>, <bhelgaas@google.com>,
-        <linux-pci@vger.kernel.org>, <gustavo.pimentel@synopsys.com>,
-        <cyrille.pitchen@bootlin.com>, Alan Douglas <adouglas@cadence.com>
-Subject: [PATCH v3 3/5] PCI: cadence: Check whether MSI is masked before sending it
-Date: Tue, 18 Sep 2018 16:19:17 +0100
-Message-ID: <1537283957-19223-1-git-send-email-adouglas@cadence.com>
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
 MIME-Version: 1.0
-Content-Type: text/plain
-Sender: linux-pci-owner@vger.kernel.org
+References: <1536842907-51732-1-git-send-email-andrew.murray@arm.com>
+In-Reply-To: <1536842907-51732-1-git-send-email-andrew.murray@arm.com>
+From: Arnd Bergmann <arnd@arndb.de>
+Date: Thu, 13 Sep 2018 16:00:54 +0200
+Message-ID: <CAK8P3a27Qx=A9zNheYNF2oZaRUQm-4h_8nPUF2xTdL+kqFrV5g@mail.gmail.com>
+Subject: Re: [PATCH] asm-generic: io: Fix ioport_map() for
+ !CONFIG_GENERIC_IOMAP && CONFIG_INDIRECT_PIO
+To: andrew.murray@arm.com
+List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
+List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
+List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
+List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
+List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
+Cc: Gabriele Paoloni <gabriele.paoloni@huawei.com>,
+ Suzuki K Poulose <suzuki.poulose@arm.com>, jean-philippe.brucker@arm.com,
+ dann.frazier@canonical.com, Will Deacon <will.deacon@arm.com>,
+ Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
+ "zhichang.yuan" <yuanzhichang@hisilicon.com>,
+ Andy Shevchenko <andy.shevchenko@gmail.com>,
+ linux-pci <linux-pci@vger.kernel.org>, Bjorn Helgaas <bhelgaas@google.com>,
+ Linux ARM <linux-arm-kernel@lists.infradead.org>
+Content-Type: text/plain; charset="us-ascii"
+Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
+Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
 List-ID: <linux-pci.vger.kernel.org>
 
-The EP driver did not check the mask bit for each MSI before
-sending it in raise_irq.  This is now checked, and -EINVAL is
-returned if masked.
+On Thu, Sep 13, 2018 at 2:48 PM Andrew Murray <andrew.murray@arm.com> wrote:
+>
+> The !CONFIG_GENERIC_IOMAP version of ioport_map uses MMIO_UPPER_LIMIT to
+> prevent users from making I/O accesses outside the expected I/O range -
+> however it erroneously treats MMIO_UPPER_LIMIT as a mask which is
+> contradictory to its other users.
+>
+> The introduction of CONFIG_INDIRECT_PIO, which subtracts an arbitrary
+> amount from IO_SPACE_LIMIT to form MMIO_UPPER_LIMIT, results in ioport_map
+> mangling the given port rather than capping it.
+>
+> We address this by aligning more closely with the CONFIG_GENERIC_IOMAP
+> implementation of ioport_map by using the comparison operator and
+> returning NULL where the port exceeds MMIO_UPPER_LIMIT. Though note that
+> we preserve the existing behavior of masking with IO_SPACE_LIMIT such that
+> we don't break existing buggy drivers that somehow rely on this masking.
+>
+> Fixes: 5745392e0c2b ("PCI: Apply the new generic I/O management on PCI IO hosts")
+> Reported-by: Will Deacon <will.deacon@arm.com>
+> Signed-off-by: Andrew Murray <andrew.murray@arm.com>
 
-Fixes: 37dddf14f1ae ("PCI: cadence: Add EndPoint Controller driver for Cadence PCIe controller")
-Signed-off-by: Alan Douglas <adouglas@cadence.com>
----
- drivers/pci/controller/pcie-cadence-ep.c | 5 +++++
- 1 file changed, 5 insertions(+)
+Looks good to me,
+Reviewed-by: Arnd Bergmann <arnd@arndb.de>
 
-diff --git a/drivers/pci/controller/pcie-cadence-ep.c b/drivers/pci/controller/pcie-cadence-ep.c
-index 970d934..56f6b87 100644
---- a/drivers/pci/controller/pcie-cadence-ep.c
-+++ b/drivers/pci/controller/pcie-cadence-ep.c
-@@ -333,6 +333,11 @@ static int cdns_pcie_ep_send_msi_irq(struct cdns_pcie_ep *ep, u8 fn,
- 	if (!interrupt_num || interrupt_num > msi_count)
- 		return -EINVAL;
- 
-+	/* Check whether MSI is masked */
-+	data = cdns_pcie_ep_fn_readw(pcie, fn, cap + PCI_MSI_MASK_64);
-+	if (data & (1 << (interrupt_num - 1)))
-+		return -EINVAL;
-+
- 	/* Compute the data value to be written. */
- 	data_mask = msi_count - 1;
- 	data = cdns_pcie_ep_fn_readw(pcie, fn, cap + PCI_MSI_DATA_64);
--- 
-1.9.0
+Can you take this through the arm64 tree?
+
+_______________________________________________
+linux-arm-kernel mailing list
+linux-arm-kernel@lists.infradead.org
+http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
