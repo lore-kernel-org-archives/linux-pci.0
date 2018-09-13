@@ -1,175 +1,121 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from lekensteyn.nl ([178.21.112.251]:54185 "EHLO lekensteyn.nl"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1726552AbeILPKk (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Wed, 12 Sep 2018 11:10:40 -0400
-Date: Wed, 12 Sep 2018 12:06:39 +0200
-From: Peter Wu <peter@lekensteyn.nl>
-To: Daniel Drake <drake@endlessm.com>
-Cc: bhelgaas@google.com, linux-pci@vger.kernel.org, linux@endlessm.com,
-        nouveau@lists.freedesktop.org, linux-pm@vger.kernel.org,
-        kherbst@redhat.com, andy.shevchenko@linux.intel.com,
-        rafael.j.wysocki@intel.com, keith.busch@intel.com,
-        mika.westerberg@linux.intel.com, jonathan.derrick@intel.com,
-        kugel@rockbox.org, davem@davemloft.net, hkallweit1@gmail.com,
-        netdev@vger.kernel.org, nic_swsd@realtek.com, rchang@marvell.com
-Subject: Re: [PATCH v2] PCI: Reprogram bridge prefetch registers on resume
-Message-ID: <20180912100639.GA9459@al>
-References: <20180912064523.9599-1-drake@endlessm.com>
+Return-Path: <linux-nvme-bounces+bjorn=helgaas.com@lists.infradead.org>
+Return-Path: <linux-nvme-bounces+bjorn=helgaas.com@lists.infradead.org>
+From: Logan Gunthorpe <logang@deltatee.com>
+To: linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
+ linux-nvme@lists.infradead.org, linux-rdma@vger.kernel.org,
+ linux-nvdimm@lists.01.org, linux-block@vger.kernel.org
+Date: Wed, 12 Sep 2018 18:11:54 -0600
+Message-Id: <20180913001156.4115-12-logang@deltatee.com>
+In-Reply-To: <20180913001156.4115-1-logang@deltatee.com>
+References: <20180913001156.4115-1-logang@deltatee.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20180912064523.9599-1-drake@endlessm.com>
-Sender: linux-pci-owner@vger.kernel.org
+Subject: [PATCH v6 11/13] nvme-pci: Add a quirk for a pseudo CMB
+List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-nvme>,
+ <mailto:linux-nvme-request@lists.infradead.org?subject=unsubscribe>
+List-Archive: <http://lists.infradead.org/pipermail/linux-nvme/>
+List-Post: <mailto:linux-nvme@lists.infradead.org>
+List-Help: <mailto:linux-nvme-request@lists.infradead.org?subject=help>
+List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-nvme>,
+ <mailto:linux-nvme-request@lists.infradead.org?subject=subscribe>
+Cc: Jens Axboe <axboe@kernel.dk>, Sagi Grimberg <sagi@grimberg.me>,
+ =?UTF-8?q?Christian=20K=C3=B6nig?= <christian.koenig@amd.com>,
+ Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+ Alex Williamson <alex.williamson@redhat.com>,
+ Stephen Bates <sbates@raithlin.com>, Keith Busch <keith.busch@intel.com>,
+ =?UTF-8?q?J=C3=A9r=C3=B4me=20Glisse?= <jglisse@redhat.com>,
+ Jason Gunthorpe <jgg@mellanox.com>, Bjorn Helgaas <bhelgaas@google.com>,
+ Max Gurtovoy <maxg@mellanox.com>, Dan Williams <dan.j.williams@intel.com>,
+ Logan Gunthorpe <logang@deltatee.com>, Christoph Hellwig <hch@lst.de>
+Content-Type: text/plain; charset="us-ascii"
+Sender: "Linux-nvme" <linux-nvme-bounces@lists.infradead.org>
+Errors-To: linux-nvme-bounces+bjorn=helgaas.com@lists.infradead.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wed, Sep 12, 2018 at 02:45:23PM +0800, Daniel Drake wrote:
-> On 38+ Intel-based Asus products, the nvidia GPU becomes unusable
-> after S3 suspend/resume. The affected products include multiple
-> generations of nvidia GPUs and Intel SoCs. After resume, nouveau logs
-> many errors such as:
-> 
->     fifo: fault 00 [READ] at 0000005555555000 engine 00 [GR] client 04 [HUB/FE] reason 4a [] on channel -1 [007fa91000 unknown]
->     DRM: failed to idle channel 0 [DRM]
-> 
-> Similarly, the nvidia proprietary driver also fails after resume
-> (black screen, 100% CPU usage in Xorg process). We shipped a sample
-> to Nvidia for diagnosis, and their response indicated that it's a
-> problem with the parent PCI bridge (on the Intel SoC), not the GPU.
-> 
-> Runtime suspend/resume works fine, only S3 suspend is affected.
-> 
-> We found a workaround: on resume, rewrite the Intel PCI bridge
-> 'Prefetchable Base Upper 32 Bits' register (PCI_PREF_BASE_UPPER32). In
-> the cases that I checked, this register has value 0 and we just have to
-> rewrite that value.
-> 
-> Linux already saves and restores PCI config space during suspend/resume,
-> but this register was being skipped because upon resume, it already
-> has value 0 (the correct, pre-suspend value).
-> 
-> Intel appear to have previously acknowledged this behaviour and the
-> requirement to rewrite this register.
-> https://bugzilla.kernel.org/show_bug.cgi?id=116851#c23
-> 
-> Based on that, rewrite the prefetch register values even when that
-> appears unnecessary.
-> 
-> We have confirmed this solution on all the affected models we have
-> in-hands (X542UQ, UX533FD, X530UN, V272UN).
-> 
-> Additionally, this solves an issue where r8169 MSI-X interrupts were
-> broken after S3 suspend/resume on Asus X441UAR. This issue was recently
-> worked around in commit 7bb05b85bc2d ("r8169: don't use MSI-X on
-> RTL8106e"). It also fixes the same issue on RTL6186evl/8111evl on an
-> Aimfor-tech laptop that we had not yet patched. I suspect it will also
-> fix the issue that was worked around in commit 7c53a722459c ("r8169:
-> don't use MSI-X on RTL8168g").
-> 
-> Thomas Martitz reports that this change also solves an issue where
-> the AMD Radeon Polaris 10 GPU on the HP Zbook 14u G5 is unresponsive
-> after S3 suspend/resume.
-> 
-> Link: https://bugzilla.kernel.org/show_bug.cgi?id=201069
-> Signed-off-by: Daniel Drake <drake@endlessm.com>
-> ---
-> 
-> Notes:
->     Replaces patch:
->        PCI: add prefetch quirk to work around Asus/Nvidia suspend issues
->     
->     Some of the more verbose info was moved to bugzilla:
->     https://bugzilla.kernel.org/show_bug.cgi?id=201069
->     
->     This patch is aimed at v4.19 (and maybe v4.18-stable); we may follow
->     up with more intrusive improvements for v4.20+.
->     
->     v2: reimplement the register restore within the existing
->         pci_restore_config_space() code.
-> 
->  drivers/pci/pci.c | 31 +++++++++++++++++++++----------
->  1 file changed, 21 insertions(+), 10 deletions(-)
-> 
-> diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
-> index 29ff9619b5fa..e1704100e72d 100644
-> --- a/drivers/pci/pci.c
-> +++ b/drivers/pci/pci.c
-> @@ -1289,13 +1289,15 @@ int pci_save_state(struct pci_dev *dev)
->  EXPORT_SYMBOL(pci_save_state);
->  
->  static void pci_restore_config_dword(struct pci_dev *pdev, int offset,
-> -				     u32 saved_val, int retry)
-> +				     u32 saved_val, int retry, bool force)
->  {
->  	u32 val;
->  
-> -	pci_read_config_dword(pdev, offset, &val);
-> -	if (val == saved_val)
-> -		return;
-> +	if (!force) {
-> +		pci_read_config_dword(pdev, offset, &val);
-> +		if (val == saved_val)
-> +			return;
-> +	}
->  
->  	for (;;) {
->  		pci_dbg(pdev, "restoring config space at offset %#x (was %#x, writing %#x)\n",
+Introduce a quirk to use CMB-like memory on older devices that have
+an exposed BAR but do not advertise support for using CMBLOC and
+CMBSIZE.
 
-"val" is uninitialized and used in this debug message.
+We'd like to use some of these older cards to test P2P memory.
 
-To avoid adding another parameter and changing unrelated lines below,
-what about:
+Signed-off-by: Logan Gunthorpe <logang@deltatee.com>
+Reviewed-by: Sagi Grimberg <sagi@grimberg.me>
+---
+ drivers/nvme/host/nvme.h |  7 +++++++
+ drivers/nvme/host/pci.c  | 24 ++++++++++++++++++++----
+ 2 files changed, 27 insertions(+), 4 deletions(-)
 
-    force = pdev->header_type == PCI_HEADER_TYPE_BRIDGE &&
-        0x24 <= start && start <= 0x2c;
+diff --git a/drivers/nvme/host/nvme.h b/drivers/nvme/host/nvme.h
+index 4030743c90aa..8e6f3bcfe956 100644
+--- a/drivers/nvme/host/nvme.h
++++ b/drivers/nvme/host/nvme.h
+@@ -90,6 +90,13 @@ enum nvme_quirks {
+ 	 * Set MEDIUM priority on SQ creation
+ 	 */
+ 	NVME_QUIRK_MEDIUM_PRIO_SQ		= (1 << 7),
++
++	/*
++	 * Pseudo CMB Support on BAR 4. For adapters like the Microsemi
++	 * NVRAM that have CMB-like memory on a BAR but does not set
++	 * CMBLOC or CMBSZ.
++	 */
++	NVME_QUIRK_PSEUDO_CMB_BAR4		= (1 << 8),
+ };
+ 
+ /*
+diff --git a/drivers/nvme/host/pci.c b/drivers/nvme/host/pci.c
+index 0d6c41bc2b35..db862ee6e53e 100644
+--- a/drivers/nvme/host/pci.c
++++ b/drivers/nvme/host/pci.c
+@@ -1644,6 +1644,13 @@ static ssize_t nvme_cmb_show(struct device *dev,
+ }
+ static DEVICE_ATTR(cmb, S_IRUGO, nvme_cmb_show, NULL);
+ 
++static u32 nvme_pseudo_cmbsz(struct pci_dev *pdev, int bar)
++{
++	return NVME_CMBSZ_WDS | NVME_CMBSZ_RDS |
++		(((ilog2(SZ_16M) - 12) / 4) << NVME_CMBSZ_SZU_SHIFT) |
++		((pci_resource_len(pdev, bar) / SZ_16M) << NVME_CMBSZ_SZ_SHIFT);
++}
++
+ static u64 nvme_cmb_size_unit(struct nvme_dev *dev)
+ {
+ 	u8 szu = (dev->cmbsz >> NVME_CMBSZ_SZU_SHIFT) & NVME_CMBSZ_SZU_MASK;
+@@ -1663,10 +1670,15 @@ static void nvme_map_cmb(struct nvme_dev *dev)
+ 	struct pci_dev *pdev = to_pci_dev(dev->dev);
+ 	int bar;
+ 
+-	dev->cmbsz = readl(dev->bar + NVME_REG_CMBSZ);
+-	if (!dev->cmbsz)
+-		return;
+-	dev->cmbloc = readl(dev->bar + NVME_REG_CMBLOC);
++	if (dev->ctrl.quirks & NVME_QUIRK_PSEUDO_CMB_BAR4) {
++		dev->cmbsz = nvme_pseudo_cmbsz(pdev, 4);
++		dev->cmbloc = 4;
++	} else {
++		dev->cmbsz = readl(dev->bar + NVME_REG_CMBSZ);
++		if (!dev->cmbsz)
++			return;
++		dev->cmbloc = readl(dev->bar + NVME_REG_CMBLOC);
++	}
+ 
+ 	size = nvme_cmb_size_unit(dev) * nvme_cmb_size(dev);
+ 	offset = nvme_cmb_size_unit(dev) * NVME_CMB_OFST(dev->cmbloc);
+@@ -2715,6 +2727,10 @@ static const struct pci_device_id nvme_id_table[] = {
+ 		.driver_data = NVME_QUIRK_LIGHTNVM, },
+ 	{ PCI_DEVICE(0x1d1d, 0x2601),	/* CNEX Granby */
+ 		.driver_data = NVME_QUIRK_LIGHTNVM, },
++	{ PCI_DEVICE(0x11f8, 0xf117),	/* Microsemi NVRAM adaptor */
++		.driver_data = NVME_QUIRK_PSEUDO_CMB_BAR4, },
++	{ PCI_DEVICE(0x1db1, 0x0002),	/* Everspin nvNitro adaptor */
++		.driver_data = NVME_QUIRK_PSEUDO_CMB_BAR4,  },
+ 	{ PCI_DEVICE_CLASS(PCI_CLASS_STORAGE_EXPRESS, 0xffffff) },
+ 	{ PCI_DEVICE(PCI_VENDOR_ID_APPLE, 0x2001) },
+ 	{ PCI_DEVICE(PCI_VENDOR_ID_APPLE, 0x2003) },
+-- 
+2.19.0
 
-(or start == 0x28 || start == 0x24 || start == 0x28 if you want to be
-very explicit). This would reduce in a smaller diff for this temporary
-solution.
 
-Kind regards,
-Peter
-
-> @@ -1313,25 +1315,34 @@ static void pci_restore_config_dword(struct pci_dev *pdev, int offset,
->  }
->  
->  static void pci_restore_config_space_range(struct pci_dev *pdev,
-> -					   int start, int end, int retry)
-> +					   int start, int end, int retry,
-> +					   bool force)
->  {
->  	int index;
->  
->  	for (index = end; index >= start; index--)
->  		pci_restore_config_dword(pdev, 4 * index,
->  					 pdev->saved_config_space[index],
-> -					 retry);
-> +					 retry, force);
->  }
->  
->  static void pci_restore_config_space(struct pci_dev *pdev)
->  {
->  	if (pdev->hdr_type == PCI_HEADER_TYPE_NORMAL) {
-> -		pci_restore_config_space_range(pdev, 10, 15, 0);
-> +		pci_restore_config_space_range(pdev, 10, 15, 0, false);
->  		/* Restore BARs before the command register. */
-> -		pci_restore_config_space_range(pdev, 4, 9, 10);
-> -		pci_restore_config_space_range(pdev, 0, 3, 0);
-> +		pci_restore_config_space_range(pdev, 4, 9, 10, false);
-> +		pci_restore_config_space_range(pdev, 0, 3, 0, false);
-> +	} else if (pdev->hdr_type == PCI_HEADER_TYPE_BRIDGE) {
-> +		pci_restore_config_space_range(pdev, 12, 15, 0, false);
-> +		/* Force rewriting of prefetch registers to avoid
-> +		 * S3 resume issues on Intel PCI bridges that occur when
-> +		 * these registers are not explicitly written.
-> +		 */
-> +		pci_restore_config_space_range(pdev, 9, 11, 0, true);
-> +		pci_restore_config_space_range(pdev, 0, 8, 0, false);
->  	} else {
-> -		pci_restore_config_space_range(pdev, 0, 15, 0);
-> +		pci_restore_config_space_range(pdev, 0, 15, 0, false);
->  	}
->  }
->  
-> -- 
-> 2.17.1
-> 
+_______________________________________________
+Linux-nvme mailing list
+Linux-nvme@lists.infradead.org
+http://lists.infradead.org/mailman/listinfo/linux-nvme
