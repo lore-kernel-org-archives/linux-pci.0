@@ -1,35 +1,70 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.29.99]:54828 "EHLO mail.kernel.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1725853AbeIEFj4 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Wed, 5 Sep 2018 01:39:56 -0400
-Subject: Re: RFC on PCI Device Lock
-To: Alex Williamson <alex.williamson@redhat.com>
-Cc: Bjorn Helgaas <bhelgaas@google.com>,
-        Dennis Dalessandro <dennis.dalessandro@intel.com>,
-        Linux PCI <linux-pci@vger.kernel.org>
-References: <87682473-6ffe-f7df-e8f8-3d00e8247621@kernel.org>
- <20180904165202.4e5bb59d@t450s.home>
-From: Sinan Kaya <okaya@kernel.org>
-Message-ID: <17720f56-2caa-2d2e-b655-867debf55934@kernel.org>
-Date: Tue, 4 Sep 2018 18:12:16 -0700
+Received: from bmailout2.hostsharing.net ([83.223.90.240]:36519 "EHLO
+        bmailout2.hostsharing.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726919AbeIMPTk (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Thu, 13 Sep 2018 11:19:40 -0400
+Date: Thu, 13 Sep 2018 12:10:50 +0200
+From: Lukas Wunner <lukas@wunner.de>
+To: Sreekanth Reddy <sreekanth.reddy@broadcom.com>
+Cc: Suganath Prabu Subramani <suganath-prabu.subramani@broadcom.com>,
+        Andy Shevchenko <andy.shevchenko@gmail.com>,
+        linux-scsi <linux-scsi@vger.kernel.org>,
+        Sathya Prakash <Sathya.Prakash@broadcom.com>,
+        linux-pci@vger.kernel.org,
+        Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+        Keith Busch <keith.busch@intel.com>
+Subject: Re: [Patch v1 0/7] mpt3sas: Hot-Plug Surprise removal support on IOC.
+Message-ID: <20180913101050.h4nkjhtxj4jwfh2h@wunner.de>
+References: <1535690081-16116-1-git-send-email-suganath-prabu.subramani@broadcom.com>
+ <CAHp75VfC8GN3oEzSFJYfMr0iqBTYUJ=WPoLS9Oh5NgVcFmnBkw@mail.gmail.com>
+ <20180831085534.n6eikj5cw522ihhe@wunner.de>
+ <CAK=zhgrzNYDeUFN0YWVJLdGR0nA443su0xydwSHFQzhouhZBuw@mail.gmail.com>
+ <20180904094234.jm5je5sfpagdf6dz@wunner.de>
+ <CAK=zhgprkzcF-UZeeqg_qN0xFLR=BfzkRNRZKA=DJyf7aMPmeg@mail.gmail.com>
+ <20180905073816.jcrct2xcpucb6bkn@wunner.de>
+ <CAK=zhgoy8qfKmjM+ypAmbZ1aXALdGwHSS5ND1G9HBt6h4hTheg@mail.gmail.com>
 MIME-Version: 1.0
-In-Reply-To: <20180904165202.4e5bb59d@t450s.home>
-Content-Type: text/plain; charset=utf-8; format=flowed
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <CAK=zhgoy8qfKmjM+ypAmbZ1aXALdGwHSS5ND1G9HBt6h4hTheg@mail.gmail.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 9/4/2018 3:52 PM, Alex Williamson wrote:
-> I won't deny that we're getting a little sloppy with some of the reset
-> interfaces and I'd love to solve the device lock issue more generally,
-> but trying to abstract slot vs bus and hide the lower level interfaces
-> from drivers doesn't seem like it's really working here.  Thanks,
+On Wed, Sep 12, 2018 at 03:31:07PM +0530, Sreekanth Reddy wrote:
+> On Wed, Sep 5, 2018 at 1:08 PM, Lukas Wunner <lukas@wunner.de> wrote:
+> > On Wed, Sep 05, 2018 at 11:45:45AM +0530, Sreekanth Reddy wrote:
+> > > I have one more instance where still we need this poll kthread, i.e
+> > > during the device probe time we have some commands which has more
+> > > timeout value (e.g. 300 seconds), so if user has unplugged this device
+> > > just after sending this more time-out valued command then driver has
+> > > to wait until this time-out value expires. i.e. this device is still
+> > > visible in lspci output until this 300 seconds timeout value expires
+> > > even though device is unplugged. if we have a poll kthread (which will
+> > > poll for every one second) then driver can early detect the unplugged
+> > > state and can terminate the outstanding commands and hence probe
+> > > operation can be completed quickly.
+> >
+> > The only instances I can see in your driver where it waits for 300 s
+> > is in _base_diag_reset(), which does an msleep(256) in a loop for up
+> > to 300 s, and scsih_scan_finished(), which is called in a loop with an
+> > msleep(10) by do_scsi_scan_host().
+> >
+> > Any harm in simply checking for removal of the device in those loops
+> > and bailing out if so?  Instead of the poll kthread to achieve the same?
+> 
+> we can do for this port enable request but still we have other
+> requests where we don't have this type of loops and used
+> wait_for_completion_timeout () API where we can't bailout the request
+> in-between and we have to wait until the timeout value expires. For
+> these types of request terminating it though watchdog thread will be
+> simple.
 
-Counter argument is that drivers need to know about bus/slot distinction
-and call two different API for hotplug capable systems. I think that's
-too much to ask.
+When the HBA is hot-removed, its driver's ->remove callback is invoked.
+You could just check at the beginning of the ->remove callback whether
+the device is no longer present, and if it isn't, complete() any
+completions that may be pending.
 
-The motivation for original patch was that hotplug information was leaking
-and we could do a better job about it. But, you are right; I partially
-covered VFIO needs as it seemed to be doing more work than a simple
-reset due to ownership dependencies.
+I think that would obviate the need for a watchdog.
+
+Thanks,
+
+Lukas
