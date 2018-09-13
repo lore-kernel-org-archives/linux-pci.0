@@ -1,239 +1,222 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.29.99]:43110 "EHLO mail.kernel.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1728671AbeIRE3E (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Tue, 18 Sep 2018 00:29:04 -0400
-Date: Mon, 17 Sep 2018 17:59:35 -0500
-From: Bjorn Helgaas <helgaas@kernel.org>
-To: Sergey Miroshnichenko <s.miroshnichenko@yadro.com>
-Cc: Sam Bobroff <sbobroff@linux.ibm.com>, linux-pci@vger.kernel.org,
-        Bjorn Helgaas <bhelgaas@google.com>, linux@yadro.com,
-        Russell Currey <ruscur@russell.cc>,
-        linuxppc-dev@lists.ozlabs.org,
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+From: Logan Gunthorpe <logang@deltatee.com>
+To: linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
+        linux-nvme@lists.infradead.org, linux-rdma@vger.kernel.org,
+        linux-nvdimm@lists.01.org, linux-block@vger.kernel.org
+Cc: Stephen Bates <sbates@raithlin.com>,
+        Christoph Hellwig <hch@lst.de>,
+        Keith Busch <keith.busch@intel.com>,
+        Sagi Grimberg <sagi@grimberg.me>,
+        Bjorn Helgaas <bhelgaas@google.com>,
+        Jason Gunthorpe <jgg@mellanox.com>,
+        Max Gurtovoy <maxg@mellanox.com>,
+        Dan Williams <dan.j.williams@intel.com>,
+        =?UTF-8?q?J=C3=A9r=C3=B4me=20Glisse?= <jglisse@redhat.com>,
         Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-        Oliver OHalloran <oliveroh@au1.ibm.com>
-Subject: Re: [PATCH RFC 1/4] PCI: hotplug: Add parameter to put devices to
- reset during rescan
-Message-ID: <20180917225935.GD54859@bhelgaas-glaptop.roam.corp.google.com>
-References: <20180914161404.4685-1-s.miroshnichenko@yadro.com>
- <20180914161404.4685-2-s.miroshnichenko@yadro.com>
- <20180917052800.GA7315@tungsten.ozlabs.ibm.com>
- <6b913e12-e8c8-30c1-5269-3029ddb00a4d@yadro.com>
+        Alex Williamson <alex.williamson@redhat.com>,
+        =?UTF-8?q?Christian=20K=C3=B6nig?= <christian.koenig@amd.com>,
+        Jens Axboe <axboe@kernel.dk>,
+        Logan Gunthorpe <logang@deltatee.com>
+Date: Wed, 12 Sep 2018 18:11:52 -0600
+Message-Id: <20180913001156.4115-10-logang@deltatee.com>
+In-Reply-To: <20180913001156.4115-1-logang@deltatee.com>
+References: <20180913001156.4115-1-logang@deltatee.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <6b913e12-e8c8-30c1-5269-3029ddb00a4d@yadro.com>
-Sender: linux-pci-owner@vger.kernel.org
+Subject: [PATCH v6 09/13] nvme-pci: Use PCI p2pmem subsystem to manage the CMB
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-[+cc Russell, Ben, Oliver, linuxppc-dev]
+Register the CMB buffer as p2pmem and use the appropriate allocation
+functions to create and destroy the IO submission queues.
 
-On Mon, Sep 17, 2018 at 11:55:43PM +0300, Sergey Miroshnichenko wrote:
-> Hello Sam,
-> 
-> On 9/17/18 8:28 AM, Sam Bobroff wrote:
-> > Hi Sergey,
-> > 
-> > On Fri, Sep 14, 2018 at 07:14:01PM +0300, Sergey Miroshnichenko wrote:
-> >> Introduce a new command line option "pci=pcie_movable_bars" that indicates
-> >> support of PCIe hotplug without prior reservation of memory regions by
-> >> BIOS/bootloader.
-> >>
-> >> If a new PCIe device has been hot-plugged between two active ones, which
-> >> have no (or not big enough) gap between their BARs, allocating new BARs
-> >> requires to move BARs of the following working devices:
-> >>
-> >> 1)                   dev 4
-> >>                        |
-> >>                        v
-> >> .. |  dev 3  |  dev 3  |  dev 5  |  dev 7  |
-> >> .. |  BAR 0  |  BAR 1  |  BAR 0  |  BAR 0  |
-> >>
-> >> 2)                             dev 4
-> >>                                  |
-> >>                                  v
-> >> .. |  dev 3  |  dev 3  | -->           --> |  dev 5  |  dev 7  |
-> >> .. |  BAR 0  |  BAR 1  | -->           --> |  BAR 0  |  BAR 0  |
-> >>
-> >> 3)
-> >>
-> >> .. |  dev 3  |  dev 3  |  dev 4  |  dev 4  |  dev 5  |  dev 7  |
-> >> .. |  BAR 0  |  BAR 1  |  BAR 0  |  BAR 1  |  BAR 0  |  BAR 0  |
-> >>
-> >> Not only BARs, but also bridge windows can be updated during a PCIe rescan,
-> >> threatening all memory transactions during this procedure, so the PCI
-> >> subsystem will instruct the drivers to pause by calling the reset_prepare()
-> >> and reset_done() callbacks.
-> >>
-> >> If a device may be affected by BAR movement, the BAR changes tracking must
-> >> be implemented in its driver.
-> >>
-> >> Signed-off-by: Sergey Miroshnichenko <s.miroshnichenko@yadro.com>
-> >> ---
-> >>  .../admin-guide/kernel-parameters.txt         |  6 +++
-> >>  drivers/pci/pci.c                             |  2 +
-> >>  drivers/pci/probe.c                           | 43 +++++++++++++++++++
-> >>  include/linux/pci.h                           |  1 +
-> >>  4 files changed, 52 insertions(+)
-> >>
-> >> diff --git a/Documentation/admin-guide/kernel-parameters.txt b/Documentation/admin-guide/kernel-parameters.txt
-> >> index 64a3bf54b974..f8132a709061 100644
-> >> --- a/Documentation/admin-guide/kernel-parameters.txt
-> >> +++ b/Documentation/admin-guide/kernel-parameters.txt
-> >> @@ -3311,6 +3311,12 @@
-> >>  				bridges without forcing it upstream. Note:
-> >>  				this removes isolation between devices and
-> >>  				may put more devices in an IOMMU group.
-> >> +		pcie_movable_bars	Arrange a space at runtime for BARs of
-> >> +				hotplugged PCIe devices - usable if bootloader
-> >> +				doesn't reserve memory regions for them. Freeing
-> >> +				a space may require moving BARs of active devices
-> >> +				to higher addresses, so device drivers will be
-> >> +				paused during rescan.
-> >>  
-> >>  	pcie_aspm=	[PCIE] Forcibly enable or disable PCIe Active State Power
-> >>  			Management.
-> >> diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
-> >> index 1835f3a7aa8d..5f07a59b5924 100644
-> >> --- a/drivers/pci/pci.c
-> >> +++ b/drivers/pci/pci.c
-> >> @@ -6105,6 +6105,8 @@ static int __init pci_setup(char *str)
-> >>  				pci_add_flags(PCI_SCAN_ALL_PCIE_DEVS);
-> >>  			} else if (!strncmp(str, "disable_acs_redir=", 18)) {
-> >>  				disable_acs_redir_param = str + 18;
-> >> +			} else if (!strncmp(str, "pcie_movable_bars", 17)) {
-> >> +				pci_add_flags(PCI_MOVABLE_BARS);
-> >>  			} else {
-> >>  				printk(KERN_ERR "PCI: Unknown option `%s'\n",
-> >>  						str);
-> >> diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
-> >> index 201f9e5ff55c..bdaafc48dc4c 100644
-> >> --- a/drivers/pci/probe.c
-> >> +++ b/drivers/pci/probe.c
-> >> @@ -3138,6 +3138,45 @@ unsigned int pci_rescan_bus_bridge_resize(struct pci_dev *bridge)
-> >>  	return max;
-> >>  }
-> >>  
-> >> +/*
-> >> + * Put all devices of the bus and its children to reset
-> >> + */
-> >> +static void pci_bus_reset_prepare(struct pci_bus *bus)
-> >> +{
-> >> +	struct pci_dev *dev;
-> >> +
-> >> +	list_for_each_entry(dev, &bus->devices, bus_list) {
-> >> +		struct pci_bus *child = dev->subordinate;
-> >> +
-> >> +		if (child) {
-> >> +			pci_bus_reset_prepare(child);
-> >> +		} else if (dev->driver &&
-> >> +			   dev->driver->err_handler &&
-> >> +			   dev->driver->err_handler->reset_prepare) {
-> >> +			dev->driver->err_handler->reset_prepare(dev);
-> >> +		}
-> > 
-> > What about devices with drivers that don't have reset_prepare()?  It
-> > looks like it will just reconfigure them anyway. Is that right?
-> > 
-> 
-> It is possible that unprepared driver without these hooks will get BARs
-> moved, I should put a warning message there. There three ways we can see
-> to make this safe:
->  - add the reset_prepare()/reset_done() hooks to *every* PCIe driver;
->  - refuse BAR movement if at least one unprepared driver has been
-> encountered during rescan;
->  - reduce the number of drivers which can be affected to some
-> controllable value and prepare them on demand.
-> 
-> Applying the second proposal as a major restriction seems fairly
-> reasonable, but for our particular setups and use-cases it is probably
-> too stiff:
->  - we've noticed that devices connected directly to the root bridge
-> don't get moved BARs, and this covers our x86_64 servers: we only
-> insert/remove devices into "second-level" and "lower" bridges there, but
-> not root;
->  - on PowerNV we have system devices (network interfaces, USB hub, etc.)
-> grouped into dedicated domain, with all other domains ready for hotplug,
-> and only these domains can be rescanned.
-> 
-> With our scenarios currently reduced to these two, we can live with just
-> a few drivers "prepared" for now: NVME and few Ethernet adapters, this
-> gives us a possibility to use this feature before "converting" *all* the
-> drivers, and even have the NVidia cards running on a closed proprietary
-> driver.
-> 
-> Should we make this behavior adjustable with something like
-> "pcie_movable_bars=safe" and "pcie_movable_bars=always" ?
+If the CMB supports WDS and RDS, publish it for use as P2P memory
+by other devices.
 
-I like the overall idea of this a lot.
+Kernels without CONFIG_PCI_P2PDMA will also no longer support NVMe CMB.
+However, seeing the main use-cases for the CMB is P2P operations,
+this seems like a reasonable dependency.
 
-  - Why do we need a command line parameter to enable this?  Can't we
-    do it unconditionally and automatically when it's possible?  We
-    could have a chicken switch to *disable* it in case this breaks
-    something horribly, but I would like this functionality to be
-    always available without a special option.
+We drop the __iomem safety on the buffer seeing that, by convention, it's
+safe to directly access memory mapped by memremap()/devm_memremap_pages().
+Architectures where this is not safe will not be supported by memremap()
+and therefore will not be support PCI P2P and have no support for CMB.
 
-  - I'm not sure the existence of .reset_done() is evidence that a
-    driver is prepared for its BARs to move.  I don't see any
-    documentation that refers to BAR movement, and I doubt it's been
-    tested.  But I only see 5 implementations in the tree, so it'd be
-    easy to verify.
-    
-  - I think your second proposal above sounds right: we should regard
-    any device whose driver lacks .reset_done() as immovable.  We will
-    likely be able to move some devices but not others.  Implementing
-    .reset_done() will increase flexibility but it shouldn't be a
-    requirement for all drivers.
+Signed-off-by: Logan Gunthorpe <logang@deltatee.com>
+---
+ drivers/nvme/host/pci.c | 80 +++++++++++++++++++++++------------------
+ 1 file changed, 45 insertions(+), 35 deletions(-)
 
-> >> +	}
-> >> +}
-> >> +
-> >> +/*
-> >> + * Complete the reset of all devices for the bus and its children
-> >> + */
-> >> +static void pci_bus_reset_done(struct pci_bus *bus)
-> >> +{
-> >> +	struct pci_dev *dev;
-> >> +
-> >> +	list_for_each_entry(dev, &bus->devices, bus_list) {
-> >> +		struct pci_bus *child = dev->subordinate;
-> >> +
-> >> +		if (child) {
-> >> +			pci_bus_reset_done(child);
-> >> +		} else if (dev->driver && dev->driver->err_handler &&
-> >> +			   dev->driver->err_handler->reset_done) {
-> >> +			dev->driver->err_handler->reset_done(dev);
-> >> +		}
-> >> +	}
-> >> +}
-> >> +
-> >>  /**
-> >>   * pci_rescan_bus - Scan a PCI bus for devices
-> >>   * @bus: PCI bus to scan
-> >> @@ -3151,8 +3190,12 @@ unsigned int pci_rescan_bus(struct pci_bus *bus)
-> >>  {
-> >>  	unsigned int max;
-> >>  
-> >> +	if (pci_has_flag(PCI_MOVABLE_BARS))
-> >> +		pci_bus_reset_prepare(bus);
-> >>  	max = pci_scan_child_bus(bus);
-> >>  	pci_assign_unassigned_bus_resources(bus);
-> >> +	if (pci_has_flag(PCI_MOVABLE_BARS))
-> >> +		pci_bus_reset_done(bus);
-> >>  	pci_bus_add_devices(bus);
-> >>  
-> >>  	return max;
-> >> diff --git a/include/linux/pci.h b/include/linux/pci.h
-> >> index 6925828f9f25..a8cb1a367c34 100644
-> >> --- a/include/linux/pci.h
-> >> +++ b/include/linux/pci.h
-> >> @@ -847,6 +847,7 @@ enum {
-> >>  	PCI_ENABLE_PROC_DOMAINS	= 0x00000010,	/* Enable domains in /proc */
-> >>  	PCI_COMPAT_DOMAIN_0	= 0x00000020,	/* ... except domain 0 */
-> >>  	PCI_SCAN_ALL_PCIE_DEVS	= 0x00000040,	/* Scan all, not just dev 0 */
-> >> +	PCI_MOVABLE_BARS	= 0x00000080,	/* Runtime BAR reassign after hotplug */
-> >>  };
-> >>  
-> >>  /* These external functions are only available when PCI support is enabled */
-> >> -- 
-> >> 2.17.1
-> >>
+diff --git a/drivers/nvme/host/pci.c b/drivers/nvme/host/pci.c
+index d668682f91df..f434706a04e8 100644
+--- a/drivers/nvme/host/pci.c
++++ b/drivers/nvme/host/pci.c
+@@ -30,6 +30,7 @@
+ #include <linux/types.h>
+ #include <linux/io-64-nonatomic-lo-hi.h>
+ #include <linux/sed-opal.h>
++#include <linux/pci-p2pdma.h>
+ 
+ #include "nvme.h"
+ 
+@@ -99,9 +100,8 @@ struct nvme_dev {
+ 	struct work_struct remove_work;
+ 	struct mutex shutdown_lock;
+ 	bool subsystem;
+-	void __iomem *cmb;
+-	pci_bus_addr_t cmb_bus_addr;
+ 	u64 cmb_size;
++	bool cmb_use_sqes;
+ 	u32 cmbsz;
+ 	u32 cmbloc;
+ 	struct nvme_ctrl ctrl;
+@@ -158,7 +158,7 @@ struct nvme_queue {
+ 	struct nvme_dev *dev;
+ 	spinlock_t sq_lock;
+ 	struct nvme_command *sq_cmds;
+-	struct nvme_command __iomem *sq_cmds_io;
++	bool sq_cmds_is_io;
+ 	spinlock_t cq_lock ____cacheline_aligned_in_smp;
+ 	volatile struct nvme_completion *cqes;
+ 	struct blk_mq_tags **tags;
+@@ -447,11 +447,8 @@ static int nvme_pci_map_queues(struct blk_mq_tag_set *set)
+ static void nvme_submit_cmd(struct nvme_queue *nvmeq, struct nvme_command *cmd)
+ {
+ 	spin_lock(&nvmeq->sq_lock);
+-	if (nvmeq->sq_cmds_io)
+-		memcpy_toio(&nvmeq->sq_cmds_io[nvmeq->sq_tail], cmd,
+-				sizeof(*cmd));
+-	else
+-		memcpy(&nvmeq->sq_cmds[nvmeq->sq_tail], cmd, sizeof(*cmd));
++
++	memcpy(&nvmeq->sq_cmds[nvmeq->sq_tail], cmd, sizeof(*cmd));
+ 
+ 	if (++nvmeq->sq_tail == nvmeq->q_depth)
+ 		nvmeq->sq_tail = 0;
+@@ -1232,9 +1229,18 @@ static void nvme_free_queue(struct nvme_queue *nvmeq)
+ {
+ 	dma_free_coherent(nvmeq->q_dmadev, CQ_SIZE(nvmeq->q_depth),
+ 				(void *)nvmeq->cqes, nvmeq->cq_dma_addr);
+-	if (nvmeq->sq_cmds)
+-		dma_free_coherent(nvmeq->q_dmadev, SQ_SIZE(nvmeq->q_depth),
+-					nvmeq->sq_cmds, nvmeq->sq_dma_addr);
++
++	if (nvmeq->sq_cmds) {
++		if (nvmeq->sq_cmds_is_io)
++			pci_free_p2pmem(to_pci_dev(nvmeq->q_dmadev),
++					nvmeq->sq_cmds,
++					SQ_SIZE(nvmeq->q_depth));
++		else
++			dma_free_coherent(nvmeq->q_dmadev,
++					  SQ_SIZE(nvmeq->q_depth),
++					  nvmeq->sq_cmds,
++					  nvmeq->sq_dma_addr);
++	}
+ }
+ 
+ static void nvme_free_queues(struct nvme_dev *dev, int lowest)
+@@ -1323,12 +1329,21 @@ static int nvme_cmb_qdepth(struct nvme_dev *dev, int nr_io_queues,
+ static int nvme_alloc_sq_cmds(struct nvme_dev *dev, struct nvme_queue *nvmeq,
+ 				int qid, int depth)
+ {
+-	/* CMB SQEs will be mapped before creation */
+-	if (qid && dev->cmb && use_cmb_sqes && (dev->cmbsz & NVME_CMBSZ_SQS))
+-		return 0;
++	struct pci_dev *pdev = to_pci_dev(dev->dev);
++
++	if (qid && dev->cmb_use_sqes && (dev->cmbsz & NVME_CMBSZ_SQS)) {
++		nvmeq->sq_cmds = pci_alloc_p2pmem(pdev, SQ_SIZE(depth));
++		nvmeq->sq_dma_addr = pci_p2pmem_virt_to_bus(pdev,
++						nvmeq->sq_cmds);
++		nvmeq->sq_cmds_is_io = true;
++	}
++
++	if (!nvmeq->sq_cmds) {
++		nvmeq->sq_cmds = dma_alloc_coherent(dev->dev, SQ_SIZE(depth),
++					&nvmeq->sq_dma_addr, GFP_KERNEL);
++		nvmeq->sq_cmds_is_io = false;
++	}
+ 
+-	nvmeq->sq_cmds = dma_alloc_coherent(dev->dev, SQ_SIZE(depth),
+-					    &nvmeq->sq_dma_addr, GFP_KERNEL);
+ 	if (!nvmeq->sq_cmds)
+ 		return -ENOMEM;
+ 	return 0;
+@@ -1405,13 +1420,6 @@ static int nvme_create_queue(struct nvme_queue *nvmeq, int qid)
+ 	int result;
+ 	s16 vector;
+ 
+-	if (dev->cmb && use_cmb_sqes && (dev->cmbsz & NVME_CMBSZ_SQS)) {
+-		unsigned offset = (qid - 1) * roundup(SQ_SIZE(nvmeq->q_depth),
+-						      dev->ctrl.page_size);
+-		nvmeq->sq_dma_addr = dev->cmb_bus_addr + offset;
+-		nvmeq->sq_cmds_io = dev->cmb + offset;
+-	}
+-
+ 	/*
+ 	 * A queue's vector matches the queue identifier unless the controller
+ 	 * has only one vector available.
+@@ -1652,9 +1660,6 @@ static void nvme_map_cmb(struct nvme_dev *dev)
+ 		return;
+ 	dev->cmbloc = readl(dev->bar + NVME_REG_CMBLOC);
+ 
+-	if (!use_cmb_sqes)
+-		return;
+-
+ 	size = nvme_cmb_size_unit(dev) * nvme_cmb_size(dev);
+ 	offset = nvme_cmb_size_unit(dev) * NVME_CMB_OFST(dev->cmbloc);
+ 	bar = NVME_CMB_BIR(dev->cmbloc);
+@@ -1671,11 +1676,18 @@ static void nvme_map_cmb(struct nvme_dev *dev)
+ 	if (size > bar_size - offset)
+ 		size = bar_size - offset;
+ 
+-	dev->cmb = ioremap_wc(pci_resource_start(pdev, bar) + offset, size);
+-	if (!dev->cmb)
++	if (pci_p2pdma_add_resource(pdev, bar, size, offset)) {
++		dev_warn(dev->ctrl.device,
++			 "failed to register the CMB\n");
+ 		return;
+-	dev->cmb_bus_addr = pci_bus_address(pdev, bar) + offset;
++	}
++
+ 	dev->cmb_size = size;
++	dev->cmb_use_sqes = use_cmb_sqes && (dev->cmbsz & NVME_CMBSZ_SQS);
++
++	if ((dev->cmbsz & (NVME_CMBSZ_WDS | NVME_CMBSZ_RDS)) ==
++			(NVME_CMBSZ_WDS | NVME_CMBSZ_RDS))
++		pci_p2pmem_publish(pdev, true);
+ 
+ 	if (sysfs_add_file_to_group(&dev->ctrl.device->kobj,
+ 				    &dev_attr_cmb.attr, NULL))
+@@ -1685,12 +1697,10 @@ static void nvme_map_cmb(struct nvme_dev *dev)
+ 
+ static inline void nvme_release_cmb(struct nvme_dev *dev)
+ {
+-	if (dev->cmb) {
+-		iounmap(dev->cmb);
+-		dev->cmb = NULL;
++	if (dev->cmb_size) {
+ 		sysfs_remove_file_from_group(&dev->ctrl.device->kobj,
+ 					     &dev_attr_cmb.attr, NULL);
+-		dev->cmbsz = 0;
++		dev->cmb_size = 0;
+ 	}
+ }
+ 
+@@ -1889,13 +1899,13 @@ static int nvme_setup_io_queues(struct nvme_dev *dev)
+ 	if (nr_io_queues == 0)
+ 		return 0;
+ 
+-	if (dev->cmb && (dev->cmbsz & NVME_CMBSZ_SQS)) {
++	if (dev->cmb_use_sqes) {
+ 		result = nvme_cmb_qdepth(dev, nr_io_queues,
+ 				sizeof(struct nvme_command));
+ 		if (result > 0)
+ 			dev->q_depth = result;
+ 		else
+-			nvme_release_cmb(dev);
++			dev->cmb_use_sqes = false;
+ 	}
+ 
+ 	do {
+-- 
+2.19.0
