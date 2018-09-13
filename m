@@ -1,307 +1,137 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mga03.intel.com ([134.134.136.65]:59972 "EHLO mga03.intel.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1730379AbeIFU0i (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Thu, 6 Sep 2018 16:26:38 -0400
-From: Mika Westerberg <mika.westerberg@linux.intel.com>
-To: Bjorn Helgaas <bhelgaas@google.com>,
-        "Rafael J. Wysocki" <rjw@rjwysocki.net>
-Cc: Len Brown <lenb@kernel.org>, Lukas Wunner <lukas@wunner.de>,
-        Keith Busch <keith.busch@intel.com>,
-        Ashok Raj <ashok.raj@intel.com>, Mario.Limonciello@dell.com,
-        Anthony Wong <anthony.wong@canonical.com>,
-        "D . J . Bernstein" <djb@cr.yp.to>,
-        Linus Walleij <linus.walleij@linaro.org>,
-        Mika Westerberg <mika.westerberg@linux.intel.com>,
-        linux-pci@vger.kernel.org, linux-acpi@vger.kernel.org
-Subject: [PATCH 09/10] ACPI / property: Allow multiple property compatible _DSD entries
-Date: Thu,  6 Sep 2018 18:50:19 +0300
-Message-Id: <20180906155020.51700-10-mika.westerberg@linux.intel.com>
-In-Reply-To: <20180906155020.51700-1-mika.westerberg@linux.intel.com>
-References: <20180906155020.51700-1-mika.westerberg@linux.intel.com>
+Received: from mail-pg1-f196.google.com ([209.85.215.196]:34364 "EHLO
+        mail-pg1-f196.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726427AbeIMIp2 (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Thu, 13 Sep 2018 04:45:28 -0400
+Received: by mail-pg1-f196.google.com with SMTP id d19-v6so2084477pgv.1
+        for <linux-pci@vger.kernel.org>; Wed, 12 Sep 2018 20:37:54 -0700 (PDT)
+From: Daniel Drake <drake@endlessm.com>
+To: bhelgaas@google.com
+Cc: linux-pci@vger.kernel.org, linux@endlessm.com,
+        nouveau@lists.freedesktop.org, linux-pm@vger.kernel.org,
+        peter@lekensteyn.nl, kherbst@redhat.com,
+        andy.shevchenko@linux.intel.com, rafael.j.wysocki@intel.com,
+        keith.busch@intel.com, jonathan.derrick@intel.com,
+        kugel@rockbox.org, davem@davemloft.net, hkallweit1@gmail.com,
+        netdev@vger.kernel.org, nic_swsd@realtek.com, rchang@marvell.com
+Subject: [PATCH v3] PCI: Reprogram bridge prefetch registers on resume
+Date: Thu, 13 Sep 2018 11:37:45 +0800
+Message-Id: <20180913033745.11178-1-drake@endlessm.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-It is possible to have _DSD entries where the data is compatible with device
-properties format but are using different GUID for various reasons. In addition
-to that there can be many such _DSD entries for a single device such as for
-PCIe root port used to host a Thunderbolt hierarchy:
+On 38+ Intel-based Asus products, the nvidia GPU becomes unusable
+after S3 suspend/resume. The affected products include multiple
+generations of nvidia GPUs and Intel SoCs. After resume, nouveau logs
+many errors such as:
 
-    Scope (\_SB.PCI0.RP21)
-    {
-        Name (_DSD, Package () {
-            ToUUID ("6211e2c0-58a3-4af3-90e1-927a4e0c55a4"),
-            Package () {
-                Package () {"HotPlugSupportInD3", 1}
-            },
+    fifo: fault 00 [READ] at 0000005555555000 engine 00 [GR] client 04
+          [HUB/FE] reason 4a [] on channel -1 [007fa91000 unknown]
+    DRM: failed to idle channel 0 [DRM]
 
-            ToUUID ("efcc06cc-73ac-4bc3-bff0-76143807c389"),
-            Package () {
-                Package () {"ExternalFacingPort", 1},
-                Package () {"UID", 0 }
-            }
-        })
-    }
+Similarly, the nvidia proprietary driver also fails after resume
+(black screen, 100% CPU usage in Xorg process). We shipped a sample
+to Nvidia for diagnosis, and their response indicated that it's a
+problem with the parent PCI bridge (on the Intel SoC), not the GPU.
 
-For more information about these new _DSD entries can be found in:
+Runtime suspend/resume works fine, only S3 suspend is affected.
 
-  https://docs.microsoft.com/en-us/windows-hardware/drivers/pci/dsd-for-pcie-root-ports
+We found a workaround: on resume, rewrite the Intel PCI bridge
+'Prefetchable Base Upper 32 Bits' register (PCI_PREF_BASE_UPPER32). In
+the cases that I checked, this register has value 0 and we just have to
+rewrite that value.
 
-In order to make these available for drivers via unified device property
-APIs modify ACPI property core so that it supports multiple _DSD entries
-organized in a linked list. We also store GUID of each _DSD entry in
-struct acpi_device_properties in case there is need to differerentiate
-between entries. The supported GUIDs are then listed in prp_guids array.
+Linux already saves and restores PCI config space during suspend/resume,
+but this register was being skipped because upon resume, it already
+has value 0 (the correct, pre-suspend value).
 
-Signed-off-by: Mika Westerberg <mika.westerberg@linux.intel.com>
+Intel appear to have previously acknowledged this behaviour and the
+requirement to rewrite this register.
+https://bugzilla.kernel.org/show_bug.cgi?id=116851#c23
+
+Based on that, rewrite the prefetch register values even when that
+appears unnecessary.
+
+We have confirmed this solution on all the affected models we have
+in-hands (X542UQ, UX533FD, X530UN, V272UN).
+
+Additionally, this solves an issue where r8169 MSI-X interrupts were
+broken after S3 suspend/resume on Asus X441UAR. This issue was recently
+worked around in commit 7bb05b85bc2d ("r8169: don't use MSI-X on
+RTL8106e"). It also fixes the same issue on RTL6186evl/8111evl on an
+Aimfor-tech laptop that we had not yet patched. I suspect it will also
+fix the issue that was worked around in commit 7c53a722459c ("r8169:
+don't use MSI-X on RTL8168g").
+
+Thomas Martitz reports that this change also solves an issue where
+the AMD Radeon Polaris 10 GPU on the HP Zbook 14u G5 is unresponsive
+after S3 suspend/resume.
+
+Link: https://bugzilla.kernel.org/show_bug.cgi?id=201069
+Signed-off-by: Daniel Drake <drake@endlessm.com>
 ---
- drivers/acpi/property.c     | 94 +++++++++++++++++++++++++++----------
- drivers/acpi/x86/apple.c    |  2 +-
- drivers/gpio/gpiolib-acpi.c |  2 +-
- include/acpi/acpi_bus.h     |  8 +++-
- include/linux/acpi.h        |  9 ++++
- 5 files changed, 86 insertions(+), 29 deletions(-)
+ drivers/pci/pci.c | 25 +++++++++++++++++--------
+ 1 file changed, 17 insertions(+), 8 deletions(-)
 
-diff --git a/drivers/acpi/property.c b/drivers/acpi/property.c
-index 693cf05b0cc4..f3ddb279d2de 100644
---- a/drivers/acpi/property.c
-+++ b/drivers/acpi/property.c
-@@ -24,11 +24,12 @@ static int acpi_data_get_property_array(const struct acpi_device_data *data,
- 					acpi_object_type type,
- 					const union acpi_object **obj);
+diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
+index 29ff9619b5fa..5d58220b6997 100644
+--- a/drivers/pci/pci.c
++++ b/drivers/pci/pci.c
+@@ -1289,12 +1289,12 @@ int pci_save_state(struct pci_dev *dev)
+ EXPORT_SYMBOL(pci_save_state);
  
--/* ACPI _DSD device properties GUID: daffd814-6eba-4d8c-8a91-bc9bbf4aa301 */
--static const guid_t prp_guid =
-+static const guid_t prp_guids[] = {
-+	/* ACPI _DSD device properties GUID: daffd814-6eba-4d8c-8a91-bc9bbf4aa301 */
- 	GUID_INIT(0xdaffd814, 0x6eba, 0x4d8c,
--		  0x8a, 0x91, 0xbc, 0x9b, 0xbf, 0x4a, 0xa3, 0x01);
--/* ACPI _DSD data subnodes GUID: dbb8e3e6-5886-4ba6-8795-1319f52a966b */
-+		  0x8a, 0x91, 0xbc, 0x9b, 0xbf, 0x4a, 0xa3, 0x01),
-+};
-+
- static const guid_t ads_guid =
- 	GUID_INIT(0xdbb8e3e6, 0x5886, 0x4ba6,
- 		  0x87, 0x95, 0x13, 0x19, 0xf5, 0x2a, 0x96, 0x6b);
-@@ -56,6 +57,7 @@ static bool acpi_nondev_subnode_extract(const union acpi_object *desc,
- 	dn->name = link->package.elements[0].string.pointer;
- 	dn->fwnode.ops = &acpi_data_fwnode_ops;
- 	dn->parent = parent;
-+	INIT_LIST_HEAD(&dn->data.properties);
- 	INIT_LIST_HEAD(&dn->data.subnodes);
+ static void pci_restore_config_dword(struct pci_dev *pdev, int offset,
+-				     u32 saved_val, int retry)
++				     u32 saved_val, int retry, bool force)
+ {
+ 	u32 val;
  
- 	result = acpi_extract_properties(desc, &dn->data);
-@@ -288,6 +290,35 @@ static void acpi_init_of_compatible(struct acpi_device *adev)
- 	adev->flags.of_compatible_ok = 1;
+ 	pci_read_config_dword(pdev, offset, &val);
+-	if (val == saved_val)
++	if (!force && val == saved_val)
+ 		return;
+ 
+ 	for (;;) {
+@@ -1313,25 +1313,34 @@ static void pci_restore_config_dword(struct pci_dev *pdev, int offset,
  }
  
-+static bool acpi_is_property_guid(const guid_t *guid)
-+{
-+	int i;
-+
-+	for (i = 0; i < ARRAY_SIZE(prp_guids); i++) {
-+		if (guid_equal(guid, &prp_guids[i]))
-+			return true;
-+	}
-+
-+	return false;
-+}
-+
-+struct acpi_device_properties *
-+acpi_data_add_props(struct acpi_device_data *data, const guid_t *guid,
-+		    const union acpi_object *properties)
-+{
-+	struct acpi_device_properties *props;
-+
-+	props = kzalloc(sizeof(*props), GFP_KERNEL);
-+	if (props) {
-+		INIT_LIST_HEAD(&props->list);
-+		props->guid = guid;
-+		props->properties = properties;
-+		list_add_tail(&props->list, &data->properties);
-+	}
-+
-+	return props;
-+}
-+
- static bool acpi_extract_properties(const union acpi_object *desc,
- 				    struct acpi_device_data *data)
+ static void pci_restore_config_space_range(struct pci_dev *pdev,
+-					   int start, int end, int retry)
++					   int start, int end, int retry,
++					   bool force)
  {
-@@ -312,7 +343,7 @@ static bool acpi_extract_properties(const union acpi_object *desc,
- 		    properties->type != ACPI_TYPE_PACKAGE)
- 			break;
+ 	int index;
  
--		if (!guid_equal((guid_t *)guid->buffer.pointer, &prp_guid))
-+		if (!acpi_is_property_guid((guid_t *)guid->buffer.pointer))
- 			continue;
+ 	for (index = end; index >= start; index--)
+ 		pci_restore_config_dword(pdev, 4 * index,
+ 					 pdev->saved_config_space[index],
+-					 retry);
++					 retry, force);
+ }
  
- 		/*
-@@ -320,13 +351,13 @@ static bool acpi_extract_properties(const union acpi_object *desc,
- 		 * package immediately following it.
- 		 */
- 		if (!acpi_properties_format_valid(properties))
--			break;
-+			continue;
- 
--		data->properties = properties;
--		return true;
-+		acpi_data_add_props(data, (const guid_t *)guid->buffer.pointer,
-+				    properties);
+ static void pci_restore_config_space(struct pci_dev *pdev)
+ {
+ 	if (pdev->hdr_type == PCI_HEADER_TYPE_NORMAL) {
+-		pci_restore_config_space_range(pdev, 10, 15, 0);
++		pci_restore_config_space_range(pdev, 10, 15, 0, false);
+ 		/* Restore BARs before the command register. */
+-		pci_restore_config_space_range(pdev, 4, 9, 10);
+-		pci_restore_config_space_range(pdev, 0, 3, 0);
++		pci_restore_config_space_range(pdev, 4, 9, 10, false);
++		pci_restore_config_space_range(pdev, 0, 3, 0, false);
++	} else if (pdev->hdr_type == PCI_HEADER_TYPE_BRIDGE) {
++		pci_restore_config_space_range(pdev, 12, 15, 0, false);
++		/* Force rewriting of prefetch registers to avoid
++		 * S3 resume issues on Intel PCI bridges that occur when
++		 * these registers are not explicitly written.
++		 */
++		pci_restore_config_space_range(pdev, 9, 11, 0, true);
++		pci_restore_config_space_range(pdev, 0, 8, 0, false);
+ 	} else {
+-		pci_restore_config_space_range(pdev, 0, 15, 0);
++		pci_restore_config_space_range(pdev, 0, 15, 0, false);
  	}
- 
--	return false;
-+	return !list_empty(&data->properties);
  }
  
- void acpi_init_properties(struct acpi_device *adev)
-@@ -336,6 +367,7 @@ void acpi_init_properties(struct acpi_device *adev)
- 	acpi_status status;
- 	bool acpi_of = false;
- 
-+	INIT_LIST_HEAD(&adev->data.properties);
- 	INIT_LIST_HEAD(&adev->data.subnodes);
- 
- 	if (!adev->handle)
-@@ -398,11 +430,16 @@ static void acpi_destroy_nondev_subnodes(struct list_head *list)
- 
- void acpi_free_properties(struct acpi_device *adev)
- {
-+	struct acpi_device_properties *props, *tmp;
-+
- 	acpi_destroy_nondev_subnodes(&adev->data.subnodes);
- 	ACPI_FREE((void *)adev->data.pointer);
- 	adev->data.of_compatible = NULL;
- 	adev->data.pointer = NULL;
--	adev->data.properties = NULL;
-+	list_for_each_entry_safe(props, tmp, &adev->data.properties, list) {
-+		list_del(&props->list);
-+		kfree(props);
-+	}
- }
- 
- /**
-@@ -427,32 +464,37 @@ static int acpi_data_get_property(const struct acpi_device_data *data,
- 				  const char *name, acpi_object_type type,
- 				  const union acpi_object **obj)
- {
--	const union acpi_object *properties;
--	int i;
-+	struct acpi_device_properties *props;
- 
- 	if (!data || !name)
- 		return -EINVAL;
- 
--	if (!data->pointer || !data->properties)
-+	if (!data->pointer || list_empty(&data->properties))
- 		return -EINVAL;
- 
--	properties = data->properties;
--	for (i = 0; i < properties->package.count; i++) {
--		const union acpi_object *propname, *propvalue;
--		const union acpi_object *property;
-+	list_for_each_entry(props, &data->properties, list) {
-+		const union acpi_object *properties;
-+		int i;
- 
--		property = &properties->package.elements[i];
-+		properties = props->properties;
-+		for (i = 0; i < properties->package.count; i++) {
-+			const union acpi_object *propname, *propvalue;
-+			const union acpi_object *property;
- 
--		propname = &property->package.elements[0];
--		propvalue = &property->package.elements[1];
-+			property = &properties->package.elements[i];
- 
--		if (!strcmp(name, propname->string.pointer)) {
--			if (type != ACPI_TYPE_ANY && propvalue->type != type)
--				return -EPROTO;
--			if (obj)
--				*obj = propvalue;
-+			propname = &property->package.elements[0];
-+			propvalue = &property->package.elements[1];
- 
--			return 0;
-+			if (!strcmp(name, propname->string.pointer)) {
-+				if (type != ACPI_TYPE_ANY &&
-+				    propvalue->type != type)
-+					return -EPROTO;
-+				if (obj)
-+					*obj = propvalue;
-+
-+				return 0;
-+			}
- 		}
- 	}
- 	return -EINVAL;
-diff --git a/drivers/acpi/x86/apple.c b/drivers/acpi/x86/apple.c
-index 51b4cf9f25da..130df1c8ed7d 100644
---- a/drivers/acpi/x86/apple.c
-+++ b/drivers/acpi/x86/apple.c
-@@ -132,8 +132,8 @@ void acpi_extract_apple_properties(struct acpi_device *adev)
- 	}
- 	WARN_ON(free_space != (void *)newprops + newsize);
- 
--	adev->data.properties = newprops;
- 	adev->data.pointer = newprops;
-+	acpi_data_add_props(&adev->data, &apple_prp_guid, newprops);
- 
- out_free:
- 	ACPI_FREE(props);
-diff --git a/drivers/gpio/gpiolib-acpi.c b/drivers/gpio/gpiolib-acpi.c
-index c48ed9d89ff5..7be705fae4b8 100644
---- a/drivers/gpio/gpiolib-acpi.c
-+++ b/drivers/gpio/gpiolib-acpi.c
-@@ -1192,7 +1192,7 @@ int acpi_gpio_count(struct device *dev, const char *con_id)
- bool acpi_can_fallback_to_crs(struct acpi_device *adev, const char *con_id)
- {
- 	/* Never allow fallback if the device has properties */
--	if (adev->data.properties || adev->driver_gpios)
-+	if (acpi_dev_has_props(adev) || adev->driver_gpios)
- 		return false;
- 
- 	return con_id == NULL;
-diff --git a/include/acpi/acpi_bus.h b/include/acpi/acpi_bus.h
-index ba4dd54f2c82..cd35e3ce9a8b 100644
---- a/include/acpi/acpi_bus.h
-+++ b/include/acpi/acpi_bus.h
-@@ -346,10 +346,16 @@ struct acpi_device_physical_node {
- 	bool put_online:1;
- };
- 
-+struct acpi_device_properties {
-+	const guid_t *guid;
-+	const union acpi_object *properties;
-+	struct list_head list;
-+};
-+
- /* ACPI Device Specific Data (_DSD) */
- struct acpi_device_data {
- 	const union acpi_object *pointer;
--	const union acpi_object *properties;
-+	struct list_head properties;
- 	const union acpi_object *of_compatible;
- 	struct list_head subnodes;
- };
-diff --git a/include/linux/acpi.h b/include/linux/acpi.h
-index de8d3d3fa651..51e3c29663fe 100644
---- a/include/linux/acpi.h
-+++ b/include/linux/acpi.h
-@@ -1074,6 +1074,15 @@ static inline int acpi_node_get_property_reference(
- 		NR_FWNODE_REFERENCE_ARGS, args);
- }
- 
-+static inline bool acpi_dev_has_props(const struct acpi_device *adev)
-+{
-+	return !list_empty(&adev->data.properties);
-+}
-+
-+struct acpi_device_properties *
-+acpi_data_add_props(struct acpi_device_data *data, const guid_t *guid,
-+		    const union acpi_object *properties);
-+
- int acpi_node_prop_get(const struct fwnode_handle *fwnode, const char *propname,
- 		       void **valptr);
- int acpi_dev_prop_read_single(struct acpi_device *adev,
 -- 
-2.18.0
+2.17.1
