@@ -1,201 +1,153 @@
-Return-Path: <SRS0=DZ5F=MB=intel.com=keith.busch@kernel.org>
-Return-Path: <SRS0=DZ5F=MB=intel.com=keith.busch@kernel.org>
-Date: Wed, 19 Sep 2018 12:00:03 -0600
-From: Keith Busch <keith.busch@intel.com>
-To: Bjorn Helgaas <helgaas@kernel.org>
-Cc: Linux PCI <linux-pci@vger.kernel.org>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	Sinan Kaya <okaya@kernel.org>, Thomas Tai <thomas.tai@oracle.com>,
-	poza@codeaurora.org, Lukas Wunner <lukas@wunner.de>,
-	Christoph Hellwig <hch@lst.de>,
-	Mika Westerberg <mika.westerberg@linux.intel.com>
-Subject: Re: [PATCHv3 01/10] PCI/portdrv: Use subsys_init for service drivers
-Message-ID: <20180919180003.GC28310@localhost.localdomain>
-References: <20180918235702.26573-1-keith.busch@intel.com>
- <20180918235702.26573-2-keith.busch@intel.com>
- <20180919162846.GB243610@bhelgaas-glaptop.roam.corp.google.com>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail-ot1-f67.google.com ([209.85.210.67]:34437 "EHLO
+        mail-ot1-f67.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726570AbeIMMAu (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Thu, 13 Sep 2018 08:00:50 -0400
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20180919162846.GB243610@bhelgaas-glaptop.roam.corp.google.com>
+References: <20180913033745.11178-1-drake@endlessm.com>
+In-Reply-To: <20180913033745.11178-1-drake@endlessm.com>
+From: "Rafael J. Wysocki" <rafael@kernel.org>
+Date: Thu, 13 Sep 2018 08:52:29 +0200
+Message-ID: <CAJZ5v0iBt+mYy4K9YNavqyQkivNqwBp3zyK5QmqGR+kWGsRO4g@mail.gmail.com>
+Subject: Re: [PATCH v3] PCI: Reprogram bridge prefetch registers on resume
+To: Daniel Drake <drake@endlessm.com>
+Cc: Bjorn Helgaas <bhelgaas@google.com>,
+        Linux PCI <linux-pci@vger.kernel.org>,
+        Linux Upstreaming Team <linux@endlessm.com>,
+        nouveau@lists.freedesktop.org, Linux PM <linux-pm@vger.kernel.org>,
+        Peter Wu <peter@lekensteyn.nl>, kherbst@redhat.com,
+        andy.shevchenko@linux.intel.com,
+        Rafael Wysocki <rafael.j.wysocki@intel.com>,
+        Keith Busch <keith.busch@intel.com>,
+        jonathan.derrick@intel.com, Thomas Martitz <kugel@rockbox.org>,
+        David Miller <davem@davemloft.net>,
+        Heiner Kallweit <hkallweit1@gmail.com>,
+        netdev <netdev@vger.kernel.org>, nic_swsd@realtek.com,
+        rchang@marvell.com
+Content-Type: text/plain; charset="UTF-8"
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wed, Sep 19, 2018 at 11:28:46AM -0500, Bjorn Helgaas wrote:
-> On Tue, Sep 18, 2018 at 05:56:53PM -0600, Keith Busch wrote:
-> Since none of the service drivers can be modules, I don't think it
-> buys us much to make their init functions initcalls.  Can we
-> explicitly call them from the pcie_portdrv_probe() path?
+On Thu, Sep 13, 2018 at 5:37 AM Daniel Drake <drake@endlessm.com> wrote:
+>
+> On 38+ Intel-based Asus products, the nvidia GPU becomes unusable
+> after S3 suspend/resume. The affected products include multiple
+> generations of nvidia GPUs and Intel SoCs. After resume, nouveau logs
+> many errors such as:
+>
+>     fifo: fault 00 [READ] at 0000005555555000 engine 00 [GR] client 04
+>           [HUB/FE] reason 4a [] on channel -1 [007fa91000 unknown]
+>     DRM: failed to idle channel 0 [DRM]
+>
+> Similarly, the nvidia proprietary driver also fails after resume
+> (black screen, 100% CPU usage in Xorg process). We shipped a sample
+> to Nvidia for diagnosis, and their response indicated that it's a
+> problem with the parent PCI bridge (on the Intel SoC), not the GPU.
+>
+> Runtime suspend/resume works fine, only S3 suspend is affected.
+>
+> We found a workaround: on resume, rewrite the Intel PCI bridge
+> 'Prefetchable Base Upper 32 Bits' register (PCI_PREF_BASE_UPPER32). In
+> the cases that I checked, this register has value 0 and we just have to
+> rewrite that value.
+>
+> Linux already saves and restores PCI config space during suspend/resume,
+> but this register was being skipped because upon resume, it already
+> has value 0 (the correct, pre-suspend value).
+>
+> Intel appear to have previously acknowledged this behaviour and the
+> requirement to rewrite this register.
+> https://bugzilla.kernel.org/show_bug.cgi?id=116851#c23
+>
+> Based on that, rewrite the prefetch register values even when that
+> appears unnecessary.
+>
+> We have confirmed this solution on all the affected models we have
+> in-hands (X542UQ, UX533FD, X530UN, V272UN).
+>
+> Additionally, this solves an issue where r8169 MSI-X interrupts were
+> broken after S3 suspend/resume on Asus X441UAR. This issue was recently
+> worked around in commit 7bb05b85bc2d ("r8169: don't use MSI-X on
+> RTL8106e"). It also fixes the same issue on RTL6186evl/8111evl on an
+> Aimfor-tech laptop that we had not yet patched. I suspect it will also
+> fix the issue that was worked around in commit 7c53a722459c ("r8169:
+> don't use MSI-X on RTL8168g").
+>
+> Thomas Martitz reports that this change also solves an issue where
+> the AMD Radeon Polaris 10 GPU on the HP Zbook 14u G5 is unresponsive
+> after S3 suspend/resume.
+>
+> Link: https://bugzilla.kernel.org/show_bug.cgi?id=201069
+> Signed-off-by: Daniel Drake <drake@endlessm.com>
 
-It's actually during pcie_portdrv_init that the services need to be
-initialized if we're going this way. Do you think the following is
-better? The initialization order should be more clear to the reader at
-the cost of more code than init call magic, but I'm okay having this
-done either way.
+Still
 
----
-diff --git a/drivers/pci/hotplug/pciehp_core.c b/drivers/pci/hotplug/pciehp_core.c
-index 68b20e667764..944047976569 100644
---- a/drivers/pci/hotplug/pciehp_core.c
-+++ b/drivers/pci/hotplug/pciehp_core.c
-@@ -287,7 +287,7 @@ static struct pcie_port_service_driver hpdriver_portdrv = {
- #endif	/* PM */
- };
- 
--static int __init pcied_init(void)
-+int __init pcie_hp_init(void)
- {
- 	int retval = 0;
- 
-@@ -298,4 +298,3 @@ static int __init pcied_init(void)
- 
- 	return retval;
- }
--device_initcall(pcied_init);
-diff --git a/drivers/pci/pcie/aer.c b/drivers/pci/pcie/aer.c
-index 83180edd6ed4..637d638f73da 100644
---- a/drivers/pci/pcie/aer.c
-+++ b/drivers/pci/pcie/aer.c
-@@ -1569,10 +1569,9 @@ static struct pcie_port_service_driver aerdriver = {
-  *
-  * Invoked when AER root service driver is loaded.
-  */
--static int __init aer_service_init(void)
-+int __init pcie_aer_init(void)
- {
- 	if (!pci_aer_available() || aer_acpi_firmware_first())
- 		return -ENXIO;
- 	return pcie_port_service_register(&aerdriver);
- }
--device_initcall(aer_service_init);
-diff --git a/drivers/pci/pcie/dpc.c b/drivers/pci/pcie/dpc.c
-index f03279fc87cd..a1fd16bf1cab 100644
---- a/drivers/pci/pcie/dpc.c
-+++ b/drivers/pci/pcie/dpc.c
-@@ -282,8 +282,7 @@ static struct pcie_port_service_driver dpcdriver = {
- 	.reset_link	= dpc_reset_link,
- };
- 
--static int __init dpc_service_init(void)
-+int __init pcie_dpc_init(void)
- {
- 	return pcie_port_service_register(&dpcdriver);
- }
--device_initcall(dpc_service_init);
-diff --git a/drivers/pci/pcie/pme.c b/drivers/pci/pcie/pme.c
-index 3ed67676ea2a..1a8b85051b1b 100644
---- a/drivers/pci/pcie/pme.c
-+++ b/drivers/pci/pcie/pme.c
-@@ -446,8 +446,7 @@ static struct pcie_port_service_driver pcie_pme_driver = {
- /**
-  * pcie_pme_service_init - Register the PCIe PME service driver.
-  */
--static int __init pcie_pme_service_init(void)
-+int __init pcie_pme_init(void)
- {
- 	return pcie_port_service_register(&pcie_pme_driver);
- }
--device_initcall(pcie_pme_service_init);
-diff --git a/drivers/pci/pcie/portdrv.h b/drivers/pci/pcie/portdrv.h
-index d59afa42fc14..2498b2d34009 100644
---- a/drivers/pci/pcie/portdrv.h
-+++ b/drivers/pci/pcie/portdrv.h
-@@ -23,6 +23,30 @@
- 
- #define PCIE_PORT_DEVICE_MAXSERVICES   4
- 
-+#ifdef CONFIG_PCIEAER
-+int pcie_aer_init(void);
-+#else
-+static inline int pcie_aer_init(void) { return 0; }
-+#endif
-+
-+#ifdef CONFIG_HOTPLUG_PCI_PCIE
-+int pcie_hp_init(void);
-+#else
-+static inline int pcie_hp_init(void) { return 0; }
-+#endif
-+
-+#ifdef CONFIG_PCIE_PME
-+int pcie_pme_init(void);
-+#else
-+static inline int pcie_pme_init(void) { return 0; }
-+#endif
-+
-+#ifdef CONFIG_PCIE_DPC
-+int pcie_dpc_init(void);
-+#else
-+static inline int pcie_dpc_init(void) { return 0; }
-+#endif
-+
- /* Port Type */
- #define PCIE_ANY_PORT			(~0)
- 
-diff --git a/drivers/pci/pcie/portdrv_pci.c b/drivers/pci/pcie/portdrv_pci.c
-index eef22dc29140..23a5a0c2c3fe 100644
---- a/drivers/pci/pcie/portdrv_pci.c
-+++ b/drivers/pci/pcie/portdrv_pci.c
-@@ -226,11 +226,20 @@ static const struct dmi_system_id pcie_portdrv_dmi_table[] __initconst = {
- 	 {}
- };
- 
-+static void __init pcie_init_services(void)
-+{
-+	pcie_aer_init();
-+	pcie_pme_init();
-+	pcie_dpc_init();
-+	pcie_hp_init();
-+}
-+
- static int __init pcie_portdrv_init(void)
- {
- 	if (pcie_ports_disabled)
- 		return -EACCES;
- 
-+	pcie_init_services();
- 	dmi_check_system(pcie_portdrv_dmi_table);
- 
- 	return pci_register_driver(&pcie_portdriver);
---
+Reviewed-by: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
 
-> > --- 
-> > diff --git a/drivers/pci/hotplug/pciehp_core.c b/drivers/pci/hotplug/pciehp_core.c
-> > index ccaf01e6eced..334044814dbe 100644
-> > --- a/drivers/pci/hotplug/pciehp_core.c
-> > +++ b/drivers/pci/hotplug/pciehp_core.c
-> > @@ -322,4 +322,4 @@ static int __init pcied_init(void)
-> >  
-> >  	return retval;
-> >  }
-> > -device_initcall(pcied_init);
-> > +subsys_initcall(pcied_init);
-> > diff --git a/drivers/pci/pcie/aer.c b/drivers/pci/pcie/aer.c
-> > index 83180edd6ed4..1d2159409b01 100644
-> > --- a/drivers/pci/pcie/aer.c
-> > +++ b/drivers/pci/pcie/aer.c
-> > @@ -1575,4 +1575,4 @@ static int __init aer_service_init(void)
-> >  		return -ENXIO;
-> >  	return pcie_port_service_register(&aerdriver);
-> >  }
-> > -device_initcall(aer_service_init);
-> > +subsys_initcall(aer_service_init);
-> > diff --git a/drivers/pci/pcie/dpc.c b/drivers/pci/pcie/dpc.c
-> > index f03279fc87cd..aacfb50eccfc 100644
-> > --- a/drivers/pci/pcie/dpc.c
-> > +++ b/drivers/pci/pcie/dpc.c
-> > @@ -286,4 +286,4 @@ static int __init dpc_service_init(void)
-> >  {
-> >  	return pcie_port_service_register(&dpcdriver);
-> >  }
-> > -device_initcall(dpc_service_init);
-> > +subsys_initcall(dpc_service_init);
-> > diff --git a/drivers/pci/pcie/pme.c b/drivers/pci/pcie/pme.c
-> > index 3ed67676ea2a..cd8c1adb9b0a 100644
-> > --- a/drivers/pci/pcie/pme.c
-> > +++ b/drivers/pci/pcie/pme.c
-> > @@ -450,4 +450,4 @@ static int __init pcie_pme_service_init(void)
-> >  {
-> >  	return pcie_port_service_register(&pcie_pme_driver);
-> >  }
-> > -device_initcall(pcie_pme_service_init);
-> > +subsys_initcall(pcie_pme_service_init);
-> > -- 
+> ---
+>  drivers/pci/pci.c | 25 +++++++++++++++++--------
+>  1 file changed, 17 insertions(+), 8 deletions(-)
+>
+> diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
+> index 29ff9619b5fa..5d58220b6997 100644
+> --- a/drivers/pci/pci.c
+> +++ b/drivers/pci/pci.c
+> @@ -1289,12 +1289,12 @@ int pci_save_state(struct pci_dev *dev)
+>  EXPORT_SYMBOL(pci_save_state);
+>
+>  static void pci_restore_config_dword(struct pci_dev *pdev, int offset,
+> -                                    u32 saved_val, int retry)
+> +                                    u32 saved_val, int retry, bool force)
+>  {
+>         u32 val;
+>
+>         pci_read_config_dword(pdev, offset, &val);
+> -       if (val == saved_val)
+> +       if (!force && val == saved_val)
+>                 return;
+>
+>         for (;;) {
+> @@ -1313,25 +1313,34 @@ static void pci_restore_config_dword(struct pci_dev *pdev, int offset,
+>  }
+>
+>  static void pci_restore_config_space_range(struct pci_dev *pdev,
+> -                                          int start, int end, int retry)
+> +                                          int start, int end, int retry,
+> +                                          bool force)
+>  {
+>         int index;
+>
+>         for (index = end; index >= start; index--)
+>                 pci_restore_config_dword(pdev, 4 * index,
+>                                          pdev->saved_config_space[index],
+> -                                        retry);
+> +                                        retry, force);
+>  }
+>
+>  static void pci_restore_config_space(struct pci_dev *pdev)
+>  {
+>         if (pdev->hdr_type == PCI_HEADER_TYPE_NORMAL) {
+> -               pci_restore_config_space_range(pdev, 10, 15, 0);
+> +               pci_restore_config_space_range(pdev, 10, 15, 0, false);
+>                 /* Restore BARs before the command register. */
+> -               pci_restore_config_space_range(pdev, 4, 9, 10);
+> -               pci_restore_config_space_range(pdev, 0, 3, 0);
+> +               pci_restore_config_space_range(pdev, 4, 9, 10, false);
+> +               pci_restore_config_space_range(pdev, 0, 3, 0, false);
+> +       } else if (pdev->hdr_type == PCI_HEADER_TYPE_BRIDGE) {
+> +               pci_restore_config_space_range(pdev, 12, 15, 0, false);
+> +               /* Force rewriting of prefetch registers to avoid
+> +                * S3 resume issues on Intel PCI bridges that occur when
+> +                * these registers are not explicitly written.
+> +                */
+> +               pci_restore_config_space_range(pdev, 9, 11, 0, true);
+> +               pci_restore_config_space_range(pdev, 0, 8, 0, false);
+>         } else {
+> -               pci_restore_config_space_range(pdev, 0, 15, 0);
+> +               pci_restore_config_space_range(pdev, 0, 15, 0, false);
+>         }
+>  }
+>
+> --
+> 2.17.1
+>
