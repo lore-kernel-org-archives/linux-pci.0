@@ -1,77 +1,53 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-Date: Mon, 17 Sep 2018 12:21:49 +0100
-From: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
-To: Niklas Cassel <niklas.cassel@linaro.org>
-Cc: Andy Gross <andy.gross@linaro.org>,
-        David Brown <david.brown@linaro.org>,
-        Rob Herring <robh+dt@kernel.org>,
-        Mark Rutland <mark.rutland@arm.com>, linux-pci@vger.kernel.org,
-        linux-arm-msm@vger.kernel.org, linux-soc@vger.kernel.org,
-        devicetree@vger.kernel.org, linux-kernel@vger.kernel.org
-Subject: Re: [PATCH] ARM: dts: qcom-apq8064: use correct pci address for
- address translation
-Message-ID: <20180917112149.GE7239@e107981-ln.cambridge.arm.com>
-References: <20180509120135.25940-1-niklas.cassel@linaro.org>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20180509120135.25940-1-niklas.cassel@linaro.org>
-Sender: linux-kernel-owner@vger.kernel.org
+Return-Path: <linux-acpi-owner@vger.kernel.org>
+From: Mika Westerberg <mika.westerberg@linux.intel.com>
+To: Bjorn Helgaas <bhelgaas@google.com>,
+        "Rafael J. Wysocki" <rjw@rjwysocki.net>
+Cc: Len Brown <lenb@kernel.org>, Lukas Wunner <lukas@wunner.de>,
+        Keith Busch <keith.busch@intel.com>,
+        Ashok Raj <ashok.raj@intel.com>, Mario.Limonciello@dell.com,
+        Anthony Wong <anthony.wong@canonical.com>,
+        Linus Walleij <linus.walleij@linaro.org>,
+        Sakari Ailus <sakari.ailus@iki.fi>,
+        Mika Westerberg <mika.westerberg@linux.intel.com>,
+        linux-pci@vger.kernel.org, linux-acpi@vger.kernel.org
+Subject: [PATCH v2 04/10] PCI: pciehp: Do not handle events if interrupts are masked
+Date: Thu, 13 Sep 2018 17:33:16 +0300
+Message-Id: <20180913143322.77953-5-mika.westerberg@linux.intel.com>
+In-Reply-To: <20180913143322.77953-1-mika.westerberg@linux.intel.com>
+References: <20180913143322.77953-1-mika.westerberg@linux.intel.com>
+Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wed, May 09, 2018 at 02:01:34PM +0200, Niklas Cassel wrote:
-> For PCI, the second and third cell in ranges specifies the upper and
-> lower target address for address translation. This target address will
-> be used to program the internal address translation unit (iATU).
-> 
-> The current device tree configuration will program the iATU to translate
-> CPU accesses to 0x08000000 to PCI address 0x0 (with TLP type MEM).
-> The device tree configuration also specifies that CPU acesses to
-> 0x0fe00000 will be translated to PCI address 0x0 (with TLP type I/O).
-> 
-> We cannot have both I/O space and memory space at PCI address 0x0.
-> 
-> The PCI code already uses the CPU address when assigning addresses to
-> memory BARs, so for memory space the PCI address should be the same as
-> the CPU address. This also matches how all other device trees using
-> snps,dw-pcie are configured.
-> 
-> The existing configuration appears to work, even if it is incorrect.
-> For some reason the iATU doesn't obey the existing configuration,
-> and doesn't translate CPU accesses from 0x08000000 to PCI address 0x0.
-> 
-> The reason why the existing configuration works at all is probably
-> because the default behavior, when there is no match, is to use the
-> untranslated address. This happens to work for memory space, since
-> it's a 1:1 mapping. However, instead of relying on this behavior,
-> let's configure the iATU correctly.
-> 
-> Signed-off-by: Niklas Cassel <niklas.cassel@linaro.org>
-> ---
->  arch/arm/boot/dts/qcom-apq8064.dtsi | 2 +-
->  1 file changed, 1 insertion(+), 1 deletion(-)
+PCIe native hotplug shares MSI vector with native PME so the interrupt
+handler might get called even the hotplug interrupt is masked. In that
+case we should not handle any events because the interrupt was not meant
+for us. Modify the PCIe hotplug interrupt handler to check this
+accordingly and bail out if it finds out that the interrupt was not
+about hotplug.
 
-Hi Niklas,
+Signed-off-by: Mika Westerberg <mika.westerberg@linux.intel.com>
+Reviewed-by: Lukas Wunner <lukas@wunner.de>
+---
+ drivers/pci/hotplug/pciehp_hpc.c | 6 ++++--
+ 1 file changed, 4 insertions(+), 2 deletions(-)
 
-what's this patch status ? Please let me know if I have to keep
-it in the PCI tree queue, I think, if ACKed, it should probably
-go via the arm-soc tree.
-
-Thanks,
-Lorenzo
-
-> diff --git a/arch/arm/boot/dts/qcom-apq8064.dtsi b/arch/arm/boot/dts/qcom-apq8064.dtsi
-> index 5341a39c0392..148cf7e565f6 100644
-> --- a/arch/arm/boot/dts/qcom-apq8064.dtsi
-> +++ b/arch/arm/boot/dts/qcom-apq8064.dtsi
-> @@ -1417,7 +1417,7 @@
->  			#address-cells = <3>;
->  			#size-cells = <2>;
->  			ranges = <0x81000000 0 0 0x0fe00000 0 0x00100000   /* I/O */
-> -				  0x82000000 0 0 0x08000000 0 0x07e00000>; /* memory */
-> +				  0x82000000 0 0x08000000 0x08000000 0 0x07e00000>; /* memory */
->  			interrupts = <GIC_SPI 238 IRQ_TYPE_NONE>;
->  			interrupt-names = "msi";
->  			#interrupt-cells = <1>;
-> -- 
-> 2.17.0
-> 
+diff --git a/drivers/pci/hotplug/pciehp_hpc.c b/drivers/pci/hotplug/pciehp_hpc.c
+index 02fb6e367e2a..26598a03e84b 100644
+--- a/drivers/pci/hotplug/pciehp_hpc.c
++++ b/drivers/pci/hotplug/pciehp_hpc.c
+@@ -533,9 +533,11 @@ static irqreturn_t pciehp_isr(int irq, void *dev_id)
+ 	u16 status, events;
+ 
+ 	/*
+-	 * Interrupts only occur in D3hot or shallower (PCIe r4.0, sec 6.7.3.4).
++	 * Interrupts only occur in D3hot or shallower and only if enabled
++	 * in the Slot Control register (PCIe r4.0, sec 6.7.3.4).
+ 	 */
+-	if (pdev->current_state == PCI_D3cold)
++	if (pdev->current_state == PCI_D3cold ||
++	    (!(ctrl->slot_ctrl & PCI_EXP_SLTCTL_HPIE) && !pciehp_poll_mode))
+ 		return IRQ_NONE;
+ 
+ 	/*
+-- 
+2.18.0
