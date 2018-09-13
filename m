@@ -1,61 +1,90 @@
-Return-Path: <SRS0=r7iM=MA=gmail.com=xiangxia.m.yue@kernel.org>
-Return-Path: <SRS0=r7iM=MA=gmail.com=xiangxia.m.yue@kernel.org>
+Return-Path: <linux-acpi-owner@vger.kernel.org>
+From: "Tian, Kevin" <kevin.tian@intel.com>
+To: Jacob Pan <jacob.jun.pan@linux.intel.com>,
+        =?utf-8?B?Q2hyaXN0aWFuIEvDtm5pZw==?= <christian.koenig@amd.com>
+CC: Jean-Philippe Brucker <jean-philippe.brucker@arm.com>,
+        Auger Eric <eric.auger@redhat.com>,
+        "linux-arm-kernel@lists.infradead.org"
+        <linux-arm-kernel@lists.infradead.org>,
+        "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+        "linux-acpi@vger.kernel.org" <linux-acpi@vger.kernel.org>,
+        "devicetree@vger.kernel.org" <devicetree@vger.kernel.org>,
+        "iommu@lists.linux-foundation.org" <iommu@lists.linux-foundation.org>,
+        "kvm@vger.kernel.org" <kvm@vger.kernel.org>,
+        "linux-mm@kvack.org" <linux-mm@kvack.org>,
+        "xieyisheng1@huawei.com" <xieyisheng1@huawei.com>,
+        "liubo95@huawei.com" <liubo95@huawei.com>,
+        "xuzaibo@huawei.com" <xuzaibo@huawei.com>,
+        "thunder.leizhen@huawei.com" <thunder.leizhen@huawei.com>,
+        Will Deacon <Will.Deacon@arm.com>,
+        "okaya@codeaurora.org" <okaya@codeaurora.org>,
+        "Liu, Yi L" <yi.l.liu@intel.com>,
+        "Raj, Ashok" <ashok.raj@intel.com>,
+        "tn@semihalf.com" <tn@semihalf.com>,
+        "joro@8bytes.org" <joro@8bytes.org>,
+        "bharatku@xilinx.com" <bharatku@xilinx.com>,
+        "liudongdong3@huawei.com" <liudongdong3@huawei.com>,
+        "rfranz@cavium.com" <rfranz@cavium.com>,
+        "jcrouse@codeaurora.org" <jcrouse@codeaurora.org>,
+        "rgummal@xilinx.com" <rgummal@xilinx.com>,
+        "jonathan.cameron@huawei.com" <jonathan.cameron@huawei.com>,
+        "shunyong.yang@hxt-semitech.com" <shunyong.yang@hxt-semitech.com>,
+        Robin Murphy <Robin.Murphy@arm.com>,
+        "ilias.apalodimas@linaro.org" <ilias.apalodimas@linaro.org>,
+        "alex.williamson@redhat.com" <alex.williamson@redhat.com>,
+        "robdclark@gmail.com" <robdclark@gmail.com>,
+        "dwmw2@infradead.org" <dwmw2@infradead.org>,
+        "nwatters@codeaurora.org" <nwatters@codeaurora.org>,
+        "baolu.lu@linux.intel.com" <baolu.lu@linux.intel.com>,
+        Michal Hocko <mhocko@kernel.org>
+Subject: RE: [PATCH v2 01/40] iommu: Introduce Shared Virtual Addressing API
+Date: Thu, 13 Sep 2018 07:15:54 +0000
+Message-ID: <AADFC41AFE54684AB9EE6CBC0274A5D191301CAC@SHSMSX101.ccr.corp.intel.com>
+References: <20180511190641.23008-1-jean-philippe.brucker@arm.com>
+        <20180511190641.23008-2-jean-philippe.brucker@arm.com>
+        <bf42affd-e9d0-e4fc-6d28-f3c3f7795348@redhat.com>
+        <03d31ba5-1eda-ea86-8c0c-91d14c86fe83@arm.com>
+        <ed39159c-087e-7e56-7d29-d1de9fa1677f@amd.com>
+        <f0b317d5-e2e9-5478-952c-05e8b97bd68b@arm.com>
+        <2fd4a0a1-1a35-bf82-df84-b995cce011d9@amd.com>
+        <65e7accd-4446-19f5-c667-c6407e89cfa6@arm.com>
+        <5bbc0332-b94b-75cc-ca42-a9b196811daf@amd.com>
+ <20180907142504.5034351e@jacob-builder>
+In-Reply-To: <20180907142504.5034351e@jacob-builder>
+Content-Type: text/plain; charset="utf-8"
 MIME-Version: 1.0
-References: <CAMDZJNV6D_NCn5_n2DAnPH25DONAKRcc-GWwGbCXX098E+EJ1Q@mail.gmail.com>
- <20180917191503.GA54859@bhelgaas-glaptop.roam.corp.google.com>
-In-Reply-To: <20180917191503.GA54859@bhelgaas-glaptop.roam.corp.google.com>
-From: Tonghao Zhang <xiangxia.m.yue@gmail.com>
-Date: Tue, 18 Sep 2018 10:00:11 +0800
-Message-ID: <CAMDZJNUg+d6um2tp20OwyhSYG4WW8jSbwLhDAU8qOsqfkO=EfQ@mail.gmail.com>
-Subject: Re: kernel panic becase pci register more than once
-To: helgaas@kernel.org
-Cc: linux-pci@vger.kernel.org, hch@lst.de
-Content-Type: text/plain; charset="UTF-8"
+Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tue, Sep 18, 2018 at 3:15 AM Bjorn Helgaas <helgaas@kernel.org> wrote:
->
-> [+cc Christoph]
->
-> On Sun, Sep 09, 2018 at 04:26:37PM +0800, Tonghao Zhang wrote:
-> > Hi all,
-> > When I enable pci msi or msix more than once, the kernel will panic.
-> > Now we just use the WARN_ON, should we add check for that has been
-> > enabled.
-> >
->
-> This needs a signed-off-by before I can apply it.  See
-> https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/tree/Documentation/process/submitting-patches.rst#n416
-OK
-> A WARN_ON() shouldn't cause the kernel to panic.  Do you mean that it
-> causes a backtrace?  I think that's the intended behavior, because
-> calling this twice would be a driver bug, and we want to find and fix
-> those bugs.
-Yes, you are right, but we can return error code when drivers call this twice.
-> > diff --git a/drivers/pci/msi.c b/drivers/pci/msi.c
-> > index f2ef896..324840f 100644
-> > --- a/drivers/pci/msi.c
-> > +++ b/drivers/pci/msi.c
-> > @@ -958,7 +958,9 @@ static int __pci_enable_msix(struct pci_dev *dev,
-> > struct msix_entry *entries,
-> >                         }
-> >                 }
-> >         }
-> > -       WARN_ON(!!dev->msix_enabled);
-> > +
-> > +       if (dev->msix_enabled)
-> > +               return -EINVAL;
-> >
-> >         /* Check whether driver already requested for MSI irq */
-> >         if (dev->msi_enabled) {
-> > @@ -1028,7 +1030,8 @@ static int __pci_enable_msi_range(struct pci_dev
-> > *dev, int minvec, int maxvec,
-> >         if (!pci_msi_supported(dev, minvec))
-> >                 return -EINVAL;
-> >
-> > -       WARN_ON(!!dev->msi_enabled);
-> > +       if (dev->msi_enabled)
-> > +               return -EINVAL;
-> >
-> >         /* Check whether driver already requested MSI-X irqs */
-> >         if (dev->msix_enabled) {
+PiBGcm9tOiBKYWNvYiBQYW4gW21haWx0bzpqYWNvYi5qdW4ucGFuQGxpbnV4LmludGVsLmNvbV0N
+Cj4gU2VudDogU2F0dXJkYXksIFNlcHRlbWJlciA4LCAyMDE4IDU6MjUgQU0NCj4gPiA+IGlvbW11
+LXN2YSBleHBlY3RzIGV2ZXJ5d2hlcmUgdGhhdCB0aGUgZGV2aWNlIGhhcyBhbiBpb21tdV9kb21h
+aW4sDQo+ID4gPiBpdCdzIHRoZSBmaXJzdCB0aGluZyB3ZSBjaGVjayBvbiBlbnRyeS4gQnlwYXNz
+aW5nIGFsbCBvZiB0aGlzIHdvdWxkDQo+ID4gPiBjYWxsIGlkcl9hbGxvYygpIGRpcmVjdGx5LCBh
+bmQgd291bGRuJ3QgaGF2ZSBhbnkgY29kZSBpbiBjb21tb24NCj4gPiA+IHdpdGggdGhlIGN1cnJl
+bnQgaW9tbXUtc3ZhLiBTbyBpdCBzZWVtcyBsaWtlIHlvdSBuZWVkIGEgbGF5ZXIgb24NCj4gPiA+
+IHRvcCBvZiBpb21tdS1zdmEgY2FsbGluZyBpZHJfYWxsb2MoKSB3aGVuIGFuIElPTU1VIGlzbid0
+IHByZXNlbnQsDQo+ID4gPiBidXQgSSBkb24ndCB0aGluayBpdCBzaG91bGQgYmUgaW4gZHJpdmVy
+cy9pb21tdS8NCj4gPg0KPiA+IEluIHRoaXMgY2FzZSBJIHF1ZXN0aW9uIGlmIHRoZSBQQVNJRCBo
+YW5kbGluZyBzaG91bGQgYmUgdW5kZXINCj4gPiBkcml2ZXJzL2lvbW11IGF0IGFsbC4NCj4gPg0K
+PiA+IFNlZSBJIGNhbiBoYXZlIGEgbWl4IG9mIFZNIGNvbnRleHQgd2hpY2ggYXJlIGJvdW5kIHRv
+IHByb2Nlc3NlcyAoc29tZQ0KPiA+IGZldykgYW5kIFZNIGNvbnRleHRzIHdoaWNoIGFyZSBzdGFu
+ZGFsb25lIGFuZCBkb2Vzbid0IGNhcmUgZm9yIGENCj4gPiBwcm9jZXNzIGFkZHJlc3Mgc3BhY2Uu
+IEJ1dCBmb3IgZWFjaCBWTSBjb250ZXh0IEkgbmVlZCBhIGRpc3RpbmN0DQo+ID4gUEFTSUQgZm9y
+IHRoZSBoYXJkd2FyZSB0byB3b3JrLg0KDQpJJ20gY29uZnVzZWQgYWJvdXQgVk0gY29udGV4dCB2
+cy4gcHJvY2Vzcy4gSXMgVk0gcmVmZXJyaW5nIHRvIFZpcnR1YWwNCk1hY2hpbmUgb3Igc29tZXRo
+aW5nIGVsc2U/IElmIHllcywgSSBkb24ndCB1bmRlcnN0YW5kIHRoZSBiaW5kaW5nIHBhcnQNCi0g
+d2hhdCBWTSBjb250ZXh0IGlzIGJvdW5kIHRvIChob3N0PykgcHJvY2Vzcz8NCg0KPiA+DQo+ID4g
+SSBjYW4gbGl2ZSBpZiB3ZSBzYXkgaWYgSU9NTVUgaXMgY29tcGxldGVseSBkaXNhYmxlZCB3ZSB1
+c2UgYSBzaW1wbGUNCj4gPiBpZGEgdG8gYWxsb2NhdGUgdGhlbSwgYnV0IHdoZW4gSU9NTVUgaXMg
+ZW5hYmxlZCBJIGNlcnRhaW5seSBuZWVkIGENCj4gPiB3YXkgdG8gcmVzZXJ2ZSBhIFBBU0lEIHdp
+dGhvdXQgYW4gYXNzb2NpYXRlZCBwcm9jZXNzLg0KPiA+DQo+IFZULWQgd291bGQgYWxzbyBoYXZl
+IHN1Y2ggcmVxdWlyZW1lbnQuIFRoZXJlIGlzIGEgdmlydHVhbCBjb21tYW5kDQo+IHJlZ2lzdGVy
+IGZvciBhbGxvY2F0ZSBhbmQgZnJlZSBQQVNJRCBmb3IgVk0gdXNlLiBXaGVuIHRoYXQgUEFTSUQN
+Cj4gYWxsb2NhdGlvbiByZXF1ZXN0IGdldHMgcHJvcGFnYXRlZCB0byB0aGUgaG9zdCBJT01NVSBk
+cml2ZXIsIHdlIG5lZWQgdG8NCj4gYWxsb2NhdGUgUEFTSUQgdy9vIG1tLg0KPiANCg0KVlQtZCBp
+cyBhIGJpdCBkaWZmZXJlbnQuIEluIGhvc3Qgc2lkZSwgUEFTSUQgYWxsb2NhdGlvbiBhbHdheXMg
+aGFwcGVucyBpbg0KUWVtdSdzIGNvbnRleHQsIHNvIHRob3NlIFBBU0lEcyBhcmUgcmVjb3JkZWQg
+d2l0aCBRZW11IHByb2Nlc3MsIA0KdGhvdWdoIHRoZSBlbnRyaWVzIG1heSBwb2ludCB0byBndWVz
+dCBwYWdlIHRhYmxlcyBpbnN0ZWFkIG9mIGhvc3QgbW0NCm9mIFFlbXUuDQoNClRoYW5rcw0KS2V2
+aW4NCg==
