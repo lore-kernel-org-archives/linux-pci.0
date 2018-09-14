@@ -1,98 +1,128 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mailgw01.mediatek.com ([210.61.82.183]:60535 "EHLO
-        mailgw01.mediatek.com" rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org
-        with ESMTP id S1727261AbeIJOns (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Mon, 10 Sep 2018 10:43:48 -0400
-From: <honghui.zhang@mediatek.com>
-To: <lorenzo.pieralisi@arm.com>, <marc.zyngier@arm.com>,
-        <bhelgaas@google.com>, <matthias.bgg@gmail.com>,
-        <linux-arm-kernel@lists.infradead.org>,
-        <linux-mediatek@lists.infradead.org>, <linux-pci@vger.kernel.org>,
-        <linux-kernel@vger.kernel.org>, <devicetree@vger.kernel.org>,
-        <yingjoe.chen@mediatek.com>, <eddie.huang@mediatek.com>,
-        <ryder.lee@mediatek.com>
-CC: <ulf.hansson@linaro.org>, <honghui.zhang@mediatek.com>,
-        <hongkun.cao@mediatek.com>, <youlin.pei@mediatek.com>,
-        <yong.wu@mediatek.com>, <yt.shen@mediatek.com>,
-        <sean.wang@mediatek.com>, <xinping.qian@mediatek.com>
-Subject: [PATCH v4 1/4] PCI: mediatek: fixup mtk_pcie_find_port logical
-Date: Mon, 10 Sep 2018 17:50:20 +0800
-Message-ID: <1536573023-6720-2-git-send-email-honghui.zhang@mediatek.com>
-In-Reply-To: <1536573023-6720-1-git-send-email-honghui.zhang@mediatek.com>
-References: <1536573023-6720-1-git-send-email-honghui.zhang@mediatek.com>
-MIME-Version: 1.0
-Content-Type: text/plain
+Received: from mail-pf1-f196.google.com ([209.85.210.196]:42209 "EHLO
+        mail-pf1-f196.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1727160AbeIOBLE (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Fri, 14 Sep 2018 21:11:04 -0400
+Received: by mail-pf1-f196.google.com with SMTP id l9-v6so4757035pff.9
+        for <linux-pci@vger.kernel.org>; Fri, 14 Sep 2018 12:55:06 -0700 (PDT)
+From: Stephen Hemminger <stephen@networkplumber.org>
+To: kys@microsoft.com, haiyangz@microsoft.com, sthemmin@microsoft.com
+Cc: devel@linuxdriverproject.org, netdev@vger.kernel.org,
+        linux-pci@vger.kernel.org
+Subject: [PATCH v2 1/2] PCI: hv: support reporting serial number as slot information
+Date: Fri, 14 Sep 2018 12:54:56 -0700
+Message-Id: <20180914195457.20433-2-sthemmin@microsoft.com>
+In-Reply-To: <20180914195457.20433-1-sthemmin@microsoft.com>
+References: <20180914195457.20433-1-sthemmin@microsoft.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-From: Honghui Zhang <honghui.zhang@mediatek.com>
+The Hyper-V host API for PCI provides a unique "serial number" which
+can be used as basis for sysfs PCI slot table. This can be useful
+for cases where userspace wants to find the PCI device based on
+serial number.
 
-The Mediatek's host controller has two slots, each with it's own control
-registers. The host driver need to identify which slot was connected
-in order to access the device's configuration space. There's problem
-for current host driver to find out which slot was connected to for
-a given EP device.
+When an SR-IOV NIC is added, the host sends an attach message
+with serial number. The kernel doesn't use the serial number, but
+it is useful when doing the same thing in a userspace driver such
+as the DPDK. By having /sys/bus/pci/slots/N it provides a direct
+way to find the matching PCI device.
 
-Assuming each slot have connect with one EP device as below:
+There maybe some cases where serial number is not unique such
+as when using GPU's. But the PCI slot infrastructure will handle
+that.
 
-                host bridge
-  bus 0 --> __________|_______
-           |                  |
-           |                  |
-         slot 0             slot 1
-  bus 1 -->|        bus 2 --> |
-           |                  |
-         EP 0               EP 1
+This has a side effect which may also be useful. The common udev
+network device naming policy uses the slot information (rather
+than PCI address).
 
-During PCI enumeration, system software will scan all the PCI device
-starting from devfn 0. So it will get the proper port for slot0 and
-slot1 device when using PCI_SLOT(devfn) for match. But it will get
-the wrong slot for EP1: The devfn will be start from 0 when scanning
-EP1 behind slot1, it will get port0 since the PCI_SLOT(EP1) is match
-for port0's slot value. So the host driver should not using EP's devfn
-but the slot's devfn(the slot which EP was connected to) for match.
-
-This patch fix the mtk_pcie_find_port's logical by using the slot's
-devfn for match.
-
-Signed-off-by: Honghui Zhang <honghui.zhang@mediatek.com>
-Acked-by: Ryder Lee <ryder.lee@mediatek.com>
+Signed-off-by: Stephen Hemminger <sthemmin@microsoft.com>
 ---
- drivers/pci/controller/pcie-mediatek.c | 19 +++++++++++++++++--
- 1 file changed, 17 insertions(+), 2 deletions(-)
+ drivers/pci/controller/pci-hyperv.c | 37 +++++++++++++++++++++++++++++
+ 1 file changed, 37 insertions(+)
 
-diff --git a/drivers/pci/controller/pcie-mediatek.c b/drivers/pci/controller/pcie-mediatek.c
-index 861dda6..20b9088 100644
---- a/drivers/pci/controller/pcie-mediatek.c
-+++ b/drivers/pci/controller/pcie-mediatek.c
-@@ -337,11 +337,26 @@ static struct mtk_pcie_port *mtk_pcie_find_port(struct pci_bus *bus,
- {
- 	struct mtk_pcie *pcie = bus->sysdata;
- 	struct mtk_pcie_port *port;
-+	struct pci_dev *dev;
-+	struct pci_bus *pbus;
+diff --git a/drivers/pci/controller/pci-hyperv.c b/drivers/pci/controller/pci-hyperv.c
+index c00f82cc54aa..ee80e79db21a 100644
+--- a/drivers/pci/controller/pci-hyperv.c
++++ b/drivers/pci/controller/pci-hyperv.c
+@@ -89,6 +89,9 @@ static enum pci_protocol_version_t pci_protocol_version;
  
--	list_for_each_entry(port, &pcie->ports, list)
--		if (port->slot == PCI_SLOT(devfn))
-+	list_for_each_entry(port, &pcie->ports, list) {
-+		if (!bus->number && port->slot == PCI_SLOT(devfn))
- 			return port;
+ #define STATUS_REVISION_MISMATCH 0xC0000059
  
-+		if (bus->number) {
-+			pbus = bus;
++/* space for 32bit serial number as string */
++#define SLOT_NAME_SIZE 11
 +
-+			while (pbus->number) {
-+				dev = pbus->self;
-+				pbus = dev->bus;
-+			}
-+
-+			if (port->slot == PCI_SLOT(dev->devfn))
-+				return port;
-+		}
-+	}
-+
- 	return NULL;
+ /*
+  * Message Types
+  */
+@@ -494,6 +497,7 @@ struct hv_pci_dev {
+ 	struct list_head list_entry;
+ 	refcount_t refs;
+ 	enum hv_pcichild_state state;
++	struct pci_slot *pci_slot;
+ 	struct pci_function_description desc;
+ 	bool reported_missing;
+ 	struct hv_pcibus_device *hbus;
+@@ -1457,6 +1461,34 @@ static void prepopulate_bars(struct hv_pcibus_device *hbus)
+ 	spin_unlock_irqrestore(&hbus->device_list_lock, flags);
  }
  
++/*
++ * Assign entries in sysfs pci slot directory.
++ *
++ * Note that this function does not need to lock the children list
++ * because it is called from pci_devices_present_work which
++ * is serialized with hv_eject_device_work because they are on the
++ * same ordered workqueue. Therefore hbus->children list will not change
++ * even when pci_create_slot sleeps.
++ */
++static void hv_pci_assign_slots(struct hv_pcibus_device *hbus)
++{
++	struct hv_pci_dev *hpdev;
++	char name[SLOT_NAME_SIZE];
++	int slot_nr;
++
++	list_for_each_entry(hpdev, &hbus->children, list_entry) {
++		if (hpdev->pci_slot)
++			continue;
++
++		slot_nr = PCI_SLOT(wslot_to_devfn(hpdev->desc.win_slot.slot));
++		snprintf(name, SLOT_NAME_SIZE, "%u", hpdev->desc.ser);
++		hpdev->pci_slot = pci_create_slot(hbus->pci_bus, slot_nr,
++					  name, NULL);
++		if (!hpdev->pci_slot)
++			pr_warn("pci_create slot %s failed\n", name);
++	}
++}
++
+ /**
+  * create_root_hv_pci_bus() - Expose a new root PCI bus
+  * @hbus:	Root PCI bus, as understood by this driver
+@@ -1480,6 +1512,7 @@ static int create_root_hv_pci_bus(struct hv_pcibus_device *hbus)
+ 	pci_lock_rescan_remove();
+ 	pci_scan_child_bus(hbus->pci_bus);
+ 	pci_bus_assign_resources(hbus->pci_bus);
++	hv_pci_assign_slots(hbus);
+ 	pci_bus_add_devices(hbus->pci_bus);
+ 	pci_unlock_rescan_remove();
+ 	hbus->state = hv_pcibus_installed;
+@@ -1742,6 +1775,7 @@ static void pci_devices_present_work(struct work_struct *work)
+ 		 */
+ 		pci_lock_rescan_remove();
+ 		pci_scan_child_bus(hbus->pci_bus);
++		hv_pci_assign_slots(hbus);
+ 		pci_unlock_rescan_remove();
+ 		break;
+ 
+@@ -1858,6 +1892,9 @@ static void hv_eject_device_work(struct work_struct *work)
+ 	list_del(&hpdev->list_entry);
+ 	spin_unlock_irqrestore(&hpdev->hbus->device_list_lock, flags);
+ 
++	if (hpdev->pci_slot)
++		pci_destroy_slot(hpdev->pci_slot);
++
+ 	memset(&ctxt, 0, sizeof(ctxt));
+ 	ejct_pkt = (struct pci_eject_response *)&ctxt.pkt.message;
+ 	ejct_pkt->message_type.type = PCI_EJECTION_COMPLETE;
 -- 
-2.6.4
+2.18.0
