@@ -1,47 +1,54 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.29.99]:54840 "EHLO mail.kernel.org"
+Received: from mta-01.yadro.com ([89.207.88.251]:60240 "EHLO mta-01.yadro.com"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1727494AbeIEUjG (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Wed, 5 Sep 2018 16:39:06 -0400
-From: Sinan Kaya <okaya@kernel.org>
-To: linux-pci@vger.kernel.org
-Cc: Sinan Kaya <okaya@kernel.org>,
-        Mike Marciniszyn <mike.marciniszyn@intel.com>,
-        Dennis Dalessandro <dennis.dalessandro@intel.com>,
-        Doug Ledford <dledford@redhat.com>,
-        Jason Gunthorpe <jgg@ziepe.ca>
-Subject: [PATCH for-rc v2 3/3] IB/hfi1: Prefer new __pci_reset_function_locked() API with reset type
-Date: Wed,  5 Sep 2018 16:08:05 +0000
-Message-Id: <20180905160805.5680-3-okaya@kernel.org>
-In-Reply-To: <20180905160805.5680-1-okaya@kernel.org>
-References: <20180905160805.5680-1-okaya@kernel.org>
+        id S1728012AbeINVgo (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Fri, 14 Sep 2018 17:36:44 -0400
+From: Sergey Miroshnichenko <s.miroshnichenko@yadro.com>
+To: <linux-pci@vger.kernel.org>
+CC: Bjorn Helgaas <bhelgaas@google.com>, <linux@yadro.com>,
+        Sergey Miroshnichenko <s.miroshnichenko@yadro.com>
+Subject: [PATCH RFC 0/4] PCI: Allow BAR movement during hotplug
+Date: Fri, 14 Sep 2018 19:14:00 +0300
+Message-ID: <20180914161404.4685-1-s.miroshnichenko@yadro.com>
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-pci_reset_bus() is being called from the probe context and causes
-a deadlock since pci_reset_bus() also tries to obtain kernel lock.
+If the firmware or kernel has arranged memory for PCIe devices in a way that doesn't
+provide enough space for BARs of a new hotplugged device, the kernel can pause the
+drivers of the "obstructing" devices and move their BARs, so new BARs can fit into the
+created hole.
 
-Use __pci_reset_function_locked() that provides locking guarantees.
+When a driver is un-paused by the kernel after the PCIe rescan, it should check if its
+BARs had changed and ioremap() them if needed.
 
-Fixes: 811c5cb37df4 ("PCI: Unify try slot and bus reset API")
-Link: https://bugzilla.kernel.org/show_bug.cgi?id=200985
-Signed-off-by: Sinan Kaya <okaya@kernel.org>
----
- drivers/infiniband/hw/hfi1/pcie.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+BARs are moved not directly, but by releasing bridge resources, then sorting and
+assigning them back, similarly to the initial PCIe topology scan during system boot
+(when pci=realloc is passed).
 
-diff --git a/drivers/infiniband/hw/hfi1/pcie.c b/drivers/infiniband/hw/hfi1/pcie.c
-index eec83757d55f..13162289b748 100644
---- a/drivers/infiniband/hw/hfi1/pcie.c
-+++ b/drivers/infiniband/hw/hfi1/pcie.c
-@@ -900,7 +900,7 @@ static int trigger_sbr(struct hfi1_devdata *dd)
- 	 * delay after a reset is required.  Per spec requirements,
- 	 * the link is either working or not after that point.
- 	 */
--	return pci_reset_bus(dev);
-+	return __pci_reset_function_locked(dev, PCI_RESET_LINK);
- }
- 
- /*
+Pausing drivers is performed via reset_prepare() and reset_done() callbacks of struct
+pci_error_handlers. Drivers should pause during rescan not only because of potential
+movement of their BARs, but also because of possible updating of the bridge windows.
+
+This patchset is a part of our work on adding support for hotplugging bridges full of
+NVME devices (without special requirement such as Hot-Plug Controller, reservation of
+bus numbers and memory regions by firmware, etc.), should I also add here the patch that
+adds support of moving BARs to the NVME driver?
+
+Sergey Miroshnichenko (4):
+  PCI: hotplug: Add parameter to put devices to reset during rescan
+  PCI: Release and reassign resources from the root during rescan
+  PCI: Invalidate the released BAR resources
+  PCI: Fix writing invalid BARs during pci_restore_state()
+
+ .../admin-guide/kernel-parameters.txt         |  6 ++
+ drivers/pci/pci.c                             |  4 +-
+ drivers/pci/pci.h                             |  8 ++
+ drivers/pci/probe.c                           | 78 ++++++++++++++++++-
+ drivers/pci/setup-bus.c                       | 33 +++++---
+ include/linux/pci.h                           |  1 +
+ 6 files changed, 119 insertions(+), 11 deletions(-)
+
 -- 
-2.18.0
+2.17.1
