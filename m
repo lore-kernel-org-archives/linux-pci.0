@@ -1,71 +1,74 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from lelv0143.ext.ti.com ([198.47.23.248]:47340 "EHLO
-        lelv0143.ext.ti.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1727176AbeIQXlK (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Mon, 17 Sep 2018 19:41:10 -0400
-Subject: Re: [PATCH v3 0/4] pci-dra7xx: Enable errata i870 workaround for RC
- mode
-To: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
-        Tony Lindgren <tony@atomide.com>
-CC: KISHON VIJAY ABRAHAM <kishon@ti.com>,
-        Bjorn Helgaas <bhelgaas@google.com>,
-        Rob Herring <robh+dt@kernel.org>,
-        "linux-omap@vger.kernel.org" <linux-omap@vger.kernel.org>,
-        "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-        "devicetree@vger.kernel.org" <devicetree@vger.kernel.org>,
-        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
-References: <20180724173150.2701-1-vigneshr@ti.com>
- <20180808165700.GB486@e107981-ln.cambridge.arm.com>
- <ba428a15-77bf-e09c-3bd7-b5a0eae7ee13@ti.com>
- <20180907170009.GJ5662@atomide.com>
- <20180917094736.GA7072@e107981-ln.cambridge.arm.com>
-From: Vignesh R <vigneshr@ti.com>
-Message-ID: <d4c7751b-6950-d16b-9435-61935a6f511d@ti.com>
-Date: Mon, 17 Sep 2018 23:42:19 +0530
+Return-Path: <linux-acpi-owner@vger.kernel.org>
+Date: Fri, 14 Sep 2018 11:06:21 +0300
+From: Mika Westerberg <mika.westerberg@linux.intel.com>
+To: "Rafael J. Wysocki" <rjw@rjwysocki.net>
+Cc: Bjorn Helgaas <bhelgaas@google.com>, Len Brown <lenb@kernel.org>,
+        Lukas Wunner <lukas@wunner.de>,
+        Keith Busch <keith.busch@intel.com>,
+        Ashok Raj <ashok.raj@intel.com>, Mario.Limonciello@dell.com,
+        Anthony Wong <anthony.wong@canonical.com>,
+        Linus Walleij <linus.walleij@linaro.org>,
+        Sakari Ailus <sakari.ailus@iki.fi>, linux-pci@vger.kernel.org,
+        linux-acpi@vger.kernel.org
+Subject: Re: [PATCH v2 01/10] PCI: Do not skip power managed bridges in
+ pci_enable_wake()
+Message-ID: <20180914080621.GT14465@lahna.fi.intel.com>
+References: <20180913143322.77953-1-mika.westerberg@linux.intel.com>
+ <20180913143322.77953-2-mika.westerberg@linux.intel.com>
+ <153688100.j3IOAyprJL@aspire.rjw.lan>
 MIME-Version: 1.0
-In-Reply-To: <20180917094736.GA7072@e107981-ln.cambridge.arm.com>
-Content-Type: text/plain; charset="utf-8"
-Sender: linux-pci-owner@vger.kernel.org
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <153688100.j3IOAyprJL@aspire.rjw.lan>
+Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hi Lorenzo,
-
-On 17-Sep-18 3:17 PM, Lorenzo Pieralisi wrote:
-> On Fri, Sep 07, 2018 at 10:00:09AM -0700, Tony Lindgren wrote:
->> * Vignesh R <vigneshr@ti.com> [180810 10:10]:
->>>
-[...]
->>>>> Tony,
->>>>>
->>>>> If you are okay with the series, could you pick this via omap tree?
->>>>> All ACKs are in place and Lorenzo is okay with PCIe bits to go along with
->>>>> rest of DTS changes.
->>>>
->>>> I think we have missed the v4.19 merge window by now - 
->>>
->>> Right. I didn't get any response from Tony.
->>
->> Sorry catching up with pending mails.. I try hard to not touch
->> anything except fixes around -rc6 time.
->>
->>>> please let me know if I can drop this series from the PCI patch queue.
->>>>
->>>
->>> Ok, I will resend the patch after 4.19-rc. Thanks!
->>
->> FYI, I'm untagging this thread too. Please post the dts
->> changes separately once the dependencies (if any) have
->> cleared.
+On Thu, Sep 13, 2018 at 04:33:39PM +0200, Rafael J. Wysocki wrote:
+> On Thursday, September 13, 2018 4:33:13 PM CEST Mika Westerberg wrote:
+> > Commit baecc470d5fd ("PCI / PM: Skip bridges in pci_enable_wake()")
+> > changed pci_enable_wake() so that all bridges are skipped when wakeup is
+> > enabled (or disabled) with the reasoning that bridges can only signal
+> > wakeup on behalf of their subordinate devices.
+> > 
+> > However, there are bridges that can signal wakeup itself. For example
+> > PCIe downstream and root ports supporting hotplug may signal wakeup upon
+> > hotplug event.
+> > 
+> > For this reason change pci_enable_wake() so that it skips all bridges
+> > except those that we power manage (->bridge_d3 is set). Those are the
+> > ones that can go into low power states and may need to signal wakeup.
+> > 
+> > Signed-off-by: Mika Westerberg <mika.westerberg@linux.intel.com>
+> > ---
+> >  drivers/pci/pci.c | 9 ++++++---
+> >  1 file changed, 6 insertions(+), 3 deletions(-)
+> > 
+> > diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
+> > index 29ff9619b5fa..1af6f1887986 100644
+> > --- a/drivers/pci/pci.c
+> > +++ b/drivers/pci/pci.c
+> > @@ -2133,10 +2133,13 @@ static int __pci_enable_wake(struct pci_dev *dev, pci_power_t state, bool enable
+> >  	int ret = 0;
+> >  
+> >  	/*
+> > -	 * Bridges can only signal wakeup on behalf of subordinate devices,
+> > -	 * but that is set up elsewhere, so skip them.
+> > +	 * Bridges that are not power-manageable directly only signal
+> > +	 * wakeup on behalf of subordinate devices which is set up
+> > +	 * elsewhere, so skip them. However, bridges that are
+> > +	 * power-manageable may signal wakeup for themselves (for example,
+> > +	 * on a hotplug event) and they need to be covered here.
+> >  	 */
+> > -	if (pci_has_subordinate(dev))
+> > +	if (!pci_power_manageable(dev))
+> >  		return 0;
+> >  
+> >  	/* Don't do the same thing twice in a row for one device. */
+> > 
 > 
-> Ok, Vignesh: I shall drop this series from the PCI patches queue,
-> waiting for your new version, let me know how you want to handle this
-> then please.
-> 
+> Reviewed-by: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
 
-Thanks for the response!
-I have sent v4 dropping DT changes (will send after driver patches have
-made it upstream). If possible, consider the patches for next rc as they
-are fixes.
+Thanks!
 
-Regards
-Vignesh
+For some reason this patch never hit the mailing lists (others did).
+Since you kept the whole context people should still be able to review
+it. I can resend this patch as well.
