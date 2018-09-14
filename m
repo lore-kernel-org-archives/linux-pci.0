@@ -1,38 +1,55 @@
-Return-Path: <SRS0=EriY=LR=linux.intel.com=mika.westerberg@kernel.org>
-Return-Path: <SRS0=EriY=LR=linux.intel.com=mika.westerberg@kernel.org>
-Date: Mon, 3 Sep 2018 15:12:09 +0300
-From: Mika Westerberg <mika.westerberg@linux.intel.com>
-To: Daniel Drake <drake@endlessm.com>
-Cc: Bjorn Helgaas <helgaas@kernel.org>, Bjorn Helgaas <bhelgaas@google.com>,
-	linux-pci@vger.kernel.org,
-	Linux Upstreaming Team <linux@endlessm.com>,
-	nouveau@lists.freedesktop.org, Linux PM <linux-pm@vger.kernel.org>,
-	Peter Wu <peter@lekensteyn.nl>, kherbst@redhat.com,
-	Andy Shevchenko <andriy.shevchenko@linux.intel.com>,
-	"Rafael J. Wysocki" <rafael.j.wysocki@intel.com>,
-	Keith Busch <keith.busch@intel.com>,
-	Jon Derrick <jonathan.derrick@intel.com>
-Subject: Re: [PATCH] PCI: add prefetch quirk to work around Asus/Nvidia
- suspend issues
-Message-ID: <20180903121209.GC2283@lahna.fi.intel.com>
-References: <20180831073057.14626-1-drake@endlessm.com>
- <20180831191225.GA43106@bhelgaas-glaptop.roam.corp.google.com>
- <CAD8Lp45CKCHxTg91zF9bWztqbAwLzgAUpNEHQ6ouKu2PkJT8SQ@mail.gmail.com>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mx1.redhat.com ([209.132.183.28]:40164 "EHLO mx1.redhat.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1727009AbeIODtx (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Fri, 14 Sep 2018 23:49:53 -0400
+Date: Fri, 14 Sep 2018 16:33:21 -0600
+From: Alex Williamson <alex.williamson@redhat.com>
+To: Sinan Kaya <okaya@kernel.org>
+Cc: linux-pci@vger.kernel.org, Bjorn Helgaas <bhelgaas@google.com>,
+        Alexey Kardashevskiy <aik@ozlabs.ru>,
+        Peter Xu <peterx@redhat.com>,
+        "Gustavo A. R. Silva" <gustavo@embeddedor.com>
+Subject: Re: [PATCH v2 6/6] PCI: Expose reset type to users of
+ pci_reset_bus()
+Message-ID: <20180914163321.2abba9fa@t450s.home>
+In-Reply-To: <20180914211808.2564-7-okaya@kernel.org>
+References: <20180914211808.2564-1-okaya@kernel.org>
+        <20180914211808.2564-7-okaya@kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <CAD8Lp45CKCHxTg91zF9bWztqbAwLzgAUpNEHQ6ouKu2PkJT8SQ@mail.gmail.com>
+Content-Type: text/plain; charset=US-ASCII
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Mon, Sep 03, 2018 at 04:56:32PM +0800, Daniel Drake wrote:
-> On Sat, Sep 1, 2018 at 3:12 AM, Bjorn Helgaas <helgaas@kernel.org> wrote:
-> > If true, this sounds like some sort of erratum, so it would be good to
-> > get some input from Intel, and I cc'd a few Intel folks.
-> 
-> Yes, it would be great to get their input.
+On Fri, 14 Sep 2018 21:18:08 +0000
+Sinan Kaya <okaya@kernel.org> wrote:
+> diff --git a/drivers/vfio/pci/vfio_pci.c b/drivers/vfio/pci/vfio_pci.c
+> index fe7ada997c51..754f08286bb1 100644
+> --- a/drivers/vfio/pci/vfio_pci.c
+> +++ b/drivers/vfio/pci/vfio_pci.c
+> @@ -1015,7 +1015,7 @@ static long vfio_pci_ioctl(void *device_data,
+>  						    &info, slot);
+>  		if (!ret)
+>  			/* User has access, do the reset */
+> -			ret = pci_reset_bus(vdev->pdev);
+> +			ret = pci_reset_bus(vdev->pdev, PCI_RESET_LINK);
 
-We have seen one similar issue with LPSS devices when BIOS assigns
-device BARs above 4G (which is not the case here) and it turned out to
-be misconfigured MTRR register or something like that. It may not be
-related at all but it could be worth a try to dump out MTRR registers of
-one of the affected systems and see if the memory areas are listed there
-(and if the attributes are somehow wrong if found).
+This should have switched back the control we had prior to 811c5cb37df4
+with something like:
+
+	ret = pci_reset_bus(vdev->pdev,
+			slot ? PCI_RESET_SLOT :	PCI_RESET_BUS);
+
+>  
+>  hot_reset_release:
+>  		for (i--; i >= 0; i--)
+> @@ -1390,7 +1390,7 @@ static void vfio_pci_try_bus_reset(struct vfio_pci_device *vdev)
+>  	}
+>  
+>  	if (needs_reset)
+> -		ret = pci_reset_bus(vdev->pdev);
+> +		ret = pci_reset_bus(vdev->pdev, PCI_RESET_LINK);
+
+Same here.  Thanks,
+
+Alex
