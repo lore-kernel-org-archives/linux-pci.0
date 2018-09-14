@@ -2,102 +2,104 @@ Return-Path: <SRS0=PQBU=L4=vger.kernel.org=linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-8.8 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_PASS,URIBL_BLOCKED,
-	USER_AGENT_GIT autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-2.1 required=3.0 tests=DKIM_SIGNED,
+	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_PASS,T_DKIM_INVALID,
+	URIBL_BLOCKED,USER_AGENT_MUTT autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id CF44EC070C3
-	for <linux-pci@archiver.kernel.org>; Fri, 14 Sep 2018 08:31:39 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id CE743FC6182
+	for <linux-pci@archiver.kernel.org>; Fri, 14 Sep 2018 14:39:05 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 9278621479
-	for <linux-pci@archiver.kernel.org>; Fri, 14 Sep 2018 08:31:39 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.3.2 mail.kernel.org 9278621479
-Authentication-Results: mail.kernel.org; dmarc=fail (p=none dis=none) header.from=linux.intel.com
+	by mail.kernel.org (Postfix) with ESMTP id F36492083A
+	for <linux-pci@archiver.kernel.org>; Fri, 14 Sep 2018 14:39:04 +0000 (UTC)
+Authentication-Results: mail.kernel.org;
+	dkim=fail reason="signature verification failed" (1024-bit key) header.d=armlinux.org.uk header.i=@armlinux.org.uk header.b="QSvxXkEO"
+DMARC-Filter: OpenDMARC Filter v1.3.2 mail.kernel.org F36492083A
+Authentication-Results: mail.kernel.org; dmarc=fail (p=none dis=none) header.from=armlinux.org.uk
 Authentication-Results: mail.kernel.org; spf=none smtp.mailfrom=linux-pci-owner@vger.kernel.org
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727752AbeINNpC (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Fri, 14 Sep 2018 09:45:02 -0400
-Received: from mga12.intel.com ([192.55.52.136]:50200 "EHLO mga12.intel.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1727194AbeINNpC (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Fri, 14 Sep 2018 09:45:02 -0400
-X-Amp-Result: SKIPPED(no attachment in message)
-X-Amp-File-Uploaded: False
-Received: from fmsmga001.fm.intel.com ([10.253.24.23])
-  by fmsmga106.fm.intel.com with ESMTP/TLS/DHE-RSA-AES256-GCM-SHA384; 14 Sep 2018 01:31:38 -0700
-X-ExtLoop1: 1
-X-IronPort-AV: E=Sophos;i="5.53,372,1531810800"; 
-   d="scan'208";a="89981059"
-Received: from black.fi.intel.com ([10.237.72.28])
-  by fmsmga001.fm.intel.com with ESMTP; 14 Sep 2018 01:31:35 -0700
-Received: by black.fi.intel.com (Postfix, from userid 1001)
-        id 5D310BA; Fri, 14 Sep 2018 11:31:34 +0300 (EEST)
-From:   Mika Westerberg <mika.westerberg@linux.intel.com>
-To:     Bjorn Helgaas <bhelgaas@google.com>,
-        "Rafael J. Wysocki" <rjw@rjwysocki.net>
-Cc:     Len Brown <lenb@kernel.org>, Lukas Wunner <lukas@wunner.de>,
-        Keith Busch <keith.busch@intel.com>,
-        Ashok Raj <ashok.raj@intel.com>, Mario.Limonciello@dell.com,
-        Anthony Wong <anthony.wong@canonical.com>,
-        Linus Walleij <linus.walleij@linaro.org>,
-        Sakari Ailus <sakari.ailus@iki.fi>,
-        Mika Westerberg <mika.westerberg@linux.intel.com>,
-        linux-pci@vger.kernel.org, linux-acpi@vger.kernel.org
-Subject: [PATCH RESEND v2 01/10] PCI: Do not skip power managed bridges in pci_enable_wake()
-Date:   Fri, 14 Sep 2018 11:31:34 +0300
-Message-Id: <20180914083134.27217-1-mika.westerberg@linux.intel.com>
-X-Mailer: git-send-email 2.18.0
-In-Reply-To: <153688100.j3IOAyprJL@aspire.rjw.lan>
-References: <153688100.j3IOAyprJL@aspire.rjw.lan>
+        id S1727746AbeINTxv (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Fri, 14 Sep 2018 15:53:51 -0400
+Received: from pandora.armlinux.org.uk ([78.32.30.218]:56264 "EHLO
+        pandora.armlinux.org.uk" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1727676AbeINTxv (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Fri, 14 Sep 2018 15:53:51 -0400
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
+        d=armlinux.org.uk; s=pandora-2014; h=Sender:In-Reply-To:Content-Type:
+        MIME-Version:References:Message-ID:Subject:Cc:To:From:Date:Reply-To:
+        Content-Transfer-Encoding:Content-ID:Content-Description:Resent-Date:
+        Resent-From:Resent-Sender:Resent-To:Resent-Cc:Resent-Message-ID:List-Id:
+        List-Help:List-Unsubscribe:List-Subscribe:List-Post:List-Owner:List-Archive;
+         bh=fLG+TWc9StWIhJwtYkJidckh5wkTsc72g9qWBmlLXqg=; b=QSvxXkEOJHFiQBVW+/jWlFWaG
+        Vig4LZHXZmnLxG0V1NGoYs/jRKxzJ6tHEbthwvHoZjm8C4TMaHlbZvc5dIbi7xat1ed+Ntvw9fkoN
+        P8Ws8PyOckjgYRvxwyP4KslcD4KbnZ0PzvBLbq4Y1O+dFHdpbVSBLCA7R45YNh+JQoH00=;
+Received: from n2100.armlinux.org.uk ([2002:4e20:1eda:1:214:fdff:fe10:4f86]:54068)
+        by pandora.armlinux.org.uk with esmtpsa (TLSv1.2:ECDHE-RSA-AES128-GCM-SHA256:128)
+        (Exim 4.90_1)
+        (envelope-from <linux@armlinux.org.uk>)
+        id 1g0pFF-0008EB-RU; Fri, 14 Sep 2018 15:38:54 +0100
+Received: from linux by n2100.armlinux.org.uk with local (Exim 4.90_1)
+        (envelope-from <linux@n2100.armlinux.org.uk>)
+        id 1g0pFC-0007K4-SU; Fri, 14 Sep 2018 15:38:50 +0100
+Date:   Fri, 14 Sep 2018 15:38:49 +0100
+From:   Russell King - ARM Linux <linux@armlinux.org.uk>
+To:     Thomas Petazzoni <thomas.petazzoni@bootlin.com>
+Cc:     Bjorn Helgaas <bhelgaas@google.com>,
+        Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
+        linux-pci@vger.kernel.org, linux-arm-kernel@lists.infradead.org,
+        Gregory Clement <gregory.clement@bootlin.com>,
+        =?iso-8859-1?Q?Miqu=E8l?= Raynal <miquel.raynal@bootlin.com>,
+        Maxime Chevallier <maxime.chevallier@bootlin.com>,
+        Antoine Tenart <antoine.tenart@bootlin.com>,
+        Nadav Haklai <nadavh@marvell.com>
+Subject: Re: [PATCHv2 1/3] PCI: Introduce PCI bridge emulated config space
+ common logic
+Message-ID: <20180914143849.GC30658@n2100.armlinux.org.uk>
+References: <20180912154831.2220-1-thomas.petazzoni@bootlin.com>
+ <20180912154831.2220-2-thomas.petazzoni@bootlin.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20180912154831.2220-2-thomas.petazzoni@bootlin.com>
+User-Agent: Mutt/1.5.23 (2014-03-12)
 Sender: linux-pci-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
-Message-ID: <20180914083134.4-HSrJU9lFLGoPF7jInUtXYm-i7zKYFPB48ingHrXFY@z>
+Message-ID: <20180914143849.U_GURzCrdInrCfN3SmWkwwsSzGUkaXY9q6TBU6JQyd0@z>
 
-Commit baecc470d5fd ("PCI / PM: Skip bridges in pci_enable_wake()")
-changed pci_enable_wake() so that all bridges are skipped when wakeup is
-enabled (or disabled) with the reasoning that bridges can only signal
-wakeup on behalf of their subordinate devices.
+On Wed, Sep 12, 2018 at 05:48:29PM +0200, Thomas Petazzoni wrote:
+> Some PCI host controllers do not expose a configuration space for the
+> root port PCI bridge. Due to this, the Marvell Armada 370/38x/XP PCI
+> controller driver (pci-mvebu) emulates a root port PCI bridge
+> configuration space, and uses that to (among other things) dynamically
+> create the memory windows that correspond to the PCI MEM and I/O
+> regions.
+> 
+> Since we now need to add a very similar logic for the Marvell Armada
+> 37xx PCI controller driver (pci-aardvark), instead of duplicating the
+> code, we create in this commit a common logic called pci-bridge-emul.
+> 
+> The idea of this logic is to emulate a root port PCI bridge
+> configuration space by providing configuration space read/write
+> operations, and faking behind the scenes the configuration space of a
+> PCI bridge. A PCI host controller driver simply has to call
+> pci_bridge_emul_conf_read() and pci_bridge_emul_conf_write() to
+> read/write the configuration space of the bridge.
+> 
+> By default, the PCI bridge configuration space is simply emulated by a
+> chunk of memory, but the PCI host controller can override the behavior
+> of the read and write operations on a per-register basis to do
+> additional actions if needed. We take care of complying with the
+> behavior of the PCI configuration space registers in terms of bits
+> that are read-write, read-only, reserved and write-1-to-clear.
 
-However, there are bridges that can signal wakeup itself. For example
-PCIe downstream and root ports supporting hotplug may signal wakeup upon
-hotplug event.
+Thanks, for the patch.  I don't see anything technically wrong from
+a PCIe device behaviour point of view, although I haven't compared
+the behaviour tables with the specs.
 
-For this reason change pci_enable_wake() so that it skips all bridges
-except those that we power manage (->bridge_d3 is set). Those are the
-ones that can go into low power states and may need to signal wakeup.
+Reviewed-by: Russell King <rmk+kernel@armlinux.org.uk>
 
-Signed-off-by: Mika Westerberg <mika.westerberg@linux.intel.com>
-Reviewed-by: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
----
-Resending this because for some reason it did not hit the mailing lists.
-Added tag from Rafael as well.
-
- drivers/pci/pci.c | 9 ++++++---
- 1 file changed, 6 insertions(+), 3 deletions(-)
-
-diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
-index 29ff9619b5fa..1af6f1887986 100644
---- a/drivers/pci/pci.c
-+++ b/drivers/pci/pci.c
-@@ -2133,10 +2133,13 @@ static int __pci_enable_wake(struct pci_dev *dev, pci_power_t state, bool enable
- 	int ret = 0;
- 
- 	/*
--	 * Bridges can only signal wakeup on behalf of subordinate devices,
--	 * but that is set up elsewhere, so skip them.
-+	 * Bridges that are not power-manageable directly only signal
-+	 * wakeup on behalf of subordinate devices which is set up
-+	 * elsewhere, so skip them. However, bridges that are
-+	 * power-manageable may signal wakeup for themselves (for example,
-+	 * on a hotplug event) and they need to be covered here.
- 	 */
--	if (pci_has_subordinate(dev))
-+	if (!pci_power_manageable(dev))
- 		return 0;
- 
- 	/* Don't do the same thing twice in a row for one device. */
 -- 
-2.18.0
-
+RMK's Patch system: http://www.armlinux.org.uk/developer/patches/
+FTTC broadband for 0.8mile line in suburbia: sync at 13.8Mbps down 630kbps up
+According to speedtest.net: 13Mbps down 490kbps up
