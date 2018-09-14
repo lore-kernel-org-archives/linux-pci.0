@@ -1,172 +1,113 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mga18.intel.com ([134.134.136.126]:52850 "EHLO mga18.intel.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1727726AbeIODJU (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Fri, 14 Sep 2018 23:09:20 -0400
-Message-ID: <be6c6d59e1a199eea4b9a1b406d78a8ce0dc67e5.camel@linux.intel.com>
-Subject: Re: [PATCH v2 2/6] PCI: Expose reset_type to users of
- pci_reset_function()
-From: Srinivas Pandruvada <srinivas.pandruvada@linux.intel.com>
-To: Sinan Kaya <okaya@kernel.org>, linux-pci@vger.kernel.org
-Cc: alex.williamson@redhat.com, Jiri Kosina <jikos@kernel.org>,
-        Benjamin Tissoires <benjamin.tissoires@redhat.com>,
-        Frank Haverkamp <haver@linux.vnet.ibm.com>,
-        "Guilherme G. Piccoli" <gpiccoli@linux.vnet.ibm.com>,
-        Arnd Bergmann <arnd@arndb.de>,
-        Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-        Harish Patil <harish.patil@cavium.com>,
-        Manish Chopra <manish.chopra@cavium.com>,
-        Dept-GELinuxNICDev@cavium.com,
-        "David S. Miller" <davem@davemloft.net>,
-        Solarflare linux maintainers <linux-net-drivers@solarflare.com>,
-        Edward Cree <ecree@solarflare.com>,
-        Bert Kenward <bkenward@solarflare.com>,
-        Bjorn Helgaas <bhelgaas@google.com>,
-        Anton Vasilyev <vasilyev@ispras.ru>
-Date: Fri, 14 Sep 2018 14:52:57 -0700
-In-Reply-To: <20180914211808.2564-3-okaya@kernel.org>
-References: <20180914211808.2564-1-okaya@kernel.org>
-         <20180914211808.2564-3-okaya@kernel.org>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <SRS0=Pbmb=L4=linux.ibm.com=sbobroff@kernel.org>
+Return-Path: <SRS0=Pbmb=L4=linux.ibm.com=sbobroff@kernel.org>
+Date: Fri, 14 Sep 2018 10:05:20 +1000
+From: Sam Bobroff <sbobroff@linux.ibm.com>
+To: Russell Currey <ruscur@russell.cc>
+Cc: Bjorn Helgaas <helgaas@kernel.org>, linux-pci@vger.kernel.org,
+        linuxppc-dev@lists.ozlabs.org,
+        Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+        Paul Mackerras <paulus@samba.org>,
+        Michael Ellerman <mpe@ellerman.id.au>, linux-kernel@vger.kernel.org,
+        oohall@gmail.com
+Subject: Re: [PATCH] MAINTAINERS: Add PPC contacts for PCI core error handling
+References: <153677132617.23091.12307288405707171077.stgit@bhelgaas-glaptop.roam.corp.google.com>
+ <20180912165846.GH118330@bhelgaas-glaptop.roam.corp.google.com>
+ <94b8929d44af6dd965600b7d159458312d500582.camel@russell.cc>
+MIME-Version: 1.0
+Content-Type: multipart/signed; micalg=pgp-sha256;
+	protocol="application/pgp-signature"; boundary="+QahgC5+KEYLbs62"
+In-Reply-To: <94b8929d44af6dd965600b7d159458312d500582.camel@russell.cc>
+Message-Id: <20180914000520.GA7655@tungsten.ozlabs.ibm.com>
 List-ID: <linux-pci.vger.kernel.org>
 
-On Fri, 2018-09-14 at 21:18 +0000, Sinan Kaya wrote:
-> Looking to have more control between the users of the API vs. what
-> the API
-> can do internally. The new reset_type tells the PCI core about the
-> bounds
-> of the request.
-> 
-> Signed-off-by: Sinan Kaya <okaya@kernel.org>
-> ---
->  drivers/hid/intel-ish-hid/ipc/ipc.c             | 2 +-
-For intel-ish-hid, change looks fine.
 
-Thanks,
-Srinivas
+--+QahgC5+KEYLbs62
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+Content-Transfer-Encoding: quoted-printable
 
->  drivers/misc/genwqe/card_base.c                 | 2 +-
->  drivers/net/ethernet/qlogic/qlcnic/qlcnic_ctx.c | 2 +-
->  drivers/net/ethernet/sfc/mcdi.c                 | 2 +-
->  drivers/pci/pci-sysfs.c                         | 2 +-
->  drivers/pci/pci.c                               | 4 ++--
->  include/linux/pci.h                             | 2 +-
->  7 files changed, 8 insertions(+), 8 deletions(-)
-> 
-> diff --git a/drivers/hid/intel-ish-hid/ipc/ipc.c b/drivers/hid/intel-
-> ish-hid/ipc/ipc.c
-> index bfbca7ec54ce..18312969f1b3 100644
-> --- a/drivers/hid/intel-ish-hid/ipc/ipc.c
-> +++ b/drivers/hid/intel-ish-hid/ipc/ipc.c
-> @@ -754,7 +754,7 @@ static int _ish_hw_reset(struct ishtp_device
-> *dev)
->  	if (!pdev)
->  		return	-ENODEV;
->  
-> -	rv = pci_reset_function(pdev);
-> +	rv = pci_reset_function(pdev, PCI_RESET_ANY);
->  	if (!rv)
->  		dev->dev_state = ISHTP_DEV_RESETTING;
->  
-> diff --git a/drivers/misc/genwqe/card_base.c
-> b/drivers/misc/genwqe/card_base.c
-> index c7cd3675bcd1..cc78ef28ee38 100644
-> --- a/drivers/misc/genwqe/card_base.c
-> +++ b/drivers/misc/genwqe/card_base.c
-> @@ -201,7 +201,7 @@ static int genwqe_bus_reset(struct genwqe_dev
-> *cd)
->  	 * restored by the pci_reset_function().
->  	 */
->  	dev_dbg(&pci_dev->dev, "[%s] pci_reset function ...\n",
-> __func__);
-> -	rc = pci_reset_function(pci_dev);
-> +	rc = pci_reset_function(pci_dev, PCI_RESET_ANY);
->  	if (rc) {
->  		dev_err(&pci_dev->dev,
->  			"[%s] err: failed reset func (rc %d)\n",
-> __func__, rc);
-> diff --git a/drivers/net/ethernet/qlogic/qlcnic/qlcnic_ctx.c
-> b/drivers/net/ethernet/qlogic/qlcnic/qlcnic_ctx.c
-> index d344e9d43832..bb737725f175 100644
-> --- a/drivers/net/ethernet/qlogic/qlcnic/qlcnic_ctx.c
-> +++ b/drivers/net/ethernet/qlogic/qlcnic/qlcnic_ctx.c
-> @@ -629,7 +629,7 @@ int qlcnic_fw_create_ctx(struct qlcnic_adapter
-> *dev)
->  	int i, err, ring;
->  
->  	if (dev->flags & QLCNIC_NEED_FLR) {
-> -		pci_reset_function(dev->pdev);
-> +		pci_reset_function(dev->pdev, PCI_RESET_ANY);
->  		dev->flags &= ~QLCNIC_NEED_FLR;
->  	}
->  
-> diff --git a/drivers/net/ethernet/sfc/mcdi.c
-> b/drivers/net/ethernet/sfc/mcdi.c
-> index dfad93fca0a6..7f95e17b8a48 100644
-> --- a/drivers/net/ethernet/sfc/mcdi.c
-> +++ b/drivers/net/ethernet/sfc/mcdi.c
-> @@ -1862,7 +1862,7 @@ int efx_mcdi_reset(struct efx_nic *efx, enum
-> reset_type method)
->  
->  	/* If MCDI is down, we can't handle_assertion */
->  	if (method == RESET_TYPE_MCDI_TIMEOUT) {
-> -		rc = pci_reset_function(efx->pci_dev);
-> +		rc = pci_reset_function(efx->pci_dev, PCI_RESET_ANY);
->  		if (rc)
->  			return rc;
->  		/* Re-enable polled MCDI completion */
-> diff --git a/drivers/pci/pci-sysfs.c b/drivers/pci/pci-sysfs.c
-> index 9ecfe13157c0..9569664ec4b2 100644
-> --- a/drivers/pci/pci-sysfs.c
-> +++ b/drivers/pci/pci-sysfs.c
-> @@ -1449,7 +1449,7 @@ static ssize_t reset_store(struct device *dev,
-> struct device_attribute *attr,
->  		return -EINVAL;
->  
->  	pm_runtime_get_sync(dev);
-> -	result = pci_reset_function(pdev);
-> +	result = pci_reset_function(pdev, PCI_RESET_ANY);
->  	pm_runtime_put(dev);
->  	if (result < 0)
->  		return result;
-> diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
-> index 8912c8ba3b2b..2b1e2b4893f3 100644
-> --- a/drivers/pci/pci.c
-> +++ b/drivers/pci/pci.c
-> @@ -4793,7 +4793,7 @@ int pci_probe_reset_function(struct pci_dev
-> *dev)
->   * Returns 0 if the device function was successfully reset or
-> negative if the
->   * device doesn't support resetting a single function.
->   */
-> -int pci_reset_function(struct pci_dev *dev)
-> +int pci_reset_function(struct pci_dev *dev, u32 reset_type)
->  {
->  	int rc;
->  
-> @@ -4803,7 +4803,7 @@ int pci_reset_function(struct pci_dev *dev)
->  	pci_dev_lock(dev);
->  	pci_dev_save_and_disable(dev);
->  
-> -	rc = __pci_reset_function_locked(dev, PCI_RESET_ANY);
-> +	rc = __pci_reset_function_locked(dev, reset_type);
->  
->  	pci_dev_restore(dev);
->  	pci_dev_unlock(dev);
-> diff --git a/include/linux/pci.h b/include/linux/pci.h
-> index d2e0a8c8177b..1a1a76130e91 100644
-> --- a/include/linux/pci.h
-> +++ b/include/linux/pci.h
-> @@ -1123,7 +1123,7 @@ void pcie_print_link_status(struct pci_dev
-> *dev);
->  bool pcie_has_flr(struct pci_dev *dev);
->  int pcie_flr(struct pci_dev *dev);
->  int __pci_reset_function_locked(struct pci_dev *dev, u32
-> reset_type);
-> -int pci_reset_function(struct pci_dev *dev);
-> +int pci_reset_function(struct pci_dev *dev, u32 reset_type);
->  int pci_reset_function_locked(struct pci_dev *dev);
->  int pci_try_reset_function(struct pci_dev *dev);
->  int pci_probe_reset_slot(struct pci_slot *slot);
+On Thu, Sep 13, 2018 at 12:26:55PM +1000, Russell Currey wrote:
+> On Wed, 2018-09-12 at 11:58 -0500, Bjorn Helgaas wrote:
+> > On Wed, Sep 12, 2018 at 11:55:26AM -0500, Bjorn Helgaas wrote:
+> > > From: Bjorn Helgaas <bhelgaas@google.com>
+> > >=20
+> > > The original PCI error recovery functionality was for the powerpc-spe=
+cific
+> > > IBM EEH feature.  PCIe subsequently added some similar features, incl=
+uding
+> > > AER and DPC, that can be used on any architecture.
+> > >=20
+> > > We want the generic PCI core error handling support to work with all =
+of
+> > > these features.  Driver error recovery callbacks should be independen=
+t of
+> > > which feature the platform provides.
+> > >=20
+> > > Add the generic PCI core error recovery files to the powerpc EEH
+> > > MAINTAINERS entry so the powerpc folks will be copied on changes to t=
+he
+> > > generic PCI error handling strategy.
+> >=20
+> > I really want to make sure the powerpc folks are plugged into any PCI c=
+ore
+> > error handling discussions.  Please let me know if there's a better way
+> > than this patch, or if there are other people who should be added.
+>=20
+> I think this patch is definitely a good idea.
+>=20
+> Alongside this (whether you want to include it in your patch or not, Bjor=
+n),
+> Sam Bobroff should replace myself as maintainer.  He's been very active i=
+n fixing,
+> reworking and reviewing in EEH land and will probably do a better job of =
+keeping
+> his finger on the pulse of the generic PCI error handling code than I did.
+>=20
+> - Russell
+
+That's fine with me. You can add me or let me know if I should send a
+patch.
+
+Sam.
+
+>=20
+> >=20
+> > > Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
+> > > ---
+> > >  MAINTAINERS |    4 ++++
+> > >  1 file changed, 4 insertions(+)
+> > >=20
+> > > diff --git a/MAINTAINERS b/MAINTAINERS
+> > > index 7e10ba65bfe4..d6699597fd89 100644
+> > > --- a/MAINTAINERS
+> > > +++ b/MAINTAINERS
+> > > @@ -11202,6 +11202,10 @@ PCI ENHANCED ERROR HANDLING (EEH) FOR POWERPC
+> > >  M:	Russell Currey <ruscur@russell.cc>
+> > >  L:	linuxppc-dev@lists.ozlabs.org
+> > >  S:	Supported
+> > > +F:	Documentation/PCI/pci-error-recovery.txt
+> > > +F:	drivers/pci/pcie/aer.c
+> > > +F:	drivers/pci/pcie/dpc.c
+> > > +F:	drivers/pci/pcie/err.c
+> > >  F:	Documentation/powerpc/eeh-pci-error-recovery.txt
+> > >  F:	arch/powerpc/kernel/eeh*.c
+> > >  F:	arch/powerpc/platforms/*/eeh*.c
+> > >=20
+>=20
+
+--+QahgC5+KEYLbs62
+Content-Type: application/pgp-signature; name="signature.asc"
+
+-----BEGIN PGP SIGNATURE-----
+
+iQEzBAABCAAdFiEELWWF8pdtWK5YQRohMX8w6AQl/iIFAlua+zEACgkQMX8w6AQl
+/iKOcQf+JdfQFAngmcHC2C0vnnnEQQqLURa4IOJ1v4MhPTFoPBNoAaFuXXTeCC/L
+6UEq5ZWULO+9LjgcDrXyzB30dFLv3o+Vdy/atZqogaiAFdFn77IQoO2IQJkZyA1v
+oS1Vd5YbepFuJyxSX1lSlV5aljuUQkcc7QRQ93w3j/j6KsRqJiyjCpI782ANZFtY
+CvomFGtSfdQgEVC/4VfXSIs4ZSbvB8LmprXWnIVmPTuw7gnkVJGpLACmmsLcwuvf
+bRZmVvveTvoyfVzJV9PCifKLJhojr1mfgtIbmQ9UWdWfjELnvKle9zAnilrppBmL
++iPh3HV5N0DSOfeYraEGzM5F7DQO0A==
+=fTc4
+-----END PGP SIGNATURE-----
+
+--+QahgC5+KEYLbs62--
