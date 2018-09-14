@@ -1,73 +1,51 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.29.99]:36214 "EHLO mail.kernel.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1727257AbeIFCBw (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Wed, 5 Sep 2018 22:01:52 -0400
-Date: Wed, 5 Sep 2018 16:29:47 -0500
-From: Bjorn Helgaas <helgaas@kernel.org>
-To: "Gustavo A. R. Silva" <gustavo@embeddedor.com>
-Cc: Kurt Schwemmer <kurt.schwemmer@microsemi.com>,
-        Logan Gunthorpe <logang@deltatee.com>,
-        Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org,
-        linux-kernel@vger.kernel.org
-Subject: Re: [PATCH] switchtec: Fix potential Spectre v1
-Message-ID: <20180905212947.GU107892@bhelgaas-glaptop.roam.corp.google.com>
-References: <20180816190646.GA9610@embeddedor.com>
+Received: from zeniv.linux.org.uk ([195.92.253.2]:42968 "EHLO
+        ZenIV.linux.org.uk" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1727416AbeIOCOJ (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Fri, 14 Sep 2018 22:14:09 -0400
+Date: Fri, 14 Sep 2018 21:57:48 +0100
+From: Al Viro <viro@ZenIV.linux.org.uk>
+To: Darren Hart <dvhart@infradead.org>
+Cc: Arnd Bergmann <arnd@arndb.de>, linux-fsdevel@vger.kernel.org,
+        Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+        "David S. Miller" <davem@davemloft.net>,
+        devel@driverdev.osuosl.org, linux-kernel@vger.kernel.org,
+        qat-linux@intel.com, linux-crypto@vger.kernel.org,
+        linux-media@vger.kernel.org, dri-devel@lists.freedesktop.org,
+        linaro-mm-sig@lists.linaro.org, amd-gfx@lists.freedesktop.org,
+        linux-input@vger.kernel.org, linux-iio@vger.kernel.org,
+        linux-rdma@vger.kernel.org, linux-nvdimm@lists.01.org,
+        linux-nvme@lists.infradead.org, linux-pci@vger.kernel.org,
+        platform-driver-x86@vger.kernel.org,
+        linux-remoteproc@vger.kernel.org, sparclinux@vger.kernel.org,
+        linux-scsi@vger.kernel.org, linux-usb@vger.kernel.org,
+        linux-fbdev@vger.kernel.org, linuxppc-dev@lists.ozlabs.org,
+        linux-btrfs@vger.kernel.org, ceph-devel@vger.kernel.org,
+        linux-wireless@vger.kernel.org, netdev@vger.kernel.org
+Subject: Re: [PATCH v2 05/17] compat_ioctl: move more drivers to
+ generic_compat_ioctl_ptrarg
+Message-ID: <20180914205748.GC19965@ZenIV.linux.org.uk>
+References: <20180912150142.157913-1-arnd@arndb.de>
+ <20180912151134.436719-1-arnd@arndb.de>
+ <20180914203506.GE35251@wrath>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20180816190646.GA9610@embeddedor.com>
+In-Reply-To: <20180914203506.GE35251@wrath>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Thu, Aug 16, 2018 at 02:06:46PM -0500, Gustavo A. R. Silva wrote:
-> p.port can is indirectly controlled by user-space, hence leading to
-> a potential exploitation of the Spectre variant 1 vulnerability.
+On Fri, Sep 14, 2018 at 01:35:06PM -0700, Darren Hart wrote:
+ 
+> Acked-by: Darren Hart (VMware) <dvhart@infradead.org>
 > 
-> This issue was detected with the help of Smatch:
-> 
-> drivers/pci/switch/switchtec.c:912 ioctl_port_to_pff() warn: potential
-> spectre issue 'pcfg->dsp_pff_inst_id' [r]
-> 
-> Fix this by sanitizing p.port before using it to index
-> pcfg->dsp_pff_inst_id
-> 
-> Notice that given that speculation windows are large, the policy is
-> to kill the speculation on the first load and not worry if it can be
-> completed with a dependent load/store [1].
-> 
-> [1] https://marc.info/?l=linux-kernel&m=152449131114778&w=2
-> 
-> Cc: stable@vger.kernel.org
-> Signed-off-by: Gustavo A. R. Silva <gustavo@embeddedor.com>
+> As for a longer term solution, would it be possible to init fops in such
+> a way that the compat_ioctl call defaults to generic_compat_ioctl_ptrarg
+> so we don't have to duplicate this boilerplate for every ioctl fops
+> structure?
 
-Applied with Logan's ack to for-linus for v4.19, thanks!
+	Bad idea, that...  Because several years down the road somebody will add
+an ioctl that takes an unsigned int for argument.  Without so much as looking
+at your magical mystery macro being used to initialize file_operations.
 
-> ---
->  drivers/pci/switch/switchtec.c | 4 ++++
->  1 file changed, 4 insertions(+)
-> 
-> diff --git a/drivers/pci/switch/switchtec.c b/drivers/pci/switch/switchtec.c
-> index 9940cc7..54a8b30 100644
-> --- a/drivers/pci/switch/switchtec.c
-> +++ b/drivers/pci/switch/switchtec.c
-> @@ -14,6 +14,8 @@
->  #include <linux/poll.h>
->  #include <linux/wait.h>
->  
-> +#include <linux/nospec.h>
-> +
->  MODULE_DESCRIPTION("Microsemi Switchtec(tm) PCIe Management Driver");
->  MODULE_VERSION("0.1");
->  MODULE_LICENSE("GPL");
-> @@ -909,6 +911,8 @@ static int ioctl_port_to_pff(struct switchtec_dev *stdev,
->  	default:
->  		if (p.port > ARRAY_SIZE(pcfg->dsp_pff_inst_id))
->  			return -EINVAL;
-> +		p.port = array_index_nospec(p.port,
-> +					ARRAY_SIZE(pcfg->dsp_pff_inst_id) + 1);
->  		p.pff = ioread32(&pcfg->dsp_pff_inst_id[p.port - 1]);
->  		break;
->  	}
-> -- 
-> 2.7.4
-> 
+	FWIW, I would name that helper in more blunt way - something like
+compat_ioctl_only_compat_pointer_ioctls_here()...
