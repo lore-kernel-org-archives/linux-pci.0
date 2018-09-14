@@ -1,68 +1,47 @@
-Return-Path: <linux-acpi-owner@vger.kernel.org>
-From: Mika Westerberg <mika.westerberg@linux.intel.com>
-To: Bjorn Helgaas <bhelgaas@google.com>,
-        "Rafael J. Wysocki" <rjw@rjwysocki.net>
-Cc: Len Brown <lenb@kernel.org>, Lukas Wunner <lukas@wunner.de>,
-        Keith Busch <keith.busch@intel.com>,
-        Ashok Raj <ashok.raj@intel.com>, Mario.Limonciello@dell.com,
-        Anthony Wong <anthony.wong@canonical.com>,
-        "D . J . Bernstein" <djb@cr.yp.to>,
-        Linus Walleij <linus.walleij@linaro.org>,
-        Mika Westerberg <mika.westerberg@linux.intel.com>,
-        linux-pci@vger.kernel.org, linux-acpi@vger.kernel.org
-Subject: [PATCH 07/10] PCI: pciehp: Implement runtime PM callbacks
-Date: Thu,  6 Sep 2018 18:50:17 +0300
-Message-Id: <20180906155020.51700-8-mika.westerberg@linux.intel.com>
-In-Reply-To: <20180906155020.51700-1-mika.westerberg@linux.intel.com>
-References: <20180906155020.51700-1-mika.westerberg@linux.intel.com>
-Sender: linux-acpi-owner@vger.kernel.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail-it0-f52.google.com ([209.85.214.52]:55093 "EHLO
+        mail-it0-f52.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1727403AbeINRBw (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Fri, 14 Sep 2018 13:01:52 -0400
+Received: by mail-it0-f52.google.com with SMTP id f14-v6so2120674ita.4
+        for <linux-pci@vger.kernel.org>; Fri, 14 Sep 2018 04:47:45 -0700 (PDT)
+MIME-Version: 1.0
+From: Peter Anemone <peter.anemone@gmail.com>
+Date: Fri, 14 Sep 2018 14:47:33 +0300
+Message-ID: <CAFtaAxH5C_4V5-z5T=CGQMLD4Yy3iKS1-=QiX1dRqpCwZAsNeA@mail.gmail.com>
+Subject: REGRESSION: Boot stall related to drivers/pci/hotplug/acpiphp_glue.c
+To: linux-pci@vger.kernel.org
+Content-Type: text/plain; charset="UTF-8"
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Basically we need to do the same thing when runtime suspending than with
-system sleep so re-use those operations here. This makes sure hotplug
-interrupt does not trigger immediately when the link goes down.
+Dear kernel developers
+I reported a bug at Bugzilla, but Greg Kroah-Hartman pointed me in
+this mailing list. Here's my bug report:
 
-Signed-off-by: Mika Westerberg <mika.westerberg@linux.intel.com>
----
- drivers/pci/hotplug/pciehp_core.c | 19 +++++++++++++++++++
- 1 file changed, 19 insertions(+)
+Linux has been unbootable for me from 4.18 upwards. Even the fallback
+image does not boot. This has not been fixed yet in 4.19-rc3. acpi=off
+kernel parameter lets me boot 4.18.6 and 4.19-rc3.
 
-diff --git a/drivers/pci/hotplug/pciehp_core.c b/drivers/pci/hotplug/pciehp_core.c
-index c9cf9c3b5f7f..25b2ea9f9242 100644
---- a/drivers/pci/hotplug/pciehp_core.c
-+++ b/drivers/pci/hotplug/pciehp_core.c
-@@ -349,6 +349,23 @@ static int pciehp_resume(struct pcie_device *dev)
- 
- 	return 0;
- }
-+
-+static int pciehp_runtime_resume(struct pcie_device *dev)
-+{
-+	struct controller *ctrl = get_service_data(dev);
-+	struct slot *slot = ctrl->slot;
-+
-+	/* pci_restore_state() just wrote to the Slot Control register */
-+	ctrl->cmd_started = jiffies;
-+	ctrl->cmd_busy = true;
-+
-+	/* clear spurious events from rediscovery of inserted card */
-+	if ((slot->state == ON_STATE || slot->state == BLINKINGOFF_STATE) &&
-+	     pme_is_native(dev))
-+		pcie_clear_hotplug_events(ctrl);
-+
-+	return pciehp_resume(dev);
-+}
- #endif /* PM */
- 
- static struct pcie_port_service_driver hpdriver_portdrv = {
-@@ -363,6 +380,8 @@ static struct pcie_port_service_driver hpdriver_portdrv = {
- 	.suspend	= pciehp_suspend,
- 	.resume_noirq	= pciehp_resume_noirq,
- 	.resume		= pciehp_resume,
-+	.runtime_suspend = pciehp_suspend,
-+	.runtime_resume	= pciehp_runtime_resume,
- #endif	/* PM */
- };
- 
--- 
-2.18.0
+I used git bisect to track down the first bad commit:
+84c8b58ed3addf17d3beb2e5037b001ffa65c5ef
+
+The commit is about:
+"ACPI / hotplug / PCI: Don't scan bridges managed by native hotplug"
+https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/commit/?id=84c8b58ed3addf17d3beb2e5037b001ffa65c5ef
+
+Linux 4.17 booted fine. Reverting commit
+84c8b58ed3addf17d3beb2e5037b001ffa65c5ef makes 4.18 and 4.19-rc3
+bootable again (without the acpi=off parameter).
+
+Information about my system:
+Model: HP 6730b laptop
+CPU: Intel Core 2 Duo P8600
+Boot manager: systemd-boot (UEFI)
+More information of my system as attachments on the bug report at Bugzilla.
+
+Link to the bug report:
+https://bugzilla.kernel.org/show_bug.cgi?id=201127
+
+Thanks for all the good work!
+--Peter
