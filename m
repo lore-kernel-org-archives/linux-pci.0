@@ -1,32 +1,123 @@
-Return-Path: <okaya@kernel.org>
-Return-Path: <okaya@kernel.org>
-Subject: Re: [PATCH for-rc v2 3/3] IB/hfi1: Prefer new
- __pci_reset_function_locked() API with reset type
-To: Bjorn Helgaas <helgaas@kernel.org>
-Cc: linux-pci@vger.kernel.org, Mike Marciniszyn <mike.marciniszyn@intel.com>,
- Dennis Dalessandro <dennis.dalessandro@intel.com>,
- Doug Ledford <dledford@redhat.com>, Jason Gunthorpe <jgg@ziepe.ca>,
- Alex Williamson <alex.williamson@redhat.com>
-References: <20180905160805.5680-1-okaya@kernel.org>
- <20180905160805.5680-3-okaya@kernel.org>
- <20180912010929.GA118330@bhelgaas-glaptop.roam.corp.google.com>
- <c0f524c3-5b3f-f796-6a6b-3040db4462a3@kernel.org>
- <20180912015927.GB118330@bhelgaas-glaptop.roam.corp.google.com>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail.kernel.org ([198.145.29.99]:37718 "EHLO mail.kernel.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1728198AbeIOCeo (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Fri, 14 Sep 2018 22:34:44 -0400
 From: Sinan Kaya <okaya@kernel.org>
-Message-ID: <9755ad74-a421-f51c-abd0-9e5bc2af2582@kernel.org>
-Date: Tue, 11 Sep 2018 22:05:48 -0400
-MIME-Version: 1.0
-In-Reply-To: <20180912015927.GB118330@bhelgaas-glaptop.roam.corp.google.com>
-Content-Type: text/plain; charset=utf-8; format=flowed
+To: linux-pci@vger.kernel.org
+Cc: alex.williamson@redhat.com, Sinan Kaya <okaya@kernel.org>,
+        Bjorn Helgaas <bhelgaas@google.com>
+Subject: [PATCH v2 5/6] PCI: Expose reset type to users of pci_probe_reset_function()
+Date: Fri, 14 Sep 2018 21:18:07 +0000
+Message-Id: <20180914211808.2564-6-okaya@kernel.org>
+In-Reply-To: <20180914211808.2564-1-okaya@kernel.org>
+References: <20180914211808.2564-1-okaya@kernel.org>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 9/11/2018 9:59 PM, Bjorn Helgaas wrote:
-> Can we just move the pci_bridge_secondary_bus_reset() decl back to
-> include/linux/pci.h temporarily and have trigger_sbr() call that
-> again?  I'd rather do that than try to squeeze some API rework into an
-> -rc.
-yes, that was the initial proposal from Dennis. If you prefer to have
-a simpler/temporary change instead for the moment, correct patches are:
+Looking to have more control between the users of the API vs. what the API
+can do internally. The new reset_type tells the PCI core about the bounds
+of the request.
 
-https://patchwork.kernel.org/patch/10584283/
-https://patchwork.kernel.org/patch/10584277/
+Signed-off-by: Sinan Kaya <okaya@kernel.org>
+---
+ drivers/pci/pci.c   | 51 ++++++++++++++++++++++++++++++---------------
+ drivers/pci/pci.h   |  2 +-
+ drivers/pci/probe.c |  2 +-
+ 3 files changed, 36 insertions(+), 19 deletions(-)
+
+diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
+index c216ab56dbcc..32b367937cc1 100644
+--- a/drivers/pci/pci.c
++++ b/drivers/pci/pci.c
+@@ -4753,28 +4753,45 @@ EXPORT_SYMBOL_GPL(__pci_reset_function_locked);
+  * Returns 0 if the device function can be reset or negative if the
+  * device doesn't support resetting a single function.
+  */
+-int pci_probe_reset_function(struct pci_dev *dev)
++int pci_probe_reset_function(struct pci_dev *dev, u32 reset_type)
+ {
+-	int rc;
++	int rc = 0;
+ 
+ 	might_sleep();
+ 
+-	rc = pci_dev_specific_reset(dev, 1);
+-	if (rc != -ENOTTY)
+-		return rc;
+-	if (pcie_has_flr(dev))
+-		return 0;
+-	rc = pci_af_flr(dev, 1);
+-	if (rc != -ENOTTY)
+-		return rc;
+-	rc = pci_pm_reset(dev, 1);
+-	if (rc != -ENOTTY)
+-		return rc;
+-	rc = pci_dev_reset_slot_function(dev, 1);
+-	if (rc != -ENOTTY)
+-		return rc;
++	if (reset_type & PCI_RESET_DEV_SPECIFIC) {
++		rc = pci_dev_specific_reset(dev, 1);
++		if (rc != -ENOTTY)
++			return rc;
++	}
++
++	if (reset_type & PCI_RESET_FLR) {
++		if (pcie_has_flr(dev))
++			return 0;
++		rc = pci_af_flr(dev, 1);
++		if (rc != -ENOTTY)
++			return rc;
++	}
+ 
+-	return pci_parent_bus_reset(dev, 1);
++	if (reset_type & PCI_RESET_PM) {
++		rc = pci_pm_reset(dev, 1);
++		if (rc != -ENOTTY)
++			return rc;
++	}
++
++	if (reset_type & PCI_RESET_SLOT) {
++		rc = pci_dev_reset_slot_function(dev, 1);
++		if (rc != -ENOTTY)
++			return rc;
++	}
++
++	if (reset_type & PCI_RESET_BUS) {
++		rc = pci_parent_bus_reset(dev, 1);
++		if (rc != -ENOTTY)
++			return rc;
++	}
++
++	return rc;
+ }
+ 
+ /**
+diff --git a/drivers/pci/pci.h b/drivers/pci/pci.h
+index 6e0d1528d471..0444bfa51b52 100644
+--- a/drivers/pci/pci.h
++++ b/drivers/pci/pci.h
+@@ -33,7 +33,7 @@ enum pci_mmap_api {
+ int pci_mmap_fits(struct pci_dev *pdev, int resno, struct vm_area_struct *vmai,
+ 		  enum pci_mmap_api mmap_api);
+ 
+-int pci_probe_reset_function(struct pci_dev *dev);
++int pci_probe_reset_function(struct pci_dev *dev, u32 reset_type);
+ int pci_bridge_secondary_bus_reset(struct pci_dev *dev);
+ 
+ /**
+diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
+index ec784009a36b..cbce5420431b 100644
+--- a/drivers/pci/probe.c
++++ b/drivers/pci/probe.c
+@@ -2332,7 +2332,7 @@ static void pci_init_capabilities(struct pci_dev *dev)
+ 
+ 	pcie_report_downtraining(dev);
+ 
+-	if (pci_probe_reset_function(dev) == 0)
++	if (pci_probe_reset_function(dev, PCI_RESET_ANY) == 0)
+ 		dev->reset_fn = 1;
+ }
+ 
+-- 
+2.18.0
