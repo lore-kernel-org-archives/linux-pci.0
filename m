@@ -1,80 +1,65 @@
-Return-Path: <linux-acpi-owner@vger.kernel.org>
-From: "Rafael J. Wysocki" <rjw@rjwysocki.net>
-To: Mika Westerberg <mika.westerberg@linux.intel.com>
-Cc: Bjorn Helgaas <bhelgaas@google.com>, Len Brown <lenb@kernel.org>,
-        Lukas Wunner <lukas@wunner.de>,
-        Keith Busch <keith.busch@intel.com>,
-        Ashok Raj <ashok.raj@intel.com>, Mario.Limonciello@dell.com,
-        Anthony Wong <anthony.wong@canonical.com>,
-        "D . J . Bernstein" <djb@cr.yp.to>,
-        Linus Walleij <linus.walleij@linaro.org>,
-        linux-pci@vger.kernel.org, linux-acpi@vger.kernel.org
-Subject: Re: [PATCH 08/10] PCI/PME: Implement runtime PM callbacks
-Date: Tue, 11 Sep 2018 10:59:29 +0200
-Message-ID: <24795628.HFVxA72mVz@aspire.rjw.lan>
-In-Reply-To: <20180906155020.51700-9-mika.westerberg@linux.intel.com>
-References: <20180906155020.51700-1-mika.westerberg@linux.intel.com> <20180906155020.51700-9-mika.westerberg@linux.intel.com>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from alln-iport-3.cisco.com ([173.37.142.90]:54384 "EHLO
+        alln-iport-3.cisco.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726902AbeINUlD (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Fri, 14 Sep 2018 16:41:03 -0400
+From: Daniel Walker <danielwa@cisco.com>
+Subject: Re: PCI: Enforce bus address limits in resource allocation
+To: linux-pci@vger.kernel.org, Yinghai Lu <yinghai@kernel.org>,
+        Bjorn Helgaas <bhelgaas@google.com>
+Message-ID: <abb9aa39-3128-3a4d-01f7-d0614d63f37e@cisco.com>
+Date: Fri, 14 Sep 2018 08:16:35 -0700
 MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Sender: linux-acpi-owner@vger.kernel.org
+Content-Type: text/plain; charset=utf-8; format=flowed
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Thursday, September 6, 2018 5:50:18 PM CEST Mika Westerberg wrote:
-> Basically we need to do the same steps than what we do when system sleep
-> is entered and disable PME interrupt when the root port is runtime
-> suspended. This prevents spurious wakeups immediately when the port is
-> transitioned into D3cold.
-> 
-> Signed-off-by: Mika Westerberg <mika.westerberg@linux.intel.com>
-> ---
->  drivers/pci/pcie/pme.c | 27 +++++++++++++++++++++++++++
->  1 file changed, 27 insertions(+)
-> 
-> diff --git a/drivers/pci/pcie/pme.c b/drivers/pci/pcie/pme.c
-> index 3ed67676ea2a..62fe122f030a 100644
-> --- a/drivers/pci/pcie/pme.c
-> +++ b/drivers/pci/pcie/pme.c
-> @@ -432,6 +432,31 @@ static void pcie_pme_remove(struct pcie_device *srv)
->  	kfree(get_service_data(srv));
->  }
->  
-> +static int pcie_pme_runtime_suspend(struct pcie_device *srv)
-> +{
-> +	struct pcie_pme_service_data *data = get_service_data(srv);
-> +
-> +	spin_lock_irq(&data->lock);
-> +	pcie_pme_interrupt_enable(srv->port, false);
-> +	pcie_clear_root_pme_status(srv->port);
-> +	data->noirq = true;
-> +	spin_unlock_irq(&data->lock);
-> +
-> +	return 0;
-> +}
-> +
-> +static int pcie_pme_runtime_resume(struct pcie_device *srv)
-> +{
-> +	struct pcie_pme_service_data *data = get_service_data(srv);
-> +
-> +	spin_lock_irq(&data->lock);
-> +	pcie_pme_interrupt_enable(srv->port, true);
-> +	data->noirq = false;
-> +	spin_unlock_irq(&data->lock);
-> +
-> +	return 0;
-> +}
-> +
->  static struct pcie_port_service_driver pcie_pme_driver = {
->  	.name		= "pcie_pme",
->  	.port_type	= PCI_EXP_TYPE_ROOT_PORT,
-> @@ -439,6 +464,8 @@ static struct pcie_port_service_driver pcie_pme_driver = {
->  
->  	.probe		= pcie_pme_probe,
->  	.suspend	= pcie_pme_suspend,
-> +	.runtime_suspend = pcie_pme_runtime_suspend,
-> +	.runtime_resume	= pcie_pme_runtime_resume,
->  	.resume		= pcie_pme_resume,
->  	.remove		= pcie_pme_remove,
->  };
-> 
 
-Reviewed-by: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
+Hi,
+
+Please forgive my ignorance of PCI. I know very little about it, but 
+I'll try to convey the issue I'm seeing.
+
+I have a powerpc system with PCI, and some devices attached to the PCI 
+bus. In 3.10 everything worked fine, then we moved to 4.9 and we had 
+some issues. I was able to bisect the issue down to the patch in the 
+subject line.
+
+f75b99d PCI: Enforce bus address limits in resource allocation
+
+
+ From 3.10 here is part of the PCI initialization,
+
+|pci 0001:0e:00.0: BAR 0: assigned [mem 0xfc0000000-0xfc00fffff pref]|
+|pci 0001:07:09.0: PCI bridge to [bus 0e]|
+|pci 0001:07:09.0: bridge window [mem 0xfc0000000-0xfc00fffff 64bit pref]|
+         
+       
+|||In this section the memory resource for the bridge is 64bit, and the 
+device "BAR 0" gets a 64bit range. However, it seems the device is 32bit.|
+||
+|Now fast forward to 4.9 we get this,|
+
+||
+|
+pci 0001:0e:00.0: BAR 0: no space for [mem size 0x00100000 pref]
+pci 0001:0e:00.0: BAR 0: failed to assign [mem size 0x00100000 pref]
+pci 0001:07:09.0: PCI bridge to [bus 0e]
+pci 0001:07:09.0: bridge window [mem 0xfc0000000-0xfc00fffff 64bit pref]
+
+|
+|Here it seems to have a larger size, I'm not sure where the size is 
+coming from. I was able to work around the issue by setting 
+IORESOURCE_MEM_64 on the resource for this device. I also was able to 
+work around it by setting "max = avail.end" to "max = (-1);" inside 
+pci_bus_alloc_resource(). |
+||
+||I don't know if the problem is the patch, or something else inside our 
+system, but any thoughts are appreciated.
+
+Daniel
+||
+
+||
+
+||
