@@ -1,59 +1,82 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mga02.intel.com ([134.134.136.20]:47633 "EHLO mga02.intel.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1730633AbeISFaa (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Wed, 19 Sep 2018 01:30:30 -0400
-From: Keith Busch <keith.busch@intel.com>
-To: Linux PCI <linux-pci@vger.kernel.org>,
-        Bjorn Helgaas <bhelgaas@google.com>
-Cc: Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-        Sinan Kaya <okaya@kernel.org>,
-        Thomas Tai <thomas.tai@oracle.com>, poza@codeaurora.org,
-        Lukas Wunner <lukas@wunner.de>, Christoph Hellwig <hch@lst.de>,
-        Mika Westerberg <mika.westerberg@linux.intel.com>,
-        Keith Busch <keith.busch@intel.com>
-Subject: [PATCHv3 02/10] PCI/portdrv: Restore pci state on slot reset
-Date: Tue, 18 Sep 2018 17:56:54 -0600
-Message-Id: <20180918235702.26573-3-keith.busch@intel.com>
-In-Reply-To: <20180918235702.26573-1-keith.busch@intel.com>
-References: <20180918235702.26573-1-keith.busch@intel.com>
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-acpi-owner@vger.kernel.org>
+MIME-Version: 1.0
+References: <20180913143322.77953-1-mika.westerberg@linux.intel.com>
+ <20180913143322.77953-2-mika.westerberg@linux.intel.com> <153688100.j3IOAyprJL@aspire.rjw.lan>
+ <20180914080621.GT14465@lahna.fi.intel.com>
+In-Reply-To: <20180914080621.GT14465@lahna.fi.intel.com>
+From: "Rafael J. Wysocki" <rafael@kernel.org>
+Date: Fri, 14 Sep 2018 10:11:25 +0200
+Message-ID: <CAJZ5v0gzacxkV+6gbY+paq6=h71KWpRM4pG5ko-Fu3ROdJ2AXQ@mail.gmail.com>
+Subject: Re: [PATCH v2 01/10] PCI: Do not skip power managed bridges in pci_enable_wake()
+To: Mika Westerberg <mika.westerberg@linux.intel.com>
+Cc: "Rafael J. Wysocki" <rjw@rjwysocki.net>,
+        Bjorn Helgaas <bhelgaas@google.com>,
+        Len Brown <lenb@kernel.org>, Lukas Wunner <lukas@wunner.de>,
+        Keith Busch <keith.busch@intel.com>,
+        "Raj, Ashok" <ashok.raj@intel.com>,
+        Mario Limonciello <Mario.Limonciello@dell.com>,
+        Anthony Wong <anthony.wong@canonical.com>,
+        Linus Walleij <linus.walleij@linaro.org>,
+        Sakari Ailus <sakari.ailus@iki.fi>,
+        Linux PCI <linux-pci@vger.kernel.org>,
+        ACPI Devel Maling List <linux-acpi@vger.kernel.org>
+Content-Type: text/plain; charset="UTF-8"
+Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-The port's config space may be cleared after a link reset. We need
-to restore the config space that was saved during probe in order to
-successfully access downstream devices.
+On Fri, Sep 14, 2018 at 10:07 AM Mika Westerberg
+<mika.westerberg@linux.intel.com> wrote:
+>
+> On Thu, Sep 13, 2018 at 04:33:39PM +0200, Rafael J. Wysocki wrote:
+> > On Thursday, September 13, 2018 4:33:13 PM CEST Mika Westerberg wrote:
+> > > Commit baecc470d5fd ("PCI / PM: Skip bridges in pci_enable_wake()")
+> > > changed pci_enable_wake() so that all bridges are skipped when wakeup is
+> > > enabled (or disabled) with the reasoning that bridges can only signal
+> > > wakeup on behalf of their subordinate devices.
+> > >
+> > > However, there are bridges that can signal wakeup itself. For example
+> > > PCIe downstream and root ports supporting hotplug may signal wakeup upon
+> > > hotplug event.
+> > >
+> > > For this reason change pci_enable_wake() so that it skips all bridges
+> > > except those that we power manage (->bridge_d3 is set). Those are the
+> > > ones that can go into low power states and may need to signal wakeup.
+> > >
+> > > Signed-off-by: Mika Westerberg <mika.westerberg@linux.intel.com>
+> > > ---
+> > >  drivers/pci/pci.c | 9 ++++++---
+> > >  1 file changed, 6 insertions(+), 3 deletions(-)
+> > >
+> > > diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
+> > > index 29ff9619b5fa..1af6f1887986 100644
+> > > --- a/drivers/pci/pci.c
+> > > +++ b/drivers/pci/pci.c
+> > > @@ -2133,10 +2133,13 @@ static int __pci_enable_wake(struct pci_dev *dev, pci_power_t state, bool enable
+> > >     int ret = 0;
+> > >
+> > >     /*
+> > > -    * Bridges can only signal wakeup on behalf of subordinate devices,
+> > > -    * but that is set up elsewhere, so skip them.
+> > > +    * Bridges that are not power-manageable directly only signal
+> > > +    * wakeup on behalf of subordinate devices which is set up
+> > > +    * elsewhere, so skip them. However, bridges that are
+> > > +    * power-manageable may signal wakeup for themselves (for example,
+> > > +    * on a hotplug event) and they need to be covered here.
+> > >      */
+> > > -   if (pci_has_subordinate(dev))
+> > > +   if (!pci_power_manageable(dev))
+> > >             return 0;
+> > >
+> > >     /* Don't do the same thing twice in a row for one device. */
+> > >
+> >
+> > Reviewed-by: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
+>
+> Thanks!
+>
+> For some reason this patch never hit the mailing lists (others did).
+> Since you kept the whole context people should still be able to review
+> it. I can resend this patch as well.
 
-Signed-off-by: Keith Busch <keith.busch@intel.com>
----
- drivers/pci/pcie/portdrv_pci.c | 8 ++++++++
- 1 file changed, 8 insertions(+)
-
-diff --git a/drivers/pci/pcie/portdrv_pci.c b/drivers/pci/pcie/portdrv_pci.c
-index eef22dc29140..7336e3abb7c9 100644
---- a/drivers/pci/pcie/portdrv_pci.c
-+++ b/drivers/pci/pcie/portdrv_pci.c
-@@ -146,6 +146,13 @@ static pci_ers_result_t pcie_portdrv_error_detected(struct pci_dev *dev,
- 	return PCI_ERS_RESULT_CAN_RECOVER;
- }
- 
-+static pci_ers_result_t pcie_portdrv_slot_reset(struct pci_dev *dev)
-+{
-+	pci_restore_state(dev);
-+	pci_save_state(dev);
-+	return PCI_ERS_RESULT_RECOVERED;
-+}
-+
- static pci_ers_result_t pcie_portdrv_mmio_enabled(struct pci_dev *dev)
- {
- 	return PCI_ERS_RESULT_RECOVERED;
-@@ -185,6 +192,7 @@ static const struct pci_device_id port_pci_ids[] = { {
- 
- static const struct pci_error_handlers pcie_portdrv_err_handler = {
- 	.error_detected = pcie_portdrv_error_detected,
-+	.slot_reset = pcie_portdrv_slot_reset,
- 	.mmio_enabled = pcie_portdrv_mmio_enabled,
- 	.resume = pcie_portdrv_err_resume,
- };
--- 
-2.14.4
+You may need to resend for Patchwork to pick it up, though.  Depends
+on Bjorn I suppose.
