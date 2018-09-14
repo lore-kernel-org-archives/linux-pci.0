@@ -1,54 +1,131 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mx0a-0014ca01.pphosted.com ([208.84.65.235]:44988 "EHLO
-        mx0a-0014ca01.pphosted.com" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1729249AbeIRV1O (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Tue, 18 Sep 2018 17:27:14 -0400
-From: Alan Douglas <adouglas@cadence.com>
-To: <lorenzo.pieralisi@arm.com>
-CC: <kishon@ti.com>, <bhelgaas@google.com>,
-        <linux-pci@vger.kernel.org>, <gustavo.pimentel@synopsys.com>,
-        <cyrille.pitchen@bootlin.com>, Alan Douglas <adouglas@cadence.com>
-Subject: [PATCH v3 0/5] Add MSI-X support for cadence EP driver
-Date: Tue, 18 Sep 2018 16:14:58 +0100
-Message-ID: <1537283698-11169-1-git-send-email-adouglas@cadence.com>
-MIME-Version: 1.0
-Content-Type: text/plain
+Received: from mail-pf1-f196.google.com ([209.85.210.196]:39267 "EHLO
+        mail-pf1-f196.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1728031AbeIOBLF (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Fri, 14 Sep 2018 21:11:05 -0400
+Received: by mail-pf1-f196.google.com with SMTP id j8-v6so4772479pff.6
+        for <linux-pci@vger.kernel.org>; Fri, 14 Sep 2018 12:55:08 -0700 (PDT)
+From: Stephen Hemminger <stephen@networkplumber.org>
+To: kys@microsoft.com, haiyangz@microsoft.com, sthemmin@microsoft.com
+Cc: devel@linuxdriverproject.org, netdev@vger.kernel.org,
+        linux-pci@vger.kernel.org
+Subject: [PATCH v2 2/2] hv_netvsc: pair VF based on serial number
+Date: Fri, 14 Sep 2018 12:54:57 -0700
+Message-Id: <20180914195457.20433-3-sthemmin@microsoft.com>
+In-Reply-To: <20180914195457.20433-1-sthemmin@microsoft.com>
+References: <20180914195457.20433-1-sthemmin@microsoft.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-The patch implements MSI-X support in the cadence endpoint driver.
+Matching network device based on MAC address is problematic
+since a non VF network device can be creted with a duplicate MAC
+address causing confusion and problems.  The VMBus API does provide
+a serial number that is a better matching method.
 
-This patch depends on on Gustavo Pimentel's patch series adding MSI-X
-support for EP ("Add MSI-X support on pcitest tool") 
+Signed-off-by: Stephen Hemminger <sthemmin@microsoft.com>
+---
+ drivers/net/hyperv/netvsc.c     |  3 ++
+ drivers/net/hyperv/netvsc_drv.c | 58 +++++++++++++++++++--------------
+ 2 files changed, 36 insertions(+), 25 deletions(-)
 
-It also adds fixes for MSI issues discovered during testing of MSI-X
-  - Use AXI region 0 for interrupt signalling
-  - Write MSI and MSI-X with 32bit value rather than 16bit
-  - Check for masking before sending MSI or MSI-X
-  - Check link is up before sending IRQ
-
-Changes since v2:
-  - Changes are only in 5/5 Add MSI-X capability to EP driver is changed
-  - Use BAR4 instead of BAR5 for MSI-X vectors
-  - Check that BAR4 has been initialized and is large enough, return
-    -EINVAL if not
-  - Use macros for MSIX & PBA table register offsets
-
-Changes since v1:
-  - Rebased on 4.18-rc1
-  - Update commit log to mark first 4 patches as fixes
-  - Correct formatting issues pointed out by checkpatch --strict
-
-Alan Douglas (5):
-  PCI: cadence: Use AXI region 0 to signal interrupts from EP
-  PCI: cadence: Write MSI data with 32bits
-  PCI: cadence: Check whether MSI is masked before sending it
-  PCI: cadence: Check link is up before sending IRQ from EP
-  PCI: cadence: Add MSI-X capability to EP driver
-
- drivers/pci/controller/pcie-cadence-ep.c | 153 +++++++++++++++++++++++++++++--
- drivers/pci/controller/pcie-cadence.h    |   7 ++
- 2 files changed, 153 insertions(+), 7 deletions(-)
-
+diff --git a/drivers/net/hyperv/netvsc.c b/drivers/net/hyperv/netvsc.c
+index 31c3d77b4733..fe01e141c8f8 100644
+--- a/drivers/net/hyperv/netvsc.c
++++ b/drivers/net/hyperv/netvsc.c
+@@ -1203,6 +1203,9 @@ static void netvsc_send_vf(struct net_device *ndev,
+ 
+ 	net_device_ctx->vf_alloc = nvmsg->msg.v4_msg.vf_assoc.allocated;
+ 	net_device_ctx->vf_serial = nvmsg->msg.v4_msg.vf_assoc.serial;
++	netdev_info(ndev, "VF slot %u %s\n",
++		    net_device_ctx->vf_serial,
++		    net_device_ctx->vf_alloc ? "added" : "removed");
+ }
+ 
+ static  void netvsc_receive_inband(struct net_device *ndev,
+diff --git a/drivers/net/hyperv/netvsc_drv.c b/drivers/net/hyperv/netvsc_drv.c
+index 1121a1ec407c..9dedc1463e88 100644
+--- a/drivers/net/hyperv/netvsc_drv.c
++++ b/drivers/net/hyperv/netvsc_drv.c
+@@ -1894,20 +1894,6 @@ static void netvsc_link_change(struct work_struct *w)
+ 	rtnl_unlock();
+ }
+ 
+-static struct net_device *get_netvsc_bymac(const u8 *mac)
+-{
+-	struct net_device_context *ndev_ctx;
+-
+-	list_for_each_entry(ndev_ctx, &netvsc_dev_list, list) {
+-		struct net_device *dev = hv_get_drvdata(ndev_ctx->device_ctx);
+-
+-		if (ether_addr_equal(mac, dev->perm_addr))
+-			return dev;
+-	}
+-
+-	return NULL;
+-}
+-
+ static struct net_device *get_netvsc_byref(struct net_device *vf_netdev)
+ {
+ 	struct net_device_context *net_device_ctx;
+@@ -2036,26 +2022,48 @@ static void netvsc_vf_setup(struct work_struct *w)
+ 	rtnl_unlock();
+ }
+ 
++/* Find netvsc by VMBus serial number.
++ * The PCI hyperv controller records the serial number as the slot.
++ */
++static struct net_device *get_netvsc_byslot(const struct net_device *vf_netdev)
++{
++	struct device *parent = vf_netdev->dev.parent;
++	struct net_device_context *ndev_ctx;
++	struct pci_dev *pdev;
++
++	if (!parent || !dev_is_pci(parent))
++		return NULL; /* not a PCI device */
++
++	pdev = to_pci_dev(parent);
++	if (!pdev->slot) {
++		netdev_notice(vf_netdev, "no PCI slot information\n");
++		return NULL;
++	}
++
++	list_for_each_entry(ndev_ctx, &netvsc_dev_list, list) {
++		if (!ndev_ctx->vf_alloc)
++			continue;
++
++		if (ndev_ctx->vf_serial == pdev->slot->number)
++			return hv_get_drvdata(ndev_ctx->device_ctx);
++	}
++
++	netdev_notice(vf_netdev,
++		      "no netdev found for slot %u\n", pdev->slot->number);
++	return NULL;
++}
++
+ static int netvsc_register_vf(struct net_device *vf_netdev)
+ {
+-	struct net_device *ndev;
+ 	struct net_device_context *net_device_ctx;
+-	struct device *pdev = vf_netdev->dev.parent;
+ 	struct netvsc_device *netvsc_dev;
++	struct net_device *ndev;
+ 	int ret;
+ 
+ 	if (vf_netdev->addr_len != ETH_ALEN)
+ 		return NOTIFY_DONE;
+ 
+-	if (!pdev || !dev_is_pci(pdev) || dev_is_pf(pdev))
+-		return NOTIFY_DONE;
+-
+-	/*
+-	 * We will use the MAC address to locate the synthetic interface to
+-	 * associate with the VF interface. If we don't find a matching
+-	 * synthetic interface, move on.
+-	 */
+-	ndev = get_netvsc_bymac(vf_netdev->perm_addr);
++	ndev = get_netvsc_byslot(vf_netdev);
+ 	if (!ndev)
+ 		return NOTIFY_DONE;
+ 
 -- 
-1.9.0
+2.18.0
