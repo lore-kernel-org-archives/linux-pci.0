@@ -1,197 +1,167 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mga05.intel.com ([192.55.52.43]:41235 "EHLO mga05.intel.com"
+Received: from mta-01.yadro.com ([89.207.88.251]:60244 "EHLO mta-01.yadro.com"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1727204AbeISFeA (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Wed, 19 Sep 2018 01:34:00 -0400
-From: Keith Busch <keith.busch@intel.com>
-To: Linux PCI <linux-pci@vger.kernel.org>,
-        Bjorn Helgaas <bhelgaas@google.com>
-Cc: Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-        Sinan Kaya <okaya@kernel.org>,
-        Thomas Tai <thomas.tai@oracle.com>, poza@codeaurora.org,
-        Lukas Wunner <lukas@wunner.de>, Christoph Hellwig <hch@lst.de>,
-        Mika Westerberg <mika.westerberg@linux.intel.com>,
-        Keith Busch <keith.busch@intel.com>
-Subject: [PATCH 12/12] PCI/pciehp: Use device managed allocations
-Date: Tue, 18 Sep 2018 17:58:48 -0600
-Message-Id: <20180918235848.26694-13-keith.busch@intel.com>
-In-Reply-To: <20180918235848.26694-1-keith.busch@intel.com>
-References: <20180918235848.26694-1-keith.busch@intel.com>
+        id S1728236AbeINVgp (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Fri, 14 Sep 2018 17:36:45 -0400
+From: Sergey Miroshnichenko <s.miroshnichenko@yadro.com>
+To: <linux-pci@vger.kernel.org>
+CC: Bjorn Helgaas <bhelgaas@google.com>, <linux@yadro.com>,
+        Sergey Miroshnichenko <s.miroshnichenko@yadro.com>
+Subject: [PATCH RFC 1/4] PCI: hotplug: Add parameter to put devices to reset during rescan
+Date: Fri, 14 Sep 2018 19:14:01 +0300
+Message-ID: <20180914161404.4685-2-s.miroshnichenko@yadro.com>
+In-Reply-To: <20180914161404.4685-1-s.miroshnichenko@yadro.com>
+References: <20180914161404.4685-1-s.miroshnichenko@yadro.com>
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-All of pciehp's resources are tied to the lifetime of the device it is
-driving. This patch simplifies the resource tracking by using the device
-managed resource allocations.
+Introduce a new command line option "pci=pcie_movable_bars" that indicates
+support of PCIe hotplug without prior reservation of memory regions by
+BIOS/bootloader.
 
-Signed-off-by: Keith Busch <keith.busch@intel.com>
+If a new PCIe device has been hot-plugged between two active ones, which
+have no (or not big enough) gap between their BARs, allocating new BARs
+requires to move BARs of the following working devices:
+
+1)                   dev 4
+                       |
+                       v
+.. |  dev 3  |  dev 3  |  dev 5  |  dev 7  |
+.. |  BAR 0  |  BAR 1  |  BAR 0  |  BAR 0  |
+
+2)                             dev 4
+                                 |
+                                 v
+.. |  dev 3  |  dev 3  | -->           --> |  dev 5  |  dev 7  |
+.. |  BAR 0  |  BAR 1  | -->           --> |  BAR 0  |  BAR 0  |
+
+3)
+
+.. |  dev 3  |  dev 3  |  dev 4  |  dev 4  |  dev 5  |  dev 7  |
+.. |  BAR 0  |  BAR 1  |  BAR 0  |  BAR 1  |  BAR 0  |  BAR 0  |
+
+Not only BARs, but also bridge windows can be updated during a PCIe rescan,
+threatening all memory transactions during this procedure, so the PCI
+subsystem will instruct the drivers to pause by calling the reset_prepare()
+and reset_done() callbacks.
+
+If a device may be affected by BAR movement, the BAR changes tracking must
+be implemented in its driver.
+
+Signed-off-by: Sergey Miroshnichenko <s.miroshnichenko@yadro.com>
 ---
- drivers/pci/hotplug/pciehp_core.c | 14 +++---------
- drivers/pci/hotplug/pciehp_hpc.c  | 48 +++++++++++----------------------------
- 2 files changed, 16 insertions(+), 46 deletions(-)
+ .../admin-guide/kernel-parameters.txt         |  6 +++
+ drivers/pci/pci.c                             |  2 +
+ drivers/pci/probe.c                           | 43 +++++++++++++++++++
+ include/linux/pci.h                           |  1 +
+ 4 files changed, 52 insertions(+)
 
-diff --git a/drivers/pci/hotplug/pciehp_core.c b/drivers/pci/hotplug/pciehp_core.c
-index 334044814dbe..c9ae89f25e8c 100644
---- a/drivers/pci/hotplug/pciehp_core.c
-+++ b/drivers/pci/hotplug/pciehp_core.c
-@@ -58,16 +58,16 @@ static int init_slot(struct controller *ctrl)
- 	char name[SLOT_NAME_SIZE];
- 	int retval = -ENOMEM;
+diff --git a/Documentation/admin-guide/kernel-parameters.txt b/Documentation/admin-guide/kernel-parameters.txt
+index 64a3bf54b974..f8132a709061 100644
+--- a/Documentation/admin-guide/kernel-parameters.txt
++++ b/Documentation/admin-guide/kernel-parameters.txt
+@@ -3311,6 +3311,12 @@
+ 				bridges without forcing it upstream. Note:
+ 				this removes isolation between devices and
+ 				may put more devices in an IOMMU group.
++		pcie_movable_bars	Arrange a space at runtime for BARs of
++				hotplugged PCIe devices - usable if bootloader
++				doesn't reserve memory regions for them. Freeing
++				a space may require moving BARs of active devices
++				to higher addresses, so device drivers will be
++				paused during rescan.
  
--	hotplug = kzalloc(sizeof(*hotplug), GFP_KERNEL);
-+	hotplug = devm_kzalloc(&ctrl->pcie->device, sizeof(*hotplug), GFP_KERNEL);
- 	if (!hotplug)
- 		goto out;
- 
--	info = kzalloc(sizeof(*info), GFP_KERNEL);
-+	info = devm_kzalloc(&ctrl->pcie->device, sizeof(*info), GFP_KERNEL);
- 	if (!info)
- 		goto out;
- 
- 	/* Setup hotplug slot ops */
--	ops = kzalloc(sizeof(*ops), GFP_KERNEL);
-+	ops = devm_kzalloc(&ctrl->pcie->device, sizeof(*ops), GFP_KERNEL);
- 	if (!ops)
- 		goto out;
- 
-@@ -98,11 +98,6 @@ static int init_slot(struct controller *ctrl)
- 	if (retval)
- 		ctrl_err(ctrl, "pci_hp_initialize failed: error %d\n", retval);
- out:
--	if (retval) {
--		kfree(ops);
--		kfree(info);
--		kfree(hotplug);
--	}
- 	return retval;
+ 	pcie_aspm=	[PCIE] Forcibly enable or disable PCIe Active State Power
+ 			Management.
+diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
+index 1835f3a7aa8d..5f07a59b5924 100644
+--- a/drivers/pci/pci.c
++++ b/drivers/pci/pci.c
+@@ -6105,6 +6105,8 @@ static int __init pci_setup(char *str)
+ 				pci_add_flags(PCI_SCAN_ALL_PCIE_DEVS);
+ 			} else if (!strncmp(str, "disable_acs_redir=", 18)) {
+ 				disable_acs_redir_param = str + 18;
++			} else if (!strncmp(str, "pcie_movable_bars", 17)) {
++				pci_add_flags(PCI_MOVABLE_BARS);
+ 			} else {
+ 				printk(KERN_ERR "PCI: Unknown option `%s'\n",
+ 						str);
+diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
+index 201f9e5ff55c..bdaafc48dc4c 100644
+--- a/drivers/pci/probe.c
++++ b/drivers/pci/probe.c
+@@ -3138,6 +3138,45 @@ unsigned int pci_rescan_bus_bridge_resize(struct pci_dev *bridge)
+ 	return max;
  }
  
-@@ -111,9 +106,6 @@ static void cleanup_slot(struct controller *ctrl)
- 	struct hotplug_slot *hotplug_slot = ctrl->slot->hotplug_slot;
- 
- 	pci_hp_destroy(hotplug_slot);
--	kfree(hotplug_slot->ops);
--	kfree(hotplug_slot->info);
--	kfree(hotplug_slot);
- }
- 
- /*
-diff --git a/drivers/pci/hotplug/pciehp_hpc.c b/drivers/pci/hotplug/pciehp_hpc.c
-index 13650f079188..72c22e9c0b63 100644
---- a/drivers/pci/hotplug/pciehp_hpc.c
-+++ b/drivers/pci/hotplug/pciehp_hpc.c
-@@ -45,22 +45,15 @@ static inline int pciehp_request_irq(struct controller *ctrl)
- 	}
- 
- 	/* Installs the interrupt handler */
--	retval = request_threaded_irq(irq, pciehp_isr, pciehp_ist,
--				      IRQF_SHARED, MY_NAME, ctrl);
-+	retval = devm_request_threaded_irq(&ctrl->pcie->device, irq, pciehp_isr,
-+					   pciehp_ist, IRQF_SHARED, MY_NAME,
-+					   ctrl);
- 	if (retval)
- 		ctrl_err(ctrl, "Cannot get irq %d for the hotplug controller\n",
- 			 irq);
- 	return retval;
- }
- 
--static inline void pciehp_free_irq(struct controller *ctrl)
--{
--	if (pciehp_poll_mode)
--		kthread_stop(ctrl->poll_thread);
--	else
--		free_irq(ctrl->pcie->irq, ctrl);
--}
--
- static int pcie_poll_cmd(struct controller *ctrl, int timeout)
- {
- 	struct pci_dev *pdev = ctrl_dev(ctrl);
-@@ -780,17 +773,14 @@ int pcie_init_notification(struct controller *ctrl)
- 	if (pciehp_request_irq(ctrl))
- 		return -1;
- 	pcie_enable_notification(ctrl);
--	ctrl->notification_enabled = 1;
- 	return 0;
- }
- 
- void pcie_shutdown_notification(struct controller *ctrl)
- {
--	if (ctrl->notification_enabled) {
--		pcie_disable_notification(ctrl);
--		pciehp_free_irq(ctrl);
--		ctrl->notification_enabled = 0;
--	}
-+	pcie_disable_notification(ctrl);
-+	if (pciehp_poll_mode)
-+		kthread_stop(ctrl->poll_thread);
- }
- 
- static int pcie_init_slot(struct controller *ctrl)
-@@ -798,7 +788,7 @@ static int pcie_init_slot(struct controller *ctrl)
- 	struct pci_bus *subordinate = ctrl_dev(ctrl)->subordinate;
- 	struct slot *slot;
- 
--	slot = kzalloc(sizeof(*slot), GFP_KERNEL);
-+	slot = devm_kzalloc(&ctrl->pcie->device, sizeof(*slot), GFP_KERNEL);
- 	if (!slot)
- 		return -ENOMEM;
- 
-@@ -813,14 +803,6 @@ static int pcie_init_slot(struct controller *ctrl)
- 	return 0;
- }
- 
--static void pcie_cleanup_slot(struct controller *ctrl)
--{
--	struct slot *slot = ctrl->slot;
--
--	cancel_delayed_work_sync(&slot->work);
--	kfree(slot);
--}
--
- static inline void dbg_ctrl(struct controller *ctrl)
- {
- 	struct pci_dev *pdev = ctrl->pcie->port;
-@@ -845,9 +827,9 @@ struct controller *pcie_init(struct pcie_device *dev)
- 	u8 occupied, poweron;
- 	struct pci_dev *pdev = dev->port;
- 
--	ctrl = kzalloc(sizeof(*ctrl), GFP_KERNEL);
-+	ctrl = devm_kzalloc(&dev->device, sizeof(*ctrl), GFP_KERNEL);
- 	if (!ctrl)
--		goto abort;
-+		return NULL;
- 
- 	ctrl->pcie = dev;
- 	pcie_capability_read_dword(pdev, PCI_EXP_SLTCAP, &slot_cap);
-@@ -893,7 +875,7 @@ struct controller *pcie_init(struct pcie_device *dev)
- 		pdev->broken_cmd_compl ? " (with Cmd Compl erratum)" : "");
- 
- 	if (pcie_init_slot(ctrl))
--		goto abort_ctrl;
-+		return NULL;
- 
- 	/*
- 	 * If empty slot's power status is on, turn power off.  The IRQ isn't
-@@ -909,17 +891,13 @@ struct controller *pcie_init(struct pcie_device *dev)
- 	}
- 
- 	return ctrl;
--
--abort_ctrl:
--	kfree(ctrl);
--abort:
--	return NULL;
- }
- 
- void pciehp_release_ctrl(struct controller *ctrl)
- {
--	pcie_cleanup_slot(ctrl);
--	kfree(ctrl);
-+	struct slot *slot = ctrl->slot;
++/*
++ * Put all devices of the bus and its children to reset
++ */
++static void pci_bus_reset_prepare(struct pci_bus *bus)
++{
++	struct pci_dev *dev;
 +
-+	cancel_delayed_work_sync(&slot->work);
- }
++	list_for_each_entry(dev, &bus->devices, bus_list) {
++		struct pci_bus *child = dev->subordinate;
++
++		if (child) {
++			pci_bus_reset_prepare(child);
++		} else if (dev->driver &&
++			   dev->driver->err_handler &&
++			   dev->driver->err_handler->reset_prepare) {
++			dev->driver->err_handler->reset_prepare(dev);
++		}
++	}
++}
++
++/*
++ * Complete the reset of all devices for the bus and its children
++ */
++static void pci_bus_reset_done(struct pci_bus *bus)
++{
++	struct pci_dev *dev;
++
++	list_for_each_entry(dev, &bus->devices, bus_list) {
++		struct pci_bus *child = dev->subordinate;
++
++		if (child) {
++			pci_bus_reset_done(child);
++		} else if (dev->driver && dev->driver->err_handler &&
++			   dev->driver->err_handler->reset_done) {
++			dev->driver->err_handler->reset_done(dev);
++		}
++	}
++}
++
+ /**
+  * pci_rescan_bus - Scan a PCI bus for devices
+  * @bus: PCI bus to scan
+@@ -3151,8 +3190,12 @@ unsigned int pci_rescan_bus(struct pci_bus *bus)
+ {
+ 	unsigned int max;
  
- static void quirk_cmd_compl(struct pci_dev *pdev)
++	if (pci_has_flag(PCI_MOVABLE_BARS))
++		pci_bus_reset_prepare(bus);
+ 	max = pci_scan_child_bus(bus);
+ 	pci_assign_unassigned_bus_resources(bus);
++	if (pci_has_flag(PCI_MOVABLE_BARS))
++		pci_bus_reset_done(bus);
+ 	pci_bus_add_devices(bus);
+ 
+ 	return max;
+diff --git a/include/linux/pci.h b/include/linux/pci.h
+index 6925828f9f25..a8cb1a367c34 100644
+--- a/include/linux/pci.h
++++ b/include/linux/pci.h
+@@ -847,6 +847,7 @@ enum {
+ 	PCI_ENABLE_PROC_DOMAINS	= 0x00000010,	/* Enable domains in /proc */
+ 	PCI_COMPAT_DOMAIN_0	= 0x00000020,	/* ... except domain 0 */
+ 	PCI_SCAN_ALL_PCIE_DEVS	= 0x00000040,	/* Scan all, not just dev 0 */
++	PCI_MOVABLE_BARS	= 0x00000080,	/* Runtime BAR reassign after hotplug */
+ };
+ 
+ /* These external functions are only available when PCI support is enabled */
 -- 
-2.14.4
+2.17.1
