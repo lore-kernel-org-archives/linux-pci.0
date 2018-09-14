@@ -1,66 +1,245 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.29.99]:50002 "EHLO mail.kernel.org"
+Received: from mx1.redhat.com ([209.132.183.28]:50234 "EHLO mx1.redhat.com"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1726487AbeIEVcx (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Wed, 5 Sep 2018 17:32:53 -0400
-Date: Wed, 5 Sep 2018 12:01:47 -0500
-From: Bjorn Helgaas <helgaas@kernel.org>
-To: Mika Westerberg <mika.westerberg@linux.intel.com>
-Cc: Bjorn Helgaas <bhelgaas@google.com>,
-        Alex Williamson <alex.williamson@redhat.com>,
-        linux-pci@vger.kernel.org
-Subject: Re: [PATCH] Revert "PCI: Add ACS quirk for Intel 300 series"
-Message-ID: <20180905170147.GL107892@bhelgaas-glaptop.roam.corp.google.com>
-References: <20180905110954.61990-1-mika.westerberg@linux.intel.com>
+        id S1728024AbeIODnm (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Fri, 14 Sep 2018 23:43:42 -0400
+Date: Fri, 14 Sep 2018 16:27:14 -0600
+From: Alex Williamson <alex.williamson@redhat.com>
+To: Sinan Kaya <okaya@kernel.org>
+Cc: linux-pci@vger.kernel.org,
+        Derek Chickles <derek.chickles@caviumnetworks.com>,
+        Satanand Burla <satananda.burla@caviumnetworks.com>,
+        Felix Manlunas <felix.manlunas@caviumnetworks.com>,
+        Raghu Vatsavayi <raghu.vatsavayi@caviumnetworks.com>,
+        "David S. Miller" <davem@davemloft.net>,
+        Bjorn Helgaas <bhelgaas@google.com>,
+        Boris Ostrovsky <boris.ostrovsky@oracle.com>,
+        Juergen Gross <jgross@suse.com>,
+        Jia-Ju Bai <baijiaju1990@gmail.com>
+Subject: Re: [PATCH v2 1/6] PCI: Expose reset_type to users of
+ __pci_reset_function_locked()
+Message-ID: <20180914162714.59b3837e@t450s.home>
+In-Reply-To: <20180914211808.2564-2-okaya@kernel.org>
+References: <20180914211808.2564-1-okaya@kernel.org>
+        <20180914211808.2564-2-okaya@kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20180905110954.61990-1-mika.westerberg@linux.intel.com>
+Content-Type: text/plain; charset=US-ASCII
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wed, Sep 05, 2018 at 02:09:54PM +0300, Mika Westerberg wrote:
-> This reverts commit f154a718e6cc0d834f5ac4dc4c3b174e65f3659e.
-> 
-> It turns out that errata "PCH PCIe* Controller Root Port (ACSCTLR)
-> Appear As Read Only" has been fixed in 300 series chipsets even if the
-> datasheet [1] claims otherwise. To make ACS working properly on 300
-> series root ports, revert the faulty commit.
-> 
-> [1] https://www.intel.com/content/dam/www/public/us/en/documents/specification-updates/300-series-c240-series-chipset-pch-spec-update.pdf
-> 
-> Signed-off-by: Mika Westerberg <mika.westerberg@linux.intel.com>
-> Cc: stable@vger.kernel.org
+On Fri, 14 Sep 2018 21:18:03 +0000
+Sinan Kaya <okaya@kernel.org> wrote:
 
-Applied to for-linus for v4.19, thanks!
-
+> We need a contract between the reset API users and the PCI core about the
+> types of reset that a user needs vs. what PCI core can do internally.
+> If a platform supports hotplug, we need to do hotplug reset as an example.
+> 
+> Expose the reset types to the drivers and try different reset types based
+> on the new reset_type parameter.
+> 
+> Most users are expected to use PCI_RESET_ANY, PCI_RESET_FUNC or
+> PCI_RESET_LINK parameters.
+> 
+> Suggested-by: Alex Williamson <alex.williamson@redhat.com>
+> Signed-off-by: Sinan Kaya <okaya@kernel.org>
 > ---
->  drivers/pci/quirks.c | 6 ------
->  1 file changed, 6 deletions(-)
+>  .../net/ethernet/cavium/liquidio/lio_main.c   |  2 +-
+>  drivers/pci/pci.c                             | 59 ++++++++++++-------
+>  drivers/xen/xen-pciback/pci_stub.c            |  6 +-
+>  include/linux/pci.h                           | 13 +++-
+>  4 files changed, 55 insertions(+), 25 deletions(-)
 > 
-> diff --git a/drivers/pci/quirks.c b/drivers/pci/quirks.c
-> index ef7143a274e0..6bc27b7fd452 100644
-> --- a/drivers/pci/quirks.c
-> +++ b/drivers/pci/quirks.c
-> @@ -4355,11 +4355,6 @@ static int pci_quirk_qcom_rp_acs(struct pci_dev *dev, u16 acs_flags)
->   *
->   * 0x9d10-0x9d1b PCI Express Root port #{1-12}
->   *
-> - * The 300 series chipset suffers from the same bug so include those root
-> - * ports here as well.
-> - *
-> - * 0xa32c-0xa343 PCI Express Root port #{0-24}
-> - *
->   * [1] http://www.intel.com/content/www/us/en/chipsets/100-series-chipset-datasheet-vol-2.html
->   * [2] http://www.intel.com/content/www/us/en/chipsets/100-series-chipset-datasheet-vol-1.html
->   * [3] http://www.intel.com/content/www/us/en/chipsets/100-series-chipset-spec-update.html
-> @@ -4377,7 +4372,6 @@ static bool pci_quirk_intel_spt_pch_acs_match(struct pci_dev *dev)
->  	case 0xa110 ... 0xa11f: case 0xa167 ... 0xa16a: /* Sunrise Point */
->  	case 0xa290 ... 0xa29f: case 0xa2e7 ... 0xa2ee: /* Union Point */
->  	case 0x9d10 ... 0x9d1b: /* 7th & 8th Gen Mobile */
-> -	case 0xa32c ... 0xa343:				/* 300 series */
->  		return true;
->  	}
+> diff --git a/drivers/net/ethernet/cavium/liquidio/lio_main.c b/drivers/net/ethernet/cavium/liquidio/lio_main.c
+> index 6fb13fa73b27..0ff76722734d 100644
+> --- a/drivers/net/ethernet/cavium/liquidio/lio_main.c
+> +++ b/drivers/net/ethernet/cavium/liquidio/lio_main.c
+> @@ -989,7 +989,7 @@ static void octeon_pci_flr(struct octeon_device *oct)
+>  	pci_write_config_word(oct->pci_dev, PCI_COMMAND,
+>  			      PCI_COMMAND_INTX_DISABLE);
 >  
-> -- 
-> 2.18.0
-> 
+> -	rc = __pci_reset_function_locked(oct->pci_dev);
+> +	rc = __pci_reset_function_locked(oct->pci_dev, PCI_RESET_ANY);
+>  
+>  	if (rc != 0)
+>  		dev_err(&oct->pci_dev->dev, "Error %d resetting PCI function %d\n",
+> diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
+> index 1835f3a7aa8d..8912c8ba3b2b 100644
+> --- a/drivers/pci/pci.c
+> +++ b/drivers/pci/pci.c
+> @@ -4673,6 +4673,7 @@ static void pci_dev_restore(struct pci_dev *dev)
+>   * __pci_reset_function_locked - reset a PCI device function while holding
+>   * the @dev mutex lock.
+>   * @dev: PCI device to reset
+> + * @reset_type: reset mask to try
+>   *
+>   * Some devices allow an individual function to be reset without affecting
+>   * other functions in the same device.  The PCI device must be responsive
+> @@ -4688,9 +4689,9 @@ static void pci_dev_restore(struct pci_dev *dev)
+>   * Returns 0 if the device function was successfully reset or negative if the
+>   * device doesn't support resetting a single function.
+>   */
+> -int __pci_reset_function_locked(struct pci_dev *dev)
+> +int __pci_reset_function_locked(struct pci_dev *dev, u32 reset_type)
+>  {
+> -	int rc;
+> +	int rc = 0;
+
+What's the proper return value when a user passes zero for reset_type?
+It seems to currently be: user provided no options, therefore we tried
+none, therefore success.  I'm torn whether that's entirely bogus to the
+point of that we should WARN_ON (ie. caller bug), or simply return
+-EINVAL, which the caller can ignore, or if there's some value to allow
+the behavior here. Thanks,
+
+Alex
+
+>  
+>  	might_sleep();
+>  
+> @@ -4702,24 +4703,42 @@ int __pci_reset_function_locked(struct pci_dev *dev)
+>  	 * other error, we're also finished: this indicates that further
+>  	 * reset mechanisms might be broken on the device.
+>  	 */
+> -	rc = pci_dev_specific_reset(dev, 0);
+> -	if (rc != -ENOTTY)
+> -		return rc;
+> -	if (pcie_has_flr(dev)) {
+> -		rc = pcie_flr(dev);
+> +	if (reset_type & PCI_RESET_DEV_SPECIFIC) {
+> +		rc = pci_dev_specific_reset(dev, 0);
+>  		if (rc != -ENOTTY)
+>  			return rc;
+>  	}
+> -	rc = pci_af_flr(dev, 0);
+> -	if (rc != -ENOTTY)
+> -		return rc;
+> -	rc = pci_pm_reset(dev, 0);
+> -	if (rc != -ENOTTY)
+> -		return rc;
+> -	rc = pci_dev_reset_slot_function(dev, 0);
+> -	if (rc != -ENOTTY)
+> -		return rc;
+> -	return pci_parent_bus_reset(dev, 0);
+> +
+> +	if (reset_type & PCI_RESET_FLR) {
+> +		if (pcie_has_flr(dev)) {
+> +			rc = pcie_flr(dev);
+> +			if (rc != -ENOTTY)
+> +				return rc;
+> +		}
+> +		rc = pci_af_flr(dev, 0);
+> +		if (rc != -ENOTTY)
+> +			return rc;
+> +	}
+> +
+> +	if (reset_type & PCI_RESET_PM) {
+> +		rc = pci_pm_reset(dev, 0);
+> +		if (rc != -ENOTTY)
+> +			return rc;
+> +	}
+> +
+> +	if (reset_type & PCI_RESET_SLOT) {
+> +		rc = pci_dev_reset_slot_function(dev, 0);
+> +		if (rc != -ENOTTY)
+> +			return rc;
+> +	}
+> +
+> +	if (reset_type & PCI_RESET_BUS) {
+> +		rc = pci_parent_bus_reset(dev, 0);
+> +		if (rc != -ENOTTY)
+> +			return rc;
+> +	}
+> +
+> +	return rc;
+>  }
+>  EXPORT_SYMBOL_GPL(__pci_reset_function_locked);
+>  
+> @@ -4784,7 +4803,7 @@ int pci_reset_function(struct pci_dev *dev)
+>  	pci_dev_lock(dev);
+>  	pci_dev_save_and_disable(dev);
+>  
+> -	rc = __pci_reset_function_locked(dev);
+> +	rc = __pci_reset_function_locked(dev, PCI_RESET_ANY);
+>  
+>  	pci_dev_restore(dev);
+>  	pci_dev_unlock(dev);
+> @@ -4819,7 +4838,7 @@ int pci_reset_function_locked(struct pci_dev *dev)
+>  
+>  	pci_dev_save_and_disable(dev);
+>  
+> -	rc = __pci_reset_function_locked(dev);
+> +	rc = __pci_reset_function_locked(dev, PCI_RESET_ANY);
+>  
+>  	pci_dev_restore(dev);
+>  
+> @@ -4844,7 +4863,7 @@ int pci_try_reset_function(struct pci_dev *dev)
+>  		return -EAGAIN;
+>  
+>  	pci_dev_save_and_disable(dev);
+> -	rc = __pci_reset_function_locked(dev);
+> +	rc = __pci_reset_function_locked(dev, PCI_RESET_ANY);
+>  	pci_dev_restore(dev);
+>  	pci_dev_unlock(dev);
+>  
+> diff --git a/drivers/xen/xen-pciback/pci_stub.c b/drivers/xen/xen-pciback/pci_stub.c
+> index 59661db144e5..6dfb805bcb19 100644
+> --- a/drivers/xen/xen-pciback/pci_stub.c
+> +++ b/drivers/xen/xen-pciback/pci_stub.c
+> @@ -105,7 +105,7 @@ static void pcistub_device_release(struct kref *kref)
+>  	/* Call the reset function which does not take lock as this
+>  	 * is called from "unbind" which takes a device_lock mutex.
+>  	 */
+> -	__pci_reset_function_locked(dev);
+> +	__pci_reset_function_locked(dev, PCI_RESET_ANY);
+>  	if (pci_load_and_free_saved_state(dev, &dev_data->pci_saved_state))
+>  		dev_info(&dev->dev, "Could not reload PCI state\n");
+>  	else
+> @@ -283,7 +283,7 @@ void pcistub_put_pci_dev(struct pci_dev *dev)
+>  	 * (so it's ready for the next domain)
+>  	 */
+>  	device_lock_assert(&dev->dev);
+> -	__pci_reset_function_locked(dev);
+> +	__pci_reset_function_locked(dev, PCI_RESET_ANY);
+>  
+>  	dev_data = pci_get_drvdata(dev);
+>  	ret = pci_load_saved_state(dev, dev_data->pci_saved_state);
+> @@ -417,7 +417,7 @@ static int pcistub_init_device(struct pci_dev *dev)
+>  		dev_err(&dev->dev, "Could not store PCI conf saved state!\n");
+>  	else {
+>  		dev_dbg(&dev->dev, "resetting (FLR, D3, etc) the device\n");
+> -		__pci_reset_function_locked(dev);
+> +		__pci_reset_function_locked(dev, PCI_RESET_ANY);
+>  		pci_restore_state(dev);
+>  	}
+>  	/* Now disable the device (this also ensures some private device
+> diff --git a/include/linux/pci.h b/include/linux/pci.h
+> index 6925828f9f25..d2e0a8c8177b 100644
+> --- a/include/linux/pci.h
+> +++ b/include/linux/pci.h
+> @@ -849,6 +849,17 @@ enum {
+>  	PCI_SCAN_ALL_PCIE_DEVS	= 0x00000040,	/* Scan all, not just dev 0 */
+>  };
+>  
+> +#define PCI_RESET_DEV_SPECIFIC	(1 << 0)
+> +#define PCI_RESET_FLR		(1 << 1)
+> +#define PCI_RESET_PM		(1 << 2)
+> +#define PCI_RESET_SLOT		(1 << 3)
+> +#define PCI_RESET_BUS		(1 << 4)
+> +
+> +#define PCI_RESET_ANY		(~0)
+> +#define PCI_RESET_FUNC		(PCI_RESET_DEV_SPECIFIC | \
+> +				 PCI_RESET_FLR | PCI_RESET_PM)
+> +#define PCI_RESET_LINK		(PCI_RESET_SLOT | PCI_RESET_BUS)
+> +
+>  /* These external functions are only available when PCI support is enabled */
+>  #ifdef CONFIG_PCI
+>  
+> @@ -1111,7 +1122,7 @@ u32 pcie_bandwidth_available(struct pci_dev *dev, struct pci_dev **limiting_dev,
+>  void pcie_print_link_status(struct pci_dev *dev);
+>  bool pcie_has_flr(struct pci_dev *dev);
+>  int pcie_flr(struct pci_dev *dev);
+> -int __pci_reset_function_locked(struct pci_dev *dev);
+> +int __pci_reset_function_locked(struct pci_dev *dev, u32 reset_type);
+>  int pci_reset_function(struct pci_dev *dev);
+>  int pci_reset_function_locked(struct pci_dev *dev);
+>  int pci_try_reset_function(struct pci_dev *dev);
