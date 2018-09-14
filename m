@@ -1,49 +1,52 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-From: Alexandru Gagniuc <mr.nuke.me@gmail.com>
-To: linux-pci@vger.kernel.org, bhelgaas@google.com
-Cc: keith.busch@intel.com, alex_gagniuc@dellteam.com,
-        austin_bolen@dell.com, shyam_iyer@dell.com,
-        Alexandru Gagniuc <mr.nuke.me@gmail.com>,
-        Ariel Elior <ariel.elior@cavium.com>,
-        everest-linux-l2@cavium.com,
-        "David S. Miller" <davem@davemloft.net>,
-        Michael Chan <michael.chan@broadcom.com>,
-        Ganesh Goudar <ganeshgr@chelsio.com>,
-        Jeff Kirsher <jeffrey.t.kirsher@intel.com>,
-        Tariq Toukan <tariqt@mellanox.com>,
-        Saeed Mahameed <saeedm@mellanox.com>,
-        Leon Romanovsky <leon@kernel.org>,
-        Jakub Kicinski <jakub.kicinski@netronome.com>,
-        Dirk van der Merwe <dirk.vandermerwe@netronome.com>,
-        netdev@vger.kernel.org, linux-kernel@vger.kernel.org,
-        intel-wired-lan@lists.osuosl.org, linux-rdma@vger.kernel.org,
-        oss-drivers@netronome.com
-Subject: [PATCH 3/9] bnxt_en: Do not call pcie_print_link_status()
-Date: Mon,  3 Sep 2018 13:02:30 -0500
-Message-Id: <20180903180242.14504-4-mr.nuke.me@gmail.com>
-In-Reply-To: <20180903180242.14504-1-mr.nuke.me@gmail.com>
-References: <20180903180242.14504-1-mr.nuke.me@gmail.com>
-Sender: linux-kernel-owner@vger.kernel.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from pandora.armlinux.org.uk ([78.32.30.218]:56370 "EHLO
+        pandora.armlinux.org.uk" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1727749AbeINT7Z (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Fri, 14 Sep 2018 15:59:25 -0400
+Date: Fri, 14 Sep 2018 15:44:20 +0100
+From: Russell King - ARM Linux <linux@armlinux.org.uk>
+To: Thomas Petazzoni <thomas.petazzoni@bootlin.com>
+Cc: Bjorn Helgaas <bhelgaas@google.com>,
+        Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
+        linux-pci@vger.kernel.org, linux-arm-kernel@lists.infradead.org,
+        Gregory Clement <gregory.clement@bootlin.com>,
+        =?iso-8859-1?Q?Miqu=E8l?= Raynal <miquel.raynal@bootlin.com>,
+        Maxime Chevallier <maxime.chevallier@bootlin.com>,
+        Antoine Tenart <antoine.tenart@bootlin.com>,
+        Nadav Haklai <nadavh@marvell.com>
+Subject: Re: [PATCHv2 2/3] PCI: mvebu: Convert to PCI emulated bridge config
+ space
+Message-ID: <20180914144420.GD30658@n2100.armlinux.org.uk>
+References: <20180912154831.2220-1-thomas.petazzoni@bootlin.com>
+ <20180912154831.2220-3-thomas.petazzoni@bootlin.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20180912154831.2220-3-thomas.petazzoni@bootlin.com>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-This is now done by the PCI core to warn of sub-optimal bandwidth.
+On Wed, Sep 12, 2018 at 05:48:30PM +0200, Thomas Petazzoni wrote:
+> This commit convers the pci-mvebu driver to use the recently
+> introduced pci-bridge-emul logic, that helps emulating a root port PCI
+> bridge configuration space.
+> 
+> It has been tested on Armada GP XP, with a E1000E NIC.
 
-Signed-off-by: Alexandru Gagniuc <mr.nuke.me@gmail.com>
----
- drivers/net/ethernet/broadcom/bnxt/bnxt.c | 1 -
- 1 file changed, 1 deletion(-)
+I think this needs commentry explaining the "FIXME":
 
-diff --git a/drivers/net/ethernet/broadcom/bnxt/bnxt.c b/drivers/net/ethernet/broadcom/bnxt/bnxt.c
-index 8bb1e38b1681..246f33d2cc9c 100644
---- a/drivers/net/ethernet/broadcom/bnxt/bnxt.c
-+++ b/drivers/net/ethernet/broadcom/bnxt/bnxt.c
-@@ -9046,7 +9046,6 @@ static int bnxt_init_one(struct pci_dev *pdev, const struct pci_device_id *ent)
- 	netdev_info(dev, "%s found at mem %lx, node addr %pM\n",
- 		    board_info[ent->driver_data].name,
- 		    (long)pci_resource_start(pdev, 0), dev->dev_addr);
--	pcie_print_link_status(pdev);
- 
- 	return 0;
- 
+> -	case PCISWCAP_EXP_DEVCTL:
+> +	case PCI_EXP_DEVCTL:
+>  		*value = mvebu_readl(port, PCIE_CAP_PCIEXP + PCI_EXP_DEVCTL) &
+>  				 ~(PCI_EXP_DEVCTL_URRE | PCI_EXP_DEVCTL_FERE |
+>  				   PCI_EXP_DEVCTL_NFERE | PCI_EXP_DEVCTL_CERE);
+> -		*value |= bridge->pcie_devctl;
+> +		/* FIXME */
+> +		*value |= bridge->pcie_conf.devctl;
+>  		break;
+
+otherwise it's likely to end up remaining there.
+
 -- 
-2.17.1
+RMK's Patch system: http://www.armlinux.org.uk/developer/patches/
+FTTC broadband for 0.8mile line in suburbia: sync at 13.8Mbps down 630kbps up
+According to speedtest.net: 13Mbps down 490kbps up
