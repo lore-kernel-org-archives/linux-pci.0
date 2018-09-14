@@ -1,67 +1,64 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.29.99]:34842 "EHLO mail.kernel.org"
+Received: from mail.kernel.org ([198.145.29.99]:37650 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1725787AbeIREGh (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Tue, 18 Sep 2018 00:06:37 -0400
-Date: Mon, 17 Sep 2018 17:37:14 -0500
-From: Bjorn Helgaas <helgaas@kernel.org>
-To: Lukas Wunner <lukas@wunner.de>
-Cc: Sinan Kaya <okaya@kernel.org>, linux-pci@vger.kernel.org,
-        Mika Westerberg <mika.westerberg@linux.intel.com>,
-        Keith Busch <keith.busch@intel.com>
-Subject: Re: [PATCH 4/9] PCI: pciehp: Unify controller and slot structs
-Message-ID: <20180917223714.GC54859@bhelgaas-glaptop.roam.corp.google.com>
-References: <cover.1534686484.git.lukas@wunner.de>
- <2d4b1ed51a1c90fb6e1ef6282ab0c28f6c62cab1.1534686485.git.lukas@wunner.de>
- <c8e76de1-a2c3-b725-2e86-733dd0267d55@kernel.org>
- <20180820090953.sbvgxc2ednxaq73s@wunner.de>
- <05c7fadf-82ef-5ee0-601d-850583eefb0f@kernel.org>
- <20180905223016.GA214747@bhelgaas-glaptop.roam.corp.google.com>
- <20180906073826.43xonlbyoahji7hr@wunner.de>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20180906073826.43xonlbyoahji7hr@wunner.de>
+        id S1728227AbeIOCei (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Fri, 14 Sep 2018 22:34:38 -0400
+From: Sinan Kaya <okaya@kernel.org>
+To: linux-pci@vger.kernel.org
+Cc: alex.williamson@redhat.com, Sinan Kaya <okaya@kernel.org>,
+        Bjorn Helgaas <bhelgaas@google.com>
+Subject: [PATCH v2 3/6] PCI: Expose reset_type to users of pci_reset_function_locked()
+Date: Fri, 14 Sep 2018 21:18:05 +0000
+Message-Id: <20180914211808.2564-4-okaya@kernel.org>
+In-Reply-To: <20180914211808.2564-1-okaya@kernel.org>
+References: <20180914211808.2564-1-okaya@kernel.org>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Thu, Sep 06, 2018 at 09:38:26AM +0200, Lukas Wunner wrote:
-> On Wed, Sep 05, 2018 at 05:30:16PM -0500, Bjorn Helgaas wrote:
-> > > > > On 8/19/2018 10:29 AM, Lukas Wunner wrote:
-> > > > > > Simplify the driver by merging struct slot into struct controller.
-> > > > > > Merge the slot constructor pcie_init_slot() and the destructor
-> > > > > > pcie_cleanup_slot() into the controller counterparts.
-> > > > > > Rename the slot struct's "lock" member to "state_lock" and rename
-> > > > > > "work" to "button_work" for clarity.
-> > 
-> > Could the rename be done in a separate patch before the unification?
-> > If so, that would be nice.
-> 
-> Okay, I've already reworked my internal development branch to do the
-> unification first, then the rename, but can easily turn the order around,
-> no problem at all.
-> 
-> The preceding patches 1 to 3 of this series could be merged independently,
-> or would you prefer me to resend them?  The first one is also included in
-> Keith's error handling rework series (posted yesterday):
-> 
-> [1/9] PCI: Simplify disconnected marking
->       https://patchwork.ozlabs.org/patch/959373/
-> [2/9] PCI: pciehp: Drop unnecessary includes
->       https://patchwork.ozlabs.org/patch/959376/
-> [3/9] [3/9] PCI: pciehp: Drop hotplug_slot_ops wrappers
->       https://patchwork.ozlabs.org/patch/959377/
-> 
-> Important side note:  Keith's series includes a pciehp fix which should
-> probably go into 4.19:
-> 
-> [PATCHv2,15/20] PCI/pciehp: Fix powerfault detection order
-> https://patchwork.ozlabs.org/patch/966678/
-> 
-> Now, if that patch goes into, say, 4.19-rc3, the pci/hotplug branch would
-> have to be rebased on top of 4.19-rc3 to avoid conflicts during the 4.20
-> merge window.
+Looking to have more control between the users of the API vs. what the API
+can do internally. The new reset_type tells the PCI core about the bounds
+of the request.
 
-OK, I rebased pci/hotplug to v4.19-rc4.  Any chance you could update
-this series to apply on top of that?
+Signed-off-by: Sinan Kaya <okaya@kernel.org>
+---
+ drivers/pci/pci.c   | 4 ++--
+ include/linux/pci.h | 2 +-
+ 2 files changed, 3 insertions(+), 3 deletions(-)
 
-Bjorn
+diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
+index 2b1e2b4893f3..3046c202bfea 100644
+--- a/drivers/pci/pci.c
++++ b/drivers/pci/pci.c
+@@ -4829,7 +4829,7 @@ EXPORT_SYMBOL_GPL(pci_reset_function);
+  * Returns 0 if the device function was successfully reset or negative if the
+  * device doesn't support resetting a single function.
+  */
+-int pci_reset_function_locked(struct pci_dev *dev)
++int pci_reset_function_locked(struct pci_dev *dev, u32 reset_type)
+ {
+ 	int rc;
+ 
+@@ -4838,7 +4838,7 @@ int pci_reset_function_locked(struct pci_dev *dev)
+ 
+ 	pci_dev_save_and_disable(dev);
+ 
+-	rc = __pci_reset_function_locked(dev, PCI_RESET_ANY);
++	rc = __pci_reset_function_locked(dev, reset_type);
+ 
+ 	pci_dev_restore(dev);
+ 
+diff --git a/include/linux/pci.h b/include/linux/pci.h
+index 1a1a76130e91..09aa99dd1c1b 100644
+--- a/include/linux/pci.h
++++ b/include/linux/pci.h
+@@ -1124,7 +1124,7 @@ bool pcie_has_flr(struct pci_dev *dev);
+ int pcie_flr(struct pci_dev *dev);
+ int __pci_reset_function_locked(struct pci_dev *dev, u32 reset_type);
+ int pci_reset_function(struct pci_dev *dev, u32 reset_type);
+-int pci_reset_function_locked(struct pci_dev *dev);
++int pci_reset_function_locked(struct pci_dev *dev, u32 reset_type);
+ int pci_try_reset_function(struct pci_dev *dev);
+ int pci_probe_reset_slot(struct pci_slot *slot);
+ int pci_probe_reset_bus(struct pci_bus *bus);
+-- 
+2.18.0
