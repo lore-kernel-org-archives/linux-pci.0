@@ -1,74 +1,46 @@
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Date: Wed, 19 Sep 2018 17:33:01 +0100
-From: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
-To: Rob Herring <robh@kernel.org>
-Subject: Re: [PATCH] PCI: remove unnecessary check of device_type == pci
-Message-ID: <20180919163301.GA21474@e107981-ln.cambridge.arm.com>
-References: <20180829183440.13601-1-robh@kernel.org>
- <20180913145130.GA5756@e107981-ln.cambridge.arm.com>
- <CAL_JsqKoOJigMkiWqoG77+nstr-6=qiAeTePZkSThcfbVAtEQQ@mail.gmail.com>
-MIME-Version: 1.0
-In-Reply-To: <CAL_JsqKoOJigMkiWqoG77+nstr-6=qiAeTePZkSThcfbVAtEQQ@mail.gmail.com>
-List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
-List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
-List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
-List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
-List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
-Cc: linux-pci@vger.kernel.org,
- Subrahmanya Lingappa <l.subrahmanya@mobiveil.co.in>,
- Will Deacon <will.deacon@arm.com>,
- "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
- Michal Simek <michal.simek@xilinx.com>, Alan Douglas <adouglas@cadence.com>,
- Bjorn Helgaas <bhelgaas@google.com>,
- "moderated list:ARM/FREESCALE IMX / MXC ARM ARCHITECTURE"
- <linux-arm-kernel@lists.infradead.org>
-Content-Type: text/plain; charset="us-ascii"
-Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
-Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mga17.intel.com ([192.55.52.151]:42824 "EHLO mga17.intel.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1728568AbeIOHFw (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Sat, 15 Sep 2018 03:05:52 -0400
+Message-ID: <5bce81814b002c66f3d96e28ba3b3d73098418da.camel@linux.intel.com>
+Subject: Re: [PATCH v2 2/6] PCI: Expose reset_type to users of
+ pci_reset_function()
+From: Srinivas Pandruvada <srinivas.pandruvada@linux.intel.com>
+To: Sinan Kaya <okaya@kernel.org>, linux-pci@vger.kernel.org
+Cc: alex.williamson@redhat.com, Jiri Kosina <jikos@kernel.org>,
+        Benjamin Tissoires <benjamin.tissoires@redhat.com>,
+        Frank Haverkamp <haver@linux.vnet.ibm.com>,
+        "Guilherme G. Piccoli" <gpiccoli@linux.vnet.ibm.com>,
+        Arnd Bergmann <arnd@arndb.de>,
+        Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+        Harish Patil <harish.patil@cavium.com>,
+        Manish Chopra <manish.chopra@cavium.com>,
+        Dept-GELinuxNICDev@cavium.com,
+        "David S. Miller" <davem@davemloft.net>,
+        Solarflare linux maintainers <linux-net-drivers@solarflare.com>,
+        Edward Cree <ecree@solarflare.com>,
+        Bert Kenward <bkenward@solarflare.com>,
+        Bjorn Helgaas <bhelgaas@google.com>,
+        Anton Vasilyev <vasilyev@ispras.ru>
+Date: Fri, 14 Sep 2018 18:48:47 -0700
+In-Reply-To: <32331f85-0971-647e-17aa-8549cd1751d6@kernel.org>
+References: <20180914211808.2564-1-okaya@kernel.org>
+         <20180914211808.2564-3-okaya@kernel.org>
+         <be6c6d59e1a199eea4b9a1b406d78a8ce0dc67e5.camel@linux.intel.com>
+         <32331f85-0971-647e-17aa-8549cd1751d6@kernel.org>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tue, Sep 18, 2018 at 12:05:40PM -0700, Rob Herring wrote:
-> On Thu, Sep 13, 2018 at 7:51 AM Lorenzo Pieralisi
-> <lorenzo.pieralisi@arm.com> wrote:
-> >
-> > On Wed, Aug 29, 2018 at 01:34:40PM -0500, Rob Herring wrote:
-> > > PCI host drivers have already matched on compatible strings, so checking
-> > > device_type is redundant. Also, device_type is considered deprecated for
-> > > FDT though we've still been requiring it for PCI hosts as it is useful
-> > > for finding PCI buses.
-> >
-> > Hi Rob,
-> >
-> > I have no problem with the patch per-se, I can't parse though the second
-> > paragraph, in particular what you mean by "useful for finding PCI
-> > buses".
+On Fri, 2018-09-14 at 19:20 -0400, Sinan Kaya wrote:
+> On 9/14/2018 5:52 PM, Srinivas Pandruvada wrote:
+> > > Signed-off-by: Sinan Kaya<okaya@kernel.org>
+> > > ---
+> > >   drivers/hid/intel-ish-hid/ipc/ipc.c             | 2 +-
+> > 
+> > For intel-ish-hid, change looks fine.
 > 
-> Device_type is the only generic way we can identify PCI buses which is
-> useful for dtc for example to do PCI binding checks. Maybe we can use
-> the node name which is what I'm doing for cpu nodes, but we've been
-> less consistent about that for PCI.
-> 
-> >
-> > What about the corresponding dts files ? I suspect we had better leave
-> > them alone lest we can trigger regressions with new dts and older
-> > kernels.
-> 
-> Yes. it will take some time before we can remove from dts files. Or
-> maybe only new ones change.
-
-OK, thanks. What about PCI host controllers bindings ? I assume we leave
-the bindings (that enforce device_type) unchanged too.
-
-If Will and Michal have no objections I will queue this patch as-is
-for v4.20.
-
-Thanks,
-Lorenzo
-
-_______________________________________________
-linux-arm-kernel mailing list
-linux-arm-kernel@lists.infradead.org
-http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
+> Is this an ACK or reviewed-by?
+Acked-by: Srinivas Pandruvada <srinivas.pandruvada@linux.intel.com>
