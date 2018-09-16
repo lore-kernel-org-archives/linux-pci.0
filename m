@@ -1,82 +1,46 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from lelv0143.ext.ti.com ([198.47.23.248]:46602 "EHLO
-        lelv0143.ext.ti.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1727052AbeIQXed (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Mon, 17 Sep 2018 19:34:33 -0400
-From: Vignesh R <vigneshr@ti.com>
-To: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
-CC: Kishon Vijay Abraham I <kishon@ti.com>,
-        Bjorn Helgaas <bhelgaas@google.com>,
-        Rob Herring <robh+dt@kernel.org>, <linux-omap@vger.kernel.org>,
-        <linux-pci@vger.kernel.org>, <devicetree@vger.kernel.org>,
-        <linux-kernel@vger.kernel.org>, Vignesh R <vigneshr@ti.com>
-Subject: [PATCH v4 2/2] pci: dwc: pci-dra7xx: Enable errata i870 for both EP and RC mode
-Date: Mon, 17 Sep 2018 23:36:35 +0530
-Message-ID: <20180917180635.26996-3-vigneshr@ti.com>
-In-Reply-To: <20180917180635.26996-1-vigneshr@ti.com>
-References: <20180917180635.26996-1-vigneshr@ti.com>
-MIME-Version: 1.0
-Content-Type: text/plain
+Received: from mail.kernel.org ([198.145.29.99]:39480 "EHLO mail.kernel.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1728498AbeIQB2q (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Sun, 16 Sep 2018 21:28:46 -0400
+From: Sinan Kaya <okaya@kernel.org>
+To: linux-pci@vger.kernel.org
+Cc: alex.williamson@redhat.com, Sinan Kaya <okaya@kernel.org>
+Subject: [PATCH v3 0/6] PCI: Add reset type parameter to PCI reset functions
+Date: Sun, 16 Sep 2018 20:04:33 +0000
+Message-Id: <20180916200439.21960-1-okaya@kernel.org>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Errata i870 is applicable in both EP and RC mode. Therefore rename
-function dra7xx_pcie_ep_unaligned_memaccess(), that implements errata
-workaround, to dra7xx_pcie_unaligned_memaccess() and call it from a
-common place. So, that errata workaround is applied for both modes of
-operation.
+We want more control over what kind of reset PCI core can apply. Have the
+application explicitly requested allowed reset types.
 
-Reported-by: Chris Welch <Chris.Welch@viavisolutions.com>
-Signed-off-by: Vignesh R <vigneshr@ti.com>
-Acked-by: Kishon Vijay Abraham I <kishon@ti.com>
-Acked-by: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
----
- drivers/pci/controller/dwc/pci-dra7xx.c | 12 ++++++------
- 1 file changed, 6 insertions(+), 6 deletions(-)
+differences from v2:
+- collect acked by
+- restore slot based reset selection in VFIO driver
 
-diff --git a/drivers/pci/controller/dwc/pci-dra7xx.c b/drivers/pci/controller/dwc/pci-dra7xx.c
-index ce9224a36f62..43711561a199 100644
---- a/drivers/pci/controller/dwc/pci-dra7xx.c
-+++ b/drivers/pci/controller/dwc/pci-dra7xx.c
-@@ -542,7 +542,7 @@ static const struct of_device_id of_dra7xx_pcie_match[] = {
- };
- 
- /*
-- * dra7xx_pcie_ep_unaligned_memaccess: workaround for AM572x/AM571x Errata i870
-+ * dra7xx_pcie_unaligned_memaccess: workaround for AM572x/AM571x Errata i870
-  * @dra7xx: the dra7xx device where the workaround should be applied
-  *
-  * Access to the PCIe slave port that are not 32-bit aligned will result
-@@ -552,7 +552,7 @@ static const struct of_device_id of_dra7xx_pcie_match[] = {
-  *
-  * To avoid this issue set PCIE_SS1_AXI2OCP_LEGACY_MODE_ENABLE to 1.
-  */
--static int dra7xx_pcie_ep_unaligned_memaccess(struct device *dev)
-+static int dra7xx_pcie_unaligned_memaccess(struct device *dev)
- {
- 	int ret;
- 	struct device_node *np = dev->of_node;
-@@ -695,6 +695,10 @@ static int __init dra7xx_pcie_probe(struct platform_device *pdev)
- 	if (dra7xx->link_gen < 0 || dra7xx->link_gen > 2)
- 		dra7xx->link_gen = 2;
- 
-+	ret = dra7xx_pcie_unaligned_memaccess(dev);
-+	if (ret)
-+		dev_err(dev, "WA for Errata i870 not applied. Update DT\n");
-+
- 	switch (mode) {
- 	case DW_PCIE_RC_TYPE:
- 		if (!IS_ENABLED(CONFIG_PCI_DRA7XX_HOST)) {
-@@ -717,10 +721,6 @@ static int __init dra7xx_pcie_probe(struct platform_device *pdev)
- 		dra7xx_pcie_writel(dra7xx, PCIECTRL_TI_CONF_DEVICE_TYPE,
- 				   DEVICE_TYPE_EP);
- 
--		ret = dra7xx_pcie_ep_unaligned_memaccess(dev);
--		if (ret)
--			goto err_gpio;
--
- 		ret = dra7xx_add_pcie_ep(dra7xx, pdev);
- 		if (ret < 0)
- 			goto err_gpio;
+Sinan Kaya (6):
+  PCI: Expose reset_type to users of __pci_reset_function_locked()
+  PCI: Expose reset_type to users of pci_reset_function()
+  PCI: Expose reset_type to users of pci_reset_function_locked()
+  PCI: Expose reset type to users of pci_try_reset_function()
+  PCI: Expose reset type to users of pci_probe_reset_function()
+  PCI: Expose reset type to users of pci_reset_bus()
+
+ drivers/hid/intel-ish-hid/ipc/ipc.c           |   2 +-
+ drivers/misc/genwqe/card_base.c               |   2 +-
+ .../net/ethernet/cavium/liquidio/lio_main.c   |   2 +-
+ .../net/ethernet/qlogic/qlcnic/qlcnic_ctx.c   |   2 +-
+ drivers/net/ethernet/sfc/mcdi.c               |   2 +-
+ drivers/pci/pci-sysfs.c                       |   2 +-
+ drivers/pci/pci.c                             | 134 ++++++++++++------
+ drivers/pci/pci.h                             |   2 +-
+ drivers/pci/probe.c                           |   2 +-
+ drivers/vfio/pci/vfio_pci.c                   |  13 +-
+ drivers/vfio/pci/vfio_pci_config.c            |   4 +-
+ drivers/xen/xen-pciback/pci_stub.c            |   6 +-
+ include/linux/pci.h                           |  21 ++-
+ 13 files changed, 128 insertions(+), 66 deletions(-)
+
 -- 
-2.19.0
+2.18.0
