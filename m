@@ -1,121 +1,230 @@
-Return-Path: <SRS0=ALKf=LS=endlessm.com=drake@kernel.org>
-Return-Path: <SRS0=ALKf=LS=endlessm.com=drake@kernel.org>
-MIME-Version: 1.0
-In-Reply-To: <20180903121209.GC2283@lahna.fi.intel.com>
-References: <20180831073057.14626-1-drake@endlessm.com> <20180831191225.GA43106@bhelgaas-glaptop.roam.corp.google.com>
- <CAD8Lp45CKCHxTg91zF9bWztqbAwLzgAUpNEHQ6ouKu2PkJT8SQ@mail.gmail.com> <20180903121209.GC2283@lahna.fi.intel.com>
-From: Daniel Drake <drake@endlessm.com>
-Date: Tue, 4 Sep 2018 09:52:02 +0800
-Message-ID: <CAD8Lp46M-raneN+6bjGakTq_yd6wGjuPiKDyOoqpO8VXyDBrfQ@mail.gmail.com>
-Subject: Re: [PATCH] PCI: add prefetch quirk to work around Asus/Nvidia
- suspend issues
-To: Mika Westerberg <mika.westerberg@linux.intel.com>
-Cc: Bjorn Helgaas <helgaas@kernel.org>, Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org,
-	Linux Upstreaming Team <linux@endlessm.com>, nouveau@lists.freedesktop.org,
-	Linux PM <linux-pm@vger.kernel.org>, Peter Wu <peter@lekensteyn.nl>, kherbst@redhat.com,
-	Andy Shevchenko <andriy.shevchenko@linux.intel.com>,
-	"Rafael J. Wysocki" <rafael.j.wysocki@intel.com>, Keith Busch <keith.busch@intel.com>,
-	Jon Derrick <jonathan.derrick@intel.com>
-Content-Type: text/plain; charset="UTF-8"
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail.kernel.org ([198.145.29.99]:39566 "EHLO mail.kernel.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1728497AbeIQB2y (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Sun, 16 Sep 2018 21:28:54 -0400
+From: Sinan Kaya <okaya@kernel.org>
+To: linux-pci@vger.kernel.org
+Cc: alex.williamson@redhat.com, Sinan Kaya <okaya@kernel.org>,
+        Derek Chickles <derek.chickles@caviumnetworks.com>,
+        Satanand Burla <satananda.burla@caviumnetworks.com>,
+        Felix Manlunas <felix.manlunas@caviumnetworks.com>,
+        Raghu Vatsavayi <raghu.vatsavayi@caviumnetworks.com>,
+        "David S. Miller" <davem@davemloft.net>,
+        Bjorn Helgaas <bhelgaas@google.com>,
+        Boris Ostrovsky <boris.ostrovsky@oracle.com>,
+        Juergen Gross <jgross@suse.com>,
+        Jia-Ju Bai <baijiaju1990@gmail.com>
+Subject: [PATCH v3 1/6] PCI: Expose reset_type to users of __pci_reset_function_locked()
+Date: Sun, 16 Sep 2018 20:04:34 +0000
+Message-Id: <20180916200439.21960-2-okaya@kernel.org>
+In-Reply-To: <20180916200439.21960-1-okaya@kernel.org>
+References: <20180916200439.21960-1-okaya@kernel.org>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Mon, Sep 3, 2018 at 8:12 PM, Mika Westerberg
-<mika.westerberg@linux.intel.com> wrote:
-> We have seen one similar issue with LPSS devices when BIOS assigns
-> device BARs above 4G (which is not the case here) and it turned out to
-> be misconfigured MTRR register or something like that. It may not be
-> related at all but it could be worth a try to dump out MTRR registers of
-> one of the affected systems and see if the memory areas are listed there
-> (and if the attributes are somehow wrong if found).
+We need a contract between the reset API users and the PCI core about the
+types of reset that a user needs vs. what PCI core can do internally.
+If a platform supports hotplug, we need to do hotplug reset as an example.
 
->From Asus X542UQ:
+Expose the reset types to the drivers and try different reset types based
+on the new reset_type parameter.
 
-# cat /proc/mtrr
-reg00: base=0x0c0000000 ( 3072MB), size= 1024MB, count=1: uncachable
-reg01: base=0x0a0000000 ( 2560MB), size=  512MB, count=1: uncachable
-reg02: base=0x090000000 ( 2304MB), size=  256MB, count=1: uncachable
-reg03: base=0x08c000000 ( 2240MB), size=   64MB, count=1: uncachable
-reg04: base=0x08b800000 ( 2232MB), size=    8MB, count=1: uncachable
+Most users are expected to use PCI_RESET_ANY, PCI_RESET_FUNC or
+PCI_RESET_LINK parameters.
 
-# cat /sys/kernel/debug/x86/pat_memtype_list
-PAT memtype list:
-write-back @ 0x84a23000-0x84a24000
-write-back @ 0x8ad34000-0x8ad60000
-write-back @ 0x8ad5f000-0x8ad66000
-write-back @ 0x8ad5f000-0x8ad60000
-write-back @ 0x8ad65000-0x8ad6a000
-write-back @ 0x8ad69000-0x8ad6b000
-write-back @ 0x8ad6a000-0x8ad6c000
-write-back @ 0x8ad6b000-0x8ad6e000
-write-back @ 0x8ad9c000-0x8ad9d000
-write-back @ 0x8adce000-0x8adcf000
-write-back @ 0x8adcf000-0x8add0000
-write-back @ 0x8adcf000-0x8add2000
-write-back @ 0x8add3000-0x8add4000
-write-back @ 0x8ae04000-0x8ae05000
-write-back @ 0x8b208000-0x8b209000
-write-combining @ 0xc0000000-0xd0000000
-write-combining @ 0xd0000000-0xe0000000
-write-combining @ 0xe0000000-0xe0040000
-write-combining @ 0xe0040000-0xe0050000
-write-combining @ 0xe0050000-0xe0051000
-write-combining @ 0xe0051000-0xe0151000
-write-combining @ 0xe0151000-0xe0191000
-write-combining @ 0xe0191000-0xe01a1000
-write-combining @ 0xe01a1000-0xe01b1000
-write-combining @ 0xe01b1000-0xe01c1000
-write-combining @ 0xe01c1000-0xe01c3000
-write-combining @ 0xe01c3000-0xe01c5000
-write-combining @ 0xe01c5000-0xe01cd000
-write-combining @ 0xe01cd000-0xe01d5000
-write-combining @ 0xe01d5000-0xe01dd000
-write-combining @ 0xe01dd000-0xe01e5000
-write-combining @ 0xe01e5000-0xe01ed000
-write-combining @ 0xe01ed000-0xe01f5000
-write-combining @ 0xe01f5000-0xe01fd000
-write-combining @ 0xe01fd000-0xe0205000
-write-combining @ 0xe0205000-0xe020d000
-write-combining @ 0xe020d000-0xe0215000
-uncached-minus @ 0xed000000-0xed200000
-write-combining @ 0xed800000-0xee000000
-uncached-minus @ 0xee000000-0xef000000
-uncached-minus @ 0xef200000-0xef400000
-uncached-minus @ 0xef400000-0xef401000
-uncached-minus @ 0xef404000-0xef405000
-uncached-minus @ 0xef510000-0xef520000
-uncached-minus @ 0xef528000-0xef52c000
-uncached-minus @ 0xef533000-0xef534000
-uncached-minus @ 0xef533000-0xef534000
-uncached-minus @ 0xef533000-0xef534000
-uncached-minus @ 0xef534000-0xef535000
-uncached-minus @ 0xef534000-0xef535000
-uncached-minus @ 0xef534000-0xef535000
-uncached-minus @ 0xef535000-0xef536000
-uncached-minus @ 0xef537000-0xef538000
-uncached-minus @ 0xef538000-0xef539000
-uncached-minus @ 0xef538000-0xef539000
-uncached-minus @ 0xef538000-0xef539000
-uncached-minus @ 0xef539000-0xef53a000
-uncached-minus @ 0xef539000-0xef53a000
-uncached-minus @ 0xef539000-0xef53a000
-uncached-minus @ 0xef53a000-0xef53b000
-uncached-minus @ 0xf0000000-0xf8000000
-uncached-minus @ 0xf00e0000-0xf00e1000
-uncached-minus @ 0xf0100000-0xf0101000
-uncached-minus @ 0xf0101000-0xf0102000
-uncached-minus @ 0xfdac0000-0xfdad0000
-uncached-minus @ 0xfdae0000-0xfdaf0000
-uncached-minus @ 0xfdaf0000-0xfdb00000
-uncached-minus @ 0xfdc43000-0xfdc44000
-uncached-minus @ 0xfe000000-0xfe001000
-uncached-minus @ 0xfe000000-0xfe001000
-uncached-minus @ 0xfed00000-0xfed01000
-uncached-minus @ 0xfed15000-0xfed16000
-uncached-minus @ 0xfed40000-0xfed41000
-uncached-minus @ 0xfed90000-0xfed91000
-uncached-minus @ 0xfed91000-0xfed92000
+Suggested-by: Alex Williamson <alex.williamson@redhat.com>
+Signed-off-by: Sinan Kaya <okaya@kernel.org>
+---
+ .../net/ethernet/cavium/liquidio/lio_main.c   |  2 +-
+ drivers/pci/pci.c                             | 59 ++++++++++++-------
+ drivers/xen/xen-pciback/pci_stub.c            |  6 +-
+ include/linux/pci.h                           | 13 +++-
+ 4 files changed, 55 insertions(+), 25 deletions(-)
 
-Is that the info you were looking for?
-
-Thanks
-Daniel
+diff --git a/drivers/net/ethernet/cavium/liquidio/lio_main.c b/drivers/net/ethernet/cavium/liquidio/lio_main.c
+index 6fb13fa73b27..0ff76722734d 100644
+--- a/drivers/net/ethernet/cavium/liquidio/lio_main.c
++++ b/drivers/net/ethernet/cavium/liquidio/lio_main.c
+@@ -989,7 +989,7 @@ static void octeon_pci_flr(struct octeon_device *oct)
+ 	pci_write_config_word(oct->pci_dev, PCI_COMMAND,
+ 			      PCI_COMMAND_INTX_DISABLE);
+ 
+-	rc = __pci_reset_function_locked(oct->pci_dev);
++	rc = __pci_reset_function_locked(oct->pci_dev, PCI_RESET_ANY);
+ 
+ 	if (rc != 0)
+ 		dev_err(&oct->pci_dev->dev, "Error %d resetting PCI function %d\n",
+diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
+index 1835f3a7aa8d..8912c8ba3b2b 100644
+--- a/drivers/pci/pci.c
++++ b/drivers/pci/pci.c
+@@ -4673,6 +4673,7 @@ static void pci_dev_restore(struct pci_dev *dev)
+  * __pci_reset_function_locked - reset a PCI device function while holding
+  * the @dev mutex lock.
+  * @dev: PCI device to reset
++ * @reset_type: reset mask to try
+  *
+  * Some devices allow an individual function to be reset without affecting
+  * other functions in the same device.  The PCI device must be responsive
+@@ -4688,9 +4689,9 @@ static void pci_dev_restore(struct pci_dev *dev)
+  * Returns 0 if the device function was successfully reset or negative if the
+  * device doesn't support resetting a single function.
+  */
+-int __pci_reset_function_locked(struct pci_dev *dev)
++int __pci_reset_function_locked(struct pci_dev *dev, u32 reset_type)
+ {
+-	int rc;
++	int rc = 0;
+ 
+ 	might_sleep();
+ 
+@@ -4702,24 +4703,42 @@ int __pci_reset_function_locked(struct pci_dev *dev)
+ 	 * other error, we're also finished: this indicates that further
+ 	 * reset mechanisms might be broken on the device.
+ 	 */
+-	rc = pci_dev_specific_reset(dev, 0);
+-	if (rc != -ENOTTY)
+-		return rc;
+-	if (pcie_has_flr(dev)) {
+-		rc = pcie_flr(dev);
++	if (reset_type & PCI_RESET_DEV_SPECIFIC) {
++		rc = pci_dev_specific_reset(dev, 0);
+ 		if (rc != -ENOTTY)
+ 			return rc;
+ 	}
+-	rc = pci_af_flr(dev, 0);
+-	if (rc != -ENOTTY)
+-		return rc;
+-	rc = pci_pm_reset(dev, 0);
+-	if (rc != -ENOTTY)
+-		return rc;
+-	rc = pci_dev_reset_slot_function(dev, 0);
+-	if (rc != -ENOTTY)
+-		return rc;
+-	return pci_parent_bus_reset(dev, 0);
++
++	if (reset_type & PCI_RESET_FLR) {
++		if (pcie_has_flr(dev)) {
++			rc = pcie_flr(dev);
++			if (rc != -ENOTTY)
++				return rc;
++		}
++		rc = pci_af_flr(dev, 0);
++		if (rc != -ENOTTY)
++			return rc;
++	}
++
++	if (reset_type & PCI_RESET_PM) {
++		rc = pci_pm_reset(dev, 0);
++		if (rc != -ENOTTY)
++			return rc;
++	}
++
++	if (reset_type & PCI_RESET_SLOT) {
++		rc = pci_dev_reset_slot_function(dev, 0);
++		if (rc != -ENOTTY)
++			return rc;
++	}
++
++	if (reset_type & PCI_RESET_BUS) {
++		rc = pci_parent_bus_reset(dev, 0);
++		if (rc != -ENOTTY)
++			return rc;
++	}
++
++	return rc;
+ }
+ EXPORT_SYMBOL_GPL(__pci_reset_function_locked);
+ 
+@@ -4784,7 +4803,7 @@ int pci_reset_function(struct pci_dev *dev)
+ 	pci_dev_lock(dev);
+ 	pci_dev_save_and_disable(dev);
+ 
+-	rc = __pci_reset_function_locked(dev);
++	rc = __pci_reset_function_locked(dev, PCI_RESET_ANY);
+ 
+ 	pci_dev_restore(dev);
+ 	pci_dev_unlock(dev);
+@@ -4819,7 +4838,7 @@ int pci_reset_function_locked(struct pci_dev *dev)
+ 
+ 	pci_dev_save_and_disable(dev);
+ 
+-	rc = __pci_reset_function_locked(dev);
++	rc = __pci_reset_function_locked(dev, PCI_RESET_ANY);
+ 
+ 	pci_dev_restore(dev);
+ 
+@@ -4844,7 +4863,7 @@ int pci_try_reset_function(struct pci_dev *dev)
+ 		return -EAGAIN;
+ 
+ 	pci_dev_save_and_disable(dev);
+-	rc = __pci_reset_function_locked(dev);
++	rc = __pci_reset_function_locked(dev, PCI_RESET_ANY);
+ 	pci_dev_restore(dev);
+ 	pci_dev_unlock(dev);
+ 
+diff --git a/drivers/xen/xen-pciback/pci_stub.c b/drivers/xen/xen-pciback/pci_stub.c
+index 59661db144e5..6dfb805bcb19 100644
+--- a/drivers/xen/xen-pciback/pci_stub.c
++++ b/drivers/xen/xen-pciback/pci_stub.c
+@@ -105,7 +105,7 @@ static void pcistub_device_release(struct kref *kref)
+ 	/* Call the reset function which does not take lock as this
+ 	 * is called from "unbind" which takes a device_lock mutex.
+ 	 */
+-	__pci_reset_function_locked(dev);
++	__pci_reset_function_locked(dev, PCI_RESET_ANY);
+ 	if (pci_load_and_free_saved_state(dev, &dev_data->pci_saved_state))
+ 		dev_info(&dev->dev, "Could not reload PCI state\n");
+ 	else
+@@ -283,7 +283,7 @@ void pcistub_put_pci_dev(struct pci_dev *dev)
+ 	 * (so it's ready for the next domain)
+ 	 */
+ 	device_lock_assert(&dev->dev);
+-	__pci_reset_function_locked(dev);
++	__pci_reset_function_locked(dev, PCI_RESET_ANY);
+ 
+ 	dev_data = pci_get_drvdata(dev);
+ 	ret = pci_load_saved_state(dev, dev_data->pci_saved_state);
+@@ -417,7 +417,7 @@ static int pcistub_init_device(struct pci_dev *dev)
+ 		dev_err(&dev->dev, "Could not store PCI conf saved state!\n");
+ 	else {
+ 		dev_dbg(&dev->dev, "resetting (FLR, D3, etc) the device\n");
+-		__pci_reset_function_locked(dev);
++		__pci_reset_function_locked(dev, PCI_RESET_ANY);
+ 		pci_restore_state(dev);
+ 	}
+ 	/* Now disable the device (this also ensures some private device
+diff --git a/include/linux/pci.h b/include/linux/pci.h
+index 6925828f9f25..d2e0a8c8177b 100644
+--- a/include/linux/pci.h
++++ b/include/linux/pci.h
+@@ -849,6 +849,17 @@ enum {
+ 	PCI_SCAN_ALL_PCIE_DEVS	= 0x00000040,	/* Scan all, not just dev 0 */
+ };
+ 
++#define PCI_RESET_DEV_SPECIFIC	(1 << 0)
++#define PCI_RESET_FLR		(1 << 1)
++#define PCI_RESET_PM		(1 << 2)
++#define PCI_RESET_SLOT		(1 << 3)
++#define PCI_RESET_BUS		(1 << 4)
++
++#define PCI_RESET_ANY		(~0)
++#define PCI_RESET_FUNC		(PCI_RESET_DEV_SPECIFIC | \
++				 PCI_RESET_FLR | PCI_RESET_PM)
++#define PCI_RESET_LINK		(PCI_RESET_SLOT | PCI_RESET_BUS)
++
+ /* These external functions are only available when PCI support is enabled */
+ #ifdef CONFIG_PCI
+ 
+@@ -1111,7 +1122,7 @@ u32 pcie_bandwidth_available(struct pci_dev *dev, struct pci_dev **limiting_dev,
+ void pcie_print_link_status(struct pci_dev *dev);
+ bool pcie_has_flr(struct pci_dev *dev);
+ int pcie_flr(struct pci_dev *dev);
+-int __pci_reset_function_locked(struct pci_dev *dev);
++int __pci_reset_function_locked(struct pci_dev *dev, u32 reset_type);
+ int pci_reset_function(struct pci_dev *dev);
+ int pci_reset_function_locked(struct pci_dev *dev);
+ int pci_try_reset_function(struct pci_dev *dev);
+-- 
+2.18.0
