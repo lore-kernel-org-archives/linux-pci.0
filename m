@@ -1,127 +1,123 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-cys01nam02on0067.outbound.protection.outlook.com ([104.47.37.67]:17611
-        "EHLO NAM02-CY1-obe.outbound.protection.outlook.com"
-        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1728339AbeISW7B (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Wed, 19 Sep 2018 18:59:01 -0400
-From: "Lendacky, Thomas" <Thomas.Lendacky@amd.com>
-To: Pu Wen <puwen@hygon.cn>, "tglx@linutronix.de" <tglx@linutronix.de>,
-        "mingo@redhat.com" <mingo@redhat.com>,
-        "hpa@zytor.com" <hpa@zytor.com>, "x86@kernel.org" <x86@kernel.org>,
-        "bp@alien8.de" <bp@alien8.de>,
-        "pbonzini@redhat.com" <pbonzini@redhat.com>,
-        "helgaas@kernel.org" <helgaas@kernel.org>
-CC: "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-        "linux-arch@vger.kernel.org" <linux-arch@vger.kernel.org>,
-        "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
-Subject: Re: [PATCH v6 07/16] x86/pci: Add Hygon Dhyana support to PCI and
- north bridge
-Date: Wed, 19 Sep 2018 17:20:03 +0000
-Message-ID: <d05c7aa5-05ba-5ac2-c70f-414d9539925f@amd.com>
-References: <cover.1536550549.git.puwen@hygon.cn>
- <035e5d0a4f2a0edf68ca0f1019e47b878eaa5da6.1536550550.git.puwen@hygon.cn>
-In-Reply-To: <035e5d0a4f2a0edf68ca0f1019e47b878eaa5da6.1536550550.git.puwen@hygon.cn>
-Content-Type: text/plain; charset="utf-8"
-MIME-Version: 1.0
+Received: from mail.kernel.org ([198.145.29.99]:39728 "EHLO mail.kernel.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1728497AbeIQB3E (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Sun, 16 Sep 2018 21:29:04 -0400
+From: Sinan Kaya <okaya@kernel.org>
+To: linux-pci@vger.kernel.org
+Cc: alex.williamson@redhat.com, Sinan Kaya <okaya@kernel.org>,
+        Bjorn Helgaas <bhelgaas@google.com>
+Subject: [PATCH v3 5/6] PCI: Expose reset type to users of pci_probe_reset_function()
+Date: Sun, 16 Sep 2018 20:04:38 +0000
+Message-Id: <20180916200439.21960-6-okaya@kernel.org>
+In-Reply-To: <20180916200439.21960-1-okaya@kernel.org>
+References: <20180916200439.21960-1-okaya@kernel.org>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-T24gMDkvMTAvMjAxOCAwODoxNyBBTSwgUHUgV2VuIHdyb3RlOg0KPiBBcyBIeWdvbiByZWdpc3Rl
-cmVkIGl0cyBQQ0kgVmVuZG9yIElEIGFzIGEgbmV3IG9uZSAweDFkOTQsIGFuZCB0aGVyZQ0KPiBh
-cmUgUENJIERldmljZXMgMHgxNDUwLzB4MTQ2My8weDE0NjQgZm9yIEhvc3QgYnJpZGdlIG9uIEh5
-Z29uIERoeWFuYQ0KPiBwbGF0Zm9ybXMsIHNvIGFkZCBIeWdvbiBEaHlhbmEgc3VwcG9ydCB0byB0
-aGUgUENJIGFuZCBub3J0aCBicmlkZ2UNCj4gc3Vic3lzdGVtIGJ5IHVzaW5nIHRoZSBjb2RlIHBh
-dGggb2YgQU1EIGZhbWlseSAxN2guDQo+IA0KPiBBY2tlZC1ieTogQmpvcm4gSGVsZ2FhcyA8Ymhl
-bGdhYXNAZ29vZ2xlLmNvbT4JIyBwY2lfaWRzLmgNCj4gU2lnbmVkLW9mZi1ieTogUHUgV2VuIDxw
-dXdlbkBoeWdvbi5jbj4NCj4gLS0tDQo+ICBhcmNoL3g4Ni9rZXJuZWwvYW1kX25iLmMgfCA0NyAr
-KysrKysrKysrKysrKysrKysrKysrKysrKysrKysrKysrKysrKysrKy0tLS0tLQ0KPiAgYXJjaC94
-ODYvcGNpL2FtZF9idXMuYyAgIHwgIDYgKysrKy0tDQo+ICBpbmNsdWRlL2xpbnV4L3BjaV9pZHMu
-aCAgfCAgMiArKw0KPiAgMyBmaWxlcyBjaGFuZ2VkLCA0NyBpbnNlcnRpb25zKCspLCA4IGRlbGV0
-aW9ucygtKQ0KPiANCj4gZGlmZiAtLWdpdCBhL2FyY2gveDg2L2tlcm5lbC9hbWRfbmIuYyBiL2Fy
-Y2gveDg2L2tlcm5lbC9hbWRfbmIuYw0KPiBpbmRleCBiNDgxYjk1Li4zZTJlYTE4IDEwMDY0NA0K
-PiAtLS0gYS9hcmNoL3g4Ni9rZXJuZWwvYW1kX25iLmMNCj4gKysrIGIvYXJjaC94ODYva2VybmVs
-L2FtZF9uYi5jDQo+IEBAIC02MSw2ICs2MSwyMSBAQCBzdGF0aWMgY29uc3Qgc3RydWN0IHBjaV9k
-ZXZpY2VfaWQgYW1kX25iX2xpbmtfaWRzW10gPSB7DQo+ICAJe30NCj4gIH07DQo+ICANCj4gK3N0
-YXRpYyBjb25zdCBzdHJ1Y3QgcGNpX2RldmljZV9pZCBoeWdvbl9yb290X2lkc1tdID0gew0KPiAr
-CXsgUENJX0RFVklDRShQQ0lfVkVORE9SX0lEX0hZR09OLCBQQ0lfREVWSUNFX0lEX0FNRF8xN0hf
-Uk9PVCkgfSwNCj4gKwl7fQ0KPiArfTsNCj4gKw0KPiArY29uc3Qgc3RydWN0IHBjaV9kZXZpY2Vf
-aWQgaHlnb25fbmJfbWlzY19pZHNbXSA9IHsNCj4gKwl7IFBDSV9ERVZJQ0UoUENJX1ZFTkRPUl9J
-RF9IWUdPTiwgUENJX0RFVklDRV9JRF9BTURfMTdIX0RGX0YzKSB9LA0KPiArCXt9DQo+ICt9Ow0K
-PiArDQo+ICtzdGF0aWMgY29uc3Qgc3RydWN0IHBjaV9kZXZpY2VfaWQgaHlnb25fbmJfbGlua19p
-ZHNbXSA9IHsNCj4gKwl7IFBDSV9ERVZJQ0UoUENJX1ZFTkRPUl9JRF9IWUdPTiwgUENJX0RFVklD
-RV9JRF9BTURfMTdIX0RGX0Y0KSB9LA0KPiArCXt9DQo+ICt9Ow0KPiArDQo+ICBjb25zdCBzdHJ1
-Y3QgYW1kX25iX2J1c19kZXZfcmFuZ2UgYW1kX25iX2J1c19kZXZfcmFuZ2VzW10gX19pbml0Y29u
-c3QgPSB7DQo+ICAJeyAweDAwLCAweDE4LCAweDIwIH0sDQo+ICAJeyAweGZmLCAweDAwLCAweDIw
-IH0sDQo+IEBAIC0xOTcsMTIgKzIxMiwyNSBAQCBpbnQgYW1kX2NhY2hlX25vcnRoYnJpZGdlcyh2
-b2lkKQ0KPiAgCXUxNiBpID0gMDsNCj4gIAlzdHJ1Y3QgYW1kX25vcnRoYnJpZGdlICpuYjsNCj4g
-IAlzdHJ1Y3QgcGNpX2RldiAqcm9vdCwgKm1pc2MsICpsaW5rOw0KPiArCWNvbnN0IHN0cnVjdCBw
-Y2lfZGV2aWNlX2lkICpyb290X2lkcyA9IE5VTEw7DQo+ICsJY29uc3Qgc3RydWN0IHBjaV9kZXZp
-Y2VfaWQgKm1pc2NfaWRzID0gTlVMTDsNCj4gKwljb25zdCBzdHJ1Y3QgcGNpX2RldmljZV9pZCAq
-bGlua19pZHMgPSBOVUxMOw0KPiArDQo+ICsJaWYgKGJvb3RfY3B1X2RhdGEueDg2X3ZlbmRvciA9
-PSBYODZfVkVORE9SX0FNRCkgew0KPiArCQlyb290X2lkcyA9IGFtZF9yb290X2lkczsNCj4gKwkJ
-bWlzY19pZHMgPSBhbWRfbmJfbWlzY19pZHM7DQo+ICsJCWxpbmtfaWRzID0gYW1kX25iX2xpbmtf
-aWRzOw0KPiArCX0gZWxzZSBpZiAoYm9vdF9jcHVfZGF0YS54ODZfdmVuZG9yID09IFg4Nl9WRU5E
-T1JfSFlHT04pIHsNCj4gKwkJcm9vdF9pZHMgPSBoeWdvbl9yb290X2lkczsNCj4gKwkJbWlzY19p
-ZHMgPSBoeWdvbl9uYl9taXNjX2lkczsNCj4gKwkJbGlua19pZHMgPSBoeWdvbl9uYl9saW5rX2lk
-czsNCj4gKwl9DQoNClRvIGJlIGNvbXBhdGlibGUgd2l0aCAiYmVmb3JlIHRoaXMgcGF0Y2giIHlv
-dSBzaG91bGQgcHJvYmFibHkgZG86DQoNCglpZiAoYm9vdF9jcHVfZGF0YS54ODZfdmVuZG9yID09
-IFg4Nl9WRU5ET1JfSFlHT04pIHsNCgkJcm9vdF9pZHMgPSBoeWdvbl9yb290X2lkczsNCgkJbWlz
-Y19pZHMgPSBoeWdvbl9uYl9taXNjX2lkczsNCgkJbGlua19pZHMgPSBoeWdvbl9uYl9saW5rX2lk
-czsNCgl9IGVsc2Ugew0KCQlyb290X2lkcyA9IGFtZF9yb290X2lkczsNCgkJbWlzY19pZHMgPSBh
-bWRfbmJfbWlzY19pZHM7DQoJCWxpbmtfaWRzID0gYW1kX25iX2xpbmtfaWRzOw0KCX0NCg0KVGhh
-dCB3YXkgdGhleSBhcmUgYWx3YXlzIHRoZSBBTUQgdmFsdWVzIGlmIG5vdCB5b3VyIGNoaXAuDQoN
-Cj4gIA0KPiAgCWlmIChhbWRfbm9ydGhicmlkZ2VzLm51bSkNCj4gIAkJcmV0dXJuIDA7DQo+ICAN
-Cj4gIAltaXNjID0gTlVMTDsNCj4gLQl3aGlsZSAoKG1pc2MgPSBuZXh0X25vcnRoYnJpZGdlKG1p
-c2MsIGFtZF9uYl9taXNjX2lkcykpICE9IE5VTEwpDQo+ICsJd2hpbGUgKChtaXNjID0gbmV4dF9u
-b3J0aGJyaWRnZShtaXNjLCBtaXNjX2lkcykpICE9IE5VTEwpDQo+ICAJCWkrKzsNCj4gIA0KPiAg
-CWlmICghaSkNCj4gQEAgLTIxOCwxMSArMjQ2LDExIEBAIGludCBhbWRfY2FjaGVfbm9ydGhicmlk
-Z2VzKHZvaWQpDQo+ICAJbGluayA9IG1pc2MgPSByb290ID0gTlVMTDsNCj4gIAlmb3IgKGkgPSAw
-OyBpICE9IGFtZF9ub3J0aGJyaWRnZXMubnVtOyBpKyspIHsNCj4gIAkJbm9kZV90b19hbWRfbmIo
-aSktPnJvb3QgPSByb290ID0NCj4gLQkJCW5leHRfbm9ydGhicmlkZ2Uocm9vdCwgYW1kX3Jvb3Rf
-aWRzKTsNCj4gKwkJCW5leHRfbm9ydGhicmlkZ2Uocm9vdCwgcm9vdF9pZHMpOw0KPiAgCQlub2Rl
-X3RvX2FtZF9uYihpKS0+bWlzYyA9IG1pc2MgPQ0KPiAtCQkJbmV4dF9ub3J0aGJyaWRnZShtaXNj
-LCBhbWRfbmJfbWlzY19pZHMpOw0KPiArCQkJbmV4dF9ub3J0aGJyaWRnZShtaXNjLCBtaXNjX2lk
-cyk7DQo+ICAJCW5vZGVfdG9fYW1kX25iKGkpLT5saW5rID0gbGluayA9DQo+IC0JCQluZXh0X25v
-cnRoYnJpZGdlKGxpbmssIGFtZF9uYl9saW5rX2lkcyk7DQo+ICsJCQluZXh0X25vcnRoYnJpZGdl
-KGxpbmssIGxpbmtfaWRzKTsNCj4gIAl9DQo+ICANCj4gIAlpZiAoYW1kX2dhcnRfcHJlc2VudCgp
-KQ0KPiBAQCAtMjYzLDkgKzI5MSwxNSBAQCBib29sIF9faW5pdCBlYXJseV9pc19hbWRfbmIodTMy
-IGRldmljZSkNCj4gIHsNCj4gIAljb25zdCBzdHJ1Y3QgcGNpX2RldmljZV9pZCAqaWQ7DQo+ICAJ
-dTMyIHZlbmRvciA9IGRldmljZSAmIDB4ZmZmZjsNCj4gKwljb25zdCBzdHJ1Y3QgcGNpX2Rldmlj
-ZV9pZCAqbWlzY19pZHMgPSBOVUxMOw0KPiArDQo+ICsJaWYgKGJvb3RfY3B1X2RhdGEueDg2X3Zl
-bmRvciA9PSBYODZfVkVORE9SX0FNRCkNCj4gKwkJbWlzY19pZHMgPSBhbWRfbmJfbWlzY19pZHM7
-DQo+ICsJZWxzZSBpZiAoYm9vdF9jcHVfZGF0YS54ODZfdmVuZG9yID09IFg4Nl9WRU5ET1JfSFlH
-T04pDQo+ICsJCW1pc2NfaWRzID0gaHlnb25fbmJfbWlzY19pZHM7DQoNClNhbWUgY29tbWVudCBh
-cyBhYm92ZS4gIFRoaXMgd2lsbCBwcm9iYWJseSBlbGltaW5hdGUgdGhlIFBBTklDIHRoYXQNCnRo
-YXQgd2FzIHJlcG9ydGVkIGJ5IExLUC4NCg0KVGhhbmtzLA0KVG9tDQoNCj4gIA0KPiAgCWRldmlj
-ZSA+Pj0gMTY7DQo+IC0JZm9yIChpZCA9IGFtZF9uYl9taXNjX2lkczsgaWQtPnZlbmRvcjsgaWQr
-KykNCj4gKwlmb3IgKGlkID0gbWlzY19pZHM7IGlkLT52ZW5kb3I7IGlkKyspDQo+ICAJCWlmICh2
-ZW5kb3IgPT0gaWQtPnZlbmRvciAmJiBkZXZpY2UgPT0gaWQtPmRldmljZSkNCj4gIAkJCXJldHVy
-biB0cnVlOw0KPiAgCXJldHVybiBmYWxzZTsNCj4gQEAgLTI3Nyw3ICszMTEsOCBAQCBzdHJ1Y3Qg
-cmVzb3VyY2UgKmFtZF9nZXRfbW1jb25maWdfcmFuZ2Uoc3RydWN0IHJlc291cmNlICpyZXMpDQo+
-ICAJdTY0IGJhc2UsIG1zcjsNCj4gIAl1bnNpZ25lZCBpbnQgc2Vnbl9idXNuX2JpdHM7DQo+ICAN
-Cj4gLQlpZiAoYm9vdF9jcHVfZGF0YS54ODZfdmVuZG9yICE9IFg4Nl9WRU5ET1JfQU1EKQ0KPiAr
-CWlmIChib290X2NwdV9kYXRhLng4Nl92ZW5kb3IgIT0gWDg2X1ZFTkRPUl9BTUQgJiYNCj4gKwkg
-ICAgYm9vdF9jcHVfZGF0YS54ODZfdmVuZG9yICE9IFg4Nl9WRU5ET1JfSFlHT04pDQo+ICAJCXJl
-dHVybiBOVUxMOw0KPiAgDQo+ICAJLyogYXNzdW1lIGFsbCBjcHVzIGZyb20gZmFtMTBoIGhhdmUg
-bW1jb25maWcgKi8NCj4gZGlmZiAtLWdpdCBhL2FyY2gveDg2L3BjaS9hbWRfYnVzLmMgYi9hcmNo
-L3g4Ni9wY2kvYW1kX2J1cy5jDQo+IGluZGV4IDY0OWJkZGUuLmJmYTUwZTYgMTAwNjQ0DQo+IC0t
-LSBhL2FyY2gveDg2L3BjaS9hbWRfYnVzLmMNCj4gKysrIGIvYXJjaC94ODYvcGNpL2FtZF9idXMu
-Yw0KPiBAQCAtOTMsNyArOTMsOCBAQCBzdGF0aWMgaW50IF9faW5pdCBlYXJseV9yb290X2luZm9f
-aW5pdCh2b2lkKQ0KPiAgCQl2ZW5kb3IgPSBpZCAmIDB4ZmZmZjsNCj4gIAkJZGV2aWNlID0gKGlk
-Pj4xNikgJiAweGZmZmY7DQo+ICANCj4gLQkJaWYgKHZlbmRvciAhPSBQQ0lfVkVORE9SX0lEX0FN
-RCkNCj4gKwkJaWYgKHZlbmRvciAhPSBQQ0lfVkVORE9SX0lEX0FNRCAmJg0KPiArCQkgICAgdmVu
-ZG9yICE9IFBDSV9WRU5ET1JfSURfSFlHT04pDQo+ICAJCQljb250aW51ZTsNCj4gIA0KPiAgCQlp
-ZiAoaGJfcHJvYmVzW2ldLmRldmljZSA9PSBkZXZpY2UpIHsNCj4gQEAgLTM5MCw3ICszOTEsOCBA
-QCBzdGF0aWMgaW50IF9faW5pdCBwY2lfaW9fZWNzX2luaXQodm9pZCkNCj4gIA0KPiAgc3RhdGlj
-IGludCBfX2luaXQgYW1kX3Bvc3Rjb3JlX2luaXQodm9pZCkNCj4gIHsNCj4gLQlpZiAoYm9vdF9j
-cHVfZGF0YS54ODZfdmVuZG9yICE9IFg4Nl9WRU5ET1JfQU1EKQ0KPiArCWlmIChib290X2NwdV9k
-YXRhLng4Nl92ZW5kb3IgIT0gWDg2X1ZFTkRPUl9BTUQgJiYNCj4gKwkgICAgYm9vdF9jcHVfZGF0
-YS54ODZfdmVuZG9yICE9IFg4Nl9WRU5ET1JfSFlHT04pDQo+ICAJCXJldHVybiAwOw0KPiAgDQo+
-ICAJZWFybHlfcm9vdF9pbmZvX2luaXQoKTsNCj4gZGlmZiAtLWdpdCBhL2luY2x1ZGUvbGludXgv
-cGNpX2lkcy5oIGIvaW5jbHVkZS9saW51eC9wY2lfaWRzLmgNCj4gaW5kZXggZDE1Nzk4My4uOGEw
-ODQxYyAxMDA2NDQNCj4gLS0tIGEvaW5jbHVkZS9saW51eC9wY2lfaWRzLmgNCj4gKysrIGIvaW5j
-bHVkZS9saW51eC9wY2lfaWRzLmgNCj4gQEAgLTI1NjEsNiArMjU2MSw4IEBADQo+ICANCj4gICNk
-ZWZpbmUgUENJX1ZFTkRPUl9JRF9BTUFaT04JCTB4MWQwZg0KPiAgDQo+ICsjZGVmaW5lIFBDSV9W
-RU5ET1JfSURfSFlHT04JCTB4MWQ5NA0KPiArDQo+ICAjZGVmaW5lIFBDSV9WRU5ET1JfSURfVEVL
-UkFNCQkweDFkZTENCj4gICNkZWZpbmUgUENJX0RFVklDRV9JRF9URUtSQU1fREMyOTAJMHhkYzI5
-DQo+ICANCj4gDQo=
+Looking to have more control between the users of the API vs. what the API
+can do internally. The new reset_type tells the PCI core about the bounds
+of the request.
+
+Signed-off-by: Sinan Kaya <okaya@kernel.org>
+---
+ drivers/pci/pci.c   | 51 ++++++++++++++++++++++++++++++---------------
+ drivers/pci/pci.h   |  2 +-
+ drivers/pci/probe.c |  2 +-
+ 3 files changed, 36 insertions(+), 19 deletions(-)
+
+diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
+index c216ab56dbcc..32b367937cc1 100644
+--- a/drivers/pci/pci.c
++++ b/drivers/pci/pci.c
+@@ -4753,28 +4753,45 @@ EXPORT_SYMBOL_GPL(__pci_reset_function_locked);
+  * Returns 0 if the device function can be reset or negative if the
+  * device doesn't support resetting a single function.
+  */
+-int pci_probe_reset_function(struct pci_dev *dev)
++int pci_probe_reset_function(struct pci_dev *dev, u32 reset_type)
+ {
+-	int rc;
++	int rc = 0;
+ 
+ 	might_sleep();
+ 
+-	rc = pci_dev_specific_reset(dev, 1);
+-	if (rc != -ENOTTY)
+-		return rc;
+-	if (pcie_has_flr(dev))
+-		return 0;
+-	rc = pci_af_flr(dev, 1);
+-	if (rc != -ENOTTY)
+-		return rc;
+-	rc = pci_pm_reset(dev, 1);
+-	if (rc != -ENOTTY)
+-		return rc;
+-	rc = pci_dev_reset_slot_function(dev, 1);
+-	if (rc != -ENOTTY)
+-		return rc;
++	if (reset_type & PCI_RESET_DEV_SPECIFIC) {
++		rc = pci_dev_specific_reset(dev, 1);
++		if (rc != -ENOTTY)
++			return rc;
++	}
++
++	if (reset_type & PCI_RESET_FLR) {
++		if (pcie_has_flr(dev))
++			return 0;
++		rc = pci_af_flr(dev, 1);
++		if (rc != -ENOTTY)
++			return rc;
++	}
+ 
+-	return pci_parent_bus_reset(dev, 1);
++	if (reset_type & PCI_RESET_PM) {
++		rc = pci_pm_reset(dev, 1);
++		if (rc != -ENOTTY)
++			return rc;
++	}
++
++	if (reset_type & PCI_RESET_SLOT) {
++		rc = pci_dev_reset_slot_function(dev, 1);
++		if (rc != -ENOTTY)
++			return rc;
++	}
++
++	if (reset_type & PCI_RESET_BUS) {
++		rc = pci_parent_bus_reset(dev, 1);
++		if (rc != -ENOTTY)
++			return rc;
++	}
++
++	return rc;
+ }
+ 
+ /**
+diff --git a/drivers/pci/pci.h b/drivers/pci/pci.h
+index 6e0d1528d471..0444bfa51b52 100644
+--- a/drivers/pci/pci.h
++++ b/drivers/pci/pci.h
+@@ -33,7 +33,7 @@ enum pci_mmap_api {
+ int pci_mmap_fits(struct pci_dev *pdev, int resno, struct vm_area_struct *vmai,
+ 		  enum pci_mmap_api mmap_api);
+ 
+-int pci_probe_reset_function(struct pci_dev *dev);
++int pci_probe_reset_function(struct pci_dev *dev, u32 reset_type);
+ int pci_bridge_secondary_bus_reset(struct pci_dev *dev);
+ 
+ /**
+diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
+index ec784009a36b..cbce5420431b 100644
+--- a/drivers/pci/probe.c
++++ b/drivers/pci/probe.c
+@@ -2332,7 +2332,7 @@ static void pci_init_capabilities(struct pci_dev *dev)
+ 
+ 	pcie_report_downtraining(dev);
+ 
+-	if (pci_probe_reset_function(dev) == 0)
++	if (pci_probe_reset_function(dev, PCI_RESET_ANY) == 0)
+ 		dev->reset_fn = 1;
+ }
+ 
+-- 
+2.18.0
