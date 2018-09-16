@@ -1,50 +1,64 @@
-Return-Path: <linux-acpi-owner@vger.kernel.org>
-Date: Wed, 5 Sep 2018 11:18:35 -0700
-From: Jacob Pan <jacob.jun.pan@linux.intel.com>
-To: Auger Eric <eric.auger@redhat.com>
-Cc: Jean-Philippe Brucker <jean-philippe.brucker@arm.com>,
-        linux-arm-kernel@lists.infradead.org, linux-pci@vger.kernel.org,
-        linux-acpi@vger.kernel.org, devicetree@vger.kernel.org,
-        iommu@lists.linux-foundation.org, kvm@vger.kernel.org,
-        linux-mm@kvack.org, xieyisheng1@huawei.com, liubo95@huawei.com,
-        xuzaibo@huawei.com, thunder.leizhen@huawei.com,
-        will.deacon@arm.com, okaya@codeaurora.org, yi.l.liu@intel.com,
-        ashok.raj@intel.com, tn@semihalf.com, joro@8bytes.org,
-        bharatku@xilinx.com, liudongdong3@huawei.com, rfranz@cavium.com,
-        kevin.tian@intel.com, jcrouse@codeaurora.org, rgummal@xilinx.com,
-        jonathan.cameron@huawei.com, shunyong.yang@hxt-semitech.com,
-        robin.murphy@arm.com, ilias.apalodimas@linaro.org,
-        alex.williamson@redhat.com, robdclark@gmail.com,
-        dwmw2@infradead.org, christian.koenig@amd.com,
-        nwatters@codeaurora.org, baolu.lu@linux.intel.com,
-        jacob.jun.pan@linux.intel.com
-Subject: Re: [PATCH v2 03/40] iommu/sva: Manage process address spaces
-Message-ID: <20180905111835.7f3ae40e@jacob-builder>
-In-Reply-To: <d785ec89-6743-d0f1-1a7f-85599a033e5b@redhat.com>
-References: <20180511190641.23008-1-jean-philippe.brucker@arm.com>
-        <20180511190641.23008-4-jean-philippe.brucker@arm.com>
-        <d785ec89-6743-d0f1-1a7f-85599a033e5b@redhat.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Sender: linux-acpi-owner@vger.kernel.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail.kernel.org ([198.145.29.99]:39654 "EHLO mail.kernel.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1728511AbeIQB25 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Sun, 16 Sep 2018 21:28:57 -0400
+From: Sinan Kaya <okaya@kernel.org>
+To: linux-pci@vger.kernel.org
+Cc: alex.williamson@redhat.com, Sinan Kaya <okaya@kernel.org>,
+        Bjorn Helgaas <bhelgaas@google.com>
+Subject: [PATCH v3 3/6] PCI: Expose reset_type to users of pci_reset_function_locked()
+Date: Sun, 16 Sep 2018 20:04:36 +0000
+Message-Id: <20180916200439.21960-4-okaya@kernel.org>
+In-Reply-To: <20180916200439.21960-1-okaya@kernel.org>
+References: <20180916200439.21960-1-okaya@kernel.org>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wed, 5 Sep 2018 14:14:12 +0200
-Auger Eric <eric.auger@redhat.com> wrote:
+Looking to have more control between the users of the API vs. what the API
+can do internally. The new reset_type tells the PCI core about the bounds
+of the request.
 
-> > + *
-> > + * On Arm and AMD IOMMUs, entry 0 of the PASID table can be used
-> > to hold
-> > + * non-PASID translations. In this case PASID 0 is reserved and
-> > entry 0 points
-> > + * to the io_pgtable base. On Intel IOMMU, the io_pgtable base
-> > would be held in
-> > + * the device table and PASID 0 would be available to the
-> > allocator.
-> > + */  
-> very nice explanation
-With the new Vt-d 3.0 spec., 2nd level IO page table base is no longer
-held in the device context table. Instead it is held in the PASID table
-entry pointed by the RID_PASID field in the device context entry. If
-RID_PASID = 0, then it is the same as ARM and AMD IOMMUs.
-You can refer to ch3.4.3 of the VT-d spec.
+Signed-off-by: Sinan Kaya <okaya@kernel.org>
+---
+ drivers/pci/pci.c   | 4 ++--
+ include/linux/pci.h | 2 +-
+ 2 files changed, 3 insertions(+), 3 deletions(-)
+
+diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
+index 2b1e2b4893f3..3046c202bfea 100644
+--- a/drivers/pci/pci.c
++++ b/drivers/pci/pci.c
+@@ -4829,7 +4829,7 @@ EXPORT_SYMBOL_GPL(pci_reset_function);
+  * Returns 0 if the device function was successfully reset or negative if the
+  * device doesn't support resetting a single function.
+  */
+-int pci_reset_function_locked(struct pci_dev *dev)
++int pci_reset_function_locked(struct pci_dev *dev, u32 reset_type)
+ {
+ 	int rc;
+ 
+@@ -4838,7 +4838,7 @@ int pci_reset_function_locked(struct pci_dev *dev)
+ 
+ 	pci_dev_save_and_disable(dev);
+ 
+-	rc = __pci_reset_function_locked(dev, PCI_RESET_ANY);
++	rc = __pci_reset_function_locked(dev, reset_type);
+ 
+ 	pci_dev_restore(dev);
+ 
+diff --git a/include/linux/pci.h b/include/linux/pci.h
+index 1a1a76130e91..09aa99dd1c1b 100644
+--- a/include/linux/pci.h
++++ b/include/linux/pci.h
+@@ -1124,7 +1124,7 @@ bool pcie_has_flr(struct pci_dev *dev);
+ int pcie_flr(struct pci_dev *dev);
+ int __pci_reset_function_locked(struct pci_dev *dev, u32 reset_type);
+ int pci_reset_function(struct pci_dev *dev, u32 reset_type);
+-int pci_reset_function_locked(struct pci_dev *dev);
++int pci_reset_function_locked(struct pci_dev *dev, u32 reset_type);
+ int pci_try_reset_function(struct pci_dev *dev);
+ int pci_probe_reset_slot(struct pci_slot *slot);
+ int pci_probe_reset_bus(struct pci_bus *bus);
+-- 
+2.18.0
