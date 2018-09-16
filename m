@@ -1,61 +1,124 @@
-Return-Path: <linux-nvme-bounces+bjorn=helgaas.com@lists.infradead.org>
-Return-Path: <linux-nvme-bounces+bjorn=helgaas.com@lists.infradead.org>
-Date: Wed, 5 Sep 2018 23:13:51 +0200
-From: Christoph Hellwig <hch@lst.de>
-To: Logan Gunthorpe <logang@deltatee.com>
-Subject: Re: [PATCH v5 07/13] block: Add PCI P2P flag for request queue and
- check support for requests
-Message-ID: <20180905211351.GA2927@lst.de>
-References: <20180905195647.GA1626@lst.de>
- <bcc1b3cf-2fd9-fa61-9cfb-b0e4d84e5d94@kernel.dk>
- <20180905201152.GA1893@lst.de>
- <eb42fb94-9da6-955b-8524-0a0f5ac4bd19@deltatee.com>
- <2a3394bd-5f13-4818-43f4-dfc61f501e05@kernel.dk>
- <e3ef26e6-6c8d-25b8-fa64-14594a51263c@deltatee.com>
- <3af4d1d4-da07-c0a6-8464-9ddc1378f2f4@kernel.dk>
- <f9e660cd-b597-bb6e-56a2-82fe71cb3649@deltatee.com>
- <34d9b2f7-9e6d-4a0a-77e5-ec0e99610f5c@kernel.dk>
- <c41c802c-9235-5383-2dfa-af9c1553f11b@deltatee.com>
-MIME-Version: 1.0
-In-Reply-To: <c41c802c-9235-5383-2dfa-af9c1553f11b@deltatee.com>
-List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-nvme>,
- <mailto:linux-nvme-request@lists.infradead.org?subject=unsubscribe>
-List-Archive: <http://lists.infradead.org/pipermail/linux-nvme/>
-List-Post: <mailto:linux-nvme@lists.infradead.org>
-List-Help: <mailto:linux-nvme-request@lists.infradead.org?subject=help>
-List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-nvme>,
- <mailto:linux-nvme-request@lists.infradead.org?subject=subscribe>
-Cc: Jens Axboe <axboe@kernel.dk>, Keith Busch <keith.busch@intel.com>,
- Alex Williamson <alex.williamson@redhat.com>, Sagi Grimberg <sagi@grimberg.me>,
- linux-nvdimm@lists.01.org, linux-rdma@vger.kernel.org,
- linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
- linux-nvme@lists.infradead.org, Stephen Bates <sbates@raithlin.com>,
- linux-block@vger.kernel.org,
- =?iso-8859-1?B?Suly9G1l?= Glisse <jglisse@redhat.com>,
- Jason Gunthorpe <jgg@mellanox.com>,
- Christian =?iso-8859-1?Q?K=F6nig?= <christian.koenig@amd.com>,
- Benjamin Herrenschmidt <benh@kernel.crashing.org>,
- Bjorn Helgaas <bhelgaas@google.com>, Max Gurtovoy <maxg@mellanox.com>,
- Dan Williams <dan.j.williams@intel.com>, Christoph Hellwig <hch@lst.de>
-Content-Type: text/plain; charset="us-ascii"
-Sender: "Linux-nvme" <linux-nvme-bounces@lists.infradead.org>
-Errors-To: linux-nvme-bounces+bjorn=helgaas.com@lists.infradead.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail.kernel.org ([198.145.29.99]:39712 "EHLO mail.kernel.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1728497AbeIQB3D (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Sun, 16 Sep 2018 21:29:03 -0400
+From: Sinan Kaya <okaya@kernel.org>
+To: linux-pci@vger.kernel.org
+Cc: alex.williamson@redhat.com, Sinan Kaya <okaya@kernel.org>,
+        Bjorn Helgaas <bhelgaas@google.com>,
+        Alexey Kardashevskiy <aik@ozlabs.ru>,
+        Peter Xu <peterx@redhat.com>,
+        "Gustavo A. R. Silva" <gustavo@embeddedor.com>,
+        Eric Auger <eric.auger@redhat.com>
+Subject: [PATCH v3 4/6] PCI: Expose reset type to users of pci_try_reset_function()
+Date: Sun, 16 Sep 2018 20:04:37 +0000
+Message-Id: <20180916200439.21960-5-okaya@kernel.org>
+In-Reply-To: <20180916200439.21960-1-okaya@kernel.org>
+References: <20180916200439.21960-1-okaya@kernel.org>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wed, Sep 05, 2018 at 03:03:18PM -0600, Logan Gunthorpe wrote:
-> There is no special p2p submission process. In the nvme-of case we are
-> using the existing process and with the code in blk-core it didn't
-> change it's process at all. Creating a helper will create one and I can
-> look at making a pci_p2pdma_submit_bio() for v6; but if the developer
-> screws up and still calls the regular submit_bio() things will only be
-> very subtly broken and that won't be obvious.
+Looking to have more control between the users of the API vs. what the API
+can do internally. The new reset_type tells the PCI core about the bounds
+of the request.
 
-I thought about that when reviewing the previous series, and even
-started hacking it up.  In the end I decided against it for the above
-reason - it just adds code, but doesn't actually help with anything
-as it is trivial to forget, and not using it will in fact just work.
+Signed-off-by: Sinan Kaya <okaya@kernel.org>
+---
+ drivers/pci/pci.c                  | 4 ++--
+ drivers/vfio/pci/vfio_pci.c        | 7 ++++---
+ drivers/vfio/pci/vfio_pci_config.c | 4 ++--
+ include/linux/pci.h                | 2 +-
+ 4 files changed, 9 insertions(+), 8 deletions(-)
 
-_______________________________________________
-Linux-nvme mailing list
-Linux-nvme@lists.infradead.org
-http://lists.infradead.org/mailman/listinfo/linux-nvme
+diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
+index 3046c202bfea..c216ab56dbcc 100644
+--- a/drivers/pci/pci.c
++++ b/drivers/pci/pci.c
+@@ -4852,7 +4852,7 @@ EXPORT_SYMBOL_GPL(pci_reset_function_locked);
+  *
+  * Same as above, except return -EAGAIN if unable to lock device.
+  */
+-int pci_try_reset_function(struct pci_dev *dev)
++int pci_try_reset_function(struct pci_dev *dev, u32 reset_type)
+ {
+ 	int rc;
+ 
+@@ -4863,7 +4863,7 @@ int pci_try_reset_function(struct pci_dev *dev)
+ 		return -EAGAIN;
+ 
+ 	pci_dev_save_and_disable(dev);
+-	rc = __pci_reset_function_locked(dev, PCI_RESET_ANY);
++	rc = __pci_reset_function_locked(dev, reset_type);
+ 	pci_dev_restore(dev);
+ 	pci_dev_unlock(dev);
+ 
+diff --git a/drivers/vfio/pci/vfio_pci.c b/drivers/vfio/pci/vfio_pci.c
+index cddb453a1ba5..fe7ada997c51 100644
+--- a/drivers/vfio/pci/vfio_pci.c
++++ b/drivers/vfio/pci/vfio_pci.c
+@@ -228,7 +228,7 @@ static int vfio_pci_enable(struct vfio_pci_device *vdev)
+ 		return ret;
+ 
+ 	/* If reset fails because of the device lock, fail this path entirely */
+-	ret = pci_try_reset_function(pdev);
++	ret = pci_try_reset_function(pdev, PCI_RESET_ANY);
+ 	if (ret == -EAGAIN) {
+ 		pci_disable_device(pdev);
+ 		return ret;
+@@ -376,7 +376,7 @@ static void vfio_pci_disable(struct vfio_pci_device *vdev)
+ 	 * Try to reset the device.  The success of this is dependent on
+ 	 * being able to lock the device, which is not always possible.
+ 	 */
+-	if (vdev->reset_works && !pci_try_reset_function(pdev))
++	if (vdev->reset_works && !pci_try_reset_function(pdev, PCI_RESET_ANY))
+ 		vdev->needs_reset = false;
+ 
+ 	pci_restore_state(pdev);
+@@ -844,7 +844,8 @@ static long vfio_pci_ioctl(void *device_data,
+ 
+ 	} else if (cmd == VFIO_DEVICE_RESET) {
+ 		return vdev->reset_works ?
+-			pci_try_reset_function(vdev->pdev) : -EINVAL;
++			pci_try_reset_function(vdev->pdev, PCI_RESET_ANY) :
++			 -EINVAL;
+ 
+ 	} else if (cmd == VFIO_DEVICE_GET_PCI_HOT_RESET_INFO) {
+ 		struct vfio_pci_hot_reset_info hdr;
+diff --git a/drivers/vfio/pci/vfio_pci_config.c b/drivers/vfio/pci/vfio_pci_config.c
+index 115a36f6f403..0d66bac66211 100644
+--- a/drivers/vfio/pci/vfio_pci_config.c
++++ b/drivers/vfio/pci/vfio_pci_config.c
+@@ -831,7 +831,7 @@ static int vfio_exp_config_write(struct vfio_pci_device *vdev, int pos,
+ 						 &cap);
+ 
+ 		if (!ret && (cap & PCI_EXP_DEVCAP_FLR))
+-			pci_try_reset_function(vdev->pdev);
++			pci_try_reset_function(vdev->pdev, PCI_RESET_ANY);
+ 	}
+ 
+ 	/*
+@@ -910,7 +910,7 @@ static int vfio_af_config_write(struct vfio_pci_device *vdev, int pos,
+ 						&cap);
+ 
+ 		if (!ret && (cap & PCI_AF_CAP_FLR) && (cap & PCI_AF_CAP_TP))
+-			pci_try_reset_function(vdev->pdev);
++			pci_try_reset_function(vdev->pdev, PCI_RESET_ANY);
+ 	}
+ 
+ 	return count;
+diff --git a/include/linux/pci.h b/include/linux/pci.h
+index 09aa99dd1c1b..4fdddcb85066 100644
+--- a/include/linux/pci.h
++++ b/include/linux/pci.h
+@@ -1125,7 +1125,7 @@ int pcie_flr(struct pci_dev *dev);
+ int __pci_reset_function_locked(struct pci_dev *dev, u32 reset_type);
+ int pci_reset_function(struct pci_dev *dev, u32 reset_type);
+ int pci_reset_function_locked(struct pci_dev *dev, u32 reset_type);
+-int pci_try_reset_function(struct pci_dev *dev);
++int pci_try_reset_function(struct pci_dev *dev, u32 reset_type);
+ int pci_probe_reset_slot(struct pci_slot *slot);
+ int pci_probe_reset_bus(struct pci_bus *bus);
+ int pci_reset_bus(struct pci_dev *dev);
+-- 
+2.18.0
