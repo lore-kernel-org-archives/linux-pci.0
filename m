@@ -1,115 +1,37 @@
-Return-Path: <SRS0=wnmn=LV=intel.com=keith.busch@kernel.org>
-Return-Path: <SRS0=wnmn=LV=intel.com=keith.busch@kernel.org>
-Date: Fri, 7 Sep 2018 14:18:19 -0600
-From: Keith Busch <keith.busch@intel.com>
-To: Bjorn Helgaas <helgaas@kernel.org>
-Cc: Linux PCI <linux-pci@vger.kernel.org>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	Sinan Kaya <okaya@kernel.org>, Thomas Tai <thomas.tai@oracle.com>,
-	poza@codeaurora.org, Lukas Wunner <lukas@wunner.de>,
-	Christoph Hellwig <hch@lst.de>
-Subject: Re: [PATCHv2 15/20] PCI/pciehp: Fix powerfault detection order
-Message-ID: <20180907201819.GA1341@localhost.localdomain>
-References: <20180905203546.21921-1-keith.busch@intel.com>
- <20180905203546.21921-16-keith.busch@intel.com>
- <20180906193657.GH214747@bhelgaas-glaptop.roam.corp.google.com>
- <20180906195047.GD31024@localhost.localdomain>
- <20180907165352.GA250890@bhelgaas-glaptop.roam.corp.google.com>
- <20180907200332.GB250890@bhelgaas-glaptop.roam.corp.google.com>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail.kernel.org ([198.145.29.99]:41438 "EHLO mail.kernel.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1728460AbeIQBcc (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Sun, 16 Sep 2018 21:32:32 -0400
+Subject: Re: [PATCH v3 1/6] PCI: Expose reset_type to users of
+ __pci_reset_function_locked()
+To: linux-pci@vger.kernel.org
+Cc: alex.williamson@redhat.com,
+        Derek Chickles <derek.chickles@caviumnetworks.com>,
+        Satanand Burla <satananda.burla@caviumnetworks.com>,
+        Felix Manlunas <felix.manlunas@caviumnetworks.com>,
+        Raghu Vatsavayi <raghu.vatsavayi@caviumnetworks.com>,
+        "David S. Miller" <davem@davemloft.net>,
+        Bjorn Helgaas <bhelgaas@google.com>,
+        Boris Ostrovsky <boris.ostrovsky@oracle.com>,
+        Juergen Gross <jgross@suse.com>,
+        Jia-Ju Bai <baijiaju1990@gmail.com>
+References: <20180916200439.21960-1-okaya@kernel.org>
+ <20180916200439.21960-2-okaya@kernel.org>
+From: Sinan Kaya <okaya@kernel.org>
+Message-ID: <a266c436-b53e-4069-73ad-a2ac276ce36e@kernel.org>
+Date: Sun, 16 Sep 2018 16:08:23 -0400
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20180907200332.GB250890@bhelgaas-glaptop.roam.corp.google.com>
+In-Reply-To: <20180916200439.21960-2-okaya@kernel.org>
+Content-Type: text/plain; charset=utf-8; format=flowed
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Fri, Sep 07, 2018 at 03:03:32PM -0500, Bjorn Helgaas wrote:
-> I applied this to for-linus with the following changelog.  Let me know
-> if I didn't understand this correctly.  I changed the comment in
-> pciehp_power_on_slot() so it doesn't say "sticky" to avoid confusion
-> with the PCI spec concept of sticky register bits (ROS, RWS, RW1CS).
+On 9/16/2018 4:04 PM, Sinan Kaya wrote:
+> +int __pci_reset_function_locked(struct pci_dev *dev, u32 reset_type)
+>   {
+> -	int rc;
+> +	int rc = 0;
 
-Perfect! Thanks for queueing this up. I'll drop this one from the rest
-of the series, which will need at least a v3 to fix a dumb mistake in
-pointed out in review, and I'll get the order to better sense (or maybe
-split into independent patch sets).
- 
-> commit 342227b42fe849eb2edac38342702aff12a5491d
-> Author: Keith Busch <keith.busch@intel.com>
-> Date:   Wed Sep 5 14:35:41 2018 -0600
-> 
->     PCI: pciehp: Fix hot-add vs powerfault detection order
->     
->     If both hot-add and power fault were observed in a single interrupt, we
->     handled the hot-add first, then the power fault, in this path:
->     
->       pciehp_ist
->         if (events & (PDC | DLLSC))
->           pciehp_handle_presence_or_link_change
->             case OFF_STATE:
->               pciehp_enable_slot
->                 __pciehp_enable_slot
->                   board_added
->                     pciehp_power_on_slot
->                       ctrl->power_fault_detected = 0
->                       pcie_write_cmd(ctrl, PCI_EXP_SLTCTL_PWR_ON, PCI_EXP_SLTCTL_PCC)
->                     pciehp_green_led_on(p_slot)             # power LED on
->                     pciehp_set_attention_status(p_slot, 0)  # attention LED off
->         if ((events & PFD) && !ctrl->power_fault_detected)
->           ctrl->power_fault_detected = 1
->           pciehp_set_attention_status(1)                    # attention LED on
->           pciehp_green_led_off(slot)                        # power LED off
->     
->     This left the attention indicator on (even though the hot-add succeeded)
->     and the power indicator off (even though the slot power was on).
->     
->     Fix this by checking for power faults before checking for new devices.
->     
->     Fixes: 0e94916e6091 ("PCI: pciehp: Handle events synchronously")
->     Signed-off-by: Keith Busch <keith.busch@intel.com>
->     [bhelgaas: changelog]
->     Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
->     Reviewed-by: Lukas Wunner <lukas@wunner.de>
-> 
-> diff --git a/drivers/pci/hotplug/pciehp_hpc.c b/drivers/pci/hotplug/pciehp_hpc.c
-> index 7136e3430925..a938abdb41ce 100644
-> --- a/drivers/pci/hotplug/pciehp_hpc.c
-> +++ b/drivers/pci/hotplug/pciehp_hpc.c
-> @@ -496,7 +496,7 @@ int pciehp_power_on_slot(struct slot *slot)
->  	u16 slot_status;
->  	int retval;
->  
-> -	/* Clear sticky power-fault bit from previous power failures */
-> +	/* Clear power-fault bit from previous power failures */
->  	pcie_capability_read_word(pdev, PCI_EXP_SLTSTA, &slot_status);
->  	if (slot_status & PCI_EXP_SLTSTA_PFD)
->  		pcie_capability_write_word(pdev, PCI_EXP_SLTSTA,
-> @@ -646,6 +646,14 @@ static irqreturn_t pciehp_ist(int irq, void *dev_id)
->  		pciehp_handle_button_press(slot);
->  	}
->  
-> +	/* Check Power Fault Detected */
-> +	if ((events & PCI_EXP_SLTSTA_PFD) && !ctrl->power_fault_detected) {
-> +		ctrl->power_fault_detected = 1;
-> +		ctrl_err(ctrl, "Slot(%s): Power fault\n", slot_name(slot));
-> +		pciehp_set_attention_status(slot, 1);
-> +		pciehp_green_led_off(slot);
-> +	}
-> +
->  	/*
->  	 * Disable requests have higher priority than Presence Detect Changed
->  	 * or Data Link Layer State Changed events.
-> @@ -657,14 +665,6 @@ static irqreturn_t pciehp_ist(int irq, void *dev_id)
->  		pciehp_handle_presence_or_link_change(slot, events);
->  	up_read(&ctrl->reset_lock);
->  
-> -	/* Check Power Fault Detected */
-> -	if ((events & PCI_EXP_SLTSTA_PFD) && !ctrl->power_fault_detected) {
-> -		ctrl->power_fault_detected = 1;
-> -		ctrl_err(ctrl, "Slot(%s): Power fault\n", slot_name(slot));
-> -		pciehp_set_attention_status(slot, 1);
-> -		pciehp_green_led_off(slot);
-> -	}
-> -
->  	pci_config_pm_runtime_put(pdev);
->  	wake_up(&ctrl->requester);
->  	return IRQ_HANDLED;
+I forgot about this. I'll wait a couple of more days before when I spin a new 
+version.
