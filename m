@@ -1,143 +1,97 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from ale.deltatee.com ([207.54.116.67]:38652 "EHLO ale.deltatee.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1726608AbeIMFTC (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Thu, 13 Sep 2018 01:19:02 -0400
-From: Logan Gunthorpe <logang@deltatee.com>
-To: linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
-        linux-nvme@lists.infradead.org, linux-rdma@vger.kernel.org,
-        linux-nvdimm@lists.01.org, linux-block@vger.kernel.org
-Cc: Stephen Bates <sbates@raithlin.com>,
-        Christoph Hellwig <hch@lst.de>,
-        Keith Busch <keith.busch@intel.com>,
-        Sagi Grimberg <sagi@grimberg.me>,
-        Bjorn Helgaas <bhelgaas@google.com>,
-        Jason Gunthorpe <jgg@mellanox.com>,
-        Max Gurtovoy <maxg@mellanox.com>,
-        Dan Williams <dan.j.williams@intel.com>,
-        =?UTF-8?q?J=C3=A9r=C3=B4me=20Glisse?= <jglisse@redhat.com>,
-        Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-        Alex Williamson <alex.williamson@redhat.com>,
-        =?UTF-8?q?Christian=20K=C3=B6nig?= <christian.koenig@amd.com>,
-        Jens Axboe <axboe@kernel.dk>,
-        Logan Gunthorpe <logang@deltatee.com>
-Date: Wed, 12 Sep 2018 18:11:46 -0600
-Message-Id: <20180913001156.4115-4-logang@deltatee.com>
-In-Reply-To: <20180913001156.4115-1-logang@deltatee.com>
-References: <20180913001156.4115-1-logang@deltatee.com>
+Received: from mail-pf1-f195.google.com ([209.85.210.195]:38632 "EHLO
+        mail-pf1-f195.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1728131AbeIQXUs (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Mon, 17 Sep 2018 19:20:48 -0400
+Received: by mail-pf1-f195.google.com with SMTP id x17-v6so7917609pfh.5
+        for <linux-pci@vger.kernel.org>; Mon, 17 Sep 2018 10:52:23 -0700 (PDT)
+Date: Mon, 17 Sep 2018 19:52:19 +0200
+From: Niklas Cassel <niklas.cassel@linaro.org>
+To: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
+Cc: Andy Gross <andy.gross@linaro.org>,
+        David Brown <david.brown@linaro.org>,
+        Rob Herring <robh+dt@kernel.org>,
+        Mark Rutland <mark.rutland@arm.com>, linux-pci@vger.kernel.org,
+        linux-arm-msm@vger.kernel.org, linux-soc@vger.kernel.org,
+        devicetree@vger.kernel.org, linux-kernel@vger.kernel.org
+Subject: Re: [PATCH] ARM: dts: qcom-apq8064: use correct pci address for
+ address translation
+Message-ID: <20180917175219.GA4157@centauri>
+References: <20180509120135.25940-1-niklas.cassel@linaro.org>
+ <20180917112149.GE7239@e107981-ln.cambridge.arm.com>
 MIME-Version: 1.0
-Subject: [PATCH v6 03/13] PCI/P2PDMA: Add PCI p2pmem DMA mappings to adjust the bus offset
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20180917112149.GE7239@e107981-ln.cambridge.arm.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-The DMA address used when mapping PCI P2P memory must be the PCI bus
-address. Thus, introduce pci_p2pmem_map_sg() to map the correct
-addresses when using P2P memory. Memory mapped in this way does not
-need to be unmapped.
+On Mon, Sep 17, 2018 at 12:21:49PM +0100, Lorenzo Pieralisi wrote:
+> On Wed, May 09, 2018 at 02:01:34PM +0200, Niklas Cassel wrote:
+> > For PCI, the second and third cell in ranges specifies the upper and
+> > lower target address for address translation. This target address will
+> > be used to program the internal address translation unit (iATU).
+> > 
+> > The current device tree configuration will program the iATU to translate
+> > CPU accesses to 0x08000000 to PCI address 0x0 (with TLP type MEM).
+> > The device tree configuration also specifies that CPU acesses to
+> > 0x0fe00000 will be translated to PCI address 0x0 (with TLP type I/O).
+> > 
+> > We cannot have both I/O space and memory space at PCI address 0x0.
+> > 
+> > The PCI code already uses the CPU address when assigning addresses to
+> > memory BARs, so for memory space the PCI address should be the same as
+> > the CPU address. This also matches how all other device trees using
+> > snps,dw-pcie are configured.
+> > 
+> > The existing configuration appears to work, even if it is incorrect.
+> > For some reason the iATU doesn't obey the existing configuration,
+> > and doesn't translate CPU accesses from 0x08000000 to PCI address 0x0.
+> > 
+> > The reason why the existing configuration works at all is probably
+> > because the default behavior, when there is no match, is to use the
+> > untranslated address. This happens to work for memory space, since
+> > it's a 1:1 mapping. However, instead of relying on this behavior,
+> > let's configure the iATU correctly.
+> > 
+> > Signed-off-by: Niklas Cassel <niklas.cassel@linaro.org>
+> > ---
+> >  arch/arm/boot/dts/qcom-apq8064.dtsi | 2 +-
+> >  1 file changed, 1 insertion(+), 1 deletion(-)
+> 
+> Hi Niklas,
+> 
+> what's this patch status ? Please let me know if I have to keep
+> it in the PCI tree queue, I think, if ACKed, it should probably
+> go via the arm-soc tree.
 
-For this, we assume that an SGL passed to these functions contain all
-P2P memory or no P2P memory.
+Hello Lorenzo,
 
-Signed-off-by: Logan Gunthorpe <logang@deltatee.com>
----
- drivers/pci/p2pdma.c       | 43 ++++++++++++++++++++++++++++++++++++++
- include/linux/memremap.h   |  1 +
- include/linux/pci-p2pdma.h |  7 +++++++
- 3 files changed, 51 insertions(+)
+This patch has been merged and is included in v4.18.
 
-diff --git a/drivers/pci/p2pdma.c b/drivers/pci/p2pdma.c
-index 67c1daf1189e..29bd40a87768 100644
---- a/drivers/pci/p2pdma.c
-+++ b/drivers/pci/p2pdma.c
-@@ -191,6 +191,8 @@ int pci_p2pdma_add_resource(struct pci_dev *pdev, int bar, size_t size,
- 	pgmap->res.flags = pci_resource_flags(pdev, bar);
- 	pgmap->ref = &pdev->p2pdma->devmap_ref;
- 	pgmap->type = MEMORY_DEVICE_PCI_P2PDMA;
-+	pgmap->pci_p2pdma_bus_offset = pci_bus_address(pdev, bar) -
-+		pci_resource_start(pdev, bar);
- 
- 	addr = devm_memremap_pages(&pdev->dev, pgmap);
- 	if (IS_ERR(addr)) {
-@@ -813,3 +815,44 @@ void pci_p2pmem_publish(struct pci_dev *pdev, bool publish)
- 	pdev->p2pdma->p2pmem_published = publish;
- }
- EXPORT_SYMBOL_GPL(pci_p2pmem_publish);
-+
-+/**
-+ * pci_p2pdma_map_sg - map a PCI peer-to-peer scatterlist for DMA
-+ * @dev: device doing the DMA request
-+ * @sg: scatter list to map
-+ * @nents: elements in the scatterlist
-+ * @dir: DMA direction
-+ *
-+ * Scatterlists mapped with this function should not be unmapped in any way.
-+ *
-+ * Returns the number of SG entries mapped or 0 on error.
-+ */
-+int pci_p2pdma_map_sg(struct device *dev, struct scatterlist *sg, int nents,
-+		      enum dma_data_direction dir)
-+{
-+	struct dev_pagemap *pgmap;
-+	struct scatterlist *s;
-+	phys_addr_t paddr;
-+	int i;
-+
-+	/*
-+	 * p2pdma mappings are not compatible with devices that use
-+	 * dma_virt_ops. If the upper layers do the right thing
-+	 * this should never happen because it will be prevented
-+	 * by the check in pci_p2pdma_add_client()
-+	 */
-+	if (WARN_ON_ONCE(IS_ENABLED(CONFIG_DMA_VIRT_OPS) &&
-+			 dev->dma_ops == &dma_virt_ops))
-+		return 0;
-+
-+	for_each_sg(sg, s, nents, i) {
-+		pgmap = sg_page(s)->pgmap;
-+		paddr = sg_phys(s);
-+
-+		s->dma_address = paddr - pgmap->pci_p2pdma_bus_offset;
-+		sg_dma_len(s) = s->length;
-+	}
-+
-+	return nents;
-+}
-+EXPORT_SYMBOL_GPL(pci_p2pdma_map_sg);
-diff --git a/include/linux/memremap.h b/include/linux/memremap.h
-index 9553370ebdad..0ac69ddf5fc4 100644
---- a/include/linux/memremap.h
-+++ b/include/linux/memremap.h
-@@ -125,6 +125,7 @@ struct dev_pagemap {
- 	struct device *dev;
- 	void *data;
- 	enum memory_type type;
-+	u64 pci_p2pdma_bus_offset;
- };
- 
- #ifdef CONFIG_ZONE_DEVICE
-diff --git a/include/linux/pci-p2pdma.h b/include/linux/pci-p2pdma.h
-index 7b2b0f547528..2f03dbbf5af6 100644
---- a/include/linux/pci-p2pdma.h
-+++ b/include/linux/pci-p2pdma.h
-@@ -36,6 +36,8 @@ struct scatterlist *pci_p2pmem_alloc_sgl(struct pci_dev *pdev,
- 					 unsigned int *nents, u32 length);
- void pci_p2pmem_free_sgl(struct pci_dev *pdev, struct scatterlist *sgl);
- void pci_p2pmem_publish(struct pci_dev *pdev, bool publish);
-+int pci_p2pdma_map_sg(struct device *dev, struct scatterlist *sg, int nents,
-+		      enum dma_data_direction dir);
- #else /* CONFIG_PCI_P2PDMA */
- static inline int pci_p2pdma_add_resource(struct pci_dev *pdev, int bar,
- 		size_t size, u64 offset)
-@@ -98,5 +100,10 @@ static inline void pci_p2pmem_free_sgl(struct pci_dev *pdev,
- static inline void pci_p2pmem_publish(struct pci_dev *pdev, bool publish)
- {
- }
-+static inline int pci_p2pdma_map_sg(struct device *dev,
-+		struct scatterlist *sg, int nents, enum dma_data_direction dir)
-+{
-+	return 0;
-+}
- #endif /* CONFIG_PCI_P2PDMA */
- #endif /* _LINUX_PCI_P2P_H */
--- 
-2.19.0
+I CC:ed PCI just to get more eyes on it.
+
+
+Kind regards,
+Niklas
+
+
+> 
+> Thanks,
+> Lorenzo
+> 
+> > diff --git a/arch/arm/boot/dts/qcom-apq8064.dtsi b/arch/arm/boot/dts/qcom-apq8064.dtsi
+> > index 5341a39c0392..148cf7e565f6 100644
+> > --- a/arch/arm/boot/dts/qcom-apq8064.dtsi
+> > +++ b/arch/arm/boot/dts/qcom-apq8064.dtsi
+> > @@ -1417,7 +1417,7 @@
+> >  			#address-cells = <3>;
+> >  			#size-cells = <2>;
+> >  			ranges = <0x81000000 0 0 0x0fe00000 0 0x00100000   /* I/O */
+> > -				  0x82000000 0 0 0x08000000 0 0x07e00000>; /* memory */
+> > +				  0x82000000 0 0x08000000 0x08000000 0 0x07e00000>; /* memory */
+> >  			interrupts = <GIC_SPI 238 IRQ_TYPE_NONE>;
+> >  			interrupt-names = "msi";
+> >  			#interrupt-cells = <1>;
+> > -- 
+> > 2.17.0
+> > 
