@@ -1,128 +1,67 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-pf1-f196.google.com ([209.85.210.196]:42209 "EHLO
-        mail-pf1-f196.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1727160AbeIOBLE (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Fri, 14 Sep 2018 21:11:04 -0400
-Received: by mail-pf1-f196.google.com with SMTP id l9-v6so4757035pff.9
-        for <linux-pci@vger.kernel.org>; Fri, 14 Sep 2018 12:55:06 -0700 (PDT)
-From: Stephen Hemminger <stephen@networkplumber.org>
-To: kys@microsoft.com, haiyangz@microsoft.com, sthemmin@microsoft.com
-Cc: devel@linuxdriverproject.org, netdev@vger.kernel.org,
-        linux-pci@vger.kernel.org
-Subject: [PATCH v2 1/2] PCI: hv: support reporting serial number as slot information
-Date: Fri, 14 Sep 2018 12:54:56 -0700
-Message-Id: <20180914195457.20433-2-sthemmin@microsoft.com>
-In-Reply-To: <20180914195457.20433-1-sthemmin@microsoft.com>
-References: <20180914195457.20433-1-sthemmin@microsoft.com>
+Received: from mail.kernel.org ([198.145.29.99]:34842 "EHLO mail.kernel.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1725787AbeIREGh (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Tue, 18 Sep 2018 00:06:37 -0400
+Date: Mon, 17 Sep 2018 17:37:14 -0500
+From: Bjorn Helgaas <helgaas@kernel.org>
+To: Lukas Wunner <lukas@wunner.de>
+Cc: Sinan Kaya <okaya@kernel.org>, linux-pci@vger.kernel.org,
+        Mika Westerberg <mika.westerberg@linux.intel.com>,
+        Keith Busch <keith.busch@intel.com>
+Subject: Re: [PATCH 4/9] PCI: pciehp: Unify controller and slot structs
+Message-ID: <20180917223714.GC54859@bhelgaas-glaptop.roam.corp.google.com>
+References: <cover.1534686484.git.lukas@wunner.de>
+ <2d4b1ed51a1c90fb6e1ef6282ab0c28f6c62cab1.1534686485.git.lukas@wunner.de>
+ <c8e76de1-a2c3-b725-2e86-733dd0267d55@kernel.org>
+ <20180820090953.sbvgxc2ednxaq73s@wunner.de>
+ <05c7fadf-82ef-5ee0-601d-850583eefb0f@kernel.org>
+ <20180905223016.GA214747@bhelgaas-glaptop.roam.corp.google.com>
+ <20180906073826.43xonlbyoahji7hr@wunner.de>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20180906073826.43xonlbyoahji7hr@wunner.de>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-The Hyper-V host API for PCI provides a unique "serial number" which
-can be used as basis for sysfs PCI slot table. This can be useful
-for cases where userspace wants to find the PCI device based on
-serial number.
+On Thu, Sep 06, 2018 at 09:38:26AM +0200, Lukas Wunner wrote:
+> On Wed, Sep 05, 2018 at 05:30:16PM -0500, Bjorn Helgaas wrote:
+> > > > > On 8/19/2018 10:29 AM, Lukas Wunner wrote:
+> > > > > > Simplify the driver by merging struct slot into struct controller.
+> > > > > > Merge the slot constructor pcie_init_slot() and the destructor
+> > > > > > pcie_cleanup_slot() into the controller counterparts.
+> > > > > > Rename the slot struct's "lock" member to "state_lock" and rename
+> > > > > > "work" to "button_work" for clarity.
+> > 
+> > Could the rename be done in a separate patch before the unification?
+> > If so, that would be nice.
+> 
+> Okay, I've already reworked my internal development branch to do the
+> unification first, then the rename, but can easily turn the order around,
+> no problem at all.
+> 
+> The preceding patches 1 to 3 of this series could be merged independently,
+> or would you prefer me to resend them?  The first one is also included in
+> Keith's error handling rework series (posted yesterday):
+> 
+> [1/9] PCI: Simplify disconnected marking
+>       https://patchwork.ozlabs.org/patch/959373/
+> [2/9] PCI: pciehp: Drop unnecessary includes
+>       https://patchwork.ozlabs.org/patch/959376/
+> [3/9] [3/9] PCI: pciehp: Drop hotplug_slot_ops wrappers
+>       https://patchwork.ozlabs.org/patch/959377/
+> 
+> Important side note:  Keith's series includes a pciehp fix which should
+> probably go into 4.19:
+> 
+> [PATCHv2,15/20] PCI/pciehp: Fix powerfault detection order
+> https://patchwork.ozlabs.org/patch/966678/
+> 
+> Now, if that patch goes into, say, 4.19-rc3, the pci/hotplug branch would
+> have to be rebased on top of 4.19-rc3 to avoid conflicts during the 4.20
+> merge window.
 
-When an SR-IOV NIC is added, the host sends an attach message
-with serial number. The kernel doesn't use the serial number, but
-it is useful when doing the same thing in a userspace driver such
-as the DPDK. By having /sys/bus/pci/slots/N it provides a direct
-way to find the matching PCI device.
+OK, I rebased pci/hotplug to v4.19-rc4.  Any chance you could update
+this series to apply on top of that?
 
-There maybe some cases where serial number is not unique such
-as when using GPU's. But the PCI slot infrastructure will handle
-that.
-
-This has a side effect which may also be useful. The common udev
-network device naming policy uses the slot information (rather
-than PCI address).
-
-Signed-off-by: Stephen Hemminger <sthemmin@microsoft.com>
----
- drivers/pci/controller/pci-hyperv.c | 37 +++++++++++++++++++++++++++++
- 1 file changed, 37 insertions(+)
-
-diff --git a/drivers/pci/controller/pci-hyperv.c b/drivers/pci/controller/pci-hyperv.c
-index c00f82cc54aa..ee80e79db21a 100644
---- a/drivers/pci/controller/pci-hyperv.c
-+++ b/drivers/pci/controller/pci-hyperv.c
-@@ -89,6 +89,9 @@ static enum pci_protocol_version_t pci_protocol_version;
- 
- #define STATUS_REVISION_MISMATCH 0xC0000059
- 
-+/* space for 32bit serial number as string */
-+#define SLOT_NAME_SIZE 11
-+
- /*
-  * Message Types
-  */
-@@ -494,6 +497,7 @@ struct hv_pci_dev {
- 	struct list_head list_entry;
- 	refcount_t refs;
- 	enum hv_pcichild_state state;
-+	struct pci_slot *pci_slot;
- 	struct pci_function_description desc;
- 	bool reported_missing;
- 	struct hv_pcibus_device *hbus;
-@@ -1457,6 +1461,34 @@ static void prepopulate_bars(struct hv_pcibus_device *hbus)
- 	spin_unlock_irqrestore(&hbus->device_list_lock, flags);
- }
- 
-+/*
-+ * Assign entries in sysfs pci slot directory.
-+ *
-+ * Note that this function does not need to lock the children list
-+ * because it is called from pci_devices_present_work which
-+ * is serialized with hv_eject_device_work because they are on the
-+ * same ordered workqueue. Therefore hbus->children list will not change
-+ * even when pci_create_slot sleeps.
-+ */
-+static void hv_pci_assign_slots(struct hv_pcibus_device *hbus)
-+{
-+	struct hv_pci_dev *hpdev;
-+	char name[SLOT_NAME_SIZE];
-+	int slot_nr;
-+
-+	list_for_each_entry(hpdev, &hbus->children, list_entry) {
-+		if (hpdev->pci_slot)
-+			continue;
-+
-+		slot_nr = PCI_SLOT(wslot_to_devfn(hpdev->desc.win_slot.slot));
-+		snprintf(name, SLOT_NAME_SIZE, "%u", hpdev->desc.ser);
-+		hpdev->pci_slot = pci_create_slot(hbus->pci_bus, slot_nr,
-+					  name, NULL);
-+		if (!hpdev->pci_slot)
-+			pr_warn("pci_create slot %s failed\n", name);
-+	}
-+}
-+
- /**
-  * create_root_hv_pci_bus() - Expose a new root PCI bus
-  * @hbus:	Root PCI bus, as understood by this driver
-@@ -1480,6 +1512,7 @@ static int create_root_hv_pci_bus(struct hv_pcibus_device *hbus)
- 	pci_lock_rescan_remove();
- 	pci_scan_child_bus(hbus->pci_bus);
- 	pci_bus_assign_resources(hbus->pci_bus);
-+	hv_pci_assign_slots(hbus);
- 	pci_bus_add_devices(hbus->pci_bus);
- 	pci_unlock_rescan_remove();
- 	hbus->state = hv_pcibus_installed;
-@@ -1742,6 +1775,7 @@ static void pci_devices_present_work(struct work_struct *work)
- 		 */
- 		pci_lock_rescan_remove();
- 		pci_scan_child_bus(hbus->pci_bus);
-+		hv_pci_assign_slots(hbus);
- 		pci_unlock_rescan_remove();
- 		break;
- 
-@@ -1858,6 +1892,9 @@ static void hv_eject_device_work(struct work_struct *work)
- 	list_del(&hpdev->list_entry);
- 	spin_unlock_irqrestore(&hpdev->hbus->device_list_lock, flags);
- 
-+	if (hpdev->pci_slot)
-+		pci_destroy_slot(hpdev->pci_slot);
-+
- 	memset(&ctxt, 0, sizeof(ctxt));
- 	ejct_pkt = (struct pci_eject_response *)&ctxt.pkt.message;
- 	ejct_pkt->message_type.type = PCI_EJECTION_COMPLETE;
--- 
-2.18.0
+Bjorn
