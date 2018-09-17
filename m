@@ -1,69 +1,235 @@
-Return-Path: <linux-acpi-owner@vger.kernel.org>
-From: Mika Westerberg <mika.westerberg@linux.intel.com>
-To: Bjorn Helgaas <bhelgaas@google.com>,
-        "Rafael J. Wysocki" <rjw@rjwysocki.net>
-Cc: Len Brown <lenb@kernel.org>, Lukas Wunner <lukas@wunner.de>,
-        Keith Busch <keith.busch@intel.com>,
-        Ashok Raj <ashok.raj@intel.com>, Mario.Limonciello@dell.com,
-        Anthony Wong <anthony.wong@canonical.com>,
-        Linus Walleij <linus.walleij@linaro.org>,
-        Sakari Ailus <sakari.ailus@iki.fi>,
-        Mika Westerberg <mika.westerberg@linux.intel.com>,
-        linux-pci@vger.kernel.org, linux-acpi@vger.kernel.org
-Subject: [PATCH v2 07/10] PCI: pciehp: Implement runtime PM callbacks
-Date: Thu, 13 Sep 2018 17:33:19 +0300
-Message-Id: <20180913143322.77953-8-mika.westerberg@linux.intel.com>
-In-Reply-To: <20180913143322.77953-1-mika.westerberg@linux.intel.com>
-References: <20180913143322.77953-1-mika.westerberg@linux.intel.com>
-Sender: linux-acpi-owner@vger.kernel.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail-io1-f68.google.com ([209.85.166.68]:41973 "EHLO
+        mail-io1-f68.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1727252AbeIRFFM (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Tue, 18 Sep 2018 01:05:12 -0400
+Received: by mail-io1-f68.google.com with SMTP id q4-v6so49830iob.8
+        for <linux-pci@vger.kernel.org>; Mon, 17 Sep 2018 16:35:34 -0700 (PDT)
+MIME-Version: 1.0
+In-Reply-To: <6b913e12-e8c8-30c1-5269-3029ddb00a4d@yadro.com>
+References: <20180914161404.4685-1-s.miroshnichenko@yadro.com>
+ <20180914161404.4685-2-s.miroshnichenko@yadro.com> <20180917052800.GA7315@tungsten.ozlabs.ibm.com>
+ <6b913e12-e8c8-30c1-5269-3029ddb00a4d@yadro.com>
+From: Oliver <oohall@gmail.com>
+Date: Tue, 18 Sep 2018 09:35:32 +1000
+Message-ID: <CAOSf1CFh5B_k_F2RLr1QuNehm0MC_k=-B6U0R+enUu79-HNs_Q@mail.gmail.com>
+Subject: Re: [PATCH RFC 1/4] PCI: hotplug: Add parameter to put devices to
+ reset during rescan
+To: Sergey Miroshnichenko <s.miroshnichenko@yadro.com>
+Cc: Sam Bobroff <sbobroff@linux.ibm.com>, linux-pci@vger.kernel.org,
+        Bjorn Helgaas <bhelgaas@google.com>, linux@yadro.com
+Content-Type: text/plain; charset="UTF-8"
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Basically we need to do the same thing when runtime suspending than with
-system sleep so re-use those operations here. This makes sure hotplug
-interrupt does not trigger immediately when the link goes down.
+On Tue, Sep 18, 2018 at 6:55 AM, Sergey Miroshnichenko
+<s.miroshnichenko@yadro.com> wrote:
+> Hello Sam,
+>
+> On 9/17/18 8:28 AM, Sam Bobroff wrote:
+>> Hi Sergey,
+>>
+>> On Fri, Sep 14, 2018 at 07:14:01PM +0300, Sergey Miroshnichenko wrote:
+>>> Introduce a new command line option "pci=pcie_movable_bars" that indicates
+>>> support of PCIe hotplug without prior reservation of memory regions by
+>>> BIOS/bootloader.
+>>>
+>>> If a new PCIe device has been hot-plugged between two active ones, which
+>>> have no (or not big enough) gap between their BARs, allocating new BARs
+>>> requires to move BARs of the following working devices:
+>>>
+>>> 1)                   dev 4
+>>>                        |
+>>>                        v
+>>> .. |  dev 3  |  dev 3  |  dev 5  |  dev 7  |
+>>> .. |  BAR 0  |  BAR 1  |  BAR 0  |  BAR 0  |
+>>>
+>>> 2)                             dev 4
+>>>                                  |
+>>>                                  v
+>>> .. |  dev 3  |  dev 3  | -->           --> |  dev 5  |  dev 7  |
+>>> .. |  BAR 0  |  BAR 1  | -->           --> |  BAR 0  |  BAR 0  |
+>>>
+>>> 3)
+>>>
+>>> .. |  dev 3  |  dev 3  |  dev 4  |  dev 4  |  dev 5  |  dev 7  |
+>>> .. |  BAR 0  |  BAR 1  |  BAR 0  |  BAR 1  |  BAR 0  |  BAR 0  |
+>>>
+>>> Not only BARs, but also bridge windows can be updated during a PCIe rescan,
+>>> threatening all memory transactions during this procedure, so the PCI
+>>> subsystem will instruct the drivers to pause by calling the reset_prepare()
+>>> and reset_done() callbacks.
+>>>
+>>> If a device may be affected by BAR movement, the BAR changes tracking must
+>>> be implemented in its driver.
+>>>
+>>> Signed-off-by: Sergey Miroshnichenko <s.miroshnichenko@yadro.com>
+>>> ---
+>>>  .../admin-guide/kernel-parameters.txt         |  6 +++
+>>>  drivers/pci/pci.c                             |  2 +
+>>>  drivers/pci/probe.c                           | 43 +++++++++++++++++++
+>>>  include/linux/pci.h                           |  1 +
+>>>  4 files changed, 52 insertions(+)
+>>>
+>>> diff --git a/Documentation/admin-guide/kernel-parameters.txt b/Documentation/admin-guide/kernel-parameters.txt
+>>> index 64a3bf54b974..f8132a709061 100644
+>>> --- a/Documentation/admin-guide/kernel-parameters.txt
+>>> +++ b/Documentation/admin-guide/kernel-parameters.txt
+>>> @@ -3311,6 +3311,12 @@
+>>>                              bridges without forcing it upstream. Note:
+>>>                              this removes isolation between devices and
+>>>                              may put more devices in an IOMMU group.
+>>> +            pcie_movable_bars       Arrange a space at runtime for BARs of
+>>> +                            hotplugged PCIe devices - usable if bootloader
+>>> +                            doesn't reserve memory regions for them. Freeing
+>>> +                            a space may require moving BARs of active devices
+>>> +                            to higher addresses, so device drivers will be
+>>> +                            paused during rescan.
+>>>
+>>>      pcie_aspm=      [PCIE] Forcibly enable or disable PCIe Active State Power
+>>>                      Management.
+>>> diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
+>>> index 1835f3a7aa8d..5f07a59b5924 100644
+>>> --- a/drivers/pci/pci.c
+>>> +++ b/drivers/pci/pci.c
+>>> @@ -6105,6 +6105,8 @@ static int __init pci_setup(char *str)
+>>>                              pci_add_flags(PCI_SCAN_ALL_PCIE_DEVS);
+>>>                      } else if (!strncmp(str, "disable_acs_redir=", 18)) {
+>>>                              disable_acs_redir_param = str + 18;
+>>> +                    } else if (!strncmp(str, "pcie_movable_bars", 17)) {
+>>> +                            pci_add_flags(PCI_MOVABLE_BARS);
+>>>                      } else {
+>>>                              printk(KERN_ERR "PCI: Unknown option `%s'\n",
+>>>                                              str);
+>>> diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
+>>> index 201f9e5ff55c..bdaafc48dc4c 100644
+>>> --- a/drivers/pci/probe.c
+>>> +++ b/drivers/pci/probe.c
+>>> @@ -3138,6 +3138,45 @@ unsigned int pci_rescan_bus_bridge_resize(struct pci_dev *bridge)
+>>>      return max;
+>>>  }
+>>>
+>>> +/*
+>>> + * Put all devices of the bus and its children to reset
+>>> + */
+>>> +static void pci_bus_reset_prepare(struct pci_bus *bus)
+>>> +{
+>>> +    struct pci_dev *dev;
+>>> +
+>>> +    list_for_each_entry(dev, &bus->devices, bus_list) {
+>>> +            struct pci_bus *child = dev->subordinate;
+>>> +
+>>> +            if (child) {
+>>> +                    pci_bus_reset_prepare(child);
+>>> +            } else if (dev->driver &&
+>>> +                       dev->driver->err_handler &&
+>>> +                       dev->driver->err_handler->reset_prepare) {
+>>> +                    dev->driver->err_handler->reset_prepare(dev);
+>>> +            }
+>>
+>> What about devices with drivers that don't have reset_prepare()?  It
+>> looks like it will just reconfigure them anyway. Is that right?
+>
+> It is possible that unprepared driver without these hooks will get BARs
+> moved, I should put a warning message there. There three ways we can see
+> to make this safe:>
 
-Signed-off-by: Mika Westerberg <mika.westerberg@linux.intel.com>
-Reviewed-by: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
----
- drivers/pci/hotplug/pciehp_core.c | 19 +++++++++++++++++++
- 1 file changed, 19 insertions(+)
+It might make more sense to allow drivers to opt-in to this rather
+than assuming any driver with the error handlers supports re-assigning
+BARs on the fly. As far as I know we restore the previous BAR values a
+part of the EEH recovery process when there's a driver bound, but I
+could be wrong.
 
-diff --git a/drivers/pci/hotplug/pciehp_core.c b/drivers/pci/hotplug/pciehp_core.c
-index 940c64fdcaae..203610478d55 100644
---- a/drivers/pci/hotplug/pciehp_core.c
-+++ b/drivers/pci/hotplug/pciehp_core.c
-@@ -312,6 +312,23 @@ static int pciehp_resume(struct pcie_device *dev)
- 
- 	return 0;
- }
-+
-+static int pciehp_runtime_resume(struct pcie_device *dev)
-+{
-+	struct controller *ctrl = get_service_data(dev);
-+	struct slot *slot = ctrl->slot;
-+
-+	/* pci_restore_state() just wrote to the Slot Control register */
-+	ctrl->cmd_started = jiffies;
-+	ctrl->cmd_busy = true;
-+
-+	/* clear spurious events from rediscovery of inserted card */
-+	if ((slot->state == ON_STATE || slot->state == BLINKINGOFF_STATE) &&
-+	     pme_is_native(dev))
-+		pcie_clear_hotplug_events(ctrl);
-+
-+	return pciehp_resume(dev);
-+}
- #endif /* PM */
- 
- static struct pcie_port_service_driver hpdriver_portdrv = {
-@@ -326,6 +343,8 @@ static struct pcie_port_service_driver hpdriver_portdrv = {
- 	.suspend	= pciehp_suspend,
- 	.resume_noirq	= pciehp_resume_noirq,
- 	.resume		= pciehp_resume,
-+	.runtime_suspend = pciehp_suspend,
-+	.runtime_resume	= pciehp_runtime_resume,
- #endif	/* PM */
- };
- 
--- 
-2.18.0
+>  - add the reset_prepare()/reset_done() hooks to *every* PCIe driver;
+>  - refuse BAR movement if at least one unprepared driver has been
+> encountered during rescan;
+>  - reduce the number of drivers which can be affected to some
+> controllable value and prepare them on demand.
+
+Is there any reason we couldn't just unbind the unaware drivers and
+re-bind them afterwards? That might be useful when hotplugging NVMe
+racks since you wouldn't want a switch management driver (or similar)
+to prevent re-assignments if they're required.
+
+> Applying the second proposal as a major restriction seems fairly
+> reasonable, but for our particular setups and use-cases it is probably
+> too stiff:
+>  - we've noticed that devices connected directly to the root bridge
+> don't get moved BARs, and this covers our x86_64 servers: we only
+> insert/remove devices into "second-level" and "lower" bridges there, but
+> not root;
+>
+>  - on PowerNV we have system devices (network interfaces, USB hub, etc.)
+> grouped into dedicated domain, with all other domains ready for hotplug,
+> and only these domains can be rescanned.
+
+Are you doing anything to enforce this or just relying on people not
+re-scanning the system device bus?
+
+> With our scenarios currently reduced to these two, we can live with just
+> a few drivers "prepared" for now: NVME and few Ethernet adapters, this
+> gives us a possibility to use this feature before "converting" *all* the
+> drivers, and even have the NVidia cards running on a closed proprietary
+> driver.
+>
+> Should we make this behavior adjustable with something like
+> "pcie_movable_bars=safe" and "pcie_movable_bars=always" ?
+>
+> Thanks!
+>
+> Best regards,
+> Serge
+>
+>>> +    }
+>>> +}
+>>> +
+>>> +/*
+>>> + * Complete the reset of all devices for the bus and its children
+>>> + */
+>>> +static void pci_bus_reset_done(struct pci_bus *bus)
+>>> +{
+>>> +    struct pci_dev *dev;
+>>> +
+>>> +    list_for_each_entry(dev, &bus->devices, bus_list) {
+>>> +            struct pci_bus *child = dev->subordinate;
+>>> +
+>>> +            if (child) {
+>>> +                    pci_bus_reset_done(child);
+>>> +            } else if (dev->driver && dev->driver->err_handler &&
+>>> +                       dev->driver->err_handler->reset_done) {
+>>> +                    dev->driver->err_handler->reset_done(dev);
+>>> +            }
+>>> +    }
+>>> +}
+>>> +
+>>>  /**
+>>>   * pci_rescan_bus - Scan a PCI bus for devices
+>>>   * @bus: PCI bus to scan
+>>> @@ -3151,8 +3190,12 @@ unsigned int pci_rescan_bus(struct pci_bus *bus)
+>>>  {
+>>>      unsigned int max;
+>>>
+>>> +    if (pci_has_flag(PCI_MOVABLE_BARS))
+>>> +            pci_bus_reset_prepare(bus);
+>>>      max = pci_scan_child_bus(bus);
+>>>      pci_assign_unassigned_bus_resources(bus);
+>>> +    if (pci_has_flag(PCI_MOVABLE_BARS))
+>>> +            pci_bus_reset_done(bus);
+>>>      pci_bus_add_devices(bus);
+>>>
+>>>      return max;
+>>> diff --git a/include/linux/pci.h b/include/linux/pci.h
+>>> index 6925828f9f25..a8cb1a367c34 100644
+>>> --- a/include/linux/pci.h
+>>> +++ b/include/linux/pci.h
+>>> @@ -847,6 +847,7 @@ enum {
+>>>      PCI_ENABLE_PROC_DOMAINS = 0x00000010,   /* Enable domains in /proc */
+>>>      PCI_COMPAT_DOMAIN_0     = 0x00000020,   /* ... except domain 0 */
+>>>      PCI_SCAN_ALL_PCIE_DEVS  = 0x00000040,   /* Scan all, not just dev 0 */
+>>> +    PCI_MOVABLE_BARS        = 0x00000080,   /* Runtime BAR reassign after hotplug */
+>>>  };
+>>>
+>>>  /* These external functions are only available when PCI support is enabled */
+>>> --
+>>> 2.17.1
+>>>
