@@ -1,72 +1,150 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from bgl-iport-2.cisco.com ([72.163.197.26]:6563 "EHLO
-        bgl-iport-2.cisco.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1727375AbeIRASg (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Mon, 17 Sep 2018 20:18:36 -0400
-Subject: Re: PCI: Enforce bus address limits in resource allocation
-From: Daniel Walker <danielwa@cisco.com>
-To: linux-pci@vger.kernel.org, Yinghai Lu <yinghai@kernel.org>,
-        Bjorn Helgaas <bhelgaas@google.com>
-References: <abb9aa39-3128-3a4d-01f7-d0614d63f37e@cisco.com>
-Message-ID: <2c531aca-1e16-ddc1-541a-3a8942d50944@cisco.com>
-Date: Mon, 17 Sep 2018 11:39:56 -0700
-MIME-Version: 1.0
-In-Reply-To: <abb9aa39-3128-3a4d-01f7-d0614d63f37e@cisco.com>
-Content-Type: text/plain; charset=utf-8; format=flowed
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-acpi-owner@vger.kernel.org>
+From: Pu Wen <puwen@hygon.cn>
+To: bp@alien8.de, tglx@linutronix.de, mingo@redhat.com, hpa@zytor.com,
+        x86@kernel.org, thomas.lendacky@amd.com, pbonzini@redhat.com,
+        tony.luck@intel.com, rkrcmar@redhat.com,
+        boris.ostrovsky@oracle.com, jgross@suse.com, rjw@rjwysocki.net,
+        lenb@kernel.org, viresh.kumar@linaro.org, mchehab@kernel.org,
+        trenn@suse.com, shuah@kernel.org
+Cc: linux-kernel@vger.kernel.org, linux-arch@vger.kernel.org,
+        linux-pci@vger.kernel.org, linux-acpi@vger.kernel.org,
+        linux-edac@vger.kernel.org, linux-pm@vger.kernel.org,
+        kvm@vger.kernel.org, xen-devel@lists.xenproject.org,
+        Pu Wen <puwen@hygon.cn>
+Subject: [PATCH v7 00/16] Add support for Hygon Dhyana Family 18h processor
+Date: Mon, 17 Sep 2018 21:28:54 +0800
+Message-Id: <cover.1537182523.git.puwen@hygon.cn>
+Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
+As a new x86 CPU Vendor, Chengdu Haiguang IC Design Co., Ltd (Hygon)
+is a Joint Venture between AMD and Haiguang Information Technology Co.,
+Ltd., and aims at providing high performance x86 processor for China
+server market.
 
-This problem exists identically on 4.19-rc4 (the lastest as of today).
+The first generation Hygon's processor(Dhyana) originates from AMD
+technology and shares most of the architecture with AMD's family 17h,
+but with different CPU Vendor ID("HygonGenuine")/PCIE Device Vendor ID
+(0x1D94)/Family series number (Family 18h).
+
+To enable the support of Linux kernel to Hygon's CPU, we added a new
+vendor type (X86_VENDOR_HYGON, with value of 9) in arch/x86/include/
+asm/processor.h, and shared most of kernel support codes with AMD
+family 17h.
+
+As Hygon will negotiate with AMD to make sure that only Hygon will
+use family 18h, so try to minimize code modification and share most
+codes with AMD under this consideration.
+
+This patch series have been applied and tested successfully on Hygon
+Dhyana SoC silicon. Also tested on AMD EPYC (Family 17h) processor,
+it works fine and makes no harm to the existing codes.
 
 
+v6->v7:
+  - Rebased on 4.19-rc4 and tested against it.
+  - Add Reviewed-by from Borislav Petkov for patches x86/cpu,
+    x86/cpu/mtrr, perf/x86, x86/pci, x86/apic, x86/mce.
+  - Refine the patch descriptions and fix some typos.
+  - Remove unneeded vendor checking for patch x86/apic.
+  - Restore the user-visible pr_err string in patch x86/bugs.
 
-On 09/14/2018 08:16 AM, Daniel Walker wrote:
-> 
-> Hi,
-> 
-> Please forgive my ignorance of PCI. I know very little about it, but 
-> I'll try to convey the issue I'm seeing.
-> 
-> I have a powerpc system with PCI, and some devices attached to the PCI 
-> bus. In 3.10 everything worked fine, then we moved to 4.9 and we had 
-> some issues. I was able to bisect the issue down to the patch in the 
-> subject line.
-> 
-> f75b99d PCI: Enforce bus address limits in resource allocation
-> 
-> 
->  From 3.10 here is part of the PCI initialization,
-> 
-> |pci 0001:0e:00.0: BAR 0: assigned [mem 0xfc0000000-0xfc00fffff pref]|
-> |pci 0001:07:09.0: PCI bridge to [bus 0e]|
-> |pci 0001:07:09.0: bridge window [mem 0xfc0000000-0xfc00fffff 64bit pref]|
-> |||In this section the memory resource for the bridge is 64bit, and the 
-> device "BAR 0" gets a 64bit range. However, it seems the device is 32bit.|
-> ||
-> |Now fast forward to 4.9 we get this,|
-> 
-> ||
-> |
-> pci 0001:0e:00.0: BAR 0: no space for [mem size 0x00100000 pref]
-> pci 0001:0e:00.0: BAR 0: failed to assign [mem size 0x00100000 pref]
-> pci 0001:07:09.0: PCI bridge to [bus 0e]
-> pci 0001:07:09.0: bridge window [mem 0xfc0000000-0xfc00fffff 64bit pref]
-> 
-> |
-> |Here it seems to have a larger size, I'm not sure where the size is 
-> coming from. I was able to work around the issue by setting 
-> IORESOURCE_MEM_64 on the resource for this device. I also was able to 
-> work around it by setting "max = avail.end" to "max = (-1);" inside 
-> pci_bus_alloc_resource(). |
-> ||
-> ||I don't know if the problem is the patch, or something else inside our 
-> system, but any thoughts are appreciated.
-> 
-> Daniel
-> ||
-> 
-> ||
-> 
-> ||
-> 
+v5->v6:
+  - Rebased on 4.19-rc3 and tested against it.
+  - Add Reviewed-by from Borislav Petkov for cacheinfo, smpboot,
+    alternative and kvm.
+  - Rework the patch subjects and patch descriptions.
+  - Rework vendor checking for some patches to minimize the code
+    modification.
+
+v4->v5:
+  - Rebased on 4.19-rc1 and tested against it.
+  - Add Reviewed-by from Boris Ostrovsky for Xen.
+  - Rework EDAC patch without vendor checking for minimal modification.
+
+v3->v4:
+  - Rebased on 4.18.3 and tested against it.
+  - Merge patches 05/17 perfctr and 10/17 events in v3 to patch 05/16
+    PMU for better patch function group.
+  - Add hygon_get_topology_early() in patch 01/16.
+  - Rework vendor checking and refine coding style.
+  - Add Acked-by from Bjorn Helgaas for pci.
+  - Add Acked-by from Rafael J. Wysocki for cpufreq and acpi.
+
+v2->v3:
+  - Rebased on 4.18-rc8 and tested against it.
+  - Rework vendor checking codes to improve consistency.
+
+v1->v2:
+  - Rebased on 4.18-rc6 and tested against it.
+  - Split the patch set to small series of patches.
+  - Rework patch descriptions.
+  - Create a separated arch/x86/kernel/cpu/hygon.c for Dhyana CPU
+    initialization to reduce long-term maintenance effort.
+
+
+Pu Wen (16):
+  x86/cpu: Create Hygon Dhyana architecture support file
+  x86/cpu: Get cache info and setup cache cpumap for Hygon Dhyana
+  x86/cpu/mtrr: Support TOP_MEM2 and get MTRR number
+  x86/smpboot: SMP init no delay and not flush caches before sleep
+  perf/x86: Add Hygon Dhyana support to PMU infrastructure
+  x86/alternative: Init ideal_nops for Hygon Dhyana
+  x86/pci: Add Hygon Dhyana support to PCI and north bridge
+  x86/apic: Add Hygon Dhyana support to APIC
+  x86/bugs: Add mitigation to spectre and no meltdown for Hygon Dhyana
+  x86/mce: Add Hygon Dhyana support to MCE infrastructure
+  x86/kvm: Add Hygon Dhyana support to KVM infrastructure
+  x86/xen: Add Hygon Dhyana support to Xen
+  ACPI, x86: Add Hygon Dhyana support
+  cpufreq, x86: Add Hygon Dhyana support
+  EDAC, amd64: Add Hygon Dhyana support
+  cpupower, x86: Add Hygon Dhyana support
+
+ MAINTAINERS                                        |   6 +
+ arch/x86/Kconfig.cpu                               |  14 +
+ arch/x86/events/amd/core.c                         |   4 +
+ arch/x86/events/amd/uncore.c                       |  20 +-
+ arch/x86/events/core.c                             |   4 +
+ arch/x86/include/asm/cacheinfo.h                   |   1 +
+ arch/x86/include/asm/kvm_emulate.h                 |   4 +
+ arch/x86/include/asm/mce.h                         |   2 +
+ arch/x86/include/asm/processor.h                   |   3 +-
+ arch/x86/include/asm/virtext.h                     |   5 +-
+ arch/x86/kernel/alternative.c                      |   4 +
+ arch/x86/kernel/amd_nb.c                           |  47 ++-
+ arch/x86/kernel/apic/apic.c                        |   7 +
+ arch/x86/kernel/apic/probe_32.c                    |   1 +
+ arch/x86/kernel/cpu/Makefile                       |   1 +
+ arch/x86/kernel/cpu/bugs.c                         |   4 +-
+ arch/x86/kernel/cpu/cacheinfo.c                    |  31 +-
+ arch/x86/kernel/cpu/common.c                       |   1 +
+ arch/x86/kernel/cpu/cpu.h                          |   1 +
+ arch/x86/kernel/cpu/hygon.c                        | 411 +++++++++++++++++++++
+ arch/x86/kernel/cpu/mcheck/mce-severity.c          |   3 +-
+ arch/x86/kernel/cpu/mcheck/mce.c                   |  20 +-
+ arch/x86/kernel/cpu/mtrr/cleanup.c                 |   3 +-
+ arch/x86/kernel/cpu/mtrr/mtrr.c                    |   2 +-
+ arch/x86/kernel/cpu/perfctr-watchdog.c             |   2 +
+ arch/x86/kernel/smpboot.c                          |   4 +-
+ arch/x86/kvm/emulate.c                             |  11 +-
+ arch/x86/pci/amd_bus.c                             |   6 +-
+ arch/x86/xen/pmu.c                                 |  12 +-
+ drivers/acpi/acpi_pad.c                            |   1 +
+ drivers/acpi/processor_idle.c                      |   1 +
+ drivers/cpufreq/acpi-cpufreq.c                     |   5 +
+ drivers/cpufreq/amd_freq_sensitivity.c             |   9 +-
+ drivers/edac/amd64_edac.c                          |   8 +-
+ drivers/edac/mce_amd.c                             |   4 +-
+ include/linux/pci_ids.h                            |   2 +
+ tools/power/cpupower/utils/cpufreq-info.c          |   6 +-
+ tools/power/cpupower/utils/helpers/amd.c           |   4 +-
+ tools/power/cpupower/utils/helpers/cpuid.c         |   8 +-
+ tools/power/cpupower/utils/helpers/helpers.h       |   2 +-
+ tools/power/cpupower/utils/helpers/misc.c          |   2 +-
+ .../cpupower/utils/idle_monitor/mperf_monitor.c    |   3 +-
+ 42 files changed, 641 insertions(+), 48 deletions(-)
+ create mode 100644 arch/x86/kernel/cpu/hygon.c
+
+-- 
+2.7.4
