@@ -1,73 +1,68 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mga18.intel.com ([134.134.136.126]:47546 "EHLO mga18.intel.com"
+Received: from foss.arm.com ([217.140.101.70]:55610 "EHLO foss.arm.com"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1728021AbeIJWQb (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Mon, 10 Sep 2018 18:16:31 -0400
-Date: Mon, 10 Sep 2018 11:22:46 -0600
-From: Keith Busch <keith.busch@intel.com>
-To: Lukas Wunner <lukas@wunner.de>
-Cc: Linux PCI <linux-pci@vger.kernel.org>,
+        id S1727299AbeIQPOU (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Mon, 17 Sep 2018 11:14:20 -0400
+Date: Mon, 17 Sep 2018 10:47:36 +0100
+From: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
+To: Tony Lindgren <tony@atomide.com>
+Cc: Vignesh R <vigneshr@ti.com>, KISHON VIJAY ABRAHAM <kishon@ti.com>,
         Bjorn Helgaas <bhelgaas@google.com>,
-        Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-        Sinan Kaya <okaya@kernel.org>,
-        Thomas Tai <thomas.tai@oracle.com>,
-        "poza@codeaurora.org" <poza@codeaurora.org>,
-        Christoph Hellwig <hch@lst.de>
-Subject: Re: [PATCHv2 16/20] PCI/pciehp: Implement error handling callbacks
-Message-ID: <20180910172246.GA7753@localhost.localdomain>
-References: <20180905203546.21921-1-keith.busch@intel.com>
- <20180905203546.21921-17-keith.busch@intel.com>
- <20180910132033.ei5nk4iibt7pesd5@wunner.de>
- <20180910145641.GA7466@localhost.localdomain>
- <20180910160926.7grtfdyw3iv2xg4x@wunner.de>
- <20180910164528.GC7466@localhost.localdomain>
- <20180910170848.7q2qii2mm655eghw@wunner.de>
+        Rob Herring <robh+dt@kernel.org>,
+        "linux-omap@vger.kernel.org" <linux-omap@vger.kernel.org>,
+        "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+        "devicetree@vger.kernel.org" <devicetree@vger.kernel.org>,
+        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
+Subject: Re: [PATCH v3 0/4] pci-dra7xx: Enable errata i870 workaround for RC
+ mode
+Message-ID: <20180917094736.GA7072@e107981-ln.cambridge.arm.com>
+References: <20180724173150.2701-1-vigneshr@ti.com>
+ <20180808165700.GB486@e107981-ln.cambridge.arm.com>
+ <ba428a15-77bf-e09c-3bd7-b5a0eae7ee13@ti.com>
+ <20180907170009.GJ5662@atomide.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20180910170848.7q2qii2mm655eghw@wunner.de>
+In-Reply-To: <20180907170009.GJ5662@atomide.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Mon, Sep 10, 2018 at 07:08:48PM +0200, Lukas Wunner wrote:
-> On Mon, Sep 10, 2018 at 10:45:28AM -0600, Keith Busch wrote:
-> > On Mon, Sep 10, 2018 at 06:09:26PM +0200, Lukas Wunner wrote:
-> > > On Mon, Sep 10, 2018 at 08:56:42AM -0600, Keith Busch wrote:
-> > > > The sysfs entries still function. Their actions are only temporarily
-> > > > stalled during error handling. Once the slot reset is called, the
-> > > > ctrl->pending_events is queried to take requested actions.
+On Fri, Sep 07, 2018 at 10:00:09AM -0700, Tony Lindgren wrote:
+> * Vignesh R <vigneshr@ti.com> [180810 10:10]:
+> > 
+> > 
+> > On Wednesday 08 August 2018 10:27 PM, Lorenzo Pieralisi wrote:
+> > > On Tue, Jul 24, 2018 at 11:01:46PM +0530, Vignesh R wrote:
+> > >> Make workaround for errata i870 applicable in Host mode as
+> > >> well(previously it was enabled only for EP mode) as per errata
+> > >> documentation: http://www.ti.com/lit/er/sprz450/sprz450.pdf
+> > >>
+> > >> Tested on DRA72 EVM
+> > >>
+> > >> Tony,
+> > >>
+> > >> If you are okay with the series, could you pick this via omap tree?
+> > >> All ACKs are in place and Lorenzo is okay with PCIe bits to go along with
+> > >> rest of DTS changes.
 > > > 
-> > > Okay I see.  Still, releasing the IRQ and requesting it again seems fairly
-> > > heavy-wheight.  Why not just acquire ctrl->reset_lock?
+> > > I think we have missed the v4.19 merge window by now - 
 > > 
-> > That was looking like a nice way to handle it, but it introduces
-> > circular locking between ctrl->reset_lock and pci_bus_sem:
-> > 
-> > CPU A                               CPU B
-> > ---------------------------------   ------------------------
-> > pci_walk_bus                        pciehp_ist
-> >  down_read(&pci_bus_sem)             down_read(&ctrl->reset_lock);
-> >   pcie_portdrv_error_detected         pciehp_handle_presence_or_link_change
-> >    pciehp_error_detected               pciehp_unconfigure_device
-> >     down_write(&ctrl->reset_lock)       pci_stop_and_remove_bus_devicea
-> >                                          down_write(&pci_bus_sem);
+> > Right. I didn't get any response from Tony.
 > 
-> Why is pciehp bringing down the slot?  Is that in reaction to a
-> Link Down caused by the error?  
+> Sorry catching up with pending mails.. I try hard to not touch
+> anything except fixes around -rc6 time.
+> 
+> > > please let me know if I can drop this series from the PCI patch queue.
+> > > 
+> > 
+> > Ok, I will resend the patch after 4.19-rc. Thanks!
+> 
+> FYI, I'm untagging this thread too. Please post the dts
+> changes separately once the dependencies (if any) have
+> cleared.
 
-This could just be something that happens if a hotplug and error event
-occur about the same time.
+Ok, Vignesh: I shall drop this series from the PCI patches queue,
+waiting for your new version, let me know how you want to handle this
+then please.
 
-> Can this be solved with Sinan's
-> approach to check in pciehp whether PCI_EXP_DEVSTA_FED is set
-> and if so, waiting for it to be handled?
-
-That only helps if the downstream port detected a fatal error, but
-error handling happens for any device reported error.
-
-> FWIW you can use synchronize_irq() in pciehp_error_detected()
-> if you need to wait for the IRQ thread to stop before taking
-> the reset_lock.
-
-That would just be a different dead lock: pciehp_error_detected is
-holding a read lock on pci_bus_sem, and irq thread may request a
-write lock, so both threads are dead locked on each other.
+Thanks,
+Lorenzo
