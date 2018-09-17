@@ -1,56 +1,239 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mx0b-001b2d01.pphosted.com ([148.163.158.5]:52450 "EHLO
-        mx0a-001b2d01.pphosted.com" rhost-flags-OK-OK-OK-FAIL)
-        by vger.kernel.org with ESMTP id S1726670AbeILRii (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Wed, 12 Sep 2018 13:38:38 -0400
-Received: from pps.filterd (m0098421.ppops.net [127.0.0.1])
-        by mx0a-001b2d01.pphosted.com (8.16.0.22/8.16.0.22) with SMTP id w8CCUA2v049374
-        for <linux-pci@vger.kernel.org>; Wed, 12 Sep 2018 08:34:18 -0400
-Received: from e06smtp04.uk.ibm.com (e06smtp04.uk.ibm.com [195.75.94.100])
-        by mx0a-001b2d01.pphosted.com with ESMTP id 2mf1pubea0-1
-        (version=TLSv1.2 cipher=AES256-GCM-SHA384 bits=256 verify=NOT)
-        for <linux-pci@vger.kernel.org>; Wed, 12 Sep 2018 08:34:17 -0400
-Received: from localhost
-        by e06smtp04.uk.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
-        for <linux-pci@vger.kernel.org> from <sebott@linux.ibm.com>;
-        Wed, 12 Sep 2018 13:34:16 +0100
-From: Sebastian Ott <sebott@linux.ibm.com>
-To: Bjorn Helgaas <bhelgaas@google.com>
-Cc: linux-pci@vger.kernel.org
-Subject: [PATCH 0/2] sriov enablement on s390
-Date: Wed, 12 Sep 2018 14:34:09 +0200
-Message-Id: <20180912123411.23229-1-sebott@linux.ibm.com>
+Received: from mail.kernel.org ([198.145.29.99]:43110 "EHLO mail.kernel.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1728671AbeIRE3E (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Tue, 18 Sep 2018 00:29:04 -0400
+Date: Mon, 17 Sep 2018 17:59:35 -0500
+From: Bjorn Helgaas <helgaas@kernel.org>
+To: Sergey Miroshnichenko <s.miroshnichenko@yadro.com>
+Cc: Sam Bobroff <sbobroff@linux.ibm.com>, linux-pci@vger.kernel.org,
+        Bjorn Helgaas <bhelgaas@google.com>, linux@yadro.com,
+        Russell Currey <ruscur@russell.cc>,
+        linuxppc-dev@lists.ozlabs.org,
+        Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+        Oliver OHalloran <oliveroh@au1.ibm.com>
+Subject: Re: [PATCH RFC 1/4] PCI: hotplug: Add parameter to put devices to
+ reset during rescan
+Message-ID: <20180917225935.GD54859@bhelgaas-glaptop.roam.corp.google.com>
+References: <20180914161404.4685-1-s.miroshnichenko@yadro.com>
+ <20180914161404.4685-2-s.miroshnichenko@yadro.com>
+ <20180917052800.GA7315@tungsten.ozlabs.ibm.com>
+ <6b913e12-e8c8-30c1-5269-3029ddb00a4d@yadro.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <6b913e12-e8c8-30c1-5269-3029ddb00a4d@yadro.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hello Bjorn,
+[+cc Russell, Ben, Oliver, linuxppc-dev]
 
-On s390 we currently handle SRIOV within firmware. Which means
-that the PF is under firmware control and not visible to operating
-systems. SRIOV enablement happens within firmware and VFs are
-passed through to logical partitions.
+On Mon, Sep 17, 2018 at 11:55:43PM +0300, Sergey Miroshnichenko wrote:
+> Hello Sam,
+> 
+> On 9/17/18 8:28 AM, Sam Bobroff wrote:
+> > Hi Sergey,
+> > 
+> > On Fri, Sep 14, 2018 at 07:14:01PM +0300, Sergey Miroshnichenko wrote:
+> >> Introduce a new command line option "pci=pcie_movable_bars" that indicates
+> >> support of PCIe hotplug without prior reservation of memory regions by
+> >> BIOS/bootloader.
+> >>
+> >> If a new PCIe device has been hot-plugged between two active ones, which
+> >> have no (or not big enough) gap between their BARs, allocating new BARs
+> >> requires to move BARs of the following working devices:
+> >>
+> >> 1)                   dev 4
+> >>                        |
+> >>                        v
+> >> .. |  dev 3  |  dev 3  |  dev 5  |  dev 7  |
+> >> .. |  BAR 0  |  BAR 1  |  BAR 0  |  BAR 0  |
+> >>
+> >> 2)                             dev 4
+> >>                                  |
+> >>                                  v
+> >> .. |  dev 3  |  dev 3  | -->           --> |  dev 5  |  dev 7  |
+> >> .. |  BAR 0  |  BAR 1  | -->           --> |  BAR 0  |  BAR 0  |
+> >>
+> >> 3)
+> >>
+> >> .. |  dev 3  |  dev 3  |  dev 4  |  dev 4  |  dev 5  |  dev 7  |
+> >> .. |  BAR 0  |  BAR 1  |  BAR 0  |  BAR 1  |  BAR 0  |  BAR 0  |
+> >>
+> >> Not only BARs, but also bridge windows can be updated during a PCIe rescan,
+> >> threatening all memory transactions during this procedure, so the PCI
+> >> subsystem will instruct the drivers to pause by calling the reset_prepare()
+> >> and reset_done() callbacks.
+> >>
+> >> If a device may be affected by BAR movement, the BAR changes tracking must
+> >> be implemented in its driver.
+> >>
+> >> Signed-off-by: Sergey Miroshnichenko <s.miroshnichenko@yadro.com>
+> >> ---
+> >>  .../admin-guide/kernel-parameters.txt         |  6 +++
+> >>  drivers/pci/pci.c                             |  2 +
+> >>  drivers/pci/probe.c                           | 43 +++++++++++++++++++
+> >>  include/linux/pci.h                           |  1 +
+> >>  4 files changed, 52 insertions(+)
+> >>
+> >> diff --git a/Documentation/admin-guide/kernel-parameters.txt b/Documentation/admin-guide/kernel-parameters.txt
+> >> index 64a3bf54b974..f8132a709061 100644
+> >> --- a/Documentation/admin-guide/kernel-parameters.txt
+> >> +++ b/Documentation/admin-guide/kernel-parameters.txt
+> >> @@ -3311,6 +3311,12 @@
+> >>  				bridges without forcing it upstream. Note:
+> >>  				this removes isolation between devices and
+> >>  				may put more devices in an IOMMU group.
+> >> +		pcie_movable_bars	Arrange a space at runtime for BARs of
+> >> +				hotplugged PCIe devices - usable if bootloader
+> >> +				doesn't reserve memory regions for them. Freeing
+> >> +				a space may require moving BARs of active devices
+> >> +				to higher addresses, so device drivers will be
+> >> +				paused during rescan.
+> >>  
+> >>  	pcie_aspm=	[PCIE] Forcibly enable or disable PCIe Active State Power
+> >>  			Management.
+> >> diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
+> >> index 1835f3a7aa8d..5f07a59b5924 100644
+> >> --- a/drivers/pci/pci.c
+> >> +++ b/drivers/pci/pci.c
+> >> @@ -6105,6 +6105,8 @@ static int __init pci_setup(char *str)
+> >>  				pci_add_flags(PCI_SCAN_ALL_PCIE_DEVS);
+> >>  			} else if (!strncmp(str, "disable_acs_redir=", 18)) {
+> >>  				disable_acs_redir_param = str + 18;
+> >> +			} else if (!strncmp(str, "pcie_movable_bars", 17)) {
+> >> +				pci_add_flags(PCI_MOVABLE_BARS);
+> >>  			} else {
+> >>  				printk(KERN_ERR "PCI: Unknown option `%s'\n",
+> >>  						str);
+> >> diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
+> >> index 201f9e5ff55c..bdaafc48dc4c 100644
+> >> --- a/drivers/pci/probe.c
+> >> +++ b/drivers/pci/probe.c
+> >> @@ -3138,6 +3138,45 @@ unsigned int pci_rescan_bus_bridge_resize(struct pci_dev *bridge)
+> >>  	return max;
+> >>  }
+> >>  
+> >> +/*
+> >> + * Put all devices of the bus and its children to reset
+> >> + */
+> >> +static void pci_bus_reset_prepare(struct pci_bus *bus)
+> >> +{
+> >> +	struct pci_dev *dev;
+> >> +
+> >> +	list_for_each_entry(dev, &bus->devices, bus_list) {
+> >> +		struct pci_bus *child = dev->subordinate;
+> >> +
+> >> +		if (child) {
+> >> +			pci_bus_reset_prepare(child);
+> >> +		} else if (dev->driver &&
+> >> +			   dev->driver->err_handler &&
+> >> +			   dev->driver->err_handler->reset_prepare) {
+> >> +			dev->driver->err_handler->reset_prepare(dev);
+> >> +		}
+> > 
+> > What about devices with drivers that don't have reset_prepare()?  It
+> > looks like it will just reconfigure them anyway. Is that right?
+> > 
+> 
+> It is possible that unprepared driver without these hooks will get BARs
+> moved, I should put a warning message there. There three ways we can see
+> to make this safe:
+>  - add the reset_prepare()/reset_done() hooks to *every* PCIe driver;
+>  - refuse BAR movement if at least one unprepared driver has been
+> encountered during rescan;
+>  - reduce the number of drivers which can be affected to some
+> controllable value and prepare them on demand.
+> 
+> Applying the second proposal as a major restriction seems fairly
+> reasonable, but for our particular setups and use-cases it is probably
+> too stiff:
+>  - we've noticed that devices connected directly to the root bridge
+> don't get moved BARs, and this covers our x86_64 servers: we only
+> insert/remove devices into "second-level" and "lower" bridges there, but
+> not root;
+>  - on PowerNV we have system devices (network interfaces, USB hub, etc.)
+> grouped into dedicated domain, with all other domains ready for hotplug,
+> and only these domains can be rescanned.
+> 
+> With our scenarios currently reduced to these two, we can live with just
+> a few drivers "prepared" for now: NVME and few Ethernet adapters, this
+> gives us a possibility to use this feature before "converting" *all* the
+> drivers, and even have the NVidia cards running on a closed proprietary
+> driver.
+> 
+> Should we make this behavior adjustable with something like
+> "pcie_movable_bars=safe" and "pcie_movable_bars=always" ?
 
-I'm working on a new mode were the PF is under operating system
-control (including SRIOV enablement). However we still need
-firmware support to access the VFs. The way this is supposed
-to work is that when firmware traps the SRIOV enablement it
-will present machine checks to the logical partition that
-triggered the SRIOV enablement and provide the VFs via hotplug
-events.
+I like the overall idea of this a lot.
 
-The problem I'm faced with is that the VF detection code in
-sriov_enable leads to unusable functions in s390.
+  - Why do we need a command line parameter to enable this?  Can't we
+    do it unconditionally and automatically when it's possible?  We
+    could have a chicken switch to *disable* it in case this breaks
+    something horribly, but I would like this functionality to be
+    always available without a special option.
 
-Would you consider the following patches?
+  - I'm not sure the existence of .reset_done() is evidence that a
+    driver is prepared for its BARs to move.  I don't see any
+    documentation that refers to BAR movement, and I doubt it's been
+    tested.  But I only see 5 implementations in the tree, so it'd be
+    easy to verify.
+    
+  - I think your second proposal above sounds right: we should regard
+    any device whose driver lacks .reset_done() as immovable.  We will
+    likely be able to move some devices but not others.  Implementing
+    .reset_done() will increase flexibility but it shouldn't be a
+    requirement for all drivers.
 
-Sebastian Ott (2):
-  pci: provide pcibios_sriov_add_vfs
-  s390/pci: handle function enumeration after sriov enablement
-
- arch/s390/pci/pci.c | 11 +++++++++++
- drivers/pci/iov.c   | 43 +++++++++++++++++++++++++++++++------------
- include/linux/pci.h |  2 ++
- 3 files changed, 44 insertions(+), 12 deletions(-)
-
--- 
-2.13.4
+> >> +	}
+> >> +}
+> >> +
+> >> +/*
+> >> + * Complete the reset of all devices for the bus and its children
+> >> + */
+> >> +static void pci_bus_reset_done(struct pci_bus *bus)
+> >> +{
+> >> +	struct pci_dev *dev;
+> >> +
+> >> +	list_for_each_entry(dev, &bus->devices, bus_list) {
+> >> +		struct pci_bus *child = dev->subordinate;
+> >> +
+> >> +		if (child) {
+> >> +			pci_bus_reset_done(child);
+> >> +		} else if (dev->driver && dev->driver->err_handler &&
+> >> +			   dev->driver->err_handler->reset_done) {
+> >> +			dev->driver->err_handler->reset_done(dev);
+> >> +		}
+> >> +	}
+> >> +}
+> >> +
+> >>  /**
+> >>   * pci_rescan_bus - Scan a PCI bus for devices
+> >>   * @bus: PCI bus to scan
+> >> @@ -3151,8 +3190,12 @@ unsigned int pci_rescan_bus(struct pci_bus *bus)
+> >>  {
+> >>  	unsigned int max;
+> >>  
+> >> +	if (pci_has_flag(PCI_MOVABLE_BARS))
+> >> +		pci_bus_reset_prepare(bus);
+> >>  	max = pci_scan_child_bus(bus);
+> >>  	pci_assign_unassigned_bus_resources(bus);
+> >> +	if (pci_has_flag(PCI_MOVABLE_BARS))
+> >> +		pci_bus_reset_done(bus);
+> >>  	pci_bus_add_devices(bus);
+> >>  
+> >>  	return max;
+> >> diff --git a/include/linux/pci.h b/include/linux/pci.h
+> >> index 6925828f9f25..a8cb1a367c34 100644
+> >> --- a/include/linux/pci.h
+> >> +++ b/include/linux/pci.h
+> >> @@ -847,6 +847,7 @@ enum {
+> >>  	PCI_ENABLE_PROC_DOMAINS	= 0x00000010,	/* Enable domains in /proc */
+> >>  	PCI_COMPAT_DOMAIN_0	= 0x00000020,	/* ... except domain 0 */
+> >>  	PCI_SCAN_ALL_PCIE_DEVS	= 0x00000040,	/* Scan all, not just dev 0 */
+> >> +	PCI_MOVABLE_BARS	= 0x00000080,	/* Runtime BAR reassign after hotplug */
+> >>  };
+> >>  
+> >>  /* These external functions are only available when PCI support is enabled */
+> >> -- 
+> >> 2.17.1
+> >>
