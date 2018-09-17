@@ -1,93 +1,72 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.29.99]:57752 "EHLO mail.kernel.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1728718AbeIRSxc (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Tue, 18 Sep 2018 14:53:32 -0400
-Date: Tue, 18 Sep 2018 08:20:56 -0500
-From: Bjorn Helgaas <helgaas@kernel.org>
-To: Daniel Walker <danielwa@cisco.com>
-Cc: linux-pci@vger.kernel.org, Yinghai Lu <yinghai@kernel.org>,
-        Bjorn Helgaas <bhelgaas@google.com>
-Subject: Re: PCI: Enforce bus address limits in resource allocation
-Message-ID: <20180918132056.GA254348@bhelgaas-glaptop.roam.corp.google.com>
-References: <abb9aa39-3128-3a4d-01f7-d0614d63f37e@cisco.com>
+Return-Path: <SRS0=k+ii=L7=google.com=bhelgaas@kernel.org>
+Return-Path: <SRS0=k+ii=L7=google.com=bhelgaas@kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <abb9aa39-3128-3a4d-01f7-d0614d63f37e@cisco.com>
-Sender: linux-pci-owner@vger.kernel.org
+References: <20171215202935.157396.74423.stgit@bhelgaas-glaptop.roam.corp.google.com>
+ <20180917144734.GF7239@e107981-ln.cambridge.arm.com>
+In-Reply-To: <20180917144734.GF7239@e107981-ln.cambridge.arm.com>
+From: Bjorn Helgaas <bhelgaas@google.com>
+Date: Mon, 17 Sep 2018 12:12:26 -0500
+Message-ID: <CAErSpo5vuW=HQ9rS68WVRmr58x9WiT11a0xvb0sc66_LfDe4Fg@mail.gmail.com>
+Subject: Re: [PATCH] PCI: rockchip: Remove redundant "valid device" check
+To: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
+Cc: Bjorn Helgaas <helgaas@kernel.org>, Shawn Lin <shawn.lin@rock-chips.com>,
+	linux-pci@vger.kernel.org, linux-rockchip@lists.infradead.org
+Content-Type: text/plain; charset="UTF-8"
 List-ID: <linux-pci.vger.kernel.org>
 
-Hi Daniel,
+On Mon, Sep 17, 2018 at 9:47 AM Lorenzo Pieralisi
+<lorenzo.pieralisi@arm.com> wrote:
+>
+> On Fri, Dec 15, 2017 at 02:29:35PM -0600, Bjorn Helgaas wrote:
+> > From: Bjorn Helgaas <bhelgaas@google.com>
+> >
+> > In rockchip_pcie_valid_device(), we do the exact same test twice:
+> >
+> >   if (bus->number == rockchip->root_bus_nr && dev > 0)
+> >     return 0;
+> >   if (bus->number == rockchip->root_bus_nr && dev > 0)
+> >     return 0;
+> >
+> > We only need to do it once, so remove one of them.
+> >
+> > Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
+> > ---
+> >  drivers/pci/host/pcie-rockchip.c |    4 ----
+> >  1 file changed, 4 deletions(-)
+> >
+> > diff --git a/drivers/pci/host/pcie-rockchip.c b/drivers/pci/host/pcie-rockchip.c
+> > index 9051c6c8fea4..dd9c7ea69e0b 100644
+> > --- a/drivers/pci/host/pcie-rockchip.c
+> > +++ b/drivers/pci/host/pcie-rockchip.c
+> > @@ -293,10 +293,6 @@ static void rockchip_pcie_update_txcredit_mui(struct rockchip_pcie *rockchip)
+> >  static int rockchip_pcie_valid_device(struct rockchip_pcie *rockchip,
+> >                                     struct pci_bus *bus, int dev)
+> >  {
+> > -     /* access only one slot on each root port */
+> > -     if (bus->number == rockchip->root_bus_nr && dev > 0)
+> > -             return 0;
+> > -
+> >       /*
+> >        * do not read more than one device on the bus directly attached
+> >        * to RC's downstream side.
+> >
+>
+> Hi Bjorn,
+>
+> this patch slipped through the cracks but I do not think it is right.
+>
+> The point here is filtering both the host bridge access side (ie check
+> for dev > 0) AND the RC downstream side, it is two different busses.
+>
+> Perhaps the check can be written in a more concise way (squash them in
+> one single conditional) but I think the current logic is correct,
+> AFAICS.
+>
+> I would drop it from the PCI patch queue.
 
-Sorry about the regression, and thanks very much for your
-investigation to identify the cause!
-
-On Fri, Sep 14, 2018 at 08:16:35AM -0700, Daniel Walker wrote:
-> I have a powerpc system with PCI, and some devices attached to the PCI bus.
-> In 3.10 everything worked fine, then we moved to 4.9 and we had some issues.
-> I was able to bisect the issue down to the patch in the subject line.
-> 
-> f75b99d PCI: Enforce bus address limits in resource allocation
-> 
-> 
-> From 3.10 here is part of the PCI initialization,
-> 
-> |pci 0001:0e:00.0: BAR 0: assigned [mem 0xfc0000000-0xfc00fffff pref]|
-> |pci 0001:07:09.0: PCI bridge to [bus 0e]|
-> |pci 0001:07:09.0: bridge window [mem 0xfc0000000-0xfc00fffff 64bit pref]|
->                 |||In this section the memory resource for the bridge is
-> 64bit, and the device "BAR 0" gets a 64bit range. However, it seems the
-> device is 32bit.|
-
-The device does appear to have a 32-bit BAR because the "BAR 0" line
-doesn't include "64bit".  However, the 0xfc0000000 resource is not an
-indication of a 64-bit range because 0xfc0000000 is a CPU address, not
-a bus address.
-
-If the host bridge performs address translation, e.g., it might
-produce a bus address by stripping off the high-order bits of the CPU
-address, this might produce a 32-bit bus address.  The fact that the
-device works suggests that the host bridge is doing some translation.
-
-Documentation/DMA-API-HOWTO.txt has some generic background on these
-translations.
-
-The "bridge window" line contains "64bit", but that's telling us the
-*width* of the bridge window register; it doesn't tell us anything
-about the current *setting* of that register.
-
-> |Now fast forward to 4.9 we get this,|
-
-> pci 0001:0e:00.0: BAR 0: no space for [mem size 0x00100000 pref]
-> pci 0001:0e:00.0: BAR 0: failed to assign [mem size 0x00100000 pref]
-> pci 0001:07:09.0: PCI bridge to [bus 0e]
-> pci 0001:07:09.0: bridge window [mem 0xfc0000000-0xfc00fffff 64bit pref]
-> 
-> |Here it seems to have a larger size, I'm not sure where the size is coming
-> from.
-
-The size is 0x00100000 (1MB), which is the same size as 
-[mem 0xfc0000000-0xfc00fffff pref].
-
-The size is normally discovered by probing the BAR (write all 1's to
-the BAR then read it back to find which bits are writable and which
-are read-only).  On powerpc we might learn it from DT instead.  But in
-any case, we to get the same 1MB size, which is the same size as the
-bridge window.  So this should still work unless there are other BARs
-in that window.
-
-> I was able to work around the issue by setting IORESOURCE_MEM_64 on
-> the resource for this device. I also was able to work around it by setting
-> "max = avail.end" to "max = (-1);" inside pci_bus_alloc_resource(). |
-> ||
-> ||I don't know if the problem is the patch, or something else inside our
-> system, but any thoughts are appreciated.
-
-It seems like we think the bridge window contains only 64-bit space
-and therefore contains nothing usable by the 32-bit BAR.
-
-You said later that the same problem exists on v4.19-rc4.  Can you
-collect the complete dmesg log with that kernel?  That should tell us
-about any host bridge address translation.
+Definitely should be dropped from patchwork.  I can't find a posting
+that had the duplicate check in it, so I don't know what I was looking
+at, but the initial commit (e77f847df54c) doesn't seem to have any
+duplication there.
 
 Bjorn
