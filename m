@@ -1,75 +1,71 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-it0-f53.google.com ([209.85.214.53]:38182 "EHLO
-        mail-it0-f53.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1727599AbeIFAqi (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Wed, 5 Sep 2018 20:46:38 -0400
-Received: by mail-it0-f53.google.com with SMTP id p129-v6so11174986ite.3
-        for <linux-pci@vger.kernel.org>; Wed, 05 Sep 2018 13:14:51 -0700 (PDT)
-Subject: Re: [PATCH v5 07/13] block: Add PCI P2P flag for request queue and
- check support for requests
-To: Logan Gunthorpe <logang@deltatee.com>,
-        Christoph Hellwig <hch@lst.de>
-Cc: linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
-        linux-nvme@lists.infradead.org, linux-rdma@vger.kernel.org,
-        linux-nvdimm@lists.01.org, linux-block@vger.kernel.org,
-        Stephen Bates <sbates@raithlin.com>,
-        Keith Busch <keith.busch@intel.com>,
-        Sagi Grimberg <sagi@grimberg.me>,
+Received: from lelv0143.ext.ti.com ([198.47.23.248]:47340 "EHLO
+        lelv0143.ext.ti.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1727176AbeIQXlK (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Mon, 17 Sep 2018 19:41:10 -0400
+Subject: Re: [PATCH v3 0/4] pci-dra7xx: Enable errata i870 workaround for RC
+ mode
+To: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
+        Tony Lindgren <tony@atomide.com>
+CC: KISHON VIJAY ABRAHAM <kishon@ti.com>,
         Bjorn Helgaas <bhelgaas@google.com>,
-        Jason Gunthorpe <jgg@mellanox.com>,
-        Max Gurtovoy <maxg@mellanox.com>,
-        Dan Williams <dan.j.williams@intel.com>,
-        =?UTF-8?B?SsOpcsO0bWUgR2xpc3Nl?= <jglisse@redhat.com>,
-        Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-        Alex Williamson <alex.williamson@redhat.com>,
-        =?UTF-8?Q?Christian_K=c3=b6nig?= <christian.koenig@amd.com>
-References: <20180830185352.3369-1-logang@deltatee.com>
- <20180830185352.3369-8-logang@deltatee.com>
- <b5ab8fa3-34ac-3117-fa0d-5206c3939435@kernel.dk>
- <20180901082812.GB670@lst.de>
- <5f79c012-c6e1-56bb-62fd-0689181fb2c9@deltatee.com>
- <59b28977-8f2a-6228-2050-03fae6bdbedd@kernel.dk>
- <1b4283da-44df-4a02-3167-e295243cef78@deltatee.com>
- <09258b9b-3aed-9890-b31a-bd70a133966c@kernel.dk>
- <20180905195647.GA1626@lst.de>
- <bcc1b3cf-2fd9-fa61-9cfb-b0e4d84e5d94@kernel.dk>
- <20180905201152.GA1893@lst.de>
- <eb42fb94-9da6-955b-8524-0a0f5ac4bd19@deltatee.com>
-From: Jens Axboe <axboe@kernel.dk>
-Message-ID: <2a3394bd-5f13-4818-43f4-dfc61f501e05@kernel.dk>
-Date: Wed, 5 Sep 2018 14:14:48 -0600
+        Rob Herring <robh+dt@kernel.org>,
+        "linux-omap@vger.kernel.org" <linux-omap@vger.kernel.org>,
+        "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+        "devicetree@vger.kernel.org" <devicetree@vger.kernel.org>,
+        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
+References: <20180724173150.2701-1-vigneshr@ti.com>
+ <20180808165700.GB486@e107981-ln.cambridge.arm.com>
+ <ba428a15-77bf-e09c-3bd7-b5a0eae7ee13@ti.com>
+ <20180907170009.GJ5662@atomide.com>
+ <20180917094736.GA7072@e107981-ln.cambridge.arm.com>
+From: Vignesh R <vigneshr@ti.com>
+Message-ID: <d4c7751b-6950-d16b-9435-61935a6f511d@ti.com>
+Date: Mon, 17 Sep 2018 23:42:19 +0530
 MIME-Version: 1.0
-In-Reply-To: <eb42fb94-9da6-955b-8524-0a0f5ac4bd19@deltatee.com>
-Content-Type: text/plain; charset=utf-8
+In-Reply-To: <20180917094736.GA7072@e107981-ln.cambridge.arm.com>
+Content-Type: text/plain; charset="utf-8"
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 9/5/18 2:09 PM, Logan Gunthorpe wrote:
-> 
-> 
-> On 05/09/18 02:11 PM, Christoph Hellwig wrote:
->> On Wed, Sep 05, 2018 at 01:54:31PM -0600, Jens Axboe wrote:
->>> On 9/5/18 1:56 PM, Christoph Hellwig wrote:
->>>> On Wed, Sep 05, 2018 at 01:45:04PM -0600, Jens Axboe wrote:
->>>>> The point is that the caller doesn't necessarily know where the bio
->>>>> will end up, hence the caller can't fully check if the whole stack
->>>>> supports P2P.
->>>>
->>>> The caller must necessarily know where the bio will end up, as for P2P
->>>> support we need to query if the bio target is P2P capable vs the
->>>> source of the P2P memory.
+Hi Lorenzo,
+
+On 17-Sep-18 3:17 PM, Lorenzo Pieralisi wrote:
+> On Fri, Sep 07, 2018 at 10:00:09AM -0700, Tony Lindgren wrote:
+>> * Vignesh R <vigneshr@ti.com> [180810 10:10]:
 >>>
->>> Then what's the point of having the check at all?
+[...]
+>>>>> Tony,
+>>>>>
+>>>>> If you are okay with the series, could you pick this via omap tree?
+>>>>> All ACKs are in place and Lorenzo is okay with PCIe bits to go along with
+>>>>> rest of DTS changes.
+>>>>
+>>>> I think we have missed the v4.19 merge window by now - 
+>>>
+>>> Right. I didn't get any response from Tony.
 >>
->> Just an additional little safe guard.  If you think it isn't worth
->> it I guess we can just drop it for now.
+>> Sorry catching up with pending mails.. I try hard to not touch
+>> anything except fixes around -rc6 time.
+>>
+>>>> please let me know if I can drop this series from the PCI patch queue.
+>>>>
+>>>
+>>> Ok, I will resend the patch after 4.19-rc. Thanks!
+>>
+>> FYI, I'm untagging this thread too. Please post the dts
+>> changes separately once the dependencies (if any) have
+>> cleared.
 > 
-> Yes, the point is to prevent driver writers from doing the wrong thing
-> by not doing the necessary checks before submitting to the queue.
+> Ok, Vignesh: I shall drop this series from the PCI patches queue,
+> waiting for your new version, let me know how you want to handle this
+> then please.
+> 
 
-But if the caller must absolutely know where the bio will end up, then
-it seems super redundant. So I'd vote for killing this check, it buys
-us absolutely nothing and isn't even exhaustive in its current form.
+Thanks for the response!
+I have sent v4 dropping DT changes (will send after driver patches have
+made it upstream). If possible, consider the patches for next rc as they
+are fixes.
 
--- 
-Jens Axboe
+Regards
+Vignesh
