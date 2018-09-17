@@ -1,45 +1,56 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.29.99]:58962 "EHLO mail.kernel.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1725198AbeIOEOY (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Sat, 15 Sep 2018 00:14:24 -0400
-Subject: Re: [PATCH v2 1/6] PCI: Expose reset_type to users of
- __pci_reset_function_locked()
-To: Alex Williamson <alex.williamson@redhat.com>
-Cc: linux-pci@vger.kernel.org,
-        Derek Chickles <derek.chickles@caviumnetworks.com>,
-        Satanand Burla <satananda.burla@caviumnetworks.com>,
-        Felix Manlunas <felix.manlunas@caviumnetworks.com>,
-        Raghu Vatsavayi <raghu.vatsavayi@caviumnetworks.com>,
-        "David S. Miller" <davem@davemloft.net>,
-        Bjorn Helgaas <bhelgaas@google.com>,
-        Boris Ostrovsky <boris.ostrovsky@oracle.com>,
-        Juergen Gross <jgross@suse.com>,
-        Jia-Ju Bai <baijiaju1990@gmail.com>
-References: <20180914211808.2564-1-okaya@kernel.org>
- <20180914211808.2564-2-okaya@kernel.org> <20180914162714.59b3837e@t450s.home>
-From: Sinan Kaya <okaya@kernel.org>
-Message-ID: <3c55b92a-500c-9f53-84ed-0a5827f78066@kernel.org>
-Date: Fri, 14 Sep 2018 18:57:49 -0400
+Received: from mail-yb1-f196.google.com ([209.85.219.196]:32851 "EHLO
+        mail-yb1-f196.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1727089AbeIRBNq (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Mon, 17 Sep 2018 21:13:46 -0400
+Received: by mail-yb1-f196.google.com with SMTP id y9-v6so4284660ybh.0
+        for <linux-pci@vger.kernel.org>; Mon, 17 Sep 2018 12:45:00 -0700 (PDT)
 MIME-Version: 1.0
-In-Reply-To: <20180914162714.59b3837e@t450s.home>
-Content-Type: text/plain; charset=utf-8; format=flowed
+References: <20180914161404.4685-1-s.miroshnichenko@yadro.com>
+ <20180914161404.4685-2-s.miroshnichenko@yadro.com> <CACK8Z6F1-P+SDYHx6x3zitSFh2iEPhQtY-Vdhz6Qwkt9=0XTjA@mail.gmail.com>
+ <20180917193832.mfy7m4uumb3kohuv@wunner.de>
+In-Reply-To: <20180917193832.mfy7m4uumb3kohuv@wunner.de>
+From: Rajat Jain <rajatja@google.com>
+Date: Mon, 17 Sep 2018 12:44:23 -0700
+Message-ID: <CACK8Z6E7OiPati12a2nMbxNJu-dca-oBgmPJvZb4C7XkrDe7mw@mail.gmail.com>
+Subject: Re: [PATCH RFC 1/4] PCI: hotplug: Add parameter to put devices to
+ reset during rescan
+To: Lukas Wunner <lukas@wunner.de>
+Cc: s.miroshnichenko@yadro.com, linux-pci <linux-pci@vger.kernel.org>,
+        Bjorn Helgaas <bhelgaas@google.com>, linux@yadro.com
+Content-Type: text/plain; charset="UTF-8"
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 9/14/2018 6:27 PM, Alex Williamson wrote:
->> +int __pci_reset_function_locked(struct pci_dev *dev, u32 reset_type)
->>   {
->> -	int rc;
->> +	int rc = 0;
-> What's the proper return value when a user passes zero for reset_type?
-> It seems to currently be: user provided no options, therefore we tried
-> none, therefore success.  I'm torn whether that's entirely bogus to the
-> point of that we should WARN_ON (ie. caller bug), or simply return
-> -EINVAL, which the caller can ignore, or if there's some value to allow
-> the behavior here. Thanks,
+On Mon, Sep 17, 2018 at 12:38 PM Lukas Wunner <lukas@wunner.de> wrote:
+>
+> On Mon, Sep 17, 2018 at 12:00:22PM -0700, Rajat Jain wrote:
+> > On Fri, Sep 14, 2018 at 9:21 AM Sergey Miroshnichenko <s.miroshnichenko@yadro.com> wrote:
+> > > If a new PCIe device has been hot-plugged between two active ones, which
+> > > have no (or not big enough) gap between their BARs, allocating new BARs
+> > > requires to move BARs of the following working devices:
+> >
+> > * What about non-memory resources? E.g. cards may have pci bridges or
+> > switches on them, and they may need extra PCI bus numbers. Does this
+> > help that use case?
+>
+> FWIW, macOS has had a "PCI Pause" functionality since 2013, documented here:
+> (the anchor is apparently overridden by Javascript, scroll down to
+> "Supporting PCIe Pause")
+>
+> https://developer.apple.com/library/archive/documentation/HardwareDrivers/Conceptual/ThunderboltDevGuide/Basics02/Basics02.html#//apple_ref/doc/uid/TP40011138-CH4-SW14
+>
+> In addition to memory resources, they also reallocate bus numbers and MSIs.
 
-Yeah, even I'm inconsistent in this series. I return -EINVAL on pci_reset_bus()
-as an example. Maybe, I'll just return -EINVAL here too.
+Thanks, that makes me wonder that would also mean that now the user
+space / UDEV may need to be notified (because some one may have taken
+a note of the PCI B:D:F). Also, the UIO drivers, ugh....
 
-WARN_ON would be too much IMO.
+Thanks,
+
+Rajat
+
+>
+> Thanks,
+>
+> Lukas
