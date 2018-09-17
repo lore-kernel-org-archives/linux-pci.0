@@ -2,109 +2,198 @@ Return-Path: <SRS0=obOR=L7=vger.kernel.org=linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-5.8 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_PASS,URIBL_DBL_ABUSE_MALW,
-	USER_AGENT_MUTT autolearn=unavailable autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-2.8 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+	MAILING_LIST_MULTI,SPF_PASS,USER_AGENT_GIT autolearn=unavailable
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id CC7F2ECE563
-	for <linux-pci@archiver.kernel.org>; Mon, 17 Sep 2018 11:22:01 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id DCD8EECE563
+	for <linux-pci@archiver.kernel.org>; Mon, 17 Sep 2018 13:30:05 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 91C0A214D5
-	for <linux-pci@archiver.kernel.org>; Mon, 17 Sep 2018 11:22:01 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.3.2 mail.kernel.org 91C0A214D5
-Authentication-Results: mail.kernel.org; dmarc=none (p=none dis=none) header.from=arm.com
+	by mail.kernel.org (Postfix) with ESMTP id 91C39214C5
+	for <linux-pci@archiver.kernel.org>; Mon, 17 Sep 2018 13:30:05 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.3.2 mail.kernel.org 91C39214C5
+Authentication-Results: mail.kernel.org; dmarc=none (p=none dis=none) header.from=hygon.cn
 Authentication-Results: mail.kernel.org; spf=none smtp.mailfrom=linux-pci-owner@vger.kernel.org
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726910AbeIQQss (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Mon, 17 Sep 2018 12:48:48 -0400
-Received: from foss.arm.com ([217.140.101.70]:57544 "EHLO foss.arm.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1726169AbeIQQsr (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Mon, 17 Sep 2018 12:48:47 -0400
-Received: from usa-sjc-imap-foss1.foss.arm.com (unknown [10.72.51.249])
-        by usa-sjc-mx-foss1.foss.arm.com (Postfix) with ESMTP id 8F27C18A;
-        Mon, 17 Sep 2018 04:21:54 -0700 (PDT)
-Received: from e107981-ln.cambridge.arm.com (e107981-ln.emea.arm.com [10.4.13.117])
-        by usa-sjc-imap-foss1.foss.arm.com (Postfix) with ESMTPSA id C396F3F5BD;
-        Mon, 17 Sep 2018 04:21:52 -0700 (PDT)
-Date:   Mon, 17 Sep 2018 12:21:49 +0100
-From:   Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
-To:     Niklas Cassel <niklas.cassel@linaro.org>
-Cc:     Andy Gross <andy.gross@linaro.org>,
-        David Brown <david.brown@linaro.org>,
-        Rob Herring <robh+dt@kernel.org>,
-        Mark Rutland <mark.rutland@arm.com>, linux-pci@vger.kernel.org,
-        linux-arm-msm@vger.kernel.org, linux-soc@vger.kernel.org,
-        devicetree@vger.kernel.org, linux-kernel@vger.kernel.org
-Subject: Re: [PATCH] ARM: dts: qcom-apq8064: use correct pci address for
- address translation
-Message-ID: <20180917112149.GE7239@e107981-ln.cambridge.arm.com>
-References: <20180509120135.25940-1-niklas.cassel@linaro.org>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20180509120135.25940-1-niklas.cassel@linaro.org>
-User-Agent: Mutt/1.5.24 (2015-08-30)
+        id S1728172AbeIQS5A (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Mon, 17 Sep 2018 14:57:00 -0400
+Received: from smtp17.cstnet.cn ([159.226.251.17]:56609 "EHLO cstnet.cn"
+        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+        id S1727124AbeIQS5A (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Mon, 17 Sep 2018 14:57:00 -0400
+Received: from pw-vbox.higon.com (unknown [182.150.46.145])
+        by APP-09 (Coremail) with SMTP id swCowAAnjx4XrJ9bNJ6lCg--.0S2;
+        Mon, 17 Sep 2018 21:29:03 +0800 (CST)
+From:   Pu Wen <puwen@hygon.cn>
+To:     bp@alien8.de, tglx@linutronix.de, mingo@redhat.com, hpa@zytor.com,
+        x86@kernel.org, thomas.lendacky@amd.com, pbonzini@redhat.com,
+        tony.luck@intel.com, rkrcmar@redhat.com,
+        boris.ostrovsky@oracle.com, jgross@suse.com, rjw@rjwysocki.net,
+        lenb@kernel.org, viresh.kumar@linaro.org, mchehab@kernel.org,
+        trenn@suse.com, shuah@kernel.org
+Cc:     linux-kernel@vger.kernel.org, linux-arch@vger.kernel.org,
+        linux-pci@vger.kernel.org, linux-acpi@vger.kernel.org,
+        linux-edac@vger.kernel.org, linux-pm@vger.kernel.org,
+        kvm@vger.kernel.org, xen-devel@lists.xenproject.org,
+        Pu Wen <puwen@hygon.cn>
+Subject: [PATCH v7 00/16] Add support for Hygon Dhyana Family 18h processor
+Date:   Mon, 17 Sep 2018 21:28:54 +0800
+Message-Id: <cover.1537182523.git.puwen@hygon.cn>
+X-Mailer: git-send-email 2.7.4
+X-CM-TRANSID: swCowAAnjx4XrJ9bNJ6lCg--.0S2
+X-Coremail-Antispam: 1UD129KBjvJXoW3Gr1DXr4xXr17GFy8AFW5Jrb_yoW7WFyDpF
+        ZFkrn5tFW8u3sxC3srCrn7urWfZa97CrW3Jw18W3sxX3W5ta4jqrs7G3WkGw1qvwn5Wr1I
+        yFy5urWxK3Z7JaDanT9S1TB71UUUUU7qnTZGkaVYY2UrUUUUjbIjqfuFe4nvWSU5nxnvy2
+        9KBjDU0xBIdaVrnRJUUUv214x267AKxVW5JVWrJwAFc2x0x2IEx4CE42xK8VAvwI8IcIk0
+        rVWrJVCq3wAFIxvE14AKwVWUJVWUGwA2ocxC64kIII0Yj41l84x0c7CEw4AK67xGY2AK02
+        1l84ACjcxK6xIIjxv20xvE14v26r1j6r1xM28EF7xvwVC0I7IYx2IY6xkF7I0E14v26r4j
+        6F4UM28EF7xvwVC2z280aVAFwI0_Gr0_Cr1l84ACjcxK6I8E87Iv6xkF7I0E14v26r4j6r
+        4UJwAS0I0E0xvYzxvE52x082IY62kv0487Mc02F40EFcxC0VAKzVAqx4xG6I80ewAv7VC0
+        I7IYx2IY67AKxVWUGVWUXwAv7VC2z280aVAFwI0_Gr1j6F4UJwAm72CE4IkC6x0Yz7v_Jr
+        0_Gr1lF7xvr2IYc2Ij64vIr41lF7I21c0EjII2zVCS5cI20VAGYxC7M4IIrI8v6xkF7I0E
+        8cxan2IY04v7MxAIw28IcxkI7VAKI48JMxC20s026xCaFVCjc4AY6r1j6r4UMI8I3I0E5I
+        8CrVAFwI0_Jr0_Jr4lx2IqxVCjr7xvwVAFwI0_JrI_JrWlx4CE17CEb7AF67AKxVW8ZVWr
+        XwCIc40Y0x0EwIxGrwCI42IY6xIIjxv20xvE14v26r1j6r1xMIIF0xvE2Ix0cI8IcVCY1x
+        0267AKxVW8JVWxJwCI42IY6xAIw20EY4v20xvaj40_Wr1j6rW3Jr1lIxAIcVC2z280aVAF
+        wI0_Gr0_Cr1lIxAIcVC2z280aVCY1x0267AKxVW8JVW8JrUvcSsGvfC2KfnxnUUI43ZEXa
+        7VU1fOz3UUUUU==
+X-Originating-IP: [182.150.46.145]
+X-CM-SenderInfo: psxzv046klw03qof0z/
 Sender: linux-pci-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
-Message-ID: <20180917112149.N0HvKxuvDfVZYGRNfcvjewqyrOc9k-28XDeauGdl4OU@z>
+Message-ID: <20180917132854.2817TFVNOwX8KJCwtO1r45KVzOsP9d-t3dva5v-XyZU@z>
 
-On Wed, May 09, 2018 at 02:01:34PM +0200, Niklas Cassel wrote:
-> For PCI, the second and third cell in ranges specifies the upper and
-> lower target address for address translation. This target address will
-> be used to program the internal address translation unit (iATU).
-> 
-> The current device tree configuration will program the iATU to translate
-> CPU accesses to 0x08000000 to PCI address 0x0 (with TLP type MEM).
-> The device tree configuration also specifies that CPU acesses to
-> 0x0fe00000 will be translated to PCI address 0x0 (with TLP type I/O).
-> 
-> We cannot have both I/O space and memory space at PCI address 0x0.
-> 
-> The PCI code already uses the CPU address when assigning addresses to
-> memory BARs, so for memory space the PCI address should be the same as
-> the CPU address. This also matches how all other device trees using
-> snps,dw-pcie are configured.
-> 
-> The existing configuration appears to work, even if it is incorrect.
-> For some reason the iATU doesn't obey the existing configuration,
-> and doesn't translate CPU accesses from 0x08000000 to PCI address 0x0.
-> 
-> The reason why the existing configuration works at all is probably
-> because the default behavior, when there is no match, is to use the
-> untranslated address. This happens to work for memory space, since
-> it's a 1:1 mapping. However, instead of relying on this behavior,
-> let's configure the iATU correctly.
-> 
-> Signed-off-by: Niklas Cassel <niklas.cassel@linaro.org>
-> ---
->  arch/arm/boot/dts/qcom-apq8064.dtsi | 2 +-
->  1 file changed, 1 insertion(+), 1 deletion(-)
+As a new x86 CPU Vendor, Chengdu Haiguang IC Design Co., Ltd (Hygon)
+is a Joint Venture between AMD and Haiguang Information Technology Co.,
+Ltd., and aims at providing high performance x86 processor for China
+server market.
 
-Hi Niklas,
+The first generation Hygon's processor(Dhyana) originates from AMD
+technology and shares most of the architecture with AMD's family 17h,
+but with different CPU Vendor ID("HygonGenuine")/PCIE Device Vendor ID
+(0x1D94)/Family series number (Family 18h).
 
-what's this patch status ? Please let me know if I have to keep
-it in the PCI tree queue, I think, if ACKed, it should probably
-go via the arm-soc tree.
+To enable the support of Linux kernel to Hygon's CPU, we added a new
+vendor type (X86_VENDOR_HYGON, with value of 9) in arch/x86/include/
+asm/processor.h, and shared most of kernel support codes with AMD
+family 17h.
 
-Thanks,
-Lorenzo
+As Hygon will negotiate with AMD to make sure that only Hygon will
+use family 18h, so try to minimize code modification and share most
+codes with AMD under this consideration.
 
-> diff --git a/arch/arm/boot/dts/qcom-apq8064.dtsi b/arch/arm/boot/dts/qcom-apq8064.dtsi
-> index 5341a39c0392..148cf7e565f6 100644
-> --- a/arch/arm/boot/dts/qcom-apq8064.dtsi
-> +++ b/arch/arm/boot/dts/qcom-apq8064.dtsi
-> @@ -1417,7 +1417,7 @@
->  			#address-cells = <3>;
->  			#size-cells = <2>;
->  			ranges = <0x81000000 0 0 0x0fe00000 0 0x00100000   /* I/O */
-> -				  0x82000000 0 0 0x08000000 0 0x07e00000>; /* memory */
-> +				  0x82000000 0 0x08000000 0x08000000 0 0x07e00000>; /* memory */
->  			interrupts = <GIC_SPI 238 IRQ_TYPE_NONE>;
->  			interrupt-names = "msi";
->  			#interrupt-cells = <1>;
-> -- 
-> 2.17.0
-> 
+This patch series have been applied and tested successfully on Hygon
+Dhyana SoC silicon. Also tested on AMD EPYC (Family 17h) processor,
+it works fine and makes no harm to the existing codes.
+
+
+v6->v7:
+  - Rebased on 4.19-rc4 and tested against it.
+  - Add Reviewed-by from Borislav Petkov for patches x86/cpu,
+    x86/cpu/mtrr, perf/x86, x86/pci, x86/apic, x86/mce.
+  - Refine the patch descriptions and fix some typos.
+  - Remove unneeded vendor checking for patch x86/apic.
+  - Restore the user-visible pr_err string in patch x86/bugs.
+
+v5->v6:
+  - Rebased on 4.19-rc3 and tested against it.
+  - Add Reviewed-by from Borislav Petkov for cacheinfo, smpboot,
+    alternative and kvm.
+  - Rework the patch subjects and patch descriptions.
+  - Rework vendor checking for some patches to minimize the code
+    modification.
+
+v4->v5:
+  - Rebased on 4.19-rc1 and tested against it.
+  - Add Reviewed-by from Boris Ostrovsky for Xen.
+  - Rework EDAC patch without vendor checking for minimal modification.
+
+v3->v4:
+  - Rebased on 4.18.3 and tested against it.
+  - Merge patches 05/17 perfctr and 10/17 events in v3 to patch 05/16
+    PMU for better patch function group.
+  - Add hygon_get_topology_early() in patch 01/16.
+  - Rework vendor checking and refine coding style.
+  - Add Acked-by from Bjorn Helgaas for pci.
+  - Add Acked-by from Rafael J. Wysocki for cpufreq and acpi.
+
+v2->v3:
+  - Rebased on 4.18-rc8 and tested against it.
+  - Rework vendor checking codes to improve consistency.
+
+v1->v2:
+  - Rebased on 4.18-rc6 and tested against it.
+  - Split the patch set to small series of patches.
+  - Rework patch descriptions.
+  - Create a separated arch/x86/kernel/cpu/hygon.c for Dhyana CPU
+    initialization to reduce long-term maintenance effort.
+
+
+Pu Wen (16):
+  x86/cpu: Create Hygon Dhyana architecture support file
+  x86/cpu: Get cache info and setup cache cpumap for Hygon Dhyana
+  x86/cpu/mtrr: Support TOP_MEM2 and get MTRR number
+  x86/smpboot: SMP init no delay and not flush caches before sleep
+  perf/x86: Add Hygon Dhyana support to PMU infrastructure
+  x86/alternative: Init ideal_nops for Hygon Dhyana
+  x86/pci: Add Hygon Dhyana support to PCI and north bridge
+  x86/apic: Add Hygon Dhyana support to APIC
+  x86/bugs: Add mitigation to spectre and no meltdown for Hygon Dhyana
+  x86/mce: Add Hygon Dhyana support to MCE infrastructure
+  x86/kvm: Add Hygon Dhyana support to KVM infrastructure
+  x86/xen: Add Hygon Dhyana support to Xen
+  ACPI, x86: Add Hygon Dhyana support
+  cpufreq, x86: Add Hygon Dhyana support
+  EDAC, amd64: Add Hygon Dhyana support
+  cpupower, x86: Add Hygon Dhyana support
+
+ MAINTAINERS                                        |   6 +
+ arch/x86/Kconfig.cpu                               |  14 +
+ arch/x86/events/amd/core.c                         |   4 +
+ arch/x86/events/amd/uncore.c                       |  20 +-
+ arch/x86/events/core.c                             |   4 +
+ arch/x86/include/asm/cacheinfo.h                   |   1 +
+ arch/x86/include/asm/kvm_emulate.h                 |   4 +
+ arch/x86/include/asm/mce.h                         |   2 +
+ arch/x86/include/asm/processor.h                   |   3 +-
+ arch/x86/include/asm/virtext.h                     |   5 +-
+ arch/x86/kernel/alternative.c                      |   4 +
+ arch/x86/kernel/amd_nb.c                           |  47 ++-
+ arch/x86/kernel/apic/apic.c                        |   7 +
+ arch/x86/kernel/apic/probe_32.c                    |   1 +
+ arch/x86/kernel/cpu/Makefile                       |   1 +
+ arch/x86/kernel/cpu/bugs.c                         |   4 +-
+ arch/x86/kernel/cpu/cacheinfo.c                    |  31 +-
+ arch/x86/kernel/cpu/common.c                       |   1 +
+ arch/x86/kernel/cpu/cpu.h                          |   1 +
+ arch/x86/kernel/cpu/hygon.c                        | 411 +++++++++++++++++++++
+ arch/x86/kernel/cpu/mcheck/mce-severity.c          |   3 +-
+ arch/x86/kernel/cpu/mcheck/mce.c                   |  20 +-
+ arch/x86/kernel/cpu/mtrr/cleanup.c                 |   3 +-
+ arch/x86/kernel/cpu/mtrr/mtrr.c                    |   2 +-
+ arch/x86/kernel/cpu/perfctr-watchdog.c             |   2 +
+ arch/x86/kernel/smpboot.c                          |   4 +-
+ arch/x86/kvm/emulate.c                             |  11 +-
+ arch/x86/pci/amd_bus.c                             |   6 +-
+ arch/x86/xen/pmu.c                                 |  12 +-
+ drivers/acpi/acpi_pad.c                            |   1 +
+ drivers/acpi/processor_idle.c                      |   1 +
+ drivers/cpufreq/acpi-cpufreq.c                     |   5 +
+ drivers/cpufreq/amd_freq_sensitivity.c             |   9 +-
+ drivers/edac/amd64_edac.c                          |   8 +-
+ drivers/edac/mce_amd.c                             |   4 +-
+ include/linux/pci_ids.h                            |   2 +
+ tools/power/cpupower/utils/cpufreq-info.c          |   6 +-
+ tools/power/cpupower/utils/helpers/amd.c           |   4 +-
+ tools/power/cpupower/utils/helpers/cpuid.c         |   8 +-
+ tools/power/cpupower/utils/helpers/helpers.h       |   2 +-
+ tools/power/cpupower/utils/helpers/misc.c          |   2 +-
+ .../cpupower/utils/idle_monitor/mperf_monitor.c    |   3 +-
+ 42 files changed, 641 insertions(+), 48 deletions(-)
+ create mode 100644 arch/x86/kernel/cpu/hygon.c
+
+-- 
+2.7.4
+
