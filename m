@@ -1,210 +1,62 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.29.99]:50380 "EHLO mail.kernel.org"
+Received: from mail.kernel.org ([198.145.29.99]:37282 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1732545AbeISVZY (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Wed, 19 Sep 2018 17:25:24 -0400
-Date: Wed, 19 Sep 2018 10:46:51 -0500
+        id S1727329AbeIRCW4 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Mon, 17 Sep 2018 22:22:56 -0400
+Date: Mon, 17 Sep 2018 15:53:54 -0500
 From: Bjorn Helgaas <helgaas@kernel.org>
-To: Keith Busch <keith.busch@intel.com>
-Cc: Linux PCI <linux-pci@vger.kernel.org>,
-        Bjorn Helgaas <bhelgaas@google.com>,
-        Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-        Sinan Kaya <okaya@kernel.org>,
-        Thomas Tai <thomas.tai@oracle.com>, poza@codeaurora.org,
-        Lukas Wunner <lukas@wunner.de>, Christoph Hellwig <hch@lst.de>,
-        Mika Westerberg <mika.westerberg@linux.intel.com>
-Subject: Re: [PATCHv3 05/10] PCI/ERR: Handle fatal error recovery
-Message-ID: <20180919154651.GA243610@bhelgaas-glaptop.roam.corp.google.com>
-References: <20180918235702.26573-1-keith.busch@intel.com>
- <20180918235702.26573-6-keith.busch@intel.com>
+To: Jon Derrick <jonathan.derrick@intel.com>
+Cc: linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
+        Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
+        Keith Busch <keith.busch@intel.com>,
+        Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+        Mika Westerberg <mika.westerberg@linux.intel.com>,
+        Sinan Kaya <okaya@kernel.org>, Christoph Hellwig <hch@lst.de>,
+        Matthew Wilcox <willy@infradead.org>,
+        Logan Gunthorpe <logang@deltatee.com>,
+        Stephen Bates <sbates@raithlin.com>
+Subject: Re: [PATCH v2] PCI hotplug Eq v2
+Message-ID: <20180917205354.GB54859@bhelgaas-glaptop.roam.corp.google.com>
+References: <1535667120-3002-1-git-send-email-jonathan.derrick@intel.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20180918235702.26573-6-keith.busch@intel.com>
+In-Reply-To: <1535667120-3002-1-git-send-email-jonathan.derrick@intel.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tue, Sep 18, 2018 at 05:56:57PM -0600, Keith Busch wrote:
-> We don't need to be paranoid about the topology changing while handling an
-> error. If the device has changed in a hotplug capable slot, we can rely
-> on the presence detection handling to react to a changing topology. This
-> patch restores the fatal error handling behavior that existed before
-> merging DPC with AER with 7e9084b3674 ("PCI/AER: Handle ERR_FATAL with
-> removal and re-enumeration of devices").
-
-7e9084b3674 updated Documentation/PCI/pci-error-recovery.txt; doesn't
-this require another update to keep it matching the code?
-
-> Signed-off-by: Keith Busch <keith.busch@intel.com>
-> ---
->  drivers/pci/pci.h      |  4 +--
->  drivers/pci/pcie/aer.c | 12 +++++---
->  drivers/pci/pcie/dpc.c |  4 +--
->  drivers/pci/pcie/err.c | 75 ++++----------------------------------------------
->  4 files changed, 18 insertions(+), 77 deletions(-)
+On Thu, Aug 30, 2018 at 04:11:59PM -0600, Jon Derrick wrote:
+> Hi Bjorn,
 > 
-> diff --git a/drivers/pci/pci.h b/drivers/pci/pci.h
-> index 21bfa30db18d..5a96978d3403 100644
-> --- a/drivers/pci/pci.h
-> +++ b/drivers/pci/pci.h
-> @@ -425,8 +425,8 @@ static inline int pci_dev_specific_disable_acs_redir(struct pci_dev *dev)
->  #endif
->  
->  /* PCI error reporting and recovery */
-> -void pcie_do_fatal_recovery(struct pci_dev *dev, u32 service);
-> -void pcie_do_nonfatal_recovery(struct pci_dev *dev);
-> +void pcie_do_recovery(struct pci_dev *dev, enum pci_channel_state state,
-> +		      u32 service);
->  
->  bool pcie_wait_for_link(struct pci_dev *pdev, bool active);
->  #ifdef CONFIG_PCIEASPM
-> diff --git a/drivers/pci/pcie/aer.c b/drivers/pci/pcie/aer.c
-> index b4d14acee66d..6b59a23568f8 100644
-> --- a/drivers/pci/pcie/aer.c
-> +++ b/drivers/pci/pcie/aer.c
-> @@ -1010,9 +1010,11 @@ static void handle_error_source(struct pci_dev *dev, struct aer_err_info *info)
->  					info->status);
->  		pci_aer_clear_device_status(dev);
->  	} else if (info->severity == AER_NONFATAL)
-> -		pcie_do_nonfatal_recovery(dev);
-> +		pcie_do_recovery(dev, pci_channel_io_normal,
-> +				 PCIE_PORT_SERVICE_AER);
->  	else if (info->severity == AER_FATAL)
-> -		pcie_do_fatal_recovery(dev, PCIE_PORT_SERVICE_AER);
-> +		pcie_do_recovery(dev, pci_channel_io_frozen,
-> +				 PCIE_PORT_SERVICE_AER);
->  	pci_dev_put(dev);
->  }
->  
-> @@ -1048,9 +1050,11 @@ static void aer_recover_work_func(struct work_struct *work)
->  		}
->  		cper_print_aer(pdev, entry.severity, entry.regs);
->  		if (entry.severity == AER_NONFATAL)
-> -			pcie_do_nonfatal_recovery(pdev);
-> +			pcie_do_recovery(pdev, pci_channel_io_normal,
-> +					 PCIE_PORT_SERVICE_AER);
->  		else if (entry.severity == AER_FATAL)
-> -			pcie_do_fatal_recovery(pdev, PCIE_PORT_SERVICE_AER);
-> +			pcie_do_recovery(pdev, pci_channel_io_frozen,
-> +					 PCIE_PORT_SERVICE_AER);
->  		pci_dev_put(pdev);
->  	}
->  }
-> diff --git a/drivers/pci/pcie/dpc.c b/drivers/pci/pcie/dpc.c
-> index aacfb50eccfc..1ed07db8ea7d 100644
-> --- a/drivers/pci/pcie/dpc.c
-> +++ b/drivers/pci/pcie/dpc.c
-> @@ -169,7 +169,7 @@ static irqreturn_t dpc_handler(int irq, void *context)
->  
->  	reason = (status & PCI_EXP_DPC_STATUS_TRIGGER_RSN) >> 1;
->  	ext_reason = (status & PCI_EXP_DPC_STATUS_TRIGGER_RSN_EXT) >> 5;
-> -	dev_warn(dev, "DPC %s detected, remove downstream devices\n",
-> +	dev_warn(dev, "DPC %s detected\n",
->  		 (reason == 0) ? "unmasked uncorrectable error" :
->  		 (reason == 1) ? "ERR_NONFATAL" :
->  		 (reason == 2) ? "ERR_FATAL" :
-> @@ -186,7 +186,7 @@ static irqreturn_t dpc_handler(int irq, void *context)
->  	}
->  
->  	/* We configure DPC so it only triggers on ERR_FATAL */
-> -	pcie_do_fatal_recovery(pdev, PCIE_PORT_SERVICE_DPC);
-> +	pcie_do_recovery(pdev, pci_channel_io_frozen, PCIE_PORT_SERVICE_DPC);
->  
->  	return IRQ_HANDLED;
->  }
-> diff --git a/drivers/pci/pcie/err.c b/drivers/pci/pcie/err.c
-> index 62ab665f0f03..644f3f725ef0 100644
-> --- a/drivers/pci/pcie/err.c
-> +++ b/drivers/pci/pcie/err.c
-> @@ -271,83 +271,20 @@ static pci_ers_result_t broadcast_error_message(struct pci_dev *dev,
->  	return result_data.result;
->  }
->  
-> -/**
-> - * pcie_do_fatal_recovery - handle fatal error recovery process
-> - * @dev: pointer to a pci_dev data structure of agent detecting an error
-> - *
-> - * Invoked when an error is fatal. Once being invoked, removes the devices
-> - * beneath this AER agent, followed by reset link e.g. secondary bus reset
-> - * followed by re-enumeration of devices.
-> - */
-> -void pcie_do_fatal_recovery(struct pci_dev *dev, u32 service)
-> -{
-> -	struct pci_dev *udev;
-> -	struct pci_bus *parent;
-> -	struct pci_dev *pdev, *temp;
-> -	pci_ers_result_t result;
-> -
-> -	if (dev->hdr_type == PCI_HEADER_TYPE_BRIDGE)
-> -		udev = dev;
-> -	else
-> -		udev = dev->bus->self;
-> -
-> -	parent = udev->subordinate;
-> -	pci_walk_bus(parent, pci_dev_set_disconnected, NULL);
-> -
-> -	pci_lock_rescan_remove();
-> -	pci_dev_get(dev);
-> -	list_for_each_entry_safe_reverse(pdev, temp, &parent->devices,
-> -					 bus_list) {
-> -		pci_stop_and_remove_bus_device(pdev);
-> -	}
-> -
-> -	result = reset_link(udev, service);
-> -
-> -	if ((service == PCIE_PORT_SERVICE_AER) &&
-> -	    (dev->hdr_type == PCI_HEADER_TYPE_BRIDGE)) {
-> -		/*
-> -		 * If the error is reported by a bridge, we think this error
-> -		 * is related to the downstream link of the bridge, so we
-> -		 * do error recovery on all subordinates of the bridge instead
-> -		 * of the bridge and clear the error status of the bridge.
-> -		 */
-> -		pci_aer_clear_fatal_status(dev);
-> -		pci_aer_clear_device_status(dev);
-> -	}
-> -
-> -	if (result == PCI_ERS_RESULT_RECOVERED) {
-> -		if (pcie_wait_for_link(udev, true))
-> -			pci_rescan_bus(udev->bus);
-> -		pci_info(dev, "Device recovery from fatal error successful\n");
-> -	} else {
-> -		pci_uevent_ers(dev, PCI_ERS_RESULT_DISCONNECT);
-> -		pci_info(dev, "Device recovery from fatal error failed\n");
-> -	}
-> -
-> -	pci_dev_put(dev);
-> -	pci_unlock_rescan_remove();
-> -}
-> -
-> -/**
-> - * pcie_do_nonfatal_recovery - handle nonfatal error recovery process
-> - * @dev: pointer to a pci_dev data structure of agent detecting an error
-> - *
-> - * Invoked when an error is nonfatal/fatal. Once being invoked, broadcast
-> - * error detected message to all downstream drivers within a hierarchy in
-> - * question and return the returned code.
-> - */
-> -void pcie_do_nonfatal_recovery(struct pci_dev *dev)
-> +void pcie_do_recovery(struct pci_dev *dev, enum pci_channel_state state,
-> +		      u32 service)
->  {
->  	pci_ers_result_t status;
-> -	enum pci_channel_state state;
-> -
-> -	state = pci_channel_io_normal;
->  
->  	status = broadcast_error_message(dev,
->  			state,
->  			"error_detected",
->  			report_error_detected);
->  
-> +	if (state == pci_channel_io_frozen &&
-> +	    reset_link(dev, service) != PCI_ERS_RESULT_RECOVERED)
-> +		goto failed;
-> +
->  	if (status == PCI_ERS_RESULT_CAN_RECOVER)
->  		status = broadcast_error_message(dev,
->  				state,
-> -- 
-> 2.14.4
+> Sorry for the delay on this one and pushing it after RC1.
+> Feel free to queue it up for 4.20 if it looks fine.
 > 
+> I've added comments to the git log and source explaining why
+> calculate_iosize was left unchanged. Basically I could not
+> synthesize a condition where it would have affected the topology.
+
+In other words, the only reason you didn't change the
+calculate_iosize() path was because you couldn't test it?
+
+I appreciate your desire to avoid untested changes, but I think it's
+very important to preserve and even improve the symmetry between
+calculate_memsize() and calculate_iosize().  For example, it's not
+obvious why the order is different here:
+
+  calculate_iosize():
+    size = ALIGN(size + size1, align);
+    if (size < old_size)
+      size = old_size;
+
+  calculate_memsize():
+    if (size < old_size)
+      size = old_size;
+    size = ALIGN(size + size1, align);
+
+So I don't want to diverge them further unless there's a real
+functional reason why we need to handle I/O port space differently
+than MMIO space.
+
+You've tested the MMIO path, and I'm willing to take the risk of
+doing the same thing in the I/O port path.
+
+Bjorn
