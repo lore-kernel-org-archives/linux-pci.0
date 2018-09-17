@@ -1,75 +1,57 @@
-Return-Path: <linux-nvme-bounces+bjorn=helgaas.com@lists.infradead.org>
-Return-Path: <linux-nvme-bounces+bjorn=helgaas.com@lists.infradead.org>
-From: Logan Gunthorpe <logang@deltatee.com>
-To: linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
- linux-nvme@lists.infradead.org, linux-rdma@vger.kernel.org,
- linux-nvdimm@lists.01.org, linux-block@vger.kernel.org
-Date: Wed, 12 Sep 2018 18:11:50 -0600
-Message-Id: <20180913001156.4115-8-logang@deltatee.com>
-In-Reply-To: <20180913001156.4115-1-logang@deltatee.com>
-References: <20180913001156.4115-1-logang@deltatee.com>
+Return-Path: <linux-acpi-owner@vger.kernel.org>
 MIME-Version: 1.0
-Subject: [PATCH v6 07/13] block: Add PCI P2P flag for request queue and check
- support for requests
-List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-nvme>,
- <mailto:linux-nvme-request@lists.infradead.org?subject=unsubscribe>
-List-Archive: <http://lists.infradead.org/pipermail/linux-nvme/>
-List-Post: <mailto:linux-nvme@lists.infradead.org>
-List-Help: <mailto:linux-nvme-request@lists.infradead.org?subject=help>
-List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-nvme>,
- <mailto:linux-nvme-request@lists.infradead.org?subject=subscribe>
-Cc: Jens Axboe <axboe@kernel.dk>, Sagi Grimberg <sagi@grimberg.me>,
- =?UTF-8?q?Christian=20K=C3=B6nig?= <christian.koenig@amd.com>,
- Benjamin Herrenschmidt <benh@kernel.crashing.org>,
- Alex Williamson <alex.williamson@redhat.com>,
- Stephen Bates <sbates@raithlin.com>, Keith Busch <keith.busch@intel.com>,
- =?UTF-8?q?J=C3=A9r=C3=B4me=20Glisse?= <jglisse@redhat.com>,
- Jason Gunthorpe <jgg@mellanox.com>, Bjorn Helgaas <bhelgaas@google.com>,
- Max Gurtovoy <maxg@mellanox.com>, Dan Williams <dan.j.williams@intel.com>,
- Logan Gunthorpe <logang@deltatee.com>, Christoph Hellwig <hch@lst.de>
-Content-Type: text/plain; charset="us-ascii"
-Sender: "Linux-nvme" <linux-nvme-bounces@lists.infradead.org>
-Errors-To: linux-nvme-bounces+bjorn=helgaas.com@lists.infradead.org
+References: <CAFtaAxE8G15vU40jCKzqzuwpt_-bDfVpWuaeuy6cQ-sh=Ap2XQ@mail.gmail.com>
+ <20180917061217.GI14465@lahna.fi.intel.com>
+In-Reply-To: <20180917061217.GI14465@lahna.fi.intel.com>
+From: Peter Anemone <peter.anemone@gmail.com>
+Date: Mon, 17 Sep 2018 10:29:50 +0300
+Message-ID: <CAFtaAxFazzhS++yFE7ByUxpMV=h-sC1DCPdg88OApPCW+9NMSQ@mail.gmail.com>
+Subject: Re: [REGRESSION][BISECTED] Boot stall related to drivers/pci/hotplug/acpiphp_glue.c
+To: mika.westerberg@linux.intel.com
+Cc: rjw@rjwysocki.net, Len Brown <lenb@kernel.org>,
+        Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org,
+        linux-acpi@vger.kernel.org, linux-kernel@vger.kernel.org
+Content-Type: text/plain; charset="UTF-8"
+Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-QUEUE_FLAG_PCI_P2P is introduced meaning a driver's request queue
-supports targeting P2P memory.
+I think I can't get a dmesg as I can't boot the kernel. My screen
+stays completely black when I try to boot.
+-Peter
 
-When a request is submitted we check if PCI P2PDMA memory is assigned
-to the first page in the bio. If it is, we ensure the queue it's
-submitted to supports it, and enforce REQ_NOMERGE.
-
-Signed-off-by: Logan Gunthorpe <logang@deltatee.com>
----
- include/linux/blkdev.h | 3 +++
- 1 file changed, 3 insertions(+)
-
-diff --git a/include/linux/blkdev.h b/include/linux/blkdev.h
-index d6869e0e2b64..7bf80ca802e1 100644
---- a/include/linux/blkdev.h
-+++ b/include/linux/blkdev.h
-@@ -699,6 +699,7 @@ struct request_queue {
- #define QUEUE_FLAG_SCSI_PASSTHROUGH 27	/* queue supports SCSI commands */
- #define QUEUE_FLAG_QUIESCED    28	/* queue has been quiesced */
- #define QUEUE_FLAG_PREEMPT_ONLY	29	/* only process REQ_PREEMPT requests */
-+#define QUEUE_FLAG_PCI_P2PDMA  30	/* device supports pci p2p requests */
- 
- #define QUEUE_FLAG_DEFAULT	((1 << QUEUE_FLAG_IO_STAT) |		\
- 				 (1 << QUEUE_FLAG_SAME_COMP)	|	\
-@@ -731,6 +732,8 @@ bool blk_queue_flag_test_and_clear(unsigned int flag, struct request_queue *q);
- #define blk_queue_dax(q)	test_bit(QUEUE_FLAG_DAX, &(q)->queue_flags)
- #define blk_queue_scsi_passthrough(q)	\
- 	test_bit(QUEUE_FLAG_SCSI_PASSTHROUGH, &(q)->queue_flags)
-+#define blk_queue_pci_p2pdma(q)	\
-+	test_bit(QUEUE_FLAG_PCI_P2PDMA, &(q)->queue_flags)
- 
- #define blk_noretry_request(rq) \
- 	((rq)->cmd_flags & (REQ_FAILFAST_DEV|REQ_FAILFAST_TRANSPORT| \
--- 
-2.19.0
-
-
-_______________________________________________
-Linux-nvme mailing list
-Linux-nvme@lists.infradead.org
-http://lists.infradead.org/mailman/listinfo/linux-nvme
+On Mon, 17 Sep 2018 at 09:13, Mika Westerberg
+<mika.westerberg@linux.intel.com> wrote:
+>
+> On Mon, Sep 17, 2018 at 08:58:50AM +0300, Peter Anemone wrote:
+> > Dear kernel developers
+> > I reported a bug at Bugzilla, but Greg Kroah-Hartman pointed me in
+> > mailing lists. Here's my bug report:
+> >
+> > Linux has been unbootable for me from 4.18 upwards. Even the fallback
+> > image does not boot. This has not been fixed yet in 4.19-rc3. acpi=off
+> > kernel parameter lets me boot 4.18.6 and 4.19-rc3.
+> >
+> > I used git bisect to track down the first bad commit:
+> > 84c8b58ed3addf17d3beb2e5037b001ffa65c5ef
+> >
+> > The commit is about:
+> > "ACPI / hotplug / PCI: Don't scan bridges managed by native hotplug"
+> > https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/commit/?id=84c8b58ed3addf17d3beb2e5037b001ffa65c5ef
+> >
+> > Linux 4.17 booted fine. Reverting commit
+> > 84c8b58ed3addf17d3beb2e5037b001ffa65c5ef makes 4.18 and 4.19-rc3
+> > bootable again (without the acpi=off parameter).
+> >
+> > Information about my system:
+> > Model: HP 6730b laptop
+> > CPU: Intel Core 2 Duo P8600
+> > Boot manager: systemd-boot (UEFI)
+> > More information of my system as attachments on the bug report at Bugzilla.
+> >
+> > Link to the bug report:
+> > https://bugzilla.kernel.org/show_bug.cgi?id=201127
+>
+> Thanks for the report. Since there is bugzilla about the issue already,
+> let's continue investigation there.
+>
+> Can you also attach full dmesg of the failure (if possible) to the bug?
