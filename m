@@ -1,66 +1,114 @@
-Return-Path: <SRS0=uuMr=L2=kernel.crashing.org=benh@kernel.org>
-Return-Path: <SRS0=uuMr=L2=kernel.crashing.org=benh@kernel.org>
-Message-ID: <867d7f0f47766e42d5fb1a479209fef406cf5fc2.camel@kernel.crashing.org>
-Subject: Re: [PATCH 0/2] sriov enablement on s390
-From: Benjamin Herrenschmidt <benh@kernel.crashing.org>
-To: Bjorn Helgaas <helgaas@kernel.org>, Sebastian Ott <sebott@linux.ibm.com>
-Cc: Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org,
-        Arnd
- Bergmann <arnd@arndb.de>, Paul Mackerras <paulus@samba.org>,
-        Michael
- Ellerman <mpe@ellerman.id.au>,
-        Russell Currey <ruscur@russell.cc>, linuxppc-dev@lists.ozlabs.org,
-        Oliver OHalloran <oliveroh@au1.ibm.com>
-Date: Wed, 12 Sep 2018 16:40:28 +0200
-In-Reply-To: <20180912130205.GG118330@bhelgaas-glaptop.roam.corp.google.com>
-References: <20180912123411.23229-1-sebott@linux.ibm.com>
-	 <20180912130205.GG118330@bhelgaas-glaptop.roam.corp.google.com>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Date: Mon, 17 Sep 2018 16:19:17 +0100
+From: Andrew Murray <andrew.murray@arm.com>
+To: John Garry <john.garry@huawei.com>
+Subject: Re: [PATCH] asm-generic: io: Fix ioport_map() for
+ !CONFIG_GENERIC_IOMAP && CONFIG_INDIRECT_PIO
+Message-ID: <20180917151917.GB5390@e119886-lin.cambridge.arm.com>
+References: <1536842907-51732-1-git-send-email-andrew.murray@arm.com>
+ <464e07ab-797e-971a-0839-5fd55e3e2ad3@huawei.com>
+MIME-Version: 1.0
+In-Reply-To: <464e07ab-797e-971a-0839-5fd55e3e2ad3@huawei.com>
+List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
+List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
+List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
+List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
+List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
+Cc: Arnd Bergmann <arnd@arndb.de>, suzuki.poulose@arm.com,
+ jean-philippe.brucker@arm.com, dann.frazier@canonical.com,
+ Will Deacon <will.deacon@arm.com>, Linuxarm <linuxarm@huawei.com>,
+ linux-kernel@vger.kernel.org, andy.shevchenko@gmail.com,
+ linux-pci@vger.kernel.org, bhelgaas@google.com,
+ linux-arm-kernel@lists.infradead.org
+Content-Type: text/plain; charset="us-ascii"
+Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
+Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wed, 2018-09-12 at 08:02 -0500, Bjorn Helgaas wrote:
-> [+cc Arnd, powerpc folks]
+On Mon, Sep 17, 2018 at 03:42:32PM +0100, John Garry wrote:
+> - dead e-mail addresses (Zhichang, Gabriele)
+> 
+> On 13/09/2018 13:48, Andrew Murray wrote:
+> 
+> Hi Andrew,
+> 
+> > The !CONFIG_GENERIC_IOMAP version of ioport_map uses MMIO_UPPER_LIMIT to
+> > prevent users from making I/O accesses outside the expected I/O range -
+> > however it erroneously treats MMIO_UPPER_LIMIT as a mask which is
+> > contradictory to its other users.
+> > 
+> > The introduction of CONFIG_INDIRECT_PIO, which subtracts an arbitrary
+> > amount from IO_SPACE_LIMIT to form MMIO_UPPER_LIMIT, results in ioport_map
+> > mangling the given port rather than capping it.
+> > 
+> > We address this by aligning more closely with the CONFIG_GENERIC_IOMAP
+> > implementation of ioport_map by using the comparison operator and
+> > returning NULL where the port exceeds MMIO_UPPER_LIMIT. Though note that
+> > we preserve the existing behavior of masking with IO_SPACE_LIMIT such that
+> > we don't break existing buggy drivers that somehow rely on this masking.
+> 
+> I wouldn't say any drivers rely on this - for the only device driver which
+> uses the "Indirect" IO space region above MMIO_UPPER_LIMIT (HiSilicon LPC),
+> no child device driver for that host uses ioport_map() [those being ipmi si
+> and 8250 generic+of drivers].
 
-[+Oliver]
+I was really referring to the existing !CONFIG_GENERIC_IOMAP && 
+!CONFIG_INDIRECT_PIO use cases where there may be drivers (however unlikely)
+that provide ioport_map an incorrect address which, due to the masking, gets
+converted into a valid address. Returning NULL for these would result in new
+run-time errors therefore it seemed safer to change this to support the new
+"indirect IO" whilst not breaking existing bad drivers.
 
-> On Wed, Sep 12, 2018 at 02:34:09PM +0200, Sebastian Ott wrote:
-> > Hello Bjorn,
-> > 
-> > On s390 we currently handle SRIOV within firmware. Which means
-> > that the PF is under firmware control and not visible to operating
-> > systems. SRIOV enablement happens within firmware and VFs are
-> > passed through to logical partitions.
-> > 
-> > I'm working on a new mode were the PF is under operating system
-> > control (including SRIOV enablement). However we still need
-> > firmware support to access the VFs. The way this is supposed
-> > to work is that when firmware traps the SRIOV enablement it
-> > will present machine checks to the logical partition that
-> > triggered the SRIOV enablement and provide the VFs via hotplug
-> > events.
-> > 
-> > The problem I'm faced with is that the VF detection code in
-> > sriov_enable leads to unusable functions in s390.
+A more correct implementation would always return NULL if
+port > IO_SPACE_LIMIT - it would fully align it with the CONFIG_GENERIC_IOMAP
+implementation - in my view these two implementations should behave the same
+with respect to error handling - at the moment they don't.
+
+
 > 
-> We're moving away from the weak function implementation style.  Can
-> you take a look at Arnd's work here, which uses pci_host_bridge
-> callbacks instead?
+> Regardless of that, it seems better to return NULL when the port is
+> out-of-range, rather than masking it.
 > 
->   https://lkml.kernel.org/r/20180817102645.3839621-1-arnd@arndb.de
+> Cheers
 > 
-> I cc'd some powerpc folks because they also have a fair amount of
-> arch-specific SR-IOV code that might one day move in this direction.
+> > 
+> > Fixes: 5745392e0c2b ("PCI: Apply the new generic I/O management on PCI IO hosts")
+> > Reported-by: Will Deacon <will.deacon@arm.com>
+> > Signed-off-by: Andrew Murray <andrew.murray@arm.com>
 > 
-> > Sebastian Ott (2):
-> >   pci: provide pcibios_sriov_add_vfs
-> >   s390/pci: handle function enumeration after sriov enablement
+> Reviewed-by: John Garry <john.garry@huawei.com>
+
+Thanks for the review.
+
+Andrew Murray
+
+> 
+> > ---
+> >  include/asm-generic/io.h | 3 ++-
+> >  1 file changed, 2 insertions(+), 1 deletion(-)
 > > 
-> >  arch/s390/pci/pci.c | 11 +++++++++++
-> >  drivers/pci/iov.c   | 43 +++++++++++++++++++++++++++++++------------
-> >  include/linux/pci.h |  2 ++
-> >  3 files changed, 44 insertions(+), 12 deletions(-)
+> > diff --git a/include/asm-generic/io.h b/include/asm-generic/io.h
+> > index 66d1d45..d356f80 100644
+> > --- a/include/asm-generic/io.h
+> > +++ b/include/asm-generic/io.h
+> > @@ -1026,7 +1026,8 @@ static inline void __iomem *ioremap_wt(phys_addr_t offset, size_t size)
+> >  #define ioport_map ioport_map
+> >  static inline void __iomem *ioport_map(unsigned long port, unsigned int nr)
+> >  {
+> > -	return PCI_IOBASE + (port & MMIO_UPPER_LIMIT);
+> > +	port &= IO_SPACE_LIMIT;
+> > +	return (port > MMIO_UPPER_LIMIT) ? NULL : PCI_IOBASE + port;
+> >  }
+> >  #endif
 > > 
-> > -- 
-> > 2.13.4
 > > 
+> 
+> 
+
+_______________________________________________
+linux-arm-kernel mailing list
+linux-arm-kernel@lists.infradead.org
+http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
