@@ -1,119 +1,100 @@
-Return-Path: <SRS0=PQBU=L4=vger.kernel.org=linux-pci-owner@kernel.org>
+Return-Path: <SRS0=obOR=L7=vger.kernel.org=linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-8.1 required=3.0 tests=DKIM_SIGNED,
-	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
-	SPF_PASS,T_DKIM_INVALID,URIBL_BLOCKED,USER_AGENT_MUTT autolearn=unavailable
-	autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-0.6 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
+	DKIM_VALID_AU,FREEMAIL_FORGED_FROMDOMAIN,FREEMAIL_FROM,
+	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_PASS
+	autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 793ECECE560
-	for <linux-pci@archiver.kernel.org>; Fri, 14 Sep 2018 20:36:53 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 580C1ECE563
+	for <linux-pci@archiver.kernel.org>; Mon, 17 Sep 2018 05:59:08 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 3369B20881
-	for <linux-pci@archiver.kernel.org>; Fri, 14 Sep 2018 20:36:53 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 111B7214C2
+	for <linux-pci@archiver.kernel.org>; Mon, 17 Sep 2018 05:59:08 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=fail reason="signature verification failed" (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="Ah5MuoBN"
-DMARC-Filter: OpenDMARC Filter v1.3.2 mail.kernel.org 3369B20881
-Authentication-Results: mail.kernel.org; dmarc=none (p=none dis=none) header.from=infradead.org
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="Y9z/hcEn"
+DMARC-Filter: OpenDMARC Filter v1.3.2 mail.kernel.org 111B7214C2
+Authentication-Results: mail.kernel.org; dmarc=fail (p=none dis=none) header.from=gmail.com
 Authentication-Results: mail.kernel.org; spf=none smtp.mailfrom=linux-pci-owner@vger.kernel.org
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1728139AbeIOBvV (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Fri, 14 Sep 2018 21:51:21 -0400
-Received: from bombadil.infradead.org ([198.137.202.133]:49774 "EHLO
-        bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1727716AbeIOBvU (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Fri, 14 Sep 2018 21:51:20 -0400
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
-        d=infradead.org; s=bombadil.20170209; h=In-Reply-To:Content-Type:MIME-Version
-        :References:Message-ID:Subject:Cc:To:From:Date:Sender:Reply-To:
-        Content-Transfer-Encoding:Content-ID:Content-Description:Resent-Date:
-        Resent-From:Resent-Sender:Resent-To:Resent-Cc:Resent-Message-ID:List-Id:
-        List-Help:List-Unsubscribe:List-Subscribe:List-Post:List-Owner:List-Archive;
-         bh=VbBHMVEyJI1lGgMge03sxnARe40m8CUxZGs5+O/1YWA=; b=Ah5MuoBNmEA4BLkku0YZio3kn
-        DAVGqIPUQWoBI9uhXleLpEL6JkuzH97OKLlZXbNGHdqk5o+SDPGjpWQoJAFfHRttYrzyAPEoAsWg4
-        L25NruAhikuc+3fGwc9iwwe/EmHiqL+cXEdpbCSrk/yTN/7bz0FXKPzbA3i0mn+uB6XjA0Ut2v1Lu
-        vcYTE3a7uq8oB+aivhjrxeSKr7N7i8F0rR4UlMm2j+8b9R8itFBPrBV0SOwqHJAT0DeDJqekdQ+U3
-        o6Q7uecIHrRLCUbVhVQ3c9o5XPYsSI2T89+VEIErp/3qxvoaTtGKNTv1xQDldcGdQCkQ6ROOtQDMJ
-        9pBT4saZA==;
-Received: from dvhart by bombadil.infradead.org with local (Exim 4.90_1 #2 (Red Hat Linux))
-        id 1g0uo1-00073o-GL; Fri, 14 Sep 2018 20:35:09 +0000
-Date:   Fri, 14 Sep 2018 13:35:06 -0700
-From:   Darren Hart <dvhart@infradead.org>
-To:     Arnd Bergmann <arnd@arndb.de>
-Cc:     viro@zeniv.linux.org.uk, linux-fsdevel@vger.kernel.org,
-        Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-        "David S. Miller" <davem@davemloft.net>,
-        devel@driverdev.osuosl.org, linux-kernel@vger.kernel.org,
-        qat-linux@intel.com, linux-crypto@vger.kernel.org,
-        linux-media@vger.kernel.org, dri-devel@lists.freedesktop.org,
-        linaro-mm-sig@lists.linaro.org, amd-gfx@lists.freedesktop.org,
-        linux-input@vger.kernel.org, linux-iio@vger.kernel.org,
-        linux-rdma@vger.kernel.org, linux-nvdimm@lists.01.org,
-        linux-nvme@lists.infradead.org, linux-pci@vger.kernel.org,
-        platform-driver-x86@vger.kernel.org,
-        linux-remoteproc@vger.kernel.org, sparclinux@vger.kernel.org,
-        linux-scsi@vger.kernel.org, linux-usb@vger.kernel.org,
-        linux-fbdev@vger.kernel.org, linuxppc-dev@lists.ozlabs.org,
-        linux-btrfs@vger.kernel.org, ceph-devel@vger.kernel.org,
-        linux-wireless@vger.kernel.org, netdev@vger.kernel.org
-Subject: Re: [PATCH v2 05/17] compat_ioctl: move more drivers to
- generic_compat_ioctl_ptrarg
-Message-ID: <20180914203506.GE35251@wrath>
-References: <20180912150142.157913-1-arnd@arndb.de>
- <20180912151134.436719-1-arnd@arndb.de>
+        id S1728185AbeIQLYx (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Mon, 17 Sep 2018 07:24:53 -0400
+Received: from mail-qt0-f180.google.com ([209.85.216.180]:38702 "EHLO
+        mail-qt0-f180.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726075AbeIQLYx (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Mon, 17 Sep 2018 07:24:53 -0400
+Received: by mail-qt0-f180.google.com with SMTP id x7-v6so14246284qtk.5;
+        Sun, 16 Sep 2018 22:59:02 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20161025;
+        h=mime-version:from:date:message-id:subject:to:cc;
+        bh=7WJ+hqzFQ96/YP53IiVcSS6j0tAZZ8UWPTJapmfUqIs=;
+        b=Y9z/hcEn93930Kkbg13GbyKto0B5heyHexWe9ygfeYTSTHPL/nGb5K7/tlpdW/3doB
+         Re8Zf8qgnJR2qc7t145EEnMBgSGP4cd6XHFo3MC9wufMGKSW5+mwunjHK6waDW7prcKG
+         e98YtytcQT4KHpYnZYFwR8yoe+NmiBInI8YLGLGlUD8U914gRJ8cl5RwtcnARcu8/+RI
+         f57PSQ0i+Mv76zNQ1KtKK+D/nZdCNcdyqeEPmq0uxvy7Cpp7l3L1qiqGXKwsNfhP6pQK
+         pmlCiPKrxTaEf0WqdXDuqJ1BjHtAHwVlwne+KaKLnIjUlworq7z7K0mwkriK5HtPOiY0
+         RKIg==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20161025;
+        h=x-gm-message-state:mime-version:from:date:message-id:subject:to:cc;
+        bh=7WJ+hqzFQ96/YP53IiVcSS6j0tAZZ8UWPTJapmfUqIs=;
+        b=XC4KXLhNu0fGn0+LmVP9FtBjD5T5iH3F2iXAyDqR3wMUUp9xkl+uJUW7T0akwByAxj
+         LuHWoQX8lKRCsnXatREmssW2XoA1D2vjqn4EobGeBmnI9XVJCA0l1GqZVhuM3HvdGpaK
+         /MTDh4LaY+8DxVBMRCL9xHH+/Y5yCPFmgKry6P66WrNYKI3oRrBb3BuzuFRNDzO5omiU
+         0H/FH3ffvAW25392voTHZR/zC5EQJgBfiwHd1RS55oyYRcocmnSZ/qqK0PX/Oyd3Y6e6
+         CN6KWnQYcyczogVNCkXnObkKqJi/MZ/mRffVjfrCYpTlwPLr1XtxvgLXz9efTQHY/3Kr
+         Ow4A==
+X-Gm-Message-State: APzg51D0w9fyAfm/lLryaQljP0d/JcTBE6hSWwProqj1c72AYcPNQMuC
+        6N9SflgWIo815YxLay3RGK2jf5vnsiqhVzEHWw==
+X-Google-Smtp-Source: ANB0VdbRxNDEytr3nnEEOl9v99PFLsCIOINHkujqV3TpS1UhdgdsQI291zV8ZvwdNhezg2Vf+33gnLoVR7B+4PRLZsU=
+X-Received: by 2002:aed:22cc:: with SMTP id q12-v6mr16584943qtc.145.1537163942063;
+ Sun, 16 Sep 2018 22:59:02 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20180912151134.436719-1-arnd@arndb.de>
-User-Agent: Mutt/1.10.1 (2018-07-13)
+From:   Peter Anemone <peter.anemone@gmail.com>
+Date:   Mon, 17 Sep 2018 08:58:50 +0300
+Message-ID:
+ <CAFtaAxE8G15vU40jCKzqzuwpt_-bDfVpWuaeuy6cQ-sh=Ap2XQ@mail.gmail.com>
+Subject: [REGRESSION][BISECTED] Boot stall related to drivers/pci/hotplug/acpiphp_glue.c
+To:     rjw@rjwysocki.net, lenb@kernel.org, bhelgaas@google.com,
+        mika.westerberg@linux.intel.com
+Cc:     linux-pci@vger.kernel.org, linux-acpi@vger.kernel.org,
+        linux-kernel@vger.kernel.org
+Content-Type: text/plain; charset="UTF-8"
 Sender: linux-pci-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
-Message-ID: <20180914203506.-ERQETHGg1qisomP10viT0U1LHeDhxzbBPw-O1FE5u0@z>
+Message-ID: <20180917055850.nMQfBOgUlzFMPSW2AmiIj6N07xm_Sl2yHj5hKJ8MUd0@z>
 
-On Wed, Sep 12, 2018 at 05:08:52PM +0200, Arnd Bergmann wrote:
-> The .ioctl and .compat_ioctl file operations have the same prototype so
-> they can both point to the same function, which works great almost all
-> the time when all the commands are compatible.
-> 
-> One exception is the s390 architecture, where a compat pointer is only
-> 31 bit wide, and converting it into a 64-bit pointer requires calling
-> compat_ptr(). Most drivers here will ever run in s390, but since we now
-> have a generic helper for it, it's easy enough to use it consistently.
-> 
-> I double-checked all these drivers to ensure that all ioctl arguments
-> are used as pointers or are ignored, but are not interpreted as integer
-> values.
-> 
-> Signed-off-by: Arnd Bergmann <arnd@arndb.de>
-> ---
-...
->  drivers/platform/x86/wmi.c                  | 2 +-
-...
->  static void link_event_work(struct work_struct *work)
-> diff --git a/drivers/platform/x86/wmi.c b/drivers/platform/x86/wmi.c
-> index 04791ea5d97b..e4d0697e07d6 100644
-> --- a/drivers/platform/x86/wmi.c
-> +++ b/drivers/platform/x86/wmi.c
-> @@ -886,7 +886,7 @@ static const struct file_operations wmi_fops = {
->  	.read		= wmi_char_read,
->  	.open		= wmi_char_open,
->  	.unlocked_ioctl	= wmi_ioctl,
-> -	.compat_ioctl	= wmi_ioctl,
-> +	.compat_ioctl	= generic_compat_ioctl_ptrarg,
->  };
+Dear kernel developers
+I reported a bug at Bugzilla, but Greg Kroah-Hartman pointed me in
+mailing lists. Here's my bug report:
 
-For platform/drivers/x86:
+Linux has been unbootable for me from 4.18 upwards. Even the fallback
+image does not boot. This has not been fixed yet in 4.19-rc3. acpi=off
+kernel parameter lets me boot 4.18.6 and 4.19-rc3.
 
-Acked-by: Darren Hart (VMware) <dvhart@infradead.org>
+I used git bisect to track down the first bad commit:
+84c8b58ed3addf17d3beb2e5037b001ffa65c5ef
 
-As for a longer term solution, would it be possible to init fops in such
-a way that the compat_ioctl call defaults to generic_compat_ioctl_ptrarg
-so we don't have to duplicate this boilerplate for every ioctl fops
-structure?
+The commit is about:
+"ACPI / hotplug / PCI: Don't scan bridges managed by native hotplug"
+https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/commit/?id=84c8b58ed3addf17d3beb2e5037b001ffa65c5ef
 
--- 
-Darren Hart
-VMware Open Source Technology Center
+Linux 4.17 booted fine. Reverting commit
+84c8b58ed3addf17d3beb2e5037b001ffa65c5ef makes 4.18 and 4.19-rc3
+bootable again (without the acpi=off parameter).
+
+Information about my system:
+Model: HP 6730b laptop
+CPU: Intel Core 2 Duo P8600
+Boot manager: systemd-boot (UEFI)
+More information of my system as attachments on the bug report at Bugzilla.
+
+Link to the bug report:
+https://bugzilla.kernel.org/show_bug.cgi?id=201127
+
+Thanks for all the good work!
+-Peter
