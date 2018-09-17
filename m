@@ -1,126 +1,44 @@
 Return-Path: <linux-acpi-owner@vger.kernel.org>
-From: Mika Westerberg <mika.westerberg@linux.intel.com>
-To: Bjorn Helgaas <bhelgaas@google.com>,
-        "Rafael J. Wysocki" <rjw@rjwysocki.net>
-Cc: Len Brown <lenb@kernel.org>, Lukas Wunner <lukas@wunner.de>,
-        Keith Busch <keith.busch@intel.com>,
-        Ashok Raj <ashok.raj@intel.com>, Mario.Limonciello@dell.com,
-        Anthony Wong <anthony.wong@canonical.com>,
-        Linus Walleij <linus.walleij@linaro.org>,
-        Sakari Ailus <sakari.ailus@iki.fi>,
-        Mika Westerberg <mika.westerberg@linux.intel.com>,
-        linux-pci@vger.kernel.org, linux-acpi@vger.kernel.org
-Subject: [PATCH v2 03/10] PCI: pciehp: Disable hotplug interrupt during suspend
-Date: Thu, 13 Sep 2018 17:33:15 +0300
-Message-Id: <20180913143322.77953-4-mika.westerberg@linux.intel.com>
-In-Reply-To: <20180913143322.77953-1-mika.westerberg@linux.intel.com>
-References: <20180913143322.77953-1-mika.westerberg@linux.intel.com>
+MIME-Version: 1.0
+From: Peter Anemone <peter.anemone@gmail.com>
+Date: Mon, 17 Sep 2018 08:58:50 +0300
+Message-ID: <CAFtaAxE8G15vU40jCKzqzuwpt_-bDfVpWuaeuy6cQ-sh=Ap2XQ@mail.gmail.com>
+Subject: [REGRESSION][BISECTED] Boot stall related to drivers/pci/hotplug/acpiphp_glue.c
+To: rjw@rjwysocki.net, lenb@kernel.org, bhelgaas@google.com,
+        mika.westerberg@linux.intel.com
+Cc: linux-pci@vger.kernel.org, linux-acpi@vger.kernel.org,
+        linux-kernel@vger.kernel.org
+Content-Type: text/plain; charset="UTF-8"
 Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-When PCIe hotplug port is transitioned into D3hot link to the downstream
-component will go down. If hotplug interrupt generation is enabled when
-that happens it will trigger immediately waking up the system and
-bringing the link back up.
+Dear kernel developers
+I reported a bug at Bugzilla, but Greg Kroah-Hartman pointed me in
+mailing lists. Here's my bug report:
 
-To prevent this disable hotplug interrupt generation when system suspend
-is entered. This does not prevent wakeup from low power states according
-to PCIe 4.0 spec section 6.7.3.4:
+Linux has been unbootable for me from 4.18 upwards. Even the fallback
+image does not boot. This has not been fixed yet in 4.19-rc3. acpi=off
+kernel parameter lets me boot 4.18.6 and 4.19-rc3.
 
-  Software enables a hot-plug event to generate a wakeup event by
-  enabling software notification of the event as described in Section
-  6.7.3.1. Note that in order for software to disable interrupt generation
-  while keeping wakeup generation enabled, the Hot-Plug Interrupt Enable
-  bit must be cleared.
+I used git bisect to track down the first bad commit:
+84c8b58ed3addf17d3beb2e5037b001ffa65c5ef
 
-So as long as we have set the slot event mask accordingly wakeup should
-work even if slot interrupt is disabled. The port should trigger wake
-and then send PME to the root port when the PCIe hierarchy is brought
-back up.
+The commit is about:
+"ACPI / hotplug / PCI: Don't scan bridges managed by native hotplug"
+https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/commit/?id=84c8b58ed3addf17d3beb2e5037b001ffa65c5ef
 
-Limit this to systems using native PME mechanism to make sure older
-Apple systems depending on commit e3354628c376 ("PCI: pciehp: Support
-interrupts sent from D3hot") still continue working.
+Linux 4.17 booted fine. Reverting commit
+84c8b58ed3addf17d3beb2e5037b001ffa65c5ef makes 4.18 and 4.19-rc3
+bootable again (without the acpi=off parameter).
 
-Signed-off-by: Mika Westerberg <mika.westerberg@linux.intel.com>
-Reviewed-by: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
----
- drivers/pci/hotplug/pciehp.h      |  2 ++
- drivers/pci/hotplug/pciehp_core.c | 18 ++++++++++++++++++
- drivers/pci/hotplug/pciehp_hpc.c  | 10 ++++++++++
- 3 files changed, 30 insertions(+)
+Information about my system:
+Model: HP 6730b laptop
+CPU: Intel Core 2 Duo P8600
+Boot manager: systemd-boot (UEFI)
+More information of my system as attachments on the bug report at Bugzilla.
 
-diff --git a/drivers/pci/hotplug/pciehp.h b/drivers/pci/hotplug/pciehp.h
-index 8131c08b21e5..9a8051a878dc 100644
---- a/drivers/pci/hotplug/pciehp.h
-+++ b/drivers/pci/hotplug/pciehp.h
-@@ -184,6 +184,8 @@ struct controller *pcie_init(struct pcie_device *dev);
- int pcie_init_notification(struct controller *ctrl);
- void pcie_shutdown_notification(struct controller *ctrl);
- void pcie_clear_hotplug_events(struct controller *ctrl);
-+void pcie_enable_interrupt(struct controller *ctrl);
-+void pcie_disable_interrupt(struct controller *ctrl);
- int pciehp_power_on_slot(struct slot *slot);
- void pciehp_power_off_slot(struct slot *slot);
- void pciehp_get_power_status(struct slot *slot, u8 *status);
-diff --git a/drivers/pci/hotplug/pciehp_core.c b/drivers/pci/hotplug/pciehp_core.c
-index ccaf01e6eced..940c64fdcaae 100644
---- a/drivers/pci/hotplug/pciehp_core.c
-+++ b/drivers/pci/hotplug/pciehp_core.c
-@@ -265,8 +265,23 @@ static void pciehp_remove(struct pcie_device *dev)
- }
- 
- #ifdef CONFIG_PM
-+static bool pme_is_native(struct pcie_device *dev)
-+{
-+	const struct pci_host_bridge *host;
-+
-+	host = pci_find_host_bridge(dev->port->bus);
-+	return pcie_ports_native || host->native_pme;
-+}
-+
- static int pciehp_suspend(struct pcie_device *dev)
- {
-+	/*
-+	 * Disable hotplug interrupt so that it does not trigger
-+	 * immediately when the downstream link goes down.
-+	 */
-+	if (pme_is_native(dev))
-+		pcie_disable_interrupt(get_service_data(dev));
-+
- 	return 0;
- }
- 
-@@ -290,6 +305,9 @@ static int pciehp_resume(struct pcie_device *dev)
- {
- 	struct controller *ctrl = get_service_data(dev);
- 
-+	if (pme_is_native(dev))
-+		pcie_enable_interrupt(ctrl);
-+
- 	pciehp_check_presence(ctrl);
- 
- 	return 0;
-diff --git a/drivers/pci/hotplug/pciehp_hpc.c b/drivers/pci/hotplug/pciehp_hpc.c
-index 017161c03a4d..02fb6e367e2a 100644
---- a/drivers/pci/hotplug/pciehp_hpc.c
-+++ b/drivers/pci/hotplug/pciehp_hpc.c
-@@ -748,6 +748,16 @@ void pcie_clear_hotplug_events(struct controller *ctrl)
- 				   PCI_EXP_SLTSTA_PDC | PCI_EXP_SLTSTA_DLLSC);
- }
- 
-+void pcie_enable_interrupt(struct controller *ctrl)
-+{
-+	pcie_write_cmd(ctrl, PCI_EXP_SLTCTL_HPIE, PCI_EXP_SLTCTL_HPIE);
-+}
-+
-+void pcie_disable_interrupt(struct controller *ctrl)
-+{
-+	pcie_write_cmd(ctrl, 0, PCI_EXP_SLTCTL_HPIE);
-+}
-+
- /*
-  * pciehp has a 1:1 bus:slot relationship so we ultimately want a secondary
-  * bus reset of the bridge, but at the same time we want to ensure that it is
--- 
-2.18.0
+Link to the bug report:
+https://bugzilla.kernel.org/show_bug.cgi?id=201127
+
+Thanks for all the good work!
+-Peter
