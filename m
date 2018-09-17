@@ -1,57 +1,52 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from bmailout2.hostsharing.net ([83.223.90.240]:44671 "EHLO
-        bmailout2.hostsharing.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1725919AbeIFQRU (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Thu, 6 Sep 2018 12:17:20 -0400
-Date: Thu, 6 Sep 2018 13:42:15 +0200
-From: Lukas Wunner <lukas@wunner.de>
-To: Keith Busch <keith.busch@intel.com>
-Cc: Linux PCI <linux-pci@vger.kernel.org>,
-        Bjorn Helgaas <bhelgaas@google.com>,
-        Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-        Sinan Kaya <okaya@kernel.org>,
-        Thomas Tai <thomas.tai@oracle.com>, poza@codeaurora.org,
-        Christoph Hellwig <hch@lst.de>
-Subject: Re: [PATCHv2 03/20] PCI: Add required waits on link active
-Message-ID: <20180906114215.jkz547ykg756pq4o@wunner.de>
-References: <20180905203546.21921-1-keith.busch@intel.com>
- <20180905203546.21921-4-keith.busch@intel.com>
+Received: from mail-qk1-f196.google.com ([209.85.222.196]:41374 "EHLO
+        mail-qk1-f196.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726075AbeIQL1R (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Mon, 17 Sep 2018 07:27:17 -0400
+Received: by mail-qk1-f196.google.com with SMTP id h138-v6so8417216qke.8
+        for <linux-pci@vger.kernel.org>; Sun, 16 Sep 2018 23:01:26 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20180905203546.21921-4-keith.busch@intel.com>
+References: <CAFtaAxH5C_4V5-z5T=CGQMLD4Yy3iKS1-=QiX1dRqpCwZAsNeA@mail.gmail.com>
+In-Reply-To: <CAFtaAxH5C_4V5-z5T=CGQMLD4Yy3iKS1-=QiX1dRqpCwZAsNeA@mail.gmail.com>
+From: Peter Anemone <peter.anemone@gmail.com>
+Date: Mon, 17 Sep 2018 09:01:13 +0300
+Message-ID: <CAFtaAxEf87RmLZBNLZ0hu2Bi+ND2xHs3bBJnDTaiib86575zeQ@mail.gmail.com>
+Subject: Re: REGRESSION: Boot stall related to drivers/pci/hotplug/acpiphp_glue.c
+To: linux-pci@vger.kernel.org
+Content-Type: text/plain; charset="UTF-8"
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wed, Sep 05, 2018 at 02:35:29PM -0600, Keith Busch wrote:
-> --- a/drivers/pci/pci.c
-> +++ b/drivers/pci/pci.c
-> @@ -4485,21 +4485,33 @@ bool pcie_wait_for_link(struct pci_dev *pdev, bool active)
->  	bool ret;
->  	u16 lnk_status;
->  
-> +	/*
-> +	 * PCIe 4.0r1 6.6.1, a component must enter LTSSM Detect within 20ms,
-> +	 * after which we should expect an link active if the reset was
-> +	 * successful. If so, software must wait a minimum 100ms before sending
-> +	 * configuration requests to devices downstream this port.
-> +	 *
-> +	 * If the link fails to activate, either the device was physically
-> +	 * removed or the link is permanently failed.
-> +	 */
-> +	if (active)
-> +		msleep(20);
-
-This function is also called by pciehp when bringing up the slot,
-yet I assume the above delay only applies to a Fundamental Reset,
-not hotplug?
-
-
-> +	if (active && ret)
-> +		msleep(100);
-
-This delay is already observed by pciehp_check_link_status()
-after calling pcie_wait_link_active().
-
-Thanks,
-
-Lukas
+Ignore this thread, I missed important recipients, so I re-sent the bug report.
+pe 14. syysk. 2018 klo 14.47 Peter Anemone (peter.anemone@gmail.com) kirjoitti:
+>
+> Dear kernel developers
+> I reported a bug at Bugzilla, but Greg Kroah-Hartman pointed me in
+> this mailing list. Here's my bug report:
+>
+> Linux has been unbootable for me from 4.18 upwards. Even the fallback
+> image does not boot. This has not been fixed yet in 4.19-rc3. acpi=off
+> kernel parameter lets me boot 4.18.6 and 4.19-rc3.
+>
+> I used git bisect to track down the first bad commit:
+> 84c8b58ed3addf17d3beb2e5037b001ffa65c5ef
+>
+> The commit is about:
+> "ACPI / hotplug / PCI: Don't scan bridges managed by native hotplug"
+> https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/commit/?id=84c8b58ed3addf17d3beb2e5037b001ffa65c5ef
+>
+> Linux 4.17 booted fine. Reverting commit
+> 84c8b58ed3addf17d3beb2e5037b001ffa65c5ef makes 4.18 and 4.19-rc3
+> bootable again (without the acpi=off parameter).
+>
+> Information about my system:
+> Model: HP 6730b laptop
+> CPU: Intel Core 2 Duo P8600
+> Boot manager: systemd-boot (UEFI)
+> More information of my system as attachments on the bug report at Bugzilla.
+>
+> Link to the bug report:
+> https://bugzilla.kernel.org/show_bug.cgi?id=201127
+>
+> Thanks for all the good work!
+> --Peter
