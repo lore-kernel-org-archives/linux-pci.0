@@ -1,60 +1,82 @@
-Return-Path: <linux-nvme-bounces+bjorn=helgaas.com@lists.infradead.org>
-Return-Path: <linux-nvme-bounces+bjorn=helgaas.com@lists.infradead.org>
-Date: Wed, 12 Sep 2018 20:13:30 +0200
-From: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
-To: Arnd Bergmann <arnd@arndb.de>
-Subject: Re: [PATCH v2 05/17] compat_ioctl: move more drivers to
- generic_compat_ioctl_ptrarg
-Message-ID: <20180912181330.GC15031@kroah.com>
-References: <20180912150142.157913-1-arnd@arndb.de>
- <20180912151134.436719-1-arnd@arndb.de>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from lelv0143.ext.ti.com ([198.47.23.248]:46602 "EHLO
+        lelv0143.ext.ti.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1727052AbeIQXed (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Mon, 17 Sep 2018 19:34:33 -0400
+From: Vignesh R <vigneshr@ti.com>
+To: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
+CC: Kishon Vijay Abraham I <kishon@ti.com>,
+        Bjorn Helgaas <bhelgaas@google.com>,
+        Rob Herring <robh+dt@kernel.org>, <linux-omap@vger.kernel.org>,
+        <linux-pci@vger.kernel.org>, <devicetree@vger.kernel.org>,
+        <linux-kernel@vger.kernel.org>, Vignesh R <vigneshr@ti.com>
+Subject: [PATCH v4 2/2] pci: dwc: pci-dra7xx: Enable errata i870 for both EP and RC mode
+Date: Mon, 17 Sep 2018 23:36:35 +0530
+Message-ID: <20180917180635.26996-3-vigneshr@ti.com>
+In-Reply-To: <20180917180635.26996-1-vigneshr@ti.com>
+References: <20180917180635.26996-1-vigneshr@ti.com>
 MIME-Version: 1.0
-In-Reply-To: <20180912151134.436719-1-arnd@arndb.de>
-List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-nvme>,
- <mailto:linux-nvme-request@lists.infradead.org?subject=unsubscribe>
-List-Archive: <http://lists.infradead.org/pipermail/linux-nvme/>
-List-Post: <mailto:linux-nvme@lists.infradead.org>
-List-Help: <mailto:linux-nvme-request@lists.infradead.org?subject=help>
-List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-nvme>,
- <mailto:linux-nvme-request@lists.infradead.org?subject=subscribe>
-Cc: linux-fbdev@vger.kernel.org, linux-iio@vger.kernel.org,
- linux-pci@vger.kernel.org, linux-remoteproc@vger.kernel.org,
- linux-nvme@lists.infradead.org, platform-driver-x86@vger.kernel.org,
- sparclinux@vger.kernel.org, devel@driverdev.osuosl.org,
- linux-scsi@vger.kernel.org, linux-nvdimm@lists.01.org,
- linux-rdma@vger.kernel.org, qat-linux@intel.com, amd-gfx@lists.freedesktop.org,
- linux-input@vger.kernel.org, linux-media@vger.kernel.org,
- linaro-mm-sig@lists.linaro.org, dri-devel@lists.freedesktop.org,
- ceph-devel@vger.kernel.org, netdev@vger.kernel.org, linux-usb@vger.kernel.org,
- linux-wireless@vger.kernel.org, linux-kernel@vger.kernel.org,
- linux-crypto@vger.kernel.org, linux-fsdevel@vger.kernel.org,
- linuxppc-dev@lists.ozlabs.org, "David S. Miller" <davem@davemloft.net>,
- linux-btrfs@vger.kernel.org, viro@zeniv.linux.org.uk
-Content-Type: text/plain; charset="us-ascii"
-Sender: "Linux-nvme" <linux-nvme-bounces@lists.infradead.org>
-Errors-To: linux-nvme-bounces+bjorn=helgaas.com@lists.infradead.org
+Content-Type: text/plain
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wed, Sep 12, 2018 at 05:08:52PM +0200, Arnd Bergmann wrote:
-> The .ioctl and .compat_ioctl file operations have the same prototype so
-> they can both point to the same function, which works great almost all
-> the time when all the commands are compatible.
-> 
-> One exception is the s390 architecture, where a compat pointer is only
-> 31 bit wide, and converting it into a 64-bit pointer requires calling
-> compat_ptr(). Most drivers here will ever run in s390, but since we now
-> have a generic helper for it, it's easy enough to use it consistently.
-> 
-> I double-checked all these drivers to ensure that all ioctl arguments
-> are used as pointers or are ignored, but are not interpreted as integer
-> values.
-> 
-> Signed-off-by: Arnd Bergmann <arnd@arndb.de>
+Errata i870 is applicable in both EP and RC mode. Therefore rename
+function dra7xx_pcie_ep_unaligned_memaccess(), that implements errata
+workaround, to dra7xx_pcie_unaligned_memaccess() and call it from a
+common place. So, that errata workaround is applied for both modes of
+operation.
 
-Acked-by: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
+Reported-by: Chris Welch <Chris.Welch@viavisolutions.com>
+Signed-off-by: Vignesh R <vigneshr@ti.com>
+Acked-by: Kishon Vijay Abraham I <kishon@ti.com>
+Acked-by: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
+---
+ drivers/pci/controller/dwc/pci-dra7xx.c | 12 ++++++------
+ 1 file changed, 6 insertions(+), 6 deletions(-)
 
-
-_______________________________________________
-Linux-nvme mailing list
-Linux-nvme@lists.infradead.org
-http://lists.infradead.org/mailman/listinfo/linux-nvme
+diff --git a/drivers/pci/controller/dwc/pci-dra7xx.c b/drivers/pci/controller/dwc/pci-dra7xx.c
+index ce9224a36f62..43711561a199 100644
+--- a/drivers/pci/controller/dwc/pci-dra7xx.c
++++ b/drivers/pci/controller/dwc/pci-dra7xx.c
+@@ -542,7 +542,7 @@ static const struct of_device_id of_dra7xx_pcie_match[] = {
+ };
+ 
+ /*
+- * dra7xx_pcie_ep_unaligned_memaccess: workaround for AM572x/AM571x Errata i870
++ * dra7xx_pcie_unaligned_memaccess: workaround for AM572x/AM571x Errata i870
+  * @dra7xx: the dra7xx device where the workaround should be applied
+  *
+  * Access to the PCIe slave port that are not 32-bit aligned will result
+@@ -552,7 +552,7 @@ static const struct of_device_id of_dra7xx_pcie_match[] = {
+  *
+  * To avoid this issue set PCIE_SS1_AXI2OCP_LEGACY_MODE_ENABLE to 1.
+  */
+-static int dra7xx_pcie_ep_unaligned_memaccess(struct device *dev)
++static int dra7xx_pcie_unaligned_memaccess(struct device *dev)
+ {
+ 	int ret;
+ 	struct device_node *np = dev->of_node;
+@@ -695,6 +695,10 @@ static int __init dra7xx_pcie_probe(struct platform_device *pdev)
+ 	if (dra7xx->link_gen < 0 || dra7xx->link_gen > 2)
+ 		dra7xx->link_gen = 2;
+ 
++	ret = dra7xx_pcie_unaligned_memaccess(dev);
++	if (ret)
++		dev_err(dev, "WA for Errata i870 not applied. Update DT\n");
++
+ 	switch (mode) {
+ 	case DW_PCIE_RC_TYPE:
+ 		if (!IS_ENABLED(CONFIG_PCI_DRA7XX_HOST)) {
+@@ -717,10 +721,6 @@ static int __init dra7xx_pcie_probe(struct platform_device *pdev)
+ 		dra7xx_pcie_writel(dra7xx, PCIECTRL_TI_CONF_DEVICE_TYPE,
+ 				   DEVICE_TYPE_EP);
+ 
+-		ret = dra7xx_pcie_ep_unaligned_memaccess(dev);
+-		if (ret)
+-			goto err_gpio;
+-
+ 		ret = dra7xx_add_pcie_ep(dra7xx, pdev);
+ 		if (ret < 0)
+ 			goto err_gpio;
+-- 
+2.19.0
