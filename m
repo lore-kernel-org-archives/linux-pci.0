@@ -1,58 +1,72 @@
-Return-Path: <SRS0=oLbb=L7=arm.com=lorenzo.pieralisi@kernel.org>
-Return-Path: <SRS0=oLbb=L7=arm.com=lorenzo.pieralisi@kernel.org>
-Date: Mon, 17 Sep 2018 16:01:17 +0100
-From: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
-To: Ray Jui <ray.jui@broadcom.com>
-Cc: Bjorn Helgaas <bhelgaas@google.com>, Bjorn Helgaas <helgaas@kernel.org>,
-	linux-kernel@vger.kernel.org, bcm-kernel-feedback-list@broadcom.com,
-	linux-pci@vger.kernel.org,
-	Jitendra Bhivare <jitendra.bhivare@broadcom.com>
-Subject: Re: [PATCH] PCI: iproc: Remove PAXC slot check to allow VF support
-Message-ID: <20180917150117.GG7239@e107981-ln.cambridge.arm.com>
-References: <20180828172258.76629-1-ray.jui@broadcom.com>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from bgl-iport-2.cisco.com ([72.163.197.26]:6563 "EHLO
+        bgl-iport-2.cisco.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1727375AbeIRASg (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Mon, 17 Sep 2018 20:18:36 -0400
+Subject: Re: PCI: Enforce bus address limits in resource allocation
+From: Daniel Walker <danielwa@cisco.com>
+To: linux-pci@vger.kernel.org, Yinghai Lu <yinghai@kernel.org>,
+        Bjorn Helgaas <bhelgaas@google.com>
+References: <abb9aa39-3128-3a4d-01f7-d0614d63f37e@cisco.com>
+Message-ID: <2c531aca-1e16-ddc1-541a-3a8942d50944@cisco.com>
+Date: Mon, 17 Sep 2018 11:39:56 -0700
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20180828172258.76629-1-ray.jui@broadcom.com>
+In-Reply-To: <abb9aa39-3128-3a4d-01f7-d0614d63f37e@cisco.com>
+Content-Type: text/plain; charset=utf-8; format=flowed
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tue, Aug 28, 2018 at 10:22:58AM -0700, Ray Jui wrote:
-> From: Jitendra Bhivare <jitendra.bhivare@broadcom.com>
+
+This problem exists identically on 4.19-rc4 (the lastest as of today).
+
+
+
+On 09/14/2018 08:16 AM, Daniel Walker wrote:
 > 
-> Fix previous incorrect logic that limits PAXC slot number to zero only.
-> In order for SRIOV/VF to work, we need to allow the slot number to be
-> greater than zero.
+> Hi,
 > 
-> Fixes: 46560388c476c ("PCI: iproc: Allow multiple devices except on PAXC")
-> Signed-off-by: Jitendra Bhivare <jitendra.bhivare@broadcom.com>
-> Signed-off-by: Ray Jui <ray.jui@broadcom.com>
-> Reviewed-by: Andy Gospodarek <gospo@broadcom.com>
-> ---
->  drivers/pci/controller/pcie-iproc.c | 8 --------
->  1 file changed, 8 deletions(-)
-
-Applied to pci/iproc for v4.20, thanks.
-
-Lorenzo
-
-> diff --git a/drivers/pci/controller/pcie-iproc.c b/drivers/pci/controller/pcie-iproc.c
-> index 3160e9342a2f..c20fd6bd68fd 100644
-> --- a/drivers/pci/controller/pcie-iproc.c
-> +++ b/drivers/pci/controller/pcie-iproc.c
-> @@ -630,14 +630,6 @@ static void __iomem *iproc_pcie_map_cfg_bus(struct iproc_pcie *pcie,
->  			return (pcie->base + offset);
->  	}
->  
-> -	/*
-> -	 * PAXC is connected to an internally emulated EP within the SoC.  It
-> -	 * allows only one device.
-> -	 */
-> -	if (pcie->ep_is_internal)
-> -		if (slot > 0)
-> -			return NULL;
-> -
->  	return iproc_pcie_map_ep_cfg_reg(pcie, busno, slot, fn, where);
->  }
->  
-> -- 
-> 2.17.1
+> Please forgive my ignorance of PCI. I know very little about it, but 
+> I'll try to convey the issue I'm seeing.
+> 
+> I have a powerpc system with PCI, and some devices attached to the PCI 
+> bus. In 3.10 everything worked fine, then we moved to 4.9 and we had 
+> some issues. I was able to bisect the issue down to the patch in the 
+> subject line.
+> 
+> f75b99d PCI: Enforce bus address limits in resource allocation
+> 
+> 
+>  From 3.10 here is part of the PCI initialization,
+> 
+> |pci 0001:0e:00.0: BAR 0: assigned [mem 0xfc0000000-0xfc00fffff pref]|
+> |pci 0001:07:09.0: PCI bridge to [bus 0e]|
+> |pci 0001:07:09.0: bridge window [mem 0xfc0000000-0xfc00fffff 64bit pref]|
+> |||In this section the memory resource for the bridge is 64bit, and the 
+> device "BAR 0" gets a 64bit range. However, it seems the device is 32bit.|
+> ||
+> |Now fast forward to 4.9 we get this,|
+> 
+> ||
+> |
+> pci 0001:0e:00.0: BAR 0: no space for [mem size 0x00100000 pref]
+> pci 0001:0e:00.0: BAR 0: failed to assign [mem size 0x00100000 pref]
+> pci 0001:07:09.0: PCI bridge to [bus 0e]
+> pci 0001:07:09.0: bridge window [mem 0xfc0000000-0xfc00fffff 64bit pref]
+> 
+> |
+> |Here it seems to have a larger size, I'm not sure where the size is 
+> coming from. I was able to work around the issue by setting 
+> IORESOURCE_MEM_64 on the resource for this device. I also was able to 
+> work around it by setting "max = avail.end" to "max = (-1);" inside 
+> pci_bus_alloc_resource(). |
+> ||
+> ||I don't know if the problem is the patch, or something else inside our 
+> system, but any thoughts are appreciated.
+> 
+> Daniel
+> ||
+> 
+> ||
+> 
+> ||
 > 
