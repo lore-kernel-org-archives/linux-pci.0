@@ -1,36 +1,42 @@
-Return-Path: <SRS0=XCBo=L2=intel.com=dennis.dalessandro@kernel.org>
-Return-Path: <SRS0=XCBo=L2=intel.com=dennis.dalessandro@kernel.org>
-Subject: Re: [PATCH for-rc v2 3/3] IB/hfi1: Prefer new
- __pci_reset_function_locked() API with reset type
-To: Bjorn Helgaas <helgaas@kernel.org>, Sinan Kaya <okaya@kernel.org>
-Cc: linux-pci@vger.kernel.org, Mike Marciniszyn <mike.marciniszyn@intel.com>,
- Doug Ledford <dledford@redhat.com>, Jason Gunthorpe <jgg@ziepe.ca>,
- Alex Williamson <alex.williamson@redhat.com>
-References: <20180905160805.5680-1-okaya@kernel.org>
- <20180905160805.5680-3-okaya@kernel.org>
- <20180912010929.GA118330@bhelgaas-glaptop.roam.corp.google.com>
- <c0f524c3-5b3f-f796-6a6b-3040db4462a3@kernel.org>
- <20180912015927.GB118330@bhelgaas-glaptop.roam.corp.google.com>
-From: Dennis Dalessandro <dennis.dalessandro@intel.com>
-Message-ID: <d4fd0617-202f-b144-a281-771fc41b795a@intel.com>
-Date: Tue, 11 Sep 2018 22:23:32 -0400
-MIME-Version: 1.0
-In-Reply-To: <20180912015927.GB118330@bhelgaas-glaptop.roam.corp.google.com>
-Content-Type: text/plain; charset=utf-8; format=flowed
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from shards.monkeyblade.net ([23.128.96.9]:45724 "EHLO
+        shards.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726885AbeIQU1j (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Mon, 17 Sep 2018 16:27:39 -0400
+Date: Mon, 17 Sep 2018 07:59:56 -0700 (PDT)
+Message-Id: <20180917.075956.2226248627299867563.davem@davemloft.net>
+To: stephen@networkplumber.org
+Cc: kys@microsoft.com, haiyangz@microsoft.com, sthemmin@microsoft.com,
+        devel@linuxdriverproject.org, netdev@vger.kernel.org,
+        linux-pci@vger.kernel.org
+Subject: Re: [PATCH v2 0/2] hv_netvsc: associate VF and PV device by serial
+ number
+From: David Miller <davem@davemloft.net>
+In-Reply-To: <20180914195457.20433-1-sthemmin@microsoft.com>
+References: <20180914195457.20433-1-sthemmin@microsoft.com>
+Mime-Version: 1.0
+Content-Type: Text/Plain; charset=us-ascii
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 9/11/2018 9:59 PM, Bjorn Helgaas wrote:
-> Can we just move the pci_bridge_secondary_bus_reset() decl back to
-> include/linux/pci.h temporarily and have trigger_sbr() call that
-> again?  I'd rather do that than try to squeeze some API rework into an
-> -rc.
+From: Stephen Hemminger <stephen@networkplumber.org>
+Date: Fri, 14 Sep 2018 12:54:55 -0700
+
+> The Hyper-V implementation of PCI controller has concept of 32 bit serial number
+> (not to be confused with PCI-E serial number).  This value is sent in the protocol
+> from the host to indicate SR-IOV VF device is attached to a synthetic NIC.
 > 
+> Using the serial number (instead of MAC address) to associate the two devices
+> avoids lots of potential problems when there are duplicate MAC addresses from
+> tunnels or layered devices.
+> 
+> The patch set is broken into two parts, one is for the PCI controller
+> and the other is for the netvsc device. Normally, these go through different
+> trees but sending them together here for better review. The PCI changes
+> were submitted previously, but the main review comment was "why do you
+> need this?". This is why.
+> 
+> v2 - slot name can be shorter.
+>      remove locking when creating pci_slots; see comment for explaination
 
-That was what I was initially hoping for [1]. Just get things back to 
-working for now, especially since we are approaching the later -rc's. 
-That being said, I have reviewed and tested Sinan's patch. So far so 
-good, but I do see the concern.
-
-[1] https://marc.info/?l=linux-pci&m=153573732824788&w=2
-
--Denny
+Series applied, thanks.
