@@ -4,156 +4,242 @@ X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 X-Spam-Level: 
 X-Spam-Status: No, score=-8.3 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
 	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_PASS,URIBL_BLOCKED,
-	USER_AGENT_MUTT autolearn=ham autolearn_force=no version=3.4.0
+	USER_AGENT_MUTT autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id A9416ECE562
-	for <linux-pci@archiver.kernel.org>; Mon, 17 Sep 2018 10:31:48 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 9ED31ECE562
+	for <linux-pci@archiver.kernel.org>; Mon, 17 Sep 2018 10:33:26 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 53A85214D5
-	for <linux-pci@archiver.kernel.org>; Mon, 17 Sep 2018 10:31:48 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.3.2 mail.kernel.org 53A85214D5
+	by mail.kernel.org (Postfix) with ESMTP id 4936D214C5
+	for <linux-pci@archiver.kernel.org>; Mon, 17 Sep 2018 10:33:26 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.3.2 mail.kernel.org 4936D214C5
 Authentication-Results: mail.kernel.org; dmarc=none (p=none dis=none) header.from=arm.com
 Authentication-Results: mail.kernel.org; spf=none smtp.mailfrom=linux-pci-owner@vger.kernel.org
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726889AbeIQP6d (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Mon, 17 Sep 2018 11:58:33 -0400
-Received: from foss.arm.com ([217.140.101.70]:56214 "EHLO foss.arm.com"
+        id S1726826AbeIQQAL (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Mon, 17 Sep 2018 12:00:11 -0400
+Received: from foss.arm.com ([217.140.101.70]:56292 "EHLO foss.arm.com"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1726865AbeIQP6d (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Mon, 17 Sep 2018 11:58:33 -0400
+        id S1726824AbeIQQAL (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Mon, 17 Sep 2018 12:00:11 -0400
 Received: from usa-sjc-imap-foss1.foss.arm.com (unknown [10.72.51.249])
-        by usa-sjc-mx-foss1.foss.arm.com (Postfix) with ESMTP id B97D318A;
-        Mon, 17 Sep 2018 03:31:46 -0700 (PDT)
+        by usa-sjc-mx-foss1.foss.arm.com (Postfix) with ESMTP id 4D2A418A;
+        Mon, 17 Sep 2018 03:33:24 -0700 (PDT)
 Received: from e107981-ln.cambridge.arm.com (e107981-ln.emea.arm.com [10.4.13.117])
-        by usa-sjc-imap-foss1.foss.arm.com (Postfix) with ESMTPSA id 87C033F5BD;
-        Mon, 17 Sep 2018 03:31:45 -0700 (PDT)
-Date:   Mon, 17 Sep 2018 11:31:42 +0100
+        by usa-sjc-imap-foss1.foss.arm.com (Postfix) with ESMTPSA id A2BCE3F5BD;
+        Mon, 17 Sep 2018 03:33:21 -0700 (PDT)
+Date:   Mon, 17 Sep 2018 11:33:18 +0100
 From:   Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
-To:     Lucas Stach <l.stach@pengutronix.de>
-Cc:     Richard Zhu <hongxing.zhu@nxp.com>, linux-pci@vger.kernel.org,
-        linux-arm-kernel@lists.infradead.org, kernel@pengutronix.de,
-        patchwork-lst@pengutronix.de
-Subject: Re: [PATCH] PCI: imx6: support MPLL reconfiguration for 100MHz and
- 200MHz refclock
-Message-ID: <20180917103142.GB7239@e107981-ln.cambridge.arm.com>
-References: <20180731102149.8537-1-l.stach@pengutronix.de>
+To:     Leonard Crestez <leonard.crestez@nxp.com>
+Cc:     Lucas Stach <l.stach@pengutronix.de>,
+        Andrey Smirnov <andrew.smirnov@gmail.com>,
+        Richard Zhu <hongxing.zhu@nxp.com>,
+        Anson Huang <Anson.Huang@nxp.com>,
+        Philipp Zabel <p.zabel@pengutronix.de>,
+        Bjorn Helgaas <bhelgaas@google.com>,
+        Jingoo Han <jingoohan1@gmail.com>,
+        Joao Pinto <Joao.Pinto@synopsys.com>,
+        Fabio Estevam <fabio.estevam@nxp.com>,
+        Dong Aisheng <aisheng.dong@nxp.com>, linux-imx@nxp.com,
+        kernel@pengutronix.de, linux-pci@vger.kernel.org,
+        linux-arm-kernel@lists.infradead.org, linux-kernel@vger.kernel.org
+Subject: Re: [RESEND] PCI: imx: Initial imx7d pm support
+Message-ID: <20180917103318.GC7239@e107981-ln.cambridge.arm.com>
+References: <d577303de61fb060aa428898f5df1d0bc9be89b8.1535369231.git.leonard.crestez@nxp.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20180731102149.8537-1-l.stach@pengutronix.de>
+In-Reply-To: <d577303de61fb060aa428898f5df1d0bc9be89b8.1535369231.git.leonard.crestez@nxp.com>
 User-Agent: Mutt/1.5.24 (2015-08-30)
 Sender: linux-pci-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
-Message-ID: <20180917103142.LPJRjKr7t8FbD_nvIIpItp_AtKdFXPrr8gs1S7HiaQQ@z>
+Message-ID: <20180917103318.ue_nEP_pIwlmPyfTrdrFePTzJh4q8PXXaZHfJIcTCZw@z>
 
-On Tue, Jul 31, 2018 at 12:21:49PM +0200, Lucas Stach wrote:
-> The power up defaults of the MPLL are designed for the standard 125MHz
-> refclock derived from the ENET PLL. As this clock has a jitter that
-> violates the PCIe Gen2 timing requirements, some board designs use
-> an external reference clock generator. Those clock generators may
-> output a clock at a different rate than what the MPLL expects
-> (usually a 100MHz clock, to re-use the PCIe bus clock).
+On Mon, Aug 27, 2018 at 02:28:37PM +0300, Leonard Crestez wrote:
+> On imx7d the pcie-phy power domain is turned off in suspend and this can
+> make the system hang after resume when attempting any read from PCI.
 > 
-> In that case the MPLL must be reconfigured via overrides to use
-> different refclock dividers and loop multipliers. The i.MX6
-> reference manual lists both 100MHz and 200MHz as supported refclock
-> rates and the associated mult and div values.
+> Fix this by adding minimal suspend/resume code from the nxp internal
+> tree. This will prepare for powering down on suspend and reset the block
+> on resume.
 > 
-> Only the 100MHz setup has been tested on a real board, but since the
-> 200MHz setup only differs in the used pre-divider it seems safe to
-> add it now.
+> Code is only for imx7d but a very similar sequence can be used for
+> other socs.
 > 
-> Signed-off-by: Lucas Stach <l.stach@pengutronix.de>
+> The original author is mostly Richard Zhu <hongxing.zhu@nxp.com>, this
+> patch adjusts the code to the upstream imx7d implemention using reset
+> controls and power domains.
+> 
+> Signed-off-by: Leonard Crestez <leonard.crestez@nxp.com>
+> Reviewed-by: Lucas Stach <l.stach@pengutronix.de>
 > ---
->  drivers/pci/controller/dwc/pci-imx6.c | 55 +++++++++++++++++++++++++++
->  1 file changed, 55 insertions(+)
+>  drivers/pci/controller/dwc/pci-imx6.c | 97 +++++++++++++++++++++++++--
+>  1 file changed, 92 insertions(+), 5 deletions(-)
 
 Applied to pci/dwc for v4.20, thanks.
 
 Lorenzo
 
+> Resending after RC1 as suggested here: https://lkml.org/lkml/2018/8/8/496
+> 
+> This was initially sent together with a dts fix, that was already
+> accepted by Shawn: https://lkml.org/lkml/2018/8/21/529
+> 
+> Some dependencies in this area are complicated but as far as I know
+> including this patch without others should not break anything that was
+> not already broken. Since this is a patch for something that has never
+> worked before it should be treated as a feature not a bugfix.
+> 
+> I have a few other patches for imx pci but it's better to deal with them
+> separately. This initial patch adding suspend support is useful by
+> itself.
+> 
 > diff --git a/drivers/pci/controller/dwc/pci-imx6.c b/drivers/pci/controller/dwc/pci-imx6.c
-> index 80f604602783..c481c61a41b8 100644
+> index 4a9a673b4777..65b6d1015723 100644
 > --- a/drivers/pci/controller/dwc/pci-imx6.c
 > +++ b/drivers/pci/controller/dwc/pci-imx6.c
-> @@ -97,6 +97,16 @@ struct imx6_pcie {
->  #define PORT_LOGIC_SPEED_CHANGE		(0x1 << 17)
+> @@ -540,10 +540,28 @@ static int imx6_pcie_wait_for_speed_change(struct imx6_pcie *imx6_pcie)
 >  
->  /* PHY registers (not memory-mapped) */
-> +#define PCIE_PHY_ATEOVRD			0x10
-> +#define  PCIE_PHY_ATEOVRD_EN			(0x1 << 2)
-> +#define  PCIE_PHY_ATEOVRD_REF_CLKDIV_SHIFT	0
-> +#define  PCIE_PHY_ATEOVRD_REF_CLKDIV_MASK	0x1
-> +
-> +#define PCIE_PHY_MPLL_OVRD_IN_LO		0x11
-> +#define  PCIE_PHY_MPLL_MULTIPLIER_SHIFT		2
-> +#define  PCIE_PHY_MPLL_MULTIPLIER_MASK		0x7f
-> +#define  PCIE_PHY_MPLL_MULTIPLIER_OVRD		(0x1 << 9)
-> +
->  #define PCIE_PHY_RX_ASIC_OUT 0x100D
->  #define PCIE_PHY_RX_ASIC_OUT_VALID	(1 << 0)
->  
-> @@ -508,6 +518,50 @@ static void imx6_pcie_init_phy(struct imx6_pcie *imx6_pcie)
->  			IMX6Q_GPR12_DEVICE_TYPE, PCI_EXP_TYPE_ROOT_PORT << 12);
+>  	dev_err(dev, "Speed change timeout\n");
+>  	return -EINVAL;
 >  }
 >  
-> +static int imx6_setup_phy_mpll(struct imx6_pcie *imx6_pcie)
+> +static void imx6_pcie_ltssm_enable(struct device *dev)
 > +{
-> +	unsigned long phy_rate = clk_get_rate(imx6_pcie->pcie_phy);
-> +	int mult, div;
-> +	u32 val;
+> +	struct imx6_pcie *imx6_pcie = dev_get_drvdata(dev);
 > +
-> +	switch (phy_rate) {
-> +	case 125000000:
-> +		/*
-> +		 * The default settings of the MPLL are for a 125MHz input
-> +		 * clock, so no need to reconfigure anything in that case.
-> +		 */
-> +		return 0;
-> +	case 100000000:
-> +		mult = 25;
-> +		div = 0;
+> +	switch (imx6_pcie->variant) {
+> +	case IMX6Q:
+> +	case IMX6SX:
+> +	case IMX6QP:
+> +		regmap_update_bits(imx6_pcie->iomuxc_gpr, IOMUXC_GPR12,
+> +				   IMX6Q_GPR12_PCIE_CTL_2,
+> +				   IMX6Q_GPR12_PCIE_CTL_2);
 > +		break;
-> +	case 200000000:
-> +		mult = 25;
-> +		div = 1;
+> +	case IMX7D:
+> +		reset_control_deassert(imx6_pcie->apps_reset);
+> +		break;
+> +	}
+> +}
+> +
+>  static int imx6_pcie_establish_link(struct imx6_pcie *imx6_pcie)
+>  {
+>  	struct dw_pcie *pci = imx6_pcie->pci;
+>  	struct device *dev = pci->dev;
+>  	u32 tmp;
+> @@ -558,15 +576,11 @@ static int imx6_pcie_establish_link(struct imx6_pcie *imx6_pcie)
+>  	tmp &= ~PCIE_RC_LCR_MAX_LINK_SPEEDS_MASK;
+>  	tmp |= PCIE_RC_LCR_MAX_LINK_SPEEDS_GEN1;
+>  	dw_pcie_writel_dbi(pci, PCIE_RC_LCR, tmp);
+>  
+>  	/* Start LTSSM. */
+> -	if (imx6_pcie->variant == IMX7D)
+> -		reset_control_deassert(imx6_pcie->apps_reset);
+> -	else
+> -		regmap_update_bits(imx6_pcie->iomuxc_gpr, IOMUXC_GPR12,
+> -				   IMX6Q_GPR12_PCIE_CTL_2, 1 << 10);
+> +	imx6_pcie_ltssm_enable(dev);
+>  
+>  	ret = imx6_pcie_wait_for_link(imx6_pcie);
+>  	if (ret)
+>  		goto err_reset_phy;
+>  
+> @@ -680,10 +694,82 @@ static int imx6_add_pcie_port(struct imx6_pcie *imx6_pcie,
+>  
+>  static const struct dw_pcie_ops dw_pcie_ops = {
+>  	.link_up = imx6_pcie_link_up,
+>  };
+>  
+> +#ifdef CONFIG_PM_SLEEP
+> +static void imx6_pcie_ltssm_disable(struct device *dev)
+> +{
+> +	struct imx6_pcie *imx6_pcie = dev_get_drvdata(dev);
+> +
+> +	switch (imx6_pcie->variant) {
+> +	case IMX6SX:
+> +	case IMX6QP:
+> +		regmap_update_bits(imx6_pcie->iomuxc_gpr, IOMUXC_GPR12,
+> +				   IMX6Q_GPR12_PCIE_CTL_2, 0);
+> +		break;
+> +	case IMX7D:
+> +		reset_control_assert(imx6_pcie->apps_reset);
 > +		break;
 > +	default:
-> +		dev_err(imx6_pcie->pci->dev,
-> +			"Unsupported PHY reference clock rate %lu\n", phy_rate);
-> +		return -EINVAL;
+> +		dev_err(dev, "ltssm_disable not supported\n");
 > +	}
+> +}
 > +
-> +	pcie_phy_read(imx6_pcie, PCIE_PHY_MPLL_OVRD_IN_LO, &val);
-> +	val &= ~(PCIE_PHY_MPLL_MULTIPLIER_MASK <<
-> +		 PCIE_PHY_MPLL_MULTIPLIER_SHIFT);
-> +	val |= mult << PCIE_PHY_MPLL_MULTIPLIER_SHIFT;
-> +	val |= PCIE_PHY_MPLL_MULTIPLIER_OVRD;
-> +	pcie_phy_write(imx6_pcie, PCIE_PHY_MPLL_OVRD_IN_LO, val);
+> +static void imx6_pcie_clk_disable(struct imx6_pcie *imx6_pcie)
+> +{
+> +	clk_disable_unprepare(imx6_pcie->pcie);
+> +	clk_disable_unprepare(imx6_pcie->pcie_phy);
+> +	clk_disable_unprepare(imx6_pcie->pcie_bus);
 > +
-> +	pcie_phy_read(imx6_pcie, PCIE_PHY_ATEOVRD, &val);
-> +	val &= ~(PCIE_PHY_ATEOVRD_REF_CLKDIV_MASK <<
-> +		 PCIE_PHY_ATEOVRD_REF_CLKDIV_SHIFT);
-> +	val |= div << PCIE_PHY_ATEOVRD_REF_CLKDIV_SHIFT;
-> +	val |= PCIE_PHY_ATEOVRD_EN;
-> +	pcie_phy_write(imx6_pcie, PCIE_PHY_ATEOVRD, val);
+> +	if (imx6_pcie->variant == IMX7D) {
+> +		regmap_update_bits(imx6_pcie->iomuxc_gpr, IOMUXC_GPR12,
+> +				   IMX7D_GPR12_PCIE_PHY_REFCLK_SEL,
+> +				   IMX7D_GPR12_PCIE_PHY_REFCLK_SEL);
+> +	}
+> +}
+> +
+> +static int imx6_pcie_suspend_noirq(struct device *dev)
+> +{
+> +	struct imx6_pcie *imx6_pcie = dev_get_drvdata(dev);
+> +
+> +	if (imx6_pcie->variant != IMX7D)
+> +		return 0;
+> +
+> +	imx6_pcie_clk_disable(imx6_pcie);
+> +	imx6_pcie_ltssm_disable(dev);
 > +
 > +	return 0;
 > +}
 > +
->  static int imx6_pcie_wait_for_link(struct imx6_pcie *imx6_pcie)
+> +static int imx6_pcie_resume_noirq(struct device *dev)
+> +{
+> +	int ret;
+> +	struct imx6_pcie *imx6_pcie = dev_get_drvdata(dev);
+> +	struct pcie_port *pp = &imx6_pcie->pci->pp;
+> +
+> +	if (imx6_pcie->variant != IMX7D)
+> +		return 0;
+> +
+> +	imx6_pcie_assert_core_reset(imx6_pcie);
+> +	imx6_pcie_init_phy(imx6_pcie);
+> +	imx6_pcie_deassert_core_reset(imx6_pcie);
+> +	dw_pcie_setup_rc(pp);
+> +
+> +	ret = imx6_pcie_establish_link(imx6_pcie);
+> +	if (ret < 0)
+> +		dev_info(dev, "pcie link is down after resume.\n");
+> +
+> +	return 0;
+> +}
+> +#endif
+> +
+> +static const struct dev_pm_ops imx6_pcie_pm_ops = {
+> +	SET_NOIRQ_SYSTEM_SLEEP_PM_OPS(imx6_pcie_suspend_noirq,
+> +				      imx6_pcie_resume_noirq)
+> +};
+> +
+>  static int imx6_pcie_probe(struct platform_device *pdev)
 >  {
->  	struct dw_pcie *pci = imx6_pcie->pci;
-> @@ -632,6 +686,7 @@ static int imx6_pcie_host_init(struct pcie_port *pp)
->  	imx6_pcie_assert_core_reset(imx6_pcie);
->  	imx6_pcie_init_phy(imx6_pcie);
->  	imx6_pcie_deassert_core_reset(imx6_pcie);
-> +	imx6_setup_phy_mpll(imx6_pcie);
->  	dw_pcie_setup_rc(pp);
->  	imx6_pcie_establish_link(imx6_pcie);
+>  	struct device *dev = &pdev->dev;
+>  	struct dw_pcie *pci;
+>  	struct imx6_pcie *imx6_pcie;
+> @@ -846,10 +932,11 @@ static const struct of_device_id imx6_pcie_of_match[] = {
+>  static struct platform_driver imx6_pcie_driver = {
+>  	.driver = {
+>  		.name	= "imx6q-pcie",
+>  		.of_match_table = imx6_pcie_of_match,
+>  		.suppress_bind_attrs = true,
+> +		.pm = &imx6_pcie_pm_ops,
+>  	},
+>  	.probe    = imx6_pcie_probe,
+>  	.shutdown = imx6_pcie_shutdown,
+>  };
 >  
 > -- 
-> 2.18.0
+> 2.17.1
 > 
