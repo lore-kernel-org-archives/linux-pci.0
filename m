@@ -2,115 +2,96 @@ Return-Path: <SRS0=obOR=L7=vger.kernel.org=linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-6.8 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_PASS,URIBL_BLOCKED
-	autolearn=unavailable autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-8.3 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_PASS,USER_AGENT_MUTT
+	autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 2C9B9ECE563
-	for <linux-pci@archiver.kernel.org>; Mon, 17 Sep 2018 14:42:51 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 25E87ECE560
+	for <linux-pci@archiver.kernel.org>; Mon, 17 Sep 2018 14:47:40 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id BE2922088F
-	for <linux-pci@archiver.kernel.org>; Mon, 17 Sep 2018 14:42:50 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.3.2 mail.kernel.org BE2922088F
-Authentication-Results: mail.kernel.org; dmarc=none (p=none dis=none) header.from=huawei.com
+	by mail.kernel.org (Postfix) with ESMTP id E00842088F
+	for <linux-pci@archiver.kernel.org>; Mon, 17 Sep 2018 14:47:39 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.3.2 mail.kernel.org E00842088F
+Authentication-Results: mail.kernel.org; dmarc=none (p=none dis=none) header.from=arm.com
 Authentication-Results: mail.kernel.org; spf=none smtp.mailfrom=linux-pci-owner@vger.kernel.org
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1728620AbeIQUK1 (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Mon, 17 Sep 2018 16:10:27 -0400
-Received: from szxga06-in.huawei.com ([45.249.212.32]:58351 "EHLO huawei.com"
-        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1728158AbeIQUK1 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Mon, 17 Sep 2018 16:10:27 -0400
-Received: from DGGEMS403-HUB.china.huawei.com (unknown [172.30.72.58])
-        by Forcepoint Email with ESMTP id 6F11A1706D4D9;
-        Mon, 17 Sep 2018 22:42:46 +0800 (CST)
-Received: from [127.0.0.1] (10.202.226.41) by DGGEMS403-HUB.china.huawei.com
- (10.3.19.203) with Microsoft SMTP Server id 14.3.399.0; Mon, 17 Sep 2018
- 22:42:39 +0800
-Subject: Re: [PATCH] asm-generic: io: Fix ioport_map() for
- !CONFIG_GENERIC_IOMAP && CONFIG_INDIRECT_PIO
-To:     Andrew Murray <andrew.murray@arm.com>,
-        Arnd Bergmann <arnd@arndb.de>,
-        "Will Deacon" <will.deacon@arm.com>, <dann.frazier@canonical.com>,
-        <bhelgaas@google.com>, <andy.shevchenko@gmail.com>
-References: <1536842907-51732-1-git-send-email-andrew.murray@arm.com>
-CC:     Linuxarm <linuxarm@huawei.com>, <linux-pci@vger.kernel.org>,
-        <linux-arm-kernel@lists.infradead.org>,
-        <linux-kernel@vger.kernel.org>, <suzuki.poulose@arm.com>,
-        <jean-philippe.brucker@arm.com>
-From:   John Garry <john.garry@huawei.com>
-Message-ID: <464e07ab-797e-971a-0839-5fd55e3e2ad3@huawei.com>
-Date:   Mon, 17 Sep 2018 15:42:32 +0100
-User-Agent: Mozilla/5.0 (Windows NT 10.0; WOW64; rv:45.0) Gecko/20100101
- Thunderbird/45.3.0
+        id S1728912AbeIQUPR (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Mon, 17 Sep 2018 16:15:17 -0400
+Received: from usa-sjc-mx-foss1.foss.arm.com ([217.140.101.70]:60276 "EHLO
+        foss.arm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1728902AbeIQUPR (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Mon, 17 Sep 2018 16:15:17 -0400
+Received: from usa-sjc-imap-foss1.foss.arm.com (unknown [10.72.51.249])
+        by usa-sjc-mx-foss1.foss.arm.com (Postfix) with ESMTP id 81CBBED1;
+        Mon, 17 Sep 2018 07:47:38 -0700 (PDT)
+Received: from e107981-ln.cambridge.arm.com (e107981-ln.emea.arm.com [10.4.13.117])
+        by usa-sjc-imap-foss1.foss.arm.com (Postfix) with ESMTPSA id 963D93F5BD;
+        Mon, 17 Sep 2018 07:47:37 -0700 (PDT)
+Date:   Mon, 17 Sep 2018 15:47:34 +0100
+From:   Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
+To:     Bjorn Helgaas <helgaas@kernel.org>,
+        Shawn Lin <shawn.lin@rock-chips.com>
+Cc:     linux-pci@vger.kernel.org, linux-rockchip@lists.infradead.org
+Subject: Re: [PATCH] PCI: rockchip: Remove redundant "valid device" check
+Message-ID: <20180917144734.GF7239@e107981-ln.cambridge.arm.com>
+References: <20171215202935.157396.74423.stgit@bhelgaas-glaptop.roam.corp.google.com>
 MIME-Version: 1.0
-In-Reply-To: <1536842907-51732-1-git-send-email-andrew.murray@arm.com>
-Content-Type: text/plain; charset="windows-1252"; format=flowed
-Content-Transfer-Encoding: 7bit
-X-Originating-IP: [10.202.226.41]
-X-CFilter-Loop: Reflected
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20171215202935.157396.74423.stgit@bhelgaas-glaptop.roam.corp.google.com>
+User-Agent: Mutt/1.5.24 (2015-08-30)
 Sender: linux-pci-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
-Message-ID: <20180917144232.3HEClXSJ9kavEP6JXmb18tmvksBnqam16BkVU1loBOQ@z>
+Message-ID: <20180917144734.ywfLGS-y_FJrdILJqTOYU8oUtyqklBu-wMu1U-2xXGE@z>
 
-- dead e-mail addresses (Zhichang, Gabriele)
-
-On 13/09/2018 13:48, Andrew Murray wrote:
-
-Hi Andrew,
-
-> The !CONFIG_GENERIC_IOMAP version of ioport_map uses MMIO_UPPER_LIMIT to
-> prevent users from making I/O accesses outside the expected I/O range -
-> however it erroneously treats MMIO_UPPER_LIMIT as a mask which is
-> contradictory to its other users.
->
-> The introduction of CONFIG_INDIRECT_PIO, which subtracts an arbitrary
-> amount from IO_SPACE_LIMIT to form MMIO_UPPER_LIMIT, results in ioport_map
-> mangling the given port rather than capping it.
->
-> We address this by aligning more closely with the CONFIG_GENERIC_IOMAP
-> implementation of ioport_map by using the comparison operator and
-> returning NULL where the port exceeds MMIO_UPPER_LIMIT. Though note that
-> we preserve the existing behavior of masking with IO_SPACE_LIMIT such that
-> we don't break existing buggy drivers that somehow rely on this masking.
-
-I wouldn't say any drivers rely on this - for the only device driver 
-which uses the "Indirect" IO space region above MMIO_UPPER_LIMIT 
-(HiSilicon LPC), no child device driver for that host uses ioport_map() 
-[those being ipmi si and 8250 generic+of drivers].
-
-Regardless of that, it seems better to return NULL when the port is 
-out-of-range, rather than masking it.
-
-Cheers
-
->
-> Fixes: 5745392e0c2b ("PCI: Apply the new generic I/O management on PCI IO hosts")
-> Reported-by: Will Deacon <will.deacon@arm.com>
-> Signed-off-by: Andrew Murray <andrew.murray@arm.com>
-
-Reviewed-by: John Garry <john.garry@huawei.com>
-
+On Fri, Dec 15, 2017 at 02:29:35PM -0600, Bjorn Helgaas wrote:
+> From: Bjorn Helgaas <bhelgaas@google.com>
+> 
+> In rockchip_pcie_valid_device(), we do the exact same test twice:
+> 
+>   if (bus->number == rockchip->root_bus_nr && dev > 0)
+>     return 0;
+>   if (bus->number == rockchip->root_bus_nr && dev > 0)
+>     return 0;
+> 
+> We only need to do it once, so remove one of them.
+> 
+> Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
 > ---
->  include/asm-generic/io.h | 3 ++-
->  1 file changed, 2 insertions(+), 1 deletion(-)
->
-> diff --git a/include/asm-generic/io.h b/include/asm-generic/io.h
-> index 66d1d45..d356f80 100644
-> --- a/include/asm-generic/io.h
-> +++ b/include/asm-generic/io.h
-> @@ -1026,7 +1026,8 @@ static inline void __iomem *ioremap_wt(phys_addr_t offset, size_t size)
->  #define ioport_map ioport_map
->  static inline void __iomem *ioport_map(unsigned long port, unsigned int nr)
+>  drivers/pci/host/pcie-rockchip.c |    4 ----
+>  1 file changed, 4 deletions(-)
+> 
+> diff --git a/drivers/pci/host/pcie-rockchip.c b/drivers/pci/host/pcie-rockchip.c
+> index 9051c6c8fea4..dd9c7ea69e0b 100644
+> --- a/drivers/pci/host/pcie-rockchip.c
+> +++ b/drivers/pci/host/pcie-rockchip.c
+> @@ -293,10 +293,6 @@ static void rockchip_pcie_update_txcredit_mui(struct rockchip_pcie *rockchip)
+>  static int rockchip_pcie_valid_device(struct rockchip_pcie *rockchip,
+>  				      struct pci_bus *bus, int dev)
 >  {
-> -	return PCI_IOBASE + (port & MMIO_UPPER_LIMIT);
-> +	port &= IO_SPACE_LIMIT;
-> +	return (port > MMIO_UPPER_LIMIT) ? NULL : PCI_IOBASE + port;
->  }
->  #endif
->
->
+> -	/* access only one slot on each root port */
+> -	if (bus->number == rockchip->root_bus_nr && dev > 0)
+> -		return 0;
+> -
+>  	/*
+>  	 * do not read more than one device on the bus directly attached
+>  	 * to RC's downstream side.
+> 
 
+Hi Bjorn,
 
+this patch slipped through the cracks but I do not think it is right.
+
+The point here is filtering both the host bridge access side (ie check
+for dev > 0) AND the RC downstream side, it is two different busses.
+
+Perhaps the check can be written in a more concise way (squash them in
+one single conditional) but I think the current logic is correct,
+AFAICS.
+
+I would drop it from the PCI patch queue.
+
+Thanks,
+Lorenzo
