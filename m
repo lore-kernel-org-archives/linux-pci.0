@@ -1,74 +1,71 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from shell.v3.sk ([90.176.6.54]:36043 "EHLO shell.v3.sk"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1728404AbeIJQxs (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Mon, 10 Sep 2018 12:53:48 -0400
-From: Lubomir Rintel <lkundrak@v3.sk>
-To: linux-kernel@vger.kernel.org
-Cc: linux-arm-kernel@lists.infradead.org, linux-pci@vger.kernel.org,
-        linux-spi@vger.kernel.org, devicetree@vger.kernel.org,
-        Mark Brown <broonie@kernel.org>,
-        Rob Herring <robh+dt@kernel.org>,
-        Mark Rutland <mark.rutland@arm.com>,
-        Eric Miao <eric.y.miao@gmail.com>,
-        Haojian Zhuang <haojian.zhuang@gmail.com>,
-        Daniel Mack <daniel@zonque.org>,
-        Robert Jarzmik <robert.jarzmik@free.fr>,
-        Bjorn Helgaas <bhelgaas@google.com>,
-        Lubomir Rintel <lkundrak@v3.sk>
-Subject: [PATCH 3/5] spi: pxa2xx: use an enum for type
-Date: Mon, 10 Sep 2018 13:59:33 +0200
-Message-Id: <20180910115935.163121-4-lkundrak@v3.sk>
-In-Reply-To: <20180910115935.163121-1-lkundrak@v3.sk>
-References: <20180910115935.163121-1-lkundrak@v3.sk>
+Received: from szxga06-in.huawei.com ([45.249.212.32]:51774 "EHLO huawei.com"
+        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+        id S1726826AbeIQPAz (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Mon, 17 Sep 2018 11:00:55 -0400
+Date: Mon, 17 Sep 2018 10:33:48 +0100
+From: Jonathan Cameron <jonathan.cameron@huawei.com>
+To: Arnd Bergmann <arnd@arndb.de>
+CC: <viro@zeniv.linux.org.uk>, <linux-fsdevel@vger.kernel.org>,
+        "Greg Kroah-Hartman" <gregkh@linuxfoundation.org>,
+        "David S. Miller" <davem@davemloft.net>,
+        <devel@driverdev.osuosl.org>, <linux-kernel@vger.kernel.org>,
+        <qat-linux@intel.com>, <linux-crypto@vger.kernel.org>,
+        <linux-media@vger.kernel.org>, <dri-devel@lists.freedesktop.org>,
+        <linaro-mm-sig@lists.linaro.org>, <amd-gfx@lists.freedesktop.org>,
+        <linux-input@vger.kernel.org>, <linux-iio@vger.kernel.org>,
+        <linux-rdma@vger.kernel.org>, <linux-nvdimm@lists.01.org>,
+        <linux-nvme@lists.infradead.org>, <linux-pci@vger.kernel.org>,
+        <platform-driver-x86@vger.kernel.org>,
+        <linux-remoteproc@vger.kernel.org>, <sparclinux@vger.kernel.org>,
+        <linux-scsi@vger.kernel.org>, <linux-usb@vger.kernel.org>,
+        <linux-fbdev@vger.kernel.org>, <linuxppc-dev@lists.ozlabs.org>,
+        <linux-btrfs@vger.kernel.org>, <ceph-devel@vger.kernel.org>,
+        <linux-wireless@vger.kernel.org>, <netdev@vger.kernel.org>
+Subject: Re: [PATCH v2 05/17] compat_ioctl: move more drivers to
+ generic_compat_ioctl_ptrarg
+Message-ID: <20180917103348.00003f31@huawei.com>
+In-Reply-To: <20180912151134.436719-1-arnd@arndb.de>
+References: <20180912150142.157913-1-arnd@arndb.de>
+        <20180912151134.436719-1-arnd@arndb.de>
+MIME-Version: 1.0
+Content-Type: text/plain; charset="US-ASCII"
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-That seems to be the correct type.
+On Wed, 12 Sep 2018 17:08:52 +0200
+Arnd Bergmann <arnd@arndb.de> wrote:
 
-Signed-off-by: Lubomir Rintel <lkundrak@v3.sk>
----
- drivers/spi/spi-pxa2xx.c   | 6 +++---
- include/linux/pxa2xx_ssp.h | 2 +-
- 2 files changed, 4 insertions(+), 4 deletions(-)
+> The .ioctl and .compat_ioctl file operations have the same prototype so
+> they can both point to the same function, which works great almost all
+> the time when all the commands are compatible.
+> 
+> One exception is the s390 architecture, where a compat pointer is only
+> 31 bit wide, and converting it into a 64-bit pointer requires calling
+> compat_ptr(). Most drivers here will ever run in s390, but since we now
+> have a generic helper for it, it's easy enough to use it consistently.
+> 
+> I double-checked all these drivers to ensure that all ioctl arguments
+> are used as pointers or are ignored, but are not interpreted as integer
+> values.
+> 
+> Signed-off-by: Arnd Bergmann <arnd@arndb.de>
+> ---
 
-diff --git a/drivers/spi/spi-pxa2xx.c b/drivers/spi/spi-pxa2xx.c
-index 14f4ea59caff..f674541675bb 100644
---- a/drivers/spi/spi-pxa2xx.c
-+++ b/drivers/spi/spi-pxa2xx.c
-@@ -1429,7 +1429,7 @@ pxa2xx_spi_init_pdata(struct platform_device *pdev)
- 	struct resource *res;
- 	const struct acpi_device_id *adev_id = NULL;
- 	const struct pci_device_id *pcidev_id = NULL;
--	int type;
-+	enum pxa_ssp_type type;
- 
- 	adev = ACPI_COMPANION(&pdev->dev);
- 
-@@ -1443,9 +1443,9 @@ pxa2xx_spi_init_pdata(struct platform_device *pdev)
- 		return NULL;
- 
- 	if (adev_id)
--		type = (int)adev_id->driver_data;
-+		type = (enum pxa_ssp_type)adev_id->driver_data;
- 	else if (pcidev_id)
--		type = (int)pcidev_id->driver_data;
-+		type = (enum pxa_ssp_type)pcidev_id->driver_data;
- 	else
- 		return NULL;
- 
-diff --git a/include/linux/pxa2xx_ssp.h b/include/linux/pxa2xx_ssp.h
-index 13b4244d44c1..262e1f318836 100644
---- a/include/linux/pxa2xx_ssp.h
-+++ b/include/linux/pxa2xx_ssp.h
-@@ -217,7 +217,7 @@ struct ssp_device {
- 
- 	const char	*label;
- 	int		port_id;
--	int		type;
-+	enum pxa_ssp_type type;
- 	int		use_count;
- 	int		irq;
- 
--- 
-2.17.1
+For IIO part.
+
+Acked-by: Jonathan Cameron <Jonathan.Cameron@huawei.com>
+
+Thanks,
+> diff --git a/drivers/iio/industrialio-core.c b/drivers/iio/industrialio-core.c
+> index a062cfddc5af..22844b94b0e9 100644
+> --- a/drivers/iio/industrialio-core.c
+> +++ b/drivers/iio/industrialio-core.c
+> @@ -1630,7 +1630,7 @@ static const struct file_operations iio_buffer_fileops = {
+>  	.owner = THIS_MODULE,
+>  	.llseek = noop_llseek,
+>  	.unlocked_ioctl = iio_ioctl,
+> -	.compat_ioctl = iio_ioctl,
+> +	.compat_ioctl = generic_compat_ioctl_ptrarg,
+>  };
+>  
