@@ -1,74 +1,107 @@
-Return-Path: <linux-nvme-bounces+bjorn=helgaas.com@lists.infradead.org>
-Return-Path: <linux-nvme-bounces+bjorn=helgaas.com@lists.infradead.org>
-To: Christoph Hellwig <hch@lst.de>
-References: <20180905195647.GA1626@lst.de>
- <bcc1b3cf-2fd9-fa61-9cfb-b0e4d84e5d94@kernel.dk>
- <20180905201152.GA1893@lst.de>
- <eb42fb94-9da6-955b-8524-0a0f5ac4bd19@deltatee.com>
- <2a3394bd-5f13-4818-43f4-dfc61f501e05@kernel.dk>
- <e3ef26e6-6c8d-25b8-fa64-14594a51263c@deltatee.com>
- <3af4d1d4-da07-c0a6-8464-9ddc1378f2f4@kernel.dk>
- <f9e660cd-b597-bb6e-56a2-82fe71cb3649@deltatee.com>
- <34d9b2f7-9e6d-4a0a-77e5-ec0e99610f5c@kernel.dk>
- <c41c802c-9235-5383-2dfa-af9c1553f11b@deltatee.com>
- <20180910164144.GA24591@lst.de>
-From: Logan Gunthorpe <logang@deltatee.com>
-Message-ID: <fc4f14ae-9490-f901-a60c-2bd1522ef137@deltatee.com>
-Date: Mon, 10 Sep 2018 12:11:01 -0600
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from userp2120.oracle.com ([156.151.31.85]:35168 "EHLO
+        userp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1727052AbeIQXd4 (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Mon, 17 Sep 2018 19:33:56 -0400
+Subject: Re: [Xen-devel] [PATCH V3 2/2] Xen/PCIback: Implement PCI
+ flr/slot/bus reset with 'reset' SysFS attribute
+To: =?UTF-8?B?UGFzaSBLw6Rya2vDpGluZW4=?= <pasik@iki.fi>
+Cc: Jan Beulich <JBeulich@suse.com>,
+        Govinda Tatti <Govinda.Tatti@oracle.com>,
+        Juergen Gross <jgross@suse.com>, linux-pci@vger.kernel.org,
+        linux-kernel@vger.kernel.org, bhelgaas@google.com,
+        xen-devel@lists.xenproject.org, roger.pau@citrix.com,
+        Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>
+References: <20171207222145.9769-1-Govinda.Tatti@Oracle.COM>
+ <20171207222145.9769-3-Govinda.Tatti@Oracle.COM>
+ <5A2A6AB10200007800195D4F@prv-mh.provo.novell.com>
+ <8a3bc517-1255-4547-d244-5c400e44cc77@Oracle.COM>
+ <f19dbb09-ef22-2cf4-fb38-2a7c42b5dc48@Oracle.COM>
+ <5A377E020200007800197FFA@prv-mh.provo.novell.com>
+ <559ffd12-b541-8a69-60bd-fbe10e3dc159@oracle.com>
+ <20180916114306.GF18222@reaktio.net>
+From: Boris Ostrovsky <boris.ostrovsky@oracle.com>
+Message-ID: <a726840b-8a5c-0890-73c6-3a95a7205153@oracle.com>
+Date: Mon, 17 Sep 2018 14:06:02 -0400
 MIME-Version: 1.0
-In-Reply-To: <20180910164144.GA24591@lst.de>
-Subject: Re: [PATCH v5 07/13] block: Add PCI P2P flag for request queue and
- check support for requests
-List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-nvme>,
- <mailto:linux-nvme-request@lists.infradead.org?subject=unsubscribe>
-List-Archive: <http://lists.infradead.org/pipermail/linux-nvme/>
-List-Post: <mailto:linux-nvme@lists.infradead.org>
-List-Help: <mailto:linux-nvme-request@lists.infradead.org?subject=help>
-List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-nvme>,
- <mailto:linux-nvme-request@lists.infradead.org?subject=subscribe>
-Cc: Jens Axboe <axboe@kernel.dk>, Keith Busch <keith.busch@intel.com>,
- Alex Williamson <alex.williamson@redhat.com>, Sagi Grimberg <sagi@grimberg.me>,
- linux-nvdimm@lists.01.org, linux-rdma@vger.kernel.org,
- linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
- linux-nvme@lists.infradead.org, Stephen Bates <sbates@raithlin.com>,
- linux-block@vger.kernel.org,
- =?UTF-8?B?SsOpcsO0bWUgR2xpc3Nl?= <jglisse@redhat.com>,
- Jason Gunthorpe <jgg@mellanox.com>,
- Benjamin Herrenschmidt <benh@kernel.crashing.org>,
- Bjorn Helgaas <bhelgaas@google.com>, Max Gurtovoy <maxg@mellanox.com>,
- Dan Williams <dan.j.williams@intel.com>,
- =?UTF-8?Q?Christian_K=c3=b6nig?= <christian.koenig@amd.com>
-Content-Type: text/plain; charset="us-ascii"
-Sender: "Linux-nvme" <linux-nvme-bounces@lists.infradead.org>
-Errors-To: linux-nvme-bounces+bjorn=helgaas.com@lists.infradead.org
+In-Reply-To: <20180916114306.GF18222@reaktio.net>
+Content-Type: text/plain; charset=utf-8
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
+On 9/16/18 7:43 AM, Pasi Kärkkäinen wrote:
+> Hi,
+>
+> On Mon, Dec 18, 2017 at 12:32:11PM -0500, Boris Ostrovsky wrote:
+>> On 12/18/2017 02:36 AM, Jan Beulich wrote:
+>>>>>> On 15.12.17 at 20:52, <Govinda.Tatti@Oracle.COM> wrote:
+>>>>>>> +static int pcistub_device_reset(struct pci_dev *dev)
+>>>>>>> +{
+>>>>>>> +	struct xen_pcibk_dev_data *dev_data;
+>>>>>>> +	bool slot = false, bus = false;
+>>>>>>> +	struct pcistub_args arg = {};
+>>>>>>> +
+>>>>>>> +	if (!dev)
+>>>>>>> +		return -EINVAL;
+>>>>>>> +
+>>>>>>> +	dev_dbg(&dev->dev, "[%s]\n", __func__);
+>>>>>>> +
+>>>>>>> +	/* First check and try FLR */
+>>>>>>> +	if (pcie_has_flr(dev)) {
+>>>>>>> +		dev_dbg(&dev->dev, "resetting %s device using FLR\n",
+>>>>>>> +			pci_name(dev));
+>>>>>>> +		pcie_flr(dev);
+>>>>>> The lack of error check here puzzled me, but I see the function
+>>>>>> indeed returns void right now. I think the prereq patch should
+>>>>>> change this along with exporting the function - you really don't
+>>>>>> want the device to be handed to a guest when the FLR timed
+>>>>>> out.
+>>>>> We will change pcie_flr() to return error code. I will make this change
+>>>>> in the next version of this patch.
+>>>> I exchanged some emails with Bjorn/Christoph and it looks like Christoph
+>>>> as some planto restructure pcie flr specific functions but I don't know
+>>>> the exact time-frame. For now,I am planning to use existing pcie_flr()
+>>>> after checking FLR capability. We will switchto revised pcie_flr() once
+>>>> it is available.
+>>>>
+>>>> I hope you are fine with this approach. Please let me know. Thanks.
+>>> I've seen that other discussion. I don't think the change here
+>>> should be done prior to the error reporting being put in place,
+>>> for security reasons. But in the end it'll be Konrad as the
+>>> maintainer to judge.
+>>>
+>>> Or wait, looks like there's some confusion in ./MAINTAINERS:
+>>> Konrad is listed as maintainer for "XEN PCI SUBSYSTEM", but the
+>>> list of files doesn't include pciback. So it would instead be Boris
+>>> or Jürgen to give you a final word.
+>>
+>> This is now 4.16 material so we can at least wait until closer to
+>> opening of the merge window when we may have the PCI updates. (And I
+>> just noticed that you responded to Christoph.)
+>>
+>> Besides, we don't want to make kernel changes until the interface is
+>> settled (i.e the toolstack changes are accepted).
+>>
+> It seems Govinda's email address is giving an error, so I assume someone else needs to pick up this pciback 'reset' feature.
+> Is it likely someone else from Oracle can/will pick up and refresh this patch, with the review comments addressed?
 
 
-On 10/09/18 10:41 AM, Christoph Hellwig wrote:
-> On Wed, Sep 05, 2018 at 03:03:18PM -0600, Logan Gunthorpe wrote:
->> There is no special p2p submission process. In the nvme-of case we are
->> using the existing process and with the code in blk-core it didn't
->> change it's process at all. Creating a helper will create one and I can
->> look at making a pci_p2pdma_submit_bio() for v6; but if the developer
->> screws up and still calls the regular submit_bio() things will only be
->> very subtly broken and that won't be obvious.
-> 
-> I just saw you added that "helper" in your tree.  Please don't, it is
-> a negative value add as it doesn't help anything with the checking.
+Govinda is no longer at Oracle.
 
-Alright, so what's the consensus then? Just have a check in
-nvmet_bdev_execute_rw() to add REQ_NOMERGE when appropriate? Jens is
-pretty dead set against adding to the common path.
-
-Logan
+What about the toolstack changes? Have they been accepted? I vaguely
+recall there was a discussion about those changes but don't remember how
+it ended.
 
 
-P.S. Here's the commit in question for anyone else on the list:
+-boris
 
-https://github.com/sbates130272/linux-p2pmem/commit/eeabe0bc94491d3eec4fe872274a9e3b4cdea538
 
-_______________________________________________
-Linux-nvme mailing list
-Linux-nvme@lists.infradead.org
-http://lists.infradead.org/mailman/listinfo/linux-nvme
+>
+>
+> Meanwhile the pcie_has_flr() has been exported in upstream Linux kernel, so that's already available for use now.
+>
+> "PCI: Export pcie_has_flr()":
+> https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/commit/?id=2d2917f7747805a1f4188672f308d82a8ba01700
+>
+>
+>
