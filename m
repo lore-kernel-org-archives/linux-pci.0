@@ -1,37 +1,54 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from shards.monkeyblade.net ([23.128.96.9]:54160 "EHLO
-        shards.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1725898AbeIBExL (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Sun, 2 Sep 2018 00:53:11 -0400
-Date: Sat, 01 Sep 2018 17:39:25 -0700 (PDT)
-Message-Id: <20180901.173925.56106529065602504.davem@davemloft.net>
-To: stephen@networkplumber.org
-Cc: kys@microsoft.com, haiyangz@microsoft.com, sthemmin@microsoft.com,
-        devel@linuxdriverproject.org, netdev@vger.kernel.org,
-        linux-pci@vger.kernel.org
-Subject: Re: [PATCH net-next 1/2] PCI: hv: support reporting serial number
- as slot information
-From: David Miller <davem@davemloft.net>
-In-Reply-To: <20180829162452.25805-2-sthemmin@microsoft.com>
-References: <20180829162452.25805-1-sthemmin@microsoft.com>
-        <20180829162452.25805-2-sthemmin@microsoft.com>
-Mime-Version: 1.0
-Content-Type: Text/Plain; charset=us-ascii
+Received: from mga02.intel.com ([134.134.136.20]:47633 "EHLO mga02.intel.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1730633AbeISFab (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Wed, 19 Sep 2018 01:30:31 -0400
+From: Keith Busch <keith.busch@intel.com>
+To: Linux PCI <linux-pci@vger.kernel.org>,
+        Bjorn Helgaas <bhelgaas@google.com>
+Cc: Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+        Sinan Kaya <okaya@kernel.org>,
+        Thomas Tai <thomas.tai@oracle.com>, poza@codeaurora.org,
+        Lukas Wunner <lukas@wunner.de>, Christoph Hellwig <hch@lst.de>,
+        Mika Westerberg <mika.westerberg@linux.intel.com>,
+        Keith Busch <keith.busch@intel.com>
+Subject: [PATCHv3 03/10] PCI/AER: Take reference on error devices
+Date: Tue, 18 Sep 2018 17:56:55 -0600
+Message-Id: <20180918235702.26573-4-keith.busch@intel.com>
+In-Reply-To: <20180918235702.26573-1-keith.busch@intel.com>
+References: <20180918235702.26573-1-keith.busch@intel.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-From: Stephen Hemminger <stephen@networkplumber.org>
-Date: Wed, 29 Aug 2018 09:24:51 -0700
+Error handling may be running in parallel with a hot removal. This patch
+reference counts the devices AER handling tracks so the device can not
+be freed while AER wants to reference it.
 
-> +	spin_lock_irqsave(&hbus->device_list_lock, flags);
-> +	list_for_each_entry(hpdev, &hbus->children, list_entry) {
-> +		if (hpdev->pci_slot)
-> +			continue;
-> +
-> +		slot_nr = PCI_SLOT(wslot_to_devfn(hpdev->desc.win_slot.slot));
-> +		snprintf(name, SLOT_NAME_SIZE, "%u", hpdev->desc.ser);
-> +		hpdev->pci_slot = pci_create_slot(hbus->pci_bus, slot_nr,
-> +					  name, NULL);
+Signed-off-by: Keith Busch <keith.busch@intel.com>
+---
+ drivers/pci/pcie/aer.c | 3 ++-
+ 1 file changed, 2 insertions(+), 1 deletion(-)
 
-pci_create_slot() takes a mutex, therefore you can't hold a spinlock or
-disable interrupts here.
+diff --git a/drivers/pci/pcie/aer.c b/drivers/pci/pcie/aer.c
+index 1d2159409b01..35a0194e5b96 100644
+--- a/drivers/pci/pcie/aer.c
++++ b/drivers/pci/pcie/aer.c
+@@ -866,7 +866,7 @@ void cper_print_aer(struct pci_dev *dev, int aer_severity,
+ static int add_error_device(struct aer_err_info *e_info, struct pci_dev *dev)
+ {
+ 	if (e_info->error_dev_num < AER_MAX_MULTI_ERR_DEVICES) {
+-		e_info->dev[e_info->error_dev_num] = dev;
++		e_info->dev[e_info->error_dev_num] = pci_dev_get(dev);
+ 		e_info->error_dev_num++;
+ 		return 0;
+ 	}
+@@ -1013,6 +1013,7 @@ static void handle_error_source(struct pci_dev *dev, struct aer_err_info *info)
+ 		pcie_do_nonfatal_recovery(dev);
+ 	else if (info->severity == AER_FATAL)
+ 		pcie_do_fatal_recovery(dev, PCIE_PORT_SERVICE_AER);
++	pci_dev_put(dev);
+ }
+ 
+ #ifdef CONFIG_ACPI_APEI_PCIEAER
+-- 
+2.14.4
