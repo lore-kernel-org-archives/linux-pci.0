@@ -1,59 +1,65 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-oi0-f65.google.com ([209.85.218.65]:37550 "EHLO
-        mail-oi0-f65.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1727271AbeICWYz (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Mon, 3 Sep 2018 18:24:55 -0400
-From: Alexandru Gagniuc <mr.nuke.me@gmail.com>
-To: linux-pci@vger.kernel.org, bhelgaas@google.com
-Cc: keith.busch@intel.com, alex_gagniuc@dellteam.com,
-        austin_bolen@dell.com, shyam_iyer@dell.com,
-        Alexandru Gagniuc <mr.nuke.me@gmail.com>,
-        Ariel Elior <ariel.elior@cavium.com>,
-        everest-linux-l2@cavium.com,
-        "David S. Miller" <davem@davemloft.net>,
-        Michael Chan <michael.chan@broadcom.com>,
-        Ganesh Goudar <ganeshgr@chelsio.com>,
-        Jeff Kirsher <jeffrey.t.kirsher@intel.com>,
-        Tariq Toukan <tariqt@mellanox.com>,
-        Saeed Mahameed <saeedm@mellanox.com>,
-        Leon Romanovsky <leon@kernel.org>,
-        Jakub Kicinski <jakub.kicinski@netronome.com>,
-        Dirk van der Merwe <dirk.vandermerwe@netronome.com>,
-        netdev@vger.kernel.org, linux-kernel@vger.kernel.org,
-        intel-wired-lan@lists.osuosl.org, linux-rdma@vger.kernel.org,
-        oss-drivers@netronome.com
-Subject: [PATCH 7/9] net/mlx4: Do not call pcie_print_link_status()
-Date: Mon,  3 Sep 2018 13:02:34 -0500
-Message-Id: <20180903180242.14504-8-mr.nuke.me@gmail.com>
-In-Reply-To: <20180903180242.14504-1-mr.nuke.me@gmail.com>
-References: <20180903180242.14504-1-mr.nuke.me@gmail.com>
+Received: from mail.kernel.org ([198.145.29.99]:33494 "EHLO mail.kernel.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1725778AbeISEaa (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Wed, 19 Sep 2018 00:30:30 -0400
+Date: Tue, 18 Sep 2018 17:55:39 -0500
+From: Bjorn Helgaas <helgaas@kernel.org>
+To: Lukas Wunner <lukas@wunner.de>
+Cc: linux-pci@vger.kernel.org, Sinan Kaya <okaya@kernel.org>,
+        Mika Westerberg <mika.westerberg@linux.intel.com>,
+        Keith Busch <keith.busch@intel.com>,
+        David Yang <mmyangfl@gmail.com>
+Subject: Re: [PATCH v2 0/8] PCI hotplug diet
+Message-ID: <20180918225539.GI13616@bhelgaas-glaptop.roam.corp.google.com>
+References: <cover.1536341821.git.lukas@wunner.de>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <cover.1536341821.git.lukas@wunner.de>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-This is now done by the PCI core to warn of sub-optimal bandwidth.
+On Sat, Sep 08, 2018 at 09:59:01AM +0200, Lukas Wunner wrote:
+> Rebase of my PCI hotplug material for the next merge window on current
+> pci/hotplug branch:
+> 
+> * Patch [1/8] makes pciehp work with broken hardware which hardwires
+>   Presence Detect to zero.  Originally submitted August 24 in response
+>   to a user report:
+>   https://patchwork.ozlabs.org/patch/961860/
+> 
+> * Patches [2/8] to [8/8] contain cleanups and code reduction.
+>   Originally submitted August 19:
+>   https://patchwork.ozlabs.org/project/linux-pci/list/?series=61434&state=*
+> 
+> 
+> Changes since v1:
+> 
+> * Separate struct unification from renaming of struct members in
+>   patches [2/8] and [3/8]. (Sinan Kaya)
+> 
+> * Do not change unsigned int to bool in patch [4/8] per commit
+>   d729593e492e ("checkpatch: add a --strict test for structs with
+>   bool member definitions").  For the same reason use unsigned int
+>   instead of bool in patch [6/8] for newly added latch_status and
+>   adapter_status members in cpci_hotplug.h.
+> 
+> * Add all collected Acked-by and Reviewed-by tags.
+> 
+> 
+> Lukas Wunner (8):
+>   PCI: pciehp: Tolerate Presence Detect hardwired to zero
+>   PCI: pciehp: Unify controller and slot structs
+>   PCI: pciehp: Rename controller struct members for clarity
+>   PCI: pciehp: Reshuffle controller struct for clarity
+>   PCI: hotplug: Constify hotplug_slot_ops
+>   PCI: hotplug: Drop hotplug_slot_info
+>   PCI: hotplug: Embed hotplug_slot
+>   PCI: hotplug: Document TODOs
 
-Signed-off-by: Alexandru Gagniuc <mr.nuke.me@gmail.com>
----
- drivers/net/ethernet/mellanox/mlx4/main.c | 7 -------
- 1 file changed, 7 deletions(-)
+This is fantastic, thank you very much!
 
-diff --git a/drivers/net/ethernet/mellanox/mlx4/main.c b/drivers/net/ethernet/mellanox/mlx4/main.c
-index d2d59444f562..9902fa3a2c13 100644
---- a/drivers/net/ethernet/mellanox/mlx4/main.c
-+++ b/drivers/net/ethernet/mellanox/mlx4/main.c
-@@ -3525,13 +3525,6 @@ static int mlx4_load_one(struct pci_dev *pdev, int pci_dev_data,
- 		}
- 	}
- 
--	/* check if the device is functioning at its maximum possible speed.
--	 * No return code for this call, just warn the user in case of PCI
--	 * express device capabilities are under-satisfied by the bus.
--	 */
--	if (!mlx4_is_slave(dev))
--		pcie_print_link_status(dev->persist->pdev);
--
- 	/* In master functions, the communication channel must be initialized
- 	 * after obtaining its address from fw */
- 	if (mlx4_is_master(dev)) {
--- 
-2.17.1
+Applied (with updated [2/8] "PCI: pciehp: Unify controller and slot
+structs" from [1]) to pci/hotplug for v4.20.
+
+[1] https://lkml.kernel.org/r/20180918194617.x7ab5kilj4ipghuv@wunner.de
