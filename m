@@ -1,144 +1,183 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-qt0-f196.google.com ([209.85.216.196]:44684 "EHLO
-        mail-qt0-f196.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1728096AbeISUKq (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Wed, 19 Sep 2018 16:10:46 -0400
-From: Jim Quinlan <jim2101024@gmail.com>
-To: linux-kernel@vger.kernel.org
-Cc: Jim Quinlan <jim2101024@gmail.com>,
-        bcm-kernel-feedback-list@broadcom.com, linux-pci@vger.kernel.org,
-        Florian Fainelli <f.fainelli@gmail.com>,
-        Christoph Hellwig <hch@lst.de>
-Subject: [PATCH v5 00/12] PCI: brcmstb: Add Broadcom Settopbox PCIe support (resend)
-Date: Wed, 19 Sep 2018 10:31:55 -0400
-Message-Id: <1537367527-20773-1-git-send-email-jim2101024@gmail.com>
+Received: from mail.kernel.org ([198.145.29.99]:50968 "EHLO mail.kernel.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1729736AbeISCW4 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Tue, 18 Sep 2018 22:22:56 -0400
+Date: Tue, 18 Sep 2018 15:48:34 -0500
+From: Bjorn Helgaas <helgaas@kernel.org>
+To: Daniel Walker <danielwa@cisco.com>
+Cc: linux-pci@vger.kernel.org, Yinghai Lu <yinghai@kernel.org>,
+        Bjorn Helgaas <bhelgaas@google.com>,
+        Rob Herring <robh+dt@kernel.org>,
+        Frank Rowand <frowand.list@gmail.com>,
+        devicetree@vger.kernel.org
+Subject: Re: PCI: Enforce bus address limits in resource allocation
+Message-ID: <20180918204834.GB13616@bhelgaas-glaptop.roam.corp.google.com>
+References: <abb9aa39-3128-3a4d-01f7-d0614d63f37e@cisco.com>
+ <20180918132056.GA254348@bhelgaas-glaptop.roam.corp.google.com>
+ <b5883e58-861a-807e-f4c8-3745b006ce0d@cisco.com>
+ <20180918184706.GA13616@bhelgaas-glaptop.roam.corp.google.com>
+ <b6281224-18cf-50af-aa38-6b048d741854@cisco.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <b6281224-18cf-50af-aa38-6b048d741854@cisco.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-This patch series adds support for the Broadcom Settopbox PCIe host
-controller.  It is targeted to Broadcom Settopbox chips running on
-ARM, ARM64, and MIPS platforms.
+[+cc Rob, Frank, devicetree list,
 
-V5 Changes:
-  - V4 had its own DMA ops structure in the PCIe driver which would
-    override/coexist with the default arch DMA ops.  This approach was
-    scrapped, and this version instead essentially implements custom
-    definitions of the __phys_to_dma and __dma_to_phys operations for the
-    three target arches: MIPs, ARM64, ARM.  This was the course suggested
-    by one of the V4 reviewers (ChristophH).
+thread starts here:
+https://lkml.kernel.org/r/abb9aa39-3128-3a4d-01f7-d0614d63f37e@cisco.com
 
-    For MIPs and ARM64, the DMA remapping is easily accomplished by having
-    custom definitions of __phys_to_dma and __dma_to_phys.  For
-    MIPs/BMIPs, ARCH_HAS_PHYS_TO_DMA is already selected and the two
-    functions are just modified.  For ARM64, this driver selects
-    ARCH_HAS_PHYS_TO_DMA and declares and defines __phys_to_dma() and
-    __dma_to_phys().  For ARM, things were not so simple.  The default
-    functions like __arch_pfn_to_dma() had to be overridden by custom ones
-    defined in arch/arm/mach-bcm/include/mach/memory.h.  For these
-    functions to be "seen", we had to declare our own brcmstb_defconfig
-    and no longer use multi_v7_defconfig.  This is unfortunate.
+dmesg snippets here:
+https://lkml.kernel.org/r/20180918184706.GA13616@bhelgaas-glaptop.roam.corp.google.com]
 
-  - Commits have been better organized to first implement the main driver,
-    then add features (MSI, DMA remap infrastructure), and then add
-    the DMA remapping modifications for MIPs, ARM64, and ARM.
+On Tue, Sep 18, 2018 at 11:56:20AM -0700, Daniel Walker wrote:
+> On 09/18/2018 11:47 AM, Bjorn Helgaas wrote:
+> > On Tue, Sep 18, 2018 at 07:24:02AM -0700, Daniel Walker wrote:
+> > > On 09/18/2018 06:20 AM, Bjorn Helgaas wrote:
+> > > > On Fri, Sep 14, 2018 at 08:16:35AM -0700, Daniel Walker wrote:
+> > > > > I have a powerpc system with PCI, and some devices attached to
+> > > > > the PCI bus.  In 3.10 everything worked fine, then we moved to
+> > > > > 4.9 and we had some issues.  I was able to bisect the issue down
+> > > > > to the patch in the subject line.
+> > > > > 
+> > > > > f75b99d PCI: Enforce bus address limits in resource allocation
+> > > > > 
+> > > > >   From 3.10 here is part of the PCI initialization,
+> > > > > 
+> > > > > |pci 0001:0e:00.0: BAR 0: assigned [mem 0xfc0000000-0xfc00fffff pref]|
+> > > > > |pci 0001:07:09.0: PCI bridge to [bus 0e]|
+> > > > > |pci 0001:07:09.0: bridge window [mem 0xfc0000000-0xfc00fffff 64bit pref]|
+> > > > >                   |||In this section the memory resource for the bridge is
+> > > > > 64bit, and the device "BAR 0" gets a 64bit range. However, it seems the
+> > > > > device is 32bit.|
+> > 
+> > > > > |Now fast forward to 4.9 we get this,|
+> > > > 
+> > > > > pci 0001:0e:00.0: BAR 0: no space for [mem size 0x00100000 pref]
+> > > > > pci 0001:0e:00.0: BAR 0: failed to assign [mem size 0x00100000 pref]
+> > > > > pci 0001:07:09.0: PCI bridge to [bus 0e]
+> > > > > pci 0001:07:09.0: bridge window [mem 0xfc0000000-0xfc00fffff 64bit pref]
+> > > > > 
+> > > > > |Here it seems to have a larger size, I'm not sure where the size is coming
+> > > > > from.
+> > > > 
+> > > > The size is 0x00100000 (1MB), which is the same size as
+> > > > [mem 0xfc0000000-0xfc00fffff pref].
+> > > > 
+> > > > The size is normally discovered by probing the BAR (write all 1's to
+> > > > the BAR then read it back to find which bits are writable and which
+> > > > are read-only).  On powerpc we might learn it from DT instead.  But in
+> > > > any case, we to get the same 1MB size, which is the same size as the
+> > > > bridge window.  So this should still work unless there are other BARs
+> > > > in that window.
+> > > 
+> > > As far as I know there is only one BAR connected to this window.
+> > > 
+> > > It kind of strikes me as an off-by-one problem because it says "no space"
+> > > but the window is the same size as what's requested. With the patch removed
+> > > you get the whole window assigned.
+> > > 
+> > > In the context of the patch if you change the pci_32_bit to pci_64_bit for
+> > > the region when calling pci_bus_alloc_from_region() in the 32bit case this
+> > > problem disappears. I do have CONFIG_ARCH_DMA_ADDR_T_64BIT enabled in my
+> > > config.
+> > > 
+> > > > > I was able to work around the issue by setting IORESOURCE_MEM_64 on
+> > > > > the resource for this device. I also was able to work around it by setting
+> > > > > "max = avail.end" to "max = (-1);" inside pci_bus_alloc_resource(). |
+> > > > > ||
+> > > > > ||I don't know if the problem is the patch, or something else inside our
+> > > > > system, but any thoughts are appreciated.
+> > > > 
+> > > > It seems like we think the bridge window contains only 64-bit space
+> > > > and therefore contains nothing usable by the 32-bit BAR.
+> > > > 
+> > > > You said later that the same problem exists on v4.19-rc4.  Can you
+> > > > collect the complete dmesg log with that kernel?  That should tell us
+> > > > about any host bridge address translation.
+> > > 
+> > > Sure. I have attached the dmesg.
+> > 
+> > The relevant parts are below.  I think your DT is incorrect.  Either
+> > it neglects to describe the host bridge address translation for the
+> > ffb240000.pcie and ffb250000.pcie bridges, or it incorrectly describes
+> > the BARs of devices below those bridges as 32-bit BARs when they are
+> > really 64-bit BARs.
+> 
+> I don't know if the DTS is correct, it very well could be incorrect. Here
+> are the relevant parts of the DTS. The BAR at issue is connected to PCI1.
 
-V4 Changes:
-  - Merged all BrcmSTB PCIe controller files into a single file.
-  - All new files now have the SPDX identifier.
-  - Removed the list of PCIe controllers.
-  - Removed "link-up" race.
-  - Removed probe of msi psuedo-device.
-  - Multiple comment text changes, as requested.
-  - "SSC" => "Spread Spectrum Clocking".
-  - Set 'memc' variable.
-  - Unnecessary variable initializations removed (eg rc_bar2_size).
-  - Added comment on "L23" link state.
-  - Removed use of "__refdata".
-  - Formatting of structure elements.
+The DTS matches what I pointed out in the dmesg log.  I think you need
+to reconcile it with your hardware and firmware, which I don't know
+anything about, so I don't know what else I can do at this point.  I
+copied some DT folks in case they have advice.
 
-V3 Changes:
-  - Fold pcie-brcmstb-msi.c into pcie-brcmstb.c
-  - Use PCI_XXX constants for PCIe capability registers
-  - Removal of any unused constants
-  - Change s/pci/pcie/ for filenames, comment text
-  - Config space access now uses 8/16/32 read/writes
-  - Use proper multi-line comment style
-  - Use function names, structure that are common in other host drivers
-  - DT binding 'brcm,ssc' is now 'brcm,enable-ssc'
-  - Dropped DT binding 'xyz-supply'
-  - Not setting CRS support as Linux does it if it is advertised.
-  - Removed code that was considered "debug code".
-  - Use of_get_pcie_domain_nr()
-  - Variable 'bridge_setup_done' removed.
-
-V2 Changes:
-* Patch brcmstb-add-memory-API:
-  - fix DT_PROP_DATA_TO_U32 macro.
-  - dropped one EXPORT_SYMBOL, changed the other to GPL.
-* Patch DT-docs-for-Brcmstb-PCIe:
-  - change 'brcm,gen' prop to standard 'max-link-speed'.
-  - rewrite bindings commit to omit standard prop defs.
-  - change props "supplies", "supply-names" to "xyz-supply"
-* Patch removed: export-symbol-arch_setup_dma_ops [4/9]
-* Patch brcmstb-add-dma-ranges:
-  - use get_dma_ops(); also use a const dma_map_ops structure.
-  - rewrite map_sg(), unmap_sg(), other calls like syng_sg_*()
-  - omit brcm_mapping_error(), but added code in brcm_dma_supported()
-  - put all of the notifier code in one compilation unit.
-
-
-
-Florian Fainelli (1):
-  soc: bcm: brcmstb: add memory API
-
-Jim Quinlan (11):
-  dt-bindings: pci: add DT docs for Brcmstb PCIe device
-  PCI: brcmstb: add Broadcom STB PCIe host controller driver
-  PCI: brcmstb: add dma-range mapping for inbound traffic
-  PCI: brcmstb: add MSI capability
-  MIPS: BMIPS: add dma remap for BrcmSTB PCIe
-  PCI/MSI: enable PCI_MSI_IRQ_DOMAIN support for MIPS
-  MIPS: BMIPS: add PCI bindings for 7425, 7435
-  MIPS: BMIPS: enable PCI
-  ARM64: declare __phys_to_dma on ARCH_HAS_PHYS_TO_DMA
-  ARM64: add dma remap for BrcmSTB PCIe
-  ARM: add dma remap for BrcmSTB PCIe
-
- .../devicetree/bindings/pci/brcmstb-pcie.txt       |   59 +
- arch/arm/Kconfig                                   |   33 +
- arch/arm/configs/brcmstb_defconfig                 |  204 +++
- arch/arm/configs/multi_v7_defconfig                |    3 -
- arch/arm/mach-bcm/Kconfig                          |   21 +-
- arch/arm/mach-bcm/Makefile.boot                    |    0
- arch/arm/mach-bcm/include/mach/irqs.h              |    3 +
- arch/arm/mach-bcm/include/mach/memory.h            |   47 +
- arch/arm/mach-bcm/include/mach/uncompress.h        |    8 +
- arch/arm64/include/asm/dma-direct.h                |   16 +
- arch/mips/Kconfig                                  |    3 +
- arch/mips/bmips/dma.c                              |    9 +
- arch/mips/boot/dts/brcm/bcm7425.dtsi               |   28 +
- arch/mips/boot/dts/brcm/bcm7435.dtsi               |   28 +
- arch/mips/boot/dts/brcm/bcm97425svmb.dts           |    4 +
- arch/mips/boot/dts/brcm/bcm97435svmb.dts           |    4 +
- drivers/pci/Kconfig                                |    2 +-
- drivers/pci/controller/Kconfig                     |   13 +
- drivers/pci/controller/Makefile                    |    1 +
- drivers/pci/controller/pcie-brcmstb.c              | 1554 ++++++++++++++++++++
- drivers/soc/bcm/brcmstb/Makefile                   |    2 +-
- drivers/soc/bcm/brcmstb/memory.c                   |  158 ++
- include/soc/brcmstb/common.h                       |   16 +
- include/soc/brcmstb/memory_api.h                   |   26 +
- 24 files changed, 2217 insertions(+), 25 deletions(-)
- create mode 100644 Documentation/devicetree/bindings/pci/brcmstb-pcie.txt
- create mode 100644 arch/arm/configs/brcmstb_defconfig
- create mode 100644 arch/arm/mach-bcm/Makefile.boot
- create mode 100644 arch/arm/mach-bcm/include/mach/irqs.h
- create mode 100644 arch/arm/mach-bcm/include/mach/memory.h
- create mode 100644 arch/arm/mach-bcm/include/mach/uncompress.h
- create mode 100644 arch/arm64/include/asm/dma-direct.h
- create mode 100644 drivers/pci/controller/pcie-brcmstb.c
- create mode 100644 drivers/soc/bcm/brcmstb/memory.c
- create mode 100644 include/soc/brcmstb/memory_api.h
-
--- 
-1.9.0.138.g2de3478
+>         pci0: pcie@ffb240000 {
+>                 compatible = "fsl,t1040-pcie", "fsl,qoriq-pcie-v2.4",
+> "fsl,qoriq-pcie";
+>                 device_type = "pci";
+>                 #size-cells = <2>;
+>                 #address-cells = <3>;
+>                 bus-range = <0x0 0xff>;
+>                 interrupts = <20 2 0 0>;
+>                 fsl,iommu-parent = <&pamu0>;
+>                 reg = <0xf 0xfb240000 0 0x10000>;
+>                 ranges = <0x03000000 0xf 0xe0000000 0xf 0xe0000000 0
+> 0x01000000>;
+> 
+>                 pcie@0 {
+>                         reg = <0 0 0 0 0>;
+>                         #size-cells = <2>;
+>                         #address-cells = <3>;
+>                         device_type = "pci";
+>                 };
+>         };
+> 
+>         pci1: pcie@ffb250000 {
+>                 compatible = "fsl,t1040-pcie", "fsl,qoriq-pcie-v2.4",
+> "fsl,qoriq-pcie";
+>                 device_type = "pci";
+>                 #size-cells = <2>;
+>                 #address-cells = <3>;
+>                 bus-range = <0 0xff>;
+>                 interrupts = <21 2 0 0>;
+>                 fsl,iommu-parent = <&pamu0>;
+>                 reg = <0xf 0xfb250000 0 0x10000>;
+> 
+>                 ranges = <0x03000000 0x4 0x00000000 0x4 0x00000000 0xc
+> 0x00000000>;
+> 
+>                 pcie@0 {
+>                         reg = <0 0 0 0 0>;
+>                         #size-cells = <2>;
+>                         #address-cells = <3>;
+>                         device_type = "pci";
+>                 };
+>         };
+> 
+>         pci3: pcie@ffb270000 {
+>                 compatible = "fsl,t1040-pcie", "fsl,qoriq-pcie-v2.4",
+> "fsl,qoriq-pcie";
+>                 device_type = "pci";
+>                 #size-cells = <2>;
+>                 #address-cells = <3>;
+>                 bus-range = <0x0 0xff>;
+>                 interrupts = <23 2 0 0>;
+>                 fsl,iommu-parent = <&pamu0>;
+>                 reg = <0xf 0xfb270000 0 0x10000>;
+>                 ranges = <0x03000000 0x0 0xe2000000 0xf 0xe2000000 0
+> 0x00100000>;
+> 
+>                 pcie@0 {
+>                         reg = <0 0 0 0 0>;
+>                         #size-cells = <2>;
+>                         #address-cells = <3>;
+>                         device_type = "pci";
+>                 };
+>         };
+> 
+> 
+> 
+> Daniel
