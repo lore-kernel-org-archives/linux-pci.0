@@ -1,61 +1,52 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.29.99]:56334 "EHLO mail.kernel.org"
+Received: from mail.kernel.org ([198.145.29.99]:50112 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1726686AbeILHud (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Wed, 12 Sep 2018 03:50:33 -0400
-Date: Tue, 11 Sep 2018 21:48:17 -0500
-From: Bjorn Helgaas <helgaas@kernel.org>
-To: Felix Kuehling <Felix.Kuehling@amd.com>
-Cc: linux-pci@vger.kernel.org, okaya@codeaurora.org,
-        bhelgaas@google.com
-Subject: Re: [PATCH for-rc] PCI: Fix enabling of PASID on RC integrated
- endpoints
-Message-ID: <20180912024817.GD118330@bhelgaas-glaptop.roam.corp.google.com>
-References: <1536607662-11690-1-git-send-email-Felix.Kuehling@amd.com>
+        id S1728681AbeIRUDt (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Tue, 18 Sep 2018 16:03:49 -0400
+Subject: Re: [PATCH] PCI/AER: Clear uncorrectable error status for device
+To: Oza Pawandeep <poza@codeaurora.org>,
+        Bjorn Helgaas <bhelgaas@google.com>,
+        Philippe Ombredanne <pombredanne@nexb.com>,
+        Thomas Gleixner <tglx@linutronix.de>,
+        Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+        Kate Stewart <kstewart@linuxfoundation.org>,
+        linux-pci@vger.kernel.org, Keith Busch <keith.busch@intel.com>,
+        Wei Zhang <wzhang@fb.com>, linux-kernel@vger.kernel.org
+Cc: Giovanni Cabiddu <giovanni.cabiddu@intel.com>,
+        Herbert Xu <herbert@gondor.apana.org.au>,
+        "David S . Miller" <davem@davemloft.net>,
+        Dan Williams <dan.j.williams@intel.com>,
+        Kees Cook <keescook@chromium.org>,
+        Sagi Grimberg <sagi@grimberg.me>,
+        Adaptec OEM Raid Solutions <aacraid@microsemi.com>,
+        "James E . J . Bottomley" <jejb@linux.vnet.ibm.com>,
+        "Martin K . Petersen" <martin.petersen@oracle.com>
+References: <1537258829-15763-1-git-send-email-poza@codeaurora.org>
+From: Sinan Kaya <okaya@kernel.org>
+Message-ID: <ab1ee64e-d257-4521-1517-4c2c648d0d9c@kernel.org>
+Date: Tue, 18 Sep 2018 10:30:52 -0400
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1536607662-11690-1-git-send-email-Felix.Kuehling@amd.com>
+In-Reply-To: <1537258829-15763-1-git-send-email-poza@codeaurora.org>
+Content-Type: text/plain; charset=utf-8; format=flowed
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Mon, Sep 10, 2018 at 03:27:42PM -0400, Felix Kuehling wrote:
-> Set the eetlp_prefix_path on PCIE_EXP_TYPE_RC_END devices to allow PASID
-> to be enabled on them. This fixes IOMMUv2 initialization on AMD Carrizo
-> APUs.
-> 
-> Fixes: 7ce3f912ae ("PCI: Enable PASID only if entire path supports End-End TLP prefixes")
-> Link: https://bugzilla.kernel.org/show_bug.cgi?id=201079
-> Signed-off-by: Felix Kuehling <Felix.Kuehling@amd.com>
+On 9/18/2018 4:20 AM, Oza Pawandeep wrote:
+> +++ b/drivers/pci/pcie/err.c
+> @@ -265,6 +265,8 @@ static pci_ers_result_t broadcast_error_message(struct pci_dev *dev,
+>   		 * The error is non fatal so the bus is ok; just invoke
+>   		 * the callback for the function that logged the error.
+>   		 */
+> +		if (cb == report_resume)
+> +			pci_cleanup_aer_uncorrect_error_status(dev);
+>   		cb(dev, &result_data);
+>   	}
 
-Applied to for-linus for v4.19, thanks!
+In order to follow the existing behavior (drivers are calling
+pci_cleanup_aer_uncorrect_error_status() right before return),
+you should probably move the pci_cleanup_aer_uncorrect_error_status
+after
 
-> ---
->  drivers/pci/probe.c | 5 ++++-
->  1 file changed, 4 insertions(+), 1 deletion(-)
-> 
-> diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
-> index ec78400..201f9e5 100644
-> --- a/drivers/pci/probe.c
-> +++ b/drivers/pci/probe.c
-> @@ -2074,6 +2074,7 @@ static void pci_configure_eetlp_prefix(struct pci_dev *dev)
->  {
->  #ifdef CONFIG_PCI_PASID
->  	struct pci_dev *bridge;
-> +	int pcie_type;
->  	u32 cap;
->  
->  	if (!pci_is_pcie(dev))
-> @@ -2083,7 +2084,9 @@ static void pci_configure_eetlp_prefix(struct pci_dev *dev)
->  	if (!(cap & PCI_EXP_DEVCAP2_EE_PREFIX))
->  		return;
->  
-> -	if (pci_pcie_type(dev) == PCI_EXP_TYPE_ROOT_PORT)
-> +	pcie_type = pci_pcie_type(dev);
-> +	if (pcie_type == PCI_EXP_TYPE_ROOT_PORT ||
-> +	    pcie_type == PCI_EXP_TYPE_RC_END)
->  		dev->eetlp_prefix_path = 1;
->  	else {
->  		bridge = pci_upstream_bridge(dev);
-> -- 
-> 2.7.4
-> 
+cb(dev, &result_data);
+
+line.
