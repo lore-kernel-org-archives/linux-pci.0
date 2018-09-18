@@ -1,104 +1,197 @@
-Return-Path: <linux-acpi-owner@vger.kernel.org>
-Date: Tue, 11 Sep 2018 11:53:40 +0200
-From: Lukas Wunner <lukas@wunner.de>
-To: Mika Westerberg <mika.westerberg@linux.intel.com>
-Cc: Bjorn Helgaas <bhelgaas@google.com>,
-        "Rafael J. Wysocki" <rjw@rjwysocki.net>,
-        Len Brown <lenb@kernel.org>,
-        Keith Busch <keith.busch@intel.com>,
-        Ashok Raj <ashok.raj@intel.com>, Mario.Limonciello@dell.com,
-        Anthony Wong <anthony.wong@canonical.com>,
-        Linus Walleij <linus.walleij@linaro.org>,
-        linux-pci@vger.kernel.org, linux-acpi@vger.kernel.org
-Subject: Re: [PATCH 05/10] PCI: portdrv: Resume upon exit from system suspend
- if left runtime suspended
-Message-ID: <20180911095340.w2lkv3rycl63hiwk@wunner.de>
-References: <20180906155020.51700-1-mika.westerberg@linux.intel.com>
- <20180906155020.51700-6-mika.westerberg@linux.intel.com>
- <20180911082935.gwcwqnk7ohwencui@wunner.de>
- <20180911090817.GS14465@lahna.fi.intel.com>
- <20180911092630.ibn36j54zamhrcoh@wunner.de>
- <20180911094144.GX14465@lahna.fi.intel.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20180911094144.GX14465@lahna.fi.intel.com>
-Sender: linux-acpi-owner@vger.kernel.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mga05.intel.com ([192.55.52.43]:41235 "EHLO mga05.intel.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1727204AbeISFeA (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Wed, 19 Sep 2018 01:34:00 -0400
+From: Keith Busch <keith.busch@intel.com>
+To: Linux PCI <linux-pci@vger.kernel.org>,
+        Bjorn Helgaas <bhelgaas@google.com>
+Cc: Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+        Sinan Kaya <okaya@kernel.org>,
+        Thomas Tai <thomas.tai@oracle.com>, poza@codeaurora.org,
+        Lukas Wunner <lukas@wunner.de>, Christoph Hellwig <hch@lst.de>,
+        Mika Westerberg <mika.westerberg@linux.intel.com>,
+        Keith Busch <keith.busch@intel.com>
+Subject: [PATCH 12/12] PCI/pciehp: Use device managed allocations
+Date: Tue, 18 Sep 2018 17:58:48 -0600
+Message-Id: <20180918235848.26694-13-keith.busch@intel.com>
+In-Reply-To: <20180918235848.26694-1-keith.busch@intel.com>
+References: <20180918235848.26694-1-keith.busch@intel.com>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tue, Sep 11, 2018 at 12:41:44PM +0300, Mika Westerberg wrote:
-> On Tue, Sep 11, 2018 at 11:26:30AM +0200, Lukas Wunner wrote:
-> > On Tue, Sep 11, 2018 at 12:08:17PM +0300, Mika Westerberg wrote:
-> > > On Tue, Sep 11, 2018 at 10:29:35AM +0200, Lukas Wunner wrote:
-> > > > On Thu, Sep 06, 2018 at 06:50:15PM +0300, Mika Westerberg wrote:
-> > > > > Currently we try to keep PCIe ports runtime suspended over system
-> > > > > suspend if possible. This mostly happens when entering suspend-to-idle
-> > > > > because there is no need to re-configure wake settings.
-> > > > > 
-> > > > > This causes problems if the parent port goes into D3cold and it gets
-> > > > > resumed upon exit from system suspend. This may happen for example if
-> > > > > the port is part of PCIe switch and the same switch is connected to a
-> > > > > PCIe endpoint that needs to be resumed. The way exit from D3cold works
-> > > > > according PCIe 4.0 spec 5.3.1.4.2 is that power is restored and cold
-> > > > > reset is signaled. After this the device is in D0unitialized state
-> > > > > keeping PME context if it supports wake from D3cold.
-> > > > > 
-> > > > > The problem occurs when a PCIe hotplug port is left suspended and the
-> > > > > parent port goes into D3cold and back to D0, the port keeps its PME
-> > > > > context but since everything else is reset back to defaults
-> > > > > (D0unitialized) it is not set to detect hotplug events anymore.
-> > > > 
-> > > > We call pci_wakeup_bus() in __pci_start_power_transition() for this
-> > > > reason.  Why isn't that sufficient in your use case?
-> > > 
-> > > It would otherwise but __pci_start_power_transition() is never called
-> > > because the bridge is left suspended.
-> > 
-> > You write above that the parent goes to D0, now you say it is left
-> > suspended.  Which one is it?
-> 
-> The port below the parent is left suspended -- the hotplug port.
-> 
-> Once the upstream port of a PCIe switch is resumed to D0 it will be
-> reset and that reset is propagated to other ports in that switch so it
-> makes the hotplug port go to D0uninitialized as well.
+All of pciehp's resources are tied to the lifetime of the device it is
+driving. This patch simplifies the resource tracking by using the device
+managed resource allocations.
 
-Yes, but as said when the PCI core runtime resumes the upstream port to D0,
-__pci_start_power_transition() should call pci_wakeup_bus() to wake all
-devices on its subordinate bus, i.e. all the Downstream Ports, including
-hotplug ports.  So they're runtime resumed as well and thus pass from
-D0uninitialized to D0initialized.  Is pci_wakeup_bus() not called in your
-case, and if so, why not?
+Signed-off-by: Keith Busch <keith.busch@intel.com>
+---
+ drivers/pci/hotplug/pciehp_core.c | 14 +++---------
+ drivers/pci/hotplug/pciehp_hpc.c  | 48 +++++++++++----------------------------
+ 2 files changed, 16 insertions(+), 46 deletions(-)
 
-
-> > > > > For this reason change the PCIe portdrv power management logic so that
-> > > > > it is fine to keep the port runtime suspended over system suspend but it
-> > > > > needs to be resumed upon exit to make sure it gets properly re-initialized.
-> > > > > The custom ->prepare() hook with DPM_FLAG_SMART_PREPARE is needed
-> > > > > because otherwise pci_pm_prepare() instructs the PM core to go directly
-> > > > > to pci_pm_complete() on resume and this skips resuming the port.
-> > > > 
-> > > > On Macs, if no Thunderbolt device is attached, it is perfectly okay to
-> > > > use direct complete and it is also perfectly okay to leave the entire
-> > > > controller (including all its PCIe ports) in D3cold when coming out of
-> > > > system sleep.  In fact it would be unnecessary and undesirable to
-> > > > runtime resume the controller, it would just waste energy for no reason.
-> > > 
-> > > I'm surprised if it works like that because both PCIe spec and
-> > > conventional PCI spec both require reset after D3cold and the only state
-> > > for a function after that is D0uninitialized.
-> > 
-> > The controller is in D3cold when coming out of system sleep if it was in
-> > D3cold when sytem sleep commenced.
-> 
-> In that case if the whole chain is left in D3cold over system sleep
-> there is no issue. But at least with the Thunderbolt controllers I've
-> been dealing with, the xHCI (or the USB stack) that is part of the PCIe
-> switch wants to resume the controller and that also resumes the upstream
-> port and the root port which leads to this situation. I did not check
-> Apple systems, though but I thought they also include xHCI.
-
-They do not if they're older than Alpine Ridge of course.
-
-Thanks,
-
-Lukas
+diff --git a/drivers/pci/hotplug/pciehp_core.c b/drivers/pci/hotplug/pciehp_core.c
+index 334044814dbe..c9ae89f25e8c 100644
+--- a/drivers/pci/hotplug/pciehp_core.c
++++ b/drivers/pci/hotplug/pciehp_core.c
+@@ -58,16 +58,16 @@ static int init_slot(struct controller *ctrl)
+ 	char name[SLOT_NAME_SIZE];
+ 	int retval = -ENOMEM;
+ 
+-	hotplug = kzalloc(sizeof(*hotplug), GFP_KERNEL);
++	hotplug = devm_kzalloc(&ctrl->pcie->device, sizeof(*hotplug), GFP_KERNEL);
+ 	if (!hotplug)
+ 		goto out;
+ 
+-	info = kzalloc(sizeof(*info), GFP_KERNEL);
++	info = devm_kzalloc(&ctrl->pcie->device, sizeof(*info), GFP_KERNEL);
+ 	if (!info)
+ 		goto out;
+ 
+ 	/* Setup hotplug slot ops */
+-	ops = kzalloc(sizeof(*ops), GFP_KERNEL);
++	ops = devm_kzalloc(&ctrl->pcie->device, sizeof(*ops), GFP_KERNEL);
+ 	if (!ops)
+ 		goto out;
+ 
+@@ -98,11 +98,6 @@ static int init_slot(struct controller *ctrl)
+ 	if (retval)
+ 		ctrl_err(ctrl, "pci_hp_initialize failed: error %d\n", retval);
+ out:
+-	if (retval) {
+-		kfree(ops);
+-		kfree(info);
+-		kfree(hotplug);
+-	}
+ 	return retval;
+ }
+ 
+@@ -111,9 +106,6 @@ static void cleanup_slot(struct controller *ctrl)
+ 	struct hotplug_slot *hotplug_slot = ctrl->slot->hotplug_slot;
+ 
+ 	pci_hp_destroy(hotplug_slot);
+-	kfree(hotplug_slot->ops);
+-	kfree(hotplug_slot->info);
+-	kfree(hotplug_slot);
+ }
+ 
+ /*
+diff --git a/drivers/pci/hotplug/pciehp_hpc.c b/drivers/pci/hotplug/pciehp_hpc.c
+index 13650f079188..72c22e9c0b63 100644
+--- a/drivers/pci/hotplug/pciehp_hpc.c
++++ b/drivers/pci/hotplug/pciehp_hpc.c
+@@ -45,22 +45,15 @@ static inline int pciehp_request_irq(struct controller *ctrl)
+ 	}
+ 
+ 	/* Installs the interrupt handler */
+-	retval = request_threaded_irq(irq, pciehp_isr, pciehp_ist,
+-				      IRQF_SHARED, MY_NAME, ctrl);
++	retval = devm_request_threaded_irq(&ctrl->pcie->device, irq, pciehp_isr,
++					   pciehp_ist, IRQF_SHARED, MY_NAME,
++					   ctrl);
+ 	if (retval)
+ 		ctrl_err(ctrl, "Cannot get irq %d for the hotplug controller\n",
+ 			 irq);
+ 	return retval;
+ }
+ 
+-static inline void pciehp_free_irq(struct controller *ctrl)
+-{
+-	if (pciehp_poll_mode)
+-		kthread_stop(ctrl->poll_thread);
+-	else
+-		free_irq(ctrl->pcie->irq, ctrl);
+-}
+-
+ static int pcie_poll_cmd(struct controller *ctrl, int timeout)
+ {
+ 	struct pci_dev *pdev = ctrl_dev(ctrl);
+@@ -780,17 +773,14 @@ int pcie_init_notification(struct controller *ctrl)
+ 	if (pciehp_request_irq(ctrl))
+ 		return -1;
+ 	pcie_enable_notification(ctrl);
+-	ctrl->notification_enabled = 1;
+ 	return 0;
+ }
+ 
+ void pcie_shutdown_notification(struct controller *ctrl)
+ {
+-	if (ctrl->notification_enabled) {
+-		pcie_disable_notification(ctrl);
+-		pciehp_free_irq(ctrl);
+-		ctrl->notification_enabled = 0;
+-	}
++	pcie_disable_notification(ctrl);
++	if (pciehp_poll_mode)
++		kthread_stop(ctrl->poll_thread);
+ }
+ 
+ static int pcie_init_slot(struct controller *ctrl)
+@@ -798,7 +788,7 @@ static int pcie_init_slot(struct controller *ctrl)
+ 	struct pci_bus *subordinate = ctrl_dev(ctrl)->subordinate;
+ 	struct slot *slot;
+ 
+-	slot = kzalloc(sizeof(*slot), GFP_KERNEL);
++	slot = devm_kzalloc(&ctrl->pcie->device, sizeof(*slot), GFP_KERNEL);
+ 	if (!slot)
+ 		return -ENOMEM;
+ 
+@@ -813,14 +803,6 @@ static int pcie_init_slot(struct controller *ctrl)
+ 	return 0;
+ }
+ 
+-static void pcie_cleanup_slot(struct controller *ctrl)
+-{
+-	struct slot *slot = ctrl->slot;
+-
+-	cancel_delayed_work_sync(&slot->work);
+-	kfree(slot);
+-}
+-
+ static inline void dbg_ctrl(struct controller *ctrl)
+ {
+ 	struct pci_dev *pdev = ctrl->pcie->port;
+@@ -845,9 +827,9 @@ struct controller *pcie_init(struct pcie_device *dev)
+ 	u8 occupied, poweron;
+ 	struct pci_dev *pdev = dev->port;
+ 
+-	ctrl = kzalloc(sizeof(*ctrl), GFP_KERNEL);
++	ctrl = devm_kzalloc(&dev->device, sizeof(*ctrl), GFP_KERNEL);
+ 	if (!ctrl)
+-		goto abort;
++		return NULL;
+ 
+ 	ctrl->pcie = dev;
+ 	pcie_capability_read_dword(pdev, PCI_EXP_SLTCAP, &slot_cap);
+@@ -893,7 +875,7 @@ struct controller *pcie_init(struct pcie_device *dev)
+ 		pdev->broken_cmd_compl ? " (with Cmd Compl erratum)" : "");
+ 
+ 	if (pcie_init_slot(ctrl))
+-		goto abort_ctrl;
++		return NULL;
+ 
+ 	/*
+ 	 * If empty slot's power status is on, turn power off.  The IRQ isn't
+@@ -909,17 +891,13 @@ struct controller *pcie_init(struct pcie_device *dev)
+ 	}
+ 
+ 	return ctrl;
+-
+-abort_ctrl:
+-	kfree(ctrl);
+-abort:
+-	return NULL;
+ }
+ 
+ void pciehp_release_ctrl(struct controller *ctrl)
+ {
+-	pcie_cleanup_slot(ctrl);
+-	kfree(ctrl);
++	struct slot *slot = ctrl->slot;
++
++	cancel_delayed_work_sync(&slot->work);
+ }
+ 
+ static void quirk_cmd_compl(struct pci_dev *pdev)
+-- 
+2.14.4
