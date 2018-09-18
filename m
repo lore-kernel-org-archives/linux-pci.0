@@ -1,52 +1,57 @@
-Return-Path: <linux-acpi-owner@vger.kernel.org>
-From: Mika Westerberg <mika.westerberg@linux.intel.com>
-To: Bjorn Helgaas <bhelgaas@google.com>,
-        "Rafael J. Wysocki" <rjw@rjwysocki.net>
-Cc: Len Brown <lenb@kernel.org>, Lukas Wunner <lukas@wunner.de>,
-        Keith Busch <keith.busch@intel.com>,
-        Ashok Raj <ashok.raj@intel.com>, Mario.Limonciello@dell.com,
-        Anthony Wong <anthony.wong@canonical.com>,
-        "D . J . Bernstein" <djb@cr.yp.to>,
-        Linus Walleij <linus.walleij@linaro.org>,
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mga02.intel.com ([134.134.136.20]:47633 "EHLO mga02.intel.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1727818AbeISFa3 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Wed, 19 Sep 2018 01:30:29 -0400
+From: Keith Busch <keith.busch@intel.com>
+To: Linux PCI <linux-pci@vger.kernel.org>,
+        Bjorn Helgaas <bhelgaas@google.com>
+Cc: Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+        Sinan Kaya <okaya@kernel.org>,
+        Thomas Tai <thomas.tai@oracle.com>, poza@codeaurora.org,
+        Lukas Wunner <lukas@wunner.de>, Christoph Hellwig <hch@lst.de>,
         Mika Westerberg <mika.westerberg@linux.intel.com>,
-        linux-pci@vger.kernel.org, linux-acpi@vger.kernel.org
-Subject: [PATCH 04/10] PCI: pciehp: Do not handle events if interrupts are masked
-Date: Thu,  6 Sep 2018 18:50:14 +0300
-Message-Id: <20180906155020.51700-5-mika.westerberg@linux.intel.com>
-In-Reply-To: <20180906155020.51700-1-mika.westerberg@linux.intel.com>
-References: <20180906155020.51700-1-mika.westerberg@linux.intel.com>
-Sender: linux-acpi-owner@vger.kernel.org
+        Keith Busch <keith.busch@intel.com>
+Subject: [PATCHv3 00/10] PCI error handling
+Date: Tue, 18 Sep 2018 17:56:52 -0600
+Message-Id: <20180918235702.26573-1-keith.busch@intel.com>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-PCIe native hotplug shares MSI vector with native PME so the interrupt
-handler might get called even the hotplug interrupt is masked. In that
-case we should not handle any events because the interrupt was not meant
-for us. Modify the PCIe hotplug interrupt handler to check this
-accordingly and bail out if it finds out that the interrupt was not
-about hotplug.
+This version is reduced in scope from the previous. The more ambitious
+handling from the previous version exacerbates other pre-existing
+deadlocking issues that are taking some time to fix.
 
-Signed-off-by: Mika Westerberg <mika.westerberg@linux.intel.com>
----
- drivers/pci/hotplug/pciehp_hpc.c | 6 ++++--
- 1 file changed, 4 insertions(+), 2 deletions(-)
+This is mostly a reduced set from v2, but slightly reordered. There is
+one prep patch that fixes the bridges pci state when it is initially
+saved, and one AER patch that fixes a use-after free.
 
-diff --git a/drivers/pci/hotplug/pciehp_hpc.c b/drivers/pci/hotplug/pciehp_hpc.c
-index 2249c4d06efd..19ed13d44b8f 100644
---- a/drivers/pci/hotplug/pciehp_hpc.c
-+++ b/drivers/pci/hotplug/pciehp_hpc.c
-@@ -533,9 +533,11 @@ static irqreturn_t pciehp_isr(int irq, void *dev_id)
- 	u16 status, events;
- 
- 	/*
--	 * Interrupts only occur in D3hot or shallower (PCIe r4.0, sec 6.7.3.4).
-+	 * Interrupts only occur in D3hot or shallower and only if enabled
-+	 * in the Slot Control register (PCIe r4.0, sec 6.7.3.4).
- 	 */
--	if (pdev->current_state == PCI_D3cold)
-+	if (pdev->current_state == PCI_D3cold ||
-+	    !(ctrl->slot_ctrl & PCI_EXP_SLTCTL_HPIE))
- 		return IRQ_NONE;
- 
- 	/*
+Keith Busch (10):
+  PCI/portdrv: Use subsys_init for service drivers
+  PCI/portdrv: Restore pci state on slot reset
+  PCI/AER: Take reference on error devices
+  PCI/ERR: Use slot reset if available
+  PCI/ERR: Handle fatal error recovery
+  PCI/ERR: Always use the first downstream port
+  PCI/ERR: Simplify broadcast callouts
+  PCI/ERR: Report current recovery status for udev
+  PCI: Unify device inaccessible
+  PCI: Make link active reporting detection generic
+
+ drivers/pci/hotplug/pciehp.h      |   6 -
+ drivers/pci/hotplug/pciehp_core.c |   2 +-
+ drivers/pci/hotplug/pciehp_hpc.c  |  22 +--
+ drivers/pci/pci.c                 |  66 ++++++++-
+ drivers/pci/pci.h                 |  66 ++++++++-
+ drivers/pci/pcie/aer.c            |  19 ++-
+ drivers/pci/pcie/dpc.c            |  10 +-
+ drivers/pci/pcie/err.c            | 276 ++++++++++----------------------------
+ drivers/pci/pcie/pme.c            |   2 +-
+ drivers/pci/pcie/portdrv_pci.c    |   8 ++
+ drivers/pci/probe.c               |   1 +
+ drivers/pci/slot.c                |   2 +-
+ include/linux/pci.h               |   1 +
+ 13 files changed, 220 insertions(+), 261 deletions(-)
+
 -- 
-2.18.0
+2.14.4
