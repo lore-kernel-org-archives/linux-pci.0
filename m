@@ -1,98 +1,131 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.29.99]:59750 "EHLO mail.kernel.org"
+Received: from mail.kernel.org ([198.145.29.99]:55338 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1726052AbeIDWCb (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Tue, 4 Sep 2018 18:02:31 -0400
-Date: Tue, 4 Sep 2018 12:36:23 -0500
+        id S1729975AbeISCpW (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Tue, 18 Sep 2018 22:45:22 -0400
+Date: Tue, 18 Sep 2018 16:10:55 -0500
 From: Bjorn Helgaas <helgaas@kernel.org>
-To: Lukas Wunner <lukas@wunner.de>
-Cc: Rajat Jain <rajatxjain@gmail.com>,
-        Shaohua Li <shaohua.li@intel.com>, linux-pci@vger.kernel.org
-Subject: Re: [PATCH] PCI/ASPM: Fix link_state teardown on device removal
-Message-ID: <20180904173623.GE107892@bhelgaas-glaptop.roam.corp.google.com>
-References: <3005bd6cf124c5fcc7f0720e973e741ba95919c7.1533012643.git.lukas@wunner.de>
+To: Sergey Miroshnichenko <s.miroshnichenko@yadro.com>
+Cc: Sam Bobroff <sbobroff@linux.ibm.com>, linux-pci@vger.kernel.org,
+        Bjorn Helgaas <bhelgaas@google.com>, linux@yadro.com,
+        Russell Currey <ruscur@russell.cc>,
+        linuxppc-dev@lists.ozlabs.org,
+        Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+        Oliver OHalloran <oliveroh@au1.ibm.com>
+Subject: Re: [PATCH RFC 1/4] PCI: hotplug: Add parameter to put devices to
+ reset during rescan
+Message-ID: <20180918211055.GC13616@bhelgaas-glaptop.roam.corp.google.com>
+References: <20180914161404.4685-1-s.miroshnichenko@yadro.com>
+ <20180914161404.4685-2-s.miroshnichenko@yadro.com>
+ <20180917052800.GA7315@tungsten.ozlabs.ibm.com>
+ <6b913e12-e8c8-30c1-5269-3029ddb00a4d@yadro.com>
+ <20180917225935.GD54859@bhelgaas-glaptop.roam.corp.google.com>
+ <b3963047-e3c1-5612-1bcf-04c9e81dacd2@yadro.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <3005bd6cf124c5fcc7f0720e973e741ba95919c7.1533012643.git.lukas@wunner.de>
+In-Reply-To: <b3963047-e3c1-5612-1bcf-04c9e81dacd2@yadro.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tue, Jul 31, 2018 at 06:58:46AM +0200, Lukas Wunner wrote:
-> Upon removal of the last device on a bus, the link_state of the bridge
-> leading to that bus is sought to be torn down by having pci_stop_dev()
-> call pcie_aspm_exit_link_state().
-> 
-> When ASPM was originally introduced by commit 7d715a6c1ae5 ("PCI: add
-> PCI Express ASPM support"), it determined whether the device being
-> removed is the last one by calling list_empty() on the bridge's
-> subordinate devices list.  That didn't work because the device is only
-> removed from the list slightly later in pci_destroy_dev().
-> 
-> Commit 3419c75e15f8 ("PCI: properly clean up ASPM link state on device
-> remove") attempted to fix it by calling list_is_last(), but that's not
-> correct either because it checks whether the device is at the *end* of
-> the list, not whether it's the last one *left* in the list.  If the user
-> removes the device which happens to be at the end of the list via sysfs
-> but other devices are preceding the device in the list, the link_state
-> is torn down prematurely.
-> 
-> The real fix is to move the invocation of pcie_aspm_exit_link_state() to
-> pci_destroy_dev() and reinstate the call to list_empty().  Remove a
-> duplicate check for dev->bus->self because pcie_aspm_exit_link_state()
-> already contains an identical check.
-> 
-> Fixes: 7d715a6c1ae5 ("PCI: add PCI Express ASPM support")
-> Signed-off-by: Lukas Wunner <lukas@wunner.de>
-> Cc: Shaohua Li <shaohua.li@intel.com>
-> Cc: stable@vger.kernel.org # v2.6.26
+On Tue, Sep 18, 2018 at 05:01:48PM +0300, Sergey Miroshnichenko wrote:
+> On 9/18/18 1:59 AM, Bjorn Helgaas wrote:
+> > On Mon, Sep 17, 2018 at 11:55:43PM +0300, Sergey Miroshnichenko wrote:
+> >> On 9/17/18 8:28 AM, Sam Bobroff wrote:
+> >>> On Fri, Sep 14, 2018 at 07:14:01PM +0300, Sergey Miroshnichenko wrote:
+> >>>> Introduce a new command line option "pci=pcie_movable_bars"
+> >>>> that indicates support of PCIe hotplug without prior
+> >>>> reservation of memory regions by BIOS/bootloader.
 
-Applied to pci/aspm for v4.20, thanks!
+> >>> What about devices with drivers that don't have reset_prepare()?  It
+> >>> looks like it will just reconfigure them anyway. Is that right?
+> >>
+> >> It is possible that unprepared driver without these hooks will get BARs
+> >> moved, I should put a warning message there. There three ways we can see
+> >> to make this safe:
+> >>  - add the reset_prepare()/reset_done() hooks to *every* PCIe driver;
+> >>  - refuse BAR movement if at least one unprepared driver has been
+> >> encountered during rescan;
+> >>  - reduce the number of drivers which can be affected to some
+> >> controllable value and prepare them on demand.
+> >>
+> >> Applying the second proposal as a major restriction seems fairly
+> >> reasonable, but for our particular setups and use-cases it is probably
+> >> too stiff:
+> >>  - we've noticed that devices connected directly to the root bridge
+> >> don't get moved BARs, and this covers our x86_64 servers: we only
+> >> insert/remove devices into "second-level" and "lower" bridges there, but
+> >> not root;
+> >>  - on PowerNV we have system devices (network interfaces, USB hub, etc.)
+> >> grouped into dedicated domain, with all other domains ready for hotplug,
+> >> and only these domains can be rescanned.
+> >>
+> >> With our scenarios currently reduced to these two, we can live with just
+> >> a few drivers "prepared" for now: NVME and few Ethernet adapters, this
+> >> gives us a possibility to use this feature before "converting" *all* the
+> >> drivers, and even have the NVidia cards running on a closed proprietary
+> >> driver.
+> >>
+> >> Should we make this behavior adjustable with something like
+> >> "pcie_movable_bars=safe" and "pcie_movable_bars=always" ?
+> > 
+> > I like the overall idea of this a lot.
+> > 
+> >   - Why do we need a command line parameter to enable this?  Can't we
+> >     do it unconditionally and automatically when it's possible?  We
+> >     could have a chicken switch to *disable* it in case this breaks
+> >     something horribly, but I would like this functionality to be
+> >     always available without a special option.
+> 
+> After making this feature completely safe we could activate it with the
+> existing option "pci=realloc".
 
-> ---
-> Alex Chiang, the author of 3419c75e15f8, cannot be cc'ed as the hp.com
-> e-mail address used to author that commit bounces with 550 User unknown.
-> Same for the canonical.com address used on Alex' last contribution
-> 856b185dd23d.
+That *sounds* good, but in practice it never happens that we decide a
+feature is completely safe and somebody makes it the default.  If
+we're going to do this, I think we need to commit to making it work
+100% of the time, with no option needed.
+
+> >   - I'm not sure the existence of .reset_done() is evidence that a
+> >     driver is prepared for its BARs to move.  I don't see any
+> >     documentation that refers to BAR movement, and I doubt it's been
+> >     tested.  But I only see 5 implementations in the tree, so it'd be
+> >     easy to verify.
 > 
->  drivers/pci/pcie/aspm.c | 2 +-
->  drivers/pci/remove.c    | 4 +---
->  2 files changed, 2 insertions(+), 4 deletions(-)
+> You are right, and we should clarify the description:
+>  - drivers which have the .reset_done() already - none of them are aware
+> of movable BARs yet;
+>  - the rest of the drivers should both be able to pause and handle the
+> changes in BARs.
+
+This doesn't clarify it for me.  If you want to update all existing
+.reset_done() methods so they deal with BAR changes, that would be
+fine with me.  That would be done by preliminary patches in the series
+that adds the feature.
+
+> >   - I think your second proposal above sounds right: we should regard
+> >     any device whose driver lacks .reset_done() as immovable.  We will
+> >     likely be able to move some devices but not others.  Implementing
+> >     .reset_done() will increase flexibility but it shouldn't be a
+> >     requirement for all drivers.
 > 
-> diff --git a/drivers/pci/pcie/aspm.c b/drivers/pci/pcie/aspm.c
-> index 0e88b3ad065f..e492b8e47fb1 100644
-> --- a/drivers/pci/pcie/aspm.c
-> +++ b/drivers/pci/pcie/aspm.c
-> @@ -991,7 +991,7 @@ void pcie_aspm_exit_link_state(struct pci_dev *pdev)
->  	 * All PCIe functions are in one slot, remove one function will remove
->  	 * the whole slot, so just wait until we are the last function left.
->  	 */
-> -	if (!list_is_last(&pdev->bus_list, &parent->subordinate->devices))
-> +	if (!list_empty(&parent->subordinate->devices))
->  		goto out;
->  
->  	link = parent->link_state;
-> diff --git a/drivers/pci/remove.c b/drivers/pci/remove.c
-> index 01ec7fcb5634..fb107fb5bb21 100644
-> --- a/drivers/pci/remove.c
-> +++ b/drivers/pci/remove.c
-> @@ -24,9 +24,6 @@ static void pci_stop_dev(struct pci_dev *dev)
->  		pci_remove_sysfs_dev_files(dev);
->  		dev->is_added = 0;
->  	}
-> -
-> -	if (dev->bus->self)
-> -		pcie_aspm_exit_link_state(dev);
->  }
->  
->  static void pci_destroy_dev(struct pci_dev *dev)
-> @@ -40,6 +37,7 @@ static void pci_destroy_dev(struct pci_dev *dev)
->  	list_del(&dev->bus_list);
->  	up_write(&pci_bus_sem);
->  
-> +	pcie_aspm_exit_link_state(dev);
->  	pci_bridge_d3_update(dev);
->  	pci_free_resources(dev);
->  	put_device(&dev->dev);
-> -- 
-> 2.18.0
-> 
+> Thanks for the advice! This is more flexible and doesn't have any
+> prerequisites. In this case the greater the "movable"/"immovable" ratio
+> of the devices that was working before the hotplug event - the higher
+> the probability to free some space for new BARs. But even a single
+> "immovable" device at an undesirable place can block the re-arrangement,
+> in this case all we can is just give up and print an error message.
+
+Right.  There's nothing we can do about that except make the relevant
+drivers smarter.
+
+> This patchset in its current form doesn't support marking a choosen BAR
+> as immovable (just releasing all the resources of the root bridge and
+> trying to sort and re-assign them back), so I'll have to implement that.
+
+The current IORESOURCE_PCI_FIXED usage is for things that literally
+*cannot* be moved because there is no BAR at all (VGA or IDE legacy,
+enhanced allocation (see pci_ea_read()) or there's some platform
+quirk.
+
+It *might* make sense to also use it for devices where the *driver*
+isn't smart enough to deal with moving it, but I'm not sure.  That
+would have to be done at driver probe time, I guess.
