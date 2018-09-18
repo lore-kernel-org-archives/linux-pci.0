@@ -1,55 +1,72 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.29.99]:60446 "EHLO mail.kernel.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1726911AbeISWVl (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Wed, 19 Sep 2018 18:21:41 -0400
-Subject: Re: [PATCHv3 10/10] PCI: Make link active reporting detection generic
-To: Keith Busch <keith.busch@intel.com>,
-        Linux PCI <linux-pci@vger.kernel.org>,
-        Bjorn Helgaas <bhelgaas@google.com>
-Cc: Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-        Thomas Tai <thomas.tai@oracle.com>, poza@codeaurora.org,
-        Lukas Wunner <lukas@wunner.de>, Christoph Hellwig <hch@lst.de>,
-        Mika Westerberg <mika.westerberg@linux.intel.com>
-References: <20180918235702.26573-1-keith.busch@intel.com>
- <20180918235702.26573-11-keith.busch@intel.com>
-From: Sinan Kaya <okaya@kernel.org>
-Message-ID: <f695a8f4-a359-389f-b27e-c1d998a50b0b@kernel.org>
-Date: Wed, 19 Sep 2018 12:42:56 -0400
+Received: from mail-pl1-f196.google.com ([209.85.214.196]:35342 "EHLO
+        mail-pl1-f196.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1730638AbeIRXdi (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Tue, 18 Sep 2018 19:33:38 -0400
+Received: by mail-pl1-f196.google.com with SMTP id g2-v6so1374393plo.2
+        for <linux-pci@vger.kernel.org>; Tue, 18 Sep 2018 10:59:55 -0700 (PDT)
+Date: Tue, 18 Sep 2018 11:59:52 -0600
+From: Jason Gunthorpe <jgg@ziepe.ca>
+To: Darren Hart <dvhart@infradead.org>
+Cc: Al Viro <viro@zeniv.linux.org.uk>, Arnd Bergmann <arnd@arndb.de>,
+        linux-fsdevel@vger.kernel.org,
+        Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+        "David S. Miller" <davem@davemloft.net>,
+        devel@driverdev.osuosl.org, linux-kernel@vger.kernel.org,
+        qat-linux@intel.com, linux-crypto@vger.kernel.org,
+        linux-media@vger.kernel.org, dri-devel@lists.freedesktop.org,
+        linaro-mm-sig@lists.linaro.org, amd-gfx@lists.freedesktop.org,
+        linux-input@vger.kernel.org, linux-iio@vger.kernel.org,
+        linux-rdma@vger.kernel.org, linux-nvdimm@lists.01.org,
+        linux-nvme@lists.infradead.org, linux-pci@vger.kernel.org,
+        platform-driver-x86@vger.kernel.org,
+        linux-remoteproc@vger.kernel.org, sparclinux@vger.kernel.org,
+        linux-scsi@vger.kernel.org, linux-usb@vger.kernel.org,
+        linux-fbdev@vger.kernel.org, linuxppc-dev@lists.ozlabs.org,
+        linux-btrfs@vger.kernel.org, ceph-devel@vger.kernel.org,
+        linux-wireless@vger.kernel.org, netdev@vger.kernel.org
+Subject: Re: [PATCH v2 05/17] compat_ioctl: move more drivers to
+ generic_compat_ioctl_ptrarg
+Message-ID: <20180918175952.GJ11367@ziepe.ca>
+References: <20180912150142.157913-1-arnd@arndb.de>
+ <20180912151134.436719-1-arnd@arndb.de>
+ <20180914203506.GE35251@wrath>
+ <20180914205748.GC19965@ZenIV.linux.org.uk>
+ <20180918175108.GF35251@wrath>
 MIME-Version: 1.0
-In-Reply-To: <20180918235702.26573-11-keith.busch@intel.com>
-Content-Type: text/plain; charset=utf-8; format=flowed
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20180918175108.GF35251@wrath>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 9/18/2018 7:57 PM, Keith Busch wrote:
-> +++ b/drivers/pci/pcie/dpc.c
-> @@ -93,10 +93,12 @@ static pci_ers_result_t dpc_reset_link(struct pci_dev *pdev)
->   	pci_write_config_word(pdev, cap + PCI_EXP_DPC_STATUS,
->   			      PCI_EXP_DPC_STATUS_TRIGGER);
->   
-> +	if (!pcie_wait_for_link(pdev, true))
-> +		return PCI_ERS_RESULT_DISCONNECT;
-> +
+On Tue, Sep 18, 2018 at 10:51:08AM -0700, Darren Hart wrote:
+> On Fri, Sep 14, 2018 at 09:57:48PM +0100, Al Viro wrote:
+> > On Fri, Sep 14, 2018 at 01:35:06PM -0700, Darren Hart wrote:
+> >  
+> > > Acked-by: Darren Hart (VMware) <dvhart@infradead.org>
+> > > 
+> > > As for a longer term solution, would it be possible to init fops in such
+> > > a way that the compat_ioctl call defaults to generic_compat_ioctl_ptrarg
+> > > so we don't have to duplicate this boilerplate for every ioctl fops
+> > > structure?
+> > 
+> > 	Bad idea, that...  Because several years down the road somebody will add
+> > an ioctl that takes an unsigned int for argument.  Without so much as looking
+> > at your magical mystery macro being used to initialize file_operations.
+> 
+> Fair, being explicit in the declaration as it is currently may be
+> preferable then.
 
-We are already doing this in err.c in pcie_do_fatal_recovery() as follows.
+It would be much cleaner and safer if you could arrange things to add
+something like this to struct file_operations:
 
-	result = reset_link(udev, service);
-	...
-	if (result == PCI_ERS_RESULT_RECOVERED) {
-		if (pcie_wait_for_link(udev, true))
-			pci_rescan_bus(udev->bus);
-		pci_info(dev, "Device recovery from fatal error successful\n");
-	}
+  long (*ptr_ioctl) (struct file *, unsigned int, void __user *);
 
-This would be an unnecessary duplication.
+Where the core code automatically converts the unsigned long to the
+void __user * as appropriate.
 
-You may want to move this piece into err.c and change the return code to 
-PCI_ERS_RESULT_DISCONNECT
-right after return from reset_link().
+Then it just works right always and the compiler will help address
+Al's concern down the road.
 
->   	return PCI_ERS_RESULT_RECOVERED;
->   }
->   
-> -
->   
+Cheers,
+Jason
