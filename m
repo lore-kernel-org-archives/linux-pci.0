@@ -2,118 +2,143 @@ Return-Path: <SRS0=7uyK=MA=vger.kernel.org=linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-3.6 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
-	DKIM_VALID_AU,FREEMAIL_FORGED_FROMDOMAIN,FREEMAIL_FROM,
-	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,SPF_PASS
-	autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-0.8 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+	MAILING_LIST_MULTI,SPF_PASS autolearn=unavailable autolearn_force=no
+	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id ECD1DECE562
-	for <linux-pci@archiver.kernel.org>; Tue, 18 Sep 2018 02:00:24 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id EEBCCECE567
+	for <linux-pci@archiver.kernel.org>; Tue, 18 Sep 2018 09:32:20 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 833D2214C5
-	for <linux-pci@archiver.kernel.org>; Tue, 18 Sep 2018 02:00:24 +0000 (UTC)
-Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="YOENmpFO"
-DMARC-Filter: OpenDMARC Filter v1.3.2 mail.kernel.org 833D2214C5
-Authentication-Results: mail.kernel.org; dmarc=fail (p=none dis=none) header.from=gmail.com
+	by mail.kernel.org (Postfix) with ESMTP id A963E2086B
+	for <linux-pci@archiver.kernel.org>; Tue, 18 Sep 2018 09:32:20 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.3.2 mail.kernel.org A963E2086B
+Authentication-Results: mail.kernel.org; dmarc=none (p=none dis=none) header.from=citrix.com
 Authentication-Results: mail.kernel.org; spf=none smtp.mailfrom=linux-pci-owner@vger.kernel.org
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726254AbeIRHab (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Tue, 18 Sep 2018 03:30:31 -0400
-Received: from mail-oi0-f66.google.com ([209.85.218.66]:35687 "EHLO
-        mail-oi0-f66.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1725807AbeIRHab (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Tue, 18 Sep 2018 03:30:31 -0400
-Received: by mail-oi0-f66.google.com with SMTP id m11-v6so314509oic.2
-        for <linux-pci@vger.kernel.org>; Mon, 17 Sep 2018 19:00:22 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20161025;
-        h=mime-version:references:in-reply-to:from:date:message-id:subject:to
-         :cc;
-        bh=QV1no5pYTas9K4Y4NpJHSo6Fa9gttO5sedjW+IN8UOI=;
-        b=YOENmpFOm5LOiBCNRorx94vdc8Ur49xhLWS8h7duDPiPBq3JLZH5I4/t3kwpfkcrJp
-         qDMexuA+DLz5uBZA5/GyiCnIy+ZXuhDbhtRt2uuGAX/UIw76Xf9IK8TMsUSgkxqpFrrq
-         kq2MNWFY5p4IslZ/62j5DW6r5f/T/zYR6v1yAHbd+k+7ZVadLOD3+3TA2rDWCTv/1HMw
-         TzkAeGPF1b4bCLCvD78d4VxtfsSryHJ14faC+QAS0+iFs/YosYA6DuVbEgD72bbHISBI
-         EX1qcuZvk/ZyxiVPBepQ4enxH9miR3WdgX2jomGaYmFq/vtdbCH5fxmww19xIBgCrRpT
-         QcYw==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20161025;
-        h=x-gm-message-state:mime-version:references:in-reply-to:from:date
-         :message-id:subject:to:cc;
-        bh=QV1no5pYTas9K4Y4NpJHSo6Fa9gttO5sedjW+IN8UOI=;
-        b=oJiEix3AUTt/mIi1wcCeRZ7CQiN/5QS3h5gN1/ajo/BCFgdnVxXrnqBkI9aDFj38lN
-         7NFGFOlfr3iRtuyPxAKdWEIBo9fBQeCPLao/bNT17FLXfmVDMfpUhe0eU8BYoGn+i4Z3
-         0+OFFxhWhNk8sLz+tNS1WdjfCOmJw5IkghFV+J8BbZ9x2AfUGDE9S8A0xztaD5hQnKfZ
-         zAEESa6IYxsT+iwhuX0N7sdzljc6pZuAZ9iI2ySiSBHUjQtW29ETDveLDwftvClgF381
-         WFiwaH0mHm/qsvwlI7RTVYSXoLKzZuDIGCnbo1DvqeppC32HO7bWeuB0EL94QnttzCTL
-         CnsQ==
-X-Gm-Message-State: APzg51CNUNbFqXKGJb540n490655WKlu++YcIk8Wi/erIvs6cbi0ThsN
-        1erGQPV3x6Il5dKXVwD77v+LpZVr6en4FKUsrZ2tDQ==
-X-Google-Smtp-Source: ANB0VdZlzdi3PhYaAd1cBPNbghHobjwIYiY+faNSVSEbryqfYFuUJGBx74j/BMTbL4KMbysJXgajzcdBwq+DEMb3RvA=
-X-Received: by 2002:aca:aa8d:: with SMTP id t135-v6mr186658oie.218.1537236022548;
- Mon, 17 Sep 2018 19:00:22 -0700 (PDT)
+        id S1726768AbeIRPD7 (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Tue, 18 Sep 2018 11:03:59 -0400
+Received: from smtp.eu.citrix.com ([185.25.65.24]:9556 "EHLO
+        SMTP.EU.CITRIX.COM" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1729578AbeIRPD6 (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Tue, 18 Sep 2018 11:03:58 -0400
+X-IronPort-AV: E=Sophos;i="5.53,389,1531785600"; 
+   d="scan'208";a="79199947"
+From:   George Dunlap <George.Dunlap@citrix.com>
+To:     =?utf-8?B?UGFzaSBLw6Rya2vDpGluZW4=?= <pasik@iki.fi>
+CC:     Boris Ostrovsky <boris.ostrovsky@oracle.com>,
+        Jan Beulich <JBeulich@suse.com>,
+        Juergen Gross <jgross@suse.com>,
+        "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+        "bhelgaas@google.com" <bhelgaas@google.com>,
+        xen-devel <xen-devel@lists.xenproject.org>,
+        Roger Pau Monne <roger.pau@citrix.com>,
+        Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>,
+        George Dunlap <George.Dunlap@citrix.com>
+Subject: Re: [Xen-devel] [PATCH V3 2/2] Xen/PCIback: Implement PCI
+ flr/slot/bus reset with 'reset' SysFS attribute
+Thread-Topic: [Xen-devel] [PATCH V3 2/2] Xen/PCIback: Implement PCI
+ flr/slot/bus reset with 'reset' SysFS attribute
+Thread-Index: AQHUTx9f82+4VewK8EuqL3LeXVReCKT1pSiA
+Date:   Tue, 18 Sep 2018 09:32:09 +0000
+Message-ID: <5E7DDB68-4E68-48A5-AEEC-EE1B21A50E9E@citrix.com>
+References: <20171207222145.9769-1-Govinda.Tatti@Oracle.COM>
+ <20171207222145.9769-3-Govinda.Tatti@Oracle.COM>
+ <5A2A6AB10200007800195D4F@prv-mh.provo.novell.com>
+ <8a3bc517-1255-4547-d244-5c400e44cc77@Oracle.COM>
+ <f19dbb09-ef22-2cf4-fb38-2a7c42b5dc48@Oracle.COM>
+ <5A377E020200007800197FFA@prv-mh.provo.novell.com>
+ <559ffd12-b541-8a69-60bd-fbe10e3dc159@oracle.com>
+ <20180916114306.GF18222@reaktio.net>
+ <a726840b-8a5c-0890-73c6-3a95a7205153@oracle.com>
+ <20180918071519.GG18222@reaktio.net>
+In-Reply-To: <20180918071519.GG18222@reaktio.net>
+Accept-Language: en-GB, en-US
+Content-Language: en-US
+X-MS-Has-Attach: 
+X-MS-TNEF-Correlator: 
+x-mailer: Apple Mail (2.3445.9.1)
+x-ms-exchange-messagesentrepresentingtype: 1
+x-ms-exchange-transport-fromentityheader: Hosted
+Content-Type: text/plain; charset="utf-8"
+Content-ID: <06A5B4745A58F84980FE1810FD94B93F@citrix.com>
+Content-Transfer-Encoding: base64
 MIME-Version: 1.0
-References: <CAMDZJNV6D_NCn5_n2DAnPH25DONAKRcc-GWwGbCXX098E+EJ1Q@mail.gmail.com>
- <20180917191503.GA54859@bhelgaas-glaptop.roam.corp.google.com>
-In-Reply-To: <20180917191503.GA54859@bhelgaas-glaptop.roam.corp.google.com>
-From:   Tonghao Zhang <xiangxia.m.yue@gmail.com>
-Date:   Tue, 18 Sep 2018 10:00:11 +0800
-Message-ID:
- <CAMDZJNUg+d6um2tp20OwyhSYG4WW8jSbwLhDAU8qOsqfkO=EfQ@mail.gmail.com>
-Subject: Re: kernel panic becase pci register more than once
-To:     helgaas@kernel.org
-Cc:     linux-pci@vger.kernel.org, hch@lst.de
-Content-Type: text/plain; charset="UTF-8"
 Sender: linux-pci-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
-Message-ID: <20180918020011._D9KKnLxHs-if9fq_ubr4RR0uj753UMcQ34BKzclcVk@z>
+Message-ID: <20180918093209.ezo4YpNY2tRBTtaNyaDUgnlVxoJit1TP68Tcx7n8gCk@z>
 
-On Tue, Sep 18, 2018 at 3:15 AM Bjorn Helgaas <helgaas@kernel.org> wrote:
->
-> [+cc Christoph]
->
-> On Sun, Sep 09, 2018 at 04:26:37PM +0800, Tonghao Zhang wrote:
-> > Hi all,
-> > When I enable pci msi or msix more than once, the kernel will panic.
-> > Now we just use the WARN_ON, should we add check for that has been
-> > enabled.
-> >
->
-> This needs a signed-off-by before I can apply it.  See
-> https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/tree/Documentation/process/submitting-patches.rst#n416
-OK
-> A WARN_ON() shouldn't cause the kernel to panic.  Do you mean that it
-> causes a backtrace?  I think that's the intended behavior, because
-> calling this twice would be a driver bug, and we want to find and fix
-> those bugs.
-Yes, you are right, but we can return error code when drivers call this twice.
-> > diff --git a/drivers/pci/msi.c b/drivers/pci/msi.c
-> > index f2ef896..324840f 100644
-> > --- a/drivers/pci/msi.c
-> > +++ b/drivers/pci/msi.c
-> > @@ -958,7 +958,9 @@ static int __pci_enable_msix(struct pci_dev *dev,
-> > struct msix_entry *entries,
-> >                         }
-> >                 }
-> >         }
-> > -       WARN_ON(!!dev->msix_enabled);
-> > +
-> > +       if (dev->msix_enabled)
-> > +               return -EINVAL;
-> >
-> >         /* Check whether driver already requested for MSI irq */
-> >         if (dev->msi_enabled) {
-> > @@ -1028,7 +1030,8 @@ static int __pci_enable_msi_range(struct pci_dev
-> > *dev, int minvec, int maxvec,
-> >         if (!pci_msi_supported(dev, minvec))
-> >                 return -EINVAL;
-> >
-> > -       WARN_ON(!!dev->msi_enabled);
-> > +       if (dev->msi_enabled)
-> > +               return -EINVAL;
-> >
-> >         /* Check whether driver already requested MSI-X irqs */
-> >         if (dev->msix_enabled) {
+DQoNCj4gT24gU2VwIDE4LCAyMDE4LCBhdCA4OjE1IEFNLCBQYXNpIEvDpHJra8OkaW5lbiA8cGFz
+aWtAaWtpLmZpPiB3cm90ZToNCj4gDQo+IEhpLA0KPiANCj4gT24gTW9uLCBTZXAgMTcsIDIwMTgg
+YXQgMDI6MDY6MDJQTSAtMDQwMCwgQm9yaXMgT3N0cm92c2t5IHdyb3RlOg0KPj4gT24gOS8xNi8x
+OCA3OjQzIEFNLCBQYXNpIEvDpHJra8OkaW5lbiB3cm90ZToNCj4+PiBIaSwNCj4+PiANCj4+PiBP
+biBNb24sIERlYyAxOCwgMjAxNyBhdCAxMjozMjoxMVBNIC0wNTAwLCBCb3JpcyBPc3Ryb3Zza3kg
+d3JvdGU6DQo+Pj4+IE9uIDEyLzE4LzIwMTcgMDI6MzYgQU0sIEphbiBCZXVsaWNoIHdyb3RlOg0K
+Pj4+Pj4+Pj4gT24gMTUuMTIuMTcgYXQgMjA6NTIsIDxHb3ZpbmRhLlRhdHRpQE9yYWNsZS5DT00+
+IHdyb3RlOg0KPj4+Pj4+Pj4+ICtzdGF0aWMgaW50IHBjaXN0dWJfZGV2aWNlX3Jlc2V0KHN0cnVj
+dCBwY2lfZGV2ICpkZXYpDQo+Pj4+Pj4+Pj4gK3sNCj4+Pj4+Pj4+PiArCXN0cnVjdCB4ZW5fcGNp
+YmtfZGV2X2RhdGEgKmRldl9kYXRhOw0KPj4+Pj4+Pj4+ICsJYm9vbCBzbG90ID0gZmFsc2UsIGJ1
+cyA9IGZhbHNlOw0KPj4+Pj4+Pj4+ICsJc3RydWN0IHBjaXN0dWJfYXJncyBhcmcgPSB7fTsNCj4+
+Pj4+Pj4+PiArDQo+Pj4+Pj4+Pj4gKwlpZiAoIWRldikNCj4+Pj4+Pj4+PiArCQlyZXR1cm4gLUVJ
+TlZBTDsNCj4+Pj4+Pj4+PiArDQo+Pj4+Pj4+Pj4gKwlkZXZfZGJnKCZkZXYtPmRldiwgIlslc11c
+biIsIF9fZnVuY19fKTsNCj4+Pj4+Pj4+PiArDQo+Pj4+Pj4+Pj4gKwkvKiBGaXJzdCBjaGVjayBh
+bmQgdHJ5IEZMUiAqLw0KPj4+Pj4+Pj4+ICsJaWYgKHBjaWVfaGFzX2ZscihkZXYpKSB7DQo+Pj4+
+Pj4+Pj4gKwkJZGV2X2RiZygmZGV2LT5kZXYsICJyZXNldHRpbmcgJXMgZGV2aWNlIHVzaW5nIEZM
+UlxuIiwNCj4+Pj4+Pj4+PiArCQkJcGNpX25hbWUoZGV2KSk7DQo+Pj4+Pj4+Pj4gKwkJcGNpZV9m
+bHIoZGV2KTsNCj4+Pj4+Pj4+IFRoZSBsYWNrIG9mIGVycm9yIGNoZWNrIGhlcmUgcHV6emxlZCBt
+ZSwgYnV0IEkgc2VlIHRoZSBmdW5jdGlvbg0KPj4+Pj4+Pj4gaW5kZWVkIHJldHVybnMgdm9pZCBy
+aWdodCBub3cuIEkgdGhpbmsgdGhlIHByZXJlcSBwYXRjaCBzaG91bGQNCj4+Pj4+Pj4+IGNoYW5n
+ZSB0aGlzIGFsb25nIHdpdGggZXhwb3J0aW5nIHRoZSBmdW5jdGlvbiAtIHlvdSByZWFsbHkgZG9u
+J3QNCj4+Pj4+Pj4+IHdhbnQgdGhlIGRldmljZSB0byBiZSBoYW5kZWQgdG8gYSBndWVzdCB3aGVu
+IHRoZSBGTFIgdGltZWQNCj4+Pj4+Pj4+IG91dC4NCj4+Pj4+Pj4gV2Ugd2lsbCBjaGFuZ2UgcGNp
+ZV9mbHIoKSB0byByZXR1cm4gZXJyb3IgY29kZS4gSSB3aWxsIG1ha2UgdGhpcyBjaGFuZ2UNCj4+
+Pj4+Pj4gaW4gdGhlIG5leHQgdmVyc2lvbiBvZiB0aGlzIHBhdGNoLg0KPj4+Pj4+IEkgZXhjaGFu
+Z2VkIHNvbWUgZW1haWxzIHdpdGggQmpvcm4vQ2hyaXN0b3BoIGFuZCBpdCBsb29rcyBsaWtlIENo
+cmlzdG9waA0KPj4+Pj4+IGFzIHNvbWUgcGxhbnRvIHJlc3RydWN0dXJlIHBjaWUgZmxyIHNwZWNp
+ZmljIGZ1bmN0aW9ucyBidXQgSSBkb24ndCBrbm93DQo+Pj4+Pj4gdGhlIGV4YWN0IHRpbWUtZnJh
+bWUuIEZvciBub3csSSBhbSBwbGFubmluZyB0byB1c2UgZXhpc3RpbmcgcGNpZV9mbHIoKQ0KPj4+
+Pj4+IGFmdGVyIGNoZWNraW5nIEZMUiBjYXBhYmlsaXR5LiBXZSB3aWxsIHN3aXRjaHRvIHJldmlz
+ZWQgcGNpZV9mbHIoKSBvbmNlDQo+Pj4+Pj4gaXQgaXMgYXZhaWxhYmxlLg0KPj4+Pj4+IA0KPj4+
+Pj4+IEkgaG9wZSB5b3UgYXJlIGZpbmUgd2l0aCB0aGlzIGFwcHJvYWNoLiBQbGVhc2UgbGV0IG1l
+IGtub3cuIFRoYW5rcy4NCj4+Pj4+IEkndmUgc2VlbiB0aGF0IG90aGVyIGRpc2N1c3Npb24uIEkg
+ZG9uJ3QgdGhpbmsgdGhlIGNoYW5nZSBoZXJlDQo+Pj4+PiBzaG91bGQgYmUgZG9uZSBwcmlvciB0
+byB0aGUgZXJyb3IgcmVwb3J0aW5nIGJlaW5nIHB1dCBpbiBwbGFjZSwNCj4+Pj4+IGZvciBzZWN1
+cml0eSByZWFzb25zLiBCdXQgaW4gdGhlIGVuZCBpdCdsbCBiZSBLb25yYWQgYXMgdGhlDQo+Pj4+
+PiBtYWludGFpbmVyIHRvIGp1ZGdlLg0KPj4+Pj4gDQo+Pj4+PiBPciB3YWl0LCBsb29rcyBsaWtl
+IHRoZXJlJ3Mgc29tZSBjb25mdXNpb24gaW4gLi9NQUlOVEFJTkVSUzoNCj4+Pj4+IEtvbnJhZCBp
+cyBsaXN0ZWQgYXMgbWFpbnRhaW5lciBmb3IgIlhFTiBQQ0kgU1VCU1lTVEVNIiwgYnV0IHRoZQ0K
+Pj4+Pj4gbGlzdCBvZiBmaWxlcyBkb2Vzbid0IGluY2x1ZGUgcGNpYmFjay4gU28gaXQgd291bGQg
+aW5zdGVhZCBiZSBCb3Jpcw0KPj4+Pj4gb3IgSsO8cmdlbiB0byBnaXZlIHlvdSBhIGZpbmFsIHdv
+cmQuDQo+Pj4+IA0KPj4+PiBUaGlzIGlzIG5vdyA0LjE2IG1hdGVyaWFsIHNvIHdlIGNhbiBhdCBs
+ZWFzdCB3YWl0IHVudGlsIGNsb3NlciB0bw0KPj4+PiBvcGVuaW5nIG9mIHRoZSBtZXJnZSB3aW5k
+b3cgd2hlbiB3ZSBtYXkgaGF2ZSB0aGUgUENJIHVwZGF0ZXMuIChBbmQgSQ0KPj4+PiBqdXN0IG5v
+dGljZWQgdGhhdCB5b3UgcmVzcG9uZGVkIHRvIENocmlzdG9waC4pDQo+Pj4+IA0KPj4+PiBCZXNp
+ZGVzLCB3ZSBkb24ndCB3YW50IHRvIG1ha2Uga2VybmVsIGNoYW5nZXMgdW50aWwgdGhlIGludGVy
+ZmFjZSBpcw0KPj4+PiBzZXR0bGVkIChpLmUgdGhlIHRvb2xzdGFjayBjaGFuZ2VzIGFyZSBhY2Nl
+cHRlZCkuDQo+Pj4+IA0KPj4+IEl0IHNlZW1zIEdvdmluZGEncyBlbWFpbCBhZGRyZXNzIGlzIGdp
+dmluZyBhbiBlcnJvciwgc28gSSBhc3N1bWUgc29tZW9uZSBlbHNlIG5lZWRzIHRvIHBpY2sgdXAg
+dGhpcyBwY2liYWNrICdyZXNldCcgZmVhdHVyZS4NCj4+PiBJcyBpdCBsaWtlbHkgc29tZW9uZSBl
+bHNlIGZyb20gT3JhY2xlIGNhbi93aWxsIHBpY2sgdXAgYW5kIHJlZnJlc2ggdGhpcyBwYXRjaCwg
+d2l0aCB0aGUgcmV2aWV3IGNvbW1lbnRzIGFkZHJlc3NlZD8NCj4+IA0KPj4gDQo+PiBHb3ZpbmRh
+IGlzIG5vIGxvbmdlciBhdCBPcmFjbGUuDQo+PiANCj4gDQo+IFllcCwgdGhvdWdodCBzby4gUmVt
+b3ZlZCBmcm9tIENDIGxpc3QuDQo+IA0KPiANCj4+IFdoYXQgYWJvdXQgdGhlIHRvb2xzdGFjayBj
+aGFuZ2VzPyBIYXZlIHRoZXkgYmVlbiBhY2NlcHRlZD8gSSB2YWd1ZWx5DQo+PiByZWNhbGwgdGhl
+cmUgd2FzIGEgZGlzY3Vzc2lvbiBhYm91dCB0aG9zZSBjaGFuZ2VzIGJ1dCBkb24ndCByZW1lbWJl
+ciBob3cNCj4+IGl0IGVuZGVkLg0KPj4gDQo+IA0KPiBJIGRvbid0IHRoaW5rIHRvb2xzdGFjay9s
+aWJ4bCBwYXRjaCBoYXMgYmVlbiBhcHBsaWVkIHlldCBlaXRoZXIuDQo+IA0KPiANCj4gIltQQVRD
+SCBWMSAwLzFdIFhlbi9Ub29sczogUENJIHJlc2V0IHVzaW5nICdyZXNldCcgU3lzRlMgYXR0cmli
+dXRlIjoNCj4gaHR0cHM6Ly9saXN0cy54ZW4ub3JnL2FyY2hpdmVzL2h0bWwveGVuLWRldmVsLzIw
+MTctMTIvbXNnMDA2NjQuaHRtbA0KPiANCj4gIltQQVRDSCBWMSAxLzFdIFhlbi9saWJ4bDogUGVy
+Zm9ybSBQQ0kgcmVzZXQgdXNpbmcgJ3Jlc2V0JyBTeXNGUyBhdHRyaWJ1dGUiOg0KPiBodHRwczov
+L2xpc3RzLnhlbi5vcmcvYXJjaGl2ZXMvaHRtbC94ZW4tZGV2ZWwvMjAxNy0xMi9tc2cwMDY2My5o
+dG1sDQo+IA0KPiBHZW9yZ2UgYXNrZWQgZm9yIHNvbWUgY2xhcmlmaWNhdGlvbnM6DQo+IGh0dHBz
+Oi8vbGlzdHMueGVuLm9yZy9hcmNoaXZlcy9odG1sL3hlbi1kZXZlbC8yMDE3LTEyL21zZzAxMDQ0
+Lmh0bWwNCj4gaHR0cHM6Ly9saXN0cy54ZW4ub3JnL2FyY2hpdmVzL2h0bWwveGVuLWRldmVsLzIw
+MTctMTIvbXNnMDExMTYuaHRtbA0KDQpSaWdodCwgdGhlIGRlc2NyaXB0aW9uIG9mIHRoZSBwYXRj
+aCBkaWRu4oCZdCBhY3R1YWxseSB0ZWxsIHlvdSB3aGF0IHdhcyBnb2luZyBvbi4gIEl0IHNob3Vs
+ZCBoYXZlIHNhaWQgc29tZXRoaW5nIGxpa2UsIOKAnHhsIGN1cnJlbnRseSBhdHRlbXB0cyB0byBy
+ZXNldCBhIGRldmljZSB1c2luZyBYOyBidXQgdGhhdOKAmXMgbmV2ZXIgYmVlbiBpbXBsZW1lbnRl
+ZCBpbiBMaW51eC4gIEluc3RlYWQsIHVzZSBZLCB3aGljaCBbaXMgYmV0dGVyIGZvciB3aGF0ZXZl
+ciByZWFzb25d4oCdLg0KDQogLUdlb3JnZQ0KDQo=
