@@ -1,80 +1,75 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from usa-sjc-mx-foss1.foss.arm.com ([217.140.101.70]:58042 "EHLO
-        foss.arm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1726552AbeILQyo (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Wed, 12 Sep 2018 12:54:44 -0400
-Date: Wed, 12 Sep 2018 12:50:31 +0100
-From: Andrew Murray <andrew.murray@arm.com>
-To: Will Deacon <will.deacon@arm.com>
-Cc: yuanzhichang@hisilicon.com, dann.frazier@canonical.com,
-        gabriele.paoloni@huawei.com, arnd@arndb.de, bhelgaas@google.com,
-        andy.shevchenko@gmail.com, linux-arm-kernel@lists.infradead.org,
-        linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
-        suzuki.poulose@arm.com, jean-philippe.brucker@arm.com,
-        john.garry@huawei.com, lorenzo.pieralisi@arm.com
-Subject: Re: [REGRESSION] Commit 5745392e0c2b ("PCI: Apply the new generic
- I/O management on PCI IO hosts") breaks PCI for legacy virtio devices with
- kvmtool on arm64
-Message-ID: <20180912115031.GG44256@e119886-lin.cambridge.arm.com>
-References: <20180907174140.GI12788@arm.com>
+Received: from mail.kernel.org ([198.145.29.99]:37758 "EHLO mail.kernel.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1729611AbeIRTTY (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Tue, 18 Sep 2018 15:19:24 -0400
+Date: Tue, 18 Sep 2018 08:46:42 -0500
+From: Bjorn Helgaas <helgaas@kernel.org>
+To: Tonghao Zhang <xiangxia.m.yue@gmail.com>
+Cc: linux-pci@vger.kernel.org, hch@lst.de
+Subject: Re: kernel panic becase pci register more than once
+Message-ID: <20180918134642.GB254348@bhelgaas-glaptop.roam.corp.google.com>
+References: <CAMDZJNV6D_NCn5_n2DAnPH25DONAKRcc-GWwGbCXX098E+EJ1Q@mail.gmail.com>
+ <20180917191503.GA54859@bhelgaas-glaptop.roam.corp.google.com>
+ <CAMDZJNUg+d6um2tp20OwyhSYG4WW8jSbwLhDAU8qOsqfkO=EfQ@mail.gmail.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20180907174140.GI12788@arm.com>
+In-Reply-To: <CAMDZJNUg+d6um2tp20OwyhSYG4WW8jSbwLhDAU8qOsqfkO=EfQ@mail.gmail.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Fri, Sep 07, 2018 at 06:41:40PM +0100, Will Deacon wrote:
-> Hi all,
-> 
-> I'm seeing a regression in Linux guests since 4.17 under kvmtool, where
-> legacy virtio devices using the PCI transport fail to probe. Legacy virtio
-> PCI devices must be accessed via "I/O space" (e.g. BAR0, which is
-> IORESOURCE_IO) and kvmtool assigns this to the guest physical range
-> 0x0 - 0x10000.
-> 
-> On arm64, when the virtio legacy PCI driver calls pci_iomap() for this BAR,
-> it expands to ioport_map():
-> 
->   static inline void __iomem *ioport_map(unsigned long port, unsigned int nr)
->   {
->   	return PCI_IOBASE + (port & MMIO_UPPER_LIMIT);
->   }
-> 
-> Since the indirect PIO changes, MMIO_UPPER_LIMIT is defined as:
-> 
->   /*
->    * We reserve 0x4000 bytes for Indirect IO as so far this library is only
->    * used by the HiSilicon LPC Host. If needed, we can reserve a wider IO
->    * area by redefining the macro below.
->    */
->   #define PIO_INDIRECT_SIZE 0x4000
->   #define MMIO_UPPER_LIMIT (IO_SPACE_LIMIT - PIO_INDIRECT_SIZE)
-> 
-> which corrupts the BAR address. For example, kvmtool has the BAR pointing
-> at 0x6200 on my system, but pci_iomap() actually maps offset 0x2200.
-> Changing PIO_INDIRECT_SIZE to 0 gets things working again.
-> 
-> Since this stuff doesn't revert nicely, I'm not sure how to proceed. Any
-> thoughts? Generally, having a per-platform magic constant hardcoded in
-> the PCI mapping code makes me feel slightly ill...
+On Tue, Sep 18, 2018 at 10:00:11AM +0800, Tonghao Zhang wrote:
+> On Tue, Sep 18, 2018 at 3:15 AM Bjorn Helgaas <helgaas@kernel.org> wrote:
+> > On Sun, Sep 09, 2018 at 04:26:37PM +0800, Tonghao Zhang wrote:
+> > > When I enable pci msi or msix more than once, the kernel will
+> > > panic.  Now we just use the WARN_ON, should we add check for
+> > > that has been enabled.
 
-It seems that MMIO_UPPER_LIMIT (and some cases previously with IO_SPACE_LIMIT)
-are not always being treated as masks - therefore ioport_map should be updated
-to use the comparison operator and reject anything above MMIO_UPPER_LIMIT.
+> > A WARN_ON() shouldn't cause the kernel to panic.  Do you mean that
+> > it causes a backtrace?  I think that's the intended behavior,
+> > because calling this twice would be a driver bug, and we want to
+> > find and fix those bugs.
 
-In any case modifying the address if it doesn't fit within the MMIO_UPPER_LIMIT
-(or IO_SPACE_LIMIT previously) will only break something further down the code
-path if the address was wrong in the first place. This function should probably
-work in the same was as GENERIC_IOMAP (given it shares the same name) whereby
-NULL is returned if the port is incorrect.
+> Yes, you are right, but we can return error code when drivers call
+> this twice.
 
-I will prepare a patch.
+That's possible.  We need a clear explanation for why we're making the
+change, and that starts with a clear description of the problem, i.e.,
+is the problem that the kernel crashes and a reboot is required, or is
+the problem some messages in the dmesg log that look alarming but are
+otherwise harmless?  I think the latter.
 
-Thanks,
+If we decide that an error return is better than the WARN_ON(), we
+need to look at where the check is done.  For example, you currently
+check in __pci_enable_msix(), which is only called from
+__pci_enable_msix_range().  We should check for simple errors like
+this as early as possible, which probably means
+__pci_enable_msix_range().
 
-Andrew Murray
-
-> 
-> Cheers,
-> 
-> Will
+> > > diff --git a/drivers/pci/msi.c b/drivers/pci/msi.c
+> > > index f2ef896..324840f 100644
+> > > --- a/drivers/pci/msi.c
+> > > +++ b/drivers/pci/msi.c
+> > > @@ -958,7 +958,9 @@ static int __pci_enable_msix(struct pci_dev *dev,
+> > > struct msix_entry *entries,
+> > >                         }
+> > >                 }
+> > >         }
+> > > -       WARN_ON(!!dev->msix_enabled);
+> > > +
+> > > +       if (dev->msix_enabled)
+> > > +               return -EINVAL;
+> > >
+> > >         /* Check whether driver already requested for MSI irq */
+> > >         if (dev->msi_enabled) {
+> > > @@ -1028,7 +1030,8 @@ static int __pci_enable_msi_range(struct pci_dev
+> > > *dev, int minvec, int maxvec,
+> > >         if (!pci_msi_supported(dev, minvec))
+> > >                 return -EINVAL;
+> > >
+> > > -       WARN_ON(!!dev->msi_enabled);
+> > > +       if (dev->msi_enabled)
+> > > +               return -EINVAL;
+> > >
+> > >         /* Check whether driver already requested MSI-X irqs */
+> > >         if (dev->msix_enabled) {
