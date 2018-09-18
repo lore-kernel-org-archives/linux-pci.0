@@ -1,42 +1,65 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from shards.monkeyblade.net ([23.128.96.9]:45724 "EHLO
-        shards.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726885AbeIQU1j (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Mon, 17 Sep 2018 16:27:39 -0400
-Date: Mon, 17 Sep 2018 07:59:56 -0700 (PDT)
-Message-Id: <20180917.075956.2226248627299867563.davem@davemloft.net>
-To: stephen@networkplumber.org
-Cc: kys@microsoft.com, haiyangz@microsoft.com, sthemmin@microsoft.com,
-        devel@linuxdriverproject.org, netdev@vger.kernel.org,
-        linux-pci@vger.kernel.org
-Subject: Re: [PATCH v2 0/2] hv_netvsc: associate VF and PV device by serial
- number
-From: David Miller <davem@davemloft.net>
-In-Reply-To: <20180914195457.20433-1-sthemmin@microsoft.com>
-References: <20180914195457.20433-1-sthemmin@microsoft.com>
-Mime-Version: 1.0
-Content-Type: Text/Plain; charset=us-ascii
+Received: from smtp.codeaurora.org ([198.145.29.96]:59590 "EHLO
+        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1728721AbeISAiw (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Tue, 18 Sep 2018 20:38:52 -0400
+MIME-Version: 1.0
+Content-Type: text/plain; charset=US-ASCII;
+ format=flowed
+Date: Wed, 19 Sep 2018 00:34:52 +0530
+From: poza@codeaurora.org
+To: Sinan Kaya <okaya@kernel.org>
+Cc: Bjorn Helgaas <bhelgaas@google.com>,
+        Philippe Ombredanne <pombredanne@nexb.com>,
+        Thomas Gleixner <tglx@linutronix.de>,
+        Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+        Kate Stewart <kstewart@linuxfoundation.org>,
+        linux-pci@vger.kernel.org, Keith Busch <keith.busch@intel.com>,
+        Wei Zhang <wzhang@fb.com>, linux-kernel@vger.kernel.org,
+        Giovanni Cabiddu <giovanni.cabiddu@intel.com>,
+        Herbert Xu <herbert@gondor.apana.org.au>,
+        "David S . Miller" <davem@davemloft.net>,
+        Dan Williams <dan.j.williams@intel.com>,
+        Kees Cook <keescook@chromium.org>,
+        Sagi Grimberg <sagi@grimberg.me>,
+        Adaptec OEM Raid Solutions <aacraid@microsemi.com>,
+        "James E . J . Bottomley" <jejb@linux.vnet.ibm.com>,
+        "Martin K . Petersen" <martin.petersen@oracle.com>
+Subject: Re: [PATCH] PCI/AER: Clear uncorrectable error status for device
+In-Reply-To: <ab1ee64e-d257-4521-1517-4c2c648d0d9c@kernel.org>
+References: <1537258829-15763-1-git-send-email-poza@codeaurora.org>
+ <ab1ee64e-d257-4521-1517-4c2c648d0d9c@kernel.org>
+Message-ID: <49a44a7202802c20d52164403139284b@codeaurora.org>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-From: Stephen Hemminger <stephen@networkplumber.org>
-Date: Fri, 14 Sep 2018 12:54:55 -0700
+On 2018-09-18 20:00, Sinan Kaya wrote:
+> On 9/18/2018 4:20 AM, Oza Pawandeep wrote:
+>> +++ b/drivers/pci/pcie/err.c
+>> @@ -265,6 +265,8 @@ static pci_ers_result_t 
+>> broadcast_error_message(struct pci_dev *dev,
+>>   		 * The error is non fatal so the bus is ok; just invoke
+>>   		 * the callback for the function that logged the error.
+>>   		 */
+>> +		if (cb == report_resume)
+>> +			pci_cleanup_aer_uncorrect_error_status(dev);
+>>   		cb(dev, &result_data);
+>>   	}
+> 
+> In order to follow the existing behavior (drivers are calling
+> pci_cleanup_aer_uncorrect_error_status() right before return),
+> you should probably move the pci_cleanup_aer_uncorrect_error_status
+> after
+> 
+> cb(dev, &result_data);
+> 
+> line.
 
-> The Hyper-V implementation of PCI controller has concept of 32 bit serial number
-> (not to be confused with PCI-E serial number).  This value is sent in the protocol
-> from the host to indicate SR-IOV VF device is attached to a synthetic NIC.
-> 
-> Using the serial number (instead of MAC address) to associate the two devices
-> avoids lots of potential problems when there are duplicate MAC addresses from
-> tunnels or layered devices.
-> 
-> The patch set is broken into two parts, one is for the PCI controller
-> and the other is for the netvsc device. Normally, these go through different
-> trees but sending them together here for better review. The PCI changes
-> were submitted previously, but the main review comment was "why do you
-> need this?". This is why.
-> 
-> v2 - slot name can be shorter.
->      remove locking when creating pci_slots; see comment for explaination
+some drivers are calling it in slot_reset, which is before resume,
+while some are calling in beginning of resume (e.g. netxen_io_resume)
 
-Series applied, thanks.
+hence I have kept it before calling resume()   (e.g. before cb(dev, 
+&result_data))
+
+Regards,
+Oza.
