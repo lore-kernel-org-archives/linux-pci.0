@@ -1,50 +1,65 @@
-Return-Path: <okaya@kernel.org>
-Return-Path: <okaya@kernel.org>
-Subject: Re: [Xen-devel] [PATCH V3 1/2] Drivers/PCI: Export pcie_has_flr()
- interface
-To: =?UTF-8?B?UGFzaSBLw6Rya2vDpGluZW4=?= <pasik@iki.fi>,
- Christoph Hellwig <hch@infradead.org>
-Cc: Bjorn Helgaas <helgaas@kernel.org>, jgross@suse.com,
- Sinan Kaya <okaya@codeaurora.org>, Govinda Tatti <Govinda.Tatti@Oracle.COM>,
- Herbert Xu <herbert@gondor.apana.org.au>,
- Satanand Burla <satananda.burla@caviumnetworks.com>,
- linux-pci@vger.kernel.org, Felix Manlunas
- <felix.manlunas@caviumnetworks.com>, linux-kernel@vger.kernel.org,
- Derek Chickles <derek.chickles@caviumnetworks.com>,
- Srikanth Jampala <Jampala.Srikanth@cavium.com>, JBeulich@suse.com,
- Russell Currey <ruscur@russell.cc>, bhelgaas@google.com,
- xen-devel@lists.xenproject.org, boris.ostrovsky@Oracle.COM,
- Raghu Vatsavayi <raghu.vatsavayi@caviumnetworks.com>, roger.pau@citrix.com
-References: <20171207222145.9769-1-Govinda.Tatti@Oracle.COM>
- <20171207222145.9769-2-Govinda.Tatti@Oracle.COM>
- <20171208202424.GC12367@bhelgaas-glaptop.roam.corp.google.com>
- <426eeeab-0dcd-8de3-9c5f-a166acf2c130@Oracle.COM>
- <20171212005919.GB30595@bhelgaas-glaptop.roam.corp.google.com>
- <49956aaf-5fd5-939d-5fc7-231ffdb98b70@Oracle.COM>
- <20171213212420.GH30595@bhelgaas-glaptop.roam.corp.google.com>
- <fea075cf-fe6f-0d0b-11e4-4279fbfc280a@Oracle.COM>
- <20171215181801.GU30595@bhelgaas-glaptop.roam.corp.google.com>
- <20171218122629.GA18423@infradead.org> <20180909185944.GC18222@reaktio.net>
-From: Sinan Kaya <okaya@kernel.org>
-Message-ID: <9ffe43d2-a44b-974c-85c9-9923d71c5dba@kernel.org>
-Date: Sun, 9 Sep 2018 22:33:02 -0400
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
 MIME-Version: 1.0
-In-Reply-To: <20180909185944.GC18222@reaktio.net>
-Content-Type: text/plain; charset=utf-8; format=flowed
+References: <20180829183440.13601-1-robh@kernel.org>
+ <20180913145130.GA5756@e107981-ln.cambridge.arm.com>
+In-Reply-To: <20180913145130.GA5756@e107981-ln.cambridge.arm.com>
+From: Rob Herring <robh@kernel.org>
+Date: Tue, 18 Sep 2018 12:05:40 -0700
+Message-ID: <CAL_JsqKoOJigMkiWqoG77+nstr-6=qiAeTePZkSThcfbVAtEQQ@mail.gmail.com>
+Subject: Re: [PATCH] PCI: remove unnecessary check of device_type == pci
+To: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
+List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
+List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
+List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
+List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
+List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
+Cc: linux-pci@vger.kernel.org,
+ Subrahmanya Lingappa <l.subrahmanya@mobiveil.co.in>,
+ Will Deacon <will.deacon@arm.com>,
+ "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+ Michal Simek <michal.simek@xilinx.com>, Alan Douglas <adouglas@cadence.com>,
+ Bjorn Helgaas <bhelgaas@google.com>,
+ "moderated list:ARM/FREESCALE IMX / MXC ARM ARCHITECTURE"
+ <linux-arm-kernel@lists.infradead.org>
+Content-Type: text/plain; charset="us-ascii"
+Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
+Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 9/9/2018 2:59 PM, Pasi Kärkkäinen wrote:
-> I noticed pcie_has_flr() has been recently exported in upstream Linux:
-> https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/commit/?id=2d2917f7747805a1f4188672f308d82a8ba01700
-> 
-> Are there more changes / cleanups planned to these interfaces, as mentioned last year?
-> 
-> (context: xen-pciback reset/do_flr features upstreaming, which kind of stalled last year when pcie_has_flr() wasn't exported at the time)
+On Thu, Sep 13, 2018 at 7:51 AM Lorenzo Pieralisi
+<lorenzo.pieralisi@arm.com> wrote:
+>
+> On Wed, Aug 29, 2018 at 01:34:40PM -0500, Rob Herring wrote:
+> > PCI host drivers have already matched on compatible strings, so checking
+> > device_type is redundant. Also, device_type is considered deprecated for
+> > FDT though we've still been requiring it for PCI hosts as it is useful
+> > for finding PCI buses.
+>
+> Hi Rob,
+>
+> I have no problem with the patch per-se, I can't parse though the second
+> paragraph, in particular what you mean by "useful for finding PCI
+> buses".
 
-Exporting pcie_has_flr() is a very simple change which could have been done
-by the XEN porting effort.
+Device_type is the only generic way we can identify PCI buses which is
+useful for dtc for example to do PCI binding checks. Maybe we can use
+the node name which is what I'm doing for cpu nodes, but we've been
+less consistent about that for PCI.
 
-Maybe, the right question is what is so special about XEN reset?
+>
+> What about the corresponding dts files ? I suspect we had better leave
+> them alone lest we can trigger regressions with new dts and older
+> kernels.
 
-What feature PCI core is missing to support XEN FLR reset that caused
-the effort to stall?
+Yes. it will take some time before we can remove from dts files. Or
+maybe only new ones change.
+
+Rob
+
+_______________________________________________
+linux-arm-kernel mailing list
+linux-arm-kernel@lists.infradead.org
+http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
