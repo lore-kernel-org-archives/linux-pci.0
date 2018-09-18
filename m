@@ -2,143 +2,128 @@ Return-Path: <SRS0=7uyK=MA=vger.kernel.org=linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-0.8 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	MAILING_LIST_MULTI,SPF_PASS autolearn=unavailable autolearn_force=no
-	version=3.4.0
+X-Spam-Status: No, score=-8.3 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_PASS,USER_AGENT_MUTT
+	autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id EEBCCECE567
-	for <linux-pci@archiver.kernel.org>; Tue, 18 Sep 2018 09:32:20 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id C65FEECE564
+	for <linux-pci@archiver.kernel.org>; Tue, 18 Sep 2018 10:58:05 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id A963E2086B
-	for <linux-pci@archiver.kernel.org>; Tue, 18 Sep 2018 09:32:20 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.3.2 mail.kernel.org A963E2086B
-Authentication-Results: mail.kernel.org; dmarc=none (p=none dis=none) header.from=citrix.com
+	by mail.kernel.org (Postfix) with ESMTP id 86F0220C0E
+	for <linux-pci@archiver.kernel.org>; Tue, 18 Sep 2018 10:58:05 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.3.2 mail.kernel.org 86F0220C0E
+Authentication-Results: mail.kernel.org; dmarc=none (p=none dis=none) header.from=arm.com
 Authentication-Results: mail.kernel.org; spf=none smtp.mailfrom=linux-pci-owner@vger.kernel.org
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726768AbeIRPD7 (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Tue, 18 Sep 2018 11:03:59 -0400
-Received: from smtp.eu.citrix.com ([185.25.65.24]:9556 "EHLO
-        SMTP.EU.CITRIX.COM" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1729578AbeIRPD6 (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Tue, 18 Sep 2018 11:03:58 -0400
-X-IronPort-AV: E=Sophos;i="5.53,389,1531785600"; 
-   d="scan'208";a="79199947"
-From:   George Dunlap <George.Dunlap@citrix.com>
-To:     =?utf-8?B?UGFzaSBLw6Rya2vDpGluZW4=?= <pasik@iki.fi>
-CC:     Boris Ostrovsky <boris.ostrovsky@oracle.com>,
-        Jan Beulich <JBeulich@suse.com>,
-        Juergen Gross <jgross@suse.com>,
-        "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-        "bhelgaas@google.com" <bhelgaas@google.com>,
-        xen-devel <xen-devel@lists.xenproject.org>,
-        Roger Pau Monne <roger.pau@citrix.com>,
-        Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>,
-        George Dunlap <George.Dunlap@citrix.com>
-Subject: Re: [Xen-devel] [PATCH V3 2/2] Xen/PCIback: Implement PCI
- flr/slot/bus reset with 'reset' SysFS attribute
-Thread-Topic: [Xen-devel] [PATCH V3 2/2] Xen/PCIback: Implement PCI
- flr/slot/bus reset with 'reset' SysFS attribute
-Thread-Index: AQHUTx9f82+4VewK8EuqL3LeXVReCKT1pSiA
-Date:   Tue, 18 Sep 2018 09:32:09 +0000
-Message-ID: <5E7DDB68-4E68-48A5-AEEC-EE1B21A50E9E@citrix.com>
-References: <20171207222145.9769-1-Govinda.Tatti@Oracle.COM>
- <20171207222145.9769-3-Govinda.Tatti@Oracle.COM>
- <5A2A6AB10200007800195D4F@prv-mh.provo.novell.com>
- <8a3bc517-1255-4547-d244-5c400e44cc77@Oracle.COM>
- <f19dbb09-ef22-2cf4-fb38-2a7c42b5dc48@Oracle.COM>
- <5A377E020200007800197FFA@prv-mh.provo.novell.com>
- <559ffd12-b541-8a69-60bd-fbe10e3dc159@oracle.com>
- <20180916114306.GF18222@reaktio.net>
- <a726840b-8a5c-0890-73c6-3a95a7205153@oracle.com>
- <20180918071519.GG18222@reaktio.net>
-In-Reply-To: <20180918071519.GG18222@reaktio.net>
-Accept-Language: en-GB, en-US
-Content-Language: en-US
-X-MS-Has-Attach: 
-X-MS-TNEF-Correlator: 
-x-mailer: Apple Mail (2.3445.9.1)
-x-ms-exchange-messagesentrepresentingtype: 1
-x-ms-exchange-transport-fromentityheader: Hosted
-Content-Type: text/plain; charset="utf-8"
-Content-ID: <06A5B4745A58F84980FE1810FD94B93F@citrix.com>
-Content-Transfer-Encoding: base64
+        id S1729290AbeIRQaH (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Tue, 18 Sep 2018 12:30:07 -0400
+Received: from usa-sjc-mx-foss1.foss.arm.com ([217.140.101.70]:42370 "EHLO
+        foss.arm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1729286AbeIRQaG (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Tue, 18 Sep 2018 12:30:06 -0400
+Received: from usa-sjc-imap-foss1.foss.arm.com (unknown [10.72.51.249])
+        by usa-sjc-mx-foss1.foss.arm.com (Postfix) with ESMTP id 6C54BED1;
+        Tue, 18 Sep 2018 03:58:03 -0700 (PDT)
+Received: from e107981-ln.cambridge.arm.com (e107981-ln.Emea.Arm.com [10.4.13.117])
+        by usa-sjc-imap-foss1.foss.arm.com (Postfix) with ESMTPSA id 39E3F3F5BD;
+        Tue, 18 Sep 2018 03:58:02 -0700 (PDT)
+Date:   Tue, 18 Sep 2018 11:57:59 +0100
+From:   Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
+To:     Bjorn Helgaas <helgaas@kernel.org>
+Cc:     Alan Douglas <adouglas@cadence.com>, bhelgaas@google.com,
+        kishon@ti.com, linux-pci@vger.kernel.org,
+        cyrille.pitchen@bootlin.com
+Subject: Re: [PATCH] pci: cadence: Correct probe behaviour when failing to
+ get PHY
+Message-ID: <20180918105759.GD26886@e107981-ln.cambridge.arm.com>
+References: <1536164408-10959-1-git-send-email-adouglas@cadence.com>
+ <20180905171008.GM107892@bhelgaas-glaptop.roam.corp.google.com>
 MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20180905171008.GM107892@bhelgaas-glaptop.roam.corp.google.com>
+User-Agent: Mutt/1.5.24 (2015-08-30)
 Sender: linux-pci-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
-Message-ID: <20180918093209.ezo4YpNY2tRBTtaNyaDUgnlVxoJit1TP68Tcx7n8gCk@z>
+Message-ID: <20180918105759.aTBrWyouzxkLUSFNRjNWNxP5TcGYtkuNbcHLdyzXkmg@z>
 
-DQoNCj4gT24gU2VwIDE4LCAyMDE4LCBhdCA4OjE1IEFNLCBQYXNpIEvDpHJra8OkaW5lbiA8cGFz
-aWtAaWtpLmZpPiB3cm90ZToNCj4gDQo+IEhpLA0KPiANCj4gT24gTW9uLCBTZXAgMTcsIDIwMTgg
-YXQgMDI6MDY6MDJQTSAtMDQwMCwgQm9yaXMgT3N0cm92c2t5IHdyb3RlOg0KPj4gT24gOS8xNi8x
-OCA3OjQzIEFNLCBQYXNpIEvDpHJra8OkaW5lbiB3cm90ZToNCj4+PiBIaSwNCj4+PiANCj4+PiBP
-biBNb24sIERlYyAxOCwgMjAxNyBhdCAxMjozMjoxMVBNIC0wNTAwLCBCb3JpcyBPc3Ryb3Zza3kg
-d3JvdGU6DQo+Pj4+IE9uIDEyLzE4LzIwMTcgMDI6MzYgQU0sIEphbiBCZXVsaWNoIHdyb3RlOg0K
-Pj4+Pj4+Pj4gT24gMTUuMTIuMTcgYXQgMjA6NTIsIDxHb3ZpbmRhLlRhdHRpQE9yYWNsZS5DT00+
-IHdyb3RlOg0KPj4+Pj4+Pj4+ICtzdGF0aWMgaW50IHBjaXN0dWJfZGV2aWNlX3Jlc2V0KHN0cnVj
-dCBwY2lfZGV2ICpkZXYpDQo+Pj4+Pj4+Pj4gK3sNCj4+Pj4+Pj4+PiArCXN0cnVjdCB4ZW5fcGNp
-YmtfZGV2X2RhdGEgKmRldl9kYXRhOw0KPj4+Pj4+Pj4+ICsJYm9vbCBzbG90ID0gZmFsc2UsIGJ1
-cyA9IGZhbHNlOw0KPj4+Pj4+Pj4+ICsJc3RydWN0IHBjaXN0dWJfYXJncyBhcmcgPSB7fTsNCj4+
-Pj4+Pj4+PiArDQo+Pj4+Pj4+Pj4gKwlpZiAoIWRldikNCj4+Pj4+Pj4+PiArCQlyZXR1cm4gLUVJ
-TlZBTDsNCj4+Pj4+Pj4+PiArDQo+Pj4+Pj4+Pj4gKwlkZXZfZGJnKCZkZXYtPmRldiwgIlslc11c
-biIsIF9fZnVuY19fKTsNCj4+Pj4+Pj4+PiArDQo+Pj4+Pj4+Pj4gKwkvKiBGaXJzdCBjaGVjayBh
-bmQgdHJ5IEZMUiAqLw0KPj4+Pj4+Pj4+ICsJaWYgKHBjaWVfaGFzX2ZscihkZXYpKSB7DQo+Pj4+
-Pj4+Pj4gKwkJZGV2X2RiZygmZGV2LT5kZXYsICJyZXNldHRpbmcgJXMgZGV2aWNlIHVzaW5nIEZM
-UlxuIiwNCj4+Pj4+Pj4+PiArCQkJcGNpX25hbWUoZGV2KSk7DQo+Pj4+Pj4+Pj4gKwkJcGNpZV9m
-bHIoZGV2KTsNCj4+Pj4+Pj4+IFRoZSBsYWNrIG9mIGVycm9yIGNoZWNrIGhlcmUgcHV6emxlZCBt
-ZSwgYnV0IEkgc2VlIHRoZSBmdW5jdGlvbg0KPj4+Pj4+Pj4gaW5kZWVkIHJldHVybnMgdm9pZCBy
-aWdodCBub3cuIEkgdGhpbmsgdGhlIHByZXJlcSBwYXRjaCBzaG91bGQNCj4+Pj4+Pj4+IGNoYW5n
-ZSB0aGlzIGFsb25nIHdpdGggZXhwb3J0aW5nIHRoZSBmdW5jdGlvbiAtIHlvdSByZWFsbHkgZG9u
-J3QNCj4+Pj4+Pj4+IHdhbnQgdGhlIGRldmljZSB0byBiZSBoYW5kZWQgdG8gYSBndWVzdCB3aGVu
-IHRoZSBGTFIgdGltZWQNCj4+Pj4+Pj4+IG91dC4NCj4+Pj4+Pj4gV2Ugd2lsbCBjaGFuZ2UgcGNp
-ZV9mbHIoKSB0byByZXR1cm4gZXJyb3IgY29kZS4gSSB3aWxsIG1ha2UgdGhpcyBjaGFuZ2UNCj4+
-Pj4+Pj4gaW4gdGhlIG5leHQgdmVyc2lvbiBvZiB0aGlzIHBhdGNoLg0KPj4+Pj4+IEkgZXhjaGFu
-Z2VkIHNvbWUgZW1haWxzIHdpdGggQmpvcm4vQ2hyaXN0b3BoIGFuZCBpdCBsb29rcyBsaWtlIENo
-cmlzdG9waA0KPj4+Pj4+IGFzIHNvbWUgcGxhbnRvIHJlc3RydWN0dXJlIHBjaWUgZmxyIHNwZWNp
-ZmljIGZ1bmN0aW9ucyBidXQgSSBkb24ndCBrbm93DQo+Pj4+Pj4gdGhlIGV4YWN0IHRpbWUtZnJh
-bWUuIEZvciBub3csSSBhbSBwbGFubmluZyB0byB1c2UgZXhpc3RpbmcgcGNpZV9mbHIoKQ0KPj4+
-Pj4+IGFmdGVyIGNoZWNraW5nIEZMUiBjYXBhYmlsaXR5LiBXZSB3aWxsIHN3aXRjaHRvIHJldmlz
-ZWQgcGNpZV9mbHIoKSBvbmNlDQo+Pj4+Pj4gaXQgaXMgYXZhaWxhYmxlLg0KPj4+Pj4+IA0KPj4+
-Pj4+IEkgaG9wZSB5b3UgYXJlIGZpbmUgd2l0aCB0aGlzIGFwcHJvYWNoLiBQbGVhc2UgbGV0IG1l
-IGtub3cuIFRoYW5rcy4NCj4+Pj4+IEkndmUgc2VlbiB0aGF0IG90aGVyIGRpc2N1c3Npb24uIEkg
-ZG9uJ3QgdGhpbmsgdGhlIGNoYW5nZSBoZXJlDQo+Pj4+PiBzaG91bGQgYmUgZG9uZSBwcmlvciB0
-byB0aGUgZXJyb3IgcmVwb3J0aW5nIGJlaW5nIHB1dCBpbiBwbGFjZSwNCj4+Pj4+IGZvciBzZWN1
-cml0eSByZWFzb25zLiBCdXQgaW4gdGhlIGVuZCBpdCdsbCBiZSBLb25yYWQgYXMgdGhlDQo+Pj4+
-PiBtYWludGFpbmVyIHRvIGp1ZGdlLg0KPj4+Pj4gDQo+Pj4+PiBPciB3YWl0LCBsb29rcyBsaWtl
-IHRoZXJlJ3Mgc29tZSBjb25mdXNpb24gaW4gLi9NQUlOVEFJTkVSUzoNCj4+Pj4+IEtvbnJhZCBp
-cyBsaXN0ZWQgYXMgbWFpbnRhaW5lciBmb3IgIlhFTiBQQ0kgU1VCU1lTVEVNIiwgYnV0IHRoZQ0K
-Pj4+Pj4gbGlzdCBvZiBmaWxlcyBkb2Vzbid0IGluY2x1ZGUgcGNpYmFjay4gU28gaXQgd291bGQg
-aW5zdGVhZCBiZSBCb3Jpcw0KPj4+Pj4gb3IgSsO8cmdlbiB0byBnaXZlIHlvdSBhIGZpbmFsIHdv
-cmQuDQo+Pj4+IA0KPj4+PiBUaGlzIGlzIG5vdyA0LjE2IG1hdGVyaWFsIHNvIHdlIGNhbiBhdCBs
-ZWFzdCB3YWl0IHVudGlsIGNsb3NlciB0bw0KPj4+PiBvcGVuaW5nIG9mIHRoZSBtZXJnZSB3aW5k
-b3cgd2hlbiB3ZSBtYXkgaGF2ZSB0aGUgUENJIHVwZGF0ZXMuIChBbmQgSQ0KPj4+PiBqdXN0IG5v
-dGljZWQgdGhhdCB5b3UgcmVzcG9uZGVkIHRvIENocmlzdG9waC4pDQo+Pj4+IA0KPj4+PiBCZXNp
-ZGVzLCB3ZSBkb24ndCB3YW50IHRvIG1ha2Uga2VybmVsIGNoYW5nZXMgdW50aWwgdGhlIGludGVy
-ZmFjZSBpcw0KPj4+PiBzZXR0bGVkIChpLmUgdGhlIHRvb2xzdGFjayBjaGFuZ2VzIGFyZSBhY2Nl
-cHRlZCkuDQo+Pj4+IA0KPj4+IEl0IHNlZW1zIEdvdmluZGEncyBlbWFpbCBhZGRyZXNzIGlzIGdp
-dmluZyBhbiBlcnJvciwgc28gSSBhc3N1bWUgc29tZW9uZSBlbHNlIG5lZWRzIHRvIHBpY2sgdXAg
-dGhpcyBwY2liYWNrICdyZXNldCcgZmVhdHVyZS4NCj4+PiBJcyBpdCBsaWtlbHkgc29tZW9uZSBl
-bHNlIGZyb20gT3JhY2xlIGNhbi93aWxsIHBpY2sgdXAgYW5kIHJlZnJlc2ggdGhpcyBwYXRjaCwg
-d2l0aCB0aGUgcmV2aWV3IGNvbW1lbnRzIGFkZHJlc3NlZD8NCj4+IA0KPj4gDQo+PiBHb3ZpbmRh
-IGlzIG5vIGxvbmdlciBhdCBPcmFjbGUuDQo+PiANCj4gDQo+IFllcCwgdGhvdWdodCBzby4gUmVt
-b3ZlZCBmcm9tIENDIGxpc3QuDQo+IA0KPiANCj4+IFdoYXQgYWJvdXQgdGhlIHRvb2xzdGFjayBj
-aGFuZ2VzPyBIYXZlIHRoZXkgYmVlbiBhY2NlcHRlZD8gSSB2YWd1ZWx5DQo+PiByZWNhbGwgdGhl
-cmUgd2FzIGEgZGlzY3Vzc2lvbiBhYm91dCB0aG9zZSBjaGFuZ2VzIGJ1dCBkb24ndCByZW1lbWJl
-ciBob3cNCj4+IGl0IGVuZGVkLg0KPj4gDQo+IA0KPiBJIGRvbid0IHRoaW5rIHRvb2xzdGFjay9s
-aWJ4bCBwYXRjaCBoYXMgYmVlbiBhcHBsaWVkIHlldCBlaXRoZXIuDQo+IA0KPiANCj4gIltQQVRD
-SCBWMSAwLzFdIFhlbi9Ub29sczogUENJIHJlc2V0IHVzaW5nICdyZXNldCcgU3lzRlMgYXR0cmli
-dXRlIjoNCj4gaHR0cHM6Ly9saXN0cy54ZW4ub3JnL2FyY2hpdmVzL2h0bWwveGVuLWRldmVsLzIw
-MTctMTIvbXNnMDA2NjQuaHRtbA0KPiANCj4gIltQQVRDSCBWMSAxLzFdIFhlbi9saWJ4bDogUGVy
-Zm9ybSBQQ0kgcmVzZXQgdXNpbmcgJ3Jlc2V0JyBTeXNGUyBhdHRyaWJ1dGUiOg0KPiBodHRwczov
-L2xpc3RzLnhlbi5vcmcvYXJjaGl2ZXMvaHRtbC94ZW4tZGV2ZWwvMjAxNy0xMi9tc2cwMDY2My5o
-dG1sDQo+IA0KPiBHZW9yZ2UgYXNrZWQgZm9yIHNvbWUgY2xhcmlmaWNhdGlvbnM6DQo+IGh0dHBz
-Oi8vbGlzdHMueGVuLm9yZy9hcmNoaXZlcy9odG1sL3hlbi1kZXZlbC8yMDE3LTEyL21zZzAxMDQ0
-Lmh0bWwNCj4gaHR0cHM6Ly9saXN0cy54ZW4ub3JnL2FyY2hpdmVzL2h0bWwveGVuLWRldmVsLzIw
-MTctMTIvbXNnMDExMTYuaHRtbA0KDQpSaWdodCwgdGhlIGRlc2NyaXB0aW9uIG9mIHRoZSBwYXRj
-aCBkaWRu4oCZdCBhY3R1YWxseSB0ZWxsIHlvdSB3aGF0IHdhcyBnb2luZyBvbi4gIEl0IHNob3Vs
-ZCBoYXZlIHNhaWQgc29tZXRoaW5nIGxpa2UsIOKAnHhsIGN1cnJlbnRseSBhdHRlbXB0cyB0byBy
-ZXNldCBhIGRldmljZSB1c2luZyBYOyBidXQgdGhhdOKAmXMgbmV2ZXIgYmVlbiBpbXBsZW1lbnRl
-ZCBpbiBMaW51eC4gIEluc3RlYWQsIHVzZSBZLCB3aGljaCBbaXMgYmV0dGVyIGZvciB3aGF0ZXZl
-ciByZWFzb25d4oCdLg0KDQogLUdlb3JnZQ0KDQo=
+On Wed, Sep 05, 2018 at 12:10:08PM -0500, Bjorn Helgaas wrote:
+> On Wed, Sep 05, 2018 at 05:20:08PM +0100, Alan Douglas wrote:
+> > Test the correct value to see whether the PHY get failed.
+> 
+> If you intended a new paragraph here, please insert a blank line.
+> 
+> > Use devm_phy_get() instead of devm_phy_optional_get(), since it is
+> > only called if phy name is given in devicetree and so should exist.
+> > If failure when getting or linking PHY, put any PHYs which were
+> > already got and unlink them.
+> > 
+> > Fixes: dfb80534692ddc5b ("PCI: cadence: Add generic PHY support to host and EP drivers")
+> > Signed-off-by: Alan Douglas <adouglas@cadence.com>
+> 
+> Lorenzo will probably take care of this for you, but if you repost this for
+> any reason, please follow the capitalization convention:
+> 
+>   $ git log --oneline --follow drivers/pci/controller/pcie-cadence.c
+>   ee12c9efe685 PCI: cadence: Add Power Management ops for host and EP
+>   dfb80534692d PCI: cadence: Add generic PHY support to host and EP drivers
+>   6e0832fa432e PCI: Collect all native drivers under drivers/pci/controller/
+>   37dddf14f1ae PCI: cadence: Add EndPoint Controller driver for Cadence PCIe controller
+
+Done, updated the log and pushed to pci/cadence for v4.20, thanks.
+
+Lorenzo
+
+> > ---
+> >  drivers/pci/controller/pcie-cadence.c | 18 +++++++++++-------
+> >  1 file changed, 11 insertions(+), 7 deletions(-)
+> > 
+> > diff --git a/drivers/pci/controller/pcie-cadence.c b/drivers/pci/controller/pcie-cadence.c
+> > index 86f1b00..67d2f98 100644
+> > --- a/drivers/pci/controller/pcie-cadence.c
+> > +++ b/drivers/pci/controller/pcie-cadence.c
+> > @@ -190,14 +190,16 @@ int cdns_pcie_init_phy(struct device *dev, struct cdns_pcie *pcie)
+> >  
+> >  	for (i = 0; i < phy_count; i++) {
+> >  		of_property_read_string_index(np, "phy-names", i, &name);
+> > -		phy[i] = devm_phy_optional_get(dev, name);
+> > -		if (IS_ERR(phy))
+> > -			return PTR_ERR(phy);
+> > -
+> > +		phy[i] = devm_phy_get(dev, name);
+> > +		if (IS_ERR(phy[i])) {
+> > +			ret = PTR_ERR(phy[i]);
+> > +			goto err_phy;
+> > +		}
+> >  		link[i] = device_link_add(dev, &phy[i]->dev, DL_FLAG_STATELESS);
+> >  		if (!link[i]) {
+> > +			devm_phy_put(dev, phy[i]);
+> >  			ret = -EINVAL;
+> > -			goto err_link;
+> > +			goto err_phy;
+> >  		}
+> >  	}
+> >  
+> > @@ -207,13 +209,15 @@ int cdns_pcie_init_phy(struct device *dev, struct cdns_pcie *pcie)
+> >  
+> >  	ret =  cdns_pcie_enable_phy(pcie);
+> >  	if (ret)
+> > -		goto err_link;
+> > +		goto err_phy;
+> >  
+> >  	return 0;
+> >  
+> > -err_link:
+> > +err_phy:
+> >  	while (--i >= 0)
+> >  		device_link_del(link[i]);
+> > +	while (--i >= 0)
+> > +		devm_phy_put(dev, phy[i]);
+> >  
+> >  	return ret;
+> >  }
+> > -- 
+> > 1.9.0
+> > 
