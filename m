@@ -1,39 +1,55 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.29.99]:37196 "EHLO mail.kernel.org"
+Received: from mga04.intel.com ([192.55.52.120]:7811 "EHLO mga04.intel.com"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1726211AbeIEHhR (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Wed, 5 Sep 2018 03:37:17 -0400
-Subject: Re: RFC on PCI Device Lock
-To: Alex Williamson <alex.williamson@redhat.com>
-Cc: Bjorn Helgaas <bhelgaas@google.com>,
-        Dennis Dalessandro <dennis.dalessandro@intel.com>,
-        Linux PCI <linux-pci@vger.kernel.org>
-References: <87682473-6ffe-f7df-e8f8-3d00e8247621@kernel.org>
- <20180904165202.4e5bb59d@t450s.home>
- <17720f56-2caa-2d2e-b655-867debf55934@kernel.org>
- <20180904204649.415491f8@t450s.home>
-From: Sinan Kaya <okaya@kernel.org>
-Message-ID: <571b8341-f6fd-d92a-7091-f4fb02a2aadf@kernel.org>
-Date: Tue, 4 Sep 2018 20:09:16 -0700
-MIME-Version: 1.0
-In-Reply-To: <20180904204649.415491f8@t450s.home>
-Content-Type: text/plain; charset=utf-8; format=flowed
+        id S1727204AbeISFeA (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Wed, 19 Sep 2018 01:34:00 -0400
+From: Keith Busch <keith.busch@intel.com>
+To: Linux PCI <linux-pci@vger.kernel.org>,
+        Bjorn Helgaas <bhelgaas@google.com>
+Cc: Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+        Sinan Kaya <okaya@kernel.org>,
+        Thomas Tai <thomas.tai@oracle.com>, poza@codeaurora.org,
+        Lukas Wunner <lukas@wunner.de>, Christoph Hellwig <hch@lst.de>,
+        Mika Westerberg <mika.westerberg@linux.intel.com>,
+        Keith Busch <keith.busch@intel.com>
+Subject: [PATCH 01/12] PCI: Set PCI bus accessors to noinline
+Date: Tue, 18 Sep 2018 17:58:37 -0600
+Message-Id: <20180918235848.26694-2-keith.busch@intel.com>
+In-Reply-To: <20180918235848.26694-1-keith.busch@intel.com>
+References: <20180918235848.26694-1-keith.busch@intel.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 9/4/2018 7:46 PM, Alex Williamson wrote:
-> #define PCI_RESET_DEV_SPECIFIC	(1 << 0)
-> #define PCI_RESET_FLR		(1 << 1)
-> #define PCI_RESET_PM		(1 << 2)
-> #define PCI_RESET_SLOT		(1 << 3)
-> #define PCI_RESET_BUS		(1 << 4)
-> 
-> #define PCI_RESET_ANY		(~0)
-> #define PCI_RESET_FUNC		(PCI_RESET_DEV_SPECIFIC | \
-> 				 PCI_RESET_FLR | PCI_RESET_PM)
-> #define PCI_RESET_LINK		(PCI_RESET_SLOT | PCI_RESET_BUS)
+The pci bus config accessors could compile inlined with other accessor
+functions, which makes it so they can't be traced. This patch forces
+these to never be inlined so that ftrace can hook into these functions.
 
-I should be able to put something together using __pci_reset_function_locked()
-shortly.
+Signed-off-by: Keith Busch <keith.busch@intel.com>
+---
+ drivers/pci/access.c | 4 ++--
+ 1 file changed, 2 insertions(+), 2 deletions(-)
 
-This is not that difficult to implement.
+diff --git a/drivers/pci/access.c b/drivers/pci/access.c
+index a3ad2fe185b9..544922f097c0 100644
+--- a/drivers/pci/access.c
++++ b/drivers/pci/access.c
+@@ -33,7 +33,7 @@ DEFINE_RAW_SPINLOCK(pci_lock);
+ #endif
+ 
+ #define PCI_OP_READ(size, type, len) \
+-int pci_bus_read_config_##size \
++int noinline pci_bus_read_config_##size \
+ 	(struct pci_bus *bus, unsigned int devfn, int pos, type *value)	\
+ {									\
+ 	int res;							\
+@@ -48,7 +48,7 @@ int pci_bus_read_config_##size \
+ }
+ 
+ #define PCI_OP_WRITE(size, type, len) \
+-int pci_bus_write_config_##size \
++int noinline pci_bus_write_config_##size \
+ 	(struct pci_bus *bus, unsigned int devfn, int pos, type value)	\
+ {									\
+ 	int res;							\
+-- 
+2.14.4
