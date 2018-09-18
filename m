@@ -1,79 +1,163 @@
-Return-Path: <SRS0=ALKf=LS=endlessm.com=drake@kernel.org>
-Return-Path: <SRS0=ALKf=LS=endlessm.com=drake@kernel.org>
-MIME-Version: 1.0
-In-Reply-To: <20180904064307.GM2283@lahna.fi.intel.com>
-References: <20180831073057.14626-1-drake@endlessm.com> <20180831191225.GA43106@bhelgaas-glaptop.roam.corp.google.com>
- <CAD8Lp45CKCHxTg91zF9bWztqbAwLzgAUpNEHQ6ouKu2PkJT8SQ@mail.gmail.com>
- <20180903121209.GC2283@lahna.fi.intel.com> <CAD8Lp46M-raneN+6bjGakTq_yd6wGjuPiKDyOoqpO8VXyDBrfQ@mail.gmail.com>
- <20180904064307.GM2283@lahna.fi.intel.com>
-From: Daniel Drake <drake@endlessm.com>
-Date: Tue, 4 Sep 2018 15:07:52 +0800
-Message-ID: <CAD8Lp45iPkYRD9-vDi0k61PW6W=i184xD6TEAPoZXh+hnGLW5g@mail.gmail.com>
-Subject: Re: [PATCH] PCI: add prefetch quirk to work around Asus/Nvidia
- suspend issues
-To: Mika Westerberg <mika.westerberg@linux.intel.com>
-Cc: Bjorn Helgaas <helgaas@kernel.org>, Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org,
-	Linux Upstreaming Team <linux@endlessm.com>, nouveau@lists.freedesktop.org,
-	Linux PM <linux-pm@vger.kernel.org>, Peter Wu <peter@lekensteyn.nl>, kherbst@redhat.com,
-	Andy Shevchenko <andriy.shevchenko@linux.intel.com>,
-	"Rafael J. Wysocki" <rafael.j.wysocki@intel.com>, Keith Busch <keith.busch@intel.com>,
-	Jon Derrick <jonathan.derrick@intel.com>
-Content-Type: text/plain; charset="UTF-8"
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mga05.intel.com ([192.55.52.43]:41235 "EHLO mga05.intel.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1728185AbeISFeA (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Wed, 19 Sep 2018 01:34:00 -0400
+From: Keith Busch <keith.busch@intel.com>
+To: Linux PCI <linux-pci@vger.kernel.org>,
+        Bjorn Helgaas <bhelgaas@google.com>
+Cc: Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+        Sinan Kaya <okaya@kernel.org>,
+        Thomas Tai <thomas.tai@oracle.com>, poza@codeaurora.org,
+        Lukas Wunner <lukas@wunner.de>, Christoph Hellwig <hch@lst.de>,
+        Mika Westerberg <mika.westerberg@linux.intel.com>,
+        Keith Busch <keith.busch@intel.com>
+Subject: [PATCH 10/12] PCI/AER: Use threaded IRQ for bottom half
+Date: Tue, 18 Sep 2018 17:58:46 -0600
+Message-Id: <20180918235848.26694-11-keith.busch@intel.com>
+In-Reply-To: <20180918235848.26694-1-keith.busch@intel.com>
+References: <20180918235848.26694-1-keith.busch@intel.com>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tue, Sep 4, 2018 at 2:43 PM, Mika Westerberg
-<mika.westerberg@linux.intel.com> wrote:
-> Yes, can you check if the failing device BAR is included in any of the
-> above entries? If not then it is probably not related.
+The threaded IRQ is naturally single threaded as desired, so use that
+to simplify the aer bottom half handler. Since the root port structure
+is has much less to do now, this patch removes the rpc construction
+helper routine.
 
-mtrr again for reference:
-reg00: base=0x0c0000000 ( 3072MB), size= 1024MB, count=1: uncachable
-reg01: base=0x0a0000000 ( 2560MB), size=  512MB, count=1: uncachable
-reg02: base=0x090000000 ( 2304MB), size=  256MB, count=1: uncachable
-reg03: base=0x08c000000 ( 2240MB), size=   64MB, count=1: uncachable
-reg04: base=0x08b800000 ( 2232MB), size=    8MB, count=1: uncachable
+Signed-off-by: Keith Busch <keith.busch@intel.com>
+---
+ drivers/pci/pcie/aer.c | 62 ++++++++++++--------------------------------------
+ 1 file changed, 14 insertions(+), 48 deletions(-)
 
-
-The PCI bridge is:
-00:1c.0 PCI bridge: Intel Corporation Sunrise Point-LP PCI Express
-Root Port (rev f1) (prog-if 00 [Normal decode])
-    Control: I/O+ Mem+ BusMaster+ SpecCycle- MemWINV- VGASnoop-
-ParErr- Stepping- SERR- FastB2B- DisINTx+
-    Status: Cap+ 66MHz- UDF- FastB2B- ParErr- DEVSEL=fast >TAbort-
-<TAbort- <MAbort- >SERR- <PERR- INTx-
-    Latency: 0, Cache Line Size: 64 bytes
-    Interrupt: pin A routed to IRQ 122
-    Bus: primary=00, secondary=01, subordinate=01, sec-latency=0
-    I/O behind bridge: 0000e000-0000efff
-    Memory behind bridge: ee000000-ef0fffff
-    Prefetchable memory behind bridge: 00000000d0000000-00000000e1ffffff
-
-The memory behind bridge at ee000000 is included in the mtrr region
-reg00 which is 0xc0000000 to 0xffffffff.
-Same for the prefetchable memory behind bridge.
-
-
-The nvidia GPU which becomes unresponsive is:
-
-01:00.0 3D controller: NVIDIA Corporation GM108M [GeForce 940MX] (rev a2)
-    Subsystem: ASUSTeK Computer Inc. GM108M [GeForce 940MX]
-    Control: I/O+ Mem+ BusMaster+ SpecCycle- MemWINV- VGASnoop-
-ParErr- Stepping- SERR- FastB2B- DisINTx+
-    Status: Cap+ 66MHz- UDF- FastB2B- ParErr- DEVSEL=fast >TAbort-
-<TAbort- <MAbort- >SERR- <PERR- INTx-
-    Latency: 0, Cache Line Size: 64 bytes
-    Interrupt: pin A routed to IRQ 133
-    Region 0: Memory at ee000000 (32-bit, non-prefetchable) [size=16M]
-    Region 1: Memory at d0000000 (64-bit, prefetchable) [size=256M]
-    Region 3: Memory at e0000000 (64-bit, prefetchable) [size=32M]
-    Region 5: I/O ports at e000 [size=128]
-    Expansion ROM at ef000000 [disabled] [size=512K]
-
-Region 0, 1, 3 and the expansion ROM are all included in the mtrr region reg00.
-
-
-The magic register that we write to workaround the issue is in PCI
-bridge config space - not in a BAR.
-
-Thanks
-Daniel
+diff --git a/drivers/pci/pcie/aer.c b/drivers/pci/pcie/aer.c
+index 41c36916d46c..1878d9d7760b 100644
+--- a/drivers/pci/pcie/aer.c
++++ b/drivers/pci/pcie/aer.c
+@@ -42,14 +42,7 @@ struct aer_err_source {
+ 
+ struct aer_rpc {
+ 	struct pci_dev *rpd;		/* Root Port device */
+-	struct work_struct dpc_handler;
+ 	DECLARE_KFIFO(aer_fifo, struct aer_err_source, AER_ERROR_SOURCES_MAX);
+-	int isr;
+-	struct mutex rpc_mutex;		/*
+-					 * only one thread could do
+-					 * recovery on the same
+-					 * root port hierarchy
+-					 */
+ };
+ 
+ /* AER stats for the device */
+@@ -1215,15 +1208,18 @@ static void aer_isr_one_error(struct aer_rpc *rpc,
+  *
+  * Invoked, as DPC, when root port records new detected error
+  */
+-static void aer_isr(struct work_struct *work)
++static irqreturn_t aer_isr(int irq, void *context)
+ {
+-	struct aer_rpc *rpc = container_of(work, struct aer_rpc, dpc_handler);
++	struct pcie_device *dev = (struct pcie_device *)context;
++	struct aer_rpc *rpc = get_service_data(dev);
+ 	struct aer_err_source uninitialized_var(e_src);
+ 
+-	mutex_lock(&rpc->rpc_mutex);
++	if (kfifo_is_empty(&rpc->aer_fifo))
++		return IRQ_NONE;
++
+ 	while (kfifo_get(&rpc->aer_fifo, &e_src))
+ 		aer_isr_one_error(rpc, &e_src);
+-	mutex_unlock(&rpc->rpc_mutex);
++	return IRQ_HANDLED;
+ }
+ 
+ /**
+@@ -1251,8 +1247,7 @@ static irqreturn_t aer_irq(int irq, void *context)
+ 	if (!kfifo_put(&rpc->aer_fifo, e_src))
+ 		return IRQ_HANDLED;
+ 
+-	schedule_work(&rpc->dpc_handler);
+-	return IRQ_HANDLED;
++	return IRQ_WAKE_THREAD;
+ }
+ 
+ static int set_device_error_reporting(struct pci_dev *dev, void *data)
+@@ -1361,30 +1356,6 @@ static void aer_disable_rootport(struct aer_rpc *rpc)
+ 	pci_write_config_dword(pdev, pos + PCI_ERR_ROOT_STATUS, reg32);
+ }
+ 
+-/**
+- * aer_alloc_rpc - allocate Root Port data structure
+- * @dev: pointer to the pcie_dev data structure
+- *
+- * Invoked when Root Port's AER service is loaded.
+- */
+-static struct aer_rpc *aer_alloc_rpc(struct pcie_device *dev)
+-{
+-	struct aer_rpc *rpc;
+-
+-	rpc = kzalloc(sizeof(struct aer_rpc), GFP_KERNEL);
+-	if (!rpc)
+-		return NULL;
+-
+-	rpc->rpd = dev->port;
+-	INIT_WORK(&rpc->dpc_handler, aer_isr);
+-	mutex_init(&rpc->rpc_mutex);
+-
+-	/* Use PCIe bus function to store rpc into PCIe device */
+-	set_service_data(dev, rpc);
+-
+-	return rpc;
+-}
+-
+ /**
+  * aer_remove - clean up resources
+  * @dev: pointer to the pcie_dev data structure
+@@ -1396,11 +1367,6 @@ static void aer_remove(struct pcie_device *dev)
+ 	struct aer_rpc *rpc = get_service_data(dev);
+ 
+ 	if (rpc) {
+-		/* If register interrupt service, it must be free. */
+-		if (rpc->isr)
+-			free_irq(dev->irq, dev);
+-
+-		flush_work(&rpc->dpc_handler);
+ 		aer_disable_rootport(rpc);
+ 		kfree(rpc);
+ 		set_service_data(dev, NULL);
+@@ -1417,18 +1383,20 @@ static int aer_probe(struct pcie_device *dev)
+ {
+ 	int status;
+ 	struct aer_rpc *rpc;
+-	struct device *device = &dev->port->dev;
++	struct device *device = &dev->port->device;
+ 
+ 	/* Alloc rpc data structure */
+-	rpc = aer_alloc_rpc(dev);
++	rpc = kzalloc(sizeof(struct aer_rpc), GFP_KERNEL);
+ 	if (!rpc) {
+ 		dev_printk(KERN_DEBUG, device, "alloc AER rpc failed\n");
+-		aer_remove(dev);
+ 		return -ENOMEM;
+ 	}
++	rpc->rpd = dev->port;
++	set_service_data(dev, rpc);
+ 
+ 	/* Request IRQ ISR */
+-	status = request_irq(dev->irq, aer_irq, IRQF_SHARED, "aerdrv", dev);
++	status = request_threaded_irq(dev->irq, aer_irq, aer_isr,
++				      IRQF_SHARED, "aerdrv", dev);
+ 	if (status) {
+ 		dev_printk(KERN_DEBUG, device, "request AER IRQ %d failed\n",
+ 			   dev->irq);
+@@ -1436,8 +1404,6 @@ static int aer_probe(struct pcie_device *dev)
+ 		return status;
+ 	}
+ 
+-	rpc->isr = 1;
+-
+ 	aer_enable_rootport(rpc);
+ 	dev_info(device, "AER enabled with IRQ %d\n", dev->irq);
+ 	return 0;
+-- 
+2.14.4
