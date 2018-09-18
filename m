@@ -1,216 +1,149 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mta-01.yadro.com ([89.207.88.251]:46630 "EHLO mta-01.yadro.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1727698AbeIRCYv (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Mon, 17 Sep 2018 22:24:51 -0400
-Subject: Re: [PATCH RFC 1/4] PCI: hotplug: Add parameter to put devices to
- reset during rescan
-To: Sam Bobroff <sbobroff@linux.ibm.com>
-CC: <linux-pci@vger.kernel.org>, Bjorn Helgaas <bhelgaas@google.com>,
-        <linux@yadro.com>
-References: <20180914161404.4685-1-s.miroshnichenko@yadro.com>
- <20180914161404.4685-2-s.miroshnichenko@yadro.com>
- <20180917052800.GA7315@tungsten.ozlabs.ibm.com>
-From: Sergey Miroshnichenko <s.miroshnichenko@yadro.com>
-Message-ID: <6b913e12-e8c8-30c1-5269-3029ddb00a4d@yadro.com>
-Date: Mon, 17 Sep 2018 23:55:43 +0300
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Date: Tue, 18 Sep 2018 14:41:52 +0100
+From: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
+To: Rob Herring <robh+dt@kernel.org>
+Subject: Re: [PATCH 1/6] PCI: iproc: Update iProc PCI binding for INTx support
+Message-ID: <20180918134152.GA31440@e107981-ln.cambridge.arm.com>
+References: <1527631130-20045-1-git-send-email-ray.jui@broadcom.com>
+ <1527631130-20045-2-git-send-email-ray.jui@broadcom.com>
+ <CAL_Jsq+ac6dmHKS6m0h5N3bv=VseKVL8XLU5K7j1Rn=mgFNLsA@mail.gmail.com>
 MIME-Version: 1.0
-In-Reply-To: <20180917052800.GA7315@tungsten.ozlabs.ibm.com>
-Content-Type: text/plain; charset="windows-1252"
-Sender: linux-pci-owner@vger.kernel.org
+In-Reply-To: <CAL_Jsq+ac6dmHKS6m0h5N3bv=VseKVL8XLU5K7j1Rn=mgFNLsA@mail.gmail.com>
+List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
+List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
+List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
+List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
+List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
+Cc: Mark Rutland <mark.rutland@arm.com>, devicetree@vger.kernel.org,
+ Arnd Bergmann <arnd@arndb.de>, linux-pci@vger.kernel.org,
+ "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+ Ray Jui <ray.jui@broadcom.com>, Bjorn Helgaas <bhelgaas@google.com>,
+ "maintainer:BROADCOM BCM7XXX ARM ARCHITECTURE"
+ <bcm-kernel-feedback-list@broadcom.com>,
+ "moderated list:ARM/FREESCALE IMX / MXC ARM ARCHITECTURE"
+ <linux-arm-kernel@lists.infradead.org>
+Content-Type: text/plain; charset="us-ascii"
+Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
+Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hello Sam,
-
-On 9/17/18 8:28 AM, Sam Bobroff wrote:
-> Hi Sergey,
+On Mon, Jun 04, 2018 at 09:17:49AM -0500, Rob Herring wrote:
+> +Arnd
 > 
-> On Fri, Sep 14, 2018 at 07:14:01PM +0300, Sergey Miroshnichenko wrote:
->> Introduce a new command line option "pci=pcie_movable_bars" that indicates
->> support of PCIe hotplug without prior reservation of memory regions by
->> BIOS/bootloader.
->>
->> If a new PCIe device has been hot-plugged between two active ones, which
->> have no (or not big enough) gap between their BARs, allocating new BARs
->> requires to move BARs of the following working devices:
->>
->> 1)                   dev 4
->>                        |
->>                        v
->> .. |  dev 3  |  dev 3  |  dev 5  |  dev 7  |
->> .. |  BAR 0  |  BAR 1  |  BAR 0  |  BAR 0  |
->>
->> 2)                             dev 4
->>                                  |
->>                                  v
->> .. |  dev 3  |  dev 3  | -->           --> |  dev 5  |  dev 7  |
->> .. |  BAR 0  |  BAR 1  | -->           --> |  BAR 0  |  BAR 0  |
->>
->> 3)
->>
->> .. |  dev 3  |  dev 3  |  dev 4  |  dev 4  |  dev 5  |  dev 7  |
->> .. |  BAR 0  |  BAR 1  |  BAR 0  |  BAR 1  |  BAR 0  |  BAR 0  |
->>
->> Not only BARs, but also bridge windows can be updated during a PCIe rescan,
->> threatening all memory transactions during this procedure, so the PCI
->> subsystem will instruct the drivers to pause by calling the reset_prepare()
->> and reset_done() callbacks.
->>
->> If a device may be affected by BAR movement, the BAR changes tracking must
->> be implemented in its driver.
->>
->> Signed-off-by: Sergey Miroshnichenko <s.miroshnichenko@yadro.com>
->> ---
->>  .../admin-guide/kernel-parameters.txt         |  6 +++
->>  drivers/pci/pci.c                             |  2 +
->>  drivers/pci/probe.c                           | 43 +++++++++++++++++++
->>  include/linux/pci.h                           |  1 +
->>  4 files changed, 52 insertions(+)
->>
->> diff --git a/Documentation/admin-guide/kernel-parameters.txt b/Documentation/admin-guide/kernel-parameters.txt
->> index 64a3bf54b974..f8132a709061 100644
->> --- a/Documentation/admin-guide/kernel-parameters.txt
->> +++ b/Documentation/admin-guide/kernel-parameters.txt
->> @@ -3311,6 +3311,12 @@
->>  				bridges without forcing it upstream. Note:
->>  				this removes isolation between devices and
->>  				may put more devices in an IOMMU group.
->> +		pcie_movable_bars	Arrange a space at runtime for BARs of
->> +				hotplugged PCIe devices - usable if bootloader
->> +				doesn't reserve memory regions for them. Freeing
->> +				a space may require moving BARs of active devices
->> +				to higher addresses, so device drivers will be
->> +				paused during rescan.
->>  
->>  	pcie_aspm=	[PCIE] Forcibly enable or disable PCIe Active State Power
->>  			Management.
->> diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
->> index 1835f3a7aa8d..5f07a59b5924 100644
->> --- a/drivers/pci/pci.c
->> +++ b/drivers/pci/pci.c
->> @@ -6105,6 +6105,8 @@ static int __init pci_setup(char *str)
->>  				pci_add_flags(PCI_SCAN_ALL_PCIE_DEVS);
->>  			} else if (!strncmp(str, "disable_acs_redir=", 18)) {
->>  				disable_acs_redir_param = str + 18;
->> +			} else if (!strncmp(str, "pcie_movable_bars", 17)) {
->> +				pci_add_flags(PCI_MOVABLE_BARS);
->>  			} else {
->>  				printk(KERN_ERR "PCI: Unknown option `%s'\n",
->>  						str);
->> diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
->> index 201f9e5ff55c..bdaafc48dc4c 100644
->> --- a/drivers/pci/probe.c
->> +++ b/drivers/pci/probe.c
->> @@ -3138,6 +3138,45 @@ unsigned int pci_rescan_bus_bridge_resize(struct pci_dev *bridge)
->>  	return max;
->>  }
->>  
->> +/*
->> + * Put all devices of the bus and its children to reset
->> + */
->> +static void pci_bus_reset_prepare(struct pci_bus *bus)
->> +{
->> +	struct pci_dev *dev;
->> +
->> +	list_for_each_entry(dev, &bus->devices, bus_list) {
->> +		struct pci_bus *child = dev->subordinate;
->> +
->> +		if (child) {
->> +			pci_bus_reset_prepare(child);
->> +		} else if (dev->driver &&
->> +			   dev->driver->err_handler &&
->> +			   dev->driver->err_handler->reset_prepare) {
->> +			dev->driver->err_handler->reset_prepare(dev);
->> +		}
+> On Tue, May 29, 2018 at 4:58 PM, Ray Jui <ray.jui@broadcom.com> wrote:
+> > Update the iProc PCIe binding document for better modeling of the legacy
+> > interrupt (INTx) support
+> >
+> > Signed-off-by: Ray Jui <ray.jui@broadcom.com>
+> > ---
+> >  .../devicetree/bindings/pci/brcm,iproc-pcie.txt    | 31 +++++++++++++++++-----
+> >  1 file changed, 24 insertions(+), 7 deletions(-)
+> >
+> > diff --git a/Documentation/devicetree/bindings/pci/brcm,iproc-pcie.txt b/Documentation/devicetree/bindings/pci/brcm,iproc-pcie.txt
+> > index b8e48b4..7ea24dc 100644
+> > --- a/Documentation/devicetree/bindings/pci/brcm,iproc-pcie.txt
+> > +++ b/Documentation/devicetree/bindings/pci/brcm,iproc-pcie.txt
+> > @@ -13,9 +13,6 @@ controller, used in Stingray
+> >    PAXB-based root complex is used for external endpoint devices. PAXC-based
+> >  root complex is connected to emulated endpoint devices internal to the ASIC
+> >  - reg: base address and length of the PCIe controller I/O register space
+> > -- #interrupt-cells: set to <1>
+> > -- interrupt-map-mask and interrupt-map, standard PCI properties to define the
+> > -  mapping of the PCIe interface to interrupt numbers
+> >  - linux,pci-domain: PCI domain ID. Should be unique for each host controller
+> >  - bus-range: PCI bus numbers covered
+> >  - #address-cells: set to <3>
+> > @@ -41,6 +38,16 @@ Required:
+> >  - brcm,pcie-ob-axi-offset: The offset from the AXI address to the internal
+> >  address used by the iProc PCIe core (not the PCIe address)
+> >
+> > +Legacy interrupt (INTx) support (optional):
+> > +
+> > +Note INTx is for PAXB only.
+> > +
+> > +- interrupt-controller: claims itself as an interrupt controller for INTx
+> > +- #interrupt-cells: set to <1>
+> > +- interrupt-map-mask and interrupt-map, standard PCI properties to define
+> > +the mapping of the PCIe interface to interrupt numbers
+> > +- interrupts: interrupt line wired to the generic GIC for INTx support
+> > +
+> >  MSI support (optional):
+> >
+> >  For older platforms without MSI integrated in the GIC, iProc PCIe core provides
+> > @@ -77,9 +84,14 @@ Example:
+> >                 compatible = "brcm,iproc-pcie";
+> >                 reg = <0x18012000 0x1000>;
+> >
+> > +               interrupt-controller;
+> >                 #interrupt-cells = <1>;
+> > -               interrupt-map-mask = <0 0 0 0>;
+> > -               interrupt-map = <0 0 0 0 &gic GIC_SPI 100 IRQ_TYPE_NONE>;
+> > +               interrupt-map-mask = <0 0 0 7>;
+> > +               interrupt-map = <0 0 0 1 &pcie0 1>,
 > 
-> What about devices with drivers that don't have reset_prepare()?  It
-> looks like it will just reconfigure them anyway. Is that right?
+> Are you sure this works? The irq parsing code will ignore
+> interrupt-map if interrupt-controller is found. In other words, you
+> should have one or the other, but not both.
 > 
+> Maybe it happens to work because "pcie0" is this node and your irq
+> numbers are the same.
+> 
+> Arnd, any thoughts on this?
 
-It is possible that unprepared driver without these hooks will get BARs
-moved, I should put a warning message there. There three ways we can see
-to make this safe:
- - add the reset_prepare()/reset_done() hooks to *every* PCIe driver;
- - refuse BAR movement if at least one unprepared driver has been
-encountered during rescan;
- - reduce the number of drivers which can be affected to some
-controllable value and prepare them on demand.
+To start with, I think the destination IRQ number is wrong, what the
+mappings actually do is mapping the PCI interrupt line (ie #INTA, #INTB,
+#INTC, #INTD) to input {0,1,2,3} of the PCI host bridge (pseudo)
+interrupt controller.
 
-Applying the second proposal as a major restriction seems fairly
-reasonable, but for our particular setups and use-cases it is probably
-too stiff:
- - we've noticed that devices connected directly to the root bridge
-don't get moved BARs, and this covers our x86_64 servers: we only
-insert/remove devices into "second-level" and "lower" bridges there, but
-not root;
- - on PowerNV we have system devices (network interfaces, USB hub, etc.)
-grouped into dedicated domain, with all other domains ready for hotplug,
-and only these domains can be rescanned.
+I really want to clean this up since currently there are different
+DT bindings defining this in different ways which resulted in
+non-consistent kernel code.
 
-With our scenarios currently reduced to these two, we can live with just
-a few drivers "prepared" for now: NVME and few Ethernet adapters, this
-gives us a possibility to use this feature before "converting" *all* the
-drivers, and even have the NVidia cards running on a closed proprietary
-driver.
+AFAICS, the Aardvark PCIe controller bindings define the mapping
+as I expect:
 
-Should we make this behavior adjustable with something like
-"pcie_movable_bars=safe" and "pcie_movable_bars=always" ?
+https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/tree/Documentation/devicetree/bindings/pci/aardvark-pci.txt?h=v4.19-rc4
 
-Thanks!
+but I would like to get Rob and Arnd viewpoint on this so that
+we can close this topic once for all.
 
-Best regards,
-Serge
 
->> +	}
->> +}
->> +
->> +/*
->> + * Complete the reset of all devices for the bus and its children
->> + */
->> +static void pci_bus_reset_done(struct pci_bus *bus)
->> +{
->> +	struct pci_dev *dev;
->> +
->> +	list_for_each_entry(dev, &bus->devices, bus_list) {
->> +		struct pci_bus *child = dev->subordinate;
->> +
->> +		if (child) {
->> +			pci_bus_reset_done(child);
->> +		} else if (dev->driver && dev->driver->err_handler &&
->> +			   dev->driver->err_handler->reset_done) {
->> +			dev->driver->err_handler->reset_done(dev);
->> +		}
->> +	}
->> +}
->> +
->>  /**
->>   * pci_rescan_bus - Scan a PCI bus for devices
->>   * @bus: PCI bus to scan
->> @@ -3151,8 +3190,12 @@ unsigned int pci_rescan_bus(struct pci_bus *bus)
->>  {
->>  	unsigned int max;
->>  
->> +	if (pci_has_flag(PCI_MOVABLE_BARS))
->> +		pci_bus_reset_prepare(bus);
->>  	max = pci_scan_child_bus(bus);
->>  	pci_assign_unassigned_bus_resources(bus);
->> +	if (pci_has_flag(PCI_MOVABLE_BARS))
->> +		pci_bus_reset_done(bus);
->>  	pci_bus_add_devices(bus);
->>  
->>  	return max;
->> diff --git a/include/linux/pci.h b/include/linux/pci.h
->> index 6925828f9f25..a8cb1a367c34 100644
->> --- a/include/linux/pci.h
->> +++ b/include/linux/pci.h
->> @@ -847,6 +847,7 @@ enum {
->>  	PCI_ENABLE_PROC_DOMAINS	= 0x00000010,	/* Enable domains in /proc */
->>  	PCI_COMPAT_DOMAIN_0	= 0x00000020,	/* ... except domain 0 */
->>  	PCI_SCAN_ALL_PCIE_DEVS	= 0x00000040,	/* Scan all, not just dev 0 */
->> +	PCI_MOVABLE_BARS	= 0x00000080,	/* Runtime BAR reassign after hotplug */
->>  };
->>  
->>  /* These external functions are only available when PCI support is enabled */
->> -- 
->> 2.17.1
->>
+Cheers,
+Lorenzo
+
+> 
+> > +                               <0 0 0 2 &pcie0 2>,
+> > +                               <0 0 0 3 &pcie0 3>,
+> > +                               <0 0 0 4 &pcie0 4>;
+> > +               interrupts = <GIC_SPI 100 IRQ_TYPE_NONE>;
+> >
+> >                 linux,pci-domain = <0>;
+> >
+> > @@ -115,9 +127,14 @@ Example:
+> >                 compatible = "brcm,iproc-pcie";
+> >                 reg = <0x18013000 0x1000>;
+> >
+> > +               interrupt-controller;
+> >                 #interrupt-cells = <1>;
+> > -               interrupt-map-mask = <0 0 0 0>;
+> > -               interrupt-map = <0 0 0 0 &gic GIC_SPI 106 IRQ_TYPE_NONE>;
+> > +               interrupt-map-mask = <0 0 0 7>;
+> > +               interrupt-map = <0 0 0 1 &pcie1 1>,
+> > +                               <0 0 0 2 &pcie1 2>,
+> > +                               <0 0 0 3 &pcie1 3>,
+> > +                               <0 0 0 4 &pcie1 4>;
+> > +               interrupts = <GIC_SPI 106 IRQ_TYPE_NONE>;
+> >
+> >                 linux,pci-domain = <1>;
+> >
+> > --
+> > 2.1.4
+> >
+
+_______________________________________________
+linux-arm-kernel mailing list
+linux-arm-kernel@lists.infradead.org
+http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
