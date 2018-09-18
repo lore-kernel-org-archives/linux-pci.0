@@ -1,53 +1,109 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mga05.intel.com ([192.55.52.43]:41237 "EHLO mga05.intel.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1730532AbeISFeA (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Wed, 19 Sep 2018 01:34:00 -0400
-From: Keith Busch <keith.busch@intel.com>
-To: Linux PCI <linux-pci@vger.kernel.org>,
-        Bjorn Helgaas <bhelgaas@google.com>
-Cc: Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-        Sinan Kaya <okaya@kernel.org>,
-        Thomas Tai <thomas.tai@oracle.com>, poza@codeaurora.org,
-        Lukas Wunner <lukas@wunner.de>, Christoph Hellwig <hch@lst.de>,
-        Mika Westerberg <mika.westerberg@linux.intel.com>,
-        Keith Busch <keith.busch@intel.com>
-Subject: [PATCH 09/12] PCI/AER: Don't read upstream ports below fatal errors
-Date: Tue, 18 Sep 2018 17:58:45 -0600
-Message-Id: <20180918235848.26694-10-keith.busch@intel.com>
-In-Reply-To: <20180918235848.26694-1-keith.busch@intel.com>
-References: <20180918235848.26694-1-keith.busch@intel.com>
+Received: from smtp.eu.citrix.com ([185.25.65.24]:9556 "EHLO
+        SMTP.EU.CITRIX.COM" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1729578AbeIRPD6 (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Tue, 18 Sep 2018 11:03:58 -0400
+From: George Dunlap <George.Dunlap@citrix.com>
+To: =?utf-8?B?UGFzaSBLw6Rya2vDpGluZW4=?= <pasik@iki.fi>
+CC: Boris Ostrovsky <boris.ostrovsky@oracle.com>,
+        Jan Beulich <JBeulich@suse.com>,
+        Juergen Gross <jgross@suse.com>,
+        "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+        "bhelgaas@google.com" <bhelgaas@google.com>,
+        xen-devel <xen-devel@lists.xenproject.org>,
+        Roger Pau Monne <roger.pau@citrix.com>,
+        Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>,
+        George Dunlap <George.Dunlap@citrix.com>
+Subject: Re: [Xen-devel] [PATCH V3 2/2] Xen/PCIback: Implement PCI
+ flr/slot/bus reset with 'reset' SysFS attribute
+Date: Tue, 18 Sep 2018 09:32:09 +0000
+Message-ID: <5E7DDB68-4E68-48A5-AEEC-EE1B21A50E9E@citrix.com>
+References: <20171207222145.9769-1-Govinda.Tatti@Oracle.COM>
+ <20171207222145.9769-3-Govinda.Tatti@Oracle.COM>
+ <5A2A6AB10200007800195D4F@prv-mh.provo.novell.com>
+ <8a3bc517-1255-4547-d244-5c400e44cc77@Oracle.COM>
+ <f19dbb09-ef22-2cf4-fb38-2a7c42b5dc48@Oracle.COM>
+ <5A377E020200007800197FFA@prv-mh.provo.novell.com>
+ <559ffd12-b541-8a69-60bd-fbe10e3dc159@oracle.com>
+ <20180916114306.GF18222@reaktio.net>
+ <a726840b-8a5c-0890-73c6-3a95a7205153@oracle.com>
+ <20180918071519.GG18222@reaktio.net>
+In-Reply-To: <20180918071519.GG18222@reaktio.net>
+Content-Type: text/plain; charset="utf-8"
+MIME-Version: 1.0
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-The AER driver has never read the config space of an end device
-that reported a fatal error because the link to that device is considered
-unreliable.
-
-An ERR_FATAL from upstream port was almost certainly detected that error
-on its upstream link, so we can't expect to reliably read its config
-space for the same reason.
-
-Signed-off-by: Keith Busch <keith.busch@intel.com>
----
- drivers/pci/pcie/aer.c | 5 +++--
- 1 file changed, 3 insertions(+), 2 deletions(-)
-
-diff --git a/drivers/pci/pcie/aer.c b/drivers/pci/pcie/aer.c
-index 33bbcaa41f65..41c36916d46c 100644
---- a/drivers/pci/pcie/aer.c
-+++ b/drivers/pci/pcie/aer.c
-@@ -1111,8 +1111,9 @@ int aer_get_device_error_info(struct pci_dev *dev, struct aer_err_info *info)
- 			&info->mask);
- 		if (!(info->status & ~info->mask))
- 			return 0;
--	} else if (dev->hdr_type == PCI_HEADER_TYPE_BRIDGE ||
--		info->severity == AER_NONFATAL) {
-+	} else if (pci_pcie_type(dev) == PCI_EXP_TYPE_ROOT_PORT ||
-+	           pci_pcie_type(dev) == PCI_EXP_TYPE_DOWNSTREAM ||
-+		   info->severity == AER_NONFATAL) {
- 
- 		/* Link is still healthy for IO reads */
- 		pci_read_config_dword(dev, pos + PCI_ERR_UNCOR_STATUS,
--- 
-2.14.4
+DQoNCj4gT24gU2VwIDE4LCAyMDE4LCBhdCA4OjE1IEFNLCBQYXNpIEvDpHJra8OkaW5lbiA8cGFz
+aWtAaWtpLmZpPiB3cm90ZToNCj4gDQo+IEhpLA0KPiANCj4gT24gTW9uLCBTZXAgMTcsIDIwMTgg
+YXQgMDI6MDY6MDJQTSAtMDQwMCwgQm9yaXMgT3N0cm92c2t5IHdyb3RlOg0KPj4gT24gOS8xNi8x
+OCA3OjQzIEFNLCBQYXNpIEvDpHJra8OkaW5lbiB3cm90ZToNCj4+PiBIaSwNCj4+PiANCj4+PiBP
+biBNb24sIERlYyAxOCwgMjAxNyBhdCAxMjozMjoxMVBNIC0wNTAwLCBCb3JpcyBPc3Ryb3Zza3kg
+d3JvdGU6DQo+Pj4+IE9uIDEyLzE4LzIwMTcgMDI6MzYgQU0sIEphbiBCZXVsaWNoIHdyb3RlOg0K
+Pj4+Pj4+Pj4gT24gMTUuMTIuMTcgYXQgMjA6NTIsIDxHb3ZpbmRhLlRhdHRpQE9yYWNsZS5DT00+
+IHdyb3RlOg0KPj4+Pj4+Pj4+ICtzdGF0aWMgaW50IHBjaXN0dWJfZGV2aWNlX3Jlc2V0KHN0cnVj
+dCBwY2lfZGV2ICpkZXYpDQo+Pj4+Pj4+Pj4gK3sNCj4+Pj4+Pj4+PiArCXN0cnVjdCB4ZW5fcGNp
+YmtfZGV2X2RhdGEgKmRldl9kYXRhOw0KPj4+Pj4+Pj4+ICsJYm9vbCBzbG90ID0gZmFsc2UsIGJ1
+cyA9IGZhbHNlOw0KPj4+Pj4+Pj4+ICsJc3RydWN0IHBjaXN0dWJfYXJncyBhcmcgPSB7fTsNCj4+
+Pj4+Pj4+PiArDQo+Pj4+Pj4+Pj4gKwlpZiAoIWRldikNCj4+Pj4+Pj4+PiArCQlyZXR1cm4gLUVJ
+TlZBTDsNCj4+Pj4+Pj4+PiArDQo+Pj4+Pj4+Pj4gKwlkZXZfZGJnKCZkZXYtPmRldiwgIlslc11c
+biIsIF9fZnVuY19fKTsNCj4+Pj4+Pj4+PiArDQo+Pj4+Pj4+Pj4gKwkvKiBGaXJzdCBjaGVjayBh
+bmQgdHJ5IEZMUiAqLw0KPj4+Pj4+Pj4+ICsJaWYgKHBjaWVfaGFzX2ZscihkZXYpKSB7DQo+Pj4+
+Pj4+Pj4gKwkJZGV2X2RiZygmZGV2LT5kZXYsICJyZXNldHRpbmcgJXMgZGV2aWNlIHVzaW5nIEZM
+UlxuIiwNCj4+Pj4+Pj4+PiArCQkJcGNpX25hbWUoZGV2KSk7DQo+Pj4+Pj4+Pj4gKwkJcGNpZV9m
+bHIoZGV2KTsNCj4+Pj4+Pj4+IFRoZSBsYWNrIG9mIGVycm9yIGNoZWNrIGhlcmUgcHV6emxlZCBt
+ZSwgYnV0IEkgc2VlIHRoZSBmdW5jdGlvbg0KPj4+Pj4+Pj4gaW5kZWVkIHJldHVybnMgdm9pZCBy
+aWdodCBub3cuIEkgdGhpbmsgdGhlIHByZXJlcSBwYXRjaCBzaG91bGQNCj4+Pj4+Pj4+IGNoYW5n
+ZSB0aGlzIGFsb25nIHdpdGggZXhwb3J0aW5nIHRoZSBmdW5jdGlvbiAtIHlvdSByZWFsbHkgZG9u
+J3QNCj4+Pj4+Pj4+IHdhbnQgdGhlIGRldmljZSB0byBiZSBoYW5kZWQgdG8gYSBndWVzdCB3aGVu
+IHRoZSBGTFIgdGltZWQNCj4+Pj4+Pj4+IG91dC4NCj4+Pj4+Pj4gV2Ugd2lsbCBjaGFuZ2UgcGNp
+ZV9mbHIoKSB0byByZXR1cm4gZXJyb3IgY29kZS4gSSB3aWxsIG1ha2UgdGhpcyBjaGFuZ2UNCj4+
+Pj4+Pj4gaW4gdGhlIG5leHQgdmVyc2lvbiBvZiB0aGlzIHBhdGNoLg0KPj4+Pj4+IEkgZXhjaGFu
+Z2VkIHNvbWUgZW1haWxzIHdpdGggQmpvcm4vQ2hyaXN0b3BoIGFuZCBpdCBsb29rcyBsaWtlIENo
+cmlzdG9waA0KPj4+Pj4+IGFzIHNvbWUgcGxhbnRvIHJlc3RydWN0dXJlIHBjaWUgZmxyIHNwZWNp
+ZmljIGZ1bmN0aW9ucyBidXQgSSBkb24ndCBrbm93DQo+Pj4+Pj4gdGhlIGV4YWN0IHRpbWUtZnJh
+bWUuIEZvciBub3csSSBhbSBwbGFubmluZyB0byB1c2UgZXhpc3RpbmcgcGNpZV9mbHIoKQ0KPj4+
+Pj4+IGFmdGVyIGNoZWNraW5nIEZMUiBjYXBhYmlsaXR5LiBXZSB3aWxsIHN3aXRjaHRvIHJldmlz
+ZWQgcGNpZV9mbHIoKSBvbmNlDQo+Pj4+Pj4gaXQgaXMgYXZhaWxhYmxlLg0KPj4+Pj4+IA0KPj4+
+Pj4+IEkgaG9wZSB5b3UgYXJlIGZpbmUgd2l0aCB0aGlzIGFwcHJvYWNoLiBQbGVhc2UgbGV0IG1l
+IGtub3cuIFRoYW5rcy4NCj4+Pj4+IEkndmUgc2VlbiB0aGF0IG90aGVyIGRpc2N1c3Npb24uIEkg
+ZG9uJ3QgdGhpbmsgdGhlIGNoYW5nZSBoZXJlDQo+Pj4+PiBzaG91bGQgYmUgZG9uZSBwcmlvciB0
+byB0aGUgZXJyb3IgcmVwb3J0aW5nIGJlaW5nIHB1dCBpbiBwbGFjZSwNCj4+Pj4+IGZvciBzZWN1
+cml0eSByZWFzb25zLiBCdXQgaW4gdGhlIGVuZCBpdCdsbCBiZSBLb25yYWQgYXMgdGhlDQo+Pj4+
+PiBtYWludGFpbmVyIHRvIGp1ZGdlLg0KPj4+Pj4gDQo+Pj4+PiBPciB3YWl0LCBsb29rcyBsaWtl
+IHRoZXJlJ3Mgc29tZSBjb25mdXNpb24gaW4gLi9NQUlOVEFJTkVSUzoNCj4+Pj4+IEtvbnJhZCBp
+cyBsaXN0ZWQgYXMgbWFpbnRhaW5lciBmb3IgIlhFTiBQQ0kgU1VCU1lTVEVNIiwgYnV0IHRoZQ0K
+Pj4+Pj4gbGlzdCBvZiBmaWxlcyBkb2Vzbid0IGluY2x1ZGUgcGNpYmFjay4gU28gaXQgd291bGQg
+aW5zdGVhZCBiZSBCb3Jpcw0KPj4+Pj4gb3IgSsO8cmdlbiB0byBnaXZlIHlvdSBhIGZpbmFsIHdv
+cmQuDQo+Pj4+IA0KPj4+PiBUaGlzIGlzIG5vdyA0LjE2IG1hdGVyaWFsIHNvIHdlIGNhbiBhdCBs
+ZWFzdCB3YWl0IHVudGlsIGNsb3NlciB0bw0KPj4+PiBvcGVuaW5nIG9mIHRoZSBtZXJnZSB3aW5k
+b3cgd2hlbiB3ZSBtYXkgaGF2ZSB0aGUgUENJIHVwZGF0ZXMuIChBbmQgSQ0KPj4+PiBqdXN0IG5v
+dGljZWQgdGhhdCB5b3UgcmVzcG9uZGVkIHRvIENocmlzdG9waC4pDQo+Pj4+IA0KPj4+PiBCZXNp
+ZGVzLCB3ZSBkb24ndCB3YW50IHRvIG1ha2Uga2VybmVsIGNoYW5nZXMgdW50aWwgdGhlIGludGVy
+ZmFjZSBpcw0KPj4+PiBzZXR0bGVkIChpLmUgdGhlIHRvb2xzdGFjayBjaGFuZ2VzIGFyZSBhY2Nl
+cHRlZCkuDQo+Pj4+IA0KPj4+IEl0IHNlZW1zIEdvdmluZGEncyBlbWFpbCBhZGRyZXNzIGlzIGdp
+dmluZyBhbiBlcnJvciwgc28gSSBhc3N1bWUgc29tZW9uZSBlbHNlIG5lZWRzIHRvIHBpY2sgdXAg
+dGhpcyBwY2liYWNrICdyZXNldCcgZmVhdHVyZS4NCj4+PiBJcyBpdCBsaWtlbHkgc29tZW9uZSBl
+bHNlIGZyb20gT3JhY2xlIGNhbi93aWxsIHBpY2sgdXAgYW5kIHJlZnJlc2ggdGhpcyBwYXRjaCwg
+d2l0aCB0aGUgcmV2aWV3IGNvbW1lbnRzIGFkZHJlc3NlZD8NCj4+IA0KPj4gDQo+PiBHb3ZpbmRh
+IGlzIG5vIGxvbmdlciBhdCBPcmFjbGUuDQo+PiANCj4gDQo+IFllcCwgdGhvdWdodCBzby4gUmVt
+b3ZlZCBmcm9tIENDIGxpc3QuDQo+IA0KPiANCj4+IFdoYXQgYWJvdXQgdGhlIHRvb2xzdGFjayBj
+aGFuZ2VzPyBIYXZlIHRoZXkgYmVlbiBhY2NlcHRlZD8gSSB2YWd1ZWx5DQo+PiByZWNhbGwgdGhl
+cmUgd2FzIGEgZGlzY3Vzc2lvbiBhYm91dCB0aG9zZSBjaGFuZ2VzIGJ1dCBkb24ndCByZW1lbWJl
+ciBob3cNCj4+IGl0IGVuZGVkLg0KPj4gDQo+IA0KPiBJIGRvbid0IHRoaW5rIHRvb2xzdGFjay9s
+aWJ4bCBwYXRjaCBoYXMgYmVlbiBhcHBsaWVkIHlldCBlaXRoZXIuDQo+IA0KPiANCj4gIltQQVRD
+SCBWMSAwLzFdIFhlbi9Ub29sczogUENJIHJlc2V0IHVzaW5nICdyZXNldCcgU3lzRlMgYXR0cmli
+dXRlIjoNCj4gaHR0cHM6Ly9saXN0cy54ZW4ub3JnL2FyY2hpdmVzL2h0bWwveGVuLWRldmVsLzIw
+MTctMTIvbXNnMDA2NjQuaHRtbA0KPiANCj4gIltQQVRDSCBWMSAxLzFdIFhlbi9saWJ4bDogUGVy
+Zm9ybSBQQ0kgcmVzZXQgdXNpbmcgJ3Jlc2V0JyBTeXNGUyBhdHRyaWJ1dGUiOg0KPiBodHRwczov
+L2xpc3RzLnhlbi5vcmcvYXJjaGl2ZXMvaHRtbC94ZW4tZGV2ZWwvMjAxNy0xMi9tc2cwMDY2My5o
+dG1sDQo+IA0KPiBHZW9yZ2UgYXNrZWQgZm9yIHNvbWUgY2xhcmlmaWNhdGlvbnM6DQo+IGh0dHBz
+Oi8vbGlzdHMueGVuLm9yZy9hcmNoaXZlcy9odG1sL3hlbi1kZXZlbC8yMDE3LTEyL21zZzAxMDQ0
+Lmh0bWwNCj4gaHR0cHM6Ly9saXN0cy54ZW4ub3JnL2FyY2hpdmVzL2h0bWwveGVuLWRldmVsLzIw
+MTctMTIvbXNnMDExMTYuaHRtbA0KDQpSaWdodCwgdGhlIGRlc2NyaXB0aW9uIG9mIHRoZSBwYXRj
+aCBkaWRu4oCZdCBhY3R1YWxseSB0ZWxsIHlvdSB3aGF0IHdhcyBnb2luZyBvbi4gIEl0IHNob3Vs
+ZCBoYXZlIHNhaWQgc29tZXRoaW5nIGxpa2UsIOKAnHhsIGN1cnJlbnRseSBhdHRlbXB0cyB0byBy
+ZXNldCBhIGRldmljZSB1c2luZyBYOyBidXQgdGhhdOKAmXMgbmV2ZXIgYmVlbiBpbXBsZW1lbnRl
+ZCBpbiBMaW51eC4gIEluc3RlYWQsIHVzZSBZLCB3aGljaCBbaXMgYmV0dGVyIGZvciB3aGF0ZXZl
+ciByZWFzb25d4oCdLg0KDQogLUdlb3JnZQ0KDQo=
