@@ -1,107 +1,144 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from userp2120.oracle.com ([156.151.31.85]:35168 "EHLO
-        userp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1727052AbeIQXd4 (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Mon, 17 Sep 2018 19:33:56 -0400
-Subject: Re: [Xen-devel] [PATCH V3 2/2] Xen/PCIback: Implement PCI
- flr/slot/bus reset with 'reset' SysFS attribute
-To: =?UTF-8?B?UGFzaSBLw6Rya2vDpGluZW4=?= <pasik@iki.fi>
-Cc: Jan Beulich <JBeulich@suse.com>,
-        Govinda Tatti <Govinda.Tatti@oracle.com>,
-        Juergen Gross <jgross@suse.com>, linux-pci@vger.kernel.org,
-        linux-kernel@vger.kernel.org, bhelgaas@google.com,
-        xen-devel@lists.xenproject.org, roger.pau@citrix.com,
-        Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>
-References: <20171207222145.9769-1-Govinda.Tatti@Oracle.COM>
- <20171207222145.9769-3-Govinda.Tatti@Oracle.COM>
- <5A2A6AB10200007800195D4F@prv-mh.provo.novell.com>
- <8a3bc517-1255-4547-d244-5c400e44cc77@Oracle.COM>
- <f19dbb09-ef22-2cf4-fb38-2a7c42b5dc48@Oracle.COM>
- <5A377E020200007800197FFA@prv-mh.provo.novell.com>
- <559ffd12-b541-8a69-60bd-fbe10e3dc159@oracle.com>
- <20180916114306.GF18222@reaktio.net>
-From: Boris Ostrovsky <boris.ostrovsky@oracle.com>
-Message-ID: <a726840b-8a5c-0890-73c6-3a95a7205153@oracle.com>
-Date: Mon, 17 Sep 2018 14:06:02 -0400
-MIME-Version: 1.0
-In-Reply-To: <20180916114306.GF18222@reaktio.net>
-Content-Type: text/plain; charset=utf-8
+Received: from mga02.intel.com ([134.134.136.20]:47647 "EHLO mga02.intel.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1730679AbeISFag (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Wed, 19 Sep 2018 01:30:36 -0400
+From: Keith Busch <keith.busch@intel.com>
+To: Linux PCI <linux-pci@vger.kernel.org>,
+        Bjorn Helgaas <bhelgaas@google.com>
+Cc: Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+        Sinan Kaya <okaya@kernel.org>,
+        Thomas Tai <thomas.tai@oracle.com>, poza@codeaurora.org,
+        Lukas Wunner <lukas@wunner.de>, Christoph Hellwig <hch@lst.de>,
+        Mika Westerberg <mika.westerberg@linux.intel.com>,
+        Keith Busch <keith.busch@intel.com>
+Subject: [PATCHv3 09/10] PCI: Unify device inaccessible
+Date: Tue, 18 Sep 2018 17:57:01 -0600
+Message-Id: <20180918235702.26573-10-keith.busch@intel.com>
+In-Reply-To: <20180918235702.26573-1-keith.busch@intel.com>
+References: <20180918235702.26573-1-keith.busch@intel.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 9/16/18 7:43 AM, Pasi Kärkkäinen wrote:
-> Hi,
->
-> On Mon, Dec 18, 2017 at 12:32:11PM -0500, Boris Ostrovsky wrote:
->> On 12/18/2017 02:36 AM, Jan Beulich wrote:
->>>>>> On 15.12.17 at 20:52, <Govinda.Tatti@Oracle.COM> wrote:
->>>>>>> +static int pcistub_device_reset(struct pci_dev *dev)
->>>>>>> +{
->>>>>>> +	struct xen_pcibk_dev_data *dev_data;
->>>>>>> +	bool slot = false, bus = false;
->>>>>>> +	struct pcistub_args arg = {};
->>>>>>> +
->>>>>>> +	if (!dev)
->>>>>>> +		return -EINVAL;
->>>>>>> +
->>>>>>> +	dev_dbg(&dev->dev, "[%s]\n", __func__);
->>>>>>> +
->>>>>>> +	/* First check and try FLR */
->>>>>>> +	if (pcie_has_flr(dev)) {
->>>>>>> +		dev_dbg(&dev->dev, "resetting %s device using FLR\n",
->>>>>>> +			pci_name(dev));
->>>>>>> +		pcie_flr(dev);
->>>>>> The lack of error check here puzzled me, but I see the function
->>>>>> indeed returns void right now. I think the prereq patch should
->>>>>> change this along with exporting the function - you really don't
->>>>>> want the device to be handed to a guest when the FLR timed
->>>>>> out.
->>>>> We will change pcie_flr() to return error code. I will make this change
->>>>> in the next version of this patch.
->>>> I exchanged some emails with Bjorn/Christoph and it looks like Christoph
->>>> as some planto restructure pcie flr specific functions but I don't know
->>>> the exact time-frame. For now,I am planning to use existing pcie_flr()
->>>> after checking FLR capability. We will switchto revised pcie_flr() once
->>>> it is available.
->>>>
->>>> I hope you are fine with this approach. Please let me know. Thanks.
->>> I've seen that other discussion. I don't think the change here
->>> should be done prior to the error reporting being put in place,
->>> for security reasons. But in the end it'll be Konrad as the
->>> maintainer to judge.
->>>
->>> Or wait, looks like there's some confusion in ./MAINTAINERS:
->>> Konrad is listed as maintainer for "XEN PCI SUBSYSTEM", but the
->>> list of files doesn't include pciback. So it would instead be Boris
->>> or Jürgen to give you a final word.
->>
->> This is now 4.16 material so we can at least wait until closer to
->> opening of the merge window when we may have the PCI updates. (And I
->> just noticed that you responded to Christoph.)
->>
->> Besides, we don't want to make kernel changes until the interface is
->> settled (i.e the toolstack changes are accepted).
->>
-> It seems Govinda's email address is giving an error, so I assume someone else needs to pick up this pciback 'reset' feature.
-> Is it likely someone else from Oracle can/will pick up and refresh this patch, with the review comments addressed?
+This patch brings surprise removals and permanent failures together so
+we no longer need separate flags. The implemetation enforces the error
+handling will not be able to override a surprise removal's permanent
+channel failure.
 
+Signed-off-by: Keith Busch <keith.busch@intel.com>
+---
+ drivers/pci/pci.h      | 60 +++++++++++++++++++++++++++++++++++++++++++++-----
+ drivers/pci/pcie/err.c | 10 ++++-----
+ 2 files changed, 59 insertions(+), 11 deletions(-)
 
-Govinda is no longer at Oracle.
-
-What about the toolstack changes? Have they been accepted? I vaguely
-recall there was a discussion about those changes but don't remember how
-it ended.
-
-
--boris
-
-
->
->
-> Meanwhile the pcie_has_flr() has been exported in upstream Linux kernel, so that's already available for use now.
->
-> "PCI: Export pcie_has_flr()":
-> https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/commit/?id=2d2917f7747805a1f4188672f308d82a8ba01700
->
->
->
+diff --git a/drivers/pci/pci.h b/drivers/pci/pci.h
+index 5a96978d3403..44862719b4e9 100644
+--- a/drivers/pci/pci.h
++++ b/drivers/pci/pci.h
+@@ -295,21 +295,71 @@ struct pci_sriov {
+ 	bool		drivers_autoprobe; /* Auto probing of VFs by driver */
+ };
+ 
+-/* pci_dev priv_flags */
+-#define PCI_DEV_DISCONNECTED 0
+-#define PCI_DEV_ADDED 1
++/**
++ * pci_dev_set_io_state - Set the new error state if possible.
++ *
++ * @dev - pci device to set new error_state
++ * @new - the state we want dev to be in
++ *
++ * Must be called with device_lock held.
++ *
++ * Returns true if state has been changed to the requested state.
++ */
++static inline bool pci_dev_set_io_state(struct pci_dev *dev,
++					pci_channel_state_t new)
++{
++	bool changed = false;
++
++	device_lock_assert(&dev->dev);
++	switch (new) {
++	case pci_channel_io_perm_failure:
++		switch (dev->error_state) {
++		case pci_channel_io_frozen:
++		case pci_channel_io_normal:
++		case pci_channel_io_perm_failure:
++			changed = true;
++			break;
++		}
++		break;
++	case pci_channel_io_frozen:
++		switch (dev->error_state) {
++		case pci_channel_io_frozen:
++		case pci_channel_io_normal:
++			changed = true;
++			break;
++		}
++		break;
++	case pci_channel_io_normal:
++		switch (dev->error_state) {
++		case pci_channel_io_frozen:
++		case pci_channel_io_normal:
++			changed = true;
++			break;
++		}
++		break;
++	}
++	if (changed)
++		dev->error_state = new;
++	return changed;
++}
+ 
+ static inline int pci_dev_set_disconnected(struct pci_dev *dev, void *unused)
+ {
+-	set_bit(PCI_DEV_DISCONNECTED, &dev->priv_flags);
++	device_lock(&dev->dev);
++	pci_dev_set_io_state(dev, pci_channel_io_perm_failure);
++	device_unlock(&dev->dev);
++
+ 	return 0;
+ }
+ 
+ static inline bool pci_dev_is_disconnected(const struct pci_dev *dev)
+ {
+-	return test_bit(PCI_DEV_DISCONNECTED, &dev->priv_flags);
++	return dev->error_state == pci_channel_io_perm_failure;
+ }
+ 
++/* pci_dev priv_flags */
++#define PCI_DEV_ADDED 0
++
+ static inline void pci_dev_assign_added(struct pci_dev *dev, bool added)
+ {
+ 	assign_bit(PCI_DEV_ADDED, &dev->priv_flags, added);
+diff --git a/drivers/pci/pcie/err.c b/drivers/pci/pcie/err.c
+index 31e8a4314384..4da2a62b4f77 100644
+--- a/drivers/pci/pcie/err.c
++++ b/drivers/pci/pcie/err.c
+@@ -52,9 +52,8 @@ static int report_error_detected(struct pci_dev *dev,
+ 	const struct pci_error_handlers *err_handler;
+ 
+ 	device_lock(&dev->dev);
+-	dev->error_state = state;
+-
+-	if (!dev->driver ||
++	if (!pci_dev_set_io_state(dev, state) ||
++		!dev->driver ||
+ 		!dev->driver->err_handler ||
+ 		!dev->driver->err_handler->error_detected) {
+ 		/*
+@@ -130,9 +129,8 @@ static int report_resume(struct pci_dev *dev, void *data)
+ 	const struct pci_error_handlers *err_handler;
+ 
+ 	device_lock(&dev->dev);
+-	dev->error_state = pci_channel_io_normal;
+-
+-	if (!dev->driver ||
++	if (!pci_dev_set_io_state(dev, pci_channel_io_normal) ||
++		!dev->driver ||
+ 		!dev->driver->err_handler ||
+ 		!dev->driver->err_handler->resume)
+ 		goto out;
+-- 
+2.14.4
