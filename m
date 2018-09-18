@@ -1,59 +1,110 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from esa6.microchip.iphmx.com ([216.71.154.253]:62993 "EHLO
-        esa6.microchip.iphmx.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726733AbeIMLvd (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Thu, 13 Sep 2018 07:51:33 -0400
-From: <Wesley.Sheng@microchip.com>
-To: <kurt.schwemmer@microsemi.com>, <Kurt.Schwemmer@microchip.com>,
-        <logang@deltatee.com>, <bhelgaas@google.com>
-CC: <linux-pci@vger.kernel.org>, <linux-kernel@vger.kernel.org>
-Subject: [PATCH] switchtec: Remove immediate status check after submit a MRPC
- command
-Date: Thu, 13 Sep 2018 06:43:21 +0000
-Message-ID: <DM2PR11MB0105EC547AFBB2DFA9D05A17951A0@DM2PR11MB0105.namprd11.prod.outlook.com>
-Content-Type: text/plain; charset="utf-8"
-MIME-Version: 1.0
+Received: from mga14.intel.com ([192.55.52.115]:7927 "EHLO mga14.intel.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1728332AbeISFeA (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Wed, 19 Sep 2018 01:34:00 -0400
+From: Keith Busch <keith.busch@intel.com>
+To: Linux PCI <linux-pci@vger.kernel.org>,
+        Bjorn Helgaas <bhelgaas@google.com>
+Cc: Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+        Sinan Kaya <okaya@kernel.org>,
+        Thomas Tai <thomas.tai@oracle.com>, poza@codeaurora.org,
+        Lukas Wunner <lukas@wunner.de>, Christoph Hellwig <hch@lst.de>,
+        Mika Westerberg <mika.westerberg@linux.intel.com>,
+        Keith Busch <keith.busch@intel.com>
+Subject: [PATCH 04/12] PCI/AER: Abstract AER interrupt handling
+Date: Tue, 18 Sep 2018 17:58:40 -0600
+Message-Id: <20180918235848.26694-5-keith.busch@intel.com>
+In-Reply-To: <20180918235848.26694-1-keith.busch@intel.com>
+References: <20180918235848.26694-1-keith.busch@intel.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-RnJvbTogV2VzbGV5IFNoZW5nIDxXZXNsZXkuU2hlbmdAbWljcm9jaGlwLmNvbT4NCg0KQWZ0ZXIg
-c3VibWl0IGEgRmlybXdhcmUgRG93bmxvYWQgKERvd25sb2FkIHN1Yi1jb21tYW5kKQ0KTVJQQyBj
-b21tYW5kLCBzd2l0Y2h0ZWMgZmlybXdhcmUgcmVmdXNlcyB0byByZXNwb25zZQ0KYW55IG1hbmFn
-ZW1lbnQgRVAncyBCQVIgYWNjZXNzIHVudGlsIGN1cnJlbnQgZmxhc2gNCnByb2dyYW1taW5nIGZp
-bmlzaGVkLg0KDQpEdXJpbmcgdGhpcyB0aW1lLCBhIFJFQUQgVExQIHRvIHRoZSBnYXMgYXJlYSBp
-biB0aGUgQkFSIG9mDQp0aGUgbWFuYWdlbWVudCBFUCB3aWxsIGNvbXBsZXRlIHdpdGggc2lnbmlm
-aWNhbnQgZGVsYXkgbGlrZQ0KbW9yZSB0aGFuIDEwbXMuDQoNCkl0J3MgYSBzd2l0Y2h0ZWMgZmly
-bXdhcmUgbGltaXRhdGlvbiB0aGF0IFJFQUQgcmVxdWVzdHMNCmNhbm5vdCBnZXQgcHJvbXB0IHNl
-cnZpY2UgZHVyaW5nIGZpcm13YXJlIGRvd25sb2FkLg0KDQpUaGUgZGVsYXllZCBjb21wbGV0aW9u
-IG9mIFJFQUQgVExQIHdvdWxkIGJlIGEgcHJvYmxlbSBvbg0Kc29tZSBzeXN0ZW0gd2hpY2ggaXMg
-c2Vuc2l0aXZlIHRvIFJFQUQgdGltZW91dC4NCg0KQ3VycmVudCBkcml2ZXIgY2hlY2sgc3RhdHVz
-IGltbWVkaWF0ZWx5IGFmdGVyIHN1Ym1pdCBhDQpNUlBDIGNvbW1hbmQsIHdoaWNoIHRyaWdnZXJz
-IFJFQUQgVExQIHRvIHRoZSBnYXMgYXJlYSBpbg0KdGhlIEJBUiBvZiB0aGUgbWFuYWdlbWVudCBF
-UC4gQWxzbywgb3RoZXIgcHJvY2Vzc2VzIG9yDQpmdW5jdGlvbnMsIGxpa2UgTlRCLCB3b3VsZCBh
-bHNvIHRyaWdnZXIgUkVBRCBUTFAgYnkgYWNjZXNzaW5nDQp0aGUgR0FTLg0KDQpUbyBhdm9pZCB0
-aGlzLCB0aGUgaW1tZWRpYXRlIGNoZWNrIG9mIHN0YXR1cyBpcyByZW1vdmVkDQppbiB0aGlzIHBh
-dGNoLCBhbmQgZHJpdmVyIGRlbGF5cyB0aGUgc3RhdHVzIGNoZWNrIHRvIHRoZQ0Kb2NjdXJyZW5j
-ZSBvZiBNU0l4IG9yIE1SUEMgdGltZW91dC4gSW4gdGhlIG1lYW53aGlsZSwgdXNlcg0KbXVzdCBu
-b3QgaW5pdGlhdGUgYW55IGdhcyBhY2Nlc3MgZHVyaW5nIGEgZmlybXdhcmUgZG93bmxvYWQuDQoN
-CkFsc28sIGFueSBwcm9jZXNzIHRoYXQgaXNzdWVzIE1SUEMgY29tbWFuZCB3aWxsIGJlIGFmZmVj
-dGVkDQpieSB0aGUgZGVsYXkgaW4gdGhpcyBwYXRjaC4NCg0KSG93ZXZlciwgdGhpcyBpcyBvbmx5
-IGEgc29mdHdhcmUgd29ya2Fyb3VuZCB0byB0aGUgUkVBRA0KaXNzdWUgaW4gZmlybXdhcmUgZG93
-bmxvYWQuIEEgY29tcGxldGUgZml4IG9mIHRoaXMgc2hvdWxkDQpoYXBwZW4gaW4gZmlybXdhcmUu
-DQoNCk5vdGU6IEZvciBOVEIgZnVuY3Rpb24sIHRoZSBtZW1vcnkgd2luZG93IGFjY2VzcyBpcyBo
-YW5kbGVkDQpieSBzd2l0Y2h0ZWMgaGFyZHdhcmUuIFNvIGl0J3Mgbm90IGFmZmVjdGVkIGJ5IHRo
-aXMgZmlybXdhcmUNCmxpbWl0YXRpb24uIEJ1dCB0aGUgR0FTIGFjY2Vzc2VzLCBsaWtlIGZvciBk
-b29yYmVsbCByZWdpc3RlcnMsDQppbiB0aGUgTlRCIGZ1bmN0aW9uIGFyZSBhZmZlY3RlZCBieSB0
-aGlzIGZpcm13YXJlIGxpbWl0YXRpb24uDQoNClNpZ25lZC1vZmYtYnk6IEtlbHZpbiBDYW8gPEtl
-bHZpbi5DYW9AbWljcm9jaGlwLmNvbT4NCi0tLQ0KIGRyaXZlcnMvcGNpL3N3aXRjaC9zd2l0Y2h0
-ZWMuYyB8IDQgLS0tLQ0KIDEgZmlsZSBjaGFuZ2VkLCA0IGRlbGV0aW9ucygtKQ0KDQpkaWZmIC0t
-Z2l0IGEvZHJpdmVycy9wY2kvc3dpdGNoL3N3aXRjaHRlYy5jIGIvZHJpdmVycy9wY2kvc3dpdGNo
-L3N3aXRjaHRlYy5jDQppbmRleCA0NTkxZjE1Li5iNzU5MjI4IDEwMDY0NA0KLS0tIGEvZHJpdmVy
-cy9wY2kvc3dpdGNoL3N3aXRjaHRlYy5jDQorKysgYi9kcml2ZXJzL3BjaS9zd2l0Y2gvc3dpdGNo
-dGVjLmMNCkBAIC0xNDIsMTAgKzE0Miw2IEBAIHN0YXRpYyB2b2lkIG1ycGNfY21kX3N1Ym1pdChz
-dHJ1Y3Qgc3dpdGNodGVjX2RldiAqc3RkZXYpDQogCQkgICAgc3R1c2VyLT5kYXRhLCBzdHVzZXIt
-PmRhdGFfbGVuKTsNCiAJaW93cml0ZTMyKHN0dXNlci0+Y21kLCAmc3RkZXYtPm1taW9fbXJwYy0+
-Y21kKTsNCiANCi0Jc3R1c2VyLT5zdGF0dXMgPSBpb3JlYWQzMigmc3RkZXYtPm1taW9fbXJwYy0+
-c3RhdHVzKTsNCi0JaWYgKHN0dXNlci0+c3RhdHVzICE9IFNXSVRDSFRFQ19NUlBDX1NUQVRVU19J
-TlBST0dSRVNTKQ0KLQkJbXJwY19jb21wbGV0ZV9jbWQoc3RkZXYpOw0KLQ0KIAlzY2hlZHVsZV9k
-ZWxheWVkX3dvcmsoJnN0ZGV2LT5tcnBjX3RpbWVvdXQsDQogCQkJICAgICAgbXNlY3NfdG9famlm
-Zmllcyg1MDApKTsNCiB9DQotLSANCjIuNy40DQo=
+The aer_inject module was directly calling aer_irq. This required the
+aer driver export its private irq handler for no other reason than to
+support error injection. A driver should not have to expose its private
+interfaces, so this patch uses the irq subsystem to route injection to
+the aer driver, and makes the aer_irq handler a private interface.
+
+This are additional benefits this provides.
+
+First, directly calling the irq handler bypasses the IRQ subsytem so
+the injection wasn't really synthesizing what happens if a shared AER
+interrupt occurs.
+
+The error injection had to provide the callback data directly, which
+may be racing with a removal that is freeing that structure. The irq
+subsystem can handle that race.
+
+Finally, if we ever need to modify the aer interrupt handling, for
+example, to use threaded IRQs for the benefits those provide, abstracting
+the interface from the error injection will make that easier to modify.
+
+Signed-off-by: Keith Busch <keith.busch@intel.com>
+---
+ drivers/pci/pcie/aer.c        | 3 +--
+ drivers/pci/pcie/aer_inject.c | 5 ++++-
+ drivers/pci/pcie/portdrv.h    | 4 ----
+ 3 files changed, 5 insertions(+), 7 deletions(-)
+
+diff --git a/drivers/pci/pcie/aer.c b/drivers/pci/pcie/aer.c
+index 6b59a23568f8..1318483a080c 100644
+--- a/drivers/pci/pcie/aer.c
++++ b/drivers/pci/pcie/aer.c
+@@ -1270,7 +1270,7 @@ static void aer_isr(struct work_struct *work)
+  *
+  * Invoked when Root Port detects AER messages.
+  */
+-irqreturn_t aer_irq(int irq, void *context)
++static irqreturn_t aer_irq(int irq, void *context)
+ {
+ 	unsigned int status, id;
+ 	struct pcie_device *pdev = (struct pcie_device *)context;
+@@ -1319,7 +1319,6 @@ irqreturn_t aer_irq(int irq, void *context)
+ 
+ 	return IRQ_HANDLED;
+ }
+-EXPORT_SYMBOL_GPL(aer_irq);
+ 
+ static int set_device_error_reporting(struct pci_dev *dev, void *data)
+ {
+diff --git a/drivers/pci/pcie/aer_inject.c b/drivers/pci/pcie/aer_inject.c
+index 7d641a543194..57821bb61c2a 100644
+--- a/drivers/pci/pcie/aer_inject.c
++++ b/drivers/pci/pcie/aer_inject.c
+@@ -15,6 +15,7 @@
+ #include <linux/module.h>
+ #include <linux/init.h>
+ #include <linux/ftrace.h>
++#include <linux/irq.h>
+ #include <linux/kallsyms.h>
+ #include <linux/kernel.h>
+ #include <linux/linkage.h>
+@@ -348,7 +349,9 @@ static int aer_inject(struct aer_error_inj *einj)
+ 		dev_info(&edev->device,
+ 			 "aer_inject: Injecting errors %08x/%08x into device %s\n",
+ 			 einj->cor_status, einj->uncor_status, pci_name(dev));
+-		aer_irq(-1, edev);
++		local_irq_disable();
++		generic_handle_irq(edev->irq);
++		local_irq_enable();
+ 	} else {
+ 		pci_err(rpdev, "aer_inject: AER device not found\n");
+ 		ret = -ENODEV;
+diff --git a/drivers/pci/pcie/portdrv.h b/drivers/pci/pcie/portdrv.h
+index d59afa42fc14..127b8b246437 100644
+--- a/drivers/pci/pcie/portdrv.h
++++ b/drivers/pci/pcie/portdrv.h
+@@ -123,10 +123,6 @@ static inline int pcie_aer_get_firmware_first(struct pci_dev *pci_dev)
+ }
+ #endif
+ 
+-#ifdef CONFIG_PCIEAER
+-irqreturn_t aer_irq(int irq, void *context);
+-#endif
+-
+ struct pcie_port_service_driver *pcie_port_find_service(struct pci_dev *dev,
+ 							u32 service);
+ struct device *pcie_port_find_device(struct pci_dev *dev, u32 service);
+-- 
+2.14.4
