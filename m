@@ -1,65 +1,181 @@
-Return-Path: <linux-acpi-owner@vger.kernel.org>
-From: Mika Westerberg <mika.westerberg@linux.intel.com>
-To: Bjorn Helgaas <bhelgaas@google.com>,
-        "Rafael J. Wysocki" <rjw@rjwysocki.net>
-Cc: Len Brown <lenb@kernel.org>, Lukas Wunner <lukas@wunner.de>,
-        Keith Busch <keith.busch@intel.com>,
-        Ashok Raj <ashok.raj@intel.com>, Mario.Limonciello@dell.com,
-        Anthony Wong <anthony.wong@canonical.com>,
-        Linus Walleij <linus.walleij@linaro.org>,
-        Sakari Ailus <sakari.ailus@iki.fi>,
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mga02.intel.com ([134.134.136.20]:47633 "EHLO mga02.intel.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1730670AbeISFad (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Wed, 19 Sep 2018 01:30:33 -0400
+From: Keith Busch <keith.busch@intel.com>
+To: Linux PCI <linux-pci@vger.kernel.org>,
+        Bjorn Helgaas <bhelgaas@google.com>
+Cc: Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+        Sinan Kaya <okaya@kernel.org>,
+        Thomas Tai <thomas.tai@oracle.com>, poza@codeaurora.org,
+        Lukas Wunner <lukas@wunner.de>, Christoph Hellwig <hch@lst.de>,
         Mika Westerberg <mika.westerberg@linux.intel.com>,
-        linux-pci@vger.kernel.org, linux-acpi@vger.kernel.org
-Subject: [PATCH RESEND v2 01/10] PCI: Do not skip power managed bridges in pci_enable_wake()
-Date: Fri, 14 Sep 2018 11:31:34 +0300
-Message-Id: <20180914083134.27217-1-mika.westerberg@linux.intel.com>
-In-Reply-To: <153688100.j3IOAyprJL@aspire.rjw.lan>
-References: <153688100.j3IOAyprJL@aspire.rjw.lan>
-Sender: linux-acpi-owner@vger.kernel.org
+        Keith Busch <keith.busch@intel.com>
+Subject: [PATCHv3 06/10] PCI/ERR: Always use the first downstream port
+Date: Tue, 18 Sep 2018 17:56:58 -0600
+Message-Id: <20180918235702.26573-7-keith.busch@intel.com>
+In-Reply-To: <20180918235702.26573-1-keith.busch@intel.com>
+References: <20180918235702.26573-1-keith.busch@intel.com>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Commit baecc470d5fd ("PCI / PM: Skip bridges in pci_enable_wake()")
-changed pci_enable_wake() so that all bridges are skipped when wakeup is
-enabled (or disabled) with the reasoning that bridges can only signal
-wakeup on behalf of their subordinate devices.
+The link reset always used the first bridge device, but AER broadcast
+error handling may have reported an end device. This means the reset may
+hit devices that were never notified of the impending error recovery.
 
-However, there are bridges that can signal wakeup itself. For example
-PCIe downstream and root ports supporting hotplug may signal wakeup upon
-hotplug event.
+This patch uses the first downstream port in the hierarchy considered
+reliable. An error detected by a switch upstream port should mean it
+occurred on its upstream link, so the patch selects the parent device
+if the error is not a root or downstream port.
 
-For this reason change pci_enable_wake() so that it skips all bridges
-except those that we power manage (->bridge_d3 is set). Those are the
-ones that can go into low power states and may need to signal wakeup.
+This allows two other clean-ups. First, error handling can only run
+on bridges so this patch removes checks for end devices. Second, the
+first accessible port does not inherit the channel error state since we
+can access it, so the special cases for error detect and resume are no
+longer necessary.
 
-Signed-off-by: Mika Westerberg <mika.westerberg@linux.intel.com>
-Reviewed-by: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
+Signed-off-by: Keith Busch <keith.busch@intel.com>
 ---
-Resending this because for some reason it did not hit the mailing lists.
-Added tag from Rafael as well.
+ drivers/pci/pcie/err.c | 85 +++++++++++++-------------------------------------
+ 1 file changed, 21 insertions(+), 64 deletions(-)
 
- drivers/pci/pci.c | 9 ++++++---
- 1 file changed, 6 insertions(+), 3 deletions(-)
-
-diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
-index 29ff9619b5fa..1af6f1887986 100644
---- a/drivers/pci/pci.c
-+++ b/drivers/pci/pci.c
-@@ -2133,10 +2133,13 @@ static int __pci_enable_wake(struct pci_dev *dev, pci_power_t state, bool enable
- 	int ret = 0;
+diff --git a/drivers/pci/pcie/err.c b/drivers/pci/pcie/err.c
+index 644f3f725ef0..0fa5e1417a4a 100644
+--- a/drivers/pci/pcie/err.c
++++ b/drivers/pci/pcie/err.c
+@@ -63,30 +63,12 @@ static int report_error_detected(struct pci_dev *dev, void *data)
+ 	if (!dev->driver ||
+ 		!dev->driver->err_handler ||
+ 		!dev->driver->err_handler->error_detected) {
+-		if (result_data->state == pci_channel_io_frozen &&
+-			dev->hdr_type != PCI_HEADER_TYPE_BRIDGE) {
+-			/*
+-			 * In case of fatal recovery, if one of down-
+-			 * stream device has no driver. We might be
+-			 * unable to recover because a later insmod
+-			 * of a driver for this device is unaware of
+-			 * its hw state.
+-			 */
+-			pci_printk(KERN_DEBUG, dev, "device has %s\n",
+-				   dev->driver ?
+-				   "no AER-aware driver" : "no driver");
+-		}
+-
+ 		/*
+-		 * If there's any device in the subtree that does not
+-		 * have an error_detected callback, returning
+-		 * PCI_ERS_RESULT_NO_AER_DRIVER prevents calling of
+-		 * the subsequent mmio_enabled/slot_reset/resume
+-		 * callbacks of "any" device in the subtree. All the
+-		 * devices in the subtree are left in the error state
+-		 * without recovery.
++		 * If any device in the subtree does not have an error_detected
++		 * callback, PCI_ERS_RESULT_NO_AER_DRIVER prevents subsequent
++		 * error callbacks of "any" device in the subtree, and will
++		 * exit in the disconnected error state.
+ 		 */
+-
+ 		if (dev->hdr_type != PCI_HEADER_TYPE_BRIDGE)
+ 			vote = PCI_ERS_RESULT_NO_AER_DRIVER;
+ 		else
+@@ -184,34 +166,23 @@ static pci_ers_result_t default_reset_link(struct pci_dev *dev)
  
- 	/*
--	 * Bridges can only signal wakeup on behalf of subordinate devices,
--	 * but that is set up elsewhere, so skip them.
-+	 * Bridges that are not power-manageable directly only signal
-+	 * wakeup on behalf of subordinate devices which is set up
-+	 * elsewhere, so skip them. However, bridges that are
-+	 * power-manageable may signal wakeup for themselves (for example,
-+	 * on a hotplug event) and they need to be covered here.
- 	 */
--	if (pci_has_subordinate(dev))
-+	if (!pci_power_manageable(dev))
- 		return 0;
+ static pci_ers_result_t reset_link(struct pci_dev *dev, u32 service)
+ {
+-	struct pci_dev *udev;
+ 	pci_ers_result_t status;
+ 	struct pcie_port_service_driver *driver = NULL;
  
- 	/* Don't do the same thing twice in a row for one device. */
+-	if (dev->hdr_type == PCI_HEADER_TYPE_BRIDGE) {
+-		/* Reset this port for all subordinates */
+-		udev = dev;
+-	} else {
+-		/* Reset the upstream component (likely downstream port) */
+-		udev = dev->bus->self;
+-	}
+-
+-	/* Use the aer driver of the component firstly */
+-	driver = pcie_port_find_service(udev, service);
+-
++	driver = pcie_port_find_service(dev, service);
+ 	if (driver && driver->reset_link) {
+-		status = driver->reset_link(udev);
+-	} else if (udev->has_secondary_link) {
+-		status = default_reset_link(udev);
++		status = driver->reset_link(dev);
++	} else if (dev->has_secondary_link) {
++		status = default_reset_link(dev);
+ 	} else {
+ 		pci_printk(KERN_DEBUG, dev, "no link-reset support at upstream device %s\n",
+-			pci_name(udev));
++			pci_name(dev));
+ 		return PCI_ERS_RESULT_DISCONNECT;
+ 	}
+ 
+ 	if (status != PCI_ERS_RESULT_RECOVERED) {
+ 		pci_printk(KERN_DEBUG, dev, "link reset at upstream device %s failed\n",
+-			pci_name(udev));
++			pci_name(dev));
+ 		return PCI_ERS_RESULT_DISCONNECT;
+ 	}
+ 
+@@ -243,31 +214,7 @@ static pci_ers_result_t broadcast_error_message(struct pci_dev *dev,
+ 	else
+ 		result_data.result = PCI_ERS_RESULT_RECOVERED;
+ 
+-	if (dev->hdr_type == PCI_HEADER_TYPE_BRIDGE) {
+-		/*
+-		 * If the error is reported by a bridge, we think this error
+-		 * is related to the downstream link of the bridge, so we
+-		 * do error recovery on all subordinates of the bridge instead
+-		 * of the bridge and clear the error status of the bridge.
+-		 */
+-		if (cb == report_error_detected)
+-			dev->error_state = state;
+-		pci_walk_bus(dev->subordinate, cb, &result_data);
+-		if (cb == report_resume) {
+-			pci_aer_clear_device_status(dev);
+-			pci_cleanup_aer_uncorrect_error_status(dev);
+-			dev->error_state = pci_channel_io_normal;
+-		}
+-	} else {
+-		/*
+-		 * If the error is reported by an end point, we think this
+-		 * error is related to the upstream link of the end point.
+-		 * The error is non fatal so the bus is ok; just invoke
+-		 * the callback for the function that logged the error.
+-		 */
+-		cb(dev, &result_data);
+-	}
+-
++	pci_walk_bus(dev->subordinate, cb, &result_data);
+ 	return result_data.result;
+ }
+ 
+@@ -276,6 +223,14 @@ void pcie_do_recovery(struct pci_dev *dev, enum pci_channel_state state,
+ {
+ 	pci_ers_result_t status;
+ 
++	/*
++	 * Error recovery runs on all subordinates of the first downstream port.
++	 * If the downstream port detected the error, it is cleared at the end.
++	 */
++	if (!(pci_pcie_type(dev) == PCI_EXP_TYPE_ROOT_PORT ||
++	      pci_pcie_type(dev) == PCI_EXP_TYPE_DOWNSTREAM))
++		dev = dev->bus->self;
++
+ 	status = broadcast_error_message(dev,
+ 			state,
+ 			"error_detected",
+@@ -311,6 +266,8 @@ void pcie_do_recovery(struct pci_dev *dev, enum pci_channel_state state,
+ 				"resume",
+ 				report_resume);
+ 
++	pci_aer_clear_device_status(dev);
++	pci_cleanup_aer_uncorrect_error_status(dev);
+ 	pci_info(dev, "AER: Device recovery successful\n");
+ 	return;
+ 
 -- 
-2.18.0
+2.14.4
