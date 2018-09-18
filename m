@@ -1,71 +1,98 @@
-Return-Path: <SRS0=mhNq=L3=russell.cc=ruscur@kernel.org>
-Return-Path: <SRS0=mhNq=L3=russell.cc=ruscur@kernel.org>
-Message-ID: <94b8929d44af6dd965600b7d159458312d500582.camel@russell.cc>
-Subject: Re: [PATCH] MAINTAINERS: Add PPC contacts for PCI core error
- handling
-From: Russell Currey <ruscur@russell.cc>
-To: Bjorn Helgaas <helgaas@kernel.org>, linux-pci@vger.kernel.org,
-	linuxppc-dev@lists.ozlabs.org, sbobroff@linux.ibm.com
-Cc: Benjamin Herrenschmidt <benh@kernel.crashing.org>, Paul Mackerras
-	 <paulus@samba.org>, Michael Ellerman <mpe@ellerman.id.au>,
-	linux-kernel@vger.kernel.org, oohall@gmail.com
-In-Reply-To: <20180912165846.GH118330@bhelgaas-glaptop.roam.corp.google.com>
-References: 
-	<153677132617.23091.12307288405707171077.stgit@bhelgaas-glaptop.roam.corp.google.com>
-	 <20180912165846.GH118330@bhelgaas-glaptop.roam.corp.google.com>
-Content-Type: text/plain; charset="UTF-8"
-Date: Thu, 13 Sep 2018 12:26:55 +1000
-Mime-Version: 1.0
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from usa-sjc-mx-foss1.foss.arm.com ([217.140.101.70]:41944 "EHLO
+        foss.arm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1727667AbeIRPrx (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Tue, 18 Sep 2018 11:47:53 -0400
+Date: Tue, 18 Sep 2018 11:15:55 +0100
+From: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
+To: Marek Vasut <marek.vasut@gmail.com>
+Cc: linux-pci@vger.kernel.org,
+        Phil Edworthy <phil.edworthy@renesas.com>,
+        Marek Vasut <marek.vasut+renesas@gmail.com>,
+        Arnd Bergmann <arnd@arndb.de>,
+        Geert Uytterhoeven <geert+renesas@glider.be>,
+        Simon Horman <horms+renesas@verge.net.au>,
+        Wolfram Sang <wsa@the-dreams.de>,
+        linux-renesas-soc@vger.kernel.org
+Subject: Re: [PATCH][RFC] PCI: rcar: Add bus notifier so we can limit the DMA
+ range
+Message-ID: <20180918101555.GB26886@e107981-ln.cambridge.arm.com>
+References: <20180521220514.30256-1-marek.vasut+renesas@gmail.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20180521220514.30256-1-marek.vasut+renesas@gmail.com>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wed, 2018-09-12 at 11:58 -0500, Bjorn Helgaas wrote:
-> On Wed, Sep 12, 2018 at 11:55:26AM -0500, Bjorn Helgaas wrote:
-> > From: Bjorn Helgaas <bhelgaas@google.com>
-> > 
-> > The original PCI error recovery functionality was for the powerpc-specific
-> > IBM EEH feature.  PCIe subsequently added some similar features, including
-> > AER and DPC, that can be used on any architecture.
-> > 
-> > We want the generic PCI core error handling support to work with all of
-> > these features.  Driver error recovery callbacks should be independent of
-> > which feature the platform provides.
-> > 
-> > Add the generic PCI core error recovery files to the powerpc EEH
-> > MAINTAINERS entry so the powerpc folks will be copied on changes to the
-> > generic PCI error handling strategy.
+On Tue, May 22, 2018 at 12:05:14AM +0200, Marek Vasut wrote:
+> From: Phil Edworthy <phil.edworthy@renesas.com>
 > 
-> I really want to make sure the powerpc folks are plugged into any PCI core
-> error handling discussions.  Please let me know if there's a better way
-> than this patch, or if there are other people who should be added.
-
-I think this patch is definitely a good idea.
-
-Alongside this (whether you want to include it in your patch or not, Bjorn),
-Sam Bobroff should replace myself as maintainer.  He's been very active in fixing,
-reworking and reviewing in EEH land and will probably do a better job of keeping
-his finger on the pulse of the generic PCI error handling code than I did.
-
-- Russell
-
+> The PCIe DMA controller on RCar Gen2 and earlier is on 32bit bus,
+> so limit the DMA range to 32bit.
 > 
-> > Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
-> > ---
-> >  MAINTAINERS |    4 ++++
-> >  1 file changed, 4 insertions(+)
-> > 
-> > diff --git a/MAINTAINERS b/MAINTAINERS
-> > index 7e10ba65bfe4..d6699597fd89 100644
-> > --- a/MAINTAINERS
-> > +++ b/MAINTAINERS
-> > @@ -11202,6 +11202,10 @@ PCI ENHANCED ERROR HANDLING (EEH) FOR POWERPC
-> >  M:	Russell Currey <ruscur@russell.cc>
-> >  L:	linuxppc-dev@lists.ozlabs.org
-> >  S:	Supported
-> > +F:	Documentation/PCI/pci-error-recovery.txt
-> > +F:	drivers/pci/pcie/aer.c
-> > +F:	drivers/pci/pcie/dpc.c
-> > +F:	drivers/pci/pcie/err.c
-> >  F:	Documentation/powerpc/eeh-pci-error-recovery.txt
-> >  F:	arch/powerpc/kernel/eeh*.c
-> >  F:	arch/powerpc/platforms/*/eeh*.c
-> > 
+> Signed-off-by: Phil Edworthy <phil.edworthy@renesas.com>
+> Signed-off-by: Marek Vasut <marek.vasut+renesas@gmail.com>
+> Cc: Arnd Bergmann <arnd@arndb.de>
+> Cc: Geert Uytterhoeven <geert+renesas@glider.be>
+> Cc: Phil Edworthy <phil.edworthy@renesas.com>
+> Cc: Simon Horman <horms+renesas@verge.net.au>
+> Cc: Wolfram Sang <wsa@the-dreams.de>
+> Cc: linux-renesas-soc@vger.kernel.org
+> To: linux-pci@vger.kernel.org
+> ---
+> NOTE: I'm aware of https://patchwork.kernel.org/patch/9495895/ , but the
+>       discussion seems to have gone way off, so I'm sending this as a
+>       RFC. Any feedback on how to do this limiting properly would be nice.
+> ---
+>  drivers/pci/host/pcie-rcar.c | 28 ++++++++++++++++++++++++++++
+>  1 file changed, 28 insertions(+)
+
+The issue solved by this patch was solved in a more generic way through
+this series:
+
+https://lists.linuxfoundation.org/pipermail/iommu/2018-July/028792.html
+
+I will therefore drop this patch from the PCI patch queue.
+
+Thanks,
+Lorenzo
+
+> diff --git a/drivers/pci/host/pcie-rcar.c b/drivers/pci/host/pcie-rcar.c
+> index c3eab0b95290..db2b16f40bc1 100644
+> --- a/drivers/pci/host/pcie-rcar.c
+> +++ b/drivers/pci/host/pcie-rcar.c
+> @@ -1325,3 +1325,31 @@ static struct platform_driver rcar_pcie_driver = {
+>  	.probe = rcar_pcie_probe,
+>  };
+>  builtin_platform_driver(rcar_pcie_driver);
+> +
+> +static int rcar_pcie_pci_notifier(struct notifier_block *nb,
+> +			    unsigned long action, void *data)
+> +{
+> +	struct device *dev = data;
+> +
+> +	switch (action) {
+> +	case BUS_NOTIFY_BOUND_DRIVER:
+> +		/* Force the DMA mask to lower 32-bits */
+> +		dma_set_mask_and_coherent(dev, DMA_BIT_MASK(32));
+> +		break;
+> +	default:
+> +		return NOTIFY_DONE;
+> +	}
+> +
+> +	return NOTIFY_OK;
+> +}
+> +
+> +static struct notifier_block device_nb = {
+> +	.notifier_call = rcar_pcie_pci_notifier,
+> +};
+> +
+> +static int __init register_rcar_pcie_pci_notifier(void)
+> +{
+> +	return bus_register_notifier(&pci_bus_type, &device_nb);
+> +}
+> +
+> +arch_initcall(register_rcar_pcie_pci_notifier);
+> -- 
+> 2.16.2
+> 
