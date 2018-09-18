@@ -1,120 +1,124 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from ale.deltatee.com ([207.54.116.67]:38564 "EHLO ale.deltatee.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1726365AbeIMFS5 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Thu, 13 Sep 2018 01:18:57 -0400
-From: Logan Gunthorpe <logang@deltatee.com>
-To: linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
-        linux-nvme@lists.infradead.org, linux-rdma@vger.kernel.org,
-        linux-nvdimm@lists.01.org, linux-block@vger.kernel.org
-Cc: Stephen Bates <sbates@raithlin.com>,
-        Christoph Hellwig <hch@lst.de>,
-        Keith Busch <keith.busch@intel.com>,
-        Sagi Grimberg <sagi@grimberg.me>,
-        Bjorn Helgaas <bhelgaas@google.com>,
-        Jason Gunthorpe <jgg@mellanox.com>,
-        Max Gurtovoy <maxg@mellanox.com>,
-        Dan Williams <dan.j.williams@intel.com>,
-        =?UTF-8?q?J=C3=A9r=C3=B4me=20Glisse?= <jglisse@redhat.com>,
-        Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-        Alex Williamson <alex.williamson@redhat.com>,
-        =?UTF-8?q?Christian=20K=C3=B6nig?= <christian.koenig@amd.com>,
-        Jens Axboe <axboe@kernel.dk>,
-        Logan Gunthorpe <logang@deltatee.com>
-Date: Wed, 12 Sep 2018 18:11:53 -0600
-Message-Id: <20180913001156.4115-11-logang@deltatee.com>
-In-Reply-To: <20180913001156.4115-1-logang@deltatee.com>
-References: <20180913001156.4115-1-logang@deltatee.com>
+Received: from esa3.dell-outbound.iphmx.com ([68.232.153.94]:20884 "EHLO
+        esa3.dell-outbound.iphmx.com" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1727207AbeIRSkg (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Tue, 18 Sep 2018 14:40:36 -0400
+Cc: <linux-pci@vger.kernel.org>, <bhelgaas@google.com>,
+        <keith.busch@intel.com>, <Austin.Bolen@dell.com>,
+        <Shyam.Iyer@dell.com>, <Narendra.K@dell.com>,
+        <Stuart.Hayes@dell.com>, <lukas@wunner.de>,
+        <linux-kernel@vger.kernel.org>
+From: <Alex_Gagniuc@Dellteam.com>
+To: <helgaas@kernel.org>, <mr.nuke.me@gmail.com>
+Subject: Re: [PATCH] PCI/MSI: Don't touch MSI bits when the PCI device is
+ disconnected
+Date: Tue, 18 Sep 2018 13:07:58 +0000
+Message-ID: <5c7aa51ff9294b1aab51a3bda2416094@ausx13mps321.AMER.DELL.COM>
+References: <20180730212146.31909-1-mr.nuke.me@gmail.com>
+ <20180912212831.GM118330@bhelgaas-glaptop.roam.corp.google.com>
+Content-Type: text/plain; charset="us-ascii"
 MIME-Version: 1.0
-Subject: [PATCH v6 10/13] nvme-pci: Add support for P2P memory in requests
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-For P2P requests, we must use the pci_p2pmem_map_sg() function
-instead of the dma_map_sg functions.
-
-With that, we can then indicate PCI_P2P support in the request queue.
-For this, we create an NVME_F_PCI_P2P flag which tells the core to
-set QUEUE_FLAG_PCI_P2P in the request queue.
-
-Signed-off-by: Logan Gunthorpe <logang@deltatee.com>
-Reviewed-by: Sagi Grimberg <sagi@grimberg.me>
-Reviewed-by: Christoph Hellwig <hch@lst.de>
----
- drivers/nvme/host/core.c |  4 ++++
- drivers/nvme/host/nvme.h |  1 +
- drivers/nvme/host/pci.c  | 17 +++++++++++++----
- 3 files changed, 18 insertions(+), 4 deletions(-)
-
-diff --git a/drivers/nvme/host/core.c b/drivers/nvme/host/core.c
-index dd8ec1dd9219..6033ce2fd3e9 100644
---- a/drivers/nvme/host/core.c
-+++ b/drivers/nvme/host/core.c
-@@ -3051,7 +3051,11 @@ static void nvme_alloc_ns(struct nvme_ctrl *ctrl, unsigned nsid)
- 	ns->queue = blk_mq_init_queue(ctrl->tagset);
- 	if (IS_ERR(ns->queue))
- 		goto out_free_ns;
-+
- 	blk_queue_flag_set(QUEUE_FLAG_NONROT, ns->queue);
-+	if (ctrl->ops->flags & NVME_F_PCI_P2PDMA)
-+		blk_queue_flag_set(QUEUE_FLAG_PCI_P2PDMA, ns->queue);
-+
- 	ns->queue->queuedata = ns;
- 	ns->ctrl = ctrl;
- 
-diff --git a/drivers/nvme/host/nvme.h b/drivers/nvme/host/nvme.h
-index bb4a2003c097..4030743c90aa 100644
---- a/drivers/nvme/host/nvme.h
-+++ b/drivers/nvme/host/nvme.h
-@@ -343,6 +343,7 @@ struct nvme_ctrl_ops {
- 	unsigned int flags;
- #define NVME_F_FABRICS			(1 << 0)
- #define NVME_F_METADATA_SUPPORTED	(1 << 1)
-+#define NVME_F_PCI_P2PDMA		(1 << 2)
- 	int (*reg_read32)(struct nvme_ctrl *ctrl, u32 off, u32 *val);
- 	int (*reg_write32)(struct nvme_ctrl *ctrl, u32 off, u32 val);
- 	int (*reg_read64)(struct nvme_ctrl *ctrl, u32 off, u64 *val);
-diff --git a/drivers/nvme/host/pci.c b/drivers/nvme/host/pci.c
-index f434706a04e8..0d6c41bc2b35 100644
---- a/drivers/nvme/host/pci.c
-+++ b/drivers/nvme/host/pci.c
-@@ -745,8 +745,13 @@ static blk_status_t nvme_map_data(struct nvme_dev *dev, struct request *req,
- 		goto out;
- 
- 	ret = BLK_STS_RESOURCE;
--	nr_mapped = dma_map_sg_attrs(dev->dev, iod->sg, iod->nents, dma_dir,
--			DMA_ATTR_NO_WARN);
-+
-+	if (is_pci_p2pdma_page(sg_page(iod->sg)))
-+		nr_mapped = pci_p2pdma_map_sg(dev->dev, iod->sg, iod->nents,
-+					  dma_dir);
-+	else
-+		nr_mapped = dma_map_sg_attrs(dev->dev, iod->sg, iod->nents,
-+					     dma_dir,  DMA_ATTR_NO_WARN);
- 	if (!nr_mapped)
- 		goto out;
- 
-@@ -788,7 +793,10 @@ static void nvme_unmap_data(struct nvme_dev *dev, struct request *req)
- 			DMA_TO_DEVICE : DMA_FROM_DEVICE;
- 
- 	if (iod->nents) {
--		dma_unmap_sg(dev->dev, iod->sg, iod->nents, dma_dir);
-+		/* P2PDMA requests do not need to be unmapped */
-+		if (!is_pci_p2pdma_page(sg_page(iod->sg)))
-+			dma_unmap_sg(dev->dev, iod->sg, iod->nents, dma_dir);
-+
- 		if (blk_integrity_rq(req))
- 			dma_unmap_sg(dev->dev, &iod->meta_sg, 1, dma_dir);
- 	}
-@@ -2400,7 +2408,8 @@ static int nvme_pci_get_address(struct nvme_ctrl *ctrl, char *buf, int size)
- static const struct nvme_ctrl_ops nvme_pci_ctrl_ops = {
- 	.name			= "pcie",
- 	.module			= THIS_MODULE,
--	.flags			= NVME_F_METADATA_SUPPORTED,
-+	.flags			= NVME_F_METADATA_SUPPORTED |
-+				  NVME_F_PCI_P2PDMA,
- 	.reg_read32		= nvme_pci_reg_read32,
- 	.reg_write32		= nvme_pci_reg_write32,
- 	.reg_read64		= nvme_pci_reg_read64,
--- 
-2.19.0
+On 9/12/2018 4:28 PM, Bjorn Helgaas wrote:=0A=
+> On Mon, Jul 30, 2018 at 04:21:44PM -0500, Alexandru Gagniuc wrote:=0A=
+>> When a PCI device is gone, we don't want to send IO to it if we can=0A=
+>> avoid it. We expose functionality via the irq_chip structure. As=0A=
+>> users of that structure may not know about the underlying PCI device,=0A=
+>> it's our responsibility to guard against removed devices.=0A=
+> =0A=
+> I'm pretty ambivalent about pci_dev_is_disconnected() in general, but=0A=
+> I think I'll take this, given a couple minor changelog clarifications:=0A=
+> =0A=
+>> irq_write_msi_msg is already guarded. pci_msi_(un)mask_irq are not.=0A=
+>> Guard them for completeness.=0A=
+> =0A=
+> By the irq_write_msi_msg() guard, I guess you mean this path:=0A=
+> =0A=
+>    pci_msi_domain_write_msg       # irq_chip.irq_write_msi_msg=0A=
+>      __pci_write_msi_msg=0A=
+>        if (dev->current_state !=3D PCI_D0 || pci_dev_is_disconnected(dev)=
+)=0A=
+>          /* don't touch */=0A=
+=0A=
+Yes!=0A=
+=0A=
+> pci_msi_(un)mask_irq() may be irq_chip.irq_mask, .irq_unmask, etc=0A=
+> pointers.  So these are parallel because they're all irq_chip function=0A=
+> pointers, but the changelog isn't (yet) parallel because it uses the=0A=
+> irq_chip pointer name for .irq_write_msi_msg but not for mask/unmask=0A=
+=0A=
+Good catch! I'll get this corrected.=0A=
+=0A=
+=0A=
+>> For example, surprise removal of a PCIe device triggers teardown. This=
+=0A=
+>> touches the irq_chips ops some point to disable the interrupts. I/O=0A=
+>> generated here can crash the system on machines with buggy firmware.=0A=
+>> Not triggering the IO in the first place eliminates the problem.=0A=
+> =0A=
+> It doesn't eliminate the problem completely because .irq_mask() and=0A=
+> .irq_unmask() may be called for reasons other than surprise removal,=0A=
+> and if a surprise removal happens after the pci_dev_is_disconnected()=0A=
+> check but before the readl(), we will still generate I/O to a device=0A=
+> that's gone.  I'd be OK if you said it "reduces" the problem.=0A=
+=0A=
+That sounds reasonable.=0A=
+=0A=
+> One reason I'm ambivalent about pci_dev_is_disconnected() is that in=0A=
+> cases like this, it turns a reproducible problem into a very=0A=
+> hard-to-reproduce problem, which reduces the likelihood that the buggy=0A=
+> firmware will be fixed.=0A=
+=0A=
+If it manages to turn this into 99.999% territory, I'll be much happier. =
+=0A=
+I'd love to give you an academically correct solution, but I just don't =0A=
+see how, given how firmware-first philosophy is written.=0A=
+=0A=
+> Do you have information about known platforms with this buggy firmware=0A=
+> and the signature of the crash?  If you do, it's always nice to be=0A=
+> able to connect a patch with the user-visible problem it fixes.=0A=
+=0A=
+ From what I've heard, it won't be fixed. The number of changes needed =0A=
+would require re-qualifying the firmware. I'm told that's very hard to =0A=
+do on platforms that are shipping. I can reword this to say =0A=
+"firmware-first" instead of "buggy" since they are mostly synonymous.=0A=
+=0A=
+Alex=0A=
+=0A=
+>> Signed-off-by: Alexandru Gagniuc <mr.nuke.me@gmail.com>=0A=
+>> ---=0A=
+>>=0A=
+>> There's another patch by Lukas Wunner that is needed (not yet published)=
+=0A=
+>> in order to fully block IO on SURPRISE!!! removal. The existing code onl=
+y=0A=
+>> sets the PCI_DEV_DISCONNECTED bit in an unreasonably narrow set of=0A=
+>> circumstances. Lukas' patch fixes that.=0A=
+>>=0A=
+>> However, this change is otherwise fully independent, and enjoy!=0A=
+>>=0A=
+>>   drivers/pci/msi.c | 3 +++=0A=
+>>   1 file changed, 3 insertions(+)=0A=
+>>=0A=
+>> diff --git a/drivers/pci/msi.c b/drivers/pci/msi.c=0A=
+>> index 4d88afdfc843..5f47b5cb0401 100644=0A=
+>> --- a/drivers/pci/msi.c=0A=
+>> +++ b/drivers/pci/msi.c=0A=
+>> @@ -227,6 +227,9 @@ static void msi_set_mask_bit(struct irq_data *data, =
+u32 flag)=0A=
+>>   {=0A=
+>>   	struct msi_desc *desc =3D irq_data_get_msi_desc(data);=0A=
+>>   =0A=
+>> +	if (pci_dev_is_disconnected(msi_desc_to_pci_dev(desc)))=0A=
+>> +		return;=0A=
+>> +=0A=
+>>   	if (desc->msi_attrib.is_msix) {=0A=
+>>   		msix_mask_irq(desc, flag);=0A=
+>>   		readl(desc->mask_base);		/* Flush write to device */=0A=
+>> -- =0A=
+>> 2.17.1=0A=
+>>=0A=
+> =0A=
+=0A=
