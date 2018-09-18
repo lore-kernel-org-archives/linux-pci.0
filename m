@@ -1,113 +1,102 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from bmailout1.hostsharing.net ([83.223.95.100]:60847 "EHLO
-        bmailout1.hostsharing.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726934AbeIATbA (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Sat, 1 Sep 2018 15:31:00 -0400
-Date: Sat, 1 Sep 2018 17:18:36 +0200
-From: Lukas Wunner <lukas@wunner.de>
-To: Keith Busch <keith.busch@intel.com>
-Cc: Linux PCI <linux-pci@vger.kernel.org>,
+Received: from foss.arm.com ([217.140.101.70]:41678 "EHLO foss.arm.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1728810AbeIRPNn (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Tue, 18 Sep 2018 11:13:43 -0400
+Date: Tue, 18 Sep 2018 10:41:47 +0100
+From: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
+To: Vignesh R <vigneshr@ti.com>
+Cc: Kishon Vijay Abraham I <kishon@ti.com>,
         Bjorn Helgaas <bhelgaas@google.com>,
-        Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-        Sinan Kaya <okaya@kernel.org>,
-        Thomas Tai <thomas.tai@oracle.com>, poza@codeaurora.org
-Subject: Re: [PATCH 12/16] PCI/pciehp: Fix powerfault detection order
-Message-ID: <20180901151836.oceptz267wy33bes@wunner.de>
-References: <20180831212639.10196-1-keith.busch@intel.com>
- <20180831212639.10196-13-keith.busch@intel.com>
+        Rob Herring <robh+dt@kernel.org>, linux-omap@vger.kernel.org,
+        linux-pci@vger.kernel.org, devicetree@vger.kernel.org,
+        linux-kernel@vger.kernel.org
+Subject: Re: [PATCH v4 2/2] pci: dwc: pci-dra7xx: Enable errata i870 for both
+ EP and RC mode
+Message-ID: <20180918094147.GA26886@e107981-ln.cambridge.arm.com>
+References: <20180917180635.26996-1-vigneshr@ti.com>
+ <20180917180635.26996-3-vigneshr@ti.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20180831212639.10196-13-keith.busch@intel.com>
+In-Reply-To: <20180917180635.26996-3-vigneshr@ti.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Fri, Aug 31, 2018 at 03:26:35PM -0600, Keith Busch wrote:
-> A device add in a power controller controlled slot will power on and
-> clear power fault slot events, but this was happening before the interrupt
-> handler attempted to set the sticky status and attention indicators. The
-> wrong status will be set if a hot-add and power fault are handled in
-> one interrupt. This patch fixes that by checking for power faults before
-> checking for new devices.
+On Mon, Sep 17, 2018 at 11:36:35PM +0530, Vignesh R wrote:
+> Errata i870 is applicable in both EP and RC mode. Therefore rename
+> function dra7xx_pcie_ep_unaligned_memaccess(), that implements errata
+> workaround, to dra7xx_pcie_unaligned_memaccess() and call it from a
+> common place. So, that errata workaround is applied for both modes of
+> operation.
 > 
-> Signed-off-by: Keith Busch <keith.busch@intel.com>
+> Reported-by: Chris Welch <Chris.Welch@viavisolutions.com>
+> Signed-off-by: Vignesh R <vigneshr@ti.com>
+> Acked-by: Kishon Vijay Abraham I <kishon@ti.com>
+> Acked-by: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
+> ---
+>  drivers/pci/controller/dwc/pci-dra7xx.c | 12 ++++++------
+>  1 file changed, 6 insertions(+), 6 deletions(-)
+> 
+> diff --git a/drivers/pci/controller/dwc/pci-dra7xx.c b/drivers/pci/controller/dwc/pci-dra7xx.c
+> index ce9224a36f62..43711561a199 100644
+> --- a/drivers/pci/controller/dwc/pci-dra7xx.c
+> +++ b/drivers/pci/controller/dwc/pci-dra7xx.c
+> @@ -542,7 +542,7 @@ static const struct of_device_id of_dra7xx_pcie_match[] = {
+>  };
+>  
+>  /*
+> - * dra7xx_pcie_ep_unaligned_memaccess: workaround for AM572x/AM571x Errata i870
+> + * dra7xx_pcie_unaligned_memaccess: workaround for AM572x/AM571x Errata i870
+>   * @dra7xx: the dra7xx device where the workaround should be applied
+>   *
+>   * Access to the PCIe slave port that are not 32-bit aligned will result
+> @@ -552,7 +552,7 @@ static const struct of_device_id of_dra7xx_pcie_match[] = {
+>   *
+>   * To avoid this issue set PCIE_SS1_AXI2OCP_LEGACY_MODE_ENABLE to 1.
+>   */
+> -static int dra7xx_pcie_ep_unaligned_memaccess(struct device *dev)
+> +static int dra7xx_pcie_unaligned_memaccess(struct device *dev)
+>  {
+>  	int ret;
+>  	struct device_node *np = dev->of_node;
+> @@ -695,6 +695,10 @@ static int __init dra7xx_pcie_probe(struct platform_device *pdev)
+>  	if (dra7xx->link_gen < 0 || dra7xx->link_gen > 2)
+>  		dra7xx->link_gen = 2;
+>  
+> +	ret = dra7xx_pcie_unaligned_memaccess(dev);
+> +	if (ret)
+> +		dev_err(dev, "WA for Errata i870 not applied. Update DT\n");
 
-Reviewed-by: Lukas Wunner <lukas@wunner.de>
+Hi Vignesh,
 
-I think this should go in as a fix for v4.19, right?
+I am not sure you want this code merged into an -rc given that without
+a DTS update is basically pointless (and for that bindings should at
+least be merged too as a fix).
 
-Thanks for catching this, I missed it during my pciehp refactoring
-because Thunderbolt doesn't have a power controller.
+I would also like to understand why a dev_err() is sufficient, can the
+controller work without the WA applied ?
 
-Actually I have further power controller related questions, maybe you
-can help me out there:
-
-* In pcie_enable_notification() there's a code comment:
-  "TBD: Power fault detected software notification support"
-  Is there really anything left to be done or can this code comment be
-  deleted?  AFAICS, a power fault *is* detected and acted upon, then
-  has to be cleared by the user, either through enablement via sysfs
-  or by physically replacing the card.
-
-* In pciehp_ist(), the if-condition to check for a power fault also
-  checks for "&& !ctrl->power_fault_detected".  The check seems
-  superfluous to me because pciehp_isr() clears the PCI_EXP_SLTSTA_PFD
-  bit in the pending events if ctrl->power_fault_detected is true.
-  Can the additional check be removed from the if-condition in
-  pciehp_ist()?
-
-* In pciehp_ist(), we call pciehp_green_led_off() if a power fault is
-  detected.  However my (limited) understanding is that a power fault
-  always results in a Link Down, and when bringing down the slot in
-  response to that, we already call pciehp_green_led_off() in
-  remove_board().  Can the call to pciehp_green_led_off() be removed
-  from pciehp_ist()?  Or does the link not necessarily go down on a
-  power fault and we should rather bring the slot down when a power
-  fault is detected?  Is that the "TBD" mentioned in the code comment?
-  Or is this just an intentional cosmetic behavior that we turn off
-  the green LED as early as possible once we detect the slot is off?
+Nit: Lastly, in the dev_err() message, it is your call/code but I would not
+print "update DT", kernel log is not a command prompt but that's just my
+opinion so it is up to you.
 
 Thanks,
+Lorenzo
 
-Lukas
-
-> ---
->  drivers/pci/hotplug/pciehp_hpc.c | 16 ++++++++--------
->  1 file changed, 8 insertions(+), 8 deletions(-)
-> 
-> diff --git a/drivers/pci/hotplug/pciehp_hpc.c b/drivers/pci/hotplug/pciehp_hpc.c
-> index 7136e3430925..c6116e516e1e 100644
-> --- a/drivers/pci/hotplug/pciehp_hpc.c
-> +++ b/drivers/pci/hotplug/pciehp_hpc.c
-> @@ -646,6 +646,14 @@ static irqreturn_t pciehp_ist(int irq, void *dev_id)
->  		pciehp_handle_button_press(slot);
->  	}
+>  	switch (mode) {
+>  	case DW_PCIE_RC_TYPE:
+>  		if (!IS_ENABLED(CONFIG_PCI_DRA7XX_HOST)) {
+> @@ -717,10 +721,6 @@ static int __init dra7xx_pcie_probe(struct platform_device *pdev)
+>  		dra7xx_pcie_writel(dra7xx, PCIECTRL_TI_CONF_DEVICE_TYPE,
+>  				   DEVICE_TYPE_EP);
 >  
-> +	/* Check Power Fault Detected */
-> +	if ((events & PCI_EXP_SLTSTA_PFD) && !ctrl->power_fault_detected) {
-> +		ctrl->power_fault_detected = 1;
-> +		ctrl_err(ctrl, "Slot(%s): Power fault\n", slot_name(slot));
-> +		pciehp_set_attention_status(slot, 1);
-> +		pciehp_green_led_off(slot);
-> +	}
-> +
->  	/*
->  	 * Disable requests have higher priority than Presence Detect Changed
->  	 * or Data Link Layer State Changed events.
-> @@ -657,14 +665,6 @@ static irqreturn_t pciehp_ist(int irq, void *dev_id)
->  		pciehp_handle_presence_or_link_change(slot, events);
->  	up_read(&ctrl->reset_lock);
->  
-> -	/* Check Power Fault Detected */
-> -	if ((events & PCI_EXP_SLTSTA_PFD) && !ctrl->power_fault_detected) {
-> -		ctrl->power_fault_detected = 1;
-> -		ctrl_err(ctrl, "Slot(%s): Power fault\n", slot_name(slot));
-> -		pciehp_set_attention_status(slot, 1);
-> -		pciehp_green_led_off(slot);
-> -	}
+> -		ret = dra7xx_pcie_ep_unaligned_memaccess(dev);
+> -		if (ret)
+> -			goto err_gpio;
 > -
->  	pci_config_pm_runtime_put(pdev);
->  	wake_up(&ctrl->requester);
->  	return IRQ_HANDLED;
+>  		ret = dra7xx_add_pcie_ep(dra7xx, pdev);
+>  		if (ret < 0)
+>  			goto err_gpio;
 > -- 
-> 2.14.4
+> 2.19.0
 > 
