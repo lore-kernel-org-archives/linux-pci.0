@@ -1,56 +1,53 @@
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-From: Kunihiko Hayashi <hayashi.kunihiko@socionext.com>
-To: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
- Bjorn Helgaas <bhelgaas@google.com>, Rob Herring <robh+dt@kernel.org>,
- Mark Rutland <mark.rutland@arm.com>,
- Masahiro Yamada <yamada.masahiro@socionext.com>
-Subject: [PATCH v2 0/2] add new UniPhier PCIe host driver
-Date: Thu,  6 Sep 2018 18:40:30 +0900
-Message-Id: <1536226832-5089-1-git-send-email-hayashi.kunihiko@socionext.com>
-List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
-List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
-List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
-List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
-List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
-Cc: devicetree@vger.kernel.org,
- Kunihiko Hayashi <hayashi.kunihiko@socionext.com>,
- Masami Hiramatsu <masami.hiramatsu@linaro.org>, linux-pci@vger.kernel.org,
- linux-kernel@vger.kernel.org, Jassi Brar <jaswinder.singh@linaro.org>,
- linux-arm-kernel@lists.infradead.org
-MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
-Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mga05.intel.com ([192.55.52.43]:41237 "EHLO mga05.intel.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1730532AbeISFeA (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Wed, 19 Sep 2018 01:34:00 -0400
+From: Keith Busch <keith.busch@intel.com>
+To: Linux PCI <linux-pci@vger.kernel.org>,
+        Bjorn Helgaas <bhelgaas@google.com>
+Cc: Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+        Sinan Kaya <okaya@kernel.org>,
+        Thomas Tai <thomas.tai@oracle.com>, poza@codeaurora.org,
+        Lukas Wunner <lukas@wunner.de>, Christoph Hellwig <hch@lst.de>,
+        Mika Westerberg <mika.westerberg@linux.intel.com>,
+        Keith Busch <keith.busch@intel.com>
+Subject: [PATCH 09/12] PCI/AER: Don't read upstream ports below fatal errors
+Date: Tue, 18 Sep 2018 17:58:45 -0600
+Message-Id: <20180918235848.26694-10-keith.busch@intel.com>
+In-Reply-To: <20180918235848.26694-1-keith.busch@intel.com>
+References: <20180918235848.26694-1-keith.busch@intel.com>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-This series adds PCIe host controller driver for Socionext UniPhier SoCs.
-This controller is based on the DesignWare PCIe core. This driver
-supports LD20 and PXs3 SoCs.
+The AER driver has never read the config space of an end device
+that reported a fatal error because the link to that device is considered
+unreliable.
 
-Changes since v1:
-- follow capitalization conventions in the descriptions
-- use C style comments except for the SPDX line
+An ERR_FATAL from upstream port was almost certainly detected that error
+on its upstream link, so we can't expect to reliably read its config
+space for the same reason.
 
-Kunihiko Hayashi (2):
-  dt-bindings: PCI: add UniPhier PCIe host controller description
-  PCI: controller: dwc: add UniPhier PCIe host controller support
+Signed-off-by: Keith Busch <keith.busch@intel.com>
+---
+ drivers/pci/pcie/aer.c | 5 +++--
+ 1 file changed, 3 insertions(+), 2 deletions(-)
 
- .../devicetree/bindings/pci/uniphier-pcie.txt      |  78 ++++
- drivers/pci/controller/dwc/Kconfig                 |   9 +
- drivers/pci/controller/dwc/Makefile                |   1 +
- drivers/pci/controller/dwc/pcie-uniphier.c         | 465 +++++++++++++++++++++
- 4 files changed, 553 insertions(+)
- create mode 100644 Documentation/devicetree/bindings/pci/uniphier-pcie.txt
- create mode 100644 drivers/pci/controller/dwc/pcie-uniphier.c
-
+diff --git a/drivers/pci/pcie/aer.c b/drivers/pci/pcie/aer.c
+index 33bbcaa41f65..41c36916d46c 100644
+--- a/drivers/pci/pcie/aer.c
++++ b/drivers/pci/pcie/aer.c
+@@ -1111,8 +1111,9 @@ int aer_get_device_error_info(struct pci_dev *dev, struct aer_err_info *info)
+ 			&info->mask);
+ 		if (!(info->status & ~info->mask))
+ 			return 0;
+-	} else if (dev->hdr_type == PCI_HEADER_TYPE_BRIDGE ||
+-		info->severity == AER_NONFATAL) {
++	} else if (pci_pcie_type(dev) == PCI_EXP_TYPE_ROOT_PORT ||
++	           pci_pcie_type(dev) == PCI_EXP_TYPE_DOWNSTREAM ||
++		   info->severity == AER_NONFATAL) {
+ 
+ 		/* Link is still healthy for IO reads */
+ 		pci_read_config_dword(dev, pos + PCI_ERR_UNCOR_STATUS,
 -- 
-2.7.4
-
-
-_______________________________________________
-linux-arm-kernel mailing list
-linux-arm-kernel@lists.infradead.org
-http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
+2.14.4
