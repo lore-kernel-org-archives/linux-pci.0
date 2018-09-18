@@ -1,119 +1,145 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-wm1-f68.google.com ([209.85.128.68]:37481 "EHLO
-        mail-wm1-f68.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726925AbeISXh4 (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Wed, 19 Sep 2018 19:37:56 -0400
-Date: Wed, 19 Sep 2018 10:58:49 -0700
-From: Nathan Chancellor <natechancellor@gmail.com>
-To: Nick Desaulniers <ndesaulniers@google.com>
-Cc: lorenzo.pieralisi@arm.com, songxiaowei@hisilicon.com,
-        wangbinghui@hisilicon.com, bhelgaas@google.com,
-        linux-pci@vger.kernel.org, LKML <linux-kernel@vger.kernel.org>,
-        Greg KH <gregkh@linuxfoundation.org>
-Subject: Re: [PATCH] PCI: kirin: Fix section mismatch warning
-Message-ID: <20180919175849.GA8787@flashbox>
-References: <20180919053829.4858-1-natechancellor@gmail.com>
- <20180919102944.GA15014@e107981-ln.cambridge.arm.com>
- <CAKwvOd=ughACX1DVPrk9N-qhe_ww4hCu3FkuDTVOq+MUEuGUbA@mail.gmail.com>
+Received: from smtp.codeaurora.org ([198.145.29.96]:53324 "EHLO
+        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1729279AbeIROJD (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Tue, 18 Sep 2018 10:09:03 -0400
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <CAKwvOd=ughACX1DVPrk9N-qhe_ww4hCu3FkuDTVOq+MUEuGUbA@mail.gmail.com>
+Content-Type: text/plain; charset=US-ASCII;
+ format=flowed
+Date: Tue, 18 Sep 2018 14:07:26 +0530
+From: poza@codeaurora.org
+To: Stephen Warren <swarren@wwwdotorg.org>
+Cc: Christoph Hellwig <hch@lst.de>,
+        Marek Szyprowski <m.szyprowski@samsung.com>,
+        Robin Murphy <robin.murphy@arm.com>,
+        Joerg Roedel <joro@8bytes.org>,
+        Kishon Vijay Abraham I <kishon@ti.com>,
+        Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
+        linux-pci@vger.kernel.org, Bjorn Helgaas <bhelgaas@google.com>,
+        Vidya Sagar <vidyas@nvidia.com>,
+        iommu@lists.linux-foundation.org,
+        Jingoo Han <jingoohan1@gmail.com>,
+        Joao Pinto <Joao.Pinto@synopsys.com>,
+        linux-pci-owner@vger.kernel.org
+Subject: Re: Explicit IOVA management from a PCIe endpoint driver
+In-Reply-To: <3e9950c5-4986-6b0d-74c8-97014530c132@wwwdotorg.org>
+References: <3e9950c5-4986-6b0d-74c8-97014530c132@wwwdotorg.org>
+Message-ID: <a46544a647f1f7309d1a10fb19910eb8@codeaurora.org>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wed, Sep 19, 2018 at 10:35:55AM -0700, Nick Desaulniers wrote:
-> On Wed, Sep 19, 2018 at 3:29 AM Lorenzo Pieralisi
-> <lorenzo.pieralisi@arm.com> wrote:
-> >
-> > Xiaowei, Binghui,
-> >
-> > On Tue, Sep 18, 2018 at 10:38:29PM -0700, Nathan Chancellor wrote:
-> > > WARNING: vmlinux.o(.text+0x4758cc): Section mismatch in reference from
-> > > the function kirin_pcie_probe() to the function
-> > > .init.text:kirin_add_pcie_port()
-> > > The function kirin_pcie_probe() references
-> > > the function __init kirin_add_pcie_port().
-> > > This is often because kirin_pcie_probe lacks a __init
-> > > annotation or the annotation of kirin_add_pcie_port is wrong.
-> > >
-> > > Remove '__init' from kirin_add_pcie_port so there is no mismatch.
-> >
-> > I think that instead of removing __init section tag we should add
-> > it to kirin_pcie_probe().
-> 
-> A bunch of these functions have a single call site, with a mix of __init:
-> 
-> kirin_pcie_probe() ->
->   kirin_add_pcie_port() ->  // __init
->     kirin_pcie_add_msi()
-> 
-> But it looks like probe functions should be marked init:
-> $ cd drivers; grep -r __init | grep probe
-> 
-> seems to turn up quite a lot of *probe() functions that are marked __init.
-> https://www.tldp.org/LDP/lkmpg/2.4/html/x281.htm has more info, and
-> from reading that, it seems that it's a no-op for a module that's
-> marked loadable.
-> 
-> So I agree; __init should be added to kirin_pcie_probe(), but also
-> kirin_pcie_add_msi().  That way if the module is statically compiled
-> into the kernel image, these functions with a single call site get
-> cleaned up after init.
-> 
-> Nathan, would you mind sending a v2?
-> 
 
-Hi Nick and Lorenzo,
-
-I had tested adding __init to both kirin_pcie_probe and
-kirin_pcie_add_msi but ran into this warning:
-
-WARNING: vmlinux.o(.data+0x68b78): Section mismatch in reference from
-the variable kirin_pcie_driver to the function
-.init.text:kirin_pcie_probe()
-The variable kirin_pcie_driver references                      
-the function __init kirin_pcie_probe()
-
-Doing a quick 'grep -r __init | grep platform_driver' doesn't show any
-'static struct platform_driver' constructs marked as __init, leading me
-to believe this patch is the proper solution.
-
-I'm happy to hear otherwise, thank you both for the quick responses,
-Nathan
-
-> >
-> > Please let me know and ACK accordingly.
-> >
-> > Lorenzo
-> >
-> > > Fixes: fc5165db245a ("PCI: kirin: Add HiSilicon Kirin SoC PCIe controller driver")
-> > > Reported-by: Nick Desaulniers <ndesaulniers@google.com>
-> > > Signed-off-by: Nathan Chancellor <natechancellor@gmail.com>
-> > > ---
-> > >  drivers/pci/controller/dwc/pcie-kirin.c | 4 ++--
-> > >  1 file changed, 2 insertions(+), 2 deletions(-)
-> > >
-> > > diff --git a/drivers/pci/controller/dwc/pcie-kirin.c b/drivers/pci/controller/dwc/pcie-kirin.c
-> > > index 5352e0c3be82..9b599296205d 100644
-> > > --- a/drivers/pci/controller/dwc/pcie-kirin.c
-> > > +++ b/drivers/pci/controller/dwc/pcie-kirin.c
-> > > @@ -467,8 +467,8 @@ static int kirin_pcie_add_msi(struct dw_pcie *pci,
-> > >       return 0;
-> > >  }
-> > >
-> > > -static int __init kirin_add_pcie_port(struct dw_pcie *pci,
-> > > -                                   struct platform_device *pdev)
-> > > +static int kirin_add_pcie_port(struct dw_pcie *pci,
-> > > +                            struct platform_device *pdev)
-> > >  {
-> > >       int ret;
-> > >
-> > > --
-> > > 2.19.0
-> > >
+On 2018-09-18 03:06, Stephen Warren wrote:
+> Joerg, Christoph, Marek, Robin,
 > 
+> I believe that the driver for our PCIe endpoint controller hardware
+> will need to explicitly manage its IOVA space more than current APIs
+> allow. I'd like to discuss how to make that possible.
 > 
+> First some background on our hardware:
 > 
-> -- 
-> Thanks,
-> ~Nick Desaulniers
+> NVIDIA's Xavier SoC contains a Synopsis Designware PCIe controller.
+> This can operate in either root port or endpoint mode. I'm
+> particularly interested in endpoint mode.
+> 
+> Our particular instantiation of this controller exposes a single
+> function with a single software-controlled PCIe BAR to the PCIe bus
+> (there are also BARs for access to DMA controller registers and
+> outbound MSI configuration, which can both be enabled/disabled but not
+> used for any other purpose). When a transaction is received from the
+> PCIe bus, the following happens:
+> 
+> 1) Transaction is matched against the BAR base/size (in PCIe address
+> space) to determine whether it "hits" this BAR or not.
+> 
+> 2) The transaction's address is processed by the PCIe controller's ATU
+> (Address Translation Unit), which can re-write the address that the
+> transaction accesses.
+> 
+> Our particular instantiation of the hardware only has 2 entries in the
+> ATU mapping table, which gives very little flexibility in setting up a
+> mapping.
+> 
+> As an FYI, ATU entries can match PCIe transactions either:
+> a) Any transaction received on a particular BAR.
+> b) Any transaction received within a single contiguous window of PCIe
+> address space. This kind of mapping entry obviously has to be set up
+> after device enumeration is complete so that it can match the correct
+> PCIe address.
+> 
+> Each ATU entry maps a single contiguous set of PCIe addresses to a
+> single contiguous set of IOVAs which are passed to the IOMMU.
+> Transactions can pass through the ATU without being translated if
+> desired.
+> 
+> 3) The transaction is passed to the IOMMU, which can again re-write
+> the address that the transaction accesses.
+> 
+> 4) The transaction is passed to the memory controller and reads/writes 
+> DRAM.
+> 
+> In general, we want to be able to expose a large and dynamic set of
+> data buffers to the PCIe bus; certainly /far/ more than two separate
+> buffers (the number of ATU table entries). With current Linux APIs,
+> these buffers will not be located in contiguous or adjacent physical
+> (DRAM) or virtual (IOVA) addresses, nor in any particular window of
+> physical or IOVA addresses. However, the ATU's mapping from PCIe to
+> IOVA can only expose one or two contiguous ranges of IOVA space. These
+> two sets of requirements are at odds!
+> 
+> So, I'd like to propose some new APIs that the PCIe endpoint driver can 
+> use:
+> 
+> 1) Allocate/reserve an IOVA range of specified size, but don't map
+> anything into the IOVA range.
+
+I had done some work on this in the past, those patches were tested on 
+Broadcom HW.
+
+https://lkml.org/lkml/2017/5/16/23,
+https://lkml.org/lkml/2017/5/16/21,
+https://lkml.org/lkml/2017/5/16/19
+
+I could not pursue it further, since I do not have the same HW to test 
+it.
+Although now in Qualcomm SOC, we do use Synopsis Designware PCIe 
+controller
+but we dont restrict inbound addresses range for our SOC.
+
+of course these patches can easily be ported, and extended.
+they basically reserve IOVA ranges based on inbound dma-ranges DT 
+property.
+
+Regards,
+Oza.
+
+> 
+> 2) De-allocate the IOVA range allocated in (1).
+> 
+> 3) Map a specific set (scatter-gather list I suppose) of
+> already-allocated/extant physical addresses into part of an IOVA range
+> allocated in (1).
+> 
+> 4) Unmap a portion of an IOVA range that was mapped by (3).
+> 
+> One final note:
+> 
+> The memory controller can translate accesses to a small region of DRAM
+> address space into accesses to an interrupt generation module. This
+> allows devices attached to the PCIe bus to generate interrupts to
+> software running on the system with the PCIe endpoint controller. Thus
+> I deliberately described API 3 above as mapping a specific physical
+> address into IOVA space, as opposed to mapping an existing DRAM
+> allocation into IOVA space, in order to allow mapping this interrupt
+> generation address space into IOVA space. If we needed separate APIs
+> to map physical addresses vs. DRAM allocations into IOVA space, that
+> would likely be fine too.
+> 
+> Does this API proposal sound reasonable?
+> 
+> I have heard from some NVIDIA developers that the above APIs rather go
+> against the principle that individual drivers should not be aware of
+> the presence/absence of an IOMMU, and hence direct management of IOVA
+> allocation/layout is deliberately avoided, and hence there hasn't been
+> a need/desire for this kind of API in the past. However, I think our
+> current hardware design and use-case rather requires it. Do you agree?
