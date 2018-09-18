@@ -1,99 +1,231 @@
-Return-Path: <linux-acpi-owner@vger.kernel.org>
-Subject: Re: [PATCH v2 13/40] vfio: Add support for Shared Virtual Addressing
-To: Jean-Philippe Brucker <jean-philippe.brucker@arm.com>,
-        "linux-arm-kernel@lists.infradead.org"
-        <linux-arm-kernel@lists.infradead.org>,
-        "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-        "linux-acpi@vger.kernel.org" <linux-acpi@vger.kernel.org>,
-        "devicetree@vger.kernel.org" <devicetree@vger.kernel.org>,
-        "iommu@lists.linux-foundation.org" <iommu@lists.linux-foundation.org>,
-        "kvm@vger.kernel.org" <kvm@vger.kernel.org>,
-        "linux-mm@kvack.org" <linux-mm@kvack.org>
-References: <20180511190641.23008-1-jean-philippe.brucker@arm.com>
- <20180511190641.23008-14-jean-philippe.brucker@arm.com>
- <5B83B11E.7010807@huawei.com> <1d5b6529-4e5a-723c-3f1b-dd5a9adb490c@arm.com>
- <5B89F818.7060300@huawei.com> <3a961aff-e830-64bb-b6a9-14e08de1abf5@arm.com>
- <5B8DEA15.7020404@huawei.com> <bc27f902-4d12-21b7-b9e9-18bcae170503@arm.com>
- <5B8F4A59.20004@huawei.com> <b51107b8-a525-13ce-f4c3-d423b8502c27@arm.com>
-CC: "joro@8bytes.org" <joro@8bytes.org>,
-        Will Deacon <Will.Deacon@arm.com>,
-        Robin Murphy <Robin.Murphy@arm.com>,
-        "alex.williamson@redhat.com" <alex.williamson@redhat.com>,
-        "tn@semihalf.com" <tn@semihalf.com>,
-        "thunder.leizhen@huawei.com" <thunder.leizhen@huawei.com>,
-        "ilias.apalodimas@linaro.org" <ilias.apalodimas@linaro.org>,
-        "jonathan.cameron@huawei.com" <jonathan.cameron@huawei.com>,
-        "liudongdong3@huawei.com" <liudongdong3@huawei.com>,
-        "shunyong.yang@hxt-semitech.com" <shunyong.yang@hxt-semitech.com>,
-        "nwatters@codeaurora.org" <nwatters@codeaurora.org>,
-        "okaya@codeaurora.org" <okaya@codeaurora.org>,
-        "jcrouse@codeaurora.org" <jcrouse@codeaurora.org>,
-        "rfranz@cavium.com" <rfranz@cavium.com>,
-        "dwmw2@infradead.org" <dwmw2@infradead.org>,
-        "jacob.jun.pan@linux.intel.com" <jacob.jun.pan@linux.intel.com>,
-        "yi.l.liu@intel.com" <yi.l.liu@intel.com>,
-        "ashok.raj@intel.com" <ashok.raj@intel.com>,
-        "kevin.tian@intel.com" <kevin.tian@intel.com>,
-        "baolu.lu@linux.intel.com" <baolu.lu@linux.intel.com>,
-        "robdclark@gmail.com" <robdclark@gmail.com>,
-        "christian.koenig@amd.com" <christian.koenig@amd.com>,
-        "bharatku@xilinx.com" <bharatku@xilinx.com>,
-        "rgummal@xilinx.com" <rgummal@xilinx.com>,
-        =?UTF-8?B?57Gz57Gz?= <kenneth-lee-2012@foxmail.com>,
-        wangzhou1 <wangzhou1@hisilicon.com>,
-        "liguozhu@hisilicon.com" <liguozhu@hisilicon.com>,
-        fanghao11 <fanghao11@huawei.com>
-From: Xu Zaibo <xuzaibo@huawei.com>
-Message-ID: <5B90D6B0.300@huawei.com>
-Date: Thu, 6 Sep 2018 15:26:40 +0800
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mx0b-0014ca01.pphosted.com ([208.86.201.193]:43642 "EHLO
+        mx0a-0014ca01.pphosted.com" rhost-flags-OK-OK-OK-FAIL)
+        by vger.kernel.org with ESMTP id S1728912AbeIRUzb (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Tue, 18 Sep 2018 16:55:31 -0400
+From: Alan Douglas <adouglas@cadence.com>
+To: <lorenzo.pieralisi@arm.com>
+CC: <kishon@ti.com>, <bhelgaas@google.com>,
+        <linux-pci@vger.kernel.org>, <gustavo.pimentel@synopsys.com>,
+        <cyrille.pitchen@bootlin.com>, Alan Douglas <adouglas@cadence.com>
+Subject: [PATCH v3 5/5] PCI: cadence: Add MSI-X capability to EP driver
+Date: Tue, 18 Sep 2018 16:21:45 +0100
+Message-ID: <1537284105-23519-1-git-send-email-adouglas@cadence.com>
 MIME-Version: 1.0
-In-Reply-To: <b51107b8-a525-13ce-f4c3-d423b8502c27@arm.com>
-Content-Type: text/plain; charset="utf-8"; format=flowed
-Sender: linux-acpi-owner@vger.kernel.org
+Content-Type: text/plain
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
+Add set_msix and get_msix functions to driver, and handle
+PCI_EPC_IRQ_MSIX request in raise_irq.  BAR4 is used for
+the MSI-X vectors.
 
-On 2018/9/5 19:02, Jean-Philippe Brucker wrote:
-> On 05/09/2018 04:15, Xu Zaibo wrote:
->>>>        1. While the series are finished well, VFIO-PCI device can be held
->>>> by only one process
->>>>            through binding IOCTL command without PASID (without PASID
->>>> being exposed user space).
->>> It could, but isn't supported at the moment. In addition to adding
->>> support in the I/O page fault code, we'd also need to update the VFIO
->>> API. Currently a VFIO_TYPE1 domain always supports the MAP/UNMAP ioctl.
->>> The case you describe isn't compatible with MAP/UNMAP, since the process
->>> manages the shared address space with mmap or malloc. We'd probably need
->>> to introduce a new VFIO IOMMU type, in which case the bind could be
->>> performed implicitly when the process does VFIO_SET_IOMMU. Then the
->>> process wouldn't need to send an additional BIND IOCTL.
->> ok. got it.  This is the legacy mode, so all the VFIO APIs are kept
->> unchanged?
-> Yes, existing VFIO semantics are preserved
->
->>>>        2. While using VFIO-PCI device to support multiple processes with
->>>> SVA series, a primary
->>>>            process with multiple secondary processes must be deployed just
->>>> like DPDK(https://www.dpdk.org/).
->>>>            And, the PASID still has to be exposed to user land.
->>> Right. A third case, also implemented by this patch (and complete), is
->>> the primary process simply doing a BIND for itself, and using the
->>> returned PASID to share its own address space with the device.
->>>
->> ok. But I am worried that the sulotion of one primary processes with
->> several secondary ones
->>
->> is a little bit limited. Maybe, users don't want to depend on the
->> primary process. :)
-> I don't see a better way for vfio-pci, though. But more importantly, I
-> don't know of any users :) While the feature is great for testing new
-> hardware, and I've been using it for all kinds of stress testing, I
-> haven't received feedback from possible users in production settings
-> (DPDK etc) and can't speculate about what they'd prefer.
->
-At present, It seems no other way existing while being compatible with 
-current logic.
-Thank you.
+Signed-off-by: Alan Douglas <adouglas@cadence.com>
+---
+ drivers/pci/controller/pcie-cadence-ep.c | 129 ++++++++++++++++++++++++++++++-
+ drivers/pci/controller/pcie-cadence.h    |   7 ++
+ 2 files changed, 135 insertions(+), 1 deletion(-)
 
-Thanks,
-Zaibo
+diff --git a/drivers/pci/controller/pcie-cadence-ep.c b/drivers/pci/controller/pcie-cadence-ep.c
+index 1248d75..dbe76ab 100644
+--- a/drivers/pci/controller/pcie-cadence-ep.c
++++ b/drivers/pci/controller/pcie-cadence-ep.c
+@@ -16,6 +16,7 @@
+ #define CDNS_PCIE_EP_MIN_APERTURE		128	/* 128 bytes */
+ #define CDNS_PCIE_EP_IRQ_PCI_ADDR_NONE		0x1
+ #define CDNS_PCIE_EP_IRQ_PCI_ADDR_LEGACY	0x3
++#define CDNS_PCIE_EP_MSIX_BAR			0x4
+ 
+ /**
+  * struct cdns_pcie_ep - private data for this PCIe endpoint controller driver
+@@ -255,6 +256,65 @@ static int cdns_pcie_ep_get_msi(struct pci_epc *epc, u8 fn)
+ 	return mme;
+ }
+ 
++static int cdns_pcie_ep_get_msix(struct pci_epc *epc, u8 func_no)
++{
++	struct cdns_pcie_ep *ep = epc_get_drvdata(epc);
++	struct cdns_pcie *pcie = &ep->pcie;
++	u32 cap = CDNS_PCIE_EP_FUNC_MSIX_CAP_OFFSET;
++	u32 val, reg;
++
++	reg = cap + PCI_MSIX_FLAGS;
++	val = cdns_pcie_ep_fn_readw(pcie, func_no, reg);
++	if (!(val & PCI_MSIX_FLAGS_ENABLE))
++		return -EINVAL;
++
++	val &= PCI_MSIX_FLAGS_QSIZE;
++
++	return val;
++}
++
++static int cdns_pcie_ep_set_msix(struct pci_epc *epc, u8 fn, u16 interrupts)
++{
++	struct cdns_pcie_ep *ep = epc_get_drvdata(epc);
++	struct cdns_pcie *pcie = &ep->pcie;
++	u32 cap = CDNS_PCIE_EP_FUNC_MSIX_CAP_OFFSET;
++	u32 val, reg, tblsize, b, cfg, ap, ctrl;
++
++	/* Check that the BAR has already been configured, and is large
++	 * enough, and fail if not.
++	 */
++	b = CDNS_PCIE_EP_MSIX_BAR;
++	if (b < BAR_4)
++		reg = CDNS_PCIE_LM_EP_FUNC_BAR_CFG0(fn);
++	else
++		reg = CDNS_PCIE_LM_EP_FUNC_BAR_CFG1(fn);
++	cfg = cdns_pcie_readl(pcie, reg);
++	ctrl = CDNS_PCIE_LM_EP_FUNC_BAR_CFG_VAL(b, cfg);
++	if (!(ctrl & CDNS_PCIE_LM_BAR_CFG_CTRL_MEM_32BITS))
++		return -EINVAL;
++	ap = CDNS_PCIE_LM_EP_FUNC_BAR_APERTURE_VAL(b, cfg);
++	tblsize = fls64(interrupts * 32 - 1);
++	/* Need (1<<tblsize)*2 bytes for vector table + PBA table */
++	if (ap + 6 <  tblsize)
++		return -EINVAL;
++
++	reg = cap + PCI_MSIX_FLAGS;
++	val = cdns_pcie_ep_fn_readw(pcie, fn, reg);
++	val &= ~PCI_MSIX_FLAGS_QSIZE;
++	val |= interrupts;
++	cdns_pcie_ep_fn_writew(pcie, fn, reg, val);
++
++	/* Set MSIX BAR and offset */
++	reg = cap + PCI_MSIX_TABLE;
++	cdns_pcie_ep_fn_writel(pcie, fn, reg, b);
++
++	/* Set PBA BAR and offset.  BAR must match MSIX BAR */
++	reg = cap + PCI_MSIX_PBA;
++	cdns_pcie_ep_fn_writel(pcie, fn, reg, (1UL << tblsize) | b);
++
++	return 0;
++}
++
+ static void cdns_pcie_ep_assert_intx(struct cdns_pcie_ep *ep, u8 fn,
+ 				     u8 intx, bool is_asserted)
+ {
+@@ -366,8 +426,69 @@ static int cdns_pcie_ep_send_msi_irq(struct cdns_pcie_ep *ep, u8 fn,
+ 	return 0;
+ }
+ 
++static int cdns_pcie_ep_send_msix_irq(struct cdns_pcie_ep *ep, u8 fn,
++				      u16 interrupt_num)
++{
++	struct cdns_pcie *pcie = &ep->pcie;
++	u32 cap = CDNS_PCIE_EP_FUNC_MSIX_CAP_OFFSET;
++	u16 flags;
++	u64 pci_addr_mask = 0xff;
++	u16 tbl_offset = 0;
++	u32 bar_addr_upper, bar_addr_lower;
++	u32 msg_addr_upper, msg_addr_lower;
++	u32 msg_data;
++	u64 tbl_addr, msg_addr;
++	void __iomem *msix_tbl;
++
++	/* Check whether the MSI-X feature has been enabled by the PCI host. */
++	flags = cdns_pcie_ep_fn_readw(pcie, fn, cap + PCI_MSIX_FLAGS);
++	if (!(flags & PCI_MSIX_FLAGS_ENABLE))
++		return -EINVAL;
++	/* We want local address, not address on host. Table is at offset 0 */
++	bar_addr_lower = cdns_pcie_readl(pcie,
++		CDNS_PCIE_AT_IB_EP_FUNC_BAR_ADDR0(fn, CDNS_PCIE_EP_MSIX_BAR));
++	bar_addr_upper = cdns_pcie_readl(pcie,
++		CDNS_PCIE_AT_IB_EP_FUNC_BAR_ADDR1(fn, CDNS_PCIE_EP_MSIX_BAR));
++
++	tbl_addr = ((u64)bar_addr_upper) << 32 | bar_addr_lower;
++	tbl_addr += (tbl_offset + ((interrupt_num - 1) * PCI_MSIX_ENTRY_SIZE));
++	tbl_addr &= PCI_BASE_ADDRESS_MEM_MASK;
++	msix_tbl = phys_to_virt(tbl_addr);
++	if (!msix_tbl)
++		return -EINVAL;
++
++	msg_addr_lower = readl(msix_tbl + PCI_MSIX_ENTRY_LOWER_ADDR);
++	msg_addr_upper = readl(msix_tbl + PCI_MSIX_ENTRY_UPPER_ADDR);
++	msg_addr = ((u64)msg_addr_upper) << 32 | msg_addr_lower;
++
++	msg_data = readl(msix_tbl + PCI_MSIX_ENTRY_VECTOR_CTRL);
++	if (msg_data & 0x1)
++		return -EINVAL;
++
++	msg_data = readl(msix_tbl + PCI_MSIX_ENTRY_DATA);
++
++	iounmap(msix_tbl);
++
++	/* Set the outbound region if needed. */
++	if (unlikely(ep->irq_pci_addr != (msg_addr & ~pci_addr_mask) ||
++		     ep->irq_pci_fn != fn)) {
++		/* First region was reserved for IRQ writes. */
++		cdns_pcie_set_outbound_region(pcie, fn, 0,
++					      false,
++					      ep->irq_phys_addr,
++					      msg_addr & ~pci_addr_mask,
++					      pci_addr_mask + 1);
++		ep->irq_pci_addr = (msg_addr & ~pci_addr_mask);
++		ep->irq_pci_fn = fn;
++	}
++	writel(msg_data, ep->irq_cpu_addr + (msg_addr & pci_addr_mask));
++
++	return 0;
++}
++
+ static int cdns_pcie_ep_raise_irq(struct pci_epc *epc, u8 fn,
+-				  enum pci_epc_irq_type type, u8 interrupt_num)
++				  enum pci_epc_irq_type type,
++				  u16 interrupt_num)
+ {
+ 	struct cdns_pcie_ep *ep = epc_get_drvdata(epc);
+ 	u32 link_status;
+@@ -384,6 +505,9 @@ static int cdns_pcie_ep_raise_irq(struct pci_epc *epc, u8 fn,
+ 	case PCI_EPC_IRQ_MSI:
+ 		return cdns_pcie_ep_send_msi_irq(ep, fn, interrupt_num);
+ 
++	case PCI_EPC_IRQ_MSIX:
++		return cdns_pcie_ep_send_msix_irq(ep, fn, interrupt_num);
++
+ 	default:
+ 		break;
+ 	}
+@@ -430,6 +554,8 @@ static int cdns_pcie_ep_start(struct pci_epc *epc)
+ 	.unmap_addr	= cdns_pcie_ep_unmap_addr,
+ 	.set_msi	= cdns_pcie_ep_set_msi,
+ 	.get_msi	= cdns_pcie_ep_get_msi,
++	.set_msix	= cdns_pcie_ep_set_msix,
++	.get_msix	= cdns_pcie_ep_get_msix,
+ 	.raise_irq	= cdns_pcie_ep_raise_irq,
+ 	.start		= cdns_pcie_ep_start,
+ };
+@@ -501,6 +627,7 @@ static int cdns_pcie_ep_probe(struct platform_device *pdev)
+ 	}
+ 
+ 	epc_set_drvdata(epc, ep);
++	epc->features |= EPC_FEATURE_MSIX_AVAILABLE;
+ 
+ 	if (of_property_read_u8(np, "max-functions", &epc->max_functions) < 0)
+ 		epc->max_functions = 1;
+diff --git a/drivers/pci/controller/pcie-cadence.h b/drivers/pci/controller/pcie-cadence.h
+index 4bb2733..946f6ee 100644
+--- a/drivers/pci/controller/pcie-cadence.h
++++ b/drivers/pci/controller/pcie-cadence.h
+@@ -52,6 +52,12 @@
+ 	(GENMASK(7, 5) << ((b) * 8))
+ #define  CDNS_PCIE_LM_EP_FUNC_BAR_CFG_BAR_CTRL(b, c) \
+ 	(((c) << ((b) * 8 + 5)) & CDNS_PCIE_LM_EP_FUNC_BAR_CFG_BAR_CTRL_MASK(b))
++#define CDNS_PCIE_LM_EP_FUNC_BAR_CFG_VAL(b, c) \
++	(((c) & CDNS_PCIE_LM_EP_FUNC_BAR_CFG_BAR_CTRL_MASK((b) % 4)) \
++						>> (((b) % 4) * 8 + 5))
++#define CDNS_PCIE_LM_EP_FUNC_BAR_APERTURE_VAL(b, c) \
++	(((c) & CDNS_PCIE_LM_EP_FUNC_BAR_CFG_BAR_APERTURE_MASK((b) % 4)) \
++							>> (((b) % 4) * 8))
+ 
+ /* Endpoint Function Configuration Register */
+ #define CDNS_PCIE_LM_EP_FUNC_CFG	(CDNS_PCIE_LM_BASE + 0x02c0)
+@@ -93,6 +99,7 @@
+ #define CDNS_PCIE_EP_FUNC_BASE(fn)	(((fn) << 12) & GENMASK(19, 12))
+ 
+ #define CDNS_PCIE_EP_FUNC_MSI_CAP_OFFSET	0x90
++#define CDNS_PCIE_EP_FUNC_MSIX_CAP_OFFSET	0xb0
+ 
+ /*
+  * Root Port Registers (PCI configuration space for the root port function)
+-- 
+1.9.0
