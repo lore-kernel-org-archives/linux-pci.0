@@ -2,111 +2,250 @@ Return-Path: <SRS0=bOp+=MB=vger.kernel.org=linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-0.8 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	MAILING_LIST_MULTI,SPF_PASS,URIBL_BLOCKED autolearn=unavailable
+X-Spam-Status: No, score=-0.6 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
+	DKIM_VALID_AU,FREEMAIL_FORGED_FROMDOMAIN,FREEMAIL_FROM,
+	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_PASS autolearn=ham
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id B1F30ECE564
-	for <linux-pci@archiver.kernel.org>; Wed, 19 Sep 2018 13:54:13 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 9E35AC433F4
+	for <linux-pci@archiver.kernel.org>; Wed, 19 Sep 2018 14:25:25 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 6AD682150F
-	for <linux-pci@archiver.kernel.org>; Wed, 19 Sep 2018 13:54:13 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.3.2 mail.kernel.org 6AD682150F
-Authentication-Results: mail.kernel.org; dmarc=none (p=none dis=none) header.from=hygon.cn
+	by mail.kernel.org (Postfix) with ESMTP id 2206E2151B
+	for <linux-pci@archiver.kernel.org>; Wed, 19 Sep 2018 14:25:25 +0000 (UTC)
+Authentication-Results: mail.kernel.org;
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="qw7o90oh"
+DMARC-Filter: OpenDMARC Filter v1.3.2 mail.kernel.org 2206E2151B
+Authentication-Results: mail.kernel.org; dmarc=fail (p=none dis=none) header.from=gmail.com
 Authentication-Results: mail.kernel.org; spf=none smtp.mailfrom=linux-pci-owner@vger.kernel.org
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1731331AbeISTcO (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Wed, 19 Sep 2018 15:32:14 -0400
-Received: from smtp20.cstnet.cn ([159.226.251.20]:54162 "EHLO cstnet.cn"
-        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1727771AbeISTcO (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Wed, 19 Sep 2018 15:32:14 -0400
-Received: from [172.20.20.131] (unknown [182.150.46.145])
-        by APP-10 (Coremail) with SMTP id tACowAB3fWHrVKJbqEtHDA--.5307S2;
-        Wed, 19 Sep 2018 21:53:48 +0800 (CST)
-From:   Pu Wen <puwen@hygon.cn>
-Subject: Re: [LKP] [x86/pci] 7ffb31888c: PANIC:early_exception
-To:     kernel test robot <rong.a.chen@intel.com>
-Cc:     bp@alien8.de, tglx@linutronix.de, mingo@redhat.com, hpa@zytor.com,
-        x86@kernel.org, thomas.lendacky@amd.com, helgaas@kernel.org,
-        linux-kernel@vger.kernel.org, linux-arch@vger.kernel.org,
-        linux-pci@vger.kernel.org, lkp@01.org
-References: <20180919031923.GC8820@shao2-debian>
-Message-ID: <4f5166f8-97b8-a58f-3e5d-19d1751a4601@hygon.cn>
-Date:   Wed, 19 Sep 2018 21:53:45 +0800
-User-Agent: Mozilla/5.0 (Windows NT 10.0; WOW64; rv:52.0) Gecko/20100101
- Thunderbird/52.9.1
+        id S1731221AbeISUDd (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Wed, 19 Sep 2018 16:03:33 -0400
+Received: from mail-io1-f49.google.com ([209.85.166.49]:42236 "EHLO
+        mail-io1-f49.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1727825AbeISUDd (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Wed, 19 Sep 2018 16:03:33 -0400
+Received: by mail-io1-f49.google.com with SMTP id n18-v6so4623705ioa.9;
+        Wed, 19 Sep 2018 07:25:23 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20161025;
+        h=mime-version:in-reply-to:references:from:date:message-id:subject:to
+         :cc;
+        bh=Jtxbin5sc2lNOePO3XUm0CDNs+hhFSD/YeeG2BmLbZk=;
+        b=qw7o90ohW/mAc4VUzfv2fjaPG3STYkN8ufZ+1ANUJxfgkDRHEdPcxVYdCew5IOqvH5
+         mRuAuU6yMX+X+ulIAXE2IG0D2CKkOndIfyBg/WpUB6rbMxmY3hr0BbxJXZsVZ7GYaVQ5
+         qH9+zGf4Wo497p0oBDcUqq2cMytk3B0KGohcJ5kjy0IF/ee4yGVpoI/yYwKzYgtwzwFG
+         ZoUaZLwG+OfN17kKRzI4XACn/WitmhQKFp5L8B6A6ynhT/RU5NhjPEOBWM7XOAhqb7p7
+         OqHJsZQD5k3H8OOfj6NUN0zhlYnU42ZdBfBUirf+9gT1/1p7pVNdxnc3NcGPzY7N7GXT
+         hWpg==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20161025;
+        h=x-gm-message-state:mime-version:in-reply-to:references:from:date
+         :message-id:subject:to:cc;
+        bh=Jtxbin5sc2lNOePO3XUm0CDNs+hhFSD/YeeG2BmLbZk=;
+        b=Z07Yb6KMIZRTlnGfEBmBD4uouPBm7QppujSSGnTLlSmy8G/ywnrG40iLti5VGQvWBZ
+         1JpT/BZ3UHzYhsOVJlA0h6U/Bq7S9dR5MCZcZTcRi/cDF8VpoIHPZkpwMYd27e83eQSG
+         vj/F8b1K+Ic6lWWH8ngm2kYJlIo2oHKCbWBsdo8pvn2UnlDJpEQsAQ5JN6FamJHJ4++f
+         iYz40FfB6QttivRbcyAL7FZaQJTofvVz+dO2CDxkYGHZ0DYY9xdMOjxWx0GuBWbJ6eEi
+         VXBcZLrYFuEAi9wvyW6CMHAK8SjoMC/GYjXeRUaSL2c17b7SIVI/BWFG34m2dRnLs5An
+         6uQw==
+X-Gm-Message-State: APzg51A8wModd0FoSENyux7iprgRLOsZSklzDINbw1R+7RlLNgGxKeGu
+        Qc/jP+tNrZ5R6h+6UpP54Ot+42g2Anjkky2yvwI=
+X-Google-Smtp-Source: ANB0VdZ5CgLDaIC+/zjGivhfkZyheaLpwAr3g1UIKgioDBle2h4+PDIMbG0crulWICCsoK22Dn6m+T69B5jWOIhgQnM=
+X-Received: by 2002:a6b:dc3:: with SMTP id 186-v6mr28015077ion.231.1537367122630;
+ Wed, 19 Sep 2018 07:25:22 -0700 (PDT)
 MIME-Version: 1.0
-In-Reply-To: <20180919031923.GC8820@shao2-debian>
-Content-Type: text/plain; charset=windows-1252
-Content-Language: en-US
-Content-Transfer-Encoding: 7bit
-X-CM-TRANSID: tACowAB3fWHrVKJbqEtHDA--.5307S2
-X-Coremail-Antispam: 1UD129KBjvJXoW7CF43Cr1kKw4DZr1fKF18Grg_yoW8ury7pF
-        yUXr1DGr48JF1UJr1UJF15Cw12krnrZ3WUXr17Gr18AF18W3WUJr18ArWUtw1DJr4DXry2
-        yrWDJ3WxtrWUKaUanT9S1TB71UUUUUUqnTZGkaVYY2UrUUUUjbIjqfuFe4nvWSU5nxnvy2
-        9KBjDU0xBIdaVrnRJUUUvEb7Iv0xC_Kw4lb4IE77IF4wAFF20E14v26r4j6ryUM7CY07I2
-        0VC2zVCF04k26cxKx2IYs7xG6rWj6s0DM7CIcVAFz4kK6r1j6r18M28lY4IEw2IIxxk0rw
-        A2F7IY1VAKz4vEj48ve4kI8wA2z4x0Y4vE2Ix0cI8IcVAFwI0_Jr0_JF4l84ACjcxK6xII
-        jxv20xvEc7CjxVAFwI0_Gr0_Cr1l84ACjcxK6I8E87Iv67AKxVWUJVW8JwA2z4x0Y4vEx4
-        A2jsIEc7CjxVAFwI0_Gr0_Gr1UM2AIxVAIcxkEcVAq07x20xvEncxIr21l5I8CrVACY4xI
-        64kE6c02F40Ex7xfMcIj6xIIjxv20xvE14v26r1j6r18McIj6I8E87Iv67AKxVW8Jr0_Cr
-        1UMcvjeVCFs4IE7xkEbVWUJVW8JwACjcxG0xvEwIxGrwACI402YVCY1x02628vn2kIc2xK
-        xwCYjI0SjxkI62AI1cAE67vIY487MxAIw28IcxkI7VAKI48JMxC20s026xCaFVCjc4AY6r
-        1j6r4UMI8I3I0E5I8CrVAFwI0_Jr0_Jr4lx2IqxVCjr7xvwVAFwI0_JrI_JrWlx4CE17CE
-        b7AF67AKxVWUtVW8ZwCIc40Y0x0EwIxGrwCI42IY6xIIjxv20xvE14v26r1j6r1xMIIF0x
-        vE2Ix0cI8IcVCY1x0267AKxVW8JVWxJwCI42IY6xAIw20EY4v20xvaj40_WFyUJVCq3wCI
-        42IY6I8E87Iv67AKxVWUJVW8JwCI42IY6I8E87Iv6xkF7I0E14v26r4j6r4UJbIYCTnIWI
-        evJa73UjIFyTuYvjxUqX4SDUUUU
-X-Originating-IP: [182.150.46.145]
-X-CM-SenderInfo: psxzv046klw03qof0z/
+Received: by 2002:a6b:9157:0:0:0:0:0 with HTTP; Wed, 19 Sep 2018 07:25:21
+ -0700 (PDT)
+In-Reply-To: <20180918204834.GB13616@bhelgaas-glaptop.roam.corp.google.com>
+References: <abb9aa39-3128-3a4d-01f7-d0614d63f37e@cisco.com>
+ <20180918132056.GA254348@bhelgaas-glaptop.roam.corp.google.com>
+ <b5883e58-861a-807e-f4c8-3745b006ce0d@cisco.com> <20180918184706.GA13616@bhelgaas-glaptop.roam.corp.google.com>
+ <b6281224-18cf-50af-aa38-6b048d741854@cisco.com> <20180918204834.GB13616@bhelgaas-glaptop.roam.corp.google.com>
+From:   Oliver <oohall@gmail.com>
+Date:   Thu, 20 Sep 2018 00:25:21 +1000
+Message-ID:
+ <CAOSf1CHcDqrwy5W-GAjJ-x+rBwbRMLoVsM8D6veFVPPXmdAsZQ@mail.gmail.com>
+Subject: Re: PCI: Enforce bus address limits in resource allocation
+To:     Bjorn Helgaas <helgaas@kernel.org>
+Cc:     Daniel Walker <danielwa@cisco.com>, linux-pci@vger.kernel.org,
+        Yinghai Lu <yinghai@kernel.org>,
+        Bjorn Helgaas <bhelgaas@google.com>,
+        Rob Herring <robh+dt@kernel.org>,
+        Frank Rowand <frowand.list@gmail.com>,
+        Device Tree <devicetree@vger.kernel.org>
+Content-Type: text/plain; charset="UTF-8"
 Sender: linux-pci-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
-Message-ID: <20180919135345.CF0Qheq2PMUCWR0-k-_awYh2CB0cjoNEFPUYf2csm3w@z>
+Message-ID: <20180919142521.D0cGgdvkdwFm9HTaro13FJT91ucFWZCoSiUsYksdHf4@z>
 
-On 2018/9/19 11:19, kernel test robot wrote:
-> [    0.800215] AGP: No AGP bridge found
-> PANIC: early exception 0xe3 IP 10:ffffffff8294623f error 0 cr2 0x0
-> [    0.815262] CPU: 0 PID: 0 Comm: swapper Not tainted 4.19.0-rc2-00018-g7ffb318 #1
-> [    0.826860] Hardware name: QEMU Standard PC (i440FX + PIIX, 1996), BIOS 1.10.2-1 04/01/2014
-> [    0.839894] RIP: 0010:early_is_amd_nb+0x30/0x4b
-> [    0.846986] Code: 15 07 3e c8 ff 0f b7 cf 48 c7 c0 c0 6a 01 82 80 fa 02 74 13 80 fa 09 48 c7 c0 20 69 01 82 ba 00 00 00 00 48 0f 45 c2 c1 ef 10 <8b> 10 85 d2 74 0f 39 ca 75 05 39 78 04 74 09 48 83 c0 20 eb eb 31
-> [    0.876321] RSP: 0000:ffffffff82403e38 EFLAGS: 00010017 ORIG_RAX: 0000000000000000
-> [    0.888131] RAX: 0000000000000000 RBX: 0000000000000000 RCX: 000000000000ffff
-> [    0.899187] RDX: 0000000000000000 RSI: 000000000000c000 RDI: 000000000000ffff
-> [    0.910233] RBP: 0000000000000018 R08: 0000000000000002 R09: 0000000000000000
-> [    0.921388] R10: ffffffff829ecc40 R11: ffffffff82aeed87 R12: 0000000000000000
-> [    0.932476] R13: 0000000000000000 R14: 0000000000000000 R15: 0000000000000000
-> [    0.943658] FS:  0000000000000000(0000) GS:ffffffff82909000(0000) knlGS:0000000000000000
-> [    0.956271] CS:  0010 DS: 0000 ES: 0000 CR0: 0000000080050033
-> [    0.965216] CR2: 0000000000000000 CR3: 00000000029a2000 CR4: 00000000000006a0
-> [    0.976358] Call Trace:
-> [    0.980238]  ? early_gart_iommu_check+0xef/0x2c5
-> [    0.987493]  ? setup_arch+0x4fa/0xc67
-> [    0.993231]  ? printk+0x52/0x6e
-> [    0.998157]  ? start_kernel+0x6e/0x4dc
-> [    1.004044]  ? load_ucode_bsp+0x42/0x12e
-> [    1.010145]  ? secondary_startup_64+0xa4/0xb0
-> BUG: kernel hang in boot stage
-> 
-> Elapsed time: 700
-> 
-> #!/bin/bash
-> 
-> 
-> 
-> To reproduce:
-> 
->          git clone https://github.com/intel/lkp-tests.git
->          cd lkp-tests
->          bin/lkp qemu -k <bzImage> job-script # job-script is attached in this email
+On Wed, Sep 19, 2018 at 6:48 AM, Bjorn Helgaas <helgaas@kernel.org> wrote:
+> [+cc Rob, Frank, devicetree list,
+>
+> thread starts here:
+> https://lkml.kernel.org/r/abb9aa39-3128-3a4d-01f7-d0614d63f37e@cisco.com
+>
+> dmesg snippets here:
+> https://lkml.kernel.org/r/20180918184706.GA13616@bhelgaas-glaptop.roam.corp.google.com]
+>
+> On Tue, Sep 18, 2018 at 11:56:20AM -0700, Daniel Walker wrote:
+>> On 09/18/2018 11:47 AM, Bjorn Helgaas wrote:
+>> > On Tue, Sep 18, 2018 at 07:24:02AM -0700, Daniel Walker wrote:
+>> > > On 09/18/2018 06:20 AM, Bjorn Helgaas wrote:
+>> > > > On Fri, Sep 14, 2018 at 08:16:35AM -0700, Daniel Walker wrote:
+>> > > > > I have a powerpc system with PCI, and some devices attached to
+>> > > > > the PCI bus.  In 3.10 everything worked fine, then we moved to
+>> > > > > 4.9 and we had some issues.  I was able to bisect the issue down
+>> > > > > to the patch in the subject line.
+>> > > > >
+>> > > > > f75b99d PCI: Enforce bus address limits in resource allocation
+>> > > > >
+>> > > > >   From 3.10 here is part of the PCI initialization,
+>> > > > >
+>> > > > > |pci 0001:0e:00.0: BAR 0: assigned [mem 0xfc0000000-0xfc00fffff pref]|
+>> > > > > |pci 0001:07:09.0: PCI bridge to [bus 0e]|
+>> > > > > |pci 0001:07:09.0: bridge window [mem 0xfc0000000-0xfc00fffff 64bit pref]|
+>> > > > >                   |||In this section the memory resource for the bridge is
+>> > > > > 64bit, and the device "BAR 0" gets a 64bit range. However, it seems the
+>> > > > > device is 32bit.|
+>> >
+>> > > > > |Now fast forward to 4.9 we get this,|
+>> > > >
+>> > > > > pci 0001:0e:00.0: BAR 0: no space for [mem size 0x00100000 pref]
+>> > > > > pci 0001:0e:00.0: BAR 0: failed to assign [mem size 0x00100000 pref]
+>> > > > > pci 0001:07:09.0: PCI bridge to [bus 0e]
+>> > > > > pci 0001:07:09.0: bridge window [mem 0xfc0000000-0xfc00fffff 64bit pref]
+>> > > > >
+>> > > > > |Here it seems to have a larger size, I'm not sure where the size is coming
+>> > > > > from.
+>> > > >
+>> > > > The size is 0x00100000 (1MB), which is the same size as
+>> > > > [mem 0xfc0000000-0xfc00fffff pref].
+>> > > >
+>> > > > The size is normally discovered by probing the BAR (write all 1's to
+>> > > > the BAR then read it back to find which bits are writable and which
+>> > > > are read-only).  On powerpc we might learn it from DT instead.  But in
+>> > > > any case, we to get the same 1MB size, which is the same size as the
+>> > > > bridge window.  So this should still work unless there are other BARs
+>> > > > in that window.
+>> > >
+>> > > As far as I know there is only one BAR connected to this window.
+>> > >
+>> > > It kind of strikes me as an off-by-one problem because it says "no space"
+>> > > but the window is the same size as what's requested. With the patch removed
+>> > > you get the whole window assigned.
+>> > >
+>> > > In the context of the patch if you change the pci_32_bit to pci_64_bit for
+>> > > the region when calling pci_bus_alloc_from_region() in the 32bit case this
+>> > > problem disappears. I do have CONFIG_ARCH_DMA_ADDR_T_64BIT enabled in my
+>> > > config.
+>> > >
+>> > > > > I was able to work around the issue by setting IORESOURCE_MEM_64 on
+>> > > > > the resource for this device. I also was able to work around it by setting
+>> > > > > "max = avail.end" to "max = (-1);" inside pci_bus_alloc_resource(). |
+>> > > > > ||
+>> > > > > ||I don't know if the problem is the patch, or something else inside our
+>> > > > > system, but any thoughts are appreciated.
+>> > > >
+>> > > > It seems like we think the bridge window contains only 64-bit space
+>> > > > and therefore contains nothing usable by the 32-bit BAR.
+>> > > >
+>> > > > You said later that the same problem exists on v4.19-rc4.  Can you
+>> > > > collect the complete dmesg log with that kernel?  That should tell us
+>> > > > about any host bridge address translation.
+>> > >
+>> > > Sure. I have attached the dmesg.
+>> >
+>> > The relevant parts are below.  I think your DT is incorrect.  Either
+>> > it neglects to describe the host bridge address translation for the
+>> > ffb240000.pcie and ffb250000.pcie bridges, or it incorrectly describes
+>> > the BARs of devices below those bridges as 32-bit BARs when they are
+>> > really 64-bit BARs.
+>>
+>> I don't know if the DTS is correct, it very well could be incorrect. Here
+>> are the relevant parts of the DTS. The BAR at issue is connected to PCI1.
+>
+> The DTS matches what I pointed out in the dmesg log.  I think you need
+> to reconcile it with your hardware and firmware, which I don't know
+> anything about, so I don't know what else I can do at this point.  I
+> copied some DT folks in case they have advice.
+>
+>>         pci0: pcie@ffb240000 {
+>>                 compatible = "fsl,t1040-pcie", "fsl,qoriq-pcie-v2.4",
+>> "fsl,qoriq-pcie";
+>>                 device_type = "pci";
+>>                 #size-cells = <2>;
+>>                 #address-cells = <3>;
+>>                 bus-range = <0x0 0xff>;
+>>                 interrupts = <20 2 0 0>;
+>>                 fsl,iommu-parent = <&pamu0>;
+>>                 reg = <0xf 0xfb240000 0 0x10000>;
+>>                 ranges = <0x03000000 0xf 0xe0000000 0xf 0xe0000000 0
+>> 0x01000000>;
+>>
+>>                 pcie@0 {
+>>                         reg = <0 0 0 0 0>;
+>>                         #size-cells = <2>;
+>>                         #address-cells = <3>;
+>>                         device_type = "pci";
+>>                 };
+>>         };
+>>
+>>         pci1: pcie@ffb250000 {
+>>                 compatible = "fsl,t1040-pcie", "fsl,qoriq-pcie-v2.4",
+>> "fsl,qoriq-pcie";
+>>                 device_type = "pci";
+>>                 #size-cells = <2>;
+>>                 #address-cells = <3>;
+>>                 bus-range = <0 0xff>;
+>>                 interrupts = <21 2 0 0>;
+>>                 fsl,iommu-parent = <&pamu0>;
+>>                 reg = <0xf 0xfb250000 0 0x10000>;
+>>
+>>                 ranges = <0x03000000 0x4 0x00000000 0x4 0x00000000 0xc
+>> 0x00000000>;
+>>
+>>                 pcie@0 {
+>>                         reg = <0 0 0 0 0>;
+>>                         #size-cells = <2>;
+>>                         #address-cells = <3>;
+>>                         device_type = "pci";
+>>                 };
+>>         };
 
-I cannot reproduce this panic on Hygon Dhyana platform. I tired lkp-tests
-both in Ubuntu 16.04 (with gcc-5) and Ubuntu 18.04 (with gcc-7).
-What kind of host do you use to run the qemu? A Intel one or AMD one?
+The upstream fsl-pci driver seems to configure the bridge windows
+based on what's in the ranges property rather than just consuming it.
+It might be possible to add some 32bit BAR space by tweaking the
+ranges to something like:
 
-Thanks,
-Pu Wen
+        ranges = <0x02000000 0x0 0x80000000 0x4 0x0 0x0 0x80000000>;
 
+That said, it looks Daniel's kernel has some patches that change how
+PCI setup works so it might not be using the upstream driver.
+
+>>
+>>         pci3: pcie@ffb270000 {
+>>                 compatible = "fsl,t1040-pcie", "fsl,qoriq-pcie-v2.4",
+>> "fsl,qoriq-pcie";
+>>                 device_type = "pci";
+>>                 #size-cells = <2>;
+>>                 #address-cells = <3>;
+>>                 bus-range = <0x0 0xff>;
+>>                 interrupts = <23 2 0 0>;
+>>                 fsl,iommu-parent = <&pamu0>;
+>>                 reg = <0xf 0xfb270000 0 0x10000>;
+>>                 ranges = <0x03000000 0x0 0xe2000000 0xf 0xe2000000 0
+>> 0x00100000>;
+>>
+>>                 pcie@0 {
+>>                         reg = <0 0 0 0 0>;
+>>                         #size-cells = <2>;
+>>                         #address-cells = <3>;
+>>                         device_type = "pci";
+>>                 };
+>>         };
+>>
+>>
+>>
+>> Daniel
