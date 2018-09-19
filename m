@@ -1,131 +1,210 @@
-Return-Path: <SRS0=aNPy=LT=intel.com=jonathan.derrick@kernel.org>
-Return-Path: <SRS0=aNPy=LT=intel.com=jonathan.derrick@kernel.org>
-From: Jon Derrick <jonathan.derrick@intel.com>
-To: Bjorn Helgaas <helgaas@kernel.org>
-Cc: Keith Busch <keith.busch@intel.com>,
-	Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
-	<linux-pci@vger.kernel.org>,
-	Jon Derrick <jonathan.derrick@intel.com>
-Subject: [PATCH 2/2] PCI/VMD: Expose VMD host-bridge
-Date: Tue,  4 Sep 2018 19:09:51 -0600
-Message-Id: <1536109791-2672-2-git-send-email-jonathan.derrick@intel.com>
-In-Reply-To: <1536109791-2672-1-git-send-email-jonathan.derrick@intel.com>
-References: <1536109791-2672-1-git-send-email-jonathan.derrick@intel.com>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail.kernel.org ([198.145.29.99]:50380 "EHLO mail.kernel.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1732545AbeISVZY (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Wed, 19 Sep 2018 17:25:24 -0400
+Date: Wed, 19 Sep 2018 10:46:51 -0500
+From: Bjorn Helgaas <helgaas@kernel.org>
+To: Keith Busch <keith.busch@intel.com>
+Cc: Linux PCI <linux-pci@vger.kernel.org>,
+        Bjorn Helgaas <bhelgaas@google.com>,
+        Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+        Sinan Kaya <okaya@kernel.org>,
+        Thomas Tai <thomas.tai@oracle.com>, poza@codeaurora.org,
+        Lukas Wunner <lukas@wunner.de>, Christoph Hellwig <hch@lst.de>,
+        Mika Westerberg <mika.westerberg@linux.intel.com>
+Subject: Re: [PATCHv3 05/10] PCI/ERR: Handle fatal error recovery
+Message-ID: <20180919154651.GA243610@bhelgaas-glaptop.roam.corp.google.com>
+References: <20180918235702.26573-1-keith.busch@intel.com>
+ <20180918235702.26573-6-keith.busch@intel.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20180918235702.26573-6-keith.busch@intel.com>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-In preparation for kernel host-bridge enhancements, and to take
-advantage of pci_host_probe()'s calling of
-pcie_bus_configure_settings(), convert the VMD driver to expose a host
-bridge rather than a root bus.
+On Tue, Sep 18, 2018 at 05:56:57PM -0600, Keith Busch wrote:
+> We don't need to be paranoid about the topology changing while handling an
+> error. If the device has changed in a hotplug capable slot, we can rely
+> on the presence detection handling to react to a changing topology. This
+> patch restores the fatal error handling behavior that existed before
+> merging DPC with AER with 7e9084b3674 ("PCI/AER: Handle ERR_FATAL with
+> removal and re-enumeration of devices").
 
-Signed-off-by: Jon Derrick <jonathan.derrick@intel.com>
----
- drivers/pci/controller/vmd.c | 54 ++++++++++++++++++++++++++++----------------
- 1 file changed, 34 insertions(+), 20 deletions(-)
+7e9084b3674 updated Documentation/PCI/pci-error-recovery.txt; doesn't
+this require another update to keep it matching the code?
 
-diff --git a/drivers/pci/controller/vmd.c b/drivers/pci/controller/vmd.c
-index 46ed80f..ca05679 100644
---- a/drivers/pci/controller/vmd.c
-+++ b/drivers/pci/controller/vmd.c
-@@ -93,7 +93,7 @@ struct vmd_dev {
- 	struct pci_sysdata	sysdata;
- 	struct resource		resources[3];
- 	struct irq_domain	*irq_domain;
--	struct pci_bus		*bus;
-+	struct pci_host_bridge	*host;
- 
- #ifdef CONFIG_X86_DEV_DMA_OPS
- 	struct dma_map_ops	dma_ops;
-@@ -582,7 +582,6 @@ static int vmd_find_free_domain(void)
- static int vmd_enable_domain(struct vmd_dev *vmd, unsigned long features)
- {
- 	struct pci_sysdata *sd = &vmd->sysdata;
--	struct fwnode_handle *fn;
- 	struct resource *res;
- 	u32 upper_bits;
- 	unsigned long flags;
-@@ -690,37 +689,51 @@ static int vmd_enable_domain(struct vmd_dev *vmd, unsigned long features)
- 		return sd->domain;
- 
- 	sd->node = pcibus_to_node(vmd->dev->bus);
--
--	fn = irq_domain_alloc_named_id_fwnode("VMD-MSI", vmd->sysdata.domain);
--	if (!fn)
-+	sd->fwnode = irq_domain_alloc_named_id_fwnode("VMD-MSI",
-+						      vmd->sysdata.domain);
-+	if (!sd->fwnode)
- 		return -ENODEV;
- 
--	vmd->irq_domain = pci_msi_create_irq_domain(fn, &vmd_msi_domain_info,
-+	vmd->irq_domain = pci_msi_create_irq_domain(sd->fwnode,
-+						    &vmd_msi_domain_info,
- 						    x86_vector_domain);
--	irq_domain_free_fwnode(fn);
- 	if (!vmd->irq_domain)
--		return -ENODEV;
-+		goto free_fwnode;
- 
-+	vmd->irq_domain->fwnode = sd->fwnode;
- 	pci_add_resource(&resources, &vmd->resources[0]);
- 	pci_add_resource_offset(&resources, &vmd->resources[1], offset[0]);
- 	pci_add_resource_offset(&resources, &vmd->resources[2], offset[1]);
- 
--	vmd->bus = pci_create_root_bus(&vmd->dev->dev, busn_start, &vmd_ops,
--				       sd, &resources);
--	if (!vmd->bus) {
--		pci_free_resource_list(&resources);
--		irq_domain_remove(vmd->irq_domain);
--		return -ENODEV;
--	}
-+	vmd->host = devm_pci_alloc_host_bridge(&vmd->dev->dev, 0);
-+	if (!vmd->host)
-+		goto free_irqdomain;
-+
-+	list_splice_init(&resources, &vmd->host->windows);
-+	vmd->host->busnr = busn_start;
-+	vmd->host->dev.parent = &vmd->dev->dev;
-+	vmd->host->ops = &vmd_ops;
-+	vmd->host->sysdata = sd;
- 
- 	vmd_attach_resources(vmd);
- 	vmd_setup_dma_ops(vmd);
--	dev_set_msi_domain(&vmd->bus->dev, vmd->irq_domain);
--	pci_rescan_bus(vmd->bus);
-+	dev_set_msi_domain(&vmd->host->dev, vmd->irq_domain);
-+	if (pci_host_probe(vmd->host))
-+		goto detach_resources;
- 
--	WARN(sysfs_create_link(&vmd->dev->dev.kobj, &vmd->bus->dev.kobj,
-+	WARN(sysfs_create_link(&vmd->dev->dev.kobj, &vmd->host->bus->dev.kobj,
- 			       "domain"), "Can't create symlink to domain\n");
- 	return 0;
-+
-+detach_resources:
-+	vmd_detach_resources(vmd);
-+free_fwnode:
-+	irq_domain_free_fwnode(vmd->irq_domain->fwnode);
-+free_irqdomain:
-+	pci_free_resource_list(&resources);
-+	irq_domain_remove(vmd->irq_domain);
-+
-+	return -ENODEV;
- }
- 
- static irqreturn_t vmd_irq(int irq, void *data)
-@@ -814,11 +827,12 @@ static void vmd_remove(struct pci_dev *dev)
- 	struct vmd_dev *vmd = pci_get_drvdata(dev);
- 
- 	sysfs_remove_link(&vmd->dev->dev.kobj, "domain");
--	pci_stop_root_bus(vmd->bus);
--	pci_remove_root_bus(vmd->bus);
-+	pci_stop_root_bus(vmd->host->bus);
-+	pci_remove_root_bus(vmd->host->bus);
- 	vmd_cleanup_srcu(vmd);
- 	vmd_teardown_dma_ops(vmd);
- 	vmd_detach_resources(vmd);
-+	irq_domain_free_fwnode(vmd->irq_domain->fwnode);
- 	irq_domain_remove(vmd->irq_domain);
- }
- 
--- 
-1.8.3.1
+> Signed-off-by: Keith Busch <keith.busch@intel.com>
+> ---
+>  drivers/pci/pci.h      |  4 +--
+>  drivers/pci/pcie/aer.c | 12 +++++---
+>  drivers/pci/pcie/dpc.c |  4 +--
+>  drivers/pci/pcie/err.c | 75 ++++----------------------------------------------
+>  4 files changed, 18 insertions(+), 77 deletions(-)
+> 
+> diff --git a/drivers/pci/pci.h b/drivers/pci/pci.h
+> index 21bfa30db18d..5a96978d3403 100644
+> --- a/drivers/pci/pci.h
+> +++ b/drivers/pci/pci.h
+> @@ -425,8 +425,8 @@ static inline int pci_dev_specific_disable_acs_redir(struct pci_dev *dev)
+>  #endif
+>  
+>  /* PCI error reporting and recovery */
+> -void pcie_do_fatal_recovery(struct pci_dev *dev, u32 service);
+> -void pcie_do_nonfatal_recovery(struct pci_dev *dev);
+> +void pcie_do_recovery(struct pci_dev *dev, enum pci_channel_state state,
+> +		      u32 service);
+>  
+>  bool pcie_wait_for_link(struct pci_dev *pdev, bool active);
+>  #ifdef CONFIG_PCIEASPM
+> diff --git a/drivers/pci/pcie/aer.c b/drivers/pci/pcie/aer.c
+> index b4d14acee66d..6b59a23568f8 100644
+> --- a/drivers/pci/pcie/aer.c
+> +++ b/drivers/pci/pcie/aer.c
+> @@ -1010,9 +1010,11 @@ static void handle_error_source(struct pci_dev *dev, struct aer_err_info *info)
+>  					info->status);
+>  		pci_aer_clear_device_status(dev);
+>  	} else if (info->severity == AER_NONFATAL)
+> -		pcie_do_nonfatal_recovery(dev);
+> +		pcie_do_recovery(dev, pci_channel_io_normal,
+> +				 PCIE_PORT_SERVICE_AER);
+>  	else if (info->severity == AER_FATAL)
+> -		pcie_do_fatal_recovery(dev, PCIE_PORT_SERVICE_AER);
+> +		pcie_do_recovery(dev, pci_channel_io_frozen,
+> +				 PCIE_PORT_SERVICE_AER);
+>  	pci_dev_put(dev);
+>  }
+>  
+> @@ -1048,9 +1050,11 @@ static void aer_recover_work_func(struct work_struct *work)
+>  		}
+>  		cper_print_aer(pdev, entry.severity, entry.regs);
+>  		if (entry.severity == AER_NONFATAL)
+> -			pcie_do_nonfatal_recovery(pdev);
+> +			pcie_do_recovery(pdev, pci_channel_io_normal,
+> +					 PCIE_PORT_SERVICE_AER);
+>  		else if (entry.severity == AER_FATAL)
+> -			pcie_do_fatal_recovery(pdev, PCIE_PORT_SERVICE_AER);
+> +			pcie_do_recovery(pdev, pci_channel_io_frozen,
+> +					 PCIE_PORT_SERVICE_AER);
+>  		pci_dev_put(pdev);
+>  	}
+>  }
+> diff --git a/drivers/pci/pcie/dpc.c b/drivers/pci/pcie/dpc.c
+> index aacfb50eccfc..1ed07db8ea7d 100644
+> --- a/drivers/pci/pcie/dpc.c
+> +++ b/drivers/pci/pcie/dpc.c
+> @@ -169,7 +169,7 @@ static irqreturn_t dpc_handler(int irq, void *context)
+>  
+>  	reason = (status & PCI_EXP_DPC_STATUS_TRIGGER_RSN) >> 1;
+>  	ext_reason = (status & PCI_EXP_DPC_STATUS_TRIGGER_RSN_EXT) >> 5;
+> -	dev_warn(dev, "DPC %s detected, remove downstream devices\n",
+> +	dev_warn(dev, "DPC %s detected\n",
+>  		 (reason == 0) ? "unmasked uncorrectable error" :
+>  		 (reason == 1) ? "ERR_NONFATAL" :
+>  		 (reason == 2) ? "ERR_FATAL" :
+> @@ -186,7 +186,7 @@ static irqreturn_t dpc_handler(int irq, void *context)
+>  	}
+>  
+>  	/* We configure DPC so it only triggers on ERR_FATAL */
+> -	pcie_do_fatal_recovery(pdev, PCIE_PORT_SERVICE_DPC);
+> +	pcie_do_recovery(pdev, pci_channel_io_frozen, PCIE_PORT_SERVICE_DPC);
+>  
+>  	return IRQ_HANDLED;
+>  }
+> diff --git a/drivers/pci/pcie/err.c b/drivers/pci/pcie/err.c
+> index 62ab665f0f03..644f3f725ef0 100644
+> --- a/drivers/pci/pcie/err.c
+> +++ b/drivers/pci/pcie/err.c
+> @@ -271,83 +271,20 @@ static pci_ers_result_t broadcast_error_message(struct pci_dev *dev,
+>  	return result_data.result;
+>  }
+>  
+> -/**
+> - * pcie_do_fatal_recovery - handle fatal error recovery process
+> - * @dev: pointer to a pci_dev data structure of agent detecting an error
+> - *
+> - * Invoked when an error is fatal. Once being invoked, removes the devices
+> - * beneath this AER agent, followed by reset link e.g. secondary bus reset
+> - * followed by re-enumeration of devices.
+> - */
+> -void pcie_do_fatal_recovery(struct pci_dev *dev, u32 service)
+> -{
+> -	struct pci_dev *udev;
+> -	struct pci_bus *parent;
+> -	struct pci_dev *pdev, *temp;
+> -	pci_ers_result_t result;
+> -
+> -	if (dev->hdr_type == PCI_HEADER_TYPE_BRIDGE)
+> -		udev = dev;
+> -	else
+> -		udev = dev->bus->self;
+> -
+> -	parent = udev->subordinate;
+> -	pci_walk_bus(parent, pci_dev_set_disconnected, NULL);
+> -
+> -	pci_lock_rescan_remove();
+> -	pci_dev_get(dev);
+> -	list_for_each_entry_safe_reverse(pdev, temp, &parent->devices,
+> -					 bus_list) {
+> -		pci_stop_and_remove_bus_device(pdev);
+> -	}
+> -
+> -	result = reset_link(udev, service);
+> -
+> -	if ((service == PCIE_PORT_SERVICE_AER) &&
+> -	    (dev->hdr_type == PCI_HEADER_TYPE_BRIDGE)) {
+> -		/*
+> -		 * If the error is reported by a bridge, we think this error
+> -		 * is related to the downstream link of the bridge, so we
+> -		 * do error recovery on all subordinates of the bridge instead
+> -		 * of the bridge and clear the error status of the bridge.
+> -		 */
+> -		pci_aer_clear_fatal_status(dev);
+> -		pci_aer_clear_device_status(dev);
+> -	}
+> -
+> -	if (result == PCI_ERS_RESULT_RECOVERED) {
+> -		if (pcie_wait_for_link(udev, true))
+> -			pci_rescan_bus(udev->bus);
+> -		pci_info(dev, "Device recovery from fatal error successful\n");
+> -	} else {
+> -		pci_uevent_ers(dev, PCI_ERS_RESULT_DISCONNECT);
+> -		pci_info(dev, "Device recovery from fatal error failed\n");
+> -	}
+> -
+> -	pci_dev_put(dev);
+> -	pci_unlock_rescan_remove();
+> -}
+> -
+> -/**
+> - * pcie_do_nonfatal_recovery - handle nonfatal error recovery process
+> - * @dev: pointer to a pci_dev data structure of agent detecting an error
+> - *
+> - * Invoked when an error is nonfatal/fatal. Once being invoked, broadcast
+> - * error detected message to all downstream drivers within a hierarchy in
+> - * question and return the returned code.
+> - */
+> -void pcie_do_nonfatal_recovery(struct pci_dev *dev)
+> +void pcie_do_recovery(struct pci_dev *dev, enum pci_channel_state state,
+> +		      u32 service)
+>  {
+>  	pci_ers_result_t status;
+> -	enum pci_channel_state state;
+> -
+> -	state = pci_channel_io_normal;
+>  
+>  	status = broadcast_error_message(dev,
+>  			state,
+>  			"error_detected",
+>  			report_error_detected);
+>  
+> +	if (state == pci_channel_io_frozen &&
+> +	    reset_link(dev, service) != PCI_ERS_RESULT_RECOVERED)
+> +		goto failed;
+> +
+>  	if (status == PCI_ERS_RESULT_CAN_RECOVER)
+>  		status = broadcast_error_message(dev,
+>  				state,
+> -- 
+> 2.14.4
+> 
