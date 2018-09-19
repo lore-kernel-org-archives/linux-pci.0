@@ -1,51 +1,54 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.29.99]:37702 "EHLO mail.kernel.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1726208AbeIDRtv (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Tue, 4 Sep 2018 13:49:51 -0400
-Date: Tue, 4 Sep 2018 08:24:42 -0500
-From: Bjorn Helgaas <helgaas@kernel.org>
-To: Punit Agrawal <punit.agrawal@arm.com>
-Cc: bhelgaas@google.com, linux-pci@vger.kernel.org, x86@kernel.org,
-        will.deacon@arm.com, linux-kernel@vger.kernel.org,
-        lorenzo.pieralisi@arm.com, linux-arm-kernel@lists.infradead.org
-Subject: Re: [PATCH 0/2] Drop node-local allocation during host controller
- initialisation
-Message-ID: <20180904132442.GB107892@bhelgaas-glaptop.roam.corp.google.com>
-References: <20180828150513.32458-1-punit.agrawal@arm.com>
+Received: from mail-wm1-f68.google.com ([209.85.128.68]:37035 "EHLO
+        mail-wm1-f68.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726044AbeISLO5 (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Wed, 19 Sep 2018 07:14:57 -0400
+From: Nathan Chancellor <natechancellor@gmail.com>
+To: Xiaowei Song <songxiaowei@hisilicon.com>,
+        Binghui Wang <wangbinghui@hisilicon.com>,
+        Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
+        Bjorn Helgaas <bhelgaas@google.com>
+Cc: linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
+        Nick Desaulniers <ndesaulniers@google.com>,
+        Nathan Chancellor <natechancellor@gmail.com>
+Subject: [PATCH] PCI: kirin: Fix section mismatch warning
+Date: Tue, 18 Sep 2018 22:38:29 -0700
+Message-Id: <20180919053829.4858-1-natechancellor@gmail.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20180828150513.32458-1-punit.agrawal@arm.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tue, Aug 28, 2018 at 04:05:11PM +0100, Punit Agrawal wrote:
-> Hi Bjorn,
-> 
-> As discussed before[0], here are a couple of patches to drop
-> node-local allocations during host contoller initialisation. This set
-> covers both arm64 and x86.
-> 
-> I'm posting early to give the patches time on the list as well in next
-> in case there are issues we've missed.
-> 
-> The patches are based on v4.19-rc1 and has been boot tested on arm64
-> and compile tested on x86.
-> 
-> Thanks,
-> Punit
-> 
-> [0] https://www.spinics.net/lists/arm-kernel/msg669746.html
-> 
-> Punit Agrawal (2):
->   arm64: PCI: Remove node-local allocations when initialising host
->     controller
->   x86/PCI: Remove node-local allocation when initialising host
->     controller
-> 
->  arch/arm64/kernel/pci.c | 5 ++---
->  arch/x86/pci/acpi.c     | 2 +-
->  2 files changed, 3 insertions(+), 4 deletions(-)
+WARNING: vmlinux.o(.text+0x4758cc): Section mismatch in reference from
+the function kirin_pcie_probe() to the function
+.init.text:kirin_add_pcie_port()
+The function kirin_pcie_probe() references
+the function __init kirin_add_pcie_port().
+This is often because kirin_pcie_probe lacks a __init
+annotation or the annotation of kirin_add_pcie_port is wrong.
 
-Applied with Will's ack on the arm64 patch to pci/enumeration for v4.20,
-thanks!
+Remove '__init' from kirin_add_pcie_port so there is no mismatch.
+
+Fixes: fc5165db245a ("PCI: kirin: Add HiSilicon Kirin SoC PCIe controller driver")
+Reported-by: Nick Desaulniers <ndesaulniers@google.com>
+Signed-off-by: Nathan Chancellor <natechancellor@gmail.com>
+---
+ drivers/pci/controller/dwc/pcie-kirin.c | 4 ++--
+ 1 file changed, 2 insertions(+), 2 deletions(-)
+
+diff --git a/drivers/pci/controller/dwc/pcie-kirin.c b/drivers/pci/controller/dwc/pcie-kirin.c
+index 5352e0c3be82..9b599296205d 100644
+--- a/drivers/pci/controller/dwc/pcie-kirin.c
++++ b/drivers/pci/controller/dwc/pcie-kirin.c
+@@ -467,8 +467,8 @@ static int kirin_pcie_add_msi(struct dw_pcie *pci,
+ 	return 0;
+ }
+ 
+-static int __init kirin_add_pcie_port(struct dw_pcie *pci,
+-				      struct platform_device *pdev)
++static int kirin_add_pcie_port(struct dw_pcie *pci,
++			       struct platform_device *pdev)
+ {
+ 	int ret;
+ 
+-- 
+2.19.0
