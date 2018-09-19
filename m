@@ -1,69 +1,150 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:45548 "EHLO mx1.redhat.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1727303AbeIEWIr (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Wed, 5 Sep 2018 18:08:47 -0400
-Date: Wed, 5 Sep 2018 11:37:35 -0600
-From: Alex Williamson <alex.williamson@redhat.com>
-To: Sinan Kaya <okaya@kernel.org>
-Cc: Bjorn Helgaas <bhelgaas@google.com>,
-        Dennis Dalessandro <dennis.dalessandro@intel.com>,
-        Linux PCI <linux-pci@vger.kernel.org>
-Subject: Re: RFC on PCI Device Lock
-Message-ID: <20180905113735.3139120c@t450s.home>
-In-Reply-To: <9e130f04-c570-b4ee-e040-b02c9ff80755@kernel.org>
-References: <87682473-6ffe-f7df-e8f8-3d00e8247621@kernel.org>
-        <20180904165202.4e5bb59d@t450s.home>
-        <17720f56-2caa-2d2e-b655-867debf55934@kernel.org>
-        <20180904204649.415491f8@t450s.home>
-        <571b8341-f6fd-d92a-7091-f4fb02a2aadf@kernel.org>
-        <7087eeca-e004-1b15-0ea6-103722399fd0@kernel.org>
-        <20180904221302.3031f952@t450s.home>
-        <9e130f04-c570-b4ee-e040-b02c9ff80755@kernel.org>
+Received: from mail-ed1-f65.google.com ([209.85.208.65]:38345 "EHLO
+        mail-ed1-f65.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1727676AbeITA1k (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Wed, 19 Sep 2018 20:27:40 -0400
+Date: Wed, 19 Sep 2018 11:48:21 -0700
+From: Nathan Chancellor <natechancellor@gmail.com>
+To: Nick Desaulniers <ndesaulniers@google.com>
+Cc: lorenzo.pieralisi@arm.com, songxiaowei@hisilicon.com,
+        wangbinghui@hisilicon.com, bhelgaas@google.com,
+        linux-pci@vger.kernel.org, LKML <linux-kernel@vger.kernel.org>,
+        Greg KH <gregkh@linuxfoundation.org>
+Subject: Re: [PATCH] PCI: kirin: Fix section mismatch warning
+Message-ID: <20180919184821.GA28548@flashbox>
+References: <20180919053829.4858-1-natechancellor@gmail.com>
+ <20180919102944.GA15014@e107981-ln.cambridge.arm.com>
+ <CAKwvOd=ughACX1DVPrk9N-qhe_ww4hCu3FkuDTVOq+MUEuGUbA@mail.gmail.com>
+ <20180919175849.GA8787@flashbox>
+ <CAKwvOdkQGHvE4JgfwZ2Hvk0HowBFvTBWwBSpkVtKX4U4iBEg=w@mail.gmail.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <CAKwvOdkQGHvE4JgfwZ2Hvk0HowBFvTBWwBSpkVtKX4U4iBEg=w@mail.gmail.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wed, 5 Sep 2018 07:26:52 -0700
-Sinan Kaya <okaya@kernel.org> wrote:
-
-> On 9/4/2018 9:13 PM, Alex Williamson wrote:
-> >> Let me know if I misunderstood you. I'll again wait for test feedback first.  
-> > Yep, that's essentially it.  I assume we'd want to trickle this through
-> > other interfaces and the hfi1 folks can look at whether they want to
-> > drop their custom config save/restore in favor of using
-> > pci_reset_function_locked(), which would do that for them.
-> > pci_reset_bus() should also allow the caller to set a mask so vfio
-> > doesn't worry about defaults changing in the core.  Thanks,  
-> The testing was successful.
+On Wed, Sep 19, 2018 at 11:35:45AM -0700, Nick Desaulniers wrote:
+> On Wed, Sep 19, 2018 at 10:58 AM Nathan Chancellor
+> <natechancellor@gmail.com> wrote:
+> >
+> > On Wed, Sep 19, 2018 at 10:35:55AM -0700, Nick Desaulniers wrote:
+> > > On Wed, Sep 19, 2018 at 3:29 AM Lorenzo Pieralisi
+> > > <lorenzo.pieralisi@arm.com> wrote:
+> > > >
+> > > > Xiaowei, Binghui,
+> > > >
+> > > > On Tue, Sep 18, 2018 at 10:38:29PM -0700, Nathan Chancellor wrote:
+> > > > > WARNING: vmlinux.o(.text+0x4758cc): Section mismatch in reference from
+> > > > > the function kirin_pcie_probe() to the function
+> > > > > .init.text:kirin_add_pcie_port()
+> > > > > The function kirin_pcie_probe() references
+> > > > > the function __init kirin_add_pcie_port().
+> > > > > This is often because kirin_pcie_probe lacks a __init
+> > > > > annotation or the annotation of kirin_add_pcie_port is wrong.
+> > > > >
+> > > > > Remove '__init' from kirin_add_pcie_port so there is no mismatch.
+> > > >
+> > > > I think that instead of removing __init section tag we should add
+> > > > it to kirin_pcie_probe().
+> > >
+> > > A bunch of these functions have a single call site, with a mix of __init:
+> > >
+> > > kirin_pcie_probe() ->
+> > >   kirin_add_pcie_port() ->  // __init
+> > >     kirin_pcie_add_msi()
+> > >
+> > > But it looks like probe functions should be marked init:
+> > > $ cd drivers; grep -r __init | grep probe
+> > >
+> > > seems to turn up quite a lot of *probe() functions that are marked __init.
+> > > https://www.tldp.org/LDP/lkmpg/2.4/html/x281.htm has more info, and
+> > > from reading that, it seems that it's a no-op for a module that's
+> > > marked loadable.
+> > >
+> > > So I agree; __init should be added to kirin_pcie_probe(), but also
+> > > kirin_pcie_add_msi().  That way if the module is statically compiled
+> > > into the kernel image, these functions with a single call site get
+> > > cleaned up after init.
+> > >
+> > > Nathan, would you mind sending a v2?
+> > >
+> >
+> > Hi Nick and Lorenzo,
+> >
+> > I had tested adding __init to both kirin_pcie_probe and
+> > kirin_pcie_add_msi but ran into this warning:
+> >
+> > WARNING: vmlinux.o(.data+0x68b78): Section mismatch in reference from
+> > the variable kirin_pcie_driver to the function
 > 
-> "--- Comment #15 from Dennis (dennis.dalessandro@intel.com) ---
-> I have tested the two new patches applied on top of 4.19-rc1 and they seem to
-> be working as well."
+> I think we want builtin_platform_driver_probe() here.
 > 
-> Before I post the code on the list, I want to make sure I capture your
-> request correctly.
+> Try removing the probe reference from the declaration of
+> kirin_pcie_driver, and then calling
 > 
-> You are asking for more APIs to have the mask feature. I can add
-> slot and bus reset options to pci_reset_bus().
+> builtin_platform_driver_probe(kirin_pcie_driver, kirin_pcie_probe);
 > 
-> If there are other functions that need mask feature, we can deal
-> with them later as I want to focus on the regression short term.
+> Does that fix the section mismatches, while keeping as much in __init
+> as possible?
 > 
-> Though, it would be good to enumerate the functions with needed masks
-> to start the conversation.
 
-Well, if __pci_reset_function_locked() has this option, would only make
-sense that these would as well:
+Hi Nick,
 
-pci_probe_reset_function()
-pci_reset_function()
-pci_reset_function_locked()
-pci_try_reset_function()
+Thank you for that suggestion, it worked. I will send a v2 for review
+shortly.
 
-Then I'd like to see the same sort of caller specification added to
-pci_reset_bus() so that vfio can specify whether it's expecting a sbr
-or slot reset.  Thanks,
+Nathan
 
-Alex
+> > .init.text:kirin_pcie_probe()
+> > The variable kirin_pcie_driver references
+> > the function __init kirin_pcie_probe()
+> >
+> > Doing a quick 'grep -r __init | grep platform_driver' doesn't show any
+> > 'static struct platform_driver' constructs marked as __init, leading me
+> > to believe this patch is the proper solution.
+> >
+> > I'm happy to hear otherwise, thank you both for the quick responses,
+> > Nathan
+> >
+> > > >
+> > > > Please let me know and ACK accordingly.
+> > > >
+> > > > Lorenzo
+> > > >
+> > > > > Fixes: fc5165db245a ("PCI: kirin: Add HiSilicon Kirin SoC PCIe controller driver")
+> > > > > Reported-by: Nick Desaulniers <ndesaulniers@google.com>
+> > > > > Signed-off-by: Nathan Chancellor <natechancellor@gmail.com>
+> > > > > ---
+> > > > >  drivers/pci/controller/dwc/pcie-kirin.c | 4 ++--
+> > > > >  1 file changed, 2 insertions(+), 2 deletions(-)
+> > > > >
+> > > > > diff --git a/drivers/pci/controller/dwc/pcie-kirin.c b/drivers/pci/controller/dwc/pcie-kirin.c
+> > > > > index 5352e0c3be82..9b599296205d 100644
+> > > > > --- a/drivers/pci/controller/dwc/pcie-kirin.c
+> > > > > +++ b/drivers/pci/controller/dwc/pcie-kirin.c
+> > > > > @@ -467,8 +467,8 @@ static int kirin_pcie_add_msi(struct dw_pcie *pci,
+> > > > >       return 0;
+> > > > >  }
+> > > > >
+> > > > > -static int __init kirin_add_pcie_port(struct dw_pcie *pci,
+> > > > > -                                   struct platform_device *pdev)
+> > > > > +static int kirin_add_pcie_port(struct dw_pcie *pci,
+> > > > > +                            struct platform_device *pdev)
+> > > > >  {
+> > > > >       int ret;
+> > > > >
+> > > > > --
+> > > > > 2.19.0
+> > > > >
+> > >
+> > >
+> > >
+> > > --
+> > > Thanks,
+> > > ~Nick Desaulniers
+> 
+> 
+> 
+> -- 
+> Thanks,
+> ~Nick Desaulniers
