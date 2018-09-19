@@ -1,56 +1,74 @@
-Return-Path: <linux-acpi-owner@vger.kernel.org>
-Date: Fri, 7 Sep 2018 16:45:46 -0600
-From: Keith Busch <keith.busch@intel.com>
-To: Mika Westerberg <mika.westerberg@linux.intel.com>
-Cc: Bjorn Helgaas <bhelgaas@google.com>,
-        "Rafael J. Wysocki" <rjw@rjwysocki.net>,
-        Len Brown <lenb@kernel.org>, Lukas Wunner <lukas@wunner.de>,
-        Ashok Raj <ashok.raj@intel.com>, Mario.Limonciello@dell.com,
-        Anthony Wong <anthony.wong@canonical.com>,
-        "D . J . Bernstein" <djb@cr.yp.to>,
-        Linus Walleij <linus.walleij@linaro.org>,
-        linux-pci@vger.kernel.org, linux-acpi@vger.kernel.org
-Subject: Re: [PATCH 04/10] PCI: pciehp: Do not handle events if interrupts
- are masked
-Message-ID: <20180907224546.GA1598@localhost.localdomain>
-References: <20180906155020.51700-1-mika.westerberg@linux.intel.com>
- <20180906155020.51700-5-mika.westerberg@linux.intel.com>
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Date: Wed, 19 Sep 2018 17:33:01 +0100
+From: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
+To: Rob Herring <robh@kernel.org>
+Subject: Re: [PATCH] PCI: remove unnecessary check of device_type == pci
+Message-ID: <20180919163301.GA21474@e107981-ln.cambridge.arm.com>
+References: <20180829183440.13601-1-robh@kernel.org>
+ <20180913145130.GA5756@e107981-ln.cambridge.arm.com>
+ <CAL_JsqKoOJigMkiWqoG77+nstr-6=qiAeTePZkSThcfbVAtEQQ@mail.gmail.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20180906155020.51700-5-mika.westerberg@linux.intel.com>
-Sender: linux-acpi-owner@vger.kernel.org
+In-Reply-To: <CAL_JsqKoOJigMkiWqoG77+nstr-6=qiAeTePZkSThcfbVAtEQQ@mail.gmail.com>
+List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
+List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
+List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
+List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
+List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
+Cc: linux-pci@vger.kernel.org,
+ Subrahmanya Lingappa <l.subrahmanya@mobiveil.co.in>,
+ Will Deacon <will.deacon@arm.com>,
+ "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+ Michal Simek <michal.simek@xilinx.com>, Alan Douglas <adouglas@cadence.com>,
+ Bjorn Helgaas <bhelgaas@google.com>,
+ "moderated list:ARM/FREESCALE IMX / MXC ARM ARCHITECTURE"
+ <linux-arm-kernel@lists.infradead.org>
+Content-Type: text/plain; charset="us-ascii"
+Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
+Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Thu, Sep 06, 2018 at 06:50:14PM +0300, Mika Westerberg wrote:
-> PCIe native hotplug shares MSI vector with native PME so the interrupt
-> handler might get called even the hotplug interrupt is masked. In that
-> case we should not handle any events because the interrupt was not meant
-> for us. Modify the PCIe hotplug interrupt handler to check this
-> accordingly and bail out if it finds out that the interrupt was not
-> about hotplug.
+On Tue, Sep 18, 2018 at 12:05:40PM -0700, Rob Herring wrote:
+> On Thu, Sep 13, 2018 at 7:51 AM Lorenzo Pieralisi
+> <lorenzo.pieralisi@arm.com> wrote:
+> >
+> > On Wed, Aug 29, 2018 at 01:34:40PM -0500, Rob Herring wrote:
+> > > PCI host drivers have already matched on compatible strings, so checking
+> > > device_type is redundant. Also, device_type is considered deprecated for
+> > > FDT though we've still been requiring it for PCI hosts as it is useful
+> > > for finding PCI buses.
+> >
+> > Hi Rob,
+> >
+> > I have no problem with the patch per-se, I can't parse though the second
+> > paragraph, in particular what you mean by "useful for finding PCI
+> > buses".
 > 
-> Signed-off-by: Mika Westerberg <mika.westerberg@linux.intel.com>
-> ---
->  drivers/pci/hotplug/pciehp_hpc.c | 6 ++++--
->  1 file changed, 4 insertions(+), 2 deletions(-)
+> Device_type is the only generic way we can identify PCI buses which is
+> useful for dtc for example to do PCI binding checks. Maybe we can use
+> the node name which is what I'm doing for cpu nodes, but we've been
+> less consistent about that for PCI.
 > 
-> diff --git a/drivers/pci/hotplug/pciehp_hpc.c b/drivers/pci/hotplug/pciehp_hpc.c
-> index 2249c4d06efd..19ed13d44b8f 100644
-> --- a/drivers/pci/hotplug/pciehp_hpc.c
-> +++ b/drivers/pci/hotplug/pciehp_hpc.c
-> @@ -533,9 +533,11 @@ static irqreturn_t pciehp_isr(int irq, void *dev_id)
->  	u16 status, events;
->  
->  	/*
-> -	 * Interrupts only occur in D3hot or shallower (PCIe r4.0, sec 6.7.3.4).
-> +	 * Interrupts only occur in D3hot or shallower and only if enabled
-> +	 * in the Slot Control register (PCIe r4.0, sec 6.7.3.4).
->  	 */
-> -	if (pdev->current_state == PCI_D3cold)
-> +	if (pdev->current_state == PCI_D3cold ||
-> +	    !(ctrl->slot_ctrl & PCI_EXP_SLTCTL_HPIE))
->  		return IRQ_NONE;
->  
->  	/*
+> >
+> > What about the corresponding dts files ? I suspect we had better leave
+> > them alone lest we can trigger regressions with new dts and older
+> > kernels.
+> 
+> Yes. it will take some time before we can remove from dts files. Or
+> maybe only new ones change.
 
-Isn't this going to break pciehp_poll_mode?
+OK, thanks. What about PCI host controllers bindings ? I assume we leave
+the bindings (that enforce device_type) unchanged too.
+
+If Will and Michal have no objections I will queue this patch as-is
+for v4.20.
+
+Thanks,
+Lorenzo
+
+_______________________________________________
+linux-arm-kernel mailing list
+linux-arm-kernel@lists.infradead.org
+http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
