@@ -1,202 +1,254 @@
-Return-Path: <SRS0=Zo3Z=LW=wunner.de=lukas@kernel.org>
-Return-Path: <SRS0=Zo3Z=LW=wunner.de=lukas@kernel.org>
-Message-Id: <025747a4036f5eae9333889ac6721018eec25d78.1536341821.git.lukas@wunner.de>
-In-Reply-To: <cover.1536341821.git.lukas@wunner.de>
-References: <cover.1536341821.git.lukas@wunner.de>
-From: Lukas Wunner <lukas@wunner.de>
-Date: Sat, 8 Sep 2018 09:59:01 +0200
-Subject: [PATCH v2 1/8] PCI: pciehp: Tolerate Presence Detect hardwired to
- zero
-To: Bjorn Helgaas <helgaas@kernel.org>, linux-pci@vger.kernel.org
-Cc: Sinan Kaya <okaya@kernel.org>, Mika Westerberg <mika.westerberg@linux.intel.com>, Keith Busch <keith.busch@intel.com>, David Yang <mmyangfl@gmail.com>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail-qt0-f194.google.com ([209.85.216.194]:42321 "EHLO
+        mail-qt0-f194.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1728096AbeISULG (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Wed, 19 Sep 2018 16:11:06 -0400
+From: Jim Quinlan <jim2101024@gmail.com>
+To: linux-kernel@vger.kernel.org
+Cc: Florian Fainelli <f.fainelli@gmail.com>,
+        Brian Norris <computersforpeace@gmail.com>,
+        Gregory Fong <gregory.0xf0@gmail.com>,
+        bcm-kernel-feedback-list@broadcom.com,
+        Doug Berger <opendmb@gmail.com>,
+        Markus Mayer <mmayer@broadcom.com>,
+        Justin Chen <justinpopo6@gmail.com>,
+        linux-arm-kernel@lists.infradead.org, linux-pci@vger.kernel.org,
+        Christoph Hellwig <hch@lst.de>
+Subject: [PATCH v5 01/12] soc: bcm: brcmstb: add memory API
+Date: Wed, 19 Sep 2018 10:31:56 -0400
+Message-Id: <1537367527-20773-2-git-send-email-jim2101024@gmail.com>
+In-Reply-To: <1537367527-20773-1-git-send-email-jim2101024@gmail.com>
+References: <1537367527-20773-1-git-send-email-jim2101024@gmail.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-The WiGig Bus Extension (WBE) specification allows tunneling PCIe over
-IEEE 802.11.  A product implementing this spec is the wil6210 from
-Wilocity (now part of Qualcomm Atheros).  It integrates a PCIe switch
-with a wireless network adapter:
+From: Florian Fainelli <f.fainelli@gmail.com>
 
-00.0-+              [1ae9:0101]  Upstream Port
-     +-00.0-+       [1ae9:0200]  Downstream Port
-     |      +-00.0  [168c:0034]  Atheros AR9462 Wireless Network Adapter
-     +-02.0         [1ae9:0201]  Downstream Port
-     +-03.0         [1ae9:0201]  Downstream Port
+This commit adds a memory API suitable for ascertaining the sizes of
+each of the N memory controllers in a Broadcom STB chip.  Its first
+user will be the Broadcom STB PCIe root complex driver, which needs
+to know these sizes to properly set up DMA mappings for inbound
+regions.
 
-Wirelessly attached devices presumably appear below the hotplug ports
-with device ID [1ae9:0201].  Oddly, the Downstream Port [1ae9:0200]
-leading to the wireless network adapter is likewise Hotplug Capable,
-but has its Presence Detect State bit hardwired to zero.  Even if the
-Link Active bit is set, Presence Detect is zero, so this cannot be
-caused by in-band presence detection but only by broken hardware.
+We cannot use memblock here or anything like what Linux provides
+because it collapses adjacent regions within a larger block, and here
+we actually need per-memory controller addresses and sizes, which is
+why we resort to manual DT parsing.
 
-pciehp assumes an empty slot if Presence Detect State is zero,
-regardless of Link Active being one.  Consequently, up until v4.18 it
-removes the wireless network adapter in pciehp_resume().  From v4.19 it
-already does so in pciehp_probe().
-
-Be lenient towards broken hardware and assume the slot is occupied if
-Link Active is set:  Introduce pciehp_card_present_or_link_active()
-and use it in lieu of pciehp_get_adapter_status() everywhere, except
-in pciehp_handle_presence_or_link_change() whose log messages depend
-on which of Presence Detect State or Link Active is set.
-
-Remove the Presence Detect State check from __pciehp_enable_slot()
-because it is only called if either of Presence Detect State or Link
-Active is set.
-
-Caution: There is a possibility that broken hardware exists which has
-working Presence Detect but hardwires Link Active to one.  On such
-hardware the slot will now incorrectly be considered always occupied.
-If such hardware is discovered, this commit can be rolled back and a
-quirk can be added which sets is_hotplug_bridge = 0 for [1ae9:0200].
-
-Link: https://bugzilla.kernel.org/show_bug.cgi?id=200839
-Reported-and-tested-by: David Yang <mmyangfl@gmail.com>
-Signed-off-by: Lukas Wunner <lukas@wunner.de>
-Cc: Rajat Jain <rajatja@google.com>
-Cc: Ashok Raj <ashok.raj@intel.com>
+Signed-off-by: Florian Fainelli <f.fainelli@gmail.com>
 ---
- drivers/pci/hotplug/pciehp.h      |  3 ++-
- drivers/pci/hotplug/pciehp_core.c |  6 +++---
- drivers/pci/hotplug/pciehp_ctrl.c | 10 ++--------
- drivers/pci/hotplug/pciehp_hpc.c  | 25 +++++++++++++++++++------
- 4 files changed, 26 insertions(+), 18 deletions(-)
+ drivers/soc/bcm/brcmstb/Makefile |   2 +-
+ drivers/soc/bcm/brcmstb/memory.c | 158 +++++++++++++++++++++++++++++++++++++++
+ include/soc/brcmstb/memory_api.h |  26 +++++++
+ 3 files changed, 185 insertions(+), 1 deletion(-)
+ create mode 100644 drivers/soc/bcm/brcmstb/memory.c
+ create mode 100644 include/soc/brcmstb/memory_api.h
 
-diff --git a/drivers/pci/hotplug/pciehp.h b/drivers/pci/hotplug/pciehp.h
-index 8131c08b21e5..b9204ef3ecd7 100644
---- a/drivers/pci/hotplug/pciehp.h
-+++ b/drivers/pci/hotplug/pciehp.h
-@@ -190,11 +190,12 @@ void pciehp_get_power_status(struct slot *slot, u8 *status);
- 
- void pciehp_set_attention_status(struct slot *slot, u8 status);
- void pciehp_get_latch_status(struct slot *slot, u8 *status);
--void pciehp_get_adapter_status(struct slot *slot, u8 *status);
- int pciehp_query_power_fault(struct slot *slot);
- void pciehp_green_led_on(struct slot *slot);
- void pciehp_green_led_off(struct slot *slot);
- void pciehp_green_led_blink(struct slot *slot);
-+bool pciehp_card_present(struct controller *ctrl);
-+bool pciehp_card_present_or_link_active(struct controller *ctrl);
- int pciehp_check_link_status(struct controller *ctrl);
- bool pciehp_check_link_active(struct controller *ctrl);
- void pciehp_release_ctrl(struct controller *ctrl);
-diff --git a/drivers/pci/hotplug/pciehp_core.c b/drivers/pci/hotplug/pciehp_core.c
-index ccaf01e6eced..d24875102b1f 100644
---- a/drivers/pci/hotplug/pciehp_core.c
-+++ b/drivers/pci/hotplug/pciehp_core.c
-@@ -158,7 +158,7 @@ static int get_adapter_status(struct hotplug_slot *hotplug_slot, u8 *value)
- 	struct pci_dev *pdev = slot->ctrl->pcie->port;
- 
- 	pci_config_pm_runtime_get(pdev);
--	pciehp_get_adapter_status(slot, value);
-+	*value = pciehp_card_present_or_link_active(slot->ctrl);
- 	pci_config_pm_runtime_put(pdev);
- 	return 0;
- }
-@@ -176,12 +176,12 @@ static int get_adapter_status(struct hotplug_slot *hotplug_slot, u8 *value)
- static void pciehp_check_presence(struct controller *ctrl)
- {
- 	struct slot *slot = ctrl->slot;
--	u8 occupied;
-+	bool occupied;
- 
- 	down_read(&ctrl->reset_lock);
- 	mutex_lock(&slot->lock);
- 
--	pciehp_get_adapter_status(slot, &occupied);
-+	occupied = pciehp_card_present_or_link_active(ctrl);
- 	if ((occupied && (slot->state == OFF_STATE ||
- 			  slot->state == BLINKINGON_STATE)) ||
- 	    (!occupied && (slot->state == ON_STATE ||
-diff --git a/drivers/pci/hotplug/pciehp_ctrl.c b/drivers/pci/hotplug/pciehp_ctrl.c
-index c4d0f902f1d2..1fda6ea96fdc 100644
---- a/drivers/pci/hotplug/pciehp_ctrl.c
-+++ b/drivers/pci/hotplug/pciehp_ctrl.c
-@@ -223,8 +223,7 @@ void pciehp_handle_disable_request(struct slot *slot)
- void pciehp_handle_presence_or_link_change(struct slot *slot, u32 events)
- {
- 	struct controller *ctrl = slot->ctrl;
--	bool link_active;
--	u8 present;
-+	bool present, link_active;
- 
- 	/*
- 	 * If the slot is on and presence or link has changed, turn it off.
-@@ -253,7 +252,7 @@ void pciehp_handle_presence_or_link_change(struct slot *slot, u32 events)
- 
- 	/* Turn the slot on if it's occupied or link is up */
- 	mutex_lock(&slot->lock);
--	pciehp_get_adapter_status(slot, &present);
-+	present = pciehp_card_present(ctrl);
- 	link_active = pciehp_check_link_active(ctrl);
- 	if (!present && !link_active) {
- 		mutex_unlock(&slot->lock);
-@@ -286,11 +285,6 @@ static int __pciehp_enable_slot(struct slot *p_slot)
- 	u8 getstatus = 0;
- 	struct controller *ctrl = p_slot->ctrl;
- 
--	pciehp_get_adapter_status(p_slot, &getstatus);
--	if (!getstatus) {
--		ctrl_info(ctrl, "Slot(%s): No adapter\n", slot_name(p_slot));
--		return -ENODEV;
--	}
- 	if (MRL_SENS(p_slot->ctrl)) {
- 		pciehp_get_latch_status(p_slot, &getstatus);
- 		if (getstatus) {
-diff --git a/drivers/pci/hotplug/pciehp_hpc.c b/drivers/pci/hotplug/pciehp_hpc.c
-index 017161c03a4d..e5fed74c392a 100644
---- a/drivers/pci/hotplug/pciehp_hpc.c
-+++ b/drivers/pci/hotplug/pciehp_hpc.c
-@@ -389,13 +389,27 @@ void pciehp_get_latch_status(struct slot *slot, u8 *status)
- 	*status = !!(slot_status & PCI_EXP_SLTSTA_MRLSS);
- }
- 
--void pciehp_get_adapter_status(struct slot *slot, u8 *status)
-+bool pciehp_card_present(struct controller *ctrl)
- {
--	struct pci_dev *pdev = ctrl_dev(slot->ctrl);
-+	struct pci_dev *pdev = ctrl_dev(ctrl);
- 	u16 slot_status;
- 
- 	pcie_capability_read_word(pdev, PCI_EXP_SLTSTA, &slot_status);
--	*status = !!(slot_status & PCI_EXP_SLTSTA_PDS);
-+	return slot_status & PCI_EXP_SLTSTA_PDS;
+diff --git a/drivers/soc/bcm/brcmstb/Makefile b/drivers/soc/bcm/brcmstb/Makefile
+index 01687c2..e4ccd3a 100644
+--- a/drivers/soc/bcm/brcmstb/Makefile
++++ b/drivers/soc/bcm/brcmstb/Makefile
+@@ -1,2 +1,2 @@
+-obj-y				+= common.o biuctrl.o
++obj-y				+= common.o biuctrl.o memory.o
+ obj-$(CONFIG_BRCMSTB_PM)	+= pm/
+diff --git a/drivers/soc/bcm/brcmstb/memory.c b/drivers/soc/bcm/brcmstb/memory.c
+new file mode 100644
+index 0000000..254783d
+--- /dev/null
++++ b/drivers/soc/bcm/brcmstb/memory.c
+@@ -0,0 +1,158 @@
++// SPDX-License-Identifier: GPL-2.0
++/* Copyright © 2015-2017 Broadcom */
++
++#include <linux/device.h>
++#include <linux/io.h>
++#include <linux/libfdt.h>
++#include <linux/of_address.h>
++#include <linux/of_fdt.h>
++#include <linux/sizes.h>
++#include <soc/brcmstb/memory_api.h>
++
++/* Macro to help extract property data */
++#define DT_PROP_DATA_TO_U32(b, offs) (fdt32_to_cpu(*(u32 *)(b + offs)))
++
++/* Constants used when retrieving memc info */
++#define NUM_BUS_RANGES 10
++#define BUS_RANGE_ULIMIT_SHIFT 4
++#define BUS_RANGE_LLIMIT_SHIFT 4
++#define BUS_RANGE_PA_SHIFT 12
++
++enum {
++	BUSNUM_MCP0 = 0x4,
++	BUSNUM_MCP1 = 0x5,
++	BUSNUM_MCP2 = 0x6,
++};
++
++/*
++ * If the DT nodes are handy, determine which MEMC holds the specified
++ * physical address.
++ */
++#ifdef CONFIG_ARCH_BRCMSTB
++int __brcmstb_memory_phys_addr_to_memc(phys_addr_t pa, void __iomem *base)
++{
++	int memc = -1;
++	int i;
++
++	for (i = 0; i < NUM_BUS_RANGES; i++, base += 8) {
++		const u64 ulimit_raw = readl(base);
++		const u64 llimit_raw = readl(base + 4);
++		const u64 ulimit =
++			((ulimit_raw >> BUS_RANGE_ULIMIT_SHIFT)
++			 << BUS_RANGE_PA_SHIFT) | 0xfff;
++		const u64 llimit = (llimit_raw >> BUS_RANGE_LLIMIT_SHIFT)
++				   << BUS_RANGE_PA_SHIFT;
++		const u32 busnum = (u32)(ulimit_raw & 0xf);
++
++		if (pa >= llimit && pa <= ulimit) {
++			if (busnum >= BUSNUM_MCP0 && busnum <= BUSNUM_MCP2) {
++				memc = busnum - BUSNUM_MCP0;
++				break;
++			}
++		}
++	}
++
++	return memc;
 +}
 +
-+/**
-+ * pciehp_card_present_or_link_active() - whether given slot is occupied
-+ * @ctrl: PCIe hotplug controller
-+ *
-+ * Unlike pciehp_card_present(), which determines presence solely from the
-+ * Presence Detect State bit, this helper also returns true if the Link Active
-+ * bit is set.  This is a concession to broken hotplug ports which hardwire
-+ * Presence Detect State to zero, such as Wilocity's [1ae9:0200].
-+ */
-+bool pciehp_card_present_or_link_active(struct controller *ctrl)
++int brcmstb_memory_phys_addr_to_memc(phys_addr_t pa)
 +{
-+	return pciehp_card_present(ctrl) || pciehp_check_link_active(ctrl);
- }
- 
- int pciehp_query_power_fault(struct slot *slot)
-@@ -858,7 +872,7 @@ struct controller *pcie_init(struct pcie_device *dev)
- {
- 	struct controller *ctrl;
- 	u32 slot_cap, link_cap;
--	u8 occupied, poweron;
-+	u8 poweron;
- 	struct pci_dev *pdev = dev->port;
- 
- 	ctrl = kzalloc(sizeof(*ctrl), GFP_KERNEL);
-@@ -918,9 +932,8 @@ struct controller *pcie_init(struct pcie_device *dev)
- 	 * requested yet, so avoid triggering a notification with this command.
- 	 */
- 	if (POWER_CTRL(ctrl)) {
--		pciehp_get_adapter_status(ctrl->slot, &occupied);
- 		pciehp_get_power_status(ctrl->slot, &poweron);
--		if (!occupied && poweron) {
-+		if (!pciehp_card_present_or_link_active(ctrl) && poweron) {
- 			pcie_disable_notification(ctrl);
- 			pciehp_power_off_slot(ctrl->slot);
- 		}
++	int memc = -1;
++	struct device_node *np;
++	void __iomem *cpubiuctrl;
++
++	np = of_find_compatible_node(NULL, NULL, "brcm,brcmstb-cpu-biu-ctrl");
++	if (!np)
++		return memc;
++
++	cpubiuctrl = of_iomap(np, 0);
++	if (!cpubiuctrl)
++		goto cleanup;
++
++	memc = __brcmstb_memory_phys_addr_to_memc(pa, cpubiuctrl);
++	iounmap(cpubiuctrl);
++
++cleanup:
++	of_node_put(np);
++
++	return memc;
++}
++
++#elif defined(CONFIG_MIPS)
++int brcmstb_memory_phys_addr_to_memc(phys_addr_t pa)
++{
++	/* The logic here is fairly simple and hardcoded: if pa <= 0x5000_0000,
++	 * then this is MEMC0, else MEMC1.
++	 *
++	 * For systems with 2GB on MEMC0, MEMC1 starts at 9000_0000, with 1GB
++	 * on MEMC0, MEMC1 starts at 6000_0000.
++	 */
++	if (pa >= 0x50000000ULL)
++		return 1;
++	else
++		return 0;
++}
++#endif
++
++u64 brcmstb_memory_memc_size(int memc)
++{
++	const void *fdt = initial_boot_params;
++	const int mem_offset = fdt_path_offset(fdt, "/memory");
++	int addr_cells = 1, size_cells = 1;
++	const struct fdt_property *prop;
++	int proplen, cellslen;
++	u64 memc_size = 0;
++	int i;
++
++	/* Get root size and address cells if specified */
++	prop = fdt_get_property(fdt, 0, "#size-cells", &proplen);
++	if (prop)
++		size_cells = DT_PROP_DATA_TO_U32(prop->data, 0);
++
++	prop = fdt_get_property(fdt, 0, "#address-cells", &proplen);
++	if (prop)
++		addr_cells = DT_PROP_DATA_TO_U32(prop->data, 0);
++
++	if (mem_offset < 0)
++		return -1;
++
++	prop = fdt_get_property(fdt, mem_offset, "reg", &proplen);
++	cellslen = (int)sizeof(u32) * (addr_cells + size_cells);
++	if ((proplen % cellslen) != 0)
++		return -1;
++
++	for (i = 0; i < proplen / cellslen; ++i) {
++		u64 addr = 0;
++		u64 size = 0;
++		int memc_idx;
++		int j;
++
++		for (j = 0; j < addr_cells; ++j) {
++			int offset = (cellslen * i) + (sizeof(u32) * j);
++
++			addr |= (u64)DT_PROP_DATA_TO_U32(prop->data, offset) <<
++				((addr_cells - j - 1) * 32);
++		}
++		for (j = 0; j < size_cells; ++j) {
++			int offset = (cellslen * i) +
++				(sizeof(u32) * (j + addr_cells));
++
++			size |= (u64)DT_PROP_DATA_TO_U32(prop->data, offset) <<
++				((size_cells - j - 1) * 32);
++		}
++
++		if ((phys_addr_t)addr != addr) {
++			pr_err("phys_addr_t is smaller than provided address 0x%llx!\n",
++			       addr);
++			return -1;
++		}
++
++		memc_idx = brcmstb_memory_phys_addr_to_memc((phys_addr_t)addr);
++		if (memc_idx == memc)
++			memc_size += size;
++	}
++
++	return memc_size;
++}
++EXPORT_SYMBOL_GPL(brcmstb_memory_memc_size);
++
+diff --git a/include/soc/brcmstb/memory_api.h b/include/soc/brcmstb/memory_api.h
+new file mode 100644
+index 0000000..6546845
+--- /dev/null
++++ b/include/soc/brcmstb/memory_api.h
+@@ -0,0 +1,26 @@
++/* SPDX-License-Identifier: GPL-2.0 */
++#ifndef __MEMORY_API_H
++#define __MEMORY_API_H
++
++/*
++ * Bus Interface Unit control register setup, must happen early during boot,
++ * before SMP is brought up, called by machine entry point.
++ */
++void brcmstb_biuctrl_init(void);
++
++#ifdef CONFIG_SOC_BRCMSTB
++int brcmstb_memory_phys_addr_to_memc(phys_addr_t pa);
++u64 brcmstb_memory_memc_size(int memc);
++#else
++static inline int brcmstb_memory_phys_addr_to_memc(phys_addr_t pa)
++{
++	return -EINVAL;
++}
++
++static inline u64 brcmstb_memory_memc_size(int memc)
++{
++	return -1;
++}
++#endif
++
++#endif /* __MEMORY_API_H */
 -- 
-2.18.0
+1.9.0.138.g2de3478
