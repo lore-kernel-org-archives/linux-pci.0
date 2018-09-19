@@ -1,131 +1,60 @@
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Message-ID: <1536313410.31406.30.camel@mhfsdcap03>
-Subject: Re: [PATCH v3 3/4] PCI: mediatek: Add system pm support for MT2712
- and MT7622
-From: Honghui Zhang <honghui.zhang@mediatek.com>
-To: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>, <rjw@rjwysocki.net>,
- <khilman@kernel.org>, <ulf.hansson@linaro.org>
-Date: Fri, 7 Sep 2018 17:43:30 +0800
-In-Reply-To: <20180718094924.GA21463@red-moon>
-References: <1530518264-6125-1-git-send-email-honghui.zhang@mediatek.com>
- <1530518264-6125-4-git-send-email-honghui.zhang@mediatek.com>
- <20180717171543.GA20991@red-moon> <1531893761.31406.15.camel@mhfsdcap03>
- <20180718094924.GA21463@red-moon>
+Return-Path: <SRS0=O3Eo=MB=hygon.cn=puwen@kernel.org>
+Return-Path: <SRS0=O3Eo=MB=hygon.cn=puwen@kernel.org>
+From: Pu Wen <puwen@hygon.cn>
+Subject: Re: [LKP] [x86/pci] 7ffb31888c: PANIC:early_exception
+To: kernel test robot <rong.a.chen@intel.com>
+Cc: bp@alien8.de, tglx@linutronix.de, mingo@redhat.com, hpa@zytor.com,
+ x86@kernel.org, thomas.lendacky@amd.com, helgaas@kernel.org,
+ linux-kernel@vger.kernel.org, linux-arch@vger.kernel.org,
+ linux-pci@vger.kernel.org, lkp@01.org
+References: <20180919031923.GC8820@shao2-debian>
+Message-ID: <4f5166f8-97b8-a58f-3e5d-19d1751a4601@hygon.cn>
+Date: Wed, 19 Sep 2018 21:53:45 +0800
 MIME-Version: 1.0
-List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
-List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
-List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
-List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
-List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
-Cc: youlin.pei@mediatek.com, devicetree@vger.kernel.org,
- hongkun.cao@mediatek.com, ryder.lee@mediatek.com, weiyi.lu@mediatek.com,
- khilman@kernel.org, marc.zyngier@arm.com, linux-pci@vger.kernel.org,
- sean.wang@mediatek.com, rjw@rjwysocki.net, linux-kernel@vger.kernel.org,
- yt.shen@mediatek.com, matthias.bgg@gmail.com,
- linux-mediatek@lists.infradead.org, yong.wu@mediatek.com, bhelgaas@google.com,
- yingjoe.chen@mediatek.com, ulf.hansson@linaro.org, eddie.huang@mediatek.com,
- chen.zhong@mediatek.com, linux-arm-kernel@lists.infradead.org
-Content-Type: text/plain; charset="us-ascii"
-Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
-Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
+In-Reply-To: <20180919031923.GC8820@shao2-debian>
+Content-Type: text/plain; charset=windows-1252
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wed, 2018-07-18 at 10:49 +0100, Lorenzo Pieralisi wrote:
-> On Wed, Jul 18, 2018 at 02:02:41PM +0800, Honghui Zhang wrote:
+On 2018/9/19 11:19, kernel test robot wrote:
+> [    0.800215] AGP: No AGP bridge found
+> PANIC: early exception 0xe3 IP 10:ffffffff8294623f error 0 cr2 0x0
+> [    0.815262] CPU: 0 PID: 0 Comm: swapper Not tainted 4.19.0-rc2-00018-g7ffb318 #1
+> [    0.826860] Hardware name: QEMU Standard PC (i440FX + PIIX, 1996), BIOS 1.10.2-1 04/01/2014
+> [    0.839894] RIP: 0010:early_is_amd_nb+0x30/0x4b
+> [    0.846986] Code: 15 07 3e c8 ff 0f b7 cf 48 c7 c0 c0 6a 01 82 80 fa 02 74 13 80 fa 09 48 c7 c0 20 69 01 82 ba 00 00 00 00 48 0f 45 c2 c1 ef 10 <8b> 10 85 d2 74 0f 39 ca 75 05 39 78 04 74 09 48 83 c0 20 eb eb 31
+> [    0.876321] RSP: 0000:ffffffff82403e38 EFLAGS: 00010017 ORIG_RAX: 0000000000000000
+> [    0.888131] RAX: 0000000000000000 RBX: 0000000000000000 RCX: 000000000000ffff
+> [    0.899187] RDX: 0000000000000000 RSI: 000000000000c000 RDI: 000000000000ffff
+> [    0.910233] RBP: 0000000000000018 R08: 0000000000000002 R09: 0000000000000000
+> [    0.921388] R10: ffffffff829ecc40 R11: ffffffff82aeed87 R12: 0000000000000000
+> [    0.932476] R13: 0000000000000000 R14: 0000000000000000 R15: 0000000000000000
+> [    0.943658] FS:  0000000000000000(0000) GS:ffffffff82909000(0000) knlGS:0000000000000000
+> [    0.956271] CS:  0010 DS: 0000 ES: 0000 CR0: 0000000080050033
+> [    0.965216] CR2: 0000000000000000 CR3: 00000000029a2000 CR4: 00000000000006a0
+> [    0.976358] Call Trace:
+> [    0.980238]  ? early_gart_iommu_check+0xef/0x2c5
+> [    0.987493]  ? setup_arch+0x4fa/0xc67
+> [    0.993231]  ? printk+0x52/0x6e
+> [    0.998157]  ? start_kernel+0x6e/0x4dc
+> [    1.004044]  ? load_ucode_bsp+0x42/0x12e
+> [    1.010145]  ? secondary_startup_64+0xa4/0xb0
+> BUG: kernel hang in boot stage
 > 
-> <snip>
+> Elapsed time: 700
 > 
-> > > > +static int __maybe_unused mtk_pcie_resume_noirq(struct device *dev)
-> > > > +{
-> > > > +	struct mtk_pcie *pcie = dev_get_drvdata(dev);
-> > > > +	const struct mtk_pcie_soc *soc = pcie->soc;
-> > > > +	struct mtk_pcie_port *port, *tmp;
-> > > > +
-> > > > +	if (!soc->pm_support)
-> > > > +		return 0;
-> > > > +
-> > > > +	if (list_empty(&pcie->ports))
-> > > > +		return 0;
-> > > > +
-> > > > +	if (dev->pm_domain) {
-> > > > +		pm_runtime_enable(dev);
-> > > > +		pm_runtime_get_sync(dev);
-> > > > +	}
-> > > 
-> > > Are these runtime PM calls needed/abused here ?
-> > > 
-> > > Mind explaining the logic ?
-> > > 
-> > > There is certainly an asymmetry with the suspend callback which made me
-> > > suspicious, I am pretty certain Rafael/Kevin/Ulf can help me clarify so
-> > > that we can make progress with this patch.
-> > > 
-> > > Lorenzo
-> > > 
-> > Hi Lorenzo, thanks for your comments.
-> > Sorry I don't get you.
-> > I believe that in suspend callbacks the pm_runtime_put_sync and
-> > pm_runtime_disable should be called to gated the CMOS for this module,
-> > while the pm_rumtime_enable and pm_rumtime_get_sync should be called
-> > in resume callback.
-
-> That's why I CC'ed Rafael, Kevin and Ulf, to answer this question
-> thoroughly, I am not sure it is needed and that's the right way
-> of doing it in system suspend callbacks.
+> #!/bin/bash
 > 
-
-hi, Rafael, Kevin and Ulf,
-
-after reading of the power related documents in Documents/power/, I'm
-still confused whether the runtime_pm callbacks should be called in
-system suspend callbacks.
-
-I believe that system suspend does not care about the device's CMOS
-status. And the device's CMOS status is controlled by runtime pm.
-That why I gated the CMOS through runtime pm in the system suspend
-callbacks.
-
-But I checked all existing system suspend callbacks and found there's no
-runtime pm was executed in system suspend callbacks. Does that means
-when system suspend, the system suspend framework does not care about
-the power consume? Or does it gated each device's CMOS in somewhere
-else?
-
-Or should I just remove the runtime pm callbacks in the system suspend
-flow?
-
-Could someone kindly give me some comments?
-
-Thanks in advance.
-
-> > That's exactly this patch doing.
-> > But the pm_rumtime_put_sync and pm_runtime_disable functions was wrapped
-> > in the mtk_pcie_subsys_powerdown.
 > 
-> Ah, sorry, I missed that.
 > 
-> > I did not call mtk_pcie_subsys_powerup since it does not just wrapped
-> > pm_rumtime related functions but also do the platform_resource_get,
-> > devm_ioremap, and free_ck clock get which I do not needed in resume
-> > callback.
-> > 
-> > Do you think it will be much clear if I abstract the
-> > platform_resource_get, devm_ioremap functions from
-> > mtk_pcie_subsys_powerup and put it to a new functions like
-> > mtk_pcie_subsys_resource_get, and then we may call the
-> > mtk_pcie_subsys_powerup in the resume function?
+> To reproduce:
 > 
-> I think so but let's wait first for feedback on whether those
-> runtime PM calls are needed in the first place.
-> 
-> Lorenzo
+>          git clone https://github.com/intel/lkp-tests.git
+>          cd lkp-tests
+>          bin/lkp qemu -k <bzImage> job-script # job-script is attached in this email
 
+I cannot reproduce this panic on Hygon Dhyana platform. I tired lkp-tests
+both in Ubuntu 16.04 (with gcc-5) and Ubuntu 18.04 (with gcc-7).
+What kind of host do you use to run the qemu? A Intel one or AMD one?
 
-
-_______________________________________________
-linux-arm-kernel mailing list
-linux-arm-kernel@lists.infradead.org
-http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
+Thanks,
+Pu Wen
