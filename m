@@ -1,73 +1,65 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from avon.wwwdotorg.org ([104.237.132.123]:33108 "EHLO
-        avon.wwwdotorg.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1730033AbeIRXtx (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Tue, 18 Sep 2018 19:49:53 -0400
-Subject: Re: Explicit IOVA management from a PCIe endpoint driver
-To: Robin Murphy <robin.murphy@arm.com>
-Cc: Christoph Hellwig <hch@lst.de>,
-        Marek Szyprowski <m.szyprowski@samsung.com>,
-        Joerg Roedel <joro@8bytes.org>,
-        Kishon Vijay Abraham I <kishon@ti.com>,
-        Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
-        linux-pci@vger.kernel.org, Bjorn Helgaas <bhelgaas@google.com>,
-        Vidya Sagar <vidyas@nvidia.com>,
-        "iommu@lists.linux-foundation.org" <iommu@lists.linux-foundation.org>,
-        Jingoo Han <jingoohan1@gmail.com>,
-        Joao Pinto <Joao.Pinto@synopsys.com>
-References: <3e9950c5-4986-6b0d-74c8-97014530c132@wwwdotorg.org>
- <a0d97ebd-c77e-400a-29cd-9524e9f47dbc@arm.com>
-From: Stephen Warren <swarren@wwwdotorg.org>
-Message-ID: <52dc4d4b-b521-17a5-dc93-e2992e481083@wwwdotorg.org>
-Date: Tue, 18 Sep 2018 12:16:03 -0600
+Received: from smtp.eu.citrix.com ([185.25.65.24]:18745 "EHLO
+        SMTP.EU.CITRIX.COM" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1727820AbeISOos (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Wed, 19 Sep 2018 10:44:48 -0400
+Date: Wed, 19 Sep 2018 11:05:26 +0200
+From: Roger Pau =?utf-8?B?TW9ubsOp?= <roger.pau@citrix.com>
+To: Boris Ostrovsky <boris.ostrovsky@oracle.com>
+CC: George Dunlap <George.Dunlap@citrix.com>,
+        Pasi =?utf-8?B?S8Okcmtrw6RpbmVu?= <pasik@iki.fi>,
+        Jan Beulich <JBeulich@suse.com>,
+        Juergen Gross <jgross@suse.com>,
+        "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+        "bhelgaas@google.com" <bhelgaas@google.com>,
+        xen-devel <xen-devel@lists.xenproject.org>,
+        Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>
+Subject: Re: [Xen-devel] [PATCH V3 2/2] Xen/PCIback: Implement PCI
+ flr/slot/bus reset with 'reset' SysFS attribute
+Message-ID: <20180919090526.s3ahnemrt2ik2tx3@mac.bytemobile.com>
+References: <5A2A6AB10200007800195D4F@prv-mh.provo.novell.com>
+ <8a3bc517-1255-4547-d244-5c400e44cc77@Oracle.COM>
+ <f19dbb09-ef22-2cf4-fb38-2a7c42b5dc48@Oracle.COM>
+ <5A377E020200007800197FFA@prv-mh.provo.novell.com>
+ <559ffd12-b541-8a69-60bd-fbe10e3dc159@oracle.com>
+ <20180916114306.GF18222@reaktio.net>
+ <a726840b-8a5c-0890-73c6-3a95a7205153@oracle.com>
+ <20180918071519.GG18222@reaktio.net>
+ <5E7DDB68-4E68-48A5-AEEC-EE1B21A50E9E@citrix.com>
+ <352310b3-ec9b-2ceb-83f0-4550718120c3@oracle.com>
 MIME-Version: 1.0
-In-Reply-To: <a0d97ebd-c77e-400a-29cd-9524e9f47dbc@arm.com>
-Content-Type: text/plain; charset=utf-8; format=flowed
+Content-Type: text/plain; charset="iso-8859-1"
+In-Reply-To: <352310b3-ec9b-2ceb-83f0-4550718120c3@oracle.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 09/18/2018 04:59 AM, Robin Murphy wrote:
-> Hi Stephen,
+On Tue, Sep 18, 2018 at 02:09:53PM -0400, Boris Ostrovsky wrote:
+> On 9/18/18 5:32 AM, George Dunlap wrote:
+> >
+> >> On Sep 18, 2018, at 8:15 AM, Pasi Kärkkäinen <pasik@iki.fi> wrote:
+> >>
+> >> Hi,
+> >>
+> >> On Mon, Sep 17, 2018 at 02:06:02PM -0400, Boris Ostrovsky wrote:
+> >>> What about the toolstack changes? Have they been accepted? I vaguely
+> >>> recall there was a discussion about those changes but don't remember how
+> >>> it ended.
+> >>>
+> >> I don't think toolstack/libxl patch has been applied yet either.
+> >>
+> >>
+> >> "[PATCH V1 0/1] Xen/Tools: PCI reset using 'reset' SysFS attribute":
+> >> https://lists.xen.org/archives/html/xen-devel/2017-12/msg00664.html
+> >>
+> >> "[PATCH V1 1/1] Xen/libxl: Perform PCI reset using 'reset' SysFS attribute":
+> >> https://lists.xen.org/archives/html/xen-devel/2017-12/msg00663.html
 > 
-> On 17/09/18 22:36, Stephen Warren wrote:
->> Joerg, Christoph, Marek, Robin,
->>
->> I believe that the driver for our PCIe endpoint controller hardware 
->> will need to explicitly manage its IOVA space more than current APIs 
->> allow. I'd like to discuss how to make that possible.
-...
->> One final note:
->>
->> The memory controller can translate accesses to a small region of DRAM 
->> address space into accesses to an interrupt generation module. This 
->> allows devices attached to the PCIe bus to generate interrupts to 
->> software running on the system with the PCIe endpoint controller. Thus 
->> I deliberately described API 3 above as mapping a specific physical 
->> address into IOVA space, as opposed to mapping an existing DRAM 
->> allocation into IOVA space, in order to allow mapping this interrupt 
->> generation address space into IOVA space. If we needed separate APIs 
->> to map physical addresses vs. DRAM allocations into IOVA space, that 
->> would likely be fine too.
 > 
-> If that's the standard DesignWare MSI dingaling, then all you should 
-> need to do is ensure you IOVA is reserved in your allocator (if it can 
-> be entirely outside the EP BAR, even better) - AFAIK the writes get 
-> completely intercepted such that they never go out to the SMMU side at 
-> all, and thus no actual mapping is even needed.
+> Will this patch work for *BSD? Roger?
 
-Unfortunately it's not. We have some custom hardware module (that 
-already existed for other purposes, such as interaction/synchronization 
-between various graphics modules) that we will slightly repurpose as a 
-plain interrupt generator for PCIe endpoint use-cases.
+At least FreeBSD don't support pci-passthrough, so none of this works
+ATM. There's no sysfs on BSD, so much of what's in libxl_pci.c will
+have to be moved to libxl_linux.c when BSD support is added.
 
->> Does this API proposal sound reasonable?
-> 
-> Indeed, as I say apart from using streaming DMA for coherency management 
-> (which I think could be added in pretty much orthogonally later), this 
-> sounds like something you could plumb into the endpoint framework right 
-> now with no dependent changes elsewhere.
-
-Great. I'll take a look at Oza's code and see about getting this 
-implemented.
-
-Thanks.
+Thanks, Roger.
