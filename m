@@ -1,175 +1,103 @@
-Return-Path: <linux-acpi-owner@vger.kernel.org>
-From: Mika Westerberg <mika.westerberg@linux.intel.com>
-To: Bjorn Helgaas <bhelgaas@google.com>,
-        "Rafael J. Wysocki" <rjw@rjwysocki.net>
-Cc: Len Brown <lenb@kernel.org>, Lukas Wunner <lukas@wunner.de>,
-        Keith Busch <keith.busch@intel.com>,
-        Ashok Raj <ashok.raj@intel.com>, Mario.Limonciello@dell.com,
-        Anthony Wong <anthony.wong@canonical.com>,
-        "D . J . Bernstein" <djb@cr.yp.to>,
-        Linus Walleij <linus.walleij@linaro.org>,
-        Mika Westerberg <mika.westerberg@linux.intel.com>,
-        linux-pci@vger.kernel.org, linux-acpi@vger.kernel.org
-Subject: [PATCH 10/10] PCI / ACPI: Whitelist D3 for more PCIe hotplug ports
-Date: Thu,  6 Sep 2018 18:50:20 +0300
-Message-Id: <20180906155020.51700-11-mika.westerberg@linux.intel.com>
-In-Reply-To: <20180906155020.51700-1-mika.westerberg@linux.intel.com>
-References: <20180906155020.51700-1-mika.westerberg@linux.intel.com>
-Sender: linux-acpi-owner@vger.kernel.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail.kernel.org ([198.145.29.99]:58274 "EHLO mail.kernel.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1732450AbeISWJr (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Wed, 19 Sep 2018 18:09:47 -0400
+From: Sinan Kaya <okaya@kernel.org>
+To: linux-pci@vger.kernel.org
+Cc: alex.williamson@redhat.com, Sinan Kaya <okaya@kernel.org>,
+        Bjorn Helgaas <bhelgaas@google.com>,
+        Alexey Kardashevskiy <aik@ozlabs.ru>,
+        Peter Xu <peterx@redhat.com>,
+        "Gustavo A. R. Silva" <gustavo@embeddedor.com>
+Subject: [PATCH v4 6/6] PCI: Expose reset type to users of pci_reset_bus()
+Date: Wed, 19 Sep 2018 16:30:37 +0000
+Message-Id: <20180919163037.13497-7-okaya@kernel.org>
+In-Reply-To: <20180919163037.13497-1-okaya@kernel.org>
+References: <20180919163037.13497-1-okaya@kernel.org>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-In order to have better power management for Thunderbolt PCIe chains,
-Windows enables power management for native PCIe hotplug ports if there
-is following ACPI _DSD attached to the root port:
+Looking to have more control between the users of the API vs. what the API
+can do internally. The new reset_type tells the PCI core about the bounds
+of the request.
 
-  Name (_DSD, Package () {
-      ToUUID ("6211e2c0-58a3-4af3-90e1-927a4e0c55a4"),
-      Package () {
-          Package () {"HotPlugSupportInD3", 1}
-      }
-  })
-
-This is also documented in:
-
-  https://docs.microsoft.com/en-us/windows-hardware/drivers/pci/dsd-for-pcie-root-ports#identifying-pcie-root-ports-supporting-hot-plug-in-d3
-
-Do the same in Linux by introducing new firmware PM callback (->bridge_d3())
-and then implement it for ACPI based systems so that the above property is
-checked.
-
-There is one catch, though. The initial pci_dev->bridge_d3 is set before
-the root port has ACPI companion bound (the device is not added to the
-PCI bus either) so we need to look up the ACPI companion manually in
-that case in acpi_pci_bridge_d3().
-
-Signed-off-by: Mika Westerberg <mika.westerberg@linux.intel.com>
+Signed-off-by: Sinan Kaya <okaya@kernel.org>
 ---
- drivers/acpi/property.c |  3 +++
- drivers/pci/pci-acpi.c  | 41 +++++++++++++++++++++++++++++++++++++++++
- drivers/pci/pci.c       |  9 +++++++++
- drivers/pci/pci.h       |  3 +++
- 4 files changed, 56 insertions(+)
+ drivers/pci/pci.c           | 18 +++++++++++++++---
+ drivers/vfio/pci/vfio_pci.c |  6 ++++--
+ include/linux/pci.h         |  2 +-
+ 3 files changed, 20 insertions(+), 6 deletions(-)
 
-diff --git a/drivers/acpi/property.c b/drivers/acpi/property.c
-index f3ddb279d2de..f9d63ee9f623 100644
---- a/drivers/acpi/property.c
-+++ b/drivers/acpi/property.c
-@@ -28,6 +28,9 @@ static const guid_t prp_guids[] = {
- 	/* ACPI _DSD device properties GUID: daffd814-6eba-4d8c-8a91-bc9bbf4aa301 */
- 	GUID_INIT(0xdaffd814, 0x6eba, 0x4d8c,
- 		  0x8a, 0x91, 0xbc, 0x9b, 0xbf, 0x4a, 0xa3, 0x01),
-+	/* Hotplug in D3 GUID: 6211e2c0-58a3-4af3-90e1-927a4e0c55a4 */
-+	GUID_INIT(0x6211e2c0, 0x58a3, 0x4af3,
-+		  0x90, 0xe1, 0x92, 0x7a, 0x4e, 0x0c, 0x55, 0xa4),
- };
- 
- static const guid_t ads_guid =
-diff --git a/drivers/pci/pci-acpi.c b/drivers/pci/pci-acpi.c
-index a4a8c02deaa0..c0394232fd93 100644
---- a/drivers/pci/pci-acpi.c
-+++ b/drivers/pci/pci-acpi.c
-@@ -519,6 +519,46 @@ static pci_power_t acpi_pci_choose_state(struct pci_dev *pdev)
- 	return PCI_POWER_ERROR;
- }
- 
-+static struct acpi_device *acpi_pci_find_companion(struct device *dev);
-+
-+static bool acpi_pci_bridge_d3(struct pci_dev *dev)
-+{
-+	const struct fwnode_handle *fwnode;
-+	struct acpi_device *adev;
-+	struct pci_dev *root;
-+	u8 val;
-+
-+	if (!dev->is_hotplug_bridge)
-+		return false;
-+
-+	/*
-+	 * Look for a special _DSD property for the root port and if it
-+	 * is set we know the hierarchy behind it supports D3 just fine.
-+	 */
-+	root = pci_find_pcie_root_port(dev);
-+	if (!root)
-+		return false;
-+
-+	adev = ACPI_COMPANION(&root->dev);
-+	if (root == dev) {
-+		/*
-+		 * It is possible that the ACPI companion is not yet bound
-+		 * for the root port so look it up manually here.
-+		 */
-+		if (!adev && !pci_dev_is_added(root))
-+			adev = acpi_pci_find_companion(&root->dev);
-+	}
-+
-+	if (!adev)
-+		return false;
-+
-+	fwnode = acpi_fwnode_handle(adev);
-+	if (fwnode_property_read_u8(fwnode, "HotPlugSupportInD3", &val))
-+		return false;
-+
-+	return val == 1;
-+}
-+
- static bool acpi_pci_power_manageable(struct pci_dev *dev)
- {
- 	struct acpi_device *adev = ACPI_COMPANION(&dev->dev);
-@@ -635,6 +675,7 @@ static bool acpi_pci_need_resume(struct pci_dev *dev)
- }
- 
- static const struct pci_platform_pm_ops acpi_pci_platform_pm = {
-+	.bridge_d3 = acpi_pci_bridge_d3,
- 	.is_manageable = acpi_pci_power_manageable,
- 	.set_state = acpi_pci_set_power_state,
- 	.get_state = acpi_pci_get_power_state,
 diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
-index 074f3f0253f9..ce212eb10be9 100644
+index b4f14419bd51..f11d29f32119 100644
 --- a/drivers/pci/pci.c
 +++ b/drivers/pci/pci.c
-@@ -791,6 +791,11 @@ static inline bool platform_pci_need_resume(struct pci_dev *dev)
- 	return pci_platform_pm ? pci_platform_pm->need_resume(dev) : false;
- }
- 
-+static inline bool platform_pci_bridge_d3(struct pci_dev *dev)
-+{
-+	return pci_platform_pm ? pci_platform_pm->bridge_d3(dev) : false;
-+}
-+
+@@ -5232,13 +5232,25 @@ static int __pci_reset_bus(struct pci_bus *bus)
  /**
-  * pci_raw_set_power_state - Use PCI PM registers to set the power state of
-  *                           given PCI device
-@@ -2513,6 +2518,10 @@ bool pci_bridge_d3_possible(struct pci_dev *bridge)
- 		if (bridge->is_thunderbolt)
- 			return true;
- 
-+		/* Platform might know better if the bridge supports D3 */
-+		if (platform_pci_bridge_d3(bridge))
-+			return true;
-+
- 		/*
- 		 * Hotplug ports handled natively by the OS were not validated
- 		 * by vendors for runtime D3 at least until 2018 because there
-diff --git a/drivers/pci/pci.h b/drivers/pci/pci.h
-index 6e0d1528d471..66fd5c1bf71b 100644
---- a/drivers/pci/pci.h
-+++ b/drivers/pci/pci.h
-@@ -39,6 +39,8 @@ int pci_bridge_secondary_bus_reset(struct pci_dev *dev);
- /**
-  * struct pci_platform_pm_ops - Firmware PM callbacks
+  * pci_reset_bus - Try to reset a PCI bus
+  * @pdev: top level PCI device to reset via slot/bus
++ * @reset_type: resets to try
   *
-+ * @bridge_d3: Does the bridge allow entering into D3
-+ *
-  * @is_manageable: returns 'true' if given device is power manageable by the
-  *		   platform firmware
-  *
-@@ -60,6 +62,7 @@ int pci_bridge_secondary_bus_reset(struct pci_dev *dev);
-  * these callbacks are mandatory.
+  * Same as above except return -EAGAIN if the bus cannot be locked
   */
- struct pci_platform_pm_ops {
-+	bool (*bridge_d3)(struct pci_dev *dev);
- 	bool (*is_manageable)(struct pci_dev *dev);
- 	int (*set_state)(struct pci_dev *dev, pci_power_t state);
- 	pci_power_t (*get_state)(struct pci_dev *dev);
+-int pci_reset_bus(struct pci_dev *pdev)
++int pci_reset_bus(struct pci_dev *pdev, u32 reset_type)
+ {
+-	return (!pci_probe_reset_slot(pdev->slot)) ?
+-	    __pci_reset_slot(pdev->slot) : __pci_reset_bus(pdev->bus);
++	if (reset_type & PCI_RESET_LINK) {
++		return (!pci_probe_reset_slot(pdev->slot)) ?
++				__pci_reset_slot(pdev->slot) :
++				__pci_reset_bus(pdev->bus);
++	}
++
++	if (reset_type & PCI_RESET_BUS)
++		return __pci_reset_bus(pdev->bus);
++
++	if (reset_type & PCI_RESET_SLOT)
++		return __pci_reset_slot(pdev->slot);
++
++	return -EINVAL;
+ }
+ EXPORT_SYMBOL_GPL(pci_reset_bus);
+ 
+diff --git a/drivers/vfio/pci/vfio_pci.c b/drivers/vfio/pci/vfio_pci.c
+index fe7ada997c51..0e80c72b1eaa 100644
+--- a/drivers/vfio/pci/vfio_pci.c
++++ b/drivers/vfio/pci/vfio_pci.c
+@@ -1015,7 +1015,8 @@ static long vfio_pci_ioctl(void *device_data,
+ 						    &info, slot);
+ 		if (!ret)
+ 			/* User has access, do the reset */
+-			ret = pci_reset_bus(vdev->pdev);
++			ret = pci_reset_bus(vdev->pdev,
++				slot ? PCI_RESET_SLOT :	PCI_RESET_BUS);
+ 
+ hot_reset_release:
+ 		for (i--; i >= 0; i--)
+@@ -1390,7 +1391,8 @@ static void vfio_pci_try_bus_reset(struct vfio_pci_device *vdev)
+ 	}
+ 
+ 	if (needs_reset)
+-		ret = pci_reset_bus(vdev->pdev);
++		ret = pci_reset_bus(vdev->pdev,
++				slot ? PCI_RESET_SLOT :	PCI_RESET_BUS);
+ 
+ put_devs:
+ 	for (i = 0; i < devs.cur_index; i++) {
+diff --git a/include/linux/pci.h b/include/linux/pci.h
+index 4fdddcb85066..85f48e156753 100644
+--- a/include/linux/pci.h
++++ b/include/linux/pci.h
+@@ -1128,7 +1128,7 @@ int pci_reset_function_locked(struct pci_dev *dev, u32 reset_type);
+ int pci_try_reset_function(struct pci_dev *dev, u32 reset_type);
+ int pci_probe_reset_slot(struct pci_slot *slot);
+ int pci_probe_reset_bus(struct pci_bus *bus);
+-int pci_reset_bus(struct pci_dev *dev);
++int pci_reset_bus(struct pci_dev *dev, u32 reset_type);
+ void pci_reset_secondary_bus(struct pci_dev *dev);
+ void pcibios_reset_secondary_bus(struct pci_dev *dev);
+ void pci_update_resource(struct pci_dev *dev, int resno);
 -- 
 2.18.0
