@@ -1,63 +1,42 @@
-Return-Path: <linux-nvme-bounces+bjorn=helgaas.com@lists.infradead.org>
-Return-Path: <linux-nvme-bounces+bjorn=helgaas.com@lists.infradead.org>
-Subject: Re: [PATCH v5 07/13] block: Add PCI P2P flag for request queue and
- check support for requests
-To: Christoph Hellwig <hch@lst.de>
-References: <20180830185352.3369-1-logang@deltatee.com>
- <20180830185352.3369-8-logang@deltatee.com>
- <b5ab8fa3-34ac-3117-fa0d-5206c3939435@kernel.dk>
- <20180901082812.GB670@lst.de>
- <5f79c012-c6e1-56bb-62fd-0689181fb2c9@deltatee.com>
- <59b28977-8f2a-6228-2050-03fae6bdbedd@kernel.dk>
- <1b4283da-44df-4a02-3167-e295243cef78@deltatee.com>
- <09258b9b-3aed-9890-b31a-bd70a133966c@kernel.dk>
- <20180905195647.GA1626@lst.de>
-From: Jens Axboe <axboe@kernel.dk>
-Message-ID: <bcc1b3cf-2fd9-fa61-9cfb-b0e4d84e5d94@kernel.dk>
-Date: Wed, 5 Sep 2018 13:54:31 -0600
-MIME-Version: 1.0
-In-Reply-To: <20180905195647.GA1626@lst.de>
-List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-nvme>,
- <mailto:linux-nvme-request@lists.infradead.org?subject=unsubscribe>
-List-Archive: <http://lists.infradead.org/pipermail/linux-nvme/>
-List-Post: <mailto:linux-nvme@lists.infradead.org>
-List-Help: <mailto:linux-nvme-request@lists.infradead.org?subject=help>
-List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-nvme>,
- <mailto:linux-nvme-request@lists.infradead.org?subject=subscribe>
-Cc: Keith Busch <keith.busch@intel.com>,
- Alex Williamson <alex.williamson@redhat.com>, Sagi Grimberg <sagi@grimberg.me>,
- linux-nvdimm@lists.01.org, linux-rdma@vger.kernel.org,
- linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
- linux-nvme@lists.infradead.org, Stephen Bates <sbates@raithlin.com>,
- linux-block@vger.kernel.org,
- =?UTF-8?B?SsOpcsO0bWUgR2xpc3Nl?= <jglisse@redhat.com>,
- Jason Gunthorpe <jgg@mellanox.com>,
- Benjamin Herrenschmidt <benh@kernel.crashing.org>,
- Bjorn Helgaas <bhelgaas@google.com>, Max Gurtovoy <maxg@mellanox.com>,
- Dan Williams <dan.j.williams@intel.com>, Logan Gunthorpe <logang@deltatee.com>,
- =?UTF-8?Q?Christian_K=c3=b6nig?= <christian.koenig@amd.com>
-Content-Type: text/plain; charset="us-ascii"
-Sender: "Linux-nvme" <linux-nvme-bounces@lists.infradead.org>
-Errors-To: linux-nvme-bounces+bjorn=helgaas.com@lists.infradead.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail-qk1-f195.google.com ([209.85.222.195]:33726 "EHLO
+        mail-qk1-f195.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1732265AbeISULV (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Wed, 19 Sep 2018 16:11:21 -0400
+From: Jim Quinlan <jim2101024@gmail.com>
+To: linux-kernel@vger.kernel.org
+Cc: Jim Quinlan <jim2101024@gmail.com>,
+        Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org,
+        bcm-kernel-feedback-list@broadcom.com,
+        Christoph Hellwig <hch@lst.de>
+Subject: [PATCH v5 07/12] PCI/MSI: enable PCI_MSI_IRQ_DOMAIN support for MIPS
+Date: Wed, 19 Sep 2018 10:32:02 -0400
+Message-Id: <1537367527-20773-8-git-send-email-jim2101024@gmail.com>
+In-Reply-To: <1537367527-20773-1-git-send-email-jim2101024@gmail.com>
+References: <1537367527-20773-1-git-send-email-jim2101024@gmail.com>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 9/5/18 1:56 PM, Christoph Hellwig wrote:
-> On Wed, Sep 05, 2018 at 01:45:04PM -0600, Jens Axboe wrote:
->> The point is that the caller doesn't necessarily know where the bio
->> will end up, hence the caller can't fully check if the whole stack
->> supports P2P.
-> 
-> The caller must necessarily know where the bio will end up, as for P2P
-> support we need to query if the bio target is P2P capable vs the
-> source of the P2P memory.
+Add MIPS as an arch that supports PCI_MSI_IRQ_DOMAIN and add
+generation of msi.h in the MIPS arch.
 
-Then what's the point of having the check at all?
+Signed-off-by: Jim Quinlan <jim2101024@gmail.com>
+---
+ drivers/pci/Kconfig | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
+diff --git a/drivers/pci/Kconfig b/drivers/pci/Kconfig
+index 56ff8f6..61a9539 100644
+--- a/drivers/pci/Kconfig
++++ b/drivers/pci/Kconfig
+@@ -22,7 +22,7 @@ config PCI_MSI
+ 	   If you don't know what to do here, say Y.
+ 
+ config PCI_MSI_IRQ_DOMAIN
+-	def_bool ARC || ARM || ARM64 || X86
++	def_bool ARC || ARM || ARM64 || MIPS || X86
+ 	depends on PCI_MSI
+ 	select GENERIC_MSI_IRQ_DOMAIN
+ 
 -- 
-Jens Axboe
-
-
-_______________________________________________
-Linux-nvme mailing list
-Linux-nvme@lists.infradead.org
-http://lists.infradead.org/mailman/listinfo/linux-nvme
+1.9.0.138.g2de3478
