@@ -2,61 +2,60 @@ Return-Path: <SRS0=bOp+=MB=vger.kernel.org=linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-5.8 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
+X-Spam-Status: No, score=-8.6 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
 	DKIM_VALID_AU,FREEMAIL_FORGED_FROMDOMAIN,FREEMAIL_FROM,
 	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
-	SPF_PASS,UNWANTED_LANGUAGE_BODY,USER_AGENT_GIT autolearn=unavailable
-	autolearn_force=no version=3.4.0
+	SPF_PASS,USER_AGENT_GIT autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 41079C433F4
-	for <linux-pci@archiver.kernel.org>; Wed, 19 Sep 2018 14:33:57 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id A59FDECE564
+	for <linux-pci@archiver.kernel.org>; Wed, 19 Sep 2018 14:34:06 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id DBCFD2086E
-	for <linux-pci@archiver.kernel.org>; Wed, 19 Sep 2018 14:33:56 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 4B1B72151B
+	for <linux-pci@archiver.kernel.org>; Wed, 19 Sep 2018 14:34:06 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="oMPZcim0"
-DMARC-Filter: OpenDMARC Filter v1.3.2 mail.kernel.org DBCFD2086E
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="DpaCMXZ2"
+DMARC-Filter: OpenDMARC Filter v1.3.2 mail.kernel.org 4B1B72151B
 Authentication-Results: mail.kernel.org; dmarc=fail (p=none dis=none) header.from=gmail.com
 Authentication-Results: mail.kernel.org; spf=none smtp.mailfrom=linux-pci-owner@vger.kernel.org
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1732043AbeISULU (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Wed, 19 Sep 2018 16:11:20 -0400
-Received: from mail-qk1-f195.google.com ([209.85.222.195]:33720 "EHLO
-        mail-qk1-f195.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1732171AbeISULT (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Wed, 19 Sep 2018 16:11:19 -0400
-Received: by mail-qk1-f195.google.com with SMTP id z78-v6so3123308qka.0;
-        Wed, 19 Sep 2018 07:33:06 -0700 (PDT)
+        id S1732012AbeISULR (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Wed, 19 Sep 2018 16:11:17 -0400
+Received: from mail-qk1-f196.google.com ([209.85.222.196]:40621 "EHLO
+        mail-qk1-f196.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1728096AbeISULR (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Wed, 19 Sep 2018 16:11:17 -0400
+Received: by mail-qk1-f196.google.com with SMTP id c126-v6so3104754qkd.7;
+        Wed, 19 Sep 2018 07:33:04 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=gmail.com; s=20161025;
         h=from:to:cc:subject:date:message-id:in-reply-to:references;
-        bh=hsaMxSOmkzqz5RAR+UryHHpliQIFDm8YiJ5EOlUllSg=;
-        b=oMPZcim0FchIxKuyIVpb/P0PO+9UWVzzvNs2JJQRmNRFglT6H+/iQJyEyLIryr7omd
-         g93lVEwi5WpPPtQSGP2X+RUkEf/n/BissfNmuQA1ivt5LGGM+qG9Yji+v6Qg0N9KBgl2
-         xAOCdjacgjvxEFTAKH4Qu5PUEuw5UciK57K1cRxCN39sZNDjwSzjOjcu03WN16q6Ctam
-         HoxSR5jUo+mfw2Eiwu6EuCnBPqUiUH1FqhtK6Br+bhd9GWo2Ez0LboC4gETCg6jU90q+
-         C+f7oStyRPylnYyU/7OvrVh53YYEtdhPFkLenxiDnHa+oPb+J4nh+/3JB3xshpxYbayi
-         nuGg==
+        bh=/9rz29b72jaHqepHkJJaUe+rOnmQ8GoDAY+dhZO8ik4=;
+        b=DpaCMXZ2FT5J9LVsOxBTw/yWKUZADa6o+s5ZFzuFXi+2hGxRfDwVTN2m1e76ITUE7P
+         sSMSSmKBQ5S8S3VRtXzqMxjUVaSEpdEkXlmWUUy/66FFrwdJ0FILMOxDgPKski7eO6aY
+         jqK64tSv7noKHJ/Z+WaJWCQTenu/ZaBp3b6uWcaWFA4Ot1nbqvhUUbuirfvRzgLSeCRx
+         zQaDS5RI+C2QeeY6Bz/8HOUyhfMqPL2gT2fdUAPHIVLIw8Q4m8SuJCzA/QAoTtRdKr1r
+         lH2+Hi5G3mIknkczyPQELL+lS6/BKnf4KvrKdwHB/IT3mkX6/AW2fMmcuCRKAsEWiTXv
+         frcQ==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20161025;
         h=x-gm-message-state:from:to:cc:subject:date:message-id:in-reply-to
          :references;
-        bh=hsaMxSOmkzqz5RAR+UryHHpliQIFDm8YiJ5EOlUllSg=;
-        b=sqKel/Ia8muqn0YFrZ/aAkIjHXvW4VF+NdPj9x8fq04xuS5nL1w+M2EgvJYaHFvhL7
-         J/AOAzi/2kTOdBHTS3irS6xXmvPYzw4amHJgHEusO5w3iq0+YvETz/OlkiLl80P+YzUn
-         yh0douGhdxPay66ARQn/xptG57DiBNrGcf4pDmG7jYk3anpxtyishEzM/RkNbDt8OFrO
-         1PeSeVEfeOz9aTMop3RxSjVZBp5G+RulW4bny2aJkma57oe0xGeQaMqKucOV986+IlfC
-         TdFyI1rz7qzURLo3692legTFwOUk5wiZc2+Qd49kQIXaZSvCaW19IAwwveQufnn3Duj5
-         63xA==
-X-Gm-Message-State: APzg51BWHrJ27sjvB5oyUfCpGuY6U/6QAjkdVPijHYbYqjh1a57ZutgQ
-        b/3wszWWtS/tlz0RusUn7rcwPk+S
-X-Google-Smtp-Source: ANB0Vdbl22kgyejDpMCmfOcZOGiYeNuS5xNGwqYkihBQxRTriqLB4TUNKT+WfiPhuOcytFVp7Eg3Ug==
-X-Received: by 2002:a37:2f82:: with SMTP id v124-v6mr1083245qkh.1.1537367585298;
-        Wed, 19 Sep 2018 07:33:05 -0700 (PDT)
+        bh=/9rz29b72jaHqepHkJJaUe+rOnmQ8GoDAY+dhZO8ik4=;
+        b=ZfQ+Dy7w92Kc92ggmc8VTsjmO1yX8kL391J/+FLXletWVnTZJ1DhAO1aYmFnmqWIVN
+         EKZGhyCTCi+SdH8OjvkiNuvE1ULaC8Yi1KQsR+5AX57onV/45nQT9kJOFWHSgZYQRruB
+         LDxDZ9XCmlUWAIcy6n7Dha6Qx2StFVMfKDzm5fafeduavF5QLj7jIKHf0MOx2vCEwtBW
+         FPsP80m8wf/AojX7C1XM9pdsWSDsOCIxqPL+9XuHIoq+AKFPpAC5fsU2HO3E2A0h8M6x
+         rn1mCeQd1Aqz5NXk+4k2fz208SzhyiwHXuS7NvqW6qn52iSXkvOR+7qcziN9UV4cStm7
+         /3IA==
+X-Gm-Message-State: APzg51CgYFh1dpQ+O9UpFvYUyVmh2GNRd6rypkIsFi8V08TDm3PLOMEL
+        ZRSPY7xw9TtPpUvr6wYHjR3wV+GP
+X-Google-Smtp-Source: ANB0VdY8RwJCBIRdUO2Qr3e3kc8/uQNFufIMTfTrs9RKNV7c4/lSHxZPK5wdHHjMaJZzKTS/8xEOAA==
+X-Received: by 2002:a37:d402:: with SMTP id l2-v6mr23651422qki.86.1537367583292;
+        Wed, 19 Sep 2018 07:33:03 -0700 (PDT)
 Received: from stbsrv-and-3.and.broadcom.com ([192.19.231.250])
-        by smtp.gmail.com with ESMTPSA id 17-v6sm2104051qkf.74.2018.09.19.07.33.03
+        by smtp.gmail.com with ESMTPSA id 17-v6sm2104051qkf.74.2018.09.19.07.33.01
         (version=TLS1_2 cipher=ECDHE-RSA-AES128-GCM-SHA256 bits=128/128);
-        Wed, 19 Sep 2018 07:33:04 -0700 (PDT)
+        Wed, 19 Sep 2018 07:33:02 -0700 (PDT)
 From:   Jim Quinlan <jim2101024@gmail.com>
 To:     linux-kernel@vger.kernel.org
 Cc:     Jim Quinlan <jim2101024@gmail.com>,
@@ -68,9 +67,9 @@ Cc:     Jim Quinlan <jim2101024@gmail.com>,
         bcm-kernel-feedback-list@broadcom.com, linux-pci@vger.kernel.org,
         linux-arm-kernel@lists.infradead.org,
         Christoph Hellwig <hch@lst.de>
-Subject: [PATCH v5 05/12] PCI: brcmstb: add MSI capability
-Date:   Wed, 19 Sep 2018 10:32:00 -0400
-Message-Id: <1537367527-20773-6-git-send-email-jim2101024@gmail.com>
+Subject: [PATCH v5 04/12] PCI: brcmstb: add dma-range mapping for inbound traffic
+Date:   Wed, 19 Sep 2018 10:31:59 -0400
+Message-Id: <1537367527-20773-5-git-send-email-jim2101024@gmail.com>
 X-Mailer: git-send-email 1.9.0.138.g2de3478
 In-Reply-To: <1537367527-20773-1-git-send-email-jim2101024@gmail.com>
 References: <1537367527-20773-1-git-send-email-jim2101024@gmail.com>
@@ -78,536 +77,274 @@ Sender: linux-pci-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
-Message-ID: <20180919143200.i3CtZN_iPpAflPG0zCDF_8xjCR3lPLn-sSx4ri24_H4@z>
+Message-ID: <20180919143159.F5zossUm3_pRUDbWjw22aVl5q3DG2qm30YFWr5wXLbw@z>
 
-This commit adds MSI to the Broadcom STB PCIe host controller. It does
-not add MSIX since that functionality is not in the HW.  The MSI
-controller is physically located within the PCIe block, however, there
-is no reason why the MSI controller could not be moved elsewhere in
-the future.
+The Broadcom STB PCIe host controller is intimately related to the
+memory subsystem.  This close relationship adds complexity to how cpu
+system memory is mapped to PCIe memory.  Ideally, this mapping is an
+identity mapping, or an identity mapping off by a constant.  Not so in
+this case.
 
-Since the internal Brcmstb MSI controller is intertwined with the PCIe
-controller, it is not its own platform device but rather part of the
-PCIe platform device.
+Consider the Broadcom reference board BCM97445LCC_4X8 which has 6 GB
+of system memory.  Here is how the PCIe controller maps the
+system memory to PCIe memory:
+
+  memc0-a@[        0....3fffffff] <=> pci@[        0....3fffffff]
+  memc0-b@[100000000...13fffffff] <=> pci@[ 40000000....7fffffff]
+  memc1-a@[ 40000000....7fffffff] <=> pci@[ 80000000....bfffffff]
+  memc1-b@[300000000...33fffffff] <=> pci@[ c0000000....ffffffff]
+  memc2-a@[ 80000000....bfffffff] <=> pci@[100000000...13fffffff]
+  memc2-b@[c00000000...c3fffffff] <=> pci@[140000000...17fffffff]
+
+Although there are some "gaps" that can be added between the
+individual mappings by software, the permutation of memory regions for
+the most part is fixed by HW.  The solution of having something close
+to an identity mapping is not possible.
+
+The idea behind this HW design is that the same PCIe module can
+act as an RC or EP, and if it acts as an EP it concatenates all
+of system memory into a BAR so anything can be accessed.  Unfortunately,
+when the PCIe block is in the role of an RC it also presents this
+"BAR" to downstream PCIe devices, rather than offering an identity map
+between its system memory and PCIe space.
+
+Suppose that an endpoint driver allocs some DMA memory.  Suppose this
+memory is located at 0x6000_0000, which is in the middle of memc1-a.
+The driver wants a dma_addr_t value that it can pass on to the EP to
+use.  Without doing any custom mapping, the EP will use this value for
+DMA: the driver will get a dma_addr_t equal to 0x6000_0000.  But this
+won't work; the device needs a dma_addr_t that reflects the PCIe space
+address, namely 0xa000_0000.
+
+So, essentially the solution to this problem must modify the
+dma_addr_t returned by the DMA routines routines.  The method to do
+this is to redefine the __dma_to_phys() and __phys_to_dma() functions
+of the ARM, ARM64, and MIPS architectures.  This commit sets up the
+infrastructure in the Brcm PCIe controller to prepare for this, while
+there is three other subsequent commits to implement/redefine these
+two functions for the three target architectures.
 
 Signed-off-by: Jim Quinlan <jim2101024@gmail.com>
 ---
- drivers/pci/controller/Kconfig        |   2 +-
- drivers/pci/controller/pcie-brcmstb.c | 361 ++++++++++++++++++++++++++++++++--
- 2 files changed, 351 insertions(+), 12 deletions(-)
+ drivers/pci/controller/pcie-brcmstb.c | 130 ++++++++++++++++++++++++++++++----
+ include/soc/brcmstb/common.h          |  16 +++++
+ 2 files changed, 133 insertions(+), 13 deletions(-)
 
-diff --git a/drivers/pci/controller/Kconfig b/drivers/pci/controller/Kconfig
-index c863c67..8daa621 100644
---- a/drivers/pci/controller/Kconfig
-+++ b/drivers/pci/controller/Kconfig
-@@ -281,7 +281,7 @@ config VMD
- config PCIE_BRCMSTB
- 	bool "Broadcom Brcmstb PCIe host controller"
- 	depends on ARCH_BRCMSTB || BMIPS_GENERIC
--	depends on OF
-+	depends on OF && PCI_MSI
- 	depends on SOC_BRCMSTB
- 	default ARCH_BRCMSTB || BMIPS_GENERIC
- 	help
 diff --git a/drivers/pci/controller/pcie-brcmstb.c b/drivers/pci/controller/pcie-brcmstb.c
-index abfa429..a805d87 100644
+index 9c87d10..abfa429 100644
 --- a/drivers/pci/controller/pcie-brcmstb.c
 +++ b/drivers/pci/controller/pcie-brcmstb.c
-@@ -1,6 +1,7 @@
- // SPDX-License-Identifier: GPL-2.0
- /* Copyright (C) 2009 - 2018 Broadcom */
+@@ -21,6 +21,7 @@
+ #include <linux/printk.h>
+ #include <linux/sizes.h>
+ #include <linux/slab.h>
++#include <soc/brcmstb/common.h>
+ #include <soc/brcmstb/memory_api.h>
+ #include <linux/string.h>
+ #include <linux/types.h>
+@@ -321,6 +322,7 @@ static void __iomem *brcm_pcie_map_conf(struct pci_bus *bus, unsigned int devfn,
+ 	(((val) & ~reg##_##field##_MASK) | \
+ 	 (reg##_##field##_MASK & (field_val << reg##_##field##_SHIFT)))
  
-+#include <linux/bitops.h>
- #include <linux/clk.h>
- #include <linux/compiler.h>
- #include <linux/delay.h>
-@@ -8,11 +9,13 @@
- #include <linux/interrupt.h>
- #include <linux/io.h>
- #include <linux/ioport.h>
-+#include <linux/irqchip/chained_irq.h>
- #include <linux/irqdomain.h>
- #include <linux/kernel.h>
- #include <linux/list.h>
- #include <linux/log2.h>
- #include <linux/module.h>
-+#include <linux/msi.h>
- #include <linux/of_address.h>
- #include <linux/of_irq.h>
- #include <linux/of_pci.h>
-@@ -48,6 +51,9 @@
- #define PCIE_MISC_RC_BAR2_CONFIG_LO			0x4034
- #define PCIE_MISC_RC_BAR2_CONFIG_HI			0x4038
- #define PCIE_MISC_RC_BAR3_CONFIG_LO			0x403c
-+#define PCIE_MISC_MSI_BAR_CONFIG_LO			0x4044
-+#define PCIE_MISC_MSI_BAR_CONFIG_HI			0x4048
-+#define PCIE_MISC_MSI_DATA_CONFIG			0x404c
- #define PCIE_MISC_PCIE_CTRL				0x4064
- #define PCIE_MISC_PCIE_STATUS				0x4068
- #define PCIE_MISC_REVISION				0x406c
-@@ -56,6 +62,7 @@
- #define PCIE_MISC_CPU_2_PCIE_MEM_WIN0_LIMIT_HI		0x4084
- #define PCIE_MISC_HARD_PCIE_HARD_DEBUG			0x4204
- #define PCIE_INTR2_CPU_BASE				0x4300
-+#define PCIE_MSI_INTR2_BASE				0x4500
- 
- /*
-  * Broadcom Settop Box PCIe Register Field shift and mask info. The
-@@ -116,6 +123,8 @@
- 
- #define BRCM_NUM_PCIE_OUT_WINS		0x4
- #define BRCM_MAX_SCB			0x4
-+#define BRCM_INT_PCI_MSI_NR		32
-+#define BRCM_PCIE_HW_REV_33		0x0303
- 
- #define BRCM_MSI_TARGET_ADDR_LT_4GB	0x0fffffffcULL
- #define BRCM_MSI_TARGET_ADDR_GT_4GB	0xffffffffcULL
-@@ -204,6 +213,33 @@ struct brcm_window {
- 	dma_addr_t size;
- };
- 
-+struct brcm_msi {
-+	struct device		*dev;
-+	void __iomem		*base;
-+	struct device_node	*dn;
-+	struct irq_domain	*msi_domain;
-+	struct irq_domain	*inner_domain;
-+	struct mutex		lock; /* guards the alloc/free operations */
-+	u64			target_addr;
-+	int			irq;
-+
-+	/* intr_base is the base pointer for interrupt status/set/clr regs */
-+	void __iomem		*intr_base;
-+
-+	/* intr_legacy_mask indicates how many bits are MSI interrupts */
-+	u32			intr_legacy_mask;
-+
-+	/*
-+	 * intr_legacy_offset indicates bit position of MSI_01. It is
-+	 * to map the register bit position to a hwirq that starts at 0.
-+	 */
-+	u32			intr_legacy_offset;
-+
-+	/* used indicates which MSI interrupts have been alloc'd */
-+	unsigned long		used;
-+	unsigned int		rev;
-+};
-+
- /* Internal PCIe Host Controller Information.*/
- struct brcm_pcie {
- 	struct device		*dev;
-@@ -218,7 +254,10 @@ struct brcm_pcie {
- 	int			num_out_wins;
- 	bool			ssc;
- 	int			gen;
-+	u64			msi_target_addr;
- 	struct brcm_window	out_wins[BRCM_NUM_PCIE_OUT_WINS];
-+	struct brcm_msi		*msi;
-+	bool			msi_internal;
- 	unsigned int		rev;
- 	const int		*reg_offsets;
- 	const int		*reg_field_info;
-@@ -535,6 +574,267 @@ static void brcm_pcie_set_outbound_win(struct brcm_pcie *pcie,
- 	}
++static struct of_pci_range *brcm_dma_ranges;
+ static phys_addr_t scb_size[BRCM_MAX_SCB];
+ static int num_memc;
+ static int num_pcie;
+@@ -599,6 +601,79 @@ static inline void brcm_pcie_perst_set(struct brcm_pcie *pcie,
+ 		WR_FLD_RB(pcie->base, PCIE_MISC_PCIE_CTRL, PCIE_PERSTB, !val);
  }
  
-+static struct irq_chip brcm_msi_irq_chip = {
-+	.name = "Brcm_MSI",
-+	.irq_mask = pci_msi_mask_irq,
-+	.irq_unmask = pci_msi_unmask_irq,
-+};
-+
-+static struct msi_domain_info brcm_msi_domain_info = {
-+	.flags	= (MSI_FLAG_USE_DEF_DOM_OPS | MSI_FLAG_USE_DEF_CHIP_OPS |
-+		   MSI_FLAG_PCI_MSIX),
-+	.chip	= &brcm_msi_irq_chip,
-+};
-+
-+static void brcm_pcie_msi_isr(struct irq_desc *desc)
++static int brcm_pcie_parse_map_dma_ranges(struct brcm_pcie *pcie)
 +{
-+	struct irq_chip *chip = irq_desc_get_chip(desc);
-+	struct brcm_msi *msi;
-+	unsigned long status, virq;
-+	u32 mask, bit, hwirq;
-+	struct device *dev;
++	int i;
++	struct of_pci_range_parser parser;
++	struct device_node *dn = pcie->dn;
 +
-+	chained_irq_enter(chip, desc);
-+	msi = irq_desc_get_handler_data(desc);
-+	mask = msi->intr_legacy_mask;
-+	dev = msi->dev;
++	/*
++	 * Parse dma-ranges property if present.  If there are multiple
++	 * PCIe controllers, we only have to parse from one of them since
++	 * the others will have an identical mapping.
++	 */
++	if (!of_pci_dma_range_parser_init(&parser, dn)) {
++		struct of_pci_range *p;
++		unsigned int max_ranges = (parser.end - parser.range)
++			/ parser.np;
 +
-+	while ((status = bcm_readl(msi->intr_base + STATUS) & mask)) {
-+		for_each_set_bit(bit, &status, BRCM_INT_PCI_MSI_NR) {
-+			/* clear the interrupt */
-+			bcm_writel(1 << bit, msi->intr_base + CLR);
++		/* Add a null entry to indicate the end of the array */
++		brcm_dma_ranges = kcalloc(max_ranges + 1,
++					  sizeof(struct of_pci_range),
++					  GFP_KERNEL);
++		if (!brcm_dma_ranges)
++			return -ENOMEM;
 +
-+			/* Account for legacy interrupt offset */
-+			hwirq = bit - msi->intr_legacy_offset;
++		p = brcm_dma_ranges;
++		while (of_pci_range_parser_one(&parser, p))
++			p++;
++	}
 +
-+			virq = irq_find_mapping(msi->inner_domain, hwirq);
-+			if (virq) {
-+				if (msi->used & (1 << hwirq))
-+					generic_handle_irq(virq);
-+				else
-+					dev_info(dev, "unhandled MSI %d\n",
-+						 hwirq);
-+			} else {
-+				/* Unknown MSI, just clear it */
-+				dev_dbg(dev, "unexpected MSI\n");
-+			}
++	for (i = 0, num_memc = 0; i < BRCM_MAX_SCB; i++) {
++		u64 size = brcmstb_memory_memc_size(i);
++
++		if (size == (u64)-1) {
++			dev_err(pcie->dev, "cannot get memc%d size", i);
++			return -EINVAL;
++		} else if (size) {
++			scb_size[i] = roundup_pow_of_two_64(size);
++			num_memc++;
++		} else {
++			break;
 +		}
 +	}
-+	chained_irq_exit(chip, desc);
-+}
-+
-+static void brcm_compose_msi_msg(struct irq_data *data, struct msi_msg *msg)
-+{
-+	struct brcm_msi *msi = irq_data_get_irq_chip_data(data);
-+	u32 temp;
-+
-+	msg->address_lo = lower_32_bits(msi->target_addr);
-+	msg->address_hi = upper_32_bits(msi->target_addr);
-+	temp = bcm_readl(msi->base + PCIE_MISC_MSI_DATA_CONFIG);
-+	msg->data = ((temp >> 16) & (temp & 0xffff)) | data->hwirq;
-+}
-+
-+static int brcm_msi_set_affinity(struct irq_data *irq_data,
-+				 const struct cpumask *mask, bool force)
-+{
-+	return -EINVAL;
-+}
-+
-+static struct irq_chip brcm_msi_bottom_irq_chip = {
-+	.name			= "Brcm_MSI",
-+	.irq_compose_msi_msg	= brcm_compose_msi_msg,
-+	.irq_set_affinity	= brcm_msi_set_affinity,
-+};
-+
-+static int brcm_msi_alloc(struct brcm_msi *msi)
-+{
-+	int bit, hwirq;
-+
-+	mutex_lock(&msi->lock);
-+	bit = ~msi->used ? ffz(msi->used) : -1;
-+
-+	if (bit >= 0 && bit < BRCM_INT_PCI_MSI_NR) {
-+		msi->used |= (1 << bit);
-+		hwirq = bit - msi->intr_legacy_offset;
-+	} else {
-+		hwirq = -ENOSPC;
-+	}
-+
-+	mutex_unlock(&msi->lock);
-+	return hwirq;
-+}
-+
-+static void brcm_msi_free(struct brcm_msi *msi, unsigned long hwirq)
-+{
-+	mutex_lock(&msi->lock);
-+	msi->used &= ~(1 << (hwirq + msi->intr_legacy_offset));
-+	mutex_unlock(&msi->lock);
-+}
-+
-+static int brcm_irq_domain_alloc(struct irq_domain *domain, unsigned int virq,
-+				 unsigned int nr_irqs, void *args)
-+{
-+	struct brcm_msi *msi = domain->host_data;
-+	int hwirq;
-+
-+	hwirq = brcm_msi_alloc(msi);
-+
-+	if (hwirq < 0)
-+		return hwirq;
-+
-+	irq_domain_set_info(domain, virq, (irq_hw_number_t)hwirq,
-+			    &brcm_msi_bottom_irq_chip, domain->host_data,
-+			    handle_simple_irq, NULL, NULL);
-+	return 0;
-+}
-+
-+static void brcm_irq_domain_free(struct irq_domain *domain,
-+				 unsigned int virq, unsigned int nr_irqs)
-+{
-+	struct irq_data *d = irq_domain_get_irq_data(domain, virq);
-+	struct brcm_msi *msi = irq_data_get_irq_chip_data(d);
-+
-+	brcm_msi_free(msi, d->hwirq);
-+}
-+
-+static void brcm_msi_set_regs(struct brcm_msi *msi)
-+{
-+	u32 data_val, msi_lo, msi_hi;
-+
-+	if (msi->rev >= BRCM_PCIE_HW_REV_33) {
-+		/*
-+		 * ffe0 -- least sig 5 bits are 0 indicating 32 msgs
-+		 * 6540 -- this is our arbitrary unique data value
-+		 */
-+		data_val = 0xffe06540;
-+	} else {
-+		/*
-+		 * fff8 -- least sig 3 bits are 0 indicating 8 msgs
-+		 * 6540 -- this is our arbitrary unique data value
-+		 */
-+		data_val = 0xfff86540;
-+	}
-+
-+	/*
-+	 * Make sure we are not masking MSIs.  Note that MSIs can be masked,
-+	 * but that occurs on the PCIe EP device
-+	 */
-+	bcm_writel(0xffffffff & msi->intr_legacy_mask,
-+		   msi->intr_base + MASK_CLR);
-+
-+	msi_lo = lower_32_bits(msi->target_addr);
-+	msi_hi = upper_32_bits(msi->target_addr);
-+	/*
-+	 * The 0 bit of PCIE_MISC_MSI_BAR_CONFIG_LO is repurposed to MSI
-+	 * enable, which we set to 1.
-+	 */
-+	bcm_writel(msi_lo | 1, msi->base + PCIE_MISC_MSI_BAR_CONFIG_LO);
-+	bcm_writel(msi_hi, msi->base + PCIE_MISC_MSI_BAR_CONFIG_HI);
-+	bcm_writel(data_val, msi->base + PCIE_MISC_MSI_DATA_CONFIG);
-+}
-+
-+static const struct irq_domain_ops msi_domain_ops = {
-+	.alloc	= brcm_irq_domain_alloc,
-+	.free	= brcm_irq_domain_free,
-+};
-+
-+static int brcm_allocate_domains(struct brcm_msi *msi)
-+{
-+	struct fwnode_handle *fwnode = of_node_to_fwnode(msi->dn);
-+	struct device *dev = msi->dev;
-+
-+	msi->inner_domain = irq_domain_add_linear(NULL, BRCM_INT_PCI_MSI_NR,
-+						  &msi_domain_ops, msi);
-+	if (!msi->inner_domain) {
-+		dev_err(dev, "failed to create IRQ domain\n");
-+		return -ENOMEM;
-+	}
-+
-+	msi->msi_domain = pci_msi_create_irq_domain(fwnode,
-+						    &brcm_msi_domain_info,
-+						    msi->inner_domain);
-+	if (!msi->msi_domain) {
-+		dev_err(dev, "failed to create MSI domain\n");
-+		irq_domain_remove(msi->inner_domain);
-+		return -ENOMEM;
-+	}
 +
 +	return 0;
 +}
 +
-+static void brcm_free_domains(struct brcm_msi *msi)
++dma_addr_t brcm_phys_to_dma(struct device *dev, phys_addr_t paddr)
 +{
-+	irq_domain_remove(msi->msi_domain);
-+	irq_domain_remove(msi->inner_domain);
++	struct of_pci_range *p;
++
++	if (!dev || !dev_is_pci(dev))
++		return (dma_addr_t)paddr;
++	for (p = brcm_dma_ranges; p && p->size; p++)
++		if (paddr >= p->cpu_addr && paddr < (p->cpu_addr + p->size))
++			return (dma_addr_t)(paddr - p->cpu_addr + p->pci_addr);
++
++	return (dma_addr_t)paddr;
 +}
 +
-+static void brcm_msi_remove(struct brcm_pcie *pcie)
++phys_addr_t brcm_dma_to_phys(struct device *dev, dma_addr_t dev_addr)
 +{
-+	struct brcm_msi *msi = pcie->msi;
++	struct of_pci_range *p;
 +
-+	if (!msi)
-+		return;
-+	irq_set_chained_handler(msi->irq, NULL);
-+	irq_set_handler_data(msi->irq, NULL);
-+	brcm_free_domains(msi);
++	if (!dev || !dev_is_pci(dev))
++		return (phys_addr_t)dev_addr;
++	for (p = brcm_dma_ranges; p && p->size; p++)
++		if (dev_addr >= p->pci_addr
++		    && dev_addr < (p->pci_addr + p->size))
++			return (phys_addr_t)
++				(dev_addr - p->pci_addr + p->cpu_addr);
++
++	return (phys_addr_t)dev_addr;
 +}
 +
-+static int brcm_pcie_enable_msi(struct brcm_pcie *pcie)
-+{
-+	struct brcm_msi *msi;
-+	int irq, ret;
-+	struct device *dev = pcie->dev;
-+
-+	irq = irq_of_parse_and_map(dev->of_node, 1);
-+	if (irq <= 0) {
-+		dev_err(dev, "cannot map msi intr\n");
-+		return -ENODEV;
-+	}
-+
-+	msi = devm_kzalloc(dev, sizeof(struct brcm_msi), GFP_KERNEL);
-+	if (!msi)
-+		return -ENOMEM;
-+
-+	msi->dev = dev;
-+	msi->base = pcie->base;
-+	msi->rev =  pcie->rev;
-+	msi->dn = pcie->dn;
-+	msi->target_addr = pcie->msi_target_addr;
-+	msi->irq = irq;
-+
-+	ret = brcm_allocate_domains(msi);
-+	if (ret)
-+		return ret;
-+
-+	irq_set_chained_handler_and_data(msi->irq, brcm_pcie_msi_isr, msi);
-+
-+	if (msi->rev >= BRCM_PCIE_HW_REV_33) {
-+		msi->intr_base = msi->base + PCIE_MSI_INTR2_BASE;
-+		/*
-+		 * This version of PCIe hw has only 32 intr bits
-+		 * starting at bit position 0.
-+		 */
-+		msi->intr_legacy_mask = 0xffffffff;
-+		msi->intr_legacy_offset = 0x0;
-+		msi->used = 0x0;
-+
-+	} else {
-+		msi->intr_base = msi->base + PCIE_INTR2_CPU_BASE;
-+		/*
-+		 * This version of PCIe hw has only 8 intr bits starting
-+		 * at bit position 24.
-+		 */
-+		msi->intr_legacy_mask = 0xff000000;
-+		msi->intr_legacy_offset = 24;
-+		msi->used = 0x00ffffff;
-+	}
-+
-+	brcm_msi_set_regs(msi);
-+	pcie->msi = msi;
-+
-+	return 0;
-+}
-+
- /* Configuration space read/write support */
- static int cfg_index(int busnr, int devfn, int reg)
+ static int brcm_pcie_add_controller(struct brcm_pcie *pcie)
  {
-@@ -776,6 +1076,7 @@ static int brcm_pcie_setup(struct brcm_pcie *pcie)
- 	u16 nlw, cls, lnksta;
- 	bool ssc_good = false;
- 	struct device *dev = pcie->dev;
-+	u64 msi_target_addr;
+ 	int i, ret = 0;
+@@ -610,6 +685,10 @@ static int brcm_pcie_add_controller(struct brcm_pcie *pcie)
+ 		goto done;
+ 	}
  
- 	/* Reset the bridge */
- 	brcm_pcie_bridge_sw_init_set(pcie, 1);
-@@ -820,14 +1121,17 @@ static int brcm_pcie_setup(struct brcm_pcie *pcie)
- 	 * The PCIe host controller by design must set the inbound
- 	 * viewport to be a contiguous arrangement of all of the
- 	 * system's memory.  In addition, its size mut be a power of
--	 * two.  To further complicate matters, the viewport must
--	 * start on a pcie-address that is aligned on a multiple of its
--	 * size.  If a portion of the viewport does not represent
--	 * system memory -- e.g. 3GB of memory requires a 4GB viewport
--	 * -- we can map the outbound memory in or after 3GB and even
--	 * though the viewport will overlap the outbound memory the
--	 * controller will know to send outbound memory downstream and
--	 * everything else upstream.
-+	 * two.  Further, the MSI target address must NOT be placed
-+	 * inside this region, as the decoding logic will consider its
-+	 * address to be inbound memory traffic.  To further
-+	 * complicate matters, the viewport must start on a
-+	 * pcie-address that is aligned on a multiple of its size.
-+	 * If a portion of the viewport does not represent system
-+	 * memory -- e.g. 3GB of memory requires a 4GB viewport --
-+	 * we can map the outbound memory in or after 3GB and even
-+	 * though the viewport will overlap the outbound memory
-+	 * the controller will know to send outbound memory downstream
-+	 * and everything else upstream.
++	ret = brcm_pcie_parse_map_dma_ranges(pcie);
++	if (ret)
++		goto done;
++
+ 	/* Determine num_memc and their sizes */
+ 	for (i = 0, num_memc = 0; i < BRCM_MAX_SCB; i++) {
+ 		u64 size = brcmstb_memory_memc_size(i);
+@@ -639,8 +718,13 @@ static int brcm_pcie_add_controller(struct brcm_pcie *pcie)
+ static void brcm_pcie_remove_controller(struct brcm_pcie *pcie)
+ {
+ 	mutex_lock(&brcm_pcie_lock);
+-	if (--num_pcie == 0)
+-		num_memc = 0;
++	if (--num_pcie > 0)
++		goto out;
++
++	kfree(brcm_dma_ranges);
++	brcm_dma_ranges = NULL;
++	num_memc = 0;
++out:
+ 	mutex_unlock(&brcm_pcie_lock);
+ }
+ 
+@@ -747,11 +831,37 @@ static int brcm_pcie_setup(struct brcm_pcie *pcie)
  	 */
  	rc_bar2_size = roundup_pow_of_two_64(total_mem_size);
  
-@@ -843,6 +1147,15 @@ static int brcm_pcie_setup(struct brcm_pcie *pcie)
- 		if (total_mem_size <= 0xc0000000ULL &&
- 		    rc_bar2_size <= 0x100000000ULL) {
- 			rc_bar2_offset = 0;
-+
-+			/* If the viewport is less then 4GB we can fit
-+			 * the MSI target address under 4GB. Otherwise
-+			 * put it right below 64GB.
+-	/*
+-	 * Set simple configuration based on memory sizes
+-	 * only.  We always start the viewport at address 0.
+-	 */
+-	rc_bar2_offset = 0;
++	if (brcm_dma_ranges) {
++		/*
++		 * The best-case scenario is to place the inbound
++		 * region in the first 4GB of pcie-space, as some
++		 * legacy devices can only address 32bits.
++		 * We would also like to put the MSI under 4GB
++		 * as well, since some devices require a 32bit
++		 * MSI target address.
++		 */
++		if (total_mem_size <= 0xc0000000ULL &&
++		    rc_bar2_size <= 0x100000000ULL) {
++			rc_bar2_offset = 0;
++		} else {
++			/*
++			 * The system memory is 4GB or larger so we
++			 * cannot start the inbound region at location
++			 * 0 (since we have to allow some space for
++			 * outbound memory @ 3GB).  So instead we
++			 * start it at the 1x multiple of its size
 +			 */
-+			msi_target_addr =
-+				(rc_bar2_size == 0x100000000ULL)
-+				? BRCM_MSI_TARGET_ADDR_GT_4GB
-+				: BRCM_MSI_TARGET_ADDR_LT_4GB;
- 		} else {
- 			/*
- 			 * The system memory is 4GB or larger so we
-@@ -852,8 +1165,12 @@ static int brcm_pcie_setup(struct brcm_pcie *pcie)
- 			 * start it at the 1x multiple of its size
- 			 */
- 			rc_bar2_offset = rc_bar2_size;
--		}
- 
-+			/* Since we are starting the viewport at 4GB or
-+			 * higher, put the MSI target address below 4GB
-+			 */
-+			msi_target_addr = BRCM_MSI_TARGET_ADDR_LT_4GB;
++			rc_bar2_offset = rc_bar2_size;
 +		}
- 	} else {
- 		/*
- 		 * Set simple configuration based on memory sizes
-@@ -861,7 +1178,12 @@ static int brcm_pcie_setup(struct brcm_pcie *pcie)
- 		 * and set the MSI target address accordingly.
- 		 */
- 		rc_bar2_offset = 0;
 +
-+		msi_target_addr = (rc_bar2_size >= 0x100000000ULL)
-+			? BRCM_MSI_TARGET_ADDR_GT_4GB
-+			: BRCM_MSI_TARGET_ADDR_LT_4GB;
- 	}
-+	pcie->msi_target_addr = msi_target_addr;
++	} else {
++		/*
++		 * Set simple configuration based on memory sizes
++		 * only.  We always start the viewport at address 0,
++		 * and set the MSI target address accordingly.
++		 */
++		rc_bar2_offset = 0;
++	}
  
  	tmp = lower_32_bits(rc_bar2_offset);
  	tmp = INSERT_FIELD(tmp, PCIE_MISC_RC_BAR2_CONFIG_LO, SIZE,
-@@ -1036,6 +1358,9 @@ static int brcm_pcie_resume(struct device *dev)
- 	if (ret)
- 		return ret;
+@@ -969,7 +1079,6 @@ static int brcm_pcie_probe(struct platform_device *pdev)
+ 	struct brcm_pcie *pcie;
+ 	struct resource *res;
+ 	void __iomem *base;
+-	u32 tmp;
+ 	struct pci_host_bridge *bridge;
+ 	struct pci_bus *child;
  
-+	if (pcie->msi && pcie->msi_internal)
-+		brcm_msi_set_regs(pcie->msi);
-+
- 	pcie->suspended = false;
+@@ -986,11 +1095,6 @@ static int brcm_pcie_probe(struct platform_device *pdev)
+ 		return -EINVAL;
+ 	}
  
- 	return 0;
-@@ -1043,6 +1368,7 @@ static int brcm_pcie_resume(struct device *dev)
- 
- static void _brcm_pcie_remove(struct brcm_pcie *pcie)
- {
-+	brcm_msi_remove(pcie);
- 	turn_off(pcie);
- 	clk_disable_unprepare(pcie->clk);
- 	clk_put(pcie->clk);
-@@ -1072,7 +1398,7 @@ static int brcm_pcie_remove(struct platform_device *pdev)
- 
- static int brcm_pcie_probe(struct platform_device *pdev)
- {
--	struct device_node *dn = pdev->dev.of_node;
-+	struct device_node *dn = pdev->dev.of_node, *msi_dn;
- 	const struct of_device_id *of_id;
- 	const struct pcie_cfg_data *data;
- 	int ret;
-@@ -1152,6 +1478,20 @@ static int brcm_pcie_probe(struct platform_device *pdev)
- 	if (ret)
- 		goto fail;
- 
-+	msi_dn = of_parse_phandle(pcie->dn, "msi-parent", 0);
-+	/* Use the internal MSI if no msi-parent property */
-+	if (!msi_dn)
-+		msi_dn = pcie->dn;
-+
-+	if (pci_msi_enabled() && msi_dn == pcie->dn) {
-+		ret = brcm_pcie_enable_msi(pcie);
-+		if (ret)
-+			dev_err(pcie->dev,
-+				"probe of internal MSI failed: %d)", ret);
-+		else
-+			pcie->msi_internal = true;
-+	}
-+
- 	list_splice_init(&pcie->resources, &bridge->windows);
- 	bridge->dev.parent = &pdev->dev;
- 	bridge->busnr = 0;
-@@ -1174,7 +1514,6 @@ static int brcm_pcie_probe(struct platform_device *pdev)
- 	pcie->root_bus = bridge->bus;
- 
- 	return 0;
+-	if (of_property_read_u32(dn, "dma-ranges", &tmp) == 0) {
+-		dev_err(&pdev->dev, "cannot yet handle dma-ranges\n");
+-		return -EINVAL;
+-	}
 -
- fail:
- 	_brcm_pcie_remove(pcie);
- 	return ret;
+ 	data = of_id->data;
+ 	pcie->reg_offsets = data->offsets;
+ 	pcie->reg_field_info = data->reg_field_info;
+diff --git a/include/soc/brcmstb/common.h b/include/soc/brcmstb/common.h
+index cfb5335..a7f19e0 100644
+--- a/include/soc/brcmstb/common.h
++++ b/include/soc/brcmstb/common.h
+@@ -12,4 +12,20 @@
+ 
+ bool soc_is_brcmstb(void);
+ 
++#if defined(CONFIG_PCIE_BRCMSTB)
++dma_addr_t brcm_phys_to_dma(struct device *dev, phys_addr_t paddr);
++phys_addr_t brcm_dma_to_phys(struct device *dev, dma_addr_t dev_addr);
++#else
++static inline dma_addr_t brcm_phys_to_dma(struct device *dev, phys_addr_t paddr)
++{
++	return (dma_addr_t)paddr;
++}
++
++static inline phys_addr_t brcm_dma_to_phys(struct device *dev,
++					   dma_addr_t dev_addr)
++{
++	return (phys_addr_t)dev_addr;
++}
++#endif
++
+ #endif /* __SOC_BRCMSTB_COMMON_H__ */
 -- 
 1.9.0.138.g2de3478
 
