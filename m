@@ -1,99 +1,130 @@
-Return-Path: <SRS0=2elN=LQ=intel.com=jonathan.derrick@kernel.org>
-Return-Path: <SRS0=2elN=LQ=intel.com=jonathan.derrick@kernel.org>
-From: Jon Derrick <jonathan.derrick@intel.com>
-To: <linux-pci@vger.kernel.org>
-Cc: <linux-kernel@vger.kernel.org>,
-	Bjorn Helgaas <helgaas@kernel.org>,
-	Keith Busch <keith.busch@intel.com>,
-	Sinan Kaya <okaya@kernel.org>,
-	Oza Pawandeep <poza@codeaurora.org>,
-	Matthew Wilcox <willy@infradead.org>,
-	Lukas Winner <lukas@wunner.de>,
-	Christoph Hellwig <hch@lst.de>,
-	Mika Westerberg <mika.westerberg@linux.intel.com>,
-	Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
-	Jon Derrick <jonathan.derrick@intel.com>
-Subject: [PATCH] PCI/AER: Fix an AER enabling/disabling race
-Date: Sat,  1 Sep 2018 19:06:52 -0600
-Message-Id: <1535850412-3085-1-git-send-email-jonathan.derrick@intel.com>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mx1.redhat.com ([209.132.183.28]:33586 "EHLO mx1.redhat.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1731250AbeITAkJ (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Wed, 19 Sep 2018 20:40:09 -0400
+Date: Wed, 19 Sep 2018 13:00:38 -0600
+From: Alex Williamson <alex.williamson@redhat.com>
+To: Sinan Kaya <okaya@kernel.org>
+Cc: linux-pci@vger.kernel.org, Bjorn Helgaas <bhelgaas@google.com>,
+        Alexey Kardashevskiy <aik@ozlabs.ru>,
+        Peter Xu <peterx@redhat.com>,
+        "Gustavo A. R. Silva" <gustavo@embeddedor.com>,
+        Eric Auger <eric.auger@redhat.com>
+Subject: Re: [PATCH v4 4/6] PCI: Expose reset type to users of
+ pci_try_reset_function()
+Message-ID: <20180919130038.0d5a152b@t450s.home>
+In-Reply-To: <20180919163037.13497-5-okaya@kernel.org>
+References: <20180919163037.13497-1-okaya@kernel.org>
+        <20180919163037.13497-5-okaya@kernel.org>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=US-ASCII
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-There is a sequence with non-ACPI root ports where the AER driver can
-enable error reporting on the tree before port drivers have bound to
-ports on the tree. The port driver assumes the AER driver will set up
-error reporting afterwards, so instead add a check if error reporting
-was set up first.
+On Wed, 19 Sep 2018 16:30:35 +0000
+Sinan Kaya <okaya@kernel.org> wrote:
 
-Example:
-[  343.790573] pcieport 10000:00:00.0: pci_disable_pcie_error_reporting
-[  343.809812] pcieport 10000:00:00.0: pci_enable_pcie_error_reporting
-[  343.819506] pci 10000:01:00.0: pci_enable_pcie_error_reporting
-[  343.828814] pci 10000:02:00.0: pci_enable_pcie_error_reporting
-[  343.838089] pci 10000:02:01.0: pci_enable_pcie_error_reporting
-[  343.847478] pci 10000:02:02.0: pci_enable_pcie_error_reporting
-[  343.856659] pci 10000:02:03.0: pci_enable_pcie_error_reporting
-[  343.865794] pci 10000:02:04.0: pci_enable_pcie_error_reporting
-[  343.874875] pci 10000:02:05.0: pci_enable_pcie_error_reporting
-[  343.883918] pci 10000:02:06.0: pci_enable_pcie_error_reporting
-[  343.892922] pci 10000:02:07.0: pci_enable_pcie_error_reporting
-[  343.918900] pcieport 10000:01:00.0: pci_disable_pcie_error_reporting
-[  343.968426] pcieport 10000:02:00.0: pci_disable_pcie_error_reporting
-[  344.028179] pcieport 10000:02:01.0: pci_disable_pcie_error_reporting
-[  344.091269] pcieport 10000:02:02.0: pci_disable_pcie_error_reporting
-[  344.156473] pcieport 10000:02:03.0: pci_disable_pcie_error_reporting
-[  344.238042] pcieport 10000:02:04.0: pci_disable_pcie_error_reporting
-[  344.321864] pcieport 10000:02:05.0: pci_disable_pcie_error_reporting
-[  344.411601] pcieport 10000:02:06.0: pci_disable_pcie_error_reporting
-[  344.505332] pcieport 10000:02:07.0: pci_disable_pcie_error_reporting
-[  344.621824] nvme 10000:06:00.0: pci_enable_pcie_error_reporting
+> Looking to have more control between the users of the API vs. what the API
+> can do internally. The new reset_type tells the PCI core about the bounds
+> of the request.
+> 
+> Signed-off-by: Sinan Kaya <okaya@kernel.org>
+> ---
+>  drivers/pci/pci.c                  | 4 ++--
+>  drivers/vfio/pci/vfio_pci.c        | 7 ++++---
+>  drivers/vfio/pci/vfio_pci_config.c | 4 ++--
+>  include/linux/pci.h                | 2 +-
+>  4 files changed, 9 insertions(+), 8 deletions(-)
 
-Signed-off-by: Jon Derrick <jonathan.derrick@intel.com>
----
- drivers/pci/pcie/aer.c          | 1 +
- drivers/pci/pcie/portdrv_core.c | 5 ++++-
- include/linux/pci.h             | 1 +
- 3 files changed, 6 insertions(+), 1 deletion(-)
+Acked-by: Alex Williamson <alex.williamson@redhat.com>
 
-diff --git a/drivers/pci/pcie/aer.c b/drivers/pci/pcie/aer.c
-index 83180ed..a4e36b6 100644
---- a/drivers/pci/pcie/aer.c
-+++ b/drivers/pci/pcie/aer.c
-@@ -1333,6 +1333,7 @@ static int set_device_error_reporting(struct pci_dev *dev, void *data)
- 	if (enable)
- 		pcie_set_ecrc_checking(dev);
- 
-+	dev->aer_configured = 1;
- 	return 0;
- }
- 
-diff --git a/drivers/pci/pcie/portdrv_core.c b/drivers/pci/pcie/portdrv_core.c
-index 7c37d81..f5de554 100644
---- a/drivers/pci/pcie/portdrv_core.c
-+++ b/drivers/pci/pcie/portdrv_core.c
-@@ -224,8 +224,11 @@ static int get_port_device_capability(struct pci_dev *dev)
- 		/*
- 		 * Disable AER on this port in case it's been enabled by the
- 		 * BIOS (the AER service driver will enable it when necessary).
-+		 * Don't disable it if the AER service driver has already
-+		 * enabled it from the root port bus walking
- 		 */
--		pci_disable_pcie_error_reporting(dev);
-+		if (!dev->aer_configured)
-+			pci_disable_pcie_error_reporting(dev);
- 	}
- #endif
- 
-diff --git a/include/linux/pci.h b/include/linux/pci.h
-index e72ca8d..c071622 100644
---- a/include/linux/pci.h
-+++ b/include/linux/pci.h
-@@ -402,6 +402,7 @@ struct pci_dev {
- 	unsigned int	has_secondary_link:1;
- 	unsigned int	non_compliant_bars:1;	/* Broken BARs; ignore them */
- 	unsigned int	is_probed:1;		/* Device probing in progress */
-+	unsigned int	aer_configured:1;	/* AER configured for device */
- 	pci_dev_flags_t dev_flags;
- 	atomic_t	enable_cnt;	/* pci_enable_device has been called */
- 
--- 
-1.8.3.1
+> diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
+> index 63b5930d8fb1..4edf70a4d528 100644
+> --- a/drivers/pci/pci.c
+> +++ b/drivers/pci/pci.c
+> @@ -4852,7 +4852,7 @@ EXPORT_SYMBOL_GPL(pci_reset_function_locked);
+>   *
+>   * Same as above, except return -EAGAIN if unable to lock device.
+>   */
+> -int pci_try_reset_function(struct pci_dev *dev)
+> +int pci_try_reset_function(struct pci_dev *dev, u32 reset_type)
+>  {
+>  	int rc;
+>  
+> @@ -4863,7 +4863,7 @@ int pci_try_reset_function(struct pci_dev *dev)
+>  		return -EAGAIN;
+>  
+>  	pci_dev_save_and_disable(dev);
+> -	rc = __pci_reset_function_locked(dev, PCI_RESET_ANY);
+> +	rc = __pci_reset_function_locked(dev, reset_type);
+>  	pci_dev_restore(dev);
+>  	pci_dev_unlock(dev);
+>  
+> diff --git a/drivers/vfio/pci/vfio_pci.c b/drivers/vfio/pci/vfio_pci.c
+> index cddb453a1ba5..fe7ada997c51 100644
+> --- a/drivers/vfio/pci/vfio_pci.c
+> +++ b/drivers/vfio/pci/vfio_pci.c
+> @@ -228,7 +228,7 @@ static int vfio_pci_enable(struct vfio_pci_device *vdev)
+>  		return ret;
+>  
+>  	/* If reset fails because of the device lock, fail this path entirely */
+> -	ret = pci_try_reset_function(pdev);
+> +	ret = pci_try_reset_function(pdev, PCI_RESET_ANY);
+>  	if (ret == -EAGAIN) {
+>  		pci_disable_device(pdev);
+>  		return ret;
+> @@ -376,7 +376,7 @@ static void vfio_pci_disable(struct vfio_pci_device *vdev)
+>  	 * Try to reset the device.  The success of this is dependent on
+>  	 * being able to lock the device, which is not always possible.
+>  	 */
+> -	if (vdev->reset_works && !pci_try_reset_function(pdev))
+> +	if (vdev->reset_works && !pci_try_reset_function(pdev, PCI_RESET_ANY))
+>  		vdev->needs_reset = false;
+>  
+>  	pci_restore_state(pdev);
+> @@ -844,7 +844,8 @@ static long vfio_pci_ioctl(void *device_data,
+>  
+>  	} else if (cmd == VFIO_DEVICE_RESET) {
+>  		return vdev->reset_works ?
+> -			pci_try_reset_function(vdev->pdev) : -EINVAL;
+> +			pci_try_reset_function(vdev->pdev, PCI_RESET_ANY) :
+> +			 -EINVAL;
+>  
+>  	} else if (cmd == VFIO_DEVICE_GET_PCI_HOT_RESET_INFO) {
+>  		struct vfio_pci_hot_reset_info hdr;
+> diff --git a/drivers/vfio/pci/vfio_pci_config.c b/drivers/vfio/pci/vfio_pci_config.c
+> index 115a36f6f403..0d66bac66211 100644
+> --- a/drivers/vfio/pci/vfio_pci_config.c
+> +++ b/drivers/vfio/pci/vfio_pci_config.c
+> @@ -831,7 +831,7 @@ static int vfio_exp_config_write(struct vfio_pci_device *vdev, int pos,
+>  						 &cap);
+>  
+>  		if (!ret && (cap & PCI_EXP_DEVCAP_FLR))
+> -			pci_try_reset_function(vdev->pdev);
+> +			pci_try_reset_function(vdev->pdev, PCI_RESET_ANY);
+>  	}
+>  
+>  	/*
+> @@ -910,7 +910,7 @@ static int vfio_af_config_write(struct vfio_pci_device *vdev, int pos,
+>  						&cap);
+>  
+>  		if (!ret && (cap & PCI_AF_CAP_FLR) && (cap & PCI_AF_CAP_TP))
+> -			pci_try_reset_function(vdev->pdev);
+> +			pci_try_reset_function(vdev->pdev, PCI_RESET_ANY);
+>  	}
+>  
+>  	return count;
+> diff --git a/include/linux/pci.h b/include/linux/pci.h
+> index 09aa99dd1c1b..4fdddcb85066 100644
+> --- a/include/linux/pci.h
+> +++ b/include/linux/pci.h
+> @@ -1125,7 +1125,7 @@ int pcie_flr(struct pci_dev *dev);
+>  int __pci_reset_function_locked(struct pci_dev *dev, u32 reset_type);
+>  int pci_reset_function(struct pci_dev *dev, u32 reset_type);
+>  int pci_reset_function_locked(struct pci_dev *dev, u32 reset_type);
+> -int pci_try_reset_function(struct pci_dev *dev);
+> +int pci_try_reset_function(struct pci_dev *dev, u32 reset_type);
+>  int pci_probe_reset_slot(struct pci_slot *slot);
+>  int pci_probe_reset_bus(struct pci_bus *bus);
+>  int pci_reset_bus(struct pci_dev *dev);
