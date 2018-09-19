@@ -1,45 +1,55 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from aserp2120.oracle.com ([141.146.126.78]:52130 "EHLO
-        aserp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1727623AbeIFDjL (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Wed, 5 Sep 2018 23:39:11 -0400
-Subject: Re: [PATCH for-rc v2 2/3] PCI: Request reset type as part of function
- reset
-To: Sinan Kaya <okaya@kernel.org>, linux-pci@vger.kernel.org
-Cc: Derek Chickles <derek.chickles@caviumnetworks.com>,
-        Satanand Burla <satananda.burla@caviumnetworks.com>,
-        Felix Manlunas <felix.manlunas@caviumnetworks.com>,
-        Raghu Vatsavayi <raghu.vatsavayi@caviumnetworks.com>,
-        "David S. Miller" <davem@davemloft.net>,
-        Bjorn Helgaas <bhelgaas@google.com>,
-        Juergen Gross <jgross@suse.com>,
-        Jia-Ju Bai <baijiaju1990@gmail.com>
-References: <20180905160805.5680-1-okaya@kernel.org>
- <20180905160805.5680-2-okaya@kernel.org>
-From: Boris Ostrovsky <boris.ostrovsky@oracle.com>
-Message-ID: <74681de4-4f08-0df3-a0ba-430ffa54c36f@oracle.com>
-Date: Wed, 5 Sep 2018 19:07:53 -0400
+Received: from foss.arm.com ([217.140.101.70]:57530 "EHLO foss.arm.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1730986AbeISQUA (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Wed, 19 Sep 2018 12:20:00 -0400
+Date: Wed, 19 Sep 2018 11:42:37 +0100
+From: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
+To: Dan Carpenter <dan.carpenter@oracle.com>,
+        Alan Douglas <adouglas@cadence.com>
+Cc: Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org,
+        kernel-janitors@vger.kernel.org
+Subject: Re: [PATCH] PCI: cadence: check the correct variable
+Message-ID: <20180919104237.GB15014@e107981-ln.cambridge.arm.com>
+References: <20180919103411.GA9238@mwanda>
 MIME-Version: 1.0
-In-Reply-To: <20180905160805.5680-2-okaya@kernel.org>
-Content-Type: text/plain; charset=utf-8
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20180919103411.GA9238@mwanda>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 09/05/2018 12:08 PM, Sinan Kaya wrote:
-> We need a contract between the reset API users and the PCI core about the
-> types of reset that a user needs vs. what PCI core can do internally.
-> If a platform supports hotplug, we need to do hotplug reset as an example.
->
-> Expose the reset types to the drivers and try different reset types based
-> on the new reset_type parameter.
->
-> Most users are expected to use PCI_RESET_ANY, PCI_RESET_FUNC or
-> PCI_RESET_LINK parameters.
->
-> Fixes: 811c5cb37df4 ("PCI: Unify try slot and bus reset API")
-> Link: https://bugzilla.kernel.org/show_bug.cgi?id=200985
-> Suggested-by: Alex Williamson <alex.williamson@redhat.com>
-> Signed-off-by: Sinan Kaya <okaya@kernel.org>
+On Wed, Sep 19, 2018 at 01:34:11PM +0300, Dan Carpenter wrote:
+> We should be checking "phy[i]" instead of "phy".
+> 
+> Fixes: dfb80534692d ("PCI: cadence: Add generic PHY support to host and EP drivers")
+> Signed-off-by: Dan Carpenter <dan.carpenter@oracle.com>
+> 
+> diff --git a/drivers/pci/controller/pcie-cadence.c b/drivers/pci/controller/pcie-cadence.c
+> index 86f1b002c846..5e369dd183c8 100644
+> --- a/drivers/pci/controller/pcie-cadence.c
+> +++ b/drivers/pci/controller/pcie-cadence.c
+> @@ -191,8 +191,8 @@ int cdns_pcie_init_phy(struct device *dev, struct cdns_pcie *pcie)
+>  	for (i = 0; i < phy_count; i++) {
+>  		of_property_read_string_index(np, "phy-names", i, &name);
+>  		phy[i] = devm_phy_optional_get(dev, name);
+> -		if (IS_ERR(phy))
+> -			return PTR_ERR(phy);
+> +		if (IS_ERR(phy[i]))
+> +			return PTR_ERR(phy[i]);
+>  
+>  		link[i] = device_link_add(dev, &phy[i]->dev, DL_FLAG_STATELESS);
+>  		if (!link[i]) {
 
+Alan,
 
-Reviewed-by: Boris Ostrovsky <boris.ostrovsky@oracle.com>
+technically, patch (that I already queued):
+
+https://patchwork.ozlabs.org/patch/966547/
+
+fixes this issue; in theory we should split it in two patches to
+first do what this patch does and then update the _get() API but I
+think it is overkill. Do you want me to squash this patch log into
+the patch above log for completeness ?
+
+Thanks,
+Lorenzo
