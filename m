@@ -1,133 +1,55 @@
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-From: Kunihiko Hayashi <hayashi.kunihiko@socionext.com>
-To: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
- Bjorn Helgaas <bhelgaas@google.com>, Rob Herring <robh+dt@kernel.org>,
- Mark Rutland <mark.rutland@arm.com>,
- Masahiro Yamada <yamada.masahiro@socionext.com>
-Subject: [PATCH v2 1/2] dt-bindings: PCI: add UniPhier PCIe host controller
- description
-Date: Thu,  6 Sep 2018 18:40:31 +0900
-Message-Id: <1536226832-5089-2-git-send-email-hayashi.kunihiko@socionext.com>
-In-Reply-To: <1536226832-5089-1-git-send-email-hayashi.kunihiko@socionext.com>
-References: <1536226832-5089-1-git-send-email-hayashi.kunihiko@socionext.com>
-List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
-List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
-List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
-List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
-List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
-Cc: devicetree@vger.kernel.org,
- Kunihiko Hayashi <hayashi.kunihiko@socionext.com>,
- Masami Hiramatsu <masami.hiramatsu@linaro.org>, linux-pci@vger.kernel.org,
- linux-kernel@vger.kernel.org, Jassi Brar <jaswinder.singh@linaro.org>,
- linux-arm-kernel@lists.infradead.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail.kernel.org ([198.145.29.99]:60446 "EHLO mail.kernel.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1726911AbeISWVl (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Wed, 19 Sep 2018 18:21:41 -0400
+Subject: Re: [PATCHv3 10/10] PCI: Make link active reporting detection generic
+To: Keith Busch <keith.busch@intel.com>,
+        Linux PCI <linux-pci@vger.kernel.org>,
+        Bjorn Helgaas <bhelgaas@google.com>
+Cc: Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+        Thomas Tai <thomas.tai@oracle.com>, poza@codeaurora.org,
+        Lukas Wunner <lukas@wunner.de>, Christoph Hellwig <hch@lst.de>,
+        Mika Westerberg <mika.westerberg@linux.intel.com>
+References: <20180918235702.26573-1-keith.busch@intel.com>
+ <20180918235702.26573-11-keith.busch@intel.com>
+From: Sinan Kaya <okaya@kernel.org>
+Message-ID: <f695a8f4-a359-389f-b27e-c1d998a50b0b@kernel.org>
+Date: Wed, 19 Sep 2018 12:42:56 -0400
 MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
-Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
+In-Reply-To: <20180918235702.26573-11-keith.busch@intel.com>
+Content-Type: text/plain; charset=utf-8; format=flowed
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Add DT bindings for PCIe controller implemented in UniPhier SoCs when
-configured in Root Complex (host) mode. This controller is based on
-the DesignWare PCIe core.
+On 9/18/2018 7:57 PM, Keith Busch wrote:
+> +++ b/drivers/pci/pcie/dpc.c
+> @@ -93,10 +93,12 @@ static pci_ers_result_t dpc_reset_link(struct pci_dev *pdev)
+>   	pci_write_config_word(pdev, cap + PCI_EXP_DPC_STATUS,
+>   			      PCI_EXP_DPC_STATUS_TRIGGER);
+>   
+> +	if (!pcie_wait_for_link(pdev, true))
+> +		return PCI_ERS_RESULT_DISCONNECT;
+> +
 
-Signed-off-by: Kunihiko Hayashi <hayashi.kunihiko@socionext.com>
----
- .../devicetree/bindings/pci/uniphier-pcie.txt      | 78 ++++++++++++++++++++++
- 1 file changed, 78 insertions(+)
- create mode 100644 Documentation/devicetree/bindings/pci/uniphier-pcie.txt
+We are already doing this in err.c in pcie_do_fatal_recovery() as follows.
 
-diff --git a/Documentation/devicetree/bindings/pci/uniphier-pcie.txt b/Documentation/devicetree/bindings/pci/uniphier-pcie.txt
-new file mode 100644
-index 0000000..a34e167
---- /dev/null
-+++ b/Documentation/devicetree/bindings/pci/uniphier-pcie.txt
-@@ -0,0 +1,78 @@
-+Socionext UniPhier PCIe host controller bindings
-+
-+This describes the devicetree bindings for PCIe host controller implemented
-+on Socionext UniPhier SoCs.
-+
-+UniPhier PCIe host controller is based on the Synopsys DesignWare PCI core.
-+It shares common functions with the PCIe DesignWare core driver and inherits
-+common properties defined in
-+Documentation/devicetree/bindings/pci/designware-pcie.txt.
-+
-+Required properties:
-+- compatible: Should be "socionext,uniphier-pcie".
-+- reg: Specifies offset and length of the register set for the device.
-+	According to the reg-names, appropriate register sets are required.
-+- reg-names: Must include the following entries:
-+    "dbi"    - controller configuration registers
-+    "link"   - SoC-specific glue layer registers
-+    "config" - PCIe configuration space
-+- clocks: A phandle to the clock gate for PCIe glue layer including
-+	the host controller.
-+- resets: A phandle to the reset line for PCIe glue layer including
-+	the host controller.
-+- interrupts: A list of interrupt specifiers. According to the
-+	interrupt-names, appropriate interrupts are required.
-+- interrupt-names: Must include the following entries:
-+    "dma"    - DMA interrupt
-+    "msi"    - MSI interrupt
-+    "intx"   - Legacy INTA/B/C/D interrupt
-+
-+Optional properties:
-+- phys: A phandle to generic PCIe PHY. According to the phy-names, appropriate
-+	phys are required.
-+- phy-names: Must be "pcie-phy".
-+
-+Required sub-node:
-+- interrupt-controller: Specifies interrupt controller for legacy PCI
-+	interrupts. The node name isn't important.
-+
-+Required properties for interrupt-controller:
-+- interrupt-controller: identifies the node as an interrupt controller.
-+- #interrupt-cells: specifies the number of cells needed to encode an
-+	interrupt source. The value must be 1.
-+
-+Example:
-+
-+	pcie: pcie@66000000 {
-+		compatible = "socionext,uniphier-pcie", "snps,dw-pcie";
-+		status = "disabled";
-+		reg-names = "dbi", "link", "config";
-+		reg = <0x66000000 0x1000>, <0x66010000 0x10000>,
-+		      <0x2fff0000 0x10000>;
-+		#address-cells = <3>;
-+		#size-cells = <2>;
-+		clocks = <&sys_clk 24>;
-+		resets = <&sys_rst 24>;
-+		num-lanes = <1>;
-+		num-viewport = <1>;
-+		bus-range = <0x0 0xff>;
-+		device_type = "pci";
-+		ranges =
-+		/* downstream I/O */
-+			<0x81000000 0 0x00000000  0x2ffe0000  0 0x00010000
-+		/* non-prefetchable memory */
-+			 0x82000000 0 0x00000000  0x20000000  0 0x0ffe0000>;
-+		#interrupt-cells = <1>;
-+		interrupt-names = "dma", "msi", "intx";
-+		interrupts = <0 224 4>, <0 225 4>, <0 226 4>;
-+		interrupt-map-mask = <0 0 0  7>;
-+		interrupt-map = <0 0 0  1  &pcie_intc 0>,	/* INTA */
-+				<0 0 0  2  &pcie_intc 1>,	/* INTB */
-+				<0 0 0  3  &pcie_intc 2>,	/* INTC */
-+				<0 0 0  4  &pcie_intc 3>;	/* INTD */
-+
-+		pcie_intc: interrupt-controller {
-+			interrupt-controller;
-+			#interrupt-cells = <1>;
-+		};
-+	};
--- 
-2.7.4
+	result = reset_link(udev, service);
+	...
+	if (result == PCI_ERS_RESULT_RECOVERED) {
+		if (pcie_wait_for_link(udev, true))
+			pci_rescan_bus(udev->bus);
+		pci_info(dev, "Device recovery from fatal error successful\n");
+	}
 
+This would be an unnecessary duplication.
 
-_______________________________________________
-linux-arm-kernel mailing list
-linux-arm-kernel@lists.infradead.org
-http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
+You may want to move this piece into err.c and change the return code to 
+PCI_ERS_RESULT_DISCONNECT
+right after return from reset_link().
+
+>   	return PCI_ERS_RESULT_RECOVERED;
+>   }
+>   
+> -
+>   
