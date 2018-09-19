@@ -1,43 +1,64 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from bmailout2.hostsharing.net ([83.223.90.240]:54847 "EHLO
-        bmailout2.hostsharing.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1725831AbeIGK3Q (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Fri, 7 Sep 2018 06:29:16 -0400
-Date: Fri, 7 Sep 2018 07:49:56 +0200
-From: Lukas Wunner <lukas@wunner.de>
-To: Daniel Drake <drake@endlessm.com>
-Cc: bhelgaas@google.com, mika.westerberg@linux.intel.com,
-        linux-pm@vger.kernel.org, linux-pci@vger.kernel.org,
-        rafael.j.wysocki@intel.com, nic_swsd@realtek.com,
-        keith.busch@intel.com, netdev@vger.kernel.org,
-        nouveau@lists.freedesktop.org, andriy.shevchenko@linux.intel.com,
-        linux@endlessm.com, davem@davemloft.net,
-        jonathan.derrick@intel.com, hkallweit1@gmail.com
-Subject: Re: [Nouveau] [PATCH] PCI: Reprogram bridge prefetch registers on
- resume
-Message-ID: <20180907054956.kuf4ttqoil5eiykl@wunner.de>
-References: <20180907053614.6540-1-drake@endlessm.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20180907053614.6540-1-drake@endlessm.com>
+Received: from usa-sjc-mx-foss1.foss.arm.com ([217.140.101.70]:33660 "EHLO
+        foss.arm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1726911AbeISVpS (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Wed, 19 Sep 2018 17:45:18 -0400
+From: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
+To: linux-pci@vger.kernel.org
+Cc: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
+        Bjorn Helgaas <bhelgaas@google.com>,
+        Subrahmanya Lingappa <l.subrahmanya@mobiveil.co.in>
+Subject: [PATCH] MAINTAINERS: Move mobiveil PCI driver entry where it belongs
+Date: Wed, 19 Sep 2018 17:06:36 +0100
+Message-Id: <20180919160636.21312-1-lorenzo.pieralisi@arm.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Fri, Sep 07, 2018 at 01:36:14PM +0800, Daniel Drake wrote:
-> --- a/include/linux/pci.h
-> +++ b/include/linux/pci.h
-> @@ -934,6 +934,7 @@ struct pci_dev *pci_scan_single_device(struct pci_bus *bus, int devfn);
->  void pci_device_add(struct pci_dev *dev, struct pci_bus *bus);
->  unsigned int pci_scan_child_bus(struct pci_bus *bus);
->  void pci_bus_add_device(struct pci_dev *dev);
-> +void pci_setup_bridge_mmio_pref(struct pci_dev *bridge);
->  void pci_read_bridge_bases(struct pci_bus *child);
->  struct resource *pci_find_parent_resource(const struct pci_dev *dev,
->  					  struct resource *res);
+Commit 92f9ccca4c08 ("PCI: mobiveil: Add Mobiveil PCIe Host Bridge IP
+driver DT bindings") managed to add a MAINTAINERS entry where it does
+not really belong (ie in the middle of a totally unrelated series of
+entries and in the wrong alphabetical order).
 
-Since this is only used internally in the PCI core, the declaration
-can live in drivers/pci/pci.h.
+Fix it.
 
-Thanks,
+Signed-off-by: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
+Cc: Bjorn Helgaas <bhelgaas@google.com>
+Cc: Subrahmanya Lingappa <l.subrahmanya@mobiveil.co.in>
+---
+ MAINTAINERS | 14 +++++++-------
+ 1 file changed, 7 insertions(+), 7 deletions(-)
 
-Lukas
+diff --git a/MAINTAINERS b/MAINTAINERS
+index 4ece30f15777..fb0474d7da61 100644
+--- a/MAINTAINERS
++++ b/MAINTAINERS
+@@ -9716,13 +9716,6 @@ Q:	http://patchwork.linuxtv.org/project/linux-media/list/
+ S:	Maintained
+ F:	drivers/media/dvb-frontends/mn88473*
+ 
+-PCI DRIVER FOR MOBIVEIL PCIE IP
+-M:	Subrahmanya Lingappa <l.subrahmanya@mobiveil.co.in>
+-L:	linux-pci@vger.kernel.org
+-S:	Supported
+-F:	Documentation/devicetree/bindings/pci/mobiveil-pcie.txt
+-F:	drivers/pci/controller/pcie-mobiveil.c
+-
+ MODULE SUPPORT
+ M:	Jessica Yu <jeyu@kernel.org>
+ T:	git git://git.kernel.org/pub/scm/linux/kernel/git/jeyu/linux.git modules-next
+@@ -11137,6 +11130,13 @@ F:	include/uapi/linux/switchtec_ioctl.h
+ F:	include/linux/switchtec.h
+ F:	drivers/ntb/hw/mscc/
+ 
++PCI DRIVER FOR MOBIVEIL PCIE IP
++M:	Subrahmanya Lingappa <l.subrahmanya@mobiveil.co.in>
++L:	linux-pci@vger.kernel.org
++S:	Supported
++F:	Documentation/devicetree/bindings/pci/mobiveil-pcie.txt
++F:	drivers/pci/controller/pcie-mobiveil.c
++
+ PCI DRIVER FOR MVEBU (Marvell Armada 370 and Armada XP SOC support)
+ M:	Thomas Petazzoni <thomas.petazzoni@free-electrons.com>
+ M:	Jason Cooper <jason@lakedaemon.net>
+-- 
+2.15.0
