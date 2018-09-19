@@ -1,124 +1,135 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.29.99]:37702 "EHLO mail.kernel.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1728196AbeIOCen (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Fri, 14 Sep 2018 22:34:43 -0400
-From: Sinan Kaya <okaya@kernel.org>
-To: linux-pci@vger.kernel.org
-Cc: alex.williamson@redhat.com, Sinan Kaya <okaya@kernel.org>,
-        Bjorn Helgaas <bhelgaas@google.com>,
-        Alexey Kardashevskiy <aik@ozlabs.ru>,
-        Peter Xu <peterx@redhat.com>,
-        "Gustavo A. R. Silva" <gustavo@embeddedor.com>,
-        Eric Auger <eric.auger@redhat.com>
-Subject: [PATCH v2 4/6] PCI: Expose reset type to users of pci_try_reset_function()
-Date: Fri, 14 Sep 2018 21:18:06 +0000
-Message-Id: <20180914211808.2564-5-okaya@kernel.org>
-In-Reply-To: <20180914211808.2564-1-okaya@kernel.org>
-References: <20180914211808.2564-1-okaya@kernel.org>
+Received: from mail-qt0-f193.google.com ([209.85.216.193]:40353 "EHLO
+        mail-qt0-f193.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1732265AbeISULY (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Wed, 19 Sep 2018 16:11:24 -0400
+From: Jim Quinlan <jim2101024@gmail.com>
+To: linux-kernel@vger.kernel.org
+Cc: Jim Quinlan <jim2101024@gmail.com>,
+        Kevin Cernekee <cernekee@gmail.com>,
+        Florian Fainelli <f.fainelli@gmail.com>,
+        Rob Herring <robh+dt@kernel.org>,
+        Mark Rutland <mark.rutland@arm.com>,
+        Ralf Baechle <ralf@linux-mips.org>,
+        Paul Burton <paul.burton@mips.com>,
+        James Hogan <jhogan@kernel.org>, linux-mips@linux-mips.org,
+        devicetree@vger.kernel.org, bcm-kernel-feedback-list@broadcom.com,
+        linux-pci@vger.kernel.org, Christoph Hellwig <hch@lst.de>
+Subject: [PATCH v5 08/12] MIPS: BMIPS: add PCI bindings for 7425, 7435
+Date: Wed, 19 Sep 2018 10:32:03 -0400
+Message-Id: <1537367527-20773-9-git-send-email-jim2101024@gmail.com>
+In-Reply-To: <1537367527-20773-1-git-send-email-jim2101024@gmail.com>
+References: <1537367527-20773-1-git-send-email-jim2101024@gmail.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Looking to have more control between the users of the API vs. what the API
-can do internally. The new reset_type tells the PCI core about the bounds
-of the request.
+Adds the PCIe nodes for the Broadcom STB PCIe root complex.
 
-Signed-off-by: Sinan Kaya <okaya@kernel.org>
+Signed-off-by: Jim Quinlan <jim2101024@gmail.com>
 ---
- drivers/pci/pci.c                  | 4 ++--
- drivers/vfio/pci/vfio_pci.c        | 7 ++++---
- drivers/vfio/pci/vfio_pci_config.c | 4 ++--
- include/linux/pci.h                | 2 +-
- 4 files changed, 9 insertions(+), 8 deletions(-)
+ arch/mips/boot/dts/brcm/bcm7425.dtsi     | 28 ++++++++++++++++++++++++++++
+ arch/mips/boot/dts/brcm/bcm7435.dtsi     | 28 ++++++++++++++++++++++++++++
+ arch/mips/boot/dts/brcm/bcm97425svmb.dts |  4 ++++
+ arch/mips/boot/dts/brcm/bcm97435svmb.dts |  4 ++++
+ 4 files changed, 64 insertions(+)
 
-diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
-index 3046c202bfea..c216ab56dbcc 100644
---- a/drivers/pci/pci.c
-+++ b/drivers/pci/pci.c
-@@ -4852,7 +4852,7 @@ EXPORT_SYMBOL_GPL(pci_reset_function_locked);
-  *
-  * Same as above, except return -EAGAIN if unable to lock device.
-  */
--int pci_try_reset_function(struct pci_dev *dev)
-+int pci_try_reset_function(struct pci_dev *dev, u32 reset_type)
- {
- 	int rc;
- 
-@@ -4863,7 +4863,7 @@ int pci_try_reset_function(struct pci_dev *dev)
- 		return -EAGAIN;
- 
- 	pci_dev_save_and_disable(dev);
--	rc = __pci_reset_function_locked(dev, PCI_RESET_ANY);
-+	rc = __pci_reset_function_locked(dev, reset_type);
- 	pci_dev_restore(dev);
- 	pci_dev_unlock(dev);
- 
-diff --git a/drivers/vfio/pci/vfio_pci.c b/drivers/vfio/pci/vfio_pci.c
-index cddb453a1ba5..fe7ada997c51 100644
---- a/drivers/vfio/pci/vfio_pci.c
-+++ b/drivers/vfio/pci/vfio_pci.c
-@@ -228,7 +228,7 @@ static int vfio_pci_enable(struct vfio_pci_device *vdev)
- 		return ret;
- 
- 	/* If reset fails because of the device lock, fail this path entirely */
--	ret = pci_try_reset_function(pdev);
-+	ret = pci_try_reset_function(pdev, PCI_RESET_ANY);
- 	if (ret == -EAGAIN) {
- 		pci_disable_device(pdev);
- 		return ret;
-@@ -376,7 +376,7 @@ static void vfio_pci_disable(struct vfio_pci_device *vdev)
- 	 * Try to reset the device.  The success of this is dependent on
- 	 * being able to lock the device, which is not always possible.
- 	 */
--	if (vdev->reset_works && !pci_try_reset_function(pdev))
-+	if (vdev->reset_works && !pci_try_reset_function(pdev, PCI_RESET_ANY))
- 		vdev->needs_reset = false;
- 
- 	pci_restore_state(pdev);
-@@ -844,7 +844,8 @@ static long vfio_pci_ioctl(void *device_data,
- 
- 	} else if (cmd == VFIO_DEVICE_RESET) {
- 		return vdev->reset_works ?
--			pci_try_reset_function(vdev->pdev) : -EINVAL;
-+			pci_try_reset_function(vdev->pdev, PCI_RESET_ANY) :
-+			 -EINVAL;
- 
- 	} else if (cmd == VFIO_DEVICE_GET_PCI_HOT_RESET_INFO) {
- 		struct vfio_pci_hot_reset_info hdr;
-diff --git a/drivers/vfio/pci/vfio_pci_config.c b/drivers/vfio/pci/vfio_pci_config.c
-index 115a36f6f403..0d66bac66211 100644
---- a/drivers/vfio/pci/vfio_pci_config.c
-+++ b/drivers/vfio/pci/vfio_pci_config.c
-@@ -831,7 +831,7 @@ static int vfio_exp_config_write(struct vfio_pci_device *vdev, int pos,
- 						 &cap);
- 
- 		if (!ret && (cap & PCI_EXP_DEVCAP_FLR))
--			pci_try_reset_function(vdev->pdev);
-+			pci_try_reset_function(vdev->pdev, PCI_RESET_ANY);
- 	}
- 
- 	/*
-@@ -910,7 +910,7 @@ static int vfio_af_config_write(struct vfio_pci_device *vdev, int pos,
- 						&cap);
- 
- 		if (!ret && (cap & PCI_AF_CAP_FLR) && (cap & PCI_AF_CAP_TP))
--			pci_try_reset_function(vdev->pdev);
-+			pci_try_reset_function(vdev->pdev, PCI_RESET_ANY);
- 	}
- 
- 	return count;
-diff --git a/include/linux/pci.h b/include/linux/pci.h
-index 09aa99dd1c1b..4fdddcb85066 100644
---- a/include/linux/pci.h
-+++ b/include/linux/pci.h
-@@ -1125,7 +1125,7 @@ int pcie_flr(struct pci_dev *dev);
- int __pci_reset_function_locked(struct pci_dev *dev, u32 reset_type);
- int pci_reset_function(struct pci_dev *dev, u32 reset_type);
- int pci_reset_function_locked(struct pci_dev *dev, u32 reset_type);
--int pci_try_reset_function(struct pci_dev *dev);
-+int pci_try_reset_function(struct pci_dev *dev, u32 reset_type);
- int pci_probe_reset_slot(struct pci_slot *slot);
- int pci_probe_reset_bus(struct pci_bus *bus);
- int pci_reset_bus(struct pci_dev *dev);
+diff --git a/arch/mips/boot/dts/brcm/bcm7425.dtsi b/arch/mips/boot/dts/brcm/bcm7425.dtsi
+index 410e61e..0edcbe4 100644
+--- a/arch/mips/boot/dts/brcm/bcm7425.dtsi
++++ b/arch/mips/boot/dts/brcm/bcm7425.dtsi
+@@ -584,4 +584,32 @@
+ 			};
+ 		};
+ 	};
++
++	pcie: pcie@10410000 {
++		reg = <0x10410000 0x830c>;
++		compatible = "brcm,bcm7425-pcie";
++		interrupts = <37>, <37>;
++		interrupt-names = "pcie", "msi";
++		interrupt-parent = <&periph_intc>;
++		#address-cells = <3>;
++		#size-cells = <2>;
++		linux,pci-domain = <0>;
++		brcm,enable-ssc;
++		bus-range = <0x00 0xff>;
++		msi-controller;
++		#interrupt-cells = <1>;
++		/* 4x128mb windows */
++		ranges = <0x2000000 0x0 0xd0000000 0xd0000000 0x0 0x20000000>;
++		/* 768M or 1GB memc0, 0-1GB memc1 */
++		dma-ranges =
++			<0x02000000 0x0 0x00000000 0x00000000 0x0 0x10000000>,
++			<0x02000000 0x0 0x10000000 0x20000000 0x0 0x30000000>,
++			<0x02000000 0x0 0x40000000 0x90000000 0x0 0x40000000>;
++		interrupt-map-mask = <0 0 0 7>;
++		interrupt-map = <0 0 0 1 &periph_intc 33
++				 0 0 0 2 &periph_intc 34
++				 0 0 0 3 &periph_intc 35
++				 0 0 0 4 &periph_intc 36>;
++	};
++
+ };
+diff --git a/arch/mips/boot/dts/brcm/bcm7435.dtsi b/arch/mips/boot/dts/brcm/bcm7435.dtsi
+index 8398b7f..50bc7a0 100644
+--- a/arch/mips/boot/dts/brcm/bcm7435.dtsi
++++ b/arch/mips/boot/dts/brcm/bcm7435.dtsi
+@@ -599,4 +599,32 @@
+ 			};
+ 		};
+ 	};
++
++	pcie: pcie@10410000 {
++		reg = <0x10410000 0x930c>;
++		interrupts = <0x27>, <0x27>;
++		interrupt-names = "pcie", "msi";
++		interrupt-parent = <&periph_intc>;
++		compatible = "brcm,bcm7435-pcie";
++		#address-cells = <3>;
++		#size-cells = <2>;
++		linux,pci-domain = <0>;
++		brcm,enable-ssc;
++		bus-range = <0x00 0xff>;
++		msi-controller;
++		#interrupt-cells = <1>;
++		ranges = <0x2000000 0x0 0xd0000000 0xd0000000 0x0 0x20000000>;
++		/* 768M or 1GB memc0, 0-1GB memc1 */
++		dma-ranges =
++			<0x02000000 0x0 0x00000000 0x00000000 0x0 0x10000000>,
++			<0x02000000 0x0 0x10000000 0x20000000 0x0 0x30000000>,
++			<0x02000000 0x0 0x40000000 0x90000000 0x0 0x40000000>;
++		interrupt-map-mask = <0 0 0 7>;
++		interrupt-map = <0 0 0 1 &periph_intc 35
++				 0 0 0 2 &periph_intc 36
++				 0 0 0 3 &periph_intc 37
++				 0 0 0 4 &periph_intc 38>;
++		status = "disabled";
++	};
++
+ };
+diff --git a/arch/mips/boot/dts/brcm/bcm97425svmb.dts b/arch/mips/boot/dts/brcm/bcm97425svmb.dts
+index 0ed2221..22270a9 100644
+--- a/arch/mips/boot/dts/brcm/bcm97425svmb.dts
++++ b/arch/mips/boot/dts/brcm/bcm97425svmb.dts
+@@ -152,3 +152,7 @@
+ &waketimer {
+ 	status = "okay";
+ };
++
++&pcie {
++	status = "okay";
++};
+diff --git a/arch/mips/boot/dts/brcm/bcm97435svmb.dts b/arch/mips/boot/dts/brcm/bcm97435svmb.dts
+index 2c145a8..91bc1ec 100644
+--- a/arch/mips/boot/dts/brcm/bcm97435svmb.dts
++++ b/arch/mips/boot/dts/brcm/bcm97435svmb.dts
+@@ -128,3 +128,7 @@
+ &waketimer {
+ 	status = "okay";
+ };
++
++&pcie {
++	status = "okay";
++};
 -- 
-2.18.0
+1.9.0.138.g2de3478
