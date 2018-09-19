@@ -2,236 +2,146 @@ Return-Path: <SRS0=bOp+=MB=vger.kernel.org=linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-5.3 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	INCLUDES_PATCH,MAILING_LIST_MULTI,SPF_PASS,USER_AGENT_MUTT autolearn=ham
-	autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-8.6 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
+	DKIM_VALID_AU,FREEMAIL_FORGED_FROMDOMAIN,FREEMAIL_FROM,
+	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
+	SPF_PASS,USER_AGENT_GIT autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 6006FECE564
-	for <linux-pci@archiver.kernel.org>; Wed, 19 Sep 2018 17:58:14 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id C818BECE564
+	for <linux-pci@archiver.kernel.org>; Wed, 19 Sep 2018 18:55:31 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 0B7322150F
-	for <linux-pci@archiver.kernel.org>; Wed, 19 Sep 2018 17:58:14 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.3.2 mail.kernel.org 0B7322150F
-Authentication-Results: mail.kernel.org; dmarc=fail (p=none dis=none) header.from=intel.com
+	by mail.kernel.org (Postfix) with ESMTP id 8276121523
+	for <linux-pci@archiver.kernel.org>; Wed, 19 Sep 2018 18:55:31 +0000 (UTC)
+Authentication-Results: mail.kernel.org;
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="sRwIl45N"
+DMARC-Filter: OpenDMARC Filter v1.3.2 mail.kernel.org 8276121523
+Authentication-Results: mail.kernel.org; dmarc=fail (p=none dis=none) header.from=gmail.com
 Authentication-Results: mail.kernel.org; spf=none smtp.mailfrom=linux-pci-owner@vger.kernel.org
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1731348AbeISXhP (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Wed, 19 Sep 2018 19:37:15 -0400
-Received: from mga03.intel.com ([134.134.136.65]:43909 "EHLO mga03.intel.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1726925AbeISXhO (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Wed, 19 Sep 2018 19:37:14 -0400
-X-Amp-Result: UNSCANNABLE
-X-Amp-File-Uploaded: False
-Received: from fmsmga007.fm.intel.com ([10.253.24.52])
-  by orsmga103.jf.intel.com with ESMTP/TLS/DHE-RSA-AES256-GCM-SHA384; 19 Sep 2018 10:58:11 -0700
-X-ExtLoop1: 1
-X-IronPort-AV: E=Sophos;i="5.53,394,1531810800"; 
-   d="scan'208";a="71304631"
-Received: from unknown (HELO localhost.localdomain) ([10.232.112.44])
-  by fmsmga007.fm.intel.com with ESMTP; 19 Sep 2018 10:58:10 -0700
-Date:   Wed, 19 Sep 2018 12:00:03 -0600
-From:   Keith Busch <keith.busch@intel.com>
-To:     Bjorn Helgaas <helgaas@kernel.org>
-Cc:     Linux PCI <linux-pci@vger.kernel.org>,
-        Bjorn Helgaas <bhelgaas@google.com>,
-        Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-        Sinan Kaya <okaya@kernel.org>,
-        Thomas Tai <thomas.tai@oracle.com>, poza@codeaurora.org,
-        Lukas Wunner <lukas@wunner.de>, Christoph Hellwig <hch@lst.de>,
-        Mika Westerberg <mika.westerberg@linux.intel.com>
-Subject: Re: [PATCHv3 01/10] PCI/portdrv: Use subsys_init for service drivers
-Message-ID: <20180919180003.GC28310@localhost.localdomain>
-References: <20180918235702.26573-1-keith.busch@intel.com>
- <20180918235702.26573-2-keith.busch@intel.com>
- <20180919162846.GB243610@bhelgaas-glaptop.roam.corp.google.com>
+        id S2387583AbeITAeo (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Wed, 19 Sep 2018 20:34:44 -0400
+Received: from mail-wm1-f67.google.com ([209.85.128.67]:40739 "EHLO
+        mail-wm1-f67.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S2387586AbeITAen (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Wed, 19 Sep 2018 20:34:43 -0400
+Received: by mail-wm1-f67.google.com with SMTP id 207-v6so8118973wme.5;
+        Wed, 19 Sep 2018 11:55:28 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20161025;
+        h=from:to:cc:subject:date:message-id:mime-version
+         :content-transfer-encoding;
+        bh=j2iPDhDe4iOXAw3mn4RE+Jg+ftaFRwYf7U24CRFhk5A=;
+        b=sRwIl45NFJ60cVaarp5Dle10v/aHKve7PLxjSVDBVRMXwEaNTB/nxCfj2jdJZGUl4g
+         kfJahCJjCcqMafBCp1uP+agEIkqkFsCjI6ttO1MgbocMkADPqLFCK7bCneylLRwy68XY
+         974a2dSyX/74M7qvl8+8K3PtqrznvRCf2Wfs9j8yJWXeUWkDU7gmH+e4V7IX0050FqrZ
+         16KWiF5xRxrUfc9w8+C7FG1yh0p+PqUeUnvVjYBz0Sj/8AYDjfIYLhhCU857mKcYcVb1
+         zrQdY+qq4zrGF2FUWmQmOgeazX/GyAeLCZJE2oKardA7+CK4VTJR1IvHU0yt7lxaj+w6
+         F3UQ==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20161025;
+        h=x-gm-message-state:from:to:cc:subject:date:message-id:mime-version
+         :content-transfer-encoding;
+        bh=j2iPDhDe4iOXAw3mn4RE+Jg+ftaFRwYf7U24CRFhk5A=;
+        b=rQOLnW2ZShQQjPIsJtEaIIgA7UvS/CvPgKzFgVz9oLzx7MC0ZMAB4vyC+3qSwrkfki
+         vWv/nStZGYA97dj1SDCtzSGT0BO+URRI1jmNfdCxEc1T8IHt9XqO0DD1TDXLPibvp+/t
+         bLzpAPHG/c78MPjCrp1XBGuTR9tEDvnMjbqLl8WCc1jc9hqiTdZHlvybh0z7rFAK+Qn2
+         0a6TNyIp8/Gj4kmO4VK9dEdFgPtqe2xTCxXo/UOqqY/nVDEHvmM1zRabuonHHMqsnAUi
+         EOkJepsQ53gcs/8hFDrlh6fubpObmjQL18kYfyhnKQ7hrmEKDoNEPIQT/ft9iMINqdzk
+         fIvw==
+X-Gm-Message-State: APzg51DJKdkLyiC4XHBcF8dtb7T57RaBTMZhw0xwUmlZD2cX6Qf6o3LH
+        bUpBayaJH5Lw/vD8NOQ/dAQ=
+X-Google-Smtp-Source: ANB0VdZkG2oSxYr6TGxQCSGEt8TrGKAqwLsWAhQBgh2oDN5i8W5euc/UzkJfSNmf0PQqw/M/cfjx4A==
+X-Received: by 2002:a1c:3743:: with SMTP id e64-v6mr20013895wma.63.1537383326922;
+        Wed, 19 Sep 2018 11:55:26 -0700 (PDT)
+Received: from localhost.localdomain ([2a01:4f8:10b:24a5::2])
+        by smtp.gmail.com with ESMTPSA id y206-v6sm7727359wmg.14.2018.09.19.11.55.25
+        (version=TLS1_2 cipher=ECDHE-RSA-AES128-GCM-SHA256 bits=128/128);
+        Wed, 19 Sep 2018 11:55:26 -0700 (PDT)
+From:   Nathan Chancellor <natechancellor@gmail.com>
+To:     Xiaowei Song <songxiaowei@hisilicon.com>,
+        Binghui Wang <wangbinghui@hisilicon.com>,
+        Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
+        Bjorn Helgaas <bhelgaas@google.com>
+Cc:     linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
+        Nick Desaulniers <ndesaulniers@google.com>,
+        Nathan Chancellor <natechancellor@gmail.com>
+Subject: [PATCH v2] PCI: kirin: Fix section mismatch warning
+Date:   Wed, 19 Sep 2018 11:53:42 -0700
+Message-Id: <20180919185341.31298-1-natechancellor@gmail.com>
+X-Mailer: git-send-email 2.19.0
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20180919162846.GB243610@bhelgaas-glaptop.roam.corp.google.com>
-User-Agent: Mutt/1.9.1 (2017-09-22)
+Content-Transfer-Encoding: 8bit
 Sender: linux-pci-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
-Message-ID: <20180919180003.h9pFyunGXTEM5ChXLOkF4UZJAPOV0RrlKEPll9lb6nU@z>
+Message-ID: <20180919185342.rCFztzuD0zxkWnQmWQDLl9j1C7oFjSzsFljVHFER7BQ@z>
 
-On Wed, Sep 19, 2018 at 11:28:46AM -0500, Bjorn Helgaas wrote:
-> On Tue, Sep 18, 2018 at 05:56:53PM -0600, Keith Busch wrote:
-> Since none of the service drivers can be modules, I don't think it
-> buys us much to make their init functions initcalls.  Can we
-> explicitly call them from the pcie_portdrv_probe() path?
+WARNING: vmlinux.o(.text+0x4758cc): Section mismatch in reference from
+the function kirin_pcie_probe() to the function
+.init.text:kirin_add_pcie_port()
+The function kirin_pcie_probe() references
+the function __init kirin_add_pcie_port().
+This is often because kirin_pcie_probe lacks a __init
+annotation or the annotation of kirin_add_pcie_port is wrong.
 
-It's actually during pcie_portdrv_init that the services need to be
-initialized if we're going this way. Do you think the following is
-better? The initialization order should be more clear to the reader at
-the cost of more code than init call magic, but I'm okay having this
-done either way.
+Add the __init annotation to both kirin_pcie_probe and
+kirin_pcie_add_msi then use builtin_platform_driver_probe
+instead of builtin_platform_driver + .probe to avoid a section
+mismatch warning with kirin_pcie_driver.
 
+Fixes: fc5165db245a ("PCI: kirin: Add HiSilicon Kirin SoC PCIe controller driver")
+Reported-by: Nick Desaulniers <ndesaulniers@google.com>
+Suggested-by: Nick Desaulniers <ndesaulniers@google.com>
+Signed-off-by: Nathan Chancellor <natechancellor@gmail.com>
 ---
-diff --git a/drivers/pci/hotplug/pciehp_core.c b/drivers/pci/hotplug/pciehp_core.c
-index 68b20e667764..944047976569 100644
---- a/drivers/pci/hotplug/pciehp_core.c
-+++ b/drivers/pci/hotplug/pciehp_core.c
-@@ -287,7 +287,7 @@ static struct pcie_port_service_driver hpdriver_portdrv = {
- #endif	/* PM */
- };
- 
--static int __init pcied_init(void)
-+int __init pcie_hp_init(void)
- {
- 	int retval = 0;
- 
-@@ -298,4 +298,3 @@ static int __init pcied_init(void)
- 
- 	return retval;
- }
--device_initcall(pcied_init);
-diff --git a/drivers/pci/pcie/aer.c b/drivers/pci/pcie/aer.c
-index 83180edd6ed4..637d638f73da 100644
---- a/drivers/pci/pcie/aer.c
-+++ b/drivers/pci/pcie/aer.c
-@@ -1569,10 +1569,9 @@ static struct pcie_port_service_driver aerdriver = {
-  *
-  * Invoked when AER root service driver is loaded.
-  */
--static int __init aer_service_init(void)
-+int __init pcie_aer_init(void)
- {
- 	if (!pci_aer_available() || aer_acpi_firmware_first())
- 		return -ENXIO;
- 	return pcie_port_service_register(&aerdriver);
- }
--device_initcall(aer_service_init);
-diff --git a/drivers/pci/pcie/dpc.c b/drivers/pci/pcie/dpc.c
-index f03279fc87cd..a1fd16bf1cab 100644
---- a/drivers/pci/pcie/dpc.c
-+++ b/drivers/pci/pcie/dpc.c
-@@ -282,8 +282,7 @@ static struct pcie_port_service_driver dpcdriver = {
- 	.reset_link	= dpc_reset_link,
- };
- 
--static int __init dpc_service_init(void)
-+int __init pcie_dpc_init(void)
- {
- 	return pcie_port_service_register(&dpcdriver);
- }
--device_initcall(dpc_service_init);
-diff --git a/drivers/pci/pcie/pme.c b/drivers/pci/pcie/pme.c
-index 3ed67676ea2a..1a8b85051b1b 100644
---- a/drivers/pci/pcie/pme.c
-+++ b/drivers/pci/pcie/pme.c
-@@ -446,8 +446,7 @@ static struct pcie_port_service_driver pcie_pme_driver = {
- /**
-  * pcie_pme_service_init - Register the PCIe PME service driver.
-  */
--static int __init pcie_pme_service_init(void)
-+int __init pcie_pme_init(void)
- {
- 	return pcie_port_service_register(&pcie_pme_driver);
- }
--device_initcall(pcie_pme_service_init);
-diff --git a/drivers/pci/pcie/portdrv.h b/drivers/pci/pcie/portdrv.h
-index d59afa42fc14..2498b2d34009 100644
---- a/drivers/pci/pcie/portdrv.h
-+++ b/drivers/pci/pcie/portdrv.h
-@@ -23,6 +23,30 @@
- 
- #define PCIE_PORT_DEVICE_MAXSERVICES   4
- 
-+#ifdef CONFIG_PCIEAER
-+int pcie_aer_init(void);
-+#else
-+static inline int pcie_aer_init(void) { return 0; }
-+#endif
-+
-+#ifdef CONFIG_HOTPLUG_PCI_PCIE
-+int pcie_hp_init(void);
-+#else
-+static inline int pcie_hp_init(void) { return 0; }
-+#endif
-+
-+#ifdef CONFIG_PCIE_PME
-+int pcie_pme_init(void);
-+#else
-+static inline int pcie_pme_init(void) { return 0; }
-+#endif
-+
-+#ifdef CONFIG_PCIE_DPC
-+int pcie_dpc_init(void);
-+#else
-+static inline int pcie_dpc_init(void) { return 0; }
-+#endif
-+
- /* Port Type */
- #define PCIE_ANY_PORT			(~0)
- 
-diff --git a/drivers/pci/pcie/portdrv_pci.c b/drivers/pci/pcie/portdrv_pci.c
-index eef22dc29140..23a5a0c2c3fe 100644
---- a/drivers/pci/pcie/portdrv_pci.c
-+++ b/drivers/pci/pcie/portdrv_pci.c
-@@ -226,11 +226,20 @@ static const struct dmi_system_id pcie_portdrv_dmi_table[] __initconst = {
- 	 {}
- };
- 
-+static void __init pcie_init_services(void)
-+{
-+	pcie_aer_init();
-+	pcie_pme_init();
-+	pcie_dpc_init();
-+	pcie_hp_init();
-+}
-+
- static int __init pcie_portdrv_init(void)
- {
- 	if (pcie_ports_disabled)
- 		return -EACCES;
- 
-+	pcie_init_services();
- 	dmi_check_system(pcie_portdrv_dmi_table);
- 
- 	return pci_register_driver(&pcie_portdriver);
---
 
-> > --- 
-> > diff --git a/drivers/pci/hotplug/pciehp_core.c b/drivers/pci/hotplug/pciehp_core.c
-> > index ccaf01e6eced..334044814dbe 100644
-> > --- a/drivers/pci/hotplug/pciehp_core.c
-> > +++ b/drivers/pci/hotplug/pciehp_core.c
-> > @@ -322,4 +322,4 @@ static int __init pcied_init(void)
-> >  
-> >  	return retval;
-> >  }
-> > -device_initcall(pcied_init);
-> > +subsys_initcall(pcied_init);
-> > diff --git a/drivers/pci/pcie/aer.c b/drivers/pci/pcie/aer.c
-> > index 83180edd6ed4..1d2159409b01 100644
-> > --- a/drivers/pci/pcie/aer.c
-> > +++ b/drivers/pci/pcie/aer.c
-> > @@ -1575,4 +1575,4 @@ static int __init aer_service_init(void)
-> >  		return -ENXIO;
-> >  	return pcie_port_service_register(&aerdriver);
-> >  }
-> > -device_initcall(aer_service_init);
-> > +subsys_initcall(aer_service_init);
-> > diff --git a/drivers/pci/pcie/dpc.c b/drivers/pci/pcie/dpc.c
-> > index f03279fc87cd..aacfb50eccfc 100644
-> > --- a/drivers/pci/pcie/dpc.c
-> > +++ b/drivers/pci/pcie/dpc.c
-> > @@ -286,4 +286,4 @@ static int __init dpc_service_init(void)
-> >  {
-> >  	return pcie_port_service_register(&dpcdriver);
-> >  }
-> > -device_initcall(dpc_service_init);
-> > +subsys_initcall(dpc_service_init);
-> > diff --git a/drivers/pci/pcie/pme.c b/drivers/pci/pcie/pme.c
-> > index 3ed67676ea2a..cd8c1adb9b0a 100644
-> > --- a/drivers/pci/pcie/pme.c
-> > +++ b/drivers/pci/pcie/pme.c
-> > @@ -450,4 +450,4 @@ static int __init pcie_pme_service_init(void)
-> >  {
-> >  	return pcie_port_service_register(&pcie_pme_driver);
-> >  }
-> > -device_initcall(pcie_pme_service_init);
-> > +subsys_initcall(pcie_pme_service_init);
-> > -- 
+v1 -> v2:
+
+Instead of removing the annotation on kirin_add_pcie_port, add it to
+kirin_pcie_add_msi and kirin_pcie_probe. To avoid a warning with this
+configuration, use builtin_platform_driver_probe.
+
+ drivers/pci/controller/dwc/pcie-kirin.c | 9 ++++-----
+ 1 file changed, 4 insertions(+), 5 deletions(-)
+
+diff --git a/drivers/pci/controller/dwc/pcie-kirin.c b/drivers/pci/controller/dwc/pcie-kirin.c
+index 5352e0c3be82..f64fed12de51 100644
+--- a/drivers/pci/controller/dwc/pcie-kirin.c
++++ b/drivers/pci/controller/dwc/pcie-kirin.c
+@@ -448,8 +448,8 @@ static const struct dw_pcie_host_ops kirin_pcie_host_ops = {
+ 	.host_init = kirin_pcie_host_init,
+ };
+ 
+-static int kirin_pcie_add_msi(struct dw_pcie *pci,
+-				struct platform_device *pdev)
++static int __init kirin_pcie_add_msi(struct dw_pcie *pci,
++				     struct platform_device *pdev)
+ {
+ 	int irq;
+ 
+@@ -481,7 +481,7 @@ static int __init kirin_add_pcie_port(struct dw_pcie *pci,
+ 	return dw_pcie_host_init(&pci->pp);
+ }
+ 
+-static int kirin_pcie_probe(struct platform_device *pdev)
++static int __init kirin_pcie_probe(struct platform_device *pdev)
+ {
+ 	struct device *dev = &pdev->dev;
+ 	struct kirin_pcie *kirin_pcie;
+@@ -533,11 +533,10 @@ static const struct of_device_id kirin_pcie_match[] = {
+ };
+ 
+ static struct platform_driver kirin_pcie_driver = {
+-	.probe			= kirin_pcie_probe,
+ 	.driver			= {
+ 		.name			= "kirin-pcie",
+ 		.of_match_table = kirin_pcie_match,
+ 		.suppress_bind_attrs = true,
+ 	},
+ };
+-builtin_platform_driver(kirin_pcie_driver);
++builtin_platform_driver_probe(kirin_pcie_driver, kirin_pcie_probe);
+-- 
+2.19.0
+
