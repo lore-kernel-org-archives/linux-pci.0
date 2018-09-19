@@ -1,254 +1,189 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-qt0-f194.google.com ([209.85.216.194]:42321 "EHLO
-        mail-qt0-f194.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1728096AbeISULG (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Wed, 19 Sep 2018 16:11:06 -0400
-From: Jim Quinlan <jim2101024@gmail.com>
-To: linux-kernel@vger.kernel.org
-Cc: Florian Fainelli <f.fainelli@gmail.com>,
-        Brian Norris <computersforpeace@gmail.com>,
-        Gregory Fong <gregory.0xf0@gmail.com>,
-        bcm-kernel-feedback-list@broadcom.com,
-        Doug Berger <opendmb@gmail.com>,
-        Markus Mayer <mmayer@broadcom.com>,
-        Justin Chen <justinpopo6@gmail.com>,
-        linux-arm-kernel@lists.infradead.org, linux-pci@vger.kernel.org,
-        Christoph Hellwig <hch@lst.de>
-Subject: [PATCH v5 01/12] soc: bcm: brcmstb: add memory API
-Date: Wed, 19 Sep 2018 10:31:56 -0400
-Message-Id: <1537367527-20773-2-git-send-email-jim2101024@gmail.com>
-In-Reply-To: <1537367527-20773-1-git-send-email-jim2101024@gmail.com>
-References: <1537367527-20773-1-git-send-email-jim2101024@gmail.com>
+Return-Path: <SRS0=EN9e=MB=gmail.com=oohall@kernel.org>
+Return-Path: <SRS0=EN9e=MB=gmail.com=oohall@kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Sender: linux-pci-owner@vger.kernel.org
+In-Reply-To: <20180918204834.GB13616@bhelgaas-glaptop.roam.corp.google.com>
+References: <abb9aa39-3128-3a4d-01f7-d0614d63f37e@cisco.com>
+ <20180918132056.GA254348@bhelgaas-glaptop.roam.corp.google.com>
+ <b5883e58-861a-807e-f4c8-3745b006ce0d@cisco.com> <20180918184706.GA13616@bhelgaas-glaptop.roam.corp.google.com>
+ <b6281224-18cf-50af-aa38-6b048d741854@cisco.com> <20180918204834.GB13616@bhelgaas-glaptop.roam.corp.google.com>
+From: Oliver <oohall@gmail.com>
+Date: Thu, 20 Sep 2018 00:25:21 +1000
+Message-ID: <CAOSf1CHcDqrwy5W-GAjJ-x+rBwbRMLoVsM8D6veFVPPXmdAsZQ@mail.gmail.com>
+Subject: Re: PCI: Enforce bus address limits in resource allocation
+To: Bjorn Helgaas <helgaas@kernel.org>
+Cc: Daniel Walker <danielwa@cisco.com>, linux-pci@vger.kernel.org,
+	Yinghai Lu <yinghai@kernel.org>, Bjorn Helgaas <bhelgaas@google.com>,
+	Rob Herring <robh+dt@kernel.org>, Frank Rowand <frowand.list@gmail.com>,
+	Device Tree <devicetree@vger.kernel.org>
+Content-Type: text/plain; charset="UTF-8"
 List-ID: <linux-pci.vger.kernel.org>
 
-From: Florian Fainelli <f.fainelli@gmail.com>
+On Wed, Sep 19, 2018 at 6:48 AM, Bjorn Helgaas <helgaas@kernel.org> wrote:
+> [+cc Rob, Frank, devicetree list,
+>
+> thread starts here:
+> https://lkml.kernel.org/r/abb9aa39-3128-3a4d-01f7-d0614d63f37e@cisco.com
+>
+> dmesg snippets here:
+> https://lkml.kernel.org/r/20180918184706.GA13616@bhelgaas-glaptop.roam.corp.google.com]
+>
+> On Tue, Sep 18, 2018 at 11:56:20AM -0700, Daniel Walker wrote:
+>> On 09/18/2018 11:47 AM, Bjorn Helgaas wrote:
+>> > On Tue, Sep 18, 2018 at 07:24:02AM -0700, Daniel Walker wrote:
+>> > > On 09/18/2018 06:20 AM, Bjorn Helgaas wrote:
+>> > > > On Fri, Sep 14, 2018 at 08:16:35AM -0700, Daniel Walker wrote:
+>> > > > > I have a powerpc system with PCI, and some devices attached to
+>> > > > > the PCI bus.  In 3.10 everything worked fine, then we moved to
+>> > > > > 4.9 and we had some issues.  I was able to bisect the issue down
+>> > > > > to the patch in the subject line.
+>> > > > >
+>> > > > > f75b99d PCI: Enforce bus address limits in resource allocation
+>> > > > >
+>> > > > >   From 3.10 here is part of the PCI initialization,
+>> > > > >
+>> > > > > |pci 0001:0e:00.0: BAR 0: assigned [mem 0xfc0000000-0xfc00fffff pref]|
+>> > > > > |pci 0001:07:09.0: PCI bridge to [bus 0e]|
+>> > > > > |pci 0001:07:09.0: bridge window [mem 0xfc0000000-0xfc00fffff 64bit pref]|
+>> > > > >                   |||In this section the memory resource for the bridge is
+>> > > > > 64bit, and the device "BAR 0" gets a 64bit range. However, it seems the
+>> > > > > device is 32bit.|
+>> >
+>> > > > > |Now fast forward to 4.9 we get this,|
+>> > > >
+>> > > > > pci 0001:0e:00.0: BAR 0: no space for [mem size 0x00100000 pref]
+>> > > > > pci 0001:0e:00.0: BAR 0: failed to assign [mem size 0x00100000 pref]
+>> > > > > pci 0001:07:09.0: PCI bridge to [bus 0e]
+>> > > > > pci 0001:07:09.0: bridge window [mem 0xfc0000000-0xfc00fffff 64bit pref]
+>> > > > >
+>> > > > > |Here it seems to have a larger size, I'm not sure where the size is coming
+>> > > > > from.
+>> > > >
+>> > > > The size is 0x00100000 (1MB), which is the same size as
+>> > > > [mem 0xfc0000000-0xfc00fffff pref].
+>> > > >
+>> > > > The size is normally discovered by probing the BAR (write all 1's to
+>> > > > the BAR then read it back to find which bits are writable and which
+>> > > > are read-only).  On powerpc we might learn it from DT instead.  But in
+>> > > > any case, we to get the same 1MB size, which is the same size as the
+>> > > > bridge window.  So this should still work unless there are other BARs
+>> > > > in that window.
+>> > >
+>> > > As far as I know there is only one BAR connected to this window.
+>> > >
+>> > > It kind of strikes me as an off-by-one problem because it says "no space"
+>> > > but the window is the same size as what's requested. With the patch removed
+>> > > you get the whole window assigned.
+>> > >
+>> > > In the context of the patch if you change the pci_32_bit to pci_64_bit for
+>> > > the region when calling pci_bus_alloc_from_region() in the 32bit case this
+>> > > problem disappears. I do have CONFIG_ARCH_DMA_ADDR_T_64BIT enabled in my
+>> > > config.
+>> > >
+>> > > > > I was able to work around the issue by setting IORESOURCE_MEM_64 on
+>> > > > > the resource for this device. I also was able to work around it by setting
+>> > > > > "max = avail.end" to "max = (-1);" inside pci_bus_alloc_resource(). |
+>> > > > > ||
+>> > > > > ||I don't know if the problem is the patch, or something else inside our
+>> > > > > system, but any thoughts are appreciated.
+>> > > >
+>> > > > It seems like we think the bridge window contains only 64-bit space
+>> > > > and therefore contains nothing usable by the 32-bit BAR.
+>> > > >
+>> > > > You said later that the same problem exists on v4.19-rc4.  Can you
+>> > > > collect the complete dmesg log with that kernel?  That should tell us
+>> > > > about any host bridge address translation.
+>> > >
+>> > > Sure. I have attached the dmesg.
+>> >
+>> > The relevant parts are below.  I think your DT is incorrect.  Either
+>> > it neglects to describe the host bridge address translation for the
+>> > ffb240000.pcie and ffb250000.pcie bridges, or it incorrectly describes
+>> > the BARs of devices below those bridges as 32-bit BARs when they are
+>> > really 64-bit BARs.
+>>
+>> I don't know if the DTS is correct, it very well could be incorrect. Here
+>> are the relevant parts of the DTS. The BAR at issue is connected to PCI1.
+>
+> The DTS matches what I pointed out in the dmesg log.  I think you need
+> to reconcile it with your hardware and firmware, which I don't know
+> anything about, so I don't know what else I can do at this point.  I
+> copied some DT folks in case they have advice.
+>
+>>         pci0: pcie@ffb240000 {
+>>                 compatible = "fsl,t1040-pcie", "fsl,qoriq-pcie-v2.4",
+>> "fsl,qoriq-pcie";
+>>                 device_type = "pci";
+>>                 #size-cells = <2>;
+>>                 #address-cells = <3>;
+>>                 bus-range = <0x0 0xff>;
+>>                 interrupts = <20 2 0 0>;
+>>                 fsl,iommu-parent = <&pamu0>;
+>>                 reg = <0xf 0xfb240000 0 0x10000>;
+>>                 ranges = <0x03000000 0xf 0xe0000000 0xf 0xe0000000 0
+>> 0x01000000>;
+>>
+>>                 pcie@0 {
+>>                         reg = <0 0 0 0 0>;
+>>                         #size-cells = <2>;
+>>                         #address-cells = <3>;
+>>                         device_type = "pci";
+>>                 };
+>>         };
+>>
+>>         pci1: pcie@ffb250000 {
+>>                 compatible = "fsl,t1040-pcie", "fsl,qoriq-pcie-v2.4",
+>> "fsl,qoriq-pcie";
+>>                 device_type = "pci";
+>>                 #size-cells = <2>;
+>>                 #address-cells = <3>;
+>>                 bus-range = <0 0xff>;
+>>                 interrupts = <21 2 0 0>;
+>>                 fsl,iommu-parent = <&pamu0>;
+>>                 reg = <0xf 0xfb250000 0 0x10000>;
+>>
+>>                 ranges = <0x03000000 0x4 0x00000000 0x4 0x00000000 0xc
+>> 0x00000000>;
+>>
+>>                 pcie@0 {
+>>                         reg = <0 0 0 0 0>;
+>>                         #size-cells = <2>;
+>>                         #address-cells = <3>;
+>>                         device_type = "pci";
+>>                 };
+>>         };
 
-This commit adds a memory API suitable for ascertaining the sizes of
-each of the N memory controllers in a Broadcom STB chip.  Its first
-user will be the Broadcom STB PCIe root complex driver, which needs
-to know these sizes to properly set up DMA mappings for inbound
-regions.
+The upstream fsl-pci driver seems to configure the bridge windows
+based on what's in the ranges property rather than just consuming it.
+It might be possible to add some 32bit BAR space by tweaking the
+ranges to something like:
 
-We cannot use memblock here or anything like what Linux provides
-because it collapses adjacent regions within a larger block, and here
-we actually need per-memory controller addresses and sizes, which is
-why we resort to manual DT parsing.
+        ranges = <0x02000000 0x0 0x80000000 0x4 0x0 0x0 0x80000000>;
 
-Signed-off-by: Florian Fainelli <f.fainelli@gmail.com>
----
- drivers/soc/bcm/brcmstb/Makefile |   2 +-
- drivers/soc/bcm/brcmstb/memory.c | 158 +++++++++++++++++++++++++++++++++++++++
- include/soc/brcmstb/memory_api.h |  26 +++++++
- 3 files changed, 185 insertions(+), 1 deletion(-)
- create mode 100644 drivers/soc/bcm/brcmstb/memory.c
- create mode 100644 include/soc/brcmstb/memory_api.h
+That said, it looks Daniel's kernel has some patches that change how
+PCI setup works so it might not be using the upstream driver.
 
-diff --git a/drivers/soc/bcm/brcmstb/Makefile b/drivers/soc/bcm/brcmstb/Makefile
-index 01687c2..e4ccd3a 100644
---- a/drivers/soc/bcm/brcmstb/Makefile
-+++ b/drivers/soc/bcm/brcmstb/Makefile
-@@ -1,2 +1,2 @@
--obj-y				+= common.o biuctrl.o
-+obj-y				+= common.o biuctrl.o memory.o
- obj-$(CONFIG_BRCMSTB_PM)	+= pm/
-diff --git a/drivers/soc/bcm/brcmstb/memory.c b/drivers/soc/bcm/brcmstb/memory.c
-new file mode 100644
-index 0000000..254783d
---- /dev/null
-+++ b/drivers/soc/bcm/brcmstb/memory.c
-@@ -0,0 +1,158 @@
-+// SPDX-License-Identifier: GPL-2.0
-+/* Copyright © 2015-2017 Broadcom */
-+
-+#include <linux/device.h>
-+#include <linux/io.h>
-+#include <linux/libfdt.h>
-+#include <linux/of_address.h>
-+#include <linux/of_fdt.h>
-+#include <linux/sizes.h>
-+#include <soc/brcmstb/memory_api.h>
-+
-+/* Macro to help extract property data */
-+#define DT_PROP_DATA_TO_U32(b, offs) (fdt32_to_cpu(*(u32 *)(b + offs)))
-+
-+/* Constants used when retrieving memc info */
-+#define NUM_BUS_RANGES 10
-+#define BUS_RANGE_ULIMIT_SHIFT 4
-+#define BUS_RANGE_LLIMIT_SHIFT 4
-+#define BUS_RANGE_PA_SHIFT 12
-+
-+enum {
-+	BUSNUM_MCP0 = 0x4,
-+	BUSNUM_MCP1 = 0x5,
-+	BUSNUM_MCP2 = 0x6,
-+};
-+
-+/*
-+ * If the DT nodes are handy, determine which MEMC holds the specified
-+ * physical address.
-+ */
-+#ifdef CONFIG_ARCH_BRCMSTB
-+int __brcmstb_memory_phys_addr_to_memc(phys_addr_t pa, void __iomem *base)
-+{
-+	int memc = -1;
-+	int i;
-+
-+	for (i = 0; i < NUM_BUS_RANGES; i++, base += 8) {
-+		const u64 ulimit_raw = readl(base);
-+		const u64 llimit_raw = readl(base + 4);
-+		const u64 ulimit =
-+			((ulimit_raw >> BUS_RANGE_ULIMIT_SHIFT)
-+			 << BUS_RANGE_PA_SHIFT) | 0xfff;
-+		const u64 llimit = (llimit_raw >> BUS_RANGE_LLIMIT_SHIFT)
-+				   << BUS_RANGE_PA_SHIFT;
-+		const u32 busnum = (u32)(ulimit_raw & 0xf);
-+
-+		if (pa >= llimit && pa <= ulimit) {
-+			if (busnum >= BUSNUM_MCP0 && busnum <= BUSNUM_MCP2) {
-+				memc = busnum - BUSNUM_MCP0;
-+				break;
-+			}
-+		}
-+	}
-+
-+	return memc;
-+}
-+
-+int brcmstb_memory_phys_addr_to_memc(phys_addr_t pa)
-+{
-+	int memc = -1;
-+	struct device_node *np;
-+	void __iomem *cpubiuctrl;
-+
-+	np = of_find_compatible_node(NULL, NULL, "brcm,brcmstb-cpu-biu-ctrl");
-+	if (!np)
-+		return memc;
-+
-+	cpubiuctrl = of_iomap(np, 0);
-+	if (!cpubiuctrl)
-+		goto cleanup;
-+
-+	memc = __brcmstb_memory_phys_addr_to_memc(pa, cpubiuctrl);
-+	iounmap(cpubiuctrl);
-+
-+cleanup:
-+	of_node_put(np);
-+
-+	return memc;
-+}
-+
-+#elif defined(CONFIG_MIPS)
-+int brcmstb_memory_phys_addr_to_memc(phys_addr_t pa)
-+{
-+	/* The logic here is fairly simple and hardcoded: if pa <= 0x5000_0000,
-+	 * then this is MEMC0, else MEMC1.
-+	 *
-+	 * For systems with 2GB on MEMC0, MEMC1 starts at 9000_0000, with 1GB
-+	 * on MEMC0, MEMC1 starts at 6000_0000.
-+	 */
-+	if (pa >= 0x50000000ULL)
-+		return 1;
-+	else
-+		return 0;
-+}
-+#endif
-+
-+u64 brcmstb_memory_memc_size(int memc)
-+{
-+	const void *fdt = initial_boot_params;
-+	const int mem_offset = fdt_path_offset(fdt, "/memory");
-+	int addr_cells = 1, size_cells = 1;
-+	const struct fdt_property *prop;
-+	int proplen, cellslen;
-+	u64 memc_size = 0;
-+	int i;
-+
-+	/* Get root size and address cells if specified */
-+	prop = fdt_get_property(fdt, 0, "#size-cells", &proplen);
-+	if (prop)
-+		size_cells = DT_PROP_DATA_TO_U32(prop->data, 0);
-+
-+	prop = fdt_get_property(fdt, 0, "#address-cells", &proplen);
-+	if (prop)
-+		addr_cells = DT_PROP_DATA_TO_U32(prop->data, 0);
-+
-+	if (mem_offset < 0)
-+		return -1;
-+
-+	prop = fdt_get_property(fdt, mem_offset, "reg", &proplen);
-+	cellslen = (int)sizeof(u32) * (addr_cells + size_cells);
-+	if ((proplen % cellslen) != 0)
-+		return -1;
-+
-+	for (i = 0; i < proplen / cellslen; ++i) {
-+		u64 addr = 0;
-+		u64 size = 0;
-+		int memc_idx;
-+		int j;
-+
-+		for (j = 0; j < addr_cells; ++j) {
-+			int offset = (cellslen * i) + (sizeof(u32) * j);
-+
-+			addr |= (u64)DT_PROP_DATA_TO_U32(prop->data, offset) <<
-+				((addr_cells - j - 1) * 32);
-+		}
-+		for (j = 0; j < size_cells; ++j) {
-+			int offset = (cellslen * i) +
-+				(sizeof(u32) * (j + addr_cells));
-+
-+			size |= (u64)DT_PROP_DATA_TO_U32(prop->data, offset) <<
-+				((size_cells - j - 1) * 32);
-+		}
-+
-+		if ((phys_addr_t)addr != addr) {
-+			pr_err("phys_addr_t is smaller than provided address 0x%llx!\n",
-+			       addr);
-+			return -1;
-+		}
-+
-+		memc_idx = brcmstb_memory_phys_addr_to_memc((phys_addr_t)addr);
-+		if (memc_idx == memc)
-+			memc_size += size;
-+	}
-+
-+	return memc_size;
-+}
-+EXPORT_SYMBOL_GPL(brcmstb_memory_memc_size);
-+
-diff --git a/include/soc/brcmstb/memory_api.h b/include/soc/brcmstb/memory_api.h
-new file mode 100644
-index 0000000..6546845
---- /dev/null
-+++ b/include/soc/brcmstb/memory_api.h
-@@ -0,0 +1,26 @@
-+/* SPDX-License-Identifier: GPL-2.0 */
-+#ifndef __MEMORY_API_H
-+#define __MEMORY_API_H
-+
-+/*
-+ * Bus Interface Unit control register setup, must happen early during boot,
-+ * before SMP is brought up, called by machine entry point.
-+ */
-+void brcmstb_biuctrl_init(void);
-+
-+#ifdef CONFIG_SOC_BRCMSTB
-+int brcmstb_memory_phys_addr_to_memc(phys_addr_t pa);
-+u64 brcmstb_memory_memc_size(int memc);
-+#else
-+static inline int brcmstb_memory_phys_addr_to_memc(phys_addr_t pa)
-+{
-+	return -EINVAL;
-+}
-+
-+static inline u64 brcmstb_memory_memc_size(int memc)
-+{
-+	return -1;
-+}
-+#endif
-+
-+#endif /* __MEMORY_API_H */
--- 
-1.9.0.138.g2de3478
+>>
+>>         pci3: pcie@ffb270000 {
+>>                 compatible = "fsl,t1040-pcie", "fsl,qoriq-pcie-v2.4",
+>> "fsl,qoriq-pcie";
+>>                 device_type = "pci";
+>>                 #size-cells = <2>;
+>>                 #address-cells = <3>;
+>>                 bus-range = <0x0 0xff>;
+>>                 interrupts = <23 2 0 0>;
+>>                 fsl,iommu-parent = <&pamu0>;
+>>                 reg = <0xf 0xfb270000 0 0x10000>;
+>>                 ranges = <0x03000000 0x0 0xe2000000 0xf 0xe2000000 0
+>> 0x00100000>;
+>>
+>>                 pcie@0 {
+>>                         reg = <0 0 0 0 0>;
+>>                         #size-cells = <2>;
+>>                         #address-cells = <3>;
+>>                         device_type = "pci";
+>>                 };
+>>         };
+>>
+>>
+>>
+>> Daniel
