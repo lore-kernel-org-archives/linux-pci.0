@@ -1,44 +1,46 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mx2.mailbox.org ([80.241.60.215]:10868 "EHLO mx2.mailbox.org"
+Received: from mail.kernel.org ([198.145.29.99]:33532 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1726315AbeIHPu6 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Sat, 8 Sep 2018 11:50:58 -0400
-Subject: Re: [PATCH] PCI: Reprogram bridge prefetch registers on resume
-To: Peter Wu <peter@lekensteyn.nl>, Daniel Drake <drake@endlessm.com>
-Cc: bhelgaas@google.com, linux-pci@vger.kernel.org, linux@endlessm.com,
-        nouveau@lists.freedesktop.org, linux-pm@vger.kernel.org,
-        kherbst@redhat.com, andriy.shevchenko@linux.intel.com,
-        rafael.j.wysocki@intel.com, keith.busch@intel.com,
-        mika.westerberg@linux.intel.com, jonathan.derrick@intel.com,
-        davem@davemloft.net, hkallweit1@gmail.com, netdev@vger.kernel.org,
-        nic_swsd@realtek.com
-References: <20180907053614.6540-1-drake@endlessm.com>
- <20180907150515.GA28739@al>
-From: Thomas Martitz <kugel@rockbox.org>
-Message-ID: <cd2f572a-9c1f-41c1-6e95-759cfec501d9@rockbox.org>
-Date: Sat, 8 Sep 2018 13:05:11 +0200
+        id S1732469AbeISXPd (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Wed, 19 Sep 2018 19:15:33 -0400
+Subject: Re: [PATCH 11/12] PCI/AER: Use managed resource allocations
+To: Keith Busch <keith.busch@intel.com>
+Cc: Linux PCI <linux-pci@vger.kernel.org>,
+        Bjorn Helgaas <bhelgaas@google.com>,
+        Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+        Thomas Tai <thomas.tai@oracle.com>, poza@codeaurora.org,
+        Lukas Wunner <lukas@wunner.de>, Christoph Hellwig <hch@lst.de>,
+        Mika Westerberg <mika.westerberg@linux.intel.com>
+References: <20180918235848.26694-1-keith.busch@intel.com>
+ <20180918235848.26694-12-keith.busch@intel.com>
+ <5b3f6bf5-2511-6a71-3410-a4f4ced4fb8c@kernel.org>
+ <20180919172526.GB28310@localhost.localdomain>
+From: Sinan Kaya <okaya@kernel.org>
+Message-ID: <a956bdf7-e901-e1ad-57ea-868835d94beb@kernel.org>
+Date: Wed, 19 Sep 2018 13:36:33 -0400
 MIME-Version: 1.0
-In-Reply-To: <20180907150515.GA28739@al>
+In-Reply-To: <20180919172526.GB28310@localhost.localdomain>
 Content-Type: text/plain; charset=utf-8; format=flowed
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Am 07.09.18 um 17:05 schrieb Peter Wu:
-> On Fri, Sep 07, 2018 at 01:36:14PM +0800, Daniel Drake wrote:
-> <..>
->> Thomas Martitz reports that this workaround also solves an issue where
->> the AMD Radeon Polaris 10 GPU on the HP Zbook 14u G5 is unresponsive
->> after S3 suspend/resume.
+On 9/19/2018 1:25 PM, Keith Busch wrote:
+> On Wed, Sep 19, 2018 at 12:29:15PM -0400, Sinan Kaya wrote:
+>> On 9/18/2018 7:58 PM, Keith Busch wrote:
+>>>    	if (status) {
+>>>    		dev_printk(KERN_DEBUG, device, "request AER IRQ %d failed\n",
+>>>    			   dev->irq);
+>>> -		aer_remove(dev);
+>>>    		return status;
+>>>    	}
+>>
+>> Don't we still need to call aer_remove() here?
+>>
+>> Old code would call aer_disable_rootport(rpc) via aer_remove() on IRQ allocation
+>> failure. We are no longer doing this.
 > 
-> Where was this claimed? It is not stated in the linked bug:
-> (https://bugs.freedesktop.org/show_bug.cgi?id=105760
+> We need to call aer_disable_rootport only if aer_enable_rootport was
+> called, but that happens *after* irq allocation.
 > 
 
-
-Actually, I reported that https://patchwork.kernel.org/patch/10583229/ 
-works. I updated the bug now, I didn't do so yet because it's closed.
-
-However, I did not actually test the exact patch *this* thread is about. 
-Do you want me to give it a spin?
-
-Best regards.
+I see. Thanks for clarification.
