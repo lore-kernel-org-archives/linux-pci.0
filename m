@@ -1,69 +1,35 @@
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Date: Fri, 7 Sep 2018 18:41:40 +0100
-From: Will Deacon <will.deacon@arm.com>
-To: yuanzhichang@hisilicon.com, dann.frazier@canonical.com,
- gabriele.paoloni@huawei.com, arnd@arndb.de, bhelgaas@google.com,
- andy.shevchenko@gmail.com
-Subject: [REGRESSION] Commit 5745392e0c2b ("PCI: Apply the new generic I/O
- management on PCI IO hosts") breaks PCI for legacy virtio devices with
- kvmtool on arm64
-Message-ID: <20180907174140.GI12788@arm.com>
+Return-Path: <SRS0=DZ5F=MB=intel.com=keith.busch@kernel.org>
+Return-Path: <SRS0=DZ5F=MB=intel.com=keith.busch@kernel.org>
+Date: Wed, 19 Sep 2018 09:52:28 -0600
+From: Keith Busch <keith.busch@intel.com>
+To: Bjorn Helgaas <helgaas@kernel.org>
+Cc: Linux PCI <linux-pci@vger.kernel.org>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	Sinan Kaya <okaya@kernel.org>, Thomas Tai <thomas.tai@oracle.com>,
+	poza@codeaurora.org, Lukas Wunner <lukas@wunner.de>,
+	Christoph Hellwig <hch@lst.de>,
+	Mika Westerberg <mika.westerberg@linux.intel.com>
+Subject: Re: [PATCHv3 05/10] PCI/ERR: Handle fatal error recovery
+Message-ID: <20180919155227.GB26372@localhost.localdomain>
+References: <20180918235702.26573-1-keith.busch@intel.com>
+ <20180918235702.26573-6-keith.busch@intel.com>
+ <20180919154651.GA243610@bhelgaas-glaptop.roam.corp.google.com>
 MIME-Version: 1.0
-List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
-List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
-List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
-List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
-List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
-Cc: jean-philippe.brucker@arm.com, linux-pci@vger.kernel.org,
- linux-kernel@vger.kernel.org, linux-arm-kernel@lists.infradead.org,
- suzuki.poulose@arm.com
-Content-Type: text/plain; charset="us-ascii"
-Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
-Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20180919154651.GA243610@bhelgaas-glaptop.roam.corp.google.com>
 List-ID: <linux-pci.vger.kernel.org>
 
-Hi all,
+On Wed, Sep 19, 2018 at 10:46:51AM -0500, Bjorn Helgaas wrote:
+> On Tue, Sep 18, 2018 at 05:56:57PM -0600, Keith Busch wrote:
+> > We don't need to be paranoid about the topology changing while handling an
+> > error. If the device has changed in a hotplug capable slot, we can rely
+> > on the presence detection handling to react to a changing topology. This
+> > patch restores the fatal error handling behavior that existed before
+> > merging DPC with AER with 7e9084b3674 ("PCI/AER: Handle ERR_FATAL with
+> > removal and re-enumeration of devices").
+> 
+> 7e9084b3674 updated Documentation/PCI/pci-error-recovery.txt; doesn't
+> this require another update to keep it matching the code?
 
-I'm seeing a regression in Linux guests since 4.17 under kvmtool, where
-legacy virtio devices using the PCI transport fail to probe. Legacy virtio
-PCI devices must be accessed via "I/O space" (e.g. BAR0, which is
-IORESOURCE_IO) and kvmtool assigns this to the guest physical range
-0x0 - 0x10000.
-
-On arm64, when the virtio legacy PCI driver calls pci_iomap() for this BAR,
-it expands to ioport_map():
-
-  static inline void __iomem *ioport_map(unsigned long port, unsigned int nr)
-  {
-  	return PCI_IOBASE + (port & MMIO_UPPER_LIMIT);
-  }
-
-Since the indirect PIO changes, MMIO_UPPER_LIMIT is defined as:
-
-  /*
-   * We reserve 0x4000 bytes for Indirect IO as so far this library is only
-   * used by the HiSilicon LPC Host. If needed, we can reserve a wider IO
-   * area by redefining the macro below.
-   */
-  #define PIO_INDIRECT_SIZE 0x4000
-  #define MMIO_UPPER_LIMIT (IO_SPACE_LIMIT - PIO_INDIRECT_SIZE)
-
-which corrupts the BAR address. For example, kvmtool has the BAR pointing
-at 0x6200 on my system, but pci_iomap() actually maps offset 0x2200.
-Changing PIO_INDIRECT_SIZE to 0 gets things working again.
-
-Since this stuff doesn't revert nicely, I'm not sure how to proceed. Any
-thoughts? Generally, having a per-platform magic constant hardcoded in
-the PCI mapping code makes me feel slightly ill...
-
-Cheers,
-
-Will
-
-_______________________________________________
-linux-arm-kernel mailing list
-linux-arm-kernel@lists.infradead.org
-http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
+Indeed, I will fix that.
