@@ -1,58 +1,166 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-qk1-f193.google.com ([209.85.222.193]:42780 "EHLO
-        mail-qk1-f193.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1732354AbeISULb (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Wed, 19 Sep 2018 16:11:31 -0400
-From: Jim Quinlan <jim2101024@gmail.com>
-To: linux-kernel@vger.kernel.org
-Cc: Jim Quinlan <jim2101024@gmail.com>,
-        Catalin Marinas <catalin.marinas@arm.com>,
-        Will Deacon <will.deacon@arm.com>,
-        Robin Murphy <robin.murphy@arm.com>,
-        Paul Burton <paul.burton@mips.com>,
-        linux-arm-kernel@lists.infradead.org,
-        bcm-kernel-feedback-list@broadcom.com, linux-pci@vger.kernel.org,
-        Christoph Hellwig <hch@lst.de>
-Subject: [PATCH v5 10/12] ARM64: declare __phys_to_dma on ARCH_HAS_PHYS_TO_DMA
-Date: Wed, 19 Sep 2018 10:32:05 -0400
-Message-Id: <1537367527-20773-11-git-send-email-jim2101024@gmail.com>
-In-Reply-To: <1537367527-20773-1-git-send-email-jim2101024@gmail.com>
-References: <1537367527-20773-1-git-send-email-jim2101024@gmail.com>
+Received: from mail.kernel.org ([198.145.29.99]:50004 "EHLO mail.kernel.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1728124AbeITBT5 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Wed, 19 Sep 2018 21:19:57 -0400
+Date: Wed, 19 Sep 2018 14:40:29 -0500
+From: Bjorn Helgaas <helgaas@kernel.org>
+To: Keith Busch <keith.busch@intel.com>
+Cc: Linux PCI <linux-pci@vger.kernel.org>,
+        Bjorn Helgaas <bhelgaas@google.com>,
+        Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+        Sinan Kaya <okaya@kernel.org>,
+        Thomas Tai <thomas.tai@oracle.com>, poza@codeaurora.org,
+        Lukas Wunner <lukas@wunner.de>, Christoph Hellwig <hch@lst.de>,
+        Mika Westerberg <mika.westerberg@linux.intel.com>
+Subject: Re: [PATCHv3 01/10] PCI/portdrv: Use subsys_init for service drivers
+Message-ID: <20180919194029.GA261184@bhelgaas-glaptop.roam.corp.google.com>
+References: <20180918235702.26573-1-keith.busch@intel.com>
+ <20180918235702.26573-2-keith.busch@intel.com>
+ <20180919162846.GB243610@bhelgaas-glaptop.roam.corp.google.com>
+ <20180919180003.GC28310@localhost.localdomain>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20180919180003.GC28310@localhost.localdomain>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-This change allows one to define custom routines for __phys_to_dma()
-and __dma_to_phys() for the ARM64 architecture by selecting
-ARCH_HAS_PHYS_TO_DMA.  This is done for similar reasons that caused
-arch/x86/include/asm/dma-direct.h to exist (see CONFIG_STA2X11).
+On Wed, Sep 19, 2018 at 12:00:03PM -0600, Keith Busch wrote:
+> On Wed, Sep 19, 2018 at 11:28:46AM -0500, Bjorn Helgaas wrote:
+> > On Tue, Sep 18, 2018 at 05:56:53PM -0600, Keith Busch wrote:
+> > Since none of the service drivers can be modules, I don't think it
+> > buys us much to make their init functions initcalls.  Can we
+> > explicitly call them from the pcie_portdrv_probe() path?
+> 
+> It's actually during pcie_portdrv_init that the services need to be
+> initialized if we're going this way. Do you think the following is
+> better? The initialization order should be more clear to the reader at
+> the cost of more code than init call magic, but I'm okay having this
+> done either way.
 
-Signed-off-by: Jim Quinlan <jim2101024@gmail.com>
----
- arch/arm64/include/asm/dma-direct.h | 16 ++++++++++++++++
- 1 file changed, 16 insertions(+)
- create mode 100644 arch/arm64/include/asm/dma-direct.h
+Yes.  More code, less magic seems like the right tradeoff to me.
 
-diff --git a/arch/arm64/include/asm/dma-direct.h b/arch/arm64/include/asm/dma-direct.h
-new file mode 100644
-index 0000000..d87da92
---- /dev/null
-+++ b/arch/arm64/include/asm/dma-direct.h
-@@ -0,0 +1,16 @@
-+/* SPDX-License-Identifier: GPL-2.0 */
-+#ifndef _ARM64_DMA_DIRECT_H
-+#define _ARM64_DMA_DIRECT_H 1
-+
-+static inline bool dma_capable(struct device *dev, dma_addr_t addr, size_t size)
-+{
-+	if (!dev->dma_mask)
-+		return false;
-+
-+	return addr + size - 1 <= *dev->dma_mask;
-+}
-+
-+dma_addr_t __phys_to_dma(struct device *dev, phys_addr_t paddr);
-+phys_addr_t __dma_to_phys(struct device *dev, dma_addr_t daddr);
-+
-+#endif /* _ARM64_DMA_DIRECT_H */
--- 
-1.9.0.138.g2de3478
+> ---
+> diff --git a/drivers/pci/hotplug/pciehp_core.c b/drivers/pci/hotplug/pciehp_core.c
+> index 68b20e667764..944047976569 100644
+> --- a/drivers/pci/hotplug/pciehp_core.c
+> +++ b/drivers/pci/hotplug/pciehp_core.c
+> @@ -287,7 +287,7 @@ static struct pcie_port_service_driver hpdriver_portdrv = {
+>  #endif	/* PM */
+>  };
+>  
+> -static int __init pcied_init(void)
+> +int __init pcie_hp_init(void)
+>  {
+>  	int retval = 0;
+>  
+> @@ -298,4 +298,3 @@ static int __init pcied_init(void)
+>  
+>  	return retval;
+>  }
+> -device_initcall(pcied_init);
+> diff --git a/drivers/pci/pcie/aer.c b/drivers/pci/pcie/aer.c
+> index 83180edd6ed4..637d638f73da 100644
+> --- a/drivers/pci/pcie/aer.c
+> +++ b/drivers/pci/pcie/aer.c
+> @@ -1569,10 +1569,9 @@ static struct pcie_port_service_driver aerdriver = {
+>   *
+>   * Invoked when AER root service driver is loaded.
+>   */
+> -static int __init aer_service_init(void)
+> +int __init pcie_aer_init(void)
+>  {
+>  	if (!pci_aer_available() || aer_acpi_firmware_first())
+>  		return -ENXIO;
+>  	return pcie_port_service_register(&aerdriver);
+>  }
+> -device_initcall(aer_service_init);
+> diff --git a/drivers/pci/pcie/dpc.c b/drivers/pci/pcie/dpc.c
+> index f03279fc87cd..a1fd16bf1cab 100644
+> --- a/drivers/pci/pcie/dpc.c
+> +++ b/drivers/pci/pcie/dpc.c
+> @@ -282,8 +282,7 @@ static struct pcie_port_service_driver dpcdriver = {
+>  	.reset_link	= dpc_reset_link,
+>  };
+>  
+> -static int __init dpc_service_init(void)
+> +int __init pcie_dpc_init(void)
+>  {
+>  	return pcie_port_service_register(&dpcdriver);
+>  }
+> -device_initcall(dpc_service_init);
+> diff --git a/drivers/pci/pcie/pme.c b/drivers/pci/pcie/pme.c
+> index 3ed67676ea2a..1a8b85051b1b 100644
+> --- a/drivers/pci/pcie/pme.c
+> +++ b/drivers/pci/pcie/pme.c
+> @@ -446,8 +446,7 @@ static struct pcie_port_service_driver pcie_pme_driver = {
+>  /**
+>   * pcie_pme_service_init - Register the PCIe PME service driver.
+>   */
+> -static int __init pcie_pme_service_init(void)
+> +int __init pcie_pme_init(void)
+>  {
+>  	return pcie_port_service_register(&pcie_pme_driver);
+>  }
+> -device_initcall(pcie_pme_service_init);
+> diff --git a/drivers/pci/pcie/portdrv.h b/drivers/pci/pcie/portdrv.h
+> index d59afa42fc14..2498b2d34009 100644
+> --- a/drivers/pci/pcie/portdrv.h
+> +++ b/drivers/pci/pcie/portdrv.h
+> @@ -23,6 +23,30 @@
+>  
+>  #define PCIE_PORT_DEVICE_MAXSERVICES   4
+>  
+> +#ifdef CONFIG_PCIEAER
+> +int pcie_aer_init(void);
+> +#else
+> +static inline int pcie_aer_init(void) { return 0; }
+> +#endif
+> +
+> +#ifdef CONFIG_HOTPLUG_PCI_PCIE
+> +int pcie_hp_init(void);
+> +#else
+> +static inline int pcie_hp_init(void) { return 0; }
+> +#endif
+> +
+> +#ifdef CONFIG_PCIE_PME
+> +int pcie_pme_init(void);
+> +#else
+> +static inline int pcie_pme_init(void) { return 0; }
+> +#endif
+> +
+> +#ifdef CONFIG_PCIE_DPC
+> +int pcie_dpc_init(void);
+> +#else
+> +static inline int pcie_dpc_init(void) { return 0; }
+> +#endif
+> +
+>  /* Port Type */
+>  #define PCIE_ANY_PORT			(~0)
+>  
+> diff --git a/drivers/pci/pcie/portdrv_pci.c b/drivers/pci/pcie/portdrv_pci.c
+> index eef22dc29140..23a5a0c2c3fe 100644
+> --- a/drivers/pci/pcie/portdrv_pci.c
+> +++ b/drivers/pci/pcie/portdrv_pci.c
+> @@ -226,11 +226,20 @@ static const struct dmi_system_id pcie_portdrv_dmi_table[] __initconst = {
+>  	 {}
+>  };
+>  
+> +static void __init pcie_init_services(void)
+> +{
+> +	pcie_aer_init();
+> +	pcie_pme_init();
+> +	pcie_dpc_init();
+> +	pcie_hp_init();
+> +}
+> +
+>  static int __init pcie_portdrv_init(void)
+>  {
+>  	if (pcie_ports_disabled)
+>  		return -EACCES;
+>  
+> +	pcie_init_services();
+>  	dmi_check_system(pcie_portdrv_dmi_table);
+>  
+>  	return pci_register_driver(&pcie_portdriver);
+> --
