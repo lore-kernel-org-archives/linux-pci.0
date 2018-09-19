@@ -1,117 +1,86 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-pf1-f194.google.com ([209.85.210.194]:38498 "EHLO
-        mail-pf1-f194.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726644AbeILPE5 (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Wed, 12 Sep 2018 11:04:57 -0400
-Received: by mail-pf1-f194.google.com with SMTP id x17-v6so769768pfh.5
-        for <linux-pci@vger.kernel.org>; Wed, 12 Sep 2018 03:01:08 -0700 (PDT)
+Return-Path: <SRS0=DZ5F=MB=intel.com=keith.busch@kernel.org>
+Return-Path: <SRS0=DZ5F=MB=intel.com=keith.busch@kernel.org>
+Date: Wed, 19 Sep 2018 11:05:33 -0600
+From: Keith Busch <keith.busch@intel.com>
+To: Bjorn Helgaas <helgaas@kernel.org>
+Cc: Linux PCI <linux-pci@vger.kernel.org>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	Sinan Kaya <okaya@kernel.org>, Thomas Tai <thomas.tai@oracle.com>,
+	poza@codeaurora.org, Lukas Wunner <lukas@wunner.de>,
+	Christoph Hellwig <hch@lst.de>,
+	Mika Westerberg <mika.westerberg@linux.intel.com>
+Subject: Re: [PATCHv3 01/10] PCI/portdrv: Use subsys_init for service drivers
+Message-ID: <20180919170533.GA28310@localhost.localdomain>
+References: <20180918235702.26573-1-keith.busch@intel.com>
+ <20180918235702.26573-2-keith.busch@intel.com>
+ <20180919162846.GB243610@bhelgaas-glaptop.roam.corp.google.com>
 MIME-Version: 1.0
-In-Reply-To: <20180905073816.jcrct2xcpucb6bkn@wunner.de>
-References: <1535690081-16116-1-git-send-email-suganath-prabu.subramani@broadcom.com>
- <CAHp75VfC8GN3oEzSFJYfMr0iqBTYUJ=WPoLS9Oh5NgVcFmnBkw@mail.gmail.com>
- <20180831085534.n6eikj5cw522ihhe@wunner.de> <CAK=zhgrzNYDeUFN0YWVJLdGR0nA443su0xydwSHFQzhouhZBuw@mail.gmail.com>
- <20180904094234.jm5je5sfpagdf6dz@wunner.de> <CAK=zhgprkzcF-UZeeqg_qN0xFLR=BfzkRNRZKA=DJyf7aMPmeg@mail.gmail.com>
- <20180905073816.jcrct2xcpucb6bkn@wunner.de>
-From: Sreekanth Reddy <sreekanth.reddy@broadcom.com>
-Date: Wed, 12 Sep 2018 15:31:07 +0530
-Message-ID: <CAK=zhgoy8qfKmjM+ypAmbZ1aXALdGwHSS5ND1G9HBt6h4hTheg@mail.gmail.com>
-Subject: Re: [Patch v1 0/7] mpt3sas: Hot-Plug Surprise removal support on IOC.
-To: Lukas Wunner <lukas@wunner.de>
-Cc: Suganath Prabu Subramani <suganath-prabu.subramani@broadcom.com>,
-        Andy Shevchenko <andy.shevchenko@gmail.com>,
-        linux-scsi <linux-scsi@vger.kernel.org>,
-        Sathya Prakash <Sathya.Prakash@broadcom.com>,
-        linux-pci@vger.kernel.org,
-        Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-        Keith Busch <keith.busch@intel.com>
-Content-Type: text/plain; charset="UTF-8"
-Sender: linux-pci-owner@vger.kernel.org
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20180919162846.GB243610@bhelgaas-glaptop.roam.corp.google.com>
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wed, Sep 5, 2018 at 1:08 PM, Lukas Wunner <lukas@wunner.de> wrote:
-> On Wed, Sep 05, 2018 at 11:45:45AM +0530, Sreekanth Reddy wrote:
->> On Tue, Sep 4, 2018 at 3:12 PM, Lukas Wunner <lukas@wunner.de> wrote:
->> > Many scsi drivers call pci_channel_offline() to detect inaccessibility
->> > of the device due to a PCI error:
->> > https://elixir.bootlin.com/linux/v4.19-rc2/ident/pci_channel_offline
->> >
->> > A patch is pending such that surprise removal can also be queried
->> > with that same function:
->> > https://www.spinics.net/lists/linux-pci/msg75722.html
->>
->> Lukas, thanks for pointing to this pci_dev_is_disconnected() API. So
->> we can use this API directly instead of reading the vendor Id and
->> checking for all one's once this patch get accepted?
->
-> Yes, except pci_dev_is_disconnected() is private to the PCI core,
-> but dev->error_state and pci_channel_offline() is public.
+On Wed, Sep 19, 2018 at 11:28:46AM -0500, Bjorn Helgaas wrote:
+> On Tue, Sep 18, 2018 at 05:56:53PM -0600, Keith Busch wrote:
+> > The PCI port driver saves the PCI state after initializing all the
+> > service devices. This was, however, before the service drivers were even
+> > registered. The config space state that the service drivers were setting
+> > up were not being saved.
+> > 
+> > This patch fixes this by changing the service drivers use the
+> > subsys_init, which gets the service drivers registered after the pci bus
+> > system is initialized, but before the pci devices are probed. This gets
+> > the state saved as expected.
+> 
+> I agree this is a problem.  What are the user-visible symptoms of it?
+> Incorrect service behavior after a resume?  Nice debugging and fix!
 
+I'll look at the suspend/resume case too, but I noticed the incorrect
+behavior after a bus reset: future DPC or HPC events downstream a port
+were lost after an AER recovery because the control registers were
+never restored.
 
-As Busch suggested, we will use pci_device_is_present() API.
-We have tested HBA hot-unplug operations with this API and the things
-are working fine.
+The very next patch is required too, since that's what actually restores
+the registers to the saved state.
 
->
->
->> I have one more instance where still we need this poll kthread, i.e
->> during the device probe time we have some commands which has more
->> timeout value (e.g. 300 seconds), so if user has unplugged this device
->> just after sending this more time-out valued command then driver has
->> to wait until this time-out value expires. i.e. this device is still
->> visible in lspci output until this 300 seconds timeout value expires
->> even though device is unplugged. if we have a poll kthread (which will
->> poll for every one second) then driver can early detect the unplugged
->> state and can terminate the outstanding commands and hence probe
->> operation can be completed quickly.
->
-> The only instances I can see in your driver where it waits for 300 s
-> is in _base_diag_reset(), which does an msleep(256) in a loop for up
-> to 300 s, and scsih_scan_finished(), which is called in a loop with an
-> msleep(10) by do_scsi_scan_host().
->
-> Any harm in simply checking for removal of the device in those loops
-> and bailing out if so?  Instead of the poll kthread to achieve the same?
-we can do for this port enable request but still we have other
-requests where we don't have this type of loops and used
-wait_for_completion_timeout () API where we can't bailout the request
-in-between and we have to wait until the timeout value expires. For
-these types of request terminating it though watchdog thread will be
-simple.
+> I think the ordering here is pretty obscure.  We have a lot of
+> initcalls here and they all have to line up exactly right.  If I
+> understand correctly, the flow of the required pieces (after this
+> patch) is like this:
+> 
+>   pci_driver_init                             # postcore_initcall (2)
+>     bus_register(&pcie_port_bus_type)
+> 
+>   pcied_init (pciehp)                         # subsys_initcall (4)
+>     pcie_port_service_register(&hpdriver_portdrv)
+>       new->driver.bus = &pcie_port_bus_type   # depends on above
+>                                               # bus_register()
+>       driver_register(&new->driver)
+> 
+>   pcie_portdrv_init                           # device_initcall (6)
+>     pci_register_driver(&pcie_portdriver)
+> 
+>   pcie_portdrv_probe                          # pcie_portdriver.probe
+>     pcie_port_device_register
+>       pcie_device_init
+>         device_register
+>           device_add
+>             bus_probe_device
+>               ...
+>                 pciehp_probe                  # <-- critical init
+>                                               # depends on above
+>                                               # service_register() and
+>                                               # eager probing
+>     pci_save_state                            # <-- critical save
+> 
+> The problem used to be that both pcied_init() (for pciehp) and
+> pcie_portdrv_init() were device initcalls and pcie_portdrv_init() was
+> called before pcied_init() because of link order, so the
+> pci_save_state() happened before the pciehp init.
+> 
+> Since none of the service drivers can be modules, I don't think it
+> buys us much to make their init functions initcalls.  Can we
+> explicitly call them from the pcie_portdrv_probe() path?
 
-[PATCH 2/7] mpt3sas: Add HBA hot plug watchdog thread:
-https://www.spinics.net/lists/linux-scsi/msg122963.html
-
-In the above patch and in the worker thread function we are just
-setting ioc->remove_host flag,
-Apart from resetting this flag we have to terminate all the
-outstanding commands at the HBA level and that is missing in the above
-patch. we will post new set of patches.
-
-We feel that this watch dog thread is needed, as we need to gracefully
-terminate all the outstanding command at the HBA level apart from stop
-receiving the new commands. With watch dog thread we can easily
-terminate all the outstanding commands.
-
->
->
->> Also whether we need to wait for below patches get accepted? so that
->> we can post the new set of patches accommodating according to your
->> suggestions,
->> https://www.spinics.net/lists/linux-pci/msg75722.html
->> https://www.spinics.net/lists/linux-pci/msg75438.html
->
-> I can't tell you whether and when those patches get accepted, that's
-> for Bjorn Helgaas to decide.  Also, what does get accepted might differ.
-> E.g. the first patch uses the existing pci_channel_io_perm_failure
-> state for removal.  There was debate whether to introduce a new state
-> for removed devices to avoid overloading the existing state, which is
-> used for error recovery.
->
-> All I can recommend is to follow linux-pci, test the patches that have
-> already been brought forward to ascertain they fulfil your needs,
-> and generally participate in the debate so that your use cases are
-> covered.
->
-> Thanks,
->
-> Lukas
+That sounds good to me. The portdrv isn't all that abstracted from the
+child services anyway.
