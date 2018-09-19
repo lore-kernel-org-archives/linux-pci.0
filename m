@@ -2,250 +2,160 @@ Return-Path: <SRS0=bOp+=MB=vger.kernel.org=linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-0.6 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
+X-Spam-Status: No, score=-8.6 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
 	DKIM_VALID_AU,FREEMAIL_FORGED_FROMDOMAIN,FREEMAIL_FROM,
-	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_PASS autolearn=ham
-	autolearn_force=no version=3.4.0
+	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
+	SPF_PASS,USER_AGENT_GIT autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 9E35AC433F4
-	for <linux-pci@archiver.kernel.org>; Wed, 19 Sep 2018 14:25:25 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 9423AC433F4
+	for <linux-pci@archiver.kernel.org>; Wed, 19 Sep 2018 14:33:04 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 2206E2151B
-	for <linux-pci@archiver.kernel.org>; Wed, 19 Sep 2018 14:25:25 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 424D12086E
+	for <linux-pci@archiver.kernel.org>; Wed, 19 Sep 2018 14:33:04 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="qw7o90oh"
-DMARC-Filter: OpenDMARC Filter v1.3.2 mail.kernel.org 2206E2151B
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="WZ53WoKU"
+DMARC-Filter: OpenDMARC Filter v1.3.2 mail.kernel.org 424D12086E
 Authentication-Results: mail.kernel.org; dmarc=fail (p=none dis=none) header.from=gmail.com
 Authentication-Results: mail.kernel.org; spf=none smtp.mailfrom=linux-pci-owner@vger.kernel.org
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1731221AbeISUDd (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Wed, 19 Sep 2018 16:03:33 -0400
-Received: from mail-io1-f49.google.com ([209.85.166.49]:42236 "EHLO
-        mail-io1-f49.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1727825AbeISUDd (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Wed, 19 Sep 2018 16:03:33 -0400
-Received: by mail-io1-f49.google.com with SMTP id n18-v6so4623705ioa.9;
-        Wed, 19 Sep 2018 07:25:23 -0700 (PDT)
+        id S1731576AbeISULJ (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Wed, 19 Sep 2018 16:11:09 -0400
+Received: from mail-qt0-f195.google.com ([209.85.216.195]:46956 "EHLO
+        mail-qt0-f195.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1728096AbeISULJ (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Wed, 19 Sep 2018 16:11:09 -0400
+Received: by mail-qt0-f195.google.com with SMTP id l42-v6so5237310qtf.13;
+        Wed, 19 Sep 2018 07:32:57 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=gmail.com; s=20161025;
-        h=mime-version:in-reply-to:references:from:date:message-id:subject:to
-         :cc;
-        bh=Jtxbin5sc2lNOePO3XUm0CDNs+hhFSD/YeeG2BmLbZk=;
-        b=qw7o90ohW/mAc4VUzfv2fjaPG3STYkN8ufZ+1ANUJxfgkDRHEdPcxVYdCew5IOqvH5
-         mRuAuU6yMX+X+ulIAXE2IG0D2CKkOndIfyBg/WpUB6rbMxmY3hr0BbxJXZsVZ7GYaVQ5
-         qH9+zGf4Wo497p0oBDcUqq2cMytk3B0KGohcJ5kjy0IF/ee4yGVpoI/yYwKzYgtwzwFG
-         ZoUaZLwG+OfN17kKRzI4XACn/WitmhQKFp5L8B6A6ynhT/RU5NhjPEOBWM7XOAhqb7p7
-         OqHJsZQD5k3H8OOfj6NUN0zhlYnU42ZdBfBUirf+9gT1/1p7pVNdxnc3NcGPzY7N7GXT
-         hWpg==
+        h=from:to:cc:subject:date:message-id:in-reply-to:references;
+        bh=TLBiLM1mdu1HxR4W2fQf8NiJqsLvqjL8vfP6p3vMZ+w=;
+        b=WZ53WoKUusbA3cHPVmaeu4I1DvIcIOmtdV6PfCRnqSjYtDObuE+Nc3N8sx1V8uR1q5
+         /H/QAyXcWy3qRXdZ75wF2Od3gQHruAFvmPtPkpv+fCAwrczKJJz1yOXvjxXKToqlc/0+
+         0OJ+csAnhvOvsPJz8iooWn5QDryrutjo9HBXK/k5WBSwDJAqNhjoXPQaG3N4nTcVxMJL
+         JHthiMRJ6DttM5KBJBSbnpP5casJ8yqZ5ZwKB3IDmHDniokiP0/LX/EiY8hzFWWVPdDR
+         fVURdenDFXnF/loyldrY4bnyXkpNvDCYxcRKGvFM66Fvoq7LnmNY09Bfe+maOQr1WIhZ
+         4xNA==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20161025;
-        h=x-gm-message-state:mime-version:in-reply-to:references:from:date
-         :message-id:subject:to:cc;
-        bh=Jtxbin5sc2lNOePO3XUm0CDNs+hhFSD/YeeG2BmLbZk=;
-        b=Z07Yb6KMIZRTlnGfEBmBD4uouPBm7QppujSSGnTLlSmy8G/ywnrG40iLti5VGQvWBZ
-         1JpT/BZ3UHzYhsOVJlA0h6U/Bq7S9dR5MCZcZTcRi/cDF8VpoIHPZkpwMYd27e83eQSG
-         vj/F8b1K+Ic6lWWH8ngm2kYJlIo2oHKCbWBsdo8pvn2UnlDJpEQsAQ5JN6FamJHJ4++f
-         iYz40FfB6QttivRbcyAL7FZaQJTofvVz+dO2CDxkYGHZ0DYY9xdMOjxWx0GuBWbJ6eEi
-         VXBcZLrYFuEAi9wvyW6CMHAK8SjoMC/GYjXeRUaSL2c17b7SIVI/BWFG34m2dRnLs5An
-         6uQw==
-X-Gm-Message-State: APzg51A8wModd0FoSENyux7iprgRLOsZSklzDINbw1R+7RlLNgGxKeGu
-        Qc/jP+tNrZ5R6h+6UpP54Ot+42g2Anjkky2yvwI=
-X-Google-Smtp-Source: ANB0VdZ5CgLDaIC+/zjGivhfkZyheaLpwAr3g1UIKgioDBle2h4+PDIMbG0crulWICCsoK22Dn6m+T69B5jWOIhgQnM=
-X-Received: by 2002:a6b:dc3:: with SMTP id 186-v6mr28015077ion.231.1537367122630;
- Wed, 19 Sep 2018 07:25:22 -0700 (PDT)
-MIME-Version: 1.0
-Received: by 2002:a6b:9157:0:0:0:0:0 with HTTP; Wed, 19 Sep 2018 07:25:21
- -0700 (PDT)
-In-Reply-To: <20180918204834.GB13616@bhelgaas-glaptop.roam.corp.google.com>
-References: <abb9aa39-3128-3a4d-01f7-d0614d63f37e@cisco.com>
- <20180918132056.GA254348@bhelgaas-glaptop.roam.corp.google.com>
- <b5883e58-861a-807e-f4c8-3745b006ce0d@cisco.com> <20180918184706.GA13616@bhelgaas-glaptop.roam.corp.google.com>
- <b6281224-18cf-50af-aa38-6b048d741854@cisco.com> <20180918204834.GB13616@bhelgaas-glaptop.roam.corp.google.com>
-From:   Oliver <oohall@gmail.com>
-Date:   Thu, 20 Sep 2018 00:25:21 +1000
-Message-ID:
- <CAOSf1CHcDqrwy5W-GAjJ-x+rBwbRMLoVsM8D6veFVPPXmdAsZQ@mail.gmail.com>
-Subject: Re: PCI: Enforce bus address limits in resource allocation
-To:     Bjorn Helgaas <helgaas@kernel.org>
-Cc:     Daniel Walker <danielwa@cisco.com>, linux-pci@vger.kernel.org,
-        Yinghai Lu <yinghai@kernel.org>,
+        h=x-gm-message-state:from:to:cc:subject:date:message-id:in-reply-to
+         :references;
+        bh=TLBiLM1mdu1HxR4W2fQf8NiJqsLvqjL8vfP6p3vMZ+w=;
+        b=XWFjraTVHkF/6wi5trBvQ6zWYwb+bfT0qMO9uVJKGAJev2L5qyaZ49d8CI+Lt/JpkG
+         /HqYuvD0ZsrsXje0O/l5E9b8eieHEIB9Fo+QsWfAJZLOIzvBegCYSosDU8mG17iTs6UC
+         b1wa/+GBeeWR0cbiFSp0UOysAgP55byNWkClERpNI1QRCiHJSMhDZs4fU9XQarDzOPRt
+         aA4KyW3tcJpCaQLAb1ywbGWGNdAqiiOgpSI5e/wbUPhl841Iw/ZR70dfoHjYvP8Eyqp3
+         ti03ltRukQUOQXk0C7+8GymdRnLFL0npFwGMzFdijE1Gty10xUZNzDHsbAnBZy/k6mGf
+         /BmQ==
+X-Gm-Message-State: APzg51AleskXavr5TLF/Uwpbs73AOqJxZkJ1fOD/QtpNChnmOj4b4V+2
+        g+vzeIeiJ+h279Sy47Cv2Fg78uxt
+X-Google-Smtp-Source: ANB0Vdaoy/bMUe/Yab81ePa9h/gnrBVobMUqYgkmgHWY15T0tkCpyngXC68ZnraC7jDlxqOqgBwqHA==
+X-Received: by 2002:ac8:1bf6:: with SMTP id m51-v6mr23892699qtk.143.1537367576468;
+        Wed, 19 Sep 2018 07:32:56 -0700 (PDT)
+Received: from stbsrv-and-3.and.broadcom.com ([192.19.231.250])
+        by smtp.gmail.com with ESMTPSA id 17-v6sm2104051qkf.74.2018.09.19.07.32.54
+        (version=TLS1_2 cipher=ECDHE-RSA-AES128-GCM-SHA256 bits=128/128);
+        Wed, 19 Sep 2018 07:32:55 -0700 (PDT)
+From:   Jim Quinlan <jim2101024@gmail.com>
+To:     linux-kernel@vger.kernel.org
+Cc:     Jim Quinlan <jim2101024@gmail.com>,
         Bjorn Helgaas <bhelgaas@google.com>,
         Rob Herring <robh+dt@kernel.org>,
-        Frank Rowand <frowand.list@gmail.com>,
-        Device Tree <devicetree@vger.kernel.org>
-Content-Type: text/plain; charset="UTF-8"
+        Mark Rutland <mark.rutland@arm.com>,
+        Brian Norris <computersforpeace@gmail.com>,
+        Gregory Fong <gregory.0xf0@gmail.com>,
+        Florian Fainelli <f.fainelli@gmail.com>,
+        bcm-kernel-feedback-list@broadcom.com, linux-pci@vger.kernel.org,
+        devicetree@vger.kernel.org, linux-arm-kernel@lists.infradead.org,
+        Christoph Hellwig <hch@lst.de>
+Subject: [PATCH v5 02/12] dt-bindings: pci: add DT docs for Brcmstb PCIe device
+Date:   Wed, 19 Sep 2018 10:31:57 -0400
+Message-Id: <1537367527-20773-3-git-send-email-jim2101024@gmail.com>
+X-Mailer: git-send-email 1.9.0.138.g2de3478
+In-Reply-To: <1537367527-20773-1-git-send-email-jim2101024@gmail.com>
+References: <1537367527-20773-1-git-send-email-jim2101024@gmail.com>
 Sender: linux-pci-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
-Message-ID: <20180919142521.D0cGgdvkdwFm9HTaro13FJT91ucFWZCoSiUsYksdHf4@z>
+Message-ID: <20180919143157.pgQZ0Ep2WjWyo3gRoySKhM2sF-ge2pNjmmzjm70wA-Y@z>
 
-On Wed, Sep 19, 2018 at 6:48 AM, Bjorn Helgaas <helgaas@kernel.org> wrote:
-> [+cc Rob, Frank, devicetree list,
->
-> thread starts here:
-> https://lkml.kernel.org/r/abb9aa39-3128-3a4d-01f7-d0614d63f37e@cisco.com
->
-> dmesg snippets here:
-> https://lkml.kernel.org/r/20180918184706.GA13616@bhelgaas-glaptop.roam.corp.google.com]
->
-> On Tue, Sep 18, 2018 at 11:56:20AM -0700, Daniel Walker wrote:
->> On 09/18/2018 11:47 AM, Bjorn Helgaas wrote:
->> > On Tue, Sep 18, 2018 at 07:24:02AM -0700, Daniel Walker wrote:
->> > > On 09/18/2018 06:20 AM, Bjorn Helgaas wrote:
->> > > > On Fri, Sep 14, 2018 at 08:16:35AM -0700, Daniel Walker wrote:
->> > > > > I have a powerpc system with PCI, and some devices attached to
->> > > > > the PCI bus.  In 3.10 everything worked fine, then we moved to
->> > > > > 4.9 and we had some issues.  I was able to bisect the issue down
->> > > > > to the patch in the subject line.
->> > > > >
->> > > > > f75b99d PCI: Enforce bus address limits in resource allocation
->> > > > >
->> > > > >   From 3.10 here is part of the PCI initialization,
->> > > > >
->> > > > > |pci 0001:0e:00.0: BAR 0: assigned [mem 0xfc0000000-0xfc00fffff pref]|
->> > > > > |pci 0001:07:09.0: PCI bridge to [bus 0e]|
->> > > > > |pci 0001:07:09.0: bridge window [mem 0xfc0000000-0xfc00fffff 64bit pref]|
->> > > > >                   |||In this section the memory resource for the bridge is
->> > > > > 64bit, and the device "BAR 0" gets a 64bit range. However, it seems the
->> > > > > device is 32bit.|
->> >
->> > > > > |Now fast forward to 4.9 we get this,|
->> > > >
->> > > > > pci 0001:0e:00.0: BAR 0: no space for [mem size 0x00100000 pref]
->> > > > > pci 0001:0e:00.0: BAR 0: failed to assign [mem size 0x00100000 pref]
->> > > > > pci 0001:07:09.0: PCI bridge to [bus 0e]
->> > > > > pci 0001:07:09.0: bridge window [mem 0xfc0000000-0xfc00fffff 64bit pref]
->> > > > >
->> > > > > |Here it seems to have a larger size, I'm not sure where the size is coming
->> > > > > from.
->> > > >
->> > > > The size is 0x00100000 (1MB), which is the same size as
->> > > > [mem 0xfc0000000-0xfc00fffff pref].
->> > > >
->> > > > The size is normally discovered by probing the BAR (write all 1's to
->> > > > the BAR then read it back to find which bits are writable and which
->> > > > are read-only).  On powerpc we might learn it from DT instead.  But in
->> > > > any case, we to get the same 1MB size, which is the same size as the
->> > > > bridge window.  So this should still work unless there are other BARs
->> > > > in that window.
->> > >
->> > > As far as I know there is only one BAR connected to this window.
->> > >
->> > > It kind of strikes me as an off-by-one problem because it says "no space"
->> > > but the window is the same size as what's requested. With the patch removed
->> > > you get the whole window assigned.
->> > >
->> > > In the context of the patch if you change the pci_32_bit to pci_64_bit for
->> > > the region when calling pci_bus_alloc_from_region() in the 32bit case this
->> > > problem disappears. I do have CONFIG_ARCH_DMA_ADDR_T_64BIT enabled in my
->> > > config.
->> > >
->> > > > > I was able to work around the issue by setting IORESOURCE_MEM_64 on
->> > > > > the resource for this device. I also was able to work around it by setting
->> > > > > "max = avail.end" to "max = (-1);" inside pci_bus_alloc_resource(). |
->> > > > > ||
->> > > > > ||I don't know if the problem is the patch, or something else inside our
->> > > > > system, but any thoughts are appreciated.
->> > > >
->> > > > It seems like we think the bridge window contains only 64-bit space
->> > > > and therefore contains nothing usable by the 32-bit BAR.
->> > > >
->> > > > You said later that the same problem exists on v4.19-rc4.  Can you
->> > > > collect the complete dmesg log with that kernel?  That should tell us
->> > > > about any host bridge address translation.
->> > >
->> > > Sure. I have attached the dmesg.
->> >
->> > The relevant parts are below.  I think your DT is incorrect.  Either
->> > it neglects to describe the host bridge address translation for the
->> > ffb240000.pcie and ffb250000.pcie bridges, or it incorrectly describes
->> > the BARs of devices below those bridges as 32-bit BARs when they are
->> > really 64-bit BARs.
->>
->> I don't know if the DTS is correct, it very well could be incorrect. Here
->> are the relevant parts of the DTS. The BAR at issue is connected to PCI1.
->
-> The DTS matches what I pointed out in the dmesg log.  I think you need
-> to reconcile it with your hardware and firmware, which I don't know
-> anything about, so I don't know what else I can do at this point.  I
-> copied some DT folks in case they have advice.
->
->>         pci0: pcie@ffb240000 {
->>                 compatible = "fsl,t1040-pcie", "fsl,qoriq-pcie-v2.4",
->> "fsl,qoriq-pcie";
->>                 device_type = "pci";
->>                 #size-cells = <2>;
->>                 #address-cells = <3>;
->>                 bus-range = <0x0 0xff>;
->>                 interrupts = <20 2 0 0>;
->>                 fsl,iommu-parent = <&pamu0>;
->>                 reg = <0xf 0xfb240000 0 0x10000>;
->>                 ranges = <0x03000000 0xf 0xe0000000 0xf 0xe0000000 0
->> 0x01000000>;
->>
->>                 pcie@0 {
->>                         reg = <0 0 0 0 0>;
->>                         #size-cells = <2>;
->>                         #address-cells = <3>;
->>                         device_type = "pci";
->>                 };
->>         };
->>
->>         pci1: pcie@ffb250000 {
->>                 compatible = "fsl,t1040-pcie", "fsl,qoriq-pcie-v2.4",
->> "fsl,qoriq-pcie";
->>                 device_type = "pci";
->>                 #size-cells = <2>;
->>                 #address-cells = <3>;
->>                 bus-range = <0 0xff>;
->>                 interrupts = <21 2 0 0>;
->>                 fsl,iommu-parent = <&pamu0>;
->>                 reg = <0xf 0xfb250000 0 0x10000>;
->>
->>                 ranges = <0x03000000 0x4 0x00000000 0x4 0x00000000 0xc
->> 0x00000000>;
->>
->>                 pcie@0 {
->>                         reg = <0 0 0 0 0>;
->>                         #size-cells = <2>;
->>                         #address-cells = <3>;
->>                         device_type = "pci";
->>                 };
->>         };
+The DT bindings description of the Brcmstb PCIe device is described.
+This node can be used by almost all Broadcom settop box chips, using
+ARM, ARM64, or MIPS CPU architectures.
 
-The upstream fsl-pci driver seems to configure the bridge windows
-based on what's in the ranges property rather than just consuming it.
-It might be possible to add some 32bit BAR space by tweaking the
-ranges to something like:
+Signed-off-by: Jim Quinlan <jim2101024@gmail.com>
+Acked-by: Rob Herring <robh@kernel.org>
+---
+ .../devicetree/bindings/pci/brcmstb-pcie.txt       | 59 ++++++++++++++++++++++
+ 1 file changed, 59 insertions(+)
+ create mode 100644 Documentation/devicetree/bindings/pci/brcmstb-pcie.txt
 
-        ranges = <0x02000000 0x0 0x80000000 0x4 0x0 0x0 0x80000000>;
+diff --git a/Documentation/devicetree/bindings/pci/brcmstb-pcie.txt b/Documentation/devicetree/bindings/pci/brcmstb-pcie.txt
+new file mode 100644
+index 0000000..a1a9ad5
+--- /dev/null
++++ b/Documentation/devicetree/bindings/pci/brcmstb-pcie.txt
+@@ -0,0 +1,59 @@
++Brcmstb PCIe Host Controller Device Tree Bindings
++
++Required Properties:
++- compatible
++  "brcm,bcm7425-pcie" -- for 7425 family MIPS-based SOCs.
++  "brcm,bcm7435-pcie" -- for 7435 family MIPS-based SOCs.
++  "brcm,bcm7445-pcie" -- for 7445 and later ARM based SOCs (not including
++      the 7278).
++  "brcm,bcm7278-pcie"  -- for 7278 family ARM-based SOCs.
++
++- reg -- the register start address and length for the PCIe reg block.
++- interrupts -- two interrupts are specified; the first interrupt is for
++     the PCI host controller and the second is for MSI if the built-in
++     MSI controller is to be used.
++- interrupt-names -- names of the interrupts (above): "pcie" and "msi".
++- #address-cells -- set to <3>.
++- #size-cells -- set to <2>.
++- #interrupt-cells: set to <1>.
++- interrupt-map-mask and interrupt-map, standard PCI properties to define the
++     mapping of the PCIe interface to interrupt numbers.
++- ranges: ranges for the PCI memory and I/O regions.
++- linux,pci-domain -- should be unique per host controller.
++
++Optional Properties:
++- clocks -- phandle of pcie clock.
++- clock-names -- set to "sw_pcie" if clocks is used.
++- dma-ranges -- Specifies the inbound memory mapping regions when
++     an "identity map" is not possible.
++- msi-controller -- this property is typically specified to have the
++     PCIe controller use its internal MSI controller.
++- msi-parent -- set to use an external MSI interrupt controller.
++- brcm,enable-ssc -- (boolean) indicates usage of spread-spectrum clocking.
++- max-link-speed --  (integer) indicates desired generation of link:
++     1 => 2.5 Gbps (gen1), 2 => 5.0 Gbps (gen2), 3 => 8.0 Gbps (gen3).
++
++Example Node:
++
++pcie0: pcie@f0460000 {
++		reg = <0x0 0xf0460000 0x0 0x9310>;
++		interrupts = <0x0 0x0 0x4>;
++		compatible = "brcm,bcm7445-pcie";
++		#address-cells = <3>;
++		#size-cells = <2>;
++		ranges = <0x02000000 0x00000000 0x00000000 0x00000000 0xc0000000 0x00000000 0x08000000
++			  0x02000000 0x00000000 0x08000000 0x00000000 0xc8000000 0x00000000 0x08000000>;
++		#interrupt-cells = <1>;
++		interrupt-map-mask = <0 0 0 7>;
++		interrupt-map = <0 0 0 1 &intc 0 47 3
++				 0 0 0 2 &intc 0 48 3
++				 0 0 0 3 &intc 0 49 3
++				 0 0 0 4 &intc 0 50 3>;
++		clocks = <&sw_pcie0>;
++		clock-names = "sw_pcie";
++		msi-parent = <&pcie0>;  /* use PCIe's internal MSI controller */
++		msi-controller;         /* use PCIe's internal MSI controller */
++		brcm,ssc;
++		max-link-speed = <1>;
++		linux,pci-domain = <0>;
++	};
+-- 
+1.9.0.138.g2de3478
 
-That said, it looks Daniel's kernel has some patches that change how
-PCI setup works so it might not be using the upstream driver.
-
->>
->>         pci3: pcie@ffb270000 {
->>                 compatible = "fsl,t1040-pcie", "fsl,qoriq-pcie-v2.4",
->> "fsl,qoriq-pcie";
->>                 device_type = "pci";
->>                 #size-cells = <2>;
->>                 #address-cells = <3>;
->>                 bus-range = <0x0 0xff>;
->>                 interrupts = <23 2 0 0>;
->>                 fsl,iommu-parent = <&pamu0>;
->>                 reg = <0xf 0xfb270000 0 0x10000>;
->>                 ranges = <0x03000000 0x0 0xe2000000 0xf 0xe2000000 0
->> 0x00100000>;
->>
->>                 pcie@0 {
->>                         reg = <0 0 0 0 0>;
->>                         #size-cells = <2>;
->>                         #address-cells = <3>;
->>                         device_type = "pci";
->>                 };
->>         };
->>
->>
->>
->> Daniel
