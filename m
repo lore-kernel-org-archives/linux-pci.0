@@ -1,33 +1,64 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from shards.monkeyblade.net ([23.128.96.9]:49720 "EHLO
-        shards.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726008AbeIDG15 (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Tue, 4 Sep 2018 02:27:57 -0400
-Date: Mon, 03 Sep 2018 19:05:08 -0700 (PDT)
-Message-Id: <20180903.190508.740770038342700188.davem@davemloft.net>
-To: anthony.wong@ubuntu.com
-Cc: nic_swsd@realtek.com, bhelgaas@google.com, netdev@vger.kernel.org,
-        linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org
-Subject: Re: [PATCH] r8169: add support for NCube 8168 network card
-From: David Miller <davem@davemloft.net>
-In-Reply-To: <1535717202-26397-1-git-send-email-anthony.wong@ubuntu.com>
-References: <1535717202-26397-1-git-send-email-anthony.wong@ubuntu.com>
-Mime-Version: 1.0
-Content-Type: Text/Plain; charset=us-ascii
+Received: from mail.kernel.org ([198.145.29.99]:58194 "EHLO mail.kernel.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1732676AbeISWJi (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Wed, 19 Sep 2018 18:09:38 -0400
+From: Sinan Kaya <okaya@kernel.org>
+To: linux-pci@vger.kernel.org
+Cc: alex.williamson@redhat.com, Sinan Kaya <okaya@kernel.org>,
+        Bjorn Helgaas <bhelgaas@google.com>
+Subject: [PATCH v4 3/6] PCI: Expose reset_type to users of pci_reset_function_locked()
+Date: Wed, 19 Sep 2018 16:30:34 +0000
+Message-Id: <20180919163037.13497-4-okaya@kernel.org>
+In-Reply-To: <20180919163037.13497-1-okaya@kernel.org>
+References: <20180919163037.13497-1-okaya@kernel.org>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-From: Anthony Wong <anthony.wong@ubuntu.com>
-Date: Fri, 31 Aug 2018 20:06:42 +0800
+Looking to have more control between the users of the API vs. what the API
+can do internally. The new reset_type tells the PCI core about the bounds
+of the request.
 
-> This card identifies itself as:
->   Ethernet controller [0200]: NCube Device [10ff:8168] (rev 06)
->   Subsystem: TP-LINK Technologies Co., Ltd. Device [7470:3468]
-> 
-> Adding a new entry to rtl8169_pci_tbl makes the card work.
-> 
-> Link: http://launchpad.net/bugs/1788730
-> Cc: <stable@vger.kernel.org>
-> Signed-off-by: Anthony Wong <anthony.wong@ubuntu.com>
+Signed-off-by: Sinan Kaya <okaya@kernel.org>
+---
+ drivers/pci/pci.c   | 4 ++--
+ include/linux/pci.h | 2 +-
+ 2 files changed, 3 insertions(+), 3 deletions(-)
 
-Applied.
+diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
+index 04fd40472a93..63b5930d8fb1 100644
+--- a/drivers/pci/pci.c
++++ b/drivers/pci/pci.c
+@@ -4829,7 +4829,7 @@ EXPORT_SYMBOL_GPL(pci_reset_function);
+  * Returns 0 if the device function was successfully reset or negative if the
+  * device doesn't support resetting a single function.
+  */
+-int pci_reset_function_locked(struct pci_dev *dev)
++int pci_reset_function_locked(struct pci_dev *dev, u32 reset_type)
+ {
+ 	int rc;
+ 
+@@ -4838,7 +4838,7 @@ int pci_reset_function_locked(struct pci_dev *dev)
+ 
+ 	pci_dev_save_and_disable(dev);
+ 
+-	rc = __pci_reset_function_locked(dev, PCI_RESET_ANY);
++	rc = __pci_reset_function_locked(dev, reset_type);
+ 
+ 	pci_dev_restore(dev);
+ 
+diff --git a/include/linux/pci.h b/include/linux/pci.h
+index 1a1a76130e91..09aa99dd1c1b 100644
+--- a/include/linux/pci.h
++++ b/include/linux/pci.h
+@@ -1124,7 +1124,7 @@ bool pcie_has_flr(struct pci_dev *dev);
+ int pcie_flr(struct pci_dev *dev);
+ int __pci_reset_function_locked(struct pci_dev *dev, u32 reset_type);
+ int pci_reset_function(struct pci_dev *dev, u32 reset_type);
+-int pci_reset_function_locked(struct pci_dev *dev);
++int pci_reset_function_locked(struct pci_dev *dev, u32 reset_type);
+ int pci_try_reset_function(struct pci_dev *dev);
+ int pci_probe_reset_slot(struct pci_slot *slot);
+ int pci_probe_reset_bus(struct pci_bus *bus);
+-- 
+2.18.0
