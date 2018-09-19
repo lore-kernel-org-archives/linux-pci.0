@@ -1,71 +1,124 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from szxga06-in.huawei.com ([45.249.212.32]:51774 "EHLO huawei.com"
-        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1726826AbeIQPAz (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Mon, 17 Sep 2018 11:00:55 -0400
-Date: Mon, 17 Sep 2018 10:33:48 +0100
-From: Jonathan Cameron <jonathan.cameron@huawei.com>
-To: Arnd Bergmann <arnd@arndb.de>
-CC: <viro@zeniv.linux.org.uk>, <linux-fsdevel@vger.kernel.org>,
-        "Greg Kroah-Hartman" <gregkh@linuxfoundation.org>,
-        "David S. Miller" <davem@davemloft.net>,
-        <devel@driverdev.osuosl.org>, <linux-kernel@vger.kernel.org>,
-        <qat-linux@intel.com>, <linux-crypto@vger.kernel.org>,
-        <linux-media@vger.kernel.org>, <dri-devel@lists.freedesktop.org>,
-        <linaro-mm-sig@lists.linaro.org>, <amd-gfx@lists.freedesktop.org>,
-        <linux-input@vger.kernel.org>, <linux-iio@vger.kernel.org>,
-        <linux-rdma@vger.kernel.org>, <linux-nvdimm@lists.01.org>,
-        <linux-nvme@lists.infradead.org>, <linux-pci@vger.kernel.org>,
-        <platform-driver-x86@vger.kernel.org>,
-        <linux-remoteproc@vger.kernel.org>, <sparclinux@vger.kernel.org>,
-        <linux-scsi@vger.kernel.org>, <linux-usb@vger.kernel.org>,
-        <linux-fbdev@vger.kernel.org>, <linuxppc-dev@lists.ozlabs.org>,
-        <linux-btrfs@vger.kernel.org>, <ceph-devel@vger.kernel.org>,
-        <linux-wireless@vger.kernel.org>, <netdev@vger.kernel.org>
-Subject: Re: [PATCH v2 05/17] compat_ioctl: move more drivers to
- generic_compat_ioctl_ptrarg
-Message-ID: <20180917103348.00003f31@huawei.com>
-In-Reply-To: <20180912151134.436719-1-arnd@arndb.de>
-References: <20180912150142.157913-1-arnd@arndb.de>
-        <20180912151134.436719-1-arnd@arndb.de>
-MIME-Version: 1.0
-Content-Type: text/plain; charset="US-ASCII"
+Received: from mail.kernel.org ([198.145.29.99]:58234 "EHLO mail.kernel.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1732216AbeISWJo (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Wed, 19 Sep 2018 18:09:44 -0400
+From: Sinan Kaya <okaya@kernel.org>
+To: linux-pci@vger.kernel.org
+Cc: alex.williamson@redhat.com, Sinan Kaya <okaya@kernel.org>,
+        Bjorn Helgaas <bhelgaas@google.com>,
+        Alexey Kardashevskiy <aik@ozlabs.ru>,
+        Peter Xu <peterx@redhat.com>,
+        "Gustavo A. R. Silva" <gustavo@embeddedor.com>,
+        Eric Auger <eric.auger@redhat.com>
+Subject: [PATCH v4 4/6] PCI: Expose reset type to users of pci_try_reset_function()
+Date: Wed, 19 Sep 2018 16:30:35 +0000
+Message-Id: <20180919163037.13497-5-okaya@kernel.org>
+In-Reply-To: <20180919163037.13497-1-okaya@kernel.org>
+References: <20180919163037.13497-1-okaya@kernel.org>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wed, 12 Sep 2018 17:08:52 +0200
-Arnd Bergmann <arnd@arndb.de> wrote:
+Looking to have more control between the users of the API vs. what the API
+can do internally. The new reset_type tells the PCI core about the bounds
+of the request.
 
-> The .ioctl and .compat_ioctl file operations have the same prototype so
-> they can both point to the same function, which works great almost all
-> the time when all the commands are compatible.
-> 
-> One exception is the s390 architecture, where a compat pointer is only
-> 31 bit wide, and converting it into a 64-bit pointer requires calling
-> compat_ptr(). Most drivers here will ever run in s390, but since we now
-> have a generic helper for it, it's easy enough to use it consistently.
-> 
-> I double-checked all these drivers to ensure that all ioctl arguments
-> are used as pointers or are ignored, but are not interpreted as integer
-> values.
-> 
-> Signed-off-by: Arnd Bergmann <arnd@arndb.de>
-> ---
+Signed-off-by: Sinan Kaya <okaya@kernel.org>
+---
+ drivers/pci/pci.c                  | 4 ++--
+ drivers/vfio/pci/vfio_pci.c        | 7 ++++---
+ drivers/vfio/pci/vfio_pci_config.c | 4 ++--
+ include/linux/pci.h                | 2 +-
+ 4 files changed, 9 insertions(+), 8 deletions(-)
 
-For IIO part.
-
-Acked-by: Jonathan Cameron <Jonathan.Cameron@huawei.com>
-
-Thanks,
-> diff --git a/drivers/iio/industrialio-core.c b/drivers/iio/industrialio-core.c
-> index a062cfddc5af..22844b94b0e9 100644
-> --- a/drivers/iio/industrialio-core.c
-> +++ b/drivers/iio/industrialio-core.c
-> @@ -1630,7 +1630,7 @@ static const struct file_operations iio_buffer_fileops = {
->  	.owner = THIS_MODULE,
->  	.llseek = noop_llseek,
->  	.unlocked_ioctl = iio_ioctl,
-> -	.compat_ioctl = iio_ioctl,
-> +	.compat_ioctl = generic_compat_ioctl_ptrarg,
->  };
->  
+diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
+index 63b5930d8fb1..4edf70a4d528 100644
+--- a/drivers/pci/pci.c
++++ b/drivers/pci/pci.c
+@@ -4852,7 +4852,7 @@ EXPORT_SYMBOL_GPL(pci_reset_function_locked);
+  *
+  * Same as above, except return -EAGAIN if unable to lock device.
+  */
+-int pci_try_reset_function(struct pci_dev *dev)
++int pci_try_reset_function(struct pci_dev *dev, u32 reset_type)
+ {
+ 	int rc;
+ 
+@@ -4863,7 +4863,7 @@ int pci_try_reset_function(struct pci_dev *dev)
+ 		return -EAGAIN;
+ 
+ 	pci_dev_save_and_disable(dev);
+-	rc = __pci_reset_function_locked(dev, PCI_RESET_ANY);
++	rc = __pci_reset_function_locked(dev, reset_type);
+ 	pci_dev_restore(dev);
+ 	pci_dev_unlock(dev);
+ 
+diff --git a/drivers/vfio/pci/vfio_pci.c b/drivers/vfio/pci/vfio_pci.c
+index cddb453a1ba5..fe7ada997c51 100644
+--- a/drivers/vfio/pci/vfio_pci.c
++++ b/drivers/vfio/pci/vfio_pci.c
+@@ -228,7 +228,7 @@ static int vfio_pci_enable(struct vfio_pci_device *vdev)
+ 		return ret;
+ 
+ 	/* If reset fails because of the device lock, fail this path entirely */
+-	ret = pci_try_reset_function(pdev);
++	ret = pci_try_reset_function(pdev, PCI_RESET_ANY);
+ 	if (ret == -EAGAIN) {
+ 		pci_disable_device(pdev);
+ 		return ret;
+@@ -376,7 +376,7 @@ static void vfio_pci_disable(struct vfio_pci_device *vdev)
+ 	 * Try to reset the device.  The success of this is dependent on
+ 	 * being able to lock the device, which is not always possible.
+ 	 */
+-	if (vdev->reset_works && !pci_try_reset_function(pdev))
++	if (vdev->reset_works && !pci_try_reset_function(pdev, PCI_RESET_ANY))
+ 		vdev->needs_reset = false;
+ 
+ 	pci_restore_state(pdev);
+@@ -844,7 +844,8 @@ static long vfio_pci_ioctl(void *device_data,
+ 
+ 	} else if (cmd == VFIO_DEVICE_RESET) {
+ 		return vdev->reset_works ?
+-			pci_try_reset_function(vdev->pdev) : -EINVAL;
++			pci_try_reset_function(vdev->pdev, PCI_RESET_ANY) :
++			 -EINVAL;
+ 
+ 	} else if (cmd == VFIO_DEVICE_GET_PCI_HOT_RESET_INFO) {
+ 		struct vfio_pci_hot_reset_info hdr;
+diff --git a/drivers/vfio/pci/vfio_pci_config.c b/drivers/vfio/pci/vfio_pci_config.c
+index 115a36f6f403..0d66bac66211 100644
+--- a/drivers/vfio/pci/vfio_pci_config.c
++++ b/drivers/vfio/pci/vfio_pci_config.c
+@@ -831,7 +831,7 @@ static int vfio_exp_config_write(struct vfio_pci_device *vdev, int pos,
+ 						 &cap);
+ 
+ 		if (!ret && (cap & PCI_EXP_DEVCAP_FLR))
+-			pci_try_reset_function(vdev->pdev);
++			pci_try_reset_function(vdev->pdev, PCI_RESET_ANY);
+ 	}
+ 
+ 	/*
+@@ -910,7 +910,7 @@ static int vfio_af_config_write(struct vfio_pci_device *vdev, int pos,
+ 						&cap);
+ 
+ 		if (!ret && (cap & PCI_AF_CAP_FLR) && (cap & PCI_AF_CAP_TP))
+-			pci_try_reset_function(vdev->pdev);
++			pci_try_reset_function(vdev->pdev, PCI_RESET_ANY);
+ 	}
+ 
+ 	return count;
+diff --git a/include/linux/pci.h b/include/linux/pci.h
+index 09aa99dd1c1b..4fdddcb85066 100644
+--- a/include/linux/pci.h
++++ b/include/linux/pci.h
+@@ -1125,7 +1125,7 @@ int pcie_flr(struct pci_dev *dev);
+ int __pci_reset_function_locked(struct pci_dev *dev, u32 reset_type);
+ int pci_reset_function(struct pci_dev *dev, u32 reset_type);
+ int pci_reset_function_locked(struct pci_dev *dev, u32 reset_type);
+-int pci_try_reset_function(struct pci_dev *dev);
++int pci_try_reset_function(struct pci_dev *dev, u32 reset_type);
+ int pci_probe_reset_slot(struct pci_slot *slot);
+ int pci_probe_reset_bus(struct pci_bus *bus);
+ int pci_reset_bus(struct pci_dev *dev);
+-- 
+2.18.0
