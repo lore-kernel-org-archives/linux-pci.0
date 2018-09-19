@@ -1,95 +1,230 @@
-Return-Path: <linux-acpi-owner@vger.kernel.org>
-Subject: Re: [PATCH v2 13/40] vfio: Add support for Shared Virtual Addressing
-To: Xu Zaibo <xuzaibo@huawei.com>,
-        "linux-arm-kernel@lists.infradead.org"
-        <linux-arm-kernel@lists.infradead.org>,
-        "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-        "linux-acpi@vger.kernel.org" <linux-acpi@vger.kernel.org>,
-        "devicetree@vger.kernel.org" <devicetree@vger.kernel.org>,
-        "iommu@lists.linux-foundation.org" <iommu@lists.linux-foundation.org>,
-        "kvm@vger.kernel.org" <kvm@vger.kernel.org>,
-        "linux-mm@kvack.org" <linux-mm@kvack.org>
-Cc: "joro@8bytes.org" <joro@8bytes.org>,
-        Will Deacon <Will.Deacon@arm.com>,
-        Robin Murphy <Robin.Murphy@arm.com>,
-        "alex.williamson@redhat.com" <alex.williamson@redhat.com>,
-        "tn@semihalf.com" <tn@semihalf.com>,
-        "thunder.leizhen@huawei.com" <thunder.leizhen@huawei.com>,
-        "ilias.apalodimas@linaro.org" <ilias.apalodimas@linaro.org>,
-        "jonathan.cameron@huawei.com" <jonathan.cameron@huawei.com>,
-        "liudongdong3@huawei.com" <liudongdong3@huawei.com>,
-        "shunyong.yang@hxt-semitech.com" <shunyong.yang@hxt-semitech.com>,
-        "nwatters@codeaurora.org" <nwatters@codeaurora.org>,
-        "okaya@codeaurora.org" <okaya@codeaurora.org>,
-        "jcrouse@codeaurora.org" <jcrouse@codeaurora.org>,
-        "rfranz@cavium.com" <rfranz@cavium.com>,
-        "dwmw2@infradead.org" <dwmw2@infradead.org>,
-        "jacob.jun.pan@linux.intel.com" <jacob.jun.pan@linux.intel.com>,
-        "yi.l.liu@intel.com" <yi.l.liu@intel.com>,
-        "ashok.raj@intel.com" <ashok.raj@intel.com>,
-        "kevin.tian@intel.com" <kevin.tian@intel.com>,
-        "baolu.lu@linux.intel.com" <baolu.lu@linux.intel.com>,
-        "robdclark@gmail.com" <robdclark@gmail.com>,
-        "christian.koenig@amd.com" <christian.koenig@amd.com>,
-        "bharatku@xilinx.com" <bharatku@xilinx.com>,
-        "rgummal@xilinx.com" <rgummal@xilinx.com>,
-        =?UTF-8?B?57Gz57Gz?= <kenneth-lee-2012@foxmail.com>,
-        wangzhou1 <wangzhou1@hisilicon.com>,
-        "liguozhu@hisilicon.com" <liguozhu@hisilicon.com>,
-        fanghao11 <fanghao11@huawei.com>
-References: <20180511190641.23008-1-jean-philippe.brucker@arm.com>
- <20180511190641.23008-14-jean-philippe.brucker@arm.com>
- <5B83B11E.7010807@huawei.com> <1d5b6529-4e5a-723c-3f1b-dd5a9adb490c@arm.com>
- <5B89F818.7060300@huawei.com> <3a961aff-e830-64bb-b6a9-14e08de1abf5@arm.com>
- <5B8DEA15.7020404@huawei.com> <bc27f902-4d12-21b7-b9e9-18bcae170503@arm.com>
- <5B8F4A59.20004@huawei.com>
-From: Jean-Philippe Brucker <jean-philippe.brucker@arm.com>
-Message-ID: <b51107b8-a525-13ce-f4c3-d423b8502c27@arm.com>
-Date: Wed, 5 Sep 2018 12:02:29 +0100
-MIME-Version: 1.0
-In-Reply-To: <5B8F4A59.20004@huawei.com>
-Content-Type: text/plain; charset=utf-8
-Sender: linux-acpi-owner@vger.kernel.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail.kernel.org ([198.145.29.99]:58120 "EHLO mail.kernel.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1732666AbeISWJd (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Wed, 19 Sep 2018 18:09:33 -0400
+From: Sinan Kaya <okaya@kernel.org>
+To: linux-pci@vger.kernel.org
+Cc: alex.williamson@redhat.com, Sinan Kaya <okaya@kernel.org>,
+        Derek Chickles <derek.chickles@caviumnetworks.com>,
+        Satanand Burla <satananda.burla@caviumnetworks.com>,
+        Felix Manlunas <felix.manlunas@caviumnetworks.com>,
+        Raghu Vatsavayi <raghu.vatsavayi@caviumnetworks.com>,
+        "David S. Miller" <davem@davemloft.net>,
+        Bjorn Helgaas <bhelgaas@google.com>,
+        Boris Ostrovsky <boris.ostrovsky@oracle.com>,
+        Juergen Gross <jgross@suse.com>,
+        Jia-Ju Bai <baijiaju1990@gmail.com>
+Subject: [PATCH v4 1/6] PCI: Expose reset_type to users of __pci_reset_function_locked()
+Date: Wed, 19 Sep 2018 16:30:32 +0000
+Message-Id: <20180919163037.13497-2-okaya@kernel.org>
+In-Reply-To: <20180919163037.13497-1-okaya@kernel.org>
+References: <20180919163037.13497-1-okaya@kernel.org>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 05/09/2018 04:15, Xu Zaibo wrote:
->>>       1. While the series are finished well, VFIO-PCI device can be held
->>> by only one process
->>>           through binding IOCTL command without PASID (without PASID
->>> being exposed user space).
->> It could, but isn't supported at the moment. In addition to adding
->> support in the I/O page fault code, we'd also need to update the VFIO
->> API. Currently a VFIO_TYPE1 domain always supports the MAP/UNMAP ioctl.
->> The case you describe isn't compatible with MAP/UNMAP, since the process
->> manages the shared address space with mmap or malloc. We'd probably need
->> to introduce a new VFIO IOMMU type, in which case the bind could be
->> performed implicitly when the process does VFIO_SET_IOMMU. Then the
->> process wouldn't need to send an additional BIND IOCTL.
-> ok. got it.  This is the legacy mode, so all the VFIO APIs are kept 
-> unchanged?
+We need a contract between the reset API users and the PCI core about the
+types of reset that a user needs vs. what PCI core can do internally.
+If a platform supports hotplug, we need to do hotplug reset as an example.
 
-Yes, existing VFIO semantics are preserved
+Expose the reset types to the drivers and try different reset types based
+on the new reset_type parameter.
 
->>>       2. While using VFIO-PCI device to support multiple processes with
->>> SVA series, a primary
->>>           process with multiple secondary processes must be deployed just
->>> like DPDK(https://www.dpdk.org/).
->>>           And, the PASID still has to be exposed to user land.
->> Right. A third case, also implemented by this patch (and complete), is
->> the primary process simply doing a BIND for itself, and using the
->> returned PASID to share its own address space with the device.
->>
-> ok. But I am worried that the sulotion of one primary processes with 
-> several secondary ones
-> 
-> is a little bit limited. Maybe, users don't want to depend on the 
-> primary process. :)
+Most users are expected to use PCI_RESET_ANY, PCI_RESET_FUNC or
+PCI_RESET_LINK parameters.
 
-I don't see a better way for vfio-pci, though. But more importantly, I
-don't know of any users :) While the feature is great for testing new
-hardware, and I've been using it for all kinds of stress testing, I
-haven't received feedback from possible users in production settings
-(DPDK etc) and can't speculate about what they'd prefer.
+Suggested-by: Alex Williamson <alex.williamson@redhat.com>
+Signed-off-by: Sinan Kaya <okaya@kernel.org>
+---
+ .../net/ethernet/cavium/liquidio/lio_main.c   |  2 +-
+ drivers/pci/pci.c                             | 59 ++++++++++++-------
+ drivers/xen/xen-pciback/pci_stub.c            |  6 +-
+ include/linux/pci.h                           | 13 +++-
+ 4 files changed, 55 insertions(+), 25 deletions(-)
 
-Thanks,
-Jean
+diff --git a/drivers/net/ethernet/cavium/liquidio/lio_main.c b/drivers/net/ethernet/cavium/liquidio/lio_main.c
+index 6fb13fa73b27..0ff76722734d 100644
+--- a/drivers/net/ethernet/cavium/liquidio/lio_main.c
++++ b/drivers/net/ethernet/cavium/liquidio/lio_main.c
+@@ -989,7 +989,7 @@ static void octeon_pci_flr(struct octeon_device *oct)
+ 	pci_write_config_word(oct->pci_dev, PCI_COMMAND,
+ 			      PCI_COMMAND_INTX_DISABLE);
+ 
+-	rc = __pci_reset_function_locked(oct->pci_dev);
++	rc = __pci_reset_function_locked(oct->pci_dev, PCI_RESET_ANY);
+ 
+ 	if (rc != 0)
+ 		dev_err(&oct->pci_dev->dev, "Error %d resetting PCI function %d\n",
+diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
+index 1835f3a7aa8d..e292ea589d3e 100644
+--- a/drivers/pci/pci.c
++++ b/drivers/pci/pci.c
+@@ -4673,6 +4673,7 @@ static void pci_dev_restore(struct pci_dev *dev)
+  * __pci_reset_function_locked - reset a PCI device function while holding
+  * the @dev mutex lock.
+  * @dev: PCI device to reset
++ * @reset_type: reset mask to try
+  *
+  * Some devices allow an individual function to be reset without affecting
+  * other functions in the same device.  The PCI device must be responsive
+@@ -4688,9 +4689,9 @@ static void pci_dev_restore(struct pci_dev *dev)
+  * Returns 0 if the device function was successfully reset or negative if the
+  * device doesn't support resetting a single function.
+  */
+-int __pci_reset_function_locked(struct pci_dev *dev)
++int __pci_reset_function_locked(struct pci_dev *dev, u32 reset_type)
+ {
+-	int rc;
++	int rc = -EINVAL;
+ 
+ 	might_sleep();
+ 
+@@ -4702,24 +4703,42 @@ int __pci_reset_function_locked(struct pci_dev *dev)
+ 	 * other error, we're also finished: this indicates that further
+ 	 * reset mechanisms might be broken on the device.
+ 	 */
+-	rc = pci_dev_specific_reset(dev, 0);
+-	if (rc != -ENOTTY)
+-		return rc;
+-	if (pcie_has_flr(dev)) {
+-		rc = pcie_flr(dev);
++	if (reset_type & PCI_RESET_DEV_SPECIFIC) {
++		rc = pci_dev_specific_reset(dev, 0);
+ 		if (rc != -ENOTTY)
+ 			return rc;
+ 	}
+-	rc = pci_af_flr(dev, 0);
+-	if (rc != -ENOTTY)
+-		return rc;
+-	rc = pci_pm_reset(dev, 0);
+-	if (rc != -ENOTTY)
+-		return rc;
+-	rc = pci_dev_reset_slot_function(dev, 0);
+-	if (rc != -ENOTTY)
+-		return rc;
+-	return pci_parent_bus_reset(dev, 0);
++
++	if (reset_type & PCI_RESET_FLR) {
++		if (pcie_has_flr(dev)) {
++			rc = pcie_flr(dev);
++			if (rc != -ENOTTY)
++				return rc;
++		}
++		rc = pci_af_flr(dev, 0);
++		if (rc != -ENOTTY)
++			return rc;
++	}
++
++	if (reset_type & PCI_RESET_PM) {
++		rc = pci_pm_reset(dev, 0);
++		if (rc != -ENOTTY)
++			return rc;
++	}
++
++	if (reset_type & PCI_RESET_SLOT) {
++		rc = pci_dev_reset_slot_function(dev, 0);
++		if (rc != -ENOTTY)
++			return rc;
++	}
++
++	if (reset_type & PCI_RESET_BUS) {
++		rc = pci_parent_bus_reset(dev, 0);
++		if (rc != -ENOTTY)
++			return rc;
++	}
++
++	return rc;
+ }
+ EXPORT_SYMBOL_GPL(__pci_reset_function_locked);
+ 
+@@ -4784,7 +4803,7 @@ int pci_reset_function(struct pci_dev *dev)
+ 	pci_dev_lock(dev);
+ 	pci_dev_save_and_disable(dev);
+ 
+-	rc = __pci_reset_function_locked(dev);
++	rc = __pci_reset_function_locked(dev, PCI_RESET_ANY);
+ 
+ 	pci_dev_restore(dev);
+ 	pci_dev_unlock(dev);
+@@ -4819,7 +4838,7 @@ int pci_reset_function_locked(struct pci_dev *dev)
+ 
+ 	pci_dev_save_and_disable(dev);
+ 
+-	rc = __pci_reset_function_locked(dev);
++	rc = __pci_reset_function_locked(dev, PCI_RESET_ANY);
+ 
+ 	pci_dev_restore(dev);
+ 
+@@ -4844,7 +4863,7 @@ int pci_try_reset_function(struct pci_dev *dev)
+ 		return -EAGAIN;
+ 
+ 	pci_dev_save_and_disable(dev);
+-	rc = __pci_reset_function_locked(dev);
++	rc = __pci_reset_function_locked(dev, PCI_RESET_ANY);
+ 	pci_dev_restore(dev);
+ 	pci_dev_unlock(dev);
+ 
+diff --git a/drivers/xen/xen-pciback/pci_stub.c b/drivers/xen/xen-pciback/pci_stub.c
+index 59661db144e5..6dfb805bcb19 100644
+--- a/drivers/xen/xen-pciback/pci_stub.c
++++ b/drivers/xen/xen-pciback/pci_stub.c
+@@ -105,7 +105,7 @@ static void pcistub_device_release(struct kref *kref)
+ 	/* Call the reset function which does not take lock as this
+ 	 * is called from "unbind" which takes a device_lock mutex.
+ 	 */
+-	__pci_reset_function_locked(dev);
++	__pci_reset_function_locked(dev, PCI_RESET_ANY);
+ 	if (pci_load_and_free_saved_state(dev, &dev_data->pci_saved_state))
+ 		dev_info(&dev->dev, "Could not reload PCI state\n");
+ 	else
+@@ -283,7 +283,7 @@ void pcistub_put_pci_dev(struct pci_dev *dev)
+ 	 * (so it's ready for the next domain)
+ 	 */
+ 	device_lock_assert(&dev->dev);
+-	__pci_reset_function_locked(dev);
++	__pci_reset_function_locked(dev, PCI_RESET_ANY);
+ 
+ 	dev_data = pci_get_drvdata(dev);
+ 	ret = pci_load_saved_state(dev, dev_data->pci_saved_state);
+@@ -417,7 +417,7 @@ static int pcistub_init_device(struct pci_dev *dev)
+ 		dev_err(&dev->dev, "Could not store PCI conf saved state!\n");
+ 	else {
+ 		dev_dbg(&dev->dev, "resetting (FLR, D3, etc) the device\n");
+-		__pci_reset_function_locked(dev);
++		__pci_reset_function_locked(dev, PCI_RESET_ANY);
+ 		pci_restore_state(dev);
+ 	}
+ 	/* Now disable the device (this also ensures some private device
+diff --git a/include/linux/pci.h b/include/linux/pci.h
+index 6925828f9f25..d2e0a8c8177b 100644
+--- a/include/linux/pci.h
++++ b/include/linux/pci.h
+@@ -849,6 +849,17 @@ enum {
+ 	PCI_SCAN_ALL_PCIE_DEVS	= 0x00000040,	/* Scan all, not just dev 0 */
+ };
+ 
++#define PCI_RESET_DEV_SPECIFIC	(1 << 0)
++#define PCI_RESET_FLR		(1 << 1)
++#define PCI_RESET_PM		(1 << 2)
++#define PCI_RESET_SLOT		(1 << 3)
++#define PCI_RESET_BUS		(1 << 4)
++
++#define PCI_RESET_ANY		(~0)
++#define PCI_RESET_FUNC		(PCI_RESET_DEV_SPECIFIC | \
++				 PCI_RESET_FLR | PCI_RESET_PM)
++#define PCI_RESET_LINK		(PCI_RESET_SLOT | PCI_RESET_BUS)
++
+ /* These external functions are only available when PCI support is enabled */
+ #ifdef CONFIG_PCI
+ 
+@@ -1111,7 +1122,7 @@ u32 pcie_bandwidth_available(struct pci_dev *dev, struct pci_dev **limiting_dev,
+ void pcie_print_link_status(struct pci_dev *dev);
+ bool pcie_has_flr(struct pci_dev *dev);
+ int pcie_flr(struct pci_dev *dev);
+-int __pci_reset_function_locked(struct pci_dev *dev);
++int __pci_reset_function_locked(struct pci_dev *dev, u32 reset_type);
+ int pci_reset_function(struct pci_dev *dev);
+ int pci_reset_function_locked(struct pci_dev *dev);
+ int pci_try_reset_function(struct pci_dev *dev);
+-- 
+2.18.0
