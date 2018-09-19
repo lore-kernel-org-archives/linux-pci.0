@@ -1,53 +1,60 @@
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Date: Mon, 10 Sep 2018 14:38:36 -0500
-From: Rob Herring <robh@kernel.org>
-To: Hanjie Lin <hanjie.lin@amlogic.com>
-Subject: Re: [PATCH v3 1/2] dt-bindings: PCI: meson: add DT bindings for
- Amlogic Meson PCIe controller
-Message-ID: <20180910193836.GA21297@bogus>
-References: <1535616829-167936-1-git-send-email-hanjie.lin@amlogic.com>
- <1535616829-167936-2-git-send-email-hanjie.lin@amlogic.com>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail.kernel.org ([198.145.29.99]:32844 "EHLO mail.kernel.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1727844AbeISWZo (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Wed, 19 Sep 2018 18:25:44 -0400
+Subject: Re: [PATCHv3 10/10] PCI: Make link active reporting detection generic
+From: Sinan Kaya <okaya@kernel.org>
+To: Keith Busch <keith.busch@intel.com>,
+        Linux PCI <linux-pci@vger.kernel.org>,
+        Bjorn Helgaas <bhelgaas@google.com>
+Cc: Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+        Thomas Tai <thomas.tai@oracle.com>, poza@codeaurora.org,
+        Lukas Wunner <lukas@wunner.de>, Christoph Hellwig <hch@lst.de>,
+        Mika Westerberg <mika.westerberg@linux.intel.com>
+References: <20180918235702.26573-1-keith.busch@intel.com>
+ <20180918235702.26573-11-keith.busch@intel.com>
+ <f695a8f4-a359-389f-b27e-c1d998a50b0b@kernel.org>
+Message-ID: <196cd477-ad06-a75b-a013-6c5c231419a3@kernel.org>
+Date: Wed, 19 Sep 2018 12:46:58 -0400
 MIME-Version: 1.0
-In-Reply-To: <1535616829-167936-2-git-send-email-hanjie.lin@amlogic.com>
-List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
-List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
-List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
-List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
-List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
-Cc: devicetree@vger.kernel.org, Hanjie Lin <hanjie.lin@amlogic.com>,
- Jianxin Pan <jianxin.pan@amlogic.com>, Kevin Hilman <khilman@baylibre.com>,
- Yixun Lan <yixun.lan@amlogic.com>, linux-kernel@vger.kernel.org,
- Yue Wang <yue.wang@amlogic.com>, Qiufang Dai <qiufang.dai@amlogic.com>,
- Liang Yang <liang.yang@amlogic.com>, Jian Hu <jian.hu@amlogic.com>,
- linux-pci@vger.kernel.org, Bjorn Helgaas <bhelgaas@google.com>,
- linux-amlogic@lists.infradead.org, linux-arm-kernel@lists.infradead.org,
- Jerome Brunet <jbrunet@baylibre.com>
-Content-Type: text/plain; charset="us-ascii"
-Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
-Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
+In-Reply-To: <f695a8f4-a359-389f-b27e-c1d998a50b0b@kernel.org>
+Content-Type: text/plain; charset=utf-8; format=flowed
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Thu, 30 Aug 2018 16:13:48 +0800, Hanjie Lin wrote:
-> From: Yue Wang <yue.wang@amlogic.com>
+On 9/19/2018 12:42 PM, Sinan Kaya wrote:
+> On 9/18/2018 7:57 PM, Keith Busch wrote:
+>> +++ b/drivers/pci/pcie/dpc.c
+>> @@ -93,10 +93,12 @@ static pci_ers_result_t dpc_reset_link(struct pci_dev *pdev)
+>>       pci_write_config_word(pdev, cap + PCI_EXP_DPC_STATUS,
+>>                     PCI_EXP_DPC_STATUS_TRIGGER);
+>> +    if (!pcie_wait_for_link(pdev, true))
+>> +        return PCI_ERS_RESULT_DISCONNECT;
+>> +
 > 
-> The Amlogic Meson PCIe host controller is based on the Synopsys DesignWare
-> PCI core. This patch adds documentation for the DT bindings in Meson PCIe
-> controller.
+> We are already doing this in err.c in pcie_do_fatal_recovery() as follows.
 > 
-> Signed-off-by: Yue Wang <yue.wang@amlogic.com>
-> Signed-off-by: Hanjie Lin <hanjie.lin@amlogic.com>
-> ---
->  .../devicetree/bindings/pci/amlogic,meson-pcie.txt | 70 ++++++++++++++++++++++
->  1 file changed, 70 insertions(+)
->  create mode 100644 Documentation/devicetree/bindings/pci/amlogic,meson-pcie.txt
+>      result = reset_link(udev, service);
+>      ...
+>      if (result == PCI_ERS_RESULT_RECOVERED) {
+>          if (pcie_wait_for_link(udev, true))
+>              pci_rescan_bus(udev->bus);
+>          pci_info(dev, "Device recovery from fatal error successful\n");
+>      }
+> 
+> This would be an unnecessary duplication.
+> 
+> You may want to move this piece into err.c and change the return code to 
+> PCI_ERS_RESULT_DISCONNECT
+> right after return from reset_link().
+> 
+>>       return PCI_ERS_RESULT_RECOVERED;
+>>   }
+>> -
 > 
 
-Reviewed-by: Rob Herring <robh@kernel.org>
+Nevermind. I just realized that you unified error recovery handlers into
+pcie_do_recovery().
 
-_______________________________________________
-linux-arm-kernel mailing list
-linux-arm-kernel@lists.infradead.org
-http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
+Please disregard this comment.
