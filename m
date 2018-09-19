@@ -1,1184 +1,340 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-qt0-f195.google.com ([209.85.216.195]:38106 "EHLO
-        mail-qt0-f195.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1728096AbeISULO (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Wed, 19 Sep 2018 16:11:14 -0400
-From: Jim Quinlan <jim2101024@gmail.com>
-To: linux-kernel@vger.kernel.org
-Cc: Jim Quinlan <jim2101024@gmail.com>,
-        Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
-        Bjorn Helgaas <bhelgaas@google.com>,
-        Brian Norris <computersforpeace@gmail.com>,
-        Gregory Fong <gregory.0xf0@gmail.com>,
-        Florian Fainelli <f.fainelli@gmail.com>,
-        bcm-kernel-feedback-list@broadcom.com, linux-pci@vger.kernel.org,
-        linux-arm-kernel@lists.infradead.org,
-        Christoph Hellwig <hch@lst.de>
-Subject: [PATCH v5 03/12] PCI: brcmstb: add Broadcom STB PCIe host controller driver
-Date: Wed, 19 Sep 2018 10:31:58 -0400
-Message-Id: <1537367527-20773-4-git-send-email-jim2101024@gmail.com>
-In-Reply-To: <1537367527-20773-1-git-send-email-jim2101024@gmail.com>
-References: <1537367527-20773-1-git-send-email-jim2101024@gmail.com>
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <SRS0=OSBU=MB=cisco.com=danielwa@kernel.org>
+Return-Path: <SRS0=OSBU=MB=cisco.com=danielwa@kernel.org>
+Subject: Re: PCI: Enforce bus address limits in resource allocation
+To: Oliver <oohall@gmail.com>, Bjorn Helgaas <helgaas@kernel.org>
+Cc: linux-pci@vger.kernel.org, Yinghai Lu <yinghai@kernel.org>,
+        Bjorn Helgaas <bhelgaas@google.com>, Rob Herring <robh+dt@kernel.org>,
+        Frank Rowand <frowand.list@gmail.com>,
+        Device Tree <devicetree@vger.kernel.org>
+References: <abb9aa39-3128-3a4d-01f7-d0614d63f37e@cisco.com>
+ <20180918132056.GA254348@bhelgaas-glaptop.roam.corp.google.com>
+ <b5883e58-861a-807e-f4c8-3745b006ce0d@cisco.com>
+ <20180918184706.GA13616@bhelgaas-glaptop.roam.corp.google.com>
+ <b6281224-18cf-50af-aa38-6b048d741854@cisco.com>
+ <20180918204834.GB13616@bhelgaas-glaptop.roam.corp.google.com>
+ <CAOSf1CHcDqrwy5W-GAjJ-x+rBwbRMLoVsM8D6veFVPPXmdAsZQ@mail.gmail.com>
+From: Daniel Walker <danielwa@cisco.com>
+Message-ID: <4ba13a62-a2b4-662d-4f55-779312aa7871@cisco.com>
+Date: Wed, 19 Sep 2018 14:13:28 -0700
+MIME-Version: 1.0
+In-Reply-To: <CAOSf1CHcDqrwy5W-GAjJ-x+rBwbRMLoVsM8D6veFVPPXmdAsZQ@mail.gmail.com>
+Content-Type: multipart/mixed;
+ boundary="------------887203805D2212F361329024"
 List-ID: <linux-pci.vger.kernel.org>
 
-This commit adds the basic Broadcom STB PCIe controller.  Missing is
-the ability to process MSI and also handle dma-ranges for inbound
-memory accesses.  These two functionalities are added in subsequent
-commits.
+This is a multi-part message in MIME format.
+--------------887203805D2212F361329024
+Content-Type: text/plain; charset=utf-8; format=flowed
+Content-Transfer-Encoding: 7bit
 
-The PCIe block contains an MDIO interface.  This is a local interface
-only accessible by the PCIe controller.  It cannot be used or shared
-by any other HW.  As such, the small amount of code for this
-controller is included in this driver as there is little upside to put
-it elsewhere.
+On 09/19/2018 07:25 AM, Oliver wrote:
+> On Wed, Sep 19, 2018 at 6:48 AM, Bjorn Helgaas <helgaas@kernel.org> wrote:
+>> [+cc Rob, Frank, devicetree list,
+>>
+>> thread starts here:
+>> https://lkml.kernel.org/r/abb9aa39-3128-3a4d-01f7-d0614d63f37e@cisco.com
+>>
+>> dmesg snippets here:
+>> https://lkml.kernel.org/r/20180918184706.GA13616@bhelgaas-glaptop.roam.corp.google.com]
+>>
+>> On Tue, Sep 18, 2018 at 11:56:20AM -0700, Daniel Walker wrote:
+>>> On 09/18/2018 11:47 AM, Bjorn Helgaas wrote:
+>>>> On Tue, Sep 18, 2018 at 07:24:02AM -0700, Daniel Walker wrote:
+>>>>> On 09/18/2018 06:20 AM, Bjorn Helgaas wrote:
+>>>>>> On Fri, Sep 14, 2018 at 08:16:35AM -0700, Daniel Walker wrote:
+>>>>>>> I have a powerpc system with PCI, and some devices attached to
+>>>>>>> the PCI bus.  In 3.10 everything worked fine, then we moved to
+>>>>>>> 4.9 and we had some issues.  I was able to bisect the issue down
+>>>>>>> to the patch in the subject line.
+>>>>>>>
+>>>>>>> f75b99d PCI: Enforce bus address limits in resource allocation
+>>>>>>>
+>>>>>>>    From 3.10 here is part of the PCI initialization,
+>>>>>>>
+>>>>>>> |pci 0001:0e:00.0: BAR 0: assigned [mem 0xfc0000000-0xfc00fffff pref]|
+>>>>>>> |pci 0001:07:09.0: PCI bridge to [bus 0e]|
+>>>>>>> |pci 0001:07:09.0: bridge window [mem 0xfc0000000-0xfc00fffff 64bit pref]|
+>>>>>>>                    |||In this section the memory resource for the bridge is
+>>>>>>> 64bit, and the device "BAR 0" gets a 64bit range. However, it seems the
+>>>>>>> device is 32bit.|
+>>>>
+>>>>>>> |Now fast forward to 4.9 we get this,|
+>>>>>>
+>>>>>>> pci 0001:0e:00.0: BAR 0: no space for [mem size 0x00100000 pref]
+>>>>>>> pci 0001:0e:00.0: BAR 0: failed to assign [mem size 0x00100000 pref]
+>>>>>>> pci 0001:07:09.0: PCI bridge to [bus 0e]
+>>>>>>> pci 0001:07:09.0: bridge window [mem 0xfc0000000-0xfc00fffff 64bit pref]
+>>>>>>>
+>>>>>>> |Here it seems to have a larger size, I'm not sure where the size is coming
+>>>>>>> from.
+>>>>>>
+>>>>>> The size is 0x00100000 (1MB), which is the same size as
+>>>>>> [mem 0xfc0000000-0xfc00fffff pref].
+>>>>>>
+>>>>>> The size is normally discovered by probing the BAR (write all 1's to
+>>>>>> the BAR then read it back to find which bits are writable and which
+>>>>>> are read-only).  On powerpc we might learn it from DT instead.  But in
+>>>>>> any case, we to get the same 1MB size, which is the same size as the
+>>>>>> bridge window.  So this should still work unless there are other BARs
+>>>>>> in that window.
+>>>>>
+>>>>> As far as I know there is only one BAR connected to this window.
+>>>>>
+>>>>> It kind of strikes me as an off-by-one problem because it says "no space"
+>>>>> but the window is the same size as what's requested. With the patch removed
+>>>>> you get the whole window assigned.
+>>>>>
+>>>>> In the context of the patch if you change the pci_32_bit to pci_64_bit for
+>>>>> the region when calling pci_bus_alloc_from_region() in the 32bit case this
+>>>>> problem disappears. I do have CONFIG_ARCH_DMA_ADDR_T_64BIT enabled in my
+>>>>> config.
+>>>>>
+>>>>>>> I was able to work around the issue by setting IORESOURCE_MEM_64 on
+>>>>>>> the resource for this device. I also was able to work around it by setting
+>>>>>>> "max = avail.end" to "max = (-1);" inside pci_bus_alloc_resource(). |
+>>>>>>> ||
+>>>>>>> ||I don't know if the problem is the patch, or something else inside our
+>>>>>>> system, but any thoughts are appreciated.
+>>>>>>
+>>>>>> It seems like we think the bridge window contains only 64-bit space
+>>>>>> and therefore contains nothing usable by the 32-bit BAR.
+>>>>>>
+>>>>>> You said later that the same problem exists on v4.19-rc4.  Can you
+>>>>>> collect the complete dmesg log with that kernel?  That should tell us
+>>>>>> about any host bridge address translation.
+>>>>>
+>>>>> Sure. I have attached the dmesg.
+>>>>
+>>>> The relevant parts are below.  I think your DT is incorrect.  Either
+>>>> it neglects to describe the host bridge address translation for the
+>>>> ffb240000.pcie and ffb250000.pcie bridges, or it incorrectly describes
+>>>> the BARs of devices below those bridges as 32-bit BARs when they are
+>>>> really 64-bit BARs.
+>>>
+>>> I don't know if the DTS is correct, it very well could be incorrect. Here
+>>> are the relevant parts of the DTS. The BAR at issue is connected to PCI1.
+>>
+>> The DTS matches what I pointed out in the dmesg log.  I think you need
+>> to reconcile it with your hardware and firmware, which I don't know
+>> anything about, so I don't know what else I can do at this point.  I
+>> copied some DT folks in case they have advice.
+>>
+>>>          pci0: pcie@ffb240000 {
+>>>                  compatible = "fsl,t1040-pcie", "fsl,qoriq-pcie-v2.4",
+>>> "fsl,qoriq-pcie";
+>>>                  device_type = "pci";
+>>>                  #size-cells = <2>;
+>>>                  #address-cells = <3>;
+>>>                  bus-range = <0x0 0xff>;
+>>>                  interrupts = <20 2 0 0>;
+>>>                  fsl,iommu-parent = <&pamu0>;
+>>>                  reg = <0xf 0xfb240000 0 0x10000>;
+>>>                  ranges = <0x03000000 0xf 0xe0000000 0xf 0xe0000000 0
+>>> 0x01000000>;
+>>>
+>>>                  pcie@0 {
+>>>                          reg = <0 0 0 0 0>;
+>>>                          #size-cells = <2>;
+>>>                          #address-cells = <3>;
+>>>                          device_type = "pci";
+>>>                  };
+>>>          };
+>>>
+>>>          pci1: pcie@ffb250000 {
+>>>                  compatible = "fsl,t1040-pcie", "fsl,qoriq-pcie-v2.4",
+>>> "fsl,qoriq-pcie";
+>>>                  device_type = "pci";
+>>>                  #size-cells = <2>;
+>>>                  #address-cells = <3>;
+>>>                  bus-range = <0 0xff>;
+>>>                  interrupts = <21 2 0 0>;
+>>>                  fsl,iommu-parent = <&pamu0>;
+>>>                  reg = <0xf 0xfb250000 0 0x10000>;
+>>>
+>>>                  ranges = <0x03000000 0x4 0x00000000 0x4 0x00000000 0xc
+>>> 0x00000000>;
+>>>
+>>>                  pcie@0 {
+>>>                          reg = <0 0 0 0 0>;
+>>>                          #size-cells = <2>;
+>>>                          #address-cells = <3>;
+>>>                          device_type = "pci";
+>>>                  };
+>>>          };
+> 
+> The upstream fsl-pci driver seems to configure the bridge windows
+> based on what's in the ranges property rather than just consuming it.
+> It might be possible to add some 32bit BAR space by tweaking the
+> ranges to something like:
+> 
+>          ranges = <0x02000000 0x0 0x80000000 0x4 0x0 0x0 0x80000000>;
 
-Signed-off-by: Jim Quinlan <jim2101024@gmail.com>
----
- drivers/pci/controller/Kconfig        |   12 +
- drivers/pci/controller/Makefile       |    1 +
- drivers/pci/controller/pcie-brcmstb.c | 1099 +++++++++++++++++++++++++++++++++
- 3 files changed, 1112 insertions(+)
- create mode 100644 drivers/pci/controller/pcie-brcmstb.c
+I added this line for pci1 , and the initialization appears to be 
+different. I don't see the same "no space" lines (there is no reference 
+to 0001:0e at all in that sequence). The unit test I have referenced 
+below starts working.
 
-diff --git a/drivers/pci/controller/Kconfig b/drivers/pci/controller/Kconfig
-index 028b287..c863c67 100644
---- a/drivers/pci/controller/Kconfig
-+++ b/drivers/pci/controller/Kconfig
-@@ -278,5 +278,17 @@ config VMD
- 	  To compile this driver as a module, choose M here: the
- 	  module will be called vmd.
- 
-+config PCIE_BRCMSTB
-+	bool "Broadcom Brcmstb PCIe host controller"
-+	depends on ARCH_BRCMSTB || BMIPS_GENERIC
-+	depends on OF
-+	depends on SOC_BRCMSTB
-+	default ARCH_BRCMSTB || BMIPS_GENERIC
-+	help
-+	  Say Y here to enable PCIe host controller support for
-+	  Broadcom Settop Box SOCs.  A Broadcom SOC will may have
-+	  multiple host controllers as opposed to a single host
-+	  controller with multiple ports.
-+
- source "drivers/pci/controller/dwc/Kconfig"
- endmenu
-diff --git a/drivers/pci/controller/Makefile b/drivers/pci/controller/Makefile
-index d56a507..e76bfb2 100644
---- a/drivers/pci/controller/Makefile
-+++ b/drivers/pci/controller/Makefile
-@@ -29,6 +29,7 @@ obj-$(CONFIG_PCIE_MEDIATEK) += pcie-mediatek.o
- obj-$(CONFIG_PCIE_MOBIVEIL) += pcie-mobiveil.o
- obj-$(CONFIG_PCIE_TANGO_SMP8759) += pcie-tango.o
- obj-$(CONFIG_VMD) += vmd.o
-+obj-$(CONFIG_PCIE_BRCMSTB) += pcie-brcmstb.o
- # pcie-hisi.o quirks are needed even without CONFIG_PCIE_DW
- obj-y				+= dwc/
- 
-diff --git a/drivers/pci/controller/pcie-brcmstb.c b/drivers/pci/controller/pcie-brcmstb.c
-new file mode 100644
-index 0000000..9c87d10
---- /dev/null
-+++ b/drivers/pci/controller/pcie-brcmstb.c
-@@ -0,0 +1,1099 @@
-+// SPDX-License-Identifier: GPL-2.0
-+/* Copyright (C) 2009 - 2018 Broadcom */
-+
-+#include <linux/clk.h>
-+#include <linux/compiler.h>
-+#include <linux/delay.h>
-+#include <linux/init.h>
-+#include <linux/interrupt.h>
-+#include <linux/io.h>
-+#include <linux/ioport.h>
-+#include <linux/irqdomain.h>
-+#include <linux/kernel.h>
-+#include <linux/list.h>
-+#include <linux/log2.h>
-+#include <linux/module.h>
-+#include <linux/of_address.h>
-+#include <linux/of_irq.h>
-+#include <linux/of_pci.h>
-+#include <linux/of_platform.h>
-+#include <linux/pci.h>
-+#include <linux/printk.h>
-+#include <linux/sizes.h>
-+#include <linux/slab.h>
-+#include <soc/brcmstb/memory_api.h>
-+#include <linux/string.h>
-+#include <linux/types.h>
-+
-+#include "../pci.h"
-+
-+/* BRCM_PCIE_CAP_REGS - Offset for the mandatory capability config regs */
-+#define BRCM_PCIE_CAP_REGS				0x00ac
-+
-+/*
-+ * Broadcom Settop Box PCIe Register Offsets. The names are from
-+ * the chip's RDB and we use them here so that a script can correlate
-+ * this code and the RDB to prevent discrepancies.
-+ */
-+#define PCIE_RC_CFG_VENDOR_VENDOR_SPECIFIC_REG1		0x0188
-+#define PCIE_RC_CFG_PRIV1_ID_VAL3			0x043c
-+#define PCIE_RC_DL_MDIO_ADDR				0x1100
-+#define PCIE_RC_DL_MDIO_WR_DATA				0x1104
-+#define PCIE_RC_DL_MDIO_RD_DATA				0x1108
-+#define PCIE_MISC_MISC_CTRL				0x4008
-+#define PCIE_MISC_CPU_2_PCIE_MEM_WIN0_LO		0x400c
-+#define PCIE_MISC_CPU_2_PCIE_MEM_WIN0_HI		0x4010
-+#define PCIE_MISC_RC_BAR1_CONFIG_LO			0x402c
-+#define PCIE_MISC_RC_BAR2_CONFIG_LO			0x4034
-+#define PCIE_MISC_RC_BAR2_CONFIG_HI			0x4038
-+#define PCIE_MISC_RC_BAR3_CONFIG_LO			0x403c
-+#define PCIE_MISC_PCIE_CTRL				0x4064
-+#define PCIE_MISC_PCIE_STATUS				0x4068
-+#define PCIE_MISC_REVISION				0x406c
-+#define PCIE_MISC_CPU_2_PCIE_MEM_WIN0_BASE_LIMIT	0x4070
-+#define PCIE_MISC_CPU_2_PCIE_MEM_WIN0_BASE_HI		0x4080
-+#define PCIE_MISC_CPU_2_PCIE_MEM_WIN0_LIMIT_HI		0x4084
-+#define PCIE_MISC_HARD_PCIE_HARD_DEBUG			0x4204
-+#define PCIE_INTR2_CPU_BASE				0x4300
-+
-+/*
-+ * Broadcom Settop Box PCIe Register Field shift and mask info. The
-+ * names are from the chip's RDB and we use them here so that a script
-+ * can correlate this code and the RDB to prevent discrepancies.
-+ */
-+#define PCIE_RC_CFG_VENDOR_VENDOR_SPECIFIC_REG1_ENDIAN_MODE_BAR2_MASK	0xc
-+#define PCIE_RC_CFG_VENDOR_VENDOR_SPECIFIC_REG1_ENDIAN_MODE_BAR2_SHIFT	0x2
-+#define PCIE_RC_CFG_PRIV1_ID_VAL3_CLASS_CODE_MASK		0xffffff
-+#define PCIE_RC_CFG_PRIV1_ID_VAL3_CLASS_CODE_SHIFT		0x0
-+#define PCIE_MISC_MISC_CTRL_SCB_ACCESS_EN_MASK			0x1000
-+#define PCIE_MISC_MISC_CTRL_SCB_ACCESS_EN_SHIFT			0xc
-+#define PCIE_MISC_MISC_CTRL_CFG_READ_UR_MODE_MASK		0x2000
-+#define PCIE_MISC_MISC_CTRL_CFG_READ_UR_MODE_SHIFT		0xd
-+#define PCIE_MISC_MISC_CTRL_MAX_BURST_SIZE_MASK			0x300000
-+#define PCIE_MISC_MISC_CTRL_MAX_BURST_SIZE_SHIFT		0x14
-+#define PCIE_MISC_MISC_CTRL_SCB0_SIZE_MASK			0xf8000000
-+#define PCIE_MISC_MISC_CTRL_SCB0_SIZE_SHIFT			0x1b
-+#define PCIE_MISC_MISC_CTRL_SCB1_SIZE_MASK			0x7c00000
-+#define PCIE_MISC_MISC_CTRL_SCB1_SIZE_SHIFT			0x16
-+#define PCIE_MISC_MISC_CTRL_SCB2_SIZE_MASK			0x1f
-+#define PCIE_MISC_MISC_CTRL_SCB2_SIZE_SHIFT			0x0
-+#define PCIE_MISC_RC_BAR1_CONFIG_LO_SIZE_MASK			0x1f
-+#define PCIE_MISC_RC_BAR1_CONFIG_LO_SIZE_SHIFT			0x0
-+#define PCIE_MISC_RC_BAR2_CONFIG_LO_SIZE_MASK			0x1f
-+#define PCIE_MISC_RC_BAR2_CONFIG_LO_SIZE_SHIFT			0x0
-+#define PCIE_MISC_RC_BAR3_CONFIG_LO_SIZE_MASK			0x1f
-+#define PCIE_MISC_RC_BAR3_CONFIG_LO_SIZE_SHIFT			0x0
-+#define PCIE_MISC_PCIE_CTRL_PCIE_PERSTB_MASK			0x4
-+#define PCIE_MISC_PCIE_CTRL_PCIE_PERSTB_SHIFT			0x2
-+#define PCIE_MISC_PCIE_CTRL_PCIE_L23_REQUEST_MASK		0x1
-+#define PCIE_MISC_PCIE_CTRL_PCIE_L23_REQUEST_SHIFT		0x0
-+#define PCIE_MISC_PCIE_STATUS_PCIE_PORT_MASK			0x80
-+#define PCIE_MISC_PCIE_STATUS_PCIE_PORT_SHIFT			0x7
-+#define PCIE_MISC_PCIE_STATUS_PCIE_DL_ACTIVE_MASK		0x20
-+#define PCIE_MISC_PCIE_STATUS_PCIE_DL_ACTIVE_SHIFT		0x5
-+#define PCIE_MISC_PCIE_STATUS_PCIE_PHYLINKUP_MASK		0x10
-+#define PCIE_MISC_PCIE_STATUS_PCIE_PHYLINKUP_SHIFT		0x4
-+#define PCIE_MISC_PCIE_STATUS_PCIE_LINK_IN_L23_MASK		0x40
-+#define PCIE_MISC_PCIE_STATUS_PCIE_LINK_IN_L23_SHIFT		0x6
-+#define PCIE_MISC_REVISION_MAJMIN_MASK				0xffff
-+#define PCIE_MISC_REVISION_MAJMIN_SHIFT				0
-+#define PCIE_MISC_CPU_2_PCIE_MEM_WIN0_BASE_LIMIT_LIMIT_MASK	0xfff00000
-+#define PCIE_MISC_CPU_2_PCIE_MEM_WIN0_BASE_LIMIT_LIMIT_SHIFT	0x14
-+#define PCIE_MISC_CPU_2_PCIE_MEM_WIN0_BASE_LIMIT_BASE_MASK	0xfff0
-+#define PCIE_MISC_CPU_2_PCIE_MEM_WIN0_BASE_LIMIT_BASE_SHIFT	0x4
-+#define PCIE_MISC_CPU_2_PCIE_MEM_WIN0_BASE_LIMIT_NUM_MASK_BITS	0xc
-+#define PCIE_MISC_CPU_2_PCIE_MEM_WIN0_BASE_HI_BASE_MASK		0xff
-+#define PCIE_MISC_CPU_2_PCIE_MEM_WIN0_BASE_HI_BASE_SHIFT	0x0
-+#define PCIE_MISC_CPU_2_PCIE_MEM_WIN0_LIMIT_HI_LIMIT_MASK	0xff
-+#define PCIE_MISC_CPU_2_PCIE_MEM_WIN0_LIMIT_HI_LIMIT_SHIFT	0x0
-+#define PCIE_MISC_HARD_PCIE_HARD_DEBUG_CLKREQ_DEBUG_ENABLE_MASK	0x2
-+#define PCIE_MISC_HARD_PCIE_HARD_DEBUG_CLKREQ_DEBUG_ENABLE_SHIFT 0x1
-+#define PCIE_MISC_HARD_PCIE_HARD_DEBUG_SERDES_IDDQ_MASK		0x08000000
-+#define PCIE_MISC_HARD_PCIE_HARD_DEBUG_SERDES_IDDQ_SHIFT	0x1b
-+#define PCIE_RGR1_SW_INIT_1_PERST_MASK				0x1
-+#define PCIE_RGR1_SW_INIT_1_PERST_SHIFT				0x0
-+
-+#define BRCM_NUM_PCIE_OUT_WINS		0x4
-+#define BRCM_MAX_SCB			0x4
-+
-+#define BRCM_MSI_TARGET_ADDR_LT_4GB	0x0fffffffcULL
-+#define BRCM_MSI_TARGET_ADDR_GT_4GB	0xffffffffcULL
-+
-+#define BURST_SIZE_128			0
-+#define BURST_SIZE_256			1
-+#define BURST_SIZE_512			2
-+
-+/* Offsets from PCIE_INTR2_CPU_BASE */
-+#define STATUS				0x0
-+#define SET				0x4
-+#define CLR				0x8
-+#define MASK_STATUS			0xc
-+#define MASK_SET			0x10
-+#define MASK_CLR			0x14
-+
-+#define PCIE_BUSNUM_SHIFT		20
-+#define PCIE_SLOT_SHIFT			15
-+#define PCIE_FUNC_SHIFT			12
-+
-+#if defined(__BIG_ENDIAN)
-+#define	DATA_ENDIAN			2	/* PCIe->DDR inbound traffic */
-+#define MMIO_ENDIAN			2	/* CPU->PCIe outbound traffic */
-+#else
-+#define	DATA_ENDIAN			0
-+#define MMIO_ENDIAN			0
-+#endif
-+
-+#define MDIO_PORT0			0x0
-+#define MDIO_DATA_MASK			0x7fffffff
-+#define MDIO_DATA_SHIFT			0x0
-+#define MDIO_PORT_MASK			0xf0000
-+#define MDIO_PORT_SHIFT			0x16
-+#define MDIO_REGAD_MASK			0xffff
-+#define MDIO_REGAD_SHIFT		0x0
-+#define MDIO_CMD_MASK			0xfff00000
-+#define MDIO_CMD_SHIFT			0x14
-+#define MDIO_CMD_READ			0x1
-+#define MDIO_CMD_WRITE			0x0
-+#define MDIO_DATA_DONE_MASK		0x80000000
-+#define MDIO_RD_DONE(x)			(((x) & MDIO_DATA_DONE_MASK) ? 1 : 0)
-+#define MDIO_WT_DONE(x)			(((x) & MDIO_DATA_DONE_MASK) ? 0 : 1)
-+#define SSC_REGS_ADDR			0x1100
-+#define SET_ADDR_OFFSET			0x1f
-+#define SSC_CNTL_OFFSET			0x2
-+#define SSC_CNTL_OVRD_EN_MASK		0x8000
-+#define SSC_CNTL_OVRD_EN_SHIFT		0xf
-+#define SSC_CNTL_OVRD_VAL_MASK		0x4000
-+#define SSC_CNTL_OVRD_VAL_SHIFT		0xe
-+#define SSC_STATUS_OFFSET		0x1
-+#define SSC_STATUS_SSC_MASK		0x400
-+#define SSC_STATUS_SSC_SHIFT		0xa
-+#define SSC_STATUS_PLL_LOCK_MASK	0x800
-+#define SSC_STATUS_PLL_LOCK_SHIFT	0xb
-+
-+#define IDX_ADDR(pcie)	\
-+	((pcie)->reg_offsets[EXT_CFG_INDEX])
-+#define DATA_ADDR(pcie)	\
-+	((pcie)->reg_offsets[EXT_CFG_DATA])
-+#define PCIE_RGR1_SW_INIT_1(pcie) \
-+	((pcie)->reg_offsets[RGR1_SW_INIT_1])
-+
-+enum {
-+	RGR1_SW_INIT_1,
-+	EXT_CFG_INDEX,
-+	EXT_CFG_DATA,
-+};
-+
-+enum {
-+	RGR1_SW_INIT_1_INIT_MASK,
-+	RGR1_SW_INIT_1_INIT_SHIFT,
-+	RGR1_SW_INIT_1_PERST_MASK,
-+	RGR1_SW_INIT_1_PERST_SHIFT,
-+};
-+
-+enum pcie_type {
-+	BCM7425,
-+	BCM7435,
-+	GENERIC,
-+	BCM7278,
-+};
-+
-+struct brcm_window {
-+	dma_addr_t pcie_addr;
-+	phys_addr_t cpu_addr;
-+	dma_addr_t size;
-+};
-+
-+/* Internal PCIe Host Controller Information.*/
-+struct brcm_pcie {
-+	struct device		*dev;
-+	void __iomem		*base;
-+	struct list_head	resources;
-+	int			irq;
-+	struct clk		*clk;
-+	struct pci_bus		*root_bus;
-+	struct device_node	*dn;
-+	int			id;
-+	bool			suspended;
-+	int			num_out_wins;
-+	bool			ssc;
-+	int			gen;
-+	struct brcm_window	out_wins[BRCM_NUM_PCIE_OUT_WINS];
-+	unsigned int		rev;
-+	const int		*reg_offsets;
-+	const int		*reg_field_info;
-+	enum pcie_type		type;
-+};
-+
-+struct pcie_cfg_data {
-+	const int		*reg_field_info;
-+	const int		*offsets;
-+	const enum pcie_type	type;
-+};
-+
-+static const int pcie_reg_field_info[] = {
-+	[RGR1_SW_INIT_1_INIT_MASK] = 0x2,
-+	[RGR1_SW_INIT_1_INIT_SHIFT] = 0x1,
-+};
-+
-+static const int pcie_reg_field_info_bcm7278[] = {
-+	[RGR1_SW_INIT_1_INIT_MASK] = 0x1,
-+	[RGR1_SW_INIT_1_INIT_SHIFT] = 0x0,
-+};
-+
-+static const int pcie_offset_bcm7425[] = {
-+	[RGR1_SW_INIT_1] = 0x8010,
-+	[EXT_CFG_INDEX]  = 0x8300,
-+	[EXT_CFG_DATA]   = 0x8304,
-+};
-+
-+static const struct pcie_cfg_data bcm7425_cfg = {
-+	.reg_field_info	= pcie_reg_field_info,
-+	.offsets	= pcie_offset_bcm7425,
-+	.type		= BCM7425,
-+};
-+
-+static const int pcie_offsets[] = {
-+	[RGR1_SW_INIT_1] = 0x9210,
-+	[EXT_CFG_INDEX]  = 0x9000,
-+	[EXT_CFG_DATA]   = 0x9004,
-+};
-+
-+static const struct pcie_cfg_data bcm7435_cfg = {
-+	.reg_field_info	= pcie_reg_field_info,
-+	.offsets	= pcie_offsets,
-+	.type		= BCM7435,
-+};
-+
-+static const struct pcie_cfg_data generic_cfg = {
-+	.reg_field_info	= pcie_reg_field_info,
-+	.offsets	= pcie_offsets,
-+	.type		= GENERIC,
-+};
-+
-+static const int pcie_offset_bcm7278[] = {
-+	[RGR1_SW_INIT_1] = 0xc010,
-+	[EXT_CFG_INDEX] = 0x9000,
-+	[EXT_CFG_DATA] = 0x9004,
-+};
-+
-+static const struct pcie_cfg_data bcm7278_cfg = {
-+	.reg_field_info = pcie_reg_field_info_bcm7278,
-+	.offsets	= pcie_offset_bcm7278,
-+	.type		= BCM7278,
-+};
-+
-+static void __iomem *brcm_pcie_map_conf(struct pci_bus *bus, unsigned int devfn,
-+					int where);
-+
-+static struct pci_ops brcm_pcie_ops = {
-+	.map_bus = brcm_pcie_map_conf,
-+	.read = pci_generic_config_read,
-+	.write = pci_generic_config_write,
-+};
-+
-+#if defined(CONFIG_MIPS)
-+/* Broadcom MIPs HW implicitly does the swapping if necessary */
-+#define bcm_readl(a)		__raw_readl(a)
-+#define bcm_writel(d, a)	__raw_writel(d, a)
-+#define bcm_readw(a)		__raw_readw(a)
-+#define bcm_writew(d, a)	__raw_writew(d, a)
-+#else
-+#define bcm_readl(a)		readl(a)
-+#define bcm_writel(d, a)	writel(d, a)
-+#define bcm_readw(a)		readw(a)
-+#define bcm_writew(d, a)	writew(d, a)
-+#endif
-+
-+/* These macros extract/insert fields to host controller's register set. */
-+#define RD_FLD(base, reg, field) \
-+	rd_fld((base) + reg, reg##_##field##_MASK, reg##_##field##_SHIFT)
-+#define WR_FLD(base, reg, field, val) \
-+	wr_fld((base) + reg, reg##_##field##_MASK, reg##_##field##_SHIFT, val)
-+#define WR_FLD_RB(base, reg, field, val) \
-+	wr_fld_rb((base) + reg, reg##_##field##_MASK, \
-+		reg##_##field##_SHIFT, val)
-+#define WR_FLD_WITH_OFFSET(base, off, reg, field, val) \
-+	wr_fld((base) + reg + (off), reg##_##field##_MASK, \
-+	       reg##_##field##_SHIFT, val)
-+#define EXTRACT_FIELD(val, reg, field) \
-+	(((val) & reg##_##field##_MASK) >> reg##_##field##_SHIFT)
-+#define INSERT_FIELD(val, reg, field, field_val) \
-+	(((val) & ~reg##_##field##_MASK) | \
-+	 (reg##_##field##_MASK & (field_val << reg##_##field##_SHIFT)))
-+
-+static phys_addr_t scb_size[BRCM_MAX_SCB];
-+static int num_memc;
-+static int num_pcie;
-+static DEFINE_MUTEX(brcm_pcie_lock);
-+
-+static u32 rd_fld(void __iomem *p, u32 mask, int shift)
-+{
-+	return (bcm_readl(p) & mask) >> shift;
-+}
-+
-+static void wr_fld(void __iomem *p, u32 mask, int shift, u32 val)
-+{
-+	u32 reg = bcm_readl(p);
-+
-+	reg = (reg & ~mask) | ((val << shift) & mask);
-+	bcm_writel(reg, p);
-+}
-+
-+static void wr_fld_rb(void __iomem *p, u32 mask, int shift, u32 val)
-+{
-+	wr_fld(p, mask, shift, val);
-+	(void)bcm_readl(p);
-+}
-+
-+static const char *link_speed_to_str(int s)
-+{
-+	switch (s) {
-+	case 1:
-+		return "2.5";
-+	case 2:
-+		return "5.0";
-+	case 3:
-+		return "8.0";
-+	default:
-+		break;
-+	}
-+	return "???";
-+}
-+
-+/*
-+ * The roundup_pow_of_two() from log2.h invokes
-+ * __roundup_pow_of_two(unsigned long), but we really need a
-+ * such a function to take a native u64 since unsigned long
-+ * is 32 bits on some configurations.  So we provide this helper
-+ * function below.
-+ */
-+static u64 roundup_pow_of_two_64(u64 n)
-+{
-+	return 1ULL << fls64(n - 1);
-+}
-+
-+/*
-+ * This is to convert the size of the inbound "BAR" region to the
-+ * non-linear values of PCIE_X_MISC_RC_BAR[123]_CONFIG_LO.SIZE
-+ */
-+int encode_ibar_size(u64 size)
-+{
-+	int log2_in = ilog2(size);
-+
-+	if (log2_in >= 12 && log2_in <= 15)
-+		/* Covers 4KB to 32KB (inclusive) */
-+		return (log2_in - 12) + 0x1c;
-+	else if (log2_in >= 16 && log2_in <= 37)
-+		/* Covers 64KB to 32GB, (inclusive) */
-+		return log2_in - 15;
-+	/* Something is awry so disable */
-+	return 0;
-+}
-+
-+static u32 mdio_form_pkt(int port, int regad, int cmd)
-+{
-+	u32 pkt = 0;
-+
-+	pkt |= (port << MDIO_PORT_SHIFT) & MDIO_PORT_MASK;
-+	pkt |= (regad << MDIO_REGAD_SHIFT) & MDIO_REGAD_MASK;
-+	pkt |= (cmd << MDIO_CMD_SHIFT) & MDIO_CMD_MASK;
-+
-+	return pkt;
-+}
-+
-+/* negative return value indicates error */
-+static int mdio_read(void __iomem *base, u8 port, u8 regad)
-+{
-+	int tries;
-+	u32 data;
-+
-+	bcm_writel(mdio_form_pkt(port, regad, MDIO_CMD_READ),
-+		   base + PCIE_RC_DL_MDIO_ADDR);
-+	bcm_readl(base + PCIE_RC_DL_MDIO_ADDR);
-+
-+	data = bcm_readl(base + PCIE_RC_DL_MDIO_RD_DATA);
-+	for (tries = 0; !MDIO_RD_DONE(data) && tries < 10; tries++) {
-+		udelay(10);
-+		data = bcm_readl(base + PCIE_RC_DL_MDIO_RD_DATA);
-+	}
-+
-+	return MDIO_RD_DONE(data)
-+		? (data & MDIO_DATA_MASK) >> MDIO_DATA_SHIFT
-+		: -EIO;
-+}
-+
-+/* negative return value indicates error */
-+static int mdio_write(void __iomem *base, u8 port, u8 regad, u16 wrdata)
-+{
-+	int tries;
-+	u32 data;
-+
-+	bcm_writel(mdio_form_pkt(port, regad, MDIO_CMD_WRITE),
-+		   base + PCIE_RC_DL_MDIO_ADDR);
-+	bcm_readl(base + PCIE_RC_DL_MDIO_ADDR);
-+	bcm_writel(MDIO_DATA_DONE_MASK | wrdata,
-+		   base + PCIE_RC_DL_MDIO_WR_DATA);
-+
-+	data = bcm_readl(base + PCIE_RC_DL_MDIO_WR_DATA);
-+	for (tries = 0; !MDIO_WT_DONE(data) && tries < 10; tries++) {
-+		udelay(10);
-+		data = bcm_readl(base + PCIE_RC_DL_MDIO_WR_DATA);
-+	}
-+
-+	return MDIO_WT_DONE(data) ? 0 : -EIO;
-+}
-+
-+/*
-+ * Configures device for Spread Spectrum Clocking (SSC) mode; a negative
-+ * return value indicates error.
-+ */
-+static int set_ssc(void __iomem *base)
-+{
-+	int tmp;
-+	u16 wrdata;
-+	int pll, ssc;
-+
-+	tmp = mdio_write(base, MDIO_PORT0, SET_ADDR_OFFSET, SSC_REGS_ADDR);
-+	if (tmp < 0)
-+		return tmp;
-+
-+	tmp = mdio_read(base, MDIO_PORT0, SSC_CNTL_OFFSET);
-+	if (tmp < 0)
-+		return tmp;
-+
-+	wrdata = INSERT_FIELD(tmp, SSC_CNTL_OVRD, EN, 1);
-+	wrdata = INSERT_FIELD(wrdata, SSC_CNTL_OVRD, VAL, 1);
-+	tmp = mdio_write(base, MDIO_PORT0, SSC_CNTL_OFFSET, wrdata);
-+	if (tmp < 0)
-+		return tmp;
-+
-+	usleep_range(1000, 2000);
-+	tmp = mdio_read(base, MDIO_PORT0, SSC_STATUS_OFFSET);
-+	if (tmp < 0)
-+		return tmp;
-+
-+	ssc = EXTRACT_FIELD(tmp, SSC_STATUS, SSC);
-+	pll = EXTRACT_FIELD(tmp, SSC_STATUS, PLL_LOCK);
-+
-+	return (ssc && pll) ? 0 : -EIO;
-+}
-+
-+/* Limits operation to a specific generation (1, 2, or 3) */
-+static void set_gen(void __iomem *base, int gen)
-+{
-+	u32 lnkcap = bcm_readl(base + BRCM_PCIE_CAP_REGS + PCI_EXP_LNKCAP);
-+	u16 lnkctl2 = bcm_readw(base + BRCM_PCIE_CAP_REGS + PCI_EXP_LNKCTL2);
-+
-+	lnkcap = (lnkcap & ~PCI_EXP_LNKCAP_SLS) | gen;
-+	bcm_writel(lnkcap, base + BRCM_PCIE_CAP_REGS + PCI_EXP_LNKCAP);
-+
-+	lnkctl2 = (lnkctl2 & ~0xf) | gen;
-+	bcm_writew(lnkctl2, base + BRCM_PCIE_CAP_REGS + PCI_EXP_LNKCTL2);
-+}
-+
-+static void brcm_pcie_set_outbound_win(struct brcm_pcie *pcie,
-+				       unsigned int win, phys_addr_t cpu_addr,
-+				       dma_addr_t  pcie_addr, dma_addr_t size)
-+{
-+	void __iomem *base = pcie->base;
-+	phys_addr_t cpu_addr_mb, limit_addr_mb;
-+	u32 tmp;
-+
-+	/* Set the base of the pcie_addr window */
-+	bcm_writel(lower_32_bits(pcie_addr) + MMIO_ENDIAN,
-+		   base + PCIE_MISC_CPU_2_PCIE_MEM_WIN0_LO + (win * 8));
-+	bcm_writel(upper_32_bits(pcie_addr),
-+		   base + PCIE_MISC_CPU_2_PCIE_MEM_WIN0_HI + (win * 8));
-+
-+	cpu_addr_mb = cpu_addr >> 20;
-+	limit_addr_mb = (cpu_addr + size - 1) >> 20;
-+
-+	/* Write the addr base low register */
-+	WR_FLD_WITH_OFFSET(base, (win * 4),
-+			   PCIE_MISC_CPU_2_PCIE_MEM_WIN0_BASE_LIMIT,
-+			   BASE, cpu_addr_mb);
-+	/* Write the addr limit low register */
-+	WR_FLD_WITH_OFFSET(base, (win * 4),
-+			   PCIE_MISC_CPU_2_PCIE_MEM_WIN0_BASE_LIMIT,
-+			   LIMIT, limit_addr_mb);
-+
-+	if (pcie->type != BCM7435 && pcie->type != BCM7425) {
-+		/* Write the cpu addr high register */
-+		tmp = (u32)(cpu_addr_mb >>
-+			PCIE_MISC_CPU_2_PCIE_MEM_WIN0_BASE_LIMIT_NUM_MASK_BITS);
-+		WR_FLD_WITH_OFFSET(base, (win * 8),
-+				   PCIE_MISC_CPU_2_PCIE_MEM_WIN0_BASE_HI,
-+				   BASE, tmp);
-+		/* Write the cpu limit high register */
-+		tmp = (u32)(limit_addr_mb >>
-+			PCIE_MISC_CPU_2_PCIE_MEM_WIN0_BASE_LIMIT_NUM_MASK_BITS);
-+		WR_FLD_WITH_OFFSET(base, (win * 8),
-+				   PCIE_MISC_CPU_2_PCIE_MEM_WIN0_LIMIT_HI,
-+				   LIMIT, tmp);
-+	}
-+}
-+
-+/* Configuration space read/write support */
-+static int cfg_index(int busnr, int devfn, int reg)
-+{
-+	return ((PCI_SLOT(devfn) & 0x1f) << PCIE_SLOT_SHIFT)
-+		| ((PCI_FUNC(devfn) & 0x07) << PCIE_FUNC_SHIFT)
-+		| (busnr << PCIE_BUSNUM_SHIFT)
-+		| (reg & ~3);
-+}
-+
-+/* The controller is capable of serving in both RC and EP roles */
-+static bool brcm_pcie_rc_mode(struct brcm_pcie *pcie)
-+{
-+	void __iomem *base = pcie->base;
-+	u32 val = bcm_readl(base + PCIE_MISC_PCIE_STATUS);
-+
-+	return !!EXTRACT_FIELD(val, PCIE_MISC_PCIE_STATUS, PCIE_PORT);
-+}
-+
-+static bool brcm_pcie_link_up(struct brcm_pcie *pcie)
-+{
-+	void __iomem *base = pcie->base;
-+	u32 val = bcm_readl(base + PCIE_MISC_PCIE_STATUS);
-+	u32 dla = EXTRACT_FIELD(val, PCIE_MISC_PCIE_STATUS, PCIE_DL_ACTIVE);
-+	u32 plu = EXTRACT_FIELD(val, PCIE_MISC_PCIE_STATUS, PCIE_PHYLINKUP);
-+
-+	return  (dla && plu) ? true : false;
-+}
-+
-+static void __iomem *brcm_pcie_map_conf(struct pci_bus *bus, unsigned int devfn,
-+					int where)
-+{
-+	struct brcm_pcie *pcie = bus->sysdata;
-+	void __iomem *base = pcie->base;
-+	int idx;
-+
-+	/* Accesses to the RC go right to the RC registers if slot==0 */
-+	if (pci_is_root_bus(bus))
-+		return PCI_SLOT(devfn) ? NULL : base + where;
-+
-+	/* For devices, write to the config space index register */
-+	idx = cfg_index(bus->number, devfn, where);
-+	bcm_writel(idx, pcie->base + IDX_ADDR(pcie));
-+	return base + DATA_ADDR(pcie) + (where & 0x3);
-+}
-+
-+static inline void brcm_pcie_bridge_sw_init_set(struct brcm_pcie *pcie,
-+						unsigned int val)
-+{
-+	unsigned int shift = pcie->reg_field_info[RGR1_SW_INIT_1_INIT_SHIFT];
-+	u32 mask =  pcie->reg_field_info[RGR1_SW_INIT_1_INIT_MASK];
-+
-+	wr_fld_rb(pcie->base + PCIE_RGR1_SW_INIT_1(pcie), mask, shift, val);
-+}
-+
-+static inline void brcm_pcie_perst_set(struct brcm_pcie *pcie,
-+				       unsigned int val)
-+{
-+	if (pcie->type != BCM7278)
-+		wr_fld_rb(pcie->base + PCIE_RGR1_SW_INIT_1(pcie),
-+			  PCIE_RGR1_SW_INIT_1_PERST_MASK,
-+			  PCIE_RGR1_SW_INIT_1_PERST_SHIFT, val);
-+	else
-+		/* Assert = 0, de-assert = 1 on 7278 */
-+		WR_FLD_RB(pcie->base, PCIE_MISC_PCIE_CTRL, PCIE_PERSTB, !val);
-+}
-+
-+static int brcm_pcie_add_controller(struct brcm_pcie *pcie)
-+{
-+	int i, ret = 0;
-+	struct device *dev = pcie->dev;
-+
-+	mutex_lock(&brcm_pcie_lock);
-+	if (num_pcie > 0) {
-+		num_pcie++;
-+		goto done;
-+	}
-+
-+	/* Determine num_memc and their sizes */
-+	for (i = 0, num_memc = 0; i < BRCM_MAX_SCB; i++) {
-+		u64 size = brcmstb_memory_memc_size(i);
-+
-+		if (size == (u64)-1) {
-+			dev_err(dev, "cannot get memc%d size\n", i);
-+			ret = -EINVAL;
-+			goto done;
-+		} else if (size) {
-+			scb_size[i] = roundup_pow_of_two_64(size);
-+			num_memc++;
-+		} else {
-+			break;
-+		}
-+	}
-+	if (!ret && num_memc == 0) {
-+		ret = -EINVAL;
-+		goto done;
-+	}
-+
-+	num_pcie++;
-+done:
-+	mutex_unlock(&brcm_pcie_lock);
-+	return ret;
-+}
-+
-+static void brcm_pcie_remove_controller(struct brcm_pcie *pcie)
-+{
-+	mutex_lock(&brcm_pcie_lock);
-+	if (--num_pcie == 0)
-+		num_memc = 0;
-+	mutex_unlock(&brcm_pcie_lock);
-+}
-+
-+static int brcm_pcie_parse_request_of_pci_ranges(struct brcm_pcie *pcie)
-+{
-+	struct resource_entry *win;
-+	int ret;
-+
-+	ret = devm_of_pci_get_host_bridge_resources(pcie->dev, 0, 0xff,
-+						    &pcie->resources, NULL);
-+	if (ret) {
-+		dev_err(pcie->dev, "failed to get host resources\n");
-+		return ret;
-+	}
-+
-+	resource_list_for_each_entry(win, &pcie->resources) {
-+		struct resource *res = win->res;
-+		dma_addr_t offset = (dma_addr_t)win->offset;
-+
-+		if (resource_type(res) != IORESOURCE_MEM)
-+			continue;
-+
-+		if (pcie->num_out_wins >= BRCM_NUM_PCIE_OUT_WINS) {
-+			dev_err(pcie->dev, "too many outbound wins\n");
-+			return -EINVAL;
-+		}
-+		pcie->out_wins[pcie->num_out_wins].cpu_addr =
-+			(phys_addr_t)res->start;
-+		pcie->out_wins[pcie->num_out_wins].pcie_addr =
-+			(dma_addr_t)(res->start - (phys_addr_t)offset);
-+		pcie->out_wins[pcie->num_out_wins].size =
-+			(dma_addr_t)(res->end - res->start + 1);
-+		pcie->num_out_wins++;
-+	}
-+
-+	ret = devm_request_pci_bus_resources(pcie->dev, &pcie->resources);
-+	if (ret)
-+		dev_err(pcie->dev, "failed to request pci resources\n");
-+	return ret;
-+}
-+
-+static int brcm_pcie_setup(struct brcm_pcie *pcie)
-+{
-+	void __iomem *base = pcie->base;
-+	unsigned int scb_size_val;
-+	u64 rc_bar2_offset, rc_bar2_size, total_mem_size = 0;
-+	u32 tmp, burst;
-+	int i, j, ret, limit;
-+	u16 nlw, cls, lnksta;
-+	bool ssc_good = false;
-+	struct device *dev = pcie->dev;
-+
-+	/* Reset the bridge */
-+	brcm_pcie_bridge_sw_init_set(pcie, 1);
-+
-+	/*
-+	 * Ensure that the fundamental reset is asserted, except for 7278,
-+	 * which fails if we do this.
-+	 */
-+	if (pcie->type != BCM7278)
-+		brcm_pcie_perst_set(pcie, 1);
-+
-+	usleep_range(100, 200);
-+
-+	/* Take the bridge out of reset */
-+	brcm_pcie_bridge_sw_init_set(pcie, 0);
-+
-+	WR_FLD_RB(base, PCIE_MISC_HARD_PCIE_HARD_DEBUG, SERDES_IDDQ, 0);
-+	/* Wait for SerDes to be stable */
-+	usleep_range(100, 200);
-+
-+	/* Grab the PCIe hw revision number */
-+	tmp = bcm_readl(base + PCIE_MISC_REVISION);
-+	pcie->rev = EXTRACT_FIELD(tmp, PCIE_MISC_REVISION, MAJMIN);
-+
-+	/* Set SCB_MAX_BURST_SIZE, CFG_READ_UR_MODE, SCB_ACCESS_EN */
-+	tmp = INSERT_FIELD(0, PCIE_MISC_MISC_CTRL, SCB_ACCESS_EN, 1);
-+	tmp = INSERT_FIELD(tmp, PCIE_MISC_MISC_CTRL, CFG_READ_UR_MODE, 1);
-+	burst = (pcie->type == GENERIC || pcie->type == BCM7278)
-+		? BURST_SIZE_512 : BURST_SIZE_256;
-+	tmp = INSERT_FIELD(tmp, PCIE_MISC_MISC_CTRL, MAX_BURST_SIZE, burst);
-+	bcm_writel(tmp, base + PCIE_MISC_MISC_CTRL);
-+
-+	/*
-+	 * Set up inbound memory view for the EP (called RC_BAR2,
-+	 * not to be confused with the BARs that are advertised by
-+	 * the EP).
-+	 */
-+	for (i = 0; i < num_memc; i++)
-+		total_mem_size += scb_size[i];
-+
-+	/*
-+	 * The PCIe host controller by design must set the inbound
-+	 * viewport to be a contiguous arrangement of all of the
-+	 * system's memory.  In addition, its size mut be a power of
-+	 * two.  To further complicate matters, the viewport must
-+	 * start on a pcie-address that is aligned on a multiple of its
-+	 * size.  If a portion of the viewport does not represent
-+	 * system memory -- e.g. 3GB of memory requires a 4GB viewport
-+	 * -- we can map the outbound memory in or after 3GB and even
-+	 * though the viewport will overlap the outbound memory the
-+	 * controller will know to send outbound memory downstream and
-+	 * everything else upstream.
-+	 */
-+	rc_bar2_size = roundup_pow_of_two_64(total_mem_size);
-+
-+	/*
-+	 * Set simple configuration based on memory sizes
-+	 * only.  We always start the viewport at address 0.
-+	 */
-+	rc_bar2_offset = 0;
-+
-+	tmp = lower_32_bits(rc_bar2_offset);
-+	tmp = INSERT_FIELD(tmp, PCIE_MISC_RC_BAR2_CONFIG_LO, SIZE,
-+			   encode_ibar_size(rc_bar2_size));
-+	bcm_writel(tmp, base + PCIE_MISC_RC_BAR2_CONFIG_LO);
-+	bcm_writel(upper_32_bits(rc_bar2_offset),
-+		   base + PCIE_MISC_RC_BAR2_CONFIG_HI);
-+
-+	scb_size_val = scb_size[0]
-+		? ilog2(scb_size[0]) - 15 : 0xf; /* 0xf is 1GB */
-+	WR_FLD(base, PCIE_MISC_MISC_CTRL, SCB0_SIZE, scb_size_val);
-+
-+	if (num_memc > 1) {
-+		scb_size_val = scb_size[1]
-+			? ilog2(scb_size[1]) - 15 : 0xf; /* 0xf is 1GB */
-+		WR_FLD(base, PCIE_MISC_MISC_CTRL, SCB1_SIZE, scb_size_val);
-+	}
-+
-+	if (num_memc > 2) {
-+		scb_size_val = scb_size[2]
-+			? ilog2(scb_size[2]) - 15 : 0xf; /* 0xf is 1GB */
-+		WR_FLD(base, PCIE_MISC_MISC_CTRL, SCB2_SIZE, scb_size_val);
-+	}
-+
-+	/* disable the PCIe->GISB memory window (RC_BAR1) */
-+	WR_FLD(base, PCIE_MISC_RC_BAR1_CONFIG_LO, SIZE, 0);
-+
-+	/* disable the PCIe->SCB memory window (RC_BAR3) */
-+	WR_FLD(base, PCIE_MISC_RC_BAR3_CONFIG_LO, SIZE, 0);
-+
-+	if (!pcie->suspended) {
-+		/* clear any interrupts we find on boot */
-+		bcm_writel(0xffffffff, base + PCIE_INTR2_CPU_BASE + CLR);
-+		(void)bcm_readl(base + PCIE_INTR2_CPU_BASE + CLR);
-+	}
-+
-+	/* Mask all interrupts since we are not handling any yet */
-+	bcm_writel(0xffffffff, base + PCIE_INTR2_CPU_BASE + MASK_SET);
-+	(void)bcm_readl(base + PCIE_INTR2_CPU_BASE + MASK_SET);
-+
-+	if (pcie->gen)
-+		set_gen(base, pcie->gen);
-+
-+	/* Unassert the fundamental reset */
-+	brcm_pcie_perst_set(pcie, 0);
-+
-+	/*
-+	 * Give the RC/EP time to wake up, before trying to configure RC.
-+	 * Intermittently check status for link-up, up to a total of 100ms
-+	 * when we don't know if the device is there, and up to 1000ms if
-+	 * we do know the device is there.
-+	 */
-+	limit = pcie->suspended ? 1000 : 100;
-+	for (i = 1, j = 0; j < limit && !brcm_pcie_link_up(pcie);
-+	     j += i, i = i * 2)
-+		msleep(i + j > limit ? limit - j : i);
-+
-+	if (!brcm_pcie_link_up(pcie)) {
-+		dev_info(dev, "link down\n");
-+		return -ENODEV;
-+	}
-+
-+	if (!brcm_pcie_rc_mode(pcie)) {
-+		dev_err(dev, "PCIe misconfigured; is in EP mode\n");
-+		return -EINVAL;
-+	}
-+
-+	for (i = 0; i < pcie->num_out_wins; i++)
-+		brcm_pcie_set_outbound_win(pcie, i, pcie->out_wins[i].cpu_addr,
-+					   pcie->out_wins[i].pcie_addr,
-+					   pcie->out_wins[i].size);
-+
-+	/*
-+	 * For config space accesses on the RC, show the right class for
-+	 * a PCIe-PCIe bridge (the default setting is to be EP mode).
-+	 */
-+	WR_FLD_RB(base, PCIE_RC_CFG_PRIV1_ID_VAL3, CLASS_CODE, 0x060400);
-+
-+	if (pcie->ssc) {
-+		ret = set_ssc(base);
-+		if (ret == 0)
-+			ssc_good = true;
-+		else
-+			dev_err(dev, "failed attempt to enter ssc mode\n");
-+	}
-+
-+	lnksta = bcm_readw(base + BRCM_PCIE_CAP_REGS + PCI_EXP_LNKSTA);
-+	cls = lnksta & PCI_EXP_LNKSTA_CLS;
-+	nlw = (lnksta & PCI_EXP_LNKSTA_NLW) >> PCI_EXP_LNKSTA_NLW_SHIFT;
-+	dev_info(dev, "link up, %s Gbps x%u %s\n", link_speed_to_str(cls),
-+		 nlw, ssc_good ? "(SSC)" : "(!SSC)");
-+
-+	/* PCIe->SCB endian mode for BAR */
-+	/* field ENDIAN_MODE_BAR2 = DATA_ENDIAN */
-+	WR_FLD_RB(base, PCIE_RC_CFG_VENDOR_VENDOR_SPECIFIC_REG1,
-+		  ENDIAN_MODE_BAR2, DATA_ENDIAN);
-+
-+	/*
-+	 * Refclk from RC should be gated with CLKREQ# input when ASPM L0s,L1
-+	 * is enabled =>  setting the CLKREQ_DEBUG_ENABLE field to 1.
-+	 */
-+	WR_FLD_RB(base, PCIE_MISC_HARD_PCIE_HARD_DEBUG, CLKREQ_DEBUG_ENABLE, 1);
-+
-+	return 0;
-+}
-+
-+/* L23 is a low-power PCIe link state */
-+static void enter_l23(struct brcm_pcie *pcie)
-+{
-+	void __iomem *base = pcie->base;
-+	int l23, i;
-+
-+	/* assert request for L23 */
-+	WR_FLD_RB(base, PCIE_MISC_PCIE_CTRL, PCIE_L23_REQUEST, 1);
-+
-+	/* Wait up to 30 msec for L23 */
-+	l23 = RD_FLD(base, PCIE_MISC_PCIE_STATUS, PCIE_LINK_IN_L23);
-+	for (i = 0; i < 15 && !l23; i++) {
-+		usleep_range(2000, 2400);
-+		l23 = RD_FLD(base, PCIE_MISC_PCIE_STATUS, PCIE_LINK_IN_L23);
-+	}
-+
-+	if (!l23)
-+		dev_err(pcie->dev, "failed to enter L23\n");
-+}
-+
-+static void turn_off(struct brcm_pcie *pcie)
-+{
-+	void __iomem *base = pcie->base;
-+
-+	if (brcm_pcie_link_up(pcie))
-+		enter_l23(pcie);
-+	/* Assert fundamental reset */
-+	brcm_pcie_perst_set(pcie, 1);
-+	/* Deassert request for L23 in case it was asserted */
-+	WR_FLD_RB(base, PCIE_MISC_PCIE_CTRL, PCIE_L23_REQUEST, 0);
-+	/* Turn off SerDes */
-+	WR_FLD_RB(base, PCIE_MISC_HARD_PCIE_HARD_DEBUG, SERDES_IDDQ, 1);
-+	/* Shutdown PCIe bridge */
-+	brcm_pcie_bridge_sw_init_set(pcie, 1);
-+}
-+
-+static int brcm_pcie_suspend(struct device *dev)
-+{
-+	struct brcm_pcie *pcie = dev_get_drvdata(dev);
-+
-+	turn_off(pcie);
-+	clk_disable_unprepare(pcie->clk);
-+	pcie->suspended = true;
-+
-+	return 0;
-+}
-+
-+static int brcm_pcie_resume(struct device *dev)
-+{
-+	struct brcm_pcie *pcie = dev_get_drvdata(dev);
-+	void __iomem *base;
-+	int ret;
-+
-+	base = pcie->base;
-+	clk_prepare_enable(pcie->clk);
-+
-+	/* Take bridge out of reset so we can access the SerDes reg */
-+	brcm_pcie_bridge_sw_init_set(pcie, 0);
-+
-+	/* Turn on SerDes */
-+	WR_FLD_RB(base, PCIE_MISC_HARD_PCIE_HARD_DEBUG, SERDES_IDDQ, 0);
-+	/* Wait for SerDes to be stable */
-+	usleep_range(100, 200);
-+
-+	ret = brcm_pcie_setup(pcie);
-+	if (ret)
-+		return ret;
-+
-+	pcie->suspended = false;
-+
-+	return 0;
-+}
-+
-+static void _brcm_pcie_remove(struct brcm_pcie *pcie)
-+{
-+	turn_off(pcie);
-+	clk_disable_unprepare(pcie->clk);
-+	clk_put(pcie->clk);
-+	pci_free_resource_list(&pcie->resources);
-+	brcm_pcie_remove_controller(pcie);
-+}
-+
-+static int brcm_pcie_remove(struct platform_device *pdev)
-+{
-+	struct brcm_pcie *pcie = platform_get_drvdata(pdev);
-+
-+	pci_stop_root_bus(pcie->root_bus);
-+	pci_remove_root_bus(pcie->root_bus);
-+	_brcm_pcie_remove(pcie);
-+
-+	return 0;
-+}
-+
-+static const struct of_device_id brcm_pcie_match[] = {
-+	{ .compatible = "brcm,bcm7425-pcie", .data = &bcm7425_cfg },
-+	{ .compatible = "brcm,bcm7435-pcie", .data = &bcm7435_cfg },
-+	{ .compatible = "brcm,bcm7278-pcie", .data = &bcm7278_cfg },
-+	{ .compatible = "brcm,bcm7445-pcie", .data = &generic_cfg },
-+	{},
-+};
-+MODULE_DEVICE_TABLE(of, brcm_pcie_match);
-+
-+static int brcm_pcie_probe(struct platform_device *pdev)
-+{
-+	struct device_node *dn = pdev->dev.of_node;
-+	const struct of_device_id *of_id;
-+	const struct pcie_cfg_data *data;
-+	int ret;
-+	struct brcm_pcie *pcie;
-+	struct resource *res;
-+	void __iomem *base;
-+	u32 tmp;
-+	struct pci_host_bridge *bridge;
-+	struct pci_bus *child;
-+
-+	bridge = devm_pci_alloc_host_bridge(&pdev->dev, sizeof(*pcie));
-+	if (!bridge)
-+		return -ENOMEM;
-+
-+	pcie = pci_host_bridge_priv(bridge);
-+	INIT_LIST_HEAD(&pcie->resources);
-+
-+	of_id = of_match_node(brcm_pcie_match, dn);
-+	if (!of_id) {
-+		dev_err(&pdev->dev, "failed to look up compatible string\n");
-+		return -EINVAL;
-+	}
-+
-+	if (of_property_read_u32(dn, "dma-ranges", &tmp) == 0) {
-+		dev_err(&pdev->dev, "cannot yet handle dma-ranges\n");
-+		return -EINVAL;
-+	}
-+
-+	data = of_id->data;
-+	pcie->reg_offsets = data->offsets;
-+	pcie->reg_field_info = data->reg_field_info;
-+	pcie->type = data->type;
-+	pcie->dn = dn;
-+	pcie->dev = &pdev->dev;
-+
-+	/* We use the domain number as our controller number */
-+	pcie->id = of_get_pci_domain_nr(dn);
-+	if (pcie->id < 0)
-+		return pcie->id;
-+
-+	res = platform_get_resource(pdev, IORESOURCE_MEM, 0);
-+	if (!res)
-+		return -EINVAL;
-+
-+	base = devm_ioremap_resource(&pdev->dev, res);
-+	if (IS_ERR(base))
-+		return PTR_ERR(base);
-+
-+	pcie->clk = of_clk_get_by_name(dn, "sw_pcie");
-+	if (IS_ERR(pcie->clk)) {
-+		dev_err(&pdev->dev, "could not get clock\n");
-+		pcie->clk = NULL;
-+	}
-+	pcie->base = base;
-+
-+	ret = of_pci_get_max_link_speed(dn);
-+	pcie->gen = (ret < 0) ? 0 : ret;
-+
-+	pcie->ssc = of_property_read_bool(dn, "brcm,enable-ssc");
-+
-+	ret = irq_of_parse_and_map(pdev->dev.of_node, 0);
-+	if (ret == 0)
-+		/* keep going, as we don't use this intr yet */
-+		dev_warn(pcie->dev, "cannot get PCIe interrupt\n");
-+	else
-+		pcie->irq = ret;
-+
-+	ret = brcm_pcie_parse_request_of_pci_ranges(pcie);
-+	if (ret)
-+		return ret;
-+
-+	ret = clk_prepare_enable(pcie->clk);
-+	if (ret) {
-+		dev_err(&pdev->dev, "could not enable clock\n");
-+		return ret;
-+	}
-+
-+	ret = brcm_pcie_add_controller(pcie);
-+	if (ret)
-+		return ret;
-+
-+	ret = brcm_pcie_setup(pcie);
-+	if (ret)
-+		goto fail;
-+
-+	list_splice_init(&pcie->resources, &bridge->windows);
-+	bridge->dev.parent = &pdev->dev;
-+	bridge->busnr = 0;
-+	bridge->ops = &brcm_pcie_ops;
-+	bridge->sysdata = pcie;
-+	bridge->map_irq = of_irq_parse_and_map_pci;
-+	bridge->swizzle_irq = pci_common_swizzle;
-+
-+	ret = pci_scan_root_bus_bridge(bridge);
-+	if (ret < 0) {
-+		dev_err(pcie->dev, "Scanning root bridge failed\n");
-+		goto fail;
-+	}
-+
-+	pci_assign_unassigned_bus_resources(bridge->bus);
-+	list_for_each_entry(child, &bridge->bus->children, node)
-+		pcie_bus_configure_settings(child);
-+	pci_bus_add_devices(bridge->bus);
-+	platform_set_drvdata(pdev, pcie);
-+	pcie->root_bus = bridge->bus;
-+
-+	return 0;
-+
-+fail:
-+	_brcm_pcie_remove(pcie);
-+	return ret;
-+}
-+
-+static const struct dev_pm_ops brcm_pcie_pm_ops = {
-+	.suspend_noirq = brcm_pcie_suspend,
-+	.resume_noirq = brcm_pcie_resume,
-+};
-+
-+static struct platform_driver brcm_pcie_driver = {
-+	.probe = brcm_pcie_probe,
-+	.remove = brcm_pcie_remove,
-+	.driver = {
-+		.name = "brcm-pcie",
-+		.owner = THIS_MODULE,
-+		.of_match_table = brcm_pcie_match,
-+		.pm = &brcm_pcie_pm_ops,
-+	},
-+};
-+
-+module_platform_driver(brcm_pcie_driver);
-+
-+MODULE_LICENSE("GPL v2");
-+MODULE_DESCRIPTION("Broadcom STB PCIe RC driver");
-+MODULE_AUTHOR("Broadcom");
--- 
-1.9.0.138.g2de3478
+Is it possible to identify all the BAR's in the window as 64bit ? We 
+have shown that the device works fine with 64-bit addresses , although 
+it's not identified as a 64-bit device. This device has no DTS entry 
+currently.
+
+
+> 
+> That said, it looks Daniel's kernel has some patches that change how
+> PCI setup works so it might not be using the upstream driver.
+
+Are you talking about these lines,
+
+FPGA_PCIE: fpga_pcie_init_module enter
+FPGA_PCIE: fpga mmio_start=0 fpga mmio_len=0
+FPGA_PCIE: resource start=0 end=0, name="PCI Bus 0001:0e"
+FPGA_PCIE: resource start=0 end=0, name="PCI Bus 0001:0e"
+FPGA_PCIE: resource start=0 end=0, name="PCI Bus 0001:0e"
+FPGA_PCIE: resource start=0 end=0, name="PCI Bus 0001:0e"
+__ioremap(): phys addr 0x0 is RAM lr fpga_pcie_probe
+
+This is a custom unit test for this issue.
+
+I noticed some changes to this file arch/powerpc/sysdev/fsl_pci.c in my 
+tree , I removed them and the issues stays the same. I don't believe I'm 
+adding anything which alters this problem.
+
+The tree I'm working off of is massively stripped down, it only provides 
+support for the platform I'm working on which is based in Freescale 
+T1042 which is upstream.
+
+I have attached a dmesg with the ranges property added, and the 
+fsl_pci.c changes removed in my tree.
+
+Daniel
+
+--------------887203805D2212F361329024
+Content-Type: application/gzip;
+ name="bootlog2.txt.gz"
+Content-Transfer-Encoding: base64
+Content-Disposition: attachment;
+ filename="bootlog2.txt.gz"
+
+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
+--------------887203805D2212F361329024--
