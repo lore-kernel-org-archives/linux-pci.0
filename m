@@ -7,70 +7,69 @@ X-Spam-Status: No, score=-8.6 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
 	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
 	SPF_PASS,USER_AGENT_GIT autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 9423AC433F4
-	for <linux-pci@archiver.kernel.org>; Wed, 19 Sep 2018 14:33:04 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 71C61ECE564
+	for <linux-pci@archiver.kernel.org>; Wed, 19 Sep 2018 14:33:28 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 424D12086E
-	for <linux-pci@archiver.kernel.org>; Wed, 19 Sep 2018 14:33:04 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 2D4502086E
+	for <linux-pci@archiver.kernel.org>; Wed, 19 Sep 2018 14:33:28 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="WZ53WoKU"
-DMARC-Filter: OpenDMARC Filter v1.3.2 mail.kernel.org 424D12086E
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="EDk36OMK"
+DMARC-Filter: OpenDMARC Filter v1.3.2 mail.kernel.org 2D4502086E
 Authentication-Results: mail.kernel.org; dmarc=fail (p=none dis=none) header.from=gmail.com
 Authentication-Results: mail.kernel.org; spf=none smtp.mailfrom=linux-pci-owner@vger.kernel.org
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1731576AbeISULJ (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Wed, 19 Sep 2018 16:11:09 -0400
-Received: from mail-qt0-f195.google.com ([209.85.216.195]:46956 "EHLO
-        mail-qt0-f195.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1728096AbeISULJ (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Wed, 19 Sep 2018 16:11:09 -0400
-Received: by mail-qt0-f195.google.com with SMTP id l42-v6so5237310qtf.13;
-        Wed, 19 Sep 2018 07:32:57 -0700 (PDT)
+        id S1732447AbeISULe (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Wed, 19 Sep 2018 16:11:34 -0400
+Received: from mail-qk1-f196.google.com ([209.85.222.196]:44926 "EHLO
+        mail-qk1-f196.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1732354AbeISULd (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Wed, 19 Sep 2018 16:11:33 -0400
+Received: by mail-qk1-f196.google.com with SMTP id d131-v6so3084052qke.11;
+        Wed, 19 Sep 2018 07:33:20 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=gmail.com; s=20161025;
         h=from:to:cc:subject:date:message-id:in-reply-to:references;
-        bh=TLBiLM1mdu1HxR4W2fQf8NiJqsLvqjL8vfP6p3vMZ+w=;
-        b=WZ53WoKUusbA3cHPVmaeu4I1DvIcIOmtdV6PfCRnqSjYtDObuE+Nc3N8sx1V8uR1q5
-         /H/QAyXcWy3qRXdZ75wF2Od3gQHruAFvmPtPkpv+fCAwrczKJJz1yOXvjxXKToqlc/0+
-         0OJ+csAnhvOvsPJz8iooWn5QDryrutjo9HBXK/k5WBSwDJAqNhjoXPQaG3N4nTcVxMJL
-         JHthiMRJ6DttM5KBJBSbnpP5casJ8yqZ5ZwKB3IDmHDniokiP0/LX/EiY8hzFWWVPdDR
-         fVURdenDFXnF/loyldrY4bnyXkpNvDCYxcRKGvFM66Fvoq7LnmNY09Bfe+maOQr1WIhZ
-         4xNA==
+        bh=dHH1ppMPThGqV5VyOb9W3/uiepQ9nDJkklt+sF0I9g0=;
+        b=EDk36OMKe6a92UllATseyp3PLc/hh2AViyfyy0H+Ohe5F25o47wnIRmgIc45+rJv/p
+         0uLjyQkJVg27KXGsIx5alEDJIfSpqrdN8RUkFYIivPARPIatBOvkbgq3IAriZIX3D9pV
+         ejT2oVkpUgDa2tyo0zlrQeaJESzbTUSd6NBXXEPI+vUTM28IAJImTaqT/eKxfzF9kFoJ
+         tlmy4rZMaK52afRL7IoSDvxLf9MskpofYRVFRPRt1+lwt1GaONKJmU7c52sk+yhEoptn
+         7VIjOJM71NncOpAIf+j88VmnZ7RIMXjcOIE5I74l50teej9bHmSnBD+qt+lDKW6XLbSZ
+         sMww==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20161025;
         h=x-gm-message-state:from:to:cc:subject:date:message-id:in-reply-to
          :references;
-        bh=TLBiLM1mdu1HxR4W2fQf8NiJqsLvqjL8vfP6p3vMZ+w=;
-        b=XWFjraTVHkF/6wi5trBvQ6zWYwb+bfT0qMO9uVJKGAJev2L5qyaZ49d8CI+Lt/JpkG
-         /HqYuvD0ZsrsXje0O/l5E9b8eieHEIB9Fo+QsWfAJZLOIzvBegCYSosDU8mG17iTs6UC
-         b1wa/+GBeeWR0cbiFSp0UOysAgP55byNWkClERpNI1QRCiHJSMhDZs4fU9XQarDzOPRt
-         aA4KyW3tcJpCaQLAb1ywbGWGNdAqiiOgpSI5e/wbUPhl841Iw/ZR70dfoHjYvP8Eyqp3
-         ti03ltRukQUOQXk0C7+8GymdRnLFL0npFwGMzFdijE1Gty10xUZNzDHsbAnBZy/k6mGf
-         /BmQ==
-X-Gm-Message-State: APzg51AleskXavr5TLF/Uwpbs73AOqJxZkJ1fOD/QtpNChnmOj4b4V+2
-        g+vzeIeiJ+h279Sy47Cv2Fg78uxt
-X-Google-Smtp-Source: ANB0Vdaoy/bMUe/Yab81ePa9h/gnrBVobMUqYgkmgHWY15T0tkCpyngXC68ZnraC7jDlxqOqgBwqHA==
-X-Received: by 2002:ac8:1bf6:: with SMTP id m51-v6mr23892699qtk.143.1537367576468;
-        Wed, 19 Sep 2018 07:32:56 -0700 (PDT)
+        bh=dHH1ppMPThGqV5VyOb9W3/uiepQ9nDJkklt+sF0I9g0=;
+        b=SGr+P01NZITsClGurhkdZVXTwKY2FLK9i4eW4mbRq5C3GiIMhcQHIKcIsMAyblymIX
+         HwX2Wfiy1J5VBpdSn7wFI8SmrQZ2SaTSZngTicC0nd+NUu09cENDSFH6++K+jhnot1si
+         N+WsP2TKO7qvwyvxOoVZa2mUAupI8p8GQlTVmwWHrx0uuAvfbXoEfW7a9EjRjjgCmWp2
+         F+449JqfbbHEYROaHsff6EqkprhnitQqO71BMfvIB8dNNWowKGyA+Jz85vqgkTtu2vLj
+         U49hctD09mDmFMtbBoxLDZZv+kywh8yEizWbQnI+IQ3Fazndewpe5V+Rxn4225V0pxDt
+         jhCA==
+X-Gm-Message-State: APzg51CHffYHRY3wlg/quZyI+Y8ilkCVRIhqjmlC1b3mKGgqYBot3dRK
+        S/wZtyB+jUrAgsNRwd7RWZmZMqa4
+X-Google-Smtp-Source: ANB0VdYseHQASVlRcBL0qWt+wqKL+4V4L+JSjQQbtVOOVs5Wf5W1z6K89dm1GkOwaWXftSn1grbspQ==
+X-Received: by 2002:a37:d78e:: with SMTP id t14-v6mr6322766qkt.220.1537367600213;
+        Wed, 19 Sep 2018 07:33:20 -0700 (PDT)
 Received: from stbsrv-and-3.and.broadcom.com ([192.19.231.250])
-        by smtp.gmail.com with ESMTPSA id 17-v6sm2104051qkf.74.2018.09.19.07.32.54
+        by smtp.gmail.com with ESMTPSA id 17-v6sm2104051qkf.74.2018.09.19.07.33.18
         (version=TLS1_2 cipher=ECDHE-RSA-AES128-GCM-SHA256 bits=128/128);
-        Wed, 19 Sep 2018 07:32:55 -0700 (PDT)
+        Wed, 19 Sep 2018 07:33:19 -0700 (PDT)
 From:   Jim Quinlan <jim2101024@gmail.com>
 To:     linux-kernel@vger.kernel.org
 Cc:     Jim Quinlan <jim2101024@gmail.com>,
+        Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
         Bjorn Helgaas <bhelgaas@google.com>,
-        Rob Herring <robh+dt@kernel.org>,
-        Mark Rutland <mark.rutland@arm.com>,
         Brian Norris <computersforpeace@gmail.com>,
         Gregory Fong <gregory.0xf0@gmail.com>,
         Florian Fainelli <f.fainelli@gmail.com>,
         bcm-kernel-feedback-list@broadcom.com, linux-pci@vger.kernel.org,
-        devicetree@vger.kernel.org, linux-arm-kernel@lists.infradead.org,
+        linux-arm-kernel@lists.infradead.org,
         Christoph Hellwig <hch@lst.de>
-Subject: [PATCH v5 02/12] dt-bindings: pci: add DT docs for Brcmstb PCIe device
-Date:   Wed, 19 Sep 2018 10:31:57 -0400
-Message-Id: <1537367527-20773-3-git-send-email-jim2101024@gmail.com>
+Subject: [PATCH v5 11/12] ARM64: add dma remap for BrcmSTB PCIe
+Date:   Wed, 19 Sep 2018 10:32:06 -0400
+Message-Id: <1537367527-20773-12-git-send-email-jim2101024@gmail.com>
 X-Mailer: git-send-email 1.9.0.138.g2de3478
 In-Reply-To: <1537367527-20773-1-git-send-email-jim2101024@gmail.com>
 References: <1537367527-20773-1-git-send-email-jim2101024@gmail.com>
@@ -78,84 +77,52 @@ Sender: linux-pci-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
-Message-ID: <20180919143157.pgQZ0Ep2WjWyo3gRoySKhM2sF-ge2pNjmmzjm70wA-Y@z>
+Message-ID: <20180919143206.uSGbb8pIO6QhgUsg6zAHokLVgNp6RDXYorpozUwgfkk@z>
 
-The DT bindings description of the Brcmstb PCIe device is described.
-This node can be used by almost all Broadcom settop box chips, using
-ARM, ARM64, or MIPS CPU architectures.
+The BrcmSTB PCIe controller needs to remap DMA accesses to it because
+of the requirements of its interface with the SOC memory controllers.
 
 Signed-off-by: Jim Quinlan <jim2101024@gmail.com>
-Acked-by: Rob Herring <robh@kernel.org>
 ---
- .../devicetree/bindings/pci/brcmstb-pcie.txt       | 59 ++++++++++++++++++++++
- 1 file changed, 59 insertions(+)
- create mode 100644 Documentation/devicetree/bindings/pci/brcmstb-pcie.txt
+ drivers/pci/controller/Kconfig        |  1 +
+ drivers/pci/controller/pcie-brcmstb.c | 12 ++++++++++++
+ 2 files changed, 13 insertions(+)
 
-diff --git a/Documentation/devicetree/bindings/pci/brcmstb-pcie.txt b/Documentation/devicetree/bindings/pci/brcmstb-pcie.txt
-new file mode 100644
-index 0000000..a1a9ad5
---- /dev/null
-+++ b/Documentation/devicetree/bindings/pci/brcmstb-pcie.txt
-@@ -0,0 +1,59 @@
-+Brcmstb PCIe Host Controller Device Tree Bindings
+diff --git a/drivers/pci/controller/Kconfig b/drivers/pci/controller/Kconfig
+index 8daa621..4394430 100644
+--- a/drivers/pci/controller/Kconfig
++++ b/drivers/pci/controller/Kconfig
+@@ -284,6 +284,7 @@ config PCIE_BRCMSTB
+ 	depends on OF && PCI_MSI
+ 	depends on SOC_BRCMSTB
+ 	default ARCH_BRCMSTB || BMIPS_GENERIC
++	select ARCH_HAS_PHYS_TO_DMA if ARM64
+ 	help
+ 	  Say Y here to enable PCIe host controller support for
+ 	  Broadcom Settop Box SOCs.  A Broadcom SOC will may have
+diff --git a/drivers/pci/controller/pcie-brcmstb.c b/drivers/pci/controller/pcie-brcmstb.c
+index a805d87..ae9df8e 100644
+--- a/drivers/pci/controller/pcie-brcmstb.c
++++ b/drivers/pci/controller/pcie-brcmstb.c
+@@ -974,6 +974,18 @@ phys_addr_t brcm_dma_to_phys(struct device *dev, dma_addr_t dev_addr)
+ 	return (phys_addr_t)dev_addr;
+ }
+ 
++#if defined(CONFIG_ARM64)
++dma_addr_t __phys_to_dma(struct device *dev, phys_addr_t paddr)
++{
++	return brcm_phys_to_dma(dev, paddr);
++}
 +
-+Required Properties:
-+- compatible
-+  "brcm,bcm7425-pcie" -- for 7425 family MIPS-based SOCs.
-+  "brcm,bcm7435-pcie" -- for 7435 family MIPS-based SOCs.
-+  "brcm,bcm7445-pcie" -- for 7445 and later ARM based SOCs (not including
-+      the 7278).
-+  "brcm,bcm7278-pcie"  -- for 7278 family ARM-based SOCs.
++phys_addr_t __dma_to_phys(struct device *dev, dma_addr_t dev_addr)
++{
++	return brcm_dma_to_phys(dev, dev_addr);
++}
++#endif
 +
-+- reg -- the register start address and length for the PCIe reg block.
-+- interrupts -- two interrupts are specified; the first interrupt is for
-+     the PCI host controller and the second is for MSI if the built-in
-+     MSI controller is to be used.
-+- interrupt-names -- names of the interrupts (above): "pcie" and "msi".
-+- #address-cells -- set to <3>.
-+- #size-cells -- set to <2>.
-+- #interrupt-cells: set to <1>.
-+- interrupt-map-mask and interrupt-map, standard PCI properties to define the
-+     mapping of the PCIe interface to interrupt numbers.
-+- ranges: ranges for the PCI memory and I/O regions.
-+- linux,pci-domain -- should be unique per host controller.
-+
-+Optional Properties:
-+- clocks -- phandle of pcie clock.
-+- clock-names -- set to "sw_pcie" if clocks is used.
-+- dma-ranges -- Specifies the inbound memory mapping regions when
-+     an "identity map" is not possible.
-+- msi-controller -- this property is typically specified to have the
-+     PCIe controller use its internal MSI controller.
-+- msi-parent -- set to use an external MSI interrupt controller.
-+- brcm,enable-ssc -- (boolean) indicates usage of spread-spectrum clocking.
-+- max-link-speed --  (integer) indicates desired generation of link:
-+     1 => 2.5 Gbps (gen1), 2 => 5.0 Gbps (gen2), 3 => 8.0 Gbps (gen3).
-+
-+Example Node:
-+
-+pcie0: pcie@f0460000 {
-+		reg = <0x0 0xf0460000 0x0 0x9310>;
-+		interrupts = <0x0 0x0 0x4>;
-+		compatible = "brcm,bcm7445-pcie";
-+		#address-cells = <3>;
-+		#size-cells = <2>;
-+		ranges = <0x02000000 0x00000000 0x00000000 0x00000000 0xc0000000 0x00000000 0x08000000
-+			  0x02000000 0x00000000 0x08000000 0x00000000 0xc8000000 0x00000000 0x08000000>;
-+		#interrupt-cells = <1>;
-+		interrupt-map-mask = <0 0 0 7>;
-+		interrupt-map = <0 0 0 1 &intc 0 47 3
-+				 0 0 0 2 &intc 0 48 3
-+				 0 0 0 3 &intc 0 49 3
-+				 0 0 0 4 &intc 0 50 3>;
-+		clocks = <&sw_pcie0>;
-+		clock-names = "sw_pcie";
-+		msi-parent = <&pcie0>;  /* use PCIe's internal MSI controller */
-+		msi-controller;         /* use PCIe's internal MSI controller */
-+		brcm,ssc;
-+		max-link-speed = <1>;
-+		linux,pci-domain = <0>;
-+	};
+ static int brcm_pcie_add_controller(struct brcm_pcie *pcie)
+ {
+ 	int i, ret = 0;
 -- 
 1.9.0.138.g2de3478
 
