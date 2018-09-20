@@ -4,132 +4,176 @@ X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 X-Spam-Level: 
 X-Spam-Status: No, score=-8.3 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
 	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_PASS,USER_AGENT_MUTT
-	autolearn=unavailable autolearn_force=no version=3.4.0
+	autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 5BC26ECE561
-	for <linux-pci@archiver.kernel.org>; Thu, 20 Sep 2018 10:58:35 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 1DEC7ECE566
+	for <linux-pci@archiver.kernel.org>; Thu, 20 Sep 2018 13:43:06 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id F0EAD2152C
-	for <linux-pci@archiver.kernel.org>; Thu, 20 Sep 2018 10:58:34 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.3.2 mail.kernel.org F0EAD2152C
+	by mail.kernel.org (Postfix) with ESMTP id B3A932152A
+	for <linux-pci@archiver.kernel.org>; Thu, 20 Sep 2018 13:43:05 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.3.2 mail.kernel.org B3A932152A
 Authentication-Results: mail.kernel.org; dmarc=none (p=none dis=none) header.from=arm.com
 Authentication-Results: mail.kernel.org; spf=none smtp.mailfrom=linux-pci-owner@vger.kernel.org
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727633AbeITQl2 (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Thu, 20 Sep 2018 12:41:28 -0400
-Received: from foss.arm.com ([217.140.101.70]:43994 "EHLO foss.arm.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1726954AbeITQl2 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Thu, 20 Sep 2018 12:41:28 -0400
+        id S1732695AbeITT0i (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Thu, 20 Sep 2018 15:26:38 -0400
+Received: from usa-sjc-mx-foss1.foss.arm.com ([217.140.101.70]:46142 "EHLO
+        foss.arm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1732302AbeITT0i (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Thu, 20 Sep 2018 15:26:38 -0400
 Received: from usa-sjc-imap-foss1.foss.arm.com (unknown [10.72.51.249])
-        by usa-sjc-mx-foss1.foss.arm.com (Postfix) with ESMTP id 5A2D480D;
-        Thu, 20 Sep 2018 03:58:33 -0700 (PDT)
+        by usa-sjc-mx-foss1.foss.arm.com (Postfix) with ESMTP id 3F05B7A9;
+        Thu, 20 Sep 2018 06:43:04 -0700 (PDT)
 Received: from e107981-ln.cambridge.arm.com (e107981-ln.emea.arm.com [10.4.13.117])
-        by usa-sjc-imap-foss1.foss.arm.com (Postfix) with ESMTPSA id AE4B63F5BD;
-        Thu, 20 Sep 2018 03:58:31 -0700 (PDT)
-Date:   Thu, 20 Sep 2018 11:58:28 +0100
+        by usa-sjc-imap-foss1.foss.arm.com (Postfix) with ESMTPSA id DE0493F77D;
+        Thu, 20 Sep 2018 06:43:02 -0700 (PDT)
+Date:   Thu, 20 Sep 2018 14:43:00 +0100
 From:   Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
-To:     Nick Desaulniers <ndesaulniers@google.com>
-Cc:     Nathan Chancellor <natechancellor@gmail.com>,
-        songxiaowei@hisilicon.com, wangbinghui@hisilicon.com,
-        bhelgaas@google.com, linux-pci@vger.kernel.org,
-        LKML <linux-kernel@vger.kernel.org>,
-        Greg KH <gregkh@linuxfoundation.org>,
-        paul.gortmaker@windriver.com
-Subject: Re: [PATCH v2] PCI: kirin: Fix section mismatch warning
-Message-ID: <20180920105828.GB838@e107981-ln.cambridge.arm.com>
-References: <20180919185341.31298-1-natechancellor@gmail.com>
- <CAKwvOdkeM3sj8M-LzTQd9M9-sM_K6n6FTz=TrNHd-3xPwg_VNw@mail.gmail.com>
+To:     Stephen Hemminger <stephen@networkplumber.org>
+Cc:     kys@microsoft.com, haiyangz@microsoft.com, sthemmin@microsoft.com,
+        devel@linuxdriverproject.org, netdev@vger.kernel.org,
+        linux-pci@vger.kernel.org
+Subject: Re: [PATCH v2 2/2] hv_netvsc: pair VF based on serial number
+Message-ID: <20180920134300.GC838@e107981-ln.cambridge.arm.com>
+References: <20180914195457.20433-1-sthemmin@microsoft.com>
+ <20180914195457.20433-3-sthemmin@microsoft.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <CAKwvOdkeM3sj8M-LzTQd9M9-sM_K6n6FTz=TrNHd-3xPwg_VNw@mail.gmail.com>
+In-Reply-To: <20180914195457.20433-3-sthemmin@microsoft.com>
 User-Agent: Mutt/1.5.24 (2015-08-30)
 Sender: linux-pci-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-[+Paul]
-
-On Wed, Sep 19, 2018 at 02:08:08PM -0700, Nick Desaulniers wrote:
-> On Wed, Sep 19, 2018 at 11:55 AM Nathan Chancellor
-> <natechancellor@gmail.com> wrote:
-> >
-> > WARNING: vmlinux.o(.text+0x4758cc): Section mismatch in reference from
-> > the function kirin_pcie_probe() to the function
-> > .init.text:kirin_add_pcie_port()
-> > The function kirin_pcie_probe() references
-> > the function __init kirin_add_pcie_port().
-> > This is often because kirin_pcie_probe lacks a __init
-> > annotation or the annotation of kirin_add_pcie_port is wrong.
-> >
-> > Add the __init annotation to both kirin_pcie_probe and
-> > kirin_pcie_add_msi then use builtin_platform_driver_probe
-> > instead of builtin_platform_driver + .probe to avoid a section
-> > mismatch warning with kirin_pcie_driver.
-> >
-> > Fixes: fc5165db245a ("PCI: kirin: Add HiSilicon Kirin SoC PCIe controller driver")
-> > Reported-by: Nick Desaulniers <ndesaulniers@google.com>
-> > Suggested-by: Nick Desaulniers <ndesaulniers@google.com>
-> > Signed-off-by: Nathan Chancellor <natechancellor@gmail.com>
-> > ---
-> >
-> > v1 -> v2:
-> >
-> > Instead of removing the annotation on kirin_add_pcie_port, add it to
-> > kirin_pcie_add_msi and kirin_pcie_probe. To avoid a warning with this
-> > configuration, use builtin_platform_driver_probe.
-> >
-> >  drivers/pci/controller/dwc/pcie-kirin.c | 9 ++++-----
-> >  1 file changed, 4 insertions(+), 5 deletions(-)
-> >
-> > diff --git a/drivers/pci/controller/dwc/pcie-kirin.c b/drivers/pci/controller/dwc/pcie-kirin.c
-> > index 5352e0c3be82..f64fed12de51 100644
-> > --- a/drivers/pci/controller/dwc/pcie-kirin.c
-> > +++ b/drivers/pci/controller/dwc/pcie-kirin.c
-> > @@ -448,8 +448,8 @@ static const struct dw_pcie_host_ops kirin_pcie_host_ops = {
-> >         .host_init = kirin_pcie_host_init,
-> >  };
-> >
-> > -static int kirin_pcie_add_msi(struct dw_pcie *pci,
-> > -                               struct platform_device *pdev)
-> > +static int __init kirin_pcie_add_msi(struct dw_pcie *pci,
-> > +                                    struct platform_device *pdev)
-> >  {
-> >         int irq;
-> >
-> > @@ -481,7 +481,7 @@ static int __init kirin_add_pcie_port(struct dw_pcie *pci,
-> >         return dw_pcie_host_init(&pci->pp);
-> >  }
-> >
-> > -static int kirin_pcie_probe(struct platform_device *pdev)
-> > +static int __init kirin_pcie_probe(struct platform_device *pdev)
-> >  {
-> >         struct device *dev = &pdev->dev;
-> >         struct kirin_pcie *kirin_pcie;
-> > @@ -533,11 +533,10 @@ static const struct of_device_id kirin_pcie_match[] = {
-> >  };
-> >
-> >  static struct platform_driver kirin_pcie_driver = {
-> > -       .probe                  = kirin_pcie_probe,
-> >         .driver                 = {
-> >                 .name                   = "kirin-pcie",
-> >                 .of_match_table = kirin_pcie_match,
-> >                 .suppress_bind_attrs = true,
-> >         },
-> >  };
-> > -builtin_platform_driver(kirin_pcie_driver);
-> > +builtin_platform_driver_probe(kirin_pcie_driver, kirin_pcie_probe);
+On Fri, Sep 14, 2018 at 12:54:57PM -0700, Stephen Hemminger wrote:
+> Matching network device based on MAC address is problematic
+> since a non VF network device can be creted with a duplicate MAC
+> address causing confusion and problems.  The VMBus API does provide
+> a serial number that is a better matching method.
 > 
-> It would be good to get additional review from someone who knows more
-> about driver callback lifecycles, but I think this is the correct fix.
-> Thanks Nathan.
-> Reviewed-by: Nick Desaulniers <ndesaulniers@google.com>
+> Signed-off-by: Stephen Hemminger <sthemmin@microsoft.com>
+> ---
+>  drivers/net/hyperv/netvsc.c     |  3 ++
+>  drivers/net/hyperv/netvsc_drv.c | 58 +++++++++++++++++++--------------
+>  2 files changed, 36 insertions(+), 25 deletions(-)
+> 
+> diff --git a/drivers/net/hyperv/netvsc.c b/drivers/net/hyperv/netvsc.c
+> index 31c3d77b4733..fe01e141c8f8 100644
+> --- a/drivers/net/hyperv/netvsc.c
+> +++ b/drivers/net/hyperv/netvsc.c
+> @@ -1203,6 +1203,9 @@ static void netvsc_send_vf(struct net_device *ndev,
+>  
+>  	net_device_ctx->vf_alloc = nvmsg->msg.v4_msg.vf_assoc.allocated;
+>  	net_device_ctx->vf_serial = nvmsg->msg.v4_msg.vf_assoc.serial;
+> +	netdev_info(ndev, "VF slot %u %s\n",
+> +		    net_device_ctx->vf_serial,
+> +		    net_device_ctx->vf_alloc ? "added" : "removed");
+>  }
+>  
+>  static  void netvsc_receive_inband(struct net_device *ndev,
+> diff --git a/drivers/net/hyperv/netvsc_drv.c b/drivers/net/hyperv/netvsc_drv.c
+> index 1121a1ec407c..9dedc1463e88 100644
+> --- a/drivers/net/hyperv/netvsc_drv.c
+> +++ b/drivers/net/hyperv/netvsc_drv.c
+> @@ -1894,20 +1894,6 @@ static void netvsc_link_change(struct work_struct *w)
+>  	rtnl_unlock();
+>  }
+>  
+> -static struct net_device *get_netvsc_bymac(const u8 *mac)
+> -{
+> -	struct net_device_context *ndev_ctx;
+> -
+> -	list_for_each_entry(ndev_ctx, &netvsc_dev_list, list) {
+> -		struct net_device *dev = hv_get_drvdata(ndev_ctx->device_ctx);
+> -
+> -		if (ether_addr_equal(mac, dev->perm_addr))
+> -			return dev;
+> -	}
+> -
+> -	return NULL;
+> -}
+> -
+>  static struct net_device *get_netvsc_byref(struct net_device *vf_netdev)
+>  {
+>  	struct net_device_context *net_device_ctx;
+> @@ -2036,26 +2022,48 @@ static void netvsc_vf_setup(struct work_struct *w)
+>  	rtnl_unlock();
+>  }
+>  
+> +/* Find netvsc by VMBus serial number.
+> + * The PCI hyperv controller records the serial number as the slot.
+> + */
+> +static struct net_device *get_netvsc_byslot(const struct net_device *vf_netdev)
+> +{
+> +	struct device *parent = vf_netdev->dev.parent;
+> +	struct net_device_context *ndev_ctx;
+> +	struct pci_dev *pdev;
+> +
+> +	if (!parent || !dev_is_pci(parent))
+> +		return NULL; /* not a PCI device */
+> +
+> +	pdev = to_pci_dev(parent);
+> +	if (!pdev->slot) {
+> +		netdev_notice(vf_netdev, "no PCI slot information\n");
+> +		return NULL;
+> +	}
+> +
+> +	list_for_each_entry(ndev_ctx, &netvsc_dev_list, list) {
+> +		if (!ndev_ctx->vf_alloc)
+> +			continue;
+> +
+> +		if (ndev_ctx->vf_serial == pdev->slot->number)
+> +			return hv_get_drvdata(ndev_ctx->device_ctx);
 
-AFAICS we can't use builtin_platform_driver_probe() if the probe()
-itself may need deferral (and I *reckon* it may need that, see eg
-clk_get()) so I suspect we have to go back to v1 for the patch,
-apologies if so.
+In patch 1, pdev->slot->number is set to:
+
+PCI_SLOT(wslot_to_devfn(hpdev->desc.win_slot.slot))
+
+so I assume vf_serial is initialized (I have no knowledge of VMBUS and
+hyper-V internals) to that value, somehow.
+
+I also do not know how the wslot stuff is handled but I assume 5 bits
+(ie dev bits in devfn) are enough.
+
+BTW, I have noticed this patch (and patch 1) are already in -next so I will
+drop them from the PCI patch queue.
 
 Lorenzo
+
+> +	}
+> +
+> +	netdev_notice(vf_netdev,
+> +		      "no netdev found for slot %u\n", pdev->slot->number);
+> +	return NULL;
+> +}
+> +
+>  static int netvsc_register_vf(struct net_device *vf_netdev)
+>  {
+> -	struct net_device *ndev;
+>  	struct net_device_context *net_device_ctx;
+> -	struct device *pdev = vf_netdev->dev.parent;
+>  	struct netvsc_device *netvsc_dev;
+> +	struct net_device *ndev;
+>  	int ret;
+>  
+>  	if (vf_netdev->addr_len != ETH_ALEN)
+>  		return NOTIFY_DONE;
+>  
+> -	if (!pdev || !dev_is_pci(pdev) || dev_is_pf(pdev))
+> -		return NOTIFY_DONE;
+> -
+> -	/*
+> -	 * We will use the MAC address to locate the synthetic interface to
+> -	 * associate with the VF interface. If we don't find a matching
+> -	 * synthetic interface, move on.
+> -	 */
+> -	ndev = get_netvsc_bymac(vf_netdev->perm_addr);
+> +	ndev = get_netvsc_byslot(vf_netdev);
+>  	if (!ndev)
+>  		return NOTIFY_DONE;
+>  
+> -- 
+> 2.18.0
+> 
