@@ -2,111 +2,105 @@ Return-Path: <SRS0=Tpvo=MC=vger.kernel.org=linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-0.8 required=3.0 tests=DKIMWL_WL_MED,DKIM_SIGNED,
-	DKIM_VALID,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_PASS,
-	URIBL_BLOCKED autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-2.8 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+	MAILING_LIST_MULTI,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT autolearn=ham
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 96E1CECE566
-	for <linux-pci@archiver.kernel.org>; Thu, 20 Sep 2018 16:50:21 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 481D0ECE566
+	for <linux-pci@archiver.kernel.org>; Thu, 20 Sep 2018 17:24:48 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 2BAE72086E
-	for <linux-pci@archiver.kernel.org>; Thu, 20 Sep 2018 16:50:21 +0000 (UTC)
-Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=networkplumber-org.20150623.gappssmtp.com header.i=@networkplumber-org.20150623.gappssmtp.com header.b="KCIFD/Kz"
-DMARC-Filter: OpenDMARC Filter v1.3.2 mail.kernel.org 2BAE72086E
-Authentication-Results: mail.kernel.org; dmarc=none (p=none dis=none) header.from=networkplumber.org
+	by mail.kernel.org (Postfix) with ESMTP id E583521523
+	for <linux-pci@archiver.kernel.org>; Thu, 20 Sep 2018 17:24:47 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.3.2 mail.kernel.org E583521523
+Authentication-Results: mail.kernel.org; dmarc=none (p=none dis=none) header.from=arm.com
 Authentication-Results: mail.kernel.org; spf=none smtp.mailfrom=linux-pci-owner@vger.kernel.org
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1731223AbeITWel (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Thu, 20 Sep 2018 18:34:41 -0400
-Received: from mail-pl1-f193.google.com ([209.85.214.193]:41128 "EHLO
-        mail-pl1-f193.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1728347AbeITWel (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Thu, 20 Sep 2018 18:34:41 -0400
-Received: by mail-pl1-f193.google.com with SMTP id b12-v6so4616570plr.8
-        for <linux-pci@vger.kernel.org>; Thu, 20 Sep 2018 09:50:18 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=networkplumber-org.20150623.gappssmtp.com; s=20150623;
-        h=date:from:to:cc:subject:message-id:in-reply-to:references
-         :mime-version:content-transfer-encoding;
-        bh=pt1QIYIfzvX0yPz7k9wxK13xZAanSdHNLYoIwWlc0Tk=;
-        b=KCIFD/KzVegL+9eOWuBjN1K7SuKJuhlIxnVnxhJGDSPJDyc2wJnN3GEnKnO09m/2s/
-         VbUNB4mHQTQ5GXcoTqXB6S9Sgvybd+atAMokBxT9EL0C2WnrT0Dl2kfeKSqmbleoFJpm
-         kT0ZXHy5psZIaNLKStW3kJlbbL0XcPpMqc2bX3+AYKu6yKYN1ghFnpoYIPHv2m3+TUjM
-         XFhW2dFeamBIMWM8NuJUapdJB/cC5o9T3LTrfku1kgjX99j3kUl4OcfwKRDjHbp01dho
-         cXFmKHxWrUGW/d0Dyh6f9TyNIuvDEi6QFn3WyJGFklU61Y6sEJ+UnZ26dhNgCt8o45lb
-         N9Tw==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20161025;
-        h=x-gm-message-state:date:from:to:cc:subject:message-id:in-reply-to
-         :references:mime-version:content-transfer-encoding;
-        bh=pt1QIYIfzvX0yPz7k9wxK13xZAanSdHNLYoIwWlc0Tk=;
-        b=NQa8uVR+0xVMQ2Mu/8+pMqFITJDVVpWkllUwnofSnuU0KVK2PL55wNvAMPL0PI1897
-         XdeMcpg6ES0a3S7cj97huJgKz0J6NDitjoExf/6l5ofbdLbw7iCTbeq7psqkeXtXn3Nh
-         ThUlcDOXcCrbLKpa5KGh1e37jXstw86BTMMXzdMT8x2JSGZJEJ/Jj1zB6C1I7GaPV2CE
-         xlTWOq51wwU+o8+kRe9GFIZecGtGaJ9ARQpPqLpSruGzuls/2ADtRmXDKCv0JL2s2B+c
-         0QAhkdGHOcIVKMz0xFFoCmhiDHOxuPbrq4U4GISsTcGLMUkPWLvVHckXB21B1zIC2siV
-         mU4Q==
-X-Gm-Message-State: APzg51B2suFsxcG+n3Z3cr1AcxIXaauS/gdZ1qDK++3C/6boDENtlVkW
-        k70fjK8PKXD/qB8jKGls7pg9yQ==
-X-Google-Smtp-Source: ANB0VdZoUX9XExCaAoF9hIlug6q/n0jvZtlWb/KmFZhoPNuXhvOmyOURES7OiSbJkEAk/1F8/8moEg==
-X-Received: by 2002:a17:902:b189:: with SMTP id s9-v6mr40136592plr.188.1537462218059;
-        Thu, 20 Sep 2018 09:50:18 -0700 (PDT)
-Received: from xeon-e3 (204-195-22-127.wavecable.com. [204.195.22.127])
-        by smtp.gmail.com with ESMTPSA id r17-v6sm39902885pff.50.2018.09.20.09.50.17
-        (version=TLS1_2 cipher=ECDHE-RSA-CHACHA20-POLY1305 bits=256/256);
-        Thu, 20 Sep 2018 09:50:17 -0700 (PDT)
-Date:   Thu, 20 Sep 2018 09:50:11 -0700
-From:   Stephen Hemminger <stephen@networkplumber.org>
-To:     Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
-Cc:     kys@microsoft.com, haiyangz@microsoft.com, sthemmin@microsoft.com,
-        devel@linuxdriverproject.org, netdev@vger.kernel.org,
-        linux-pci@vger.kernel.org
-Subject: Re: [PATCH v2 0/2] hv_netvsc: associate VF and PV device by serial
- number
-Message-ID: <20180920095011.26406404@xeon-e3>
-In-Reply-To: <20180920141820.GD838@e107981-ln.cambridge.arm.com>
-References: <20180914195457.20433-1-sthemmin@microsoft.com>
-        <20180920141820.GD838@e107981-ln.cambridge.arm.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7bit
+        id S1727659AbeITXJR (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Thu, 20 Sep 2018 19:09:17 -0400
+Received: from usa-sjc-mx-foss1.foss.arm.com ([217.140.101.70]:50008 "EHLO
+        foss.arm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1732761AbeITXJQ (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Thu, 20 Sep 2018 19:09:16 -0400
+Received: from usa-sjc-imap-foss1.foss.arm.com (unknown [10.72.51.249])
+        by usa-sjc-mx-foss1.foss.arm.com (Postfix) with ESMTP id 4EBEB7A9;
+        Thu, 20 Sep 2018 10:24:46 -0700 (PDT)
+Received: from ostrya.Emea.Arm.com (ostrya.emea.arm.com [10.4.12.111])
+        by usa-sjc-imap-foss1.foss.arm.com (Postfix) with ESMTPA id 8A2F53F557;
+        Thu, 20 Sep 2018 10:24:42 -0700 (PDT)
+From:   Jean-Philippe Brucker <jean-philippe.brucker@arm.com>
+To:     iommu@lists.linux-foundation.org
+Cc:     joro@8bytes.org, linux-pci@vger.kernel.org, jcrouse@codeaurora.org,
+        alex.williamson@redhat.com, Jonathan.Cameron@huawei.com,
+        jacob.jun.pan@linux.intel.com, christian.koenig@amd.com,
+        eric.auger@redhat.com, kevin.tian@intel.com, yi.l.liu@intel.com,
+        andrew.murray@arm.com, will.deacon@arm.com, robin.murphy@arm.com,
+        ashok.raj@intel.com, baolu.lu@linux.intel.com, xuzaibo@huawei.com,
+        liguozhu@hisilicon.com, okaya@codeaurora.org, bharatku@xilinx.com,
+        ilias.apalodimas@linaro.org, shunyong.yang@hxt-semitech.com
+Subject: [PATCH v3 00/10] Shared Virtual Addressing for the IOMMU
+Date:   Thu, 20 Sep 2018 18:00:36 +0100
+Message-Id: <20180920170046.20154-1-jean-philippe.brucker@arm.com>
+X-Mailer: git-send-email 2.18.0
 Sender: linux-pci-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-On Thu, 20 Sep 2018 15:18:20 +0100
-Lorenzo Pieralisi <lorenzo.pieralisi@arm.com> wrote:
+This is version 3 of the core changes for Shared Virtual Addressing in
+the IOMMU. It provides an API for sharing process address spaces with
+devices, using for example PCI PASID and PRI.
 
-> On Fri, Sep 14, 2018 at 12:54:55PM -0700, Stephen Hemminger wrote:
-> > The Hyper-V implementation of PCI controller has concept of 32 bit serial number
-> > (not to be confused with PCI-E serial number).  This value is sent in the protocol
-> > from the host to indicate SR-IOV VF device is attached to a synthetic NIC.
-> > 
-> > Using the serial number (instead of MAC address) to associate the two devices
-> > avoids lots of potential problems when there are duplicate MAC addresses from
-> > tunnels or layered devices.
-> > 
-> > The patch set is broken into two parts, one is for the PCI controller
-> > and the other is for the netvsc device. Normally, these go through different
-> > trees but sending them together here for better review. The PCI changes
-> > were submitted previously, but the main review comment was "why do you
-> > need this?". This is why.  
-> 
-> The question was more whether we should convert this serial number into
-> a PCI slot number (that has user space visibility and that is what you are
-> after) to improve the current matching, I do not question why you need
-> it, just for the records.
+This time I didn't append the VFIO and SMMUv3 example users. A smaller
+series is easier for me to manage and may be less intimidating for
+reviewers. If you're adding or updating SVA support to your IOMMU or
+device driver, you can find my complete patch stack at [1] for
+inspiration.
 
-The name slot is way overloaded in this context.
-There is 
-	windows slot number which comes from Hyperv
-	pci address slot which pci-hyperv sets from windows slot
-	pci slot api value which for normal devices comes from ACPI
-		this patch gets it from serial number
+Changes to patches 1-9 address feedback from v2 [2]. Mostly small tweaks
+and comments, that I tried to detail on each patch.
 
+I added patch 10/10 from Jordan Crouse, for managing PASID without
+sharing process address spaces. This interface might get superseded by
+auxiliary domains [3], since they are more suitable than io_mm for Intel
+vt-d's mdev virtualization. Auxiliary domains reuse existing iommu_map/
+iommu_unmap/etc ops instead of introducing new ones, so even though it's
+more invasive, I tend to prefer that solution. But since we need
+something for testing right now, I'm appending patch 10 to the series.
 
-The netvsc driver needed to be able to find a PCI device based on the serial
-number. The serial number was not visible in any current PCI-hyperv controller
-values.  The windows slot (wslot) is not the same the serial number.
+The series depends on Jacob Pan's patches for fault reporting [4].
+  iommu: introduce device fault data
+  driver core: add per device iommu param
+  iommu: add a timeout parameter for prq response
+  iommu: introduce device fault report API
+  iommu: introduce page response function
+
+[1] git://linux-arm.org/linux-jpb.git sva/v3
+[2] https://www.spinics.net/lists/kvm/msg168742.html
+[3] https://lwn.net/ml/linux-kernel/20180830040922.30426-1-baolu.lu@linux.intel.com/
+[4] https://lwn.net/ml/linux-kernel/1526072055-86990-1-git-send-email-jacob.jun.pan%40linux.intel.com/
+
+Jean-Philippe Brucker (10):
+  iommu: Introduce Shared Virtual Addressing API
+  iommu/sva: Bind process address spaces to devices
+  iommu/sva: Manage process address spaces
+  iommu/sva: Add a mm_exit callback for device drivers
+  iommu/sva: Track mm changes with an MMU notifier
+  iommu/sva: Search mm by PASID
+  iommu: Add a page fault handler
+  iommu/iopf: Handle mm faults
+  iommu/sva: Register page fault handler
+  iommu/sva: Add support for private PASIDs
+
+ drivers/iommu/Kconfig      |   9 +
+ drivers/iommu/Makefile     |   2 +
+ drivers/iommu/io-pgfault.c | 464 ++++++++++++++++++
+ drivers/iommu/iommu-sva.c  | 967 +++++++++++++++++++++++++++++++++++++
+ drivers/iommu/iommu.c      | 143 +++++-
+ include/linux/iommu.h      | 289 ++++++++++-
+ 6 files changed, 1855 insertions(+), 19 deletions(-)
+ create mode 100644 drivers/iommu/io-pgfault.c
+ create mode 100644 drivers/iommu/iommu-sva.c
+
+-- 
+2.18.0
+
