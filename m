@@ -2,241 +2,111 @@ Return-Path: <SRS0=Tpvo=MC=vger.kernel.org=linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-8.8 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_PASS,URIBL_BLOCKED,
-	USER_AGENT_GIT autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-0.8 required=3.0 tests=DKIMWL_WL_MED,DKIM_SIGNED,
+	DKIM_VALID,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_PASS,
+	URIBL_BLOCKED autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 121C4ECE566
-	for <linux-pci@archiver.kernel.org>; Thu, 20 Sep 2018 16:26:37 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 96E1CECE566
+	for <linux-pci@archiver.kernel.org>; Thu, 20 Sep 2018 16:50:21 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id C558D2147D
-	for <linux-pci@archiver.kernel.org>; Thu, 20 Sep 2018 16:26:36 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.3.2 mail.kernel.org C558D2147D
-Authentication-Results: mail.kernel.org; dmarc=fail (p=none dis=none) header.from=intel.com
+	by mail.kernel.org (Postfix) with ESMTP id 2BAE72086E
+	for <linux-pci@archiver.kernel.org>; Thu, 20 Sep 2018 16:50:21 +0000 (UTC)
+Authentication-Results: mail.kernel.org;
+	dkim=pass (2048-bit key) header.d=networkplumber-org.20150623.gappssmtp.com header.i=@networkplumber-org.20150623.gappssmtp.com header.b="KCIFD/Kz"
+DMARC-Filter: OpenDMARC Filter v1.3.2 mail.kernel.org 2BAE72086E
+Authentication-Results: mail.kernel.org; dmarc=none (p=none dis=none) header.from=networkplumber.org
 Authentication-Results: mail.kernel.org; spf=none smtp.mailfrom=linux-pci-owner@vger.kernel.org
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727813AbeITWKv (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Thu, 20 Sep 2018 18:10:51 -0400
-Received: from mga07.intel.com ([134.134.136.100]:21062 "EHLO mga07.intel.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1731798AbeITWKv (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Thu, 20 Sep 2018 18:10:51 -0400
-X-Amp-Result: SKIPPED(no attachment in message)
-X-Amp-File-Uploaded: False
-Received: from orsmga005.jf.intel.com ([10.7.209.41])
-  by orsmga105.jf.intel.com with ESMTP/TLS/DHE-RSA-AES256-GCM-SHA384; 20 Sep 2018 09:26:34 -0700
-X-ExtLoop1: 1
-X-IronPort-AV: E=Sophos;i="5.54,281,1534834800"; 
-   d="scan'208";a="258918216"
-Received: from unknown (HELO localhost.lm.intel.com) ([10.232.112.44])
-  by orsmga005.jf.intel.com with ESMTP; 20 Sep 2018 09:26:34 -0700
-From:   Keith Busch <keith.busch@intel.com>
-To:     Linux PCI <linux-pci@vger.kernel.org>,
-        Bjorn Helgaas <bhelgaas@google.com>
-Cc:     Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-        Sinan Kaya <okaya@kernel.org>,
-        Thomas Tai <thomas.tai@oracle.com>, poza@codeaurora.org,
-        Lukas Wunner <lukas@wunner.de>, Christoph Hellwig <hch@lst.de>,
-        Mika Westerberg <mika.westerberg@linux.intel.com>,
-        Keith Busch <keith.busch@intel.com>
-Subject: [PATCHv4 12/12] PCI: Make link active reporting detection generic
-Date:   Thu, 20 Sep 2018 10:27:17 -0600
-Message-Id: <20180920162717.31066-13-keith.busch@intel.com>
-X-Mailer: git-send-email 2.13.6
-In-Reply-To: <20180920162717.31066-1-keith.busch@intel.com>
-References: <20180920162717.31066-1-keith.busch@intel.com>
+        id S1731223AbeITWel (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Thu, 20 Sep 2018 18:34:41 -0400
+Received: from mail-pl1-f193.google.com ([209.85.214.193]:41128 "EHLO
+        mail-pl1-f193.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1728347AbeITWel (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Thu, 20 Sep 2018 18:34:41 -0400
+Received: by mail-pl1-f193.google.com with SMTP id b12-v6so4616570plr.8
+        for <linux-pci@vger.kernel.org>; Thu, 20 Sep 2018 09:50:18 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=networkplumber-org.20150623.gappssmtp.com; s=20150623;
+        h=date:from:to:cc:subject:message-id:in-reply-to:references
+         :mime-version:content-transfer-encoding;
+        bh=pt1QIYIfzvX0yPz7k9wxK13xZAanSdHNLYoIwWlc0Tk=;
+        b=KCIFD/KzVegL+9eOWuBjN1K7SuKJuhlIxnVnxhJGDSPJDyc2wJnN3GEnKnO09m/2s/
+         VbUNB4mHQTQ5GXcoTqXB6S9Sgvybd+atAMokBxT9EL0C2WnrT0Dl2kfeKSqmbleoFJpm
+         kT0ZXHy5psZIaNLKStW3kJlbbL0XcPpMqc2bX3+AYKu6yKYN1ghFnpoYIPHv2m3+TUjM
+         XFhW2dFeamBIMWM8NuJUapdJB/cC5o9T3LTrfku1kgjX99j3kUl4OcfwKRDjHbp01dho
+         cXFmKHxWrUGW/d0Dyh6f9TyNIuvDEi6QFn3WyJGFklU61Y6sEJ+UnZ26dhNgCt8o45lb
+         N9Tw==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20161025;
+        h=x-gm-message-state:date:from:to:cc:subject:message-id:in-reply-to
+         :references:mime-version:content-transfer-encoding;
+        bh=pt1QIYIfzvX0yPz7k9wxK13xZAanSdHNLYoIwWlc0Tk=;
+        b=NQa8uVR+0xVMQ2Mu/8+pMqFITJDVVpWkllUwnofSnuU0KVK2PL55wNvAMPL0PI1897
+         XdeMcpg6ES0a3S7cj97huJgKz0J6NDitjoExf/6l5ofbdLbw7iCTbeq7psqkeXtXn3Nh
+         ThUlcDOXcCrbLKpa5KGh1e37jXstw86BTMMXzdMT8x2JSGZJEJ/Jj1zB6C1I7GaPV2CE
+         xlTWOq51wwU+o8+kRe9GFIZecGtGaJ9ARQpPqLpSruGzuls/2ADtRmXDKCv0JL2s2B+c
+         0QAhkdGHOcIVKMz0xFFoCmhiDHOxuPbrq4U4GISsTcGLMUkPWLvVHckXB21B1zIC2siV
+         mU4Q==
+X-Gm-Message-State: APzg51B2suFsxcG+n3Z3cr1AcxIXaauS/gdZ1qDK++3C/6boDENtlVkW
+        k70fjK8PKXD/qB8jKGls7pg9yQ==
+X-Google-Smtp-Source: ANB0VdZoUX9XExCaAoF9hIlug6q/n0jvZtlWb/KmFZhoPNuXhvOmyOURES7OiSbJkEAk/1F8/8moEg==
+X-Received: by 2002:a17:902:b189:: with SMTP id s9-v6mr40136592plr.188.1537462218059;
+        Thu, 20 Sep 2018 09:50:18 -0700 (PDT)
+Received: from xeon-e3 (204-195-22-127.wavecable.com. [204.195.22.127])
+        by smtp.gmail.com with ESMTPSA id r17-v6sm39902885pff.50.2018.09.20.09.50.17
+        (version=TLS1_2 cipher=ECDHE-RSA-CHACHA20-POLY1305 bits=256/256);
+        Thu, 20 Sep 2018 09:50:17 -0700 (PDT)
+Date:   Thu, 20 Sep 2018 09:50:11 -0700
+From:   Stephen Hemminger <stephen@networkplumber.org>
+To:     Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
+Cc:     kys@microsoft.com, haiyangz@microsoft.com, sthemmin@microsoft.com,
+        devel@linuxdriverproject.org, netdev@vger.kernel.org,
+        linux-pci@vger.kernel.org
+Subject: Re: [PATCH v2 0/2] hv_netvsc: associate VF and PV device by serial
+ number
+Message-ID: <20180920095011.26406404@xeon-e3>
+In-Reply-To: <20180920141820.GD838@e107981-ln.cambridge.arm.com>
+References: <20180914195457.20433-1-sthemmin@microsoft.com>
+        <20180920141820.GD838@e107981-ln.cambridge.arm.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7bit
 Sender: linux-pci-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-The spec has timing requirements when waiting for a link to become
-active after a conventional reset. This patch implements those hard
-delays when waiting for an active link so pciehp and dpc drivers don't
-need to duplicate this.
+On Thu, 20 Sep 2018 15:18:20 +0100
+Lorenzo Pieralisi <lorenzo.pieralisi@arm.com> wrote:
 
-Since downstream ports that are HPC and DPC capable exist that do not
-implement data link layer active reporting, the pci driver will wait
-a fixed recommend time if the device reports it does not have link
-reporing capabilities.
+> On Fri, Sep 14, 2018 at 12:54:55PM -0700, Stephen Hemminger wrote:
+> > The Hyper-V implementation of PCI controller has concept of 32 bit serial number
+> > (not to be confused with PCI-E serial number).  This value is sent in the protocol
+> > from the host to indicate SR-IOV VF device is attached to a synthetic NIC.
+> > 
+> > Using the serial number (instead of MAC address) to associate the two devices
+> > avoids lots of potential problems when there are duplicate MAC addresses from
+> > tunnels or layered devices.
+> > 
+> > The patch set is broken into two parts, one is for the PCI controller
+> > and the other is for the netvsc device. Normally, these go through different
+> > trees but sending them together here for better review. The PCI changes
+> > were submitted previously, but the main review comment was "why do you
+> > need this?". This is why.  
+> 
+> The question was more whether we should convert this serial number into
+> a PCI slot number (that has user space visibility and that is what you are
+> after) to improve the current matching, I do not question why you need
+> it, just for the records.
 
-Signed-off-by: Keith Busch <keith.busch@intel.com>
----
- drivers/pci/hotplug/pciehp.h     |  6 ------
- drivers/pci/hotplug/pciehp_hpc.c | 22 ++--------------------
- drivers/pci/pci.c                | 33 +++++++++++++++++++++++++++------
- drivers/pci/pcie/dpc.c           |  4 +++-
- drivers/pci/probe.c              |  1 +
- include/linux/pci.h              |  1 +
- 6 files changed, 34 insertions(+), 33 deletions(-)
+The name slot is way overloaded in this context.
+There is 
+	windows slot number which comes from Hyperv
+	pci address slot which pci-hyperv sets from windows slot
+	pci slot api value which for normal devices comes from ACPI
+		this patch gets it from serial number
 
-diff --git a/drivers/pci/hotplug/pciehp.h b/drivers/pci/hotplug/pciehp.h
-index 3740f1a759c5..75fd52571107 100644
---- a/drivers/pci/hotplug/pciehp.h
-+++ b/drivers/pci/hotplug/pciehp.h
-@@ -62,11 +62,6 @@ do {									\
-  * struct controller - PCIe hotplug controller
-  * @pcie: pointer to the controller's PCIe port service device
-  * @slot_cap: cached copy of the Slot Capabilities register
-- * @link_active_reporting: cached copy of Data Link Layer Link Active Reporting
-- *	Capable bit in Link Capabilities register; if this bit is zero, the
-- *	Data Link Layer Link Active bit in the Link Status register will never
-- *	be set and the driver is thus confined to wait 1 second before assuming
-- *	the link to a hotplugged device is up and accessing it
-  * @slot_ctrl: cached copy of the Slot Control register
-  * @ctrl_lock: serializes writes to the Slot Control register
-  * @cmd_started: jiffies when the Slot Control register was last written;
-@@ -103,7 +98,6 @@ struct controller {
- 	struct pcie_device *pcie;
- 
- 	u32 slot_cap;				/* capabilities and quirks */
--	unsigned int link_active_reporting:1;
- 
- 	u16 slot_ctrl;				/* control register access */
- 	struct mutex ctrl_lock;
-diff --git a/drivers/pci/hotplug/pciehp_hpc.c b/drivers/pci/hotplug/pciehp_hpc.c
-index 7b5f9db60d9a..f0f3f4a3dac4 100644
---- a/drivers/pci/hotplug/pciehp_hpc.c
-+++ b/drivers/pci/hotplug/pciehp_hpc.c
-@@ -214,13 +214,6 @@ bool pciehp_check_link_active(struct controller *ctrl)
- 	return ret;
- }
- 
--static void pcie_wait_link_active(struct controller *ctrl)
--{
--	struct pci_dev *pdev = ctrl_dev(ctrl);
--
--	pcie_wait_for_link(pdev, true);
--}
--
- static bool pci_bus_check_dev(struct pci_bus *bus, int devfn)
- {
- 	u32 l;
-@@ -253,18 +246,9 @@ int pciehp_check_link_status(struct controller *ctrl)
- 	bool found;
- 	u16 lnk_status;
- 
--	/*
--	 * Data Link Layer Link Active Reporting must be capable for
--	 * hot-plug capable downstream port. But old controller might
--	 * not implement it. In this case, we wait for 1000 ms.
--	*/
--	if (ctrl->link_active_reporting)
--		pcie_wait_link_active(ctrl);
--	else
--		msleep(1000);
-+	if (!pcie_wait_for_link(pdev, true))
-+		return -1;
- 
--	/* wait 100ms before read pci conf, and try in 1s */
--	msleep(100);
- 	found = pci_bus_check_dev(ctrl->pcie->port->subordinate,
- 					PCI_DEVFN(0, 0));
- 
-@@ -865,8 +849,6 @@ struct controller *pcie_init(struct pcie_device *dev)
- 
- 	/* Check if Data Link Layer Link Active Reporting is implemented */
- 	pcie_capability_read_dword(pdev, PCI_EXP_LNKCAP, &link_cap);
--	if (link_cap & PCI_EXP_LNKCAP_DLLLARC)
--		ctrl->link_active_reporting = 1;
- 
- 	/* Clear all remaining event bits in Slot Status register. */
- 	pcie_capability_write_word(pdev, PCI_EXP_SLTSTA,
-diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
-index ce4dafbfe2d1..2b4117011313 100644
---- a/drivers/pci/pci.c
-+++ b/drivers/pci/pci.c
-@@ -4501,21 +4501,42 @@ bool pcie_wait_for_link(struct pci_dev *pdev, bool active)
- 	bool ret;
- 	u16 lnk_status;
- 
-+	/*
-+	 * Some controllers might not implement link active reporting. In this
-+	 * case, we wait for 1000 + 100 ms.
-+	 */
-+	if (!pdev->link_active_reporting) {
-+		msleep(1100);
-+		return true;
-+	}
-+
-+	/*
-+	 * PCIe 4.0r1 6.6.1, a component must enter LTSSM Detect within 20ms,
-+	 * after which we should expect an link active if the reset was
-+	 * successful. If so, software must wait a minimum 100ms before sending
-+	 * configuration requests to devices downstream this port.
-+	 *
-+	 * If the link fails to activate, either the device was physically
-+	 * removed or the link is permanently failed.
-+	 */
-+	if (active)
-+		msleep(20);
- 	for (;;) {
- 		pcie_capability_read_word(pdev, PCI_EXP_LNKSTA, &lnk_status);
- 		ret = !!(lnk_status & PCI_EXP_LNKSTA_DLLLA);
- 		if (ret == active)
--			return true;
-+			break;
- 		if (timeout <= 0)
- 			break;
- 		msleep(10);
- 		timeout -= 10;
- 	}
--
--	pci_info(pdev, "Data Link Layer Link Active not %s in 1000 msec\n",
--		 active ? "set" : "cleared");
--
--	return false;
-+	if (active && ret)
-+		msleep(100);
-+	else if (ret != active)
-+		pci_info(pdev, "Data Link Layer Link Active not %s in 1000 msec\n",
-+			active ? "set" : "cleared");
-+	return ret == active;
- }
- 
- void pci_reset_secondary_bus(struct pci_dev *dev)
-diff --git a/drivers/pci/pcie/dpc.c b/drivers/pci/pcie/dpc.c
-index 23e063aefddf..e435d12e61a0 100644
---- a/drivers/pci/pcie/dpc.c
-+++ b/drivers/pci/pcie/dpc.c
-@@ -140,10 +140,12 @@ static pci_ers_result_t dpc_reset_link(struct pci_dev *pdev)
- 	pci_write_config_word(pdev, cap + PCI_EXP_DPC_STATUS,
- 			      PCI_EXP_DPC_STATUS_TRIGGER);
- 
-+	if (!pcie_wait_for_link(pdev, true))
-+		return PCI_ERS_RESULT_DISCONNECT;
-+
- 	return PCI_ERS_RESULT_RECOVERED;
- }
- 
--
- static void dpc_process_rp_pio_error(struct dpc_dev *dpc)
- {
- 	struct device *dev = &dpc->dev->device;
-diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
-index 7c422ccbf9b4..ea2a6289e513 100644
---- a/drivers/pci/probe.c
-+++ b/drivers/pci/probe.c
-@@ -713,6 +713,7 @@ static void pci_set_bus_speed(struct pci_bus *bus)
- 
- 		pcie_capability_read_dword(bridge, PCI_EXP_LNKCAP, &linkcap);
- 		bus->max_bus_speed = pcie_link_speed[linkcap & PCI_EXP_LNKCAP_SLS];
-+		bridge->link_active_reporting = !!(linkcap & PCI_EXP_LNKCAP_DLLLARC);
- 
- 		pcie_capability_read_word(bridge, PCI_EXP_LNKSTA, &linksta);
- 		pcie_update_link_speed(bus, linksta);
-diff --git a/include/linux/pci.h b/include/linux/pci.h
-index 6925828f9f25..896b42032ec5 100644
---- a/include/linux/pci.h
-+++ b/include/linux/pci.h
-@@ -402,6 +402,7 @@ struct pci_dev {
- 	unsigned int	has_secondary_link:1;
- 	unsigned int	non_compliant_bars:1;	/* Broken BARs; ignore them */
- 	unsigned int	is_probed:1;		/* Device probing in progress */
-+	unsigned int	link_active_reporting:1;/* Device capable of reporting link active */
- 	pci_dev_flags_t dev_flags;
- 	atomic_t	enable_cnt;	/* pci_enable_device has been called */
- 
--- 
-2.14.4
 
+The netvsc driver needed to be able to find a PCI device based on the serial
+number. The serial number was not visible in any current PCI-hyperv controller
+values.  The windows slot (wslot) is not the same the serial number.
