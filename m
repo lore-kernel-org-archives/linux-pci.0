@@ -2,43 +2,31 @@ Return-Path: <SRS0=Tpvo=MC=vger.kernel.org=linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-6.3 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_PASS,
-	URIBL_BLOCKED,USER_AGENT_MUTT autolearn=unavailable autolearn_force=no
+X-Spam-Status: No, score=-0.8 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+	MAILING_LIST_MULTI,SPF_PASS autolearn=unavailable autolearn_force=no
 	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 91842C433F4
-	for <linux-pci@archiver.kernel.org>; Thu, 20 Sep 2018 22:38:32 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 3701DECE566
+	for <linux-pci@archiver.kernel.org>; Thu, 20 Sep 2018 22:48:23 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 4099D21535
-	for <linux-pci@archiver.kernel.org>; Thu, 20 Sep 2018 22:38:32 +0000 (UTC)
-Authentication-Results: mail.kernel.org;
-	dkim=pass (1024-bit key) header.d=kernel.org header.i=@kernel.org header.b="wEBwp57B"
-DMARC-Filter: OpenDMARC Filter v1.3.2 mail.kernel.org 4099D21535
-Authentication-Results: mail.kernel.org; dmarc=fail (p=none dis=none) header.from=kernel.org
+	by mail.kernel.org (Postfix) with ESMTP id 1B83A21534
+	for <linux-pci@archiver.kernel.org>; Thu, 20 Sep 2018 22:48:22 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.3.2 mail.kernel.org 1B83A21534
+Authentication-Results: mail.kernel.org; dmarc=none (p=none dis=none) header.from=deltatee.com
 Authentication-Results: mail.kernel.org; spf=none smtp.mailfrom=linux-pci-owner@vger.kernel.org
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727405AbeIUEYQ (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Fri, 21 Sep 2018 00:24:16 -0400
-Received: from mail.kernel.org ([198.145.29.99]:53296 "EHLO mail.kernel.org"
+        id S1725965AbeIUEeI (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Fri, 21 Sep 2018 00:34:08 -0400
+Received: from ale.deltatee.com ([207.54.116.67]:39822 "EHLO ale.deltatee.com"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1725749AbeIUEYP (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Fri, 21 Sep 2018 00:24:15 -0400
-Received: from localhost (unknown [207.160.231.254])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
-        (No client certificate requested)
-        by mail.kernel.org (Postfix) with ESMTPSA id 32FC821522;
-        Thu, 20 Sep 2018 22:38:30 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=default; t=1537483110;
-        bh=8QvI4P/cwd5lxqiU5tntsh/2aORvpAC+Vk0r/VskKi4=;
-        h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-        b=wEBwp57B37qGR4K4EXkBeQwJq3Kj2bXcXKtb9LLvwXHpBt+ldn4/v17kZ5NYN91gA
-         ySTFTsBzJ/E5zLfFoQ35moRqYXIEfZRqju7f614+MoQQV6ruuiZNLNT0ZLK1ZbS9wC
-         mANuEL9nf9/sZyme9K13cJqqWYxJAKAkdPjrXwOY=
-Date:   Thu, 20 Sep 2018 17:38:29 -0500
-From:   Bjorn Helgaas <helgaas@kernel.org>
-To:     Logan Gunthorpe <logang@deltatee.com>
+        id S1725861AbeIUEeI (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Fri, 21 Sep 2018 00:34:08 -0400
+Received: from guinness.priv.deltatee.com ([172.16.1.162])
+        by ale.deltatee.com with esmtpsa (TLS1.2:ECDHE_RSA_AES_128_GCM_SHA256:128)
+        (Exim 4.89)
+        (envelope-from <logang@deltatee.com>)
+        id 1g37jq-0004Wt-6u; Thu, 20 Sep 2018 16:47:59 -0600
+To:     Bjorn Helgaas <helgaas@kernel.org>
 Cc:     linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
         linux-nvme@lists.infradead.org, linux-rdma@vger.kernel.org,
         linux-nvdimm@lists.01.org, linux-block@vger.kernel.org,
@@ -50,174 +38,46 @@ Cc:     linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
         Jason Gunthorpe <jgg@mellanox.com>,
         Max Gurtovoy <maxg@mellanox.com>,
         Dan Williams <dan.j.williams@intel.com>,
-        =?iso-8859-1?B?Suly9G1l?= Glisse <jglisse@redhat.com>,
+        =?UTF-8?B?SsOpcsO0bWUgR2xpc3Nl?= <jglisse@redhat.com>,
         Benjamin Herrenschmidt <benh@kernel.crashing.org>,
         Alex Williamson <alex.williamson@redhat.com>,
-        Christian =?iso-8859-1?Q?K=F6nig?= <christian.koenig@amd.com>,
+        =?UTF-8?Q?Christian_K=c3=b6nig?= <christian.koenig@amd.com>,
         Jens Axboe <axboe@kernel.dk>
-Subject: Re: [PATCH v6 01/13] PCI/P2PDMA: Support peer-to-peer memory
-Message-ID: <20180920223829.GD224714@bhelgaas-glaptop.roam.corp.google.com>
 References: <20180913001156.4115-1-logang@deltatee.com>
  <20180913001156.4115-2-logang@deltatee.com>
+ <20180920223829.GD224714@bhelgaas-glaptop.roam.corp.google.com>
+From:   Logan Gunthorpe <logang@deltatee.com>
+Message-ID: <ab733346-9518-ed68-492d-e52929586293@deltatee.com>
+Date:   Thu, 20 Sep 2018 16:47:49 -0600
+User-Agent: Mozilla/5.0 (Windows NT 10.0; WOW64; rv:52.0) Gecko/20100101
+ Thunderbird/52.9.1
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20180913001156.4115-2-logang@deltatee.com>
-User-Agent: Mutt/1.10.1 (2018-07-13)
+In-Reply-To: <20180920223829.GD224714@bhelgaas-glaptop.roam.corp.google.com>
+Content-Type: text/plain; charset=utf-8
+Content-Language: en-US
+Content-Transfer-Encoding: 7bit
+X-SA-Exim-Connect-IP: 172.16.1.162
+X-SA-Exim-Rcpt-To: axboe@kernel.dk, christian.koenig@amd.com, alex.williamson@redhat.com, benh@kernel.crashing.org, jglisse@redhat.com, dan.j.williams@intel.com, maxg@mellanox.com, jgg@mellanox.com, bhelgaas@google.com, sagi@grimberg.me, keith.busch@intel.com, hch@lst.de, sbates@raithlin.com, linux-block@vger.kernel.org, linux-nvdimm@lists.01.org, linux-rdma@vger.kernel.org, linux-nvme@lists.infradead.org, linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org, helgaas@kernel.org
+X-SA-Exim-Mail-From: logang@deltatee.com
+Subject: Re: [PATCH v6 01/13] PCI/P2PDMA: Support peer-to-peer memory
+X-SA-Exim-Version: 4.2.1 (built Tue, 02 Aug 2016 21:08:31 +0000)
+X-SA-Exim-Scanned: Yes (on ale.deltatee.com)
 Sender: linux-pci-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-On Wed, Sep 12, 2018 at 06:11:44PM -0600, Logan Gunthorpe wrote:
-> Some PCI devices may have memory mapped in a BAR space that's
-> intended for use in peer-to-peer transactions. In order to enable
-> such transactions the memory must be registered with ZONE_DEVICE pages
-> so it can be used by DMA interfaces in existing drivers.
+On 2018-09-20 4:38 PM, Bjorn Helgaas wrote:
+> Acked-by: Bjorn Helgaas <bhelgaas@google.com>  # PCI pieces
 > 
-> Add an interface for other subsystems to find and allocate chunks of P2P
-> memory as necessary to facilitate transfers between two PCI peers:
+> Mostly trivial comments below.  Thanks for persevering with this!
+
+Thanks Bjorn. I'll make these fixes for v7 next week.
+>> +#define pr_fmt(fmt) "pci-p2pdma: " fmt
 > 
-> int pci_p2pdma_add_client();
-> struct pci_dev *pci_p2pmem_find();
-> void *pci_alloc_p2pmem();
-> 
-> The new interface requires a driver to collect a list of client devices
-> involved in the transaction with the pci_p2pmem_add_client*() functions
-> then call pci_p2pmem_find() to obtain any suitable P2P memory. Once
-> this is done the list is bound to the memory and the calling driver is
-> free to add and remove clients as necessary (adding incompatible clients
-> will fail). With a suitable p2pmem device, memory can then be
-> allocated with pci_alloc_p2pmem() for use in DMA transactions.
-> 
-> Depending on hardware, using peer-to-peer memory may reduce the bandwidth
-> of the transfer but can significantly reduce pressure on system memory.
-> This may be desirable in many cases: for example a system could be designed
-> with a small CPU connected to a PCIe switch by a small number of lanes
-> which would maximize the number of lanes available to connect to NVMe
-> devices.
-> 
-> The code is designed to only utilize the p2pmem device if all the devices
-> involved in a transfer are behind the same PCI bridge. This is because we
-> have no way of knowing whether peer-to-peer routing between PCIe Root Ports
-> is supported (PCIe r4.0, sec 1.3.1). Additionally, the benefits of P2P
-> transfers that go through the RC is limited to only reducing DRAM usage
-> and, in some cases, coding convenience. The PCI-SIG may be exploring
-> adding a new capability bit to advertise whether this is possible for
-> future hardware.
-> 
-> This commit includes significant rework and feedback from Christoph
-> Hellwig.
-> 
-> Signed-off-by: Christoph Hellwig <hch@lst.de>
-> Signed-off-by: Logan Gunthorpe <logang@deltatee.com>
+> Is pr_fmt() actually used anywhere?
 
-Acked-by: Bjorn Helgaas <bhelgaas@google.com>  # PCI pieces
+It's used in a Patch 4 to print errors in the configfs helpers.
 
-Mostly trivial comments below.  Thanks for persevering with this!
+Logan
 
-> ---
->  drivers/pci/Kconfig        |  17 +
->  drivers/pci/Makefile       |   1 +
->  drivers/pci/p2pdma.c       | 761 +++++++++++++++++++++++++++++++++++++
->  include/linux/memremap.h   |   5 +
->  include/linux/mm.h         |  18 +
->  include/linux/pci-p2pdma.h | 102 +++++
->  include/linux/pci.h        |   4 +
->  7 files changed, 908 insertions(+)
->  create mode 100644 drivers/pci/p2pdma.c
->  create mode 100644 include/linux/pci-p2pdma.h
-
-> +#define pr_fmt(fmt) "pci-p2pdma: " fmt
-
-Is pr_fmt() actually used anywhere?
-
-> + * Check if a PCI bridge has it's ACS redirection bits set to redirect P2P
-
-s/it's/its/
-
-> + * TLPs upstream via ACS. Returns 1 if the packets will be redirected
-> + * upstream, 0 otherwise.
-> + */
-> +static int pci_bridge_has_acs_redir(struct pci_dev *dev)
-
-Most of your code uses "pdev" for a struct pci_dev *.
-
-> +static void seq_buf_print_bus_devfn(struct seq_buf *buf, struct pci_dev *dev)
-> +{
-> +	if (!buf)
-> +		return;
-> +
-> +	seq_buf_printf(buf, "%04x:%02x:%02x.%x;", pci_domain_nr(dev->bus),
-> +		       dev->bus->number, PCI_SLOT(dev->devfn),
-> +		       PCI_FUNC(dev->devfn));
-
-dev vs pdev?
-I think you could use pci_name() here (see pci_setup_device()).
-
-> + * In the case where two devices are connected to different PCIe switches,
-> + * this function will still return a positive distance as long as both
-> + * switches evenutally have a common upstream bridge. Note this covers
-
-s/evenutally/eventually/
-
-> +static int upstream_bridge_distance_warn(struct pci_dev *provider,
-> +					 struct pci_dev *client)
-> +{
-> +	struct seq_buf acs_list;
-> +	int ret;
-> +
-> +	seq_buf_init(&acs_list, kmalloc(PAGE_SIZE, GFP_KERNEL), PAGE_SIZE);
-
-Check for kmalloc() failure here?  Failure would mean acs_list->buffer is
-NULL, but I gave up following the chain to see how that would be handled.
-
-> +
-> +	ret = upstream_bridge_distance(provider, client, &acs_list);
-> +	if (ret == -2) {
-> +		pci_warn(client, "cannot be used for peer-to-peer DMA as ACS redirect is set between the client and provider\n");
-
-Maybe include pci_name(provider) in these messages?
-
-> +		/* Drop final semicolon */
-> +		acs_list.buffer[acs_list.len-1] = 0;
-> +		pci_warn(client, "to disable ACS redirect for this path, add the kernel parameter: pci=disable_acs_redir=%s\n",
-> +			 acs_list.buffer);
-> +
-> +	} else if (ret < 0) {
-> +		pci_warn(client, "cannot be used for peer-to-peer DMA as the client and provider do not share an upstream bridge\n");
-
-> + * pci_p2pdma_assign_provider - Check compatibily (as per pci_p2pdma_distance)
-
-s/compatibily/compatibility/
-
-> +struct pci_dev *pci_p2pmem_find(struct list_head *clients)
-> +{
-> +	struct pci_dev *pdev = NULL;
-> +	struct pci_p2pdma_client *pos;
-> +	int distance;
-> +	int closest_distance = INT_MAX;
-> +	struct pci_dev **closest_pdevs;
-> +	int dev_cnt = 0;
-> +	const int max_devs = PAGE_SIZE / sizeof(*closest_pdevs);
-> +	int i;
-> +
-> +	closest_pdevs = kmalloc(PAGE_SIZE, GFP_KERNEL);
-
-Check for kmalloc() failure?
-
-> +++ b/include/linux/pci-p2pdma.h
-> @@ -0,0 +1,102 @@
-> +/* SPDX-License-Identifier: GPL-2.0 */
-> +/*
-> + * PCI Peer 2 Peer DMA support.
-> + *
-> + * Copyright (c) 2016-2018, Logan Gunthorpe
-> + * Copyright (c) 2016-2017, Microsemi Corporation
-> + * Copyright (c) 2017, Christoph Hellwig
-> + * Copyright (c) 2018, Eideticom Inc.
-> + *
-
-Spurious blank line.
-
-> + */
