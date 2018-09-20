@@ -3,278 +3,133 @@ X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
 X-Spam-Status: No, score=-8.3 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_PASS,URIBL_BLOCKED,
-	USER_AGENT_MUTT autolearn=ham autolearn_force=no version=3.4.0
+	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_PASS,USER_AGENT_MUTT
+	autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 152F5ECE561
-	for <linux-pci@archiver.kernel.org>; Thu, 20 Sep 2018 10:15:25 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 5BC26ECE561
+	for <linux-pci@archiver.kernel.org>; Thu, 20 Sep 2018 10:58:35 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id C456C2152A
-	for <linux-pci@archiver.kernel.org>; Thu, 20 Sep 2018 10:15:24 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.3.2 mail.kernel.org C456C2152A
+	by mail.kernel.org (Postfix) with ESMTP id F0EAD2152C
+	for <linux-pci@archiver.kernel.org>; Thu, 20 Sep 2018 10:58:34 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.3.2 mail.kernel.org F0EAD2152C
 Authentication-Results: mail.kernel.org; dmarc=none (p=none dis=none) header.from=arm.com
 Authentication-Results: mail.kernel.org; spf=none smtp.mailfrom=linux-pci-owner@vger.kernel.org
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1732275AbeITP6H (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Thu, 20 Sep 2018 11:58:07 -0400
-Received: from usa-sjc-mx-foss1.foss.arm.com ([217.140.101.70]:43632 "EHLO
-        foss.arm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1732274AbeITP6H (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Thu, 20 Sep 2018 11:58:07 -0400
+        id S1727633AbeITQl2 (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Thu, 20 Sep 2018 12:41:28 -0400
+Received: from foss.arm.com ([217.140.101.70]:43994 "EHLO foss.arm.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1726954AbeITQl2 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Thu, 20 Sep 2018 12:41:28 -0400
 Received: from usa-sjc-imap-foss1.foss.arm.com (unknown [10.72.51.249])
-        by usa-sjc-mx-foss1.foss.arm.com (Postfix) with ESMTP id 45A1280D;
-        Thu, 20 Sep 2018 03:15:23 -0700 (PDT)
+        by usa-sjc-mx-foss1.foss.arm.com (Postfix) with ESMTP id 5A2D480D;
+        Thu, 20 Sep 2018 03:58:33 -0700 (PDT)
 Received: from e107981-ln.cambridge.arm.com (e107981-ln.emea.arm.com [10.4.13.117])
-        by usa-sjc-imap-foss1.foss.arm.com (Postfix) with ESMTPSA id 1360C3F5BD;
-        Thu, 20 Sep 2018 03:15:21 -0700 (PDT)
-Date:   Thu, 20 Sep 2018 11:15:16 +0100
+        by usa-sjc-imap-foss1.foss.arm.com (Postfix) with ESMTPSA id AE4B63F5BD;
+        Thu, 20 Sep 2018 03:58:31 -0700 (PDT)
+Date:   Thu, 20 Sep 2018 11:58:28 +0100
 From:   Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
-To:     Alan Douglas <adouglas@cadence.com>
-Cc:     kishon@ti.com, bhelgaas@google.com, linux-pci@vger.kernel.org,
-        gustavo.pimentel@synopsys.com, cyrille.pitchen@bootlin.com
-Subject: Re: [PATCH v3 5/5] PCI: cadence: Add MSI-X capability to EP driver
-Message-ID: <20180920101516.GA838@e107981-ln.cambridge.arm.com>
-References: <1537284105-23519-1-git-send-email-adouglas@cadence.com>
+To:     Nick Desaulniers <ndesaulniers@google.com>
+Cc:     Nathan Chancellor <natechancellor@gmail.com>,
+        songxiaowei@hisilicon.com, wangbinghui@hisilicon.com,
+        bhelgaas@google.com, linux-pci@vger.kernel.org,
+        LKML <linux-kernel@vger.kernel.org>,
+        Greg KH <gregkh@linuxfoundation.org>,
+        paul.gortmaker@windriver.com
+Subject: Re: [PATCH v2] PCI: kirin: Fix section mismatch warning
+Message-ID: <20180920105828.GB838@e107981-ln.cambridge.arm.com>
+References: <20180919185341.31298-1-natechancellor@gmail.com>
+ <CAKwvOdkeM3sj8M-LzTQd9M9-sM_K6n6FTz=TrNHd-3xPwg_VNw@mail.gmail.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <1537284105-23519-1-git-send-email-adouglas@cadence.com>
+In-Reply-To: <CAKwvOdkeM3sj8M-LzTQd9M9-sM_K6n6FTz=TrNHd-3xPwg_VNw@mail.gmail.com>
 User-Agent: Mutt/1.5.24 (2015-08-30)
 Sender: linux-pci-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-On Tue, Sep 18, 2018 at 04:21:45PM +0100, Alan Douglas wrote:
-> Add set_msix and get_msix functions to driver, and handle
-> PCI_EPC_IRQ_MSIX request in raise_irq.  BAR4 is used for
-> the MSI-X vectors.
+[+Paul]
 
-https://marc.info/?l=linux-pci&m=150905742808166&w=2
-
-> Signed-off-by: Alan Douglas <adouglas@cadence.com>
-> ---
->  drivers/pci/controller/pcie-cadence-ep.c | 129 ++++++++++++++++++++++++++++++-
->  drivers/pci/controller/pcie-cadence.h    |   7 ++
->  2 files changed, 135 insertions(+), 1 deletion(-)
+On Wed, Sep 19, 2018 at 02:08:08PM -0700, Nick Desaulniers wrote:
+> On Wed, Sep 19, 2018 at 11:55 AM Nathan Chancellor
+> <natechancellor@gmail.com> wrote:
+> >
+> > WARNING: vmlinux.o(.text+0x4758cc): Section mismatch in reference from
+> > the function kirin_pcie_probe() to the function
+> > .init.text:kirin_add_pcie_port()
+> > The function kirin_pcie_probe() references
+> > the function __init kirin_add_pcie_port().
+> > This is often because kirin_pcie_probe lacks a __init
+> > annotation or the annotation of kirin_add_pcie_port is wrong.
+> >
+> > Add the __init annotation to both kirin_pcie_probe and
+> > kirin_pcie_add_msi then use builtin_platform_driver_probe
+> > instead of builtin_platform_driver + .probe to avoid a section
+> > mismatch warning with kirin_pcie_driver.
+> >
+> > Fixes: fc5165db245a ("PCI: kirin: Add HiSilicon Kirin SoC PCIe controller driver")
+> > Reported-by: Nick Desaulniers <ndesaulniers@google.com>
+> > Suggested-by: Nick Desaulniers <ndesaulniers@google.com>
+> > Signed-off-by: Nathan Chancellor <natechancellor@gmail.com>
+> > ---
+> >
+> > v1 -> v2:
+> >
+> > Instead of removing the annotation on kirin_add_pcie_port, add it to
+> > kirin_pcie_add_msi and kirin_pcie_probe. To avoid a warning with this
+> > configuration, use builtin_platform_driver_probe.
+> >
+> >  drivers/pci/controller/dwc/pcie-kirin.c | 9 ++++-----
+> >  1 file changed, 4 insertions(+), 5 deletions(-)
+> >
+> > diff --git a/drivers/pci/controller/dwc/pcie-kirin.c b/drivers/pci/controller/dwc/pcie-kirin.c
+> > index 5352e0c3be82..f64fed12de51 100644
+> > --- a/drivers/pci/controller/dwc/pcie-kirin.c
+> > +++ b/drivers/pci/controller/dwc/pcie-kirin.c
+> > @@ -448,8 +448,8 @@ static const struct dw_pcie_host_ops kirin_pcie_host_ops = {
+> >         .host_init = kirin_pcie_host_init,
+> >  };
+> >
+> > -static int kirin_pcie_add_msi(struct dw_pcie *pci,
+> > -                               struct platform_device *pdev)
+> > +static int __init kirin_pcie_add_msi(struct dw_pcie *pci,
+> > +                                    struct platform_device *pdev)
+> >  {
+> >         int irq;
+> >
+> > @@ -481,7 +481,7 @@ static int __init kirin_add_pcie_port(struct dw_pcie *pci,
+> >         return dw_pcie_host_init(&pci->pp);
+> >  }
+> >
+> > -static int kirin_pcie_probe(struct platform_device *pdev)
+> > +static int __init kirin_pcie_probe(struct platform_device *pdev)
+> >  {
+> >         struct device *dev = &pdev->dev;
+> >         struct kirin_pcie *kirin_pcie;
+> > @@ -533,11 +533,10 @@ static const struct of_device_id kirin_pcie_match[] = {
+> >  };
+> >
+> >  static struct platform_driver kirin_pcie_driver = {
+> > -       .probe                  = kirin_pcie_probe,
+> >         .driver                 = {
+> >                 .name                   = "kirin-pcie",
+> >                 .of_match_table = kirin_pcie_match,
+> >                 .suppress_bind_attrs = true,
+> >         },
+> >  };
+> > -builtin_platform_driver(kirin_pcie_driver);
+> > +builtin_platform_driver_probe(kirin_pcie_driver, kirin_pcie_probe);
 > 
-> diff --git a/drivers/pci/controller/pcie-cadence-ep.c b/drivers/pci/controller/pcie-cadence-ep.c
-> index 1248d75..dbe76ab 100644
-> --- a/drivers/pci/controller/pcie-cadence-ep.c
-> +++ b/drivers/pci/controller/pcie-cadence-ep.c
-> @@ -16,6 +16,7 @@
->  #define CDNS_PCIE_EP_MIN_APERTURE		128	/* 128 bytes */
->  #define CDNS_PCIE_EP_IRQ_PCI_ADDR_NONE		0x1
->  #define CDNS_PCIE_EP_IRQ_PCI_ADDR_LEGACY	0x3
-> +#define CDNS_PCIE_EP_MSIX_BAR			0x4
->  
->  /**
->   * struct cdns_pcie_ep - private data for this PCIe endpoint controller driver
-> @@ -255,6 +256,65 @@ static int cdns_pcie_ep_get_msi(struct pci_epc *epc, u8 fn)
->  	return mme;
->  }
->  
-> +static int cdns_pcie_ep_get_msix(struct pci_epc *epc, u8 func_no)
-> +{
-> +	struct cdns_pcie_ep *ep = epc_get_drvdata(epc);
-> +	struct cdns_pcie *pcie = &ep->pcie;
-> +	u32 cap = CDNS_PCIE_EP_FUNC_MSIX_CAP_OFFSET;
-> +	u32 val, reg;
-> +
-> +	reg = cap + PCI_MSIX_FLAGS;
-> +	val = cdns_pcie_ep_fn_readw(pcie, func_no, reg);
-> +	if (!(val & PCI_MSIX_FLAGS_ENABLE))
-> +		return -EINVAL;
-> +
-> +	val &= PCI_MSIX_FLAGS_QSIZE;
-> +
-> +	return val;
-> +}
-> +
-> +static int cdns_pcie_ep_set_msix(struct pci_epc *epc, u8 fn, u16 interrupts)
-> +{
-> +	struct cdns_pcie_ep *ep = epc_get_drvdata(epc);
-> +	struct cdns_pcie *pcie = &ep->pcie;
-> +	u32 cap = CDNS_PCIE_EP_FUNC_MSIX_CAP_OFFSET;
-> +	u32 val, reg, tblsize, b, cfg, ap, ctrl;
-> +
-> +	/* Check that the BAR has already been configured, and is large
-> +	 * enough, and fail if not.
-> +	 */
-> +	b = CDNS_PCIE_EP_MSIX_BAR;
-> +	if (b < BAR_4)
-> +		reg = CDNS_PCIE_LM_EP_FUNC_BAR_CFG0(fn);
-> +	else
-> +		reg = CDNS_PCIE_LM_EP_FUNC_BAR_CFG1(fn);
-> +	cfg = cdns_pcie_readl(pcie, reg);
-> +	ctrl = CDNS_PCIE_LM_EP_FUNC_BAR_CFG_VAL(b, cfg);
-> +	if (!(ctrl & CDNS_PCIE_LM_BAR_CFG_CTRL_MEM_32BITS))
-> +		return -EINVAL;
-> +	ap = CDNS_PCIE_LM_EP_FUNC_BAR_APERTURE_VAL(b, cfg);
-> +	tblsize = fls64(interrupts * 32 - 1);
-> +	/* Need (1<<tblsize)*2 bytes for vector table + PBA table */
-> +	if (ap + 6 <  tblsize)
+> It would be good to get additional review from someone who knows more
+> about driver callback lifecycles, but I think this is the correct fix.
+> Thanks Nathan.
+> Reviewed-by: Nick Desaulniers <ndesaulniers@google.com>
 
-This is cryptic, you have to explain what it does (inclusive of that
-hardcoded 6 value).
-
-> +		return -EINVAL;
-> +
-> +	reg = cap + PCI_MSIX_FLAGS;
-> +	val = cdns_pcie_ep_fn_readw(pcie, fn, reg);
-> +	val &= ~PCI_MSIX_FLAGS_QSIZE;
-> +	val |= interrupts;
-> +	cdns_pcie_ep_fn_writew(pcie, fn, reg, val);
-> +
-> +	/* Set MSIX BAR and offset */
-> +	reg = cap + PCI_MSIX_TABLE;
-> +	cdns_pcie_ep_fn_writel(pcie, fn, reg, b);
-> +
-> +	/* Set PBA BAR and offset.  BAR must match MSIX BAR */
-> +	reg = cap + PCI_MSIX_PBA;
-> +	cdns_pcie_ep_fn_writel(pcie, fn, reg, (1UL << tblsize) | b);
-> +
-> +	return 0;
-> +}
-> +
->  static void cdns_pcie_ep_assert_intx(struct cdns_pcie_ep *ep, u8 fn,
->  				     u8 intx, bool is_asserted)
->  {
-> @@ -366,8 +426,69 @@ static int cdns_pcie_ep_send_msi_irq(struct cdns_pcie_ep *ep, u8 fn,
->  	return 0;
->  }
->  
-> +static int cdns_pcie_ep_send_msix_irq(struct cdns_pcie_ep *ep, u8 fn,
-> +				      u16 interrupt_num)
-> +{
-> +	struct cdns_pcie *pcie = &ep->pcie;
-> +	u32 cap = CDNS_PCIE_EP_FUNC_MSIX_CAP_OFFSET;
-> +	u16 flags;
-> +	u64 pci_addr_mask = 0xff;
-> +	u16 tbl_offset = 0;
-> +	u32 bar_addr_upper, bar_addr_lower;
-> +	u32 msg_addr_upper, msg_addr_lower;
-> +	u32 msg_data;
-> +	u64 tbl_addr, msg_addr;
-> +	void __iomem *msix_tbl;
-> +
-> +	/* Check whether the MSI-X feature has been enabled by the PCI host. */
-> +	flags = cdns_pcie_ep_fn_readw(pcie, fn, cap + PCI_MSIX_FLAGS);
-> +	if (!(flags & PCI_MSIX_FLAGS_ENABLE))
-> +		return -EINVAL;
-> +	/* We want local address, not address on host. Table is at offset 0 */
-> +	bar_addr_lower = cdns_pcie_readl(pcie,
-> +		CDNS_PCIE_AT_IB_EP_FUNC_BAR_ADDR0(fn, CDNS_PCIE_EP_MSIX_BAR));
-> +	bar_addr_upper = cdns_pcie_readl(pcie,
-> +		CDNS_PCIE_AT_IB_EP_FUNC_BAR_ADDR1(fn, CDNS_PCIE_EP_MSIX_BAR));
-> +
-> +	tbl_addr = ((u64)bar_addr_upper) << 32 | bar_addr_lower;
-> +	tbl_addr += (tbl_offset + ((interrupt_num - 1) * PCI_MSIX_ENTRY_SIZE));
-> +	tbl_addr &= PCI_BASE_ADDRESS_MEM_MASK;
-> +	msix_tbl = phys_to_virt(tbl_addr);
-
-phys_to_virt() coupled with iounmap() below, this does not look OK
-to me.
-
-IIUC you want to map the BAR in the EP system address space to read the
-tables entries, where the BAR content is set by the host system but
-phys_to_virt() is not the way to do it.
-
-Please explain to me if my reading of the code is correct.
+AFAICS we can't use builtin_platform_driver_probe() if the probe()
+itself may need deferral (and I *reckon* it may need that, see eg
+clk_get()) so I suspect we have to go back to v1 for the patch,
+apologies if so.
 
 Lorenzo
-
-> +	if (!msix_tbl)
-> +		return -EINVAL;
-> +
-> +	msg_addr_lower = readl(msix_tbl + PCI_MSIX_ENTRY_LOWER_ADDR);
-> +	msg_addr_upper = readl(msix_tbl + PCI_MSIX_ENTRY_UPPER_ADDR);
-> +	msg_addr = ((u64)msg_addr_upper) << 32 | msg_addr_lower;
-> +
-> +	msg_data = readl(msix_tbl + PCI_MSIX_ENTRY_VECTOR_CTRL);
-> +	if (msg_data & 0x1)
-> +		return -EINVAL;
-> +
-> +	msg_data = readl(msix_tbl + PCI_MSIX_ENTRY_DATA);
-> +
-> +	iounmap(msix_tbl);
-> +
-> +	/* Set the outbound region if needed. */
-> +	if (unlikely(ep->irq_pci_addr != (msg_addr & ~pci_addr_mask) ||
-> +		     ep->irq_pci_fn != fn)) {
-> +		/* First region was reserved for IRQ writes. */
-> +		cdns_pcie_set_outbound_region(pcie, fn, 0,
-> +					      false,
-> +					      ep->irq_phys_addr,
-> +					      msg_addr & ~pci_addr_mask,
-> +					      pci_addr_mask + 1);
-> +		ep->irq_pci_addr = (msg_addr & ~pci_addr_mask);
-> +		ep->irq_pci_fn = fn;
-> +	}
-> +	writel(msg_data, ep->irq_cpu_addr + (msg_addr & pci_addr_mask));
-> +
-> +	return 0;
-> +}
-> +
->  static int cdns_pcie_ep_raise_irq(struct pci_epc *epc, u8 fn,
-> -				  enum pci_epc_irq_type type, u8 interrupt_num)
-> +				  enum pci_epc_irq_type type,
-> +				  u16 interrupt_num)
->  {
->  	struct cdns_pcie_ep *ep = epc_get_drvdata(epc);
->  	u32 link_status;
-> @@ -384,6 +505,9 @@ static int cdns_pcie_ep_raise_irq(struct pci_epc *epc, u8 fn,
->  	case PCI_EPC_IRQ_MSI:
->  		return cdns_pcie_ep_send_msi_irq(ep, fn, interrupt_num);
->  
-> +	case PCI_EPC_IRQ_MSIX:
-> +		return cdns_pcie_ep_send_msix_irq(ep, fn, interrupt_num);
-> +
->  	default:
->  		break;
->  	}
-> @@ -430,6 +554,8 @@ static int cdns_pcie_ep_start(struct pci_epc *epc)
->  	.unmap_addr	= cdns_pcie_ep_unmap_addr,
->  	.set_msi	= cdns_pcie_ep_set_msi,
->  	.get_msi	= cdns_pcie_ep_get_msi,
-> +	.set_msix	= cdns_pcie_ep_set_msix,
-> +	.get_msix	= cdns_pcie_ep_get_msix,
->  	.raise_irq	= cdns_pcie_ep_raise_irq,
->  	.start		= cdns_pcie_ep_start,
->  };
-> @@ -501,6 +627,7 @@ static int cdns_pcie_ep_probe(struct platform_device *pdev)
->  	}
->  
->  	epc_set_drvdata(epc, ep);
-> +	epc->features |= EPC_FEATURE_MSIX_AVAILABLE;
->  
->  	if (of_property_read_u8(np, "max-functions", &epc->max_functions) < 0)
->  		epc->max_functions = 1;
-> diff --git a/drivers/pci/controller/pcie-cadence.h b/drivers/pci/controller/pcie-cadence.h
-> index 4bb2733..946f6ee 100644
-> --- a/drivers/pci/controller/pcie-cadence.h
-> +++ b/drivers/pci/controller/pcie-cadence.h
-> @@ -52,6 +52,12 @@
->  	(GENMASK(7, 5) << ((b) * 8))
->  #define  CDNS_PCIE_LM_EP_FUNC_BAR_CFG_BAR_CTRL(b, c) \
->  	(((c) << ((b) * 8 + 5)) & CDNS_PCIE_LM_EP_FUNC_BAR_CFG_BAR_CTRL_MASK(b))
-> +#define CDNS_PCIE_LM_EP_FUNC_BAR_CFG_VAL(b, c) \
-> +	(((c) & CDNS_PCIE_LM_EP_FUNC_BAR_CFG_BAR_CTRL_MASK((b) % 4)) \
-> +						>> (((b) % 4) * 8 + 5))
-> +#define CDNS_PCIE_LM_EP_FUNC_BAR_APERTURE_VAL(b, c) \
-> +	(((c) & CDNS_PCIE_LM_EP_FUNC_BAR_CFG_BAR_APERTURE_MASK((b) % 4)) \
-> +							>> (((b) % 4) * 8))
->  
->  /* Endpoint Function Configuration Register */
->  #define CDNS_PCIE_LM_EP_FUNC_CFG	(CDNS_PCIE_LM_BASE + 0x02c0)
-> @@ -93,6 +99,7 @@
->  #define CDNS_PCIE_EP_FUNC_BASE(fn)	(((fn) << 12) & GENMASK(19, 12))
->  
->  #define CDNS_PCIE_EP_FUNC_MSI_CAP_OFFSET	0x90
-> +#define CDNS_PCIE_EP_FUNC_MSIX_CAP_OFFSET	0xb0
->  
->  /*
->   * Root Port Registers (PCI configuration space for the root port function)
-> -- 
-> 1.9.0
-> 
