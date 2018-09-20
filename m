@@ -6,27 +6,27 @@ X-Spam-Status: No, score=-8.8 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
 	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_PASS,URIBL_BLOCKED,
 	USER_AGENT_GIT autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 9DD6AC433F4
-	for <linux-pci@archiver.kernel.org>; Thu, 20 Sep 2018 17:24:52 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 88B91ECE566
+	for <linux-pci@archiver.kernel.org>; Thu, 20 Sep 2018 17:24:56 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 526C921531
-	for <linux-pci@archiver.kernel.org>; Thu, 20 Sep 2018 17:24:52 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.3.2 mail.kernel.org 526C921531
+	by mail.kernel.org (Postfix) with ESMTP id 4634F21523
+	for <linux-pci@archiver.kernel.org>; Thu, 20 Sep 2018 17:24:56 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.3.2 mail.kernel.org 4634F21523
 Authentication-Results: mail.kernel.org; dmarc=none (p=none dis=none) header.from=arm.com
 Authentication-Results: mail.kernel.org; spf=none smtp.mailfrom=linux-pci-owner@vger.kernel.org
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S2387445AbeITXJV (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Thu, 20 Sep 2018 19:09:21 -0400
-Received: from usa-sjc-mx-foss1.foss.arm.com ([217.140.101.70]:50048 "EHLO
+        id S1733291AbeITXJZ (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Thu, 20 Sep 2018 19:09:25 -0400
+Received: from usa-sjc-mx-foss1.foss.arm.com ([217.140.101.70]:50094 "EHLO
         foss.arm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1732761AbeITXJU (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Thu, 20 Sep 2018 19:09:20 -0400
+        id S1732761AbeITXJY (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Thu, 20 Sep 2018 19:09:24 -0400
 Received: from usa-sjc-imap-foss1.foss.arm.com (unknown [10.72.51.249])
-        by usa-sjc-mx-foss1.foss.arm.com (Postfix) with ESMTP id 54CAA1596;
-        Thu, 20 Sep 2018 10:24:50 -0700 (PDT)
+        by usa-sjc-mx-foss1.foss.arm.com (Postfix) with ESMTP id 5A03A7A9;
+        Thu, 20 Sep 2018 10:24:54 -0700 (PDT)
 Received: from ostrya.Emea.Arm.com (ostrya.emea.arm.com [10.4.12.111])
-        by usa-sjc-imap-foss1.foss.arm.com (Postfix) with ESMTPA id 90E863F557;
-        Thu, 20 Sep 2018 10:24:46 -0700 (PDT)
+        by usa-sjc-imap-foss1.foss.arm.com (Postfix) with ESMTPA id 961C63F557;
+        Thu, 20 Sep 2018 10:24:50 -0700 (PDT)
 From:   Jean-Philippe Brucker <jean-philippe.brucker@arm.com>
 To:     iommu@lists.linux-foundation.org
 Cc:     joro@8bytes.org, linux-pci@vger.kernel.org, jcrouse@codeaurora.org,
@@ -37,9 +37,9 @@ Cc:     joro@8bytes.org, linux-pci@vger.kernel.org, jcrouse@codeaurora.org,
         ashok.raj@intel.com, baolu.lu@linux.intel.com, xuzaibo@huawei.com,
         liguozhu@hisilicon.com, okaya@codeaurora.org, bharatku@xilinx.com,
         ilias.apalodimas@linaro.org, shunyong.yang@hxt-semitech.com
-Subject: [PATCH v3 01/10] iommu: Introduce Shared Virtual Addressing API
-Date:   Thu, 20 Sep 2018 18:00:37 +0100
-Message-Id: <20180920170046.20154-2-jean-philippe.brucker@arm.com>
+Subject: [PATCH v3 02/10] iommu/sva: Bind process address spaces to devices
+Date:   Thu, 20 Sep 2018 18:00:38 +0100
+Message-Id: <20180920170046.20154-3-jean-philippe.brucker@arm.com>
 X-Mailer: git-send-email 2.18.0
 In-Reply-To: <20180920170046.20154-1-jean-philippe.brucker@arm.com>
 References: <20180920170046.20154-1-jean-philippe.brucker@arm.com>
@@ -48,273 +48,236 @@ Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-Shared Virtual Addressing (SVA) provides a way for device drivers to bind
-process address spaces to devices. This requires the IOMMU to support page
-table format and features compatible with the CPUs, and usually requires
-the system to support I/O Page Faults (IOPF) and Process Address Space ID
-(PASID). When all of these are available, DMA can access virtual addresses
-of a process. A PASID is allocated for each process, and the device driver
-programs it into the device in an implementation-specific way.
-
-Add a new API for sharing process page tables with devices. Introduce two
-IOMMU operations, sva_init_device() and sva_shutdown_device(), that
-prepare the IOMMU driver for SVA. For example allocate PASID tables and
-fault queues. Subsequent patches will implement the bind() and unbind()
-operations.
-
-Introduce a new mutex sva_lock on the device's IOMMU param to serialize
-init(), shutdown(), bind() and unbind() operations. Using the existing
-lock isn't possible because the unbind() and shutdown() operations will
-have to wait while holding sva_lock for concurrent fault queue flushes to
-terminate. These flushes will take the existing lock.
-
-Support for I/O Page Faults will be added in a later patch using a new
-feature bit (IOMMU_SVA_FEAT_IOPF). With the current API users must pin
-down all shared mappings.
+Add bind() and unbind() operations to the IOMMU API. Bind() returns a
+PASID that drivers can program in hardware, to let their devices access an
+mm. This patch only adds skeletons for the device driver API, most of the
+implementation is still missing.
 
 Signed-off-by: Jean-Philippe Brucker <jean-philippe.brucker@arm.com>
 ---
-v2->v3:
-* Add sva_lock to serialize init/bind/unbind/shutdown
-* Rename functions for consistency with the rest of the API
----
- drivers/iommu/Kconfig     |   4 ++
- drivers/iommu/Makefile    |   1 +
- drivers/iommu/iommu-sva.c | 107 ++++++++++++++++++++++++++++++++++++++
- drivers/iommu/iommu.c     |   1 +
- include/linux/iommu.h     |  34 ++++++++++++
- 5 files changed, 147 insertions(+)
- create mode 100644 drivers/iommu/iommu-sva.c
+ drivers/iommu/iommu-sva.c | 34 +++++++++++++++
+ drivers/iommu/iommu.c     | 90 +++++++++++++++++++++++++++++++++++++++
+ include/linux/iommu.h     | 37 ++++++++++++++++
+ 3 files changed, 161 insertions(+)
 
-diff --git a/drivers/iommu/Kconfig b/drivers/iommu/Kconfig
-index c60395b7470f..884580401919 100644
---- a/drivers/iommu/Kconfig
-+++ b/drivers/iommu/Kconfig
-@@ -95,6 +95,10 @@ config IOMMU_DMA
- 	select IOMMU_IOVA
- 	select NEED_SG_DMA_LENGTH
- 
-+config IOMMU_SVA
-+	bool
-+	select IOMMU_API
-+
- config FSL_PAMU
- 	bool "Freescale IOMMU support"
- 	depends on PCI
-diff --git a/drivers/iommu/Makefile b/drivers/iommu/Makefile
-index ab5eba6edf82..7d6332be5f0e 100644
---- a/drivers/iommu/Makefile
-+++ b/drivers/iommu/Makefile
-@@ -4,6 +4,7 @@ obj-$(CONFIG_IOMMU_API) += iommu-traces.o
- obj-$(CONFIG_IOMMU_API) += iommu-sysfs.o
- obj-$(CONFIG_IOMMU_DEBUGFS) += iommu-debugfs.o
- obj-$(CONFIG_IOMMU_DMA) += dma-iommu.o
-+obj-$(CONFIG_IOMMU_SVA) += iommu-sva.o
- obj-$(CONFIG_IOMMU_IO_PGTABLE) += io-pgtable.o
- obj-$(CONFIG_IOMMU_IO_PGTABLE_ARMV7S) += io-pgtable-arm-v7s.o
- obj-$(CONFIG_IOMMU_IO_PGTABLE_LPAE) += io-pgtable-arm.o
 diff --git a/drivers/iommu/iommu-sva.c b/drivers/iommu/iommu-sva.c
-new file mode 100644
-index 000000000000..85ef98efede8
---- /dev/null
+index 85ef98efede8..d60d4f0bb89e 100644
+--- a/drivers/iommu/iommu-sva.c
 +++ b/drivers/iommu/iommu-sva.c
-@@ -0,0 +1,107 @@
-+// SPDX-License-Identifier: GPL-2.0
-+/*
-+ * Manage PASIDs and bind process address spaces to devices.
-+ *
-+ * Copyright (C) 2018 ARM Ltd.
-+ */
+@@ -8,6 +8,38 @@
+ #include <linux/iommu.h>
+ #include <linux/slab.h>
+ 
++int __iommu_sva_bind_device(struct device *dev, struct mm_struct *mm, int *pasid,
++			    unsigned long flags, void *drvdata)
++{
++	return -ENOSYS; /* TODO */
++}
++EXPORT_SYMBOL_GPL(__iommu_sva_bind_device);
 +
-+#include <linux/iommu.h>
-+#include <linux/slab.h>
++int __iommu_sva_unbind_device(struct device *dev, int pasid)
++{
++	return -ENOSYS; /* TODO */
++}
++EXPORT_SYMBOL_GPL(__iommu_sva_unbind_device);
++
++static void __iommu_sva_unbind_device_all(struct device *dev)
++{
++	/* TODO */
++}
 +
 +/**
-+ * iommu_sva_init_device() - Initialize Shared Virtual Addressing for a device
-+ * @dev: the device
-+ * @features: bitmask of features that need to be initialized
-+ * @min_pasid: min PASID value supported by the device
-+ * @max_pasid: max PASID value supported by the device
-+ *
-+ * Users of the bind()/unbind() API must call this function to initialize all
-+ * features required for SVA.
-+ *
-+ * The device must support multiple address spaces (e.g. PCI PASID). By default
-+ * the PASID allocated during bind() is limited by the IOMMU capacity, and by
-+ * the device PASID width defined in the PCI capability or in the firmware
-+ * description. Setting @max_pasid to a non-zero value smaller than this limit
-+ * overrides it. Similarly, @min_pasid overrides the lower PASID limit supported
-+ * by the IOMMU.
-+ *
-+ * The device should not be performing any DMA while this function is running,
-+ * otherwise the behavior is undefined.
-+ *
-+ * Return 0 if initialization succeeded, or an error.
-+ */
-+int iommu_sva_init_device(struct device *dev, unsigned long features,
-+		       unsigned int min_pasid, unsigned int max_pasid)
-+{
-+	int ret;
-+	struct iommu_sva_param *param;
-+	struct iommu_domain *domain = iommu_get_domain_for_dev(dev);
-+
-+	if (!domain || !domain->ops->sva_init_device)
-+		return -ENODEV;
-+
-+	if (features)
-+		return -EINVAL;
-+
-+	param = kzalloc(sizeof(*param), GFP_KERNEL);
-+	if (!param)
-+		return -ENOMEM;
-+
-+	param->features		= features;
-+	param->min_pasid	= min_pasid;
-+	param->max_pasid	= max_pasid;
-+
-+	mutex_lock(&dev->iommu_param->sva_lock);
-+	if (dev->iommu_param->sva_param) {
-+		ret = -EEXIST;
-+		goto err_unlock;
-+	}
-+
-+	/*
-+	 * IOMMU driver updates the limits depending on the IOMMU and device
-+	 * capabilities.
-+	 */
-+	ret = domain->ops->sva_init_device(dev, param);
-+	if (ret)
-+		goto err_unlock;
-+
-+	dev->iommu_param->sva_param = param;
-+	mutex_unlock(&dev->iommu_param->sva_lock);
-+	return 0;
-+
-+err_unlock:
-+	mutex_unlock(&dev->iommu_param->sva_lock);
-+	kfree(param);
-+	return ret;
-+}
-+EXPORT_SYMBOL_GPL(iommu_sva_init_device);
-+
-+/**
-+ * iommu_sva_shutdown_device() - Shutdown Shared Virtual Addressing for a device
++ * iommu_sva_unbind_device_all() - Detach all address spaces from this device
 + * @dev: the device
 + *
-+ * Disable SVA. Device driver should ensure that the device isn't performing any
-+ * DMA while this function is running.
++ * When detaching @dev from a domain, IOMMU drivers should use this helper.
 + */
-+void iommu_sva_shutdown_device(struct device *dev)
++void iommu_sva_unbind_device_all(struct device *dev)
 +{
-+	struct iommu_sva_param *param;
-+	struct iommu_domain *domain = iommu_get_domain_for_dev(dev);
-+
-+	if (!domain)
-+		return;
-+
 +	mutex_lock(&dev->iommu_param->sva_lock);
-+	param = dev->iommu_param->sva_param;
-+	if (!param)
-+		goto out_unlock;
-+
-+	if (domain->ops->sva_shutdown_device)
-+		domain->ops->sva_shutdown_device(dev);
-+
-+	kfree(param);
-+	dev->iommu_param->sva_param = NULL;
-+out_unlock:
++	__iommu_sva_unbind_device_all(dev);
 +	mutex_unlock(&dev->iommu_param->sva_lock);
 +}
-+EXPORT_SYMBOL_GPL(iommu_sva_shutdown_device);
-diff --git a/drivers/iommu/iommu.c b/drivers/iommu/iommu.c
-index 58f3477f2993..fa0561ed006f 100644
---- a/drivers/iommu/iommu.c
-+++ b/drivers/iommu/iommu.c
-@@ -653,6 +653,7 @@ int iommu_group_add_device(struct iommu_group *group, struct device *dev)
- 		goto err_free_name;
- 	}
- 	mutex_init(&dev->iommu_param->lock);
-+	mutex_init(&dev->iommu_param->sva_lock);
- 
- 	kobject_get(group->devices_kobj);
- 
-diff --git a/include/linux/iommu.h b/include/linux/iommu.h
-index 8177f7736fcd..4c27cb347770 100644
---- a/include/linux/iommu.h
-+++ b/include/linux/iommu.h
-@@ -197,6 +197,12 @@ struct page_response_msg {
- 	u64 private_data;
- };
- 
-+struct iommu_sva_param {
-+	unsigned long features;
-+	unsigned int min_pasid;
-+	unsigned int max_pasid;
-+};
++EXPORT_SYMBOL_GPL(iommu_sva_unbind_device_all);
 +
  /**
-  * struct iommu_ops - iommu ops and capabilities
-  * @capable: check capability
-@@ -204,6 +210,8 @@ struct page_response_msg {
-  * @domain_free: free iommu domain
-  * @attach_dev: attach device to an iommu domain
-  * @detach_dev: detach device from an iommu domain
-+ * @sva_init_device: initialize Shared Virtual Addressing for a device
-+ * @sva_shutdown_device: shutdown Shared Virtual Addressing for a device
-  * @map: map a physically contiguous memory region to an iommu domain
-  * @unmap: unmap a physically contiguous memory region from an iommu domain
-  * @flush_tlb_all: Synchronously flush all hardware TLBs for this domain
-@@ -239,6 +247,8 @@ struct iommu_ops {
+  * iommu_sva_init_device() - Initialize Shared Virtual Addressing for a device
+  * @dev: the device
+@@ -96,6 +128,8 @@ void iommu_sva_shutdown_device(struct device *dev)
+ 	if (!param)
+ 		goto out_unlock;
  
- 	int (*attach_dev)(struct iommu_domain *domain, struct device *dev);
- 	void (*detach_dev)(struct iommu_domain *domain, struct device *dev);
-+	int (*sva_init_device)(struct device *dev, struct iommu_sva_param *param);
-+	void (*sva_shutdown_device)(struct device *dev);
- 	int (*map)(struct iommu_domain *domain, unsigned long iova,
- 		   phys_addr_t paddr, size_t size, int prot);
- 	size_t (*unmap)(struct iommu_domain *domain, unsigned long iova,
-@@ -393,6 +403,9 @@ struct iommu_fault_param {
-  * struct iommu_param - collection of per-device IOMMU data
-  *
-  * @fault_param: IOMMU detected device fault reporting data
-+ * @lock: serializes accesses to fault_param
-+ * @sva_param: SVA parameters
-+ * @sva_lock: serializes accesses to sva_param
-  *
-  * TODO: migrate other per device data pointers under iommu_dev_data, e.g.
-  *	struct iommu_group	*iommu_group;
-@@ -401,6 +414,8 @@ struct iommu_fault_param {
- struct iommu_param {
- 	struct mutex lock;
- 	struct iommu_fault_param *fault_param;
-+	struct mutex sva_lock;
-+	struct iommu_sva_param *sva_param;
- };
++	__iommu_sva_unbind_device_all(dev);
++
+ 	if (domain->ops->sva_shutdown_device)
+ 		domain->ops->sva_shutdown_device(dev);
  
- int  iommu_device_register(struct iommu_device *iommu);
-@@ -904,4 +919,23 @@ void iommu_debugfs_setup(void);
- static inline void iommu_debugfs_setup(void) {}
- #endif
+diff --git a/drivers/iommu/iommu.c b/drivers/iommu/iommu.c
+index fa0561ed006f..aba3bf15d46c 100644
+--- a/drivers/iommu/iommu.c
++++ b/drivers/iommu/iommu.c
+@@ -2325,3 +2325,93 @@ int iommu_fwspec_add_ids(struct device *dev, u32 *ids, int num_ids)
+ 	return 0;
+ }
+ EXPORT_SYMBOL_GPL(iommu_fwspec_add_ids);
++
++/**
++ * iommu_sva_bind_device() - Bind a process address space to a device
++ * @dev: the device
++ * @mm: the mm to bind, caller must hold a reference to it
++ * @pasid: valid address where the PASID will be stored
++ * @flags: bond properties
++ * @drvdata: private data passed to the mm exit handler
++ *
++ * Create a bond between device and task, allowing the device to access the mm
++ * using the returned PASID. If unbind() isn't called first, a subsequent bind()
++ * for the same device and mm fails with -EEXIST.
++ *
++ * iommu_sva_init_device() must be called first, to initialize the required SVA
++ * features. @flags must be a subset of these features.
++ *
++ * The caller must pin down using get_user_pages*() all mappings shared with the
++ * device. mlock() isn't sufficient, as it doesn't prevent minor page faults
++ * (e.g. copy-on-write).
++ *
++ * On success, 0 is returned and @pasid contains a valid ID. Otherwise, an error
++ * is returned.
++ */
++int iommu_sva_bind_device(struct device *dev, struct mm_struct *mm, int *pasid,
++			  unsigned long flags, void *drvdata)
++{
++	int ret = -EINVAL;
++	struct iommu_group *group;
++
++	if (!pasid)
++		return -EINVAL;
++
++	group = iommu_group_get(dev);
++	if (!group)
++		return -ENODEV;
++
++	/* Ensure device count and domain don't change while we're binding */
++	mutex_lock(&group->mutex);
++
++	/*
++	 * To keep things simple, SVA currently doesn't support IOMMU groups
++	 * with more than one device. Existing SVA-capable systems are not
++	 * affected by the problems that required IOMMU groups (lack of ACS
++	 * isolation, device ID aliasing and other hardware issues).
++	 */
++	if (iommu_group_device_count(group) != 1)
++		goto out_unlock;
++
++	ret = __iommu_sva_bind_device(dev, mm, pasid, flags, drvdata);
++
++out_unlock:
++	mutex_unlock(&group->mutex);
++	iommu_group_put(group);
++
++	return ret;
++}
++EXPORT_SYMBOL_GPL(iommu_sva_bind_device);
++
++/**
++ * iommu_sva_unbind_device() - Remove a bond created with iommu_sva_bind_device
++ * @dev: the device
++ * @pasid: the pasid returned by bind()
++ *
++ * Remove bond between device and address space identified by @pasid. Users
++ * should not call unbind() if the corresponding mm exited (as the PASID might
++ * have been reallocated for another process).
++ *
++ * The device must not be issuing any more transaction for this PASID. All
++ * outstanding page requests for this PASID must have been flushed to the IOMMU.
++ *
++ * Returns 0 on success, or an error value
++ */
++int iommu_sva_unbind_device(struct device *dev, int pasid)
++{
++	int ret = -EINVAL;
++	struct iommu_group *group;
++
++	group = iommu_group_get(dev);
++	if (!group)
++		return -ENODEV;
++
++	mutex_lock(&group->mutex);
++	ret = __iommu_sva_unbind_device(dev, pasid);
++	mutex_unlock(&group->mutex);
++
++	iommu_group_put(group);
++
++	return ret;
++}
++EXPORT_SYMBOL_GPL(iommu_sva_unbind_device);
+diff --git a/include/linux/iommu.h b/include/linux/iommu.h
+index 4c27cb347770..9c49877e37a5 100644
+--- a/include/linux/iommu.h
++++ b/include/linux/iommu.h
+@@ -586,6 +586,10 @@ void iommu_fwspec_free(struct device *dev);
+ int iommu_fwspec_add_ids(struct device *dev, u32 *ids, int num_ids);
+ const struct iommu_ops *iommu_ops_from_fwnode(struct fwnode_handle *fwnode);
  
-+#ifdef CONFIG_IOMMU_SVA
-+extern int iommu_sva_init_device(struct device *dev, unsigned long features,
-+				 unsigned int min_pasid,
-+				 unsigned int max_pasid);
-+extern void iommu_sva_shutdown_device(struct device *dev);
-+#else /* CONFIG_IOMMU_SVA */
-+static inline int iommu_sva_init_device(struct device *dev,
-+					unsigned long features,
-+					unsigned int min_pasid,
-+					unsigned int max_pasid)
++extern int iommu_sva_bind_device(struct device *dev, struct mm_struct *mm,
++				int *pasid, unsigned long flags, void *drvdata);
++extern int iommu_sva_unbind_device(struct device *dev, int pasid);
++
+ #else /* CONFIG_IOMMU_API */
+ 
+ struct iommu_ops {};
+@@ -910,6 +914,18 @@ static inline int iommu_sva_invalidate(struct iommu_domain *domain,
+ 	return -ENODEV;
+ }
+ 
++static inline int iommu_sva_bind_device(struct device *dev,
++					struct mm_struct *mm, int *pasid,
++					unsigned long flags, void *drvdata)
 +{
 +	return -ENODEV;
 +}
 +
-+static inline void iommu_sva_shutdown_device(struct device *dev)
++static inline int iommu_sva_unbind_device(struct device *dev, int pasid)
++{
++	return -ENODEV;
++}
++
+ #endif /* CONFIG_IOMMU_API */
+ 
+ #ifdef CONFIG_IOMMU_DEBUGFS
+@@ -924,6 +940,11 @@ extern int iommu_sva_init_device(struct device *dev, unsigned long features,
+ 				 unsigned int min_pasid,
+ 				 unsigned int max_pasid);
+ extern void iommu_sva_shutdown_device(struct device *dev);
++extern int __iommu_sva_bind_device(struct device *dev, struct mm_struct *mm,
++				   int *pasid, unsigned long flags,
++				   void *drvdata);
++extern int __iommu_sva_unbind_device(struct device *dev, int pasid);
++extern void iommu_sva_unbind_device_all(struct device *dev);
+ #else /* CONFIG_IOMMU_SVA */
+ static inline int iommu_sva_init_device(struct device *dev,
+ 					unsigned long features,
+@@ -936,6 +957,22 @@ static inline int iommu_sva_init_device(struct device *dev,
+ static inline void iommu_sva_shutdown_device(struct device *dev)
+ {
+ }
++
++static inline int __iommu_sva_bind_device(struct device *dev,
++					  struct mm_struct *mm, int *pasid,
++					  unsigned long flags, void *drvdata)
++{
++	return -ENODEV;
++}
++
++static inline int __iommu_sva_unbind_device(struct device *dev, int pasid)
++{
++	return -ENODEV;
++}
++
++static inline void iommu_sva_unbind_device_all(struct device *dev)
 +{
 +}
-+#endif /* CONFIG_IOMMU_SVA */
-+
+ #endif /* CONFIG_IOMMU_SVA */
+ 
  #endif /* __LINUX_IOMMU_H */
 -- 
 2.18.0
