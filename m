@@ -6,30 +6,30 @@ X-Spam-Status: No, score=-8.8 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
 	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_PASS,URIBL_BLOCKED,
 	USER_AGENT_GIT autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 7EF62C433F4
-	for <linux-pci@archiver.kernel.org>; Thu, 20 Sep 2018 16:26:34 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 7E7CBECE566
+	for <linux-pci@archiver.kernel.org>; Thu, 20 Sep 2018 16:26:35 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 4405021522
-	for <linux-pci@archiver.kernel.org>; Thu, 20 Sep 2018 16:26:34 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.3.2 mail.kernel.org 4405021522
+	by mail.kernel.org (Postfix) with ESMTP id 417DB2147D
+	for <linux-pci@archiver.kernel.org>; Thu, 20 Sep 2018 16:26:35 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.3.2 mail.kernel.org 417DB2147D
 Authentication-Results: mail.kernel.org; dmarc=fail (p=none dis=none) header.from=intel.com
 Authentication-Results: mail.kernel.org; spf=none smtp.mailfrom=linux-pci-owner@vger.kernel.org
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727094AbeITWKt (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        id S1731785AbeITWKt (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
         Thu, 20 Sep 2018 18:10:49 -0400
-Received: from mga07.intel.com ([134.134.136.100]:21058 "EHLO mga07.intel.com"
+Received: from mga07.intel.com ([134.134.136.100]:21062 "EHLO mga07.intel.com"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
         id S1730915AbeITWKt (ORCPT <rfc822;linux-pci@vger.kernel.org>);
         Thu, 20 Sep 2018 18:10:49 -0400
 X-Amp-Result: SKIPPED(no attachment in message)
 X-Amp-File-Uploaded: False
 Received: from orsmga005.jf.intel.com ([10.7.209.41])
-  by orsmga105.jf.intel.com with ESMTP/TLS/DHE-RSA-AES256-GCM-SHA384; 20 Sep 2018 09:26:32 -0700
+  by orsmga105.jf.intel.com with ESMTP/TLS/DHE-RSA-AES256-GCM-SHA384; 20 Sep 2018 09:26:33 -0700
 X-ExtLoop1: 1
 X-IronPort-AV: E=Sophos;i="5.54,281,1534834800"; 
-   d="scan'208";a="258918199"
+   d="scan'208";a="258918206"
 Received: from unknown (HELO localhost.lm.intel.com) ([10.232.112.44])
-  by orsmga005.jf.intel.com with ESMTP; 20 Sep 2018 09:26:31 -0700
+  by orsmga005.jf.intel.com with ESMTP; 20 Sep 2018 09:26:32 -0700
 From:   Keith Busch <keith.busch@intel.com>
 To:     Linux PCI <linux-pci@vger.kernel.org>,
         Bjorn Helgaas <bhelgaas@google.com>
@@ -39,9 +39,9 @@ Cc:     Benjamin Herrenschmidt <benh@kernel.crashing.org>,
         Lukas Wunner <lukas@wunner.de>, Christoph Hellwig <hch@lst.de>,
         Mika Westerberg <mika.westerberg@linux.intel.com>,
         Keith Busch <keith.busch@intel.com>
-Subject: [PATCHv4 09/12] PCI: ERR: Simplify broadcast callouts
-Date:   Thu, 20 Sep 2018 10:27:14 -0600
-Message-Id: <20180920162717.31066-10-keith.busch@intel.com>
+Subject: [PATCHv4 10/12] PCI: ERR: Report current recovery status for udev
+Date:   Thu, 20 Sep 2018 10:27:15 -0600
+Message-Id: <20180920162717.31066-11-keith.busch@intel.com>
 X-Mailer: git-send-email 2.13.6
 In-Reply-To: <20180920162717.31066-1-keith.busch@intel.com>
 References: <20180920162717.31066-1-keith.busch@intel.com>
@@ -50,220 +50,40 @@ Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-There is no point in having a generic broadcast function if it needs
-to have special cases for each callback it broadcasts. This patch
-abstracts the error broadcast to only the necessary information and
-removes the now unnecessary helper to walk the bus.
+A device still participates in error recovery even if it doesn't have
+the error callbacks. This patch provides the status for user event
+watchers.
 
 Signed-off-by: Keith Busch <keith.busch@intel.com>
 ---
- drivers/pci/pcie/err.c | 107 ++++++++++++++++++-------------------------------
- 1 file changed, 38 insertions(+), 69 deletions(-)
+ drivers/pci/pcie/err.c | 5 ++---
+ 1 file changed, 2 insertions(+), 3 deletions(-)
 
 diff --git a/drivers/pci/pcie/err.c b/drivers/pci/pcie/err.c
-index 0fa5e1417a4a..362a717c831a 100644
+index 362a717c831a..31e8a4314384 100644
 --- a/drivers/pci/pcie/err.c
 +++ b/drivers/pci/pcie/err.c
-@@ -19,11 +19,6 @@
- #include "portdrv.h"
- #include "../pci.h"
- 
--struct aer_broadcast_data {
--	enum pci_channel_state state;
--	enum pci_ers_result result;
--};
--
- static pci_ers_result_t merge_result(enum pci_ers_result orig,
- 				  enum pci_ers_result new)
- {
-@@ -49,16 +44,15 @@ static pci_ers_result_t merge_result(enum pci_ers_result orig,
- 	return orig;
- }
- 
--static int report_error_detected(struct pci_dev *dev, void *data)
-+static int report_error_detected(struct pci_dev *dev,
-+				 enum pci_channel_state state,
-+				 enum pci_ers_result *result)
- {
- 	pci_ers_result_t vote;
- 	const struct pci_error_handlers *err_handler;
--	struct aer_broadcast_data *result_data;
--
--	result_data = (struct aer_broadcast_data *) data;
- 
- 	device_lock(&dev->dev);
--	dev->error_state = result_data->state;
-+	dev->error_state = state;
- 
- 	if (!dev->driver ||
- 		!dev->driver->err_handler ||
-@@ -75,22 +69,29 @@ static int report_error_detected(struct pci_dev *dev, void *data)
- 			vote = PCI_ERS_RESULT_NONE;
+@@ -70,9 +70,8 @@ static int report_error_detected(struct pci_dev *dev,
  	} else {
  		err_handler = dev->driver->err_handler;
--		vote = err_handler->error_detected(dev, result_data->state);
-+		vote = err_handler->error_detected(dev, state);
- 		pci_uevent_ers(dev, PCI_ERS_RESULT_NONE);
+ 		vote = err_handler->error_detected(dev, state);
+-		pci_uevent_ers(dev, PCI_ERS_RESULT_NONE);
  	}
+-
++	pci_uevent_ers(dev, vote);
+ 	*result = merge_result(*result, vote);
+ 	device_unlock(&dev->dev);
+ 	return 0;
+@@ -140,8 +139,8 @@ static int report_resume(struct pci_dev *dev, void *data)
  
--	result_data->result = merge_result(result_data->result, vote);
-+	*result = merge_result(*result, vote);
+ 	err_handler = dev->driver->err_handler;
+ 	err_handler->resume(dev);
+-	pci_uevent_ers(dev, PCI_ERS_RESULT_RECOVERED);
+ out:
++	pci_uevent_ers(dev, PCI_ERS_RESULT_RECOVERED);
  	device_unlock(&dev->dev);
  	return 0;
  }
- 
-+static int report_frozen_detected(struct pci_dev *dev, void *data)
-+{
-+	return report_error_detected(dev, pci_channel_io_frozen, data);
-+}
-+
-+static int report_normal_detected(struct pci_dev *dev, void *data)
-+{
-+	return report_error_detected(dev, pci_channel_io_normal, data);
-+}
-+
- static int report_mmio_enabled(struct pci_dev *dev, void *data)
- {
--	pci_ers_result_t vote;
-+	pci_ers_result_t vote, *result = data;
- 	const struct pci_error_handlers *err_handler;
--	struct aer_broadcast_data *result_data;
--
--	result_data = (struct aer_broadcast_data *) data;
- 
- 	device_lock(&dev->dev);
- 	if (!dev->driver ||
-@@ -100,7 +101,7 @@ static int report_mmio_enabled(struct pci_dev *dev, void *data)
- 
- 	err_handler = dev->driver->err_handler;
- 	vote = err_handler->mmio_enabled(dev);
--	result_data->result = merge_result(result_data->result, vote);
-+	*result = merge_result(*result, vote);
- out:
- 	device_unlock(&dev->dev);
- 	return 0;
-@@ -108,11 +109,8 @@ static int report_mmio_enabled(struct pci_dev *dev, void *data)
- 
- static int report_slot_reset(struct pci_dev *dev, void *data)
- {
--	pci_ers_result_t vote;
-+	pci_ers_result_t vote, *result = data;
- 	const struct pci_error_handlers *err_handler;
--	struct aer_broadcast_data *result_data;
--
--	result_data = (struct aer_broadcast_data *) data;
- 
- 	device_lock(&dev->dev);
- 	if (!dev->driver ||
-@@ -122,7 +120,7 @@ static int report_slot_reset(struct pci_dev *dev, void *data)
- 
- 	err_handler = dev->driver->err_handler;
- 	vote = err_handler->slot_reset(dev);
--	result_data->result = merge_result(result_data->result, vote);
-+	*result = merge_result(*result, vote);
- out:
- 	device_unlock(&dev->dev);
- 	return 0;
-@@ -189,39 +187,11 @@ static pci_ers_result_t reset_link(struct pci_dev *dev, u32 service)
- 	return status;
- }
- 
--/**
-- * broadcast_error_message - handle message broadcast to downstream drivers
-- * @dev: pointer to from where in a hierarchy message is broadcasted down
-- * @state: error state
-- * @error_mesg: message to print
-- * @cb: callback to be broadcasted
-- *
-- * Invoked during error recovery process. Once being invoked, the content
-- * of error severity will be broadcasted to all downstream drivers in a
-- * hierarchy in question.
-- */
--static pci_ers_result_t broadcast_error_message(struct pci_dev *dev,
--	enum pci_channel_state state,
--	char *error_mesg,
--	int (*cb)(struct pci_dev *, void *))
--{
--	struct aer_broadcast_data result_data;
--
--	pci_printk(KERN_DEBUG, dev, "broadcast %s message\n", error_mesg);
--	result_data.state = state;
--	if (cb == report_error_detected)
--		result_data.result = PCI_ERS_RESULT_CAN_RECOVER;
--	else
--		result_data.result = PCI_ERS_RESULT_RECOVERED;
--
--	pci_walk_bus(dev->subordinate, cb, &result_data);
--	return result_data.result;
--}
--
- void pcie_do_recovery(struct pci_dev *dev, enum pci_channel_state state,
- 		      u32 service)
- {
--	pci_ers_result_t status;
-+	pci_ers_result_t status = PCI_ERS_RESULT_CAN_RECOVER;
-+	struct pci_bus *bus;
- 
- 	/*
- 	 * Error recovery runs on all subordinates of the first downstream port.
-@@ -230,21 +200,23 @@ void pcie_do_recovery(struct pci_dev *dev, enum pci_channel_state state,
- 	if (!(pci_pcie_type(dev) == PCI_EXP_TYPE_ROOT_PORT ||
- 	      pci_pcie_type(dev) == PCI_EXP_TYPE_DOWNSTREAM))
- 		dev = dev->bus->self;
-+	bus = dev->subordinate;
- 
--	status = broadcast_error_message(dev,
--			state,
--			"error_detected",
--			report_error_detected);
-+	pci_dbg(dev, "broadcast error_detected message\n");
-+	if (state == pci_channel_io_frozen)
-+		pci_walk_bus(bus, report_frozen_detected, &status);
-+	else
-+		pci_walk_bus(bus, report_normal_detected, &status);
- 
- 	if (state == pci_channel_io_frozen &&
- 	    reset_link(dev, service) != PCI_ERS_RESULT_RECOVERED)
- 		goto failed;
- 
--	if (status == PCI_ERS_RESULT_CAN_RECOVER)
--		status = broadcast_error_message(dev,
--				state,
--				"mmio_enabled",
--				report_mmio_enabled);
-+	if (status == PCI_ERS_RESULT_CAN_RECOVER) {
-+		status = PCI_ERS_RESULT_RECOVERED;
-+		pci_dbg(dev, "broadcast mmio_enabled message\n");
-+		pci_walk_bus(bus, report_mmio_enabled, &status);
-+	}
- 
- 	if (status == PCI_ERS_RESULT_NEED_RESET) {
- 		/*
-@@ -252,19 +224,16 @@ void pcie_do_recovery(struct pci_dev *dev, enum pci_channel_state state,
- 		 * functions to reset slot before calling
- 		 * drivers' slot_reset callbacks?
- 		 */
--		status = broadcast_error_message(dev,
--				state,
--				"slot_reset",
--				report_slot_reset);
-+		status = PCI_ERS_RESULT_RECOVERED;
-+		pci_dbg(dev, "broadcast slot_reset message\n");
-+		pci_walk_bus(bus, report_slot_reset, &status);
- 	}
- 
- 	if (status != PCI_ERS_RESULT_RECOVERED)
- 		goto failed;
- 
--	broadcast_error_message(dev,
--				state,
--				"resume",
--				report_resume);
-+	pci_dbg(dev, "broadcast resume message\n");
-+	pci_walk_bus(bus, report_resume, &status);
- 
- 	pci_aer_clear_device_status(dev);
- 	pci_cleanup_aer_uncorrect_error_status(dev);
 -- 
 2.14.4
 
