@@ -2,122 +2,145 @@ Return-Path: <SRS0=Tpvo=MC=vger.kernel.org=linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-8.3 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_PASS,URIBL_BLOCKED,
-	USER_AGENT_MUTT autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-0.8 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+	MAILING_LIST_MULTI,SPF_PASS autolearn=unavailable autolearn_force=no
+	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 79698C433F4
-	for <linux-pci@archiver.kernel.org>; Thu, 20 Sep 2018 07:36:28 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 991A4C433F4
+	for <linux-pci@archiver.kernel.org>; Thu, 20 Sep 2018 08:05:37 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 066552087A
-	for <linux-pci@archiver.kernel.org>; Thu, 20 Sep 2018 07:36:28 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.3.2 mail.kernel.org 066552087A
-Authentication-Results: mail.kernel.org; dmarc=fail (p=none dis=none) header.from=linux.intel.com
+	by mail.kernel.org (Postfix) with ESMTP id 5DF1121526
+	for <linux-pci@archiver.kernel.org>; Thu, 20 Sep 2018 08:05:37 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.3.2 mail.kernel.org 5DF1121526
+Authentication-Results: mail.kernel.org; dmarc=none (p=none dis=none) header.from=hygon.cn
 Authentication-Results: mail.kernel.org; spf=none smtp.mailfrom=linux-pci-owner@vger.kernel.org
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726383AbeITNSc (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Thu, 20 Sep 2018 09:18:32 -0400
-Received: from mga06.intel.com ([134.134.136.31]:62629 "EHLO mga06.intel.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1726177AbeITNSc (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Thu, 20 Sep 2018 09:18:32 -0400
-X-Amp-Result: UNSCANNABLE
-X-Amp-File-Uploaded: False
-Received: from orsmga003.jf.intel.com ([10.7.209.27])
-  by orsmga104.jf.intel.com with ESMTP/TLS/DHE-RSA-AES256-GCM-SHA384; 20 Sep 2018 00:36:25 -0700
-X-ExtLoop1: 1
-X-IronPort-AV: E=Sophos;i="5.53,397,1531810800"; 
-   d="scan'208";a="85076873"
-Received: from lahna.fi.intel.com (HELO lahna) ([10.237.72.157])
-  by orsmga003.jf.intel.com with SMTP; 20 Sep 2018 00:36:14 -0700
-Received: by lahna (sSMTP sendmail emulation); Thu, 20 Sep 2018 10:36:13 +0300
-Date:   Thu, 20 Sep 2018 10:36:13 +0300
-From:   Mika Westerberg <mika.westerberg@linux.intel.com>
-To:     "Rafael J. Wysocki" <rafael@kernel.org>
-Cc:     "Rafael J. Wysocki" <rjw@rjwysocki.net>,
-        Bjorn Helgaas <bhelgaas@google.com>,
-        Len Brown <lenb@kernel.org>, peter.anemone@gmail.com,
-        ACPI Devel Maling List <linux-acpi@vger.kernel.org>,
-        Linux PCI <linux-pci@vger.kernel.org>
-Subject: Re: [PATCH] ACPI / hotplug / PCI: Don't scan for non-hotplug bridges
- if slot is not bridge
-Message-ID: <20180920073613.GG14465@lahna.fi.intel.com>
-References: <20180919113247.4274-1-mika.westerberg@linux.intel.com>
- <CAJZ5v0ir_S3gXP905-Ex9K7OQkG3OJD=pnLt0dKZ0jbSFe_BWQ@mail.gmail.com>
+        id S1731455AbeITNrs (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Thu, 20 Sep 2018 09:47:48 -0400
+Received: from smtp17.cstnet.cn ([159.226.251.17]:37088 "EHLO cstnet.cn"
+        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+        id S1726177AbeITNrs (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Thu, 20 Sep 2018 09:47:48 -0400
+Received: from [172.20.20.131] (unknown [182.150.46.145])
+        by APP-09 (Coremail) with SMTP id swCowAB3XR23VKNb2wB3Cw--.29767S2;
+        Thu, 20 Sep 2018 16:05:12 +0800 (CST)
+From:   Pu Wen <puwen@hygon.cn>
+Subject: Re: [PATCH v6 07/16] x86/pci: Add Hygon Dhyana support to PCI and
+ north bridge
+To:     "Lendacky, Thomas" <Thomas.Lendacky@amd.com>,
+        "tglx@linutronix.de" <tglx@linutronix.de>
+Cc:     "mingo@redhat.com" <mingo@redhat.com>,
+        "hpa@zytor.com" <hpa@zytor.com>, "x86@kernel.org" <x86@kernel.org>,
+        "bp@alien8.de" <bp@alien8.de>,
+        "pbonzini@redhat.com" <pbonzini@redhat.com>,
+        "helgaas@kernel.org" <helgaas@kernel.org>,
+        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+        "linux-arch@vger.kernel.org" <linux-arch@vger.kernel.org>,
+        "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
+References: <cover.1536550549.git.puwen@hygon.cn>
+ <035e5d0a4f2a0edf68ca0f1019e47b878eaa5da6.1536550550.git.puwen@hygon.cn>
+ <d05c7aa5-05ba-5ac2-c70f-414d9539925f@amd.com>
+Message-ID: <b44e0656-7d57-3f9e-03fb-1dcf04091cdc@hygon.cn>
+Date:   Thu, 20 Sep 2018 16:05:07 +0800
+User-Agent: Mozilla/5.0 (Windows NT 10.0; WOW64; rv:52.0) Gecko/20100101
+ Thunderbird/52.9.1
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <CAJZ5v0ir_S3gXP905-Ex9K7OQkG3OJD=pnLt0dKZ0jbSFe_BWQ@mail.gmail.com>
-Organization: Intel Finland Oy - BIC 0357606-4 - Westendinkatu 7, 02160 Espoo
-User-Agent: Mutt/1.10.1 (2018-07-13)
+In-Reply-To: <d05c7aa5-05ba-5ac2-c70f-414d9539925f@amd.com>
+Content-Type: text/plain; charset=utf-8; format=flowed
+Content-Language: en-US
+Content-Transfer-Encoding: 7bit
+X-CM-TRANSID: swCowAB3XR23VKNb2wB3Cw--.29767S2
+X-Coremail-Antispam: 1UD129KBjvJXoW7Ar1xGF15GrWfAFW8tF13Arb_yoW8uF1Upr
+        W5Xws5urn5Wr1Yqayjqr4UXr40vrWDWay7WrW3Gwn5GF1Duw18Zr429w1Sy3ZxJr4kua17
+        J3WkXF15Ar4ktFDanT9S1TB71UUUUUUqnTZGkaVYY2UrUUUUjbIjqfuFe4nvWSU5nxnvy2
+        9KBjDU0xBIdaVrnRJUUUvKb7Iv0xC_tr1lb4IE77IF4wAFF20E14v26r4j6ryUM7CY07I2
+        0VC2zVCF04k26cxKx2IYs7xG6rWj6s0DM7CIcVAFz4kK6r1j6r18M28lY4IEw2IIxxk0rw
+        A2F7IY1VAKz4vEj48ve4kI8wA2z4x0Y4vE2Ix0cI8IcVAFwI0_Jr0_JF4l84ACjcxK6xII
+        jxv20xvEc7CjxVAFwI0_Gr0_Cr1l84ACjcxK6I8E87Iv67AKxVWUJVW8JwA2z4x0Y4vEx4
+        A2jsIEc7CjxVAFwI0_Gr0_Gr1UM2AIxVAIcxkEcVAq07x20xvEncxIr21l5I8CrVACY4xI
+        64kE6c02F40Ex7xfMcIj6xIIjxv20xvE14v26r126r1DMcIj6I8E87Iv67AKxVWxJVW8Jr
+        1lOx8S6xCaFVCjc4AY6r1j6r4UM4x0Y48IcVAKI48JM4IIrI8v6xkF7I0E8cxan2IY04v7
+        Mxk0xIA0c2IEe2xFo4CEbIxvr21l42xK82IYc2Ij64vIr41l4I8I3I0E4IkC6x0Yz7v_Jr
+        0_Gr1lx2IqxVAqx4xG67AKxVWUJVWUGwC20s026x8GjcxK67AKxVWUGVWUWwC2zVAF1VAY
+        17CE14v26r1q6r43MIIYrxkI7VAKI48JMIIF0xvE2Ix0cI8IcVAFwI0_Jr0_JF4lIxAIcV
+        C0I7IYx2IY6xkF7I0E14v26r4j6F4UMIIF0xvE42xK8VAvwI8IcIk0rVWrZr1j6s0DMIIF
+        0xvEx4A2jsIE14v26r1j6r4UMIIF0xvEx4A2jsIEc7CjxVAFwI0_Gr0_Gr1UYxBIdaVFxh
+        VjvjDU0xZFpf9x07UE-erUUUUU=
+X-Originating-IP: [182.150.46.145]
+X-CM-SenderInfo: psxzv046klw03qof0z/
 Sender: linux-pci-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-On Wed, Sep 19, 2018 at 11:44:02PM +0200, Rafael J. Wysocki wrote:
-> On Wed, Sep 19, 2018 at 1:32 PM Mika Westerberg
-> <mika.westerberg@linux.intel.com> wrote:
-> >
-> > HP 6730b laptop has an ethernet NIC connected to one of the PCIe root
-> > ports. The root ports itself are native PCIe hotplug capable. Now,
-> > during boot after PCI devices are scanned the BIOS triggers ACPI bus
-> > check directly to the NIC:
-> >
-> >   [    0.942239] ACPI: \_SB_.PCI0.RP06.NIC_: Bus check in hotplug_event()
-> >
-> > It is not clear why it is sending bus check but regardless the ACPI
-> > hotplug notify handler calls enable_slot() directly (instead of going
-> > through acpiphp_check_bridge() as there is no bridge) which ends up
-> > handling special case for non-hotplug bridges with native PCIe hotplug.
-> > This results a crash of some kind but the reporter only sees black
-> > screen so it is hard to figure out the exact spot and what actually
-> > happens. Based on few fix proposals it was tracked to crash somewhere
-> > inside pci_assign_unassigned_bridge_resources().
-> >
-> > In any case we should not really be in that special branch at all
-> > because the ACPI notify happened to a slot that is not a PCI bridge (it
-> > is just a regular PCI device).
-> >
-> > Fix this so that we only go to that special branch if we are calling
-> > enable_slot() for a bridge (e.g the ACPI notification was for the bridge).
-> >
-> > Link: https://bugzilla.kernel.org/show_bug.cgi?id=201127
-> > Fixes: 84c8b58ed3ad ACPI / hotplug / PCI: Don't scan bridges managed by native hotplug
-> > Reported-by: Peter Anemone <peter.anemone@gmail.com>
-> > Signed-off-by: Mika Westerberg <mika.westerberg@linux.intel.com>
-> > ---
-> >  drivers/pci/hotplug/acpiphp_glue.c | 13 ++++++++-----
-> >  1 file changed, 8 insertions(+), 5 deletions(-)
-> >
-> > diff --git a/drivers/pci/hotplug/acpiphp_glue.c b/drivers/pci/hotplug/acpiphp_glue.c
-> > index ef0b1b6ba86f..fa2d82ae6ccd 100644
-> > --- a/drivers/pci/hotplug/acpiphp_glue.c
-> > +++ b/drivers/pci/hotplug/acpiphp_glue.c
-> > @@ -457,17 +457,20 @@ static void acpiphp_native_scan_bridge(struct pci_dev *bridge)
-> >  /**
-> >   * enable_slot - enable, configure a slot
-> >   * @slot: slot to be enabled
-> > + * @bridge: Bridge if the hotplug was directly to the bridge. %NULL
-> > + *         otherwise.
-> >   *
-> >   * This function should be called per *physical slot*,
-> >   * not per each slot object in ACPI namespace.
-> >   */
-> > -static void enable_slot(struct acpiphp_slot *slot)
-> > +static void enable_slot(struct acpiphp_slot *slot,
-> > +                       const struct acpiphp_bridge *bridge)
-> >  {
-> >         struct pci_dev *dev;
-> >         struct pci_bus *bus = slot->bus;
-> >         struct acpiphp_func *func;
-> >
-> > -       if (bus->self && hotplug_is_native(bus->self)) {
-> > +       if (bridge && bus->self && hotplug_is_native(bus->self)) {
-> 
-> AFAICS "bridge" is used as a bool here.  What would be wrong with
-> using the bool data type for this arg?
+On 2018/9/20 1:20, Lendacky, Thomas wrote:
+>> @@ -197,12 +212,25 @@ int amd_cache_northbridges(void)
+>>   	u16 i = 0;
+>>   	struct amd_northbridge *nb;
+>>   	struct pci_dev *root, *misc, *link;
+>> +	const struct pci_device_id *root_ids = NULL;
+>> +	const struct pci_device_id *misc_ids = NULL;
+>> +	const struct pci_device_id *link_ids = NULL;
+>> +
+>> +	if (boot_cpu_data.x86_vendor == X86_VENDOR_AMD) {
+>> +		root_ids = amd_root_ids;
+>> +		misc_ids = amd_nb_misc_ids;
+>> +		link_ids = amd_nb_link_ids;
+>> +	} else if (boot_cpu_data.x86_vendor == X86_VENDOR_HYGON) {
+>> +		root_ids = hygon_root_ids;
+>> +		misc_ids = hygon_nb_misc_ids;
+>> +		link_ids = hygon_nb_link_ids;
+>> +	}
+>
+> To be compatible with "before this patch" you should probably do:
+>
+> 	if (boot_cpu_data.x86_vendor == X86_VENDOR_HYGON) {
+> 		root_ids = hygon_root_ids;
+> 		misc_ids = hygon_nb_misc_ids;
+> 		link_ids = hygon_nb_link_ids;
+> 	} else {
+> 		root_ids = amd_root_ids;
+> 		misc_ids = amd_nb_misc_ids;
+> 		link_ids = amd_nb_link_ids;
+> 	}
+>
+> That way they are always the AMD values if not your chip.
+>
+...
+>> @@ -263,9 +291,15 @@ bool __init early_is_amd_nb(u32 device)
+>>   {
+>>   	const struct pci_device_id *id;
+>>   	u32 vendor = device & 0xffff;
+>> +	const struct pci_device_id *misc_ids = NULL;
+>> +
+>> +	if (boot_cpu_data.x86_vendor == X86_VENDOR_AMD)
+>> +		misc_ids = amd_nb_misc_ids;
+>> +	else if (boot_cpu_data.x86_vendor == X86_VENDOR_HYGON)
+>> +		misc_ids = hygon_nb_misc_ids;
+>
+> Same comment as above.  This will probably eliminate the PANIC that
+> that was reported by LKP.
 
-Nothing wrong with that :) I'll change it.
+Yes, it's this modification that caused the PANIC reported by LKP.
+Because the misc_ids will be NULL if running on Intel chip.
 
-Thanks!
+If change the vendor checking like this:
+
++	if (boot_cpu_data.x86_vendor == X86_VENDOR_HYGON)
++		misc_ids = hygon_nb_misc_ids;
++	else
++		misc_ids = amd_nb_misc_ids;
+
+The PANIC will be eliminated.
+
+The PANIC will also be eliminated by adding AMD vendor checking in
+amd_gart_present:
+
++	if(boot_cpu_data.x86_vendor != X86_VENDOR_AMD)
++		return false;
+
+To prevent the function return true on non AMD platform.
+
+Thanks,
+Pu Wen
+
