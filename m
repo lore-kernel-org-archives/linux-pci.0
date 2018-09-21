@@ -2,81 +2,99 @@ Return-Path: <SRS0=H68a=MD=vger.kernel.org=linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-8.8 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_PASS,URIBL_BLOCKED,
-	USER_AGENT_GIT autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-2.8 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+	MAILING_LIST_MULTI,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT
+	autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id AE6D5ECE561
-	for <linux-pci@archiver.kernel.org>; Fri, 21 Sep 2018 02:43:55 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 85B1DECE562
+	for <linux-pci@archiver.kernel.org>; Fri, 21 Sep 2018 06:03:24 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 5E0D62086E
-	for <linux-pci@archiver.kernel.org>; Fri, 21 Sep 2018 02:43:54 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.3.2 mail.kernel.org 5E0D62086E
-Authentication-Results: mail.kernel.org; dmarc=none (p=none dis=none) header.from=huawei.com
+	by mail.kernel.org (Postfix) with ESMTP id 2D8E92147C
+	for <linux-pci@archiver.kernel.org>; Fri, 21 Sep 2018 06:03:24 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.3.2 mail.kernel.org 2D8E92147C
+Authentication-Results: mail.kernel.org; dmarc=none (p=none dis=none) header.from=amlogic.com
 Authentication-Results: mail.kernel.org; spf=none smtp.mailfrom=linux-pci-owner@vger.kernel.org
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S2388722AbeIUIac (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Fri, 21 Sep 2018 04:30:32 -0400
-Received: from szxga07-in.huawei.com ([45.249.212.35]:47745 "EHLO huawei.com"
-        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1726103AbeIUIab (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Fri, 21 Sep 2018 04:30:31 -0400
-Received: from DGGEMS401-HUB.china.huawei.com (unknown [172.30.72.60])
-        by Forcepoint Email with ESMTP id F090333123DED;
-        Fri, 21 Sep 2018 10:43:49 +0800 (CST)
-Received: from localhost.localdomain.localdomain (10.175.113.25) by
- DGGEMS401-HUB.china.huawei.com (10.3.19.201) with Microsoft SMTP Server id
- 14.3.399.0; Fri, 21 Sep 2018 10:43:44 +0800
-From:   Wei Yongjun <weiyongjun1@huawei.com>
-To:     "K. Y. Srinivasan" <kys@microsoft.com>,
-        Haiyang Zhang <haiyangz@microsoft.com>,
-        Stephen Hemminger <sthemmin@microsoft.com>,
-        "Lorenzo Pieralisi" <lorenzo.pieralisi@arm.com>,
+        id S1726160AbeIULuk (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Fri, 21 Sep 2018 07:50:40 -0400
+Received: from mail-sh2.amlogic.com ([58.32.228.45]:48302 "EHLO
+        mail-sh2.amlogic.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1725898AbeIULuk (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Fri, 21 Sep 2018 07:50:40 -0400
+Received: from droid10.amlogic.com (10.18.11.213) by mail-sh2.amlogic.com
+ (10.18.11.6) with Microsoft SMTP Server id 15.0.1320.4; Fri, 21 Sep 2018
+ 14:03:52 +0800
+From:   Hanjie Lin <hanjie.lin@amlogic.com>
+To:     Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
         Bjorn Helgaas <bhelgaas@google.com>
-CC:     Wei Yongjun <weiyongjun1@huawei.com>,
-        <devel@linuxdriverproject.org>, <linux-pci@vger.kernel.org>,
-        <netdev@vger.kernel.org>, <kernel-janitors@vger.kernel.org>
-Subject: [PATCH RESEND] PCI: hv: Fix return value check in hv_pci_assign_slots()
-Date:   Fri, 21 Sep 2018 02:53:17 +0000
-Message-ID: <1537498397-191756-1-git-send-email-weiyongjun1@huawei.com>
-X-Mailer: git-send-email 1.8.3.1
-In-Reply-To: <1537425631-28460-1-git-send-email-weiyongjun1@huawei.com>
-References: <1537425631-28460-1-git-send-email-weiyongjun1@huawei.com>
-Content-Type: text/plain; charset="ISO-8859-1"
-Content-Transfer-Encoding: 7bit
+CC:     Hanjie Lin <hanjie.lin@amlogic.com>,
+        Kevin Hilman <khilman@baylibre.com>,
+        Carlo Caione <carlo@caione.org>,
+        Jerome Brunet <jbrunet@baylibre.com>,
+        Rob Herring <robh@kernel.org>,
+        Gustavo Pimentel <gustavo.pimentel@synopsys.com>,
+        Niklas Cassel <niklas.cassel@axis.com>,
+        Shawn Lin <shawn.lin@rock-chips.com>,
+        Jianguo Sun <sunjianguo1@huawei.com>,
+        Philippe Ombredanne <pombredanne@nexb.com>,
+        Cyrille Pitchen <cyrille.pitchen@free-electrons.com>,
+        <linux-kernel@vger.kernel.org>, <linux-pci@vger.kernel.org>,
+        <linux-arm-kernel@lists.infradead.org>,
+        <linux-amlogic@lists.infradead.org>,
+        Yixun Lan <yixun.lan@amlogic.com>,
+        Liang Yang <liang.yang@amlogic.com>,
+        Jianxin Pan <jianxin.pan@amlogic.com>,
+        Qiufang Dai <qiufang.dai@amlogic.com>,
+        Jian Hu <jian.hu@amlogic.com>, <devicetree@vger.kernel.org>
+Subject: [RESEND PATCH v3 0/2] add the Amlogic Meson PCIe controller driver
+Date:   Fri, 21 Sep 2018 14:03:38 +0800
+Message-ID: <1537509820-52040-1-git-send-email-hanjie.lin@amlogic.com>
+X-Mailer: git-send-email 2.7.4
 MIME-Version: 1.0
-X-Originating-IP: [10.175.113.25]
-X-CFilter-Loop: Reflected
+Content-Type: text/plain
+X-Originating-IP: [10.18.11.213]
 Sender: linux-pci-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-In case of error, the function pci_create_slot() returns ERR_PTR() and
-never returns NULL. The NULL test in the return value check should be
-replaced with IS_ERR().
+This is v3 post RESEND: [2] 
+ - add Rob's Reviewed-by to patch 1/2
+ - add more to&cc list suggested by get_maintainer.pl
 
-Fixes: a15f2c08c708 ("PCI: hv: support reporting serial number as slot information")
-Signed-off-by: Wei Yongjun <weiyongjun1@huawei.com>
----
-Since the orig patch is merged from net tree, cc netdev@vger.kernel.org
----
- drivers/pci/controller/pci-hyperv.c | 4 +++-
- 1 file changed, 3 insertions(+), 1 deletion(-)
+The Amlogic Meson PCIe host controller is based on the Synopsys DesignWare
+PCI core. This patchset add the driver and dt-bindings of the controller.
 
-diff --git a/drivers/pci/controller/pci-hyperv.c b/drivers/pci/controller/pci-hyperv.c
-index ee80e79..9ba4d12 100644
---- a/drivers/pci/controller/pci-hyperv.c
-+++ b/drivers/pci/controller/pci-hyperv.c
-@@ -1484,8 +1484,10 @@ static void hv_pci_assign_slots(struct hv_pcibus_device *hbus)
- 		snprintf(name, SLOT_NAME_SIZE, "%u", hpdev->desc.ser);
- 		hpdev->pci_slot = pci_create_slot(hbus->pci_bus, slot_nr,
- 					  name, NULL);
--		if (!hpdev->pci_slot)
-+		if (IS_ERR(hpdev->pci_slot)) {
- 			pr_warn("pci_create slot %s failed\n", name);
-+			hpdev->pci_slot = NULL;
-+		}
- 	}
- }
+Till patch v2, we have a dedicated phy driver which only process reset job.
+It's too overkill so we integrate phy driver into the controller.
+
+Changes since v2: [1]
+ - abandon phy driver, move reset to the controller
+ - use devm_add_action_or_reset() to use clock res
+ - format correcting
+
+Changes since v1: [0]
+ - use gpio lib instead open code 
+ - move 'apb' and 'port' reset from phy driver
+ - format correcting
+
+[0] : https://lkml.kernel.org/r/1534227522-186798-1-git-send-email-hanjie.lin@amlogic.com
+[1] : https://lkml.kernel.org/r/1535096165-45827-1-git-send-email-hanjie.lin@amlogic.com 
+[2] : https://lkml.kernel.org/r/1535616829-167936-1-git-send-email-hanjie.lin@amlogic.com 
+
+Yue Wang (2):
+  dt-bindings: PCI: meson: add DT bindings for Amlogic Meson PCIe
+    controller
+  PCI: meson: add the Amlogic Meson PCIe controller driver
+
+ .../devicetree/bindings/pci/amlogic,meson-pcie.txt |  70 +++
+ drivers/pci/controller/dwc/Kconfig                 |  12 +
+ drivers/pci/controller/dwc/Makefile                |   1 +
+ drivers/pci/controller/dwc/pci-meson.c             | 617 +++++++++++++++++++++
+ 4 files changed, 700 insertions(+)
+ create mode 100644 Documentation/devicetree/bindings/pci/amlogic,meson-pcie.txt
+ create mode 100644 drivers/pci/controller/dwc/pci-meson.c
+
+-- 
+2.7.4
 
