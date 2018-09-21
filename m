@@ -2,80 +2,74 @@ Return-Path: <SRS0=H68a=MD=vger.kernel.org=linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-0.8 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	MAILING_LIST_MULTI,SPF_PASS autolearn=unavailable autolearn_force=no
-	version=3.4.0
+X-Spam-Status: No, score=-0.5 required=3.0 tests=FREEMAIL_FORGED_FROMDOMAIN,
+	FREEMAIL_FROM,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_PASS,
+	URIBL_BLOCKED autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id E7FC9C433F4
-	for <linux-pci@archiver.kernel.org>; Fri, 21 Sep 2018 20:01:32 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 0E625C433F4
+	for <linux-pci@archiver.kernel.org>; Fri, 21 Sep 2018 20:34:16 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id A87592087A
-	for <linux-pci@archiver.kernel.org>; Fri, 21 Sep 2018 20:01:32 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.3.2 mail.kernel.org A87592087A
-Authentication-Results: mail.kernel.org; dmarc=none (p=none dis=none) header.from=deltatee.com
+	by mail.kernel.org (Postfix) with ESMTP id C8A2E21532
+	for <linux-pci@archiver.kernel.org>; Fri, 21 Sep 2018 20:34:15 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.3.2 mail.kernel.org C8A2E21532
+Authentication-Results: mail.kernel.org; dmarc=none (p=none dis=none) header.from=free.fr
 Authentication-Results: mail.kernel.org; spf=none smtp.mailfrom=linux-pci-owner@vger.kernel.org
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S2391321AbeIVBvs (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Fri, 21 Sep 2018 21:51:48 -0400
-Received: from ale.deltatee.com ([207.54.116.67]:46062 "EHLO ale.deltatee.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S2391089AbeIVBvs (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Fri, 21 Sep 2018 21:51:48 -0400
-Received: from guinness.priv.deltatee.com ([172.16.1.162])
-        by ale.deltatee.com with esmtpsa (TLS1.2:ECDHE_RSA_AES_128_GCM_SHA256:128)
-        (Exim 4.89)
-        (envelope-from <logang@deltatee.com>)
-        id 1g3Rc4-0002NV-UB; Fri, 21 Sep 2018 14:01:17 -0600
-To:     Bjorn Helgaas <helgaas@kernel.org>
-Cc:     Jens Axboe <axboe@kernel.dk>, Keith Busch <keith.busch@intel.com>,
-        Alex Williamson <alex.williamson@redhat.com>,
-        Sagi Grimberg <sagi@grimberg.me>, linux-nvdimm@lists.01.org,
-        linux-rdma@vger.kernel.org, linux-pci@vger.kernel.org,
-        linux-kernel@vger.kernel.org, linux-nvme@lists.infradead.org,
-        Stephen Bates <sbates@raithlin.com>,
-        linux-block@vger.kernel.org,
-        =?UTF-8?B?SsOpcsO0bWUgR2xpc3Nl?= <jglisse@redhat.com>,
-        Jason Gunthorpe <jgg@mellanox.com>,
-        =?UTF-8?Q?Christian_K=c3=b6nig?= <christian.koenig@amd.com>,
-        Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-        Bjorn Helgaas <bhelgaas@google.com>,
-        Max Gurtovoy <maxg@mellanox.com>,
-        Dan Williams <dan.j.williams@intel.com>,
-        Christoph Hellwig <hch@lst.de>
-References: <20180913001156.4115-1-logang@deltatee.com>
- <20180913001156.4115-4-logang@deltatee.com>
- <20180921131550.GG224714@bhelgaas-glaptop.roam.corp.google.com>
- <20180921164813.GJ224714@bhelgaas-glaptop.roam.corp.google.com>
- <506dd00c-35e9-e285-bc97-c689c766b4cf@deltatee.com>
- <20180921200021.GN224714@bhelgaas-glaptop.roam.corp.google.com>
-From:   Logan Gunthorpe <logang@deltatee.com>
-Message-ID: <cf4ead8f-9dde-ba3b-3c87-71f73cebee74@deltatee.com>
-Date:   Fri, 21 Sep 2018 14:01:13 -0600
-User-Agent: Mozilla/5.0 (Windows NT 10.0; WOW64; rv:52.0) Gecko/20100101
- Thunderbird/52.9.1
+        id S2391243AbeIVCYl (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Fri, 21 Sep 2018 22:24:41 -0400
+Received: from smtp12.smtpout.orange.fr ([80.12.242.134]:50293 "EHLO
+        smtp.smtpout.orange.fr" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S2391328AbeIVCYl (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Fri, 21 Sep 2018 22:24:41 -0400
+Received: from belgarion ([90.89.234.36])
+        by mwinf5d35 with ME
+        id eLa31y00Z0nnJME03La40J; Fri, 21 Sep 2018 22:34:06 +0200
+X-ME-Helo: belgarion
+X-ME-Auth: amFyem1pay5yb2JlcnRAb3JhbmdlLmZy
+X-ME-Date: Fri, 21 Sep 2018 22:34:06 +0200
+X-ME-IP: 90.89.234.36
+From:   Robert Jarzmik <robert.jarzmik@free.fr>
+To:     Lubomir Rintel <lkundrak@v3.sk>
+Cc:     linux-kernel@vger.kernel.org, linux-arm-kernel@lists.infradead.org,
+        linux-pci@vger.kernel.org, linux-spi@vger.kernel.org,
+        devicetree@vger.kernel.org, Mark Brown <broonie@kernel.org>,
+        Rob Herring <robh+dt@kernel.org>,
+        Mark Rutland <mark.rutland@arm.com>,
+        Eric Miao <eric.y.miao@gmail.com>,
+        Haojian Zhuang <haojian.zhuang@gmail.com>,
+        Daniel Mack <daniel@zonque.org>,
+        Bjorn Helgaas <bhelgaas@google.com>
+Subject: Re: [PATCH 3/5] spi: pxa2xx: use an enum for type
+References: <20180910115935.163121-1-lkundrak@v3.sk>
+        <20180910115935.163121-4-lkundrak@v3.sk>
+X-URL:  http://belgarath.falguerolles.org/
+Date:   Fri, 21 Sep 2018 22:34:03 +0200
+In-Reply-To: <20180910115935.163121-4-lkundrak@v3.sk> (Lubomir Rintel's
+        message of "Mon, 10 Sep 2018 13:59:33 +0200")
+Message-ID: <87d0t64mkk.fsf@belgarion.home>
+User-Agent: Gnus/5.130008 (Ma Gnus v0.8) Emacs/24.5 (gnu/linux)
 MIME-Version: 1.0
-In-Reply-To: <20180921200021.GN224714@bhelgaas-glaptop.roam.corp.google.com>
-Content-Type: text/plain; charset=utf-8
-Content-Language: en-US
-Content-Transfer-Encoding: 7bit
-X-SA-Exim-Connect-IP: 172.16.1.162
-X-SA-Exim-Rcpt-To: hch@lst.de, dan.j.williams@intel.com, maxg@mellanox.com, bhelgaas@google.com, benh@kernel.crashing.org, christian.koenig@amd.com, jgg@mellanox.com, jglisse@redhat.com, linux-block@vger.kernel.org, sbates@raithlin.com, linux-nvme@lists.infradead.org, linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org, linux-rdma@vger.kernel.org, linux-nvdimm@lists.01.org, sagi@grimberg.me, alex.williamson@redhat.com, keith.busch@intel.com, axboe@kernel.dk, helgaas@kernel.org
-X-SA-Exim-Mail-From: logang@deltatee.com
-Subject: Re: [PATCH v6 03/13] PCI/P2PDMA: Add PCI p2pmem DMA mappings to
- adjust the bus offset
-X-SA-Exim-Version: 4.2.1 (built Tue, 02 Aug 2016 21:08:31 +0000)
-X-SA-Exim-Scanned: Yes (on ale.deltatee.com)
+Content-Type: text/plain
 Sender: linux-pci-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-On 2018-09-21 2:00 PM, Bjorn Helgaas wrote:
-> Ok.  I was assuming s->dma_address would have been already set before
-> the call and would be overwritten by pci_p2pmem_map_sg().  But I guess
-> that's not the case -- sounds like s->dma_address is undefined before
-> the call.
+Lubomir Rintel <lkundrak@v3.sk> writes:
 
-Correct. It's set by whatever dma_map function operates on it.
+> That seems to be the correct type.
+Okay, but what happens here when adev_id->driver_data is a value out of enum
+range ? Does the following assignment make sense ?
+> +		type = (enum pxa_ssp_type)adev_id->driver_data;
 
-Logan
+As a side note, could you join for the next throw to the review :
+ - Jarkko Nikula <jarkko.nikula@linux.intel.com>
+ - Mika Westerberg <mika.westerberg@linux.intel.com>
+
+Even if they are Intel, I think they have worked a lot on this driver for Intel
+platforms.
+
+Cheers.
+
+-- 
+Robert
