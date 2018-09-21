@@ -2,82 +2,91 @@ Return-Path: <SRS0=H68a=MD=vger.kernel.org=linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-6.8 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_PASS,URIBL_BLOCKED
-	autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-5.3 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+	INCLUDES_PATCH,MAILING_LIST_MULTI,SPF_PASS,USER_AGENT_MUTT autolearn=ham
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 9F198C433F4
-	for <linux-pci@archiver.kernel.org>; Fri, 21 Sep 2018 14:03:31 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 1B2F8C433F4
+	for <linux-pci@archiver.kernel.org>; Fri, 21 Sep 2018 14:11:48 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 5B9202154F
-	for <linux-pci@archiver.kernel.org>; Fri, 21 Sep 2018 14:03:31 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.3.2 mail.kernel.org 5B9202154F
-Authentication-Results: mail.kernel.org; dmarc=none (p=none dis=none) header.from=hisilicon.com
+	by mail.kernel.org (Postfix) with ESMTP id BC74A21567
+	for <linux-pci@archiver.kernel.org>; Fri, 21 Sep 2018 14:11:47 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.3.2 mail.kernel.org BC74A21567
+Authentication-Results: mail.kernel.org; dmarc=fail (p=none dis=none) header.from=intel.com
 Authentication-Results: mail.kernel.org; spf=none smtp.mailfrom=linux-pci-owner@vger.kernel.org
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S2390244AbeIUTwa (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Fri, 21 Sep 2018 15:52:30 -0400
-Received: from szxga05-in.huawei.com ([45.249.212.191]:12672 "EHLO huawei.com"
-        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S2390216AbeIUTwa (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Fri, 21 Sep 2018 15:52:30 -0400
-Received: from DGGEMS412-HUB.china.huawei.com (unknown [172.30.72.58])
-        by Forcepoint Email with ESMTP id 26F4760D0BD38;
-        Fri, 21 Sep 2018 22:03:26 +0800 (CST)
-Received: from [127.0.0.1] (10.202.226.42) by DGGEMS412-HUB.china.huawei.com
- (10.3.19.212) with Microsoft SMTP Server id 14.3.399.0; Fri, 21 Sep 2018
- 22:03:21 +0800
-Subject: Re: [PATCH] arm64: defconfig: Enable PCIEPORTBUS
-To:     Dongdong Liu <liudongdong3@huawei.com>, <catalin.marinas@arm.com>,
-        <will.deacon@arm.com>, <Lorenzo.Pieralisi@arm.com>
-References: <1535632172-127690-1-git-send-email-liudongdong3@huawei.com>
-CC:     <linux-pci@vger.kernel.org>, <helgaas@kernel.org>,
-        <linuxarm@huawei.com>, <linux-arm-kernel@lists.infradead.org>
-From:   Wei Xu <xuwei5@hisilicon.com>
-Message-ID: <5BA4FA22.7000602@hisilicon.com>
-Date:   Fri, 21 Sep 2018 15:03:14 +0100
-User-Agent: Mozilla/5.0 (Windows NT 10.0; WOW64; rv:38.0) Gecko/20100101
- Thunderbird/38.6.0
+        id S1728384AbeIUUAu (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Fri, 21 Sep 2018 16:00:50 -0400
+Received: from mga05.intel.com ([192.55.52.43]:20682 "EHLO mga05.intel.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1728365AbeIUUAu (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Fri, 21 Sep 2018 16:00:50 -0400
+X-Amp-Result: UNKNOWN
+X-Amp-Original-Verdict: FILE UNKNOWN
+X-Amp-File-Uploaded: False
+Received: from fmsmga007.fm.intel.com ([10.253.24.52])
+  by fmsmga105.fm.intel.com with ESMTP/TLS/DHE-RSA-AES256-GCM-SHA384; 21 Sep 2018 07:11:46 -0700
+X-ExtLoop1: 1
+X-IronPort-AV: E=Sophos;i="5.54,285,1534834800"; 
+   d="scan'208";a="71841742"
+Received: from unknown (HELO localhost.localdomain) ([10.232.112.44])
+  by fmsmga007.fm.intel.com with ESMTP; 21 Sep 2018 07:11:36 -0700
+Date:   Fri, 21 Sep 2018 08:13:34 -0600
+From:   Keith Busch <keith.busch@intel.com>
+To:     kbuild test robot <lkp@intel.com>
+Cc:     kbuild-all@01.org, linux-pci@vger.kernel.org,
+        Bjorn Helgaas <helgaas@kernel.org>
+Subject: Re: [pci:pci/hotplug 15/24] bus.c:(.text+0x358): multiple definition
+ of `pci_save_dpc_state'
+Message-ID: <20180921141333.GA1157@localhost.localdomain>
+References: <201809211041.8FEIzMUy%fengguang.wu@intel.com>
 MIME-Version: 1.0
-In-Reply-To: <1535632172-127690-1-git-send-email-liudongdong3@huawei.com>
-Content-Type: text/plain; charset="windows-1252"
-Content-Transfer-Encoding: 7bit
-X-Originating-IP: [10.202.226.42]
-X-CFilter-Loop: Reflected
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <201809211041.8FEIzMUy%fengguang.wu@intel.com>
+User-Agent: Mutt/1.9.1 (2017-09-22)
 Sender: linux-pci-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-Hi Dongdong,
-
-On 2018/8/30 13:29, Dongdong Liu wrote:
-> PCIe features like AER, Hotplug, PME, DPC depend on PCIEPORTBUS,
-> so enable PCIEPORTBUS as default.
+On Fri, Sep 21, 2018 at 10:06:44AM +0800, kbuild test robot wrote:
+> tree:   https://git.kernel.org/pub/scm/linux/kernel/git/helgaas/pci.git pci/hotplug
+> head:   64ab39d38d17e5d53434d949681c3ff3ec0f79d3
+> commit: d17964c0d81fc38c733fc5281436d2b262306a33 [15/24] PCI/DPC: Save and restore config state
+> config: m68k-m5475evb_defconfig (attached as .config)
+> compiler: m68k-linux-gnu-gcc (Debian 7.2.0-11) 7.2.0
+> reproduce:
+>         wget https://raw.githubusercontent.com/intel/lkp-tests/master/sbin/make.cross -O ~/bin/make.cross
+>         chmod +x ~/bin/make.cross
+>         git checkout d17964c0d81fc38c733fc5281436d2b262306a33
+>         # save the attached .config to linux build tree
+>         GCC_VERSION=7.2.0 make.cross ARCH=m68k 
 > 
-> Signed-off-by: Dongdong Liu <liudongdong3@huawei.com>
-
-Thanks!
-Applied to the hisilicon defconfig tree.
-
-Best Regards,
-Wei
-
-> ---
->  arch/arm64/configs/defconfig | 1 +
->  1 file changed, 1 insertion(+)
+> All errors (new ones prefixed by >>):
 > 
-> diff --git a/arch/arm64/configs/defconfig b/arch/arm64/configs/defconfig
-> index f67e8d5..e5652e9 100644
-> --- a/arch/arm64/configs/defconfig
-> +++ b/arch/arm64/configs/defconfig
-> @@ -67,6 +67,7 @@ CONFIG_ARCH_XGENE=y
->  CONFIG_ARCH_ZX=y
->  CONFIG_ARCH_ZYNQMP=y
->  CONFIG_PCI=y
-> +CONFIG_PCIEPORTBUS=y
->  CONFIG_PCI_IOV=y
->  CONFIG_HOTPLUG_PCI=y
->  CONFIG_HOTPLUG_PCI_ACPI=y
-> 
+>    drivers/pci/bus.o: In function `pci_save_dpc_state':
+> >> bus.c:(.text+0x358): multiple definition of `pci_save_dpc_state'
+>    drivers/pci/access.o:access.c:(.text+0x1114): first defined here
+>    drivers/pci/bus.o: In function `pci_restore_dpc_state':
+> >> bus.c:(.text+0x35a): multiple definition of `pci_restore_dpc_state'
 
+Appropriate fix to be sent:
+
+---
+diff --git a/drivers/pci/pci.h b/drivers/pci/pci.h
+index a244bd0c5ca7..eb3125decffe 100644
+--- a/drivers/pci/pci.h
++++ b/drivers/pci/pci.h
+@@ -402,8 +402,8 @@ void aer_print_error(struct pci_dev *dev, struct aer_err_info *info);
+ void pci_save_dpc_state(struct pci_dev *dev);
+ void pci_restore_dpc_state(struct pci_dev *dev);
+ #else
+-void pci_save_dpc_state(struct pci_dev *dev) {}
+-void pci_restore_dpc_state(struct pci_dev *dev) {}
++static inline void pci_save_dpc_state(struct pci_dev *dev) {}
++static inline void pci_restore_dpc_state(struct pci_dev *dev) {}
+ #endif
+ 
+ #ifdef CONFIG_PCI_ATS
+--
