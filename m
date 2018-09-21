@@ -2,53 +2,52 @@ Return-Path: <SRS0=H68a=MD=vger.kernel.org=linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-6.7 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
+X-Spam-Status: No, score=-9.5 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
 	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,
-	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_PASS,UNWANTED_LANGUAGE_BODY,
-	URIBL_BLOCKED,USER_AGENT_GIT autolearn=unavailable autolearn_force=no
-	version=3.4.0
+	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT
+	autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id C2642ECE562
-	for <linux-pci@archiver.kernel.org>; Fri, 21 Sep 2018 10:26:20 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 8307DECE562
+	for <linux-pci@archiver.kernel.org>; Fri, 21 Sep 2018 10:27:06 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 7C80221547
-	for <linux-pci@archiver.kernel.org>; Fri, 21 Sep 2018 10:26:20 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 3043021547
+	for <linux-pci@archiver.kernel.org>; Fri, 21 Sep 2018 10:27:06 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (1024-bit key) header.d=ti.com header.i=@ti.com header.b="bxhKx+6y"
-DMARC-Filter: OpenDMARC Filter v1.3.2 mail.kernel.org 7C80221547
+	dkim=pass (1024-bit key) header.d=ti.com header.i=@ti.com header.b="Re3B76MC"
+DMARC-Filter: OpenDMARC Filter v1.3.2 mail.kernel.org 3043021547
 Authentication-Results: mail.kernel.org; dmarc=fail (p=quarantine dis=none) header.from=ti.com
 Authentication-Results: mail.kernel.org; spf=none smtp.mailfrom=linux-pci-owner@vger.kernel.org
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S2389673AbeIUQOZ (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Fri, 21 Sep 2018 12:14:25 -0400
-Received: from lelv0143.ext.ti.com ([198.47.23.248]:54720 "EHLO
-        lelv0143.ext.ti.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S2389264AbeIUQOY (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Fri, 21 Sep 2018 12:14:24 -0400
-Received: from dflxv15.itg.ti.com ([128.247.5.124])
-        by lelv0143.ext.ti.com (8.15.2/8.15.2) with ESMTP id w8LANnA1032939;
-        Fri, 21 Sep 2018 05:23:49 -0500
+        id S2389744AbeIUQNk (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Fri, 21 Sep 2018 12:13:40 -0400
+Received: from lelv0142.ext.ti.com ([198.47.23.249]:51542 "EHLO
+        lelv0142.ext.ti.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S2389264AbeIUQNk (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Fri, 21 Sep 2018 12:13:40 -0400
+Received: from dlelxv90.itg.ti.com ([172.17.2.17])
+        by lelv0142.ext.ti.com (8.15.2/8.15.2) with ESMTP id w8LAP6A1033570;
+        Fri, 21 Sep 2018 05:25:06 -0500
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=ti.com;
-        s=ti-com-17Q1; t=1537525429;
-        bh=oDF6ndAYJvQk5lqs0pyCrinasCIrID1DOTXjY2ayVww=;
+        s=ti-com-17Q1; t=1537525506;
+        bh=oXmEv3zbJKHI1VttjoVtSvRnozSnUYt2kr8MS+fRUlw=;
         h=From:To:CC:Subject:Date:In-Reply-To:References;
-        b=bxhKx+6y89OzMZGYuHtzWPoV5lsR1NRkqPJTDy6pzxhxSt8B60pbKD93LOfvQaq4m
-         3nWggHxBSbjAoR7kd7TMXv75vOkeZu1xGk+cbpae7kfJU0jSne+Dxb9FU2KEty4GXJ
-         7qbDt5XdprYqDR238FiAsGpGwuMkPYXtKNAl03qw=
-Received: from DFLE103.ent.ti.com (dfle103.ent.ti.com [10.64.6.24])
-        by dflxv15.itg.ti.com (8.14.3/8.13.8) with ESMTP id w8LANn7P018958;
-        Fri, 21 Sep 2018 05:23:49 -0500
-Received: from DFLE100.ent.ti.com (10.64.6.21) by DFLE103.ent.ti.com
- (10.64.6.24) with Microsoft SMTP Server (version=TLS1_2,
+        b=Re3B76MCmwzUr5IOuEAPKWPlkF+ZLpbJiWCP+VMk9vMTrtALBvuyE5vbRnWI/AMWB
+         snd7JXBZ6yQu5at3sz5RkC+blw9daORvsiQWhxddI+ZVAFe6R9t7FNTChohgEWf0yf
+         g8D5u8CBqa0EFb0/BJY4XMB77RU6R56cXpeStC6I=
+Received: from DLEE113.ent.ti.com (dlee113.ent.ti.com [157.170.170.24])
+        by dlelxv90.itg.ti.com (8.14.3/8.13.8) with ESMTP id w8LAP6El032092;
+        Fri, 21 Sep 2018 05:25:06 -0500
+Received: from DLEE113.ent.ti.com (157.170.170.24) by DLEE113.ent.ti.com
+ (157.170.170.24) with Microsoft SMTP Server (version=TLS1_2,
  cipher=TLS_ECDHE_RSA_WITH_AES_128_CBC_SHA256_P256) id 15.1.1466.3; Fri, 21
- Sep 2018 05:23:48 -0500
-Received: from dlep33.itg.ti.com (157.170.170.75) by DFLE100.ent.ti.com
- (10.64.6.21) with Microsoft SMTP Server (version=TLS1_0,
+ Sep 2018 05:25:06 -0500
+Received: from dlep33.itg.ti.com (157.170.170.75) by DLEE113.ent.ti.com
+ (157.170.170.24) with Microsoft SMTP Server (version=TLS1_0,
  cipher=TLS_RSA_WITH_AES_256_CBC_SHA) id 15.1.1466.3 via Frontend Transport;
- Fri, 21 Sep 2018 05:23:48 -0500
+ Fri, 21 Sep 2018 05:25:06 -0500
 Received: from a0393678ub.dal.design.ti.com (ileax41-snat.itg.ti.com [10.172.224.153])
-        by dlep33.itg.ti.com (8.14.3/8.13.8) with ESMTP id w8LAMEtN032280;
-        Fri, 21 Sep 2018 05:23:44 -0500
+        by dlep33.itg.ti.com (8.14.3/8.13.8) with ESMTP id w8LAMEte032280;
+        Fri, 21 Sep 2018 05:25:02 -0500
 From:   Kishon Vijay Abraham I <kishon@ti.com>
 To:     Jingoo Han <jingoohan1@gmail.com>,
         Joao Pinto <Joao.Pinto@synopsys.com>,
@@ -64,9 +63,9 @@ CC:     Mark Rutland <mark.rutland@arm.com>,
         <linux-pci@vger.kernel.org>, <devicetree@vger.kernel.org>,
         <linux-kernel@vger.kernel.org>,
         <linux-arm-kernel@lists.infradead.org>
-Subject: [RFC PATCH 19/40] PCI: keystone: Cleanup set_dbi_mode and get_dbi_mode
-Date:   Fri, 21 Sep 2018 15:51:34 +0530
-Message-ID: <20180921102155.22839-20-kishon@ti.com>
+Subject: [RFC PATCH 36/40] arm64: dts: k3-am6: Add "socionext,synquacer-pre-its" property to gic_its
+Date:   Fri, 21 Sep 2018 15:51:51 +0530
+Message-ID: <20180921102155.22839-37-kishon@ti.com>
 X-Mailer: git-send-email 2.17.1
 In-Reply-To: <20180921102155.22839-1-kishon@ti.com>
 References: <20180921102155.22839-1-kishon@ti.com>
@@ -78,57 +77,27 @@ Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-No functional change. Use BIT() macro for DBI_CS2 and cleanup
-set_dbimode and get_dbi_mode
+GIC_ITS used in AM65x platform has the same configuration as that of
+GIC_ITS used in Socionext SoCs. Add "socionext,synquacer-pre-its"
+property to get PCI MSI working.
 
 Signed-off-by: Kishon Vijay Abraham I <kishon@ti.com>
 ---
- drivers/pci/controller/dwc/pci-keystone.c | 12 +++++++-----
- 1 file changed, 7 insertions(+), 5 deletions(-)
+ arch/arm64/boot/dts/ti/k3-am65-main.dtsi | 1 +
+ 1 file changed, 1 insertion(+)
 
-diff --git a/drivers/pci/controller/dwc/pci-keystone.c b/drivers/pci/controller/dwc/pci-keystone.c
-index d5304c4a1eb5..728b1e0db314 100644
---- a/drivers/pci/controller/dwc/pci-keystone.c
-+++ b/drivers/pci/controller/dwc/pci-keystone.c
-@@ -40,7 +40,7 @@
- #define LTSSM_EN_VAL		        BIT(0)
- #define LTSSM_STATE_MASK		0x1f
- #define LTSSM_STATE_L0			0x11
--#define DBI_CS2_EN_VAL			0x20
-+#define DBI_CS2				BIT(5)
- #define OB_XLAT_EN_VAL		        BIT(1)
- 
- /* Application registers */
-@@ -214,11 +214,12 @@ static void ks_pcie_set_dbi_mode(struct keystone_pcie *ks_pcie)
- 	u32 val;
- 
- 	val = ks_pcie_app_readl(ks_pcie, CMD_STATUS);
--	ks_pcie_app_writel(ks_pcie, CMD_STATUS, DBI_CS2_EN_VAL | val);
-+	val |= DBI_CS2;
-+	ks_pcie_app_writel(ks_pcie, CMD_STATUS, val);
- 
- 	do {
- 		val = ks_pcie_app_readl(ks_pcie, CMD_STATUS);
--	} while (!(val & DBI_CS2_EN_VAL));
-+	} while (!(val & DBI_CS2));
- }
- 
- /**
-@@ -232,11 +233,12 @@ static void ks_pcie_clear_dbi_mode(struct keystone_pcie *ks_pcie)
- 	u32 val;
- 
- 	val = ks_pcie_app_readl(ks_pcie, CMD_STATUS);
--	ks_pcie_app_writel(ks_pcie, CMD_STATUS, ~DBI_CS2_EN_VAL & val);
-+	val &= ~DBI_CS2;
-+	ks_pcie_app_writel(ks_pcie, CMD_STATUS, val);
- 
- 	do {
- 		val = ks_pcie_app_readl(ks_pcie, CMD_STATUS);
--	} while (val & DBI_CS2_EN_VAL);
-+	} while (val & DBI_CS2);
- }
- 
- static int ks_pcie_rd_other_conf(struct pcie_port *pp, struct pci_bus *bus,
+diff --git a/arch/arm64/boot/dts/ti/k3-am65-main.dtsi b/arch/arm64/boot/dts/ti/k3-am65-main.dtsi
+index adcd6341e40c..2df4acb198bd 100644
+--- a/arch/arm64/boot/dts/ti/k3-am65-main.dtsi
++++ b/arch/arm64/boot/dts/ti/k3-am65-main.dtsi
+@@ -24,6 +24,7 @@
+ 		gic_its: gic-its@18200000 {
+ 			compatible = "arm,gic-v3-its";
+ 			reg = <0x00 0x01820000 0x00 0x10000>;
++			socionext,synquacer-pre-its = <0x1000000 0x400000>;
+ 			msi-controller;
+ 			#msi-cells = <1>;
+ 		};
 -- 
 2.17.1
 
