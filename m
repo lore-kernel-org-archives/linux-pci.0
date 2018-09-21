@@ -7,47 +7,47 @@ X-Spam-Status: No, score=-9.5 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
 	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT
 	autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 552A3ECE562
-	for <linux-pci@archiver.kernel.org>; Fri, 21 Sep 2018 10:24:43 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id B3930C433F4
+	for <linux-pci@archiver.kernel.org>; Fri, 21 Sep 2018 10:24:57 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 0824F2150E
-	for <linux-pci@archiver.kernel.org>; Fri, 21 Sep 2018 10:24:43 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 6750A2150E
+	for <linux-pci@archiver.kernel.org>; Fri, 21 Sep 2018 10:24:57 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (1024-bit key) header.d=ti.com header.i=@ti.com header.b="TTDsla0+"
-DMARC-Filter: OpenDMARC Filter v1.3.2 mail.kernel.org 0824F2150E
+	dkim=pass (1024-bit key) header.d=ti.com header.i=@ti.com header.b="l0FHH5vw"
+DMARC-Filter: OpenDMARC Filter v1.3.2 mail.kernel.org 6750A2150E
 Authentication-Results: mail.kernel.org; dmarc=fail (p=quarantine dis=none) header.from=ti.com
 Authentication-Results: mail.kernel.org; spf=none smtp.mailfrom=linux-pci-owner@vger.kernel.org
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S2390103AbeIUQMy (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Fri, 21 Sep 2018 12:12:54 -0400
-Received: from lelv0143.ext.ti.com ([198.47.23.248]:54622 "EHLO
-        lelv0143.ext.ti.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1727776AbeIUQMx (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Fri, 21 Sep 2018 12:12:53 -0400
+        id S2389688AbeIUQNI (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Fri, 21 Sep 2018 12:13:08 -0400
+Received: from fllv0016.ext.ti.com ([198.47.19.142]:46396 "EHLO
+        fllv0016.ext.ti.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S2389684AbeIUQNH (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Fri, 21 Sep 2018 12:13:07 -0400
 Received: from dlelxv90.itg.ti.com ([172.17.2.17])
-        by lelv0143.ext.ti.com (8.15.2/8.15.2) with ESMTP id w8LAOGCI033032;
-        Fri, 21 Sep 2018 05:24:16 -0500
+        by fllv0016.ext.ti.com (8.15.2/8.15.2) with ESMTP id w8LAOdR7008072;
+        Fri, 21 Sep 2018 05:24:39 -0500
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=ti.com;
-        s=ti-com-17Q1; t=1537525457;
-        bh=Oy9h1kP8jbCXe+8kD93AkYommSwhxCLq/ir/s6HONHk=;
+        s=ti-com-17Q1; t=1537525479;
+        bh=dX0AnoHumpKjN/Hxuc1DnDN/uBYu6jOtQe3dNmu6KNI=;
         h=From:To:CC:Subject:Date:In-Reply-To:References;
-        b=TTDsla0+qw0fOos7SiyBlN9shgEmejgPp2Prs4yaOEVXQ+nYTswognIYWoINtOTR8
-         LDvksH6Y/BD7ncQ66JYTt+yUIOx+eCjrHn5O21gxGGoG0ZahBd8DvYwEqwMLE3ScaS
-         m7l4sjKbuu/DcleMh2dhpz5d9k2m73KFi89YdWIk=
-Received: from DLEE101.ent.ti.com (dlee101.ent.ti.com [157.170.170.31])
-        by dlelxv90.itg.ti.com (8.14.3/8.13.8) with ESMTP id w8LAOGZD030984;
-        Fri, 21 Sep 2018 05:24:16 -0500
-Received: from DLEE111.ent.ti.com (157.170.170.22) by DLEE101.ent.ti.com
- (157.170.170.31) with Microsoft SMTP Server (version=TLS1_2,
+        b=l0FHH5vwaRIsxNt8oUAd6vawFpDR25X3eFdVLjGYD6Mc0L64Rm8O0xSE05EI59xKH
+         RWgu4p8f7Y7i3K/wblaWv5iY4sgdvfbXEO51Nqpe+vbMki0BM2/T/6PeKrgLZeoRTq
+         Aos0A9szHDzLyX6202enZH6+fwdXTGBxY9itPl0U=
+Received: from DFLE104.ent.ti.com (dfle104.ent.ti.com [10.64.6.25])
+        by dlelxv90.itg.ti.com (8.14.3/8.13.8) with ESMTP id w8LAOdn0031281;
+        Fri, 21 Sep 2018 05:24:39 -0500
+Received: from DFLE110.ent.ti.com (10.64.6.31) by DFLE104.ent.ti.com
+ (10.64.6.25) with Microsoft SMTP Server (version=TLS1_2,
  cipher=TLS_ECDHE_RSA_WITH_AES_128_CBC_SHA256_P256) id 15.1.1466.3; Fri, 21
- Sep 2018 05:24:16 -0500
-Received: from dlep33.itg.ti.com (157.170.170.75) by DLEE111.ent.ti.com
- (157.170.170.22) with Microsoft SMTP Server (version=TLS1_0,
+ Sep 2018 05:24:38 -0500
+Received: from dlep33.itg.ti.com (157.170.170.75) by DFLE110.ent.ti.com
+ (10.64.6.31) with Microsoft SMTP Server (version=TLS1_0,
  cipher=TLS_RSA_WITH_AES_256_CBC_SHA) id 15.1.1466.3 via Frontend Transport;
- Fri, 21 Sep 2018 05:24:16 -0500
+ Fri, 21 Sep 2018 05:24:38 -0500
 Received: from a0393678ub.dal.design.ti.com (ileax41-snat.itg.ti.com [10.172.224.153])
-        by dlep33.itg.ti.com (8.14.3/8.13.8) with ESMTP id w8LAMEtT032280;
-        Fri, 21 Sep 2018 05:24:12 -0500
+        by dlep33.itg.ti.com (8.14.3/8.13.8) with ESMTP id w8LAMEtY032280;
+        Fri, 21 Sep 2018 05:24:34 -0500
 From:   Kishon Vijay Abraham I <kishon@ti.com>
 To:     Jingoo Han <jingoohan1@gmail.com>,
         Joao Pinto <Joao.Pinto@synopsys.com>,
@@ -63,9 +63,9 @@ CC:     Mark Rutland <mark.rutland@arm.com>,
         <linux-pci@vger.kernel.org>, <devicetree@vger.kernel.org>,
         <linux-kernel@vger.kernel.org>,
         <linux-arm-kernel@lists.infradead.org>
-Subject: [RFC PATCH 25/40] dt-bindings: PCI: Add dt-binding to configure PCIe mode
-Date:   Fri, 21 Sep 2018 15:51:40 +0530
-Message-ID: <20180921102155.22839-26-kishon@ti.com>
+Subject: [RFC PATCH 30/40] dt-bindings: PCI: Add PCI RC dt binding documentation for AM654
+Date:   Fri, 21 Sep 2018 15:51:45 +0530
+Message-ID: <20180921102155.22839-31-kishon@ti.com>
 X-Mailer: git-send-email 2.17.1
 In-Reply-To: <20180921102155.22839-1-kishon@ti.com>
 References: <20180921102155.22839-1-kishon@ti.com>
@@ -77,27 +77,38 @@ Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-Add "ti,syscon-pcie-mode" dt-binding to hold phandle to the syscon
-register that should be used to configure PCIe in RC mode or EP mode.
+Add devicetree binding documentation for PCIe in RC mode present in
+AM654 SoC.
 
 Signed-off-by: Kishon Vijay Abraham I <kishon@ti.com>
 ---
- Documentation/devicetree/bindings/pci/pci-keystone.txt | 2 ++
- 1 file changed, 2 insertions(+)
+ Documentation/devicetree/bindings/pci/pci-keystone.txt | 6 +++++-
+ 1 file changed, 5 insertions(+), 1 deletion(-)
 
 diff --git a/Documentation/devicetree/bindings/pci/pci-keystone.txt b/Documentation/devicetree/bindings/pci/pci-keystone.txt
-index 3a551687cfa2..8ee07197a063 100644
+index 8ee07197a063..5c60e911b8b1 100644
 --- a/Documentation/devicetree/bindings/pci/pci-keystone.txt
 +++ b/Documentation/devicetree/bindings/pci/pci-keystone.txt
-@@ -23,6 +23,8 @@ pcie_msi_intc : Interrupt controller device node for MSI IRQ chip
+@@ -11,7 +11,8 @@ described here as well as properties that are not applicable.
+ 
+ Required Properties:-
+ 
+-compatibility: "ti,keystone-pcie"
++compatibility: Should be "ti,keystone-pcie" for RC on Keystone2 SoC
++	       Should be "ti,am654-pcie-rc" for RC on AM654x SoC
+ reg: Three register ranges as listed in the reg-names property
+ reg-names: "dbics" for the DesignWare PCIe registers, "app" for the
+ 	   TI specific application registers, "config" for the
+@@ -20,6 +21,9 @@ reg-names: "dbics" for the DesignWare PCIe registers, "app" for the
+ pcie_msi_intc : Interrupt controller device node for MSI IRQ chip
+ 	interrupt-cells: should be set to 1
+ 	interrupts: GIC interrupt lines connected to PCI MSI interrupt lines
++	(required if the compatible is "ti,keystone-pcie")
++msi-map: As specified in Documentation/devicetree/bindings/pci/pci-msi.txt
++	 (required if the compatible is "ti,am654-pcie-rc".
  
  ti,syscon-pcie-id : phandle to the device control module required to set device
  		    id and vendor id.
-+ti,syscon-pcie-mode : phandle to the device control module required to configure
-+		      PCI in either RC mode or EP mode.
- 
-  Example:
- 	pcie_msi_intc: msi-interrupt-controller {
 -- 
 2.17.1
 
