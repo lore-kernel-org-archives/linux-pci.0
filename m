@@ -7,47 +7,47 @@ X-Spam-Status: No, score=-9.5 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
 	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT
 	autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 3A28BECE562
-	for <linux-pci@archiver.kernel.org>; Fri, 21 Sep 2018 10:27:52 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 859B0ECE562
+	for <linux-pci@archiver.kernel.org>; Fri, 21 Sep 2018 10:27:58 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id DF12521547
-	for <linux-pci@archiver.kernel.org>; Fri, 21 Sep 2018 10:27:51 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 404DB206B7
+	for <linux-pci@archiver.kernel.org>; Fri, 21 Sep 2018 10:27:58 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (1024-bit key) header.d=ti.com header.i=@ti.com header.b="CEDLZ0Y5"
-DMARC-Filter: OpenDMARC Filter v1.3.2 mail.kernel.org DF12521547
+	dkim=pass (1024-bit key) header.d=ti.com header.i=@ti.com header.b="R7EMEBgb"
+DMARC-Filter: OpenDMARC Filter v1.3.2 mail.kernel.org 404DB206B7
 Authentication-Results: mail.kernel.org; dmarc=fail (p=quarantine dis=none) header.from=ti.com
 Authentication-Results: mail.kernel.org; spf=none smtp.mailfrom=linux-pci-owner@vger.kernel.org
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S2390152AbeIUQQC (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Fri, 21 Sep 2018 12:16:02 -0400
-Received: from fllv0015.ext.ti.com ([198.47.19.141]:35424 "EHLO
-        fllv0015.ext.ti.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S2389559AbeIUQQB (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Fri, 21 Sep 2018 12:16:01 -0400
-Received: from dflxv15.itg.ti.com ([128.247.5.124])
-        by fllv0015.ext.ti.com (8.15.2/8.15.2) with ESMTP id w8LAPOaA030920;
-        Fri, 21 Sep 2018 05:25:24 -0500
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=ti.com;
-        s=ti-com-17Q1; t=1537525524;
-        bh=XDj+mFJD+CB99IbCn09zPB+O+0SrSz7pxE0ENLfnd3U=;
-        h=From:To:CC:Subject:Date:In-Reply-To:References;
-        b=CEDLZ0Y5yKRNRb+NyrPFti9OQvBLmegwPFs4roceFaJrWIMJ+N2ZZtiXa6cJp/zIG
-         P3TxQT7KsyhmKqx08V1g3FKTVRTFY0xPBQPkVvbbNnNS8O8vaP+bpcwkCw2FPM7Ojz
-         WWn2N7D4s9daIrSNzlQgN4wzWf6R2+vQOVpcc3Cc=
-Received: from DFLE105.ent.ti.com (dfle105.ent.ti.com [10.64.6.26])
-        by dflxv15.itg.ti.com (8.14.3/8.13.8) with ESMTP id w8LAPORG021767;
-        Fri, 21 Sep 2018 05:25:24 -0500
-Received: from DFLE112.ent.ti.com (10.64.6.33) by DFLE105.ent.ti.com
- (10.64.6.26) with Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_128_CBC_SHA256_P256) id 15.1.1466.3; Fri, 21
- Sep 2018 05:25:24 -0500
-Received: from dlep33.itg.ti.com (157.170.170.75) by DFLE112.ent.ti.com
- (10.64.6.33) with Microsoft SMTP Server (version=TLS1_0,
- cipher=TLS_RSA_WITH_AES_256_CBC_SHA) id 15.1.1466.3 via Frontend Transport;
- Fri, 21 Sep 2018 05:25:24 -0500
-Received: from a0393678ub.dal.design.ti.com (ileax41-snat.itg.ti.com [10.172.224.153])
-        by dlep33.itg.ti.com (8.14.3/8.13.8) with ESMTP id w8LAMEti032280;
+        id S2390071AbeIUQP5 (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Fri, 21 Sep 2018 12:15:57 -0400
+Received: from fllv0016.ext.ti.com ([198.47.19.142]:46610 "EHLO
+        fllv0016.ext.ti.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S2389559AbeIUQP4 (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Fri, 21 Sep 2018 12:15:56 -0400
+Received: from dlelxv90.itg.ti.com ([172.17.2.17])
+        by fllv0016.ext.ti.com (8.15.2/8.15.2) with ESMTP id w8LAPKjm008199;
         Fri, 21 Sep 2018 05:25:20 -0500
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=ti.com;
+        s=ti-com-17Q1; t=1537525520;
+        bh=Hx6wSR+rqqvmzg8ziF4Yx5EsYxtHEdd50Pac9BsuRBs=;
+        h=From:To:CC:Subject:Date:In-Reply-To:References;
+        b=R7EMEBgb9B0+Tb+i5yYrhikXNmCTxmD+OAmLGddR1d4DD7gT7qD0i2383LRd5E5m9
+         XwZ/1n46wHBzjRTBnhkzlHZ2gvq5NpQPZ/yeug7w3cs4JvdQLTlXq3cn9TpjhsOB27
+         mwgFMeNtl5cVkD15JSg0VV5DFeD+/E4NwRUtrmhg=
+Received: from DLEE107.ent.ti.com (dlee107.ent.ti.com [157.170.170.37])
+        by dlelxv90.itg.ti.com (8.14.3/8.13.8) with ESMTP id w8LAPKil032372;
+        Fri, 21 Sep 2018 05:25:20 -0500
+Received: from DLEE105.ent.ti.com (157.170.170.35) by DLEE107.ent.ti.com
+ (157.170.170.37) with Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_128_CBC_SHA256_P256) id 15.1.1466.3; Fri, 21
+ Sep 2018 05:25:20 -0500
+Received: from dlep33.itg.ti.com (157.170.170.75) by DLEE105.ent.ti.com
+ (157.170.170.35) with Microsoft SMTP Server (version=TLS1_0,
+ cipher=TLS_RSA_WITH_AES_256_CBC_SHA) id 15.1.1466.3 via Frontend Transport;
+ Fri, 21 Sep 2018 05:25:20 -0500
+Received: from a0393678ub.dal.design.ti.com (ileax41-snat.itg.ti.com [10.172.224.153])
+        by dlep33.itg.ti.com (8.14.3/8.13.8) with ESMTP id w8LAMEth032280;
+        Fri, 21 Sep 2018 05:25:15 -0500
 From:   Kishon Vijay Abraham I <kishon@ti.com>
 To:     Jingoo Han <jingoohan1@gmail.com>,
         Joao Pinto <Joao.Pinto@synopsys.com>,
@@ -63,9 +63,9 @@ CC:     Mark Rutland <mark.rutland@arm.com>,
         <linux-pci@vger.kernel.org>, <devicetree@vger.kernel.org>,
         <linux-kernel@vger.kernel.org>,
         <linux-arm-kernel@lists.infradead.org>
-Subject: [RFC PATCH 40/40] arm64: dts: k3-am6: Add Root Complex PCIe dt node
-Date:   Fri, 21 Sep 2018 15:51:55 +0530
-Message-ID: <20180921102155.22839-41-kishon@ti.com>
+Subject: [RFC PATCH 39/40] arm64: dts: k3-am6: Add SERDES DT node
+Date:   Fri, 21 Sep 2018 15:51:54 +0530
+Message-ID: <20180921102155.22839-40-kishon@ti.com>
 X-Mailer: git-send-email 2.17.1
 In-Reply-To: <20180921102155.22839-1-kishon@ti.com>
 References: <20180921102155.22839-1-kishon@ti.com>
@@ -77,125 +77,82 @@ Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-Add Root Complex PCIe dt node.
+Add DT node for SERDES0 and SERDES1.
 
 Signed-off-by: Kishon Vijay Abraham I <kishon@ti.com>
 ---
- arch/arm64/boot/dts/ti/k3-am65-main.dtsi | 83 ++++++++++++++++++++++++
- arch/arm64/boot/dts/ti/k3-am65.dtsi      |  1 +
- 2 files changed, 84 insertions(+)
+ arch/arm64/boot/dts/ti/k3-am65-main.dtsi | 46 ++++++++++++++++++++++++
+ 1 file changed, 46 insertions(+)
 
 diff --git a/arch/arm64/boot/dts/ti/k3-am65-main.dtsi b/arch/arm64/boot/dts/ti/k3-am65-main.dtsi
-index b08d15fa110e..0a5d74a8eef4 100644
+index 4379c370f6f8..b08d15fa110e 100644
 --- a/arch/arm64/boot/dts/ti/k3-am65-main.dtsi
 +++ b/arch/arm64/boot/dts/ti/k3-am65-main.dtsi
-@@ -14,6 +14,21 @@
- 		#size-cells = <1>;
- 		ranges = <0x0 0x0 0x00100000 0x1c000>;
+@@ -4,11 +4,25 @@
+  *
+  * Copyright (C) 2016-2018 Texas Instruments Incorporated - http://www.ti.com/
+  */
++#include <dt-bindings/phy/phy-am654-serdes.h>
  
-+		pcie0_mode: pcie-mode@4060 {
+ &cbass_main {
+ 	scm_conf: scm_conf@100000 {
+ 		compatible = "syscon", "simple-mfd";
+ 		reg = <0 0x00100000 0 0x1c000>;
++		#address-cells = <1>;
++		#size-cells = <1>;
++		ranges = <0x0 0x0 0x00100000 0x1c000>;
++
++		serdes0_clk: serdes_clk@4080 {
 +			compatible = "syscon";
-+			reg = <0x00004060 0x4>;
++			reg = <0x00004080 0x4>;
 +		};
 +
-+		pcie1_mode: pcie-mode@4070 {
++		serdes1_clk: serdes_clk@4090 {
 +			compatible = "syscon";
-+			reg = <0x00004070 0x4>;
++			reg = <0x00004090 0x4>;
 +		};
-+
-+		pcie_devid: pcie-devid@210 {
-+			compatible = "syscon";
-+			reg = <0x00000210 0x4>;
-+		};
-+
- 		serdes0_clk: serdes_clk@4080 {
- 			compatible = "syscon";
- 			reg = <0x00004080 0x4>;
-@@ -128,4 +143,72 @@
- 		clock-frequency = <48000000>;
- 		current-speed = <115200>;
+ 
+ 		serdes_mux: mux-controller {
+ 			compatible = "mmio-mux";
+@@ -53,6 +67,38 @@
+ 		interrupts = <GIC_SPI 37 IRQ_TYPE_LEVEL_HIGH>;
  	};
-+
-+	pcie0_rc: pcie@5500000 {
-+		compatible = "ti,am654-pcie-rc";
-+		reg =  <0x0 0x5500000 0x0 0x1000>, <0x0 0x5501000 0x0 0x1000>, <0x0 0x10000000 0x0 0x2000>, <0x0 0x5506000 0x0 0x1000>;
-+		reg-names = "app", "dbics", "config", "atu";
-+		power-domains = <&k3_pds 120>;
-+		#address-cells = <3>;
-+		#size-cells = <2>;
-+		ranges = <0x81000000 0 0          0x0 0x10020000 0 0x00010000
-+			  0x82000000 0 0x10030000 0x0 0x10030000 0 0x07FD0000>;
-+		ti,syscon-pcie-id = <&pcie_devid>;
-+		ti,syscon-pcie-mode = <&pcie0_mode>;
-+		bus-range = <0x0 0xff>;
-+		device_type = "pci";
-+		num-lanes = <1>;
-+		num-ob-windows = <16>;
-+		num-viewport = <16>;
-+		interrupts = <GIC_SPI 340 IRQ_TYPE_EDGE_RISING>;
-+		#interrupt-cells = <1>;
-+		interrupt-map-mask = <0 0 0 7>;
-+		interrupt-map = <0 0 0 1 &pcie0_intc 0>, /* INT A */
-+				<0 0 0 2 &pcie0_intc 0>, /* INT B */
-+				<0 0 0 3 &pcie0_intc 0>, /* INT C */
-+				<0 0 0 4 &pcie0_intc 0>; /* INT D */
-+		msi-map = <0x0 &gic_its 0x0 0x10000>;
+ 
++	serdes0: serdes@900000 {
++		compatible = "ti,phy-am654-serdes";
++		reg = <0x0 0x900000 0x0 0x2000>;
++		reg-names = "serdes";
++		#phy-cells = <2>;
++		power-domains = <&k3_pds 153>;
++		clocks = <&k3_clks 153 4>, <&k3_clks 153 1>, <&serdes1 AM654_SERDES_LO_REFCLK>;
++		clock-output-names = "serdes0_cmu_refclk", "serdes0_lo_refclk", "serdes0_ro_refclk";
++		assigned-clocks = <&k3_clks 153 4>, <&serdes0 AM654_SERDES_CMU_REFCLK>;
++		assigned-clock-parents = <&k3_clks 153 8>, <&k3_clks 153 4>;
++		ti,serdes-clk = <&serdes0_clk>;
++		#clock-cells = <1>;
++		mux-controls = <&serdes_mux 0>;
 +		status = "disabled";
-+
-+		pcie0_intc: legacy-interrupt-controller@1 {
-+			interrupt-controller;
-+			#interrupt-cells = <1>;
-+			interrupt-parent = <&gic500>;
-+			interrupts = <GIC_SPI 328 IRQ_TYPE_EDGE_RISING>;
-+		};
 +	};
 +
-+	pcie1_rc: pcie@5600000 {
-+		compatible = "ti,am654-pcie-rc";
-+		reg =  <0x0 0x5600000 0x0 0x1000>, <0x0 0x5601000 0x0 0x1000>, <0x0 0x18000000 0x0 0x2000>, <0x0 0x5606000 0x0 0x1000>;
-+		reg-names = "app", "dbics", "config", "atu";
-+		power-domains = <&k3_pds 121>;
-+		#address-cells = <3>;
-+		#size-cells = <2>;
-+		ranges = <0x81000000 0 0          0x0   0x18020000 0 0x00010000
-+			  0x82000000 0 0x18030000 0x0   0x18030000 0 0x07FD0000>;
-+		ti,syscon-pcie-id = <&pcie_devid>;
-+		ti,syscon-pcie-mode = <&pcie1_mode>;
-+		bus-range = <0x0 0xff>;
++	serdes1: serdes@910000 {
++		compatible = "ti,phy-am654-serdes";
++		reg = <0x0 0x910000 0x0 0x2000>;
++		reg-names = "serdes";
++		#phy-cells = <2>;
++		power-domains = <&k3_pds 154>;
++		clocks = <&serdes0 AM654_SERDES_RO_REFCLK>, <&k3_clks 154 1>, <&k3_clks 154 5>;
++		clock-output-names = "serdes1_cmu_refclk", "serdes1_lo_refclk", "serdes1_ro_refclk";
++		assigned-clocks = <&k3_clks 154 5>, <&serdes1 AM654_SERDES_CMU_REFCLK>;
++		assigned-clock-parents = <&k3_clks 154 9>, <&k3_clks 154 5>;
++		ti,serdes-clk = <&serdes1_clk>;
++		#clock-cells = <1>;
++		mux-controls = <&serdes_mux 1>;
 +		status = "disabled";
-+		device_type = "pci";
-+		num-lanes = <1>;
-+		num-ob-windows = <16>;
-+		num-viewport = <16>;
-+		interrupts = <GIC_SPI 355 IRQ_TYPE_EDGE_RISING>;
-+		#interrupt-cells = <1>;
-+		interrupt-map-mask = <0 0 0 7>;
-+		interrupt-map = <0 0 0 1 &pcie1_intc 0>, /* INT A */
-+				<0 0 0 2 &pcie1_intc 0>, /* INT B */
-+				<0 0 0 3 &pcie1_intc 0>, /* INT C */
-+				<0 0 0 4 &pcie1_intc 0>; /* INT D */
-+		msi-map = <0x0 &gic_its 0x10000 0x10000>;
-+
-+		pcie1_intc: legacy-interrupt-controller@1 {
-+			interrupt-controller;
-+			#interrupt-cells = <1>;
-+			interrupt-parent = <&gic500>;
-+			interrupts = <GIC_SPI 343 IRQ_TYPE_EDGE_RISING>;
-+		};
 +	};
- };
-diff --git a/arch/arm64/boot/dts/ti/k3-am65.dtsi b/arch/arm64/boot/dts/ti/k3-am65.dtsi
-index 3d4bf369d030..b87081765894 100644
---- a/arch/arm64/boot/dts/ti/k3-am65.dtsi
-+++ b/arch/arm64/boot/dts/ti/k3-am65.dtsi
-@@ -61,6 +61,7 @@
- 			 <0x00 0x00900000 0x00 0x00900000 0x00 0x00012000>, /* serdes */
- 			 <0x00 0x01000000 0x00 0x01000000 0x00 0x0af02400>, /* Most peripherals */
- 			 <0x00 0x30800000 0x00 0x30800000 0x00 0x0bc00000>, /* MAIN NAVSS */
-+			 <0x00 0x10000000 0x00 0x10000000 0x00 0x10000000>, /* PCIe DAT */
- 			 /* MCUSS Range */
- 			 <0x00 0x28380000 0x00 0x28380000 0x00 0x03880000>,
- 			 <0x00 0x40200000 0x00 0x40200000 0x00 0x00900100>,
++
+ 	main_uart0: serial@2800000 {
+ 		compatible = "ti,am654-uart";
+ 		reg = <0x00 0x02800000 0x00 0x100>;
 -- 
 2.17.1
 
