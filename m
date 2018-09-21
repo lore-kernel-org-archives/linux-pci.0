@@ -2,148 +2,239 @@ Return-Path: <SRS0=H68a=MD=vger.kernel.org=linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-8.3 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_PASS,URIBL_BLOCKED,
-	USER_AGENT_MUTT autolearn=unavailable autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-9.3 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
+	SPF_PASS,USER_AGENT_MUTT autolearn=unavailable autolearn_force=no
+	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 99AA6ECE567
-	for <linux-pci@archiver.kernel.org>; Fri, 21 Sep 2018 16:07:59 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 4C85AECE567
+	for <linux-pci@archiver.kernel.org>; Fri, 21 Sep 2018 16:19:12 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 5F38221550
-	for <linux-pci@archiver.kernel.org>; Fri, 21 Sep 2018 16:07:59 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.3.2 mail.kernel.org 5F38221550
-Authentication-Results: mail.kernel.org; dmarc=none (p=none dis=none) header.from=arm.com
+	by mail.kernel.org (Postfix) with ESMTP id E76F321565
+	for <linux-pci@archiver.kernel.org>; Fri, 21 Sep 2018 16:19:11 +0000 (UTC)
+Authentication-Results: mail.kernel.org;
+	dkim=pass (1024-bit key) header.d=kernel.org header.i=@kernel.org header.b="fiFTXajG"
+DMARC-Filter: OpenDMARC Filter v1.3.2 mail.kernel.org E76F321565
+Authentication-Results: mail.kernel.org; dmarc=fail (p=none dis=none) header.from=kernel.org
 Authentication-Results: mail.kernel.org; spf=none smtp.mailfrom=linux-pci-owner@vger.kernel.org
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S2390550AbeIUV5Z (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Fri, 21 Sep 2018 17:57:25 -0400
-Received: from usa-sjc-mx-foss1.foss.arm.com ([217.140.101.70]:38688 "EHLO
-        foss.arm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S2389545AbeIUV5Y (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Fri, 21 Sep 2018 17:57:24 -0400
-Received: from usa-sjc-imap-foss1.foss.arm.com (unknown [10.72.51.249])
-        by usa-sjc-mx-foss1.foss.arm.com (Postfix) with ESMTP id 2320418A;
-        Fri, 21 Sep 2018 09:07:51 -0700 (PDT)
-Received: from e107981-ln.cambridge.arm.com (e107981-ln.Emea.Arm.com [10.4.13.117])
-        by usa-sjc-imap-foss1.foss.arm.com (Postfix) with ESMTPSA id 0E4363F557;
-        Fri, 21 Sep 2018 09:07:47 -0700 (PDT)
-Date:   Fri, 21 Sep 2018 17:07:45 +0100
-From:   Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
-To:     honghui.zhang@mediatek.com
-Cc:     marc.zyngier@arm.com, bhelgaas@google.com, matthias.bgg@gmail.com,
-        linux-arm-kernel@lists.infradead.org,
-        linux-mediatek@lists.infradead.org, linux-pci@vger.kernel.org,
-        linux-kernel@vger.kernel.org, devicetree@vger.kernel.org,
-        yingjoe.chen@mediatek.com, eddie.huang@mediatek.com,
-        ryder.lee@mediatek.com, ulf.hansson@linaro.org,
-        hongkun.cao@mediatek.com, youlin.pei@mediatek.com,
-        yong.wu@mediatek.com, yt.shen@mediatek.com, sean.wang@mediatek.com,
-        xinping.qian@mediatek.com
-Subject: Re: [PATCH v4 1/4] PCI: mediatek: fixup mtk_pcie_find_port logical
-Message-ID: <20180921160745.GB21644@e107981-ln.cambridge.arm.com>
-References: <1536573023-6720-1-git-send-email-honghui.zhang@mediatek.com>
- <1536573023-6720-2-git-send-email-honghui.zhang@mediatek.com>
+        id S2390575AbeIUWIl (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Fri, 21 Sep 2018 18:08:41 -0400
+Received: from mail.kernel.org ([198.145.29.99]:60080 "EHLO mail.kernel.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1728221AbeIUWIl (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Fri, 21 Sep 2018 18:08:41 -0400
+Received: from localhost (unknown [150.199.191.185])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+        (No client certificate requested)
+        by mail.kernel.org (Postfix) with ESMTPSA id 1FFAA21550;
+        Fri, 21 Sep 2018 16:19:05 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+        s=default; t=1537546745;
+        bh=rmuL3ipH4J1YEgEOUFO5mHBBwkTmkIFd94u591nDNCo=;
+        h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
+        b=fiFTXajGYkHgZbrzjqLKjg9cxO+N4ViMZswUGrdBxxA5ks8qm58vsLGRnD8T3nt1m
+         1rQAdbNF9+imjwRygHG8p1OorCf7ReW/BRASmvw/m3aNaF8ZkBIjPZss6CVJGAqyzX
+         rbHHiX/M6ykPOLbLakThzxrYomUTAy7HA2EF5nr4=
+Date:   Fri, 21 Sep 2018 11:18:58 -0500
+From:   Bjorn Helgaas <helgaas@kernel.org>
+To:     Logan Gunthorpe <logang@deltatee.com>
+Cc:     linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
+        linux-nvme@lists.infradead.org, linux-rdma@vger.kernel.org,
+        linux-nvdimm@lists.01.org, linux-block@vger.kernel.org,
+        Stephen Bates <sbates@raithlin.com>,
+        Christoph Hellwig <hch@lst.de>,
+        Keith Busch <keith.busch@intel.com>,
+        Sagi Grimberg <sagi@grimberg.me>,
+        Bjorn Helgaas <bhelgaas@google.com>,
+        Jason Gunthorpe <jgg@mellanox.com>,
+        Max Gurtovoy <maxg@mellanox.com>,
+        Dan Williams <dan.j.williams@intel.com>,
+        =?iso-8859-1?B?Suly9G1l?= Glisse <jglisse@redhat.com>,
+        Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+        Alex Williamson <alex.williamson@redhat.com>,
+        Christian =?iso-8859-1?Q?K=F6nig?= <christian.koenig@amd.com>,
+        Jens Axboe <axboe@kernel.dk>
+Subject: Re: [PATCH v6 04/13] PCI/P2PDMA: Introduce configfs/sysfs enable
+ attribute helpers
+Message-ID: <20180921161858.GH224714@bhelgaas-glaptop.roam.corp.google.com>
+References: <20180913001156.4115-1-logang@deltatee.com>
+ <20180913001156.4115-5-logang@deltatee.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <1536573023-6720-2-git-send-email-honghui.zhang@mediatek.com>
-User-Agent: Mutt/1.5.24 (2015-08-30)
+In-Reply-To: <20180913001156.4115-5-logang@deltatee.com>
+User-Agent: Mutt/1.10.1 (2018-07-13)
 Sender: linux-pci-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-On Mon, Sep 10, 2018 at 05:50:20PM +0800, honghui.zhang@mediatek.com wrote:
-> From: Honghui Zhang <honghui.zhang@mediatek.com>
+On Wed, Sep 12, 2018 at 06:11:47PM -0600, Logan Gunthorpe wrote:
+> Users of the P2PDMA infrastructure will typically need a way for
+> the user to tell the kernel to use P2P resources. Typically
+> this will be a simple on/off boolean operation but sometimes
+> it may be desirable for the user to specify the exact device to
+> use for the P2P operation.
 > 
-> The Mediatek's host controller has two slots, each with it's own control
-> registers. The host driver need to identify which slot was connected
-> in order to access the device's configuration space. There's problem
-> for current host driver to find out which slot was connected to for
-> a given EP device.
-> 
-> Assuming each slot have connect with one EP device as below:
-> 
->                 host bridge
->   bus 0 --> __________|_______
->            |                  |
->            |                  |
->          slot 0             slot 1
->   bus 1 -->|        bus 2 --> |
->            |                  |
->          EP 0               EP 1
-> 
-> During PCI enumeration, system software will scan all the PCI device
-> starting from devfn 0. So it will get the proper port for slot0 and
-> slot1 device when using PCI_SLOT(devfn) for match. But it will get
-> the wrong slot for EP1: The devfn will be start from 0 when scanning
-> EP1 behind slot1, it will get port0 since the PCI_SLOT(EP1) is match
-> for port0's slot value. So the host driver should not using EP's devfn
-> but the slot's devfn(the slot which EP was connected to) for match.
-> 
-> This patch fix the mtk_pcie_find_port's logical by using the slot's
-> devfn for match.
-> 
-> Signed-off-by: Honghui Zhang <honghui.zhang@mediatek.com>
-> Acked-by: Ryder Lee <ryder.lee@mediatek.com>
+> Add new helpers for attributes which take a boolean or a PCI device.
+> Any boolean, or the word 'auto' turn P2P on or off. Specifying a full
+> PCI device name/BDF will select the specific device.
+
+I think examples of the valid booleans would be useful.  "Boolean"
+suggests true/false, but AFAICT strtobool() only works for things
+like 0/1/on/off.
+
+What's the need for "auto"?  Sounds like it's equivalent to "on" but
+it's not obvious why we need both.
+
+It'd be sort of nice if the contents of the sysfs file were valid
+things you could put *back* into it.  But it looks like the contents
+might be "none", which isn't valid for the store.  And the contents
+are never "on" or "off".
+
+Where do these store/show functions get connected to sysfs?  I know
+there's a lot of magic there, so apologies if I'm missing it.
+
+> Signed-off-by: Logan Gunthorpe <logang@deltatee.com>
 > ---
->  drivers/pci/controller/pcie-mediatek.c | 19 +++++++++++++++++--
->  1 file changed, 17 insertions(+), 2 deletions(-)
+>  drivers/pci/p2pdma.c       | 83 ++++++++++++++++++++++++++++++++++++++
+>  include/linux/pci-p2pdma.h | 15 +++++++
+>  2 files changed, 98 insertions(+)
 > 
-> diff --git a/drivers/pci/controller/pcie-mediatek.c b/drivers/pci/controller/pcie-mediatek.c
-> index 861dda6..20b9088 100644
-> --- a/drivers/pci/controller/pcie-mediatek.c
-> +++ b/drivers/pci/controller/pcie-mediatek.c
-> @@ -337,11 +337,26 @@ static struct mtk_pcie_port *mtk_pcie_find_port(struct pci_bus *bus,
->  {
->  	struct mtk_pcie *pcie = bus->sysdata;
->  	struct mtk_pcie_port *port;
-> +	struct pci_dev *dev;
-> +	struct pci_bus *pbus;
+> diff --git a/drivers/pci/p2pdma.c b/drivers/pci/p2pdma.c
+> index 29bd40a87768..3da848f3fe72 100644
+> --- a/drivers/pci/p2pdma.c
+> +++ b/drivers/pci/p2pdma.c
+> @@ -9,6 +9,7 @@
+>   */
 >  
-> -	list_for_each_entry(port, &pcie->ports, list)
-> -		if (port->slot == PCI_SLOT(devfn))
-> +	list_for_each_entry(port, &pcie->ports, list) {
-> +		if (!bus->number && port->slot == PCI_SLOT(devfn))
->  			return port;
->  
-> +		if (bus->number) {
-> +			pbus = bus;
+>  #define pr_fmt(fmt) "pci-p2pdma: " fmt
+> +#include <linux/ctype.h>
+>  #include <linux/pci-p2pdma.h>
+>  #include <linux/module.h>
+>  #include <linux/slab.h>
+> @@ -856,3 +857,85 @@ int pci_p2pdma_map_sg(struct device *dev, struct scatterlist *sg, int nents,
+>  	return nents;
+>  }
+>  EXPORT_SYMBOL_GPL(pci_p2pdma_map_sg);
 > +
-> +			while (pbus->number) {
-> +				dev = pbus->self;
-> +				pbus = dev->bus;
-> +			}
+> +/**
+> + * pci_p2pdma_enable_store - parse a configfs/sysfs attribute store
+> + *		to enable p2pdma
+> + * @page: contents of the value to be stored
+> + * @p2p_dev: returns the PCI device that was selected to be used
+> + *		(if 'auto', 'none or a boolean isn't the store value)
+> + * @use_p2pdma: returns whether to enable p2pdma or not
+> + *
+> + * Parses an attribute value to decide whether to enable p2pdma.
+> + * The value can select a PCI device (using it's full BDF device
+> + * name), a boolean, or 'auto'. 'auto' and a true boolean value
+> + * have the same meaning. A false value disables p2pdma and
+> + * a PCI device enables it to use a specific device as the
+> + * backing provider.
+> + *
+> + * pci_p2pdma_enable_show() should be used as the show operation for
+> + * the attribute.
+> + *
+> + * Returns 0 on success
+> + */
+> +int pci_p2pdma_enable_store(const char *page, struct pci_dev **p2p_dev,
+> +			    bool *use_p2pdma)
+> +{
+> +	struct device *dev;
 > +
-> +			if (port->slot == PCI_SLOT(dev->devfn))
-> +				return port;
+> +	dev = bus_find_device_by_name(&pci_bus_type, NULL, page);
+> +	if (dev) {
+> +		*use_p2pdma = true;
+> +		*p2p_dev = to_pci_dev(dev);
+> +
+> +		if (!pci_has_p2pmem(*p2p_dev)) {
+> +			pr_err("PCI device has no peer-to-peer memory: %s\n",
+
+pci_err()?
+
+> +			       page);
+> +			pci_dev_put(*p2p_dev);
+> +			return -ENODEV;
 > +		}
+> +
+> +		return 0;
+> +	} else if (sysfs_streq(page, "auto")) {
+> +		*use_p2pdma = true;
+> +		return 0;
+> +	} else if ((page[0] == '0' || page[0] == '1') && !iscntrl(page[1])) {
+> +		/*
+> +		 * If the user enters a PCI device that  doesn't exist
+> +		 * like "0000:01:00.1", we don't want strtobool to think
+> +		 * it's a '0' when it's clearly not what the user wanted.
+> +		 * So we require 0's and 1's to be exactly one character.
+> +		 */
+> +	} else if (!strtobool(page, use_p2pdma)) {
+> +		return 0;
 > +	}
-
-	/*
-	 * Walk the bus hierarchy to get the devfn value
-	 * of the port in the root bus.
-	 */
-	while (bus && bus->number) {
-		devfn = bus->self->devfn;
-		bus = bus->parent;
-	}
-
-	list_for_each_entry(port, &pcie->ports, list) {
-		if (port->slot == PCI_SLOT(devfn))
-			return port;
-
-	return NULL;
-
-Would it work ? Maybe it is a little easier to parse.
-
-I think this can even be made easier by using struct device_node* as
-comparison (and store it in port->slot instead of the port number), I
-think that the pci_dev representing the port should have the right
-of_node associated with it by core code, so it is just a matter of
-finding the first pci_dev parent with an of_node set and compare it
-against port->slot (that should be converted to a struct device_node*).
-
-This ought to be tested and written but I think that's doable.
-
-Lorenzo
+> +
+> +	pr_err("No such PCI device: %.*s\n", (int)strcspn(page, "\n"), page);
+> +	return -ENODEV;
+> +}
+> +EXPORT_SYMBOL_GPL(pci_p2pdma_enable_store);
+> +
+> +/**
+> + * pci_p2pdma_enable_show - show a configfs/sysfs attribute indicating
+> + *		whether p2pdma is enabled
+> + * @page: contents of the stored value
+> + * @p2p_dev: the selected p2p device (NULL if no device is selected)
+> + * @use_p2pdma: whether p2pdme has been enabled
+> + *
+> + * Attributes that use pci_p2pdma_enable_store() should use this function
+> + * to show the value of the attribute.
+> + *
+> + * Returns 0 on success
+> + */
+> +ssize_t pci_p2pdma_enable_show(char *page, struct pci_dev *p2p_dev,
+> +			       bool use_p2pdma)
+> +{
+> +	if (!use_p2pdma)
+> +		return sprintf(page, "none\n");
+> +
+> +	if (!p2p_dev)
+> +		return sprintf(page, "auto\n");
+> +
+> +	return sprintf(page, "%s\n", pci_name(p2p_dev));
+> +}
+> +EXPORT_SYMBOL_GPL(pci_p2pdma_enable_show);
+> diff --git a/include/linux/pci-p2pdma.h b/include/linux/pci-p2pdma.h
+> index 2f03dbbf5af6..377de4d73767 100644
+> --- a/include/linux/pci-p2pdma.h
+> +++ b/include/linux/pci-p2pdma.h
+> @@ -38,6 +38,10 @@ void pci_p2pmem_free_sgl(struct pci_dev *pdev, struct scatterlist *sgl);
+>  void pci_p2pmem_publish(struct pci_dev *pdev, bool publish);
+>  int pci_p2pdma_map_sg(struct device *dev, struct scatterlist *sg, int nents,
+>  		      enum dma_data_direction dir);
+> +int pci_p2pdma_enable_store(const char *page, struct pci_dev **p2p_dev,
+> +			    bool *use_p2pdma);
+> +ssize_t pci_p2pdma_enable_show(char *page, struct pci_dev *p2p_dev,
+> +			       bool use_p2pdma);
+>  #else /* CONFIG_PCI_P2PDMA */
+>  static inline int pci_p2pdma_add_resource(struct pci_dev *pdev, int bar,
+>  		size_t size, u64 offset)
+> @@ -105,5 +109,16 @@ static inline int pci_p2pdma_map_sg(struct device *dev,
+>  {
+>  	return 0;
+>  }
+> +static inline int pci_p2pdma_enable_store(const char *page,
+> +		struct pci_dev **p2p_dev, bool *use_p2pdma)
+> +{
+> +	*use_p2pdma = false;
+> +	return 0;
+> +}
+> +static inline ssize_t pci_p2pdma_enable_show(char *page,
+> +		struct pci_dev *p2p_dev, bool use_p2pdma)
+> +{
+> +	return sprintf(page, "none\n");
+> +}
+>  #endif /* CONFIG_PCI_P2PDMA */
+>  #endif /* _LINUX_PCI_P2P_H */
+> -- 
+> 2.19.0
+> 
