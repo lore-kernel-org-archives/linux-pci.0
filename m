@@ -7,47 +7,47 @@ X-Spam-Status: No, score=-9.5 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
 	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT
 	autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 5EA20C433F4
-	for <linux-pci@archiver.kernel.org>; Fri, 21 Sep 2018 10:27:36 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 3A28BECE562
+	for <linux-pci@archiver.kernel.org>; Fri, 21 Sep 2018 10:27:52 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 17F40206B7
-	for <linux-pci@archiver.kernel.org>; Fri, 21 Sep 2018 10:27:36 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id DF12521547
+	for <linux-pci@archiver.kernel.org>; Fri, 21 Sep 2018 10:27:51 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (1024-bit key) header.d=ti.com header.i=@ti.com header.b="Qr9/RnDd"
-DMARC-Filter: OpenDMARC Filter v1.3.2 mail.kernel.org 17F40206B7
+	dkim=pass (1024-bit key) header.d=ti.com header.i=@ti.com header.b="CEDLZ0Y5"
+DMARC-Filter: OpenDMARC Filter v1.3.2 mail.kernel.org DF12521547
 Authentication-Results: mail.kernel.org; dmarc=fail (p=quarantine dis=none) header.from=ti.com
 Authentication-Results: mail.kernel.org; spf=none smtp.mailfrom=linux-pci-owner@vger.kernel.org
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S2390119AbeIUQM5 (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Fri, 21 Sep 2018 12:12:57 -0400
-Received: from fllv0015.ext.ti.com ([198.47.19.141]:35170 "EHLO
+        id S2390152AbeIUQQC (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Fri, 21 Sep 2018 12:16:02 -0400
+Received: from fllv0015.ext.ti.com ([198.47.19.141]:35424 "EHLO
         fllv0015.ext.ti.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1727776AbeIUQM5 (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Fri, 21 Sep 2018 12:12:57 -0400
-Received: from dlelxv90.itg.ti.com ([172.17.2.17])
-        by fllv0015.ext.ti.com (8.15.2/8.15.2) with ESMTP id w8LAOL1B030608;
-        Fri, 21 Sep 2018 05:24:21 -0500
+        with ESMTP id S2389559AbeIUQQB (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Fri, 21 Sep 2018 12:16:01 -0400
+Received: from dflxv15.itg.ti.com ([128.247.5.124])
+        by fllv0015.ext.ti.com (8.15.2/8.15.2) with ESMTP id w8LAPOaA030920;
+        Fri, 21 Sep 2018 05:25:24 -0500
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=ti.com;
-        s=ti-com-17Q1; t=1537525461;
-        bh=Zb1pEq/7Y0jRAn9nRMQL9/laMZOm8SQbSboCqJYQG+M=;
+        s=ti-com-17Q1; t=1537525524;
+        bh=XDj+mFJD+CB99IbCn09zPB+O+0SrSz7pxE0ENLfnd3U=;
         h=From:To:CC:Subject:Date:In-Reply-To:References;
-        b=Qr9/RnDd2oJjpm7qzfzWh3Picr00OuO8n75xmCyyI60rZH2AgodXim8eJeQP51tH4
-         pLQ0qRrl2ZvkQkULaTuVwsgeipw6aEXDVXXj6ioLVMfD8LFBMN7xVBWhfS0miOFdMK
-         NCoNHGE0+JZsPyaluoQj7at25ftRYRelwrnYEjWU=
-Received: from DLEE102.ent.ti.com (dlee102.ent.ti.com [157.170.170.32])
-        by dlelxv90.itg.ti.com (8.14.3/8.13.8) with ESMTP id w8LAOLGK031053;
-        Fri, 21 Sep 2018 05:24:21 -0500
-Received: from DLEE110.ent.ti.com (157.170.170.21) by DLEE102.ent.ti.com
- (157.170.170.32) with Microsoft SMTP Server (version=TLS1_2,
+        b=CEDLZ0Y5yKRNRb+NyrPFti9OQvBLmegwPFs4roceFaJrWIMJ+N2ZZtiXa6cJp/zIG
+         P3TxQT7KsyhmKqx08V1g3FKTVRTFY0xPBQPkVvbbNnNS8O8vaP+bpcwkCw2FPM7Ojz
+         WWn2N7D4s9daIrSNzlQgN4wzWf6R2+vQOVpcc3Cc=
+Received: from DFLE105.ent.ti.com (dfle105.ent.ti.com [10.64.6.26])
+        by dflxv15.itg.ti.com (8.14.3/8.13.8) with ESMTP id w8LAPORG021767;
+        Fri, 21 Sep 2018 05:25:24 -0500
+Received: from DFLE112.ent.ti.com (10.64.6.33) by DFLE105.ent.ti.com
+ (10.64.6.26) with Microsoft SMTP Server (version=TLS1_2,
  cipher=TLS_ECDHE_RSA_WITH_AES_128_CBC_SHA256_P256) id 15.1.1466.3; Fri, 21
- Sep 2018 05:24:20 -0500
-Received: from dlep33.itg.ti.com (157.170.170.75) by DLEE110.ent.ti.com
- (157.170.170.21) with Microsoft SMTP Server (version=TLS1_0,
+ Sep 2018 05:25:24 -0500
+Received: from dlep33.itg.ti.com (157.170.170.75) by DFLE112.ent.ti.com
+ (10.64.6.33) with Microsoft SMTP Server (version=TLS1_0,
  cipher=TLS_RSA_WITH_AES_256_CBC_SHA) id 15.1.1466.3 via Frontend Transport;
- Fri, 21 Sep 2018 05:24:20 -0500
+ Fri, 21 Sep 2018 05:25:24 -0500
 Received: from a0393678ub.dal.design.ti.com (ileax41-snat.itg.ti.com [10.172.224.153])
-        by dlep33.itg.ti.com (8.14.3/8.13.8) with ESMTP id w8LAMEtU032280;
-        Fri, 21 Sep 2018 05:24:16 -0500
+        by dlep33.itg.ti.com (8.14.3/8.13.8) with ESMTP id w8LAMEti032280;
+        Fri, 21 Sep 2018 05:25:20 -0500
 From:   Kishon Vijay Abraham I <kishon@ti.com>
 To:     Jingoo Han <jingoohan1@gmail.com>,
         Joao Pinto <Joao.Pinto@synopsys.com>,
@@ -63,9 +63,9 @@ CC:     Mark Rutland <mark.rutland@arm.com>,
         <linux-pci@vger.kernel.org>, <devicetree@vger.kernel.org>,
         <linux-kernel@vger.kernel.org>,
         <linux-arm-kernel@lists.infradead.org>
-Subject: [RFC PATCH 26/40] PCI: keystone: Explicitly set the PCIe mode
-Date:   Fri, 21 Sep 2018 15:51:41 +0530
-Message-ID: <20180921102155.22839-27-kishon@ti.com>
+Subject: [RFC PATCH 40/40] arm64: dts: k3-am6: Add Root Complex PCIe dt node
+Date:   Fri, 21 Sep 2018 15:51:55 +0530
+Message-ID: <20180921102155.22839-41-kishon@ti.com>
 X-Mailer: git-send-email 2.17.1
 In-Reply-To: <20180921102155.22839-1-kishon@ti.com>
 References: <20180921102155.22839-1-kishon@ti.com>
@@ -77,77 +77,125 @@ Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-Explicitly set the PCIe mode to BOOTCFG_DEVCFG instead of always
-relying on the default values. This is required when EP mode has to
-be explicitly written to BOOTCFG_DEVCFG register.
+Add Root Complex PCIe dt node.
 
 Signed-off-by: Kishon Vijay Abraham I <kishon@ti.com>
 ---
- drivers/pci/controller/dwc/pci-keystone.c | 37 +++++++++++++++++++++++
- 1 file changed, 37 insertions(+)
+ arch/arm64/boot/dts/ti/k3-am65-main.dtsi | 83 ++++++++++++++++++++++++
+ arch/arm64/boot/dts/ti/k3-am65.dtsi      |  1 +
+ 2 files changed, 84 insertions(+)
 
-diff --git a/drivers/pci/controller/dwc/pci-keystone.c b/drivers/pci/controller/dwc/pci-keystone.c
-index 13e865f82f96..e8328039a017 100644
---- a/drivers/pci/controller/dwc/pci-keystone.c
-+++ b/drivers/pci/controller/dwc/pci-keystone.c
-@@ -80,6 +80,15 @@
- #define PCIE_RC_K2L			0xb00a
- #define PCIE_RC_K2G			0xb00b
+diff --git a/arch/arm64/boot/dts/ti/k3-am65-main.dtsi b/arch/arm64/boot/dts/ti/k3-am65-main.dtsi
+index b08d15fa110e..0a5d74a8eef4 100644
+--- a/arch/arm64/boot/dts/ti/k3-am65-main.dtsi
++++ b/arch/arm64/boot/dts/ti/k3-am65-main.dtsi
+@@ -14,6 +14,21 @@
+ 		#size-cells = <1>;
+ 		ranges = <0x0 0x0 0x00100000 0x1c000>;
  
-+#define KS_PCIE_DEV_TYPE_MASK		(0x3 << 1)
-+#define KS_PCIE_DEV_TYPE(mode)		((mode) << 1)
++		pcie0_mode: pcie-mode@4060 {
++			compatible = "syscon";
++			reg = <0x00004060 0x4>;
++		};
 +
-+#define EP				0x0
-+#define LEG_EP				0x1
-+#define RC				0x2
++		pcie1_mode: pcie-mode@4070 {
++			compatible = "syscon";
++			reg = <0x00004070 0x4>;
++		};
 +
-+#define KS_PCIE_SYSCLOCKOUTEN		BIT(0)
++		pcie_devid: pcie-devid@210 {
++			compatible = "syscon";
++			reg = <0x00000210 0x4>;
++		};
 +
- #define to_keystone_pcie(x)		dev_get_drvdata((x)->dev)
- 
- static int ks_pcie_start_link(struct dw_pcie *pci);
-@@ -749,6 +758,30 @@ static int ks_pcie_enable_phy(struct keystone_pcie *ks_pcie)
- 	return ret;
- }
- 
-+static int ks_pcie_set_mode(struct device *dev)
-+{
-+	struct device_node *np = dev->of_node;
-+	struct regmap *syscon;
-+	u32 val;
-+	u32 mask;
-+	int ret = 0;
+ 		serdes0_clk: serdes_clk@4080 {
+ 			compatible = "syscon";
+ 			reg = <0x00004080 0x4>;
+@@ -128,4 +143,72 @@
+ 		clock-frequency = <48000000>;
+ 		current-speed = <115200>;
+ 	};
 +
-+	syscon = syscon_regmap_lookup_by_phandle(np, "ti,syscon-pcie-mode");
-+	if (IS_ERR(syscon))
-+		return 0;
++	pcie0_rc: pcie@5500000 {
++		compatible = "ti,am654-pcie-rc";
++		reg =  <0x0 0x5500000 0x0 0x1000>, <0x0 0x5501000 0x0 0x1000>, <0x0 0x10000000 0x0 0x2000>, <0x0 0x5506000 0x0 0x1000>;
++		reg-names = "app", "dbics", "config", "atu";
++		power-domains = <&k3_pds 120>;
++		#address-cells = <3>;
++		#size-cells = <2>;
++		ranges = <0x81000000 0 0          0x0 0x10020000 0 0x00010000
++			  0x82000000 0 0x10030000 0x0 0x10030000 0 0x07FD0000>;
++		ti,syscon-pcie-id = <&pcie_devid>;
++		ti,syscon-pcie-mode = <&pcie0_mode>;
++		bus-range = <0x0 0xff>;
++		device_type = "pci";
++		num-lanes = <1>;
++		num-ob-windows = <16>;
++		num-viewport = <16>;
++		interrupts = <GIC_SPI 340 IRQ_TYPE_EDGE_RISING>;
++		#interrupt-cells = <1>;
++		interrupt-map-mask = <0 0 0 7>;
++		interrupt-map = <0 0 0 1 &pcie0_intc 0>, /* INT A */
++				<0 0 0 2 &pcie0_intc 0>, /* INT B */
++				<0 0 0 3 &pcie0_intc 0>, /* INT C */
++				<0 0 0 4 &pcie0_intc 0>; /* INT D */
++		msi-map = <0x0 &gic_its 0x0 0x10000>;
++		status = "disabled";
 +
-+	mask = KS_PCIE_DEV_TYPE_MASK | KS_PCIE_SYSCLOCKOUTEN;
-+	val = KS_PCIE_DEV_TYPE(RC) | KS_PCIE_SYSCLOCKOUTEN;
++		pcie0_intc: legacy-interrupt-controller@1 {
++			interrupt-controller;
++			#interrupt-cells = <1>;
++			interrupt-parent = <&gic500>;
++			interrupts = <GIC_SPI 328 IRQ_TYPE_EDGE_RISING>;
++		};
++	};
 +
-+	ret = regmap_update_bits(syscon, 0, mask, val);
-+	if (ret) {
-+		dev_err(dev, "failed to set pcie mode\n");
-+		return ret;
-+	}
++	pcie1_rc: pcie@5600000 {
++		compatible = "ti,am654-pcie-rc";
++		reg =  <0x0 0x5600000 0x0 0x1000>, <0x0 0x5601000 0x0 0x1000>, <0x0 0x18000000 0x0 0x2000>, <0x0 0x5606000 0x0 0x1000>;
++		reg-names = "app", "dbics", "config", "atu";
++		power-domains = <&k3_pds 121>;
++		#address-cells = <3>;
++		#size-cells = <2>;
++		ranges = <0x81000000 0 0          0x0   0x18020000 0 0x00010000
++			  0x82000000 0 0x18030000 0x0   0x18030000 0 0x07FD0000>;
++		ti,syscon-pcie-id = <&pcie_devid>;
++		ti,syscon-pcie-mode = <&pcie1_mode>;
++		bus-range = <0x0 0xff>;
++		status = "disabled";
++		device_type = "pci";
++		num-lanes = <1>;
++		num-ob-windows = <16>;
++		num-viewport = <16>;
++		interrupts = <GIC_SPI 355 IRQ_TYPE_EDGE_RISING>;
++		#interrupt-cells = <1>;
++		interrupt-map-mask = <0 0 0 7>;
++		interrupt-map = <0 0 0 1 &pcie1_intc 0>, /* INT A */
++				<0 0 0 2 &pcie1_intc 0>, /* INT B */
++				<0 0 0 3 &pcie1_intc 0>, /* INT C */
++				<0 0 0 4 &pcie1_intc 0>; /* INT D */
++		msi-map = <0x0 &gic_its 0x10000 0x10000>;
 +
-+	return 0;
-+}
-+
- static int __init ks_pcie_probe(struct platform_device *pdev)
- {
- 	struct device *dev = &pdev->dev;
-@@ -865,6 +898,10 @@ static int __init ks_pcie_probe(struct platform_device *pdev)
- 		goto err_get_sync;
- 	}
- 
-+	ret = ks_pcie_set_mode(dev);
-+	if (ret < 0)
-+		goto err_get_sync;
-+
- 	ret = ks_pcie_add_pcie_port(ks_pcie, pdev);
- 	if (ret < 0)
- 		goto err_get_sync;
++		pcie1_intc: legacy-interrupt-controller@1 {
++			interrupt-controller;
++			#interrupt-cells = <1>;
++			interrupt-parent = <&gic500>;
++			interrupts = <GIC_SPI 343 IRQ_TYPE_EDGE_RISING>;
++		};
++	};
+ };
+diff --git a/arch/arm64/boot/dts/ti/k3-am65.dtsi b/arch/arm64/boot/dts/ti/k3-am65.dtsi
+index 3d4bf369d030..b87081765894 100644
+--- a/arch/arm64/boot/dts/ti/k3-am65.dtsi
++++ b/arch/arm64/boot/dts/ti/k3-am65.dtsi
+@@ -61,6 +61,7 @@
+ 			 <0x00 0x00900000 0x00 0x00900000 0x00 0x00012000>, /* serdes */
+ 			 <0x00 0x01000000 0x00 0x01000000 0x00 0x0af02400>, /* Most peripherals */
+ 			 <0x00 0x30800000 0x00 0x30800000 0x00 0x0bc00000>, /* MAIN NAVSS */
++			 <0x00 0x10000000 0x00 0x10000000 0x00 0x10000000>, /* PCIe DAT */
+ 			 /* MCUSS Range */
+ 			 <0x00 0x28380000 0x00 0x28380000 0x00 0x03880000>,
+ 			 <0x00 0x40200000 0x00 0x40200000 0x00 0x00900100>,
 -- 
 2.17.1
 
