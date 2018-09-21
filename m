@@ -2,106 +2,81 @@ Return-Path: <SRS0=H68a=MD=vger.kernel.org=linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-9.5 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,
-	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT
+X-Spam-Status: No, score=-3.3 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,MAILING_LIST_MULTI,SPF_PASS,USER_AGENT_MUTT
 	autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 8363EC433F4
-	for <linux-pci@archiver.kernel.org>; Fri, 21 Sep 2018 10:29:12 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 2D07BC433F4
+	for <linux-pci@archiver.kernel.org>; Fri, 21 Sep 2018 13:00:15 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 3F37821531
-	for <linux-pci@archiver.kernel.org>; Fri, 21 Sep 2018 10:29:12 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id C2F662154F
+	for <linux-pci@archiver.kernel.org>; Fri, 21 Sep 2018 13:00:14 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (1024-bit key) header.d=ti.com header.i=@ti.com header.b="BF3iIMyL"
-DMARC-Filter: OpenDMARC Filter v1.3.2 mail.kernel.org 3F37821531
-Authentication-Results: mail.kernel.org; dmarc=fail (p=quarantine dis=none) header.from=ti.com
+	dkim=pass (1024-bit key) header.d=kernel.org header.i=@kernel.org header.b="La4K4o7g"
+DMARC-Filter: OpenDMARC Filter v1.3.2 mail.kernel.org C2F662154F
+Authentication-Results: mail.kernel.org; dmarc=fail (p=none dis=none) header.from=kernel.org
 Authentication-Results: mail.kernel.org; spf=none smtp.mailfrom=linux-pci-owner@vger.kernel.org
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S2389778AbeIUQMC (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Fri, 21 Sep 2018 12:12:02 -0400
-Received: from lelv0142.ext.ti.com ([198.47.23.249]:51328 "EHLO
-        lelv0142.ext.ti.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1727554AbeIUQMB (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Fri, 21 Sep 2018 12:12:01 -0400
-Received: from dlelxv90.itg.ti.com ([172.17.2.17])
-        by lelv0142.ext.ti.com (8.15.2/8.15.2) with ESMTP id w8LANKGF033241;
-        Fri, 21 Sep 2018 05:23:20 -0500
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=ti.com;
-        s=ti-com-17Q1; t=1537525400;
-        bh=HPgjlX5taw7ZtR4to3Xv2wCqCwxm6AbKhwmyuCfZ5x4=;
-        h=From:To:CC:Subject:Date:In-Reply-To:References;
-        b=BF3iIMyLpvmg8ufJVXccWSXoSZipCJQLRIrEuiHUfy3sMHyV5iGDIeXH5JX2QSW+Q
-         VD2Rw6DwYAcPR3OmzFWJda/3HS/6twRoolCQRA+asf6+bDLeJyRml5ZiEJeyxRj+cw
-         0psyzjhJyDJezpaHtuI8qXNb+xnat8wqrgrMHCac=
-Received: from DLEE103.ent.ti.com (dlee103.ent.ti.com [157.170.170.33])
-        by dlelxv90.itg.ti.com (8.14.3/8.13.8) with ESMTP id w8LANKpE029903;
-        Fri, 21 Sep 2018 05:23:20 -0500
-Received: from DLEE109.ent.ti.com (157.170.170.41) by DLEE103.ent.ti.com
- (157.170.170.33) with Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_128_CBC_SHA256_P256) id 15.1.1466.3; Fri, 21
- Sep 2018 05:23:19 -0500
-Received: from dlep33.itg.ti.com (157.170.170.75) by DLEE109.ent.ti.com
- (157.170.170.41) with Microsoft SMTP Server (version=TLS1_0,
- cipher=TLS_RSA_WITH_AES_256_CBC_SHA) id 15.1.1466.3 via Frontend Transport;
- Fri, 21 Sep 2018 05:23:19 -0500
-Received: from a0393678ub.dal.design.ti.com (ileax41-snat.itg.ti.com [10.172.224.153])
-        by dlep33.itg.ti.com (8.14.3/8.13.8) with ESMTP id w8LAMEtH032280;
-        Fri, 21 Sep 2018 05:23:15 -0500
-From:   Kishon Vijay Abraham I <kishon@ti.com>
-To:     Jingoo Han <jingoohan1@gmail.com>,
-        Joao Pinto <Joao.Pinto@synopsys.com>,
+        id S1728100AbeIUSs7 (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Fri, 21 Sep 2018 14:48:59 -0400
+Received: from mail.kernel.org ([198.145.29.99]:44164 "EHLO mail.kernel.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1727857AbeIUSs7 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Fri, 21 Sep 2018 14:48:59 -0400
+Received: from localhost (252.sub-174-234-146.myvzw.com [174.234.146.252])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+        (No client certificate requested)
+        by mail.kernel.org (Postfix) with ESMTPSA id F21BA21532;
+        Fri, 21 Sep 2018 13:00:12 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+        s=default; t=1537534813;
+        bh=hA5iPYdQ0jTpDnLtGsIrSdBsuzOxXx5TPBOpzhMh7pw=;
+        h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
+        b=La4K4o7gyJDI/svllE5SIfTrGw1/wqdiV6lEG/r8oJXMEDRk7PbVPbnkcVibXNHDE
+         i9cBd1W1sm6F6B8FT2M0MYZdYSVM+bPEuNCh8h6ADTWYbLcG8NxrtBMY2QMYdqTK+O
+         uMCgeRHXNfeKf68PVmgT+ysp68D5nM/S6j0Q5tHI=
+Date:   Fri, 21 Sep 2018 08:00:10 -0500
+From:   Bjorn Helgaas <helgaas@kernel.org>
+To:     Logan Gunthorpe <logang@deltatee.com>
+Cc:     linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
+        linux-nvme@lists.infradead.org, linux-rdma@vger.kernel.org,
+        linux-nvdimm@lists.01.org, linux-block@vger.kernel.org,
+        Stephen Bates <sbates@raithlin.com>,
+        Christoph Hellwig <hch@lst.de>,
+        Keith Busch <keith.busch@intel.com>,
+        Sagi Grimberg <sagi@grimberg.me>,
         Bjorn Helgaas <bhelgaas@google.com>,
-        Rob Herring <robh+dt@kernel.org>,
-        Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
-        Murali Karicheri <m-karicheri2@ti.com>,
-        Kishon Vijay Abraham I <kishon@ti.com>,
-        <Gustavo.Pimentel@synopsys.com>
-CC:     Mark Rutland <mark.rutland@arm.com>,
-        Santosh Shilimkar <ssantosh@kernel.org>,
-        Tero Kristo <t-kristo@ti.com>, Nishanth Menon <nm@ti.com>,
-        <linux-pci@vger.kernel.org>, <devicetree@vger.kernel.org>,
-        <linux-kernel@vger.kernel.org>,
-        <linux-arm-kernel@lists.infradead.org>
-Subject: [RFC PATCH 13/40] dt-bindings: PCI: keystone: Add "reg-names" binding information
-Date:   Fri, 21 Sep 2018 15:51:28 +0530
-Message-ID: <20180921102155.22839-14-kishon@ti.com>
-X-Mailer: git-send-email 2.17.1
-In-Reply-To: <20180921102155.22839-1-kishon@ti.com>
-References: <20180921102155.22839-1-kishon@ti.com>
+        Jason Gunthorpe <jgg@mellanox.com>,
+        Max Gurtovoy <maxg@mellanox.com>,
+        Dan Williams <dan.j.williams@intel.com>,
+        =?iso-8859-1?B?Suly9G1l?= Glisse <jglisse@redhat.com>,
+        Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+        Alex Williamson <alex.williamson@redhat.com>,
+        Christian =?iso-8859-1?Q?K=F6nig?= <christian.koenig@amd.com>,
+        Jens Axboe <axboe@kernel.dk>
+Subject: Re: [PATCH v6 01/13] PCI/P2PDMA: Support peer-to-peer memory
+Message-ID: <20180921130010.GE224714@bhelgaas-glaptop.roam.corp.google.com>
+References: <20180913001156.4115-1-logang@deltatee.com>
+ <20180913001156.4115-2-logang@deltatee.com>
+ <20180920223829.GD224714@bhelgaas-glaptop.roam.corp.google.com>
+ <ab733346-9518-ed68-492d-e52929586293@deltatee.com>
 MIME-Version: 1.0
-Content-Type: text/plain
-X-EXCLAIMER-MD-CONFIG: e1e8a2fd-e40a-4ac6-ac9b-f7e9cc9ee180
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <ab733346-9518-ed68-492d-e52929586293@deltatee.com>
+User-Agent: Mutt/1.10.1 (2018-07-13)
 Sender: linux-pci-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-Add "reg-names" binding information in order for device tree node
-to be populated with the correct register strings.
+On Thu, Sep 20, 2018 at 04:47:49PM -0600, Logan Gunthorpe wrote:
+> On 2018-09-20 4:38 PM, Bjorn Helgaas wrote:
+> >> +#define pr_fmt(fmt) "pci-p2pdma: " fmt
+> > 
+> > Is pr_fmt() actually used anywhere?
+> 
+> It's used in a Patch 4 to print errors in the configfs helpers.
 
-Signed-off-by: Kishon Vijay Abraham I <kishon@ti.com>
----
- Documentation/devicetree/bindings/pci/pci-keystone.txt | 6 ++++--
- 1 file changed, 4 insertions(+), 2 deletions(-)
-
-diff --git a/Documentation/devicetree/bindings/pci/pci-keystone.txt b/Documentation/devicetree/bindings/pci/pci-keystone.txt
-index 2030ee0dc4f9..3a551687cfa2 100644
---- a/Documentation/devicetree/bindings/pci/pci-keystone.txt
-+++ b/Documentation/devicetree/bindings/pci/pci-keystone.txt
-@@ -12,8 +12,10 @@ described here as well as properties that are not applicable.
- Required Properties:-
- 
- compatibility: "ti,keystone-pcie"
--reg:	index 1 is the base address and length of DW application registers.
--	index 2 is the base address and length of PCI device ID register.
-+reg: Three register ranges as listed in the reg-names property
-+reg-names: "dbics" for the DesignWare PCIe registers, "app" for the
-+	   TI specific application registers, "config" for the
-+	   configuration space address
- 
- pcie_msi_intc : Interrupt controller device node for MSI IRQ chip
- 	interrupt-cells: should be set to 1
--- 
-2.17.1
-
+Ideally pr_fmt() would be added in the same patch that uses it, but
+obviously pretty trivial.
