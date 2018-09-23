@@ -2,321 +2,121 @@ Return-Path: <SRS0=l472=MF=vger.kernel.org=linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-6.8 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_PASS,URIBL_BLOCKED
-	autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-0.6 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
+	DKIM_VALID_AU,FREEMAIL_FORGED_FROMDOMAIN,FREEMAIL_FROM,
+	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_PASS autolearn=ham
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id ABB7AECE561
-	for <linux-pci@archiver.kernel.org>; Sun, 23 Sep 2018 03:07:39 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 0BF05C433F4
+	for <linux-pci@archiver.kernel.org>; Sun, 23 Sep 2018 06:20:32 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 4030620657
-	for <linux-pci@archiver.kernel.org>; Sun, 23 Sep 2018 03:07:39 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.3.2 mail.kernel.org 4030620657
-Authentication-Results: mail.kernel.org; dmarc=fail (p=none dis=none) header.from=linux.intel.com
+	by mail.kernel.org (Postfix) with ESMTP id 948842086B
+	for <linux-pci@archiver.kernel.org>; Sun, 23 Sep 2018 06:20:31 +0000 (UTC)
+Authentication-Results: mail.kernel.org;
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="Xiw4tcBw"
+DMARC-Filter: OpenDMARC Filter v1.3.2 mail.kernel.org 948842086B
+Authentication-Results: mail.kernel.org; dmarc=fail (p=none dis=none) header.from=gmail.com
 Authentication-Results: mail.kernel.org; spf=none smtp.mailfrom=linux-pci-owner@vger.kernel.org
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1725939AbeIWJD2 (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Sun, 23 Sep 2018 05:03:28 -0400
-Received: from mga07.intel.com ([134.134.136.100]:21781 "EHLO mga07.intel.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1725903AbeIWJD2 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Sun, 23 Sep 2018 05:03:28 -0400
-X-Amp-Result: SKIPPED(no attachment in message)
-X-Amp-File-Uploaded: False
-Received: from fmsmga007.fm.intel.com ([10.253.24.52])
-  by orsmga105.jf.intel.com with ESMTP/TLS/DHE-RSA-AES256-GCM-SHA384; 22 Sep 2018 20:07:36 -0700
-X-ExtLoop1: 1
-X-IronPort-AV: E=Sophos;i="5.54,291,1534834800"; 
-   d="scan'208";a="72163879"
-Received: from allen-box.sh.intel.com (HELO [10.239.161.122]) ([10.239.161.122])
-  by fmsmga007.fm.intel.com with ESMTP; 22 Sep 2018 20:07:08 -0700
-Cc:     baolu.lu@linux.intel.com, joro@8bytes.org,
-        linux-pci@vger.kernel.org, jcrouse@codeaurora.org,
-        alex.williamson@redhat.com, Jonathan.Cameron@huawei.com,
-        jacob.jun.pan@linux.intel.com, christian.koenig@amd.com,
-        eric.auger@redhat.com, kevin.tian@intel.com, yi.l.liu@intel.com,
-        andrew.murray@arm.com, will.deacon@arm.com, robin.murphy@arm.com,
-        ashok.raj@intel.com, xuzaibo@huawei.com, liguozhu@hisilicon.com,
-        okaya@codeaurora.org, bharatku@xilinx.com,
-        ilias.apalodimas@linaro.org, shunyong.yang@hxt-semitech.com
-Subject: Re: [PATCH v3 02/10] iommu/sva: Bind process address spaces to
- devices
-To:     Jean-Philippe Brucker <jean-philippe.brucker@arm.com>,
-        iommu@lists.linux-foundation.org
-References: <20180920170046.20154-1-jean-philippe.brucker@arm.com>
- <20180920170046.20154-3-jean-philippe.brucker@arm.com>
-From:   Lu Baolu <baolu.lu@linux.intel.com>
-Message-ID: <cdcd4083-ef28-4c5e-4a2c-5b93e61a86b4@linux.intel.com>
-Date:   Sun, 23 Sep 2018 11:05:40 +0800
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:52.0) Gecko/20100101
- Thunderbird/52.9.1
+        id S1725988AbeIWMQs (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Sun, 23 Sep 2018 08:16:48 -0400
+Received: from mail-ot1-f51.google.com ([209.85.210.51]:42331 "EHLO
+        mail-ot1-f51.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1725971AbeIWMQs (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Sun, 23 Sep 2018 08:16:48 -0400
+Received: by mail-ot1-f51.google.com with SMTP id h26-v6so16922402otl.9
+        for <linux-pci@vger.kernel.org>; Sat, 22 Sep 2018 23:20:29 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20161025;
+        h=mime-version:in-reply-to:references:from:date:message-id:subject:to
+         :cc;
+        bh=fGMZisMSU0oco4B/fQ3Dg0oB9MsTWPF8Oxorw6sa2hc=;
+        b=Xiw4tcBwY/CgGsieXcImtcImbhxwDrXUuNztO924yObeNy1EVYQzrLBz+bGvE5lXWB
+         piDlEReWFXK9cPZEXj8v1HYDXHu0VdTk1JrpdjkSbT+xBCh3aKkcr0i7oidQmXP1ArbE
+         tsrrLbxVEb3tKnVtdFhGUoxcnrOiMuGug4B/r187zpbefBVO5sdzysr8wdbTu5x+Ie4f
+         lVYc6VAydJP0Shc0lRf/Su5WMzsAo+o/lnM4O6C8kTcPq7dLX97Xq5ZCXmxxtzrcT/oV
+         Zo5AivDYdfM4sFwPj1OEjDRH56EGTY9w2u7KrJf+yb1UjY+fMH49e5U3ZgC2+Cl4BHOC
+         9cuA==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20161025;
+        h=x-gm-message-state:mime-version:in-reply-to:references:from:date
+         :message-id:subject:to:cc;
+        bh=fGMZisMSU0oco4B/fQ3Dg0oB9MsTWPF8Oxorw6sa2hc=;
+        b=YQ8iRrwBybXxP4Mfb60a946CHk0Cp++Wt5h3T1SZNlsGuyZc0aqKKO3PF4rTk7B625
+         IS179jiKajJq3saoQZIqzk+XIotggPyYIoiD4QFpaEoBHaSQT2isklELDhcwc13BeNBW
+         iuVc+kzsIwikB2/UTl4eTqGCt9qbkfc7M1EC3edXRM3Dlu0jRjURD3qwyYbWpCPUPjxt
+         sd6w56cx4wLCpq+hmSPBhhUG5jzB+KB+PNHs/DVbRVC79K/9o+ltsw7AhN3JPTlezxWr
+         Pd8G7CUR/pCfzC0IBDaxk3YRin8OtklioU+GlN01HlVphaMLg9Mn3LvSmHpEKhFwMRJy
+         ARFg==
+X-Gm-Message-State: ABuFfoiqF8TAd/uhY4Fni49AuI9wQOAym7zZDro40scZBEylCWI6VgnC
+        zBXsAE+oQYuM7bwgZI6K9+6gmqP3O0u+nj//6Wo=
+X-Google-Smtp-Source: ACcGV630rkyUWkV0Sh+NDjjtdZ/TPMNx7wLqxBvJ+GIIW1gAWoeaCy98kjfRDg2xkaHrzdxTkPMlCBwVFP6/WUgILv4=
+X-Received: by 2002:a9d:5cc3:: with SMTP id r3-v6mr3105936oti.301.1537683629107;
+ Sat, 22 Sep 2018 23:20:29 -0700 (PDT)
 MIME-Version: 1.0
-In-Reply-To: <20180920170046.20154-3-jean-philippe.brucker@arm.com>
-Content-Type: text/plain; charset=utf-8; format=flowed
-Content-Language: en-US
-Content-Transfer-Encoding: 7bit
+Received: by 2002:a9d:521f:0:0:0:0:0 with HTTP; Sat, 22 Sep 2018 23:20:28
+ -0700 (PDT)
+In-Reply-To: <8fd595af-53fa-c100-c369-8c7a30eba8e3@gmail.com>
+References: <8fd595af-53fa-c100-c369-8c7a30eba8e3@gmail.com>
+From:   Sergio Paracuellos <sergio.paracuellos@gmail.com>
+Date:   Sun, 23 Sep 2018 08:20:28 +0200
+Message-ID: <CAMhs-H-CM3bb9fg2eX6G_534bmuQYcoFa+pJSuNeArXLSXO4=Q@mail.gmail.com>
+Subject: Re: mt7621/mt7628 PCIe linux driver
+To:     Petr Cvek <petrcvekcz@gmail.com>
+Cc:     ryder.lee@mediatek.com, blogic@openwrt.org,
+        linux-mediatek@lists.infradead.org, linux-mips@linux-mips.org,
+        linux-pci@vger.kernel.org
+Content-Type: text/plain; charset="UTF-8"
 Sender: linux-pci-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-Hi,
+Hi Petr,
 
-On 09/21/2018 01:00 AM, Jean-Philippe Brucker wrote:
-> Add bind() and unbind() operations to the IOMMU API. Bind() returns a
-> PASID that drivers can program in hardware, to let their devices access an
-> mm. This patch only adds skeletons for the device driver API, most of the
-> implementation is still missing.
+On Sat, Sep 22, 2018 at 11:06 PM, Petr Cvek <petrcvekcz@gmail.com> wrote:
+> Hello,
+>
+> I'm trying to play with mt7628 PCIe (and it's old driver mt7620), but
+> the system keeps freezing. It is probably because of bus master access
+> of my PCIe cards but I don't see any memory access controls for PCIe <->
+> RAM in the datasheet. The same problem is with MSI. It seems the root
+> complex supports MSI (it has an MSI capability field), but there isn't
+> any mention in the MT7628 datasheet too. As it seems the MT7628 PCIe is
+> based on MT7621 PCIe, I went for an MT7621 datasheet, but sadly in the
+> datasheet the PCIe section is missing completely.
 
-Is it possible that a malicious process can unbind a pasid which is
-used by another normal process?
+AFAIK, MT7628 should be covered with mt7620 driver. The source code is in
+arch/mips/pci/pci-mt7620.c. For initialization in really depends on
+the "ralink_soc"
+variable exported in arch/mips/ralink/prom.c.
 
-It might happen in below sequence:
+You have to figure out why and where is really freezing. Does a clean kernel
+boots and success on setting up PCI? A 'dmesg' would be helpful.
 
+>
+> Does anybody have a working MT7621/28 bus master setup or a more
+> completed datasheet? I would like to get some information for fixing the
+> mt7620 PCIe driver. It is possible the MSI/bus master is controlled by
+> the undocumented bridge registers (in the pci-mt7621 they controls the
+> manual oscillator settings, I've found a link quality register at
+> 0x101490c4) or in a PCI config space of the root complex (around 0x700
+> offset). If you have a working SoC with MSI/bus mastering (= mem access
+> from card), can you send me the dump of there spaces?
 
-Process A			Process B
-=========			=========
-iommu_sva_init_device(dev)
-iommu_sva_bind_device(dev)
-....
-device access mm of A with
-#PASID returned above
-....
-				iommu_sva_unbind_device(dev, #PASID)
-....
-[unrecoverable errors]
+The datasheet for the mt7620 contains information about PCI registers.
+Linux initializes the
+pci topology but master bit of command registers for endpoints is
+disabled and is mission of final
+card driver to enable it in order to allow memory accessing to the card.
 
-I didn't have a thorough consideration of this. Sorry if this has been
-prevented.
+Hope this helps.
+
+>
+> Thanks
+>
+> best regards,
+> Petr
 
 Best regards,
-Lu Baolu
-
-> 
-> Signed-off-by: Jean-Philippe Brucker <jean-philippe.brucker@arm.com>
-> ---
->   drivers/iommu/iommu-sva.c | 34 +++++++++++++++
->   drivers/iommu/iommu.c     | 90 +++++++++++++++++++++++++++++++++++++++
->   include/linux/iommu.h     | 37 ++++++++++++++++
->   3 files changed, 161 insertions(+)
-> 
-> diff --git a/drivers/iommu/iommu-sva.c b/drivers/iommu/iommu-sva.c
-> index 85ef98efede8..d60d4f0bb89e 100644
-> --- a/drivers/iommu/iommu-sva.c
-> +++ b/drivers/iommu/iommu-sva.c
-> @@ -8,6 +8,38 @@
->   #include <linux/iommu.h>
->   #include <linux/slab.h>
->   
-> +int __iommu_sva_bind_device(struct device *dev, struct mm_struct *mm, int *pasid,
-> +			    unsigned long flags, void *drvdata)
-> +{
-> +	return -ENOSYS; /* TODO */
-> +}
-> +EXPORT_SYMBOL_GPL(__iommu_sva_bind_device);
-> +
-> +int __iommu_sva_unbind_device(struct device *dev, int pasid)
-> +{
-> +	return -ENOSYS; /* TODO */
-> +}
-> +EXPORT_SYMBOL_GPL(__iommu_sva_unbind_device);
-> +
-> +static void __iommu_sva_unbind_device_all(struct device *dev)
-> +{
-> +	/* TODO */
-> +}
-> +
-> +/**
-> + * iommu_sva_unbind_device_all() - Detach all address spaces from this device
-> + * @dev: the device
-> + *
-> + * When detaching @dev from a domain, IOMMU drivers should use this helper.
-> + */
-> +void iommu_sva_unbind_device_all(struct device *dev)
-> +{
-> +	mutex_lock(&dev->iommu_param->sva_lock);
-> +	__iommu_sva_unbind_device_all(dev);
-> +	mutex_unlock(&dev->iommu_param->sva_lock);
-> +}
-> +EXPORT_SYMBOL_GPL(iommu_sva_unbind_device_all);
-> +
->   /**
->    * iommu_sva_init_device() - Initialize Shared Virtual Addressing for a device
->    * @dev: the device
-> @@ -96,6 +128,8 @@ void iommu_sva_shutdown_device(struct device *dev)
->   	if (!param)
->   		goto out_unlock;
->   
-> +	__iommu_sva_unbind_device_all(dev);
-> +
->   	if (domain->ops->sva_shutdown_device)
->   		domain->ops->sva_shutdown_device(dev);
->   
-> diff --git a/drivers/iommu/iommu.c b/drivers/iommu/iommu.c
-> index fa0561ed006f..aba3bf15d46c 100644
-> --- a/drivers/iommu/iommu.c
-> +++ b/drivers/iommu/iommu.c
-> @@ -2325,3 +2325,93 @@ int iommu_fwspec_add_ids(struct device *dev, u32 *ids, int num_ids)
->   	return 0;
->   }
->   EXPORT_SYMBOL_GPL(iommu_fwspec_add_ids);
-> +
-> +/**
-> + * iommu_sva_bind_device() - Bind a process address space to a device
-> + * @dev: the device
-> + * @mm: the mm to bind, caller must hold a reference to it
-> + * @pasid: valid address where the PASID will be stored
-> + * @flags: bond properties
-> + * @drvdata: private data passed to the mm exit handler
-> + *
-> + * Create a bond between device and task, allowing the device to access the mm
-> + * using the returned PASID. If unbind() isn't called first, a subsequent bind()
-> + * for the same device and mm fails with -EEXIST.
-> + *
-> + * iommu_sva_init_device() must be called first, to initialize the required SVA
-> + * features. @flags must be a subset of these features.
-> + *
-> + * The caller must pin down using get_user_pages*() all mappings shared with the
-> + * device. mlock() isn't sufficient, as it doesn't prevent minor page faults
-> + * (e.g. copy-on-write).
-> + *
-> + * On success, 0 is returned and @pasid contains a valid ID. Otherwise, an error
-> + * is returned.
-> + */
-> +int iommu_sva_bind_device(struct device *dev, struct mm_struct *mm, int *pasid,
-> +			  unsigned long flags, void *drvdata)
-> +{
-> +	int ret = -EINVAL;
-> +	struct iommu_group *group;
-> +
-> +	if (!pasid)
-> +		return -EINVAL;
-> +
-> +	group = iommu_group_get(dev);
-> +	if (!group)
-> +		return -ENODEV;
-> +
-> +	/* Ensure device count and domain don't change while we're binding */
-> +	mutex_lock(&group->mutex);
-> +
-> +	/*
-> +	 * To keep things simple, SVA currently doesn't support IOMMU groups
-> +	 * with more than one device. Existing SVA-capable systems are not
-> +	 * affected by the problems that required IOMMU groups (lack of ACS
-> +	 * isolation, device ID aliasing and other hardware issues).
-> +	 */
-> +	if (iommu_group_device_count(group) != 1)
-> +		goto out_unlock;
-> +
-> +	ret = __iommu_sva_bind_device(dev, mm, pasid, flags, drvdata);
-> +
-> +out_unlock:
-> +	mutex_unlock(&group->mutex);
-> +	iommu_group_put(group);
-> +
-> +	return ret;
-> +}
-> +EXPORT_SYMBOL_GPL(iommu_sva_bind_device);
-> +
-> +/**
-> + * iommu_sva_unbind_device() - Remove a bond created with iommu_sva_bind_device
-> + * @dev: the device
-> + * @pasid: the pasid returned by bind()
-> + *
-> + * Remove bond between device and address space identified by @pasid. Users
-> + * should not call unbind() if the corresponding mm exited (as the PASID might
-> + * have been reallocated for another process).
-> + *
-> + * The device must not be issuing any more transaction for this PASID. All
-> + * outstanding page requests for this PASID must have been flushed to the IOMMU.
-> + *
-> + * Returns 0 on success, or an error value
-> + */
-> +int iommu_sva_unbind_device(struct device *dev, int pasid)
-> +{
-> +	int ret = -EINVAL;
-> +	struct iommu_group *group;
-> +
-> +	group = iommu_group_get(dev);
-> +	if (!group)
-> +		return -ENODEV;
-> +
-> +	mutex_lock(&group->mutex);
-> +	ret = __iommu_sva_unbind_device(dev, pasid);
-> +	mutex_unlock(&group->mutex);
-> +
-> +	iommu_group_put(group);
-> +
-> +	return ret;
-> +}
-> +EXPORT_SYMBOL_GPL(iommu_sva_unbind_device);
-> diff --git a/include/linux/iommu.h b/include/linux/iommu.h
-> index 4c27cb347770..9c49877e37a5 100644
-> --- a/include/linux/iommu.h
-> +++ b/include/linux/iommu.h
-> @@ -586,6 +586,10 @@ void iommu_fwspec_free(struct device *dev);
->   int iommu_fwspec_add_ids(struct device *dev, u32 *ids, int num_ids);
->   const struct iommu_ops *iommu_ops_from_fwnode(struct fwnode_handle *fwnode);
->   
-> +extern int iommu_sva_bind_device(struct device *dev, struct mm_struct *mm,
-> +				int *pasid, unsigned long flags, void *drvdata);
-> +extern int iommu_sva_unbind_device(struct device *dev, int pasid);
-> +
->   #else /* CONFIG_IOMMU_API */
->   
->   struct iommu_ops {};
-> @@ -910,6 +914,18 @@ static inline int iommu_sva_invalidate(struct iommu_domain *domain,
->   	return -ENODEV;
->   }
->   
-> +static inline int iommu_sva_bind_device(struct device *dev,
-> +					struct mm_struct *mm, int *pasid,
-> +					unsigned long flags, void *drvdata)
-> +{
-> +	return -ENODEV;
-> +}
-> +
-> +static inline int iommu_sva_unbind_device(struct device *dev, int pasid)
-> +{
-> +	return -ENODEV;
-> +}
-> +
->   #endif /* CONFIG_IOMMU_API */
->   
->   #ifdef CONFIG_IOMMU_DEBUGFS
-> @@ -924,6 +940,11 @@ extern int iommu_sva_init_device(struct device *dev, unsigned long features,
->   				 unsigned int min_pasid,
->   				 unsigned int max_pasid);
->   extern void iommu_sva_shutdown_device(struct device *dev);
-> +extern int __iommu_sva_bind_device(struct device *dev, struct mm_struct *mm,
-> +				   int *pasid, unsigned long flags,
-> +				   void *drvdata);
-> +extern int __iommu_sva_unbind_device(struct device *dev, int pasid);
-> +extern void iommu_sva_unbind_device_all(struct device *dev);
->   #else /* CONFIG_IOMMU_SVA */
->   static inline int iommu_sva_init_device(struct device *dev,
->   					unsigned long features,
-> @@ -936,6 +957,22 @@ static inline int iommu_sva_init_device(struct device *dev,
->   static inline void iommu_sva_shutdown_device(struct device *dev)
->   {
->   }
-> +
-> +static inline int __iommu_sva_bind_device(struct device *dev,
-> +					  struct mm_struct *mm, int *pasid,
-> +					  unsigned long flags, void *drvdata)
-> +{
-> +	return -ENODEV;
-> +}
-> +
-> +static inline int __iommu_sva_unbind_device(struct device *dev, int pasid)
-> +{
-> +	return -ENODEV;
-> +}
-> +
-> +static inline void iommu_sva_unbind_device_all(struct device *dev)
-> +{
-> +}
->   #endif /* CONFIG_IOMMU_SVA */
->   
->   #endif /* __LINUX_IOMMU_H */
-> 
+    Sergio Paracuellos
