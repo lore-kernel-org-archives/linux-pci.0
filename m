@@ -2,121 +2,202 @@ Return-Path: <SRS0=l472=MF=vger.kernel.org=linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-0.6 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
-	DKIM_VALID_AU,FREEMAIL_FORGED_FROMDOMAIN,FREEMAIL_FROM,
-	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_PASS autolearn=ham
+X-Spam-Status: No, score=-2.8 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+	MAILING_LIST_MULTI,SPF_PASS,USER_AGENT_GIT autolearn=unavailable
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 0BF05C433F4
-	for <linux-pci@archiver.kernel.org>; Sun, 23 Sep 2018 06:20:32 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 6769CC433F4
+	for <linux-pci@archiver.kernel.org>; Sun, 23 Sep 2018 09:33:36 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 948842086B
-	for <linux-pci@archiver.kernel.org>; Sun, 23 Sep 2018 06:20:31 +0000 (UTC)
-Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="Xiw4tcBw"
-DMARC-Filter: OpenDMARC Filter v1.3.2 mail.kernel.org 948842086B
-Authentication-Results: mail.kernel.org; dmarc=fail (p=none dis=none) header.from=gmail.com
+	by mail.kernel.org (Postfix) with ESMTP id 0518A214C2
+	for <linux-pci@archiver.kernel.org>; Sun, 23 Sep 2018 09:33:35 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.3.2 mail.kernel.org 0518A214C2
+Authentication-Results: mail.kernel.org; dmarc=none (p=none dis=none) header.from=hygon.cn
 Authentication-Results: mail.kernel.org; spf=none smtp.mailfrom=linux-pci-owner@vger.kernel.org
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1725988AbeIWMQs (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Sun, 23 Sep 2018 08:16:48 -0400
-Received: from mail-ot1-f51.google.com ([209.85.210.51]:42331 "EHLO
-        mail-ot1-f51.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1725971AbeIWMQs (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Sun, 23 Sep 2018 08:16:48 -0400
-Received: by mail-ot1-f51.google.com with SMTP id h26-v6so16922402otl.9
-        for <linux-pci@vger.kernel.org>; Sat, 22 Sep 2018 23:20:29 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20161025;
-        h=mime-version:in-reply-to:references:from:date:message-id:subject:to
-         :cc;
-        bh=fGMZisMSU0oco4B/fQ3Dg0oB9MsTWPF8Oxorw6sa2hc=;
-        b=Xiw4tcBwY/CgGsieXcImtcImbhxwDrXUuNztO924yObeNy1EVYQzrLBz+bGvE5lXWB
-         piDlEReWFXK9cPZEXj8v1HYDXHu0VdTk1JrpdjkSbT+xBCh3aKkcr0i7oidQmXP1ArbE
-         tsrrLbxVEb3tKnVtdFhGUoxcnrOiMuGug4B/r187zpbefBVO5sdzysr8wdbTu5x+Ie4f
-         lVYc6VAydJP0Shc0lRf/Su5WMzsAo+o/lnM4O6C8kTcPq7dLX97Xq5ZCXmxxtzrcT/oV
-         Zo5AivDYdfM4sFwPj1OEjDRH56EGTY9w2u7KrJf+yb1UjY+fMH49e5U3ZgC2+Cl4BHOC
-         9cuA==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20161025;
-        h=x-gm-message-state:mime-version:in-reply-to:references:from:date
-         :message-id:subject:to:cc;
-        bh=fGMZisMSU0oco4B/fQ3Dg0oB9MsTWPF8Oxorw6sa2hc=;
-        b=YQ8iRrwBybXxP4Mfb60a946CHk0Cp++Wt5h3T1SZNlsGuyZc0aqKKO3PF4rTk7B625
-         IS179jiKajJq3saoQZIqzk+XIotggPyYIoiD4QFpaEoBHaSQT2isklELDhcwc13BeNBW
-         iuVc+kzsIwikB2/UTl4eTqGCt9qbkfc7M1EC3edXRM3Dlu0jRjURD3qwyYbWpCPUPjxt
-         sd6w56cx4wLCpq+hmSPBhhUG5jzB+KB+PNHs/DVbRVC79K/9o+ltsw7AhN3JPTlezxWr
-         Pd8G7CUR/pCfzC0IBDaxk3YRin8OtklioU+GlN01HlVphaMLg9Mn3LvSmHpEKhFwMRJy
-         ARFg==
-X-Gm-Message-State: ABuFfoiqF8TAd/uhY4Fni49AuI9wQOAym7zZDro40scZBEylCWI6VgnC
-        zBXsAE+oQYuM7bwgZI6K9+6gmqP3O0u+nj//6Wo=
-X-Google-Smtp-Source: ACcGV630rkyUWkV0Sh+NDjjtdZ/TPMNx7wLqxBvJ+GIIW1gAWoeaCy98kjfRDg2xkaHrzdxTkPMlCBwVFP6/WUgILv4=
-X-Received: by 2002:a9d:5cc3:: with SMTP id r3-v6mr3105936oti.301.1537683629107;
- Sat, 22 Sep 2018 23:20:29 -0700 (PDT)
-MIME-Version: 1.0
-Received: by 2002:a9d:521f:0:0:0:0:0 with HTTP; Sat, 22 Sep 2018 23:20:28
- -0700 (PDT)
-In-Reply-To: <8fd595af-53fa-c100-c369-8c7a30eba8e3@gmail.com>
-References: <8fd595af-53fa-c100-c369-8c7a30eba8e3@gmail.com>
-From:   Sergio Paracuellos <sergio.paracuellos@gmail.com>
-Date:   Sun, 23 Sep 2018 08:20:28 +0200
-Message-ID: <CAMhs-H-CM3bb9fg2eX6G_534bmuQYcoFa+pJSuNeArXLSXO4=Q@mail.gmail.com>
-Subject: Re: mt7621/mt7628 PCIe linux driver
-To:     Petr Cvek <petrcvekcz@gmail.com>
-Cc:     ryder.lee@mediatek.com, blogic@openwrt.org,
-        linux-mediatek@lists.infradead.org, linux-mips@linux-mips.org,
-        linux-pci@vger.kernel.org
-Content-Type: text/plain; charset="UTF-8"
+        id S1726225AbeIWPaW (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Sun, 23 Sep 2018 11:30:22 -0400
+Received: from smtp21.cstnet.cn ([159.226.251.21]:45873 "EHLO cstnet.cn"
+        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+        id S1726094AbeIWPaW (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Sun, 23 Sep 2018 11:30:22 -0400
+Received: from pw-vbox.higon.com (unknown [182.150.46.145])
+        by APP-01 (Coremail) with SMTP id qwCowAA3GOWKXadb8BGzDA--.31S2;
+        Sun, 23 Sep 2018 17:32:55 +0800 (CST)
+From:   Pu Wen <puwen@hygon.cn>
+To:     bp@alien8.de, tglx@linutronix.de, mingo@redhat.com, hpa@zytor.com,
+        x86@kernel.org, thomas.lendacky@amd.com, pbonzini@redhat.com,
+        tony.luck@intel.com, rkrcmar@redhat.com,
+        boris.ostrovsky@oracle.com, jgross@suse.com, rjw@rjwysocki.net,
+        lenb@kernel.org, viresh.kumar@linaro.org, mchehab@kernel.org,
+        trenn@suse.com, shuah@kernel.org
+Cc:     linux-kernel@vger.kernel.org, linux-arch@vger.kernel.org,
+        linux-pci@vger.kernel.org, linux-acpi@vger.kernel.org,
+        linux-edac@vger.kernel.org, linux-pm@vger.kernel.org,
+        kvm@vger.kernel.org, xen-devel@lists.xenproject.org,
+        Pu Wen <puwen@hygon.cn>
+Subject: [PATCH v8 00/16] Add support for Hygon Dhyana Family 18h processor
+Date:   Sun, 23 Sep 2018 17:30:47 +0800
+Message-Id: <cover.1537533368.git.puwen@hygon.cn>
+X-Mailer: git-send-email 2.7.4
+X-CM-TRANSID: qwCowAA3GOWKXadb8BGzDA--.31S2
+X-Coremail-Antispam: 1UD129KBjvJXoW3Gr1DXr4xXr17GF47CFWxWFg_yoW7Aw18pF
+        ZFkrn5tFW8u3sxC3srCrn7urWfuan7CrW3Jw18W3sxX3W5ta4jqrs7G3WkGw1qvwn5Wr1I
+        yFy5urWxK3Z7taDanT9S1TB71UUUUU7qnTZGkaVYY2UrUUUUjbIjqfuFe4nvWSU5nxnvy2
+        9KBjDU0xBIdaVrnRJUUUvY14x267AKxVW5JVWrJwAFc2x0x2IEx4CE42xK8VAvwI8IcIk0
+        rVWrJVCq3wAFIxvE14AKwVWUJVWUGwA2ocxC64kIII0Yj41l84x0c7CEw4AK67xGY2AK02
+        1l84ACjcxK6xIIjxv20xvE14v26r1j6r1xM28EF7xvwVC0I7IYx2IY6xkF7I0E14v26r4j
+        6F4UM28EF7xvwVC2z280aVAFwI0_Gr0_Cr1l84ACjcxK6I8E87Iv6xkF7I0E14v26r4j6r
+        4UJwAS0I0E0xvYzxvE52x082IY62kv0487Mc02F40EFcxC0VAKzVAqx4xG6I80ewAv7VC0
+        I7IYx2IY67AKxVWUGVWUXwAv7VC2z280aVAFwI0_Gr0_Cr1lOx8S6xCaFVCjc4AY6r1j6r
+        4UM4x0Y48IcxkI7VAKI48JM4x0x7Aq67IIx4CEVc8vx2IErcIFxwACI402YVCY1x02628v
+        n2kIc2xKxwCF04k20xvY0x0EwIxGrwCFx2IqxVCFs4IE7xkEbVWUJVW8JwC20s026c02F4
+        0E14v26r1j6r18MI8I3I0E7480Y4vE14v26r106r1rMI8E67AF67kF1VAFwI0_GFv_Wryl
+        IxkGc2Ij64vIr41lIxAIcVC0I7IYx2IY67AKxVWUJVWUCwCI42IY6xIIjxv20xvEc7CjxV
+        AFwI0_Gr0_Cr1lIxAIcVCF04k26cxKx2IYs7xG6rWUJVWrZr1UMIIF0xvEx4A2jsIE14v2
+        6r4j6F4UMIIF0xvEx4A2jsIEc7CjxVAFwI0_Gr0_Gr1UYxBIdaVFxhVjvjDU0xZFpf9x0J
+        UmjgxUUUUU=
+X-Originating-IP: [182.150.46.145]
+X-CM-SenderInfo: psxzv046klw03qof0z/
 Sender: linux-pci-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-Hi Petr,
+As a new x86 CPU Vendor, Chengdu Haiguang IC Design Co., Ltd (Hygon)
+is a Joint Venture between AMD and Haiguang Information Technology Co.,
+Ltd., and aims at providing high performance x86 processor for China
+server market.
 
-On Sat, Sep 22, 2018 at 11:06 PM, Petr Cvek <petrcvekcz@gmail.com> wrote:
-> Hello,
->
-> I'm trying to play with mt7628 PCIe (and it's old driver mt7620), but
-> the system keeps freezing. It is probably because of bus master access
-> of my PCIe cards but I don't see any memory access controls for PCIe <->
-> RAM in the datasheet. The same problem is with MSI. It seems the root
-> complex supports MSI (it has an MSI capability field), but there isn't
-> any mention in the MT7628 datasheet too. As it seems the MT7628 PCIe is
-> based on MT7621 PCIe, I went for an MT7621 datasheet, but sadly in the
-> datasheet the PCIe section is missing completely.
+The first generation Hygon's processor(Dhyana) originates from AMD
+technology and shares most of the architecture with AMD's family 17h,
+but with different CPU Vendor ID("HygonGenuine")/PCIE Device Vendor ID
+(0x1D94)/Family series number (Family 18h).
 
-AFAIK, MT7628 should be covered with mt7620 driver. The source code is in
-arch/mips/pci/pci-mt7620.c. For initialization in really depends on
-the "ralink_soc"
-variable exported in arch/mips/ralink/prom.c.
+To enable the support of Linux kernel to Hygon's CPU, we added a new
+vendor type (X86_VENDOR_HYGON, with value of 9) in arch/x86/include/
+asm/processor.h, and shared most of kernel support codes with AMD
+family 17h.
 
-You have to figure out why and where is really freezing. Does a clean kernel
-boots and success on setting up PCI? A 'dmesg' would be helpful.
+As Hygon will negotiate with AMD to make sure that only Hygon will
+use family 18h, so try to minimize code modification and share most
+codes with AMD under this consideration.
 
->
-> Does anybody have a working MT7621/28 bus master setup or a more
-> completed datasheet? I would like to get some information for fixing the
-> mt7620 PCIe driver. It is possible the MSI/bus master is controlled by
-> the undocumented bridge registers (in the pci-mt7621 they controls the
-> manual oscillator settings, I've found a link quality register at
-> 0x101490c4) or in a PCI config space of the root complex (around 0x700
-> offset). If you have a working SoC with MSI/bus mastering (= mem access
-> from card), can you send me the dump of there spaces?
+This patch series have been applied and tested successfully on Hygon
+Dhyana SoC silicon. Also tested on AMD EPYC (Family 17h) processor,
+it works fine and makes no harm to the existing codes.
 
-The datasheet for the mt7620 contains information about PCI registers.
-Linux initializes the
-pci topology but master bit of command registers for endpoints is
-disabled and is mission of final
-card driver to enable it in order to allow memory accessing to the card.
 
-Hope this helps.
+v7->v8:
+  - Fix the issue that patch x86/pci may cause LKP boot test failure
+    on some Intel platform.
 
->
-> Thanks
->
-> best regards,
-> Petr
+v6->v7:
+  - Rebased on 4.19-rc4 and tested against it.
+  - Add Reviewed-by from Borislav Petkov for patches x86/cpu,
+    x86/cpu/mtrr, perf/x86, x86/pci, x86/apic, x86/mce.
+  - Refine the patch descriptions and fix some typos.
+  - Remove unneeded vendor checking for patch x86/apic.
+  - Restore the user-visible pr_err string in patch x86/bugs.
 
-Best regards,
-    Sergio Paracuellos
+v5->v6:
+  - Rebased on 4.19-rc3 and tested against it.
+  - Add Reviewed-by from Borislav Petkov for cacheinfo, smpboot,
+    alternative and kvm.
+  - Rework the patch subjects and patch descriptions.
+  - Rework vendor checking for some patches to minimize the code
+    modification.
+
+v4->v5:
+  - Rebased on 4.19-rc1 and tested against it.
+  - Add Reviewed-by from Boris Ostrovsky for Xen.
+  - Rework EDAC patch without vendor checking for minimal modification.
+
+v3->v4:
+  - Rebased on 4.18.3 and tested against it.
+  - Merge patches 05/17 perfctr and 10/17 events in v3 to patch 05/16
+    PMU for better patch function group.
+  - Add hygon_get_topology_early() in patch 01/16.
+  - Rework vendor checking and refine coding style.
+  - Add Acked-by from Bjorn Helgaas for pci.
+  - Add Acked-by from Rafael J. Wysocki for cpufreq and acpi.
+
+v2->v3:
+  - Rebased on 4.18-rc8 and tested against it.
+  - Rework vendor checking codes to improve consistency.
+
+v1->v2:
+  - Rebased on 4.18-rc6 and tested against it.
+  - Split the patch set to small series of patches.
+  - Rework patch descriptions.
+  - Create a separated arch/x86/kernel/cpu/hygon.c for Dhyana CPU
+    initialization to reduce long-term maintenance effort.
+
+
+Pu Wen (16):
+  x86/cpu: Create Hygon Dhyana architecture support file
+  x86/cpu: Get cache info and setup cache cpumap for Hygon Dhyana
+  x86/cpu/mtrr: Support TOP_MEM2 and get MTRR number
+  x86/smpboot: SMP init no delay and not flush caches before sleep
+  perf/x86: Add Hygon Dhyana support to PMU infrastructure
+  x86/alternative: Init ideal_nops for Hygon Dhyana
+  x86/pci: Add Hygon Dhyana support to PCI and north bridge
+  x86/apic: Add Hygon Dhyana support to APIC
+  x86/bugs: Add mitigation to spectre and no meltdown for Hygon Dhyana
+  x86/mce: Add Hygon Dhyana support to MCE infrastructure
+  x86/kvm: Add Hygon Dhyana support to KVM infrastructure
+  x86/xen: Add Hygon Dhyana support to Xen
+  ACPI, x86: Add Hygon Dhyana support
+  cpufreq, x86: Add Hygon Dhyana support
+  EDAC, amd64: Add Hygon Dhyana support
+  cpupower, x86: Add Hygon Dhyana support
+
+ MAINTAINERS                                        |   6 +
+ arch/x86/Kconfig.cpu                               |  14 +
+ arch/x86/events/amd/core.c                         |   4 +
+ arch/x86/events/amd/uncore.c                       |  20 +-
+ arch/x86/events/core.c                             |   4 +
+ arch/x86/include/asm/amd_nb.h                      |   3 +
+ arch/x86/include/asm/cacheinfo.h                   |   1 +
+ arch/x86/include/asm/kvm_emulate.h                 |   4 +
+ arch/x86/include/asm/mce.h                         |   2 +
+ arch/x86/include/asm/processor.h                   |   3 +-
+ arch/x86/include/asm/virtext.h                     |   5 +-
+ arch/x86/kernel/alternative.c                      |   4 +
+ arch/x86/kernel/amd_nb.c                           |  47 ++-
+ arch/x86/kernel/apic/apic.c                        |   7 +
+ arch/x86/kernel/apic/probe_32.c                    |   1 +
+ arch/x86/kernel/cpu/Makefile                       |   1 +
+ arch/x86/kernel/cpu/bugs.c                         |   4 +-
+ arch/x86/kernel/cpu/cacheinfo.c                    |  31 +-
+ arch/x86/kernel/cpu/common.c                       |   1 +
+ arch/x86/kernel/cpu/cpu.h                          |   1 +
+ arch/x86/kernel/cpu/hygon.c                        | 411 +++++++++++++++++++++
+ arch/x86/kernel/cpu/mcheck/mce-severity.c          |   3 +-
+ arch/x86/kernel/cpu/mcheck/mce.c                   |  20 +-
+ arch/x86/kernel/cpu/mtrr/cleanup.c                 |   3 +-
+ arch/x86/kernel/cpu/mtrr/mtrr.c                    |   2 +-
+ arch/x86/kernel/cpu/perfctr-watchdog.c             |   2 +
+ arch/x86/kernel/smpboot.c                          |   4 +-
+ arch/x86/kvm/emulate.c                             |  11 +-
+ arch/x86/pci/amd_bus.c                             |   6 +-
+ arch/x86/xen/pmu.c                                 |  12 +-
+ drivers/acpi/acpi_pad.c                            |   1 +
+ drivers/acpi/processor_idle.c                      |   1 +
+ drivers/cpufreq/acpi-cpufreq.c                     |   5 +
+ drivers/cpufreq/amd_freq_sensitivity.c             |   9 +-
+ drivers/edac/amd64_edac.c                          |   8 +-
+ drivers/edac/mce_amd.c                             |   4 +-
+ include/linux/pci_ids.h                            |   2 +
+ tools/power/cpupower/utils/cpufreq-info.c          |   6 +-
+ tools/power/cpupower/utils/helpers/amd.c           |   4 +-
+ tools/power/cpupower/utils/helpers/cpuid.c         |   8 +-
+ tools/power/cpupower/utils/helpers/helpers.h       |   2 +-
+ tools/power/cpupower/utils/helpers/misc.c          |   2 +-
+ .../cpupower/utils/idle_monitor/mperf_monitor.c    |   3 +-
+ 43 files changed, 644 insertions(+), 48 deletions(-)
+ create mode 100644 arch/x86/kernel/cpu/hygon.c
+
+-- 
+2.7.4
+
