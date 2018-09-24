@@ -2,99 +2,165 @@ Return-Path: <SRS0=+fdl=MG=vger.kernel.org=linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-0.6 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
-	DKIM_VALID_AU,FREEMAIL_FORGED_FROMDOMAIN,FREEMAIL_FROM,
-	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_PASS autolearn=ham
-	autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-5.3 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+	INCLUDES_PATCH,MAILING_LIST_MULTI,SPF_PASS,URIBL_BLOCKED,USER_AGENT_MUTT
+	autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 4329CECE560
-	for <linux-pci@archiver.kernel.org>; Mon, 24 Sep 2018 16:32:23 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 67BCBC433F4
+	for <linux-pci@archiver.kernel.org>; Mon, 24 Sep 2018 16:42:23 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id DA5662087A
-	for <linux-pci@archiver.kernel.org>; Mon, 24 Sep 2018 16:32:22 +0000 (UTC)
-Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="PuCYmlel"
-DMARC-Filter: OpenDMARC Filter v1.3.2 mail.kernel.org DA5662087A
-Authentication-Results: mail.kernel.org; dmarc=fail (p=none dis=none) header.from=gmail.com
+	by mail.kernel.org (Postfix) with ESMTP id 10AE42098A
+	for <linux-pci@archiver.kernel.org>; Mon, 24 Sep 2018 16:42:22 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.3.2 mail.kernel.org 10AE42098A
+Authentication-Results: mail.kernel.org; dmarc=none (p=none dis=none) header.from=arm.com
 Authentication-Results: mail.kernel.org; spf=none smtp.mailfrom=linux-pci-owner@vger.kernel.org
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1728054AbeIXWfT (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Mon, 24 Sep 2018 18:35:19 -0400
-Received: from mail-wr1-f48.google.com ([209.85.221.48]:41455 "EHLO
-        mail-wr1-f48.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726400AbeIXWfT (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Mon, 24 Sep 2018 18:35:19 -0400
-Received: by mail-wr1-f48.google.com with SMTP id j15-v6so16265919wrt.8
-        for <linux-pci@vger.kernel.org>; Mon, 24 Sep 2018 09:32:20 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20161025;
-        h=mime-version:references:in-reply-to:from:date:message-id:subject:to
-         :cc;
-        bh=XGpr1NGBBpHgvutxIt8Lxxn+OfANQ96PTqkALPDCmHU=;
-        b=PuCYmlel80HT1b49Rp/GTngSjPRmwO/KPZZuOciLfzLK0fWART960JQLaSuVOZZrhG
-         lIIB19b6w54RUppa7dgy0ENllfiDbcasuKiu+jg97JdY5mu006smT1/QfxI3MjcJ5QrS
-         XX1NYfju4o/BUmLiBtyp6G5I7bDdTKx19zxvsv0jykrqSIvrsJ1movO8faowgn4jjI2d
-         to45VesmHwXexWcUWSP4f0YkK1kkFtHBzBRVqkf+jcYXQt8MSw8aaxwTjJV81qsRHVTn
-         Q46cgtjiSxupaOTUJg4RSYeON2pKp6Uh7wdilc4bSwBtdCcQ2li05OJvBPIs6jy7gPJy
-         YKbQ==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20161025;
-        h=x-gm-message-state:mime-version:references:in-reply-to:from:date
-         :message-id:subject:to:cc;
-        bh=XGpr1NGBBpHgvutxIt8Lxxn+OfANQ96PTqkALPDCmHU=;
-        b=brgfro9zgJgBOExgDRi0JFyPGKHuJi3eLvevwRn+CgeFOhtbtBVkNC/6SndXSuFFoH
-         GF9aZsh83CTgc9XEjEnMBN0A71kRehi+fVrARFjmS91wbenEPoZ+pNXh2UTStNzgR9dP
-         j6+sNfarUMFNZcocCszN7qJuDWJMQFc0Af63LzSoto4O0q8A6XcVBxX+MKqnWw6oZhwW
-         dGR1hiSYinQ1knrqvhx/JHYYi1/OtuJzoWqxAoiVyF0k1JzNdFGZ/sL5dDxctiolQZQi
-         Pq49UxggRoqqPteQLGgjMTBbMLTsVW7TTZ1ZPVWU8jPQ40YgKuRvvQTsgWTKrXXAo+O5
-         j4mQ==
-X-Gm-Message-State: ABuFfoghpwJyvxBnGeKMc3ZQDRpJhLw9FJ2jzwEB9RTL+RcSY1epLlPn
-        /dc7Daj9DJyl8egkoKdhCwD4lAy3PkVZBP1sedVXeQ==
-X-Google-Smtp-Source: ACcGV63+twm++ybHv0zSRf9SKgLPKMbQ8iLs/ual6Sy/WZSZF7S1ia6y9I/KMQUhrIwUX7QjdTJ4INr1U66l8T/LYjk=
-X-Received: by 2002:a5d:6051:: with SMTP id j17-v6mr4779964wrt.265.1537806739633;
- Mon, 24 Sep 2018 09:32:19 -0700 (PDT)
+        id S1728731AbeIXWpW (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Mon, 24 Sep 2018 18:45:22 -0400
+Received: from foss.arm.com ([217.140.101.70]:38560 "EHLO foss.arm.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1726400AbeIXWpW (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Mon, 24 Sep 2018 18:45:22 -0400
+Received: from usa-sjc-imap-foss1.foss.arm.com (unknown [10.72.51.249])
+        by usa-sjc-mx-foss1.foss.arm.com (Postfix) with ESMTP id 440C780D;
+        Mon, 24 Sep 2018 09:42:21 -0700 (PDT)
+Received: from red-moon (red-moon.emea.arm.com [10.4.13.120])
+        by usa-sjc-imap-foss1.foss.arm.com (Postfix) with ESMTPSA id 9BB9F3F5BD;
+        Mon, 24 Sep 2018 09:42:19 -0700 (PDT)
+Date:   Mon, 24 Sep 2018 17:42:58 +0100
+From:   Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
+To:     Thomas Petazzoni <thomas.petazzoni@bootlin.com>
+Cc:     Russell King - ARM Linux <linux@armlinux.org.uk>,
+        Jan =?iso-8859-1?Q?Kundr=E1t?= <jan.kundrat@cesnet.cz>,
+        Baruch Siach <baruch@tkos.co.il>,
+        Jason Cooper <jason@lakedaemon.net>, linux-pci@vger.kernel.org,
+        linux-kernel@vger.kernel.org, Bjorn Helgaas <bhelgaas@google.com>,
+        linux-arm-kernel@lists.infradead.org
+Subject: Re: [BISECTED] Regression: Solidrun Clearfog Base won't boot since
+ "PCI: mvebu: Only remap I/O space if configured"
+Message-ID: <20180924164258.GA19513@red-moon>
+References: <5ad46fec-a71a-477a-b23f-d20aacfb481d@cesnet.cz>
+ <20180913104241.65db8243@windsurf>
+ <20180924101213.GO30658@n2100.armlinux.org.uk>
+ <20180924122614.70738b5c@windsurf>
+ <20180924111341.GP30658@n2100.armlinux.org.uk>
+ <20180924141203.3df9707a@windsurf>
+ <20180924124620.GA10322@e107981-ln.cambridge.arm.com>
+ <20180924151040.5e57462b@windsurf>
+ <20180924141512.GA11875@e107981-ln.cambridge.arm.com>
+ <20180924165218.26c7c418@windsurf>
 MIME-Version: 1.0
-References: <CAN7O0+L1cg9qRMqTN3KwyP=O19HcqCHM0Md89PKp1+LwHKRD8Q@mail.gmail.com>
- <CAN7O0+LpJUtmEZEjg8XoZRZcWP_3wR3i8=MdamudF=NYjc9ZBA@mail.gmail.com>
-In-Reply-To: <CAN7O0+LpJUtmEZEjg8XoZRZcWP_3wR3i8=MdamudF=NYjc9ZBA@mail.gmail.com>
-From:   vidya sagar <sagar.tv@gmail.com>
-Date:   Mon, 24 Sep 2018 22:02:07 +0530
-Message-ID: <CAN7O0+JsL9xxjRtZUxxjrOS_7FvS_1cyhFk+tOi=fMU31ywhiA@mail.gmail.com>
-Subject: Re: Need information w.r.t PCIe end point framework
-To:     kishon@ti.com
-Cc:     bhelgaas@google.com, treding@nvidia.com, swarren@nvidia.com,
-        NManikanta <mmaddireddy@nvidia.com>, kthota@nvidia.com,
-        linux-pci@vger.kernel.org
-Content-Type: text/plain; charset="UTF-8"
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20180924165218.26c7c418@windsurf>
+User-Agent: Mutt/1.5.21 (2010-09-15)
 Sender: linux-pci-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-Hi Kishon,
-Could you please help me with the below questions?
+On Mon, Sep 24, 2018 at 04:52:18PM +0200, Thomas Petazzoni wrote:
+> Hello,
+> 
+> On Mon, 24 Sep 2018 15:15:12 +0100, Lorenzo Pieralisi wrote:
+> 
+> > I understand that, I wanted to make sure we come up with a fix asap
+> > and what I put forward would cover everything discussed in this thread,
+> > at least temporarily, giving us time to check ISA related issues while
+> > unmapping IO space.
+> 
+> Something like this should implemented what you suggest I guess:
+> 
+> diff --git a/drivers/pci/controller/pci-mvebu.c b/drivers/pci/controller/pci-mvebu.c
+> index 50eb0729385b..a41d79b8d46a 100644
+> --- a/drivers/pci/controller/pci-mvebu.c
+> +++ b/drivers/pci/controller/pci-mvebu.c
+> @@ -1145,7 +1145,6 @@ static int mvebu_pcie_parse_request_resources(struct mvebu_pcie *pcie)
+>  {
+>         struct device *dev = &pcie->pdev->dev;
+>         struct device_node *np = dev->of_node;
+> -       unsigned int i;
+>         int ret;
+>  
+>         INIT_LIST_HEAD(&pcie->resources);
+> @@ -1179,13 +1178,58 @@ static int mvebu_pcie_parse_request_resources(struct mvebu_pcie *pcie)
+>                                          resource_size(&pcie->io) - 1);
+>                 pcie->realio.name = "PCI I/O";
+>  
+> +               pci_add_resource(&pcie->resources, &pcie->realio);
+> +       }
+> +
+> +       return devm_request_pci_bus_resources(dev, &pcie->resources);
+> +}
+> +
+> +/*
+> + * This is a copy of pci_host_probe(), except that it does the I/O
+> + * remap as the last step, once we are sure we won't fail.
+> + *
+> + * It should be removed once the I/O remap error handling issue has
+> + * been sorted out.
+> + */
+> +static int mvebu_pci_host_probe(struct pci_host_bridge *bridge)
+> +{
+> +       struct mvebu_pcie *pcie;
+> +       struct pci_bus *bus, *child;
+> +       int ret;
+> +
+> +       ret = pci_scan_root_bus_bridge(bridge);
+> +       if (ret < 0) {
+> +               dev_err(bridge->dev.parent, "Scanning root bridge failed");
+> +               return ret;
+> +       }
+> +
+> +       pcie = pci_host_bridge_priv(bridge);
+> +       if (resource_size(&pcie->io) != 0) {
+> +               unsigned int i;
+> +
+>                 for (i = 0; i < resource_size(&pcie->realio); i += SZ_64K)
+>                         pci_ioremap_io(i, pcie->io.start + i);
+> +       }
+>  
+> -               pci_add_resource(&pcie->resources, &pcie->realio);
+> +       bus = bridge->bus;
+> +
+> +       /*
+> +        * We insert PCI resources into the iomem_resource and
+> +        * ioport_resource trees in either pci_bus_claim_resources()
+> +        * or pci_bus_assign_resources().
+> +        */
+> +       if (pci_has_flag(PCI_PROBE_ONLY)) {
+> +               pci_bus_claim_resources(bus);
+> +       } else {
+> +               pci_bus_size_bridges(bus);
+> +               pci_bus_assign_resources(bus);
+> +
+> +               list_for_each_entry(child, &bus->children, node)
+> +                       pcie_bus_configure_settings(child);
+>         }
+>  
+> -       return devm_request_pci_bus_resources(dev, &pcie->resources);
+> +       pci_bus_add_devices(bus);
+> +       return 0;
+>  }
+>  
+>  static int mvebu_pcie_probe(struct platform_device *pdev)
+> @@ -1268,7 +1312,7 @@ static int mvebu_pcie_probe(struct platform_device *pdev)
+>         bridge->align_resource = mvebu_pcie_align_resource;
+>         bridge->msi = pcie->msi;
+>  
+> -       return pci_host_probe(bridge);
+> +       return mvebu_pci_host_probe(bridge);
+>  }
+>  
+>  static const struct of_device_id mvebu_pcie_of_match_table[] = {
+> 
+> If that's what you meant, I'll go ahead and test on actual hardware and
+> submit as a proper patch.
 
-On Tue, Sep 18, 2018 at 12:43 AM vidya sagar <sagar.tv@gmail.com> wrote:
->
-> Hi,
-> I have following queries w.r.t PCIe endpoint framework in kernel in
-> the context of a DesignWare core IP.
-> -> Since the PCIe spec says that the endpoint should have stable
-> REFCLK before it observes PEX_RST from host, endpoint's LTSSM in a way
-> depends on arrival of PEX_RST from host (there by locking endpoint's
-> internal PLLs to incoming REFCLK from host, followed by core
-> programming and finally enabling LTSSM of endpoint). But, IIUC, the
-> endpoint framework starts LTSSM based on writing '1' to 'start' in epc
-> device's config-fs entry. What is the rationale behind it? Why is
-> starting LTSSM in endpoint decoupled from PEX_RST toggle?
-> -> Also, kernel documentation says that the sequence is first creating
-> EPF device followed by EPC device and linking it with already created
-> EPF device and finally going for link up. This implicitly assumes
-> that, programming of core registers is happening in the absence of
-> REFCLK from host. Does it mean, there are internal clock sources
-> available for DWC core programming (dbi registers programming) before
-> REFCLK is available from host, and, finally when PEX_RST is observed,
-> switch clock source from internal clock source to external REFCLK?
->
-> Thanks,
-> Vidya Sagar
+Yes, that's what I meant, I hope that you will have some bandwidth to
+discuss a way forward for v4.21, when this fix is merged (I think that
+v4.20 is a tall order but we can try if you will have time to post the
+patches - I suspect your fix will go in -rc6 if Bjorn can pull it this
+week).
+
+Lorenzo
