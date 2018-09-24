@@ -2,151 +2,105 @@ Return-Path: <SRS0=+fdl=MG=vger.kernel.org=linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-2.1 required=3.0 tests=DKIM_SIGNED,
-	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_PASS,T_DKIM_INVALID,
-	URIBL_BLOCKED,USER_AGENT_MUTT autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-0.8 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+	MAILING_LIST_MULTI,SPF_PASS autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id C1933ECE561
-	for <linux-pci@archiver.kernel.org>; Mon, 24 Sep 2018 11:13:57 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id C1DD7C433F4
+	for <linux-pci@archiver.kernel.org>; Mon, 24 Sep 2018 12:08:06 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 6F48221480
-	for <linux-pci@archiver.kernel.org>; Mon, 24 Sep 2018 11:13:57 +0000 (UTC)
-Authentication-Results: mail.kernel.org;
-	dkim=fail reason="signature verification failed" (1024-bit key) header.d=armlinux.org.uk header.i=@armlinux.org.uk header.b="KifoXzPN"
-DMARC-Filter: OpenDMARC Filter v1.3.2 mail.kernel.org 6F48221480
-Authentication-Results: mail.kernel.org; dmarc=fail (p=none dis=none) header.from=armlinux.org.uk
+	by mail.kernel.org (Postfix) with ESMTP id 85E6220C0A
+	for <linux-pci@archiver.kernel.org>; Mon, 24 Sep 2018 12:08:06 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.3.2 mail.kernel.org 85E6220C0A
+Authentication-Results: mail.kernel.org; dmarc=none (p=none dis=none) header.from=arm.com
 Authentication-Results: mail.kernel.org; spf=none smtp.mailfrom=linux-pci-owner@vger.kernel.org
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726711AbeIXRP3 (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Mon, 24 Sep 2018 13:15:29 -0400
-Received: from pandora.armlinux.org.uk ([78.32.30.218]:42886 "EHLO
-        pandora.armlinux.org.uk" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1725982AbeIXRP3 (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Mon, 24 Sep 2018 13:15:29 -0400
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
-        d=armlinux.org.uk; s=pandora-2014; h=Sender:In-Reply-To:Content-Type:
-        MIME-Version:References:Message-ID:Subject:Cc:To:From:Date:Reply-To:
-        Content-Transfer-Encoding:Content-ID:Content-Description:Resent-Date:
-        Resent-From:Resent-Sender:Resent-To:Resent-Cc:Resent-Message-ID:List-Id:
-        List-Help:List-Unsubscribe:List-Subscribe:List-Post:List-Owner:List-Archive;
-         bh=StR9z8XziZ854Gz49Nwx94jSYQxbm1EuvCMEYM7LdWE=; b=KifoXzPNhYLx6UOknRelFsLSx
-        No1SzRapBqMQbvzcDwVE+rfrtJMinSYPi5ecW9d2VR2HouFP6CyQZhdaZVmboIDrr17y93ks37E+1
-        J3NIzX0XhwsgmelhRv/H0Reskxu0OL0b+c/HzzQbc/nAQbJboebxHJ4hwWnT5abO/apb4=;
-Received: from n2100.armlinux.org.uk ([2002:4e20:1eda:1:214:fdff:fe10:4f86]:43544)
-        by pandora.armlinux.org.uk with esmtpsa (TLSv1.2:ECDHE-RSA-AES128-GCM-SHA256:128)
-        (Exim 4.90_1)
-        (envelope-from <linux@armlinux.org.uk>)
-        id 1g4OoF-0002wH-8I; Mon, 24 Sep 2018 12:13:47 +0100
-Received: from linux by n2100.armlinux.org.uk with local (Exim 4.90_1)
-        (envelope-from <linux@n2100.armlinux.org.uk>)
-        id 1g4OoB-0006oG-TM; Mon, 24 Sep 2018 12:13:44 +0100
-Date:   Mon, 24 Sep 2018 12:13:41 +0100
-From:   Russell King - ARM Linux <linux@armlinux.org.uk>
-To:     Thomas Petazzoni <thomas.petazzoni@bootlin.com>
-Cc:     Jan =?iso-8859-1?Q?Kundr=E1t?= <jan.kundrat@cesnet.cz>,
-        Baruch Siach <baruch@tkos.co.il>,
-        Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
-        Jason Cooper <jason@lakedaemon.net>, linux-pci@vger.kernel.org,
-        linux-kernel@vger.kernel.org, Bjorn Helgaas <bhelgaas@google.com>,
-        linux-arm-kernel@lists.infradead.org
-Subject: Re: [BISECTED] Regression: Solidrun Clearfog Base won't boot since
- "PCI: mvebu: Only remap I/O space if configured"
-Message-ID: <20180924111341.GP30658@n2100.armlinux.org.uk>
-References: <61fdfd69-2bb6-478c-b0d5-69d8744adae3@cesnet.cz>
- <87zhwm4kl6.fsf@tkos.co.il>
- <20180912231050.GX30658@n2100.armlinux.org.uk>
- <20180913094515.351967bb@windsurf>
- <5ad46fec-a71a-477a-b23f-d20aacfb481d@cesnet.cz>
- <20180913104241.65db8243@windsurf>
- <20180924101213.GO30658@n2100.armlinux.org.uk>
- <20180924122614.70738b5c@windsurf>
+        id S1729196AbeIXSJw (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Mon, 24 Sep 2018 14:09:52 -0400
+Received: from usa-sjc-mx-foss1.foss.arm.com ([217.140.101.70]:33472 "EHLO
+        foss.arm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1728516AbeIXSJw (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Mon, 24 Sep 2018 14:09:52 -0400
+Received: from usa-sjc-imap-foss1.foss.arm.com (unknown [10.72.51.249])
+        by usa-sjc-mx-foss1.foss.arm.com (Postfix) with ESMTP id 550B780D;
+        Mon, 24 Sep 2018 05:08:04 -0700 (PDT)
+Received: from [10.4.12.111] (ostrya.Emea.Arm.com [10.4.12.111])
+        by usa-sjc-imap-foss1.foss.arm.com (Postfix) with ESMTPSA id D87D03F5C0;
+        Mon, 24 Sep 2018 05:08:00 -0700 (PDT)
+Subject: Re: [PATCH v3 01/10] iommu: Introduce Shared Virtual Addressing API
+To:     Lu Baolu <baolu.lu@linux.intel.com>,
+        "iommu@lists.linux-foundation.org" <iommu@lists.linux-foundation.org>
+Cc:     "joro@8bytes.org" <joro@8bytes.org>,
+        "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+        "jcrouse@codeaurora.org" <jcrouse@codeaurora.org>,
+        "alex.williamson@redhat.com" <alex.williamson@redhat.com>,
+        "Jonathan.Cameron@huawei.com" <Jonathan.Cameron@huawei.com>,
+        "jacob.jun.pan@linux.intel.com" <jacob.jun.pan@linux.intel.com>,
+        "christian.koenig@amd.com" <christian.koenig@amd.com>,
+        "eric.auger@redhat.com" <eric.auger@redhat.com>,
+        "kevin.tian@intel.com" <kevin.tian@intel.com>,
+        "yi.l.liu@intel.com" <yi.l.liu@intel.com>,
+        Andrew Murray <Andrew.Murray@arm.com>,
+        Will Deacon <Will.Deacon@arm.com>,
+        Robin Murphy <Robin.Murphy@arm.com>,
+        "ashok.raj@intel.com" <ashok.raj@intel.com>,
+        "xuzaibo@huawei.com" <xuzaibo@huawei.com>,
+        "liguozhu@hisilicon.com" <liguozhu@hisilicon.com>,
+        "okaya@codeaurora.org" <okaya@codeaurora.org>,
+        "bharatku@xilinx.com" <bharatku@xilinx.com>,
+        "ilias.apalodimas@linaro.org" <ilias.apalodimas@linaro.org>,
+        "shunyong.yang@hxt-semitech.com" <shunyong.yang@hxt-semitech.com>
+References: <20180920170046.20154-1-jean-philippe.brucker@arm.com>
+ <20180920170046.20154-2-jean-philippe.brucker@arm.com>
+ <f406bcf7-4e54-9f1b-88eb-03fc642ffede@linux.intel.com>
+From:   Jean-Philippe Brucker <jean-philippe.brucker@arm.com>
+Message-ID: <64630c7b-8349-37dd-3fbb-d03c8bc05511@arm.com>
+Date:   Mon, 24 Sep 2018 13:07:44 +0100
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:60.0) Gecko/20100101
+ Thunderbird/60.0
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20180924122614.70738b5c@windsurf>
-User-Agent: Mutt/1.5.23 (2014-03-12)
+In-Reply-To: <f406bcf7-4e54-9f1b-88eb-03fc642ffede@linux.intel.com>
+Content-Type: text/plain; charset=utf-8
+Content-Language: en-US
+Content-Transfer-Encoding: 8bit
 Sender: linux-pci-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-On Mon, Sep 24, 2018 at 12:26:14PM +0200, Thomas Petazzoni wrote:
-> Hello,
+On 23/09/2018 03:39, Lu Baolu wrote:
+>> +int iommu_sva_init_device(struct device *dev, unsigned long features,
+>> +                    unsigned int min_pasid, unsigned int max_pasid)
+>> +{
+>> +     int ret;
+>> +     struct iommu_sva_param *param;
+>> +     struct iommu_domain *domain = iommu_get_domain_for_dev(dev);
 > 
-> On Mon, 24 Sep 2018 11:12:13 +0100, Russell King - ARM Linux wrote:
+> This doesn't work for vt-d. The domains for host iova are self-managed
+> by vt-d driver itself. Hence, iommu_get_domain_for_dev() will always
+> return NULL unless an UNMANAGED domain is attached to the device.
 > 
-> > > Thanks for the testing. I'll wait for Russell to say if he is happy
-> > > (or not) with the addition of pci_unmap_io() in the ARM code, if that's
-> > > the case, I'll send a proper patch to fix the issue.  
-> > 
-> > I'd prefer not to provide an unmapping API, because it gives the
-> > impression that it's okay to unmap the IO space mapping, and we'll
-> > end up with drivers that decide to call it in their cleanup path.
-> > IO space isn't expected to ever go away - eg, on a PC, it's always
-> > present.
+> How about
 > 
-> But being able to unmap it would also be needed to be able to remove
-> PCI host controller drivers, and therefore compile them as module, and
-> make them more like any other drivers.
-> 
-> I'm not sure why we need to guarantee that the I/O space is always
-> mapped:
-> 
->  - It isn't mapped before the PCI controller driver does the mapping.
-> 
->  - There is no reason for it to be accessed when the PCI controller
->    driver is not initialized: PCI devices can only be probed and
->    initialized when the PCI controller driver is probed/initialized.
+>        const struct iommu_ops *ops = dev->bus->iommu_ops;>
+> instead?
 
-There are historic reasons.  PCI provides ISA IO space, and when you
-have a machine with ISA peripherals present, the PCI IO space must
-never be unmapped - if it is, ISA drivers will oops the kernel.  There
-is no way for a vanishing PCI controller to cause ISA drivers to be
-unbound.
+Right, this should work. I also needed to change the IOMMU ops
+introduced in patch 3 to not take a domain. It's a shame that iommu-sva
+can't get the device's current domain, I was hoping we could manage the
+bonds per domain in common code. But it's not a big deal and on the
+upside, it simplifies these core patches.
 
-If you have a host controller that does unmap PCI IO space and you have
-ISA peripherals with drivers present, unbinding the PCI host controller
-will remove the IO space mapping, and next time an ISA peripheral
-touches IO space, the kernel will oops.
+I was previously relying on "if we have a domain, then
+iommu_group_add_device has been called and therefore dev->iommu_param is
+set". I now do the same as iommu_register_device_fault_handler, check if
+iommu_param isn't NULL. I don't think there is a race with
+iommu_group_add/remove_device, since the device driver cannot call SVA
+functions before the core called its probe() callback and after the core
+called its remove() callback, which happen after
+iommu_group_add_device() and before iommu_group_remove_device()
+respectively. Though I don't have a full picture here, and might be wrong.
 
-> All other drivers, including on ARM, use pci_remap_iospace(), which
-> does provide the pci_unmap_iospace() counter part.
+I pushed the updated version to my sva/current branch
 
-... which has been created in PCI land just to deal with PCI without
-regard for the above issue.
-
-However, there's another issue I missed - if you _do_ have ISA
-peripherals, you likely want the IO space setup from very early on,
-and you won't be using the new fangled PCI host driver support anyway.
-That uses pci_map_io_early() rather than pci_ioremap_io() or
-pci_remap_io().
-
-> But to me, the general direction is that the ARM-specific
-> pci_remap_io() API is fading away, and its replacement already provides
-> an unmapping capability. So why not add the same unmapping capability
-> to pci_remap_io() ?
-
-Yes, that would be a good longer term plan - we don't need three
-different ways to map PCI IO space, but it is development.
-
-> But we have a regression and we need to fix it. Do you suggest to not
-> use the new pci_host_probe() API ?
-
-Well, arguably, the patch that caused the regression is the buggy patch,
-_not_ the lack of unmapping API for pci_ioremap_io().  Trying to address
-a regression with further development means that _that_ development
-needs thought and review, which is a slower process.
-
-I do understand the desire to keep moving forward and never take a step
-backwards, but sometimes backwards steps are the best way to resolve a
-regression.  But I also do appreciate that a simple revert in this case
-is not possible.
-
-I'll accept your patch on the condition that the ARM private
-pci_ioremap_io() will go away in the very near future (please _try_
-to get agreement on that before this patch is merged.)
-
--- 
-RMK's Patch system: http://www.armlinux.org.uk/developer/patches/
-FTTC broadband for 0.8mile line in suburbia: sync at 13.8Mbps down 630kbps up
-According to speedtest.net: 13Mbps down 490kbps up
+Thanks,
+Jean
