@@ -2,165 +2,128 @@ Return-Path: <SRS0=+fdl=MG=vger.kernel.org=linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-5.3 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	INCLUDES_PATCH,MAILING_LIST_MULTI,SPF_PASS,URIBL_BLOCKED,USER_AGENT_MUTT
-	autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-0.8 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+	MAILING_LIST_MULTI,SPF_PASS,URIBL_BLOCKED autolearn=unavailable
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 67BCBC433F4
-	for <linux-pci@archiver.kernel.org>; Mon, 24 Sep 2018 16:42:23 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id E64A7C433F4
+	for <linux-pci@archiver.kernel.org>; Mon, 24 Sep 2018 20:19:25 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 10AE42098A
-	for <linux-pci@archiver.kernel.org>; Mon, 24 Sep 2018 16:42:22 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.3.2 mail.kernel.org 10AE42098A
-Authentication-Results: mail.kernel.org; dmarc=none (p=none dis=none) header.from=arm.com
+	by mail.kernel.org (Postfix) with ESMTP id AA72C2087A
+	for <linux-pci@archiver.kernel.org>; Mon, 24 Sep 2018 20:19:25 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.3.2 mail.kernel.org AA72C2087A
+Authentication-Results: mail.kernel.org; dmarc=none (p=none dis=none) header.from=arndb.de
 Authentication-Results: mail.kernel.org; spf=none smtp.mailfrom=linux-pci-owner@vger.kernel.org
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1728731AbeIXWpW (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Mon, 24 Sep 2018 18:45:22 -0400
-Received: from foss.arm.com ([217.140.101.70]:38560 "EHLO foss.arm.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1726400AbeIXWpW (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Mon, 24 Sep 2018 18:45:22 -0400
-Received: from usa-sjc-imap-foss1.foss.arm.com (unknown [10.72.51.249])
-        by usa-sjc-mx-foss1.foss.arm.com (Postfix) with ESMTP id 440C780D;
-        Mon, 24 Sep 2018 09:42:21 -0700 (PDT)
-Received: from red-moon (red-moon.emea.arm.com [10.4.13.120])
-        by usa-sjc-imap-foss1.foss.arm.com (Postfix) with ESMTPSA id 9BB9F3F5BD;
-        Mon, 24 Sep 2018 09:42:19 -0700 (PDT)
-Date:   Mon, 24 Sep 2018 17:42:58 +0100
-From:   Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
-To:     Thomas Petazzoni <thomas.petazzoni@bootlin.com>
-Cc:     Russell King - ARM Linux <linux@armlinux.org.uk>,
-        Jan =?iso-8859-1?Q?Kundr=E1t?= <jan.kundrat@cesnet.cz>,
-        Baruch Siach <baruch@tkos.co.il>,
-        Jason Cooper <jason@lakedaemon.net>, linux-pci@vger.kernel.org,
-        linux-kernel@vger.kernel.org, Bjorn Helgaas <bhelgaas@google.com>,
-        linux-arm-kernel@lists.infradead.org
-Subject: Re: [BISECTED] Regression: Solidrun Clearfog Base won't boot since
- "PCI: mvebu: Only remap I/O space if configured"
-Message-ID: <20180924164258.GA19513@red-moon>
-References: <5ad46fec-a71a-477a-b23f-d20aacfb481d@cesnet.cz>
- <20180913104241.65db8243@windsurf>
- <20180924101213.GO30658@n2100.armlinux.org.uk>
- <20180924122614.70738b5c@windsurf>
- <20180924111341.GP30658@n2100.armlinux.org.uk>
- <20180924141203.3df9707a@windsurf>
- <20180924124620.GA10322@e107981-ln.cambridge.arm.com>
- <20180924151040.5e57462b@windsurf>
- <20180924141512.GA11875@e107981-ln.cambridge.arm.com>
- <20180924165218.26c7c418@windsurf>
+        id S1727370AbeIYCXH (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Mon, 24 Sep 2018 22:23:07 -0400
+Received: from mail-qt1-f196.google.com ([209.85.160.196]:37611 "EHLO
+        mail-qt1-f196.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726316AbeIYCXH (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Mon, 24 Sep 2018 22:23:07 -0400
+Received: by mail-qt1-f196.google.com with SMTP id n6-v6so10943050qtl.4;
+        Mon, 24 Sep 2018 13:19:09 -0700 (PDT)
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20161025;
+        h=x-gm-message-state:mime-version:references:in-reply-to:from:date
+         :message-id:subject:to:cc;
+        bh=OsYidU1hlYJ+klx90AxIRQwB+6wMrrJr/JJ5pU6q0MY=;
+        b=Bq/5Ah6K21QrKgRd+sjq/p5dJ91R2dGXcpqxjIP6Bg+7vpN08kjY+Dt47M4ZWLQpy7
+         jWD2Xl247Vp9nhJwHCKu4MLoc/EaiAJKxWCbQTyBPprQ3k0pW3+ANb0vjgsMD/Z997c3
+         TTQErOEhXe37g034dqRyqZnxjDcbV1O5xAvhemXC0trlHhq8VTSBTaXu/lCeZNMzLdwF
+         f7arq0xyFJiacUrcyltM3Jq9mrkP0ImHO0BXL5vt10A1ggljVrqJJhAOH/MD2YwFTJg3
+         /+K/bIdKv6ZCGQxQGe3C/o10WAVA0/aUOVl11Oud2OwxwgE+VuN73daPLfyknval13lO
+         Gsfw==
+X-Gm-Message-State: ABuFfohThuABX9vh8S5yordOs4kPicfzJH7PP/gcS6K9DccXXnG2e6nk
+        a05V5KLBS8tfiTJs1N6C94upuBmoFFwCm9LwbLQ=
+X-Google-Smtp-Source: ACcGV60Ps3U5LLCo0RjeCpaPr9VTAwVS7tqdLJYGXjikqVVB7pTkjFqFcc8hPBx92H8kqqx7rZwu+cIOb887IRHt2U8=
+X-Received: by 2002:a0c:a8cc:: with SMTP id h12-v6mr393998qvc.161.1537820349291;
+ Mon, 24 Sep 2018 13:19:09 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20180924165218.26c7c418@windsurf>
-User-Agent: Mutt/1.5.21 (2010-09-15)
+References: <20180912150142.157913-1-arnd@arndb.de> <20180912151134.436719-1-arnd@arndb.de>
+ <20180914203506.GE35251@wrath> <20180914205748.GC19965@ZenIV.linux.org.uk>
+ <20180918175108.GF35251@wrath> <20180918175952.GJ11367@ziepe.ca>
+In-Reply-To: <20180918175952.GJ11367@ziepe.ca>
+From:   Arnd Bergmann <arnd@arndb.de>
+Date:   Mon, 24 Sep 2018 22:18:52 +0200
+Message-ID: <CAK8P3a17GY89in7PeLk1F2T-0Xq=sCrwwntM+Y4BCpXheUC+qQ@mail.gmail.com>
+Subject: Re: [PATCH v2 05/17] compat_ioctl: move more drivers to generic_compat_ioctl_ptrarg
+To:     Jason Gunthorpe <jgg@ziepe.ca>
+Cc:     Darren Hart <dvhart@infradead.org>,
+        Al Viro <viro@zeniv.linux.org.uk>,
+        Linux FS-devel Mailing List <linux-fsdevel@vger.kernel.org>,
+        gregkh <gregkh@linuxfoundation.org>,
+        David Miller <davem@davemloft.net>,
+        driverdevel <devel@driverdev.osuosl.org>,
+        Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
+        qat-linux@intel.com,
+        "open list:HARDWARE RANDOM NUMBER GENERATOR CORE" 
+        <linux-crypto@vger.kernel.org>,
+        Linux Media Mailing List <linux-media@vger.kernel.org>,
+        dri-devel <dri-devel@lists.freedesktop.org>,
+        linaro-mm-sig@lists.linaro.org, amd-gfx@lists.freedesktop.org,
+        "open list:HID CORE LAYER" <linux-input@vger.kernel.org>,
+        linux-iio@vger.kernel.org, linux-rdma <linux-rdma@vger.kernel.org>,
+        linux-nvdimm@lists.01.org, linux-nvme@lists.infradead.org,
+        linux-pci <linux-pci@vger.kernel.org>,
+        Platform Driver <platform-driver-x86@vger.kernel.org>,
+        linux-remoteproc@vger.kernel.org,
+        sparclinux <sparclinux@vger.kernel.org>,
+        linux-scsi <linux-scsi@vger.kernel.org>,
+        USB list <linux-usb@vger.kernel.org>,
+        linux-fbdev@vger.kernel.org,
+        linuxppc-dev <linuxppc-dev@lists.ozlabs.org>,
+        linux-btrfs <linux-btrfs@vger.kernel.org>,
+        ceph-devel <ceph-devel@vger.kernel.org>,
+        linux-wireless <linux-wireless@vger.kernel.org>,
+        Networking <netdev@vger.kernel.org>
+Content-Type: text/plain; charset="UTF-8"
 Sender: linux-pci-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-On Mon, Sep 24, 2018 at 04:52:18PM +0200, Thomas Petazzoni wrote:
-> Hello,
-> 
-> On Mon, 24 Sep 2018 15:15:12 +0100, Lorenzo Pieralisi wrote:
-> 
-> > I understand that, I wanted to make sure we come up with a fix asap
-> > and what I put forward would cover everything discussed in this thread,
-> > at least temporarily, giving us time to check ISA related issues while
-> > unmapping IO space.
-> 
-> Something like this should implemented what you suggest I guess:
-> 
-> diff --git a/drivers/pci/controller/pci-mvebu.c b/drivers/pci/controller/pci-mvebu.c
-> index 50eb0729385b..a41d79b8d46a 100644
-> --- a/drivers/pci/controller/pci-mvebu.c
-> +++ b/drivers/pci/controller/pci-mvebu.c
-> @@ -1145,7 +1145,6 @@ static int mvebu_pcie_parse_request_resources(struct mvebu_pcie *pcie)
->  {
->         struct device *dev = &pcie->pdev->dev;
->         struct device_node *np = dev->of_node;
-> -       unsigned int i;
->         int ret;
->  
->         INIT_LIST_HEAD(&pcie->resources);
-> @@ -1179,13 +1178,58 @@ static int mvebu_pcie_parse_request_resources(struct mvebu_pcie *pcie)
->                                          resource_size(&pcie->io) - 1);
->                 pcie->realio.name = "PCI I/O";
->  
-> +               pci_add_resource(&pcie->resources, &pcie->realio);
-> +       }
-> +
-> +       return devm_request_pci_bus_resources(dev, &pcie->resources);
-> +}
-> +
-> +/*
-> + * This is a copy of pci_host_probe(), except that it does the I/O
-> + * remap as the last step, once we are sure we won't fail.
-> + *
-> + * It should be removed once the I/O remap error handling issue has
-> + * been sorted out.
-> + */
-> +static int mvebu_pci_host_probe(struct pci_host_bridge *bridge)
-> +{
-> +       struct mvebu_pcie *pcie;
-> +       struct pci_bus *bus, *child;
-> +       int ret;
-> +
-> +       ret = pci_scan_root_bus_bridge(bridge);
-> +       if (ret < 0) {
-> +               dev_err(bridge->dev.parent, "Scanning root bridge failed");
-> +               return ret;
-> +       }
-> +
-> +       pcie = pci_host_bridge_priv(bridge);
-> +       if (resource_size(&pcie->io) != 0) {
-> +               unsigned int i;
-> +
->                 for (i = 0; i < resource_size(&pcie->realio); i += SZ_64K)
->                         pci_ioremap_io(i, pcie->io.start + i);
-> +       }
->  
-> -               pci_add_resource(&pcie->resources, &pcie->realio);
-> +       bus = bridge->bus;
-> +
-> +       /*
-> +        * We insert PCI resources into the iomem_resource and
-> +        * ioport_resource trees in either pci_bus_claim_resources()
-> +        * or pci_bus_assign_resources().
-> +        */
-> +       if (pci_has_flag(PCI_PROBE_ONLY)) {
-> +               pci_bus_claim_resources(bus);
-> +       } else {
-> +               pci_bus_size_bridges(bus);
-> +               pci_bus_assign_resources(bus);
-> +
-> +               list_for_each_entry(child, &bus->children, node)
-> +                       pcie_bus_configure_settings(child);
->         }
->  
-> -       return devm_request_pci_bus_resources(dev, &pcie->resources);
-> +       pci_bus_add_devices(bus);
-> +       return 0;
->  }
->  
->  static int mvebu_pcie_probe(struct platform_device *pdev)
-> @@ -1268,7 +1312,7 @@ static int mvebu_pcie_probe(struct platform_device *pdev)
->         bridge->align_resource = mvebu_pcie_align_resource;
->         bridge->msi = pcie->msi;
->  
-> -       return pci_host_probe(bridge);
-> +       return mvebu_pci_host_probe(bridge);
->  }
->  
->  static const struct of_device_id mvebu_pcie_of_match_table[] = {
-> 
-> If that's what you meant, I'll go ahead and test on actual hardware and
-> submit as a proper patch.
+On Tue, Sep 18, 2018 at 7:59 PM Jason Gunthorpe <jgg@ziepe.ca> wrote:
+>
+> On Tue, Sep 18, 2018 at 10:51:08AM -0700, Darren Hart wrote:
+> > On Fri, Sep 14, 2018 at 09:57:48PM +0100, Al Viro wrote:
+> > > On Fri, Sep 14, 2018 at 01:35:06PM -0700, Darren Hart wrote:
+> > >
+> > > > Acked-by: Darren Hart (VMware) <dvhart@infradead.org>
+> > > >
+> > > > As for a longer term solution, would it be possible to init fops in such
+> > > > a way that the compat_ioctl call defaults to generic_compat_ioctl_ptrarg
+> > > > so we don't have to duplicate this boilerplate for every ioctl fops
+> > > > structure?
+> > >
+> > >     Bad idea, that...  Because several years down the road somebody will add
+> > > an ioctl that takes an unsigned int for argument.  Without so much as looking
+> > > at your magical mystery macro being used to initialize file_operations.
+> >
+> > Fair, being explicit in the declaration as it is currently may be
+> > preferable then.
+>
+> It would be much cleaner and safer if you could arrange things to add
+> something like this to struct file_operations:
+>
+>   long (*ptr_ioctl) (struct file *, unsigned int, void __user *);
+>
+> Where the core code automatically converts the unsigned long to the
+> void __user * as appropriate.
+>
+> Then it just works right always and the compiler will help address
+> Al's concern down the road.
 
-Yes, that's what I meant, I hope that you will have some bandwidth to
-discuss a way forward for v4.21, when this fix is merged (I think that
-v4.20 is a tall order but we can try if you will have time to post the
-patches - I suspect your fix will go in -rc6 if Bjorn can pull it this
-week).
+I think if we wanted to do this with a new file operation, the best
+way would be to do the copy_from_user()/copy_to_user() in the caller
+as well.
 
-Lorenzo
+We already do this inside of some subsystems, notably drivers/media/,
+and it simplifies the implementation of the ioctl handler function
+significantly. We obviously cannot do this in general, both because of
+traditional drivers that have 16-bit command codes (drivers/tty and others)
+and also because of drivers that by accident defined the commands
+incorrectly and use the wrong type or the wrong direction in the
+definition.
+
+       Arnd
