@@ -2,122 +2,176 @@ Return-Path: <SRS0=+fdl=MG=vger.kernel.org=linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-2.3 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	MAILING_LIST_MULTI,SPF_PASS,URIBL_BLOCKED,USER_AGENT_MUTT autolearn=ham
-	autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-8.3 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_PASS,URIBL_BLOCKED,
+	USER_AGENT_MUTT autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 2A7EFC433F4
-	for <linux-pci@archiver.kernel.org>; Mon, 24 Sep 2018 15:11:57 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id E0031ECE560
+	for <linux-pci@archiver.kernel.org>; Mon, 24 Sep 2018 15:24:47 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id DF728206B2
-	for <linux-pci@archiver.kernel.org>; Mon, 24 Sep 2018 15:11:56 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.3.2 mail.kernel.org DF728206B2
-Authentication-Results: mail.kernel.org; dmarc=fail (p=none dis=none) header.from=intel.com
+	by mail.kernel.org (Postfix) with ESMTP id A5C6B20833
+	for <linux-pci@archiver.kernel.org>; Mon, 24 Sep 2018 15:24:47 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.3.2 mail.kernel.org A5C6B20833
+Authentication-Results: mail.kernel.org; dmarc=none (p=none dis=none) header.from=alien8.de
 Authentication-Results: mail.kernel.org; spf=none smtp.mailfrom=linux-pci-owner@vger.kernel.org
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1729592AbeIXVOc (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Mon, 24 Sep 2018 17:14:32 -0400
-Received: from mga05.intel.com ([192.55.52.43]:40067 "EHLO mga05.intel.com"
+        id S1728387AbeIXV12 (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Mon, 24 Sep 2018 17:27:28 -0400
+Received: from mail.skyhub.de ([5.9.137.197]:39680 "EHLO mail.skyhub.de"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1729387AbeIXVOc (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Mon, 24 Sep 2018 17:14:32 -0400
-X-Amp-Result: UNKNOWN
-X-Amp-Original-Verdict: FILE UNKNOWN
-X-Amp-File-Uploaded: False
-Received: from fmsmga006.fm.intel.com ([10.253.24.20])
-  by fmsmga105.fm.intel.com with ESMTP/TLS/DHE-RSA-AES256-GCM-SHA384; 24 Sep 2018 08:11:54 -0700
-X-ExtLoop1: 1
-X-IronPort-AV: E=Sophos;i="5.54,298,1534834800"; 
-   d="scan'208";a="266231554"
-Received: from unknown (HELO localhost.localdomain) ([10.232.112.44])
-  by fmsmga006.fm.intel.com with ESMTP; 24 Sep 2018 08:01:51 -0700
-Date:   Mon, 24 Sep 2018 09:03:54 -0600
-From:   Keith Busch <keith.busch@intel.com>
-To:     Lukas Wunner <lukas@wunner.de>
-Cc:     Linux PCI <linux-pci@vger.kernel.org>,
-        Bjorn Helgaas <bhelgaas@google.com>
-Subject: Re: [PATCH] PCI: Device removal rescan deadlock
-Message-ID: <20180924150353.GA9223@localhost.localdomain>
-References: <20180921205752.3191-1-keith.busch@intel.com>
- <20180922081117.n5geis3u3tuerkav@wunner.de>
+        id S1728962AbeIXV11 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Mon, 24 Sep 2018 17:27:27 -0400
+X-Virus-Scanned: Nedap ESD1 at mail.skyhub.de
+Received: from mail.skyhub.de ([127.0.0.1])
+        by localhost (blast.alien8.de [127.0.0.1]) (amavisd-new, port 10026)
+        with ESMTP id 5_tnEv_XDxvo; Mon, 24 Sep 2018 17:24:44 +0200 (CEST)
+Received: from zn.tnic (p200300EC2BC69500329C23FFFEA6A903.dip0.t-ipconnect.de [IPv6:2003:ec:2bc6:9500:329c:23ff:fea6:a903])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+        (No client certificate requested)
+        by mail.skyhub.de (SuperMail on ZX Spectrum 128k) with ESMTPSA id A22731EC0118;
+        Mon, 24 Sep 2018 17:24:44 +0200 (CEST)
+Date:   Mon, 24 Sep 2018 17:24:48 +0200
+From:   Borislav Petkov <bp@alien8.de>
+To:     Pu Wen <puwen@hygon.cn>
+Cc:     bhelgaas@google.com, tglx@linutronix.de, mingo@redhat.com,
+        hpa@zytor.com, x86@kernel.org, thomas.lendacky@amd.com,
+        helgaas@kernel.org, linux-kernel@vger.kernel.org,
+        linux-arch@vger.kernel.org, linux-pci@vger.kernel.org
+Subject: Re: [PATCH v8 07/16] x86/pci: Add Hygon Dhyana support to PCI and
+ north bridge
+Message-ID: <20180924152448.GE20187@zn.tnic>
+References: <cover.1537533368.git.puwen@hygon.cn>
+ <580dc519d37ad9257520fe8c533f2c61d3e0cd83.1537533369.git.puwen@hygon.cn>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=utf-8
 Content-Disposition: inline
-In-Reply-To: <20180922081117.n5geis3u3tuerkav@wunner.de>
-User-Agent: Mutt/1.9.1 (2017-09-22)
+In-Reply-To: <580dc519d37ad9257520fe8c533f2c61d3e0cd83.1537533369.git.puwen@hygon.cn>
+User-Agent: Mutt/1.10.1 (2018-07-13)
 Sender: linux-pci-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-On Sat, Sep 22, 2018 at 10:11:17AM +0200, Lukas Wunner wrote:
-> On Fri, Sep 21, 2018 at 02:57:52PM -0600, Keith Busch wrote:
-> > The pci_rescan_remove_lock provides single-threaded enumeration. This
-> > can deadlock if a task requests this lock to enumerate below a device
-> > while another task wants to remove that device.
-> > 
-> > A simple example to create this dead lock from sysfs looks something
-> > like the following:
-> > 
-> >   # echo 1 > /sys/bus/pci/devices/<parent>/remove & \
-> >     echo 1 > /sys/bus/pci/devices/<child>/rescan &
-> > 
-> > If the parent removal locks the pci_rescan_remove_lock first, the child
-> > thread is blocked from forward progress, but the parent can't release
-> > the lock until the child thread releases the device.
-> > 
-> > Similar deadlocks are possible in the surprise removal path due to
-> > deadlocked interrupt handlers.
-> > 
-> > This patch provides an alternate locking method that exits in failure
-> > if the caller wants to scan below a device being removed.
+On Sun, Sep 23, 2018 at 05:35:13PM +0800, Pu Wen wrote:
+> As Hygon registered its PCI Vendor ID as a new one 0x1d94, and there
+> are PCI Devices 0x1450/0x1463/0x1464 for Host bridge on Hygon Dhyana
+> platform, so add Hygon Dhyana support to the PCI and north bridge
+> subsystem by using the code path of AMD family 17h.
 > 
-> For context, alternative patches to tackle this problem were submitted
-> earlier by Xiongfeng Wang and myself:
+> To prevent further checking PCI device ids which cannot happen both on
+> Hygon and Intel platform, the function amd_gart_present should return
+> if it's not a AMD CPU.
 > 
-> https://patchwork.ozlabs.org/patch/877835/
-> https://patchwork.ozlabs.org/patch/930403/
+> Signed-off-by: Pu Wen <puwen@hygon.cn>
+> Acked-by: Bjorn Helgaas <bhelgaas@google.com>	# pci_ids.h
+> Reviewed-by: Borislav Petkov <bp@suse.de>
+> ---
+>  arch/x86/include/asm/amd_nb.h |  3 +++
+>  arch/x86/kernel/amd_nb.c      | 47 +++++++++++++++++++++++++++++++++++++------
+>  arch/x86/pci/amd_bus.c        |  6 ++++--
+>  include/linux/pci_ids.h       |  2 ++
+>  4 files changed, 50 insertions(+), 8 deletions(-)
 > 
-> The solution you've found lools good in principle, this might work.
-> 
-> However.  I had withdrawn my solution because I came to the conclusion
-> that pci_lock_rescan_remove() is basically the equivalent to the
-> Big Kernel Lock in the PCI subsystem.  It's way too coarse-grained and
-> the proper solution, it seems, is to move to more fine-grained locking.
->
-> Specifically, device removal comprises two phases, unbinding of the
-> driver (pci_stop_bus_device()) and destruction of the pci_dev
-> (pci_remove_bus_device()).  Currently pci_lock_rescan_remove()
-> protects both phases.  If we make it so that it only protects the
-> second phase, such that the first phase runs lockless, those deadlocks
-> automatically go away.  I've explained this in a little more detail
-> in this reply to Mika:
-> https://www.spinics.net/lists/linux-pci/msg75960.html
-> 
-> Making unbinding of the driver lockless requires careful examination
-> of core PCI enumeration code.  E.g., you've moved the call to
-> pci_dev_assign_added() up in pci_stop_dev().  I don't know if that's
-> safe.  Changing the "added" flag has consequences which I haven't
-> fully understood yet, e.g. it's used to determine newly discovered
-> devices during rescan, but I recall noticing that it also has other
-> meanings.  This is historically grown code which needs to be untangled
-> to make it run lockless, but that takes time.
-> 
-> The problem is real, so the conundrum is whether to apply a fix now
-> which essentially amounts to duct tape, but helps users, or fixing
-> the root cause, which takes more time and would leave users exposed
-> to the problem for now.  Applying duct tape reduces pressure to
-> address the root cause and makes untangling more difficult
-> in the long run.
+> diff --git a/arch/x86/include/asm/amd_nb.h b/arch/x86/include/asm/amd_nb.h
+> index fddb6d2..1ae4e57 100644
+> --- a/arch/x86/include/asm/amd_nb.h
+> +++ b/arch/x86/include/asm/amd_nb.h
+> @@ -103,6 +103,9 @@ static inline u16 amd_pci_dev_to_node_id(struct pci_dev *pdev)
+>  
+>  static inline bool amd_gart_present(void)
+>  {
+> +	if (boot_cpu_data.x86_vendor != X86_VENDOR_AMD)
+> +		return false;
+> +
 
-Yep, I agree with all the points you've made.
+What is that for?
 
-The coarse locking is not the only issue either. The pci driver internals
-are a bit too exposed: many archs and other drivers directly access what
-should be private pointers to other parts of the hierarchy without
-proper locking, and then uses them without reference accounting. Many
-desirable changes may not necessarily be isolated to just pci core.
+Hygon doesn't have F15h so that function will return false there too...
 
-I originally set out to try to remove the Big PCI Lock, but it started
-touching too many subsystems I wouldn't be able to test, so reached for
-the duct tape instead. :(
+... or is that because the qemu script you got from the 0day bot guys
+uses -cpu kvm64 which is family 0xf:
+
+[    0.214353] smpboot: CPU0: AMD Common KVM processor (family: 0xf, model: 0x6, stepping: 0x1)
+
+?
+
+and that makes amd_gart_present() say yes.
+
+In that case, please make a *prepatch* which adds the vendor check to
+both amd_gart_present() and early_is_amd_nb() and send it as a reply to
+this message.
+
+*Then*, do this patch ontop and also as a reply.
+
+>  	/* GART present only on Fam15h, upto model 0fh */
+>  	if (boot_cpu_data.x86 == 0xf || boot_cpu_data.x86 == 0x10 ||
+>  	    (boot_cpu_data.x86 == 0x15 && boot_cpu_data.x86_model < 0x10))
+> diff --git a/arch/x86/kernel/amd_nb.c b/arch/x86/kernel/amd_nb.c
+> index b481b95..dcc4130 100644
+> --- a/arch/x86/kernel/amd_nb.c
+> +++ b/arch/x86/kernel/amd_nb.c
+> @@ -61,6 +61,21 @@ static const struct pci_device_id amd_nb_link_ids[] = {
+>  	{}
+>  };
+>  
+> +static const struct pci_device_id hygon_root_ids[] = {
+> +	{ PCI_DEVICE(PCI_VENDOR_ID_HYGON, PCI_DEVICE_ID_AMD_17H_ROOT) },
+> +	{}
+> +};
+> +
+> +const struct pci_device_id hygon_nb_misc_ids[] = {
+> +	{ PCI_DEVICE(PCI_VENDOR_ID_HYGON, PCI_DEVICE_ID_AMD_17H_DF_F3) },
+> +	{}
+> +};
+> +
+> +static const struct pci_device_id hygon_nb_link_ids[] = {
+> +	{ PCI_DEVICE(PCI_VENDOR_ID_HYGON, PCI_DEVICE_ID_AMD_17H_DF_F4) },
+> +	{}
+> +};
+> +
+>  const struct amd_nb_bus_dev_range amd_nb_bus_dev_ranges[] __initconst = {
+>  	{ 0x00, 0x18, 0x20 },
+>  	{ 0xff, 0x00, 0x20 },
+> @@ -197,12 +212,25 @@ int amd_cache_northbridges(void)
+>  	u16 i = 0;
+>  	struct amd_northbridge *nb;
+>  	struct pci_dev *root, *misc, *link;
+> +	const struct pci_device_id *root_ids = NULL;
+> +	const struct pci_device_id *misc_ids = NULL;
+> +	const struct pci_device_id *link_ids = NULL;
+> +
+> +	if (boot_cpu_data.x86_vendor == X86_VENDOR_HYGON) {
+> +		root_ids = hygon_root_ids;
+> +		misc_ids = hygon_nb_misc_ids;
+> +		link_ids = hygon_nb_link_ids;
+> +	} else {
+> +		root_ids = amd_root_ids;
+> +		misc_ids = amd_nb_misc_ids;
+> +		link_ids = amd_nb_link_ids;
+> +	}
+
+Also, you can make this assignment differently:
+
+	const struct pci_device_id *root_ids = amd_root_ids;
+	const struct pci_device_id *misc_ids = amd_nb_misc_ids;
+	const struct pci_device_id *link_ids = amd_nb_link_ids;
+
+
+	if (boot_cpu_data.x86_vendor == X86_VENDOR_HYGON) {
+		root_ids = hygon_root_ids;
+		misc_ids = hygon_nb_misc_ids;
+		link_ids = hygon_nb_link_ids;
+	}
+
+This way the change is obvious and it is only for Hygon without
+affecting the other vendors.
+
+Ditto for the other assignment.
+
+Thx.
+
+-- 
+Regards/Gruss,
+    Boris.
+
+Good mailing practices for 400: avoid top-posting and trim the reply.
