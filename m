@@ -2,111 +2,111 @@ Return-Path: <SRS0=+fdl=MG=vger.kernel.org=linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-0.8 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	MAILING_LIST_MULTI,SPF_PASS autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-2.3 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+	MAILING_LIST_MULTI,SPF_PASS,USER_AGENT_MUTT autolearn=unavailable
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 33FFCECE561
-	for <linux-pci@archiver.kernel.org>; Mon, 24 Sep 2018 12:08:10 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id E4978C433F4
+	for <linux-pci@archiver.kernel.org>; Mon, 24 Sep 2018 12:46:45 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id ED57C20877
-	for <linux-pci@archiver.kernel.org>; Mon, 24 Sep 2018 12:08:09 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.3.2 mail.kernel.org ED57C20877
+	by mail.kernel.org (Postfix) with ESMTP id AAAB720842
+	for <linux-pci@archiver.kernel.org>; Mon, 24 Sep 2018 12:46:45 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.3.2 mail.kernel.org AAAB720842
 Authentication-Results: mail.kernel.org; dmarc=none (p=none dis=none) header.from=arm.com
 Authentication-Results: mail.kernel.org; spf=none smtp.mailfrom=linux-pci-owner@vger.kernel.org
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1729625AbeIXSJ4 (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Mon, 24 Sep 2018 14:09:56 -0400
-Received: from usa-sjc-mx-foss1.foss.arm.com ([217.140.101.70]:33522 "EHLO
+        id S1729399AbeIXSsk (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Mon, 24 Sep 2018 14:48:40 -0400
+Received: from usa-sjc-mx-foss1.foss.arm.com ([217.140.101.70]:34610 "EHLO
         foss.arm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1728516AbeIXSJz (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Mon, 24 Sep 2018 14:09:55 -0400
+        id S1728387AbeIXSsj (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Mon, 24 Sep 2018 14:48:39 -0400
 Received: from usa-sjc-imap-foss1.foss.arm.com (unknown [10.72.51.249])
-        by usa-sjc-mx-foss1.foss.arm.com (Postfix) with ESMTP id 8E0BB1596;
-        Mon, 24 Sep 2018 05:08:07 -0700 (PDT)
-Received: from [10.4.12.111] (ostrya.Emea.Arm.com [10.4.12.111])
-        by usa-sjc-imap-foss1.foss.arm.com (Postfix) with ESMTPSA id 1213A3F6A8;
-        Mon, 24 Sep 2018 05:08:03 -0700 (PDT)
-Subject: Re: [PATCH v3 02/10] iommu/sva: Bind process address spaces to
- devices
-To:     Lu Baolu <baolu.lu@linux.intel.com>,
-        "iommu@lists.linux-foundation.org" <iommu@lists.linux-foundation.org>
-Cc:     "joro@8bytes.org" <joro@8bytes.org>,
-        "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-        "jcrouse@codeaurora.org" <jcrouse@codeaurora.org>,
-        "alex.williamson@redhat.com" <alex.williamson@redhat.com>,
-        "Jonathan.Cameron@huawei.com" <Jonathan.Cameron@huawei.com>,
-        "jacob.jun.pan@linux.intel.com" <jacob.jun.pan@linux.intel.com>,
-        "christian.koenig@amd.com" <christian.koenig@amd.com>,
-        "eric.auger@redhat.com" <eric.auger@redhat.com>,
-        "kevin.tian@intel.com" <kevin.tian@intel.com>,
-        "yi.l.liu@intel.com" <yi.l.liu@intel.com>,
-        Andrew Murray <Andrew.Murray@arm.com>,
-        Will Deacon <Will.Deacon@arm.com>,
-        Robin Murphy <Robin.Murphy@arm.com>,
-        "ashok.raj@intel.com" <ashok.raj@intel.com>,
-        "xuzaibo@huawei.com" <xuzaibo@huawei.com>,
-        "liguozhu@hisilicon.com" <liguozhu@hisilicon.com>,
-        "okaya@codeaurora.org" <okaya@codeaurora.org>,
-        "bharatku@xilinx.com" <bharatku@xilinx.com>,
-        "ilias.apalodimas@linaro.org" <ilias.apalodimas@linaro.org>,
-        "shunyong.yang@hxt-semitech.com" <shunyong.yang@hxt-semitech.com>
-References: <20180920170046.20154-1-jean-philippe.brucker@arm.com>
- <20180920170046.20154-3-jean-philippe.brucker@arm.com>
- <cdcd4083-ef28-4c5e-4a2c-5b93e61a86b4@linux.intel.com>
-From:   Jean-Philippe Brucker <jean-philippe.brucker@arm.com>
-Message-ID: <7cbd503a-c79e-3c40-7388-ce6c23f7f536@arm.com>
-Date:   Mon, 24 Sep 2018 13:07:47 +0100
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:60.0) Gecko/20100101
- Thunderbird/60.0
+        by usa-sjc-mx-foss1.foss.arm.com (Postfix) with ESMTP id 61F5E18A;
+        Mon, 24 Sep 2018 05:46:40 -0700 (PDT)
+Received: from e107981-ln.cambridge.arm.com (e107981-ln.Emea.Arm.com [10.4.13.117])
+        by usa-sjc-imap-foss1.foss.arm.com (Postfix) with ESMTPSA id BA2243F5BD;
+        Mon, 24 Sep 2018 05:46:38 -0700 (PDT)
+Date:   Mon, 24 Sep 2018 13:46:29 +0100
+From:   Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
+To:     Thomas Petazzoni <thomas.petazzoni@bootlin.com>
+Cc:     Russell King - ARM Linux <linux@armlinux.org.uk>,
+        Jan Kundr??t <jan.kundrat@cesnet.cz>,
+        Baruch Siach <baruch@tkos.co.il>,
+        Jason Cooper <jason@lakedaemon.net>, linux-pci@vger.kernel.org,
+        linux-kernel@vger.kernel.org, Bjorn Helgaas <bhelgaas@google.com>,
+        linux-arm-kernel@lists.infradead.org
+Subject: Re: [BISECTED] Regression: Solidrun Clearfog Base won't boot since
+ "PCI: mvebu: Only remap I/O space if configured"
+Message-ID: <20180924124620.GA10322@e107981-ln.cambridge.arm.com>
+References: <61fdfd69-2bb6-478c-b0d5-69d8744adae3@cesnet.cz>
+ <87zhwm4kl6.fsf@tkos.co.il>
+ <20180912231050.GX30658@n2100.armlinux.org.uk>
+ <20180913094515.351967bb@windsurf>
+ <5ad46fec-a71a-477a-b23f-d20aacfb481d@cesnet.cz>
+ <20180913104241.65db8243@windsurf>
+ <20180924101213.GO30658@n2100.armlinux.org.uk>
+ <20180924122614.70738b5c@windsurf>
+ <20180924111341.GP30658@n2100.armlinux.org.uk>
+ <20180924141203.3df9707a@windsurf>
 MIME-Version: 1.0
-In-Reply-To: <cdcd4083-ef28-4c5e-4a2c-5b93e61a86b4@linux.intel.com>
-Content-Type: text/plain; charset=utf-8
-Content-Language: en-US
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20180924141203.3df9707a@windsurf>
+User-Agent: Mutt/1.5.24 (2015-08-30)
 Sender: linux-pci-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-On 23/09/2018 04:05, Lu Baolu wrote:
-> Hi,
-> 
-> On 09/21/2018 01:00 AM, Jean-Philippe Brucker wrote:
->> Add bind() and unbind() operations to the IOMMU API. Bind() returns a
->> PASID that drivers can program in hardware, to let their devices access an
->> mm. This patch only adds skeletons for the device driver API, most of the
->> implementation is still missing.
-> 
-> Is it possible that a malicious process can unbind a pasid which is
-> used by another normal process?
+On Mon, Sep 24, 2018 at 02:12:03PM +0200, Thomas Petazzoni wrote:
 
-Yes, it's up to the device driver that calls unbind() to check that the
-caller is allowed to unbind this PASID. We can't do it ourselves since
-unbind() could also be called from a kernel thread for example from a
-cleanup function in some workqueue, outside the context of the process
-to unbind.
+[...]
+
+> > Trying to address a regression with further development means that
+> > _that_ development needs thought and review, which is a slower
+> > process.
+> > 
+> > I do understand the desire to keep moving forward and never take a
+> > step backwards, but sometimes backwards steps are the best way to
+> > resolve a regression.  But I also do appreciate that a simple revert
+> > in this case is not possible.
+> 
+> Well, I can revert:
+> 
+> 42342073e38b50113354944cd51dcfed28d857a1 PCI: mvebu: Convert to use
+> pci_host_bridge directly ee1604381a371b3ea6aec7d5e43b6e3f5e153854 PCI:
+> mvebu: Only remap I/O space if configured
+> 
+> so it's not a big deal either. I can revert those, and then resubmit a
+> more complete series later on that moves pci-mvebu to use
+> pci_remap_iospace().
+> 
+> > I'll accept your patch on the condition that the ARM private
+> > pci_ioremap_io() will go away in the very near future (please _try_
+> > to get agreement on that before this patch is merged.)
+> 
+> Bjorn, Lorenzo, what do you prefer ? 
+> 
+> If we want to get rid of pci_ioremap_io(), then we need a way to tell
+> pci_remap_iospace() the memory attributes that should be used for the
+> mapping, because on Armada 38x, we need to map the I/O space mapped
+> MT_UNCACHED instead of MT_DEVICE. I'm not sure how to achieve this yet.
+> Should pgprot_device() be changed to return MT_UNCACHED on a
+> platform-specific basis ? Any other idea ?
+
+I think we should address Russell's concern, he has more insights into
+code that predates the PCI host developments.
+
+What I think you can do short term, given that AFAICS MVEBU is not
+removable, instead of using pci_host_probe() you move part of its code
+into the driver and make sure that you remap IO as last operation before
+probe completion (ie after scanning the host bridge) so that you do not
+need to unmap it on failure; write a commit log summarising/linking this
+thread please and when v4.20 lands we will give this a more thorough
+look as Russell requested.
+
+How does that sound ?
 
 Thanks,
-Jean
-
-> 
-> It might happen in below sequence:
-> 
-> 
-> Process A                       Process B
-> =========                       =========
-> iommu_sva_init_device(dev)
-> iommu_sva_bind_device(dev)
-> ....
-> device access mm of A with
-> #PASID returned above
-> ....
->                                 iommu_sva_unbind_device(dev, #PASID)
-> ....
-> [unrecoverable errors]
-> 
-> I didn't have a thorough consideration of this. Sorry if this has been
-> prevented.
-> 
-> Best regards,
-> Lu Baolu
+Lorenzo
