@@ -2,144 +2,95 @@ Return-Path: <SRS0=zVIF=MH=vger.kernel.org=linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-6.8 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_PASS,URIBL_BLOCKED
+X-Spam-Status: No, score=-3.0 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_PASS,URIBL_BLOCKED,URIBL_SBL,URIBL_SBL_A
 	autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 912B0C43382
-	for <linux-pci@archiver.kernel.org>; Tue, 25 Sep 2018 05:01:10 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 94851C43382
+	for <linux-pci@archiver.kernel.org>; Tue, 25 Sep 2018 05:32:38 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 3D0EF20C0A
-	for <linux-pci@archiver.kernel.org>; Tue, 25 Sep 2018 05:01:10 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.3.2 mail.kernel.org 3D0EF20C0A
-Authentication-Results: mail.kernel.org; dmarc=fail (p=none dis=none) header.from=linux.intel.com
+	by mail.kernel.org (Postfix) with ESMTP id 37A772145D
+	for <linux-pci@archiver.kernel.org>; Tue, 25 Sep 2018 05:32:38 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.3.2 mail.kernel.org 37A772145D
+Authentication-Results: mail.kernel.org; dmarc=none (p=none dis=none) header.from=ellerman.id.au
 Authentication-Results: mail.kernel.org; spf=none smtp.mailfrom=linux-pci-owner@vger.kernel.org
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1725987AbeIYLGv (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Tue, 25 Sep 2018 07:06:51 -0400
-Received: from mga01.intel.com ([192.55.52.88]:20895 "EHLO mga01.intel.com"
+        id S1726031AbeIYLiZ (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Tue, 25 Sep 2018 07:38:25 -0400
+Received: from ozlabs.org ([203.11.71.1]:42129 "EHLO ozlabs.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1725959AbeIYLGv (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Tue, 25 Sep 2018 07:06:51 -0400
-X-Amp-Result: SKIPPED(no attachment in message)
-X-Amp-File-Uploaded: False
-Received: from fmsmga007.fm.intel.com ([10.253.24.52])
-  by fmsmga101.fm.intel.com with ESMTP/TLS/DHE-RSA-AES256-GCM-SHA384; 24 Sep 2018 22:01:07 -0700
-X-ExtLoop1: 1
-X-IronPort-AV: E=Sophos;i="5.54,300,1534834800"; 
-   d="scan'208";a="72624921"
-Received: from allen-box.sh.intel.com (HELO [10.239.161.122]) ([10.239.161.122])
-  by fmsmga007.fm.intel.com with ESMTP; 24 Sep 2018 22:01:04 -0700
-Cc:     baolu.lu@linux.intel.com, joro@8bytes.org,
-        linux-pci@vger.kernel.org, jcrouse@codeaurora.org,
-        alex.williamson@redhat.com, Jonathan.Cameron@huawei.com,
-        jacob.jun.pan@linux.intel.com, christian.koenig@amd.com,
-        eric.auger@redhat.com, kevin.tian@intel.com, yi.l.liu@intel.com,
-        andrew.murray@arm.com, will.deacon@arm.com, robin.murphy@arm.com,
-        ashok.raj@intel.com, xuzaibo@huawei.com, liguozhu@hisilicon.com,
-        okaya@codeaurora.org, bharatku@xilinx.com,
-        ilias.apalodimas@linaro.org, shunyong.yang@hxt-semitech.com
-Subject: Re: [PATCH v3 06/10] iommu/sva: Search mm by PASID
-To:     Jean-Philippe Brucker <jean-philippe.brucker@arm.com>,
-        iommu@lists.linux-foundation.org
-References: <20180920170046.20154-1-jean-philippe.brucker@arm.com>
- <20180920170046.20154-7-jean-philippe.brucker@arm.com>
-From:   Lu Baolu <baolu.lu@linux.intel.com>
-Message-ID: <bb2e42bb-175a-3368-4a53-8872e63e8d3e@linux.intel.com>
-Date:   Tue, 25 Sep 2018 12:59:33 +0800
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:52.0) Gecko/20100101
- Thunderbird/52.9.1
+        id S1725959AbeIYLiZ (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Tue, 25 Sep 2018 07:38:25 -0400
+Received: from authenticated.ozlabs.org (localhost [127.0.0.1])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+        (No client certificate requested)
+        by ozlabs.org (Postfix) with ESMTPSA id 42K8pm6Y4Nz9s47;
+        Tue, 25 Sep 2018 15:32:32 +1000 (AEST)
+Authentication-Results: ozlabs.org; dmarc=none (p=none dis=none) header.from=ellerman.id.au
+From:   Michael Ellerman <mpe@ellerman.id.au>
+To:     Guenter Roeck <linux@roeck-us.net>, Christoph Hellwig <hch@lst.de>
+Cc:     iommu@lists.linux-foundation.org,
+        Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+        Robin Murphy <robin.murphy@arm.com>,
+        linux-kernel@vger.kernel.org, linux-arm-kernel@lists.infradead.org,
+        Marek Szyprowski <m.szyprowski@samsung.com>,
+        Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org,
+        Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+        Paul Mackerras <paulus@samba.org>,
+        linuxppc-dev@lists.ozlabs.org
+Subject: Re: [PATCH 4/4] dma-mapping: clear dev->dma_ops in arch_teardown_dma_ops
+In-Reply-To: <20180922150119.GA14761@roeck-us.net>
+References: <20180827084711.23407-1-hch@lst.de> <20180827084711.23407-5-hch@lst.de> <20180922150119.GA14761@roeck-us.net>
+Date:   Tue, 25 Sep 2018 15:32:30 +1000
+Message-ID: <87r2hi3zwx.fsf@concordia.ellerman.id.au>
 MIME-Version: 1.0
-In-Reply-To: <20180920170046.20154-7-jean-philippe.brucker@arm.com>
-Content-Type: text/plain; charset=utf-8; format=flowed
-Content-Language: en-US
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain
 Sender: linux-pci-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-Hi,
+Guenter Roeck <linux@roeck-us.net> writes:
+> Hi,
+>
+> On Mon, Aug 27, 2018 at 10:47:11AM +0200, Christoph Hellwig wrote:
+>> There is no reason to leave the per-device dma_ops around when
+>> deconfiguring a device, so move this code from arm64 into the
+>> common code.
+>> Signed-off-by: Christoph Hellwig <hch@lst.de>
+>> Reviewed-by: Robin Murphy <robin.murphy@arm.com>
+>
+> This patch causes various ppc images to crash in -next due to NULL
+> DMA ops in dma_alloc_attrs().
 
-On 09/21/2018 01:00 AM, Jean-Philippe Brucker wrote:
-> The fault handler will need to find an mm given its PASID. This is the
-> reason we have an IDR for storing address spaces, so hook it up.
-> 
-> Signed-off-by: Jean-Philippe Brucker <jean-philippe.brucker@arm.com>
-> ---
->   drivers/iommu/iommu-sva.c | 26 ++++++++++++++++++++++++++
->   include/linux/iommu.h     |  7 +++++++
->   2 files changed, 33 insertions(+)
-> 
-> diff --git a/drivers/iommu/iommu-sva.c b/drivers/iommu/iommu-sva.c
-> index 5ff8967cb213..ee86f00ee1b9 100644
-> --- a/drivers/iommu/iommu-sva.c
-> +++ b/drivers/iommu/iommu-sva.c
-> @@ -636,6 +636,32 @@ void iommu_sva_unbind_device_all(struct device *dev)
->   }
->   EXPORT_SYMBOL_GPL(iommu_sva_unbind_device_all);
->   
-> +/**
-> + * iommu_sva_find() - Find mm associated to the given PASID
-> + * @pasid: Process Address Space ID assigned to the mm
-> + *
-> + * Returns the mm corresponding to this PASID, or NULL if not found. A reference
-> + * to the mm is taken, and must be released with mmput().
-> + */
-> +struct mm_struct *iommu_sva_find(int pasid)
-> +{
-> +	struct io_mm *io_mm;
-> +	struct mm_struct *mm = NULL;
-> +
-> +	spin_lock(&iommu_sva_lock);
-> +	io_mm = idr_find(&iommu_pasid_idr, pasid);
+I finally remembered where you autobuilder is :)
 
-The same thing here. We can't guarantee that a pointer of mm_struct type
-is associated with a pasid value when pasid is also used for other
-purposes. If hardware reports a bad pasid, this function might run into
-problem.
+https://kerneltests.org/builders/qemu-ppc-next/builds/970/steps/qemubuildcommand_1/logs/stdio
 
-Best regards,
-Lu Baolu
+Looks like mac99 at least is failing.
 
-> +	if (io_mm && io_mm_get_locked(io_mm)) {
-> +		if (mmget_not_zero(io_mm->mm))
-> +			mm = io_mm->mm;
-> +
-> +		io_mm_put_locked(io_mm);
-> +	}
-> +	spin_unlock(&iommu_sva_lock);
-> +
-> +	return mm;
-> +}
-> +EXPORT_SYMBOL_GPL(iommu_sva_find);
-> +
->   /**
->    * iommu_sva_init_device() - Initialize Shared Virtual Addressing for a device
->    * @dev: the device
-> diff --git a/include/linux/iommu.h b/include/linux/iommu.h
-> index 429f3dc37a35..a457650b80de 100644
-> --- a/include/linux/iommu.h
-> +++ b/include/linux/iommu.h
-> @@ -987,6 +987,8 @@ extern int __iommu_sva_bind_device(struct device *dev, struct mm_struct *mm,
->   				   void *drvdata);
->   extern int __iommu_sva_unbind_device(struct device *dev, int pasid);
->   extern void iommu_sva_unbind_device_all(struct device *dev);
-> +extern struct mm_struct *iommu_sva_find(int pasid);
-> +
->   #else /* CONFIG_IOMMU_SVA */
->   static inline int iommu_sva_init_device(struct device *dev,
->   					unsigned long features,
-> @@ -1016,6 +1018,11 @@ static inline int __iommu_sva_unbind_device(struct device *dev, int pasid)
->   static inline void iommu_sva_unbind_device_all(struct device *dev)
->   {
->   }
-> +
-> +static inline struct mm_struct *iommu_sva_find(int pasid)
-> +{
-> +	return NULL;
-> +}
->   #endif /* CONFIG_IOMMU_SVA */
->   
->   #endif /* __LINUX_IOMMU_H */
-> 
+Just reproduced it on my setup.
+
+> Looking into the code, the macio driver tries to instantiate on
+> the 0000:f0:0d.0 PCI address (the driver maps to all Apple PCI IDs)
+> and fails. This results in a call to arch_teardown_dma_ops(). Later,
+> the same device pointer is used to instantiate ohci-pci, which
+> crashes in probe because the dma_ops pointer has been cleared.
+>
+> I don't claim to fully understand the code, but to me it looks like
+> the pci device is allocated and waiting for a driver to attach to.
+> See arch/powerpc/kernel/pci_of_scan.c:of_create_pci_dev().
+> If attaching a driver (here: macio) fails, the same device pointer
+> is then reused for the next matching driver until a match is found
+> and the device is successfully instantiated. Of course this fails
+> quite badly if the device pointer has been scrubbed after the first
+> failure.
+>
+> I don't know if this is generic PCI behavior or ppc specific.
+> I am copying pci and ppc maintainers for additional input.
+
+I would guess this is some PPC special sauce  O_o
+
+Will have a look.
+
+cheers
