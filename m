@@ -6,46 +6,46 @@ X-Spam-Status: No, score=-0.8 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
 	MAILING_LIST_MULTI,SPF_PASS autolearn=unavailable autolearn_force=no
 	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id EC462C43382
-	for <linux-pci@archiver.kernel.org>; Tue, 25 Sep 2018 17:29:23 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id EF0D3C43382
+	for <linux-pci@archiver.kernel.org>; Tue, 25 Sep 2018 17:33:34 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id AFA7420842
-	for <linux-pci@archiver.kernel.org>; Tue, 25 Sep 2018 17:29:23 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.3.2 mail.kernel.org AFA7420842
+	by mail.kernel.org (Postfix) with ESMTP id B39ED20842
+	for <linux-pci@archiver.kernel.org>; Tue, 25 Sep 2018 17:33:34 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.3.2 mail.kernel.org B39ED20842
 Authentication-Results: mail.kernel.org; dmarc=none (p=none dis=none) header.from=acm.org
 Authentication-Results: mail.kernel.org; spf=none smtp.mailfrom=linux-pci-owner@vger.kernel.org
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727487AbeIYXht (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Tue, 25 Sep 2018 19:37:49 -0400
-Received: from mail-pg1-f196.google.com ([209.85.215.196]:42755 "EHLO
-        mail-pg1-f196.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726350AbeIYXhs (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Tue, 25 Sep 2018 19:37:48 -0400
-Received: by mail-pg1-f196.google.com with SMTP id y4-v6so12051309pgp.9;
-        Tue, 25 Sep 2018 10:29:18 -0700 (PDT)
+        id S1726815AbeIYXmA (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Tue, 25 Sep 2018 19:42:00 -0400
+Received: from mail-pg1-f193.google.com ([209.85.215.193]:33463 "EHLO
+        mail-pg1-f193.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726173AbeIYXmA (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Tue, 25 Sep 2018 19:42:00 -0400
+Received: by mail-pg1-f193.google.com with SMTP id y18-v6so8766137pge.0;
+        Tue, 25 Sep 2018 10:33:28 -0700 (PDT)
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20161025;
         h=x-gm-message-state:message-id:subject:from:to:cc:date:in-reply-to
          :references:mime-version:content-transfer-encoding;
-        bh=aU8Y/8mDcaCk6uRU0aOMBAJ7SSRSxdGenG/C818kHl4=;
-        b=E/gksXwP97NzsNgMPFBdSsGJnUanVG8Izg7J0ZCOMRsGqvSjnczdNRukxmcX5wNGRu
-         AupMww9m8IjqaOKP3oNEely8uRNHD/GSvDCVuI3o6T9oevqq+7LdteyUoCBdRPeywgyM
-         f4UfL90XK8Bv0xmzGLO7SR05UZwl+z8tJFbJ/F6qjNM3r4lvK8t9YrnYrgQDKl4dX5JD
-         IqpGuJpMdbtfBeZvQjQ4Nbw5p+i3736voazpbEXTeriIb7P1GMIv6+HfyCv7/KGETYSX
-         ueq3d3/tB5A57RJDNLTND+d5It2676nR9doezMnrIlBXXnBGbMh3S/kZ09R/mIpcazTJ
-         nbDA==
-X-Gm-Message-State: ABuFfohkQZXDgkfAkc65Di/cG74F+tsTwywWsLXdGxUPKMuf5v37mGNS
-        JHaEE14qXxe9D/oJt/xTsJg=
-X-Google-Smtp-Source: ACcGV62BL4T1QFEJbGQ/tica4x+V2G6iRkFyRxPiamzoVd8rITZD4XFmVhO/3TPdYZouZbCtnfEwLQ==
-X-Received: by 2002:a62:1655:: with SMTP id 82-v6mr2152095pfw.11.1537896557509;
-        Tue, 25 Sep 2018 10:29:17 -0700 (PDT)
+        bh=93CkPH0+9ZK84C4ZVTEiA210DqPYunLMckKev7kSXTc=;
+        b=IGoVDUllSVrd2n+sSSRVMVSmOq1RTwJYvD/Csr8AcxZP71O/6Of9AF+ylGCU8OU7in
+         DNP/tqhT1EdGf8iDlyCgbIn46rTv9p5HPQIZGVIYYvWNKhPNqNqeTWgwMeGro0P+r9iY
+         sBAyZ28NORP3+xa8st3EDagw/VrtTnJb8Np7avTmM0nX9gLJ7l+oVf/xLIaUKfe21QkY
+         pDDoVI2Nxq4k6xqgQASDw4wHUtRL5ZHKWPjJ+qf7KHXZuEVn8+UIO5H7Ev1/EYSrSyMQ
+         qQq5OVcw6MgoOx5rsXf9jr6TUpJOoyyHDbkI3JW+6G4LR7D6F6GM1GF86hu0ktKYRUOB
+         04Ww==
+X-Gm-Message-State: ABuFfog4ylxhh3NWoD7u2K5QugGskb4IuFokUjW0hstySUsONogWQceW
+        y1JSNwi6XqlX3sRXulPEnBU=
+X-Google-Smtp-Source: ACcGV62MhG7g4R/2h0B4P29/eiGKLp/nbakbpvEqmLJX5cNNYq6sJFxsAjrOSScLwf8yK/O+GEOUmg==
+X-Received: by 2002:a63:b23:: with SMTP id 35-v6mr2011075pgl.301.1537896807533;
+        Tue, 25 Sep 2018 10:33:27 -0700 (PDT)
 Received: from ?IPv6:2620:15c:2cd:203:5cdc:422c:7b28:ebb5? ([2620:15c:2cd:203:5cdc:422c:7b28:ebb5])
-        by smtp.gmail.com with ESMTPSA id h124-v6sm4988061pfg.112.2018.09.25.10.29.16
+        by smtp.gmail.com with ESMTPSA id g15-v6sm4933994pfg.98.2018.09.25.10.33.26
         (version=TLS1_2 cipher=ECDHE-RSA-CHACHA20-POLY1305 bits=256/256);
-        Tue, 25 Sep 2018 10:29:16 -0700 (PDT)
-Message-ID: <1537896555.11137.22.camel@acm.org>
-Subject: Re: [PATCH v7 02/13] PCI/P2PDMA: Add sysfs group to display p2pmem
- stats
+        Tue, 25 Sep 2018 10:33:26 -0700 (PDT)
+Message-ID: <1537896805.11137.25.camel@acm.org>
+Subject: Re: [PATCH v7 03/13] PCI/P2PDMA: Add PCI p2pmem DMA mappings to
+ adjust the bus offset
 From:   Bart Van Assche <bvanassche@acm.org>
 To:     Logan Gunthorpe <logang@deltatee.com>,
         linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
@@ -64,10 +64,10 @@ Cc:     Stephen Bates <sbates@raithlin.com>,
         Alex Williamson <alex.williamson@redhat.com>,
         Christian =?ISO-8859-1?Q?K=F6nig?= <christian.koenig@amd.com>,
         Jens Axboe <axboe@kernel.dk>
-Date:   Tue, 25 Sep 2018 10:29:15 -0700
-In-Reply-To: <20180925162231.4354-3-logang@deltatee.com>
+Date:   Tue, 25 Sep 2018 10:33:25 -0700
+In-Reply-To: <20180925162231.4354-4-logang@deltatee.com>
 References: <20180925162231.4354-1-logang@deltatee.com>
-         <20180925162231.4354-3-logang@deltatee.com>
+         <20180925162231.4354-4-logang@deltatee.com>
 Content-Type: text/plain; charset="UTF-7"
 X-Mailer: Evolution 3.26.2-1 
 Mime-Version: 1.0
@@ -78,24 +78,28 @@ List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
 On Tue, 2018-09-25 at 10:22 -0600, Logan Gunthorpe wrote:
-+AD4 +AEAAQA -83,9 +-132,14 +AEAAQA static int pci+AF8-p2pdma+AF8-setup(struct pci+AF8-dev +ACo-pdev)
-+AD4  
-+AD4  	pdev-+AD4-p2pdma +AD0 p2p+ADs
-+AD4  
-+AD4 +-	error +AD0 sysfs+AF8-create+AF8-group(+ACY-pdev-+AD4-dev.kobj, +ACY-p2pmem+AF8-group)+ADs
-+AD4 +-	if (error)
-+AD4 +-		goto out+AF8-pool+AF8-destroy+ADs
++AD4 +-int pci+AF8-p2pdma+AF8-map+AF8-sg(struct device +ACo-dev, struct scatterlist +ACo-sg, int nents,
++AD4 +-		      enum dma+AF8-data+AF8-direction dir)
++AD4 +-+AHs
++AD4 +-	struct dev+AF8-pagemap +ACo-pgmap+ADs
++AD4 +-	struct scatterlist +ACo-s+ADs
++AD4 +-	phys+AF8-addr+AF8-t paddr+ADs
++AD4 +-	int i+ADs
 +AD4 +-
-+AD4  	return 0+ADs
-+AD4  
-+AD4  out+AF8-pool+AF8-destroy:
-+AD4 +-	pdev-+AD4-p2pdma +AD0 NULL+ADs
-+AD4  	gen+AF8-pool+AF8-destroy(p2p-+AD4-pool)+ADs
-+AD4  out:
-+AD4  	devm+AF8-kfree(+ACY-pdev-+AD4-dev, p2p)+ADs
++AD4 +-	/+ACo
++AD4 +-	 +ACo p2pdma mappings are not compatible with devices that use
++AD4 +-	 +ACo dma+AF8-virt+AF8-ops. If the upper layers do the right thing
++AD4 +-	 +ACo this should never happen because it will be prevented
++AD4 +-	 +ACo by the check in pci+AF8-p2pdma+AF8-add+AF8-client()
++AD4 +-	 +ACo-/
++AD4 +-	if (WARN+AF8-ON+AF8-ONCE(IS+AF8-ENABLED(CONFIG+AF8-DMA+AF8-VIRT+AF8-OPS) +ACYAJg
++AD4 +-			 dev-+AD4-dma+AF8-ops +AD0APQ +ACY-dma+AF8-virt+AF8-ops))
++AD4 +-		return 0+ADs
 
-This doesn't look right to me. Shouldn't devm+AF8-remove+AF8-action() be called instead
-of devm+AF8-kfree() if sysfs+AF8-create+AF8-group() fails?
+Are you assuming that the compiler will optimize out the dev-+AD4-dma+AF8-ops
++AD0APQ +ACY-dma+AF8-virt+AF8-ops test if CONFIG+AF8-DMA+AF8-VIRT+AF8-OPS+AD0-n such that no reference to the
+dma+AF8-virt+AF8-ops symbol appears in the object file? Are you sure all compilers
+and compiler versions that are used to build the Linux kernel will do that?
 
 Thanks,
 
