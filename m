@@ -6,29 +6,29 @@ X-Spam-Status: No, score=-8.8 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
 	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_PASS,URIBL_BLOCKED,
 	USER_AGENT_GIT autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 35CE9C43382
-	for <linux-pci@archiver.kernel.org>; Tue, 25 Sep 2018 16:23:32 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 9C19CC43382
+	for <linux-pci@archiver.kernel.org>; Tue, 25 Sep 2018 16:23:41 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id EC30321508
-	for <linux-pci@archiver.kernel.org>; Tue, 25 Sep 2018 16:23:31 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.3.2 mail.kernel.org EC30321508
+	by mail.kernel.org (Postfix) with ESMTP id 4858C2150C
+	for <linux-pci@archiver.kernel.org>; Tue, 25 Sep 2018 16:23:41 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.3.2 mail.kernel.org 4858C2150C
 Authentication-Results: mail.kernel.org; dmarc=none (p=none dis=none) header.from=deltatee.com
 Authentication-Results: mail.kernel.org; spf=none smtp.mailfrom=linux-pci-owner@vger.kernel.org
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1729568AbeIYWbM (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Tue, 25 Sep 2018 18:31:12 -0400
-Received: from ale.deltatee.com ([207.54.116.67]:42766 "EHLO ale.deltatee.com"
+        id S1729825AbeIYWbK (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Tue, 25 Sep 2018 18:31:10 -0400
+Received: from ale.deltatee.com ([207.54.116.67]:42746 "EHLO ale.deltatee.com"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1729839AbeIYWbL (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Tue, 25 Sep 2018 18:31:11 -0400
+        id S1729253AbeIYWbJ (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Tue, 25 Sep 2018 18:31:09 -0400
 Received: from cgy1-donard.priv.deltatee.com ([172.16.1.31])
         by ale.deltatee.com with esmtps (TLS1.2:ECDHE_RSA_AES_256_GCM_SHA384:256)
         (Exim 4.89)
         (envelope-from <gunthorp@deltatee.com>)
-        id 1g4q6p-0002fQ-OJ; Tue, 25 Sep 2018 10:22:55 -0600
+        id 1g4q6p-0002fR-VL; Tue, 25 Sep 2018 10:22:54 -0600
 Received: from gunthorp by cgy1-donard.priv.deltatee.com with local (Exim 4.89)
         (envelope-from <gunthorp@deltatee.com>)
-        id 1g4q6d-00019i-Ci; Tue, 25 Sep 2018 10:22:35 -0600
+        id 1g4q6d-00019l-GI; Tue, 25 Sep 2018 10:22:35 -0600
 From:   Logan Gunthorpe <logang@deltatee.com>
 To:     linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
         linux-nvme@lists.infradead.org, linux-rdma@vger.kernel.org,
@@ -46,18 +46,20 @@ Cc:     Stephen Bates <sbates@raithlin.com>,
         Alex Williamson <alex.williamson@redhat.com>,
         =?UTF-8?q?Christian=20K=C3=B6nig?= <christian.koenig@amd.com>,
         Jens Axboe <axboe@kernel.dk>,
-        Logan Gunthorpe <logang@deltatee.com>
-Date:   Tue, 25 Sep 2018 10:22:30 -0600
-Message-Id: <20180925162231.4354-13-logang@deltatee.com>
+        Logan Gunthorpe <logang@deltatee.com>,
+        Steve Wise <swise@opengridcomputing.com>
+Date:   Tue, 25 Sep 2018 10:22:31 -0600
+Message-Id: <20180925162231.4354-14-logang@deltatee.com>
 X-Mailer: git-send-email 2.19.0
 In-Reply-To: <20180925162231.4354-1-logang@deltatee.com>
 References: <20180925162231.4354-1-logang@deltatee.com>
 MIME-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 8bit
 X-SA-Exim-Connect-IP: 172.16.1.31
-X-SA-Exim-Rcpt-To: linux-nvme@lists.infradead.org, linux-nvdimm@lists.01.org, linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org, linux-rdma@vger.kernel.org, linux-block@vger.kernel.org, sbates@raithlin.com, hch@lst.de, sagi@grimberg.me, bhelgaas@google.com, jgg@mellanox.com, maxg@mellanox.com, keith.busch@intel.com, dan.j.williams@intel.com, benh@kernel.crashing.org, jglisse@redhat.com, alex.williamson@redhat.com, christian.koenig@amd.com, axboe@kernel.dk, logang@deltatee.com
+X-SA-Exim-Rcpt-To: linux-nvme@lists.infradead.org, linux-nvdimm@lists.01.org, linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org, linux-rdma@vger.kernel.org, linux-block@vger.kernel.org, sbates@raithlin.com, hch@lst.de, sagi@grimberg.me, bhelgaas@google.com, jgg@mellanox.com, maxg@mellanox.com, keith.busch@intel.com, dan.j.williams@intel.com, benh@kernel.crashing.org, jglisse@redhat.com, alex.williamson@redhat.com, christian.koenig@amd.com, axboe@kernel.dk, logang@deltatee.com, swise@opengridcomputing.com
 X-SA-Exim-Mail-From: gunthorp@deltatee.com
-Subject: [PATCH v7 12/13] nvmet: Introduce helper functions to allocate and free request SGLs
+Subject: [PATCH v7 13/13] nvmet: Optionally use PCI P2P memory
 X-SA-Exim-Version: 4.2.1 (built Tue, 02 Aug 2016 21:08:31 +0000)
 X-SA-Exim-Scanned: Yes (on ale.deltatee.com)
 Sender: linux-pci-owner@vger.kernel.org
@@ -65,129 +67,397 @@ Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-Add helpers to allocate and free the SGL in a struct nvmet_req:
+We create a configfs attribute in each nvme-fabrics target port to
+enable p2p memory use. When enabled, the port will only then use the
+p2p memory if a p2p memory device can be found which is behind the
+same switch hierarchy as the RDMA port and all the block devices in
+use. If the user enabled it and no devices are found, then the system
+will silently fall back on using regular memory.
 
-int nvmet_req_alloc_sgl(struct nvmet_req *req, struct nvmet_sq *sq)
-void nvmet_req_free_sgl(struct nvmet_req *req)
+If appropriate, that port will allocate memory for the RDMA buffers
+for queues from the p2pmem device falling back to system memory should
+anything fail.
 
-This will be expanded in a future patch to implement peer-to-peer
-memory DMAs and should be common with all target drivers. The presently
-unused 'sq' argument in the alloc function will be necessary to
-decide whether to use peer-to-peer memory and obtain the correct
-provider to allocate the memory.
+Ideally, we'd want to use an NVME CMB buffer as p2p memory. This would
+save an extra PCI transfer as the NVME card could just take the data
+out of it's own memory. However, at this time, only a limited number
+of cards with CMB buffers seem to be available.
 
-The new helpers are used in nvmet-rdma. Seeing we use req.transfer_len
-as the length of the SGL it is set earlier and cleared on any error.
-It also seems to be unnecessary to accumulate the length as the map_sgl
-functions should only ever be called once per request.
-
+Signed-off-by: Stephen Bates <sbates@raithlin.com>
+Signed-off-by: Steve Wise <swise@opengridcomputing.com>
+[hch: partial rewrite of the initial code]
+Signed-off-by: Christoph Hellwig <hch@lst.de>
 Signed-off-by: Logan Gunthorpe <logang@deltatee.com>
-Acked-by: Sagi Grimberg <sagi@grimberg.me>
-Cc: Christoph Hellwig <hch@lst.de>
 ---
- drivers/nvme/target/core.c  | 18 ++++++++++++++++++
- drivers/nvme/target/nvmet.h |  2 ++
- drivers/nvme/target/rdma.c  | 20 ++++++++++++--------
- 3 files changed, 32 insertions(+), 8 deletions(-)
+ drivers/nvme/target/configfs.c    |  36 ++++++++
+ drivers/nvme/target/core.c        | 138 +++++++++++++++++++++++++++++-
+ drivers/nvme/target/io-cmd-bdev.c |   3 +
+ drivers/nvme/target/nvmet.h       |  13 +++
+ drivers/nvme/target/rdma.c        |   2 +
+ 5 files changed, 191 insertions(+), 1 deletion(-)
 
+diff --git a/drivers/nvme/target/configfs.c b/drivers/nvme/target/configfs.c
+index b37a8e3e3f80..0dfb0e0c3d21 100644
+--- a/drivers/nvme/target/configfs.c
++++ b/drivers/nvme/target/configfs.c
+@@ -17,6 +17,8 @@
+ #include <linux/slab.h>
+ #include <linux/stat.h>
+ #include <linux/ctype.h>
++#include <linux/pci.h>
++#include <linux/pci-p2pdma.h>
+ 
+ #include "nvmet.h"
+ 
+@@ -1094,6 +1096,37 @@ static void nvmet_port_release(struct config_item *item)
+ 	kfree(port);
+ }
+ 
++#ifdef CONFIG_PCI_P2PDMA
++static ssize_t nvmet_p2pmem_show(struct config_item *item, char *page)
++{
++	struct nvmet_port *port = to_nvmet_port(item);
++
++	return pci_p2pdma_enable_show(page, port->p2p_dev, port->use_p2pmem);
++}
++
++static ssize_t nvmet_p2pmem_store(struct config_item *item,
++		const char *page, size_t count)
++{
++	struct nvmet_port *port = to_nvmet_port(item);
++	struct pci_dev *p2p_dev = NULL;
++	bool use_p2pmem;
++	int error;
++
++	error = pci_p2pdma_enable_store(page, &p2p_dev, &use_p2pmem);
++	if (error)
++		return error;
++
++	down_write(&nvmet_config_sem);
++	port->use_p2pmem = use_p2pmem;
++	pci_dev_put(port->p2p_dev);
++	port->p2p_dev = p2p_dev;
++	up_write(&nvmet_config_sem);
++
++	return count;
++}
++CONFIGFS_ATTR(nvmet_, p2pmem);
++#endif /* CONFIG_PCI_P2PDMA */
++
+ static struct configfs_attribute *nvmet_port_attrs[] = {
+ 	&nvmet_attr_addr_adrfam,
+ 	&nvmet_attr_addr_treq,
+@@ -1101,6 +1134,9 @@ static struct configfs_attribute *nvmet_port_attrs[] = {
+ 	&nvmet_attr_addr_trsvcid,
+ 	&nvmet_attr_addr_trtype,
+ 	&nvmet_attr_param_inline_data_size,
++#ifdef CONFIG_PCI_P2PDMA
++	&nvmet_attr_p2pmem,
++#endif
+ 	NULL,
+ };
+ 
 diff --git a/drivers/nvme/target/core.c b/drivers/nvme/target/core.c
-index b5ec96abd048..bddd1599b826 100644
+index bddd1599b826..7ade16cb4ed3 100644
 --- a/drivers/nvme/target/core.c
 +++ b/drivers/nvme/target/core.c
-@@ -725,6 +725,24 @@ void nvmet_req_execute(struct nvmet_req *req)
+@@ -15,6 +15,7 @@
+ #include <linux/module.h>
+ #include <linux/random.h>
+ #include <linux/rculist.h>
++#include <linux/pci-p2pdma.h>
+ 
+ #include "nvmet.h"
+ 
+@@ -365,9 +366,29 @@ static void nvmet_ns_dev_disable(struct nvmet_ns *ns)
+ 	nvmet_file_ns_disable(ns);
  }
- EXPORT_SYMBOL_GPL(nvmet_req_execute);
  
-+int nvmet_req_alloc_sgl(struct nvmet_req *req, struct nvmet_sq *sq)
++static int nvmet_p2pdma_add_client(struct nvmet_ctrl *ctrl,
++		struct nvmet_ns *ns)
 +{
-+	req->sg = sgl_alloc(req->transfer_len, GFP_KERNEL, &req->sg_cnt);
-+	if (!req->sg)
-+		return -ENOMEM;
++	int ret;
 +
-+	return 0;
++	if (!blk_queue_pci_p2pdma(ns->bdev->bd_queue)) {
++		pr_err("peer-to-peer DMA is not supported by %s\n",
++		       ns->device_path);
++		return -EINVAL;
++	}
++
++	ret = pci_p2pdma_add_client(&ctrl->p2p_clients, nvmet_ns_dev(ns));
++	if (ret)
++		pr_err("failed to add peer-to-peer DMA client %s: %d\n",
++		       ns->device_path, ret);
++
++	return ret;
 +}
-+EXPORT_SYMBOL_GPL(nvmet_req_alloc_sgl);
 +
-+void nvmet_req_free_sgl(struct nvmet_req *req)
-+{
-+	sgl_free(req->sg);
-+	req->sg = NULL;
-+	req->sg_cnt = 0;
-+}
-+EXPORT_SYMBOL_GPL(nvmet_req_free_sgl);
-+
- static inline bool nvmet_cc_en(u32 cc)
+ int nvmet_ns_enable(struct nvmet_ns *ns)
  {
- 	return (cc >> NVME_CC_EN_SHIFT) & 0x1;
-diff --git a/drivers/nvme/target/nvmet.h b/drivers/nvme/target/nvmet.h
-index ec9af4ee03b6..7d6cb61021e4 100644
---- a/drivers/nvme/target/nvmet.h
-+++ b/drivers/nvme/target/nvmet.h
-@@ -336,6 +336,8 @@ bool nvmet_req_init(struct nvmet_req *req, struct nvmet_cq *cq,
- void nvmet_req_uninit(struct nvmet_req *req);
- void nvmet_req_execute(struct nvmet_req *req);
- void nvmet_req_complete(struct nvmet_req *req, u16 status);
-+int nvmet_req_alloc_sgl(struct nvmet_req *req, struct nvmet_sq *sq);
-+void nvmet_req_free_sgl(struct nvmet_req *req);
- 
- void nvmet_cq_setup(struct nvmet_ctrl *ctrl, struct nvmet_cq *cq, u16 qid,
- 		u16 size);
-diff --git a/drivers/nvme/target/rdma.c b/drivers/nvme/target/rdma.c
-index bfc4da660bb4..b0d0cedc74bb 100644
---- a/drivers/nvme/target/rdma.c
-+++ b/drivers/nvme/target/rdma.c
-@@ -503,7 +503,7 @@ static void nvmet_rdma_release_rsp(struct nvmet_rdma_rsp *rsp)
- 	}
- 
- 	if (rsp->req.sg != rsp->cmd->inline_sg)
--		sgl_free(rsp->req.sg);
-+		nvmet_req_free_sgl(&rsp->req);
- 
- 	if (unlikely(!list_empty_careful(&queue->rsp_wr_wait_list)))
- 		nvmet_rdma_process_wr_wait_list(queue);
-@@ -652,24 +652,24 @@ static u16 nvmet_rdma_map_sgl_keyed(struct nvmet_rdma_rsp *rsp,
- {
- 	struct rdma_cm_id *cm_id = rsp->queue->cm_id;
- 	u64 addr = le64_to_cpu(sgl->addr);
--	u32 len = get_unaligned_le24(sgl->length);
- 	u32 key = get_unaligned_le32(sgl->key);
+ 	struct nvmet_subsys *subsys = ns->subsys;
++	struct nvmet_ctrl *ctrl;
  	int ret;
  
-+	rsp->req.transfer_len = get_unaligned_le24(sgl->length);
+ 	mutex_lock(&subsys->lock);
+@@ -389,6 +410,14 @@ int nvmet_ns_enable(struct nvmet_ns *ns)
+ 	if (ret)
+ 		goto out_dev_put;
+ 
++	list_for_each_entry(ctrl, &subsys->ctrls, subsys_entry) {
++		if (ctrl->p2p_dev) {
++			ret = nvmet_p2pdma_add_client(ctrl, ns);
++			if (ret)
++				goto out_remove_clients;
++		}
++	}
 +
- 	/* no data command? */
--	if (!len)
-+	if (!rsp->req.transfer_len)
- 		return 0;
+ 	if (ns->nsid > subsys->max_nsid)
+ 		subsys->max_nsid = ns->nsid;
  
--	rsp->req.sg = sgl_alloc(len, GFP_KERNEL, &rsp->req.sg_cnt);
--	if (!rsp->req.sg)
--		return NVME_SC_INTERNAL;
-+	ret = nvmet_req_alloc_sgl(&rsp->req, &rsp->queue->nvme_sq);
-+	if (ret < 0)
-+		goto error_out;
+@@ -417,6 +446,9 @@ int nvmet_ns_enable(struct nvmet_ns *ns)
+ out_unlock:
+ 	mutex_unlock(&subsys->lock);
+ 	return ret;
++out_remove_clients:
++	list_for_each_entry(ctrl, &subsys->ctrls, subsys_entry)
++		pci_p2pdma_remove_client(&ctrl->p2p_clients, nvmet_ns_dev(ns));
+ out_dev_put:
+ 	nvmet_ns_dev_disable(ns);
+ 	goto out_unlock;
+@@ -425,6 +457,7 @@ int nvmet_ns_enable(struct nvmet_ns *ns)
+ void nvmet_ns_disable(struct nvmet_ns *ns)
+ {
+ 	struct nvmet_subsys *subsys = ns->subsys;
++	struct nvmet_ctrl *ctrl;
  
- 	ret = rdma_rw_ctx_init(&rsp->rw, cm_id->qp, cm_id->port_num,
- 			rsp->req.sg, rsp->req.sg_cnt, 0, addr, key,
- 			nvmet_data_dir(&rsp->req));
- 	if (ret < 0)
--		return NVME_SC_INTERNAL;
--	rsp->req.transfer_len += len;
-+		goto error_out;
- 	rsp->n_rdma += ret;
+ 	mutex_lock(&subsys->lock);
+ 	if (!ns->enabled)
+@@ -450,6 +483,12 @@ void nvmet_ns_disable(struct nvmet_ns *ns)
+ 	percpu_ref_exit(&ns->ref);
  
- 	if (invalidate) {
-@@ -678,6 +678,10 @@ static u16 nvmet_rdma_map_sgl_keyed(struct nvmet_rdma_rsp *rsp,
- 	}
- 
- 	return 0;
+ 	mutex_lock(&subsys->lock);
 +
-+error_out:
-+	rsp->req.transfer_len = 0;
-+	return NVME_SC_INTERNAL;
++	list_for_each_entry(ctrl, &subsys->ctrls, subsys_entry) {
++		pci_p2pdma_remove_client(&ctrl->p2p_clients, nvmet_ns_dev(ns));
++		nvmet_add_async_event(ctrl, NVME_AER_TYPE_NOTICE, 0, 0);
++	}
++
+ 	subsys->nr_namespaces--;
+ 	nvmet_ns_changed(subsys, ns->nsid);
+ 	nvmet_ns_dev_disable(ns);
+@@ -727,6 +766,23 @@ EXPORT_SYMBOL_GPL(nvmet_req_execute);
+ 
+ int nvmet_req_alloc_sgl(struct nvmet_req *req, struct nvmet_sq *sq)
+ {
++	struct pci_dev *p2p_dev = NULL;
++
++	if (IS_ENABLED(CONFIG_PCI_P2PDMA)) {
++		if (sq->ctrl)
++			p2p_dev = sq->ctrl->p2p_dev;
++
++		req->p2p_dev = NULL;
++		if (sq->qid && p2p_dev) {
++			req->sg = pci_p2pmem_alloc_sgl(p2p_dev, &req->sg_cnt,
++						       req->transfer_len);
++			if (req->sg) {
++				req->p2p_dev = p2p_dev;
++				return 0;
++			}
++		}
++	}
++
+ 	req->sg = sgl_alloc(req->transfer_len, GFP_KERNEL, &req->sg_cnt);
+ 	if (!req->sg)
+ 		return -ENOMEM;
+@@ -737,7 +793,11 @@ EXPORT_SYMBOL_GPL(nvmet_req_alloc_sgl);
+ 
+ void nvmet_req_free_sgl(struct nvmet_req *req)
+ {
+-	sgl_free(req->sg);
++	if (req->p2p_dev)
++		pci_p2pmem_free_sgl(req->p2p_dev, req->sg);
++	else
++		sgl_free(req->sg);
++
+ 	req->sg = NULL;
+ 	req->sg_cnt = 0;
+ }
+@@ -939,6 +999,79 @@ bool nvmet_host_allowed(struct nvmet_req *req, struct nvmet_subsys *subsys,
+ 		return __nvmet_host_allowed(subsys, hostnqn);
  }
  
- static u16 nvmet_rdma_map_sgl(struct nvmet_rdma_rsp *rsp)
++/*
++ * If allow_p2pmem is set, we will try to use P2P memory for the SGL lists for
++ * Ι/O commands. This requires the PCI p2p device to be compatible with the
++ * backing device for every namespace on this controller.
++ */
++static void nvmet_setup_p2pmem(struct nvmet_ctrl *ctrl, struct nvmet_req *req)
++{
++	struct nvmet_ns *ns;
++	int ret;
++
++	if (!req->port->use_p2pmem || !req->p2p_client)
++		return;
++
++	mutex_lock(&ctrl->subsys->lock);
++
++	ret = pci_p2pdma_add_client(&ctrl->p2p_clients, req->p2p_client);
++	if (ret) {
++		pr_err("failed adding peer-to-peer DMA client %s: %d\n",
++		       dev_name(req->p2p_client), ret);
++		goto free_devices;
++	}
++
++	list_for_each_entry_rcu(ns, &ctrl->subsys->namespaces, dev_link) {
++		ret = nvmet_p2pdma_add_client(ctrl, ns);
++		if (ret)
++			goto free_devices;
++	}
++
++	if (req->port->p2p_dev) {
++		/* A specific P2P device was selected in configfs */
++		if (!pci_p2pdma_assign_provider(req->port->p2p_dev,
++						&ctrl->p2p_clients)) {
++			pr_info("peer-to-peer memory on %s is not supported\n",
++				pci_name(req->port->p2p_dev));
++			goto free_devices;
++		}
++		ctrl->p2p_dev = pci_dev_get(req->port->p2p_dev);
++	} else {
++		/*
++		 * No P2P device was provided in configfs, therefore find one
++		 * automatically.
++		 */
++		ctrl->p2p_dev = pci_p2pmem_find(&ctrl->p2p_clients);
++		if (!ctrl->p2p_dev) {
++			pr_info("no supported peer-to-peer memory devices found\n");
++			goto free_devices;
++		}
++	}
++
++	mutex_unlock(&ctrl->subsys->lock);
++
++	pr_info("using peer-to-peer memory on %s\n", pci_name(ctrl->p2p_dev));
++	return;
++
++free_devices:
++	pci_p2pdma_client_list_free(&ctrl->p2p_clients);
++	mutex_unlock(&ctrl->subsys->lock);
++}
++
++static void nvmet_release_p2pmem(struct nvmet_ctrl *ctrl)
++{
++	if (!ctrl->p2p_dev)
++		return;
++
++	mutex_lock(&ctrl->subsys->lock);
++
++	pci_p2pdma_client_list_free(&ctrl->p2p_clients);
++	pci_dev_put(ctrl->p2p_dev);
++	ctrl->p2p_dev = NULL;
++
++	mutex_unlock(&ctrl->subsys->lock);
++}
++
+ u16 nvmet_alloc_ctrl(const char *subsysnqn, const char *hostnqn,
+ 		struct nvmet_req *req, u32 kato, struct nvmet_ctrl **ctrlp)
+ {
+@@ -980,6 +1113,7 @@ u16 nvmet_alloc_ctrl(const char *subsysnqn, const char *hostnqn,
+ 
+ 	INIT_WORK(&ctrl->async_event_work, nvmet_async_event_work);
+ 	INIT_LIST_HEAD(&ctrl->async_events);
++	INIT_LIST_HEAD(&ctrl->p2p_clients);
+ 
+ 	memcpy(ctrl->subsysnqn, subsysnqn, NVMF_NQN_SIZE);
+ 	memcpy(ctrl->hostnqn, hostnqn, NVMF_NQN_SIZE);
+@@ -1041,6 +1175,7 @@ u16 nvmet_alloc_ctrl(const char *subsysnqn, const char *hostnqn,
+ 		ctrl->kato = DIV_ROUND_UP(kato, 1000);
+ 	}
+ 	nvmet_start_keep_alive_timer(ctrl);
++	nvmet_setup_p2pmem(ctrl, req);
+ 
+ 	mutex_lock(&subsys->lock);
+ 	list_add_tail(&ctrl->subsys_entry, &subsys->ctrls);
+@@ -1079,6 +1214,7 @@ static void nvmet_ctrl_free(struct kref *ref)
+ 	flush_work(&ctrl->async_event_work);
+ 	cancel_work_sync(&ctrl->fatal_err_work);
+ 
++	nvmet_release_p2pmem(ctrl);
+ 	ida_simple_remove(&cntlid_ida, ctrl->cntlid);
+ 
+ 	kfree(ctrl->sqs);
+diff --git a/drivers/nvme/target/io-cmd-bdev.c b/drivers/nvme/target/io-cmd-bdev.c
+index 7bc9f6240432..5660dd7ca755 100644
+--- a/drivers/nvme/target/io-cmd-bdev.c
++++ b/drivers/nvme/target/io-cmd-bdev.c
+@@ -78,6 +78,9 @@ static void nvmet_bdev_execute_rw(struct nvmet_req *req)
+ 		op = REQ_OP_READ;
+ 	}
+ 
++	if (is_pci_p2pdma_page(sg_page(req->sg)))
++		op_flags |= REQ_NOMERGE;
++
+ 	sector = le64_to_cpu(req->cmd->rw.slba);
+ 	sector <<= (req->ns->blksize_shift - 9);
+ 
+diff --git a/drivers/nvme/target/nvmet.h b/drivers/nvme/target/nvmet.h
+index 7d6cb61021e4..297861064dd8 100644
+--- a/drivers/nvme/target/nvmet.h
++++ b/drivers/nvme/target/nvmet.h
+@@ -84,6 +84,11 @@ static inline struct nvmet_ns *to_nvmet_ns(struct config_item *item)
+ 	return container_of(to_config_group(item), struct nvmet_ns, group);
+ }
+ 
++static inline struct device *nvmet_ns_dev(struct nvmet_ns *ns)
++{
++	return disk_to_dev(ns->bdev->bd_disk);
++}
++
+ struct nvmet_cq {
+ 	u16			qid;
+ 	u16			size;
+@@ -134,6 +139,8 @@ struct nvmet_port {
+ 	void				*priv;
+ 	bool				enabled;
+ 	int				inline_data_size;
++	bool				use_p2pmem;
++	struct pci_dev			*p2p_dev;
+ };
+ 
+ static inline struct nvmet_port *to_nvmet_port(struct config_item *item)
+@@ -182,6 +189,9 @@ struct nvmet_ctrl {
+ 	__le32			*changed_ns_list;
+ 	u32			nr_changed_ns;
+ 
++	struct pci_dev		*p2p_dev;
++	struct list_head	p2p_clients;
++
+ 	char			subsysnqn[NVMF_NQN_FIELD_LEN];
+ 	char			hostnqn[NVMF_NQN_FIELD_LEN];
+ };
+@@ -294,6 +304,9 @@ struct nvmet_req {
+ 
+ 	void (*execute)(struct nvmet_req *req);
+ 	const struct nvmet_fabrics_ops *ops;
++
++	struct pci_dev *p2p_dev;
++	struct device *p2p_client;
+ };
+ 
+ extern struct workqueue_struct *buffered_io_wq;
+diff --git a/drivers/nvme/target/rdma.c b/drivers/nvme/target/rdma.c
+index b0d0cedc74bb..e5f00449ac68 100644
+--- a/drivers/nvme/target/rdma.c
++++ b/drivers/nvme/target/rdma.c
+@@ -749,6 +749,8 @@ static void nvmet_rdma_handle_command(struct nvmet_rdma_queue *queue,
+ 		cmd->send_sge.addr, cmd->send_sge.length,
+ 		DMA_TO_DEVICE);
+ 
++	cmd->req.p2p_client = &queue->dev->device->dev;
++
+ 	if (!nvmet_req_init(&cmd->req, &queue->nvme_cq,
+ 			&queue->nvme_sq, &nvmet_rdma_ops))
+ 		return;
 -- 
 2.19.0
 
