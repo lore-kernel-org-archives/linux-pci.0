@@ -2,132 +2,179 @@ Return-Path: <SRS0=zVIF=MH=vger.kernel.org=linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-0.8 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	MAILING_LIST_MULTI,SPF_PASS autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-8.2 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_PASS,URIBL_BLOCKED,
+	USER_AGENT_MUTT autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id EA1A0C43382
-	for <linux-pci@archiver.kernel.org>; Tue, 25 Sep 2018 10:32:54 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 1F747C43382
+	for <linux-pci@archiver.kernel.org>; Tue, 25 Sep 2018 10:49:55 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 90AE72145D
-	for <linux-pci@archiver.kernel.org>; Tue, 25 Sep 2018 10:32:54 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.3.2 mail.kernel.org 90AE72145D
+	by mail.kernel.org (Postfix) with ESMTP id BFDCD20842
+	for <linux-pci@archiver.kernel.org>; Tue, 25 Sep 2018 10:49:54 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.3.2 mail.kernel.org BFDCD20842
 Authentication-Results: mail.kernel.org; dmarc=none (p=none dis=none) header.from=arm.com
 Authentication-Results: mail.kernel.org; spf=none smtp.mailfrom=linux-pci-owner@vger.kernel.org
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726586AbeIYQjr (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Tue, 25 Sep 2018 12:39:47 -0400
-Received: from usa-sjc-mx-foss1.foss.arm.com ([217.140.101.70]:48670 "EHLO
+        id S1728199AbeIYQ4u (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Tue, 25 Sep 2018 12:56:50 -0400
+Received: from usa-sjc-mx-foss1.foss.arm.com ([217.140.101.70]:48936 "EHLO
         foss.arm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1726125AbeIYQjr (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Tue, 25 Sep 2018 12:39:47 -0400
+        id S1727075AbeIYQ4u (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Tue, 25 Sep 2018 12:56:50 -0400
 Received: from usa-sjc-imap-foss1.foss.arm.com (unknown [10.72.51.249])
-        by usa-sjc-mx-foss1.foss.arm.com (Postfix) with ESMTP id BF4CC7A9;
-        Tue, 25 Sep 2018 03:32:52 -0700 (PDT)
-Received: from [10.4.12.111] (ostrya.emea.arm.com [10.4.12.111])
-        by usa-sjc-imap-foss1.foss.arm.com (Postfix) with ESMTPSA id 43EA63F5B7;
-        Tue, 25 Sep 2018 03:32:49 -0700 (PDT)
-Subject: Re: [PATCH v3 03/10] iommu/sva: Manage process address spaces
-To:     Lu Baolu <baolu.lu@linux.intel.com>,
-        "iommu@lists.linux-foundation.org" <iommu@lists.linux-foundation.org>
-Cc:     "joro@8bytes.org" <joro@8bytes.org>,
-        "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-        "jcrouse@codeaurora.org" <jcrouse@codeaurora.org>,
-        "alex.williamson@redhat.com" <alex.williamson@redhat.com>,
-        "Jonathan.Cameron@huawei.com" <Jonathan.Cameron@huawei.com>,
-        "jacob.jun.pan@linux.intel.com" <jacob.jun.pan@linux.intel.com>,
-        "christian.koenig@amd.com" <christian.koenig@amd.com>,
-        "eric.auger@redhat.com" <eric.auger@redhat.com>,
-        "kevin.tian@intel.com" <kevin.tian@intel.com>,
-        "yi.l.liu@intel.com" <yi.l.liu@intel.com>,
-        Andrew Murray <Andrew.Murray@arm.com>,
-        Will Deacon <Will.Deacon@arm.com>,
-        Robin Murphy <Robin.Murphy@arm.com>,
-        "ashok.raj@intel.com" <ashok.raj@intel.com>,
-        "xuzaibo@huawei.com" <xuzaibo@huawei.com>,
-        "liguozhu@hisilicon.com" <liguozhu@hisilicon.com>,
-        "okaya@codeaurora.org" <okaya@codeaurora.org>,
-        "bharatku@xilinx.com" <bharatku@xilinx.com>,
-        "ilias.apalodimas@linaro.org" <ilias.apalodimas@linaro.org>,
-        "shunyong.yang@hxt-semitech.com" <shunyong.yang@hxt-semitech.com>
-References: <20180920170046.20154-1-jean-philippe.brucker@arm.com>
- <20180920170046.20154-4-jean-philippe.brucker@arm.com>
- <09933fce-b959-32e1-b1f3-0d4389abf735@linux.intel.com>
-From:   Jean-Philippe Brucker <jean-philippe.brucker@arm.com>
-Message-ID: <5aff8dc0-9ce7-5018-e78e-770279681cbc@arm.com>
-Date:   Tue, 25 Sep 2018 11:32:32 +0100
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:60.0) Gecko/20100101
- Thunderbird/60.0
+        by usa-sjc-mx-foss1.foss.arm.com (Postfix) with ESMTP id 158997A9;
+        Tue, 25 Sep 2018 03:49:53 -0700 (PDT)
+Received: from red-moon (red-moon.emea.arm.com [10.4.13.120])
+        by usa-sjc-imap-foss1.foss.arm.com (Postfix) with ESMTPSA id 4AC9B3F5B7;
+        Tue, 25 Sep 2018 03:49:51 -0700 (PDT)
+Date:   Tue, 25 Sep 2018 11:50:27 +0100
+From:   Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
+To:     Arnd Bergmann <arnd@arndb.de>
+Cc:     Rob Herring <robh+dt@kernel.org>, Ray Jui <ray.jui@broadcom.com>,
+        Bjorn Helgaas <bhelgaas@google.com>,
+        Mark Rutland <mark.rutland@arm.com>,
+        Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
+        bcm-kernel-feedback-list <bcm-kernel-feedback-list@broadcom.com>,
+        linux-pci <linux-pci@vger.kernel.org>,
+        DTML <devicetree@vger.kernel.org>,
+        Linux ARM <linux-arm-kernel@lists.infradead.org>
+Subject: Re: [PATCH 1/6] PCI: iproc: Update iProc PCI binding for INTx support
+Message-ID: <20180925105027.GA29857@red-moon>
+References: <1527631130-20045-1-git-send-email-ray.jui@broadcom.com>
+ <1527631130-20045-2-git-send-email-ray.jui@broadcom.com>
+ <CAL_Jsq+ac6dmHKS6m0h5N3bv=VseKVL8XLU5K7j1Rn=mgFNLsA@mail.gmail.com>
+ <20180918134152.GA31440@e107981-ln.cambridge.arm.com>
+ <CAK8P3a3cWHK=DNCFn+p_NjSyXhoLQw07EVedVf5-UFdz4V4OPA@mail.gmail.com>
 MIME-Version: 1.0
-In-Reply-To: <09933fce-b959-32e1-b1f3-0d4389abf735@linux.intel.com>
-Content-Type: text/plain; charset=utf-8
-Content-Language: en-US
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <CAK8P3a3cWHK=DNCFn+p_NjSyXhoLQw07EVedVf5-UFdz4V4OPA@mail.gmail.com>
+User-Agent: Mutt/1.5.21 (2010-09-15)
 Sender: linux-pci-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-On 25/09/2018 04:15, Lu Baolu wrote:
->> +     /* If an io_mm already exists, use it */
->> +     spin_lock(&iommu_sva_lock);
->> +     idr_for_each_entry(&iommu_pasid_idr, io_mm, i) {
+On Mon, Sep 24, 2018 at 10:53:13PM +0200, Arnd Bergmann wrote:
+> On Tue, Sep 18, 2018 at 3:42 PM Lorenzo Pieralisi
+> <lorenzo.pieralisi@arm.com> wrote:
+> >
+> > On Mon, Jun 04, 2018 at 09:17:49AM -0500, Rob Herring wrote:
+> > > +Arnd
+> > >
+> > > On Tue, May 29, 2018 at 4:58 PM, Ray Jui <ray.jui@broadcom.com> wrote:
+> > > > Update the iProc PCIe binding document for better modeling of the legacy
+> > > > interrupt (INTx) support
+> > > >
+> > > > Signed-off-by: Ray Jui <ray.jui@broadcom.com>
+> > > > ---
+> > > >  .../devicetree/bindings/pci/brcm,iproc-pcie.txt    | 31 +++++++++++++++++-----
+> > > >  1 file changed, 24 insertions(+), 7 deletions(-)
+> > > >
+> > > > diff --git a/Documentation/devicetree/bindings/pci/brcm,iproc-pcie.txt b/Documentation/devicetree/bindings/pci/brcm,iproc-pcie.txt
+> > > > index b8e48b4..7ea24dc 100644
+> > > > --- a/Documentation/devicetree/bindings/pci/brcm,iproc-pcie.txt
+> > > > +++ b/Documentation/devicetree/bindings/pci/brcm,iproc-pcie.txt
+> > > > @@ -13,9 +13,6 @@ controller, used in Stingray
+> > > >    PAXB-based root complex is used for external endpoint devices. PAXC-based
+> > > >  root complex is connected to emulated endpoint devices internal to the ASIC
+> > > >  - reg: base address and length of the PCIe controller I/O register space
+> > > > -- #interrupt-cells: set to <1>
+> > > > -- interrupt-map-mask and interrupt-map, standard PCI properties to define the
+> > > > -  mapping of the PCIe interface to interrupt numbers
+> > > >  - linux,pci-domain: PCI domain ID. Should be unique for each host controller
+> > > >  - bus-range: PCI bus numbers covered
+> > > >  - #address-cells: set to <3>
+> > > > @@ -41,6 +38,16 @@ Required:
+> > > >  - brcm,pcie-ob-axi-offset: The offset from the AXI address to the internal
+> > > >  address used by the iProc PCIe core (not the PCIe address)
+> > > >
+> > > > +Legacy interrupt (INTx) support (optional):
+> > > > +
+> > > > +Note INTx is for PAXB only.
+> > > > +
+> > > > +- interrupt-controller: claims itself as an interrupt controller for INTx
+> > > > +- #interrupt-cells: set to <1>
+> > > > +- interrupt-map-mask and interrupt-map, standard PCI properties to define
+> > > > +the mapping of the PCIe interface to interrupt numbers
+> > > > +- interrupts: interrupt line wired to the generic GIC for INTx support
+> > > > +
+> > > >  MSI support (optional):
+> > > >
+> > > >  For older platforms without MSI integrated in the GIC, iProc PCIe core provides
+> > > > @@ -77,9 +84,14 @@ Example:
+> > > >                 compatible = "brcm,iproc-pcie";
+> > > >                 reg = <0x18012000 0x1000>;
+> > > >
+> > > > +               interrupt-controller;
+> > > >                 #interrupt-cells = <1>;
+> > > > -               interrupt-map-mask = <0 0 0 0>;
+> > > > -               interrupt-map = <0 0 0 0 &gic GIC_SPI 100 IRQ_TYPE_NONE>;
+> > > > +               interrupt-map-mask = <0 0 0 7>;
+> > > > +               interrupt-map = <0 0 0 1 &pcie0 1>,
+> > >
+> > > Are you sure this works? The irq parsing code will ignore
+> > > interrupt-map if interrupt-controller is found. In other words, you
+> > > should have one or the other, but not both.
+> > >
+> > > Maybe it happens to work because "pcie0" is this node and your irq
+> > > numbers are the same.
+> > >
+> > > Arnd, any thoughts on this?
+> >
+> > To start with, I think the destination IRQ number is wrong, what the
+> > mappings actually do is mapping the PCI interrupt line (ie #INTA, #INTB,
+> > #INTC, #INTD) to input {0,1,2,3} of the PCI host bridge (pseudo)
+> > interrupt controller.
+> >
+> > I really want to clean this up since currently there are different
+> > DT bindings defining this in different ways which resulted in
+> > non-consistent kernel code.
+> >
+> > AFAICS, the Aardvark PCIe controller bindings define the mapping
+> > as I expect:
+> >
+> > https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/tree/Documentation/devicetree/bindings/pci/aardvark-pci.txt?h=v4.19-rc4
+> >
+> > but I would like to get Rob and Arnd viewpoint on this so that
+> > we can close this topic once for all.
 > 
-> This might be problematic for vt-d (and other possible arch's which use
-> PASID other than SVA). When vt-d iommu works in scalable mode, a PASID
-> might be allocated for:
-> 
-> (1) SVA
-> (2) Device Assignable Interface (might be a mdev or directly managed
->      within a device driver).
-> (3) SVA in VM guest
-> (4) Device Assignable Interface in VM guest
-> 
-> So we can't expect that an io_mm pointer was associated with each PASID.
+> It seems ambiguous at best, as Rob suggested it may only
+> work by accident. Since there is only one upstream interrupt,
+> could we simply list <GIC_SPI 100 IRQ_TYPE_NONE> as
+> the destination for any IntX?
 
-Yes as discussed on the previous series, we'll need to move the PASID
-allocator outside of iommu-sva at some point, and even outside of
-drivers/iommu since device driver might want to use the PASID allocator
-without an IOMMU.
+I think that would not be correct from an HW description standpoint
+since there is some logic in the host bridge that behaves as an
+interrupt controller (eg registers to ack/mask IRQs).
 
-To be usable by all consumers of PASIDs, that allocator will need the
-same interface as IDR, so I don't think we have a problem here. I
-haven't had time or need to write such allocator yet (and don't plan to
-do it as part of this series), but I drafted an interface, that at least
-fulfills the needs of SVA.
+AFAICS the aardvark (it is an example) bindings below should be correct,
+with an interrupt controller node within the PCI host bridge:
 
-* Single system-wide PASID space
-* Multiple consumers, each associating their own structure to PASIDs.
-  Each consumer gets a token.
-* Device drivers might want to use both SVA and private PASIDs for a
-  device at the same time.
-* In my opinion "pasid" isn't the right name, "ioasid" would be better
-  but that's not important.
+	pcie0: pcie@d0070000 {
+		compatible = "marvell,armada-3700-pcie";
+		device_type = "pci";
+		reg = <0 0xd0070000 0 0x20000>;
+		#address-cells = <3>;
+		#size-cells = <2>;
+		bus-range = <0x00 0xff>;
+		interrupts = <GIC_SPI 29 IRQ_TYPE_LEVEL_HIGH>;
+		#interrupt-cells = <1>;
+		msi-controller;
+		msi-parent = <&pcie0>;
+		ranges = <0x82000000 0 0xe8000000   0 0xe8000000 0 0x1000000 /* Port 0 MEM */
+			  0x81000000 0 0xe9000000   0 0xe9000000 0 0x10000>; /* Port 0 IO*/
+		interrupt-map-mask = <0 0 0 7>;
+		interrupt-map = <0 0 0 1 &pcie_intc 0>,
+				<0 0 0 2 &pcie_intc 1>,
+				<0 0 0 3 &pcie_intc 2>,
+				<0 0 0 4 &pcie_intc 3>;
+		pcie_intc: interrupt-controller {
+			interrupt-controller;
+			#interrupt-cells = <1>;
+		};
+	};
 
-typedef unsigned int pasid_t;
+Thoughts ?
 
-/* Returns consumer token */
-void *pasid_get_consumer();
-void pasid_put_consumer(void *consumer);
-
-/* Returns pasid or invalid (pasid_t)(-1) */
-pasid_t pasid_alloc(void *consumer, pasid_t min, pasid_t max,
-                    void *private);
-void pasid_remove(pasid_t pasid);
-
-/* Iterate over PASIDs for this consumer. Func returns non-zero to stop
-iterating */
-int pasid_for_each(void *consumer, void *iter_data,
-		   int (*func)(void *iter_data, pasid_t pasid,
-			       void *private));
-/* Returns priv data or NULL */
-void *pasid_find(void *consumer, pasid_t pasid);
-
-Thanks,
-Jean
-
-> And this code might run into problem if the pasid is allocated for
-> usages other than SVA.
-> 
-> Best regards,
-> Lu Baolu
-
+Lorenzo
