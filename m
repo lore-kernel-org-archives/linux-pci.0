@@ -2,130 +2,152 @@ Return-Path: <SRS0=zVIF=MH=vger.kernel.org=linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-8.5 required=3.0 tests=INCLUDES_PATCH,
-	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_PASS,USER_AGENT_MUTT autolearn=ham
-	autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-8.6 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
+	DKIM_VALID_AU,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_PASS,
+	URIBL_BLOCKED,USER_AGENT_MUTT autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id BF781C43382
-	for <linux-pci@archiver.kernel.org>; Tue, 25 Sep 2018 20:55:05 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id EFA3BC43382
+	for <linux-pci@archiver.kernel.org>; Tue, 25 Sep 2018 21:01:39 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 7D5642086E
-	for <linux-pci@archiver.kernel.org>; Tue, 25 Sep 2018 20:55:05 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.3.2 mail.kernel.org 7D5642086E
+	by mail.kernel.org (Postfix) with ESMTP id A60E321480
+	for <linux-pci@archiver.kernel.org>; Tue, 25 Sep 2018 21:01:39 +0000 (UTC)
+Authentication-Results: mail.kernel.org;
+	dkim=pass (1024-bit key) header.d=kernel.org header.i=@kernel.org header.b="iJpWJ5ra"
+DMARC-Filter: OpenDMARC Filter v1.3.2 mail.kernel.org A60E321480
 Authentication-Results: mail.kernel.org; dmarc=fail (p=none dis=none) header.from=kernel.org
 Authentication-Results: mail.kernel.org; spf=none smtp.mailfrom=linux-pci-owner@vger.kernel.org
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726242AbeIZDE2 (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Tue, 25 Sep 2018 23:04:28 -0400
-Received: from mail-oi1-f193.google.com ([209.85.167.193]:45825 "EHLO
-        mail-oi1-f193.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726173AbeIZDE2 (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Tue, 25 Sep 2018 23:04:28 -0400
-Received: by mail-oi1-f193.google.com with SMTP id d63-v6so2695489oic.12;
-        Tue, 25 Sep 2018 13:55:03 -0700 (PDT)
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20161025;
-        h=x-gm-message-state:date:from:to:cc:subject:message-id:references
-         :mime-version:content-disposition:in-reply-to:user-agent;
-        bh=4V4I9cuu0zr7k8htcOxbtJKHIx3sECSRMltRNOfzVhk=;
-        b=rUrkCPFkDws5+pBC4w6PF32B1yqpDZ/MWz+axdsMe3TZ9zd4sDcryh1c7tBBsAtymw
-         kQEsPvX0q4B8Hr9cWW4/tb6cHG+g7ZwPoBJgrHBrxpADc5nfUKc8aApdE8A+UT3KeGss
-         UtnmaRUXw4fg+N3PWyOvgCI/oU69NJ7395bDfOpMlgJ/seWjwxBi1QEXJyvNCfmdbr6/
-         kyuQq8qiDQZsTIK8z3h0BAJESjkkoHgKjsXYskAHonIIOaH9hJdu6dW5Vgpkh2b7QiXm
-         zSGzg0JbxFdt1lUtaM+1aVr0hyVtqTT9qSDCgM2Z1kte4jiwiT3ptlXf+3LTPREadGT7
-         oeXA==
-X-Gm-Message-State: ABuFfojxtNyxwmnnkRU2a3Ei/onGi8BTLubHnihhYGnXfYRRTsKdlxO6
-        waQPvVtkFsD+UmmLcHugsA==
-X-Google-Smtp-Source: ACcGV62wGEhlzsf/bzH5dK6Hf1f5OiDzxyOVqI/jSTi0T45gdU42fgvONGCQr5x4A1nwqGxkqpDZmg==
-X-Received: by 2002:aca:d4cd:: with SMTP id l196-v6mr1685209oig.15.1537908903402;
-        Tue, 25 Sep 2018 13:55:03 -0700 (PDT)
-Received: from localhost (24-155-109-49.dyn.grandenetworks.net. [24.155.109.49])
-        by smtp.gmail.com with ESMTPSA id j2-v6sm1188669ote.50.2018.09.25.13.55.02
-        (version=TLS1_2 cipher=ECDHE-RSA-CHACHA20-POLY1305 bits=256/256);
-        Tue, 25 Sep 2018 13:55:02 -0700 (PDT)
-Date:   Tue, 25 Sep 2018 15:55:02 -0500
-From:   Rob Herring <robh@kernel.org>
-To:     Kunihiko Hayashi <hayashi.kunihiko@socionext.com>
-Cc:     Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
+        id S1726422AbeIZDLE (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Tue, 25 Sep 2018 23:11:04 -0400
+Received: from mail.kernel.org ([198.145.29.99]:42330 "EHLO mail.kernel.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1726319AbeIZDLE (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Tue, 25 Sep 2018 23:11:04 -0400
+Received: from localhost (unknown [69.71.4.100])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+        (No client certificate requested)
+        by mail.kernel.org (Postfix) with ESMTPSA id 6D0B120666;
+        Tue, 25 Sep 2018 21:01:37 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+        s=default; t=1537909297;
+        bh=PafiLdgTzFfaj6CLHMJAP7S60YOP1h6KtDc9S5/5TcY=;
+        h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
+        b=iJpWJ5rat0zdwByMZ/OGkJtNSr1VRz+bF0RS4iCjfBlBn9py6RlmEX23Qf6ECymIL
+         F0gripPQVwRGKBrAXRYihR47s5tf3BTvC+02ZnRYUMeDeUV4HxUCw1ubXpoVLs/DTt
+         n06/BL7t5XMap3mev3cGC3uKP8uGtLeryrnkJAdQ=
+Date:   Tue, 25 Sep 2018 16:01:36 -0500
+From:   Bjorn Helgaas <helgaas@kernel.org>
+To:     Mika Westerberg <mika.westerberg@linux.intel.com>
+Cc:     "Rafael J. Wysocki" <rjw@rjwysocki.net>,
         Bjorn Helgaas <bhelgaas@google.com>,
-        Mark Rutland <mark.rutland@arm.com>,
-        Masahiro Yamada <yamada.masahiro@socionext.com>,
-        linux-pci@vger.kernel.org, devicetree@vger.kernel.org,
-        linux-arm-kernel@lists.infradead.org, linux-kernel@vger.kernel.org,
-        Masami Hiramatsu <masami.hiramatsu@linaro.org>,
-        Jassi Brar <jaswinder.singh@linaro.org>
-Subject: Re: [PATCH v2 1/2] dt-bindings: PCI: add UniPhier PCIe host
- controller description
-Message-ID: <20180925205502.GA12949@bogus>
-References: <1536226832-5089-1-git-send-email-hayashi.kunihiko@socionext.com>
- <1536226832-5089-2-git-send-email-hayashi.kunihiko@socionext.com>
+        Len Brown <lenb@kernel.org>,
+        Peter Anemone <peter.anemone@gmail.com>,
+        linux-acpi@vger.kernel.org, linux-pci@vger.kernel.org
+Subject: Re: [PATCH v2] ACPI / hotplug / PCI: Don't scan for non-hotplug
+ bridges if slot is not bridge
+Message-ID: <20180925210136.GE80129@bhelgaas-glaptop.roam.corp.google.com>
+References: <20180924094259.74789-1-mika.westerberg@linux.intel.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <1536226832-5089-2-git-send-email-hayashi.kunihiko@socionext.com>
-User-Agent: Mutt/1.9.4 (2018-02-28)
+In-Reply-To: <20180924094259.74789-1-mika.westerberg@linux.intel.com>
+User-Agent: Mutt/1.10.1 (2018-07-13)
 Sender: linux-pci-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-On Thu, Sep 06, 2018 at 06:40:31PM +0900, Kunihiko Hayashi wrote:
-> Add DT bindings for PCIe controller implemented in UniPhier SoCs when
-> configured in Root Complex (host) mode. This controller is based on
-> the DesignWare PCIe core.
+On Mon, Sep 24, 2018 at 12:42:59PM +0300, Mika Westerberg wrote:
+> HP 6730b laptop has an ethernet NIC connected to one of the PCIe root
+> ports. The root ports itself are native PCIe hotplug capable. Now,
+> during boot after PCI devices are scanned the BIOS triggers ACPI bus
+> check directly to the NIC:
 > 
-> Signed-off-by: Kunihiko Hayashi <hayashi.kunihiko@socionext.com>
+>   [    0.942239] ACPI: \_SB_.PCI0.RP06.NIC_: Bus check in hotplug_event()
+> 
+> It is not clear why it is sending bus check but regardless the ACPI
+> hotplug notify handler calls enable_slot() directly (instead of going
+> through acpiphp_check_bridge() as there is no bridge) which ends up
+> handling special case for non-hotplug bridges with native PCIe hotplug.
+> This results a crash of some kind but the reporter only sees black
+> screen so it is hard to figure out the exact spot and what actually
+> happens. Based on few fix proposals it was tracked to crash somewhere
+> inside pci_assign_unassigned_bridge_resources().
+> 
+> In any case we should not really be in that special branch at all
+> because the ACPI notify happened to a slot that is not a PCI bridge (it
+> is just a regular PCI device).
+> 
+> Fix this so that we only go to that special branch if we are calling
+> enable_slot() for a bridge (e.g the ACPI notification was for the bridge).
+> 
+> Link: https://bugzilla.kernel.org/show_bug.cgi?id=201127
+> Fixes: 84c8b58ed3ad ACPI / hotplug / PCI: Don't scan bridges managed by native hotplug
+> Reported-by: Peter Anemone <peter.anemone@gmail.com>
+> Signed-off-by: Mika Westerberg <mika.westerberg@linux.intel.com>
+
+Applied with Rafael's reviewed-by to pci/hotplug for v4.20, thanks!
+
 > ---
->  .../devicetree/bindings/pci/uniphier-pcie.txt      | 78 ++++++++++++++++++++++
->  1 file changed, 78 insertions(+)
->  create mode 100644 Documentation/devicetree/bindings/pci/uniphier-pcie.txt
+> Changes from v1:
 > 
-> diff --git a/Documentation/devicetree/bindings/pci/uniphier-pcie.txt b/Documentation/devicetree/bindings/pci/uniphier-pcie.txt
-> new file mode 100644
-> index 0000000..a34e167
-> --- /dev/null
-> +++ b/Documentation/devicetree/bindings/pci/uniphier-pcie.txt
-> @@ -0,0 +1,78 @@
-> +Socionext UniPhier PCIe host controller bindings
-> +
-> +This describes the devicetree bindings for PCIe host controller implemented
-> +on Socionext UniPhier SoCs.
-> +
-> +UniPhier PCIe host controller is based on the Synopsys DesignWare PCI core.
-> +It shares common functions with the PCIe DesignWare core driver and inherits
-> +common properties defined in
-> +Documentation/devicetree/bindings/pci/designware-pcie.txt.
-> +
-> +Required properties:
-> +- compatible: Should be "socionext,uniphier-pcie".
-> +- reg: Specifies offset and length of the register set for the device.
-> +	According to the reg-names, appropriate register sets are required.
-> +- reg-names: Must include the following entries:
-> +    "dbi"    - controller configuration registers
-> +    "link"   - SoC-specific glue layer registers
-> +    "config" - PCIe configuration space
-> +- clocks: A phandle to the clock gate for PCIe glue layer including
-> +	the host controller.
-> +- resets: A phandle to the reset line for PCIe glue layer including
-> +	the host controller.
-> +- interrupts: A list of interrupt specifiers. According to the
-> +	interrupt-names, appropriate interrupts are required.
-> +- interrupt-names: Must include the following entries:
-> +    "dma"    - DMA interrupt
-> +    "msi"    - MSI interrupt
-> +    "intx"   - Legacy INTA/B/C/D interrupt
-> +
-> +Optional properties:
-> +- phys: A phandle to generic PCIe PHY. According to the phy-names, appropriate
-> +	phys are required.
-> +- phy-names: Must be "pcie-phy".
-> +
-> +Required sub-node:
-> +- interrupt-controller: Specifies interrupt controller for legacy PCI
-> +	interrupts. The node name isn't important.
-
-No, it is important.
-
-With that sentence removed,
-
-Reviewed-by: Rob Herring <robh@kernel.org>
+>   * Pass bool instead of a bridge pointer
+> 
+>  drivers/pci/hotplug/acpiphp_glue.c | 11 ++++++-----
+>  1 file changed, 6 insertions(+), 5 deletions(-)
+> 
+> diff --git a/drivers/pci/hotplug/acpiphp_glue.c b/drivers/pci/hotplug/acpiphp_glue.c
+> index ef0b1b6ba86f..12afa7fdf77e 100644
+> --- a/drivers/pci/hotplug/acpiphp_glue.c
+> +++ b/drivers/pci/hotplug/acpiphp_glue.c
+> @@ -457,17 +457,18 @@ static void acpiphp_native_scan_bridge(struct pci_dev *bridge)
+>  /**
+>   * enable_slot - enable, configure a slot
+>   * @slot: slot to be enabled
+> + * @bridge: true if enable is for the whole bridge (not a single slot)
+>   *
+>   * This function should be called per *physical slot*,
+>   * not per each slot object in ACPI namespace.
+>   */
+> -static void enable_slot(struct acpiphp_slot *slot)
+> +static void enable_slot(struct acpiphp_slot *slot, bool bridge)
+>  {
+>  	struct pci_dev *dev;
+>  	struct pci_bus *bus = slot->bus;
+>  	struct acpiphp_func *func;
+>  
+> -	if (bus->self && hotplug_is_native(bus->self)) {
+> +	if (bridge && bus->self && hotplug_is_native(bus->self)) {
+>  		/*
+>  		 * If native hotplug is used, it will take care of hotplug
+>  		 * slot management and resource allocation for hotplug
+> @@ -701,7 +702,7 @@ static void acpiphp_check_bridge(struct acpiphp_bridge *bridge)
+>  					trim_stale_devices(dev);
+>  
+>  			/* configure all functions */
+> -			enable_slot(slot);
+> +			enable_slot(slot, true);
+>  		} else {
+>  			disable_slot(slot);
+>  		}
+> @@ -785,7 +786,7 @@ static void hotplug_event(u32 type, struct acpiphp_context *context)
+>  		if (bridge)
+>  			acpiphp_check_bridge(bridge);
+>  		else if (!(slot->flags & SLOT_IS_GOING_AWAY))
+> -			enable_slot(slot);
+> +			enable_slot(slot, false);
+>  
+>  		break;
+>  
+> @@ -973,7 +974,7 @@ int acpiphp_enable_slot(struct acpiphp_slot *slot)
+>  
+>  	/* configure all functions */
+>  	if (!(slot->flags & SLOT_ENABLED))
+> -		enable_slot(slot);
+> +		enable_slot(slot, false);
+>  
+>  	pci_unlock_rescan_remove();
+>  	return 0;
+> -- 
+> 2.18.0
+> 
