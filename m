@@ -4,31 +4,31 @@ X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 X-Spam-Level: 
 X-Spam-Status: No, score=-8.8 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
 	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_PASS,URIBL_BLOCKED,
-	USER_AGENT_GIT autolearn=ham autolearn_force=no version=3.4.0
+	USER_AGENT_GIT autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 7F89BECE561
-	for <linux-pci@archiver.kernel.org>; Tue, 25 Sep 2018 16:22:56 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id A2EB3C43382
+	for <linux-pci@archiver.kernel.org>; Tue, 25 Sep 2018 16:23:13 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 4049721508
-	for <linux-pci@archiver.kernel.org>; Tue, 25 Sep 2018 16:22:56 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.3.2 mail.kernel.org 4049721508
+	by mail.kernel.org (Postfix) with ESMTP id 526EC2150C
+	for <linux-pci@archiver.kernel.org>; Tue, 25 Sep 2018 16:23:13 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.3.2 mail.kernel.org 526EC2150C
 Authentication-Results: mail.kernel.org; dmarc=none (p=none dis=none) header.from=deltatee.com
 Authentication-Results: mail.kernel.org; spf=none smtp.mailfrom=linux-pci-owner@vger.kernel.org
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1729751AbeIYWbJ (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Tue, 25 Sep 2018 18:31:09 -0400
-Received: from ale.deltatee.com ([207.54.116.67]:42714 "EHLO ale.deltatee.com"
+        id S1729927AbeIYWbO (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Tue, 25 Sep 2018 18:31:14 -0400
+Received: from ale.deltatee.com ([207.54.116.67]:42810 "EHLO ale.deltatee.com"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1729654AbeIYWbI (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Tue, 25 Sep 2018 18:31:08 -0400
+        id S1729889AbeIYWbN (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Tue, 25 Sep 2018 18:31:13 -0400
 Received: from cgy1-donard.priv.deltatee.com ([172.16.1.31])
         by ale.deltatee.com with esmtps (TLS1.2:ECDHE_RSA_AES_256_GCM_SHA384:256)
         (Exim 4.89)
         (envelope-from <gunthorp@deltatee.com>)
-        id 1g4q6p-0002fO-OJ; Tue, 25 Sep 2018 10:22:53 -0600
+        id 1g4q6r-0002fK-HB; Tue, 25 Sep 2018 10:22:57 -0600
 Received: from gunthorp by cgy1-donard.priv.deltatee.com with local (Exim 4.89)
         (envelope-from <gunthorp@deltatee.com>)
-        id 1g4q6d-00019c-6U; Tue, 25 Sep 2018 10:22:35 -0600
+        id 1g4q6c-00019Q-QM; Tue, 25 Sep 2018 10:22:34 -0600
 From:   Logan Gunthorpe <logang@deltatee.com>
 To:     linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
         linux-nvme@lists.infradead.org, linux-rdma@vger.kernel.org,
@@ -46,18 +46,19 @@ Cc:     Stephen Bates <sbates@raithlin.com>,
         Alex Williamson <alex.williamson@redhat.com>,
         =?UTF-8?q?Christian=20K=C3=B6nig?= <christian.koenig@amd.com>,
         Jens Axboe <axboe@kernel.dk>,
-        Logan Gunthorpe <logang@deltatee.com>
-Date:   Tue, 25 Sep 2018 10:22:28 -0600
-Message-Id: <20180925162231.4354-11-logang@deltatee.com>
+        Logan Gunthorpe <logang@deltatee.com>,
+        Jonathan Corbet <corbet@lwn.net>
+Date:   Tue, 25 Sep 2018 10:22:24 -0600
+Message-Id: <20180925162231.4354-7-logang@deltatee.com>
 X-Mailer: git-send-email 2.19.0
 In-Reply-To: <20180925162231.4354-1-logang@deltatee.com>
 References: <20180925162231.4354-1-logang@deltatee.com>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 X-SA-Exim-Connect-IP: 172.16.1.31
-X-SA-Exim-Rcpt-To: linux-nvme@lists.infradead.org, linux-nvdimm@lists.01.org, linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org, linux-rdma@vger.kernel.org, linux-block@vger.kernel.org, sbates@raithlin.com, hch@lst.de, sagi@grimberg.me, bhelgaas@google.com, jgg@mellanox.com, maxg@mellanox.com, keith.busch@intel.com, dan.j.williams@intel.com, benh@kernel.crashing.org, jglisse@redhat.com, alex.williamson@redhat.com, christian.koenig@amd.com, axboe@kernel.dk, logang@deltatee.com
+X-SA-Exim-Rcpt-To: linux-nvme@lists.infradead.org, linux-nvdimm@lists.01.org, linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org, linux-rdma@vger.kernel.org, linux-block@vger.kernel.org, sbates@raithlin.com, hch@lst.de, sagi@grimberg.me, bhelgaas@google.com, jgg@mellanox.com, maxg@mellanox.com, keith.busch@intel.com, dan.j.williams@intel.com, benh@kernel.crashing.org, jglisse@redhat.com, alex.williamson@redhat.com, christian.koenig@amd.com, axboe@kernel.dk, logang@deltatee.com, corbet@lwn.net
 X-SA-Exim-Mail-From: gunthorp@deltatee.com
-Subject: [PATCH v7 10/13] nvme-pci: Add support for P2P memory in requests
+Subject: [PATCH v7 06/13] PCI/P2PDMA: Add P2P DMA driver writer's documentation
 X-SA-Exim-Version: 4.2.1 (built Tue, 02 Aug 2016 21:08:31 +0000)
 X-SA-Exim-Scanned: Yes (on ale.deltatee.com)
 Sender: linux-pci-owner@vger.kernel.org
@@ -65,92 +66,212 @@ Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-For P2P requests, we must use the pci_p2pmem_map_sg() function
-instead of the dma_map_sg functions.
+Add a restructured text file describing how to write drivers
+with support for P2P DMA transactions. The document describes
+how to use the APIs that were added in the previous few
+commits.
 
-With that, we can then indicate PCI_P2P support in the request queue.
-For this, we create an NVME_F_PCI_P2P flag which tells the core to
-set QUEUE_FLAG_PCI_P2P in the request queue.
+Also adds an index for the PCI documentation tree even though this
+is the only PCI document that has been converted to restructured text
+at this time.
 
 Signed-off-by: Logan Gunthorpe <logang@deltatee.com>
-Reviewed-by: Sagi Grimberg <sagi@grimberg.me>
-Reviewed-by: Christoph Hellwig <hch@lst.de>
+Acked-by: Bjorn Helgaas <bhelgaas@google.com>
+Cc: Jonathan Corbet <corbet@lwn.net>
 ---
- drivers/nvme/host/core.c |  4 ++++
- drivers/nvme/host/nvme.h |  1 +
- drivers/nvme/host/pci.c  | 17 +++++++++++++----
- 3 files changed, 18 insertions(+), 4 deletions(-)
+ Documentation/driver-api/pci/index.rst  |   1 +
+ Documentation/driver-api/pci/p2pdma.rst | 170 ++++++++++++++++++++++++
+ 2 files changed, 171 insertions(+)
+ create mode 100644 Documentation/driver-api/pci/p2pdma.rst
 
-diff --git a/drivers/nvme/host/core.c b/drivers/nvme/host/core.c
-index dd8ec1dd9219..6033ce2fd3e9 100644
---- a/drivers/nvme/host/core.c
-+++ b/drivers/nvme/host/core.c
-@@ -3051,7 +3051,11 @@ static void nvme_alloc_ns(struct nvme_ctrl *ctrl, unsigned nsid)
- 	ns->queue = blk_mq_init_queue(ctrl->tagset);
- 	if (IS_ERR(ns->queue))
- 		goto out_free_ns;
-+
- 	blk_queue_flag_set(QUEUE_FLAG_NONROT, ns->queue);
-+	if (ctrl->ops->flags & NVME_F_PCI_P2PDMA)
-+		blk_queue_flag_set(QUEUE_FLAG_PCI_P2PDMA, ns->queue);
-+
- 	ns->queue->queuedata = ns;
- 	ns->ctrl = ctrl;
+diff --git a/Documentation/driver-api/pci/index.rst b/Documentation/driver-api/pci/index.rst
+index eaf20b24bf7d..ecc7416c523b 100644
+--- a/Documentation/driver-api/pci/index.rst
++++ b/Documentation/driver-api/pci/index.rst
+@@ -11,6 +11,7 @@ The Linux PCI driver implementer's API guide
+    :maxdepth: 2
  
-diff --git a/drivers/nvme/host/nvme.h b/drivers/nvme/host/nvme.h
-index bb4a2003c097..4030743c90aa 100644
---- a/drivers/nvme/host/nvme.h
-+++ b/drivers/nvme/host/nvme.h
-@@ -343,6 +343,7 @@ struct nvme_ctrl_ops {
- 	unsigned int flags;
- #define NVME_F_FABRICS			(1 << 0)
- #define NVME_F_METADATA_SUPPORTED	(1 << 1)
-+#define NVME_F_PCI_P2PDMA		(1 << 2)
- 	int (*reg_read32)(struct nvme_ctrl *ctrl, u32 off, u32 *val);
- 	int (*reg_write32)(struct nvme_ctrl *ctrl, u32 off, u32 val);
- 	int (*reg_read64)(struct nvme_ctrl *ctrl, u32 off, u64 *val);
-diff --git a/drivers/nvme/host/pci.c b/drivers/nvme/host/pci.c
-index f434706a04e8..0d6c41bc2b35 100644
---- a/drivers/nvme/host/pci.c
-+++ b/drivers/nvme/host/pci.c
-@@ -745,8 +745,13 @@ static blk_status_t nvme_map_data(struct nvme_dev *dev, struct request *req,
- 		goto out;
+    pci
++   p2pdma
  
- 	ret = BLK_STS_RESOURCE;
--	nr_mapped = dma_map_sg_attrs(dev->dev, iod->sg, iod->nents, dma_dir,
--			DMA_ATTR_NO_WARN);
+ .. only::  subproject and html
+ 
+diff --git a/Documentation/driver-api/pci/p2pdma.rst b/Documentation/driver-api/pci/p2pdma.rst
+new file mode 100644
+index 000000000000..7febe66ee4f3
+--- /dev/null
++++ b/Documentation/driver-api/pci/p2pdma.rst
+@@ -0,0 +1,170 @@
++.. SPDX-License-Identifier: GPL-2.0
 +
-+	if (is_pci_p2pdma_page(sg_page(iod->sg)))
-+		nr_mapped = pci_p2pdma_map_sg(dev->dev, iod->sg, iod->nents,
-+					  dma_dir);
-+	else
-+		nr_mapped = dma_map_sg_attrs(dev->dev, iod->sg, iod->nents,
-+					     dma_dir,  DMA_ATTR_NO_WARN);
- 	if (!nr_mapped)
- 		goto out;
- 
-@@ -788,7 +793,10 @@ static void nvme_unmap_data(struct nvme_dev *dev, struct request *req)
- 			DMA_TO_DEVICE : DMA_FROM_DEVICE;
- 
- 	if (iod->nents) {
--		dma_unmap_sg(dev->dev, iod->sg, iod->nents, dma_dir);
-+		/* P2PDMA requests do not need to be unmapped */
-+		if (!is_pci_p2pdma_page(sg_page(iod->sg)))
-+			dma_unmap_sg(dev->dev, iod->sg, iod->nents, dma_dir);
++============================
++PCI Peer-to-Peer DMA Support
++============================
 +
- 		if (blk_integrity_rq(req))
- 			dma_unmap_sg(dev->dev, &iod->meta_sg, 1, dma_dir);
- 	}
-@@ -2400,7 +2408,8 @@ static int nvme_pci_get_address(struct nvme_ctrl *ctrl, char *buf, int size)
- static const struct nvme_ctrl_ops nvme_pci_ctrl_ops = {
- 	.name			= "pcie",
- 	.module			= THIS_MODULE,
--	.flags			= NVME_F_METADATA_SUPPORTED,
-+	.flags			= NVME_F_METADATA_SUPPORTED |
-+				  NVME_F_PCI_P2PDMA,
- 	.reg_read32		= nvme_pci_reg_read32,
- 	.reg_write32		= nvme_pci_reg_write32,
- 	.reg_read64		= nvme_pci_reg_read64,
++The PCI bus has pretty decent support for performing DMA transfers
++between two devices on the bus. This type of transaction is henceforth
++called Peer-to-Peer (or P2P). However, there are a number of issues that
++make P2P transactions tricky to do in a perfectly safe way.
++
++One of the biggest issues is that PCI doesn't require forwarding
++transactions between hierarchy domains, and in PCIe, each Root Port
++defines a separate hierarchy domain. To make things worse, there is no
++simple way to determine if a given Root Complex supports this or not.
++(See PCIe r4.0, sec 1.3.1). Therefore, as of this writing, the kernel
++only supports doing P2P when the endpoints involved are all behind the
++same PCI bridge, as such devices are all in the same PCI hierarchy
++domain, and the spec guarantees that all transactions within the
++hierarchy will be routable, but it does not require routing
++between hierarchies.
++
++The second issue is that to make use of existing interfaces in Linux,
++memory that is used for P2P transactions needs to be backed by struct
++pages. However, PCI BARs are not typically cache coherent so there are
++a few corner case gotchas with these pages so developers need to
++be careful about what they do with them.
++
++
++Driver Writer's Guide
++=====================
++
++In a given P2P implementation there may be three or more different
++types of kernel drivers in play:
++
++* Provider - A driver which provides or publishes P2P resources like
++  memory or doorbell registers to other drivers.
++* Client - A driver which makes use of a resource by setting up a
++  DMA transaction to or from it.
++* Orchestrator - A driver which orchestrates the flow of data between
++  clients and providers.
++
++In many cases there could be overlap between these three types (i.e.,
++it may be typical for a driver to be both a provider and a client).
++
++For example, in the NVMe Target Copy Offload implementation:
++
++* The NVMe PCI driver is both a client, provider and orchestrator
++  in that it exposes any CMB (Controller Memory Buffer) as a P2P memory
++  resource (provider), it accepts P2P memory pages as buffers in requests
++  to be used directly (client) and it can also make use the CMB as
++  submission queue entries.
++* The RDMA driver is a client in this arrangement so that an RNIC
++  can DMA directly to the memory exposed by the NVMe device.
++* The NVMe Target driver (nvmet) can orchestrate the data from the RNIC
++  to the P2P memory (CMB) and then to the NVMe device (and vice versa).
++
++This is currently the only arrangement supported by the kernel but
++one could imagine slight tweaks to this that would allow for the same
++functionality. For example, if a specific RNIC added a BAR with some
++memory behind it, its driver could add support as a P2P provider and
++then the NVMe Target could use the RNIC's memory instead of the CMB
++in cases where the NVMe cards in use do not have CMB support.
++
++
++Provider Drivers
++----------------
++
++A provider simply needs to register a BAR (or a portion of a BAR)
++as a P2P DMA resource using :c:func:`pci_p2pdma_add_resource()`.
++This will register struct pages for all the specified memory.
++
++After that it may optionally publish all of its resources as
++P2P memory using :c:func:`pci_p2pmem_publish()`. This will allow
++any orchestrator drivers to find and use the memory. When marked in
++this way, the resource must be regular memory with no side effects.
++
++For the time being this is fairly rudimentary in that all resources
++are typically going to be P2P memory. Future work will likely expand
++this to include other types of resources like doorbells.
++
++
++Client Drivers
++--------------
++
++A client driver typically only has to conditionally change its DMA map
++routine to use the mapping function :c:func:`pci_p2pdma_map_sg()` instead
++of the usual :c:func:`dma_map_sg()` function. Memory mapped in this
++way does not need to be unmapped.
++
++The client may also, optionally, make use of
++:c:func:`is_pci_p2pdma_page()` to determine when to use the P2P mapping
++functions and when to use the regular mapping functions. In some
++situations, it may be more appropriate to use a flag to indicate a
++given request is P2P memory and map appropriately (for example the
++block layer uses a flag to keep P2P memory out of queues that do not
++have P2P client support). It is important to ensure that struct pages that
++back P2P memory stay out of code that does not have support for them.
++
++
++Orchestrator Drivers
++--------------------
++
++The first task an orchestrator driver must do is compile a list of
++all client devices that will be involved in a given transaction. For
++example, the NVMe Target driver creates a list including all NVMe
++devices and the RNIC in use. The list is stored as an anonymous struct
++list_head which must be initialized with the usual INIT_LIST_HEAD.
++The following functions may then be used to add to, remove from and free
++the list of clients with the functions :c:func:`pci_p2pdma_add_client()`,
++:c:func:`pci_p2pdma_remove_client()` and
++:c:func:`pci_p2pdma_client_list_free()`.
++
++With the client list in hand, the orchestrator may then call
++:c:func:`pci_p2pmem_find()` to obtain a published P2P memory provider
++that is supported (behind the same root port) as all the clients. If more
++than one provider is supported, the one nearest to all the clients will
++be chosen first. If more than one provider is an equal distance away, the
++one returned will be chosen at random. This function returns the PCI
++device to use for the provider with a reference taken and therefore
++when it's no longer needed it should be returned with pci_dev_put().
++
++Alternatively, if the orchestrator knows (via some other means)
++which provider it wants to use it may use :c:func:`pci_has_p2pmem()`
++to determine if it has P2P memory and :c:func:`pci_p2pdma_distance()`
++to determine the cumulative distance between it and a potential
++list of clients.
++
++With a supported provider in hand, the driver can then call
++:c:func:`pci_p2pdma_assign_provider()` to assign the provider
++to the client list. This function returns false if any of the
++clients are unsupported by the provider.
++
++Once a provider is assigned to a client list via either
++:c:func:`pci_p2pmem_find()` or :c:func:`pci_p2pdma_assign_provider()`,
++the list is permanently bound to the provider such that any new clients
++added to the list must be supported by the already selected provider.
++If they are not supported, :c:func:`pci_p2pdma_add_client()` will return
++an error. In this way, orchestrators are free to add and remove devices
++without having to recheck support or tear down existing transfers to
++change P2P providers.
++
++Once a provider is selected, the orchestrator can then use
++:c:func:`pci_alloc_p2pmem()` and :c:func:`pci_free_p2pmem()` to
++allocate P2P memory from the provider. :c:func:`pci_p2pmem_alloc_sgl()`
++and :c:func:`pci_p2pmem_free_sgl()` are convenience functions for
++allocating scatter-gather lists with P2P memory.
++
++Struct Page Caveats
++-------------------
++
++Driver writers should be very careful about not passing these special
++struct pages to code that isn't prepared for it. At this time, the kernel
++interfaces do not have any checks for ensuring this. This obviously
++precludes passing these pages to userspace.
++
++P2P memory is also technically IO memory but should never have any side
++effects behind it. Thus, the order of loads and stores should not be important
++and ioreadX(), iowriteX() and friends should not be necessary.
++However, as the memory is not cache coherent, if access ever needs to
++be protected by a spinlock then :c:func:`mmiowb()` must be used before
++unlocking the lock. (See ACQUIRES VS I/O ACCESSES in
++Documentation/memory-barriers.txt)
++
++
++P2P DMA Support Library
++=====================
++
++.. kernel-doc:: drivers/pci/p2pdma.c
++   :export:
 -- 
 2.19.0
 
