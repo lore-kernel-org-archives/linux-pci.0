@@ -2,135 +2,72 @@ Return-Path: <SRS0=zVIF=MH=vger.kernel.org=linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-2.8 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	MAILING_LIST_MULTI,SPF_PASS,URIBL_BLOCKED,USER_AGENT_NEOMUTT autolearn=ham
-	autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-2.6 required=3.0 tests=DKIM_SIGNED,
+	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_PASS,T_DKIM_INVALID,
+	USER_AGENT_NEOMUTT autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 3F69AC43382
-	for <linux-pci@archiver.kernel.org>; Tue, 25 Sep 2018 07:13:17 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 02EF9C43382
+	for <linux-pci@archiver.kernel.org>; Tue, 25 Sep 2018 07:48:48 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 008A82087A
-	for <linux-pci@archiver.kernel.org>; Tue, 25 Sep 2018 07:13:16 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.3.2 mail.kernel.org 008A82087A
-Authentication-Results: mail.kernel.org; dmarc=none (p=none dis=none) header.from=wunner.de
+	by mail.kernel.org (Postfix) with ESMTP id A0B0F214AB
+	for <linux-pci@archiver.kernel.org>; Tue, 25 Sep 2018 07:48:47 +0000 (UTC)
+Authentication-Results: mail.kernel.org;
+	dkim=fail reason="signature verification failed" (2048-bit key) header.d=8bytes.org header.i=@8bytes.org header.b="VgTxbchJ"
+DMARC-Filter: OpenDMARC Filter v1.3.2 mail.kernel.org A0B0F214AB
+Authentication-Results: mail.kernel.org; dmarc=fail (p=none dis=none) header.from=8bytes.org
 Authentication-Results: mail.kernel.org; spf=none smtp.mailfrom=linux-pci-owner@vger.kernel.org
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1728328AbeIYNTY (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Tue, 25 Sep 2018 09:19:24 -0400
-Received: from bmailout3.hostsharing.net ([176.9.242.62]:48707 "EHLO
-        bmailout3.hostsharing.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726356AbeIYNTX (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Tue, 25 Sep 2018 09:19:23 -0400
-Received: from h08.hostsharing.net (h08.hostsharing.net [83.223.95.28])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
-        (Client CN "*.hostsharing.net", Issuer "COMODO RSA Domain Validation Secure Server CA" (not verified))
-        by bmailout3.hostsharing.net (Postfix) with ESMTPS id CA06D100B02C3;
-        Tue, 25 Sep 2018 09:13:11 +0200 (CEST)
-Received: by h08.hostsharing.net (Postfix, from userid 100393)
-        id 78E665CCC0D; Tue, 25 Sep 2018 09:13:11 +0200 (CEST)
-Date:   Tue, 25 Sep 2018 09:13:11 +0200
-From:   Lukas Wunner <lukas@wunner.de>
-To:     Bjorn Helgaas <helgaas@kernel.org>
-Cc:     Keith Busch <keith.busch@intel.com>,
-        Linux PCI <linux-pci@vger.kernel.org>,
-        Bjorn Helgaas <bhelgaas@google.com>,
-        Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-        Sinan Kaya <okaya@kernel.org>,
-        Thomas Tai <thomas.tai@oracle.com>, poza@codeaurora.org,
-        Christoph Hellwig <hch@lst.de>,
-        Mika Westerberg <mika.westerberg@linux.intel.com>
-Subject: Re: [PATCH 12/12] PCI/pciehp: Use device managed allocations
-Message-ID: <20180925071311.cwd5eunuuauzoymw@wunner.de>
-References: <20180918235848.26694-1-keith.busch@intel.com>
- <20180918235848.26694-13-keith.busch@intel.com>
- <20180922181057.2jy2xzmifmvvbwbm@wunner.de>
- <20180924234307.GQ224714@bhelgaas-glaptop.roam.corp.google.com>
+        id S1728659AbeIYNzD (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Tue, 25 Sep 2018 09:55:03 -0400
+Received: from 8bytes.org ([81.169.241.247]:60606 "EHLO theia.8bytes.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1727588AbeIYNzD (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Tue, 25 Sep 2018 09:55:03 -0400
+Received: by theia.8bytes.org (Postfix, from userid 1000)
+        id A12816FB; Tue, 25 Sep 2018 09:48:44 +0200 (CEST)
+DKIM-Signature: v=1; a=rsa-sha256; c=simple/simple; d=8bytes.org; s=mail-1;
+        t=1537861724; bh=LVYbrjqMy2WgBfYXlTwm/fehw+I4n+2yeSu8Pa/BQXM=;
+        h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
+        b=VgTxbchJK1EpFW4ereN4XQe8LN8oW5yj2eGhSh1OL5khC4A0etr2zxSZ+Mpqr4+Qc
+         kZE9/nsYq9BNqI6CsRozINDxi82rjcOb4IWMmt/AI0tqlbqgl4VUZscyNJD861fAIl
+         17+OSegMqd1I96COriXHg/z6zPWmtALP3Qq1qJguHT/mmlG5L1byaDQ84fietJvgnM
+         NfN5cwCeNJ1RZQZWEUTRO/mJ9k9NEn4S993rfHldUsIn0M78qDj0zRJGY430Sbi3Oe
+         LWgVbjhxg0cCeEDtcGlwX0ZKINSq6/87tO5itB8saHBWsHLcCt/201HdUqyPHm+fo0
+         IW4v22xOC3a0Q==
+Date:   Tue, 25 Sep 2018 09:48:41 +0200
+From:   Joerg Roedel <joro@8bytes.org>
+To:     Nipun Gupta <nipun.gupta@nxp.com>
+Cc:     robin.murphy@arm.com, will.deacon@arm.com, robh+dt@kernel.org,
+        robh@kernel.org, mark.rutland@arm.com, catalin.marinas@arm.com,
+        gregkh@linuxfoundation.org, laurentiu.tudor@nxp.com,
+        bhelgaas@google.com, hch@lst.de, m.szyprowski@samsung.com,
+        shawnguo@kernel.org, frowand.list@gmail.com,
+        iommu@lists.linux-foundation.org, linux-kernel@vger.kernel.org,
+        devicetree@vger.kernel.org, linux-arm-kernel@lists.infradead.org,
+        linuxppc-dev@lists.ozlabs.org, linux-pci@vger.kernel.org,
+        bharat.bhushan@nxp.com, stuyoder@gmail.com, leoyang.li@nxp.com
+Subject: Re: [PATCH 0/7 v7] Support for fsl-mc bus and its devices in SMMU
+Message-ID: <20180925074841.oukeyvrmub45kzis@8bytes.org>
+References: <1536587361-11047-1-git-send-email-nipun.gupta@nxp.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20180924234307.GQ224714@bhelgaas-glaptop.roam.corp.google.com>
-User-Agent: NeoMutt/20170113 (1.7.2)
+In-Reply-To: <1536587361-11047-1-git-send-email-nipun.gupta@nxp.com>
+User-Agent: NeoMutt/20170421 (1.8.2)
 Sender: linux-pci-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-On Mon, Sep 24, 2018 at 06:43:07PM -0500, Bjorn Helgaas wrote:
-> On Sat, Sep 22, 2018 at 08:10:57PM +0200, Lukas Wunner wrote:
-> > This cannot happen with what's in v4.19 or on the pci/hotplug branch
-> > because the IRQ is released right after the call to pci_hp_del().
-> > If the button_work happens to be scheduled afterwards, it will call
-> > irq_wake_thread(ctrl->pcie->irq, ctrl).  Now if you look at the
-> > implementation of irq_wake_thread(), it iterates over all the
-> > actions of the IRQ (in case it's shared by multiple devices) and
-> > finds the action which matches the ctrl pointer.  But because we've
-> > already released the IRQ at that point, it won't find the IRQ action
-> > and just return.  So irq_wake_thread() essentially becomes a no-op.
-> 
-> This seems like a very subtle issue that we're likely to trip over
-> again.  I assume most drivers can use device-managed IRQs safely, but
-> it's a problem here because of the extra complexity around
-> hotplug_slot?  Is there some way we can make it less subtle, e.g., by
-> moving the slot cleanup into the pci_destroy_dev() path or something?
+On Mon, Sep 10, 2018 at 07:19:14PM +0530, Nipun Gupta wrote:
+> Nipun Gupta (7):
+>   Documentation: fsl-mc: add iommu-map device-tree binding for fsl-mc
+>     bus
+>   iommu/of: make of_pci_map_rid() available for other devices too
+>   iommu/of: support iommu configuration for fsl-mc devices
+>   iommu/arm-smmu: Add support for the fsl-mc bus
+>   bus: fsl-mc: support dma configure for devices on fsl-mc bus
+>   bus: fsl-mc: set coherent dma mask for devices on fsl-mc bus
+>   arm64: dts: ls208xa: comply with the iommu map binding for fsl_mc
 
-The extra complexity is caused by the various ways in which events can
-be triggered (Slot Status register change, sysfs, button_work) plus the
-deregistration of hotplug_slot.  Teardown paths are always hard, I don't
-really see a better code solution, but I should add more code comments to
-make it less subtle.
-
-
-> Is there some value we get from having both struct hotplug_slot and
-> struct pci_slot?
-
-When Alex Chiang introduced struct pci_slot, he thought of migrating
-struct hotplug_slot into it.  See the "migrate over time" code comment
-in commit f46753c5e354.  (It got changed to "move here" by 0aa0f5d1084c.)
-
-On the current pci/hotplug branch, I've embedded struct hotplug_slot
-in each hotplug driver's struct slot.  But that doesn't preclude
-merging struct hotplug_slot into struct pci_slot, the hotplug drivers
-would just have to embed a struct pci_slot instead, or struct pci_slot
-would be embedded in struct hotplug_slot.
-
-TBH the rationale behind all the different structs isn't quite clear
-to me, e.g. struct pci_slot is also used for non-hotplug slots it seems,
-see 8344b568f5bd.
-
-(Note, Alex is no longer reachable under his hp.com address, same for
-his canonical.com address.)
-
-
-> > While I had thought of using devm_kzalloc(), I also knew that Bjorn
-> > wants to get rid of portdrv and I didn't want to make any changes that
-> > might constrain the future design of portdrv.  Right now, portdrv
-> > creates a sub-device for each service and service drivers bind to it.
-> > An alternative design could either be a single driver that binds to
-> > ports and handles all services at once (probably wouldn't be all that
-> > different to the current situation), or no driver would be bound to
-> > ports and the functionality of the port services would be handled
-> > within the core.  In either case we have the pci_dev of the port to
-> > attach the device-managed allocations to, so I suppose using
-> > devm_kzalloc() here isn't constraining us all that much, hence
-> > seems fine.
-> 
-> I'd *like* to get rid of portdrv, but I don't see a clear path to do
-> that yet, so it might be impractical.  One reason I don't like it is
-> that only one driver can bind to a device, so portdrv prevents us from
-> having drivers for device-specific bridge features like performance
-> monitors.  For that reason, I'd like to have the architected services
-> handled directly in the core.
-
-Hm, well in that case we can't use devm_*() at all, as Benjamin
-Herrenschmidt has just correctly pointed out, devres_release_all()
-is called both on driver unbind in __device_release_driver() as well
-as on device destruction in device_release().
-
-Thus, if the port services are handled in the core to allow a driver
-to bind to the port and devm_kzalloc() is used by the port services,
-those allocations will be freed when that driver unbinds, and any
-further use of the allocations is a use-after-free.
-
-Thanks,
-
-Lukas
+Applied, thanks Nipun.
