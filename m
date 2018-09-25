@@ -2,89 +2,106 @@ Return-Path: <SRS0=zVIF=MH=vger.kernel.org=linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-2.3 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	MAILING_LIST_MULTI,SPF_PASS,USER_AGENT_MUTT autolearn=ham autolearn_force=no
-	version=3.4.0
+X-Spam-Status: No, score=-8.8 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_PASS,URIBL_BLOCKED,
+	USER_AGENT_GIT autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 65A5EC43382
-	for <linux-pci@archiver.kernel.org>; Tue, 25 Sep 2018 14:15:30 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 67CF9C43382
+	for <linux-pci@archiver.kernel.org>; Tue, 25 Sep 2018 14:46:27 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 28D5520880
-	for <linux-pci@archiver.kernel.org>; Tue, 25 Sep 2018 14:15:30 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.3.2 mail.kernel.org 28D5520880
-Authentication-Results: mail.kernel.org; dmarc=fail (p=none dis=none) header.from=intel.com
+	by mail.kernel.org (Postfix) with ESMTP id 15B112086E
+	for <linux-pci@archiver.kernel.org>; Tue, 25 Sep 2018 14:46:27 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.3.2 mail.kernel.org 15B112086E
+Authentication-Results: mail.kernel.org; dmarc=none (p=none dis=none) header.from=hygon.cn
 Authentication-Results: mail.kernel.org; spf=none smtp.mailfrom=linux-pci-owner@vger.kernel.org
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1729152AbeIYUXL (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Tue, 25 Sep 2018 16:23:11 -0400
-Received: from mga03.intel.com ([134.134.136.65]:36723 "EHLO mga03.intel.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1729098AbeIYUXL (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Tue, 25 Sep 2018 16:23:11 -0400
-X-Amp-Result: UNSCANNABLE
-X-Amp-File-Uploaded: False
-Received: from fmsmga001.fm.intel.com ([10.253.24.23])
-  by orsmga103.jf.intel.com with ESMTP/TLS/DHE-RSA-AES256-GCM-SHA384; 25 Sep 2018 07:15:28 -0700
-X-ExtLoop1: 1
-X-IronPort-AV: E=Sophos;i="5.54,302,1534834800"; 
-   d="scan'208";a="93098375"
-Received: from unknown (HELO localhost.localdomain) ([10.232.112.44])
-  by fmsmga001.fm.intel.com with ESMTP; 25 Sep 2018 07:15:27 -0700
-Date:   Tue, 25 Sep 2018 08:17:33 -0600
-From:   Keith Busch <keith.busch@intel.com>
-To:     Benjamin Herrenschmidt <benh@kernel.crashing.org>
-Cc:     Linux PCI <linux-pci@vger.kernel.org>,
-        Bjorn Helgaas <bhelgaas@google.com>,
-        Sinan Kaya <okaya@kernel.org>,
-        Thomas Tai <thomas.tai@oracle.com>, poza@codeaurora.org,
-        Lukas Wunner <lukas@wunner.de>, Christoph Hellwig <hch@lst.de>,
-        Mika Westerberg <mika.westerberg@linux.intel.com>
-Subject: Re: [PATCH 11/12] PCI/AER: Use managed resource allocations
-Message-ID: <20180925141733.GA11657@localhost.localdomain>
-References: <20180918235848.26694-1-keith.busch@intel.com>
- <20180918235848.26694-12-keith.busch@intel.com>
- <4fc055a6ead393b4adac20929291b7ca9ae959b6.camel@kernel.crashing.org>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <4fc055a6ead393b4adac20929291b7ca9ae959b6.camel@kernel.crashing.org>
-User-Agent: Mutt/1.9.1 (2017-09-22)
+        id S1729260AbeIYUyQ (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Tue, 25 Sep 2018 16:54:16 -0400
+Received: from smtp17.cstnet.cn ([159.226.251.17]:45318 "EHLO cstnet.cn"
+        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+        id S1729231AbeIYUyQ (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Tue, 25 Sep 2018 16:54:16 -0400
+Received: from pw-vbox.higon.com (unknown [182.150.46.145])
+        by APP-09 (Coremail) with SMTP id swCowADn75MlSqpboMHiDA--.140S2;
+        Tue, 25 Sep 2018 22:46:04 +0800 (CST)
+From:   Pu Wen <puwen@hygon.cn>
+To:     bp@alien8.de, bhelgaas@google.com, tglx@linutronix.de,
+        mingo@redhat.com, hpa@zytor.com, x86@kernel.org,
+        thomas.lendacky@amd.com, helgaas@kernel.org
+Cc:     linux-kernel@vger.kernel.org, linux-arch@vger.kernel.org,
+        linux-pci@vger.kernel.org, Pu Wen <puwen@hygon.cn>
+Subject: [PATCH 1/2] x86/amd_nb: Add vendor checking for strict function access
+Date:   Tue, 25 Sep 2018 22:45:01 +0800
+Message-Id: <487d8078708baedaf63eb00a82251e228b58f1c2.1537885177.git.puwen@hygon.cn>
+X-Mailer: git-send-email 2.7.4
+In-Reply-To: <20180924152448.GE20187@zn.tnic>
+References: <cover.1537533368.git.puwen@hygon.cn> <580dc519d37ad9257520fe8c533f2c61d3e0cd83.1537533369.git.puwen@hygon.cn> <20180924152448.GE20187@zn.tnic>
+X-CM-TRANSID: swCowADn75MlSqpboMHiDA--.140S2
+X-Coremail-Antispam: 1UD129KBjvJXoW7ArWrtr4DKFyfKF43Aw1fZwb_yoW8Wr1rpF
+        ZrJFn7WFs5Was3Z3s5tr4kur48AF4DK3Wxt3yUGw1fJF1DZFy7Xrsakw1Skw1jqr4kKFyr
+        tFZI9a10qF10yaUanT9S1TB71UUUUUUqnTZGkaVYY2UrUUUUjbIjqfuFe4nvWSU5nxnvy2
+        9KBjDU0xBIdaVrnRJUUUvF14x267AKxVW8JVW5JwAFc2x0x2IEx4CE42xK8VAvwI8IcIk0
+        rVWrJVCq3wAFIxvE14AKwVWUJVWUGwA2ocxC64kIII0Yj41l84x0c7CEw4AK67xGY2AK02
+        1l84ACjcxK6xIIjxv20xvE14v26r1j6r1xM28EF7xvwVC0I7IYx2IY6xkF7I0E14v26r4j
+        6F4UM28EF7xvwVC2z280aVAFwI0_Gr0_Cr1l84ACjcxK6I8E87Iv6xkF7I0E14v26r4j6r
+        4UJwAS0I0E0xvYzxvE52x082IY62kv0487Mc02F40EFcxC0VAKzVAqx4xG6I80ewAv7VC0
+        I7IYx2IY67AKxVWUJVWUGwAv7VC2z280aVAFwI0_Gr1j6F4UJwAm72CE4IkC6x0Yz7v_Jr
+        0_Gr1lF7xvr2IYc2Ij64vIr41lF7I21c0EjII2zVCS5cI20VAGYxC7M4IIrI8v6xkF7I0E
+        8cxan2IY04v7MxAIw28IcxkI7VAKI48JMxC20s026xCaFVCjc4AY6r1j6r4UMI8I3I0E5I
+        8CrVAFwI0_Jr0_Jr4lx2IqxVCjr7xvwVAFwI0_JrI_JrWlx4CE17CEb7AF67AKxVWUtVW8
+        ZwCIc40Y0x0EwIxGrwCI42IY6xIIjxv20xvE14v26r1j6r1xMIIF0xvE2Ix0cI8IcVCY1x
+        0267AKxVW8JVWxJwCI42IY6xAIw20EY4v20xvaj40_WFyUJVCq3wCI42IY6I8E87Iv67AK
+        xVWUJVW8JwCI42IY6I8E87Iv6xkF7I0E14v26r4j6r4UJbIYCTnIWIevJa73UjIFyTuYvj
+        fUoZ2-UUUUU
+X-Originating-IP: [182.150.46.145]
+X-CM-SenderInfo: psxzv046klw03qof0z/
 Sender: linux-pci-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-On Tue, Sep 25, 2018 at 11:13:42AM +1000, Benjamin Herrenschmidt wrote:
-> On Tue, 2018-09-18 at 17:58 -0600, Keith Busch wrote:
-> > This uses the managed device resource allocations for the service data
-> > so that the aer driver doesn't need to manage it, further simplifying
-> > this driver.
-> 
-> Just be careful (it migh be ok, I haven't audited everything, but I got
-> bitten by something like that in the past) that the devm stuff will get
-> disposed of in two cases:
-> 
->  - The owner device going away (so far so good)
-> 
->  - The owner device's driver being unbound
-> 
-> The latter is something not completely obvious, ie, even if the owner
-> device still has held references, the successful completion of
-> ->remove() on the driver will be followed by a cleanup of the managed
-> stuff.
-> 
-> As I said, it might be ok in the AER case, but you might want to at
-> least keep the set_service_data(dev, NULL) to make sure you don't leave
-> a stale pointer there.
+To prevent further PCI device ids checking in early_gart_iommu_check
+which cannot happen both on Hygon and Intel platform, the function
+amd_gart_present should return if it's not a AMD CPU.
 
-Yes, these resource methods should be considered carefully. I think
-we're okay here, and didn't want to set service data to NULL for a
-couple reasons:
+Also only AMD or Hygon CPU should use the functionality provided by
+early_is_amd_nb.
 
- 1. The service data and its device are released together, so the device
-    is already out of scope before it could hold a stale pointer.
+Signed-off-by: Pu Wen <puwen@hygon.cn>
+---
+ arch/x86/include/asm/amd_nb.h | 3 +++
+ arch/x86/kernel/amd_nb.c      | 4 ++++
+ 2 files changed, 7 insertions(+)
 
- 2. It is possible the IRQ handler may be invoked after 'remove', but
-    before the managed irq is torn down. Leaving the service data set
-    while it is allocated removes a requirement to check for NULL on
-    each interrupt.
+diff --git a/arch/x86/include/asm/amd_nb.h b/arch/x86/include/asm/amd_nb.h
+index fddb6d2..1ae4e57 100644
+--- a/arch/x86/include/asm/amd_nb.h
++++ b/arch/x86/include/asm/amd_nb.h
+@@ -103,6 +103,9 @@ static inline u16 amd_pci_dev_to_node_id(struct pci_dev *pdev)
+ 
+ static inline bool amd_gart_present(void)
+ {
++	if (boot_cpu_data.x86_vendor != X86_VENDOR_AMD)
++		return false;
++
+ 	/* GART present only on Fam15h, upto model 0fh */
+ 	if (boot_cpu_data.x86 == 0xf || boot_cpu_data.x86 == 0x10 ||
+ 	    (boot_cpu_data.x86 == 0x15 && boot_cpu_data.x86_model < 0x10))
+diff --git a/arch/x86/kernel/amd_nb.c b/arch/x86/kernel/amd_nb.c
+index b481b95..b51c6b1 100644
+--- a/arch/x86/kernel/amd_nb.c
++++ b/arch/x86/kernel/amd_nb.c
+@@ -264,6 +264,10 @@ bool __init early_is_amd_nb(u32 device)
+ 	const struct pci_device_id *id;
+ 	u32 vendor = device & 0xffff;
+ 
++	if (boot_cpu_data.x86_vendor != X86_VENDOR_AMD &&
++	    boot_cpu_data.x86_vendor != X86_VENDOR_HYGON)
++		return false;
++
+ 	device >>= 16;
+ 	for (id = amd_nb_misc_ids; id->vendor; id++)
+ 		if (vendor == id->vendor && device == id->device)
+-- 
+2.7.4
+
