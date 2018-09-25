@@ -2,105 +2,108 @@ Return-Path: <SRS0=zVIF=MH=vger.kernel.org=linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-8.6 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
-	DKIM_VALID_AU,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_PASS,
-	URIBL_BLOCKED,USER_AGENT_MUTT autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-0.8 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
+	DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_PASS,
+	URIBL_BLOCKED autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id B2EBFC43382
-	for <linux-pci@archiver.kernel.org>; Tue, 25 Sep 2018 09:20:34 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 82858C43382
+	for <linux-pci@archiver.kernel.org>; Tue, 25 Sep 2018 09:46:43 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 4443820877
-	for <linux-pci@archiver.kernel.org>; Tue, 25 Sep 2018 09:20:34 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 35D7120C0A
+	for <linux-pci@archiver.kernel.org>; Tue, 25 Sep 2018 09:46:43 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (1024-bit key) header.d=kernel.org header.i=@kernel.org header.b="a2z0sMRf"
-DMARC-Filter: OpenDMARC Filter v1.3.2 mail.kernel.org 4443820877
-Authentication-Results: mail.kernel.org; dmarc=fail (p=none dis=none) header.from=kernel.org
+	dkim=pass (1024-bit key) header.d=broadcom.com header.i=@broadcom.com header.b="K2JqaKP7"
+DMARC-Filter: OpenDMARC Filter v1.3.2 mail.kernel.org 35D7120C0A
+Authentication-Results: mail.kernel.org; dmarc=fail (p=quarantine dis=none) header.from=broadcom.com
 Authentication-Results: mail.kernel.org; spf=none smtp.mailfrom=linux-pci-owner@vger.kernel.org
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727678AbeIYP1K (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Tue, 25 Sep 2018 11:27:10 -0400
-Received: from mail.kernel.org ([198.145.29.99]:53944 "EHLO mail.kernel.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1727588AbeIYP1J (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Tue, 25 Sep 2018 11:27:09 -0400
-Received: from dragon (unknown [104.237.86.64])
-        (using TLSv1.2 with cipher DHE-RSA-AES128-SHA (128/128 bits))
-        (No client certificate requested)
-        by mail.kernel.org (Postfix) with ESMTPSA id CC48C20870;
-        Tue, 25 Sep 2018 09:20:27 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=default; t=1537867232;
-        bh=mj9y9mab7lUzK/UuS2xyBkhBFVZ2e8eqOxK11M21Z9Q=;
-        h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-        b=a2z0sMRfzWdHXDzbF8y9pxHRPoviFAjkpYtR+o3z2Mwg7zzapY+6E5nc2te0HJrd5
-         hhgHF2gY7fsUxte3t+j1dEeRKKzab75ED4ZToPVUQxDGzWGeErefuriGw/qBpPuxWv
-         nYN/owZweZt6563CaCUop6FBugrlI2/4ZQgyP4m0=
-Date:   Tue, 25 Sep 2018 17:20:20 +0800
-From:   Shawn Guo <shawnguo@kernel.org>
-To:     Leonard Crestez <leonard.crestez@nxp.com>
-Cc:     Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
-        Philipp Zabel <p.zabel@pengutronix.de>,
-        Lucas Stach <l.stach@pengutronix.de>,
-        Mark Rutland <mark.rutland@arm.com>,
-        devicetree@vger.kernel.org, Joao Pinto <Joao.Pinto@synopsys.com>,
-        Richard Zhu <hongxing.zhu@nxp.com>,
-        Anson Huang <Anson.Huang@nxp.com>,
-        Andrey Smirnov <andrew.smirnov@gmail.com>,
-        Jingoo Han <jingoohan1@gmail.com>,
-        linux-kernel@vger.kernel.org, Rob Herring <robh+dt@kernel.org>,
-        linux-imx@nxp.com, kernel@pengutronix.de,
-        linux-pci@vger.kernel.org, Bjorn Helgaas <bhelgaas@google.com>,
-        linux-arm-kernel@lists.infradead.org
-Subject: Re: [PATCH v4 5/6] ARM: dts: imx7d: Add turnoff reset
-Message-ID: <20180925092018.GA21282@dragon>
-References: <cover.1534264292.git.leonard.crestez@nxp.com>
- <c305d4da96ead7d570bf755fde9f0e0cc68f88e0.1534264292.git.leonard.crestez@nxp.com>
+        id S1728836AbeIYPxY (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Tue, 25 Sep 2018 11:53:24 -0400
+Received: from mail-lf1-f68.google.com ([209.85.167.68]:36474 "EHLO
+        mail-lf1-f68.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1727114AbeIYPxY (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Tue, 25 Sep 2018 11:53:24 -0400
+Received: by mail-lf1-f68.google.com with SMTP id v17-v6so15503299lfe.3
+        for <linux-pci@vger.kernel.org>; Tue, 25 Sep 2018 02:46:40 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=broadcom.com; s=google;
+        h=mime-version:references:in-reply-to:from:date:message-id:subject:to
+         :cc;
+        bh=NrOVCwlU7+7r3eDStJITmlj6uViTBWR8FQtqOC2V8rM=;
+        b=K2JqaKP7ff8CtmscoonCg2j5np/AHDie3CA0Z1+w+Kp+u3Emrn3UzTATYOoj1Moi+U
+         477lRgTXqlL6FsmKsPogqlosHnHfro8flHr43rpFh5oraFqPbsRcMF9A7+u37egg/7zf
+         KqIHrflfZi/WACmq5UyTSV9veaV+zOk8V81U8=
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20161025;
+        h=x-gm-message-state:mime-version:references:in-reply-to:from:date
+         :message-id:subject:to:cc;
+        bh=NrOVCwlU7+7r3eDStJITmlj6uViTBWR8FQtqOC2V8rM=;
+        b=arnrg3SAg6zTHVOuisAp1XbSv9AEMLMnoC8cJxcJKVjWaRFzZIMsedBk1mvpc5lgDT
+         SGu04RQ3iapSlOU/HrDjIkXeO74BcM30StRBI/qOiH6TGqWEEAONKyExYiQXtr4MzRMv
+         YbI2hgUN29ElDKJWORYhDbdoE7lWuXjvyfHLZwfeqG76D53yt3Fz8QOrYoveP6gEUgko
+         MBE2RtYmaooiyGgg3y6KMNiK1s+1a0ztx2GQl9XDES1R1T3zEUbEti7mSwLHfWYxYg87
+         tm4rtuXy0BPekIbDyA32FoAylIu1SFpSv23o+LZbQqkPyQXNvqoJ/LrzhzDleg271Dyg
+         cScA==
+X-Gm-Message-State: ABuFfojWK7QCEjmsmAJQzi1eXHP1xmmfvoUjn21SIMEADAAqajTEIYJy
+        7tecUJ76hyDd/y6Cy+RE3XhL74RC823SSNSncp27nQ==
+X-Google-Smtp-Source: ACcGV60Kdzznh6soVCZRBkq5Ru1MwwqZi117OtOfaC9GmxRooKnfgXJ6jS81CADB8jY9NZX9C7LIvc+SlMo1cArMvsw=
+X-Received: by 2002:a19:8d11:: with SMTP id p17-v6mr183392lfd.116.1537868799092;
+ Tue, 25 Sep 2018 02:46:39 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <c305d4da96ead7d570bf755fde9f0e0cc68f88e0.1534264292.git.leonard.crestez@nxp.com>
-User-Agent: Mutt/1.5.21 (2010-09-15)
+References: <1537770916-16337-1-git-send-email-suganath-prabu.subramani@broadcom.com>
+ <1537770916-16337-2-git-send-email-suganath-prabu.subramani@broadcom.com> <CAHp75Vd7eLgK59DdmVCE7jZgnkpGq0+21DqU=f6PghdvpUEzuA@mail.gmail.com>
+In-Reply-To: <CAHp75Vd7eLgK59DdmVCE7jZgnkpGq0+21DqU=f6PghdvpUEzuA@mail.gmail.com>
+From:   Suganath Prabu Subramani <suganath-prabu.subramani@broadcom.com>
+Date:   Tue, 25 Sep 2018 15:16:58 +0530
+Message-ID: <CA+RiK64ExuUXKHk8tRAoYT7aSCqX4T4hofWrpkD4KysG0WrhyQ@mail.gmail.com>
+Subject: Re: [PATCH v3 1/6] mpt3sas: Introduce mpt3sas_base_pci_device_is_available
+To:     andy.shevchenko@gmail.com
+Cc:     linux-scsi@vger.kernel.org,
+        Sathya Prakash <Sathya.Prakash@broadcom.com>,
+        Sreekanth Reddy <sreekanth.reddy@broadcom.com>,
+        Christoph Hellwig <hch@infradead.org>, lukas@wunner.de,
+        linux-pci@vger.kernel.org
+Content-Type: text/plain; charset="UTF-8"
 Sender: linux-pci-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-On Tue, Aug 14, 2018 at 07:50:19PM +0300, Leonard Crestez wrote:
-> This is required for the imx pci driver to send the PME_Turn_Off TLP.
-> 
-> Signed-off-by: Leonard Crestez <leonard.crestez@nxp.com>
+Hi Andy,
 
-Acked-by: Shawn Guo <shawnguo@kernel.org>
+I forgot to add Lukas in last patch CC list, But i have sent a note
+regarding the updated patch to him.
+ Also added linux-pci
 
-> ---
->  arch/arm/boot/dts/imx7d.dtsi | 5 +++--
->  1 file changed, 3 insertions(+), 2 deletions(-)
-> 
-> diff --git a/arch/arm/boot/dts/imx7d.dtsi b/arch/arm/boot/dts/imx7d.dtsi
-> index 7234e8330a57..efbdeaaa8dcd 100644
-> --- a/arch/arm/boot/dts/imx7d.dtsi
-> +++ b/arch/arm/boot/dts/imx7d.dtsi
-> @@ -144,12 +144,13 @@
->  					 <&clks IMX7D_PLL_ENET_MAIN_100M_CLK>;
->  
->  		fsl,max-link-speed = <2>;
->  		power-domains = <&pgc_pcie_phy>;
->  		resets = <&src IMX7_RESET_PCIEPHY>,
-> -			 <&src IMX7_RESET_PCIE_CTRL_APPS_EN>;
-> -		reset-names = "pciephy", "apps";
-> +			 <&src IMX7_RESET_PCIE_CTRL_APPS_EN>,
-> +			 <&src IMX7_RESET_PCIE_CTRL_APPS_TURNOFF>;
-> +		reset-names = "pciephy", "apps", "turnoff";
->  		status = "disabled";
->  	};
->  };
->  
->  &ca_funnel_ports {
-> -- 
-> 2.17.1
-> 
-> 
-> _______________________________________________
-> linux-arm-kernel mailing list
-> linux-arm-kernel@lists.infradead.org
-> http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
+On Tue, Sep 25, 2018 at 2:10 PM Andy Shevchenko
+<andy.shevchenko@gmail.com> wrote:
+>
+> On Mon, Sep 24, 2018 at 9:36 AM Suganath Prabu S
+> <suganath-prabu.subramani@broadcom.com> wrote:
+> >
+> > * Driver uses "pci_device_is_present" to check whether
+> > If Hot unplugged:
+> > the outstanding IOs with 'DID_NO_CONNECT' before removing the drives
+> > attached to the HBA.
+> > "DID_NO_CONNECT" status and free the smid, if driver detects that
+> > HBA is hot unplugged.
+> >
+> > * In the hard reset flush out all the outstanding IOs even if diag reset
+> > fails and also if driver detects that HBA is hot unplugged.
+>
+> > +       if (!mpt3sas_base_pci_device_is_available(ioc)) {
+>
+> > +               pr_err(MPT3SAS_FMT
+> > +                   "%s: pci error recovery reset or"
+> > +                   " pci device unplug occurred\n",
+>
+> This should be just one line.
+Above line crosses over 80 characters, so it is in two lines.
+>
+> > +                   ioc->name, __func__);
+> > +               return;
+> > +       }
+>
+> --
+> With Best Regards,
+> Andy Shevchenko
