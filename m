@@ -2,204 +2,130 @@ Return-Path: <SRS0=zVIF=MH=vger.kernel.org=linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-2.2 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	MAILING_LIST_MULTI,SPF_PASS,URIBL_BLOCKED,USER_AGENT_MUTT
+X-Spam-Status: No, score=-9.3 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,
+	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT
 	autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id F0042C43382
-	for <linux-pci@archiver.kernel.org>; Tue, 25 Sep 2018 08:18:06 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 6FD9DC43382
+	for <linux-pci@archiver.kernel.org>; Tue, 25 Sep 2018 08:30:06 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 8F35820877
-	for <linux-pci@archiver.kernel.org>; Tue, 25 Sep 2018 08:18:06 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.3.2 mail.kernel.org 8F35820877
-Authentication-Results: mail.kernel.org; dmarc=none (p=none dis=none) header.from=arm.com
+	by mail.kernel.org (Postfix) with ESMTP id 5A6162145D
+	for <linux-pci@archiver.kernel.org>; Tue, 25 Sep 2018 08:30:05 +0000 (UTC)
+Authentication-Results: mail.kernel.org;
+	dkim=pass (1024-bit key) header.d=ti.com header.i=@ti.com header.b="L20sdWNT"
+DMARC-Filter: OpenDMARC Filter v1.3.2 mail.kernel.org 5A6162145D
+Authentication-Results: mail.kernel.org; dmarc=fail (p=quarantine dis=none) header.from=ti.com
 Authentication-Results: mail.kernel.org; spf=none smtp.mailfrom=linux-pci-owner@vger.kernel.org
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726934AbeIYOY1 (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Tue, 25 Sep 2018 10:24:27 -0400
-Received: from foss.arm.com ([217.140.101.70]:46586 "EHLO foss.arm.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1726208AbeIYOY1 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Tue, 25 Sep 2018 10:24:27 -0400
-Received: from usa-sjc-imap-foss1.foss.arm.com (unknown [10.72.51.249])
-        by usa-sjc-mx-foss1.foss.arm.com (Postfix) with ESMTP id AF56D80D;
-        Tue, 25 Sep 2018 01:18:04 -0700 (PDT)
-Received: from localhost (unknown [10.37.6.11])
-        by usa-sjc-imap-foss1.foss.arm.com (Postfix) with ESMTPSA id 1329F3F5B7;
-        Tue, 25 Sep 2018 01:18:03 -0700 (PDT)
-Date:   Tue, 25 Sep 2018 09:18:02 +0100
-From:   Andrew Murray <andrew.murray@arm.com>
-To:     Thomas Petazzoni <thomas.petazzoni@bootlin.com>
-Cc:     Russell King - ARM Linux <linux@armlinux.org.uk>,
-        Baruch Siach <baruch@tkos.co.il>,
-        Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
-        Jason Cooper <jason@lakedaemon.net>, linux-pci@vger.kernel.org,
-        linux-kernel@vger.kernel.org, Bjorn Helgaas <bhelgaas@google.com>,
-        Jan =?iso-8859-1?Q?Kundr=E1t?= <jan.kundrat@cesnet.cz>,
-        linux-arm-kernel@lists.infradead.org
-Subject: Re: [BISECTED] Regression: Solidrun Clearfog Base won't boot since
- "PCI: mvebu: Only remap I/O space if configured"
-Message-ID: <20180925081801.GA54965@e119886-lin.cambridge.arm.com>
-References: <61fdfd69-2bb6-478c-b0d5-69d8744adae3@cesnet.cz>
- <87zhwm4kl6.fsf@tkos.co.il>
- <20180912231050.GX30658@n2100.armlinux.org.uk>
- <20180913094515.351967bb@windsurf>
- <5ad46fec-a71a-477a-b23f-d20aacfb481d@cesnet.cz>
- <20180913104241.65db8243@windsurf>
- <20180924101213.GO30658@n2100.armlinux.org.uk>
- <20180924122614.70738b5c@windsurf>
- <20180924111341.GP30658@n2100.armlinux.org.uk>
- <20180924141203.3df9707a@windsurf>
+        id S1728377AbeIYOgR (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Tue, 25 Sep 2018 10:36:17 -0400
+Received: from lelv0142.ext.ti.com ([198.47.23.249]:37768 "EHLO
+        lelv0142.ext.ti.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726660AbeIYOgQ (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Tue, 25 Sep 2018 10:36:16 -0400
+Received: from dlelxv90.itg.ti.com ([172.17.2.17])
+        by lelv0142.ext.ti.com (8.15.2/8.15.2) with ESMTP id w8P8TdA5005203;
+        Tue, 25 Sep 2018 03:29:39 -0500
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=ti.com;
+        s=ti-com-17Q1; t=1537864179;
+        bh=NsgKHlaiOjl6kZ/dQrwoeSz2NyDz89QRNLj7uHPdlh4=;
+        h=From:To:CC:Subject:Date:In-Reply-To:References;
+        b=L20sdWNTE+M8PGEDrwfM+skhbw2ytPSEl+TKA1/UV2z3SijYPWNQs3770waYFGs1y
+         cg4zogJE7IvoFYVHLJqR01ylb4Ub+P+Kb/mCKc5tjvaqbZ/Tx6a66d1EXjKdQBNz74
+         DBfl3N+RXgcCq+8/sVujScUI1WkGaGejsCkYn2ys=
+Received: from DFLE101.ent.ti.com (dfle101.ent.ti.com [10.64.6.22])
+        by dlelxv90.itg.ti.com (8.14.3/8.13.8) with ESMTP id w8P8Td40027079;
+        Tue, 25 Sep 2018 03:29:39 -0500
+Received: from DFLE114.ent.ti.com (10.64.6.35) by DFLE101.ent.ti.com
+ (10.64.6.22) with Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_128_CBC_SHA256_P256) id 15.1.1466.3; Tue, 25
+ Sep 2018 03:29:39 -0500
+Received: from dflp33.itg.ti.com (10.64.6.16) by DFLE114.ent.ti.com
+ (10.64.6.35) with Microsoft SMTP Server (version=TLS1_0,
+ cipher=TLS_RSA_WITH_AES_256_CBC_SHA) id 15.1.1466.3 via Frontend Transport;
+ Tue, 25 Sep 2018 03:29:40 -0500
+Received: from a0132425.india.ti.com (ileax41-snat.itg.ti.com [10.172.224.153])
+        by dflp33.itg.ti.com (8.14.3/8.13.8) with ESMTP id w8P8TU3m006331;
+        Tue, 25 Sep 2018 03:29:37 -0500
+From:   Vignesh R <vigneshr@ti.com>
+To:     Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
+CC:     Kishon Vijay Abraham I <kishon@ti.com>,
+        Bjorn Helgaas <bhelgaas@google.com>,
+        Rob Herring <robh+dt@kernel.org>, <linux-omap@vger.kernel.org>,
+        <linux-pci@vger.kernel.org>, <devicetree@vger.kernel.org>,
+        <linux-kernel@vger.kernel.org>, Vignesh R <vigneshr@ti.com>
+Subject: [PATCH v5 2/2] pci: dwc: pci-dra7xx: Enable errata i870 for both EP and RC mode
+Date:   Tue, 25 Sep 2018 14:00:24 +0530
+Message-ID: <20180925083024.6960-3-vigneshr@ti.com>
+X-Mailer: git-send-email 2.19.0
+In-Reply-To: <20180925083024.6960-1-vigneshr@ti.com>
+References: <20180925083024.6960-1-vigneshr@ti.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20180924141203.3df9707a@windsurf>
-User-Agent: Mutt/1.10.1+81 (426a6c1) (2018-08-26)
+Content-Transfer-Encoding: 8bit
+Content-Type: text/plain
+X-EXCLAIMER-MD-CONFIG: e1e8a2fd-e40a-4ac6-ac9b-f7e9cc9ee180
 Sender: linux-pci-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-Hi Thomas,
+Errata i870 is applicable in both EP and RC mode. Therefore rename
+function dra7xx_pcie_ep_unaligned_memaccess(), that implements errata
+workaround, to dra7xx_pcie_unaligned_memaccess() and call it for both RC
+and EP. Make sure driver probe does not fail in case workaround is not
+applied for RC mode so as to maintain DT backward compatibility.
 
-On Mon, Sep 24, 2018 at 02:12:03PM +0200, Thomas Petazzoni wrote:
-> Hello,
-> 
-> On Mon, 24 Sep 2018 12:13:41 +0100, Russell King - ARM Linux wrote:
-> 
-> > > But being able to unmap it would also be needed to be able to remove
-> > > PCI host controller drivers, and therefore compile them as module, and
-> > > make them more like any other drivers.
-> > > 
-> > > I'm not sure why we need to guarantee that the I/O space is always
-> > > mapped:
-> > > 
-> > >  - It isn't mapped before the PCI controller driver does the mapping.
-> > > 
-> > >  - There is no reason for it to be accessed when the PCI controller
-> > >    driver is not initialized: PCI devices can only be probed and
-> > >    initialized when the PCI controller driver is probed/initialized.  
-> > 
-> > There are historic reasons.  PCI provides ISA IO space, and when you
-> > have a machine with ISA peripherals present, the PCI IO space must
-> > never be unmapped - if it is, ISA drivers will oops the kernel.  There
-> > is no way for a vanishing PCI controller to cause ISA drivers to be
-> > unbound.
-> > 
-> > If you have a host controller that does unmap PCI IO space and you have
-> > ISA peripherals with drivers present, unbinding the PCI host controller
-> > will remove the IO space mapping, and next time an ISA peripheral
-> > touches IO space, the kernel will oops.
-> 
-> Thanks for sharing some additional technical context on this, very
-> useful.
-> 
-> I have another question though: shouldn't those ISA devices be child
-> devices of the PCI controller, if they use some resources of the PCI
-> controller ? Could you give an example of such an ISA device driver ?
+Reported-by: Chris Welch <Chris.Welch@viavisolutions.com>
+Signed-off-by: Vignesh R <vigneshr@ti.com>
+Acked-by: Kishon Vijay Abraham I <kishon@ti.com>
+---
+ drivers/pci/controller/dwc/pci-dra7xx.c | 11 ++++++++---
+ 1 file changed, 8 insertions(+), 3 deletions(-)
 
-Legacy VGA also falls into this category - for example
-drivers/video/console/vgacon.c will happily use outb/inb macros to hard
-coded addresses which are hoped to be present on some PCI/ISA bus.
+diff --git a/drivers/pci/controller/dwc/pci-dra7xx.c b/drivers/pci/controller/dwc/pci-dra7xx.c
+index ce9224a36f62..a32d6dde7a57 100644
+--- a/drivers/pci/controller/dwc/pci-dra7xx.c
++++ b/drivers/pci/controller/dwc/pci-dra7xx.c
+@@ -542,7 +542,7 @@ static const struct of_device_id of_dra7xx_pcie_match[] = {
+ };
+ 
+ /*
+- * dra7xx_pcie_ep_unaligned_memaccess: workaround for AM572x/AM571x Errata i870
++ * dra7xx_pcie_unaligned_memaccess: workaround for AM572x/AM571x Errata i870
+  * @dra7xx: the dra7xx device where the workaround should be applied
+  *
+  * Access to the PCIe slave port that are not 32-bit aligned will result
+@@ -552,7 +552,7 @@ static const struct of_device_id of_dra7xx_pcie_match[] = {
+  *
+  * To avoid this issue set PCIE_SS1_AXI2OCP_LEGACY_MODE_ENABLE to 1.
+  */
+-static int dra7xx_pcie_ep_unaligned_memaccess(struct device *dev)
++static int dra7xx_pcie_unaligned_memaccess(struct device *dev)
+ {
+ 	int ret;
+ 	struct device_node *np = dev->of_node;
+@@ -704,6 +704,11 @@ static int __init dra7xx_pcie_probe(struct platform_device *pdev)
+ 
+ 		dra7xx_pcie_writel(dra7xx, PCIECTRL_TI_CONF_DEVICE_TYPE,
+ 				   DEVICE_TYPE_RC);
++
++		ret = dra7xx_pcie_unaligned_memaccess(dev);
++		if (ret)
++			dev_err(dev, "WA for Errata i870 not applied\n");
++
+ 		ret = dra7xx_add_pcie_port(dra7xx, pdev);
+ 		if (ret < 0)
+ 			goto err_gpio;
+@@ -717,7 +722,7 @@ static int __init dra7xx_pcie_probe(struct platform_device *pdev)
+ 		dra7xx_pcie_writel(dra7xx, PCIECTRL_TI_CONF_DEVICE_TYPE,
+ 				   DEVICE_TYPE_EP);
+ 
+-		ret = dra7xx_pcie_ep_unaligned_memaccess(dev);
++		ret = dra7xx_pcie_unaligned_memaccess(dev);
+ 		if (ret)
+ 			goto err_gpio;
+ 
+-- 
+2.19.0
 
-With regards to ISA drivers - take a look for anything that registers with
-isa_register_driver - for example:
-
-drivers/input/touchscreen/htcpen.c
-drivers/net/ethernet/3com/3c509.c
-drivers/watchdog/ebc-c384_wdt.c
-
-None of these drivers do any kind of mapping before attempting to access
-these addresses.
-
-Thanks,
-
-Andrew Murray
-
-> This is just to understand better the issue, because there seems to be
-> a kind of hidden dependency between those ISA drivers and the setup of
-> the PCI controller.
-> 
-> > > All other drivers, including on ARM, use pci_remap_iospace(), which
-> > > does provide the pci_unmap_iospace() counter part.  
-> > 
-> > ... which has been created in PCI land just to deal with PCI without
-> > regard for the above issue.
-> > 
-> > However, there's another issue I missed - if you _do_ have ISA
-> > peripherals, you likely want the IO space setup from very early on,
-> > and you won't be using the new fangled PCI host driver support anyway.
-> > That uses pci_map_io_early() rather than pci_ioremap_io() or
-> > pci_remap_io().
-> 
-> OK. There's today a single platform (Footbridge) that uses
-> pci_map_io_early(), and it is indeed called through the ->map_io()
-> hook, which is very early in the boot process.
-> 
-> BTW, look at drivers/pcmcia/at91_cf.c. It has ->probe() and ->remove(),
-> and does a pci_ioremap_io() in its ->probe(), and nothing in its
-> ->remove(). I don't think this driver, compiled as a module, will work
-> well after a insmod/rmmod/insmod cycle.
-> 
-> > > But to me, the general direction is that the ARM-specific
-> > > pci_remap_io() API is fading away, and its replacement already provides
-> > > an unmapping capability. So why not add the same unmapping capability
-> > > to pci_remap_io() ?  
-> > 
-> > Yes, that would be a good longer term plan - we don't need three
-> > different ways to map PCI IO space, but it is development.
-> 
-> Absolutely. Glad to hear that you agree on the longer term plan.
-> 
-> > > But we have a regression and we need to fix it. Do you suggest to not
-> > > use the new pci_host_probe() API ?  
-> > 
-> > Well, arguably, the patch that caused the regression is the buggy patch,
-> > _not_ the lack of unmapping API for pci_ioremap_io().
-> 
-> Totally true.
-> 
-> > Trying to address a regression with further development means that
-> > _that_ development needs thought and review, which is a slower
-> > process.
-> > 
-> > I do understand the desire to keep moving forward and never take a
-> > step backwards, but sometimes backwards steps are the best way to
-> > resolve a regression.  But I also do appreciate that a simple revert
-> > in this case is not possible.
-> 
-> Well, I can revert:
-> 
-> 42342073e38b50113354944cd51dcfed28d857a1 PCI: mvebu: Convert to use
-> pci_host_bridge directly ee1604381a371b3ea6aec7d5e43b6e3f5e153854 PCI:
-> mvebu: Only remap I/O space if configured
-> 
-> so it's not a big deal either. I can revert those, and then resubmit a
-> more complete series later on that moves pci-mvebu to use
-> pci_remap_iospace().
-> 
-> > I'll accept your patch on the condition that the ARM private
-> > pci_ioremap_io() will go away in the very near future (please _try_
-> > to get agreement on that before this patch is merged.)
-> 
-> Bjorn, Lorenzo, what do you prefer ? 
-> 
-> If we want to get rid of pci_ioremap_io(), then we need a way to tell
-> pci_remap_iospace() the memory attributes that should be used for the
-> mapping, because on Armada 38x, we need to map the I/O space mapped
-> MT_UNCACHED instead of MT_DEVICE. I'm not sure how to achieve this yet.
-> Should pgprot_device() be changed to return MT_UNCACHED on a
-> platform-specific basis ? Any other idea ?
-> 
-> Best regards,
-> 
-> Thomas
-> -- 
-> Thomas Petazzoni, CTO, Bootlin
-> Embedded Linux and Kernel engineering
-> https://bootlin.com
-> 
-> _______________________________________________
-> linux-arm-kernel mailing list
-> linux-arm-kernel@lists.infradead.org
-> http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
