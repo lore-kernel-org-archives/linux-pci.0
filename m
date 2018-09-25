@@ -6,81 +6,70 @@ X-Spam-Status: No, score=-2.3 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
 	MAILING_LIST_MULTI,SPF_PASS,USER_AGENT_MUTT autolearn=ham autolearn_force=no
 	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 23992C43382
-	for <linux-pci@archiver.kernel.org>; Tue, 25 Sep 2018 15:34:13 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 89E3FC43382
+	for <linux-pci@archiver.kernel.org>; Tue, 25 Sep 2018 15:36:12 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id DC39220C0A
-	for <linux-pci@archiver.kernel.org>; Tue, 25 Sep 2018 15:34:12 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.3.2 mail.kernel.org DC39220C0A
-Authentication-Results: mail.kernel.org; dmarc=fail (p=none dis=none) header.from=intel.com
+	by mail.kernel.org (Postfix) with ESMTP id 4E90020C0A
+	for <linux-pci@archiver.kernel.org>; Tue, 25 Sep 2018 15:36:12 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.3.2 mail.kernel.org 4E90020C0A
+Authentication-Results: mail.kernel.org; dmarc=none (p=none dis=none) header.from=lst.de
 Authentication-Results: mail.kernel.org; spf=none smtp.mailfrom=linux-pci-owner@vger.kernel.org
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1729570AbeIYVmN (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Tue, 25 Sep 2018 17:42:13 -0400
-Received: from mga01.intel.com ([192.55.52.88]:43492 "EHLO mga01.intel.com"
+        id S1729571AbeIYVoO (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Tue, 25 Sep 2018 17:44:14 -0400
+Received: from verein.lst.de ([213.95.11.211]:33106 "EHLO newverein.lst.de"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1729306AbeIYVmM (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Tue, 25 Sep 2018 17:42:12 -0400
-X-Amp-Result: UNKNOWN
-X-Amp-Original-Verdict: FILE UNKNOWN
-X-Amp-File-Uploaded: False
-Received: from fmsmga005.fm.intel.com ([10.253.24.32])
-  by fmsmga101.fm.intel.com with ESMTP/TLS/DHE-RSA-AES256-GCM-SHA384; 25 Sep 2018 08:34:09 -0700
-X-ExtLoop1: 1
-X-IronPort-AV: E=Sophos;i="5.54,302,1534834800"; 
-   d="scan'208";a="265595805"
-Received: from unknown (HELO localhost.localdomain) ([10.232.112.44])
-  by fmsmga005.fm.intel.com with ESMTP; 25 Sep 2018 08:33:07 -0700
-Date:   Tue, 25 Sep 2018 09:35:13 -0600
-From:   Keith Busch <keith.busch@intel.com>
-To:     Benjamin Herrenschmidt <benh@kernel.crashing.org>
-Cc:     Linux PCI <linux-pci@vger.kernel.org>,
-        Bjorn Helgaas <bhelgaas@google.com>,
-        Sinan Kaya <okaya@kernel.org>,
-        Thomas Tai <thomas.tai@oracle.com>,
-        "poza@codeaurora.org" <poza@codeaurora.org>,
-        Lukas Wunner <lukas@wunner.de>, Christoph Hellwig <hch@lst.de>,
-        Mika Westerberg <mika.westerberg@linux.intel.com>
-Subject: Re: [PATCHv3 09/10] PCI: Unify device inaccessible
-Message-ID: <20180925153512.GC11657@localhost.localdomain>
-References: <20180918235702.26573-1-keith.busch@intel.com>
- <20180918235702.26573-10-keith.busch@intel.com>
- <e0606dfcf8780bf994432dc373581fdf0af18f8e.camel@kernel.crashing.org>
+        id S1729306AbeIYVoN (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Tue, 25 Sep 2018 17:44:13 -0400
+Received: by newverein.lst.de (Postfix, from userid 2407)
+        id 43FB068AFE; Tue, 25 Sep 2018 17:36:09 +0200 (CEST)
+Date:   Tue, 25 Sep 2018 17:36:09 +0200
+From:   Christoph Hellwig <hch@lst.de>
+To:     xiangxia.m.yue@gmail.com
+Cc:     helgaas@kernel.org, hch@lst.de, linux-pci@vger.kernel.org
+Subject: Re: [PATCH] pci: msi: return error code instead of only warn
+Message-ID: <20180925153609.GB404@lst.de>
+References: <1537797641-6868-1-git-send-email-xiangxia.m.yue@gmail.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <e0606dfcf8780bf994432dc373581fdf0af18f8e.camel@kernel.crashing.org>
-User-Agent: Mutt/1.9.1 (2017-09-22)
+In-Reply-To: <1537797641-6868-1-git-send-email-xiangxia.m.yue@gmail.com>
+User-Agent: Mutt/1.5.17 (2007-11-01)
 Sender: linux-pci-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-On Mon, Sep 24, 2018 at 06:10:01PM -0700, Benjamin Herrenschmidt wrote:
-> On Tue, 2018-09-18 at 17:57 -0600, Keith Busch wrote:
+On Mon, Sep 24, 2018 at 07:00:41AM -0700, xiangxia.m.yue@gmail.com wrote:
+> From: Tonghao Zhang <xiangxia.m.yue@gmail.com>
 > 
->  .../...
+> The drivers may enable the msi/msix more than once.
+> Actually, this is the driver bug. But the bug may panic
+> the kernel and should be fixed. We can return the error
+> code instead of WARN_ON, to tell the drivers that the
+> msi/msix is already enabled.
 > 
-> Any reason why you don't do cmpxchg as I originally suggested (sorry
-> I've been away and may have missed some previous emails)
+> When enable them again, the call tree is shown on kernel
+> 3.10.0, but linux upstream in the same way.
 
-That was to block a device hot removal on error_detected and error_resume,
-or vice versa.
- 
-> > -/* pci_dev priv_flags */
-> > -#define PCI_DEV_DISCONNECTED 0
-> > -#define PCI_DEV_ADDED 1
-> > +/**
-> > + * pci_dev_set_io_state - Set the new error state if possible.
-> > + *
-> > + * @dev - pci device to set new error_state
-> > + * @new - the state we want dev to be in
-> > + *
-> > + * Must be called with device_lock held.
-> 
-> This won't work for PowerPC EEH. We will change the state from a
-> readl() so at interrupt time or any other context.
-> 
-> We really need the cmpxchg variant.
+You can use up to 73 characters per line for your changelog, and doing so
+makes it a little more readable.
 
-These are private interfaces. EEH can't call them from any context.
+> +	if (WARN_ON_ONCE(!!dev->msi_enabled))
+> +		return  -EINVAL;
+> +
+>  	nvec = pci_msi_vec_count(dev);
+>  	if (nvec < 0)
+>  		return nvec;
+> @@ -1087,6 +1087,9 @@ static int __pci_enable_msix_range(struct pci_dev *dev,
+>  	if (maxvec < minvec)
+>  		return -ERANGE;
+>  
+> +	if (WARN_ON_ONCE(!!dev->msix_enabled))
+> +		return  -EINVAL;
+> +
+
+You can drop the "!!", WARN_ON_ONCE will do the implicit bool conversion
+for you.
+
+Except for that the patch looks good to me.
