@@ -2,158 +2,130 @@ Return-Path: <SRS0=zVIF=MH=vger.kernel.org=linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-9.1 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
-	SPF_PASS,USER_AGENT_MUTT autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-8.5 required=3.0 tests=INCLUDES_PATCH,
+	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_PASS,USER_AGENT_MUTT autolearn=ham
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 3DC9EC43382
-	for <linux-pci@archiver.kernel.org>; Tue, 25 Sep 2018 20:54:12 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id BF781C43382
+	for <linux-pci@archiver.kernel.org>; Tue, 25 Sep 2018 20:55:05 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id DCEC92086E
-	for <linux-pci@archiver.kernel.org>; Tue, 25 Sep 2018 20:54:11 +0000 (UTC)
-Authentication-Results: mail.kernel.org;
-	dkim=pass (1024-bit key) header.d=kernel.org header.i=@kernel.org header.b="ttLkvLla"
-DMARC-Filter: OpenDMARC Filter v1.3.2 mail.kernel.org DCEC92086E
+	by mail.kernel.org (Postfix) with ESMTP id 7D5642086E
+	for <linux-pci@archiver.kernel.org>; Tue, 25 Sep 2018 20:55:05 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.3.2 mail.kernel.org 7D5642086E
 Authentication-Results: mail.kernel.org; dmarc=fail (p=none dis=none) header.from=kernel.org
 Authentication-Results: mail.kernel.org; spf=none smtp.mailfrom=linux-pci-owner@vger.kernel.org
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726242AbeIZDDe (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Tue, 25 Sep 2018 23:03:34 -0400
-Received: from mail.kernel.org ([198.145.29.99]:40576 "EHLO mail.kernel.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1726173AbeIZDDe (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Tue, 25 Sep 2018 23:03:34 -0400
-Received: from localhost (unknown [69.71.4.100])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
-        (No client certificate requested)
-        by mail.kernel.org (Postfix) with ESMTPSA id 0EAF320877;
-        Tue, 25 Sep 2018 20:54:09 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=default; t=1537908850;
-        bh=1ml6EAnagJSqSlHpimClO5YOHV/0/YCAYxuYYaarPeI=;
-        h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-        b=ttLkvLlauyg24iYhqyXOiAytPCCyKZ3UgeVatvUWLaVnfYIm/tsekZ0ov4b6yQMDj
-         qPqaeVMO40fZRkgUrbzrAzn9+e9dU5+m31MmanCQdBexiugdX7wTVUWtSCR/pHhG0/
-         0EB8r2w69R55UiBt/PBkJTNj+ZeyelyxSv5r6NnA=
-Date:   Tue, 25 Sep 2018 15:54:08 -0500
-From:   Bjorn Helgaas <helgaas@kernel.org>
-To:     Sinan Kaya <okaya@kernel.org>
-Cc:     linux-pci@vger.kernel.org, alex.williamson@redhat.com,
+        id S1726242AbeIZDE2 (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Tue, 25 Sep 2018 23:04:28 -0400
+Received: from mail-oi1-f193.google.com ([209.85.167.193]:45825 "EHLO
+        mail-oi1-f193.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726173AbeIZDE2 (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Tue, 25 Sep 2018 23:04:28 -0400
+Received: by mail-oi1-f193.google.com with SMTP id d63-v6so2695489oic.12;
+        Tue, 25 Sep 2018 13:55:03 -0700 (PDT)
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20161025;
+        h=x-gm-message-state:date:from:to:cc:subject:message-id:references
+         :mime-version:content-disposition:in-reply-to:user-agent;
+        bh=4V4I9cuu0zr7k8htcOxbtJKHIx3sECSRMltRNOfzVhk=;
+        b=rUrkCPFkDws5+pBC4w6PF32B1yqpDZ/MWz+axdsMe3TZ9zd4sDcryh1c7tBBsAtymw
+         kQEsPvX0q4B8Hr9cWW4/tb6cHG+g7ZwPoBJgrHBrxpADc5nfUKc8aApdE8A+UT3KeGss
+         UtnmaRUXw4fg+N3PWyOvgCI/oU69NJ7395bDfOpMlgJ/seWjwxBi1QEXJyvNCfmdbr6/
+         kyuQq8qiDQZsTIK8z3h0BAJESjkkoHgKjsXYskAHonIIOaH9hJdu6dW5Vgpkh2b7QiXm
+         zSGzg0JbxFdt1lUtaM+1aVr0hyVtqTT9qSDCgM2Z1kte4jiwiT3ptlXf+3LTPREadGT7
+         oeXA==
+X-Gm-Message-State: ABuFfojxtNyxwmnnkRU2a3Ei/onGi8BTLubHnihhYGnXfYRRTsKdlxO6
+        waQPvVtkFsD+UmmLcHugsA==
+X-Google-Smtp-Source: ACcGV62wGEhlzsf/bzH5dK6Hf1f5OiDzxyOVqI/jSTi0T45gdU42fgvONGCQr5x4A1nwqGxkqpDZmg==
+X-Received: by 2002:aca:d4cd:: with SMTP id l196-v6mr1685209oig.15.1537908903402;
+        Tue, 25 Sep 2018 13:55:03 -0700 (PDT)
+Received: from localhost (24-155-109-49.dyn.grandenetworks.net. [24.155.109.49])
+        by smtp.gmail.com with ESMTPSA id j2-v6sm1188669ote.50.2018.09.25.13.55.02
+        (version=TLS1_2 cipher=ECDHE-RSA-CHACHA20-POLY1305 bits=256/256);
+        Tue, 25 Sep 2018 13:55:02 -0700 (PDT)
+Date:   Tue, 25 Sep 2018 15:55:02 -0500
+From:   Rob Herring <robh@kernel.org>
+To:     Kunihiko Hayashi <hayashi.kunihiko@socionext.com>
+Cc:     Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
         Bjorn Helgaas <bhelgaas@google.com>,
-        Alexey Kardashevskiy <aik@ozlabs.ru>,
-        Peter Xu <peterx@redhat.com>,
-        "Gustavo A. R. Silva" <gustavo@embeddedor.com>
-Subject: Re: [PATCH v4 6/6] PCI: Expose reset type to users of pci_reset_bus()
-Message-ID: <20180925205408.GD80129@bhelgaas-glaptop.roam.corp.google.com>
-References: <20180919163037.13497-1-okaya@kernel.org>
- <20180919163037.13497-7-okaya@kernel.org>
+        Mark Rutland <mark.rutland@arm.com>,
+        Masahiro Yamada <yamada.masahiro@socionext.com>,
+        linux-pci@vger.kernel.org, devicetree@vger.kernel.org,
+        linux-arm-kernel@lists.infradead.org, linux-kernel@vger.kernel.org,
+        Masami Hiramatsu <masami.hiramatsu@linaro.org>,
+        Jassi Brar <jaswinder.singh@linaro.org>
+Subject: Re: [PATCH v2 1/2] dt-bindings: PCI: add UniPhier PCIe host
+ controller description
+Message-ID: <20180925205502.GA12949@bogus>
+References: <1536226832-5089-1-git-send-email-hayashi.kunihiko@socionext.com>
+ <1536226832-5089-2-git-send-email-hayashi.kunihiko@socionext.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20180919163037.13497-7-okaya@kernel.org>
-User-Agent: Mutt/1.10.1 (2018-07-13)
+In-Reply-To: <1536226832-5089-2-git-send-email-hayashi.kunihiko@socionext.com>
+User-Agent: Mutt/1.9.4 (2018-02-28)
 Sender: linux-pci-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-On Wed, Sep 19, 2018 at 04:30:37PM +0000, Sinan Kaya wrote:
-> Looking to have more control between the users of the API vs. what the API
-> can do internally. The new reset_type tells the PCI core about the bounds
-> of the request.
+On Thu, Sep 06, 2018 at 06:40:31PM +0900, Kunihiko Hayashi wrote:
+> Add DT bindings for PCIe controller implemented in UniPhier SoCs when
+> configured in Root Complex (host) mode. This controller is based on
+> the DesignWare PCIe core.
 > 
-> Signed-off-by: Sinan Kaya <okaya@kernel.org>
+> Signed-off-by: Kunihiko Hayashi <hayashi.kunihiko@socionext.com>
 > ---
->  drivers/pci/pci.c           | 18 +++++++++++++++---
->  drivers/vfio/pci/vfio_pci.c |  6 ++++--
->  include/linux/pci.h         |  2 +-
->  3 files changed, 20 insertions(+), 6 deletions(-)
+>  .../devicetree/bindings/pci/uniphier-pcie.txt      | 78 ++++++++++++++++++++++
+>  1 file changed, 78 insertions(+)
+>  create mode 100644 Documentation/devicetree/bindings/pci/uniphier-pcie.txt
 > 
-> diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
-> index b4f14419bd51..f11d29f32119 100644
-> --- a/drivers/pci/pci.c
-> +++ b/drivers/pci/pci.c
-> @@ -5232,13 +5232,25 @@ static int __pci_reset_bus(struct pci_bus *bus)
->  /**
->   * pci_reset_bus - Try to reset a PCI bus
->   * @pdev: top level PCI device to reset via slot/bus
-> + * @reset_type: resets to try
->   *
->   * Same as above except return -EAGAIN if the bus cannot be locked
->   */
-> -int pci_reset_bus(struct pci_dev *pdev)
-> +int pci_reset_bus(struct pci_dev *pdev, u32 reset_type)
->  {
-> -	return (!pci_probe_reset_slot(pdev->slot)) ?
-> -	    __pci_reset_slot(pdev->slot) : __pci_reset_bus(pdev->bus);
-> +	if (reset_type & PCI_RESET_LINK) {
-> +		return (!pci_probe_reset_slot(pdev->slot)) ?
-> +				__pci_reset_slot(pdev->slot) :
-> +				__pci_reset_bus(pdev->bus);
-> +	}
+> diff --git a/Documentation/devicetree/bindings/pci/uniphier-pcie.txt b/Documentation/devicetree/bindings/pci/uniphier-pcie.txt
+> new file mode 100644
+> index 0000000..a34e167
+> --- /dev/null
+> +++ b/Documentation/devicetree/bindings/pci/uniphier-pcie.txt
+> @@ -0,0 +1,78 @@
+> +Socionext UniPhier PCIe host controller bindings
 > +
-> +	if (reset_type & PCI_RESET_BUS)
-> +		return __pci_reset_bus(pdev->bus);
+> +This describes the devicetree bindings for PCIe host controller implemented
+> +on Socionext UniPhier SoCs.
 > +
-> +	if (reset_type & PCI_RESET_SLOT)
-> +		return __pci_reset_slot(pdev->slot);
-
-I don't understand this code.  We have
-
-  #define PCI_RESET_LINK         (PCI_RESET_SLOT | PCI_RESET_BUS)
-
-so if either PCI_RESET_BUS or PCI_RESET_SLOT is set, we should take
-the first "if" above, which always returns, and the last two should
-never be reached.  What am I missing?
-
+> +UniPhier PCIe host controller is based on the Synopsys DesignWare PCI core.
+> +It shares common functions with the PCIe DesignWare core driver and inherits
+> +common properties defined in
+> +Documentation/devicetree/bindings/pci/designware-pcie.txt.
 > +
-> +	return -EINVAL;
->  }
->  EXPORT_SYMBOL_GPL(pci_reset_bus);
->  
-> diff --git a/drivers/vfio/pci/vfio_pci.c b/drivers/vfio/pci/vfio_pci.c
-> index fe7ada997c51..0e80c72b1eaa 100644
-> --- a/drivers/vfio/pci/vfio_pci.c
-> +++ b/drivers/vfio/pci/vfio_pci.c
-> @@ -1015,7 +1015,8 @@ static long vfio_pci_ioctl(void *device_data,
->  						    &info, slot);
->  		if (!ret)
->  			/* User has access, do the reset */
-> -			ret = pci_reset_bus(vdev->pdev);
-> +			ret = pci_reset_bus(vdev->pdev,
-> +				slot ? PCI_RESET_SLOT :	PCI_RESET_BUS);
+> +Required properties:
+> +- compatible: Should be "socionext,uniphier-pcie".
+> +- reg: Specifies offset and length of the register set for the device.
+> +	According to the reg-names, appropriate register sets are required.
+> +- reg-names: Must include the following entries:
+> +    "dbi"    - controller configuration registers
+> +    "link"   - SoC-specific glue layer registers
+> +    "config" - PCIe configuration space
+> +- clocks: A phandle to the clock gate for PCIe glue layer including
+> +	the host controller.
+> +- resets: A phandle to the reset line for PCIe glue layer including
+> +	the host controller.
+> +- interrupts: A list of interrupt specifiers. According to the
+> +	interrupt-names, appropriate interrupts are required.
+> +- interrupt-names: Must include the following entries:
+> +    "dma"    - DMA interrupt
+> +    "msi"    - MSI interrupt
+> +    "intx"   - Legacy INTA/B/C/D interrupt
+> +
+> +Optional properties:
+> +- phys: A phandle to generic PCIe PHY. According to the phy-names, appropriate
+> +	phys are required.
+> +- phy-names: Must be "pcie-phy".
+> +
+> +Required sub-node:
+> +- interrupt-controller: Specifies interrupt controller for legacy PCI
+> +	interrupts. The node name isn't important.
 
-This is the only place in the whole series where a caller uses
-something other than PCI_RESET_ANY.  Inquiring minds want to know why.
-I'm sure it's the right thing to do, it's just that we'll need to know
-how to choose in future cases.
+No, it is important.
 
->  
->  hot_reset_release:
->  		for (i--; i >= 0; i--)
-> @@ -1390,7 +1391,8 @@ static void vfio_pci_try_bus_reset(struct vfio_pci_device *vdev)
->  	}
->  
->  	if (needs_reset)
-> -		ret = pci_reset_bus(vdev->pdev);
-> +		ret = pci_reset_bus(vdev->pdev,
-> +				slot ? PCI_RESET_SLOT :	PCI_RESET_BUS);
->  
->  put_devs:
->  	for (i = 0; i < devs.cur_index; i++) {
-> diff --git a/include/linux/pci.h b/include/linux/pci.h
-> index 4fdddcb85066..85f48e156753 100644
-> --- a/include/linux/pci.h
-> +++ b/include/linux/pci.h
-> @@ -1128,7 +1128,7 @@ int pci_reset_function_locked(struct pci_dev *dev, u32 reset_type);
->  int pci_try_reset_function(struct pci_dev *dev, u32 reset_type);
->  int pci_probe_reset_slot(struct pci_slot *slot);
->  int pci_probe_reset_bus(struct pci_bus *bus);
-> -int pci_reset_bus(struct pci_dev *dev);
-> +int pci_reset_bus(struct pci_dev *dev, u32 reset_type);
->  void pci_reset_secondary_bus(struct pci_dev *dev);
->  void pcibios_reset_secondary_bus(struct pci_dev *dev);
->  void pci_update_resource(struct pci_dev *dev, int resno);
-> -- 
-> 2.18.0
-> 
+With that sentence removed,
+
+Reviewed-by: Rob Herring <robh@kernel.org>
