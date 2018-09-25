@@ -2,90 +2,88 @@ Return-Path: <SRS0=zVIF=MH=vger.kernel.org=linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-0.8 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	MAILING_LIST_MULTI,SPF_PASS autolearn=unavailable autolearn_force=no
-	version=3.4.0
+X-Spam-Status: No, score=-2.6 required=3.0 tests=DKIM_SIGNED,
+	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_PASS,T_DKIM_INVALID,
+	USER_AGENT_NEOMUTT autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id F0E29C43382
-	for <linux-pci@archiver.kernel.org>; Tue, 25 Sep 2018 12:57:43 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id EB33CC43382
+	for <linux-pci@archiver.kernel.org>; Tue, 25 Sep 2018 13:16:50 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 9B5FB208D9
-	for <linux-pci@archiver.kernel.org>; Tue, 25 Sep 2018 12:57:43 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.3.2 mail.kernel.org 9B5FB208D9
-Authentication-Results: mail.kernel.org; dmarc=none (p=none dis=none) header.from=hygon.cn
+	by mail.kernel.org (Postfix) with ESMTP id 8B8082145D
+	for <linux-pci@archiver.kernel.org>; Tue, 25 Sep 2018 13:16:50 +0000 (UTC)
+Authentication-Results: mail.kernel.org;
+	dkim=fail reason="signature verification failed" (2048-bit key) header.d=8bytes.org header.i=@8bytes.org header.b="c38vK6Yj"
+DMARC-Filter: OpenDMARC Filter v1.3.2 mail.kernel.org 8B8082145D
+Authentication-Results: mail.kernel.org; dmarc=fail (p=none dis=none) header.from=8bytes.org
 Authentication-Results: mail.kernel.org; spf=none smtp.mailfrom=linux-pci-owner@vger.kernel.org
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1729015AbeIYTFI (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Tue, 25 Sep 2018 15:05:08 -0400
-Received: from smtp20.cstnet.cn ([159.226.251.20]:44801 "EHLO cstnet.cn"
-        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1728881AbeIYTFI (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Tue, 25 Sep 2018 15:05:08 -0400
-Received: from [172.20.20.131] (unknown [182.150.46.145])
-        by APP-10 (Coremail) with SMTP id tACowACXnWGyMKpbq5D7DQ--.16571S2;
-        Tue, 25 Sep 2018 20:57:23 +0800 (CST)
-Subject: Re: [PATCH v8 07/16] x86/pci: Add Hygon Dhyana support to PCI and
- north bridge
-To:     Borislav Petkov <bp@alien8.de>
-Cc:     bhelgaas@google.com, tglx@linutronix.de, mingo@redhat.com,
-        hpa@zytor.com, x86@kernel.org, thomas.lendacky@amd.com,
-        helgaas@kernel.org, linux-kernel@vger.kernel.org,
-        linux-arch@vger.kernel.org, linux-pci@vger.kernel.org
-References: <cover.1537533368.git.puwen@hygon.cn>
- <580dc519d37ad9257520fe8c533f2c61d3e0cd83.1537533369.git.puwen@hygon.cn>
- <20180924152448.GE20187@zn.tnic>
- <8ed72e5f-c85c-67f6-67e9-460ef99ab372@hygon.cn>
- <20180925123035.GC23986@zn.tnic>
-From:   Pu Wen <puwen@hygon.cn>
-Message-ID: <d565ef8a-6d53-4490-2cba-1f237b0aa9d5@hygon.cn>
-Date:   Tue, 25 Sep 2018 20:57:20 +0800
-User-Agent: Mozilla/5.0 (Windows NT 10.0; WOW64; rv:52.0) Gecko/20100101
- Thunderbird/52.9.1
+        id S1729015AbeIYTYU (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Tue, 25 Sep 2018 15:24:20 -0400
+Received: from 8bytes.org ([81.169.241.247]:35526 "EHLO theia.8bytes.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1728272AbeIYTYU (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Tue, 25 Sep 2018 15:24:20 -0400
+Received: by theia.8bytes.org (Postfix, from userid 1000)
+        id 5A0E46FB; Tue, 25 Sep 2018 15:16:48 +0200 (CEST)
+DKIM-Signature: v=1; a=rsa-sha256; c=simple/simple; d=8bytes.org; s=mail-1;
+        t=1537881408; bh=NoZfEAEX7j5Cxz91w35YqyedzEVx63I0uS2pBsq43Fc=;
+        h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
+        b=c38vK6Yj6EYYrJM56AHIqMv0jZaIJjGb+DNryyHYaXZOvGVHZQxPg5FiymoLfjGAn
+         ZN1HGDiVtuRclre4KOeTW+zwPDgQXTvFtt0ambLCtDixhaTS5CTb3mm1VzNlnPnx77
+         6/ymbObg5miMAGwyyiyFxMUfOeWPlB8Dky48OPIr0bnD69A/Mv6cTM39ueoIPcfU+U
+         jokQVzvx5c3GTOSQ+UGLsL4H/TGUCmhR77Mg0tsAgjl145BQmxj1Z5lUzRQQyG5nfD
+         dG9kHjak5w1stQu8E/rW/nVh8NhIE+X37L56VR/Qwg7sakE7VvOlNGabBJkmRR2Kwi
+         1nbDs7GRLONvw==
+Date:   Tue, 25 Sep 2018 15:16:47 +0200
+From:   Joerg Roedel <joro@8bytes.org>
+To:     Lu Baolu <baolu.lu@linux.intel.com>
+Cc:     Jean-Philippe Brucker <jean-philippe.brucker@arm.com>,
+        iommu@lists.linux-foundation.org, linux-pci@vger.kernel.org,
+        jcrouse@codeaurora.org, alex.williamson@redhat.com,
+        Jonathan.Cameron@huawei.com, jacob.jun.pan@linux.intel.com,
+        christian.koenig@amd.com, eric.auger@redhat.com,
+        kevin.tian@intel.com, yi.l.liu@intel.com, andrew.murray@arm.com,
+        will.deacon@arm.com, robin.murphy@arm.com, ashok.raj@intel.com,
+        xuzaibo@huawei.com, liguozhu@hisilicon.com, okaya@codeaurora.org,
+        bharatku@xilinx.com, ilias.apalodimas@linaro.org,
+        shunyong.yang@hxt-semitech.com
+Subject: Re: [PATCH v3 01/10] iommu: Introduce Shared Virtual Addressing API
+Message-ID: <20180925131647.rygncwik5uszsm3n@8bytes.org>
+References: <20180920170046.20154-1-jean-philippe.brucker@arm.com>
+ <20180920170046.20154-2-jean-philippe.brucker@arm.com>
+ <f406bcf7-4e54-9f1b-88eb-03fc642ffede@linux.intel.com>
 MIME-Version: 1.0
-In-Reply-To: <20180925123035.GC23986@zn.tnic>
-Content-Type: text/plain; charset=utf-8; format=flowed
-Content-Language: en-US
-Content-Transfer-Encoding: 7bit
-X-CM-TRANSID: tACowACXnWGyMKpbq5D7DQ--.16571S2
-X-Coremail-Antispam: 1UD129KBjDUn29KB7ZKAUJUUUUU529EdanIXcx71UUUUU7v73
-        VFW2AGmfu7bjvjm3AaLaJ3UjIYCTnIWjp_UUUYD7k0a2IF6w1UM7kC6x804xWl14x267AK
-        xVW8JVW5JwAFc2x0x2IEx4CE42xK8VAvwI8IcIk0rVWrJVCq3wAFIxvE14AKwVWUJVWUGw
-        A2ocxC64kIII0Yj41l84x0c7CEw4AK67xGY2AK021l84ACjcxK6xIIjxv20xvE14v26r1j
-        6r1xM28EF7xvwVC0I7IYx2IY6xkF7I0E14v26r4j6F4UM28EF7xvwVC2z280aVAFwI0_Gr
-        0_Cr1l84ACjcxK6I8E87Iv6xkF7I0E14v26r4j6r4UJwAS0I0E0xvYzxvE52x082IY62kv
-        0487Mc02F40EFcxC0VAKzVAqx4xG6I80ewAv7VC0I7IYx2IY67AKxVWUXVWUAwAv7VC2z2
-        80aVAFwI0_Gr1j6F4UJwAm72CE4IkC6x0Yz7v_Jr0_Gr1lF7xvr2IY64vIr41lFIxGxcIE
-        c7CjxVA2Y2ka0xkIwI1lc7I2V7IY0VAS07AlzVAYIcxG8wCF04k20xvY0x0EwIxGrwCFx2
-        IqxVCFs4IE7xkEbVWUJVW8JwC20s026c02F40E14v26r1j6r18MI8I3I0E7480Y4vE14v2
-        6r106r1rMI8E67AF67kF1VAFwI0_Jw0_GFylIxkGc2Ij64vIr41lIxAIcVC0I7IYx2IY67
-        AKxVWUJVWUCwCI42IY6xIIjxv20xvEc7CjxVAFwI0_Gr0_Cr1lIxAIcVCF04k26cxKx2IY
-        s7xG6rWUJVWrZr1UMIIF0xvEx4A2jsIE14v26r1j6r4UMIIF0xvEx4A2jsIEc7CjxVAFwI
-        0_Gr0_Gr1UYxBIdaVFxhVjvjDU0xZFpf9x07jbUUUUUUUU=
-X-Originating-IP: [182.150.46.145]
-X-CM-SenderInfo: psxzv046klw03qof0z/
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <f406bcf7-4e54-9f1b-88eb-03fc642ffede@linux.intel.com>
+User-Agent: NeoMutt/20170421 (1.8.2)
 Sender: linux-pci-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-On 2018/9/25 20:30, Borislav Petkov wrote:
-> On Tue, Sep 25, 2018 at 08:27:15PM +0800, Pu Wen wrote:
->> All right, I will change these in the next version patch set.
+On Sun, Sep 23, 2018 at 10:39:25AM +0800, Lu Baolu wrote:
+> > +int iommu_sva_init_device(struct device *dev, unsigned long features,
+> > +		       unsigned int min_pasid, unsigned int max_pasid)
+> > +{
+> > +	int ret;
+> > +	struct iommu_sva_param *param;
+> > +	struct iommu_domain *domain = iommu_get_domain_for_dev(dev);
 > 
-> Just send two patches as a reply to this thread here:
+> This doesn't work for vt-d. The domains for host iova are self-managed
+> by vt-d driver itself. Hence, iommu_get_domain_for_dev() will always
+> return NULL unless an UNMANAGED domain is attached to the device.
 > 
-> 1. add the vendor check to both amd_gart_present() and early_is_amd_nb()
-> 2. redo 7/16 ontop of the first patch.
+> How about
 > 
-> I don't think you need to resend the whole patchset as the rest is still
-> good.
+>       const struct iommu_ops *ops = dev->bus->iommu_ops;
+> 
+> instead?
 
-OK, I got the point. :)
-I'll just send the two patches.
+The per-bus iommu-ops might go away sooner or later as we move to
+per-device iommu-ops. How about fixing the VT-d driver to not keep that
+domain internal to itself?
 
-Thx.
-
--- 
 Regards,
-Pu Wen
 
+	Joerg
