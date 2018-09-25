@@ -2,261 +2,440 @@ Return-Path: <SRS0=zVIF=MH=vger.kernel.org=linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-8.8 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_PASS,URIBL_BLOCKED,
-	USER_AGENT_GIT autolearn=unavailable autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-2.2 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+	MAILING_LIST_MULTI,SPF_PASS,URIBL_BLOCKED,USER_AGENT_MUTT autolearn=ham
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 43B2BC43382
-	for <linux-pci@archiver.kernel.org>; Tue, 25 Sep 2018 16:24:46 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 83FA0C46470
+	for <linux-pci@archiver.kernel.org>; Tue, 25 Sep 2018 16:25:02 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id F41CF21508
-	for <linux-pci@archiver.kernel.org>; Tue, 25 Sep 2018 16:24:45 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.3.2 mail.kernel.org F41CF21508
-Authentication-Results: mail.kernel.org; dmarc=none (p=none dis=none) header.from=deltatee.com
+	by mail.kernel.org (Postfix) with ESMTP id 1A34A214C5
+	for <linux-pci@archiver.kernel.org>; Tue, 25 Sep 2018 16:14:26 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.3.2 mail.kernel.org 1A34A214C5
+Authentication-Results: mail.kernel.org; dmarc=none (p=none dis=none) header.from=arm.com
 Authentication-Results: mail.kernel.org; spf=none smtp.mailfrom=linux-pci-owner@vger.kernel.org
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726322AbeIYWct (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Tue, 25 Sep 2018 18:32:49 -0400
-Received: from ale.deltatee.com ([207.54.116.67]:42704 "EHLO ale.deltatee.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1729653AbeIYWbI (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Tue, 25 Sep 2018 18:31:08 -0400
-Received: from cgy1-donard.priv.deltatee.com ([172.16.1.31])
-        by ale.deltatee.com with esmtps (TLS1.2:ECDHE_RSA_AES_256_GCM_SHA384:256)
-        (Exim 4.89)
-        (envelope-from <gunthorp@deltatee.com>)
-        id 1g4q6p-0002fN-OK; Tue, 25 Sep 2018 10:22:52 -0600
-Received: from gunthorp by cgy1-donard.priv.deltatee.com with local (Exim 4.89)
-        (envelope-from <gunthorp@deltatee.com>)
-        id 1g4q6d-00019Z-3W; Tue, 25 Sep 2018 10:22:35 -0600
-From:   Logan Gunthorpe <logang@deltatee.com>
-To:     linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
-        linux-nvme@lists.infradead.org, linux-rdma@vger.kernel.org,
-        linux-nvdimm@lists.01.org, linux-block@vger.kernel.org
-Cc:     Stephen Bates <sbates@raithlin.com>,
-        Christoph Hellwig <hch@lst.de>,
-        Keith Busch <keith.busch@intel.com>,
-        Sagi Grimberg <sagi@grimberg.me>,
-        Bjorn Helgaas <bhelgaas@google.com>,
-        Jason Gunthorpe <jgg@mellanox.com>,
-        Max Gurtovoy <maxg@mellanox.com>,
-        Dan Williams <dan.j.williams@intel.com>,
-        =?UTF-8?q?J=C3=A9r=C3=B4me=20Glisse?= <jglisse@redhat.com>,
-        Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-        Alex Williamson <alex.williamson@redhat.com>,
-        =?UTF-8?q?Christian=20K=C3=B6nig?= <christian.koenig@amd.com>,
-        Jens Axboe <axboe@kernel.dk>,
-        Logan Gunthorpe <logang@deltatee.com>
-Date:   Tue, 25 Sep 2018 10:22:27 -0600
-Message-Id: <20180925162231.4354-10-logang@deltatee.com>
-X-Mailer: git-send-email 2.19.0
-In-Reply-To: <20180925162231.4354-1-logang@deltatee.com>
-References: <20180925162231.4354-1-logang@deltatee.com>
+        id S1729090AbeIYWWh (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Tue, 25 Sep 2018 18:22:37 -0400
+Received: from usa-sjc-mx-foss1.foss.arm.com ([217.140.101.70]:53734 "EHLO
+        foss.arm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1728917AbeIYWWg (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Tue, 25 Sep 2018 18:22:36 -0400
+Received: from usa-sjc-imap-foss1.foss.arm.com (unknown [10.72.51.249])
+        by usa-sjc-mx-foss1.foss.arm.com (Postfix) with ESMTP id 84D377A9;
+        Tue, 25 Sep 2018 09:14:24 -0700 (PDT)
+Received: from e107981-ln.cambridge.arm.com (e107981-ln.emea.arm.com [10.4.13.117])
+        by usa-sjc-imap-foss1.foss.arm.com (Postfix) with ESMTPSA id 73BDD3F5BD;
+        Tue, 25 Sep 2018 09:14:22 -0700 (PDT)
+Date:   Tue, 25 Sep 2018 17:14:17 +0100
+From:   Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
+To:     Kunihiko Hayashi <hayashi.kunihiko@socionext.com>
+Cc:     Bjorn Helgaas <bhelgaas@google.com>,
+        Rob Herring <robh+dt@kernel.org>,
+        Mark Rutland <mark.rutland@arm.com>,
+        Masahiro Yamada <yamada.masahiro@socionext.com>,
+        linux-pci@vger.kernel.org, devicetree@vger.kernel.org,
+        linux-arm-kernel@lists.infradead.org, linux-kernel@vger.kernel.org,
+        Masami Hiramatsu <masami.hiramatsu@linaro.org>,
+        Jassi Brar <jaswinder.singh@linaro.org>,
+        Gustavo Pimentel <gustavo.pimentel@synopsys.com>
+Subject: Re: [PATCH v2 2/2] PCI: controller: dwc: add UniPhier PCIe host
+ controller support
+Message-ID: <20180925161417.GA30943@e107981-ln.cambridge.arm.com>
+References: <1536226832-5089-1-git-send-email-hayashi.kunihiko@socionext.com>
+ <1536226832-5089-3-git-send-email-hayashi.kunihiko@socionext.com>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
-X-SA-Exim-Connect-IP: 172.16.1.31
-X-SA-Exim-Rcpt-To: linux-nvme@lists.infradead.org, linux-nvdimm@lists.01.org, linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org, linux-rdma@vger.kernel.org, linux-block@vger.kernel.org, sbates@raithlin.com, hch@lst.de, sagi@grimberg.me, bhelgaas@google.com, jgg@mellanox.com, maxg@mellanox.com, keith.busch@intel.com, dan.j.williams@intel.com, benh@kernel.crashing.org, jglisse@redhat.com, alex.williamson@redhat.com, christian.koenig@amd.com, axboe@kernel.dk, logang@deltatee.com
-X-SA-Exim-Mail-From: gunthorp@deltatee.com
-Subject: [PATCH v7 09/13] nvme-pci: Use PCI p2pmem subsystem to manage the CMB
-X-SA-Exim-Version: 4.2.1 (built Tue, 02 Aug 2016 21:08:31 +0000)
-X-SA-Exim-Scanned: Yes (on ale.deltatee.com)
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <1536226832-5089-3-git-send-email-hayashi.kunihiko@socionext.com>
+User-Agent: Mutt/1.5.24 (2015-08-30)
 Sender: linux-pci-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-Register the CMB buffer as p2pmem and use the appropriate allocation
-functions to create and destroy the IO submission queues.
+[+Gustavo, please have a look at INTX/MSI management]
 
-If the CMB supports WDS and RDS, publish it for use as P2P memory
-by other devices.
+On Thu, Sep 06, 2018 at 06:40:32PM +0900, Kunihiko Hayashi wrote:
+> This introduces specific glue layer for UniPhier platform to support
+> PCIe host controller that is based on the DesignWare PCIe core, and
+> this driver supports Root Complex (host) mode.
 
-Kernels without CONFIG_PCI_P2PDMA will also no longer support NVMe CMB.
-However, seeing the main use-cases for the CMB is P2P operations,
-this seems like a reasonable dependency.
+Please read this thread and apply it to next versions:
 
-We drop the __iomem safety on the buffer seeing that, by convention, it's
-safe to directly access memory mapped by memremap()/devm_memremap_pages().
-Architectures where this is not safe will not be supported by memremap()
-and therefore will not be support PCI P2P and have no support for CMB.
+https://marc.info/?l=linux-pci&m=150905742808166&w=2
 
-Signed-off-by: Logan Gunthorpe <logang@deltatee.com>
----
- drivers/nvme/host/pci.c | 80 +++++++++++++++++++++++------------------
- 1 file changed, 45 insertions(+), 35 deletions(-)
+[...]
 
-diff --git a/drivers/nvme/host/pci.c b/drivers/nvme/host/pci.c
-index d668682f91df..f434706a04e8 100644
---- a/drivers/nvme/host/pci.c
-+++ b/drivers/nvme/host/pci.c
-@@ -30,6 +30,7 @@
- #include <linux/types.h>
- #include <linux/io-64-nonatomic-lo-hi.h>
- #include <linux/sed-opal.h>
-+#include <linux/pci-p2pdma.h>
- 
- #include "nvme.h"
- 
-@@ -99,9 +100,8 @@ struct nvme_dev {
- 	struct work_struct remove_work;
- 	struct mutex shutdown_lock;
- 	bool subsystem;
--	void __iomem *cmb;
--	pci_bus_addr_t cmb_bus_addr;
- 	u64 cmb_size;
-+	bool cmb_use_sqes;
- 	u32 cmbsz;
- 	u32 cmbloc;
- 	struct nvme_ctrl ctrl;
-@@ -158,7 +158,7 @@ struct nvme_queue {
- 	struct nvme_dev *dev;
- 	spinlock_t sq_lock;
- 	struct nvme_command *sq_cmds;
--	struct nvme_command __iomem *sq_cmds_io;
-+	bool sq_cmds_is_io;
- 	spinlock_t cq_lock ____cacheline_aligned_in_smp;
- 	volatile struct nvme_completion *cqes;
- 	struct blk_mq_tags **tags;
-@@ -447,11 +447,8 @@ static int nvme_pci_map_queues(struct blk_mq_tag_set *set)
- static void nvme_submit_cmd(struct nvme_queue *nvmeq, struct nvme_command *cmd)
- {
- 	spin_lock(&nvmeq->sq_lock);
--	if (nvmeq->sq_cmds_io)
--		memcpy_toio(&nvmeq->sq_cmds_io[nvmeq->sq_tail], cmd,
--				sizeof(*cmd));
--	else
--		memcpy(&nvmeq->sq_cmds[nvmeq->sq_tail], cmd, sizeof(*cmd));
-+
-+	memcpy(&nvmeq->sq_cmds[nvmeq->sq_tail], cmd, sizeof(*cmd));
- 
- 	if (++nvmeq->sq_tail == nvmeq->q_depth)
- 		nvmeq->sq_tail = 0;
-@@ -1232,9 +1229,18 @@ static void nvme_free_queue(struct nvme_queue *nvmeq)
- {
- 	dma_free_coherent(nvmeq->q_dmadev, CQ_SIZE(nvmeq->q_depth),
- 				(void *)nvmeq->cqes, nvmeq->cq_dma_addr);
--	if (nvmeq->sq_cmds)
--		dma_free_coherent(nvmeq->q_dmadev, SQ_SIZE(nvmeq->q_depth),
--					nvmeq->sq_cmds, nvmeq->sq_dma_addr);
-+
-+	if (nvmeq->sq_cmds) {
-+		if (nvmeq->sq_cmds_is_io)
-+			pci_free_p2pmem(to_pci_dev(nvmeq->q_dmadev),
-+					nvmeq->sq_cmds,
-+					SQ_SIZE(nvmeq->q_depth));
-+		else
-+			dma_free_coherent(nvmeq->q_dmadev,
-+					  SQ_SIZE(nvmeq->q_depth),
-+					  nvmeq->sq_cmds,
-+					  nvmeq->sq_dma_addr);
-+	}
- }
- 
- static void nvme_free_queues(struct nvme_dev *dev, int lowest)
-@@ -1323,12 +1329,21 @@ static int nvme_cmb_qdepth(struct nvme_dev *dev, int nr_io_queues,
- static int nvme_alloc_sq_cmds(struct nvme_dev *dev, struct nvme_queue *nvmeq,
- 				int qid, int depth)
- {
--	/* CMB SQEs will be mapped before creation */
--	if (qid && dev->cmb && use_cmb_sqes && (dev->cmbsz & NVME_CMBSZ_SQS))
--		return 0;
-+	struct pci_dev *pdev = to_pci_dev(dev->dev);
-+
-+	if (qid && dev->cmb_use_sqes && (dev->cmbsz & NVME_CMBSZ_SQS)) {
-+		nvmeq->sq_cmds = pci_alloc_p2pmem(pdev, SQ_SIZE(depth));
-+		nvmeq->sq_dma_addr = pci_p2pmem_virt_to_bus(pdev,
-+						nvmeq->sq_cmds);
-+		nvmeq->sq_cmds_is_io = true;
-+	}
-+
-+	if (!nvmeq->sq_cmds) {
-+		nvmeq->sq_cmds = dma_alloc_coherent(dev->dev, SQ_SIZE(depth),
-+					&nvmeq->sq_dma_addr, GFP_KERNEL);
-+		nvmeq->sq_cmds_is_io = false;
-+	}
- 
--	nvmeq->sq_cmds = dma_alloc_coherent(dev->dev, SQ_SIZE(depth),
--					    &nvmeq->sq_dma_addr, GFP_KERNEL);
- 	if (!nvmeq->sq_cmds)
- 		return -ENOMEM;
- 	return 0;
-@@ -1405,13 +1420,6 @@ static int nvme_create_queue(struct nvme_queue *nvmeq, int qid)
- 	int result;
- 	s16 vector;
- 
--	if (dev->cmb && use_cmb_sqes && (dev->cmbsz & NVME_CMBSZ_SQS)) {
--		unsigned offset = (qid - 1) * roundup(SQ_SIZE(nvmeq->q_depth),
--						      dev->ctrl.page_size);
--		nvmeq->sq_dma_addr = dev->cmb_bus_addr + offset;
--		nvmeq->sq_cmds_io = dev->cmb + offset;
--	}
--
- 	/*
- 	 * A queue's vector matches the queue identifier unless the controller
- 	 * has only one vector available.
-@@ -1652,9 +1660,6 @@ static void nvme_map_cmb(struct nvme_dev *dev)
- 		return;
- 	dev->cmbloc = readl(dev->bar + NVME_REG_CMBLOC);
- 
--	if (!use_cmb_sqes)
--		return;
--
- 	size = nvme_cmb_size_unit(dev) * nvme_cmb_size(dev);
- 	offset = nvme_cmb_size_unit(dev) * NVME_CMB_OFST(dev->cmbloc);
- 	bar = NVME_CMB_BIR(dev->cmbloc);
-@@ -1671,11 +1676,18 @@ static void nvme_map_cmb(struct nvme_dev *dev)
- 	if (size > bar_size - offset)
- 		size = bar_size - offset;
- 
--	dev->cmb = ioremap_wc(pci_resource_start(pdev, bar) + offset, size);
--	if (!dev->cmb)
-+	if (pci_p2pdma_add_resource(pdev, bar, size, offset)) {
-+		dev_warn(dev->ctrl.device,
-+			 "failed to register the CMB\n");
- 		return;
--	dev->cmb_bus_addr = pci_bus_address(pdev, bar) + offset;
-+	}
-+
- 	dev->cmb_size = size;
-+	dev->cmb_use_sqes = use_cmb_sqes && (dev->cmbsz & NVME_CMBSZ_SQS);
-+
-+	if ((dev->cmbsz & (NVME_CMBSZ_WDS | NVME_CMBSZ_RDS)) ==
-+			(NVME_CMBSZ_WDS | NVME_CMBSZ_RDS))
-+		pci_p2pmem_publish(pdev, true);
- 
- 	if (sysfs_add_file_to_group(&dev->ctrl.device->kobj,
- 				    &dev_attr_cmb.attr, NULL))
-@@ -1685,12 +1697,10 @@ static void nvme_map_cmb(struct nvme_dev *dev)
- 
- static inline void nvme_release_cmb(struct nvme_dev *dev)
- {
--	if (dev->cmb) {
--		iounmap(dev->cmb);
--		dev->cmb = NULL;
-+	if (dev->cmb_size) {
- 		sysfs_remove_file_from_group(&dev->ctrl.device->kobj,
- 					     &dev_attr_cmb.attr, NULL);
--		dev->cmbsz = 0;
-+		dev->cmb_size = 0;
- 	}
- }
- 
-@@ -1889,13 +1899,13 @@ static int nvme_setup_io_queues(struct nvme_dev *dev)
- 	if (nr_io_queues == 0)
- 		return 0;
- 
--	if (dev->cmb && (dev->cmbsz & NVME_CMBSZ_SQS)) {
-+	if (dev->cmb_use_sqes) {
- 		result = nvme_cmb_qdepth(dev, nr_io_queues,
- 				sizeof(struct nvme_command));
- 		if (result > 0)
- 			dev->q_depth = result;
- 		else
--			nvme_release_cmb(dev);
-+			dev->cmb_use_sqes = false;
- 	}
- 
- 	do {
--- 
-2.19.0
+> +static int uniphier_pcie_link_up(struct dw_pcie *pci)
+> +{
+> +	struct uniphier_pcie_priv *priv = to_uniphier_pcie(pci);
+> +	u32 val, mask;
+> +
+> +	val = readl(priv->base + PCL_STATUS_LINK);
+> +	mask = PCL_RDLH_LINK_UP | PCL_XMLH_LINK_UP;
+> +
+> +	return (val & mask) == mask;
+> +}
+> +
+> +static int uniphier_pcie_establish_link(struct dw_pcie *pci)
+> +{
+> +	struct uniphier_pcie_priv *priv = to_uniphier_pcie(pci);
+> +	int ret;
+> +
+> +	if (dw_pcie_link_up(pci))
+> +		return 0;
+> +
+> +	uniphier_pcie_ltssm_enable(priv);
+> +
+> +	ret = dw_pcie_wait_for_link(pci);
+> +	if (ret == -ETIMEDOUT) {
+> +		dev_warn(pci->dev, "Link not up\n");
+> +		ret = 0;
 
+So if the link is not up we warn, return and all is fine ?
+
+> +	}
+> +
+> +	return ret;
+> +}
+> +
+> +static void uniphier_pcie_stop_link(struct dw_pcie *pci)
+> +{
+> +	struct uniphier_pcie_priv *priv = to_uniphier_pcie(pci);
+> +
+> +	uniphier_pcie_ltssm_disable(priv);
+> +}
+> +
+> +static int uniphier_pcie_intx_map(struct irq_domain *domain, unsigned int irq,
+> +				  irq_hw_number_t hwirq)
+> +{
+> +	irq_set_chip_and_handler(irq, &dummy_irq_chip, handle_simple_irq);
+> +	irq_set_chip_data(irq, domain->host_data);
+> +
+> +	return 0;
+> +}
+> +
+> +static const struct irq_domain_ops uniphier_intx_domain_ops = {
+> +	.map = uniphier_pcie_intx_map,
+> +};
+
+I looped in Gustavo since this is not how I expect INTX management
+should be done. I do not think there is a DWC INTX generic layer
+but I think drivers/pci/controller/dwc/pci-keystone-dw.c is how
+it has to be done.
+
+> +
+> +static int uniphier_pcie_init_irq_domain(struct pcie_port *pp)
+> +{
+> +	struct dw_pcie *pci = to_dw_pcie_from_pp(pp);
+> +	struct uniphier_pcie_priv *priv = to_uniphier_pcie(pci);
+> +	struct device_node *np = pci->dev->of_node;
+> +	struct device_node *np_intc = of_get_next_child(np, NULL);
+> +
+> +	if (!np_intc) {
+> +		dev_err(pci->dev, "Failed to get child node\n");
+> +		return -ENODEV;
+> +	}
+> +
+> +	priv->irq_domain = irq_domain_add_linear(np_intc, PCI_NUM_INTX,
+> +						 &uniphier_intx_domain_ops,
+> +						 pp);
+> +	if (!priv->irq_domain) {
+> +		dev_err(pci->dev, "Failed to get INTx domain\n");
+> +		return -ENODEV;
+> +	}
+> +
+> +	return 0;
+> +}
+> +
+> +static void uniphier_pcie_irq_enable(struct uniphier_pcie_priv *priv)
+> +{
+> +	writel(PCL_RCV_INT_ALL_ENABLE, priv->base + PCL_RCV_INT);
+> +	writel(PCL_RCV_INTX_ALL_ENABLE, priv->base + PCL_RCV_INTX);
+> +}
+> +
+> +static void uniphier_pcie_irq_disable(struct uniphier_pcie_priv *priv)
+> +{
+> +	writel(0, priv->base + PCL_RCV_INT);
+> +	writel(0, priv->base + PCL_RCV_INTX);
+> +}
+
+> +
+> +static irqreturn_t uniphier_pcie_irq_handler(int irq, void *arg)
+
+This should not be an IRQ handler (and we should not use
+devm_request_irq() for the multiplexed IRQ line), it is a chained
+interrupt controller configuration and should be managed by an IRQ
+chain, again the way keystone does it seems reasonable to me.
+
+> +{
+> +	struct uniphier_pcie_priv *priv = arg;
+> +	struct dw_pcie *pci = &priv->pci;
+> +	u32 val;
+> +
+> +	/* INT for debug */
+> +	val = readl(priv->base + PCL_RCV_INT);
+> +
+> +	if (val & PCL_CFG_BW_MGT_STATUS)
+> +		dev_dbg(pci->dev, "Link Bandwidth Management Event\n");
+> +	if (val & PCL_CFG_LINK_AUTO_BW_STATUS)
+> +		dev_dbg(pci->dev, "Link Autonomous Bandwidth Event\n");
+> +	if (val & PCL_CFG_AER_RC_ERR_MSI_STATUS)
+> +		dev_dbg(pci->dev, "Root Error\n");
+> +	if (val & PCL_CFG_PME_MSI_STATUS)
+> +		dev_dbg(pci->dev, "PME Interrupt\n");
+> +
+> +	writel(val, priv->base + PCL_RCV_INT);
+> +
+> +	/* INTx */
+> +	val = readl(priv->base + PCL_RCV_INTX);
+> +
+> +	if (val & PCL_RADM_INTA_STATUS)
+> +		generic_handle_irq(irq_find_mapping(priv->irq_domain, 0));
+> +	if (val & PCL_RADM_INTB_STATUS)
+> +		generic_handle_irq(irq_find_mapping(priv->irq_domain, 1));
+> +	if (val & PCL_RADM_INTC_STATUS)
+> +		generic_handle_irq(irq_find_mapping(priv->irq_domain, 2));
+> +	if (val & PCL_RADM_INTD_STATUS)
+> +		generic_handle_irq(irq_find_mapping(priv->irq_domain, 3));
+
+Nit: Do you really need 4 if statements to handle INTX ?
+
+> +
+> +	writel(val, priv->base + PCL_RCV_INTX);
+> +
+> +	return IRQ_HANDLED;
+> +}
+> +
+> +static irqreturn_t uniphier_pcie_msi_irq_handler(int irq, void *arg)
+> +{
+> +	struct pcie_port *pp = arg;
+> +
+> +	return dw_handle_msi_irq(pp);
+> +}
+
+This IRQ handler must be removed, the MSI irq is handled by dwc core.
+
+> +static int uniphier_pcie_host_init(struct pcie_port *pp)
+> +{
+> +	struct dw_pcie *pci = to_dw_pcie_from_pp(pp);
+> +	int ret;
+> +
+> +	dw_pcie_setup_rc(pp);
+> +	ret = uniphier_pcie_establish_link(pci);
+> +	if (ret)
+> +		return ret;
+> +
+> +	if (IS_ENABLED(CONFIG_PCI_MSI))
+> +		dw_pcie_msi_init(pp);
+> +
+> +	return 0;
+> +}
+> +
+> +static const struct dw_pcie_host_ops uniphier_pcie_host_ops = {
+> +	.host_init = uniphier_pcie_host_init,
+> +};
+> +
+> +static int uniphier_add_pcie_port(struct uniphier_pcie_priv *priv,
+> +				  struct platform_device *pdev)
+> +{
+> +	struct dw_pcie *pci = &priv->pci;
+> +	struct pcie_port *pp = &pci->pp;
+> +	struct device *dev = &pdev->dev;
+> +	int ret;
+> +
+> +	pp->root_bus_nr = -1;
+
+Useless initialization, remove it.
+
+(ie dw_pcie_host_init() initializes root_bus_nr for you).
+
+> +	pp->ops = &uniphier_pcie_host_ops;
+> +
+> +	pp->irq = platform_get_irq_byname(pdev, "intx");
+> +	if (pp->irq < 0) {
+> +		dev_err(dev, "Failed to get intx irq\n");
+> +		return pp->irq;
+> +	}
+> +
+> +	ret = devm_request_irq(dev, pp->irq, uniphier_pcie_irq_handler,
+> +			       IRQF_SHARED, "pcie", priv);
+
+This is wrong, you should set-up a chained IRQ for INTX.
+
+I *think* that
+
+ks_pcie_setup_interrupts()
+
+is a good example to start with but I wonder whether it is worth
+generalizing the INTX approach to designware as a whole as it was
+done for MSIs.
+
+Thoughts ?
+
+> +	if (ret) {
+> +		dev_err(dev, "Failed to request irq %d\n", pp->irq);
+> +		return ret;
+> +	}
+> +
+> +	ret = uniphier_pcie_init_irq_domain(pp);
+> +	if (ret)
+> +		return ret;
+> +
+> +	if (IS_ENABLED(CONFIG_PCI_MSI)) {
+> +		pp->msi_irq = platform_get_irq_byname(pdev, "msi");
+> +		if (pp->msi_irq < 0)
+> +			return pp->msi_irq;
+> +
+> +		ret = devm_request_irq(dev, pp->msi_irq,
+> +				       uniphier_pcie_msi_irq_handler,
+> +				       IRQF_SHARED, "pcie-msi", pp);
+
+No. With MSI management in DWC core all you need to do is initializing
+pp->msi_irq.
+
+Lorenzo
+
+> +		if (ret) {
+> +			dev_err(dev, "failed to request msi_irq %d\n",
+> +				pp->msi_irq);
+> +			return ret;
+> +		}
+> +	}
+> +
+> +	ret = dw_pcie_host_init(pp);
+> +	if (ret) {
+> +		dev_err(dev, "Failed to initialize host (%d)\n", ret);
+> +		return ret;
+> +	}
+> +
+> +	return 0;
+> +}
+> +
+> +static int uniphier_pcie_host_enable(struct uniphier_pcie_priv *priv)
+> +{
+> +	int ret;
+> +
+> +	ret = clk_prepare_enable(priv->clk);
+> +	if (ret)
+> +		return ret;
+> +
+> +	ret = reset_control_deassert(priv->rst);
+> +	if (ret)
+> +		goto out_clk_disable;
+> +
+> +	uniphier_pcie_init_rc(priv);
+> +
+> +	ret = phy_init(priv->phy);
+> +	if (ret)
+> +		goto out_rst_assert;
+> +
+> +	ret = uniphier_pcie_wait_rc(priv);
+> +	if (ret)
+> +		goto out_phy_exit;
+> +
+> +	uniphier_pcie_irq_enable(priv);
+> +
+> +	return 0;
+> +
+> +out_phy_exit:
+> +	phy_exit(priv->phy);
+> +out_rst_assert:
+> +	reset_control_assert(priv->rst);
+> +out_clk_disable:
+> +	clk_disable_unprepare(priv->clk);
+> +
+> +	return ret;
+> +}
+> +
+> +static void uniphier_pcie_host_disable(struct uniphier_pcie_priv *priv)
+> +{
+> +	uniphier_pcie_irq_disable(priv);
+> +	phy_exit(priv->phy);
+> +	reset_control_assert(priv->rst);
+> +	clk_disable_unprepare(priv->clk);
+> +}
+> +
+> +static const struct dw_pcie_ops dw_pcie_ops = {
+> +	.start_link = uniphier_pcie_establish_link,
+> +	.stop_link = uniphier_pcie_stop_link,
+> +	.link_up = uniphier_pcie_link_up,
+> +};
+> +
+> +static int uniphier_pcie_probe(struct platform_device *pdev)
+> +{
+> +	struct device *dev = &pdev->dev;
+> +	struct uniphier_pcie_priv *priv;
+> +	struct resource *res;
+> +	int ret;
+> +
+> +	priv = devm_kzalloc(dev, sizeof(*priv), GFP_KERNEL);
+> +	if (!priv)
+> +		return -ENOMEM;
+> +
+> +	priv->pci.dev = dev;
+> +	priv->pci.ops = &dw_pcie_ops;
+> +
+> +	res = platform_get_resource_byname(pdev, IORESOURCE_MEM, "dbi");
+> +	priv->pci.dbi_base = devm_pci_remap_cfg_resource(dev, res);
+> +	if (IS_ERR(priv->pci.dbi_base))
+> +		return PTR_ERR(priv->pci.dbi_base);
+> +
+> +	res = platform_get_resource_byname(pdev, IORESOURCE_MEM, "link");
+> +	priv->base = devm_ioremap_resource(dev, res);
+> +	if (IS_ERR(priv->base))
+> +		return PTR_ERR(priv->base);
+> +
+> +	priv->clk = devm_clk_get(dev, NULL);
+> +	if (IS_ERR(priv->clk))
+> +		return PTR_ERR(priv->clk);
+> +
+> +	priv->rst = devm_reset_control_get_shared(dev, NULL);
+> +	if (IS_ERR(priv->rst))
+> +		return PTR_ERR(priv->rst);
+> +
+> +	priv->phy = devm_phy_optional_get(dev, "pcie-phy");
+> +	if (IS_ERR(priv->phy))
+> +		return PTR_ERR(priv->phy);
+> +
+> +	platform_set_drvdata(pdev, priv);
+> +
+> +	ret = uniphier_pcie_host_enable(priv);
+> +	if (ret)
+> +		return ret;
+> +
+> +	return uniphier_add_pcie_port(priv, pdev);
+> +}
+> +
+> +static int uniphier_pcie_remove(struct platform_device *pdev)
+> +{
+> +	struct uniphier_pcie_priv *priv = platform_get_drvdata(pdev);
+> +
+> +	uniphier_pcie_host_disable(priv);
+> +
+> +	return 0;
+> +}
+> +
+> +static const struct of_device_id uniphier_pcie_match[] = {
+> +	{ .compatible = "socionext,uniphier-pcie", },
+> +	{ /* sentinel */ },
+> +};
+> +MODULE_DEVICE_TABLE(of, uniphier_pcie_match);
+> +
+> +static struct platform_driver uniphier_pcie_driver = {
+> +	.probe  = uniphier_pcie_probe,
+> +	.remove = uniphier_pcie_remove,
+> +	.driver = {
+> +		.name = "uniphier-pcie",
+> +		.of_match_table = uniphier_pcie_match,
+> +	},
+> +};
+> +builtin_platform_driver(uniphier_pcie_driver);
+> +
+> +MODULE_AUTHOR("Kunihiko Hayashi <hayashi.kunihiko@socionext.com>");
+> +MODULE_DESCRIPTION("UniPhier PCIe host controller driver");
+> +MODULE_LICENSE("GPL v2");
+> -- 
+> 2.7.4
+> 
