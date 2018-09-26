@@ -2,76 +2,119 @@ Return-Path: <SRS0=XSei=MI=vger.kernel.org=linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-0.8 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	MAILING_LIST_MULTI,SPF_PASS,URIBL_BLOCKED autolearn=ham autolearn_force=no
-	version=3.4.0
+X-Spam-Status: No, score=-2.9 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
+	DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_PASS,
+	URIBL_BLOCKED,USER_AGENT_GIT autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 58C6EC43382
-	for <linux-pci@archiver.kernel.org>; Wed, 26 Sep 2018 04:20:29 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 0CFF8C43382
+	for <linux-pci@archiver.kernel.org>; Wed, 26 Sep 2018 04:23:06 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id B72AB21480
-	for <linux-pci@archiver.kernel.org>; Wed, 26 Sep 2018 04:20:28 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.3.2 mail.kernel.org B72AB21480
-Authentication-Results: mail.kernel.org; dmarc=none (p=none dis=none) header.from=ellerman.id.au
+	by mail.kernel.org (Postfix) with ESMTP id 9499B21480
+	for <linux-pci@archiver.kernel.org>; Wed, 26 Sep 2018 04:23:05 +0000 (UTC)
+Authentication-Results: mail.kernel.org;
+	dkim=pass (1024-bit key) header.d=broadcom.com header.i=@broadcom.com header.b="O5oeZ3mt"
+DMARC-Filter: OpenDMARC Filter v1.3.2 mail.kernel.org 9499B21480
+Authentication-Results: mail.kernel.org; dmarc=fail (p=quarantine dis=none) header.from=broadcom.com
 Authentication-Results: mail.kernel.org; spf=none smtp.mailfrom=linux-pci-owner@vger.kernel.org
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726486AbeIZKbX (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Wed, 26 Sep 2018 06:31:23 -0400
-Received: from ozlabs.org ([203.11.71.1]:41605 "EHLO ozlabs.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1726175AbeIZKbX (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Wed, 26 Sep 2018 06:31:23 -0400
-Received: from authenticated.ozlabs.org (localhost [127.0.0.1])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
-        (No client certificate requested)
-        by ozlabs.org (Postfix) with ESMTPSA id 42Kl920wH1z9s4s;
-        Wed, 26 Sep 2018 14:20:22 +1000 (AEST)
-Authentication-Results: ozlabs.org; dmarc=none (p=none dis=none) header.from=ellerman.id.au
-From:   Michael Ellerman <mpe@ellerman.id.au>
-To:     Christoph Hellwig <hch@lst.de>, Guenter Roeck <linux@roeck-us.net>
-Cc:     Christoph Hellwig <hch@lst.de>, iommu@lists.linux-foundation.org,
-        Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-        Robin Murphy <robin.murphy@arm.com>,
-        linux-kernel@vger.kernel.org, linux-arm-kernel@lists.infradead.org,
-        Marek Szyprowski <m.szyprowski@samsung.com>,
-        Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org,
-        Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-        Paul Mackerras <paulus@samba.org>,
-        linuxppc-dev@lists.ozlabs.org
-Subject: Re: [PATCH 4/4] dma-mapping: clear dev->dma_ops in arch_teardown_dma_ops
-In-Reply-To: <20180925201619.GB8413@lst.de>
-References: <20180827084711.23407-1-hch@lst.de> <20180827084711.23407-5-hch@lst.de> <20180922150119.GA14761@roeck-us.net> <20180925201619.GB8413@lst.de>
-Date:   Wed, 26 Sep 2018 14:20:19 +1000
-Message-ID: <87r2hgga9o.fsf@concordia.ellerman.id.au>
-MIME-Version: 1.0
-Content-Type: text/plain
+        id S1726401AbeIZKeA (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Wed, 26 Sep 2018 06:34:00 -0400
+Received: from mail-qk1-f195.google.com ([209.85.222.195]:47003 "EHLO
+        mail-qk1-f195.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726314AbeIZKeA (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Wed, 26 Sep 2018 06:34:00 -0400
+Received: by mail-qk1-f195.google.com with SMTP id q12-v6so6554199qkl.13
+        for <linux-pci@vger.kernel.org>; Tue, 25 Sep 2018 21:23:03 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=broadcom.com; s=google;
+        h=from:to:cc:subject:date:message-id;
+        bh=Lz8aiHv3tmdpsES4QvVmbMgVGn1T1cbRJZq6UNojIH0=;
+        b=O5oeZ3mtzoxRHeRs1F8xtzjGijxtR3/YD3KyATVgZastCdkNKC0DbhME48BcVVQOyN
+         5lIZeWlyLPFPe0z4m9KYi8mOamgiHT0sTr8OMhUnLlirEnaEVvkEwWU2m828ceFdKIaM
+         YKkUdi+1oFhYyL7sMXM8G/Qxa/Q2GqrRCieyE=
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20161025;
+        h=x-gm-message-state:from:to:cc:subject:date:message-id;
+        bh=Lz8aiHv3tmdpsES4QvVmbMgVGn1T1cbRJZq6UNojIH0=;
+        b=ooqV83fI3ur5NWSgxlZJaB4HM9mKAzp2/4RjxtoYMn8TLRTclSyJvn0zE/5T6Kw3jO
+         BYfZB35bBeOwgSKE0uic0/3HyYuGIc3+ykQBCABvnjrsuG2t3E0UaX24JGzJa7z+1tm3
+         OgI5pSrSBsgyGMOZUOshMmTyZ5f6AnT9BafQdWxIf2THffI3YGoFK64EeK5pLBjbLGoE
+         pTjezf0b9iDK9xvNDPVehg4i3/GR2crLCFgSv9ougtpKItUshy14ixPhwiQ3UBpHPTQ0
+         5Z9jMQqNzLhRqTMwMA39fWX+cXRz6oiv+IO8rqn7ctqisoj54zb6qDniNxo+XOguAb2H
+         sBeA==
+X-Gm-Message-State: ABuFfogzYL4+2lrlpXywz5j9u9kSI4HgQHIdA0ZDUrtyKbwIFCjGxNZG
+        cHCGghICtMOIUEc1WfwjdfDpsg==
+X-Google-Smtp-Source: ACcGV62w/Ya/JyaAcJUjbEwCG48mG9tDoNtF51wef4DG6onDfppL7d9B9rK7geHj7mfHkLHaaspK/w==
+X-Received: by 2002:a37:50c3:: with SMTP id e186-v6mr2992945qkb.91.1537935782989;
+        Tue, 25 Sep 2018 21:23:02 -0700 (PDT)
+Received: from dhcp-10-123-74-106.dhcp.broadcom.net ([192.19.234.250])
+        by smtp.gmail.com with ESMTPSA id a17-v6sm2375260qkb.62.2018.09.25.21.22.59
+        (version=TLS1_2 cipher=ECDHE-RSA-AES128-GCM-SHA256 bits=128/128);
+        Tue, 25 Sep 2018 21:23:02 -0700 (PDT)
+From:   Suganath Prabu S <suganath-prabu.subramani@broadcom.com>
+To:     linux-scsi@vger.kernel.org, linux-pci@vger.kernel.org
+Cc:     lukas@wunner.de, andy.shevchenko@gmail.com,
+        Sathya.Prakash@broadcom.com, sreekanth.reddy@broadcom.com,
+        Suganath Prabu S <suganath-prabu.subramani@broadcom.com>
+Subject: [PATCH v4 0/6] mpt3sas: Hot-Plug Surprise removal support on IOC.
+Date:   Wed, 26 Sep 2018 09:52:33 +0530
+Message-Id: <1537935759-14754-1-git-send-email-suganath-prabu.subramani@broadcom.com>
+X-Mailer: git-send-email 1.8.3.1
 Sender: linux-pci-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-Christoph Hellwig <hch@lst.de> writes:
+Posting below set of patches to support PCIe Hot Plug surprise removal,
+and few defect fixes.
 
-> Looking at the code I think this commit is simply broken for
-> architectures not using arch_setup_dma_ops, but instead setting up
-> the dma ops through arch specific magic.
+This is NOT the normal PCIe Hot Plug support, whereby the user informs the
+OS that a hot removal is desired, the OS does an orderly shutdown of the
+driver on the device, special hot plug circuitry removes power from the
+PCIe slot, then the user can remove the device and replace it
+(where orderly bring-up of the device is done).
 
-I arch_setup_dma_ops() called from of_dma_configure(), but
-pci_dma_configure() doesn't call that for this device:
+With a true surprise removal (just removing HBA from a slot)
+there is a possibility to get all kinds of PCIe transaction errors,
+Below patches addresses those issues and remove HBA without bringing
+the system down.
 
-static int pci_dma_configure(struct device *dev)
-{
-	...
-	if (IS_ENABLED(CONFIG_OF) && bridge->parent &&
-	    bridge->parent->of_node) {
-		ret = of_dma_configure(dev, bridge->parent->of_node, true);
+For surprise removal detection, driver does a PCI
+read of IOC's vendor field in IOC's PCI configuration space.
+If the read value is 0xFFFFFFFF this indicates that the device
+might have hot removed and the device will be removed from driver.
 
-bridge->parent is NULL.
+V1 changes:
+In Patch 0001 - unlock mutex, if active reset is in progress.
 
-So I don't think arch_setup_dma_ops() would help here?
+V2 changes:
+Replaced mpt3sas_base_pci_device_is_unplugged with
+pci_device_is_present.
 
-> I'll revert the patch.
+V3 Change Set:
+Simplified function "mpt3sas_base_pci_device_is_available" and
+made inline
 
-Thanks.
+V4 Change set:
+Reframe split strings in print statement, to avoid
+warning from checkpatch.pl.
 
-cheers
+Suganath Prabu S (6):
+  mpt3sas: Introduce      mpt3sas_base_pci_device_is_available
+  mpt3sas: Separate out      mpt3sas_wait_for_ioc_to_operational
+  mpt3sas: Introdude  _scsih_get_shost_and_ioc.
+  mpt3sas: Fix Sync cache command failure during driver      unload.
+  mpt3sas: Fix driver modifying NVRAM/persistent data.
+  mpt3sas: Bump driver version to 27.100.00.00.
+
+ drivers/scsi/mpt3sas/mpt3sas_base.c      | 133 +++++++++++++++-------
+ drivers/scsi/mpt3sas/mpt3sas_base.h      |  11 +-
+ drivers/scsi/mpt3sas/mpt3sas_config.c    |  32 +-----
+ drivers/scsi/mpt3sas/mpt3sas_ctl.c       |  26 +----
+ drivers/scsi/mpt3sas/mpt3sas_scsih.c     | 189 +++++++++++++++++++++++++++----
+ drivers/scsi/mpt3sas/mpt3sas_transport.c |  82 +++-----------
+ 6 files changed, 296 insertions(+), 177 deletions(-)
+
+-- 
+1.8.3.1
+
