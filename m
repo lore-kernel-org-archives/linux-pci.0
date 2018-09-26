@@ -2,139 +2,84 @@ Return-Path: <SRS0=XSei=MI=vger.kernel.org=linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-8.6 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
-	DKIM_VALID_AU,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_PASS,
-	URIBL_BLOCKED,USER_AGENT_MUTT autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-9.1 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
+	SPF_PASS,USER_AGENT_MUTT autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id CB0A5C43382
-	for <linux-pci@archiver.kernel.org>; Wed, 26 Sep 2018 19:24:22 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 87C48ECE560
+	for <linux-pci@archiver.kernel.org>; Wed, 26 Sep 2018 19:24:44 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 6E8F621536
-	for <linux-pci@archiver.kernel.org>; Wed, 26 Sep 2018 19:24:22 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 33E5821536
+	for <linux-pci@archiver.kernel.org>; Wed, 26 Sep 2018 19:24:44 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (1024-bit key) header.d=kernel.org header.i=@kernel.org header.b="xnOiVC7Y"
-DMARC-Filter: OpenDMARC Filter v1.3.2 mail.kernel.org 6E8F621536
+	dkim=pass (1024-bit key) header.d=kernel.org header.i=@kernel.org header.b="chwQQjGG"
+DMARC-Filter: OpenDMARC Filter v1.3.2 mail.kernel.org 33E5821536
 Authentication-Results: mail.kernel.org; dmarc=fail (p=none dis=none) header.from=kernel.org
 Authentication-Results: mail.kernel.org; spf=none smtp.mailfrom=linux-pci-owner@vger.kernel.org
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726410AbeI0Bis (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Wed, 26 Sep 2018 21:38:48 -0400
-Received: from mail.kernel.org ([198.145.29.99]:50832 "EHLO mail.kernel.org"
+        id S1726422AbeI0BjK (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Wed, 26 Sep 2018 21:39:10 -0400
+Received: from mail.kernel.org ([198.145.29.99]:50954 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1726354AbeI0Bis (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Wed, 26 Sep 2018 21:38:48 -0400
+        id S1726304AbeI0BjJ (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Wed, 26 Sep 2018 21:39:09 -0400
 Received: from localhost (unknown [69.71.4.100])
         (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
         (No client certificate requested)
-        by mail.kernel.org (Postfix) with ESMTPSA id DBB7421533;
-        Wed, 26 Sep 2018 19:24:20 +0000 (UTC)
+        by mail.kernel.org (Postfix) with ESMTPSA id 248B221533;
+        Wed, 26 Sep 2018 19:24:42 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=default; t=1537989861;
-        bh=52kxYWnShG/EJXrpS8BAP8kF70I6nyYLuOcheKOfeB4=;
+        s=default; t=1537989882;
+        bh=2hXRx2MAfdkcNOP4dsXI5d/CD00bmpA6f7jg2uJ17VY=;
         h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-        b=xnOiVC7YhhFDlvLQop+nX2n95BapiC2FXcwl56WggjWsxBELsckadgj3KFh0tlCX/
-         ZfHEQPSRmT5BPfqeNBQKPfnSMpOP6ejauLLPFjgthVvb/hoFODvcbAqJBYEYoYTY5h
-         Yu8zYpF79ypkGz2auFblpbxqI7lD8sBnzsazT2DA=
-Date:   Wed, 26 Sep 2018 14:24:19 -0500
+        b=chwQQjGGevoGdnx6poapReTxHNIZnXsAbavq1AAGvJFKUjHCVM66z98DGQOanFz4D
+         oq889318Oe3oMakV7p1Mgrc96SZGblAOBqkQt2H40I4w7aI56QCGgYwrRiGyVAU27d
+         gzkQE0tRFZKSZ2FyGRENBih2h1g++N5GsWIdmKSM=
+Date:   Wed, 26 Sep 2018 14:24:40 -0500
 From:   Bjorn Helgaas <helgaas@kernel.org>
-To:     Keith Busch <keith.busch@intel.com>
-Cc:     Linux PCI <linux-pci@vger.kernel.org>,
+To:     YueHaibing <yuehaibing@huawei.com>
+Cc:     Russell Currey <ruscur@russell.cc>,
+        Sam Bobroff <sbobroff@linux.ibm.com>,
+        Oliver O'Halloran <oohall@gmail.com>,
         Bjorn Helgaas <bhelgaas@google.com>,
-        Stephen Rothwell <sfr@canb.auug.org.au>
-Subject: Re: [PATCH] PCI: Fix bus error reset when CONFIG_SYSFS not set
-Message-ID: <20180926192419.GB28024@bhelgaas-glaptop.roam.corp.google.com>
-References: <20180926152326.14821-1-keith.busch@intel.com>
+        linuxppc-dev@lists.ozlabs.org, linux-pci@vger.kernel.org,
+        kernel-janitors@vger.kernel.org
+Subject: Re: [PATCH -next] PCI/AER: Remove duplicated include from err.c
+Message-ID: <20180926192440.GC28024@bhelgaas-glaptop.roam.corp.google.com>
+References: <1537959610-71713-1-git-send-email-yuehaibing@huawei.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20180926152326.14821-1-keith.busch@intel.com>
+In-Reply-To: <1537959610-71713-1-git-send-email-yuehaibing@huawei.com>
 User-Agent: Mutt/1.10.1 (2018-07-13)
 Sender: linux-pci-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-On Wed, Sep 26, 2018 at 09:23:26AM -0600, Keith Busch wrote:
-> The pci slot component is not compiled if the kernel config does not
-> set CONFIG_SYSFS, but a previous commit used a lock symbol from there
-> without considering when it isn't defined.
+On Wed, Sep 26, 2018 at 11:00:10AM +0000, YueHaibing wrote:
+> Remove duplicated include.
 > 
-> This patch fixes that by moving the mutex definition to a context outside
-> CONFIG_SYSFS. This also made it obvious the implementation missed going
-> to the fallback when there were no bus slots, so this is also fixed.
-> 
-> Fixes: 131b0ca2c7b263fd ("PCI/ERR: Use slot reset if available")
-> Reported-by: Stephen Rothwell <sfr@canb.auug.org.au>
-> Signed-off-by: Keith Busch <keith.busch@intel.com>
+> Signed-off-by: YueHaibing <yuehaibing@huawei.com>
 
-Folded into 131b0ca2c7b263fd ("PCI/ERR: Use slot reset if available")
-since it hasn't been merged upstream yet, thanks!  This on pci/hotplug,
-headed for v4.20.
+Applied to pci/hotplug for v4.20, thanks!
 
 > ---
->  drivers/pci/pci.c  | 24 ++++++++++++++----------
->  drivers/pci/slot.c |  1 -
->  2 files changed, 14 insertions(+), 11 deletions(-)
+>  drivers/pci/pcie/err.c | 1 -
+>  1 file changed, 1 deletion(-)
 > 
-> diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
-> index 2b4117011313..f6104a551b60 100644
-> --- a/drivers/pci/pci.c
-> +++ b/drivers/pci/pci.c
-> @@ -35,6 +35,8 @@
+> diff --git a/drivers/pci/pcie/err.c b/drivers/pci/pcie/err.c
+> index 4da2a62b..773197a 100644
+> --- a/drivers/pci/pcie/err.c
+> +++ b/drivers/pci/pcie/err.c
+> @@ -12,7 +12,6 @@
+>  
+>  #include <linux/pci.h>
+>  #include <linux/module.h>
+> -#include <linux/pci.h>
+>  #include <linux/kernel.h>
+>  #include <linux/errno.h>
 >  #include <linux/aer.h>
->  #include "pci.h"
->  
-> +DEFINE_MUTEX(pci_slot_mutex);
-> +
->  const char *pci_power_names[] = {
->  	"error", "D0", "D1", "D2", "D3hot", "D3cold", "unknown",
->  };
-> @@ -5201,21 +5203,23 @@ static int pci_bus_reset(struct pci_bus *bus, int probe)
->  int pci_bus_error_reset(struct pci_dev *bridge)
->  {
->  	struct pci_bus *bus = bridge->subordinate;
-> +	struct pci_slot *slot;
->  
->  	if (!bus)
->  		return -ENOTTY;
->  
->  	mutex_lock(&pci_slot_mutex);
-> -	if (!list_empty(&bus->slots)) {
-> -		struct pci_slot *slot;
-> -
-> -		list_for_each_entry(slot, &bus->slots, list)
-> -			if (pci_probe_reset_slot(slot))
-> -				goto bus_reset;
-> -		list_for_each_entry(slot, &bus->slots, list)
-> -			if (pci_slot_reset(slot, 0))
-> -				goto bus_reset;
-> -	}
-> +	if (list_empty(&bus->slots))
-> +		goto bus_reset;
-> +
-> +	list_for_each_entry(slot, &bus->slots, list)
-> +		if (pci_probe_reset_slot(slot))
-> +			goto bus_reset;
-> +
-> +	list_for_each_entry(slot, &bus->slots, list)
-> +		if (pci_slot_reset(slot, 0))
-> +			goto bus_reset;
-> +
->  	mutex_unlock(&pci_slot_mutex);
->  	return 0;
->  bus_reset:
-> diff --git a/drivers/pci/slot.c b/drivers/pci/slot.c
-> index 3da03fcc6fbf..c46d5e1ff536 100644
-> --- a/drivers/pci/slot.c
-> +++ b/drivers/pci/slot.c
-> @@ -14,7 +14,6 @@
->  
->  struct kset *pci_slots_kset;
->  EXPORT_SYMBOL_GPL(pci_slots_kset);
-> -DEFINE_MUTEX(pci_slot_mutex);
->  
->  static ssize_t pci_slot_attr_show(struct kobject *kobj,
->  					struct attribute *attr, char *buf)
-> -- 
-> 2.14.4
+> 
+> 
 > 
