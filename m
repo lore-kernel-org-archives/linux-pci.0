@@ -3,146 +3,75 @@ X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
 X-Spam-Status: No, score=-0.8 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	MAILING_LIST_MULTI,SPF_PASS autolearn=ham autolearn_force=no version=3.4.0
+	MAILING_LIST_MULTI,SPF_PASS,URIBL_BLOCKED autolearn=ham autolearn_force=no
+	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 25A5BC43382
-	for <linux-pci@archiver.kernel.org>; Wed, 26 Sep 2018 03:15:01 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 58C6EC43382
+	for <linux-pci@archiver.kernel.org>; Wed, 26 Sep 2018 04:20:29 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id A3F8320833
-	for <linux-pci@archiver.kernel.org>; Wed, 26 Sep 2018 03:15:00 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.3.2 mail.kernel.org A3F8320833
-Authentication-Results: mail.kernel.org; dmarc=fail (p=none dis=none) header.from=linux.intel.com
+	by mail.kernel.org (Postfix) with ESMTP id B72AB21480
+	for <linux-pci@archiver.kernel.org>; Wed, 26 Sep 2018 04:20:28 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.3.2 mail.kernel.org B72AB21480
+Authentication-Results: mail.kernel.org; dmarc=none (p=none dis=none) header.from=ellerman.id.au
 Authentication-Results: mail.kernel.org; spf=none smtp.mailfrom=linux-pci-owner@vger.kernel.org
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726197AbeIZJZm (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Wed, 26 Sep 2018 05:25:42 -0400
-Received: from mga09.intel.com ([134.134.136.24]:5410 "EHLO mga09.intel.com"
+        id S1726486AbeIZKbX (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Wed, 26 Sep 2018 06:31:23 -0400
+Received: from ozlabs.org ([203.11.71.1]:41605 "EHLO ozlabs.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1726229AbeIZJZm (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Wed, 26 Sep 2018 05:25:42 -0400
-X-Amp-Result: SKIPPED(no attachment in message)
-X-Amp-File-Uploaded: False
-Received: from fmsmga002.fm.intel.com ([10.253.24.26])
-  by orsmga102.jf.intel.com with ESMTP/TLS/DHE-RSA-AES256-GCM-SHA384; 25 Sep 2018 20:14:58 -0700
-X-ExtLoop1: 1
-X-IronPort-AV: E=Sophos;i="5.54,304,1534834800"; 
-   d="scan'208";a="89385468"
-Received: from allen-box.sh.intel.com (HELO [10.239.161.122]) ([10.239.161.122])
-  by fmsmga002.fm.intel.com with ESMTP; 25 Sep 2018 20:13:53 -0700
-Cc:     baolu.lu@linux.intel.com, "joro@8bytes.org" <joro@8bytes.org>,
-        "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-        "jcrouse@codeaurora.org" <jcrouse@codeaurora.org>,
-        "alex.williamson@redhat.com" <alex.williamson@redhat.com>,
-        "Jonathan.Cameron@huawei.com" <Jonathan.Cameron@huawei.com>,
-        "jacob.jun.pan@linux.intel.com" <jacob.jun.pan@linux.intel.com>,
-        "christian.koenig@amd.com" <christian.koenig@amd.com>,
-        "eric.auger@redhat.com" <eric.auger@redhat.com>,
-        "kevin.tian@intel.com" <kevin.tian@intel.com>,
-        "yi.l.liu@intel.com" <yi.l.liu@intel.com>,
-        Andrew Murray <Andrew.Murray@arm.com>,
-        Will Deacon <Will.Deacon@arm.com>,
-        Robin Murphy <Robin.Murphy@arm.com>,
-        "ashok.raj@intel.com" <ashok.raj@intel.com>,
-        "xuzaibo@huawei.com" <xuzaibo@huawei.com>,
-        "liguozhu@hisilicon.com" <liguozhu@hisilicon.com>,
-        "okaya@codeaurora.org" <okaya@codeaurora.org>,
-        "bharatku@xilinx.com" <bharatku@xilinx.com>,
-        "ilias.apalodimas@linaro.org" <ilias.apalodimas@linaro.org>,
-        "shunyong.yang@hxt-semitech.com" <shunyong.yang@hxt-semitech.com>
-Subject: Re: [PATCH v3 03/10] iommu/sva: Manage process address spaces
-To:     Jean-Philippe Brucker <jean-philippe.brucker@arm.com>,
-        "iommu@lists.linux-foundation.org" <iommu@lists.linux-foundation.org>
-References: <20180920170046.20154-1-jean-philippe.brucker@arm.com>
- <20180920170046.20154-4-jean-philippe.brucker@arm.com>
- <09933fce-b959-32e1-b1f3-0d4389abf735@linux.intel.com>
- <5aff8dc0-9ce7-5018-e78e-770279681cbc@arm.com>
-From:   Lu Baolu <baolu.lu@linux.intel.com>
-Message-ID: <ac40a922-a1d3-6d74-cb4b-0c19972673a1@linux.intel.com>
-Date:   Wed, 26 Sep 2018 11:12:22 +0800
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:52.0) Gecko/20100101
- Thunderbird/52.9.1
+        id S1726175AbeIZKbX (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Wed, 26 Sep 2018 06:31:23 -0400
+Received: from authenticated.ozlabs.org (localhost [127.0.0.1])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+        (No client certificate requested)
+        by ozlabs.org (Postfix) with ESMTPSA id 42Kl920wH1z9s4s;
+        Wed, 26 Sep 2018 14:20:22 +1000 (AEST)
+Authentication-Results: ozlabs.org; dmarc=none (p=none dis=none) header.from=ellerman.id.au
+From:   Michael Ellerman <mpe@ellerman.id.au>
+To:     Christoph Hellwig <hch@lst.de>, Guenter Roeck <linux@roeck-us.net>
+Cc:     Christoph Hellwig <hch@lst.de>, iommu@lists.linux-foundation.org,
+        Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+        Robin Murphy <robin.murphy@arm.com>,
+        linux-kernel@vger.kernel.org, linux-arm-kernel@lists.infradead.org,
+        Marek Szyprowski <m.szyprowski@samsung.com>,
+        Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org,
+        Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+        Paul Mackerras <paulus@samba.org>,
+        linuxppc-dev@lists.ozlabs.org
+Subject: Re: [PATCH 4/4] dma-mapping: clear dev->dma_ops in arch_teardown_dma_ops
+In-Reply-To: <20180925201619.GB8413@lst.de>
+References: <20180827084711.23407-1-hch@lst.de> <20180827084711.23407-5-hch@lst.de> <20180922150119.GA14761@roeck-us.net> <20180925201619.GB8413@lst.de>
+Date:   Wed, 26 Sep 2018 14:20:19 +1000
+Message-ID: <87r2hgga9o.fsf@concordia.ellerman.id.au>
 MIME-Version: 1.0
-In-Reply-To: <5aff8dc0-9ce7-5018-e78e-770279681cbc@arm.com>
-Content-Type: text/plain; charset=utf-8; format=flowed
-Content-Language: en-US
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain
 Sender: linux-pci-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-Hi,
+Christoph Hellwig <hch@lst.de> writes:
 
-On 09/25/2018 06:32 PM, Jean-Philippe Brucker wrote:
-> On 25/09/2018 04:15, Lu Baolu wrote:
->>> +     /* If an io_mm already exists, use it */
->>> +     spin_lock(&iommu_sva_lock);
->>> +     idr_for_each_entry(&iommu_pasid_idr, io_mm, i) {
->>
->> This might be problematic for vt-d (and other possible arch's which use
->> PASID other than SVA). When vt-d iommu works in scalable mode, a PASID
->> might be allocated for:
->>
->> (1) SVA
->> (2) Device Assignable Interface (might be a mdev or directly managed
->>       within a device driver).
->> (3) SVA in VM guest
->> (4) Device Assignable Interface in VM guest
->>
->> So we can't expect that an io_mm pointer was associated with each PASID.
-> 
-> Yes as discussed on the previous series, we'll need to move the PASID
-> allocator outside of iommu-sva at some point, and even outside of
-> drivers/iommu since device driver might want to use the PASID allocator
-> without an IOMMU.
-> 
-> To be usable by all consumers of PASIDs, that allocator will need the
-> same interface as IDR, so I don't think we have a problem here. I
-> haven't had time or need to write such allocator yet (and don't plan to
-> do it as part of this series), but I drafted an interface, that at least
-> fulfills the needs of SVA.
+> Looking at the code I think this commit is simply broken for
+> architectures not using arch_setup_dma_ops, but instead setting up
+> the dma ops through arch specific magic.
 
-I have a patch set for the global pasid allocator. It mostly matches
-your idea. I can send it out for comments later.
+I arch_setup_dma_ops() called from of_dma_configure(), but
+pci_dma_configure() doesn't call that for this device:
 
-Best regards,
-Lu Baolu
+static int pci_dma_configure(struct device *dev)
+{
+	...
+	if (IS_ENABLED(CONFIG_OF) && bridge->parent &&
+	    bridge->parent->of_node) {
+		ret = of_dma_configure(dev, bridge->parent->of_node, true);
 
-> 
-> * Single system-wide PASID space
-> * Multiple consumers, each associating their own structure to PASIDs.
->    Each consumer gets a token.
-> * Device drivers might want to use both SVA and private PASIDs for a
->    device at the same time.
-> * In my opinion "pasid" isn't the right name, "ioasid" would be better
->    but that's not important.
-> 
-> typedef unsigned int pasid_t;
-> 
-> /* Returns consumer token */
-> void *pasid_get_consumer();
-> void pasid_put_consumer(void *consumer);
-> 
-> /* Returns pasid or invalid (pasid_t)(-1) */
-> pasid_t pasid_alloc(void *consumer, pasid_t min, pasid_t max,
->                      void *private);
-> void pasid_remove(pasid_t pasid);
-> 
-> /* Iterate over PASIDs for this consumer. Func returns non-zero to stop
-> iterating */
-> int pasid_for_each(void *consumer, void *iter_data,
-> 		   int (*func)(void *iter_data, pasid_t pasid,
-> 			       void *private));
-> /* Returns priv data or NULL */
-> void *pasid_find(void *consumer, pasid_t pasid);
-> 
-> Thanks,
-> Jean
-> 
->> And this code might run into problem if the pasid is allocated for
->> usages other than SVA.
->>
->> Best regards,
->> Lu Baolu
-> 
-> 
+bridge->parent is NULL.
+
+So I don't think arch_setup_dma_ops() would help here?
+
+> I'll revert the patch.
+
+Thanks.
+
+cheers
