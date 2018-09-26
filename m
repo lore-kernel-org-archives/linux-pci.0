@@ -2,102 +2,88 @@ Return-Path: <SRS0=XSei=MI=vger.kernel.org=linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-2.0 required=3.0 tests=DKIM_INVALID,DKIM_SIGNED,
-	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_PASS,URIBL_BLOCKED,
-	USER_AGENT_MUTT autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-0.8 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+	MAILING_LIST_MULTI,SPF_PASS autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id CBFD1C43382
-	for <linux-pci@archiver.kernel.org>; Wed, 26 Sep 2018 12:48:25 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 0E978C43382
+	for <linux-pci@archiver.kernel.org>; Wed, 26 Sep 2018 13:50:35 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 86EA6214C5
-	for <linux-pci@archiver.kernel.org>; Wed, 26 Sep 2018 12:48:25 +0000 (UTC)
-Authentication-Results: mail.kernel.org;
-	dkim=fail reason="signature verification failed" (2048-bit key) header.d=8bytes.org header.i=@8bytes.org header.b="MW9ke9Fv"
-DMARC-Filter: OpenDMARC Filter v1.3.2 mail.kernel.org 86EA6214C5
-Authentication-Results: mail.kernel.org; dmarc=fail (p=none dis=none) header.from=8bytes.org
+	by mail.kernel.org (Postfix) with ESMTP id B19EE206B6
+	for <linux-pci@archiver.kernel.org>; Wed, 26 Sep 2018 13:50:34 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.3.2 mail.kernel.org B19EE206B6
+Authentication-Results: mail.kernel.org; dmarc=none (p=none dis=none) header.from=arm.com
 Authentication-Results: mail.kernel.org; spf=none smtp.mailfrom=linux-pci-owner@vger.kernel.org
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1728282AbeIZTBO (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Wed, 26 Sep 2018 15:01:14 -0400
-Received: from 8bytes.org ([81.169.241.247]:55174 "EHLO theia.8bytes.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1726915AbeIZTBN (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Wed, 26 Sep 2018 15:01:13 -0400
-Received: by theia.8bytes.org (Postfix, from userid 1000)
-        id 87F976FB; Wed, 26 Sep 2018 14:48:22 +0200 (CEST)
-DKIM-Signature: v=1; a=rsa-sha256; c=simple/simple; d=8bytes.org; s=mail-1;
-        t=1537966102; bh=9ZaB2GQwO5w/0AtLdM2wJqWL41Gqww2IZtFAg48zA+o=;
-        h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-        b=MW9ke9FviRgKjsP5Yg01v7BikR5ltDBvdorPogWuRUtSH4GwTeBvVthM5JPtN+Zx/
-         O2WoMI8oJp5UIEURYyFHMIwzw901u7O9e1tZa6FewwdyRC066cdzey4YGgd2pXqHGZ
-         lU/fAYbaqBQkha8QaTZbyf5mh6MttEbNLZltlFayyQm0/QZuq0KGwkTQJ8YYAZuPim
-         R59jluoEz5rr91tkHBbEk7MoZUjDCliWNaykloZ+m6fANOofUasPjB/LngkGJavtbv
-         yeaofcQFeX0irxTt9q6jReNHeQHxQphYNpPwRMNbr+AEesqaVEW8GGOv1pMHZDdNMC
-         mF0RAzdtjZ8cA==
-Date:   Wed, 26 Sep 2018 14:48:22 +0200
-From:   Joerg Roedel <joro@8bytes.org>
-To:     Jacob Pan <jacob.jun.pan@linux.intel.com>
-Cc:     Lu Baolu <baolu.lu@linux.intel.com>,
-        Jean-Philippe Brucker <jean-philippe.brucker@arm.com>,
-        iommu@lists.linux-foundation.org, linux-pci@vger.kernel.org,
-        jcrouse@codeaurora.org, alex.williamson@redhat.com,
-        Jonathan.Cameron@huawei.com, christian.koenig@amd.com,
-        eric.auger@redhat.com, kevin.tian@intel.com, yi.l.liu@intel.com,
-        andrew.murray@arm.com, will.deacon@arm.com, robin.murphy@arm.com,
-        ashok.raj@intel.com, xuzaibo@huawei.com, liguozhu@hisilicon.com,
-        okaya@codeaurora.org, bharatku@xilinx.com,
-        ilias.apalodimas@linaro.org, shunyong.yang@hxt-semitech.com
-Subject: Re: [PATCH v3 01/10] iommu: Introduce Shared Virtual Addressing API
-Message-ID: <20180926124822.GE18287@8bytes.org>
+        id S1727184AbeIZUDg (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Wed, 26 Sep 2018 16:03:36 -0400
+Received: from usa-sjc-mx-foss1.foss.arm.com ([217.140.101.70]:46648 "EHLO
+        foss.arm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1727048AbeIZUDg (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Wed, 26 Sep 2018 16:03:36 -0400
+Received: from usa-sjc-imap-foss1.foss.arm.com (unknown [10.72.51.249])
+        by usa-sjc-mx-foss1.foss.arm.com (Postfix) with ESMTP id 888B518A;
+        Wed, 26 Sep 2018 06:50:33 -0700 (PDT)
+Received: from [10.4.12.111] (ostrya.emea.arm.com [10.4.12.111])
+        by usa-sjc-imap-foss1.foss.arm.com (Postfix) with ESMTPSA id 7623F3F5B3;
+        Wed, 26 Sep 2018 06:50:31 -0700 (PDT)
+Subject: Re: [PATCH v3 03/10] iommu/sva: Manage process address spaces
+To:     Joerg Roedel <joro@8bytes.org>
+Cc:     "kevin.tian@intel.com" <kevin.tian@intel.com>,
+        "ashok.raj@intel.com" <ashok.raj@intel.com>,
+        "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+        "ilias.apalodimas@linaro.org" <ilias.apalodimas@linaro.org>,
+        Will Deacon <Will.Deacon@arm.com>,
+        "alex.williamson@redhat.com" <alex.williamson@redhat.com>,
+        "okaya@codeaurora.org" <okaya@codeaurora.org>,
+        "iommu@lists.linux-foundation.org" <iommu@lists.linux-foundation.org>,
+        "liguozhu@hisilicon.com" <liguozhu@hisilicon.com>,
+        Robin Murphy <Robin.Murphy@arm.com>,
+        "christian.koenig@amd.com" <christian.koenig@amd.com>
 References: <20180920170046.20154-1-jean-philippe.brucker@arm.com>
- <20180920170046.20154-2-jean-philippe.brucker@arm.com>
- <f406bcf7-4e54-9f1b-88eb-03fc642ffede@linux.intel.com>
- <20180925131647.rygncwik5uszsm3n@8bytes.org>
- <20180925154642.18a98849@jacob-builder>
+ <20180920170046.20154-4-jean-philippe.brucker@arm.com>
+ <09933fce-b959-32e1-b1f3-0d4389abf735@linux.intel.com>
+ <20180925132627.vbdotr23o7lqrmnd@8bytes.org>
+ <b33a1911-e100-586b-b8df-eb04312ecffd@linux.intel.com>
+ <754d495d-d016-f42f-5682-ba4a75a618e0@arm.com>
+ <20180926124527.GD18287@8bytes.org>
+From:   Jean-Philippe Brucker <jean-philippe.brucker@arm.com>
+Message-ID: <1f53c6f1-4e7a-1451-1abc-a7bca4a2359d@arm.com>
+Date:   Wed, 26 Sep 2018 14:50:15 +0100
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:60.0) Gecko/20100101
+ Thunderbird/60.0
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20180925154642.18a98849@jacob-builder>
-User-Agent: Mutt/1.5.24 (2015-08-30)
+In-Reply-To: <20180926124527.GD18287@8bytes.org>
+Content-Type: text/plain; charset=utf-8
+Content-Language: en-US
+Content-Transfer-Encoding: 7bit
 Sender: linux-pci-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-On Tue, Sep 25, 2018 at 03:46:42PM -0700, Jacob Pan wrote:
-> On Tue, 25 Sep 2018 15:16:47 +0200
-> Joerg Roedel <joro@8bytes.org> wrote:
+On 26/09/2018 13:45, Joerg Roedel wrote:
+> On Wed, Sep 26, 2018 at 11:20:34AM +0100, Jean-Philippe Brucker wrote:
+>> Yes, at the moment it's difficult to guess what device drivers will
+>> want, but I can imagine some driver offering SVA to userspace, while
+>> keeping a few PASIDs for themselves to map kernel memory. Or create mdev
+>> devices for virtualization while also allowing bare-metal SVA. So I
+>> think we should aim at enabling these use-cases in parallel, even if it
+>> doesn't necessarily need to be possible right now.
 > 
-> > On Sun, Sep 23, 2018 at 10:39:25AM +0800, Lu Baolu wrote:
-> > > > +int iommu_sva_init_device(struct device *dev, unsigned long
-> > > > features,
-> > > > +		       unsigned int min_pasid, unsigned int
-> > > > max_pasid) +{
-> > > > +	int ret;
-> > > > +	struct iommu_sva_param *param;
-> > > > +	struct iommu_domain *domain =
-> > > > iommu_get_domain_for_dev(dev);  
-> > > 
-> > > This doesn't work for vt-d. The domains for host iova are
-> > > self-managed by vt-d driver itself. Hence,
-> > > iommu_get_domain_for_dev() will always return NULL unless an
-> > > UNMANAGED domain is attached to the device.
-> > > 
-> > > How about
-> > > 
-> > >       const struct iommu_ops *ops = dev->bus->iommu_ops;
-> > > 
-> > > instead?  
-> > 
-> > The per-bus iommu-ops might go away sooner or later as we move to
-> > per-device iommu-ops. How about fixing the VT-d driver to not keep
-> > that domain internal to itself?
-> > 
-> Just to understand more specifically, you mean let VT-d driver also
-> support IOMMU_DOMAIN_DMA as default domain?
+> Yeah okay, but allowing these use-cases in parallel basically disallows
+> giving any guest control over a device's pasid-table, no?
+All of these use-cases require the host to manage the PASID tables, so
+while any one of them is enabled, we can't give a guest control over the
+PASID tables. But allowing these use-cases in parallel doesn't change that.
 
-Yes, bringing it on-par with other IOMMU drivers in this regard.
+There is an ambiguity: I understand "(3) SVA in VM guest" as SVA for a
+device-assignable interface assigned to a guest, using vfio-mdev and the
+new Intel vt-d architecture (right?). That case does require the host to
+allocate and manage PASIDs (because the PCI device is shared between
+multiple VMs).
 
-Regards,
+For the "classic" vfio-pci case, "SVA in guest" still means giving the
+guest control over the whole PASID table.
 
-	Joerg
+Thanks,
+Jean
