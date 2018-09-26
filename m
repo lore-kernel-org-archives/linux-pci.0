@@ -2,127 +2,139 @@ Return-Path: <SRS0=XSei=MI=vger.kernel.org=linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-0.8 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	MAILING_LIST_MULTI,SPF_PASS,URIBL_BLOCKED autolearn=ham autolearn_force=no
-	version=3.4.0
+X-Spam-Status: No, score=-8.6 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
+	DKIM_VALID_AU,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_PASS,
+	URIBL_BLOCKED,USER_AGENT_MUTT autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id BA026C43382
-	for <linux-pci@archiver.kernel.org>; Wed, 26 Sep 2018 18:02:48 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id CB0A5C43382
+	for <linux-pci@archiver.kernel.org>; Wed, 26 Sep 2018 19:24:22 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 8261E21565
-	for <linux-pci@archiver.kernel.org>; Wed, 26 Sep 2018 18:02:48 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.3.2 mail.kernel.org 8261E21565
-Authentication-Results: mail.kernel.org; dmarc=fail (p=none dis=none) header.from=linux.intel.com
+	by mail.kernel.org (Postfix) with ESMTP id 6E8F621536
+	for <linux-pci@archiver.kernel.org>; Wed, 26 Sep 2018 19:24:22 +0000 (UTC)
+Authentication-Results: mail.kernel.org;
+	dkim=pass (1024-bit key) header.d=kernel.org header.i=@kernel.org header.b="xnOiVC7Y"
+DMARC-Filter: OpenDMARC Filter v1.3.2 mail.kernel.org 6E8F621536
+Authentication-Results: mail.kernel.org; dmarc=fail (p=none dis=none) header.from=kernel.org
 Authentication-Results: mail.kernel.org; spf=none smtp.mailfrom=linux-pci-owner@vger.kernel.org
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726127AbeI0AQx convert rfc822-to-8bit (ORCPT
-        <rfc822;linux-pci@archiver.kernel.org>);
-        Wed, 26 Sep 2018 20:16:53 -0400
-Received: from mga01.intel.com ([192.55.52.88]:55749 "EHLO mga01.intel.com"
+        id S1726410AbeI0Bis (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Wed, 26 Sep 2018 21:38:48 -0400
+Received: from mail.kernel.org ([198.145.29.99]:50832 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1726032AbeI0AQx (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Wed, 26 Sep 2018 20:16:53 -0400
-X-Amp-Result: SKIPPED(no attachment in message)
-X-Amp-File-Uploaded: False
-Received: from orsmga008.jf.intel.com ([10.7.209.65])
-  by fmsmga101.fm.intel.com with ESMTP/TLS/DHE-RSA-AES256-GCM-SHA384; 26 Sep 2018 11:02:47 -0700
-X-ExtLoop1: 1
-X-IronPort-AV: E=Sophos;i="5.54,307,1534834800"; 
-   d="scan'208";a="76422090"
-Received: from jacob-builder.jf.intel.com (HELO jacob-builder) ([10.7.199.155])
-  by orsmga008.jf.intel.com with ESMTP; 26 Sep 2018 10:59:37 -0700
-Date:   Wed, 26 Sep 2018 11:01:03 -0700
-From:   Jacob Pan <jacob.jun.pan@linux.intel.com>
-To:     Jean-Philippe Brucker <jean-philippe.brucker@arm.com>
-Cc:     Lu Baolu <baolu.lu@linux.intel.com>,
-        "iommu@lists.linux-foundation.org" <iommu@lists.linux-foundation.org>,
-        "joro@8bytes.org" <joro@8bytes.org>,
-        "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-        "jcrouse@codeaurora.org" <jcrouse@codeaurora.org>,
-        "alex.williamson@redhat.com" <alex.williamson@redhat.com>,
-        "Jonathan.Cameron@huawei.com" <Jonathan.Cameron@huawei.com>,
-        "christian.koenig@amd.com" <christian.koenig@amd.com>,
-        "eric.auger@redhat.com" <eric.auger@redhat.com>,
-        "kevin.tian@intel.com" <kevin.tian@intel.com>,
-        "yi.l.liu@intel.com" <yi.l.liu@intel.com>,
-        Andrew Murray <Andrew.Murray@arm.com>,
-        Will Deacon <Will.Deacon@arm.com>,
-        Robin Murphy <Robin.Murphy@arm.com>,
-        "ashok.raj@intel.com" <ashok.raj@intel.com>,
-        "xuzaibo@huawei.com" <xuzaibo@huawei.com>,
-        "liguozhu@hisilicon.com" <liguozhu@hisilicon.com>,
-        "okaya@codeaurora.org" <okaya@codeaurora.org>,
-        "bharatku@xilinx.com" <bharatku@xilinx.com>,
-        "ilias.apalodimas@linaro.org" <ilias.apalodimas@linaro.org>,
-        "shunyong.yang@hxt-semitech.com" <shunyong.yang@hxt-semitech.com>,
-        jacob.jun.pan@linux.intel.com
-Subject: Re: [PATCH v3 02/10] iommu/sva: Bind process address spaces to
- devices
-Message-ID: <20180926110103.45b57f75@jacob-builder>
-In-Reply-To: <7cbd503a-c79e-3c40-7388-ce6c23f7f536@arm.com>
-References: <20180920170046.20154-1-jean-philippe.brucker@arm.com>
-        <20180920170046.20154-3-jean-philippe.brucker@arm.com>
-        <cdcd4083-ef28-4c5e-4a2c-5b93e61a86b4@linux.intel.com>
-        <7cbd503a-c79e-3c40-7388-ce6c23f7f536@arm.com>
-Organization: OTC
-X-Mailer: Claws Mail 3.13.2 (GTK+ 2.24.30; x86_64-pc-linux-gnu)
+        id S1726354AbeI0Bis (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Wed, 26 Sep 2018 21:38:48 -0400
+Received: from localhost (unknown [69.71.4.100])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+        (No client certificate requested)
+        by mail.kernel.org (Postfix) with ESMTPSA id DBB7421533;
+        Wed, 26 Sep 2018 19:24:20 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+        s=default; t=1537989861;
+        bh=52kxYWnShG/EJXrpS8BAP8kF70I6nyYLuOcheKOfeB4=;
+        h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
+        b=xnOiVC7YhhFDlvLQop+nX2n95BapiC2FXcwl56WggjWsxBELsckadgj3KFh0tlCX/
+         ZfHEQPSRmT5BPfqeNBQKPfnSMpOP6ejauLLPFjgthVvb/hoFODvcbAqJBYEYoYTY5h
+         Yu8zYpF79ypkGz2auFblpbxqI7lD8sBnzsazT2DA=
+Date:   Wed, 26 Sep 2018 14:24:19 -0500
+From:   Bjorn Helgaas <helgaas@kernel.org>
+To:     Keith Busch <keith.busch@intel.com>
+Cc:     Linux PCI <linux-pci@vger.kernel.org>,
+        Bjorn Helgaas <bhelgaas@google.com>,
+        Stephen Rothwell <sfr@canb.auug.org.au>
+Subject: Re: [PATCH] PCI: Fix bus error reset when CONFIG_SYSFS not set
+Message-ID: <20180926192419.GB28024@bhelgaas-glaptop.roam.corp.google.com>
+References: <20180926152326.14821-1-keith.busch@intel.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 8BIT
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20180926152326.14821-1-keith.busch@intel.com>
+User-Agent: Mutt/1.10.1 (2018-07-13)
 Sender: linux-pci-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-On Mon, 24 Sep 2018 13:07:47 +0100
-Jean-Philippe Brucker <jean-philippe.brucker@arm.com> wrote:
-
-> On 23/09/2018 04:05, Lu Baolu wrote:
-> > Hi,
-> > 
-> > On 09/21/2018 01:00 AM, Jean-Philippe Brucker wrote:  
-> >> Add bind() and unbind() operations to the IOMMU API. Bind()
-> >> returns a PASID that drivers can program in hardware, to let their
-> >> devices access an mm. This patch only adds skeletons for the
-> >> device driver API, most of the implementation is still missing.  
-> > 
-> > Is it possible that a malicious process can unbind a pasid which is
-> > used by another normal process?  
+On Wed, Sep 26, 2018 at 09:23:26AM -0600, Keith Busch wrote:
+> The pci slot component is not compiled if the kernel config does not
+> set CONFIG_SYSFS, but a previous commit used a lock symbol from there
+> without considering when it isn't defined.
 > 
-> Yes, it's up to the device driver that calls unbind() to check that
-> the caller is allowed to unbind this PASID. We can't do it ourselves
-> since unbind() could also be called from a kernel thread for example
-> from a cleanup function in some workqueue, outside the context of the
-> process to unbind.
+> This patch fixes that by moving the mutex definition to a context outside
+> CONFIG_SYSFS. This also made it obvious the implementation missed going
+> to the fallback when there were no bus slots, so this is also fixed.
 > 
-I am wondering if we can avoid the complexity around permission
-checking by simply _only_ allow bind/unbind() on current mm? what would
-be the missing use cases if we bind current only?
-It can also avoid other race such as unbind and mmu_notifier release
-call.
+> Fixes: 131b0ca2c7b263fd ("PCI/ERR: Use slot reset if available")
+> Reported-by: Stephen Rothwell <sfr@canb.auug.org.au>
+> Signed-off-by: Keith Busch <keith.busch@intel.com>
 
-> Jean
+Folded into 131b0ca2c7b263fd ("PCI/ERR: Use slot reset if available")
+since it hasn't been merged upstream yet, thanks!  This on pci/hotplug,
+headed for v4.20.
+
+> ---
+>  drivers/pci/pci.c  | 24 ++++++++++++++----------
+>  drivers/pci/slot.c |  1 -
+>  2 files changed, 14 insertions(+), 11 deletions(-)
 > 
-> > 
-> > It might happen in below sequence:
-> > 
-> > 
-> > Process A                       Process B
-> > =========                       =========
-> > iommu_sva_init_device(dev)
-> > iommu_sva_bind_device(dev)
-> > ....
-> > device access mm of A with
-> > #PASID returned above
-> > ....
-> >                                 iommu_sva_unbind_device(dev, #PASID)
-> > ....
-> > [unrecoverable errors]
-> > 
-> > I didn't have a thorough consideration of this. Sorry if this has
-> > been prevented.
-> > 
-> > Best regards,
-> > Lu Baolu  
-
-[Jacob Pan]
+> diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
+> index 2b4117011313..f6104a551b60 100644
+> --- a/drivers/pci/pci.c
+> +++ b/drivers/pci/pci.c
+> @@ -35,6 +35,8 @@
+>  #include <linux/aer.h>
+>  #include "pci.h"
+>  
+> +DEFINE_MUTEX(pci_slot_mutex);
+> +
+>  const char *pci_power_names[] = {
+>  	"error", "D0", "D1", "D2", "D3hot", "D3cold", "unknown",
+>  };
+> @@ -5201,21 +5203,23 @@ static int pci_bus_reset(struct pci_bus *bus, int probe)
+>  int pci_bus_error_reset(struct pci_dev *bridge)
+>  {
+>  	struct pci_bus *bus = bridge->subordinate;
+> +	struct pci_slot *slot;
+>  
+>  	if (!bus)
+>  		return -ENOTTY;
+>  
+>  	mutex_lock(&pci_slot_mutex);
+> -	if (!list_empty(&bus->slots)) {
+> -		struct pci_slot *slot;
+> -
+> -		list_for_each_entry(slot, &bus->slots, list)
+> -			if (pci_probe_reset_slot(slot))
+> -				goto bus_reset;
+> -		list_for_each_entry(slot, &bus->slots, list)
+> -			if (pci_slot_reset(slot, 0))
+> -				goto bus_reset;
+> -	}
+> +	if (list_empty(&bus->slots))
+> +		goto bus_reset;
+> +
+> +	list_for_each_entry(slot, &bus->slots, list)
+> +		if (pci_probe_reset_slot(slot))
+> +			goto bus_reset;
+> +
+> +	list_for_each_entry(slot, &bus->slots, list)
+> +		if (pci_slot_reset(slot, 0))
+> +			goto bus_reset;
+> +
+>  	mutex_unlock(&pci_slot_mutex);
+>  	return 0;
+>  bus_reset:
+> diff --git a/drivers/pci/slot.c b/drivers/pci/slot.c
+> index 3da03fcc6fbf..c46d5e1ff536 100644
+> --- a/drivers/pci/slot.c
+> +++ b/drivers/pci/slot.c
+> @@ -14,7 +14,6 @@
+>  
+>  struct kset *pci_slots_kset;
+>  EXPORT_SYMBOL_GPL(pci_slots_kset);
+> -DEFINE_MUTEX(pci_slot_mutex);
+>  
+>  static ssize_t pci_slot_attr_show(struct kobject *kobj,
+>  					struct attribute *attr, char *buf)
+> -- 
+> 2.14.4
+> 
