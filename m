@@ -2,70 +2,72 @@ Return-Path: <SRS0=XSei=MI=vger.kernel.org=linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-0.8 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	MAILING_LIST_MULTI,SPF_PASS autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-8.8 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_PASS,URIBL_BLOCKED,
+	USER_AGENT_GIT autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 38FDCC43382
-	for <linux-pci@archiver.kernel.org>; Wed, 26 Sep 2018 10:45:33 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id D11EBC43382
+	for <linux-pci@archiver.kernel.org>; Wed, 26 Sep 2018 10:51:05 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id E298F20779
-	for <linux-pci@archiver.kernel.org>; Wed, 26 Sep 2018 10:45:32 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.3.2 mail.kernel.org E298F20779
-Authentication-Results: mail.kernel.org; dmarc=none (p=none dis=none) header.from=arm.com
+	by mail.kernel.org (Postfix) with ESMTP id 4F9D6214C5
+	for <linux-pci@archiver.kernel.org>; Wed, 26 Sep 2018 10:51:05 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.3.2 mail.kernel.org 4F9D6214C5
+Authentication-Results: mail.kernel.org; dmarc=none (p=none dis=none) header.from=huawei.com
 Authentication-Results: mail.kernel.org; spf=none smtp.mailfrom=linux-pci-owner@vger.kernel.org
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726938AbeIZQ5w (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Wed, 26 Sep 2018 12:57:52 -0400
-Received: from usa-sjc-mx-foss1.foss.arm.com ([217.140.101.70]:42922 "EHLO
-        foss.arm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1726703AbeIZQ5w (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Wed, 26 Sep 2018 12:57:52 -0400
-Received: from usa-sjc-imap-foss1.foss.arm.com (unknown [10.72.51.249])
-        by usa-sjc-mx-foss1.foss.arm.com (Postfix) with ESMTP id 823ECED1;
-        Wed, 26 Sep 2018 03:45:31 -0700 (PDT)
-Received: from [10.4.12.131] (e110467-lin.emea.arm.com [10.4.12.131])
-        by usa-sjc-imap-foss1.foss.arm.com (Postfix) with ESMTPSA id 3407B3F5BD;
-        Wed, 26 Sep 2018 03:45:29 -0700 (PDT)
-Subject: Re: [PATCH 4/4] dma-mapping: clear dev->dma_ops in
- arch_teardown_dma_ops
-To:     Christoph Hellwig <hch@lst.de>, Guenter Roeck <linux@roeck-us.net>
-Cc:     iommu@lists.linux-foundation.org,
-        Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-        linux-kernel@vger.kernel.org, linux-arm-kernel@lists.infradead.org,
-        Marek Szyprowski <m.szyprowski@samsung.com>,
-        Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org,
-        Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-        Paul Mackerras <paulus@samba.org>,
-        Michael Ellerman <mpe@ellerman.id.au>,
-        linuxppc-dev@lists.ozlabs.org
-References: <20180827084711.23407-1-hch@lst.de>
- <20180827084711.23407-5-hch@lst.de> <20180922150119.GA14761@roeck-us.net>
- <20180925201619.GB8413@lst.de>
-From:   Robin Murphy <robin.murphy@arm.com>
-Message-ID: <fe8bae9a-10d1-ca88-158d-5caf9aa80885@arm.com>
-Date:   Wed, 26 Sep 2018 11:45:27 +0100
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:52.0) Gecko/20100101
- Thunderbird/52.9.1
-MIME-Version: 1.0
-In-Reply-To: <20180925201619.GB8413@lst.de>
-Content-Type: text/plain; charset=utf-8; format=flowed
-Content-Language: en-GB
+        id S1726765AbeIZRD0 (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Wed, 26 Sep 2018 13:03:26 -0400
+Received: from szxga07-in.huawei.com ([45.249.212.35]:41874 "EHLO huawei.com"
+        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+        id S1726704AbeIZRD0 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Wed, 26 Sep 2018 13:03:26 -0400
+Received: from DGGEMS401-HUB.china.huawei.com (unknown [172.30.72.59])
+        by Forcepoint Email with ESMTP id 4A3AFB94D2C5A;
+        Wed, 26 Sep 2018 18:51:00 +0800 (CST)
+Received: from localhost.localdomain.localdomain (10.175.113.25) by
+ DGGEMS401-HUB.china.huawei.com (10.3.19.201) with Microsoft SMTP Server id
+ 14.3.399.0; Wed, 26 Sep 2018 18:50:54 +0800
+From:   YueHaibing <yuehaibing@huawei.com>
+To:     Russell Currey <ruscur@russell.cc>,
+        Sam Bobroff <sbobroff@linux.ibm.com>,
+        Oliver O'Halloran <oohall@gmail.com>,
+        Bjorn Helgaas <bhelgaas@google.com>
+CC:     YueHaibing <yuehaibing@huawei.com>,
+        <linuxppc-dev@lists.ozlabs.org>, <linux-pci@vger.kernel.org>,
+        <kernel-janitors@vger.kernel.org>
+Subject: [PATCH -next] PCI/AER: Remove duplicated include from err.c
+Date:   Wed, 26 Sep 2018 11:00:10 +0000
+Message-ID: <1537959610-71713-1-git-send-email-yuehaibing@huawei.com>
+X-Mailer: git-send-email 1.8.3.1
+Content-Type: text/plain; charset="ISO-8859-1"
 Content-Transfer-Encoding: 7bit
+MIME-Version: 1.0
+X-Originating-IP: [10.175.113.25]
+X-CFilter-Loop: Reflected
 Sender: linux-pci-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-On 25/09/18 21:16, Christoph Hellwig wrote:
-> Looking at the code I think this commit is simply broken for
-> architectures not using arch_setup_dma_ops, but instead setting up
-> the dma ops through arch specific magic.
-> 
-> I'll revert the patch.
+Remove duplicated include.
 
-Ugh, sorry about missing that too. Ack to a revert - thinking about 
-those PPC symptoms, it might actually be that other architectures could 
-also get into the same pickle just by unbinding and rebinding a driver 
-(e.g. switching to VFIO then back again).
+Signed-off-by: YueHaibing <yuehaibing@huawei.com>
+---
+ drivers/pci/pcie/err.c | 1 -
+ 1 file changed, 1 deletion(-)
 
-Robin.
+diff --git a/drivers/pci/pcie/err.c b/drivers/pci/pcie/err.c
+index 4da2a62b..773197a 100644
+--- a/drivers/pci/pcie/err.c
++++ b/drivers/pci/pcie/err.c
+@@ -12,7 +12,6 @@
+ 
+ #include <linux/pci.h>
+ #include <linux/module.h>
+-#include <linux/pci.h>
+ #include <linux/kernel.h>
+ #include <linux/errno.h>
+ #include <linux/aer.h>
+
+
+
