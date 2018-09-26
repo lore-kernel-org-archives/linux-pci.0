@@ -2,134 +2,96 @@ Return-Path: <SRS0=XSei=MI=vger.kernel.org=linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-6.8 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_PASS,URIBL_BLOCKED
+X-Spam-Status: No, score=-2.1 required=3.0 tests=DKIM_INVALID,DKIM_SIGNED,
+	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_PASS,USER_AGENT_MUTT
 	autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id DF290C43382
-	for <linux-pci@archiver.kernel.org>; Wed, 26 Sep 2018 12:33:47 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 569F9C43382
+	for <linux-pci@archiver.kernel.org>; Wed, 26 Sep 2018 12:45:30 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id A08BB214DA
-	for <linux-pci@archiver.kernel.org>; Wed, 26 Sep 2018 12:33:47 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.3.2 mail.kernel.org A08BB214DA
-Authentication-Results: mail.kernel.org; dmarc=none (p=none dis=none) header.from=socionext.com
+	by mail.kernel.org (Postfix) with ESMTP id 0BC5E206B7
+	for <linux-pci@archiver.kernel.org>; Wed, 26 Sep 2018 12:45:30 +0000 (UTC)
+Authentication-Results: mail.kernel.org;
+	dkim=fail reason="signature verification failed" (2048-bit key) header.d=8bytes.org header.i=@8bytes.org header.b="HIhUb9cH"
+DMARC-Filter: OpenDMARC Filter v1.3.2 mail.kernel.org 0BC5E206B7
+Authentication-Results: mail.kernel.org; dmarc=fail (p=none dis=none) header.from=8bytes.org
 Authentication-Results: mail.kernel.org; spf=none smtp.mailfrom=linux-pci-owner@vger.kernel.org
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727292AbeIZSqd (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Wed, 26 Sep 2018 14:46:33 -0400
-Received: from mx.socionext.com ([202.248.49.38]:27123 "EHLO mx.socionext.com"
+        id S1727045AbeIZS6S (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Wed, 26 Sep 2018 14:58:18 -0400
+Received: from 8bytes.org ([81.169.241.247]:55120 "EHLO theia.8bytes.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1726315AbeIZSqd (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Wed, 26 Sep 2018 14:46:33 -0400
-Received: from unknown (HELO kinkan-ex.css.socionext.com) ([172.31.9.52])
-  by mx.socionext.com with ESMTP; 26 Sep 2018 21:33:44 +0900
-Received: from mail.mfilter.local (m-filter-2 [10.213.24.62])
-        by kinkan-ex.css.socionext.com (Postfix) with ESMTP id D18E4180B7D;
-        Wed, 26 Sep 2018 21:33:44 +0900 (JST)
-Received: from 172.31.9.53 (172.31.9.53) by m-FILTER with ESMTP; Wed, 26 Sep 2018 21:33:44 +0900
-Received: from yuzu.css.socionext.com (yuzu [172.31.8.45])
-        by iyokan.css.socionext.com (Postfix) with ESMTP id B2DBF4039A;
-        Wed, 26 Sep 2018 21:33:44 +0900 (JST)
-Received: from [127.0.0.1] (unknown [10.213.132.48])
-        by yuzu.css.socionext.com (Postfix) with ESMTP id 74FC2120417;
-        Wed, 26 Sep 2018 21:33:44 +0900 (JST)
-Date:   Wed, 26 Sep 2018 21:33:44 +0900
-From:   Kunihiko Hayashi <hayashi.kunihiko@socionext.com>
-To:     Rob Herring <robh@kernel.org>
-Subject: Re: [PATCH v2 1/2] dt-bindings: PCI: add UniPhier PCIe host controller description
-Cc:     Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
-        Bjorn Helgaas <bhelgaas@google.com>,
-        Mark Rutland <mark.rutland@arm.com>,
-        Masahiro Yamada <yamada.masahiro@socionext.com>,
-        <linux-pci@vger.kernel.org>, <devicetree@vger.kernel.org>,
-        <linux-arm-kernel@lists.infradead.org>,
-        <linux-kernel@vger.kernel.org>,
-        Masami Hiramatsu <masami.hiramatsu@linaro.org>,
-        Jassi Brar <jaswinder.singh@linaro.org>
-In-Reply-To: <20180925205502.GA12949@bogus>
-References: <1536226832-5089-2-git-send-email-hayashi.kunihiko@socionext.com> <20180925205502.GA12949@bogus>
-Message-Id: <20180926213343.A4B8.4A936039@socionext.com>
+        id S1726342AbeIZS6S (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Wed, 26 Sep 2018 14:58:18 -0400
+Received: by theia.8bytes.org (Postfix, from userid 1000)
+        id D6D646FB; Wed, 26 Sep 2018 14:45:27 +0200 (CEST)
+DKIM-Signature: v=1; a=rsa-sha256; c=simple/simple; d=8bytes.org; s=mail-1;
+        t=1537965927; bh=Oc9OdBFncwGb0skX+Wire6fE9n48FKNjvogEgQoU7b8=;
+        h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
+        b=HIhUb9cHI4RYdWfexCnlf6beDji9l5Bl4DElLAKEvv/+UekGT/+93WXN+wQpKAhKe
+         /OmrHaS7qR/vcvx1deaecKqttam0+uLyK7EnckvHV7c7OTcT1cfRstai29VoFxegpn
+         EPW0PSrF6JW+qCW/wP20ZP/cvKBArq5WaceBDWwN7sGZIT5VWRqdn5j6T/mzZLWgB1
+         QrImYjultUQVirAjojJGNzerxqG5jvRoD/XwAYyZPDdMJMs8VlZOtObJaxLov1yD3I
+         L8C5U6okFxM8aGCfFV1cAuT25A7C4umjVbxdE6EzK/KCbeuVumFJrIwmFhAA47p7Nl
+         r6ZvhKXIFtiJw==
+Date:   Wed, 26 Sep 2018 14:45:27 +0200
+From:   Joerg Roedel <joro@8bytes.org>
+To:     Jean-Philippe Brucker <jean-philippe.brucker@arm.com>
+Cc:     Lu Baolu <baolu.lu@linux.intel.com>,
+        "iommu@lists.linux-foundation.org" <iommu@lists.linux-foundation.org>,
+        "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+        "jcrouse@codeaurora.org" <jcrouse@codeaurora.org>,
+        "alex.williamson@redhat.com" <alex.williamson@redhat.com>,
+        "Jonathan.Cameron@huawei.com" <Jonathan.Cameron@huawei.com>,
+        "jacob.jun.pan@linux.intel.com" <jacob.jun.pan@linux.intel.com>,
+        "christian.koenig@amd.com" <christian.koenig@amd.com>,
+        "eric.auger@redhat.com" <eric.auger@redhat.com>,
+        "kevin.tian@intel.com" <kevin.tian@intel.com>,
+        "yi.l.liu@intel.com" <yi.l.liu@intel.com>,
+        Andrew Murray <Andrew.Murray@arm.com>,
+        Will Deacon <Will.Deacon@arm.com>,
+        Robin Murphy <Robin.Murphy@arm.com>,
+        "ashok.raj@intel.com" <ashok.raj@intel.com>,
+        "xuzaibo@huawei.com" <xuzaibo@huawei.com>,
+        "liguozhu@hisilicon.com" <liguozhu@hisilicon.com>,
+        "okaya@codeaurora.org" <okaya@codeaurora.org>,
+        "bharatku@xilinx.com" <bharatku@xilinx.com>,
+        "ilias.apalodimas@linaro.org" <ilias.apalodimas@linaro.org>,
+        "shunyong.yang@hxt-semitech.com" <shunyong.yang@hxt-semitech.com>
+Subject: Re: [PATCH v3 03/10] iommu/sva: Manage process address spaces
+Message-ID: <20180926124527.GD18287@8bytes.org>
+References: <20180920170046.20154-1-jean-philippe.brucker@arm.com>
+ <20180920170046.20154-4-jean-philippe.brucker@arm.com>
+ <09933fce-b959-32e1-b1f3-0d4389abf735@linux.intel.com>
+ <20180925132627.vbdotr23o7lqrmnd@8bytes.org>
+ <b33a1911-e100-586b-b8df-eb04312ecffd@linux.intel.com>
+ <754d495d-d016-f42f-5682-ba4a75a618e0@arm.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="US-ASCII"
-Content-Transfer-Encoding: 7bit
-X-Mailer: Becky! ver. 2.70 [ja]
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <754d495d-d016-f42f-5682-ba4a75a618e0@arm.com>
+User-Agent: Mutt/1.5.24 (2015-08-30)
 Sender: linux-pci-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-Hi Rob,
+On Wed, Sep 26, 2018 at 11:20:34AM +0100, Jean-Philippe Brucker wrote:
+> Yes, at the moment it's difficult to guess what device drivers will
+> want, but I can imagine some driver offering SVA to userspace, while
+> keeping a few PASIDs for themselves to map kernel memory. Or create mdev
+> devices for virtualization while also allowing bare-metal SVA. So I
+> think we should aim at enabling these use-cases in parallel, even if it
+> doesn't necessarily need to be possible right now.
 
-On Tue, 25 Sep 2018 15:55:02 -0500 <robh@kernel.org> wrote:
+Yeah okay, but allowing these use-cases in parallel basically disallows
+giving any guest control over a device's pasid-table, no?
 
-> On Thu, Sep 06, 2018 at 06:40:31PM +0900, Kunihiko Hayashi wrote:
-> > Add DT bindings for PCIe controller implemented in UniPhier SoCs when
-> > configured in Root Complex (host) mode. This controller is based on
-> > the DesignWare PCIe core.
-> > 
-> > Signed-off-by: Kunihiko Hayashi <hayashi.kunihiko@socionext.com>
-> > ---
-> >  .../devicetree/bindings/pci/uniphier-pcie.txt      | 78 ++++++++++++++++++++++
-> >  1 file changed, 78 insertions(+)
-> >  create mode 100644 Documentation/devicetree/bindings/pci/uniphier-pcie.txt
-> > 
-> > diff --git a/Documentation/devicetree/bindings/pci/uniphier-pcie.txt b/Documentation/devicetree/bindings/pci/uniphier-pcie.txt
-> > new file mode 100644
-> > index 0000000..a34e167
-> > --- /dev/null
-> > +++ b/Documentation/devicetree/bindings/pci/uniphier-pcie.txt
-> > @@ -0,0 +1,78 @@
-> > +Socionext UniPhier PCIe host controller bindings
-> > +
-> > +This describes the devicetree bindings for PCIe host controller implemented
-> > +on Socionext UniPhier SoCs.
-> > +
-> > +UniPhier PCIe host controller is based on the Synopsys DesignWare PCI core.
-> > +It shares common functions with the PCIe DesignWare core driver and inherits
-> > +common properties defined in
-> > +Documentation/devicetree/bindings/pci/designware-pcie.txt.
-> > +
-> > +Required properties:
-> > +- compatible: Should be "socionext,uniphier-pcie".
-> > +- reg: Specifies offset and length of the register set for the device.
-> > +	According to the reg-names, appropriate register sets are required.
-> > +- reg-names: Must include the following entries:
-> > +    "dbi"    - controller configuration registers
-> > +    "link"   - SoC-specific glue layer registers
-> > +    "config" - PCIe configuration space
-> > +- clocks: A phandle to the clock gate for PCIe glue layer including
-> > +	the host controller.
-> > +- resets: A phandle to the reset line for PCIe glue layer including
-> > +	the host controller.
-> > +- interrupts: A list of interrupt specifiers. According to the
-> > +	interrupt-names, appropriate interrupts are required.
-> > +- interrupt-names: Must include the following entries:
-> > +    "dma"    - DMA interrupt
-> > +    "msi"    - MSI interrupt
-> > +    "intx"   - Legacy INTA/B/C/D interrupt
-> > +
-> > +Optional properties:
-> > +- phys: A phandle to generic PCIe PHY. According to the phy-names, appropriate
-> > +	phys are required.
-> > +- phy-names: Must be "pcie-phy".
-> > +
-> > +Required sub-node:
-> > +- interrupt-controller: Specifies interrupt controller for legacy PCI
-> > +	interrupts. The node name isn't important.
-> 
-> No, it is important.
-> 
-> With that sentence removed,
-> 
-> Reviewed-by: Rob Herring <robh@kernel.org>
+I am just asking because I want to make up my mind about the necessary
+extensions to the IOMMU-API.
 
-I was wrong. the node name is important to express its role.
-I'll remove that sentence in next.
 
-Thank you,
+Regards,
 
----
-Best Regards,
-Kunihiko Hayashi
-
+	Joerg
 
