@@ -4,31 +4,31 @@ X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 X-Spam-Level: 
 X-Spam-Status: No, score=-8.8 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
 	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_PASS,URIBL_BLOCKED,
-	USER_AGENT_GIT autolearn=ham autolearn_force=no version=3.4.0
+	USER_AGENT_GIT autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 97F92C004D5
-	for <linux-pci@archiver.kernel.org>; Thu, 27 Sep 2018 16:56:19 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 040A4C43382
+	for <linux-pci@archiver.kernel.org>; Thu, 27 Sep 2018 16:56:39 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 605C32152F
-	for <linux-pci@archiver.kernel.org>; Thu, 27 Sep 2018 16:56:19 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.3.2 mail.kernel.org 605C32152F
+	by mail.kernel.org (Postfix) with ESMTP id A625A2168B
+	for <linux-pci@archiver.kernel.org>; Thu, 27 Sep 2018 16:56:38 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.3.2 mail.kernel.org A625A2168B
 Authentication-Results: mail.kernel.org; dmarc=none (p=none dis=none) header.from=deltatee.com
 Authentication-Results: mail.kernel.org; spf=none smtp.mailfrom=linux-pci-owner@vger.kernel.org
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1728476AbeI0XNm (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Thu, 27 Sep 2018 19:13:42 -0400
-Received: from ale.deltatee.com ([207.54.116.67]:58400 "EHLO ale.deltatee.com"
+        id S1728259AbeI0XPf (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Thu, 27 Sep 2018 19:15:35 -0400
+Received: from ale.deltatee.com ([207.54.116.67]:58412 "EHLO ale.deltatee.com"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1728377AbeI0XNm (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        id S1728393AbeI0XNm (ORCPT <rfc822;linux-pci@vger.kernel.org>);
         Thu, 27 Sep 2018 19:13:42 -0400
 Received: from cgy1-donard.priv.deltatee.com ([172.16.1.31])
         by ale.deltatee.com with esmtps (TLS1.2:ECDHE_RSA_AES_256_GCM_SHA384:256)
         (Exim 4.89)
         (envelope-from <gunthorp@deltatee.com>)
-        id 1g5ZYZ-0003f7-Ms; Thu, 27 Sep 2018 10:54:30 -0600
+        id 1g5ZYZ-0003f3-Mr; Thu, 27 Sep 2018 10:54:32 -0600
 Received: from gunthorp by cgy1-donard.priv.deltatee.com with local (Exim 4.89)
         (envelope-from <gunthorp@deltatee.com>)
-        id 1g5ZYU-0001OZ-6q; Thu, 27 Sep 2018 10:54:22 -0600
+        id 1g5ZYT-0001ON-Om; Thu, 27 Sep 2018 10:54:21 -0600
 From:   Logan Gunthorpe <logang@deltatee.com>
 To:     linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
         linux-nvme@lists.infradead.org, linux-rdma@vger.kernel.org,
@@ -47,8 +47,8 @@ Cc:     Stephen Bates <sbates@raithlin.com>,
         =?UTF-8?q?Christian=20K=C3=B6nig?= <christian.koenig@amd.com>,
         Jens Axboe <axboe@kernel.dk>,
         Logan Gunthorpe <logang@deltatee.com>
-Date:   Thu, 27 Sep 2018 10:54:14 -0600
-Message-Id: <20180927165420.5290-8-logang@deltatee.com>
+Date:   Thu, 27 Sep 2018 10:54:10 -0600
+Message-Id: <20180927165420.5290-4-logang@deltatee.com>
 X-Mailer: git-send-email 2.19.0
 In-Reply-To: <20180927165420.5290-1-logang@deltatee.com>
 References: <20180927165420.5290-1-logang@deltatee.com>
@@ -57,7 +57,7 @@ Content-Transfer-Encoding: 8bit
 X-SA-Exim-Connect-IP: 172.16.1.31
 X-SA-Exim-Rcpt-To: linux-nvme@lists.infradead.org, linux-nvdimm@lists.01.org, linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org, linux-rdma@vger.kernel.org, linux-block@vger.kernel.org, sbates@raithlin.com, hch@lst.de, sagi@grimberg.me, bhelgaas@google.com, jgg@mellanox.com, maxg@mellanox.com, keith.busch@intel.com, dan.j.williams@intel.com, benh@kernel.crashing.org, jglisse@redhat.com, alex.williamson@redhat.com, christian.koenig@amd.com, axboe@kernel.dk, logang@deltatee.com
 X-SA-Exim-Mail-From: gunthorp@deltatee.com
-Subject: [PATCH v8 07/13] block: Add PCI P2P flag for request queue and check support for requests
+Subject: [PATCH v8 03/13] PCI/P2PDMA: Add PCI p2pmem DMA mappings to adjust the bus offset
 X-SA-Exim-Version: 4.2.1 (built Tue, 02 Aug 2016 21:08:31 +0000)
 X-SA-Exim-Scanned: Yes (on ale.deltatee.com)
 Sender: linux-pci-owner@vger.kernel.org
@@ -65,37 +65,121 @@ Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-QUEUE_FLAG_PCI_P2P is introduced meaning a driver's request queue
-supports targeting P2P memory. This will be used by P2P providers and
-orchestrators (in subsequent patches) to ensure block devices can
-support P2P memory before submitting P2P backed pages to submit_bio().
+The DMA address used when mapping PCI P2P memory must be the PCI bus
+address. Thus, introduce pci_p2pmem_map_sg() to map the correct
+addresses when using P2P memory.
+
+Memory mapped in this way does not need to be unmapped and thus if we
+provided pci_p2pmem_unmap_sg() it would be empty. This breaks the
+expected balance between map/unmap but was left out as an empty
+function doesn't really provide any benefit. In the future, if
+this call becomes necessary it can be added without much difficulty.
+
+For this, we assume that an SGL passed to these functions contain all
+P2P memory or no P2P memory.
 
 Signed-off-by: Logan Gunthorpe <logang@deltatee.com>
+Acked-by: Bjorn Helgaas <bhelgaas@google.com>
 ---
- include/linux/blkdev.h | 3 +++
- 1 file changed, 3 insertions(+)
+ drivers/pci/p2pdma.c       | 43 ++++++++++++++++++++++++++++++++++++++
+ include/linux/memremap.h   |  1 +
+ include/linux/pci-p2pdma.h |  7 +++++++
+ 3 files changed, 51 insertions(+)
 
-diff --git a/include/linux/blkdev.h b/include/linux/blkdev.h
-index 6980014357d4..87fb1963b721 100644
---- a/include/linux/blkdev.h
-+++ b/include/linux/blkdev.h
-@@ -699,6 +699,7 @@ struct request_queue {
- #define QUEUE_FLAG_SCSI_PASSTHROUGH 27	/* queue supports SCSI commands */
- #define QUEUE_FLAG_QUIESCED    28	/* queue has been quiesced */
- #define QUEUE_FLAG_PREEMPT_ONLY	29	/* only process REQ_PREEMPT requests */
-+#define QUEUE_FLAG_PCI_P2PDMA  30	/* device supports pci p2p requests */
+diff --git a/drivers/pci/p2pdma.c b/drivers/pci/p2pdma.c
+index 7d239c203fde..ec56febf08fc 100644
+--- a/drivers/pci/p2pdma.c
++++ b/drivers/pci/p2pdma.c
+@@ -194,6 +194,8 @@ int pci_p2pdma_add_resource(struct pci_dev *pdev, int bar, size_t size,
+ 	pgmap->res.flags = pci_resource_flags(pdev, bar);
+ 	pgmap->ref = &pdev->p2pdma->devmap_ref;
+ 	pgmap->type = MEMORY_DEVICE_PCI_P2PDMA;
++	pgmap->pci_p2pdma_bus_offset = pci_bus_address(pdev, bar) -
++		pci_resource_start(pdev, bar);
  
- #define QUEUE_FLAG_DEFAULT	((1 << QUEUE_FLAG_IO_STAT) |		\
- 				 (1 << QUEUE_FLAG_SAME_COMP)	|	\
-@@ -731,6 +732,8 @@ bool blk_queue_flag_test_and_clear(unsigned int flag, struct request_queue *q);
- #define blk_queue_dax(q)	test_bit(QUEUE_FLAG_DAX, &(q)->queue_flags)
- #define blk_queue_scsi_passthrough(q)	\
- 	test_bit(QUEUE_FLAG_SCSI_PASSTHROUGH, &(q)->queue_flags)
-+#define blk_queue_pci_p2pdma(q)	\
-+	test_bit(QUEUE_FLAG_PCI_P2PDMA, &(q)->queue_flags)
+ 	addr = devm_memremap_pages(&pdev->dev, pgmap);
+ 	if (IS_ERR(addr)) {
+@@ -825,3 +827,44 @@ void pci_p2pmem_publish(struct pci_dev *pdev, bool publish)
+ 	pdev->p2pdma->p2pmem_published = publish;
+ }
+ EXPORT_SYMBOL_GPL(pci_p2pmem_publish);
++
++/**
++ * pci_p2pdma_map_sg - map a PCI peer-to-peer scatterlist for DMA
++ * @dev: device doing the DMA request
++ * @sg: scatter list to map
++ * @nents: elements in the scatterlist
++ * @dir: DMA direction
++ *
++ * Scatterlists mapped with this function should not be unmapped in any way.
++ *
++ * Returns the number of SG entries mapped or 0 on error.
++ */
++int pci_p2pdma_map_sg(struct device *dev, struct scatterlist *sg, int nents,
++		      enum dma_data_direction dir)
++{
++	struct dev_pagemap *pgmap;
++	struct scatterlist *s;
++	phys_addr_t paddr;
++	int i;
++
++	/*
++	 * p2pdma mappings are not compatible with devices that use
++	 * dma_virt_ops. If the upper layers do the right thing
++	 * this should never happen because it will be prevented
++	 * by the check in pci_p2pdma_add_client()
++	 */
++	if (WARN_ON_ONCE(IS_ENABLED(CONFIG_DMA_VIRT_OPS) &&
++			 dev->dma_ops == &dma_virt_ops))
++		return 0;
++
++	for_each_sg(sg, s, nents, i) {
++		pgmap = sg_page(s)->pgmap;
++		paddr = sg_phys(s);
++
++		s->dma_address = paddr - pgmap->pci_p2pdma_bus_offset;
++		sg_dma_len(s) = s->length;
++	}
++
++	return nents;
++}
++EXPORT_SYMBOL_GPL(pci_p2pdma_map_sg);
+diff --git a/include/linux/memremap.h b/include/linux/memremap.h
+index 9553370ebdad..0ac69ddf5fc4 100644
+--- a/include/linux/memremap.h
++++ b/include/linux/memremap.h
+@@ -125,6 +125,7 @@ struct dev_pagemap {
+ 	struct device *dev;
+ 	void *data;
+ 	enum memory_type type;
++	u64 pci_p2pdma_bus_offset;
+ };
  
- #define blk_noretry_request(rq) \
- 	((rq)->cmd_flags & (REQ_FAILFAST_DEV|REQ_FAILFAST_TRANSPORT| \
+ #ifdef CONFIG_ZONE_DEVICE
+diff --git a/include/linux/pci-p2pdma.h b/include/linux/pci-p2pdma.h
+index 127e95f50491..f039c48990a5 100644
+--- a/include/linux/pci-p2pdma.h
++++ b/include/linux/pci-p2pdma.h
+@@ -35,6 +35,8 @@ struct scatterlist *pci_p2pmem_alloc_sgl(struct pci_dev *pdev,
+ 					 unsigned int *nents, u32 length);
+ void pci_p2pmem_free_sgl(struct pci_dev *pdev, struct scatterlist *sgl);
+ void pci_p2pmem_publish(struct pci_dev *pdev, bool publish);
++int pci_p2pdma_map_sg(struct device *dev, struct scatterlist *sg, int nents,
++		      enum dma_data_direction dir);
+ #else /* CONFIG_PCI_P2PDMA */
+ static inline int pci_p2pdma_add_resource(struct pci_dev *pdev, int bar,
+ 		size_t size, u64 offset)
+@@ -97,5 +99,10 @@ static inline void pci_p2pmem_free_sgl(struct pci_dev *pdev,
+ static inline void pci_p2pmem_publish(struct pci_dev *pdev, bool publish)
+ {
+ }
++static inline int pci_p2pdma_map_sg(struct device *dev,
++		struct scatterlist *sg, int nents, enum dma_data_direction dir)
++{
++	return 0;
++}
+ #endif /* CONFIG_PCI_P2PDMA */
+ #endif /* _LINUX_PCI_P2P_H */
 -- 
 2.19.0
 
