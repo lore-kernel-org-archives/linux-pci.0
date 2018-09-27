@@ -2,80 +2,95 @@ Return-Path: <SRS0=vBCh=MJ=vger.kernel.org=linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-8.8 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_PASS,URIBL_BLOCKED,
-	USER_AGENT_GIT autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-0.8 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+	MAILING_LIST_MULTI,SPF_PASS autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id A8603C43382
-	for <linux-pci@archiver.kernel.org>; Thu, 27 Sep 2018 12:35:58 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id B68FDC43382
+	for <linux-pci@archiver.kernel.org>; Thu, 27 Sep 2018 13:38:15 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 53418216B7
-	for <linux-pci@archiver.kernel.org>; Thu, 27 Sep 2018 12:35:58 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.3.2 mail.kernel.org 53418216B7
-Authentication-Results: mail.kernel.org; dmarc=none (p=none dis=none) header.from=bp.renesas.com
+	by mail.kernel.org (Postfix) with ESMTP id 55FA9216E3
+	for <linux-pci@archiver.kernel.org>; Thu, 27 Sep 2018 13:38:15 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.3.2 mail.kernel.org 55FA9216E3
+Authentication-Results: mail.kernel.org; dmarc=none (p=none dis=none) header.from=arm.com
 Authentication-Results: mail.kernel.org; spf=none smtp.mailfrom=linux-pci-owner@vger.kernel.org
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727169AbeI0SyB (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Thu, 27 Sep 2018 14:54:01 -0400
-Received: from relmlor4.renesas.com ([210.160.252.174]:41889 "EHLO
-        relmlie3.idc.renesas.com" rhost-flags-OK-OK-OK-FAIL)
-        by vger.kernel.org with ESMTP id S1727112AbeI0SyB (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Thu, 27 Sep 2018 14:54:01 -0400
-Received: from unknown (HELO relmlir1.idc.renesas.com) ([10.200.68.151])
-  by relmlie3.idc.renesas.com with ESMTP; 27 Sep 2018 21:35:54 +0900
-Received: from relmlii1.idc.renesas.com (relmlii1.idc.renesas.com [10.200.68.65])
-        by relmlir1.idc.renesas.com (Postfix) with ESMTP id 07BA38AE0F;
-        Thu, 27 Sep 2018 21:35:55 +0900 (JST)
-X-IronPort-AV: E=Sophos;i="5.54,310,1534777200"; 
-   d="scan'208";a="292089098"
-Received: from unknown (HELO be1yocto.ree.adwin.renesas.com) ([172.29.43.62])
-  by relmlii1.idc.renesas.com with ESMTP; 27 Sep 2018 21:35:52 +0900
-From:   Biju Das <biju.das@bp.renesas.com>
-To:     Rob Herring <robh+dt@kernel.org>,
-        Mark Rutland <mark.rutland@arm.com>
-Cc:     Biju Das <biju.das@bp.renesas.com>,
-        Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org,
-        devicetree@vger.kernel.org, Simon Horman <horms@verge.net.au>,
-        Geert Uytterhoeven <geert+renesas@glider.be>,
-        Chris Paterson <Chris.Paterson2@renesas.com>,
-        Fabrizio Castro <fabrizio.castro@bp.renesas.com>
-Subject: [PATCH] dt-bindings: PCI: rcar: Add device tree support for r8a7744
-Date:   Thu, 27 Sep 2018 13:28:51 +0100
-Message-Id: <1538051331-14860-1-git-send-email-biju.das@bp.renesas.com>
-X-Mailer: git-send-email 2.7.4
+        id S1727175AbeI0T4c (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Thu, 27 Sep 2018 15:56:32 -0400
+Received: from foss.arm.com ([217.140.101.70]:34680 "EHLO foss.arm.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1726953AbeI0T4c (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Thu, 27 Sep 2018 15:56:32 -0400
+Received: from usa-sjc-imap-foss1.foss.arm.com (unknown [10.72.51.249])
+        by usa-sjc-mx-foss1.foss.arm.com (Postfix) with ESMTP id E2A0B7A9;
+        Thu, 27 Sep 2018 06:38:13 -0700 (PDT)
+Received: from [10.4.12.111] (ostrya.Emea.Arm.com [10.4.12.111])
+        by usa-sjc-imap-foss1.foss.arm.com (Postfix) with ESMTPSA id 9B75E3F5B7;
+        Thu, 27 Sep 2018 06:38:11 -0700 (PDT)
+From:   Jean-Philippe Brucker <jean-philippe.brucker@arm.com>
+Subject: Re: [PATCH v3 03/10] iommu/sva: Manage process address spaces
+To:     "Liu, Yi L" <yi.l.liu@intel.com>, Joerg Roedel <joro@8bytes.org>
+Cc:     "Tian, Kevin" <kevin.tian@intel.com>,
+        "Raj, Ashok" <ashok.raj@intel.com>,
+        "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+        "ilias.apalodimas@linaro.org" <ilias.apalodimas@linaro.org>,
+        Will Deacon <Will.Deacon@arm.com>,
+        "alex.williamson@redhat.com" <alex.williamson@redhat.com>,
+        "okaya@codeaurora.org" <okaya@codeaurora.org>,
+        "iommu@lists.linux-foundation.org" <iommu@lists.linux-foundation.org>,
+        "liguozhu@hisilicon.com" <liguozhu@hisilicon.com>,
+        "christian.koenig@amd.com" <christian.koenig@amd.com>,
+        Robin Murphy <Robin.Murphy@arm.com>
+References: <20180920170046.20154-1-jean-philippe.brucker@arm.com>
+ <20180920170046.20154-4-jean-philippe.brucker@arm.com>
+ <09933fce-b959-32e1-b1f3-0d4389abf735@linux.intel.com>
+ <20180925132627.vbdotr23o7lqrmnd@8bytes.org>
+ <b33a1911-e100-586b-b8df-eb04312ecffd@linux.intel.com>
+ <754d495d-d016-f42f-5682-ba4a75a618e0@arm.com>
+ <20180926124527.GD18287@8bytes.org>
+ <1f53c6f1-4e7a-1451-1abc-a7bca4a2359d@arm.com>
+ <A2975661238FB949B60364EF0F2C257439D0CC48@SHSMSX104.ccr.corp.intel.com>
+Message-ID: <9aedb22e-ff28-7bfd-feeb-ae86802e6400@arm.com>
+Date:   Thu, 27 Sep 2018 14:37:54 +0100
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:60.0) Gecko/20100101
+ Thunderbird/60.0
+MIME-Version: 1.0
+In-Reply-To: <A2975661238FB949B60364EF0F2C257439D0CC48@SHSMSX104.ccr.corp.intel.com>
+Content-Type: text/plain; charset=utf-8
+Content-Language: en-US
+Content-Transfer-Encoding: 7bit
 Sender: linux-pci-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-Add internal PCI bridge support for r8a7744 SoC.  The Renesas RZ/G1N
-(R8A7744) internal PCI bridge is identical to the R-Car Gen2 family.
+On 27/09/2018 04:22, Liu, Yi L wrote:
+>> For the "classic" vfio-pci case, "SVA in guest" still means giving the
+>> guest control over the whole PASID table.
+> 
+> No, if giving guest control over the whole PASID table, it means guest may have
+> its own PASID namespace. right? And for vfio-mdev case, it gets PASID from host.
+> So there would be multiple PASID namespaces. Thinking about the following scenario:
+> 
+> A PF/VF assigned to a VM via "classic" vfio-pci. And an assignable-device-interface
+> assigned to this VM via vfio-mdev. If an application in this VM tries to manipulate
+> these two "devices", it should have the same PASID programmed to them. right?
+> But as the above comments mentioned, for vfio-pci case, it would get a PASID from
+> its own PASID namespace. While the vfio-mdev case would get a PASID from host.
+> This would result in conflict.
 
-This doesn't change the driver, so it does nothing by itself.  But it does
-mean that checkpatch won't complain about a future patch that adds
-"renesas,pci-r8a7744" to a DT, which helps ensure that shipped DTs use
-documented compatibility strings.
+Ah I see, if the host assigns an ADI via vfio-mdev and a PCI function
+via vfio-pci to the same VM, the guest needs to use the paravirtualized
+PASID allocator for the PCI device as well, not just the ADI. In fact
+all guest PASIDs need to be allocated through one PV channel, even if
+the VM has other vIOMMUs that don't support PV. But I suppose that kind
+of VM is unrealistic. However for SMMUv3 we'll still use the
+bind_pasid_table for vfio-pci and let the guest allocate PASIDs, since
+the PASID table lives in guest-physical space.
 
-Signed-off-by: Biju Das <biju.das@bp.renesas.com>
-Reviewed-by: Chris Paterson <Chris.Paterson2@renesas.com>
----
-This patch is tested against linux-next next-20180927
----
- Documentation/devicetree/bindings/pci/pci-rcar-gen2.txt | 1 +
- 1 file changed, 1 insertion(+)
+In any case, for the patch series at hand, it means that iommu-sva will
+need assistance from the vt-d driver to allocate PASIDs: host uses the
+generic allocator, guest uses the PV one. I guess the mm_alloc() op
+could do that?
 
-diff --git a/Documentation/devicetree/bindings/pci/pci-rcar-gen2.txt b/Documentation/devicetree/bindings/pci/pci-rcar-gen2.txt
-index 9fe7e12..b94078f 100644
---- a/Documentation/devicetree/bindings/pci/pci-rcar-gen2.txt
-+++ b/Documentation/devicetree/bindings/pci/pci-rcar-gen2.txt
-@@ -7,6 +7,7 @@ OHCI and EHCI controllers.
- 
- Required properties:
- - compatible: "renesas,pci-r8a7743" for the R8A7743 SoC;
-+	      "renesas,pci-r8a7744" for the R8A7744 SoC;
- 	      "renesas,pci-r8a7745" for the R8A7745 SoC;
- 	      "renesas,pci-r8a7790" for the R8A7790 SoC;
- 	      "renesas,pci-r8a7791" for the R8A7791 SoC;
--- 
-2.7.4
-
+Thanks,
+Jean
