@@ -2,80 +2,118 @@ Return-Path: <SRS0=vBCh=MJ=vger.kernel.org=linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-8.8 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_PASS,URIBL_BLOCKED,
-	USER_AGENT_GIT autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-2.8 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+	MAILING_LIST_MULTI,SPF_PASS,USER_AGENT_NEOMUTT autolearn=ham
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 54A32C43382
-	for <linux-pci@archiver.kernel.org>; Thu, 27 Sep 2018 06:43:33 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 7D10AC43382
+	for <linux-pci@archiver.kernel.org>; Thu, 27 Sep 2018 07:03:32 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 194AD2156D
-	for <linux-pci@archiver.kernel.org>; Thu, 27 Sep 2018 06:43:33 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.3.2 mail.kernel.org 194AD2156D
-Authentication-Results: mail.kernel.org; dmarc=none (p=none dis=none) header.from=huawei.com
+	by mail.kernel.org (Postfix) with ESMTP id 31DBC2156D
+	for <linux-pci@archiver.kernel.org>; Thu, 27 Sep 2018 07:03:32 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.3.2 mail.kernel.org 31DBC2156D
+Authentication-Results: mail.kernel.org; dmarc=none (p=none dis=none) header.from=wunner.de
 Authentication-Results: mail.kernel.org; spf=none smtp.mailfrom=linux-pci-owner@vger.kernel.org
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727255AbeI0NAM (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Thu, 27 Sep 2018 09:00:12 -0400
-Received: from szxga04-in.huawei.com ([45.249.212.190]:13134 "EHLO huawei.com"
-        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1727097AbeI0NAM (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Thu, 27 Sep 2018 09:00:12 -0400
-Received: from DGGEMS404-HUB.china.huawei.com (unknown [172.30.72.58])
-        by Forcepoint Email with ESMTP id 2C0188831A52C;
-        Thu, 27 Sep 2018 14:43:29 +0800 (CST)
-Received: from localhost.localdomain.localdomain (10.175.113.25) by
- DGGEMS404-HUB.china.huawei.com (10.3.19.204) with Microsoft SMTP Server id
- 14.3.399.0; Thu, 27 Sep 2018 14:43:20 +0800
-From:   YueHaibing <yuehaibing@huawei.com>
-To:     Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-        Paul Mackerras <paulus@samba.org>,
-        Michael Ellerman <mpe@ellerman.id.au>,
-        Bjorn Helgaas <bhelgaas@google.com>
-CC:     YueHaibing <yuehaibing@huawei.com>,
-        <linuxppc-dev@lists.ozlabs.org>, <linux-pci@vger.kernel.org>,
-        <kernel-janitors@vger.kernel.org>
-Subject: [PATCH -next] PCI: hotplug: Use kmemdup rather than duplicating its implementation in pnv_php_add_devtree()
-Date:   Thu, 27 Sep 2018 06:52:21 +0000
-Message-ID: <1538031141-138417-1-git-send-email-yuehaibing@huawei.com>
-X-Mailer: git-send-email 1.8.3.1
-Content-Type: text/plain; charset="ISO-8859-1"
-Content-Transfer-Encoding: 7bit
+        id S1727018AbeI0NUQ (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Thu, 27 Sep 2018 09:20:16 -0400
+Received: from bmailout2.hostsharing.net ([83.223.90.240]:35633 "EHLO
+        bmailout2.hostsharing.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726962AbeI0NUQ (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Thu, 27 Sep 2018 09:20:16 -0400
+Received: from h08.hostsharing.net (h08.hostsharing.net [83.223.95.28])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+        (Client CN "*.hostsharing.net", Issuer "COMODO RSA Domain Validation Secure Server CA" (not verified))
+        by bmailout2.hostsharing.net (Postfix) with ESMTPS id EC5262800A26C;
+        Thu, 27 Sep 2018 09:03:27 +0200 (CEST)
+Received: by h08.hostsharing.net (Postfix, from userid 100393)
+        id 810E2CC5B1; Thu, 27 Sep 2018 09:03:27 +0200 (CEST)
+Date:   Thu, 27 Sep 2018 09:03:27 +0200
+From:   Lukas Wunner <lukas@wunner.de>
+To:     Bjorn Helgaas <helgaas@kernel.org>
+Cc:     Suganath Prabu S <suganath-prabu.subramani@broadcom.com>,
+        linux-scsi@vger.kernel.org, linux-pci@vger.kernel.org,
+        andy.shevchenko@gmail.com, Sathya.Prakash@broadcom.com,
+        sreekanth.reddy@broadcom.com, linux-kernel@vger.kernel.org
+Subject: Re: [PATCH v4 1/6] mpt3sas: Introduce
+ mpt3sas_base_pci_device_is_available
+Message-ID: <20180927070327.wvl5glb4c7gtjoa3@wunner.de>
+References: <1537935759-14754-1-git-send-email-suganath-prabu.subramani@broadcom.com>
+ <1537935759-14754-2-git-send-email-suganath-prabu.subramani@broadcom.com>
+ <20180926213241.GI28024@bhelgaas-glaptop.roam.corp.google.com>
 MIME-Version: 1.0
-X-Originating-IP: [10.175.113.25]
-X-CFilter-Loop: Reflected
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20180926213241.GI28024@bhelgaas-glaptop.roam.corp.google.com>
+User-Agent: NeoMutt/20170113 (1.7.2)
 Sender: linux-pci-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-Use kmemdup rather than duplicating its implementation
+On Wed, Sep 26, 2018 at 04:32:41PM -0500, Bjorn Helgaas wrote:
+> On Wed, Sep 26, 2018 at 09:52:34AM +0530, Suganath Prabu S wrote:
+> > @@ -6853,6 +6872,13 @@ mpt3sas_wait_for_commands_to_complete(struct MPT3SAS_ADAPTER *ioc)
+> >  
+> >  	ioc->pending_io_count = 0;
+> >  
+> > +	if (!mpt3sas_base_pci_device_is_available(ioc)) {
+> > +		pr_err(MPT3SAS_FMT
+> > +		    "%s: pci error recovery reset or pci device unplug occurred\n",
+> > +		    ioc->name, __func__);
+> > +		return;
+> > +	}
+> > +
+> >  	ioc_state = mpt3sas_base_get_iocstate(ioc, 0);
+> 
+> This is a good example of why I don't like pci_device_is_present(): it
+> is fundamentally racy and gives a false sense of security.  Here we
+> *think* we're making the code safer, but in fact we could have this
+> sequence:
+> 
+>   mpt3sas_base_pci_device_is_available()    # returns true
+>   # device is removed
+>   ioc_state = mpt3sas_base_get_iocstate()
+> 
+> In this case the readl() inside mpt3sas_base_get_iocstate() will
+> probably return 0xffffffff data, and we assume that's valid and
+> continue on our merry way, pretending that "ioc_state" makes sense
+> when it really doesn't.
 
-Signed-off-by: YueHaibing <yuehaibing@huawei.com>
----
- drivers/pci/hotplug/pnv_php.c | 3 +--
- 1 file changed, 1 insertion(+), 2 deletions(-)
+The function does the following:
 
-diff --git a/drivers/pci/hotplug/pnv_php.c b/drivers/pci/hotplug/pnv_php.c
-index 5070620..ee54f5b 100644
---- a/drivers/pci/hotplug/pnv_php.c
-+++ b/drivers/pci/hotplug/pnv_php.c
-@@ -275,14 +275,13 @@ static int pnv_php_add_devtree(struct pnv_php_slot *php_slot)
- 		goto free_fdt1;
- 	}
- 
--	fdt = kzalloc(fdt_totalsize(fdt1), GFP_KERNEL);
-+	fdt = kmemdup(fdt1, fdt_totalsize(fdt1), GFP_KERNEL);
- 	if (!fdt) {
- 		ret = -ENOMEM;
- 		goto free_fdt1;
- 	}
- 
- 	/* Unflatten device tree blob */
--	memcpy(fdt, fdt1, fdt_totalsize(fdt1));
- 	dt = of_fdt_unflatten_tree(fdt, php_slot->dn, NULL);
- 	if (!dt) {
- 		ret = -EINVAL;
+	ioc_state = mpt3sas_base_get_iocstate(ioc, 0);
+	if ((ioc_state & MPI2_IOC_STATE_MASK) != MPI2_IOC_STATE_OPERATIONAL)
+		return;
 
+where MPI2_IOC_STATE_MASK is 0xF0000000 and MPI2_IOC_STATE_OPERATIONAL
+is 0x20000000.  If the device is removed after the call to
+mpt3sas_base_pci_device_is_available(), the result of the bitwise "and"
+operation would be 0xF0000000, which is unequal to 0x20000000.
+Hence this looks safe.
 
+I agree that pci_device_is_present() (and the pci_dev_is_disconnected()
+it calls) must be used judiciously, but here it seems to have been done
+correctly.
 
+One thing to be aware of is that a return value of "true" from
+pci_dev_is_disconnected() is definitive and can be trusted.
+On the other hand a return value of "false" is more like a fuzzy
+"likely not disconnected, but can't give any guarantees".
+So the boolean return value is kind of the problem here.
+Boolean logic doesn't really fit these "definitive if true,
+not definitive if false" semantics.
+
+However being able to get the definitive answer in the disconnected
+case is valuable:  pciehp is the only entity that can determine
+surprise removal authoritatively and unambiguously (albeit with
+a latency).  All the other tools that we have at our disposal don't
+have that quality:  E.g. checking the Vendor ID is ambiguous because
+it returns a valid value if a device was quickly replaced with another
+one.  Also, all ones may be returned in the case of an Uncorrectable
+Error, but the device may revert to valid responses if the error can
+be recovered.  (Please correct me if I'm wrong.)
+
+Thanks,
+
+Lukas
