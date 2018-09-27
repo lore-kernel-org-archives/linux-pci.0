@@ -2,118 +2,156 @@ Return-Path: <SRS0=vBCh=MJ=vger.kernel.org=linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-2.8 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	MAILING_LIST_MULTI,SPF_PASS,USER_AGENT_NEOMUTT autolearn=ham
-	autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-0.8 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+	MAILING_LIST_MULTI,SPF_PASS,URIBL_BLOCKED autolearn=ham autolearn_force=no
+	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 7D10AC43382
-	for <linux-pci@archiver.kernel.org>; Thu, 27 Sep 2018 07:03:32 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 309E3C43382
+	for <linux-pci@archiver.kernel.org>; Thu, 27 Sep 2018 07:44:31 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 31DBC2156D
-	for <linux-pci@archiver.kernel.org>; Thu, 27 Sep 2018 07:03:32 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.3.2 mail.kernel.org 31DBC2156D
-Authentication-Results: mail.kernel.org; dmarc=none (p=none dis=none) header.from=wunner.de
+	by mail.kernel.org (Postfix) with ESMTP id E67EF21570
+	for <linux-pci@archiver.kernel.org>; Thu, 27 Sep 2018 07:44:30 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.3.2 mail.kernel.org E67EF21570
+Authentication-Results: mail.kernel.org; dmarc=none (p=none dis=none) header.from=socionext.com
 Authentication-Results: mail.kernel.org; spf=none smtp.mailfrom=linux-pci-owner@vger.kernel.org
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727018AbeI0NUQ (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Thu, 27 Sep 2018 09:20:16 -0400
-Received: from bmailout2.hostsharing.net ([83.223.90.240]:35633 "EHLO
-        bmailout2.hostsharing.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726962AbeI0NUQ (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Thu, 27 Sep 2018 09:20:16 -0400
-Received: from h08.hostsharing.net (h08.hostsharing.net [83.223.95.28])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
-        (Client CN "*.hostsharing.net", Issuer "COMODO RSA Domain Validation Secure Server CA" (not verified))
-        by bmailout2.hostsharing.net (Postfix) with ESMTPS id EC5262800A26C;
-        Thu, 27 Sep 2018 09:03:27 +0200 (CEST)
-Received: by h08.hostsharing.net (Postfix, from userid 100393)
-        id 810E2CC5B1; Thu, 27 Sep 2018 09:03:27 +0200 (CEST)
-Date:   Thu, 27 Sep 2018 09:03:27 +0200
-From:   Lukas Wunner <lukas@wunner.de>
-To:     Bjorn Helgaas <helgaas@kernel.org>
-Cc:     Suganath Prabu S <suganath-prabu.subramani@broadcom.com>,
-        linux-scsi@vger.kernel.org, linux-pci@vger.kernel.org,
-        andy.shevchenko@gmail.com, Sathya.Prakash@broadcom.com,
-        sreekanth.reddy@broadcom.com, linux-kernel@vger.kernel.org
-Subject: Re: [PATCH v4 1/6] mpt3sas: Introduce
- mpt3sas_base_pci_device_is_available
-Message-ID: <20180927070327.wvl5glb4c7gtjoa3@wunner.de>
-References: <1537935759-14754-1-git-send-email-suganath-prabu.subramani@broadcom.com>
- <1537935759-14754-2-git-send-email-suganath-prabu.subramani@broadcom.com>
- <20180926213241.GI28024@bhelgaas-glaptop.roam.corp.google.com>
+        id S1726952AbeI0OBX (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Thu, 27 Sep 2018 10:01:23 -0400
+Received: from mx.socionext.com ([202.248.49.38]:38036 "EHLO mx.socionext.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1726659AbeI0OBX (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Thu, 27 Sep 2018 10:01:23 -0400
+Received: from unknown (HELO iyokan-ex.css.socionext.com) ([172.31.9.54])
+  by mx.socionext.com with ESMTP; 27 Sep 2018 16:44:28 +0900
+Received: from mail.mfilter.local (m-filter-1 [10.213.24.61])
+        by iyokan-ex.css.socionext.com (Postfix) with ESMTP id 7BEB46006C;
+        Thu, 27 Sep 2018 16:44:28 +0900 (JST)
+Received: from 172.31.9.53 (172.31.9.53) by m-FILTER with ESMTP; Thu, 27 Sep 2018 16:44:28 +0900
+Received: from yuzu.css.socionext.com (yuzu [172.31.8.45])
+        by iyokan.css.socionext.com (Postfix) with ESMTP id B78134039A;
+        Thu, 27 Sep 2018 16:44:27 +0900 (JST)
+Received: from [127.0.0.1] (unknown [10.213.132.48])
+        by yuzu.css.socionext.com (Postfix) with ESMTP id 796EA120BA0;
+        Thu, 27 Sep 2018 16:44:27 +0900 (JST)
+Date:   Thu, 27 Sep 2018 16:44:26 +0900
+From:   Kunihiko Hayashi <hayashi.kunihiko@socionext.com>
+To:     Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
+        Gustavo Pimentel <gustavo.pimentel@synopsys.com>
+Subject: Re: [PATCH v2 2/2] PCI: controller: dwc: add UniPhier PCIe host controller support
+Cc:     Bjorn Helgaas <bhelgaas@google.com>,
+        Rob Herring <robh+dt@kernel.org>,
+        Mark Rutland <mark.rutland@arm.com>,
+        Masahiro Yamada <yamada.masahiro@socionext.com>,
+        "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+        "devicetree@vger.kernel.org" <devicetree@vger.kernel.org>,
+        "linux-arm-kernel@lists.infradead.org" 
+        <linux-arm-kernel@lists.infradead.org>,
+        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+        Masami Hiramatsu <masami.hiramatsu@linaro.org>,
+        Jassi Brar <jaswinder.singh@linaro.org>
+In-Reply-To: <20180926213135.A4B4.4A936039@socionext.com>
+References: <b869b273-e681-0b8c-52f5-6e02f9de5485@synopsys.com> <20180926213135.A4B4.4A936039@socionext.com>
+Message-Id: <20180927164426.ECD6.4A936039@socionext.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20180926213241.GI28024@bhelgaas-glaptop.roam.corp.google.com>
-User-Agent: NeoMutt/20170113 (1.7.2)
+Content-Type: text/plain; charset="US-ASCII"
+Content-Transfer-Encoding: 7bit
+X-Mailer: Becky! ver. 2.70 [ja]
 Sender: linux-pci-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-On Wed, Sep 26, 2018 at 04:32:41PM -0500, Bjorn Helgaas wrote:
-> On Wed, Sep 26, 2018 at 09:52:34AM +0530, Suganath Prabu S wrote:
-> > @@ -6853,6 +6872,13 @@ mpt3sas_wait_for_commands_to_complete(struct MPT3SAS_ADAPTER *ioc)
-> >  
-> >  	ioc->pending_io_count = 0;
-> >  
-> > +	if (!mpt3sas_base_pci_device_is_available(ioc)) {
-> > +		pr_err(MPT3SAS_FMT
-> > +		    "%s: pci error recovery reset or pci device unplug occurred\n",
-> > +		    ioc->name, __func__);
-> > +		return;
-> > +	}
-> > +
-> >  	ioc_state = mpt3sas_base_get_iocstate(ioc, 0);
+Hi Lorenzo, Gustavo,
+
+On Wed, 26 Sep 2018 21:31:36 +0900 <hayashi.kunihiko@socionext.com> wrote:
+
+> Hi Lorenzo, Gustavo,
 > 
-> This is a good example of why I don't like pci_device_is_present(): it
-> is fundamentally racy and gives a false sense of security.  Here we
-> *think* we're making the code safer, but in fact we could have this
-> sequence:
+> Thank you for reviewing.
 > 
->   mpt3sas_base_pci_device_is_available()    # returns true
->   # device is removed
->   ioc_state = mpt3sas_base_get_iocstate()
+> On Tue, 25 Sep 2018 18:53:01 +0100
+> Gustavo Pimentel <gustavo.pimentel@synopsys.com> wrote:
 > 
-> In this case the readl() inside mpt3sas_base_get_iocstate() will
-> probably return 0xffffffff data, and we assume that's valid and
-> continue on our merry way, pretending that "ioc_state" makes sense
-> when it really doesn't.
+> > On 25/09/2018 17:14, Lorenzo Pieralisi wrote:
+> > > [+Gustavo, please have a look at INTX/MSI management]
+> > > 
+> > > On Thu, Sep 06, 2018 at 06:40:32PM +0900, Kunihiko Hayashi wrote:
+> > >> This introduces specific glue layer for UniPhier platform to support
+> > >> PCIe host controller that is based on the DesignWare PCIe core, and
+> > >> this driver supports Root Complex (host) mode.
+> > > 
+> > > Please read this thread and apply it to next versions:
+> > > 
+> > > https://urldefense.proofpoint.com/v2/url?u=https-3A__marc.info_-3Fl-3Dlinux-2Dpci-26m-3D150905742808166-26w-3D2&d=DwIBAg&c=DPL6_X_6JkXFx7AXWqB0tg&r=bkWxpLoW-f-E3EdiDCCa0_h0PicsViasSlvIpzZvPxs&m=H8UNDDUGQnQnqfWr4CBios689dJcjxu4qeTTRGulLmU&s=CgcXc_2LThyOpW-4bCriJNo9H1lzROEdy_cG9p-Y5hU&e=
+> 
+> I also found this thread in previous linux-pci, and I think it's helpful for me.
+> I'll check it carefully.
 
-The function does the following:
+[snip]
 
-	ioc_state = mpt3sas_base_get_iocstate(ioc, 0);
-	if ((ioc_state & MPI2_IOC_STATE_MASK) != MPI2_IOC_STATE_OPERATIONAL)
-		return;
+> > >> +	ret = devm_request_irq(dev, pp->irq, uniphier_pcie_irq_handler,
+> > >> +			       IRQF_SHARED, "pcie", priv);
+> > > 
+> > > This is wrong, you should set-up a chained IRQ for INTX.
+> > > 
+> > > I *think* that
+> > > 
+> > > ks_pcie_setup_interrupts()
+> > > 
+> > > is a good example to start with but I wonder whether it is worth
+> > > generalizing the INTX approach to designware as a whole as it was
+> > > done for MSIs.
+> > > 
+> > > Thoughts ?
+> > 
+> > From what I understood this is for legacy IRQ, right?
+> 
+> Yes. For legacy IRQ.
+> 
+> > Like you (Lorenzo) said there is 2 drivers (pci-keystone-dw.c and pci-dra7xx.c)
+> > that uses it and can be use as a template for handling this type of interrupts.
+> > 
+> > We can try to pass some kind of generic INTX function to the DesignWare host
+> > library to handling this, but this will require some help from keystone and
+> > dra7xx maintainers, since my setup doesn't have legacy IRQ HW support.
+> 
+> Now I think it's difficult to make a template for INTX function,
+> and at first, I'll try to re-write this part with reference to pci-keystone-dw.c.
 
-where MPI2_IOC_STATE_MASK is 0xF0000000 and MPI2_IOC_STATE_OPERATIONAL
-is 0x20000000.  If the device is removed after the call to
-mpt3sas_base_pci_device_is_available(), the result of the bitwise "and"
-operation would be 0xF0000000, which is unequal to 0x20000000.
-Hence this looks safe.
+I understand that there are 2 types of interrupt and the drivers.
 
-I agree that pci_device_is_present() (and the pci_dev_is_disconnected()
-it calls) must be used judiciously, but here it seems to have been done
-correctly.
+One like pci-keystone-dw.c is:
 
-One thing to be aware of is that a return value of "true" from
-pci_dev_is_disconnected() is definitive and can be trusted.
-On the other hand a return value of "false" is more like a fuzzy
-"likely not disconnected, but can't give any guarantees".
-So the boolean return value is kind of the problem here.
-Boolean logic doesn't really fit these "definitive if true,
-not definitive if false" semantics.
+ - there are 4 interrupts for legacy,
+ - invoke handlers for each interrupt, and handle the interrupt,
+ - call irq_set_chained_handler_and_data() to make a chain of the interrupts
+  when initializing
 
-However being able to get the definitive answer in the disconnected
-case is valuable:  pciehp is the only entity that can determine
-surprise removal authoritatively and unambiguously (albeit with
-a latency).  All the other tools that we have at our disposal don't
-have that quality:  E.g. checking the Vendor ID is ambiguous because
-it returns a valid value if a device was quickly replaced with another
-one.  Also, all ones may be returned in the case of an Uncorrectable
-Error, but the device may revert to valid responses if the error can
-be recovered.  (Please correct me if I'm wrong.)
+The other like pci-dra7xx.c is:
 
-Thanks,
+ - there is 1 IRQ for legacy as a parent,
+ - check an interrupt factor register, and handle the interrupt correspond
+   to the factor,
+ - call request_irq() for the parent IRQ and irq_domain_add_linear() for
+   the factor when initializing
 
-Lukas
+The pcie-uniphier.c is the same type as the latter (like pci-dra7xx.c).
+
+However, in pci-dra7xx.c, MSI and legacy IRQ share the same interrupt number,
+so the same handler is called and the handler divides these IRQs.
+(found in dra7xx_pcie_msi_irq_handler())
+
+In pcie-uniphier.c, MSI and legacy IRQ are independent.
+Therefore it's necessary to prepare the handler for the legacy IRQ.
+
+I think that it's difficult to apply the way of pci-keystone-dw.c,
+and uniphier_pcie_irq_handler() and calling devm_request_irq() are still necessary
+to handle legacy IRQ.
+
+Thank you,
+
+---
+Best Regards,
+Kunihiko Hayashi
+
+
