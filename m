@@ -2,141 +2,152 @@ Return-Path: <SRS0=vBCh=MJ=vger.kernel.org=linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-0.8 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	MAILING_LIST_MULTI,SPF_PASS,URIBL_BLOCKED autolearn=ham autolearn_force=no
-	version=3.4.0
+X-Spam-Status: No, score=-6.8 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
+	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
+	SPF_PASS autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 28264C004D1
-	for <linux-pci@archiver.kernel.org>; Thu, 27 Sep 2018 03:24:57 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 5AC3DC43382
+	for <linux-pci@archiver.kernel.org>; Thu, 27 Sep 2018 05:57:26 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id D38462156D
-	for <linux-pci@archiver.kernel.org>; Thu, 27 Sep 2018 03:24:56 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.3.2 mail.kernel.org D38462156D
-Authentication-Results: mail.kernel.org; dmarc=fail (p=none dis=none) header.from=intel.com
+	by mail.kernel.org (Postfix) with ESMTP id 01D722156B
+	for <linux-pci@archiver.kernel.org>; Thu, 27 Sep 2018 05:57:26 +0000 (UTC)
+Authentication-Results: mail.kernel.org;
+	dkim=pass (1024-bit key) header.d=microchiptechnology.onmicrosoft.com header.i=@microchiptechnology.onmicrosoft.com header.b="c4KeY7t0"
+DMARC-Filter: OpenDMARC Filter v1.3.2 mail.kernel.org 01D722156B
+Authentication-Results: mail.kernel.org; dmarc=none (p=none dis=none) header.from=microchip.com
 Authentication-Results: mail.kernel.org; spf=none smtp.mailfrom=linux-pci-owner@vger.kernel.org
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727083AbeI0Jk6 convert rfc822-to-8bit (ORCPT
-        <rfc822;linux-pci@archiver.kernel.org>);
-        Thu, 27 Sep 2018 05:40:58 -0400
-Received: from mga09.intel.com ([134.134.136.24]:63080 "EHLO mga09.intel.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1726539AbeI0Jk5 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Thu, 27 Sep 2018 05:40:57 -0400
-X-Amp-Result: SKIPPED(no attachment in message)
-X-Amp-File-Uploaded: False
-Received: from orsmga003.jf.intel.com ([10.7.209.27])
-  by orsmga102.jf.intel.com with ESMTP/TLS/DHE-RSA-AES256-GCM-SHA384; 26 Sep 2018 20:24:53 -0700
-X-ExtLoop1: 1
-X-IronPort-AV: E=Sophos;i="5.54,308,1534834800"; 
-   d="scan'208";a="86914106"
-Received: from fmsmsx106.amr.corp.intel.com ([10.18.124.204])
-  by orsmga003.jf.intel.com with ESMTP; 26 Sep 2018 20:22:50 -0700
-Received: from FMSMSX110.amr.corp.intel.com (10.18.116.10) by
- FMSMSX106.amr.corp.intel.com (10.18.124.204) with Microsoft SMTP Server (TLS)
- id 14.3.319.2; Wed, 26 Sep 2018 20:22:49 -0700
-Received: from shsmsx152.ccr.corp.intel.com (10.239.6.52) by
- fmsmsx110.amr.corp.intel.com (10.18.116.10) with Microsoft SMTP Server (TLS)
- id 14.3.319.2; Wed, 26 Sep 2018 20:22:48 -0700
-Received: from shsmsx104.ccr.corp.intel.com ([169.254.5.183]) by
- SHSMSX152.ccr.corp.intel.com ([169.254.6.37]) with mapi id 14.03.0319.002;
- Thu, 27 Sep 2018 11:22:46 +0800
-From:   "Liu, Yi L" <yi.l.liu@intel.com>
-To:     Jean-Philippe Brucker <jean-philippe.brucker@arm.com>,
-        Joerg Roedel <joro@8bytes.org>
-CC:     "Tian, Kevin" <kevin.tian@intel.com>,
-        "Raj, Ashok" <ashok.raj@intel.com>,
-        "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-        "ilias.apalodimas@linaro.org" <ilias.apalodimas@linaro.org>,
-        Will Deacon <Will.Deacon@arm.com>,
-        "iommu@lists.linux-foundation.org" <iommu@lists.linux-foundation.org>,
-        "okaya@codeaurora.org" <okaya@codeaurora.org>,
-        "alex.williamson@redhat.com" <alex.williamson@redhat.com>,
-        "liguozhu@hisilicon.com" <liguozhu@hisilicon.com>,
-        "christian.koenig@amd.com" <christian.koenig@amd.com>,
-        Robin Murphy <Robin.Murphy@arm.com>,
-        "Liu, Yi L" <yi.l.liu@intel.com>
-Subject: RE: [PATCH v3 03/10] iommu/sva: Manage process address spaces
-Thread-Topic: [PATCH v3 03/10] iommu/sva: Manage process address spaces
-Thread-Index: AQHUUQbeYoKTwka2WEyXMYBJUUEZKaT/0+gAgACqp4CAAKmhgIAAtMQAgAAoe4CAABIbgIABZMTA
-Date:   Thu, 27 Sep 2018 03:22:46 +0000
-Message-ID: <A2975661238FB949B60364EF0F2C257439D0CC48@SHSMSX104.ccr.corp.intel.com>
-References: <20180920170046.20154-1-jean-philippe.brucker@arm.com>
-        <20180920170046.20154-4-jean-philippe.brucker@arm.com>
-        <09933fce-b959-32e1-b1f3-0d4389abf735@linux.intel.com>
-        <20180925132627.vbdotr23o7lqrmnd@8bytes.org>
-        <b33a1911-e100-586b-b8df-eb04312ecffd@linux.intel.com>
-        <754d495d-d016-f42f-5682-ba4a75a618e0@arm.com>
-        <20180926124527.GD18287@8bytes.org>
- <1f53c6f1-4e7a-1451-1abc-a7bca4a2359d@arm.com>
-In-Reply-To: <1f53c6f1-4e7a-1451-1abc-a7bca4a2359d@arm.com>
+        id S1726545AbeI0MN4 (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Thu, 27 Sep 2018 08:13:56 -0400
+Received: from esa1.microchip.iphmx.com ([68.232.147.91]:15642 "EHLO
+        esa1.microchip.iphmx.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726469AbeI0MN4 (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Thu, 27 Sep 2018 08:13:56 -0400
+X-IronPort-AV: E=Sophos;i="5.54,309,1534834800"; 
+   d="scan'208";a="21427606"
+Received: from smtpout.microchip.com (HELO email.microchip.com) ([198.175.253.82])
+  by esa1.microchip.iphmx.com with ESMTP/TLS/DHE-RSA-AES256-SHA; 26 Sep 2018 22:57:24 -0700
+Received: from NAM02-BL2-obe.outbound.protection.outlook.com (10.10.215.89) by
+ email.microchip.com (10.10.76.106) with Microsoft SMTP Server (TLS) id
+ 14.3.352.0; Wed, 26 Sep 2018 22:57:23 -0700
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+ d=microchiptechnology.onmicrosoft.com;
+ s=selector1-microchiptechnology-onmicrosoft-com;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
+ bh=O0lZKLbISIWLPH99npWvKGkqZG732XzK0UclymUxKUQ=;
+ b=c4KeY7t05YZbZv4ujRbcb++haNzmAoqn0lZsIzCggc9RLMzCRxIJ7oiBXNbpnhs/eAm3bvyZNKV7oyhWwrHJ834r9BVyRkuK2VaIKDP950bPiOlvVxqvivBPDoU1sehgrSowo5BYV6glYUr5WvXn7mLE17dvZP4I9YZXfUsxujo=
+Received: from DM2PR11MB0105.namprd11.prod.outlook.com (10.160.26.155) by
+ DM2PR11MB0057.namprd11.prod.outlook.com (10.160.28.14) with Microsoft SMTP
+ Server (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
+ 15.20.1164.25; Thu, 27 Sep 2018 05:57:21 +0000
+Received: from DM2PR11MB0105.namprd11.prod.outlook.com
+ ([fe80::cdb9:9501:ede9:23c4]) by DM2PR11MB0105.namprd11.prod.outlook.com
+ ([fe80::cdb9:9501:ede9:23c4%2]) with mapi id 15.20.1164.024; Thu, 27 Sep 2018
+ 05:57:19 +0000
+From:   <Wesley.Sheng@microchip.com>
+To:     <logang@deltatee.com>, <kurt.schwemmer@microsemi.com>,
+        <Kurt.Schwemmer@microchip.com>, <bhelgaas@google.com>
+CC:     <linux-pci@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
+        <Wesley.Sheng@microchip.com>, <Kelvin.Cao@microchip.com>
+Subject: [PATCH 1/12 v2] switchtec: Remove immediate status check after submit
+ a MRPC command
+Thread-Topic: [PATCH 1/12 v2] switchtec: Remove immediate status check after
+ submit a MRPC command
+Thread-Index: AdRWJF1jbNxK+iTHQO26nowQGjGEMw==
+Date:   Thu, 27 Sep 2018 05:57:19 +0000
+Message-ID: <DM2PR11MB0105CD1B3A264290413ED1CA95140@DM2PR11MB0105.namprd11.prod.outlook.com>
 Accept-Language: en-US
 Content-Language: en-US
 X-MS-Has-Attach: 
 X-MS-TNEF-Correlator: 
-dlp-product: dlpe-windows
-dlp-version: 11.0.400.15
-dlp-reaction: no-action
-x-ctpclassification: CTP_NT
-x-titus-metadata-40: eyJDYXRlZ29yeUxhYmVscyI6IiIsIk1ldGFkYXRhIjp7Im5zIjoiaHR0cDpcL1wvd3d3LnRpdHVzLmNvbVwvbnNcL0ludGVsMyIsImlkIjoiZjQ4YzRkY2ItNTdjNi00YTM0LTg5MzctZTIzZWM3YmRmMjYxIiwicHJvcHMiOlt7Im4iOiJDVFBDbGFzc2lmaWNhdGlvbiIsInZhbHMiOlt7InZhbHVlIjoiQ1RQX05UIn1dfV19LCJTdWJqZWN0TGFiZWxzIjpbXSwiVE1DVmVyc2lvbiI6IjE3LjEwLjE4MDQuNDkiLCJUcnVzdGVkTGFiZWxIYXNoIjoiYzVaeHdXT3VkK1E1ZFJSSk03TWhFNnBwREtPV05hTGVKaW5pdGxtcDg0cXlERFZHZ2pcL2ZxOCs4d1AzNDJrbTEifQ==
-x-originating-ip: [10.239.127.40]
+x-originating-ip: [211.144.195.220]
+x-ms-publictraffictype: Email
+x-microsoft-exchange-diagnostics: 1;DM2PR11MB0057;6:V6LkyKS30PZRGogX8UTQmJNxNlIJMt4skF4tqwlnSaVGgOua7IERlB0uFcNAkCoZb44CzxoMLAMcTTXsBMRf9lkKvab/hs9DlHItII3p3O6SacKxz0YkUhGJmHqfIdtClYqX6lTC7y4PGEf9n/Li2mFiXs01YD4j1tIg0Qz6Xxe50jgGyb00GERuxAOeYIntft5GyYVHjDA15iKFTdngb4GUgLrfqP499dz2QjG7oG9qafLZSBkQYXiD85sbryHhjRWsBBrg3hrorZPt9ns1uoRKa/H8kXS+EaZ29bMckvinnQemsf7CdqrlwPpxJvQqwHwqet1VeXTOLGJU9QKxTo63KsyrQoJbNkiThqH1Q656g+1TXQC0gVeDYQuop6tmR4JoEdmI7ToBQH8EsmxF0fJRQcAWw4NHSIRLJgcGDGwbPt4/7s+OHHjJo1HEohJ3U7tFYcWiQKSH42RvFUbvDg==;5:SqbLPfBaYtdaM5M4T7BO0vPU++XptK12bu0GByGKSADCyLFzOF3Ei1dEvuKK6kffle/XEPj4L3f04YIBo4FKBM8/31pcpg1IkneNsIEbvqwUBOUpEgs1dw/UQrQ8JO5aTPcFn0ejn7Gsg3+WvzN1c4kqX5Up7XotxvAf6cVGAME=;7:qGd9aFIV5kq0zmb5PcEJTkxlTY14V/2celbMIaIyTy7ZyC4GppDCD/SxClYmdqqaSZkukiEjrrs8KqlEg0VGqY7vsmTUpNeorkN8p2t5HPWO2W4a32EmbzvMLaIxLg/abeTZDbZdziWnpLm+T85PtpIhXcy3avdjY0LJsMDLJNhu0yCkHYIO8nFDNs2FihUHujSUQIF1roJLbzuOzBKF6b5MLD4gGlwZloDKiHSrdpS+W9dGfDABINBVapuULAJB
+x-ms-exchange-antispam-srfa-diagnostics: SOS;SOR;
+x-forefront-antispam-report: SFV:SKI;SCL:-1;SFV:NSPM;SFS:(10009020)(136003)(39860400002)(396003)(346002)(366004)(376002)(189003)(55674003)(199004)(81166006)(86362001)(2900100001)(54906003)(2906002)(110136005)(107886003)(256004)(14444005)(316002)(68736007)(25786009)(4326008)(305945005)(7736002)(478600001)(74316002)(33656002)(81156014)(6116002)(105586002)(3846002)(14454004)(106356001)(97736004)(8936002)(72206003)(8676002)(6436002)(5660300001)(476003)(55016002)(486006)(6506007)(26005)(71200400001)(102836004)(7696005)(34290500001)(66066001)(9686003)(53936002)(186003)(71190400001)(99286004)(5250100002)(2501003)(14773001);DIR:OUT;SFP:1101;SCL:1;SRVR:DM2PR11MB0057;H:DM2PR11MB0105.namprd11.prod.outlook.com;FPR:;SPF:None;LANG:en;PTR:InfoNoRecords;MX:1;A:1;
+x-ms-office365-filtering-correlation-id: 079a3483-0c0c-4d44-3c14-08d6243e163e
+x-microsoft-antispam: BCL:0;PCL:0;RULEID:(7020095)(4652040)(8989299)(4534165)(4627221)(201703031133081)(201702281549075)(8990200)(5600074)(711020)(2017052603328)(7153060)(7193020);SRVR:DM2PR11MB0057;
+x-ms-traffictypediagnostic: DM2PR11MB0057:
+authentication-results: spf=none (sender IP is )
+ smtp.mailfrom=Wesley.Sheng@microchip.com; 
+x-microsoft-antispam-prvs: <DM2PR11MB0057958100045686C9DBD5CF95140@DM2PR11MB0057.namprd11.prod.outlook.com>
+x-exchange-antispam-report-test: UriScan:;
+x-ms-exchange-senderadcheck: 1
+x-exchange-antispam-report-cfa-test: BCL:0;PCL:0;RULEID:(6040522)(2401047)(8121501046)(5005006)(3231355)(944501410)(52105095)(3002001)(10201501046)(93006095)(93001095)(149066)(150057)(6041310)(20161123564045)(20161123560045)(20161123562045)(20161123558120)(201703131423095)(201702281528075)(20161123555045)(201703061421075)(201703061406153)(201708071742011)(7699051)(76991041);SRVR:DM2PR11MB0057;BCL:0;PCL:0;RULEID:;SRVR:DM2PR11MB0057;
+x-forefront-prvs: 0808323E97
+received-spf: None (protection.outlook.com: microchip.com does not designate
+ permitted sender hosts)
+x-microsoft-antispam-message-info: 5iWP6dbTzU7OOjv0bbHOx+2jH/RLDHZ2N77cSRilXhVf4GaFKeikE411sSVhLmYZKmCjKCzVt2/gQApJvLn2Zhdwgm/vrdDzPzofmS5NvA+h6+tx9y91NeKpkA4eSafCEWbYR/gXptQdpJA9sSbKOoQC3+YxbtifR9RhyNceDFGVSMA/SGkjUWWRjHluEG7Zysg4bDxUjGNe7c3nIn7HFsJ2sinJzcgG5HQsO1/v05csQovcCkCZEmSV50lRXse/SCSHZTQUdjlmc+Ks9sJpj8p6IUnoQDuHt3yAXi70cmSB9eO0wdvN6qP7NH1MVwNxBAd5wsUJZ2HexijIJbZjHw/4eB5FGqpFR/Be+e0XVX4=
+spamdiagnosticoutput: 1:99
+spamdiagnosticmetadata: NSPM
 Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 8BIT
+Content-Transfer-Encoding: quoted-printable
 MIME-Version: 1.0
+X-MS-Exchange-CrossTenant-Network-Message-Id: 079a3483-0c0c-4d44-3c14-08d6243e163e
+X-MS-Exchange-CrossTenant-originalarrivaltime: 27 Sep 2018 05:57:19.7534
+ (UTC)
+X-MS-Exchange-CrossTenant-fromentityheader: Hosted
+X-MS-Exchange-CrossTenant-id: 3f4057f3-b418-4d4e-ba84-d55b4e897d88
+X-MS-Exchange-Transport-CrossTenantHeadersStamped: DM2PR11MB0057
+X-OriginatorOrg: microchip.com
 Sender: linux-pci-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-> From: iommu-bounces@lists.linux-foundation.org [mailto:iommu-
-> bounces@lists.linux-foundation.org] On Behalf Of Jean-Philippe Brucker
-> Sent: Wednesday, September 26, 2018 9:50 PM
-> Subject: Re: [PATCH v3 03/10] iommu/sva: Manage process address spaces
-> 
-> On 26/09/2018 13:45, Joerg Roedel wrote:
-> > On Wed, Sep 26, 2018 at 11:20:34AM +0100, Jean-Philippe Brucker wrote:
-> >> Yes, at the moment it's difficult to guess what device drivers will
-> >> want, but I can imagine some driver offering SVA to userspace, while
-> >> keeping a few PASIDs for themselves to map kernel memory. Or create mdev
-> >> devices for virtualization while also allowing bare-metal SVA. So I
-> >> think we should aim at enabling these use-cases in parallel, even if it
-> >> doesn't necessarily need to be possible right now.
-> >
-> > Yeah okay, but allowing these use-cases in parallel basically disallows
-> > giving any guest control over a device's pasid-table, no?
-> All of these use-cases require the host to manage the PASID tables, so
-> while any one of them is enabled, we can't give a guest control over the
-> PASID tables. But allowing these use-cases in parallel doesn't change that.
-> 
-> There is an ambiguity: I understand "(3) SVA in VM guest" as SVA for a
-> device-assignable interface assigned to a guest, using vfio-mdev and the
-> new Intel vt-d architecture (right?). That case does require the host to
-> allocate and manage PASIDs (because the PCI device is shared between
-> multiple VMs).
+After submit a Firmware Download (Download sub-command) MRPC
+command, Switchtec firmware refuses to response any management=20
+EP's BAR access until current flash programming finished.
+During this time, a READ TLP to the gas area in the BAR of the
+management EP will complete with significant delay like more than=20
+10ms.
+It's a Switchtec firmware limitation that READ requests cannot get
+prompt service during firmware download.
+The delayed completion of READ TLP would be a problem on some system
+ which is sensitive to READ timeout.
+Current driver check status immediately after submit a MRPC command,
+which triggers READ TLP to the gas area in the BAR of the management EP.
+Also, other processes or functions, like NTB, would also trigger READ TLP b=
+y
+accessing the GAS.
+To avoid this, the immediate check of status is removed in this patch, and
+driver delays the status check to the occurrence of MSIx or MRPC timeout.
+In the meantime, user must not initiate any gas access during a firmware
+download.
+Also, any process that issues MRPC command will be affected by the delay
+in this patch.
+However, this is only a software workaround to the READ issue in firmware
+download. A complete fix of this should happen in firmware.
 
-Correct. For such case, we give host the charge to allocate and manage PASIDs.
-And the reason is correct.
+Note: For NTB function, the memory window access is handled by Switchtec
+hardware. So it's not affected by this firmware limitation. But the other G=
+AS
+access which is handled by Switchtec firmware is are affected by this firmw=
+are
+limitation.
 
-> 
-> For the "classic" vfio-pci case, "SVA in guest" still means giving the
-> guest control over the whole PASID table.
+Signed-off-by: Kelvin Cao <Kelvin.Cao@microchip.com>
+Signed-off-by: Wesley Sheng <Wesley.sheng@microchip.com>
 
-No, if giving guest control over the whole PASID table, it means guest may have
-its own PASID namespace. right? And for vfio-mdev case, it gets PASID from host.
-So there would be multiple PASID namespaces. Thinking about the following scenario:
+---
+ drivers/pci/switch/switchtec.c | 4 ----
+ 1 file changed, 4 deletions(-)
 
-A PF/VF assigned to a VM via "classic" vfio-pci. And an assignable-device-interface
-assigned to this VM via vfio-mdev. If an application in this VM tries to manipulate
-these two "devices", it should have the same PASID programmed to them. right?
-But as the above comments mentioned, for vfio-pci case, it would get a PASID from
-its own PASID namespace. While the vfio-mdev case would get a PASID from host.
-This would result in conflict.
-
-So I would like we get host to allocate and manage the whole PASID table, so that
-to cover possible combinations of vfio-pci passthru and vfio-mdev passthru.
-
-> 
-> Thanks,
-> Jean
-
-Regards,
-Yi Liu
+diff --git a/drivers/pci/switch/switchtec.c b/drivers/pci/switch/switchtec.=
+c index 4591f15..b759228 100644
+--- a/drivers/pci/switch/switchtec.c
++++ b/drivers/pci/switch/switchtec.c
+@@ -142,10 +142,6 @@ static void mrpc_cmd_submit(struct switchtec_dev *stde=
+v)
+ 		    stuser->data, stuser->data_len);
+ 	iowrite32(stuser->cmd, &stdev->mmio_mrpc->cmd);
+=20
+-	stuser->status =3D ioread32(&stdev->mmio_mrpc->status);
+-	if (stuser->status !=3D SWITCHTEC_MRPC_STATUS_INPROGRESS)
+-		mrpc_complete_cmd(stdev);
+-
+ 	schedule_delayed_work(&stdev->mrpc_timeout,
+ 			      msecs_to_jiffies(500));
+ }
+--
+2.7.4
