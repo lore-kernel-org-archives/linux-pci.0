@@ -2,156 +2,150 @@ Return-Path: <SRS0=vBCh=MJ=vger.kernel.org=linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-0.8 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	MAILING_LIST_MULTI,SPF_PASS,URIBL_BLOCKED autolearn=ham autolearn_force=no
-	version=3.4.0
+X-Spam-Status: No, score=-6.9 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
+	DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,
+	SIGNED_OFF_BY,SPF_PASS autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 309E3C43382
-	for <linux-pci@archiver.kernel.org>; Thu, 27 Sep 2018 07:44:31 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id CEEC0C43382
+	for <linux-pci@archiver.kernel.org>; Thu, 27 Sep 2018 10:30:45 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id E67EF21570
-	for <linux-pci@archiver.kernel.org>; Thu, 27 Sep 2018 07:44:30 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.3.2 mail.kernel.org E67EF21570
-Authentication-Results: mail.kernel.org; dmarc=none (p=none dis=none) header.from=socionext.com
+	by mail.kernel.org (Postfix) with ESMTP id 7A5942150B
+	for <linux-pci@archiver.kernel.org>; Thu, 27 Sep 2018 10:30:45 +0000 (UTC)
+Authentication-Results: mail.kernel.org;
+	dkim=pass (1024-bit key) header.d=broadcom.com header.i=@broadcom.com header.b="F7cxZ+x8"
+DMARC-Filter: OpenDMARC Filter v1.3.2 mail.kernel.org 7A5942150B
+Authentication-Results: mail.kernel.org; dmarc=fail (p=quarantine dis=none) header.from=broadcom.com
 Authentication-Results: mail.kernel.org; spf=none smtp.mailfrom=linux-pci-owner@vger.kernel.org
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726952AbeI0OBX (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Thu, 27 Sep 2018 10:01:23 -0400
-Received: from mx.socionext.com ([202.248.49.38]:38036 "EHLO mx.socionext.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1726659AbeI0OBX (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Thu, 27 Sep 2018 10:01:23 -0400
-Received: from unknown (HELO iyokan-ex.css.socionext.com) ([172.31.9.54])
-  by mx.socionext.com with ESMTP; 27 Sep 2018 16:44:28 +0900
-Received: from mail.mfilter.local (m-filter-1 [10.213.24.61])
-        by iyokan-ex.css.socionext.com (Postfix) with ESMTP id 7BEB46006C;
-        Thu, 27 Sep 2018 16:44:28 +0900 (JST)
-Received: from 172.31.9.53 (172.31.9.53) by m-FILTER with ESMTP; Thu, 27 Sep 2018 16:44:28 +0900
-Received: from yuzu.css.socionext.com (yuzu [172.31.8.45])
-        by iyokan.css.socionext.com (Postfix) with ESMTP id B78134039A;
-        Thu, 27 Sep 2018 16:44:27 +0900 (JST)
-Received: from [127.0.0.1] (unknown [10.213.132.48])
-        by yuzu.css.socionext.com (Postfix) with ESMTP id 796EA120BA0;
-        Thu, 27 Sep 2018 16:44:27 +0900 (JST)
-Date:   Thu, 27 Sep 2018 16:44:26 +0900
-From:   Kunihiko Hayashi <hayashi.kunihiko@socionext.com>
-To:     Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
-        Gustavo Pimentel <gustavo.pimentel@synopsys.com>
-Subject: Re: [PATCH v2 2/2] PCI: controller: dwc: add UniPhier PCIe host controller support
-Cc:     Bjorn Helgaas <bhelgaas@google.com>,
-        Rob Herring <robh+dt@kernel.org>,
-        Mark Rutland <mark.rutland@arm.com>,
-        Masahiro Yamada <yamada.masahiro@socionext.com>,
-        "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-        "devicetree@vger.kernel.org" <devicetree@vger.kernel.org>,
-        "linux-arm-kernel@lists.infradead.org" 
-        <linux-arm-kernel@lists.infradead.org>,
-        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-        Masami Hiramatsu <masami.hiramatsu@linaro.org>,
-        Jassi Brar <jaswinder.singh@linaro.org>
-In-Reply-To: <20180926213135.A4B4.4A936039@socionext.com>
-References: <b869b273-e681-0b8c-52f5-6e02f9de5485@synopsys.com> <20180926213135.A4B4.4A936039@socionext.com>
-Message-Id: <20180927164426.ECD6.4A936039@socionext.com>
+        id S1727145AbeI0QsU (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Thu, 27 Sep 2018 12:48:20 -0400
+Received: from mail-qk1-f195.google.com ([209.85.222.195]:39220 "EHLO
+        mail-qk1-f195.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726959AbeI0QsU (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Thu, 27 Sep 2018 12:48:20 -0400
+Received: by mail-qk1-f195.google.com with SMTP id b19-v6so1219445qkc.6
+        for <linux-pci@vger.kernel.org>; Thu, 27 Sep 2018 03:30:43 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=broadcom.com; s=google;
+        h=mime-version:references:in-reply-to:from:date:message-id:subject:to
+         :cc;
+        bh=nrkD/liiJcZE8DGmvB8WlwgsEZAdq2wIyZuChbqDJX8=;
+        b=F7cxZ+x8Oud/Xb+1BKr5ZqQRJzNjeQH0yJu8qK8SkSiQXHcxmQCIp0uB+M1R8WpMhS
+         qjkNcg+NbTL6doHZaxVRlYu6q38WM01ieYlmcsLblqUd9q2L0P7ohkkLYb9LhE/ZpVNk
+         Vv+3pafsTwZYBvOpsGzDa66Sg0poMWmQGbcIY=
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20161025;
+        h=x-gm-message-state:mime-version:references:in-reply-to:from:date
+         :message-id:subject:to:cc;
+        bh=nrkD/liiJcZE8DGmvB8WlwgsEZAdq2wIyZuChbqDJX8=;
+        b=kCg09O15mD/Y6iYxXD/iRAUQCPCRCJuHaCV7RVml8NsMM/NMuLYIHEoUtauHJMD3x3
+         Au7aKtmCf4IFAuXcrVQOYIoGrX5XozVgctOxUNO44puo3+4kODBye6JhX4oPFRW+JRQx
+         LYSMYtiHJT4/kyoyKTDua6S74FmIqyzG/eWHGCmDUmSnpIMWNZNKrfBxlSPuzYjLFRTd
+         7HHQPO2E0oLvtCNF10rqamOG/7hFNUEiLdvLAf/lFu67+wwY8aPFrCOeFAlNeYwA9lt4
+         xjV8z9jHw6d8WR0u/jZ+hdZf06XlPQwwRmAclfjW5fLZ57E0drYIGn6cd0r+PgBjwYWR
+         aZ6g==
+X-Gm-Message-State: ABuFfoi6aJXrV78adArZG+Xi0++63Q44C9nHqOpXlPGIQrZJh35b0ejN
+        bWHkr8hXKbDxo9I/K7ur1oLGxj4muFI5awoKvRm0CJ6V
+X-Google-Smtp-Source: ACcGV61ew4hQ3xJBCsJ/gudWhfekCM443S6zBlyIQYqswHelJOviBlh8LCRxMcv/e/uCxLziOv8OYwnVlgyFxFozQi8=
+X-Received: by 2002:ae9:ed82:: with SMTP id c124-v6mr7446232qkg.264.1538044243170;
+ Thu, 27 Sep 2018 03:30:43 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: text/plain; charset="US-ASCII"
-Content-Transfer-Encoding: 7bit
-X-Mailer: Becky! ver. 2.70 [ja]
+References: <1537935759-14754-1-git-send-email-suganath-prabu.subramani@broadcom.com>
+ <1537935759-14754-3-git-send-email-suganath-prabu.subramani@broadcom.com> <20180926210345.GG28024@bhelgaas-glaptop.roam.corp.google.com>
+In-Reply-To: <20180926210345.GG28024@bhelgaas-glaptop.roam.corp.google.com>
+From:   Suganath Prabu Subramani <suganath-prabu.subramani@broadcom.com>
+Date:   Thu, 27 Sep 2018 16:01:03 +0530
+Message-ID: <CA+RiK66=yDUL8J_UxcAGCDnZd6eHrxz7E=AUF_thhdiEGJRZUA@mail.gmail.com>
+Subject: Re: [PATCH v4 2/6] mpt3sas: Separate out mpt3sas_wait_for_ioc_to_operational
+To:     helgaas@kernel.org
+Cc:     linux-scsi@vger.kernel.org, linux-pci@vger.kernel.org,
+        lukas@wunner.de, Andy Shevchenko <andy.shevchenko@gmail.com>,
+        Sathya Prakash <Sathya.Prakash@broadcom.com>,
+        Sreekanth Reddy <sreekanth.reddy@broadcom.com>
+Content-Type: text/plain; charset="UTF-8"
 Sender: linux-pci-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-Hi Lorenzo, Gustavo,
+Hi Bjorn,
 
-On Wed, 26 Sep 2018 21:31:36 +0900 <hayashi.kunihiko@socionext.com> wrote:
+Thanks for reviewing.
 
-> Hi Lorenzo, Gustavo,
-> 
-> Thank you for reviewing.
-> 
-> On Tue, 25 Sep 2018 18:53:01 +0100
-> Gustavo Pimentel <gustavo.pimentel@synopsys.com> wrote:
-> 
-> > On 25/09/2018 17:14, Lorenzo Pieralisi wrote:
-> > > [+Gustavo, please have a look at INTX/MSI management]
-> > > 
-> > > On Thu, Sep 06, 2018 at 06:40:32PM +0900, Kunihiko Hayashi wrote:
-> > >> This introduces specific glue layer for UniPhier platform to support
-> > >> PCIe host controller that is based on the DesignWare PCIe core, and
-> > >> this driver supports Root Complex (host) mode.
-> > > 
-> > > Please read this thread and apply it to next versions:
-> > > 
-> > > https://urldefense.proofpoint.com/v2/url?u=https-3A__marc.info_-3Fl-3Dlinux-2Dpci-26m-3D150905742808166-26w-3D2&d=DwIBAg&c=DPL6_X_6JkXFx7AXWqB0tg&r=bkWxpLoW-f-E3EdiDCCa0_h0PicsViasSlvIpzZvPxs&m=H8UNDDUGQnQnqfWr4CBios689dJcjxu4qeTTRGulLmU&s=CgcXc_2LThyOpW-4bCriJNo9H1lzROEdy_cG9p-Y5hU&e=
-> 
-> I also found this thread in previous linux-pci, and I think it's helpful for me.
-> I'll check it carefully.
-
-[snip]
-
-> > >> +	ret = devm_request_irq(dev, pp->irq, uniphier_pcie_irq_handler,
-> > >> +			       IRQF_SHARED, "pcie", priv);
-> > > 
-> > > This is wrong, you should set-up a chained IRQ for INTX.
-> > > 
-> > > I *think* that
-> > > 
-> > > ks_pcie_setup_interrupts()
-> > > 
-> > > is a good example to start with but I wonder whether it is worth
-> > > generalizing the INTX approach to designware as a whole as it was
-> > > done for MSIs.
-> > > 
-> > > Thoughts ?
-> > 
-> > From what I understood this is for legacy IRQ, right?
-> 
-> Yes. For legacy IRQ.
-> 
-> > Like you (Lorenzo) said there is 2 drivers (pci-keystone-dw.c and pci-dra7xx.c)
-> > that uses it and can be use as a template for handling this type of interrupts.
-> > 
-> > We can try to pass some kind of generic INTX function to the DesignWare host
-> > library to handling this, but this will require some help from keystone and
-> > dra7xx maintainers, since my setup doesn't have legacy IRQ HW support.
-> 
-> Now I think it's difficult to make a template for INTX function,
-> and at first, I'll try to re-write this part with reference to pci-keystone-dw.c.
-
-I understand that there are 2 types of interrupt and the drivers.
-
-One like pci-keystone-dw.c is:
-
- - there are 4 interrupts for legacy,
- - invoke handlers for each interrupt, and handle the interrupt,
- - call irq_set_chained_handler_and_data() to make a chain of the interrupts
-  when initializing
-
-The other like pci-dra7xx.c is:
-
- - there is 1 IRQ for legacy as a parent,
- - check an interrupt factor register, and handle the interrupt correspond
-   to the factor,
- - call request_irq() for the parent IRQ and irq_domain_add_linear() for
-   the factor when initializing
-
-The pcie-uniphier.c is the same type as the latter (like pci-dra7xx.c).
-
-However, in pci-dra7xx.c, MSI and legacy IRQ share the same interrupt number,
-so the same handler is called and the handler divides these IRQs.
-(found in dra7xx_pcie_msi_irq_handler())
-
-In pcie-uniphier.c, MSI and legacy IRQ are independent.
-Therefore it's necessary to prepare the handler for the legacy IRQ.
-
-I think that it's difficult to apply the way of pci-keystone-dw.c,
-and uniphier_pcie_irq_handler() and calling devm_request_irq() are still necessary
-to handle legacy IRQ.
-
-Thank you,
-
----
-Best Regards,
-Kunihiko Hayashi
-
-
+On Thu, Sep 27, 2018 at 2:33 AM Bjorn Helgaas <helgaas@kernel.org> wrote:
+>
+> On Wed, Sep 26, 2018 at 09:52:35AM +0530, Suganath Prabu S wrote:
+> > Introduce mpt3sas_wait_for_ioc_to_operational.
+> >
+> > This section of code "wait for IOC to be operational"
+> > is used in many places across the driver,
+> > and hence moved this section of code in to the function
+> > "mpt3sas_wait_for_ioc_to_operational".
+> >
+> > Also added HBA hot unplug checks, and this returns with
+> > error code EFAULT, if it detects HBA is hot unplugged
+> > or IOC is not in operational state.
+>
+> This should be two patches:
+>
+>   1) Factor out the "wait for IOC" code.  This should not cause any
+>      functional changes (I didn't verify in your code, but this is the
+>      objective).
+>
+>   2) Add the hot unplug checks.
+>
+> This makes the patches much easier to review.
+> Will move hot unplug check to separate patch.
+> > V2 change set:
+> > used pci_device_is_present instead of
+> > mpt3sas_base_pci_device_is_unplugged
+> >
+> > v4 Change set:
+> > Dont split strings in print statement
+>
+> I don't know the convention in drivers/scsi, but in driver/pci, I
+> remove this sort of v2/v3 commentary from the changelog because it's
+> really not of interest after the patch is merged.  It's nice to have
+> it in the email, but I think if you put it after a line containing
+> only "--" it will be in the email but not the changelog.
+>Thanks, Will add change sets after --
+> > Signed-off-by: Suganath Prabu S <suganath-prabu.subramani@broadcom.com>
+> > ---
+> >  drivers/scsi/mpt3sas/mpt3sas_base.c      | 92 +++++++++++++++++++-------------
+> >  drivers/scsi/mpt3sas/mpt3sas_base.h      |  4 ++
+> >  drivers/scsi/mpt3sas/mpt3sas_config.c    | 28 +++-------
+> >  drivers/scsi/mpt3sas/mpt3sas_ctl.c       | 26 ++-------
+> >  drivers/scsi/mpt3sas/mpt3sas_transport.c | 75 +++++---------------------
+> >  5 files changed, 81 insertions(+), 144 deletions(-)
+> >
+> > diff --git a/drivers/scsi/mpt3sas/mpt3sas_base.c b/drivers/scsi/mpt3sas/mpt3sas_base.c
+> > index c880e72..9f1d8fb 100644
+> > --- a/drivers/scsi/mpt3sas/mpt3sas_base.c
+> > +++ b/drivers/scsi/mpt3sas/mpt3sas_base.c
+> > @@ -5176,6 +5176,53 @@ _base_send_ioc_reset(struct MPT3SAS_ADAPTER *ioc, u8 reset_type, int timeout)
+> >  }
+> >
+> >  /**
+> > + * mpt3sas_wait_for_ioc_to_operational - IOC's operational
+> > + *           state and HBA hot unplug status are checked here.
+> > + * @ioc: per adapter object
+> > + * @wait_count: timeout in seconds
+>
+> "wait_count" is really a timeout and maybe should be named "timeout".
+>Yes, wait_count is timeout, will rename wait_count to timeout
+> > + * Return:  Returns EFAULT, if HBA is hot unplugged or IOC is
+> > + * not in operational state, within the wait_count.
+> > + * And returns 0, If not hot unplugged Or ioc is in
+> > + * operational state.
+>
+> I think you mean something like:
+>
+>   Waits up to wait_count seconds for the IOC to become operational.
+>   Returns 0 if IOC is present and operational; otherwise returns
+>   -EFAULT.
+> Yes.
+> > + */
+> > +
+> > +int
+> > +mpt3sas_wait_for_ioc_to_operational(struct MPT3SAS_ADAPTER *ioc,
+> > +     int wait_count)
