@@ -4,35 +4,34 @@ X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 X-Spam-Level: 
 X-Spam-Status: No, score=-8.7 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
 	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_PASS,UNPARSEABLE_RELAY,
-	URIBL_BLOCKED,USER_AGENT_GIT autolearn=unavailable autolearn_force=no
-	version=3.4.0
+	URIBL_BLOCKED,USER_AGENT_GIT autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id A3E41C43382
-	for <linux-pci@archiver.kernel.org>; Fri, 28 Sep 2018 10:05:11 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 72901C43382
+	for <linux-pci@archiver.kernel.org>; Fri, 28 Sep 2018 10:05:19 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 64C412173D
-	for <linux-pci@archiver.kernel.org>; Fri, 28 Sep 2018 10:05:11 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.3.2 mail.kernel.org 64C412173D
+	by mail.kernel.org (Postfix) with ESMTP id 3B3F02173D
+	for <linux-pci@archiver.kernel.org>; Fri, 28 Sep 2018 10:05:19 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.3.2 mail.kernel.org 3B3F02173D
 Authentication-Results: mail.kernel.org; dmarc=none (p=none dis=none) header.from=mediatek.com
 Authentication-Results: mail.kernel.org; spf=none smtp.mailfrom=linux-pci-owner@vger.kernel.org
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1729399AbeI1Q16 (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Fri, 28 Sep 2018 12:27:58 -0400
-Received: from mailgw01.mediatek.com ([210.61.82.183]:49950 "EHLO
-        mailgw01.mediatek.com" rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org
-        with ESMTP id S1729362AbeI1Q15 (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Fri, 28 Sep 2018 12:27:57 -0400
-X-UUID: 3b42a84649244825948714084e935bff-20180928
-Received: from mtkexhb02.mediatek.inc [(172.21.101.103)] by mailgw01.mediatek.com
+        id S1729440AbeI1Q2P (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Fri, 28 Sep 2018 12:28:15 -0400
+Received: from mailgw02.mediatek.com ([210.61.82.184]:34120 "EHLO
+        mailgw02.mediatek.com" rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org
+        with ESMTP id S1729093AbeI1Q14 (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Fri, 28 Sep 2018 12:27:56 -0400
+X-UUID: ad15c5d6b8df463ba1ad7713e0defb71-20180928
+Received: from mtkcas08.mediatek.inc [(172.21.101.126)] by mailgw02.mediatek.com
         (envelope-from <honghui.zhang@mediatek.com>)
         (mhqrelay.mediatek.com ESMTP with TLS)
-        with ESMTP id 496390613; Fri, 28 Sep 2018 18:04:52 +0800
+        with ESMTP id 339698027; Fri, 28 Sep 2018 18:04:50 +0800
 Received: from MTKCAS06.mediatek.inc (172.21.101.30) by
  mtkmbs01n1.mediatek.inc (172.21.101.68) with Microsoft SMTP Server (TLS) id
- 15.0.1395.4; Fri, 28 Sep 2018 18:04:51 +0800
+ 15.0.1395.4; Fri, 28 Sep 2018 18:04:49 +0800
 Received: from localhost.localdomain (10.17.3.153) by MTKCAS06.mediatek.inc
  (172.21.101.73) with Microsoft SMTP Server id 15.0.1395.4 via Frontend
- Transport; Fri, 28 Sep 2018 18:04:50 +0800
+ Transport; Fri, 28 Sep 2018 18:04:48 +0800
 From:   <honghui.zhang@mediatek.com>
 To:     <lorenzo.pieralisi@arm.com>, <bhelgaas@google.com>,
         <linux-arm-kernel@lists.infradead.org>,
@@ -43,9 +42,9 @@ CC:     <ulf.hansson@linaro.org>, <marc.zyngier@arm.com>,
         <yingjoe.chen@mediatek.com>, <eddie.huang@mediatek.com>,
         <honghui.zhang@mediatek.com>, <youlin.pei@mediatek.com>,
         <yt.shen@mediatek.com>, <sean.wang@mediatek.com>
-Subject: [PATCH v5 9/9] PCI: mediatek: Add loadable kernel module support
-Date:   Fri, 28 Sep 2018 18:04:40 +0800
-Message-ID: <1538129080-8206-10-git-send-email-honghui.zhang@mediatek.com>
+Subject: [PATCH v5 7/9] PCI: mediatek: Add system pm support for MT2712 and MT7622
+Date:   Fri, 28 Sep 2018 18:04:38 +0800
+Message-ID: <1538129080-8206-8-git-send-email-honghui.zhang@mediatek.com>
 X-Mailer: git-send-email 2.6.4
 In-Reply-To: <1538129080-8206-1-git-send-email-honghui.zhang@mediatek.com>
 References: <1538129080-8206-1-git-send-email-honghui.zhang@mediatek.com>
@@ -59,116 +58,87 @@ X-Mailing-List: linux-pci@vger.kernel.org
 
 From: Honghui Zhang <honghui.zhang@mediatek.com>
 
-Implement remove callback function for Mediatek PCIe driver to add
-loadable kernel module support.
+In order to reduce the PCIe power consuming while system suspend,
+the physical layer should be gated. And the PCIe link should be
+re-established and the related control register values should be
+re-initialized after system resume.
+
+Register suspend_noirq & resume_noirq callback functions to allow
+PCIe to come up after resume from RAM.
 
 Signed-off-by: Honghui Zhang <honghui.zhang@mediatek.com>
 ---
- drivers/pci/controller/Kconfig         |  2 +-
- drivers/pci/controller/pcie-mediatek.c | 52 +++++++++++++++++++++++++++++++++-
- 2 files changed, 52 insertions(+), 2 deletions(-)
+ drivers/pci/controller/pcie-mediatek.c | 50 ++++++++++++++++++++++++++++++++++
+ 1 file changed, 50 insertions(+)
 
-diff --git a/drivers/pci/controller/Kconfig b/drivers/pci/controller/Kconfig
-index 028b287..465790f 100644
---- a/drivers/pci/controller/Kconfig
-+++ b/drivers/pci/controller/Kconfig
-@@ -231,7 +231,7 @@ config PCIE_ROCKCHIP_EP
- 	  available to support GEN2 with 4 slots.
- 
- config PCIE_MEDIATEK
--	bool "MediaTek PCIe controller"
-+	tristate "MediaTek PCIe controller"
- 	depends on ARCH_MEDIATEK || COMPILE_TEST
- 	depends on OF
- 	depends on PCI_MSI_IRQ_DOMAIN
 diff --git a/drivers/pci/controller/pcie-mediatek.c b/drivers/pci/controller/pcie-mediatek.c
-index d35890c..b8ae214 100644
+index be38b38..bd1bde3 100644
 --- a/drivers/pci/controller/pcie-mediatek.c
 +++ b/drivers/pci/controller/pcie-mediatek.c
-@@ -15,6 +15,7 @@
- #include <linux/irqdomain.h>
- #include <linux/kernel.h>
- #include <linux/msi.h>
-+#include <linux/module.h>
- #include <linux/of_address.h>
- #include <linux/of_pci.h>
- #include <linux/of_platform.h>
-@@ -536,6 +537,27 @@ static void mtk_pcie_enable_msi(struct mtk_pcie_port *port)
- 	writel(val, port->base + PCIE_INT_MASK);
- }
- 
-+static void mtk_pcie_irq_teardown(struct mtk_pcie *pcie)
-+{
-+	struct mtk_pcie_port *port, *tmp;
-+
-+	list_for_each_entry_safe(port, tmp, &pcie->ports, list) {
-+		irq_set_chained_handler_and_data(port->irq, NULL, NULL);
-+
-+		if (port->irq_domain)
-+			irq_domain_remove(port->irq_domain);
-+
-+		if (IS_ENABLED(CONFIG_PCI_MSI)) {
-+			if (port->msi_domain)
-+				irq_domain_remove(port->msi_domain);
-+			if (port->inner_domain)
-+				irq_domain_remove(port->inner_domain);
-+		}
-+
-+		irq_dispose_mapping(port->irq);
-+	}
-+}
-+
- static int mtk_pcie_intx_map(struct irq_domain *domain, unsigned int irq,
- 			     irq_hw_number_t hwirq)
- {
-@@ -1175,6 +1197,32 @@ static int mtk_pcie_probe(struct platform_device *pdev)
+@@ -1172,6 +1172,55 @@ static int mtk_pcie_probe(struct platform_device *pdev)
  	return err;
  }
  
-+
-+static void mtk_pcie_free_resources(struct mtk_pcie *pcie)
++static int __maybe_unused mtk_pcie_suspend_noirq(struct device *dev)
 +{
-+	struct pci_host_bridge *host = pci_host_bridge_from_priv(pcie);
-+	struct list_head *windows = &host->windows;
++	struct mtk_pcie *pcie = dev_get_drvdata(dev);
++	struct mtk_pcie_port *port;
 +
-+	pci_unmap_iospace(&pcie->pio);
-+	pci_free_resource_list(windows);
-+}
++	if (list_empty(&pcie->ports))
++		return 0;
 +
-+static int mtk_pcie_remove(struct platform_device *pdev)
-+{
-+	struct mtk_pcie *pcie = platform_get_drvdata(pdev);
-+	struct pci_host_bridge *host = pci_host_bridge_from_priv(pcie);
++	list_for_each_entry(port, &pcie->ports, list) {
++		clk_disable_unprepare(port->pipe_ck);
++		clk_disable_unprepare(port->obff_ck);
++		clk_disable_unprepare(port->axi_ck);
++		clk_disable_unprepare(port->aux_ck);
++		clk_disable_unprepare(port->ahb_ck);
++		clk_disable_unprepare(port->sys_ck);
++		phy_power_off(port->phy);
++		phy_exit(port->phy);
++	}
 +
-+	pci_stop_root_bus(host->bus);
-+	pci_remove_root_bus(host->bus);
-+	mtk_pcie_free_resources(pcie);
-+
-+	mtk_pcie_irq_teardown(pcie);
-+
-+	mtk_pcie_put_resources(pcie);
++	clk_disable_unprepare(pcie->free_ck);
 +
 +	return 0;
 +}
 +
- static int __maybe_unused mtk_pcie_suspend_noirq(struct device *dev)
- {
- 	struct mtk_pcie *pcie = dev_get_drvdata(dev);
-@@ -1252,6 +1300,7 @@ static const struct of_device_id mtk_pcie_ids[] = {
- 
- static struct platform_driver mtk_pcie_driver = {
- 	.probe = mtk_pcie_probe,
-+	.remove = mtk_pcie_remove,
- 	.driver = {
++static int __maybe_unused mtk_pcie_resume_noirq(struct device *dev)
++{
++	struct mtk_pcie *pcie = dev_get_drvdata(dev);
++	struct mtk_pcie_port *port, *tmp;
++
++	if (list_empty(&pcie->ports))
++		return 0;
++
++	clk_prepare_enable(pcie->free_ck);
++
++	list_for_each_entry_safe(port, tmp, &pcie->ports, list)
++		mtk_pcie_enable_port(port);
++
++	/* In case of EP was removed while system suspend. */
++	if (list_empty(&pcie->ports))
++		clk_disable_unprepare(pcie->free_ck);
++
++	return 0;
++}
++
++static const struct dev_pm_ops mtk_pcie_pm_ops = {
++	SET_NOIRQ_SYSTEM_SLEEP_PM_OPS(mtk_pcie_suspend_noirq,
++				      mtk_pcie_resume_noirq)
++};
++
+ static const struct mtk_pcie_soc mtk_pcie_soc_v1 = {
+ 	.ops = &mtk_pcie_ops,
+ 	.startup = mtk_pcie_startup_port,
+@@ -1204,6 +1253,7 @@ static struct platform_driver mtk_pcie_driver = {
  		.name = "mtk-pcie",
  		.of_match_table = mtk_pcie_ids,
-@@ -1259,4 +1308,5 @@ static struct platform_driver mtk_pcie_driver = {
- 		.pm = &mtk_pcie_pm_ops,
+ 		.suppress_bind_attrs = true,
++		.pm = &mtk_pcie_pm_ops,
  	},
  };
--builtin_platform_driver(mtk_pcie_driver);
-+module_platform_driver(mtk_pcie_driver);
-+MODULE_LICENSE("GPL v2");
+ builtin_platform_driver(mtk_pcie_driver);
 -- 
 2.6.4
 
