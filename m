@@ -2,90 +2,141 @@ Return-Path: <SRS0=ex/N=MK=vger.kernel.org=linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-0.8 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	MAILING_LIST_MULTI,SPF_PASS autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-3.0 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,MAILING_LIST_MULTI,SPF_PASS,USER_AGENT_MUTT
+	autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 130E6C43143
-	for <linux-pci@archiver.kernel.org>; Fri, 28 Sep 2018 20:39:40 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id CC384C43143
+	for <linux-pci@archiver.kernel.org>; Fri, 28 Sep 2018 20:50:39 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id AF8F52073F
-	for <linux-pci@archiver.kernel.org>; Fri, 28 Sep 2018 20:39:39 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.3.2 mail.kernel.org AF8F52073F
-Authentication-Results: mail.kernel.org; dmarc=none (p=none dis=none) header.from=wwwdotorg.org
+	by mail.kernel.org (Postfix) with ESMTP id 83DC32073F
+	for <linux-pci@archiver.kernel.org>; Fri, 28 Sep 2018 20:50:39 +0000 (UTC)
+Authentication-Results: mail.kernel.org;
+	dkim=pass (1024-bit key) header.d=kernel.org header.i=@kernel.org header.b="aNQwxz9h"
+DMARC-Filter: OpenDMARC Filter v1.3.2 mail.kernel.org 83DC32073F
+Authentication-Results: mail.kernel.org; dmarc=fail (p=none dis=none) header.from=kernel.org
 Authentication-Results: mail.kernel.org; spf=none smtp.mailfrom=linux-pci-owner@vger.kernel.org
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726451AbeI2DFE (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Fri, 28 Sep 2018 23:05:04 -0400
-Received: from avon.wwwdotorg.org ([104.237.132.123]:38330 "EHLO
-        avon.wwwdotorg.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726304AbeI2DFE (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Fri, 28 Sep 2018 23:05:04 -0400
-Received: from [10.20.204.51] (unknown [216.228.112.24])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+        id S1726856AbeI2DQH (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Fri, 28 Sep 2018 23:16:07 -0400
+Received: from mail.kernel.org ([198.145.29.99]:37174 "EHLO mail.kernel.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1726664AbeI2DQG (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Fri, 28 Sep 2018 23:16:06 -0400
+Received: from localhost (unknown [69.71.4.100])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
         (No client certificate requested)
-        by avon.wwwdotorg.org (Postfix) with ESMTPSA id 4F6EB1C0160;
-        Fri, 28 Sep 2018 14:39:37 -0600 (MDT)
-X-Virus-Status: Clean
-X-Virus-Scanned: clamav-milter 0.100.1 at avon.wwwdotorg.org
-Subject: Re: Explicit IOVA management from a PCIe endpoint driver
-From:   Stephen Warren <swarren@wwwdotorg.org>
-To:     Robin Murphy <robin.murphy@arm.com>
-Cc:     Christoph Hellwig <hch@lst.de>,
-        Marek Szyprowski <m.szyprowski@samsung.com>,
-        Joerg Roedel <joro@8bytes.org>,
-        Kishon Vijay Abraham I <kishon@ti.com>,
-        Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
-        linux-pci@vger.kernel.org, Bjorn Helgaas <bhelgaas@google.com>,
-        Vidya Sagar <vidyas@nvidia.com>,
-        "iommu@lists.linux-foundation.org" <iommu@lists.linux-foundation.org>,
-        Jingoo Han <jingoohan1@gmail.com>,
-        Joao Pinto <Joao.Pinto@synopsys.com>
-References: <3e9950c5-4986-6b0d-74c8-97014530c132@wwwdotorg.org>
- <a0d97ebd-c77e-400a-29cd-9524e9f47dbc@arm.com>
- <52dc4d4b-b521-17a5-dc93-e2992e481083@wwwdotorg.org>
-Message-ID: <4dc0ffa8-7b16-9063-2aba-b8249a09885f@wwwdotorg.org>
-Date:   Fri, 28 Sep 2018 14:39:36 -0600
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:52.0) Gecko/20100101
- Thunderbird/52.9.1
+        by mail.kernel.org (Postfix) with ESMTPSA id 1CC2A206B8;
+        Fri, 28 Sep 2018 20:50:37 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+        s=default; t=1538167837;
+        bh=PTLDBhoMrtkfB5of9L0203imi+DFADeGVethPQBTtHk=;
+        h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
+        b=aNQwxz9hRBYseye3XFqbFLYDPBm+9iUM/Ngz2ZrZWbVt0zUhjcreKrEc/Pai7Ek8T
+         FcOwAmpS47rassr+91T8PyTGuxDJn0Jrtbfa5QPmuC5yTStF7/R/QPCn5Xv3YMgg6n
+         UmRLQoXKkHKQI6WfPLJdi4+9SEKcUm8Idct2BCGg=
+Date:   Fri, 28 Sep 2018 15:50:34 -0500
+From:   Bjorn Helgaas <helgaas@kernel.org>
+To:     Keith Busch <keith.busch@intel.com>
+Cc:     Linux PCI <linux-pci@vger.kernel.org>,
+        Bjorn Helgaas <bhelgaas@google.com>,
+        Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+        Sinan Kaya <okaya@kernel.org>,
+        Thomas Tai <thomas.tai@oracle.com>, poza@codeaurora.org,
+        Lukas Wunner <lukas@wunner.de>, Christoph Hellwig <hch@lst.de>,
+        Mika Westerberg <mika.westerberg@linux.intel.com>
+Subject: Re: [PATCHv4 08/12] PCI: ERR: Always use the first downstream port
+Message-ID: <20180928205034.GA119911@bhelgaas-glaptop.roam.corp.google.com>
+References: <20180920162717.31066-1-keith.busch@intel.com>
+ <20180920162717.31066-9-keith.busch@intel.com>
+ <20180926220116.GJ28024@bhelgaas-glaptop.roam.corp.google.com>
+ <20180926221924.GA17934@localhost.localdomain>
+ <20180927225625.GB18434@bhelgaas-glaptop.roam.corp.google.com>
+ <20180928154220.GA21996@localhost.localdomain>
 MIME-Version: 1.0
-In-Reply-To: <52dc4d4b-b521-17a5-dc93-e2992e481083@wwwdotorg.org>
-Content-Type: text/plain; charset=utf-8; format=flowed
-Content-Language: en-US
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20180928154220.GA21996@localhost.localdomain>
+User-Agent: Mutt/1.10.1 (2018-07-13)
 Sender: linux-pci-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-On 09/18/2018 12:16 PM, Stephen Warren wrote:
-> On 09/18/2018 04:59 AM, Robin Murphy wrote:
->> Hi Stephen,
->>
->> On 17/09/18 22:36, Stephen Warren wrote:
->>> Joerg, Christoph, Marek, Robin,
->>>
->>> I believe that the driver for our PCIe endpoint controller hardware 
->>> will need to explicitly manage its IOVA space more than current APIs 
->>> allow. I'd like to discuss how to make that possible.
-...
->>> Does this API proposal sound reasonable?
->>
->> Indeed, as I say apart from using streaming DMA for coherency 
->> management (which I think could be added in pretty much orthogonally 
->> later), this sounds like something you could plumb into the endpoint 
->> framework right now with no dependent changes elsewhere.
+On Fri, Sep 28, 2018 at 09:42:20AM -0600, Keith Busch wrote:
+> On Thu, Sep 27, 2018 at 05:56:25PM -0500, Bjorn Helgaas wrote:
+> > On Wed, Sep 26, 2018 at 04:19:25PM -0600, Keith Busch wrote:
+> > > On Wed, Sep 26, 2018 at 05:01:16PM -0500, Bjorn Helgaas wrote:
+> > > > On Thu, Sep 20, 2018 at 10:27:13AM -0600, Keith Busch wrote:
+> > > > > The link reset always used the first bridge device, but AER broadcast
+> > > > > error handling may have reported an end device. This means the reset may
+> > > > > hit devices that were never notified of the impending error recovery.
+> > > > > 
+> > > > > This patch uses the first downstream port in the hierarchy considered
+> > > > > reliable. An error detected by a switch upstream port should mean it
+> > > > > occurred on its upstream link, so the patch selects the parent device
+> > > > > if the error is not a root or downstream port.
+> > > > 
+> > > > I'm not really clear on what "Always use the first downstream port"
+> > > > means.  Always use it for *what*?
+> > 
+> > And I forgot to ask what "first downstream port" means.
 > 
-> Great. I'll take a look at Oza's code and see about getting this 
-> implemented.
+> The "first downstream port" was supposed to mean the first DSP we
+> find when walking toward the root from the pci_dev that reported
+> ERR_[NON]FATAL.
+> 
+> By "use", I mean "walking down the sub-tree for error handling".
+> 
+> After thinking more on this, that doesn't really capture the intent. A
+> better way might be:
+> 
+>   Run error handling starting from the downstream port of the bus
+>   reporting an error
 
-I took a longer look at the various APIs in iommu.h and dma-iommh.h. As 
-you said, I think most of it is already there. I think we just need to 
-add functions iommu_dma_alloc/free_iova() [1] that drivers can call to 
-acquire an IOVA range that is guaranteed not be used by any other device 
-that shares the same IOVA domain (i.e. IOMMU ASID). After the driver 
-calls that, it can just use iommu_map() and iommu_map_sg() on the IOVA 
-range that was reserved. Does that sound reasonable?
+I think the light is beginning to dawn.  Does this make sense (as far
+as it goes)?
 
-[1] there's already a static function of that name for internal use in 
-dma-iommu.c. I guess I'd rename that to __iommu_dma_alloc_iova() and 
-have the new function be a thin wrapper on top of it.
+  PCI/ERR: Run error recovery callbacks for all affected devices
+
+  If an Endpoint reports an error with ERR_FATAL, we previously ran
+  driver error recovery callbacks only for the Endpoint.  But if
+  recovery requires that we reset the Endpoint, we may have to use a
+  port farther upstream to initiate a Link reset, and that may affect
+  components other than the Endpoint, e.g., multi-function peers and
+  their children.  Drivers for those devices were never notified of
+  the impending reset.
+
+  Call driver error recovery callbacks for every device that will be
+  reset.
+
+Now help me understand this part:
+
+> This allows two other clean-ups.  First, error handling can only run
+> on bridges so this patch removes checks for endpoints.  
+
+"error handling can only run on bridges"?  I *think* only Root Ports
+and Root Complex Event Collectors can assert AER interrupts, so
+aer_irq() is only run for them (actually I don't think we quite
+support Event Collectors yet).  Is this what you're getting at?
+
+Probably not, because the "dev" passed to pcie_do_recovery() isn't an
+RP or RCEC.  But the e_info->dev[i] that aer_process_err_devices()
+eventually passes in doesn't have to be a bridge at all, does it?
+
+So I can't quite figure out the bridge connection here.
+
+> Second, the first accessible port does not inherit the channel error
+> state since we can access it, so the special cases for error detect
+> and resume are no longer necessary.
+
+When we call pcie_do_recovery(), I guess we specify a "dev" that
+logged an AER event and a pci_channel_state.  It seems a little bit
+weird to handle those separately, as opposed to incorporating into 
+the pci_dev or something.
+
+But if you're just saying that "if A is frozen because of an error,
+that doesn't mean bridges upstream from A are frozen", that makes good
+sense.
+
+Bjorn
