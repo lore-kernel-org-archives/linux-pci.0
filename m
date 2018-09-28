@@ -2,36 +2,36 @@ Return-Path: <SRS0=ex/N=MK=vger.kernel.org=linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-2.7 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	MAILING_LIST_MULTI,SPF_PASS,UNPARSEABLE_RELAY,URIBL_BLOCKED,USER_AGENT_GIT
-	autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-8.7 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_PASS,UNPARSEABLE_RELAY,
+	URIBL_BLOCKED,USER_AGENT_GIT autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id A1416C43382
-	for <linux-pci@archiver.kernel.org>; Fri, 28 Sep 2018 10:04:49 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 6D14FC004D1
+	for <linux-pci@archiver.kernel.org>; Fri, 28 Sep 2018 10:04:52 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 6821421754
-	for <linux-pci@archiver.kernel.org>; Fri, 28 Sep 2018 10:04:49 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.3.2 mail.kernel.org 6821421754
+	by mail.kernel.org (Postfix) with ESMTP id 374CE2173D
+	for <linux-pci@archiver.kernel.org>; Fri, 28 Sep 2018 10:04:52 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.3.2 mail.kernel.org 374CE2173D
 Authentication-Results: mail.kernel.org; dmarc=none (p=none dis=none) header.from=mediatek.com
 Authentication-Results: mail.kernel.org; spf=none smtp.mailfrom=linux-pci-owner@vger.kernel.org
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1729124AbeI1Q1r (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Fri, 28 Sep 2018 12:27:47 -0400
+        id S1729292AbeI1Q1t (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Fri, 28 Sep 2018 12:27:49 -0400
 Received: from mailgw01.mediatek.com ([210.61.82.183]:45099 "EHLO
         mailgw01.mediatek.com" rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org
-        with ESMTP id S1729093AbeI1Q1r (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Fri, 28 Sep 2018 12:27:47 -0400
-X-UUID: 63467f366a144b8ba114a0d5fe790bc9-20180928
-Received: from mtkcas08.mediatek.inc [(172.21.101.126)] by mailgw01.mediatek.com
+        with ESMTP id S1729268AbeI1Q1s (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Fri, 28 Sep 2018 12:27:48 -0400
+X-UUID: fdd5fcdeb3d944f9bf6fef344bfe3795-20180928
+Received: from mtkexhb02.mediatek.inc [(172.21.101.103)] by mailgw01.mediatek.com
         (envelope-from <honghui.zhang@mediatek.com>)
         (mhqrelay.mediatek.com ESMTP with TLS)
-        with ESMTP id 1523964212; Fri, 28 Sep 2018 18:04:43 +0800
+        with ESMTP id 2050651582; Fri, 28 Sep 2018 18:04:45 +0800
 Received: from MTKCAS06.mediatek.inc (172.21.101.30) by
- mtkmbs08n1.mediatek.inc (172.21.101.55) with Microsoft SMTP Server (TLS) id
- 15.0.1395.4; Fri, 28 Sep 2018 18:04:42 +0800
+ mtkmbs08n2.mediatek.inc (172.21.101.56) with Microsoft SMTP Server (TLS) id
+ 15.0.1395.4; Fri, 28 Sep 2018 18:04:43 +0800
 Received: from localhost.localdomain (10.17.3.153) by MTKCAS06.mediatek.inc
  (172.21.101.73) with Microsoft SMTP Server id 15.0.1395.4 via Frontend
- Transport; Fri, 28 Sep 2018 18:04:41 +0800
+ Transport; Fri, 28 Sep 2018 18:04:42 +0800
 From:   <honghui.zhang@mediatek.com>
 To:     <lorenzo.pieralisi@arm.com>, <bhelgaas@google.com>,
         <linux-arm-kernel@lists.infradead.org>,
@@ -42,12 +42,15 @@ CC:     <ulf.hansson@linaro.org>, <marc.zyngier@arm.com>,
         <yingjoe.chen@mediatek.com>, <eddie.huang@mediatek.com>,
         <honghui.zhang@mediatek.com>, <youlin.pei@mediatek.com>,
         <yt.shen@mediatek.com>, <sean.wang@mediatek.com>
-Subject: [PATCH v5 0/9] PCI: mediatek: fixup find_port, enable_msi and add pm, module support
-Date:   Fri, 28 Sep 2018 18:04:31 +0800
-Message-ID: <1538129080-8206-1-git-send-email-honghui.zhang@mediatek.com>
+Subject: [PATCH v5 1/9] PCI: mediatek: Using slot's devfn for compare to fix mtk_pcie_find_port logic
+Date:   Fri, 28 Sep 2018 18:04:32 +0800
+Message-ID: <1538129080-8206-2-git-send-email-honghui.zhang@mediatek.com>
 X-Mailer: git-send-email 2.6.4
+In-Reply-To: <1538129080-8206-1-git-send-email-honghui.zhang@mediatek.com>
+References: <1538129080-8206-1-git-send-email-honghui.zhang@mediatek.com>
 MIME-Version: 1.0
 Content-Type: text/plain
+X-TM-SNTS-SMTP: 5855F8BC4DEC6CD93D2617F41CDD3F62E583445DEB4E583805C1A9F4FD3E039E2000:8
 X-MTK:  N
 Sender: linux-pci-owner@vger.kernel.org
 Precedence: bulk
@@ -56,70 +59,70 @@ X-Mailing-List: linux-pci@vger.kernel.org
 
 From: Honghui Zhang <honghui.zhang@mediatek.com>
 
-This patchset includes misc patchs:
+The Mediatek's host controller has two slots, each with it's own control
+registers. The host driver need to identify which slot was connected
+in order to access the device's configuration space. There's problem
+for current host driver to find out which slot was connected to for
+a given EP device.
 
-The patch 1 fixup the mtk_pcie_find_port logic which will cause system
-could not touch the EP's configuration space that connected to PCIe slot 1.
+Assuming each slot have connect with one EP device as below:
 
-The patch 2 fixup the class type for MT7622.
-The patch 6 fixup the enable msi logic, the operation to enable msi
-should be after system clock is enabled. Call mtk_pcie_enable_msi in
-mtk_pcie_startup_port_v2 since the clock was all enabled at that time.
+                host bridge
+  bus 0 --> __________|_______
+           |                  |
+           |                  |
+         slot 0             slot 1
+  bus 1 -->|        bus 2 --> |
+           |                  |
+         EP 0               EP 1
 
-The patch 7 was rebased and refactor of the v4 patch[1], changes are:
- -Add PM support for MT7622.
- -Using mtk_pcie_enable_port to re-establish the link when resumed.
- -Rebased on this patchset.
+During PCI enumeration, system software will scan all the PCI device
+starting from devfn 0. So it will get the proper port for slot0 and
+slot1 device when using PCI_SLOT(devfn) for match. But it will get
+the wrong slot for EP1: The devfn will be start from 0 when scanning
+EP1 behind slot1, it will get port0 since the PCI_SLOT(EP1) is match
+for port0's slot value. So the host driver should not using EP's devfn
+but the slot's devfn(the slot which EP was connected to) for match.
 
-The patch 9 add loadable kernel module support.
+This patch fix the mtk_pcie_find_port's logic by using the slot's
+devfn for match if finding device connected to the subordinate bus.
 
-[1] https://patchwork.kernel.org/patch/10479079
+Signed-off-by: Honghui Zhang <honghui.zhang@mediatek.com>
+---
+ drivers/pci/controller/pcie-mediatek.c | 17 ++++++++++++++++-
+ 1 file changed, 16 insertions(+), 1 deletion(-)
 
-Change since v4:
- - Add patch 2 to fixup class type for MT7622.
- - Add patch 3 to remove the redundant dev->pm_domain check
- - Add patch 4 to covert to use pci_host_probe
- - Add patch 5 to re-arrange the function define, this is a prepare patch for
-   fixup the enable_msi logic, no functional changed have been made by this one.
- - Add patch 8 to save the GIC IRQ in mtk_pcie_port as a prepare patch for tear
-   down the irq when remove the kernel module.
- - Re-arrange the find_port flow suggest by Lorenzo to make the code parse easier
-   for the patch 1.
- - Remove the .pm_support in mtk_pcie_soc in patch 7 since if system pm was not
-   supported, then those pm callbacks will never be executed for MT7622. So the
-   .pm_support is not needed.
-
-Change since v3:
- - Remove pm_runtime_XXX ops in suspend and resume callbacks in the third patch.
- - Rebase to 4.19-rc1.
-
-Change since v2:
- - Fix the list_for_each_entry_safe parameter error.
- - Add Ryder's Acked-by flag.
-
-Change since v1:
- - A bit of code refact of the first patch suggested by Andy Shevchenko, and
-   commit message updated.
- - Using __maybe_unused.
- - Remove the redundant list_empty check of the fourth patch.
-
-Honghui Zhang (9):
-  PCI: mediatek: Using slot's devfn for compare to fix
-    mtk_pcie_find_port logic
-  PCI: mediatek: Fixup class ID for MT7622 as PCI_CLASS_BRIDGE_PCI
-  PCI: mediatek: Remove the redundant dev->pm_domain check
-  PCI: mediatek: Convert to use pci_host_probe()
-  PCI: mediatek: Move the mtk_pcie_startup_port_v2 function's define
-    after mtk_pcie_setup_irq
-  PCI: mediatek: Enable msi after clock enabled
-  PCI: mediatek: Add system pm support for MT2712 and MT7622
-  PCI: mediatek: Save the GIC IRQ in mtk_pcie_port
-  PCI: mediatek: Add loadable kernel module support
-
- drivers/pci/controller/Kconfig         |   2 +-
- drivers/pci/controller/pcie-mediatek.c | 326 +++++++++++++++++++++------------
- 2 files changed, 210 insertions(+), 118 deletions(-)
-
+diff --git a/drivers/pci/controller/pcie-mediatek.c b/drivers/pci/controller/pcie-mediatek.c
+index 9999dae..264e03f 100644
+--- a/drivers/pci/controller/pcie-mediatek.c
++++ b/drivers/pci/controller/pcie-mediatek.c
+@@ -337,10 +337,25 @@ static struct mtk_pcie_port *mtk_pcie_find_port(struct pci_bus *bus,
+ {
+ 	struct mtk_pcie *pcie = bus->sysdata;
+ 	struct mtk_pcie_port *port;
++	struct pci_dev *dev = NULL;
++
++	/*
++	 * Walk the bus hierarchy to get the devfn value
++	 * of the port in the root bus.
++	 */
++	while (bus && bus->number) {
++		dev = bus->self;
++		bus = dev->bus;
++	}
++
++	list_for_each_entry(port, &pcie->ports, list) {
++		/* Using slot's devfn to compare for subordinary bus. */
++		if (dev)
++			devfn = dev->devfn;
+ 
+-	list_for_each_entry(port, &pcie->ports, list)
+ 		if (port->slot == PCI_SLOT(devfn))
+ 			return port;
++	}
+ 
+ 	return NULL;
+ }
 -- 
 2.6.4
 
