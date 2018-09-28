@@ -2,120 +2,148 @@ Return-Path: <SRS0=ex/N=MK=vger.kernel.org=linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-8.6 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
-	DKIM_VALID_AU,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_PASS,
-	USER_AGENT_MUTT autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-2.6 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
+	DKIM_VALID_AU,MAILING_LIST_MULTI,SPF_PASS,USER_AGENT_MUTT autolearn=ham
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id E4E7EC43143
-	for <linux-pci@archiver.kernel.org>; Fri, 28 Sep 2018 23:06:20 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 24BC3C43143
+	for <linux-pci@archiver.kernel.org>; Fri, 28 Sep 2018 23:28:06 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 9BBE220779
-	for <linux-pci@archiver.kernel.org>; Fri, 28 Sep 2018 23:06:20 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id DBCBF2073F
+	for <linux-pci@archiver.kernel.org>; Fri, 28 Sep 2018 23:28:05 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (1024-bit key) header.d=kernel.org header.i=@kernel.org header.b="TH7Iq+uO"
-DMARC-Filter: OpenDMARC Filter v1.3.2 mail.kernel.org 9BBE220779
+	dkim=pass (1024-bit key) header.d=kernel.org header.i=@kernel.org header.b="KERPoUbU"
+DMARC-Filter: OpenDMARC Filter v1.3.2 mail.kernel.org DBCBF2073F
 Authentication-Results: mail.kernel.org; dmarc=fail (p=none dis=none) header.from=kernel.org
 Authentication-Results: mail.kernel.org; spf=none smtp.mailfrom=linux-pci-owner@vger.kernel.org
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726881AbeI2FcS (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Sat, 29 Sep 2018 01:32:18 -0400
-Received: from mail.kernel.org ([198.145.29.99]:41514 "EHLO mail.kernel.org"
+        id S1727429AbeI2FyH (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Sat, 29 Sep 2018 01:54:07 -0400
+Received: from mail.kernel.org ([198.145.29.99]:47842 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1726804AbeI2FcS (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Sat, 29 Sep 2018 01:32:18 -0400
+        id S1726287AbeI2FyG (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Sat, 29 Sep 2018 01:54:06 -0400
 Received: from localhost (unknown [69.71.4.100])
         (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
         (No client certificate requested)
-        by mail.kernel.org (Postfix) with ESMTPSA id A0C17206B2;
-        Fri, 28 Sep 2018 23:06:18 +0000 (UTC)
+        by mail.kernel.org (Postfix) with ESMTPSA id 526D4206B6;
+        Fri, 28 Sep 2018 23:28:03 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=default; t=1538175978;
-        bh=CyRSco7B+Z2g5xRJzIoEoSRiG6gj0ciuXLVIiseL/a4=;
+        s=default; t=1538177283;
+        bh=zHaUNTol0xkPgtVSNRdtJIPAX5a0/Gd/PpRFKy/X0Tk=;
         h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-        b=TH7Iq+uOFEUAJPzOnXYq0uMWX73uHSP5B7ni1tEtobk0bQObPmG0TI++WDOLWnwnz
-         vJDByg5v/dG/MTbivs96xy4hPrjjI/Hp9qQXBF/gtHnmlVMdqGRQfeHRjXPBsXqc8l
-         GfIWi9BqcFLfVK/NYtHHdomHtj+xSI6q/RJzPxJ8=
-Date:   Fri, 28 Sep 2018 18:06:17 -0500
+        b=KERPoUbUNbG6Z406Y9sbBIee1BZnd+loDf/d4dRX1PeRvTNdoYd7KVr6Vc9MMm+dC
+         oQi1dHLeXJCDutRBWb3QhS85peJKGZsRw4lV2muf6Oil+8x9TteLYzO0IIPS8JCsvB
+         IzBOurL78LWF2vdLrOIkxJd1Gw7troAn2+tIQFoU=
+Date:   Fri, 28 Sep 2018 18:28:02 -0500
 From:   Bjorn Helgaas <helgaas@kernel.org>
-To:     Joe Perches <joe@perches.com>
-Cc:     linux-kernel@vger.kernel.org,
-        "Rafael J . Wysocki" <rjw@rjwysocki.net>,
-        Len Brown <lenb@kernel.org>, linux-acpi@vger.kernel.org,
+To:     Keith Busch <keith.busch@intel.com>
+Cc:     Linux PCI <linux-pci@vger.kernel.org>,
         Bjorn Helgaas <bhelgaas@google.com>,
-        Keith Busch <keith.busch@intel.com>,
-        Tony Luck <tony.luck@intel.com>,
-        Borislav Petkov <bp@alien8.de>, linux-pci@vger.kernel.org
-Subject: Re: Bad MAINTAINERS pattern in section 'ACPI'
-Message-ID: <20180928230616.GA150287@bhelgaas-glaptop.roam.corp.google.com>
-References: <20180928215054.28561-1-joe@perches.com>
+        Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+        Sinan Kaya <okaya@kernel.org>,
+        Thomas Tai <thomas.tai@oracle.com>, poza@codeaurora.org,
+        Lukas Wunner <lukas@wunner.de>, Christoph Hellwig <hch@lst.de>,
+        Mika Westerberg <mika.westerberg@linux.intel.com>
+Subject: Re: [PATCHv4 08/12] PCI: ERR: Always use the first downstream port
+Message-ID: <20180928232801.GB119911@bhelgaas-glaptop.roam.corp.google.com>
+References: <20180920162717.31066-1-keith.busch@intel.com>
+ <20180920162717.31066-9-keith.busch@intel.com>
+ <20180926220116.GJ28024@bhelgaas-glaptop.roam.corp.google.com>
+ <20180926221924.GA17934@localhost.localdomain>
+ <20180927225625.GB18434@bhelgaas-glaptop.roam.corp.google.com>
+ <20180928154220.GA21996@localhost.localdomain>
+ <20180928205034.GA119911@bhelgaas-glaptop.roam.corp.google.com>
+ <20180928213523.GA22508@localhost.localdomain>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20180928215054.28561-1-joe@perches.com>
+In-Reply-To: <20180928213523.GA22508@localhost.localdomain>
 User-Agent: Mutt/1.10.1 (2018-07-13)
 Sender: linux-pci-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-[+cc Tony, Borislav (ACPI APEI reviewers), linux-pci]
-
-On Fri, Sep 28, 2018 at 02:50:53PM -0700, Joe Perches wrote:
-> Please fix this defect appropriately.
+On Fri, Sep 28, 2018 at 03:35:23PM -0600, Keith Busch wrote:
+> On Fri, Sep 28, 2018 at 03:50:34PM -0500, Bjorn Helgaas wrote:
+> > On Fri, Sep 28, 2018 at 09:42:20AM -0600, Keith Busch wrote:
+> > > On Thu, Sep 27, 2018 at 05:56:25PM -0500, Bjorn Helgaas wrote:
+> > > > On Wed, Sep 26, 2018 at 04:19:25PM -0600, Keith Busch wrote:
+> > > The "first downstream port" was supposed to mean the first DSP we
+> > > find when walking toward the root from the pci_dev that reported
+> > > ERR_[NON]FATAL.
+> > > 
+> > > By "use", I mean "walking down the sub-tree for error handling".
+> > > 
+> > > After thinking more on this, that doesn't really capture the intent. A
+> > > better way might be:
+> > > 
+> > >   Run error handling starting from the downstream port of the bus
+> > >   reporting an error
+> > 
+> > I think the light is beginning to dawn.  Does this make sense (as far
+> > as it goes)?
+> > 
+> >   PCI/ERR: Run error recovery callbacks for all affected devices
+> > 
+> >   If an Endpoint reports an error with ERR_FATAL, we previously ran
+> >   driver error recovery callbacks only for the Endpoint.  But if
+> >   recovery requires that we reset the Endpoint, we may have to use a
+> >   port farther upstream to initiate a Link reset, and that may affect
+> >   components other than the Endpoint, e.g., multi-function peers and
+> >   their children.  Drivers for those devices were never notified of
+> >   the impending reset.
+> > 
+> >   Call driver error recovery callbacks for every device that will be
+> >   reset.
 > 
-> linux-next MAINTAINERS section:
+> Yes!
+>  
+> > Now help me understand this part:
+> > 
+> > > This allows two other clean-ups.  First, error handling can only run
+> > > on bridges so this patch removes checks for endpoints.  
+> > 
+> > "error handling can only run on bridges"?  I *think* only Root Ports
+> > and Root Complex Event Collectors can assert AER interrupts, so
+> > aer_irq() is only run for them (actually I don't think we quite
+> > support Event Collectors yet).  Is this what you're getting at?
 > 
-> 	308	ACPI
-> 	309	M:	"Rafael J. Wysocki" <rjw@rjwysocki.net>
-> 	310	M:	Len Brown <lenb@kernel.org>
-> 	311	L:	linux-acpi@vger.kernel.org
-> 	312	W:	https://01.org/linux-acpi
-> 	313	Q:	https://patchwork.kernel.org/project/linux-acpi/list/
-> 	314	T:	git git://git.kernel.org/pub/scm/linux/kernel/git/rafael/linux-pm
-> 	315	B:	https://bugzilla.kernel.org
-> 	316	S:	Supported
-> 	317	F:	drivers/acpi/
-> 	318	F:	drivers/pnp/pnpacpi/
-> 	319	F:	include/linux/acpi.h
-> 	320	F:	include/linux/fwnode.h
-> 	321	F:	include/acpi/
-> 	322	F:	Documentation/acpi/
-> 	323	F:	Documentation/ABI/testing/sysfs-bus-acpi
-> 	324	F:	Documentation/ABI/testing/configfs-acpi
-> 	325	F:	drivers/pci/*acpi*
-> 	326	F:	drivers/pci/*/*acpi*
-> -->	327	F:	drivers/pci/*/*/*acpi*
-> 	328	F:	tools/power/acpi/
+> I mean the pci_dev sent to pcie_do_recovery(), which may be any device
+> in the topology including or below the root port that aer_irq() serviced.
 
-My proposal to fix this:
+Yep.
 
-commit a99051c0d3c59fd259fd76a8bbd9837b76b509d9
-Author: Bjorn Helgaas <bhelgaas@google.com>
-Date:   Fri Sep 28 17:34:21 2018 -0500
+> > Probably not, because the "dev" passed to pcie_do_recovery() isn't an
+> > RP or RCEC.  But the e_info->dev[i] that aer_process_err_devices()
+> > eventually passes in doesn't have to be a bridge at all, does it?
+> 
+> Yes, e_info->dev[i] is sent to pcie_do_recovery(). That could be an RP,
+> but it may also be anything anything below it.
 
-    MAINTAINERS: Remove obsolete drivers/pci pattern from ACPI section
-    
-    Prior to 256a45937093 ("PCI/AER: Squash aerdrv_acpi.c into aerdrv.c"),
-    drivers/pci/pcie/aer/aerdrv_acpi.c contained code to parse the ACPI HEST
-    table.  That code now lives in drivers/pci/pcie/aer.c.
-    
-    Remove the "F: drivers/pci/*/*/*acpi*" pattern because it matches nothing.
-    
-    We could add a "F: drivers/pci/pcie/aer.c" pattern to the ACPI APEI
-    section, but that file sees a lot of changes, almost none of which are of
-    interest to the ACPI folks.
-    
-    Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
+Yep.
 
-diff --git a/MAINTAINERS b/MAINTAINERS
-index 700408b7bc53..9babd8a0406b 100644
---- a/MAINTAINERS
-+++ b/MAINTAINERS
-@@ -324,7 +324,6 @@ F:	Documentation/ABI/testing/sysfs-bus-acpi
- F:	Documentation/ABI/testing/configfs-acpi
- F:	drivers/pci/*acpi*
- F:	drivers/pci/*/*acpi*
--F:	drivers/pci/*/*/*acpi*
- F:	tools/power/acpi/
- 
- ACPI APEI
+> The assumption I'm making (which I think is a safe assumption with
+> general consensus) is that errors detected on an end point or an upstream
+> port happened because of something wrong with the link going upstream:
+> end devices have no other option, 
+
+Is this really true?  It looks like "Internal Errors" (sec 6.2.9) may
+be unrelated to a packet or event (though they are supposed to be
+associated with a PCIe interface).
+
+It says the only method of recovering is reset or hardware
+replacement.  It doesn't specify, but it seems like a FLR or similar
+reset might be appropriate and we may not have to reset the link.
+
+Getting back to the changelog, "error handling can only run on
+bridges" clearly doesn't refer to the driver callbacks (since those
+only apply to endpoints).  Maybe "error handling" refers to the
+reset_link(), which can only be done on a bridge?
+
+That would make sense to me, although the current code may be
+resetting more devices than necessary if Internal Errors can be
+handled without a link reset.
+
+Bjorn
