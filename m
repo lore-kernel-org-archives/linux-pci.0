@@ -2,129 +2,129 @@ Return-Path: <SRS0=T4LS=ML=vger.kernel.org=linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-0.8 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	MAILING_LIST_MULTI,SPF_PASS,UNPARSEABLE_RELAY autolearn=ham
-	autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-7.0 required=3.0 tests=INCLUDES_PATCH,
+	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_PASS autolearn=ham autolearn_force=no
+	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id A496CC43143
-	for <linux-pci@archiver.kernel.org>; Sat, 29 Sep 2018 05:58:11 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 30F89C43143
+	for <linux-pci@archiver.kernel.org>; Sat, 29 Sep 2018 13:18:59 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 59E8620879
-	for <linux-pci@archiver.kernel.org>; Sat, 29 Sep 2018 05:58:11 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.3.2 mail.kernel.org 59E8620879
-Authentication-Results: mail.kernel.org; dmarc=none (p=none dis=none) header.from=mediatek.com
+	by mail.kernel.org (Postfix) with ESMTP id D542020882
+	for <linux-pci@archiver.kernel.org>; Sat, 29 Sep 2018 13:18:58 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.3.2 mail.kernel.org D542020882
+Authentication-Results: mail.kernel.org; dmarc=fail (p=none dis=none) header.from=kernel.org
 Authentication-Results: mail.kernel.org; spf=none smtp.mailfrom=linux-pci-owner@vger.kernel.org
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727393AbeI2MZP (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Sat, 29 Sep 2018 08:25:15 -0400
-Received: from mailgw02.mediatek.com ([210.61.82.184]:9213 "EHLO
-        mailgw02.mediatek.com" rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org
-        with ESMTP id S1727362AbeI2MZP (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Sat, 29 Sep 2018 08:25:15 -0400
-X-UUID: f4e8ce099007409596c57b2a305a28ca-20180929
-Received: from mtkcas09.mediatek.inc [(172.21.101.178)] by mailgw02.mediatek.com
-        (envelope-from <ryder.lee@mediatek.com>)
-        (mhqrelay.mediatek.com ESMTP with TLS)
-        with ESMTP id 1528896963; Sat, 29 Sep 2018 13:58:04 +0800
-Received: from mtkcas09.mediatek.inc (172.21.101.178) by
- mtkmbs01n1.mediatek.inc (172.21.101.68) with Microsoft SMTP Server (TLS) id
- 15.0.1395.4; Sat, 29 Sep 2018 13:58:02 +0800
-Received: from [172.21.77.33] (172.21.77.33) by mtkcas09.mediatek.inc
- (172.21.101.73) with Microsoft SMTP Server id 15.0.1395.4 via Frontend
- Transport; Sat, 29 Sep 2018 13:58:03 +0800
-Message-ID: <1538200683.25778.6.camel@mtkswgap22>
-Subject: Re: [PATCH v5 0/9] PCI: mediatek: fixup find_port, enable_msi and
- add pm, module support
-From:   Ryder Lee <ryder.lee@mediatek.com>
-To:     <honghui.zhang@mediatek.com>
-CC:     <lorenzo.pieralisi@arm.com>, <bhelgaas@google.com>,
-        <linux-arm-kernel@lists.infradead.org>,
-        <linux-mediatek@lists.infradead.org>, <linux-pci@vger.kernel.org>,
-        <linux-kernel@vger.kernel.org>, <ulf.hansson@linaro.org>,
-        <marc.zyngier@arm.com>, <matthias.bgg@gmail.com>,
-        <devicetree@vger.kernel.org>, <yingjoe.chen@mediatek.com>,
-        <eddie.huang@mediatek.com>, <youlin.pei@mediatek.com>,
-        <yt.shen@mediatek.com>, <sean.wang@mediatek.com>
-Date:   Sat, 29 Sep 2018 13:58:03 +0800
-In-Reply-To: <1538129080-8206-1-git-send-email-honghui.zhang@mediatek.com>
-References: <1538129080-8206-1-git-send-email-honghui.zhang@mediatek.com>
-Content-Type: text/plain; charset="UTF-8"
-X-Mailer: Evolution 3.2.3-0ubuntu6 
-Content-Transfer-Encoding: 7bit
+        id S1728077AbeI2TrY (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Sat, 29 Sep 2018 15:47:24 -0400
+Received: from mail-ot1-f67.google.com ([209.85.210.67]:42063 "EHLO
+        mail-ot1-f67.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1728029AbeI2TrX (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Sat, 29 Sep 2018 15:47:23 -0400
+Received: by mail-ot1-f67.google.com with SMTP id h26-v6so8697115otl.9;
+        Sat, 29 Sep 2018 06:18:57 -0700 (PDT)
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20161025;
+        h=x-gm-message-state:mime-version:references:in-reply-to:from:date
+         :message-id:subject:to:cc;
+        bh=e2ZdzCMuwxxmZmPfkJD5u2P9Apa5Mq6LiwzMxfl7dc8=;
+        b=IWVBILx1Yl0J9tlt7/keRQDxSH37Ba3XaCP0zrR6U8YgJKwMaQr7pdWep8FF4R6ulx
+         98LPAU83+4ZG3Emvl6Jj47v60asEwRp8q8L9i5Bbs3r5uDdKcDE2qMyv+QkVqzWywEgs
+         WTnCdfIu2FR6Uq7m6Nz58Agj8GurqjzD8yVbyrF81GyV8+FTqXQHVr7K74+ssCbLg5O6
+         iF3fh5s6kgWH0tzWZLX8CUB7u/e/ssTJrYfkbM3htEDhYtLOGCvc38TYWDI1Kq4qUqB4
+         Y1XdOIzYO7eefY62GHm7a1chZBJiJT/AH40c5i9YMOqjXy8xNVSP/QHWrXZC+ljdtY91
+         3nKg==
+X-Gm-Message-State: ABuFfoimg85DEI4CVk8PPdDGd6GMyTwaENXWsF+r8JrdOfvVcYFIWws/
+        b20u3FEF9FZS7RqpLRiBWOLkBiKySj9kkIT8ric=
+X-Google-Smtp-Source: ACcGV63Z00kmUxofNmnxr+FnW1CWrz3N5cyNCA1wvbqPsLNeV2rJJcMfky7xnuUk/AfPRjrkMojmqMD9tbJn6SpkWIU=
+X-Received: by 2002:a9d:48f9:: with SMTP id a54-v6mr1875665otj.343.1538227136722;
+ Sat, 29 Sep 2018 06:18:56 -0700 (PDT)
 MIME-Version: 1.0
-X-MTK:  N
+References: <20180928215054.28561-1-joe@perches.com> <20180928230616.GA150287@bhelgaas-glaptop.roam.corp.google.com>
+In-Reply-To: <20180928230616.GA150287@bhelgaas-glaptop.roam.corp.google.com>
+From:   "Rafael J. Wysocki" <rafael@kernel.org>
+Date:   Sat, 29 Sep 2018 15:18:38 +0200
+Message-ID: <CAJZ5v0hh899QjTTbzRK7oWqSH6GccV_H0weUUYJdVw8sQgyONQ@mail.gmail.com>
+Subject: Re: Bad MAINTAINERS pattern in section 'ACPI'
+To:     Bjorn Helgaas <helgaas@kernel.org>
+Cc:     Joe Perches <joe@perches.com>,
+        Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
+        "Rafael J. Wysocki" <rjw@rjwysocki.net>,
+        Len Brown <lenb@kernel.org>,
+        ACPI Devel Maling List <linux-acpi@vger.kernel.org>,
+        Bjorn Helgaas <bhelgaas@google.com>,
+        Keith Busch <keith.busch@intel.com>,
+        Tony Luck <tony.luck@intel.com>,
+        Borislav Petkov <bp@alien8.de>,
+        Linux PCI <linux-pci@vger.kernel.org>
+Content-Type: text/plain; charset="UTF-8"
 Sender: linux-pci-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-On Fri, 2018-09-28 at 18:04 +0800, honghui.zhang@mediatek.com wrote:
-> From: Honghui Zhang <honghui.zhang@mediatek.com>
-> 
-> This patchset includes misc patchs:
-> 
-> The patch 1 fixup the mtk_pcie_find_port logic which will cause system
-> could not touch the EP's configuration space that connected to PCIe slot 1.
-> 
-> The patch 2 fixup the class type for MT7622.
-> The patch 6 fixup the enable msi logic, the operation to enable msi
-> should be after system clock is enabled. Call mtk_pcie_enable_msi in
-> mtk_pcie_startup_port_v2 since the clock was all enabled at that time.
-> 
-> The patch 7 was rebased and refactor of the v4 patch[1], changes are:
->  -Add PM support for MT7622.
->  -Using mtk_pcie_enable_port to re-establish the link when resumed.
->  -Rebased on this patchset.
-> 
-> The patch 9 add loadable kernel module support.
-> 
-> [1] https://patchwork.kernel.org/patch/10479079
-> 
-> Change since v4:
->  - Add patch 2 to fixup class type for MT7622.
->  - Add patch 3 to remove the redundant dev->pm_domain check
->  - Add patch 4 to covert to use pci_host_probe
->  - Add patch 5 to re-arrange the function define, this is a prepare patch for
->    fixup the enable_msi logic, no functional changed have been made by this one.
->  - Add patch 8 to save the GIC IRQ in mtk_pcie_port as a prepare patch for tear
->    down the irq when remove the kernel module.
->  - Re-arrange the find_port flow suggest by Lorenzo to make the code parse easier
->    for the patch 1.
->  - Remove the .pm_support in mtk_pcie_soc in patch 7 since if system pm was not
->    supported, then those pm callbacks will never be executed for MT7622. So the
->    .pm_support is not needed.
-> 
-> Change since v3:
->  - Remove pm_runtime_XXX ops in suspend and resume callbacks in the third patch.
->  - Rebase to 4.19-rc1.
-> 
-> Change since v2:
->  - Fix the list_for_each_entry_safe parameter error.
->  - Add Ryder's Acked-by flag.
-> 
-> Change since v1:
->  - A bit of code refact of the first patch suggested by Andy Shevchenko, and
->    commit message updated.
->  - Using __maybe_unused.
->  - Remove the redundant list_empty check of the fourth patch.
-> 
-> Honghui Zhang (9):
->   PCI: mediatek: Using slot's devfn for compare to fix
->     mtk_pcie_find_port logic
->   PCI: mediatek: Fixup class ID for MT7622 as PCI_CLASS_BRIDGE_PCI
->   PCI: mediatek: Remove the redundant dev->pm_domain check
->   PCI: mediatek: Convert to use pci_host_probe()
->   PCI: mediatek: Move the mtk_pcie_startup_port_v2 function's define
->     after mtk_pcie_setup_irq
->   PCI: mediatek: Enable msi after clock enabled
->   PCI: mediatek: Add system pm support for MT2712 and MT7622
->   PCI: mediatek: Save the GIC IRQ in mtk_pcie_port
->   PCI: mediatek: Add loadable kernel module support
-> 
->  drivers/pci/controller/Kconfig         |   2 +-
->  drivers/pci/controller/pcie-mediatek.c | 326 +++++++++++++++++++++------------
->  2 files changed, 210 insertions(+), 118 deletions(-)
-> 
+On Sat, Sep 29, 2018 at 1:06 AM Bjorn Helgaas <helgaas@kernel.org> wrote:
+>
+> [+cc Tony, Borislav (ACPI APEI reviewers), linux-pci]
+>
+> On Fri, Sep 28, 2018 at 02:50:53PM -0700, Joe Perches wrote:
+> > Please fix this defect appropriately.
+> >
+> > linux-next MAINTAINERS section:
+> >
+> >       308     ACPI
+> >       309     M:      "Rafael J. Wysocki" <rjw@rjwysocki.net>
+> >       310     M:      Len Brown <lenb@kernel.org>
+> >       311     L:      linux-acpi@vger.kernel.org
+> >       312     W:      https://01.org/linux-acpi
+> >       313     Q:      https://patchwork.kernel.org/project/linux-acpi/list/
+> >       314     T:      git git://git.kernel.org/pub/scm/linux/kernel/git/rafael/linux-pm
+> >       315     B:      https://bugzilla.kernel.org
+> >       316     S:      Supported
+> >       317     F:      drivers/acpi/
+> >       318     F:      drivers/pnp/pnpacpi/
+> >       319     F:      include/linux/acpi.h
+> >       320     F:      include/linux/fwnode.h
+> >       321     F:      include/acpi/
+> >       322     F:      Documentation/acpi/
+> >       323     F:      Documentation/ABI/testing/sysfs-bus-acpi
+> >       324     F:      Documentation/ABI/testing/configfs-acpi
+> >       325     F:      drivers/pci/*acpi*
+> >       326     F:      drivers/pci/*/*acpi*
+> > -->   327     F:      drivers/pci/*/*/*acpi*
+> >       328     F:      tools/power/acpi/
+>
+> My proposal to fix this:
+>
+> commit a99051c0d3c59fd259fd76a8bbd9837b76b509d9
+> Author: Bjorn Helgaas <bhelgaas@google.com>
+> Date:   Fri Sep 28 17:34:21 2018 -0500
+>
+>     MAINTAINERS: Remove obsolete drivers/pci pattern from ACPI section
+>
+>     Prior to 256a45937093 ("PCI/AER: Squash aerdrv_acpi.c into aerdrv.c"),
+>     drivers/pci/pcie/aer/aerdrv_acpi.c contained code to parse the ACPI HEST
+>     table.  That code now lives in drivers/pci/pcie/aer.c.
+>
+>     Remove the "F: drivers/pci/*/*/*acpi*" pattern because it matches nothing.
+>
+>     We could add a "F: drivers/pci/pcie/aer.c" pattern to the ACPI APEI
+>     section, but that file sees a lot of changes, almost none of which are of
+>     interest to the ACPI folks.
+>
+>     Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
+>
+> diff --git a/MAINTAINERS b/MAINTAINERS
+> index 700408b7bc53..9babd8a0406b 100644
+> --- a/MAINTAINERS
+> +++ b/MAINTAINERS
+> @@ -324,7 +324,6 @@ F:  Documentation/ABI/testing/sysfs-bus-acpi
+>  F:     Documentation/ABI/testing/configfs-acpi
+>  F:     drivers/pci/*acpi*
+>  F:     drivers/pci/*/*acpi*
+> -F:     drivers/pci/*/*/*acpi*
+>  F:     tools/power/acpi/
 
-Acked-by: Ryder Lee <ryder.lee@mediatek.com> for the whole series.
+Looks good to me.
 
+Acked-by: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
