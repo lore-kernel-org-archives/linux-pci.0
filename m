@@ -2,85 +2,136 @@ Return-Path: <SRS0=/qR3=MN=vger.kernel.org=linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-0.8 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	MAILING_LIST_MULTI,SPF_PASS,URIBL_BLOCKED autolearn=ham autolearn_force=no
-	version=3.4.0
+X-Spam-Status: No, score=-8.2 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_PASS,URIBL_BLOCKED,
+	USER_AGENT_MUTT autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 712C6C43143
-	for <linux-pci@archiver.kernel.org>; Mon,  1 Oct 2018 14:25:43 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id A439BC43143
+	for <linux-pci@archiver.kernel.org>; Mon,  1 Oct 2018 14:36:00 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 1ABC6208D9
-	for <linux-pci@archiver.kernel.org>; Mon,  1 Oct 2018 14:25:43 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.3.2 mail.kernel.org 1ABC6208D9
-Authentication-Results: mail.kernel.org; dmarc=none (p=none dis=none) header.from=rockbox.org
+	by mail.kernel.org (Postfix) with ESMTP id 75998208AE
+	for <linux-pci@archiver.kernel.org>; Mon,  1 Oct 2018 14:36:00 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.3.2 mail.kernel.org 75998208AE
+Authentication-Results: mail.kernel.org; dmarc=none (p=none dis=none) header.from=arm.com
 Authentication-Results: mail.kernel.org; spf=none smtp.mailfrom=linux-pci-owner@vger.kernel.org
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1729404AbeJAVDp (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Mon, 1 Oct 2018 17:03:45 -0400
-Received: from mx1.mailbox.org ([80.241.60.212]:59078 "EHLO mx1.mailbox.org"
+        id S1729452AbeJAVOG (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Mon, 1 Oct 2018 17:14:06 -0400
+Received: from foss.arm.com ([217.140.101.70]:50636 "EHLO foss.arm.com"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1729182AbeJAVDp (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Mon, 1 Oct 2018 17:03:45 -0400
-Received: from smtp1.mailbox.org (smtp1.mailbox.org [80.241.60.240])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
-        (No client certificate requested)
-        by mx1.mailbox.org (Postfix) with ESMTPS id 65E15499FC;
-        Mon,  1 Oct 2018 16:25:38 +0200 (CEST)
-X-Virus-Scanned: amavisd-new at heinlein-support.de
-Received: from smtp1.mailbox.org ([80.241.60.240])
-        by hefe.heinlein-support.de (hefe.heinlein-support.de [91.198.250.172]) (amavisd-new, port 10030)
-        with ESMTP id 79zojJ75-bhP; Mon,  1 Oct 2018 16:25:31 +0200 (CEST)
-Subject: Re: [PATCH v3] PCI: Reprogram bridge prefetch registers on resume
-To:     Daniel Drake <drake@endlessm.com>
-Cc:     Bjorn Helgaas <helgaas@kernel.org>,
-        Bjorn Helgaas <bhelgaas@google.com>,
-        Linux PCI <linux-pci@vger.kernel.org>,
-        Linux Upstreaming Team <linux@endlessm.com>,
-        nouveau@lists.freedesktop.org, Linux PM <linux-pm@vger.kernel.org>,
-        Peter Wu <peter@lekensteyn.nl>, kherbst@redhat.com,
-        andy.shevchenko@linux.intel.com,
-        "Wysocki, Rafael J" <rafael.j.wysocki@intel.com>,
-        Keith Busch <keith.busch@intel.com>,
-        Jon Derrick <jonathan.derrick@intel.com>,
-        David Miller <davem@davemloft.net>,
-        Heiner Kallweit <hkallweit1@gmail.com>,
-        netdev <netdev@vger.kernel.org>, nic_swsd@realtek.com,
-        rchang@marvell.com, Linux Kernel <linux-kernel@vger.kernel.org>
-References: <20180913033745.11178-1-drake@endlessm.com>
- <20180918213244.GE13616@bhelgaas-glaptop.roam.corp.google.com>
- <20180927205247.GA18434@bhelgaas-glaptop.roam.corp.google.com>
- <3f8efcd6-7cd2-b41a-d984-28c9e1740d6c@rockbox.org>
- <CAD8Lp47uL3DQTBiVTduO1+Cg8px4CDpv26qVJsgT+RJ4WZx9oA@mail.gmail.com>
-From:   Thomas Martitz <kugel@rockbox.org>
-Organization: Rockbox
-Message-ID: <7b0a5388-5b3a-a6e0-347f-94f87fc2e540@rockbox.org>
-Date:   Mon, 1 Oct 2018 16:25:06 +0200
+        id S1729378AbeJAVOF (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Mon, 1 Oct 2018 17:14:05 -0400
+Received: from usa-sjc-imap-foss1.foss.arm.com (unknown [10.72.51.249])
+        by usa-sjc-mx-foss1.foss.arm.com (Postfix) with ESMTP id BBE6C18A;
+        Mon,  1 Oct 2018 07:35:58 -0700 (PDT)
+Received: from red-moon (red-moon.emea.arm.com [10.4.13.120])
+        by usa-sjc-imap-foss1.foss.arm.com (Postfix) with ESMTPSA id 0138E3F5B3;
+        Mon,  1 Oct 2018 07:35:55 -0700 (PDT)
+Date:   Mon, 1 Oct 2018 15:36:41 +0100
+From:   Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
+To:     honghui.zhang@mediatek.com
+Cc:     bhelgaas@google.com, linux-arm-kernel@lists.infradead.org,
+        linux-mediatek@lists.infradead.org, linux-pci@vger.kernel.org,
+        linux-kernel@vger.kernel.org, ryder.lee@mediatek.com,
+        ulf.hansson@linaro.org, marc.zyngier@arm.com,
+        matthias.bgg@gmail.com, devicetree@vger.kernel.org,
+        yingjoe.chen@mediatek.com, eddie.huang@mediatek.com,
+        youlin.pei@mediatek.com, yt.shen@mediatek.com,
+        sean.wang@mediatek.com
+Subject: Re: [PATCH v5 1/9] PCI: mediatek: Using slot's devfn for compare to
+ fix mtk_pcie_find_port logic
+Message-ID: <20181001143641.GB13049@red-moon>
+References: <1538129080-8206-1-git-send-email-honghui.zhang@mediatek.com>
+ <1538129080-8206-2-git-send-email-honghui.zhang@mediatek.com>
 MIME-Version: 1.0
-In-Reply-To: <CAD8Lp47uL3DQTBiVTduO1+Cg8px4CDpv26qVJsgT+RJ4WZx9oA@mail.gmail.com>
-Content-Type: text/plain; charset=utf-8; format=flowed
-Content-Language: en-US
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <1538129080-8206-2-git-send-email-honghui.zhang@mediatek.com>
+User-Agent: Mutt/1.5.21 (2010-09-15)
 Sender: linux-pci-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-Am 01.10.18 um 06:57 schrieb Daniel Drake:
-> On Sun, Sep 30, 2018 at 5:07 AM Thomas Martitz <kugel@rockbox.org> wrote:
->> The latest iteration does not work on my HP system. The GPU fails to
->> power up just like the unpatched kernel.
+On Fri, Sep 28, 2018 at 06:04:32PM +0800, honghui.zhang@mediatek.com wrote:
+> From: Honghui Zhang <honghui.zhang@mediatek.com>
 > 
-> That's weird, I would not expect a behaviour change in the latest
-> patch. pci_restore_config_dword() has some debug messages, could you
-> please make them visible and show logs again?
-> Also remind us of the PCI device address of the parent bridge (lspci -vt)
+> The Mediatek's host controller has two slots, each with it's own control
+> registers. The host driver need to identify which slot was connected
+> in order to access the device's configuration space. There's problem
+> for current host driver to find out which slot was connected to for
+> a given EP device.
 > 
+> Assuming each slot have connect with one EP device as below:
+> 
+>                 host bridge
+>   bus 0 --> __________|_______
+>            |                  |
+>            |                  |
+>          slot 0             slot 1
+>   bus 1 -->|        bus 2 --> |
+>            |                  |
+>          EP 0               EP 1
+> 
+> During PCI enumeration, system software will scan all the PCI device
+> starting from devfn 0. So it will get the proper port for slot0 and
+> slot1 device when using PCI_SLOT(devfn) for match. But it will get
+> the wrong slot for EP1: The devfn will be start from 0 when scanning
+> EP1 behind slot1, it will get port0 since the PCI_SLOT(EP1) is match
+> for port0's slot value. So the host driver should not using EP's devfn
+> but the slot's devfn(the slot which EP was connected to) for match.
+> 
+> This patch fix the mtk_pcie_find_port's logic by using the slot's
+> devfn for match if finding device connected to the subordinate bus.
+> 
+> Signed-off-by: Honghui Zhang <honghui.zhang@mediatek.com>
+> ---
+>  drivers/pci/controller/pcie-mediatek.c | 17 ++++++++++++++++-
+>  1 file changed, 16 insertions(+), 1 deletion(-)
+> 
+> diff --git a/drivers/pci/controller/pcie-mediatek.c b/drivers/pci/controller/pcie-mediatek.c
+> index 9999dae..264e03f 100644
+> --- a/drivers/pci/controller/pcie-mediatek.c
+> +++ b/drivers/pci/controller/pcie-mediatek.c
+> @@ -337,10 +337,25 @@ static struct mtk_pcie_port *mtk_pcie_find_port(struct pci_bus *bus,
+>  {
+>  	struct mtk_pcie *pcie = bus->sysdata;
+>  	struct mtk_pcie_port *port;
+> +	struct pci_dev *dev = NULL;
+> +
+> +	/*
+> +	 * Walk the bus hierarchy to get the devfn value
+> +	 * of the port in the root bus.
+> +	 */
+> +	while (bus && bus->number) {
+> +		dev = bus->self;
+> +		bus = dev->bus;
 
-I'll follow up with more the requested information on bugzilla
-(Link: https://bugzilla.kernel.org/show_bug.cgi?id=201069).
+If you add:
 
-On a quick re-check, it seems to depend on if I used the eGPU before
-the initial suspend. If I run glxgears (with DRI_PRIME=1) before suspend 
-it seems fine.
+devfn = dev->devfn;
 
-Best regards.
+here
+
+> +	}
+> +
+> +	list_for_each_entry(port, &pcie->ports, list) {
+> +		/* Using slot's devfn to compare for subordinary bus. */
+> +		if (dev)
+> +			devfn = dev->devfn;
+
+You can remove this ugly hunk altogether (and dev initialization
+to NULL).
+
+Lorenzo
+
+> -	list_for_each_entry(port, &pcie->ports, list)
+>  		if (port->slot == PCI_SLOT(devfn))
+>  			return port;
+> +	}
+>  
+>  	return NULL;
+>  }
+> -- 
+> 2.6.4
+> 
