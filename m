@@ -7,34 +7,34 @@ X-Spam-Status: No, score=-8.8 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
 	SIGNED_OFF_BY,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT autolearn=unavailable
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 96DB5C00449
-	for <linux-pci@archiver.kernel.org>; Mon,  1 Oct 2018 20:56:52 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 98F12C43143
+	for <linux-pci@archiver.kernel.org>; Mon,  1 Oct 2018 20:56:59 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 488AB2146D
-	for <linux-pci@archiver.kernel.org>; Mon,  1 Oct 2018 20:56:52 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 4FA992089A
+	for <linux-pci@archiver.kernel.org>; Mon,  1 Oct 2018 20:56:59 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (1024-bit key) header.d=nxp.com header.i=@nxp.com header.b="jfxJc2Q/"
-DMARC-Filter: OpenDMARC Filter v1.3.2 mail.kernel.org 488AB2146D
+	dkim=pass (1024-bit key) header.d=nxp.com header.i=@nxp.com header.b="hGz2fy55"
+DMARC-Filter: OpenDMARC Filter v1.3.2 mail.kernel.org 4FA992089A
 Authentication-Results: mail.kernel.org; dmarc=fail (p=none dis=none) header.from=nxp.com
 Authentication-Results: mail.kernel.org; spf=none smtp.mailfrom=linux-pci-owner@vger.kernel.org
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726532AbeJBDg1 (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Mon, 1 Oct 2018 23:36:27 -0400
+        id S1726461AbeJBDgY (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Mon, 1 Oct 2018 23:36:24 -0400
 Received: from mail-eopbgr40072.outbound.protection.outlook.com ([40.107.4.72]:43648
         "EHLO EUR03-DB5-obe.outbound.protection.outlook.com"
         rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1725948AbeJBDg0 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Mon, 1 Oct 2018 23:36:26 -0400
+        id S1726192AbeJBDgX (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Mon, 1 Oct 2018 23:36:23 -0400
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=nxp.com; s=selector1;
  h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=M5Z5lfXTiW+4bRSBkYYtMeRmSqfTS2wgVljtRSIrkXM=;
- b=jfxJc2Q/Xk6W8mP98DiqjD20mW9tWKoKZFDHRiMsED4XQmnUBw2iYmM6t7HTYd3Gn4dhzqJtpswcx1NVyIkeOJ/C6QOe6ffgMQ8zfw/E+81mdxSycJKjSB9Hl8+8cwB4frjB42NG1P4ghz1O1/QlQoNK+I1AlwmcbToWQWdWXno=
+ bh=4yKB5JTuGIe1TdTbAFcxXbYK7jDi9HONS4Qjp6QPcbY=;
+ b=hGz2fy55G2g9iozw8bFdfyjsPSf0CkZqmSW19eUSIbmY59b7yGUhilUX6G3VqBqCPibYFdyf5+2trd5SXzCE/1qaZtxkGDL/MLnUf4YF/P1Dge1HfGOtVKaj2evo9arcvV3IWhYb8MXCmEGIAt6fsIh5poJIWWB2Q70Oy0vDYUg=
 Authentication-Results: spf=none (sender IP is )
  smtp.mailfrom=leonard.crestez@nxp.com; 
 Received: from localhost.localdomain (95.76.156.53) by
  VI1PR04MB4303.eurprd04.prod.outlook.com (2603:10a6:803:3f::30) with Microsoft
  SMTP Server (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- 15.20.1185.25; Mon, 1 Oct 2018 20:56:37 +0000
+ 15.20.1185.25; Mon, 1 Oct 2018 20:56:36 +0000
 From:   Leonard Crestez <leonard.crestez@nxp.com>
 To:     Lucas Stach <l.stach@pengutronix.de>,
         Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
@@ -45,9 +45,9 @@ Cc:     Fabio Estevam <fabio.estevam@nxp.com>,
         dri-devel@lists.freedesktop.org, linux-pci@vger.kernel.org,
         linux-pm@vger.kernel.org, linux-kernel@vger.kernel.org,
         linux-imx@nxp.com, kernel@pengutronix.de
-Subject: [PATCH 2/3] PCI: imx: Add multi-pd support
-Date:   Mon,  1 Oct 2018 23:56:17 +0300
-Message-Id: <5832128f3b1822839a0f0bbd1cf8313cf586f15f.1538426534.git.leonard.crestez@nxp.com>
+Subject: [PATCH 1/3] soc: imx: gpc: Increase GPC_CLK_MAX to 7
+Date:   Mon,  1 Oct 2018 23:56:16 +0300
+Message-Id: <f224bad2c4bf8d09faded5fe557463e313e368de.1538426534.git.leonard.crestez@nxp.com>
 X-Mailer: git-send-email 2.17.1
 In-Reply-To: <cover.1538426534.git.leonard.crestez@nxp.com>
 References: <cover.1538426534.git.leonard.crestez@nxp.com>
@@ -57,52 +57,52 @@ X-Originating-IP: [95.76.156.53]
 X-ClientProxiedBy: HE1P190CA0058.EURP190.PROD.OUTLOOK.COM (2603:10a6:7:52::47)
  To VI1PR04MB4303.eurprd04.prod.outlook.com (2603:10a6:803:3f::30)
 X-MS-PublicTrafficType: Email
-X-MS-Office365-Filtering-Correlation-Id: 1a93b8d0-e616-4c42-d2df-08d627e06260
+X-MS-Office365-Filtering-Correlation-Id: bcbc27ae-d593-4f8e-7dc8-08d627e06128
 X-MS-Office365-Filtering-HT: Tenant
 X-Microsoft-Antispam: BCL:0;PCL:0;RULEID:(7020095)(4652040)(8989299)(4534165)(4627221)(201703031133081)(201702281549075)(8990200)(5600074)(711020)(4618075)(2017052603328)(7153060)(7193020);SRVR:VI1PR04MB4303;
-X-Microsoft-Exchange-Diagnostics: 1;VI1PR04MB4303;3:tyXX+EsrMnJ0ahPAr7D69lhlvSDXVmfSMunP3XpTnAQkPVRWhMSyDb3/27QPC57bwM+mSo9i4zQBsUCafbA5lWmqb4yrFYsywlmIrVeuSUvUOS58/54U3qDgj490Ob4HTJzjAQ7XzRtM9tBxCI+wTOa4TPkrIBzRCJasWtAUF4mLID0f/Jb+RP+np9l35+ZCrJXzx97ldvPDGRI/t1aR18QROfaU4TUmPU2H5zOklPBMOgwK2aYtsOwVEc2ADETA;25:uGAnbwIlxDCsuRnTv/DT8dxq7gzM8M5CdLX54ORt3/IXToLklaqKZ6tx+jvEBeH7gm7ATO8Mb3L5pbclup5T2WhzX1onvsz1/4AuDfl/9lmqttOh/1lWkrQoXa/DYrCvbQNsT/iU0SPSDIWc9Xp1LIHHPd3ig7rnO0xUMbEibSFqUWbjD9hXDszK2m193mSLStzBvEyYc/GbV1MSI3He8obsSXkE+omGw7rSprvXU53nRJilqiPkNDlrx7WwxudqoeUYVISUoZTBpUPbUGgMhWJodiBmL8y4ax+jQwKzxG3aPYsaPlPaYYxcqOSPQLX9BlZaMPFrfwbkqmdbLiSciA==;31:RZ/cArnFMVi31xZIc8IcHyTioG0bxOmMWkw6Zm/95/KK2WjvWcX6lPr0omOLBAtwYIEcAwz2B+LuRMDmG3AYkPGKxkJfGj6kJcLp73KdiMaI3RlFuJzvB1ErhSlIu8giw4RZqq/meXI779YTkZr1cDaVfsCIkjvVgyA4VQM/XNY12y17Ox8EGUjDNE/2YhabS09UmQGhXgh8EB+AbUJzP74ty923LurY3cFjZfXTF24=
+X-Microsoft-Exchange-Diagnostics: 1;VI1PR04MB4303;3:Bx0UFvcVKfpdKOhPfVXFKOeKs3Z1C84lyDX/gUmzMfswIVpdKIRo5s+nuQ0a9RjxZWvACHb23DHXNpZqPCl1YQK24Y9cqAA873VkjqVRYkJmXdW/FF8B4oqKA6l9vdwlE/hcyxyozwA2X0Drs4y7DXLqG80Y9JsRb0Jk4kG207mOwsC9rhkz0jqOyxZhJTRMkTEgrEK6R9m7fljztYu+MiAjRKSS4kz0kSekm2iWaE6ei4e1jlu5mADVmtHXI8eH;25:klEWq5lGIGGdmehO/mnSa9vSdNJVT92fgrHEbG1IGQgZNtBLsnW4dmdbWviraYGrzwj3Czi6ctsN3ZaCvAIARdMiHbfZHHnhcLxWyEn4JPI0hx81+YTi74vSEDkgaenlpcvZKpx0kR/Efj3JkhndoDjMzDNGZbM2Se4jiyUZZuEilUTMbu8mYCmr/7kTzf5VcipK/xkYLalL0Rh+rly7VwdzFLESMOp0bFJYNBhZoMVc1OToDvhFu7M+21T3gres+lOjGeio0UM3ZfmLSi3AiYSTezqQYekeadbRzEqt5i6+hIi64/TPEaHBuQVqMadGyb9+g1FUqxJ+I8hvPKQNwg==;31:Gxvvs0qzmqYV5zBvIxGZAsv3/14yUenOYQYFul7UxSB/5WZ/48MS3FLXzYuMymCOhsONMI+HzKFTjO0EQWV01Hz/ld/np0g8wAA1fIzWVZN2rybqKU2AMZSS2gFTG4SzypiLqOtsmgliWRuRebkgP4QT6RB5jd5OA9NIWT1LuYhvppysllsqZBX6r+xe8mPZq1/EMwHy2hF+ai4XlbENAgStBi/pIpZh2FpMFOlBU5I=
 X-MS-TrafficTypeDiagnostic: VI1PR04MB4303:
-X-Microsoft-Exchange-Diagnostics: 1;VI1PR04MB4303;20:HCP9wws8uvYRG1rMEi6Lu5SIRrd5GWrGK8NqObo7Iy3L1w24GoSmYZHkZKzg98T5L/qfBv8KIkWdQx0HOn2fpmUHs/DPtoLFOdx0yTZP/NWBjRjyr2PheEsUbPcmJuoF/Y007mu/0qxG3pj6TvsegQtU5lm8evRYW+A3X1KMqTU0VOYZLdVxTVYpzkO26awo2lzpphlGy7niSb0tFdPVIlyAYNU4lZpbcnUCBfP5ZiKCQgqvGvUIK5ZlH6JLsxa5Y3LzzxG9yNDVKTm4igqjLKk/QNqs23u8NJS6gfHvYDsh9FT+hhLjUslFAxgxot0QZS24qoHEKXAhTVsMhm4yED4QExfmO5kGxa3h3YtXME7HdntY8FElSh4voZQ+ZMWBOiuNvYkyulhbr/hy8XJcriSy4DPJQ5kpfEj5Wh2U/ICjKi6qS7wOn+zPyaTy07ue7FLfsGBMTLEEhqNiah1EngLGg60WLWmUMg/IxGUi62ugQhTinSPJUDyf3thTLyy7;4:FonEqQ5XV7EMn/sPrGOrVPH0CO1fgDx4Uk6wrSnkXZ5IHjuwujI5b6OfQvG8jPJ4Nrgzebhx28L/WqSehkl4YAZ5Ga8XyfD1LWdk8rd8oCCJYfVXYDWgDt8Y9JiW3vLbsg26NnRY2Noy/4hF34WvP1tZ0Wo8mypyqImiN/wNzVS756U9yCi9ben/5RfszGbHrhW86tl+BO4vsEeDVHyQ2BDNaP8nobMHV+VJeISB8akeNGZNpNdGB0kTAr7Bvbh0A/N582gO5f5uyhmVXirq7XJTMk5q1IWMCVpHhN/a/Rc8VbMNOWVpltQ4iInEgPAOgiM4v18j/aJ8soAIE0Ii99UHZOJKgWp/z9nKU2xBnZ4=
-X-Microsoft-Antispam-PRVS: <VI1PR04MB4303ED36A43C1C5E810B950CEEEF0@VI1PR04MB4303.eurprd04.prod.outlook.com>
+X-Microsoft-Exchange-Diagnostics: 1;VI1PR04MB4303;20:aCgZEJA41WykM7UkTENddUPnFNoDKPWKaMyzhjFLBL2q6WaFgkzPs3bBx5Os46ObhWpKYD6iylQ9atyfATyO/CWo2lpO0hom8zCFvCPYIuN5A81FEdJPBwN3+vPoWZWsjq8RORKtHOs1acbvkpAyVftbkeVyxl432nPCl21L2OuKU5CRCR3WlqRyNmSFLkb2nh880wyjM5eCIVdPNxLshfef2+4AGHQOioG7USvI0ZB8+s1zRTn6xtXiKpCnJhIpkEUfxI3DS8J4biH9tLOh9KfvG27o+a+QBrKWLHMuTRCI7NaT9/esv0UvgAX/en9d6+WfbFgZacvGjtZ1IZkAuah066D+696UN4S5NFt7r4AigUYPHpxO70hnHXO8+CfSsDNUDimtDR7Ri57nPPMpTbyiOu+/rAUAIznyIJfzOTDHDC2oAuVaVWz7jN/kL6V1zpfTYb5FJnx5VY26Ul4gKr0fdjEppS1C+4bihtnJd9CA/EIRRF4pZDZraHnDs7JP;4:kw8GFIxbbToirpthfsZ0XG9XQRT/41G04YyyCfyeUyrSJOw7sNWtjCYZMJGhZ/TRaE1aRB+tuPf0T65m5sus0woGz5vunmK15mOopWRFHwzTKSqQpkpPG4/fHeNt5NWYgz5poaTw4Wd+gyi9wJG91wUOTYXESuBqXiGAS2BzQwYCsn2HKb3/dWeYjI9MNiNbEXKfOPn+Uu6pUoeZzRIt7WYDCcO5rgK70uXyW6CI7Sd/eiVSbkElqmNTkLQ01Q2SSFTqod/zsXNhPEHYBD7iWr2Gv7DR1+aakrbyzHuS7ooOXQ4+//LKcsya/FIaUnhiz60Fi6F4rpQtVBf7Ju06IyDy5+VUloc3vrRnXicSdlo=
+X-Microsoft-Antispam-PRVS: <VI1PR04MB43034F505A1A89EAE0D54C9AEEEF0@VI1PR04MB4303.eurprd04.prod.outlook.com>
 X-Exchange-Antispam-Report-Test: UriScan:(269456686620040)(185117386973197);
 X-MS-Exchange-SenderADCheck: 1
 X-Exchange-Antispam-Report-CFA-Test: BCL:0;PCL:0;RULEID:(8211001083)(6040522)(2401047)(8121501046)(5005006)(3002001)(3231355)(944501410)(52105095)(10201501046)(93006095)(93001095)(6055026)(149066)(150057)(6041310)(20161123558120)(20161123564045)(201703131423095)(201702281528075)(20161123555045)(201703061421075)(201703061406153)(20161123562045)(20161123560045)(201708071742011)(7699051);SRVR:VI1PR04MB4303;BCL:0;PCL:0;RULEID:;SRVR:VI1PR04MB4303;
 X-Forefront-PRVS: 0812095267
-X-Forefront-Antispam-Report: SFV:NSPM;SFS:(10009020)(6069001)(39860400002)(136003)(366004)(376002)(346002)(396003)(199004)(189003)(5660300001)(6506007)(386003)(316002)(3846002)(16586007)(6512007)(36756003)(6116002)(53936002)(54906003)(110136005)(86362001)(52116002)(51416003)(76176011)(6486002)(44832011)(11346002)(476003)(118296001)(2616005)(6666003)(956004)(2906002)(50226002)(68736007)(8936002)(81156014)(446003)(81166006)(8676002)(486006)(97736004)(105586002)(106356001)(478600001)(25786009)(966005)(48376002)(4326008)(16526019)(186003)(69590400006)(26005)(7416002)(305945005)(6306002)(14444005)(7736002)(47776003)(50466002)(5024004)(66066001);DIR:OUT;SFP:1101;SCL:1;SRVR:VI1PR04MB4303;H:localhost.localdomain;FPR:;SPF:None;LANG:en;PTR:InfoNoRecords;A:1;MX:1;
+X-Forefront-Antispam-Report: SFV:NSPM;SFS:(10009020)(6069001)(39860400002)(136003)(366004)(376002)(346002)(396003)(199004)(189003)(5660300001)(6506007)(386003)(316002)(3846002)(16586007)(6512007)(36756003)(6116002)(53936002)(54906003)(110136005)(575784001)(86362001)(52116002)(51416003)(76176011)(6486002)(44832011)(11346002)(476003)(118296001)(2616005)(6666003)(956004)(2906002)(50226002)(68736007)(8936002)(81156014)(446003)(81166006)(8676002)(486006)(97736004)(105586002)(106356001)(478600001)(25786009)(48376002)(4326008)(16526019)(186003)(69590400006)(26005)(7416002)(305945005)(14444005)(7736002)(47776003)(50466002)(66066001);DIR:OUT;SFP:1101;SCL:1;SRVR:VI1PR04MB4303;H:localhost.localdomain;FPR:;SPF:None;LANG:en;PTR:InfoNoRecords;A:1;MX:1;
 Received-SPF: None (protection.outlook.com: nxp.com does not designate
  permitted sender hosts)
-X-Microsoft-Exchange-Diagnostics: =?us-ascii?Q?1;VI1PR04MB4303;23:w6apis3duD/20pJX84fjlpO5ybFTd56Lijp/Wz7uC?=
- =?us-ascii?Q?vUex+K6hwaqTAg3XGGhfeqo97ukKafLcaixHdgqvPM0kFm4sEPcWRsBc41Ev?=
- =?us-ascii?Q?41fEeIiGsIwtEAjdQtLxahCpWLZ7nE/wZCpt5asKawuuF235f5QI9IxuFxAJ?=
- =?us-ascii?Q?NnMQ+ARxviPLWV3W97seThn253KqKI1PgJo2dQpZrUt0jub93BzLYpFLCctF?=
- =?us-ascii?Q?hMaXZe4XNx25dDFo5d+mDLeh6w9b5+CCwqqUBc6dVg4xKl7MjiSoS2k4I4/b?=
- =?us-ascii?Q?MBGbwBYuZ70OK8ilgg5R/6zOn/lRPzZX+/skU0HQ1VTTS1XAbueSW7VNi5K1?=
- =?us-ascii?Q?RbwcSYmLNc4Mo38lav/uXfxOTCla3qtYkU8sFfKU0Pq1W6k4Yt2+/8aCIG2W?=
- =?us-ascii?Q?03ooFFbrfSUj2sTnQOVnubwZ/Y29mLQKwG8f0GWVw7QubLmMC/k3vgB94J1h?=
- =?us-ascii?Q?dlAY8nwpSQUT4RApqeJULzQNoSOY3fnZSb80Ye3ADX3dJWBw0J5oGqAEyjzb?=
- =?us-ascii?Q?Ltw3vJURtbvyAabbZX6cAc81d7K64RPGP94dc4ZXJzIqqoq2VmNAClIkHCXZ?=
- =?us-ascii?Q?jniEHRsaa+objPNma7KJ2e0qQUeDbGqCvw131eubbTMk9FDDOir/L1ShbuAM?=
- =?us-ascii?Q?IHReIM2xymLmJ0Ts9Z6YFz7/xdCPTxfUYZSvJPfOuFK69wWrTwxm3gMcKycH?=
- =?us-ascii?Q?ojWgSFLBxo04vS7J3RJRYxRwJHTT//hn5wWYaHoP8+ztLk15c3dWtn6ExN7k?=
- =?us-ascii?Q?KGmF5O5JRdiHRL5z7IOjRXqye92B6JJhaJZ0JvhDtlOh3FJnwGChaGdYkMDg?=
- =?us-ascii?Q?cr4C39ucEPd1bi9HTLPyRrsNWiH6hn4ypKmnZrziD8jOMb/UK3bRDvQurWk8?=
- =?us-ascii?Q?EVZlstnjCZIgSlv9gwXcV39Z4CkLkXFvsIPlR0tBANhf5HgpFz2nePDuZLdz?=
- =?us-ascii?Q?5kv5pC3+BWGmXKyaNUJ8HFqLx5CDOPMmci6d/lPkRNyTDvGWEHYJJcAg+vYx?=
- =?us-ascii?Q?vcmgsQhH/dNhn22CE5uraQGAfAhHU1oPBUY3Ol6GOYgbPSdhtrIuqY8nQndq?=
- =?us-ascii?Q?5JYocfpsO7doMxVHs5vMVXinyAXcV07EEapqnOwL1ttNqic+LfaE9ZIoYVpG?=
- =?us-ascii?Q?V8fzaaaFsFKcNkCKqLzZ0HcWFmMQE6O/a+6VivAAL+LIejTVZDmcif4DNtAa?=
- =?us-ascii?Q?FibATS7+e/EH00upqICc24zQVj0R0SVK0mcZruzWhMLj88X3gtboyZDrzH5n?=
- =?us-ascii?Q?qSgXp8URHmzR/0vb5vmszkgWovEt0Wjlw3VACGXOq4lqMk4llc4LwFWXiEgs?=
- =?us-ascii?Q?9qL+KM3Wi/qAjspyiuam8fw57+0gJcnKGc6XkYuXLp+KV/P8tiLGYM2JtcKF?=
- =?us-ascii?Q?oLLpUuuPhe38arMcYHdrFIMRuU=3D?=
-X-Microsoft-Antispam-Message-Info: YCw2Vq2pWH9/ZqtyKZssFh/Q9lKvlFXlQL/y+ieY0Q27zcFYdNfdGpUXfcOFEW6Gr8G+L4B41jRKlGlceW3rE/y17N6xXGVyl0sM71bvmicVzdjgRyEzcx69vG0RLBCqrNFunBjoRFsSOGmRnBN1Cr6d0YO0qD+HSKy1H0t7bn5k+9ylSo6UkHNibc/1wU760SApNG8y6lVXYGduYnH+U0ytjfzr71B/0MJmOWEHK5gCa25VxCrjN+In2Ps+87H9KPdGqCHzi/rh53YwYrIL3V2te4W8MOC6U17NqSRp82zvdr/gzQmsShQcnFLacZQRM+03YmnzBtFXOpMvX4/8ICIbSazsX2IZUJ2Fqc7F2kI=
-X-Microsoft-Exchange-Diagnostics: 1;VI1PR04MB4303;6:Ts2rnrA/aNRt3SrtaddJJrgcMCMoAvuxBEKdRtX6nCBTKiUimAPyceoz5+dUKoVBs+u7Wsit3mjWsaaV9BldcavIVozxT+aLlAflL3HFDJ6Og2WPVkiOVKunxFc7xQG1tP+CUPanisMD/WQlesFqdFOKFa2HExbzob28KdurLUYRXS+xvxv9VRU0juhmpWZeK6MxVx9KOjfpZOW8Qdzl8G/DYE/y7MxwJZstYChkzMpNtAMTnQx4pSlLcXbO86Q+P1applbi8zEXKQTq8eUkSBNZBG6PLmWyPsb639jpEDkK5nAHkyPB9NkWoBD9YFwemBCju3Px6kwDxcqeuoBObNy4DNUGWj69F6wKPFEB+1FaFkbVhDyZ3ihvDrfZTK87feSGdZKUewItEDgwNyRARYEy8qIuPOF0tQmBWh+3mvov3oXtjqr/vd2V6N5ogtyd35gilOHjasBr+K4RLgy2RA==;5:0NMVEFoizBhVOeGmXks00GQieKpiR6JkDcHgaH0ivThjKx3EBDMDmGUn+7NcOjANMZAJdI1bmGTYm0hoRyLv2qicxe1gYx5T6V4sBIVXzl3ylVdG67boOrb9gRJ8Em0j/sNas+bEPASMc9hlOf2yAvizbgp/j84qXbtiWFlKwWI=;7:OzCcenY90gUkR64Qe1IwedMyecSzSyG3tXwKajce6ESNDH6e174nxCIzy02iQOODZDpqLCxh7GftBwgq9nkzuzYEjGEY1VZJRkJR1mP8oSlVZbLLC0eBERxE5BF6OaxT9hcjZ/E9w89QmtBvS6vz6E3QY/bQysZLFzaBKIL4th+F2l+4MrgZAVVfigxLeyaLb4fp24qaDgreUo0mtyuPLWSPYVB2K2f3FSB8ALj6SZzuNG9ty9vA4sxpz1A5/d+8
+X-Microsoft-Exchange-Diagnostics: =?us-ascii?Q?1;VI1PR04MB4303;23:R6c19x1CMBMWF47ryzTJk4PQ3l3aB/PmvXsh/h+da?=
+ =?us-ascii?Q?DduZQbPSwMhax99JERg7kUcbA4PD4RcvXH635WrqX61LJEQnv3Q4lOWYtmXO?=
+ =?us-ascii?Q?2ab7PrnVfvPth9F2gKlfkdr4qRk4Lk+fb7Se0tgFVKm8l99hkdcX6L4kPAd8?=
+ =?us-ascii?Q?H9LuWVwm+BR+6SxlGNrZJmo1jq8ZUpUAWFhnzqLQt/l92BTeayYkEh6WJ/aC?=
+ =?us-ascii?Q?wUqdnTrA4HsUhNpD+ii3XwuLhVFVMMndqOtfBcrJwRz2JgJW3PVxb1FDbKtt?=
+ =?us-ascii?Q?ihtWWZN+38c/HTHI2thkGD8KD015cfylcZUAb3e0sZnBVwVrLFpThy/apeAA?=
+ =?us-ascii?Q?+guHDTEAfjt8cUuIPZoFJHH0pdWsYL/l8pIV9w7m1mr3XUQL9O2DFjhWH2Ol?=
+ =?us-ascii?Q?7zLbSJABIBcp37sBK8WnCciC/rZzttDw/jC2Tf8+cIl3z235gB0+CRHMs3z7?=
+ =?us-ascii?Q?TsNpSc0xX5g14j8joUp1aFIHoNCb2V8cjk+VhQzLjkuLdhResjN0iw8LmfB2?=
+ =?us-ascii?Q?qdjP3yoWzXZTyXV5irXWDAxU9oCOo78KQIF3M/W4YTSd9q9uTHqGac80aTFg?=
+ =?us-ascii?Q?MNLCDALWJtoOlS4ollgtMB4GWLN6Xwg32L7Nv0fgnvZkNQnsIhIYsVonp7hH?=
+ =?us-ascii?Q?qxP4216A4d28cGGFDwA8jr9Fa5AFBUgRQr8ge3Ui6raRbzn9n/lg+CMzoUmV?=
+ =?us-ascii?Q?WfK00zUvJYEenrFE/oSQu7woafroBQhMZtdgU+x0FVH20LmpO+cccXTAmjPs?=
+ =?us-ascii?Q?IcM1pNqEDHsJPr19slGhYq/vRFam+WtNLj12sGmIpcuKyfkRW3snIoYh4MxM?=
+ =?us-ascii?Q?irC271dV2vuAFQLUSKKjCTeqsOI+8Ec+ORWjqJ5XHExkQlVhgKILlHbqBOZ1?=
+ =?us-ascii?Q?lGRDl9uV0OSCDPhDVRxRT0eLm93caefuzOpPLBpK+awRfq3EfwXgHpbxhyp7?=
+ =?us-ascii?Q?j+m6BUFI4xCl+c/fISlz22YIsCK/V3Va9/PSLzYZXMPiMv47OamDRnQx06dN?=
+ =?us-ascii?Q?wYFHtDfCAebeOKIQs9zRvJFMO3t3gCGOhFNZeBUVqj5ypkWal0qa298zKwEX?=
+ =?us-ascii?Q?IpSc2vJIZdEmVjestTZIXZ+guMhhGBpsRlRYTfyfrqmpeAtXCgkuOO2nM94g?=
+ =?us-ascii?Q?Ge785tzYEOeP055nHTYfhtYGGUzHZriFDLL4kaLk6NAA/W1LQRg1zR7kMCba?=
+ =?us-ascii?Q?6ya/wSpGO9xunnKZVq2282Y0PtafrjJ0dtzNIhdRZ952iEZV6JieVwcXQX2a?=
+ =?us-ascii?Q?kN7NqkUIIWp11WA5KAtwmJAeyB9FlSI7PJJHlYeIdGSxspQFFsaBiiChohle?=
+ =?us-ascii?Q?pFpkP8WzDinVcWJP61CfNUQNlA5Zo26fl4m8qDfIPVuc5bLbb3uhAJ4GhMSg?=
+ =?us-ascii?Q?8XYyA=3D=3D?=
+X-Microsoft-Antispam-Message-Info: SPuaVJuKLXihxa5FvvKWPjOVlMWKjL0eCgAEUonjrtzCuEvTI0w3GI2QKYrvORmqYiKRhE7atiIxYnl0RI35vDJ/8l+3mWKuGl+vY/TgYY3YJf3mLN7mwkz5IATZzG+RXLksSzbPswzcKJisiKOH2Cphob0mHv+A1AAbqjclaeeB+0JqNq5SY6TivLJAsJhRWOFWuFzN3yFsK+a0sFtJyJU1c4kkHmzhOthzqwbYcusw44TTLRb7407SmgaLL8gwZcjLPH1aSD20gHYULaPECGDyM3OM9VNed74WW0fqAeVOL14PMV1l3xOY/cIjzFMbAWwffFOtHKivLRTA1SBMiWWyytJlr7RSsQ1ZQE4q92U=
+X-Microsoft-Exchange-Diagnostics: 1;VI1PR04MB4303;6:t1mECsZdsf7UjAVN6Eb54wN7bzegLXxbUhDfRzvMmBQZy9E1zi5VfbBSCVVKZ9PrPCZ6QaEyov+86WqdA0ydmuddb5LNjE9MiplK1J10bqUSAV17FK7gX7g7RhPbFssfCA6G/GDM8Lzhc2GeKMgebG0P0Hp6Z7cz6PfazfdJbvT/0VS2ww7/M39m0eE3OYt83neQa+indL7nWL6G2YhZnWt6FP/JpZXm5hQMAWZ5l9J7YgL1CJvEFjctEZxY9KMRffu1kLC9yw0ajYu2BMvdL4GCBilVONlhQXZ/YaJSqHoNv/+j+XxtLiqR6JchZLqr05vYoz3BV6u8/cQ0tTerVDe9JOCyqDP7GiPwWht3tOyfs3ZXVQKbphEsFrrz7jVqjhBS0ebgJlCfLnhWbcmnrJzKGKv96Uv2co/hdZZP+/R81Fbc0yocgKBaXJdkEu/TI/uljPPtOz9ooWVL9o/2RQ==;5:kscfWbXT8nNonZ87sN0P+y7NZJEbod1oCy0mvodnQNxAa+jVJGv9/0rotgAbM5BFN+IrYSSGmwNuLllBFh1RJTUl6cms2LGR9h5FSgk7K1ZcykEHmS7cMabc1oyE6gvPifc8S38+owkhFoy0MI6c5n2P/r/WtVsxpH8EfFMB1ik=;7:vWoXbvIvCmMeMQdoTdOCpSyLwLLv7JvrFsgWn8njiYVdCiHMmDcRIj11fA8fQ2IpNC/Ukyh+Zp2XU1S+zzxN7bD5yJySgMXMb+iXe7Sg3Qng+MJ6+mOdumalYW7zfFskfDH4xFqobzkIXO4RmVU5kgdgJjJtA6kE2fysS3XwpWHIEoLwbqNo6h0ZKw8S55etxbRRJGN6N4gJS96YMjkEZe2v8znpFAnEVFrEW2wNgAJ6iaKd3+G/i48CvSTgB/qQ
 SpamDiagnosticOutput: 1:99
 SpamDiagnosticMetadata: NSPM
 X-OriginatorOrg: nxp.com
-X-MS-Exchange-CrossTenant-OriginalArrivalTime: 01 Oct 2018 20:56:37.9298
+X-MS-Exchange-CrossTenant-OriginalArrivalTime: 01 Oct 2018 20:56:36.0236
  (UTC)
-X-MS-Exchange-CrossTenant-Network-Message-Id: 1a93b8d0-e616-4c42-d2df-08d627e06260
+X-MS-Exchange-CrossTenant-Network-Message-Id: bcbc27ae-d593-4f8e-7dc8-08d627e06128
 X-MS-Exchange-CrossTenant-FromEntityHeader: Hosted
 X-MS-Exchange-CrossTenant-Id: 686ea1d3-bc2b-4c6f-a92c-d99c5c301635
 X-MS-Exchange-Transport-CrossTenantHeadersStamped: VI1PR04MB4303
@@ -111,123 +111,30 @@ Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-On some chips the PCIE and PCIE_PHY blocks are in separate power domains
-which can be power-gated independently. The driver needs to handle this
-by keeping both domain active.
-
-This is intended for imx6sx where PCIE is in DISPMIX and PCIE_PHY in
-it's own domain. Defining the DISPMIX domain requires a way for pcie to
-keep it active or it will break when displays are off.
-
-The power-domains on imx6sx are meant to look like this:
-	power-domains = <&pd_disp>, <&pd_pci>;
-	power-domain-names = "pcie", "pcie_phy";
+The DISPLAY power domain on imx6sx has 7 clocks.
 
 Signed-off-by: Leonard Crestez <leonard.crestez@nxp.com>
-Reviewed-by: Ulf Hansson <ulf.hansson@linaro.org>
-
 ---
- drivers/pci/controller/dwc/pci-imx6.c | 48 +++++++++++++++++++++++++++
- 1 file changed, 48 insertions(+)
+ drivers/soc/imx/gpc.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-Previously sent as RFC: https://lkml.org/lkml/2018/7/24/849
-
-diff --git a/drivers/pci/controller/dwc/pci-imx6.c b/drivers/pci/controller/dwc/pci-imx6.c
-index d13dae50dc99..6ba16fd1373c 100644
---- a/drivers/pci/controller/dwc/pci-imx6.c
-+++ b/drivers/pci/controller/dwc/pci-imx6.c
-@@ -25,10 +25,12 @@
- #include <linux/resource.h>
- #include <linux/signal.h>
- #include <linux/types.h>
- #include <linux/interrupt.h>
- #include <linux/reset.h>
-+#include <linux/pm_domain.h>
-+#include <linux/pm_runtime.h>
+diff --git a/drivers/soc/imx/gpc.c b/drivers/soc/imx/gpc.c
+index c1d0ffdac6dd..51cbfe63ec12 100644
+--- a/drivers/soc/imx/gpc.c
++++ b/drivers/soc/imx/gpc.c
+@@ -39,11 +39,11 @@
+ #define GPC_PGC_DISP_SR		0x24c
  
- #include "pcie-designware.h"
+ #define GPU_VPU_PUP_REQ		BIT(1)
+ #define GPU_VPU_PDN_REQ		BIT(0)
  
- #define to_imx6_pcie(x)	dev_get_drvdata((x)->dev)
+-#define GPC_CLK_MAX		6
++#define GPC_CLK_MAX		7
  
-@@ -56,10 +58,15 @@ struct imx6_pcie {
- 	u32			tx_deemph_gen2_6db;
- 	u32			tx_swing_full;
- 	u32			tx_swing_low;
- 	int			link_gen;
- 	struct regulator	*vpcie;
-+
-+	/* power domain for pcie itself (dispmix) */
-+	struct device		*pd_pcie;
-+	/* power domain for pcie phy */
-+	struct device		*pd_pcie_phy;
- };
+ #define PGC_DOMAIN_FLAG_NO_PD		BIT(0)
  
- /* Parameters for the waiting for PCIe PHY PLL to lock on i.MX7 */
- #define PHY_PLL_LOCK_WAIT_MAX_RETRIES	2000
- #define PHY_PLL_LOCK_WAIT_USLEEP_MIN	50
-@@ -289,10 +296,47 @@ static int imx6q_pcie_abort_handler(unsigned long addr,
- 	}
- 
- 	return 1;
- }
- 
-+static int imx6_pcie_attach_pd(struct device *dev)
-+{
-+	struct imx6_pcie *imx6_pcie = dev_get_drvdata(dev);
-+	struct device_link *link;
-+
-+	/* Do nothing when in a single power domain */
-+	if (dev->pm_domain)
-+		return 0;
-+
-+	imx6_pcie->pd_pcie = dev_pm_domain_attach_by_name(dev, "pcie");
-+	if (IS_ERR(imx6_pcie->pd_pcie))
-+		return PTR_ERR(imx6_pcie->pd_pcie);
-+	link = device_link_add(dev, imx6_pcie->pd_pcie,
-+			DL_FLAG_STATELESS |
-+			DL_FLAG_PM_RUNTIME |
-+			DL_FLAG_RPM_ACTIVE);
-+	if (IS_ERR(link)) {
-+		dev_err(dev, "Failed to add device_link to pcie pd: %ld\n", PTR_ERR(link));
-+		return PTR_ERR(link);
-+	}
-+
-+	imx6_pcie->pd_pcie_phy = dev_pm_domain_attach_by_name(dev, "pcie_phy");
-+	if (IS_ERR(imx6_pcie->pd_pcie_phy))
-+		return PTR_ERR(imx6_pcie->pd_pcie_phy);
-+
-+	device_link_add(dev, imx6_pcie->pd_pcie_phy,
-+			DL_FLAG_STATELESS |
-+			DL_FLAG_PM_RUNTIME |
-+			DL_FLAG_RPM_ACTIVE);
-+	if (IS_ERR(link)) {
-+		dev_err(dev, "Failed to add device_link to pcie_phy pd: %ld\n", PTR_ERR(link));
-+		return PTR_ERR(link);
-+	}
-+
-+	return 0;
-+}
-+
- static void imx6_pcie_assert_core_reset(struct imx6_pcie *imx6_pcie)
- {
- 	struct device *dev = imx6_pcie->pci->dev;
- 
- 	switch (imx6_pcie->variant) {
-@@ -959,10 +1003,14 @@ static int imx6_pcie_probe(struct platform_device *pdev)
- 		imx6_pcie->vpcie = NULL;
- 	}
- 
- 	platform_set_drvdata(pdev, imx6_pcie);
- 
-+	ret = imx6_pcie_attach_pd(dev);
-+	if (ret)
-+		return ret;
-+
- 	ret = imx6_add_pcie_port(imx6_pcie, pdev);
- 	if (ret < 0)
- 		return ret;
- 
- 	return 0;
+ struct imx_pm_domain {
+ 	struct generic_pm_domain base;
 -- 
 2.17.1
 
