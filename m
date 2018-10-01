@@ -2,105 +2,158 @@ Return-Path: <SRS0=/qR3=MN=vger.kernel.org=linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-2.3 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	MAILING_LIST_MULTI,SPF_PASS,USER_AGENT_MUTT autolearn=ham autolearn_force=no
-	version=3.4.0
+X-Spam-Status: No, score=-8.3 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_PASS,USER_AGENT_MUTT
+	autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 98331C43143
-	for <linux-pci@archiver.kernel.org>; Mon,  1 Oct 2018 15:12:36 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 9EC11C43143
+	for <linux-pci@archiver.kernel.org>; Mon,  1 Oct 2018 16:44:21 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 69310208D9
-	for <linux-pci@archiver.kernel.org>; Mon,  1 Oct 2018 15:12:36 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.3.2 mail.kernel.org 69310208D9
-Authentication-Results: mail.kernel.org; dmarc=fail (p=none dis=none) header.from=intel.com
+	by mail.kernel.org (Postfix) with ESMTP id 5098A208AE
+	for <linux-pci@archiver.kernel.org>; Mon,  1 Oct 2018 16:44:21 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.3.2 mail.kernel.org 5098A208AE
+Authentication-Results: mail.kernel.org; dmarc=none (p=none dis=none) header.from=arm.com
 Authentication-Results: mail.kernel.org; spf=none smtp.mailfrom=linux-pci-owner@vger.kernel.org
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1729469AbeJAVuv (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Mon, 1 Oct 2018 17:50:51 -0400
-Received: from mga09.intel.com ([134.134.136.24]:58392 "EHLO mga09.intel.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1728979AbeJAVuu (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Mon, 1 Oct 2018 17:50:50 -0400
-X-Amp-Result: UNSCANNABLE
-X-Amp-File-Uploaded: False
-Received: from fmsmga004.fm.intel.com ([10.253.24.48])
-  by orsmga102.jf.intel.com with ESMTP/TLS/DHE-RSA-AES256-GCM-SHA384; 01 Oct 2018 08:12:34 -0700
-X-ExtLoop1: 1
-X-IronPort-AV: E=Sophos;i="5.54,328,1534834800"; 
-   d="scan'208";a="93611239"
-Received: from unknown (HELO localhost.localdomain) ([10.232.112.44])
-  by fmsmga004.fm.intel.com with ESMTP; 01 Oct 2018 08:12:33 -0700
-Date:   Mon, 1 Oct 2018 09:14:51 -0600
-From:   Keith Busch <keith.busch@intel.com>
-To:     Bjorn Helgaas <helgaas@kernel.org>
-Cc:     Linux PCI <linux-pci@vger.kernel.org>,
-        Bjorn Helgaas <bhelgaas@google.com>,
-        Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-        Sinan Kaya <okaya@kernel.org>,
-        Thomas Tai <thomas.tai@oracle.com>, poza@codeaurora.org,
-        Lukas Wunner <lukas@wunner.de>, Christoph Hellwig <hch@lst.de>,
-        Mika Westerberg <mika.westerberg@linux.intel.com>
-Subject: Re: [PATCHv4 08/12] PCI: ERR: Always use the first downstream port
-Message-ID: <20181001151450.GB22508@localhost.localdomain>
-References: <20180920162717.31066-1-keith.busch@intel.com>
- <20180920162717.31066-9-keith.busch@intel.com>
- <20180926220116.GJ28024@bhelgaas-glaptop.roam.corp.google.com>
- <20180926221924.GA17934@localhost.localdomain>
- <20180927225625.GB18434@bhelgaas-glaptop.roam.corp.google.com>
- <20180928154220.GA21996@localhost.localdomain>
- <20180928205034.GA119911@bhelgaas-glaptop.roam.corp.google.com>
- <20180928213523.GA22508@localhost.localdomain>
- <20180928232801.GB119911@bhelgaas-glaptop.roam.corp.google.com>
+        id S1725881AbeJAXW7 (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Mon, 1 Oct 2018 19:22:59 -0400
+Received: from usa-sjc-mx-foss1.foss.arm.com ([217.140.101.70]:52720 "EHLO
+        foss.arm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1725740AbeJAXW7 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Mon, 1 Oct 2018 19:22:59 -0400
+Received: from usa-sjc-imap-foss1.foss.arm.com (unknown [10.72.51.249])
+        by usa-sjc-mx-foss1.foss.arm.com (Postfix) with ESMTP id 7669218A;
+        Mon,  1 Oct 2018 09:44:19 -0700 (PDT)
+Received: from e107981-ln.cambridge.arm.com (e107981-ln.emea.arm.com [10.4.13.117])
+        by usa-sjc-imap-foss1.foss.arm.com (Postfix) with ESMTPSA id BE5173F5D3;
+        Mon,  1 Oct 2018 09:44:17 -0700 (PDT)
+Date:   Mon, 1 Oct 2018 17:44:10 +0100
+From:   Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
+To:     Nathan Chancellor <natechancellor@gmail.com>
+Cc:     Nick Desaulniers <ndesaulniers@google.com>,
+        songxiaowei@hisilicon.com, wangbinghui@hisilicon.com,
+        bhelgaas@google.com, linux-pci@vger.kernel.org,
+        LKML <linux-kernel@vger.kernel.org>,
+        Greg KH <gregkh@linuxfoundation.org>,
+        paul.gortmaker@windriver.com
+Subject: Re: [PATCH v2] PCI: kirin: Fix section mismatch warning
+Message-ID: <20181001164410.GA14767@e107981-ln.cambridge.arm.com>
+References: <20180919185341.31298-1-natechancellor@gmail.com>
+ <CAKwvOdkeM3sj8M-LzTQd9M9-sM_K6n6FTz=TrNHd-3xPwg_VNw@mail.gmail.com>
+ <20180920105828.GB838@e107981-ln.cambridge.arm.com>
+ <20181001145341.GC13049@red-moon>
+ <20181001151205.GA17607@flashbox>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20180928232801.GB119911@bhelgaas-glaptop.roam.corp.google.com>
-User-Agent: Mutt/1.9.1 (2017-09-22)
+In-Reply-To: <20181001151205.GA17607@flashbox>
+User-Agent: Mutt/1.5.24 (2015-08-30)
 Sender: linux-pci-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-On Fri, Sep 28, 2018 at 06:28:02PM -0500, Bjorn Helgaas wrote:
-> On Fri, Sep 28, 2018 at 03:35:23PM -0600, Keith Busch wrote:
-> > The assumption I'm making (which I think is a safe assumption with
-> > general consensus) is that errors detected on an end point or an upstream
-> > port happened because of something wrong with the link going upstream:
-> > end devices have no other option, 
+On Mon, Oct 01, 2018 at 08:12:05AM -0700, Nathan Chancellor wrote:
+> On Mon, Oct 01, 2018 at 03:53:41PM +0100, Lorenzo Pieralisi wrote:
+> > On Thu, Sep 20, 2018 at 11:58:28AM +0100, Lorenzo Pieralisi wrote:
+> > > [+Paul]
+> > > 
+> > > On Wed, Sep 19, 2018 at 02:08:08PM -0700, Nick Desaulniers wrote:
+> > > > On Wed, Sep 19, 2018 at 11:55 AM Nathan Chancellor
+> > > > <natechancellor@gmail.com> wrote:
+> > > > >
+> > > > > WARNING: vmlinux.o(.text+0x4758cc): Section mismatch in reference from
+> > > > > the function kirin_pcie_probe() to the function
+> > > > > .init.text:kirin_add_pcie_port()
+> > > > > The function kirin_pcie_probe() references
+> > > > > the function __init kirin_add_pcie_port().
+> > > > > This is often because kirin_pcie_probe lacks a __init
+> > > > > annotation or the annotation of kirin_add_pcie_port is wrong.
+> > > > >
+> > > > > Add the __init annotation to both kirin_pcie_probe and
+> > > > > kirin_pcie_add_msi then use builtin_platform_driver_probe
+> > > > > instead of builtin_platform_driver + .probe to avoid a section
+> > > > > mismatch warning with kirin_pcie_driver.
+> > > > >
+> > > > > Fixes: fc5165db245a ("PCI: kirin: Add HiSilicon Kirin SoC PCIe controller driver")
+> > > > > Reported-by: Nick Desaulniers <ndesaulniers@google.com>
+> > > > > Suggested-by: Nick Desaulniers <ndesaulniers@google.com>
+> > > > > Signed-off-by: Nathan Chancellor <natechancellor@gmail.com>
+> > > > > ---
+> > > > >
+> > > > > v1 -> v2:
+> > > > >
+> > > > > Instead of removing the annotation on kirin_add_pcie_port, add it to
+> > > > > kirin_pcie_add_msi and kirin_pcie_probe. To avoid a warning with this
+> > > > > configuration, use builtin_platform_driver_probe.
+> > > > >
+> > > > >  drivers/pci/controller/dwc/pcie-kirin.c | 9 ++++-----
+> > > > >  1 file changed, 4 insertions(+), 5 deletions(-)
+> > > > >
+> > > > > diff --git a/drivers/pci/controller/dwc/pcie-kirin.c b/drivers/pci/controller/dwc/pcie-kirin.c
+> > > > > index 5352e0c3be82..f64fed12de51 100644
+> > > > > --- a/drivers/pci/controller/dwc/pcie-kirin.c
+> > > > > +++ b/drivers/pci/controller/dwc/pcie-kirin.c
+> > > > > @@ -448,8 +448,8 @@ static const struct dw_pcie_host_ops kirin_pcie_host_ops = {
+> > > > >         .host_init = kirin_pcie_host_init,
+> > > > >  };
+> > > > >
+> > > > > -static int kirin_pcie_add_msi(struct dw_pcie *pci,
+> > > > > -                               struct platform_device *pdev)
+> > > > > +static int __init kirin_pcie_add_msi(struct dw_pcie *pci,
+> > > > > +                                    struct platform_device *pdev)
+> > > > >  {
+> > > > >         int irq;
+> > > > >
+> > > > > @@ -481,7 +481,7 @@ static int __init kirin_add_pcie_port(struct dw_pcie *pci,
+> > > > >         return dw_pcie_host_init(&pci->pp);
+> > > > >  }
+> > > > >
+> > > > > -static int kirin_pcie_probe(struct platform_device *pdev)
+> > > > > +static int __init kirin_pcie_probe(struct platform_device *pdev)
+> > > > >  {
+> > > > >         struct device *dev = &pdev->dev;
+> > > > >         struct kirin_pcie *kirin_pcie;
+> > > > > @@ -533,11 +533,10 @@ static const struct of_device_id kirin_pcie_match[] = {
+> > > > >  };
+> > > > >
+> > > > >  static struct platform_driver kirin_pcie_driver = {
+> > > > > -       .probe                  = kirin_pcie_probe,
+> > > > >         .driver                 = {
+> > > > >                 .name                   = "kirin-pcie",
+> > > > >                 .of_match_table = kirin_pcie_match,
+> > > > >                 .suppress_bind_attrs = true,
+> > > > >         },
+> > > > >  };
+> > > > > -builtin_platform_driver(kirin_pcie_driver);
+> > > > > +builtin_platform_driver_probe(kirin_pcie_driver, kirin_pcie_probe);
+> > > > 
+> > > > It would be good to get additional review from someone who knows more
+> > > > about driver callback lifecycles, but I think this is the correct fix.
+> > > > Thanks Nathan.
+> > > > Reviewed-by: Nick Desaulniers <ndesaulniers@google.com>
+> > > 
+> > > AFAICS we can't use builtin_platform_driver_probe() if the probe()
+> > > itself may need deferral (and I *reckon* it may need that, see eg
+> > > clk_get()) so I suspect we have to go back to v1 for the patch,
+> > > apologies if so.
+> > 
+> > I think that the best course of action consists in merging v1 since
+> > we have not reached a definitive conclusion on v2, please let me
+> > know.
+> > 
+> > Thanks,
+> > Lorenzo
 > 
-> Is this really true?  It looks like "Internal Errors" (sec 6.2.9) may
-> be unrelated to a packet or event (though they are supposed to be
-> associated with a PCIe interface).
+> Hi Lorenzo,
 > 
-> It says the only method of recovering is reset or hardware
-> replacement.  It doesn't specify, but it seems like a FLR or similar
-> reset might be appropriate and we may not have to reset the link.
+> I am perfectly fine with v1 being merged as either patch solves the
+> warning. I agree with Nick that if this version works it would be more
+> proper but it also carries more risk with regards to deferral like you
+> stated. Please let me know if I need to resend it.
 
-That is an interesting case we might want to handle better. I've a couple
-concerns to consider for implementing:
+I have applied v1 to my pci/dwc for v4.20 and dropped this patch, thanks
+for bearing with me and if there is any objection please let me know.
 
-We don't know an ERR_FATAL occured for an internal reason until we read the
-config register across the link, and the AER driver historically avoided
-accessing potentially unhealthy links. I don't *think* it's harmful to
-attempt reading the register, but we'd just need to check for an "all 1's"
-completion before trusting the result.
-
-The other issue with trying to use FLR is a device may not implement
-it, so pci reset has fallback methods depending on the device's
-capabilities. We can end up calling pci_parent_bus_reset(), which does the
-same secondary bus reset that already happens as part of error recovery.
-We'd just need to make sure affected devices and drivers have a chance
-to be notified (which is the this patch's intention).
- 
-> Getting back to the changelog, "error handling can only run on
-> bridges" clearly doesn't refer to the driver callbacks (since those
-> only apply to endpoints).  Maybe "error handling" refers to the
-> reset_link(), which can only be done on a bridge?
-
-Yep, referring to how link reset_link is only sent from bridges.
- 
-> That would make sense to me, although the current code may be
-> resetting more devices than necessary if Internal Errors can be
-> handled without a link reset.
-
-That sounds good, I'll test some scenarios out here.
+Thanks,
+Lorenzo
