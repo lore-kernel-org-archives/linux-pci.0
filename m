@@ -1,96 +1,94 @@
-Return-Path: <SRS0=75lR=MM=vger.kernel.org=linux-pci-owner@kernel.org>
+Return-Path: <SRS0=/qR3=MN=vger.kernel.org=linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-0.6 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
-	DKIM_VALID_AU,FREEMAIL_FORGED_FROMDOMAIN,FREEMAIL_FROM,
-	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_PASS autolearn=ham
-	autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-0.8 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
+	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_PASS,URIBL_BLOCKED
+	autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 0B6F2C004D2
-	for <linux-pci@archiver.kernel.org>; Sun, 30 Sep 2018 09:15:15 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 2768DC43143
+	for <linux-pci@archiver.kernel.org>; Mon,  1 Oct 2018 04:57:25 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id AA3BB2075E
-	for <linux-pci@archiver.kernel.org>; Sun, 30 Sep 2018 09:15:14 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id AF45F2084C
+	for <linux-pci@archiver.kernel.org>; Mon,  1 Oct 2018 04:57:24 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="vhnzrjnO"
-DMARC-Filter: OpenDMARC Filter v1.3.2 mail.kernel.org AA3BB2075E
-Authentication-Results: mail.kernel.org; dmarc=fail (p=none dis=none) header.from=gmail.com
+	dkim=pass (2048-bit key) header.d=endlessm-com.20150623.gappssmtp.com header.i=@endlessm-com.20150623.gappssmtp.com header.b="zKrK+SqC"
+DMARC-Filter: OpenDMARC Filter v1.3.2 mail.kernel.org AF45F2084C
+Authentication-Results: mail.kernel.org; dmarc=none (p=none dis=none) header.from=endlessm.com
 Authentication-Results: mail.kernel.org; spf=none smtp.mailfrom=linux-pci-owner@vger.kernel.org
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727800AbeI3PrY (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Sun, 30 Sep 2018 11:47:24 -0400
-Received: from mail-oi1-f176.google.com ([209.85.167.176]:46315 "EHLO
-        mail-oi1-f176.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1727742AbeI3PrY (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Sun, 30 Sep 2018 11:47:24 -0400
-Received: by mail-oi1-f176.google.com with SMTP id k64-v6so8816223oia.13
-        for <linux-pci@vger.kernel.org>; Sun, 30 Sep 2018 02:15:13 -0700 (PDT)
+        id S1728617AbeJALdQ (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Mon, 1 Oct 2018 07:33:16 -0400
+Received: from mail-qk1-f194.google.com ([209.85.222.194]:44742 "EHLO
+        mail-qk1-f194.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726930AbeJALdQ (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Mon, 1 Oct 2018 07:33:16 -0400
+Received: by mail-qk1-f194.google.com with SMTP id g184-v6so7304227qkc.11
+        for <linux-pci@vger.kernel.org>; Sun, 30 Sep 2018 21:57:23 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20161025;
-        h=mime-version:from:date:message-id:subject:to;
-        bh=OtwEtit3KgQISQYCP2aKX7Mk9vT6KonUKrTj4V0UU0o=;
-        b=vhnzrjnOs6LByh6DgkGIgMBK5HSQpmdLJ4UbYA/BoS+hruePefI4OV5REOzIN2E3B/
-         aaG1woJYAq3G+vOFHNjyH3meRgtetbkCF6et07KP6UnokTcJkINJ2WcI+2tbdrKTVNdY
-         KEPdJAmQ16LJHU+sEiLBHCJaJcpsr1TcgknR1llyYs3JXUOKkfvD1pmpgOBi7QDDmaxj
-         t2K3o2tulrTU2fmDZMhJ0Elscw8XATL+h9Sat1ruCH87dTUPyYJSmeE+mcF0TFPfqhDE
-         abzwhB2kOxKZNCHgxjzZqDDjGkdwwRitclCNy9PsLwDOU1fU74GdcUx2lvLVH1VpXZjF
-         mdSw==
+        d=endlessm-com.20150623.gappssmtp.com; s=20150623;
+        h=mime-version:references:in-reply-to:from:date:message-id:subject:to
+         :cc;
+        bh=jnrjBvxLkgEYqcoy4gP3bz3vkNJm9uQLA53NunoyuBk=;
+        b=zKrK+SqCw0pXqtxApE8AZ6kpFcMmAAF0VugdUfcdSrp8elS80jJnue3yDLnBjgXn8A
+         MH3l626cilo7fTZO/DvyDpPh6LrY7KT4kSMdhQWxn9k5R5RvSbR+yHfqlOsMXYHgqw+q
+         USpViqU4f8ugY/v6e5cXx6o/gSXGb/IiITZHuoddfVUYCFKwGL1RsX2J9ggD8erjlgRQ
+         37ck3pAhAtVFtJjWuSNHAydMuLz/rGrCLSm6p/RS44Jj4U71QO6xAsnzNZt7dF1tCUBo
+         w5P81zR1Ikb3JJ3cYj60oU7cLAmGGh2Zt+Fk+6q3U8KZ7HDT84Xkq6WNfkn0p69HjVRo
+         aNlA==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20161025;
-        h=x-gm-message-state:mime-version:from:date:message-id:subject:to;
-        bh=OtwEtit3KgQISQYCP2aKX7Mk9vT6KonUKrTj4V0UU0o=;
-        b=YRB2T9IAtYJ4JI2kQesSyP6Aq+Fu91qkvBE2GJrnz5aG4N11B8whOIXweZGd5MM76m
-         n5YUamvCQCAmFJZQO2fxNp95qvMz94/I7aoDcPVeibwRdtr1JBGaf2zBLZlj4N2ugPVQ
-         M3tt/db2tJvGnqsuaBn32IHTNndmlQzegm528uK9fkLGK8tAwmjpPKDLRexazbLwuZNE
-         NMqjEdmtD6avcivum0k/HN9yrJhX6h7VgZ6FKb1PjmJ9CzrDCA9J48E1b+/oVb806dl1
-         riOABw0limxTnT1sNBcCX3kwmJqXB0qQETfywF4vN+MMgnHy2TX8Tm6061vq9aBR3Zs7
-         a19g==
-X-Gm-Message-State: ABuFfogUwropavvKB2dC2nRbqORB609N2ze4lV+uUAmAQANXsOEabdEg
-        7RZuRw6JhaW0mw1NgdWsh3DS5LSxBWS512bhcS3IXkhY
-X-Google-Smtp-Source: ACcGV63awAxFd/6QQIjnFTLY8cQiqtqt3+9IheV9wZmoC3jsfEdOyWdxPTVj+7wbQmWgN4j5Znkc2kwFvfWpxaswSbg=
-X-Received: by 2002:aca:50c1:: with SMTP id e184-v6mr3042436oib.264.1538298912873;
- Sun, 30 Sep 2018 02:15:12 -0700 (PDT)
+        h=x-gm-message-state:mime-version:references:in-reply-to:from:date
+         :message-id:subject:to:cc;
+        bh=jnrjBvxLkgEYqcoy4gP3bz3vkNJm9uQLA53NunoyuBk=;
+        b=hUV7eXbTquT/DKk1ECuVlOx6Xx3K2pQ+zZ2ZnviNgxRgYn3sSgOMT6v1fewLmJ5QQu
+         gCxEPYVJQMOAPsKPUNRh4UoP4Ce0U2XgxaM4VNa+Qj7kBdZr1CtvrhZYal34edeFdU4p
+         YuBXr1fSqt4ZYzMEOdV3yecNTXtbKNo9If5acffP829rliNUktlTiQZtUW/2FH+fDgAR
+         KTEbn9hn+5kiP3mNAVKYCBXzWtMqWszYHtgOWqSLOj69I92gijAAPgjUztD8J7Ko3Ot+
+         6lyz0icAguwTbJrXRKujXzH+Wp0EGrQzB4ZBampeRIng9rWDfjluLmJKrt2ZmKPHdUKq
+         eVBw==
+X-Gm-Message-State: ABuFfoiZu7QmAOrPZaMd80ca41Z7cx3RjdS1/sex+ePQ9/5BFQPcvZey
+        0OA0LuAEKdctQRLjP0olz7M8VM/T6ZjoifBj/0EnwQ==
+X-Google-Smtp-Source: ACcGV62AH/lpTJqfs7LctyFks9p2g1nLlHZ/w5vWgh3mI0EGsxzcvvOiwWgzTwkWcJViUyEW+7rFMBKXETX29hwPYL0=
+X-Received: by 2002:a37:1f88:: with SMTP id n8-v6mr7012136qkh.64.1538369842479;
+ Sun, 30 Sep 2018 21:57:22 -0700 (PDT)
 MIME-Version: 1.0
-From:   Kevin Wilson <wkevils@gmail.com>
-Date:   Sun, 30 Sep 2018 12:15:01 +0300
-Message-ID: <CAGXs5wXBdmjp-3XcuNHFCykLdT5LJj=tMPJnqLexAL18n=wLNg@mail.gmail.com>
-Subject: A question about pcim_iomap_regions() and Managed Device Resource API
-To:     linux-pci@vger.kernel.org
+References: <20180913033745.11178-1-drake@endlessm.com> <20180918213244.GE13616@bhelgaas-glaptop.roam.corp.google.com>
+ <20180927205247.GA18434@bhelgaas-glaptop.roam.corp.google.com> <3f8efcd6-7cd2-b41a-d984-28c9e1740d6c@rockbox.org>
+In-Reply-To: <3f8efcd6-7cd2-b41a-d984-28c9e1740d6c@rockbox.org>
+From:   Daniel Drake <drake@endlessm.com>
+Date:   Mon, 1 Oct 2018 12:57:11 +0800
+Message-ID: <CAD8Lp47uL3DQTBiVTduO1+Cg8px4CDpv26qVJsgT+RJ4WZx9oA@mail.gmail.com>
+Subject: Re: [PATCH v3] PCI: Reprogram bridge prefetch registers on resume
+To:     Thomas Martitz <kugel@rockbox.org>
+Cc:     Bjorn Helgaas <helgaas@kernel.org>,
+        Bjorn Helgaas <bhelgaas@google.com>,
+        Linux PCI <linux-pci@vger.kernel.org>,
+        Linux Upstreaming Team <linux@endlessm.com>,
+        nouveau@lists.freedesktop.org, Linux PM <linux-pm@vger.kernel.org>,
+        Peter Wu <peter@lekensteyn.nl>, kherbst@redhat.com,
+        andy.shevchenko@linux.intel.com,
+        "Wysocki, Rafael J" <rafael.j.wysocki@intel.com>,
+        Keith Busch <keith.busch@intel.com>,
+        Jon Derrick <jonathan.derrick@intel.com>,
+        David Miller <davem@davemloft.net>,
+        Heiner Kallweit <hkallweit1@gmail.com>,
+        netdev <netdev@vger.kernel.org>, nic_swsd@realtek.com,
+        rchang@marvell.com, Linux Kernel <linux-kernel@vger.kernel.org>
 Content-Type: text/plain; charset="UTF-8"
 Sender: linux-pci-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-HI, linux-pci developers,
+On Sun, Sep 30, 2018 at 5:07 AM Thomas Martitz <kugel@rockbox.org> wrote:
+> The latest iteration does not work on my HP system. The GPU fails to
+> power up just like the unpatched kernel.
 
-There are very few Ethernet drivers which use
-pcim_iomap_regions(); for example,
-drivers/net/ethernet/realtek/r8169.c.
+That's weird, I would not expect a behaviour change in the latest
+patch. pci_restore_config_dword() has some debug messages, could you
+please make them visible and show logs again?
+Also remind us of the PCI device address of the parent bridge (lspci -vt)
 
-My question is: why do they use this
-Managed Device Resource API and not
-the regular Device Resource API (ioremap() for example), which is used in
-**most** Ethernet Linux device drivers, for example, in I40E driver:
-
-...
-    err = pci_request_mem_regions(pdev, i40e_driver_name);
-    ...
-    hw->hw_addr = ioremap(pci_resource_start(pdev, 0), pf->ioremap_len);
-...
-
-Is there some inherent HW feature in r8169 (or the other
-drivers, see list below) which requires using this API ? Is usage
-of this API (the managed devices, with pcim_iomap_regions(), etc) is
-mandatory for these device drivers, and cannot be
-use in most drivers (like I40E and most of the others) ?
-
-The other Linux Ethenet drivers that use
-pcim_iomap_regions() are:
-amd/xgbe, cavium/common/cavium_ptp.c, intel/ice/ice_main.c,
-oki-semi/pch_gbe/pch_gbe_main.c, stmicro/stmmac/stmmac_pci.c,
-synopsys/dwc-xlgmac-pci.c and toshiba/tc35815.c.
-
-Regards,
-Kevin W.
+Thanks
+Daniel
