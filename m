@@ -2,188 +2,175 @@ Return-Path: <SRS0=/qR3=MN=vger.kernel.org=linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-8.6 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
-	DKIM_VALID_AU,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_PASS,
-	URIBL_BLOCKED,USER_AGENT_MUTT autolearn=unavailable autolearn_force=no
-	version=3.4.0
+X-Spam-Status: No, score=-8.2 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_PASS,URIBL_BLOCKED,
+	USER_AGENT_MUTT autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 80D77C43143
-	for <linux-pci@archiver.kernel.org>; Mon,  1 Oct 2018 13:41:10 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 64722C43143
+	for <linux-pci@archiver.kernel.org>; Mon,  1 Oct 2018 14:01:11 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 3D12A20C0A
-	for <linux-pci@archiver.kernel.org>; Mon,  1 Oct 2018 13:41:10 +0000 (UTC)
-Authentication-Results: mail.kernel.org;
-	dkim=pass (1024-bit key) header.d=kernel.org header.i=@kernel.org header.b="OEIRuyBJ"
-DMARC-Filter: OpenDMARC Filter v1.3.2 mail.kernel.org 3D12A20C0A
-Authentication-Results: mail.kernel.org; dmarc=fail (p=none dis=none) header.from=kernel.org
+	by mail.kernel.org (Postfix) with ESMTP id 372A22064D
+	for <linux-pci@archiver.kernel.org>; Mon,  1 Oct 2018 14:01:11 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.3.2 mail.kernel.org 372A22064D
+Authentication-Results: mail.kernel.org; dmarc=none (p=none dis=none) header.from=arm.com
 Authentication-Results: mail.kernel.org; spf=none smtp.mailfrom=linux-pci-owner@vger.kernel.org
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1729149AbeJAUSz (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Mon, 1 Oct 2018 16:18:55 -0400
-Received: from mail.kernel.org ([198.145.29.99]:49028 "EHLO mail.kernel.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1728979AbeJAUSz (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Mon, 1 Oct 2018 16:18:55 -0400
-Received: from localhost (173-25-171-118.client.mchsi.com [173.25.171.118])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
-        (No client certificate requested)
-        by mail.kernel.org (Postfix) with ESMTPSA id 960D620C0A;
-        Mon,  1 Oct 2018 13:41:02 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=default; t=1538401262;
-        bh=SqvE6Nnvl5NLnoBosPLtPOBDjJ27QWfxGhZkNt0YNz8=;
-        h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-        b=OEIRuyBJ2pM4bKp8KNW1yTYc43UIdwCWDq7dU4yTsU/+75DJpKF37sNsnSaWwTaza
-         o32W/gySkF44b+Meue7HTyDaIcu1P2WlI/dqMtAdvOZeZCF7EzAwkJyOk7q8cZdjVP
-         TEIFC2fHmVMTOAa/c3vOZCWOw3p3qORgcABGAIpQ=
-Date:   Mon, 1 Oct 2018 08:40:58 -0500
-From:   Bjorn Helgaas <helgaas@kernel.org>
-To:     Suganath Prabu Subramani <suganath-prabu.subramani@broadcom.com>
-Cc:     linux-scsi@vger.kernel.org, linux-pci@vger.kernel.org,
-        lukas@wunner.de, Andy Shevchenko <andy.shevchenko@gmail.com>,
-        Sathya Prakash <Sathya.Prakash@broadcom.com>,
-        Sreekanth Reddy <sreekanth.reddy@broadcom.com>,
-        linux-kernel@vger.kernel.org
-Subject: Re: [PATCH v4 3/6] mpt3sas: Introdude _scsih_get_shost_and_ioc.
-Message-ID: <20181001134058.GA142872@bhelgaas-glaptop.roam.corp.google.com>
-References: <1537935759-14754-1-git-send-email-suganath-prabu.subramani@broadcom.com>
- <1537935759-14754-4-git-send-email-suganath-prabu.subramani@broadcom.com>
- <20180926210918.GH28024@bhelgaas-glaptop.roam.corp.google.com>
- <CA+RiK66toWULgXRa+nZVOEom70ntQW8PTO7N_8qFn2AvXB_8QA@mail.gmail.com>
+        id S1729291AbeJAUjG (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Mon, 1 Oct 2018 16:39:06 -0400
+Received: from usa-sjc-mx-foss1.foss.arm.com ([217.140.101.70]:49614 "EHLO
+        foss.arm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1729289AbeJAUjG (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Mon, 1 Oct 2018 16:39:06 -0400
+Received: from usa-sjc-imap-foss1.foss.arm.com (unknown [10.72.51.249])
+        by usa-sjc-mx-foss1.foss.arm.com (Postfix) with ESMTP id 81C797A9;
+        Mon,  1 Oct 2018 07:01:09 -0700 (PDT)
+Received: from red-moon (red-moon.emea.arm.com [10.4.13.120])
+        by usa-sjc-imap-foss1.foss.arm.com (Postfix) with ESMTPSA id 9599B3F5B7;
+        Mon,  1 Oct 2018 07:01:07 -0700 (PDT)
+Date:   Mon, 1 Oct 2018 15:01:46 +0100
+From:   Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
+To:     Thomas Petazzoni <thomas.petazzoni@bootlin.com>,
+        Bjorn Helgaas <bhelgaas@google.com>
+Cc:     linux-pci@vger.kernel.org,
+        Jan =?iso-8859-1?Q?Kundr=E1t?= <jan.kundrat@cesnet.cz>,
+        Jason Cooper <jason@lakedaemon.net>,
+        Andrew Lunn <andrew@lunn.ch>,
+        Sebastian Hesselbarth <sebastian.hesselbarth@gmail.com>,
+        Gregory Clement <gregory.clement@bootlin.com>,
+        linux-arm-kernel@lists.infradead.org,
+        Russell King <linux@arm.linux.org.uk>
+Subject: Re: [PATCH] PCI: mvebu: Fix PCI I/O mapping creation sequence
+Message-ID: <20181001140137.GA13049@red-moon>
+References: <20181001124934.7222-1-thomas.petazzoni@bootlin.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
+Content-Type: text/plain; charset=iso-8859-1
 Content-Disposition: inline
 Content-Transfer-Encoding: 8bit
-In-Reply-To: <CA+RiK66toWULgXRa+nZVOEom70ntQW8PTO7N_8qFn2AvXB_8QA@mail.gmail.com>
-User-Agent: Mutt/1.10.1 (2018-07-13)
+In-Reply-To: <20181001124934.7222-1-thomas.petazzoni@bootlin.com>
+User-Agent: Mutt/1.5.21 (2010-09-15)
 Sender: linux-pci-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-[+cc LKML]
+On Mon, Oct 01, 2018 at 02:49:34PM +0200, Thomas Petazzoni wrote:
+> Commit ee1604381a371 ("PCI: mvebu: Only remap I/O space if
+> configured") had the side effect that the PCI I/O mapping was created
+> much earlier than before, at a point where the probe() of the driver
+> could still fail. This is for example a problem if one gets an
+> -EPROBE_DEFER at some point during probe(), after pci_ioremap_io() has
+> been called.
+> 
+> Indeed, there is currently no function to undo what pci_ioremap_io()
+> did, and switching to pci_remap_iospace() is not an option in
+> pci-mvebu due to the need for special memory attributes on Armada 38x.
+> 
+> Reverting ee1604381a371 ("PCI: mvebu: Only remap I/O space if
+> configured") would be a possibility, but it would require also
+> reverting 42342073e38b5 ("PCI: mvebu: Convert to use pci_host_bridge
+> directly"). So instead, we use an open-coded version of
+> pci_host_probe() that creates the PCI I/O mapping at a point where we
+> are guaranteed not to fail anymore.
+> 
+> Reported-by: Jan Kundr�t <jan.kundrat@cesnet.cz>
+> Fixes: ee1604381a371 ("PCI: mvebu: Only remap I/O space if configured")
+> Signed-off-by: Thomas Petazzoni <thomas.petazzoni@bootlin.com>
+> ---
+>  drivers/pci/controller/pci-mvebu.c | 52 +++++++++++++++++++++++++++++++++++---
+>  1 file changed, 48 insertions(+), 4 deletions(-)
 
-On Mon, Oct 01, 2018 at 12:57:01PM +0530, Suganath Prabu Subramani wrote:
-> On Thu, Sep 27, 2018 at 2:39 AM Bjorn Helgaas <helgaas@kernel.org> wrote:
-> > On Wed, Sep 26, 2018 at 09:52:36AM +0530, Suganath Prabu S wrote:
-> > > The code for getting shost and IOC is redundant so
-> > > moved that to function "scsih_get_shost_and_ioc".
-> > > Also checks for NULL are added to IOC and shost.
-> > >
-> > > Signed-off-by: Suganath Prabu S <suganath-prabu.subramani@broadcom.com>
-> > > ---
-> > >  drivers/scsi/mpt3sas/mpt3sas_scsih.c | 98 ++++++++++++++++++++++++++++++------
-> > >  1 file changed, 82 insertions(+), 16 deletions(-)
-> > >
-> > > diff --git a/drivers/scsi/mpt3sas/mpt3sas_scsih.c b/drivers/scsi/mpt3sas/mpt3sas_scsih.c
-> > > index 566a550..f6e92eb 100644
-> > > --- a/drivers/scsi/mpt3sas/mpt3sas_scsih.c
-> > > +++ b/drivers/scsi/mpt3sas/mpt3sas_scsih.c
-> > > @@ -9809,6 +9809,35 @@ _scsih_ir_shutdown(struct MPT3SAS_ADAPTER *ioc)
-> > >  }
-> > >
-> > >  /**
-> > > + * _scsih_get_shost_and_ioc - get shost and ioc
-> > > + *                   and verify whether they are NULL or not
-> > > + * @pdev: PCI device struct
-> > > + * @shost: address of scsi host pointer
-> > > + * @ioc: address of HBA adapter pointer
-> > > + *
-> > > + * Return zero if *shost and *ioc are not NULL otherwise return error number.
-> > > + */
-> > > +static int
-> > > +_scsih_get_shost_and_ioc(struct pci_dev *pdev,
-> > > +     struct Scsi_Host **shost, struct MPT3SAS_ADAPTER **ioc)
-> > > +{
-> > > +     *shost = pci_get_drvdata(pdev);
-> > > +     if (*shost == NULL) {
-> > > +             dev_err(&pdev->dev, "pdev's driver data is null\n");
-> > > +             return -ENXIO;
-> > > +     }
-> > > +
-> > > +     *ioc = shost_priv(*shost);
-> > > +     if (*ioc == NULL) {
-> > > +             dev_err(&pdev->dev, "shost's private data is null\n");
-> > > +             return -ENXIO;
-> >
-> > I think it's better to omit NULL pointer checks like these because
-> > there should not be a path where we can execute this code when these
-> > pointers are NULL.
-> >
-> > If there *is* such a path, I think that's a serious bug and it's
-> > better to oops when we try to dereference the NULL pointer.  If we
-> > just return an error code, it's likely the bug will be ignored and
-> > never fixed.
-> >
-> We have added the ioc and shost checks, because of kernel panic in
-> below scenario.
-> Have 3 HBA's in system and perform below operation.
-> 1) Run “poweroff”.
-> 2) Immediate hot unplug HBA.
-> We have observed, kernel's shutdown process has removed all the 3
-> HBA devices smoothly, and also user have unplugged the HBA device
-> during this time. PCI subsystem's hot-plug thread is also trying to
-> remove the hot plugged PCI device which is already removed/cleaned
-> by the shutdown process. (Which is not expected for the already
-> removed device) Due to this kernel panic is observed. And we are not
-> sure whether it has to fixed from pciehp layer, so we added sanity
-> checks in driver.
+Thank you Thomas.
 
-This is a great example.  scsih_remove() is the mpt3sas_driver.remove
-method.  It sounds like it's getting called twice for the same HBA.
-I think that's a PCI core defect and we should fix it there instead of
-trying to work around it in every driver.
+Acked-by: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
 
-The trace below is from v4.4.55.  Can you reproduce the same problem
-with a current tree, e.g., v4.19-rc?  There have been many changes
-since v4.4 that may have fixed this problem.
+Bjorn, is it possible please to send this patch for -rc7 ? It is
+a regression we introduced in the last cycle.
 
-> [ 1745.605510] BUG: unable to handle kernel NULL pointer dereference
-> at 0000000000000a98
-> [ 1745.606554] IP: [<ffffffffa054c750>] scsih_remove+0x20/0x2d0 [mpt3sas]
-> [ 1745.607609] PGD 0
-> [ 1745.608621] Oops: 0000 [#1] SMP
-> [ 1745.622989] CPU: 0 PID: 668 Comm: kworker/0:2 Tainted: G
-> O    4.4.55-1.el7.elrepo.x86_64 #1
-> [ 1745.624800] Hardware name: PRO-MNU65930231
-> PRO-NME69559126/BRD-PRO55212588, BIOS 0.51e 05/08/2017
-> [ 1745.626673] Workqueue: pciehp-3 pciehp_power_thread
-> [ 1745.628566] task: ffff881fe50dd880 ti: ffff881fe88e4000 task.ti:
-> ffff881fe88e4000
-> [ 1745.630530] RIP: 0010:[<ffffffffa054c750>]  [<ffffffffa054c750>]
-> scsih_remove+0x20/0x2d0 [mpt3sas]
-> [ 1745.632577] RSP: 0018:ffff881fe88e7c98  EFLAGS: 00010292
-> [ 1745.634639] RAX: 0000000000000001 RBX: ffff881feef5c000 RCX: 0000000000000000
-> [ 1745.636718] RDX: 0000000000000000 RSI: 0000000000000202 RDI: ffff881feef5c000
-> [ 1745.638832] RBP: ffff881fe88e7cc8 R08: 0000000000000000 R09: 0000000180220002
-> [ 1745.640972] R10: 00000000eaf4a401 R11: ffffea007fabd280 R12: 0000000000000000
-> [ 1745.643136] R13: ffffffffa0576020 R14: ffff881fe9af8240 R15: 0000000000000000
-> [ 1745.645320] FS:  0000000000000000(0000) GS:ffff881ffde00000(0000)
-> knlGS:0000000000000000
-> [ 1745.647572] CS:  0010 DS: 0000 ES: 0000 CR0: 0000000080050033
-> [ 1745.649833] CR2: 0000000000000a98 CR3: 0000001fe76df000 CR4: 00000000003406f0
-> [ 1745.652147] DR0: 0000000000000000 DR1: 0000000000000000 DR2: 0000000000000000
-> [ 1745.654476] DR3: 0000000000000000 DR6: 00000000fffe0ff0 DR7: 0000000000000400
-> [ 1745.656825] Stack:
-> [ 1745.659138]  ffff881fe88e7cc8 ffff881feef5c098 ffff881feef5c000
-> ffffffffa0576020
-> [ 1745.661562]  ffff881fe9af8240 0000000000000000 ffff881fe88e7cf0
-> ffffffff8137f9d9
-> [ 1745.663990]  ffff881feef5c098 ffffffffa0576088 ffff881feef5c000
-> ffff881fe88e7d10
-> [ 1745.666428] Call Trace:
-> [ 1745.668830]  [<ffffffff8137f9d9>] pci_device_remove+0x39/0xc0
-> [ 1745.671256]  [<ffffffff8147db36>] __device_release_driver+0x96/0x130
-> [ 1745.673664]  [<ffffffff8147dbf3>] device_release_driver+0x23/0x30
-> [ 1745.676071]  [<ffffffff8137851c>] pci_stop_bus_device+0x8c/0xa0
-> [ 1745.678485]  [<ffffffff81378612>] pci_stop_and_remove_bus_device+0x12/0x20
-> [ 1745.680909]  [<ffffffff81392eea>] pciehp_unconfigure_device+0xaa/0x1b0
-> [ 1745.683331]  [<ffffffff813929e2>] pciehp_disable_slot+0x52/0xd0
-> [ 1745.685767]  [<ffffffff81392aed>] pciehp_power_thread+0x8d/0xb0
-> [ 1745.688210]  [<ffffffff8109728f>] process_one_work+0x14f/0x400
-> [ 1745.690633]  [<ffffffff81097b04>] worker_thread+0x114/0x470
-> [ 1745.693080]  [<ffffffff810979f0>] ? rescuer_thread+0x310/0x310
-> [ 1745.695518]  [<ffffffff8109d648>] kthread+0xd8/0xf0
-> [ 1745.697936]  [<ffffffff8109d570>] ? kthread_park+0x60/0x60
-> [ 1745.700359]  [<ffffffff816f854f>] ret_from_fork+0x3f/0x70
-> [ 1745.702747]  [<ffffffff8109d570>] ? kthread_park+0x60/0x60
+Thanks,
+Lorenzo
+
+> diff --git a/drivers/pci/controller/pci-mvebu.c b/drivers/pci/controller/pci-mvebu.c
+> index 50eb0729385b..a41d79b8d46a 100644
+> --- a/drivers/pci/controller/pci-mvebu.c
+> +++ b/drivers/pci/controller/pci-mvebu.c
+> @@ -1145,7 +1145,6 @@ static int mvebu_pcie_parse_request_resources(struct mvebu_pcie *pcie)
+>  {
+>  	struct device *dev = &pcie->pdev->dev;
+>  	struct device_node *np = dev->of_node;
+> -	unsigned int i;
+>  	int ret;
+>  
+>  	INIT_LIST_HEAD(&pcie->resources);
+> @@ -1179,13 +1178,58 @@ static int mvebu_pcie_parse_request_resources(struct mvebu_pcie *pcie)
+>  					 resource_size(&pcie->io) - 1);
+>  		pcie->realio.name = "PCI I/O";
+>  
+> +		pci_add_resource(&pcie->resources, &pcie->realio);
+> +	}
+> +
+> +	return devm_request_pci_bus_resources(dev, &pcie->resources);
+> +}
+> +
+> +/*
+> + * This is a copy of pci_host_probe(), except that it does the I/O
+> + * remap as the last step, once we are sure we won't fail.
+> + *
+> + * It should be removed once the I/O remap error handling issue has
+> + * been sorted out.
+> + */
+> +static int mvebu_pci_host_probe(struct pci_host_bridge *bridge)
+> +{
+> +	struct mvebu_pcie *pcie;
+> +	struct pci_bus *bus, *child;
+> +	int ret;
+> +
+> +	ret = pci_scan_root_bus_bridge(bridge);
+> +	if (ret < 0) {
+> +		dev_err(bridge->dev.parent, "Scanning root bridge failed");
+> +		return ret;
+> +	}
+> +
+> +	pcie = pci_host_bridge_priv(bridge);
+> +	if (resource_size(&pcie->io) != 0) {
+> +		unsigned int i;
+> +
+>  		for (i = 0; i < resource_size(&pcie->realio); i += SZ_64K)
+>  			pci_ioremap_io(i, pcie->io.start + i);
+> +	}
+>  
+> -		pci_add_resource(&pcie->resources, &pcie->realio);
+> +	bus = bridge->bus;
+> +
+> +	/*
+> +	 * We insert PCI resources into the iomem_resource and
+> +	 * ioport_resource trees in either pci_bus_claim_resources()
+> +	 * or pci_bus_assign_resources().
+> +	 */
+> +	if (pci_has_flag(PCI_PROBE_ONLY)) {
+> +		pci_bus_claim_resources(bus);
+> +	} else {
+> +		pci_bus_size_bridges(bus);
+> +		pci_bus_assign_resources(bus);
+> +
+> +		list_for_each_entry(child, &bus->children, node)
+> +			pcie_bus_configure_settings(child);
+>  	}
+>  
+> -	return devm_request_pci_bus_resources(dev, &pcie->resources);
+> +	pci_bus_add_devices(bus);
+> +	return 0;
+>  }
+>  
+>  static int mvebu_pcie_probe(struct platform_device *pdev)
+> @@ -1268,7 +1312,7 @@ static int mvebu_pcie_probe(struct platform_device *pdev)
+>  	bridge->align_resource = mvebu_pcie_align_resource;
+>  	bridge->msi = pcie->msi;
+>  
+> -	return pci_host_probe(bridge);
+> +	return mvebu_pci_host_probe(bridge);
+>  }
+>  
+>  static const struct of_device_id mvebu_pcie_of_match_table[] = {
+> -- 
+> 2.14.4
+> 
