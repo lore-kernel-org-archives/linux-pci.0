@@ -2,153 +2,96 @@ Return-Path: <SRS0=XHdA=MO=vger.kernel.org=linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-2.6 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
-	DKIM_VALID_AU,MAILING_LIST_MULTI,SPF_PASS,USER_AGENT_MUTT
-	autolearn=unavailable autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-8.6 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
+	DKIM_VALID_AU,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_PASS,
+	URIBL_BLOCKED,USER_AGENT_MUTT autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 15591C64EB9
-	for <linux-pci@archiver.kernel.org>; Tue,  2 Oct 2018 20:59:14 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 89015C64EBD
+	for <linux-pci@archiver.kernel.org>; Tue,  2 Oct 2018 21:24:25 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id CCAD32089C
-	for <linux-pci@archiver.kernel.org>; Tue,  2 Oct 2018 20:59:13 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 4DA33206B2
+	for <linux-pci@archiver.kernel.org>; Tue,  2 Oct 2018 21:24:25 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (1024-bit key) header.d=kernel.org header.i=@kernel.org header.b="VrlUApMo"
-DMARC-Filter: OpenDMARC Filter v1.3.2 mail.kernel.org CCAD32089C
+	dkim=pass (1024-bit key) header.d=kernel.org header.i=@kernel.org header.b="cojvk/Ju"
+DMARC-Filter: OpenDMARC Filter v1.3.2 mail.kernel.org 4DA33206B2
 Authentication-Results: mail.kernel.org; dmarc=fail (p=none dis=none) header.from=kernel.org
 Authentication-Results: mail.kernel.org; spf=none smtp.mailfrom=linux-pci-owner@vger.kernel.org
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727875AbeJCDoV (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Tue, 2 Oct 2018 23:44:21 -0400
-Received: from mail.kernel.org ([198.145.29.99]:41320 "EHLO mail.kernel.org"
+        id S1728476AbeJCEJo (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Wed, 3 Oct 2018 00:09:44 -0400
+Received: from mail.kernel.org ([198.145.29.99]:50440 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1726572AbeJCDoU (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Tue, 2 Oct 2018 23:44:20 -0400
+        id S1725976AbeJCEJo (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Wed, 3 Oct 2018 00:09:44 -0400
 Received: from localhost (unknown [69.71.4.100])
         (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
         (No client certificate requested)
-        by mail.kernel.org (Postfix) with ESMTPSA id 430B12082A;
-        Tue,  2 Oct 2018 20:59:05 +0000 (UTC)
+        by mail.kernel.org (Postfix) with ESMTPSA id 1AE4020652;
+        Tue,  2 Oct 2018 21:24:22 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=default; t=1538513945;
-        bh=NhShGRlF3tvA3wPqMetEvDsa+MXMBWRWcegxI0YNFUQ=;
+        s=default; t=1538515463;
+        bh=VALqT3VRwHTnUn4Ko3gpoHwc419cyYzKNs71GRKJtlE=;
         h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-        b=VrlUApMoHYMLzjumPIlCSSIgIIKQ8IBo3cly3bPbZ6rMCxrrSFR2Qen2Ljvvn6rsg
-         uu3M9ERNwPR7ZWRZlriqVlR4pDu0NLzS8SU13jwcn27jfCIzyQIzfdHDaE+OM4mF/W
-         hsSmQFg18TrNMExTlRVbce97ivlHjiB7qe60yz0Q=
-Date:   Tue, 2 Oct 2018 15:59:03 -0500
+        b=cojvk/JuulTEfwhbTwSadjBDRinh3NJ5NQBdcw4s8x5PaDe2zwyYFBwGapyoDL0Bh
+         FNLaFBhERxmOMrqryA7CV7TN9jmGNHIE46rVldCWT1ncRKB7uFU0vcdFiB3YYBtnaY
+         UxzTXEDPKa2W0yKR1QqejoosJR03hVkiXBrJpoE0=
+Date:   Tue, 2 Oct 2018 16:24:21 -0500
 From:   Bjorn Helgaas <helgaas@kernel.org>
-To:     Arnd Bergmann <arnd@arndb.de>
-Cc:     linux-pci@vger.kernel.org, Bjorn Helgaas <bhelgaas@google.com>,
-        linux-kernel@vger.kernel.org,
-        Christoph Hellwig <hch@infradead.org>,
+To:     Jon Derrick <jonathan.derrick@intel.com>
+Cc:     Thomas Gleixner <tglx@linutronix.de>,
         Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
-        Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-        linuxppc-dev@lists.ozlabs.org, linux-acpi@vger.kernel.org
-Subject: Re: [RFC 00/15] PCI: turn some __weak functions into callbacks
-Message-ID: <20181002205903.GD120535@bhelgaas-glaptop.roam.corp.google.com>
-References: <20180817102645.3839621-1-arnd@arndb.de>
+        linux-pci@vger.kernel.org, Keith Busch <keith.busch@intel.com>
+Subject: Re: [PATCH] x86/PCI: Apply VMD's AERSID fixup generically
+Message-ID: <20181002212421.GE120535@bhelgaas-glaptop.roam.corp.google.com>
+References: <1536348150-3535-1-git-send-email-jonathan.derrick@intel.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20180817102645.3839621-1-arnd@arndb.de>
+In-Reply-To: <1536348150-3535-1-git-send-email-jonathan.derrick@intel.com>
 User-Agent: Mutt/1.10.1 (2018-07-13)
 Sender: linux-pci-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-On Fri, Aug 17, 2018 at 12:26:30PM +0200, Arnd Bergmann wrote:
-> Hi Bjorn and others,
+On Fri, Sep 07, 2018 at 01:22:30PM -0600, Jon Derrick wrote:
+> A root port device-id changed between simulation and production. Rather
+> than match device-ids which may not be future-proof if left
+> unmaintained, match all root ports which exist in a VMD-domain
 > 
-> Triggered by Christoph's patches, I had another go at converting
-> all of the remaining pci host bridge implementations to be based
-> on pci_alloc_host_bridge and a separate registration function.
-> 
-> This is made possible through work from Lorenzo and others to
-> convert many of the existing drivers, as well as the removal
-> of some of the older architectures that nobody used.
-> 
-> I'm adding a bit of duplication into the less maintained code
-> here, but it makes everything more consistent, and gives an
-> easy place to hook up callback functions etc.
-> 
-> The three parts of this series are:
-> 
-> a) push up the registration into the callers (this is where
->    code gets added)
-> b) clean up some of the more common host bridge
->    implementations again to integrate that code better.
->    This could be done for the rest as well, or we could just
->    leave them alone.
-> c) start moving the __weak functions into callbacks in
->    pci_host_bridge. This is intentionally incomplete, since
->    it is a lot of work to do it for all those functions,
->    and I want to get consensus on the approach first, as well
->    as maybe get other developers to help out with the rest.
-> 
-> Please have a look.
-> 
->        Arnd
-> 
-> [1] https://lore.kernel.org/lkml/4288331.jNpl6KXlNO@wuerfel/
-> [2] https://patchwork.kernel.org/patch/10555657/
-> 
-> Arnd Bergmann (15):
->   PCI: clean up legacy host bridge scan functions
->   PCI: move pci_scan_bus into callers
->   PCI: move pci_scan_root_bus into callers
->   PCI: export pci_register_host_bridge
->   PCI: move pci_create_root_bus into callers
->   powerpc/pci: fold pci_create_root_bus into pcibios_scan_phb
->   PCI/ACPI: clean up acpi_pci_root_create()
->   x86: PCI: clean up pcibios_scan_root()
->   PCI: xenfront: clean up pcifront_scan_root()
->   sparc/PCI: simplify pci_scan_one_pbm
->   PCI: hyperv: convert to pci_scan_root_bus_bridge
->   PCI: make pcibios_bus_add_device() a callback function
->   PCI: turn pcibios_alloc_irq into a callback
->   PCI: make pcibios_root_bridge_prepare a callback
->   PCI: make pcibios_add_bus/remove_bus callbacks
-> 
->  arch/arm64/kernel/pci.c               |  40 ++-----
->  arch/ia64/pci/pci.c                   |  25 +----
->  arch/ia64/sn/kernel/io_init.c         |  27 +++++
->  arch/microblaze/pci/pci-common.c      |  27 +++++
->  arch/powerpc/include/asm/pci-bridge.h |   3 +
->  arch/powerpc/kernel/pci-common.c      |  60 +++++------
->  arch/s390/pci/pci.c                   |  30 +++++-
->  arch/sh/drivers/pci/pci.c             |   1 +
->  arch/sh/drivers/pci/pcie-sh7786.c     |   3 +-
->  arch/sh/include/asm/pci.h             |   2 +
->  arch/sparc/kernel/pci.c               |  40 ++++---
->  arch/sparc/kernel/pcic.c              |  35 ++++++
->  arch/x86/pci/acpi.c                   |  15 +--
->  arch/x86/pci/common.c                 |  42 ++++----
->  arch/xtensa/kernel/pci.c              |  27 +++++
->  drivers/acpi/pci_root.c               |  43 +++++---
->  drivers/parisc/dino.c                 |  28 +++++
->  drivers/parisc/lba_pci.c              |  28 +++++
->  drivers/pci/bus.c                     |   8 +-
->  drivers/pci/controller/pci-hyperv.c   |  47 ++++----
->  drivers/pci/controller/vmd.c          |  30 +++++-
->  drivers/pci/hotplug/ibmphp_core.c     |  35 ++++++
->  drivers/pci/pci-driver.c              |  13 ++-
->  drivers/pci/probe.c                   | 150 +++++++++-----------------
->  drivers/pci/xen-pcifront.c            |  40 +++----
->  include/linux/acpi.h                  |   2 +
->  include/linux/pci.h                   |  17 ++-
->  27 files changed, 514 insertions(+), 304 deletions(-)
+> Signed-off-by: Jon Derrick <jonathan.derrick@intel.com>
 
-Sorry for the late response to this.
+I applied this on pci/host-vmd for v4.20, thanks!
 
-I think I'm generally on-board with this.  I admit I'm a little
-hesitant about adding 200 lines of code when this is really more
-"cleanup" than new functionality, but I think a lot of that is because
-this series contains costs (e.g., duplicating code) for everybody but
-only has the corresponding benefits for a few (ACPI, x86, xenfront).
-Those cases are much closer to parity in terms of lines added/removed.
-
-I saw some minor comments that suggested you had some updates, so I'll
-watch for an updated posting.
-
-Bjorn
+> ---
+>  arch/x86/pci/fixup.c | 12 +++---------
+>  1 file changed, 3 insertions(+), 9 deletions(-)
+> 
+> diff --git a/arch/x86/pci/fixup.c b/arch/x86/pci/fixup.c
+> index 13f4485..30a5111 100644
+> --- a/arch/x86/pci/fixup.c
+> +++ b/arch/x86/pci/fixup.c
+> @@ -629,17 +629,11 @@ static void quirk_apple_mbp_poweroff(struct pci_dev *pdev)
+>  static void quirk_no_aersid(struct pci_dev *pdev)
+>  {
+>  	/* VMD Domain */
+> -	if (is_vmd(pdev->bus))
+> +	if (is_vmd(pdev->bus) && pci_is_root_bus(pdev->bus))
+>  		pdev->bus->bus_flags |= PCI_BUS_FLAGS_NO_AERSID;
+>  }
+> -DECLARE_PCI_FIXUP_EARLY(PCI_VENDOR_ID_INTEL, 0x2030, quirk_no_aersid);
+> -DECLARE_PCI_FIXUP_EARLY(PCI_VENDOR_ID_INTEL, 0x2031, quirk_no_aersid);
+> -DECLARE_PCI_FIXUP_EARLY(PCI_VENDOR_ID_INTEL, 0x2032, quirk_no_aersid);
+> -DECLARE_PCI_FIXUP_EARLY(PCI_VENDOR_ID_INTEL, 0x2033, quirk_no_aersid);
+> -DECLARE_PCI_FIXUP_EARLY(PCI_VENDOR_ID_INTEL, 0x334a, quirk_no_aersid);
+> -DECLARE_PCI_FIXUP_EARLY(PCI_VENDOR_ID_INTEL, 0x334b, quirk_no_aersid);
+> -DECLARE_PCI_FIXUP_EARLY(PCI_VENDOR_ID_INTEL, 0x334c, quirk_no_aersid);
+> -DECLARE_PCI_FIXUP_EARLY(PCI_VENDOR_ID_INTEL, 0x334d, quirk_no_aersid);
+> +DECLARE_PCI_FIXUP_CLASS_EARLY(PCI_VENDOR_ID_INTEL, PCI_ANY_ID,
+> +			      PCI_CLASS_BRIDGE_PCI, 8, quirk_no_aersid);
+>  
+>  #ifdef CONFIG_PHYS_ADDR_T_64BIT
+>  
+> -- 
+> 1.8.3.1
+> 
