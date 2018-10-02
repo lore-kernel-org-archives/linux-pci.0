@@ -2,98 +2,153 @@ Return-Path: <SRS0=XHdA=MO=vger.kernel.org=linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-2.6 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,MAILING_LIST_MULTI,SPF_PASS,URIBL_BLOCKED,
-	USER_AGENT_MUTT autolearn=unavailable autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-2.6 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
+	DKIM_VALID_AU,MAILING_LIST_MULTI,SPF_PASS,USER_AGENT_MUTT
+	autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 06148C64EB8
-	for <linux-pci@archiver.kernel.org>; Tue,  2 Oct 2018 20:04:03 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 15591C64EB9
+	for <linux-pci@archiver.kernel.org>; Tue,  2 Oct 2018 20:59:14 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id C0C6B2082A
-	for <linux-pci@archiver.kernel.org>; Tue,  2 Oct 2018 20:04:02 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id CCAD32089C
+	for <linux-pci@archiver.kernel.org>; Tue,  2 Oct 2018 20:59:13 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (1024-bit key) header.d=kernel.org header.i=@kernel.org header.b="qdUJ2qok"
-DMARC-Filter: OpenDMARC Filter v1.3.2 mail.kernel.org C0C6B2082A
+	dkim=pass (1024-bit key) header.d=kernel.org header.i=@kernel.org header.b="VrlUApMo"
+DMARC-Filter: OpenDMARC Filter v1.3.2 mail.kernel.org CCAD32089C
 Authentication-Results: mail.kernel.org; dmarc=fail (p=none dis=none) header.from=kernel.org
 Authentication-Results: mail.kernel.org; spf=none smtp.mailfrom=linux-pci-owner@vger.kernel.org
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726787AbeJCCsz (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Tue, 2 Oct 2018 22:48:55 -0400
-Received: from mail.kernel.org ([198.145.29.99]:56776 "EHLO mail.kernel.org"
+        id S1727875AbeJCDoV (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Tue, 2 Oct 2018 23:44:21 -0400
+Received: from mail.kernel.org ([198.145.29.99]:41320 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1726194AbeJCCsy (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Tue, 2 Oct 2018 22:48:54 -0400
+        id S1726572AbeJCDoU (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Tue, 2 Oct 2018 23:44:20 -0400
 Received: from localhost (unknown [69.71.4.100])
         (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
         (No client certificate requested)
-        by mail.kernel.org (Postfix) with ESMTPSA id 84D5320652;
-        Tue,  2 Oct 2018 20:03:51 +0000 (UTC)
+        by mail.kernel.org (Postfix) with ESMTPSA id 430B12082A;
+        Tue,  2 Oct 2018 20:59:05 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=default; t=1538510631;
-        bh=X5xWHYlf5yWDwyydsBDtMo3blqnal0/vOvaUTVJEYiw=;
+        s=default; t=1538513945;
+        bh=NhShGRlF3tvA3wPqMetEvDsa+MXMBWRWcegxI0YNFUQ=;
         h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-        b=qdUJ2qokdwPf8dOlpp7shfKxIbF0BdYX7l5lhZwThLuz7nNrzINQjNe3bnXl2CveE
-         WOCJFR7YZA8kHoMZHopBunwhP7d5HxGWGdetjoR4hjazXfxpfX9PdSMbRklVgj1s5f
-         gllvwpr42zl16omXBq4poRp93LQ+CUhg5fTEPSaM=
-Date:   Tue, 2 Oct 2018 15:03:50 -0500
+        b=VrlUApMoHYMLzjumPIlCSSIgIIKQ8IBo3cly3bPbZ6rMCxrrSFR2Qen2Ljvvn6rsg
+         uu3M9ERNwPR7ZWRZlriqVlR4pDu0NLzS8SU13jwcn27jfCIzyQIzfdHDaE+OM4mF/W
+         hsSmQFg18TrNMExTlRVbce97ivlHjiB7qe60yz0Q=
+Date:   Tue, 2 Oct 2018 15:59:03 -0500
 From:   Bjorn Helgaas <helgaas@kernel.org>
-To:     Thomas Martitz <kugel@rockbox.org>
-Cc:     Daniel Drake <drake@endlessm.com>,
-        Bjorn Helgaas <bhelgaas@google.com>,
-        Linux PCI <linux-pci@vger.kernel.org>,
-        Linux Upstreaming Team <linux@endlessm.com>,
-        nouveau@lists.freedesktop.org, Linux PM <linux-pm@vger.kernel.org>,
-        Peter Wu <peter@lekensteyn.nl>, kherbst@redhat.com,
-        andy.shevchenko@linux.intel.com,
-        "Wysocki, Rafael J" <rafael.j.wysocki@intel.com>,
-        Keith Busch <keith.busch@intel.com>,
-        Jon Derrick <jonathan.derrick@intel.com>,
-        David Miller <davem@davemloft.net>,
-        Heiner Kallweit <hkallweit1@gmail.com>,
-        netdev <netdev@vger.kernel.org>, nic_swsd@realtek.com,
-        rchang@marvell.com, Linux Kernel <linux-kernel@vger.kernel.org>
-Subject: Re: [PATCH v3] PCI: Reprogram bridge prefetch registers on resume
-Message-ID: <20181002200350.GC120535@bhelgaas-glaptop.roam.corp.google.com>
-References: <20180913033745.11178-1-drake@endlessm.com>
- <20180918213244.GE13616@bhelgaas-glaptop.roam.corp.google.com>
- <20180927205247.GA18434@bhelgaas-glaptop.roam.corp.google.com>
- <3f8efcd6-7cd2-b41a-d984-28c9e1740d6c@rockbox.org>
- <CAD8Lp47uL3DQTBiVTduO1+Cg8px4CDpv26qVJsgT+RJ4WZx9oA@mail.gmail.com>
- <7b0a5388-5b3a-a6e0-347f-94f87fc2e540@rockbox.org>
+To:     Arnd Bergmann <arnd@arndb.de>
+Cc:     linux-pci@vger.kernel.org, Bjorn Helgaas <bhelgaas@google.com>,
+        linux-kernel@vger.kernel.org,
+        Christoph Hellwig <hch@infradead.org>,
+        Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
+        Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+        linuxppc-dev@lists.ozlabs.org, linux-acpi@vger.kernel.org
+Subject: Re: [RFC 00/15] PCI: turn some __weak functions into callbacks
+Message-ID: <20181002205903.GD120535@bhelgaas-glaptop.roam.corp.google.com>
+References: <20180817102645.3839621-1-arnd@arndb.de>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <7b0a5388-5b3a-a6e0-347f-94f87fc2e540@rockbox.org>
+In-Reply-To: <20180817102645.3839621-1-arnd@arndb.de>
 User-Agent: Mutt/1.10.1 (2018-07-13)
 Sender: linux-pci-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-Hi Thomas,
-
-On Mon, Oct 01, 2018 at 04:25:06PM +0200, Thomas Martitz wrote:
-> Am 01.10.18 um 06:57 schrieb Daniel Drake:
-> > On Sun, Sep 30, 2018 at 5:07 AM Thomas Martitz <kugel@rockbox.org> wrote:
-> > > The latest iteration does not work on my HP system. The GPU fails to
-> > > power up just like the unpatched kernel.
-> > 
-> > That's weird, I would not expect a behaviour change in the latest
-> > patch. pci_restore_config_dword() has some debug messages, could you
-> > please make them visible and show logs again?
-> > Also remind us of the PCI device address of the parent bridge (lspci -vt)
+On Fri, Aug 17, 2018 at 12:26:30PM +0200, Arnd Bergmann wrote:
+> Hi Bjorn and others,
 > 
-> I'll follow up with more the requested information on bugzilla
-> (Link: https://bugzilla.kernel.org/show_bug.cgi?id=201069).
+> Triggered by Christoph's patches, I had another go at converting
+> all of the remaining pci host bridge implementations to be based
+> on pci_alloc_host_bridge and a separate registration function.
 > 
-> On a quick re-check, it seems to depend on if I used the eGPU before
-> the initial suspend. If I run glxgears (with DRI_PRIME=1) before suspend it
-> seems fine.
+> This is made possible through work from Lorenzo and others to
+> convert many of the existing drivers, as well as the removal
+> of some of the older architectures that nobody used.
+> 
+> I'm adding a bit of duplication into the less maintained code
+> here, but it makes everything more consistent, and gives an
+> easy place to hook up callback functions etc.
+> 
+> The three parts of this series are:
+> 
+> a) push up the registration into the callers (this is where
+>    code gets added)
+> b) clean up some of the more common host bridge
+>    implementations again to integrate that code better.
+>    This could be done for the rest as well, or we could just
+>    leave them alone.
+> c) start moving the __weak functions into callbacks in
+>    pci_host_bridge. This is intentionally incomplete, since
+>    it is a lot of work to do it for all those functions,
+>    and I want to get consensus on the approach first, as well
+>    as maybe get other developers to help out with the rest.
+> 
+> Please have a look.
+> 
+>        Arnd
+> 
+> [1] https://lore.kernel.org/lkml/4288331.jNpl6KXlNO@wuerfel/
+> [2] https://patchwork.kernel.org/patch/10555657/
+> 
+> Arnd Bergmann (15):
+>   PCI: clean up legacy host bridge scan functions
+>   PCI: move pci_scan_bus into callers
+>   PCI: move pci_scan_root_bus into callers
+>   PCI: export pci_register_host_bridge
+>   PCI: move pci_create_root_bus into callers
+>   powerpc/pci: fold pci_create_root_bus into pcibios_scan_phb
+>   PCI/ACPI: clean up acpi_pci_root_create()
+>   x86: PCI: clean up pcibios_scan_root()
+>   PCI: xenfront: clean up pcifront_scan_root()
+>   sparc/PCI: simplify pci_scan_one_pbm
+>   PCI: hyperv: convert to pci_scan_root_bus_bridge
+>   PCI: make pcibios_bus_add_device() a callback function
+>   PCI: turn pcibios_alloc_irq into a callback
+>   PCI: make pcibios_root_bridge_prepare a callback
+>   PCI: make pcibios_add_bus/remove_bus callbacks
+> 
+>  arch/arm64/kernel/pci.c               |  40 ++-----
+>  arch/ia64/pci/pci.c                   |  25 +----
+>  arch/ia64/sn/kernel/io_init.c         |  27 +++++
+>  arch/microblaze/pci/pci-common.c      |  27 +++++
+>  arch/powerpc/include/asm/pci-bridge.h |   3 +
+>  arch/powerpc/kernel/pci-common.c      |  60 +++++------
+>  arch/s390/pci/pci.c                   |  30 +++++-
+>  arch/sh/drivers/pci/pci.c             |   1 +
+>  arch/sh/drivers/pci/pcie-sh7786.c     |   3 +-
+>  arch/sh/include/asm/pci.h             |   2 +
+>  arch/sparc/kernel/pci.c               |  40 ++++---
+>  arch/sparc/kernel/pcic.c              |  35 ++++++
+>  arch/x86/pci/acpi.c                   |  15 +--
+>  arch/x86/pci/common.c                 |  42 ++++----
+>  arch/xtensa/kernel/pci.c              |  27 +++++
+>  drivers/acpi/pci_root.c               |  43 +++++---
+>  drivers/parisc/dino.c                 |  28 +++++
+>  drivers/parisc/lba_pci.c              |  28 +++++
+>  drivers/pci/bus.c                     |   8 +-
+>  drivers/pci/controller/pci-hyperv.c   |  47 ++++----
+>  drivers/pci/controller/vmd.c          |  30 +++++-
+>  drivers/pci/hotplug/ibmphp_core.c     |  35 ++++++
+>  drivers/pci/pci-driver.c              |  13 ++-
+>  drivers/pci/probe.c                   | 150 +++++++++-----------------
+>  drivers/pci/xen-pcifront.c            |  40 +++----
+>  include/linux/acpi.h                  |   2 +
+>  include/linux/pci.h                   |  17 ++-
+>  27 files changed, 514 insertions(+), 304 deletions(-)
 
-Does the patch ([1]) make things *worse* compared to v4.19-rc5?
+Sorry for the late response to this.
 
-If so, I'll drop the patch until we figure this out.  But if the GPU
-power issue also occurs in v4.19-rc5, I think we can assume it's a
-different problem and we can go ahead and merge [1].
+I think I'm generally on-board with this.  I admit I'm a little
+hesitant about adding 200 lines of code when this is really more
+"cleanup" than new functionality, but I think a lot of that is because
+this series contains costs (e.g., duplicating code) for everybody but
+only has the corresponding benefits for a few (ACPI, x86, xenfront).
+Those cases are much closer to parity in terms of lines added/removed.
 
-[1] https://git.kernel.org/pub/scm/linux/kernel/git/helgaas/pci.git/commit/?h=for-linus&id=083874549fdfefa629dfa752785e20427dde1511
+I saw some minor comments that suggested you had some updates, so I'll
+watch for an updated posting.
+
+Bjorn
