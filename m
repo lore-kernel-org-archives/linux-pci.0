@@ -6,28 +6,28 @@ X-Spam-Status: No, score=-0.8 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
 	MAILING_LIST_MULTI,SPF_PASS,URIBL_BLOCKED autolearn=ham autolearn_force=no
 	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 112DDC00449
-	for <linux-pci@archiver.kernel.org>; Wed,  3 Oct 2018 17:46:19 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id B03C7C00449
+	for <linux-pci@archiver.kernel.org>; Wed,  3 Oct 2018 17:52:24 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id DA327213A2
-	for <linux-pci@archiver.kernel.org>; Wed,  3 Oct 2018 17:46:18 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.3.2 mail.kernel.org DA327213A2
+	by mail.kernel.org (Postfix) with ESMTP id 59A3320684
+	for <linux-pci@archiver.kernel.org>; Wed,  3 Oct 2018 17:52:24 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.3.2 mail.kernel.org 59A3320684
 Authentication-Results: mail.kernel.org; dmarc=none (p=none dis=none) header.from=arm.com
 Authentication-Results: mail.kernel.org; spf=none smtp.mailfrom=linux-pci-owner@vger.kernel.org
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726862AbeJDAfl (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Wed, 3 Oct 2018 20:35:41 -0400
-Received: from foss.arm.com ([217.140.101.70]:54634 "EHLO foss.arm.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1726851AbeJDAfl (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Wed, 3 Oct 2018 20:35:41 -0400
+        id S1726892AbeJDAls (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Wed, 3 Oct 2018 20:41:48 -0400
+Received: from usa-sjc-mx-foss1.foss.arm.com ([217.140.101.70]:54836 "EHLO
+        foss.arm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1726851AbeJDAlr (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Wed, 3 Oct 2018 20:41:47 -0400
 Received: from usa-sjc-imap-foss1.foss.arm.com (unknown [10.72.51.249])
-        by usa-sjc-mx-foss1.foss.arm.com (Postfix) with ESMTP id 4000AED1;
-        Wed,  3 Oct 2018 10:46:17 -0700 (PDT)
+        by usa-sjc-mx-foss1.foss.arm.com (Postfix) with ESMTP id A587780D;
+        Wed,  3 Oct 2018 10:52:22 -0700 (PDT)
 Received: from [10.1.35.75] (lophozonia.cambridge.arm.com [10.1.35.75])
-        by usa-sjc-imap-foss1.foss.arm.com (Postfix) with ESMTPSA id 8728A3F5B3;
-        Wed,  3 Oct 2018 10:46:13 -0700 (PDT)
-Subject: Re: [PATCH v3 07/10] iommu: Add a page fault handler
+        by usa-sjc-imap-foss1.foss.arm.com (Postfix) with ESMTPSA id 1EE1E3F5B3;
+        Wed,  3 Oct 2018 10:52:17 -0700 (PDT)
+Subject: Re: [PATCH v3 03/10] iommu/sva: Manage process address spaces
 To:     Jacob Pan <jacob.jun.pan@linux.intel.com>
 Cc:     "iommu@lists.linux-foundation.org" <iommu@lists.linux-foundation.org>,
         "joro@8bytes.org" <joro@8bytes.org>,
@@ -51,15 +51,15 @@ Cc:     "iommu@lists.linux-foundation.org" <iommu@lists.linux-foundation.org>,
         "ilias.apalodimas@linaro.org" <ilias.apalodimas@linaro.org>,
         "shunyong.yang@hxt-semitech.com" <shunyong.yang@hxt-semitech.com>
 References: <20180920170046.20154-1-jean-philippe.brucker@arm.com>
- <20180920170046.20154-8-jean-philippe.brucker@arm.com>
- <20180927133746.319e19b8@jacob-builder>
+ <20180920170046.20154-4-jean-philippe.brucker@arm.com>
+ <20180926153544.54884f88@jacob-builder>
 From:   Jean-Philippe Brucker <jean-philippe.brucker@arm.com>
-Message-ID: <f873cc65-ec0c-9273-eb14-9e07f13d3206@arm.com>
-Date:   Wed, 3 Oct 2018 18:46:11 +0100
+Message-ID: <8ebfd3b5-9e16-85f6-a9f9-2627fb4b5b03@arm.com>
+Date:   Wed, 3 Oct 2018 18:52:16 +0100
 User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:60.0) Gecko/20100101
  Thunderbird/60.0
 MIME-Version: 1.0
-In-Reply-To: <20180927133746.319e19b8@jacob-builder>
+In-Reply-To: <20180926153544.54884f88@jacob-builder>
 Content-Type: text/plain; charset=windows-1252
 Content-Language: en-US
 Content-Transfer-Encoding: 7bit
@@ -68,89 +68,75 @@ Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-On 27/09/2018 21:37, Jacob Pan wrote:
-> On Thu, 20 Sep 2018 18:00:43 +0100
+On 26/09/2018 23:35, Jacob Pan wrote:
+> On Thu, 20 Sep 2018 18:00:39 +0100
 > Jean-Philippe Brucker <jean-philippe.brucker@arm.com> wrote:
 > 
->> +	/*
->> +	 * When removing a PASID, the device driver tells the device
->> to stop
->> +	 * using it, and flush any pending fault to the IOMMU. In
->> this flush
->> +	 * callback, the IOMMU driver makes sure that there are no
->> such faults
->> +	 * left in the low-level queue.
->> +	 */
->> +	queue->flush(queue->flush_arg, dev, pasid);
 >> +
+>> +static int io_mm_attach(struct iommu_domain *domain, struct device
+>> *dev,
+>> +			struct io_mm *io_mm, void *drvdata)
+>> +{
+>> +	int ret;
+>> +	bool attach_domain = true;
+>> +	int pasid = io_mm->pasid;
+>> +	struct iommu_bond *bond, *tmp;
+>> +	struct iommu_sva_param *param = dev->iommu_param->sva_param;
+>> +
+>> +	if (!domain->ops->mm_attach || !domain->ops->mm_detach)
+>> +		return -ENODEV;
+>> +
+>> +	if (pasid > param->max_pasid || pasid < param->min_pasid)
+>> +		return -ERANGE;
+>> +
+>> +	bond = kzalloc(sizeof(*bond), GFP_KERNEL);
+>> +	if (!bond)
+>> +		return -ENOMEM;
+>> +
+>> +	bond->domain		= domain;
+>> +	bond->io_mm		= io_mm;
+>> +	bond->dev		= dev;
+>> +	bond->drvdata		= drvdata;
+>> +
+>> +	spin_lock(&iommu_sva_lock);
 >> +	/*
->> +	 * If at some point the low-level fault queue overflowed and
->> the IOMMU
->> +	 * device had to auto-respond to a 'last' page fault, other
->> faults from
->> +	 * the same Page Request Group may still be stuck in the
->> partial list.
->> +	 * We need to make sure that the next address space using
->> the PASID
->> +	 * doesn't receive them.
+>> +	 * Check if this io_mm is already bound to the domain. In
+>> which case the
+>> +	 * IOMMU driver doesn't have to install the PASID table
+>> entry.
 >> +	 */
-> Trying to understand the intended use case under queue full condition.
-> 1 model specific iommu driver register a flush callback to handle
->   internal PRQ drain
+>> +	list_for_each_entry(tmp, &domain->mm_list, domain_head) {
+>> +		if (tmp->io_mm == io_mm) {
+>> +			attach_domain = false;
+>> +			break;
+>> +		}
+>> +	}
+>> +
+>> +	ret = domain->ops->mm_attach(domain, dev, io_mm,
+>> attach_domain);
+>> +	if (ret) {
+>> +		kfree(bond);
+>> +		goto out_unlock;
+>> +	}
+>> +
+>> +	list_add(&bond->mm_head, &io_mm->devices);
+>> +	list_add(&bond->domain_head, &domain->mm_list);
+>> +	list_add(&bond->dev_head, &param->mm_list);
+>> +
 > 
-> 2 IOMMU HW detects queue full and auto respond with 'SUCCESS' code to
->   all device and PASID, raise interrupt
-> 
-> 3 model specific iommu driver detects queue full and call
-> iopf_queue_flush_dev()
+> I am trying to understand if mm_list is needed for both per device and
+> per domain. Do you always unbind and detach domain? Seems device could
+> use the domain->mm_list to track all mm's, true?
 
-I didn't intent for iopf_queue_flush_dev to be called by the IOMMU driver
-in this situation, at the moment it's only intended for the SVA code to
-clean up before removing a PASID (in which case we have to wipe partial
-faults). This version doesn't provide anything to the IOMMU driver for
-handling overflow condition cleanly, partial faults are kept until the
-PASID is unbound or SVA is disabled.
+We need to track bonds per devices, since the bind/unbind() user interface
+in on devices. Tracking per domain is just a helper, so IOMMU drivers that
+have a single PASID table per domain know when they need to install a new
+entry (the attach_domain parameter above) and remove it. I think my code
+is wrong here: if binding two devices that are in the same domain to the
+same process we shouldn't add the io_mm to domain->mm_list twice.
 
-> 4 call queue->flush() callback to drain PRQ in-flight inside IOMMU HW
-
-Could we avoid this step in this scenario? If it's the PRI IRQ thread that
-detects queue full in step 3, then it could drain the HW queue before
-calling iopf_flush_partial() (or something like that). I'm a bit worried
-about possible locking problems if we go back to the IOMMU driver here
-while it is calling us.
-
-> 5.Shoot down partial list for all PASIDs
-> 
-> If the above understanding is correct, don't we need to shoot down all
-> partial groups? instead of just one PASID. At least for VT-d, we need
-> to do that.
-
-Passing IOMMU_PASID_INVALID will do that. But It also needs to be done for
-all devices that use this IOPF queue, and we don't need to flush the
-workqueue, so iopf_queue_flush_dev isn't really adapted.
+I'm still not sure if I should remove domains handling here though, could
+you confirm if you're planning to support iommu_get_domain_for_dev for vt-d?
 
 Thanks,
 Jean
-
-> 
-> 
->> +	mutex_lock(&param->lock);
->> +	list_for_each_entry_safe(fault, next,
->> &param->iopf_param->partial, head) {
->> +		if (fault->evt.pasid == pasid || pasid ==
->> IOMMU_PASID_INVALID) {
->> +			list_del(&fault->head);
->> +			kfree(fault);
->> +		}
->> +	}
->> +	mutex_unlock(&param->lock);
->> +
->> +	flush_workqueue(queue->wq);
->> +
->> +	return 0;
->> +}
->> +EXPORT_SYMBOL_GPL(iopf_queue_flush_dev);
->> +
-> [Jacob Pan]
-> 
-
