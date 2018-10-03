@@ -2,141 +2,156 @@ Return-Path: <SRS0=Y6U6=MP=vger.kernel.org=linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-0.8 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	MAILING_LIST_MULTI,SPF_PASS,URIBL_BLOCKED autolearn=ham autolearn_force=no
-	version=3.4.0
+X-Spam-Status: No, score=-8.6 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
+	DKIM_VALID_AU,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_PASS,
+	USER_AGENT_MUTT autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id B03C7C00449
-	for <linux-pci@archiver.kernel.org>; Wed,  3 Oct 2018 17:52:24 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 39D40C00449
+	for <linux-pci@archiver.kernel.org>; Wed,  3 Oct 2018 20:12:50 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 59A3320684
-	for <linux-pci@archiver.kernel.org>; Wed,  3 Oct 2018 17:52:24 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.3.2 mail.kernel.org 59A3320684
-Authentication-Results: mail.kernel.org; dmarc=none (p=none dis=none) header.from=arm.com
+	by mail.kernel.org (Postfix) with ESMTP id D7B9221477
+	for <linux-pci@archiver.kernel.org>; Wed,  3 Oct 2018 20:12:49 +0000 (UTC)
+Authentication-Results: mail.kernel.org;
+	dkim=pass (1024-bit key) header.d=kernel.org header.i=@kernel.org header.b="oV2UGR3e"
+DMARC-Filter: OpenDMARC Filter v1.3.2 mail.kernel.org D7B9221477
+Authentication-Results: mail.kernel.org; dmarc=fail (p=none dis=none) header.from=kernel.org
 Authentication-Results: mail.kernel.org; spf=none smtp.mailfrom=linux-pci-owner@vger.kernel.org
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726892AbeJDAls (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Wed, 3 Oct 2018 20:41:48 -0400
-Received: from usa-sjc-mx-foss1.foss.arm.com ([217.140.101.70]:54836 "EHLO
-        foss.arm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1726851AbeJDAlr (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Wed, 3 Oct 2018 20:41:47 -0400
-Received: from usa-sjc-imap-foss1.foss.arm.com (unknown [10.72.51.249])
-        by usa-sjc-mx-foss1.foss.arm.com (Postfix) with ESMTP id A587780D;
-        Wed,  3 Oct 2018 10:52:22 -0700 (PDT)
-Received: from [10.1.35.75] (lophozonia.cambridge.arm.com [10.1.35.75])
-        by usa-sjc-imap-foss1.foss.arm.com (Postfix) with ESMTPSA id 1EE1E3F5B3;
-        Wed,  3 Oct 2018 10:52:17 -0700 (PDT)
-Subject: Re: [PATCH v3 03/10] iommu/sva: Manage process address spaces
-To:     Jacob Pan <jacob.jun.pan@linux.intel.com>
-Cc:     "iommu@lists.linux-foundation.org" <iommu@lists.linux-foundation.org>,
-        "joro@8bytes.org" <joro@8bytes.org>,
-        "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-        "jcrouse@codeaurora.org" <jcrouse@codeaurora.org>,
-        "alex.williamson@redhat.com" <alex.williamson@redhat.com>,
-        "Jonathan.Cameron@huawei.com" <Jonathan.Cameron@huawei.com>,
-        "christian.koenig@amd.com" <christian.koenig@amd.com>,
-        "eric.auger@redhat.com" <eric.auger@redhat.com>,
-        "kevin.tian@intel.com" <kevin.tian@intel.com>,
-        "yi.l.liu@intel.com" <yi.l.liu@intel.com>,
-        Andrew Murray <Andrew.Murray@arm.com>,
-        Will Deacon <Will.Deacon@arm.com>,
-        Robin Murphy <Robin.Murphy@arm.com>,
-        "ashok.raj@intel.com" <ashok.raj@intel.com>,
-        "baolu.lu@linux.intel.com" <baolu.lu@linux.intel.com>,
-        "xuzaibo@huawei.com" <xuzaibo@huawei.com>,
-        "liguozhu@hisilicon.com" <liguozhu@hisilicon.com>,
-        "okaya@codeaurora.org" <okaya@codeaurora.org>,
-        "bharatku@xilinx.com" <bharatku@xilinx.com>,
-        "ilias.apalodimas@linaro.org" <ilias.apalodimas@linaro.org>,
-        "shunyong.yang@hxt-semitech.com" <shunyong.yang@hxt-semitech.com>
-References: <20180920170046.20154-1-jean-philippe.brucker@arm.com>
- <20180920170046.20154-4-jean-philippe.brucker@arm.com>
- <20180926153544.54884f88@jacob-builder>
-From:   Jean-Philippe Brucker <jean-philippe.brucker@arm.com>
-Message-ID: <8ebfd3b5-9e16-85f6-a9f9-2627fb4b5b03@arm.com>
-Date:   Wed, 3 Oct 2018 18:52:16 +0100
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:60.0) Gecko/20100101
- Thunderbird/60.0
+        id S1726964AbeJDDCl (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Wed, 3 Oct 2018 23:02:41 -0400
+Received: from mail.kernel.org ([198.145.29.99]:60964 "EHLO mail.kernel.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1726950AbeJDDCl (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Wed, 3 Oct 2018 23:02:41 -0400
+Received: from localhost (unknown [69.71.4.100])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+        (No client certificate requested)
+        by mail.kernel.org (Postfix) with ESMTPSA id 2EC0321470;
+        Wed,  3 Oct 2018 20:12:47 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+        s=default; t=1538597567;
+        bh=ZPs0Oa4tqcEP9M41WwrONHaui5nL3bwAw5u1np159FA=;
+        h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
+        b=oV2UGR3ejbLPCTEssToBX3t8/sktoYvn5g9X78QQuAHdN0iSWPnb6H0NStoedSb3v
+         Du/B4rLzRlFUI3TqbIhsQqU01GE9Fkb+fY9dPngJhY94ZUwex4YtezE0ABCBzyF7eh
+         M1P5OB100U+wpdlHWCN89bXdI/OqL73IqfWYx2dw=
+Date:   Wed, 3 Oct 2018 15:12:44 -0500
+From:   Bjorn Helgaas <helgaas@kernel.org>
+To:     Bin Meng <bmeng.cn@gmail.com>
+Cc:     Bjorn Helgaas <bhelgaas@google.com>,
+        linux-pci <linux-pci@vger.kernel.org>,
+        Thomas Jarosch <thomas.jarosch@intra2net.com>,
+        stable <stable@vger.kernel.org>, jani.nikula@linux.intel.com,
+        joonas.lahtinen@linux.intel.com, rodrigo.vivi@intel.com,
+        intel-gfx@lists.freedesktop.org, dri-devel@lists.freedesktop.org,
+        linux-kernel <linux-kernel@vger.kernel.org>
+Subject: Re: [PATCH] pci: Add a few new IDs for Intel GPU "spurious
+ interrupt" quirk
+Message-ID: <20181003201244.GG120535@bhelgaas-glaptop.roam.corp.google.com>
+References: <1537974841-29928-1-git-send-email-bmeng.cn@gmail.com>
+ <20180926165721.GA28024@bhelgaas-glaptop.roam.corp.google.com>
+ <CAEUhbmXc--Ph71DGu2b+ijTzB6xvHXzuESBJKp9zARE2gjqV6w@mail.gmail.com>
 MIME-Version: 1.0
-In-Reply-To: <20180926153544.54884f88@jacob-builder>
-Content-Type: text/plain; charset=windows-1252
-Content-Language: en-US
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <CAEUhbmXc--Ph71DGu2b+ijTzB6xvHXzuESBJKp9zARE2gjqV6w@mail.gmail.com>
+User-Agent: Mutt/1.10.1 (2018-07-13)
 Sender: linux-pci-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-On 26/09/2018 23:35, Jacob Pan wrote:
-> On Thu, 20 Sep 2018 18:00:39 +0100
-> Jean-Philippe Brucker <jean-philippe.brucker@arm.com> wrote:
+On Thu, Sep 27, 2018 at 10:10:07AM +0800, Bin Meng wrote:
+> On Thu, Sep 27, 2018 at 12:57 AM Bjorn Helgaas <helgaas@kernel.org> wrote:
+> > On Wed, Sep 26, 2018 at 08:14:01AM -0700, Bin Meng wrote:
+> > > Add more PCI IDs to the Intel GPU "spurious interrupt" quirk table,
+> > > which are known to break.
+> >
+> > Do you have a reference for this?  Any public bug reports, bugzilla,
+> > Intel spec reference or errata?  "Which are known to break" is pretty
+> > vague.
 > 
->> +
->> +static int io_mm_attach(struct iommu_domain *domain, struct device
->> *dev,
->> +			struct io_mm *io_mm, void *drvdata)
->> +{
->> +	int ret;
->> +	bool attach_domain = true;
->> +	int pasid = io_mm->pasid;
->> +	struct iommu_bond *bond, *tmp;
->> +	struct iommu_sva_param *param = dev->iommu_param->sva_param;
->> +
->> +	if (!domain->ops->mm_attach || !domain->ops->mm_detach)
->> +		return -ENODEV;
->> +
->> +	if (pasid > param->max_pasid || pasid < param->min_pasid)
->> +		return -ERANGE;
->> +
->> +	bond = kzalloc(sizeof(*bond), GFP_KERNEL);
->> +	if (!bond)
->> +		return -ENOMEM;
->> +
->> +	bond->domain		= domain;
->> +	bond->io_mm		= io_mm;
->> +	bond->dev		= dev;
->> +	bond->drvdata		= drvdata;
->> +
->> +	spin_lock(&iommu_sva_lock);
->> +	/*
->> +	 * Check if this io_mm is already bound to the domain. In
->> which case the
->> +	 * IOMMU driver doesn't have to install the PASID table
->> entry.
->> +	 */
->> +	list_for_each_entry(tmp, &domain->mm_list, domain_head) {
->> +		if (tmp->io_mm == io_mm) {
->> +			attach_domain = false;
->> +			break;
->> +		}
->> +	}
->> +
->> +	ret = domain->ops->mm_attach(domain, dev, io_mm,
->> attach_domain);
->> +	if (ret) {
->> +		kfree(bond);
->> +		goto out_unlock;
->> +	}
->> +
->> +	list_add(&bond->mm_head, &io_mm->devices);
->> +	list_add(&bond->domain_head, &domain->mm_list);
->> +	list_add(&bond->dev_head, &param->mm_list);
->> +
+> Sorry I used wrong words and should have been clearer. These devices
+> are validated to be broken. The test I used is very simple, just
+> unplug the VGA cable and plug it again, and "spurious interrupt" will
+> be seen on the interrupt line of the IGD device. I was not aware of
+> any public bugs filed to Intel, nor seen any errata from Intel.
+
+The original commit, f67fd55fa96f ("PCI: Add quirk for still enabled
+interrupts on Intel Sandy Bridge GPUs"), says some systems "crash"
+(not sure if that means an oops or an actual crash that requires a
+reboot) and on other systems, Linux disables the shared interrupt
+line.  I assume disabling the interrupt line keeps devices using that
+line from working, but does not directly cause a crash.
+
+What specific symptom do you see here?  I think it might be useful to
+collect details, e.g., dmesg logs, /proc/interrupts contents, output
+of "sudo lspci -vv", etc., for the systems you're quirking here.  I'm
+hoping we can eventually figure out a solution that doesn't require a
+quirk for every new GPU, and maybe that info will help find it.
+
+> > > See commit f67fd55fa96f ("PCI: Add quirk for still enabled interrupts
+> > > on Intel Sandy Bridge GPUs"), and commit 7c82126a94e6 ("PCI: Add new
+> > > ID for Intel GPU "spurious interrupt" quirk") for some history.
+> > >
+> > > Based on current findings, it is highly possible that all Intel
+> > > 1st/2nd/3rd generation Core processors' IGD has such quirk.
+> >
+> > Can you include a reference to these "current findings"?  I assume you
+> > have bug reports that include the device IDs you're adding?  If not,
+> > how did you build this list of new IDs?
 > 
-> I am trying to understand if mm_list is needed for both per device and
-> per domain. Do you always unbind and detach domain? Seems device could
-> use the domain->mm_list to track all mm's, true?
+> By "current findings" I mean given the IDs we have here, plus previous
+> one added by Thomas, it's highly possible this VGA BIOS bug exists in
+> every 1st/2nd/3rd generation Core processors.
+> 
+> > The function comment added by f67fd55fa96f ("PCI: Add quirk for still
+> > enabled interrupts on Intel Sandy Bridge GPUs") suggests that this is
+> > actually a BIOS issue, not a hardware erratum, i.e., I don't see
+> > anything there that suggests a hardware defect.
+> >
+> > But there must be a hole somewhere -- the kernel can't be expected to
+> > disable interrupts in device-specific ways when there's no driver
+> > loaded.  Maybe it's simply a BIOS defect or maybe there's some
+> > interrupt or _PRT-related setup we're missing.
+> 
+> It's a pure VGA BIOS bug, not the BIOS bug or _PRT etc. The VGA BIOS
+> forgot to turn off the interrupt on these devices.
 
-We need to track bonds per devices, since the bind/unbind() user interface
-in on devices. Tracking per domain is just a helper, so IOMMU drivers that
-have a single PASID table per domain know when they need to install a new
-entry (the attach_domain parameter above) and remove it. I think my code
-is wrong here: if binding two devices that are in the same domain to the
-same process we shouldn't add the io_mm to domain->mm_list twice.
+If this is a VGA BIOS defect, it's not very likely that it will
+magically be fixed for all new Intel GPUs, so in effect it sounds like
+we need to update this list of quirks in Linux every time a new Intel
+GPU comes out.  That prospect is a little daunting.
 
-I'm still not sure if I should remove domains handling here though, could
-you confirm if you're planning to support iommu_get_domain_for_dev for vt-d?
+Do you happen to know if Windows has the same problem?  I.e., if you
+boot an old version of Windows with a new GPU, and unplug the VGA
+cable, does Windows crash?  If Windows can figure out how to handle
+that situation gracefully, Linux should be able to do it, too.
 
-Thanks,
-Jean
+> > > Signed-off-by: Bin Meng <bmeng.cn@gmail.com>
+> > > Cc: <stable@vger.kernel.org> # v3.4+
+> > > ---
+> > >
+> > >  drivers/pci/quirks.c | 4 ++++
+> > >  1 file changed, 4 insertions(+)
+> > >
+> > > diff --git a/drivers/pci/quirks.c b/drivers/pci/quirks.c
+> > > index 6bc27b7..c0673a7 100644
+> > > --- a/drivers/pci/quirks.c
+> > > +++ b/drivers/pci/quirks.c
+> > > @@ -3190,7 +3190,11 @@ static void disable_igfx_irq(struct pci_dev *dev)
+> > >
+> > >       pci_iounmap(dev, regs);
+> > >  }
+> > > +DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_INTEL, 0x0042, disable_igfx_irq);
+> > > +DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_INTEL, 0x0046, disable_igfx_irq);
+> > > +DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_INTEL, 0x004a, disable_igfx_irq);
+> > >  DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_INTEL, 0x0102, disable_igfx_irq);
+> > > +DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_INTEL, 0x0106, disable_igfx_irq);
+> > >  DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_INTEL, 0x010a, disable_igfx_irq);
+> > >  DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_INTEL, 0x0152, disable_igfx_irq);
+> > >
+> > > --
+> 
+> Regards,
+> Bin
