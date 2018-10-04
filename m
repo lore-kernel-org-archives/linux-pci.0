@@ -2,85 +2,156 @@ Return-Path: <SRS0=kgUF=MQ=vger.kernel.org=linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-8.6 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
-	DKIM_VALID_AU,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_PASS,
-	URIBL_BLOCKED,USER_AGENT_MUTT autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-8.8 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_PASS,USER_AGENT_GIT
+	autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 64E60C64EB8
-	for <linux-pci@archiver.kernel.org>; Thu,  4 Oct 2018 20:52:22 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 34EFAC64EB8
+	for <linux-pci@archiver.kernel.org>; Thu,  4 Oct 2018 21:28:05 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 2E5562098A
-	for <linux-pci@archiver.kernel.org>; Thu,  4 Oct 2018 20:52:22 +0000 (UTC)
-Authentication-Results: mail.kernel.org;
-	dkim=pass (1024-bit key) header.d=kernel.org header.i=@kernel.org header.b="jPNg85G/"
-DMARC-Filter: OpenDMARC Filter v1.3.2 mail.kernel.org 2E5562098A
-Authentication-Results: mail.kernel.org; dmarc=fail (p=none dis=none) header.from=kernel.org
+	by mail.kernel.org (Postfix) with ESMTP id E9F8B20877
+	for <linux-pci@archiver.kernel.org>; Thu,  4 Oct 2018 21:28:04 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.3.2 mail.kernel.org E9F8B20877
+Authentication-Results: mail.kernel.org; dmarc=none (p=none dis=none) header.from=deltatee.com
 Authentication-Results: mail.kernel.org; spf=none smtp.mailfrom=linux-pci-owner@vger.kernel.org
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727638AbeJEDrW (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Thu, 4 Oct 2018 23:47:22 -0400
-Received: from mail.kernel.org ([198.145.29.99]:55984 "EHLO mail.kernel.org"
+        id S1727528AbeJEEXP (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Fri, 5 Oct 2018 00:23:15 -0400
+Received: from ale.deltatee.com ([207.54.116.67]:52934 "EHLO ale.deltatee.com"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1727536AbeJEDrW (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Thu, 4 Oct 2018 23:47:22 -0400
-Received: from localhost (unknown [69.71.4.100])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
-        (No client certificate requested)
-        by mail.kernel.org (Postfix) with ESMTPSA id 81A6720854;
-        Thu,  4 Oct 2018 20:52:20 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=default; t=1538686340;
-        bh=b42EPkrt/ZjF3xT+fO10BGM1CbNcYPzjOe5+xKzByjU=;
-        h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-        b=jPNg85G/AmaZ8w7BBSupXoUWet9vkNaOLE5jhe4sMSa9r+tGmUOXXOLJU2S0AJ572
-         D5IrUsmrmCbrcoZkG4/pZiMyMdslhzXtDt/CN886TfrcdN5YEHbHoYe1Ik7t/xFiCX
-         vLPKGrEMUvD3GGxitW0WsgHS5C/Q8B07sEWwuBpI=
-Date:   Thu, 4 Oct 2018 15:52:19 -0500
-From:   Bjorn Helgaas <helgaas@kernel.org>
-To:     "Gustavo A. R. Silva" <gustavo@embeddedor.com>
-Cc:     "Rafael J. Wysocki" <rjw@rjwysocki.net>,
-        Len Brown <lenb@kernel.org>,
+        id S1725893AbeJEEXP (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Fri, 5 Oct 2018 00:23:15 -0400
+Received: from cgy1-donard.priv.deltatee.com ([172.16.1.31])
+        by ale.deltatee.com with esmtps (TLS1.2:ECDHE_RSA_AES_256_GCM_SHA384:256)
+        (Exim 4.89)
+        (envelope-from <gunthorp@deltatee.com>)
+        id 1g8BA4-0002Yl-S1; Thu, 04 Oct 2018 15:28:01 -0600
+Received: from gunthorp by cgy1-donard.priv.deltatee.com with local (Exim 4.89)
+        (envelope-from <gunthorp@deltatee.com>)
+        id 1g8B9y-0001f1-HU; Thu, 04 Oct 2018 15:27:50 -0600
+From:   Logan Gunthorpe <logang@deltatee.com>
+To:     linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
+        linux-nvme@lists.infradead.org, linux-rdma@vger.kernel.org,
+        linux-nvdimm@lists.01.org, linux-block@vger.kernel.org
+Cc:     Stephen Bates <sbates@raithlin.com>,
+        Christoph Hellwig <hch@lst.de>,
+        Keith Busch <keith.busch@intel.com>,
+        Sagi Grimberg <sagi@grimberg.me>,
         Bjorn Helgaas <bhelgaas@google.com>,
-        linux-acpi@vger.kernel.org, linux-pci@vger.kernel.org,
-        linux-kernel@vger.kernel.org
-Subject: Re: [PATCH] PCI / ACPI: Mark expected switch fall-through
-Message-ID: <20181004205219.GJ120535@bhelgaas-glaptop.roam.corp.google.com>
-References: <20181004154041.GA28767@embeddedor.com>
+        Jason Gunthorpe <jgg@mellanox.com>,
+        Max Gurtovoy <maxg@mellanox.com>,
+        Dan Williams <dan.j.williams@intel.com>,
+        =?UTF-8?q?J=C3=A9r=C3=B4me=20Glisse?= <jglisse@redhat.com>,
+        Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+        Alex Williamson <alex.williamson@redhat.com>,
+        =?UTF-8?q?Christian=20K=C3=B6nig?= <christian.koenig@amd.com>,
+        Jens Axboe <axboe@kernel.dk>,
+        Logan Gunthorpe <logang@deltatee.com>
+Date:   Thu,  4 Oct 2018 15:27:44 -0600
+Message-Id: <20181004212747.6301-11-logang@deltatee.com>
+X-Mailer: git-send-email 2.19.0
+In-Reply-To: <20181004212747.6301-1-logang@deltatee.com>
+References: <20181004212747.6301-1-logang@deltatee.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20181004154041.GA28767@embeddedor.com>
-User-Agent: Mutt/1.10.1 (2018-07-13)
+Content-Transfer-Encoding: 8bit
+X-SA-Exim-Connect-IP: 172.16.1.31
+X-SA-Exim-Rcpt-To: linux-nvme@lists.infradead.org, linux-nvdimm@lists.01.org, linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org, linux-rdma@vger.kernel.org, linux-block@vger.kernel.org, sbates@raithlin.com, hch@lst.de, sagi@grimberg.me, bhelgaas@google.com, jgg@mellanox.com, maxg@mellanox.com, keith.busch@intel.com, dan.j.williams@intel.com, benh@kernel.crashing.org, jglisse@redhat.com, alex.williamson@redhat.com, christian.koenig@amd.com, axboe@kernel.dk, logang@deltatee.com
+X-SA-Exim-Mail-From: gunthorp@deltatee.com
+Subject: [PATCH v9 10/13] nvme-pci: Add support for P2P memory in requests
+X-SA-Exim-Version: 4.2.1 (built Tue, 02 Aug 2016 21:08:31 +0000)
+X-SA-Exim-Scanned: Yes (on ale.deltatee.com)
 Sender: linux-pci-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-On Thu, Oct 04, 2018 at 05:40:41PM +0200, Gustavo A. R. Silva wrote:
-> In preparation to enabling -Wimplicit-fallthrough, mark switch cases
-> where we are expecting to fall through.
-> 
-> Addresses-Coverity-ID: 1472052 ("Missing break in switch")
-> Signed-off-by: Gustavo A. R. Silva <gustavo@embeddedor.com>
+For P2P requests, we must use the pci_p2pmem_map_sg() function
+instead of the dma_map_sg functions.
 
-Applied to pci/misc for v4.20, thanks!
+With that, we can then indicate PCI_P2P support in the request queue.
+For this, we create an NVME_F_PCI_P2P flag which tells the core to
+set QUEUE_FLAG_PCI_P2P in the request queue.
 
-> ---
->  drivers/pci/pci-acpi.c | 1 +
->  1 file changed, 1 insertion(+)
-> 
-> diff --git a/drivers/pci/pci-acpi.c b/drivers/pci/pci-acpi.c
-> index 79c8e95..2a4aa64 100644
-> --- a/drivers/pci/pci-acpi.c
-> +++ b/drivers/pci/pci-acpi.c
-> @@ -588,6 +588,7 @@ static int acpi_pci_set_power_state(struct pci_dev *dev, pci_power_t state)
->  			error = -EBUSY;
->  			break;
->  		}
-> +		/* Fall through */
->  	case PCI_D0:
->  	case PCI_D1:
->  	case PCI_D2:
-> -- 
-> 2.7.4
-> 
+Signed-off-by: Logan Gunthorpe <logang@deltatee.com>
+Reviewed-by: Sagi Grimberg <sagi@grimberg.me>
+Reviewed-by: Christoph Hellwig <hch@lst.de>
+Reviewed-by: Keith Busch <keith.busch@intel.com>
+---
+ drivers/nvme/host/core.c |  4 ++++
+ drivers/nvme/host/nvme.h |  1 +
+ drivers/nvme/host/pci.c  | 17 +++++++++++++----
+ 3 files changed, 18 insertions(+), 4 deletions(-)
+
+diff --git a/drivers/nvme/host/core.c b/drivers/nvme/host/core.c
+index dd8ec1dd9219..6033ce2fd3e9 100644
+--- a/drivers/nvme/host/core.c
++++ b/drivers/nvme/host/core.c
+@@ -3051,7 +3051,11 @@ static void nvme_alloc_ns(struct nvme_ctrl *ctrl, unsigned nsid)
+ 	ns->queue = blk_mq_init_queue(ctrl->tagset);
+ 	if (IS_ERR(ns->queue))
+ 		goto out_free_ns;
++
+ 	blk_queue_flag_set(QUEUE_FLAG_NONROT, ns->queue);
++	if (ctrl->ops->flags & NVME_F_PCI_P2PDMA)
++		blk_queue_flag_set(QUEUE_FLAG_PCI_P2PDMA, ns->queue);
++
+ 	ns->queue->queuedata = ns;
+ 	ns->ctrl = ctrl;
+ 
+diff --git a/drivers/nvme/host/nvme.h b/drivers/nvme/host/nvme.h
+index bb4a2003c097..4030743c90aa 100644
+--- a/drivers/nvme/host/nvme.h
++++ b/drivers/nvme/host/nvme.h
+@@ -343,6 +343,7 @@ struct nvme_ctrl_ops {
+ 	unsigned int flags;
+ #define NVME_F_FABRICS			(1 << 0)
+ #define NVME_F_METADATA_SUPPORTED	(1 << 1)
++#define NVME_F_PCI_P2PDMA		(1 << 2)
+ 	int (*reg_read32)(struct nvme_ctrl *ctrl, u32 off, u32 *val);
+ 	int (*reg_write32)(struct nvme_ctrl *ctrl, u32 off, u32 val);
+ 	int (*reg_read64)(struct nvme_ctrl *ctrl, u32 off, u64 *val);
+diff --git a/drivers/nvme/host/pci.c b/drivers/nvme/host/pci.c
+index f434706a04e8..0d6c41bc2b35 100644
+--- a/drivers/nvme/host/pci.c
++++ b/drivers/nvme/host/pci.c
+@@ -745,8 +745,13 @@ static blk_status_t nvme_map_data(struct nvme_dev *dev, struct request *req,
+ 		goto out;
+ 
+ 	ret = BLK_STS_RESOURCE;
+-	nr_mapped = dma_map_sg_attrs(dev->dev, iod->sg, iod->nents, dma_dir,
+-			DMA_ATTR_NO_WARN);
++
++	if (is_pci_p2pdma_page(sg_page(iod->sg)))
++		nr_mapped = pci_p2pdma_map_sg(dev->dev, iod->sg, iod->nents,
++					  dma_dir);
++	else
++		nr_mapped = dma_map_sg_attrs(dev->dev, iod->sg, iod->nents,
++					     dma_dir,  DMA_ATTR_NO_WARN);
+ 	if (!nr_mapped)
+ 		goto out;
+ 
+@@ -788,7 +793,10 @@ static void nvme_unmap_data(struct nvme_dev *dev, struct request *req)
+ 			DMA_TO_DEVICE : DMA_FROM_DEVICE;
+ 
+ 	if (iod->nents) {
+-		dma_unmap_sg(dev->dev, iod->sg, iod->nents, dma_dir);
++		/* P2PDMA requests do not need to be unmapped */
++		if (!is_pci_p2pdma_page(sg_page(iod->sg)))
++			dma_unmap_sg(dev->dev, iod->sg, iod->nents, dma_dir);
++
+ 		if (blk_integrity_rq(req))
+ 			dma_unmap_sg(dev->dev, &iod->meta_sg, 1, dma_dir);
+ 	}
+@@ -2400,7 +2408,8 @@ static int nvme_pci_get_address(struct nvme_ctrl *ctrl, char *buf, int size)
+ static const struct nvme_ctrl_ops nvme_pci_ctrl_ops = {
+ 	.name			= "pcie",
+ 	.module			= THIS_MODULE,
+-	.flags			= NVME_F_METADATA_SUPPORTED,
++	.flags			= NVME_F_METADATA_SUPPORTED |
++				  NVME_F_PCI_P2PDMA,
+ 	.reg_read32		= nvme_pci_reg_read32,
+ 	.reg_write32		= nvme_pci_reg_write32,
+ 	.reg_read64		= nvme_pci_reg_read64,
+-- 
+2.19.0
+
