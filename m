@@ -6,29 +6,29 @@ X-Spam-Status: No, score=-8.8 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
 	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_PASS,URIBL_BLOCKED,
 	USER_AGENT_GIT autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 9F7DEC64EB8
-	for <linux-pci@archiver.kernel.org>; Thu,  4 Oct 2018 21:28:52 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 37F7EC64EB8
+	for <linux-pci@archiver.kernel.org>; Thu,  4 Oct 2018 21:28:59 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 61A452087D
-	for <linux-pci@archiver.kernel.org>; Thu,  4 Oct 2018 21:28:52 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.3.2 mail.kernel.org 61A452087D
+	by mail.kernel.org (Postfix) with ESMTP id E9B9C2087D
+	for <linux-pci@archiver.kernel.org>; Thu,  4 Oct 2018 21:28:58 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.3.2 mail.kernel.org E9B9C2087D
 Authentication-Results: mail.kernel.org; dmarc=none (p=none dis=none) header.from=deltatee.com
 Authentication-Results: mail.kernel.org; spf=none smtp.mailfrom=linux-pci-owner@vger.kernel.org
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1728311AbeJEEYD (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Fri, 5 Oct 2018 00:24:03 -0400
-Received: from ale.deltatee.com ([207.54.116.67]:52926 "EHLO ale.deltatee.com"
+        id S1728071AbeJEEXQ (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Fri, 5 Oct 2018 00:23:16 -0400
+Received: from ale.deltatee.com ([207.54.116.67]:52904 "EHLO ale.deltatee.com"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1726574AbeJEEXQ (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        id S1726753AbeJEEXQ (ORCPT <rfc822;linux-pci@vger.kernel.org>);
         Fri, 5 Oct 2018 00:23:16 -0400
 Received: from cgy1-donard.priv.deltatee.com ([172.16.1.31])
         by ale.deltatee.com with esmtps (TLS1.2:ECDHE_RSA_AES_256_GCM_SHA384:256)
         (Exim 4.89)
         (envelope-from <gunthorp@deltatee.com>)
-        id 1g8BA2-0002Yo-W2; Thu, 04 Oct 2018 15:28:00 -0600
+        id 1g8BA3-0002Yh-1P; Thu, 04 Oct 2018 15:27:58 -0600
 Received: from gunthorp by cgy1-donard.priv.deltatee.com with local (Exim 4.89)
         (envelope-from <gunthorp@deltatee.com>)
-        id 1g8B9y-0001fA-SL; Thu, 04 Oct 2018 15:27:50 -0600
+        id 1g8B9y-0001ep-4X; Thu, 04 Oct 2018 15:27:50 -0600
 From:   Logan Gunthorpe <logang@deltatee.com>
 To:     linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
         linux-nvme@lists.infradead.org, linux-rdma@vger.kernel.org,
@@ -47,18 +47,18 @@ Cc:     Stephen Bates <sbates@raithlin.com>,
         =?UTF-8?q?Christian=20K=C3=B6nig?= <christian.koenig@amd.com>,
         Jens Axboe <axboe@kernel.dk>,
         Logan Gunthorpe <logang@deltatee.com>,
-        Steve Wise <swise@opengridcomputing.com>
-Date:   Thu,  4 Oct 2018 15:27:47 -0600
-Message-Id: <20181004212747.6301-14-logang@deltatee.com>
+        Jonathan Corbet <corbet@lwn.net>
+Date:   Thu,  4 Oct 2018 15:27:40 -0600
+Message-Id: <20181004212747.6301-7-logang@deltatee.com>
 X-Mailer: git-send-email 2.19.0
 In-Reply-To: <20181004212747.6301-1-logang@deltatee.com>
 References: <20181004212747.6301-1-logang@deltatee.com>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 X-SA-Exim-Connect-IP: 172.16.1.31
-X-SA-Exim-Rcpt-To: linux-nvme@lists.infradead.org, linux-nvdimm@lists.01.org, linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org, linux-rdma@vger.kernel.org, linux-block@vger.kernel.org, sbates@raithlin.com, hch@lst.de, sagi@grimberg.me, bhelgaas@google.com, jgg@mellanox.com, maxg@mellanox.com, keith.busch@intel.com, dan.j.williams@intel.com, benh@kernel.crashing.org, jglisse@redhat.com, alex.williamson@redhat.com, christian.koenig@amd.com, axboe@kernel.dk, logang@deltatee.com, swise@opengridcomputing.com
+X-SA-Exim-Rcpt-To: linux-nvme@lists.infradead.org, linux-nvdimm@lists.01.org, linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org, linux-rdma@vger.kernel.org, linux-block@vger.kernel.org, sbates@raithlin.com, hch@lst.de, sagi@grimberg.me, bhelgaas@google.com, jgg@mellanox.com, maxg@mellanox.com, keith.busch@intel.com, dan.j.williams@intel.com, benh@kernel.crashing.org, jglisse@redhat.com, alex.williamson@redhat.com, christian.koenig@amd.com, axboe@kernel.dk, logang@deltatee.com, corbet@lwn.net
 X-SA-Exim-Mail-From: gunthorp@deltatee.com
-Subject: [PATCH v9 13/13] nvmet: Optionally use PCI P2P memory
+Subject: [PATCH v9 06/13] PCI/P2PDMA: Add P2P DMA driver writer's documentation
 X-SA-Exim-Version: 4.2.1 (built Tue, 02 Aug 2016 21:08:31 +0000)
 X-SA-Exim-Scanned: Yes (on ale.deltatee.com)
 Sender: linux-pci-owner@vger.kernel.org
@@ -66,450 +66,187 @@ Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-We create a configfs attribute in each nvme-fabrics namespace to
-enable P2P memory use. The attribute may be enabled (with a boolean)
-or a specific P2P device may be given (with the device's PCI name).
+Add a restructured text file describing how to write drivers
+with support for P2P DMA transactions. The document describes
+how to use the APIs that were added in the previous few
+commits.
 
-When enabled, the namespace will ensure the underlying block device
-supports P2P and that it is compatible with any specified P2P device.
-If no device was specified it will ensure there is compatible P2P memory
-somewhere in the system. Enabling an namespace with P2P memory will fail
-with EINVAL (and an appropriate dmesg error) if any of these conditions
-are not met.
+Also adds an index for the PCI documentation tree even though this
+is the only PCI document that has been converted to restructured text
+at this time.
 
-Once a controller is setup on a specific port, the P2P device to use
-for each namespace will be found and stored in a radix tree by
-namespace ID. When memory is allocated for a request, the tree is used
-to look up the P2P device to allocate memory against. If no device is in
-the tree (because no appropriate device was found), or if allocation of
-P2P memory fails, the system will fall back to using regular memory.
-
-Signed-off-by: Stephen Bates <sbates@raithlin.com>
-Signed-off-by: Steve Wise <swise@opengridcomputing.com>
-[hch: partial rewrite of the initial code]
-Signed-off-by: Christoph Hellwig <hch@lst.de>
 Signed-off-by: Logan Gunthorpe <logang@deltatee.com>
+Acked-by: Bjorn Helgaas <bhelgaas@google.com>
+Cc: Jonathan Corbet <corbet@lwn.net>
 ---
- drivers/nvme/target/configfs.c    |  45 ++++++++
- drivers/nvme/target/core.c        | 164 +++++++++++++++++++++++++++++-
- drivers/nvme/target/io-cmd-bdev.c |   3 +
- drivers/nvme/target/nvmet.h       |  15 +++
- drivers/nvme/target/rdma.c        |   2 +
- 5 files changed, 228 insertions(+), 1 deletion(-)
+ Documentation/driver-api/pci/index.rst  |   1 +
+ Documentation/driver-api/pci/p2pdma.rst | 145 ++++++++++++++++++++++++
+ 2 files changed, 146 insertions(+)
+ create mode 100644 Documentation/driver-api/pci/p2pdma.rst
 
-diff --git a/drivers/nvme/target/configfs.c b/drivers/nvme/target/configfs.c
-index b37a8e3e3f80..72e7e356fed2 100644
---- a/drivers/nvme/target/configfs.c
-+++ b/drivers/nvme/target/configfs.c
-@@ -17,6 +17,8 @@
- #include <linux/slab.h>
- #include <linux/stat.h>
- #include <linux/ctype.h>
-+#include <linux/pci.h>
-+#include <linux/pci-p2pdma.h>
+diff --git a/Documentation/driver-api/pci/index.rst b/Documentation/driver-api/pci/index.rst
+index eaf20b24bf7d..ecc7416c523b 100644
+--- a/Documentation/driver-api/pci/index.rst
++++ b/Documentation/driver-api/pci/index.rst
+@@ -11,6 +11,7 @@ The Linux PCI driver implementer's API guide
+    :maxdepth: 2
  
- #include "nvmet.h"
+    pci
++   p2pdma
  
-@@ -340,6 +342,46 @@ static ssize_t nvmet_ns_device_path_store(struct config_item *item,
+ .. only::  subproject and html
  
- CONFIGFS_ATTR(nvmet_ns_, device_path);
- 
-+#ifdef CONFIG_PCI_P2PDMA
-+static ssize_t nvmet_ns_p2pmem_show(struct config_item *item, char *page)
-+{
-+	struct nvmet_ns *ns = to_nvmet_ns(item);
+diff --git a/Documentation/driver-api/pci/p2pdma.rst b/Documentation/driver-api/pci/p2pdma.rst
+new file mode 100644
+index 000000000000..0c83a0619007
+--- /dev/null
++++ b/Documentation/driver-api/pci/p2pdma.rst
+@@ -0,0 +1,145 @@
++.. SPDX-License-Identifier: GPL-2.0
 +
-+	return pci_p2pdma_enable_show(page, ns->p2p_dev, ns->use_p2pmem);
-+}
++============================
++PCI Peer-to-Peer DMA Support
++============================
 +
-+static ssize_t nvmet_ns_p2pmem_store(struct config_item *item,
-+		const char *page, size_t count)
-+{
-+	struct nvmet_ns *ns = to_nvmet_ns(item);
-+	struct pci_dev *p2p_dev = NULL;
-+	bool use_p2pmem;
-+	int error;
-+	int ret = count;
++The PCI bus has pretty decent support for performing DMA transfers
++between two devices on the bus. This type of transaction is henceforth
++called Peer-to-Peer (or P2P). However, there are a number of issues that
++make P2P transactions tricky to do in a perfectly safe way.
 +
-+	mutex_lock(&ns->subsys->lock);
-+	if (ns->enabled) {
-+		ret = -EBUSY;
-+		goto out_unlock;
-+	}
++One of the biggest issues is that PCI doesn't require forwarding
++transactions between hierarchy domains, and in PCIe, each Root Port
++defines a separate hierarchy domain. To make things worse, there is no
++simple way to determine if a given Root Complex supports this or not.
++(See PCIe r4.0, sec 1.3.1). Therefore, as of this writing, the kernel
++only supports doing P2P when the endpoints involved are all behind the
++same PCI bridge, as such devices are all in the same PCI hierarchy
++domain, and the spec guarantees that all transactions within the
++hierarchy will be routable, but it does not require routing
++between hierarchies.
 +
-+	error = pci_p2pdma_enable_store(page, &p2p_dev, &use_p2pmem);
-+	if (error)
-+		return error;
++The second issue is that to make use of existing interfaces in Linux,
++memory that is used for P2P transactions needs to be backed by struct
++pages. However, PCI BARs are not typically cache coherent so there are
++a few corner case gotchas with these pages so developers need to
++be careful about what they do with them.
 +
-+	ns->use_p2pmem = use_p2pmem;
-+	pci_dev_put(ns->p2p_dev);
-+	ns->p2p_dev = p2p_dev;
 +
-+out_unlock:
-+	mutex_unlock(&ns->subsys->lock);
++Driver Writer's Guide
++=====================
 +
-+	return ret;
-+}
++In a given P2P implementation there may be three or more different
++types of kernel drivers in play:
 +
-+CONFIGFS_ATTR(nvmet_ns_, p2pmem);
-+#endif /* CONFIG_PCI_P2PDMA */
++* Provider - A driver which provides or publishes P2P resources like
++  memory or doorbell registers to other drivers.
++* Client - A driver which makes use of a resource by setting up a
++  DMA transaction to or from it.
++* Orchestrator - A driver which orchestrates the flow of data between
++  clients and providers.
 +
- static ssize_t nvmet_ns_device_uuid_show(struct config_item *item, char *page)
- {
- 	return sprintf(page, "%pUb\n", &to_nvmet_ns(item)->uuid);
-@@ -509,6 +551,9 @@ static struct configfs_attribute *nvmet_ns_attrs[] = {
- 	&nvmet_ns_attr_ana_grpid,
- 	&nvmet_ns_attr_enable,
- 	&nvmet_ns_attr_buffered_io,
-+#ifdef CONFIG_PCI_P2PDMA
-+	&nvmet_ns_attr_p2pmem,
-+#endif
- 	NULL,
- };
- 
-diff --git a/drivers/nvme/target/core.c b/drivers/nvme/target/core.c
-index 310b9fb54f6a..d9e273ada36d 100644
---- a/drivers/nvme/target/core.c
-+++ b/drivers/nvme/target/core.c
-@@ -15,6 +15,7 @@
- #include <linux/module.h>
- #include <linux/random.h>
- #include <linux/rculist.h>
-+#include <linux/pci-p2pdma.h>
- 
- #include "nvmet.h"
- 
-@@ -365,9 +366,93 @@ static void nvmet_ns_dev_disable(struct nvmet_ns *ns)
- 	nvmet_file_ns_disable(ns);
- }
- 
-+static int nvmet_p2pmem_ns_enable(struct nvmet_ns *ns)
-+{
-+	int ret;
-+	struct pci_dev *p2p_dev;
++In many cases there could be overlap between these three types (i.e.,
++it may be typical for a driver to be both a provider and a client).
 +
-+	if (!ns->use_p2pmem)
-+		return 0;
++For example, in the NVMe Target Copy Offload implementation:
 +
-+	if (!ns->bdev) {
-+		pr_err("peer-to-peer DMA is not supported by non-block device namespaces\n");
-+		return -EINVAL;
-+	}
++* The NVMe PCI driver is both a client, provider and orchestrator
++  in that it exposes any CMB (Controller Memory Buffer) as a P2P memory
++  resource (provider), it accepts P2P memory pages as buffers in requests
++  to be used directly (client) and it can also make use of the CMB as
++  submission queue entries (orchastrator).
++* The RDMA driver is a client in this arrangement so that an RNIC
++  can DMA directly to the memory exposed by the NVMe device.
++* The NVMe Target driver (nvmet) can orchestrate the data from the RNIC
++  to the P2P memory (CMB) and then to the NVMe device (and vice versa).
 +
-+	if (!blk_queue_pci_p2pdma(ns->bdev->bd_queue)) {
-+		pr_err("peer-to-peer DMA is not supported by the driver of %s\n",
-+		       ns->device_path);
-+		return -EINVAL;
-+	}
++This is currently the only arrangement supported by the kernel but
++one could imagine slight tweaks to this that would allow for the same
++functionality. For example, if a specific RNIC added a BAR with some
++memory behind it, its driver could add support as a P2P provider and
++then the NVMe Target could use the RNIC's memory instead of the CMB
++in cases where the NVMe cards in use do not have CMB support.
 +
-+	if (ns->p2p_dev) {
-+		ret = pci_p2pdma_distance(ns->p2p_dev, nvmet_ns_dev(ns), true);
-+		if (ret < 0)
-+			return -EINVAL;
-+	} else {
-+		/*
-+		 * Right now we just check that there is p2pmem available so
-+		 * we can report an error to the user right away if there
-+		 * is not. We'll find the actual device to use once we
-+		 * setup the controller when the port's device is available.
-+		 */
 +
-+		p2p_dev = pci_p2pmem_find(nvmet_ns_dev(ns));
-+		if (!p2p_dev) {
-+			pr_err("no peer-to-peer memory is available for %s\n",
-+			       ns->device_path);
-+			return -EINVAL;
-+		}
++Provider Drivers
++----------------
 +
-+		pci_dev_put(p2p_dev);
-+	}
++A provider simply needs to register a BAR (or a portion of a BAR)
++as a P2P DMA resource using :c:func:`pci_p2pdma_add_resource()`.
++This will register struct pages for all the specified memory.
 +
-+	return 0;
-+}
++After that it may optionally publish all of its resources as
++P2P memory using :c:func:`pci_p2pmem_publish()`. This will allow
++any orchestrator drivers to find and use the memory. When marked in
++this way, the resource must be regular memory with no side effects.
 +
-+/*
-+ * Note: ctrl->subsys->lock should be held when calling this function
-+ */
-+static void nvmet_p2pmem_ns_add_p2p(struct nvmet_ctrl *ctrl,
-+				    struct nvmet_ns *ns)
-+{
-+	struct device *clients[2];
-+	struct pci_dev *p2p_dev;
-+	int ret;
++For the time being this is fairly rudimentary in that all resources
++are typically going to be P2P memory. Future work will likely expand
++this to include other types of resources like doorbells.
 +
-+	if (!ctrl->p2p_client)
-+		return;
 +
-+	if (ns->p2p_dev) {
-+		ret = pci_p2pdma_distance(ns->p2p_dev, ctrl->p2p_client, true);
-+		if (ret < 0)
-+			return;
++Client Drivers
++--------------
 +
-+		p2p_dev = pci_dev_get(ns->p2p_dev);
-+	} else {
-+		clients[0] = ctrl->p2p_client;
-+		clients[1] = nvmet_ns_dev(ns);
++A client driver typically only has to conditionally change its DMA map
++routine to use the mapping function :c:func:`pci_p2pdma_map_sg()` instead
++of the usual :c:func:`dma_map_sg()` function. Memory mapped in this
++way does not need to be unmapped.
 +
-+		p2p_dev = pci_p2pmem_find_many(clients, ARRAY_SIZE(clients));
-+		if (!p2p_dev) {
-+			pr_err("no peer-to-peer memory is available that's supported by %s and %s\n",
-+			       dev_name(ctrl->p2p_client), ns->device_path);
-+			return;
-+		}
-+	}
++The client may also, optionally, make use of
++:c:func:`is_pci_p2pdma_page()` to determine when to use the P2P mapping
++functions and when to use the regular mapping functions. In some
++situations, it may be more appropriate to use a flag to indicate a
++given request is P2P memory and map appropriately. It is important to
++ensure that struct pages that back P2P memory stay out of code that
++does not have support for them as other code may treat the pages as
++regular memory which may not be appropriate.
 +
-+	ret = radix_tree_insert(&ctrl->p2p_ns_map, ns->nsid, p2p_dev);
-+	if (ret < 0)
-+		pci_dev_put(p2p_dev);
 +
-+	pr_info("using p2pmem on %s for nsid %d\n", pci_name(p2p_dev),
-+		ns->nsid);
-+}
++Orchestrator Drivers
++--------------------
 +
- int nvmet_ns_enable(struct nvmet_ns *ns)
- {
- 	struct nvmet_subsys *subsys = ns->subsys;
-+	struct nvmet_ctrl *ctrl;
- 	int ret;
- 
- 	mutex_lock(&subsys->lock);
-@@ -384,6 +469,13 @@ int nvmet_ns_enable(struct nvmet_ns *ns)
- 	if (ret)
- 		goto out_unlock;
- 
-+	ret = nvmet_p2pmem_ns_enable(ns);
-+	if (ret)
-+		goto out_unlock;
++The first task an orchestrator driver must do is compile a list of
++all client devices that will be involved in a given transaction. For
++example, the NVMe Target driver creates a list including the namespace
++block device and the RNIC in use. If the orchestrator has access to
++a specific P2P provider to use it may check compatibility using
++:c:func:`pci_p2pdma_distance()` otherwise it may find a memory provider
++that's compatible with all clients using  :c:func:`pci_p2pmem_find()`.
++If more than one provider is supported, the one nearest to all the clients will
++be chosen first. If more than one provider is an equal distance away, the
++one returned will be chosen at random (it is not an arbitrary but
++truely random). This function returns the PCI device to use for the provider
++with a reference taken and therefore when it's no longer needed it should be
++returned with pci_dev_put().
 +
-+	list_for_each_entry(ctrl, &subsys->ctrls, subsys_entry)
-+		nvmet_p2pmem_ns_add_p2p(ctrl, ns);
++Once a provider is selected, the orchestrator can then use
++:c:func:`pci_alloc_p2pmem()` and :c:func:`pci_free_p2pmem()` to
++allocate P2P memory from the provider. :c:func:`pci_p2pmem_alloc_sgl()`
++and :c:func:`pci_p2pmem_free_sgl()` are convenience functions for
++allocating scatter-gather lists with P2P memory.
 +
- 	ret = percpu_ref_init(&ns->ref, nvmet_destroy_namespace,
- 				0, GFP_KERNEL);
- 	if (ret)
-@@ -418,6 +510,9 @@ int nvmet_ns_enable(struct nvmet_ns *ns)
- 	mutex_unlock(&subsys->lock);
- 	return ret;
- out_dev_put:
-+	list_for_each_entry(ctrl, &subsys->ctrls, subsys_entry)
-+		pci_dev_put(radix_tree_delete(&ctrl->p2p_ns_map, ns->nsid));
++Struct Page Caveats
++-------------------
 +
- 	nvmet_ns_dev_disable(ns);
- 	goto out_unlock;
- }
-@@ -425,6 +520,7 @@ int nvmet_ns_enable(struct nvmet_ns *ns)
- void nvmet_ns_disable(struct nvmet_ns *ns)
- {
- 	struct nvmet_subsys *subsys = ns->subsys;
-+	struct nvmet_ctrl *ctrl;
- 
- 	mutex_lock(&subsys->lock);
- 	if (!ns->enabled)
-@@ -434,6 +530,10 @@ void nvmet_ns_disable(struct nvmet_ns *ns)
- 	list_del_rcu(&ns->dev_link);
- 	if (ns->nsid == subsys->max_nsid)
- 		subsys->max_nsid = nvmet_max_nsid(subsys);
++Driver writers should be very careful about not passing these special
++struct pages to code that isn't prepared for it. At this time, the kernel
++interfaces do not have any checks for ensuring this. This obviously
++precludes passing these pages to userspace.
 +
-+	list_for_each_entry(ctrl, &subsys->ctrls, subsys_entry)
-+		pci_dev_put(radix_tree_delete(&ctrl->p2p_ns_map, ns->nsid));
++P2P memory is also technically IO memory but should never have any side
++effects behind it. Thus, the order of loads and stores should not be important
++and ioreadX(), iowriteX() and friends should not be necessary.
++However, as the memory is not cache coherent, if access ever needs to
++be protected by a spinlock then :c:func:`mmiowb()` must be used before
++unlocking the lock. (See ACQUIRES VS I/O ACCESSES in
++Documentation/memory-barriers.txt)
 +
- 	mutex_unlock(&subsys->lock);
- 
- 	/*
-@@ -450,6 +550,7 @@ void nvmet_ns_disable(struct nvmet_ns *ns)
- 	percpu_ref_exit(&ns->ref);
- 
- 	mutex_lock(&subsys->lock);
 +
- 	subsys->nr_namespaces--;
- 	nvmet_ns_changed(subsys, ns->nsid);
- 	nvmet_ns_dev_disable(ns);
-@@ -727,6 +828,29 @@ EXPORT_SYMBOL_GPL(nvmet_req_execute);
- 
- int nvmet_req_alloc_sgl(struct nvmet_req *req)
- {
-+	struct pci_dev *p2p_dev = NULL;
++P2P DMA Support Library
++=====================
 +
-+	if (IS_ENABLED(CONFIG_PCI_P2PDMA)) {
-+		if (req->sq->ctrl && req->ns)
-+			p2p_dev = radix_tree_lookup(&req->sq->ctrl->p2p_ns_map,
-+						    req->ns->nsid);
-+
-+		req->p2p_dev = NULL;
-+		if (req->sq->qid && p2p_dev) {
-+			req->sg = pci_p2pmem_alloc_sgl(p2p_dev, &req->sg_cnt,
-+						       req->transfer_len);
-+			if (req->sg) {
-+				req->p2p_dev = p2p_dev;
-+				return 0;
-+			}
-+		}
-+
-+		/*
-+		 * If no P2P memory was available we fallback to using
-+		 * regular memory
-+		 */
-+	}
-+
- 	req->sg = sgl_alloc(req->transfer_len, GFP_KERNEL, &req->sg_cnt);
- 	if (!req->sg)
- 		return -ENOMEM;
-@@ -737,7 +861,11 @@ EXPORT_SYMBOL_GPL(nvmet_req_alloc_sgl);
- 
- void nvmet_req_free_sgl(struct nvmet_req *req)
- {
--	sgl_free(req->sg);
-+	if (req->p2p_dev)
-+		pci_p2pmem_free_sgl(req->p2p_dev, req->sg);
-+	else
-+		sgl_free(req->sg);
-+
- 	req->sg = NULL;
- 	req->sg_cnt = 0;
- }
-@@ -939,6 +1067,37 @@ bool nvmet_host_allowed(struct nvmet_req *req, struct nvmet_subsys *subsys,
- 		return __nvmet_host_allowed(subsys, hostnqn);
- }
- 
-+/*
-+ * Note: ctrl->subsys->lock should be held when calling this function
-+ */
-+static void nvmet_setup_p2p_ns_map(struct nvmet_ctrl *ctrl,
-+		struct nvmet_req *req)
-+{
-+	struct nvmet_ns *ns;
-+
-+	if (!req->p2p_client)
-+		return;
-+
-+	ctrl->p2p_client = get_device(req->p2p_client);
-+
-+	list_for_each_entry_rcu(ns, &ctrl->subsys->namespaces, dev_link)
-+		nvmet_p2pmem_ns_add_p2p(ctrl, ns);
-+}
-+
-+/*
-+ * Note: ctrl->subsys->lock should be held when calling this function
-+ */
-+static void nvmet_release_p2p_ns_map(struct nvmet_ctrl *ctrl)
-+{
-+	struct radix_tree_iter iter;
-+	void **slot;
-+
-+	radix_tree_for_each_slot(slot, &ctrl->p2p_ns_map, &iter, 0)
-+		pci_dev_put(radix_tree_deref_slot(slot));
-+
-+	put_device(ctrl->p2p_client);
-+}
-+
- u16 nvmet_alloc_ctrl(const char *subsysnqn, const char *hostnqn,
- 		struct nvmet_req *req, u32 kato, struct nvmet_ctrl **ctrlp)
- {
-@@ -980,6 +1139,7 @@ u16 nvmet_alloc_ctrl(const char *subsysnqn, const char *hostnqn,
- 
- 	INIT_WORK(&ctrl->async_event_work, nvmet_async_event_work);
- 	INIT_LIST_HEAD(&ctrl->async_events);
-+	INIT_RADIX_TREE(&ctrl->p2p_ns_map, GFP_KERNEL);
- 
- 	memcpy(ctrl->subsysnqn, subsysnqn, NVMF_NQN_SIZE);
- 	memcpy(ctrl->hostnqn, hostnqn, NVMF_NQN_SIZE);
-@@ -1044,6 +1204,7 @@ u16 nvmet_alloc_ctrl(const char *subsysnqn, const char *hostnqn,
- 
- 	mutex_lock(&subsys->lock);
- 	list_add_tail(&ctrl->subsys_entry, &subsys->ctrls);
-+	nvmet_setup_p2p_ns_map(ctrl, req);
- 	mutex_unlock(&subsys->lock);
- 
- 	*ctrlp = ctrl;
-@@ -1071,6 +1232,7 @@ static void nvmet_ctrl_free(struct kref *ref)
- 	struct nvmet_subsys *subsys = ctrl->subsys;
- 
- 	mutex_lock(&subsys->lock);
-+	nvmet_release_p2p_ns_map(ctrl);
- 	list_del(&ctrl->subsys_entry);
- 	mutex_unlock(&subsys->lock);
- 
-diff --git a/drivers/nvme/target/io-cmd-bdev.c b/drivers/nvme/target/io-cmd-bdev.c
-index 7bc9f6240432..5660dd7ca755 100644
---- a/drivers/nvme/target/io-cmd-bdev.c
-+++ b/drivers/nvme/target/io-cmd-bdev.c
-@@ -78,6 +78,9 @@ static void nvmet_bdev_execute_rw(struct nvmet_req *req)
- 		op = REQ_OP_READ;
- 	}
- 
-+	if (is_pci_p2pdma_page(sg_page(req->sg)))
-+		op_flags |= REQ_NOMERGE;
-+
- 	sector = le64_to_cpu(req->cmd->rw.slba);
- 	sector <<= (req->ns->blksize_shift - 9);
- 
-diff --git a/drivers/nvme/target/nvmet.h b/drivers/nvme/target/nvmet.h
-index e7b7406c4e22..4333e2c5b4f5 100644
---- a/drivers/nvme/target/nvmet.h
-+++ b/drivers/nvme/target/nvmet.h
-@@ -26,6 +26,7 @@
- #include <linux/configfs.h>
- #include <linux/rcupdate.h>
- #include <linux/blkdev.h>
-+#include <linux/radix-tree.h>
- 
- #define NVMET_ASYNC_EVENTS		4
- #define NVMET_ERROR_LOG_SLOTS		128
-@@ -77,6 +78,9 @@ struct nvmet_ns {
- 	struct completion	disable_done;
- 	mempool_t		*bvec_pool;
- 	struct kmem_cache	*bvec_cache;
-+
-+	int			use_p2pmem;
-+	struct pci_dev		*p2p_dev;
- };
- 
- static inline struct nvmet_ns *to_nvmet_ns(struct config_item *item)
-@@ -84,6 +88,11 @@ static inline struct nvmet_ns *to_nvmet_ns(struct config_item *item)
- 	return container_of(to_config_group(item), struct nvmet_ns, group);
- }
- 
-+static inline struct device *nvmet_ns_dev(struct nvmet_ns *ns)
-+{
-+	return disk_to_dev(ns->bdev->bd_disk);
-+}
-+
- struct nvmet_cq {
- 	u16			qid;
- 	u16			size;
-@@ -184,6 +193,9 @@ struct nvmet_ctrl {
- 
- 	char			subsysnqn[NVMF_NQN_FIELD_LEN];
- 	char			hostnqn[NVMF_NQN_FIELD_LEN];
-+
-+	struct device *p2p_client;
-+	struct radix_tree_root p2p_ns_map;
- };
- 
- struct nvmet_subsys {
-@@ -294,6 +306,9 @@ struct nvmet_req {
- 
- 	void (*execute)(struct nvmet_req *req);
- 	const struct nvmet_fabrics_ops *ops;
-+
-+	struct pci_dev *p2p_dev;
-+	struct device *p2p_client;
- };
- 
- extern struct workqueue_struct *buffered_io_wq;
-diff --git a/drivers/nvme/target/rdma.c b/drivers/nvme/target/rdma.c
-index 9e091e78a2f0..3f7971d3706d 100644
---- a/drivers/nvme/target/rdma.c
-+++ b/drivers/nvme/target/rdma.c
-@@ -749,6 +749,8 @@ static void nvmet_rdma_handle_command(struct nvmet_rdma_queue *queue,
- 		cmd->send_sge.addr, cmd->send_sge.length,
- 		DMA_TO_DEVICE);
- 
-+	cmd->req.p2p_client = &queue->dev->device->dev;
-+
- 	if (!nvmet_req_init(&cmd->req, &queue->nvme_cq,
- 			&queue->nvme_sq, &nvmet_rdma_ops))
- 		return;
++.. kernel-doc:: drivers/pci/p2pdma.c
++   :export:
 -- 
 2.19.0
 
