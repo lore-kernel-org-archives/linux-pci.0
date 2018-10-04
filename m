@@ -2,47 +2,37 @@ Return-Path: <SRS0=kgUF=MQ=vger.kernel.org=linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-8.9 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
-	DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,
-	SIGNED_OFF_BY,SPF_PASS,USER_AGENT_GIT autolearn=unavailable
-	autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-6.8 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_PASS,URIBL_BLOCKED
+	autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 36F01C64EBC
-	for <linux-pci@archiver.kernel.org>; Thu,  4 Oct 2018 16:35:06 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 5BDB5C64EB8
+	for <linux-pci@archiver.kernel.org>; Thu,  4 Oct 2018 16:44:18 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id E69372082A
-	for <linux-pci@archiver.kernel.org>; Thu,  4 Oct 2018 16:35:05 +0000 (UTC)
-Authentication-Results: mail.kernel.org;
-	dkim=pass (1024-bit key) header.d=nxp.com header.i=@nxp.com header.b="yI8lAW74"
-DMARC-Filter: OpenDMARC Filter v1.3.2 mail.kernel.org E69372082A
-Authentication-Results: mail.kernel.org; dmarc=fail (p=none dis=none) header.from=nxp.com
+	by mail.kernel.org (Postfix) with ESMTP id 29D492083F
+	for <linux-pci@archiver.kernel.org>; Thu,  4 Oct 2018 16:44:18 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.3.2 mail.kernel.org 29D492083F
+Authentication-Results: mail.kernel.org; dmarc=none (p=none dis=none) header.from=pengutronix.de
 Authentication-Results: mail.kernel.org; spf=none smtp.mailfrom=linux-pci-owner@vger.kernel.org
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727822AbeJDX2d (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Thu, 4 Oct 2018 19:28:33 -0400
-Received: from mail-eopbgr80058.outbound.protection.outlook.com ([40.107.8.58]:50486
-        "EHLO EUR04-VI1-obe.outbound.protection.outlook.com"
-        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1727415AbeJDX2c (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Thu, 4 Oct 2018 19:28:32 -0400
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=nxp.com; s=selector1;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=DyOr3KhjVhrtaIigEqzfqh2MmL6BiTpih628112q038=;
- b=yI8lAW745KstGC1PU0ocFI5rt0zm90LR3w34XIi10PlVryE+cL69+mb1/v5djbFbzAQlYrLXc9a83spzg9m01vRYa3uQOjNUwjx0U1JHhlot8gl2/D/k6vnADH8pkvvIBP0RZWnOwAbkWxVo93pmulAnRmzlbHdLmjxgdHXTle0=
-Received: from AM0PR04MB4290.eurprd04.prod.outlook.com (52.134.126.145) by
- AM0PR04MB5266.eurprd04.prod.outlook.com (20.177.42.75) with Microsoft SMTP
- Server (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- 15.20.1185.25; Thu, 4 Oct 2018 16:34:27 +0000
-Received: from AM0PR04MB4290.eurprd04.prod.outlook.com
- ([fe80::3836:6416:4ebd:34ef]) by AM0PR04MB4290.eurprd04.prod.outlook.com
- ([fe80::3836:6416:4ebd:34ef%3]) with mapi id 15.20.1207.022; Thu, 4 Oct 2018
- 16:34:27 +0000
-From:   Leonard Crestez <leonard.crestez@nxp.com>
-To:     Lucas Stach <l.stach@pengutronix.de>,
+        id S1727832AbeJDXiV (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Thu, 4 Oct 2018 19:38:21 -0400
+Received: from metis.ext.pengutronix.de ([85.220.165.71]:40635 "EHLO
+        metis.ext.pengutronix.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1727505AbeJDXiU (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Thu, 4 Oct 2018 19:38:20 -0400
+Received: from kresse.hi.pengutronix.de ([2001:67c:670:100:1d::2a])
+        by metis.ext.pengutronix.de with esmtp (Exim 4.89)
+        (envelope-from <l.stach@pengutronix.de>)
+        id 1g86jR-0002jX-4A; Thu, 04 Oct 2018 18:44:09 +0200
+Message-ID: <1538671446.3515.17.camel@pengutronix.de>
+Subject: Re: [PATCH v2 4/4] PCI: imx: Add PME_Turn_Off support
+From:   Lucas Stach <l.stach@pengutronix.de>
+To:     Leonard Crestez <leonard.crestez@nxp.com>,
         Philipp Zabel <p.zabel@pengutronix.de>,
         Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
         Richard Zhu <hongxing.zhu@nxp.com>
-CC:     Andrey Smirnov <andrew.smirnov@gmail.com>,
+Cc:     Andrey Smirnov <andrew.smirnov@gmail.com>,
         Gustavo Pimentel <gustavo.pimentel@synopsys.com>,
         Jingoo Han <jingoohan1@gmail.com>,
         Bjorn Helgaas <bhelgaas@google.com>,
@@ -52,86 +42,116 @@ CC:     Andrey Smirnov <andrew.smirnov@gmail.com>,
         "kernel@pengutronix.de" <kernel@pengutronix.de>,
         "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
         "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
-Subject: [PATCH v2 2/4] dt-bindings: imx6q-pcie: Add turnoff reset for imx7d
-Thread-Topic: [PATCH v2 2/4] dt-bindings: imx6q-pcie: Add turnoff reset for
- imx7d
-Thread-Index: AQHUXAAdyMDIGjrm5kyzw/2wqGXRFg==
-Date:   Thu, 4 Oct 2018 16:34:27 +0000
-Message-ID: <19537dfb0750a342b1aa645934325d4c6a3176fb.1538670431.git.leonard.crestez@nxp.com>
+Date:   Thu, 04 Oct 2018 18:44:06 +0200
+In-Reply-To: <37d60fe2119361381a6a81f439fa1c3ad29db45e.1538670431.git.leonard.crestez@nxp.com>
 References: <cover.1538670431.git.leonard.crestez@nxp.com>
-In-Reply-To: <cover.1538670431.git.leonard.crestez@nxp.com>
-Accept-Language: en-US
-Content-Language: en-US
-X-MS-Has-Attach: 
-X-MS-TNEF-Correlator: 
-x-originating-ip: [95.76.156.53]
-x-mailer: git-send-email 2.17.1
-x-clientproxiedby: DB6PR02CA0003.eurprd02.prod.outlook.com
- (2603:10a6:6:15::16) To AM0PR04MB4290.eurprd04.prod.outlook.com
- (2603:10a6:208:67::17)
-authentication-results: spf=none (sender IP is )
- smtp.mailfrom=leonard.crestez@nxp.com; 
-x-ms-exchange-messagesentrepresentingtype: 1
-x-ms-publictraffictype: Email
-x-microsoft-exchange-diagnostics: 1;AM0PR04MB5266;6:CjckKvNXTxFajzeNuBerbB54mrJk7YD9RFCgC+9y9v0A3ImhqdYLVVoSw6akX/yMiZMJWQeqwOtUAMDzfS6WW9UcAf9y/zHegGUHThvuoKZPfqz5hDqh/76Iy3spD9IImPCZfskKPUcBni6gRa5na4dcn9iqJAQy2e9V/HWLotzditm0UpuRVL4icIUcZyZcibmqRhfQ9n1kh5SdYJerZhvZViUI3r8dfHQSWmcYQ0TaqT3o9ifCq66a7NEA4+jJbufnGVclDkyDljuMQRrknEyUbTmvEvcuBZQEPKCyE4b4Jk7U7CWFH6R9jRL9wn74/E5u9/JZbXUHTlxEubv0NdW8AUa5exzzUlVPMVwkrMQYdohA4ZcGTwksh5Z14xdSLwMkV0ZKEUAFEK9wKJ4nA6IkXHvgYO4t0fxPmHspsQ37oqs4w2A3yhc8ovr67D0WCeS4lUeJbKGkU8CQoxGTXQ==;5:9eY3ERKYlGi+HtQqO90FpG3eVH6LcnY5BlKK3vPvrh6wv0pYX1z+wWH+8WdOCxIHUU8OlPWgbveQTiwHjU/oY7f9uKMBBuSOiZHRhbzvT5xUYhGa4UDT8slI3l5ahrDcGvR3LE9knZhFmIlSvzPyrV7DZlV/v0b7oRuQdNtAoCE=;7:whOgIEowZzb75zUzSc4uNbqI93XLsWj0NMVzGse/gZiDl0kEiDt6r50g+vsB8M42W/vqB6bchjNPtvq8eus6WzbG/gxCoBXLd049uIxKXhrlO2gbWFsrg6o83m9yvB5d/1SyGlhLX2+evR9n+qbJGvL0QFZVfjtTpk59UWzUWZmcKcKgXYpn5Wyl/WqExw8QIUliBoL+6wBV2QGvFSWLk+H/4tAgSjE6JmSQTvlAyDlTqJYSBWKK4tOkh90cJQBp
-x-ms-office365-filtering-correlation-id: f51891de-e6d4-4ccb-0372-08d62a17401d
-x-ms-office365-filtering-ht: Tenant
-x-microsoft-antispam: BCL:0;PCL:0;RULEID:(7020095)(4652040)(8989299)(4534185)(4627221)(201703031133081)(201702281549075)(8990200)(5600074)(711020)(4618075)(2017052603328)(7153060)(7193020);SRVR:AM0PR04MB5266;
-x-ms-traffictypediagnostic: AM0PR04MB5266:
-x-microsoft-antispam-prvs: <AM0PR04MB52662020FB327E3A4E219311EEEA0@AM0PR04MB5266.eurprd04.prod.outlook.com>
-x-exchange-antispam-report-test: UriScan:(185117386973197);
-x-ms-exchange-senderadcheck: 1
-x-exchange-antispam-report-cfa-test: BCL:0;PCL:0;RULEID:(8211001083)(6040522)(2401047)(8121501046)(5005006)(10201501046)(3002001)(3231355)(944501410)(52105095)(93006095)(93001095)(6055026)(149066)(150057)(6041310)(20161123560045)(20161123562045)(20161123564045)(201703131423095)(201702281528075)(20161123555045)(201703061421075)(201703061406153)(20161123558120)(201708071742011)(7699051);SRVR:AM0PR04MB5266;BCL:0;PCL:0;RULEID:;SRVR:AM0PR04MB5266;
-x-forefront-prvs: 0815F8251E
-x-forefront-antispam-report: SFV:NSPM;SFS:(10009020)(366004)(136003)(396003)(39860400002)(346002)(376002)(199004)(189003)(86362001)(66066001)(14454004)(50226002)(39060400002)(4326008)(6436002)(256004)(8936002)(106356001)(81156014)(81166006)(5660300001)(105586002)(316002)(2906002)(68736007)(478600001)(476003)(2616005)(44832011)(36756003)(26005)(3846002)(486006)(6116002)(11346002)(446003)(186003)(2900100001)(102836004)(8676002)(6506007)(386003)(54906003)(76176011)(53936002)(71200400001)(71190400001)(52116002)(97736004)(99286004)(6512007)(6636002)(118296001)(7416002)(110136005)(5250100002)(25786009)(7736002)(305945005)(6486002)(32563001);DIR:OUT;SFP:1101;SCL:1;SRVR:AM0PR04MB5266;H:AM0PR04MB4290.eurprd04.prod.outlook.com;FPR:;SPF:None;LANG:en;PTR:InfoNoRecords;A:1;MX:1;
-received-spf: None (protection.outlook.com: nxp.com does not designate
- permitted sender hosts)
-x-microsoft-antispam-message-info: OwRRQEH5RD9KkJv3ESHf6STJ1yL3P1C7OVlFviR/KHZtizTUryYh55AwDkr/mXtjeJz/aK9dyPlye6XgEifjqrq0vfSJLFMXmfWTDbpxlucnh0wi6N5p5koK2w9SMGrNpSQOjWTuvIzzqeheHbaJKrmd2sdibbXR2KFLPRGpTXCLalP8o1X9yBKGV6/OurvsVzrUPGGwHnXVx4fzoZkoR2sHLv3dOviWyDRcTiZDUwuOd1/DLD3rZK/AFNcE6GK0Bg6m+nRndpiVCvhLaqbhW3pnPLvZUHlFKRp/LzGIC7iarFDvQ0try3vFgtX9htbmSK108iOLBlDqSUb/rYB1A/RQqRIpdfmkL/yVYCf8hHg=
-spamdiagnosticoutput: 1:99
-spamdiagnosticmetadata: NSPM
-Content-Type: text/plain; charset="iso-8859-1"
-Content-Transfer-Encoding: quoted-printable
-MIME-Version: 1.0
-X-OriginatorOrg: nxp.com
-X-MS-Exchange-CrossTenant-Network-Message-Id: f51891de-e6d4-4ccb-0372-08d62a17401d
-X-MS-Exchange-CrossTenant-originalarrivaltime: 04 Oct 2018 16:34:27.0673
- (UTC)
-X-MS-Exchange-CrossTenant-fromentityheader: Hosted
-X-MS-Exchange-CrossTenant-id: 686ea1d3-bc2b-4c6f-a92c-d99c5c301635
-X-MS-Exchange-Transport-CrossTenantHeadersStamped: AM0PR04MB5266
+         <37d60fe2119361381a6a81f439fa1c3ad29db45e.1538670431.git.leonard.crestez@nxp.com>
+Content-Type: text/plain; charset="UTF-8"
+X-Mailer: Evolution 3.22.6-1+deb9u1 
+Mime-Version: 1.0
+Content-Transfer-Encoding: 8bit
+X-SA-Exim-Connect-IP: 2001:67c:670:100:1d::2a
+X-SA-Exim-Mail-From: l.stach@pengutronix.de
+X-SA-Exim-Scanned: No (on metis.ext.pengutronix.de); SAEximRunCond expanded to false
+X-PTX-Original-Recipient: linux-pci@vger.kernel.org
 Sender: linux-pci-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-This is documented as "required" but won't be present in old dtbs.
+Am Donnerstag, den 04.10.2018, 16:34 +0000 schrieb Leonard Crestez:
+> When the root complex suspends it must send a PME_Turn_Off TLP.
+> Implement this by asserting the "turnoff" reset.
+> 
+> On imx7d this functionality is part of the SRC and exposed through the
+> linux reset-controller subsystem. On imx6 equivalent bits are in the
+> IOMUXC GPR area which the imx6-pcie driver accesses directly.
+> 
+> This is only for imx7d right now but it's deliberately implemented as an
+> optional reset, ignoring the chip variant:
+> * Older dtbs won't have this reset so it will be ignored.
+> * Future chips might also expose this as a reset controller.
+> 
+> For example imx8m (not yet supported) has the exact same
+> PCIE_CTRL_APPS_TURNOFF bit in the same location.
+> 
+> Signed-off-by: Leonard Crestez <leonard.crestez@nxp.com>
 
-These resets are also present on other imx chips but right now only
-imx7d implements them through the reset controller subsystem.
+Reviewed-by: Lucas Stach <l.stach@pengutronix.de>
 
-Signed-off-by: Leonard Crestez <leonard.crestez@nxp.com>
-Acked-by: Rob Herring <robh@kernel.org>
----
- Documentation/devicetree/bindings/pci/fsl,imx6q-pcie.txt | 1 +
- 1 file changed, 1 insertion(+)
-
-diff --git a/Documentation/devicetree/bindings/pci/fsl,imx6q-pcie.txt b/Doc=
-umentation/devicetree/bindings/pci/fsl,imx6q-pcie.txt
-index cb33421184a0..f37494d5a7be 100644
---- a/Documentation/devicetree/bindings/pci/fsl,imx6q-pcie.txt
-+++ b/Documentation/devicetree/bindings/pci/fsl,imx6q-pcie.txt
-@@ -48,10 +48,11 @@ Additional required properties for imx7d-pcie:
- - resets: Must contain phandles to PCIe-related reset lines exposed by SRC
-   IP block
- - reset-names: Must contain the following entires:
- 	       - "pciephy"
- 	       - "apps"
-+	       - "turnoff"
-=20
- Example:
-=20
- 	pcie@01000000 {
- 		compatible =3D "fsl,imx6q-pcie", "snps,dw-pcie";
---=20
-2.17.1
-
+> ---
+>  drivers/pci/controller/dwc/pci-imx6.c | 24 ++++++++++++++++++++++++
+>  1 file changed, 24 insertions(+)
+> 
+> diff --git a/drivers/pci/controller/dwc/pci-imx6.c b/drivers/pci/controller/dwc/pci-imx6.c
+> index 6ba16fd1373c..2bf80f1ad852 100644
+> --- a/drivers/pci/controller/dwc/pci-imx6.c
+> +++ b/drivers/pci/controller/dwc/pci-imx6.c
+> @@ -50,10 +50,11 @@ struct imx6_pcie {
+> > >  	struct clk		*pcie_inbound_axi;
+> > >  	struct clk		*pcie;
+> > >  	struct regmap		*iomuxc_gpr;
+> > >  	struct reset_control	*pciephy_reset;
+> > >  	struct reset_control	*apps_reset;
+> > > +	struct reset_control	*turnoff_reset;
+> >  	enum imx6_pcie_variants variant;
+> > >  	u32			tx_deemph_gen1;
+> > >  	u32			tx_deemph_gen2_3p5db;
+> > >  	u32			tx_deemph_gen2_6db;
+> > >  	u32			tx_swing_full;
+> @@ -812,10 +813,25 @@ static void imx6_pcie_ltssm_disable(struct device *dev)
+> >  	default:
+> >  		dev_err(dev, "ltssm_disable not supported\n");
+> >  	}
+>  }
+>  
+> +static void imx6_pcie_pm_turnoff(struct imx6_pcie *imx6_pcie)
+> +{
+> > +	reset_control_assert(imx6_pcie->turnoff_reset);
+> > +	reset_control_deassert(imx6_pcie->turnoff_reset);
+> +
+> > +	/*
+> > +	 * Components with an upstream port must respond to
+> > +	 * PME_Turn_Off with PME_TO_Ack but we can't check.
+> > +	 *
+> > +	 * The standard recommends a 1-10ms timeout after which to
+> > +	 * proceed anyway as if acks were received.
+> > +	 */
+> > +	usleep_range(1000, 10000);
+> +}
+> +
+>  static void imx6_pcie_clk_disable(struct imx6_pcie *imx6_pcie)
+>  {
+> >  	clk_disable_unprepare(imx6_pcie->pcie);
+> >  	clk_disable_unprepare(imx6_pcie->pcie_phy);
+> >  	clk_disable_unprepare(imx6_pcie->pcie_bus);
+> @@ -832,10 +848,11 @@ static int imx6_pcie_suspend_noirq(struct device *dev)
+> >  	struct imx6_pcie *imx6_pcie = dev_get_drvdata(dev);
+>  
+> >  	if (imx6_pcie->variant != IMX7D)
+> >  		return 0;
+>  
+> > +	imx6_pcie_pm_turnoff(imx6_pcie);
+> >  	imx6_pcie_clk_disable(imx6_pcie);
+> >  	imx6_pcie_ltssm_disable(dev);
+>  
+> >  	return 0;
+>  }
+> @@ -959,10 +976,17 @@ static int imx6_pcie_probe(struct platform_device *pdev)
+> >  		break;
+> >  	default:
+> >  		break;
+> >  	}
+>  
+> > +	/* Grab turnoff reset */
+> > +	imx6_pcie->turnoff_reset = devm_reset_control_get_optional_exclusive(dev, "turnoff");
+> > +	if (IS_ERR(imx6_pcie->turnoff_reset)) {
+> > +		dev_err(dev, "Failed to get TURNOFF reset control\n");
+> > +		return PTR_ERR(imx6_pcie->turnoff_reset);
+> > +	}
+> +
+> >  	/* Grab GPR config register range */
+> >  	imx6_pcie->iomuxc_gpr =
+> >  		 syscon_regmap_lookup_by_compatible("fsl,imx6q-iomuxc-gpr");
+> >  	if (IS_ERR(imx6_pcie->iomuxc_gpr)) {
+> >  		dev_err(dev, "unable to find iomuxc registers\n");
