@@ -2,100 +2,93 @@ Return-Path: <SRS0=kgUF=MQ=vger.kernel.org=linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-8.8 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_PASS,USER_AGENT_GIT
-	autolearn=unavailable autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-2.6 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
+	DKIM_VALID_AU,MAILING_LIST_MULTI,SPF_PASS,USER_AGENT_MUTT autolearn=ham
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id D1183C65BA7
-	for <linux-pci@archiver.kernel.org>; Thu,  4 Oct 2018 21:29:50 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 429E9C64EB8
+	for <linux-pci@archiver.kernel.org>; Thu,  4 Oct 2018 21:40:20 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id A0E0A2087D
-	for <linux-pci@archiver.kernel.org>; Thu,  4 Oct 2018 21:29:50 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.3.2 mail.kernel.org A0E0A2087D
-Authentication-Results: mail.kernel.org; dmarc=none (p=none dis=none) header.from=deltatee.com
+	by mail.kernel.org (Postfix) with ESMTP id 06F2A213A2
+	for <linux-pci@archiver.kernel.org>; Thu,  4 Oct 2018 21:40:20 +0000 (UTC)
+Authentication-Results: mail.kernel.org;
+	dkim=pass (1024-bit key) header.d=kernel.org header.i=@kernel.org header.b="mR7OpPaL"
+DMARC-Filter: OpenDMARC Filter v1.3.2 mail.kernel.org 06F2A213A2
+Authentication-Results: mail.kernel.org; dmarc=fail (p=none dis=none) header.from=kernel.org
 Authentication-Results: mail.kernel.org; spf=none smtp.mailfrom=linux-pci-owner@vger.kernel.org
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1728217AbeJEEYr (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Fri, 5 Oct 2018 00:24:47 -0400
-Received: from ale.deltatee.com ([207.54.116.67]:52954 "EHLO ale.deltatee.com"
+        id S1726910AbeJEEff (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Fri, 5 Oct 2018 00:35:35 -0400
+Received: from mail.kernel.org ([198.145.29.99]:38164 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1727107AbeJEEXP (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Fri, 5 Oct 2018 00:23:15 -0400
-Received: from cgy1-donard.priv.deltatee.com ([172.16.1.31])
-        by ale.deltatee.com with esmtps (TLS1.2:ECDHE_RSA_AES_256_GCM_SHA384:256)
-        (Exim 4.89)
-        (envelope-from <gunthorp@deltatee.com>)
-        id 1g8BA2-0002Yi-PL; Thu, 04 Oct 2018 15:28:02 -0600
-Received: from gunthorp by cgy1-donard.priv.deltatee.com with local (Exim 4.89)
-        (envelope-from <gunthorp@deltatee.com>)
-        id 1g8B9y-0001es-7W; Thu, 04 Oct 2018 15:27:50 -0600
-From:   Logan Gunthorpe <logang@deltatee.com>
-To:     linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
-        linux-nvme@lists.infradead.org, linux-rdma@vger.kernel.org,
-        linux-nvdimm@lists.01.org, linux-block@vger.kernel.org
-Cc:     Stephen Bates <sbates@raithlin.com>,
-        Christoph Hellwig <hch@lst.de>,
-        Keith Busch <keith.busch@intel.com>,
-        Sagi Grimberg <sagi@grimberg.me>,
+        id S1725997AbeJEEff (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Fri, 5 Oct 2018 00:35:35 -0400
+Received: from localhost (unknown [69.71.4.100])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+        (No client certificate requested)
+        by mail.kernel.org (Postfix) with ESMTPSA id 2AEE820854;
+        Thu,  4 Oct 2018 21:40:18 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+        s=default; t=1538689218;
+        bh=mdoT6mtC+8j/Xsm6CRBuGv13jWvre1tN7tLgBKEdmSQ=;
+        h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
+        b=mR7OpPaL2Qrj+pI4alGKxoGAj8Rsqon5uZf2FCiHemB/K0zOt8FBHi50ISYGNIIeD
+         XmqkosPSIeYsAbw6SFxLUZ7zLHrfeIq6TQfIAtj1XqpUxFqV00tw2syKxpHOJXF0vh
+         MGf3YEOsIecebZz18J1Zvc5FuciBi1oJwrU/N7Qc=
+Date:   Thu, 4 Oct 2018 16:40:15 -0500
+From:   Bjorn Helgaas <helgaas@kernel.org>
+To:     Keith Busch <keith.busch@intel.com>
+Cc:     Linux PCI <linux-pci@vger.kernel.org>,
         Bjorn Helgaas <bhelgaas@google.com>,
-        Jason Gunthorpe <jgg@mellanox.com>,
-        Max Gurtovoy <maxg@mellanox.com>,
-        Dan Williams <dan.j.williams@intel.com>,
-        =?UTF-8?q?J=C3=A9r=C3=B4me=20Glisse?= <jglisse@redhat.com>,
         Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-        Alex Williamson <alex.williamson@redhat.com>,
-        =?UTF-8?q?Christian=20K=C3=B6nig?= <christian.koenig@amd.com>,
-        Jens Axboe <axboe@kernel.dk>,
-        Logan Gunthorpe <logang@deltatee.com>
-Date:   Thu,  4 Oct 2018 15:27:41 -0600
-Message-Id: <20181004212747.6301-8-logang@deltatee.com>
-X-Mailer: git-send-email 2.19.0
-In-Reply-To: <20181004212747.6301-1-logang@deltatee.com>
-References: <20181004212747.6301-1-logang@deltatee.com>
+        Sinan Kaya <okaya@kernel.org>,
+        Thomas Tai <thomas.tai@oracle.com>, poza@codeaurora.org,
+        Lukas Wunner <lukas@wunner.de>, Christoph Hellwig <hch@lst.de>,
+        Mika Westerberg <mika.westerberg@linux.intel.com>
+Subject: Re: [PATCH 00/12] error handling and pciehp maintenance
+Message-ID: <20181004214015.GK120535@bhelgaas-glaptop.roam.corp.google.com>
+References: <20180918235848.26694-1-keith.busch@intel.com>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
-X-SA-Exim-Connect-IP: 172.16.1.31
-X-SA-Exim-Rcpt-To: linux-nvme@lists.infradead.org, linux-nvdimm@lists.01.org, linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org, linux-rdma@vger.kernel.org, linux-block@vger.kernel.org, sbates@raithlin.com, hch@lst.de, sagi@grimberg.me, bhelgaas@google.com, jgg@mellanox.com, maxg@mellanox.com, keith.busch@intel.com, dan.j.williams@intel.com, benh@kernel.crashing.org, jglisse@redhat.com, alex.williamson@redhat.com, christian.koenig@amd.com, axboe@kernel.dk, logang@deltatee.com
-X-SA-Exim-Mail-From: gunthorp@deltatee.com
-Subject: [PATCH v9 07/13] block: Add PCI P2P flag for request queue and check support for requests
-X-SA-Exim-Version: 4.2.1 (built Tue, 02 Aug 2016 21:08:31 +0000)
-X-SA-Exim-Scanned: Yes (on ale.deltatee.com)
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20180918235848.26694-1-keith.busch@intel.com>
+User-Agent: Mutt/1.10.1 (2018-07-13)
 Sender: linux-pci-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-QUEUE_FLAG_PCI_P2P is introduced meaning a driver's request queue
-supports targeting P2P memory. This will be used by P2P providers and
-orchestrators (in subsequent patches) to ensure block devices can
-support P2P memory before submitting P2P backed pages to submit_bio().
+On Tue, Sep 18, 2018 at 05:58:36PM -0600, Keith Busch wrote:
+> I ran into a lot of trouble testing error handling, and this series is
+> just trying to simplify some things. The first 4 fix up aer_inject, and
+> the rest are cleanup to make better use of kernel APIs.
+> 
+> Keith Busch (12):
+>   PCI: Set PCI bus accessors to noinline
+>   PCI/AER: Covertly inject errors
+>   PCI/AER: Reuse existing service device lookup
+>   PCI/AER: Abstract AER interrupt handling
+>   PCI/AER: Remove dead code
+>   PCI/AER: Remove error source from aer struct
+>   PCI/AER: Use kfifo for tracking events
+>   PCI/AER: Use kfifo helper inserting locked elements
+>   PCI/AER: Don't read upstream ports below fatal errors
+>   PCI/AER: Use threaded IRQ for bottom half
+>   PCI/AER: Use managed resource allocations
+>   PCI/pciehp: Use device managed allocations
+> 
+>  drivers/pci/access.c              |   4 +-
+>  drivers/pci/hotplug/pciehp_core.c |  14 +-
+>  drivers/pci/hotplug/pciehp_hpc.c  |  48 ++----
+>  drivers/pci/pcie/Kconfig          |   2 +-
+>  drivers/pci/pcie/aer.c            | 219 ++++++---------------------
+>  drivers/pci/pcie/aer_inject.c     | 306 ++++++++++++++++++++------------------
+>  drivers/pci/pcie/portdrv.h        |   4 -
+>  drivers/pci/pcie/portdrv_core.c   |   1 +
+>  8 files changed, 227 insertions(+), 371 deletions(-)
 
-Signed-off-by: Logan Gunthorpe <logang@deltatee.com>
----
- include/linux/blkdev.h | 3 +++
- 1 file changed, 3 insertions(+)
-
-diff --git a/include/linux/blkdev.h b/include/linux/blkdev.h
-index 6980014357d4..87fb1963b721 100644
---- a/include/linux/blkdev.h
-+++ b/include/linux/blkdev.h
-@@ -699,6 +699,7 @@ struct request_queue {
- #define QUEUE_FLAG_SCSI_PASSTHROUGH 27	/* queue supports SCSI commands */
- #define QUEUE_FLAG_QUIESCED    28	/* queue has been quiesced */
- #define QUEUE_FLAG_PREEMPT_ONLY	29	/* only process REQ_PREEMPT requests */
-+#define QUEUE_FLAG_PCI_P2PDMA  30	/* device supports pci p2p requests */
- 
- #define QUEUE_FLAG_DEFAULT	((1 << QUEUE_FLAG_IO_STAT) |		\
- 				 (1 << QUEUE_FLAG_SAME_COMP)	|	\
-@@ -731,6 +732,8 @@ bool blk_queue_flag_test_and_clear(unsigned int flag, struct request_queue *q);
- #define blk_queue_dax(q)	test_bit(QUEUE_FLAG_DAX, &(q)->queue_flags)
- #define blk_queue_scsi_passthrough(q)	\
- 	test_bit(QUEUE_FLAG_SCSI_PASSTHROUGH, &(q)->queue_flags)
-+#define blk_queue_pci_p2pdma(q)	\
-+	test_bit(QUEUE_FLAG_PCI_P2PDMA, &(q)->queue_flags)
- 
- #define blk_noretry_request(rq) \
- 	((rq)->cmd_flags & (REQ_FAILFAST_DEV|REQ_FAILFAST_TRANSPORT| \
--- 
-2.19.0
-
+Thanks a lot for doing this!  I applied these to pci/hotplug for
+v4.20, except for "PCI/AER: Don't read upstream ports below fatal
+errors", which seems to be already there via another posting, and
+"PCI/pciehp: Use device managed allocations", which needs a few
+tweaks.
