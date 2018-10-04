@@ -1,211 +1,143 @@
-Return-Path: <SRS0=Y6U6=MP=vger.kernel.org=linux-pci-owner@kernel.org>
+Return-Path: <SRS0=kgUF=MQ=vger.kernel.org=linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-6.6 required=3.0 tests=DKIM_INVALID,DKIM_SIGNED,
+X-Spam-Status: No, score=-8.1 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
+	DKIM_VALID_AU,FREEMAIL_FORGED_FROMDOMAIN,FREEMAIL_FROM,
 	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
-	SPF_PASS autolearn=ham autolearn_force=no version=3.4.0
+	SPF_PASS,URIBL_BLOCKED,USER_AGENT_MUTT autolearn=ham autolearn_force=no
+	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id CD357C00449
-	for <linux-pci@archiver.kernel.org>; Wed,  3 Oct 2018 22:00:25 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 712BAC64EB8
+	for <linux-pci@archiver.kernel.org>; Thu,  4 Oct 2018 06:50:14 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 622B62064D
-	for <linux-pci@archiver.kernel.org>; Wed,  3 Oct 2018 22:00:25 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 261292098A
+	for <linux-pci@archiver.kernel.org>; Thu,  4 Oct 2018 06:50:14 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=fail reason="signature verification failed" (1024-bit key) header.d=dellteam.com header.i=@dellteam.com header.b="vZaT5252"
-DMARC-Filter: OpenDMARC Filter v1.3.2 mail.kernel.org 622B62064D
-Authentication-Results: mail.kernel.org; dmarc=none (p=none dis=none) header.from=Dellteam.com
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="YHnR3rkP"
+DMARC-Filter: OpenDMARC Filter v1.3.2 mail.kernel.org 261292098A
+Authentication-Results: mail.kernel.org; dmarc=fail (p=none dis=none) header.from=gmail.com
 Authentication-Results: mail.kernel.org; spf=none smtp.mailfrom=linux-pci-owner@vger.kernel.org
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1725871AbeJDEuh (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Thu, 4 Oct 2018 00:50:37 -0400
-Received: from esa3.dell-outbound.iphmx.com ([68.232.153.94]:2296 "EHLO
-        esa3.dell-outbound.iphmx.com" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1725723AbeJDEuh (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Thu, 4 Oct 2018 00:50:37 -0400
-DKIM-Signature: v=1; a=rsa-sha256; c=simple/simple;
-  d=dellteam.com; i=@dellteam.com; q=dns/txt; s=smtpout;
-  t=1538604017; x=1570140017;
-  h=cc:from:to:subject:date:message-id:references:
-   content-transfer-encoding:mime-version;
-  bh=PtpaPfwaIK9dzSY+IUD7+Xr18VxCJDTjx2HWC5N4iEA=;
-  b=vZaT52521hkD84cet01YqBs7sCgScE1x/Fnvk5Az4UoVkJss6AnYPq2b
-   LdJ1GiLGhv0agDF+P00Qigb9irsEgBwi7rEaLA9snQFcjAPGuTwuhD/de
-   zNea7aJRAZDBn7UIjkOU1p6VDr5dcpOrWkAsm9l5eDPQeeReDMYK4JBgy
-   4=;
-X-IronPort-Anti-Spam-Filtered: true
-X-IronPort-Anti-Spam-Result: =?us-ascii?q?A2EJAABKO7VbhyeV50NcGgEBAQEBAgE?=
- =?us-ascii?q?BAQEHAgEBAQGBUoFjgRB/KAqMXo1HiGKNehSBZgslCYQ+hCMhNRcBAwEBAgE?=
- =?us-ascii?q?BAgEBAhABAQEVCQgpIwxCDgGBZCIRS2sBAQEBAQEjAg1kAQEBAxIoPxACAQg?=
- =?us-ascii?q?YFQkQITYCBAESCBqCNEsBgWkDFQ+adolXAQEBghuHNw2CTAWLIYIXgRKDEoJ?=
- =?us-ascii?q?WLBkEGIECEgESAQ0SLBOFGQKIMZRwLAkFhkSGWIMVH4FKhGKJNowXcYgiAgQ?=
- =?us-ascii?q?CBAUCFIFEAjNmcXCDPIIzh1iBC4U+bwGBZolwgR+BHwEB?=
-X-IPAS-Result: =?us-ascii?q?A2EJAABKO7VbhyeV50NcGgEBAQEBAgEBAQEHAgEBAQGBU?=
- =?us-ascii?q?oFjgRB/KAqMXo1HiGKNehSBZgslCYQ+hCMhNRcBAwEBAgEBAgEBAhABAQEVC?=
- =?us-ascii?q?QgpIwxCDgGBZCIRS2sBAQEBAQEjAg1kAQEBAxIoPxACAQgYFQkQITYCBAESC?=
- =?us-ascii?q?BqCNEsBgWkDFQ+adolXAQEBghuHNw2CTAWLIYIXgRKDEoJWLBkEGIECEgESA?=
- =?us-ascii?q?Q0SLBOFGQKIMZRwLAkFhkSGWIMVH4FKhGKJNowXcYgiAgQCBAUCFIFEAjNmc?=
- =?us-ascii?q?XCDPIIzh1iBC4U+bwGBZolwgR+BHwEB?=
-Received: from mx0a-00154901.pphosted.com ([67.231.149.39])
-  by esa3.dell-outbound.iphmx.com with ESMTP/TLS/AES256-SHA256; 03 Oct 2018 17:00:16 -0500
-Received: from pps.filterd (m0134746.ppops.net [127.0.0.1])
-        by mx0a-00154901.pphosted.com (8.16.0.22/8.16.0.22) with SMTP id w93LrNRq017484;
-        Wed, 3 Oct 2018 18:00:22 -0400
-Received: from esa5.dell-outbound2.iphmx.com (esa5.dell-outbound2.iphmx.com [68.232.153.203])
-        by mx0a-00154901.pphosted.com with ESMTP id 2mw0smht2k-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=FAIL);
-        Wed, 03 Oct 2018 18:00:22 -0400
-Cc:     <linux-pci@vger.kernel.org>, <bhelgaas@google.com>,
-        <keith.busch@intel.com>, <Austin.Bolen@dell.com>,
-        <Shyam.Iyer@dell.com>, <ariel.elior@cavium.com>,
-        <everest-linux-l2@cavium.com>, <davem@davemloft.net>,
-        <michael.chan@broadcom.com>, <ganeshgr@chelsio.com>,
-        <jeffrey.t.kirsher@intel.com>, <tariqt@mellanox.com>,
-        <saeedm@mellanox.com>, <leon@kernel.org>,
-        <jakub.kicinski@netronome.com>, <dirk.vandermerwe@netronome.com>,
-        <netdev@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
-        <intel-wired-lan@lists.osuosl.org>, <linux-rdma@vger.kernel.org>,
-        <oss-drivers@netronome.com>, <stephen@networkplumber.org>,
-        <mj@ucw.cz>
-Received: from ausxippc110.us.dell.com ([143.166.85.200])
-  by esa5.dell-outbound2.iphmx.com with ESMTP/TLS/DHE-RSA-AES256-SHA256; 04 Oct 2018 03:59:57 +0600
-X-LoopCount0: from 10.166.134.84
-X-IronPort-AV: E=Sophos;i="5.54,337,1534827600"; 
-   d="scan'208";a="710724416"
-From:   <Alex_Gagniuc@Dellteam.com>
-To:     <helgaas@kernel.org>, <mr.nuke.me@gmail.com>
-Subject: Re: [PATCH 1/9] PCI: sysfs: Export available PCIe bandwidth
-Thread-Topic: [PATCH 1/9] PCI: sysfs: Export available PCIe bandwidth
-Thread-Index: AQHUQ7BfSa0aPLhtZE62OuK+W8HsxQ==
-Date:   Wed, 3 Oct 2018 22:00:19 +0000
-Message-ID: <f9fbc8babbb344eca593a3f8b0d096d9@ausx13mps321.AMER.DELL.COM>
-References: <20180903180242.14504-1-mr.nuke.me@gmail.com>
- <20180903180242.14504-2-mr.nuke.me@gmail.com>
- <20181003213054.GH120535@bhelgaas-glaptop.roam.corp.google.com>
-Accept-Language: en-US
-Content-Language: en-US
-X-MS-Has-Attach: 
-X-MS-TNEF-Correlator: 
-x-ms-exchange-transport-fromentityheader: Hosted
-x-originating-ip: [10.177.90.70]
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: quoted-printable
+        id S1727007AbeJDNl5 (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Thu, 4 Oct 2018 09:41:57 -0400
+Received: from mail-pf1-f193.google.com ([209.85.210.193]:43995 "EHLO
+        mail-pf1-f193.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726899AbeJDNl5 (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Thu, 4 Oct 2018 09:41:57 -0400
+Received: by mail-pf1-f193.google.com with SMTP id p24-v6so2879632pff.10;
+        Wed, 03 Oct 2018 23:50:12 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20161025;
+        h=date:from:to:cc:subject:message-id:references:mime-version
+         :content-disposition:in-reply-to:user-agent;
+        bh=7v/Ja+Lq5+B4yKE1dTAlKzuYtn+OMr8F5awEI9XnsFs=;
+        b=YHnR3rkPMbf5hnlbcqgP044aMQjvMyZ1ySZ03PSexi/03EOAP/sCb3pdFnf5hSEHcP
+         4gJpeVKTsocnI6hjEyGW9KMc/sOJ+o/tKDJ+72nzCQjbjp+1/8Gaioyze7gAdvsd7gqU
+         NuNM73u00R15u87oJAwmIDgfhVy3dKNQLGjHkf4/BEY13VPRuHu1pzGhnSn7pSDolNq8
+         FUs28HNuOoAx/p88mDFRbqrYewlHVzrZ7d8Azd8tM1InuKNjpU+i0fO+UUorGo9GPYbq
+         S2vRvTjQctQYcdlEifZdmXk6JlWo8tPWh6F4PgUJc+pwG79USAyz6/N6b4X81CW/un3Z
+         mtQQ==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20161025;
+        h=x-gm-message-state:date:from:to:cc:subject:message-id:references
+         :mime-version:content-disposition:in-reply-to:user-agent;
+        bh=7v/Ja+Lq5+B4yKE1dTAlKzuYtn+OMr8F5awEI9XnsFs=;
+        b=K96pApkuJYVF6LOeYnTdvRFncgLnquasqOKMMAsJXbny9H32z7lMpMmXqbG/hns0kK
+         /+SXP1Vm7hgFDKhtDkW0sLnkzGCWOte+r5lPM4Ji4nqbWJQX3mH/QcSQyPStup9beAhT
+         VqvoKYS09fV6A4ewKtYnSLUaRwPAAgIGBRghFWJVvs0o/LQfDsMjsl1V0pSe64gycWEy
+         dYWnlFI9auSQq8Cn2l1Tz9nxa8CaPb8vh4JFj4EG1Evh593jqKF+YR/oo8rp7Rf7UHDc
+         KjovrazFfZ8UTWOH6Suyt3ty6DyY+CYXb9GzogpbhJ31vkE8ZvFjKVQsrNnn4+XbPi+u
+         Nx9A==
+X-Gm-Message-State: ABuFfoiaYLGpfeTtQXXaXZ0msZQCnKgKNewYgOS9jXvujj8V2l7tCgie
+        bghK+mbrKltARSRWM/pxA68=
+X-Google-Smtp-Source: ACcGV60suxW1JbnsBcuE75HHWH9GK8Ls3jwmVxBdvoGxK2j37GPEvNOtQN2jblI2V8SakYXDSFH1SA==
+X-Received: by 2002:a63:8e43:: with SMTP id k64-v6mr4343298pge.75.1538635811982;
+        Wed, 03 Oct 2018 23:50:11 -0700 (PDT)
+Received: from E570.localdomain (c-24-21-68-121.hsd1.or.comcast.net. [24.21.68.121])
+        by smtp.gmail.com with ESMTPSA id r73-v6sm7649816pfk.157.2018.10.03.23.50.10
+        (version=TLS1_2 cipher=ECDHE-RSA-CHACHA20-POLY1305 bits=256/256);
+        Wed, 03 Oct 2018 23:50:11 -0700 (PDT)
+Received: by E570.localdomain (Postfix, from userid 1000)
+        id 6F488160683; Wed,  3 Oct 2018 23:50:11 -0700 (PDT)
+Date:   Wed, 3 Oct 2018 23:50:11 -0700
+From:   Lance Roy <ldr709@gmail.com>
+To:     Bjorn Helgaas <helgaas@kernel.org>
+Cc:     linux-kernel@vger.kernel.org,
+        "Paul E. McKenney" <paulmck@linux.ibm.com>,
+        Bjorn Helgaas <bhelgaas@google.com>,
+        Thomas Gleixner <tglx@linutronix.de>,
+        Ingo Molnar <mingo@redhat.com>, Borislav Petkov <bp@alien8.de>,
+        "H. Peter Anvin" <hpa@zytor.com>, x86@kernel.org,
+        linux-pci@vger.kernel.org
+Subject: Re: [PATCH 01/16] x86/PCI: Replace spin_is_locked() with lockdep
+Message-ID: <20181004065011.GC896@E570.localdomain>
+References: <20181003053902.6910-1-ldr709@gmail.com>
+ <20181003053902.6910-2-ldr709@gmail.com>
+ <20181003160051.GF120535@bhelgaas-glaptop.roam.corp.google.com>
 MIME-Version: 1.0
-X-Proofpoint-Virus-Version: vendor=fsecure engine=2.50.10434:,, definitions=2018-10-03_10:,,
- signatures=0
-X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0 priorityscore=1501
- malwarescore=0 suspectscore=0 phishscore=0 bulkscore=0 spamscore=0
- clxscore=1011 lowpriorityscore=0 mlxscore=0 impostorscore=0
- mlxlogscore=999 adultscore=0 classifier=spam adjust=0 reason=mlx
- scancount=1 engine=8.0.1-1807170000 definitions=main-1810030199
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20181003160051.GF120535@bhelgaas-glaptop.roam.corp.google.com>
+User-Agent: Mutt/1.10.1 (2018-07-13)
 Sender: linux-pci-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-On 10/03/2018 04:31 PM, Bjorn Helgaas wrote:=0A=
-> =0A=
-> [EXTERNAL EMAIL]=0A=
-> Please report any suspicious attachments, links, or requests for sensitiv=
-e information.=0A=
-> =0A=
-> =0A=
-> [+cc Stephen, Martin (for possible lspci changes)]=0A=
-> =0A=
-> Hi Alexandru,=0A=
-> =0A=
-> On Mon, Sep 03, 2018 at 01:02:28PM -0500, Alexandru Gagniuc wrote:=0A=
->> For certain bandwidth-critical devices (e.g. multi-port network cards)=
-=0A=
->> it is useful to know the available bandwidth to the root complex. This=
-=0A=
->> information is only available via the system log, which doesn't=0A=
->> account for link degradation after probing.=0A=
->>=0A=
->> With a sysfs attribute, we can computes the bandwidth on-demand, and=0A=
->> will detect degraded links.=0A=
->>=0A=
->> Signed-off-by: Alexandru Gagniuc <mr.nuke.me@gmail.com>=0A=
->> ---=0A=
->>   drivers/pci/pci-sysfs.c | 13 +++++++++++++=0A=
->>   1 file changed, 13 insertions(+)=0A=
->>=0A=
->> diff --git a/drivers/pci/pci-sysfs.c b/drivers/pci/pci-sysfs.c=0A=
->> index 9ecfe13157c0..6658e927b1f5 100644=0A=
->> --- a/drivers/pci/pci-sysfs.c=0A=
->> +++ b/drivers/pci/pci-sysfs.c=0A=
->> @@ -218,6 +218,18 @@ static ssize_t current_link_width_show(struct devic=
-e *dev,=0A=
->>   }=0A=
->>   static DEVICE_ATTR_RO(current_link_width);=0A=
->>   =0A=
->> +static ssize_t available_bandwidth_show(struct device *dev,=0A=
->> +				       struct device_attribute *attr, char *buf)=0A=
->> +{=0A=
->> +	struct pci_dev *pci_dev =3D to_pci_dev(dev);=0A=
->> +	u32 bw_avail;=0A=
->> +=0A=
->> +	bw_avail =3D pcie_bandwidth_available(pci_dev, NULL, NULL, NULL);=0A=
->> +=0A=
->> +	return sprintf(buf, "%u.%03u Gb/s\n", bw_avail / 1000, bw_avail % 1000=
-);=0A=
->> +}=0A=
->> +static DEVICE_ATTR_RO(available_bandwidth);=0A=
-> =0A=
-> Help me understand this.  We already have these sysfs attributes:=0A=
-> =0A=
->    max_link_speed          # eg, 16 GT/s=0A=
->    max_link_width          # eg, 8=0A=
->    current_link_speed      # eg, 16 GT/s=0A=
->    current_link_width      # eg, 8=0A=
-> =0A=
-> so I think the raw materials are already exposed.=0A=
-> > The benefits I see for this new file are that=0A=
-> =0A=
->    - pcie_bandwidth_available() does the work of traversing up the=0A=
->      tree, doing the computations (link width * speed, reduced by=0A=
->      encoding overhead), and finding the minimum, and=0A=
-> =0A=
->    - it re-traverses the path every time we look at it, while the=0A=
->      boot-time check is a one-time event.=0A=
-> =0A=
-> In principle this could all be done in user space with the attributes=0A=
-> that are already exported.  There's some precedent for things like=0A=
-> this in lspci, e.g., "NUMA node" [1], and lspci might even be a more=0A=
-> user-friendly place for users to look for this, as opposed to=0A=
-> searching through sysfs.=0A=
-=0A=
-Parsing the endpoint to root port bandwidth is, in principle, possible =0A=
-from userspace. It's just that in practice it's very clumsy to do, and, =0A=
-as you pointed out, not that reliable.=0A=
-=0A=
-I understand it's not information that all users would jump in the air =0A=
-to know. However, it was important enough for certain use cases, that =0A=
-the kernel already has a very reliable way to calculate it.=0A=
-=0A=
-It seems to me that the most elegant way is to let the kernel tell us, =0A=
-since the kernel already has this facility. To quote one of the texts =0A=
-under Documentation/, it is an elegant way to "avoid reinventing kernel =0A=
-wheels in userspace".=0A=
-=0A=
-Alex=0A=
-=0A=
-> [1] https://git.kernel.org/pub/scm/utils/pciutils/pciutils.git/commit/?id=
-=3D90ec4a6d0ae8=0A=
-> =0A=
->>   static ssize_t secondary_bus_number_show(struct device *dev,=0A=
->>   					 struct device_attribute *attr,=0A=
->>   					 char *buf)=0A=
->> @@ -786,6 +798,7 @@ static struct attribute *pcie_dev_attrs[] =3D {=0A=
->>   	&dev_attr_current_link_width.attr,=0A=
->>   	&dev_attr_max_link_width.attr,=0A=
->>   	&dev_attr_max_link_speed.attr,=0A=
->> +	&dev_attr_available_bandwidth.attr,=0A=
->>   	NULL,=0A=
->>   };=0A=
->>   =0A=
->> -- =0A=
->> 2.17.1=0A=
->>=0A=
-> =0A=
-=0A=
+On Wed, Oct 03, 2018 at 11:00:51AM -0500, Bjorn Helgaas wrote:
+> On Tue, Oct 02, 2018 at 10:38:47PM -0700, Lance Roy wrote:
+> > lockdep_assert_held() is better suited to checking locking requirements,
+> > since it won't get confused when someone else holds the lock. This is
+> > also a step towards possibly removing spin_is_locked().
+> >
+> > Signed-off-by: Lance Roy <ldr709@gmail.com>
+> > Cc: Bjorn Helgaas <bhelgaas@google.com>
+> > Cc: Thomas Gleixner <tglx@linutronix.de>
+> > Cc: Ingo Molnar <mingo@redhat.com>
+> > Cc: Borislav Petkov <bp@alien8.de>
+> > Cc: "H. Peter Anvin" <hpa@zytor.com>
+> > Cc: <x86@kernel.org>
+> > Cc: <linux-pci@vger.kernel.org>
+>
+> I assume you plan to merge the whole series together.  I don't object
+> to that, but I don't know enough to be able to formally ack this.
+>
+> It would be useful to include a tiny bit more detail in the changelog.
+> The spin_is_locked() documentation doesn't mention anything about
+> differences with respect to the lock being held by self vs by someone
+> else, so I can't tell where the confusion arises.
+The difference is that spin_is_locked() will return true when someone else holds
+the lock, while lockdep_assert_held() asserts that the current thread holds the
+lock. How about the following for an new changelog?
+
+lockdep_assert_held() is better suited to checking locking requirements,
+since it only checks if the current thread holds the lock regardless of
+whether someone else does. This is also a step towards possibly removing
+spin_is_locked().
+
+Thanks,
+Lance
+
+> Bjorn
+>
+> > ---
+> >  arch/x86/pci/i386.c | 2 +-
+> >  1 file changed, 1 insertion(+), 1 deletion(-)
+> >
+> > diff --git a/arch/x86/pci/i386.c b/arch/x86/pci/i386.c
+> > index ed4ac215305d..24bb58a007de 100644
+> > --- a/arch/x86/pci/i386.c
+> > +++ b/arch/x86/pci/i386.c
+> > @@ -59,7 +59,7 @@ static struct pcibios_fwaddrmap *pcibios_fwaddrmap_lookup(struct pci_dev *dev)
+> >  {
+> >  	struct pcibios_fwaddrmap *map;
+> >
+> > -	WARN_ON_SMP(!spin_is_locked(&pcibios_fwaddrmap_lock));
+> > +	lockdep_assert_held(&pcibios_fwaddrmap_lock);
+> >
+> >  	list_for_each_entry(map, &pcibios_fwaddrmappings, list)
+> >  		if (map->dev == dev)
+> > --
+> > 2.19.0
+> >
