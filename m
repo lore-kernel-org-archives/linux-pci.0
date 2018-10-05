@@ -2,182 +2,133 @@ Return-Path: <SRS0=s+SA=MR=vger.kernel.org=linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-8.8 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_PASS,URIBL_BLOCKED,
-	USER_AGENT_GIT autolearn=unavailable autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-2.6 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,MAILING_LIST_MULTI,SPF_PASS,USER_AGENT_MUTT
+	autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id F37CEC65BA7
-	for <linux-pci@archiver.kernel.org>; Fri,  5 Oct 2018 15:49:52 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 65899C00449
+	for <linux-pci@archiver.kernel.org>; Fri,  5 Oct 2018 17:31:49 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id BD1B72087D
-	for <linux-pci@archiver.kernel.org>; Fri,  5 Oct 2018 15:49:52 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.3.2 mail.kernel.org BD1B72087D
-Authentication-Results: mail.kernel.org; dmarc=none (p=none dis=none) header.from=deltatee.com
+	by mail.kernel.org (Postfix) with ESMTP id 2CA4321473
+	for <linux-pci@archiver.kernel.org>; Fri,  5 Oct 2018 17:31:49 +0000 (UTC)
+Authentication-Results: mail.kernel.org;
+	dkim=pass (1024-bit key) header.d=kernel.org header.i=@kernel.org header.b="fcDDUumB"
+DMARC-Filter: OpenDMARC Filter v1.3.2 mail.kernel.org 2CA4321473
+Authentication-Results: mail.kernel.org; dmarc=fail (p=none dis=none) header.from=kernel.org
 Authentication-Results: mail.kernel.org; spf=none smtp.mailfrom=linux-pci-owner@vger.kernel.org
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1728333AbeJEWtC (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Fri, 5 Oct 2018 18:49:02 -0400
-Received: from ale.deltatee.com ([207.54.116.67]:60428 "EHLO ale.deltatee.com"
+        id S1727958AbeJFAba (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Fri, 5 Oct 2018 20:31:30 -0400
+Received: from mail.kernel.org ([198.145.29.99]:50914 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1727572AbeJEWtC (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Fri, 5 Oct 2018 18:49:02 -0400
-Received: from cgy1-donard.priv.deltatee.com ([172.16.1.31])
-        by ale.deltatee.com with esmtps (TLS1.2:ECDHE_RSA_AES_256_GCM_SHA384:256)
-        (Exim 4.89)
-        (envelope-from <gunthorp@deltatee.com>)
-        id 1g8SMK-0007dv-0j; Fri, 05 Oct 2018 09:49:45 -0600
-Received: from gunthorp by cgy1-donard.priv.deltatee.com with local (Exim 4.89)
-        (envelope-from <gunthorp@deltatee.com>)
-        id 1g8SMJ-0000GH-EJ; Fri, 05 Oct 2018 09:49:43 -0600
-From:   Logan Gunthorpe <logang@deltatee.com>
-To:     linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org
-Cc:     Logan Gunthorpe <logang@deltatee.com>,
-        Doug Meyer <dmeyer@gigaio.com>,
+        id S1727941AbeJFAba (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Fri, 5 Oct 2018 20:31:30 -0400
+Received: from localhost (unknown [69.71.4.100])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+        (No client certificate requested)
+        by mail.kernel.org (Postfix) with ESMTPSA id 51763213A2;
+        Fri,  5 Oct 2018 17:31:47 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+        s=default; t=1538760707;
+        bh=yjr3rJd5n7kwy89yTMmB1oPgrPRMWhCND6814p+FZUs=;
+        h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
+        b=fcDDUumB+qUsKyf0KYt3azj1S4oq8+T96BrmhwuNVFLlnEMB9O8WOs2GjpT0hkoKU
+         PGQErqzpAAUzEHKWCjzzQf7hoJGHYtc9UVUnoNyBtazFkO3gBXOo3wL1ZRjqNDCcvx
+         U3shgFYeZ6jllzmhgzk79s5W5EHDUnaNfpL1msCA=
+Date:   Fri, 5 Oct 2018 12:31:45 -0500
+From:   Bjorn Helgaas <helgaas@kernel.org>
+To:     Keith Busch <keith.busch@intel.com>
+Cc:     Linux PCI <linux-pci@vger.kernel.org>,
         Bjorn Helgaas <bhelgaas@google.com>,
-        Kurt Schwemmer <kurt.schwemmer@microsemi.com>
-Date:   Fri,  5 Oct 2018 09:49:40 -0600
-Message-Id: <20181005154940.964-1-logang@deltatee.com>
-X-Mailer: git-send-email 2.19.0
+        Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+        Sinan Kaya <okaya@kernel.org>,
+        Thomas Tai <thomas.tai@oracle.com>, poza@codeaurora.org,
+        Lukas Wunner <lukas@wunner.de>, Christoph Hellwig <hch@lst.de>,
+        Mika Westerberg <mika.westerberg@linux.intel.com>,
+        Catalin Marinas <catalin.marinas@arm.com>,
+        Will Deacon <will.deacon@arm.com>,
+        linux-arm-kernel@lists.infradead.org, linux-kernel@vger.kernel.org
+Subject: Re: [PATCH 00/12] error handling and pciehp maintenance
+Message-ID: <20181005173145.GL120535@bhelgaas-glaptop.roam.corp.google.com>
+References: <20180918235848.26694-1-keith.busch@intel.com>
+ <20181004214015.GK120535@bhelgaas-glaptop.roam.corp.google.com>
+ <20181004221137.GB21834@localhost.localdomain>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
-X-SA-Exim-Connect-IP: 172.16.1.31
-X-SA-Exim-Rcpt-To: linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org, logang@deltatee.com, dmeyer@gigaio.com, bhelgaas@google.com, kurt.schwemmer@microsemi.com
-X-SA-Exim-Mail-From: gunthorp@deltatee.com
-Subject: [PATCH v2] PCI: Fix Switchtec DMA aliasing quirk dmesg noise
-X-SA-Exim-Version: 4.2.1 (built Tue, 02 Aug 2016 21:08:31 +0000)
-X-SA-Exim-Scanned: Yes (on ale.deltatee.com)
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20181004221137.GB21834@localhost.localdomain>
+User-Agent: Mutt/1.10.1 (2018-07-13)
 Sender: linux-pci-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-Currently the Switchtec quirk runs on all endpoints in the Switch
-which includes all the upstream and downstream ports. Seeing these
-other functions do not contain BARs the quirk fails when trying to
-map the BAR and prints the error "Cannot iomap Switchtec device".
-The user will see a few of these useless and scary errors, one for
-each port in the switch.
+[+cc arm64 folks, LKML: This conversation is about this patch:
 
-At most, the quirk should only run on either a management endpoint
-(class=PCI_CLASS_MEMORY_OTHER) or an NTB endpoint
-(PCI_CLASS_BRIDGE_OTHER). However, seeing the quirk is useless except
-in NTB applications, we will only run it when the class is
-PCI_CLASS_BRIDGE_OTHER.
+  https://lore.kernel.org/linux-pci/20180918235848.26694-3-keith.busch@intel.com
 
-Thus, switch to using DECLARE_PCI_FIXUP_CLASS_FINAL and clean up
-the list with a define (so we don't have to change as much code if
-we ever have to adjust the list).
+which fixes some PCIe AER error injection bugs, but also makes the error
+injector dependent on DYNAMIC_FTRACE_WITH_REGS, which not all arches
+support.  Note that this question is only about the error *injection*
+module used for testing.  It doesn't affect AER support itself.]
 
-Reported-by: Stephen  Bates <sbates@raithlin.com>
-Cc: Doug Meyer <dmeyer@gigaio.com>
-Cc: Bjorn Helgaas <bhelgaas@google.com>
-Cc: Kurt Schwemmer <kurt.schwemmer@microsemi.com>
-Fixes: ad281ecf1c7d ("PCI: Add DMA alias quirk for Microsemi Switchtec NTB")
-Signed-off-by: Logan Gunthorpe <logang@deltatee.com>
----
+On Thu, Oct 04, 2018 at 04:11:37PM -0600, Keith Busch wrote:
+> On Thu, Oct 04, 2018 at 04:40:15PM -0500, Bjorn Helgaas wrote:
+> > On Tue, Sep 18, 2018 at 05:58:36PM -0600, Keith Busch wrote:
+> > > I ran into a lot of trouble testing error handling, and this series is
+> > > just trying to simplify some things. The first 4 fix up aer_inject, and
+> > > the rest are cleanup to make better use of kernel APIs.
+> > > 
+> > > Keith Busch (12):
+> > >   PCI: Set PCI bus accessors to noinline
+> > >   PCI/AER: Covertly inject errors
+> > >   PCI/AER: Reuse existing service device lookup
+> > >   PCI/AER: Abstract AER interrupt handling
+> > >   PCI/AER: Remove dead code
+> > >   PCI/AER: Remove error source from aer struct
+> > >   PCI/AER: Use kfifo for tracking events
+> > >   PCI/AER: Use kfifo helper inserting locked elements
+> > >   PCI/AER: Don't read upstream ports below fatal errors
+> > >   PCI/AER: Use threaded IRQ for bottom half
+> > >   PCI/AER: Use managed resource allocations
+> > >   PCI/pciehp: Use device managed allocations
+> > > 
+> > >  drivers/pci/access.c              |   4 +-
+> > >  drivers/pci/hotplug/pciehp_core.c |  14 +-
+> > >  drivers/pci/hotplug/pciehp_hpc.c  |  48 ++----
+> > >  drivers/pci/pcie/Kconfig          |   2 +-
+> > >  drivers/pci/pcie/aer.c            | 219 ++++++---------------------
+> > >  drivers/pci/pcie/aer_inject.c     | 306 ++++++++++++++++++++------------------
+> > >  drivers/pci/pcie/portdrv.h        |   4 -
+> > >  drivers/pci/pcie/portdrv_core.c   |   1 +
+> > >  8 files changed, 227 insertions(+), 371 deletions(-)
+> > 
+> > Thanks a lot for doing this!  I applied these to pci/hotplug for
+> > v4.20, except for "PCI/AER: Don't read upstream ports below fatal
+> > errors", which seems to be already there via another posting, and
+> > "PCI/pciehp: Use device managed allocations", which needs a few
+> > tweaks.
+> 
+> Sounds good, and thanks for applying!
+> 
+> In case this went unnoticed, patch 2's aer_inject using ftrace hooks
+> to pci config accessors is really cool and fixes several kernel crashes
+> I encountered, but it may not work on every architecture. I'm not sure
+> how widely aer_inject is used, so maybe there are no concerns with the
+> DYNAMIC_FTRACE_WITH_REGS dependency, but I just want to reemphasize that
+> dependency in case there are valid objections.
 
-* v2: Changes comment style, per feedback from Christoph
+Oh, indeed, I hadn't noticed this arch dependency.  AFAICT, the new
+DYNAMIC_FTRACE_WITH_REGS dependency means aer_inject will work only
+on these arches:
 
- drivers/pci/quirks.c | 90 +++++++++++++++++---------------------------
- 1 file changed, 34 insertions(+), 56 deletions(-)
+  arm		# if (!XIP_KERNEL) && !CPU_ENDIAN_BE32 && MMU
+  powerpc	# if PPC64 && CPU_LITTLE_ENDIAN
+  riscv		# ARCH_RV64I only
+  s390
+  x86
 
-diff --git a/drivers/pci/quirks.c b/drivers/pci/quirks.c
-index 6bc27b7fd452..0f072aed30f5 100644
---- a/drivers/pci/quirks.c
-+++ b/drivers/pci/quirks.c
-@@ -5057,59 +5057,37 @@ static void quirk_switchtec_ntb_dma_alias(struct pci_dev *pdev)
- 	pci_iounmap(pdev, mmio);
- 	pci_disable_device(pdev);
- }
--DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_MICROSEMI, 0x8531,
--			quirk_switchtec_ntb_dma_alias);
--DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_MICROSEMI, 0x8532,
--			quirk_switchtec_ntb_dma_alias);
--DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_MICROSEMI, 0x8533,
--			quirk_switchtec_ntb_dma_alias);
--DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_MICROSEMI, 0x8534,
--			quirk_switchtec_ntb_dma_alias);
--DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_MICROSEMI, 0x8535,
--			quirk_switchtec_ntb_dma_alias);
--DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_MICROSEMI, 0x8536,
--			quirk_switchtec_ntb_dma_alias);
--DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_MICROSEMI, 0x8543,
--			quirk_switchtec_ntb_dma_alias);
--DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_MICROSEMI, 0x8544,
--			quirk_switchtec_ntb_dma_alias);
--DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_MICROSEMI, 0x8545,
--			quirk_switchtec_ntb_dma_alias);
--DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_MICROSEMI, 0x8546,
--			quirk_switchtec_ntb_dma_alias);
--DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_MICROSEMI, 0x8551,
--			quirk_switchtec_ntb_dma_alias);
--DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_MICROSEMI, 0x8552,
--			quirk_switchtec_ntb_dma_alias);
--DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_MICROSEMI, 0x8553,
--			quirk_switchtec_ntb_dma_alias);
--DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_MICROSEMI, 0x8554,
--			quirk_switchtec_ntb_dma_alias);
--DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_MICROSEMI, 0x8555,
--			quirk_switchtec_ntb_dma_alias);
--DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_MICROSEMI, 0x8556,
--			quirk_switchtec_ntb_dma_alias);
--DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_MICROSEMI, 0x8561,
--			quirk_switchtec_ntb_dma_alias);
--DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_MICROSEMI, 0x8562,
--			quirk_switchtec_ntb_dma_alias);
--DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_MICROSEMI, 0x8563,
--			quirk_switchtec_ntb_dma_alias);
--DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_MICROSEMI, 0x8564,
--			quirk_switchtec_ntb_dma_alias);
--DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_MICROSEMI, 0x8565,
--			quirk_switchtec_ntb_dma_alias);
--DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_MICROSEMI, 0x8566,
--			quirk_switchtec_ntb_dma_alias);
--DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_MICROSEMI, 0x8571,
--			quirk_switchtec_ntb_dma_alias);
--DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_MICROSEMI, 0x8572,
--			quirk_switchtec_ntb_dma_alias);
--DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_MICROSEMI, 0x8573,
--			quirk_switchtec_ntb_dma_alias);
--DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_MICROSEMI, 0x8574,
--			quirk_switchtec_ntb_dma_alias);
--DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_MICROSEMI, 0x8575,
--			quirk_switchtec_ntb_dma_alias);
--DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_MICROSEMI, 0x8576,
--			quirk_switchtec_ntb_dma_alias);
-+
-+#define SWITCHTEC_QUIRK(vid) \
-+	DECLARE_PCI_FIXUP_CLASS_FINAL(PCI_VENDOR_ID_MICROSEMI, vid, \
-+		PCI_CLASS_BRIDGE_OTHER, 8, quirk_switchtec_ntb_dma_alias)
-+SWITCHTEC_QUIRK(0x8531);  /* PFX 24xG3 */
-+SWITCHTEC_QUIRK(0x8532);  /* PFX 32xG3 */
-+SWITCHTEC_QUIRK(0x8533);  /* PFX 48xG3 */
-+SWITCHTEC_QUIRK(0x8534);  /* PFX 64xG3 */
-+SWITCHTEC_QUIRK(0x8535);  /* PFX 80xG3 */
-+SWITCHTEC_QUIRK(0x8536);  /* PFX 96xG3 */
-+SWITCHTEC_QUIRK(0x8541);  /* PSX 24xG3 */
-+SWITCHTEC_QUIRK(0x8542);  /* PSX 32xG3 */
-+SWITCHTEC_QUIRK(0x8543);  /* PSX 48xG3 */
-+SWITCHTEC_QUIRK(0x8544);  /* PSX 64xG3 */
-+SWITCHTEC_QUIRK(0x8545);  /* PSX 80xG3 */
-+SWITCHTEC_QUIRK(0x8546);  /* PSX 96xG3 */
-+SWITCHTEC_QUIRK(0x8551);  /* PAX 24XG3 */
-+SWITCHTEC_QUIRK(0x8552);  /* PAX 32XG3 */
-+SWITCHTEC_QUIRK(0x8553);  /* PAX 48XG3 */
-+SWITCHTEC_QUIRK(0x8554);  /* PAX 64XG3 */
-+SWITCHTEC_QUIRK(0x8555);  /* PAX 80XG3 */
-+SWITCHTEC_QUIRK(0x8556);  /* PAX 96XG3 */
-+SWITCHTEC_QUIRK(0x8561);  /* PFXL 24XG3 */
-+SWITCHTEC_QUIRK(0x8562);  /* PFXL 32XG3 */
-+SWITCHTEC_QUIRK(0x8563);  /* PFXL 48XG3 */
-+SWITCHTEC_QUIRK(0x8564);  /* PFXL 64XG3 */
-+SWITCHTEC_QUIRK(0x8565);  /* PFXL 80XG3 */
-+SWITCHTEC_QUIRK(0x8566);  /* PFXL 96XG3 */
-+SWITCHTEC_QUIRK(0x8571);  /* PFXI 24XG3 */
-+SWITCHTEC_QUIRK(0x8572);  /* PFXI 32XG3 */
-+SWITCHTEC_QUIRK(0x8573);  /* PFXI 48XG3 */
-+SWITCHTEC_QUIRK(0x8574);  /* PFXI 64XG3 */
-+SWITCHTEC_QUIRK(0x8575);  /* PFXI 80XG3 */
-+SWITCHTEC_QUIRK(0x8576);  /* PFXI 96XG3 */
---
-2.19.0
+Notably missing is arm64, which has DYNAMIC_FTRACE but not
+DYNAMIC_FTRACE_WITH_REGS.
+
+Bjorn
