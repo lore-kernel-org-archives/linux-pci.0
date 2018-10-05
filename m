@@ -2,120 +2,161 @@ Return-Path: <SRS0=s+SA=MR=vger.kernel.org=linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-0.8 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	MAILING_LIST_MULTI,SPF_PASS autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-8.3 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_PASS,USER_AGENT_MUTT
+	autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 31B82C00449
-	for <linux-pci@archiver.kernel.org>; Fri,  5 Oct 2018 07:34:26 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 7C586C00449
+	for <linux-pci@archiver.kernel.org>; Fri,  5 Oct 2018 10:28:25 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id E13682054F
-	for <linux-pci@archiver.kernel.org>; Fri,  5 Oct 2018 07:34:25 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.3.2 mail.kernel.org E13682054F
-Authentication-Results: mail.kernel.org; dmarc=none (p=none dis=none) header.from=grimberg.me
+	by mail.kernel.org (Postfix) with ESMTP id 456952084D
+	for <linux-pci@archiver.kernel.org>; Fri,  5 Oct 2018 10:28:25 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.3.2 mail.kernel.org 456952084D
+Authentication-Results: mail.kernel.org; dmarc=none (p=none dis=none) header.from=arm.com
 Authentication-Results: mail.kernel.org; spf=none smtp.mailfrom=linux-pci-owner@vger.kernel.org
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1728372AbeJEObv (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Fri, 5 Oct 2018 10:31:51 -0400
-Received: from mail-pf1-f195.google.com ([209.85.210.195]:39118 "EHLO
-        mail-pf1-f195.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1727830AbeJEObv (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Fri, 5 Oct 2018 10:31:51 -0400
-Received: by mail-pf1-f195.google.com with SMTP id c25-v6so4352050pfe.6;
-        Fri, 05 Oct 2018 00:34:23 -0700 (PDT)
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20161025;
-        h=x-gm-message-state:subject:to:cc:references:from:message-id:date
-         :user-agent:mime-version:in-reply-to:content-language
-         :content-transfer-encoding;
-        bh=SEhqGCs3D6tIVEyCVOq+J9ATvMQloVr0AmxdN/QdFsk=;
-        b=ktOMNRSskAwnQyb531Skeaj5kMGGjVH+kTIFPj7F2NvPNEA4yiiFrOilcnr6OJ94pU
-         8KPbJz2Rm8SMtWM+wngvq/okk6lc+7UA3ytP0kLx7N452DYMBJyZZGas8CqpQJqZThrI
-         0MIo4FOApmnOGBxFcfakhQbO3mozypmcp/IZyGZPEE0Sdi3NvN2flSfp3bnAA9ihvr+8
-         DyNWEP/T/rxnkji6/uJRuJLfXgQ7oqqA38ft7oJwW4UkOmYHmILr2Hs89Ajpvss2FzZt
-         L4BzprHpfW7oQzpBfXtngoCggIXLO390H/WepWhmFoW5hHXxtsrscHTP8Ko4a/7q2hxk
-         355A==
-X-Gm-Message-State: ABuFfoimCLU9GK5CCeLsJT72W4yomaLBREP/WU/e7sa5BV6my4MxRdtz
-        s5iAM5KiW/SO7akSJf2Mr3Z9V0VF
-X-Google-Smtp-Source: ACcGV62v4GXHUGqx7UVBEVD0y4McXxnULW5VpdgrVx/dH4ubp2NgXLzFSJlLYHg3b9sF7HKFfv7NzQ==
-X-Received: by 2002:a63:1b0b:: with SMTP id b11-v6mr8916635pgb.66.1538724863548;
-        Fri, 05 Oct 2018 00:34:23 -0700 (PDT)
-Received: from ?IPv6:2601:647:4800:973f:65ce:2bfc:fedf:1f69? ([2601:647:4800:973f:65ce:2bfc:fedf:1f69])
-        by smtp.gmail.com with ESMTPSA id 70-v6sm10529605pfz.27.2018.10.05.00.34.10
-        (version=TLS1_2 cipher=ECDHE-RSA-AES128-GCM-SHA256 bits=128/128);
-        Fri, 05 Oct 2018 00:34:22 -0700 (PDT)
-Subject: Re: [PATCH v9 13/13] nvmet: Optionally use PCI P2P memory
-To:     Christoph Hellwig <hch@lst.de>,
-        Logan Gunthorpe <logang@deltatee.com>
-Cc:     linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
-        linux-nvme@lists.infradead.org, linux-rdma@vger.kernel.org,
-        linux-nvdimm@lists.01.org, linux-block@vger.kernel.org,
-        Stephen Bates <sbates@raithlin.com>,
-        Keith Busch <keith.busch@intel.com>,
+        id S1727601AbeJER0e (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Fri, 5 Oct 2018 13:26:34 -0400
+Received: from foss.arm.com ([217.140.101.70]:49580 "EHLO foss.arm.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1727535AbeJER0d (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Fri, 5 Oct 2018 13:26:33 -0400
+Received: from usa-sjc-imap-foss1.foss.arm.com (unknown [10.72.51.249])
+        by usa-sjc-mx-foss1.foss.arm.com (Postfix) with ESMTP id B8E4480D;
+        Fri,  5 Oct 2018 03:28:23 -0700 (PDT)
+Received: from red-moon (red-moon.emea.arm.com [10.4.13.120])
+        by usa-sjc-imap-foss1.foss.arm.com (Postfix) with ESMTPSA id 474C33F5A0;
+        Fri,  5 Oct 2018 03:28:21 -0700 (PDT)
+Date:   Fri, 5 Oct 2018 11:29:06 +0100
+From:   Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
+To:     Leonard Crestez <leonard.crestez@nxp.com>
+Cc:     Lucas Stach <l.stach@pengutronix.de>,
+        Philipp Zabel <p.zabel@pengutronix.de>,
+        Richard Zhu <hongxing.zhu@nxp.com>,
+        Andrey Smirnov <andrew.smirnov@gmail.com>,
+        Gustavo Pimentel <gustavo.pimentel@synopsys.com>,
+        Jingoo Han <jingoohan1@gmail.com>,
         Bjorn Helgaas <bhelgaas@google.com>,
-        Jason Gunthorpe <jgg@mellanox.com>,
-        Max Gurtovoy <maxg@mellanox.com>,
-        Dan Williams <dan.j.williams@intel.com>,
-        =?UTF-8?B?SsOpcsO0bWUgR2xpc3Nl?= <jglisse@redhat.com>,
-        Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-        Alex Williamson <alex.williamson@redhat.com>,
-        =?UTF-8?Q?Christian_K=c3=b6nig?= <christian.koenig@amd.com>,
-        Jens Axboe <axboe@kernel.dk>,
-        Steve Wise <swise@opengridcomputing.com>
-References: <20181004212747.6301-1-logang@deltatee.com>
- <20181004212747.6301-14-logang@deltatee.com>
- <a3af4bda-0b73-c964-c7d6-5d59f0710768@grimberg.me>
- <2bcc0927-83ab-1bf2-d584-aebd5274cefa@deltatee.com>
- <20181005070720.GA23725@lst.de>
-From:   Sagi Grimberg <sagi@grimberg.me>
-Message-ID: <236ae882-34e0-50d8-ac19-ee5dab8db3f2@grimberg.me>
-Date:   Fri, 5 Oct 2018 00:34:06 -0700
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:52.0) Gecko/20100101
- Thunderbird/52.9.1
+        Shawn Guo <shawnguo@kernel.org>,
+        Fabio Estevam <fabio.estevam@nxp.com>,
+        dl-linux-imx <linux-imx@nxp.com>,
+        "kernel@pengutronix.de" <kernel@pengutronix.de>,
+        "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
+Subject: Re: [PATCH v2 4/4] PCI: imx: Add PME_Turn_Off support
+Message-ID: <20181005102906.GA25651@red-moon>
+References: <cover.1538670431.git.leonard.crestez@nxp.com>
+ <37d60fe2119361381a6a81f439fa1c3ad29db45e.1538670431.git.leonard.crestez@nxp.com>
 MIME-Version: 1.0
-In-Reply-To: <20181005070720.GA23725@lst.de>
-Content-Type: text/plain; charset=utf-8; format=flowed
-Content-Language: en-US
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <37d60fe2119361381a6a81f439fa1c3ad29db45e.1538670431.git.leonard.crestez@nxp.com>
+User-Agent: Mutt/1.5.21 (2010-09-15)
 Sender: linux-pci-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-
->>>> +static inline struct device *nvmet_ns_dev(struct nvmet_ns *ns)
->>>> +{
->>>> +	return disk_to_dev(ns->bdev->bd_disk);
->>>> +}
->>>
->>> This needs to handle non bdev namespaces.
->>
->> As it's coded now the helper never gets called unless ns->bdev is not
->> null. But in general, yes you are right, we should probably return NULL
->> if ns->bdev is NULL.
+On Thu, Oct 04, 2018 at 04:34:30PM +0000, Leonard Crestez wrote:
+> When the root complex suspends it must send a PME_Turn_Off TLP.
+> Implement this by asserting the "turnoff" reset.
 > 
-> I'd rather skip that for now.
+> On imx7d this functionality is part of the SRC and exposed through the
+> linux reset-controller subsystem. On imx6 equivalent bits are in the
+> IOMUXC GPR area which the imx6-pcie driver accesses directly.
 
-If there is a v10 I don't see why that cannot be addressed.
+Nit: I am merging the series, please define what SRC and GPR are so
+that I can update the commit log accordingly, it must be clear to
+anyone reading it.
 
->>> index ef286b72d958..3d12f5f4568d 100644
->>> --- a/drivers/nvme/target/fc.c
->>> +++ b/drivers/nvme/target/fc.c
->>> @@ -2280,6 +2280,7 @@ nvmet_fc_handle_fcp_rqst(struct nvmet_fc_tgtport
->>> *tgtport,
->>>           fod->req.cmd = &fod->cmdiubuf.sqe;
->>>           fod->req.rsp = &fod->rspiubuf.cqe;
->>>           fod->req.port = tgtport->pe->port;
->>> +       fod->req.p2p_client = tgtport->dev;
->>>
->>>           /* clear any response payload */
->>>           memset(&fod->rspiubuf, 0, sizeof(fod->rspiubuf));
->>> --
->>
->> Sure, I guess that makes sense. I've never tried it with fc hardware but
->> I assume there's no reason it wouldn't work.
->>
->> I'll queue these changes up for a v10.
+Thanks,
+Lorenzo
+
+> This is only for imx7d right now but it's deliberately implemented as an
+> optional reset, ignoring the chip variant:
+> * Older dtbs won't have this reset so it will be ignored.
+> * Future chips might also expose this as a reset controller.
 > 
-> And I'd wait until someone has actually tested this case.
-
-Oh yes, agreed. Should work though...
+> For example imx8m (not yet supported) has the exact same
+> PCIE_CTRL_APPS_TURNOFF bit in the same location.
+> 
+> Signed-off-by: Leonard Crestez <leonard.crestez@nxp.com>
+> ---
+>  drivers/pci/controller/dwc/pci-imx6.c | 24 ++++++++++++++++++++++++
+>  1 file changed, 24 insertions(+)
+> 
+> diff --git a/drivers/pci/controller/dwc/pci-imx6.c b/drivers/pci/controller/dwc/pci-imx6.c
+> index 6ba16fd1373c..2bf80f1ad852 100644
+> --- a/drivers/pci/controller/dwc/pci-imx6.c
+> +++ b/drivers/pci/controller/dwc/pci-imx6.c
+> @@ -50,10 +50,11 @@ struct imx6_pcie {
+>  	struct clk		*pcie_inbound_axi;
+>  	struct clk		*pcie;
+>  	struct regmap		*iomuxc_gpr;
+>  	struct reset_control	*pciephy_reset;
+>  	struct reset_control	*apps_reset;
+> +	struct reset_control	*turnoff_reset;
+>  	enum imx6_pcie_variants variant;
+>  	u32			tx_deemph_gen1;
+>  	u32			tx_deemph_gen2_3p5db;
+>  	u32			tx_deemph_gen2_6db;
+>  	u32			tx_swing_full;
+> @@ -812,10 +813,25 @@ static void imx6_pcie_ltssm_disable(struct device *dev)
+>  	default:
+>  		dev_err(dev, "ltssm_disable not supported\n");
+>  	}
+>  }
+>  
+> +static void imx6_pcie_pm_turnoff(struct imx6_pcie *imx6_pcie)
+> +{
+> +	reset_control_assert(imx6_pcie->turnoff_reset);
+> +	reset_control_deassert(imx6_pcie->turnoff_reset);
+> +
+> +	/*
+> +	 * Components with an upstream port must respond to
+> +	 * PME_Turn_Off with PME_TO_Ack but we can't check.
+> +	 *
+> +	 * The standard recommends a 1-10ms timeout after which to
+> +	 * proceed anyway as if acks were received.
+> +	 */
+> +	usleep_range(1000, 10000);
+> +}
+> +
+>  static void imx6_pcie_clk_disable(struct imx6_pcie *imx6_pcie)
+>  {
+>  	clk_disable_unprepare(imx6_pcie->pcie);
+>  	clk_disable_unprepare(imx6_pcie->pcie_phy);
+>  	clk_disable_unprepare(imx6_pcie->pcie_bus);
+> @@ -832,10 +848,11 @@ static int imx6_pcie_suspend_noirq(struct device *dev)
+>  	struct imx6_pcie *imx6_pcie = dev_get_drvdata(dev);
+>  
+>  	if (imx6_pcie->variant != IMX7D)
+>  		return 0;
+>  
+> +	imx6_pcie_pm_turnoff(imx6_pcie);
+>  	imx6_pcie_clk_disable(imx6_pcie);
+>  	imx6_pcie_ltssm_disable(dev);
+>  
+>  	return 0;
+>  }
+> @@ -959,10 +976,17 @@ static int imx6_pcie_probe(struct platform_device *pdev)
+>  		break;
+>  	default:
+>  		break;
+>  	}
+>  
+> +	/* Grab turnoff reset */
+> +	imx6_pcie->turnoff_reset = devm_reset_control_get_optional_exclusive(dev, "turnoff");
+> +	if (IS_ERR(imx6_pcie->turnoff_reset)) {
+> +		dev_err(dev, "Failed to get TURNOFF reset control\n");
+> +		return PTR_ERR(imx6_pcie->turnoff_reset);
+> +	}
+> +
+>  	/* Grab GPR config register range */
+>  	imx6_pcie->iomuxc_gpr =
+>  		 syscon_regmap_lookup_by_compatible("fsl,imx6q-iomuxc-gpr");
+>  	if (IS_ERR(imx6_pcie->iomuxc_gpr)) {
+>  		dev_err(dev, "unable to find iomuxc registers\n");
+> -- 
+> 2.17.1
+> 
