@@ -2,106 +2,120 @@ Return-Path: <SRS0=RTeO=MS=vger.kernel.org=linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-0.8 required=3.0 tests=DKIMWL_WL_MED,DKIM_SIGNED,
-	DKIM_VALID,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_PASS
-	autolearn=unavailable autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-5.4 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
+	DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,
+	SPF_PASS,URIBL_BLOCKED,USER_AGENT_MUTT autolearn=unavailable
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 969B4C00449
-	for <linux-pci@archiver.kernel.org>; Sat,  6 Oct 2018 01:16:16 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id C6839C65BD1
+	for <linux-pci@archiver.kernel.org>; Sat,  6 Oct 2018 07:02:48 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 5C0B921479
-	for <linux-pci@archiver.kernel.org>; Sat,  6 Oct 2018 01:16:16 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 8712F208E7
+	for <linux-pci@archiver.kernel.org>; Sat,  6 Oct 2018 07:02:48 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel-dk.20150623.gappssmtp.com header.i=@kernel-dk.20150623.gappssmtp.com header.b="DmapE2TU"
-DMARC-Filter: OpenDMARC Filter v1.3.2 mail.kernel.org 5C0B921479
-Authentication-Results: mail.kernel.org; dmarc=none (p=none dis=none) header.from=kernel.dk
+	dkim=pass (1024-bit key) header.d=linaro.org header.i=@linaro.org header.b="NBNNzcf+"
+DMARC-Filter: OpenDMARC Filter v1.3.2 mail.kernel.org 8712F208E7
+Authentication-Results: mail.kernel.org; dmarc=fail (p=none dis=none) header.from=linaro.org
 Authentication-Results: mail.kernel.org; spf=none smtp.mailfrom=linux-pci-owner@vger.kernel.org
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726608AbeJFIRc (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Sat, 6 Oct 2018 04:17:32 -0400
-Received: from mail-pg1-f175.google.com ([209.85.215.175]:34151 "EHLO
-        mail-pg1-f175.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726830AbeJFIR1 (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Sat, 6 Oct 2018 04:17:27 -0400
-Received: by mail-pg1-f175.google.com with SMTP id g12-v6so5444511pgs.1
-        for <linux-pci@vger.kernel.org>; Fri, 05 Oct 2018 18:16:09 -0700 (PDT)
+        id S1727207AbeJFOE5 (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Sat, 6 Oct 2018 10:04:57 -0400
+Received: from mail-pf1-f195.google.com ([209.85.210.195]:34796 "EHLO
+        mail-pf1-f195.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1727317AbeJFOEs (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Sat, 6 Oct 2018 10:04:48 -0400
+Received: by mail-pf1-f195.google.com with SMTP id k19-v6so6082889pfi.1
+        for <linux-pci@vger.kernel.org>; Sat, 06 Oct 2018 00:02:37 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=kernel-dk.20150623.gappssmtp.com; s=20150623;
-        h=subject:to:cc:references:from:message-id:date:user-agent
-         :mime-version:in-reply-to:content-language:content-transfer-encoding;
-        bh=kkkU9e6NPdzWlq+30NnrBK3elbGcUFsjA5IRWacg35w=;
-        b=DmapE2TUzmc3Z6DEB7tymyPxhkSegI3cgbwecwz9zh9u9wlyli32femmPWMl+EGTHy
-         Ifihsl9HZIXk7n062XWCRPIdD8TWOXtOCVFPgHymyvNIZMZwepYq9Q6gxHDvl65MNtmw
-         RzRCvfwG5iEbSh97ZIvC0rmMyEca1IqeJyY8t4TSj/cXlZPSQz2TLIgEv7QLZHyd0hS3
-         wkch7jwq+8an0TjOLu8H21e6WJf+wDEItrrJ7iOo5O9+E1Hvfl/5oUaTKC5cjyyVeV7X
-         aTd6EkBN0z6UVWCn5VYESmp6JOtxogNtRgyHVwPf3ZiEDsvUw4xtNHA14u5eiHIy9MLM
-         eAvg==
+        d=linaro.org; s=google;
+        h=date:from:to:cc:subject:message-id:references:mime-version
+         :content-disposition:in-reply-to:user-agent;
+        bh=yxuvBu+Fwt+lK+efudO8FJo6vyjQWM3N8/U9NFmxvos=;
+        b=NBNNzcf+XT2vcflggfwGxwcUwEbcV+4BoJavPuiIXo92PniznQvrxXkzH2mi7Ok5sm
+         ZsU/OCdsuCkHOwhUI/VGSbQ5R35qXCcRmM32NLxVnGTZx970MtD3IeYlUY0UNDQwPZVq
+         vsLh01rG+tMjRWRLgKa/cFyR39gz878jTGLoY=
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20161025;
-        h=x-gm-message-state:subject:to:cc:references:from:message-id:date
-         :user-agent:mime-version:in-reply-to:content-language
-         :content-transfer-encoding;
-        bh=kkkU9e6NPdzWlq+30NnrBK3elbGcUFsjA5IRWacg35w=;
-        b=LuQx2zi6lBZjj+hkfwHGGxCL2r/D9qXudOImiqxnDrKn0IXEk4Rhw4SvCqeEvTdiSy
-         EJtcyHpXwveUV0/gRoxkM1BmL9f5z/zyVmHJgtczSXy0wYcmHjbJI2C+o+R4S/e1uQyf
-         b0rh4W2eiyQeSIGyTc3TzqwSJWmKFLbOYQONwaMEDytwCgo8sMRwVpKapVDym0QP4aOH
-         geIkFDopJZPIIaqDeW1RkuLuVI0sM1jhgjAXg5eE02AUR2TKa3EaiGNzICow47vh5br2
-         /QwDVM7mRdKFIMmVDADrcCdaJBcqnW5VICNxIYgO57ENSVv8FmP9n+onjI8Ap8HgJGqb
-         DrRA==
-X-Gm-Message-State: ABuFfojx+RrCvBlx7u83ejmUzojsUJiFZWwEIaoydrjMfVPnFdbtJYtN
-        XHUSELiUbcOasYK02XYjVI38Aw==
-X-Google-Smtp-Source: ACcGV63r0ikAEGMOAxu5X0gW1kEShgGiPHOZoICu2OViKvWK0OP+2t8c87y/LwDoXW1ek+7KBeRV/w==
-X-Received: by 2002:a62:ccd4:: with SMTP id j81-v6mr14800582pfk.76.1538788568829;
-        Fri, 05 Oct 2018 18:16:08 -0700 (PDT)
-Received: from [192.168.1.212] (107.191.0.22.static.utbb.net. [107.191.0.22])
-        by smtp.gmail.com with ESMTPSA id z70-v6sm11859792pgd.64.2018.10.05.18.16.06
-        (version=TLS1_2 cipher=ECDHE-RSA-AES128-GCM-SHA256 bits=128/128);
-        Fri, 05 Oct 2018 18:16:07 -0700 (PDT)
-Subject: Re: [PATCH v9 07/13] block: Add PCI P2P flag for request queue and
- check support for requests
-To:     Logan Gunthorpe <logang@deltatee.com>,
-        linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
-        linux-nvme@lists.infradead.org, linux-rdma@vger.kernel.org,
-        linux-nvdimm@lists.01.org, linux-block@vger.kernel.org
-Cc:     Stephen Bates <sbates@raithlin.com>,
-        Christoph Hellwig <hch@lst.de>,
-        Keith Busch <keith.busch@intel.com>,
-        Sagi Grimberg <sagi@grimberg.me>,
-        Bjorn Helgaas <bhelgaas@google.com>,
-        Jason Gunthorpe <jgg@mellanox.com>,
-        Max Gurtovoy <maxg@mellanox.com>,
-        Dan Williams <dan.j.williams@intel.com>,
-        =?UTF-8?B?SsOpcsO0bWUgR2xpc3Nl?= <jglisse@redhat.com>,
-        Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-        Alex Williamson <alex.williamson@redhat.com>,
-        =?UTF-8?Q?Christian_K=c3=b6nig?= <christian.koenig@amd.com>
-References: <20181004212747.6301-1-logang@deltatee.com>
- <20181004212747.6301-8-logang@deltatee.com>
-From:   Jens Axboe <axboe@kernel.dk>
-Message-ID: <485de371-0e84-6f20-7f3b-cec5635b87fe@kernel.dk>
-Date:   Fri, 5 Oct 2018 19:16:04 -0600
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:60.0) Gecko/20100101
- Thunderbird/60.0
+        h=x-gm-message-state:date:from:to:cc:subject:message-id:references
+         :mime-version:content-disposition:in-reply-to:user-agent;
+        bh=yxuvBu+Fwt+lK+efudO8FJo6vyjQWM3N8/U9NFmxvos=;
+        b=P6M50ulBnL3bXAKEYxxBZDX4Xn/YE5S4ojd2L6TRh2JmYEqAy0GuEWMfZlHY9C46/P
+         TZXjlFOI9tVJEZMAkZA1nIxRXns7Drt7nhurFpVG/lwWVIeDHyRDPlRrE/7M4QAiHvhq
+         rzAjhcT1sDPIkpCovcaqkn9LiOo/qUzFn076jHY76S62+mCoAUngNT4maWdBLwB/mK5f
+         +6cMoRjhQwtKFHhfIAhOg3Mo8GfmZiBcjUAuphc1hMYjcudZJ+pu180bICOB3ih1locW
+         8dTrUBAnb8TSOIAKn9abU1ABYzEAMwBBMzbIUCEuUjvdeRyEGSvDAe14xXWT2JAQ2Uk4
+         pG8A==
+X-Gm-Message-State: ABuFfohNKttdSucWfJ8eipJgniI8Fiszxs+8ktBci8fMECozhPPNT440
+        NdqqxpH+82D+OFT+VCejn0XZBA==
+X-Google-Smtp-Source: ACcGV60dGSKOxXNr63g3bSD2U1+VM5YZuF2x7KTrzF1isi7pBVPzBtAzQZonbp4SGaT2JDqwz8iFZw==
+X-Received: by 2002:a62:1407:: with SMTP id 7-v6mr15150079pfu.28.1538809356673;
+        Sat, 06 Oct 2018 00:02:36 -0700 (PDT)
+Received: from builder (104-188-17-28.lightspeed.sndgca.sbcglobal.net. [104.188.17.28])
+        by smtp.gmail.com with ESMTPSA id g123-v6sm749112pfc.67.2018.10.06.00.02.34
+        (version=TLS1_2 cipher=ECDHE-RSA-CHACHA20-POLY1305 bits=256/256);
+        Sat, 06 Oct 2018 00:02:35 -0700 (PDT)
+Date:   Sat, 6 Oct 2018 00:05:21 -0700
+From:   Bjorn Andersson <bjorn.andersson@linaro.org>
+To:     Arnd Bergmann <arnd@arndb.de>
+Cc:     viro@zeniv.linux.org.uk, linux-fsdevel@vger.kernel.org,
+        Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+        "David S. Miller" <davem@davemloft.net>,
+        devel@driverdev.osuosl.org, linux-kernel@vger.kernel.org,
+        qat-linux@intel.com, linux-crypto@vger.kernel.org,
+        linux-media@vger.kernel.org, dri-devel@lists.freedesktop.org,
+        linaro-mm-sig@lists.linaro.org, amd-gfx@lists.freedesktop.org,
+        linux-input@vger.kernel.org, linux-iio@vger.kernel.org,
+        linux-rdma@vger.kernel.org, linux-nvdimm@lists.01.org,
+        linux-nvme@lists.infradead.org, linux-pci@vger.kernel.org,
+        platform-driver-x86@vger.kernel.org,
+        linux-remoteproc@vger.kernel.org, sparclinux@vger.kernel.org,
+        linux-scsi@vger.kernel.org, linux-usb@vger.kernel.org,
+        linux-fbdev@vger.kernel.org, linuxppc-dev@lists.ozlabs.org,
+        linux-btrfs@vger.kernel.org, ceph-devel@vger.kernel.org,
+        linux-wireless@vger.kernel.org, netdev@vger.kernel.org
+Subject: Re: [PATCH v2 05/17] compat_ioctl: move more drivers to
+ generic_compat_ioctl_ptrarg
+Message-ID: <20181006070521.GM12063@builder>
+References: <20180912150142.157913-1-arnd@arndb.de>
+ <20180912151134.436719-1-arnd@arndb.de>
 MIME-Version: 1.0
-In-Reply-To: <20181004212747.6301-8-logang@deltatee.com>
-Content-Type: text/plain; charset=utf-8
-Content-Language: en-US
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20180912151134.436719-1-arnd@arndb.de>
+User-Agent: Mutt/1.10.0 (2018-05-17)
 Sender: linux-pci-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-On 10/4/18 3:27 PM, Logan Gunthorpe wrote:
-> QUEUE_FLAG_PCI_P2P is introduced meaning a driver's request queue
-> supports targeting P2P memory. This will be used by P2P providers and
-> orchestrators (in subsequent patches) to ensure block devices can
-> support P2P memory before submitting P2P backed pages to submit_bio().
+On Wed 12 Sep 08:08 PDT 2018, Arnd Bergmann wrote:
 
-Nit pick, but the subject line still says that it checks support
-for requests. This patch just adds the ability to flag support
-in the queue.
+[..]
+> diff --git a/drivers/rpmsg/rpmsg_char.c b/drivers/rpmsg/rpmsg_char.c
+> index a76b963a7e50..02aefb2b2d47 100644
+> --- a/drivers/rpmsg/rpmsg_char.c
+> +++ b/drivers/rpmsg/rpmsg_char.c
+> @@ -285,7 +285,7 @@ static const struct file_operations rpmsg_eptdev_fops = {
+>  	.write = rpmsg_eptdev_write,
+>  	.poll = rpmsg_eptdev_poll,
+>  	.unlocked_ioctl = rpmsg_eptdev_ioctl,
+> -	.compat_ioctl = rpmsg_eptdev_ioctl,
+> +	.compat_ioctl = generic_compat_ioctl_ptrarg,
+>  };
+>  
+>  static ssize_t name_show(struct device *dev, struct device_attribute *attr,
+> @@ -446,7 +446,7 @@ static const struct file_operations rpmsg_ctrldev_fops = {
+>  	.open = rpmsg_ctrldev_open,
+>  	.release = rpmsg_ctrldev_release,
+>  	.unlocked_ioctl = rpmsg_ctrldev_ioctl,
+> -	.compat_ioctl = rpmsg_ctrldev_ioctl,
+> +	.compat_ioctl = generic_compat_ioctl_ptrarg,
+>  };
+>  
 
--- 
-Jens Axboe
+For rpmsg part
 
+Acked-by: Bjorn Andersson <bjorn.andersson@linaro.org>
+
+Regards,
+Bjorn
