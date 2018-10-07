@@ -1,121 +1,88 @@
-Return-Path: <SRS0=RTeO=MS=vger.kernel.org=linux-pci-owner@kernel.org>
+Return-Path: <SRS0=ld9y=MT=vger.kernel.org=linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-5.4 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
-	DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,
-	SPF_PASS,URIBL_BLOCKED,USER_AGENT_MUTT autolearn=unavailable
-	autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-3.6 required=3.0 tests=DKIM_INVALID,DKIM_SIGNED,
+	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_PASS,
+	URIBL_BLOCKED autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id C6839C65BD1
-	for <linux-pci@archiver.kernel.org>; Sat,  6 Oct 2018 07:02:48 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 8382AC00449
+	for <linux-pci@archiver.kernel.org>; Sun,  7 Oct 2018 03:56:38 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 8712F208E7
-	for <linux-pci@archiver.kernel.org>; Sat,  6 Oct 2018 07:02:48 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id ED53E20882
+	for <linux-pci@archiver.kernel.org>; Sun,  7 Oct 2018 03:56:36 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (1024-bit key) header.d=linaro.org header.i=@linaro.org header.b="NBNNzcf+"
-DMARC-Filter: OpenDMARC Filter v1.3.2 mail.kernel.org 8712F208E7
-Authentication-Results: mail.kernel.org; dmarc=fail (p=none dis=none) header.from=linaro.org
+	dkim=fail reason="signature verification failed" (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="Df7TT4UM"
+DMARC-Filter: OpenDMARC Filter v1.3.2 mail.kernel.org ED53E20882
+Authentication-Results: mail.kernel.org; dmarc=none (p=none dis=none) header.from=infradead.org
 Authentication-Results: mail.kernel.org; spf=none smtp.mailfrom=linux-pci-owner@vger.kernel.org
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727207AbeJFOE5 (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Sat, 6 Oct 2018 10:04:57 -0400
-Received: from mail-pf1-f195.google.com ([209.85.210.195]:34796 "EHLO
-        mail-pf1-f195.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1727317AbeJFOEs (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Sat, 6 Oct 2018 10:04:48 -0400
-Received: by mail-pf1-f195.google.com with SMTP id k19-v6so6082889pfi.1
-        for <linux-pci@vger.kernel.org>; Sat, 06 Oct 2018 00:02:37 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=linaro.org; s=google;
-        h=date:from:to:cc:subject:message-id:references:mime-version
-         :content-disposition:in-reply-to:user-agent;
-        bh=yxuvBu+Fwt+lK+efudO8FJo6vyjQWM3N8/U9NFmxvos=;
-        b=NBNNzcf+XT2vcflggfwGxwcUwEbcV+4BoJavPuiIXo92PniznQvrxXkzH2mi7Ok5sm
-         ZsU/OCdsuCkHOwhUI/VGSbQ5R35qXCcRmM32NLxVnGTZx970MtD3IeYlUY0UNDQwPZVq
-         vsLh01rG+tMjRWRLgKa/cFyR39gz878jTGLoY=
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20161025;
-        h=x-gm-message-state:date:from:to:cc:subject:message-id:references
-         :mime-version:content-disposition:in-reply-to:user-agent;
-        bh=yxuvBu+Fwt+lK+efudO8FJo6vyjQWM3N8/U9NFmxvos=;
-        b=P6M50ulBnL3bXAKEYxxBZDX4Xn/YE5S4ojd2L6TRh2JmYEqAy0GuEWMfZlHY9C46/P
-         TZXjlFOI9tVJEZMAkZA1nIxRXns7Drt7nhurFpVG/lwWVIeDHyRDPlRrE/7M4QAiHvhq
-         rzAjhcT1sDPIkpCovcaqkn9LiOo/qUzFn076jHY76S62+mCoAUngNT4maWdBLwB/mK5f
-         +6cMoRjhQwtKFHhfIAhOg3Mo8GfmZiBcjUAuphc1hMYjcudZJ+pu180bICOB3ih1locW
-         8dTrUBAnb8TSOIAKn9abU1ABYzEAMwBBMzbIUCEuUjvdeRyEGSvDAe14xXWT2JAQ2Uk4
-         pG8A==
-X-Gm-Message-State: ABuFfohNKttdSucWfJ8eipJgniI8Fiszxs+8ktBci8fMECozhPPNT440
-        NdqqxpH+82D+OFT+VCejn0XZBA==
-X-Google-Smtp-Source: ACcGV60dGSKOxXNr63g3bSD2U1+VM5YZuF2x7KTrzF1isi7pBVPzBtAzQZonbp4SGaT2JDqwz8iFZw==
-X-Received: by 2002:a62:1407:: with SMTP id 7-v6mr15150079pfu.28.1538809356673;
-        Sat, 06 Oct 2018 00:02:36 -0700 (PDT)
-Received: from builder (104-188-17-28.lightspeed.sndgca.sbcglobal.net. [104.188.17.28])
-        by smtp.gmail.com with ESMTPSA id g123-v6sm749112pfc.67.2018.10.06.00.02.34
-        (version=TLS1_2 cipher=ECDHE-RSA-CHACHA20-POLY1305 bits=256/256);
-        Sat, 06 Oct 2018 00:02:35 -0700 (PDT)
-Date:   Sat, 6 Oct 2018 00:05:21 -0700
-From:   Bjorn Andersson <bjorn.andersson@linaro.org>
-To:     Arnd Bergmann <arnd@arndb.de>
-Cc:     viro@zeniv.linux.org.uk, linux-fsdevel@vger.kernel.org,
-        Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-        "David S. Miller" <davem@davemloft.net>,
-        devel@driverdev.osuosl.org, linux-kernel@vger.kernel.org,
-        qat-linux@intel.com, linux-crypto@vger.kernel.org,
-        linux-media@vger.kernel.org, dri-devel@lists.freedesktop.org,
-        linaro-mm-sig@lists.linaro.org, amd-gfx@lists.freedesktop.org,
-        linux-input@vger.kernel.org, linux-iio@vger.kernel.org,
-        linux-rdma@vger.kernel.org, linux-nvdimm@lists.01.org,
-        linux-nvme@lists.infradead.org, linux-pci@vger.kernel.org,
-        platform-driver-x86@vger.kernel.org,
-        linux-remoteproc@vger.kernel.org, sparclinux@vger.kernel.org,
-        linux-scsi@vger.kernel.org, linux-usb@vger.kernel.org,
-        linux-fbdev@vger.kernel.org, linuxppc-dev@lists.ozlabs.org,
-        linux-btrfs@vger.kernel.org, ceph-devel@vger.kernel.org,
-        linux-wireless@vger.kernel.org, netdev@vger.kernel.org
-Subject: Re: [PATCH v2 05/17] compat_ioctl: move more drivers to
- generic_compat_ioctl_ptrarg
-Message-ID: <20181006070521.GM12063@builder>
-References: <20180912150142.157913-1-arnd@arndb.de>
- <20180912151134.436719-1-arnd@arndb.de>
+        id S1726291AbeJGLCX (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Sun, 7 Oct 2018 07:02:23 -0400
+Received: from bombadil.infradead.org ([198.137.202.133]:41364 "EHLO
+        bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726238AbeJGLCX (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Sun, 7 Oct 2018 07:02:23 -0400
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
+        d=infradead.org; s=bombadil.20170209; h=Content-Transfer-Encoding:
+        Content-Type:MIME-Version:Date:Message-ID:Subject:From:Cc:To:Sender:Reply-To:
+        Content-ID:Content-Description:Resent-Date:Resent-From:Resent-Sender:
+        Resent-To:Resent-Cc:Resent-Message-ID:In-Reply-To:References:List-Id:
+        List-Help:List-Unsubscribe:List-Subscribe:List-Post:List-Owner:List-Archive;
+         bh=GcsFwBsTlRGg/ymaDk01OYInWyg4O77CuATR9BiGVRA=; b=Df7TT4UMOwTKwXuuhJ6gyk1gV
+        mbm/io3yJZTTGOCf7x1er1g2NlAXwqH4H5aobjHS5Qg7GpBe8+YrIV7xtRaKRADg0DjFztc0dAo7D
+        BztgT0B+ec6GjtKV+4Yd1KvxEjGllantpK0PesB2M1UO5r6NmiO6jDF1Bqq0xM+mnCgCuV7YJcPt5
+        3LYcNdwrhC7U56QrFYwKKv9Z6aHARwDO7OxNkWxsEsLX+vWfvTsabdkY3upA0mtxtldBlaXMRcqcS
+        UWab5lj2ex8Z/X3WmJVViENvuB/iHgsDFqRjL7b8nOJ19SIR3+0hYLnhvMQveCVjWuqtvR+9LsPbk
+        DlyVTqXRg==;
+Received: from static-50-53-52-16.bvtn.or.frontiernet.net ([50.53.52.16] helo=midway.dunlab)
+        by bombadil.infradead.org with esmtpsa (Exim 4.90_1 #2 (Red Hat Linux))
+        id 1g90BG-0004QT-Nc; Sun, 07 Oct 2018 03:56:34 +0000
+To:     linux-pci <linux-pci@vger.kernel.org>,
+        Bjorn Helgaas <bhelgaas@google.com>
+Cc:     LKML <linux-kernel@vger.kernel.org>,
+        Alexander Duyck <alexander.h.duyck@intel.com>
+From:   Randy Dunlap <rdunlap@infradead.org>
+Subject: [PATCH] PCI: expand the "PF" acronym in Kconfig help text
+Message-ID: <fceb7567-dae1-f393-b2e9-bce6e1fa5159@infradead.org>
+Date:   Sat, 6 Oct 2018 20:56:33 -0700
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:60.0) Gecko/20100101
+ Thunderbird/60.0
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20180912151134.436719-1-arnd@arndb.de>
-User-Agent: Mutt/1.10.0 (2018-05-17)
+Content-Type: text/plain; charset=utf-8
+Content-Language: en-US
+Content-Transfer-Encoding: 7bit
 Sender: linux-pci-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-On Wed 12 Sep 08:08 PDT 2018, Arnd Bergmann wrote:
+From: Randy Dunlap <rdunlap@infradead.org>
 
-[..]
-> diff --git a/drivers/rpmsg/rpmsg_char.c b/drivers/rpmsg/rpmsg_char.c
-> index a76b963a7e50..02aefb2b2d47 100644
-> --- a/drivers/rpmsg/rpmsg_char.c
-> +++ b/drivers/rpmsg/rpmsg_char.c
-> @@ -285,7 +285,7 @@ static const struct file_operations rpmsg_eptdev_fops = {
->  	.write = rpmsg_eptdev_write,
->  	.poll = rpmsg_eptdev_poll,
->  	.unlocked_ioctl = rpmsg_eptdev_ioctl,
-> -	.compat_ioctl = rpmsg_eptdev_ioctl,
-> +	.compat_ioctl = generic_compat_ioctl_ptrarg,
->  };
->  
->  static ssize_t name_show(struct device *dev, struct device_attribute *attr,
-> @@ -446,7 +446,7 @@ static const struct file_operations rpmsg_ctrldev_fops = {
->  	.open = rpmsg_ctrldev_open,
->  	.release = rpmsg_ctrldev_release,
->  	.unlocked_ioctl = rpmsg_ctrldev_ioctl,
-> -	.compat_ioctl = rpmsg_ctrldev_ioctl,
-> +	.compat_ioctl = generic_compat_ioctl_ptrarg,
->  };
->  
+Tell users what a PCI PF is in the PCI_PF_STUB config help text.
 
-For rpmsg part
+Fixes: a8ccf8a66663 ("PCI/IOV: Add pci-pf-stub driver for PFs that only enable VFs")
 
-Acked-by: Bjorn Andersson <bjorn.andersson@linaro.org>
+Signed-off-by: Randy Dunlap <rdunlap@infradead.org>
+Cc: Alexander Duyck <alexander.h.duyck@intel.com>
+---
+ drivers/pci/Kconfig |    6 +++---
+ 1 file changed, 3 insertions(+), 3 deletions(-)
 
-Regards,
-Bjorn
+--- lnx-419-rc6.orig/drivers/pci/Kconfig
++++ lnx-419-rc6/drivers/pci/Kconfig
+@@ -73,9 +73,9 @@ config PCI_PF_STUB
+ 	depends on PCI_IOV
+ 	help
+ 	  Say Y or M here if you want to enable support for devices that
+-	  require SR-IOV support, while at the same time the PF itself is
+-	  not providing any actual services on the host itself such as
+-	  storage or networking.
++	  require SR-IOV support, while at the same time the PF (Physical
++	  Function) itself is not providing any actual services on the
++	  host itself such as storage or networking.
+ 
+ 	  When in doubt, say N.
+ 
+
+
