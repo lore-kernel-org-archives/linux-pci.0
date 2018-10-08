@@ -2,35 +2,44 @@ Return-Path: <SRS0=j7M/=MU=vger.kernel.org=linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-8.2 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_PASS,URIBL_BLOCKED,
-	USER_AGENT_MUTT autolearn=unavailable autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-3.0 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,MAILING_LIST_MULTI,SPF_PASS,URIBL_BLOCKED,
+	USER_AGENT_MUTT autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 7E799C65C20
-	for <linux-pci@archiver.kernel.org>; Mon,  8 Oct 2018 17:24:26 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 16D6FC677D4
+	for <linux-pci@archiver.kernel.org>; Mon,  8 Oct 2018 17:31:35 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 4AF12213A2
-	for <linux-pci@archiver.kernel.org>; Mon,  8 Oct 2018 17:24:26 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.3.2 mail.kernel.org 4AF12213A2
-Authentication-Results: mail.kernel.org; dmarc=none (p=none dis=none) header.from=arm.com
+	by mail.kernel.org (Postfix) with ESMTP id D021C2145D
+	for <linux-pci@archiver.kernel.org>; Mon,  8 Oct 2018 17:31:34 +0000 (UTC)
+Authentication-Results: mail.kernel.org;
+	dkim=pass (1024-bit key) header.d=kernel.org header.i=@kernel.org header.b="ulhjD4xQ"
+DMARC-Filter: OpenDMARC Filter v1.3.2 mail.kernel.org D021C2145D
+Authentication-Results: mail.kernel.org; dmarc=fail (p=none dis=none) header.from=kernel.org
 Authentication-Results: mail.kernel.org; spf=none smtp.mailfrom=linux-pci-owner@vger.kernel.org
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726670AbeJIAga (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Mon, 8 Oct 2018 20:36:30 -0400
-Received: from foss.arm.com ([217.140.101.70]:53548 "EHLO foss.arm.com"
+        id S1726445AbeJIAoT (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Mon, 8 Oct 2018 20:44:19 -0400
+Received: from mail.kernel.org ([198.145.29.99]:53996 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1726427AbeJIAg3 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Mon, 8 Oct 2018 20:36:29 -0400
-Received: from usa-sjc-imap-foss1.foss.arm.com (unknown [10.72.51.249])
-        by usa-sjc-mx-foss1.foss.arm.com (Postfix) with ESMTP id 1423DED1;
-        Mon,  8 Oct 2018 10:23:46 -0700 (PDT)
-Received: from e107981-ln.cambridge.arm.com (e107981-ln.cambridge.arm.com [10.1.197.40])
-        by usa-sjc-imap-foss1.foss.arm.com (Postfix) with ESMTPSA id 69F043F5D3;
-        Mon,  8 Oct 2018 10:23:43 -0700 (PDT)
-Date:   Mon, 8 Oct 2018 18:23:37 +0100
-From:   Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
-To:     honghui.zhang@mediatek.com, bhelgaas@google.com
-Cc:     linux-arm-kernel@lists.infradead.org,
+        id S1726291AbeJIAoT (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Mon, 8 Oct 2018 20:44:19 -0400
+Received: from localhost (unknown [64.22.249.253])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+        (No client certificate requested)
+        by mail.kernel.org (Postfix) with ESMTPSA id 09BD0213A2;
+        Mon,  8 Oct 2018 17:31:32 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+        s=default; t=1539019893;
+        bh=KX2ZgCDGy6ZgsQvtEVci3+RbZ1rpqfiwmxMUNP/ewd4=;
+        h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
+        b=ulhjD4xQ4fZkkcGaNBlcHUo+p0Q1/mB+OzdP5nuuX0W4kSMq0Qr4/jmgGzHSem/VC
+         W9aFmG5WmCPzNtK64vIX5RMR4EMRVqHOZYtp1lv/TStw8f/WTuEAgG1FjRPYgyTMKj
+         2iDOWwiCVeVjMLMIrSS6Zi1Id7A+un3AIzmULCMo=
+Date:   Mon, 8 Oct 2018 12:31:31 -0500
+From:   Bjorn Helgaas <helgaas@kernel.org>
+To:     honghui.zhang@mediatek.com
+Cc:     lorenzo.pieralisi@arm.com, bhelgaas@google.com,
+        linux-arm-kernel@lists.infradead.org,
         linux-mediatek@lists.infradead.org, linux-pci@vger.kernel.org,
         linux-kernel@vger.kernel.org, ryder.lee@mediatek.com,
         ulf.hansson@linaro.org, marc.zyngier@arm.com,
@@ -38,74 +47,41 @@ Cc:     linux-arm-kernel@lists.infradead.org,
         yingjoe.chen@mediatek.com, eddie.huang@mediatek.com,
         youlin.pei@mediatek.com, yt.shen@mediatek.com,
         sean.wang@mediatek.com
-Subject: Re: [PATCH v6 2/9] PCI: mediatek: Fixup class ID for MT7622 as
- PCI_CLASS_BRIDGE_PCI
-Message-ID: <20181008172337.GA13538@e107981-ln.cambridge.arm.com>
+Subject: Re: [PATCH v6 0/9] PCI: mediatek: fixup find_port, enable_msi and
+ add pm, module support
+Message-ID: <20181008173131.GN120535@bhelgaas-glaptop.roam.corp.google.com>
 References: <1538969088-7136-1-git-send-email-honghui.zhang@mediatek.com>
- <1538969088-7136-3-git-send-email-honghui.zhang@mediatek.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <1538969088-7136-3-git-send-email-honghui.zhang@mediatek.com>
-User-Agent: Mutt/1.5.24 (2015-08-30)
+In-Reply-To: <1538969088-7136-1-git-send-email-honghui.zhang@mediatek.com>
+User-Agent: Mutt/1.10.1 (2018-07-13)
 Sender: linux-pci-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-On Mon, Oct 08, 2018 at 11:24:41AM +0800, honghui.zhang@mediatek.com wrote:
-> From: Honghui Zhang <honghui.zhang@mediatek.com>
-> 
-> The PCIe controller of MT7622 has TYPE 1 configuration space type, but
-> the HW default class type values is invalid.
-> 
-> The commit 101c92dc80c8 ("PCI: mediatek: Set up vendor ID and class
-> type for MT7622") have set the class ID for MT7622 as
-> PCI_CLASS_BRIDGE_HOST, but it's not workable for MT7622:
-> 
-> In __pci_bus_assign_resources, the framework only setup bridge's
-> resource window only if class type is PCI_CLASS_BRIDGE_PCI. Or it
-> will leave the subordinary PCIe device's MMIO window un-touched.
-> 
-> Fixup the class type to PCI_CLASS_BRIDGE_PCI as most of the controller
-> driver do.
+On Mon, Oct 08, 2018 at 11:24:39AM +0800, honghui.zhang@mediatek.com wrote:
 
-I think that this patch is correct but the commit log fails to pin point
-the problem. The IP you are programming is a root port, that's why you
-have to have the proper class code, the patch looks fine but I would
-like to peek Bjorn's brain on this since it is a fundamental concept.
+> Honghui Zhang (9):
+>   PCI: mediatek: Using slot's devfn for compare to fix
+>     mtk_pcie_find_port logic
+>   PCI: mediatek: Fixup class ID for MT7622 as PCI_CLASS_BRIDGE_PCI
+>   PCI: mediatek: Remove the redundant dev->pm_domain check
+>   PCI: mediatek: Convert to use pci_host_probe()
+>   PCI: mediatek: Move the mtk_pcie_startup_port_v2 function's define
+>     after mtk_pcie_setup_irq
+>   PCI: mediatek: Fixup enable msi logic by enable msi after clock
+>     enabled
 
-If the kernel does not assign resources unless it detects a
-PCI_CLASS_BRIDGE_PCI this means that for components that are
-actually PCI_CLASS_BRIDGE_HOST their register set must come
-preprogrammed unless I am missing something.
+s/msi/MSI/ (twice)
 
-I would like to get to the bottom of this since it is a fundamental
-enumeration concept.
+>   PCI: mediatek: Add system pm support for MT2712 and MT7622
 
-Thanks,
-Lorenzo
+s/pm/PM/
 
-> 
-> Signed-off-by: Honghui Zhang <honghui.zhang@mediatek.com>
-> Acked-by: Ryder Lee <ryder.lee@mediatek.com>
-> ---
->  drivers/pci/controller/pcie-mediatek.c | 2 +-
->  1 file changed, 1 insertion(+), 1 deletion(-)
-> 
-> diff --git a/drivers/pci/controller/pcie-mediatek.c b/drivers/pci/controller/pcie-mediatek.c
-> index 288b8e2..bcdac9b 100644
-> --- a/drivers/pci/controller/pcie-mediatek.c
-> +++ b/drivers/pci/controller/pcie-mediatek.c
-> @@ -432,7 +432,7 @@ static int mtk_pcie_startup_port_v2(struct mtk_pcie_port *port)
->  		val = PCI_VENDOR_ID_MEDIATEK;
->  		writew(val, port->base + PCIE_CONF_VEND_ID);
->  
-> -		val = PCI_CLASS_BRIDGE_HOST;
-> +		val = PCI_CLASS_BRIDGE_PCI;
->  		writew(val, port->base + PCIE_CONF_CLASS_ID);
->  	}
->  
-> -- 
-> 2.6.4
-> 
+"msi" and "pm" are not English words, and capitalizing them tells the
+reader that they are acronyms or initialisms (like GIC and IRQ below).
+
+>   PCI: mediatek: Save the GIC IRQ in mtk_pcie_port
+>   PCI: mediatek: Add loadable kernel module support
