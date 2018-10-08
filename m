@@ -1,105 +1,156 @@
-Return-Path: <SRS0=ld9y=MT=vger.kernel.org=linux-pci-owner@kernel.org>
+Return-Path: <SRS0=j7M/=MU=vger.kernel.org=linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-3.6 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
-	DKIM_VALID_AU,FREEMAIL_FORGED_FROMDOMAIN,FREEMAIL_FROM,
-	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_PASS,
-	URIBL_BLOCKED autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-6.8 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_PASS,UNPARSEABLE_RELAY,
+	URIBL_BLOCKED autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 03DFCC65C1B
-	for <linux-pci@archiver.kernel.org>; Sun,  7 Oct 2018 17:02:46 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 5976FC6787E
+	for <linux-pci@archiver.kernel.org>; Mon,  8 Oct 2018 03:02:58 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id A61B92087D
-	for <linux-pci@archiver.kernel.org>; Sun,  7 Oct 2018 17:02:45 +0000 (UTC)
-Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="NZACf78P"
-DMARC-Filter: OpenDMARC Filter v1.3.2 mail.kernel.org A61B92087D
-Authentication-Results: mail.kernel.org; dmarc=fail (p=none dis=none) header.from=gmail.com
+	by mail.kernel.org (Postfix) with ESMTP id 156D620834
+	for <linux-pci@archiver.kernel.org>; Mon,  8 Oct 2018 03:02:58 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.3.2 mail.kernel.org 156D620834
+Authentication-Results: mail.kernel.org; dmarc=none (p=none dis=none) header.from=mediatek.com
 Authentication-Results: mail.kernel.org; spf=none smtp.mailfrom=linux-pci-owner@vger.kernel.org
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727882AbeJHAKh (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Sun, 7 Oct 2018 20:10:37 -0400
-Received: from mail-it1-f196.google.com ([209.85.166.196]:36381 "EHLO
-        mail-it1-f196.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1727820AbeJHAKh (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Sun, 7 Oct 2018 20:10:37 -0400
-Received: by mail-it1-f196.google.com with SMTP id c85-v6so8972783itd.1;
-        Sun, 07 Oct 2018 10:02:44 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20161025;
-        h=mime-version:references:in-reply-to:from:date:message-id:subject:to
-         :cc;
-        bh=BySx2ZW7o37OCQFUIM+WKKH2cvbcU7bEIXH3NrdwXnw=;
-        b=NZACf78PTFDiXCmLzhrv9FtP/7RROEy/nyss/b0DwNwSpTt6Z26FweCjztMAMCLMma
-         bRRZuZolYQlwX4PkaVghrJgKzZH+QcjUUwPJsnz/1VvrzdljIVnijXvlxUSI6kFnNr4a
-         fWzDUEJKnuvtO0KfYmCNxB7a4qgHWOmEgkxGGNh5gH9WJxk3j17t500rVneZ4NH7ZLRR
-         UAKy2pbmIfyuqGKCwkkW6syfiW9agsMNnSds5BP5ZauHnWDw5jkB1S2lPSQYXW4i8nQc
-         aW0HCDoHrFH/2LGXZ1daGP9RoE9d76rQHYFq1L4k1K9bY42IBNul3iYcDWSTrW98SIOJ
-         i4Cg==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20161025;
-        h=x-gm-message-state:mime-version:references:in-reply-to:from:date
-         :message-id:subject:to:cc;
-        bh=BySx2ZW7o37OCQFUIM+WKKH2cvbcU7bEIXH3NrdwXnw=;
-        b=ekyw0RvyKD6fdXs2ACK14htoTKldPn4CsquBH7n02yml1My5JfQ5iu1aZZQwWLUqga
-         n7Z3O4ir7V7x8hwbz6mW7m4Vz0QkehyeV5J7ujV0QOaHQQiKqfx6vU4knJP9J0ZSrAKY
-         PcDkp9nXGG9D7EPcsuFWhdn29Ypi4boVvUF0E/i/ee3Xcc5K6ZJeKPxk/UgM7UZC24nD
-         swzHCS4IrfZsJga3UhwvGw5zuP4XbPant99IPGuYG4mdrdDLxpotZjkNC04aGvO4TiAD
-         hoLBnSD5ztVxMdTcfJxMt5IZM1X1vTSJZLpJYAiHgSDBqSJVlc9kp98UnySTLnUZNZ1H
-         W+7w==
-X-Gm-Message-State: ABuFfojaF29HhnsdbQqdr+1PZ8Yc8sXP6Xjviok5IyWtzxlVNm9UCs3P
-        2t5eKhTZKw7NvvnD1j5XmWMp1qzHe+/wHWoYGNsqkA==
-X-Google-Smtp-Source: ACcGV61tcfGzgHqquoILSE9kk10Il9wwQwu9VpGY1r/AQV1a+/a/cly+Lzf/I4iQOEFZk0rWFU1LQdWtz7Cq2C7CXZM=
-X-Received: by 2002:a05:660c:383:: with SMTP id x3mr14400111itj.121.1538931763496;
- Sun, 07 Oct 2018 10:02:43 -0700 (PDT)
-MIME-Version: 1.0
-References: <fceb7567-dae1-f393-b2e9-bce6e1fa5159@infradead.org>
-In-Reply-To: <fceb7567-dae1-f393-b2e9-bce6e1fa5159@infradead.org>
-From:   Alexander Duyck <alexander.duyck@gmail.com>
-Date:   Sun, 7 Oct 2018 10:02:32 -0700
-Message-ID: <CAKgT0UfTULhJYvw2z8xHYLUJ=Mh+iuk4TQXUduXsgiUjicXxPA@mail.gmail.com>
-Subject: Re: [PATCH] PCI: expand the "PF" acronym in Kconfig help text
-To:     Randy Dunlap <rdunlap@infradead.org>
-Cc:     linux-pci <linux-pci@vger.kernel.org>,
-        Bjorn Helgaas <bhelgaas@google.com>,
-        LKML <linux-kernel@vger.kernel.org>,
-        "Duyck, Alexander H" <alexander.h.duyck@intel.com>
+        id S1725993AbeJHKMX (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Mon, 8 Oct 2018 06:12:23 -0400
+Received: from mailgw02.mediatek.com ([1.203.163.81]:48095 "EHLO
+        mailgw02.mediatek.com" rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org
+        with ESMTP id S1725760AbeJHKMX (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Mon, 8 Oct 2018 06:12:23 -0400
+X-UUID: 011a7058029c4c6a960bbd9c2bd86b2f-20181008
+X-UUID: 011a7058029c4c6a960bbd9c2bd86b2f-20181008
+Received: from mtkcas35.mediatek.inc [(172.27.4.250)] by mailgw02.mediatek.com
+        (envelope-from <honghui.zhang@mediatek.com>)
+        (mailgw01.mediatek.com ESMTP with TLS)
+        with ESMTP id 2089238376; Mon, 08 Oct 2018 11:02:22 +0800
+Received: from MTKCAS36.mediatek.inc (172.27.4.186) by MTKMBS31DR.mediatek.inc
+ (172.27.6.102) with Microsoft SMTP Server (TLS) id 15.0.1395.4; Mon, 8 Oct
+ 2018 11:02:19 +0800
+Received: from [10.17.3.153] (10.17.3.153) by MTKCAS36.mediatek.inc
+ (172.27.4.170) with Microsoft SMTP Server id 15.0.1395.4 via Frontend
+ Transport; Mon, 8 Oct 2018 11:02:17 +0800
+Message-ID: <1538967737.6246.5.camel@mhfsdcap03>
+Subject: Re: [PATCH v5 1/9] PCI: mediatek: Using slot's devfn for compare to
+ fix mtk_pcie_find_port logic
+From:   Honghui Zhang <honghui.zhang@mediatek.com>
+To:     Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
+CC:     <bhelgaas@google.com>, <linux-arm-kernel@lists.infradead.org>,
+        <linux-mediatek@lists.infradead.org>, <linux-pci@vger.kernel.org>,
+        <linux-kernel@vger.kernel.org>, <ryder.lee@mediatek.com>,
+        <ulf.hansson@linaro.org>, <marc.zyngier@arm.com>,
+        <matthias.bgg@gmail.com>, <devicetree@vger.kernel.org>,
+        <yingjoe.chen@mediatek.com>, <eddie.huang@mediatek.com>,
+        <youlin.pei@mediatek.com>, <yt.shen@mediatek.com>,
+        <sean.wang@mediatek.com>
+Date:   Mon, 8 Oct 2018 11:02:17 +0800
+In-Reply-To: <20181002105945.GA27736@e107981-ln.cambridge.arm.com>
+References: <1538129080-8206-1-git-send-email-honghui.zhang@mediatek.com>
+         <1538129080-8206-2-git-send-email-honghui.zhang@mediatek.com>
+         <20181001143641.GB13049@red-moon>
+         <20181002105945.GA27736@e107981-ln.cambridge.arm.com>
 Content-Type: text/plain; charset="UTF-8"
+X-Mailer: Evolution 3.2.3-0ubuntu6 
+Content-Transfer-Encoding: 7bit
+MIME-Version: 1.0
+X-MTK:  N
 Sender: linux-pci-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-On Sat, Oct 6, 2018 at 8:57 PM Randy Dunlap <rdunlap@infradead.org> wrote:
->
-> From: Randy Dunlap <rdunlap@infradead.org>
->
-> Tell users what a PCI PF is in the PCI_PF_STUB config help text.
->
-> Fixes: a8ccf8a66663 ("PCI/IOV: Add pci-pf-stub driver for PFs that only enable VFs")
->
-> Signed-off-by: Randy Dunlap <rdunlap@infradead.org>
-> Cc: Alexander Duyck <alexander.h.duyck@intel.com>
-> ---
->  drivers/pci/Kconfig |    6 +++---
->  1 file changed, 3 insertions(+), 3 deletions(-)
->
-> --- lnx-419-rc6.orig/drivers/pci/Kconfig
-> +++ lnx-419-rc6/drivers/pci/Kconfig
-> @@ -73,9 +73,9 @@ config PCI_PF_STUB
->         depends on PCI_IOV
->         help
->           Say Y or M here if you want to enable support for devices that
-> -         require SR-IOV support, while at the same time the PF itself is
-> -         not providing any actual services on the host itself such as
-> -         storage or networking.
-> +         require SR-IOV support, while at the same time the PF (Physical
-> +         Function) itself is not providing any actual services on the
-> +         host itself such as storage or networking.
->
->           When in doubt, say N.
+On Tue, 2018-10-02 at 11:59 +0100, Lorenzo Pieralisi wrote:
+> On Mon, Oct 01, 2018 at 03:36:41PM +0100, Lorenzo Pieralisi wrote:
+> > On Fri, Sep 28, 2018 at 06:04:32PM +0800, honghui.zhang@mediatek.com wrote:
+> > > From: Honghui Zhang <honghui.zhang@mediatek.com>
+> > > 
+> > > The Mediatek's host controller has two slots, each with it's own control
+> > > registers. The host driver need to identify which slot was connected
+> > > in order to access the device's configuration space. There's problem
+> > > for current host driver to find out which slot was connected to for
+> > > a given EP device.
+> > > 
+> > > Assuming each slot have connect with one EP device as below:
+> > > 
+> > >                 host bridge
+> > >   bus 0 --> __________|_______
+> > >            |                  |
+> > >            |                  |
+> > >          slot 0             slot 1
+> > >   bus 1 -->|        bus 2 --> |
+> > >            |                  |
+> > >          EP 0               EP 1
+> > > 
+> > > During PCI enumeration, system software will scan all the PCI device
+> > > starting from devfn 0. So it will get the proper port for slot0 and
+> > > slot1 device when using PCI_SLOT(devfn) for match. But it will get
+> > > the wrong slot for EP1: The devfn will be start from 0 when scanning
+> > > EP1 behind slot1, it will get port0 since the PCI_SLOT(EP1) is match
+> > > for port0's slot value. So the host driver should not using EP's devfn
+> > > but the slot's devfn(the slot which EP was connected to) for match.
+> > > 
+> > > This patch fix the mtk_pcie_find_port's logic by using the slot's
+> > > devfn for match if finding device connected to the subordinate bus.
+> > > 
+> > > Signed-off-by: Honghui Zhang <honghui.zhang@mediatek.com>
+> > > ---
+> > >  drivers/pci/controller/pcie-mediatek.c | 17 ++++++++++++++++-
+> > >  1 file changed, 16 insertions(+), 1 deletion(-)
+> > > 
+> > > diff --git a/drivers/pci/controller/pcie-mediatek.c b/drivers/pci/controller/pcie-mediatek.c
+> > > index 9999dae..264e03f 100644
+> > > --- a/drivers/pci/controller/pcie-mediatek.c
+> > > +++ b/drivers/pci/controller/pcie-mediatek.c
+> > > @@ -337,10 +337,25 @@ static struct mtk_pcie_port *mtk_pcie_find_port(struct pci_bus *bus,
+> > >  {
+> > >  	struct mtk_pcie *pcie = bus->sysdata;
+> > >  	struct mtk_pcie_port *port;
+> > > +	struct pci_dev *dev = NULL;
+> > > +
+> > > +	/*
+> > > +	 * Walk the bus hierarchy to get the devfn value
+> > > +	 * of the port in the root bus.
+> > > +	 */
+> > > +	while (bus && bus->number) {
+> > > +		dev = bus->self;
+> > > +		bus = dev->bus;
+> > 
+> > If you add:
+> > 
+> > devfn = dev->devfn;
+> > 
+> > here
+> > 
+> > > +	}
+> > > +
+> > > +	list_for_each_entry(port, &pcie->ports, list) {
+> > > +		/* Using slot's devfn to compare for subordinary bus. */
+> > > +		if (dev)
+> > > +			devfn = dev->devfn;
+> > 
+> > You can remove this ugly hunk altogether (and dev initialization
+> > to NULL).
+> 
+> Hi Honghui,
+> 
+> if you can make this change I would merge this series, it has been
+> been in the mailing lists for a while, I can make that change too
+> just let me know please.
+> 
 
-This looks good to me.
+Hi, Lorenzo, sorry for the late reply.
 
-Acked-by: Alexander Duyck <alexander.h.duyck@linux.intel.com>
+I tried your advise and it works fine.
+
+I will send another version to fix this, as well as to add a fix tag in
+the commit message of patch 6.
+
+thanks
+
+> Thanks,
+> Lorenzo
+
+
