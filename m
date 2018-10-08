@@ -4,35 +4,36 @@ X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 X-Spam-Level: 
 X-Spam-Status: No, score=-8.8 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
 	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_PASS,UNPARSEABLE_RELAY,
-	URIBL_BLOCKED,USER_AGENT_GIT autolearn=ham autolearn_force=no version=3.4.0
+	URIBL_BLOCKED,USER_AGENT_GIT autolearn=unavailable autolearn_force=no
+	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id BA53CECDE2D
-	for <linux-pci@archiver.kernel.org>; Mon,  8 Oct 2018 03:25:16 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id F1FCDC6787E
+	for <linux-pci@archiver.kernel.org>; Mon,  8 Oct 2018 03:25:29 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 884F22088F
-	for <linux-pci@archiver.kernel.org>; Mon,  8 Oct 2018 03:25:16 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.3.2 mail.kernel.org 884F22088F
+	by mail.kernel.org (Postfix) with ESMTP id C01932077C
+	for <linux-pci@archiver.kernel.org>; Mon,  8 Oct 2018 03:25:29 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.3.2 mail.kernel.org C01932077C
 Authentication-Results: mail.kernel.org; dmarc=none (p=none dis=none) header.from=mediatek.com
 Authentication-Results: mail.kernel.org; spf=none smtp.mailfrom=linux-pci-owner@vger.kernel.org
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726892AbeJHKep (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Mon, 8 Oct 2018 06:34:45 -0400
-Received: from mailgw01.mediatek.com ([210.61.82.183]:51367 "EHLO
-        mailgw01.mediatek.com" rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org
-        with ESMTP id S1726656AbeJHKeo (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Mon, 8 Oct 2018 06:34:44 -0400
-X-UUID: 2f31724e6c4a43c3883a2497b2c4eec9-20181008
-X-UUID: 2f31724e6c4a43c3883a2497b2c4eec9-20181008
-Received: from mtkexhb02.mediatek.inc [(172.21.101.103)] by mailgw01.mediatek.com
+        id S1726096AbeJHKey (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Mon, 8 Oct 2018 06:34:54 -0400
+Received: from mailgw02.mediatek.com ([210.61.82.184]:64222 "EHLO
+        mailgw02.mediatek.com" rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org
+        with ESMTP id S1725950AbeJHKex (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Mon, 8 Oct 2018 06:34:53 -0400
+X-UUID: d6b1f2bc195047819810d9d8fd8a91e7-20181008
+X-UUID: d6b1f2bc195047819810d9d8fd8a91e7-20181008
+Received: from mtkcas08.mediatek.inc [(172.21.101.126)] by mailgw02.mediatek.com
         (envelope-from <honghui.zhang@mediatek.com>)
         (mhqrelay.mediatek.com ESMTP with TLS)
-        with ESMTP id 845126148; Mon, 08 Oct 2018 11:25:01 +0800
+        with ESMTP id 1302659844; Mon, 08 Oct 2018 11:25:09 +0800
 Received: from MTKCAS06.mediatek.inc (172.21.101.30) by
- mtkmbs01n1.mediatek.inc (172.21.101.68) with Microsoft SMTP Server (TLS) id
- 15.0.1395.4; Mon, 8 Oct 2018 11:24:59 +0800
+ mtkmbs08n1.mediatek.inc (172.21.101.55) with Microsoft SMTP Server (TLS) id
+ 15.0.1395.4; Mon, 8 Oct 2018 11:25:07 +0800
 Received: from localhost.localdomain (10.17.3.153) by MTKCAS06.mediatek.inc
  (172.21.101.73) with Microsoft SMTP Server id 15.0.1395.4 via Frontend
- Transport; Mon, 8 Oct 2018 11:24:59 +0800
+ Transport; Mon, 8 Oct 2018 11:25:06 +0800
 From:   <honghui.zhang@mediatek.com>
 To:     <lorenzo.pieralisi@arm.com>, <bhelgaas@google.com>,
         <linux-arm-kernel@lists.infradead.org>,
@@ -43,9 +44,9 @@ CC:     <ulf.hansson@linaro.org>, <marc.zyngier@arm.com>,
         <yingjoe.chen@mediatek.com>, <eddie.huang@mediatek.com>,
         <honghui.zhang@mediatek.com>, <youlin.pei@mediatek.com>,
         <yt.shen@mediatek.com>, <sean.wang@mediatek.com>
-Subject: [PATCH v6 1/9] PCI: mediatek: Using slot's devfn for compare to fix mtk_pcie_find_port logic
-Date:   Mon, 8 Oct 2018 11:24:40 +0800
-Message-ID: <1538969088-7136-2-git-send-email-honghui.zhang@mediatek.com>
+Subject: [PATCH v6 9/9] PCI: mediatek: Add loadable kernel module support
+Date:   Mon, 8 Oct 2018 11:24:48 +0800
+Message-ID: <1538969088-7136-10-git-send-email-honghui.zhang@mediatek.com>
 X-Mailer: git-send-email 2.6.4
 In-Reply-To: <1538969088-7136-1-git-send-email-honghui.zhang@mediatek.com>
 References: <1538969088-7136-1-git-send-email-honghui.zhang@mediatek.com>
@@ -59,61 +60,117 @@ X-Mailing-List: linux-pci@vger.kernel.org
 
 From: Honghui Zhang <honghui.zhang@mediatek.com>
 
-The Mediatek's host controller has two slots, each with it's own control
-registers. The host driver need to identify which slot was connected
-in order to access the device's configuration space. There's problem
-for current host driver to find out which slot was connected to for
-a given EP device.
-
-Assuming each slot have connect with one EP device as below:
-
-                host bridge
-  bus 0 --> __________|_______
-           |                  |
-           |                  |
-         slot 0             slot 1
-  bus 1 -->|        bus 2 --> |
-           |                  |
-         EP 0               EP 1
-
-During PCI enumeration, system software will scan all the PCI device
-starting from devfn 0. So it will get the proper port for slot0 and
-slot1 device when using PCI_SLOT(devfn) for match. But it will get
-the wrong slot for EP1: The devfn will be start from 0 when scanning
-EP1 behind slot1, it will get port0 since the PCI_SLOT(EP1) is match
-for port0's slot value. So the host driver should not using EP's devfn
-but the slot's devfn(the slot which EP was connected to) for match.
-
-This patch fix the mtk_pcie_find_port's logic by using the slot's
-devfn for match if finding device connected to the subordinate bus.
+Implement remove callback function for Mediatek PCIe driver to add
+loadable kernel module support.
 
 Signed-off-by: Honghui Zhang <honghui.zhang@mediatek.com>
+Reviewed-by: Ryder Lee <ryder.lee@mediatek.com>
 ---
- drivers/pci/controller/pcie-mediatek.c | 11 +++++++++++
- 1 file changed, 11 insertions(+)
+ drivers/pci/controller/Kconfig         |  2 +-
+ drivers/pci/controller/pcie-mediatek.c | 52 +++++++++++++++++++++++++++++++++-
+ 2 files changed, 52 insertions(+), 2 deletions(-)
 
+diff --git a/drivers/pci/controller/Kconfig b/drivers/pci/controller/Kconfig
+index 028b287..465790f 100644
+--- a/drivers/pci/controller/Kconfig
++++ b/drivers/pci/controller/Kconfig
+@@ -231,7 +231,7 @@ config PCIE_ROCKCHIP_EP
+ 	  available to support GEN2 with 4 slots.
+ 
+ config PCIE_MEDIATEK
+-	bool "MediaTek PCIe controller"
++	tristate "MediaTek PCIe controller"
+ 	depends on ARCH_MEDIATEK || COMPILE_TEST
+ 	depends on OF
+ 	depends on PCI_MSI_IRQ_DOMAIN
 diff --git a/drivers/pci/controller/pcie-mediatek.c b/drivers/pci/controller/pcie-mediatek.c
-index 9999dae..288b8e2 100644
+index daba78f..3327c75 100644
 --- a/drivers/pci/controller/pcie-mediatek.c
 +++ b/drivers/pci/controller/pcie-mediatek.c
-@@ -337,6 +337,17 @@ static struct mtk_pcie_port *mtk_pcie_find_port(struct pci_bus *bus,
- {
- 	struct mtk_pcie *pcie = bus->sysdata;
- 	struct mtk_pcie_port *port;
-+	struct pci_dev *dev = NULL;
-+
-+	/*
-+	 * Walk the bus hierarchy to get the devfn value
-+	 * of the port in the root bus.
-+	 */
-+	while (bus && bus->number) {
-+		dev = bus->self;
-+		bus = dev->bus;
-+		devfn = dev->devfn;
-+	}
+@@ -15,6 +15,7 @@
+ #include <linux/irqdomain.h>
+ #include <linux/kernel.h>
+ #include <linux/msi.h>
++#include <linux/module.h>
+ #include <linux/of_address.h>
+ #include <linux/of_pci.h>
+ #include <linux/of_platform.h>
+@@ -532,6 +533,27 @@ static void mtk_pcie_enable_msi(struct mtk_pcie_port *port)
+ 	writel(val, port->base + PCIE_INT_MASK);
+ }
  
- 	list_for_each_entry(port, &pcie->ports, list)
- 		if (port->slot == PCI_SLOT(devfn))
++static void mtk_pcie_irq_teardown(struct mtk_pcie *pcie)
++{
++	struct mtk_pcie_port *port, *tmp;
++
++	list_for_each_entry_safe(port, tmp, &pcie->ports, list) {
++		irq_set_chained_handler_and_data(port->irq, NULL, NULL);
++
++		if (port->irq_domain)
++			irq_domain_remove(port->irq_domain);
++
++		if (IS_ENABLED(CONFIG_PCI_MSI)) {
++			if (port->msi_domain)
++				irq_domain_remove(port->msi_domain);
++			if (port->inner_domain)
++				irq_domain_remove(port->inner_domain);
++		}
++
++		irq_dispose_mapping(port->irq);
++	}
++}
++
+ static int mtk_pcie_intx_map(struct irq_domain *domain, unsigned int irq,
+ 			     irq_hw_number_t hwirq)
+ {
+@@ -1171,6 +1193,32 @@ static int mtk_pcie_probe(struct platform_device *pdev)
+ 	return err;
+ }
+ 
++
++static void mtk_pcie_free_resources(struct mtk_pcie *pcie)
++{
++	struct pci_host_bridge *host = pci_host_bridge_from_priv(pcie);
++	struct list_head *windows = &host->windows;
++
++	pci_unmap_iospace(&pcie->pio);
++	pci_free_resource_list(windows);
++}
++
++static int mtk_pcie_remove(struct platform_device *pdev)
++{
++	struct mtk_pcie *pcie = platform_get_drvdata(pdev);
++	struct pci_host_bridge *host = pci_host_bridge_from_priv(pcie);
++
++	pci_stop_root_bus(host->bus);
++	pci_remove_root_bus(host->bus);
++	mtk_pcie_free_resources(pcie);
++
++	mtk_pcie_irq_teardown(pcie);
++
++	mtk_pcie_put_resources(pcie);
++
++	return 0;
++}
++
+ static int __maybe_unused mtk_pcie_suspend_noirq(struct device *dev)
+ {
+ 	struct mtk_pcie *pcie = dev_get_drvdata(dev);
+@@ -1248,6 +1296,7 @@ static const struct of_device_id mtk_pcie_ids[] = {
+ 
+ static struct platform_driver mtk_pcie_driver = {
+ 	.probe = mtk_pcie_probe,
++	.remove = mtk_pcie_remove,
+ 	.driver = {
+ 		.name = "mtk-pcie",
+ 		.of_match_table = mtk_pcie_ids,
+@@ -1255,4 +1304,5 @@ static struct platform_driver mtk_pcie_driver = {
+ 		.pm = &mtk_pcie_pm_ops,
+ 	},
+ };
+-builtin_platform_driver(mtk_pcie_driver);
++module_platform_driver(mtk_pcie_driver);
++MODULE_LICENSE("GPL v2");
 -- 
 2.6.4
 
