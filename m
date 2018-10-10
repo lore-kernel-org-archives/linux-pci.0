@@ -2,101 +2,98 @@ Return-Path: <SRS0=medT=MW=vger.kernel.org=linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-3.0 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,MAILING_LIST_MULTI,SPF_PASS,USER_AGENT_MUTT
-	autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-0.8 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+	MAILING_LIST_MULTI,SPF_PASS,URIBL_BLOCKED autolearn=ham autolearn_force=no
+	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 47C9EC43441
-	for <linux-pci@archiver.kernel.org>; Wed, 10 Oct 2018 16:26:56 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 74191C43441
+	for <linux-pci@archiver.kernel.org>; Wed, 10 Oct 2018 17:27:05 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 0F14521470
-	for <linux-pci@archiver.kernel.org>; Wed, 10 Oct 2018 16:26:56 +0000 (UTC)
-Authentication-Results: mail.kernel.org;
-	dkim=pass (1024-bit key) header.d=kernel.org header.i=@kernel.org header.b="IsrOItuO"
-DMARC-Filter: OpenDMARC Filter v1.3.2 mail.kernel.org 0F14521470
-Authentication-Results: mail.kernel.org; dmarc=fail (p=none dis=none) header.from=kernel.org
+	by mail.kernel.org (Postfix) with ESMTP id 3AEFA214C4
+	for <linux-pci@archiver.kernel.org>; Wed, 10 Oct 2018 17:27:05 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.3.2 mail.kernel.org 3AEFA214C4
+Authentication-Results: mail.kernel.org; dmarc=none (p=none dis=none) header.from=v3.sk
 Authentication-Results: mail.kernel.org; spf=none smtp.mailfrom=linux-pci-owner@vger.kernel.org
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726503AbeJJXtt (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Wed, 10 Oct 2018 19:49:49 -0400
-Received: from mail.kernel.org ([198.145.29.99]:35426 "EHLO mail.kernel.org"
+        id S1726562AbeJKAuM (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Wed, 10 Oct 2018 20:50:12 -0400
+Received: from shell.v3.sk ([90.176.6.54]:54823 "EHLO shell.v3.sk"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1726479AbeJJXtt (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Wed, 10 Oct 2018 19:49:49 -0400
-Received: from localhost (unknown [64.22.249.253])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
-        (No client certificate requested)
-        by mail.kernel.org (Postfix) with ESMTPSA id 6141B2086D;
-        Wed, 10 Oct 2018 16:26:54 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=default; t=1539188814;
-        bh=twuA02RXB5h9Jz6WjY2j3vJVNMR0BNpXQAwy23Uf9sM=;
-        h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-        b=IsrOItuO5lSCjpyEYiO20h/WSnHpkCvElQPSmrI87m/no9sEzUVG+IIohfYdfQtXI
-         wda6mA3HKcK46cH4/DxgvJY9jvtfjgyS92qsnxuuv+hKR2gf/yT+ceO05qq3/Oy7uU
-         QE2WuHt2ULBWwxEwcMJy7SOBueG9CP3/QyQjQj6Q=
-Date:   Wed, 10 Oct 2018 11:26:53 -0500
-From:   Bjorn Helgaas <helgaas@kernel.org>
-To:     Sebastian Ott <sebott@linux.ibm.com>
-Cc:     Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org,
-        Arnd Bergmann <arnd@arndb.de>,
-        Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-        Paul Mackerras <paulus@samba.org>,
-        Michael Ellerman <mpe@ellerman.id.au>,
-        Russell Currey <ruscur@russell.cc>,
-        linuxppc-dev@lists.ozlabs.org
-Subject: Re: [PATCH 0/2] sriov enablement on s390
-Message-ID: <20181010162653.GD5906@bhelgaas-glaptop.roam.corp.google.com>
-References: <20180912123411.23229-1-sebott@linux.ibm.com>
- <20180912130205.GG118330@bhelgaas-glaptop.roam.corp.google.com>
- <alpine.LFD.2.21.1810101451310.32089@schleppi.aag-de.ibmmobiledemo.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <alpine.LFD.2.21.1810101451310.32089@schleppi.aag-de.ibmmobiledemo.com>
-User-Agent: Mutt/1.10.1 (2018-07-13)
+        id S1726799AbeJKAuM (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Wed, 10 Oct 2018 20:50:12 -0400
+Received: from localhost (localhost [127.0.0.1])
+        by zimbra.v3.sk (Postfix) with ESMTP id EFEBCBCFC6;
+        Wed, 10 Oct 2018 19:27:00 +0200 (CEST)
+Received: from shell.v3.sk ([127.0.0.1])
+        by localhost (zimbra.v3.sk [127.0.0.1]) (amavisd-new, port 10032)
+        with ESMTP id YOGe0zoO6xj4; Wed, 10 Oct 2018 19:26:57 +0200 (CEST)
+Received: from localhost (localhost [127.0.0.1])
+        by zimbra.v3.sk (Postfix) with ESMTP id 8561EBCFE6;
+        Wed, 10 Oct 2018 19:26:57 +0200 (CEST)
+X-Virus-Scanned: amavisd-new at zimbra.v3.sk
+Received: from shell.v3.sk ([127.0.0.1])
+        by localhost (zimbra.v3.sk [127.0.0.1]) (amavisd-new, port 10026)
+        with ESMTP id kiyiRDjEM7hX; Wed, 10 Oct 2018 19:26:56 +0200 (CEST)
+Received: from belphegor.lan (ip-89-102-31-34.net.upcbroadband.cz [89.102.31.34])
+        by zimbra.v3.sk (Postfix) with ESMTPSA id 5AE8ABCFC6;
+        Wed, 10 Oct 2018 19:26:56 +0200 (CEST)
+Message-ID: <817b05ed7a619e9c46594f395ebc02d7cde9fc24.camel@v3.sk>
+Subject: Re: [PATCH 3/5] spi: pxa2xx: use an enum for type
+From:   Lubomir Rintel <lkundrak@v3.sk>
+To:     Robert Jarzmik <robert.jarzmik@free.fr>
+Cc:     linux-kernel@vger.kernel.org, linux-arm-kernel@lists.infradead.org,
+        linux-pci@vger.kernel.org, linux-spi@vger.kernel.org,
+        devicetree@vger.kernel.org, Mark Brown <broonie@kernel.org>,
+        Rob Herring <robh+dt@kernel.org>,
+        Mark Rutland <mark.rutland@arm.com>,
+        Eric Miao <eric.y.miao@gmail.com>,
+        Haojian Zhuang <haojian.zhuang@gmail.com>,
+        Daniel Mack <daniel@zonque.org>,
+        Bjorn Helgaas <bhelgaas@google.com>
+Date:   Wed, 10 Oct 2018 19:26:56 +0200
+In-Reply-To: <87d0t64mkk.fsf@belgarion.home>
+References: <20180910115935.163121-1-lkundrak@v3.sk>
+         <20180910115935.163121-4-lkundrak@v3.sk> <87d0t64mkk.fsf@belgarion.home>
+Content-Type: text/plain; charset="UTF-8"
+User-Agent: Evolution 3.30.1 (3.30.1-1.fc29) 
+Mime-Version: 1.0
+Content-Transfer-Encoding: 7bit
 Sender: linux-pci-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-On Wed, Oct 10, 2018 at 02:55:07PM +0200, Sebastian Ott wrote:
-> Hello Bjorn,
+On Fri, 2018-09-21 at 22:34 +0200, Robert Jarzmik wrote:
+> Lubomir Rintel <lkundrak@v3.sk> writes:
 > 
-> On Wed, 12 Sep 2018, Bjorn Helgaas wrote:
-> > On Wed, Sep 12, 2018 at 02:34:09PM +0200, Sebastian Ott wrote:
-> > > On s390 we currently handle SRIOV within firmware. Which means
-> > > that the PF is under firmware control and not visible to operating
-> > > systems. SRIOV enablement happens within firmware and VFs are
-> > > passed through to logical partitions.
-> > > 
-> > > I'm working on a new mode were the PF is under operating system
-> > > control (including SRIOV enablement). However we still need
-> > > firmware support to access the VFs. The way this is supposed
-> > > to work is that when firmware traps the SRIOV enablement it
-> > > will present machine checks to the logical partition that
-> > > triggered the SRIOV enablement and provide the VFs via hotplug
-> > > events.
-> > > 
-> > > The problem I'm faced with is that the VF detection code in
-> > > sriov_enable leads to unusable functions in s390.
-> > 
-> > We're moving away from the weak function implementation style.  Can
-> > you take a look at Arnd's work here, which uses pci_host_bridge
-> > callbacks instead?
-> > 
-> >   https://lkml.kernel.org/r/20180817102645.3839621-1-arnd@arndb.de
+> > That seems to be the correct type.
+> Okay, but what happens here when adev_id->driver_data is a value out
+> of enum
+> range ? Does the following assignment make sense ?
+> > +		type = (enum pxa_ssp_type)adev_id->driver_data;
 > 
-> What's the status of Arnd's patches - will they go upstream in the next
-> couple of versions?
+> As a side note, could you join for the next throw to the review :
+>  - Jarkko Nikula <jarkko.nikula@linux.intel.com>
+>  - Mika Westerberg <mika.westerberg@linux.intel.com>
 
-I hope so [1].  IIRC Arnd mentioned doing some minor updates, so I'm
-waiting on that.
+Argh, of course I forgot. My apologies.
 
-> What about my patches that I rebased on Arnd's branch
-> will they be considered?
+Jarkko & Mika, I'm wondering if you could take a look at the [1] thread
+and tell me what you think. (I can forward it to you via e-mail too, if
+you're not subscribed to lists it has been Cc'd to, if that would be
+more convenient).
 
-Definitely.  From my point of view they're just lined up behind Arnd's
-patches.
+[1] [PATCH 0/11] spi: pxa2xx: add DT and slave mode support"
+    https://lore.kernel.org/lkml/20181010170936.316862-1-lkundrak@v3.sk/T/#t
 
-[1] https://lore.kernel.org/linux-pci/20181002205903.GD120535@bhelgaas-glaptop.roam.corp.google.com
+Thanks
+Lubo
+
+> 
+> Even if they are Intel, I think they have worked a lot on this driver
+> for Intel
+> platforms.
+> 
+> Cheers.
+> 
+
