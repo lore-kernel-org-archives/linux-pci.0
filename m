@@ -3,39 +3,39 @@ X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
 X-Spam-Status: No, score=-8.8 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_PASS,URIBL_BLOCKED,
-	USER_AGENT_GIT autolearn=ham autolearn_force=no version=3.4.0
+	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_PASS,USER_AGENT_GIT
+	autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id BBE36C67803
-	for <linux-pci@archiver.kernel.org>; Thu, 11 Oct 2018 16:55:10 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id B0ED4C677FF
+	for <linux-pci@archiver.kernel.org>; Thu, 11 Oct 2018 16:55:11 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 8ADE321470
-	for <linux-pci@archiver.kernel.org>; Thu, 11 Oct 2018 16:55:10 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.3.2 mail.kernel.org 8ADE321470
+	by mail.kernel.org (Postfix) with ESMTP id 771B82085B
+	for <linux-pci@archiver.kernel.org>; Thu, 11 Oct 2018 16:55:11 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.3.2 mail.kernel.org 771B82085B
 Authentication-Results: mail.kernel.org; dmarc=fail (p=none dis=none) header.from=intel.com
 Authentication-Results: mail.kernel.org; spf=none smtp.mailfrom=linux-pci-owner@vger.kernel.org
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1730371AbeJLAXN (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Thu, 11 Oct 2018 20:23:13 -0400
+        id S1729991AbeJLAXO (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Thu, 11 Oct 2018 20:23:14 -0400
 Received: from mga05.intel.com ([192.55.52.43]:17763 "EHLO mga05.intel.com"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1729991AbeJLAXN (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Thu, 11 Oct 2018 20:23:13 -0400
+        id S1730301AbeJLAXO (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Thu, 11 Oct 2018 20:23:14 -0400
 X-Amp-Result: SKIPPED(no attachment in message)
 X-Amp-File-Uploaded: False
 Received: from fmsmga003.fm.intel.com ([10.253.24.29])
   by fmsmga105.fm.intel.com with ESMTP/TLS/DHE-RSA-AES256-GCM-SHA384; 11 Oct 2018 09:55:09 -0700
 X-ExtLoop1: 1
 X-IronPort-AV: E=Sophos;i="5.54,369,1534834800"; 
-   d="scan'208";a="87599224"
+   d="scan'208";a="87599227"
 Received: from unknown (HELO localhost.lm.intel.com) ([10.232.112.69])
-  by FMSMGA003.fm.intel.com with ESMTP; 11 Oct 2018 09:55:08 -0700
+  by FMSMGA003.fm.intel.com with ESMTP; 11 Oct 2018 09:55:09 -0700
 From:   Keith Busch <keith.busch@intel.com>
 To:     linux-pci@vger.kernel.org, Bjorn Helgaas <helgaas@kernel.org>
 Cc:     Keith Busch <keith.busch@intel.com>
-Subject: [PATCH 2/3] PCI/AER: Abstract AER interrupt handling
-Date:   Thu, 11 Oct 2018 10:52:06 -0600
-Message-Id: <20181011165207.12782-3-keith.busch@intel.com>
+Subject: [PATCH 3/3] PCI/AER: Covertly inject errors with ftrace hooks
+Date:   Thu, 11 Oct 2018 10:52:07 -0600
+Message-Id: <20181011165207.12782-4-keith.busch@intel.com>
 X-Mailer: git-send-email 2.13.6
 In-Reply-To: <20181011165207.12782-1-keith.busch@intel.com>
 References: <20181011165207.12782-1-keith.busch@intel.com>
@@ -44,91 +44,331 @@ Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-The aer_inject module was directly calling aer_irq().  This required the
-AER driver export its private IRQ handler for no other reason than to
-support error injection.  A driver should not have to expose its private
-interfaces, so use the IRQ subsystem to route injection to the AER driver,
-and make aer_irq() a private interface.
+The aer_inject module had been intercepting config requests by overwriting
+the config accessor operations in the pci_bus ops.  This has several
+issues.
 
-This provides additional benefits:
+First, the module was tracking kernel objects unbeknownst to the drivers
+that own them.  The kernel may free those devices, leaving the AER inject
+module holding stale references and no way to know that happened.
 
-First, directly calling the IRQ handler bypassed the IRQ subsytem so the
-injection wasn't really synthesizing what happens if a shared AER interrupt
-occurs.
+Second, the PCI enumeration has child devices inherit pci_bus ops from
+the parent bus.  Since errors may lead to link resets that trigger
+re-enumeration, the child devices would inherit operations that don't
+know about the devices using them, causing kernel crashes.
 
-The error injection had to provide the callback data directly, which may be
-racing with a removal that is freeing that structure.  The IRQ subsystem
-can handle that race.
+Finally, CONFIG_PCI_LOCKLESS_CONFIG doesn't block accessing the pci_bus
+ops, so it's racing with potential in-flight config requests.
 
-Finally, using the IRQ subsystem automatically reacts to threaded IRQs,
-keeping the error injection abstracted from that implementation detail.
+This patch uses a different error injection approach leveraging ftrace
+to thunk the config space functions.  If the kernel and architecture
+are capable, the ftrace hook will overwrite the processor's function
+call address with the address of the error injecting function. This way
+doesn't modify or track driver structures, fixing the issues with the
+current method.
+
+If either the kernel config or platform arch do not support the necessary
+ftrace capabilities, the aer_inject module will fallback to the older
+way so that it may continue to be used as before.
 
 Signed-off-by: Keith Busch <keith.busch@intel.com>
 ---
- drivers/pci/pcie/aer.c        | 3 +--
- drivers/pci/pcie/aer_inject.c | 5 ++++-
- drivers/pci/pcie/portdrv.h    | 4 ----
- 3 files changed, 5 insertions(+), 7 deletions(-)
+ drivers/pci/pcie/aer_inject.c | 218 ++++++++++++++++++++++++++++++++++++------
+ 1 file changed, 189 insertions(+), 29 deletions(-)
 
-diff --git a/drivers/pci/pcie/aer.c b/drivers/pci/pcie/aer.c
-index 90b53abf621d..a90a9194ac4a 100644
---- a/drivers/pci/pcie/aer.c
-+++ b/drivers/pci/pcie/aer.c
-@@ -1229,7 +1229,7 @@ static irqreturn_t aer_isr(int irq, void *context)
-  *
-  * Invoked when Root Port detects AER messages.
-  */
--irqreturn_t aer_irq(int irq, void *context)
-+static irqreturn_t aer_irq(int irq, void *context)
- {
- 	struct pcie_device *pdev = (struct pcie_device *)context;
- 	struct aer_rpc *rpc = get_service_data(pdev);
-@@ -1249,7 +1249,6 @@ irqreturn_t aer_irq(int irq, void *context)
- 
- 	return IRQ_WAKE_THREAD;
- }
--EXPORT_SYMBOL_GPL(aer_irq);
- 
- static int set_device_error_reporting(struct pci_dev *dev, void *data)
- {
 diff --git a/drivers/pci/pcie/aer_inject.c b/drivers/pci/pcie/aer_inject.c
-index f40ed5867c89..726987f8d53c 100644
+index 726987f8d53c..4825fa465b60 100644
 --- a/drivers/pci/pcie/aer_inject.c
 +++ b/drivers/pci/pcie/aer_inject.c
-@@ -14,6 +14,7 @@
- 
+@@ -15,6 +15,10 @@
  #include <linux/module.h>
  #include <linux/init.h>
-+#include <linux/irq.h>
+ #include <linux/irq.h>
++#include <linux/ftrace.h>
++#include <linux/kallsyms.h>
++#include <linux/kernel.h>
++#include <linux/linkage.h>
  #include <linux/miscdevice.h>
  #include <linux/pci.h>
  #include <linux/slab.h>
-@@ -457,7 +458,9 @@ static int aer_inject(struct aer_error_inj *einj)
- 		dev_info(&edev->device,
- 			 "aer_inject: Injecting errors %08x/%08x into device %s\n",
- 			 einj->cor_status, einj->uncor_status, pci_name(dev));
--		aer_irq(-1, edev);
-+		local_irq_disable();
-+		generic_handle_irq(edev->irq);
-+		local_irq_enable();
- 	} else {
- 		pci_err(rpdev, "aer_inject: AER device not found\n");
- 		ret = -ENODEV;
-diff --git a/drivers/pci/pcie/portdrv.h b/drivers/pci/pcie/portdrv.h
-index abfdc2ae7979..e495f04394d0 100644
---- a/drivers/pci/pcie/portdrv.h
-+++ b/drivers/pci/pcie/portdrv.h
-@@ -151,10 +151,6 @@ static inline int pcie_aer_get_firmware_first(struct pci_dev *pci_dev)
- }
- #endif
+@@ -65,6 +69,8 @@ struct pci_bus_ops {
+ 	struct pci_ops *ops;
+ };
  
--#ifdef CONFIG_PCIEAER
--irqreturn_t aer_irq(int irq, void *context);
--#endif
--
- struct pcie_port_service_driver *pcie_port_find_service(struct pci_dev *dev,
- 							u32 service);
- struct device *pcie_port_find_device(struct pci_dev *dev, u32 service);
++static bool legacy;
++
+ static LIST_HEAD(einjected);
+ 
+ static LIST_HEAD(pci_bus_ops_list);
+@@ -176,14 +182,48 @@ static u32 *find_pci_config_dword(struct aer_error *err, int where,
+ 	return target;
+ }
+ 
++static int aer_inj_legacy_read(struct pci_bus *bus, unsigned int devfn,
++			       int where, int size, u32 *val)
++{
++	struct pci_ops *ops, *my_ops;
++	int rv;
++
++	ops = __find_pci_bus_ops(bus);
++	if (!ops)
++		return -1;
++
++	my_ops = bus->ops;
++	bus->ops = ops;
++	rv = ops->read(bus, devfn, where, size, val);
++	bus->ops = my_ops;
++
++	return rv;
++}
++
++static int aer_inj_legacy_write(struct pci_bus *bus, unsigned int devfn,
++				int where, int size, u32 val)
++{
++	struct pci_ops *ops, *my_ops;
++	int rv;
++
++	ops = __find_pci_bus_ops(bus);
++	if (!ops)
++		return -1;
++
++	my_ops = bus->ops;
++	bus->ops = ops;
++	rv = ops->write(bus, devfn, where, size, val);
++	bus->ops = my_ops;
++
++	return rv;
++}
++
+ static int aer_inj_read_config(struct pci_bus *bus, unsigned int devfn,
+ 			       int where, int size, u32 *val)
+ {
+ 	u32 *sim;
+ 	struct aer_error *err;
+ 	unsigned long flags;
+-	struct pci_ops *ops;
+-	struct pci_ops *my_ops;
+ 	int domain;
+ 	int rv;
+ 
+@@ -204,18 +244,7 @@ static int aer_inj_read_config(struct pci_bus *bus, unsigned int devfn,
+ 		return 0;
+ 	}
+ out:
+-	ops = __find_pci_bus_ops(bus);
+-	/*
+-	 * pci_lock must already be held, so we can directly
+-	 * manipulate bus->ops.  Many config access functions,
+-	 * including pci_generic_config_read() require the original
+-	 * bus->ops be installed to function, so temporarily put them
+-	 * back.
+-	 */
+-	my_ops = bus->ops;
+-	bus->ops = ops;
+-	rv = ops->read(bus, devfn, where, size, val);
+-	bus->ops = my_ops;
++	rv = aer_inj_legacy_read(bus, devfn, where, size, val);
+ 	spin_unlock_irqrestore(&inject_lock, flags);
+ 	return rv;
+ }
+@@ -227,8 +256,6 @@ static int aer_inj_write_config(struct pci_bus *bus, unsigned int devfn,
+ 	struct aer_error *err;
+ 	unsigned long flags;
+ 	int rw1cs;
+-	struct pci_ops *ops;
+-	struct pci_ops *my_ops;
+ 	int domain;
+ 	int rv;
+ 
+@@ -252,18 +279,7 @@ static int aer_inj_write_config(struct pci_bus *bus, unsigned int devfn,
+ 		return 0;
+ 	}
+ out:
+-	ops = __find_pci_bus_ops(bus);
+-	/*
+-	 * pci_lock must already be held, so we can directly
+-	 * manipulate bus->ops.  Many config access functions,
+-	 * including pci_generic_config_write() require the original
+-	 * bus->ops be installed to function, so temporarily put them
+-	 * back.
+-	 */
+-	my_ops = bus->ops;
+-	bus->ops = ops;
+-	rv = ops->write(bus, devfn, where, size, val);
+-	bus->ops = my_ops;
++	rv = aer_inj_legacy_write(bus, devfn, where, size, val);
+ 	spin_unlock_irqrestore(&inject_lock, flags);
+ 	return rv;
+ }
+@@ -288,6 +304,9 @@ static int pci_bus_set_aer_ops(struct pci_bus *bus)
+ 	struct pci_bus_ops *bus_ops;
+ 	unsigned long flags;
+ 
++	if (!legacy)
++		return 0;
++
+ 	bus_ops = kmalloc(sizeof(*bus_ops), GFP_KERNEL);
+ 	if (!bus_ops)
+ 		return -ENOMEM;
+@@ -504,9 +523,148 @@ static struct miscdevice aer_inject_device = {
+ 	.fops = &aer_inject_fops,
+ };
+ 
++static asmlinkage int (*read_config_dword)(struct pci_bus *bus,
++					   unsigned int devfn,
++					   int where, u32 *val);
++static asmlinkage int (*write_config_dword)(struct pci_bus *bus,
++					    unsigned int devfn,
++					    int where, u32 val);
++struct aer_hook {
++	struct ftrace_ops ops;
++	const char *name;
++	void *function;
++	void *original;
++	unsigned long address;
++};
++
++static int asmlinkage ainj_read_config_dword(struct pci_bus *bus,
++			unsigned int devfn, int where, u32 *val)
++{
++	if (!aer_inj_read_config(bus, devfn, where, sizeof(u32), (u32 *)val))
++		return 0;
++	return read_config_dword(bus, devfn, where, val);
++}
++
++static int asmlinkage ainj_write_config_dword(struct pci_bus *bus,
++			unsigned int devfn, int where, u32 val)
++{
++	if (!aer_inj_write_config(bus, devfn, where, sizeof(u32), val))
++		return 0;
++	return write_config_dword(bus, devfn, where, val);
++}
++
++static int aer_inject_resolve_hook_address(struct aer_hook *hook)
++{
++	hook->address = kallsyms_lookup_name(hook->name);
++
++	if (!hook->address) {
++		pr_warn("unresolved symbol: %s\n", hook->name);
++		return -ENOENT;
++	}
++	*((unsigned long*) hook->original) = hook->address + MCOUNT_INSN_SIZE;
++
++	return 0;
++}
++
++static void notrace aer_inject_ftrace_thunk(unsigned long ip, unsigned long parent_ip,
++		struct ftrace_ops *ops, struct pt_regs *regs)
++{
++	struct aer_hook *hook = ops->private;
++	instruction_pointer_set(regs, (unsigned long)hook->function);
++}
++
++static int aer_inject_install_hook(struct aer_hook *hook)
++{
++	int err;
++
++	err = aer_inject_resolve_hook_address(hook);
++	if (err)
++		return err;
++
++	hook->ops.private = hook;
++	hook->ops.func = aer_inject_ftrace_thunk;
++	hook->ops.flags = FTRACE_OPS_FL_SAVE_REGS |
++			  FTRACE_OPS_FL_RECURSION_SAFE |
++			  FTRACE_OPS_FL_IPMODIFY;
++	err = ftrace_set_filter_ip(&hook->ops, hook->address, 0, 0);
++	if (err) {
++		pr_warn("ftrace_set_filter_ip() failed: %d\n", err);
++		return err;
++	}
++
++	err = register_ftrace_function(&hook->ops);
++	if (err) {
++		pr_warn("register_ftrace_function() failed: %d\n", err);
++		ftrace_set_filter_ip(&hook->ops, hook->address, 1, 0);
++		return err;
++	}
++	return 0;
++}
++
++static void aer_inject_remove_hook(struct aer_hook *hook)
++{
++	int err;
++
++	err = unregister_ftrace_function(&hook->ops);
++	if (err)
++		pr_warn("unregister_ftrace_function() failed: %d\n", err);
++
++	err = ftrace_set_filter_ip(&hook->ops, hook->address, 1, 0);
++	if (err)
++		pr_warn("ftrace_set_filter_ip() failed: %d\n", err);
++}
++
++static int aer_inject_install_hooks(struct aer_hook *hooks, size_t count)
++{
++	int err, i;
++
++	for (i = 0; i < count; i++) {
++		err = aer_inject_install_hook(&hooks[i]);
++		if (err)
++			goto error;
++	}
++	return 0;
++error:
++	for (i--; i >= 0; i--)
++		aer_inject_remove_hook(&hooks[i]);
++	return err;
++}
++
++static void aer_inject_remove_hooks(struct aer_hook *hooks, size_t count)
++{
++	int i;
++
++	for (i = 0; i < count; i++)
++		aer_inject_remove_hook(&hooks[i]);
++}
++
++static struct aer_hook aer_hooks[] = {
++	{
++		.name = "pci_bus_read_config_dword",
++		.function = ainj_read_config_dword,
++		.original = &read_config_dword,
++	},
++	{
++		.name = "pci_bus_write_config_dword",
++		.function = ainj_write_config_dword,
++		.original = &write_config_dword,
++	},
++};
++
+ static int __init aer_inject_init(void)
+ {
+-	return misc_register(&aer_inject_device);
++	int err;
++
++	err = misc_register(&aer_inject_device);
++	if (err)
++		return err;
++
++	err = aer_inject_install_hooks(aer_hooks, ARRAY_SIZE(aer_hooks));
++	if (err) {
++		pr_info("aer_inject: using legacy error inject method\n");
++		legacy = true;
++	}
++	return 0;
+ }
+ 
+ static void __exit aer_inject_exit(void)
+@@ -515,6 +673,8 @@ static void __exit aer_inject_exit(void)
+ 	unsigned long flags;
+ 	struct pci_bus_ops *bus_ops;
+ 
++	if (!legacy)
++		aer_inject_remove_hooks(aer_hooks, ARRAY_SIZE(aer_hooks));
+ 	misc_deregister(&aer_inject_device);
+ 
+ 	while ((bus_ops = pci_bus_ops_pop())) {
 -- 
 2.14.4
 
