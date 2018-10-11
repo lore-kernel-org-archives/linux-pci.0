@@ -6,71 +6,79 @@ X-Spam-Status: No, score=-2.9 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
 	DKIM_VALID,DKIM_VALID_AU,MAILING_LIST_MULTI,SPF_PASS,USER_AGENT_MUTT
 	autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id EA877C677FC
-	for <linux-pci@archiver.kernel.org>; Thu, 11 Oct 2018 19:36:52 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 356B5C677FC
+	for <linux-pci@archiver.kernel.org>; Thu, 11 Oct 2018 19:41:49 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id AD8B52098A
-	for <linux-pci@archiver.kernel.org>; Thu, 11 Oct 2018 19:36:52 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id D88C32075C
+	for <linux-pci@archiver.kernel.org>; Thu, 11 Oct 2018 19:41:48 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (1024-bit key) header.d=kernel.org header.i=@kernel.org header.b="YTpbkh6E"
-DMARC-Filter: OpenDMARC Filter v1.3.2 mail.kernel.org AD8B52098A
+	dkim=pass (1024-bit key) header.d=kernel.org header.i=@kernel.org header.b="SPjv5FHd"
+DMARC-Filter: OpenDMARC Filter v1.3.2 mail.kernel.org D88C32075C
 Authentication-Results: mail.kernel.org; dmarc=fail (p=none dis=none) header.from=kernel.org
 Authentication-Results: mail.kernel.org; spf=none smtp.mailfrom=linux-pci-owner@vger.kernel.org
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726235AbeJLDFc (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Thu, 11 Oct 2018 23:05:32 -0400
-Received: from mail.kernel.org ([198.145.29.99]:43734 "EHLO mail.kernel.org"
+        id S1726071AbeJLDKa (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Thu, 11 Oct 2018 23:10:30 -0400
+Received: from mail.kernel.org ([198.145.29.99]:44798 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1726607AbeJLDFc (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Thu, 11 Oct 2018 23:05:32 -0400
+        id S1726036AbeJLDKa (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Thu, 11 Oct 2018 23:10:30 -0400
 Received: from localhost (32.sub-174-234-152.myvzw.com [174.234.152.32])
         (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
         (No client certificate requested)
-        by mail.kernel.org (Postfix) with ESMTPSA id EC6952075C;
-        Thu, 11 Oct 2018 19:36:50 +0000 (UTC)
+        by mail.kernel.org (Postfix) with ESMTPSA id 5E73B2075C;
+        Thu, 11 Oct 2018 19:41:47 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=default; t=1539286611;
-        bh=F7reNq7i1JQtZiheMHZGjzCNw6qSNWvN0YkpsnrI3sU=;
+        s=default; t=1539286907;
+        bh=8TBvY16YEZmo3mA57K5veO7mh/4UAWzckwYogRcDQNw=;
         h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-        b=YTpbkh6Eb9MYLlsOa8/pNmYC01BtbaTTr2RglLBosBxStnWnkuyhPOxkEsn2Kpw8m
-         A/pD0e3JnYTBrqRStohOOPtHI7SK2/AvFn05L2oDJ79M9x9xsR+3jPVY/bQZzPY+Re
-         jciEqecj4icqJb43oH90dgpjEoBZVlYvtaVoqlBw=
-Date:   Thu, 11 Oct 2018 14:36:49 -0500
+        b=SPjv5FHd/WEPGJ8C3YR10S05eYukAgnzqfm11eRxhQuQ4QyRoyQXHcOuGfvkJpDUl
+         GtK+98FkR8NEbHgZTpd3zjjIPdLhqeYK+n5uI0lok5P0ev3e3BmgQmZNslVJvUn54f
+         4+Z8dP1/56QCr3vjmE+3irgijn64t6yIrBsXuBmY=
+Date:   Thu, 11 Oct 2018 14:41:46 -0500
 From:   Bjorn Helgaas <helgaas@kernel.org>
-To:     kbuild test robot <lkp@intel.com>
-Cc:     KarimAllah Ahmed <karahmed@amazon.de>, kbuild-all@01.org,
-        linux-pci@vger.kernel.org
-Subject: Re: [pci:pci/virtualization 1/2] drivers/pci/probe.c:1460:15: error:
- 'struct pci_dev' has no member named 'physfn'; did you mean 'is_physfn'?
-Message-ID: <20181011193649.GT5906@bhelgaas-glaptop.roam.corp.google.com>
-References: <201810120115.eUoVoata%fengguang.wu@intel.com>
+To:     Keith Busch <keith.busch@intel.com>
+Cc:     linux-pci@vger.kernel.org
+Subject: Re: [PATCHv2 4/4] PCI/AER: Covertly inject errors with ftrace hooks
+Message-ID: <20181011194146.GU5906@bhelgaas-glaptop.roam.corp.google.com>
+References: <20181011183413.13183-1-keith.busch@intel.com>
+ <20181011183413.13183-5-keith.busch@intel.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <201810120115.eUoVoata%fengguang.wu@intel.com>
+In-Reply-To: <20181011183413.13183-5-keith.busch@intel.com>
 User-Agent: Mutt/1.10.1 (2018-07-13)
 Sender: linux-pci-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-On Fri, Oct 12, 2018 at 01:16:19AM +0800, kbuild test robot wrote:
-> tree:   https://git.kernel.org/pub/scm/linux/kernel/git/helgaas/pci.git pci/virtualization
-> head:   71fad47b6941d0922562a1e5e32f57b99f9f2c32
-> commit: 601f9f6679157b70a7a4e752baa590bd2af69ffb [1/2] PCI/IOV: Use VF0 cached config space size for other VFs
-> config: i386-randconfig-x002-201840 (attached as .config)
-> compiler: gcc-7 (Debian 7.3.0-1) 7.3.0
-> reproduce:
->         git checkout 601f9f6679157b70a7a4e752baa590bd2af69ffb
->         # save the attached .config to linux build tree
->         make ARCH=i386 
+On Thu, Oct 11, 2018 at 12:34:13PM -0600, Keith Busch wrote:
+> The aer_inject module had been intercepting config requests by overwriting
+> the config accessor operations in the pci_bus ops.  This has several
+> issues.
 > 
-> All errors (new ones prefixed by >>):
+> First, the module was tracking kernel objects unbeknownst to the drivers
+> that own them.  The kernel may free those devices, leaving the AER inject
+> module holding stale references and no way to know that happened.
 > 
->    drivers/pci/probe.c: In function 'pci_cfg_space_size':
-> >> drivers/pci/probe.c:1460:15: error: 'struct pci_dev' has no member named 'physfn'; did you mean 'is_physfn'?
->       return dev->physfn->sriov->cfg_size;
->                   ^~~~~~
->                   is_physfn
+> Second, the PCI enumeration has child devices inherit pci_bus ops from
+> the parent bus.  Since errors may lead to link resets that trigger
+> re-enumeration, the child devices would inherit operations that don't
+> know about the devices using them, causing kernel crashes.
+> 
+> Finally, CONFIG_PCI_LOCKLESS_CONFIG doesn't block accessing the pci_bus
+> ops, so it's racing with potential in-flight config requests.
+> 
+> This patch uses a different error injection approach leveraging ftrace
+> to thunk the config space functions.  If the kernel and architecture
+> are capable, the ftrace hook will overwrite the processor's function
+> call address with the error injection function. This discreet error
+> injection doesn't modify or track driver structures, fixing the issues
+> with the current method.
+> 
+> If either the kernel config or platform arch do not support the necessary
+> ftrace capabilities, the aer_inject module will fallback to the older
+> way so that it may continue to be used as before.
 
-Sorry, this was my fault.  I fixed it.
+I dropped this patch for now because the 0-day robot found something wrong.
