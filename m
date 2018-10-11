@@ -2,153 +2,77 @@ Return-Path: <SRS0=UcfF=MX=vger.kernel.org=linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-6.8 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_PASS autolearn=ham
-	autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-4.4 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_PASS
+	autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id D2ACAC32788
-	for <linux-pci@archiver.kernel.org>; Thu, 11 Oct 2018 15:33:49 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id A680DC677FE
+	for <linux-pci@archiver.kernel.org>; Thu, 11 Oct 2018 15:41:05 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id A11EE2075C
-	for <linux-pci@archiver.kernel.org>; Thu, 11 Oct 2018 15:33:49 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.3.2 mail.kernel.org A11EE2075C
-Authentication-Results: mail.kernel.org; dmarc=fail (p=none dis=none) header.from=redhat.com
+	by mail.kernel.org (Postfix) with ESMTP id 6D86221470
+	for <linux-pci@archiver.kernel.org>; Thu, 11 Oct 2018 15:41:05 +0000 (UTC)
+Authentication-Results: mail.kernel.org;
+	dkim=pass (1024-bit key) header.d=kernel.org header.i=@kernel.org header.b="POLZpIho"
+DMARC-Filter: OpenDMARC Filter v1.3.2 mail.kernel.org 6D86221470
+Authentication-Results: mail.kernel.org; dmarc=fail (p=none dis=none) header.from=kernel.org
 Authentication-Results: mail.kernel.org; spf=none smtp.mailfrom=linux-pci-owner@vger.kernel.org
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727577AbeJKXB3 (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Thu, 11 Oct 2018 19:01:29 -0400
-Received: from mx1.redhat.com ([209.132.183.28]:40138 "EHLO mx1.redhat.com"
+        id S1726647AbeJKXIq (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Thu, 11 Oct 2018 19:08:46 -0400
+Received: from mail.kernel.org ([198.145.29.99]:39252 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1726907AbeJKXB3 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Thu, 11 Oct 2018 19:01:29 -0400
-Received: from smtp.corp.redhat.com (int-mx08.intmail.prod.int.phx2.redhat.com [10.5.11.23])
-        (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
+        id S1730332AbeJKXIq (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Thu, 11 Oct 2018 19:08:46 -0400
+Received: from [10.17.91.149] (rrcs-70-63-152-218.midsouth.biz.rr.com [70.63.152.218])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
         (No client certificate requested)
-        by mx1.redhat.com (Postfix) with ESMTPS id 5EA85308125E;
-        Thu, 11 Oct 2018 15:33:48 +0000 (UTC)
-Received: from w520.home (ovpn-116-90.phx2.redhat.com [10.3.116.90])
-        by smtp.corp.redhat.com (Postfix) with ESMTP id A5F478BB13;
-        Thu, 11 Oct 2018 15:33:45 +0000 (UTC)
-Date:   Thu, 11 Oct 2018 09:33:44 -0600
-From:   Alex Williamson <alex.williamson@redhat.com>
-To:     Sinan Kaya <okaya@kernel.org>
-Cc:     linux-pci@vger.kernel.org, Bjorn Helgaas <bhelgaas@google.com>,
-        Alexey Kardashevskiy <aik@ozlabs.ru>,
-        Peter Xu <peterx@redhat.com>,
-        "Gustavo A. R. Silva" <gustavo@embeddedor.com>
-Subject: Re: [PATCH v5 06/11] PCI: Expose reset type to users of
- pci_reset_bus()
-Message-ID: <20181011093344.76725f36@w520.home>
-In-Reply-To: <20181011045008.32212-6-okaya@kernel.org>
+        by mail.kernel.org (Postfix) with ESMTPSA id 1E08A21477;
+        Thu, 11 Oct 2018 15:41:01 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+        s=default; t=1539272462;
+        bh=nJoFpNjFnLM0A1CTIGjCqxfM+hB0Hev+sKTwFQ80WD4=;
+        h=Subject:To:Cc:References:From:Date:In-Reply-To:From;
+        b=POLZpIhoIcbaapIFl7lEY7YoUgiAVbf0hMfRYd8JoI+lDsBGI6ZwVrvuov54KkNI0
+         4LC6cWR7E2Toh+/gf0wcg70W95/80A307CCHMAH30qQDPtvdKaYSFVjSYuFqIISuCh
+         CrZEtqUiVYc7IP72DubPixm5ateWjkL0mH6mWeuo=
+Subject: Re: [PATCH v5 11/11] PCI: Hide pcie_flr() in favor of
+ pci_reset_function()
+To:     linux-pci@vger.kernel.org
+Cc:     Giovanni Cabiddu <giovanni.cabiddu@intel.com>,
+        Herbert Xu <herbert@gondor.apana.org.au>,
+        "David S. Miller" <davem@davemloft.net>,
+        Mike Marciniszyn <mike.marciniszyn@intel.com>,
+        Dennis Dalessandro <dennis.dalessandro@intel.com>,
+        Doug Ledford <dledford@redhat.com>,
+        Jason Gunthorpe <jgg@ziepe.ca>,
+        Derek Chickles <derek.chickles@caviumnetworks.com>,
+        Satanand Burla <satananda.burla@caviumnetworks.com>,
+        Felix Manlunas <felix.manlunas@caviumnetworks.com>,
+        Raghu Vatsavayi <raghu.vatsavayi@caviumnetworks.com>,
+        Jeff Kirsher <jeffrey.t.kirsher@intel.com>,
+        Bjorn Helgaas <bhelgaas@google.com>,
+        Jia-Ju Bai <baijiaju1990@gmail.com>
 References: <20181011045008.32212-1-okaya@kernel.org>
-        <20181011045008.32212-6-okaya@kernel.org>
+ <20181011045008.32212-11-okaya@kernel.org>
+From:   Sinan Kaya <okaya@kernel.org>
+Message-ID: <ff639aab-63e2-fe7e-ca09-b82d47f25734@kernel.org>
+Date:   Thu, 11 Oct 2018 11:41:00 -0400
+User-Agent: Mozilla/5.0 (Windows NT 10.0; WOW64; rv:52.0) Gecko/20100101
+ Thunderbird/52.9.1
 MIME-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+In-Reply-To: <20181011045008.32212-11-okaya@kernel.org>
+Content-Type: text/plain; charset=utf-8; format=flowed
+Content-Language: en-US
 Content-Transfer-Encoding: 7bit
-X-Scanned-By: MIMEDefang 2.84 on 10.5.11.23
-X-Greylist: Sender IP whitelisted, not delayed by milter-greylist-4.5.16 (mx1.redhat.com [10.5.110.49]); Thu, 11 Oct 2018 15:33:48 +0000 (UTC)
 Sender: linux-pci-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-On Thu, 11 Oct 2018 04:49:58 +0000
-Sinan Kaya <okaya@kernel.org> wrote:
-
-> Looking to have more control between the users of the API vs. what the API
-> can do internally. The new reset_type tells the PCI core about the bounds
-> of the request.
+On 10/11/2018 12:50 AM, Sinan Kaya wrote:
+> Now that we have a unified API for device reset, let's eliminate
+> one duplication by hiding pcie_flr().
 > 
-> Signed-off-by: Sinan Kaya <okaya@kernel.org>
-> ---
->  drivers/pci/pci.c           | 17 ++++++++++++++---
->  drivers/vfio/pci/vfio_pci.c |  6 ++++--
->  include/linux/pci.h         |  2 +-
->  3 files changed, 19 insertions(+), 6 deletions(-)
-> 
-> diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
-> index a1a7dd6988be..a3a1c2a5e0cf 100644
-> --- a/drivers/pci/pci.c
-> +++ b/drivers/pci/pci.c
-> @@ -5236,13 +5236,24 @@ static int __pci_reset_bus(struct pci_bus *bus)
->  /**
->   * pci_reset_bus - Try to reset a PCI bus
->   * @pdev: top level PCI device to reset via slot/bus
-> + * @reset_type: resets to try
->   *
->   * Same as above except return -EAGAIN if the bus cannot be locked
->   */
-> -int pci_reset_bus(struct pci_dev *pdev)
-> +int pci_reset_bus(struct pci_dev *pdev, u32 reset_type)
->  {
-> -	return (!pci_probe_reset_slot(pdev->slot)) ?
-> -	    __pci_reset_slot(pdev->slot) : __pci_reset_bus(pdev->bus);
-> +	if ((reset_type & PCI_RESET_LINK) == PCI_RESET_LINK)
-> +		return (!pci_probe_reset_slot(pdev->slot)) ?
-> +				__pci_reset_slot(pdev->slot) :
-> +				__pci_reset_bus(pdev->bus);
-> +
-> +	if ((reset_type & PCI_RESET_BUS) == PCI_RESET_BUS)
-> +		return __pci_reset_bus(pdev->bus);
-> +
-> +	if ((reset_type & PCI_RESET_SLOT) == PCI_RESET_SLOT)
-> +		return __pci_reset_slot(pdev->slot);
-> +
-> +	return -EINVAL;
+> Signed-off-by: Sinan Kaya<okaya@kernel.org>
 
-
-Having three cases here still seems strange.  The below still has some
-duplicate probing but doesn't it do the same thing with less redundancy?
-
-if ((reset_type & PCI_RESET_SLOT) && !pci_probe_reset_slot(pdev->slot))
-	return __pci_reset_slot(pdev->slot);
-
-if ((reset_type & PCI_RESET_BUS) && !pci_probe_reset_bus(pdev->slot))
-	return __pci_reset_bus(pdev->bus);
-
-return -EINVAL;
-
-Thanks,
-Alex
-
->  }
->  EXPORT_SYMBOL_GPL(pci_reset_bus);
->  
-> diff --git a/drivers/vfio/pci/vfio_pci.c b/drivers/vfio/pci/vfio_pci.c
-> index fe7ada997c51..0e80c72b1eaa 100644
-> --- a/drivers/vfio/pci/vfio_pci.c
-> +++ b/drivers/vfio/pci/vfio_pci.c
-> @@ -1015,7 +1015,8 @@ static long vfio_pci_ioctl(void *device_data,
->  						    &info, slot);
->  		if (!ret)
->  			/* User has access, do the reset */
-> -			ret = pci_reset_bus(vdev->pdev);
-> +			ret = pci_reset_bus(vdev->pdev,
-> +				slot ? PCI_RESET_SLOT :	PCI_RESET_BUS);
->  
->  hot_reset_release:
->  		for (i--; i >= 0; i--)
-> @@ -1390,7 +1391,8 @@ static void vfio_pci_try_bus_reset(struct vfio_pci_device *vdev)
->  	}
->  
->  	if (needs_reset)
-> -		ret = pci_reset_bus(vdev->pdev);
-> +		ret = pci_reset_bus(vdev->pdev,
-> +				slot ? PCI_RESET_SLOT :	PCI_RESET_BUS);
->  
->  put_devs:
->  	for (i = 0; i < devs.cur_index; i++) {
-> diff --git a/include/linux/pci.h b/include/linux/pci.h
-> index 1c120cf00dd8..cf1e847ea02e 100644
-> --- a/include/linux/pci.h
-> +++ b/include/linux/pci.h
-> @@ -1171,7 +1171,7 @@ int pci_reset_function_locked(struct pci_dev *dev, u32 reset_type);
->  int pci_try_reset_function(struct pci_dev *dev, u32 reset_type);
->  int pci_probe_reset_slot(struct pci_slot *slot);
->  int pci_probe_reset_bus(struct pci_bus *bus);
-> -int pci_reset_bus(struct pci_dev *dev);
-> +int pci_reset_bus(struct pci_dev *dev, u32 reset_type);
->  void pci_reset_secondary_bus(struct pci_dev *dev);
->  void pcibios_reset_secondary_bus(struct pci_dev *dev);
->  void pci_update_resource(struct pci_dev *dev, int resno);
-
+This patch might have gone too far. I'm willing to drop it.
