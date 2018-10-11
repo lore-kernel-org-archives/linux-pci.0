@@ -2,378 +2,369 @@ Return-Path: <SRS0=UcfF=MX=vger.kernel.org=linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-6.8 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
-	DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,
-	SIGNED_OFF_BY,SPF_PASS,URIBL_BLOCKED autolearn=ham autolearn_force=no
-	version=3.4.0
+X-Spam-Status: No, score=-8.2 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_PASS,URIBL_BLOCKED,
+	USER_AGENT_MUTT autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 4D459C32788
-	for <linux-pci@archiver.kernel.org>; Thu, 11 Oct 2018 13:47:13 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 718DDC32788
+	for <linux-pci@archiver.kernel.org>; Thu, 11 Oct 2018 13:53:01 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id BD9CB20652
-	for <linux-pci@archiver.kernel.org>; Thu, 11 Oct 2018 13:47:12 +0000 (UTC)
-Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=cadence.com header.i=@cadence.com header.b="L2U9ruv0";
-	dkim=pass (1024-bit key) header.d=cadence.com header.i=@cadence.com header.b="iNG9NH9W"
-DMARC-Filter: OpenDMARC Filter v1.3.2 mail.kernel.org BD9CB20652
-Authentication-Results: mail.kernel.org; dmarc=fail (p=none dis=none) header.from=cadence.com
+	by mail.kernel.org (Postfix) with ESMTP id 2FB7420659
+	for <linux-pci@archiver.kernel.org>; Thu, 11 Oct 2018 13:53:01 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.3.2 mail.kernel.org 2FB7420659
+Authentication-Results: mail.kernel.org; dmarc=none (p=none dis=none) header.from=arm.com
 Authentication-Results: mail.kernel.org; spf=none smtp.mailfrom=linux-pci-owner@vger.kernel.org
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1728037AbeJKVO2 (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Thu, 11 Oct 2018 17:14:28 -0400
-Received: from mx0a-0014ca01.pphosted.com ([208.84.65.235]:41084 "EHLO
-        mx0a-0014ca01.pphosted.com" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1728006AbeJKVO1 (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Thu, 11 Oct 2018 17:14:27 -0400
-Received: from pps.filterd (m0042385.ppops.net [127.0.0.1])
-        by mx0a-0014ca01.pphosted.com (8.16.0.22/8.16.0.22) with SMTP id w9BDgaMO032708;
-        Thu, 11 Oct 2018 06:46:58 -0700
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=cadence.com; h=from : to : cc :
- subject : date : message-id : references : in-reply-to : content-type :
- content-transfer-encoding : mime-version; s=proofpoint;
- bh=MK9ti9bygrBkOShL34njxpu35FmBTGnInVj+PdTHB9k=;
- b=L2U9ruv0neV4gzf8ToYcfcjcBDBwErIZi4T15MoOFTvyjpvCM1G+LeQ2WiG1u1EGx/ss
- HG8Li5Caoq+5fGKpJn2rJG93P1pxkYHyWvMAnTupmQo0rL5fVoAUe4/k23nAo5rRoSOW
- 3L5Z+LygM7QpTVY1VUHxt+MUrD9lAUAivwvUGIFX8ZQnN6T+Bmp6/zxk5L4GRYFic7j5
- ivekdZTEClw3XBRz+BuTNJpeSjGM6OFAmwSaGiUxGSabwKlEQhfmWGNtfA49IUhh5yjC
- 2gNThlnCF6KVdJY22K+tHJJJODMr8HcnW2i28Saa+3Fx1kyN2mpY8nAw/v5OkiEs84PR Pg== 
-Authentication-Results: cadence.com;
-        spf=pass smtp.mailfrom=adouglas@cadence.com
-Received: from nam03-dm3-obe.outbound.protection.outlook.com (mail-dm3nam03lp0015.outbound.protection.outlook.com [207.46.163.15])
-        by mx0a-0014ca01.pphosted.com with ESMTP id 2mxuwx76nd-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-SHA384 bits=256 verify=NOT);
-        Thu, 11 Oct 2018 06:46:58 -0700
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=cadence.com;
- s=selector1;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=MK9ti9bygrBkOShL34njxpu35FmBTGnInVj+PdTHB9k=;
- b=iNG9NH9WaMVe3ClOwxf1g9s90nteRC83Is1zX/WSu687fWt4wYXkhXgneVnxFU6ioWmVSBsfn5TEg6qJqubNpRBqD15eCwa1S9B6685DDdh6exciXWrsgQm0aNbL94JmXeaAghR0FWWfcnqlQGriPTWk7b9TuWpLIOWGfrjcGnw=
-Received: from MWHPR07MB3502.namprd07.prod.outlook.com (10.164.192.29) by
- MWHPR07MB3102.namprd07.prod.outlook.com (10.172.95.8) with Microsoft SMTP
- Server (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- 15.20.1207.26; Thu, 11 Oct 2018 13:46:55 +0000
-Received: from MWHPR07MB3502.namprd07.prod.outlook.com
- ([fe80::8d72:9288:d100:975b]) by MWHPR07MB3502.namprd07.prod.outlook.com
- ([fe80::8d72:9288:d100:975b%2]) with mapi id 15.20.1207.029; Thu, 11 Oct 2018
- 13:46:55 +0000
-From:   Alan Douglas <adouglas@cadence.com>
-To:     Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
-CC:     "kishon@ti.com" <kishon@ti.com>,
+        id S1728508AbeJKVUR (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Thu, 11 Oct 2018 17:20:17 -0400
+Received: from usa-sjc-mx-foss1.foss.arm.com ([217.140.101.70]:37836 "EHLO
+        foss.arm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1727080AbeJKVUR (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Thu, 11 Oct 2018 17:20:17 -0400
+Received: from usa-sjc-imap-foss1.foss.arm.com (unknown [10.72.51.249])
+        by usa-sjc-mx-foss1.foss.arm.com (Postfix) with ESMTP id 7281FEBD;
+        Thu, 11 Oct 2018 06:52:59 -0700 (PDT)
+Received: from e107981-ln.cambridge.arm.com (e107981-ln.cambridge.arm.com [10.1.197.40])
+        by usa-sjc-imap-foss1.foss.arm.com (Postfix) with ESMTPSA id 41C213F5D3;
+        Thu, 11 Oct 2018 06:52:58 -0700 (PDT)
+Date:   Thu, 11 Oct 2018 14:52:52 +0100
+From:   Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
+To:     Alan Douglas <adouglas@cadence.com>
+Cc:     "kishon@ti.com" <kishon@ti.com>,
         "bhelgaas@google.com" <bhelgaas@google.com>,
         "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
         "gustavo.pimentel@synopsys.com" <gustavo.pimentel@synopsys.com>,
         "cyrille.pitchen@bootlin.com" <cyrille.pitchen@bootlin.com>
-Subject: RE: [PATCH v3 5/5] PCI: cadence: Add MSI-X capability to EP driver
-Thread-Topic: [PATCH v3 5/5] PCI: cadence: Add MSI-X capability to EP driver
-Thread-Index: AQHUT2NUIOOrPZnotk24ZjWNkHBdvaT49uAAgABHYJCAB5HWcIAZMdiwgAAvGYCAAAEV4A==
-Date:   Thu, 11 Oct 2018 13:46:55 +0000
-Message-ID: <MWHPR07MB35022DBA01653A85FD49F5D0D8E10@MWHPR07MB3502.namprd07.prod.outlook.com>
+Subject: Re: [PATCH v3 5/5] PCI: cadence: Add MSI-X capability to EP driver
+Message-ID: <20181011135252.GA7241@e107981-ln.cambridge.arm.com>
 References: <1537284105-23519-1-git-send-email-adouglas@cadence.com>
  <20180920101516.GA838@e107981-ln.cambridge.arm.com>
  <MWHPR07MB350242FB438E947E62C3A684D8130@MWHPR07MB3502.namprd07.prod.outlook.com>
  <BN6PR07MB3491660B49601BD32F412E92D8160@BN6PR07MB3491.namprd07.prod.outlook.com>
  <MWHPR07MB3502A33F294B978C1045176ED8E10@MWHPR07MB3502.namprd07.prod.outlook.com>
  <20181011133959.GB3574@e107981-ln.cambridge.arm.com>
-In-Reply-To: <20181011133959.GB3574@e107981-ln.cambridge.arm.com>
-Accept-Language: en-GB, en-US
-Content-Language: en-US
-X-MS-Has-Attach: 
-X-MS-TNEF-Correlator: 
-x-dg-ref: PG1ldGE+PGF0IG5tPSJib2R5LnR4dCIgcD0iYzpcdXNlcnNcYWRvdWdsYXNcYXBwZGF0YVxyb2FtaW5nXDA5ZDg0OWI2LTMyZDMtNGE0MC04NWVlLTZiODRiYTI5ZTM1Ylxtc2dzXG1zZy0xZjdkMTZhMC1jZDVjLTExZTgtYWI4Yy1mNDk2MzQ4NmY0ZWNcYW1lLXRlc3RcMWY3ZDE2YTItY2Q1Yy0xMWU4LWFiOGMtZjQ5NjM0ODZmNGVjYm9keS50eHQiIHN6PSIxNDM2NiIgdD0iMTMxODM3MzkyMTkzOTY0OTMwIiBoPSJscUJYNW5SdDJkU21Vc211KzhxTjJQQ0xqenc9IiBpZD0iIiBibD0iMCIgYm89IjEiLz48L21ldGE+
-x-dg-rorf: 
-x-originating-ip: [185.217.253.59]
-x-ms-publictraffictype: Email
-x-microsoft-exchange-diagnostics: 1;MWHPR07MB3102;20:iiSQKl6os3vSoNgR/K1qTrlCKe26OFhCbke14nnJVbTWmLM6hn5TEQ3JsiQiAstPEsFt1MLK8Fy6voP9+iSRDmDO4W7eCELkAe0kySYFHP5tZYBd4jZUO71Ji2ANiwT1Qp8RRbWd1lErhAkeWA62+BiSjUWwO0u+F88za8neppt31WZXgR3mf9dPtecRXuBjnAzr1TgJ8AFGBwIo3aIea5uXHgT4OvuwZqN156mmx/uFEkbanKIuIOE6c6wH/uxz
-x-ms-exchange-antispam-srfa-diagnostics: SOS;
-x-ms-office365-filtering-correlation-id: 90694288-cc10-4d83-5364-08d62f8001db
-x-microsoft-antispam: BCL:0;PCL:0;RULEID:(7020095)(4652040)(8989299)(4534185)(4627221)(201703031133081)(201702281549075)(8990200)(5600074)(711020)(2017052603328)(7153060)(7193020);SRVR:MWHPR07MB3102;
-x-ms-traffictypediagnostic: MWHPR07MB3102:
-x-microsoft-antispam-prvs: <MWHPR07MB3102DDB0B23A78551D8F14D1D8E10@MWHPR07MB3102.namprd07.prod.outlook.com>
-x-exchange-antispam-report-test: UriScan:(31051911155226)(211936372134217)(9452136761055)(10436049006162)(788757137089)(180628864354917)(72806322054110);
-x-ms-exchange-senderadcheck: 1
-x-exchange-antispam-report-cfa-test: BCL:0;PCL:0;RULEID:(8211001083)(6040522)(2401047)(8121501046)(5005006)(3231355)(944501410)(52105095)(3002001)(93006095)(93001095)(10201501046)(149066)(150057)(6041310)(20161123560045)(20161123562045)(20161123558120)(201703131423095)(201702281528075)(20161123555045)(201703061421075)(201703061406153)(20161123564045)(201708071742011)(7699051)(76991055);SRVR:MWHPR07MB3102;BCL:0;PCL:0;RULEID:;SRVR:MWHPR07MB3102;
-x-forefront-prvs: 08220FA8D6
-x-forefront-antispam-report: SFV:NSPM;SFS:(10009020)(346002)(366004)(39860400002)(376002)(396003)(136003)(189003)(199004)(36092001)(93886005)(105586002)(106356001)(305945005)(7736002)(53936002)(74316002)(54906003)(33656002)(53546011)(66066001)(6506007)(2900100001)(71200400001)(71190400001)(68736007)(966005)(2906002)(6246003)(25786009)(14454004)(6346003)(102836004)(5250100002)(4744004)(11346002)(476003)(6436002)(19627235002)(97736004)(4326008)(5660300001)(99286004)(446003)(81166006)(229853002)(81156014)(6916009)(14444005)(8936002)(486006)(256004)(26005)(8676002)(186003)(6306002)(6116002)(86362001)(575784001)(76176011)(9686003)(3846002)(55016002)(316002)(7696005)(478600001);DIR:OUT;SFP:1101;SCL:1;SRVR:MWHPR07MB3102;H:MWHPR07MB3502.namprd07.prod.outlook.com;FPR:;SPF:None;LANG:en;PTR:InfoNoRecords;MX:1;A:1;
-received-spf: None (protection.outlook.com: cadence.com does not designate
- permitted sender hosts)
-x-microsoft-antispam-message-info: WBf7L1RzvnsoSJWB6cMVp6y8utfXMHgq0OOdLnDtpZm+tJ1SBVENKbFIRWvrKSmTziK3yTdBzmTqGG9cPjn0masLf9PKf6YnW0wh2Z/nqau8Ubb6719tJGerkCE3FODg4+tEwfdAKSyU0uKtObYsBcXHSt0YGlidUhTKK6m47CVDRHfRbCqka0v3Lll+10PuYmdqxdhjQFjfvMX300nI1+zN8K+C4z2JSQfCRpiM87A1XnEdU8TdtPHzupQuJYIUfZi2Nda77sK9kqlMDZ+aM8rLw3TDuVbVgyJklMfjvhev0f6FvHdsRrGMO0ZTYIURsNcw7hpRHbSv88YxIIOjZD2X9cv+FUIA4Va+RavL+yA=
-spamdiagnosticoutput: 1:99
-spamdiagnosticmetadata: NSPM
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: base64
+ <MWHPR07MB35022DBA01653A85FD49F5D0D8E10@MWHPR07MB3502.namprd07.prod.outlook.com>
 MIME-Version: 1.0
-X-OriginatorOrg: cadence.com
-X-MS-Exchange-CrossTenant-Network-Message-Id: 90694288-cc10-4d83-5364-08d62f8001db
-X-MS-Exchange-CrossTenant-originalarrivaltime: 11 Oct 2018 13:46:55.1753
- (UTC)
-X-MS-Exchange-CrossTenant-fromentityheader: Hosted
-X-MS-Exchange-CrossTenant-id: d36035c5-6ce6-4662-a3dc-e762e61ae4c9
-X-MS-Exchange-Transport-CrossTenantHeadersStamped: MWHPR07MB3102
-X-Proofpoint-SPF-Result: pass
-X-Proofpoint-SPF-Record: v=spf1 a:mx-sanjose2.Cadence.COM a:mx-sanjose4.Cadence.COM
- a:mx-sanjose5.Cadence.COM include:mktomail.com
- include:spf-0014ca01.pphosted.com include:spf.protection.outlook.com
- include:auth.msgapp.com include:spf.mandrillapp.com ~all
-X-Proofpoint-Virus-Version: vendor=fsecure engine=2.50.10434:,, definitions=2018-10-11_07:,,
- signatures=0
-X-Proofpoint-Spam-Details: rule=outbound_check_notspam policy=outbound_check score=0
- priorityscore=1501 malwarescore=0 suspectscore=0 phishscore=0 bulkscore=0
- spamscore=0 clxscore=1015 lowpriorityscore=0 mlxscore=0 impostorscore=0
- mlxlogscore=999 adultscore=0 classifier=spam adjust=0 reason=mlx
- scancount=1 engine=8.0.1-1807170000 definitions=main-1810110134
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <MWHPR07MB35022DBA01653A85FD49F5D0D8E10@MWHPR07MB3502.namprd07.prod.outlook.com>
+User-Agent: Mutt/1.5.24 (2015-08-30)
 Sender: linux-pci-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-T24gMTEgT2N0b2JlciAyMDE4IDE0OjQwLCBMb3JlbnpvIFBpZXJhbGlzaSB3cm90ZToNCj4gT24g
-VGh1LCBPY3QgMTEsIDIwMTggYXQgMTI6Mjc6MjJQTSArMDAwMCwgQWxhbiBEb3VnbGFzIHdyb3Rl
-Og0KPiA+IEhpIExvcmVuem8sDQo+ID4NCj4gPiBJIG5lZWQgdG8gbWFrZSBzaWduaWZpY2FudCBj
-aGFuZ2VzIHRvIFBBVENIIDUvNSBpbiB0aGlzIHNlcmllcywNCj4gPiB0aGlzIGlzIHRoZSBwYXRj
-aCB0aGF0IGFjdHVhbGx5IGFkZHMgdGhlIE1TSS1YIHN1cHBvcnQuDQo+ID4gVGhlICBtZW1vcnkg
-cmVnaW9uIHRvIHVzZSBmb3IgTVNJLVggQkFSIHNob3VsZCBiZSBwYXJ0IG9mDQo+ID4gdGhlIEVQ
-IHJlc291cmNlcywgc28gSSBuZWVkIHRvIG1ha2Ugc29tZSBjaGFuZ2VzIHRvIGRldmljZSB0cmVl
-DQo+ID4gYmluZGluZ3MuDQo+ID4NCj4gPiBQYXRjaGVzIDEsMiwzIGFuZCA0IHdpbGwgYmUgdW5j
-aGFuZ2VkLCBhbmQgYXJlIGZpeGVzLCBzbw0KPiA+IGRvZXMgaXQgY2F1c2UgeW91IGFueSBwcm9i
-bGVtIGlmIEkgbW92ZSB0aGVzZSB0byBhIHNlcGFyYXRlDQo+ID4gcGF0Y2ggc2VyaWVzIHNvIHRo
-YXQgdGhleSBhcmUgbm90IHRpZWQgdG8gdGhlIE1TSS1YIGltcGxlbWVudGF0aW9uPw0KPiANCj4g
-RG8geW91IHdhbnQgbWUgdG8gcHVsbCAoMSwyLDMsNCkgYXMgdGhleSBhcmUgc28gdGhhdCB5b3Ug
-Y2FuIHNlbmQNCj4gcGF0Y2ggNSBzdGFuZGFsb25lID8NCj4gDQo+IExvcmVuem8NCj4gDQpUaGFu
-a3MsIHRoYXQgd291bGQgd29yayB3ZWxsLiAgSSdkIHRoZW4gcmVtb3ZlIHRoZW0gZnJvbSB0aGUg
-bmV4dCByZXZpc2lvbg0Kb2YgdGhpcyBzZXJpZXMuDQoNCkFsYW4NCj4gPg0KPiA+IFJlZ2FyZHMs
-DQo+ID4gQWxhbg0KPiA+IE9uICAyNSBTZXB0ZW1iZXIgMjAxOCAxNjoxOSwgQWxhbiBEb3VnbGFz
-IHdyb3RlOg0KPiA+ID4gT24gMjAgU2VwdGVtYmVyIDIwMTggMTc6MTIsIEFsYW4gRG91Z2xhcyB3
-cm90ZToNCj4gPiA+ID4gVG86ICdMb3JlbnpvIFBpZXJhbGlzaScgPGxvcmVuem8ucGllcmFsaXNp
-QGFybS5jb20+DQo+ID4gPiA+IENjOiBraXNob25AdGkuY29tOyBiaGVsZ2Fhc0Bnb29nbGUuY29t
-OyBsaW51eC1wY2lAdmdlci5rZXJuZWwub3JnOyBndXN0YXZvLnBpbWVudGVsQHN5bm9wc3lzLmNv
-bTsNCj4gY3lyaWxsZS5waXRjaGVuQGJvb3RsaW4uY29tDQo+ID4gPiA+IFN1YmplY3Q6IFJFOiBb
-UEFUQ0ggdjMgNS81XSBQQ0k6IGNhZGVuY2U6IEFkZCBNU0ktWCBjYXBhYmlsaXR5IHRvIEVQIGRy
-aXZlcg0KPiA+ID4gPg0KPiA+ID4gPiBIaSwNCj4gPiA+ID4gT24gMjAgU2VwdGVtYmVyIDIwMTgg
-MTE6MTUsIExvcmVuem8gUGllcmFsaXNpIHdyb3RlOg0KPiA+ID4gPiA+IE9uIFR1ZSwgU2VwIDE4
-LCAyMDE4IGF0IDA0OjIxOjQ1UE0gKzAxMDAsIEFsYW4gRG91Z2xhcyB3cm90ZToNCj4gPiA+ID4g
-PiA+IEFkZCBzZXRfbXNpeCBhbmQgZ2V0X21zaXggZnVuY3Rpb25zIHRvIGRyaXZlciwgYW5kIGhh
-bmRsZQ0KPiA+ID4gPiA+ID4gUENJX0VQQ19JUlFfTVNJWCByZXF1ZXN0IGluIHJhaXNlX2lycS4g
-IEJBUjQgaXMgdXNlZCBmb3INCj4gPiA+ID4gPiA+IHRoZSBNU0ktWCB2ZWN0b3JzLg0KPiA+ID4g
-PiA+DQo+ID4gPiA+ID4gaHR0cHM6Ly91cmxkZWZlbnNlLnByb29mcG9pbnQuY29tL3YyL3VybD91
-PWh0dHBzLTNBX19tYXJjLmluZm9fLTNGbC0zRGxpbnV4LTJEcGNpLTI2bS0zRDE1MDkwNTc0Mjgw
-ODE2Ni0yNnctDQo+IDNEMiZkPUR3SUJBZyZjPWFVcTk4M0wycHVlMkZxS0ZvUDZQR0hNSlF5b0o3
-a2wzczNHWi1faGFYcVkmcj1MREdCLQ0KPiBQWG1KR1U5c0NNcEtuNGMxNU1qc0hpY2RlT2N0ZlNx
-czdVVmgzRSZtPXFmQXRGMTJZNDNoSTNVbmpUWTRZcFQtd0pVOXdWb2VlR3FDNmJjY2pRakkmcz1H
-eWVjdE1KQlUtDQo+IHNUN2dRaTZ3Rm1peEFMTjBseXdrNVlFQUFlQnU1RWdjQSZlPQ0KPiA+ID4g
-PiA+DQo+ID4gPiA+IEkgd2lsbCBhZGQgbW9yZSBleHBsYW5hdGlvbiBpbiB2NCwgYW5kIGNoZWNr
-IGZvciBvdGhlciBpc3N1ZXMgSSBtaXNzZWQuDQo+ID4gPiA+DQo+ID4gPiA+ID4NCj4gPiA+ID4g
-PiA+IFNpZ25lZC1vZmYtYnk6IEFsYW4gRG91Z2xhcyA8YWRvdWdsYXNAY2FkZW5jZS5jb20+DQo+
-ID4gPiA+ID4gPiAtLS0NCj4gPiA+ID4gPiA+ICBkcml2ZXJzL3BjaS9jb250cm9sbGVyL3BjaWUt
-Y2FkZW5jZS1lcC5jIHwgMTI5ICsrKysrKysrKysrKysrKysrKysrKysrKysrKysrKy0NCj4gPiA+
-ID4gPiA+ICBkcml2ZXJzL3BjaS9jb250cm9sbGVyL3BjaWUtY2FkZW5jZS5oICAgIHwgICA3ICsr
-DQo+ID4gPiA+ID4gPiAgMiBmaWxlcyBjaGFuZ2VkLCAxMzUgaW5zZXJ0aW9ucygrKSwgMSBkZWxl
-dGlvbigtKQ0KPiA+ID4gPiA+ID4NCj4gPiA+ID4gPiA+IGRpZmYgLS1naXQgYS9kcml2ZXJzL3Bj
-aS9jb250cm9sbGVyL3BjaWUtY2FkZW5jZS1lcC5jIGIvZHJpdmVycy9wY2kvY29udHJvbGxlci9w
-Y2llLWNhZGVuY2UtZXAuYw0KPiA+ID4gPiA+ID4gaW5kZXggMTI0OGQ3NS4uZGJlNzZhYiAxMDA2
-NDQNCj4gPiA+ID4gPiA+IC0tLSBhL2RyaXZlcnMvcGNpL2NvbnRyb2xsZXIvcGNpZS1jYWRlbmNl
-LWVwLmMNCj4gPiA+ID4gPiA+ICsrKyBiL2RyaXZlcnMvcGNpL2NvbnRyb2xsZXIvcGNpZS1jYWRl
-bmNlLWVwLmMNCj4gPiA+ID4gPiA+IEBAIC0xNiw2ICsxNiw3IEBADQo+ID4gPiA+ID4gPiAgI2Rl
-ZmluZSBDRE5TX1BDSUVfRVBfTUlOX0FQRVJUVVJFCQkxMjgJLyogMTI4IGJ5dGVzICovDQo+ID4g
-PiA+ID4gPiAgI2RlZmluZSBDRE5TX1BDSUVfRVBfSVJRX1BDSV9BRERSX05PTkUJCTB4MQ0KPiA+
-ID4gPiA+ID4gICNkZWZpbmUgQ0ROU19QQ0lFX0VQX0lSUV9QQ0lfQUREUl9MRUdBQ1kJMHgzDQo+
-ID4gPiA+ID4gPiArI2RlZmluZSBDRE5TX1BDSUVfRVBfTVNJWF9CQVIJCQkweDQNCj4gPiA+ID4g
-PiA+DQo+ID4gPiA+ID4gPiAgLyoqDQo+ID4gPiA+ID4gPiAgICogc3RydWN0IGNkbnNfcGNpZV9l
-cCAtIHByaXZhdGUgZGF0YSBmb3IgdGhpcyBQQ0llIGVuZHBvaW50IGNvbnRyb2xsZXIgZHJpdmVy
-DQo+ID4gPiA+ID4gPiBAQCAtMjU1LDYgKzI1Niw2NSBAQCBzdGF0aWMgaW50IGNkbnNfcGNpZV9l
-cF9nZXRfbXNpKHN0cnVjdCBwY2lfZXBjICplcGMsIHU4IGZuKQ0KPiA+ID4gPiA+ID4gIAlyZXR1
-cm4gbW1lOw0KPiA+ID4gPiA+ID4gIH0NCj4gPiA+ID4gPiA+DQo+ID4gPiA+ID4gPiArc3RhdGlj
-IGludCBjZG5zX3BjaWVfZXBfZ2V0X21zaXgoc3RydWN0IHBjaV9lcGMgKmVwYywgdTggZnVuY19u
-bykNCj4gPiA+ID4gPiA+ICt7DQo+ID4gPiA+ID4gPiArCXN0cnVjdCBjZG5zX3BjaWVfZXAgKmVw
-ID0gZXBjX2dldF9kcnZkYXRhKGVwYyk7DQo+ID4gPiA+ID4gPiArCXN0cnVjdCBjZG5zX3BjaWUg
-KnBjaWUgPSAmZXAtPnBjaWU7DQo+ID4gPiA+ID4gPiArCXUzMiBjYXAgPSBDRE5TX1BDSUVfRVBf
-RlVOQ19NU0lYX0NBUF9PRkZTRVQ7DQo+ID4gPiA+ID4gPiArCXUzMiB2YWwsIHJlZzsNCj4gPiA+
-ID4gPiA+ICsNCj4gPiA+ID4gPiA+ICsJcmVnID0gY2FwICsgUENJX01TSVhfRkxBR1M7DQo+ID4g
-PiA+ID4gPiArCXZhbCA9IGNkbnNfcGNpZV9lcF9mbl9yZWFkdyhwY2llLCBmdW5jX25vLCByZWcp
-Ow0KPiA+ID4gPiA+ID4gKwlpZiAoISh2YWwgJiBQQ0lfTVNJWF9GTEFHU19FTkFCTEUpKQ0KPiA+
-ID4gPiA+ID4gKwkJcmV0dXJuIC1FSU5WQUw7DQo+ID4gPiA+ID4gPiArDQo+ID4gPiA+ID4gPiAr
-CXZhbCAmPSBQQ0lfTVNJWF9GTEFHU19RU0laRTsNCj4gPiA+ID4gPiA+ICsNCj4gPiA+ID4gPiA+
-ICsJcmV0dXJuIHZhbDsNCj4gPiA+ID4gPiA+ICt9DQo+ID4gPiA+ID4gPiArDQo+ID4gPiA+ID4g
-PiArc3RhdGljIGludCBjZG5zX3BjaWVfZXBfc2V0X21zaXgoc3RydWN0IHBjaV9lcGMgKmVwYywg
-dTggZm4sIHUxNiBpbnRlcnJ1cHRzKQ0KPiA+ID4gPiA+ID4gK3sNCj4gPiA+ID4gPiA+ICsJc3Ry
-dWN0IGNkbnNfcGNpZV9lcCAqZXAgPSBlcGNfZ2V0X2RydmRhdGEoZXBjKTsNCj4gPiA+ID4gPiA+
-ICsJc3RydWN0IGNkbnNfcGNpZSAqcGNpZSA9ICZlcC0+cGNpZTsNCj4gPiA+ID4gPiA+ICsJdTMy
-IGNhcCA9IENETlNfUENJRV9FUF9GVU5DX01TSVhfQ0FQX09GRlNFVDsNCj4gPiA+ID4gPiA+ICsJ
-dTMyIHZhbCwgcmVnLCB0YmxzaXplLCBiLCBjZmcsIGFwLCBjdHJsOw0KPiA+ID4gPiA+ID4gKw0K
-PiA+ID4gPiA+ID4gKwkvKiBDaGVjayB0aGF0IHRoZSBCQVIgaGFzIGFscmVhZHkgYmVlbiBjb25m
-aWd1cmVkLCBhbmQgaXMgbGFyZ2UNCj4gPiA+ID4gPiA+ICsJICogZW5vdWdoLCBhbmQgZmFpbCBp
-ZiBub3QuDQo+ID4gPiA+ID4gPiArCSAqLw0KPiA+ID4gPiA+ID4gKwliID0gQ0ROU19QQ0lFX0VQ
-X01TSVhfQkFSOw0KPiA+ID4gPiA+ID4gKwlpZiAoYiA8IEJBUl80KQ0KPiA+ID4gPiA+ID4gKwkJ
-cmVnID0gQ0ROU19QQ0lFX0xNX0VQX0ZVTkNfQkFSX0NGRzAoZm4pOw0KPiA+ID4gPiA+ID4gKwll
-bHNlDQo+ID4gPiA+ID4gPiArCQlyZWcgPSBDRE5TX1BDSUVfTE1fRVBfRlVOQ19CQVJfQ0ZHMShm
-bik7DQo+ID4gPiA+ID4gPiArCWNmZyA9IGNkbnNfcGNpZV9yZWFkbChwY2llLCByZWcpOw0KPiA+
-ID4gPiA+ID4gKwljdHJsID0gQ0ROU19QQ0lFX0xNX0VQX0ZVTkNfQkFSX0NGR19WQUwoYiwgY2Zn
-KTsNCj4gPiA+ID4gPiA+ICsJaWYgKCEoY3RybCAmIENETlNfUENJRV9MTV9CQVJfQ0ZHX0NUUkxf
-TUVNXzMyQklUUykpDQo+ID4gPiA+ID4gPiArCQlyZXR1cm4gLUVJTlZBTDsNCj4gPiA+ID4gPiA+
-ICsJYXAgPSBDRE5TX1BDSUVfTE1fRVBfRlVOQ19CQVJfQVBFUlRVUkVfVkFMKGIsIGNmZyk7DQo+
-ID4gPiA+ID4gPiArCXRibHNpemUgPSBmbHM2NChpbnRlcnJ1cHRzICogMzIgLSAxKTsNCj4gPiA+
-ID4gPiA+ICsJLyogTmVlZCAoMTw8dGJsc2l6ZSkqMiBieXRlcyBmb3IgdmVjdG9yIHRhYmxlICsg
-UEJBIHRhYmxlICovDQo+ID4gPiA+ID4gPiArCWlmIChhcCArIDYgPCAgdGJsc2l6ZSkNCj4gPiA+
-ID4gPg0KPiA+ID4gPiA+IFRoaXMgaXMgY3J5cHRpYywgeW91IGhhdmUgdG8gZXhwbGFpbiB3aGF0
-IGl0IGRvZXMgKGluY2x1c2l2ZSBvZiB0aGF0DQo+ID4gPiA+ID4gaGFyZGNvZGVkIDYgdmFsdWUp
-Lg0KPiA+ID4gPiA+DQo+ID4gPiA+IEknbGwgZXhwYW5kIHRoYXQsIGFuZCByZXBsYWNlIDYgd2l0
-aCAoQ0ROU19QQ0lFX0VQX01JTl9BUEVSVFVSRSAtIDEpDQo+ID4gPiA+IEkgbWVhbiB0aGF0IHRo
-ZSBCQVIgaGFzIHRvIGJlIGF0IGxlYXN0IHR3aWNlIHRoZSBzaXplIG9mIHRoZSB2ZWN0b3IgdGFi
-bGUsDQo+ID4gPiA+IHRvIGFsbG93IGZvciBQQkEgYXMgd2VsbC4gIEJBUiBzaXplIGlzIDJeKGFw
-ZXJ0dXJlICsgNykNCj4gPiA+ID4NCj4gPiA+ID4gPiA+ICsJCXJldHVybiAtRUlOVkFMOw0KPiA+
-ID4gPiA+ID4gKw0KPiA+ID4gPiA+ID4gKwlyZWcgPSBjYXAgKyBQQ0lfTVNJWF9GTEFHUzsNCj4g
-PiA+ID4gPiA+ICsJdmFsID0gY2Ruc19wY2llX2VwX2ZuX3JlYWR3KHBjaWUsIGZuLCByZWcpOw0K
-PiA+ID4gPiA+ID4gKwl2YWwgJj0gflBDSV9NU0lYX0ZMQUdTX1FTSVpFOw0KPiA+ID4gPiA+ID4g
-Kwl2YWwgfD0gaW50ZXJydXB0czsNCj4gPiA+ID4gPiA+ICsJY2Ruc19wY2llX2VwX2ZuX3dyaXRl
-dyhwY2llLCBmbiwgcmVnLCB2YWwpOw0KPiA+ID4gPiA+ID4gKw0KPiA+ID4gPiA+ID4gKwkvKiBT
-ZXQgTVNJWCBCQVIgYW5kIG9mZnNldCAqLw0KPiA+ID4gPiA+ID4gKwlyZWcgPSBjYXAgKyBQQ0lf
-TVNJWF9UQUJMRTsNCj4gPiA+ID4gPiA+ICsJY2Ruc19wY2llX2VwX2ZuX3dyaXRlbChwY2llLCBm
-biwgcmVnLCBiKTsNCj4gPiA+ID4gPiA+ICsNCj4gPiA+ID4gPiA+ICsJLyogU2V0IFBCQSBCQVIg
-YW5kIG9mZnNldC4gIEJBUiBtdXN0IG1hdGNoIE1TSVggQkFSICovDQo+ID4gPiA+ID4gPiArCXJl
-ZyA9IGNhcCArIFBDSV9NU0lYX1BCQTsNCj4gPiA+ID4gPiA+ICsJY2Ruc19wY2llX2VwX2ZuX3dy
-aXRlbChwY2llLCBmbiwgcmVnLCAoMVVMIDw8IHRibHNpemUpIHwgYik7DQo+ID4gPiA+ID4gPiAr
-DQo+ID4gPiA+ID4gPiArCXJldHVybiAwOw0KPiA+ID4gPiA+ID4gK30NCj4gPiA+ID4gPiA+ICsN
-Cj4gPiA+ID4gPiA+ICBzdGF0aWMgdm9pZCBjZG5zX3BjaWVfZXBfYXNzZXJ0X2ludHgoc3RydWN0
-IGNkbnNfcGNpZV9lcCAqZXAsIHU4IGZuLA0KPiA+ID4gPiA+ID4gIAkJCQkgICAgIHU4IGludHgs
-IGJvb2wgaXNfYXNzZXJ0ZWQpDQo+ID4gPiA+ID4gPiAgew0KPiA+ID4gPiA+ID4gQEAgLTM2Niw4
-ICs0MjYsNjkgQEAgc3RhdGljIGludCBjZG5zX3BjaWVfZXBfc2VuZF9tc2lfaXJxKHN0cnVjdCBj
-ZG5zX3BjaWVfZXAgKmVwLCB1OCBmbiwNCj4gPiA+ID4gPiA+ICAJcmV0dXJuIDA7DQo+ID4gPiA+
-ID4gPiAgfQ0KPiA+ID4gPiA+ID4NCj4gPiA+ID4gPiA+ICtzdGF0aWMgaW50IGNkbnNfcGNpZV9l
-cF9zZW5kX21zaXhfaXJxKHN0cnVjdCBjZG5zX3BjaWVfZXAgKmVwLCB1OCBmbiwNCj4gPiA+ID4g
-PiA+ICsJCQkJICAgICAgdTE2IGludGVycnVwdF9udW0pDQo+ID4gPiA+ID4gPiArew0KPiA+ID4g
-PiA+ID4gKwlzdHJ1Y3QgY2Ruc19wY2llICpwY2llID0gJmVwLT5wY2llOw0KPiA+ID4gPiA+ID4g
-Kwl1MzIgY2FwID0gQ0ROU19QQ0lFX0VQX0ZVTkNfTVNJWF9DQVBfT0ZGU0VUOw0KPiA+ID4gPiA+
-ID4gKwl1MTYgZmxhZ3M7DQo+ID4gPiA+ID4gPiArCXU2NCBwY2lfYWRkcl9tYXNrID0gMHhmZjsN
-Cj4gPiA+ID4gPiA+ICsJdTE2IHRibF9vZmZzZXQgPSAwOw0KPiA+ID4gPiA+ID4gKwl1MzIgYmFy
-X2FkZHJfdXBwZXIsIGJhcl9hZGRyX2xvd2VyOw0KPiA+ID4gPiA+ID4gKwl1MzIgbXNnX2FkZHJf
-dXBwZXIsIG1zZ19hZGRyX2xvd2VyOw0KPiA+ID4gPiA+ID4gKwl1MzIgbXNnX2RhdGE7DQo+ID4g
-PiA+ID4gPiArCXU2NCB0YmxfYWRkciwgbXNnX2FkZHI7DQo+ID4gPiA+ID4gPiArCXZvaWQgX19p
-b21lbSAqbXNpeF90Ymw7DQo+ID4gPiA+ID4gPiArDQo+ID4gPiA+ID4gPiArCS8qIENoZWNrIHdo
-ZXRoZXIgdGhlIE1TSS1YIGZlYXR1cmUgaGFzIGJlZW4gZW5hYmxlZCBieSB0aGUgUENJIGhvc3Qu
-ICovDQo+ID4gPiA+ID4gPiArCWZsYWdzID0gY2Ruc19wY2llX2VwX2ZuX3JlYWR3KHBjaWUsIGZu
-LCBjYXAgKyBQQ0lfTVNJWF9GTEFHUyk7DQo+ID4gPiA+ID4gPiArCWlmICghKGZsYWdzICYgUENJ
-X01TSVhfRkxBR1NfRU5BQkxFKSkNCj4gPiA+ID4gPiA+ICsJCXJldHVybiAtRUlOVkFMOw0KPiA+
-ID4gPiA+ID4gKwkvKiBXZSB3YW50IGxvY2FsIGFkZHJlc3MsIG5vdCBhZGRyZXNzIG9uIGhvc3Qu
-IFRhYmxlIGlzIGF0IG9mZnNldCAwICovDQo+ID4gPiA+ID4gPiArCWJhcl9hZGRyX2xvd2VyID0g
-Y2Ruc19wY2llX3JlYWRsKHBjaWUsDQo+ID4gPiA+ID4gPiArCQlDRE5TX1BDSUVfQVRfSUJfRVBf
-RlVOQ19CQVJfQUREUjAoZm4sIENETlNfUENJRV9FUF9NU0lYX0JBUikpOw0KPiA+ID4gPiA+ID4g
-KwliYXJfYWRkcl91cHBlciA9IGNkbnNfcGNpZV9yZWFkbChwY2llLA0KPiA+ID4gPiA+ID4gKwkJ
-Q0ROU19QQ0lFX0FUX0lCX0VQX0ZVTkNfQkFSX0FERFIxKGZuLCBDRE5TX1BDSUVfRVBfTVNJWF9C
-QVIpKTsNCj4gPiA+ID4gPiA+ICsNCj4gPiA+ID4gPiA+ICsJdGJsX2FkZHIgPSAoKHU2NCliYXJf
-YWRkcl91cHBlcikgPDwgMzIgfCBiYXJfYWRkcl9sb3dlcjsNCj4gPiA+ID4gPiA+ICsJdGJsX2Fk
-ZHIgKz0gKHRibF9vZmZzZXQgKyAoKGludGVycnVwdF9udW0gLSAxKSAqIFBDSV9NU0lYX0VOVFJZ
-X1NJWkUpKTsNCj4gPiA+ID4gPiA+ICsJdGJsX2FkZHIgJj0gUENJX0JBU0VfQUREUkVTU19NRU1f
-TUFTSzsNCj4gPiA+ID4gPiA+ICsJbXNpeF90YmwgPSBwaHlzX3RvX3ZpcnQodGJsX2FkZHIpOw0K
-PiA+ID4gPiA+DQo+ID4gPiA+ID4gcGh5c190b192aXJ0KCkgY291cGxlZCB3aXRoIGlvdW5tYXAo
-KSBiZWxvdywgdGhpcyBkb2VzIG5vdCBsb29rIE9LDQo+ID4gPiA+ID4gdG8gbWUuDQo+ID4gPiA+
-IEkgbWlzc2VkIHRoYXQsIEkgcHJvcG9zZSB0byBjaGFuZ2UgdGhpcyB0byBpb3JlbWFwX25vY2Fj
-aGUoKSAvIGlvdW5tYXAoKQ0KPiA+ID4gPiBJdCB3YXMgd29ya2luZyBmb3IgbWUgaW4gdGVzdGlu
-ZyBiZWNhdXNlIHRoZSBCQVIgaXMgYWxyZWFkeSBtYXBwZWQgYW5kIGlvdW5tYXAoKQ0KPiA+ID4g
-PiBkaWRuJ3QgaGF2ZSBhbnkgZWZmZWN0Lg0KPiA+ID4gPiA+DQo+ID4gPiA+ID4gSUlVQyB5b3Ug
-d2FudCB0byBtYXAgdGhlIEJBUiBpbiB0aGUgRVAgc3lzdGVtIGFkZHJlc3Mgc3BhY2UgdG8gcmVh
-ZCB0aGUNCj4gPiA+ID4gPiB0YWJsZXMgZW50cmllcywgd2hlcmUgdGhlIEJBUiBjb250ZW50IGlz
-IHNldCBieSB0aGUgaG9zdCBzeXN0ZW0gYnV0DQo+ID4gPiA+ID4gcGh5c190b192aXJ0KCkgaXMg
-bm90IHRoZSB3YXkgdG8gZG8gaXQuDQo+ID4gPiA+ID4NCj4gPiA+ID4gPiBQbGVhc2UgZXhwbGFp
-biB0byBtZSBpZiBteSByZWFkaW5nIG9mIHRoZSBjb2RlIGlzIGNvcnJlY3QuDQo+ID4gPiA+IFll
-cywgSSB3YW50IHRvIG1hcCB0aGUgQkFSIGluIEVQIHN5c3RlbSBhZGRyZXNzIHNwYWNlLg0KPiA+
-ID4gPiBUaGUgcGh5c2ljYWwgYWRkcmVzcyAoaW4gRVAgc3BhY2UpIGZvciB0aGUgQkFSIGlzIGlu
-IHRoZSBpbmJvdW5kIGFkZHJlc3MNCj4gPiA+ID4gdHJhbnNsYXRpb24gcmVnaXN0ZXJzICB3aGlj
-aCBhcmUgcmVhZCBpbnRvIGJhcl9hZGRyX2xvd2VyICYgYmFyX2FkZHJfdXBwZXIuDQo+ID4gPiA+
-IEkgd2FudCB0byBtYXAgdGhpcyBpbnRvIEVQIHN5c3RlbSBhZGRyZXNzIHNwYWNlLCBzbyB3aWxs
-IHVzZSBpb3JlbWFwX25vY2FjaGUoKQ0KPiA+ID4gPiBpbnN0ZWFkIHVubGVzcyB5b3UgcHJvcG9z
-ZSBvdGhlcndpc2UuDQo+ID4gPiBBY3R1YWxseSwgSSBmb3VuZCBzb21lIHByb2JsZW1zIHRvIHVz
-ZSBpb3JlbWFwX25vY2FjaGUoKSwgSSBydW4gaW50byBhIFdBUk5fT04gaW4NCj4gPiA+IGlvcmVt
-YXBfY2FsbGVyKCkgYmVjYXVzZSB0aGUgQkFSIG1lbW9yeSBpcyBpbiBSQU0uICBJdCBpcyBhbGxv
-Y2F0ZWQgdXNpbmcNCj4gPiA+IGRtYV9hbGxvY19jb2hlcmVudCgpIGluIHBjaV9lcGZfYWxsb2Nf
-c3BhY2UoKQ0KPiA+ID4NCj4gPiA+IFNvLCBteSBwcm9ibGVtIGlzIHRvIGdldCB0aGUgdmlydHVh
-bCBhZGRyZXNzIG9mIHRoZSBtZW1vcnkgZnJvbSB0aGUgcGh5c2ljYWwgYWRkcmVzcy4NCj4gPiA+
-IEkgZG9uJ3QgaGF2ZSB0aGUgdmlydHVhbCBhZGRyZXNzIHRoYXQgd2FzIHJldHVybmVkIGJ5IGRt
-YV9hbGxvY19jb2hlcmVudCgpLCBJIGNhbid0DQo+ID4gPiBnZXQgdGhpcyBmcm9tIHRoZSBlbmRw
-b2ludCBkcml2ZXIgY29yZSwgYnV0IEkgZG9uJ3Qgc2VlIGEgd2F5IHRvIGNvbnZlcnQgdGhlDQo+
-ID4gPiBwaHlzaWNhbCBhZGRyZXNzIHRvIERNQSBhZGRyZXNzLiAgcGh5c190b192aXJ0KCkgc2Vl
-bXMgdG8gd29yayBpbiBteSBzZXR1cCwgYnV0DQo+ID4gPiBJIHVuZGVyc3RhbmQgdGhhdCB0aGlz
-IGlzIG5vdCBzdWl0YWJsZSBmcm9tIHlvdXIgY29tbWVudHMsIGFuZCBmcm9tIHJlYWRpbmcgdGhl
-IERNQQ0KPiA+ID4gZG9jdW1lbnRhdGlvbi4gIGRtYV9tYXBfcmVzb3VyY2UoKSBsb29rcyBjbG9z
-ZSB0byB3aGF0IEkgd2FudCwgYnV0IEkgc2VlIGl0IGNhbid0IGJlDQo+ID4gPiB1c2VkIGZvciBS
-QU0gZWl0aGVyLg0KPiA+ID4NCj4gPiA+IEknbSBub3cgc2VhcmNoaW5nIGZvciBhbm90aGVyIHNv
-bHV0aW9uIHRvIHRoaXMsIGJ1dCBsb29rcyBsaWtlIEkgbWF5IG5lZWQgdG8gZmluZCBhIHdheQ0K
-PiA+ID4gdG8gZ2V0IHRoZSBvcmlnaW5hbCB2aXJ0dWFsIGFkZHJlc3MgcmV0dXJuZWQgYnkgZG1h
-X2FsbG9jX2NvaGVyZW50KCkuICBJZiB5b3UgaGF2ZSBhbnkNCj4gPiA+IG90aGVyIHN1Z2dlc3Rp
-b25zIHRoZXkgd2lsbCBiZSB3ZWxjb21lIQ0KPiA+ID4gPg0KPiA+ID4gPiBUaGFua3MgZm9yIHlv
-dXIgcmV2aWV3LA0KPiA+ID4gPiBBbGFuDQo+ID4gPiA+ID4NCj4gPiA+ID4gPiBMb3JlbnpvDQo+
-ID4gPiA+ID4NCj4gPiA+ID4gPiA+ICsJaWYgKCFtc2l4X3RibCkNCj4gPiA+ID4gPiA+ICsJCXJl
-dHVybiAtRUlOVkFMOw0KPiA+ID4gPiA+ID4gKw0KPiA+ID4gPiA+ID4gKwltc2dfYWRkcl9sb3dl
-ciA9IHJlYWRsKG1zaXhfdGJsICsgUENJX01TSVhfRU5UUllfTE9XRVJfQUREUik7DQo+ID4gPiA+
-ID4gPiArCW1zZ19hZGRyX3VwcGVyID0gcmVhZGwobXNpeF90YmwgKyBQQ0lfTVNJWF9FTlRSWV9V
-UFBFUl9BRERSKTsNCj4gPiA+ID4gPiA+ICsJbXNnX2FkZHIgPSAoKHU2NCltc2dfYWRkcl91cHBl
-cikgPDwgMzIgfCBtc2dfYWRkcl9sb3dlcjsNCj4gPiA+ID4gPiA+ICsNCj4gPiA+ID4gPiA+ICsJ
-bXNnX2RhdGEgPSByZWFkbChtc2l4X3RibCArIFBDSV9NU0lYX0VOVFJZX1ZFQ1RPUl9DVFJMKTsN
-Cj4gPiA+ID4gPiA+ICsJaWYgKG1zZ19kYXRhICYgMHgxKQ0KPiA+ID4gPiA+ID4gKwkJcmV0dXJu
-IC1FSU5WQUw7DQo+ID4gPiA+ID4gPiArDQo+ID4gPiA+ID4gPiArCW1zZ19kYXRhID0gcmVhZGwo
-bXNpeF90YmwgKyBQQ0lfTVNJWF9FTlRSWV9EQVRBKTsNCj4gPiA+ID4gPiA+ICsNCj4gPiA+ID4g
-PiA+ICsJaW91bm1hcChtc2l4X3RibCk7DQo+ID4gPiA+ID4gPiArDQo+ID4gPiA+ID4gPiArCS8q
-IFNldCB0aGUgb3V0Ym91bmQgcmVnaW9uIGlmIG5lZWRlZC4gKi8NCj4gPiA+ID4gPiA+ICsJaWYg
-KHVubGlrZWx5KGVwLT5pcnFfcGNpX2FkZHIgIT0gKG1zZ19hZGRyICYgfnBjaV9hZGRyX21hc2sp
-IHx8DQo+ID4gPiA+ID4gPiArCQkgICAgIGVwLT5pcnFfcGNpX2ZuICE9IGZuKSkgew0KPiA+ID4g
-PiA+ID4gKwkJLyogRmlyc3QgcmVnaW9uIHdhcyByZXNlcnZlZCBmb3IgSVJRIHdyaXRlcy4gKi8N
-Cj4gPiA+ID4gPiA+ICsJCWNkbnNfcGNpZV9zZXRfb3V0Ym91bmRfcmVnaW9uKHBjaWUsIGZuLCAw
-LA0KPiA+ID4gPiA+ID4gKwkJCQkJICAgICAgZmFsc2UsDQo+ID4gPiA+ID4gPiArCQkJCQkgICAg
-ICBlcC0+aXJxX3BoeXNfYWRkciwNCj4gPiA+ID4gPiA+ICsJCQkJCSAgICAgIG1zZ19hZGRyICYg
-fnBjaV9hZGRyX21hc2ssDQo+ID4gPiA+ID4gPiArCQkJCQkgICAgICBwY2lfYWRkcl9tYXNrICsg
-MSk7DQo+ID4gPiA+ID4gPiArCQllcC0+aXJxX3BjaV9hZGRyID0gKG1zZ19hZGRyICYgfnBjaV9h
-ZGRyX21hc2spOw0KPiA+ID4gPiA+ID4gKwkJZXAtPmlycV9wY2lfZm4gPSBmbjsNCj4gPiA+ID4g
-PiA+ICsJfQ0KPiA+ID4gPiA+ID4gKwl3cml0ZWwobXNnX2RhdGEsIGVwLT5pcnFfY3B1X2FkZHIg
-KyAobXNnX2FkZHIgJiBwY2lfYWRkcl9tYXNrKSk7DQo+ID4gPiA+ID4gPiArDQo+ID4gPiA+ID4g
-PiArCXJldHVybiAwOw0KPiA+ID4gPiA+ID4gK30NCj4gPiA+ID4gPiA+ICsNCj4gPiA+ID4gPiA+
-ICBzdGF0aWMgaW50IGNkbnNfcGNpZV9lcF9yYWlzZV9pcnEoc3RydWN0IHBjaV9lcGMgKmVwYywg
-dTggZm4sDQo+ID4gPiA+ID4gPiAtCQkJCSAgZW51bSBwY2lfZXBjX2lycV90eXBlIHR5cGUsIHU4
-IGludGVycnVwdF9udW0pDQo+ID4gPiA+ID4gPiArCQkJCSAgZW51bSBwY2lfZXBjX2lycV90eXBl
-IHR5cGUsDQo+ID4gPiA+ID4gPiArCQkJCSAgdTE2IGludGVycnVwdF9udW0pDQo+ID4gPiA+ID4g
-PiAgew0KPiA+ID4gPiA+ID4gIAlzdHJ1Y3QgY2Ruc19wY2llX2VwICplcCA9IGVwY19nZXRfZHJ2
-ZGF0YShlcGMpOw0KPiA+ID4gPiA+ID4gIAl1MzIgbGlua19zdGF0dXM7DQo+ID4gPiA+ID4gPiBA
-QCAtMzg0LDYgKzUwNSw5IEBAIHN0YXRpYyBpbnQgY2Ruc19wY2llX2VwX3JhaXNlX2lycShzdHJ1
-Y3QgcGNpX2VwYyAqZXBjLCB1OCBmbiwNCj4gPiA+ID4gPiA+ICAJY2FzZSBQQ0lfRVBDX0lSUV9N
-U0k6DQo+ID4gPiA+ID4gPiAgCQlyZXR1cm4gY2Ruc19wY2llX2VwX3NlbmRfbXNpX2lycShlcCwg
-Zm4sIGludGVycnVwdF9udW0pOw0KPiA+ID4gPiA+ID4NCj4gPiA+ID4gPiA+ICsJY2FzZSBQQ0lf
-RVBDX0lSUV9NU0lYOg0KPiA+ID4gPiA+ID4gKwkJcmV0dXJuIGNkbnNfcGNpZV9lcF9zZW5kX21z
-aXhfaXJxKGVwLCBmbiwgaW50ZXJydXB0X251bSk7DQo+ID4gPiA+ID4gPiArDQo+ID4gPiA+ID4g
-PiAgCWRlZmF1bHQ6DQo+ID4gPiA+ID4gPiAgCQlicmVhazsNCj4gPiA+ID4gPiA+ICAJfQ0KPiA+
-ID4gPiA+ID4gQEAgLTQzMCw2ICs1NTQsOCBAQCBzdGF0aWMgaW50IGNkbnNfcGNpZV9lcF9zdGFy
-dChzdHJ1Y3QgcGNpX2VwYyAqZXBjKQ0KPiA+ID4gPiA+ID4gIAkudW5tYXBfYWRkcgk9IGNkbnNf
-cGNpZV9lcF91bm1hcF9hZGRyLA0KPiA+ID4gPiA+ID4gIAkuc2V0X21zaQk9IGNkbnNfcGNpZV9l
-cF9zZXRfbXNpLA0KPiA+ID4gPiA+ID4gIAkuZ2V0X21zaQk9IGNkbnNfcGNpZV9lcF9nZXRfbXNp
-LA0KPiA+ID4gPiA+ID4gKwkuc2V0X21zaXgJPSBjZG5zX3BjaWVfZXBfc2V0X21zaXgsDQo+ID4g
-PiA+ID4gPiArCS5nZXRfbXNpeAk9IGNkbnNfcGNpZV9lcF9nZXRfbXNpeCwNCj4gPiA+ID4gPiA+
-ICAJLnJhaXNlX2lycQk9IGNkbnNfcGNpZV9lcF9yYWlzZV9pcnEsDQo+ID4gPiA+ID4gPiAgCS5z
-dGFydAkJPSBjZG5zX3BjaWVfZXBfc3RhcnQsDQo+ID4gPiA+ID4gPiAgfTsNCj4gPiA+ID4gPiA+
-IEBAIC01MDEsNiArNjI3LDcgQEAgc3RhdGljIGludCBjZG5zX3BjaWVfZXBfcHJvYmUoc3RydWN0
-IHBsYXRmb3JtX2RldmljZSAqcGRldikNCj4gPiA+ID4gPiA+ICAJfQ0KPiA+ID4gPiA+ID4NCj4g
-PiA+ID4gPiA+ICAJZXBjX3NldF9kcnZkYXRhKGVwYywgZXApOw0KPiA+ID4gPiA+ID4gKwllcGMt
-PmZlYXR1cmVzIHw9IEVQQ19GRUFUVVJFX01TSVhfQVZBSUxBQkxFOw0KPiA+ID4gPiA+ID4NCj4g
-PiA+ID4gPiA+ICAJaWYgKG9mX3Byb3BlcnR5X3JlYWRfdTgobnAsICJtYXgtZnVuY3Rpb25zIiwg
-JmVwYy0+bWF4X2Z1bmN0aW9ucykgPCAwKQ0KPiA+ID4gPiA+ID4gIAkJZXBjLT5tYXhfZnVuY3Rp
-b25zID0gMTsNCj4gPiA+ID4gPiA+IGRpZmYgLS1naXQgYS9kcml2ZXJzL3BjaS9jb250cm9sbGVy
-L3BjaWUtY2FkZW5jZS5oIGIvZHJpdmVycy9wY2kvY29udHJvbGxlci9wY2llLWNhZGVuY2UuaA0K
-PiA+ID4gPiA+ID4gaW5kZXggNGJiMjczMy4uOTQ2ZjZlZSAxMDA2NDQNCj4gPiA+ID4gPiA+IC0t
-LSBhL2RyaXZlcnMvcGNpL2NvbnRyb2xsZXIvcGNpZS1jYWRlbmNlLmgNCj4gPiA+ID4gPiA+ICsr
-KyBiL2RyaXZlcnMvcGNpL2NvbnRyb2xsZXIvcGNpZS1jYWRlbmNlLmgNCj4gPiA+ID4gPiA+IEBA
-IC01Miw2ICs1MiwxMiBAQA0KPiA+ID4gPiA+ID4gIAkoR0VOTUFTSyg3LCA1KSA8PCAoKGIpICog
-OCkpDQo+ID4gPiA+ID4gPiAgI2RlZmluZSAgQ0ROU19QQ0lFX0xNX0VQX0ZVTkNfQkFSX0NGR19C
-QVJfQ1RSTChiLCBjKSBcDQo+ID4gPiA+ID4gPiAgCSgoKGMpIDw8ICgoYikgKiA4ICsgNSkpICYg
-Q0ROU19QQ0lFX0xNX0VQX0ZVTkNfQkFSX0NGR19CQVJfQ1RSTF9NQVNLKGIpKQ0KPiA+ID4gPiA+
-ID4gKyNkZWZpbmUgQ0ROU19QQ0lFX0xNX0VQX0ZVTkNfQkFSX0NGR19WQUwoYiwgYykgXA0KPiA+
-ID4gPiA+ID4gKwkoKChjKSAmIENETlNfUENJRV9MTV9FUF9GVU5DX0JBUl9DRkdfQkFSX0NUUkxf
-TUFTSygoYikgJSA0KSkgXA0KPiA+ID4gPiA+ID4gKwkJCQkJCT4+ICgoKGIpICUgNCkgKiA4ICsg
-NSkpDQo+ID4gPiA+ID4gPiArI2RlZmluZSBDRE5TX1BDSUVfTE1fRVBfRlVOQ19CQVJfQVBFUlRV
-UkVfVkFMKGIsIGMpIFwNCj4gPiA+ID4gPiA+ICsJKCgoYykgJiBDRE5TX1BDSUVfTE1fRVBfRlVO
-Q19CQVJfQ0ZHX0JBUl9BUEVSVFVSRV9NQVNLKChiKSAlIDQpKSBcDQo+ID4gPiA+ID4gPiArCQkJ
-CQkJCT4+ICgoKGIpICUgNCkgKiA4KSkNCj4gPiA+ID4gPiA+DQo+ID4gPiA+ID4gPiAgLyogRW5k
-cG9pbnQgRnVuY3Rpb24gQ29uZmlndXJhdGlvbiBSZWdpc3RlciAqLw0KPiA+ID4gPiA+ID4gICNk
-ZWZpbmUgQ0ROU19QQ0lFX0xNX0VQX0ZVTkNfQ0ZHCShDRE5TX1BDSUVfTE1fQkFTRSArIDB4MDJj
-MCkNCj4gPiA+ID4gPiA+IEBAIC05Myw2ICs5OSw3IEBADQo+ID4gPiA+ID4gPiAgI2RlZmluZSBD
-RE5TX1BDSUVfRVBfRlVOQ19CQVNFKGZuKQkoKChmbikgPDwgMTIpICYgR0VOTUFTSygxOSwgMTIp
-KQ0KPiA+ID4gPiA+ID4NCj4gPiA+ID4gPiA+ICAjZGVmaW5lIENETlNfUENJRV9FUF9GVU5DX01T
-SV9DQVBfT0ZGU0VUCTB4OTANCj4gPiA+ID4gPiA+ICsjZGVmaW5lIENETlNfUENJRV9FUF9GVU5D
-X01TSVhfQ0FQX09GRlNFVAkweGIwDQo+ID4gPiA+ID4gPg0KPiA+ID4gPiA+ID4gIC8qDQo+ID4g
-PiA+ID4gPiAgICogUm9vdCBQb3J0IFJlZ2lzdGVycyAoUENJIGNvbmZpZ3VyYXRpb24gc3BhY2Ug
-Zm9yIHRoZSByb290IHBvcnQgZnVuY3Rpb24pDQo+ID4gPiA+ID4gPiAtLQ0KPiA+ID4gPiA+ID4g
-MS45LjANCj4gPiA+ID4gPiA+DQo=
+On Thu, Oct 11, 2018 at 01:46:55PM +0000, Alan Douglas wrote:
+> On 11 October 2018 14:40, Lorenzo Pieralisi wrote:
+> > On Thu, Oct 11, 2018 at 12:27:22PM +0000, Alan Douglas wrote:
+> > > Hi Lorenzo,
+> > >
+> > > I need to make significant changes to PATCH 5/5 in this series,
+> > > this is the patch that actually adds the MSI-X support.
+> > > The  memory region to use for MSI-X BAR should be part of
+> > > the EP resources, so I need to make some changes to device tree
+> > > bindings.
+> > >
+> > > Patches 1,2,3 and 4 will be unchanged, and are fixes, so
+> > > does it cause you any problem if I move these to a separate
+> > > patch series so that they are not tied to the MSI-X implementation?
+> > 
+> > Do you want me to pull (1,2,3,4) as they are so that you can send
+> > patch 5 standalone ?
+> > 
+> > Lorenzo
+> > 
+> Thanks, that would work well.  I'd then remove them from the next revision
+> of this series.
+
+Can you resend patches (1,2,3,4) on top of my pci/cadence branch please
+?
+
+I will push them out then.
+
+Thanks,
+Lorenzo
+
+> 
+> Alan
+> > >
+> > > Regards,
+> > > Alan
+> > > On  25 September 2018 16:19, Alan Douglas wrote:
+> > > > On 20 September 2018 17:12, Alan Douglas wrote:
+> > > > > To: 'Lorenzo Pieralisi' <lorenzo.pieralisi@arm.com>
+> > > > > Cc: kishon@ti.com; bhelgaas@google.com; linux-pci@vger.kernel.org; gustavo.pimentel@synopsys.com;
+> > cyrille.pitchen@bootlin.com
+> > > > > Subject: RE: [PATCH v3 5/5] PCI: cadence: Add MSI-X capability to EP driver
+> > > > >
+> > > > > Hi,
+> > > > > On 20 September 2018 11:15, Lorenzo Pieralisi wrote:
+> > > > > > On Tue, Sep 18, 2018 at 04:21:45PM +0100, Alan Douglas wrote:
+> > > > > > > Add set_msix and get_msix functions to driver, and handle
+> > > > > > > PCI_EPC_IRQ_MSIX request in raise_irq.  BAR4 is used for
+> > > > > > > the MSI-X vectors.
+> > > > > >
+> > > > > > https://urldefense.proofpoint.com/v2/url?u=https-3A__marc.info_-3Fl-3Dlinux-2Dpci-26m-3D150905742808166-26w-
+> > 3D2&d=DwIBAg&c=aUq983L2pue2FqKFoP6PGHMJQyoJ7kl3s3GZ-_haXqY&r=LDGB-
+> > PXmJGU9sCMpKn4c15MjsHicdeOctfSqs7UVh3E&m=qfAtF12Y43hI3UnjTY4YpT-wJU9wVoeeGqC6bccjQjI&s=GyectMJBU-
+> > sT7gQi6wFmixALN0lywk5YEAAeBu5EgcA&e=
+> > > > > >
+> > > > > I will add more explanation in v4, and check for other issues I missed.
+> > > > >
+> > > > > >
+> > > > > > > Signed-off-by: Alan Douglas <adouglas@cadence.com>
+> > > > > > > ---
+> > > > > > >  drivers/pci/controller/pcie-cadence-ep.c | 129 ++++++++++++++++++++++++++++++-
+> > > > > > >  drivers/pci/controller/pcie-cadence.h    |   7 ++
+> > > > > > >  2 files changed, 135 insertions(+), 1 deletion(-)
+> > > > > > >
+> > > > > > > diff --git a/drivers/pci/controller/pcie-cadence-ep.c b/drivers/pci/controller/pcie-cadence-ep.c
+> > > > > > > index 1248d75..dbe76ab 100644
+> > > > > > > --- a/drivers/pci/controller/pcie-cadence-ep.c
+> > > > > > > +++ b/drivers/pci/controller/pcie-cadence-ep.c
+> > > > > > > @@ -16,6 +16,7 @@
+> > > > > > >  #define CDNS_PCIE_EP_MIN_APERTURE		128	/* 128 bytes */
+> > > > > > >  #define CDNS_PCIE_EP_IRQ_PCI_ADDR_NONE		0x1
+> > > > > > >  #define CDNS_PCIE_EP_IRQ_PCI_ADDR_LEGACY	0x3
+> > > > > > > +#define CDNS_PCIE_EP_MSIX_BAR			0x4
+> > > > > > >
+> > > > > > >  /**
+> > > > > > >   * struct cdns_pcie_ep - private data for this PCIe endpoint controller driver
+> > > > > > > @@ -255,6 +256,65 @@ static int cdns_pcie_ep_get_msi(struct pci_epc *epc, u8 fn)
+> > > > > > >  	return mme;
+> > > > > > >  }
+> > > > > > >
+> > > > > > > +static int cdns_pcie_ep_get_msix(struct pci_epc *epc, u8 func_no)
+> > > > > > > +{
+> > > > > > > +	struct cdns_pcie_ep *ep = epc_get_drvdata(epc);
+> > > > > > > +	struct cdns_pcie *pcie = &ep->pcie;
+> > > > > > > +	u32 cap = CDNS_PCIE_EP_FUNC_MSIX_CAP_OFFSET;
+> > > > > > > +	u32 val, reg;
+> > > > > > > +
+> > > > > > > +	reg = cap + PCI_MSIX_FLAGS;
+> > > > > > > +	val = cdns_pcie_ep_fn_readw(pcie, func_no, reg);
+> > > > > > > +	if (!(val & PCI_MSIX_FLAGS_ENABLE))
+> > > > > > > +		return -EINVAL;
+> > > > > > > +
+> > > > > > > +	val &= PCI_MSIX_FLAGS_QSIZE;
+> > > > > > > +
+> > > > > > > +	return val;
+> > > > > > > +}
+> > > > > > > +
+> > > > > > > +static int cdns_pcie_ep_set_msix(struct pci_epc *epc, u8 fn, u16 interrupts)
+> > > > > > > +{
+> > > > > > > +	struct cdns_pcie_ep *ep = epc_get_drvdata(epc);
+> > > > > > > +	struct cdns_pcie *pcie = &ep->pcie;
+> > > > > > > +	u32 cap = CDNS_PCIE_EP_FUNC_MSIX_CAP_OFFSET;
+> > > > > > > +	u32 val, reg, tblsize, b, cfg, ap, ctrl;
+> > > > > > > +
+> > > > > > > +	/* Check that the BAR has already been configured, and is large
+> > > > > > > +	 * enough, and fail if not.
+> > > > > > > +	 */
+> > > > > > > +	b = CDNS_PCIE_EP_MSIX_BAR;
+> > > > > > > +	if (b < BAR_4)
+> > > > > > > +		reg = CDNS_PCIE_LM_EP_FUNC_BAR_CFG0(fn);
+> > > > > > > +	else
+> > > > > > > +		reg = CDNS_PCIE_LM_EP_FUNC_BAR_CFG1(fn);
+> > > > > > > +	cfg = cdns_pcie_readl(pcie, reg);
+> > > > > > > +	ctrl = CDNS_PCIE_LM_EP_FUNC_BAR_CFG_VAL(b, cfg);
+> > > > > > > +	if (!(ctrl & CDNS_PCIE_LM_BAR_CFG_CTRL_MEM_32BITS))
+> > > > > > > +		return -EINVAL;
+> > > > > > > +	ap = CDNS_PCIE_LM_EP_FUNC_BAR_APERTURE_VAL(b, cfg);
+> > > > > > > +	tblsize = fls64(interrupts * 32 - 1);
+> > > > > > > +	/* Need (1<<tblsize)*2 bytes for vector table + PBA table */
+> > > > > > > +	if (ap + 6 <  tblsize)
+> > > > > >
+> > > > > > This is cryptic, you have to explain what it does (inclusive of that
+> > > > > > hardcoded 6 value).
+> > > > > >
+> > > > > I'll expand that, and replace 6 with (CDNS_PCIE_EP_MIN_APERTURE - 1)
+> > > > > I mean that the BAR has to be at least twice the size of the vector table,
+> > > > > to allow for PBA as well.  BAR size is 2^(aperture + 7)
+> > > > >
+> > > > > > > +		return -EINVAL;
+> > > > > > > +
+> > > > > > > +	reg = cap + PCI_MSIX_FLAGS;
+> > > > > > > +	val = cdns_pcie_ep_fn_readw(pcie, fn, reg);
+> > > > > > > +	val &= ~PCI_MSIX_FLAGS_QSIZE;
+> > > > > > > +	val |= interrupts;
+> > > > > > > +	cdns_pcie_ep_fn_writew(pcie, fn, reg, val);
+> > > > > > > +
+> > > > > > > +	/* Set MSIX BAR and offset */
+> > > > > > > +	reg = cap + PCI_MSIX_TABLE;
+> > > > > > > +	cdns_pcie_ep_fn_writel(pcie, fn, reg, b);
+> > > > > > > +
+> > > > > > > +	/* Set PBA BAR and offset.  BAR must match MSIX BAR */
+> > > > > > > +	reg = cap + PCI_MSIX_PBA;
+> > > > > > > +	cdns_pcie_ep_fn_writel(pcie, fn, reg, (1UL << tblsize) | b);
+> > > > > > > +
+> > > > > > > +	return 0;
+> > > > > > > +}
+> > > > > > > +
+> > > > > > >  static void cdns_pcie_ep_assert_intx(struct cdns_pcie_ep *ep, u8 fn,
+> > > > > > >  				     u8 intx, bool is_asserted)
+> > > > > > >  {
+> > > > > > > @@ -366,8 +426,69 @@ static int cdns_pcie_ep_send_msi_irq(struct cdns_pcie_ep *ep, u8 fn,
+> > > > > > >  	return 0;
+> > > > > > >  }
+> > > > > > >
+> > > > > > > +static int cdns_pcie_ep_send_msix_irq(struct cdns_pcie_ep *ep, u8 fn,
+> > > > > > > +				      u16 interrupt_num)
+> > > > > > > +{
+> > > > > > > +	struct cdns_pcie *pcie = &ep->pcie;
+> > > > > > > +	u32 cap = CDNS_PCIE_EP_FUNC_MSIX_CAP_OFFSET;
+> > > > > > > +	u16 flags;
+> > > > > > > +	u64 pci_addr_mask = 0xff;
+> > > > > > > +	u16 tbl_offset = 0;
+> > > > > > > +	u32 bar_addr_upper, bar_addr_lower;
+> > > > > > > +	u32 msg_addr_upper, msg_addr_lower;
+> > > > > > > +	u32 msg_data;
+> > > > > > > +	u64 tbl_addr, msg_addr;
+> > > > > > > +	void __iomem *msix_tbl;
+> > > > > > > +
+> > > > > > > +	/* Check whether the MSI-X feature has been enabled by the PCI host. */
+> > > > > > > +	flags = cdns_pcie_ep_fn_readw(pcie, fn, cap + PCI_MSIX_FLAGS);
+> > > > > > > +	if (!(flags & PCI_MSIX_FLAGS_ENABLE))
+> > > > > > > +		return -EINVAL;
+> > > > > > > +	/* We want local address, not address on host. Table is at offset 0 */
+> > > > > > > +	bar_addr_lower = cdns_pcie_readl(pcie,
+> > > > > > > +		CDNS_PCIE_AT_IB_EP_FUNC_BAR_ADDR0(fn, CDNS_PCIE_EP_MSIX_BAR));
+> > > > > > > +	bar_addr_upper = cdns_pcie_readl(pcie,
+> > > > > > > +		CDNS_PCIE_AT_IB_EP_FUNC_BAR_ADDR1(fn, CDNS_PCIE_EP_MSIX_BAR));
+> > > > > > > +
+> > > > > > > +	tbl_addr = ((u64)bar_addr_upper) << 32 | bar_addr_lower;
+> > > > > > > +	tbl_addr += (tbl_offset + ((interrupt_num - 1) * PCI_MSIX_ENTRY_SIZE));
+> > > > > > > +	tbl_addr &= PCI_BASE_ADDRESS_MEM_MASK;
+> > > > > > > +	msix_tbl = phys_to_virt(tbl_addr);
+> > > > > >
+> > > > > > phys_to_virt() coupled with iounmap() below, this does not look OK
+> > > > > > to me.
+> > > > > I missed that, I propose to change this to ioremap_nocache() / iounmap()
+> > > > > It was working for me in testing because the BAR is already mapped and iounmap()
+> > > > > didn't have any effect.
+> > > > > >
+> > > > > > IIUC you want to map the BAR in the EP system address space to read the
+> > > > > > tables entries, where the BAR content is set by the host system but
+> > > > > > phys_to_virt() is not the way to do it.
+> > > > > >
+> > > > > > Please explain to me if my reading of the code is correct.
+> > > > > Yes, I want to map the BAR in EP system address space.
+> > > > > The physical address (in EP space) for the BAR is in the inbound address
+> > > > > translation registers  which are read into bar_addr_lower & bar_addr_upper.
+> > > > > I want to map this into EP system address space, so will use ioremap_nocache()
+> > > > > instead unless you propose otherwise.
+> > > > Actually, I found some problems to use ioremap_nocache(), I run into a WARN_ON in
+> > > > ioremap_caller() because the BAR memory is in RAM.  It is allocated using
+> > > > dma_alloc_coherent() in pci_epf_alloc_space()
+> > > >
+> > > > So, my problem is to get the virtual address of the memory from the physical address.
+> > > > I don't have the virtual address that was returned by dma_alloc_coherent(), I can't
+> > > > get this from the endpoint driver core, but I don't see a way to convert the
+> > > > physical address to DMA address.  phys_to_virt() seems to work in my setup, but
+> > > > I understand that this is not suitable from your comments, and from reading the DMA
+> > > > documentation.  dma_map_resource() looks close to what I want, but I see it can't be
+> > > > used for RAM either.
+> > > >
+> > > > I'm now searching for another solution to this, but looks like I may need to find a way
+> > > > to get the original virtual address returned by dma_alloc_coherent().  If you have any
+> > > > other suggestions they will be welcome!
+> > > > >
+> > > > > Thanks for your review,
+> > > > > Alan
+> > > > > >
+> > > > > > Lorenzo
+> > > > > >
+> > > > > > > +	if (!msix_tbl)
+> > > > > > > +		return -EINVAL;
+> > > > > > > +
+> > > > > > > +	msg_addr_lower = readl(msix_tbl + PCI_MSIX_ENTRY_LOWER_ADDR);
+> > > > > > > +	msg_addr_upper = readl(msix_tbl + PCI_MSIX_ENTRY_UPPER_ADDR);
+> > > > > > > +	msg_addr = ((u64)msg_addr_upper) << 32 | msg_addr_lower;
+> > > > > > > +
+> > > > > > > +	msg_data = readl(msix_tbl + PCI_MSIX_ENTRY_VECTOR_CTRL);
+> > > > > > > +	if (msg_data & 0x1)
+> > > > > > > +		return -EINVAL;
+> > > > > > > +
+> > > > > > > +	msg_data = readl(msix_tbl + PCI_MSIX_ENTRY_DATA);
+> > > > > > > +
+> > > > > > > +	iounmap(msix_tbl);
+> > > > > > > +
+> > > > > > > +	/* Set the outbound region if needed. */
+> > > > > > > +	if (unlikely(ep->irq_pci_addr != (msg_addr & ~pci_addr_mask) ||
+> > > > > > > +		     ep->irq_pci_fn != fn)) {
+> > > > > > > +		/* First region was reserved for IRQ writes. */
+> > > > > > > +		cdns_pcie_set_outbound_region(pcie, fn, 0,
+> > > > > > > +					      false,
+> > > > > > > +					      ep->irq_phys_addr,
+> > > > > > > +					      msg_addr & ~pci_addr_mask,
+> > > > > > > +					      pci_addr_mask + 1);
+> > > > > > > +		ep->irq_pci_addr = (msg_addr & ~pci_addr_mask);
+> > > > > > > +		ep->irq_pci_fn = fn;
+> > > > > > > +	}
+> > > > > > > +	writel(msg_data, ep->irq_cpu_addr + (msg_addr & pci_addr_mask));
+> > > > > > > +
+> > > > > > > +	return 0;
+> > > > > > > +}
+> > > > > > > +
+> > > > > > >  static int cdns_pcie_ep_raise_irq(struct pci_epc *epc, u8 fn,
+> > > > > > > -				  enum pci_epc_irq_type type, u8 interrupt_num)
+> > > > > > > +				  enum pci_epc_irq_type type,
+> > > > > > > +				  u16 interrupt_num)
+> > > > > > >  {
+> > > > > > >  	struct cdns_pcie_ep *ep = epc_get_drvdata(epc);
+> > > > > > >  	u32 link_status;
+> > > > > > > @@ -384,6 +505,9 @@ static int cdns_pcie_ep_raise_irq(struct pci_epc *epc, u8 fn,
+> > > > > > >  	case PCI_EPC_IRQ_MSI:
+> > > > > > >  		return cdns_pcie_ep_send_msi_irq(ep, fn, interrupt_num);
+> > > > > > >
+> > > > > > > +	case PCI_EPC_IRQ_MSIX:
+> > > > > > > +		return cdns_pcie_ep_send_msix_irq(ep, fn, interrupt_num);
+> > > > > > > +
+> > > > > > >  	default:
+> > > > > > >  		break;
+> > > > > > >  	}
+> > > > > > > @@ -430,6 +554,8 @@ static int cdns_pcie_ep_start(struct pci_epc *epc)
+> > > > > > >  	.unmap_addr	= cdns_pcie_ep_unmap_addr,
+> > > > > > >  	.set_msi	= cdns_pcie_ep_set_msi,
+> > > > > > >  	.get_msi	= cdns_pcie_ep_get_msi,
+> > > > > > > +	.set_msix	= cdns_pcie_ep_set_msix,
+> > > > > > > +	.get_msix	= cdns_pcie_ep_get_msix,
+> > > > > > >  	.raise_irq	= cdns_pcie_ep_raise_irq,
+> > > > > > >  	.start		= cdns_pcie_ep_start,
+> > > > > > >  };
+> > > > > > > @@ -501,6 +627,7 @@ static int cdns_pcie_ep_probe(struct platform_device *pdev)
+> > > > > > >  	}
+> > > > > > >
+> > > > > > >  	epc_set_drvdata(epc, ep);
+> > > > > > > +	epc->features |= EPC_FEATURE_MSIX_AVAILABLE;
+> > > > > > >
+> > > > > > >  	if (of_property_read_u8(np, "max-functions", &epc->max_functions) < 0)
+> > > > > > >  		epc->max_functions = 1;
+> > > > > > > diff --git a/drivers/pci/controller/pcie-cadence.h b/drivers/pci/controller/pcie-cadence.h
+> > > > > > > index 4bb2733..946f6ee 100644
+> > > > > > > --- a/drivers/pci/controller/pcie-cadence.h
+> > > > > > > +++ b/drivers/pci/controller/pcie-cadence.h
+> > > > > > > @@ -52,6 +52,12 @@
+> > > > > > >  	(GENMASK(7, 5) << ((b) * 8))
+> > > > > > >  #define  CDNS_PCIE_LM_EP_FUNC_BAR_CFG_BAR_CTRL(b, c) \
+> > > > > > >  	(((c) << ((b) * 8 + 5)) & CDNS_PCIE_LM_EP_FUNC_BAR_CFG_BAR_CTRL_MASK(b))
+> > > > > > > +#define CDNS_PCIE_LM_EP_FUNC_BAR_CFG_VAL(b, c) \
+> > > > > > > +	(((c) & CDNS_PCIE_LM_EP_FUNC_BAR_CFG_BAR_CTRL_MASK((b) % 4)) \
+> > > > > > > +						>> (((b) % 4) * 8 + 5))
+> > > > > > > +#define CDNS_PCIE_LM_EP_FUNC_BAR_APERTURE_VAL(b, c) \
+> > > > > > > +	(((c) & CDNS_PCIE_LM_EP_FUNC_BAR_CFG_BAR_APERTURE_MASK((b) % 4)) \
+> > > > > > > +							>> (((b) % 4) * 8))
+> > > > > > >
+> > > > > > >  /* Endpoint Function Configuration Register */
+> > > > > > >  #define CDNS_PCIE_LM_EP_FUNC_CFG	(CDNS_PCIE_LM_BASE + 0x02c0)
+> > > > > > > @@ -93,6 +99,7 @@
+> > > > > > >  #define CDNS_PCIE_EP_FUNC_BASE(fn)	(((fn) << 12) & GENMASK(19, 12))
+> > > > > > >
+> > > > > > >  #define CDNS_PCIE_EP_FUNC_MSI_CAP_OFFSET	0x90
+> > > > > > > +#define CDNS_PCIE_EP_FUNC_MSIX_CAP_OFFSET	0xb0
+> > > > > > >
+> > > > > > >  /*
+> > > > > > >   * Root Port Registers (PCI configuration space for the root port function)
+> > > > > > > --
+> > > > > > > 1.9.0
+> > > > > > >
