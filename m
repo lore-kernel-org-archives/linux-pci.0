@@ -2,214 +2,141 @@ Return-Path: <SRS0=UcfF=MX=vger.kernel.org=linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-0.6 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
-	DKIM_VALID_AU,FREEMAIL_FORGED_FROMDOMAIN,FREEMAIL_FROM,
-	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_PASS
+X-Spam-Status: No, score=-2.2 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+	MAILING_LIST_MULTI,SPF_PASS,URIBL_BLOCKED,USER_AGENT_MUTT
 	autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id A35F7C32788
-	for <linux-pci@archiver.kernel.org>; Thu, 11 Oct 2018 07:11:17 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 9C39CC32788
+	for <linux-pci@archiver.kernel.org>; Thu, 11 Oct 2018 11:38:22 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 232EE20841
-	for <linux-pci@archiver.kernel.org>; Thu, 11 Oct 2018 07:11:17 +0000 (UTC)
-Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="QveMhMYT"
-DMARC-Filter: OpenDMARC Filter v1.3.2 mail.kernel.org 232EE20841
-Authentication-Results: mail.kernel.org; dmarc=fail (p=none dis=none) header.from=gmail.com
+	by mail.kernel.org (Postfix) with ESMTP id 6CFED2087A
+	for <linux-pci@archiver.kernel.org>; Thu, 11 Oct 2018 11:38:22 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.3.2 mail.kernel.org 6CFED2087A
+Authentication-Results: mail.kernel.org; dmarc=none (p=none dis=none) header.from=arm.com
 Authentication-Results: mail.kernel.org; spf=none smtp.mailfrom=linux-pci-owner@vger.kernel.org
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726205AbeJKOhL (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Thu, 11 Oct 2018 10:37:11 -0400
-Received: from mail-ed1-f65.google.com ([209.85.208.65]:40220 "EHLO
-        mail-ed1-f65.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726008AbeJKOhL (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Thu, 11 Oct 2018 10:37:11 -0400
-Received: by mail-ed1-f65.google.com with SMTP id r1-v6so7235519edd.7;
-        Thu, 11 Oct 2018 00:11:13 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20161025;
-        h=mime-version:references:in-reply-to:from:date:message-id:subject:to
-         :cc;
-        bh=RfjMOpk4IR7k/ytZ0GpMq9Dx5ypAOWjJjYYZmR/lSeo=;
-        b=QveMhMYTs1gnmL//X/RMWf+mt2jz7ARGpf+XQ+id0DS4RRDJM8qMtyfMvOGetJ1BCi
-         mE8hkgbvDMi/EAQvUMVluZoWsAi9xlIuKc0WP2RTc8v739Jms//u/05iisNjO6GPMvne
-         W4EfH+fBBOOipeHtK0JsCB3ecExsuVzJStCbd1DPn6oT2DB//5VK9IyE/rcwkfkyqQPH
-         FEFBFMgO1mbE1EZd33cYl5DvHoD0EDE0O4vHYPTNNPiZBCJWyYUY7GV2nhyIWxxpx8aa
-         peXoFKXj3KNiCrZ+ixKTZ2QPXG9DoeK0dcdJi+qRSg0sW3o067qoBBt2EtLCBN5n4sI+
-         lASA==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20161025;
-        h=x-gm-message-state:mime-version:references:in-reply-to:from:date
-         :message-id:subject:to:cc;
-        bh=RfjMOpk4IR7k/ytZ0GpMq9Dx5ypAOWjJjYYZmR/lSeo=;
-        b=MDGL11HYLQjNhXJZS0GXyHus1eLsJ8y+Ano43E6bKdB/sPLSOyKKHrM0u2EjKgsB7b
-         ImFBgB/InG9iIz9ELfwWkfMcXz98gvIRrIIRGwAvyrLqusahYtafd4NjnQYGImjfTcIE
-         Ylr/ArXjYXEc0Kcqp7dDlE6aDYz24XntO9quTNrbrI4k80/v5gVKuOUY/Fg0em1GMu0V
-         6GAXyEZmV2sodxaIYA69meov7y06adTSexxXV83DuKjOWctwCLUQ9UXc0yifcEiV+8+u
-         KMHlZdbKFk4hqjXp2clHfWNJKlr7dKEnRSBcRpnAnlm6FOOrYPTilCcJObcQSwWg5F9R
-         3+xQ==
-X-Gm-Message-State: ABuFfoiu2YM+bGAamGEuYtQJxhh7/yNmbcO/WHb7wp+aiBWvNXiqIzLX
-        OuzCXo3peMQ1dwKAiCdim2YBA37y9nvX4+G81XY=
-X-Google-Smtp-Source: ACcGV62k3Inq3v/Yc2J86bV4fcn4lJX0jQ0mgMg7iSHH+mO7gL0DnD9Ml4RAwZhgawRgB82pIm2kgIdCFqbgf3AzX/0=
-X-Received: by 2002:a17:906:2d4a:: with SMTP id e10-v6mr828904eji.105.1539241873050;
- Thu, 11 Oct 2018 00:11:13 -0700 (PDT)
+        id S1727649AbeJKTFG (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Thu, 11 Oct 2018 15:05:06 -0400
+Received: from usa-sjc-mx-foss1.foss.arm.com ([217.140.101.70]:36196 "EHLO
+        foss.arm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1727056AbeJKTFG (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Thu, 11 Oct 2018 15:05:06 -0400
+Received: from usa-sjc-imap-foss1.foss.arm.com (unknown [10.72.51.249])
+        by usa-sjc-mx-foss1.foss.arm.com (Postfix) with ESMTP id 5A918ED1;
+        Thu, 11 Oct 2018 04:38:15 -0700 (PDT)
+Received: from e107981-ln.cambridge.arm.com (e107981-ln.cambridge.arm.com [10.1.197.40])
+        by usa-sjc-imap-foss1.foss.arm.com (Postfix) with ESMTPSA id B0B583F5BC;
+        Thu, 11 Oct 2018 04:38:12 -0700 (PDT)
+Date:   Thu, 11 Oct 2018 12:38:00 +0100
+From:   Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
+To:     Honghui Zhang <honghui.zhang@mediatek.com>
+Cc:     bhelgaas@google.com, linux-arm-kernel@lists.infradead.org,
+        linux-mediatek@lists.infradead.org, linux-pci@vger.kernel.org,
+        linux-kernel@vger.kernel.org, ryder.lee@mediatek.com,
+        ulf.hansson@linaro.org, marc.zyngier@arm.com,
+        matthias.bgg@gmail.com, devicetree@vger.kernel.org,
+        yingjoe.chen@mediatek.com, eddie.huang@mediatek.com,
+        youlin.pei@mediatek.com, yt.shen@mediatek.com,
+        sean.wang@mediatek.com
+Subject: Re: [PATCH v6 2/9] PCI: mediatek: Fixup class ID for MT7622 as
+ PCI_CLASS_BRIDGE_PCI
+Message-ID: <20181011113748.GA3574@e107981-ln.cambridge.arm.com>
+References: <1538969088-7136-1-git-send-email-honghui.zhang@mediatek.com>
+ <1538969088-7136-3-git-send-email-honghui.zhang@mediatek.com>
+ <20181008172337.GA13538@e107981-ln.cambridge.arm.com>
+ <1539054495.6246.31.camel@mhfsdcap03>
 MIME-Version: 1.0
-References: <1537974841-29928-1-git-send-email-bmeng.cn@gmail.com>
- <20180926165721.GA28024@bhelgaas-glaptop.roam.corp.google.com>
- <CAEUhbmXc--Ph71DGu2b+ijTzB6xvHXzuESBJKp9zARE2gjqV6w@mail.gmail.com>
- <20181003201244.GG120535@bhelgaas-glaptop.roam.corp.google.com>
- <CAEUhbmUBic3RJbMH6bukw3NVis4qxMKr_pqJhn14vFtpGvES=w@mail.gmail.com> <20181009170158.GA5906@bhelgaas-glaptop.roam.corp.google.com>
-In-Reply-To: <20181009170158.GA5906@bhelgaas-glaptop.roam.corp.google.com>
-From:   Bin Meng <bmeng.cn@gmail.com>
-Date:   Thu, 11 Oct 2018 15:11:01 +0800
-Message-ID: <CAEUhbmXvN9RAYr139YcPdTdzWtCMN0D1881+9+9UGF1zeNjMWA@mail.gmail.com>
-Subject: Re: [PATCH] pci: Add a few new IDs for Intel GPU "spurious interrupt" quirk
-To:     helgaas@kernel.org
-Cc:     Bjorn Helgaas <bhelgaas@google.com>,
-        linux-pci <linux-pci@vger.kernel.org>,
-        Thomas Jarosch <thomas.jarosch@intra2net.com>,
-        stable <stable@vger.kernel.org>, jani.nikula@linux.intel.com,
-        joonas.lahtinen@linux.intel.com, rodrigo.vivi@intel.com,
-        intel-gfx@lists.freedesktop.org, dri-devel@lists.freedesktop.org,
-        linux-kernel <linux-kernel@vger.kernel.org>
-Content-Type: text/plain; charset="UTF-8"
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <1539054495.6246.31.camel@mhfsdcap03>
+User-Agent: Mutt/1.5.24 (2015-08-30)
 Sender: linux-pci-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-Hi Bjorn,
+On Tue, Oct 09, 2018 at 11:08:15AM +0800, Honghui Zhang wrote:
+> On Mon, 2018-10-08 at 18:23 +0100, Lorenzo Pieralisi wrote:
+> > On Mon, Oct 08, 2018 at 11:24:41AM +0800, honghui.zhang@mediatek.com wrote:
+> > > From: Honghui Zhang <honghui.zhang@mediatek.com>
+> > > 
+> > > The PCIe controller of MT7622 has TYPE 1 configuration space type, but
+> > > the HW default class type values is invalid.
+> > > 
+> > > The commit 101c92dc80c8 ("PCI: mediatek: Set up vendor ID and class
+> > > type for MT7622") have set the class ID for MT7622 as
+> > > PCI_CLASS_BRIDGE_HOSTe, but it's not workable for MT7622:
+> > > 
+> > > In __pci_bus_assign_resources, the framework only setup bridge's
+> > > resource window only if class type is PCI_CLASS_BRIDGE_PCI. Or it
+> > > will leave the subordinary PCIe device's MMIO window un-touched.
 
-On Wed, Oct 10, 2018 at 1:02 AM Bjorn Helgaas <helgaas@kernel.org> wrote:
->
-> On Mon, Oct 08, 2018 at 05:44:08PM +0800, Bin Meng wrote:
-> > On Thu, Oct 4, 2018 at 4:12 AM Bjorn Helgaas <helgaas@kernel.org> wrote:
-> > > On Thu, Sep 27, 2018 at 10:10:07AM +0800, Bin Meng wrote:
-> > > > On Thu, Sep 27, 2018 at 12:57 AM Bjorn Helgaas <helgaas@kernel.org> wrote:
-> > > > > On Wed, Sep 26, 2018 at 08:14:01AM -0700, Bin Meng wrote:
-> > > > > > Add more PCI IDs to the Intel GPU "spurious interrupt" quirk table,
-> > > > > > which are known to break.
-> > > > >
-> > > > > Do you have a reference for this?  Any public bug reports, bugzilla,
-> > > > > Intel spec reference or errata?  "Which are known to break" is pretty
-> > > > > vague.
-> > > >
-> > > > Sorry I used wrong words and should have been clearer. These devices
-> > > > are validated to be broken. The test I used is very simple, just
-> > > > unplug the VGA cable and plug it again, and "spurious interrupt" will
-> > > > be seen on the interrupt line of the IGD device. I was not aware of
-> > > > any public bugs filed to Intel, nor seen any errata from Intel.
-> > >
-> > > The original commit, f67fd55fa96f ("PCI: Add quirk for still enabled
-> > > interrupts on Intel Sandy Bridge GPUs"), says some systems "crash"
-> > > (not sure if that means an oops or an actual crash that requires a
-> > > reboot) and on other systems, Linux disables the shared interrupt
-> > > line.  I assume disabling the interrupt line keeps devices using that
-> > > line from working, but does not directly cause a crash.
-> > >
-> >
-> > Correct, disable the shared interrupt line keeps all devices using
-> > that line from working, which is current kernel's behavior w/o this
-> > quirk handling: it disables the (shared) interrupt line after 100.000+
-> > generated interrupts. But the side effect is that other devices become
-> > unusable after that (eg: USB devices which share the same interrupt
-> > line with the Intel GPU). That's why the original commit, f67fd55fa96f
-> > ("PCI: Add quirk for still enabled interrupts on Intel Sandy Bridge
-> > GPUs") disables the GPU's interrupt directly, which should really be
-> > done by the VGA BIOS itself (a buggy VBIOS!).
-> >
-> > > What specific symptom do you see here?  I think it might be useful to
-> > > collect details, e.g., dmesg logs, /proc/interrupts contents, output
-> > > of "sudo lspci -vv", etc., for the systems you're quirking here.  I'm
-> > > hoping we can eventually figure out a solution that doesn't require a
-> > > quirk for every new GPU, and maybe that info will help find it.
-> >
-> > The symptom was described briefly in the original commit f67fd55fa96f
-> > too, that disables the (shared) interrupt line after 100.000+
-> > generated interrupts (can be observed via /proc/interrupts).
-> >
-> > > > > > See commit f67fd55fa96f ("PCI: Add quirk for still enabled interrupts
-> > > > > > on Intel Sandy Bridge GPUs"), and commit 7c82126a94e6 ("PCI: Add new
-> > > > > > ID for Intel GPU "spurious interrupt" quirk") for some history.
-> > > > > >
-> > > > > > Based on current findings, it is highly possible that all Intel
-> > > > > > 1st/2nd/3rd generation Core processors' IGD has such quirk.
-> > > > >
-> > > > > Can you include a reference to these "current findings"?  I assume you
-> > > > > have bug reports that include the device IDs you're adding?  If not,
-> > > > > how did you build this list of new IDs?
-> > > >
-> > > > By "current findings" I mean given the IDs we have here, plus previous
-> > > > one added by Thomas, it's highly possible this VGA BIOS bug exists in
-> > > > every 1st/2nd/3rd generation Core processors.
-> > > >
-> > > > > The function comment added by f67fd55fa96f ("PCI: Add quirk for still
-> > > > > enabled interrupts on Intel Sandy Bridge GPUs") suggests that this is
-> > > > > actually a BIOS issue, not a hardware erratum, i.e., I don't see
-> > > > > anything there that suggests a hardware defect.
-> > > > >
-> > > > > But there must be a hole somewhere -- the kernel can't be expected to
-> > > > > disable interrupts in device-specific ways when there's no driver
-> > > > > loaded.  Maybe it's simply a BIOS defect or maybe there's some
-> > > > > interrupt or _PRT-related setup we're missing.
-> > > >
-> > > > It's a pure VGA BIOS bug, not the BIOS bug or _PRT etc. The VGA BIOS
-> > > > forgot to turn off the interrupt on these devices.
-> > >
-> > > If this is a VGA BIOS defect, it's not very likely that it will
-> > > magically be fixed for all new Intel GPUs, so in effect it sounds like
-> > > we need to update this list of quirks in Linux every time a new Intel
-> > > GPU comes out.  That prospect is a little daunting.
-> >
-> > I don't have a relatively newer Intel board at hand for testing right
-> > now. I can try to locate one. But as I said, it's highly possible at
-> > least all 1st/2nd/3rd generation Core processors are affected.
->
-> > Maybe
-> > we can add all these known GPU devices of  1st/2nd/3rd generation Core
-> > processors all together for now? For newer GPUs, let's wait until
-> > someone reports the issue again?
->
-> This is exactly my point: we don't want to have to wait for somebody
-> to report an issue for every new GPU.  That (a) is a maintenance
-> headache and, more importantly, (b) prevents an old kernel from
-> running on new hardware.  (b) is important to distros because nobody
-> wants to qualify and release a new kernel just to add a new device ID.
->
-> Bottom line is that I think I'm going to have to apply this patch, but
-> I want to get off this train in the future, so now is the time to find
-> a better solution.
->
-> > > Do you happen to know if Windows has the same problem?  I.e., if you
-> > > boot an old version of Windows with a new GPU, and unplug the VGA
-> > > cable, does Windows crash?  If Windows can figure out how to handle
-> > > that situation gracefully, Linux should be able to do it, too.
-> >
-> > I suspect Windows cannot handle it too. Without the GPU awareness, the
-> > interrupt line is simply on and no driver claims the devices and will
-> > cause issues. I can test this.
->
-> If you could test this, that would be great.  I would be quite
-> surprised if Windows crashed when you unplug the VGA cable.
->
+Can you please provide me with a full log of the issue ?
 
-For the record, I installed Windows 7 to one of the affected board.
-The Intel GPU driver is not installed, so Windows is using the
-standard VGA driver. Unplug/plug the VGA cable does not crash Windows,
-nor did I notice anything abnormal. Since I have no idea how Windows
-is handling any spurious interrupt, I cannot tell whether Windows does
-anything special in the background to make it be "normal".
+What is the bug this patch is actually fixing ?
 
-> What I'm wondering is if there's some different way we could manage
-> the IOAPICs or maybe disable interrupts at the PCI device level as
-> David suggests.  If something like that could be done we wouldn't need
-> quirks for every new device.
->
-> It's possible we could learn something by running Windows on qemu and
-> tracing its PCI config accesses to see whether it sets the
-> PCI_COMMAND_INTX_DISABLE bit or something.
+> > > Fixup the class type to PCI_CLASS_BRIDGE_PCI as most of the controller
+> > > driver do.
+> > 
+> > I think that this patch is correct but the commit log fails to pin point
+> > the problem. The IP you are programming is a root port, that's why you
+> > have to have the proper class code, the patch looks fine but I would
+> > like to peek Bjorn's brain on this since it is a fundamental concept.
+> > 
+> 
+> I'm a bit confused with the concepts of PCI_CLASS_BRIDGE_HOST and
+> PCI_CLASS_BRIDGE_PCI, from PCI express spec,
+> 4.0r1.0(PCI_Express_Base_4.0r1.0_September-27-2017-c), Host Bridge is
+> "part of a Root Complex that connects a host CPU or CPUs to a
+> Hierarchy". While Root Complex defines as "A defined System Element that
+> includes at least one Host Bridge, Root port, or Root complex Integrated
+> Endpoint".
+> 
+> But according to my understanding, most of the root port IPs integrated
+> with a "PCI_CLASS_BRIDGE_PCI", which has type 1 configuration space and
+> could be saw as a pci device when using lspci.
+> 
+> And for MT7622, it integrated with block of internal control registers,
+> type 1 configuration space, and is considered as a root complex.
 
-Good idea.
+I assume you mean a type 1 config header here. I do not think it
+is mandatory for a host bridge to have a type 1 config header
+(and related bridge windows + primary/secondary/subordinate bus
+numbers) but I do not know how the IP you are programming is
+designed.
 
-Regards,
-Bin
+If the host bridge needs its memory window to be configured you can
+easily do that in the driver (with driver specific code) without
+requiring the generic PCI resource core to do that for you, the host
+bridge is the root of the bus I do not see any reason why it should
+be up to core PCI code to assign it, it is preprogrammed.
+
+> I'm not sure which CLASS type it should have:
+> From PCI_Code-ID_r_1_10__v8-Nov_2017, class type of
+> 0x0604(PCI_CLASS_BRIDGE_PCI) is defined as a PCI-to-PCI bridge, not
+> literally suitable for MT7622(which is a root complex)(In my personal
+> opinion). But it is the only workable CLASS type for MT7622 in current
+> kernel.
+> 
+> > If the kernel does not assign resources unless it detects a
+> > PCI_CLASS_BRIDGE_PCI this means that for components that are
+> > actually PCI_CLASS_BRIDGE_HOST their register set must come
+> > preprogrammed unless I am missing something.
+> > 
+> 
+> In the function pci_request_resource_alignment, it will by pass the
+> resource assignment for PCI_CLASS_BRIDGE_HOST, though I'm not figured
+> out why.
+> 
+> > I would like to get to the bottom of this since it is a fundamental
+> > enumeration concept.
+> > 
+> 
+> Do you like me to re-write the commit message for this patch and put the
+> above information in? Or just not mention the PCI_CLASS_BRIDGE_HOST
+> assign resource routine?
+
+I want to understand where the problem is and whether it is right to
+define the component as a PCI bridge rather than a host bridge.
+
+Lorenzo
