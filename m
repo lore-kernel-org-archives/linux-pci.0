@@ -2,78 +2,91 @@ Return-Path: <SRS0=mL0v=MY=vger.kernel.org=linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-0.8 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	MAILING_LIST_MULTI,SPF_PASS autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-9.0 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
+	SPF_PASS,URIBL_BLOCKED,USER_AGENT_MUTT autolearn=ham autolearn_force=no
+	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 3BD71C6787C
-	for <linux-pci@archiver.kernel.org>; Fri, 12 Oct 2018 18:55:57 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 0733EC6787C
+	for <linux-pci@archiver.kernel.org>; Fri, 12 Oct 2018 19:30:48 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 11B8D20865
-	for <linux-pci@archiver.kernel.org>; Fri, 12 Oct 2018 18:55:56 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.3.2 mail.kernel.org 11B8D20865
-Authentication-Results: mail.kernel.org; dmarc=none (p=none dis=none) header.from=arm.com
+	by mail.kernel.org (Postfix) with ESMTP id B6CD021477
+	for <linux-pci@archiver.kernel.org>; Fri, 12 Oct 2018 19:30:47 +0000 (UTC)
+Authentication-Results: mail.kernel.org;
+	dkim=pass (1024-bit key) header.d=kernel.org header.i=@kernel.org header.b="aCjf5v45"
+DMARC-Filter: OpenDMARC Filter v1.3.2 mail.kernel.org B6CD021477
+Authentication-Results: mail.kernel.org; dmarc=fail (p=none dis=none) header.from=kernel.org
 Authentication-Results: mail.kernel.org; spf=none smtp.mailfrom=linux-pci-owner@vger.kernel.org
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726647AbeJMC3s (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Fri, 12 Oct 2018 22:29:48 -0400
-Received: from usa-sjc-mx-foss1.foss.arm.com ([217.140.101.70]:56388 "EHLO
-        foss.arm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1725903AbeJMC3s (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Fri, 12 Oct 2018 22:29:48 -0400
-Received: from usa-sjc-imap-foss1.foss.arm.com (unknown [10.72.51.249])
-        by usa-sjc-mx-foss1.foss.arm.com (Postfix) with ESMTP id 9DD88F;
-        Fri, 12 Oct 2018 11:55:55 -0700 (PDT)
-Received: from [10.1.196.78] (ostrya.cambridge.arm.com [10.1.196.78])
-        by usa-sjc-imap-foss1.foss.arm.com (Postfix) with ESMTPSA id 1E0513F5D3;
-        Fri, 12 Oct 2018 11:55:52 -0700 (PDT)
-Subject: Re: [PATCH v3 0/7] Add virtio-iommu driver
-To:     "Michael S. Tsirkin" <mst@redhat.com>
-Cc:     mark.rutland@arm.com, peter.maydell@linaro.org,
-        kevin.tian@intel.com, tnowicki@caviumnetworks.com,
-        devicetree@vger.kernel.org, jasowang@redhat.com,
-        linux-pci@vger.kernel.org, will.deacon@arm.com,
-        virtualization@lists.linux-foundation.org,
-        iommu@lists.linux-foundation.org, robh+dt@kernel.org,
-        marc.zyngier@arm.com, robin.murphy@arm.com,
-        kvmarm@lists.cs.columbia.edu
-References: <20181012145917.6840-1-jean-philippe.brucker@arm.com>
- <20181012125443-mutt-send-email-mst@kernel.org>
-From:   Jean-Philippe Brucker <jean-philippe.brucker@arm.com>
-Message-ID: <17f1406e-a7a0-591f-749d-21cbda37dbe4@arm.com>
-Date:   Fri, 12 Oct 2018 19:55:40 +0100
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:60.0) Gecko/20100101
- Thunderbird/60.0
+        id S1726158AbeJMDEq (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Fri, 12 Oct 2018 23:04:46 -0400
+Received: from mail.kernel.org ([198.145.29.99]:54448 "EHLO mail.kernel.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1725935AbeJMDEq (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Fri, 12 Oct 2018 23:04:46 -0400
+Received: from localhost (unknown [69.71.4.100])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+        (No client certificate requested)
+        by mail.kernel.org (Postfix) with ESMTPSA id F067D2087D;
+        Fri, 12 Oct 2018 19:30:45 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+        s=default; t=1539372646;
+        bh=EzauUfxNT0fa4JMaXD+jaNIPwK8oMMCKoY2AVwziCZw=;
+        h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
+        b=aCjf5v45Mv8yXVy/Iy/PrFIyXDoLP1XarO8URaM4tdmc4BrBXW17+MNgcg57eSZTy
+         gNvEKS5XxrOjeN+84vw4eNDebGo6RGIDDQxD42N4AOtyzEC3I8rwRjF5EhgcAMmkpu
+         03juyGFeu/pncDxK3tBtX04Xay+w6toFbqolAKD0=
+Date:   Fri, 12 Oct 2018 14:30:44 -0500
+From:   Bjorn Helgaas <helgaas@kernel.org>
+To:     Keith Busch <keith.busch@intel.com>
+Cc:     linux-pci@vger.kernel.org, Logan Gunthorpe <logang@deltatee.com>
+Subject: Re: [PATCHv2] PCI/P2PDMA: Fix freeing dev_pagemap on error
+Message-ID: <20181012193044.GW5906@bhelgaas-glaptop.roam.corp.google.com>
+References: <20181012155920.15418-1-keith.busch@intel.com>
 MIME-Version: 1.0
-In-Reply-To: <20181012125443-mutt-send-email-mst@kernel.org>
-Content-Type: text/plain; charset=utf-8
-Content-Language: en-US
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20181012155920.15418-1-keith.busch@intel.com>
+User-Agent: Mutt/1.10.1 (2018-07-13)
 Sender: linux-pci-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-On 12/10/2018 18:00, Michael S. Tsirkin wrote:
-> This all looks good to me. Minor nits:
-> - I think DEBUG mode is best just removed for now
-> - Slightly wrong patch splitup causing a misaligned structure
->   in uapi until all patches are applied.
-
-Thanks a lot for the review, I'll fix these up and send a new version
-
-> You should Cc Bjorn on the pci change - I'd like to see his ack on it
-> being merged through my tree.
-
-Argh, I don't know how I missed him. However patches 1-4 are device tree
-changes, and need acks from Rob or Mark (on Cc)
-
-> And pls Cc the virtio-dev list on any virtio uapi changes.
+On Fri, Oct 12, 2018 at 09:59:20AM -0600, Keith Busch wrote:
+> The devres_free() API is only to be used after the resource has been
+> unlinked from the device tracking it. Calling this functino directly will
+> hit a kernel BUG_ON. This patch fixes this to use the managed resource
+> release function, devm_kfree().
 > 
-> At a feature level I have some ideas for more features we
-> could add, but for now I think I'll put this version in -next
-> while you iron out the above wrinkles. Hope you can make the
-> merge window.
-Thanks, I also have some work lined up for hardware acceleration and
-shared address spaces.
+> Fixes: 1380472e7b855 ("PCI/P2PDMA: Support peer-to-peer memory")
+> Cc: Logan Gunthorpe <logang@deltatee.com>
+> Signed-off-by: Keith Busch <keith.busch@intel.com>
 
-Jean
+I folded this fix into the original 1380472e7b855 commit (now
+31fd98513249 ("PCI/P2PDMA: Support peer-to-peer memory"), thanks!
+
+> ---
+> v1 -> v2:
+> 
+>   Fixed compile breaking typo in code
+> 
+>  drivers/pci/p2pdma.c | 2 +-
+>  1 file changed, 1 insertion(+), 1 deletion(-)
+> 
+> diff --git a/drivers/pci/p2pdma.c b/drivers/pci/p2pdma.c
+> index da66c7e31730..9c56a10eff15 100644
+> --- a/drivers/pci/p2pdma.c
+> +++ b/drivers/pci/p2pdma.c
+> @@ -222,7 +222,7 @@ int pci_p2pdma_add_resource(struct pci_dev *pdev, int bar, size_t size,
+>  	return 0;
+>  
+>  pgmap_free:
+> -	devres_free(pgmap);
+> +	devm_kfree(&pdev->dev, pgmap);
+>  	return error;
+>  }
+>  EXPORT_SYMBOL_GPL(pci_p2pdma_add_resource);
+> -- 
+> 2.14.4
+> 
