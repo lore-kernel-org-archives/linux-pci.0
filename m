@@ -2,80 +2,206 @@ Return-Path: <SRS0=mL0v=MY=vger.kernel.org=linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-2.1 required=3.0 tests=DKIM_INVALID,DKIM_SIGNED,
-	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_PASS,USER_AGENT_MUTT
-	autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-2.3 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+	MAILING_LIST_MULTI,SPF_PASS,USER_AGENT_MUTT autolearn=ham autolearn_force=no
+	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 77897C43441
-	for <linux-pci@archiver.kernel.org>; Fri, 12 Oct 2018 09:18:58 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id B2AC5C43441
+	for <linux-pci@archiver.kernel.org>; Fri, 12 Oct 2018 10:22:41 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 0B4FF2086A
-	for <linux-pci@archiver.kernel.org>; Fri, 12 Oct 2018 09:18:58 +0000 (UTC)
-Authentication-Results: mail.kernel.org;
-	dkim=fail reason="signature verification failed" (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="hKq7HD4T"
-DMARC-Filter: OpenDMARC Filter v1.3.2 mail.kernel.org 0B4FF2086A
-Authentication-Results: mail.kernel.org; dmarc=none (p=none dis=none) header.from=infradead.org
+	by mail.kernel.org (Postfix) with ESMTP id 618B42087D
+	for <linux-pci@archiver.kernel.org>; Fri, 12 Oct 2018 10:22:41 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.3.2 mail.kernel.org 618B42087D
+Authentication-Results: mail.kernel.org; dmarc=none (p=none dis=none) header.from=arm.com
 Authentication-Results: mail.kernel.org; spf=none smtp.mailfrom=linux-pci-owner@vger.kernel.org
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1728028AbeJLQuZ (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Fri, 12 Oct 2018 12:50:25 -0400
-Received: from bombadil.infradead.org ([198.137.202.133]:38436 "EHLO
-        bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1728027AbeJLQuZ (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Fri, 12 Oct 2018 12:50:25 -0400
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
-        d=infradead.org; s=bombadil.20170209; h=In-Reply-To:Content-Type:MIME-Version
-        :References:Message-ID:Subject:Cc:To:From:Date:Sender:Reply-To:
-        Content-Transfer-Encoding:Content-ID:Content-Description:Resent-Date:
-        Resent-From:Resent-Sender:Resent-To:Resent-Cc:Resent-Message-ID:List-Id:
-        List-Help:List-Unsubscribe:List-Subscribe:List-Post:List-Owner:List-Archive;
-         bh=2xe+s4Wbr7FgqF/2Q1owCcxKtS/pF8tx/FqElyXCSu0=; b=hKq7HD4T+gtaq12jv6h33B4O9
-        XS7jpMYmJ5qhvbGohfMSP/5jzmeAdglfd8fY5LdEaPWdE7PmzHgeHAlxugEU1jar9GboYyw9qfsPS
-        oy2B7pzvf3QYG7RYJnXl5JM9NL4HvLu9J8YaSad3NuWcFEzsBwwMSl9soHjL93IpDF+tErxOXKvw5
-        un60WQR9/COsOvEvtD0NPiVfiCztEKZpbqgpimFA7EUNDgrkT9J/MK+pnvY3Gaj5TIv+SOfKI8MtP
-        5XbpAeapm4BaznQrfHNPkfj51SUwbjrml6nTXgGIdNAFYGT5NK8NkrnsnwnUm3TClsPyWmKXSfua7
-        Avw+QFtHA==;
-Received: from hch by bombadil.infradead.org with local (Exim 4.90_1 #2 (Red Hat Linux))
-        id 1gAtaw-0002tx-Bq; Fri, 12 Oct 2018 09:18:54 +0000
-Date:   Fri, 12 Oct 2018 02:18:54 -0700
-From:   Christoph Hellwig <hch@infradead.org>
-To:     Sinan Kaya <okaya@kernel.org>
-Cc:     linux-pci@vger.kernel.org,
-        Srinivas Pandruvada <srinivas.pandruvada@linux.intel.com>,
-        Jiri Kosina <jikos@kernel.org>,
-        Benjamin Tissoires <benjamin.tissoires@redhat.com>,
-        Frank Haverkamp <haver@linux.vnet.ibm.com>,
-        "Guilherme G. Piccoli" <gpiccoli@linux.vnet.ibm.com>,
-        Arnd Bergmann <arnd@arndb.de>,
-        Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-        Harish Patil <harish.patil@cavium.com>,
-        Manish Chopra <manish.chopra@cavium.com>,
-        Dept-GELinuxNICDev@cavium.com,
-        "David S. Miller" <davem@davemloft.net>,
-        Solarflare linux maintainers <linux-net-drivers@solarflare.com>,
-        Edward Cree <ecree@solarflare.com>,
-        Bert Kenward <bkenward@solarflare.com>,
-        Bjorn Helgaas <bhelgaas@google.com>,
-        Anton Vasilyev <vasilyev@ispras.ru>
-Subject: Re: [PATCH v5 09/11] PCI: Add options to pci_reset_function
-Message-ID: <20181012091854.GB6669@infradead.org>
-References: <20181011045008.32212-1-okaya@kernel.org>
- <20181011045008.32212-9-okaya@kernel.org>
+        id S1728014AbeJLRyW (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Fri, 12 Oct 2018 13:54:22 -0400
+Received: from foss.arm.com ([217.140.101.70]:49218 "EHLO foss.arm.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1726788AbeJLRyW (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Fri, 12 Oct 2018 13:54:22 -0400
+Received: from usa-sjc-imap-foss1.foss.arm.com (unknown [10.72.51.249])
+        by usa-sjc-mx-foss1.foss.arm.com (Postfix) with ESMTP id C1823F;
+        Fri, 12 Oct 2018 03:22:38 -0700 (PDT)
+Received: from e107981-ln.cambridge.arm.com (e107981-ln.cambridge.arm.com [10.1.197.40])
+        by usa-sjc-imap-foss1.foss.arm.com (Postfix) with ESMTPSA id 2317B3F5B7;
+        Fri, 12 Oct 2018 03:22:35 -0700 (PDT)
+Date:   Fri, 12 Oct 2018 11:22:30 +0100
+From:   Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
+To:     Honghui Zhang <honghui.zhang@mediatek.com>
+Cc:     bhelgaas@google.com, linux-arm-kernel@lists.infradead.org,
+        linux-mediatek@lists.infradead.org, linux-pci@vger.kernel.org,
+        linux-kernel@vger.kernel.org, ryder.lee@mediatek.com,
+        ulf.hansson@linaro.org, marc.zyngier@arm.com,
+        matthias.bgg@gmail.com, devicetree@vger.kernel.org,
+        yingjoe.chen@mediatek.com, eddie.huang@mediatek.com,
+        youlin.pei@mediatek.com, yt.shen@mediatek.com,
+        sean.wang@mediatek.com
+Subject: Re: [PATCH v6 2/9] PCI: mediatek: Fixup class ID for MT7622 as
+ PCI_CLASS_BRIDGE_PCI
+Message-ID: <20181012102230.GA23257@e107981-ln.cambridge.arm.com>
+References: <1538969088-7136-1-git-send-email-honghui.zhang@mediatek.com>
+ <1538969088-7136-3-git-send-email-honghui.zhang@mediatek.com>
+ <20181008172337.GA13538@e107981-ln.cambridge.arm.com>
+ <1539054495.6246.31.camel@mhfsdcap03>
+ <20181011113748.GA3574@e107981-ln.cambridge.arm.com>
+ <1539331289.6246.61.camel@mhfsdcap03>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20181011045008.32212-9-okaya@kernel.org>
-User-Agent: Mutt/1.9.2 (2017-12-15)
-X-SRS-Rewrite: SMTP reverse-path rewritten from <hch@infradead.org> by bombadil.infradead.org. See http://www.infradead.org/rpr.html
+In-Reply-To: <1539331289.6246.61.camel@mhfsdcap03>
+User-Agent: Mutt/1.5.24 (2015-08-30)
 Sender: linux-pci-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-On Thu, Oct 11, 2018 at 04:50:01AM +0000, Sinan Kaya wrote:
-> Getting ready to deprecate pci_reset_function_locked(). Add
-> saverestore and locked parameters to pci_reset_function() function
-> and add saverestore = true and locked = false to all existing
-> callers.
+On Fri, Oct 12, 2018 at 04:01:29PM +0800, Honghui Zhang wrote:
+> On Thu, 2018-10-11 at 12:38 +0100, Lorenzo Pieralisi wrote:
+> > On Tue, Oct 09, 2018 at 11:08:15AM +0800, Honghui Zhang wrote:
+> > > On Mon, 2018-10-08 at 18:23 +0100, Lorenzo Pieralisi wrote:
+> > > > On Mon, Oct 08, 2018 at 11:24:41AM +0800, honghui.zhang@mediatek.com wrote:
+> > > > > From: Honghui Zhang <honghui.zhang@mediatek.com>
+> > > > > 
+> > > > > The PCIe controller of MT7622 has TYPE 1 configuration space type, but
+> > > > > the HW default class type values is invalid.
+> > > > > 
+> > > > > The commit 101c92dc80c8 ("PCI: mediatek: Set up vendor ID and class
+> > > > > type for MT7622") have set the class ID for MT7622 as
+> > > > > PCI_CLASS_BRIDGE_HOSTe, but it's not workable for MT7622:
+> > > > > 
+> > > > > In __pci_bus_assign_resources, the framework only setup bridge's
+> > > > > resource window only if class type is PCI_CLASS_BRIDGE_PCI. Or it
+> > > > > will leave the subordinary PCIe device's MMIO window un-touched.
+> > 
+> > Can you please provide me with a full log of the issue ?
+> > 
+> > What is the bug this patch is actually fixing ?
+> > 
+> > > > > Fixup the class type to PCI_CLASS_BRIDGE_PCI as most of the controller
+> > > > > driver do.
+> > > > 
+> > > > I think that this patch is correct but the commit log fails to pin point
+> > > > the problem. The IP you are programming is a root port, that's why you
+> > > > have to have the proper class code, the patch looks fine but I would
+> > > > like to peek Bjorn's brain on this since it is a fundamental concept.
+> > > > 
+> > > 
+> > > I'm a bit confused with the concepts of PCI_CLASS_BRIDGE_HOST and
+> > > PCI_CLASS_BRIDGE_PCI, from PCI express spec,
+> > > 4.0r1.0(PCI_Express_Base_4.0r1.0_September-27-2017-c), Host Bridge is
+> > > "part of a Root Complex that connects a host CPU or CPUs to a
+> > > Hierarchy". While Root Complex defines as "A defined System Element that
+> > > includes at least one Host Bridge, Root port, or Root complex Integrated
+> > > Endpoint".
+> > > 
+> > > But according to my understanding, most of the root port IPs integrated
+> > > with a "PCI_CLASS_BRIDGE_PCI", which has type 1 configuration space and
+> > > could be saw as a pci device when using lspci.
+> > > 
+> > > And for MT7622, it integrated with block of internal control registers,
+> > > type 1 configuration space, and is considered as a root complex.
+> > 
+> > I assume you mean a type 1 config header here. I do not think it
+> > is mandatory for a host bridge to have a type 1 config header
+> > (and related bridge windows + primary/secondary/subordinate bus
+> > numbers) but I do not know how the IP you are programming is
+> > designed.
+> 
+> Yes, MT7622 has the type 1 config header and related bridge windows and
+> primary/secondary/subordinate bus numbers.
+> 
+> > 
+> > If the host bridge needs its memory window to be configured you can
+> > easily do that in the driver (with driver specific code) without
+> > requiring the generic PCI resource core to do that for you, the host
+> > bridge is the root of the bus I do not see any reason why it should
+> > be up to core PCI code to assign it, it is preprogrammed.
+> > 
+> Thanks for explain this.
+> Yes, the MT7622 bridge needs its memory window to be configured but I
+> prefer the PCI resource core to do this for the following reasons:
+> 1. MTK have MT7622 and MT2712, they pretty much using the same IP, but
+> have different memory window base. Currently we using device tree to
+> pass the memory window base. Take using of PCI resource core code to
+> parse and assign those resource will release the burden of driver.
+> 2. I do not want to re-implement the resource parse code to get the
+> memory base from device node. And hard code the memory base in driver is
+> not quite elegant.
+> 3. Most of the host driver which I referenced are using the PCI resource
+> core to help with it's memory window configure, I guess following the
+> majority way maybe better even they may have slit different of the IP
+> design from MTK.
+> 4. Passing the memory base in device node make it more flexible to
+> change the memory window base (in the HW acceptable range) in case of
+> some special EP device required some special PCI address range.
+> 5. MT7622 and MT2712 have the pretty much same IP only MT7622's HW has
+> set the class type to an un-proper class type. Set it to the same values
+> as MT2712 is an easy way to fix.
 
-NAK - no conditional locking based on a parameter, please.
+We do what needs to be done. From what you are saying, your IP
+implements a config 1 type header and that defines it as a PCI-to-PCI
+bridge (eg a root port, of sorts).
+
+The points you are making above are software, I understand them but
+that's not what we are discussing here.
+
+I want you to define the class of your IP according to what your IP
+is and it seems _reasonable_ to me to define the IP as a PCI-to-PCI
+bridge class from the information you are providing.
+
+I would like you to:
+
+1) Rewrite the commit log and explain why your IP needs class
+   reprogramming. I do not care about driver software complexity,
+   I want you to describe how HW works. I do not want you to define
+   a class for your IP because that makes the driver simpler, I want
+   you to define a class for your IP to describe to the kernel what
+   that IP really is, which is different things.
+2) Define and report the bug you are fixing in the commit log
+3) Provide a Fixes: tag pointing at the faulty commit
+
+Thanks for your time providing information.
+
+Lorenzo
+
+> thanks.
+> > > I'm not sure which CLASS type it should have:
+> > > From PCI_Code-ID_r_1_10__v8-Nov_2017, class type of
+> > > 0x0604(PCI_CLASS_BRIDGE_PCI) is defined as a PCI-to-PCI bridge, not
+> > > literally suitable for MT7622(which is a root complex)(In my personal
+> > > opinion). But it is the only workable CLASS type for MT7622 in current
+> > > kernel.
+> > > 
+> > > > If the kernel does not assign resources unless it detects a
+> > > > PCI_CLASS_BRIDGE_PCI this means that for components that are
+> > > > actually PCI_CLASS_BRIDGE_HOST their register set must come
+> > > > preprogrammed unless I am missing something.
+> > > > 
+> > > 
+> > > In the function pci_request_resource_alignment, it will by pass the
+> > > resource assignment for PCI_CLASS_BRIDGE_HOST, though I'm not figured
+> > > out why.
+> > > 
+> > > > I would like to get to the bottom of this since it is a fundamental
+> > > > enumeration concept.
+> > > > 
+> > > 
+> > > Do you like me to re-write the commit message for this patch and put the
+> > > above information in? Or just not mention the PCI_CLASS_BRIDGE_HOST
+> > > assign resource routine?
+> > 
+> > I want to understand where the problem is and whether it is right to
+> > define the component as a PCI bridge rather than a host bridge.
+> > 
+> 
+> I will update the commit message (put some of the above reasons in the
+> commit message) and send a new version of this patch if it's acceptable
+> for you.
+> 
+> Thanks
+> > Lorenzo
+> 
+> 
+> 
