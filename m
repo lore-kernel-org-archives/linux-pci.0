@@ -2,96 +2,125 @@ Return-Path: <SRS0=mL0v=MY=vger.kernel.org=linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-1.5 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,MAILING_LIST_MULTI,SPF_PASS autolearn=ham
+X-Spam-Status: No, score=-2.8 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+	MAILING_LIST_MULTI,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT autolearn=ham
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 23295C6786C
-	for <linux-pci@archiver.kernel.org>; Fri, 12 Oct 2018 14:47:02 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id DE1D5C6783C
+	for <linux-pci@archiver.kernel.org>; Fri, 12 Oct 2018 15:00:46 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id D184F213A2
-	for <linux-pci@archiver.kernel.org>; Fri, 12 Oct 2018 14:47:01 +0000 (UTC)
-Authentication-Results: mail.kernel.org;
-	dkim=pass (1024-bit key) header.d=kernel.org header.i=@kernel.org header.b="KyitjuZ6"
-DMARC-Filter: OpenDMARC Filter v1.3.2 mail.kernel.org D184F213A2
-Authentication-Results: mail.kernel.org; dmarc=fail (p=none dis=none) header.from=kernel.org
+	by mail.kernel.org (Postfix) with ESMTP id B15882086A
+	for <linux-pci@archiver.kernel.org>; Fri, 12 Oct 2018 15:00:46 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.3.2 mail.kernel.org B15882086A
+Authentication-Results: mail.kernel.org; dmarc=none (p=none dis=none) header.from=arm.com
 Authentication-Results: mail.kernel.org; spf=none smtp.mailfrom=linux-pci-owner@vger.kernel.org
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1729048AbeJLWTr (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Fri, 12 Oct 2018 18:19:47 -0400
-Received: from mail.kernel.org ([198.145.29.99]:34306 "EHLO mail.kernel.org"
+        id S1728844AbeJLWdg (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Fri, 12 Oct 2018 18:33:36 -0400
+Received: from foss.arm.com ([217.140.101.70]:52632 "EHLO foss.arm.com"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1728697AbeJLWTr (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Fri, 12 Oct 2018 18:19:47 -0400
-Received: from [10.80.45.152] (unknown [71.69.156.42])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
-        (No client certificate requested)
-        by mail.kernel.org (Postfix) with ESMTPSA id 93FC92098A;
-        Fri, 12 Oct 2018 14:46:58 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=default; t=1539355620;
-        bh=9bhyVuVvpzN51N902ngdSt4Sc3lf8CdYjUgcHhhOz84=;
-        h=Subject:To:Cc:References:From:Date:In-Reply-To:From;
-        b=KyitjuZ6gnwo5KTAij9AcP0jU4+B7n/N0y6uEqpbTYKzbUw9dfaIZ7lhLmEHpCrh8
-         73vDQOjX+HxmWFfOlk86iL/AvP2Ftao8OkjhCKbUO1IoZX1tMh2Vd8ARo8fqdObIRJ
-         ef24zRE14TqBpFheiLE3UT1hef9ha0Iw4ITgR6VA=
-Subject: Re: [PATCH v5 08/11] PCI: Unify pci_reset_function_locked() and
- __pci_reset_function_locked()
-To:     Christoph Hellwig <hch@infradead.org>
-Cc:     linux-pci@vger.kernel.org,
-        Mike Marciniszyn <mike.marciniszyn@intel.com>,
-        Dennis Dalessandro <dennis.dalessandro@intel.com>,
-        Doug Ledford <dledford@redhat.com>,
-        Jason Gunthorpe <jgg@ziepe.ca>,
-        Derek Chickles <derek.chickles@caviumnetworks.com>,
-        Satanand Burla <satananda.burla@caviumnetworks.com>,
-        Felix Manlunas <felix.manlunas@caviumnetworks.com>,
-        Raghu Vatsavayi <raghu.vatsavayi@caviumnetworks.com>,
-        "David S. Miller" <davem@davemloft.net>,
-        Bjorn Helgaas <bhelgaas@google.com>,
-        Boris Ostrovsky <boris.ostrovsky@oracle.com>,
-        Juergen Gross <jgross@suse.com>,
-        Jia-Ju Bai <baijiaju1990@gmail.com>
-References: <20181011045008.32212-1-okaya@kernel.org>
- <20181011045008.32212-8-okaya@kernel.org>
- <20181012091809.GA6669@infradead.org>
-From:   Sinan Kaya <okaya@kernel.org>
-Message-ID: <9b5c0248-25e5-58d2-5729-9ae3c905e6e8@kernel.org>
-Date:   Fri, 12 Oct 2018 10:46:57 -0400
-User-Agent: Mozilla/5.0 (Windows NT 10.0; WOW64; rv:52.0) Gecko/20100101
- Thunderbird/52.9.1
+        id S1728182AbeJLWdg (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Fri, 12 Oct 2018 18:33:36 -0400
+Received: from usa-sjc-imap-foss1.foss.arm.com (unknown [10.72.51.249])
+        by usa-sjc-mx-foss1.foss.arm.com (Postfix) with ESMTP id 7B359F;
+        Fri, 12 Oct 2018 08:00:45 -0700 (PDT)
+Received: from ostrya.cambridge.arm.com (ostrya.cambridge.arm.com [10.1.196.78])
+        by usa-sjc-imap-foss1.foss.arm.com (Postfix) with ESMTPA id 89CD13F5BC;
+        Fri, 12 Oct 2018 08:00:42 -0700 (PDT)
+From:   Jean-Philippe Brucker <jean-philippe.brucker@arm.com>
+To:     iommu@lists.linux-foundation.org,
+        virtualization@lists.linux-foundation.org,
+        devicetree@vger.kernel.org
+Cc:     linux-pci@vger.kernel.org, kvmarm@lists.cs.columbia.edu,
+        peter.maydell@linaro.org, joro@8bytes.org, mst@redhat.com,
+        jasowang@redhat.com, robh+dt@kernel.org, mark.rutland@arm.com,
+        eric.auger@redhat.com, tnowicki@caviumnetworks.com,
+        kevin.tian@intel.com, marc.zyngier@arm.com, robin.murphy@arm.com,
+        will.deacon@arm.com, lorenzo.pieralisi@arm.com
+Subject: [PATCH v3 0/7] Add virtio-iommu driver
+Date:   Fri, 12 Oct 2018 15:59:10 +0100
+Message-Id: <20181012145917.6840-1-jean-philippe.brucker@arm.com>
+X-Mailer: git-send-email 2.19.1
 MIME-Version: 1.0
-In-Reply-To: <20181012091809.GA6669@infradead.org>
-Content-Type: text/plain; charset=utf-8; format=flowed
-Content-Language: en-US
-Content-Transfer-Encoding: 7bit
+Content-Transfer-Encoding: 8bit
 Sender: linux-pci-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-On 10/12/2018 5:18 AM, Christoph Hellwig wrote:
-> On Thu, Oct 11, 2018 at 04:50:00AM +0000, Sinan Kaya wrote:
->> The difference between pci_reset_function_locked() and
->> __pci_reset_function_locked() is the saving and restoring of the registers.
->> Unify these API by adding saverestore argument that caller passes.
-> 
-> Adding random boolean arguments doesn't really help the API.  Either
-> make this another flag for reset_type or if there is a clear benefit
-> add an additional flags parameter with well described flags.
-> 
+Implement the virtio-iommu driver, following specification v0.8 [1].
+Changes since v2 [2]:
 
-Good idea. This is the kind of feedback I was looking for. Here is what I
-collected so far.
+* Patches 2-4 allow virtio-iommu to use the PCI transport, since QEMU
+  would like to phase out the MMIO transport. This produces a complex
+  topology where the programming interface of the IOMMU could appear
+  lower than the endpoints that it translates. It's not unheard of (e.g.
+  AMD IOMMU), and the guest easily copes with this.
+  
+  The "Firmware description" section of the specification has been
+  updated with all combinations of PCI, MMIO and DT, ACPI.
 
-Alex doesn't like the API changes as it should be obvious that there are
-differences between pci_reset_function_locked() and
-__pci_reset_function_locked(). Sinan thinks that the difference is not that
-obvious as some drivers implemented their own save/restore mechanism using
-__pci_reset_function_locked(). Sinan would rather reduce the reset API flavors
-and give a unified interface where user specifies what they are interested in.
+* Fix structures layout, they don't need the "packed" attribute anymore.
 
-Christoph asked for additional flags to be rolled into the reset_type argument.
-Sinan thinks that this is a good idea.
+* While we're at it, add domain parameter to DETACH request, and leave
+  some padding. This way the next version, that adds PASID support,
+  won't have to introduce a "DETACH2" request to stay backward
+  compatible.
 
-Anybody else?
+* Require virtio device 1.0+. Remove legacy transport notes from the
+  specification.
+
+* Request timeout is now only enabled with DEBUG.
+
+* The patch for VFIO Kconfig (previously patch 5/5) is in next.
+
+You can find Linux driver and kvmtool device on branches
+virtio-iommu/v0.8 [3] (currently based on 4.19-rc7 but rebasing onto
+next only produced a trivial conflict). Branch virtio-iommu/devel
+contains a few patches that I'd like to send once the base is upstream:
+
+* virtio-iommu as a module. It got *much* nicer after Rob's probe
+  deferral rework, but I still have a bug to fix when re-loading the
+  virtio-iommu module.
+
+* ACPI support requires a minor IORT spec update (reservation of node
+  ID). I think it should be easier to obtain once the device and drivers
+  are upstream.
+
+[1] Virtio-iommu specification v0.8, diff from v0.7, and sources
+    git://linux-arm.org/virtio-iommu.git virtio-iommu/v0.8
+    http://jpbrucker.net/virtio-iommu/spec/v0.8/virtio-iommu-v0.8.pdf
+    http://jpbrucker.net/virtio-iommu/spec/diffs/virtio-iommu-pdf-diff-v0.7-v0.8.pdf
+
+[2] [PATCH v2 0/5] Add virtio-iommu driver
+    https://www.spinics.net/lists/kvm/msg170655.html
+
+[3] git://linux-arm.org/linux-jpb.git virtio-iommu/v0.8
+    git://linux-arm.org/kvmtool-jpb.git virtio-iommu/v0.8
+
+Jean-Philippe Brucker (7):
+  dt-bindings: virtio-mmio: Add IOMMU description
+  dt-bindings: virtio: Add virtio-pci-iommu node
+  PCI: OF: allow endpoints to bypass the iommu
+  PCI: OF: Initialize dev->fwnode appropriately
+  iommu: Add virtio-iommu driver
+  iommu/virtio: Add probe request
+  iommu/virtio: Add event queue
+
+ .../devicetree/bindings/virtio/iommu.txt      |   66 +
+ .../devicetree/bindings/virtio/mmio.txt       |   30 +
+ MAINTAINERS                                   |    7 +
+ drivers/iommu/Kconfig                         |   11 +
+ drivers/iommu/Makefile                        |    1 +
+ drivers/iommu/virtio-iommu.c                  | 1171 +++++++++++++++++
+ drivers/pci/of.c                              |   14 +-
+ include/uapi/linux/virtio_ids.h               |    1 +
+ include/uapi/linux/virtio_iommu.h             |  159 +++
+ 9 files changed, 1457 insertions(+), 3 deletions(-)
+ create mode 100644 Documentation/devicetree/bindings/virtio/iommu.txt
+ create mode 100644 drivers/iommu/virtio-iommu.c
+ create mode 100644 include/uapi/linux/virtio_iommu.h
+
+-- 
+2.19.1
+
