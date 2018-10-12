@@ -2,206 +2,239 @@ Return-Path: <SRS0=mL0v=MY=vger.kernel.org=linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-2.3 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	MAILING_LIST_MULTI,SPF_PASS,USER_AGENT_MUTT autolearn=ham autolearn_force=no
+X-Spam-Status: No, score=-0.8 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+	MAILING_LIST_MULTI,SPF_PASS,URIBL_BLOCKED autolearn=ham autolearn_force=no
 	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id B2AC5C43441
-	for <linux-pci@archiver.kernel.org>; Fri, 12 Oct 2018 10:22:41 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 74BEEC43441
+	for <linux-pci@archiver.kernel.org>; Fri, 12 Oct 2018 10:50:28 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 618B42087D
-	for <linux-pci@archiver.kernel.org>; Fri, 12 Oct 2018 10:22:41 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.3.2 mail.kernel.org 618B42087D
-Authentication-Results: mail.kernel.org; dmarc=none (p=none dis=none) header.from=arm.com
+	by mail.kernel.org (Postfix) with ESMTP id 364C92086A
+	for <linux-pci@archiver.kernel.org>; Fri, 12 Oct 2018 10:50:27 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.3.2 mail.kernel.org 364C92086A
+Authentication-Results: mail.kernel.org; dmarc=none (p=none dis=none) header.from=socionext.com
 Authentication-Results: mail.kernel.org; spf=none smtp.mailfrom=linux-pci-owner@vger.kernel.org
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1728014AbeJLRyW (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Fri, 12 Oct 2018 13:54:22 -0400
-Received: from foss.arm.com ([217.140.101.70]:49218 "EHLO foss.arm.com"
+        id S1727652AbeJLSWQ (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Fri, 12 Oct 2018 14:22:16 -0400
+Received: from mx.socionext.com ([202.248.49.38]:47639 "EHLO mx.socionext.com"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1726788AbeJLRyW (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Fri, 12 Oct 2018 13:54:22 -0400
-Received: from usa-sjc-imap-foss1.foss.arm.com (unknown [10.72.51.249])
-        by usa-sjc-mx-foss1.foss.arm.com (Postfix) with ESMTP id C1823F;
-        Fri, 12 Oct 2018 03:22:38 -0700 (PDT)
-Received: from e107981-ln.cambridge.arm.com (e107981-ln.cambridge.arm.com [10.1.197.40])
-        by usa-sjc-imap-foss1.foss.arm.com (Postfix) with ESMTPSA id 2317B3F5B7;
-        Fri, 12 Oct 2018 03:22:35 -0700 (PDT)
-Date:   Fri, 12 Oct 2018 11:22:30 +0100
-From:   Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
-To:     Honghui Zhang <honghui.zhang@mediatek.com>
-Cc:     bhelgaas@google.com, linux-arm-kernel@lists.infradead.org,
-        linux-mediatek@lists.infradead.org, linux-pci@vger.kernel.org,
-        linux-kernel@vger.kernel.org, ryder.lee@mediatek.com,
-        ulf.hansson@linaro.org, marc.zyngier@arm.com,
-        matthias.bgg@gmail.com, devicetree@vger.kernel.org,
-        yingjoe.chen@mediatek.com, eddie.huang@mediatek.com,
-        youlin.pei@mediatek.com, yt.shen@mediatek.com,
-        sean.wang@mediatek.com
-Subject: Re: [PATCH v6 2/9] PCI: mediatek: Fixup class ID for MT7622 as
- PCI_CLASS_BRIDGE_PCI
-Message-ID: <20181012102230.GA23257@e107981-ln.cambridge.arm.com>
-References: <1538969088-7136-1-git-send-email-honghui.zhang@mediatek.com>
- <1538969088-7136-3-git-send-email-honghui.zhang@mediatek.com>
- <20181008172337.GA13538@e107981-ln.cambridge.arm.com>
- <1539054495.6246.31.camel@mhfsdcap03>
- <20181011113748.GA3574@e107981-ln.cambridge.arm.com>
- <1539331289.6246.61.camel@mhfsdcap03>
+        id S1726664AbeJLSWQ (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Fri, 12 Oct 2018 14:22:16 -0400
+Received: from unknown (HELO kinkan-ex.css.socionext.com) ([172.31.9.52])
+  by mx.socionext.com with ESMTP; 12 Oct 2018 19:50:24 +0900
+Received: from mail.mfilter.local (m-filter-1 [10.213.24.61])
+        by kinkan-ex.css.socionext.com (Postfix) with ESMTP id 7C48618023A;
+        Fri, 12 Oct 2018 19:50:24 +0900 (JST)
+Received: from 172.31.9.53 (172.31.9.53) by m-FILTER with ESMTP; Fri, 12 Oct 2018 19:50:24 +0900
+Received: from yuzu.css.socionext.com (yuzu [172.31.8.45])
+        by iyokan.css.socionext.com (Postfix) with ESMTP id 379994031A;
+        Fri, 12 Oct 2018 19:50:24 +0900 (JST)
+Received: from [127.0.0.1] (unknown [10.213.132.48])
+        by yuzu.css.socionext.com (Postfix) with ESMTP id DEC5C120424;
+        Fri, 12 Oct 2018 19:50:23 +0900 (JST)
+Date:   Fri, 12 Oct 2018 19:50:23 +0900
+From:   Kunihiko Hayashi <hayashi.kunihiko@socionext.com>
+To:     Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
+        Kishon Vijay Abraham I <kishon@ti.com>
+Subject: Re: [PATCH v2 2/2] PCI: controller: dwc: add UniPhier PCIe host controller support
+Cc:     Marc Zyngier <marc.zyngier@arm.com>,
+        Gustavo Pimentel <gustavo.pimentel@synopsys.com>,
+        Bjorn Helgaas <bhelgaas@google.com>,
+        "Rob Herring" <robh+dt@kernel.org>,
+        Mark Rutland <mark.rutland@arm.com>,
+        "Masahiro Yamada" <yamada.masahiro@socionext.com>,
+        "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+        "devicetree@vger.kernel.org" <devicetree@vger.kernel.org>,
+        "linux-arm-kernel@lists.infradead.org" 
+        <linux-arm-kernel@lists.infradead.org>,
+        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+        Masami Hiramatsu <masami.hiramatsu@linaro.org>,
+        Jassi Brar <jaswinder.singh@linaro.org>,
+        Murali Karicheri <m-karicheri2@ti.com>
+In-Reply-To: <20181008143215.GA9596@e107981-ln.cambridge.arm.com>
+References: <dbb43a92-b5c0-0d26-3db0-3dbbccb12b98@ti.com> <20181008143215.GA9596@e107981-ln.cambridge.arm.com>
+Message-Id: <20181012195022.CA43.4A936039@socionext.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <1539331289.6246.61.camel@mhfsdcap03>
-User-Agent: Mutt/1.5.24 (2015-08-30)
+Content-Type: text/plain; charset="US-ASCII"
+Content-Transfer-Encoding: 7bit
+X-Mailer: Becky! ver. 2.70 [ja]
 Sender: linux-pci-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-On Fri, Oct 12, 2018 at 04:01:29PM +0800, Honghui Zhang wrote:
-> On Thu, 2018-10-11 at 12:38 +0100, Lorenzo Pieralisi wrote:
-> > On Tue, Oct 09, 2018 at 11:08:15AM +0800, Honghui Zhang wrote:
-> > > On Mon, 2018-10-08 at 18:23 +0100, Lorenzo Pieralisi wrote:
-> > > > On Mon, Oct 08, 2018 at 11:24:41AM +0800, honghui.zhang@mediatek.com wrote:
-> > > > > From: Honghui Zhang <honghui.zhang@mediatek.com>
-> > > > > 
-> > > > > The PCIe controller of MT7622 has TYPE 1 configuration space type, but
-> > > > > the HW default class type values is invalid.
-> > > > > 
-> > > > > The commit 101c92dc80c8 ("PCI: mediatek: Set up vendor ID and class
-> > > > > type for MT7622") have set the class ID for MT7622 as
-> > > > > PCI_CLASS_BRIDGE_HOSTe, but it's not workable for MT7622:
-> > > > > 
-> > > > > In __pci_bus_assign_resources, the framework only setup bridge's
-> > > > > resource window only if class type is PCI_CLASS_BRIDGE_PCI. Or it
-> > > > > will leave the subordinary PCIe device's MMIO window un-touched.
+Hi Lorenzo, Kishon,
+
+On Mon, 8 Oct 2018 15:32:16 +0100 <lorenzo.pieralisi@arm.com> wrote:
+
+> On Mon, Oct 08, 2018 at 11:15:59AM +0530, Kishon Vijay Abraham I wrote:
+> > Hi Lorenzo,
 > > 
-> > Can you please provide me with a full log of the issue ?
-> > 
-> > What is the bug this patch is actually fixing ?
-> > 
-> > > > > Fixup the class type to PCI_CLASS_BRIDGE_PCI as most of the controller
-> > > > > driver do.
-> > > > 
-> > > > I think that this patch is correct but the commit log fails to pin point
-> > > > the problem. The IP you are programming is a root port, that's why you
-> > > > have to have the proper class code, the patch looks fine but I would
-> > > > like to peek Bjorn's brain on this since it is a fundamental concept.
-> > > > 
+> > On Friday 28 September 2018 09:13 PM, Lorenzo Pieralisi wrote:
+> > > On Fri, Sep 28, 2018 at 02:17:16PM +0100, Marc Zyngier wrote:
+> > >> On 28/09/18 12:06, Lorenzo Pieralisi wrote:
+> > >>> [+Murali, Marc]
+> > >>>
+> > >>> On Thu, Sep 27, 2018 at 04:44:26PM +0900, Kunihiko Hayashi wrote:
+> > >>>> Hi Lorenzo, Gustavo,
+> > >>>>
+> > >>>> On Wed, 26 Sep 2018 21:31:36 +0900 <hayashi.kunihiko@socionext.com> wrote:
+> > >>>>
+> > >>>>> Hi Lorenzo, Gustavo,
+> > >>>>>
+> > >>>>> Thank you for reviewing.
+> > >>>>>
+> > >>>>> On Tue, 25 Sep 2018 18:53:01 +0100
+> > >>>>> Gustavo Pimentel <gustavo.pimentel@synopsys.com> wrote:
+> > >>>>>
+> > >>>>>> On 25/09/2018 17:14, Lorenzo Pieralisi wrote:
+> > >>>>>>> [+Gustavo, please have a look at INTX/MSI management]
+> > >>>>>>>
+> > >>>>>>> On Thu, Sep 06, 2018 at 06:40:32PM +0900, Kunihiko Hayashi wrote:
+> > >>>>>>>> This introduces specific glue layer for UniPhier platform to support
+> > >>>>>>>> PCIe host controller that is based on the DesignWare PCIe core, and
+> > >>>>>>>> this driver supports Root Complex (host) mode.
+> > >>>>>>>
+> > >>>>>>> Please read this thread and apply it to next versions:
+> > >>>>>>>
+> > >>>>>>> https://urldefense.proofpoint.com/v2/url?u=https-3A__marc.info_-3Fl-3Dlinux-2Dpci-26m-3D150905742808166-26w-3D2&d=DwIBAg&c=DPL6_X_6JkXFx7AXWqB0tg&r=bkWxpLoW-f-E3EdiDCCa0_h0PicsViasSlvIpzZvPxs&m=H8UNDDUGQnQnqfWr4CBios689dJcjxu4qeTTRGulLmU&s=CgcXc_2LThyOpW-4bCriJNo9H1lzROEdy_cG9p-Y5hU&e=
+> > >>>>>
+> > >>>>> I also found this thread in previous linux-pci, and I think it's helpful for me.
+> > >>>>> I'll check it carefully.
+> > >>>>
+> > >>>> [snip]
+> > >>>>
+> > >>>>>>>> +	ret = devm_request_irq(dev, pp->irq, uniphier_pcie_irq_handler,
+> > >>>>>>>> +			       IRQF_SHARED, "pcie", priv);
+> > >>>>>>>
+> > >>>>>>> This is wrong, you should set-up a chained IRQ for INTX.
+> > >>>>>>>
+> > >>>>>>> I *think* that
+> > >>>>>>>
+> > >>>>>>> ks_pcie_setup_interrupts()
+> > >>>>>>>
+> > >>>>>>> is a good example to start with but I wonder whether it is worth
+> > >>>>>>> generalizing the INTX approach to designware as a whole as it was
+> > >>>>>>> done for MSIs.
+> > >>>>>>>
+> > >>>>>>> Thoughts ?
+> > >>>>>>
+> > >>>>>> From what I understood this is for legacy IRQ, right?
+> > >>>>>
+> > >>>>> Yes. For legacy IRQ.
+> > >>>>>
+> > >>>>>> Like you (Lorenzo) said there is 2 drivers (pci-keystone-dw.c and pci-dra7xx.c)
+> > >>>>>> that uses it and can be use as a template for handling this type of interrupts.
+> > >>>>>>
+> > >>>>>> We can try to pass some kind of generic INTX function to the DesignWare host
+> > >>>>>> library to handling this, but this will require some help from keystone and
+> > >>>>>> dra7xx maintainers, since my setup doesn't have legacy IRQ HW support.
+> > >>>>>
+> > >>>>> Now I think it's difficult to make a template for INTX function,
+> > >>>>> and at first, I'll try to re-write this part with reference to pci-keystone-dw.c.
+> > >>>>
+> > >>>> I understand that there are 2 types of interrupt and the drivers.
+> > >>>>
+> > >>>> One like pci-keystone-dw.c is:
+> > >>>>
+> > >>>>  - there are 4 interrupts for legacy,
+> > >>>>  - invoke handlers for each interrupt, and handle the interrupt,
+> > >>>>  - call irq_set_chained_handler_and_data() to make a chain of the interrupts
+> > >>>>   when initializing
+> > >>>>
+> > >>>> The other like pci-dra7xx.c is:
+> > >>>>
+> > >>>>  - there is 1 IRQ for legacy as a parent,
+> > >>>>  - check an interrupt factor register, and handle the interrupt correspond
+> > >>>>    to the factor,
+> > >>>>  - call request_irq() for the parent IRQ and irq_domain_add_linear() for
+> > >>>>    the factor when initializing
+> > >>>>
+> > >>>> The pcie-uniphier.c is the same type as the latter (like pci-dra7xx.c).
+> > >>>>
+> > >>>> However, in pci-dra7xx.c, MSI and legacy IRQ share the same interrupt number,
+> > >>>> so the same handler is called and the handler divides these IRQs.
+> > >>>> (found in dra7xx_pcie_msi_irq_handler())
+> > >>>>
+> > >>>> In pcie-uniphier.c, MSI and legacy IRQ are independent.
+> > >>>> Therefore it's necessary to prepare the handler for the legacy IRQ.
+> > >>>>
+> > >>>> I think that it's difficult to apply the way of pci-keystone-dw.c, and
+> > >>>> uniphier_pcie_irq_handler() and calling devm_request_irq() are still
+> > >>>> necessary to handle legacy IRQ.
+> > >>>
+> > >>> I do not think it is difficult, the difference is that keystone has
+> > >>> 1 GIC irq line allocated per legacy IRQ, your set-up has one for
+> > >>> all INTX.
+> > >>>
+> > >>> *However*, I would like some clarifications from Murali on this code
+> > >>> in drivers/pci/controller/dwc/pci-keystone.c:
+> > >>>
+> > >>> static void ks_pcie_legacy_irq_handler(struct irq_desc *desc)
+> > >>> {
+> > >>> 	unsigned int irq = irq_desc_get_irq(desc);
+> > >>> 	struct keystone_pcie *ks_pcie = irq_desc_get_handler_data(desc);
+> > >>> 	struct dw_pcie *pci = ks_pcie->pci;
+> > >>> 	struct device *dev = pci->dev;
+> > >>> 	u32 irq_offset = irq - ks_pcie->legacy_host_irqs[0];
+> > >>>
+> > >>> Here the IRQ numbers are virtual IRQs, is it correct to consider
+> > >>> the virq numbers as sequential values ? The "offset" is used to
+> > >>> handle the PCI controller interrupt registers, so it must be a value
+> > >>> between 0-3 IIUC.
+> > >>
+> > >> There is absolutely no reason why virtual interrupt numbers should be
+> > >> contiguous. Shake the allocator hard enough, and you'll see gaps appearing.
+> > >>
+> > >> In general, the only thing that makes sense is to compute this offset based
+> > >> on the hwirq which is HW-specific.
 > > > 
-> > > I'm a bit confused with the concepts of PCI_CLASS_BRIDGE_HOST and
-> > > PCI_CLASS_BRIDGE_PCI, from PCI express spec,
-> > > 4.0r1.0(PCI_Express_Base_4.0r1.0_September-27-2017-c), Host Bridge is
-> > > "part of a Root Complex that connects a host CPU or CPUs to a
-> > > Hierarchy". While Root Complex defines as "A defined System Element that
-> > > includes at least one Host Bridge, Root port, or Root complex Integrated
-> > > Endpoint".
-> > > 
-> > > But according to my understanding, most of the root port IPs integrated
-> > > with a "PCI_CLASS_BRIDGE_PCI", which has type 1 configuration space and
-> > > could be saw as a pci device when using lspci.
-> > > 
-> > > And for MT7622, it integrated with block of internal control registers,
-> > > type 1 configuration space, and is considered as a root complex.
+> > > That was my understanding and why I asked, which means that keystone
+> > > code can break (unless I read it wrong) and Murali will send me a fix as
+> > > soon as possible please to get it right (and Kunihiko will base his
+> > > code on this discussion).
 > > 
-> > I assume you mean a type 1 config header here. I do not think it
-> > is mandatory for a host bridge to have a type 1 config header
-> > (and related bridge windows + primary/secondary/subordinate bus
-> > numbers) but I do not know how the IP you are programming is
-> > designed.
-> 
-> Yes, MT7622 has the type 1 config header and related bridge windows and
-> primary/secondary/subordinate bus numbers.
-> 
+> > I had cleaned up legacy interrupt handling in keystone driver [1] which was
+> > also required for TI's AM654 Platform.
 > > 
-> > If the host bridge needs its memory window to be configured you can
-> > easily do that in the driver (with driver specific code) without
-> > requiring the generic PCI resource core to do that for you, the host
-> > bridge is the root of the bus I do not see any reason why it should
-> > be up to core PCI code to assign it, it is preprogrammed.
-> > 
-> Thanks for explain this.
-> Yes, the MT7622 bridge needs its memory window to be configured but I
-> prefer the PCI resource core to do this for the following reasons:
-> 1. MTK have MT7622 and MT2712, they pretty much using the same IP, but
-> have different memory window base. Currently we using device tree to
-> pass the memory window base. Take using of PCI resource core code to
-> parse and assign those resource will release the burden of driver.
-> 2. I do not want to re-implement the resource parse code to get the
-> memory base from device node. And hard code the memory base in driver is
-> not quite elegant.
-> 3. Most of the host driver which I referenced are using the PCI resource
-> core to help with it's memory window configure, I guess following the
-> majority way maybe better even they may have slit different of the IP
-> design from MTK.
-> 4. Passing the memory base in device node make it more flexible to
-> change the memory window base (in the HW acceptable range) in case of
-> some special EP device required some special PCI address range.
-> 5. MT7622 and MT2712 have the pretty much same IP only MT7622's HW has
-> set the class type to an un-proper class type. Set it to the same values
-> as MT2712 is an easy way to fix.
-
-We do what needs to be done. From what you are saying, your IP
-implements a config 1 type header and that defines it as a PCI-to-PCI
-bridge (eg a root port, of sorts).
-
-The points you are making above are software, I understand them but
-that's not what we are discussing here.
-
-I want you to define the class of your IP according to what your IP
-is and it seems _reasonable_ to me to define the IP as a PCI-to-PCI
-bridge class from the information you are providing.
-
-I would like you to:
-
-1) Rewrite the commit log and explain why your IP needs class
-   reprogramming. I do not care about driver software complexity,
-   I want you to describe how HW works. I do not want you to define
-   a class for your IP because that makes the driver simpler, I want
-   you to define a class for your IP to describe to the kernel what
-   that IP really is, which is different things.
-2) Define and report the bug you are fixing in the commit log
-3) Provide a Fixes: tag pointing at the faulty commit
-
-Thanks for your time providing information.
-
-Lorenzo
-
-> thanks.
-> > > I'm not sure which CLASS type it should have:
-> > > From PCI_Code-ID_r_1_10__v8-Nov_2017, class type of
-> > > 0x0604(PCI_CLASS_BRIDGE_PCI) is defined as a PCI-to-PCI bridge, not
-> > > literally suitable for MT7622(which is a root complex)(In my personal
-> > > opinion). But it is the only workable CLASS type for MT7622 in current
-> > > kernel.
-> > > 
-> > > > If the kernel does not assign resources unless it detects a
-> > > > PCI_CLASS_BRIDGE_PCI this means that for components that are
-> > > > actually PCI_CLASS_BRIDGE_HOST their register set must come
-> > > > preprogrammed unless I am missing something.
-> > > > 
-> > > 
-> > > In the function pci_request_resource_alignment, it will by pass the
-> > > resource assignment for PCI_CLASS_BRIDGE_HOST, though I'm not figured
-> > > out why.
-> > > 
-> > > > I would like to get to the bottom of this since it is a fundamental
-> > > > enumeration concept.
-> > > > 
-> > > 
-> > > Do you like me to re-write the commit message for this patch and put the
-> > > above information in? Or just not mention the PCI_CLASS_BRIDGE_HOST
-> > > assign resource routine?
-> > 
-> > I want to understand where the problem is and whether it is right to
-> > define the component as a PCI bridge rather than a host bridge.
-> > 
+> > But I guess the same issue will occur in MSI interrupt handling. I'll fix that
+> > up in the next version. Btw can you review [2] so that I can fix any other
+> > comments that you may have.
 > 
-> I will update the commit message (put some of the above reasons in the
-> commit message) and send a new version of this patch if it's acceptable
-> for you.
+> Hi Kishon,
 > 
-> Thanks
-> > Lorenzo
-> 
-> 
-> 
+> yes I will, I am getting there (sorry for the delay), I don't think we
+> can make it v4.20 material but let me first have a look, maybe we can
+> split it up and simplify its merge.
+
+Thank you for introducing RFC patches.
+I saw the legacy interrupt part of them and I think that these became easier
+to reference. Especially irq_domain_ops.map() will be the same.
+
+Currently candidate pcie-uniphier driver and some ones are assuming to take
+an interrupt from "interrupts" property because of using single interrupt.
+
+	interrupt-name = "intx";
+	interrupts = <xxx>;
+
+However, keystone has 4 interrupts and Kishon's patch is assuming
+to take it from the property in child "legacy-interrupt-controller" node.
+Maybe latter is more general and I can apply it.
+
+	legacy-interrupt-controller {
+		interrupt-controller;
+		#interrupt-cells = <1>;
+		interrupt-parent = <&gic>;
+		interrupts = <xxx>;
+	};
+
+I'll send v3 patch with reference to these RFC patches for now.
+
+Thank you,
+
+---
+Best Regards,
+Kunihiko Hayashi
+
+
