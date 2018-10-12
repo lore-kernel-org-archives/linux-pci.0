@@ -2,147 +2,67 @@ Return-Path: <SRS0=mL0v=MY=vger.kernel.org=linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-0.8 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	MAILING_LIST_MULTI,SPF_PASS,URIBL_BLOCKED autolearn=ham autolearn_force=no
-	version=3.4.0
+X-Spam-Status: No, score=-3.8 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_PASS,URIBL_BLOCKED autolearn=ham
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 7258FC67877
-	for <linux-pci@archiver.kernel.org>; Fri, 12 Oct 2018 17:00:43 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 680B5C6787C
+	for <linux-pci@archiver.kernel.org>; Fri, 12 Oct 2018 17:30:44 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 44982214C4
-	for <linux-pci@archiver.kernel.org>; Fri, 12 Oct 2018 17:00:43 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.3.2 mail.kernel.org 44982214C4
-Authentication-Results: mail.kernel.org; dmarc=fail (p=none dis=none) header.from=redhat.com
+	by mail.kernel.org (Postfix) with ESMTP id 38584205F4
+	for <linux-pci@archiver.kernel.org>; Fri, 12 Oct 2018 17:30:44 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.3.2 mail.kernel.org 38584205F4
+Authentication-Results: mail.kernel.org; dmarc=none (p=none dis=none) header.from=lwn.net
 Authentication-Results: mail.kernel.org; spf=none smtp.mailfrom=linux-pci-owner@vger.kernel.org
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727078AbeJMAeG (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Fri, 12 Oct 2018 20:34:06 -0400
-Received: from mx1.redhat.com ([209.132.183.28]:44574 "EHLO mx1.redhat.com"
+        id S1726917AbeJMBEP (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Fri, 12 Oct 2018 21:04:15 -0400
+Received: from ms.lwn.net ([45.79.88.28]:51164 "EHLO ms.lwn.net"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1725854AbeJMAeG (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Fri, 12 Oct 2018 20:34:06 -0400
-Received: from smtp.corp.redhat.com (int-mx04.intmail.prod.int.phx2.redhat.com [10.5.11.14])
-        (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
+        id S1725854AbeJMBEP (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Fri, 12 Oct 2018 21:04:15 -0400
+Received: from lwn.net (localhost [127.0.0.1])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
         (No client certificate requested)
-        by mx1.redhat.com (Postfix) with ESMTPS id BFD9EDF88E;
-        Fri, 12 Oct 2018 17:00:41 +0000 (UTC)
-Received: from redhat.com (ovpn-124-120.rdu2.redhat.com [10.10.124.120])
-        by smtp.corp.redhat.com (Postfix) with SMTP id 82EF77B5F0;
-        Fri, 12 Oct 2018 17:00:35 +0000 (UTC)
-Date:   Fri, 12 Oct 2018 13:00:34 -0400
-From:   "Michael S. Tsirkin" <mst@redhat.com>
-To:     Jean-Philippe Brucker <jean-philippe.brucker@arm.com>
-Cc:     iommu@lists.linux-foundation.org,
-        virtualization@lists.linux-foundation.org,
-        devicetree@vger.kernel.org, linux-pci@vger.kernel.org,
-        kvmarm@lists.cs.columbia.edu, peter.maydell@linaro.org,
-        joro@8bytes.org, jasowang@redhat.com, robh+dt@kernel.org,
-        mark.rutland@arm.com, eric.auger@redhat.com,
-        tnowicki@caviumnetworks.com, kevin.tian@intel.com,
-        marc.zyngier@arm.com, robin.murphy@arm.com, will.deacon@arm.com,
-        lorenzo.pieralisi@arm.com
-Subject: Re: [PATCH v3 0/7] Add virtio-iommu driver
-Message-ID: <20181012125443-mutt-send-email-mst@kernel.org>
-References: <20181012145917.6840-1-jean-philippe.brucker@arm.com>
+        by ms.lwn.net (Postfix) with ESMTPSA id 0FABC2E5;
+        Fri, 12 Oct 2018 17:30:42 +0000 (UTC)
+Date:   Fri, 12 Oct 2018 11:30:40 -0600
+From:   Jonathan Corbet <corbet@lwn.net>
+To:     Wesley Sheng <wesleyshenggit@sina.com>
+Cc:     kurt.schwemmer@microsemi.com, logang@deltatee.com,
+        linux-pci@vger.kernel.org, linux-doc@vger.kernel.org,
+        linux-kernel@vger.kernel.org, bhelgaas@google.com,
+        linux-ntb@googlegroups.com,
+        Wesley Yung <wesley.yung@microchip.com>,
+        Kelvin Cao <kelvin.cao@microchip.com>
+Subject: Re: [PATCH v3] NTB: switchtec_ntb: Update switchtec documentation
+ with pre-requisites for NTB
+Message-ID: <20181012113040.52bfff58@lwn.net>
+In-Reply-To: <1539174788-25878-1-git-send-email-wesleyshenggit@sina.com>
+References: <1539174788-25878-1-git-send-email-wesleyshenggit@sina.com>
+Organization: LWN.net
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20181012145917.6840-1-jean-philippe.brucker@arm.com>
-X-Scanned-By: MIMEDefang 2.79 on 10.5.11.14
-X-Greylist: Sender IP whitelisted, not delayed by milter-greylist-4.5.16 (mx1.redhat.com [10.5.110.38]); Fri, 12 Oct 2018 17:00:42 +0000 (UTC)
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 8bit
 Sender: linux-pci-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-On Fri, Oct 12, 2018 at 03:59:10PM +0100, Jean-Philippe Brucker wrote:
-> Implement the virtio-iommu driver, following specification v0.8 [1].
-> Changes since v2 [2]:
-> 
-> * Patches 2-4 allow virtio-iommu to use the PCI transport, since QEMU
->   would like to phase out the MMIO transport. This produces a complex
->   topology where the programming interface of the IOMMU could appear
->   lower than the endpoints that it translates. It's not unheard of (e.g.
->   AMD IOMMU), and the guest easily copes with this.
->   
->   The "Firmware description" section of the specification has been
->   updated with all combinations of PCI, MMIO and DT, ACPI.
-> 
-> * Fix structures layout, they don't need the "packed" attribute anymore.
-> 
-> * While we're at it, add domain parameter to DETACH request, and leave
->   some padding. This way the next version, that adds PASID support,
->   won't have to introduce a "DETACH2" request to stay backward
->   compatible.
-> 
-> * Require virtio device 1.0+. Remove legacy transport notes from the
->   specification.
-> 
-> * Request timeout is now only enabled with DEBUG.
-> 
-> * The patch for VFIO Kconfig (previously patch 5/5) is in next.
-> 
-> You can find Linux driver and kvmtool device on branches
-> virtio-iommu/v0.8 [3] (currently based on 4.19-rc7 but rebasing onto
-> next only produced a trivial conflict). Branch virtio-iommu/devel
-> contains a few patches that I'd like to send once the base is upstream:
-> 
-> * virtio-iommu as a module. It got *much* nicer after Rob's probe
->   deferral rework, but I still have a bug to fix when re-loading the
->   virtio-iommu module.
-> 
-> * ACPI support requires a minor IORT spec update (reservation of node
->   ID). I think it should be easier to obtain once the device and drivers
->   are upstream.
-> 
-> [1] Virtio-iommu specification v0.8, diff from v0.7, and sources
->     git://linux-arm.org/virtio-iommu.git virtio-iommu/v0.8
->     http://jpbrucker.net/virtio-iommu/spec/v0.8/virtio-iommu-v0.8.pdf
->     http://jpbrucker.net/virtio-iommu/spec/diffs/virtio-iommu-pdf-diff-v0.7-v0.8.pdf
-> 
-> [2] [PATCH v2 0/5] Add virtio-iommu driver
->     https://www.spinics.net/lists/kvm/msg170655.html
-> 
-> [3] git://linux-arm.org/linux-jpb.git virtio-iommu/v0.8
->     git://linux-arm.org/kvmtool-jpb.git virtio-iommu/v0.8
-> 
-> Jean-Philippe Brucker (7):
->   dt-bindings: virtio-mmio: Add IOMMU description
->   dt-bindings: virtio: Add virtio-pci-iommu node
->   PCI: OF: allow endpoints to bypass the iommu
->   PCI: OF: Initialize dev->fwnode appropriately
->   iommu: Add virtio-iommu driver
->   iommu/virtio: Add probe request
->   iommu/virtio: Add event queue
-> 
->  .../devicetree/bindings/virtio/iommu.txt      |   66 +
->  .../devicetree/bindings/virtio/mmio.txt       |   30 +
->  MAINTAINERS                                   |    7 +
->  drivers/iommu/Kconfig                         |   11 +
->  drivers/iommu/Makefile                        |    1 +
->  drivers/iommu/virtio-iommu.c                  | 1171 +++++++++++++++++
->  drivers/pci/of.c                              |   14 +-
->  include/uapi/linux/virtio_ids.h               |    1 +
->  include/uapi/linux/virtio_iommu.h             |  159 +++
->  9 files changed, 1457 insertions(+), 3 deletions(-)
->  create mode 100644 Documentation/devicetree/bindings/virtio/iommu.txt
->  create mode 100644 drivers/iommu/virtio-iommu.c
->  create mode 100644 include/uapi/linux/virtio_iommu.h
+On Wed, 10 Oct 2018 20:33:08 +0800
+Wesley Sheng <wesleyshenggit@sina.com> wrote:
 
-This all looks good to me. Minor nits:
-- I think DEBUG mode is best just removed for now
-- Slightly wrong patch splitup causing a misaligned structure
-  in uapi until all patches are applied.
+> The ntb_hw_switchtec driver has requirements on kernel configuration
+> so we add these notes to the documentation and also clean up a few 
+> other sentences in the documentation.
+> 
+> Signed-off-by: Wesley Yung <wesley.yung@microchip.com>
+> Signed-off-by: Kelvin Cao <kelvin.cao@microchip.com>
+> Signed-off-by: Wesley Sheng <wesleyshenggit@sina.com>
 
-You should Cc Bjorn on the pci change - I'd like to see his ack on it
-being merged through my tree.
+So why all of these signoffs for such a small patch?  Who is the actual
+author of the patch?
 
-And pls Cc the virtio-dev list on any virtio uapi changes.
+Thanks,
 
-At a feature level I have some ideas for more features we
-could add, but for now I think I'll put this version in -next
-while you iron out the above wrinkles. Hope you can make the
-merge window.
-
-> -- 
-> 2.19.1
+jon
