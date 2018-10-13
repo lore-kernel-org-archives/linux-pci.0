@@ -4,41 +4,41 @@ X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 X-Spam-Level: 
 X-Spam-Status: No, score=-8.6 required=3.0 tests=DKIM_INVALID,DKIM_SIGNED,
 	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
-	SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT autolearn=ham autolearn_force=no
-	version=3.4.0
+	SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT autolearn=unavailable
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 8076BC71122
-	for <linux-pci@archiver.kernel.org>; Sat, 13 Oct 2018 15:10:42 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 5C58BC28CF8
+	for <linux-pci@archiver.kernel.org>; Sat, 13 Oct 2018 15:10:54 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 4561520652
-	for <linux-pci@archiver.kernel.org>; Sat, 13 Oct 2018 15:10:42 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 252AF20895
+	for <linux-pci@archiver.kernel.org>; Sat, 13 Oct 2018 15:10:54 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=fail reason="signature verification failed" (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="mu5tDy+H"
-DMARC-Filter: OpenDMARC Filter v1.3.2 mail.kernel.org 4561520652
+	dkim=fail reason="signature verification failed" (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="I7f34KTR"
+DMARC-Filter: OpenDMARC Filter v1.3.2 mail.kernel.org 252AF20895
 Authentication-Results: mail.kernel.org; dmarc=none (p=none dis=none) header.from=lst.de
 Authentication-Results: mail.kernel.org; spf=none smtp.mailfrom=linux-pci-owner@vger.kernel.org
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727210AbeJMWsJ (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Sat, 13 Oct 2018 18:48:09 -0400
-Received: from bombadil.infradead.org ([198.137.202.133]:33110 "EHLO
+        id S1727257AbeJMWsO (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Sat, 13 Oct 2018 18:48:14 -0400
+Received: from bombadil.infradead.org ([198.137.202.133]:33148 "EHLO
         bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726292AbeJMWsI (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Sat, 13 Oct 2018 18:48:08 -0400
+        with ESMTP id S1726292AbeJMWsN (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Sat, 13 Oct 2018 18:48:13 -0400
 DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
         d=infradead.org; s=bombadil.20170209; h=Content-Transfer-Encoding:
         MIME-Version:References:In-Reply-To:Message-Id:Date:Subject:Cc:To:From:Sender
         :Reply-To:Content-Type:Content-ID:Content-Description:Resent-Date:Resent-From
         :Resent-Sender:Resent-To:Resent-Cc:Resent-Message-ID:List-Id:List-Help:
         List-Unsubscribe:List-Subscribe:List-Post:List-Owner:List-Archive;
-        bh=cS9Bx2+93/rMsywL0BCpHzBOMgFu2LBSHmwFMqqRAEM=; b=mu5tDy+HaADaKvdflLDZOYPtPo
-        Xbh0bUSe20SFaChQZ7oG51q+dLhoT2g5gEUvYHIl3C7eiz/lNpoMBq8JyR3aL4mV1m9Por4iQO0Iz
-        Ue8j+DwcTjQGgB96ucH8Rm9w0FgeOZ9RzV0b1sMnkU+dNUOWbRe9OJ7Ptr1bZSay1Hma8nxsz+GMH
-        Fp3cx5X7pxs3aE6kYAweticGY5ImiqB9n54fyg3PbpQE6vPGJdZ9LWCzg4TZnkiEQzCLcYCC5q/um
-        8qp5r+7nZVjC//dINlezu9rkbtrtQ32tEEQ71XJO2ZhrHTQm8vgJ2/eKmRKRyMlaWPSSdxmWGVHW6
-        qW94JuCg==;
+        bh=e2M4x6Di82IjUYtVVlGQAJo/6xAoTWNHc0fE3LO/Xaw=; b=I7f34KTRbVwJdqPMZZF498MTU7
+        yoIltDsGbqzLHXKYsVWW9GAKecu5UCoBFVAQt1E+UbiNBlOQqZKgS+z0Mpbv/R697OzKmmxRy7yUz
+        KONKRfD0hnTcyvBrmXcRE45eRYL7vyVQDeRYgC4h9L7C0jdVfAm7rKUQjeX8X84ZhTRYniiTl1H7p
+        JF2j3A/6FxzDmog3undFhhdDv9yM9a+mu7UYq/aSpAdTXgY/wS8Zc0gKZoPAB2tYqw2ND7L4XX5tr
+        MoqSsiOW04aNNreT0/nr5eHv3R4qMN4XiRG+zLHN514JEg99acQVkdbRJpbavJ5nr6ccRbYU8b4q0
+        BEz18G6A==;
 Received: from 089144199123.atnat0008.highway.a1.net ([89.144.199.123] helo=localhost)
         by bombadil.infradead.org with esmtpsa (Exim 4.90_1 #2 (Red Hat Linux))
-        id 1gBLYp-0002vh-EH; Sat, 13 Oct 2018 15:10:35 +0000
+        id 1gBLYu-00030N-Q6; Sat, 13 Oct 2018 15:10:41 +0000
 From:   Christoph Hellwig <hch@lst.de>
 To:     Masahiro Yamada <yamada.masahiro@socionext.com>
 Cc:     Matt Porter <mporter@kernel.crashing.org>,
@@ -47,9 +47,9 @@ Cc:     Matt Porter <mporter@kernel.crashing.org>,
         linux-kbuild@vger.kernel.org, linux-pci@vger.kernel.org,
         linux-scsi@vger.kernel.org, linux-arch@vger.kernel.org,
         linux-kernel@vger.kernel.org, linuxppc-dev@lists.ozlabs.org
-Subject: [PATCH 6/8] rapidio: consolidate RAPIDIO config entry in drivers/rapidio
-Date:   Sat, 13 Oct 2018 17:10:14 +0200
-Message-Id: <20181013151016.31674-7-hch@lst.de>
+Subject: [PATCH 8/8] kconfig: remove CONFIG_MCA leftovers
+Date:   Sat, 13 Oct 2018 17:10:16 +0200
+Message-Id: <20181013151016.31674-9-hch@lst.de>
 X-Mailer: git-send-email 2.19.1
 In-Reply-To: <20181013151016.31674-1-hch@lst.de>
 References: <20181013151016.31674-1-hch@lst.de>
@@ -61,132 +61,55 @@ Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-There is no good reason to duplicate the RAPIDIO menu in various
-architectures.  Instead provide a selectable HAS_RAPIDIO symbol
-that indicates native availability of RAPIDIO support and the handle
-the rest in drivers/pci.  This also means we now provide support
-for PCI(e) to Rapidio bridges for every architecture instead of a
-limited subset.
-
 Signed-off-by: Christoph Hellwig <hch@lst.de>
 ---
- arch/mips/Kconfig       | 13 -------------
- arch/powerpc/Kconfig    | 13 -------------
- arch/x86/Kconfig        | 10 ----------
- drivers/Kconfig         |  1 +
- drivers/rapidio/Kconfig | 11 +++++++++++
- 5 files changed, 12 insertions(+), 36 deletions(-)
+ arch/powerpc/Kconfig | 4 ----
+ drivers/scsi/Kconfig | 6 +++---
+ 2 files changed, 3 insertions(+), 7 deletions(-)
 
-diff --git a/arch/mips/Kconfig b/arch/mips/Kconfig
-index fc74fd685e6a..70a9e09329bb 100644
---- a/arch/mips/Kconfig
-+++ b/arch/mips/Kconfig
-@@ -3090,19 +3090,6 @@ config ZONE_DMA
- config ZONE_DMA32
- 	bool
- 
--config HAS_RAPIDIO
--	bool
--	default n
--
--config RAPIDIO
--	tristate "RapidIO support"
--	depends on HAS_RAPIDIO || PCI
--	help
--	  If you say Y here, the kernel will include drivers and
--	  infrastructure code to support RapidIO interconnect devices.
--
--source "drivers/rapidio/Kconfig"
--
- endmenu
- 
- config TRAD_SIGNALS
 diff --git a/arch/powerpc/Kconfig b/arch/powerpc/Kconfig
-index 8959ce594b08..b1c3a47f1f30 100644
+index f0ea460653cd..8b9edf7caf96 100644
 --- a/arch/powerpc/Kconfig
 +++ b/arch/powerpc/Kconfig
-@@ -971,17 +971,6 @@ config PCI_8260
- 	select PPC_INDIRECT_PCI
- 	default y
- 
--config HAS_RAPIDIO
--	bool
--	default n
--
--config RAPIDIO
--	tristate "RapidIO support"
--	depends on HAS_RAPIDIO || PCI
--	help
--	  If you say Y here, the kernel will include drivers and
--	  infrastructure code to support RapidIO interconnect devices.
--
- config FSL_RIO
- 	bool "Freescale Embedded SRIO Controller support"
- 	depends on RAPIDIO = y && HAS_RAPIDIO
-@@ -990,8 +979,6 @@ config FSL_RIO
- 	  Include support for RapidIO controller on Freescale embedded
- 	  processors (MPC8548, MPC8641, etc).
- 
--source "drivers/rapidio/Kconfig"
--
- endmenu
- 
- config NONSTATIC_KERNEL
-diff --git a/arch/x86/Kconfig b/arch/x86/Kconfig
-index dc48280bdac9..f731ad1a043a 100644
---- a/arch/x86/Kconfig
-+++ b/arch/x86/Kconfig
-@@ -2810,16 +2810,6 @@ config AMD_NB
- 	def_bool y
- 	depends on CPU_SUP_AMD && PCI
- 
--config RAPIDIO
--	tristate "RapidIO support"
--	depends on PCI
--	default n
--	help
--	  If enabled this option will include drivers and the core
--	  infrastructure code to support RapidIO interconnect devices.
--
--source "drivers/rapidio/Kconfig"
--
- config X86_SYSFB
- 	bool "Mark VGA/VBE/EFI FB as generic system framebuffer"
+@@ -944,10 +944,6 @@ config FSL_GTM
  	help
-diff --git a/drivers/Kconfig b/drivers/Kconfig
-index 58ee88c36cf5..065d308fcb00 100644
---- a/drivers/Kconfig
-+++ b/drivers/Kconfig
-@@ -6,6 +6,7 @@ menu "Device Drivers"
- source "drivers/amba/Kconfig"
- source "drivers/pci/Kconfig"
- source "drivers/pcmcia/Kconfig"
-+source "drivers/rapidio/Kconfig"
+ 	  Freescale General-purpose Timers support
  
+-# Yes MCA RS/6000s exist but Linux-PPC does not currently support any
+-config MCA
+-	bool
+-
+ config PCI_DOMAINS
+ 	def_bool PCI
  
- source "drivers/base/Kconfig"
-diff --git a/drivers/rapidio/Kconfig b/drivers/rapidio/Kconfig
-index d6d2f20c4597..102f4989c11a 100644
---- a/drivers/rapidio/Kconfig
-+++ b/drivers/rapidio/Kconfig
-@@ -1,6 +1,17 @@
- #
- # RapidIO configuration
- #
-+
-+config HAS_RAPIDIO
-+	bool
-+
-+menuconfig RAPIDIO
-+	tristate "RapidIO support"
-+	depends on HAS_RAPIDIO || PCI
-+	help
-+	  If you say Y here, the kernel will include drivers and
-+	  infrastructure code to support RapidIO interconnect devices.
-+
- source "drivers/rapidio/devices/Kconfig"
+diff --git a/drivers/scsi/Kconfig b/drivers/scsi/Kconfig
+index 7c097006c54d..d3734c54aec9 100644
+--- a/drivers/scsi/Kconfig
++++ b/drivers/scsi/Kconfig
+@@ -535,7 +535,7 @@ config SCSI_HPTIOP
  
- config RAPIDIO_DISC_TIMEOUT
+ config SCSI_BUSLOGIC
+ 	tristate "BusLogic SCSI support"
+-	depends on (PCI || ISA || MCA) && SCSI && ISA_DMA_API && VIRT_TO_BUS
++	depends on (PCI || ISA) && SCSI && ISA_DMA_API && VIRT_TO_BUS
+ 	---help---
+ 	  This is support for BusLogic MultiMaster and FlashPoint SCSI Host
+ 	  Adapters. Consult the SCSI-HOWTO, available from
+@@ -1142,12 +1142,12 @@ config SCSI_LPFC_DEBUG_FS
+ 
+ config SCSI_SIM710
+ 	tristate "Simple 53c710 SCSI support (Compaq, NCR machines)"
+-	depends on (EISA || MCA) && SCSI
++	depends on EISA && SCSI
+ 	select SCSI_SPI_ATTRS
+ 	---help---
+ 	  This driver is for NCR53c710 based SCSI host adapters.
+ 
+-	  It currently supports Compaq EISA cards and NCR MCA cards
++	  It currently supports Compaq EISA cards.
+ 
+ config SCSI_DC395x
+ 	tristate "Tekram DC395(U/UW/F) and DC315(U) SCSI support"
 -- 
 2.19.1
 
