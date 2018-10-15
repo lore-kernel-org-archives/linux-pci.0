@@ -2,114 +2,144 @@ Return-Path: <SRS0=/yaj=M3=vger.kernel.org=linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-8.7 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_PASS,UNPARSEABLE_RELAY,
-	URIBL_BLOCKED,USER_AGENT_GIT autolearn=unavailable autolearn_force=no
-	version=3.4.0
+X-Spam-Status: No, score=-0.7 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+	MAILING_LIST_MULTI,SPF_PASS,UNPARSEABLE_RELAY,URIBL_BLOCKED autolearn=ham
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id BABD8C7112A
-	for <linux-pci@archiver.kernel.org>; Mon, 15 Oct 2018 05:45:52 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 86A44C28CF8
+	for <linux-pci@archiver.kernel.org>; Mon, 15 Oct 2018 06:06:02 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 8A00A204FD
-	for <linux-pci@archiver.kernel.org>; Mon, 15 Oct 2018 05:45:52 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.3.2 mail.kernel.org 8A00A204FD
+	by mail.kernel.org (Postfix) with ESMTP id 4DE5B2086A
+	for <linux-pci@archiver.kernel.org>; Mon, 15 Oct 2018 06:06:02 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.3.2 mail.kernel.org 4DE5B2086A
 Authentication-Results: mail.kernel.org; dmarc=none (p=none dis=none) header.from=mediatek.com
 Authentication-Results: mail.kernel.org; spf=none smtp.mailfrom=linux-pci-owner@vger.kernel.org
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726687AbeJON2s (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Mon, 15 Oct 2018 09:28:48 -0400
-Received: from mailgw01.mediatek.com ([210.61.82.183]:48703 "EHLO
-        mailgw01.mediatek.com" rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org
-        with ESMTP id S1726553AbeJON2r (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Mon, 15 Oct 2018 09:28:47 -0400
-X-UUID: 5b197c3fc09b4f3fa1a0016a6fd96ed6-20181015
-X-UUID: 5b197c3fc09b4f3fa1a0016a6fd96ed6-20181015
-Received: from mtkcas08.mediatek.inc [(172.21.101.126)] by mailgw01.mediatek.com
-        (envelope-from <honghui.zhang@mediatek.com>)
+        id S1726474AbeJONtr (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Mon, 15 Oct 2018 09:49:47 -0400
+Received: from mailgw02.mediatek.com ([210.61.82.184]:38999 "EHLO
+        mailgw02.mediatek.com" rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org
+        with ESMTP id S1726401AbeJONtr (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Mon, 15 Oct 2018 09:49:47 -0400
+X-UUID: 84507e3de42a467bbddde0788015103e-20181015
+X-UUID: 84507e3de42a467bbddde0788015103e-20181015
+Received: from mtkcas09.mediatek.inc [(172.21.101.178)] by mailgw02.mediatek.com
+        (envelope-from <ryder.lee@mediatek.com>)
         (mhqrelay.mediatek.com ESMTP with TLS)
-        with ESMTP id 866280829; Mon, 15 Oct 2018 13:44:59 +0800
-Received: from mtkcas08.mediatek.inc (172.21.101.126) by
+        with ESMTP id 166524223; Mon, 15 Oct 2018 14:05:55 +0800
+Received: from MTKCAS06.mediatek.inc (172.21.101.30) by
  mtkmbs01n1.mediatek.inc (172.21.101.68) with Microsoft SMTP Server (TLS) id
- 15.0.1395.4; Mon, 15 Oct 2018 13:44:57 +0800
-Received: from localhost.localdomain (10.17.3.153) by mtkcas08.mediatek.inc
+ 15.0.1395.4; Mon, 15 Oct 2018 14:05:54 +0800
+Received: from [172.21.77.33] (172.21.77.33) by MTKCAS06.mediatek.inc
  (172.21.101.73) with Microsoft SMTP Server id 15.0.1395.4 via Frontend
- Transport; Mon, 15 Oct 2018 13:44:56 +0800
-From:   <honghui.zhang@mediatek.com>
-To:     <lorenzo.pieralisi@arm.com>, <bhelgaas@google.com>,
+ Transport; Mon, 15 Oct 2018 14:05:54 +0800
+Message-ID: <1539583554.20626.2.camel@mtkswgap22>
+Subject: Re: [PATCH v7 0/9] PCI: mediatek: fixup find_port, enable_msi and
+ add PM, module support
+From:   Ryder Lee <ryder.lee@mediatek.com>
+To:     <honghui.zhang@mediatek.com>
+CC:     <lorenzo.pieralisi@arm.com>, <bhelgaas@google.com>,
         <linux-arm-kernel@lists.infradead.org>,
         <linux-mediatek@lists.infradead.org>, <linux-pci@vger.kernel.org>,
-        <linux-kernel@vger.kernel.org>, <ryder.lee@mediatek.com>
-CC:     <ulf.hansson@linaro.org>, <marc.zyngier@arm.com>,
-        <matthias.bgg@gmail.com>, <devicetree@vger.kernel.org>,
-        <yingjoe.chen@mediatek.com>, <eddie.huang@mediatek.com>,
-        <honghui.zhang@mediatek.com>, <youlin.pei@mediatek.com>,
+        <linux-kernel@vger.kernel.org>, <ulf.hansson@linaro.org>,
+        <marc.zyngier@arm.com>, <matthias.bgg@gmail.com>,
+        <devicetree@vger.kernel.org>, <yingjoe.chen@mediatek.com>,
+        <eddie.huang@mediatek.com>, <youlin.pei@mediatek.com>,
         <yt.shen@mediatek.com>, <jianjun.wang@mediatek.com>
-Subject: [PATCH v7 8/9] PCI: mediatek: Save the GIC IRQ in mtk_pcie_port
-Date:   Mon, 15 Oct 2018 13:44:46 +0800
-Message-ID: <1539582287-9171-9-git-send-email-honghui.zhang@mediatek.com>
-X-Mailer: git-send-email 2.6.4
+Date:   Mon, 15 Oct 2018 14:05:54 +0800
 In-Reply-To: <1539582287-9171-1-git-send-email-honghui.zhang@mediatek.com>
 References: <1539582287-9171-1-git-send-email-honghui.zhang@mediatek.com>
+Content-Type: text/plain; charset="UTF-8"
+X-Mailer: Evolution 3.2.3-0ubuntu6 
+Content-Transfer-Encoding: 7bit
 MIME-Version: 1.0
-Content-Type: text/plain
 X-MTK:  N
 Sender: linux-pci-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-From: Honghui Zhang <honghui.zhang@mediatek.com>
+On Mon, 2018-10-15 at 13:44 +0800, honghui.zhang@mediatek.com wrote:
+> From: Honghui Zhang <honghui.zhang@mediatek.com>
+> 
+> This patchset includes misc patchs:
+> 
+> The patch 1 fixup the mtk_pcie_find_port logic which will cause system
+> could not touch the EP's configuration space that connected to PCIe slot 1.
+> 
+> The patch 2 fixup the class type for MT7622.
+> The patch 6 fixup the enable msi logic, the operation to enable MSI
+> should be after system clock is enabled. Call mtk_pcie_enable_msi in
+> mtk_pcie_startup_port_v2 since the clock was all enabled at that time.
+> 
+> The patch 7 was rebased and refactor of the v4 patch[1], changes are:
+>  -Add PM support for MT7622.
+>  -Using mtk_pcie_enable_port to re-establish the link when resumed.
+>  -Rebased on this patchset.
+> 
+> The patch 9 add loadable kernel module support.
+> 
+> [1] https://patchwork.kernel.org/patch/10479079
+> 
+> Change since v6:
+>  - Remove the pci_unmap_iospace when remove the device since the
+>    devm_pci_remap_iospace is an devm_ version.
+>  - Commit message changed for patch 2(Fix class type for MT7622 as PCI_CLASS_BRIDGE_PCI).
+>  - Capitilizing "MSI" and "PM" in the patch title.
+> 
+> Change since v5:
+>  - A bit improvement of mtk_pcie_find_port suggest by Lorenzo.
+>  - Add fixup tags of fix enable MSI logic in patch 6.
+>  - Add Acked-by tags from Ryder.
+> 
+> Change since v4:
+>  - Add patch 2 to fixup class type for MT7622.
+>  - Add patch 3 to remove the redundant dev->pm_domain check
+>  - Add patch 4 to covert to use pci_host_probe
+>  - Add patch 5 to re-arrange the function define, this is a prepare patch for
+>    fixup the enable_msi logic, no functional changed have been made by this one.
+>  - Add patch 8 to save the GIC IRQ in mtk_pcie_port as a prepare patch for tear
+>    down the irq when remove the kernel module.
+>  - Re-arrange the find_port flow suggest by Lorenzo to make the code parse easier
+>    for the patch 1.
+>  - Remove the .pm_support in mtk_pcie_soc in patch 7 since if system pm was not
+>    supported, then those pm callbacks will never be executed for MT7622. So the
+>    .pm_support is not needed.
+> 
+> Change since v3:
+>  - Remove pm_runtime_XXX ops in suspend and resume callbacks in the third patch.
+>  - Rebase to 4.19-rc1.
+> 
+> Change since v2:
+>  - Fix the list_for_each_entry_safe parameter error.
+>  - Add Ryder's Acked-by flag.
+> 
+> Change since v1:
+>  - A bit of code refact of the first patch suggested by Andy Shevchenko, and
+>    commit message updated.
+> 
+> Honghui Zhang (9):
+>   PCI: mediatek: Using slot's devfn for compare to fix
+>     mtk_pcie_find_port logic
+>   PCI: mediatek: Fix class type for MT7622 as PCI_CLASS_BRIDGE_PCI
+>   PCI: mediatek: Remove the redundant dev->pm_domain check
+>   PCI: mediatek: Convert to use pci_host_probe()
+>   PCI: mediatek: Move the mtk_pcie_startup_port_v2 function's define
+>     after mtk_pcie_setup_irq
+>   PCI: mediatek: Fixup enable MSI logic by enable MSI after clock
+>     enabled
+>   PCI: mediatek: Add system PM support for MT2712 and MT7622
+>   PCI: mediatek: Save the GIC IRQ in mtk_pcie_port
+>   PCI: mediatek: Add loadable kernel module support
+> 
+>  drivers/pci/controller/Kconfig         |   2 +-
+>  drivers/pci/controller/pcie-mediatek.c | 319 +++++++++++++++++++++------------
+>  2 files changed, 204 insertions(+), 117 deletions(-)
 
-Need to save the PCIe's GIC IRQ for dispose_irq, this is a prepare
-patch for add mediatek PCIe module support to tear down the IRQ, no
-functional changed.
 
-Signed-off-by: Honghui Zhang <honghui.zhang@mediatek.com>
----
- drivers/pci/controller/pcie-mediatek.c | 9 ++++++---
- 1 file changed, 6 insertions(+), 3 deletions(-)
+You forgot to add my Acked-by tags in v7.
 
-diff --git a/drivers/pci/controller/pcie-mediatek.c b/drivers/pci/controller/pcie-mediatek.c
-index 42cf2a4..daba78f 100644
---- a/drivers/pci/controller/pcie-mediatek.c
-+++ b/drivers/pci/controller/pcie-mediatek.c
-@@ -162,6 +162,7 @@ struct mtk_pcie_soc {
-  * @phy: pointer to PHY control block
-  * @lane: lane count
-  * @slot: port slot
-+ * @irq: GIC irq
-  * @irq_domain: legacy INTx IRQ domain
-  * @inner_domain: inner IRQ domain
-  * @msi_domain: MSI IRQ domain
-@@ -182,6 +183,7 @@ struct mtk_pcie_port {
- 	struct phy *phy;
- 	u32 lane;
- 	u32 slot;
-+	int irq;
- 	struct irq_domain *irq_domain;
- 	struct irq_domain *inner_domain;
- 	struct irq_domain *msi_domain;
-@@ -620,7 +622,7 @@ static int mtk_pcie_setup_irq(struct mtk_pcie_port *port,
- 	struct mtk_pcie *pcie = port->pcie;
- 	struct device *dev = pcie->dev;
- 	struct platform_device *pdev = to_platform_device(dev);
--	int err, irq;
-+	int err;
- 
- 	err = mtk_pcie_init_irq_domain(port, node);
- 	if (err) {
-@@ -628,8 +630,9 @@ static int mtk_pcie_setup_irq(struct mtk_pcie_port *port,
- 		return err;
- 	}
- 
--	irq = platform_get_irq(pdev, port->slot);
--	irq_set_chained_handler_and_data(irq, mtk_pcie_intr_handler, port);
-+	port->irq = platform_get_irq(pdev, port->slot);
-+	irq_set_chained_handler_and_data(port->irq,
-+					 mtk_pcie_intr_handler, port);
- 
- 	return 0;
- }
--- 
-2.6.4
+Acked-by: Ryder Lee <ryder.lee@mediatek.com> for the series.
+
+Thanks.
 
