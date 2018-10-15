@@ -2,144 +2,125 @@ Return-Path: <SRS0=/yaj=M3=vger.kernel.org=linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-0.7 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	MAILING_LIST_MULTI,SPF_PASS,UNPARSEABLE_RELAY,URIBL_BLOCKED autolearn=ham
-	autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-6.8 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
+	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
+	SPF_PASS,URIBL_BLOCKED autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 86A44C28CF8
-	for <linux-pci@archiver.kernel.org>; Mon, 15 Oct 2018 06:06:02 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id C9B2CC28CF8
+	for <linux-pci@archiver.kernel.org>; Mon, 15 Oct 2018 06:43:43 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 4DE5B2086A
-	for <linux-pci@archiver.kernel.org>; Mon, 15 Oct 2018 06:06:02 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.3.2 mail.kernel.org 4DE5B2086A
-Authentication-Results: mail.kernel.org; dmarc=none (p=none dis=none) header.from=mediatek.com
+	by mail.kernel.org (Postfix) with ESMTP id 89D8A2087D
+	for <linux-pci@archiver.kernel.org>; Mon, 15 Oct 2018 06:43:43 +0000 (UTC)
+Authentication-Results: mail.kernel.org;
+	dkim=pass (2048-bit key) header.d=nifty.com header.i=@nifty.com header.b="zdZrATFA"
+DMARC-Filter: OpenDMARC Filter v1.3.2 mail.kernel.org 89D8A2087D
+Authentication-Results: mail.kernel.org; dmarc=none (p=none dis=none) header.from=socionext.com
 Authentication-Results: mail.kernel.org; spf=none smtp.mailfrom=linux-pci-owner@vger.kernel.org
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726474AbeJONtr (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Mon, 15 Oct 2018 09:49:47 -0400
-Received: from mailgw02.mediatek.com ([210.61.82.184]:38999 "EHLO
-        mailgw02.mediatek.com" rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org
-        with ESMTP id S1726401AbeJONtr (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Mon, 15 Oct 2018 09:49:47 -0400
-X-UUID: 84507e3de42a467bbddde0788015103e-20181015
-X-UUID: 84507e3de42a467bbddde0788015103e-20181015
-Received: from mtkcas09.mediatek.inc [(172.21.101.178)] by mailgw02.mediatek.com
-        (envelope-from <ryder.lee@mediatek.com>)
-        (mhqrelay.mediatek.com ESMTP with TLS)
-        with ESMTP id 166524223; Mon, 15 Oct 2018 14:05:55 +0800
-Received: from MTKCAS06.mediatek.inc (172.21.101.30) by
- mtkmbs01n1.mediatek.inc (172.21.101.68) with Microsoft SMTP Server (TLS) id
- 15.0.1395.4; Mon, 15 Oct 2018 14:05:54 +0800
-Received: from [172.21.77.33] (172.21.77.33) by MTKCAS06.mediatek.inc
- (172.21.101.73) with Microsoft SMTP Server id 15.0.1395.4 via Frontend
- Transport; Mon, 15 Oct 2018 14:05:54 +0800
-Message-ID: <1539583554.20626.2.camel@mtkswgap22>
-Subject: Re: [PATCH v7 0/9] PCI: mediatek: fixup find_port, enable_msi and
- add PM, module support
-From:   Ryder Lee <ryder.lee@mediatek.com>
-To:     <honghui.zhang@mediatek.com>
-CC:     <lorenzo.pieralisi@arm.com>, <bhelgaas@google.com>,
-        <linux-arm-kernel@lists.infradead.org>,
-        <linux-mediatek@lists.infradead.org>, <linux-pci@vger.kernel.org>,
-        <linux-kernel@vger.kernel.org>, <ulf.hansson@linaro.org>,
-        <marc.zyngier@arm.com>, <matthias.bgg@gmail.com>,
-        <devicetree@vger.kernel.org>, <yingjoe.chen@mediatek.com>,
-        <eddie.huang@mediatek.com>, <youlin.pei@mediatek.com>,
-        <yt.shen@mediatek.com>, <jianjun.wang@mediatek.com>
-Date:   Mon, 15 Oct 2018 14:05:54 +0800
-In-Reply-To: <1539582287-9171-1-git-send-email-honghui.zhang@mediatek.com>
-References: <1539582287-9171-1-git-send-email-honghui.zhang@mediatek.com>
-Content-Type: text/plain; charset="UTF-8"
-X-Mailer: Evolution 3.2.3-0ubuntu6 
-Content-Transfer-Encoding: 7bit
+        id S1726436AbeJOO1h (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Mon, 15 Oct 2018 10:27:37 -0400
+Received: from condef-09.nifty.com ([202.248.20.74]:40256 "EHLO
+        condef-09.nifty.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726404AbeJOO1g (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Mon, 15 Oct 2018 10:27:36 -0400
+Received: from conssluserg-05.nifty.com ([10.126.8.84])by condef-09.nifty.com with ESMTP id w9F6aRx1029886;
+        Mon, 15 Oct 2018 15:36:27 +0900
+Received: from mail-vs1-f51.google.com (mail-vs1-f51.google.com [209.85.217.51]) (authenticated)
+        by conssluserg-05.nifty.com with ESMTP id w9F6aIMV032480;
+        Mon, 15 Oct 2018 15:36:18 +0900
+DKIM-Filter: OpenDKIM Filter v2.10.3 conssluserg-05.nifty.com w9F6aIMV032480
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=nifty.com;
+        s=dec2015msa; t=1539585379;
+        bh=WTSQTIo6lZvTTDeUHanOaS24TqjvzaMlov8TsHwIzBs=;
+        h=References:In-Reply-To:From:Date:Subject:To:Cc:From;
+        b=zdZrATFANN/2Gsg0uxCwo3kTQxSkK2pKeslTA5wMSYlICoH3n2wlsZ+UnSPSf0b24
+         1K279Ng4QtuVZpRY+yuDhZPkbZorJlkQ+NJKyenJaSqIGLTrzjsf8/D1u1f8PvZyuF
+         2fcbqRfkc412xgfuJ1V2EwRQ0A13KcmkYSyh8xYCSdXDTMLUPBMk0D+8WImrLSFZG6
+         kJ2BXPXEJCEne20dotXU+EzcpSjTdWCQG6PJfzcb4hmC5mWKHw7PaV5bhnP/Xuob8p
+         3ibWeEmBhncPvwlCJdKXwrIhteucwJzqtoFFZS2Qe95aU84syH/vhCgxJmJEtkqXY7
+         /cxhZnYStcvfg==
+X-Nifty-SrcIP: [209.85.217.51]
+Received: by mail-vs1-f51.google.com with SMTP id c10so15628037vsk.2;
+        Sun, 14 Oct 2018 23:36:18 -0700 (PDT)
+X-Gm-Message-State: ABuFfoi+QcxjAERBO8dJ/Mi0b/HVT6wkKZGSNnboSh0KF2ZtSQOdvKCC
+        S7HJQV1d5g00XoW3OVBNJJUWFUaf/eDPPsTYcMk=
+X-Google-Smtp-Source: ACcGV61bTrA4Ownqel0P+8B+UG8xFSuByfdf/oRyq6iCpmZPeHKuZIcjxmqqkrLsL+9ptlTNIYcxYD0BF+5qpcMN5yc=
+X-Received: by 2002:a67:3793:: with SMTP id j19mr6061000vsi.215.1539585377442;
+ Sun, 14 Oct 2018 23:36:17 -0700 (PDT)
 MIME-Version: 1.0
-X-MTK:  N
+References: <20181013151016.31674-1-hch@lst.de> <20181013151016.31674-3-hch@lst.de>
+In-Reply-To: <20181013151016.31674-3-hch@lst.de>
+From:   Masahiro Yamada <yamada.masahiro@socionext.com>
+Date:   Mon, 15 Oct 2018 15:35:41 +0900
+X-Gmail-Original-Message-ID: <CAK7LNAQxZcBNadLJhfrmxJGj-XJFVaya3Z1eexZp20vRPwrN7A@mail.gmail.com>
+Message-ID: <CAK7LNAQxZcBNadLJhfrmxJGj-XJFVaya3Z1eexZp20vRPwrN7A@mail.gmail.com>
+Subject: Re: [PATCH 2/8] powerpc: simplify CONFIG_PCI_QSPAN Kconfig magic
+To:     Christoph Hellwig <hch@lst.de>
+Cc:     mporter@kernel.crashing.org, alex.bou9@gmail.com,
+        Dominik Brodowski <linux@dominikbrodowski.net>,
+        Linux Kbuild mailing list <linux-kbuild@vger.kernel.org>,
+        linux-pci@vger.kernel.org, linux-scsi <linux-scsi@vger.kernel.org>,
+        linux-arch <linux-arch@vger.kernel.org>,
+        Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
+        linuxppc-dev <linuxppc-dev@lists.ozlabs.org>
+Content-Type: text/plain; charset="UTF-8"
 Sender: linux-pci-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-On Mon, 2018-10-15 at 13:44 +0800, honghui.zhang@mediatek.com wrote:
-> From: Honghui Zhang <honghui.zhang@mediatek.com>
-> 
-> This patchset includes misc patchs:
-> 
-> The patch 1 fixup the mtk_pcie_find_port logic which will cause system
-> could not touch the EP's configuration space that connected to PCIe slot 1.
-> 
-> The patch 2 fixup the class type for MT7622.
-> The patch 6 fixup the enable msi logic, the operation to enable MSI
-> should be after system clock is enabled. Call mtk_pcie_enable_msi in
-> mtk_pcie_startup_port_v2 since the clock was all enabled at that time.
-> 
-> The patch 7 was rebased and refactor of the v4 patch[1], changes are:
->  -Add PM support for MT7622.
->  -Using mtk_pcie_enable_port to re-establish the link when resumed.
->  -Rebased on this patchset.
-> 
-> The patch 9 add loadable kernel module support.
-> 
-> [1] https://patchwork.kernel.org/patch/10479079
-> 
-> Change since v6:
->  - Remove the pci_unmap_iospace when remove the device since the
->    devm_pci_remap_iospace is an devm_ version.
->  - Commit message changed for patch 2(Fix class type for MT7622 as PCI_CLASS_BRIDGE_PCI).
->  - Capitilizing "MSI" and "PM" in the patch title.
-> 
-> Change since v5:
->  - A bit improvement of mtk_pcie_find_port suggest by Lorenzo.
->  - Add fixup tags of fix enable MSI logic in patch 6.
->  - Add Acked-by tags from Ryder.
-> 
-> Change since v4:
->  - Add patch 2 to fixup class type for MT7622.
->  - Add patch 3 to remove the redundant dev->pm_domain check
->  - Add patch 4 to covert to use pci_host_probe
->  - Add patch 5 to re-arrange the function define, this is a prepare patch for
->    fixup the enable_msi logic, no functional changed have been made by this one.
->  - Add patch 8 to save the GIC IRQ in mtk_pcie_port as a prepare patch for tear
->    down the irq when remove the kernel module.
->  - Re-arrange the find_port flow suggest by Lorenzo to make the code parse easier
->    for the patch 1.
->  - Remove the .pm_support in mtk_pcie_soc in patch 7 since if system pm was not
->    supported, then those pm callbacks will never be executed for MT7622. So the
->    .pm_support is not needed.
-> 
-> Change since v3:
->  - Remove pm_runtime_XXX ops in suspend and resume callbacks in the third patch.
->  - Rebase to 4.19-rc1.
-> 
-> Change since v2:
->  - Fix the list_for_each_entry_safe parameter error.
->  - Add Ryder's Acked-by flag.
-> 
-> Change since v1:
->  - A bit of code refact of the first patch suggested by Andy Shevchenko, and
->    commit message updated.
-> 
-> Honghui Zhang (9):
->   PCI: mediatek: Using slot's devfn for compare to fix
->     mtk_pcie_find_port logic
->   PCI: mediatek: Fix class type for MT7622 as PCI_CLASS_BRIDGE_PCI
->   PCI: mediatek: Remove the redundant dev->pm_domain check
->   PCI: mediatek: Convert to use pci_host_probe()
->   PCI: mediatek: Move the mtk_pcie_startup_port_v2 function's define
->     after mtk_pcie_setup_irq
->   PCI: mediatek: Fixup enable MSI logic by enable MSI after clock
->     enabled
->   PCI: mediatek: Add system PM support for MT2712 and MT7622
->   PCI: mediatek: Save the GIC IRQ in mtk_pcie_port
->   PCI: mediatek: Add loadable kernel module support
-> 
->  drivers/pci/controller/Kconfig         |   2 +-
->  drivers/pci/controller/pcie-mediatek.c | 319 +++++++++++++++++++++------------
->  2 files changed, 204 insertions(+), 117 deletions(-)
+On Sun, Oct 14, 2018 at 12:11 AM Christoph Hellwig <hch@lst.de> wrote:
+>
+> The way how CONFIG_PCI_QSPAN selects the CONFIG_PCI default is highly
+> unusual and gets in the way of moving CONFIG_PCI into
+> drivers/pci/Kconfig.  Simplify it by just having it depend on
+> CONFIG_PCI.
+>
+> Signed-off-by: Christoph Hellwig <hch@lst.de>
+> ---
+>  arch/powerpc/Kconfig | 3 +--
+>  1 file changed, 1 insertion(+), 2 deletions(-)
+>
+> diff --git a/arch/powerpc/Kconfig b/arch/powerpc/Kconfig
+> index a80669209155..6fa6f92edb7f 100644
+> --- a/arch/powerpc/Kconfig
+> +++ b/arch/powerpc/Kconfig
+> @@ -955,7 +955,6 @@ config PCI
+>         bool "PCI support" if PPC_PCI_CHOICE
+>         default y if !40x && !CPM2 && !PPC_8xx && !PPC_83xx \
+>                 && !PPC_85xx && !PPC_86xx && !GAMECUBE_COMMON
+> -       default PCI_QSPAN if PPC_8xx
+>         select GENERIC_PCI_IOMAP
+>         help
+>           Find out whether your system includes a PCI bus. PCI is the name of
+> @@ -971,7 +970,7 @@ config PCI_SYSCALL
+>
+>  config PCI_QSPAN
+>         bool "QSpan PCI"
+> -       depends on PPC_8xx
+> +       depends on PPC_8xx && PCI
+>         select PPC_I8259
+>         help
+>           Say Y here if you have a system based on a Motorola 8xx-series
+> --
+> 2.19.1
+>
 
 
-You forgot to add my Acked-by tags in v7.
 
-Acked-by: Ryder Lee <ryder.lee@mediatek.com> for the series.
+'git grep' did not get any other hit.
 
-Thanks.
+masahiro@pug:~/ref/linux$ git grep PCI_QSPAN
+arch/powerpc/Kconfig:   default PCI_QSPAN if PPC_8xx
+arch/powerpc/Kconfig:config PCI_QSPAN
 
+With your patch, PCI_QSPAN will become
+a dead config option.
+
+How about removing it entirely?
+
+
+
+--
+Best Regards
+Masahiro Yamada
