@@ -6,30 +6,30 @@ X-Spam-Status: No, score=-8.7 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
 	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_PASS,UNPARSEABLE_RELAY,
 	URIBL_BLOCKED,USER_AGENT_GIT autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 54817C28CF8
-	for <linux-pci@archiver.kernel.org>; Mon, 15 Oct 2018 05:45:03 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id D60E3C28CF8
+	for <linux-pci@archiver.kernel.org>; Mon, 15 Oct 2018 05:45:12 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 2673B20890
-	for <linux-pci@archiver.kernel.org>; Mon, 15 Oct 2018 05:45:03 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.3.2 mail.kernel.org 2673B20890
+	by mail.kernel.org (Postfix) with ESMTP id A7918204FD
+	for <linux-pci@archiver.kernel.org>; Mon, 15 Oct 2018 05:45:12 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.3.2 mail.kernel.org A7918204FD
 Authentication-Results: mail.kernel.org; dmarc=none (p=none dis=none) header.from=mediatek.com
 Authentication-Results: mail.kernel.org; spf=none smtp.mailfrom=linux-pci-owner@vger.kernel.org
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726566AbeJON2n (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Mon, 15 Oct 2018 09:28:43 -0400
-Received: from mailgw01.mediatek.com ([210.61.82.183]:34098 "EHLO
-        mailgw01.mediatek.com" rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org
-        with ESMTP id S1726098AbeJON2m (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Mon, 15 Oct 2018 09:28:42 -0400
-X-UUID: 8f4c69b7527343c9a4a213854fe68d24-20181015
-X-UUID: 8f4c69b7527343c9a4a213854fe68d24-20181015
-Received: from mtkcas07.mediatek.inc [(172.21.101.84)] by mailgw01.mediatek.com
+        id S1727013AbeJON2w (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Mon, 15 Oct 2018 09:28:52 -0400
+Received: from mailgw02.mediatek.com ([210.61.82.184]:15915 "EHLO
+        mailgw02.mediatek.com" rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org
+        with ESMTP id S1726663AbeJON2v (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Mon, 15 Oct 2018 09:28:51 -0400
+X-UUID: f457e6d1e0234f75a2ca186a799dc132-20181015
+X-UUID: f457e6d1e0234f75a2ca186a799dc132-20181015
+Received: from mtkexhb02.mediatek.inc [(172.21.101.103)] by mailgw02.mediatek.com
         (envelope-from <honghui.zhang@mediatek.com>)
         (mhqrelay.mediatek.com ESMTP with TLS)
-        with ESMTP id 667844826; Mon, 15 Oct 2018 13:44:53 +0800
+        with ESMTP id 1005407080; Mon, 15 Oct 2018 13:44:52 +0800
 Received: from mtkcas08.mediatek.inc (172.21.101.126) by
- mtkmbs01n2.mediatek.inc (172.21.101.79) with Microsoft SMTP Server (TLS) id
- 15.0.1395.4; Mon, 15 Oct 2018 13:44:51 +0800
+ mtkmbs08n1.mediatek.inc (172.21.101.55) with Microsoft SMTP Server (TLS) id
+ 15.0.1395.4; Mon, 15 Oct 2018 13:44:50 +0800
 Received: from localhost.localdomain (10.17.3.153) by mtkcas08.mediatek.inc
  (172.21.101.73) with Microsoft SMTP Server id 15.0.1395.4 via Frontend
  Transport; Mon, 15 Oct 2018 13:44:50 +0800
@@ -43,15 +43,14 @@ CC:     <ulf.hansson@linaro.org>, <marc.zyngier@arm.com>,
         <yingjoe.chen@mediatek.com>, <eddie.huang@mediatek.com>,
         <honghui.zhang@mediatek.com>, <youlin.pei@mediatek.com>,
         <yt.shen@mediatek.com>, <jianjun.wang@mediatek.com>
-Subject: [PATCH v7 2/9] PCI: mediatek: Fix class type for MT7622 as PCI_CLASS_BRIDGE_PCI
-Date:   Mon, 15 Oct 2018 13:44:40 +0800
-Message-ID: <1539582287-9171-3-git-send-email-honghui.zhang@mediatek.com>
+Subject: [PATCH v7 1/9] PCI: mediatek: Using slot's devfn for compare to fix mtk_pcie_find_port logic
+Date:   Mon, 15 Oct 2018 13:44:39 +0800
+Message-ID: <1539582287-9171-2-git-send-email-honghui.zhang@mediatek.com>
 X-Mailer: git-send-email 2.6.4
 In-Reply-To: <1539582287-9171-1-git-send-email-honghui.zhang@mediatek.com>
 References: <1539582287-9171-1-git-send-email-honghui.zhang@mediatek.com>
 MIME-Version: 1.0
 Content-Type: text/plain
-X-TM-SNTS-SMTP: B4B361F3B013D77587189E47996C243E9B52A8380CF4B87104C662071EF591722000:8
 X-MTK:  N
 Sender: linux-pci-owner@vger.kernel.org
 Precedence: bulk
@@ -60,37 +59,61 @@ X-Mailing-List: linux-pci@vger.kernel.org
 
 From: Honghui Zhang <honghui.zhang@mediatek.com>
 
-The commit 101c92dc80c8 ("PCI: mediatek: Set up vendor ID and class
-type for MT7622") have set the class type for MT7622 as un-properly
-value of PCI_CLASS_BRIDGE_HOST.
+The Mediatek's host controller has two slots, each with it's own control
+registers. The host driver need to identify which slot was connected
+in order to access the device's configuration space. There's problem
+for current host driver to find out which slot was connected to for
+a given EP device.
 
-The PCIe controller of MT7622 is complexed with Root Port and PCI-to-PCI
-bridge, the bridge has type 1 configuration space header and related bridge
-windows. The HW default value of this bridge's class type is invalid. Fix
-its class type as PCI_CLASS_BRIDGE_PCI since it is HW defines.
+Assuming each slot have connect with one EP device as below:
 
-Making the bridge visiable to PCI framework by setting its class type
-properly will get its bridge windows configurated during PCI device
-enumerate.
+                host bridge
+  bus 0 --> __________|_______
+           |                  |
+           |                  |
+         slot 0             slot 1
+  bus 1 -->|        bus 2 --> |
+           |                  |
+         EP 0               EP 1
+
+During PCI enumeration, system software will scan all the PCI device
+starting from devfn 0. So it will get the proper port for slot0 and
+slot1 device when using PCI_SLOT(devfn) for match. But it will get
+the wrong slot for EP1: The devfn will be start from 0 when scanning
+EP1 behind slot1, it will get port0 since the PCI_SLOT(EP1) is match
+for port0's slot value. So the host driver should not using EP's devfn
+but the slot's devfn(the slot which EP was connected to) for match.
+
+This patch fix the mtk_pcie_find_port's logic by using the slot's
+devfn for match if finding device connected to the subordinate bus.
 
 Signed-off-by: Honghui Zhang <honghui.zhang@mediatek.com>
 ---
- drivers/pci/controller/pcie-mediatek.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+ drivers/pci/controller/pcie-mediatek.c | 11 +++++++++++
+ 1 file changed, 11 insertions(+)
 
 diff --git a/drivers/pci/controller/pcie-mediatek.c b/drivers/pci/controller/pcie-mediatek.c
-index 288b8e2..bcdac9b 100644
+index 9999dae..288b8e2 100644
 --- a/drivers/pci/controller/pcie-mediatek.c
 +++ b/drivers/pci/controller/pcie-mediatek.c
-@@ -432,7 +432,7 @@ static int mtk_pcie_startup_port_v2(struct mtk_pcie_port *port)
- 		val = PCI_VENDOR_ID_MEDIATEK;
- 		writew(val, port->base + PCIE_CONF_VEND_ID);
+@@ -337,6 +337,17 @@ static struct mtk_pcie_port *mtk_pcie_find_port(struct pci_bus *bus,
+ {
+ 	struct mtk_pcie *pcie = bus->sysdata;
+ 	struct mtk_pcie_port *port;
++	struct pci_dev *dev = NULL;
++
++	/*
++	 * Walk the bus hierarchy to get the devfn value
++	 * of the port in the root bus.
++	 */
++	while (bus && bus->number) {
++		dev = bus->self;
++		bus = dev->bus;
++		devfn = dev->devfn;
++	}
  
--		val = PCI_CLASS_BRIDGE_HOST;
-+		val = PCI_CLASS_BRIDGE_PCI;
- 		writew(val, port->base + PCIE_CONF_CLASS_ID);
- 	}
- 
+ 	list_for_each_entry(port, &pcie->ports, list)
+ 		if (port->slot == PCI_SLOT(devfn))
 -- 
 2.6.4
 
