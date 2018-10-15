@@ -6,55 +6,56 @@ X-Spam-Status: No, score=-6.8 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
 	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
 	SPF_PASS,URIBL_BLOCKED autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id C9B2CC28CF8
-	for <linux-pci@archiver.kernel.org>; Mon, 15 Oct 2018 06:43:43 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id AEDBBC7112B
+	for <linux-pci@archiver.kernel.org>; Mon, 15 Oct 2018 06:43:44 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 89D8A2087D
-	for <linux-pci@archiver.kernel.org>; Mon, 15 Oct 2018 06:43:43 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 6B7822086A
+	for <linux-pci@archiver.kernel.org>; Mon, 15 Oct 2018 06:43:44 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=nifty.com header.i=@nifty.com header.b="zdZrATFA"
-DMARC-Filter: OpenDMARC Filter v1.3.2 mail.kernel.org 89D8A2087D
+	dkim=pass (2048-bit key) header.d=nifty.com header.i=@nifty.com header.b="YIT2tug1"
+DMARC-Filter: OpenDMARC Filter v1.3.2 mail.kernel.org 6B7822086A
 Authentication-Results: mail.kernel.org; dmarc=none (p=none dis=none) header.from=socionext.com
 Authentication-Results: mail.kernel.org; spf=none smtp.mailfrom=linux-pci-owner@vger.kernel.org
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726436AbeJOO1h (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        id S1726404AbeJOO1h (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
         Mon, 15 Oct 2018 10:27:37 -0400
-Received: from condef-09.nifty.com ([202.248.20.74]:40256 "EHLO
+Received: from condef-09.nifty.com ([202.248.20.74]:40167 "EHLO
         condef-09.nifty.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726404AbeJOO1g (ORCPT
+        with ESMTP id S1726164AbeJOO1g (ORCPT
         <rfc822;linux-pci@vger.kernel.org>); Mon, 15 Oct 2018 10:27:36 -0400
-Received: from conssluserg-05.nifty.com ([10.126.8.84])by condef-09.nifty.com with ESMTP id w9F6aRx1029886;
-        Mon, 15 Oct 2018 15:36:27 +0900
-Received: from mail-vs1-f51.google.com (mail-vs1-f51.google.com [209.85.217.51]) (authenticated)
-        by conssluserg-05.nifty.com with ESMTP id w9F6aIMV032480;
-        Mon, 15 Oct 2018 15:36:18 +0900
-DKIM-Filter: OpenDKIM Filter v2.10.3 conssluserg-05.nifty.com w9F6aIMV032480
+X-Greylist: delayed 323 seconds by postgrey-1.27 at vger.kernel.org; Mon, 15 Oct 2018 10:27:34 EDT
+Received: from conssluserg-02.nifty.com ([10.126.8.81])by condef-09.nifty.com with ESMTP id w9F6c359030066;
+        Mon, 15 Oct 2018 15:38:03 +0900
+Received: from mail-vs1-f45.google.com (mail-vs1-f45.google.com [209.85.217.45]) (authenticated)
+        by conssluserg-02.nifty.com with ESMTP id w9F6bgcK019113;
+        Mon, 15 Oct 2018 15:37:42 +0900
+DKIM-Filter: OpenDKIM Filter v2.10.3 conssluserg-02.nifty.com w9F6bgcK019113
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=nifty.com;
-        s=dec2015msa; t=1539585379;
-        bh=WTSQTIo6lZvTTDeUHanOaS24TqjvzaMlov8TsHwIzBs=;
+        s=dec2015msa; t=1539585463;
+        bh=1AMjU1A6/uICsHilAFIoOIpHvInEhbWkBwxYmpRFp1Y=;
         h=References:In-Reply-To:From:Date:Subject:To:Cc:From;
-        b=zdZrATFANN/2Gsg0uxCwo3kTQxSkK2pKeslTA5wMSYlICoH3n2wlsZ+UnSPSf0b24
-         1K279Ng4QtuVZpRY+yuDhZPkbZorJlkQ+NJKyenJaSqIGLTrzjsf8/D1u1f8PvZyuF
-         2fcbqRfkc412xgfuJ1V2EwRQ0A13KcmkYSyh8xYCSdXDTMLUPBMk0D+8WImrLSFZG6
-         kJ2BXPXEJCEne20dotXU+EzcpSjTdWCQG6PJfzcb4hmC5mWKHw7PaV5bhnP/Xuob8p
-         3ibWeEmBhncPvwlCJdKXwrIhteucwJzqtoFFZS2Qe95aU84syH/vhCgxJmJEtkqXY7
-         /cxhZnYStcvfg==
-X-Nifty-SrcIP: [209.85.217.51]
-Received: by mail-vs1-f51.google.com with SMTP id c10so15628037vsk.2;
-        Sun, 14 Oct 2018 23:36:18 -0700 (PDT)
-X-Gm-Message-State: ABuFfoi+QcxjAERBO8dJ/Mi0b/HVT6wkKZGSNnboSh0KF2ZtSQOdvKCC
-        S7HJQV1d5g00XoW3OVBNJJUWFUaf/eDPPsTYcMk=
-X-Google-Smtp-Source: ACcGV61bTrA4Ownqel0P+8B+UG8xFSuByfdf/oRyq6iCpmZPeHKuZIcjxmqqkrLsL+9ptlTNIYcxYD0BF+5qpcMN5yc=
-X-Received: by 2002:a67:3793:: with SMTP id j19mr6061000vsi.215.1539585377442;
- Sun, 14 Oct 2018 23:36:17 -0700 (PDT)
+        b=YIT2tug1GR0Mfp9osYA8vylx5Jo21YJwqIZBPc0W8ePyG4j2TRktS1dOB5BKtReAF
+         ZO4dVJWXCAQr2O45MTpNdJBoWd+ft/avpbgRy0tfrzrv8r8+OYHT9ACfR+NMQIpx4X
+         uawHGdoZzdrFF5C+B1hDpQ6qamFU5nco5Zcoz9WVniFh2S8YWcwBH/4L01yI1XMiGO
+         EsiG142QLMwi7D23sWGWt8FKqb+Hg8qn7TS37XkdzCnwVPDIOD0AHRQqfwCF2Xbsw5
+         hav1t0ZuZ9QYiM0Yo1bOTer0u0pBeGB5qMw+zFMQy3/AZShYBpX9kKwu/iJzmlb2ly
+         BDpaChKHTFqxw==
+X-Nifty-SrcIP: [209.85.217.45]
+Received: by mail-vs1-f45.google.com with SMTP id w85so15604278vsa.10;
+        Sun, 14 Oct 2018 23:37:42 -0700 (PDT)
+X-Gm-Message-State: ABuFfoh9BLPT6n1RKh+uPfqBom8/CoesE4WuEIejptkW/goWFCyHwnfu
+        q9hX6B06q/Xdc/Dm6+G+uzuZJtO8UvcpkEd7ogw=
+X-Google-Smtp-Source: ACcGV60Ueo0wYOOiysuClAVTt0oCDdBckmM7hkj3VFb7XIu/mRmOAMyXSDxls3MtLn70/osDPK8vRmHL7j2+IKLLF54=
+X-Received: by 2002:a67:5fc7:: with SMTP id t190mr6266579vsb.155.1539585461532;
+ Sun, 14 Oct 2018 23:37:41 -0700 (PDT)
 MIME-Version: 1.0
-References: <20181013151016.31674-1-hch@lst.de> <20181013151016.31674-3-hch@lst.de>
-In-Reply-To: <20181013151016.31674-3-hch@lst.de>
+References: <20181013151016.31674-1-hch@lst.de> <20181013151016.31674-5-hch@lst.de>
+In-Reply-To: <20181013151016.31674-5-hch@lst.de>
 From:   Masahiro Yamada <yamada.masahiro@socionext.com>
-Date:   Mon, 15 Oct 2018 15:35:41 +0900
-X-Gmail-Original-Message-ID: <CAK7LNAQxZcBNadLJhfrmxJGj-XJFVaya3Z1eexZp20vRPwrN7A@mail.gmail.com>
-Message-ID: <CAK7LNAQxZcBNadLJhfrmxJGj-XJFVaya3Z1eexZp20vRPwrN7A@mail.gmail.com>
-Subject: Re: [PATCH 2/8] powerpc: simplify CONFIG_PCI_QSPAN Kconfig magic
+Date:   Mon, 15 Oct 2018 15:37:05 +0900
+X-Gmail-Original-Message-ID: <CAK7LNAQy_NTu5=8R6C3Xc2VLrJo7tKOz-u1=3JfGtBa3Z+ZD9g@mail.gmail.com>
+Message-ID: <CAK7LNAQy_NTu5=8R6C3Xc2VLrJo7tKOz-u1=3JfGtBa3Z+ZD9g@mail.gmail.com>
+Subject: Re: [PATCH 4/8] pci: consolidate PCI config entry in drivers/pci
 To:     Christoph Hellwig <hch@lst.de>
 Cc:     mporter@kernel.crashing.org, alex.bou9@gmail.com,
         Dominik Brodowski <linux@dominikbrodowski.net>,
@@ -71,54 +72,271 @@ X-Mailing-List: linux-pci@vger.kernel.org
 
 On Sun, Oct 14, 2018 at 12:11 AM Christoph Hellwig <hch@lst.de> wrote:
 >
-> The way how CONFIG_PCI_QSPAN selects the CONFIG_PCI default is highly
-> unusual and gets in the way of moving CONFIG_PCI into
-> drivers/pci/Kconfig.  Simplify it by just having it depend on
-> CONFIG_PCI.
+> There is no good reason to duplicate the PCI menu in every architecture.
+> Instead provide a selectable HAS_PCI symbol that indicates availability
+> of PCI support and the handle the rest in drivers/pci.
+
+
+I think HAVE_ is a preferred prefix in this case according to this doc:
+https://github.com/masahir0y/linux/blob/v4.19-rc4/Documentation/kbuild/kconfig-language.txt#L448
+
+
+It is true we have some options with HAS_ prefix,
+but the majority is HAVE_.
+
+masahiro@pug:~/ref/linux$ find . -name 'Kconfig*' | xargs grep 'config
+HAS_' | wc
+      9      18     355
+masahiro@pug:~/ref/linux$ find . -name 'Kconfig*' | xargs grep 'config
+HAVE_' | wc
+    177     354    8182
+
+
+
+
+
+> Note that for powerpc we now select HAS_PCI globally instead of the
+> convoluted mess of conditional or or non-conditional support per board,
+> similar to what we do e.g. on x86.  For alpha PCI is selected for the
+> non-jensen configs as it was the default before, and a lot of code does
+> not compile without PCI enabled.  On other architectures with limited
+> PCI support that wasn't as complicated I've left the selection as-is.
 >
 > Signed-off-by: Christoph Hellwig <hch@lst.de>
 > ---
->  arch/powerpc/Kconfig | 3 +--
->  1 file changed, 1 insertion(+), 2 deletions(-)
->
+
+
+
 > diff --git a/arch/powerpc/Kconfig b/arch/powerpc/Kconfig
-> index a80669209155..6fa6f92edb7f 100644
+> index 6fa6f92edb7f..0713375e1127 100644
 > --- a/arch/powerpc/Kconfig
 > +++ b/arch/powerpc/Kconfig
-> @@ -955,7 +955,6 @@ config PCI
->         bool "PCI support" if PPC_PCI_CHOICE
->         default y if !40x && !CPM2 && !PPC_8xx && !PPC_83xx \
->                 && !PPC_85xx && !PPC_86xx && !GAMECUBE_COMMON
-> -       default PCI_QSPAN if PPC_8xx
->         select GENERIC_PCI_IOMAP
->         help
->           Find out whether your system includes a PCI bus. PCI is the name of
-> @@ -971,7 +970,7 @@ config PCI_SYSCALL
+> @@ -168,10 +168,16 @@ config PPC
+>         select GENERIC_CPU_VULNERABILITIES      if PPC_BARRIER_NOSPEC
+>         select GENERIC_IRQ_SHOW
+>         select GENERIC_IRQ_SHOW_LEVEL
+> +       select GENERIC_PCI_IOMAP                if PCI
+>         select GENERIC_SMP_IDLE_THREAD
+>         select GENERIC_STRNCPY_FROM_USER
+>         select GENERIC_STRNLEN_USER
+>         select GENERIC_TIME_VSYSCALL
+> +       # Platforms that what PCI turned unconditionally just do select PCI
+> +       # in their config node, otherwise allow the user to enable it.
+> +       # This means we can enable PCI even on platforms that don't support
+> +       # it, which is harmless except for wasted memory.
+> +       select HAS_PCI
+
+
+If you do this for entire powerpc,
+the other 'select HAS_PCI' addtions to
+arch/powerpc/platforms/*/Kconfig look redundant.
+
+
+
+
+
+> diff --git a/arch/riscv/Kconfig b/arch/riscv/Kconfig
+> index a344980287a5..6eb31a0698ac 100644
+> --- a/arch/riscv/Kconfig
+> +++ b/arch/riscv/Kconfig
+> @@ -38,6 +38,7 @@ config RISCV
+>         select RISCV_ISA_A if SMP
+>         select SPARSE_IRQ
+>         select SYSCTL_EXCEPTION_TRACE
+> +       select HAS_PCI
+>         select HAVE_ARCH_TRACEHOOK
+>         select MODULES_USE_ELF_RELA if MODULES
+>         select THREAD_INFO_IN_TASK
+> @@ -216,28 +217,12 @@ source "kernel/Kconfig.hz"
 >
->  config PCI_QSPAN
->         bool "QSpan PCI"
-> -       depends on PPC_8xx
-> +       depends on PPC_8xx && PCI
->         select PPC_I8259
+>  endmenu
+>
+> -menu "Bus support"
+> -
+> -config PCI
+> -       bool "PCI support"
+> -       select PCI_MSI
+
+
+I think this 'select PCI_MSI' for riscv was lost.
+
+
+
+
+> -       help
+> -         This feature enables support for PCI bus system. If you say Y
+> -         here, the kernel will include drivers and infrastructure code
+> -         to support PCI bus devices.
+> -
+> -         If you don't know what to do here, say Y.
+> -
+>  config PCI_DOMAINS
+>         def_bool PCI
+>
+>  config PCI_DOMAINS_GENERIC
+>         def_bool PCI
+>
+> -source "drivers/pci/Kconfig"
+> -
+> -endmenu
+> -
+>  menu "Power management options"
+>
+>  source kernel/power/Kconfig
+
+
+
+> diff --git a/arch/x86/Kconfig b/arch/x86/Kconfig
+> index 1a0be022f91d..7cbc656f47e7 100644
+> --- a/arch/x86/Kconfig
+> +++ b/arch/x86/Kconfig
+> @@ -113,6 +113,7 @@ config X86
+>         select GENERIC_STRNLEN_USER
+>         select GENERIC_TIME_VSYSCALL
+>         select HARDLOCKUP_CHECK_TIMESTAMP       if X86_64
+> +       select HAS_PCI
+>         select HAVE_ACPI_APEI                   if ACPI
+>         select HAVE_ACPI_APEI_NMI               if ACPI
+>         select HAVE_ALIGNED_STRUCT_PAGE         if SLUB
+> @@ -2567,15 +2568,6 @@ endmenu
+>
+>  menu "Bus options (PCI etc.)"
+>
+> -config PCI
+> -       bool "PCI support"
+> -       default y
+
+
+The default is y for x86 (and xtensa as well).
+
+With this patch, the default will be flipped.
+
+I think most of people want to use PCI for x86,
+and this change will make people upset.
+
+Will you update arch/{x86,xtensa}/configs/*_defconfig?
+
+
+
+
+
+
+> -       ---help---
+> -         Find out whether you have a PCI motherboard. PCI is the name of a
+> -         bus system, i.e. the way the CPU talks to the other stuff inside
+> -         your box. Other bus systems are ISA, EISA, MicroChannel (MCA) or
+> -         VESA. If you have PCI, say Y, otherwise N.
+> -
+>  choice
+>         prompt "PCI access mode"
+>         depends on X86_32 && PCI
+> @@ -2658,8 +2650,6 @@ config PCI_CNB20LE_QUIRK
+>
+>           You should say N unless you know you need this.
+>
+> -source "drivers/pci/Kconfig"
+> -
+>  config ISA_BUS
+>         bool "ISA bus support on modern systems" if EXPERT
 >         help
->           Say Y here if you have a system based on a Motorola 8xx-series
+> diff --git a/arch/xtensa/Kconfig b/arch/xtensa/Kconfig
+> index b9ad83a0ee5d..22abeb236863 100644
+> --- a/arch/xtensa/Kconfig
+> +++ b/arch/xtensa/Kconfig
+> @@ -20,6 +20,7 @@ config XTENSA
+>         select GENERIC_PCI_IOMAP
+>         select GENERIC_SCHED_CLOCK
+>         select GENERIC_STRNCPY_FROM_USER if KASAN
+> +       select HAS_PCI
+>         select HAVE_ARCH_KASAN if MMU
+>         select HAVE_DEBUG_KMEMLEAK
+>         select HAVE_DMA_CONTIGUOUS
+> @@ -384,21 +385,6 @@ config XTENSA_CALIBRATE_CCOUNT
+>  config SERIAL_CONSOLE
+>         def_bool n
+>
+> -menu "Bus options"
+> -
+> -config PCI
+> -       bool "PCI support"
+> -       default y
+> -       help
+> -         Find out whether you have a PCI motherboard. PCI is the name of a
+> -         bus system, i.e. the way the CPU talks to the other stuff inside
+> -         your box. Other bus systems are ISA, EISA, MicroChannel (MCA) or
+> -         VESA. If you have PCI, say Y, otherwise N.
+> -
+> -source "drivers/pci/Kconfig"
+> -
+> -endmenu
+> -
+>  menu "Platform options"
+>
+>  choice
+> diff --git a/drivers/Kconfig b/drivers/Kconfig
+> index ab4d43923c4d..059573823387 100644
+> --- a/drivers/Kconfig
+> +++ b/drivers/Kconfig
+> @@ -1,7 +1,11 @@
+>  # SPDX-License-Identifier: GPL-2.0
+>  menu "Device Drivers"
+>
+> +# Keep I/O buses first
+> +
+>  source "drivers/amba/Kconfig"
+> +source "drivers/pci/Kconfig"
+> +
+>
+>  source "drivers/base/Kconfig"
+>
+> diff --git a/drivers/parisc/Kconfig b/drivers/parisc/Kconfig
+> index 5a48b5606110..5bbfea1a019c 100644
+> --- a/drivers/parisc/Kconfig
+> +++ b/drivers/parisc/Kconfig
+> @@ -63,17 +63,6 @@ config ISA
+>           If you want to plug an ISA card into your EISA bus, say Y here.
+>           Most people should say N.
+>
+> -config PCI
+> -       bool "PCI support"
+> -       help
+> -         All recent HP machines have PCI slots, and you should say Y here
+> -         if you have a recent machine.  If you are convinced you do not have
+> -         PCI slots in your machine (eg a 712), then you may say "N" here.
+> -         Beware that some GSC cards have a Dino onboard and PCI inside them,
+> -         so it may be safest to say "Y" anyway.
+> -
+> -source "drivers/pci/Kconfig"
+> -
+>  config GSC_DINO
+>         bool "GSCtoPCI/Dino PCI support"
+>         depends on PCI && GSC
+> diff --git a/drivers/pci/Kconfig b/drivers/pci/Kconfig
+> index 56ff8f6d31fc..229a518b68cd 100644
+> --- a/drivers/pci/Kconfig
+> +++ b/drivers/pci/Kconfig
+> @@ -3,6 +3,18 @@
+>  # PCI configuration
+>  #
+>
+> +config HAS_PCI
+> +       bool
+> +
+> +menuconfig PCI
+> +       bool "PCI support"
+> +       depends on HAS_PCI
+> +
+> +       help
+> +         This option enables support for the PCI local bus, including
+> +         support for PCI-X and the fundations for PCI Express support.
+> +         Say 'Y' here unless you know what you are doing.
+> +
+>  source "drivers/pci/pcie/Kconfig"
+>
+>  config PCI_MSI
 > --
 > 2.19.1
 >
-
-
-
-'git grep' did not get any other hit.
-
-masahiro@pug:~/ref/linux$ git grep PCI_QSPAN
-arch/powerpc/Kconfig:   default PCI_QSPAN if PPC_8xx
-arch/powerpc/Kconfig:config PCI_QSPAN
-
-With your patch, PCI_QSPAN will become
-a dead config option.
-
-How about removing it entirely?
-
 
 
 --
