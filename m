@@ -4,50 +4,50 @@ X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 X-Spam-Level: 
 X-Spam-Status: No, score=-8.9 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
 	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,
-	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_PASS,USER_AGENT_GIT autolearn=ham
-	autolearn_force=no version=3.4.0
+	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT
+	autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 46CBFC71130
-	for <linux-pci@archiver.kernel.org>; Mon, 15 Oct 2018 13:08:30 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 307EAC71130
+	for <linux-pci@archiver.kernel.org>; Mon, 15 Oct 2018 13:08:42 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 0D83220842
-	for <linux-pci@archiver.kernel.org>; Mon, 15 Oct 2018 13:08:30 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id EB1E920892
+	for <linux-pci@archiver.kernel.org>; Mon, 15 Oct 2018 13:08:41 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (1024-bit key) header.d=ti.com header.i=@ti.com header.b="UaBdacgj"
-DMARC-Filter: OpenDMARC Filter v1.3.2 mail.kernel.org 0D83220842
+	dkim=pass (1024-bit key) header.d=ti.com header.i=@ti.com header.b="FEPjW3Ua"
+DMARC-Filter: OpenDMARC Filter v1.3.2 mail.kernel.org EB1E920892
 Authentication-Results: mail.kernel.org; dmarc=fail (p=quarantine dis=none) header.from=ti.com
 Authentication-Results: mail.kernel.org; spf=none smtp.mailfrom=linux-pci-owner@vger.kernel.org
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726421AbeJOUxl (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Mon, 15 Oct 2018 16:53:41 -0400
-Received: from fllv0016.ext.ti.com ([198.47.19.142]:43352 "EHLO
-        fllv0016.ext.ti.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726422AbeJOUxl (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Mon, 15 Oct 2018 16:53:41 -0400
-Received: from dflxv15.itg.ti.com ([128.247.5.124])
-        by fllv0016.ext.ti.com (8.15.2/8.15.2) with ESMTP id w9FD82O4089099;
-        Mon, 15 Oct 2018 08:08:02 -0500
+        id S1726703AbeJOUxt (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Mon, 15 Oct 2018 16:53:49 -0400
+Received: from lelv0142.ext.ti.com ([198.47.23.249]:38760 "EHLO
+        lelv0142.ext.ti.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726524AbeJOUxs (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Mon, 15 Oct 2018 16:53:48 -0400
+Received: from dlelxv90.itg.ti.com ([172.17.2.17])
+        by lelv0142.ext.ti.com (8.15.2/8.15.2) with ESMTP id w9FD89L6119664;
+        Mon, 15 Oct 2018 08:08:09 -0500
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=ti.com;
-        s=ti-com-17Q1; t=1539608882;
-        bh=iBGFjwERlyNXfssV0mhi5P70SxiWNRCvnKhKGvOqAU0=;
+        s=ti-com-17Q1; t=1539608889;
+        bh=gQ0+pQEKb3K+sriSc3X3V9ettXr93wDRpE/j2uyHhZs=;
         h=From:To:CC:Subject:Date:In-Reply-To:References;
-        b=UaBdacgj9aso7wuuExr7YoxQcc93EjRbftDWxGdVz7TZQsDC/wrEkXveIVTYVPQ6J
-         M4eyoReIDjhWqdtry7j5Ce1EsUab6SwVLB415Q/+H/vTMSw9Il7XGfM2AmY1hTA47N
-         qu8pVAPQVfzGUoDkafxiTGgpWYgkmKuwoDhlZ4P4=
-Received: from DFLE104.ent.ti.com (dfle104.ent.ti.com [10.64.6.25])
-        by dflxv15.itg.ti.com (8.14.3/8.13.8) with ESMTP id w9FD8211010630;
-        Mon, 15 Oct 2018 08:08:02 -0500
-Received: from DFLE115.ent.ti.com (10.64.6.36) by DFLE104.ent.ti.com
- (10.64.6.25) with Microsoft SMTP Server (version=TLS1_2,
+        b=FEPjW3UaTJnbAFq4v0kErrUsBLCfKdxNXgEUEYgkbUigy9mRJ4l3uNIlbE8O6d6r5
+         nPSugZ83x+IwmAwxtNaJm+mlqjJH62CCvpSGjDqN8R7eP84tO9R/AbBuUQpF6p60Xk
+         ZGSeEYSHiPakoSJ2o3HCb/KLGGRt6PMUKybdCInw=
+Received: from DFLE109.ent.ti.com (dfle109.ent.ti.com [10.64.6.30])
+        by dlelxv90.itg.ti.com (8.14.3/8.13.8) with ESMTP id w9FD89OW032597;
+        Mon, 15 Oct 2018 08:08:09 -0500
+Received: from DFLE115.ent.ti.com (10.64.6.36) by DFLE109.ent.ti.com
+ (10.64.6.30) with Microsoft SMTP Server (version=TLS1_2,
  cipher=TLS_ECDHE_RSA_WITH_AES_128_CBC_SHA256_P256) id 15.1.1466.3; Mon, 15
- Oct 2018 08:08:02 -0500
+ Oct 2018 08:08:09 -0500
 Received: from dflp33.itg.ti.com (10.64.6.16) by DFLE115.ent.ti.com
  (10.64.6.36) with Microsoft SMTP Server (version=TLS1_0,
  cipher=TLS_RSA_WITH_AES_256_CBC_SHA) id 15.1.1466.3 via Frontend Transport;
- Mon, 15 Oct 2018 08:08:02 -0500
+ Mon, 15 Oct 2018 08:08:09 -0500
 Received: from a0393678ub.dal.design.ti.com (ileax41-snat.itg.ti.com [10.172.224.153])
-        by dflp33.itg.ti.com (8.14.3/8.13.8) with ESMTP id w9FD7tL4009433;
-        Mon, 15 Oct 2018 08:07:59 -0500
+        by dflp33.itg.ti.com (8.14.3/8.13.8) with ESMTP id w9FD7tL6009433;
+        Mon, 15 Oct 2018 08:08:06 -0500
 From:   Kishon Vijay Abraham I <kishon@ti.com>
 To:     Bjorn Helgaas <bhelgaas@google.com>,
         Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
@@ -58,9 +58,9 @@ CC:     Rob Herring <robh+dt@kernel.org>, <linux-pci@vger.kernel.org>,
         <devicetree@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
         <linux-arm-kernel@lists.infradead.org>,
         Kishon Vijay Abraham I <kishon@ti.com>
-Subject: [PATCH 01/19] PCI: keystone: Use quirk to limit MRRS for K2G
-Date:   Mon, 15 Oct 2018 18:37:03 +0530
-Message-ID: <20181015130721.5535-2-kishon@ti.com>
+Subject: [PATCH 03/19] PCI: keystone: Move dw_pcie_setup_rc out of ks_pcie_establish_link()
+Date:   Mon, 15 Oct 2018 18:37:05 +0530
+Message-ID: <20181015130721.5535-4-kishon@ti.com>
 X-Mailer: git-send-email 2.17.1
 In-Reply-To: <20181015130721.5535-1-kishon@ti.com>
 References: <20181015130721.5535-1-kishon@ti.com>
@@ -72,36 +72,41 @@ Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-PCI controller in K2G also has a limitation that memory read request
-size (MRRS) must not exceed 256 bytes. Use the quirk to limit MRRS
-(added for K2HK, K2L and K2E) for K2G as well.
+No functional change. Move dw_pcie_setup_rc out of
+ks_pcie_establish_link() so that ks_pcie_establish_link can be used only
+to start the link.
 
 Signed-off-by: Kishon Vijay Abraham I <kishon@ti.com>
 ---
- drivers/pci/controller/dwc/pci-keystone.c | 3 +++
- 1 file changed, 3 insertions(+)
+ drivers/pci/controller/dwc/pci-keystone.c | 5 ++---
+ 1 file changed, 2 insertions(+), 3 deletions(-)
 
 diff --git a/drivers/pci/controller/dwc/pci-keystone.c b/drivers/pci/controller/dwc/pci-keystone.c
-index e88bd221fffe..7d43e10a03b0 100644
+index 5d9c5d199ada..afb948372077 100644
 --- a/drivers/pci/controller/dwc/pci-keystone.c
 +++ b/drivers/pci/controller/dwc/pci-keystone.c
-@@ -36,6 +36,7 @@
- #define PCIE_RC_K2HK		0xb008
- #define PCIE_RC_K2E		0xb009
- #define PCIE_RC_K2L		0xb00a
-+#define PCIE_RC_K2G		0xb00b
+@@ -86,12 +86,9 @@ DECLARE_PCI_FIXUP_ENABLE(PCI_ANY_ID, PCI_ANY_ID, quirk_limit_mrrs);
+ static int ks_pcie_establish_link(struct keystone_pcie *ks_pcie)
+ {
+ 	struct dw_pcie *pci = ks_pcie->pci;
+-	struct pcie_port *pp = &pci->pp;
+ 	struct device *dev = pci->dev;
+ 	unsigned int retries;
  
- #define to_keystone_pcie(x)	dev_get_drvdata((x)->dev)
+-	dw_pcie_setup_rc(pp);
+-
+ 	if (dw_pcie_link_up(pci)) {
+ 		dev_info(dev, "Link already up\n");
+ 		return 0;
+@@ -266,6 +263,8 @@ static int __init ks_pcie_host_init(struct pcie_port *pp)
+ 	struct dw_pcie *pci = to_dw_pcie_from_pp(pp);
+ 	struct keystone_pcie *ks_pcie = to_keystone_pcie(pci);
  
-@@ -50,6 +51,8 @@ static void quirk_limit_mrrs(struct pci_dev *dev)
- 		 .class = PCI_CLASS_BRIDGE_PCI << 8, .class_mask = ~0, },
- 		{ PCI_DEVICE(PCI_VENDOR_ID_TI, PCIE_RC_K2L),
- 		 .class = PCI_CLASS_BRIDGE_PCI << 8, .class_mask = ~0, },
-+		{ PCI_DEVICE(PCI_VENDOR_ID_TI, PCIE_RC_K2G),
-+		 .class = PCI_CLASS_BRIDGE_PCI << 8, .class_mask = ~0, },
- 		{ 0, },
- 	};
- 
++	dw_pcie_setup_rc(pp);
++
+ 	ks_pcie_establish_link(ks_pcie);
+ 	ks_dw_pcie_setup_rc_app_regs(ks_pcie);
+ 	ks_pcie_setup_interrupts(ks_pcie);
 -- 
 2.17.1
 
