@@ -2,133 +2,154 @@ Return-Path: <SRS0=/yaj=M3=vger.kernel.org=linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-0.6 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
-	DKIM_VALID_AU,FREEMAIL_FORGED_FROMDOMAIN,FREEMAIL_FROM,
-	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_PASS autolearn=ham
-	autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-0.8 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+	MAILING_LIST_MULTI,SPF_PASS autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 6E4B1C04AA5
-	for <linux-pci@archiver.kernel.org>; Mon, 15 Oct 2018 19:46:46 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 2FDA9C04AA5
+	for <linux-pci@archiver.kernel.org>; Mon, 15 Oct 2018 20:51:48 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 2511021470
-	for <linux-pci@archiver.kernel.org>; Mon, 15 Oct 2018 19:46:46 +0000 (UTC)
-Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="Y+0STN6W"
-DMARC-Filter: OpenDMARC Filter v1.3.2 mail.kernel.org 2511021470
-Authentication-Results: mail.kernel.org; dmarc=fail (p=none dis=none) header.from=gmail.com
+	by mail.kernel.org (Postfix) with ESMTP id E1B142145D
+	for <linux-pci@archiver.kernel.org>; Mon, 15 Oct 2018 20:51:47 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.3.2 mail.kernel.org E1B142145D
+Authentication-Results: mail.kernel.org; dmarc=fail (p=none dis=none) header.from=linux.intel.com
 Authentication-Results: mail.kernel.org; spf=none smtp.mailfrom=linux-pci-owner@vger.kernel.org
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726861AbeJPDd0 (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Mon, 15 Oct 2018 23:33:26 -0400
-Received: from mail-wm1-f67.google.com ([209.85.128.67]:35719 "EHLO
-        mail-wm1-f67.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726713AbeJPDdZ (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Mon, 15 Oct 2018 23:33:25 -0400
-Received: by mail-wm1-f67.google.com with SMTP id e187-v6so20934014wmf.0;
-        Mon, 15 Oct 2018 12:46:43 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20161025;
-        h=from:subject:to:cc:references:message-id:date:user-agent
-         :mime-version:in-reply-to:content-language:content-transfer-encoding;
-        bh=65KHhQVGVMh2ZxEY6sZveMaOF0hZr9aJwaLFnVaNY/E=;
-        b=Y+0STN6WIQVw+GMgetfakC6IObezJias3owFd18nFAwnAo4UO22N1NvjA5M5/sPACl
-         /c7zxsDTO76tXlNqjn5lrOneccC2trdpAjidBucaX2nxDJetq87rdveFutjq/nqoCLYt
-         UuuIvboE1Q4A/nEHqICp7KUJrx+1sQtTy5RXJoBogbdQr6mmgWitg0fmdEIOrZ0rrQE+
-         woXZw06LHQkJLPuy+XzxCyunYjL75Xxh/SDBrfZE7q+eRw6L+nS7+s/CenIOQafQrpfz
-         wGA4SUbwrLN7euUVwhCV3T4eAwq9MOm/cNbgwQlGXqafPV4+aHz73Oo/3ACUtWPvPG1N
-         e1cQ==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20161025;
-        h=x-gm-message-state:from:subject:to:cc:references:message-id:date
-         :user-agent:mime-version:in-reply-to:content-language
-         :content-transfer-encoding;
-        bh=65KHhQVGVMh2ZxEY6sZveMaOF0hZr9aJwaLFnVaNY/E=;
-        b=FjZbWoyV7hHBNtBnDSVQY5kI2SAFF52V4EuwrRdw7qKKuKWlKZkaq3/Phi1OgoMTX9
-         lxFEBMixC1evOPKkoFcDGDE8jJFfBB1fSU+G5+grGkneBSnytZ2QxQoUM2fy41FLt4EX
-         n7QJr+ovMMHxpGCOUmQGxF+dlREf1wHOZgU02p6Y//sTsaVgxPtASxp7Dw/KxjzHiN4c
-         vIuWjtRAmy1YuSvKXEJeuCHKTOSlP9Qdowh3FqzkQPhHpm40QEB3ETVgGX5vKLJACSd8
-         CNevtu8FFLm+Qvbg231XecVmSC/G9oDsGCvLwpGTHmSn/dH+R5h8n4p3bXX2WFS1RZZr
-         nYCg==
-X-Gm-Message-State: ABuFfoiZb9tk0a6FwYllKQHTQBfmxEJfHDlGnaBkUwF36qcD+UuIRwAD
-        7OrnW6lo1YFAI1iftqAxGBs=
-X-Google-Smtp-Source: ACcGV61tL7N66VQmLrwE8iVUthq0WKnhB72bCIydcO59KiTK4phR/qrg551AFYSNQT3nI/jsL/8iCg==
-X-Received: by 2002:a1c:950f:: with SMTP id x15-v6mr13796753wmd.3.1539632803109;
-        Mon, 15 Oct 2018 12:46:43 -0700 (PDT)
-Received: from [192.168.0.5] (cpc92304-cmbg19-2-0-cust820.5-4.cable.virginm.net. [82.24.199.53])
-        by smtp.gmail.com with ESMTPSA id j6-v6sm10403280wmd.29.2018.10.15.12.46.41
-        (version=TLS1_2 cipher=ECDHE-RSA-AES128-GCM-SHA256 bits=128/128);
-        Mon, 15 Oct 2018 12:46:42 -0700 (PDT)
-From:   Jean-philippe Brucker <jphilippe.brucker@gmail.com>
-Subject: Re: [PATCH v3 3/7] PCI: OF: Allow endpoints to bypass the iommu
-To:     "Michael S. Tsirkin" <mst@redhat.com>,
-        Bjorn Helgaas <helgaas@kernel.org>
-Cc:     mark.rutland@arm.com, devicetree@vger.kernel.org,
-        kevin.tian@intel.com, tnowicki@caviumnetworks.com,
-        peter.maydell@linaro.org, linux-pci@vger.kernel.org,
-        will.deacon@arm.com, robin.murphy@arm.com,
-        virtualization@lists.linux-foundation.org,
-        iommu@lists.linux-foundation.org, robh+dt@kernel.org,
-        marc.zyngier@arm.com, jasowang@redhat.com,
-        kvmarm@lists.cs.columbia.edu, jean-philippe.brucker@arm.com
-References: <20181012145917.6840-1-jean-philippe.brucker@arm.com>
- <20181012145917.6840-4-jean-philippe.brucker@arm.com>
- <20181012194158.GX5906@bhelgaas-glaptop.roam.corp.google.com>
- <20181015065024-mutt-send-email-mst@kernel.org>
-Message-ID: <482d0eb9-8c4c-9d64-7b32-25d5d11a8b8f@gmail.com>
-Date:   Mon, 15 Oct 2018 20:46:41 +0100
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:60.0) Gecko/20100101
- Thunderbird/60.0
+        id S1726024AbeJPEil (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Tue, 16 Oct 2018 00:38:41 -0400
+Received: from mga17.intel.com ([192.55.52.151]:32529 "EHLO mga17.intel.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1725957AbeJPEil (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Tue, 16 Oct 2018 00:38:41 -0400
+X-Amp-Result: SKIPPED(no attachment in message)
+X-Amp-File-Uploaded: False
+Received: from orsmga002.jf.intel.com ([10.7.209.21])
+  by fmsmga107.fm.intel.com with ESMTP/TLS/DHE-RSA-AES256-GCM-SHA384; 15 Oct 2018 13:51:45 -0700
+X-ExtLoop1: 1
+X-IronPort-AV: E=Sophos;i="5.54,385,1534834800"; 
+   d="scan'208";a="100476046"
+Received: from jacob-builder.jf.intel.com (HELO jacob-builder) ([10.7.199.155])
+  by orsmga002.jf.intel.com with ESMTP; 15 Oct 2018 13:51:45 -0700
+Date:   Mon, 15 Oct 2018 13:53:22 -0700
+From:   Jacob Pan <jacob.jun.pan@linux.intel.com>
+To:     Jean-Philippe Brucker <jean-philippe.brucker@arm.com>
+Cc:     "iommu@lists.linux-foundation.org" <iommu@lists.linux-foundation.org>,
+        "joro@8bytes.org" <joro@8bytes.org>,
+        "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+        "jcrouse@codeaurora.org" <jcrouse@codeaurora.org>,
+        "alex.williamson@redhat.com" <alex.williamson@redhat.com>,
+        "Jonathan.Cameron@huawei.com" <Jonathan.Cameron@huawei.com>,
+        "christian.koenig@amd.com" <christian.koenig@amd.com>,
+        "eric.auger@redhat.com" <eric.auger@redhat.com>,
+        "kevin.tian@intel.com" <kevin.tian@intel.com>,
+        "yi.l.liu@intel.com" <yi.l.liu@intel.com>,
+        Andrew Murray <Andrew.Murray@arm.com>,
+        Will Deacon <Will.Deacon@arm.com>,
+        Robin Murphy <Robin.Murphy@arm.com>,
+        "ashok.raj@intel.com" <ashok.raj@intel.com>,
+        "baolu.lu@linux.intel.com" <baolu.lu@linux.intel.com>,
+        "xuzaibo@huawei.com" <xuzaibo@huawei.com>,
+        "liguozhu@hisilicon.com" <liguozhu@hisilicon.com>,
+        "okaya@codeaurora.org" <okaya@codeaurora.org>,
+        "bharatku@xilinx.com" <bharatku@xilinx.com>,
+        "ilias.apalodimas@linaro.org" <ilias.apalodimas@linaro.org>,
+        "shunyong.yang@hxt-semitech.com" <shunyong.yang@hxt-semitech.com>,
+        jacob.jun.pan@linux.intel.com
+Subject: Re: [PATCH v3 03/10] iommu/sva: Manage process address spaces
+Message-ID: <20181015135322.6c7f4797@jacob-builder>
+In-Reply-To: <8ebfd3b5-9e16-85f6-a9f9-2627fb4b5b03@arm.com>
+References: <20180920170046.20154-1-jean-philippe.brucker@arm.com>
+        <20180920170046.20154-4-jean-philippe.brucker@arm.com>
+        <20180926153544.54884f88@jacob-builder>
+        <8ebfd3b5-9e16-85f6-a9f9-2627fb4b5b03@arm.com>
+Organization: OTC
+X-Mailer: Claws Mail 3.13.2 (GTK+ 2.24.30; x86_64-pc-linux-gnu)
 MIME-Version: 1.0
-In-Reply-To: <20181015065024-mutt-send-email-mst@kernel.org>
-Content-Type: text/plain; charset=utf-8
-Content-Language: en-US
+Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: 7bit
 Sender: linux-pci-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-[Replying with my personal address because we're having SMTP issues]
+On Wed, 3 Oct 2018 18:52:16 +0100
+Jean-Philippe Brucker <jean-philippe.brucker@arm.com> wrote:
 
-On 15/10/2018 11:52, Michael S. Tsirkin wrote:
-> On Fri, Oct 12, 2018 at 02:41:59PM -0500, Bjorn Helgaas wrote:
->> s/iommu/IOMMU/ in subject
->>
->> On Fri, Oct 12, 2018 at 03:59:13PM +0100, Jean-Philippe Brucker wrote:
->>> Using the iommu-map binding, endpoints in a given PCI domain can be
->>> managed by different IOMMUs. Some virtual machines may allow a subset of
->>> endpoints to bypass the IOMMU. In some case the IOMMU itself is presented
->>
->> s/case/cases/
->>
->>> as a PCI endpoint (e.g. AMD IOMMU and virtio-iommu). Currently, when a
->>> PCI root complex has an iommu-map property, the driver requires all
->>> endpoints to be described by the property. Allow the iommu-map property to
->>> have gaps.
->>
->> I'm not an IOMMU or virtio expert, so it's not obvious to me why it is
->> safe to allow devices to bypass the IOMMU.  Does this mean a typo in
->> iommu-map could inadvertently allow devices to bypass it?
+> On 26/09/2018 23:35, Jacob Pan wrote:
+> > On Thu, 20 Sep 2018 18:00:39 +0100
+> > Jean-Philippe Brucker <jean-philippe.brucker@arm.com> wrote:
+> >   
+> >> +
+> >> +static int io_mm_attach(struct iommu_domain *domain, struct device
+> >> *dev,
+> >> +			struct io_mm *io_mm, void *drvdata)
+> >> +{
+> >> +	int ret;
+> >> +	bool attach_domain = true;
+> >> +	int pasid = io_mm->pasid;
+> >> +	struct iommu_bond *bond, *tmp;
+> >> +	struct iommu_sva_param *param =
+> >> dev->iommu_param->sva_param; +
+> >> +	if (!domain->ops->mm_attach || !domain->ops->mm_detach)
+> >> +		return -ENODEV;
+> >> +
+> >> +	if (pasid > param->max_pasid || pasid < param->min_pasid)
+> >> +		return -ERANGE;
+> >> +
+> >> +	bond = kzalloc(sizeof(*bond), GFP_KERNEL);
+> >> +	if (!bond)
+> >> +		return -ENOMEM;
+> >> +
+> >> +	bond->domain		= domain;
+> >> +	bond->io_mm		= io_mm;
+> >> +	bond->dev		= dev;
+> >> +	bond->drvdata		= drvdata;
+> >> +
+> >> +	spin_lock(&iommu_sva_lock);
+> >> +	/*
+> >> +	 * Check if this io_mm is already bound to the domain. In
+> >> which case the
+> >> +	 * IOMMU driver doesn't have to install the PASID table
+> >> entry.
+> >> +	 */
+> >> +	list_for_each_entry(tmp, &domain->mm_list, domain_head) {
+> >> +		if (tmp->io_mm == io_mm) {
+> >> +			attach_domain = false;
+> >> +			break;
+> >> +		}
+> >> +	}
+> >> +
+> >> +	ret = domain->ops->mm_attach(domain, dev, io_mm,
+> >> attach_domain);
+> >> +	if (ret) {
+> >> +		kfree(bond);
+> >> +		goto out_unlock;
+> >> +	}
+> >> +
+> >> +	list_add(&bond->mm_head, &io_mm->devices);
+> >> +	list_add(&bond->domain_head, &domain->mm_list);
+> >> +	list_add(&bond->dev_head, &param->mm_list);
+> >> +  
+> > 
+> > I am trying to understand if mm_list is needed for both per device
+> > and per domain. Do you always unbind and detach domain? Seems
+> > device could use the domain->mm_list to track all mm's, true?  
 > 
+> We need to track bonds per devices, since the bind/unbind() user
+> interface in on devices. Tracking per domain is just a helper, so
+> IOMMU drivers that have a single PASID table per domain know when
+> they need to install a new entry (the attach_domain parameter above)
+> and remove it. I think my code is wrong here: if binding two devices
+> that are in the same domain to the same process we shouldn't add the
+> io_mm to domain->mm_list twice.
 > 
-> Thinking about this comment, I would like to ask: can't the
-> virtio device indicate the ranges in a portable way?
-> This would minimize the dependency on dt bindings and ACPI,
-> enabling support for systems that have neither but do
-> have virtio e.g. through pci.
+> I'm still not sure if I should remove domains handling here though,
+> could you confirm if you're planning to support
+> iommu_get_domain_for_dev for vt-d?
+> 
+yes. i am working on getting vt-d onto the same behavior in terms of
+default domain. I have a patch being tested, we need to respect RMRR (
+reserved region) that is setup before iommu_get_domain_for_dev().
+> Thanks,
+> Jean
 
-I thought about adding a PROBE request for this in virtio-iommu, but it
-wouldn't be usable by a Linux guest because of a bootstrapping problem.
-
-Early on, Linux needs a description of device dependencies, to determine
-in which order to probe them. If the device dependency was described by
-virtio-iommu itself, the guest could for example initialize a NIC,
-allocate buffers and start DMA on the physical address space (which aborts
-if the IOMMU implementation disallows DMA by default), only to find out
-once the virtio-iommu module is loaded that it needs to cancel all DMA and
-reconfigure the NIC. With a static description such as iommu-map in DT or
-ACPI remapping tables, the guest can defer probing of the NIC until the
-IOMMU is initialized.
-
-Thanks,
-Jean
+[Jacob Pan]
