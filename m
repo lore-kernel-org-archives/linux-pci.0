@@ -1,288 +1,89 @@
-Return-Path: <SRS0=/yaj=M3=vger.kernel.org=linux-pci-owner@kernel.org>
+Return-Path: <SRS0=JYfi=M4=vger.kernel.org=linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-8.8 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_PASS,URIBL_BLOCKED,
-	USER_AGENT_GIT autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-2.8 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+	MAILING_LIST_MULTI,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT autolearn=ham
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 08BA4C04EB9
-	for <linux-pci@archiver.kernel.org>; Mon, 15 Oct 2018 22:31:52 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id BE204C04EBD
+	for <linux-pci@archiver.kernel.org>; Tue, 16 Oct 2018 00:55:16 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id B27F5208D9
-	for <linux-pci@archiver.kernel.org>; Mon, 15 Oct 2018 22:31:51 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.3.2 mail.kernel.org B27F5208D9
-Authentication-Results: mail.kernel.org; dmarc=fail (p=none dis=none) header.from=xes-inc.com
+	by mail.kernel.org (Postfix) with ESMTP id 8E0C3208B3
+	for <linux-pci@archiver.kernel.org>; Tue, 16 Oct 2018 00:55:16 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.3.2 mail.kernel.org 8E0C3208B3
+Authentication-Results: mail.kernel.org; dmarc=fail (p=none dis=none) header.from=intel.com
 Authentication-Results: mail.kernel.org; spf=none smtp.mailfrom=linux-pci-owner@vger.kernel.org
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726928AbeJPGTE (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Tue, 16 Oct 2018 02:19:04 -0400
-Received: from xes-mad.com ([162.248.234.2]:3145 "EHLO mail.xes-mad.com"
+        id S1727024AbeJPIm7 (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Tue, 16 Oct 2018 04:42:59 -0400
+Received: from mga14.intel.com ([192.55.52.115]:26009 "EHLO mga14.intel.com"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1726917AbeJPGTE (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Tue, 16 Oct 2018 02:19:04 -0400
-X-Greylist: delayed 525 seconds by postgrey-1.27 at vger.kernel.org; Tue, 16 Oct 2018 02:19:03 EDT
-Received: from asierra1.xes-mad.com (asierra1.xes-mad.com [10.52.16.65])
-        by mail.xes-mad.com (Postfix) with ESMTP id 2A27920252;
-        Mon, 15 Oct 2018 17:23:06 -0500 (CDT)
-From:   Aaron Sierra <asierra@xes-inc.com>
-To:     linux-pci@vger.kernel.org
-Cc:     Bjorn Helgaas <bhelgaas@google.com>,
-        "Rafael J. Wysocki" <rjw@rjwysocki.net>,
-        Len Brown <lenb@kernel.org>
-Subject: [PATCH] PCI/ACPI: Improve _OSC control request granularity
-Date:   Mon, 15 Oct 2018 17:23:06 -0500
-Message-Id: <1539642186-12821-1-git-send-email-asierra@xes-inc.com>
-X-Mailer: git-send-email 2.7.4
+        id S1726986AbeJPIm7 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Tue, 16 Oct 2018 04:42:59 -0400
+X-Amp-Result: SKIPPED(no attachment in message)
+X-Amp-File-Uploaded: False
+Received: from fmsmga002.fm.intel.com ([10.253.24.26])
+  by fmsmga103.fm.intel.com with ESMTP/TLS/DHE-RSA-AES256-GCM-SHA384; 15 Oct 2018 17:55:13 -0700
+X-ExtLoop1: 1
+X-IronPort-AV: E=Sophos;i="5.54,386,1534834800"; 
+   d="scan'208";a="95512629"
+Received: from unknown (HELO localhost.localdomain.localdomain) ([10.232.117.194])
+  by fmsmga002.fm.intel.com with ESMTP; 15 Oct 2018 17:55:13 -0700
+From:   Jon Derrick <jonathan.derrick@intel.com>
+To:     <linux-pci@vger.kernel.org>
+Cc:     Bjorn Helgaas <helgaas@kernel.org>,
+        Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
+        Keith Busch <keith.busch@intel.com>,
+        Jon Derrick <jonathan.derrick@intel.com>
+Subject: [PATCH 0/2] VMD fixes for 4.20
+Date:   Mon, 15 Oct 2018 18:48:06 -0600
+Message-Id: <1539650888-3792-1-git-send-email-jonathan.derrick@intel.com>
+X-Mailer: git-send-email 1.8.3.1
 Sender: linux-pci-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-This patch reorganizes negotiate_os_control() to be less ASPM-centric in
-order to:
+Hello Lorenzo, Keith, Bjorn
 
-    1. allow other features (notably AER) to work without enabling ASPM
-    2. better isolate feature-specific tests for readability/maintenance
+These are VMD fixes for 4.20
+First one looks to fix an orphaned struct resource issue when removing the VMD
+module
 
-Each feature (ASPM, PCIe hotplug, SHPC hotplug, and AER) now has its own
-inline function for setting its _OSC control requests.
 
-Part of making this function more generic, required eliminating a test
-for overall success/failure that previously caused two different types
-of messages to be printed. Now, printed messages are streamlined to
-always show requested _OSC control versus what was granted.
+Second patch enables firmware-first error handling on a VMD domain.
 
-Previous output (success):
+Because the endpoint is somewhat divorced from the VMD domain, the driver
+doesn't use a standard ACPI method of signaling firmware-first on the domain.
+The idea behind firmware-first in VMD is that the endpoint will advertise its
+support using the interface bit in the endpoint. The driver enables SMI system
+error messages in the root port control register. The firmware is allowed to
+handle the interrupt as it sees fit, but returns control to the VMD driver by
+synthesizing an MSI message. The kernel native AER driver may be used for
+further processing, so is left enabled. If the firmware doesn't need the native
+driver, of course it can handle and clear all errors and the subsequent MSI
+will be eventually dropped as it goes through the VMD ISR.
 
-  acpi PNP0A08:00: _OSC: OS now controls [PME AER PCIeCapability LTR]
+At this time, I'm unaware of how the errors will be represented in the error
+status headers. In the past they could be seen as a combination of the VMD
+endpoint device's bus number and the erroring device's bus number, but could be
+different depending on the type of error and if the erroring endpoint was lost
+(completion timeout). Currently the native driver handles these errors by
+scanning every device on the bus for error status and there's no plan to change
+that mechanism for future VMD devices.
 
-Previous output (failure):
+Follow-up to:
+https://patchwork.ozlabs.org/patch/966128/
+https://patchwork.ozlabs.org/patch/964254/
 
-  acpi PNP0A08:00: _OSC: OS requested [PME AER PCIeCapability LTR]
-  acpi PNP0A08:00: _OSC: platform willing to grant []
+Jon Derrick (2):
+  PCI/VMD: Detach resources after stopping root bus
+  PCI/VMD: Set up firmware-first if capable
 
-Now:
+ drivers/pci/controller/vmd.c | 32 +++++++++++++++++++++++++++++++-
+ 1 file changed, 31 insertions(+), 1 deletion(-)
 
-  acpi PNP0A08:00: _OSC: OS requested [PME AER PCIeCapability LTR]
-  acpi PNP0A08:00: _OSC: platform granted [PME AER PCIeCapability LTR]
-
-Signed-off-by: Aaron Sierra <asierra@xes-inc.com>
----
- drivers/acpi/pci_root.c | 161 ++++++++++++++++++++++++++++++++++--------------
- 1 file changed, 116 insertions(+), 45 deletions(-)
-
-diff --git a/drivers/acpi/pci_root.c b/drivers/acpi/pci_root.c
-index 7433035..8dd6720 100644
---- a/drivers/acpi/pci_root.c
-+++ b/drivers/acpi/pci_root.c
-@@ -53,9 +53,10 @@ static int acpi_pci_root_scan_dependent(struct acpi_device *adev)
- }
- 
- #define ACPI_PCIE_REQ_SUPPORT (OSC_PCI_EXT_CONFIG_SUPPORT \
--				| OSC_PCI_ASPM_SUPPORT \
--				| OSC_PCI_CLOCK_PM_SUPPORT \
- 				| OSC_PCI_MSI_SUPPORT)
-+#define ACPI_PCIE_ASPM_SUPPORT (ACPI_PCIE_REQ_SUPPORT \
-+				| OSC_PCI_ASPM_SUPPORT \
-+				| OSC_PCI_CLOCK_PM_SUPPORT)
- 
- static const struct acpi_device_id root_device_ids[] = {
- 	{"PNP0A03", 0},
-@@ -421,10 +422,101 @@ acpi_status acpi_pci_osc_control_set(acpi_handle handle, u32 *mask, u32 req)
- }
- EXPORT_SYMBOL(acpi_pci_osc_control_set);
- 
-+static int __osc_check_support(struct acpi_pci_root *root, u32 support,
-+			       u32 required, const char *feature)
-+{
-+	acpi_status status;
-+
-+	if ((support & required) != required)
-+		return -ENODEV;
-+
-+	status = acpi_pci_osc_support(root, support);
-+	if (ACPI_FAILURE(status)) {
-+		dev_info(&root->device->dev, "_OSC failed (%s); disabling %s\n",
-+			 acpi_format_exception(status), feature);
-+		return -ENODEV;
-+	}
-+
-+	return 0;
-+}
-+
-+static inline int __osc_set_aspm_control(struct acpi_pci_root *root,
-+					 u32 support, u32 *control)
-+{
-+	int rc;
-+
-+	if (!IS_ENABLED(CONFIG_PCIEASPM))
-+		return -ENODEV;
-+
-+	rc = __osc_check_support(root, support, ACPI_PCIE_ASPM_SUPPORT, "ASPM");
-+	if (rc)
-+		return rc;
-+
-+	*control |= OSC_PCI_EXPRESS_CAPABILITY_CONTROL |
-+		    OSC_PCI_EXPRESS_LTR_CONTROL |
-+		    OSC_PCI_EXPRESS_PME_CONTROL;
-+
-+	return 0;
-+}
-+
-+static inline bool __osc_have_aspm_control(u32 control)
-+{
-+	u32 required = OSC_PCI_EXPRESS_CAPABILITY_CONTROL |
-+		       OSC_PCI_EXPRESS_LTR_CONTROL |
-+		       OSC_PCI_EXPRESS_PME_CONTROL;
-+
-+	return (control & required) == required;
-+}
-+
-+static inline void __osc_set_pciehp_control(struct acpi_pci_root *root,
-+					    u32 support, u32 *control)
-+{
-+	if (!IS_ENABLED(CONFIG_HOTPLUG_PCI_PCIE))
-+		return;
-+
-+	if (__osc_check_support(root, support, ACPI_PCIE_REQ_SUPPORT,
-+				"PCIeHotplug"))
-+		return;
-+
-+	*control |= OSC_PCI_EXPRESS_CAPABILITY_CONTROL |
-+		    OSC_PCI_EXPRESS_NATIVE_HP_CONTROL;
-+}
-+
-+static inline void __osc_set_shpchp_control(struct acpi_pci_root *root,
-+					    u32 support, u32 *control)
-+{
-+	if (!IS_ENABLED(CONFIG_HOTPLUG_PCI_SHPC))
-+		return;
-+
-+	if (__osc_check_support(root, support, ACPI_PCIE_REQ_SUPPORT,
-+				"SHPCHotplug"))
-+		return;
-+
-+	*control |= OSC_PCI_EXPRESS_CAPABILITY_CONTROL |
-+		    OSC_PCI_SHPC_NATIVE_HP_CONTROL;
-+}
-+
-+static inline void __osc_set_aer_control(struct acpi_pci_root *root,
-+					 u32 support, u32 *control)
-+{
-+	if (!pci_aer_available())
-+		return;
-+
-+	if (aer_acpi_firmware_first()) {
-+		dev_info(&root->device->dev, "PCIe AER handled by firmware\n");
-+		return;
-+	}
-+
-+	if (__osc_check_support(root, support, ACPI_PCIE_REQ_SUPPORT, "AER"))
-+		return;
-+
-+	*control |= OSC_PCI_EXPRESS_CAPABILITY_CONTROL |
-+		    OSC_PCI_EXPRESS_AER_CONTROL;
-+}
-+
- static void negotiate_os_control(struct acpi_pci_root *root, int *no_aspm)
- {
- 	u32 support, control, requested;
--	acpi_status status;
- 	struct acpi_device *device = root->device;
- 	acpi_handle handle = device->handle;
- 
-@@ -440,6 +532,12 @@ static void negotiate_os_control(struct acpi_pci_root *root, int *no_aspm)
- 		return;
- 	}
- 
-+	if (pcie_ports_disabled) {
-+		dev_info(&device->dev,
-+			 "PCIe port services disabled; not requesting _OSC control\n");
-+		return;
-+	}
-+
- 	/*
- 	 * All supported architectures that use ACPI have support for
- 	 * PCI domains, so we indicate this in _OSC support capabilities.
-@@ -453,50 +551,26 @@ static void negotiate_os_control(struct acpi_pci_root *root, int *no_aspm)
- 		support |= OSC_PCI_MSI_SUPPORT;
- 
- 	decode_osc_support(root, "OS supports", support);
--	status = acpi_pci_osc_support(root, support);
--	if (ACPI_FAILURE(status)) {
--		dev_info(&device->dev, "_OSC failed (%s); disabling ASPM\n",
--			 acpi_format_exception(status));
-+
-+	control = 0;
-+	if (__osc_set_aspm_control(root, support, &control))
- 		*no_aspm = 1;
--		return;
--	}
- 
--	if (pcie_ports_disabled) {
--		dev_info(&device->dev, "PCIe port services disabled; not requesting _OSC control\n");
--		return;
--	}
-+	__osc_set_pciehp_control(root, support, &control);
-+	__osc_set_shpchp_control(root, support, &control);
-+	__osc_set_aer_control(root, support, &control);
- 
--	if ((support & ACPI_PCIE_REQ_SUPPORT) != ACPI_PCIE_REQ_SUPPORT) {
--		decode_osc_support(root, "not requesting OS control; OS requires",
--				   ACPI_PCIE_REQ_SUPPORT);
-+	if (!control) {
-+		dev_info(&device->dev, "_OSC: not requesting OS control\n");
- 		return;
- 	}
- 
--	control = OSC_PCI_EXPRESS_CAPABILITY_CONTROL
--		| OSC_PCI_EXPRESS_PME_CONTROL;
--
--	if (IS_ENABLED(CONFIG_PCIEASPM))
--		control |= OSC_PCI_EXPRESS_LTR_CONTROL;
--
--	if (IS_ENABLED(CONFIG_HOTPLUG_PCI_PCIE))
--		control |= OSC_PCI_EXPRESS_NATIVE_HP_CONTROL;
--
--	if (IS_ENABLED(CONFIG_HOTPLUG_PCI_SHPC))
--		control |= OSC_PCI_SHPC_NATIVE_HP_CONTROL;
--
--	if (pci_aer_available()) {
--		if (aer_acpi_firmware_first())
--			dev_info(&device->dev,
--				 "PCIe AER handled by firmware\n");
--		else
--			control |= OSC_PCI_EXPRESS_AER_CONTROL;
--	}
--
- 	requested = control;
--	status = acpi_pci_osc_control_set(handle, &control,
--					  OSC_PCI_EXPRESS_CAPABILITY_CONTROL);
--	if (ACPI_SUCCESS(status)) {
--		decode_osc_control(root, "OS now controls", control);
-+	acpi_pci_osc_control_set(handle, &control, 0);
-+	decode_osc_control(root, "OS requested", requested);
-+	decode_osc_control(root, "platform granted", control);
-+
-+	if (__osc_have_aspm_control(control)) {
- 		if (acpi_gbl_FADT.boot_flags & ACPI_FADT_NO_ASPM) {
- 			/*
- 			 * We have ASPM control, but the FADT indicates that
-@@ -506,11 +580,8 @@ static void negotiate_os_control(struct acpi_pci_root *root, int *no_aspm)
- 			dev_info(&device->dev, "FADT indicates ASPM is unsupported, using BIOS configuration\n");
- 			*no_aspm = 1;
- 		}
--	} else {
--		decode_osc_control(root, "OS requested", requested);
--		decode_osc_control(root, "platform willing to grant", control);
--		dev_info(&device->dev, "_OSC failed (%s); disabling ASPM\n",
--			acpi_format_exception(status));
-+	} else if (!*no_aspm) {
-+		dev_info(&device->dev, "_OSC failed; disabling ASPM\n");
- 
- 		/*
- 		 * We want to disable ASPM here, but aspm_disabled
 -- 
-2.7.4
+1.8.3.1
 
