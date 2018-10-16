@@ -2,91 +2,97 @@ Return-Path: <SRS0=JYfi=M4=vger.kernel.org=linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-8.8 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_PASS,URIBL_BLOCKED,
-	USER_AGENT_GIT autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-2.8 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+	MAILING_LIST_MULTI,SPF_PASS,USER_AGENT_GIT autolearn=ham autolearn_force=no
+	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id BB90DC04EBF
-	for <linux-pci@archiver.kernel.org>; Tue, 16 Oct 2018 00:55:17 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id A2606C04EB9
+	for <linux-pci@archiver.kernel.org>; Tue, 16 Oct 2018 01:26:19 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 830712145D
-	for <linux-pci@archiver.kernel.org>; Tue, 16 Oct 2018 00:55:17 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.3.2 mail.kernel.org 830712145D
-Authentication-Results: mail.kernel.org; dmarc=fail (p=none dis=none) header.from=intel.com
+	by mail.kernel.org (Postfix) with ESMTP id 63631208E4
+	for <linux-pci@archiver.kernel.org>; Tue, 16 Oct 2018 01:26:19 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.3.2 mail.kernel.org 63631208E4
+Authentication-Results: mail.kernel.org; dmarc=none (p=none dis=none) header.from=socionext.com
 Authentication-Results: mail.kernel.org; spf=none smtp.mailfrom=linux-pci-owner@vger.kernel.org
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727020AbeJPInB (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Tue, 16 Oct 2018 04:43:01 -0400
-Received: from mga14.intel.com ([192.55.52.115]:26009 "EHLO mga14.intel.com"
+        id S1726933AbeJPJOI (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Tue, 16 Oct 2018 05:14:08 -0400
+Received: from mx.socionext.com ([202.248.49.38]:26267 "EHLO mx.socionext.com"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1726982AbeJPIm7 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Tue, 16 Oct 2018 04:42:59 -0400
-X-Amp-Result: SKIPPED(no attachment in message)
-X-Amp-File-Uploaded: False
-Received: from fmsmga002.fm.intel.com ([10.253.24.26])
-  by fmsmga103.fm.intel.com with ESMTP/TLS/DHE-RSA-AES256-GCM-SHA384; 15 Oct 2018 17:55:13 -0700
-X-ExtLoop1: 1
-X-IronPort-AV: E=Sophos;i="5.54,386,1534834800"; 
-   d="scan'208";a="95512632"
-Received: from unknown (HELO localhost.localdomain.localdomain) ([10.232.117.194])
-  by fmsmga002.fm.intel.com with ESMTP; 15 Oct 2018 17:55:13 -0700
-From:   Jon Derrick <jonathan.derrick@intel.com>
-To:     <linux-pci@vger.kernel.org>
-Cc:     Bjorn Helgaas <helgaas@kernel.org>,
-        Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
-        Keith Busch <keith.busch@intel.com>,
-        Jon Derrick <jonathan.derrick@intel.com>
-Subject: [PATCH 1/2] PCI/VMD: Detach resources after stopping root bus
-Date:   Mon, 15 Oct 2018 18:48:07 -0600
-Message-Id: <1539650888-3792-2-git-send-email-jonathan.derrick@intel.com>
-X-Mailer: git-send-email 1.8.3.1
-In-Reply-To: <1539650888-3792-1-git-send-email-jonathan.derrick@intel.com>
-References: <1539650888-3792-1-git-send-email-jonathan.derrick@intel.com>
+        id S1726051AbeJPJOI (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Tue, 16 Oct 2018 05:14:08 -0400
+Received: from unknown (HELO iyokan-ex.css.socionext.com) ([172.31.9.54])
+  by mx.socionext.com with ESMTP; 16 Oct 2018 10:26:15 +0900
+Received: from mail.mfilter.local (m-filter-1 [10.213.24.61])
+        by iyokan-ex.css.socionext.com (Postfix) with ESMTP id EF6E16006C;
+        Tue, 16 Oct 2018 10:26:15 +0900 (JST)
+Received: from 172.31.9.51 (172.31.9.51) by m-FILTER with ESMTP; Tue, 16 Oct 2018 10:26:15 +0900
+Received: from plum.e01.socionext.com (unknown [10.213.132.32])
+        by kinkan.css.socionext.com (Postfix) with ESMTP id 27A611A1210;
+        Tue, 16 Oct 2018 10:26:15 +0900 (JST)
+From:   Kunihiko Hayashi <hayashi.kunihiko@socionext.com>
+To:     Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
+        Bjorn Helgaas <bhelgaas@google.com>,
+        Rob Herring <robh+dt@kernel.org>,
+        Mark Rutland <mark.rutland@arm.com>,
+        Masahiro Yamada <yamada.masahiro@socionext.com>
+Cc:     linux-pci@vger.kernel.org, devicetree@vger.kernel.org,
+        linux-arm-kernel@lists.infradead.org, linux-kernel@vger.kernel.org,
+        Masami Hiramatsu <masami.hiramatsu@linaro.org>,
+        Jassi Brar <jaswinder.singh@linaro.org>,
+        Gustavo Pimentel <gustavo.pimentel@synopsys.com>,
+        Kunihiko Hayashi <hayashi.kunihiko@socionext.com>
+Subject: [PATCH v3 0/2] add new UniPhier PCIe host driver
+Date:   Tue, 16 Oct 2018 10:26:06 +0900
+Message-Id: <1539653168-22862-1-git-send-email-hayashi.kunihiko@socionext.com>
+X-Mailer: git-send-email 2.7.4
 Sender: linux-pci-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-The VMD removal path calls pci_stop_root_bus, which tears down the pcie
-tree, including detaching all of the attached drivers. During driver
-detachment, devices may use pci_release_region to release resources.
-This path relies on the resource being accessible in resource tree.
+This series adds PCIe host controller driver for Socionext UniPhier SoCs.
+This controller is based on the DesignWare PCIe core. This driver
+supports LD20 and PXs3 SoCs.
 
-By detaching the child domain from the parent resource domain prior to
-stopping the bus, we are preventing the list traversal from finding the
-resource to be freed. If we instead detach the resource after stopping
-the bus, we will have properly freed the resource and detaching is
-simply accounting at that point.
+v2: https://www.spinics.net/lists/linux-pci/msg75930.html
 
-Without this order, the resource is never freed and is orphaned on VMD
-removal, leading to warning:
-[  181.940162] Trying to free nonexistent resource <e5a10000-e5a13fff>
+About legacy IRQ, it might be necessary to share common view from
+keystone driver that have been cleaned up[1].
 
-Fixes 2c2c5c5cd213aea38c850bb6edc9b7f77f29802f:
-"x86/PCI: VMD: Attach VMD resources to parent domain's resource tree"
-Signed-off-by: Jon Derrick <jonathan.derrick@intel.com>
----
- drivers/pci/controller/vmd.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+[1] https://lore.kernel.org/patchwork/patch/989541/
 
-diff --git a/drivers/pci/controller/vmd.c b/drivers/pci/controller/vmd.c
-index fd2dbd7..46ed80f 100644
---- a/drivers/pci/controller/vmd.c
-+++ b/drivers/pci/controller/vmd.c
-@@ -813,12 +813,12 @@ static void vmd_remove(struct pci_dev *dev)
- {
- 	struct vmd_dev *vmd = pci_get_drvdata(dev);
- 
--	vmd_detach_resources(vmd);
- 	sysfs_remove_link(&vmd->dev->dev.kobj, "domain");
- 	pci_stop_root_bus(vmd->bus);
- 	pci_remove_root_bus(vmd->bus);
- 	vmd_cleanup_srcu(vmd);
- 	vmd_teardown_dma_ops(vmd);
-+	vmd_detach_resources(vmd);
- 	irq_domain_remove(vmd->irq_domain);
- }
- 
+Changes since v2:
+- dt-bindings: remove a comment that the node name isn't important
+- dt-bindings: remove "intx" interrupt
+- dt-bindings: define 'legacy-interrupt-controller' node and its properties
+- return an error value when link up fails
+- remove devm_request_irq() and a handler for MSI IRQ
+- use chained interrupt instead of devm_request_irq() for legacy IRQ
+- add unipher_pcie_config_legacy_irq() to get legacy IRQ from
+  'legacy-interrupt controller' node
+- replace 4 statments to handle INTX with for_each_set_bit()
+- remove initialization of pp->root_bus_nr
+- remove indivisual interrupt enable bit definitions
+- rename 'irq_domain' member to 'legacy_irq_domain' in private structure
+- use pci_irqd_intx_xlate() for irq_domain_ops.xlate function
+
+Changes since v1:
+- follow capitalization conventions in the descriptions
+- use C style comments except for the SPDX line
+
+Kunihiko Hayashi (2):
+  dt-bindings: PCI: Add UniPhier PCIe host controller description
+  PCI: uniphier: Add UniPhier PCIe host controller support
+
+ .../devicetree/bindings/pci/uniphier-pcie.txt      |  81 ++++
+ drivers/pci/controller/dwc/Kconfig                 |   9 +
+ drivers/pci/controller/dwc/Makefile                |   1 +
+ drivers/pci/controller/dwc/pcie-uniphier.c         | 432 +++++++++++++++++++++
+ 4 files changed, 523 insertions(+)
+ create mode 100644 Documentation/devicetree/bindings/pci/uniphier-pcie.txt
+ create mode 100644 drivers/pci/controller/dwc/pcie-uniphier.c
+
 -- 
-1.8.3.1
+2.7.4
 
