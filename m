@@ -7,33 +7,33 @@ X-Spam-Status: No, score=-8.7 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
 	URIBL_BLOCKED,USER_AGENT_GIT autolearn=unavailable autolearn_force=no
 	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 6FE8AC04EBD
-	for <linux-pci@archiver.kernel.org>; Tue, 16 Oct 2018 10:45:45 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 1BBAAC169D4
+	for <linux-pci@archiver.kernel.org>; Tue, 16 Oct 2018 10:45:51 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 3FC402089E
-	for <linux-pci@archiver.kernel.org>; Tue, 16 Oct 2018 10:45:45 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.3.2 mail.kernel.org 3FC402089E
+	by mail.kernel.org (Postfix) with ESMTP id DF3D020881
+	for <linux-pci@archiver.kernel.org>; Tue, 16 Oct 2018 10:45:50 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.3.2 mail.kernel.org DF3D020881
 Authentication-Results: mail.kernel.org; dmarc=none (p=none dis=none) header.from=mediatek.com
 Authentication-Results: mail.kernel.org; spf=none smtp.mailfrom=linux-pci-owner@vger.kernel.org
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727300AbeJPSf3 (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Tue, 16 Oct 2018 14:35:29 -0400
-Received: from mailgw01.mediatek.com ([210.61.82.183]:5135 "EHLO
-        mailgw01.mediatek.com" rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org
-        with ESMTP id S1727045AbeJPSew (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Tue, 16 Oct 2018 14:34:52 -0400
-X-UUID: 3160a475f52e48909605d76f7b9f6ab4-20181016
-X-UUID: 3160a475f52e48909605d76f7b9f6ab4-20181016
-Received: from mtkcas07.mediatek.inc [(172.21.101.84)] by mailgw01.mediatek.com
+        id S1727088AbeJPSev (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Tue, 16 Oct 2018 14:34:51 -0400
+Received: from mailgw02.mediatek.com ([210.61.82.184]:47719 "EHLO
+        mailgw02.mediatek.com" rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org
+        with ESMTP id S1726581AbeJPSev (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Tue, 16 Oct 2018 14:34:51 -0400
+X-UUID: 1aace9748a744448895d1386d7f55862-20181016
+X-UUID: 1aace9748a744448895d1386d7f55862-20181016
+Received: from mtkexhb01.mediatek.inc [(172.21.101.102)] by mailgw02.mediatek.com
         (envelope-from <honghui.zhang@mediatek.com>)
         (mhqrelay.mediatek.com ESMTP with TLS)
-        with ESMTP id 1106135180; Tue, 16 Oct 2018 18:44:55 +0800
+        with ESMTP id 1622814068; Tue, 16 Oct 2018 18:44:55 +0800
 Received: from MTKCAS06.mediatek.inc (172.21.101.30) by
- mtkmbs01n2.mediatek.inc (172.21.101.79) with Microsoft SMTP Server (TLS) id
- 15.0.1395.4; Tue, 16 Oct 2018 18:44:53 +0800
+ mtkmbs01n1.mediatek.inc (172.21.101.68) with Microsoft SMTP Server (TLS) id
+ 15.0.1395.4; Tue, 16 Oct 2018 18:44:54 +0800
 Received: from localhost.localdomain (10.17.3.153) by MTKCAS06.mediatek.inc
  (172.21.101.73) with Microsoft SMTP Server id 15.0.1395.4 via Frontend
- Transport; Tue, 16 Oct 2018 18:44:52 +0800
+ Transport; Tue, 16 Oct 2018 18:44:53 +0800
 From:   <honghui.zhang@mediatek.com>
 To:     <lorenzo.pieralisi@arm.com>, <bhelgaas@google.com>,
         <linux-arm-kernel@lists.infradead.org>,
@@ -44,15 +44,14 @@ CC:     <ulf.hansson@linaro.org>, <marc.zyngier@arm.com>,
         <yingjoe.chen@mediatek.com>, <eddie.huang@mediatek.com>,
         <honghui.zhang@mediatek.com>, <youlin.pei@mediatek.com>,
         <yt.shen@mediatek.com>, <jianjun.wang@mediatek.com>
-Subject: [PATCH v9 1/9] PCI: mediatek: Using slot's devfn for compare to fix mtk_pcie_find_port logic
-Date:   Tue, 16 Oct 2018 18:44:42 +0800
-Message-ID: <1539686690-24068-2-git-send-email-honghui.zhang@mediatek.com>
+Subject: [PATCH v9 2/9] PCI: Using PCI configuration space header type instead of class type to assign resource
+Date:   Tue, 16 Oct 2018 18:44:43 +0800
+Message-ID: <1539686690-24068-3-git-send-email-honghui.zhang@mediatek.com>
 X-Mailer: git-send-email 2.6.4
 In-Reply-To: <1539686690-24068-1-git-send-email-honghui.zhang@mediatek.com>
 References: <1539686690-24068-1-git-send-email-honghui.zhang@mediatek.com>
 MIME-Version: 1.0
 Content-Type: text/plain
-X-TM-SNTS-SMTP: 826833B6E5DF223E8E66B8C01491BA2C951C3DA2F9CBFA6028F1CF6380AE946F2000:8
 X-MTK:  N
 Sender: linux-pci-owner@vger.kernel.org
 Precedence: bulk
@@ -61,62 +60,110 @@ X-Mailing-List: linux-pci@vger.kernel.org
 
 From: Honghui Zhang <honghui.zhang@mediatek.com>
 
-The Mediatek's host controller has two slots, each with it's own control
-registers. The host driver need to identify which slot was connected
-in order to access the device's configuration space. There's problem
-for current host driver to find out which slot was connected to for
-a given EP device.
+The PCI configuration space header type defines the layout of the rest
+of the header (PCI r3.0 sec 6.1, PCIe r4.0 sec 7.5.1.1.9) while the
+resource assignment is based on the configuration space layout instead
+of its class type. Using configuration space header type instead of
+class type for the resource assignment.
 
-Assuming each slot have connect with one EP device as below:
-
-                host bridge
-  bus 0 --> __________|_______
-           |                  |
-           |                  |
-         slot 0             slot 1
-  bus 1 -->|        bus 2 --> |
-           |                  |
-         EP 0               EP 1
-
-During PCI enumeration, system software will scan all the PCI device
-starting from devfn 0. So it will get the proper port for slot0 and
-slot1 device when using PCI_SLOT(devfn) for match. But it will get
-the wrong slot for EP1: The devfn will be start from 0 when scanning
-EP1 behind slot1, it will get port0 since the PCI_SLOT(EP1) is match
-for port0's slot value. So the host driver should not using EP's devfn
-but the slot's devfn(the slot which EP was connected to) for match.
-
-This patch fix the mtk_pcie_find_port's logic by using the slot's
-devfn for match if finding device connected to the subordinate bus.
-
+Suggested-by: Bjorn Helgaas <bhelgaas@google.com>
 Signed-off-by: Honghui Zhang <honghui.zhang@mediatek.com>
-Acked-by: Ryder Lee <ryder.lee@mediatek.com>
 ---
- drivers/pci/controller/pcie-mediatek.c | 11 +++++++++++
- 1 file changed, 11 insertions(+)
+ drivers/pci/pci.c       |  3 +--
+ drivers/pci/probe.c     |  3 ---
+ drivers/pci/setup-bus.c | 20 ++++++++++----------
+ 3 files changed, 11 insertions(+), 15 deletions(-)
 
-diff --git a/drivers/pci/controller/pcie-mediatek.c b/drivers/pci/controller/pcie-mediatek.c
-index 9999dae..288b8e2 100644
---- a/drivers/pci/controller/pcie-mediatek.c
-+++ b/drivers/pci/controller/pcie-mediatek.c
-@@ -337,6 +337,17 @@ static struct mtk_pcie_port *mtk_pcie_find_port(struct pci_bus *bus,
- {
- 	struct mtk_pcie *pcie = bus->sysdata;
- 	struct mtk_pcie_port *port;
-+	struct pci_dev *dev = NULL;
-+
-+	/*
-+	 * Walk the bus hierarchy to get the devfn value
-+	 * of the port in the root bus.
-+	 */
-+	while (bus && bus->number) {
-+		dev = bus->self;
-+		bus = dev->bus;
-+		devfn = dev->devfn;
-+	}
+diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
+index 29ff961..7d379ca 100644
+--- a/drivers/pci/pci.c
++++ b/drivers/pci/pci.c
+@@ -5908,8 +5908,7 @@ void pci_reassigndev_resource_alignment(struct pci_dev *dev)
+ 	 * to enable the kernel to reassign new resource
+ 	 * window later on.
+ 	 */
+-	if (dev->hdr_type == PCI_HEADER_TYPE_BRIDGE &&
+-	    (dev->class >> 8) == PCI_CLASS_BRIDGE_PCI) {
++	if (dev->hdr_type == PCI_HEADER_TYPE_BRIDGE) {
+ 		for (i = PCI_BRIDGE_RESOURCES; i < PCI_NUM_RESOURCES; i++) {
+ 			r = &dev->resource[i];
+ 			if (!(r->flags & IORESOURCE_MEM))
+diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
+index ec78400..29a35c1 100644
+--- a/drivers/pci/probe.c
++++ b/drivers/pci/probe.c
+@@ -1695,9 +1695,6 @@ int pci_setup_device(struct pci_dev *dev)
+ 		break;
  
- 	list_for_each_entry(port, &pcie->ports, list)
- 		if (port->slot == PCI_SLOT(devfn))
+ 	case PCI_HEADER_TYPE_BRIDGE:		    /* bridge header */
+-		if (class != PCI_CLASS_BRIDGE_PCI)
+-			goto bad;
+-
+ 		/*
+ 		 * The PCI-to-PCI bridge spec requires that subtractive
+ 		 * decoding (i.e. transparent) bridge must have programming
+diff --git a/drivers/pci/setup-bus.c b/drivers/pci/setup-bus.c
+index 79b1824..69f90f4 100644
+--- a/drivers/pci/setup-bus.c
++++ b/drivers/pci/setup-bus.c
+@@ -182,7 +182,7 @@ static void __dev_sort_resources(struct pci_dev *dev,
+ 	u16 class = dev->class >> 8;
+ 
+ 	/* Don't touch classless devices or host bridges or ioapics.  */
+-	if (class == PCI_CLASS_NOT_DEFINED || class == PCI_CLASS_BRIDGE_HOST)
++	if (class == PCI_CLASS_NOT_DEFINED)
+ 		return;
+ 
+ 	/* Don't touch ioapic devices already enabled by firmware */
+@@ -1221,12 +1221,12 @@ void __pci_bus_size_bridges(struct pci_bus *bus, struct list_head *realloc_head)
+ 		if (!b)
+ 			continue;
+ 
+-		switch (dev->class >> 8) {
+-		case PCI_CLASS_BRIDGE_CARDBUS:
++		switch (dev->hdr_type) {
++		case PCI_HEADER_TYPE_CARDBUS:
+ 			pci_bus_size_cardbus(b, realloc_head);
+ 			break;
+ 
+-		case PCI_CLASS_BRIDGE_PCI:
++		case PCI_HEADER_TYPE_BRIDGE:
+ 		default:
+ 			__pci_bus_size_bridges(b, realloc_head);
+ 			break;
+@@ -1237,12 +1237,12 @@ void __pci_bus_size_bridges(struct pci_bus *bus, struct list_head *realloc_head)
+ 	if (pci_is_root_bus(bus))
+ 		return;
+ 
+-	switch (bus->self->class >> 8) {
+-	case PCI_CLASS_BRIDGE_CARDBUS:
++	switch (bus->self->hdr_type) {
++	case PCI_HEADER_TYPE_CARDBUS:
+ 		/* don't size cardbuses yet. */
+ 		break;
+ 
+-	case PCI_CLASS_BRIDGE_PCI:
++	case PCI_HEADER_TYPE_BRIDGE:
+ 		pci_bridge_check_ranges(bus);
+ 		if (bus->self->is_hotplug_bridge) {
+ 			additional_io_size  = pci_hotplug_io_size;
+@@ -1391,13 +1391,13 @@ void __pci_bus_assign_resources(const struct pci_bus *bus,
+ 
+ 		__pci_bus_assign_resources(b, realloc_head, fail_head);
+ 
+-		switch (dev->class >> 8) {
+-		case PCI_CLASS_BRIDGE_PCI:
++		switch (dev->hdr_type) {
++		case PCI_HEADER_TYPE_BRIDGE:
+ 			if (!pci_is_enabled(dev))
+ 				pci_setup_bridge(b);
+ 			break;
+ 
+-		case PCI_CLASS_BRIDGE_CARDBUS:
++		case PCI_HEADER_TYPE_CARDBUS:
+ 			pci_setup_cardbus(b);
+ 			break;
+ 
 -- 
 2.6.4
 
