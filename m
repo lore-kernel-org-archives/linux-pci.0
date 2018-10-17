@@ -7,38 +7,38 @@ X-Spam-Status: No, score=-8.6 required=3.0 tests=DKIM_INVALID,DKIM_SIGNED,
 	SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT autolearn=ham autolearn_force=no
 	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id EEA1EECDE35
-	for <linux-pci@archiver.kernel.org>; Wed, 17 Oct 2018 08:02:21 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 3B2AFECDE35
+	for <linux-pci@archiver.kernel.org>; Wed, 17 Oct 2018 08:02:30 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id B21B2214C3
-	for <linux-pci@archiver.kernel.org>; Wed, 17 Oct 2018 08:02:21 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id DFBF2214C3
+	for <linux-pci@archiver.kernel.org>; Wed, 17 Oct 2018 08:02:29 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=fail reason="signature verification failed" (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="X7MU2yqV"
-DMARC-Filter: OpenDMARC Filter v1.3.2 mail.kernel.org B21B2214C3
+	dkim=fail reason="signature verification failed" (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="VARKN0M3"
+DMARC-Filter: OpenDMARC Filter v1.3.2 mail.kernel.org DFBF2214C3
 Authentication-Results: mail.kernel.org; dmarc=none (p=none dis=none) header.from=lst.de
 Authentication-Results: mail.kernel.org; spf=none smtp.mailfrom=linux-pci-owner@vger.kernel.org
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727616AbeJQP4r (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Wed, 17 Oct 2018 11:56:47 -0400
-Received: from bombadil.infradead.org ([198.137.202.133]:50550 "EHLO
+        id S1727718AbeJQP44 (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Wed, 17 Oct 2018 11:56:56 -0400
+Received: from bombadil.infradead.org ([198.137.202.133]:50888 "EHLO
         bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726691AbeJQP4q (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Wed, 17 Oct 2018 11:56:46 -0400
+        with ESMTP id S1727637AbeJQP4z (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Wed, 17 Oct 2018 11:56:55 -0400
 DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
         d=infradead.org; s=bombadil.20170209; h=Content-Transfer-Encoding:
         MIME-Version:References:In-Reply-To:Message-Id:Date:Subject:Cc:To:From:Sender
         :Reply-To:Content-Type:Content-ID:Content-Description:Resent-Date:Resent-From
         :Resent-Sender:Resent-To:Resent-Cc:Resent-Message-ID:List-Id:List-Help:
         List-Unsubscribe:List-Subscribe:List-Post:List-Owner:List-Archive;
-        bh=yoAjUj25y4R5GH19rZSL/JJsy5pd/GhDvZgdcIB62yA=; b=X7MU2yqVEazsuPyRnacvedaPZs
-        CsZ3UgrEyqpk+KX71xFAxo5avenQuxLrMo7sZNbYJ01awLxfPLW8rsyOF+CwbMVqupXfm0slqPxVc
-        sxkswDsXfRb5hlcpbirxzqTf9FtK4uTSZ4m27wjj5ryNrZ0V1AYA97KSgtZKcUScHKL0g1HW3+evo
-        jia79FxVUj7IP24meksQRq3pUqQGZYI6hGJRHlhBPnJ7BMIGmP2RuwgSvz8ShsYQVBRPNzu4bB8jt
-        VhXbgJApHbyDQG5NhN2gmUJ1B8GbDycaQyJ4uh1P5OzLsQoWTX5vEIew8hki7y1N4dAkvPIkQ8EIq
-        PP3PF9gQ==;
+        bh=39zMTQSbdGWCkYgM3TcO8gzxnidTjjeKxyyL/cCZp3o=; b=VARKN0M3MglF5W7gl3dQL77t9h
+        TasVq4gbZIw1lJ6GKxCxv92H7kJaJZ5AZRv87v2+Y9ZgUXkPUTeX+mAV6Vm7CSin1DUWH/epVWRr4
+        P/HkF2XfUA6gxoOxNpVhWV4NJ0WIW8YYKk9AXOegbM6hJWH3h3S1xVmFcwEMJTx/cP+i5uHrdpYE6
+        e27e0DoqV2S/HBQN/YHHvwuov7KqxQ8Ti+rkagZhFntaFQb/dTXeyWvKa0h4Y7wswbV8AkgYA3ZIR
+        hsxF6ziLZCLOwsJPgu9xbxXPPewKlRN/JFeIfD+A/8KPyXbccb7isAh9om98V7Xki/nanp0RVmm8h
+        wRpzlL3w==;
 Received: from clnet-p19-102.ikbnet.co.at ([83.175.77.102] helo=localhost)
         by bombadil.infradead.org with esmtpsa (Exim 4.90_1 #2 (Red Hat Linux))
-        id 1gCgmR-0003GY-0K; Wed, 17 Oct 2018 08:02:11 +0000
+        id 1gCgmZ-0003KP-I0; Wed, 17 Oct 2018 08:02:19 +0000
 From:   Christoph Hellwig <hch@lst.de>
 To:     Masahiro Yamada <yamada.masahiro@socionext.com>
 Cc:     Matt Porter <mporter@kernel.crashing.org>,
@@ -47,9 +47,9 @@ Cc:     Matt Porter <mporter@kernel.crashing.org>,
         linux-kbuild@vger.kernel.org, linux-pci@vger.kernel.org,
         linux-scsi@vger.kernel.org, linux-arch@vger.kernel.org,
         linux-kernel@vger.kernel.org, linuxppc-dev@lists.ozlabs.org
-Subject: [PATCH 2/8] powerpc: remove CONFIG_PCI_QSPAN
-Date:   Wed, 17 Oct 2018 10:01:55 +0200
-Message-Id: <20181017080201.10866-3-hch@lst.de>
+Subject: [PATCH 5/8] pcmcia: allow PCMCIA support independent of the architecture
+Date:   Wed, 17 Oct 2018 10:01:58 +0200
+Message-Id: <20181017080201.10866-6-hch@lst.de>
 X-Mailer: git-send-email 2.19.1
 In-Reply-To: <20181017080201.10866-1-hch@lst.de>
 References: <20181017080201.10866-1-hch@lst.de>
@@ -61,40 +61,212 @@ Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-This option isn't actually used anywhere.
+There is nothing architecture specific in the PCMCIA core, so allow
+building it everywhere.  The actual host controllers will depend on ISA,
+PCI or a specific SOC.
 
 Signed-off-by: Christoph Hellwig <hch@lst.de>
+Acked-by: Dominik Brodowski <linux@dominikbrodowski.net>
+Acked-by: Thomas Gleixner <tglx@linutronix.de>
 ---
- arch/powerpc/Kconfig | 9 ---------
- 1 file changed, 9 deletions(-)
+ arch/alpha/Kconfig     | 2 --
+ arch/arm/Kconfig       | 2 --
+ arch/ia64/Kconfig      | 2 --
+ arch/m68k/Kconfig.bus  | 2 --
+ arch/mips/Kconfig      | 2 --
+ arch/powerpc/Kconfig   | 2 --
+ arch/sh/Kconfig        | 2 --
+ arch/sparc/Kconfig     | 2 --
+ arch/unicore32/Kconfig | 6 ------
+ arch/x86/Kconfig       | 2 --
+ arch/xtensa/Kconfig    | 2 --
+ drivers/Kconfig        | 1 +
+ drivers/parisc/Kconfig | 2 --
+ drivers/pcmcia/Kconfig | 1 +
+ 14 files changed, 2 insertions(+), 28 deletions(-)
 
-diff --git a/arch/powerpc/Kconfig b/arch/powerpc/Kconfig
-index a80669209155..e8c8970248bc 100644
---- a/arch/powerpc/Kconfig
-+++ b/arch/powerpc/Kconfig
-@@ -955,7 +955,6 @@ config PCI
- 	bool "PCI support" if PPC_PCI_CHOICE
- 	default y if !40x && !CPM2 && !PPC_8xx && !PPC_83xx \
- 		&& !PPC_85xx && !PPC_86xx && !GAMECUBE_COMMON
--	default PCI_QSPAN if PPC_8xx
- 	select GENERIC_PCI_IOMAP
- 	help
- 	  Find out whether your system includes a PCI bus. PCI is the name of
-@@ -969,14 +968,6 @@ config PCI_DOMAINS
+diff --git a/arch/alpha/Kconfig b/arch/alpha/Kconfig
+index bb89924c0361..96f02268ea16 100644
+--- a/arch/alpha/Kconfig
++++ b/arch/alpha/Kconfig
+@@ -675,8 +675,6 @@ config HZ
+ 
+ source "drivers/eisa/Kconfig"
+ 
+-source "drivers/pcmcia/Kconfig"
+-
+ config SRM_ENV
+ 	tristate "SRM environment through procfs"
+ 	depends on PROC_FS
+diff --git a/arch/arm/Kconfig b/arch/arm/Kconfig
+index 516105df6c71..60e37b9a715d 100644
+--- a/arch/arm/Kconfig
++++ b/arch/arm/Kconfig
+@@ -1256,8 +1256,6 @@ config PCI_HOST_ITE8152
+ 	default y
+ 	select DMABOUNCE
+ 
+-source "drivers/pcmcia/Kconfig"
+-
+ endmenu
+ 
+ menu "Kernel Features"
+diff --git a/arch/ia64/Kconfig b/arch/ia64/Kconfig
+index 89da763d7c17..704ff5922ce0 100644
+--- a/arch/ia64/Kconfig
++++ b/arch/ia64/Kconfig
+@@ -553,8 +553,6 @@ config PCI_DOMAINS
  config PCI_SYSCALL
  	def_bool PCI
  
--config PCI_QSPAN
--	bool "QSpan PCI"
--	depends on PPC_8xx
--	select PPC_I8259
--	help
--	  Say Y here if you have a system based on a Motorola 8xx-series
--	  embedded processor with a QSPAN PCI interface, otherwise say N.
+-source "drivers/pcmcia/Kconfig"
 -
- config PCI_8260
+ endmenu
+ 
+ endif
+diff --git a/arch/m68k/Kconfig.bus b/arch/m68k/Kconfig.bus
+index 8cb0604b195b..9d0a3a23d50e 100644
+--- a/arch/m68k/Kconfig.bus
++++ b/arch/m68k/Kconfig.bus
+@@ -68,6 +68,4 @@ if !MMU
+ config ISA_DMA_API
+         def_bool !M5272
+ 
+-source "drivers/pcmcia/Kconfig"
+-
+ endif
+diff --git a/arch/mips/Kconfig b/arch/mips/Kconfig
+index 09b93d5a55cb..18eeb66c6d99 100644
+--- a/arch/mips/Kconfig
++++ b/arch/mips/Kconfig
+@@ -3090,8 +3090,6 @@ config ZONE_DMA
+ config ZONE_DMA32
  	bool
- 	depends on PCI && 8260
+ 
+-source "drivers/pcmcia/Kconfig"
+-
+ config HAS_RAPIDIO
+ 	bool
+ 	default n
+diff --git a/arch/powerpc/Kconfig b/arch/powerpc/Kconfig
+index 8f5a49d11385..6430aafe712f 100644
+--- a/arch/powerpc/Kconfig
++++ b/arch/powerpc/Kconfig
+@@ -963,8 +963,6 @@ config PCI_8260
+ 	select PPC_INDIRECT_PCI
+ 	default y
+ 
+-source "drivers/pcmcia/Kconfig"
+-
+ config HAS_RAPIDIO
+ 	bool
+ 	default n
+diff --git a/arch/sh/Kconfig b/arch/sh/Kconfig
+index 2ff6855811a5..ce9487139155 100644
+--- a/arch/sh/Kconfig
++++ b/arch/sh/Kconfig
+@@ -861,8 +861,6 @@ config MAPLE
+ config PCI_DOMAINS
+ 	bool
+ 
+-source "drivers/pcmcia/Kconfig"
+-
+ endmenu
+ 
+ menu "Power management options (EXPERIMENTAL)"
+diff --git a/arch/sparc/Kconfig b/arch/sparc/Kconfig
+index fc311b8dc46b..0198f96528fc 100644
+--- a/arch/sparc/Kconfig
++++ b/arch/sparc/Kconfig
+@@ -509,8 +509,6 @@ config SPARC_GRPCI2
+ 	help
+ 	  Say Y here to include the GRPCI2 Host Bridge Driver.
+ 
+-source "drivers/pcmcia/Kconfig"
+-
+ config SUN_OPENPROMFS
+ 	tristate "Openprom tree appears in /proc/openprom"
+ 	help
+diff --git a/arch/unicore32/Kconfig b/arch/unicore32/Kconfig
+index 601dcad2560e..d7750e7c7ccb 100644
+--- a/arch/unicore32/Kconfig
++++ b/arch/unicore32/Kconfig
+@@ -118,12 +118,6 @@ config UNICORE_FPU_F64
+ 
+ endmenu
+ 
+-menu "Bus support"
+-
+-source "drivers/pcmcia/Kconfig"
+-
+-endmenu
+-
+ menu "Kernel Features"
+ 
+ source "kernel/Kconfig.hz"
+diff --git a/arch/x86/Kconfig b/arch/x86/Kconfig
+index 5816e20a3ff9..fda01408b596 100644
+--- a/arch/x86/Kconfig
++++ b/arch/x86/Kconfig
+@@ -2810,8 +2810,6 @@ config AMD_NB
+ 	def_bool y
+ 	depends on CPU_SUP_AMD && PCI
+ 
+-source "drivers/pcmcia/Kconfig"
+-
+ config RAPIDIO
+ 	tristate "RapidIO support"
+ 	depends on PCI
+diff --git a/arch/xtensa/Kconfig b/arch/xtensa/Kconfig
+index f057c16a48a5..c18ceaab7860 100644
+--- a/arch/xtensa/Kconfig
++++ b/arch/xtensa/Kconfig
+@@ -517,8 +517,6 @@ config FORCE_MAX_ZONEORDER
+ 	  This config option is actually maximum order plus one. For example,
+ 	  a value of 11 means that the largest free memory block is 2^10 pages.
+ 
+-source "drivers/pcmcia/Kconfig"
+-
+ config PLATFORM_WANT_DEFAULT_MEM
+ 	def_bool n
+ 
+diff --git a/drivers/Kconfig b/drivers/Kconfig
+index 059573823387..58ee88c36cf5 100644
+--- a/drivers/Kconfig
++++ b/drivers/Kconfig
+@@ -5,6 +5,7 @@ menu "Device Drivers"
+ 
+ source "drivers/amba/Kconfig"
+ source "drivers/pci/Kconfig"
++source "drivers/pcmcia/Kconfig"
+ 
+ 
+ source "drivers/base/Kconfig"
+diff --git a/drivers/parisc/Kconfig b/drivers/parisc/Kconfig
+index 5bbfea1a019c..1a55763d1245 100644
+--- a/drivers/parisc/Kconfig
++++ b/drivers/parisc/Kconfig
+@@ -92,8 +92,6 @@ config IOMMU_SBA
+ 	depends on PCI_LBA
+ 	default PCI_LBA
+ 
+-source "drivers/pcmcia/Kconfig"
+-
+ endmenu
+ 
+ menu "PA-RISC specific drivers"
+diff --git a/drivers/pcmcia/Kconfig b/drivers/pcmcia/Kconfig
+index cbbe4a285b48..c9bdbb463a7e 100644
+--- a/drivers/pcmcia/Kconfig
++++ b/drivers/pcmcia/Kconfig
+@@ -4,6 +4,7 @@
+ 
+ menuconfig PCCARD
+ 	tristate "PCCard (PCMCIA/CardBus) support"
++	depends on !UML
+ 	---help---
+ 	  Say Y here if you want to attach PCMCIA- or PC-cards to your Linux
+ 	  computer.  These are credit-card size devices such as network cards,
 -- 
 2.19.1
 
