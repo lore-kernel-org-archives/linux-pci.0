@@ -2,132 +2,100 @@ Return-Path: <SRS0=Zwnb=M5=vger.kernel.org=linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-0.8 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	MAILING_LIST_MULTI,SPF_PASS,URIBL_BLOCKED autolearn=ham autolearn_force=no
-	version=3.4.0
+X-Spam-Status: No, score=-2.9 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,
+	SPF_PASS,UNPARSEABLE_RELAY,USER_AGENT_NEOMUTT autolearn=ham
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 85DE0ECDE32
-	for <linux-pci@archiver.kernel.org>; Wed, 17 Oct 2018 08:43:56 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id DADA3ECDE30
+	for <linux-pci@archiver.kernel.org>; Wed, 17 Oct 2018 08:45:56 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 26A5821526
-	for <linux-pci@archiver.kernel.org>; Wed, 17 Oct 2018 08:43:56 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.3.2 mail.kernel.org 26A5821526
-Authentication-Results: mail.kernel.org; dmarc=none (p=none dis=none) header.from=huawei.com
+	by mail.kernel.org (Postfix) with ESMTP id 8CA79214C3
+	for <linux-pci@archiver.kernel.org>; Wed, 17 Oct 2018 08:45:56 +0000 (UTC)
+Authentication-Results: mail.kernel.org;
+	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="V8OF3VFf"
+DMARC-Filter: OpenDMARC Filter v1.3.2 mail.kernel.org 8CA79214C3
+Authentication-Results: mail.kernel.org; dmarc=fail (p=none dis=none) header.from=oracle.com
 Authentication-Results: mail.kernel.org; spf=none smtp.mailfrom=linux-pci-owner@vger.kernel.org
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726768AbeJQQid (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Wed, 17 Oct 2018 12:38:33 -0400
-Received: from szxga06-in.huawei.com ([45.249.212.32]:49509 "EHLO huawei.com"
-        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1726561AbeJQQid (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Wed, 17 Oct 2018 12:38:33 -0400
-Received: from DGGEMS409-HUB.china.huawei.com (unknown [172.30.72.59])
-        by Forcepoint Email with ESMTP id E39C733B5C9E6;
-        Wed, 17 Oct 2018 16:43:50 +0800 (CST)
-Received: from [127.0.0.1] (10.177.223.23) by DGGEMS409-HUB.china.huawei.com
- (10.3.19.209) with Microsoft SMTP Server id 14.3.399.0; Wed, 17 Oct 2018
- 16:43:44 +0800
-Subject: Re: [Bug report] NVMe and RAID probe fail with commit cdf6b7362108
-To:     Lukas Wunner <lukas@wunner.de>
-CC:     Bjorn Helgaas <bhelgaas@google.com>,
-        "Rafael J. Wysocki" <rafael.j.wysocki@intel.com>,
-        Mika Westerberg <mika.westerberg@linux.intel.com>,
-        "wangxiongfeng (C)" <wangxiongfeng2@huawei.com>,
-        <linux-pci@vger.kernel.org>, Linuxarm <linuxarm@huawei.com>,
-        Xie XiuQi <xiexiuqi@huawei.com>,
-        "liudongdong (C)" <liudongdong3@huawei.com>
-References: <ce7332ed-0dfb-da20-40e8-702c755d3e08@huawei.com>
- <20181017075612.eie3i44myjyj6r6d@wunner.de>
-From:   Hanjun Guo <guohanjun@huawei.com>
-Message-ID: <b094b253-d988-12c0-3dc9-a8cbb7e28135@huawei.com>
-Date:   Wed, 17 Oct 2018 16:43:31 +0800
-User-Agent: Mozilla/5.0 (Windows NT 6.1; WOW64; rv:52.0) Gecko/20100101
- Thunderbird/52.5.0
+        id S1726561AbeJQQke (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Wed, 17 Oct 2018 12:40:34 -0400
+Received: from userp2130.oracle.com ([156.151.31.86]:55684 "EHLO
+        userp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726482AbeJQQkd (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Wed, 17 Oct 2018 12:40:33 -0400
+Received: from pps.filterd (userp2130.oracle.com [127.0.0.1])
+        by userp2130.oracle.com (8.16.0.22/8.16.0.22) with SMTP id w9H8i018099754;
+        Wed, 17 Oct 2018 08:45:47 GMT
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=date : from : to : cc
+ : subject : message-id : mime-version : content-type; s=corp-2018-07-02;
+ bh=p1ZH1FzQOD9KGrRoQ7Ypniu1T5clRu635OJnee/nSRY=;
+ b=V8OF3VFfJQ6zbdz2U0bJKtZyshsp+qH7tcRGablssHHk9Kvr276+2s1sirJnjl9jIVXg
+ f3dwjV2lVURBDx2u4rdoeJ/9jAM+5+Fl4Al5GLNiJw6NTnFT1R/Ul/elWqq5HVjmDhlG
+ qwQlTJf1tUTDyUcSQmQVMa4A6BCRzVwKs2P8jMr9Ov3Ikw04LjLxHadq1kj7PUI115I3
+ JgDR2xLrr8jscvKMPxKZBRbynV6DwjIsAJRanjlzN6O5eQ0Ms7mhxrLwbEtUcwjmg2ym
+ TBUTEAxaK8EVW/KYHQheplGk4ID13jgQ7DBmPUZOu9AK5ngoBA8kXEQqPv2kSi8mqVdy PQ== 
+Received: from userv0022.oracle.com (userv0022.oracle.com [156.151.31.74])
+        by userp2130.oracle.com with ESMTP id 2n384u5pr6-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
+        Wed, 17 Oct 2018 08:45:47 +0000
+Received: from aserv0121.oracle.com (aserv0121.oracle.com [141.146.126.235])
+        by userv0022.oracle.com (8.14.4/8.14.4) with ESMTP id w9H8jjWo030214
+        (version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
+        Wed, 17 Oct 2018 08:45:46 GMT
+Received: from abhmp0005.oracle.com (abhmp0005.oracle.com [141.146.116.11])
+        by aserv0121.oracle.com (8.14.4/8.13.8) with ESMTP id w9H8jjAl006087;
+        Wed, 17 Oct 2018 08:45:45 GMT
+Received: from kili.mountain (/129.205.6.86)
+        by default (Oracle Beehive Gateway v4.0)
+        with ESMTP ; Wed, 17 Oct 2018 01:45:44 -0700
+Date:   Wed, 17 Oct 2018 11:45:29 +0300
+From:   Dan Carpenter <dan.carpenter@oracle.com>
+To:     logang@deltatee.com
+Cc:     linux-pci@vger.kernel.org
+Subject: [bug report] PCI/P2PDMA: Support peer-to-peer memory
+Message-ID: <20181017084529.hizjk6bdxsgpuvn5@kili.mountain>
 MIME-Version: 1.0
-In-Reply-To: <20181017075612.eie3i44myjyj6r6d@wunner.de>
-Content-Type: text/plain; charset="utf-8"
-Content-Language: en-US
-Content-Transfer-Encoding: 7bit
-X-Originating-IP: [10.177.223.23]
-X-CFilter-Loop: Reflected
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+User-Agent: NeoMutt/20170113 (1.7.2)
+X-Proofpoint-Virus-Version: vendor=nai engine=5900 definitions=9048 signatures=668706
+X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 suspectscore=1 malwarescore=0
+ phishscore=0 bulkscore=0 spamscore=0 mlxscore=0 mlxlogscore=449
+ adultscore=0 classifier=spam adjust=0 reason=mlx scancount=1
+ engine=8.0.1-1807170000 definitions=main-1810170079
 Sender: linux-pci-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-Hi Lukas,
+Hello Logan Gunthorpe,
 
-Thank you for the quick reply.
+This is a semi-automatic email about new static checker warnings.
 
-On 2018/10/17 15:56, Lukas Wunner wrote:
-> On Wed, Oct 17, 2018 at 11:38:11AM +0800, Hanjun Guo wrote:
->> We met NVMe and RAID probe failure on 4.19-rc1+ based kernel on
->> Hisilicon D06, then we bisect to this commit:
->>
->> cdf6b7362108 "PCI: pciehp: Always enable occupied slot on probe"
->>
->> Reverting this patch makes the system back to functional, I'm not
->> sure why this lead some regression on our board, could you share
->> some idea on this?
->>
->> Boot log below, [0] is the failure one, [1] is the good one,
->> please let me you if you need something more.
-> 
-> Please cherry-pick the following linux-next commit and test if the
-> issue goes away:
-> 
->     commit 80696f991424d05a784c0cf9c314ac09ac280406
->     Author: Lukas Wunner <lukas@wunner.de>
->     Date:   Sat Sep 8 09:59:01 2018 +0200
->     
->     PCI: pciehp: Tolerate Presence Detect hardwired to zero
-> 
-> If this does not fix the issue, please provide full dmesg output for
-> the working and non-working case with "pciehp.pciehp_debug=1" on the
-> kernel command line, preferrably attached to a bugzilla entry.
-> 
-> Detailed analysis of the dmesg output you've already provided:
-> 
-> There are 9 hotplug ports but devices are only present below 4 of them:
-> a RAID adapter, a BMC with VGA, a 2x 10G Ethernet adapter and the NVMe drive:
-> 
-> 0000:00:00.0 [19e5:a120] bridge to [bus 01]
-> 0000:00:04.0 [19e5:a120] bridge to [bus 02]
-> 0000:00:08.0 [19e5:a120] bridge to [bus 03]: 0000:03:00.0 [1000:0097] mpt3sas *
-> 0000:00:10.0 [19e5:a120] bridge to [bus 04]: 0000:04:00.0 [19e5:1711] hibmc   *
-> 0000:00:12.0 [19e5:a120] bridge to [bus 05]: 0000:05:00.0 [8086:10fb] ixgbe
->                                              0000:05:00.1 [8086:10fb] ixgbe
-> 0000:80:00.0 [19e5:a120] bridge to [bus 81]: 0000:81:00.0 [19e5:0123] nvme    *
-> 0000:80:08.0 [19e5:a120] bridge to [bus 82]
-> 0000:80:0c.0 [19e5:a120] bridge to [bus 83]
-> 0000:80:10.0 [19e5:a120] bridge to [bus 84]
-> 
-> Of the 4 occupied hotplug ports, 3 exhibit a hardware bug wherein the link
-> is reported to be up but the Presence Detect State bit in the Slot Status
-> register is zero.  Consequently pciehp deems the slot unoccupied.
-> I've marked the broken ports with an asterisk *.
+The patch 31fd98513249: "PCI/P2PDMA: Support peer-to-peer memory" 
+from Oct 4, 2018, leads to the following Smatch complaint:
 
-Thank you very much for the clue, it helps a lot.
+    drivers/pci/p2pdma.c:684 pci_p2pmem_publish()
+     error: we previously assumed 'pdev->p2pdma' could be null (see line 681)
 
-> 
-> The above-mentioned commit works around such broken hardware but so far
-> we knew only of a single affected chip, the Wilocity/QCA wil6210.
-> It looks like this bug is more common than we thought, so it might be
-> worth applying it already to v4.19.  However v4.19 is expected to be
-> released in 4 days, so backporting to a 4.19 stable release might be
-> more practical than squeezing the commit in before the coming Sunday.
+drivers/pci/p2pdma.c
+   680	{
+   681		if (publish && !pdev->p2pdma)
+                    ^^^^^^^^^^^^^^^^^^^^^^^^
 
-Make sense to me.
+It feels like this should just be:
 
-> 
-> For some reason the hotplug port 0000:00:12.0 with the 2x 10G Ethernet
-> adapter does not exhibit the hardware bug.
+		if (!pdev->p2pdma)
 
-After some debug of the hardware, only some ports were set to have the
-capability for hotplug, 0000:00:12 is the one (obviously ports for nvme
-and mpt3sas are not), so some behave OK and others are not, can be easily
-fixed by BIOS and cpld logic on the board.
+In other words, I don't understand why we are testing "publish"...
 
-Thank you again for the help.
-Hanjun
+   682			return;
+   683	
+   684		pdev->p2pdma->p2pmem_published = publish;
+                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+   685	}
+   686	EXPORT_SYMBOL_GPL(pci_p2pmem_publish);
 
+regards,
+dan carpenter
