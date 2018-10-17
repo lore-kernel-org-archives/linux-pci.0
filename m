@@ -2,134 +2,145 @@ Return-Path: <SRS0=Zwnb=M5=vger.kernel.org=linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-8.6 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
-	DKIM_VALID_AU,FREEMAIL_FORGED_FROMDOMAIN,FREEMAIL_FROM,
-	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
-	SPF_PASS,USER_AGENT_NEOMUTT autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-8.3 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_PASS,URIBL_BLOCKED,
+	USER_AGENT_MUTT autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 3E504ECDE32
-	for <linux-pci@archiver.kernel.org>; Wed, 17 Oct 2018 14:11:56 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 26F53ECDE30
+	for <linux-pci@archiver.kernel.org>; Wed, 17 Oct 2018 14:13:06 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 0223A214C2
-	for <linux-pci@archiver.kernel.org>; Wed, 17 Oct 2018 14:11:56 +0000 (UTC)
-Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="GG5XkhP9"
-DMARC-Filter: OpenDMARC Filter v1.3.2 mail.kernel.org 0223A214C2
-Authentication-Results: mail.kernel.org; dmarc=fail (p=none dis=none) header.from=gmail.com
+	by mail.kernel.org (Postfix) with ESMTP id C5AEE214C2
+	for <linux-pci@archiver.kernel.org>; Wed, 17 Oct 2018 14:13:05 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.3.2 mail.kernel.org C5AEE214C2
+Authentication-Results: mail.kernel.org; dmarc=none (p=none dis=none) header.from=arm.com
 Authentication-Results: mail.kernel.org; spf=none smtp.mailfrom=linux-pci-owner@vger.kernel.org
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727048AbeJQWHr (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Wed, 17 Oct 2018 18:07:47 -0400
-Received: from mail-pl1-f196.google.com ([209.85.214.196]:39807 "EHLO
-        mail-pl1-f196.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1727037AbeJQWHr (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Wed, 17 Oct 2018 18:07:47 -0400
-Received: by mail-pl1-f196.google.com with SMTP id e67-v6so3779935plb.6;
-        Wed, 17 Oct 2018 07:11:54 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20161025;
-        h=date:from:to:cc:subject:message-id:references:mime-version
-         :content-disposition:in-reply-to:user-agent;
-        bh=FaPs55bqnuyP+FLEaAyUF6ZVLn1DpC5Q1ZV5DDxmVWE=;
-        b=GG5XkhP98u4EMlVzOg/HseeCXBGQEGCq1wcI+2ysjM1JnHVUCjB3Elf5VFyB0cUUFk
-         brjT4E9WcBlJYIa01FUQami5ezSqlqQRRDLd+8mOg9/4K/EyGc9SK/U/+F5MtdEMZZAx
-         f11x8VChaFs+/83qlX6XGlO7uUch3c5zMgd9xmwY2ETyD16MzRlVYTVmg31JbhNQPMWq
-         hljhbmz8oW8L2ROMDgYeyKOOsE0A7vm/UUGsOqGwrLZrrPFYgSX21KiYWdZZ071ifFdZ
-         QAI3T9p4z2X3oWiZ3zAykAmvQGOF69yuIDWw+hJ37XMU7n2c9aDjHl+gl0+GRwxvWc3C
-         x7gA==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20161025;
-        h=x-gm-message-state:date:from:to:cc:subject:message-id:references
-         :mime-version:content-disposition:in-reply-to:user-agent;
-        bh=FaPs55bqnuyP+FLEaAyUF6ZVLn1DpC5Q1ZV5DDxmVWE=;
-        b=Ia+JNi/0yP7U6oqTXToGI0mHLHw43nvGZTHncpAzEX+GlTcy+PwrV9VoVk5V1e/i0H
-         aGtzUxVWN/i/ztRrXcbyjXdLLD0n3/rgO9wHymm9bRPwqUh29sWEvsWZ3t7j02VncY4h
-         +2WR+5KCiNDIfqkWGybBfcxAE+xvZv85B+NuWZtE86dSkRfzAhhlC3ZtcMWdt4mTUSKL
-         OtVy9GW08ALQ68NArpniScIq9mqIGXaJ1Z4Py9IcZOPHf4nGkBox0ZhItksxFeMvWi/l
-         8Ed1sk+xg9cT84evCDmaouwZRcg2dSQQXaT+BhDtGT8Im0tXUrbQu0bHl1egxPxRgS+T
-         Ylag==
-X-Gm-Message-State: ABuFfoj4pAUdTZRXL99zwABfjyOb8PQVepz5CtL2dykw8123gF7camJH
-        ZOWfy3A7u2YM7V1mjPeeEaw=
-X-Google-Smtp-Source: ACcGV604vbnaYACb/pZtykEZIR0bkCgs67WnJ5iTjfK9Di33TUdI109HyVeqOfgi50s0OKtDRZ4JXA==
-X-Received: by 2002:a17:902:b70d:: with SMTP id d13-v6mr25819322pls.44.1539785514600;
-        Wed, 17 Oct 2018 07:11:54 -0700 (PDT)
-Received: from mail.google.com ([2001:19f0:6001:4ff6:5400:1ff:feb7:a195])
-        by smtp.gmail.com with ESMTPSA id y24-v6sm34215688pfi.24.2018.10.17.07.11.53
-        (version=TLS1_2 cipher=ECDHE-RSA-CHACHA20-POLY1305 bits=256/256);
-        Wed, 17 Oct 2018 07:11:54 -0700 (PDT)
-Date:   Wed, 17 Oct 2018 14:11:52 +0000
-From:   Du Changbin <changbin.du@gmail.com>
-To:     bhelgaas@google.com, changbin.du@gmail.com
-Cc:     linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org
-Subject: Re: [PATCH] PCI: make pci_size() return real size
-Message-ID: <20181017135151.mg22ki76ywta6c5i@mail.google.com>
-References: <20181013004919.3202-1-changbin.du@gmail.com>
+        id S1727103AbeJQWI5 (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Wed, 17 Oct 2018 18:08:57 -0400
+Received: from foss.arm.com ([217.140.101.70]:52432 "EHLO foss.arm.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1727037AbeJQWI5 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Wed, 17 Oct 2018 18:08:57 -0400
+Received: from usa-sjc-imap-foss1.foss.arm.com (unknown [10.72.51.249])
+        by usa-sjc-mx-foss1.foss.arm.com (Postfix) with ESMTP id 9EF9C80D;
+        Wed, 17 Oct 2018 07:13:04 -0700 (PDT)
+Received: from e107981-ln.cambridge.arm.com (unknown [10.1.197.40])
+        by usa-sjc-imap-foss1.foss.arm.com (Postfix) with ESMTPSA id 95EFE3F59C;
+        Wed, 17 Oct 2018 07:13:03 -0700 (PDT)
+Date:   Wed, 17 Oct 2018 15:12:58 +0100
+From:   Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
+To:     Jon Derrick <jonathan.derrick@intel.com>, bhelgaas@google.com
+Cc:     linux-pci@vger.kernel.org, Bjorn Helgaas <helgaas@kernel.org>,
+        Keith Busch <keith.busch@intel.com>
+Subject: Re: [PATCH 2/2] PCI/VMD: Set up firmware-first if capable
+Message-ID: <20181017140733.GA6674@e107981-ln.cambridge.arm.com>
+References: <1539650888-3792-1-git-send-email-jonathan.derrick@intel.com>
+ <1539650888-3792-3-git-send-email-jonathan.derrick@intel.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20181013004919.3202-1-changbin.du@gmail.com>
-User-Agent: NeoMutt/20180716-508-7c9a6d
+In-Reply-To: <1539650888-3792-3-git-send-email-jonathan.derrick@intel.com>
+User-Agent: Mutt/1.5.24 (2015-08-30)
 Sender: linux-pci-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-Hi Bjorn. Have you checked this little improvment? The idea here is that
-this is not a hotspot, so readbility matters than trick. Thanks!
+On Mon, Oct 15, 2018 at 06:48:08PM -0600, Jon Derrick wrote:
+> The VMD endpoint device exposes a domain of root ports and any
+> downstream devices attached to that hierarchy. VMD domains consisting of
+> the root ports and downstream devices are not represented in the ACPI
+> tables and _OSC is unsupported. Because of this non-standard way of
+> signaling firmware-first enabling on the root ports, the VMD device
+> instead advertises support for firmware-first on the root ports by
+> setting its interface bit to 0x1.
+> 
+> When firmware-first is enabled on a VMD domain, the driver sets up the
+> root port control registers to generate SMI system interrupts to
+> firmware on errors. System firmware will handle the error as it sees
+> fit, then passes back control to VMD with a synthesized MSI message.
+> 
+> Because of this kernel pass-back, the driver does not disable the native
+> AER port service driver attached to the VMD root ports, allowing for
+> further kernel error handling if desired.
 
-On Sat, Oct 13, 2018 at 08:49:19AM +0800, changbin.du@gmail.com wrote:
-> From: Du Changbin <changbin.du@gmail.com>
-> 
-> Currently, the pci_size() function actually return 'size-1'.
-> Make it return real size to avoid confusing.
-> 
-> Signed-off-by: Du Changbin <changbin.du@gmail.com>
+This patch looks more like a policy to detect whether the generic
+Root Port system error reporting should be enabled or not, or at
+least may be generalized as such.
+
+It is contained in the VMD driver - I would like to have Keith and Bjorn
+opinions before merging it, see below.
+
+> Signed-off-by: Jon Derrick <jonathan.derrick@intel.com>
 > ---
->  drivers/pci/probe.c | 8 ++++----
->  1 file changed, 4 insertions(+), 4 deletions(-)
+>  drivers/pci/controller/vmd.c | 30 ++++++++++++++++++++++++++++++
+>  1 file changed, 30 insertions(+)
 > 
-> diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
-> index 201f9e5ff55c..8ff2b1413865 100644
-> --- a/drivers/pci/probe.c
-> +++ b/drivers/pci/probe.c
-> @@ -121,13 +121,13 @@ static u64 pci_size(u64 base, u64 maxbase, u64 mask)
->  	 * Get the lowest of them to find the decode size, and from that
->  	 * the extent.
->  	 */
-> -	size = (size & ~(size-1)) - 1;
-> +	size = size & ~(size-1);
+> diff --git a/drivers/pci/controller/vmd.c b/drivers/pci/controller/vmd.c
+> index 46ed80f..9625dca 100644
+> --- a/drivers/pci/controller/vmd.c
+> +++ b/drivers/pci/controller/vmd.c
+> @@ -589,6 +589,7 @@ static int vmd_enable_domain(struct vmd_dev *vmd, unsigned long features)
+>  	LIST_HEAD(resources);
+>  	resource_size_t offset[2] = {0};
+>  	resource_size_t membar2_offset = 0x2000, busn_start = 0;
+> +	u8 interface;
 >  
 >  	/*
->  	 * base == maxbase can be valid only if the BAR has already been
->  	 * programmed with all 1s.
->  	 */
-> -	if (base == maxbase && ((base | size) & mask) != mask)
-> +	if (base == maxbase && ((base | (size - 1)) & mask) != mask)
->  		return 0;
+>  	 * Shadow registers may exist in certain VMD device ids which allow
+> @@ -718,6 +719,35 @@ static int vmd_enable_domain(struct vmd_dev *vmd, unsigned long features)
+>  	dev_set_msi_domain(&vmd->bus->dev, vmd->irq_domain);
+>  	pci_rescan_bus(vmd->bus);
 >  
->  	return size;
-> @@ -278,7 +278,7 @@ int __pci_read_base(struct pci_dev *dev, enum pci_bar_type type,
->  			/* Above 32-bit boundary; try to reallocate */
->  			res->flags |= IORESOURCE_UNSET;
->  			res->start = 0;
-> -			res->end = sz64;
-> +			res->end = sz64 - 1;
->  			pci_info(dev, "reg 0x%x: can't handle BAR above 4GB (bus address %#010llx)\n",
->  				 pos, (unsigned long long)l64);
->  			goto out;
-> @@ -286,7 +286,7 @@ int __pci_read_base(struct pci_dev *dev, enum pci_bar_type type,
->  	}
->  
->  	region.start = l64;
-> -	region.end = l64 + sz64;
-> +	region.end = l64 + sz64 - 1;
->  
->  	pcibios_bus_to_resource(dev->bus, res, &region);
->  	pcibios_resource_to_bus(dev->bus, &inverted_region, res);
-> -- 
-> 2.17.1
-> 
+> +	/*
+> +	 * Certain VMD devices may request firmware-first error handling
+> +	 * support on the domain. These domains are virtual and not described
+> +	 * by ACPI and must be configured manually. VMD domains which utilize
+> +	 * firmware-first may still require further kernel error handling, but
+> +	 * the domain is intended to first interrupt upon error to system
+> +	 * firmware before being passed back to the kernel. The system error
+> +	 * handling bits in the root port control register must be enabled
+> +	 * following the AER service driver configuration in order to generate
+> +	 * these system interrupts.
+> +	 *
+> +	 * Because the root ports are not described by ACPI and _OSC is
+> +	 * unsupported in VMD domains, the intent to use firmware-first error
+> +	 * handling in the root ports is instead described by the VMD device's
+> +	 * interface bit.
+> +	 */
+> +	pci_read_config_byte(vmd->dev, PCI_CLASS_PROG, &interface);
+> +	if (interface == 0x1) {
+> +		struct pci_dev *rpdev;
+> +
+> +		list_for_each_entry(rpdev, &vmd->bus->devices, bus_list) {
+> +			if (rpdev->aer_cap)
 
--- 
-Thanks,
-Du Changbin
+This should be CONFIG_PCIEAER guarded but I would like to understand its
+logic.
+
+IIUC this assumes all devices in the root bus are root ports, which is
+an VMD assumption I reckon.
+
+> +				pcie_capability_set_word(rpdev, PCI_EXP_RTCTL,
+> +							 PCI_EXP_RTCTL_SECEE  |
+> +							 PCI_EXP_RTCTL_SENFEE |
+> +							 PCI_EXP_RTCTL_SEFEE);
+
+I wonder whether this code should be part of the generic AER layer (ie
+the PCIE port driver) rather than VMD specific, after all that's part of
+the generic specifications, I do not know if we can envisage an API that
+allow PCI controller drivers to enable/disable system errors.
+
+Thoughts ?
+
+Lorenzo
+
+> +		}
+> +	}
+> +
+>  	WARN(sysfs_create_link(&vmd->dev->dev.kobj, &vmd->bus->dev.kobj,
+>  			       "domain"), "Can't create symlink to domain\n");
+>  	return 0;
+> -- 
+> 1.8.3.1
+> 
