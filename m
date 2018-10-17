@@ -2,57 +2,55 @@ Return-Path: <SRS0=Zwnb=M5=vger.kernel.org=linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-8.9 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,
-	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT
-	autolearn=unavailable autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-2.9 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,
+	SPF_PASS,USER_AGENT_GIT autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 8807DC04EB9
-	for <linux-pci@archiver.kernel.org>; Wed, 17 Oct 2018 06:00:00 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 0A59AC04EB9
+	for <linux-pci@archiver.kernel.org>; Wed, 17 Oct 2018 06:00:03 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 38D34214C4
-	for <linux-pci@archiver.kernel.org>; Wed, 17 Oct 2018 06:00:00 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id BE40E214C4
+	for <linux-pci@archiver.kernel.org>; Wed, 17 Oct 2018 06:00:02 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (1024-bit key) header.d=broadcom.com header.i=@broadcom.com header.b="NedRIZKN"
-DMARC-Filter: OpenDMARC Filter v1.3.2 mail.kernel.org 38D34214C4
+	dkim=pass (1024-bit key) header.d=broadcom.com header.i=@broadcom.com header.b="Iomrhsnf"
+DMARC-Filter: OpenDMARC Filter v1.3.2 mail.kernel.org BE40E214C4
 Authentication-Results: mail.kernel.org; dmarc=fail (p=quarantine dis=none) header.from=broadcom.com
 Authentication-Results: mail.kernel.org; spf=none smtp.mailfrom=linux-pci-owner@vger.kernel.org
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727146AbeJQNx0 (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Wed, 17 Oct 2018 09:53:26 -0400
-Received: from mail-yb1-f196.google.com ([209.85.219.196]:38440 "EHLO
-        mail-yb1-f196.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1727141AbeJQNxZ (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Wed, 17 Oct 2018 09:53:25 -0400
-Received: by mail-yb1-f196.google.com with SMTP id e190-v6so9875259ybb.5
-        for <linux-pci@vger.kernel.org>; Tue, 16 Oct 2018 22:59:26 -0700 (PDT)
+        id S1726923AbeJQNyA (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Wed, 17 Oct 2018 09:54:00 -0400
+Received: from mail-yw1-f66.google.com ([209.85.161.66]:36094 "EHLO
+        mail-yw1-f66.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1727035AbeJQNxU (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Wed, 17 Oct 2018 09:53:20 -0400
+Received: by mail-yw1-f66.google.com with SMTP id e201-v6so9882893ywa.3
+        for <linux-pci@vger.kernel.org>; Tue, 16 Oct 2018 22:59:22 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=broadcom.com; s=google;
-        h=from:to:cc:subject:date:message-id:in-reply-to:references;
-        bh=JKEeSaI0NWMtpYbArZasgm1Rp1ul3p0mgAzF0mTISHs=;
-        b=NedRIZKNBu4n/Uk2fvx5iUfyDeAUyX5zshZkWWFiP9gXWX3B2sq1CfhSwUi3TEoIru
-         XIq4NjTPhotGOtu5rGvZ81nfh7Rx+PKkKM9edUY4AeJmkYn19DO1cxBMJ332mK55voXd
-         hr/gUa0iP57rKRNLKrsEKiz5C/FAkteUGG1Eo=
+        h=from:to:cc:subject:date:message-id;
+        bh=sCauzHwXqwCjUbPk1DeKyYb1CHYEMkWxnfrc84MWjQs=;
+        b=IomrhsnfaJziWJKmqJhNsJP5r28FROKz9zTZSoy1+RWrCSPaB3+7+5AQYj8spHuBie
+         T1c9z1UA7SYKxfXM4zR9xy5ZH+xmkO01LNV8K9dWpY+qvE+H73bOxMo/EAKT05p3LK1z
+         /dcl0RXgB+P094LeuZUTKma/wm2diCT23lMYE=
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20161025;
-        h=x-gm-message-state:from:to:cc:subject:date:message-id:in-reply-to
-         :references;
-        bh=JKEeSaI0NWMtpYbArZasgm1Rp1ul3p0mgAzF0mTISHs=;
-        b=Ifj49baYumy1DdwUGs6dvuV2hzQ1udzTIAWxGnUkZIDF/3uI3qUr0zV5B65yamWaph
-         jaK+RQVOzfcIBrgjoSnOYVxglSGUGM8d3/9+lcD6I/QxvMzIE6qLtwUNM/dedu0Za4cN
-         xl7M+z6O1rjmJ+EMJ73EdTx4dBvQY2CKNBvBhg6DrglHdt17WYmALe1b0Tp3YHNd5KTV
-         sO1RR1y71mwlS+/HrDz9K6BFV2Oa3hCbLmoH4Gtv2H9sgr3YNSEPwRSV6Fc+9Z6/Z9Nf
-         bFeJ8uWGKy2oZGmFLacYts0I6nhS5mlcvFTqzN+jkxY8n2ycvievCrn2fVRef/UQSGoD
-         HFOA==
-X-Gm-Message-State: ABuFfoixBwVGnp3gTJR+gR+YgpqNkQu12c+xi9/klBsiJQnN5IIMgtGF
-        5885JjZ4LGAse0Dcn5VMLPRbMA==
-X-Google-Smtp-Source: ACcGV613BKn9dDwq3b8p3rEFjeZ8ZHxgODkwBxu2QG/b2RLW5hUlFDAXvbR4EMwyv3s0hE4c0Poxfg==
-X-Received: by 2002:a5b:50f:: with SMTP id o15-v6mr13042119ybp.7.1539755966073;
-        Tue, 16 Oct 2018 22:59:26 -0700 (PDT)
+        h=x-gm-message-state:from:to:cc:subject:date:message-id;
+        bh=sCauzHwXqwCjUbPk1DeKyYb1CHYEMkWxnfrc84MWjQs=;
+        b=C6Y1GAr1HQkfqJ34m57IGxXqbU6nV4be102rg3mkqX3p15IzZsCqTBsXPCVM/3BYng
+         zmgF393Q2+J3mtMlfF4iYpkRkxPjsnJ59fEti4kWXc4IlJQ2MNz8/ic1i12xrqutjfPd
+         ePvpkIbhnMgcEuPrL6tMPnpxsuPdSRPnPDBhgTPBB3tELbZ043ssuFr3YChOpVirBDXJ
+         skDTx0PqVXSu7SjTFzko0JyOPgfhELjMFVlj8uLX7XD6J9WpOJdpLaayGj0ELYuJq/55
+         YkPnad1C8Hbj2af6egFKR2GChnNKSHH/QkbW16YibDeZi2lUrxzkwKQzNZlDOiatVf2S
+         QQYw==
+X-Gm-Message-State: ABuFfojfychsnCTHC5gghBxFunrveSf6IOI/wdp3xUibc1EO98lANViH
+        Rgyw79UB4l2RZNp+qrmDyQaBMg==
+X-Google-Smtp-Source: ACcGV62EurbfrbUeMxd5FAO+AusgU4Ptwq1OPbSnHWOge2IYtNSuWg7S9mF6ShCoTelk67QQ9NyCxQ==
+X-Received: by 2002:a0d:c505:: with SMTP id h5-v6mr13709930ywd.477.1539755961550;
+        Tue, 16 Oct 2018 22:59:21 -0700 (PDT)
 Received: from dhcp-10-123-74-106.dhcp.broadcom.net ([192.19.234.250])
-        by smtp.gmail.com with ESMTPSA id y1-v6sm3930329ywf.34.2018.10.16.22.59.21
+        by smtp.gmail.com with ESMTPSA id y1-v6sm3930329ywf.34.2018.10.16.22.59.16
         (version=TLS1_2 cipher=ECDHE-RSA-AES128-GCM-SHA256 bits=128/128);
-        Tue, 16 Oct 2018 22:59:25 -0700 (PDT)
+        Tue, 16 Oct 2018 22:59:20 -0700 (PDT)
 From:   Suganath Prabu <suganath-prabu.subramani@broadcom.com>
 To:     helgaas@kernel.org, lukas@wunner.de, linux-scsi@vger.kernel.org,
         linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org
@@ -61,397 +59,48 @@ Cc:     benh@kernel.crashing.org, ruscur@russell.cc,
         andy.shevchenko@gmail.com, Sathya.Prakash@broadcom.com,
         sreekanth.reddy@broadcom.com,
         Suganath Prabu <suganath-prabu.subramani@broadcom.com>
-Subject: [v5 1/4] mpt3sas: Separate out mpt3sas_wait_for_ioc_to_operational
-Date:   Wed, 17 Oct 2018 11:29:04 +0530
-Message-Id: <1539755947-27014-2-git-send-email-suganath-prabu.subramani@broadcom.com>
+Subject: [v5 0/4] mpt3sas: Hot-Plug Surprise removal support on IOC.
+Date:   Wed, 17 Oct 2018 11:29:03 +0530
+Message-Id: <1539755947-27014-1-git-send-email-suganath-prabu.subramani@broadcom.com>
 X-Mailer: git-send-email 1.8.3.1
-In-Reply-To: <1539755947-27014-1-git-send-email-suganath-prabu.subramani@broadcom.com>
-References: <1539755947-27014-1-git-send-email-suganath-prabu.subramani@broadcom.com>
 Sender: linux-pci-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-No functional changes. This section of code
- "wait for IOC to be operational" is used in many places
- across the driver, and hence moved this code in to
- a function "mpt3sas_wait_for_ioc_to_operational()"
+V5 Change set:
+V5 post has only defect fixes.
+We are reworking and incorporating the suggestions from Bjorn.
+And after covering tests, we ll be post Hot-Plug Surprise
+ removal patches.
 
-Signed-off-by: Suganath Prabu <suganath-prabu.subramani@broadcom.com>
----
- drivers/scsi/mpt3sas/mpt3sas_base.c      | 77 +++++++++++++++++++-------------
- drivers/scsi/mpt3sas/mpt3sas_base.h      |  4 ++
- drivers/scsi/mpt3sas/mpt3sas_config.c    | 25 +++--------
+V4 Change set:
+Reframe split strings in print statement, to avoid
+
+V3 Change Set:
+Simplified function "mpt3sas_base_pci_device_is_available" and
+made inline
+
+V2 changes:
+Replaced mpt3sas_base_pci_device_is_unplugged with
+pci_device_is_present.
+
+V1 changes:
+In Patch 0001 - unlock mutex, if active reset is in progress.
+
+  mpt3sas: Separate out mpt3sas_wait_for_ioc_to_operational
+  mpt3sas: Fix Sync cache command failure during driver unload
+  mpt3sas:Fix driver modifying persistent data.
+  mpt3sas: Bump driver version to 27.100.00.00.
+
+ drivers/scsi/mpt3sas/mpt3sas_base.c      | 79 +++++++++++++++++++-------------
+ drivers/scsi/mpt3sas/mpt3sas_base.h      |  8 +++-
+ drivers/scsi/mpt3sas/mpt3sas_config.c    | 29 +++---------
  drivers/scsi/mpt3sas/mpt3sas_ctl.c       | 22 ++-------
- drivers/scsi/mpt3sas/mpt3sas_transport.c | 66 +++++----------------------
- 5 files changed, 71 insertions(+), 123 deletions(-)
+ drivers/scsi/mpt3sas/mpt3sas_scsih.c     | 38 ++++++++++++++-
+ drivers/scsi/mpt3sas/mpt3sas_transport.c | 73 +++++++----------------------
+ 6 files changed, 115 insertions(+), 134 deletions(-)
 
-diff --git a/drivers/scsi/mpt3sas/mpt3sas_base.c b/drivers/scsi/mpt3sas/mpt3sas_base.c
-index 166b607..a6c217c 100644
---- a/drivers/scsi/mpt3sas/mpt3sas_base.c
-+++ b/drivers/scsi/mpt3sas/mpt3sas_base.c
-@@ -5079,6 +5079,43 @@ _base_send_ioc_reset(struct MPT3SAS_ADAPTER *ioc, u8 reset_type, int timeout)
- }
- 
- /**
-+ * mpt3sas_wait_for_ioc_to_operational - IOC's operational
-+ *		state and HBA hot unplug status are checked here.
-+ * @ioc: per adapter object
-+ * @wait_count: timeout in seconds
-+ *
-+ * Return: Waits up to timeout seconds for the IOC to
-+ * become operational. Returns 0 if IOC is present
-+ * and operational; otherwise returns -EFAULT.
-+ */
-+
-+int
-+mpt3sas_wait_for_ioc_to_operational(struct MPT3SAS_ADAPTER *ioc,
-+	int timeout)
-+{
-+	int wait_state_count = 0;
-+	u32 ioc_state;
-+
-+	ioc_state = mpt3sas_base_get_iocstate(ioc, 1);
-+	while (ioc_state != MPI2_IOC_STATE_OPERATIONAL) {
-+
-+		if (wait_state_count++ == timeout) {
-+			ioc_err(ioc, "%s: failed due to ioc not operational\n",
-+				__func__);
-+			return -EFAULT;
-+		}
-+		ssleep(1);
-+		ioc_state = mpt3sas_base_get_iocstate(ioc, 1);
-+		ioc_info(ioc, "%s: waiting for operational state(count=%d)\n",
-+			 __func__, wait_state_count);
-+	}
-+	if (wait_state_count)
-+		ioc_info(ioc, "ioc is operational\n");
-+
-+	return 0;
-+}
-+
-+/**
-  * _base_handshake_req_reply_wait - send request thru doorbell interface
-  * @ioc: per adapter object
-  * @request_bytes: request length
-@@ -5212,11 +5249,9 @@ mpt3sas_base_sas_iounit_control(struct MPT3SAS_ADAPTER *ioc,
- 	Mpi2SasIoUnitControlRequest_t *mpi_request)
- {
- 	u16 smid;
--	u32 ioc_state;
- 	u8 issue_reset = 0;
- 	int rc;
- 	void *request;
--	u16 wait_state_count;
- 
- 	dinitprintk(ioc, ioc_info(ioc, "%s\n", __func__));
- 
-@@ -5228,20 +5263,10 @@ mpt3sas_base_sas_iounit_control(struct MPT3SAS_ADAPTER *ioc,
- 		goto out;
- 	}
- 
--	wait_state_count = 0;
--	ioc_state = mpt3sas_base_get_iocstate(ioc, 1);
--	while (ioc_state != MPI2_IOC_STATE_OPERATIONAL) {
--		if (wait_state_count++ == 10) {
--			ioc_err(ioc, "%s: failed due to ioc not operational\n",
--				__func__);
--			rc = -EFAULT;
--			goto out;
--		}
--		ssleep(1);
--		ioc_state = mpt3sas_base_get_iocstate(ioc, 1);
--		ioc_info(ioc, "%s: waiting for operational state(count=%d)\n",
--			 __func__, wait_state_count);
--	}
-+	rc = mpt3sas_wait_for_ioc_to_operational(ioc,
-+					IOC_OPERATIONAL_WAIT_COUNT);
-+	if (rc)
-+		goto out;
- 
- 	smid = mpt3sas_base_get_smid(ioc, ioc->base_cb_idx);
- 	if (!smid) {
-@@ -5307,11 +5332,9 @@ mpt3sas_base_scsi_enclosure_processor(struct MPT3SAS_ADAPTER *ioc,
- 	Mpi2SepReply_t *mpi_reply, Mpi2SepRequest_t *mpi_request)
- {
- 	u16 smid;
--	u32 ioc_state;
- 	u8 issue_reset = 0;
- 	int rc;
- 	void *request;
--	u16 wait_state_count;
- 
- 	dinitprintk(ioc, ioc_info(ioc, "%s\n", __func__));
- 
-@@ -5323,20 +5346,10 @@ mpt3sas_base_scsi_enclosure_processor(struct MPT3SAS_ADAPTER *ioc,
- 		goto out;
- 	}
- 
--	wait_state_count = 0;
--	ioc_state = mpt3sas_base_get_iocstate(ioc, 1);
--	while (ioc_state != MPI2_IOC_STATE_OPERATIONAL) {
--		if (wait_state_count++ == 10) {
--			ioc_err(ioc, "%s: failed due to ioc not operational\n",
--				__func__);
--			rc = -EFAULT;
--			goto out;
--		}
--		ssleep(1);
--		ioc_state = mpt3sas_base_get_iocstate(ioc, 1);
--		ioc_info(ioc, "%s: waiting for operational state(count=%d)\n",
--			 __func__, wait_state_count);
--	}
-+	rc = mpt3sas_wait_for_ioc_to_operational(ioc,
-+					IOC_OPERATIONAL_WAIT_COUNT);
-+	if (rc)
-+		goto out;
- 
- 	smid = mpt3sas_base_get_smid(ioc, ioc->base_cb_idx);
- 	if (!smid) {
-diff --git a/drivers/scsi/mpt3sas/mpt3sas_base.h b/drivers/scsi/mpt3sas/mpt3sas_base.h
-index 8f1d6b0..c860ed2 100644
---- a/drivers/scsi/mpt3sas/mpt3sas_base.h
-+++ b/drivers/scsi/mpt3sas/mpt3sas_base.h
-@@ -139,6 +139,8 @@
- #define DEFAULT_NUM_FWCHAIN_ELEMTS	8
- 
- #define FW_IMG_HDR_READ_TIMEOUT	15
-+
-+#define IOC_OPERATIONAL_WAIT_COUNT	10
- /*
-  * NVMe defines
-  */
-@@ -1487,6 +1489,8 @@ mpt3sas_wait_for_commands_to_complete(struct MPT3SAS_ADAPTER *ioc);
- 
- u8 mpt3sas_base_check_cmd_timeout(struct MPT3SAS_ADAPTER *ioc,
- 	u8 status, void *mpi_request, int sz);
-+int mpt3sas_wait_for_ioc_to_operational(struct MPT3SAS_ADAPTER *ioc,
-+	int wait_count);
- 
- /* scsih shared API */
- struct scsi_cmnd *mpt3sas_scsih_scsi_lookup_get(struct MPT3SAS_ADAPTER *ioc,
-diff --git a/drivers/scsi/mpt3sas/mpt3sas_config.c b/drivers/scsi/mpt3sas/mpt3sas_config.c
-index 0220944..14a195c 100644
---- a/drivers/scsi/mpt3sas/mpt3sas_config.c
-+++ b/drivers/scsi/mpt3sas/mpt3sas_config.c
-@@ -300,11 +300,10 @@ _config_request(struct MPT3SAS_ADAPTER *ioc, Mpi2ConfigRequest_t
- 	void *config_page, u16 config_page_sz)
- {
- 	u16 smid;
--	u32 ioc_state;
- 	Mpi2ConfigRequest_t *config_request;
- 	int r;
- 	u8 retry_count, issue_host_reset = 0;
--	u16 wait_state_count;
-+
- 	struct config_request mem;
- 	u32 ioc_status = UINT_MAX;
- 
-@@ -361,23 +360,11 @@ _config_request(struct MPT3SAS_ADAPTER *ioc, Mpi2ConfigRequest_t
- 		ioc_info(ioc, "%s: attempting retry (%d)\n",
- 			 __func__, retry_count);
- 	}
--	wait_state_count = 0;
--	ioc_state = mpt3sas_base_get_iocstate(ioc, 1);
--	while (ioc_state != MPI2_IOC_STATE_OPERATIONAL) {
--		if (wait_state_count++ == MPT3_CONFIG_PAGE_DEFAULT_TIMEOUT) {
--			ioc_err(ioc, "%s: failed due to ioc not operational\n",
--				__func__);
--			ioc->config_cmds.status = MPT3_CMD_NOT_USED;
--			r = -EFAULT;
--			goto free_mem;
--		}
--		ssleep(1);
--		ioc_state = mpt3sas_base_get_iocstate(ioc, 1);
--		ioc_info(ioc, "%s: waiting for operational state(count=%d)\n",
--			 __func__, wait_state_count);
--	}
--	if (wait_state_count)
--		ioc_info(ioc, "%s: ioc is operational\n", __func__);
-+
-+	r = mpt3sas_wait_for_ioc_to_operational(ioc,
-+				MPT3_CONFIG_PAGE_DEFAULT_TIMEOUT);
-+	if (r)
-+		goto free_mem;
- 
- 	smid = mpt3sas_base_get_smid(ioc, ioc->config_cb_idx);
- 	if (!smid) {
-diff --git a/drivers/scsi/mpt3sas/mpt3sas_ctl.c b/drivers/scsi/mpt3sas/mpt3sas_ctl.c
-index 0f6305c..34c11a5 100644
---- a/drivers/scsi/mpt3sas/mpt3sas_ctl.c
-+++ b/drivers/scsi/mpt3sas/mpt3sas_ctl.c
-@@ -641,7 +641,6 @@ _ctl_do_mpt_command(struct MPT3SAS_ADAPTER *ioc, struct mpt3_ioctl_command karg,
- 	MPI2DefaultReply_t *mpi_reply;
- 	Mpi26NVMeEncapsulatedRequest_t *nvme_encap_request = NULL;
- 	struct _pcie_device *pcie_device = NULL;
--	u32 ioc_state;
- 	u16 smid;
- 	u8 timeout;
- 	u8 issue_reset;
-@@ -654,7 +653,6 @@ _ctl_do_mpt_command(struct MPT3SAS_ADAPTER *ioc, struct mpt3_ioctl_command karg,
- 	dma_addr_t data_in_dma = 0;
- 	size_t data_in_sz = 0;
- 	long ret;
--	u16 wait_state_count;
- 	u16 device_handle = MPT3SAS_INVALID_DEVICE_HANDLE;
- 	u8 tr_method = MPI26_SCSITASKMGMT_MSGFLAGS_PROTOCOL_LVL_RST_PCIE;
- 
-@@ -666,22 +664,10 @@ _ctl_do_mpt_command(struct MPT3SAS_ADAPTER *ioc, struct mpt3_ioctl_command karg,
- 		goto out;
- 	}
- 
--	wait_state_count = 0;
--	ioc_state = mpt3sas_base_get_iocstate(ioc, 1);
--	while (ioc_state != MPI2_IOC_STATE_OPERATIONAL) {
--		if (wait_state_count++ == 10) {
--			ioc_err(ioc, "%s: failed due to ioc not operational\n",
--				__func__);
--			ret = -EFAULT;
--			goto out;
--		}
--		ssleep(1);
--		ioc_state = mpt3sas_base_get_iocstate(ioc, 1);
--		ioc_info(ioc, "%s: waiting for operational state(count=%d)\n",
--			 __func__, wait_state_count);
--	}
--	if (wait_state_count)
--		ioc_info(ioc, "%s: ioc is operational\n", __func__);
-+	ret = mpt3sas_wait_for_ioc_to_operational(ioc,
-+					IOC_OPERATIONAL_WAIT_COUNT);
-+	if (ret)
-+		goto out;
- 
- 	mpi_request = kzalloc(ioc->request_sz, GFP_KERNEL);
- 	if (!mpi_request) {
-diff --git a/drivers/scsi/mpt3sas/mpt3sas_transport.c b/drivers/scsi/mpt3sas/mpt3sas_transport.c
-index 031b420..7acb408 100644
---- a/drivers/scsi/mpt3sas/mpt3sas_transport.c
-+++ b/drivers/scsi/mpt3sas/mpt3sas_transport.c
-@@ -296,7 +296,6 @@ _transport_expander_report_manufacture(struct MPT3SAS_ADAPTER *ioc,
- 	struct rep_manu_request *manufacture_request;
- 	int rc;
- 	u16 smid;
--	u32 ioc_state;
- 	void *psge;
- 	u8 issue_reset = 0;
- 	void *data_out = NULL;
-@@ -304,7 +303,6 @@ _transport_expander_report_manufacture(struct MPT3SAS_ADAPTER *ioc,
- 	dma_addr_t data_in_dma;
- 	size_t data_in_sz;
- 	size_t data_out_sz;
--	u16 wait_state_count;
- 
- 	if (ioc->shost_recovery || ioc->pci_error_recovery) {
- 		ioc_info(ioc, "%s: host reset in progress!\n", __func__);
-@@ -320,22 +318,10 @@ _transport_expander_report_manufacture(struct MPT3SAS_ADAPTER *ioc,
- 	}
- 	ioc->transport_cmds.status = MPT3_CMD_PENDING;
- 
--	wait_state_count = 0;
--	ioc_state = mpt3sas_base_get_iocstate(ioc, 1);
--	while (ioc_state != MPI2_IOC_STATE_OPERATIONAL) {
--		if (wait_state_count++ == 10) {
--			ioc_err(ioc, "%s: failed due to ioc not operational\n",
--				__func__);
--			rc = -EFAULT;
--			goto out;
--		}
--		ssleep(1);
--		ioc_state = mpt3sas_base_get_iocstate(ioc, 1);
--		ioc_info(ioc, "%s: waiting for operational state(count=%d)\n",
--			 __func__, wait_state_count);
--	}
--	if (wait_state_count)
--		ioc_info(ioc, "%s: ioc is operational\n", __func__);
-+	rc = mpt3sas_wait_for_ioc_to_operational(ioc,
-+					IOC_OPERATIONAL_WAIT_COUNT);
-+	if (rc)
-+		goto out;
- 
- 	smid = mpt3sas_base_get_smid(ioc, ioc->transport_cb_idx);
- 	if (!smid) {
-@@ -1077,13 +1063,11 @@ _transport_get_expander_phy_error_log(struct MPT3SAS_ADAPTER *ioc,
- 	struct phy_error_log_reply *phy_error_log_reply;
- 	int rc;
- 	u16 smid;
--	u32 ioc_state;
- 	void *psge;
- 	u8 issue_reset = 0;
- 	void *data_out = NULL;
- 	dma_addr_t data_out_dma;
- 	u32 sz;
--	u16 wait_state_count;
- 
- 	if (ioc->shost_recovery || ioc->pci_error_recovery) {
- 		ioc_info(ioc, "%s: host reset in progress!\n", __func__);
-@@ -1099,22 +1083,10 @@ _transport_get_expander_phy_error_log(struct MPT3SAS_ADAPTER *ioc,
- 	}
- 	ioc->transport_cmds.status = MPT3_CMD_PENDING;
- 
--	wait_state_count = 0;
--	ioc_state = mpt3sas_base_get_iocstate(ioc, 1);
--	while (ioc_state != MPI2_IOC_STATE_OPERATIONAL) {
--		if (wait_state_count++ == 10) {
--			ioc_err(ioc, "%s: failed due to ioc not operational\n",
--				__func__);
--			rc = -EFAULT;
--			goto out;
--		}
--		ssleep(1);
--		ioc_state = mpt3sas_base_get_iocstate(ioc, 1);
--		ioc_info(ioc, "%s: waiting for operational state(count=%d)\n",
--			 __func__, wait_state_count);
--	}
--	if (wait_state_count)
--		ioc_info(ioc, "%s: ioc is operational\n", __func__);
-+	rc = mpt3sas_wait_for_ioc_to_operational(ioc,
-+					IOC_OPERATIONAL_WAIT_COUNT);
-+	if (rc)
-+		goto out;
- 
- 	smid = mpt3sas_base_get_smid(ioc, ioc->transport_cb_idx);
- 	if (!smid) {
-@@ -1381,13 +1353,11 @@ _transport_expander_phy_control(struct MPT3SAS_ADAPTER *ioc,
- 	struct phy_control_reply *phy_control_reply;
- 	int rc;
- 	u16 smid;
--	u32 ioc_state;
- 	void *psge;
- 	u8 issue_reset = 0;
- 	void *data_out = NULL;
- 	dma_addr_t data_out_dma;
- 	u32 sz;
--	u16 wait_state_count;
- 
- 	if (ioc->shost_recovery || ioc->pci_error_recovery) {
- 		ioc_info(ioc, "%s: host reset in progress!\n", __func__);
-@@ -1403,22 +1373,10 @@ _transport_expander_phy_control(struct MPT3SAS_ADAPTER *ioc,
- 	}
- 	ioc->transport_cmds.status = MPT3_CMD_PENDING;
- 
--	wait_state_count = 0;
--	ioc_state = mpt3sas_base_get_iocstate(ioc, 1);
--	while (ioc_state != MPI2_IOC_STATE_OPERATIONAL) {
--		if (wait_state_count++ == 10) {
--			ioc_err(ioc, "%s: failed due to ioc not operational\n",
--				__func__);
--			rc = -EFAULT;
--			goto out;
--		}
--		ssleep(1);
--		ioc_state = mpt3sas_base_get_iocstate(ioc, 1);
--		ioc_info(ioc, "%s: waiting for operational state(count=%d)\n",
--			 __func__, wait_state_count);
--	}
--	if (wait_state_count)
--		ioc_info(ioc, "%s: ioc is operational\n", __func__);
-+	rc = mpt3sas_wait_for_ioc_to_operational(ioc,
-+					IOC_OPERATIONAL_WAIT_COUNT);
-+	if (rc)
-+		goto out;
- 
- 	smid = mpt3sas_base_get_smid(ioc, ioc->transport_cb_idx);
- 	if (!smid) {
 -- 
 1.8.3.1
 
