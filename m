@@ -5,49 +5,49 @@ X-Spam-Level:
 X-Spam-Status: No, score=-8.9 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
 	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,
 	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT
-	autolearn=ham autolearn_force=no version=3.4.0
+	autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id B60F9ECDE32
-	for <linux-pci@archiver.kernel.org>; Wed, 17 Oct 2018 07:42:40 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 5BE94ECDE32
+	for <linux-pci@archiver.kernel.org>; Wed, 17 Oct 2018 07:42:48 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 7B32C21527
-	for <linux-pci@archiver.kernel.org>; Wed, 17 Oct 2018 07:42:40 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 14A0C2152B
+	for <linux-pci@archiver.kernel.org>; Wed, 17 Oct 2018 07:42:48 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (1024-bit key) header.d=ti.com header.i=@ti.com header.b="OBHCxJvx"
-DMARC-Filter: OpenDMARC Filter v1.3.2 mail.kernel.org 7B32C21527
+	dkim=pass (1024-bit key) header.d=ti.com header.i=@ti.com header.b="W1MU7Zra"
+DMARC-Filter: OpenDMARC Filter v1.3.2 mail.kernel.org 14A0C2152B
 Authentication-Results: mail.kernel.org; dmarc=fail (p=quarantine dis=none) header.from=ti.com
 Authentication-Results: mail.kernel.org; spf=none smtp.mailfrom=linux-pci-owner@vger.kernel.org
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727494AbeJQPhB (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Wed, 17 Oct 2018 11:37:01 -0400
-Received: from fllv0016.ext.ti.com ([198.47.19.142]:56520 "EHLO
-        fllv0016.ext.ti.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1727435AbeJQPhB (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Wed, 17 Oct 2018 11:37:01 -0400
+        id S1727524AbeJQPhF (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Wed, 17 Oct 2018 11:37:05 -0400
+Received: from lelv0142.ext.ti.com ([198.47.23.249]:52606 "EHLO
+        lelv0142.ext.ti.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1727466AbeJQPhE (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Wed, 17 Oct 2018 11:37:04 -0400
 Received: from dflxv15.itg.ti.com ([128.247.5.124])
-        by fllv0016.ext.ti.com (8.15.2/8.15.2) with ESMTP id w9H7gKHF022931;
-        Wed, 17 Oct 2018 02:42:20 -0500
+        by lelv0142.ext.ti.com (8.15.2/8.15.2) with ESMTP id w9H7gNit052378;
+        Wed, 17 Oct 2018 02:42:23 -0500
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=ti.com;
-        s=ti-com-17Q1; t=1539762140;
-        bh=I+8oB3slUMP8h64wG5S3UqrQQp1pEImCeexOuq//BTs=;
+        s=ti-com-17Q1; t=1539762143;
+        bh=qLooC43o3Xah6sg19dYuQxiI+kMXmBiRqnnUEenMqWs=;
         h=From:To:CC:Subject:Date:In-Reply-To:References;
-        b=OBHCxJvxGbPQsUzweKOMWKfjjHbvfiG7NTSGJUsyt3K0mgOOysc/65gBM5Q/M/BWi
-         Hn8u07wS6+ZyltSl15FDZb1/D50/8fQcBZcAxaeHllEA/WYMAVK3epWrUb0iRVqHee
-         KtMl6sJAX9oJVOOf37cg8lFnv7T6ovKQ0lLo1D/8=
-Received: from DLEE115.ent.ti.com (dlee115.ent.ti.com [157.170.170.26])
-        by dflxv15.itg.ti.com (8.14.3/8.13.8) with ESMTP id w9H7gKMG009200;
-        Wed, 17 Oct 2018 02:42:20 -0500
-Received: from DLEE111.ent.ti.com (157.170.170.22) by DLEE115.ent.ti.com
- (157.170.170.26) with Microsoft SMTP Server (version=TLS1_2,
+        b=W1MU7ZraCdhLviemlrJ0vTn8XTzWVcToIOGEjddvO53L2OAfW6TYI97t0igrcMIsc
+         Glgi6qIRFcEKdkikpuN4VKUVDzDUexNp+BG0viuwYVd+cxefSzyeWA1XQ5SHhlWuf0
+         8Uk7t9y6rYirnXhLn78gBdt769AN0n7B2EkIhb9E=
+Received: from DFLE102.ent.ti.com (dfle102.ent.ti.com [10.64.6.23])
+        by dflxv15.itg.ti.com (8.14.3/8.13.8) with ESMTP id w9H7gNFD009303;
+        Wed, 17 Oct 2018 02:42:23 -0500
+Received: from DFLE110.ent.ti.com (10.64.6.31) by DFLE102.ent.ti.com
+ (10.64.6.23) with Microsoft SMTP Server (version=TLS1_2,
  cipher=TLS_ECDHE_RSA_WITH_AES_128_CBC_SHA256_P256) id 15.1.1466.3; Wed, 17
- Oct 2018 02:42:20 -0500
-Received: from dflp32.itg.ti.com (10.64.6.15) by DLEE111.ent.ti.com
- (157.170.170.22) with Microsoft SMTP Server (version=TLS1_0,
+ Oct 2018 02:42:23 -0500
+Received: from dflp32.itg.ti.com (10.64.6.15) by DFLE110.ent.ti.com
+ (10.64.6.31) with Microsoft SMTP Server (version=TLS1_0,
  cipher=TLS_RSA_WITH_AES_256_CBC_SHA) id 15.1.1466.3 via Frontend Transport;
- Wed, 17 Oct 2018 02:42:19 -0500
+ Wed, 17 Oct 2018 02:42:23 -0500
 Received: from a0393678ub.dal.design.ti.com (ileax41-snat.itg.ti.com [10.172.224.153])
-        by dflp32.itg.ti.com (8.14.3/8.13.8) with ESMTP id w9H7fgSV009413;
-        Wed, 17 Oct 2018 02:42:16 -0500
+        by dflp32.itg.ti.com (8.14.3/8.13.8) with ESMTP id w9H7fgSW009413;
+        Wed, 17 Oct 2018 02:42:20 -0500
 From:   Kishon Vijay Abraham I <kishon@ti.com>
 To:     Bjorn Helgaas <bhelgaas@google.com>,
         Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
@@ -58,9 +58,9 @@ CC:     Rob Herring <robh+dt@kernel.org>, <linux-pci@vger.kernel.org>,
         <devicetree@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
         <linux-arm-kernel@lists.infradead.org>,
         Kishon Vijay Abraham I <kishon@ti.com>
-Subject: [PATCH v2 10/21] PCI: keystone: Use SYSCON APIs to get device ID from control module
-Date:   Wed, 17 Oct 2018 13:11:03 +0530
-Message-ID: <20181017074114.28239-11-kishon@ti.com>
+Subject: [PATCH v2 11/21] PCI: keystone: Cleanup PHY handling
+Date:   Wed, 17 Oct 2018 13:11:04 +0530
+Message-ID: <20181017074114.28239-12-kishon@ti.com>
 X-Mailer: git-send-email 2.17.1
 In-Reply-To: <20181017074114.28239-1-kishon@ti.com>
 References: <20181017074114.28239-1-kishon@ti.com>
@@ -72,116 +72,195 @@ Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-Control module registers should be read using syscon APIs.
-pci-keystone.c uses platform_get_resource to get control module registers.
-Fix it here by using syscon APIs to get device id from control module.
+Cleanup PHY handling by using devm_phy_optional_get to get PHYs if
+the PHYs are optional, creating a device link between the PHY device
+and the controller device and disable PHY on error cases here.
 
 Signed-off-by: Kishon Vijay Abraham I <kishon@ti.com>
 ---
- drivers/pci/controller/dwc/pci-keystone.c | 45 ++++++++++++++++-------
- 1 file changed, 32 insertions(+), 13 deletions(-)
+ drivers/pci/controller/dwc/pci-keystone.c | 122 +++++++++++++++++++---
+ 1 file changed, 106 insertions(+), 16 deletions(-)
 
 diff --git a/drivers/pci/controller/dwc/pci-keystone.c b/drivers/pci/controller/dwc/pci-keystone.c
-index e2045b5d2af2..e22328f89c84 100644
+index e22328f89c84..5ae73c185c99 100644
 --- a/drivers/pci/controller/dwc/pci-keystone.c
 +++ b/drivers/pci/controller/dwc/pci-keystone.c
-@@ -15,12 +15,14 @@
- #include <linux/interrupt.h>
- #include <linux/irqdomain.h>
- #include <linux/init.h>
-+#include <linux/mfd/syscon.h>
- #include <linux/msi.h>
- #include <linux/of_irq.h>
- #include <linux/of.h>
- #include <linux/of_pci.h>
- #include <linux/platform_device.h>
- #include <linux/phy/phy.h>
-+#include <linux/regmap.h>
- #include <linux/resource.h>
- #include <linux/signal.h>
+@@ -105,6 +105,9 @@ struct keystone_pcie {
  
-@@ -28,6 +30,9 @@
+ 	int			num_msi_host_irqs;
+ 	int			msi_host_irqs[MAX_MSI_HOST_IRQS];
++	int			num_lanes;
++	struct phy		**phy;
++	struct device_link	**link;
+ 	struct			device_node *msi_intc_np;
+ 	struct irq_domain	*legacy_irq_domain;
+ 	struct device_node	*np;
+@@ -880,22 +883,57 @@ static const struct dw_pcie_ops ks_pcie_dw_pcie_ops = {
+ 	.link_up = ks_pcie_link_up,
+ };
  
- #define DRIVER_NAME	"keystone-pcie"
+-static int __exit ks_pcie_remove(struct platform_device *pdev)
++static void ks_pcie_disable_phy(struct keystone_pcie *ks_pcie)
+ {
+-	struct keystone_pcie *ks_pcie = platform_get_drvdata(pdev);
++	int num_lanes = ks_pcie->num_lanes;
  
-+#define PCIE_VENDORID_MASK	0xffff
-+#define PCIE_DEVICEID_SHIFT	16
+-	clk_disable_unprepare(ks_pcie->clk);
++	while (num_lanes--) {
++		phy_power_off(ks_pcie->phy[num_lanes]);
++		phy_exit(ks_pcie->phy[num_lanes]);
++	}
++}
 +
- /* DEV_STAT_CTRL */
- #define PCIE_CAP_BASE		0x70
++static int ks_pcie_enable_phy(struct keystone_pcie *ks_pcie)
++{
++	int i;
++	int ret;
++	int num_lanes = ks_pcie->num_lanes;
++
++	for (i = 0; i < num_lanes; i++) {
++		ret = phy_init(ks_pcie->phy[i]);
++		if (ret < 0)
++			goto err_phy;
++
++		ret = phy_power_on(ks_pcie->phy[i]);
++		if (ret < 0) {
++			phy_exit(ks_pcie->phy[i]);
++			goto err_phy;
++		}
++	}
  
-@@ -744,10 +749,34 @@ static int ks_pcie_fault(unsigned long addr, unsigned int fsr,
  	return 0;
++
++err_phy:
++	while (--i >= 0) {
++		phy_power_off(ks_pcie->phy[i]);
++		phy_exit(ks_pcie->phy[i]);
++	}
++
++	return ret;
  }
  
-+static int __init ks_pcie_init_id(struct keystone_pcie *ks_pcie)
-+{
-+	int ret;
-+	unsigned int id;
-+	struct regmap *devctrl_regs;
-+	struct dw_pcie *pci = ks_pcie->pci;
-+	struct device *dev = pci->dev;
+ static int __init ks_pcie_probe(struct platform_device *pdev)
+ {
+ 	struct device *dev = &pdev->dev;
 +	struct device_node *np = dev->of_node;
-+
-+	devctrl_regs = syscon_regmap_lookup_by_phandle(np, "ti,syscon-pcie-id");
-+	if (IS_ERR(devctrl_regs))
-+		return PTR_ERR(devctrl_regs);
-+
-+	ret = regmap_read(devctrl_regs, 0, &id);
+ 	struct dw_pcie *pci;
+ 	struct keystone_pcie *ks_pcie;
+-	struct phy *phy;
++	struct device_link **link;
++	struct phy **phy;
++	u32 num_lanes;
++	char name[10];
+ 	int ret;
++	int i;
+ 
+ 	ks_pcie = devm_kzalloc(dev, sizeof(*ks_pcie), GFP_KERNEL);
+ 	if (!ks_pcie)
+@@ -908,29 +946,59 @@ static int __init ks_pcie_probe(struct platform_device *pdev)
+ 	pci->dev = dev;
+ 	pci->ops = &ks_pcie_dw_pcie_ops;
+ 
+-	ks_pcie->pci = pci;
++	ret = of_property_read_u32(np, "num-lanes", &num_lanes);
 +	if (ret)
-+		return ret;
++		num_lanes = 1;
+ 
+-	/* initialize SerDes Phy if present */
+-	phy = devm_phy_get(dev, "pcie-phy");
+-	if (PTR_ERR_OR_ZERO(phy) == -EPROBE_DEFER)
+-		return PTR_ERR(phy);
++	phy = devm_kzalloc(dev, sizeof(*phy) * num_lanes, GFP_KERNEL);
++	if (!phy)
++		return -ENOMEM;
+ 
+-	if (!IS_ERR_OR_NULL(phy)) {
+-		ret = phy_init(phy);
+-		if (ret < 0)
+-			return ret;
++	link = devm_kzalloc(dev, sizeof(*link) * num_lanes, GFP_KERNEL);
++	if (!link)
++		return -ENOMEM;
 +
-+	dw_pcie_writew_dbi(pci, PCI_VENDOR_ID, id & PCIE_VENDORID_MASK);
-+	dw_pcie_writew_dbi(pci, PCI_DEVICE_ID, id >> PCIE_DEVICEID_SHIFT);
++	for (i = 0; i < num_lanes; i++) {
++		snprintf(name, sizeof(name), "pcie-phy%d", i);
++		phy[i] = devm_phy_optional_get(dev, name);
++		if (IS_ERR(phy[i])) {
++			ret = PTR_ERR(phy[i]);
++			goto err_link;
++		}
++
++		if (!phy[i])
++			continue;
++
++		link[i] = device_link_add(dev, &phy[i]->dev, DL_FLAG_STATELESS);
++		if (!link[i]) {
++			ret = -EINVAL;
++			goto err_link;
++		}
++	}
++
++	ks_pcie->np = np;
++	ks_pcie->pci = pci;
++	ks_pcie->link = link;
++	ks_pcie->num_lanes = num_lanes;
++	ks_pcie->phy = phy;
++
++	ret = ks_pcie_enable_phy(ks_pcie);
++	if (ret) {
++		dev_err(dev, "failed to enable phy\n");
++		goto err_link;
+ 	}
+ 
+-	ks_pcie->np = dev->of_node;
+ 	platform_set_drvdata(pdev, ks_pcie);
+ 	ks_pcie->clk = devm_clk_get(dev, "pcie");
+ 	if (IS_ERR(ks_pcie->clk)) {
+ 		dev_err(dev, "Failed to get pcie rc clock\n");
+-		return PTR_ERR(ks_pcie->clk);
++		ret = PTR_ERR(ks_pcie->clk);
++		goto err_phy;
+ 	}
++
+ 	ret = clk_prepare_enable(ks_pcie->clk);
+ 	if (ret)
+-		return ret;
++		goto err_phy;
+ 
+ 	ret = ks_pcie_add_pcie_port(ks_pcie, pdev);
+ 	if (ret < 0)
+@@ -940,9 +1008,31 @@ static int __init ks_pcie_probe(struct platform_device *pdev)
+ fail_clk:
+ 	clk_disable_unprepare(ks_pcie->clk);
+ 
++err_phy:
++	ks_pcie_disable_phy(ks_pcie);
++
++err_link:
++	while (--i >= 0 && link[i])
++		device_link_del(link[i]);
++
+ 	return ret;
+ }
+ 
++static int __exit ks_pcie_remove(struct platform_device *pdev)
++{
++	struct keystone_pcie *ks_pcie = platform_get_drvdata(pdev);
++	struct device_link **link = ks_pcie->link;
++	int num_lanes = ks_pcie->num_lanes;
++
++	clk_disable_unprepare(ks_pcie->clk);
++	ks_pcie_disable_phy(ks_pcie);
++
++	while (num_lanes--)
++		device_link_del(link[num_lanes]);
 +
 +	return 0;
 +}
 +
- static int __init ks_pcie_host_init(struct pcie_port *pp)
- {
- 	struct dw_pcie *pci = to_dw_pcie_from_pp(pp);
- 	struct keystone_pcie *ks_pcie = to_keystone_pcie(pci);
-+	int ret;
- 
- 	dw_pcie_setup_rc(pp);
- 
-@@ -757,8 +786,9 @@ static int __init ks_pcie_host_init(struct pcie_port *pp)
- 	writew(PCI_IO_RANGE_TYPE_32 | (PCI_IO_RANGE_TYPE_32 << 8),
- 			pci->dbi_base + PCI_IO_BASE);
- 
--	/* update the Vendor ID */
--	writew(ks_pcie->device_id, pci->dbi_base + PCI_DEVICE_ID);
-+	ret = ks_pcie_init_id(ks_pcie);
-+	if (ret < 0)
-+		return ret;
- 
- 	/*
- 	 * PCIe access errors that result into OCP errors are caught by ARM as
-@@ -864,8 +894,6 @@ static int __init ks_pcie_probe(struct platform_device *pdev)
- 	struct device *dev = &pdev->dev;
- 	struct dw_pcie *pci;
- 	struct keystone_pcie *ks_pcie;
--	struct resource *res;
--	void __iomem *reg_p;
- 	struct phy *phy;
- 	int ret;
- 
-@@ -893,15 +921,6 @@ static int __init ks_pcie_probe(struct platform_device *pdev)
- 			return ret;
- 	}
- 
--	/* index 2 is to read PCI DEVICE_ID */
--	res = platform_get_resource(pdev, IORESOURCE_MEM, 2);
--	reg_p = devm_ioremap_resource(dev, res);
--	if (IS_ERR(reg_p))
--		return PTR_ERR(reg_p);
--	ks_pcie->device_id = readl(reg_p) >> 16;
--	devm_iounmap(dev, reg_p);
--	devm_release_mem_region(dev, res->start, resource_size(res));
--
- 	ks_pcie->np = dev->of_node;
- 	platform_set_drvdata(pdev, ks_pcie);
- 	ks_pcie->clk = devm_clk_get(dev, "pcie");
+ static struct platform_driver ks_pcie_driver __refdata = {
+ 	.probe  = ks_pcie_probe,
+ 	.remove = __exit_p(ks_pcie_remove),
 -- 
 2.17.1
 
