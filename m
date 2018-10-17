@@ -2,149 +2,112 @@ Return-Path: <SRS0=Zwnb=M5=vger.kernel.org=linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-5.1 required=3.0 tests=DKIM_INVALID,DKIM_SIGNED,
-	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_PASS,
-	URIBL_BLOCKED,USER_AGENT_MUTT autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-0.8 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+	MAILING_LIST_MULTI,SPF_PASS autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 5C7A1ECDE32
-	for <linux-pci@archiver.kernel.org>; Wed, 17 Oct 2018 15:08:00 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 20AE2ECDE32
+	for <linux-pci@archiver.kernel.org>; Wed, 17 Oct 2018 15:14:11 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 18AC320658
-	for <linux-pci@archiver.kernel.org>; Wed, 17 Oct 2018 15:08:00 +0000 (UTC)
-Authentication-Results: mail.kernel.org;
-	dkim=fail reason="key not found in DNS" (0-bit key) header.d=codeaurora.org header.i=@codeaurora.org header.b="iCdXvYPX";
-	dkim=fail reason="key not found in DNS" (0-bit key) header.d=codeaurora.org header.i=@codeaurora.org header.b="D6T+lnGL"
-DMARC-Filter: OpenDMARC Filter v1.3.2 mail.kernel.org 18AC320658
-Authentication-Results: mail.kernel.org; dmarc=none (p=none dis=none) header.from=codeaurora.org
+	by mail.kernel.org (Postfix) with ESMTP id E546E2152A
+	for <linux-pci@archiver.kernel.org>; Wed, 17 Oct 2018 15:14:10 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.3.2 mail.kernel.org E546E2152A
+Authentication-Results: mail.kernel.org; dmarc=fail (p=none dis=none) header.from=redhat.com
 Authentication-Results: mail.kernel.org; spf=none smtp.mailfrom=linux-pci-owner@vger.kernel.org
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727410AbeJQXEF (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Wed, 17 Oct 2018 19:04:05 -0400
-Received: from smtp.codeaurora.org ([198.145.29.96]:39698 "EHLO
-        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1727182AbeJQXEF (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Wed, 17 Oct 2018 19:04:05 -0400
-Received: by smtp.codeaurora.org (Postfix, from userid 1000)
-        id 4A1FE61314; Wed, 17 Oct 2018 15:07:57 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=codeaurora.org;
-        s=default; t=1539788878;
-        bh=aIDjsHgp29qxLYl8k2zdVmwWr1qd6bytssBEyFK+7JI=;
-        h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-        b=iCdXvYPX2teWy+QeEyngboKFSMFnrpdAFrrGvLyOpBzO+PV/Q7hXw2XtqwsbKf9lu
-         +Bz5v1N/KMEstWXRqkxeBjcEu18d5yNtUMy39oxwDFFYu5qdO4CJCzM2PEc4nzQVap
-         zSuT67xcAD6a7pgb6hd9uCK/uRsVeQu6ZFuwnk1M=
-Received: from jcrouse-lnx.qualcomm.com (i-global254.qualcomm.com [199.106.103.254])
-        (using TLSv1.2 with cipher DHE-RSA-AES128-SHA (128/128 bits))
+        id S1727037AbeJQXKS (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Wed, 17 Oct 2018 19:10:18 -0400
+Received: from mx1.redhat.com ([209.132.183.28]:56288 "EHLO mx1.redhat.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1727013AbeJQXKS (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Wed, 17 Oct 2018 19:10:18 -0400
+Received: from smtp.corp.redhat.com (int-mx01.intmail.prod.int.phx2.redhat.com [10.5.11.11])
+        (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
         (No client certificate requested)
-        (Authenticated sender: jcrouse@smtp.codeaurora.org)
-        by smtp.codeaurora.org (Postfix) with ESMTPSA id 51E4C605A4;
-        Wed, 17 Oct 2018 15:07:54 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=codeaurora.org;
-        s=default; t=1539788876;
-        bh=aIDjsHgp29qxLYl8k2zdVmwWr1qd6bytssBEyFK+7JI=;
-        h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-        b=D6T+lnGLmZGetw1PqUwJOfJS6Y/PXrEgP7WMTCMQr8SDSToBbSpJsMnT3Iq96JoL8
-         T57/xqAjnZaMTUG481FPbsmZwHwpv74CxUNXSpy8d2bvk1Fp5OEfku/9t6XjR7nKq6
-         MGn7ubI5K3Phh3iFguA41XEtUFGT+DgzwklhRc3w=
-DMARC-Filter: OpenDMARC Filter v1.3.2 smtp.codeaurora.org 51E4C605A4
-Authentication-Results: pdx-caf-mail.web.codeaurora.org; dmarc=none (p=none dis=none) header.from=codeaurora.org
-Authentication-Results: pdx-caf-mail.web.codeaurora.org; spf=none smtp.mailfrom=jcrouse@codeaurora.org
-Date:   Wed, 17 Oct 2018 09:07:52 -0600
-From:   Jordan Crouse <jcrouse@codeaurora.org>
-To:     Jean-Philippe Brucker <jean-philippe.brucker@arm.com>
-Cc:     iommu@lists.linux-foundation.org, joro@8bytes.org,
-        linux-pci@vger.kernel.org, alex.williamson@redhat.com,
-        Jonathan.Cameron@huawei.com, jacob.jun.pan@linux.intel.com,
-        christian.koenig@amd.com, eric.auger@redhat.com,
-        kevin.tian@intel.com, yi.l.liu@intel.com, andrew.murray@arm.com,
-        will.deacon@arm.com, robin.murphy@arm.com, ashok.raj@intel.com,
-        baolu.lu@linux.intel.com, xuzaibo@huawei.com,
-        liguozhu@hisilicon.com, okaya@codeaurora.org, bharatku@xilinx.com,
-        ilias.apalodimas@linaro.org, shunyong.yang@hxt-semitech.com
-Subject: Re: [RFC PATCH v3 10/10] iommu/sva: Add support for private PASIDs
-Message-ID: <20181017150751.GF4751@jcrouse-lnx.qualcomm.com>
-Mail-Followup-To: Jean-Philippe Brucker <jean-philippe.brucker@arm.com>,
-        iommu@lists.linux-foundation.org, joro@8bytes.org,
-        linux-pci@vger.kernel.org, alex.williamson@redhat.com,
-        Jonathan.Cameron@huawei.com, jacob.jun.pan@linux.intel.com,
-        christian.koenig@amd.com, eric.auger@redhat.com,
-        kevin.tian@intel.com, yi.l.liu@intel.com, andrew.murray@arm.com,
-        will.deacon@arm.com, robin.murphy@arm.com, ashok.raj@intel.com,
-        baolu.lu@linux.intel.com, xuzaibo@huawei.com,
-        liguozhu@hisilicon.com, okaya@codeaurora.org, bharatku@xilinx.com,
-        ilias.apalodimas@linaro.org, shunyong.yang@hxt-semitech.com
-References: <20180920170046.20154-1-jean-philippe.brucker@arm.com>
- <20180920170046.20154-11-jean-philippe.brucker@arm.com>
- <20181012143229.GI9977@jcrouse-lnx.qualcomm.com>
- <3e1b58bb-eb16-5855-2922-2b15b37ba971@arm.com>
+        by mx1.redhat.com (Postfix) with ESMTPS id 42536C04BD42;
+        Wed, 17 Oct 2018 15:14:09 +0000 (UTC)
+Received: from redhat.com (ovpn-124-92.rdu2.redhat.com [10.10.124.92])
+        by smtp.corp.redhat.com (Postfix) with SMTP id 0D85319E63;
+        Wed, 17 Oct 2018 15:14:05 +0000 (UTC)
+Date:   Wed, 17 Oct 2018 11:14:05 -0400
+From:   "Michael S. Tsirkin" <mst@redhat.com>
+To:     Jean-philippe Brucker <jphilippe.brucker@gmail.com>
+Cc:     Bjorn Helgaas <helgaas@kernel.org>, mark.rutland@arm.com,
+        devicetree@vger.kernel.org, kevin.tian@intel.com,
+        tnowicki@caviumnetworks.com, peter.maydell@linaro.org,
+        linux-pci@vger.kernel.org, will.deacon@arm.com,
+        robin.murphy@arm.com, virtualization@lists.linux-foundation.org,
+        iommu@lists.linux-foundation.org, robh+dt@kernel.org,
+        marc.zyngier@arm.com, jasowang@redhat.com,
+        kvmarm@lists.cs.columbia.edu, jean-philippe.brucker@arm.com
+Subject: Re: [PATCH v3 3/7] PCI: OF: Allow endpoints to bypass the iommu
+Message-ID: <20181017111100-mutt-send-email-mst@kernel.org>
+References: <20181012145917.6840-1-jean-philippe.brucker@arm.com>
+ <20181012145917.6840-4-jean-philippe.brucker@arm.com>
+ <20181012194158.GX5906@bhelgaas-glaptop.roam.corp.google.com>
+ <20181015065024-mutt-send-email-mst@kernel.org>
+ <482d0eb9-8c4c-9d64-7b32-25d5d11a8b8f@gmail.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <3e1b58bb-eb16-5855-2922-2b15b37ba971@arm.com>
-User-Agent: Mutt/1.5.21 (2010-09-15)
+In-Reply-To: <482d0eb9-8c4c-9d64-7b32-25d5d11a8b8f@gmail.com>
+X-Scanned-By: MIMEDefang 2.79 on 10.5.11.11
+X-Greylist: Sender IP whitelisted, not delayed by milter-greylist-4.5.16 (mx1.redhat.com [10.5.110.31]); Wed, 17 Oct 2018 15:14:09 +0000 (UTC)
 Sender: linux-pci-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-On Wed, Oct 17, 2018 at 03:21:43PM +0100, Jean-Philippe Brucker wrote:
-> Hi Jordan,
+On Mon, Oct 15, 2018 at 08:46:41PM +0100, Jean-philippe Brucker wrote:
+> [Replying with my personal address because we're having SMTP issues]
 > 
-> On 12/10/2018 15:32, Jordan Crouse wrote:
-> > On Thu, Sep 20, 2018 at 06:00:46PM +0100, Jean-Philippe Brucker wrote:
-> >> Provide an API for allocating PASIDs and populating them manually. To ease
-> >> cleanup and factor allocation code, reuse the io_mm structure for private
-> >> PASID. Private io_mm has a NULL mm_struct pointer, and cannot be bound to
-> >> multiple devices. The mm_alloc() IOMMU op must now check if the mm
-> >> argument is NULL, in which case it should allocate io_pgtables instead of
-> >> binding to an mm.
+> On 15/10/2018 11:52, Michael S. Tsirkin wrote:
+> > On Fri, Oct 12, 2018 at 02:41:59PM -0500, Bjorn Helgaas wrote:
+> >> s/iommu/IOMMU/ in subject
 > >>
-> >> Signed-off-by: Jordan Crouse <jcrouse@codeaurora.org>
-> >> Signed-off-by: Jean-Philippe Brucker <jean-philippe.brucker@arm.com>
-> >> ---
-> >> Sadly this probably won't be the final thing. The API in this patch is
-> >> used like this:
+> >> On Fri, Oct 12, 2018 at 03:59:13PM +0100, Jean-Philippe Brucker wrote:
+> >>> Using the iommu-map binding, endpoints in a given PCI domain can be
+> >>> managed by different IOMMUs. Some virtual machines may allow a subset of
+> >>> endpoints to bypass the IOMMU. In some case the IOMMU itself is presented
 > >>
-> >>         iommu_sva_alloc_pasid(dev, &io_mm) -> PASID
-> >>         iommu_sva_map(io_mm, ...)
-> >>         iommu_sva_unmap(io_mm, ...)
-> >>         iommu_sva_free_pasid(dev, io_mm)
+> >> s/case/cases/
 > >>
-> >> The proposed API for auxiliary domains is in an early stage but might
-> >> replace this patch and could be used like this:
+> >>> as a PCI endpoint (e.g. AMD IOMMU and virtio-iommu). Currently, when a
+> >>> PCI root complex has an iommu-map property, the driver requires all
+> >>> endpoints to be described by the property. Allow the iommu-map property to
+> >>> have gaps.
 > >>
-> >>         iommu_enable_aux_domain(dev)
-> >>         d = iommu_domain_alloc()
-> >>         iommu_attach_aux(dev, d)
-> >>         iommu_aux_id(d) -> PASID
-> >>         iommu_map(d, ...)
-> >>         iommu_unmap(d, ...)
-> >>         iommu_detach_aux(dev, d)
-> >>         iommu_domain_free(d)
-> >>
-> >> The advantage being that the driver doesn't have to use a special
-> >> version of map/unmap/etc.
-> >
-> > Hi Jean-Phillippe -
-> >
-> > Have you thought about this any more? I want to send out a
-> > refresh for the per-context pagetables for arm-smmu so if we want to change
-> > the underlying assumptions this would be a great time.
-> >
-> > For my part I'm okay with either model. In fact the second one is closer
-> > to the original implementation that I sent out so I have a clear development
-> > path in mind for either option depending on what the community decides.
+> >> I'm not an IOMMU or virtio expert, so it's not obvious to me why it is
+> >> safe to allow devices to bypass the IOMMU.  Does this mean a typo in
+> >> iommu-map could inadvertently allow devices to bypass it?
+> > 
+> > 
+> > Thinking about this comment, I would like to ask: can't the
+> > virtio device indicate the ranges in a portable way?
+> > This would minimize the dependency on dt bindings and ACPI,
+> > enabling support for systems that have neither but do
+> > have virtio e.g. through pci.
 > 
-> We'll probably go with the second model. I'm trying to make the latest
-> version work with SMMUv3
-> (https://lwn.net/ml/linux-kernel/20181012051632.26064-1-baolu.lu@linux.intel.com/)
-> and I'd like to send an RFC soon
+> I thought about adding a PROBE request for this in virtio-iommu, but it
+> wouldn't be usable by a Linux guest because of a bootstrapping problem.
 
-Okay. When you do, I'll try to add the v2 code and make it work with the Adreno
-GPU.
+Hmm. At some level it seems wrong to design hardware interfaces
+around how Linux happens to probe things. That can change at any time
+...
 
-Jordan
+> Early on, Linux needs a description of device dependencies, to determine
+> in which order to probe them. If the device dependency was described by
+> virtio-iommu itself, the guest could for example initialize a NIC,
+> allocate buffers and start DMA on the physical address space (which aborts
+> if the IOMMU implementation disallows DMA by default), only to find out
+> once the virtio-iommu module is loaded that it needs to cancel all DMA and
+> reconfigure the NIC. With a static description such as iommu-map in DT or
+> ACPI remapping tables, the guest can defer probing of the NIC until the
+> IOMMU is initialized.
+> 
+> Thanks,
+> Jean
+
+Could you point me at the code you refer to here?
 
 -- 
-The Qualcomm Innovation Center, Inc. is a member of Code Aurora Forum,
-a Linux Foundation Collaborative Project
+MST
