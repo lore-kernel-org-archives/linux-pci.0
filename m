@@ -2,168 +2,83 @@ Return-Path: <SRS0=Zwnb=M5=vger.kernel.org=linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-0.8 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	MAILING_LIST_MULTI,SPF_PASS autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-8.8 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_PASS,URIBL_BLOCKED,
+	USER_AGENT_GIT autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 33BDBECDE32
-	for <linux-pci@archiver.kernel.org>; Wed, 17 Oct 2018 15:23:57 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id BE131ECDE32
+	for <linux-pci@archiver.kernel.org>; Wed, 17 Oct 2018 16:05:20 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id EF8D221529
-	for <linux-pci@archiver.kernel.org>; Wed, 17 Oct 2018 15:23:56 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.3.2 mail.kernel.org EF8D221529
-Authentication-Results: mail.kernel.org; dmarc=fail (p=none dis=none) header.from=redhat.com
+	by mail.kernel.org (Postfix) with ESMTP id C767A214DD
+	for <linux-pci@archiver.kernel.org>; Wed, 17 Oct 2018 16:05:19 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.3.2 mail.kernel.org C767A214DD
+Authentication-Results: mail.kernel.org; dmarc=none (p=none dis=none) header.from=deltatee.com
 Authentication-Results: mail.kernel.org; spf=none smtp.mailfrom=linux-pci-owner@vger.kernel.org
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727485AbeJQXUH (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Wed, 17 Oct 2018 19:20:07 -0400
-Received: from mx1.redhat.com ([209.132.183.28]:35966 "EHLO mx1.redhat.com"
+        id S1727493AbeJRABl (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Wed, 17 Oct 2018 20:01:41 -0400
+Received: from ale.deltatee.com ([207.54.116.67]:43164 "EHLO ale.deltatee.com"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1727013AbeJQXUG (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Wed, 17 Oct 2018 19:20:06 -0400
-Received: from smtp.corp.redhat.com (int-mx01.intmail.prod.int.phx2.redhat.com [10.5.11.11])
-        (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
-        (No client certificate requested)
-        by mx1.redhat.com (Postfix) with ESMTPS id 1AD01308FB9E;
-        Wed, 17 Oct 2018 15:23:55 +0000 (UTC)
-Received: from redhat.com (ovpn-124-92.rdu2.redhat.com [10.10.124.92])
-        by smtp.corp.redhat.com (Postfix) with ESMTP id 7C36560490;
-        Wed, 17 Oct 2018 15:23:51 +0000 (UTC)
-Date:   Wed, 17 Oct 2018 11:23:50 -0400
-From:   "Michael S. Tsirkin" <mst@redhat.com>
-To:     Jean-Philippe Brucker <jean-philippe.brucker@arm.com>
-Cc:     Auger Eric <eric.auger@redhat.com>,
-        "iommu@lists.linux-foundation.org" <iommu@lists.linux-foundation.org>,
-        "virtualization@lists.linux-foundation.org" 
-        <virtualization@lists.linux-foundation.org>,
-        "devicetree@vger.kernel.org" <devicetree@vger.kernel.org>,
-        "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-        "kvmarm@lists.cs.columbia.edu" <kvmarm@lists.cs.columbia.edu>,
-        "peter.maydell@linaro.org" <peter.maydell@linaro.org>,
-        "joro@8bytes.org" <joro@8bytes.org>,
-        "jasowang@redhat.com" <jasowang@redhat.com>,
-        "robh+dt@kernel.org" <robh+dt@kernel.org>,
-        Mark Rutland <Mark.Rutland@arm.com>,
-        "tnowicki@caviumnetworks.com" <tnowicki@caviumnetworks.com>,
-        "kevin.tian@intel.com" <kevin.tian@intel.com>,
-        Marc Zyngier <Marc.Zyngier@arm.com>,
-        Robin Murphy <Robin.Murphy@arm.com>,
-        Will Deacon <Will.Deacon@arm.com>,
-        Lorenzo Pieralisi <Lorenzo.Pieralisi@arm.com>
-Subject: Re: [PATCH v3 0/7] Add virtio-iommu driver
-Message-ID: <20181017111509-mutt-send-email-mst@kernel.org>
-References: <20181012145917.6840-1-jean-philippe.brucker@arm.com>
- <7874471b-3711-ca44-d220-5e756ac7db8c@redhat.com>
- <b2f929c3-b0df-acdc-c5e8-0d7ddf7ed964@arm.com>
- <c7167c51-d864-08f5-c128-f4b3257840ce@redhat.com>
- <40dddb20-6248-5bb0-e0ed-48bacd1867a1@arm.com>
+        id S1727048AbeJRABl (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Wed, 17 Oct 2018 20:01:41 -0400
+Received: from cgy1-donard.priv.deltatee.com ([172.16.1.31])
+        by ale.deltatee.com with esmtps (TLS1.2:ECDHE_RSA_AES_256_GCM_SHA384:256)
+        (Exim 4.89)
+        (envelope-from <gunthorp@deltatee.com>)
+        id 1gCoJu-0002Bv-VC; Wed, 17 Oct 2018 10:05:15 -0600
+Received: from gunthorp by cgy1-donard.priv.deltatee.com with local (Exim 4.89)
+        (envelope-from <gunthorp@deltatee.com>)
+        id 1gCoJt-0004fq-Rb; Wed, 17 Oct 2018 10:05:13 -0600
+From:   Logan Gunthorpe <logang@deltatee.com>
+To:     linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org
+Cc:     Dan Carpenter <dan.carpenter@oracle.com>,
+        Logan Gunthorpe <logang@deltatee.com>,
+        Bjorn Helgaas <bhelgaas@google.com>,
+        Christoph Hellwig <hch@infradead.org>
+Date:   Wed, 17 Oct 2018 10:05:10 -0600
+Message-Id: <20181017160510.17926-1-logang@deltatee.com>
+X-Mailer: git-send-email 2.19.0
 MIME-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
-Content-Disposition: inline
 Content-Transfer-Encoding: 8bit
-In-Reply-To: <40dddb20-6248-5bb0-e0ed-48bacd1867a1@arm.com>
-X-Scanned-By: MIMEDefang 2.79 on 10.5.11.11
-X-Greylist: Sender IP whitelisted, not delayed by milter-greylist-4.5.16 (mx1.redhat.com [10.5.110.43]); Wed, 17 Oct 2018 15:23:55 +0000 (UTC)
+X-SA-Exim-Connect-IP: 172.16.1.31
+X-SA-Exim-Rcpt-To: linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org, dan.carpenter@oracle.com, logang@deltatee.com, bhelgaas@google.com, hch@infradead.org
+X-SA-Exim-Mail-From: gunthorp@deltatee.com
+Subject: [PATCH] PCI/P2PDMA: Fix NULL check in pci_p2pmem_publish()
+X-SA-Exim-Version: 4.2.1 (built Tue, 02 Aug 2016 21:08:31 +0000)
+X-SA-Exim-Scanned: Yes (on ale.deltatee.com)
 Sender: linux-pci-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-On Wed, Oct 17, 2018 at 12:54:28PM +0100, Jean-Philippe Brucker wrote:
-> On 16/10/2018 21:31, Auger Eric wrote:
-> > Hi Jean,
-> > 
-> > On 10/16/18 8:44 PM, Jean-Philippe Brucker wrote:
-> >> On 16/10/2018 10:25, Auger Eric wrote:
-> >>> Hi Jean,
-> >>>
-> >>> On 10/12/18 4:59 PM, Jean-Philippe Brucker wrote:
-> >>>> Implement the virtio-iommu driver, following specification v0.8 [1].
-> >>>> Changes since v2 [2]:
-> >>>>
-> >>>> * Patches 2-4 allow virtio-iommu to use the PCI transport, since QEMU
-> >>>>    would like to phase out the MMIO transport. This produces a complex
-> >>>>    topology where the programming interface of the IOMMU could appear
-> >>>>    lower than the endpoints that it translates. It's not unheard of (e.g.
-> >>>>    AMD IOMMU), and the guest easily copes with this.
-> >>>>    
-> >>>>    The "Firmware description" section of the specification has been
-> >>>>    updated with all combinations of PCI, MMIO and DT, ACPI.
-> >>>
-> >>> I have a question wrt the FW specification. The IOMMU consumes 1 slot in
-> >>> the PCI domain and one needs to leave a RID hole in the iommu-map.  It
-> >>> is not obvious to me that this RID always is predictable given the pcie
-> >>> enumeration mechanism. Generally we have a coarse grain mapping of RID
-> >>> onto iommu phandles/STREAMIDs. Here, if I understand correctly we need
-> >>> to precisely identify the RID granted to the iommu. On QEMU this may
-> >>> depend on the instantiation order of the virtio-pci device right?
-> >> 
-> >> Yes, although it should all happen before you boot the guest, since
-> >> there is no hotplugging an IOMMU. Could you reserve a PCI slot upfront
-> >> and use it for virtio-iommu later? Or generate the iommu-map at the same
-> >> time as generating the child node of the PCI RC?
-> > 
-> > Even when cold-plugging the PCIe devices through qemu CLI, this depends
-> > on the order of the pcie devices in the list I guess. I need to further
-> > experiment.
-> 
-> Please let me know how it goes. I guess the problem will be the same for
-> building IORT tables? You're also going to need a hole in the ID
-> mappings of the PCI root complex node.
-> 
-> >>> So
-> >>> this does not look trivial to build this info. Isn't it possible to do
-> >>> this exclusion at kernel level instead?
-> >> 
-> >> So in theory VIRTIO_F_IOMMU_PLATFORM already does that:
-> >> 
-> >> VIRTIO_F_IOMMU_PLATFORM(33)
-> >>     This feature indicates that the device is behind an IOMMU that
-> >>     translates bus addresses from the device into physical addresses in
-> >>     memory. If this feature bit is set to 0, then the device emits
-> >>     physical addresses which are not translated further, even though an
-> >>     IOMMU may be present.
-> > 
-> > This tells the driver to use the dma api, right? 
-> 
-> That's how Linux implements the bit, install custom DMA ops when the bit
-> is absent. But it doesn't work for everyone and has caused a lot of
-> debate (https://patchwork.ozlabs.org/cover/946708/)
-> 
-> > Effectively this
-> > explicitly says whether the device is supposed to be upfront an IOMMU.
-> 
-> Yes. It's quite strange if you consider hotpluggable hardware, since
-> those devices shouldn't get to choose whether they are managed by an
-> IOMMU. For the IOMMU itself, it should be fine
-> 
-> >> For better or for worse, the guest has to implement it. If this feature
-> >> bit is unset for virtio-iommu, it does DMA on the physical address
-> >> space, regardless of what the static topology description says.
-> >> 
-> >> In practice it doesn't quite work. If your iommu-map describes the IOMMU
-> >> as translating itself, Linux' OF code will wait for the IOMMU to be
-> >> probed before probing the IOMMU. Working around this with hacks is
-> >> possible, but I don't want to introduce more questionable code to OF and
-> >> device tree bindings if there is any other way.
-> > Hum ok. I cannot really comment on this.
-> > 
-> > I just wanted to raise this concern about RID identfication.
-> 
-> We can always try. Relaxing iommu-map further would be one additional
-> patch to Documentation/devicetree/bindings/pci/pci-iommu.txt, and one to
-> drivers/iommu/of-iommu.c. I'd rather make it a separate RFC.
-> 
-> Since we need acks from an OF maintainer and I'd also like Joerg's
-> approval for adding a new driver to the IOMMU tree, I think it's too
-> late for this iteration. I wasn't intending for this to go into 4.20,
-> just have something to discuss at KVM forum next week.
-> 
-> Thanks,
-> Jean
+We should only assign 'p2pmem_published' if 'pdev->p2pdma' is not NULL.
+The extra check on 'publish' makes no sense.
 
-OK then. I'd appreciate it if you mark patches that aren't
-intended to be merged as RFC in subject line.
-Thanks!
+Signed-off-by: Logan Gunthorpe <logang@deltatee.com>
+Reported-by: Dan Carpenter <dan.carpenter@oracle.com>
+Cc: Bjorn Helgaas <bhelgaas@google.com>
+Cc: Christoph Hellwig <hch@infradead.org>
+---
+ drivers/pci/p2pdma.c | 6 ++----
+ 1 file changed, 2 insertions(+), 4 deletions(-)
 
+diff --git a/drivers/pci/p2pdma.c b/drivers/pci/p2pdma.c
+index da66c7e31730..d710b5ef65a1 100644
+--- a/drivers/pci/p2pdma.c
++++ b/drivers/pci/p2pdma.c
+@@ -678,10 +678,8 @@ EXPORT_SYMBOL_GPL(pci_p2pmem_free_sgl);
+  */
+ void pci_p2pmem_publish(struct pci_dev *pdev, bool publish)
+ {
+-	if (publish && !pdev->p2pdma)
+-		return;
+-
+-	pdev->p2pdma->p2pmem_published = publish;
++	if (pdev->p2pdma)
++		pdev->p2pdma->p2pmem_published = publish;
+ }
+ EXPORT_SYMBOL_GPL(pci_p2pmem_publish);
+ 
 -- 
-MST
+2.19.0
+
