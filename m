@@ -2,112 +2,149 @@ Return-Path: <SRS0=Zwnb=M5=vger.kernel.org=linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-0.8 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	MAILING_LIST_MULTI,SPF_PASS autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-2.3 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+	MAILING_LIST_MULTI,SPF_PASS,URIBL_BLOCKED,USER_AGENT_MUTT
+	autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 20AE2ECDE32
-	for <linux-pci@archiver.kernel.org>; Wed, 17 Oct 2018 15:14:11 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 1E60EECDE32
+	for <linux-pci@archiver.kernel.org>; Wed, 17 Oct 2018 15:20:21 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id E546E2152A
-	for <linux-pci@archiver.kernel.org>; Wed, 17 Oct 2018 15:14:10 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.3.2 mail.kernel.org E546E2152A
-Authentication-Results: mail.kernel.org; dmarc=fail (p=none dis=none) header.from=redhat.com
+	by mail.kernel.org (Postfix) with ESMTP id E56B121527
+	for <linux-pci@archiver.kernel.org>; Wed, 17 Oct 2018 15:20:20 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.3.2 mail.kernel.org E56B121527
+Authentication-Results: mail.kernel.org; dmarc=none (p=none dis=none) header.from=arm.com
 Authentication-Results: mail.kernel.org; spf=none smtp.mailfrom=linux-pci-owner@vger.kernel.org
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727037AbeJQXKS (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Wed, 17 Oct 2018 19:10:18 -0400
-Received: from mx1.redhat.com ([209.132.183.28]:56288 "EHLO mx1.redhat.com"
+        id S1727954AbeJQXQM (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Wed, 17 Oct 2018 19:16:12 -0400
+Received: from foss.arm.com ([217.140.101.70]:53452 "EHLO foss.arm.com"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1727013AbeJQXKS (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Wed, 17 Oct 2018 19:10:18 -0400
-Received: from smtp.corp.redhat.com (int-mx01.intmail.prod.int.phx2.redhat.com [10.5.11.11])
-        (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
-        (No client certificate requested)
-        by mx1.redhat.com (Postfix) with ESMTPS id 42536C04BD42;
-        Wed, 17 Oct 2018 15:14:09 +0000 (UTC)
-Received: from redhat.com (ovpn-124-92.rdu2.redhat.com [10.10.124.92])
-        by smtp.corp.redhat.com (Postfix) with SMTP id 0D85319E63;
-        Wed, 17 Oct 2018 15:14:05 +0000 (UTC)
-Date:   Wed, 17 Oct 2018 11:14:05 -0400
-From:   "Michael S. Tsirkin" <mst@redhat.com>
-To:     Jean-philippe Brucker <jphilippe.brucker@gmail.com>
-Cc:     Bjorn Helgaas <helgaas@kernel.org>, mark.rutland@arm.com,
-        devicetree@vger.kernel.org, kevin.tian@intel.com,
-        tnowicki@caviumnetworks.com, peter.maydell@linaro.org,
-        linux-pci@vger.kernel.org, will.deacon@arm.com,
-        robin.murphy@arm.com, virtualization@lists.linux-foundation.org,
-        iommu@lists.linux-foundation.org, robh+dt@kernel.org,
-        marc.zyngier@arm.com, jasowang@redhat.com,
-        kvmarm@lists.cs.columbia.edu, jean-philippe.brucker@arm.com
-Subject: Re: [PATCH v3 3/7] PCI: OF: Allow endpoints to bypass the iommu
-Message-ID: <20181017111100-mutt-send-email-mst@kernel.org>
-References: <20181012145917.6840-1-jean-philippe.brucker@arm.com>
- <20181012145917.6840-4-jean-philippe.brucker@arm.com>
- <20181012194158.GX5906@bhelgaas-glaptop.roam.corp.google.com>
- <20181015065024-mutt-send-email-mst@kernel.org>
- <482d0eb9-8c4c-9d64-7b32-25d5d11a8b8f@gmail.com>
+        id S1727948AbeJQXQM (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Wed, 17 Oct 2018 19:16:12 -0400
+Received: from usa-sjc-imap-foss1.foss.arm.com (unknown [10.72.51.249])
+        by usa-sjc-mx-foss1.foss.arm.com (Postfix) with ESMTP id 5A1DB80D;
+        Wed, 17 Oct 2018 08:20:02 -0700 (PDT)
+Received: from e107981-ln.cambridge.arm.com (unknown [10.1.197.40])
+        by usa-sjc-imap-foss1.foss.arm.com (Postfix) with ESMTPSA id 92C023F59C;
+        Wed, 17 Oct 2018 08:19:59 -0700 (PDT)
+Date:   Wed, 17 Oct 2018 16:19:54 +0100
+From:   Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
+To:     honghui.zhang@mediatek.com
+Cc:     bhelgaas@google.com, linux-arm-kernel@lists.infradead.org,
+        linux-mediatek@lists.infradead.org, linux-pci@vger.kernel.org,
+        linux-kernel@vger.kernel.org, ryder.lee@mediatek.com,
+        ulf.hansson@linaro.org, marc.zyngier@arm.com,
+        matthias.bgg@gmail.com, devicetree@vger.kernel.org,
+        yingjoe.chen@mediatek.com, eddie.huang@mediatek.com,
+        youlin.pei@mediatek.com, yt.shen@mediatek.com,
+        jianjun.wang@mediatek.com, yong.wu@mediatek.com
+Subject: Re: [PATCH v8 0/9] PCI: mediatek: fixup find_port, enable_msi and
+ add PM, module support
+Message-ID: <20181017151954.GA9374@e107981-ln.cambridge.arm.com>
+References: <1539590940-13355-1-git-send-email-honghui.zhang@mediatek.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <482d0eb9-8c4c-9d64-7b32-25d5d11a8b8f@gmail.com>
-X-Scanned-By: MIMEDefang 2.79 on 10.5.11.11
-X-Greylist: Sender IP whitelisted, not delayed by milter-greylist-4.5.16 (mx1.redhat.com [10.5.110.31]); Wed, 17 Oct 2018 15:14:09 +0000 (UTC)
+In-Reply-To: <1539590940-13355-1-git-send-email-honghui.zhang@mediatek.com>
+User-Agent: Mutt/1.5.24 (2015-08-30)
 Sender: linux-pci-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-On Mon, Oct 15, 2018 at 08:46:41PM +0100, Jean-philippe Brucker wrote:
-> [Replying with my personal address because we're having SMTP issues]
+On Mon, Oct 15, 2018 at 04:08:51PM +0800, honghui.zhang@mediatek.com wrote:
+> From: Honghui Zhang <honghui.zhang@mediatek.com>
 > 
-> On 15/10/2018 11:52, Michael S. Tsirkin wrote:
-> > On Fri, Oct 12, 2018 at 02:41:59PM -0500, Bjorn Helgaas wrote:
-> >> s/iommu/IOMMU/ in subject
-> >>
-> >> On Fri, Oct 12, 2018 at 03:59:13PM +0100, Jean-Philippe Brucker wrote:
-> >>> Using the iommu-map binding, endpoints in a given PCI domain can be
-> >>> managed by different IOMMUs. Some virtual machines may allow a subset of
-> >>> endpoints to bypass the IOMMU. In some case the IOMMU itself is presented
-> >>
-> >> s/case/cases/
-> >>
-> >>> as a PCI endpoint (e.g. AMD IOMMU and virtio-iommu). Currently, when a
-> >>> PCI root complex has an iommu-map property, the driver requires all
-> >>> endpoints to be described by the property. Allow the iommu-map property to
-> >>> have gaps.
-> >>
-> >> I'm not an IOMMU or virtio expert, so it's not obvious to me why it is
-> >> safe to allow devices to bypass the IOMMU.  Does this mean a typo in
-> >> iommu-map could inadvertently allow devices to bypass it?
-> > 
-> > 
-> > Thinking about this comment, I would like to ask: can't the
-> > virtio device indicate the ranges in a portable way?
-> > This would minimize the dependency on dt bindings and ACPI,
-> > enabling support for systems that have neither but do
-> > have virtio e.g. through pci.
+> This patchset includes misc patchs:
 > 
-> I thought about adding a PROBE request for this in virtio-iommu, but it
-> wouldn't be usable by a Linux guest because of a bootstrapping problem.
-
-Hmm. At some level it seems wrong to design hardware interfaces
-around how Linux happens to probe things. That can change at any time
-...
-
-> Early on, Linux needs a description of device dependencies, to determine
-> in which order to probe them. If the device dependency was described by
-> virtio-iommu itself, the guest could for example initialize a NIC,
-> allocate buffers and start DMA on the physical address space (which aborts
-> if the IOMMU implementation disallows DMA by default), only to find out
-> once the virtio-iommu module is loaded that it needs to cancel all DMA and
-> reconfigure the NIC. With a static description such as iommu-map in DT or
-> ACPI remapping tables, the guest can defer probing of the NIC until the
-> IOMMU is initialized.
+> The patch 1 fixup the mtk_pcie_find_port logic which will cause system
+> could not touch the EP's configuration space that connected to PCIe slot 1.
 > 
-> Thanks,
-> Jean
+> The patch 2 fixup the class type for MT7622.
+> The patch 6 fixup the enable msi logic, the operation to enable MSI
+> should be after system clock is enabled. Call mtk_pcie_enable_msi in
+> mtk_pcie_startup_port_v2 since the clock was all enabled at that time.
+> 
+> The patch 7 was rebased and refactor of the v4 patch[1], changes are:
+>  -Add PM support for MT7622.
+>  -Using mtk_pcie_enable_port to re-establish the link when resumed.
+>  -Rebased on this patchset.
+> 
+> The patch 9 add loadable kernel module support.
+> 
+> [1] https://patchwork.kernel.org/patch/10479079
 
-Could you point me at the code you refer to here?
+I have pushed out (after basically rewriting all commit logs and
+squashing two patches) this version of the patchset to my pci/mediatek
+branch for v4.20, keeping in mind that you must follow-up with Bjorn on
+this patch:
 
--- 
-MST
+https://patchwork.ozlabs.org/patch/984668/
+
+that we shall still consider for v4.21.
+
+Lorenzo
+
+> Change since v7:
+>  - Add Acked-by tags from Ryder Lee.
+>  - Add Fix tags for patch 2(Fix calss type for MT7622 as PCI_CLASS_BRIDGE_PCI)
+>    and patch 6(Fixup enable MSI logic by enable MSI after clock enabled)
+> 
+> Change since v6:
+>  - Remove the pci_unmap_iospace when remove the device since the
+>    devm_pci_remap_iospace is an devm_ version.
+>  - Commit message changed for patch 2(Fix class type for MT7622 as PCI_CLASS_BRIDGE_PCI).
+>  - Capitilizing "MSI" and "PM" in the patch title.
+> 
+> Change since v5:
+>  - A bit improvement of mtk_pcie_find_port suggest by Lorenzo.
+>    MSI after clock enabled).
+>  - Add Acked-by tags from Ryder.
+> 
+> Change since v4:
+>  - Add patch 2 to fixup class type for MT7622.
+>  - Add patch 3 to remove the redundant dev->pm_domain check
+>  - Add patch 4 to covert to use pci_host_probe
+>  - Add patch 5 to re-arrange the function define, this is a prepare patch for
+>    fixup the enable_msi logic, no functional changed have been made by this one.
+>  - Add patch 8 to save the GIC IRQ in mtk_pcie_port as a prepare patch for tear
+>    down the irq when remove the kernel module.
+>  - Re-arrange the find_port flow suggest by Lorenzo to make the code parse easier
+>    for the patch 1.
+>  - Remove the .pm_support in mtk_pcie_soc in patch 7 since if system pm was not
+>    supported, then those pm callbacks will never be executed for MT7622. So the
+>    .pm_support is not needed.
+> 
+> Change since v3:
+>  - Remove pm_runtime_XXX ops in suspend and resume callbacks in the third patch.
+>  - Rebase to 4.19-rc1.
+> 
+> Change since v2:
+>  - Fix the list_for_each_entry_safe parameter error.
+>  - Add Ryder's Acked-by flag.
+> 
+> Change since v1:
+>  - A bit of code refact of the first patch suggested by Andy Shevchenko, and
+>    commit message updated.
+> 
+> Honghui Zhang (9):
+>   PCI: mediatek: Using slot's devfn for compare to fix
+>     mtk_pcie_find_port logic
+>   PCI: mediatek: Fix class type for MT7622 as PCI_CLASS_BRIDGE_PCI
+>   PCI: mediatek: Remove the redundant dev->pm_domain check
+>   PCI: mediatek: Convert to use pci_host_probe()
+>   PCI: mediatek: Move the mtk_pcie_startup_port_v2 function's define
+>     after mtk_pcie_setup_irq
+>   PCI: mediatek: Fixup enable MSI logic by enable MSI after clock
+>     enabled
+>   PCI: mediatek: Add system PM support for MT2712 and MT7622
+>   PCI: mediatek: Save the GIC IRQ in mtk_pcie_port
+>   PCI: mediatek: Add loadable kernel module support
+> 
+>  drivers/pci/controller/Kconfig         |   2 +-
+>  drivers/pci/controller/pcie-mediatek.c | 319 +++++++++++++++++++++------------
+>  2 files changed, 204 insertions(+), 117 deletions(-)
+> 
+> -- 
+> 2.6.4
+> 
