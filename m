@@ -2,102 +2,126 @@ Return-Path: <SRS0=Zwnb=M5=vger.kernel.org=linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-0.8 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	MAILING_LIST_MULTI,SPF_PASS,URIBL_BLOCKED autolearn=unavailable
-	autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-0.6 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
+	DKIM_VALID_AU,FREEMAIL_FORGED_FROMDOMAIN,FREEMAIL_FROM,
+	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_PASS,URIBL_BLOCKED
+	autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 972A4ECDE30
-	for <linux-pci@archiver.kernel.org>; Wed, 17 Oct 2018 08:31:09 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id E7C06ECDE30
+	for <linux-pci@archiver.kernel.org>; Wed, 17 Oct 2018 08:32:32 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 691E821526
-	for <linux-pci@archiver.kernel.org>; Wed, 17 Oct 2018 08:31:09 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.3.2 mail.kernel.org 691E821526
-Authentication-Results: mail.kernel.org; dmarc=none (p=none dis=none) header.from=linux-m68k.org
+	by mail.kernel.org (Postfix) with ESMTP id 893F321523
+	for <linux-pci@archiver.kernel.org>; Wed, 17 Oct 2018 08:32:32 +0000 (UTC)
+Authentication-Results: mail.kernel.org;
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="XqP4Gk52"
+DMARC-Filter: OpenDMARC Filter v1.3.2 mail.kernel.org 893F321523
+Authentication-Results: mail.kernel.org; dmarc=fail (p=none dis=none) header.from=gmail.com
 Authentication-Results: mail.kernel.org; spf=none smtp.mailfrom=linux-pci-owner@vger.kernel.org
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727013AbeJQQZi (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Wed, 17 Oct 2018 12:25:38 -0400
-Received: from mail-vs1-f68.google.com ([209.85.217.68]:36612 "EHLO
-        mail-vs1-f68.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726994AbeJQQZh (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Wed, 17 Oct 2018 12:25:37 -0400
-Received: by mail-vs1-f68.google.com with SMTP id c205so20238224vsd.3;
-        Wed, 17 Oct 2018 01:31:02 -0700 (PDT)
+        id S1727095AbeJQQ1H (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Wed, 17 Oct 2018 12:27:07 -0400
+Received: from mail-qt1-f196.google.com ([209.85.160.196]:38223 "EHLO
+        mail-qt1-f196.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726967AbeJQQ1G (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Wed, 17 Oct 2018 12:27:06 -0400
+Received: by mail-qt1-f196.google.com with SMTP id l9-v6so29024968qtf.5;
+        Wed, 17 Oct 2018 01:32:30 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20161025;
+        h=mime-version:references:in-reply-to:from:date:message-id:subject:to
+         :cc;
+        bh=gnmOvwVBiwhbr4qv0Wcjz1gEzwBhaQoYwTvhnMhd4bY=;
+        b=XqP4Gk52VAKImMyKwOb2O70F9s7eC+3G+J4qOOsauf4EFxt5OPOpqtaoq1yRpkn2Ea
+         JtoEtVL5rQ289iz/GXD7HeuzU+cDZN9MaMJUSizwoaVS0rRqbuNHGzNbFVE6Rgi1l7Bc
+         3ZB6/g7hs7CSRRb3cAEo3GWvZOaWMh4zAaGaght47DJe5jpZtzLF0l2u8/qo4RH7yMy/
+         J9cAXnEdZfqqtsiACX5MriRWS1R/MXchsk+VTaF+45ytgfhcwesIWRhyFI4rUFGCHQQY
+         OefBNGesldPZuX+3QmahQeT9E9OW2GYD/I3MT04G5JoZaSDi808c5VbQdf+MUsMlRDHD
+         0Wlg==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20161025;
         h=x-gm-message-state:mime-version:references:in-reply-to:from:date
          :message-id:subject:to:cc;
-        bh=Nbgd8scfCvhY6jmG199ZNUqhpVDts12fW1AAxoxPxmI=;
-        b=LWouU6AlAJbs0Rns0leAhpE4XwlYxQW9C0zvb2hdVNIzp9M+uIYwOkuL09D9vtJimJ
-         U2mkwUOPmlKSXyKVRw0LOKlKa5xAIhSW3m5YZRaKWYihAqY3USmQAkCq+uYw+kis4s8Y
-         uNqe7KU/aul5Mhbnxe83pnOUPkM8hdixqwFQSG58WCtrDzKVbyDjI2ZdQmNDTTHyS0d1
-         lTo9otyOfQ5KjUB+AV8sy2lXEPN56sfbS68D5kzi/oHcUDHSMpzQ0DpVBAZmVEhNXiJk
-         3OTEtSt+J8OmRYa/ZLtU8XdmzwypLsT057LHRof8EVuLYB1PeE7uZVXKAHlhJxAAUpfE
-         YnWA==
-X-Gm-Message-State: ABuFfoj4FK7KIWAVNtSXiHOTpOaaR9gd4pMe6wuV7lpM2ZwZQAakcbCj
-        r022eNf/PW5uVxcAzzSrMGLp9LYf8RkcAlLd39g=
-X-Google-Smtp-Source: ACcGV6273LL+JTUOtmfdqAmVO+8UCsjrLVNOvZEMtmS9Vt2WV6JXoIZjMmugHwndwVBvraDokh3c/RzyRUPLyAWwMIc=
-X-Received: by 2002:a67:843:: with SMTP id 64mr10052717vsi.166.1539765061626;
- Wed, 17 Oct 2018 01:31:01 -0700 (PDT)
+        bh=gnmOvwVBiwhbr4qv0Wcjz1gEzwBhaQoYwTvhnMhd4bY=;
+        b=pDCq3u+xpVOXg1be8jDlfoYWlZiZZryDjkN7mvCSSgbbFpeNidqz9/Ur9kDZEeXgQw
+         lrrlYnSq+D+y4f3E9UX6Nml6ozifzlqR23J20sAFsqCWwRnFTDLtWodil889stUq2I0Y
+         wOSQJvXGe/18csUcRWMmdio2XLIKhCceC+I9r+ABPAI3rUYNTyv5wVo0Q41XGLjPMJeH
+         weW7vDN/h7dGDJ54vY/lo+fEtY/bYEmUkwwSpow40rI0LiMbgOmqE76JLZKp/7lUG0Wg
+         BckX3rbP+t6KX2UFJPg8F1eTpE2297VjJ13KXEn+ysE6uUKuvj42K46p1+cjakEuS7gY
+         LypA==
+X-Gm-Message-State: ABuFfohfVq968TUSDOMVzkgBc8pdz93floHvb+WkeUchOIlgXRItbLfn
+        y02fzUN1ksYLSnCnjoxy6nYefIX4kQNh+CMIOzM=
+X-Google-Smtp-Source: ACcGV60ft8YlaFa+c+7OYch40bCCnIAR4z4vA7VZtL/C7k8ihRTPGbYQdpxAza/WrBtbCuarELNmyL+OF2Z/pMZvW80=
+X-Received: by 2002:ac8:190e:: with SMTP id t14-v6mr22831024qtj.327.1539765150096;
+ Wed, 17 Oct 2018 01:32:30 -0700 (PDT)
 MIME-Version: 1.0
-References: <20181017080201.10866-1-hch@lst.de>
-In-Reply-To: <20181017080201.10866-1-hch@lst.de>
-From:   Geert Uytterhoeven <geert@linux-m68k.org>
-Date:   Wed, 17 Oct 2018 10:30:49 +0200
-Message-ID: <CAMuHMdWMtxxu8iivcnT=uWTMHsp=iSq_QzXqDWQut5OHwTU8Sg@mail.gmail.com>
-Subject: Re: move bus (PCI, PCMCIA, EISA, rapdio) config to drivers/ v2
-To:     Christoph Hellwig <hch@lst.de>
-Cc:     Masahiro Yamada <yamada.masahiro@socionext.com>,
-        Matt Porter <mporter@kernel.crashing.org>,
-        Alex Bounine <alex.bou9@gmail.com>,
-        Dominik Brodowski <linux@dominikbrodowski.net>,
-        linux-kbuild <linux-kbuild@vger.kernel.org>,
-        linux-pci <linux-pci@vger.kernel.org>,
-        scsi <linux-scsi@vger.kernel.org>,
-        Linux-Arch <linux-arch@vger.kernel.org>,
+References: <1539755947-27014-1-git-send-email-suganath-prabu.subramani@broadcom.com>
+ <1539755947-27014-3-git-send-email-suganath-prabu.subramani@broadcom.com>
+In-Reply-To: <1539755947-27014-3-git-send-email-suganath-prabu.subramani@broadcom.com>
+From:   Andy Shevchenko <andy.shevchenko@gmail.com>
+Date:   Wed, 17 Oct 2018 11:32:18 +0300
+Message-ID: <CAHp75Ve=X9X6xG5FpuZrmRKfSpcLwFQYE_A8vhUzNn92KSoc4w@mail.gmail.com>
+Subject: Re: [v5 2/4] mpt3sas: Fix Sync cache command failure during driver unload
+To:     Suganath Prabu Subramani <suganath-prabu.subramani@broadcom.com>
+Cc:     Bjorn Helgaas <helgaas@kernel.org>, Lukas Wunner <lukas@wunner.de>,
+        linux-scsi <linux-scsi@vger.kernel.org>,
+        linux-pci@vger.kernel.org,
         Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
-        linuxppc-dev <linuxppc-dev@lists.ozlabs.org>
+        Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+        ruscur@russell.cc, sbobroff@linux.ibm.com, oohall@gmail.com,
+        Sathya Prakash <Sathya.Prakash@broadcom.com>,
+        Sreekanth Reddy <sreekanth.reddy@broadcom.com>
 Content-Type: text/plain; charset="UTF-8"
 Sender: linux-pci-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-Hi Christoph,
-
-On Wed, Oct 17, 2018 at 10:03 AM Christoph Hellwig <hch@lst.de> wrote:
-> currently every architecture that wants to provide on of the common
-> periphal busses needs to add some boilerplate code and include the
-> right Kconfig files.   This series instead just selects the presence
-> (when needed) and then handles everything in the bus-specific
-> Kconfig file under drivers/.
+On Wed, Oct 17, 2018 at 8:59 AM Suganath Prabu
+<suganath-prabu.subramani@broadcom.com> wrote:
 >
-> Changes since v1:
->  - rename all HAS_* Kconfig symbols to HAVE_*
->  - drop the CONFIG_PCI_QSPAN option entirely
->  - drop duplicate select from powerpc
->  - restore missing selection of PCI_MSI for riscv
->  - update x86 and riscv defconfigs to include PCI
->  - actually inclue drivers/eisa/Kconfig
->  - adjust some captilizations
+> This is to fix Sync cache and start stop command
+>  failures with DID_NO_CONNECT during driver unload.
+>
+> 1) Release drives first from SML, then remove internally
+> in driver.
+> 2) And allow sync cache and Start stop commands to firmware,
+> even when remove_host flag is set.
 
-Thanks for the update!
+> +       if (ioc->hba_mpi_version_belonged == MPI2_VERSION) {
+> +               if (ioc->remove_host)
+> +                       return false;
+> +
+> +               return true;
+> +       }
+> +
+> +       if (ioc->remove_host) {
+> +
+> +               switch (scmd->cmnd[0]) {
+> +               case SYNCHRONIZE_CACHE:
+> +               case START_STOP:
+> +                       return true;
+> +               default:
+> +                       return false;
+> +               }
+> +       }
+> +
+> +       return true;
 
-Please use "git format-patch -v<N> --cover" to prepare patch series
-for sending with git-send-email.
+Wouldn't be the same as
 
-  "-v<N>" to prefix all patches with version number <N>,
-  "--cover" to have a "[PATCH 0/<M>]" prefix in the cover letter.
+if (!ioc->remove_host || ioc->hba_mpi_version_belonged == MPI2_VERSION)
+   return !ioc->remove_host;
 
-Thanks!
+ switch (scmd->cmnd[0]) {
+ case SYNCHRONIZE_CACHE:
+ case START_STOP:
+   return true;
+ default:
+   return false;
+ }
 
-Gr{oetje,eeting}s,
-
-                        Geert
+?
 
 -- 
-Geert Uytterhoeven -- There's lots of Linux beyond ia32 -- geert@linux-m68k.org
-
-In personal conversations with technical people, I call myself a hacker. But
-when I'm talking to journalists I just say "programmer" or something like that.
-                                -- Linus Torvalds
+With Best Regards,
+Andy Shevchenko
