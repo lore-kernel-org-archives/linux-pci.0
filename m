@@ -2,145 +2,128 @@ Return-Path: <SRS0=PAID=M6=vger.kernel.org=linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-0.6 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
-	DKIM_VALID_AU,FREEMAIL_FORGED_FROMDOMAIN,FREEMAIL_FROM,
-	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_PASS autolearn=ham
-	autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-0.8 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+	MAILING_LIST_MULTI,SPF_PASS autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id B57E0ECDE43
-	for <linux-pci@archiver.kernel.org>; Thu, 18 Oct 2018 07:23:33 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id D5EFEECDE43
+	for <linux-pci@archiver.kernel.org>; Thu, 18 Oct 2018 10:47:25 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 796EB208E4
-	for <linux-pci@archiver.kernel.org>; Thu, 18 Oct 2018 07:23:33 +0000 (UTC)
-Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="jr9P8hsO"
-DMARC-Filter: OpenDMARC Filter v1.3.2 mail.kernel.org 796EB208E4
-Authentication-Results: mail.kernel.org; dmarc=fail (p=none dis=none) header.from=gmail.com
+	by mail.kernel.org (Postfix) with ESMTP id A67912145D
+	for <linux-pci@archiver.kernel.org>; Thu, 18 Oct 2018 10:47:25 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.3.2 mail.kernel.org A67912145D
+Authentication-Results: mail.kernel.org; dmarc=none (p=none dis=none) header.from=arm.com
 Authentication-Results: mail.kernel.org; spf=none smtp.mailfrom=linux-pci-owner@vger.kernel.org
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727666AbeJRPXJ (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Thu, 18 Oct 2018 11:23:09 -0400
-Received: from mail-qt1-f194.google.com ([209.85.160.194]:44357 "EHLO
-        mail-qt1-f194.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1727359AbeJRPXJ (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Thu, 18 Oct 2018 11:23:09 -0400
-Received: by mail-qt1-f194.google.com with SMTP id x24-v6so1561765qtx.11;
-        Thu, 18 Oct 2018 00:23:30 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20161025;
-        h=mime-version:references:in-reply-to:from:date:message-id:subject:to
-         :cc;
-        bh=O7kIxwq2qKHcExhNfWzmcsriRPxkNspejgUxQxEv01Y=;
-        b=jr9P8hsOVn+LrrHJMQESCTGZakg+cJlWvuVArNccQja+NdHig6POM0QkIDNuj6ggv8
-         nyQ5cWw2aXCqpPM0Mo2QdU+2R2JP28LUpgbrAlKXi9eBQ+0D03Z4OjXQdzTRgxkQNkyY
-         WhxUDzYizChbQDM3KYxEcqWG2s5G8JQZbiQwnoKg74W0C2vAhBv0anXHv9nEXVT3N+JA
-         TaZGecbJqW/cg756u1gx++UqpXWQd2nR9i+q5ej+hRKGmmlnwfx+YmtClpaImYxbgbWz
-         MxUbhCuz+ei6BfVZieJD2ARy2q8UtxR1Q+lsy+jJwkw5D452aOsJowMJEbxTJmscPbI7
-         zs0A==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20161025;
-        h=x-gm-message-state:mime-version:references:in-reply-to:from:date
-         :message-id:subject:to:cc;
-        bh=O7kIxwq2qKHcExhNfWzmcsriRPxkNspejgUxQxEv01Y=;
-        b=XsC/eUNsSLOxKjwAytTthFlDDsSPZGksSaQ3n62rsHXXtCADb7XD9CCnHWlcpqL2Tw
-         TB/6X1G8ocf2lprHOS3bYrjXDlTOqbKXAFURN2eJV+TgXgZto35UTF3j85x/aLacB0xA
-         ZdPS4Daqxvs2MPgjvb4C7b9HpCiZt2jkfutYpyt5hd97lbbMD23p1tp9CZ8FRYMbUjHG
-         LYRRAlvnQ54c9HLCh67FtcsD9Vu/sDfYgmUllvinlxyt2TN74Ui3/d10ZIVj7uZP4mLu
-         oOydlA/PxD/3iue+LMc/US4byLiBeZbt0VGP6d3CtsTJJRu99ZlrsyjKvvhWn2co6+wv
-         OdzA==
-X-Gm-Message-State: ABuFfojzS5RtJFCBNpMNicviklmJV1uALNP5lpcyjN2JPxvEada5+V99
-        CEyUG2colGASdQuZxsNqdkzox9WkCZzUmTZTFNfINgVZ+6o=
-X-Google-Smtp-Source: ACcGV62KVYxg4rjUnT1EREW/DiVAF+aXR+k46NOswC01dj3RKOlrmvV0bF4eAuH2MybFoPnL5Y23UiY8ys536jPbvFE=
-X-Received: by 2002:ac8:6784:: with SMTP id b4-v6mr28081655qtp.373.1539847410128;
- Thu, 18 Oct 2018 00:23:30 -0700 (PDT)
+        id S1728104AbeJRSrt (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Thu, 18 Oct 2018 14:47:49 -0400
+Received: from usa-sjc-mx-foss1.foss.arm.com ([217.140.101.70]:35810 "EHLO
+        foss.arm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1727961AbeJRSrt (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Thu, 18 Oct 2018 14:47:49 -0400
+Received: from usa-sjc-imap-foss1.foss.arm.com (unknown [10.72.51.249])
+        by usa-sjc-mx-foss1.foss.arm.com (Postfix) with ESMTP id ED72CA78;
+        Thu, 18 Oct 2018 03:47:23 -0700 (PDT)
+Received: from [10.1.196.75] (e110467-lin.cambridge.arm.com [10.1.196.75])
+        by usa-sjc-imap-foss1.foss.arm.com (Postfix) with ESMTPSA id 2C37F3F5D3;
+        Thu, 18 Oct 2018 03:47:21 -0700 (PDT)
+Subject: Re: [PATCH v3 3/7] PCI: OF: Allow endpoints to bypass the iommu
+To:     "Michael S. Tsirkin" <mst@redhat.com>,
+        Jean-philippe Brucker <jphilippe.brucker@gmail.com>
+Cc:     Bjorn Helgaas <helgaas@kernel.org>, mark.rutland@arm.com,
+        devicetree@vger.kernel.org, kevin.tian@intel.com,
+        tnowicki@caviumnetworks.com, peter.maydell@linaro.org,
+        linux-pci@vger.kernel.org, will.deacon@arm.com,
+        virtualization@lists.linux-foundation.org,
+        iommu@lists.linux-foundation.org, robh+dt@kernel.org,
+        marc.zyngier@arm.com, jasowang@redhat.com,
+        kvmarm@lists.cs.columbia.edu, jean-philippe.brucker@arm.com
+References: <20181012145917.6840-1-jean-philippe.brucker@arm.com>
+ <20181012145917.6840-4-jean-philippe.brucker@arm.com>
+ <20181012194158.GX5906@bhelgaas-glaptop.roam.corp.google.com>
+ <20181015065024-mutt-send-email-mst@kernel.org>
+ <482d0eb9-8c4c-9d64-7b32-25d5d11a8b8f@gmail.com>
+ <20181017111100-mutt-send-email-mst@kernel.org>
+From:   Robin Murphy <robin.murphy@arm.com>
+Message-ID: <e609de5e-1be2-594e-a4a9-ec1a40d997ab@arm.com>
+Date:   Thu, 18 Oct 2018 11:47:18 +0100
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:52.0) Gecko/20100101
+ Thunderbird/52.9.1
 MIME-Version: 1.0
-References: <1539755947-27014-1-git-send-email-suganath-prabu.subramani@broadcom.com>
- <1539755947-27014-3-git-send-email-suganath-prabu.subramani@broadcom.com>
- <CAHp75Ve=X9X6xG5FpuZrmRKfSpcLwFQYE_A8vhUzNn92KSoc4w@mail.gmail.com> <CA+RiK67067aV9Ky5m8uCGLGcvjbBRxqFVeyB0CsYcvSw7rgqJg@mail.gmail.com>
-In-Reply-To: <CA+RiK67067aV9Ky5m8uCGLGcvjbBRxqFVeyB0CsYcvSw7rgqJg@mail.gmail.com>
-From:   Andy Shevchenko <andy.shevchenko@gmail.com>
-Date:   Thu, 18 Oct 2018 10:23:18 +0300
-Message-ID: <CAHp75VfENTJjJVMyQ1wnD4GXYKjhgr6h+wocPOfk16p9nWrpeg@mail.gmail.com>
-Subject: Re: [v5 2/4] mpt3sas: Fix Sync cache command failure during driver unload
-To:     Suganath Prabu Subramani <suganath-prabu.subramani@broadcom.com>
-Cc:     Bjorn Helgaas <helgaas@kernel.org>, Lukas Wunner <lukas@wunner.de>,
-        linux-scsi <linux-scsi@vger.kernel.org>,
-        linux-pci@vger.kernel.org,
-        Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
-        Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-        ruscur@russell.cc, sbobroff@linux.ibm.com,
-        Oliver <oohall@gmail.com>,
-        Sathya Prakash <Sathya.Prakash@broadcom.com>,
-        Sreekanth Reddy <sreekanth.reddy@broadcom.com>
-Content-Type: text/plain; charset="UTF-8"
+In-Reply-To: <20181017111100-mutt-send-email-mst@kernel.org>
+Content-Type: text/plain; charset=utf-8; format=flowed
+Content-Language: en-GB
+Content-Transfer-Encoding: 7bit
 Sender: linux-pci-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-On Thu, Oct 18, 2018 at 10:11 AM Suganath Prabu Subramani
-<suganath-prabu.subramani@broadcom.com> wrote:
->
->
->
-> On Wed, Oct 17, 2018 at 2:02 PM Andy Shevchenko <andy.shevchenko@gmail.com> wrote:
+On 17/10/18 16:14, Michael S. Tsirkin wrote:
+> On Mon, Oct 15, 2018 at 08:46:41PM +0100, Jean-philippe Brucker wrote:
+>> [Replying with my personal address because we're having SMTP issues]
 >>
->> On Wed, Oct 17, 2018 at 8:59 AM Suganath Prabu
->> <suganath-prabu.subramani@broadcom.com> wrote:
->> >
->> > This is to fix Sync cache and start stop command
->> >  failures with DID_NO_CONNECT during driver unload.
->> >
->> > 1) Release drives first from SML, then remove internally
->> > in driver.
->> > 2) And allow sync cache and Start stop commands to firmware,
->> > even when remove_host flag is set.
+>> On 15/10/2018 11:52, Michael S. Tsirkin wrote:
+>>> On Fri, Oct 12, 2018 at 02:41:59PM -0500, Bjorn Helgaas wrote:
+>>>> s/iommu/IOMMU/ in subject
+>>>>
+>>>> On Fri, Oct 12, 2018 at 03:59:13PM +0100, Jean-Philippe Brucker wrote:
+>>>>> Using the iommu-map binding, endpoints in a given PCI domain can be
+>>>>> managed by different IOMMUs. Some virtual machines may allow a subset of
+>>>>> endpoints to bypass the IOMMU. In some case the IOMMU itself is presented
+>>>>
+>>>> s/case/cases/
+>>>>
+>>>>> as a PCI endpoint (e.g. AMD IOMMU and virtio-iommu). Currently, when a
+>>>>> PCI root complex has an iommu-map property, the driver requires all
+>>>>> endpoints to be described by the property. Allow the iommu-map property to
+>>>>> have gaps.
+>>>>
+>>>> I'm not an IOMMU or virtio expert, so it's not obvious to me why it is
+>>>> safe to allow devices to bypass the IOMMU.  Does this mean a typo in
+>>>> iommu-map could inadvertently allow devices to bypass it?
+>>>
+>>>
+>>> Thinking about this comment, I would like to ask: can't the
+>>> virtio device indicate the ranges in a portable way?
+>>> This would minimize the dependency on dt bindings and ACPI,
+>>> enabling support for systems that have neither but do
+>>> have virtio e.g. through pci.
 >>
->> > +       if (ioc->hba_mpi_version_belonged == MPI2_VERSION) {
->> > +               if (ioc->remove_host)
->> > +                       return false;
->> > +
->> > +               return true;
->> > +       }
->> > +
->> > +       if (ioc->remove_host) {
->> > +
->> > +               switch (scmd->cmnd[0]) {
->> > +               case SYNCHRONIZE_CACHE:
->> > +               case START_STOP:
->> > +                       return true;
->> > +               default:
->> > +                       return false;
->> > +               }
->> > +       }
->> > +
->> > +       return true;
+>> I thought about adding a PROBE request for this in virtio-iommu, but it
+>> wouldn't be usable by a Linux guest because of a bootstrapping problem.
+> 
+> Hmm. At some level it seems wrong to design hardware interfaces
+> around how Linux happens to probe things. That can change at any time
+> ...
+
+This isn't Linux-specific though. In general it's somewhere between 
+difficult and impossible to pull in an IOMMU underneath a device after 
+at device is active, so if any OS wants to use an IOMMU, it's going to 
+want to know up-front that it's there and which devices it translates so 
+that it can program said IOMMU appropriately *before* potentially 
+starting DMA and/or interrupts from the relevant devices. Linux happens 
+to do things in that order (either by firmware-driven probe-deferral or 
+just perilous initcall ordering) because it is the only reasonable order 
+in which to do them. AFAIK the platforms which don't rely on any 
+firmware description of their IOMMU tend to have a fairly static system 
+architecture (such that the OS simply makes hard-coded assumptions), so 
+it's not necessarily entirely clear how they would cope with 
+virtio-iommu either way.
+
+Robin.
+
+>> Early on, Linux needs a description of device dependencies, to determine
+>> in which order to probe them. If the device dependency was described by
+>> virtio-iommu itself, the guest could for example initialize a NIC,
+>> allocate buffers and start DMA on the physical address space (which aborts
+>> if the IOMMU implementation disallows DMA by default), only to find out
+>> once the virtio-iommu module is loaded that it needs to cancel all DMA and
+>> reconfigure the NIC. With a static description such as iommu-map in DT or
+>> ACPI remapping tables, the guest can defer probing of the NIC until the
+>> IOMMU is initialized.
 >>
->> Wouldn't be the same as
-
->> Yes it is same, but i feel original code is more readable.
-
-OK (I didn't compare assembly, but I assume this is slow path).
-
->> if (!ioc->remove_host || ioc->hba_mpi_version_belonged == MPI2_VERSION)
->>    return !ioc->remove_host;
->>
->>  switch (scmd->cmnd[0]) {
->>  case SYNCHRONIZE_CACHE:
->>  case START_STOP:
->>    return true;
->>  default:
->>    return false;
->>  }
->>
->> ?
->>
->> --
->> With Best Regards,
->> Andy Shevchenko
-
-
-
--- 
-With Best Regards,
-Andy Shevchenko
+>> Thanks,
+>> Jean
+> 
+> Could you point me at the code you refer to here?
+> 
