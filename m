@@ -2,41 +2,39 @@ Return-Path: <SRS0=PAID=M6=vger.kernel.org=linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-6.0 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_PASS,
-	UNWANTED_LANGUAGE_BODY,USER_AGENT_GIT autolearn=ham autolearn_force=no
-	version=3.4.0
+X-Spam-Status: No, score=-8.8 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_PASS,USER_AGENT_GIT
+	autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 60BE0ECDE46
-	for <linux-pci@archiver.kernel.org>; Thu, 18 Oct 2018 15:37:26 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 8ADB4ECDE43
+	for <linux-pci@archiver.kernel.org>; Thu, 18 Oct 2018 15:37:27 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 2CCE621477
-	for <linux-pci@archiver.kernel.org>; Thu, 18 Oct 2018 15:37:26 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.3.2 mail.kernel.org 2CCE621477
+	by mail.kernel.org (Postfix) with ESMTP id 4650721473
+	for <linux-pci@archiver.kernel.org>; Thu, 18 Oct 2018 15:37:27 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.3.2 mail.kernel.org 4650721473
 Authentication-Results: mail.kernel.org; dmarc=none (p=none dis=none) header.from=bootlin.com
 Authentication-Results: mail.kernel.org; spf=none smtp.mailfrom=linux-pci-owner@vger.kernel.org
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1728325AbeJRXi6 (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Thu, 18 Oct 2018 19:38:58 -0400
-Received: from mail.bootlin.com ([62.4.15.54]:37059 "EHLO mail.bootlin.com"
+        id S1728333AbeJRXi7 (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Thu, 18 Oct 2018 19:38:59 -0400
+Received: from mail.bootlin.com ([62.4.15.54]:37053 "EHLO mail.bootlin.com"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1728331AbeJRXi6 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Thu, 18 Oct 2018 19:38:58 -0400
+        id S1728330AbeJRXi7 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Thu, 18 Oct 2018 19:38:59 -0400
 Received: by mail.bootlin.com (Postfix, from userid 110)
-        id 25DC420DE2; Thu, 18 Oct 2018 17:37:23 +0200 (CEST)
+        id C62AA20DD8; Thu, 18 Oct 2018 17:37:22 +0200 (CEST)
 Received: from localhost (AAubervilliers-681-1-25-52.w90-88.abo.wanadoo.fr [90.88.145.52])
-        by mail.bootlin.com (Postfix) with ESMTPSA id E5ECE20618;
+        by mail.bootlin.com (Postfix) with ESMTPSA id 8FFB320618;
         Thu, 18 Oct 2018 17:37:22 +0200 (CEST)
 From:   Thomas Petazzoni <thomas.petazzoni@bootlin.com>
 To:     Bjorn Helgaas <bhelgaas@google.com>,
         Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
         Russell King <linux@arm.linux.org.uk>
 Cc:     linux-pci@vger.kernel.org, linux-arm-kernel@lists.infradead.org,
-        Zachary Zhang <zhangzg@marvell.com>,
         Thomas Petazzoni <thomas.petazzoni@bootlin.com>
-Subject: [PATCH v3 4/4] PCI: aardvark: Implement emulated root PCI bridge config space
-Date:   Thu, 18 Oct 2018 17:37:19 +0200
-Message-Id: <20181018153719.23115-5-thomas.petazzoni@bootlin.com>
+Subject: [PATCH v3 3/4] PCI: mvebu: Convert to PCI emulated bridge config space
+Date:   Thu, 18 Oct 2018 17:37:18 +0200
+Message-Id: <20181018153719.23115-4-thomas.petazzoni@bootlin.com>
 X-Mailer: git-send-email 2.14.4
 In-Reply-To: <20181018153719.23115-1-thomas.petazzoni@bootlin.com>
 References: <20181018153719.23115-1-thomas.petazzoni@bootlin.com>
@@ -45,248 +43,572 @@ Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-From: Zachary Zhang <zhangzg@marvell.com>
+Convert the pci-mvebu driver to use the pci-bridge-emul logic, that
+helps emulating a root port PCI bridge configuration space.
 
-The PCI controller in the Marvell Armada 3720 does not implement a
-software-accessible root port PCI bridge configuration space. This
-causes a number of problems when using PCIe switches or when the Max
-Payload size needs to be aligned between the root complex and the
-endpoint.
+It has been tested on Armada GP XP, with a E1000E NIC.
 
-Implementing an emulated root PCI bridge, like is already done in the
-pci-mvebu driver for older Marvell platforms allows to solve those
-issues, and also to support features such as ASR, PME, VC, HP.
-
-Signed-off-by: Zachary Zhang <zhangzg@marvell.com>
-[Thomas: convert to the common emulated PCI bridge logic.]
 Signed-off-by: Thomas Petazzoni <thomas.petazzoni@bootlin.com>
 ---
- drivers/pci/controller/Kconfig        |   1 +
- drivers/pci/controller/pci-aardvark.c | 129 +++++++++++++++++++++++++++++++++-
- 2 files changed, 127 insertions(+), 3 deletions(-)
+ drivers/pci/controller/Kconfig     |   1 +
+ drivers/pci/controller/pci-mvebu.c | 370 ++++++++++---------------------------
+ 2 files changed, 101 insertions(+), 270 deletions(-)
 
 diff --git a/drivers/pci/controller/Kconfig b/drivers/pci/controller/Kconfig
-index 6d0f9930be7f..5d76ef51532d 100644
+index 028b287466fb..6d0f9930be7f 100644
 --- a/drivers/pci/controller/Kconfig
 +++ b/drivers/pci/controller/Kconfig
-@@ -16,6 +16,7 @@ config PCI_AARDVARK
- 	depends on (ARCH_MVEBU && ARM64) || COMPILE_TEST
+@@ -9,6 +9,7 @@ config PCI_MVEBU
+ 	depends on MVEBU_MBUS
+ 	depends on ARM
  	depends on OF
- 	depends on PCI_MSI_IRQ_DOMAIN
 +	select PCI_BRIDGE_EMUL
- 	help
- 	 Add support for Aardvark 64bit PCIe Host Controller. This
- 	 controller is part of the South Bridge of the Marvel Armada
-diff --git a/drivers/pci/controller/pci-aardvark.c b/drivers/pci/controller/pci-aardvark.c
-index 6b4555ff2548..750081c1cb48 100644
---- a/drivers/pci/controller/pci-aardvark.c
-+++ b/drivers/pci/controller/pci-aardvark.c
-@@ -20,12 +20,16 @@
- #include <linux/of_pci.h>
+ 
+ config PCI_AARDVARK
+ 	bool "Aardvark PCIe controller"
+diff --git a/drivers/pci/controller/pci-mvebu.c b/drivers/pci/controller/pci-mvebu.c
+index beaff9325a09..4711ca8fa5d4 100644
+--- a/drivers/pci/controller/pci-mvebu.c
++++ b/drivers/pci/controller/pci-mvebu.c
+@@ -22,6 +22,7 @@
+ #include <linux/of_platform.h>
  
  #include "../pci.h"
 +#include "../pci-bridge-emul.h"
  
- /* PCIe core registers */
-+#define PCIE_CORE_DEV_ID_REG					0x0
- #define PCIE_CORE_CMD_STATUS_REG				0x4
- #define     PCIE_CORE_CMD_IO_ACCESS_EN				BIT(0)
- #define     PCIE_CORE_CMD_MEM_ACCESS_EN				BIT(1)
- #define     PCIE_CORE_CMD_MEM_IO_REQ_EN				BIT(2)
-+#define PCIE_CORE_DEV_REV_REG					0x8
-+#define PCIE_CORE_PCIEXP_CAP					0xc0
- #define PCIE_CORE_DEV_CTRL_STATS_REG				0xc8
- #define     PCIE_CORE_DEV_CTRL_STATS_RELAX_ORDER_DISABLE	(0 << 4)
- #define     PCIE_CORE_DEV_CTRL_STATS_MAX_PAYLOAD_SZ_SHIFT	5
-@@ -41,7 +45,10 @@
- #define     PCIE_CORE_ERR_CAPCTL_ECRC_CHK_TX_EN			BIT(6)
- #define     PCIE_CORE_ERR_CAPCTL_ECRC_CHCK			BIT(7)
- #define     PCIE_CORE_ERR_CAPCTL_ECRC_CHCK_RCV			BIT(8)
--
-+#define     PCIE_CORE_INT_A_ASSERT_ENABLE			1
-+#define     PCIE_CORE_INT_B_ASSERT_ENABLE			2
-+#define     PCIE_CORE_INT_C_ASSERT_ENABLE			3
-+#define     PCIE_CORE_INT_D_ASSERT_ENABLE			4
- /* PIO registers base address and register offsets */
- #define PIO_BASE_ADDR				0x4000
- #define PIO_CTRL				(PIO_BASE_ADDR + 0x0)
-@@ -93,7 +100,9 @@
- #define     PCIE_CORE_CTRL2_STRICT_ORDER_ENABLE	BIT(5)
- #define     PCIE_CORE_CTRL2_OB_WIN_ENABLE	BIT(6)
- #define     PCIE_CORE_CTRL2_MSI_ENABLE		BIT(10)
-+#define PCIE_MSG_LOG_REG			(CONTROL_BASE_ADDR + 0x30)
- #define PCIE_ISR0_REG				(CONTROL_BASE_ADDR + 0x40)
-+#define PCIE_MSG_PM_PME_MASK			BIT(7)
- #define PCIE_ISR0_MASK_REG			(CONTROL_BASE_ADDR + 0x44)
- #define     PCIE_ISR0_MSI_INT_PENDING		BIT(24)
- #define     PCIE_ISR0_INTX_ASSERT(val)		BIT(16 + (val))
-@@ -189,6 +198,7 @@ struct advk_pcie {
- 	struct mutex msi_used_lock;
- 	u16 msi_msg;
- 	int root_bus_nr;
-+	struct pci_bridge_emul bridge;
- };
+ /*
+  * PCIe unit register offsets.
+@@ -63,56 +64,6 @@
+ #define PCIE_DEBUG_CTRL         0x1a60
+ #define  PCIE_DEBUG_SOFT_RESET		BIT(20)
  
- static inline void advk_writel(struct advk_pcie *pcie, u32 val, u64 reg)
-@@ -390,6 +400,109 @@ static int advk_pcie_wait_pio(struct advk_pcie *pcie)
- 	return -ETIMEDOUT;
+-enum {
+-	PCISWCAP = PCI_BRIDGE_CONTROL + 2,
+-	PCISWCAP_EXP_LIST_ID	= PCISWCAP + PCI_CAP_LIST_ID,
+-	PCISWCAP_EXP_DEVCAP	= PCISWCAP + PCI_EXP_DEVCAP,
+-	PCISWCAP_EXP_DEVCTL	= PCISWCAP + PCI_EXP_DEVCTL,
+-	PCISWCAP_EXP_LNKCAP	= PCISWCAP + PCI_EXP_LNKCAP,
+-	PCISWCAP_EXP_LNKCTL	= PCISWCAP + PCI_EXP_LNKCTL,
+-	PCISWCAP_EXP_SLTCAP	= PCISWCAP + PCI_EXP_SLTCAP,
+-	PCISWCAP_EXP_SLTCTL	= PCISWCAP + PCI_EXP_SLTCTL,
+-	PCISWCAP_EXP_RTCTL	= PCISWCAP + PCI_EXP_RTCTL,
+-	PCISWCAP_EXP_RTSTA	= PCISWCAP + PCI_EXP_RTSTA,
+-	PCISWCAP_EXP_DEVCAP2	= PCISWCAP + PCI_EXP_DEVCAP2,
+-	PCISWCAP_EXP_DEVCTL2	= PCISWCAP + PCI_EXP_DEVCTL2,
+-	PCISWCAP_EXP_LNKCAP2	= PCISWCAP + PCI_EXP_LNKCAP2,
+-	PCISWCAP_EXP_LNKCTL2	= PCISWCAP + PCI_EXP_LNKCTL2,
+-	PCISWCAP_EXP_SLTCAP2	= PCISWCAP + PCI_EXP_SLTCAP2,
+-	PCISWCAP_EXP_SLTCTL2	= PCISWCAP + PCI_EXP_SLTCTL2,
+-};
+-
+-/* PCI configuration space of a PCI-to-PCI bridge */
+-struct mvebu_sw_pci_bridge {
+-	u16 vendor;
+-	u16 device;
+-	u16 command;
+-	u16 status;
+-	u16 class;
+-	u8 interface;
+-	u8 revision;
+-	u8 bist;
+-	u8 header_type;
+-	u8 latency_timer;
+-	u8 cache_line_size;
+-	u32 bar[2];
+-	u8 primary_bus;
+-	u8 secondary_bus;
+-	u8 subordinate_bus;
+-	u8 secondary_latency_timer;
+-	u8 iobase;
+-	u8 iolimit;
+-	u16 secondary_status;
+-	u16 membase;
+-	u16 memlimit;
+-	u16 iobaseupper;
+-	u16 iolimitupper;
+-	u32 romaddr;
+-	u8 intline;
+-	u8 intpin;
+-	u16 bridgectrl;
+-};
+-
+ struct mvebu_pcie_port;
+ 
+ /* Structure representing all PCIe interfaces */
+@@ -148,7 +99,7 @@ struct mvebu_pcie_port {
+ 	struct clk *clk;
+ 	struct gpio_desc *reset_gpio;
+ 	char *reset_name;
+-	struct mvebu_sw_pci_bridge bridge;
++	struct pci_bridge_emul bridge;
+ 	struct device_node *dn;
+ 	struct mvebu_pcie *pcie;
+ 	struct mvebu_pcie_window memwin;
+@@ -410,11 +361,12 @@ static void mvebu_pcie_set_window(struct mvebu_pcie_port *port,
+ static void mvebu_pcie_handle_iobase_change(struct mvebu_pcie_port *port)
+ {
+ 	struct mvebu_pcie_window desired = {};
++	struct pci_bridge_emul_conf *conf = &port->bridge.conf;
+ 
+ 	/* Are the new iobase/iolimit values invalid? */
+-	if (port->bridge.iolimit < port->bridge.iobase ||
+-	    port->bridge.iolimitupper < port->bridge.iobaseupper ||
+-	    !(port->bridge.command & PCI_COMMAND_IO)) {
++	if (conf->iolimit < conf->iobase ||
++	    conf->iolimitupper < conf->iobaseupper ||
++	    !(conf->command & PCI_COMMAND_IO)) {
+ 		mvebu_pcie_set_window(port, port->io_target, port->io_attr,
+ 				      &desired, &port->iowin);
+ 		return;
+@@ -433,11 +385,11 @@ static void mvebu_pcie_handle_iobase_change(struct mvebu_pcie_port *port)
+ 	 * specifications. iobase is the bus address, port->iowin_base
+ 	 * is the CPU address.
+ 	 */
+-	desired.remap = ((port->bridge.iobase & 0xF0) << 8) |
+-			(port->bridge.iobaseupper << 16);
++	desired.remap = ((conf->iobase & 0xF0) << 8) |
++			(conf->iobaseupper << 16);
+ 	desired.base = port->pcie->io.start + desired.remap;
+-	desired.size = ((0xFFF | ((port->bridge.iolimit & 0xF0) << 8) |
+-			 (port->bridge.iolimitupper << 16)) -
++	desired.size = ((0xFFF | ((conf->iolimit & 0xF0) << 8) |
++			 (conf->iolimitupper << 16)) -
+ 			desired.remap) +
+ 		       1;
+ 
+@@ -448,10 +400,11 @@ static void mvebu_pcie_handle_iobase_change(struct mvebu_pcie_port *port)
+ static void mvebu_pcie_handle_membase_change(struct mvebu_pcie_port *port)
+ {
+ 	struct mvebu_pcie_window desired = {.remap = MVEBU_MBUS_NO_REMAP};
++	struct pci_bridge_emul_conf *conf = &port->bridge.conf;
+ 
+ 	/* Are the new membase/memlimit values invalid? */
+-	if (port->bridge.memlimit < port->bridge.membase ||
+-	    !(port->bridge.command & PCI_COMMAND_MEMORY)) {
++	if (conf->memlimit < conf->membase ||
++	    !(conf->command & PCI_COMMAND_MEMORY)) {
+ 		mvebu_pcie_set_window(port, port->mem_target, port->mem_attr,
+ 				      &desired, &port->memwin);
+ 		return;
+@@ -463,129 +416,32 @@ static void mvebu_pcie_handle_membase_change(struct mvebu_pcie_port *port)
+ 	 * window to setup, according to the PCI-to-PCI bridge
+ 	 * specifications.
+ 	 */
+-	desired.base = ((port->bridge.membase & 0xFFF0) << 16);
+-	desired.size = (((port->bridge.memlimit & 0xFFF0) << 16) | 0xFFFFF) -
++	desired.base = ((conf->membase & 0xFFF0) << 16);
++	desired.size = (((conf->memlimit & 0xFFF0) << 16) | 0xFFFFF) -
+ 		       desired.base + 1;
+ 
+ 	mvebu_pcie_set_window(port, port->mem_target, port->mem_attr, &desired,
+ 			      &port->memwin);
  }
  
-+
+-/*
+- * Initialize the configuration space of the PCI-to-PCI bridge
+- * associated with the given PCIe interface.
+- */
+-static void mvebu_sw_pci_bridge_init(struct mvebu_pcie_port *port)
 +static pci_bridge_emul_read_status_t
-+advk_pci_bridge_emul_pcie_conf_read(struct pci_bridge_emul *bridge,
-+				    int reg, u32 *value)
-+{
-+	struct advk_pcie *pcie = bridge->data;
-+
-+
++mvebu_pci_bridge_emul_pcie_conf_read(struct pci_bridge_emul *bridge,
++				     int reg, u32 *value)
+ {
+-	struct mvebu_sw_pci_bridge *bridge = &port->bridge;
+-
+-	memset(bridge, 0, sizeof(struct mvebu_sw_pci_bridge));
+-
+-	bridge->class = PCI_CLASS_BRIDGE_PCI;
+-	bridge->vendor = PCI_VENDOR_ID_MARVELL;
+-	bridge->device = mvebu_readl(port, PCIE_DEV_ID_OFF) >> 16;
+-	bridge->revision = mvebu_readl(port, PCIE_DEV_REV_OFF) & 0xff;
+-	bridge->header_type = PCI_HEADER_TYPE_BRIDGE;
+-	bridge->cache_line_size = 0x10;
+-
+-	/* We support 32 bits I/O addressing */
+-	bridge->iobase = PCI_IO_RANGE_TYPE_32;
+-	bridge->iolimit = PCI_IO_RANGE_TYPE_32;
+-
+-	/* Add capabilities */
+-	bridge->status = PCI_STATUS_CAP_LIST;
+-}
+-
+-/*
+- * Read the configuration space of the PCI-to-PCI bridge associated to
+- * the given PCIe interface.
+- */
+-static int mvebu_sw_pci_bridge_read(struct mvebu_pcie_port *port,
+-				  unsigned int where, int size, u32 *value)
+-{
+-	struct mvebu_sw_pci_bridge *bridge = &port->bridge;
+-
+-	switch (where & ~3) {
+-	case PCI_VENDOR_ID:
+-		*value = bridge->device << 16 | bridge->vendor;
+-		break;
+-
+-	case PCI_COMMAND:
+-		*value = bridge->command | bridge->status << 16;
+-		break;
+-
+-	case PCI_CLASS_REVISION:
+-		*value = bridge->class << 16 | bridge->interface << 8 |
+-			 bridge->revision;
+-		break;
+-
+-	case PCI_CACHE_LINE_SIZE:
+-		*value = bridge->bist << 24 | bridge->header_type << 16 |
+-			 bridge->latency_timer << 8 | bridge->cache_line_size;
+-		break;
+-
+-	case PCI_BASE_ADDRESS_0 ... PCI_BASE_ADDRESS_1:
+-		*value = bridge->bar[((where & ~3) - PCI_BASE_ADDRESS_0) / 4];
+-		break;
+-
+-	case PCI_PRIMARY_BUS:
+-		*value = (bridge->secondary_latency_timer << 24 |
+-			  bridge->subordinate_bus         << 16 |
+-			  bridge->secondary_bus           <<  8 |
+-			  bridge->primary_bus);
+-		break;
+-
+-	case PCI_IO_BASE:
+-		if (!mvebu_has_ioport(port))
+-			*value = bridge->secondary_status << 16;
+-		else
+-			*value = (bridge->secondary_status << 16 |
+-				  bridge->iolimit          <<  8 |
+-				  bridge->iobase);
+-		break;
+-
+-	case PCI_MEMORY_BASE:
+-		*value = (bridge->memlimit << 16 | bridge->membase);
+-		break;
+-
+-	case PCI_PREF_MEMORY_BASE:
+-		*value = 0;
+-		break;
+-
+-	case PCI_IO_BASE_UPPER16:
+-		*value = (bridge->iolimitupper << 16 | bridge->iobaseupper);
+-		break;
+-
+-	case PCI_CAPABILITY_LIST:
+-		*value = PCISWCAP;
+-		break;
++	struct mvebu_pcie_port *port = bridge->data;
+ 
+-	case PCI_ROM_ADDRESS1:
+-		*value = 0;
+-		break;
+-
+-	case PCI_INTERRUPT_LINE:
+-		/* LINE PIN MIN_GNT MAX_LAT */
+-		*value = 0;
+-		break;
+-
+-	case PCISWCAP_EXP_LIST_ID:
+-		/* Set PCIe v2, root port, slot support */
+-		*value = (PCI_EXP_TYPE_ROOT_PORT << 4 | 2 |
+-			  PCI_EXP_FLAGS_SLOT) << 16 | PCI_CAP_ID_EXP;
+-		break;
+-
+-	case PCISWCAP_EXP_DEVCAP:
 +	switch (reg) {
-+	case PCI_EXP_SLTCTL:
-+		*value = PCI_EXP_SLTSTA_PDS << 16;
-+		return PCI_BRIDGE_EMUL_HANDLED;
-+
-+	case PCI_EXP_RTCTL: {
-+		u32 val = advk_readl(pcie, PCIE_ISR0_MASK_REG);
-+		*value = (val & PCIE_MSG_PM_PME_MASK) ? PCI_EXP_RTCTL_PMEIE : 0;
-+		return PCI_BRIDGE_EMUL_HANDLED;
-+	}
-+
-+	case PCI_EXP_RTSTA: {
-+		u32 isr0 = advk_readl(pcie, PCIE_ISR0_REG);
-+		u32 msglog = advk_readl(pcie, PCIE_MSG_LOG_REG);
-+		*value = (isr0 & PCIE_MSG_PM_PME_MASK) << 16 | (msglog >> 16);
-+		return PCI_BRIDGE_EMUL_HANDLED;
-+	}
-+
-+	case PCI_CAP_LIST_ID:
 +	case PCI_EXP_DEVCAP:
+ 		*value = mvebu_readl(port, PCIE_CAP_PCIEXP + PCI_EXP_DEVCAP);
+ 		break;
+ 
+-	case PCISWCAP_EXP_DEVCTL:
 +	case PCI_EXP_DEVCTL:
+ 		*value = mvebu_readl(port, PCIE_CAP_PCIEXP + PCI_EXP_DEVCTL) &
+ 				 ~(PCI_EXP_DEVCTL_URRE | PCI_EXP_DEVCTL_FERE |
+ 				   PCI_EXP_DEVCTL_NFERE | PCI_EXP_DEVCTL_CERE);
+ 		break;
+ 
+-	case PCISWCAP_EXP_LNKCAP:
 +	case PCI_EXP_LNKCAP:
+ 		/*
+ 		 * PCIe requires the clock power management capability to be
+ 		 * hard-wired to zero for downstream ports
+@@ -594,168 +450,140 @@ static int mvebu_sw_pci_bridge_read(struct mvebu_pcie_port *port,
+ 			 ~PCI_EXP_LNKCAP_CLKPM;
+ 		break;
+ 
+-	case PCISWCAP_EXP_LNKCTL:
 +	case PCI_EXP_LNKCTL:
-+		*value = advk_readl(pcie, PCIE_CORE_PCIEXP_CAP + reg);
-+		return PCI_BRIDGE_EMUL_HANDLED;
-+	default:
+ 		*value = mvebu_readl(port, PCIE_CAP_PCIEXP + PCI_EXP_LNKCTL);
+ 		break;
+ 
+-	case PCISWCAP_EXP_SLTCTL:
++	case PCI_EXP_SLTCTL:
+ 		*value = PCI_EXP_SLTSTA_PDS << 16;
+ 		break;
+ 
+-	case PCISWCAP_EXP_RTSTA:
++	case PCI_EXP_RTSTA:
+ 		*value = mvebu_readl(port, PCIE_RC_RTSTA);
+ 		break;
+ 
+-	/* PCIe requires the v2 fields to be hard-wired to zero */
+-	case PCISWCAP_EXP_DEVCAP2:
+-	case PCISWCAP_EXP_DEVCTL2:
+-	case PCISWCAP_EXP_LNKCAP2:
+-	case PCISWCAP_EXP_LNKCTL2:
+-	case PCISWCAP_EXP_SLTCAP2:
+-	case PCISWCAP_EXP_SLTCTL2:
+ 	default:
+-		/*
+-		 * PCI defines configuration read accesses to reserved or
+-		 * unimplemented registers to read as zero and complete
+-		 * normally.
+-		 */
+-		*value = 0;
+-		return PCIBIOS_SUCCESSFUL;
 +		return PCI_BRIDGE_EMUL_NOT_HANDLED;
+ 	}
+ 
+-	if (size == 2)
+-		*value = (*value >> (8 * (where & 3))) & 0xffff;
+-	else if (size == 1)
+-		*value = (*value >> (8 * (where & 3))) & 0xff;
+-
+-	return PCIBIOS_SUCCESSFUL;
++	return PCI_BRIDGE_EMUL_HANDLED;
+ }
+ 
+-/* Write to the PCI-to-PCI bridge configuration space */
+-static int mvebu_sw_pci_bridge_write(struct mvebu_pcie_port *port,
+-				     unsigned int where, int size, u32 value)
++static void
++mvebu_pci_bridge_emul_base_conf_write(struct pci_bridge_emul *bridge,
++				      int reg, u32 old, u32 new, u32 mask)
+ {
+-	struct mvebu_sw_pci_bridge *bridge = &port->bridge;
+-	u32 mask, reg;
+-	int err;
+-
+-	if (size == 4)
+-		mask = 0x0;
+-	else if (size == 2)
+-		mask = ~(0xffff << ((where & 3) * 8));
+-	else if (size == 1)
+-		mask = ~(0xff << ((where & 3) * 8));
+-	else
+-		return PCIBIOS_BAD_REGISTER_NUMBER;
++	struct mvebu_pcie_port *port = bridge->data;
++	struct pci_bridge_emul_conf *conf = &bridge->conf;
+ 
+-	err = mvebu_sw_pci_bridge_read(port, where & ~3, 4, &reg);
+-	if (err)
+-		return err;
+-
+-	value = (reg & mask) | value << ((where & 3) * 8);
+-
+-	switch (where & ~3) {
++	switch (reg) {
+ 	case PCI_COMMAND:
+ 	{
+-		u32 old = bridge->command;
+-
+ 		if (!mvebu_has_ioport(port))
+-			value &= ~PCI_COMMAND_IO;
++			conf->command &= ~PCI_COMMAND_IO;
+ 
+-		bridge->command = value & 0xffff;
+-		if ((old ^ bridge->command) & PCI_COMMAND_IO)
++		if ((old ^ new) & PCI_COMMAND_IO)
+ 			mvebu_pcie_handle_iobase_change(port);
+-		if ((old ^ bridge->command) & PCI_COMMAND_MEMORY)
++		if ((old ^ new) & PCI_COMMAND_MEMORY)
+ 			mvebu_pcie_handle_membase_change(port);
+-		break;
+-	}
+ 
+-	case PCI_BASE_ADDRESS_0 ... PCI_BASE_ADDRESS_1:
+-		bridge->bar[((where & ~3) - PCI_BASE_ADDRESS_0) / 4] = value;
+ 		break;
 +	}
-+
+ 
+ 	case PCI_IO_BASE:
+ 		/*
+-		 * We also keep bit 1 set, it is a read-only bit that
++		 * We keep bit 1 set, it is a read-only bit that
+ 		 * indicates we support 32 bits addressing for the
+ 		 * I/O
+ 		 */
+-		bridge->iobase = (value & 0xff) | PCI_IO_RANGE_TYPE_32;
+-		bridge->iolimit = ((value >> 8) & 0xff) | PCI_IO_RANGE_TYPE_32;
++		conf->iobase |= PCI_IO_RANGE_TYPE_32;
++		conf->iolimit |= PCI_IO_RANGE_TYPE_32;
+ 		mvebu_pcie_handle_iobase_change(port);
+ 		break;
+ 
+ 	case PCI_MEMORY_BASE:
+-		bridge->membase = value & 0xffff;
+-		bridge->memlimit = value >> 16;
+ 		mvebu_pcie_handle_membase_change(port);
+ 		break;
+ 
+ 	case PCI_IO_BASE_UPPER16:
+-		bridge->iobaseupper = value & 0xffff;
+-		bridge->iolimitupper = value >> 16;
+ 		mvebu_pcie_handle_iobase_change(port);
+ 		break;
+ 
+ 	case PCI_PRIMARY_BUS:
+-		bridge->primary_bus             = value & 0xff;
+-		bridge->secondary_bus           = (value >> 8) & 0xff;
+-		bridge->subordinate_bus         = (value >> 16) & 0xff;
+-		bridge->secondary_latency_timer = (value >> 24) & 0xff;
+-		mvebu_pcie_set_local_bus_nr(port, bridge->secondary_bus);
++		mvebu_pcie_set_local_bus_nr(port, conf->secondary_bus);
+ 		break;
+ 
+-	case PCISWCAP_EXP_DEVCTL:
++	default:
++		break;
++	}
 +}
 +
 +static void
-+advk_pci_bridge_emul_pcie_conf_write(struct pci_bridge_emul *bridge,
-+				     int reg, u32 old, u32 new, u32 mask)
++mvebu_pci_bridge_emul_pcie_conf_write(struct pci_bridge_emul *bridge,
++				      int reg, u32 old, u32 new, u32 mask)
 +{
-+	struct advk_pcie *pcie = bridge->data;
++	struct mvebu_pcie_port *port = bridge->data;
 +
 +	switch (reg) {
 +	case PCI_EXP_DEVCTL:
+ 		/*
+ 		 * Armada370 data says these bits must always
+ 		 * be zero when in root complex mode.
+ 		 */
+-		value &= ~(PCI_EXP_DEVCTL_URRE | PCI_EXP_DEVCTL_FERE |
+-			   PCI_EXP_DEVCTL_NFERE | PCI_EXP_DEVCTL_CERE);
+-
+-		/*
+-		 * If the mask is 0xffff0000, then we only want to write
+-		 * the device control register, rather than clearing the
+-		 * RW1C bits in the device status register.  Mask out the
+-		 * status register bits.
+-		 */
+-		if (mask == 0xffff0000)
+-			value &= 0xffff;
++		new &= ~(PCI_EXP_DEVCTL_URRE | PCI_EXP_DEVCTL_FERE |
++			 PCI_EXP_DEVCTL_NFERE | PCI_EXP_DEVCTL_CERE);
+ 
+-		mvebu_writel(port, value, PCIE_CAP_PCIEXP + PCI_EXP_DEVCTL);
++		mvebu_writel(port, new, PCIE_CAP_PCIEXP + PCI_EXP_DEVCTL);
+ 		break;
+ 
+-	case PCISWCAP_EXP_LNKCTL:
 +	case PCI_EXP_LNKCTL:
-+		advk_writel(pcie, new, PCIE_CORE_PCIEXP_CAP + reg);
-+		break;
-+
-+	case PCI_EXP_RTCTL:
-+		new = (new & PCI_EXP_RTCTL_PMEIE) << 3;
-+		advk_writel(pcie, new, PCIE_ISR0_MASK_REG);
-+		break;
-+
+ 		/*
+ 		 * If we don't support CLKREQ, we must ensure that the
+ 		 * CLKREQ enable bit always reads zero.  Since we haven't
+ 		 * had this capability, and it's dependent on board wiring,
+ 		 * disable it for the time being.
+ 		 */
+-		value &= ~PCI_EXP_LNKCTL_CLKREQ_EN;
+-
+-		/*
+-		 * If the mask is 0xffff0000, then we only want to write
+-		 * the link control register, rather than clearing the
+-		 * RW1C bits in the link status register.  Mask out the
+-		 * RW1C status register bits.
+-		 */
+-		if (mask == 0xffff0000)
+-			value &= ~((PCI_EXP_LNKSTA_LABS |
+-				    PCI_EXP_LNKSTA_LBMS) << 16);
++		new &= ~PCI_EXP_LNKCTL_CLKREQ_EN;
+ 
+-		mvebu_writel(port, value, PCIE_CAP_PCIEXP + PCI_EXP_LNKCTL);
++		mvebu_writel(port, new, PCIE_CAP_PCIEXP + PCI_EXP_LNKCTL);
+ 		break;
+ 
+-	case PCISWCAP_EXP_RTSTA:
+-		mvebu_writel(port, value, PCIE_RC_RTSTA);
 +	case PCI_EXP_RTSTA:
-+		new = (new & PCI_EXP_RTSTA_PME) >> 9;
-+		advk_writel(pcie, new, PCIE_ISR0_REG);
-+		break;
-+
-+	default:
-+		break;
++		mvebu_writel(port, new, PCIE_RC_RTSTA);
+ 		break;
 +	}
 +}
-+
-+struct pci_bridge_emul_ops advk_pci_bridge_emul_ops = {
-+	.read_pcie = advk_pci_bridge_emul_pcie_conf_read,
-+	.write_pcie = advk_pci_bridge_emul_pcie_conf_write,
+ 
+-	default:
+-		break;
++struct pci_bridge_emul_ops mvebu_pci_bridge_emul_ops = {
++	.write_base = mvebu_pci_bridge_emul_base_conf_write,
++	.read_pcie = mvebu_pci_bridge_emul_pcie_conf_read,
++	.write_pcie = mvebu_pci_bridge_emul_pcie_conf_write,
 +};
 +
 +/*
 + * Initialize the configuration space of the PCI-to-PCI bridge
 + * associated with the given PCIe interface.
 + */
-+static void advk_sw_pci_bridge_init(struct advk_pcie *pcie)
++static void mvebu_pci_bridge_emul_init(struct mvebu_pcie_port *port)
 +{
-+	struct pci_bridge_emul *bridge = &pcie->bridge;
++	struct pci_bridge_emul *bridge = &port->bridge;
 +
-+	bridge->conf.vendor = advk_readl(pcie, PCIE_CORE_DEV_ID_REG) & 0xffff;
-+	bridge->conf.device = advk_readl(pcie, PCIE_CORE_DEV_ID_REG) >> 16;
++	bridge->conf.vendor = PCI_VENDOR_ID_MARVELL;
++	bridge->conf.device = mvebu_readl(port, PCIE_DEV_ID_OFF) >> 16;
 +	bridge->conf.class_revision =
-+		advk_readl(pcie, PCIE_CORE_DEV_REV_REG) & 0xff;
++		mvebu_readl(port, PCIE_DEV_REV_OFF) & 0xff;
 +
-+	/* Support 32 bits I/O addressing */
-+	bridge->conf.iobase = PCI_IO_RANGE_TYPE_32;
-+	bridge->conf.iolimit = PCI_IO_RANGE_TYPE_32;
-+
-+	/* Support 64 bits memory pref */
-+	bridge->conf.pref_mem_base = PCI_PREF_RANGE_TYPE_64;
-+	bridge->conf.pref_mem_limit = PCI_PREF_RANGE_TYPE_64;
-+
-+	/* Support interrupt A for MSI feature */
-+	bridge->conf.intpin = PCIE_CORE_INT_A_ASSERT_ENABLE;
-+
-+	bridge->has_pcie = true;
-+	bridge->data = pcie;
-+	bridge->ops = &advk_pci_bridge_emul_ops;
-+
-+	pci_bridge_emul_init(bridge);
-+
-+}
-+
- static bool advk_pcie_valid_device(struct advk_pcie *pcie, struct pci_bus *bus,
- 				  int devfn)
- {
-@@ -411,6 +524,10 @@ static int advk_pcie_rd_conf(struct pci_bus *bus, u32 devfn,
- 		return PCIBIOS_DEVICE_NOT_FOUND;
++	if (mvebu_has_ioport(port)) {
++		/* We support 32 bits I/O addressing */
++		bridge->conf.iobase = PCI_IO_RANGE_TYPE_32;
++		bridge->conf.iolimit = PCI_IO_RANGE_TYPE_32;
  	}
  
-+	if (bus->number == pcie->root_bus_nr)
-+		return pci_bridge_emul_conf_read(&pcie->bridge, where,
-+						 size, val);
+-	return PCIBIOS_SUCCESSFUL;
++	bridge->has_pcie = true;
++	bridge->data = port;
++	bridge->ops = &mvebu_pci_bridge_emul_ops;
 +
- 	/* Start PIO */
- 	advk_writel(pcie, 0, PIO_START);
- 	advk_writel(pcie, 1, PIO_ISR);
-@@ -418,7 +535,7 @@ static int advk_pcie_rd_conf(struct pci_bus *bus, u32 devfn,
- 	/* Program the control register */
- 	reg = advk_readl(pcie, PIO_CTRL);
- 	reg &= ~PIO_CTRL_TYPE_MASK;
--	if (bus->number ==  pcie->root_bus_nr)
-+	if (bus->primary ==  pcie->root_bus_nr)
- 		reg |= PCIE_CONFIG_RD_TYPE0;
- 	else
- 		reg |= PCIE_CONFIG_RD_TYPE1;
-@@ -463,6 +580,10 @@ static int advk_pcie_wr_conf(struct pci_bus *bus, u32 devfn,
- 	if (!advk_pcie_valid_device(pcie, bus, devfn))
- 		return PCIBIOS_DEVICE_NOT_FOUND;
++	pci_bridge_emul_init(bridge);
+ }
  
-+	if (bus->number == pcie->root_bus_nr)
-+		return pci_bridge_emul_conf_write(&pcie->bridge, where,
+ static inline struct mvebu_pcie *sys_to_pcie(struct pci_sys_data *sys)
+@@ -775,8 +603,8 @@ static struct mvebu_pcie_port *mvebu_pcie_find_port(struct mvebu_pcie *pcie,
+ 		if (bus->number == 0 && port->devfn == devfn)
+ 			return port;
+ 		if (bus->number != 0 &&
+-		    bus->number >= port->bridge.secondary_bus &&
+-		    bus->number <= port->bridge.subordinate_bus)
++		    bus->number >= port->bridge.conf.secondary_bus &&
++		    bus->number <= port->bridge.conf.subordinate_bus)
+ 			return port;
+ 	}
+ 
+@@ -797,7 +625,8 @@ static int mvebu_pcie_wr_conf(struct pci_bus *bus, u32 devfn,
+ 
+ 	/* Access the emulated PCI-to-PCI bridge */
+ 	if (bus->number == 0)
+-		return mvebu_sw_pci_bridge_write(port, where, size, val);
++		return pci_bridge_emul_conf_write(&port->bridge, where,
 +						  size, val);
-+
- 	if (where % size)
- 		return PCIBIOS_SET_FAILED;
  
-@@ -473,7 +594,7 @@ static int advk_pcie_wr_conf(struct pci_bus *bus, u32 devfn,
- 	/* Program the control register */
- 	reg = advk_readl(pcie, PIO_CTRL);
- 	reg &= ~PIO_CTRL_TYPE_MASK;
--	if (bus->number == pcie->root_bus_nr)
-+	if (bus->primary == pcie->root_bus_nr)
- 		reg |= PCIE_CONFIG_WR_TYPE0;
- 	else
- 		reg |= PCIE_CONFIG_WR_TYPE1;
-@@ -875,6 +996,8 @@ static int advk_pcie_probe(struct platform_device *pdev)
+ 	if (!mvebu_pcie_link_up(port))
+ 		return PCIBIOS_DEVICE_NOT_FOUND;
+@@ -825,7 +654,8 @@ static int mvebu_pcie_rd_conf(struct pci_bus *bus, u32 devfn, int where,
  
- 	advk_pcie_setup_hw(pcie);
+ 	/* Access the emulated PCI-to-PCI bridge */
+ 	if (bus->number == 0)
+-		return mvebu_sw_pci_bridge_read(port, where, size, val);
++		return pci_bridge_emul_conf_read(&port->bridge, where,
++						 size, val);
  
-+	advk_sw_pci_bridge_init(pcie);
-+
- 	ret = advk_pcie_init_irq_domain(pcie);
- 	if (ret) {
- 		dev_err(dev, "Failed to initialize irq\n");
+ 	if (!mvebu_pcie_link_up(port)) {
+ 		*val = 0xffffffff;
+@@ -1239,7 +1069,7 @@ static int mvebu_pcie_probe(struct platform_device *pdev)
+ 
+ 		mvebu_pcie_setup_hw(port);
+ 		mvebu_pcie_set_local_dev_nr(port, 1);
+-		mvebu_sw_pci_bridge_init(port);
++		mvebu_pci_bridge_emul_init(port);
+ 	}
+ 
+ 	pcie->nports = i;
 -- 
 2.14.4
 
