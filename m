@@ -6,52 +6,52 @@ X-Spam-Status: No, score=-8.8 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
 	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_PASS,URIBL_BLOCKED,
 	USER_AGENT_GIT autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id EC533ECDE43
-	for <linux-pci@archiver.kernel.org>; Thu, 18 Oct 2018 18:39:53 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id B67CFECDE43
+	for <linux-pci@archiver.kernel.org>; Thu, 18 Oct 2018 18:39:55 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id AEB56205C9
-	for <linux-pci@archiver.kernel.org>; Thu, 18 Oct 2018 18:39:53 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.3.2 mail.kernel.org AEB56205C9
+	by mail.kernel.org (Postfix) with ESMTP id 87886205C9
+	for <linux-pci@archiver.kernel.org>; Thu, 18 Oct 2018 18:39:55 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.3.2 mail.kernel.org 87886205C9
 Authentication-Results: mail.kernel.org; dmarc=fail (p=none dis=none) header.from=canonical.com
 Authentication-Results: mail.kernel.org; spf=none smtp.mailfrom=linux-pci-owner@vger.kernel.org
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1728708AbeJSCmK (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Thu, 18 Oct 2018 22:42:10 -0400
-Received: from youngberry.canonical.com ([91.189.89.112]:34676 "EHLO
+        id S1728736AbeJSCmM (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Thu, 18 Oct 2018 22:42:12 -0400
+Received: from youngberry.canonical.com ([91.189.89.112]:34677 "EHLO
         youngberry.canonical.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726424AbeJSCmK (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Thu, 18 Oct 2018 22:42:10 -0400
-Received: from mail-qk1-f198.google.com ([209.85.222.198])
+        with ESMTP id S1726424AbeJSCmM (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Thu, 18 Oct 2018 22:42:12 -0400
+Received: from mail-qt1-f199.google.com ([209.85.160.199])
         by youngberry.canonical.com with esmtps (TLS1.0:RSA_AES_128_CBC_SHA1:16)
         (Exim 4.76)
         (envelope-from <gpiccoli@canonical.com>)
-        id 1gDDAq-0006eQ-81
-        for linux-pci@vger.kernel.org; Thu, 18 Oct 2018 18:37:32 +0000
-Received: by mail-qk1-f198.google.com with SMTP id t18-v6so7051442qki.22
-        for <linux-pci@vger.kernel.org>; Thu, 18 Oct 2018 11:37:32 -0700 (PDT)
+        id 1gDDAk-0006cB-3O
+        for linux-pci@vger.kernel.org; Thu, 18 Oct 2018 18:37:26 +0000
+Received: by mail-qt1-f199.google.com with SMTP id i64-v6so33025642qtb.21
+        for <linux-pci@vger.kernel.org>; Thu, 18 Oct 2018 11:37:26 -0700 (PDT)
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20161025;
-        h=x-gm-message-state:from:to:cc:subject:date:message-id:in-reply-to
-         :references:mime-version:content-transfer-encoding;
-        bh=LrkGIEQTF5zUcSb1wtQu7JM5b2l3BV/Dlae07e36iMo=;
-        b=DFWNTkGWpsNxOV4veijPUf0g51LIh0Sq5m9c9AzXAn8BOY5xeFmYapDv6+ZDID+Cn0
-         ghyjBtvJCtpIska3scy6/cZg+qyqIizb/6lOFnedJoykUE3+0vbObhG9XojUig/M2XO2
-         BM2zQQD0r7QiWR8BsiOWT7Wi4q5p5MWkEw+YBPbAUa5vLQqvL/BDPKWI/1PwmLLh40en
-         n6FYmdoPWJQpJkNzwlGO1PSBPACsyu9n9HcPtWvFer2pUSKCB74NRKUhEuDnY8eNFM8+
-         VnGFF48hrJ+6XAIe7E6u5ZBcs2zrTTwpzEQqwy6q8w2+5iHPneeiurwf2vth/t1BkBfV
-         wrMA==
-X-Gm-Message-State: ABuFfoiUeZEQi0OUeuZVl7W4wRAcxfiID0mGegbMAIVBk8mdVTm8lNvd
-        Ipz4Wn9cDtzMnr7g3Y0/4WPoeSiP88M0TwNAnLgrfVW0f95yS8pvQ2ZlO+GMs4qJBxAJUN8NCop
-        /syt9+MSIQLeGv6EOSJEVG4tzLpwFmNB6Mld1kw==
-X-Received: by 2002:a37:f50e:: with SMTP id l14-v6mr5189863qkk.224.1539887850924;
-        Thu, 18 Oct 2018 11:37:30 -0700 (PDT)
-X-Google-Smtp-Source: ACcGV60zvZxyv+DICCq5iVK7LjVSoGpQZ8DNjeJ5sNa0uGbtPDlW0oO+cskblvhLZ216/1IPzipOqQ==
-X-Received: by 2002:a37:f50e:: with SMTP id l14-v6mr5189824qkk.224.1539887850691;
-        Thu, 18 Oct 2018 11:37:30 -0700 (PDT)
+        h=x-gm-message-state:from:to:cc:subject:date:message-id:mime-version
+         :content-transfer-encoding;
+        bh=NclvvB40TxQbdPL4DDvlauQ+xtT8J1d4L7Y1pNey3NI=;
+        b=fQvp4gtjxHqSH+cCz6MRULG6O2EuWfMk6d82T9gYiZOzYBMKyRQaPy5l7+BdJHj373
+         +P8bkBkpfZ0IS1KYUVLuo10CoKdjV3KpLUAtfgnpQxxE5vOXJ5U0IZU8UAlzILDp263G
+         JtLb8IhWU1jRyZQJD6HhiqyfqO0h4Tp3l5BFxlnj6RspUkLd1a/1ucImidULC4W09D2V
+         FsIlee+LiOj38JQiI7mpWTA8A+7Gh6YVM7RSEQ3ZKO92olmLpycMpK8FENcvuXvbyNRB
+         lsmP7VORgtmZzk429kEdIrPvXAYLgJFdc6r2XtCUjK0Lwi43FBWbGHIFkKaln3RiQsB+
+         6mqA==
+X-Gm-Message-State: ABuFfoj1FiOJsoYLZAofNNgD9cwfSQqMZzES7q0vOuQLU2HHn0E0cVld
+        Zj2VFltRpdX/nGrPPo7LMA5L9CV97peP2all8UoejCd4ytL/tG+F4VMvNCgBkAjeCx4vQsI2WXy
+        DJAiP2Tz7HbwbQkBDI3cbh1bIlaQIRCESKb0k3w==
+X-Received: by 2002:aed:3165:: with SMTP id 92-v6mr29266234qtg.72.1539887844662;
+        Thu, 18 Oct 2018 11:37:24 -0700 (PDT)
+X-Google-Smtp-Source: ACcGV62jUux+ZzkbGulQBAgA0QXCMD1M1BFmT24W2IX3mYeZpUhgCVCRGUc4zQfYgA7zneZwHr6rzA==
+X-Received: by 2002:aed:3165:: with SMTP id 92-v6mr29266205qtg.72.1539887844485;
+        Thu, 18 Oct 2018 11:37:24 -0700 (PDT)
 Received: from localhost ([179.225.132.84])
-        by smtp.gmail.com with ESMTPSA id p21-v6sm15617677qtj.18.2018.10.18.11.37.29
+        by smtp.gmail.com with ESMTPSA id o41-v6sm16209527qto.38.2018.10.18.11.37.22
         (version=TLS1_2 cipher=ECDHE-RSA-AES128-GCM-SHA256 bits=128/128);
-        Thu, 18 Oct 2018 11:37:29 -0700 (PDT)
+        Thu, 18 Oct 2018 11:37:23 -0700 (PDT)
 From:   "Guilherme G. Piccoli" <gpiccoli@canonical.com>
 To:     linux-pci@vger.kernel.org, kexec@lists.infradead.org,
         x86@kernel.org
@@ -64,12 +64,10 @@ Cc:     linux-kernel@vger.kernel.org, bhelgaas@google.com,
         gpiccoli@canonical.com, jay.vosburgh@canonical.com,
         kernel@gpiccoli.net, mfo@canonical.com,
         shan.gavin@linux.alibaba.com
-Subject: [PATCH 3/3] x86/quirks: Add parameter to clear MSIs early on boot
-Date:   Thu, 18 Oct 2018 15:37:21 -0300
-Message-Id: <20181018183721.27467-3-gpiccoli@canonical.com>
+Subject: [PATCH 1/3] x86/quirks: Scan all busses for early PCI quirks
+Date:   Thu, 18 Oct 2018 15:37:19 -0300
+Message-Id: <20181018183721.27467-1-gpiccoli@canonical.com>
 X-Mailer: git-send-email 2.19.0
-In-Reply-To: <20181018183721.27467-1-gpiccoli@canonical.com>
-References: <20181018183721.27467-1-gpiccoli@canonical.com>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 Sender: linux-pci-owner@vger.kernel.org
@@ -77,139 +75,89 @@ Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-We observed a kdump failure in x86 that was narrowed down to MSI irq
-storm coming from a PCI network device. The bug manifests as a lack of
-progress in the boot process of kdump kernel, and a flood of kernel
-messages like:
+Recently was noticed in an HP GEN9 system that kdump couldn't succeed
+due to an irq storm coming from an Intel NIC, narrowed down to be lack
+of clearing the MSI/MSI-X enable bits during the kdump kernel boot.
+For that, we need an early quirk to manually turn off MSI/MSI-X for
+PCI devices - this was worked as an optional boot parameter in a
+subsequent patch.
 
-[...]
-[ 342.265294] do_IRQ: 0.155 No irq handler for vector
-[ 342.266916] do_IRQ: 0.155 No irq handler for vector
-[ 347.258422] do_IRQ: 14053260 callbacks suppressed
-[...]
+Problem is that in our test system, the Intel NICs were not present in
+any secondary bus under the first PCIe root complex, so they couldn't
+be reached by the recursion in check_dev_quirk(). Modern systems,
+specially with multi-processors and multiple NUMA nodes expose multiple
+root complexes, describing more than one PCI hierarchy domain. Currently
+the simple recursion present in the early-quirks code from x86 starts a
+descending recursion from bus 0000:00, and reach many other busses by
+navigating this hierarchy walking through the bridges. This is not
+enough in systems with more than one root complex/host bridge, since
+the recursion won't "traverse" to other root complexes by starting
+statically in 0000:00 (for more details, see [0]).
 
-The root cause of the issue is that kexec process of the kdump kernel
-doesn't ensure PCI devices are reset or MSI capabilities are disabled,
-so a PCI adapter could produce a huge amount of irqs which would steal
-all the processing time for the CPU (specially since we usually restrict
-kdump kernel to use a single CPU only).
+This patch hence implements the full bus/device/function scan in
+early_quirks(), by checking all possible busses instead of using a
+recursion based on the first root bus or limiting the search scope to
+the first 32 busses (like it was done in the beginning [1]).
 
-This patch implements the kernel parameter "pci=clearmsi" to clear the
-MSI/MSI-X enable bits in the Message Control register for all PCI devices
-during early boot time, thus preventing potential issues in the kexec'ed
-kernel. PCI spec also supports/enforces this need (see PCI Local Bus
-spec sections 6.8.1.3 and 6.8.2.3).
+[0] https://bugs.launchpad.net/bugs/1797990
 
-Suggested-by: Dan Streetman <ddstreet@canonical.com>
-Suggested-by: Gavin Shan <shan.gavin@linux.alibaba.com>
+[1] From historical perspective, early PCI scan dates back
+to BitKeeper, added by Andi Kleen's "[PATCH] APIC fixes for x86-64",
+on October/2003. It initially restricted the search to the first
+32 busses and slots.
+
+Due to a potential bug found in Nvidia chipsets, the scan
+was changed to run only in the first root bus: see
+commit 8659c406ade3 ("x86: only scan the root bus in early PCI quirks")
+
+Finally, secondary busses reachable from the 1st bus were re-added back by:
+commit 850c321027c2 ("x86/quirks: Reintroduce scanning of secondary buses")
+
+Reported-by: Dan Streetman <ddstreet@canonical.com>
 Signed-off-by: Guilherme G. Piccoli <gpiccoli@canonical.com>
 ---
- .../admin-guide/kernel-parameters.txt         |  6 ++++
- arch/x86/include/asm/pci-direct.h             |  1 +
- arch/x86/kernel/early-quirks.c                | 32 +++++++++++++++++++
- arch/x86/pci/common.c                         |  4 +++
- 4 files changed, 43 insertions(+)
+ arch/x86/kernel/early-quirks.c | 13 ++++++-------
+ 1 file changed, 6 insertions(+), 7 deletions(-)
 
-diff --git a/Documentation/admin-guide/kernel-parameters.txt b/Documentation/admin-guide/kernel-parameters.txt
-index 92eb1f42240d..aeb510e484d4 100644
---- a/Documentation/admin-guide/kernel-parameters.txt
-+++ b/Documentation/admin-guide/kernel-parameters.txt
-@@ -3161,6 +3161,12 @@
- 		nomsi		[MSI] If the PCI_MSI kernel config parameter is
- 				enabled, this kernel boot option can be used to
- 				disable the use of MSI interrupts system-wide.
-+		clearmsi	[X86] Clears MSI/MSI-X enable bits early in boot
-+				time in order to avoid issues like adapters
-+				screaming irqs and preventing boot progress.
-+				Also, it enforces the PCI Local Bus spec
-+				rule that those bits should be 0 in system reset
-+				events (useful for kexec/kdump cases).
- 		noioapicquirk	[APIC] Disable all boot interrupt quirks.
- 				Safety option to keep boot IRQs enabled. This
- 				should never be necessary.
-diff --git a/arch/x86/include/asm/pci-direct.h b/arch/x86/include/asm/pci-direct.h
-index 813996305bf5..ebb3db2eee41 100644
---- a/arch/x86/include/asm/pci-direct.h
-+++ b/arch/x86/include/asm/pci-direct.h
-@@ -15,5 +15,6 @@ extern void write_pci_config(u8 bus, u8 slot, u8 func, u8 offset, u32 val);
- extern void write_pci_config_byte(u8 bus, u8 slot, u8 func, u8 offset, u8 val);
- extern void write_pci_config_16(u8 bus, u8 slot, u8 func, u8 offset, u16 val);
- 
-+extern unsigned int pci_early_clear_msi;
- extern int early_pci_allowed(void);
- #endif /* _ASM_X86_PCI_DIRECT_H */
 diff --git a/arch/x86/kernel/early-quirks.c b/arch/x86/kernel/early-quirks.c
-index fd50f9e21623..21060d80441e 100644
+index 50d5848bf22e..fd50f9e21623 100644
 --- a/arch/x86/kernel/early-quirks.c
 +++ b/arch/x86/kernel/early-quirks.c
-@@ -28,6 +28,37 @@
- #include <asm/irq_remapping.h>
- #include <asm/early_ioremap.h>
+@@ -731,7 +731,6 @@ static int __init check_dev_quirk(int num, int slot, int func)
+ 	u16 vendor;
+ 	u16 device;
+ 	u8 type;
+-	u8 sec;
+ 	int i;
  
-+static void __init early_pci_clear_msi(int bus, int slot, int func)
-+{
-+	int pos;
-+	u16 ctrl;
-+
-+	if (likely(!pci_early_clear_msi))
-+		return;
-+
-+	pr_info_once("Clearing MSI/MSI-X enable bits early in boot (quirk)\n");
-+
-+	pos = pci_early_find_cap(bus, slot, func, PCI_CAP_ID_MSI);
-+	if (pos) {
-+		ctrl = read_pci_config_16(bus, slot, func, pos + PCI_MSI_FLAGS);
-+		ctrl &= ~PCI_MSI_FLAGS_ENABLE;
-+		write_pci_config_16(bus, slot, func, pos + PCI_MSI_FLAGS, ctrl);
-+
-+		/* Read again to flush previous write */
-+		ctrl = read_pci_config_16(bus, slot, func, pos + PCI_MSI_FLAGS);
-+	}
-+
-+	pos = pci_early_find_cap(bus, slot, func, PCI_CAP_ID_MSIX);
-+	if (pos) {
-+		ctrl = read_pci_config_16(bus, slot, func, pos + PCI_MSIX_FLAGS);
-+		ctrl &= ~PCI_MSIX_FLAGS_ENABLE;
-+		write_pci_config_16(bus, slot, func, pos + PCI_MSIX_FLAGS, ctrl);
-+
-+		/* Read again to flush previous write */
-+		ctrl = read_pci_config_16(bus, slot, func, pos + PCI_MSIX_FLAGS);
-+	}
-+}
-+
- static void __init fix_hypertransport_config(int num, int slot, int func)
+ 	class = read_pci_config_16(num, slot, func, PCI_CLASS_DEVICE);
+@@ -760,11 +759,8 @@ static int __init check_dev_quirk(int num, int slot, int func)
+ 	type = read_pci_config_byte(num, slot, func,
+ 				    PCI_HEADER_TYPE);
+ 
+-	if ((type & 0x7f) == PCI_HEADER_TYPE_BRIDGE) {
+-		sec = read_pci_config_byte(num, slot, func, PCI_SECONDARY_BUS);
+-		if (sec > num)
+-			early_pci_scan_bus(sec);
+-	}
++	if ((type & 0x7f) == PCI_HEADER_TYPE_BRIDGE)
++		return -1;
+ 
+ 	if (!(type & 0x80))
+ 		return -1;
+@@ -787,8 +783,11 @@ static void __init early_pci_scan_bus(int bus)
+ 
+ void __init early_quirks(void)
  {
- 	u32 htcfg;
-@@ -709,6 +740,7 @@ static struct chipset early_qrk[] __initdata = {
- 		PCI_CLASS_BRIDGE_HOST, PCI_ANY_ID, 0, force_disable_hpet},
- 	{ PCI_VENDOR_ID_BROADCOM, 0x4331,
- 	  PCI_CLASS_NETWORK_OTHER, PCI_ANY_ID, 0, apple_airport_reset},
-+	{ PCI_ANY_ID, PCI_ANY_ID, 0, 0, 0, early_pci_clear_msi},
- 	{}
- };
++	int bus;
++
+ 	if (!early_pci_allowed())
+ 		return;
  
-diff --git a/arch/x86/pci/common.c b/arch/x86/pci/common.c
-index d4ec117c1142..7f6f85bd47a3 100644
---- a/arch/x86/pci/common.c
-+++ b/arch/x86/pci/common.c
-@@ -32,6 +32,7 @@ int noioapicreroute = 1;
- #endif
- int pcibios_last_bus = -1;
- unsigned long pirq_table_addr;
-+unsigned int pci_early_clear_msi;
- const struct pci_raw_ops *__read_mostly raw_pci_ops;
- const struct pci_raw_ops *__read_mostly raw_pci_ext_ops;
- 
-@@ -604,6 +605,9 @@ char *__init pcibios_setup(char *str)
- 	} else if (!strcmp(str, "skip_isa_align")) {
- 		pci_probe |= PCI_CAN_SKIP_ISA_ALIGN;
- 		return NULL;
-+	} else if (!strcmp(str, "clearmsi")) {
-+		pci_early_clear_msi = 1;
-+		return NULL;
- 	} else if (!strcmp(str, "noioapicquirk")) {
- 		noioapicquirk = 1;
- 		return NULL;
+-	early_pci_scan_bus(0);
++	for (bus = 0; bus < 256; bus++)
++		early_pci_scan_bus(bus);
+ }
 -- 
 2.19.0
 
