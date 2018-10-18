@@ -4,65 +4,64 @@ X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 X-Spam-Level: 
 X-Spam-Status: No, score=-0.6 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
 	DKIM_VALID_AU,FREEMAIL_FORGED_FROMDOMAIN,FREEMAIL_FROM,
-	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_PASS,URIBL_BLOCKED
-	autolearn=unavailable autolearn_force=no version=3.4.0
+	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_PASS autolearn=ham
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id CA3EAC5ACCC
-	for <linux-pci@archiver.kernel.org>; Thu, 18 Oct 2018 07:22:21 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id B57E0ECDE43
+	for <linux-pci@archiver.kernel.org>; Thu, 18 Oct 2018 07:23:33 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 8F49C208E4
-	for <linux-pci@archiver.kernel.org>; Thu, 18 Oct 2018 07:22:21 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 796EB208E4
+	for <linux-pci@archiver.kernel.org>; Thu, 18 Oct 2018 07:23:33 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="U7a9sL6F"
-DMARC-Filter: OpenDMARC Filter v1.3.2 mail.kernel.org 8F49C208E4
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="jr9P8hsO"
+DMARC-Filter: OpenDMARC Filter v1.3.2 mail.kernel.org 796EB208E4
 Authentication-Results: mail.kernel.org; dmarc=fail (p=none dis=none) header.from=gmail.com
 Authentication-Results: mail.kernel.org; spf=none smtp.mailfrom=linux-pci-owner@vger.kernel.org
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727376AbeJRPVv (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Thu, 18 Oct 2018 11:21:51 -0400
-Received: from mail-qt1-f196.google.com ([209.85.160.196]:44221 "EHLO
-        mail-qt1-f196.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1727365AbeJRPVv (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Thu, 18 Oct 2018 11:21:51 -0400
-Received: by mail-qt1-f196.google.com with SMTP id x24-v6so1559064qtx.11;
-        Thu, 18 Oct 2018 00:22:12 -0700 (PDT)
+        id S1727666AbeJRPXJ (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Thu, 18 Oct 2018 11:23:09 -0400
+Received: from mail-qt1-f194.google.com ([209.85.160.194]:44357 "EHLO
+        mail-qt1-f194.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1727359AbeJRPXJ (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Thu, 18 Oct 2018 11:23:09 -0400
+Received: by mail-qt1-f194.google.com with SMTP id x24-v6so1561765qtx.11;
+        Thu, 18 Oct 2018 00:23:30 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=gmail.com; s=20161025;
         h=mime-version:references:in-reply-to:from:date:message-id:subject:to
          :cc;
-        bh=hW70wPM5B1kwnKSHRgQ7+ugmG/Kth6DHltt08mOUgrk=;
-        b=U7a9sL6F1De6iqcemhWxikuybdlr+gsnPAOSjrnsAS9qqnUiLfSR7ZdNzfaqpkKu2j
-         HCkQ/6ofazu7QYyVaKLsrV1LEibi1bn94rEEFGZ25KIvg3WMLRgBRur/vWdkunEni7l1
-         6+rGw+wjjlzP/ig4CBKjVekfyeJOsrCPIp6RHF7GzAhqGZMY224RYRfDzXEWQCZUO4N3
-         6U4k1FI9zggjsM1gaz1JrZfHlINq2JvKSxisMWOdjvxvzbP0aDXWcbncty4Szd9HPNJ6
-         DDsLIDqBWQ1PuEj3Vy/BMikfVAFMSt8pJBGBlhMwZKvbs0WvPpH5NbragQ606QFvXmkz
-         yNsw==
+        bh=O7kIxwq2qKHcExhNfWzmcsriRPxkNspejgUxQxEv01Y=;
+        b=jr9P8hsOVn+LrrHJMQESCTGZakg+cJlWvuVArNccQja+NdHig6POM0QkIDNuj6ggv8
+         nyQ5cWw2aXCqpPM0Mo2QdU+2R2JP28LUpgbrAlKXi9eBQ+0D03Z4OjXQdzTRgxkQNkyY
+         WhxUDzYizChbQDM3KYxEcqWG2s5G8JQZbiQwnoKg74W0C2vAhBv0anXHv9nEXVT3N+JA
+         TaZGecbJqW/cg756u1gx++UqpXWQd2nR9i+q5ej+hRKGmmlnwfx+YmtClpaImYxbgbWz
+         MxUbhCuz+ei6BfVZieJD2ARy2q8UtxR1Q+lsy+jJwkw5D452aOsJowMJEbxTJmscPbI7
+         zs0A==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20161025;
         h=x-gm-message-state:mime-version:references:in-reply-to:from:date
          :message-id:subject:to:cc;
-        bh=hW70wPM5B1kwnKSHRgQ7+ugmG/Kth6DHltt08mOUgrk=;
-        b=ZPdXgzCauF/ItJdzkj+VJQfSqbPU5jV+L+IWAElFqsVVpr2ahicIX4RXjkHfcnI80B
-         ULQGYhUd43BJvCzSM5j4F9e34wYOkjJvcWaSebFiEk8cWlQYJl3N8vjR5h0/Yot1Q9jg
-         1fqhWpYdt5sZpYzhuInijlx2WOYTdetw9+0o4H3nVUxwgBwEkwvJX7LU0oWCgMtxHWh7
-         lu8LyyvjQfVZJMrKtevAux+6oJ7ifxe5sw2Ywf7s3F255kK0LYpmbYRgSNNG+q62RXi0
-         d0IpIA3cyF7Fs4tZvLAHWUzZlyck36lq5/bHHrsUck3nvietreKs9bmvQEbaipnL7a5I
-         9psA==
-X-Gm-Message-State: ABuFfojN3Y6N1Z4A51Ud/guEgTpbTUug4MCB7GIXzlZ3USPgPG/Du6Pw
-        cqx216TAAYriq7N7cBbsY11IAeNKq/dDbrBxsKI=
-X-Google-Smtp-Source: ACcGV63SaNabP/WirmTt7GWoE/S7yyTZ+TgFo7oAS4ORoPDq8PAXXxBEaeXhySN7n5ycKfK1TYPtCsSeMJJ5vRZGEBA=
-X-Received: by 2002:aed:2de3:: with SMTP id i90-v6mr9194791qtd.229.1539847332291;
- Thu, 18 Oct 2018 00:22:12 -0700 (PDT)
+        bh=O7kIxwq2qKHcExhNfWzmcsriRPxkNspejgUxQxEv01Y=;
+        b=XsC/eUNsSLOxKjwAytTthFlDDsSPZGksSaQ3n62rsHXXtCADb7XD9CCnHWlcpqL2Tw
+         TB/6X1G8ocf2lprHOS3bYrjXDlTOqbKXAFURN2eJV+TgXgZto35UTF3j85x/aLacB0xA
+         ZdPS4Daqxvs2MPgjvb4C7b9HpCiZt2jkfutYpyt5hd97lbbMD23p1tp9CZ8FRYMbUjHG
+         LYRRAlvnQ54c9HLCh67FtcsD9Vu/sDfYgmUllvinlxyt2TN74Ui3/d10ZIVj7uZP4mLu
+         oOydlA/PxD/3iue+LMc/US4byLiBeZbt0VGP6d3CtsTJJRu99ZlrsyjKvvhWn2co6+wv
+         OdzA==
+X-Gm-Message-State: ABuFfojzS5RtJFCBNpMNicviklmJV1uALNP5lpcyjN2JPxvEada5+V99
+        CEyUG2colGASdQuZxsNqdkzox9WkCZzUmTZTFNfINgVZ+6o=
+X-Google-Smtp-Source: ACcGV62KVYxg4rjUnT1EREW/DiVAF+aXR+k46NOswC01dj3RKOlrmvV0bF4eAuH2MybFoPnL5Y23UiY8ys536jPbvFE=
+X-Received: by 2002:ac8:6784:: with SMTP id b4-v6mr28081655qtp.373.1539847410128;
+ Thu, 18 Oct 2018 00:23:30 -0700 (PDT)
 MIME-Version: 1.0
 References: <1539755947-27014-1-git-send-email-suganath-prabu.subramani@broadcom.com>
- <1539755947-27014-2-git-send-email-suganath-prabu.subramani@broadcom.com>
- <CAHp75Veh=CkhD67jb+Qjps-UqtcCBUsA8bWco6kqppm0Q+tcvg@mail.gmail.com>
- <CAHp75VfPok+x4U_CmP91eG8KtOUvFYkavrw0Wg5Q9m2ZNbcVZg@mail.gmail.com> <CA+RiK66_gpLvzFyztdQ3BdX11wn2uRfxoF6hhRg1TXoERe7z3Q@mail.gmail.com>
-In-Reply-To: <CA+RiK66_gpLvzFyztdQ3BdX11wn2uRfxoF6hhRg1TXoERe7z3Q@mail.gmail.com>
+ <1539755947-27014-3-git-send-email-suganath-prabu.subramani@broadcom.com>
+ <CAHp75Ve=X9X6xG5FpuZrmRKfSpcLwFQYE_A8vhUzNn92KSoc4w@mail.gmail.com> <CA+RiK67067aV9Ky5m8uCGLGcvjbBRxqFVeyB0CsYcvSw7rgqJg@mail.gmail.com>
+In-Reply-To: <CA+RiK67067aV9Ky5m8uCGLGcvjbBRxqFVeyB0CsYcvSw7rgqJg@mail.gmail.com>
 From:   Andy Shevchenko <andy.shevchenko@gmail.com>
-Date:   Thu, 18 Oct 2018 10:22:00 +0300
-Message-ID: <CAHp75Vd63Ss3WBuAA0euutGboUuOzS0EJ3J-365b5QOTz98NqQ@mail.gmail.com>
-Subject: Re: [v5 1/4] mpt3sas: Separate out mpt3sas_wait_for_ioc_to_operational
+Date:   Thu, 18 Oct 2018 10:23:18 +0300
+Message-ID: <CAHp75VfENTJjJVMyQ1wnD4GXYKjhgr6h+wocPOfk16p9nWrpeg@mail.gmail.com>
+Subject: Re: [v5 2/4] mpt3sas: Fix Sync cache command failure during driver unload
 To:     Suganath Prabu Subramani <suganath-prabu.subramani@broadcom.com>
 Cc:     Bjorn Helgaas <helgaas@kernel.org>, Lukas Wunner <lukas@wunner.de>,
         linux-scsi <linux-scsi@vger.kernel.org>,
@@ -79,36 +78,67 @@ Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-On Thu, Oct 18, 2018 at 10:10 AM Suganath Prabu Subramani
+On Thu, Oct 18, 2018 at 10:11 AM Suganath Prabu Subramani
 <suganath-prabu.subramani@broadcom.com> wrote:
-> On Wed, Oct 17, 2018 at 1:49 PM Andy Shevchenko <andy.shevchenko@gmail.com> wrote:
->> On Wed, Oct 17, 2018 at 11:17 AM Andy Shevchenko
->> <andy.shevchenko@gmail.com> wrote:
-
->> > I understand this is part of existing code, but can you consider to
->> > modify it to something like
->> >
->> > do {
->> >     ioc_state = mpt3sas_base_get_iocstate(ioc, 1);
->> >     if (ioc_state == MPI2_IOC_STATE_OPERATIONAL)
->> >       break;
->>
->> Forgot ssleep(1); here.
->>
->> >     ioc_info(ioc, "%s: waiting for operational state(count=%d)\n",
->> > __func__, ++wait_state_count);
-
->> > while (timeout--);
-
-Just noticed this should be --timeout.
-
->> > if (!timeout) {
->> >     ioc_err(ioc, "%s: failed due to ioc not operational\n", __func__);
->> >     return -EFAULT;
->> > }
->> > Less lines, more understandable in my view.
 >
-> Yes, We 'll take this change and resend.
+>
+>
+> On Wed, Oct 17, 2018 at 2:02 PM Andy Shevchenko <andy.shevchenko@gmail.com> wrote:
+>>
+>> On Wed, Oct 17, 2018 at 8:59 AM Suganath Prabu
+>> <suganath-prabu.subramani@broadcom.com> wrote:
+>> >
+>> > This is to fix Sync cache and start stop command
+>> >  failures with DID_NO_CONNECT during driver unload.
+>> >
+>> > 1) Release drives first from SML, then remove internally
+>> > in driver.
+>> > 2) And allow sync cache and Start stop commands to firmware,
+>> > even when remove_host flag is set.
+>>
+>> > +       if (ioc->hba_mpi_version_belonged == MPI2_VERSION) {
+>> > +               if (ioc->remove_host)
+>> > +                       return false;
+>> > +
+>> > +               return true;
+>> > +       }
+>> > +
+>> > +       if (ioc->remove_host) {
+>> > +
+>> > +               switch (scmd->cmnd[0]) {
+>> > +               case SYNCHRONIZE_CACHE:
+>> > +               case START_STOP:
+>> > +                       return true;
+>> > +               default:
+>> > +                       return false;
+>> > +               }
+>> > +       }
+>> > +
+>> > +       return true;
+>>
+>> Wouldn't be the same as
+
+>> Yes it is same, but i feel original code is more readable.
+
+OK (I didn't compare assembly, but I assume this is slow path).
+
+>> if (!ioc->remove_host || ioc->hba_mpi_version_belonged == MPI2_VERSION)
+>>    return !ioc->remove_host;
+>>
+>>  switch (scmd->cmnd[0]) {
+>>  case SYNCHRONIZE_CACHE:
+>>  case START_STOP:
+>>    return true;
+>>  default:
+>>    return false;
+>>  }
+>>
+>> ?
+>>
+>> --
+>> With Best Regards,
+>> Andy Shevchenko
+
 
 
 -- 
