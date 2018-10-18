@@ -2,240 +2,97 @@ Return-Path: <SRS0=PAID=M6=vger.kernel.org=linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-8.8 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_PASS,UNPARSEABLE_RELAY,
-	USER_AGENT_GIT autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-1.1 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,
+	SPF_PASS autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id F035FECDE3D
-	for <linux-pci@archiver.kernel.org>; Thu, 18 Oct 2018 03:23:51 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 07173C5ACCC
+	for <linux-pci@archiver.kernel.org>; Thu, 18 Oct 2018 07:15:50 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id BEC6820838
-	for <linux-pci@archiver.kernel.org>; Thu, 18 Oct 2018 03:23:50 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.3.2 mail.kernel.org BEC6820838
-Authentication-Results: mail.kernel.org; dmarc=none (p=none dis=none) header.from=mediatek.com
+	by mail.kernel.org (Postfix) with ESMTP id C04DB21476
+	for <linux-pci@archiver.kernel.org>; Thu, 18 Oct 2018 07:15:49 +0000 (UTC)
+Authentication-Results: mail.kernel.org;
+	dkim=pass (1024-bit key) header.d=broadcom.com header.i=@broadcom.com header.b="e5qoWcpL"
+DMARC-Filter: OpenDMARC Filter v1.3.2 mail.kernel.org C04DB21476
+Authentication-Results: mail.kernel.org; dmarc=fail (p=quarantine dis=none) header.from=broadcom.com
 Authentication-Results: mail.kernel.org; spf=none smtp.mailfrom=linux-pci-owner@vger.kernel.org
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727301AbeJRLWh (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Thu, 18 Oct 2018 07:22:37 -0400
-Received: from mailgw01.mediatek.com ([210.61.82.183]:30039 "EHLO
-        mailgw01.mediatek.com" rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org
-        with ESMTP id S1727260AbeJRLWh (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Thu, 18 Oct 2018 07:22:37 -0400
-X-UUID: e51f200e0df94dda90367f309991c1a7-20181018
-X-UUID: e51f200e0df94dda90367f309991c1a7-20181018
-Received: from mtkcas08.mediatek.inc [(172.21.101.126)] by mailgw01.mediatek.com
-        (envelope-from <honghui.zhang@mediatek.com>)
-        (mhqrelay.mediatek.com ESMTP with TLS)
-        with ESMTP id 523055548; Thu, 18 Oct 2018 11:23:40 +0800
-Received: from mtkcas08.mediatek.inc (172.21.101.126) by
- mtkmbs08n2.mediatek.inc (172.21.101.56) with Microsoft SMTP Server (TLS) id
- 15.0.1395.4; Thu, 18 Oct 2018 11:23:37 +0800
-Received: from localhost.localdomain (10.17.3.153) by mtkcas08.mediatek.inc
- (172.21.101.73) with Microsoft SMTP Server id 15.0.1395.4 via Frontend
- Transport; Thu, 18 Oct 2018 11:23:37 +0800
-From:   <honghui.zhang@mediatek.com>
-To:     <bhelgaas@google.com>, <linux-arm-kernel@lists.infradead.org>,
-        <linux-mediatek@lists.infradead.org>, <linux-pci@vger.kernel.org>,
-        <ryder.lee@mediatek.com>, <lorenzo.pieralisi@arm.com>
-CC:     <linux-kernel@vger.kernel.org>, <youlin.pei@mediatek.com>,
-        <yt.shen@mediatek.com>, <jianjun.wang@mediatek.com>,
-        Honghui Zhang <honghui.zhang@mediatek.com>
-Subject: [PATCH] PCI: mediatek: Use devm_of_pci_get_host_bridge_resources() to parse DT
-Date:   Thu, 18 Oct 2018 11:23:34 +0800
-Message-ID: <1539833014-1738-1-git-send-email-honghui.zhang@mediatek.com>
-X-Mailer: git-send-email 2.6.4
+        id S1727538AbeJRPPZ (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Thu, 18 Oct 2018 11:15:25 -0400
+Received: from mail-qk1-f194.google.com ([209.85.222.194]:37677 "EHLO
+        mail-qk1-f194.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1727351AbeJRPPZ (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Thu, 18 Oct 2018 11:15:25 -0400
+Received: by mail-qk1-f194.google.com with SMTP id x8-v6so18174151qka.4
+        for <linux-pci@vger.kernel.org>; Thu, 18 Oct 2018 00:15:48 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=broadcom.com; s=google;
+        h=mime-version:references:in-reply-to:from:date:message-id:subject:to
+         :cc;
+        bh=FyuFzcEQH2PI2Z1BPcQ0AM/syJ5Q+StfzBsWc9otInk=;
+        b=e5qoWcpLq3QTglkiubqBlBlczLWIrid3yBKj03nFvGZgfC8a3S1/RaFGn36OUh69t3
+         DTS5Tb9YY0K4nwu1YWV4Uk6vFZ6TKr4V23HNd6j+SUXqKKRBjYWzhWMG1FjnKqcTlU1Q
+         6ldfRqD8YncDrORItC94ZzgTGzHW01S7TXuQU=
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20161025;
+        h=x-gm-message-state:mime-version:references:in-reply-to:from:date
+         :message-id:subject:to:cc;
+        bh=FyuFzcEQH2PI2Z1BPcQ0AM/syJ5Q+StfzBsWc9otInk=;
+        b=HAo7vjIA0wtRUikMZM706mYL+VGct4+jnxF7W6wZEfpXMHJob61rQBND/dtTzbE38u
+         hI4n0TExCuI2rqGySRvGbYKd53IozY/PMTsqC8J6XJu4CfcWjHHn8IxW3YT28T5IT1Zv
+         4NOmbSrwGYuKjdmmgKrJGHWNfFtyEhxSnJlkP6HQO/yibFst9nX4XieBOmu9PxkQ+1OK
+         rlm5TinHwDP2aMtYi7ftuA+f2hV6S/k6X/4L3OzHwBZ1zeMLoIDsN7vzpfMtFHStYPVu
+         FJ1fbeqiUjXq4ETFDmIt6i/IdBHbEnlbE+UHOi3jzUOSyKFI7LG+EvOBWb8qvBkB3ajw
+         mkiQ==
+X-Gm-Message-State: ABuFfoi/K+uokhbIGoyVBi/5RG5jARd/PGiFDQjojYllvqJ88ciA3Z/O
+        8DAnh2rVywWatug/JvidpmHkBgbKxQgOo7VX6aBd94LLl0s=
+X-Google-Smtp-Source: ACcGV62a3zQjYeDkJ48pZHNeBaVPQlkLFCj5WSrDZz2Q+1khz+hH0UDdc7P6qneQbr7dhTVbom3gmPI1Ae0jpBEoNn0=
+X-Received: by 2002:a37:e21a:: with SMTP id g26-v6mr27082141qki.330.1539846947855;
+ Thu, 18 Oct 2018 00:15:47 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: text/plain
-X-TM-SNTS-SMTP: 02CCF5676C0ADB95BC049CEC9A168FAC163EAFCA2F550AC4B8C205C5D51D42F12000:8
-X-MTK:  N
+References: <1539755947-27014-1-git-send-email-suganath-prabu.subramani@broadcom.com>
+ <1539755947-27014-4-git-send-email-suganath-prabu.subramani@broadcom.com> <CAHp75Vf2HMj-DBU7TPEM2=g=XdzksnMgCvzCU6BQa9W8XJmPKQ@mail.gmail.com>
+In-Reply-To: <CAHp75Vf2HMj-DBU7TPEM2=g=XdzksnMgCvzCU6BQa9W8XJmPKQ@mail.gmail.com>
+From:   Suganath Prabu Subramani <suganath-prabu.subramani@broadcom.com>
+Date:   Thu, 18 Oct 2018 12:46:29 +0530
+Message-ID: <CA+RiK66upf=E-LWSknA-xK4G=y+2OiqT1zUpvQAJ=aYz1yWHtw@mail.gmail.com>
+Subject: Re: [v5 3/4] mpt3sas:Fix driver modifying persistent data.
+To:     Andy Shevchenko <andy.shevchenko@gmail.com>
+Cc:     helgaas@kernel.org, lukas@wunner.de, linux-scsi@vger.kernel.org,
+        linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
+        benh@kernel.crashing.org, ruscur@russell.cc,
+        sbobroff@linux.ibm.com, Oliver <oohall@gmail.com>,
+        Sathya Prakash <Sathya.Prakash@broadcom.com>,
+        Sreekanth Reddy <sreekanth.reddy@broadcom.com>
+Content-Type: text/plain; charset="UTF-8"
 Sender: linux-pci-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-From: Honghui Zhang <honghui.zhang@mediatek.com>
-
-Use the devm_of_pci_get_host_bridge_resources() API in place of the PCI OF
-DT parser.
-
-Signed-off-by: Honghui Zhang <honghui.zhang@mediatek.com>
----
- drivers/pci/controller/pcie-mediatek.c | 109 +++++++++------------------------
- 1 file changed, 29 insertions(+), 80 deletions(-)
-
-diff --git a/drivers/pci/controller/pcie-mediatek.c b/drivers/pci/controller/pcie-mediatek.c
-index 2a1f97c..6632d4e 100644
---- a/drivers/pci/controller/pcie-mediatek.c
-+++ b/drivers/pci/controller/pcie-mediatek.c
-@@ -197,29 +197,20 @@ struct mtk_pcie_port {
-  * @dev: pointer to PCIe device
-  * @base: IO mapped register base
-  * @free_ck: free-run reference clock
-- * @io: IO resource
-- * @pio: PIO resource
-  * @mem: non-prefetchable memory resource
-- * @busn: bus range
-- * @offset: IO / Memory offset
-  * @ports: pointer to PCIe port information
-  * @soc: pointer to SoC-dependent operations
-+ * @busnr: root bus number
-  */
- struct mtk_pcie {
- 	struct device *dev;
- 	void __iomem *base;
- 	struct clk *free_ck;
- 
--	struct resource io;
--	struct resource pio;
- 	struct resource mem;
--	struct resource busn;
--	struct {
--		resource_size_t mem;
--		resource_size_t io;
--	} offset;
- 	struct list_head ports;
- 	const struct mtk_pcie_soc *soc;
-+	int busnr;
- };
- 
- static void mtk_pcie_subsys_powerdown(struct mtk_pcie *pcie)
-@@ -1045,55 +1036,42 @@ static int mtk_pcie_setup(struct mtk_pcie *pcie)
- {
- 	struct device *dev = pcie->dev;
- 	struct device_node *node = dev->of_node, *child;
--	struct of_pci_range_parser parser;
--	struct of_pci_range range;
--	struct resource res;
- 	struct mtk_pcie_port *port, *tmp;
-+	struct pci_host_bridge *host = pci_host_bridge_from_priv(pcie);
-+	struct list_head *windows = &host->windows;
-+	struct resource_entry *win, *tmp_win;
-+	resource_size_t io_base;
- 	int err;
- 
--	if (of_pci_range_parser_init(&parser, node)) {
--		dev_err(dev, "missing \"ranges\" property\n");
--		return -EINVAL;
--	}
-+	err = devm_of_pci_get_host_bridge_resources(dev, 0, 0xff,
-+						    windows, &io_base);
-+	if (err)
-+		return err;
- 
--	for_each_of_pci_range(&parser, &range) {
--		err = of_pci_range_to_resource(&range, node, &res);
--		if (err < 0)
--			return err;
-+	err = devm_request_pci_bus_resources(dev, windows);
-+	if (err < 0)
-+		return err;
- 
--		switch (res.flags & IORESOURCE_TYPE_BITS) {
-+	/* Get the I/O and memory ranges from DT */
-+	resource_list_for_each_entry_safe(win, tmp_win, windows) {
-+		switch (resource_type(win->res)) {
- 		case IORESOURCE_IO:
--			pcie->offset.io = res.start - range.pci_addr;
--
--			memcpy(&pcie->pio, &res, sizeof(res));
--			pcie->pio.name = node->full_name;
--
--			pcie->io.start = range.cpu_addr;
--			pcie->io.end = range.cpu_addr + range.size - 1;
--			pcie->io.flags = IORESOURCE_MEM;
--			pcie->io.name = "I/O";
--
--			memcpy(&res, &pcie->io, sizeof(res));
--			break;
--
-+			err = devm_pci_remap_iospace(dev, win->res, io_base);
-+			if (err) {
-+				dev_warn(dev, "error %d: failed to map resource %pR\n",
-+					 err, win->res);
-+				resource_list_destroy_entry(win);
-+			}
- 		case IORESOURCE_MEM:
--			pcie->offset.mem = res.start - range.pci_addr;
--
--			memcpy(&pcie->mem, &res, sizeof(res));
-+			memcpy(&pcie->mem, win->res, sizeof(*win->res));
- 			pcie->mem.name = "non-prefetchable";
- 			break;
-+		case IORESOURCE_BUS:
-+			pcie->busnr = win->res->start;
-+			break;
- 		}
- 	}
- 
--	err = of_pci_parse_bus_range(node, &pcie->busn);
--	if (err < 0) {
--		dev_err(dev, "failed to parse bus ranges property: %d\n", err);
--		pcie->busn.name = node->name;
--		pcie->busn.start = 0;
--		pcie->busn.end = 0xff;
--		pcie->busn.flags = IORESOURCE_BUS;
--	}
--
- 	for_each_available_child_of_node(node, child) {
- 		int slot;
- 
-@@ -1125,28 +1103,6 @@ static int mtk_pcie_setup(struct mtk_pcie *pcie)
- 	return 0;
- }
- 
--static int mtk_pcie_request_resources(struct mtk_pcie *pcie)
--{
--	struct pci_host_bridge *host = pci_host_bridge_from_priv(pcie);
--	struct list_head *windows = &host->windows;
--	struct device *dev = pcie->dev;
--	int err;
--
--	pci_add_resource_offset(windows, &pcie->pio, pcie->offset.io);
--	pci_add_resource_offset(windows, &pcie->mem, pcie->offset.mem);
--	pci_add_resource(windows, &pcie->busn);
--
--	err = devm_request_pci_bus_resources(dev, windows);
--	if (err < 0)
--		return err;
--
--	err = devm_pci_remap_iospace(dev, &pcie->pio, pcie->io.start);
--	if (err < 0)
--		return err;
--
--	return 0;
--}
--
- static int mtk_pcie_probe(struct platform_device *pdev)
- {
- 	struct device *dev = &pdev->dev;
-@@ -1169,11 +1125,7 @@ static int mtk_pcie_probe(struct platform_device *pdev)
- 	if (err)
- 		return err;
- 
--	err = mtk_pcie_request_resources(pcie);
--	if (err)
--		goto put_resources;
--
--	host->busnr = pcie->busn.start;
-+	host->busnr = pcie->busnr;
- 	host->dev.parent = pcie->dev;
- 	host->ops = pcie->soc->ops;
- 	host->map_irq = of_irq_parse_and_map_pci;
-@@ -1181,12 +1133,9 @@ static int mtk_pcie_probe(struct platform_device *pdev)
- 	host->sysdata = pcie;
- 
- 	err = pci_host_probe(host);
--	if (err)
--		goto put_resources;
--
--	return 0;
-+	if (!err)
-+		return 0;
- 
--put_resources:
- 	if (!list_empty(&pcie->ports))
- 		mtk_pcie_put_resources(pcie);
- 
--- 
-2.6.4
-
+On Wed, Oct 17, 2018 at 1:54 PM Andy Shevchenko
+<andy.shevchenko@gmail.com> wrote:
+>
+> On Wed, Oct 17, 2018 at 8:59 AM Suganath Prabu
+> <suganath-prabu.subramani@broadcom.com> wrote:
+> >
+> > * If EEDPTagMode field in manufacturing page11 is set,
+> > unset it. This is needed to fix a hardware bug
+> > in SAS3/SAS2 cards, So, skipping EEDPTagMode changes
+> > in Manufacturing page11 for SAS35 controllers.
+> >
+> > * Fix driver modifying NVRAM/persistent data in
+> > Manufacturing page11 along with current copy. Driver should
+> > change only current copy of Manufacturing page11.
+>
+> > -       if (ioc->manu_pg11.EEDPTagMode == 0) {
+> > +       if ((!ioc->is_gen35_ioc) && (ioc->manu_pg11.EEDPTagMode == 0)) {
+>
+> No need to have parens.
+>
+Yes, We ll remove parentheses in v6 patch set.
+Thanks,
+>
+> --
+> With Best Regards,
+> Andy Shevchenko
