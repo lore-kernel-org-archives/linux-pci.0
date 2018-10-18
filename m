@@ -2,163 +2,240 @@ Return-Path: <SRS0=PAID=M6=vger.kernel.org=linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-0.8 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	MAILING_LIST_MULTI,SPF_PASS,UNPARSEABLE_RELAY,URIBL_BLOCKED
-	autolearn=unavailable autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-8.8 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_PASS,UNPARSEABLE_RELAY,
+	USER_AGENT_GIT autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id C8CA6ECDE3D
-	for <linux-pci@archiver.kernel.org>; Thu, 18 Oct 2018 01:26:33 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id F035FECDE3D
+	for <linux-pci@archiver.kernel.org>; Thu, 18 Oct 2018 03:23:51 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 965BA21473
-	for <linux-pci@archiver.kernel.org>; Thu, 18 Oct 2018 01:26:33 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.3.2 mail.kernel.org 965BA21473
+	by mail.kernel.org (Postfix) with ESMTP id BEC6820838
+	for <linux-pci@archiver.kernel.org>; Thu, 18 Oct 2018 03:23:50 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.3.2 mail.kernel.org BEC6820838
 Authentication-Results: mail.kernel.org; dmarc=none (p=none dis=none) header.from=mediatek.com
 Authentication-Results: mail.kernel.org; spf=none smtp.mailfrom=linux-pci-owner@vger.kernel.org
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727247AbeJRJY7 (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Thu, 18 Oct 2018 05:24:59 -0400
-Received: from Mailgw01.mediatek.com ([1.203.163.78]:53771 "EHLO
+        id S1727301AbeJRLWh (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Thu, 18 Oct 2018 07:22:37 -0400
+Received: from mailgw01.mediatek.com ([210.61.82.183]:30039 "EHLO
         mailgw01.mediatek.com" rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org
-        with ESMTP id S1726943AbeJRJY7 (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Thu, 18 Oct 2018 05:24:59 -0400
-X-UUID: f8d66faec2884058b7f904e2b72a65c3-20181018
-X-UUID: f8d66faec2884058b7f904e2b72a65c3-20181018
-Received: from mtkcas35.mediatek.inc [(172.27.4.250)] by mailgw01.mediatek.com
+        with ESMTP id S1727260AbeJRLWh (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Thu, 18 Oct 2018 07:22:37 -0400
+X-UUID: e51f200e0df94dda90367f309991c1a7-20181018
+X-UUID: e51f200e0df94dda90367f309991c1a7-20181018
+Received: from mtkcas08.mediatek.inc [(172.21.101.126)] by mailgw01.mediatek.com
         (envelope-from <honghui.zhang@mediatek.com>)
-        (mailgw01.mediatek.com ESMTP with TLS)
-        with ESMTP id 2104160628; Thu, 18 Oct 2018 09:26:27 +0800
-Received: from MTKCAS36.mediatek.inc (172.27.4.186) by MTKMBS31N2.mediatek.inc
- (172.27.4.87) with Microsoft SMTP Server (TLS) id 15.0.1395.4; Thu, 18 Oct
- 2018 09:26:25 +0800
-Received: from [10.17.3.153] (10.17.3.153) by MTKCAS36.mediatek.inc
- (172.27.4.170) with Microsoft SMTP Server id 15.0.1395.4 via Frontend
- Transport; Thu, 18 Oct 2018 09:26:24 +0800
-Message-ID: <1539825984.11281.9.camel@mhfsdcap03>
-Subject: Re: [PATCH v8 0/9] PCI: mediatek: fixup find_port, enable_msi and
- add PM, module support
-From:   Honghui Zhang <honghui.zhang@mediatek.com>
-To:     Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
-CC:     <bhelgaas@google.com>, <linux-arm-kernel@lists.infradead.org>,
+        (mhqrelay.mediatek.com ESMTP with TLS)
+        with ESMTP id 523055548; Thu, 18 Oct 2018 11:23:40 +0800
+Received: from mtkcas08.mediatek.inc (172.21.101.126) by
+ mtkmbs08n2.mediatek.inc (172.21.101.56) with Microsoft SMTP Server (TLS) id
+ 15.0.1395.4; Thu, 18 Oct 2018 11:23:37 +0800
+Received: from localhost.localdomain (10.17.3.153) by mtkcas08.mediatek.inc
+ (172.21.101.73) with Microsoft SMTP Server id 15.0.1395.4 via Frontend
+ Transport; Thu, 18 Oct 2018 11:23:37 +0800
+From:   <honghui.zhang@mediatek.com>
+To:     <bhelgaas@google.com>, <linux-arm-kernel@lists.infradead.org>,
         <linux-mediatek@lists.infradead.org>, <linux-pci@vger.kernel.org>,
-        <linux-kernel@vger.kernel.org>, <ryder.lee@mediatek.com>,
-        <ulf.hansson@linaro.org>, <marc.zyngier@arm.com>,
-        <matthias.bgg@gmail.com>, <devicetree@vger.kernel.org>,
-        <yingjoe.chen@mediatek.com>, <eddie.huang@mediatek.com>,
-        <youlin.pei@mediatek.com>, <yt.shen@mediatek.com>,
-        <jianjun.wang@mediatek.com>, <yong.wu@mediatek.com>
-Date:   Thu, 18 Oct 2018 09:26:24 +0800
-In-Reply-To: <20181017151954.GA9374@e107981-ln.cambridge.arm.com>
-References: <1539590940-13355-1-git-send-email-honghui.zhang@mediatek.com>
-         <20181017151954.GA9374@e107981-ln.cambridge.arm.com>
-Content-Type: text/plain; charset="UTF-8"
-X-Mailer: Evolution 3.2.3-0ubuntu6 
-Content-Transfer-Encoding: 7bit
+        <ryder.lee@mediatek.com>, <lorenzo.pieralisi@arm.com>
+CC:     <linux-kernel@vger.kernel.org>, <youlin.pei@mediatek.com>,
+        <yt.shen@mediatek.com>, <jianjun.wang@mediatek.com>,
+        Honghui Zhang <honghui.zhang@mediatek.com>
+Subject: [PATCH] PCI: mediatek: Use devm_of_pci_get_host_bridge_resources() to parse DT
+Date:   Thu, 18 Oct 2018 11:23:34 +0800
+Message-ID: <1539833014-1738-1-git-send-email-honghui.zhang@mediatek.com>
+X-Mailer: git-send-email 2.6.4
 MIME-Version: 1.0
+Content-Type: text/plain
+X-TM-SNTS-SMTP: 02CCF5676C0ADB95BC049CEC9A168FAC163EAFCA2F550AC4B8C205C5D51D42F12000:8
 X-MTK:  N
 Sender: linux-pci-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-On Wed, 2018-10-17 at 16:19 +0100, Lorenzo Pieralisi wrote:
-> On Mon, Oct 15, 2018 at 04:08:51PM +0800, honghui.zhang@mediatek.com wrote:
-> > From: Honghui Zhang <honghui.zhang@mediatek.com>
-> > 
-> > This patchset includes misc patchs:
-> > 
-> > The patch 1 fixup the mtk_pcie_find_port logic which will cause system
-> > could not touch the EP's configuration space that connected to PCIe slot 1.
-> > 
-> > The patch 2 fixup the class type for MT7622.
-> > The patch 6 fixup the enable msi logic, the operation to enable MSI
-> > should be after system clock is enabled. Call mtk_pcie_enable_msi in
-> > mtk_pcie_startup_port_v2 since the clock was all enabled at that time.
-> > 
-> > The patch 7 was rebased and refactor of the v4 patch[1], changes are:
-> >  -Add PM support for MT7622.
-> >  -Using mtk_pcie_enable_port to re-establish the link when resumed.
-> >  -Rebased on this patchset.
-> > 
-> > The patch 9 add loadable kernel module support.
-> > 
-> > [1] https://patchwork.kernel.org/patch/10479079
-> 
-> I have pushed out (after basically rewriting all commit logs and
-> squashing two patches) this version of the patchset to my pci/mediatek
-> branch for v4.20, keeping in mind that you must follow-up with Bjorn on
-> this patch:
+From: Honghui Zhang <honghui.zhang@mediatek.com>
 
-Thanks for your great help with this serial.
+Use the devm_of_pci_get_host_bridge_resources() API in place of the PCI OF
+DT parser.
 
-> 
-> https://patchwork.ozlabs.org/patch/984668/
-> 
-> that we shall still consider for v4.21.
-> 
-> Lorenzo
-> 
-> > Change since v7:
-> >  - Add Acked-by tags from Ryder Lee.
-> >  - Add Fix tags for patch 2(Fix calss type for MT7622 as PCI_CLASS_BRIDGE_PCI)
-> >    and patch 6(Fixup enable MSI logic by enable MSI after clock enabled)
-> > 
-> > Change since v6:
-> >  - Remove the pci_unmap_iospace when remove the device since the
-> >    devm_pci_remap_iospace is an devm_ version.
-> >  - Commit message changed for patch 2(Fix class type for MT7622 as PCI_CLASS_BRIDGE_PCI).
-> >  - Capitilizing "MSI" and "PM" in the patch title.
-> > 
-> > Change since v5:
-> >  - A bit improvement of mtk_pcie_find_port suggest by Lorenzo.
-> >    MSI after clock enabled).
-> >  - Add Acked-by tags from Ryder.
-> > 
-> > Change since v4:
-> >  - Add patch 2 to fixup class type for MT7622.
-> >  - Add patch 3 to remove the redundant dev->pm_domain check
-> >  - Add patch 4 to covert to use pci_host_probe
-> >  - Add patch 5 to re-arrange the function define, this is a prepare patch for
-> >    fixup the enable_msi logic, no functional changed have been made by this one.
-> >  - Add patch 8 to save the GIC IRQ in mtk_pcie_port as a prepare patch for tear
-> >    down the irq when remove the kernel module.
-> >  - Re-arrange the find_port flow suggest by Lorenzo to make the code parse easier
-> >    for the patch 1.
-> >  - Remove the .pm_support in mtk_pcie_soc in patch 7 since if system pm was not
-> >    supported, then those pm callbacks will never be executed for MT7622. So the
-> >    .pm_support is not needed.
-> > 
-> > Change since v3:
-> >  - Remove pm_runtime_XXX ops in suspend and resume callbacks in the third patch.
-> >  - Rebase to 4.19-rc1.
-> > 
-> > Change since v2:
-> >  - Fix the list_for_each_entry_safe parameter error.
-> >  - Add Ryder's Acked-by flag.
-> > 
-> > Change since v1:
-> >  - A bit of code refact of the first patch suggested by Andy Shevchenko, and
-> >    commit message updated.
-> > 
-> > Honghui Zhang (9):
-> >   PCI: mediatek: Using slot's devfn for compare to fix
-> >     mtk_pcie_find_port logic
-> >   PCI: mediatek: Fix class type for MT7622 as PCI_CLASS_BRIDGE_PCI
-> >   PCI: mediatek: Remove the redundant dev->pm_domain check
-> >   PCI: mediatek: Convert to use pci_host_probe()
-> >   PCI: mediatek: Move the mtk_pcie_startup_port_v2 function's define
-> >     after mtk_pcie_setup_irq
-> >   PCI: mediatek: Fixup enable MSI logic by enable MSI after clock
-> >     enabled
-> >   PCI: mediatek: Add system PM support for MT2712 and MT7622
-> >   PCI: mediatek: Save the GIC IRQ in mtk_pcie_port
-> >   PCI: mediatek: Add loadable kernel module support
-> > 
-> >  drivers/pci/controller/Kconfig         |   2 +-
-> >  drivers/pci/controller/pcie-mediatek.c | 319 +++++++++++++++++++++------------
-> >  2 files changed, 204 insertions(+), 117 deletions(-)
-> > 
-> > -- 
-> > 2.6.4
-> > 
+Signed-off-by: Honghui Zhang <honghui.zhang@mediatek.com>
+---
+ drivers/pci/controller/pcie-mediatek.c | 109 +++++++++------------------------
+ 1 file changed, 29 insertions(+), 80 deletions(-)
 
+diff --git a/drivers/pci/controller/pcie-mediatek.c b/drivers/pci/controller/pcie-mediatek.c
+index 2a1f97c..6632d4e 100644
+--- a/drivers/pci/controller/pcie-mediatek.c
++++ b/drivers/pci/controller/pcie-mediatek.c
+@@ -197,29 +197,20 @@ struct mtk_pcie_port {
+  * @dev: pointer to PCIe device
+  * @base: IO mapped register base
+  * @free_ck: free-run reference clock
+- * @io: IO resource
+- * @pio: PIO resource
+  * @mem: non-prefetchable memory resource
+- * @busn: bus range
+- * @offset: IO / Memory offset
+  * @ports: pointer to PCIe port information
+  * @soc: pointer to SoC-dependent operations
++ * @busnr: root bus number
+  */
+ struct mtk_pcie {
+ 	struct device *dev;
+ 	void __iomem *base;
+ 	struct clk *free_ck;
+ 
+-	struct resource io;
+-	struct resource pio;
+ 	struct resource mem;
+-	struct resource busn;
+-	struct {
+-		resource_size_t mem;
+-		resource_size_t io;
+-	} offset;
+ 	struct list_head ports;
+ 	const struct mtk_pcie_soc *soc;
++	int busnr;
+ };
+ 
+ static void mtk_pcie_subsys_powerdown(struct mtk_pcie *pcie)
+@@ -1045,55 +1036,42 @@ static int mtk_pcie_setup(struct mtk_pcie *pcie)
+ {
+ 	struct device *dev = pcie->dev;
+ 	struct device_node *node = dev->of_node, *child;
+-	struct of_pci_range_parser parser;
+-	struct of_pci_range range;
+-	struct resource res;
+ 	struct mtk_pcie_port *port, *tmp;
++	struct pci_host_bridge *host = pci_host_bridge_from_priv(pcie);
++	struct list_head *windows = &host->windows;
++	struct resource_entry *win, *tmp_win;
++	resource_size_t io_base;
+ 	int err;
+ 
+-	if (of_pci_range_parser_init(&parser, node)) {
+-		dev_err(dev, "missing \"ranges\" property\n");
+-		return -EINVAL;
+-	}
++	err = devm_of_pci_get_host_bridge_resources(dev, 0, 0xff,
++						    windows, &io_base);
++	if (err)
++		return err;
+ 
+-	for_each_of_pci_range(&parser, &range) {
+-		err = of_pci_range_to_resource(&range, node, &res);
+-		if (err < 0)
+-			return err;
++	err = devm_request_pci_bus_resources(dev, windows);
++	if (err < 0)
++		return err;
+ 
+-		switch (res.flags & IORESOURCE_TYPE_BITS) {
++	/* Get the I/O and memory ranges from DT */
++	resource_list_for_each_entry_safe(win, tmp_win, windows) {
++		switch (resource_type(win->res)) {
+ 		case IORESOURCE_IO:
+-			pcie->offset.io = res.start - range.pci_addr;
+-
+-			memcpy(&pcie->pio, &res, sizeof(res));
+-			pcie->pio.name = node->full_name;
+-
+-			pcie->io.start = range.cpu_addr;
+-			pcie->io.end = range.cpu_addr + range.size - 1;
+-			pcie->io.flags = IORESOURCE_MEM;
+-			pcie->io.name = "I/O";
+-
+-			memcpy(&res, &pcie->io, sizeof(res));
+-			break;
+-
++			err = devm_pci_remap_iospace(dev, win->res, io_base);
++			if (err) {
++				dev_warn(dev, "error %d: failed to map resource %pR\n",
++					 err, win->res);
++				resource_list_destroy_entry(win);
++			}
+ 		case IORESOURCE_MEM:
+-			pcie->offset.mem = res.start - range.pci_addr;
+-
+-			memcpy(&pcie->mem, &res, sizeof(res));
++			memcpy(&pcie->mem, win->res, sizeof(*win->res));
+ 			pcie->mem.name = "non-prefetchable";
+ 			break;
++		case IORESOURCE_BUS:
++			pcie->busnr = win->res->start;
++			break;
+ 		}
+ 	}
+ 
+-	err = of_pci_parse_bus_range(node, &pcie->busn);
+-	if (err < 0) {
+-		dev_err(dev, "failed to parse bus ranges property: %d\n", err);
+-		pcie->busn.name = node->name;
+-		pcie->busn.start = 0;
+-		pcie->busn.end = 0xff;
+-		pcie->busn.flags = IORESOURCE_BUS;
+-	}
+-
+ 	for_each_available_child_of_node(node, child) {
+ 		int slot;
+ 
+@@ -1125,28 +1103,6 @@ static int mtk_pcie_setup(struct mtk_pcie *pcie)
+ 	return 0;
+ }
+ 
+-static int mtk_pcie_request_resources(struct mtk_pcie *pcie)
+-{
+-	struct pci_host_bridge *host = pci_host_bridge_from_priv(pcie);
+-	struct list_head *windows = &host->windows;
+-	struct device *dev = pcie->dev;
+-	int err;
+-
+-	pci_add_resource_offset(windows, &pcie->pio, pcie->offset.io);
+-	pci_add_resource_offset(windows, &pcie->mem, pcie->offset.mem);
+-	pci_add_resource(windows, &pcie->busn);
+-
+-	err = devm_request_pci_bus_resources(dev, windows);
+-	if (err < 0)
+-		return err;
+-
+-	err = devm_pci_remap_iospace(dev, &pcie->pio, pcie->io.start);
+-	if (err < 0)
+-		return err;
+-
+-	return 0;
+-}
+-
+ static int mtk_pcie_probe(struct platform_device *pdev)
+ {
+ 	struct device *dev = &pdev->dev;
+@@ -1169,11 +1125,7 @@ static int mtk_pcie_probe(struct platform_device *pdev)
+ 	if (err)
+ 		return err;
+ 
+-	err = mtk_pcie_request_resources(pcie);
+-	if (err)
+-		goto put_resources;
+-
+-	host->busnr = pcie->busn.start;
++	host->busnr = pcie->busnr;
+ 	host->dev.parent = pcie->dev;
+ 	host->ops = pcie->soc->ops;
+ 	host->map_irq = of_irq_parse_and_map_pci;
+@@ -1181,12 +1133,9 @@ static int mtk_pcie_probe(struct platform_device *pdev)
+ 	host->sysdata = pcie;
+ 
+ 	err = pci_host_probe(host);
+-	if (err)
+-		goto put_resources;
+-
+-	return 0;
++	if (!err)
++		return 0;
+ 
+-put_resources:
+ 	if (!list_empty(&pcie->ports))
+ 		mtk_pcie_put_resources(pcie);
+ 
+-- 
+2.6.4
 
