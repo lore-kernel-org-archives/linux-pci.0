@@ -2,95 +2,137 @@ Return-Path: <SRS0=PAID=M6=vger.kernel.org=linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-8.2 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_PASS,URIBL_BLOCKED,
-	USER_AGENT_MUTT autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-2.3 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+	MAILING_LIST_MULTI,SPF_PASS,USER_AGENT_MUTT autolearn=ham autolearn_force=no
+	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 1FCACC5ACCC
-	for <linux-pci@archiver.kernel.org>; Thu, 18 Oct 2018 16:43:49 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 4C911C5ACCC
+	for <linux-pci@archiver.kernel.org>; Thu, 18 Oct 2018 17:17:55 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id BB4372145D
-	for <linux-pci@archiver.kernel.org>; Thu, 18 Oct 2018 16:43:48 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.3.2 mail.kernel.org BB4372145D
+	by mail.kernel.org (Postfix) with ESMTP id 08B2A2148D
+	for <linux-pci@archiver.kernel.org>; Thu, 18 Oct 2018 17:17:55 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.3.2 mail.kernel.org 08B2A2148D
 Authentication-Results: mail.kernel.org; dmarc=none (p=none dis=none) header.from=arm.com
 Authentication-Results: mail.kernel.org; spf=none smtp.mailfrom=linux-pci-owner@vger.kernel.org
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727492AbeJSApf (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Thu, 18 Oct 2018 20:45:35 -0400
-Received: from usa-sjc-mx-foss1.foss.arm.com ([217.140.101.70]:40590 "EHLO
-        foss.arm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1727402AbeJSApf (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Thu, 18 Oct 2018 20:45:35 -0400
+        id S1727391AbeJSBTt (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Thu, 18 Oct 2018 21:19:49 -0400
+Received: from foss.arm.com ([217.140.101.70]:41280 "EHLO foss.arm.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1726463AbeJSBTt (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Thu, 18 Oct 2018 21:19:49 -0400
 Received: from usa-sjc-imap-foss1.foss.arm.com (unknown [10.72.51.249])
-        by usa-sjc-mx-foss1.foss.arm.com (Postfix) with ESMTP id 17EFC341;
-        Thu, 18 Oct 2018 09:43:47 -0700 (PDT)
+        by usa-sjc-mx-foss1.foss.arm.com (Postfix) with ESMTP id 6FB93341;
+        Thu, 18 Oct 2018 10:17:53 -0700 (PDT)
 Received: from e107981-ln.cambridge.arm.com (e107981-ln.cambridge.arm.com [10.1.197.40])
-        by usa-sjc-imap-foss1.foss.arm.com (Postfix) with ESMTPSA id 2CCF03F5D3;
-        Thu, 18 Oct 2018 09:43:46 -0700 (PDT)
-Date:   Thu, 18 Oct 2018 17:43:40 +0100
+        by usa-sjc-imap-foss1.foss.arm.com (Postfix) with ESMTPSA id 603BC3F5D3;
+        Thu, 18 Oct 2018 10:17:52 -0700 (PDT)
+Date:   Thu, 18 Oct 2018 18:17:47 +0100
 From:   Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
-To:     Jon Derrick <jonathan.derrick@intel.com>
-Cc:     linux-pci@vger.kernel.org, Bjorn Helgaas <helgaas@kernel.org>,
-        Keith Busch <keith.busch@intel.com>
-Subject: Re: [PATCH 1/2] PCI/VMD: Detach resources after stopping root bus
-Message-ID: <20181018164340.GA32306@e107981-ln.cambridge.arm.com>
-References: <1539650888-3792-1-git-send-email-jonathan.derrick@intel.com>
- <1539650888-3792-2-git-send-email-jonathan.derrick@intel.com>
+To:     Thomas Petazzoni <thomas.petazzoni@bootlin.com>
+Cc:     Bjorn Helgaas <bhelgaas@google.com>,
+        Russell King <linux@arm.linux.org.uk>,
+        linux-pci@vger.kernel.org, linux-arm-kernel@lists.infradead.org
+Subject: Re: [PATCH v3 0/4] PCI: emulated PCI bridge config space
+Message-ID: <20181018171747.GA529@e107981-ln.cambridge.arm.com>
+References: <20181018153719.23115-1-thomas.petazzoni@bootlin.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <1539650888-3792-2-git-send-email-jonathan.derrick@intel.com>
+In-Reply-To: <20181018153719.23115-1-thomas.petazzoni@bootlin.com>
 User-Agent: Mutt/1.5.24 (2015-08-30)
 Sender: linux-pci-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-On Mon, Oct 15, 2018 at 06:48:07PM -0600, Jon Derrick wrote:
-> The VMD removal path calls pci_stop_root_bus, which tears down the pcie
-> tree, including detaching all of the attached drivers. During driver
-> detachment, devices may use pci_release_region to release resources.
-> This path relies on the resource being accessible in resource tree.
+On Thu, Oct 18, 2018 at 05:37:15PM +0200, Thomas Petazzoni wrote:
+> Hello,
 > 
-> By detaching the child domain from the parent resource domain prior to
-> stopping the bus, we are preventing the list traversal from finding the
-> resource to be freed. If we instead detach the resource after stopping
-> the bus, we will have properly freed the resource and detaching is
-> simply accounting at that point.
+> The pci-mvebu driver already contains some logic to emulate a root
+> port PCI bridge configuration space. It turns out that we have a
+> similar need for the pci-aardvark driver. Instead of duplicating the
+> same logic in two drivers, this patch series starts by adding a small
+> common infrastructure that helps emulate a root port PCI bridge config
+> space, converts pci-mvebu to use it, and finally extends pci-aardvark
+> to use it as well.
 > 
-> Without this order, the resource is never freed and is orphaned on VMD
-> removal, leading to warning:
-> [  181.940162] Trying to free nonexistent resource <e5a10000-e5a13fff>
+> Thanks to this, Marvell Armada 3720 based systems, which use the
+> Aarkvark PCI controller, will have better PCI support, by having a
+> root port PCI bridge exposed.
 > 
-> Fixes 2c2c5c5cd213aea38c850bb6edc9b7f77f29802f:
-> "x86/PCI: VMD: Attach VMD resources to parent domain's resource tree"
-> Signed-off-by: Jon Derrick <jonathan.derrick@intel.com>
-> ---
->  drivers/pci/controller/vmd.c | 2 +-
->  1 file changed, 1 insertion(+), 1 deletion(-)
+> The emulated PCI bridge common logic is a proposal, I very much
+> welcome comments and suggestions. Also, if you feel that adding a
+> common logic for only two drivers is too early, I'm fine with
+> duplicating a bit of code betwen pci-mvebu and pci-aardvark.
+> 
+> Changes v2 -> v3:
+> 
+>  - Address the FIXME comment that was pointed out by Russell. In fact
+>    the |= pcie_devctl was not needed, because pcie_devctl is always
+>    zero. To fix this, an additional commit was added to the series to
+>    drop the use of unneeded fields in the PCI Express capability block
+>    emulation in pci-mvebu.
+> 
+>  - Drop some more code from pci-mvebu that was used to prevent messing
+>    up with W1C bits, because this is now already taken care of by the
+>    common bridge emulation logic.
+> 
+>  - Fixed the commit log of "PCI: mvebu: Convert to PCI emulated bridge
+>    config space" according to Lorenzo comments.
+> 
+>  - Use PCI_STD_HEADER_SIZEOF when defining PCI_BRIDGE_CONTROL, as
+>    suggested by Bjorn.
+> 
+>  - Added Bjorn Acked-by and Russell Reviewed-by on the patch adding
+>    the common logic.
+> 
+> Changes v1 -> v2:
+> 
+>  - Rebased to 4.19-rc1
+> 
+>  - The functions implementing the config space read/write emulation
+>    now have the knowledge of which registers/bits are read-only,
+>    read-write, reserved and write-1-to-clear, and behave according to
+>    this information.
+> 
+>  - I have renamed the function to use conf_read() and conf_write()
+>    suffixes, as suggested by Bjorn.
+> 
+>  - The whole thing is now named pci-bridge-emul instead of
+>    pci-sw-bridge (and of course all functions, types and macros were
+>    changed accordingly), as Bjorn wasn't happy about pci-sw-bridge.
+> 
+>  - The header file was moved into drivers/pci (instead of being in
+>    include/linux).
+> 
+> Thanks a lot in advance for your review and feedback.
+> 
+> Best regards,
+> 
+> Thomas Petazzoni
+> 
+> Thomas Petazzoni (3):
+>   PCI: Introduce PCI bridge emulated config space common logic
+>   PCI: mvebu: Drop unused PCI express capability code
+>   PCI: mvebu: Convert to PCI emulated bridge config space
+> 
+> Zachary Zhang (1):
+>   PCI: aardvark: Implement emulated root PCI bridge config space
+> 
+>  drivers/pci/Kconfig                   |   3 +
+>  drivers/pci/Makefile                  |   1 +
+>  drivers/pci/controller/Kconfig        |   2 +
+>  drivers/pci/controller/pci-aardvark.c | 129 ++++++++++-
+>  drivers/pci/controller/pci-mvebu.c    | 384 +++++++++-----------------------
+>  drivers/pci/pci-bridge-emul.c         | 408 ++++++++++++++++++++++++++++++++++
+>  drivers/pci/pci-bridge-emul.h         | 124 +++++++++++
+>  7 files changed, 764 insertions(+), 287 deletions(-)
+>  create mode 100644 drivers/pci/pci-bridge-emul.c
+>  create mode 100644 drivers/pci/pci-bridge-emul.h
 
-I have applied this patch to pci/vmd for v4.20, thanks.
+I have applied the series with Bjorn and Russell ACKs to
+pci/controller-misc, tentatively for v4.20.
 
+Thanks !
 Lorenzo
-
-> diff --git a/drivers/pci/controller/vmd.c b/drivers/pci/controller/vmd.c
-> index fd2dbd7..46ed80f 100644
-> --- a/drivers/pci/controller/vmd.c
-> +++ b/drivers/pci/controller/vmd.c
-> @@ -813,12 +813,12 @@ static void vmd_remove(struct pci_dev *dev)
->  {
->  	struct vmd_dev *vmd = pci_get_drvdata(dev);
->  
-> -	vmd_detach_resources(vmd);
->  	sysfs_remove_link(&vmd->dev->dev.kobj, "domain");
->  	pci_stop_root_bus(vmd->bus);
->  	pci_remove_root_bus(vmd->bus);
->  	vmd_cleanup_srcu(vmd);
->  	vmd_teardown_dma_ops(vmd);
-> +	vmd_detach_resources(vmd);
->  	irq_domain_remove(vmd->irq_domain);
->  }
->  
-> -- 
-> 1.8.3.1
-> 
