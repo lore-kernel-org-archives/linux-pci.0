@@ -4,151 +4,164 @@ X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 X-Spam-Level: 
 X-Spam-Status: No, score=-8.8 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
 	DKIM_VALID,DKIM_VALID_AU,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
-	SPF_PASS,URIBL_BLOCKED,USER_AGENT_MUTT autolearn=ham autolearn_force=no
-	version=3.4.0
+	SPF_PASS,URIBL_BLOCKED,USER_AGENT_MUTT autolearn=unavailable
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 8ABF3C67863
-	for <linux-pci@archiver.kernel.org>; Thu, 18 Oct 2018 21:25:17 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 175CDC67863
+	for <linux-pci@archiver.kernel.org>; Thu, 18 Oct 2018 22:15:49 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 4E9BB21476
-	for <linux-pci@archiver.kernel.org>; Thu, 18 Oct 2018 21:25:17 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id BFDAB21476
+	for <linux-pci@archiver.kernel.org>; Thu, 18 Oct 2018 22:15:48 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (1024-bit key) header.d=kernel.org header.i=@kernel.org header.b="c43aDONR"
-DMARC-Filter: OpenDMARC Filter v1.3.2 mail.kernel.org 4E9BB21476
+	dkim=pass (1024-bit key) header.d=kernel.org header.i=@kernel.org header.b="ZQH2cym4"
+DMARC-Filter: OpenDMARC Filter v1.3.2 mail.kernel.org BFDAB21476
 Authentication-Results: mail.kernel.org; dmarc=fail (p=none dis=none) header.from=kernel.org
 Authentication-Results: mail.kernel.org; spf=none smtp.mailfrom=linux-pci-owner@vger.kernel.org
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726627AbeJSF2K (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Fri, 19 Oct 2018 01:28:10 -0400
-Received: from mail.kernel.org ([198.145.29.99]:57774 "EHLO mail.kernel.org"
+        id S1726080AbeJSGSq (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Fri, 19 Oct 2018 02:18:46 -0400
+Received: from mail.kernel.org ([198.145.29.99]:39650 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1725735AbeJSF2K (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Fri, 19 Oct 2018 01:28:10 -0400
+        id S1725906AbeJSGSq (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Fri, 19 Oct 2018 02:18:46 -0400
 Received: from localhost (unknown [69.71.4.100])
         (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
         (No client certificate requested)
-        by mail.kernel.org (Postfix) with ESMTPSA id 3BC1020658;
-        Thu, 18 Oct 2018 21:25:15 +0000 (UTC)
+        by mail.kernel.org (Postfix) with ESMTPSA id 4C7D420866;
+        Thu, 18 Oct 2018 22:15:40 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=default; t=1539897915;
-        bh=+JJoCtYKWsMOBakdHZmyMpqet2gJwJxC1u4eCCWnhIA=;
+        s=default; t=1539900940;
+        bh=NR+HGgysltSBVqhS0cFOctXdlc9FHGSD+bYmdF6BxT4=;
         h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-        b=c43aDONRgNxGoMuqgBesw3k97bioNo2R3EL90Li9PemVjOqO9xfA0+ldmHW2C57wm
-         glbK0Oox4K/0CrbA99QfZ8Ei7K71Cro8FpNhCZsgZN+siTpzHBhiJ7A0GY0E8bX+Mp
-         vh3B8EEL5QiwvwcUUUergRQRn1xTVXSQRMSyKoIE=
-Date:   Thu, 18 Oct 2018 16:25:13 -0500
+        b=ZQH2cym47C28ItijN+0LGmTjTIBFbbBooFrtod88THeKOp2jNS2SXJr4RoTG2Dlsb
+         r7VkVPpjvrCCYekUwGr4LqDtk0ZUIqyuEf3k5wOsUw4dmxkj35naEgfYd/XuOL/6TU
+         QZVhpzkVjzl30VJBm/vOF54M+SAnfkxSBAK9Zj3w=
+Date:   Thu, 18 Oct 2018 17:15:39 -0500
 From:   Bjorn Helgaas <helgaas@kernel.org>
-To:     Jarkko Nikula <jarkko.nikula@linux.intel.com>
-Cc:     linux-pci@vger.kernel.org, linux-pm@vger.kernel.org,
-        Bjorn Helgaas <bhelgaas@google.com>,
-        "Rafael J . Wysocki" <rjw@rjwysocki.net>,
-        Mika Westerberg <mika.westerberg@linux.intel.com>,
-        Jean Delvare <jdelvare@suse.de>,
-        Wolfram Sang <wsa@the-dreams.de>, stable@vger.kernel.org
-Subject: Re: [PATCH] PCI / PM: Allow runtime PM without callback functions
-Message-ID: <20181018212513.GM5906@bhelgaas-glaptop.roam.corp.google.com>
-References: <20181018123038.21386-1-jarkko.nikula@linux.intel.com>
+To:     "Guilherme G. Piccoli" <gpiccoli@canonical.com>
+Cc:     linux-pci@vger.kernel.org, kexec@lists.infradead.org,
+        x86@kernel.org, linux-kernel@vger.kernel.org, bhelgaas@google.com,
+        dyoung@redhat.com, bhe@redhat.com, vgoyal@redhat.com,
+        tglx@linutronix.de, mingo@redhat.com, bp@alien8.de, hpa@zytor.com,
+        andi@firstfloor.org, lukas@wunner.de, billy.olsen@canonical.com,
+        cascardo@canonical.com, ddstreet@canonical.com,
+        fabiomirmar@canonical.com, gavin.guo@canonical.com,
+        jay.vosburgh@canonical.com, kernel@gpiccoli.net, mfo@canonical.com,
+        shan.gavin@linux.alibaba.com
+Subject: Re: [PATCH 1/3] x86/quirks: Scan all busses for early PCI quirks
+Message-ID: <20181018221538.GN5906@bhelgaas-glaptop.roam.corp.google.com>
+References: <20181018183721.27467-1-gpiccoli@canonical.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20181018123038.21386-1-jarkko.nikula@linux.intel.com>
+In-Reply-To: <20181018183721.27467-1-gpiccoli@canonical.com>
 User-Agent: Mutt/1.10.1 (2018-07-13)
 Sender: linux-pci-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-On Thu, Oct 18, 2018 at 03:30:38PM +0300, Jarkko Nikula wrote:
-> Allow PCI core to do runtime PM to devices without needing to use dummy
-> runtime PM callback functions if there is no need to do anything device
-> specific beyond PCI device power state management.
+On Thu, Oct 18, 2018 at 03:37:19PM -0300, Guilherme G. Piccoli wrote:
+> Recently was noticed in an HP GEN9 system that kdump couldn't succeed
+> due to an irq storm coming from an Intel NIC, narrowed down to be lack
+> of clearing the MSI/MSI-X enable bits during the kdump kernel boot.
+> For that, we need an early quirk to manually turn off MSI/MSI-X for
+> PCI devices - this was worked as an optional boot parameter in a
+> subsequent patch.
 > 
-> Implement this by letting core to change device power state during
-> runtime PM transitions even if no callback functions are defined.
+> Problem is that in our test system, the Intel NICs were not present in
+> any secondary bus under the first PCIe root complex, so they couldn't
+> be reached by the recursion in check_dev_quirk(). Modern systems,
+> specially with multi-processors and multiple NUMA nodes expose multiple
+> root complexes, describing more than one PCI hierarchy domain. Currently
+> the simple recursion present in the early-quirks code from x86 starts a
+> descending recursion from bus 0000:00, and reach many other busses by
+> navigating this hierarchy walking through the bridges. This is not
+> enough in systems with more than one root complex/host bridge, since
+> the recursion won't "traverse" to other root complexes by starting
+> statically in 0000:00 (for more details, see [0]).
 > 
-> Fixes: a9c8088c7988 ("i2c: i801: Don't restore config registers on runtime PM")
-> Reported-by: Mika Westerberg <mika.westerberg@linux.intel.com>
-> Cc: <stable@vger.kernel.org>
+> This patch hence implements the full bus/device/function scan in
+> early_quirks(), by checking all possible busses instead of using a
+> recursion based on the first root bus or limiting the search scope to
+> the first 32 busses (like it was done in the beginning [1]).
 
-I applied this with Rafael's reviewed-by to pci/misc for v4.20,
-thanks!
+I don't want to expand the early quirk infrastructure unless there is
+absolutely no other way to solve this.  The early quirk stuff is
+x86-specific, and it's not obvious that this problem is x86-only.
 
-But I dropped the stable tag because if I understand correctly, the
-point of this is to avoid the need for SIMPLE_DEV_PM_OPS() in drivers
-that don't need to do anything for PM.
+This patch scans buses 0-255, but still only in domain 0, so it won't
+help with even more complicated systems that use other domains.
 
-That's worthwhile, but it's not transparently obvious that it would
-qualify for a stable backport based on this:
+I'm not an IRQ expert, but it seems wrong to me that we are enabling
+this interrupt before we're ready for it.  The MSI should target an
+IOAPIC.  Can't that IOAPIC entry be masked until later?  I guess the
+kdump kernel doesn't know what MSI address the device might be using.
 
-  https://git.kernel.org/cgit/linux/kernel/git/torvalds/linux.git/tree/Documentation/process/stable-kernel-rules.rst
+Could the IRQ core be more tolerant of this somehow, e.g., if it
+notices incoming interrupts with no handler, could it disable the
+IOAPIC entry and fall back to polling periodically until a handler is
+added?
 
-If there's an argument for adding a stable tag, I'll add it , but that
-justification should be explicit in the changelog.
-
-> Signed-off-by: Jarkko Nikula <jarkko.nikula@linux.intel.com>
+> [0] https://bugs.launchpad.net/bugs/1797990
+> 
+> [1] From historical perspective, early PCI scan dates back
+> to BitKeeper, added by Andi Kleen's "[PATCH] APIC fixes for x86-64",
+> on October/2003. It initially restricted the search to the first
+> 32 busses and slots.
+> 
+> Due to a potential bug found in Nvidia chipsets, the scan
+> was changed to run only in the first root bus: see
+> commit 8659c406ade3 ("x86: only scan the root bus in early PCI quirks")
+> 
+> Finally, secondary busses reachable from the 1st bus were re-added back by:
+> commit 850c321027c2 ("x86/quirks: Reintroduce scanning of secondary buses")
+> 
+> Reported-by: Dan Streetman <ddstreet@canonical.com>
+> Signed-off-by: Guilherme G. Piccoli <gpiccoli@canonical.com>
 > ---
-> This is related to my i2c-i801.c fix thread back in June which I completely
-> forgot till now: https://lkml.org/lkml/2018/6/27/642
-> Discussion back then was that it should be handled in the PCI PM instead
-> of having dummy functions in the drivers. I wanted to respin with a
-> patch.
-> ---
->  drivers/pci/pci-driver.c | 16 ++++++----------
->  1 file changed, 6 insertions(+), 10 deletions(-)
+>  arch/x86/kernel/early-quirks.c | 13 ++++++-------
+>  1 file changed, 6 insertions(+), 7 deletions(-)
 > 
-> diff --git a/drivers/pci/pci-driver.c b/drivers/pci/pci-driver.c
-> index bef17c3fca67..6185b878ede1 100644
-> --- a/drivers/pci/pci-driver.c
-> +++ b/drivers/pci/pci-driver.c
-> @@ -1239,7 +1239,7 @@ static int pci_pm_runtime_suspend(struct device *dev)
->  	struct pci_dev *pci_dev = to_pci_dev(dev);
->  	const struct dev_pm_ops *pm = dev->driver ? dev->driver->pm : NULL;
->  	pci_power_t prev = pci_dev->current_state;
-> -	int error;
-> +	int error = 0;
+> diff --git a/arch/x86/kernel/early-quirks.c b/arch/x86/kernel/early-quirks.c
+> index 50d5848bf22e..fd50f9e21623 100644
+> --- a/arch/x86/kernel/early-quirks.c
+> +++ b/arch/x86/kernel/early-quirks.c
+> @@ -731,7 +731,6 @@ static int __init check_dev_quirk(int num, int slot, int func)
+>  	u16 vendor;
+>  	u16 device;
+>  	u8 type;
+> -	u8 sec;
+>  	int i;
 >  
->  	/*
->  	 * If pci_dev->driver is not set (unbound), we leave the device in D0,
-> @@ -1251,11 +1251,9 @@ static int pci_pm_runtime_suspend(struct device *dev)
->  		return 0;
->  	}
+>  	class = read_pci_config_16(num, slot, func, PCI_CLASS_DEVICE);
+> @@ -760,11 +759,8 @@ static int __init check_dev_quirk(int num, int slot, int func)
+>  	type = read_pci_config_byte(num, slot, func,
+>  				    PCI_HEADER_TYPE);
 >  
-> -	if (!pm || !pm->runtime_suspend)
-> -		return -ENOSYS;
-> -
->  	pci_dev->state_saved = false;
-> -	error = pm->runtime_suspend(dev);
-> +	if (pm && pm->runtime_suspend)
-> +		error = pm->runtime_suspend(dev);
->  	if (error) {
->  		/*
->  		 * -EBUSY and -EAGAIN is used to request the runtime PM core
-> @@ -1292,7 +1290,7 @@ static int pci_pm_runtime_suspend(struct device *dev)
+> -	if ((type & 0x7f) == PCI_HEADER_TYPE_BRIDGE) {
+> -		sec = read_pci_config_byte(num, slot, func, PCI_SECONDARY_BUS);
+> -		if (sec > num)
+> -			early_pci_scan_bus(sec);
+> -	}
+> +	if ((type & 0x7f) == PCI_HEADER_TYPE_BRIDGE)
+> +		return -1;
 >  
->  static int pci_pm_runtime_resume(struct device *dev)
+>  	if (!(type & 0x80))
+>  		return -1;
+> @@ -787,8 +783,11 @@ static void __init early_pci_scan_bus(int bus)
+>  
+>  void __init early_quirks(void)
 >  {
-> -	int rc;
-> +	int rc = 0;
->  	struct pci_dev *pci_dev = to_pci_dev(dev);
->  	const struct dev_pm_ops *pm = dev->driver ? dev->driver->pm : NULL;
+> +	int bus;
+> +
+>  	if (!early_pci_allowed())
+>  		return;
 >  
-> @@ -1306,14 +1304,12 @@ static int pci_pm_runtime_resume(struct device *dev)
->  	if (!pci_dev->driver)
->  		return 0;
->  
-> -	if (!pm || !pm->runtime_resume)
-> -		return -ENOSYS;
-> -
->  	pci_fixup_device(pci_fixup_resume_early, pci_dev);
->  	pci_enable_wake(pci_dev, PCI_D0, false);
->  	pci_fixup_device(pci_fixup_resume, pci_dev);
->  
-> -	rc = pm->runtime_resume(dev);
-> +	if (pm && pm->runtime_resume)
-> +		rc = pm->runtime_resume(dev);
->  
->  	pci_dev->runtime_d3cold = false;
->  
+> -	early_pci_scan_bus(0);
+> +	for (bus = 0; bus < 256; bus++)
+> +		early_pci_scan_bus(bus);
+>  }
 > -- 
-> 2.19.1
+> 2.19.0
 > 
