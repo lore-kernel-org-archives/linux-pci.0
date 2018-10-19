@@ -2,69 +2,125 @@ Return-Path: <SRS0=b7f5=M7=vger.kernel.org=linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-1.3 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,MAILING_LIST_MULTI,SPF_PASS autolearn=ham
-	autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-3.8 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
+	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_PASS,
+	URIBL_BLOCKED autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id C52C1C67863
-	for <linux-pci@archiver.kernel.org>; Fri, 19 Oct 2018 03:28:51 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 60608ECDE3D
+	for <linux-pci@archiver.kernel.org>; Fri, 19 Oct 2018 04:47:35 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 746F121476
-	for <linux-pci@archiver.kernel.org>; Fri, 19 Oct 2018 03:28:51 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id E203D21476
+	for <linux-pci@archiver.kernel.org>; Fri, 19 Oct 2018 04:47:34 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (1024-bit key) header.d=kernel.org header.i=@kernel.org header.b="mXREp/i1"
-DMARC-Filter: OpenDMARC Filter v1.3.2 mail.kernel.org 746F121476
-Authentication-Results: mail.kernel.org; dmarc=fail (p=none dis=none) header.from=kernel.org
+	dkim=pass (2048-bit key) header.d=nifty.com header.i=@nifty.com header.b="VXRplUIK"
+DMARC-Filter: OpenDMARC Filter v1.3.2 mail.kernel.org E203D21476
+Authentication-Results: mail.kernel.org; dmarc=none (p=none dis=none) header.from=socionext.com
 Authentication-Results: mail.kernel.org; spf=none smtp.mailfrom=linux-pci-owner@vger.kernel.org
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726566AbeJSLc6 (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Fri, 19 Oct 2018 07:32:58 -0400
-Received: from mail.kernel.org ([198.145.29.99]:53362 "EHLO mail.kernel.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1726562AbeJSLc6 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Fri, 19 Oct 2018 07:32:58 -0400
-Received: from [192.168.0.107] (cpe-174-109-247-98.nc.res.rr.com [174.109.247.98])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
-        (No client certificate requested)
-        by mail.kernel.org (Postfix) with ESMTPSA id CAD9B2145D;
-        Fri, 19 Oct 2018 03:28:49 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=default; t=1539919730;
-        bh=OB62rxdxQm0Y7Ofds9NeFMQmZBpbtEoN/rn5SDJS2iw=;
-        h=Subject:To:Cc:References:From:Date:In-Reply-To:From;
-        b=mXREp/i1gHf9g0Yo0ZIvck6kddxIcOHVZqIxv0bM13DhKUgbi5oRsErmQpBBjACUM
-         ZCrQ9ncvvcuU2HOHRbr2/etGtYZh7kNMHN4KjSYVJOT9YO8YCmzODxEhCjkogy7GQ9
-         4OIhn+teiDU9IpQXSKZPmiKOB/KcKChtubkU45qo=
-Subject: Re: [RFC PATCH v1 2/3] PCI: Add options to pci_reset_function
-To:     linux-pci@vger.kernel.org
-Cc:     Bjorn Helgaas <bhelgaas@google.com>
-References: <20181019032345.5791-1-okaya@kernel.org>
- <20181019032345.5791-2-okaya@kernel.org>
-From:   Sinan Kaya <okaya@kernel.org>
-Message-ID: <c2cb7954-5647-1659-b2d4-5015066d815c@kernel.org>
-Date:   Thu, 18 Oct 2018 23:28:46 -0400
-User-Agent: Mozilla/5.0 (Windows NT 10.0; WOW64; rv:52.0) Gecko/20100101
- Thunderbird/52.9.1
+        id S1727116AbeJSMvx (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Fri, 19 Oct 2018 08:51:53 -0400
+Received: from conssluserg-02.nifty.com ([210.131.2.81]:54322 "EHLO
+        conssluserg-02.nifty.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726542AbeJSMvw (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Fri, 19 Oct 2018 08:51:52 -0400
+Received: from mail-ua1-f51.google.com (mail-ua1-f51.google.com [209.85.222.51]) (authenticated)
+        by conssluserg-02.nifty.com with ESMTP id w9J4lRr6029379;
+        Fri, 19 Oct 2018 13:47:27 +0900
+DKIM-Filter: OpenDKIM Filter v2.10.3 conssluserg-02.nifty.com w9J4lRr6029379
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=nifty.com;
+        s=dec2015msa; t=1539924448;
+        bh=pK2P6jmLONh9Q8yuFfp8pJzDg/VUeqpoMwtgB6qewdU=;
+        h=References:In-Reply-To:From:Date:Subject:To:Cc:From;
+        b=VXRplUIK4zb19KBicxRtcRRptdwGB88HNVJs7XAfXOS+mE5eub90QsnIu4jGqcSeI
+         RO9XdT02maCQ4q1uEbkzB2weLY1NKYLedai3GTyYCSHDkZptXzir5sbcnB1JawQrA1
+         I2OVevpgcU4pk576e/a7aYP5NXc7B/9aWSHdHgoFPRQwLib8xniJIKH978gJS79ZMs
+         o8gQOaI4CxNcSgAnrnJ1HVvSUqe0bNb4Cac78S0tO9q6Y2KWDfRUPa9HQAuwX1soqn
+         FCNQSC4014J/UWpYchXd3GbAffyQGatGLXYOam8qpO8VqmPbOZ2rvbT+Ft0DmPyxYf
+         3lZDAgHofK8Qg==
+X-Nifty-SrcIP: [209.85.222.51]
+Received: by mail-ua1-f51.google.com with SMTP id c89so7001444uac.10;
+        Thu, 18 Oct 2018 21:47:27 -0700 (PDT)
+X-Gm-Message-State: ABuFfojwwrSbPKz/tb07SAyX3yc2yI5ElqNgVr7+D0uSazl/hqAZRAJO
+        OA5yXQQi9w7VrrSjhm0J+rrc55FPVYkrFrpf6F0=
+X-Google-Smtp-Source: ACcGV63egybwc1VmwifyaWlL2Zohv2AYGtaS9ZfusuGtk4VPWN4ujFUTPB8/gWTYJ0GCetxJ8P+DKV/+RIQmG6bohGY=
+X-Received: by 2002:ab0:4e8b:: with SMTP id l11mr15202740uah.93.1539924446735;
+ Thu, 18 Oct 2018 21:47:26 -0700 (PDT)
 MIME-Version: 1.0
-In-Reply-To: <20181019032345.5791-2-okaya@kernel.org>
-Content-Type: text/plain; charset=utf-8; format=flowed
-Content-Language: en-US
-Content-Transfer-Encoding: 7bit
+References: <20181017080201.10866-1-hch@lst.de> <20181017080201.10866-8-hch@lst.de>
+In-Reply-To: <20181017080201.10866-8-hch@lst.de>
+From:   Masahiro Yamada <yamada.masahiro@socionext.com>
+Date:   Fri, 19 Oct 2018 13:46:50 +0900
+X-Gmail-Original-Message-ID: <CAK7LNAT0pzpMZC+X5KiofPCUH89hr716WCKQkNYronQa3byT9w@mail.gmail.com>
+Message-ID: <CAK7LNAT0pzpMZC+X5KiofPCUH89hr716WCKQkNYronQa3byT9w@mail.gmail.com>
+Subject: Re: [PATCH 7/8] eisa: consolidate EISA Kconfig entry in drivers/eisa
+To:     Christoph Hellwig <hch@lst.de>
+Cc:     mporter@kernel.crashing.org, Alex Bounine <alex.bou9@gmail.com>,
+        Dominik Brodowski <linux@dominikbrodowski.net>,
+        Linux Kbuild mailing list <linux-kbuild@vger.kernel.org>,
+        linux-pci@vger.kernel.org, linux-scsi <linux-scsi@vger.kernel.org>,
+        linux-arch <linux-arch@vger.kernel.org>,
+        Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
+        linuxppc-dev <linuxppc-dev@lists.ozlabs.org>
+Content-Type: text/plain; charset="UTF-8"
 Sender: linux-pci-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-On 10/18/2018 11:23 PM, Sinan Kaya wrote:
-> Getting ready to deprecate pci_reset_function_locked(). Add
-> saverestore and locked parameters to pci_reset_function() function
-> and add saverestore = true and locked = false to all existing
-> callers.
+On Wed, Oct 17, 2018 at 5:03 PM Christoph Hellwig <hch@lst.de> wrote:
+>
+> Let architectures opt into EISA support by selecting HAS_EISA and
+> handle everything else in drivers/eisa.
+>
+> Signed-off-by: Christoph Hellwig <hch@lst.de>
+> Acked-by: Thomas Gleixner <tglx@linutronix.de>
+> ---
 
-I realized that I forgot to update the commit text but this is a follow up
-to this conversation per Christoph's request.
 
-https://patchwork.kernel.org/patch/10636071/
+> index 60e37b9a715d..c90a1a4d6079 100644
+> --- a/arch/arm/Kconfig
+> +++ b/arch/arm/Kconfig
+> @@ -59,6 +59,7 @@ config ARM
+>         select HAVE_ARCH_TRACEHOOK
+>         select HAVE_ARM_SMCCC if CPU_V7
+>         select HAVE_EBPF_JIT if !CPU_ENDIAN_BE32
+> +       select HAVE_EISA
 
-Since Alex didn't like the idea much, I also split the API reduction work
-out of the original reset API refactoring work and sent as an RFC.
+I doubt this.
+
+arch/arm/Kconfig previously did not include
+driver/eisa/Kconfig.
+
+No ARM platform enabled CONFIG_EISA either.
+
+
+>         select HAVE_CONTEXT_TRACKING
+>         select HAVE_C_RECORDMCOUNT
+>         select HAVE_DEBUG_KMEMLEAK
+> @@ -162,21 +163,6 @@ config HAVE_PROC_CPU
+>  config NO_IOPORT_MAP
+>         bool
+>
+> -config EISA
+> -       bool
+> -       ---help---
+> -         The Extended Industry Standard Architecture (EISA) bus was
+> -         developed as an open alternative to the IBM MicroChannel bus.
+> -
+> -         The EISA bus provided some of the features of the IBM MicroChannel
+> -         bus while maintaining backward compatibility with cards made for
+> -         the older ISA bus.  The EISA bus saw limited use between 1988 and
+> -         1995 when it was made obsolete by the PCI bus.
+> -
+> -         Say Y here if you are building a kernel for an EISA-based machine.
+> -
+> -         Otherwise, say N.
+> -
+>  config SBUS
+>         bool
+>
+
+
+-- 
+Best Regards
+Masahiro Yamada
