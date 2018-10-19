@@ -2,90 +2,112 @@ Return-Path: <SRS0=b7f5=M7=vger.kernel.org=linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-4.2 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_PASS
-	autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-2.3 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+	MAILING_LIST_MULTI,SPF_PASS,USER_AGENT_MUTT autolearn=ham autolearn_force=no
+	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 66FD1ECDE43
-	for <linux-pci@archiver.kernel.org>; Fri, 19 Oct 2018 13:45:59 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 5A961ECDE3D
+	for <linux-pci@archiver.kernel.org>; Fri, 19 Oct 2018 15:01:07 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 2D2D321479
-	for <linux-pci@archiver.kernel.org>; Fri, 19 Oct 2018 13:45:59 +0000 (UTC)
-Authentication-Results: mail.kernel.org;
-	dkim=pass (1024-bit key) header.d=kernel.org header.i=@kernel.org header.b="x2BMd72B"
-DMARC-Filter: OpenDMARC Filter v1.3.2 mail.kernel.org 2D2D321479
-Authentication-Results: mail.kernel.org; dmarc=fail (p=none dis=none) header.from=kernel.org
+	by mail.kernel.org (Postfix) with ESMTP id 0BC282083A
+	for <linux-pci@archiver.kernel.org>; Fri, 19 Oct 2018 15:01:06 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.3.2 mail.kernel.org 0BC282083A
+Authentication-Results: mail.kernel.org; dmarc=fail (p=none dis=none) header.from=intel.com
 Authentication-Results: mail.kernel.org; spf=none smtp.mailfrom=linux-pci-owner@vger.kernel.org
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727384AbeJSVwK (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Fri, 19 Oct 2018 17:52:10 -0400
-Received: from mail.kernel.org ([198.145.29.99]:47404 "EHLO mail.kernel.org"
+        id S1727243AbeJSXHe (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Fri, 19 Oct 2018 19:07:34 -0400
+Received: from mga17.intel.com ([192.55.52.151]:8316 "EHLO mga17.intel.com"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1727315AbeJSVwK (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Fri, 19 Oct 2018 17:52:10 -0400
-Received: from [192.168.0.107] (cpe-174-109-247-98.nc.res.rr.com [174.109.247.98])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
-        (No client certificate requested)
-        by mail.kernel.org (Postfix) with ESMTPSA id 6527B21476;
-        Fri, 19 Oct 2018 13:45:56 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=default; t=1539956757;
-        bh=WPLOG6i3VROfmKs0UnIYQQvHMsZxD2TC/rwj46NZh08=;
-        h=Subject:To:Cc:References:From:Date:In-Reply-To:From;
-        b=x2BMd72BaADAJvED9vAPffZexj66cnvH+QG9xcCO1Qrs6MM7ZVGYgfrqBcxiWudGl
-         Y73meI8T0tL5UlIOEAxda1d63sbypX0SbJ5+4fOY/Akc6xrT0BALPp++eewn6AyEDG
-         K01uRzMOt0X4+aEU8CAFbV71whpZ7Zsj+G6joXoA=
-Subject: Re: [RFC PATCH v1 3/3] PCI: Hide pci_reset_function_locked()
-To:     Juergen Gross <jgross@suse.com>, linux-pci@vger.kernel.org
-Cc:     Mike Marciniszyn <mike.marciniszyn@intel.com>,
-        Dennis Dalessandro <dennis.dalessandro@intel.com>,
-        Doug Ledford <dledford@redhat.com>,
-        Jason Gunthorpe <jgg@ziepe.ca>,
-        Derek Chickles <derek.chickles@caviumnetworks.com>,
-        Satanand Burla <satananda.burla@caviumnetworks.com>,
-        Felix Manlunas <felix.manlunas@caviumnetworks.com>,
-        Raghu Vatsavayi <raghu.vatsavayi@caviumnetworks.com>,
-        "David S. Miller" <davem@davemloft.net>,
-        Bjorn Helgaas <bhelgaas@google.com>,
-        Boris Ostrovsky <boris.ostrovsky@oracle.com>,
-        Jia-Ju Bai <baijiaju1990@gmail.com>
-References: <20181019032345.5791-1-okaya@kernel.org>
- <20181019032345.5791-3-okaya@kernel.org>
- <ed64acac-cfc2-6b19-20c1-ce648cd7a073@suse.com>
-From:   Sinan Kaya <okaya@kernel.org>
-Message-ID: <1db7e078-9eb0-7282-f853-e084f4845523@kernel.org>
-Date:   Fri, 19 Oct 2018 09:45:55 -0400
-User-Agent: Mozilla/5.0 (Windows NT 10.0; WOW64; rv:52.0) Gecko/20100101
- Thunderbird/52.9.1
+        id S1726664AbeJSXHe (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Fri, 19 Oct 2018 19:07:34 -0400
+X-Amp-Result: UNKNOWN
+X-Amp-Original-Verdict: FILE UNKNOWN
+X-Amp-File-Uploaded: False
+Received: from orsmga001.jf.intel.com ([10.7.209.18])
+  by fmsmga107.fm.intel.com with ESMTP/TLS/DHE-RSA-AES256-GCM-SHA384; 19 Oct 2018 08:01:05 -0700
+X-ExtLoop1: 1
+X-IronPort-AV: E=Sophos;i="5.54,400,1534834800"; 
+   d="scan'208";a="100889079"
+Received: from unknown (HELO localhost.localdomain) ([10.232.112.69])
+  by orsmga001.jf.intel.com with ESMTP; 19 Oct 2018 08:01:04 -0700
+Date:   Fri, 19 Oct 2018 08:58:20 -0600
+From:   Keith Busch <keith.busch@intel.com>
+To:     Bjorn Helgaas <helgaas@kernel.org>
+Cc:     Jon Derrick <jonathan.derrick@intel.com>,
+        Dongdong Liu <liudongdong3@huawei.com>,
+        Sinan Kaya <okaya@kernel.org>,
+        Oza Pawandeep <poza@codeaurora.org>,
+        Matthew Wilcox <willy@infradead.org>,
+        Lukas Wunner <lukas@wunner.de>, Christoph Hellwig <hch@lst.de>,
+        Mika Westerberg <mika.westerberg@linux.intel.com>,
+        linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org
+Subject: Re: [PATCH v4] PCI/AER: Enable error reporting for all ports
+Message-ID: <20181019145820.GB23571@localhost.localdomain>
+References: <153989603841.78375.436243401553964151.stgit@bhelgaas-glaptop.roam.corp.google.com>
+ <20181018230312.GB23301@localhost.localdomain>
+ <20181019011135.GP5906@bhelgaas-glaptop.roam.corp.google.com>
 MIME-Version: 1.0
-In-Reply-To: <ed64acac-cfc2-6b19-20c1-ce648cd7a073@suse.com>
-Content-Type: text/plain; charset=utf-8; format=flowed
-Content-Language: en-US
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20181019011135.GP5906@bhelgaas-glaptop.roam.corp.google.com>
+User-Agent: Mutt/1.9.1 (2017-09-22)
 Sender: linux-pci-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-On 10/19/2018 4:12 AM, Juergen Gross wrote:
-> On 19/10/2018 05:23, Sinan Kaya wrote:
->> It is time to hide pci_reset_function_locked() since pci_reset_function()
->> provides the same functionality. One less API to expose to the users.
->>
->> Signed-off-by: Sinan Kaya <okaya@kernel.org>
+On Thu, Oct 18, 2018 at 08:11:35PM -0500, Bjorn Helgaas wrote:
+> On Thu, Oct 18, 2018 at 05:03:13PM -0600, Keith Busch wrote:
+> > On Thu, Oct 18, 2018 at 03:53:58PM -0500, Bjorn Helgaas wrote:
+> > > Change the AER service driver so it binds to *all* PCIe Ports,
+> > > including Switch Upstream and Downstream Ports.  Enable AER error
+> > > reporting for all these Ports, but not for any children.
+> > 
+> > I'm looking at this again and think enabling/disabling error
+> > reporting for ports is the responsibility of the port driver, not
+> > the AER service.
 > 
-> Did you try to compile that?
+> That's an interesting idea.  Can you expand on this a little more?
+> Why is it the responsibility of the port driver?
 > 
-> You are mixing use of PCI_RESET_ALREADY_LOCKED and
-> PCI_RESET_ALREADYLOCKED, and I can't imagine both are valid.
+> Do you think pci_enable_pcie_error_reporting() shouldn't be part of
+> the AER service because it updates the Device Control register, which
+> is in the PCIe Capability, not the AER Capability?
+> 
+> What about pci_aer_clear_device_status(), which clears Device Status,
+> which is also in the PCIe Capability?
 
-You are right, I did compile. However, not all kernel options were
-enabled apparently. I should have done allyesconfig.
-
-Thanks for the heads up. I can fix it on the next rev.
-
+I was comparing how other end device driver's enable this, and they all call
+pci_enable_pcie_error_reporting() somewhere along their pci_driver->probe
+path. With that in mind, are ports special compared to end devices for this
+particular feature?
+ 
+> > The following should do the same as this patch, but without making
+> > AER driver handle non-root ports.  The report enabling/disabling
+> > functions are already stubbed for '!CONFIG_PCIE_AER' and have checks
+> > for aer_cap and firmware first.
 > 
-> 
-> Juergen
-> 
+> If we thought we should enable error reporting *always*, regardless of
+> whether the AER service is enabled, this would make perfect sense to
+> me, and I might suggest doing it in an even more generic place like
+> pci_configure_device() or pci_init_capabilities().
 
+There are unfortunately still pci_driver instances that don't implement
+the err_handler callbacks, and may cause problems if we enable error
+reporting in the device when its driver isn't capable of reacting to them.
+
+If it wasn't for that, I think it would make more sense to move this
+responsibility from drivers to the pci core.
+
+> But that doesn't seem like where you're headed.  It seems like you
+> still only want error reporting enabled when CONFIG_PCIEAR=y.  If
+> that's the case, it seems like doing it in portdrv only obfuscates the
+> connection with AER.  When CONFIG_PCIEAER is unset, the portdrv code
+> *looks* like it's doing something but it's really not because of the
+> #ifdef magic.
+
+Right, but that's no different than every other Linux pci_driver. The
+component that provides the pci_driver.err_handler should be responsible
+for requesting to enable device error reporting, and that's provided by
+the port driver, not AER.
