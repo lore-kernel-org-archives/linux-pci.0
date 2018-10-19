@@ -2,142 +2,106 @@ Return-Path: <SRS0=b7f5=M7=vger.kernel.org=linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-6.8 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
-	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
-	SPF_PASS,URIBL_BLOCKED autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-0.8 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
+	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_PASS,URIBL_BLOCKED
+	autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 6671DECDE3D
-	for <linux-pci@archiver.kernel.org>; Fri, 19 Oct 2018 12:57:28 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 8DD37ECDE3D
+	for <linux-pci@archiver.kernel.org>; Fri, 19 Oct 2018 12:59:39 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 2E15C20644
-	for <linux-pci@archiver.kernel.org>; Fri, 19 Oct 2018 12:57:28 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 5476520644
+	for <linux-pci@archiver.kernel.org>; Fri, 19 Oct 2018 12:59:39 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=nifty.com header.i=@nifty.com header.b="lpz/fs9J"
-DMARC-Filter: OpenDMARC Filter v1.3.2 mail.kernel.org 2E15C20644
+	dkim=pass (2048-bit key) header.d=nifty.com header.i=@nifty.com header.b="rI/Nr7pP"
+DMARC-Filter: OpenDMARC Filter v1.3.2 mail.kernel.org 5476520644
 Authentication-Results: mail.kernel.org; dmarc=none (p=none dis=none) header.from=socionext.com
 Authentication-Results: mail.kernel.org; spf=none smtp.mailfrom=linux-pci-owner@vger.kernel.org
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727284AbeJSVD1 (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Fri, 19 Oct 2018 17:03:27 -0400
-Received: from conssluserg-05.nifty.com ([210.131.2.90]:47664 "EHLO
-        conssluserg-05.nifty.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1727241AbeJSVD1 (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Fri, 19 Oct 2018 17:03:27 -0400
-Received: from mail-ua1-f45.google.com (mail-ua1-f45.google.com [209.85.222.45]) (authenticated)
-        by conssluserg-05.nifty.com with ESMTP id w9JCvBPU031957;
-        Fri, 19 Oct 2018 21:57:12 +0900
-DKIM-Filter: OpenDKIM Filter v2.10.3 conssluserg-05.nifty.com w9JCvBPU031957
+        id S1727525AbeJSVF2 (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Fri, 19 Oct 2018 17:05:28 -0400
+Received: from conssluserg-04.nifty.com ([210.131.2.83]:50746 "EHLO
+        conssluserg-04.nifty.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1727199AbeJSVF2 (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Fri, 19 Oct 2018 17:05:28 -0400
+Received: from mail-vk1-f172.google.com (mail-vk1-f172.google.com [209.85.221.172]) (authenticated)
+        by conssluserg-04.nifty.com with ESMTP id w9JCxNoa008056;
+        Fri, 19 Oct 2018 21:59:23 +0900
+DKIM-Filter: OpenDKIM Filter v2.10.3 conssluserg-04.nifty.com w9JCxNoa008056
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=nifty.com;
-        s=dec2015msa; t=1539953832;
-        bh=Gq+3Ld2a9I8XpUsYwDmPMl4YFsFY0o/2/Az/R14YyMk=;
+        s=dec2015msa; t=1539953964;
+        bh=TzNt9vFzOmeru9+0ICk7t+QXt1OoO7XrIfBO4dZLhZA=;
         h=References:In-Reply-To:From:Date:Subject:To:Cc:From;
-        b=lpz/fs9Jy4/Y7041ZzGJbETYaWGtKcQJGM+GaCZpEwCnYYFcmS+6tuqmsFrpurFC6
-         OL0ZftqDx2mi6cmGYFV78uuS+cY6S9fZRk6D0IzPBagyOidF8RCbPwdQe1pWoAa3TM
-         C/PSWoSn0bf1ZsyUotvwbkEmisQtEn+2qJmcsIMCjcKEWUF7JTqk8CROWgjKHFpsMv
-         ZVa2g1SpxD3YXzywmn/jpIsL64GKJvsHLfXk2Y6nScPp9tVTGX9os/A1lVokiScl53
-         6XycF6P2344x9N5OqQloXeVgb4D0EvjXtdaeP23slNdJWH7m12xfZ2Tu6VomNMzJzf
-         +1szLlWpaNb+g==
-X-Nifty-SrcIP: [209.85.222.45]
-Received: by mail-ua1-f45.google.com with SMTP id c1so7405412uaq.9;
-        Fri, 19 Oct 2018 05:57:11 -0700 (PDT)
-X-Gm-Message-State: ABuFfohovKwrvB+xirQfyhKAHkkTYnuaaLd8UAwM3jwJJTEbAVZCQPvW
-        Z7aJ11ENTiNr41JNOV1GEjMWNyMtslgmHW2gGF0=
-X-Google-Smtp-Source: ACcGV61X1bzrIsFQWEoWVcGsHYTpyfbXhPp5BlcP63vGcyIM6DnI7rbGVuMZiHaMY+tzDAeaKL5s36q2zXrOfzloNDc=
-X-Received: by 2002:ab0:115b:: with SMTP id g27mr15609617uac.89.1539953830707;
- Fri, 19 Oct 2018 05:57:10 -0700 (PDT)
+        b=rI/Nr7pP7Ia7xtwh+JypN6pe08zYyemauTat478xqXU9YnkP0t6mftcWukmsYyLrk
+         QUtjhRMRF6nXV/9sUVJEk/ANyrwh4EGcSvWyKfDIzcU1vHEGitDqpt4Tk7mhZw9qaf
+         ASY4jOo8JDRJfUf1llqtlXTjYfZNiyBcKuKpCRrlEdpGtiUauq1D96s76Ox3rlOAEN
+         gCufX9cbf0/lcAUMr6ZAuJ2gZ6ZH+8tyw4pAm0wuMxLJ0i0SpHLOMs5GPCPPMDaJ91
+         3l8zsH6pHzawJZXL3T8c5tepvW68/Q8dXyXIPFyvwX32c73OXIgrMsH5X2Q9l50Q/q
+         X2z0QjZidKkfg==
+X-Nifty-SrcIP: [209.85.221.172]
+Received: by mail-vk1-f172.google.com with SMTP id o196so6951724vka.12;
+        Fri, 19 Oct 2018 05:59:23 -0700 (PDT)
+X-Gm-Message-State: ABuFfojwA94A7WplDyMkiXmLO1/3r8nFPoBEH8uE9amV0QeosCQfZDRC
+        I3vGKgGHncxE8PHbyAEEpy8l2Xd2itwlX8fLRAQ=
+X-Google-Smtp-Source: ACcGV62BIuydGNY+mLEeiEF2HWEKzurX1J12Va0O1ytVraXQTMcjAw4Oe1mR8XsTknT0Do4e63p51yoUpggMgMjGtdM=
+X-Received: by 2002:a1f:a014:: with SMTP id j20mr7965499vke.64.1539953962704;
+ Fri, 19 Oct 2018 05:59:22 -0700 (PDT)
 MIME-Version: 1.0
-References: <20181019120952.32763-1-hch@lst.de> <20181019120952.32763-3-hch@lst.de>
-In-Reply-To: <20181019120952.32763-3-hch@lst.de>
+References: <20181019120952.32763-1-hch@lst.de> <20181019120952.32763-7-hch@lst.de>
+ <20181019122228.GJ30658@n2100.armlinux.org.uk>
+In-Reply-To: <20181019122228.GJ30658@n2100.armlinux.org.uk>
 From:   Masahiro Yamada <yamada.masahiro@socionext.com>
-Date:   Fri, 19 Oct 2018 21:56:34 +0900
-X-Gmail-Original-Message-ID: <CAK7LNATc54ZMaKLzabW=NqCQ+WSr-3C7PNAGL6OmOnQf_kgOyQ@mail.gmail.com>
-Message-ID: <CAK7LNATc54ZMaKLzabW=NqCQ+WSr-3C7PNAGL6OmOnQf_kgOyQ@mail.gmail.com>
-Subject: Re: [PATCH 2/9] arm: remove EISA kconfig option
-To:     Christoph Hellwig <hch@lst.de>
-Cc:     mporter@kernel.crashing.org, Alex Bounine <alex.bou9@gmail.com>,
-        Dominik Brodowski <linux@dominikbrodowski.net>,
-        Linux Kbuild mailing list <linux-kbuild@vger.kernel.org>,
-        linux-arm-kernel <linux-arm-kernel@lists.infradead.org>,
-        linux-pci@vger.kernel.org, linux-scsi <linux-scsi@vger.kernel.org>,
+Date:   Fri, 19 Oct 2018 21:58:46 +0900
+X-Gmail-Original-Message-ID: <CAK7LNATZ8LagrTrTae_QCQbSuTW7_y6sDrdTHfTyONPrsYDs4A@mail.gmail.com>
+Message-ID: <CAK7LNATZ8LagrTrTae_QCQbSuTW7_y6sDrdTHfTyONPrsYDs4A@mail.gmail.com>
+Subject: Re: [PATCH 6/9] PCI: consolidate PCI config entry in drivers/pci
+To:     Russell King <linux@armlinux.org.uk>
+Cc:     Christoph Hellwig <hch@lst.de>,
         linux-arch <linux-arch@vger.kernel.org>,
+        linux-scsi <linux-scsi@vger.kernel.org>,
+        Linux Kbuild mailing list <linux-kbuild@vger.kernel.org>,
+        linux-pci@vger.kernel.org,
         Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
+        Dominik Brodowski <linux@dominikbrodowski.net>,
+        Alex Bounine <alex.bou9@gmail.com>,
+        mporter@kernel.crashing.org,
         linuxppc-dev <linuxppc-dev@lists.ozlabs.org>,
-        Russell King <linux@armlinux.org.uk>
+        linux-arm-kernel <linux-arm-kernel@lists.infradead.org>
 Content-Type: text/plain; charset="UTF-8"
 Sender: linux-pci-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-On Fri, Oct 19, 2018 at 9:10 PM Christoph Hellwig <hch@lst.de> wrote:
+On Fri, Oct 19, 2018 at 9:23 PM Russell King - ARM Linux
+<linux@armlinux.org.uk> wrote:
+
+> > index a68b34183107..b185794549be 100644
+> > --- a/arch/arm/mach-pxa/Kconfig
+> > +++ b/arch/arm/mach-pxa/Kconfig
+> > @@ -125,7 +125,7 @@ config MACH_ARMCORE
+> >       bool "CompuLab CM-X255/CM-X270 modules"
+> >       select ARCH_HAS_DMA_SET_COHERENT_MASK if PCI
+> >       select IWMMXT
+> > -     select MIGHT_HAVE_PCI
+> > +     select HAVE_PCI
+> >       select NEED_MACH_IO_H if PCI
+> >       select PXA25x
+> >       select PXA27x
 >
-> No arm config enables EISA, and arm does not include drivers/eisa/Kconfig
-> which provides support for things like PCI to EISA bridges, so it is most
-> likely dead.
->
-> If this is wrong we will be able to resurrect it easily by selecting
-> HAVE_EISA for the right arm configs after this series.
-
-What is your concern?
-
-This absolutely looks dead to me.
+> This is wrong.  "MIGHT_HAVE_PCI" is _not_ the same as "HAVE_PCI" - we
+> have a bunch of platforms that mandatorily have PCI and these select
+> PCI directly.  "MIGHT_HAVE_PCI" controls the _visibility_ of the PCI
+> menu option, but does not prevent it being selected.  Your patch will
+> cause Kconfig to complain for those which mandatorily have PCI but
+> do not set HAVE_PCI.
 
 
-> Suggested-by: Masahiro Yamada <yamada.masahiro@socionext.com>
-> Signed-off-by: Christoph Hellwig <hch@lst.de>
-> ---
->  arch/arm/Kconfig | 15 ---------------
->  1 file changed, 15 deletions(-)
->
-> diff --git a/arch/arm/Kconfig b/arch/arm/Kconfig
-> index e8cd55a5b04c..e33735ce1c14 100644
-> --- a/arch/arm/Kconfig
-> +++ b/arch/arm/Kconfig
-> @@ -165,21 +165,6 @@ config HAVE_PROC_CPU
->  config NO_IOPORT_MAP
->         bool
->
-> -config EISA
-> -       bool
+Good catch!
+But, adding a bunch of 'select HAVE_PCI' along with 'select PCI' is ugly.
 
-There is no prompt for this symbol.
-Hence, there is no way for a user to enable this directly.
+Do you have any suggestion?
 
-'select EISA' is the only way to enable it.
-
-git grep 'select EISA'
-gave no hit.
-
-So, we can say it is dead.
-
-
-
-
-
-> -       ---help---
-> -         The Extended Industry Standard Architecture (EISA) bus was
-> -         developed as an open alternative to the IBM MicroChannel bus.
-> -
-> -         The EISA bus provided some of the features of the IBM MicroChannel
-> -         bus while maintaining backward compatibility with cards made for
-> -         the older ISA bus.  The EISA bus saw limited use between 1988 and
-> -         1995 when it was made obsolete by the PCI bus.
-> -
-> -         Say Y here if you are building a kernel for an EISA-based machine.
-> -
-> -         Otherwise, say N.
-> -
->  config SBUS
->         bool
-
-
-
-I guess the situation is the same as powerpc.
-
-The difference between arm and powerpc is the presence of help.
-
-You fold the powerpc change in 9/9.
-
+How about letting CONFIG_ARM to select HAVE_PCI ?
 
 -- 
 Best Regards
