@@ -2,107 +2,95 @@ Return-Path: <SRS0=b7f5=M7=vger.kernel.org=linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-0.8 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
-	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_PASS,URIBL_BLOCKED
-	autolearn=unavailable autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-3.8 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_PASS autolearn=ham autolearn_force=no
+	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 8DD37ECDE3D
-	for <linux-pci@archiver.kernel.org>; Fri, 19 Oct 2018 12:59:39 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 63201ECDE3D
+	for <linux-pci@archiver.kernel.org>; Fri, 19 Oct 2018 13:10:45 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 5476520644
-	for <linux-pci@archiver.kernel.org>; Fri, 19 Oct 2018 12:59:39 +0000 (UTC)
-Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=nifty.com header.i=@nifty.com header.b="rI/Nr7pP"
-DMARC-Filter: OpenDMARC Filter v1.3.2 mail.kernel.org 5476520644
-Authentication-Results: mail.kernel.org; dmarc=none (p=none dis=none) header.from=socionext.com
+	by mail.kernel.org (Postfix) with ESMTP id 22D6121470
+	for <linux-pci@archiver.kernel.org>; Fri, 19 Oct 2018 13:10:45 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.3.2 mail.kernel.org 22D6121470
+Authentication-Results: mail.kernel.org; dmarc=fail (p=none dis=none) header.from=redhat.com
 Authentication-Results: mail.kernel.org; spf=none smtp.mailfrom=linux-pci-owner@vger.kernel.org
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727525AbeJSVF2 (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Fri, 19 Oct 2018 17:05:28 -0400
-Received: from conssluserg-04.nifty.com ([210.131.2.83]:50746 "EHLO
-        conssluserg-04.nifty.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1727199AbeJSVF2 (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Fri, 19 Oct 2018 17:05:28 -0400
-Received: from mail-vk1-f172.google.com (mail-vk1-f172.google.com [209.85.221.172]) (authenticated)
-        by conssluserg-04.nifty.com with ESMTP id w9JCxNoa008056;
-        Fri, 19 Oct 2018 21:59:23 +0900
-DKIM-Filter: OpenDKIM Filter v2.10.3 conssluserg-04.nifty.com w9JCxNoa008056
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=nifty.com;
-        s=dec2015msa; t=1539953964;
-        bh=TzNt9vFzOmeru9+0ICk7t+QXt1OoO7XrIfBO4dZLhZA=;
-        h=References:In-Reply-To:From:Date:Subject:To:Cc:From;
-        b=rI/Nr7pP7Ia7xtwh+JypN6pe08zYyemauTat478xqXU9YnkP0t6mftcWukmsYyLrk
-         QUtjhRMRF6nXV/9sUVJEk/ANyrwh4EGcSvWyKfDIzcU1vHEGitDqpt4Tk7mhZw9qaf
-         ASY4jOo8JDRJfUf1llqtlXTjYfZNiyBcKuKpCRrlEdpGtiUauq1D96s76Ox3rlOAEN
-         gCufX9cbf0/lcAUMr6ZAuJ2gZ6ZH+8tyw4pAm0wuMxLJ0i0SpHLOMs5GPCPPMDaJ91
-         3l8zsH6pHzawJZXL3T8c5tepvW68/Q8dXyXIPFyvwX32c73OXIgrMsH5X2Q9l50Q/q
-         X2z0QjZidKkfg==
-X-Nifty-SrcIP: [209.85.221.172]
-Received: by mail-vk1-f172.google.com with SMTP id o196so6951724vka.12;
-        Fri, 19 Oct 2018 05:59:23 -0700 (PDT)
-X-Gm-Message-State: ABuFfojwA94A7WplDyMkiXmLO1/3r8nFPoBEH8uE9amV0QeosCQfZDRC
-        I3vGKgGHncxE8PHbyAEEpy8l2Xd2itwlX8fLRAQ=
-X-Google-Smtp-Source: ACcGV62BIuydGNY+mLEeiEF2HWEKzurX1J12Va0O1ytVraXQTMcjAw4Oe1mR8XsTknT0Do4e63p51yoUpggMgMjGtdM=
-X-Received: by 2002:a1f:a014:: with SMTP id j20mr7965499vke.64.1539953962704;
- Fri, 19 Oct 2018 05:59:22 -0700 (PDT)
-MIME-Version: 1.0
-References: <20181019120952.32763-1-hch@lst.de> <20181019120952.32763-7-hch@lst.de>
- <20181019122228.GJ30658@n2100.armlinux.org.uk>
-In-Reply-To: <20181019122228.GJ30658@n2100.armlinux.org.uk>
-From:   Masahiro Yamada <yamada.masahiro@socionext.com>
-Date:   Fri, 19 Oct 2018 21:58:46 +0900
-X-Gmail-Original-Message-ID: <CAK7LNATZ8LagrTrTae_QCQbSuTW7_y6sDrdTHfTyONPrsYDs4A@mail.gmail.com>
-Message-ID: <CAK7LNATZ8LagrTrTae_QCQbSuTW7_y6sDrdTHfTyONPrsYDs4A@mail.gmail.com>
-Subject: Re: [PATCH 6/9] PCI: consolidate PCI config entry in drivers/pci
-To:     Russell King <linux@armlinux.org.uk>
-Cc:     Christoph Hellwig <hch@lst.de>,
-        linux-arch <linux-arch@vger.kernel.org>,
-        linux-scsi <linux-scsi@vger.kernel.org>,
-        Linux Kbuild mailing list <linux-kbuild@vger.kernel.org>,
-        linux-pci@vger.kernel.org,
-        Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
-        Dominik Brodowski <linux@dominikbrodowski.net>,
-        Alex Bounine <alex.bou9@gmail.com>,
-        mporter@kernel.crashing.org,
-        linuxppc-dev <linuxppc-dev@lists.ozlabs.org>,
-        linux-arm-kernel <linux-arm-kernel@lists.infradead.org>
-Content-Type: text/plain; charset="UTF-8"
+        id S1727017AbeJSVQs (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Fri, 19 Oct 2018 17:16:48 -0400
+Received: from mx1.redhat.com ([209.132.183.28]:34294 "EHLO mx1.redhat.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1727004AbeJSVQs (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Fri, 19 Oct 2018 17:16:48 -0400
+Received: from smtp.corp.redhat.com (int-mx07.intmail.prod.int.phx2.redhat.com [10.5.11.22])
+        (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
+        (No client certificate requested)
+        by mx1.redhat.com (Postfix) with ESMTPS id D1EEB81F12;
+        Fri, 19 Oct 2018 13:10:43 +0000 (UTC)
+Received: from haswell-e.nc.xsintricity.com (ovpn-112-29.rdu2.redhat.com [10.10.112.29])
+        by smtp.corp.redhat.com (Postfix) with ESMTPS id 8BA15101F969;
+        Fri, 19 Oct 2018 13:10:42 +0000 (UTC)
+Message-ID: <b8393e70623ef7743fba74684218c1b744925801.camel@redhat.com>
+Subject: Re: [PATCH v6 7/7] IB/hfi1,PCI: switch to __pci_function_locked()
+ for reset request
+From:   Doug Ledford <dledford@redhat.com>
+To:     Sinan Kaya <okaya@kernel.org>, linux-pci@vger.kernel.org
+Cc:     Mike Marciniszyn <mike.marciniszyn@intel.com>,
+        Dennis Dalessandro <dennis.dalessandro@intel.com>,
+        Jason Gunthorpe <jgg@ziepe.ca>,
+        Bjorn Helgaas <bhelgaas@google.com>
+Date:   Fri, 19 Oct 2018 09:10:40 -0400
+In-Reply-To: <20181019021132.14743-7-okaya@kernel.org>
+References: <20181019021132.14743-1-okaya@kernel.org>
+         <20181019021132.14743-7-okaya@kernel.org>
+Organization: Red Hat, Inc.
+Content-Type: multipart/signed; micalg="pgp-sha256";
+        protocol="application/pgp-signature"; boundary="=-E5HDrwi+zXkbYOIvBMjv"
+Mime-Version: 1.0
+X-Scanned-By: MIMEDefang 2.84 on 10.5.11.22
+X-Greylist: Sender IP whitelisted, not delayed by milter-greylist-4.5.16 (mx1.redhat.com [10.5.110.27]); Fri, 19 Oct 2018 13:10:44 +0000 (UTC)
 Sender: linux-pci-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-On Fri, Oct 19, 2018 at 9:23 PM Russell King - ARM Linux
-<linux@armlinux.org.uk> wrote:
 
-> > index a68b34183107..b185794549be 100644
-> > --- a/arch/arm/mach-pxa/Kconfig
-> > +++ b/arch/arm/mach-pxa/Kconfig
-> > @@ -125,7 +125,7 @@ config MACH_ARMCORE
-> >       bool "CompuLab CM-X255/CM-X270 modules"
-> >       select ARCH_HAS_DMA_SET_COHERENT_MASK if PCI
-> >       select IWMMXT
-> > -     select MIGHT_HAVE_PCI
-> > +     select HAVE_PCI
-> >       select NEED_MACH_IO_H if PCI
-> >       select PXA25x
-> >       select PXA27x
->
-> This is wrong.  "MIGHT_HAVE_PCI" is _not_ the same as "HAVE_PCI" - we
-> have a bunch of platforms that mandatorily have PCI and these select
-> PCI directly.  "MIGHT_HAVE_PCI" controls the _visibility_ of the PCI
-> menu option, but does not prevent it being selected.  Your patch will
-> cause Kconfig to complain for those which mandatorily have PCI but
-> do not set HAVE_PCI.
+--=-E5HDrwi+zXkbYOIvBMjv
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
 
+On Fri, 2018-10-19 at 02:11 +0000, Sinan Kaya wrote:
+> Start using the new reset API rather than the workaround.
+>=20
+> Signed-off-by: Sinan Kaya <okaya@kernel.org>
 
-Good catch!
-But, adding a bunch of 'select HAVE_PCI' along with 'select PCI' is ugly.
+Acked-by: Doug Ledford <dledford@redhat.com>
 
-Do you have any suggestion?
+--=20
+Doug Ledford <dledford@redhat.com>
+    GPG KeyID: B826A3330E572FDD
+    Key fingerprint =3D AE6B 1BDA 122B 23B4 265B  1274 B826 A333 0E57 2FDD
 
-How about letting CONFIG_ARM to select HAVE_PCI ?
+--=-E5HDrwi+zXkbYOIvBMjv
+Content-Type: application/pgp-signature; name="signature.asc"
+Content-Description: This is a digitally signed message part
+Content-Transfer-Encoding: 7bit
 
--- 
-Best Regards
-Masahiro Yamada
+-----BEGIN PGP SIGNATURE-----
+
+iQIzBAABCAAdFiEErmsb2hIrI7QmWxJ0uCajMw5XL90FAlvJ19EACgkQuCajMw5X
+L93/HA//X7euvVWdmMT3frlPX9krt4JZQpHY/T8jduTrQUIDkbT/P6O7fA5QK0wo
+rgJBfSP3eH463PKIr/EXA62J2q26sTwWgGyOkcZG4q/3qpsi9DMjFuvVvF5XqnGK
+wobwS6UjjfcuCRG2eBzpfprkmnrUhOoMmrxf6BDn5iTUCQOTTWOsj1B76EXUrF8H
+TluAWJMLCkQ6JOWxUixrWjJaM6gKz97TqpFNXhvdgJ7faMvet/uqtBoAH0fFI+Cq
+TQxBhWsg3Yz/EORDUOckTLn9JvlvcrG2QYsBCGZPQ7vQdkM1Ks1L9mbtDYKwv4+h
+osaCIIrYMBlX5P1PXlI4CA+RH7EWq1avpQMRBMYIWYtmU4ubbei2rk8sDyVasOge
+JWsqCtU/tR34DBUAFCGMTPlaJBVFwVekBLGGcstCQRhTu07JHOoHBarvr+fYTLso
+HA1vp1tdkhQLCNsZQwJfBuVnC9lAqYeMyPRFqUVG0G46DNHmTaAMN4GgRPiKJtGy
+3Ho2+gRpXcuKky9K/rUf5OkRx+BJ47i9Y5wVCOBgyCX0P882sAlpRRObdlOx7hUt
+Go9jWW+f5v4NVj/dyregycmIj/s500UlkjkDwZK8XkghCeZ5qjTfVeLaL5jjwsWh
+7dGC4kTnf8Co7yzhwRf5pmDQ6RwNq6PLsfhnbv5SQb/P2a6Iq2o=
+=RTf0
+-----END PGP SIGNATURE-----
+
+--=-E5HDrwi+zXkbYOIvBMjv--
+
