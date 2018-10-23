@@ -2,99 +2,175 @@ Return-Path: <SRS0=AklG=ND=vger.kernel.org=linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-9.3 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,
-	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_PASS,USER_AGENT_GIT autolearn=ham
-	autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-8.8 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_PASS,USER_AGENT_GIT
+	autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 93B23C46475
-	for <linux-pci@archiver.kernel.org>; Tue, 23 Oct 2018 10:21:49 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id CF5BAC46475
+	for <linux-pci@archiver.kernel.org>; Tue, 23 Oct 2018 11:46:24 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 5FE3520665
-	for <linux-pci@archiver.kernel.org>; Tue, 23 Oct 2018 10:21:49 +0000 (UTC)
-Authentication-Results: mail.kernel.org;
-	dkim=pass (1024-bit key) header.d=broadcom.com header.i=@broadcom.com header.b="f5m32EOT"
-DMARC-Filter: OpenDMARC Filter v1.3.2 mail.kernel.org 5FE3520665
-Authentication-Results: mail.kernel.org; dmarc=fail (p=quarantine dis=none) header.from=broadcom.com
+	by mail.kernel.org (Postfix) with ESMTP id 8AA6A20652
+	for <linux-pci@archiver.kernel.org>; Tue, 23 Oct 2018 11:46:24 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.3.2 mail.kernel.org 8AA6A20652
+Authentication-Results: mail.kernel.org; dmarc=fail (p=none dis=none) header.from=linux.intel.com
 Authentication-Results: mail.kernel.org; spf=none smtp.mailfrom=linux-pci-owner@vger.kernel.org
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1728016AbeJWSoe (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Tue, 23 Oct 2018 14:44:34 -0400
-Received: from mail-pl1-f194.google.com ([209.85.214.194]:41359 "EHLO
-        mail-pl1-f194.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1728015AbeJWSoe (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Tue, 23 Oct 2018 14:44:34 -0400
-Received: by mail-pl1-f194.google.com with SMTP id p5-v6so400691plq.8
-        for <linux-pci@vger.kernel.org>; Tue, 23 Oct 2018 03:21:47 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=broadcom.com; s=google;
-        h=from:to:cc:subject:date:message-id:in-reply-to:references;
-        bh=XSmVEIviJMjQM1OKrDTk07dUzJE9uaUtvcYab6n5jL0=;
-        b=f5m32EOT/vCXExXgRUN1nIQnAtDdyyUquN528h4tSrEnX9XADX7crql2as+22vnBRp
-         QSl1lhwAhiunwEt+aFwL6mn7dHB794n/sjFmSaDAt5XkA1hfTf7xtYUm/ZBZHLWSHYEQ
-         31gzo8+rwen+Kdw8F2HlDEOAY9AHe7m57L3fo=
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20161025;
-        h=x-gm-message-state:from:to:cc:subject:date:message-id:in-reply-to
-         :references;
-        bh=XSmVEIviJMjQM1OKrDTk07dUzJE9uaUtvcYab6n5jL0=;
-        b=LSIh6NJsENeJ0+Xib7jdGQn1qUtXE1B5sg9B88YNUFSSZrDGGVLbLrHGAhIyzoYG1q
-         FkjSZItzhKCUCxOQ3QwkaoRTY6ve2XFShHrc5M0lvYqtnFkwkR+gT9UK15BrU3zGYyga
-         p6+cehzg06J/m+hVrAq9AYdoaLLNDG8syTla/F4ieGPHZmy+OvBJIpt2FrZ8zIJWEZbo
-         yVU4yEyqNuflPWoUB5YprFPQZDhTfyKfMFJs1uDVY2kOYeo911jqWs3sEt3b1xcBqG/n
-         951mfTEz6Vb2atpAZ5OIYbAxoWIZl74Tcrtv7dBw0zo7tg83G8q0sDAXHU6UZyyrxJeG
-         RWHw==
-X-Gm-Message-State: ABuFfoj/vab+8ItYANkdXRNUav9CZIML6eNFyPXmlPjVGO5U8PeOQ66e
-        XpHCZ1bs/Ce3Rrw83xMGVZ3L6Z78zyg=
-X-Google-Smtp-Source: ACcGV62zEJBvgcdzSw4vGFXNygLkGw5PGBD4xs5lpDLsROd+kHW6NHLw9EQpbqyTMcT+UZXmMdBSCg==
-X-Received: by 2002:a17:902:b58c:: with SMTP id a12-v6mr46713929pls.226.1540290107472;
-        Tue, 23 Oct 2018 03:21:47 -0700 (PDT)
-Received: from dhcp-10-123-74-106.dhcp.broadcom.net ([192.19.234.250])
-        by smtp.gmail.com with ESMTPSA id m10-v6sm2918523pfg.180.2018.10.23.03.21.43
-        (version=TLS1_2 cipher=ECDHE-RSA-AES128-GCM-SHA256 bits=128/128);
-        Tue, 23 Oct 2018 03:21:46 -0700 (PDT)
-From:   Suganath Prabu <suganath-prabu.subramani@broadcom.com>
-To:     helgaas@kernel.org, lukas@wunner.de, linux-scsi@vger.kernel.org,
-        linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org
-Cc:     benh@kernel.crashing.org, ruscur@russell.cc,
-        sbobroff@linux.ibm.com, oohall@gmail.com,
-        andy.shevchenko@gmail.com, Sathya.Prakash@broadcom.com,
-        sreekanth.reddy@broadcom.com,
-        Suganath Prabu <suganath-prabu.subramani@broadcom.com>
-Subject: [v6 4/4] mpt3sas: Bump driver version to 27.100.00.00.
-Date:   Tue, 23 Oct 2018 15:51:21 +0530
-Message-Id: <1540290081-15827-5-git-send-email-suganath-prabu.subramani@broadcom.com>
-X-Mailer: git-send-email 1.8.3.1
-In-Reply-To: <1540290081-15827-1-git-send-email-suganath-prabu.subramani@broadcom.com>
-References: <1540290081-15827-1-git-send-email-suganath-prabu.subramani@broadcom.com>
+        id S1727843AbeJWUJb (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Tue, 23 Oct 2018 16:09:31 -0400
+Received: from mga14.intel.com ([192.55.52.115]:37283 "EHLO mga14.intel.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1727749AbeJWUJb (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Tue, 23 Oct 2018 16:09:31 -0400
+X-Amp-Result: SKIPPED(no attachment in message)
+X-Amp-File-Uploaded: False
+Received: from orsmga003.jf.intel.com ([10.7.209.27])
+  by fmsmga103.fm.intel.com with ESMTP/TLS/DHE-RSA-AES256-GCM-SHA384; 23 Oct 2018 04:46:22 -0700
+X-ExtLoop1: 1
+X-IronPort-AV: E=Sophos;i="5.54,416,1534834800"; 
+   d="scan'208";a="94295401"
+Received: from mylly.fi.intel.com (HELO mylly.fi.intel.com.) ([10.237.72.104])
+  by orsmga003.jf.intel.com with ESMTP; 23 Oct 2018 04:46:19 -0700
+From:   Jarkko Nikula <jarkko.nikula@linux.intel.com>
+To:     linux-pci@vger.kernel.org
+Cc:     linux-pm@vger.kernel.org, Bjorn Helgaas <bhelgaas@google.com>,
+        "Rafael J . Wysocki" <rjw@rjwysocki.net>,
+        Mika Westerberg <mika.westerberg@linux.intel.com>,
+        Jean Delvare <jdelvare@suse.de>,
+        Wolfram Sang <wsa@the-dreams.de>,
+        Jarkko Nikula <jarkko.nikula@linux.intel.com>,
+        stable@vger.kernel.org
+Subject: [PATCH v2] PCI / PM: Allow runtime PM without callback functions
+Date:   Tue, 23 Oct 2018 14:45:52 +0300
+Message-Id: <20181023114552.22958-1-jarkko.nikula@linux.intel.com>
+X-Mailer: git-send-email 2.19.1
+MIME-Version: 1.0
+Content-Transfer-Encoding: 8bit
 Sender: linux-pci-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-Modify driver version to 27.100.00.00
-(which is equivalent to PH8 OOB driver)
+Commit a9c8088c7988 ("i2c: i801: Don't restore config registers on
+runtime PM") nullified the runtime PM suspend/resume callback pointers
+while keeping the runtime PM enabled.
 
-Signed-off-by: Suganath Prabu <suganath-prabu.subramani@broadcom.com>
+This causes that SMBus PCI device stays in D0 power state and sysfs
+/sys/bus/pci/devices/[SMBus PCI ID]/power/runtime_status shows "error"
+when the runtime PM framework attempts to autosuspend the device. This
+is due PCI bus runtime PM which checks for driver runtime PM callbacks
+and returns with -ENOSYS if they are not set.
+
+Since i2c-i801.c don't need to do anything device specific beyond PCI
+device power state management Jean Delvare proposed if this can be fixed
+in the PCI subsystem core level rather than adding dummy runtime PM
+callback functions in the PCI drivers.
+
+Change the pci_pm_runtime_suspend()/pci_pm_runtime_resume() semantics so
+that they allow change the PCI device power state during runtime PM
+transitions even if no runtime PM callback functions are defined.
+
+This change fixes the runtime PM regression on i2c-i801.c.
+
+It is not obvious why the code had hard requirements for the runtime PM
+callbacks. Test has been here since the code was introduced by the
+commit 6cbf82148ff2 ("PCI PM: Run-time callbacks for PCI bus type").
+
+On the other hand similar change than this was done to generic runtime
+PM callbacks way back in the commit 05aa55dddb9e ("PM / Runtime: Lenient
+generic runtime pm callbacks").
+
+Fixes: a9c8088c7988 ("i2c: i801: Don't restore config registers on runtime PM")
+Reported-by: Mika Westerberg <mika.westerberg@linux.intel.com>
+Cc: <stable@vger.kernel.org> # 4.18+
+Signed-off-by: Jarkko Nikula <jarkko.nikula@linux.intel.com>
 ---
- drivers/scsi/mpt3sas/mpt3sas_base.h | 4 ++--
- 1 file changed, 2 insertions(+), 2 deletions(-)
+I Cc'ed stable since this fixes the regression on i2c-i801.c. But we
+probably want to get some test coverage first before applying into
+stable. Queueing for v4.20 sounds reasonable to me.
+v2:
+Previous version had a potential NULL dereference in WARN_ONCE() statement
+noted by Jean Delvare. Now covered by pm && pm->runtime_suspend test.
+Also handling of error code from pm->runtime_suspend() moved under the
+same code block where callback is called.
+v1:
+This is related to my i2c-i801.c fix thread back in June which I completely
+forgot till now: https://lkml.org/lkml/2018/6/27/642
+Discussion back then was that it should be handled in the PCI PM instead
+of having dummy functions in the drivers. I wanted to respin with a patch.
+---
+ drivers/pci/pci-driver.c | 27 ++++++++++++---------------
+ 1 file changed, 12 insertions(+), 15 deletions(-)
 
-diff --git a/drivers/scsi/mpt3sas/mpt3sas_base.h b/drivers/scsi/mpt3sas/mpt3sas_base.h
-index c860ed2..7fdaf29 100644
---- a/drivers/scsi/mpt3sas/mpt3sas_base.h
-+++ b/drivers/scsi/mpt3sas/mpt3sas_base.h
-@@ -74,8 +74,8 @@
- #define MPT3SAS_DRIVER_NAME		"mpt3sas"
- #define MPT3SAS_AUTHOR "Avago Technologies <MPT-FusionLinux.pdl@avagotech.com>"
- #define MPT3SAS_DESCRIPTION	"LSI MPT Fusion SAS 3.0 Device Driver"
--#define MPT3SAS_DRIVER_VERSION		"26.100.00.00"
--#define MPT3SAS_MAJOR_VERSION		26
-+#define MPT3SAS_DRIVER_VERSION		"27.100.00.00"
-+#define MPT3SAS_MAJOR_VERSION		27
- #define MPT3SAS_MINOR_VERSION		100
- #define MPT3SAS_BUILD_VERSION		0
- #define MPT3SAS_RELEASE_VERSION	00
+diff --git a/drivers/pci/pci-driver.c b/drivers/pci/pci-driver.c
+index bef17c3fca67..33f3f475e5c6 100644
+--- a/drivers/pci/pci-driver.c
++++ b/drivers/pci/pci-driver.c
+@@ -1251,30 +1251,29 @@ static int pci_pm_runtime_suspend(struct device *dev)
+ 		return 0;
+ 	}
+ 
+-	if (!pm || !pm->runtime_suspend)
+-		return -ENOSYS;
+-
+ 	pci_dev->state_saved = false;
+-	error = pm->runtime_suspend(dev);
+-	if (error) {
++	if (pm && pm->runtime_suspend) {
++		error = pm->runtime_suspend(dev);
+ 		/*
+ 		 * -EBUSY and -EAGAIN is used to request the runtime PM core
+ 		 * to schedule a new suspend, so log the event only with debug
+ 		 * log level.
+ 		 */
+-		if (error == -EBUSY || error == -EAGAIN)
++		if (error == -EBUSY || error == -EAGAIN) {
+ 			dev_dbg(dev, "can't suspend now (%pf returned %d)\n",
+ 				pm->runtime_suspend, error);
+-		else
++			return error;
++		} else if (error) {
+ 			dev_err(dev, "can't suspend (%pf returned %d)\n",
+ 				pm->runtime_suspend, error);
+-
+-		return error;
++			return error;
++		}
+ 	}
+ 
+ 	pci_fixup_device(pci_fixup_suspend, pci_dev);
+ 
+-	if (!pci_dev->state_saved && pci_dev->current_state != PCI_D0
++	if (pm && pm->runtime_suspend
++	    && !pci_dev->state_saved && pci_dev->current_state != PCI_D0
+ 	    && pci_dev->current_state != PCI_UNKNOWN) {
+ 		WARN_ONCE(pci_dev->current_state != prev,
+ 			"PCI PM: State of device not saved by %pF\n",
+@@ -1292,7 +1291,7 @@ static int pci_pm_runtime_suspend(struct device *dev)
+ 
+ static int pci_pm_runtime_resume(struct device *dev)
+ {
+-	int rc;
++	int rc = 0;
+ 	struct pci_dev *pci_dev = to_pci_dev(dev);
+ 	const struct dev_pm_ops *pm = dev->driver ? dev->driver->pm : NULL;
+ 
+@@ -1306,14 +1305,12 @@ static int pci_pm_runtime_resume(struct device *dev)
+ 	if (!pci_dev->driver)
+ 		return 0;
+ 
+-	if (!pm || !pm->runtime_resume)
+-		return -ENOSYS;
+-
+ 	pci_fixup_device(pci_fixup_resume_early, pci_dev);
+ 	pci_enable_wake(pci_dev, PCI_D0, false);
+ 	pci_fixup_device(pci_fixup_resume, pci_dev);
+ 
+-	rc = pm->runtime_resume(dev);
++	if (pm && pm->runtime_resume)
++		rc = pm->runtime_resume(dev);
+ 
+ 	pci_dev->runtime_d3cold = false;
+ 
 -- 
-1.8.3.1
+2.19.1
 
