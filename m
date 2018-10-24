@@ -2,113 +2,80 @@ Return-Path: <SRS0=WZ4f=NE=vger.kernel.org=linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-6.0 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_PASS,
-	USER_AGENT_MUTT autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-7.5 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
+	SPF_PASS,URIBL_BLOCKED autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 2C676ECDE44
-	for <linux-pci@archiver.kernel.org>; Wed, 24 Oct 2018 22:00:52 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 64F71ECDE46
+	for <linux-pci@archiver.kernel.org>; Wed, 24 Oct 2018 22:14:02 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id C1B0120831
-	for <linux-pci@archiver.kernel.org>; Wed, 24 Oct 2018 22:00:51 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 15A8A20831
+	for <linux-pci@archiver.kernel.org>; Wed, 24 Oct 2018 22:14:02 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (1024-bit key) header.d=kernel.org header.i=@kernel.org header.b="hzXDEVjA"
-DMARC-Filter: OpenDMARC Filter v1.3.2 mail.kernel.org C1B0120831
+	dkim=pass (1024-bit key) header.d=kernel.org header.i=@kernel.org header.b="Rl0op/x6"
+DMARC-Filter: OpenDMARC Filter v1.3.2 mail.kernel.org 15A8A20831
 Authentication-Results: mail.kernel.org; dmarc=fail (p=none dis=none) header.from=kernel.org
 Authentication-Results: mail.kernel.org; spf=none smtp.mailfrom=linux-pci-owner@vger.kernel.org
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727009AbeJYGaj (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Thu, 25 Oct 2018 02:30:39 -0400
-Received: from mail.kernel.org ([198.145.29.99]:53906 "EHLO mail.kernel.org"
+        id S1726178AbeJYGnw (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Thu, 25 Oct 2018 02:43:52 -0400
+Received: from mail.kernel.org ([198.145.29.99]:57002 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1726365AbeJYGaj (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Thu, 25 Oct 2018 02:30:39 -0400
+        id S1726044AbeJYGnw (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Thu, 25 Oct 2018 02:43:52 -0400
 Received: from localhost (unknown [69.71.4.100])
         (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
         (No client certificate requested)
-        by mail.kernel.org (Postfix) with ESMTPSA id F284E2075D;
-        Wed, 24 Oct 2018 22:00:49 +0000 (UTC)
+        by mail.kernel.org (Postfix) with ESMTPSA id 7F8DD2075D;
+        Wed, 24 Oct 2018 22:14:00 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=default; t=1540418450;
-        bh=ltRyFvvnL2kTzdym5JpZLgLj3QWdbxk/oZumBfWn/HA=;
-        h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-        b=hzXDEVjANDni3q193gY/k1mVhPwxLs+BZrUAhAfFBEi/5Wu92G//jOWDzqGS11nzI
-         LMrkDqsdkPhc2NTBApSPVG5uOfSXXMMLTDdWQLmqcVdBqBRgzni0Wum804RxLedlQD
-         +eQRmeajoBcRjFmecWVMpFdH3AtN4/eZVlnHd9rI=
-Date:   Wed, 24 Oct 2018 17:00:48 -0500
+        s=default; t=1540419240;
+        bh=I0/HoZy/5Qtiq/LDZOlUyb8v4svXUYh+DkT8SAyu4P0=;
+        h=Subject:From:To:Cc:Date:From;
+        b=Rl0op/x6cUBgIJQhh1nAguCg9QcZshQZaLDqtLqAWNUxe6wWLjIa/j1N3dL3IA44X
+         r52Z8A99UEx2EoLwxzHBWPD+GVGnVqdtuqw6c7oFBunsqNjnLWJ0RJzuV8lNy3nJv5
+         73kG9wivHgOVNkHRBPxLCRmGClsHgVgzfk5EHWVY=
+Subject: [PATCH] MAINTAINERS: Add x86 early-quirks.c file pattern to PCI
+ subsystem
 From:   Bjorn Helgaas <helgaas@kernel.org>
-To:     Marek =?iso-8859-1?Q?Beh=FAn?= <marek.behun@nic.cz>
-Cc:     Thomas Petazzoni <thomas.petazzoni@bootlin.com>,
-        Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
-        Thomas Petazzoni <thomas.petazzoni@free-electrons.com>,
-        linux-pci@vger.kernel.org,
-        Antoine =?iso-8859-1?Q?T=E9nart?= 
-        <antoine.tenart@free-electrons.com>,
-        =?iso-8859-1?Q?Gr=E9gory?= Clement 
-        <gregory.clement@free-electrons.com>,
-        =?iso-8859-1?Q?Miqu=E8l?= Raynal 
-        <miquel.raynal@free-electrons.com>, Victor Gu <xigu@marvell.com>
-Subject: Re: [PATCH RFC v4.14] PCI: aadrvark: warm reset the cores and card
-Message-ID: <20181024220048.GD214775@bhelgaas-glaptop.roam.corp.google.com>
-References: <20181024152056.17813-1-marek.behun@nic.cz>
+To:     linux-pci@vger.kernel.org
+Cc:     Thomas Gleixner <tglx@linutronix.de>,
+        Ingo Molnar <mingo@redhat.com>,
+        "H. Peter Anvin" <hpa@zytor.com>, linux-kernel@vger.kernel.org
+Date:   Wed, 24 Oct 2018 17:13:59 -0500
+Message-ID: <154041923937.26247.17083948926896599419.stgit@bhelgaas-glaptop.roam.corp.google.com>
+User-Agent: StGit/0.18
 MIME-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
-Content-Disposition: inline
-Content-Transfer-Encoding: 8bit
-In-Reply-To: <20181024152056.17813-1-marek.behun@nic.cz>
-User-Agent: Mutt/1.10.1 (2018-07-13)
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: 7bit
 Sender: linux-pci-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-Hi Marek,
+From: Bjorn Helgaas <bhelgaas@google.com>
 
-On Wed, Oct 24, 2018 at 05:20:56PM +0200, Marek Behún wrote:
-> Add code to do a warm reset on the PHY and PCIE cores and if PERSTN GPIO
-> is specified in device tree (as reset-gpio), also reset the card.
-> 
-> The reset-gpio is inspired by what is done in U-Boot and linux-marvell,
-> and is not final version: I am hoping this can be done via a PCIe register
-> rather than GPIO - bit 3 of CTRL_WARM_RESET_REG register (which is added
-> by this patch) is called PERSTN_GPIO_EN (Enable PERSTN from GPIO) and
-> I think this is the right register, but manipulating this register did
-> not have any effect on the PERSTN pin, even when pinctrl was correctly set.
-> 
-> I asked Marvell about this and am awaiting their reply.
-> 
-> The reset-gpio is needed for Compex 5 GHz wifi card model WLE900VX. Without
-> this patch the PCIe link never comes up in kernel (although U-Boot pci
-> command was able to enumerate the card).
-> 
-> What is weird is that the link does not come up for this card when
-> pci-aardvark driver is probed in U-Boot. I haven't yet had time to discover
-> the problem there. My temporary solution is to compile out the pci-aardvark
-> driver from U-Boot.
-> 
-> This patch is based on 4.14 kernel.
+arch/x86/kernel/early-quirks.c contains special PCI quirks that need to
+run even before the usual DECLARE_PCI_FIXUP_EARLY() quirks.  These have
+typically been merged by the x86 maintainers, which is fine, but PCI folks
+should at least see what's happening, so add a file pattern to the PCI
+subsystem entry.
 
-Thanks for your research and the patch!
+Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
+---
+ MAINTAINERS |    1 +
+ 1 file changed, 1 insertion(+)
 
-As I'm sure you know, this would have to be applied to the latest
-kernel, e.g., v4.20-rc1 (when that comes out in about 10 days), so the
-best place to test it would be v4.19 + this patch, or v4.20-rc1 + this
-patch.
+diff --git a/MAINTAINERS b/MAINTAINERS
+index 4ece30f15777..63cb7f3dbbb4 100644
+--- a/MAINTAINERS
++++ b/MAINTAINERS
+@@ -11249,6 +11249,7 @@ F:	include/uapi/linux/pci*
+ F:	lib/pci*
+ F:	arch/x86/pci/
+ F:	arch/x86/kernel/quirks.c
++F:	arch/x86/kernel/early-quirks.c
+ 
+ PCI NATIVE HOST BRIDGE AND ENDPOINT DRIVERS
+ M:	Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
 
-After it's applied to the master branch, it's possible it could be
-backported to stable kernels if appropriate.
-
-> If you have time, please try it with some PCIe cards and let me know if they
-> work correctly.
-> 
-> Signed-off-by: Marek Behún <marek.behun@nic.cz>
-> Cc: Lorenzo  Pieralisi <lorenzo.pieralisi@arm.com>
-> Cc: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>
-> Cc: Bjorn Helgaas  <helgaas@kernel.org>
-> Cc: linux-pci@vger.kernel.org
-> Cc: Antoine Ténart  <antoine.tenart@free-electrons.com>
-> Cc: Grégory  Clement  <gregory.clement@free-electrons.com>
-> Cc: Miquèl Raynal  <miquel.raynal@free-electrons.com>
-> Cc: Victor Gu <xigu@marvell.com>
-
-Nit: some of the CC lines above have extra spaces.
