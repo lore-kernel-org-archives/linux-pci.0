@@ -4,39 +4,39 @@ X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 X-Spam-Level: 
 X-Spam-Status: No, score=-6.8 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
 	DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,
-	SIGNED_OFF_BY,SPF_PASS,URIBL_BLOCKED autolearn=ham autolearn_force=no
+	SIGNED_OFF_BY,SPF_PASS,URIBL_BLOCKED autolearn=unavailable autolearn_force=no
 	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id D2906ECDE46
-	for <linux-pci@archiver.kernel.org>; Thu, 25 Oct 2018 09:49:39 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 7796FECDE47
+	for <linux-pci@archiver.kernel.org>; Thu, 25 Oct 2018 09:49:51 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 997BE2064C
-	for <linux-pci@archiver.kernel.org>; Thu, 25 Oct 2018 09:49:39 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 32E0B20834
+	for <linux-pci@archiver.kernel.org>; Thu, 25 Oct 2018 09:49:51 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (1024-bit key) header.d=nxp.com header.i=@nxp.com header.b="jGlY3EOd"
-DMARC-Filter: OpenDMARC Filter v1.3.2 mail.kernel.org 997BE2064C
+	dkim=pass (1024-bit key) header.d=nxp.com header.i=@nxp.com header.b="Hg7Mjs6k"
+DMARC-Filter: OpenDMARC Filter v1.3.2 mail.kernel.org 32E0B20834
 Authentication-Results: mail.kernel.org; dmarc=fail (p=none dis=none) header.from=nxp.com
 Authentication-Results: mail.kernel.org; spf=none smtp.mailfrom=linux-pci-owner@vger.kernel.org
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727278AbeJYSVh (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Thu, 25 Oct 2018 14:21:37 -0400
-Received: from mail-eopbgr00044.outbound.protection.outlook.com ([40.107.0.44]:37222
+        id S1727416AbeJYSVr (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Thu, 25 Oct 2018 14:21:47 -0400
+Received: from mail-eopbgr00044.outbound.protection.outlook.com ([40.107.0.44]:44960
         "EHLO EUR02-AM5-obe.outbound.protection.outlook.com"
         rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1727202AbeJYSVh (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Thu, 25 Oct 2018 14:21:37 -0400
+        id S1727355AbeJYSVq (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Thu, 25 Oct 2018 14:21:46 -0400
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=nxp.com; s=selector1;
  h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=1HWFT8/F7QfozdSh6O2E1i5i0JfTHtpZfR552U835KI=;
- b=jGlY3EOdUiI1jr0foYwZ4O9BpDaF77EYCfvwoeQV+8/GWD53Q+NycASSEp6ddGPr+R7nonoM48RvxsUJlOGayqI0u/BPhnIZUlR/WppId6HbE2NsOOEPmOcxF6WBXfTHCn11ekbuieTy/9NOxvHyvPW7DBklRkEN6lr/Cy4Icvk=
+ bh=/+FQdBIs21/N2l7jaJsDtjswZZfk5P1PciWVNIAfBy0=;
+ b=Hg7Mjs6kVRdPQMC1XRPgGjhFQtlHFSTxbMkzyEQFmM30wboVghiv+bLonocGix9aGxIJ6r7Cxlhq4MY0ugHMYAjebAm2jO1cFbIT8Da5H1ugp1yFtQr3KKuRejyT0dPRzthpYIm02cjVBTnF/HiiQ8DD4Ehe28FRigghqXyVZOI=
 Received: from DB5PR04MB1221.eurprd04.prod.outlook.com (10.162.155.27) by
  DB5PR04MB1208.eurprd04.prod.outlook.com (10.162.155.26) with Microsoft SMTP
  Server (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- 15.20.1250.30; Thu, 25 Oct 2018 09:49:34 +0000
+ 15.20.1250.30; Thu, 25 Oct 2018 09:49:44 +0000
 Received: from DB5PR04MB1221.eurprd04.prod.outlook.com
  ([fe80::6c36:f4cb:26c2:e8cb]) by DB5PR04MB1221.eurprd04.prod.outlook.com
  ([fe80::6c36:f4cb:26c2:e8cb%2]) with mapi id 15.20.1250.028; Thu, 25 Oct 2018
- 09:49:34 +0000
+ 09:49:44 +0000
 From:   "Z.q. Hou" <zhiqiang.hou@nxp.com>
 To:     "linux-arm-kernel@lists.infradead.org" 
         <linux-arm-kernel@lists.infradead.org>,
@@ -51,13 +51,13 @@ To:     "linux-arm-kernel@lists.infradead.org"
         Mingkai Hu <mingkai.hu@nxp.com>,
         "M.h. Lian" <minghuan.lian@nxp.com>
 CC:     "Z.q. Hou" <zhiqiang.hou@nxp.com>
-Subject: [PATCH v2 1/4] dt-bindings: pci: layerscape-pci: add compatible
- strings "fsl,ls1043a-pcie"
-Thread-Topic: [PATCH v2 1/4] dt-bindings: pci: layerscape-pci: add compatible
- strings "fsl,ls1043a-pcie"
-Thread-Index: AQHUbEgIvp/tpcIpjU+vqwYYD02j6g==
-Date:   Thu, 25 Oct 2018 09:49:34 +0000
-Message-ID: <20181025094929.29481-2-Zhiqiang.Hou@nxp.com>
+Subject: [PATCH v2 3/4] dts/arm/ls1021a: Clean PCIe controller compatible
+ strings
+Thread-Topic: [PATCH v2 3/4] dts/arm/ls1021a: Clean PCIe controller compatible
+ strings
+Thread-Index: AQHUbEgOmENJU84lvUu8AoxrcxdgOw==
+Date:   Thu, 25 Oct 2018 09:49:44 +0000
+Message-ID: <20181025094929.29481-4-Zhiqiang.Hou@nxp.com>
 References: <20181025094929.29481-1-Zhiqiang.Hou@nxp.com>
 In-Reply-To: <20181025094929.29481-1-Zhiqiang.Hou@nxp.com>
 Accept-Language: zh-CN, en-US
@@ -72,28 +72,28 @@ authentication-results: spf=none (sender IP is )
 x-ms-exchange-messagesentrepresentingtype: 1
 x-originating-ip: [119.31.174.73]
 x-ms-publictraffictype: Email
-x-microsoft-exchange-diagnostics: 1;DB5PR04MB1208;6:naAknVL2+8mp+VC0raFuAWz5aWF2XQIHvjHlV8BUlRdyVsG1I3WDZ6adAfWUGGPL5OMRJG3ydPi16AoyDy49WcrHKcL+KRHqMBeX5+VkI45OiUMXvtFWwFg7BdC+502qORXbY1zGrmJ2K4U+P8+0yTf/x28CDlo92+jCn+uo86MufSpQQqS6tf/7tDozUZMMi0ZZDmPqEzfrv+SDwvD846IV/1WVe6blwXZpfoBswnS+021sq1KxzFwhRw2X+uYE7aqzF+yyHBn6UgNbCnzc9oA69GQRy6UjdgKXEb0DUMf5Y7/49yEHzVJYrqks94Nz/xhyDEEy4fGy3SgmSVHAk3IKETT0Aj11/+lN68gOp4KF1Vx8NRHvsk5JG6PilZ4JGLhW+63/kxQGxQV6f21Ho4tzwyMwOKP16/EAdrCCJPsEm9L1F6r0XFufOWuD8xk/bx09HNkqvswHXTPMnlI2Uw==;5:NrRezYwNkXb/WqKt368ZJjNziYY8k2J6nLtg/gBFNoEwYRrgP5TpxdyXV2vaP1wGErDi1zSTPFJSQseeBL5n0+nrkbjRrPUxbDkBvtojYwX4GR6U6NW3j2Yc4mkx49fbo0yw9zytsl0hFoqvm7LxCvpfT33Yjl5V0Z9Tf3Gxpu8=;7:GxqSZGecFuXBxkqLgObXEsF7cmlU61bXkEQ6uXxYRfoTAG3WbUeRuPr7hiAT8l2rhqNsR67/d5c2ySGAfgmkx/AhovLRBwu10LianJXAvvi8Rx74pKo/0auRpmyYtcpctkGyK5M/ffDDK563q62B1prIpetUbojjuipdQvn9Ncvo59pO7VBGmhPlHCFo1ogVs0QbXP//8qxFEJbY3zC69kGLk81hHkkfjqeBQ4QO1JIMfBERu6mkvWxedZc6nI+h
-x-ms-office365-filtering-correlation-id: 97279770-df1d-41ee-e26f-08d63a5f2ae1
+x-microsoft-exchange-diagnostics: 1;DB5PR04MB1208;6:hh2Gtc5IPhmhaYhzf5fW1xw2cRnlyKwr2vEPo99racleqzgB4R1s/S2CBstUrGYfhLVbBJRisKuslOn+g8nSDwjgOhx3qx9chiNtHRUyXiSyxmCIDGVjcQJ3euSiI29M44bmAs8MGDO2YpW3zys0yeeTMF9iEfl4bid9ixHuai5tXN40bqt9PWkUNnSouTXhJ1WEWtgDVeiCOtY37kk/peGSLq3c0vNlatsJHscK3UTCNEiQrui7atng4DwZsrmksg7kSu/ZCUVc9TfOtmQe075WOpTEIffvXYIKBhph5tOVY5NpzlJbf7Dre2wBcqquXvwZZ3NGgpc67L567vd1mLRHo0E/dQT+M7z3IiJoHnSMW1HN2BpXxlBCOrrYq9vP9lv++538iUnC3d7Rm4ZZ9zFd6mF3BQ3NvwtFC9Q0zksKcMdSwg3FFVRcGY7AiUHhgjaS0nV4j4TORoM0HlxsmA==;5:+c7NaLLROOPOfUst/uldSK/mNKpngE0FXf7BJzF1lW4lYzFFlTd0CglNMVSy3XKVlguxx6p8uKCsirbBZ8abZkx6aXhgZf8Zt81VkZFJTTCfvCUof1tCy+W5jjzgw0xdUEZc0FiD6eszm0AIR/LkdlYjpGaPSdwZpGUapW14fNo=;7:VJjEQaFh0Nhw1mqw0ec01iPy2SujRn9j4dAYvMRkBXD8Uc62C+LruxPSbvyEKyK+nKxXcQhKm5OwRpghahqdRTw4wMrYHcYsAXV2IlLxY3qZQCl7AYmZcHg/tkCxthTbQ6GnzhXsfEWD7iXDFEl/M4r5WI+e2wfeSoB1NAdqMLex51fSFCSn9BGikvdlwoikRrcwDv04c3mOkVq0u/VDiF9r5brRM37veLRq6R1t++1T+QmMboJnMkFdUXTGJOA2
+x-ms-office365-filtering-correlation-id: 4de8e0a7-61c0-4393-a831-08d63a5f310e
 x-ms-office365-filtering-ht: Tenant
 x-microsoft-antispam: BCL:0;PCL:0;RULEID:(7020095)(4652040)(8989299)(5600074)(711020)(4618075)(4534185)(4627221)(201703031133081)(201702281549075)(8990200)(2017052603328)(7153060)(7193020);SRVR:DB5PR04MB1208;
 x-ms-traffictypediagnostic: DB5PR04MB1208:
-x-microsoft-antispam-prvs: <DB5PR04MB120864CC8CAA7FBD7A18783F84F70@DB5PR04MB1208.eurprd04.prod.outlook.com>
+x-microsoft-antispam-prvs: <DB5PR04MB12084B06B8DF1E1931EBE90F84F70@DB5PR04MB1208.eurprd04.prod.outlook.com>
 x-exchange-antispam-report-test: UriScan:(185117386973197);
 x-ms-exchange-senderadcheck: 1
 x-exchange-antispam-report-cfa-test: BCL:0;PCL:0;RULEID:(8211001083)(6040522)(2401047)(8121501046)(5005006)(3231355)(944501410)(52105095)(3002001)(93006095)(93001095)(10201501046)(6055026)(148016)(149066)(150057)(6041310)(20161123558120)(20161123560045)(20161123562045)(20161123564045)(201703131423095)(201702281528075)(20161123555045)(201703061421075)(201703061406153)(201708071742011)(7699051)(76991095);SRVR:DB5PR04MB1208;BCL:0;PCL:0;RULEID:;SRVR:DB5PR04MB1208;
 x-forefront-prvs: 083691450C
-x-forefront-antispam-report: SFV:NSPM;SFS:(10009020)(376002)(346002)(366004)(396003)(136003)(39860400002)(199004)(189003)(446003)(486006)(6116002)(3846002)(102836004)(5660300001)(6636002)(6506007)(386003)(575784001)(256004)(99286004)(6486002)(1076002)(76176011)(86362001)(110136005)(7736002)(305945005)(52116002)(2501003)(5250100002)(2201001)(26005)(71200400001)(71190400001)(316002)(478600001)(2900100001)(4326008)(25786009)(68736007)(97736004)(81156014)(53936002)(6512007)(8936002)(81166006)(6436002)(14454004)(105586002)(186003)(8676002)(2616005)(11346002)(476003)(36756003)(66066001)(106356001)(2906002)(921003)(142933001)(1121003);DIR:OUT;SFP:1101;SCL:1;SRVR:DB5PR04MB1208;H:DB5PR04MB1221.eurprd04.prod.outlook.com;FPR:;SPF:None;LANG:en;PTR:InfoNoRecords;A:1;MX:1;
+x-forefront-antispam-report: SFV:NSPM;SFS:(10009020)(376002)(346002)(366004)(396003)(136003)(39860400002)(199004)(189003)(446003)(486006)(6116002)(3846002)(102836004)(5660300001)(6636002)(6506007)(386003)(256004)(99286004)(6486002)(1076002)(76176011)(86362001)(110136005)(7736002)(305945005)(52116002)(2501003)(5250100002)(2201001)(26005)(71200400001)(71190400001)(316002)(478600001)(2900100001)(4326008)(25786009)(68736007)(97736004)(81156014)(53936002)(6512007)(8936002)(81166006)(6436002)(14454004)(105586002)(186003)(8676002)(2616005)(11346002)(476003)(36756003)(66066001)(106356001)(2906002)(921003)(1121003);DIR:OUT;SFP:1101;SCL:1;SRVR:DB5PR04MB1208;H:DB5PR04MB1221.eurprd04.prod.outlook.com;FPR:;SPF:None;LANG:en;PTR:InfoNoRecords;A:1;MX:1;
 received-spf: None (protection.outlook.com: nxp.com does not designate
  permitted sender hosts)
-x-microsoft-antispam-message-info: KgduA1Kbq67z/nqOmAUz0b5Te0/O8BUBlEjOwT6sw8oLtL3LkVPhtmi0HwWKZD/UAlPj/0lsitukPN0jTd5s3Lo7bCwiGxnkt1Mx3NRgGzy9GfwCUmTohNzgsqDc2TxvKjSaOCy2/JdUetcn/50NBnk+qwl/xvpsdLkNuczm/FIQ+tXpW8CqAVapWzs0CIvf1wdpKUfBBXY0zahmXj/B6Po4LLpZvMrAxlxpQpx323dRMZlsk0TMuJsp6kmB+v185Qn7fJbAYKqlwCdfOgseA3dKA7ScCQPhOi7Jx5JWyGfqylaTto33z7A2/wE0/lF50tmd9d+tWuE7sKPD/bc57muZcADvYRxPXjix7L+1yo8=
+x-microsoft-antispam-message-info: 0ni4u1crolJi7WzC8YrqXTyeFNW3eD39p7LFa3uJd2MkiCx1gP73PwkvX0O11axw9bwVDlQu6V2sOTilc+v/gcC3Oc+KvBzKotxCM2RKAePyaE60ZWDydQ8K/sj6aEmWQTf2tHj6WkbZ25GSo291aig1fXW02Uymvrs2xkPpPVB0AXQylSfBti/e/s88kUFuWvDRH99jZa2iXbTBrbdwsAsTn145xMW9EUzCk63e0b/2PRseEN34/jT3RM4DExXEQtRncXy+XwexgwWhuVpt6khsWWP0j3fCnRKqbnqt5VT5smHGsycG4jxFvrp0n+9QqwL+S9mXR46NzJLsd9fl3YpBmj3vN3oAAWlkIHrEGWo=
 spamdiagnosticoutput: 1:99
 spamdiagnosticmetadata: NSPM
 Content-Type: text/plain; charset="iso-8859-1"
 Content-Transfer-Encoding: quoted-printable
 MIME-Version: 1.0
 X-OriginatorOrg: nxp.com
-X-MS-Exchange-CrossTenant-Network-Message-Id: 97279770-df1d-41ee-e26f-08d63a5f2ae1
-X-MS-Exchange-CrossTenant-originalarrivaltime: 25 Oct 2018 09:49:34.0879
+X-MS-Exchange-CrossTenant-Network-Message-Id: 4de8e0a7-61c0-4393-a831-08d63a5f310e
+X-MS-Exchange-CrossTenant-originalarrivaltime: 25 Oct 2018 09:49:44.4477
  (UTC)
 X-MS-Exchange-CrossTenant-fromentityheader: Hosted
 X-MS-Exchange-CrossTenant-id: 686ea1d3-bc2b-4c6f-a92c-d99c5c301635
@@ -105,30 +105,40 @@ X-Mailing-List: linux-pci@vger.kernel.org
 
 From: Hou Zhiqiang <Zhiqiang.Hou@nxp.com>
 
-The PCIe compatible string for LS1043A was lost, so add it.
+Removed the wrong compatible string "snps,dw-pcie", in case
+match incorrect driver.
 
 Signed-off-by: Hou Zhiqiang <Zhiqiang.Hou@nxp.com>
 ---
 V2:
- - Improved the subject and corrected 'PCIe' casing.
+ - no change
 
- Documentation/devicetree/bindings/pci/layerscape-pci.txt | 1 +
- 1 file changed, 1 insertion(+)
+ arch/arm/boot/dts/ls1021a.dtsi | 4 ++--
+ 1 file changed, 2 insertions(+), 2 deletions(-)
 
-diff --git a/Documentation/devicetree/bindings/pci/layerscape-pci.txt b/Doc=
-umentation/devicetree/bindings/pci/layerscape-pci.txt
-index 66df1e81e0b8..5eb1c202932f 100644
---- a/Documentation/devicetree/bindings/pci/layerscape-pci.txt
-+++ b/Documentation/devicetree/bindings/pci/layerscape-pci.txt
-@@ -18,6 +18,7 @@ Required properties:
-         "fsl,ls2088a-pcie"
-         "fsl,ls1088a-pcie"
-         "fsl,ls1046a-pcie"
-+        "fsl,ls1043a-pcie"
-         "fsl,ls1012a-pcie"
- - reg: base addresses and lengths of the PCIe controller register blocks.
- - interrupts: A list of interrupt outputs of the controller. Must contain =
-an
+diff --git a/arch/arm/boot/dts/ls1021a.dtsi b/arch/arm/boot/dts/ls1021a.dts=
+i
+index bdd6e66a79ad..1aaa3288a450 100644
+--- a/arch/arm/boot/dts/ls1021a.dtsi
++++ b/arch/arm/boot/dts/ls1021a.dtsi
+@@ -716,7 +716,7 @@
+ 		};
+=20
+ 		pcie@3400000 {
+-			compatible =3D "fsl,ls1021a-pcie", "snps,dw-pcie";
++			compatible =3D "fsl,ls1021a-pcie";
+ 			reg =3D <0x00 0x03400000 0x0 0x00010000   /* controller registers */
+ 			       0x40 0x00000000 0x0 0x00002000>; /* configuration space */
+ 			reg-names =3D "regs", "config";
+@@ -739,7 +739,7 @@
+ 		};
+=20
+ 		pcie@3500000 {
+-			compatible =3D "fsl,ls1021a-pcie", "snps,dw-pcie";
++			compatible =3D "fsl,ls1021a-pcie";
+ 			reg =3D <0x00 0x03500000 0x0 0x00010000   /* controller registers */
+ 			       0x48 0x00000000 0x0 0x00002000>; /* configuration space */
+ 			reg-names =3D "regs", "config";
 --=20
 2.17.1
 
