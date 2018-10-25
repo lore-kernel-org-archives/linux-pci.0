@@ -6,36 +6,36 @@ X-Spam-Status: No, score=-6.9 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
 	DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,
 	SIGNED_OFF_BY,SPF_PASS autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id B6F32C46475
-	for <linux-pci@archiver.kernel.org>; Thu, 25 Oct 2018 09:23:01 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id E6964C46475
+	for <linux-pci@archiver.kernel.org>; Thu, 25 Oct 2018 09:23:02 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 6870F20834
-	for <linux-pci@archiver.kernel.org>; Thu, 25 Oct 2018 09:23:01 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id AA0DA2082E
+	for <linux-pci@archiver.kernel.org>; Thu, 25 Oct 2018 09:23:02 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (1024-bit key) header.d=nxp.com header.i=@nxp.com header.b="IDdYtu76"
-DMARC-Filter: OpenDMARC Filter v1.3.2 mail.kernel.org 6870F20834
+	dkim=pass (1024-bit key) header.d=nxp.com header.i=@nxp.com header.b="Q3Yl+c0b"
+DMARC-Filter: OpenDMARC Filter v1.3.2 mail.kernel.org AA0DA2082E
 Authentication-Results: mail.kernel.org; dmarc=fail (p=none dis=none) header.from=nxp.com
 Authentication-Results: mail.kernel.org; spf=none smtp.mailfrom=linux-pci-owner@vger.kernel.org
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726866AbeJYRyr (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Thu, 25 Oct 2018 13:54:47 -0400
-Received: from mail-eopbgr30083.outbound.protection.outlook.com ([40.107.3.83]:23468
+        id S1727135AbeJYRyc (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Thu, 25 Oct 2018 13:54:32 -0400
+Received: from mail-eopbgr30078.outbound.protection.outlook.com ([40.107.3.78]:10483
         "EHLO EUR03-AM5-obe.outbound.protection.outlook.com"
         rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1726785AbeJYRyq (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Thu, 25 Oct 2018 13:54:46 -0400
+        id S1726785AbeJYRyb (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Thu, 25 Oct 2018 13:54:31 -0400
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=nxp.com; s=selector1;
  h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=2nkfQZl/cBzfEno5oHQWwPQaRwoPh/sKA6PawQmtZtM=;
- b=IDdYtu76bePFcgGDLdjgCidXQZ97+wp3bnRWRBNwb/Gr9aEvxrhoVseKYCAMLO2qRRNq1qABxep2LVv2igALUuVpzpCyqJ7ep1xLSiI82qzNzXmSSR7VzB/hG/wkBWbFAvvPbcfNbs5txgOXL9wEPknJ08SgIhfUr9wZTtw6J1A=
+ bh=Ie25hpAqX9ySS3l7uae86c4vfPDa5RBfALtQqz40X5U=;
+ b=Q3Yl+c0b1TUWU3+6Uk4F34X8weOgXTz+9RZ9J/q+qKO4B1PwWlDaD8T6LpkXTmMK04zIm7akgFPZSslT8msFRa5fMbFHyskk4PNg0+xbQfzz7302/OkX5TRSSgnJQMxemZRj3lLHI9t1LpGd+Vl6OtCtQhjYKk8iX+0/uk2G0Jc=
 Received: from DB5PR04MB1221.eurprd04.prod.outlook.com (10.162.155.27) by
  DB5PR04MB0952.eurprd04.prod.outlook.com (10.161.195.20) with Microsoft SMTP
  Server (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- 15.20.1250.30; Thu, 25 Oct 2018 09:22:50 +0000
+ 15.20.1250.30; Thu, 25 Oct 2018 09:22:36 +0000
 Received: from DB5PR04MB1221.eurprd04.prod.outlook.com
  ([fe80::6c36:f4cb:26c2:e8cb]) by DB5PR04MB1221.eurprd04.prod.outlook.com
  ([fe80::6c36:f4cb:26c2:e8cb%2]) with mapi id 15.20.1250.028; Thu, 25 Oct 2018
- 09:22:50 +0000
+ 09:22:36 +0000
 From:   "Z.q. Hou" <zhiqiang.hou@nxp.com>
 To:     "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
         "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
@@ -46,11 +46,11 @@ To:     "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
 CC:     Roy Zang <roy.zang@nxp.com>, Mingkai Hu <mingkai.hu@nxp.com>,
         "M.h. Lian" <minghuan.lian@nxp.com>,
         "Z.q. Hou" <zhiqiang.hou@nxp.com>
-Subject: [PATCH 4/4] PCI/dwc: Add more than 4GiB range support
-Thread-Topic: [PATCH 4/4] PCI/dwc: Add more than 4GiB range support
-Thread-Index: AQHUbERMuOPdoBqF20StZYHO34SK+Q==
-Date:   Thu, 25 Oct 2018 09:22:50 +0000
-Message-ID: <20181025092229.28413-5-Zhiqiang.Hou@nxp.com>
+Subject: [PATCH 1/4] PCI/dwc: fix potential memory leak
+Thread-Topic: [PATCH 1/4] PCI/dwc: fix potential memory leak
+Thread-Index: AQHUbEREQvuwyxv4sEeimaudU2OseQ==
+Date:   Thu, 25 Oct 2018 09:22:35 +0000
+Message-ID: <20181025092229.28413-2-Zhiqiang.Hou@nxp.com>
 References: <20181025092229.28413-1-Zhiqiang.Hou@nxp.com>
 In-Reply-To: <20181025092229.28413-1-Zhiqiang.Hou@nxp.com>
 Accept-Language: zh-CN, en-US
@@ -63,12 +63,12 @@ x-clientproxiedby: HK0P153CA0010.APCP153.PROD.OUTLOOK.COM
 x-ms-exchange-messagesentrepresentingtype: 1
 x-originating-ip: [119.31.174.73]
 x-ms-publictraffictype: Email
-x-microsoft-exchange-diagnostics: 1;DB5PR04MB0952;6:onz636fvb+t4WsseBBqScy1UExcduJVBLkY/DosHV9gb0ewx2zqMJWTfh22Z3yTpQ+jYRlHp8IuW17TUTwqSj1FMfY/rb+mY6oOjUVFGV+dxkkGo8EMa0aexHQI3v/ur+7s1HqRO6yxWjka2GtiR5GD3QZmTwVmIDENG6Ztc/gWlorpssL+OJUh9ByH7r8IE3UBdzT7NKusZAo52Ohp1/HWYMJKCr6OVh/sj2HdibCivbBPIeQHCrVoRyHupxz8+UvBbrGa3LNn1WajfYUczfKoPaAiCr95qzWJWfN1dU9qXKuFpYeUnS6bBdfZ9mDdM6vqxD7VWP5XzFI7XFNQP6IDLPdxTl+cfFhJJrlnN97Hu3B6VcJNXP24uRniJmztx7EALztoUwY8Y7JSpBHG/T3e2+rpL6GT3BOSEG3i/lbn5VHkw/GVWLo52LSJGPmUIEtks34Fki7ij+al7d1vOCA==;5:QjZzpPH8cdkyZNjfoYXOFSYUqmj7WWIwBoKTi/4Y8DWeSwXZwcgbOf7D26L5i5JH5/uMqQvAOOmwLVeC6l9Y9yQ6N5D4111nmvpg2PQOD/Efz8gy0cwR8DiUxB6KhOGwiENYWD97IKY1bRrNuQbZCirmioEck4jheaMr0yzKVz0=;7:qIjn1HAWzpb3pwuvcKXBOTxXwl+R1pORehgVBfHCBCzpVElT3gky68a+pxXRQV6FtczhwcqWPmJVcj9Cfx9K5sfdy6hxs5G6HUGPruizJznVb0XgT45wrm6Wn2kqAaszQ1hcWvHbeJj12a/FtNFYB7SV6/hA23HsOpeSADO+CIlfnqDACanEkStEdduZcSeaQF7hFYQV9U98xxZh/T/Uw7mEVKGMfu2zKMw3f36HW1xE1LB073HuheWqtA2w4u7e
-x-ms-office365-filtering-correlation-id: 53693be8-6026-4e3a-c950-08d63a5b6f1e
+x-microsoft-exchange-diagnostics: 1;DB5PR04MB0952;6:ylp+qWsSOrYbYrK47SHgRb2l+SG0W1Spv3bpLWie7uu9klneCDBsYTVNexhTEh/2FcuSy/OugGnoMULTlljkkgVrTOxzL0Jyv8DIzvNfa7qQ3fXbvKFtR9G17qA6wC4O69pZUzyyB+zpUN+4lH7BC17zX+IqCelHwRjm9XJvqBhRq60+CY4k16bnON9tGIvukKAk8+V7OHZZVILogAlfjFqdCbN6noiZLFV2s2lLxjJ25TdYOSVuQtpvR+UGPIY2jYoBhHIWFsWbe3XF66W3LXuboVCNEU0Se7VpzYGaoAc0ix5WQv/A9HqduWiGUBeDkZjUxPg8Op2yHzhzksgta1WXpCOQ/tzFDygXKRq3a3L5xqXasfwmgsTbCdhZJ2w5T5T01P+8S3naWHoLas6ANkZrrqxgPVDrHG8udtHEw1hOz6lBb3jSxUZBw0q7Rcu/+wXJJlbKL+hNoTHXdySgFw==;5:2iSnQ4w8L3NmhBdrGpnN5+QTZhQxUxeB447TflDBDYqxiUxTnsC2SkkvssNc8vz3dl2hTXDZn1SobwYSqemf0V389M+CEioNVVXznZimRzrXBrqFhjkuhExcBv720iA88ECQnal66b+tHc9APq/IVj+3P43GKvlruT+8zzud9+0=;7:oQBHTzMRGmGnFjjLIrVydt8SV2gLCfGz2XMoU9L/WS5yBk00XeVfDkoK+y6n/KA8u75XsGbiMilsY8tBCnbFAsrm59zBbcznjBhEI8IooX+g1S9mfiDu79+XEs48RdUezkNzx+UfflhmOFDXvTP59DfjYjOrm7ro743+CnDyk4eSVBuNFav6I3+c10Ct+CY/H/jYve+PnpT3eNBrvxsexCsZ+YLVJYbwPdX7JKYevCqF4rpYAeL+GtbgttBXxOrD
+x-ms-office365-filtering-correlation-id: 1aaa4840-1fae-4fb8-ae0a-08d63a5b6664
 x-ms-office365-filtering-ht: Tenant
 x-microsoft-antispam: BCL:0;PCL:0;RULEID:(7020095)(4652040)(8989299)(5600074)(711020)(4618075)(4534185)(4627221)(201703031133081)(201702281549075)(8990200)(2017052603328)(7153060)(7193020);SRVR:DB5PR04MB0952;
 x-ms-traffictypediagnostic: DB5PR04MB0952:
-x-microsoft-antispam-prvs: <DB5PR04MB0952C9A0D2BFB6E5575E795B84F70@DB5PR04MB0952.eurprd04.prod.outlook.com>
+x-microsoft-antispam-prvs: <DB5PR04MB095291003EFE656E5C77C7E684F70@DB5PR04MB0952.eurprd04.prod.outlook.com>
 x-exchange-antispam-report-test: UriScan:(185117386973197);
 x-ms-exchange-senderadcheck: 1
 x-exchange-antispam-report-cfa-test: BCL:0;PCL:0;RULEID:(8211001083)(6040522)(2401047)(8121501046)(5005006)(3231355)(944501410)(52105095)(3002001)(10201501046)(93006095)(93001095)(6055026)(148016)(149066)(150057)(6041310)(201703131423095)(201702281528075)(20161123555045)(201703061421075)(201703061406153)(20161123558120)(20161123564045)(20161123560045)(20161123562045)(201708071742011)(7699051)(76991095);SRVR:DB5PR04MB0952;BCL:0;PCL:0;RULEID:;SRVR:DB5PR04MB0952;
@@ -78,15 +78,15 @@ received-spf: None (protection.outlook.com: nxp.com does not designate
  permitted sender hosts)
 authentication-results: spf=none (sender IP is )
  smtp.mailfrom=zhiqiang.hou@nxp.com; 
-x-microsoft-antispam-message-info: byU5hhmjteYIuCHZ/QKbjUAaXGPUCGnAMcWk6TYviSM/JctsTMy1tD4ZCikJdwT8hvefYwB3Oiy7Hrv0PPZ6LnIBgJYHlOGaXGwo7NjLx7+WTcGfOTSsn7KcXHAchcwwAdmERXCqE58uhXOn4d0JPvNsSHRNO3uFLYJARwk2tM765xwVq4r0/w9foUrA4q/BkCKUvQPPNEZDNNcns7ZncZfboNff38Lz2MzoDQBcwas6DluII5+qG7vPbCplCd+FBQHkhJqDw88GzYpLMELNjJuS3BkjHZXfGE58CBp41sXTO6pDmcaz3zzYl+riux/ruxDzDcwF2GFDp0XJAPfi+yfcN2EcmcH0ljyBYXNY9b0=
+x-microsoft-antispam-message-info: UWd3NPj7GTJ8fJ2RPOuyg1W9AU7drqEhhNpvZGX1ajuFYYBOoxU+GqC23UgaqJgBO7jLjqA1ZAczEasOAEm9ldQFj6PY38wVuV+8w9gIKVZCWLbMkz6wh34X6CxnHvcKTTcl1iORZE/jQFwUY3eZqgLlV1NNfc1sOHrgbwQLLAu7TzmLdCHEVvWb5MFDjWye1swsvsgafqASMR+R+T8jVYfzsyQGxdNCeTwal6xDB3i2aoR4piCwASsmMy3uldjz/fXAd277GZrsUhA6wxZH82ACAOXeeic08S6AS4WwBtHbe+R8Ser5jot4STJOU3Vzend8/HosGeKJ/r5LFV26R9uvk+ie20JYOdgXm2/sp3U=
 spamdiagnosticoutput: 1:99
 spamdiagnosticmetadata: NSPM
 Content-Type: text/plain; charset="iso-8859-1"
 Content-Transfer-Encoding: quoted-printable
 MIME-Version: 1.0
 X-OriginatorOrg: nxp.com
-X-MS-Exchange-CrossTenant-Network-Message-Id: 53693be8-6026-4e3a-c950-08d63a5b6f1e
-X-MS-Exchange-CrossTenant-originalarrivaltime: 25 Oct 2018 09:22:50.5852
+X-MS-Exchange-CrossTenant-Network-Message-Id: 1aaa4840-1fae-4fb8-ae0a-08d63a5b6664
+X-MS-Exchange-CrossTenant-originalarrivaltime: 25 Oct 2018 09:22:35.9282
  (UTC)
 X-MS-Exchange-CrossTenant-fromentityheader: Hosted
 X-MS-Exchange-CrossTenant-id: 686ea1d3-bc2b-4c6f-a92c-d99c5c301635
@@ -98,169 +98,37 @@ X-Mailing-List: linux-pci@vger.kernel.org
 
 From: Hou Zhiqiang <Zhiqiang.Hou@nxp.com>
 
-As each viewport support upto 4GiB, to support greater than 4GiB range
-we need multiple viewport for MEM windows. And this patch explicitly
-assigned the last (if there are only 2 viewports) or last 2 viewports
-for CFG and IO windows and the rests for MEM windows.
+Free the allocated pci_host_bridge struct when failed to get
+host bridge resources, and free the resource windows before
+free the bridge.
 
 Signed-off-by: Hou Zhiqiang <Zhiqiang.Hou@nxp.com>
 ---
- .../pci/controller/dwc/pcie-designware-host.c | 80 ++++++++++++++++---
- drivers/pci/controller/dwc/pcie-designware.h  |  3 +
- 2 files changed, 70 insertions(+), 13 deletions(-)
+ drivers/pci/controller/dwc/pcie-designware-host.c | 3 ++-
+ 1 file changed, 2 insertions(+), 1 deletion(-)
 
 diff --git a/drivers/pci/controller/dwc/pcie-designware-host.c b/drivers/pc=
 i/controller/dwc/pcie-designware-host.c
-index ecacce016489..1b083873835e 100644
+index 29a05759a294..ecacce016489 100644
 --- a/drivers/pci/controller/dwc/pcie-designware-host.c
 +++ b/drivers/pci/controller/dwc/pcie-designware-host.c
-@@ -346,6 +346,35 @@ int dw_pcie_host_init(struct pcie_port *pp)
- 		dev_err(dev, "Missing *config* reg space\n");
- 	}
+@@ -353,7 +353,7 @@ int dw_pcie_host_init(struct pcie_port *pp)
+ 	ret =3D devm_of_pci_get_host_bridge_resources(dev, 0, 0xff,
+ 					&bridge->windows, &pp->io_base);
+ 	if (ret)
+-		return ret;
++		goto error;
 =20
-+	/*
-+	 * If vendor's platform driver has set the num_viewport and it is
-+	 * not less than 2, skip getting the num_viewport from DT here.
-+	 */
-+	if (pci->num_viewport < 2) {
-+		ret =3D of_property_read_u32(np, "num-viewport",
-+					   &pci->num_viewport);
-+		if (ret || pci->num_viewport < 2)
-+			pci->num_viewport =3D 2;
-+	}
-+
-+	/*
-+	 * if there are only 2 viewports, assign the last viewport for
-+	 * both CFG and IO window, otherwise assign the last 2 viewport
-+	 * for CFG and IO window specific. And the rest viewports are
-+	 * assigned to MEM windows.
-+	 */
-+	if (pci->num_viewport =3D=3D 2) {
-+		pp->cfg_idx =3D pp->io_idx =3D PCIE_ATU_REGION_INDEX1;
-+		pp->mem_wins =3D 1;
-+	} else {
-+		pp->cfg_idx =3D pci->num_viewport - 1;
-+		pp->io_idx =3D pci->num_viewport - 2;
-+		pp->mem_wins =3D pci->num_viewport - 2;
-+	}
-+
-+	dev_dbg(dev, "CFG window index: %d, IO window index: %d, Total MEM window=
- number: %d\n",
-+		pp->cfg_idx, pp->io_idx, pp->mem_wins);
-+
- 	bridge =3D pci_alloc_host_bridge(0);
- 	if (!bridge)
- 		return -ENOMEM;
-@@ -534,12 +563,12 @@ static int dw_pcie_rd_other_conf(struct pcie_port *pp=
-, struct pci_bus *bus,
- 		va_cfg_base =3D pp->va_cfg1_base;
- 	}
+ 	ret =3D devm_request_pci_bus_resources(dev, &bridge->windows);
+ 	if (ret)
+@@ -502,6 +502,7 @@ int dw_pcie_host_init(struct pcie_port *pp)
+ 	return 0;
 =20
--	dw_pcie_prog_outbound_atu(pci, PCIE_ATU_REGION_INDEX1,
-+	dw_pcie_prog_outbound_atu(pci, pp->cfg_idx,
- 				  type, cpu_addr,
- 				  busdev, cfg_size);
- 	ret =3D dw_pcie_read(va_cfg_base + where, size, val);
--	if (pci->num_viewport <=3D 2)
--		dw_pcie_prog_outbound_atu(pci, PCIE_ATU_REGION_INDEX1,
-+	if (pp->cfg_idx =3D=3D pp->io_idx)
-+		dw_pcie_prog_outbound_atu(pci, pp->io_idx,
- 					  PCIE_ATU_TYPE_IO, pp->io_base,
- 					  pp->io_bus_addr, pp->io_size);
-=20
-@@ -573,12 +602,12 @@ static int dw_pcie_wr_other_conf(struct pcie_port *pp=
-, struct pci_bus *bus,
- 		va_cfg_base =3D pp->va_cfg1_base;
- 	}
-=20
--	dw_pcie_prog_outbound_atu(pci, PCIE_ATU_REGION_INDEX1,
-+	dw_pcie_prog_outbound_atu(pci, pp->cfg_idx,
- 				  type, cpu_addr,
- 				  busdev, cfg_size);
- 	ret =3D dw_pcie_write(va_cfg_base + where, size, val);
--	if (pci->num_viewport <=3D 2)
--		dw_pcie_prog_outbound_atu(pci, PCIE_ATU_REGION_INDEX1,
-+	if (pp->cfg_idx =3D=3D pp->io_idx)
-+		dw_pcie_prog_outbound_atu(pci, pp->io_idx,
- 					  PCIE_ATU_TYPE_IO, pp->io_base,
- 					  pp->io_bus_addr, pp->io_size);
-=20
-@@ -652,6 +681,9 @@ static u8 dw_pcie_iatu_unroll_enabled(struct dw_pcie *p=
-ci)
- void dw_pcie_setup_rc(struct pcie_port *pp)
- {
- 	u32 val, ctrl, num_ctrls;
-+	u64 remain_size, base, win_size;
-+	phys_addr_t bus_addr;
-+	int i;
- 	struct dw_pcie *pci =3D to_dw_pcie_from_pp(pp);
-=20
- 	dw_pcie_setup(pci);
-@@ -700,13 +732,35 @@ void dw_pcie_setup_rc(struct pcie_port *pp)
- 		dev_dbg(pci->dev, "iATU unroll: %s\n",
- 			pci->iatu_unroll_enabled ? "enabled" : "disabled");
-=20
--		dw_pcie_prog_outbound_atu(pci, PCIE_ATU_REGION_INDEX0,
--					  PCIE_ATU_TYPE_MEM, pp->mem_base,
--					  pp->mem_bus_addr, pp->mem_size);
--		if (pci->num_viewport > 2)
--			dw_pcie_prog_outbound_atu(pci, PCIE_ATU_REGION_INDEX2,
--						  PCIE_ATU_TYPE_IO, pp->io_base,
--						  pp->io_bus_addr, pp->io_size);
-+		remain_size =3D pp->mem_size;
-+		base =3D pp->mem_base;
-+		bus_addr =3D pp->mem_bus_addr;
-+
-+		for (i =3D 0; remain_size > 0 && i < pp->mem_wins; i++) {
-+			/*
-+			 * The maximum region size is 4 GB, and a region
-+			 * must not cross a 4 GB boundary.
-+			 */
-+			win_size =3D SZ_4G - (base & (SZ_4G - 1));
-+			win_size =3D min(win_size, remain_size);
-+			dev_dbg(pci->dev, "iATU: MEM window %d: base =3D %llx, bus_addr =3D %ll=
-x, size =3D %llx\n",
-+				i, base, bus_addr, win_size);
-+
-+			dw_pcie_prog_outbound_atu(pci, i,
-+						  PCIE_ATU_TYPE_MEM, base,
-+						  bus_addr, win_size);
-+
-+			base +=3D win_size;
-+			bus_addr +=3D win_size;
-+			remain_size -=3D win_size;
-+		}
-+
-+		if (remain_size > 0)
-+			dev_info(pci->dev, "iATU: MEM window isn't enough\n");
-+
-+		dw_pcie_prog_outbound_atu(pci, pp->io_idx,
-+					  PCIE_ATU_TYPE_IO, pp->io_base,
-+					  pp->io_bus_addr, pp->io_size);
- 	}
-=20
- 	dw_pcie_wr_own_conf(pp, PCI_BASE_ADDRESS_0, 4, 0);
-diff --git a/drivers/pci/controller/dwc/pcie-designware.h b/drivers/pci/con=
-troller/dwc/pcie-designware.h
-index a438c3879aa9..20146b8729b3 100644
---- a/drivers/pci/controller/dwc/pcie-designware.h
-+++ b/drivers/pci/controller/dwc/pcie-designware.h
-@@ -148,12 +148,15 @@ struct pcie_port {
- 	u64			cfg1_base;
- 	void __iomem		*va_cfg1_base;
- 	u32			cfg1_size;
-+	u32			cfg_idx;
- 	resource_size_t		io_base;
- 	phys_addr_t		io_bus_addr;
- 	u32			io_size;
-+	u32			io_idx;
- 	u64			mem_base;
- 	phys_addr_t		mem_bus_addr;
- 	u64			mem_size;
-+	u32			mem_wins;
- 	struct resource		*cfg;
- 	struct resource		*io;
- 	struct resource		*mem;
+ error:
++	pci_free_resource_list(&bridge->windows);
+ 	pci_free_host_bridge(bridge);
+ 	return ret;
+ }
 --=20
 2.17.1
 
