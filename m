@@ -2,82 +2,85 @@ Return-Path: <SRS0=18Ni=NF=vger.kernel.org=linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-8.8 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_PASS,URIBL_BLOCKED,
-	USER_AGENT_GIT autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-0.9 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
+	DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_PASS
+	autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 3F632C46475
-	for <linux-pci@archiver.kernel.org>; Thu, 25 Oct 2018 13:52:47 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id B0CBEECDE46
+	for <linux-pci@archiver.kernel.org>; Thu, 25 Oct 2018 13:55:33 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id D96C82075D
-	for <linux-pci@archiver.kernel.org>; Thu, 25 Oct 2018 13:52:46 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.3.2 mail.kernel.org D96C82075D
-Authentication-Results: mail.kernel.org; dmarc=fail (p=none dis=none) header.from=canonical.com
+	by mail.kernel.org (Postfix) with ESMTP id 78F532075D
+	for <linux-pci@archiver.kernel.org>; Thu, 25 Oct 2018 13:55:33 +0000 (UTC)
+Authentication-Results: mail.kernel.org;
+	dkim=pass (1024-bit key) header.d=linux-foundation.org header.i=@linux-foundation.org header.b="VYJXLZ4f"
+DMARC-Filter: OpenDMARC Filter v1.3.2 mail.kernel.org 78F532075D
+Authentication-Results: mail.kernel.org; dmarc=none (p=none dis=none) header.from=linux-foundation.org
 Authentication-Results: mail.kernel.org; spf=none smtp.mailfrom=linux-pci-owner@vger.kernel.org
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727356AbeJYWZh (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Thu, 25 Oct 2018 18:25:37 -0400
-Received: from youngberry.canonical.com ([91.189.89.112]:38225 "EHLO
-        youngberry.canonical.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1727323AbeJYWZg (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Thu, 25 Oct 2018 18:25:36 -0400
-Received: from 1.general.cking.uk.vpn ([10.172.193.212] helo=localhost)
-        by youngberry.canonical.com with esmtpsa (TLS1.0:RSA_AES_256_CBC_SHA1:32)
-        (Exim 4.76)
-        (envelope-from <colin.king@canonical.com>)
-        id 1gFg3s-0002Hw-76; Thu, 25 Oct 2018 13:52:32 +0000
-From:   Colin King <colin.king@canonical.com>
-To:     Bjorn Helgaas <bhelgaas@google.com>,
-        Thomas Gleixner <tglx@linutronix.de>,
-        Ingo Molnar <mingo@redhat.com>, Borislav Petkov <bp@alien8.de>,
-        "H . Peter Anvin" <hpa@zytor.com>, x86@kernel.org,
-        linux-pci@vger.kernel.org
-Cc:     kernel-janitors@vger.kernel.org, linux-kernel@vger.kernel.org
-Subject: [PATCH] x86/PCI: Fix Broadcom CNB20LE unintended sign extension (redux)
-Date:   Thu, 25 Oct 2018 14:52:31 +0100
-Message-Id: <20181025135231.27817-1-colin.king@canonical.com>
-X-Mailer: git-send-email 2.19.1
+        id S1727469AbeJYW2Y (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Thu, 25 Oct 2018 18:28:24 -0400
+Received: from mail-lf1-f45.google.com ([209.85.167.45]:44460 "EHLO
+        mail-lf1-f45.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1727323AbeJYW2X (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Thu, 25 Oct 2018 18:28:23 -0400
+Received: by mail-lf1-f45.google.com with SMTP id m18-v6so6863195lfl.11
+        for <linux-pci@vger.kernel.org>; Thu, 25 Oct 2018 06:55:31 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=linux-foundation.org; s=google;
+        h=mime-version:references:in-reply-to:from:date:message-id:subject:to
+         :cc;
+        bh=pF6Ntyek8lzhI14RsHZQtcUKXPUe3XVye+Z+HZsCvU0=;
+        b=VYJXLZ4fNBBbs0hP5YoWWqI7Z5nJSveS2c1i8xY6/FuT494OAmyNGOig2YQW0m4VVX
+         SBDn1JoWNmqrtVE7zt9ufP/S8BdntMeEluxMN43QG4WY/M7dDsbZXxT7a0raZEGJ492/
+         G7CizwGBieTnGOFNuhP0pm+dCKRFIYswZzi4c=
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20161025;
+        h=x-gm-message-state:mime-version:references:in-reply-to:from:date
+         :message-id:subject:to:cc;
+        bh=pF6Ntyek8lzhI14RsHZQtcUKXPUe3XVye+Z+HZsCvU0=;
+        b=MjYN/K+YjHDbAPTsxbb8LN2CXbCnTcqhnsiXJxgNDA9hDIYP2xsODutH3mKBNh0oNK
+         SyrxZRpZUi2IdzjgitLcMXwkLiIchj8k4zUG/3aaCktbj21OZG7x9OaQ4kHGZ6G7mnYn
+         NXrQHNm3qqTMXtI81VDcIDhaBl+dYiP4ASa3UyaWA8mgihylwL+/YDx+dbyLOhPBPTG5
+         fX3s9qsIe2cL9EL2LtaxLHa0x3qc0IiFij4dRw/9smN7bUxlv9vqR9gykgDLmag3wvDN
+         rxUBkHTCyAr9NI9/fJXaEHT0kHKF1tnF32R5R76Wm3fUqzrFJybKcazOACr03eHY3xcc
+         0LeQ==
+X-Gm-Message-State: AGRZ1gJcD2cGFy6tg2bizFYNUu7PTH0wiKGhWh9AhKgYQ53k2lOzYIQg
+        9Tx6gdNEmkZ3ae9l2VrKH2m7lmRN9BFEa0+R
+X-Google-Smtp-Source: AJdET5ddkwGR/i3Lz9UQmZ8vYBzW8pdLE0AK2s3rpo1zIA6sbueMjqJyBEZI8hNroDHN4y3DtrdG/Q==
+X-Received: by 2002:a19:4d8d:: with SMTP id a135mr1336070lfb.80.1540475730199;
+        Thu, 25 Oct 2018 06:55:30 -0700 (PDT)
+Received: from mail-lf1-f42.google.com (mail-lf1-f42.google.com. [209.85.167.42])
+        by smtp.gmail.com with ESMTPSA id g92-v6sm1172058lji.24.2018.10.25.06.55.28
+        for <linux-pci@vger.kernel.org>
+        (version=TLS1_2 cipher=ECDHE-RSA-AES128-GCM-SHA256 bits=128/128);
+        Thu, 25 Oct 2018 06:55:29 -0700 (PDT)
+Received: by mail-lf1-f42.google.com with SMTP id c16so6855652lfj.8
+        for <linux-pci@vger.kernel.org>; Thu, 25 Oct 2018 06:55:28 -0700 (PDT)
+X-Received: by 2002:a19:111b:: with SMTP id g27mr1293580lfi.135.1540475728189;
+ Thu, 25 Oct 2018 06:55:28 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: 8bit
+References: <20181023173934.GA14918@bhelgaas-glaptop.roam.corp.google.com>
+In-Reply-To: <20181023173934.GA14918@bhelgaas-glaptop.roam.corp.google.com>
+From:   Linus Torvalds <torvalds@linux-foundation.org>
+Date:   Thu, 25 Oct 2018 06:55:12 -0700
+X-Gmail-Original-Message-ID: <CAHk-=wiTnb=o9JomnD68ob-6wNKHbBsYKKD1XmNwDBW0NjvkPA@mail.gmail.com>
+Message-ID: <CAHk-=wiTnb=o9JomnD68ob-6wNKHbBsYKKD1XmNwDBW0NjvkPA@mail.gmail.com>
+Subject: Re: [GIT PULL] PCI changes for v4.20
+To:     helgaas@kernel.org
+Cc:     linux-pci@vger.kernel.org,
+        Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
+        lorenzo.pieralisi@arm.com, Greg KH <gregkh@linuxfoundation.org>,
+        bvanassche@acm.org, Jens Axboe <axboe@kernel.dk>
+Content-Type: text/plain; charset="UTF-8"
 Sender: linux-pci-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-From: Colin Ian King <colin.king@canonical.com>
+On Tue, Oct 23, 2018 at 10:39 AM Bjorn Helgaas <helgaas@kernel.org> wrote:
+>
+> PCI changes:
 
-In the expression "word1 << 16", word1 starts as u16, but is promoted to
-a signed int, then sign-extended to resource_size_t, which is probably
-not what was intended.  Cast to resource_size_t to avoid the sign
-extension.
+Pulled,
 
-This fixes an identical issue as fixed by commit 0b2d70764bb3
-("x86/PCI: Fix Broadcom CNB20LE unintended sign extension") back in 2014.
-
-Detected by CoverityScan, CID#138749, 138750 ("Unintended sign extension")
-
-Fixes: 3f6ea84a3035 ("PCI: read memory ranges out of Broadcom CNB20LE host bridge")
-Signed-off-by: Colin Ian King <colin.king@canonical.com>
----
- arch/x86/pci/broadcom_bus.c | 4 ++--
- 1 file changed, 2 insertions(+), 2 deletions(-)
-
-diff --git a/arch/x86/pci/broadcom_bus.c b/arch/x86/pci/broadcom_bus.c
-index 526536c81ddc..d09c401a300d 100644
---- a/arch/x86/pci/broadcom_bus.c
-+++ b/arch/x86/pci/broadcom_bus.c
-@@ -50,8 +50,8 @@ static void __init cnb20le_res(u8 bus, u8 slot, u8 func)
- 	word1 = read_pci_config_16(bus, slot, func, 0xc0);
- 	word2 = read_pci_config_16(bus, slot, func, 0xc2);
- 	if (word1 != word2) {
--		res.start = (word1 << 16) | 0x0000;
--		res.end   = (word2 << 16) | 0xffff;
-+		res.start = ((resource_size_t) word1 << 16) | 0x0000;
-+		res.end   = ((resource_size_t) word2 << 16) | 0xffff;
- 		res.flags = IORESOURCE_MEM;
- 		update_res(info, res.start, res.end, res.flags, 0);
- 	}
--- 
-2.19.1
-
+                        Linus
