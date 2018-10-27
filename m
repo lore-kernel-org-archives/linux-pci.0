@@ -1,293 +1,212 @@
-Return-Path: <SRS0=XYt1=NG=vger.kernel.org=linux-pci-owner@kernel.org>
+Return-Path: <SRS0=ddhW=NH=vger.kernel.org=linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-6.8 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_PASS,URIBL_BLOCKED
-	autolearn=unavailable autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-6.9 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
+	DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,
+	SIGNED_OFF_BY,SPF_PASS,URIBL_BLOCKED autolearn=ham autolearn_force=no
+	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 0082DECDE46
-	for <linux-pci@archiver.kernel.org>; Fri, 26 Oct 2018 21:01:13 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id B78C2ECDE44
+	for <linux-pci@archiver.kernel.org>; Sat, 27 Oct 2018 00:02:25 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 9B3AA2082B
-	for <linux-pci@archiver.kernel.org>; Fri, 26 Oct 2018 21:01:12 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.3.2 mail.kernel.org 9B3AA2082B
-Authentication-Results: mail.kernel.org; dmarc=fail (p=none dis=none) header.from=nxp.com
+	by mail.kernel.org (Postfix) with ESMTP id 5176D2082C
+	for <linux-pci@archiver.kernel.org>; Sat, 27 Oct 2018 00:02:25 +0000 (UTC)
+Authentication-Results: mail.kernel.org;
+	dkim=pass (1024-bit key) header.d=impinj.com header.i=@impinj.com header.b="elowdOc3"
+DMARC-Filter: OpenDMARC Filter v1.3.2 mail.kernel.org 5176D2082C
+Authentication-Results: mail.kernel.org; dmarc=fail (p=quarantine dis=none) header.from=impinj.com
 Authentication-Results: mail.kernel.org; spf=none smtp.mailfrom=linux-pci-owner@vger.kernel.org
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727965AbeJ0Fjj (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Sat, 27 Oct 2018 01:39:39 -0400
-Received: from mail-oi1-f196.google.com ([209.85.167.196]:38307 "EHLO
-        mail-oi1-f196.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726460AbeJ0Fjj (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Sat, 27 Oct 2018 01:39:39 -0400
-Received: by mail-oi1-f196.google.com with SMTP id k19-v6so2208011oiw.5;
-        Fri, 26 Oct 2018 14:01:05 -0700 (PDT)
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20161025;
-        h=x-gm-message-state:mime-version:references:in-reply-to:from:date
-         :message-id:subject:to:cc;
-        bh=qVlDeIxXOJFWyvrYSVlklmDwdDxaa13w01/V7QPawOM=;
-        b=eZ+QEd4E5AmtxExrWiRvyYGBTfIRGWv2XX3uwvwShe+UxpTVGwFxe7eXxB6E9Tv4ND
-         XeHwSyuCl4Nv9zwCKiRh3TdAaRIvDoTPuV0/xps5iuwfQH2pinqvPu5mtB6Yho6Y68GS
-         vdZfUM4SgUTBGvNQhoZYu7gO8M9X5Jq7NmyxiR7mEIr2yRyEBBpFQEirzbJvRq6BCWHi
-         /0aDzef183aYBgBgBVZ6ftY+ihBkyanhxHTx2RlClk6N2xe8+JJBA6BocPIDgjOVgc/w
-         WGpSjm8doXHFXKGU0RZs6N6+VFneHMLDoOF3oIrx9ezoFl+717ny6c85uWGL3T0kV0uo
-         lAAg==
-X-Gm-Message-State: AGRZ1gJxJZbkx1Qqz997H3pwGLPVRYuegxECkKiaKSBTFRfqLQ9SCss4
-        6tXZ2nyVeC01M1ms9K5Eysac35JGQxo=
-X-Google-Smtp-Source: AJdET5c3/tCBRpHA1Somyum7rQ4Ms8TVq3nTvPwxjNppuzpwYydq47wn5UezxfkH9xYkcpPJfDpkSQ==
-X-Received: by 2002:aca:e087:: with SMTP id x129-v6mr3292500oig.221.1540587664953;
-        Fri, 26 Oct 2018 14:01:04 -0700 (PDT)
-Received: from mail-oi1-f171.google.com (mail-oi1-f171.google.com. [209.85.167.171])
-        by smtp.gmail.com with ESMTPSA id 143-v6sm5540031oii.16.2018.10.26.14.01.03
-        (version=TLS1_2 cipher=ECDHE-RSA-AES128-GCM-SHA256 bits=128/128);
-        Fri, 26 Oct 2018 14:01:04 -0700 (PDT)
-Received: by mail-oi1-f171.google.com with SMTP id r127-v6so475266oie.3;
-        Fri, 26 Oct 2018 14:01:03 -0700 (PDT)
-X-Received: by 2002:aca:5215:: with SMTP id g21-v6mr2773754oib.351.1540587663497;
- Fri, 26 Oct 2018 14:01:03 -0700 (PDT)
+        id S1728073AbeJ0Il0 (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Sat, 27 Oct 2018 04:41:26 -0400
+Received: from mail-bl2nam02on0108.outbound.protection.outlook.com ([104.47.38.108]:35622
+        "EHLO NAM02-BL2-obe.outbound.protection.outlook.com"
+        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+        id S1727778AbeJ0Il0 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Sat, 27 Oct 2018 04:41:26 -0400
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=impinj.com;
+ s=selector1;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
+ bh=X9ZxQX5/Qc6p72GmZzpkvG/KZXpgMyar5oGYt2wdQwk=;
+ b=elowdOc3Oq8L3s825zVhfoeInpG50JKiAClHfG+EawLUDxcPAWcJFbjBP4EYDgR5rl0ymzFwgOQ3/l401TCj/VVRW/qlFuwiqVmuUCYV177EA/C9EBfxjJwltEEHYk7rLLCvtEp/YxhrAJycQtVeDpzuM2BmRsBaenXpj44Ipxg=
+Received: from MWHPR0601MB3708.namprd06.prod.outlook.com (10.167.236.38) by
+ MWHPR0601MB3689.namprd06.prod.outlook.com (10.167.236.31) with Microsoft SMTP
+ Server (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
+ 15.20.1250.30; Sat, 27 Oct 2018 00:00:57 +0000
+Received: from MWHPR0601MB3708.namprd06.prod.outlook.com
+ ([fe80::f51a:d8dd:1aad:3bf9]) by MWHPR0601MB3708.namprd06.prod.outlook.com
+ ([fe80::f51a:d8dd:1aad:3bf9%3]) with mapi id 15.20.1273.025; Sat, 27 Oct 2018
+ 00:00:57 +0000
+From:   Trent Piepho <tpiepho@impinj.com>
+To:     "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
+CC:     Trent Piepho <tpiepho@impinj.com>,
+        "stable@vger.kernel.org" <stable@vger.kernel.org>,
+        Vignesh R <vigneshr@ti.com>, Faiz Abbas <faiz_abbas@ti.com>,
+        Jingoo Han <jingoohan1@gmail.com>,
+        Gustavo Pimentel <gustavo.pimentel@synopsys.com>,
+        Joao Pinto <jpinto@synopsys.com>,
+        Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
+        Bjorn Helgaas <bhelgaas@google.com>
+Subject: [PATCH] PCI: dwc: Fix interrupt race in when handling MSI
+Thread-Topic: [PATCH] PCI: dwc: Fix interrupt race in when handling MSI
+Thread-Index: AQHUbYgjUY6vVpEq1Ees3VO0f7sjeQ==
+Date:   Sat, 27 Oct 2018 00:00:57 +0000
+Message-ID: <20181027000028.21343-1-tpiepho@impinj.com>
+Accept-Language: en-US
+Content-Language: en-US
+X-MS-Has-Attach: 
+X-MS-TNEF-Correlator: 
+x-clientproxiedby: MWHPR1701CA0021.namprd17.prod.outlook.com
+ (2603:10b6:301:14::31) To MWHPR0601MB3708.namprd06.prod.outlook.com
+ (2603:10b6:301:7c::38)
+authentication-results: spf=none (sender IP is )
+ smtp.mailfrom=tpiepho@impinj.com; 
+x-ms-exchange-messagesentrepresentingtype: 1
+x-originating-ip: [216.207.205.253]
+x-ms-publictraffictype: Email
+x-microsoft-exchange-diagnostics: 1;MWHPR0601MB3689;6:t44IT6XzoL147kb7aDabQFiqSaY20zidQKnEikZnoeT1wpfRPeXgtlqkHWOwXKMNLQ0T30AITMgjt8jbd/VSMmELGsgl4xjY5g557XdoRa1eYDKG1URokqY7jPSvk1YMQ0gFaHDAQSGu02FjCZ0qR1VKSxJLZOdZ+dfhHlqfhYDrVDIhzmukDnb7LLKnkxzXcNGenWzJIqw/i5ImDhN+e4FqhwaF5amXI/f3zs1EJ5oHim5KZvPdVUkdml8YLoG2qCOrIvxaCVJU7Hhe1H+Rwl+ajAfZ5tZkIiUYVETiY0WuQ0RV830lwEEEpiph4i7zIZRZMAaELNPepJEIbLb6HJbZJIn8DqTr7ej6+xX7fSM8c4vajZLDZ7lFJlKDLtoZo3JPEo0CluPQtCijf8b446YNOJwtGq28XOkh13zlKDOxZpYw4KolZbRGEXGSSlyw9aUQK5ZCyej+mBJZhULX7w==;5:keITai424iM4BkvP4IPOg/a0s6dkbQueBq0XM3E1Ef4DoLdkN6AFhpXoO5F4r+bMmLjqyCh8k4An5CpxUPR0Z+tStJ8xePY/LvblDd/1xQzRkHr4IK/8piKgly4lDaN2z2gc9+p8RRJ+suqm7f6drmdaV2zCc8wrXcxXuFiGZ+c=;7:urcLMXfat8TOComi14S3fM39kmqsgfCIVzFp/QXjkRPTlTMs15OPGmBFRKCjkzO05xYeV4+zJ5/HKOAb+6rfAeYYPnspglQcQhysnLRfvBOUl45T7AYgCw0Gfn9jxa1bjGut3KT9ndmN2ae1roAH5scp5EfyeHm8zzI/al1JD+QL8KMf/0jMXZmTGEQE5rr2+UBx2O4ok621NfYt1i1vfceQ6o3HYXhF96pw9CmlL40q3dfZMA/nHzd24xNUe7zA
+x-ms-office365-filtering-correlation-id: febfe4c1-b16d-406f-bbfd-08d63b9f454b
+x-microsoft-antispam: BCL:0;PCL:0;RULEID:(7020095)(4652040)(8989299)(5600074)(711020)(4534185)(4627221)(201703031133081)(201702281549075)(8990200)(2017052603328)(7153060)(7193020);SRVR:MWHPR0601MB3689;
+x-ms-traffictypediagnostic: MWHPR0601MB3689:
+x-microsoft-antispam-prvs: <MWHPR0601MB36896145879ABD6073DD68A1D3F10@MWHPR0601MB3689.namprd06.prod.outlook.com>
+x-exchange-antispam-report-test: UriScan:(9452136761055)(31051911155226)(85827821059158)(180628864354917)(211936372134217)(153496737603132);
+x-ms-exchange-senderadcheck: 1
+x-exchange-antispam-report-cfa-test: BCL:0;PCL:0;RULEID:(8211001083)(6040522)(2401047)(5005006)(8121501046)(93006095)(93001095)(10201501046)(3231355)(944501410)(52105095)(3002001)(148016)(149066)(150057)(6041310)(20161123564045)(20161123562045)(20161123558120)(20161123560045)(201703131423095)(201702281528075)(20161123555045)(201703061421075)(201703061406153)(201708071742011)(7699051)(76991095);SRVR:MWHPR0601MB3689;BCL:0;PCL:0;RULEID:;SRVR:MWHPR0601MB3689;
+x-forefront-prvs: 08381C729B
+x-forefront-antispam-report: SFV:NSPM;SFS:(10019020)(366004)(136003)(346002)(376002)(396003)(39830400003)(199004)(189003)(305945005)(71190400001)(71200400001)(7736002)(316002)(5660300001)(99286004)(486006)(2351001)(476003)(54906003)(66066001)(2616005)(186003)(1857600001)(6916009)(52116002)(6506007)(386003)(86362001)(81156014)(2906002)(81166006)(2900100001)(102836004)(97736004)(6116002)(39060400002)(5250100002)(3846002)(1076002)(2501003)(53936002)(26005)(6306002)(68736007)(14444005)(256004)(966005)(105586002)(25786009)(5640700003)(106356001)(36756003)(478600001)(6436002)(14454004)(8676002)(6512007)(8936002)(4326008)(6486002);DIR:OUT;SFP:1102;SCL:1;SRVR:MWHPR0601MB3689;H:MWHPR0601MB3708.namprd06.prod.outlook.com;FPR:;SPF:None;LANG:en;PTR:InfoNoRecords;A:1;MX:1;
+received-spf: None (protection.outlook.com: impinj.com does not designate
+ permitted sender hosts)
+x-microsoft-antispam-message-info: FxBh63kazrBxNi0oyPZ9x6IMZ55GJknxDYjM+V+YQxsIan2BjUuasE7JIXNdxxPwOkh03eJ+cVys0OGoJBOiBBPpSfBwiRHIXds/fl1DQ/3QRbgB34sKp3DLZEq5oa2C+AA/ujY4O0uqBnEDkYgvpyy9QfL0ilICsXJFS7fGz6vuckMIwqdyjD8DRm/HlFovP5nTtZeMytYjcQkOxSEkh35d5vX6kgkms0NexJCDC6B6UOiWSny90OdKk7J0sw5ivc+ooLJ7/rgUnpr4ofsq4AACGzcetLN89wJnVq1M9GMia3MgQ+AOjtpb6/TTr6AGOAhpHtEO9Hb7eABoe7vD3DhCj8ct7uq7VAAWOcaBxFs=
+spamdiagnosticoutput: 1:99
+spamdiagnosticmetadata: NSPM
+Content-Type: text/plain; charset="iso-8859-1"
+Content-Transfer-Encoding: quoted-printable
 MIME-Version: 1.0
-References: <20181025094929.29481-1-Zhiqiang.Hou@nxp.com> <20181025094929.29481-5-Zhiqiang.Hou@nxp.com>
-In-Reply-To: <20181025094929.29481-5-Zhiqiang.Hou@nxp.com>
-From:   Li Yang <leoyang.li@nxp.com>
-Date:   Fri, 26 Oct 2018 16:00:52 -0500
-X-Gmail-Original-Message-ID: <CADRPPNQ=cyi5b+86VvoS2XRycU-WvWM5s2RXYopi=RaMjjYpLg@mail.gmail.com>
-Message-ID: <CADRPPNQ=cyi5b+86VvoS2XRycU-WvWM5s2RXYopi=RaMjjYpLg@mail.gmail.com>
-Subject: Re: [PATCH v2 4/4] dts/arm64/layerscape: Clean PCIe controller
- compatible strings
-To:     Zhiqiang Hou <zhiqiang.hou@nxp.com>
-Cc:     "moderated list:ARM/FREESCALE IMX / MXC ARM ARCHITECTURE" 
-        <linux-arm-kernel@lists.infradead.org>,
-        lkml <linux-kernel@vger.kernel.org>, linux-pci@vger.kernel.org,
-        "open list:OPEN FIRMWARE AND FLATTENED DEVICE TREE BINDINGS" 
-        <devicetree@vger.kernel.org>, Rob Herring <robh+dt@kernel.org>,
-        Shawn Guo <shawnguo@kernel.org>,
-        Mark Rutland <mark.rutland@arm.com>,
-        Bjorn Helgaas <bhelgaas@google.com>,
-        Mingkai Hu <mingkai.hu@nxp.com>,
-        Minghuan Lian <minghuan.lian@nxp.com>
-Content-Type: text/plain; charset="UTF-8"
+X-OriginatorOrg: impinj.com
+X-MS-Exchange-CrossTenant-Network-Message-Id: febfe4c1-b16d-406f-bbfd-08d63b9f454b
+X-MS-Exchange-CrossTenant-originalarrivaltime: 27 Oct 2018 00:00:57.5789
+ (UTC)
+X-MS-Exchange-CrossTenant-fromentityheader: Hosted
+X-MS-Exchange-CrossTenant-id: 6de70f0f-7357-4529-a415-d8cbb7e93e5e
+X-MS-Exchange-Transport-CrossTenantHeadersStamped: MWHPR0601MB3689
 Sender: linux-pci-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-On Thu, Oct 25, 2018 at 4:53 AM Z.q. Hou <zhiqiang.hou@nxp.com> wrote:
+This reverts commit 8c934095fa2f ("PCI: dwc: Clear MSI interrupt status
+after it is handled, not before").
 
-The correct prefix for arm64 dts patches should be: "arm64: dts:
-layerscape: ...", and it should be better to mention the string
-removed in the title too.
+This is a very real race that we observed quickly after switching from
+4.13 to 4.16.  Using a custom PCI-e endpoint and driver, I was able to
+track it to the precise race and verify the fixed behavior, as will be
+described below.
 
->
-> From: Hou Zhiqiang <Zhiqiang.Hou@nxp.com>
->
-> Removed the wrong compatible string "snps,dw-pcie", in case
-> match incorrect driver.
->
-> Signed-off-by: Hou Zhiqiang <Zhiqiang.Hou@nxp.com>
-> ---
-> V2:
->  - no change
->
->  arch/arm64/boot/dts/freescale/fsl-ls1012a.dtsi |  2 +-
->  arch/arm64/boot/dts/freescale/fsl-ls1043a.dtsi |  6 +++---
->  arch/arm64/boot/dts/freescale/fsl-ls1046a.dtsi |  6 +++---
->  arch/arm64/boot/dts/freescale/fsl-ls1088a.dtsi |  6 +++---
->  arch/arm64/boot/dts/freescale/fsl-ls2088a.dtsi |  8 ++++----
->  arch/arm64/boot/dts/freescale/fsl-ls208xa.dtsi | 12 ++++--------
->  6 files changed, 18 insertions(+), 22 deletions(-)
->
-> diff --git a/arch/arm64/boot/dts/freescale/fsl-ls1012a.dtsi b/arch/arm64/boot/dts/freescale/fsl-ls1012a.dtsi
-> index 5da732f82fa0..028a6daa5597 100644
-> --- a/arch/arm64/boot/dts/freescale/fsl-ls1012a.dtsi
-> +++ b/arch/arm64/boot/dts/freescale/fsl-ls1012a.dtsi
-> @@ -475,7 +475,7 @@
->                 };
->
->                 pcie@3400000 {
-> -                       compatible = "fsl,ls1012a-pcie", "snps,dw-pcie";
-> +                       compatible = "fsl,ls1012a-pcie";
->                         reg = <0x00 0x03400000 0x0 0x00100000   /* controller registers */
->                                0x40 0x00000000 0x0 0x00002000>; /* configuration space */
->                         reg-names = "regs", "config";
-> diff --git a/arch/arm64/boot/dts/freescale/fsl-ls1043a.dtsi b/arch/arm64/boot/dts/freescale/fsl-ls1043a.dtsi
-> index 3fed504b5381..5480d6c4c548 100644
-> --- a/arch/arm64/boot/dts/freescale/fsl-ls1043a.dtsi
-> +++ b/arch/arm64/boot/dts/freescale/fsl-ls1043a.dtsi
-> @@ -661,7 +661,7 @@
->                 };
->
->                 pcie@3400000 {
-> -                       compatible = "fsl,ls1043a-pcie", "snps,dw-pcie";
-> +                       compatible = "fsl,ls1043a-pcie";
->                         reg = <0x00 0x03400000 0x0 0x00100000   /* controller registers */
->                                0x40 0x00000000 0x0 0x00002000>; /* configuration space */
->                         reg-names = "regs", "config";
-> @@ -686,7 +686,7 @@
->                 };
->
->                 pcie@3500000 {
-> -                       compatible = "fsl,ls1043a-pcie", "snps,dw-pcie";
-> +                       compatible = "fsl,ls1043a-pcie";
->                         reg = <0x00 0x03500000 0x0 0x00100000   /* controller registers */
->                                0x48 0x00000000 0x0 0x00002000>; /* configuration space */
->                         reg-names = "regs", "config";
-> @@ -711,7 +711,7 @@
->                 };
->
->                 pcie@3600000 {
-> -                       compatible = "fsl,ls1043a-pcie", "snps,dw-pcie";
-> +                       compatible = "fsl,ls1043a-pcie";
->                         reg = <0x00 0x03600000 0x0 0x00100000   /* controller registers */
->                                0x50 0x00000000 0x0 0x00002000>; /* configuration space */
->                         reg-names = "regs", "config";
-> diff --git a/arch/arm64/boot/dts/freescale/fsl-ls1046a.dtsi b/arch/arm64/boot/dts/freescale/fsl-ls1046a.dtsi
-> index 51cbd50012d6..519315c5d507 100644
-> --- a/arch/arm64/boot/dts/freescale/fsl-ls1046a.dtsi
-> +++ b/arch/arm64/boot/dts/freescale/fsl-ls1046a.dtsi
-> @@ -630,7 +630,7 @@
->                 };
->
->                 pcie@3400000 {
-> -                       compatible = "fsl,ls1046a-pcie", "snps,dw-pcie";
-> +                       compatible = "fsl,ls1046a-pcie";
->                         reg = <0x00 0x03400000 0x0 0x00100000   /* controller registers */
->                                0x40 0x00000000 0x0 0x00002000>; /* configuration space */
->                         reg-names = "regs", "config";
-> @@ -655,7 +655,7 @@
->                 };
->
->                 pcie@3500000 {
-> -                       compatible = "fsl,ls1046a-pcie", "snps,dw-pcie";
-> +                       compatible = "fsl,ls1046a-pcie";
->                         reg = <0x00 0x03500000 0x0 0x00100000   /* controller registers */
->                                0x48 0x00000000 0x0 0x00002000>; /* configuration space */
->                         reg-names = "regs", "config";
-> @@ -680,7 +680,7 @@
->                 };
->
->                 pcie@3600000 {
-> -                       compatible = "fsl,ls1046a-pcie", "snps,dw-pcie";
-> +                       compatible = "fsl,ls1046a-pcie";
->                         reg = <0x00 0x03600000 0x0 0x00100000   /* controller registers */
->                                0x50 0x00000000 0x0 0x00002000>; /* configuration space */
->                         reg-names = "regs", "config";
-> diff --git a/arch/arm64/boot/dts/freescale/fsl-ls1088a.dtsi b/arch/arm64/boot/dts/freescale/fsl-ls1088a.dtsi
-> index a07f612ab56b..10b253c88a16 100644
-> --- a/arch/arm64/boot/dts/freescale/fsl-ls1088a.dtsi
-> +++ b/arch/arm64/boot/dts/freescale/fsl-ls1088a.dtsi
-> @@ -512,7 +512,7 @@
->                 };
->
->                 pcie@3400000 {
-> -                       compatible = "fsl,ls1088a-pcie", "snps,dw-pcie";
-> +                       compatible = "fsl,ls1088a-pcie";
->                         reg = <0x00 0x03400000 0x0 0x00100000   /* controller registers */
->                                0x20 0x00000000 0x0 0x00002000>; /* configuration space */
->                         reg-names = "regs", "config";
-> @@ -536,7 +536,7 @@
->                 };
->
->                 pcie@3500000 {
-> -                       compatible = "fsl,ls1088a-pcie", "snps,dw-pcie";
-> +                       compatible = "fsl,ls1088a-pcie";
->                         reg = <0x00 0x03500000 0x0 0x00100000   /* controller registers */
->                                0x28 0x00000000 0x0 0x00002000>; /* configuration space */
->                         reg-names = "regs", "config";
-> @@ -560,7 +560,7 @@
->                 };
->
->                 pcie@3600000 {
-> -                       compatible = "fsl,ls1088a-pcie", "snps,dw-pcie";
-> +                       compatible = "fsl,ls1088a-pcie";
->                         reg = <0x00 0x03600000 0x0 0x00100000   /* controller registers */
->                                0x30 0x00000000 0x0 0x00002000>; /* configuration space */
->                         reg-names = "regs", "config";
-> diff --git a/arch/arm64/boot/dts/freescale/fsl-ls2088a.dtsi b/arch/arm64/boot/dts/freescale/fsl-ls2088a.dtsi
-> index 7c882da3f6b0..a5f668d786b8 100644
-> --- a/arch/arm64/boot/dts/freescale/fsl-ls2088a.dtsi
-> +++ b/arch/arm64/boot/dts/freescale/fsl-ls2088a.dtsi
-> @@ -119,7 +119,7 @@
->  };
->
->  &pcie1 {
-> -       compatible = "fsl,ls2088a-pcie", "snps,dw-pcie";
-> +       compatible = "fsl,ls2088a-pcie";
->         reg = <0x00 0x03400000 0x0 0x00100000   /* controller registers */
->                0x20 0x00000000 0x0 0x00002000>; /* configuration space */
->
-> @@ -128,7 +128,7 @@
->  };
->
->  &pcie2 {
-> -       compatible = "fsl,ls2088a-pcie", "snps,dw-pcie";
-> +       compatible = "fsl,ls2088a-pcie";
->         reg = <0x00 0x03500000 0x0 0x00100000   /* controller registers */
->                0x28 0x00000000 0x0 0x00002000>; /* configuration space */
->
-> @@ -137,7 +137,7 @@
->  };
->
->  &pcie3 {
-> -       compatible = "fsl,ls2088a-pcie", "snps,dw-pcie";
-> +       compatible = "fsl,ls2088a-pcie";
->         reg = <0x00 0x03600000 0x0 0x00100000   /* controller registers */
->                0x30 0x00000000 0x0 0x00002000>; /* configuration space */
->
-> @@ -146,7 +146,7 @@
->  };
->
->  &pcie4 {
-> -       compatible = "fsl,ls2088a-pcie", "snps,dw-pcie";
-> +       compatible = "fsl,ls2088a-pcie";
->         reg = <0x00 0x03700000 0x0 0x00100000   /* controller registers */
->                0x38 0x00000000 0x0 0x00002000>; /* configuration space */
->
-> diff --git a/arch/arm64/boot/dts/freescale/fsl-ls208xa.dtsi b/arch/arm64/boot/dts/freescale/fsl-ls208xa.dtsi
-> index d188774a36e8..80cc40f76a4a 100644
-> --- a/arch/arm64/boot/dts/freescale/fsl-ls208xa.dtsi
-> +++ b/arch/arm64/boot/dts/freescale/fsl-ls208xa.dtsi
-> @@ -630,8 +630,7 @@
->                 };
->
->                 pcie1: pcie@3400000 {
-> -                       compatible = "fsl,ls2080a-pcie", "fsl,ls2085a-pcie",
-> -                                    "snps,dw-pcie";
-> +                       compatible = "fsl,ls2080a-pcie", "fsl,ls2085a-pcie";
->                         reg-names = "regs", "config";
->                         interrupts = <0 108 0x4>; /* Level high type */
->                         interrupt-names = "intr";
-> @@ -651,8 +650,7 @@
->                 };
->
->                 pcie2: pcie@3500000 {
-> -                       compatible = "fsl,ls2080a-pcie", "fsl,ls2085a-pcie",
-> -                                    "snps,dw-pcie";
-> +                       compatible = "fsl,ls2080a-pcie", "fsl,ls2085a-pcie";
->                         reg-names = "regs", "config";
->                         interrupts = <0 113 0x4>; /* Level high type */
->                         interrupt-names = "intr";
-> @@ -672,8 +670,7 @@
->                 };
->
->                 pcie3: pcie@3600000 {
-> -                       compatible = "fsl,ls2080a-pcie", "fsl,ls2085a-pcie",
-> -                                    "snps,dw-pcie";
-> +                       compatible = "fsl,ls2080a-pcie", "fsl,ls2085a-pcie";
->                         reg-names = "regs", "config";
->                         interrupts = <0 118 0x4>; /* Level high type */
->                         interrupt-names = "intr";
-> @@ -693,8 +690,7 @@
->                 };
->
->                 pcie4: pcie@3700000 {
-> -                       compatible = "fsl,ls2080a-pcie", "fsl,ls2085a-pcie",
-> -                                    "snps,dw-pcie";
-> +                       compatible = "fsl,ls2080a-pcie", "fsl,ls2085a-pcie";
->                         reg-names = "regs", "config";
->                         interrupts = <0 123 0x4>; /* Level high type */
->                         interrupt-names = "intr";
-> --
-> 2.17.1
->
+This bug was originally fixed in 2013, in commit ca1658921b63 ("PCI:
+designware: Fix missing MSI IRQs") The discussion of that commit,
+archived in patchwork [1], is informative and worth reading.
+
+The bug was re-added in the '8c934 commit this is reverting, which
+appeared in the 4.14 kernel.
+
+Unfortunately, Synopsys appears to consider the operation of this PCI-e
+controller secret.  They provide no publicly available docs for it nor
+allow the references manuals of SoCs using the controller to publish any
+documentation of it.
+
+So I can not say certain this code is correctly using the controller's
+features.  However, extensive testing gives me high confidence in the
+accuracy of what is described below.
+
+If an MSI is received by the PCI-e controller while the status register
+bit for that MSI is set, the PCI-e controller will NOT generate another
+interrupt.  In addition, it will NOT queue or otherwise mark the
+interrupt as "pending", which means it will NOT generate an interrupt
+when the status bit is unmasked.
+
+This gives the following race scenario:
+
+1.  An MSI is received by, and the status bit for the MSI is set in, the
+DWC PCI-e controller.
+2.  dw_handle_msi_irq() calls a driver's registered interrupt handler
+for the MSI received.
+3.  At some point, the interrupt handler must decide, correctly, that
+there is no more work to do and return.
+4.  The hardware generates a new MSI.  As the MSI's status bit is still
+set, this new MSI is ignored.
+6.  dw_handle_msi_irq() unsets the MSI status bit.
+
+The MSI received at point 4 will never be acted upon.  It occurred after
+the driver had finished checking the hardware status for interrupt
+conditions to act on.  Since the MSI status was masked, it does not
+generated a new IRQ, neither when it was received nor when the MSI is
+unmasked.
+
+It seems clear there is an unsolvable race here.
+
+After this patch, the sequence becomes as follows:
+
+1.  An MSI is received and the status bit for the MSI is set in the
+DWC PCI-e controller.
+2.  dw_handle_msi_irq() clears this MSI status bit.
+3.  dw_handle_msi_irq() calls a driver's registered interrupt handler
+for the MSI received.
+3.  At some point, the interrupt handler must decide, correctly, that
+there is no more work to do and return.
+4.  The hardware generates a new MSI.  This sets the MSI status bit and
+triggers another interrupt in the interrupt controller(s) above the DWC
+PCI-e controller.  As the the dwc-pcie handler is not re-entrant, it is
+not run again at this time.
+6.  dw_handle_msi_irq() finishes.  The MSI status bit remains set.
+7.  The IRQ is re-raised and dw_handle_msi_irq() runs again.
+8.  dw_handle_msi_irq() invokes the MSI's registered interrupt handler
+again as the status bit was still set.
+
+The observant will notice that point 4 present the opportunity for the
+SoC's interrupt controller to lose the interrupt in the same manner as
+the bug in this driver.  The driver for that interrupt controller will
+be written to properly deal with this.  In some cases the hardware
+supports an EOI concept, where the 2nd IRQ is masked and internally
+queued in the hardware, to be re-raised at EOI in step 7.  In other
+cases the IRQ will be unmasked and re-raised at step 4, but the kernel
+will see the handler is INPROGRESS and not re-invoke it, and instead set
+a PENDING flag, which causes the handler to re-run at step 7.
+
+[1] https://patchwork.kernel.org/patch/3333681/
+
+Fixes: 8c934095fa2f ("PCI: dwc: Clear MSI interrupt status after it is hand=
+led, not before")
+Cc: stable@vger.kernel.org
+Cc: Vignesh R <vigneshr@ti.com>
+Cc: Faiz Abbas <faiz_abbas@ti.com>
+Cc: Jingoo Han <jingoohan1@gmail.com>
+Cc: Gustavo Pimentel <gustavo.pimentel@synopsys.com>
+Cc: Joao Pinto <jpinto@synopsys.com>
+Cc: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
+Cc: Bjorn Helgaas <bhelgaas@google.com>
+Signed-off-by: Trent Piepho <tpiepho@impinj.com>
+---
+ drivers/pci/controller/dwc/pcie-designware-host.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/drivers/pci/controller/dwc/pcie-designware-host.c b/drivers/pc=
+i/controller/dwc/pcie-designware-host.c
+index 29a05759a294..9a3960c95ad3 100644
+--- a/drivers/pci/controller/dwc/pcie-designware-host.c
++++ b/drivers/pci/controller/dwc/pcie-designware-host.c
+@@ -98,10 +98,10 @@ irqreturn_t dw_handle_msi_irq(struct pcie_port *pp)
+ 			irq =3D irq_find_mapping(pp->irq_domain,
+ 					       (i * MAX_MSI_IRQS_PER_CTRL) +
+ 					       pos);
+-			generic_handle_irq(irq);
+ 			dw_pcie_wr_own_conf(pp, PCIE_MSI_INTR0_STATUS +
+ 						(i * MSI_REG_CTRL_BLOCK_SIZE),
+ 					    4, 1 << pos);
++			generic_handle_irq(irq);
+ 			pos++;
+ 		}
+ 	}
+--=20
+2.14.4
+
