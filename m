@@ -2,75 +2,66 @@ Return-Path: <SRS0=ddhW=NH=vger.kernel.org=linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-2.1 required=3.0 tests=DKIM_INVALID,DKIM_SIGNED,
-	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_PASS,USER_AGENT_MUTT
+X-Spam-Status: No, score=-5.8 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT
 	autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id CB62BC46475
-	for <linux-pci@archiver.kernel.org>; Sat, 27 Oct 2018 07:34:54 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 053BEC46475
+	for <linux-pci@archiver.kernel.org>; Sat, 27 Oct 2018 19:06:38 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 90F4620868
-	for <linux-pci@archiver.kernel.org>; Sat, 27 Oct 2018 07:34:54 +0000 (UTC)
-Authentication-Results: mail.kernel.org;
-	dkim=fail reason="signature verification failed" (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="ikANX6k1"
-DMARC-Filter: OpenDMARC Filter v1.3.2 mail.kernel.org 90F4620868
-Authentication-Results: mail.kernel.org; dmarc=none (p=none dis=none) header.from=infradead.org
+	by mail.kernel.org (Postfix) with ESMTP id AB4C22085B
+	for <linux-pci@archiver.kernel.org>; Sat, 27 Oct 2018 19:06:37 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.3.2 mail.kernel.org AB4C22085B
+Authentication-Results: mail.kernel.org; dmarc=none (p=none dis=none) header.from=lip6.fr
 Authentication-Results: mail.kernel.org; spf=none smtp.mailfrom=linux-pci-owner@vger.kernel.org
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1728257AbeJ0QO4 (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Sat, 27 Oct 2018 12:14:56 -0400
-Received: from bombadil.infradead.org ([198.137.202.133]:48544 "EHLO
-        bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1727643AbeJ0QO4 (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Sat, 27 Oct 2018 12:14:56 -0400
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
-        d=infradead.org; s=bombadil.20170209; h=In-Reply-To:Content-Type:MIME-Version
-        :References:Message-ID:Subject:Cc:To:From:Date:Sender:Reply-To:
-        Content-Transfer-Encoding:Content-ID:Content-Description:Resent-Date:
-        Resent-From:Resent-Sender:Resent-To:Resent-Cc:Resent-Message-ID:List-Id:
-        List-Help:List-Unsubscribe:List-Subscribe:List-Post:List-Owner:List-Archive;
-         bh=kAR1ai/S1gEoexvLzEpemQBBndgOUaUOpPDik2CRLFw=; b=ikANX6k1GJaXTHUQ1U45DpvI1
-        WdOGM1JKTK6qtgypvXmqmJVqzcbVDMORTr3Upecmt05j0Gfp94PxW8IjzcqSd0EyPTgYBGDiI9MEa
-        neWeD4v9UohwLJ1hwnC0bofTHDKlrvnnJvuXSCzKLAUpeqwuKfqHhK3KmC9cqrqAyLizmHeD8np1j
-        pfMblUHpHENWu+cdAfinnBsp73nwjVlzBEJoZEQt9fndET08gKp9MQ4DrlRXTjqCUu+HX/tTwkw2k
-        HUFWNbWF2RCuf2AOBqhsgfPvyduMt21Oyz5OrnF2E8E2WY97Myu0BMrjdeL1pFZ1wyoAcgGrjEWNI
-        YTdOf/myg==;
-Received: from hch by bombadil.infradead.org with local (Exim 4.90_1 #2 (Red Hat Linux))
-        id 1gGJ7U-0007FK-FM; Sat, 27 Oct 2018 07:34:52 +0000
-Date:   Sat, 27 Oct 2018 00:34:52 -0700
-From:   Christoph Hellwig <hch@infradead.org>
-To:     Jon Derrick <jonathan.derrick@intel.com>
-Cc:     linux-pci@vger.kernel.org, Bjorn Helgaas <helgaas@kernel.org>,
+        id S1728845AbeJ1Dsb (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Sat, 27 Oct 2018 23:48:31 -0400
+Received: from mail2-relais-roc.national.inria.fr ([192.134.164.83]:6204 "EHLO
+        mail2-relais-roc.national.inria.fr" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1728472AbeJ1Dsb (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Sat, 27 Oct 2018 23:48:31 -0400
+X-IronPort-AV: E=Sophos;i="5.54,433,1534802400"; 
+   d="scan'208";a="353101584"
+Received: from palace.lip6.fr ([132.227.105.202])
+  by mail2-relais-roc.national.inria.fr with ESMTP/TLS/AES128-SHA256; 27 Oct 2018 21:06:34 +0200
+From:   Julia Lawall <Julia.Lawall@lip6.fr>
+To:     Jianguo Sun <sunjianguo1@huawei.com>
+Cc:     kernel-janitors@vger.kernel.org, Shawn Guo <shawn.guo@linaro.org>,
         Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
-        Keith Busch <keith.busch@intel.com>
-Subject: Re: [PATCH 3/3] PCI/VMD: Enable firmware-first combined model
-Message-ID: <20181027073452.GA15476@infradead.org>
-References: <1540585146-31876-1-git-send-email-jonathan.derrick@intel.com>
- <1540585146-31876-3-git-send-email-jonathan.derrick@intel.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <1540585146-31876-3-git-send-email-jonathan.derrick@intel.com>
-User-Agent: Mutt/1.9.2 (2017-12-15)
-X-SRS-Rewrite: SMTP reverse-path rewritten from <hch@infradead.org> by bombadil.infradead.org. See http://www.infradead.org/rpr.html
+        Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org,
+        linux-kernel@vger.kernel.org
+Subject: [PATCH] PCI: histb: constify dw_pcie_host_ops structure
+Date:   Sat, 27 Oct 2018 20:31:19 +0200
+Message-Id: <1540665079-27788-1-git-send-email-Julia.Lawall@lip6.fr>
+X-Mailer: git-send-email 1.9.1
 Sender: linux-pci-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-On Fri, Oct 26, 2018 at 02:19:06PM -0600, Jon Derrick wrote:
-> The VMD endpoint acts as a host bridge for a nested PCIe segment. This
-> segment and its ports and endpoints are not represented in ACPI tables
-> such as DSDT and HEST, so "firmware first" error handling is currently
-> unsupported in the driver in favor of OS native error handling.
-> 
-> VMD does support firmware error handling where errors are signaled to
-> host firmware via SMI. VMD supports a "combined model" [1] where
-> OS-native error handling is used in addition to firmware. Because of
-> this combined model, this patch does not subscribe to the kernel
-> firmware-first architecture which would prevent OS native error
-> handling.
+The dw_pcie_host_ops structure is only stored in the ops field
+of a pcie_port structure, and this field is const, so make the
+dw_pcie_host_ops structure const as well.
 
-This sounds really horrible.  Why can't Intel just offer a tweak to
-disable this whole VMD nightmare and treat it like a normal PCIe bus,
-which would leave everyone much better off?
+Done with the help of Coccinelle.
+
+Signed-off-by: Julia Lawall <Julia.Lawall@lip6.fr>
+
+---
+ drivers/pci/controller/dwc/pcie-histb.c |    2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff -u -p a/drivers/pci/controller/dwc/pcie-histb.c b/drivers/pci/controller/dwc/pcie-histb.c
+--- a/drivers/pci/controller/dwc/pcie-histb.c
++++ b/drivers/pci/controller/dwc/pcie-histb.c
+@@ -202,7 +202,7 @@ static int histb_pcie_host_init(struct p
+ 	return 0;
+ }
+ 
+-static struct dw_pcie_host_ops histb_pcie_host_ops = {
++static const struct dw_pcie_host_ops histb_pcie_host_ops = {
+ 	.rd_own_conf = histb_pcie_rd_own_conf,
+ 	.wr_own_conf = histb_pcie_wr_own_conf,
+ 	.host_init = histb_pcie_host_init,
+
