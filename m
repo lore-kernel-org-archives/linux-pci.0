@@ -2,122 +2,177 @@ Return-Path: <SRS0=Nkm2=NM=vger.kernel.org=linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-2.0 required=3.0 tests=DKIM_INVALID,DKIM_SIGNED,
-	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_PASS,URIBL_BLOCKED,
-	USER_AGENT_MUTT autolearn=unavailable autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-8.2 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_PASS,URIBL_BLOCKED,
+	USER_AGENT_MUTT autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 177CDC6786F
-	for <linux-pci@archiver.kernel.org>; Thu,  1 Nov 2018 10:25:22 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 44051C0044C
+	for <linux-pci@archiver.kernel.org>; Thu,  1 Nov 2018 13:55:38 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id CF7532081B
-	for <linux-pci@archiver.kernel.org>; Thu,  1 Nov 2018 10:25:21 +0000 (UTC)
-Authentication-Results: mail.kernel.org;
-	dkim=fail reason="signature verification failed" (1024-bit key) header.d=armlinux.org.uk header.i=@armlinux.org.uk header.b="mcK7rckW"
-DMARC-Filter: OpenDMARC Filter v1.3.2 mail.kernel.org CF7532081B
-Authentication-Results: mail.kernel.org; dmarc=fail (p=none dis=none) header.from=armlinux.org.uk
+	by mail.kernel.org (Postfix) with ESMTP id 067B320820
+	for <linux-pci@archiver.kernel.org>; Thu,  1 Nov 2018 13:55:38 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.3.2 mail.kernel.org 067B320820
+Authentication-Results: mail.kernel.org; dmarc=none (p=none dis=none) header.from=arm.com
 Authentication-Results: mail.kernel.org; spf=none smtp.mailfrom=linux-pci-owner@vger.kernel.org
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1728098AbeKAT1h (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Thu, 1 Nov 2018 15:27:37 -0400
-Received: from pandora.armlinux.org.uk ([78.32.30.218]:55884 "EHLO
-        pandora.armlinux.org.uk" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1727583AbeKAT1h (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Thu, 1 Nov 2018 15:27:37 -0400
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
-        d=armlinux.org.uk; s=pandora-2014; h=Sender:In-Reply-To:Content-Type:
-        MIME-Version:References:Message-ID:Subject:Cc:To:From:Date:Reply-To:
-        Content-Transfer-Encoding:Content-ID:Content-Description:Resent-Date:
-        Resent-From:Resent-Sender:Resent-To:Resent-Cc:Resent-Message-ID:List-Id:
-        List-Help:List-Unsubscribe:List-Subscribe:List-Post:List-Owner:List-Archive;
-         bh=pfBYPcKEHFmp/09Hz2p1i9SED+F/1DOEjiI7amX/IgY=; b=mcK7rckWm93VnKfbX3LmKsGrV
-        YYuXCUZtnmAAVC7MLl/1vn773bBPxQv2RCflQF/J6tDIxIzBQiWD9MlJKPgwwnXaUKHnBLuDjPkKt
-        UYTVIT0cbKiCy3FQvSpNuFlpgkcohc222qwEtW+Tq3MWDrCayYfcQ0ffbR6KsSm42BXfg=;
-Received: from n2100.armlinux.org.uk ([2001:4d48:ad52:3201:214:fdff:fe10:4f86]:43519)
-        by pandora.armlinux.org.uk with esmtpsa (TLSv1.2:ECDHE-RSA-AES128-GCM-SHA256:128)
-        (Exim 4.90_1)
-        (envelope-from <linux@armlinux.org.uk>)
-        id 1gIAA0-0004WL-HU; Thu, 01 Nov 2018 10:25:08 +0000
-Received: from linux by n2100.armlinux.org.uk with local (Exim 4.90_1)
-        (envelope-from <linux@n2100.armlinux.org.uk>)
-        id 1gIA9s-0006ug-Cy; Thu, 01 Nov 2018 10:25:00 +0000
-Date:   Thu, 1 Nov 2018 10:24:58 +0000
-From:   Russell King - ARM Linux <linux@armlinux.org.uk>
-To:     Masahiro Yamada <yamada.masahiro@socionext.com>
-Cc:     Christoph Hellwig <hch@lst.de>,
-        linux-arch <linux-arch@vger.kernel.org>,
-        linux-scsi <linux-scsi@vger.kernel.org>,
-        Linux Kbuild mailing list <linux-kbuild@vger.kernel.org>,
-        linux-pci@vger.kernel.org,
-        Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
-        Dominik Brodowski <linux@dominikbrodowski.net>,
-        Alex Bounine <alex.bou9@gmail.com>,
-        mporter@kernel.crashing.org,
-        linuxppc-dev <linuxppc-dev@lists.ozlabs.org>,
-        linux-arm-kernel <linux-arm-kernel@lists.infradead.org>
-Subject: Re: [PATCH 6/9] PCI: consolidate PCI config entry in drivers/pci
-Message-ID: <20181101102458.GN30658@n2100.armlinux.org.uk>
-References: <20181019120952.32763-1-hch@lst.de>
- <20181019120952.32763-7-hch@lst.de>
- <20181019122228.GJ30658@n2100.armlinux.org.uk>
- <CAK7LNATZ8LagrTrTae_QCQbSuTW7_y6sDrdTHfTyONPrsYDs4A@mail.gmail.com>
+        id S1728520AbeKAW6l (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Thu, 1 Nov 2018 18:58:41 -0400
+Received: from usa-sjc-mx-foss1.foss.arm.com ([217.140.101.70]:56806 "EHLO
+        foss.arm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1728449AbeKAW6l (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Thu, 1 Nov 2018 18:58:41 -0400
+Received: from usa-sjc-imap-foss1.foss.arm.com (unknown [10.72.51.249])
+        by usa-sjc-mx-foss1.foss.arm.com (Postfix) with ESMTP id 707CEA78;
+        Thu,  1 Nov 2018 06:55:36 -0700 (PDT)
+Received: from e107981-ln.cambridge.arm.com (e107981-ln.cambridge.arm.com [10.1.197.40])
+        by usa-sjc-imap-foss1.foss.arm.com (Postfix) with ESMTPSA id 7B1963F5D3;
+        Thu,  1 Nov 2018 06:55:35 -0700 (PDT)
+Date:   Thu, 1 Nov 2018 13:55:30 +0000
+From:   Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
+To:     Trent Piepho <tpiepho@impinj.com>
+Cc:     "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+        Bjorn Helgaas <bhelgaas@google.com>,
+        Joao Pinto <Joao.Pinto@synopsys.com>
+Subject: Re: [PATCH v2] PCI: imx6: Check for link training status in link up
+ check
+Message-ID: <20181101135530.GA8020@e107981-ln.cambridge.arm.com>
+References: <20181031194944.19233-1-tpiepho@impinj.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <CAK7LNATZ8LagrTrTae_QCQbSuTW7_y6sDrdTHfTyONPrsYDs4A@mail.gmail.com>
-User-Agent: Mutt/1.5.23 (2014-03-12)
+In-Reply-To: <20181031194944.19233-1-tpiepho@impinj.com>
+User-Agent: Mutt/1.5.24 (2015-08-30)
 Sender: linux-pci-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-On Fri, Oct 19, 2018 at 09:58:46PM +0900, Masahiro Yamada wrote:
-> On Fri, Oct 19, 2018 at 9:23 PM Russell King - ARM Linux
-> <linux@armlinux.org.uk> wrote:
-> 
-> > > index a68b34183107..b185794549be 100644
-> > > --- a/arch/arm/mach-pxa/Kconfig
-> > > +++ b/arch/arm/mach-pxa/Kconfig
-> > > @@ -125,7 +125,7 @@ config MACH_ARMCORE
-> > >       bool "CompuLab CM-X255/CM-X270 modules"
-> > >       select ARCH_HAS_DMA_SET_COHERENT_MASK if PCI
-> > >       select IWMMXT
-> > > -     select MIGHT_HAVE_PCI
-> > > +     select HAVE_PCI
-> > >       select NEED_MACH_IO_H if PCI
-> > >       select PXA25x
-> > >       select PXA27x
-> >
-> > This is wrong.  "MIGHT_HAVE_PCI" is _not_ the same as "HAVE_PCI" - we
-> > have a bunch of platforms that mandatorily have PCI and these select
-> > PCI directly.  "MIGHT_HAVE_PCI" controls the _visibility_ of the PCI
-> > menu option, but does not prevent it being selected.  Your patch will
-> > cause Kconfig to complain for those which mandatorily have PCI but
-> > do not set HAVE_PCI.
-> 
-> 
-> Good catch!
-> But, adding a bunch of 'select HAVE_PCI' along with 'select PCI' is ugly.
-> 
-> Do you have any suggestion?
-> 
-> How about letting CONFIG_ARM to select HAVE_PCI ?
+On Wed, Oct 31, 2018 at 07:49:59PM +0000, Trent Piepho wrote:
+> This fixes a regression introduced in merge 562df5c8521e.
 
-Well, the situation we have on ARM is rather optimal - when the
-rest of the configuration supports PCI, PCI is made visible.  When
-there's no hardware support for PCI, PCI is hidden.  When PCI is
-mandatory, PCI is selected and mostly always hidden.
+A merge being a commits collection, the regression was certainly
+introduced by a specific commit in it, not the merge itself.
 
-It seems that with this consolidation, we lose that - we end up
-with PCI being visible for every ARM config, not only those where
-PCI is "impossible" but also for those where PCI is forcefully
-selected.
+Please remove this line and add a proper Fixes: tag below.
 
-That said, offering PCI for platforms that do not have any possibility
-of PCI hardware shouldn't cause any compile issues, and would increase
-build coverage - but I'd say it wouldn't _usefully_ increase build
-coverage.
+Please use the canonical commit format:
 
--- 
-RMK's Patch system: http://www.armlinux.org.uk/developer/patches/
-FTTC broadband for 0.8mile line in suburbia: sync at 12.1Mbps down 622kbps up
-According to speedtest.net: 11.9Mbps down 500kbps up
+git --no-pager show -s --abbrev-commit --abbrev=12 --pretty=format:"%h
+(\"%s\")%n" SHA-1 ID
+
+Also for the Fixes: tag and all references.
+
+> Prior to this the link up check done by imx6_pcie_wait_for_link()
+> consisted of a polling loop on imx6_pcie_link_up() (via the former
+> calling dw_pcie_link_up() which called the latter as callback), and
+> imx6_pcie_link_up() polled the link status register checking for link
+> up *and link not still training*.
+> 
+> This was a polling loop inside another polling loop.  And the outermost
+> loop was duplicated with minor variations in a number of other dwc based
+> host drivers.
+> 
+> This was addressed in two commits.  Commit 4d107d3b5a68 ("PCI: imx6: Move
+> link up check into imx6_pcie_wait_for_link()"), changed
+> imx6_pcie_wait_for_link() to poll the link status register directly,
+> checking for link up and not training, and made imx6_pcie_link_up() only
+> check the link up bit (once, not a polling loop).
+> 
+> While commit commit 886bc5ceb5cc ("PCI: designware: Add generic
+
+One "commit" is enough.
+
+> dw_pcie_wait_for_link()"), replaced the loop in imx6_pcie_wait_for_link()
+> with a call to a new dwc core function, which polled imx6_pcie_link_up(),
+> which still checked both link up and not training in a loop.
+> 
+> When these two commits were merged, the version of
+> imx6_pcie_wait_for_link() from '886 was kept, which eliminated the link
+> training check placed there by '4d1.  But the version of
+> imx6_pcie_link_up() from '4d1 was kept, which eliminated the link training
+> check that had been there and was moved to imx6_pcie_wait_for_link().
+> 
+> There result is no link training check.
+> 
+> Then commit dac29e6c5460 ("PCI: designware: Add default link up check if
+> sub-driver doesn't override") added a default check into
+> dw_pcie_link_up(), which could have been used by imx6, but wasn't.  Then
+> commit 01c076732e82 ("PCI: designware: Check LTSSM training bit before
+> deciding link is up") added a link training check to the default from
+> 'dac, but this code was still not used by imx6.
+> 
+> This commit eliminates imx6_pcie_link_up() so that the default
+> dw_pcie_link_up() is used.  The default has the correct code and is what
+> the imx6 driver used to do.
+
+Write one sentence in imperative form, eg "Eliminate imx6_pcie_link_up()..",
+see Bjorn's guidelines below.
+
+> Fixes: 562df5c8521e1371f3cbd0b7b868034da376d714
+
+Report the commit you are fixing, not the merge commit and report it
+in canonical format.
+
+> Cc: Bjorn Helgaas <bhelgaas@google.com>
+> Cc: Joao Pinto <Joao.Pinto@synopsys.com>
+> Reviewed-by: Lucas Stach <l.stach@pengutronix.de>
+> Signed-off-by: Trent Piepho <tpiepho@impinj.com>
+
+This commit log is a tad long, I would appreciate if you tried to
+summarize it, I can do it for you if you wish so.
+
+Please read:
+
+https://lore.kernel.org/linux-pci/20171026223701.GA25649@bhelgaas-glaptop.roam.corp.google.com/
+
+You should CC at least what
+
+get_maintainer.pl -f drivers/pci/controller/dwc/pci-imx6.c
+
+reports.
+
+Thanks,
+Lorenzo
+
+> ---
+>  drivers/pci/controller/dwc/pci-imx6.c | 10 +---------
+>  1 file changed, 1 insertion(+), 9 deletions(-)
+> 
+> diff --git a/drivers/pci/controller/dwc/pci-imx6.c b/drivers/pci/controller/dwc/pci-imx6.c
+> index 4a9a673b4777..975050a69494 100644
+> --- a/drivers/pci/controller/dwc/pci-imx6.c
+> +++ b/drivers/pci/controller/dwc/pci-imx6.c
+> @@ -80,8 +80,6 @@ struct imx6_pcie {
+>  #define PCIE_PL_PFLR_FORCE_LINK			(1 << 15)
+>  #define PCIE_PHY_DEBUG_R0 (PL_OFFSET + 0x28)
+>  #define PCIE_PHY_DEBUG_R1 (PL_OFFSET + 0x2c)
+> -#define PCIE_PHY_DEBUG_R1_XMLH_LINK_IN_TRAINING	(1 << 29)
+> -#define PCIE_PHY_DEBUG_R1_XMLH_LINK_UP		(1 << 4)
+>  
+>  #define PCIE_PHY_CTRL (PL_OFFSET + 0x114)
+>  #define PCIE_PHY_CTRL_DATA_LOC 0
+> @@ -641,12 +639,6 @@ static int imx6_pcie_host_init(struct pcie_port *pp)
+>  	return 0;
+>  }
+>  
+> -static int imx6_pcie_link_up(struct dw_pcie *pci)
+> -{
+> -	return dw_pcie_readl_dbi(pci, PCIE_PHY_DEBUG_R1) &
+> -			PCIE_PHY_DEBUG_R1_XMLH_LINK_UP;
+> -}
+> -
+>  static const struct dw_pcie_host_ops imx6_pcie_host_ops = {
+>  	.host_init = imx6_pcie_host_init,
+>  };
+> @@ -679,7 +671,7 @@ static int imx6_add_pcie_port(struct imx6_pcie *imx6_pcie,
+>  }
+>  
+>  static const struct dw_pcie_ops dw_pcie_ops = {
+> -	.link_up = imx6_pcie_link_up,
+> +	/* No special ops needed, but pcie-designware still expects this struct */
+>  };
+>  
+>  static int imx6_pcie_probe(struct platform_device *pdev)
+> -- 
+> 2.14.4
+> 
