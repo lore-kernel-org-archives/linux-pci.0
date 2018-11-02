@@ -2,45 +2,40 @@ Return-Path: <SRS0=VxNY=NN=vger.kernel.org=linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-8.6 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
-	DKIM_VALID_AU,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_PASS,
-	T_DKIMWL_WL_HIGH,USER_AGENT_MUTT autolearn=ham autolearn_force=no
-	version=3.4.0
+X-Spam-Status: No, score=-2.3 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+	MAILING_LIST_MULTI,SPF_PASS,USER_AGENT_MUTT autolearn=unavailable
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 3D705C32789
-	for <linux-pci@archiver.kernel.org>; Fri,  2 Nov 2018 19:59:29 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 03AC5C32789
+	for <linux-pci@archiver.kernel.org>; Fri,  2 Nov 2018 23:30:02 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id DDCB220833
-	for <linux-pci@archiver.kernel.org>; Fri,  2 Nov 2018 19:59:28 +0000 (UTC)
-Authentication-Results: mail.kernel.org;
-	dkim=pass (1024-bit key) header.d=kernel.org header.i=@kernel.org header.b="zwmlpB+Q"
-DMARC-Filter: OpenDMARC Filter v1.3.2 mail.kernel.org DDCB220833
-Authentication-Results: mail.kernel.org; dmarc=fail (p=none dis=none) header.from=kernel.org
+	by mail.kernel.org (Postfix) with ESMTP id AEC8E2081F
+	for <linux-pci@archiver.kernel.org>; Fri,  2 Nov 2018 23:30:02 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.3.2 mail.kernel.org AEC8E2081F
+Authentication-Results: mail.kernel.org; dmarc=none (p=none dis=none) header.from=alien8.de
 Authentication-Results: mail.kernel.org; spf=none smtp.mailfrom=linux-pci-owner@vger.kernel.org
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726150AbeKCFH6 (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Sat, 3 Nov 2018 01:07:58 -0400
-Received: from mail.kernel.org ([198.145.29.99]:46112 "EHLO mail.kernel.org"
+        id S1728221AbeKCIjM (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Sat, 3 Nov 2018 04:39:12 -0400
+Received: from mail.skyhub.de ([5.9.137.197]:50664 "EHLO mail.skyhub.de"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1726106AbeKCFH6 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Sat, 3 Nov 2018 01:07:58 -0400
-Received: from localhost (unknown [69.71.4.100])
+        id S1726778AbeKCIjL (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Sat, 3 Nov 2018 04:39:11 -0400
+X-Virus-Scanned: Nedap ESD1 at mail.skyhub.de
+Received: from mail.skyhub.de ([127.0.0.1])
+        by localhost (blast.alien8.de [127.0.0.1]) (amavisd-new, port 10026)
+        with ESMTP id pzsfQp6ePQH9; Sat,  3 Nov 2018 00:30:00 +0100 (CET)
+Received: from zn.tnic (p200300EC2BCD3B00329C23FFFEA6A903.dip0.t-ipconnect.de [IPv6:2003:ec:2bcd:3b00:329c:23ff:fea6:a903])
         (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
         (No client certificate requested)
-        by mail.kernel.org (Postfix) with ESMTPSA id B900C2081B;
-        Fri,  2 Nov 2018 19:59:26 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=default; t=1541188767;
-        bh=liSUcXWJy0aGb9Dr/w+lxSwtMCU7z5euI7DsIO4eMFE=;
-        h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-        b=zwmlpB+QE650NorjxNp88N+Rj5S/VO1Ufs1j/gr2b6PAh8PVo+HpZdBc3OmoRYDTn
-         CCkpYyacrWOKmrtQ9OUOJt9k8jZRsAu94kbIfD20orQjVt8Dj6EmxMZ5Xs1Zt85JuX
-         oOs1nOesXo5cekr43z2debVfAARzXPUdu+DCFh3Y=
-Date:   Fri, 2 Nov 2018 14:59:25 -0500
-From:   Bjorn Helgaas <helgaas@kernel.org>
-To:     "Woods, Brian" <Brian.Woods@amd.com>
-Cc:     Thomas Gleixner <tglx@linutronix.de>,
-        Ingo Molnar <mingo@redhat.com>, Borislav Petkov <bp@alien8.de>,
+        by mail.skyhub.de (SuperMail on ZX Spectrum 128k) with ESMTPSA id E428E1EC0A67;
+        Sat,  3 Nov 2018 00:29:59 +0100 (CET)
+Date:   Sat, 3 Nov 2018 00:29:48 +0100
+From:   Borislav Petkov <bp@alien8.de>
+To:     Bjorn Helgaas <helgaas@kernel.org>
+Cc:     "Woods, Brian" <Brian.Woods@amd.com>,
+        Thomas Gleixner <tglx@linutronix.de>,
+        Ingo Molnar <mingo@redhat.com>,
         "H. Peter Anvin" <hpa@zytor.com>,
         "x86@kernel.org" <x86@kernel.org>,
         Clemens Ladisch <clemens@ladisch.de>,
@@ -51,129 +46,52 @@ Cc:     Thomas Gleixner <tglx@linutronix.de>,
         "linux-hwmon@vger.kernel.org" <linux-hwmon@vger.kernel.org>,
         "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
 Subject: Re: [PATCH 2/4] x86/amd_nb: add support for newer PCI topologies
-Message-ID: <20181102195925.GB160487@google.com>
+Message-ID: <20181102232948.GC26770@zn.tnic>
 References: <20181102181055.130531-1-brian.woods@amd.com>
  <20181102181055.130531-3-brian.woods@amd.com>
+ <20181102195925.GB160487@google.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=utf-8
 Content-Disposition: inline
-In-Reply-To: <20181102181055.130531-3-brian.woods@amd.com>
+In-Reply-To: <20181102195925.GB160487@google.com>
 User-Agent: Mutt/1.10.1 (2018-07-13)
 Sender: linux-pci-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-On Fri, Nov 02, 2018 at 06:11:07PM +0000, Woods, Brian wrote:
-> Add support for new processors which have multiple PCI root complexes
-> per data fabric/SMN interface.  The interfaces per root complex are
-> redundant and should be skipped.  This makes sure the DF/SMN interfaces
-> get accessed via the correct root complex.
+On Fri, Nov 02, 2018 at 02:59:25PM -0500, Bjorn Helgaas wrote:
+> This isn't my code, and I'm not really objecting to these changes, but
+> from where I sit, the fact that you need this sort of vendor-specific
+> topology discovery is a little bit ugly and seems like something of a
+> maintenance issue.  You could argue that this is sort of an "AMD CPU
+> driver", which is entitled to be device-specific, and that does make
+> some sense.
 
-SMN?
+It is a bunch of glue code which enumerates the PCI devices a CPU
+has and other in-kernel users can use that instead of doing the
+discovery/enumeration themselves.
 
-> Ex:
-> DF/SMN 0 -> 60
-> 	    40
-> 	    20
-> 	    00
-> DF/SMN 1 -> e0
-> 	    c0
-> 	    a0
-> 	    80
+> But device-specific code is typically packaged as a driver that uses
+> driver registration interfaces like acpi_bus_register_driver(),
+> pci_register_driver(), etc.  That gives you a consistent structure
+> and, more importantly, a framework for dealing with hotplug.  It
+> doesn't look like amd_nb.c would deal well with hot-add of CPUs.
 
-This isn't my code, and I'm not really objecting to these changes, but
-from where I sit, the fact that you need this sort of vendor-specific
-topology discovery is a little bit ugly and seems like something of a
-maintenance issue.  You could argue that this is sort of an "AMD CPU
-driver", which is entitled to be device-specific, and that does make
-some sense.
+If you mean physical hotadd, then that's a non-issue as, AFAIK, AMD
+doesn't support that.
 
-But device-specific code is typically packaged as a driver that uses
-driver registration interfaces like acpi_bus_register_driver(),
-pci_register_driver(), etc.  That gives you a consistent structure
-and, more importantly, a framework for dealing with hotplug.  It
-doesn't look like amd_nb.c would deal well with hot-add of CPUs.
+Now, TBH I've never tried soft-offlining the cores of a node and then
+check whether using the PCI devices of that node would work.
 
-> Signed-off-by: Brian Woods <brian.woods@amd.com>
-> ---
->  arch/x86/kernel/amd_nb.c | 41 +++++++++++++++++++++++++++++++++++------
->  1 file changed, 35 insertions(+), 6 deletions(-)
-> 
-> diff --git a/arch/x86/kernel/amd_nb.c b/arch/x86/kernel/amd_nb.c
-> index 19d489ee2b1e..c0bf26aeb7c3 100644
-> --- a/arch/x86/kernel/amd_nb.c
-> +++ b/arch/x86/kernel/amd_nb.c
-> @@ -213,7 +213,10 @@ int amd_cache_northbridges(void)
->  	const struct pci_device_id *root_ids = amd_root_ids;
->  	struct pci_dev *root, *misc, *link;
->  	struct amd_northbridge *nb;
-> -	u16 i = 0;
-> +	u16 roots_per_misc = 0;
-> +	u16 misc_count = 0;
-> +	u16 root_count = 0;
-> +	u16 i, j;
->  
->  	if (amd_northbridges.num)
->  		return 0;
-> @@ -226,26 +229,52 @@ int amd_cache_northbridges(void)
->  
->  	misc = NULL;
->  	while ((misc = next_northbridge(misc, misc_ids)) != NULL)
-> -		i++;
-> +		misc_count++;
->  
-> -	if (!i)
-> +	root = NULL;
-> +	while ((root = next_northbridge(root, root_ids)) != NULL)
-> +		root_count++;
-> +
-> +	if (!misc_count)
->  		return -ENODEV;
->  
-> -	nb = kcalloc(i, sizeof(struct amd_northbridge), GFP_KERNEL);
-> +	if (root_count) {
-> +		roots_per_misc = root_count / misc_count;
-> +
-> +		/*
-> +		 * There should be _exactly_ N roots for each DF/SMN
-> +		 * interface.
-> +		 */
-> +		if (!roots_per_misc || (root_count % roots_per_misc)) {
-> +			pr_info("Unsupported AMD DF/PCI configuration found\n");
-> +			return -ENODEV;
-> +		}
-> +	}
-> +
-> +	nb = kcalloc(misc_count, sizeof(struct amd_northbridge), GFP_KERNEL);
->  	if (!nb)
->  		return -ENOMEM;
->  
->  	amd_northbridges.nb = nb;
-> -	amd_northbridges.num = i;
-> +	amd_northbridges.num = misc_count;
->  
->  	link = misc = root = NULL;
-> -	for (i = 0; i != amd_northbridges.num; i++) {
-> +	for (i = 0; i < amd_northbridges.num; i++) {
->  		node_to_amd_nb(i)->root = root =
->  			next_northbridge(root, root_ids);
->  		node_to_amd_nb(i)->misc = misc =
->  			next_northbridge(misc, misc_ids);
->  		node_to_amd_nb(i)->link = link =
->  			next_northbridge(link, link_ids);
-> +
-> +		/*
-> +		 * If there are more root devices than data fabric/SMN,
-> +		 * interfaces, then the root devices per DF/SMN
-> +		 * interface are redundant and N-1 should be skipped so
-> +		 * they aren't mapped incorrectly.
-> +		 */
-> +		for (j = 1; j < roots_per_misc; j++)
-> +			root = next_northbridge(root, root_ids);
->  	}
->  
->  	if (amd_gart_present())
-> -- 
-> 2.11.0
-> 
+Now, I don't mind this getting converted to a proper PCI driver as long
+as it is not a module as it has to be present at all times. Other than
+that, I'm a happy camper.
+
+Thx.
+
+-- 
+Regards/Gruss,
+    Boris.
+
+Good mailing practices for 400: avoid top-posting and trim the reply.
