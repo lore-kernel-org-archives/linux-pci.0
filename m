@@ -2,109 +2,139 @@ Return-Path: <SRS0=VxNY=NN=vger.kernel.org=linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-6.8 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_PASS,URIBL_BLOCKED
-	autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-8.2 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_PASS,URIBL_BLOCKED,
+	USER_AGENT_MUTT autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 10401C65C22
-	for <linux-pci@archiver.kernel.org>; Fri,  2 Nov 2018 07:20:21 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 05151C32789
+	for <linux-pci@archiver.kernel.org>; Fri,  2 Nov 2018 09:53:08 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 9B29B20831
-	for <linux-pci@archiver.kernel.org>; Fri,  2 Nov 2018 07:20:18 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.3.2 mail.kernel.org 9B29B20831
-Authentication-Results: mail.kernel.org; dmarc=fail (p=quarantine dis=none) header.from=ti.com
+	by mail.kernel.org (Postfix) with ESMTP id B05FA2082E
+	for <linux-pci@archiver.kernel.org>; Fri,  2 Nov 2018 09:53:07 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.3.2 mail.kernel.org B05FA2082E
+Authentication-Results: mail.kernel.org; dmarc=none (p=none dis=none) header.from=alien8.de
 Authentication-Results: mail.kernel.org; spf=none smtp.mailfrom=linux-pci-owner@vger.kernel.org
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1728040AbeKBQ0X (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Fri, 2 Nov 2018 12:26:23 -0400
-Received: from lelv0143.ext.ti.com ([198.47.23.248]:48586 "EHLO
-        lelv0143.ext.ti.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1727551AbeKBQ0X (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Fri, 2 Nov 2018 12:26:23 -0400
-Received: from fllv0035.itg.ti.com ([10.64.41.0])
-        by lelv0143.ext.ti.com (8.15.2/8.15.2) with ESMTP id wA27Jqv5064586;
-        Fri, 2 Nov 2018 02:19:52 -0500
-Received: from DLEE107.ent.ti.com (dlee107.ent.ti.com [157.170.170.37])
-        by fllv0035.itg.ti.com (8.15.2/8.15.2) with ESMTPS id wA27JqS5113150
-        (version=TLSv1.2 cipher=AES256-GCM-SHA384 bits=256 verify=FAIL);
-        Fri, 2 Nov 2018 02:19:52 -0500
-Received: from DLEE110.ent.ti.com (157.170.170.21) by DLEE107.ent.ti.com
- (157.170.170.37) with Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_128_CBC_SHA256_P256) id 15.1.1466.3; Fri, 2 Nov
- 2018 02:19:51 -0500
-Received: from dflp33.itg.ti.com (10.64.6.16) by DLEE110.ent.ti.com
- (157.170.170.21) with Microsoft SMTP Server (version=TLS1_0,
- cipher=TLS_RSA_WITH_AES_256_CBC_SHA) id 15.1.1466.3 via Frontend Transport;
- Fri, 2 Nov 2018 02:19:51 -0500
-Received: from [172.24.190.233] (ileax41-snat.itg.ti.com [10.172.224.153])
-        by dflp33.itg.ti.com (8.14.3/8.13.8) with ESMTP id wA27Jl4C018108;
-        Fri, 2 Nov 2018 02:19:47 -0500
-Subject: Re: [RFC PATCH 13/40] dt-bindings: PCI: keystone: Add "reg-names"
- binding information
-To:     Rob Herring <robh@kernel.org>
-CC:     Jingoo Han <jingoohan1@gmail.com>,
-        Joao Pinto <Joao.Pinto@synopsys.com>,
-        Bjorn Helgaas <bhelgaas@google.com>,
+        id S1726084AbeKBS7l (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Fri, 2 Nov 2018 14:59:41 -0400
+Received: from mail.skyhub.de ([5.9.137.197]:43018 "EHLO mail.skyhub.de"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1726008AbeKBS7l (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Fri, 2 Nov 2018 14:59:41 -0400
+X-Virus-Scanned: Nedap ESD1 at mail.skyhub.de
+Received: from mail.skyhub.de ([127.0.0.1])
+        by localhost (blast.alien8.de [127.0.0.1]) (amavisd-new, port 10026)
+        with ESMTP id q6_VM_YTgKXV; Fri,  2 Nov 2018 10:53:04 +0100 (CET)
+Received: from zn.tnic (p200300EC2BCD3B00329C23FFFEA6A903.dip0.t-ipconnect.de [IPv6:2003:ec:2bcd:3b00:329c:23ff:fea6:a903])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+        (No client certificate requested)
+        by mail.skyhub.de (SuperMail on ZX Spectrum 128k) with ESMTPSA id 906E21EC02E6;
+        Fri,  2 Nov 2018 10:53:04 +0100 (CET)
+Date:   Fri, 2 Nov 2018 10:53:00 +0100
+From:   Borislav Petkov <bp@alien8.de>
+To:     Bjorn Helgaas <helgaas@kernel.org>
+Cc:     Jon Derrick <jonathan.derrick@intel.com>,
+        linux-pci@vger.kernel.org,
         Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
-        Murali Karicheri <m-karicheri2@ti.com>,
-        <Gustavo.Pimentel@synopsys.com>,
-        Mark Rutland <mark.rutland@arm.com>,
-        Santosh Shilimkar <ssantosh@kernel.org>,
-        Tero Kristo <t-kristo@ti.com>, Nishanth Menon <nm@ti.com>,
-        <linux-pci@vger.kernel.org>, <devicetree@vger.kernel.org>,
-        <linux-kernel@vger.kernel.org>,
-        <linux-arm-kernel@lists.infradead.org>
-References: <20180921102155.22839-1-kishon@ti.com>
- <20180921102155.22839-14-kishon@ti.com>
- <5baa1b0e.1c69fb81.4f57b.32f7@mx.google.com>
-From:   Kishon Vijay Abraham I <kishon@ti.com>
-Message-ID: <ba9f2c1d-c1e0-b920-fdf1-22445fb6eb5a@ti.com>
-Date:   Fri, 2 Nov 2018 12:49:22 +0530
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:60.0) Gecko/20100101
- Thunderbird/60.2.1
+        Keith Busch <keith.busch@intel.com>,
+        "Rafael J. Wysocki" <rjw@rjwysocki.net>,
+        Len Brown <lenb@kernel.org>, Tony Luck <tony.luck@intel.com>,
+        Tyler Baicar <tbaicar@codeaurora.org>,
+        Christoph Hellwig <hch@infradead.org>,
+        linux-acpi@vger.kernel.org, linux-kernel@vger.kernel.org
+Subject: Re: [PATCH 1/3] PCI/AER: Option to leave System Error Interrupts
+ as-is
+Message-ID: <20181102095300.GB14602@zn.tnic>
+References: <1540585146-31876-1-git-send-email-jonathan.derrick@intel.com>
+ <20181029210651.GB13681@bhelgaas-glaptop.roam.corp.google.com>
 MIME-Version: 1.0
-In-Reply-To: <5baa1b0e.1c69fb81.4f57b.32f7@mx.google.com>
-Content-Type: text/plain; charset="utf-8"
-Content-Language: en-US
-Content-Transfer-Encoding: 7bit
-X-EXCLAIMER-MD-CONFIG: e1e8a2fd-e40a-4ac6-ac9b-f7e9cc9ee180
+Content-Type: text/plain; charset=utf-8
+Content-Disposition: inline
+In-Reply-To: <20181029210651.GB13681@bhelgaas-glaptop.roam.corp.google.com>
+User-Agent: Mutt/1.10.1 (2018-07-13)
 Sender: linux-pci-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-Hi Rob,
-
-On 25/09/18 4:30 AM, Rob Herring wrote:
-> On Fri, Sep 21, 2018 at 03:51:28PM +0530, Kishon Vijay Abraham I wrote:
->> Add "reg-names" binding information in order for device tree node
->> to be populated with the correct register strings.
->>
->> Signed-off-by: Kishon Vijay Abraham I <kishon@ti.com>
->> ---
->>  Documentation/devicetree/bindings/pci/pci-keystone.txt | 6 ++++--
->>  1 file changed, 4 insertions(+), 2 deletions(-)
->>
->> diff --git a/Documentation/devicetree/bindings/pci/pci-keystone.txt b/Documentation/devicetree/bindings/pci/pci-keystone.txt
->> index 2030ee0dc4f9..3a551687cfa2 100644
->> --- a/Documentation/devicetree/bindings/pci/pci-keystone.txt
->> +++ b/Documentation/devicetree/bindings/pci/pci-keystone.txt
->> @@ -12,8 +12,10 @@ described here as well as properties that are not applicable.
->>  Required Properties:-
->>  
->>  compatibility: "ti,keystone-pcie"
->> -reg:	index 1 is the base address and length of DW application registers.
->> -	index 2 is the base address and length of PCI device ID register.
->> +reg: Three register ranges as listed in the reg-names property
->> +reg-names: "dbics" for the DesignWare PCIe registers, "app" for the
->> +	   TI specific application registers, "config" for the
->> +	   configuration space address
+On Mon, Oct 29, 2018 at 04:06:51PM -0500, Bjorn Helgaas wrote:
+> [+cc Rafael, Len, Tony, Borislav, Tyler, Christoph, linux-acpi, LKML]
 > 
-> This doesn't doesn't look like a compatible change.
+> On Fri, Oct 26, 2018 at 02:19:04PM -0600, Jon Derrick wrote:
+> > Add a bit in pci_host_bridge to indicate to leave the System Error
+> > Interrupts as configured by the pre-boot environment. Propagate this to
+> > the AER driver which disables System Error Interrupts.
 
-The pcie-keystone driver hasn't worked in mainline because of lack of serdes
-support. Since the same driver is used for am654 SoC (which has serdes support
-included in this series), I'm trying to cleanup the binding.
+This commit message should not explain what the patch does - that's
+obvious - but why it is doing it.
 
-Thanks
-Kishon
+
+> > Signed-off-by: Jon Derrick <jonathan.derrick@intel.com>
+> > ---
+> >  drivers/pci/pcie/aer.c | 7 +++++--
+> >  include/linux/pci.h    | 3 +++
+> >  2 files changed, 8 insertions(+), 2 deletions(-)
+> > 
+> > diff --git a/drivers/pci/pcie/aer.c b/drivers/pci/pcie/aer.c
+> > index 83180ed..6a4af63 100644
+> > --- a/drivers/pci/pcie/aer.c
+> > +++ b/drivers/pci/pcie/aer.c
+> > @@ -1360,6 +1360,7 @@ static void set_downstream_devices_error_reporting(struct pci_dev *dev,
+> >  static void aer_enable_rootport(struct aer_rpc *rpc)
+> >  {
+> >  	struct pci_dev *pdev = rpc->rpd;
+> > +	struct pci_host_bridge *host;
+> >  	int aer_pos;
+> >  	u16 reg16;
+> >  	u32 reg32;
+> > @@ -1369,8 +1370,10 @@ static void aer_enable_rootport(struct aer_rpc *rpc)
+> >  	pcie_capability_write_word(pdev, PCI_EXP_DEVSTA, reg16);
+> >  
+> >  	/* Disable system error generation in response to error messages */
+> > -	pcie_capability_clear_word(pdev, PCI_EXP_RTCTL,
+> > -				   SYSTEM_ERROR_INTR_ON_MESG_MASK);
+> > +	host = pci_find_host_bridge(pdev->bus);
+> > +	if (!host->no_disable_sys_err)
+
+Double negation
+
+	if (! .. ->no..
+
+could simply be
+
+	if (host->disable_sys_err...
+
+> > +		pcie_capability_clear_word(pdev, PCI_EXP_RTCTL,
+> > +					   SYSTEM_ERROR_INTR_ON_MESG_MASK);
+> 
+> If I squint hard enough this sort of makes sense, but it also makes me
+> confused about the normal APEI firmware-first model works.
+> 
+> In the NON-firmare-first case, firmware isn't involved in handling AER
+> errors.  The Linux AER driver fields an interrupt from a Root Port,
+> reads AER log registers, etc.
+> 
+> In the normal APEI firmware-first case, when the hardware reports an
+> AER event, I think firmware gets control first, and *it* reads the AER
+> log registers, packages them up, and generates an interrupt to the OS,
+> which reads the packaged error state from the firmware via the HEST.
+> 
+> If I understand this special Intel VMD firmware-first case correctly,
+> firmware gets control first, reads the AER log registers, and
+> synthesizes what looks to the OS like a normal AER interrupt.  The
+
+Why?
+
+Why the faking?
+
+If firmware needs to get control, why doesn't it then *retain* control
+and report the error through HEST, like others do?
+
+AFAIUC, fw wants to do something underneath. What's wrong with making it
+a normal firmware-first case?
+
+-- 
+Regards/Gruss,
+    Boris.
+
+Good mailing practices for 400: avoid top-posting and trim the reply.
