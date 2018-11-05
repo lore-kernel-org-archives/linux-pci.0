@@ -7,59 +7,62 @@ X-Spam-Status: No, score=-9.1 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
 	SIGNED_OFF_BY,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT autolearn=ham
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 83B00C0044C
-	for <linux-pci@archiver.kernel.org>; Mon,  5 Nov 2018 12:51:54 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id B5A2EC46475
+	for <linux-pci@archiver.kernel.org>; Mon,  5 Nov 2018 12:52:00 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 057F020869
-	for <linux-pci@archiver.kernel.org>; Mon,  5 Nov 2018 12:51:54 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 7D77120819
+	for <linux-pci@archiver.kernel.org>; Mon,  5 Nov 2018 12:52:00 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (1024-bit key) header.d=mobiveil.co.in header.i=@mobiveil.co.in header.b="DmGUOSbO"
-DMARC-Filter: OpenDMARC Filter v1.3.2 mail.kernel.org 057F020869
+	dkim=pass (1024-bit key) header.d=mobiveil.co.in header.i=@mobiveil.co.in header.b="QHbZ0NXW"
+DMARC-Filter: OpenDMARC Filter v1.3.2 mail.kernel.org 7D77120819
 Authentication-Results: mail.kernel.org; dmarc=none (p=none dis=none) header.from=mobiveil.co.in
 Authentication-Results: mail.kernel.org; spf=none smtp.mailfrom=linux-pci-owner@vger.kernel.org
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1729917AbeKEWL2 (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Mon, 5 Nov 2018 17:11:28 -0500
-Received: from mail-pl1-f196.google.com ([209.85.214.196]:41045 "EHLO
-        mail-pl1-f196.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1729015AbeKEWL2 (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Mon, 5 Nov 2018 17:11:28 -0500
-Received: by mail-pl1-f196.google.com with SMTP id p16-v6so4425952plr.8
-        for <linux-pci@vger.kernel.org>; Mon, 05 Nov 2018 04:51:52 -0800 (PST)
+        id S1729675AbeKEWLf (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Mon, 5 Nov 2018 17:11:35 -0500
+Received: from mail-pf1-f195.google.com ([209.85.210.195]:39887 "EHLO
+        mail-pf1-f195.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1729015AbeKEWLf (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Mon, 5 Nov 2018 17:11:35 -0500
+Received: by mail-pf1-f195.google.com with SMTP id n11-v6so4397503pfb.6
+        for <linux-pci@vger.kernel.org>; Mon, 05 Nov 2018 04:51:59 -0800 (PST)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=mobiveil.co.in; s=google;
-        h=from:to:cc:subject:date:message-id;
+        h=from:to:cc:subject:date:message-id:in-reply-to:references;
         bh=61IM1BpJF7hP0Xm3lMelzTNjW0VhxJvVmEeUdyzQx18=;
-        b=DmGUOSbOn5EsBORSGteAO4mn7aRiYH2vxN51jCbjfBhynZmwDh5d16YTOHSlspylhm
-         nugxCrOJauCFVC9RJYxlHYp43NAuEgITjO35YTAFBZIxsVHw0hJWJsfW+p1raBmGlP9j
-         hlCywhgpDk76dDShDsvNr7rkSG8CctbySqfBI=
+        b=QHbZ0NXW6P1YS3eywB0Q3GSydPqxjWbv9NbWj5guAz1Vup8DXtm1ls6qM5muhr2e+F
+         H7jXLrx08ju9iZbN6LR+DuOXkBP6Q3b2WaC6SoO/Nt7x0N9AzAx1F32EEldCgCb0/JzL
+         ObpSBrO/wG/Ajh9I+mojaIc1YYZ0pgMzQ17wA=
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20161025;
-        h=x-gm-message-state:from:to:cc:subject:date:message-id;
+        h=x-gm-message-state:from:to:cc:subject:date:message-id:in-reply-to
+         :references;
         bh=61IM1BpJF7hP0Xm3lMelzTNjW0VhxJvVmEeUdyzQx18=;
-        b=OUrGsAmZjyORSjHnc6ln9tJSAWtb8pOgbeeciQTgAXuLYMB15TX3IDNrEba2hj+RYc
-         j2j35qd/rdJcuCGutcdGx0BY/HJIILC3rZzuejc0ggr/1KdjwteGvI07BWFk5Acgza+N
-         DfrhcM6c+s5Gc7LFmdQ2IQSXClZKjXQfLXzdJvWErmrsvS6+G7njTLrKy+8cKiVKr2BW
-         Nm0Jg9x34BFZEBnc49/iBSkM2elFpWYl7o98u4/d0aK7zgx6ebPMMXHRjNbbP1K1YOO9
-         vSK3vi5tnUrd1LS7tqyx+vGs076E4cUNGGrj2/ly5prL41ntWILRFu6iFpgnU9CFqeru
-         CbAw==
-X-Gm-Message-State: AGRZ1gKaLbX2szsVOAquHtklDuqZ1PeuAfm6pmky1Rd6Qo4vFox9Ns/C
-        YMyPaA3E7qAC6v5MCiKVC5ZhcdM2JYnpwA==
-X-Google-Smtp-Source: AJdET5ejy0emOGJ82xRaYQSmZZwU1H9DyAFZ/jyrFGzYsFTe2dAQeQZnNyTYiOhRmYxH0N68Bjetzw==
-X-Received: by 2002:a17:902:f209:: with SMTP id gn9mr21096464plb.6.1541422311402;
-        Mon, 05 Nov 2018 04:51:51 -0800 (PST)
+        b=sKeApsMeze4/p7ckrPCkwBY9mGI25Moj+gO+0B/V09Ap+hmA5WxsonYlnhFpTGZZtM
+         vpTmQEFBKCemR8Az5xyuKA0E+pMy0/hGWk/P61kWyJ9z7jdswqLSbyNxNAA6LVRzk2vt
+         eshQ3Sjhr+AHmJBE2F0pMob8DHjTbqfcFzt7EZ9fj67ITwiLhKWU+GVPgA3hYMJW3LMo
+         KQlKBUm3pPlTC9Y4J6nk64h8950RXHuwWDROjW6QbdD+zjfGmALrKra2zAM5hNxcXeyB
+         kyhyyQ5i4qlBlZMvn4pXau3GuBDii3ikwA4EqCX0ygOT+sPudRFWC8x+CSQ3Vzf9qhfe
+         VYNQ==
+X-Gm-Message-State: AGRZ1gL8yt+S9IhYmpnYNEB1xKAZ/rQInvgVNED2mWpwWVZfBZ2BWmu7
+        FUq+0N8uuOQgZhhaqVAmv/vYaP1L9bijfw==
+X-Google-Smtp-Source: AJdET5dNKl7PNL1S5y0IhC5m0Q7694Pv8Mpf7fQpfqhcG4Dt4IDg8lmjOS9M7YaZ4q+yGrcHcBsqnA==
+X-Received: by 2002:a62:da54:: with SMTP id w20-v6mr7570318pfl.106.1541422318386;
+        Mon, 05 Nov 2018 04:51:58 -0800 (PST)
 Received: from localhost.localdomain.localdomain ([106.51.129.105])
-        by smtp.gmail.com with ESMTPSA id 144-v6sm38860034pfu.129.2018.11.05.04.51.48
+        by smtp.gmail.com with ESMTPSA id 144-v6sm38860034pfu.129.2018.11.05.04.51.56
         (version=TLS1_2 cipher=ECDHE-RSA-AES128-GCM-SHA256 bits=128/128);
-        Mon, 05 Nov 2018 04:51:50 -0800 (PST)
+        Mon, 05 Nov 2018 04:51:57 -0800 (PST)
 From:   Subrahmanya Lingappa <l.subrahmanya@mobiveil.co.in>
 To:     linux-pci@vger.kernel.org, bhelgaas@google.com,
         lorenzo.pieralisi@arm.com
 Cc:     Subrahmanya Lingappa <l.subrahmanya@mobiveil.co.in>
-Subject: [PATCH 1/1] PCI: mobiveil: fix multi function endpoint failures
-Date:   Mon,  5 Nov 2018 07:51:40 -0500
-Message-Id: <1541422301-29176-1-git-send-email-l.subrahmanya@mobiveil.co.in>
+Subject: [PATCH v2] PCI: mobiveil: fix multi function endpoint failures
+Date:   Mon,  5 Nov 2018 07:51:41 -0500
+Message-Id: <1541422301-29176-2-git-send-email-l.subrahmanya@mobiveil.co.in>
 X-Mailer: git-send-email 1.8.3.1
+In-Reply-To: <1541422301-29176-1-git-send-email-l.subrahmanya@mobiveil.co.in>
+References: <1541422301-29176-1-git-send-email-l.subrahmanya@mobiveil.co.in>
 Sender: linux-pci-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
