@@ -6,30 +6,30 @@ X-Spam-Status: No, score=-9.0 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
 	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_PASS,URIBL_BLOCKED,
 	USER_AGENT_GIT autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 2A5D1C0044C
-	for <linux-pci@archiver.kernel.org>; Mon,  5 Nov 2018 08:51:44 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id F1459C0044C
+	for <linux-pci@archiver.kernel.org>; Mon,  5 Nov 2018 08:51:48 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id F112320854
-	for <linux-pci@archiver.kernel.org>; Mon,  5 Nov 2018 08:51:43 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.3.2 mail.kernel.org F112320854
+	by mail.kernel.org (Postfix) with ESMTP id B315320862
+	for <linux-pci@archiver.kernel.org>; Mon,  5 Nov 2018 08:51:48 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.3.2 mail.kernel.org B315320862
 Authentication-Results: mail.kernel.org; dmarc=fail (p=none dis=none) header.from=nxp.com
 Authentication-Results: mail.kernel.org; spf=none smtp.mailfrom=linux-pci-owner@vger.kernel.org
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1728377AbeKESKD (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Mon, 5 Nov 2018 13:10:03 -0500
-Received: from inva021.nxp.com ([92.121.34.21]:38658 "EHLO inva021.nxp.com"
+        id S1727814AbeKESKB (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Mon, 5 Nov 2018 13:10:01 -0500
+Received: from inva020.nxp.com ([92.121.34.13]:48060 "EHLO inva020.nxp.com"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1727575AbeKESKC (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Mon, 5 Nov 2018 13:10:02 -0500
-Received: from inva021.nxp.com (localhost [127.0.0.1])
-        by inva021.eu-rdc02.nxp.com (Postfix) with ESMTP id 40EB3200170;
-        Mon,  5 Nov 2018 09:51:24 +0100 (CET)
+        id S1726086AbeKESKB (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Mon, 5 Nov 2018 13:10:01 -0500
+Received: from inva020.nxp.com (localhost [127.0.0.1])
+        by inva020.eu-rdc02.nxp.com (Postfix) with ESMTP id A36711A0140;
+        Mon,  5 Nov 2018 09:51:22 +0100 (CET)
 Received: from invc005.ap-rdc01.nxp.com (invc005.ap-rdc01.nxp.com [165.114.16.14])
-        by inva021.eu-rdc02.nxp.com (Postfix) with ESMTP id 1E81F2000AD;
-        Mon,  5 Nov 2018 09:51:14 +0100 (CET)
+        by inva020.eu-rdc02.nxp.com (Postfix) with ESMTP id 8006D1A013D;
+        Mon,  5 Nov 2018 09:51:12 +0100 (CET)
 Received: from titan.ap.freescale.net (TITAN.ap.freescale.net [10.192.208.233])
-        by invc005.ap-rdc01.nxp.com (Postfix) with ESMTP id 10EEE4030D;
-        Mon,  5 Nov 2018 16:51:01 +0800 (SGT)
+        by invc005.ap-rdc01.nxp.com (Postfix) with ESMTP id 05AC340309;
+        Mon,  5 Nov 2018 16:50:59 +0800 (SGT)
 From:   Xiaowei Bao <xiaowei.bao@nxp.com>
 To:     bhelgaas@google.com, robh+dt@kernel.org, mark.rutland@arm.com,
         shawnguo@kernel.org, leoyang.li@nxp.com, kishon@ti.com,
@@ -42,9 +42,9 @@ To:     bhelgaas@google.com, robh+dt@kernel.org, mark.rutland@arm.com,
         linux-kernel@vger.kernel.org, linux-arm-kernel@lists.infradead.org,
         linuxppc-dev@lists.ozlabs.org
 Cc:     Xiaowei Bao <xiaowei.bao@nxp.com>
-Subject: [PATCHv2 4/6] arm64: dts: Add the PCIE EP node in dts
-Date:   Mon,  5 Nov 2018 16:46:51 +0800
-Message-Id: <20181105084653.26597-4-xiaowei.bao@nxp.com>
+Subject: [PATCHv2 3/6] PCI: layerscape: Add the EP mode support
+Date:   Mon,  5 Nov 2018 16:46:50 +0800
+Message-Id: <20181105084653.26597-3-xiaowei.bao@nxp.com>
 X-Mailer: git-send-email 2.14.1
 In-Reply-To: <20181105084653.26597-1-xiaowei.bao@nxp.com>
 References: <20181105084653.26597-1-xiaowei.bao@nxp.com>
@@ -54,73 +54,36 @@ Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-Add the PCIE EP node in dts for ls1046a.
+Add the EP mode support.
 
 Signed-off-by: Xiaowei Bao <xiaowei.bao@nxp.com>
 ---
 v2:
- - Add the SoC specific compatibles. 
+ - Add the SoC specific compatibles.
 
- arch/arm64/boot/dts/freescale/fsl-ls1046a.dtsi |   32 ++++++++++++++++++++++++
- 1 files changed, 32 insertions(+), 0 deletions(-)
+ .../devicetree/bindings/pci/layerscape-pci.txt     |    3 +++
+ 1 files changed, 3 insertions(+), 0 deletions(-)
 
-diff --git a/arch/arm64/boot/dts/freescale/fsl-ls1046a.dtsi b/arch/arm64/boot/dts/freescale/fsl-ls1046a.dtsi
-index 64d334c..544b3e5 100644
---- a/arch/arm64/boot/dts/freescale/fsl-ls1046a.dtsi
-+++ b/arch/arm64/boot/dts/freescale/fsl-ls1046a.dtsi
-@@ -655,6 +655,17 @@
- 			status = "disabled";
- 		};
+diff --git a/Documentation/devicetree/bindings/pci/layerscape-pci.txt b/Documentation/devicetree/bindings/pci/layerscape-pci.txt
+index 66df1e8..9c090c7 100644
+--- a/Documentation/devicetree/bindings/pci/layerscape-pci.txt
++++ b/Documentation/devicetree/bindings/pci/layerscape-pci.txt
+@@ -13,12 +13,15 @@ information.
  
-+		pcie_ep@3400000 {
-+			compatible = "fsl,ls1046a-pcie-ep","fsl,ls-pcie-ep";
-+			reg = <0x00 0x03400000 0x0 0x00100000
-+				0x40 0x00000000 0x8 0x00000000>;
-+			reg-names = "regs", "addr_space";
-+			num-ib-windows = <6>;
-+			num-ob-windows = <6>;
-+			num-lanes = <2>;
-+			status = "disabled";
-+		};
-+
- 		pcie@3500000 {
- 			compatible = "fsl,ls1046a-pcie", "snps,dw-pcie";
- 			reg = <0x00 0x03500000 0x0 0x00100000   /* controller registers */
-@@ -681,6 +692,17 @@
- 			status = "disabled";
- 		};
- 
-+		pcie_ep@3500000 {
-+			compatible = "fsl,ls1046a-pcie-ep","fsl,ls-pcie-ep";
-+			reg = <0x00 0x03500000 0x0 0x00100000
-+				0x48 0x00000000 0x8 0x00000000>;
-+			reg-names = "regs", "addr_space";
-+			num-ib-windows = <6>;
-+			num-ob-windows = <6>;
-+			num-lanes = <2>;
-+			status = "disabled";
-+		};
-+
- 		pcie@3600000 {
- 			compatible = "fsl,ls1046a-pcie", "snps,dw-pcie";
- 			reg = <0x00 0x03600000 0x0 0x00100000   /* controller registers */
-@@ -707,6 +729,16 @@
- 			status = "disabled";
- 		};
- 
-+		pcie_ep@3600000 {
-+			compatible = "fsl,ls1046a-pcie-ep", "fsl,ls-pcie-ep";
-+			reg = <0x00 0x03600000 0x0 0x00100000
-+				0x50 0x00000000 0x8 0x00000000>;
-+			reg-names = "regs", "addr_space";
-+			num-ib-windows = <6>;
-+			num-ob-windows = <6>;
-+			num-lanes = <2>;
-+			status = "disabled";
-+		};
- 	};
- 
- 	reserved-memory {
+ Required properties:
+ - compatible: should contain the platform identifier such as:
++  RC mode:
+         "fsl,ls1021a-pcie", "snps,dw-pcie"
+         "fsl,ls2080a-pcie", "fsl,ls2085a-pcie", "snps,dw-pcie"
+         "fsl,ls2088a-pcie"
+         "fsl,ls1088a-pcie"
+         "fsl,ls1046a-pcie"
+         "fsl,ls1012a-pcie"
++  EP mode:
++        "fsl,ls1046a-pcie-ep", "fsl,ls-pcie-ep"
+ - reg: base addresses and lengths of the PCIe controller register blocks.
+ - interrupts: A list of interrupt outputs of the controller. Must contain an
+   entry for each entry in the interrupt-names property.
 -- 
 1.7.1
 
