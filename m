@@ -2,179 +2,96 @@ Return-Path: <SRS0=Hm5h=NQ=vger.kernel.org=linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-8.5 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_PASS,USER_AGENT_MUTT
+X-Spam-Status: No, score=-10.5 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,
+	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT
 	autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id D06E8C0044C
-	for <linux-pci@archiver.kernel.org>; Mon,  5 Nov 2018 19:39:42 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 9EB8BC46465
+	for <linux-pci@archiver.kernel.org>; Mon,  5 Nov 2018 20:17:51 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id A19F020685
-	for <linux-pci@archiver.kernel.org>; Mon,  5 Nov 2018 19:39:24 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.3.2 mail.kernel.org A19F020685
-Authentication-Results: mail.kernel.org; dmarc=none (p=none dis=none) header.from=alien8.de
+	by mail.kernel.org (Postfix) with ESMTP id 62DC620819
+	for <linux-pci@archiver.kernel.org>; Mon,  5 Nov 2018 20:17:51 +0000 (UTC)
+Authentication-Results: mail.kernel.org;
+	dkim=pass (1024-bit key) header.d=chromium.org header.i=@chromium.org header.b="bsT6xS1e"
+DMARC-Filter: OpenDMARC Filter v1.3.2 mail.kernel.org 62DC620819
+Authentication-Results: mail.kernel.org; dmarc=fail (p=none dis=none) header.from=chromium.org
 Authentication-Results: mail.kernel.org; spf=none smtp.mailfrom=linux-pci-owner@vger.kernel.org
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1725774AbeKFFAC (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Tue, 6 Nov 2018 00:00:02 -0500
-Received: from mail.skyhub.de ([5.9.137.197]:38780 "EHLO mail.skyhub.de"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1725139AbeKFFAC (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Tue, 6 Nov 2018 00:00:02 -0500
-X-Virus-Scanned: Nedap ESD1 at mail.skyhub.de
-Received: from mail.skyhub.de ([127.0.0.1])
-        by localhost (blast.alien8.de [127.0.0.1]) (amavisd-new, port 10026)
-        with ESMTP id 3Yg419cShtUj; Mon,  5 Nov 2018 20:38:48 +0100 (CET)
-Received: from zn.tnic (p200300EC2BCD5300329C23FFFEA6A903.dip0.t-ipconnect.de [IPv6:2003:ec:2bcd:5300:329c:23ff:fea6:a903])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
-        (No client certificate requested)
-        by mail.skyhub.de (SuperMail on ZX Spectrum 128k) with ESMTPSA id 3E1A41EC038E;
-        Mon,  5 Nov 2018 20:38:48 +0100 (CET)
-Date:   Mon, 5 Nov 2018 20:38:40 +0100
-From:   Borislav Petkov <bp@alien8.de>
-To:     "Woods, Brian" <Brian.Woods@amd.com>
-Cc:     Thomas Gleixner <tglx@linutronix.de>,
-        Ingo Molnar <mingo@redhat.com>,
-        "H. Peter Anvin" <hpa@zytor.com>,
-        "x86@kernel.org" <x86@kernel.org>,
-        Clemens Ladisch <clemens@ladisch.de>,
-        Jean Delvare <jdelvare@suse.com>,
-        Guenter Roeck <linux@roeck-us.net>,
-        Bjorn Helgaas <bhelgaas@google.com>, Pu Wen <puwen@hygon.cn>,
-        Jia Zhang <qianyue.zj@alibaba-inc.com>,
-        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-        "linux-hwmon@vger.kernel.org" <linux-hwmon@vger.kernel.org>,
-        "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
-Subject: Re: [PATCH 2/4] x86/amd_nb: add support for newer PCI topologies
-Message-ID: <20181105193840.GA26868@zn.tnic>
-References: <20181102181055.130531-1-brian.woods@amd.com>
- <20181102181055.130531-3-brian.woods@amd.com>
+        id S1727526AbeKFFjF (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Tue, 6 Nov 2018 00:39:05 -0500
+Received: from mail-pl1-f196.google.com ([209.85.214.196]:46890 "EHLO
+        mail-pl1-f196.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1730115AbeKFFjF (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Tue, 6 Nov 2018 00:39:05 -0500
+Received: by mail-pl1-f196.google.com with SMTP id c13-v6so4977393plz.13
+        for <linux-pci@vger.kernel.org>; Mon, 05 Nov 2018 12:17:43 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=chromium.org; s=google;
+        h=from:to:cc:subject:date:message-id:mime-version
+         :content-transfer-encoding;
+        bh=+4+xrKqcCnzzEGa97yidlIN9VxNjgsG971WTiE2U09o=;
+        b=bsT6xS1eF+TBKCO6uMQSYsGzUdElb/830fFPpNBbg7AmPDQuG+IQx6RYS/7zNMnhc0
+         6PU61H8Y5I2yOuM/57zJpzo01b6uPnXUWVLkYN7FS4FJvRqJM2l9nxqSxA7beL9/404x
+         HdnenMT/l3Mr9JEeltlEipd4ZQvDUXD4s2LGQ=
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20161025;
+        h=x-gm-message-state:from:to:cc:subject:date:message-id:mime-version
+         :content-transfer-encoding;
+        bh=+4+xrKqcCnzzEGa97yidlIN9VxNjgsG971WTiE2U09o=;
+        b=iuo4AD0xKTB3BpftrLqhWRQy7+xuldSsdSzxVA5e7Xbdhfrhj7JIBVtFIfh3E5cRQ9
+         sf1OPq/ROO29t39vnET/+QGG+mXvaZGEt8bbr+JygMY6i+9FrX2RQxYFEjsJjBW8Tu6q
+         gJqe30y7vvckxbTE28Ts1RqoMxOFTpMfPWRQDbEZoeeQldgQ2JU6zkrxLQZv6YgjIh9A
+         Fge+/snuHAfxF+/M4vZrke1qUGfq05hcGnsjOOWMI3mvMYQFUE4iY65OHfXS7Ntb9qBe
+         kpnDMCpGH6aeitSYAr5ceHDcZP3advKbx9HlsBvNvDVJawf86p9FJNxXYib6JmFQXo3b
+         JtJg==
+X-Gm-Message-State: AGRZ1gLAP2wwaNeDl9Ffbu437di6QYtOOFBxIF0S12Ly50Xembp1XDIw
+        +TOOVfFWjP7IZr7nQ20ay7h7xg==
+X-Google-Smtp-Source: AJdET5c1PIeAtrh2vLETbJ81GooRuIiXoW0KGpxq2iOnvvyo40fNVfYKjcRt1GXMSn4fuvUxLDy7Nw==
+X-Received: by 2002:a17:902:2:: with SMTP id 2-v6mr23958956pla.178.1541449062980;
+        Mon, 05 Nov 2018 12:17:42 -0800 (PST)
+Received: from zsm-linux.mtv.corp.google.com ([2620:15c:202:201:1b7c:8280:c835:b226])
+        by smtp.googlemail.com with ESMTPSA id e2-v6sm45972561pgv.25.2018.11.05.12.17.41
+        (version=TLS1_2 cipher=ECDHE-RSA-AES128-GCM-SHA256 bits=128/128);
+        Mon, 05 Nov 2018 12:17:42 -0800 (PST)
+From:   Zubin Mithra <zsm@chromium.org>
+To:     tglx@linutronix.de, mingo@redhat.com, bp@alien8.de, hpa@zytor.com,
+        linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org
+Cc:     groeck@chromium.org, keescook@chromium.org, zsm@chromium.org
+Subject: [PATCH] x86/pci: Annotate 'pci_root_ops' with __ro_after_init
+Date:   Mon,  5 Nov 2018 12:17:35 -0800
+Message-Id: <20181105201735.72026-1-zsm@chromium.org>
+X-Mailer: git-send-email 2.19.1.930.g4563a0d9d0-goog
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Disposition: inline
-In-Reply-To: <20181102181055.130531-3-brian.woods@amd.com>
-User-Agent: Mutt/1.10.1 (2018-07-13)
+Content-Transfer-Encoding: 8bit
 Sender: linux-pci-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-On Fri, Nov 02, 2018 at 06:11:07PM +0000, Woods, Brian wrote:
-> Add support for new processors which have multiple PCI root complexes
-> per data fabric/SMN interface.
+When CONFIG_X86_INTEL_MID is set pci_root_ops is written to inside
+intel_mid_pci_init(which is marked __init) and not modified after. This
+makes pci_root_ops a suitable candidate for annotating as
+__ro_after_init.
 
-Please write out abbreviations. I believe it is only you and I who know
-what SMN means. :)
+Signed-off-by: Zubin Mithra <zsm@chromium.org>
+---
+ arch/x86/pci/common.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-> The interfaces per root complex are redundant and should be skipped.
-
-And I believe it is only you who understands that sentence. :)
-
-Please elaborate why interfaces need to be skipped, *which* interfaces
-need to be skipped and which is the correct interface to access DF/SMN
-through?
-
-> This makes sure the DF/SMN interfaces get accessed via the correct
-> root complex.
->
-> Ex:
-> DF/SMN 0 -> 60
-> 	    40
-> 	    20
-> 	    00
-> DF/SMN 1 -> e0
-> 	    c0
-> 	    a0
-> 	    80
-> 
-> Signed-off-by: Brian Woods <brian.woods@amd.com>
-> ---
->  arch/x86/kernel/amd_nb.c | 41 +++++++++++++++++++++++++++++++++++------
->  1 file changed, 35 insertions(+), 6 deletions(-)
-> 
-> diff --git a/arch/x86/kernel/amd_nb.c b/arch/x86/kernel/amd_nb.c
-> index 19d489ee2b1e..c0bf26aeb7c3 100644
-> --- a/arch/x86/kernel/amd_nb.c
-> +++ b/arch/x86/kernel/amd_nb.c
-> @@ -213,7 +213,10 @@ int amd_cache_northbridges(void)
->  	const struct pci_device_id *root_ids = amd_root_ids;
->  	struct pci_dev *root, *misc, *link;
->  	struct amd_northbridge *nb;
-> -	u16 i = 0;
-> +	u16 roots_per_misc = 0;
-> +	u16 misc_count = 0;
-> +	u16 root_count = 0;
-> +	u16 i, j;
->  
->  	if (amd_northbridges.num)
->  		return 0;
-> @@ -226,26 +229,52 @@ int amd_cache_northbridges(void)
->  
->  	misc = NULL;
->  	while ((misc = next_northbridge(misc, misc_ids)) != NULL)
-> -		i++;
-> +		misc_count++;
->  
-> -	if (!i)
-> +	root = NULL;
-> +	while ((root = next_northbridge(root, root_ids)) != NULL)
-> +		root_count++;
-> +
-> +	if (!misc_count)
->  		return -ENODEV;
-
-So you're doing the root_count above but returning in the !misc_count
-case. So that root_count iteration was unnecessary work. IOW, you should
-keep the misc_count check after its loop.
-
->  
-> -	nb = kcalloc(i, sizeof(struct amd_northbridge), GFP_KERNEL);
-> +	if (root_count) {
-> +		roots_per_misc = root_count / misc_count;
-> +
-> +		/*
-> +		 * There should be _exactly_ N roots for each DF/SMN
-> +		 * interface.
-> +		 */
-> +		if (!roots_per_misc || (root_count % roots_per_misc)) {
-> +			pr_info("Unsupported AMD DF/PCI configuration found\n");
-> +			return -ENODEV;
-> +		}
-> +	}
-> +
-> +	nb = kcalloc(misc_count, sizeof(struct amd_northbridge), GFP_KERNEL);
->  	if (!nb)
->  		return -ENOMEM;
->  
->  	amd_northbridges.nb = nb;
-> -	amd_northbridges.num = i;
-> +	amd_northbridges.num = misc_count;
->  
->  	link = misc = root = NULL;
-> -	for (i = 0; i != amd_northbridges.num; i++) {
-> +	for (i = 0; i < amd_northbridges.num; i++) {
->  		node_to_amd_nb(i)->root = root =
->  			next_northbridge(root, root_ids);
->  		node_to_amd_nb(i)->misc = misc =
->  			next_northbridge(misc, misc_ids);
->  		node_to_amd_nb(i)->link = link =
->  			next_northbridge(link, link_ids);
-> +
-> +		/*
-> +		 * If there are more root devices than data fabric/SMN,
-> +		 * interfaces, then the root devices per DF/SMN
-> +		 * interface are redundant and N-1 should be skipped so
-> +		 * they aren't mapped incorrectly.
-> +		 */
-
-This text is trying to explain it a bit better but you still still need
-to specify which are the redundant ones. All N-1 or is there a special
-root device through which the DF/SMN gets accessed or?
-
-Thx.
-
+diff --git a/arch/x86/pci/common.c b/arch/x86/pci/common.c
+index d4ec117c1142..204ee80cfa63 100644
+--- a/arch/x86/pci/common.c
++++ b/arch/x86/pci/common.c
+@@ -67,7 +67,7 @@ static int pci_write(struct pci_bus *bus, unsigned int devfn, int where, int siz
+ 				  devfn, where, size, value);
+ }
+ 
+-struct pci_ops pci_root_ops = {
++struct pci_ops pci_root_ops __ro_after_init = {
+ 	.read = pci_read,
+ 	.write = pci_write,
+ };
 -- 
-Regards/Gruss,
-    Boris.
+2.19.1.930.g4563a0d9d0-goog
 
-Good mailing practices for 400: avoid top-posting and trim the reply.
