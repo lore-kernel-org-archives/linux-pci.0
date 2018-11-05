@@ -2,73 +2,80 @@ Return-Path: <SRS0=Hm5h=NQ=vger.kernel.org=linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-7.0 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_PASS,URIBL_BLOCKED
-	autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-7.1 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
+	DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,
+	SIGNED_OFF_BY,SPF_PASS,URIBL_BLOCKED autolearn=ham autolearn_force=no
+	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 026CDC46475
-	for <linux-pci@archiver.kernel.org>; Mon,  5 Nov 2018 10:27:17 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 30F0FC0044C
+	for <linux-pci@archiver.kernel.org>; Mon,  5 Nov 2018 12:12:15 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id BE0DA2086A
-	for <linux-pci@archiver.kernel.org>; Mon,  5 Nov 2018 10:27:15 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.3.2 mail.kernel.org BE0DA2086A
-Authentication-Results: mail.kernel.org; dmarc=fail (p=quarantine dis=none) header.from=ti.com
+	by mail.kernel.org (Postfix) with ESMTP id BB86720819
+	for <linux-pci@archiver.kernel.org>; Mon,  5 Nov 2018 12:12:14 +0000 (UTC)
+Authentication-Results: mail.kernel.org;
+	dkim=pass (2048-bit key) header.d=synopsys.com header.i=@synopsys.com header.b="jj7pMnCK"
+DMARC-Filter: OpenDMARC Filter v1.3.2 mail.kernel.org BB86720819
+Authentication-Results: mail.kernel.org; dmarc=fail (p=none dis=none) header.from=synopsys.com
 Authentication-Results: mail.kernel.org; spf=none smtp.mailfrom=linux-pci-owner@vger.kernel.org
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727563AbeKETqO (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Mon, 5 Nov 2018 14:46:14 -0500
-Received: from lelv0142.ext.ti.com ([198.47.23.249]:46064 "EHLO
-        lelv0142.ext.ti.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726186AbeKETqO (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Mon, 5 Nov 2018 14:46:14 -0500
-Received: from fllv0035.itg.ti.com ([10.64.41.0])
-        by lelv0142.ext.ti.com (8.15.2/8.15.2) with ESMTP id wA5AR7K7094769;
-        Mon, 5 Nov 2018 04:27:07 -0600
-Received: from DLEE115.ent.ti.com (dlee115.ent.ti.com [157.170.170.26])
-        by fllv0035.itg.ti.com (8.15.2/8.15.2) with ESMTPS id wA5AR7SI090928
-        (version=TLSv1.2 cipher=AES256-GCM-SHA384 bits=256 verify=FAIL);
-        Mon, 5 Nov 2018 04:27:07 -0600
-Received: from DLEE100.ent.ti.com (157.170.170.30) by DLEE115.ent.ti.com
- (157.170.170.26) with Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_128_CBC_SHA256_P256) id 15.1.1466.3; Mon, 5 Nov
- 2018 04:27:06 -0600
-Received: from dflp33.itg.ti.com (10.64.6.16) by DLEE100.ent.ti.com
- (157.170.170.30) with Microsoft SMTP Server (version=TLS1_0,
- cipher=TLS_RSA_WITH_AES_256_CBC_SHA) id 15.1.1466.3 via Frontend Transport;
- Mon, 5 Nov 2018 04:27:06 -0600
-Received: from [172.24.190.89] (ileax41-snat.itg.ti.com [10.172.224.153])
-        by dflp33.itg.ti.com (8.14.3/8.13.8) with ESMTP id wA5AR3tL011435;
-        Mon, 5 Nov 2018 04:27:04 -0600
-From:   Vignesh R <vigneshr@ti.com>
+        id S1727040AbeKEVbk (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Mon, 5 Nov 2018 16:31:40 -0500
+Received: from smtprelay4.synopsys.com ([198.182.47.9]:59590 "EHLO
+        smtprelay.synopsys.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726358AbeKEVbk (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Mon, 5 Nov 2018 16:31:40 -0500
+Received: from mailhost.synopsys.com (mailhost3.synopsys.com [10.12.238.238])
+        by smtprelay.synopsys.com (Postfix) with ESMTP id 42D2024E1292;
+        Mon,  5 Nov 2018 04:12:13 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=synopsys.com; s=mail;
+        t=1541419933; bh=Gy07hkLdoQGtHMrwkZ7eIMaOnmU74TyfhO8Vn9kBgAw=;
+        h=Subject:To:CC:References:From:Date:In-Reply-To:From;
+        b=jj7pMnCKUNhMjxb7WDQ9AMNHfVz26p7tKjGwxBhZVb7T67OKtxGRxJa6uWPDgjxUG
+         gPMi9lpfX9SZl8LC2HxRLS76z2QGAf7U1ESJSlzN4PRKoKrJUSOHurjtaoIBotM8YX
+         IvLFRBtICpoWKely4d2u2H535tDOs1AgjDGfhW3Ld3DrLoa605uPdtiNx4Mq0/uNtH
+         L1FU7LH6715CsCvVmQ7/bTcoeXYcNe9IATgScuKbptOcLzAH23Eo1BViNUfY93CtU9
+         A9jyi/++qdzKxCTMAvd6h1T5g9oxrvCq9ibARS8uv/Jb01Nc7piW4UpOxMylEC7pNz
+         YRnyU6WDyIKhA==
+Received: from US01WEHTC3.internal.synopsys.com (us01wehtc3.internal.synopsys.com [10.15.84.232])
+        by mailhost.synopsys.com (Postfix) with ESMTP id F13D63834;
+        Mon,  5 Nov 2018 04:12:12 -0800 (PST)
+Received: from DE02WEHTCA.internal.synopsys.com (10.225.19.92) by
+ US01WEHTC3.internal.synopsys.com (10.15.84.232) with Microsoft SMTP Server
+ (TLS) id 14.3.408.0; Mon, 5 Nov 2018 04:12:12 -0800
+Received: from DE02WEHTCB.internal.synopsys.com (10.225.19.94) by
+ DE02WEHTCA.internal.synopsys.com (10.225.19.92) with Microsoft SMTP Server
+ (TLS) id 14.3.408.0; Mon, 5 Nov 2018 13:12:11 +0100
+Received: from [10.107.25.131] (10.107.25.131) by
+ DE02WEHTCB.internal.synopsys.com (10.225.19.80) with Microsoft SMTP Server
+ (TLS) id 14.3.408.0; Mon, 5 Nov 2018 13:12:11 +0100
 Subject: Re: [PATCH] PCI: dwc: Fix interrupt race in when handling MSI
 To:     Trent Piepho <tpiepho@impinj.com>,
         "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
 CC:     "stable@vger.kernel.org" <stable@vger.kernel.org>,
-        "Rizvi, Mohammad Faiz Abbas" <faiz_abbas@ti.com>,
+        Vignesh R <vigneshr@ti.com>, Faiz Abbas <faiz_abbas@ti.com>,
         Jingoo Han <jingoohan1@gmail.com>,
         Gustavo Pimentel <gustavo.pimentel@synopsys.com>,
-        Joao Pinto <jpinto@synopsys.com>,
+        Joao Pinto <joao.pinto@synopsys.com>,
         Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
         Bjorn Helgaas <bhelgaas@google.com>
 References: <20181027000028.21343-1-tpiepho@impinj.com>
-Message-ID: <2e7472b5-4da1-12e8-385e-5017da2cbf33@ti.com>
-Date:   Mon, 5 Nov 2018 15:58:00 +0530
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:60.0) Gecko/20100101
- Thunderbird/60.2.1
+From:   Gustavo Pimentel <gustavo.pimentel@synopsys.com>
+Message-ID: <fbc29901-a98b-7392-3ca5-6e1b4e324105@synopsys.com>
+Date:   Mon, 5 Nov 2018 12:08:19 +0000
+User-Agent: Mozilla/5.0 (Windows NT 10.0; WOW64; rv:52.0) Gecko/20100101
+ Thunderbird/52.9.1
 MIME-Version: 1.0
 In-Reply-To: <20181027000028.21343-1-tpiepho@impinj.com>
 Content-Type: text/plain; charset="utf-8"
 Content-Language: en-US
 Content-Transfer-Encoding: 7bit
-X-EXCLAIMER-MD-CONFIG: e1e8a2fd-e40a-4ac6-ac9b-f7e9cc9ee180
+X-Originating-IP: [10.107.25.131]
 Sender: linux-pci-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-
-
-On 27/10/18 5:30 AM, Trent Piepho wrote:
+On 27/10/2018 01:00, Trent Piepho wrote:
 > This reverts commit 8c934095fa2f ("PCI: dwc: Clear MSI interrupt status
 > after it is handled, not before").
 > 
@@ -147,7 +154,7 @@ On 27/10/18 5:30 AM, Trent Piepho wrote:
 > will see the handler is INPROGRESS and not re-invoke it, and instead set
 > a PENDING flag, which causes the handler to re-run at step 7.
 > 
-> [1] https://patchwork.kernel.org/patch/3333681/
+> [1] https://urldefense.proofpoint.com/v2/url?u=https-3A__patchwork.kernel.org_patch_3333681_&d=DwIFAw&c=DPL6_X_6JkXFx7AXWqB0tg&r=bkWxpLoW-f-E3EdiDCCa0_h0PicsViasSlvIpzZvPxs&m=ZglJ52030-QSg4t06j182Uq9rsDcKNSB0P7q7Cx5Ow8&s=sHHaXL5syvT5Y0WGTVohW_3QqpQgnPTPOQ-HxAmvnb0&e=
 > 
 > Fixes: 8c934095fa2f ("PCI: dwc: Clear MSI interrupt status after it is handled, not before")
 > Cc: stable@vger.kernel.org
@@ -160,18 +167,6 @@ On 27/10/18 5:30 AM, Trent Piepho wrote:
 > Cc: Bjorn Helgaas <bhelgaas@google.com>
 > Signed-off-by: Trent Piepho <tpiepho@impinj.com>
 > ---
-
-
-Thanks for the patch! I have observed similar race as described above
-using DWC controller on DRA7xx SoCs[2]. The proposed patch and correct
-handling of MSIs within controller driver helps overcome this issue. So,
-for this patch:
-
-Reviewed-by: Vignesh R <vigneshr@ti.com>
-
-
-[2] https://www.spinics.net/lists/linux-pci/msg68996.html
-
 >  drivers/pci/controller/dwc/pcie-designware-host.c | 2 +-
 >  1 file changed, 1 insertion(+), 1 deletion(-)
 > 
@@ -188,11 +183,13 @@ Reviewed-by: Vignesh R <vigneshr@ti.com>
 >  						(i * MSI_REG_CTRL_BLOCK_SIZE),
 >  					    4, 1 << pos);
 > +			generic_handle_irq(irq);
+
+Makes sense.
+
+Acked-by: Gustavo Pimentel <gustavo.pimentel@synopsys.com>
+
 >  			pos++;
 >  		}
 >  	}
 > 
 
--- 
-Regards
-Vignesh
