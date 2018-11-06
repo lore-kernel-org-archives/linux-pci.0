@@ -4,38 +4,39 @@ X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 X-Spam-Level: 
 X-Spam-Status: No, score=-7.1 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
 	DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,
-	SIGNED_OFF_BY,SPF_PASS autolearn=unavailable autolearn_force=no version=3.4.0
+	SIGNED_OFF_BY,SPF_PASS,URIBL_BLOCKED autolearn=ham autolearn_force=no
+	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 01AE6C32789
-	for <linux-pci@archiver.kernel.org>; Tue,  6 Nov 2018 13:20:44 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 60ACBC32789
+	for <linux-pci@archiver.kernel.org>; Tue,  6 Nov 2018 13:20:49 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id B36ED2085B
-	for <linux-pci@archiver.kernel.org>; Tue,  6 Nov 2018 13:20:43 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 1E86F2086B
+	for <linux-pci@archiver.kernel.org>; Tue,  6 Nov 2018 13:20:49 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (1024-bit key) header.d=nxp.com header.i=@nxp.com header.b="YuwGC9Y4"
-DMARC-Filter: OpenDMARC Filter v1.3.2 mail.kernel.org B36ED2085B
+	dkim=pass (1024-bit key) header.d=nxp.com header.i=@nxp.com header.b="udXByu/m"
+DMARC-Filter: OpenDMARC Filter v1.3.2 mail.kernel.org 1E86F2086B
 Authentication-Results: mail.kernel.org; dmarc=fail (p=none dis=none) header.from=nxp.com
 Authentication-Results: mail.kernel.org; spf=none smtp.mailfrom=linux-pci-owner@vger.kernel.org
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1730620AbeKFWpu (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Tue, 6 Nov 2018 17:45:50 -0500
-Received: from mail-eopbgr20059.outbound.protection.outlook.com ([40.107.2.59]:61568
-        "EHLO EUR02-VE1-obe.outbound.protection.outlook.com"
+        id S2388434AbeKFWp6 (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Tue, 6 Nov 2018 17:45:58 -0500
+Received: from mail-he1eur01on0056.outbound.protection.outlook.com ([104.47.0.56]:1632
+        "EHLO EUR01-HE1-obe.outbound.protection.outlook.com"
         rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1730570AbeKFWpt (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Tue, 6 Nov 2018 17:45:49 -0500
+        id S2388116AbeKFWp5 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Tue, 6 Nov 2018 17:45:57 -0500
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=nxp.com; s=selector1;
  h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=yAUFvYhjmTM46xau+yCPPWh2H2TGKQRiw9bL+RiVHL4=;
- b=YuwGC9Y4kj77+JnvZO9djzWaYfhl7Oijf/T+aX2qFcAWanDG83ZZ3H86DCGEQVZJTF+MpAkfMVXkzKftA6Nqti1xu1zINDgwuLu5Ox4sIOLj5G5o2w8k1woyxs+/0jmaCPKhb8zXqUXq/q/toKGZ6OKU+A68Wf/WWfi8n/+0H5Y=
+ bh=/YLf24qphxUIRFAt/Tr/CmTNedbEu3U+TSjeFQGRsj8=;
+ b=udXByu/mqMHidqVy7rG2d4BHBlgXvklcqMXsykIHESCwsPgJa5H9cA3xTwimIrynQFs23cWuLaFg22a1fqygR6bmFrkV43nigmBsngnvxe3F88KJuQJQIkw0pKdRbNOmBsicr/O38a1aP0CKnMCmq+95SPT/q7Gck9XD1clPGec=
 Received: from DB5PR04MB1221.eurprd04.prod.outlook.com (10.162.155.27) by
  DB5PR04MB1414.eurprd04.prod.outlook.com (10.162.221.24) with Microsoft SMTP
  Server (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- 15.20.1294.27; Tue, 6 Nov 2018 13:20:35 +0000
+ 15.20.1294.27; Tue, 6 Nov 2018 13:20:41 +0000
 Received: from DB5PR04MB1221.eurprd04.prod.outlook.com
  ([fe80::6c36:f4cb:26c2:e8cb]) by DB5PR04MB1221.eurprd04.prod.outlook.com
  ([fe80::6c36:f4cb:26c2:e8cb%2]) with mapi id 15.20.1273.035; Tue, 6 Nov 2018
- 13:20:35 +0000
+ 13:20:41 +0000
 From:   "Z.q. Hou" <zhiqiang.hou@nxp.com>
 To:     "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
         "linux-arm-kernel@lists.infradead.org" 
@@ -53,13 +54,13 @@ CC:     Mingkai Hu <mingkai.hu@nxp.com>,
         "M.h. Lian" <minghuan.lian@nxp.com>,
         Xiaowei Bao <xiaowei.bao@nxp.com>,
         "Z.q. Hou" <zhiqiang.hou@nxp.com>
-Subject: [PATCH 14/23] PCI: mobiveil: initialize Primary/Secondary/Subordinate
- bus number
-Thread-Topic: [PATCH 14/23] PCI: mobiveil: initialize
- Primary/Secondary/Subordinate bus number
-Thread-Index: AQHUddOAOpjrJxdoLEW1ke5psCHyLA==
-Date:   Tue, 6 Nov 2018 13:20:35 +0000
-Message-ID: <20181106131807.29951-15-Zhiqiang.Hou@nxp.com>
+Subject: [PATCH 15/23] dt-bindings: pci: mobiveil: change gpio_slave and
+ apb_csr to optional
+Thread-Topic: [PATCH 15/23] dt-bindings: pci: mobiveil: change gpio_slave and
+ apb_csr to optional
+Thread-Index: AQHUddOEP/V1AsPVHEO11IQdjk5tbA==
+Date:   Tue, 6 Nov 2018 13:20:41 +0000
+Message-ID: <20181106131807.29951-16-Zhiqiang.Hou@nxp.com>
 References: <20181106131807.29951-1-Zhiqiang.Hou@nxp.com>
 In-Reply-To: <20181106131807.29951-1-Zhiqiang.Hou@nxp.com>
 Accept-Language: zh-CN, en-US
@@ -74,12 +75,12 @@ authentication-results: spf=none (sender IP is )
 x-ms-exchange-messagesentrepresentingtype: 1
 x-originating-ip: [119.31.174.73]
 x-ms-publictraffictype: Email
-x-microsoft-exchange-diagnostics: 1;DB5PR04MB1414;6:2Ru1+Bq4n0ok02zcRoXayJD4p5fZugs2lh0GG9+kY6Qk0lXsyU8yaCb157Ok7uu9ca8zOPeI5JKWtn6XKrGo1AAK5HN62QIWYg8OBgCDoSHTFTOOG8X6kG2qlqMbNBKTksRVUp+WbkgwMY/aZzwqYRQFffo1EYBewafvOgCFpqNdk4Y7/batTCistTG6ewvsppPmpSuf7m5U+35akIhnzWRxSnaNNaRdvRS5ltf6b37/kzbd8wlO9vKx3ngyE3uR81XSD5mV1HC/DPXgQkd6+ZH+U3f/BaqYCi5cCOtoiYmFfKOoDCyABQn2Qs0C+eMuiwoM+qQ9S/1tw4UkmEzgvwmJGhusJRtSk16+c3Kyak+CeFLXpB8+ukFmaQJ6nZL7N0W0HySS21DTQIu5eMsrgjNb2kxVtuSAXoxUbfd5zrgNfjlxSHldSdyiBuWQdo1OTCek+fCbpG/+3v1ycNcAug==;5:xfgto8n9BeSkyGKWBuJ9BMZt3a7QaECGIslq/zyYsedmd/wi/MvGoV/n3KzIsggzlkK0EUrSsvM8oemyaGmUvZ2qKJYxlC/7rwRIGf3WvDCXDYBLcjCMXjN8t1GnYTo9alkoqXrVzHsCSeMskhprhIXLh1d8MeX014rki1DGIzk=;7:USPqfnoL+OJWw5NZQLCXG1MLeEQZ8MHkFuYLa17g9xq1ofyr8eF+xDew6XRiVpAQfm0MpIB1LSd2P1054V2T9rqCURWJUFGNiqHlkclwRa9ilAmkn71Yb8MrCl8svRSkwYWYEis8XymNldhGW4OG/w==
-x-ms-office365-filtering-correlation-id: c2fbdc9f-b473-44a6-cf9d-08d643eaa2be
+x-microsoft-exchange-diagnostics: 1;DB5PR04MB1414;6:5QOvlDpDaN0PiJWV81dl1auGuHDuEPG1ONqZpXnE12z8/ViCpVKKZSr6AY3Ozpv46qPA9R02fqAVnAZMcse5BN4h2nRen2SwAeFabPGOksuYvfk299pv6sYsR9ei8Sf/9B+CpLb+l3pzzvIPWDdlThtML+RV90j8l3GeRNoeBgSzK2pW2z2xufQ2zZipEEIk0Qp1d5SrCu6o3H575BDixaPhwSDwgUppGpn7Ok7Nf3UHeHR9U5/AG4DDsWmctn+9ldi1gwM6qTuoJ4M6ayBPh28PIc9BwgANhnJGIlLv6ahizesYTQLR9NKdQHYQKUjzulTIKJ2PgheLt53Shhum245PZM+ozuaAqX06hu+LDRjtiTkrfJvhwQeBK4hoT/c9UOwafIQxIAg359mXYa+X2vwNwsMdWBD2PNO7kCCTCEmGsZTlWaqkdiVHZ6T+B5b0Q98tusqEe6iw9frZEpl0Ng==;5:CPR42xHv1WBtP/l0BWNm6ngGka6OKCACbBOo0O+EBh6I9ttKp1wIemU4HNmSzWOeEPnf7IuO4/mDaUSnvaHEedKJJST6un7ouIwNSn/r3GK2KIJcmW+XHd51+cHbWlDfJVu/cno1AV6IBzvoM+AVwOOOqxAnjbdVoQU6ZvImhcA=;7:uK8DjVT0hFfXNZOhGR7QwERJ6+n7qJaE27MZxunBpP2Uhyd7XAgGf5zfS881kqCgKiT3sgGH7yKq7EM9OhWdRm0e53KS2Kv7aEI7dwlAy05af/2ZLfbkHDbR0L8bgrI+lyT+tMhgnnYhE5kL7JromQ==
+x-ms-office365-filtering-correlation-id: f6993cfc-ad59-4881-d844-08d643eaa653
 x-ms-office365-filtering-ht: Tenant
 x-microsoft-antispam: BCL:0;PCL:0;RULEID:(7020095)(4652040)(8989299)(5600074)(711020)(4618075)(4534185)(4627221)(201703031133081)(201702281549075)(8990200)(2017052603328)(7153060)(7193020);SRVR:DB5PR04MB1414;
 x-ms-traffictypediagnostic: DB5PR04MB1414:
-x-microsoft-antispam-prvs: <DB5PR04MB14140E75020FA006FE14B15684CB0@DB5PR04MB1414.eurprd04.prod.outlook.com>
+x-microsoft-antispam-prvs: <DB5PR04MB1414599B031C7FC3DC85566584CB0@DB5PR04MB1414.eurprd04.prod.outlook.com>
 x-exchange-antispam-report-test: UriScan:(185117386973197);
 x-ms-exchange-senderadcheck: 1
 x-exchange-antispam-report-cfa-test: BCL:0;PCL:0;RULEID:(8211001083)(6040522)(2401047)(8121501046)(5005006)(3002001)(10201501046)(93006095)(93001095)(3231382)(944501410)(52105095)(6055026)(148016)(149066)(150057)(6041310)(20161123562045)(20161123558120)(20161123564045)(20161123560045)(201703131423095)(201702281528075)(20161123555045)(201703061421075)(201703061406153)(201708071742011)(7699051)(76991095);SRVR:DB5PR04MB1414;BCL:0;PCL:0;RULEID:;SRVR:DB5PR04MB1414;
@@ -87,15 +88,15 @@ x-forefront-prvs: 0848C1A6AA
 x-forefront-antispam-report: SFV:NSPM;SFS:(10009020)(39860400002)(366004)(396003)(376002)(346002)(136003)(189003)(199004)(97736004)(66066001)(8936002)(81156014)(81166006)(7416002)(8676002)(5660300001)(71200400001)(71190400001)(478600001)(6486002)(6116002)(2900100001)(1076002)(53936002)(6436002)(6512007)(305945005)(4326008)(25786009)(7736002)(105586002)(106356001)(68736007)(2906002)(3846002)(256004)(26005)(486006)(2501003)(14454004)(99286004)(52116002)(76176011)(36756003)(110136005)(386003)(6506007)(102836004)(54906003)(86362001)(186003)(446003)(11346002)(316002)(2616005)(476003)(2201001)(921003)(1121003);DIR:OUT;SFP:1101;SCL:1;SRVR:DB5PR04MB1414;H:DB5PR04MB1221.eurprd04.prod.outlook.com;FPR:;SPF:None;LANG:en;PTR:InfoNoRecords;MX:1;A:1;
 received-spf: None (protection.outlook.com: nxp.com does not designate
  permitted sender hosts)
-x-microsoft-antispam-message-info: ADfJiFj4c08S++/5lqfKgEB6Veo65TZI2npmb86Nk8l0resNCmU45ZTxlcwLaKzMy2reVTV6YKkr83cVDefZBdnK60TW0ZRaErphwrMUVX1xsGTQ51zSGdBrP19/wJpa0+OWhtcA41Wp3IVG4kKHhr7FviQCqXtG6fCTv5kdFuXRFhGLq1OHr8nMSZOLd1Mew/fBFOuLnTJwvX5taez4Dw3qjS27DIyBevsUm4ZGqFTI0qdiGK2NTLw+KhpwD9qVBK91wMe+J3a3wrfu+i0OhV+2X2bLIpg3Vmb0GVnosrYZx2N1xOm/jvAeM4l1L9JpSwPRvOtg+HWI/CtNEBNabtRUIYAHHXfbcNjennoye9c=
+x-microsoft-antispam-message-info: sc0aV76Q/S4RUOM7nl3k0niSwPvJwsmjHs4ycrAbZsunLNh7mghp1/TNPm/xGtl1hudWiylLAQX7xToofCcLp2/+LogzHG+kM4aqZSByqOYYvT1MYGfl/i0PKmf9yEDxj7SOf3xEJlEYNFYogMQ13PBed3R62uDJksLX7ShdBv/8MEOdPR6W7oPGPT7GlMjvBfkb1k6yBzErBGc2j3Nle4t5ijKuN7Sm6188q/3HTlhDhwSH0ARMM1nxChNtNS7qKMvkr+5ymevd2SFEocqw3xrK0WY7b3xIaAc4X2cRGcr6Q4QC4T8/kY3REExOYdFqlg+vNwSFmNodMeQVL5NBztIHHNgrFzae0ReKG4NxAyE=
 spamdiagnosticoutput: 1:99
 spamdiagnosticmetadata: NSPM
 Content-Type: text/plain; charset="iso-8859-1"
 Content-Transfer-Encoding: quoted-printable
 MIME-Version: 1.0
 X-OriginatorOrg: nxp.com
-X-MS-Exchange-CrossTenant-Network-Message-Id: c2fbdc9f-b473-44a6-cf9d-08d643eaa2be
-X-MS-Exchange-CrossTenant-originalarrivaltime: 06 Nov 2018 13:20:35.6670
+X-MS-Exchange-CrossTenant-Network-Message-Id: f6993cfc-ad59-4881-d844-08d643eaa653
+X-MS-Exchange-CrossTenant-originalarrivaltime: 06 Nov 2018 13:20:41.7299
  (UTC)
 X-MS-Exchange-CrossTenant-fromentityheader: Hosted
 X-MS-Exchange-CrossTenant-id: 686ea1d3-bc2b-4c6f-a92c-d99c5c301635
@@ -107,33 +108,31 @@ X-Mailing-List: linux-pci@vger.kernel.org
 
 From: Hou Zhiqiang <Zhiqiang.Hou@nxp.com>
 
-The reset value is all zero, so set a workable value for Primary,
-Secondary and Subordinate bus numbers.
+Change the "gpio_slave" and "apb_csr" to optional, the "gpio_slave"
+is not used in current code, and "apb_csr" is not used by some
+platorms.
 
 Signed-off-by: Hou Zhiqiang <Zhiqiang.Hou@nxp.com>
 ---
- drivers/pci/controller/pcie-mobiveil.c | 6 ++++++
- 1 file changed, 6 insertions(+)
+ Documentation/devicetree/bindings/pci/mobiveil-pcie.txt | 2 ++
+ 1 file changed, 2 insertions(+)
 
-diff --git a/drivers/pci/controller/pcie-mobiveil.c b/drivers/pci/controlle=
-r/pcie-mobiveil.c
-index 3da924bb6b3c..8d6a1e98f655 100644
---- a/drivers/pci/controller/pcie-mobiveil.c
-+++ b/drivers/pci/controller/pcie-mobiveil.c
-@@ -581,6 +581,12 @@ static int mobiveil_host_init(struct mobiveil_pcie *pc=
-ie)
- 	u32 value, pab_ctrl, type;
- 	struct resource_entry *win;
+diff --git a/Documentation/devicetree/bindings/pci/mobiveil-pcie.txt b/Docu=
+mentation/devicetree/bindings/pci/mobiveil-pcie.txt
+index a618d4787dd7..64156993e052 100644
+--- a/Documentation/devicetree/bindings/pci/mobiveil-pcie.txt
++++ b/Documentation/devicetree/bindings/pci/mobiveil-pcie.txt
+@@ -10,8 +10,10 @@ Required properties:
+ 	interrupt source. The value must be 1.
+ - compatible: Should contain "mbvl,gpex40-pcie"
+ - reg: Should contain PCIe registers location and length
++	Mandatory:
+ 	"config_axi_slave": PCIe controller registers
+ 	"csr_axi_slave"	  : Bridge config registers
++	Optional:
+ 	"gpio_slave"	  : GPIO registers to control slot power
+ 	"apb_csr"	  : MSI registers
 =20
-+	/* setup bus numbers */
-+	value =3D csr_readl(pcie, PCI_PRIMARY_BUS);
-+	value &=3D 0xff000000;
-+	value |=3D 0x00ff0100;
-+	csr_writel(pcie, value, PCI_PRIMARY_BUS);
-+
- 	/*
- 	 * program Bus Master Enable Bit in Command Register in PAB Config
- 	 * Space
 --=20
 2.17.1
 
