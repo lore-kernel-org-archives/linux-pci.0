@@ -4,39 +4,39 @@ X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 X-Spam-Level: 
 X-Spam-Status: No, score=-7.1 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
 	DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,
-	SIGNED_OFF_BY,SPF_PASS,URIBL_BLOCKED autolearn=ham autolearn_force=no
+	SIGNED_OFF_BY,SPF_PASS,URIBL_BLOCKED autolearn=unavailable autolearn_force=no
 	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id C7C26C32789
-	for <linux-pci@archiver.kernel.org>; Tue,  6 Nov 2018 13:21:37 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id A9C22C32789
+	for <linux-pci@archiver.kernel.org>; Tue,  6 Nov 2018 13:21:48 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 78D942085B
-	for <linux-pci@archiver.kernel.org>; Tue,  6 Nov 2018 13:21:37 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 5DDD32086B
+	for <linux-pci@archiver.kernel.org>; Tue,  6 Nov 2018 13:21:48 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (1024-bit key) header.d=nxp.com header.i=@nxp.com header.b="m/41wVvh"
-DMARC-Filter: OpenDMARC Filter v1.3.2 mail.kernel.org 78D942085B
+	dkim=pass (1024-bit key) header.d=nxp.com header.i=@nxp.com header.b="fo172d22"
+DMARC-Filter: OpenDMARC Filter v1.3.2 mail.kernel.org 5DDD32086B
 Authentication-Results: mail.kernel.org; dmarc=fail (p=none dis=none) header.from=nxp.com
 Authentication-Results: mail.kernel.org; spf=none smtp.mailfrom=linux-pci-owner@vger.kernel.org
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S2388298AbeKFWqr (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Tue, 6 Nov 2018 17:46:47 -0500
-Received: from mail-db5eur01on0088.outbound.protection.outlook.com ([104.47.2.88]:27376
+        id S2387922AbeKFWqm (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Tue, 6 Nov 2018 17:46:42 -0500
+Received: from mail-db5eur01on0082.outbound.protection.outlook.com ([104.47.2.82]:27088
         "EHLO EUR01-DB5-obe.outbound.protection.outlook.com"
         rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S2388180AbeKFWqq (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Tue, 6 Nov 2018 17:46:46 -0500
+        id S2388180AbeKFWql (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Tue, 6 Nov 2018 17:46:41 -0500
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=nxp.com; s=selector1;
  h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=uH+NVtMyK88ERBuGiA3bleC7dKqchyffkOY+IM6SfLI=;
- b=m/41wVvheKP4mohlXq5KxKcew07MVGixcNINL6yeBli4W4c6Zb6Kk5A3IsbgP+YyghY3p+ro5/U97RfInloM9TJPCgTvEc8cYcKCKyoC+McNoX0794Kubf8BMYYsTOdEsk3LoLFqtTcJM2m6h56U6eg2+gbZMgc16AEtkRJb+wc=
+ bh=mVgDtGVx6qdNsZHy7LpnTvW7755nFc/ty1myaR0GhoI=;
+ b=fo172d22SGx2tyGKTbEsK81aRiGvhgqJgrTKLPgMLpVYUT8Y7gpfJ+bf120QTnUEu0P66CLwWyPv7dUdFMnF99qHmFsoNzxBC6NVC9IHgDCh4HE1eZFNIN4CFQo8jKg2hVLquLGxsjmI8zNM9yj8WF9Lfxm1CXpZxXr4yMoKtME=
 Received: from DB5PR04MB1221.eurprd04.prod.outlook.com (10.162.155.27) by
  DB5PR04MB2119.eurprd04.prod.outlook.com (10.166.172.136) with Microsoft SMTP
  Server (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- 15.20.1294.28; Tue, 6 Nov 2018 13:21:31 +0000
+ 15.20.1294.28; Tue, 6 Nov 2018 13:21:25 +0000
 Received: from DB5PR04MB1221.eurprd04.prod.outlook.com
  ([fe80::6c36:f4cb:26c2:e8cb]) by DB5PR04MB1221.eurprd04.prod.outlook.com
  ([fe80::6c36:f4cb:26c2:e8cb%2]) with mapi id 15.20.1273.035; Tue, 6 Nov 2018
- 13:21:31 +0000
+ 13:21:25 +0000
 From:   "Z.q. Hou" <zhiqiang.hou@nxp.com>
 To:     "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
         "linux-arm-kernel@lists.infradead.org" 
@@ -54,11 +54,13 @@ CC:     Mingkai Hu <mingkai.hu@nxp.com>,
         "M.h. Lian" <minghuan.lian@nxp.com>,
         Xiaowei Bao <xiaowei.bao@nxp.com>,
         "Z.q. Hou" <zhiqiang.hou@nxp.com>
-Subject: [PATCH 23/23] arm64: dts: freescale: lx2160a: add pcie DT nodes
-Thread-Topic: [PATCH 23/23] arm64: dts: freescale: lx2160a: add pcie DT nodes
-Thread-Index: AQHUddOh0w0BqLXql0i/nqlyxcYYgg==
-Date:   Tue, 6 Nov 2018 13:21:31 +0000
-Message-ID: <20181106131807.29951-24-Zhiqiang.Hou@nxp.com>
+Subject: [PATCH 22/23] PCI: mobiveil: add PCIe RC driver for NXP LX series
+ SoCs
+Thread-Topic: [PATCH 22/23] PCI: mobiveil: add PCIe RC driver for NXP LX
+ series SoCs
+Thread-Index: AQHUddOeWH2W17CrSk6lzc/1cOUlfw==
+Date:   Tue, 6 Nov 2018 13:21:25 +0000
+Message-ID: <20181106131807.29951-23-Zhiqiang.Hou@nxp.com>
 References: <20181106131807.29951-1-Zhiqiang.Hou@nxp.com>
 In-Reply-To: <20181106131807.29951-1-Zhiqiang.Hou@nxp.com>
 Accept-Language: zh-CN, en-US
@@ -73,28 +75,29 @@ authentication-results: spf=none (sender IP is )
 x-ms-exchange-messagesentrepresentingtype: 1
 x-originating-ip: [119.31.174.73]
 x-ms-publictraffictype: Email
-x-microsoft-exchange-diagnostics: 1;DB5PR04MB2119;6:pKpXm3U9Rp7/iuw8MFd/5aZazFReMSkj38m1SnPpdfYKZyX45BcAJvghviQ3W4ZoS0L0tet4HSfBr3I1cobRKdA4O8yKBOdK1xNfXyVqcXo/D5I1Ej48T5GDUuHMpWw1f+32c7RZ1Z58Jcj1+AeMmKqLUhbpDNy0Ghv0WKYv/9Wi2rJKV6EI2RLnksYVXS2i+TTQHf8g3zDvuuGUPMstqwr7SKcUlbAFhXQSA6TsFL3YZlw3uu55SLxWSxRbAyqPXhmfO2OWBOIDCX+hzolr0rAb91XtDuj5LFX/SYw13A3X5KCfa3QzdWq+0SJGnR7+gm9SDgUrci/oCstZ9lOT85m5MjZWrl09+OwUasWPWww8L4BcxGRhK4PMP0XaQOlGLNkh+9LTi9t08zAALbI2qlM8cuYFFJ96bKA9A9U5lIVK2/dx+/U0mJAhrMocmOwA4d4Kc7ITRiIQBecbRgy8gw==;5:bC68TqHuRo6g1WWVQtnUtZ069OsfGUvt4RpOBBsBm/qLb1SgAnAOUw6iu5CFu0eZmgU8LfarE/fORYqwdXyenmOv1bnsxFotD92KAgsFqKmcTprcteJafzqTrWX+KNVfcAe4ZQy/4lAT4c5hCHET60nj5lmknv8KFtFPW6nqMVQ=;7:fz7YW1yZnHz2p4fg9/wUF1Uz+nGYQpTB8EYX5cfMWqm9a3cf24NMw2Byt64KqNNpUeX0hrOYlXWQ0dJIw7QaCB2G3SfXXtSzzM5O4XSLlWLRXEkpPJKMYsXbg+I51mkdduAC1oJIpRtwqgWcnrwiWw==
-x-ms-office365-filtering-correlation-id: 02cdaa70-aea5-416f-209c-08d643eac3de
+x-microsoft-exchange-diagnostics: 1;DB5PR04MB2119;6:ZocHzOUaHXh2dRmQaIQ8XHT5+YXfvoJWLP/dEpgQ91jGwquse7wOEAFSBBHb3pzfkcRGOM9Vw+yqyTOGs7ckjGjoG6pESe/RulM1cNVYtAjrI2+KwUYT4Fy+PHB11cpc+Kprr5F7U32tIlmR4YhzvOWc3sHV4pXd4RO7oCYEAwLwe3jhE3KFT0FjlDXASrPgbRUmgLXvq+NbKXn/CZqFSTU3Iap6amYEBi8d442cSwNVO11dDmyf6CraJM1OnLaJNEhg0RoqwdAW3ICRshJCxTaH8ufcquFyRIG2n85P4UIvmTxBWLPHV6X00J/TysShQV2V0PkNb7hcBTNqNiLYnp7HcjTr4Ppl6QQLWqtHkIzEQBcCM1q1v4/c6+Q5nBgvXbZwurnsGLEHEZtWQ80mlsz2neoMJPFfLGG0IKMkrEh2k+xLjJzQDQR5AzdUZX6FCQfKWDYlUmbrcRK8XlyfcA==;5:PJv4XnJ+L+jOV+xLkRvCNHe4QFl8NdeJ2QMSyWr0jLvR0+eyHlml2g2XBcfTd1SWYoUGGFORYiOmEFWZJjDY/caGvmTDmaGSuY+/BZ87kaOW78Msx3NM0b6ZoB6eelVsYeZ5tXifGLlhLnOOQwgSYU3eQnf+5glut9yr39YaQ7I=;7:qFlD4peB/dSF62vaKMwlpLq3YMfWYf8UpW6qPHw6slNQZHJozcj3T/Mz/KnHqgddjMirtdgvpNwboOq9GtnnMI2UtFEDszEwAozAmYf3wBiuc8dIsc1jZAD5KQ/NhKTCY6XL+t2E8QKjIRxTHF+A1Q==
+x-ms-office365-filtering-correlation-id: 76891e7d-26af-4977-740f-08d643eac04c
 x-ms-office365-filtering-ht: Tenant
 x-microsoft-antispam: BCL:0;PCL:0;RULEID:(7020095)(4652040)(8989299)(4534185)(4627221)(201703031133081)(201702281549075)(8990200)(5600074)(711020)(4618075)(2017052603328)(7153060)(7193020);SRVR:DB5PR04MB2119;
 x-ms-traffictypediagnostic: DB5PR04MB2119:
-x-microsoft-antispam-prvs: <DB5PR04MB2119F41CE2D188A4B0C2332B84CB0@DB5PR04MB2119.eurprd04.prod.outlook.com>
+x-microsoft-antispam-prvs: <DB5PR04MB2119561FB8FC932189FE26A784CB0@DB5PR04MB2119.eurprd04.prod.outlook.com>
 x-exchange-antispam-report-test: UriScan:(185117386973197);
 x-ms-exchange-senderadcheck: 1
 x-exchange-antispam-report-cfa-test: BCL:0;PCL:0;RULEID:(8211001083)(6040522)(2401047)(8121501046)(5005006)(93006095)(93001095)(3231382)(944501410)(52105095)(10201501046)(3002001)(6055026)(148016)(149066)(150057)(6041310)(20161123560045)(201703131423095)(201702281528075)(20161123555045)(201703061421075)(201703061406153)(20161123564045)(20161123562045)(20161123558120)(201708071742011)(7699051)(76991095);SRVR:DB5PR04MB2119;BCL:0;PCL:0;RULEID:;SRVR:DB5PR04MB2119;
 x-forefront-prvs: 0848C1A6AA
-x-forefront-antispam-report: SFV:NSPM;SFS:(10009020)(979002)(346002)(376002)(396003)(136003)(39860400002)(366004)(189003)(199004)(81156014)(99286004)(2201001)(8936002)(86362001)(6486002)(68736007)(6436002)(5660300001)(478600001)(53936002)(6512007)(4326008)(25786009)(36756003)(14454004)(54906003)(186003)(316002)(110136005)(2906002)(2900100001)(1076002)(3846002)(6116002)(81166006)(8676002)(7416002)(256004)(14444005)(446003)(11346002)(486006)(476003)(2616005)(7736002)(305945005)(71190400001)(71200400001)(66066001)(97736004)(76176011)(52116002)(102836004)(106356001)(26005)(2501003)(105586002)(386003)(6506007)(921003)(1121003)(969003)(989001)(999001)(1009001)(1019001);DIR:OUT;SFP:1101;SCL:1;SRVR:DB5PR04MB2119;H:DB5PR04MB1221.eurprd04.prod.outlook.com;FPR:;SPF:None;LANG:en;PTR:InfoNoRecords;MX:1;A:1;
+x-forefront-antispam-report: SFV:NSPM;SFS:(10009020)(6029001)(346002)(376002)(396003)(136003)(39860400002)(366004)(189003)(199004)(81156014)(99286004)(2201001)(8936002)(575784001)(86362001)(6486002)(68736007)(6436002)(5660300001)(478600001)(53936002)(6512007)(4326008)(25786009)(36756003)(14454004)(54906003)(186003)(316002)(110136005)(2906002)(2900100001)(1076002)(3846002)(6116002)(81166006)(8676002)(7416002)(256004)(14444005)(446003)(11346002)(486006)(476003)(2616005)(7736002)(305945005)(71190400001)(71200400001)(66066001)(97736004)(76176011)(52116002)(102836004)(106356001)(26005)(2501003)(105586002)(386003)(6506007)(921003)(1121003);DIR:OUT;SFP:1101;SCL:1;SRVR:DB5PR04MB2119;H:DB5PR04MB1221.eurprd04.prod.outlook.com;FPR:;SPF:None;LANG:en;PTR:InfoNoRecords;MX:1;A:1;
 received-spf: None (protection.outlook.com: nxp.com does not designate
  permitted sender hosts)
-x-microsoft-antispam-message-info: 9Lw/fxCGhNfATjJP0uA6I90xyikLpq2MNSQR5rG7YFnBQocLMyRah+IvM0JcgXLLjI3+9CdksER0eLVKC6UPUxw6q7y6KkVw86oe+SUDOyRNfHoU/YZNEoZ0qBajzlKdhfQGYxcBQWmrE8ZcHc30uoAQvcMu99Lo6lZj7sbxYqRe2jWR4qoUY59ZA816Xd8WilsbjG3RYN0MLf2Wb3wm5O0YlTAGi2pGESuVm99Ph7zNAF5IXtdcimFdsPbXojZRAFJmtOumZizhfC2PwGzGYmg7h/RF7yyVLoo5yut8KQU2rSYQumXuRMvAYQg00pTmg6ghnu/HH8b/R3aoFkk9QwFd48IRtTgtMrVc6By4EEE=
+x-microsoft-antispam-message-info: FV08fU5/3Qm9eSVUpY/CeEaQgsDdlNNgwE3R+4QEwFOyqBqWfK4/nSKzfsCTtVqKv9WV7UtUb7bRqND2ZH8n7bro2rdVXsEEISim3lX9wzMmn0LEgEOnw/80ZjG0oaD1eUyNcTJBdmirip0K3JbuL8/p5KbU/sMM901swW1eD0UeWP9W0xXJmMph8CDi2Skqtfei7NIWwsh8NtMXMo51MGYmBZlGt+d2psj8jOhb7eUg+R+bnwd88zl21qXLkCD7mOKRANpv3vHcFSkyoP3zZ6GKqFM0q5rJQO/tplr0UKIoptz91qMlG7w00p7ZRmiVxNuMQEDgLDXIJ3WBayu8YeAJxFvf/YgWq/W45XT3NZg=
 spamdiagnosticoutput: 1:99
 spamdiagnosticmetadata: NSPM
-Content-Type: text/plain; charset="iso-8859-1"
-Content-Transfer-Encoding: quoted-printable
+Content-Type: text/plain; charset="utf-8"
+Content-ID: <C7510C8BDA7C05449494D3434100A1D0@eurprd04.prod.outlook.com>
+Content-Transfer-Encoding: base64
 MIME-Version: 1.0
 X-OriginatorOrg: nxp.com
-X-MS-Exchange-CrossTenant-Network-Message-Id: 02cdaa70-aea5-416f-209c-08d643eac3de
-X-MS-Exchange-CrossTenant-originalarrivaltime: 06 Nov 2018 13:21:31.1390
+X-MS-Exchange-CrossTenant-Network-Message-Id: 76891e7d-26af-4977-740f-08d643eac04c
+X-MS-Exchange-CrossTenant-originalarrivaltime: 06 Nov 2018 13:21:25.2022
  (UTC)
 X-MS-Exchange-CrossTenant-fromentityheader: Hosted
 X-MS-Exchange-CrossTenant-id: 686ea1d3-bc2b-4c6f-a92c-d99c5c301635
@@ -104,187 +107,174 @@ Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-From: Hou Zhiqiang <Zhiqiang.Hou@nxp.com>
-
-Signed-off-by: Hou Zhiqiang <Zhiqiang.Hou@nxp.com>
----
- .../arm64/boot/dts/freescale/fsl-lx2160a.dtsi | 157 ++++++++++++++++++
- 1 file changed, 157 insertions(+)
-
-diff --git a/arch/arm64/boot/dts/freescale/fsl-lx2160a.dtsi b/arch/arm64/bo=
-ot/dts/freescale/fsl-lx2160a.dtsi
-index 6ba722e373ee..49dfaaf7560d 100644
---- a/arch/arm64/boot/dts/freescale/fsl-lx2160a.dtsi
-+++ b/arch/arm64/boot/dts/freescale/fsl-lx2160a.dtsi
-@@ -953,5 +953,162 @@
- 			clock-names =3D "fspi_en", "fspi";
- 			status =3D "disabled";
- 		};
-+
-+		pcie@3400000 {
-+			compatible =3D "fsl,lx2160a-pcie";
-+			reg =3D <0x00 0x03400000 0x0 0x00100000   /* controller registers */
-+			       0x80 0x00000000 0x0 0x00001000>; /* configuration space */
-+			reg-names =3D "csr_axi_slave", "config_axi_slave";
-+			interrupts =3D <GIC_SPI 108 IRQ_TYPE_LEVEL_HIGH>, /* AER interrupt */
-+				     <GIC_SPI 108 IRQ_TYPE_LEVEL_HIGH>, /* PME interrupt */
-+				     <GIC_SPI 108 IRQ_TYPE_LEVEL_HIGH>; /* controller interrupt */
-+			interrupt-names =3D "aer", "pme", "intr";
-+			#address-cells =3D <3>;
-+			#size-cells =3D <2>;
-+			device_type =3D "pci";
-+			dma-coherent;
-+			apio-wins =3D <8>;
-+			ppio-wins =3D <8>;
-+			bus-range =3D <0x0 0xff>;
-+			ranges =3D <0x82000000 0x0 0x40000000 0x80 0x40000000 0x0 0x40000000>; =
-/* non-prefetchable memory */
-+			msi-parent =3D <&its>;
-+			#interrupt-cells =3D <1>;
-+			interrupt-map-mask =3D <0 0 0 7>;
-+			interrupt-map =3D <0000 0 0 1 &gic 0 0 0 109 IRQ_TYPE_LEVEL_HIGH>,
-+					<0000 0 0 2 &gic 0 0 0 110 IRQ_TYPE_LEVEL_HIGH>,
-+					<0000 0 0 3 &gic 0 0 0 111 IRQ_TYPE_LEVEL_HIGH>,
-+					<0000 0 0 4 &gic 0 0 0 112 IRQ_TYPE_LEVEL_HIGH>;
-+		};
-+
-+		pcie@3500000 {
-+			compatible =3D "fsl,lx2160a-pcie";
-+			reg =3D <0x00 0x03500000 0x0 0x00100000   /* controller registers */
-+			       0x88 0x00000000 0x0 0x00001000>; /* configuration space */
-+			reg-names =3D "csr_axi_slave", "config_axi_slave";
-+			interrupts =3D <GIC_SPI 113 IRQ_TYPE_LEVEL_HIGH>, /* AER interrupt */
-+				     <GIC_SPI 113 IRQ_TYPE_LEVEL_HIGH>, /* PME interrupt */
-+				     <GIC_SPI 113 IRQ_TYPE_LEVEL_HIGH>; /* controller interrupt */
-+			interrupt-names =3D "aer", "pme", "intr";
-+			#address-cells =3D <3>;
-+			#size-cells =3D <2>;
-+			device_type =3D "pci";
-+			dma-coherent;
-+			apio-wins =3D <8>;
-+			ppio-wins =3D <8>;
-+			bus-range =3D <0x0 0xff>;
-+			ranges =3D <0x82000000 0x0 0x40000000 0x88 0x40000000 0x0 0x40000000>; =
-/* non-prefetchable memory */
-+			msi-parent =3D <&its>;
-+			#interrupt-cells =3D <1>;
-+			interrupt-map-mask =3D <0 0 0 7>;
-+			interrupt-map =3D <0000 0 0 1 &gic 0 0 0 114 IRQ_TYPE_LEVEL_HIGH>,
-+					<0000 0 0 2 &gic 0 0 0 115 IRQ_TYPE_LEVEL_HIGH>,
-+					<0000 0 0 3 &gic 0 0 0 116 IRQ_TYPE_LEVEL_HIGH>,
-+					<0000 0 0 4 &gic 0 0 0 117 IRQ_TYPE_LEVEL_HIGH>;
-+		};
-+
-+		pcie@3600000 {
-+			compatible =3D "fsl,lx2160a-pcie";
-+			reg =3D <0x00 0x03600000 0x0 0x00100000   /* controller registers */
-+			       0x90 0x00000000 0x0 0x00001000>; /* configuration space */
-+			reg-names =3D "csr_axi_slave", "config_axi_slave";
-+			interrupts =3D <GIC_SPI 118 IRQ_TYPE_LEVEL_HIGH>, /* AER interrupt */
-+				     <GIC_SPI 118 IRQ_TYPE_LEVEL_HIGH>, /* PME interrupt */
-+				     <GIC_SPI 118 IRQ_TYPE_LEVEL_HIGH>; /* controller interrupt */
-+			interrupt-names =3D "aer", "pme", "intr";
-+			#address-cells =3D <3>;
-+			#size-cells =3D <2>;
-+			device_type =3D "pci";
-+			dma-coherent;
-+			apio-wins =3D <8>;
-+			ppio-wins =3D <8>;
-+			bus-range =3D <0x0 0xff>;
-+			ranges =3D <0x82000000 0x0 0x40000000 0x90 0x40000000 0x0 0x40000000>; =
-/* non-prefetchable memory */
-+			msi-parent =3D <&its>;
-+			#interrupt-cells =3D <1>;
-+			interrupt-map-mask =3D <0 0 0 7>;
-+			interrupt-map =3D <0000 0 0 1 &gic 0 0 0 119 IRQ_TYPE_LEVEL_HIGH>,
-+					<0000 0 0 2 &gic 0 0 0 120 IRQ_TYPE_LEVEL_HIGH>,
-+					<0000 0 0 3 &gic 0 0 0 121 IRQ_TYPE_LEVEL_HIGH>,
-+					<0000 0 0 4 &gic 0 0 0 122 IRQ_TYPE_LEVEL_HIGH>;
-+		};
-+
-+		pcie@3700000 {
-+			compatible =3D "fsl,lx2160a-pcie";
-+			reg =3D <0x00 0x03700000 0x0 0x00100000   /* controller registers */
-+			       0x98 0x00000000 0x0 0x00001000>; /* configuration space */
-+			reg-names =3D "csr_axi_slave", "config_axi_slave";
-+			interrupts =3D <GIC_SPI 123 IRQ_TYPE_LEVEL_HIGH>, /* AER interrupt */
-+				     <GIC_SPI 123 IRQ_TYPE_LEVEL_HIGH>, /* PME interrupt */
-+				     <GIC_SPI 123 IRQ_TYPE_LEVEL_HIGH>; /* controller interrupt */
-+			interrupt-names =3D "aer", "pme", "intr";
-+			#address-cells =3D <3>;
-+			#size-cells =3D <2>;
-+			device_type =3D "pci";
-+			dma-coherent;
-+			apio-wins =3D <8>;
-+			ppio-wins =3D <8>;
-+			bus-range =3D <0x0 0xff>;
-+			ranges =3D <0x82000000 0x0 0x40000000 0x98 0x40000000 0x0 0x40000000>; =
-/* non-prefetchable memory */
-+			msi-parent =3D <&its>;
-+			#interrupt-cells =3D <1>;
-+			interrupt-map-mask =3D <0 0 0 7>;
-+			interrupt-map =3D <0000 0 0 1 &gic 0 0 0 124 IRQ_TYPE_LEVEL_HIGH>,
-+					<0000 0 0 2 &gic 0 0 0 125 IRQ_TYPE_LEVEL_HIGH>,
-+					<0000 0 0 3 &gic 0 0 0 126 IRQ_TYPE_LEVEL_HIGH>,
-+					<0000 0 0 4 &gic 0 0 0 127 IRQ_TYPE_LEVEL_HIGH>;
-+		};
-+
-+		pcie@3800000 {
-+			compatible =3D "fsl,lx2160a-pcie";
-+			reg =3D <0x00 0x03800000 0x0 0x00100000   /* controller registers */
-+			       0xa0 0x00000000 0x0 0x00001000>; /* configuration space */
-+			reg-names =3D "csr_axi_slave", "config_axi_slave";
-+			interrupts =3D <GIC_SPI 128 IRQ_TYPE_LEVEL_HIGH>, /* AER interrupt */
-+				     <GIC_SPI 128 IRQ_TYPE_LEVEL_HIGH>, /* PME interrupt */
-+				     <GIC_SPI 128 IRQ_TYPE_LEVEL_HIGH>; /* controller interrupt */
-+			interrupt-names =3D "aer", "pme", "intr";
-+			#address-cells =3D <3>;
-+			#size-cells =3D <2>;
-+			device_type =3D "pci";
-+			dma-coherent;
-+			apio-wins =3D <8>;
-+			ppio-wins =3D <8>;
-+			bus-range =3D <0x0 0xff>;
-+			ranges =3D <0x82000000 0x0 0x40000000 0xa0 0x40000000 0x0 0x40000000>; =
-/* non-prefetchable memory */
-+			msi-parent =3D <&its>;
-+			#interrupt-cells =3D <1>;
-+			interrupt-map-mask =3D <0 0 0 7>;
-+			interrupt-map =3D <0000 0 0 1 &gic 0 0 0 129 IRQ_TYPE_LEVEL_HIGH>,
-+					<0000 0 0 2 &gic 0 0 0 130 IRQ_TYPE_LEVEL_HIGH>,
-+					<0000 0 0 3 &gic 0 0 0 131 IRQ_TYPE_LEVEL_HIGH>,
-+					<0000 0 0 4 &gic 0 0 0 132 IRQ_TYPE_LEVEL_HIGH>;
-+		};
-+
-+		pcie@3900000 {
-+			compatible =3D "fsl,lx2160a-pcie";
-+			reg =3D <0x00 0x03900000 0x0 0x00100000   /* controller registers */
-+			       0xa8 0x00000000 0x0 0x00001000>; /* configuration space */
-+			reg-names =3D "csr_axi_slave", "config_axi_slave";
-+			interrupts =3D <GIC_SPI 103 IRQ_TYPE_LEVEL_HIGH>, /* AER interrupt */
-+				     <GIC_SPI 103 IRQ_TYPE_LEVEL_HIGH>, /* PME interrupt */
-+				     <GIC_SPI 103 IRQ_TYPE_LEVEL_HIGH>; /* controller interrupt */
-+			interrupt-names =3D "aer", "pme", "intr";
-+			#address-cells =3D <3>;
-+			#size-cells =3D <2>;
-+			device_type =3D "pci";
-+			dma-coherent;
-+			apio-wins =3D <8>;
-+			ppio-wins =3D <8>;
-+			bus-range =3D <0x0 0xff>;
-+			ranges =3D <0x82000000 0x0 0x40000000 0xa8 0x40000000 0x0 0x40000000>; =
-/* non-prefetchable memory */
-+			msi-parent =3D <&its>;
-+			#interrupt-cells =3D <1>;
-+			interrupt-map-mask =3D <0 0 0 7>;
-+			interrupt-map =3D <0000 0 0 1 &gic 0 0 0 104 IRQ_TYPE_LEVEL_HIGH>,
-+					<0000 0 0 2 &gic 0 0 0 105 IRQ_TYPE_LEVEL_HIGH>,
-+					<0000 0 0 3 &gic 0 0 0 106 IRQ_TYPE_LEVEL_HIGH>,
-+					<0000 0 0 4 &gic 0 0 0 107 IRQ_TYPE_LEVEL_HIGH>;
-+		};
-+
- 	};
- };
---=20
-2.17.1
-
+RnJvbTogSG91IFpoaXFpYW5nIDxaaGlxaWFuZy5Ib3VAbnhwLmNvbT4NCg0KVGhpcyBQQ0llIGNv
+bnRyb2xsZXIgaXMgYmFzZWQgb24gdGhlIE1vYml2ZWlsIEdQRVggSVAsIHdoaWNoIGlzDQpjb21w
+YXRpYmxlIHdpdGggdGhlIFBDSSBFeHByZXNz4oSiIEJhc2UgU3BlY2lmaWNhdGlvbiwgUmV2aXNp
+b24gNC4wLg0KDQpTaWduZWQtb2ZmLWJ5OiBIb3UgWmhpcWlhbmcgPFpoaXFpYW5nLkhvdUBueHAu
+Y29tPg0KLS0tDQogZHJpdmVycy9wY2kvY29udHJvbGxlci9tb2JpdmVpbC9LY29uZmlnICAgICAg
+IHwgIDEwICsNCiBkcml2ZXJzL3BjaS9jb250cm9sbGVyL21vYml2ZWlsL01ha2VmaWxlICAgICAg
+fCAgIDEgKw0KIGRyaXZlcnMvcGNpL2NvbnRyb2xsZXIvbW9iaXZlaWwvcGNpLWx4LmMgICAgICB8
+IDIyMiArKysrKysrKysrKysrKysrKysNCiAuLi4vY29udHJvbGxlci9tb2JpdmVpbC9wY2llLW1v
+Yml2ZWlsLWhvc3QuYyAgfCAgIDUgKy0NCiAuLi4vcGNpL2NvbnRyb2xsZXIvbW9iaXZlaWwvcGNp
+ZS1tb2JpdmVpbC5oICAgfCAgMTUgKy0NCiA1IGZpbGVzIGNoYW5nZWQsIDI0OSBpbnNlcnRpb25z
+KCspLCA0IGRlbGV0aW9ucygtKQ0KIGNyZWF0ZSBtb2RlIDEwMDY0NCBkcml2ZXJzL3BjaS9jb250
+cm9sbGVyL21vYml2ZWlsL3BjaS1seC5jDQoNCmRpZmYgLS1naXQgYS9kcml2ZXJzL3BjaS9jb250
+cm9sbGVyL21vYml2ZWlsL0tjb25maWcgYi9kcml2ZXJzL3BjaS9jb250cm9sbGVyL21vYml2ZWls
+L0tjb25maWcNCmluZGV4IDY0MzQzYzA3YmZlZC4uMTAyNTQ0OGY2ZDBjIDEwMDY0NA0KLS0tIGEv
+ZHJpdmVycy9wY2kvY29udHJvbGxlci9tb2JpdmVpbC9LY29uZmlnDQorKysgYi9kcml2ZXJzL3Bj
+aS9jb250cm9sbGVyL21vYml2ZWlsL0tjb25maWcNCkBAIC0yMSw0ICsyMSwxNCBAQCBjb25maWcg
+UENJRV9NT0JJVkVJTF9QTEFUDQogCSAgU29mdCBJUC4gSXQgaGFzIHVwIHRvIDggb3V0Ym91bmQg
+YW5kIGluYm91bmQgd2luZG93cw0KIAkgIGZvciBhZGRyZXNzIHRyYW5zbGF0aW9uIGFuZCBpdCBp
+cyBhIFBDSWUgR2VuNCBJUC4NCiANCitjb25maWcgUENJX0xYDQorCWJvb2wgIkZyZWVzY2FsZSBM
+WCBQQ0llIGNvbnRyb2xsZXIiDQorCWRlcGVuZHMgb24gUENJDQorCWRlcGVuZHMgb24gT0YgJiYg
+KEFSTTY0IHx8IEFSQ0hfTEFZRVJTQ0FQRSkNCisJZGVwZW5kcyBvbiBQQ0lfTVNJX0lSUV9ET01B
+SU4NCisJc2VsZWN0IFBDSUVfTU9CSVZFSUxfSE9TVA0KKwloZWxwDQorCSAgU2F5IFkgaGVyZSBp
+ZiB5b3Ugd2FudCBQQ0llIGNvbnRyb2xsZXIgc3VwcG9ydCBvbiBMWCBTb0NzLg0KKwkgIFRoZSBQ
+Q0llIGNvbnRyb2xsZXIgY2FuIHdvcmsgaW4gUkMgb3IgRVAgbW9kZSBhY2NvcmRpbmcgdG8NCisJ
+ICBSQ1dbSE9TVF9BR1RfUEVYXSBzZXR0aW5nLg0KIGVuZG1lbnUNCmRpZmYgLS1naXQgYS9kcml2
+ZXJzL3BjaS9jb250cm9sbGVyL21vYml2ZWlsL01ha2VmaWxlIGIvZHJpdmVycy9wY2kvY29udHJv
+bGxlci9tb2JpdmVpbC9NYWtlZmlsZQ0KaW5kZXggOWZiNmQxYzY1MDRkLi5lNTMxOGEzMzQxNDkg
+MTAwNjQ0DQotLS0gYS9kcml2ZXJzL3BjaS9jb250cm9sbGVyL21vYml2ZWlsL01ha2VmaWxlDQor
+KysgYi9kcml2ZXJzL3BjaS9jb250cm9sbGVyL21vYml2ZWlsL01ha2VmaWxlDQpAQCAtMiwzICsy
+LDQgQEANCiBvYmotJChDT05GSUdfUENJRV9NT0JJVkVJTCkgKz0gcGNpZS1tb2JpdmVpbC5vDQog
+b2JqLSQoQ09ORklHX1BDSUVfTU9CSVZFSUxfSE9TVCkgKz0gcGNpZS1tb2JpdmVpbC1ob3N0Lm8N
+CiBvYmotJChDT05GSUdfUENJRV9NT0JJVkVJTF9QTEFUKSArPSBwY2llLW1vYml2ZWlsLXBsYXQu
+bw0KK29iai0kKENPTkZJR19QQ0lfTFgpICs9IHBjaS1seC5vDQpkaWZmIC0tZ2l0IGEvZHJpdmVy
+cy9wY2kvY29udHJvbGxlci9tb2JpdmVpbC9wY2ktbHguYyBiL2RyaXZlcnMvcGNpL2NvbnRyb2xs
+ZXIvbW9iaXZlaWwvcGNpLWx4LmMNCm5ldyBmaWxlIG1vZGUgMTAwNjQ0DQppbmRleCAwMDAwMDAw
+MDAwMDAuLjUzMDgyNTVkYzcyNQ0KLS0tIC9kZXYvbnVsbA0KKysrIGIvZHJpdmVycy9wY2kvY29u
+dHJvbGxlci9tb2JpdmVpbC9wY2ktbHguYw0KQEAgLTAsMCArMSwyMjIgQEANCisvLyBTUERYLUxp
+Y2Vuc2UtSWRlbnRpZmllcjogR1BMLTIuMA0KKy8qDQorICogUENJZSBob3N0IGNvbnRyb2xsZXIg
+ZHJpdmVyIGZvciBOWFAgTFggU29Dcw0KKyAqDQorICogQ29weXJpZ2h0IDIwMTggTlhQDQorICoN
+CisgKiBBdXRob3I6IFpoaXFpYW5nIEhvdSA8WmhpcWlhbmcuSG91QG54cC5jb20+DQorICovDQor
+DQorI2luY2x1ZGUgPGxpbnV4L2tlcm5lbC5oPg0KKyNpbmNsdWRlIDxsaW51eC9pbnRlcnJ1cHQu
+aD4NCisjaW5jbHVkZSA8bGludXgvaW5pdC5oPg0KKyNpbmNsdWRlIDxsaW51eC9vZl9wY2kuaD4N
+CisjaW5jbHVkZSA8bGludXgvb2ZfcGxhdGZvcm0uaD4NCisjaW5jbHVkZSA8bGludXgvb2ZfaXJx
+Lmg+DQorI2luY2x1ZGUgPGxpbnV4L29mX2FkZHJlc3MuaD4NCisjaW5jbHVkZSA8bGludXgvcGNp
+Lmg+DQorI2luY2x1ZGUgPGxpbnV4L3BsYXRmb3JtX2RldmljZS5oPg0KKyNpbmNsdWRlIDxsaW51
+eC9yZXNvdXJjZS5oPg0KKyNpbmNsdWRlIDxsaW51eC9tZmQvc3lzY29uLmg+DQorI2luY2x1ZGUg
+PGxpbnV4L3JlZ21hcC5oPg0KKw0KKyNpbmNsdWRlICJwY2llLW1vYml2ZWlsLmgiDQorDQorLyog
+TFVUIGFuZCBQRiBjb250cm9sIHJlZ2lzdGVycyAqLw0KKyNkZWZpbmUgUENJRV9MVVRfT0ZGCQkJ
+KDB4ODAwMDApDQorI2RlZmluZSBQQ0lFX1BGX09GRgkJCSgweGMwMDAwKQ0KKyNkZWZpbmUgUENJ
+RV9QRl9JTlRfU1RBVAkJKDB4MTgpDQorI2RlZmluZSBQRl9JTlRfU1RBVF9QQUJSU1QJCSgzMSkN
+CisNCisjZGVmaW5lIFBDSUVfUEZfREJHCQkJKDB4N2ZjKQ0KKyNkZWZpbmUgUEZfREJHX0xUU1NN
+X01BU0sJCSgweDNmKQ0KKyNkZWZpbmUgUEZfREJHX1dFCQkJKDMxKQ0KKyNkZWZpbmUgUEZfREJH
+X1BBQlIJCQkoMjcpDQorDQorI2RlZmluZSBMWF9QQ0lFX0xUU1NNX0wwCQkweDJkIC8qIEwwIHN0
+YXRlICovDQorDQorc3RydWN0IGx4X3BjaWUgew0KKwlzdHJ1Y3QgbW9iaXZlaWxfcGNpZSAqcGNp
+Ow0KKwlpbnQgaXJxOw0KK307DQorDQorI2RlZmluZSB0b19seF9wY2llKHgpCXBsYXRmb3JtX2dl
+dF9kcnZkYXRhKCh4KS0+cGRldikNCisNCitzdGF0aWMgaW5saW5lIHUzMiBseF9wY2llX2x1dF9y
+ZWFkbChzdHJ1Y3QgbHhfcGNpZSAqcGNpZSwgdTMyIG9mZikNCit7DQorCXJldHVybiBpb3JlYWQz
+MihwY2llLT5wY2ktPmNzcl9heGlfc2xhdmVfYmFzZSArIFBDSUVfTFVUX09GRiArIG9mZik7DQor
+fQ0KKw0KK3N0YXRpYyBpbmxpbmUgdm9pZCBseF9wY2llX2x1dF93cml0ZWwoc3RydWN0IGx4X3Bj
+aWUgKnBjaWUsIHUzMiBvZmYsIHUzMiB2YWwpDQorew0KKwlpb3dyaXRlMzIodmFsLCBwY2llLT5w
+Y2ktPmNzcl9heGlfc2xhdmVfYmFzZSArIFBDSUVfTFVUX09GRiArIG9mZik7DQorfQ0KKw0KK3N0
+YXRpYyBpbmxpbmUgdTMyIGx4X3BjaWVfcGZfcmVhZGwoc3RydWN0IGx4X3BjaWUgKnBjaWUsIHUz
+MiBvZmYpDQorew0KKwlyZXR1cm4gaW9yZWFkMzIocGNpZS0+cGNpLT5jc3JfYXhpX3NsYXZlX2Jh
+c2UgKyBQQ0lFX1BGX09GRiArIG9mZik7DQorfQ0KKw0KK3N0YXRpYyBpbmxpbmUgdm9pZCBseF9w
+Y2llX3BmX3dyaXRlbChzdHJ1Y3QgbHhfcGNpZSAqcGNpZSwgdTMyIG9mZiwgdTMyIHZhbCkNCit7
+DQorCWlvd3JpdGUzMih2YWwsIHBjaWUtPnBjaS0+Y3NyX2F4aV9zbGF2ZV9iYXNlICsgUENJRV9Q
+Rl9PRkYgKyBvZmYpOw0KK30NCisNCitzdGF0aWMgYm9vbCBseF9wY2llX2lzX2JyaWRnZShzdHJ1
+Y3QgbHhfcGNpZSAqcGNpZSkNCit7DQorCXN0cnVjdCBtb2JpdmVpbF9wY2llICptdl9wY2kgPSBw
+Y2llLT5wY2k7DQorCXUzMiBoZWFkZXJfdHlwZTsNCisNCisJaGVhZGVyX3R5cGUgPSBjc3JfcmVh
+ZGIobXZfcGNpLCBQQ0lfSEVBREVSX1RZUEUpOw0KKwloZWFkZXJfdHlwZSAmPSAweDdmOw0KKw0K
+KwlyZXR1cm4gaGVhZGVyX3R5cGUgPT0gUENJX0hFQURFUl9UWVBFX0JSSURHRTsNCit9DQorDQor
+c3RhdGljIGludCBseF9wY2llX2xpbmtfdXAoc3RydWN0IG1vYml2ZWlsX3BjaWUgKnBjaSkNCit7
+DQorCXN0cnVjdCBseF9wY2llICpwY2llID0gdG9fbHhfcGNpZShwY2kpOw0KKwl1MzIgc3RhdGU7
+DQorDQorCXN0YXRlID0gbHhfcGNpZV9wZl9yZWFkbChwY2llLCBQQ0lFX1BGX0RCRyk7DQorCXN0
+YXRlID0Jc3RhdGUgJiBQRl9EQkdfTFRTU01fTUFTSzsNCisNCisJaWYgKHN0YXRlID09IExYX1BD
+SUVfTFRTU01fTDApDQorCQlyZXR1cm4gMTsNCisNCisJcmV0dXJuIDA7DQorfQ0KKw0KK3N0YXRp
+YyBpbnQgbHhfcGNpZV9pbnRlcnJ1cHRfaW5pdChzdHJ1Y3QgbW9iaXZlaWxfcGNpZSAqcGNpZSkN
+Cit7DQorCXJldHVybiAwOw0KK30NCisNCitzdGF0aWMgc3RydWN0IG1vYml2ZWlsX3JwX29wcyBs
+eF9wY2llX3JwX29wcyA9IHsNCisJLmludGVycnVwdF9pbml0ID0gbHhfcGNpZV9pbnRlcnJ1cHRf
+aW5pdCwNCit9Ow0KKw0KK3N0YXRpYyBjb25zdCBzdHJ1Y3QgbW9iaXZlaWxfcGFiX29wcyBseF9w
+Y2llX3BhYl9vcHMgPSB7DQorCS5saW5rX3VwID0gbHhfcGNpZV9saW5rX3VwLA0KK307DQorDQor
+c3RhdGljIGNvbnN0IHN0cnVjdCBvZl9kZXZpY2VfaWQgbHhfcGNpZV9vZl9tYXRjaFtdID0gew0K
+Kwl7IC5jb21wYXRpYmxlID0gImZzbCxseDIxNjBhLXBjaWUiLCB9LA0KKwl7IH0sDQorfTsNCisN
+CitzdGF0aWMgdm9pZCBseF9wY2llX3JlaW5pdF9odyhzdHJ1Y3QgbHhfcGNpZSAqcGNpZSkNCit7
+DQorCXN0cnVjdCBtb2JpdmVpbF9wY2llICptdl9wY2kgPSBwY2llLT5wY2k7DQorCXUzMiB2YWws
+IGFjdF9zdGF0Ow0KKw0KKwkvKiBQb2xsIGZvciBwYWJfY3NiX3Jlc2V0IHRvIGNsZWFyICwgUEFC
+IGFjdGl2aXR5IHRvIHNldCAqLw0KKwlkbyB7DQorCQl2YWwgPSBseF9wY2llX3BmX3JlYWRsKHBj
+aWUsIFBDSUVfUEZfSU5UX1NUQVQpOw0KKwkJYWN0X3N0YXQgPSBjc3JfcmVhZGwobXZfcGNpLCBQ
+QUJfQUNUSVZJVFlfU1RBVCk7DQorDQorCX0gd2hpbGUgKCgodmFsICYgKDEgPDwgUEZfSU5UX1NU
+QVRfUEFCUlNUKSkgPT0gMCkgfHwgYWN0X3N0YXQpOw0KKw0KKwl3aGlsZSAoIWx4X3BjaWVfbGlu
+a191cChtdl9wY2kpKQ0KKwkJOw0KKw0KKwkvKiBjbGVhciBQRVhfUkVTRVQgYml0IGluIFBFWF9Q
+RjBfREJHIHJlZ2lzdGVyICovDQorCXZhbCA9IGx4X3BjaWVfcGZfcmVhZGwocGNpZSwgUENJRV9Q
+Rl9EQkcpOw0KKwl2YWwgfD0gMSA8PCBQRl9EQkdfV0U7DQorCWx4X3BjaWVfcGZfd3JpdGVsKHBj
+aWUsIFBDSUVfUEZfREJHLCB2YWwpOw0KKw0KKwl2YWwgPSBseF9wY2llX3BmX3JlYWRsKHBjaWUs
+IFBDSUVfUEZfREJHKTsNCisJdmFsIHw9IDEgPDwgUEZfREJHX1BBQlI7DQorCWx4X3BjaWVfcGZf
+d3JpdGVsKHBjaWUsIFBDSUVfUEZfREJHLCB2YWwpOw0KKw0KKwl2YWwgPSBseF9wY2llX3BmX3Jl
+YWRsKHBjaWUsIFBDSUVfUEZfREJHKTsNCisJdmFsICY9IH4oMSA8PCBQRl9EQkdfV0UpOw0KKwls
+eF9wY2llX3BmX3dyaXRlbChwY2llLCBQQ0lFX1BGX0RCRywgdmFsKTsNCisNCisJbW9iaXZlaWxf
+aG9zdF9pbml0KG12X3BjaSwgdHJ1ZSk7DQorfQ0KKw0KK3N0YXRpYyBpcnFyZXR1cm5fdCBseF9w
+Y2llX2hhbmRsZXIoaW50IGlycSwgdm9pZCAqZGV2X2lkKQ0KK3sNCisJc3RydWN0IGx4X3BjaWUg
+KnBjaWUgPSAoc3RydWN0IGx4X3BjaWUgKilkZXZfaWQ7DQorCXN0cnVjdCBtb2JpdmVpbF9wY2ll
+ICptdl9wY2kgPSBwY2llLT5wY2k7DQorCXUzMiB2YWw7DQorCXUxNiBjdHJsOw0KKw0KKwl2YWwg
+PSBjc3JfcmVhZGwobXZfcGNpLCBQQUJfSU5UUF9BTUJBX01JU0NfU1RBVCk7DQorCWlmICghdmFs
+KQ0KKwkJcmV0dXJuIElSUV9OT05FOw0KKw0KKwlpZiAodmFsICYgUEFCX0lOVFBfUkVTRVQpIHsN
+CisJCWN0cmwgPSBjc3JfcmVhZHcobXZfcGNpLCBQQ0lfQlJJREdFX0NPTlRST0wpOw0KKwkJY3Ry
+bCAmPSB+UENJX0JSSURHRV9DVExfQlVTX1JFU0VUOw0KKwkJY3NyX3dyaXRldyhtdl9wY2ksIGN0
+cmwsIFBDSV9CUklER0VfQ09OVFJPTCk7DQorCQlseF9wY2llX3JlaW5pdF9odyhwY2llKTsNCisJ
+fQ0KKw0KKwljc3Jfd3JpdGVsKG12X3BjaSwgdmFsLCBQQUJfSU5UUF9BTUJBX01JU0NfU1RBVCk7
+DQorDQorCXJldHVybiBJUlFfSEFORExFRDsNCit9DQorDQorc3RhdGljIGludCBfX2luaXQgbHhf
+cGNpZV9wcm9iZShzdHJ1Y3QgcGxhdGZvcm1fZGV2aWNlICpwZGV2KQ0KK3sNCisJc3RydWN0IGRl
+dmljZSAqZGV2ID0gJnBkZXYtPmRldjsNCisJc3RydWN0IG1vYml2ZWlsX3BjaWUgKm12X3BjaTsN
+CisJc3RydWN0IGx4X3BjaWUgKnBjaWU7DQorCXN0cnVjdCBkZXZpY2Vfbm9kZSAqbnAgPSBkZXYt
+Pm9mX25vZGU7DQorCWludCByZXQ7DQorDQorCWlmICghb2ZfcGFyc2VfcGhhbmRsZShucCwgIm1z
+aS1wYXJlbnQiLCAwKSkgew0KKwkJZGV2X2VycihkZXYsICJmYWlsZWQgdG8gZmluZCBtc2ktcGFy
+ZW50XG4iKTsNCisJCXJldHVybiAtRUlOVkFMOw0KKwl9DQorDQorCXBjaWUgPSBkZXZtX2t6YWxs
+b2MoZGV2LCBzaXplb2YoKnBjaWUpLCBHRlBfS0VSTkVMKTsNCisJaWYgKCFwY2llKQ0KKwkJcmV0
+dXJuIC1FTk9NRU07DQorDQorCW12X3BjaSA9IGRldm1fa3phbGxvYyhkZXYsIHNpemVvZigqbXZf
+cGNpKSwgR0ZQX0tFUk5FTCk7DQorCWlmICghbXZfcGNpKQ0KKwkJcmV0dXJuIC1FTk9NRU07DQor
+DQorCW12X3BjaS0+cGRldiA9IHBkZXY7DQorCW12X3BjaS0+b3BzID0gJmx4X3BjaWVfcGFiX29w
+czsNCisJbXZfcGNpLT5ycC5vcHMgPSAmbHhfcGNpZV9ycF9vcHM7DQorCXBjaWUtPnBjaSA9IG12
+X3BjaTsNCisNCisJcGxhdGZvcm1fc2V0X2RydmRhdGEocGRldiwgcGNpZSk7DQorDQorCXBjaWUt
+PmlycSA9IHBsYXRmb3JtX2dldF9pcnFfYnluYW1lKHBkZXYsICJpbnRyIik7DQorCWlmIChwY2ll
+LT5pcnEgPCAwKSB7DQorCQlkZXZfZXJyKCZwZGV2LT5kZXYsICJDYW4ndCBnZXQgaW50ciBpcnEu
+XG4iKTsNCisJCXJldHVybiBwY2llLT5pcnE7DQorCX0NCisJcmV0ID0gZGV2bV9yZXF1ZXN0X2ly
+cShkZXYsIHBjaWUtPmlycSwgbHhfcGNpZV9oYW5kbGVyLA0KKwkJCSAgICAgICBJUlFGX1NIQVJF
+RCwgcGRldi0+bmFtZSwgcGNpZSk7DQorCWlmIChyZXQpIHsNCisJCWRldl9lcnIoZGV2LCAiQ2Fu
+J3QgcmVnaXN0ZXIgTFggUENJZSBJUlEuXG4iKTsNCisJCXJldHVybiAgcmV0Ow0KKwl9DQorDQor
+CXJldCA9IG1vYml2ZWlsX3BjaWVfaG9zdF9wcm9iZShtdl9wY2kpOw0KKwlpZiAocmV0KSB7DQor
+CQlkZXZfZXJyKGRldiwgInBjaS1seDogZmFpbCB0byBwcm9iZSFcbiIpOw0KKwkJcmV0dXJuICBy
+ZXQ7DQorCX0NCisNCisJaWYgKCFseF9wY2llX2lzX2JyaWRnZShwY2llKSkNCisJCXJldHVybiAt
+RU5PREVWOw0KKw0KKwlyZXR1cm4gMDsNCit9DQorDQorc3RhdGljIHN0cnVjdCBwbGF0Zm9ybV9k
+cml2ZXIgbHhfcGNpZV9kcml2ZXIgPSB7DQorCS5kcml2ZXIgPSB7DQorCQkubmFtZSA9ICJseC1w
+Y2llIiwNCisJCS5vZl9tYXRjaF90YWJsZSA9IGx4X3BjaWVfb2ZfbWF0Y2gsDQorCQkuc3VwcHJl
+c3NfYmluZF9hdHRycyA9IHRydWUsDQorCX0sDQorfTsNCisNCitidWlsdGluX3BsYXRmb3JtX2Ry
+aXZlcl9wcm9iZShseF9wY2llX2RyaXZlciwgbHhfcGNpZV9wcm9iZSk7DQpkaWZmIC0tZ2l0IGEv
+ZHJpdmVycy9wY2kvY29udHJvbGxlci9tb2JpdmVpbC9wY2llLW1vYml2ZWlsLWhvc3QuYyBiL2Ry
+aXZlcnMvcGNpL2NvbnRyb2xsZXIvbW9iaXZlaWwvcGNpZS1tb2JpdmVpbC1ob3N0LmMNCmluZGV4
+IGIxZDY3YTY5N2VjYy4uZWFkZTVhODAwMmQxIDEwMDY0NA0KLS0tIGEvZHJpdmVycy9wY2kvY29u
+dHJvbGxlci9tb2JpdmVpbC9wY2llLW1vYml2ZWlsLWhvc3QuYw0KKysrIGIvZHJpdmVycy9wY2kv
+Y29udHJvbGxlci9tb2JpdmVpbC9wY2llLW1vYml2ZWlsLWhvc3QuYw0KQEAgLTI0OSw4ICsyNDks
+OSBAQCBpbnQgbW9iaXZlaWxfaG9zdF9pbml0KHN0cnVjdCBtb2JpdmVpbF9wY2llICpwY2llLCBi
+b29sIHJlaW5pdCkNCiAJcGFiX2N0cmwgfD0gKDEgPDwgQU1CQV9QSU9fRU5BQkxFX1NISUZUKSB8
+ICgxIDw8IFBFWF9QSU9fRU5BQkxFX1NISUZUKTsNCiAJY3NyX3dyaXRlbChwY2llLCBwYWJfY3Ry
+bCwgUEFCX0NUUkwpOw0KIA0KLQljc3Jfd3JpdGVsKHBjaWUsIChQQUJfSU5UUF9JTlRYX01BU0sg
+fCBQQUJfSU5UUF9NU0lfTUFTSyksDQotCQkgICBQQUJfSU5UUF9BTUJBX01JU0NfRU5CKTsNCisJ
+dmFsdWUgPSBQQUJfSU5UUF9JTlRYX01BU0sgfCBQQUJfSU5UUF9NU0kgfCBQQUJfSU5UUF9SRVNF
+VCB8DQorCQlQQUJfSU5UUF9QQ0lFX1VFIHwgUEFCX0lOVFBfSUVfUE1SRURJIHwgUEFCX0lOVFBf
+SUVfRUM7DQorCWNzcl93cml0ZWwocGNpZSwgdmFsdWUsIFBBQl9JTlRQX0FNQkFfTUlTQ19FTkIp
+Ow0KIA0KIAkvKg0KIAkgKiBwcm9ncmFtIFBJTyBFbmFibGUgQml0IHRvIDEgYW5kIENvbmZpZyBX
+aW5kb3cgRW5hYmxlIEJpdCB0byAxIGluDQpkaWZmIC0tZ2l0IGEvZHJpdmVycy9wY2kvY29udHJv
+bGxlci9tb2JpdmVpbC9wY2llLW1vYml2ZWlsLmggYi9kcml2ZXJzL3BjaS9jb250cm9sbGVyL21v
+Yml2ZWlsL3BjaWUtbW9iaXZlaWwuaA0KaW5kZXggNTExOTVkYjA5MzQ3Li5kZGQ3MzZmYTIwNDIg
+MTAwNjQ0DQotLS0gYS9kcml2ZXJzL3BjaS9jb250cm9sbGVyL21vYml2ZWlsL3BjaWUtbW9iaXZl
+aWwuaA0KKysrIGIvZHJpdmVycy9wY2kvY29udHJvbGxlci9tb2JpdmVpbC9wY2llLW1vYml2ZWls
+LmgNCkBAIC00MSw2ICs0MSw4IEBADQogI2RlZmluZSAgUEFHRV9MT19NQVNLCQkJMHgzZmYNCiAj
+ZGVmaW5lICBQQUdFX1NFTF9PRkZTRVRfU0hJRlQJCTEwDQogDQorI2RlZmluZSBQQUJfQUNUSVZJ
+VFlfU1RBVAkJMHg4MWMNCisNCiAjZGVmaW5lIFBBQl9BWElfUElPX0NUUkwJCTB4MDg0MA0KICNk
+ZWZpbmUgIEFQSU9fRU5fTUFTSwkJCTB4Zg0KIA0KQEAgLTQ5LDggKzUxLDE3IEBADQogDQogI2Rl
+ZmluZSBQQUJfSU5UUF9BTUJBX01JU0NfRU5CCQkweDBiMGMNCiAjZGVmaW5lIFBBQl9JTlRQX0FN
+QkFfTUlTQ19TVEFUCQkweDBiMWMNCi0jZGVmaW5lICBQQUJfSU5UUF9JTlRYX01BU0sJCTB4MDFl
+MA0KLSNkZWZpbmUgIFBBQl9JTlRQX01TSV9NQVNLCQkweDgNCisjZGVmaW5lICBQQUJfSU5UUF9S
+RVNFVAkJCSgweDEgPDwgMSkNCisjZGVmaW5lICBQQUJfSU5UUF9NU0kJCQkoMHgxIDw8IDMpDQor
+I2RlZmluZSAgUEFCX0lOVFBfSU5UQQkJCSgweDEgPDwgNSkNCisjZGVmaW5lICBQQUJfSU5UUF9J
+TlRCCQkJKDB4MSA8PCA2KQ0KKyNkZWZpbmUgIFBBQl9JTlRQX0lOVEMJCQkoMHgxIDw8IDcpDQor
+I2RlZmluZSAgUEFCX0lOVFBfSU5URAkJCSgweDEgPDwgOCkNCisjZGVmaW5lICBQQUJfSU5UUF9Q
+Q0lFX1VFCQkoMHgxIDw8IDkpDQorI2RlZmluZSAgUEFCX0lOVFBfSUVfUE1SRURJCQkoMHgxIDw8
+IDI5KQ0KKyNkZWZpbmUgIFBBQl9JTlRQX0lFX0VDCQkJKDB4MSA8PCAzMCkNCisjZGVmaW5lICBQ
+QUJfSU5UUF9JTlRYX01BU0sJCShQQUJfSU5UUF9JTlRBIHwgUEFCX0lOVFBfSU5UQiB8XA0KKwkJ
+CQkJUEFCX0lOVFBfSU5UQyB8IFBBQl9JTlRQX0lOVEQpDQogDQogI2RlZmluZSBQQUJfQVhJX0FN
+QVBfQ1RSTCh3aW4pCQlQQUJfUkVHX0FERFIoMHgwYmEwLCB3aW4pDQogI2RlZmluZSAgV0lOX0VO
+QUJMRV9TSElGVAkJMA0KLS0gDQoyLjE3LjENCg0K
