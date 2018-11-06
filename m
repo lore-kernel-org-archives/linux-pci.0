@@ -6,36 +6,36 @@ X-Spam-Status: No, score=-7.1 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
 	DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,
 	SIGNED_OFF_BY,SPF_PASS autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 556A8C46465
-	for <linux-pci@archiver.kernel.org>; Tue,  6 Nov 2018 13:20:23 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 0AFF8C32789
+	for <linux-pci@archiver.kernel.org>; Tue,  6 Nov 2018 13:20:35 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 1D3C32085B
-	for <linux-pci@archiver.kernel.org>; Tue,  6 Nov 2018 13:20:23 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id B44AC20869
+	for <linux-pci@archiver.kernel.org>; Tue,  6 Nov 2018 13:20:34 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (1024-bit key) header.d=nxp.com header.i=@nxp.com header.b="nx7neKGs"
-DMARC-Filter: OpenDMARC Filter v1.3.2 mail.kernel.org 1D3C32085B
+	dkim=pass (1024-bit key) header.d=nxp.com header.i=@nxp.com header.b="VlyJO1nw"
+DMARC-Filter: OpenDMARC Filter v1.3.2 mail.kernel.org B44AC20869
 Authentication-Results: mail.kernel.org; dmarc=fail (p=none dis=none) header.from=nxp.com
 Authentication-Results: mail.kernel.org; spf=none smtp.mailfrom=linux-pci-owner@vger.kernel.org
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S2388429AbeKFWpc (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Tue, 6 Nov 2018 17:45:32 -0500
-Received: from mail-eopbgr20070.outbound.protection.outlook.com ([40.107.2.70]:53248
-        "EHLO EUR02-VE1-obe.outbound.protection.outlook.com"
+        id S1730481AbeKFWpi (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Tue, 6 Nov 2018 17:45:38 -0500
+Received: from mail-he1eur01on0088.outbound.protection.outlook.com ([104.47.0.88]:31635
+        "EHLO EUR01-HE1-obe.outbound.protection.outlook.com"
         rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S2387930AbeKFWpb (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Tue, 6 Nov 2018 17:45:31 -0500
+        id S1729728AbeKFWph (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Tue, 6 Nov 2018 17:45:37 -0500
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=nxp.com; s=selector1;
  h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=vLCzTSVXqk69mjV2G0uMjdSuJB0D7mj0QkDfLtG61lc=;
- b=nx7neKGs2mMSe4Uym3gizNi4EEC9paTqqDbAMph9jLd6JUhxesErw2seBa7Cvw6jM3JL8hoP1njqtkA+EKg97VeCyFuvvslnE9RIP0uweL9u+3PRbrBegyWMRSoV9x507NCyh8lNKbe44n+LyonwoLYjfMJXDmasf0s4xVRcj4c=
+ bh=vu0Gn1s/q0UKMAa9copK/c+XN2Y+zhvBH+DX2EtU8CI=;
+ b=VlyJO1nw202UHTt4Wy7eFlWvmNlz4kigHiTJJWIOPYpLQeyJxBD0Au24QBOnpT8AGrsc6skCEOO7GyvigiY3uHY3BxhJEp8RfUqdOAVp3M7Pw/sIeQDLDNPD1WdF5OablJZ7YljsApBL1FYCzJzss2DpBam3XOyk/mTlO66I68E=
 Received: from DB5PR04MB1221.eurprd04.prod.outlook.com (10.162.155.27) by
  DB5PR04MB1414.eurprd04.prod.outlook.com (10.162.221.24) with Microsoft SMTP
  Server (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- 15.20.1294.27; Tue, 6 Nov 2018 13:20:17 +0000
+ 15.20.1294.27; Tue, 6 Nov 2018 13:20:23 +0000
 Received: from DB5PR04MB1221.eurprd04.prod.outlook.com
  ([fe80::6c36:f4cb:26c2:e8cb]) by DB5PR04MB1221.eurprd04.prod.outlook.com
  ([fe80::6c36:f4cb:26c2:e8cb%2]) with mapi id 15.20.1273.035; Tue, 6 Nov 2018
- 13:20:17 +0000
+ 13:20:22 +0000
 From:   "Z.q. Hou" <zhiqiang.hou@nxp.com>
 To:     "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
         "linux-arm-kernel@lists.infradead.org" 
@@ -53,11 +53,13 @@ CC:     Mingkai Hu <mingkai.hu@nxp.com>,
         "M.h. Lian" <minghuan.lian@nxp.com>,
         Xiaowei Bao <xiaowei.bao@nxp.com>,
         "Z.q. Hou" <zhiqiang.hou@nxp.com>
-Subject: [PATCH 11/23] PCI: mobiveil: only fixup the Class Code field
-Thread-Topic: [PATCH 11/23] PCI: mobiveil: only fixup the Class Code field
-Thread-Index: AQHUddN1NZze+4D3a0WmVRogFB+YMw==
-Date:   Tue, 6 Nov 2018 13:20:16 +0000
-Message-ID: <20181106131807.29951-12-Zhiqiang.Hou@nxp.com>
+Subject: [PATCH 12/23] PCI: mobiveil: move out the link up waiting from
+ mobiveil_host_init
+Thread-Topic: [PATCH 12/23] PCI: mobiveil: move out the link up waiting from
+ mobiveil_host_init
+Thread-Index: AQHUddN4KxeZ6jJ77ka31NmPNJmtWQ==
+Date:   Tue, 6 Nov 2018 13:20:22 +0000
+Message-ID: <20181106131807.29951-13-Zhiqiang.Hou@nxp.com>
 References: <20181106131807.29951-1-Zhiqiang.Hou@nxp.com>
 In-Reply-To: <20181106131807.29951-1-Zhiqiang.Hou@nxp.com>
 Accept-Language: zh-CN, en-US
@@ -72,12 +74,12 @@ authentication-results: spf=none (sender IP is )
 x-ms-exchange-messagesentrepresentingtype: 1
 x-originating-ip: [119.31.174.73]
 x-ms-publictraffictype: Email
-x-microsoft-exchange-diagnostics: 1;DB5PR04MB1414;6:M7txVNWWM/xN+eQBg3HFXyYnHcV3le7ItrSVU4pgZrDDeSL5x4qCo9ANJUqsPzAAv+v31q5OcSHjmw0JUVtzjdyB0nLofc+bYzDd65z3bIXlAnOFiXkyG94filzcBJQ1tVG5vmja9FNkciHV8E5XKLq55ScaDaFaeK2yvoEnBBq/EG7g88Mb3gVeqp0XTKFyWiJwU1ohJ9/uHlQmCvGgFOUknXkvhSFDn8srBjjk62kdJddvPz5uUMWGbFEhfIGTsfbTl81oCedVSnbpfocHEE5ozWyq9SSSlDk2VIPj0E7eXcUmxbCih1l1kf/q+Hkp+rFGFfe7VMEYZh72PdA55YllWHSpcQHuJ1C3t4aW1nsyh5MwsO7ooRqcNrTwHg1m4Rbb1UIPrPaIPKdAkTrRLV2SWBYfeU20CsJl/ODbHNcQAs9i0knlWeZvCt9GwU4FHhb4N9MIt6VyBwdzbZxzpg==;5:DGTZyReU+cZAnoZ9cUR734rNtYRr7753my6xe/C5qQhTWb6SkuZ561vJrK/AwCK8fP6s4WydJovEaNQNidJsG0c/zukomzCTdn7i8QJOIArXpIhxrw+ADofSx4YTEmxUxKz+OKh37UKrgHcnkR3x0q+qr1B1j9PIELr7UGUkANc=;7:VCMmf2c9wG3mVqk3t36eVMgmaYw5a1EKJ++hUnElrq1DiSoAyyRNCZC1X4CVIUlxt4pLSBNDr9xIdFgoH/d5lGr0GoVntnyueQo5k4+ugV1be/p3sLlPsyL4MaPw+/rZRDOYD06RFMtCK/NHtmNaVg==
-x-ms-office365-filtering-correlation-id: 80a4a48f-863a-423a-2beb-08d643ea9798
+x-microsoft-exchange-diagnostics: 1;DB5PR04MB1414;6:fklJxJof4i7LYB86SkTDVhI5hTKIkKft0Rhe9E6YdwIvGfPdtESAjCo3iGs/QMkrZ3ofnGfZ6ExhTL+dyOoUXtXFhJzKknvSgoFyWP+/uJ0g+R1ah/3McILyzk4Xh212mMd+jG27aYREa4QzDPZOkeHDAO+1fyeG19/UDrBM6e++uXyv92l90eKYxVG+W/vg8QbcEc6nO1kKKGi0Q4q2qGfEOA28B7ceIAoHGwdDtvqE3ss824pN/qLLAaTYBu5CBqSaZeVmo+20VcDJ4EXqb4Wbng9R7iiY5sBY3e5IkFRjVeL3q8sCgkQSoBL4ngROfDnZyBShy3ZPQ8lISp/lGZX6SmLEflYpjU2EBJ/S827X0/0Ms7f9nQqx/NSp6b9+HPDSwqta3zcHnVEmnuhlHZJgS2vs640O6LEYYqtkTwx/XzF+z2iD0HBAOP6OoMUCVAoAHIlEUECBvzckujnxZw==;5:1l6x5fBlrk9BlV+kqyMkGOnJqLBYVAPYPXtSg0D5ozFgz4aP44jsVFgJ8BVJNDOouAKjJnCzbvvgLHgwbVNe0seyW14XjFYBlZ5dO+BwwUhWKeGJK/i0xZ15XoAOlJXkBofXl1H72vZ6NnN3dBWWqBBPVbwqRQ5EFrcRY6RmGkQ=;7:28zHLv9vp6pyegzl+Ck7EGtlC8vrCbW37aA174siv9rw2O16T4KuJDzNNBgaGQGKxY0DOW5qh2uUprSZQ9oooHTtLvD7hMJx3pWBjU5T0hFvoikd+UCQ6Mp/bSZ9/qC+bqZRHXHL+iRuhq+xiMm3gA==
+x-ms-office365-filtering-correlation-id: 429190ff-f254-4a95-1f0b-08d643ea9b39
 x-ms-office365-filtering-ht: Tenant
 x-microsoft-antispam: BCL:0;PCL:0;RULEID:(7020095)(4652040)(8989299)(5600074)(711020)(4618075)(4534185)(4627221)(201703031133081)(201702281549075)(8990200)(2017052603328)(7153060)(7193020);SRVR:DB5PR04MB1414;
 x-ms-traffictypediagnostic: DB5PR04MB1414:
-x-microsoft-antispam-prvs: <DB5PR04MB1414929FC8D0E760031535E984CB0@DB5PR04MB1414.eurprd04.prod.outlook.com>
+x-microsoft-antispam-prvs: <DB5PR04MB1414F5A6C51F3C422A16A4B084CB0@DB5PR04MB1414.eurprd04.prod.outlook.com>
 x-exchange-antispam-report-test: UriScan:(185117386973197);
 x-ms-exchange-senderadcheck: 1
 x-exchange-antispam-report-cfa-test: BCL:0;PCL:0;RULEID:(8211001083)(6040522)(2401047)(8121501046)(5005006)(3002001)(10201501046)(93006095)(93001095)(3231382)(944501410)(52105095)(6055026)(148016)(149066)(150057)(6041310)(20161123562045)(20161123558120)(20161123564045)(20161123560045)(201703131423095)(201702281528075)(20161123555045)(201703061421075)(201703061406153)(201708071742011)(7699051)(76991095);SRVR:DB5PR04MB1414;BCL:0;PCL:0;RULEID:;SRVR:DB5PR04MB1414;
@@ -85,15 +87,15 @@ x-forefront-prvs: 0848C1A6AA
 x-forefront-antispam-report: SFV:NSPM;SFS:(10009020)(39860400002)(366004)(396003)(376002)(346002)(136003)(189003)(199004)(97736004)(66066001)(8936002)(81156014)(81166006)(7416002)(8676002)(5660300001)(71200400001)(71190400001)(478600001)(6486002)(6116002)(2900100001)(1076002)(53936002)(6436002)(6512007)(305945005)(4326008)(25786009)(7736002)(105586002)(106356001)(68736007)(2906002)(3846002)(256004)(26005)(486006)(2501003)(14454004)(99286004)(52116002)(76176011)(36756003)(110136005)(386003)(6506007)(102836004)(54906003)(86362001)(186003)(446003)(11346002)(316002)(2616005)(476003)(2201001)(921003)(1121003);DIR:OUT;SFP:1101;SCL:1;SRVR:DB5PR04MB1414;H:DB5PR04MB1221.eurprd04.prod.outlook.com;FPR:;SPF:None;LANG:en;PTR:InfoNoRecords;MX:1;A:1;
 received-spf: None (protection.outlook.com: nxp.com does not designate
  permitted sender hosts)
-x-microsoft-antispam-message-info: CNsQ/t8Sk6vuQS0PzBsvjhB77nUE1qe76sEwgzeuQO7iiNnUaTN6vPh7D5VnPmjp+2sYjvIZejUcJBPN+Z4WegnRn1x7XSVAu83oqMv/voNvYhWpw1v1PnC96nUmpp4yiG0YQfEhk0x5VtmCsqR7NWQyhHnEORffGngNVOGbMyuEAxqFqDoNWSmSMxTnmkiBzBkICmz6tR1j+BFLDXjAvli28hxgyp/m6vCdz7pQ3173G8C5KArB5YqHN/fOMuUR9hCpHpp+OVPHQ+gLkmAYt5bA9o8Bg2PLZLkWGFZlIH+/1sUsf0EvjE86NBYMv3fFf43A/iaPq4v9ggxyAGMdn+wutYDhBfW/Tzb5qEQNz1Y=
+x-microsoft-antispam-message-info: z/wVW3/SSemqjo1uJ1akycQ5LuAw1fmECtu8TCeo0ruS1O5grbtEnL98IsVeKOlm2Be7fE9xHdPEWJ5/fVTqSQdiNlHjAc/hj6B4c/ACul0bKpm1tg0rMkuP11+osknJP0xMSwvqbpMQn6o4WKgrh5fYvljVE7Rj+7Q2lD9xnlUesAUs2NURxDRN/XKxvyUNQPEFxSF5GBl3zCEck8+dR27yuLmS+Lac8Oo27PQEoC8L6KYTmT+80qlG3aWmQ4CoY3Z5RT2Ksfw7UGJpjAStdTg1e7IE1GR76zCY5fScwFx8gptTsGDKlBS9vU8EMktRa14ktwgAGdCcPA7OZOiTU63Veq/0aNgakftFKBvYmxw=
 spamdiagnosticoutput: 1:99
 spamdiagnosticmetadata: NSPM
 Content-Type: text/plain; charset="iso-8859-1"
 Content-Transfer-Encoding: quoted-printable
 MIME-Version: 1.0
 X-OriginatorOrg: nxp.com
-X-MS-Exchange-CrossTenant-Network-Message-Id: 80a4a48f-863a-423a-2beb-08d643ea9798
-X-MS-Exchange-CrossTenant-originalarrivaltime: 06 Nov 2018 13:20:16.9909
+X-MS-Exchange-CrossTenant-Network-Message-Id: 429190ff-f254-4a95-1f0b-08d643ea9b39
+X-MS-Exchange-CrossTenant-originalarrivaltime: 06 Nov 2018 13:20:22.8266
  (UTC)
 X-MS-Exchange-CrossTenant-fromentityheader: Hosted
 X-MS-Exchange-CrossTenant-id: 686ea1d3-bc2b-4c6f-a92c-d99c5c301635
@@ -105,44 +107,60 @@ X-Mailing-List: linux-pci@vger.kernel.org
 
 From: Hou Zhiqiang <Zhiqiang.Hou@nxp.com>
 
-Fixup the Class Code to PCI bridge, do not change the Revision ID.
-And move the fixup to *_host_init function.
+Host initial sequence does not depend on PCIe link up, so move it
+to the place just before the enumeration.
 
 Signed-off-by: Hou Zhiqiang <Zhiqiang.Hou@nxp.com>
 ---
- drivers/pci/controller/pcie-mobiveil.c | 9 ++++++---
- 1 file changed, 6 insertions(+), 3 deletions(-)
+ drivers/pci/controller/pcie-mobiveil.c | 15 +++++++--------
+ 1 file changed, 7 insertions(+), 8 deletions(-)
 
 diff --git a/drivers/pci/controller/pcie-mobiveil.c b/drivers/pci/controlle=
 r/pcie-mobiveil.c
-index 884c9f95374d..8e3630359597 100644
+index 8e3630359597..4b21b8549664 100644
 --- a/drivers/pci/controller/pcie-mobiveil.c
 +++ b/drivers/pci/controller/pcie-mobiveil.c
-@@ -652,6 +652,12 @@ static int mobiveil_host_init(struct mobiveil_pcie *pc=
-ie)
- 				   type, resource_size(win->res));
- 	}
+@@ -581,15 +581,8 @@ static void mobiveil_pcie_enable_msi(struct mobiveil_p=
+cie *pcie)
+ static int mobiveil_host_init(struct mobiveil_pcie *pcie)
+ {
+ 	u32 value, pab_ctrl, type;
+-	int err;
+ 	struct resource_entry *win;
 =20
-+	/* fixup for PCIe class register */
-+	value =3D csr_readl(pcie, PAB_INTP_AXI_PIO_CLASS);
-+	value &=3D 0xff;
-+	value |=3D (PCI_CLASS_BRIDGE_PCI << 16);
-+	csr_writel(pcie, value, PAB_INTP_AXI_PIO_CLASS);
-+
+-	err =3D mobiveil_bringup_link(pcie);
+-	if (err) {
+-		dev_info(&pcie->pdev->dev, "link bring-up failed\n");
+-		return err;
+-	}
+-
+ 	/*
+ 	 * program Bus Master Enable Bit in Command Register in PAB Config
+ 	 * Space
+@@ -661,7 +654,7 @@ static int mobiveil_host_init(struct mobiveil_pcie *pci=
+e)
  	/* setup MSI hardware registers */
  	mobiveil_pcie_enable_msi(pcie);
 =20
-@@ -895,9 +901,6 @@ static int mobiveil_pcie_probe(struct platform_device *=
-pdev)
- 		goto error;
- 	}
+-	return err;
++	return 0;
+ }
 =20
--	/* fixup for PCIe class register */
--	csr_writel(pcie, 0x060402ab, PAB_INTP_AXI_PIO_CLASS);
--
- 	/* initialize the IRQ domains */
- 	ret =3D mobiveil_pcie_init_irq_domain(pcie);
- 	if (ret) {
+ static void mobiveil_mask_intx_irq(struct irq_data *data)
+@@ -921,6 +914,12 @@ static int mobiveil_pcie_probe(struct platform_device =
+*pdev)
+ 	bridge->map_irq =3D of_irq_parse_and_map_pci;
+ 	bridge->swizzle_irq =3D pci_common_swizzle;
+=20
++	ret =3D mobiveil_bringup_link(pcie);
++	if (ret) {
++		dev_info(dev, "link bring-up failed\n");
++		goto error;
++	}
++
+ 	/* setup the kernel resources for the newly added PCIe root bus */
+ 	ret =3D pci_scan_root_bus_bridge(bridge);
+ 	if (ret)
 --=20
 2.17.1
 
