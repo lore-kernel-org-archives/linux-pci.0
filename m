@@ -2,216 +2,151 @@ Return-Path: <SRS0=wh2u=NR=vger.kernel.org=linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-1.0 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	MAILING_LIST_MULTI,SPF_PASS autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-2.5 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+	MAILING_LIST_MULTI,SPF_PASS,USER_AGENT_MUTT autolearn=ham autolearn_force=no
+	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 62310C32789
-	for <linux-pci@archiver.kernel.org>; Tue,  6 Nov 2018 16:00:13 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 45862C32789
+	for <linux-pci@archiver.kernel.org>; Tue,  6 Nov 2018 16:34:22 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 220F220869
-	for <linux-pci@archiver.kernel.org>; Tue,  6 Nov 2018 16:00:13 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.3.2 mail.kernel.org 220F220869
+	by mail.kernel.org (Postfix) with ESMTP id 156F82085B
+	for <linux-pci@archiver.kernel.org>; Tue,  6 Nov 2018 16:34:22 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.3.2 mail.kernel.org 156F82085B
 Authentication-Results: mail.kernel.org; dmarc=none (p=none dis=none) header.from=arm.com
 Authentication-Results: mail.kernel.org; spf=none smtp.mailfrom=linux-pci-owner@vger.kernel.org
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S2388959AbeKGB0E (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Tue, 6 Nov 2018 20:26:04 -0500
-Received: from foss.arm.com ([217.140.101.70]:36222 "EHLO foss.arm.com"
+        id S2388555AbeKGCAV (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Tue, 6 Nov 2018 21:00:21 -0500
+Received: from foss.arm.com ([217.140.101.70]:36720 "EHLO foss.arm.com"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S2388422AbeKGB0D (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Tue, 6 Nov 2018 20:26:03 -0500
+        id S2387685AbeKGCAV (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Tue, 6 Nov 2018 21:00:21 -0500
 Received: from usa-sjc-imap-foss1.foss.arm.com (unknown [10.72.51.249])
-        by usa-sjc-mx-foss1.foss.arm.com (Postfix) with ESMTP id 6ED09EBD;
-        Tue,  6 Nov 2018 08:00:11 -0800 (PST)
-Received: from [10.1.196.62] (usa-sjc-imap-foss1.foss.arm.com [10.72.51.249])
-        by usa-sjc-imap-foss1.foss.arm.com (Postfix) with ESMTPSA id B98743F5CF;
-        Tue,  6 Nov 2018 08:00:09 -0800 (PST)
-Subject: Re: [PATCH] PCI: dwc: Fix interrupt race in when handling MSI
-To:     Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
-        Trent Piepho <tpiepho@impinj.com>
-Cc:     "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-        "stable@vger.kernel.org" <stable@vger.kernel.org>,
-        Vignesh R <vigneshr@ti.com>, Faiz Abbas <faiz_abbas@ti.com>,
-        Jingoo Han <jingoohan1@gmail.com>,
-        Gustavo Pimentel <gustavo.pimentel@synopsys.com>,
-        Joao Pinto <jpinto@synopsys.com>,
-        Bjorn Helgaas <bhelgaas@google.com>
-References: <20181027000028.21343-1-tpiepho@impinj.com>
- <20181106145347.GB19060@e107981-ln.cambridge.arm.com>
-From:   Marc Zyngier <marc.zyngier@arm.com>
-Openpgp: preference=signencrypt
-Autocrypt: addr=marc.zyngier@arm.com; prefer-encrypt=mutual; keydata=
- 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
-Organization: ARM Ltd
-Message-ID: <db3462e2-422c-161a-1f58-135bc4eab7eb@arm.com>
-Date:   Tue, 6 Nov 2018 16:00:08 +0000
-User-Agent: Mozilla/5.0 (X11; Linux aarch64; rv:52.0) Gecko/20100101
- Thunderbird/52.9.1
+        by usa-sjc-mx-foss1.foss.arm.com (Postfix) with ESMTP id 727B1A78;
+        Tue,  6 Nov 2018 08:34:20 -0800 (PST)
+Received: from e107981-ln.cambridge.arm.com (e107981-ln.cambridge.arm.com [10.1.197.40])
+        by usa-sjc-imap-foss1.foss.arm.com (Postfix) with ESMTPSA id EB18F3F5CF;
+        Tue,  6 Nov 2018 08:34:17 -0800 (PST)
+Date:   Tue, 6 Nov 2018 16:34:08 +0000
+From:   Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
+To:     Keith Busch <keith.busch@intel.com>
+Cc:     Bjorn Helgaas <helgaas@kernel.org>,
+        Linux PCI <linux-pci@vger.kernel.org>,
+        Bjorn Helgaas <bhelgaas@google.com>,
+        Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+        Sinan Kaya <okaya@kernel.org>,
+        Thomas Tai <thomas.tai@oracle.com>, poza@codeaurora.org,
+        Lukas Wunner <lukas@wunner.de>, Christoph Hellwig <hch@lst.de>,
+        Mika Westerberg <mika.westerberg@linux.intel.com>,
+        Catalin Marinas <catalin.marinas@arm.com>,
+        Will Deacon <will.deacon@arm.com>,
+        linux-arm-kernel@lists.infradead.org, linux-kernel@vger.kernel.org
+Subject: Re: [PATCH 00/12] error handling and pciehp maintenance
+Message-ID: <20181106163400.GA21193@e107981-ln.cambridge.arm.com>
+References: <20180918235848.26694-1-keith.busch@intel.com>
+ <20181004214015.GK120535@bhelgaas-glaptop.roam.corp.google.com>
+ <20181004221137.GB21834@localhost.localdomain>
+ <20181005173145.GL120535@bhelgaas-glaptop.roam.corp.google.com>
+ <20181008161847.GA30971@localhost.localdomain>
 MIME-Version: 1.0
-In-Reply-To: <20181106145347.GB19060@e107981-ln.cambridge.arm.com>
-Content-Type: text/plain; charset=utf-8
-Content-Language: en-GB
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20181008161847.GA30971@localhost.localdomain>
+User-Agent: Mutt/1.5.24 (2015-08-30)
 Sender: linux-pci-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-On 06/11/18 14:53, Lorenzo Pieralisi wrote:
-> [CC Marc]
+On Mon, Oct 08, 2018 at 10:18:47AM -0600, Keith Busch wrote:
+> On Fri, Oct 05, 2018 at 12:31:45PM -0500, Bjorn Helgaas wrote:
+> > [+cc arm64 folks, LKML: This conversation is about this patch:
+> > 
+> >   https://lore.kernel.org/linux-pci/20180918235848.26694-3-keith.busch@intel.com
+> > 
+> > which fixes some PCIe AER error injection bugs, but also makes the error
+> > injector dependent on DYNAMIC_FTRACE_WITH_REGS, which not all arches
+> > support.  Note that this question is only about the error *injection*
+> > module used for testing.  It doesn't affect AER support itself.]
+> > 
+> > On Thu, Oct 04, 2018 at 04:11:37PM -0600, Keith Busch wrote:
+> > > On Thu, Oct 04, 2018 at 04:40:15PM -0500, Bjorn Helgaas wrote:
+> > > > On Tue, Sep 18, 2018 at 05:58:36PM -0600, Keith Busch wrote:
+> > > > > I ran into a lot of trouble testing error handling, and this series is
+> > > > > just trying to simplify some things. The first 4 fix up aer_inject, and
+> > > > > the rest are cleanup to make better use of kernel APIs.
+> > > > > 
+> > > > > Keith Busch (12):
+> > > > >   PCI: Set PCI bus accessors to noinline
+> > > > >   PCI/AER: Covertly inject errors
+> > > > >   PCI/AER: Reuse existing service device lookup
+> > > > >   PCI/AER: Abstract AER interrupt handling
+> > > > >   PCI/AER: Remove dead code
+> > > > >   PCI/AER: Remove error source from aer struct
+> > > > >   PCI/AER: Use kfifo for tracking events
+> > > > >   PCI/AER: Use kfifo helper inserting locked elements
+> > > > >   PCI/AER: Don't read upstream ports below fatal errors
+> > > > >   PCI/AER: Use threaded IRQ for bottom half
+> > > > >   PCI/AER: Use managed resource allocations
+> > > > >   PCI/pciehp: Use device managed allocations
+> > > > > 
+> > > > >  drivers/pci/access.c              |   4 +-
+> > > > >  drivers/pci/hotplug/pciehp_core.c |  14 +-
+> > > > >  drivers/pci/hotplug/pciehp_hpc.c  |  48 ++----
+> > > > >  drivers/pci/pcie/Kconfig          |   2 +-
+> > > > >  drivers/pci/pcie/aer.c            | 219 ++++++---------------------
+> > > > >  drivers/pci/pcie/aer_inject.c     | 306 ++++++++++++++++++++------------------
+> > > > >  drivers/pci/pcie/portdrv.h        |   4 -
+> > > > >  drivers/pci/pcie/portdrv_core.c   |   1 +
+> > > > >  8 files changed, 227 insertions(+), 371 deletions(-)
+> > > > 
+> > > > Thanks a lot for doing this!  I applied these to pci/hotplug for
+> > > > v4.20, except for "PCI/AER: Don't read upstream ports below fatal
+> > > > errors", which seems to be already there via another posting, and
+> > > > "PCI/pciehp: Use device managed allocations", which needs a few
+> > > > tweaks.
+> > > 
+> > > Sounds good, and thanks for applying!
+> > > 
+> > > In case this went unnoticed, patch 2's aer_inject using ftrace hooks
+> > > to pci config accessors is really cool and fixes several kernel crashes
+> > > I encountered, but it may not work on every architecture. I'm not sure
+> > > how widely aer_inject is used, so maybe there are no concerns with the
+> > > DYNAMIC_FTRACE_WITH_REGS dependency, but I just want to reemphasize that
+> > > dependency in case there are valid objections.
+> > 
+> > Oh, indeed, I hadn't noticed this arch dependency.  AFAICT, the new
+> > DYNAMIC_FTRACE_WITH_REGS dependency means aer_inject will work only
+> > on these arches:
+> > 
+> >   arm		# if (!XIP_KERNEL) && !CPU_ENDIAN_BE32 && MMU
+> >   powerpc	# if PPC64 && CPU_LITTLE_ENDIAN
+> >   riscv		# ARCH_RV64I only
+> >   s390
+> >   x86
+> > 
+> > Notably missing is arm64, which has DYNAMIC_FTRACE but not
+> > DYNAMIC_FTRACE_WITH_REGS.
+> > 
+> > Bjorn
 > 
-> On Sat, Oct 27, 2018 at 12:00:57AM +0000, Trent Piepho wrote:
->> This reverts commit 8c934095fa2f ("PCI: dwc: Clear MSI interrupt status
->> after it is handled, not before").
->>
->> This is a very real race that we observed quickly after switching from
->> 4.13 to 4.16.  Using a custom PCI-e endpoint and driver, I was able to
->> track it to the precise race and verify the fixed behavior, as will be
->> described below.
->>
->> This bug was originally fixed in 2013, in commit ca1658921b63 ("PCI:
->> designware: Fix missing MSI IRQs") The discussion of that commit,
->> archived in patchwork [1], is informative and worth reading.
->>
->> The bug was re-added in the '8c934 commit this is reverting, which
->> appeared in the 4.14 kernel.
->>
->> Unfortunately, Synopsys appears to consider the operation of this PCI-e
->> controller secret.  They provide no publicly available docs for it nor
->> allow the references manuals of SoCs using the controller to publish any
->> documentation of it.
->>
->> So I can not say certain this code is correctly using the controller's
->> features.  However, extensive testing gives me high confidence in the
->> accuracy of what is described below.
->>
->> If an MSI is received by the PCI-e controller while the status register
->> bit for that MSI is set, the PCI-e controller will NOT generate another
->> interrupt.  In addition, it will NOT queue or otherwise mark the
->> interrupt as "pending", which means it will NOT generate an interrupt
->> when the status bit is unmasked.
->>
->> This gives the following race scenario:
->>
->> 1.  An MSI is received by, and the status bit for the MSI is set in, the
->> DWC PCI-e controller.
->> 2.  dw_handle_msi_irq() calls a driver's registered interrupt handler
->> for the MSI received.
->> 3.  At some point, the interrupt handler must decide, correctly, that
->> there is no more work to do and return.
->> 4.  The hardware generates a new MSI.  As the MSI's status bit is still
->> set, this new MSI is ignored.
->> 6.  dw_handle_msi_irq() unsets the MSI status bit.
->>
->> The MSI received at point 4 will never be acted upon.  It occurred after
->> the driver had finished checking the hardware status for interrupt
->> conditions to act on.  Since the MSI status was masked, it does not
->> generated a new IRQ, neither when it was received nor when the MSI is
->> unmasked.
->>
->> It seems clear there is an unsolvable race here.
->>
->> After this patch, the sequence becomes as follows:
->>
->> 1.  An MSI is received and the status bit for the MSI is set in the
->> DWC PCI-e controller.
->> 2.  dw_handle_msi_irq() clears this MSI status bit.
->> 3.  dw_handle_msi_irq() calls a driver's registered interrupt handler
->> for the MSI received.
->> 3.  At some point, the interrupt handler must decide, correctly, that
->> there is no more work to do and return.
->> 4.  The hardware generates a new MSI.  This sets the MSI status bit and
->> triggers another interrupt in the interrupt controller(s) above the DWC
->> PCI-e controller.  As the the dwc-pcie handler is not re-entrant, it is
->> not run again at this time.
->> 6.  dw_handle_msi_irq() finishes.  The MSI status bit remains set.
->> 7.  The IRQ is re-raised and dw_handle_msi_irq() runs again.
->> 8.  dw_handle_msi_irq() invokes the MSI's registered interrupt handler
->> again as the status bit was still set.
-> 
-> Not sure why (5) is not used in your lists, I assume because you want
-> to highlight the race condition with the jump from 4 to 6 (or maybe
-> you do not like number 5 :), just curious).
-> 
->> The observant will notice that point 4 present the opportunity for the
->> SoC's interrupt controller to lose the interrupt in the same manner as
->> the bug in this driver.  The driver for that interrupt controller will
->> be written to properly deal with this.  In some cases the hardware
->> supports an EOI concept, where the 2nd IRQ is masked and internally
->> queued in the hardware, to be re-raised at EOI in step 7.  In other
->> cases the IRQ will be unmasked and re-raised at step 4, but the kernel
->> will see the handler is INPROGRESS and not re-invoke it, and instead set
->> a PENDING flag, which causes the handler to re-run at step 7.
->>
->> [1] https://patchwork.kernel.org/patch/3333681/
->>
->> Fixes: 8c934095fa2f ("PCI: dwc: Clear MSI interrupt status after it is handled, not before")
-> 
-> I have two questions:
-> 
-> - Commit 8c934095fa2f has been in the kernel for a year and no
->   regression was reported. It was assumed to fix a problem so before
->   reverting it I want to make sure we are not breaking anything else.
-> - Your reasoning seems correct but I would pick Marc's brain on this
->   because I want to understand if what this patch does is what IRQ core
->   expects it to do, especially in relation to the IRQ chaining you
->   are mentioning.
+> Looks like the kbuild bot found an ARM kernel config that has
+> DYNAMIC_FTRACE_WITH_REGS set, and then the module can't compile
+> there. I'll need to update this patch regardless, and I think the right
+> thing to do is maintain the "old" way with conditional compiling for
+> any arch specific features.
 
-It is hard to decide what the right solution is without understanding
-exactly what this particular write actually does. It seems to be some
-form of acknowledgement, but I'm only making an educated guess, and some
-of the defines suggest that there might be another register for that.
+The question is whether we really need to dynamically patch the kernel
+with ftrace to achieve what that patch does.
 
-What I'm interested in is the relationship this has with the mask/unmask
-callbacks, and whether masking the interrupt before acking it would help.
+Furthermore, it would also be good to report what bugs we are actually
+fixing, from what you are writing falling back to the current method if
+!DYNAMIC_FTRACE_WITH_REGS is broken in many ways and I would start with
+fixing the current behaviour with something that does not depend on arch
+features that may not even be implemented.
 
-Gustavo, can you help here?
-
-In any way, moving the action of acknowledging the interrupt to its
-right spot in the kernel (dw_pci_bottom_ack) would be a good start.
+Anyway - please CC me in in the follow up series, I am happy to help you
+test it.
 
 Thanks,
-
-	M.
--- 
-Jazz is not dead. It just smells funny...
+Lorenzo
