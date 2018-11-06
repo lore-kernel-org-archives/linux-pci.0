@@ -4,57 +4,58 @@ X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 X-Spam-Level: 
 X-Spam-Status: No, score=-8.8 required=3.0 tests=DKIM_INVALID,DKIM_SIGNED,
 	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
-	SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT autolearn=ham autolearn_force=no
-	version=3.4.0
+	SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT autolearn=unavailable
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 6C0CEC0044C
-	for <linux-pci@archiver.kernel.org>; Tue,  6 Nov 2018 02:04:08 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 4151DC0044C
+	for <linux-pci@archiver.kernel.org>; Tue,  6 Nov 2018 02:04:14 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 1ADE320862
-	for <linux-pci@archiver.kernel.org>; Tue,  6 Nov 2018 02:04:08 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 076EE20862
+	for <linux-pci@archiver.kernel.org>; Tue,  6 Nov 2018 02:04:14 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=fail reason="signature verification failed" (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="HDOLs4Ap"
-DMARC-Filter: OpenDMARC Filter v1.3.2 mail.kernel.org 1ADE320862
+	dkim=fail reason="signature verification failed" (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="dZZb7Qv8"
+DMARC-Filter: OpenDMARC Filter v1.3.2 mail.kernel.org 076EE20862
 Authentication-Results: mail.kernel.org; dmarc=fail (p=none dis=none) header.from=canonical.com
 Authentication-Results: mail.kernel.org; spf=none smtp.mailfrom=linux-pci-owner@vger.kernel.org
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727358AbeKFL0v (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Tue, 6 Nov 2018 06:26:51 -0500
-Received: from mail-pl1-f196.google.com ([209.85.214.196]:37048 "EHLO
-        mail-pl1-f196.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726368AbeKFL0v (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Tue, 6 Nov 2018 06:26:51 -0500
-Received: by mail-pl1-f196.google.com with SMTP id p6-v6so5376826pll.4;
-        Mon, 05 Nov 2018 18:04:06 -0800 (PST)
+        id S1729326AbeKFL0x (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Tue, 6 Nov 2018 06:26:53 -0500
+Received: from mail-pf1-f196.google.com ([209.85.210.196]:35446 "EHLO
+        mail-pf1-f196.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1729309AbeKFL0x (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Tue, 6 Nov 2018 06:26:53 -0500
+Received: by mail-pf1-f196.google.com with SMTP id v9-v6so3038448pff.2;
+        Mon, 05 Nov 2018 18:04:09 -0800 (PST)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=gmail.com; s=20161025;
-        h=sender:from:to:subject:date:message-id;
-        bh=19U5nnS+32OVLXwVWLlWkIemkFQKEnGuAOn8fC7twHs=;
-        b=HDOLs4ApedBKIWZ/OBpRz1OMpDdkqI697Nyoi/M796demU//wCxG6HyM4qiGvvoHWm
-         hRpMcvl67TUNd4uO75gt6TWZV4z+kOQzHT95LT9QNCKhzxsX+UXgSi6763Km1t5va5IU
-         9mU5yesYuautARMkG1pmXpcPsk/Jgi4SDaJVd8U3JPWt/8UXcBpaauo3PiXRE1CMjohD
-         VX/z+7ir8IB9nVuD57585G7c7B3Zo/MVgh7Tw2PfUR3DfH7uZseyDlim2t+f3r2sJMfh
-         l6/UquRbE6YLKENM6IqA8clfhH16T7jndwPAjklNVGqgKf7OnNpgdl84mfaOV1QmReiX
-         O1nQ==
+        h=sender:from:to:subject:date:message-id:in-reply-to:references;
+        bh=q1iCaObEwHgNndGc+IQ2osgW1NSsAor6JGa6GWHzAjI=;
+        b=dZZb7Qv8iGNz116jBljeafsTgUke4MGb++eS36R2NpsyYZMX+dG8LtxyGs+/fU3ULT
+         gDDfodxu7e229UDpblC6SmU3JRc9lL5kJKZsmfmqf7w8BVohxZ1r2f8IzFvJ1Uut3L5b
+         lynYPz01FKEY8eaVI9WZKDQIV8frB+XNyI94GDr539SVvN3OopJcteugo2LNgXa46Q6L
+         dXqhuzID3lGxzInLt0sxzDxZ72jr52roLRhndFKx+MUFGlexHTZIkMemAKNqt9wqqtxC
+         vslyqGgWZFnY/evt7lUJZH96SVsV1BdBzsSbaQ84nyEPBvZfOXSHA3mtWpZ6c/YJ9w67
+         TTbg==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20161025;
-        h=x-gm-message-state:sender:from:to:subject:date:message-id;
-        bh=19U5nnS+32OVLXwVWLlWkIemkFQKEnGuAOn8fC7twHs=;
-        b=Cv+wyWGymD9a2gUWelZT5g4S8wfkCJ2wsLuSuILZKFMsaF9SiAUEWlGDcaAyjMzo6m
-         +LivMQ5lqLTz83DiUf14rStA5bJZFTIogDPZs1pRx7Ccc3Cr4uYLq8GgSPiae1qAdj3z
-         ZyCl+opgon1BcMly0AVfzOeqWB7RFNzoOW7j6/tzLzX2XXE8y3+9YGpmYzUw7bH2WtqF
-         7ee5U2K+XyDGFRT3xR894wTUxOn+Y6htIWhwrsHgZa1GAl6m1x0gcPuLD67SCrykvlH8
-         G1le2A2f0hPrC9vbN9wzF2SSNCFZe6sJMbm6FZqcHmBsvWridPpZNbykKSPmnknzkNkG
-         HoMA==
-X-Gm-Message-State: AGRZ1gJooWD2PGhIug9ekppc2sd2/9iiP4TDgeTJNKqFVklG5qOtqTLc
-        iwy2mg0aYQqG2tr/TqmHFcg=
-X-Google-Smtp-Source: AJdET5furphSaw6cCr9eHYAqjKJBwOC/zGAlzk746wPD1wfv2R9IPwCRNL+qj6bRQs1eT2BDXlROIA==
-X-Received: by 2002:a17:902:9a04:: with SMTP id v4-v6mr23924878plp.247.1541469845887;
-        Mon, 05 Nov 2018 18:04:05 -0800 (PST)
+        h=x-gm-message-state:sender:from:to:subject:date:message-id
+         :in-reply-to:references;
+        bh=q1iCaObEwHgNndGc+IQ2osgW1NSsAor6JGa6GWHzAjI=;
+        b=Ras3qwU7zrM7bT40rDDRG8jYWHuvjK5inFLd6wE9C/nnNQK4UhlEn5FEtuVwyF1Bcm
+         1Sb3jrDn/Q6FM4WYu5nM6Gmv7AUatHCkJkLxZLUARWUhN/8RIlV8Yw1KddAkxUPkfYpn
+         JqCvBbV75XV2x6U/KmG2H1roAlgEzeXimUqdsSIfdB4wNs/amjKt8om9/oDtNAa2oPVN
+         VWOcQ0GQK9R1KO+H6YKg1rlWialW0UKhgcY8OT8pB/ch2uIjNZ9plYzFEDabDiPXjh4k
+         KQVvryQHTBB/D/vZExUqxoMmfsQRX428OUcXfu5wway8o/M+J08MDrRZG6yqS7PA8Nu8
+         ZgSQ==
+X-Gm-Message-State: AGRZ1gI5ADRnGAw312E9Qv1+92Dh+NbdnERoI1rWg4vyJD0JBlpnMdFd
+        ah/ADlUzqeE/5cHkXelbCZ8=
+X-Google-Smtp-Source: AJdET5daG9t1xJkmSRzpif4lKnsWw7H+0IaiNx/01cEGo3RhZU2iNgah+uTrlv+36d6JFBFPwwuwwQ==
+X-Received: by 2002:a62:5904:: with SMTP id n4-v6mr10465640pfb.174.1541469848604;
+        Mon, 05 Nov 2018 18:04:08 -0800 (PST)
 Received: from localhost (61-220-137-37.HINET-IP.hinet.net. [61.220.137.37])
-        by smtp.gmail.com with ESMTPSA id 64-v6sm2591804pfa.120.2018.11.05.18.04.04
+        by smtp.gmail.com with ESMTPSA id 188-v6sm27858805pfy.87.2018.11.05.18.04.07
         (version=TLS1_2 cipher=ECDHE-RSA-CHACHA20-POLY1305 bits=256/256);
-        Mon, 05 Nov 2018 18:04:04 -0800 (PST)
+        Mon, 05 Nov 2018 18:04:07 -0800 (PST)
 From:   AceLan Kao <acelan.kao@canonical.com>
 To:     Keith Busch <keith.busch@intel.com>, Jens Axboe <axboe@fb.com>,
         Christoph Hellwig <hch@lst.de>,
@@ -62,56 +63,80 @@ To:     Keith Busch <keith.busch@intel.com>, Jens Axboe <axboe@fb.com>,
         Bjorn Helgaas <bhelgaas@google.com>,
         linux-nvme@lists.infradead.org, linux-kernel@vger.kernel.org,
         linux-pci@vger.kernel.org
-Subject: [PATCH 1/2] pci: prevent sk hynix nvme from entering D3
-Date:   Tue,  6 Nov 2018 10:04:01 +0800
-Message-Id: <20181106020402.21120-1-acelan.kao@canonical.com>
+Subject: [PATCH 2/2] nvme: add quirk to not call disable function when suspending
+Date:   Tue,  6 Nov 2018 10:04:02 +0800
+Message-Id: <20181106020402.21120-2-acelan.kao@canonical.com>
 X-Mailer: git-send-email 2.17.1
+In-Reply-To: <20181106020402.21120-1-acelan.kao@canonical.com>
+References: <20181106020402.21120-1-acelan.kao@canonical.com>
 Sender: linux-pci-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-It leads to the power consumption raises to 2.2W during s2idle, while
-it consumes less than 1W during long idle if put SK hynix nvme to D3
-and then enter s2idle.
-From SK hynix FE, MS Windows doesn't put nvme to D3, and uses its own
-APST feature to do the power management.
-To leverage its APST feature during s2idle, we can't disable nvme
-device while suspending, too.
-
-BTW, prevent it from entering D3 will increase the power consumtion around
-0.13W ~ 0.15W during short/long idle, and the power consumption during
-s2idle becomes 0.77W.
+Call nvme_dev_disable() function leads to the power consumption goes
+up to 2.2 Watt during suspend-to-idle, and from SK hynix FE, they
+suggest us to use its own APST feature to do the power management during
+s2idle.
+After D3 is diabled and nvme_dev_disable() is not called while
+suspending, the power consumption drops to 0.77 Watt during s2idle.
 
 Signed-off-by: AceLan Kao <acelan.kao@canonical.com>
 ---
- drivers/pci/quirks.c    | 1 +
- include/linux/pci_ids.h | 2 ++
- 2 files changed, 3 insertions(+)
+ drivers/nvme/host/nvme.h | 5 +++++
+ drivers/nvme/host/pci.c  | 8 +++++++-
+ 2 files changed, 12 insertions(+), 1 deletion(-)
 
-diff --git a/drivers/pci/quirks.c b/drivers/pci/quirks.c
-index 4700d24e5d55..b7e6492e8311 100644
---- a/drivers/pci/quirks.c
-+++ b/drivers/pci/quirks.c
-@@ -1332,6 +1332,7 @@ DECLARE_PCI_FIXUP_CLASS_EARLY(PCI_VENDOR_ID_AL, PCI_ANY_ID,
-    occur when mode detecting */
- DECLARE_PCI_FIXUP_CLASS_EARLY(PCI_VENDOR_ID_VIA, PCI_ANY_ID,
- 				PCI_CLASS_STORAGE_IDE, 8, quirk_no_ata_d3);
-+DECLARE_PCI_FIXUP_EARLY(PCI_VENDOR_ID_SK_HYNIX, 0x1527, quirk_no_ata_d3);
+diff --git a/drivers/nvme/host/nvme.h b/drivers/nvme/host/nvme.h
+index cee79cb388af..35d260a4cf46 100644
+--- a/drivers/nvme/host/nvme.h
++++ b/drivers/nvme/host/nvme.h
+@@ -90,6 +90,11 @@ enum nvme_quirks {
+ 	 * Set MEDIUM priority on SQ creation
+ 	 */
+ 	NVME_QUIRK_MEDIUM_PRIO_SQ		= (1 << 7),
++
++	/*
++	 * Do not disable nvme when suspending(s2idle)
++	 */
++	NVME_QUIRK_NO_DISABLE			= (1 << 8),
+ };
  
  /*
-  * This was originally an Alpha-specific thing, but it really fits here.
-diff --git a/include/linux/pci_ids.h b/include/linux/pci_ids.h
-index 69f0abe1ba1a..5f5adda07de0 100644
---- a/include/linux/pci_ids.h
-+++ b/include/linux/pci_ids.h
-@@ -3090,4 +3090,6 @@
+diff --git a/drivers/nvme/host/pci.c b/drivers/nvme/host/pci.c
+index c33bb201b884..586f3516e36b 100644
+--- a/drivers/nvme/host/pci.c
++++ b/drivers/nvme/host/pci.c
+@@ -31,6 +31,7 @@
+ #include <linux/io-64-nonatomic-lo-hi.h>
+ #include <linux/sed-opal.h>
+ #include <linux/pci-p2pdma.h>
++#include <linux/suspend.h>
  
- #define PCI_VENDOR_ID_NCUBE		0x10ff
+ #include "nvme.h"
  
-+#define PCI_VENDOR_ID_SK_HYNIX		0x1c5c
+@@ -2612,8 +2613,11 @@ static int nvme_suspend(struct device *dev)
+ {
+ 	struct pci_dev *pdev = to_pci_dev(dev);
+ 	struct nvme_dev *ndev = pci_get_drvdata(pdev);
++	struct nvme_ctrl *ctrl = &ndev->ctrl;
 +
- #endif /* _LINUX_PCI_IDS_H */
++	if (!(pm_suspend_via_s2idle() && (ctrl->quirks & NVME_QUIRK_NO_DISABLE)))
++		nvme_dev_disable(ndev, true);
+ 
+-	nvme_dev_disable(ndev, true);
+ 	return 0;
+ }
+ 
+@@ -2716,6 +2720,8 @@ static const struct pci_device_id nvme_id_table[] = {
+ 		.driver_data = NVME_QUIRK_LIGHTNVM, },
+ 	{ PCI_DEVICE(0x1d1d, 0x2601),	/* CNEX Granby */
+ 		.driver_data = NVME_QUIRK_LIGHTNVM, },
++	{ PCI_DEVICE(0x1c5c, 0x1527),   /* Sk Hynix */
++		.driver_data = NVME_QUIRK_NO_DISABLE, },
+ 	{ PCI_DEVICE_CLASS(PCI_CLASS_STORAGE_EXPRESS, 0xffffff) },
+ 	{ PCI_DEVICE(PCI_VENDOR_ID_APPLE, 0x2001) },
+ 	{ PCI_DEVICE(PCI_VENDOR_ID_APPLE, 0x2003) },
 -- 
 2.17.1
 
