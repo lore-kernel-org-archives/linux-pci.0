@@ -2,85 +2,94 @@ Return-Path: <SRS0=wh2u=NR=vger.kernel.org=linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-2.5 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	MAILING_LIST_MULTI,SPF_PASS,USER_AGENT_MUTT autolearn=ham autolearn_force=no
-	version=3.4.0
+X-Spam-Status: No, score=-4.0 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_PASS,URIBL_BLOCKED autolearn=ham
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 1B2DCC32789
-	for <linux-pci@archiver.kernel.org>; Tue,  6 Nov 2018 08:28:09 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id C3268C32789
+	for <linux-pci@archiver.kernel.org>; Tue,  6 Nov 2018 08:43:59 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id E077F20866
-	for <linux-pci@archiver.kernel.org>; Tue,  6 Nov 2018 08:28:08 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.3.2 mail.kernel.org E077F20866
-Authentication-Results: mail.kernel.org; dmarc=none (p=none dis=none) header.from=alien8.de
+	by mail.kernel.org (Postfix) with ESMTP id 8848A2085B
+	for <linux-pci@archiver.kernel.org>; Tue,  6 Nov 2018 08:43:59 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.3.2 mail.kernel.org 8848A2085B
+Authentication-Results: mail.kernel.org; dmarc=fail (p=none dis=none) header.from=linux.intel.com
 Authentication-Results: mail.kernel.org; spf=none smtp.mailfrom=linux-pci-owner@vger.kernel.org
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S2387469AbeKFRwL (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Tue, 6 Nov 2018 12:52:11 -0500
-Received: from mail.skyhub.de ([5.9.137.197]:33964 "EHLO mail.skyhub.de"
+        id S2387872AbeKFSIG (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Tue, 6 Nov 2018 13:08:06 -0500
+Received: from mga18.intel.com ([134.134.136.126]:7966 "EHLO mga18.intel.com"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1728133AbeKFRwL (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Tue, 6 Nov 2018 12:52:11 -0500
-X-Virus-Scanned: Nedap ESD1 at mail.skyhub.de
-Received: from mail.skyhub.de ([127.0.0.1])
-        by localhost (blast.alien8.de [127.0.0.1]) (amavisd-new, port 10026)
-        with ESMTP id LwX-uHJxuqY5; Tue,  6 Nov 2018 09:28:06 +0100 (CET)
-Received: from zn.tnic (p200300EC2BD1C800329C23FFFEA6A903.dip0.t-ipconnect.de [IPv6:2003:ec:2bd1:c800:329c:23ff:fea6:a903])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
-        (No client certificate requested)
-        by mail.skyhub.de (SuperMail on ZX Spectrum 128k) with ESMTPSA id 482691EC026E;
-        Tue,  6 Nov 2018 09:28:06 +0100 (CET)
-Date:   Tue, 6 Nov 2018 09:27:59 +0100
-From:   Borislav Petkov <bp@alien8.de>
-To:     "Woods, Brian" <Brian.Woods@amd.com>
-Cc:     Thomas Gleixner <tglx@linutronix.de>,
-        Ingo Molnar <mingo@redhat.com>,
-        "H. Peter Anvin" <hpa@zytor.com>,
-        "x86@kernel.org" <x86@kernel.org>,
-        Clemens Ladisch <clemens@ladisch.de>,
-        Jean Delvare <jdelvare@suse.com>,
-        Guenter Roeck <linux@roeck-us.net>,
-        Bjorn Helgaas <bhelgaas@google.com>, Pu Wen <puwen@hygon.cn>,
-        Jia Zhang <qianyue.zj@alibaba-inc.com>,
-        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-        "linux-hwmon@vger.kernel.org" <linux-hwmon@vger.kernel.org>,
-        "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
-Subject: Re: [PATCH 2/4] x86/amd_nb: add support for newer PCI topologies
-Message-ID: <20181106082759.GA13712@zn.tnic>
-References: <20181102181055.130531-1-brian.woods@amd.com>
- <20181102181055.130531-3-brian.woods@amd.com>
- <20181105193840.GA26868@zn.tnic>
- <20181105203330.GB27399@amd.com>
- <20181105214233.GF26868@zn.tnic>
- <20181105233212.GC27399@amd.com>
+        id S2387868AbeKFSIG (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Tue, 6 Nov 2018 13:08:06 -0500
+X-Amp-Result: UNSCANNABLE
+X-Amp-File-Uploaded: False
+Received: from orsmga005.jf.intel.com ([10.7.209.41])
+  by orsmga106.jf.intel.com with ESMTP/TLS/DHE-RSA-AES256-GCM-SHA384; 06 Nov 2018 00:43:58 -0800
+X-ExtLoop1: 1
+X-IronPort-AV: E=Sophos;i="5.54,471,1534834800"; 
+   d="asc'?scan'208";a="271729570"
+Received: from pipin.fi.intel.com (HELO localhost) ([10.237.72.128])
+  by orsmga005.jf.intel.com with ESMTP; 06 Nov 2018 00:43:56 -0800
+From:   Felipe Balbi <felipe.balbi@linux.intel.com>
+To:     Thinh Nguyen <thinh.nguyen@synopsys.com>,
+        "linux-pci\@vger.kernel.org" <linux-pci@vger.kernel.org>,
+        Bjorn Helgaas <bhelgaas@google.com>,
+        "gregkh\@linuxfoundation.org" <gregkh@linuxfoundation.org>
+Cc:     USB <linux-usb@vger.kernel.org>
+Subject: Re: [PATCH 2/2] pci: quirks: Override Synopsys USB 3.x HAPS device driver
+In-Reply-To: <30102591E157244384E984126FC3CB4F639A0308@us01wembx1.internal.synopsys.com>
+References: <62f746c341ea00ccadda47c3cb02eb57f2e90db2.1541209477.git.thinhn@synopsys.com> <8faa039d80ba1f8ab2c7192a237ff8431d5cdc4a.1541209477.git.thinhn@synopsys.com> <30102591E157244384E984126FC3CB4F639A0308@us01wembx1.internal.synopsys.com>
+Date:   Tue, 06 Nov 2018 10:43:51 +0200
+Message-ID: <87in1avbnc.fsf@linux.intel.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Disposition: inline
-In-Reply-To: <20181105233212.GC27399@amd.com>
-User-Agent: Mutt/1.10.1 (2018-07-13)
+Content-Type: multipart/signed; boundary="=-=-=";
+        micalg=pgp-sha256; protocol="application/pgp-signature"
 Sender: linux-pci-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-On Mon, Nov 05, 2018 at 11:32:16PM +0000, Woods, Brian wrote:
-> Your understanding is correct.  It's more so that the following DF/SMN
-> interface gets mapped correctly.
-> 		/*
-> 		 * If there are more PCI root devices than data fabric/
-> 		 * system management network interfaces, then the (N)
-> 		 * PCI roots per DF/SMN interface are functionally the
-> 		 * same (for DF/SMN access) and N-1 are redundant.  N-1
-> 		 * PCI roots should be skipped per DF/SMN interface so
-> 		 * the following DF/SMN interfaces get mapped to
-> 		 * correct PCI roots.
-> 		 */
-> Does that read clearer?
+--=-=-=
+Content-Type: text/plain
+Content-Transfer-Encoding: quoted-printable
 
-Yap, thanks!
+Thinh Nguyen <thinh.nguyen@synopsys.com> writes:
 
--- 
-Regards/Gruss,
-    Boris.
+> ++ linux-usb
+> ++ Greg
+>
+> On 11/2/2018 6:47 PM, Thinh Nguyen wrote:
+>> Synopsys USB 3.x host HAPS platform has a class code of
+>> PCI_CLASS_SERIAL_USB_XHCI, and xhci driver can claim it. However, these
+>> devices should use dwc3-haps driver. Set driver_override to dwc3-haps
+>> for these platforms.
+>>
+>> Signed-off-by: Thinh Nguyen <thinhn@synopsys.com>
 
-Good mailing practices for 400: avoid top-posting and trim the reply.
+FWIW:
+
+Acked-by: Felipe Balbi <felipe.balbi@linux.intel.com>
+
+=2D-=20
+balbi
+
+--=-=-=
+Content-Type: application/pgp-signature; name="signature.asc"
+
+-----BEGIN PGP SIGNATURE-----
+
+iQIzBAEBCAAdFiEElLzh7wn96CXwjh2IzL64meEamQYFAlvhVEcACgkQzL64meEa
+mQY3iRAApJVbJS5Xa5zjmo0pL+I/g+PZh62n94OYkZcQDSCkJ1G462R49eA5J+5D
+WeM1y605r4GXq5m3GpUQbRG2hlwqzIUQN/h6zd1k8pXdNZEGCV4MFtXIygigMI6E
+WsIWdZM7r1xahSmAZ3YmumT2i2zjHrswXSmDqaIrT2y4tnPfvV24ZIOnwMD073xL
+JvShjAE1XYxfXvOgb/h0WMlPWqcGeQlEmzbVbEzvKw2vg3ENuk8qnV1yx7VV9CV5
+7H69pkxGa+cBfiw9dijCsjXt7g4/Z+ZQUdZ4W5jSYVmn2O1SfCzyoLuDLGWQwK99
+X/5wXuOtFetR2KFwhuBsqoyI+bYtFPH/xP78bqPZd2KOcosHO874HGDZ7e9ICIV2
+Mq5K0RVLFYV1oa5eOIOuqW9C+pcdWIhShZmoyZL0YhTZMZ9Mp9BG7Xg4PfxDpbNm
+DVjol3/5bd7JMawZz8Op6Lklom31rhjxaO8eyCGAxl4qAFgKjo3TGeRC9Gble0Bd
+U+/MY8Zd1GlM+I/UmKGNbQsyfFA51PQCm9zFKd7b7cnPW7xzTFucqy8EtMerIBCc
+e2TnDKg7Jv/s2YmxuAuV84eEHgwjkFhiLPTUYLJYYv1P0FHem46G9M2R5kQmocXd
+0h2sl2po7lI7mZ5rgBuwOkRW/dVvn5bwQRZvoHHpT242qW/a0gs=
+=MUuk
+-----END PGP SIGNATURE-----
+--=-=-=--
