@@ -2,176 +2,112 @@ Return-Path: <SRS0=wh2u=NR=vger.kernel.org=linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-7.1 required=3.0 tests=DKIMWL_WL_MED,DKIM_SIGNED,
-	DKIM_VALID,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,
-	SIGNED_OFF_BY,SPF_PASS autolearn=unavailable autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-9.0 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_PASS,URIBL_BLOCKED,
+	USER_AGENT_GIT autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id B9147C32789
-	for <linux-pci@archiver.kernel.org>; Tue,  6 Nov 2018 20:09:00 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id B6A2AC32789
+	for <linux-pci@archiver.kernel.org>; Tue,  6 Nov 2018 20:12:44 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 736292085B
-	for <linux-pci@archiver.kernel.org>; Tue,  6 Nov 2018 20:09:00 +0000 (UTC)
-Authentication-Results: mail.kernel.org;
-	dkim=pass (1024-bit key) header.d=amdcloud.onmicrosoft.com header.i=@amdcloud.onmicrosoft.com header.b="X5MDCWBm"
-DMARC-Filter: OpenDMARC Filter v1.3.2 mail.kernel.org 736292085B
-Authentication-Results: mail.kernel.org; dmarc=none (p=none dis=none) header.from=amd.com
+	by mail.kernel.org (Postfix) with ESMTP id 7C8322083D
+	for <linux-pci@archiver.kernel.org>; Tue,  6 Nov 2018 20:12:44 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.3.2 mail.kernel.org 7C8322083D
+Authentication-Results: mail.kernel.org; dmarc=fail (p=none dis=none) header.from=intel.com
 Authentication-Results: mail.kernel.org; spf=none smtp.mailfrom=linux-pci-owner@vger.kernel.org
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727488AbeKGFfZ (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Wed, 7 Nov 2018 00:35:25 -0500
-Received: from mail-eopbgr710077.outbound.protection.outlook.com ([40.107.71.77]:4676
-        "EHLO NAM05-BY2-obe.outbound.protection.outlook.com"
-        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1726463AbeKGFfY (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Wed, 7 Nov 2018 00:35:24 -0500
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
- d=amdcloud.onmicrosoft.com; s=selector1-amd-com;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=xplz2xb40fRxhyTMIJzBed1Axyo8cX5rku9Q0s3T45k=;
- b=X5MDCWBmDZ/7mo531nFCLUKj0iMzawlubjqEc4Hf9jS+J0B8BZfnR46HRJ7B0xNP3p+2LPBjeUB5VUVcWi6YYykf10LP8NF6yWQYITSJZyhJIKilCiauHegWVxDHerOn0qCghlxJfecyR20SgwCpgidjJovh/J09oaqvE7/MHCU=
-Received: from BN6PR12MB1764.namprd12.prod.outlook.com (10.175.101.137) by
- BN6PR12MB1540.namprd12.prod.outlook.com (10.172.18.13) with Microsoft SMTP
- Server (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- 15.20.1294.26; Tue, 6 Nov 2018 20:08:14 +0000
-Received: from BN6PR12MB1764.namprd12.prod.outlook.com
- ([fe80::d455:a1d4:8ed9:7e13]) by BN6PR12MB1764.namprd12.prod.outlook.com
- ([fe80::d455:a1d4:8ed9:7e13%7]) with mapi id 15.20.1294.032; Tue, 6 Nov 2018
- 20:08:14 +0000
-From:   "Woods, Brian" <Brian.Woods@amd.com>
-To:     Thomas Gleixner <tglx@linutronix.de>,
-        Ingo Molnar <mingo@redhat.com>, Borislav Petkov <bp@alien8.de>,
-        "H. Peter Anvin" <hpa@zytor.com>,
-        "x86@kernel.org" <x86@kernel.org>,
-        Clemens Ladisch <clemens@ladisch.de>,
-        Jean Delvare <jdelvare@suse.com>,
-        Guenter Roeck <linux@roeck-us.net>,
-        Bjorn Helgaas <bhelgaas@google.com>,
-        "Woods, Brian" <Brian.Woods@amd.com>, Pu Wen <puwen@hygon.cn>,
-        Jia Zhang <qianyue.zj@alibaba-inc.com>,
-        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-        "linux-hwmon@vger.kernel.org" <linux-hwmon@vger.kernel.org>,
-        "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
-Subject: [PATCH v2 1/4] k10temp: x86/amd_nb: consolidate shared device IDs
-Thread-Topic: [PATCH v2 1/4] k10temp: x86/amd_nb: consolidate shared device
- IDs
-Thread-Index: AQHUdgxy91c5eKVeSU+Tt1VO6Do63g==
-Date:   Tue, 6 Nov 2018 20:08:14 +0000
-Message-ID: <20181106200754.60722-2-brian.woods@amd.com>
-References: <20181106200754.60722-1-brian.woods@amd.com>
-In-Reply-To: <20181106200754.60722-1-brian.woods@amd.com>
-Accept-Language: en-US
-Content-Language: en-US
-X-MS-Has-Attach: 
-X-MS-TNEF-Correlator: 
-x-clientproxiedby: SN4PR0201CA0002.namprd02.prod.outlook.com
- (2603:10b6:803:2b::12) To BN6PR12MB1764.namprd12.prod.outlook.com
- (2603:10b6:404:107::9)
-authentication-results: spf=none (sender IP is )
- smtp.mailfrom=Brian.Woods@amd.com; 
-x-ms-exchange-messagesentrepresentingtype: 1
-x-originating-ip: [165.204.77.1]
-x-ms-publictraffictype: Email
-x-microsoft-exchange-diagnostics: 1;BN6PR12MB1540;20:HMa0vDt4wk7V7JSx5an+sfB/9uDaFvzQPptc8gj4kCWoeFepPTcXRmvfc0MuS4emT19OqJFZ4zwMlV+aFKzFYGfHwR3Y7Bv0e4NmzPt8LczwS6KhJPoZB5kVCN4fZaJx3TfotBDTKR7i3/TYKASp9r+NKw5unpF2uvS9ZeCFoYv1thMJ+uEH8bolkfA7wMZzcQMOb272qsicvaniQf9tO7Ni/ly4zKBjvzqDkHzojmHUJW/Ik5Y9L/PAPSu5ndsY
-x-ms-office365-filtering-correlation-id: 0159cd99-f4e7-4755-d022-08d64423951c
-x-ms-office365-filtering-ht: Tenant
-x-microsoft-antispam: BCL:0;PCL:0;RULEID:(7020095)(4652040)(8989299)(4534185)(4627221)(201703031133081)(201702281549075)(8990200)(5600074)(711020)(4618075)(2017052603328)(7153060)(7193020);SRVR:BN6PR12MB1540;
-x-ms-traffictypediagnostic: BN6PR12MB1540:
-x-microsoft-antispam-prvs: <BN6PR12MB15402C42F611FDD04D1F18CCE5CB0@BN6PR12MB1540.namprd12.prod.outlook.com>
-x-exchange-antispam-report-test: UriScan:(767451399110);
-x-ms-exchange-senderadcheck: 1
-x-exchange-antispam-report-cfa-test: BCL:0;PCL:0;RULEID:(8211001083)(6040522)(2401047)(5005006)(8121501046)(823302103)(3231382)(944501410)(52105095)(3002001)(10201501046)(93006095)(93001095)(6055026)(148016)(149066)(150057)(6041310)(201703131423095)(201702281528075)(20161123555045)(201703061421075)(201703061406153)(20161123560045)(20161123564045)(20161123558120)(20161123562045)(201708071742011)(7699051)(76991095);SRVR:BN6PR12MB1540;BCL:0;PCL:0;RULEID:;SRVR:BN6PR12MB1540;
-x-forefront-prvs: 0848C1A6AA
-x-forefront-antispam-report: SFV:NSPM;SFS:(10009020)(396003)(136003)(39860400002)(366004)(376002)(346002)(199004)(189003)(71190400001)(105586002)(106356001)(6506007)(36756003)(76176011)(186003)(52116002)(386003)(2616005)(486006)(11346002)(256004)(14444005)(446003)(7736002)(14454004)(478600001)(72206003)(26005)(305945005)(316002)(5660300001)(110136005)(8676002)(68736007)(2906002)(6486002)(53936002)(81166006)(81156014)(2501003)(476003)(8936002)(66066001)(6512007)(2201001)(99286004)(2900100001)(1076002)(97736004)(86362001)(575784001)(25786009)(102836004)(6116002)(6436002)(7416002)(3846002)(71200400001)(921003)(1121003);DIR:OUT;SFP:1101;SCL:1;SRVR:BN6PR12MB1540;H:BN6PR12MB1764.namprd12.prod.outlook.com;FPR:;SPF:None;LANG:en;PTR:InfoNoRecords;A:1;MX:1;
-received-spf: None (protection.outlook.com: amd.com does not designate
- permitted sender hosts)
-x-microsoft-antispam-message-info: PVAS4SZbGYJKCIYBNmfZ6aLewCM4QL/5RcdwLH+vlaC3Zj61FhKIuAgQqe6OVrHJWS/6J4vu50LOemWz59jwWxW0+4S0CUfwrJRektIA4/gExyhAD54YaHXfAOVkodwRN+SzxCAYClQG7U6Tzs3JlVp7KbWDVkMsP4aGqPsJz7F6sYpmyM0k7s9wOW3d2hjenOqjVXfm6vW3+6hoQwLXhHpmaSh7yOC6jTa4CfwSWE0slYT2A/kTiD62AfuKm8dPqSZjG8VRZ9LDDAGiYtCju+qfbg0lOYYFsQg5kvAvZYpPLuepWTJWauAgRWrbT3z5amrTW3qLmFi33IINjZQHufOuFTQXTNg/Y1T/l8OkHsA=
-spamdiagnosticoutput: 1:99
-spamdiagnosticmetadata: NSPM
-Content-Type: text/plain; charset="iso-8859-1"
-Content-Transfer-Encoding: quoted-printable
-MIME-Version: 1.0
-X-OriginatorOrg: amd.com
-X-MS-Exchange-CrossTenant-Network-Message-Id: 0159cd99-f4e7-4755-d022-08d64423951c
-X-MS-Exchange-CrossTenant-originalarrivaltime: 06 Nov 2018 20:08:14.0925
- (UTC)
-X-MS-Exchange-CrossTenant-fromentityheader: Hosted
-X-MS-Exchange-CrossTenant-id: 3dd8961f-e488-4e60-8e11-a82d994e183d
-X-MS-Exchange-Transport-CrossTenantHeadersStamped: BN6PR12MB1540
+        id S1727738AbeKGFji (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Wed, 7 Nov 2018 00:39:38 -0500
+Received: from mga11.intel.com ([192.55.52.93]:7263 "EHLO mga11.intel.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1725958AbeKGFji (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Wed, 7 Nov 2018 00:39:38 -0500
+X-Amp-Result: SKIPPED(no attachment in message)
+X-Amp-File-Uploaded: False
+Received: from fmsmga004.fm.intel.com ([10.253.24.48])
+  by fmsmga102.fm.intel.com with ESMTP/TLS/DHE-RSA-AES256-GCM-SHA384; 06 Nov 2018 12:12:43 -0800
+X-ExtLoop1: 1
+X-IronPort-AV: E=Sophos;i="5.54,472,1534834800"; 
+   d="scan'208";a="103944916"
+Received: from unknown (HELO localhost.lm.intel.com) ([10.232.112.46])
+  by fmsmga004.fm.intel.com with ESMTP; 06 Nov 2018 12:12:43 -0800
+From:   Jon Derrick <jonathan.derrick@intel.com>
+To:     Bjorn Helgaas <helgaas@kernel.org>, <linux-pci@vger.kernel.org>
+Cc:     Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
+        Yinghai Lu <yinghai@kernel.org>,
+        Jon Derrick <jonathan.derrick@intel.com>
+Subject: [PATCH v2] PCI: Configure MPS on rescan
+Date:   Tue,  6 Nov 2018 13:12:42 -0700
+Message-Id: <20181106201242.2862-1-jonathan.derrick@intel.com>
+X-Mailer: git-send-email 2.14.4
 Sender: linux-pci-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-Consolidate shared PCI_DEVICE_IDs that were scattered through k10temp
-and amd_nb, and move them into pci_ids.
+During pci_rescan_bus(), we may encounter new buses and devices which
+don't have MPS set for compatibility. Using this path, newly discovered
+buses and devices would then require their MPS to be configured after
+driver attachment, which may be too late for drivers which do memory
+transactions on probe.
 
-Signed-off-by: Brian Woods <brian.woods@amd.com>
+This additionally ensures that any pcie_bus_config kernel settings will
+be applied to the buses and devices discovered through this path prior
+to driver attachment.
+
+Signed-off-by: Jon Derrick <jonathan.derrick@intel.com>
 ---
- arch/x86/kernel/amd_nb.c | 3 +--
- drivers/hwmon/k10temp.c  | 9 +--------
- include/linux/pci_ids.h  | 2 ++
- 3 files changed, 4 insertions(+), 10 deletions(-)
+v1: https://patchwork.kernel.org/patch/10642019/
 
-diff --git a/arch/x86/kernel/amd_nb.c b/arch/x86/kernel/amd_nb.c
-index a6eca647bc76..19d489ee2b1e 100644
---- a/arch/x86/kernel/amd_nb.c
-+++ b/arch/x86/kernel/amd_nb.c
-@@ -11,13 +11,12 @@
- #include <linux/errno.h>
- #include <linux/export.h>
- #include <linux/spinlock.h>
-+#include <linux/pci_ids.h>
- #include <asm/amd_nb.h>
-=20
- #define PCI_DEVICE_ID_AMD_17H_ROOT	0x1450
- #define PCI_DEVICE_ID_AMD_17H_M10H_ROOT	0x15d0
--#define PCI_DEVICE_ID_AMD_17H_DF_F3	0x1463
- #define PCI_DEVICE_ID_AMD_17H_DF_F4	0x1464
--#define PCI_DEVICE_ID_AMD_17H_M10H_DF_F3 0x15eb
- #define PCI_DEVICE_ID_AMD_17H_M10H_DF_F4 0x15ec
-=20
- /* Protect the PCI config register pairs used for SMN and DF indirect acce=
-ss. */
-diff --git a/drivers/hwmon/k10temp.c b/drivers/hwmon/k10temp.c
-index 2cef0c37ff6f..bc6871c8dd4e 100644
---- a/drivers/hwmon/k10temp.c
-+++ b/drivers/hwmon/k10temp.c
-@@ -23,6 +23,7 @@
- #include <linux/init.h>
- #include <linux/module.h>
- #include <linux/pci.h>
-+#include <linux/pci_ids.h>
- #include <asm/amd_nb.h>
- #include <asm/processor.h>
-=20
-@@ -41,14 +42,6 @@ static DEFINE_MUTEX(nb_smu_ind_mutex);
- #define PCI_DEVICE_ID_AMD_15H_M70H_NB_F3	0x15b3
- #endif
-=20
--#ifndef PCI_DEVICE_ID_AMD_17H_DF_F3
--#define PCI_DEVICE_ID_AMD_17H_DF_F3	0x1463
--#endif
--
--#ifndef PCI_DEVICE_ID_AMD_17H_M10H_DF_F3
--#define PCI_DEVICE_ID_AMD_17H_M10H_DF_F3	0x15eb
--#endif
--
- /* CPUID function 0x80000001, ebx */
- #define CPUID_PKGTYPE_MASK	0xf0000000
- #define CPUID_PKGTYPE_F		0x00000000
-diff --git a/include/linux/pci_ids.h b/include/linux/pci_ids.h
-index 69f0abe1ba1a..78d5cd29778a 100644
---- a/include/linux/pci_ids.h
-+++ b/include/linux/pci_ids.h
-@@ -545,6 +545,8 @@
- #define PCI_DEVICE_ID_AMD_16H_NB_F4	0x1534
- #define PCI_DEVICE_ID_AMD_16H_M30H_NB_F3 0x1583
- #define PCI_DEVICE_ID_AMD_16H_M30H_NB_F4 0x1584
-+#define PCI_DEVICE_ID_AMD_17H_DF_F3	0x1463
-+#define PCI_DEVICE_ID_AMD_17H_M10H_DF_F3 0x15eb
- #define PCI_DEVICE_ID_AMD_CNB17H_F3	0x1703
- #define PCI_DEVICE_ID_AMD_LANCE		0x2000
- #define PCI_DEVICE_ID_AMD_LANCE_HOME	0x2001
---=20
-2.11.0
+ drivers/pci/probe.c | 29 +++++++++++++++++++++++++++++
+ 1 file changed, 29 insertions(+)
+
+diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
+index b1c05b5054a0..126cd426b6f2 100644
+--- a/drivers/pci/probe.c
++++ b/drivers/pci/probe.c
+@@ -3156,6 +3156,34 @@ unsigned int pci_rescan_bus_bridge_resize(struct pci_dev *bridge)
+ 	return max;
+ }
+ 
++/*
++ * Walks the PCI/PCIe tree to find the first instance of a PCIe device and
++ * hands off the PCIe bus to pcie_bus_configure_settings to walk the rest.
++ */
++static int pcie_rescan_bus_configure_settings(struct pci_dev *dev, void *data)
++{
++	if (pci_is_pcie(dev)) {
++		struct pci_bus *child, *bus = dev->bus;
++
++		list_for_each_entry(child, &bus->children, node)
++			pcie_bus_configure_settings(child);
++
++		return 1;
++	}
++	return 0;
++}
++
++/**
++ * pci_bus_configure_settings - Configure bus settings
++ * @bus: PCI/PCIE bus to configure
++ *
++ * Currently only configures PCIe bus settings related to MPS and MRRS.
++ */
++static void pci_bus_configure_settings(struct pci_bus *bus)
++{
++	pci_walk_bus(bus, pcie_rescan_bus_configure_settings, NULL);
++}
++
+ /**
+  * pci_rescan_bus - Scan a PCI bus for devices
+  * @bus: PCI bus to scan
+@@ -3171,6 +3199,7 @@ unsigned int pci_rescan_bus(struct pci_bus *bus)
+ 
+ 	max = pci_scan_child_bus(bus);
+ 	pci_assign_unassigned_bus_resources(bus);
++	pci_bus_configure_settings(bus);
+ 	pci_bus_add_devices(bus);
+ 
+ 	return max;
+-- 
+2.14.4
 
