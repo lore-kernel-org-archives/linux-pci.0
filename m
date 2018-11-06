@@ -2,96 +2,116 @@ Return-Path: <SRS0=wh2u=NR=vger.kernel.org=linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-4.0 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_PASS,URIBL_BLOCKED autolearn=ham
-	autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-8.8 required=3.0 tests=DKIM_INVALID,DKIM_SIGNED,
+	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
+	SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT autolearn=ham autolearn_force=no
+	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 464CFC0044C
-	for <linux-pci@archiver.kernel.org>; Tue,  6 Nov 2018 01:34:58 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 6C0CEC0044C
+	for <linux-pci@archiver.kernel.org>; Tue,  6 Nov 2018 02:04:08 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id C88942083D
-	for <linux-pci@archiver.kernel.org>; Tue,  6 Nov 2018 01:34:57 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.3.2 mail.kernel.org C88942083D
-Authentication-Results: mail.kernel.org; dmarc=none (p=none dis=none) header.from=hxt-semitech.com
+	by mail.kernel.org (Postfix) with ESMTP id 1ADE320862
+	for <linux-pci@archiver.kernel.org>; Tue,  6 Nov 2018 02:04:08 +0000 (UTC)
+Authentication-Results: mail.kernel.org;
+	dkim=fail reason="signature verification failed" (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="HDOLs4Ap"
+DMARC-Filter: OpenDMARC Filter v1.3.2 mail.kernel.org 1ADE320862
+Authentication-Results: mail.kernel.org; dmarc=fail (p=none dis=none) header.from=canonical.com
 Authentication-Results: mail.kernel.org; spf=none smtp.mailfrom=linux-pci-owner@vger.kernel.org
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1729016AbeKFK5f convert rfc822-to-8bit (ORCPT
-        <rfc822;linux-pci@archiver.kernel.org>);
-        Tue, 6 Nov 2018 05:57:35 -0500
-Received: from mx01.hxt-semitech.com ([223.203.96.7]:34042 "EHLO
-        barracuda.hxt-semitech.com" rhost-flags-OK-OK-OK-FAIL)
-        by vger.kernel.org with ESMTP id S1729015AbeKFK5e (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Tue, 6 Nov 2018 05:57:34 -0500
-X-ASG-Debug-ID: 1541468080-093b7e4bb101d80001-0c9NHn
-Received: from HXTBJIDCEMVIW01.hxtcorp.net ([10.128.0.14]) by barracuda.hxt-semitech.com with ESMTP id VkSwohwyxwXYdl5b (version=TLSv1.2 cipher=ECDHE-RSA-AES256-SHA384 bits=256 verify=NO); Tue, 06 Nov 2018 09:34:40 +0800 (CST)
-X-Barracuda-Envelope-From: shunyong.yang@hxt-semitech.com
-Received: from HXTBJIDCEMVIW01.hxtcorp.net (10.128.0.14) by
- HXTBJIDCEMVIW01.hxtcorp.net (10.128.0.14) with Microsoft SMTP Server (TLS) id
- 15.0.1395.4; Tue, 6 Nov 2018 09:34:07 +0800
-Received: from HXTBJIDCEMVIW01.hxtcorp.net ([fe80::f451:a443:c0b5:87d1]) by
- HXTBJIDCEMVIW01.hxtcorp.net ([fe80::f451:a443:c0b5:87d1%12]) with mapi id
- 15.00.1395.000; Tue, 6 Nov 2018 09:34:07 +0800
-From:   "Yang, Shunyong" <shunyong.yang@hxt-semitech.com>
-To:     Sinan Kaya <okaya@kernel.org>,
-        "bhelgaas@google.com" <bhelgaas@google.com>
-CC:     "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-        "okaya@codeaurora.org" <okaya@codeaurora.org>,
-        "Zheng, Joey" <yu.zheng@hxt-semitech.com>
-Subject: Re: [PATCH] PCI: Add HXT vendor ID and ACS quirk
-Thread-Topic: [PATCH] PCI: Add HXT vendor ID and ACS quirk
-X-ASG-Orig-Subj: Re: [PATCH] PCI: Add HXT vendor ID and ACS quirk
-Thread-Index: AQHUdLXdxwZYUqZPBkaNFsBxAdjg4g==
-Date:   Tue, 6 Nov 2018 01:34:07 +0000
-Message-ID: <946ea4b463a44113b6eb84f6b8e5e3f2@HXTBJIDCEMVIW01.hxtcorp.net>
-References: <1541387759-2336-1-git-send-email-shunyong.yang@hxt-semitech.com>
- <bcaf1d5d-23a6-d4e6-08e8-587daf6cca06@kernel.org>
-Accept-Language: en-US
-Content-Language: en-US
-X-MS-Has-Attach: 
-X-MS-TNEF-Correlator: 
-x-ms-exchange-transport-fromentityheader: Hosted
-x-originating-ip: [10.64.6.144]
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 8BIT
-MIME-Version: 1.0
-X-Barracuda-Connect: UNKNOWN[10.128.0.14]
-X-Barracuda-Start-Time: 1541468080
-X-Barracuda-Encrypted: ECDHE-RSA-AES256-SHA384
-X-Barracuda-URL: https://192.168.50.101:443/cgi-mod/mark.cgi
-X-Virus-Scanned: by bsmtpd at hxt-semitech.com
-X-Barracuda-BRTS-Status: 1
-X-Barracuda-Bayes: INNOCENT GLOBAL 0.2319 1.0000 -0.6641
-X-Barracuda-Spam-Score: -0.66
-X-Barracuda-Spam-Status: No, SCORE=-0.66 using global scores of TAG_LEVEL=1000.0 QUARANTINE_LEVEL=1000.0 KILL_LEVEL=9.0 tests=
-X-Barracuda-Spam-Report: Code version 3.2, rules version 3.2.3.61276
-        Rule breakdown below
-         pts rule name              description
-        ---- ---------------------- --------------------------------------------------
+        id S1727358AbeKFL0v (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Tue, 6 Nov 2018 06:26:51 -0500
+Received: from mail-pl1-f196.google.com ([209.85.214.196]:37048 "EHLO
+        mail-pl1-f196.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726368AbeKFL0v (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Tue, 6 Nov 2018 06:26:51 -0500
+Received: by mail-pl1-f196.google.com with SMTP id p6-v6so5376826pll.4;
+        Mon, 05 Nov 2018 18:04:06 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20161025;
+        h=sender:from:to:subject:date:message-id;
+        bh=19U5nnS+32OVLXwVWLlWkIemkFQKEnGuAOn8fC7twHs=;
+        b=HDOLs4ApedBKIWZ/OBpRz1OMpDdkqI697Nyoi/M796demU//wCxG6HyM4qiGvvoHWm
+         hRpMcvl67TUNd4uO75gt6TWZV4z+kOQzHT95LT9QNCKhzxsX+UXgSi6763Km1t5va5IU
+         9mU5yesYuautARMkG1pmXpcPsk/Jgi4SDaJVd8U3JPWt/8UXcBpaauo3PiXRE1CMjohD
+         VX/z+7ir8IB9nVuD57585G7c7B3Zo/MVgh7Tw2PfUR3DfH7uZseyDlim2t+f3r2sJMfh
+         l6/UquRbE6YLKENM6IqA8clfhH16T7jndwPAjklNVGqgKf7OnNpgdl84mfaOV1QmReiX
+         O1nQ==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20161025;
+        h=x-gm-message-state:sender:from:to:subject:date:message-id;
+        bh=19U5nnS+32OVLXwVWLlWkIemkFQKEnGuAOn8fC7twHs=;
+        b=Cv+wyWGymD9a2gUWelZT5g4S8wfkCJ2wsLuSuILZKFMsaF9SiAUEWlGDcaAyjMzo6m
+         +LivMQ5lqLTz83DiUf14rStA5bJZFTIogDPZs1pRx7Ccc3Cr4uYLq8GgSPiae1qAdj3z
+         ZyCl+opgon1BcMly0AVfzOeqWB7RFNzoOW7j6/tzLzX2XXE8y3+9YGpmYzUw7bH2WtqF
+         7ee5U2K+XyDGFRT3xR894wTUxOn+Y6htIWhwrsHgZa1GAl6m1x0gcPuLD67SCrykvlH8
+         G1le2A2f0hPrC9vbN9wzF2SSNCFZe6sJMbm6FZqcHmBsvWridPpZNbykKSPmnknzkNkG
+         HoMA==
+X-Gm-Message-State: AGRZ1gJooWD2PGhIug9ekppc2sd2/9iiP4TDgeTJNKqFVklG5qOtqTLc
+        iwy2mg0aYQqG2tr/TqmHFcg=
+X-Google-Smtp-Source: AJdET5furphSaw6cCr9eHYAqjKJBwOC/zGAlzk746wPD1wfv2R9IPwCRNL+qj6bRQs1eT2BDXlROIA==
+X-Received: by 2002:a17:902:9a04:: with SMTP id v4-v6mr23924878plp.247.1541469845887;
+        Mon, 05 Nov 2018 18:04:05 -0800 (PST)
+Received: from localhost (61-220-137-37.HINET-IP.hinet.net. [61.220.137.37])
+        by smtp.gmail.com with ESMTPSA id 64-v6sm2591804pfa.120.2018.11.05.18.04.04
+        (version=TLS1_2 cipher=ECDHE-RSA-CHACHA20-POLY1305 bits=256/256);
+        Mon, 05 Nov 2018 18:04:04 -0800 (PST)
+From:   AceLan Kao <acelan.kao@canonical.com>
+To:     Keith Busch <keith.busch@intel.com>, Jens Axboe <axboe@fb.com>,
+        Christoph Hellwig <hch@lst.de>,
+        Sagi Grimberg <sagi@grimberg.me>,
+        Bjorn Helgaas <bhelgaas@google.com>,
+        linux-nvme@lists.infradead.org, linux-kernel@vger.kernel.org,
+        linux-pci@vger.kernel.org
+Subject: [PATCH 1/2] pci: prevent sk hynix nvme from entering D3
+Date:   Tue,  6 Nov 2018 10:04:01 +0800
+Message-Id: <20181106020402.21120-1-acelan.kao@canonical.com>
+X-Mailer: git-send-email 2.17.1
 Sender: linux-pci-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-Hi, Sinan,
+It leads to the power consumption raises to 2.2W during s2idle, while
+it consumes less than 1W during long idle if put SK hynix nvme to D3
+and then enter s2idle.
+From SK hynix FE, MS Windows doesn't put nvme to D3, and uses its own
+APST feature to do the power management.
+To leverage its APST feature during s2idle, we can't disable nvme
+device while suspending, too.
 
-On 2018/11/6 7:12, Sinan Kaya wrote:
-> On 11/4/2018 7:15 PM, Shunyong Yang wrote:
->> Add the HXT vendor ID to pci_ids.h and use it in quirks. As the
->> design of HXT SD4800 ACS feature is the same as QCOM QDF2xxx,
->> pci_quirk_qcom_rp_acs() is reused for SD4800 quirk.
->>
->> Cc: Joey Zheng<yu.zheng@hxt-semitech.com>
->> Signed-off-by: Shunyong Yang<shunyong.yang@hxt-semitech.com>
-> 
-> There is also a couple of hotplug quirks for QDF2400. You should
-> probably take care of those as well.
-> 
-> Assuming your PCI IDs are correct:
-> 
-> Reviewed-by: Sinan Kaya <okaya@kernel.org>
-> 
+BTW, prevent it from entering D3 will increase the power consumtion around
+0.13W ~ 0.15W during short/long idle, and the power consumption during
+s2idle becomes 0.77W.
 
-Thanks for your review and information. I will check the changes.
+Signed-off-by: AceLan Kao <acelan.kao@canonical.com>
+---
+ drivers/pci/quirks.c    | 1 +
+ include/linux/pci_ids.h | 2 ++
+ 2 files changed, 3 insertions(+)
 
-Shunyong.
+diff --git a/drivers/pci/quirks.c b/drivers/pci/quirks.c
+index 4700d24e5d55..b7e6492e8311 100644
+--- a/drivers/pci/quirks.c
++++ b/drivers/pci/quirks.c
+@@ -1332,6 +1332,7 @@ DECLARE_PCI_FIXUP_CLASS_EARLY(PCI_VENDOR_ID_AL, PCI_ANY_ID,
+    occur when mode detecting */
+ DECLARE_PCI_FIXUP_CLASS_EARLY(PCI_VENDOR_ID_VIA, PCI_ANY_ID,
+ 				PCI_CLASS_STORAGE_IDE, 8, quirk_no_ata_d3);
++DECLARE_PCI_FIXUP_EARLY(PCI_VENDOR_ID_SK_HYNIX, 0x1527, quirk_no_ata_d3);
+ 
+ /*
+  * This was originally an Alpha-specific thing, but it really fits here.
+diff --git a/include/linux/pci_ids.h b/include/linux/pci_ids.h
+index 69f0abe1ba1a..5f5adda07de0 100644
+--- a/include/linux/pci_ids.h
++++ b/include/linux/pci_ids.h
+@@ -3090,4 +3090,6 @@
+ 
+ #define PCI_VENDOR_ID_NCUBE		0x10ff
+ 
++#define PCI_VENDOR_ID_SK_HYNIX		0x1c5c
++
+ #endif /* _LINUX_PCI_IDS_H */
+-- 
+2.17.1
+
