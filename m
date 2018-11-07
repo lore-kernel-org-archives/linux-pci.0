@@ -2,119 +2,132 @@ Return-Path: <SRS0=4zPb=NS=vger.kernel.org=linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-1.1 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
-	DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_PASS
-	autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-7.1 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
+	DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,
+	SIGNED_OFF_BY,SPF_PASS,URIBL_BLOCKED autolearn=ham autolearn_force=no
+	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 27C33C0044C
-	for <linux-pci@archiver.kernel.org>; Wed,  7 Nov 2018 04:41:55 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id D58EEC0044C
+	for <linux-pci@archiver.kernel.org>; Wed,  7 Nov 2018 05:16:55 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id D1E4E20827
-	for <linux-pci@archiver.kernel.org>; Wed,  7 Nov 2018 04:41:54 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 8DAF820862
+	for <linux-pci@archiver.kernel.org>; Wed,  7 Nov 2018 05:16:55 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (1024-bit key) header.d=nxp.com header.i=@nxp.com header.b="EdKGgPm9"
-DMARC-Filter: OpenDMARC Filter v1.3.2 mail.kernel.org D1E4E20827
+	dkim=pass (1024-bit key) header.d=nxp.com header.i=@nxp.com header.b="XrZMNtew"
+DMARC-Filter: OpenDMARC Filter v1.3.2 mail.kernel.org 8DAF820862
 Authentication-Results: mail.kernel.org; dmarc=fail (p=none dis=none) header.from=nxp.com
 Authentication-Results: mail.kernel.org; spf=none smtp.mailfrom=linux-pci-owner@vger.kernel.org
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727076AbeKGOKe (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Wed, 7 Nov 2018 09:10:34 -0500
-Received: from mail-ve1eur01on0062.outbound.protection.outlook.com ([104.47.1.62]:26976
-        "EHLO EUR01-VE1-obe.outbound.protection.outlook.com"
+        id S1725976AbeKGOpj (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Wed, 7 Nov 2018 09:45:39 -0500
+Received: from mail-eopbgr10076.outbound.protection.outlook.com ([40.107.1.76]:60128
+        "EHLO EUR02-HE1-obe.outbound.protection.outlook.com"
         rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1726558AbeKGOKe (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Wed, 7 Nov 2018 09:10:34 -0500
+        id S1729816AbeKGOpj (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Wed, 7 Nov 2018 09:45:39 -0500
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=nxp.com; s=selector1;
  h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=SB85xXmFlRXf3+Ab0wFBT0KYmpDmGoGHV7zVuyRgDD8=;
- b=EdKGgPm95BYKqc3UtfJFBbAGcH4k3xfM0LkUUl1C5tPeFIj0E1/0lTaetNTTNoiNXtJf7inHTvGA+IFfLK0rxu/U49aj+aggiCBmHkWibQutDuiSEV0hrDHgTEioxGz2nBOzwdc0Y9tln2G9roV4f7RIocLkI20ff7k6L4rJa9M=
+ bh=K1zKHXMnDgtSECbjHXX8dCStYSy8peO20PyXM5naIsE=;
+ b=XrZMNtew3CQNr9IHO9c3Q67Ek78oq9NrceBmpxwz+VHOcYtCzF7YrdwaifouHmk9tbIB8ujwOpm2S4JFHMkY+gjsKzw2+eEkn6iX9/w1tHY5Z93mEawtSCPoNiw5nY2VNXOaiNIpuOFx/X9bb7XSdRg6DwpOICwBJdpTG5ojy/4=
 Received: from AM6PR04MB5781.eurprd04.prod.outlook.com (20.179.2.80) by
- AM6PR04MB4056.eurprd04.prod.outlook.com (52.135.167.150) with Microsoft SMTP
+ AM6PR04MB3973.eurprd04.prod.outlook.com (52.135.160.142) with Microsoft SMTP
  Server (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- 15.20.1294.25; Wed, 7 Nov 2018 04:41:49 +0000
+ 15.20.1294.20; Wed, 7 Nov 2018 05:16:50 +0000
 Received: from AM6PR04MB5781.eurprd04.prod.outlook.com
  ([fe80::7d93:8053:57fd:1a00]) by AM6PR04MB5781.eurprd04.prod.outlook.com
  ([fe80::7d93:8053:57fd:1a00%3]) with mapi id 15.20.1273.035; Wed, 7 Nov 2018
- 04:41:49 +0000
+ 05:16:49 +0000
 From:   "Z.q. Hou" <zhiqiang.hou@nxp.com>
-To:     Bjorn Helgaas <helgaas@kernel.org>
-CC:     "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+To:     "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
         "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
         "bhelgaas@google.com" <bhelgaas@google.com>,
-        "lorenzo.pieralisi@arm.com" <lorenzo.pieralisi@arm.com>,
-        Roy Zang <roy.zang@nxp.com>,
-        "M.h. Lian" <minghuan.lian@nxp.com>
-Subject: RE: [PATCH] PCI/Layerscape: fix wrongly invoking of outbound window
+        "lorenzo.pieralisi@arm.com" <lorenzo.pieralisi@arm.com>
+CC:     Roy Zang <roy.zang@nxp.com>, "M.h. Lian" <minghuan.lian@nxp.com>,
+        "Z.q. Hou" <zhiqiang.hou@nxp.com>,
+        "stable@vger.kernel.org" <stable@vger.kernel.org>
+Subject: [PATCHv2] PCI/Layerscape: fix wrongly invoking of outbound window
  disable accessor
-Thread-Topic: [PATCH] PCI/Layerscape: fix wrongly invoking of outbound window
- disable accessor
-Thread-Index: AQHUbEA3bQ9DeLR/KUmsy7zvrJJQ86Uv+XIAgADQnOCABacBAIANXmFg
-Date:   Wed, 7 Nov 2018 04:41:49 +0000
-Message-ID: <AM6PR04MB5781A39406AC16F7CE5D727D84C40@AM6PR04MB5781.eurprd04.prod.outlook.com>
-References: <20181025085323.8819-1-Zhiqiang.Hou@nxp.com>
- <20181025134522.GE214775@bhelgaas-glaptop.roam.corp.google.com>
- <AM3PR04MB121709BD837D4E5EA3E28B1A84F00@AM3PR04MB1217.eurprd04.prod.outlook.com>
- <20181029163102.GA13681@bhelgaas-glaptop.roam.corp.google.com>
-In-Reply-To: <20181029163102.GA13681@bhelgaas-glaptop.roam.corp.google.com>
+Thread-Topic: [PATCHv2] PCI/Layerscape: fix wrongly invoking of outbound
+ window disable accessor
+Thread-Index: AQHUdlkWDR7SdoKvBk2auCyGdas4rQ==
+Date:   Wed, 7 Nov 2018 05:16:49 +0000
+Message-ID: <20181107051647.12242-1-Zhiqiang.Hou@nxp.com>
 Accept-Language: zh-CN, en-US
 Content-Language: en-US
 X-MS-Has-Attach: 
 X-MS-TNEF-Correlator: 
+x-clientproxiedby: HK0PR03CA0021.apcprd03.prod.outlook.com
+ (2603:1096:203:2e::33) To AM6PR04MB5781.eurprd04.prod.outlook.com
+ (2603:10a6:20b:aa::16)
 authentication-results: spf=none (sender IP is )
  smtp.mailfrom=zhiqiang.hou@nxp.com; 
+x-ms-exchange-messagesentrepresentingtype: 1
 x-originating-ip: [119.31.174.73]
 x-ms-publictraffictype: Email
-x-microsoft-exchange-diagnostics: 1;AM6PR04MB4056;6:aZ81gGqpNx7vQ+4KUwe7ojOgTu5JlZdGTkuMJux+jR1DICINdz5p7YKTXwhDqeXLYNbg+q4vKzkggWaHpRfGer7p40FmStnRsCvZV5vGHT90oTQtKBzAyj5XOHw9o4ADxFqz32ogzyBOiPNvzjek2LBcnJvKVJtON54XovB5bF08/jydgVsSbWlsu7DrvLZ/5Z4EGveY8iJy3HfiKRPrXyHsK5cUF8B/RcnGeFCVDgkrKReTacUR19198aNPmM+FVlUn866QW8VVAknxqaMxJvEiaKHenjgxz9tpHsI9rA6QQZVH4ie2dI2zS5A8uOXr1rfGxvrG0cTl83Dvs5ZrrDojF8Vb6YUsUai0FDqBf1xcxtcdc1D+/znLcMoou2jTbnTe+srMqbNRgnH6FJB6BjAsqw+EOd2RmYPi909aLM92VVlZgbBrnvCQZFKR4pbKyme1ZonAOrM2I5wolhHTYg==;5:w2eM99iM/qwDbgAhRCMvVcE74kKweMGydLW/33hB/7JmptmSkzm4kHPPjmJE0XRPCHDyRY5VywKN2ALXcQfE2EIK8EXVDqm8FrBtTAGV8UXap7tUh1DhdEFMspngBDMAcp9ht/Cpx2YB8IdXOHT1/etz2hzeu0EkcL3R0KT3KnA=;7:Ps8qxtHHVMdtnM8T5bgY7cAlkfecYBk8xQQq8NH+H2fHC3RLMd8eIow7SqdqTQAGMZhic8iMHxkVaYB/Pr04oxW1J2Wec7rO0CXGKQoKZMFjKz9t+fS6ulp0RLJ4nlEN4nvMFdfXv6WlNaAAB56x0Q==
-x-ms-exchange-antispam-srfa-diagnostics: SOS;
-x-ms-office365-filtering-correlation-id: 415bd389-96f9-40f8-ea48-08d6446b54ee
+x-microsoft-exchange-diagnostics: 1;AM6PR04MB3973;6:dyUxbCoAf53azRbeBpDBNAUr7igz5bLjjHLSeCYEeSQFIkEvLxVKo3Qxg/uSdOHaHtBx1UmIA/VPOAVSCkdaLmGCFphpxKgeMcT8Z7/8qsBdf1m4B8RtsUVDnuzd89sR6WUo3c5q7hJehywu1eGe4Kl6lu0QsNtTH+Wh2JsA5MXnSEZrhP0zVcK4V0YGNAHpmit8EGTRHRgUYbgxWLrdmXS/vhh/rBHe+Vy4rpvIDsiBBPvyGyA1NJKkkCBzaGHKxdpS/4+xU8DbcHzhwN1HNj+Tvzek3rLVl6ibqwFjwct+qNBA/Bc19E0HoPtfEz+z5P/oltHr+jhYfwcRGVT7hRZjPowt+MhE72uiBHHo4YkdOOv/1i3/4IB6rMThkyOkn7gmIWprNVzoZ77NuY4k28j2dRj0kKCGNqGsKLeeHh+x/h+Nr0bDCo9Xed/aZdlIIm1mRwh6/j0S+6u6OX5vMQ==;5:d2Rp66csFFFzxYbfzCwNw5pdOmlFmy3tkRo3mr0fnR8JdvKuGQ/CEV1fy8f6Ne0n2McgMBXUqtjUHza+tADCRME8wgUiAPqFMnqdW900NM3X2s11FGpqDnL3laCq7W4nwwPrNsSbjSkN10vn+r5MhsMNTlfdtTGbPb/A+cKvh50=;7:DEJXStXc6/YyrVC9EsGKVzKUQ3ioNFAWoxCkrQuTJqWqJDva8qylYaCzl/4APtFohwlUErFBEnRF+M6IJloKeyOzN9sSY1CRyeJrwFmgR9qpETlQXRZ1qdCfVX9cLbTqrh+l0RnFd5oTmHRmhdD2ZA==
+x-ms-office365-filtering-correlation-id: 74976380-457d-48fc-91d9-08d64470386d
 x-ms-office365-filtering-ht: Tenant
-x-microsoft-antispam: BCL:0;PCL:0;RULEID:(7020095)(4652040)(8989299)(5600074)(711020)(4618075)(4534185)(4627221)(201703031133081)(201702281549075)(8990200)(2017052603328)(7153060)(7193020);SRVR:AM6PR04MB4056;
-x-ms-traffictypediagnostic: AM6PR04MB4056:
-x-microsoft-antispam-prvs: <AM6PR04MB40561E94AD3D99ACD3DC3F2A84C40@AM6PR04MB4056.eurprd04.prod.outlook.com>
-x-exchange-antispam-report-test: UriScan:(9452136761055)(211936372134217)(180628864354917)(45079756050767)(189930954265078)(185117386973197);
+x-microsoft-antispam: BCL:0;PCL:0;RULEID:(7020095)(4652040)(8989299)(5600074)(711020)(4618075)(4534185)(4627221)(201703031133081)(201702281549075)(8990200)(2017052603328)(7153060)(7193020);SRVR:AM6PR04MB3973;
+x-ms-traffictypediagnostic: AM6PR04MB3973:
+x-microsoft-antispam-prvs: <AM6PR04MB3973B1144DBAB9D41BC96CC384C40@AM6PR04MB3973.eurprd04.prod.outlook.com>
+x-exchange-antispam-report-test: UriScan:(9452136761055)(185117386973197);
 x-ms-exchange-senderadcheck: 1
-x-exchange-antispam-report-cfa-test: BCL:0;PCL:0;RULEID:(8211001083)(6040522)(2401047)(5005006)(8121501046)(10201501046)(3002001)(93006095)(93001095)(3231382)(944501410)(52105095)(6055026)(148016)(149066)(150057)(6041310)(20161123564045)(201703131423095)(201702281528075)(20161123555045)(201703061421075)(201703061406153)(20161123558120)(20161123562045)(20161123560045)(201708071742011)(7699051)(76991095);SRVR:AM6PR04MB4056;BCL:0;PCL:0;RULEID:;SRVR:AM6PR04MB4056;
+x-exchange-antispam-report-cfa-test: BCL:0;PCL:0;RULEID:(8211001083)(6040522)(2401047)(8121501046)(5005006)(3231382)(944501410)(52105095)(93006095)(93001095)(3002001)(10201501046)(6055026)(148016)(149066)(150057)(6041310)(20161123558120)(201703131423095)(201702281528075)(20161123555045)(201703061421075)(201703061406153)(20161123560045)(20161123564045)(20161123562045)(201708071742011)(7699051)(76991095);SRVR:AM6PR04MB3973;BCL:0;PCL:0;RULEID:;SRVR:AM6PR04MB3973;
 x-forefront-prvs: 08497C3D99
-x-forefront-antispam-report: SFV:NSPM;SFS:(10009020)(396003)(366004)(39860400002)(136003)(376002)(346002)(199004)(13464003)(189003)(5660300001)(26005)(54906003)(99286004)(256004)(476003)(316002)(55016002)(486006)(186003)(4326008)(6306002)(9686003)(105586002)(6916009)(6436002)(106356001)(71190400001)(71200400001)(93886005)(97736004)(2900100001)(446003)(11346002)(86362001)(6506007)(53546011)(76176011)(7696005)(102836004)(45080400002)(81166006)(2906002)(81156014)(478600001)(66066001)(33656002)(966005)(229853002)(68736007)(8676002)(3846002)(6116002)(7736002)(8936002)(14454004)(6246003)(25786009)(53936002)(74316002)(305945005);DIR:OUT;SFP:1101;SCL:1;SRVR:AM6PR04MB4056;H:AM6PR04MB5781.eurprd04.prod.outlook.com;FPR:;SPF:None;LANG:en;PTR:InfoNoRecords;A:1;MX:1;
+x-forefront-antispam-report: SFV:NSPM;SFS:(10009020)(39860400002)(396003)(376002)(136003)(366004)(346002)(189003)(199004)(110136005)(54906003)(1076002)(71200400001)(2201001)(53936002)(71190400001)(186003)(2501003)(2906002)(102836004)(316002)(86362001)(6512007)(14454004)(6116002)(476003)(99286004)(2616005)(1857600001)(3846002)(6436002)(97736004)(14444005)(8936002)(36756003)(68736007)(81156014)(81166006)(26005)(106356001)(105586002)(486006)(8676002)(256004)(6486002)(7736002)(2900100001)(305945005)(4326008)(66066001)(386003)(5660300001)(25786009)(6506007)(52116002)(478600001);DIR:OUT;SFP:1101;SCL:1;SRVR:AM6PR04MB3973;H:AM6PR04MB5781.eurprd04.prod.outlook.com;FPR:;SPF:None;LANG:en;PTR:InfoNoRecords;MX:1;A:1;
 received-spf: None (protection.outlook.com: nxp.com does not designate
  permitted sender hosts)
-x-microsoft-antispam-message-info: pmMUBdreihrPLtzEYLr/DuRuo9f3wqFxjYXcHFhMKxg53d3Oh0TFmzXpNDg4nwXEQSubuHZlppKMLpb4NYBU6dzYZArE2rqp7N9fDeBUpstuijp+6MHfBJnRDDYel5KW9FbU3RdzlClSx/Thwb6kJIXPKFE6eIZ1flg44WKFBBXfdipr7mm42Issxtedr1O3v6xmSB3Fg54Z7wUO7Yhwoiy2fQ9HCsIZSexc/8VitqWald8Znn7rsvbrTSFjZO2+XUut00jMz9UQ8ul8vMCfgHBQiE+nst/Bfg81QpWwacD45Ley6eu9covAAg8AlcPYcolpJghmSKuj6kADQMK7188o2H/NNSL0aazCejsUdjA=
+x-microsoft-antispam-message-info: 49c30XUqcJ7kzS/8QBS4bbd7DBFkn7ZiVFsc+lP16GK38y8aOKe5tFE8vFQY/+QbnGP+oYmm4kc6dtMbYQ+jbEZTK6f4Y1oHbq2NAvh4oBhmBilRuSVgqgzJFLdj5R6xB6+najDVCkZ5GxVG3y/xJ5UlsrVD7R1oBrobM+3pMmohmwZCwbmdVaRm2fDbXeudw2rzvWXrtbP6iptG+HFmlRW5NiixhrFqpZVwLU6lF0PG0leWNxpq0wWHHFvW2iegvc+65oiVe1Qb/WMU59zEsdQyU1HCkUeM1e+mr2TuzcwvkeQzYRbe7TCWa0EbDw05+cj7t7/uQL0r/vBbejgv0iBHtar4+WaEjv2OIHa2JmQ=
 spamdiagnosticoutput: 1:99
 spamdiagnosticmetadata: NSPM
-Content-Type: text/plain; charset="gb2312"
-Content-Transfer-Encoding: base64
+Content-Type: text/plain; charset="iso-8859-1"
+Content-Transfer-Encoding: quoted-printable
 MIME-Version: 1.0
 X-OriginatorOrg: nxp.com
-X-MS-Exchange-CrossTenant-Network-Message-Id: 415bd389-96f9-40f8-ea48-08d6446b54ee
-X-MS-Exchange-CrossTenant-originalarrivaltime: 07 Nov 2018 04:41:49.5996
+X-MS-Exchange-CrossTenant-Network-Message-Id: 74976380-457d-48fc-91d9-08d64470386d
+X-MS-Exchange-CrossTenant-originalarrivaltime: 07 Nov 2018 05:16:49.8168
  (UTC)
 X-MS-Exchange-CrossTenant-fromentityheader: Hosted
 X-MS-Exchange-CrossTenant-id: 686ea1d3-bc2b-4c6f-a92c-d99c5c301635
-X-MS-Exchange-Transport-CrossTenantHeadersStamped: AM6PR04MB4056
+X-MS-Exchange-Transport-CrossTenantHeadersStamped: AM6PR04MB3973
 Sender: linux-pci-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-SGkgQmpvcm4sDQoNClRoYW5rcyBhIGxvdCBmb3IgeW91ciBndWlkZSENCkknbGwgdGFnIGl0IGZv
-ciBzdGFibGUgaW4gdjIuDQoNClRoYW5rcywNClpoaXFpYW5nDQoNCj4gLS0tLS1PcmlnaW5hbCBN
-ZXNzYWdlLS0tLS0NCj4gRnJvbTogQmpvcm4gSGVsZ2FhcyA8aGVsZ2Fhc0BrZXJuZWwub3JnPg0K
-PiBTZW50OiAyMDE4xOoxMNTCMzDI1SAwOjMxDQo+IFRvOiBaLnEuIEhvdSA8emhpcWlhbmcuaG91
-QG54cC5jb20+DQo+IENjOiBsaW51eC1wY2lAdmdlci5rZXJuZWwub3JnOyBsaW51eC1rZXJuZWxA
-dmdlci5rZXJuZWwub3JnOw0KPiBiaGVsZ2Fhc0Bnb29nbGUuY29tOyBsb3JlbnpvLnBpZXJhbGlz
-aUBhcm0uY29tOyBSb3kgWmFuZw0KPiA8cm95LnphbmdAbnhwLmNvbT47IE0uaC4gTGlhbiA8bWlu
-Z2h1YW4ubGlhbkBueHAuY29tPg0KPiBTdWJqZWN0OiBSZTogW1BBVENIXSBQQ0kvTGF5ZXJzY2Fw
-ZTogZml4IHdyb25nbHkgaW52b2tpbmcgb2Ygb3V0Ym91bmQNCj4gd2luZG93IGRpc2FibGUgYWNj
-ZXNzb3INCj4gDQo+IE9uIEZyaSwgT2N0IDI2LCAyMDE4IGF0IDAyOjIwOjIxQU0gKzAwMDAsIFou
-cS4gSG91IHdyb3RlOg0KPiA+ID4gRnJvbTogQmpvcm4gSGVsZ2FhcyA8aGVsZ2Fhc0BrZXJuZWwu
-b3JnPg0KPiANCj4gPiA+IEhvbHkgY293LCB0aGlzIGhhcyBiZWVuIGJyb2tlbiBzaW5jZSB2NC4x
-NC4gIElmIGZpeGluZyB0aGlzIG1ha2VzIGENCj4gPiA+IGRpZmZlcmVuY2UsIHlvdSBtaWdodCB3
-YW50IHRvIHRhZyBpdCBmb3Igc3RhYmxlLg0KPiA+DQo+ID4gSG93IGNhbiBJIHRhZyBpdCBmb3Ig
-c3RhYmxlPw0KPiANCj4gaHR0cHM6Ly9lbWVhMDEuc2FmZWxpbmtzLnByb3RlY3Rpb24ub3V0bG9v
-ay5jb20vP3VybD1odHRwcyUzQSUyRiUyRmdpdC5rDQo+IGVybmVsLm9yZyUyRmNnaXQlMkZsaW51
-eCUyRmtlcm5lbCUyRmdpdCUyRnRvcnZhbGRzJTJGbGludXguZ2l0JTJGdHJlZSUNCj4gMkZEb2N1
-bWVudGF0aW9uJTJGcHJvY2VzcyUyRnN0YWJsZS1rZXJuZWwtcnVsZXMucnN0JmFtcDtkYXRhPTAy
-JTdDMDENCj4gJTdDemhpcWlhbmcuaG91JTQwbnhwLmNvbSU3Q2QzYmI2ZTI2ZTJiZDRkYzA2YzY4
-MDhkNjNkYmJlZTA2JTcNCj4gQzY4NmVhMWQzYmMyYjRjNmZhOTJjZDk5YzVjMzAxNjM1JTdDMCU3
-QzAlN0M2MzY3NjQyNzQ2OTczMjE4Mw0KPiAwJmFtcDtzZGF0YT1rNkRGMlUyUCUyRng1aWF5bDI5
-cWhDM2xscUlFbyUyQm5PcTFkTmRoUmdGbEFzZyUzRCYNCj4gYW1wO3Jlc2VydmVkPTANCg==
+From: Hou Zhiqiang <Zhiqiang.Hou@nxp.com>
+
+The order of parameters is not correct when invoking the outbound
+window disable routine.
+
+Fixes: commit 4a2745d760fac ("PCI: layerscape: Disable outbound
+windows configured by bootloader").
+
+Cc: stable@vger.kernel.org
+Signed-off-by: Hou Zhiqiang <Zhiqiang.Hou@nxp.com>
+---
+V2:
+ - Tagged this patch for stable.
+ - Reworded the commit description.
+
+ drivers/pci/controller/dwc/pci-layerscape.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/drivers/pci/controller/dwc/pci-layerscape.c b/drivers/pci/cont=
+roller/dwc/pci-layerscape.c
+index 3724d3ef7008..7aa9a82b7ebd 100644
+--- a/drivers/pci/controller/dwc/pci-layerscape.c
++++ b/drivers/pci/controller/dwc/pci-layerscape.c
+@@ -88,7 +88,7 @@ static void ls_pcie_disable_outbound_atus(struct ls_pcie =
+*pcie)
+ 	int i;
+=20
+ 	for (i =3D 0; i < PCIE_IATU_NUM; i++)
+-		dw_pcie_disable_atu(pcie->pci, DW_PCIE_REGION_OUTBOUND, i);
++		dw_pcie_disable_atu(pcie->pci, i, DW_PCIE_REGION_OUTBOUND);
+ }
+=20
+ static int ls1021_pcie_link_up(struct dw_pcie *pci)
+--=20
+2.17.1
+
