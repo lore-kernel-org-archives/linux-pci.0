@@ -2,146 +2,213 @@ Return-Path: <SRS0=4zPb=NS=vger.kernel.org=linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-1.1 required=3.0 tests=DKIMWL_WL_MED,DKIM_SIGNED,
-	DKIM_VALID,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_PASS
-	autolearn=unavailable autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-9.0 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_PASS,URIBL_BLOCKED,
+	USER_AGENT_GIT autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id D43A9C46464
-	for <linux-pci@archiver.kernel.org>; Wed,  7 Nov 2018 19:50:13 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 2CF93C0044C
+	for <linux-pci@archiver.kernel.org>; Wed,  7 Nov 2018 19:59:02 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 9426320862
-	for <linux-pci@archiver.kernel.org>; Wed,  7 Nov 2018 19:50:13 +0000 (UTC)
-Authentication-Results: mail.kernel.org;
-	dkim=pass (1024-bit key) header.d=amdcloud.onmicrosoft.com header.i=@amdcloud.onmicrosoft.com header.b="Snw9eUhA"
-DMARC-Filter: OpenDMARC Filter v1.3.2 mail.kernel.org 9426320862
-Authentication-Results: mail.kernel.org; dmarc=none (p=none dis=none) header.from=amd.com
+	by mail.kernel.org (Postfix) with ESMTP id EED3320818
+	for <linux-pci@archiver.kernel.org>; Wed,  7 Nov 2018 19:59:01 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.3.2 mail.kernel.org EED3320818
+Authentication-Results: mail.kernel.org; dmarc=fail (p=none dis=none) header.from=linux.intel.com
 Authentication-Results: mail.kernel.org; spf=none smtp.mailfrom=linux-pci-owner@vger.kernel.org
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726252AbeKHFVz (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Thu, 8 Nov 2018 00:21:55 -0500
-Received: from mail-dm3nam03on0070.outbound.protection.outlook.com ([104.47.41.70]:33301
-        "EHLO NAM03-DM3-obe.outbound.protection.outlook.com"
-        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1726362AbeKHFVz (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Thu, 8 Nov 2018 00:21:55 -0500
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
- d=amdcloud.onmicrosoft.com; s=selector1-amd-com;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=TBLgHP8Qg23wPrkT92c+y+QQN3nVUImta2nNQDclVNM=;
- b=Snw9eUhABwxS3Yth4PUCbb+Bk0+DRSI9qdp0lWi+eAQ/88D5Nh3BGMz+ib0KbXE7HhJ+JzHYS515YzG8qFnsrk1+cxyKtsbUEPkXlIid6KyLs71b4Ju3iZ1iL5MQoiy/bIRdwstZq3q28FC5CM81Y6qiHwpD+3mFOcooemK0IA4=
-Received: from CY4PR12MB1768.namprd12.prod.outlook.com (10.175.63.10) by
- CY4PR12MB1703.namprd12.prod.outlook.com (10.175.62.137) with Microsoft SMTP
- Server (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- 15.20.1294.21; Wed, 7 Nov 2018 19:50:01 +0000
-Received: from CY4PR12MB1768.namprd12.prod.outlook.com
- ([fe80::82f:4b8a:fd43:aab3]) by CY4PR12MB1768.namprd12.prod.outlook.com
- ([fe80::82f:4b8a:fd43:aab3%8]) with mapi id 15.20.1294.034; Wed, 7 Nov 2018
- 19:50:01 +0000
-From:   "Woods, Brian" <Brian.Woods@amd.com>
-To:     Borislav Petkov <bp@alien8.de>
-CC:     Bjorn Helgaas <helgaas@kernel.org>,
-        "Woods, Brian" <Brian.Woods@amd.com>,
-        Thomas Gleixner <tglx@linutronix.de>,
-        Ingo Molnar <mingo@redhat.com>,
-        "H. Peter Anvin" <hpa@zytor.com>,
-        "x86@kernel.org" <x86@kernel.org>,
-        Clemens Ladisch <clemens@ladisch.de>,
-        Jean Delvare <jdelvare@suse.com>,
-        Guenter Roeck <linux@roeck-us.net>, Pu Wen <puwen@hygon.cn>,
-        Jia Zhang <qianyue.zj@alibaba-inc.com>,
-        Takashi Iwai <tiwai@suse.de>,
-        Andy Whitcroft <apw@canonical.com>,
-        Colin Ian King <colin.king@canonical.com>,
-        Myron Stowe <myron.stowe@redhat.com>,
-        Sumeet Pawnikar <sumeet.r.pawnikar@intel.com>,
-        Srinivas Pandruvada <srinivas.pandruvada@linux.intel.com>,
-        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-        "linux-hwmon@vger.kernel.org" <linux-hwmon@vger.kernel.org>,
-        "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
-Subject: Re: [PATCH 2/4] x86/amd_nb: add support for newer PCI topologies
-Thread-Topic: [PATCH 2/4] x86/amd_nb: add support for newer PCI topologies
-Thread-Index: AQHUctdtTs18UoG4rUKlKIFT94W0kqU9IkqagASZzYCAAAMiAIABjnMAgAAFC4CAABZFgIAApxAAgAByOsGAAD4qgA==
-Date:   Wed, 7 Nov 2018 19:50:01 +0000
-Message-ID: <20181107194955.GA19346@amd.com>
-References: <20181102195925.GB160487@google.com>
- <20181102232948.GC26770@zn.tnic> <20181105214537.GA19420@google.com>
- <20181105215650.GG26868@zn.tnic> <20181106214256.GA65443@google.com>
- <20181106220059.GA4139@zn.tnic> <20181106232040.GA85755@google.com>
- <20181107091838.GA10835@zn.tnic> <20181107133856.GA238955@google.com>
- <20181107160707.GA14169@zn.tnic>
-In-Reply-To: <20181107160707.GA14169@zn.tnic>
-Accept-Language: en-US
-Content-Language: en-US
-X-MS-Has-Attach: 
-X-MS-TNEF-Correlator: 
-x-clientproxiedby: SN1PR12CA0056.namprd12.prod.outlook.com
- (2603:10b6:802:20::27) To CY4PR12MB1768.namprd12.prod.outlook.com
- (2603:10b6:903:122::10)
-authentication-results: spf=none (sender IP is )
- smtp.mailfrom=Brian.Woods@amd.com; 
-x-ms-exchange-messagesentrepresentingtype: 1
-x-originating-ip: [165.204.77.1]
-x-ms-publictraffictype: Email
-x-microsoft-exchange-diagnostics: 1;CY4PR12MB1703;20:1UZOaMsVTrOo01BXBYOnOPZDbVad/sgqwKBKBRvONdBHgNwiJhq31itj6gwDYBm2X586RPo94MTntgw1mQ8FU1z9FyrKH3CLjgYyMc+OGcWefCTxhp9QyEtBlMkn50pYO2wf6n8zeb6+vkVc0KB1W+uYuxrCP8YooeBjifaGLJa6FP2h766KM27PD4L8GDWwW+bwZJvZou5wDeWTDf1w3tE+r2JH2ft3EwgjQzc/qLhx9FyJyE8pGB0migZp//r5
-x-ms-office365-filtering-correlation-id: 293c924a-2d00-45cd-823b-08d644ea344b
-x-ms-office365-filtering-ht: Tenant
-x-microsoft-antispam: BCL:0;PCL:0;RULEID:(7020095)(4652040)(8989299)(5600074)(711020)(4618075)(4534185)(4627221)(201703031133081)(201702281549075)(8990200)(2017052603328)(7153060)(7193020);SRVR:CY4PR12MB1703;
-x-ms-traffictypediagnostic: CY4PR12MB1703:
-x-microsoft-antispam-prvs: <CY4PR12MB17030A4789F7A3FAC0BFF522E5C40@CY4PR12MB1703.namprd12.prod.outlook.com>
-x-exchange-antispam-report-test: UriScan:;
-x-ms-exchange-senderadcheck: 1
-x-exchange-antispam-report-cfa-test: BCL:0;PCL:0;RULEID:(8211001083)(6040522)(2401047)(8121501046)(5005006)(93006095)(93001095)(10201501046)(3002001)(3231382)(944501410)(52105095)(6055026)(148016)(149066)(150057)(6041310)(20161123564045)(20161123560045)(20161123562045)(20161123558120)(201703131423095)(201702281528075)(20161123555045)(201703061421075)(201703061406153)(201708071742011)(7699051)(76991095);SRVR:CY4PR12MB1703;BCL:0;PCL:0;RULEID:;SRVR:CY4PR12MB1703;
-x-forefront-prvs: 08497C3D99
-x-forefront-antispam-report: SFV:NSPM;SFS:(10009020)(979002)(346002)(376002)(366004)(39860400002)(136003)(396003)(199004)(189003)(52314003)(8676002)(71200400001)(81166006)(81156014)(6486002)(6512007)(14454004)(52116002)(7736002)(76176011)(71190400001)(8936002)(186003)(1076002)(2906002)(229853002)(256004)(72206003)(102836004)(25786009)(386003)(6506007)(3846002)(6436002)(53936002)(2616005)(93886005)(6116002)(11346002)(305945005)(6246003)(7416002)(54906003)(316002)(33656002)(446003)(2900100001)(6916009)(26005)(97736004)(478600001)(4326008)(486006)(105586002)(66066001)(106356001)(476003)(5660300001)(86362001)(36756003)(68736007)(99286004)(969003)(989001)(999001)(1009001)(1019001);DIR:OUT;SFP:1101;SCL:1;SRVR:CY4PR12MB1703;H:CY4PR12MB1768.namprd12.prod.outlook.com;FPR:;SPF:None;LANG:en;PTR:InfoNoRecords;A:1;MX:1;
-received-spf: None (protection.outlook.com: amd.com does not designate
- permitted sender hosts)
-x-microsoft-antispam-message-info: MUwJAPDK9womBLhVaYDopKUaxnH9qh0LZzi3RF/kgr5Y2afO1+LFIelg0s1qQNlpL5vEDAVvQH+omE7dwa+pNIpmMVJ0hTRFzC69DkbDBbJSUVhc+ua4jGgbJK3ARCw2WudCHyStD6FbVV2Dz+wgUCN9jbBWXXx5AXcUEK4UKk87nlwLGp1bqZA16LWa3WyEBT/JNcqjKlx8hdJaX5eq/LW/7Hx39aLvd1EmJUQpN2JsvJda5G0HKO7Ux8KpMavQdwHJYe/4bm42mLLfrLGhEjcLI0kXjvRNr9nVJu0Ota8tp8STIpLxn6K7Sr+A6xVYiL8up6I0+dkuevRew3E9Yxq8J+1mSP07thKX1D3Rltk=
-spamdiagnosticoutput: 1:99
-spamdiagnosticmetadata: NSPM
-Content-Type: text/plain; charset="us-ascii"
-Content-ID: <7998EECAD1E2BA468FA787687FFC6F70@namprd12.prod.outlook.com>
-Content-Transfer-Encoding: quoted-printable
+        id S1726283AbeKHFax (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Thu, 8 Nov 2018 00:30:53 -0500
+Received: from mga11.intel.com ([192.55.52.93]:41325 "EHLO mga11.intel.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1725838AbeKHFax (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Thu, 8 Nov 2018 00:30:53 -0500
+X-Amp-Result: SKIPPED(no attachment in message)
+X-Amp-File-Uploaded: False
+Received: from fmsmga002.fm.intel.com ([10.253.24.26])
+  by fmsmga102.fm.intel.com with ESMTP/TLS/DHE-RSA-AES256-GCM-SHA384; 07 Nov 2018 11:59:00 -0800
+X-ExtLoop1: 1
+X-IronPort-AV: E=Sophos;i="5.54,476,1534834800"; 
+   d="scan'208";a="102417620"
+Received: from black.fi.intel.com ([10.237.72.28])
+  by fmsmga002.fm.intel.com with ESMTP; 07 Nov 2018 11:58:58 -0800
+Received: by black.fi.intel.com (Postfix, from userid 1003)
+        id 0A801E6; Wed,  7 Nov 2018 21:58:56 +0200 (EET)
+From:   Andy Shevchenko <andriy.shevchenko@linux.intel.com>
+To:     Vinod Koul <vkoul@kernel.org>,
+        Linus Walleij <linus.walleij@linaro.org>,
+        Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+        "David S. Miller" <davem@davemloft.net>,
+        Mark Brown <broonie@kernel.org>,
+        Felipe Balbi <balbi@kernel.org>, linux-kernel@vger.kernel.org,
+        Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org
+Cc:     Andy Shevchenko <andriy.shevchenko@linux.intel.com>
+Subject: [PATCH v1] PCI: Move Rohm vendor ID to generic list
+Date:   Wed,  7 Nov 2018 21:58:56 +0200
+Message-Id: <20181107195856.43223-1-andriy.shevchenko@linux.intel.com>
+X-Mailer: git-send-email 2.19.1
 MIME-Version: 1.0
-X-OriginatorOrg: amd.com
-X-MS-Exchange-CrossTenant-Network-Message-Id: 293c924a-2d00-45cd-823b-08d644ea344b
-X-MS-Exchange-CrossTenant-originalarrivaltime: 07 Nov 2018 19:50:01.4267
- (UTC)
-X-MS-Exchange-CrossTenant-fromentityheader: Hosted
-X-MS-Exchange-CrossTenant-id: 3dd8961f-e488-4e60-8e11-a82d994e183d
-X-MS-Exchange-Transport-CrossTenantHeadersStamped: CY4PR12MB1703
+Content-Transfer-Encoding: 8bit
 Sender: linux-pci-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-On Wed, Nov 07, 2018 at 05:07:07PM +0100, Borislav Petkov wrote:
-> Thanks for explaining.
->=20
-> So I don't know about temp sensors - I'm talking about amd_nb which is
-> something... well, I explained already what it is in my previous mail so
-> I won't repeat myself.
->=20
-> Anyway, if there is such a PNP ID device - and I believe I have stumbled
-> upon some blurb about it in the BKDGs - which says "this device
-> represents the PCI device IDs of a CPU" and if that can be used to
-> register amd_nb through it, then sure, I don't see why not.
->=20
-> This way, when new CPU comes out and the same PNP ID device is present,
-> amd_nb would load, sure.
->=20
-> Maybe Brian knows more on the subject...
->=20
-> --=20
-> Regards/Gruss,
->     Boris.
->=20
-> Good mailing practices for 400: avoid top-posting and trim the reply.
+Move the Rohm vendor ID to pci_ids.h from dozen of drivers.
 
-More on exactly what?
+Signed-off-by: Andy Shevchenko <andriy.shevchenko@linux.intel.com>
+---
 
-If it's the PNP ID device, if you can let me know where in the BKDG you
-found it before so I can look for keywords etc?  Because I'd need to
-find those for k8 onwards so.
+I believe the best chance to get it merged and be less intrusive to ongoing
+work is through PCI subsystem as a _fix_ for v4.20.
 
---=20
-Brian Woods
+ drivers/dma/pch_dma.c                                | 1 -
+ drivers/gpio/gpio-ml-ioh.c                           | 2 --
+ drivers/gpio/gpio-pch.c                              | 1 -
+ drivers/i2c/busses/i2c-eg20t.c                       | 1 -
+ drivers/misc/pch_phub.c                              | 1 -
+ drivers/net/ethernet/oki-semi/pch_gbe/pch_gbe_main.c | 7 ++-----
+ drivers/spi/spi-topcliff-pch.c                       | 1 -
+ drivers/tty/serial/pch_uart.c                        | 2 --
+ drivers/usb/gadget/udc/pch_udc.c                     | 1 -
+ include/linux/pci_ids.h                              | 2 ++
+ 10 files changed, 4 insertions(+), 15 deletions(-)
+
+diff --git a/drivers/dma/pch_dma.c b/drivers/dma/pch_dma.c
+index afd8f27bda96..538b6e0e17bb 100644
+--- a/drivers/dma/pch_dma.c
++++ b/drivers/dma/pch_dma.c
+@@ -972,7 +972,6 @@ static void pch_dma_remove(struct pci_dev *pdev)
+ }
+ 
+ /* PCI Device ID of DMA device */
+-#define PCI_VENDOR_ID_ROHM             0x10DB
+ #define PCI_DEVICE_ID_EG20T_PCH_DMA_8CH        0x8810
+ #define PCI_DEVICE_ID_EG20T_PCH_DMA_4CH        0x8815
+ #define PCI_DEVICE_ID_ML7213_DMA1_8CH	0x8026
+diff --git a/drivers/gpio/gpio-ml-ioh.c b/drivers/gpio/gpio-ml-ioh.c
+index 51c7d1b84c2e..0c076dce9e17 100644
+--- a/drivers/gpio/gpio-ml-ioh.c
++++ b/drivers/gpio/gpio-ml-ioh.c
+@@ -31,8 +31,6 @@
+ 
+ #define IOH_IRQ_BASE		0
+ 
+-#define PCI_VENDOR_ID_ROHM             0x10DB
+-
+ struct ioh_reg_comn {
+ 	u32	ien;
+ 	u32	istatus;
+diff --git a/drivers/gpio/gpio-pch.c b/drivers/gpio/gpio-pch.c
+index ffce0ab912ed..8c7f3d20e30e 100644
+--- a/drivers/gpio/gpio-pch.c
++++ b/drivers/gpio/gpio-pch.c
+@@ -524,7 +524,6 @@ static int pch_gpio_resume(struct pci_dev *pdev)
+ #define pch_gpio_resume NULL
+ #endif
+ 
+-#define PCI_VENDOR_ID_ROHM             0x10DB
+ static const struct pci_device_id pch_gpio_pcidev_id[] = {
+ 	{ PCI_DEVICE(PCI_VENDOR_ID_INTEL, 0x8803) },
+ 	{ PCI_DEVICE(PCI_VENDOR_ID_ROHM, 0x8014) },
+diff --git a/drivers/i2c/busses/i2c-eg20t.c b/drivers/i2c/busses/i2c-eg20t.c
+index 835d54ac2971..231675b10376 100644
+--- a/drivers/i2c/busses/i2c-eg20t.c
++++ b/drivers/i2c/busses/i2c-eg20t.c
+@@ -177,7 +177,6 @@ static wait_queue_head_t pch_event;
+ static DEFINE_MUTEX(pch_mutex);
+ 
+ /* Definition for ML7213 by LAPIS Semiconductor */
+-#define PCI_VENDOR_ID_ROHM		0x10DB
+ #define PCI_DEVICE_ID_ML7213_I2C	0x802D
+ #define PCI_DEVICE_ID_ML7223_I2C	0x8010
+ #define PCI_DEVICE_ID_ML7831_I2C	0x8817
+diff --git a/drivers/misc/pch_phub.c b/drivers/misc/pch_phub.c
+index 540845651b8c..309703e9c42e 100644
+--- a/drivers/misc/pch_phub.c
++++ b/drivers/misc/pch_phub.c
+@@ -64,7 +64,6 @@
+ #define CLKCFG_UARTCLKSEL			(1 << 18)
+ 
+ /* Macros for ML7213 */
+-#define PCI_VENDOR_ID_ROHM			0x10db
+ #define PCI_DEVICE_ID_ROHM_ML7213_PHUB		0x801A
+ 
+ /* Macros for ML7223 */
+diff --git a/drivers/net/ethernet/oki-semi/pch_gbe/pch_gbe_main.c b/drivers/net/ethernet/oki-semi/pch_gbe/pch_gbe_main.c
+index 43c0c10dfeb7..3a4225837049 100644
+--- a/drivers/net/ethernet/oki-semi/pch_gbe/pch_gbe_main.c
++++ b/drivers/net/ethernet/oki-semi/pch_gbe/pch_gbe_main.c
+@@ -27,7 +27,6 @@
+ #define DRV_VERSION     "1.01"
+ const char pch_driver_version[] = DRV_VERSION;
+ 
+-#define PCI_DEVICE_ID_INTEL_IOH1_GBE	0x8802		/* Pci device ID */
+ #define PCH_GBE_MAR_ENTRIES		16
+ #define PCH_GBE_SHORT_PKT		64
+ #define DSC_INIT16			0xC000
+@@ -37,11 +36,9 @@ const char pch_driver_version[] = DRV_VERSION;
+ #define PCH_GBE_PCI_BAR			1
+ #define PCH_GBE_RESERVE_MEMORY		0x200000	/* 2MB */
+ 
+-/* Macros for ML7223 */
+-#define PCI_VENDOR_ID_ROHM			0x10db
+-#define PCI_DEVICE_ID_ROHM_ML7223_GBE		0x8013
++#define PCI_DEVICE_ID_INTEL_IOH1_GBE		0x8802
+ 
+-/* Macros for ML7831 */
++#define PCI_DEVICE_ID_ROHM_ML7223_GBE		0x8013
+ #define PCI_DEVICE_ID_ROHM_ML7831_GBE		0x8802
+ 
+ #define PCH_GBE_TX_WEIGHT         64
+diff --git a/drivers/spi/spi-topcliff-pch.c b/drivers/spi/spi-topcliff-pch.c
+index 97d137591b18..d794180e83dc 100644
+--- a/drivers/spi/spi-topcliff-pch.c
++++ b/drivers/spi/spi-topcliff-pch.c
+@@ -92,7 +92,6 @@
+ #define PCH_MAX_SPBR		1023
+ 
+ /* Definition for ML7213/ML7223/ML7831 by LAPIS Semiconductor */
+-#define PCI_VENDOR_ID_ROHM		0x10DB
+ #define PCI_DEVICE_ID_ML7213_SPI	0x802c
+ #define PCI_DEVICE_ID_ML7223_SPI	0x800F
+ #define PCI_DEVICE_ID_ML7831_SPI	0x8816
+diff --git a/drivers/tty/serial/pch_uart.c b/drivers/tty/serial/pch_uart.c
+index cb85002a10d8..d04108e7503a 100644
+--- a/drivers/tty/serial/pch_uart.c
++++ b/drivers/tty/serial/pch_uart.c
+@@ -192,8 +192,6 @@ enum {
+ #define PCH_UART_HAL_LOOP		(PCH_UART_MCR_LOOP)
+ #define PCH_UART_HAL_AFE		(PCH_UART_MCR_AFE)
+ 
+-#define PCI_VENDOR_ID_ROHM		0x10DB
+-
+ #define BOTH_EMPTY (UART_LSR_TEMT | UART_LSR_THRE)
+ 
+ #define DEFAULT_UARTCLK   1843200 /*   1.8432 MHz */
+diff --git a/drivers/usb/gadget/udc/pch_udc.c b/drivers/usb/gadget/udc/pch_udc.c
+index afaea11ec771..5b6f2b9eaa5f 100644
+--- a/drivers/usb/gadget/udc/pch_udc.c
++++ b/drivers/usb/gadget/udc/pch_udc.c
+@@ -368,7 +368,6 @@ struct pch_udc_dev {
+ #define PCI_DEVICE_ID_INTEL_QUARK_X1000_UDC	0x0939
+ #define PCI_DEVICE_ID_INTEL_EG20T_UDC		0x8808
+ 
+-#define PCI_VENDOR_ID_ROHM		0x10DB
+ #define PCI_DEVICE_ID_ML7213_IOH_UDC	0x801D
+ #define PCI_DEVICE_ID_ML7831_IOH_UDC	0x8808
+ 
+diff --git a/include/linux/pci_ids.h b/include/linux/pci_ids.h
+index 69f0abe1ba1a..7fc8d79260e6 100644
+--- a/include/linux/pci_ids.h
++++ b/include/linux/pci_ids.h
+@@ -1137,6 +1137,8 @@
+ #define PCI_VENDOR_ID_TCONRAD		0x10da
+ #define PCI_DEVICE_ID_TCONRAD_TOKENRING	0x0508
+ 
++#define PCI_VENDOR_ID_ROHM		0x10db
++
+ #define PCI_VENDOR_ID_NVIDIA			0x10de
+ #define PCI_DEVICE_ID_NVIDIA_TNT		0x0020
+ #define PCI_DEVICE_ID_NVIDIA_TNT2		0x0028
+-- 
+2.19.1
+
