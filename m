@@ -5,42 +5,41 @@ X-Spam-Level:
 X-Spam-Status: No, score=-1.0 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
 	MAILING_LIST_MULTI,SPF_PASS autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id DFEBFC0044C
-	for <linux-pci@archiver.kernel.org>; Wed,  7 Nov 2018 18:41:16 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 722D4C0044C
+	for <linux-pci@archiver.kernel.org>; Wed,  7 Nov 2018 18:46:09 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id A69A020896
-	for <linux-pci@archiver.kernel.org>; Wed,  7 Nov 2018 18:41:16 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.3.2 mail.kernel.org A69A020896
+	by mail.kernel.org (Postfix) with ESMTP id 306A12086C
+	for <linux-pci@archiver.kernel.org>; Wed,  7 Nov 2018 18:46:09 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.3.2 mail.kernel.org 306A12086C
 Authentication-Results: mail.kernel.org; dmarc=none (p=none dis=none) header.from=arm.com
 Authentication-Results: mail.kernel.org; spf=none smtp.mailfrom=linux-pci-owner@vger.kernel.org
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727734AbeKHEMw (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Wed, 7 Nov 2018 23:12:52 -0500
-Received: from foss.arm.com ([217.140.101.70]:56828 "EHLO foss.arm.com"
+        id S1726684AbeKHERp (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Wed, 7 Nov 2018 23:17:45 -0500
+Received: from foss.arm.com ([217.140.101.70]:56872 "EHLO foss.arm.com"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1727006AbeKHEMw (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Wed, 7 Nov 2018 23:12:52 -0500
+        id S1726068AbeKHERp (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Wed, 7 Nov 2018 23:17:45 -0500
 Received: from usa-sjc-imap-foss1.foss.arm.com (unknown [10.72.51.249])
-        by usa-sjc-mx-foss1.foss.arm.com (Postfix) with ESMTP id 276C5A78;
-        Wed,  7 Nov 2018 10:41:15 -0800 (PST)
+        by usa-sjc-mx-foss1.foss.arm.com (Postfix) with ESMTP id 5CDF6A78;
+        Wed,  7 Nov 2018 10:46:07 -0800 (PST)
 Received: from [10.1.196.62] (usa-sjc-imap-foss1.foss.arm.com [10.72.51.249])
-        by usa-sjc-imap-foss1.foss.arm.com (Postfix) with ESMTPSA id 7D9103F5C0;
-        Wed,  7 Nov 2018 10:41:13 -0800 (PST)
+        by usa-sjc-imap-foss1.foss.arm.com (Postfix) with ESMTPSA id AB7413F5C0;
+        Wed,  7 Nov 2018 10:46:05 -0800 (PST)
 Subject: Re: [PATCH] PCI: dwc: Fix interrupt race in when handling MSI
-To:     Trent Piepho <tpiepho@impinj.com>,
-        "lorenzo.pieralisi@arm.com" <lorenzo.pieralisi@arm.com>
-Cc:     "jpinto@synopsys.com" <jpinto@synopsys.com>,
-        "jingoohan1@gmail.com" <jingoohan1@gmail.com>,
-        "gustavo.pimentel@synopsys.com" <gustavo.pimentel@synopsys.com>,
-        "faiz_abbas@ti.com" <faiz_abbas@ti.com>,
+To:     Gustavo Pimentel <gustavo.pimentel@synopsys.com>,
+        Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
+        Trent Piepho <tpiepho@impinj.com>
+Cc:     "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
         "stable@vger.kernel.org" <stable@vger.kernel.org>,
-        "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-        "bhelgaas@google.com" <bhelgaas@google.com>,
-        "vigneshr@ti.com" <vigneshr@ti.com>
+        Vignesh R <vigneshr@ti.com>, Faiz Abbas <faiz_abbas@ti.com>,
+        Jingoo Han <jingoohan1@gmail.com>,
+        Joao Pinto <joao.pinto@synopsys.com>,
+        Bjorn Helgaas <bhelgaas@google.com>
 References: <20181027000028.21343-1-tpiepho@impinj.com>
  <20181106145347.GB19060@e107981-ln.cambridge.arm.com>
  <db3462e2-422c-161a-1f58-135bc4eab7eb@arm.com>
- <1541533217.30311.263.camel@impinj.com>
+ <725afc4a-ec19-e4e6-7091-f499bfb63652@synopsys.com>
 From:   Marc Zyngier <marc.zyngier@arm.com>
 Openpgp: preference=signencrypt
 Autocrypt: addr=marc.zyngier@arm.com; prefer-encrypt=mutual; keydata=
@@ -86,12 +85,12 @@ Autocrypt: addr=marc.zyngier@arm.com; prefer-encrypt=mutual; keydata=
  hApihi08gwvP5G9fNGKQyRETePEtEAWt0b7dOqMzYBYGRVr7uS4uT6WP7fzOwAJC4lU7ZYWZ
  yVshCa0IvTtp1085RtT3qhh9mobkcZ+7cQOY+Tx2RGXS9WeOh2jZjdoWUv6CevXNQyOUXMM=
 Organization: ARM Ltd
-Message-ID: <597d9ebd-f95f-0a4d-e1a3-fe79d4333879@arm.com>
-Date:   Wed, 7 Nov 2018 18:41:11 +0000
+Message-ID: <6f8f5c2c-6164-dae8-72d8-a49832d0d760@arm.com>
+Date:   Wed, 7 Nov 2018 18:46:03 +0000
 User-Agent: Mozilla/5.0 (X11; Linux aarch64; rv:52.0) Gecko/20100101
  Thunderbird/52.9.1
 MIME-Version: 1.0
-In-Reply-To: <1541533217.30311.263.camel@impinj.com>
+In-Reply-To: <725afc4a-ec19-e4e6-7091-f499bfb63652@synopsys.com>
 Content-Type: text/plain; charset=utf-8
 Content-Language: en-GB
 Content-Transfer-Encoding: 7bit
@@ -100,45 +99,141 @@ Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-On 06/11/18 19:40, Trent Piepho wrote:
-> On Tue, 2018-11-06 at 16:00 +0000, Marc Zyngier wrote:
+On 07/11/18 12:57, Gustavo Pimentel wrote:
+> On 06/11/2018 16:00, Marc Zyngier wrote:
+>> On 06/11/18 14:53, Lorenzo Pieralisi wrote:
+>>> [CC Marc]
+>>>
+>>> On Sat, Oct 27, 2018 at 12:00:57AM +0000, Trent Piepho wrote:
+>>>> This reverts commit 8c934095fa2f ("PCI: dwc: Clear MSI interrupt status
+>>>> after it is handled, not before").
+>>>>
+>>>> This is a very real race that we observed quickly after switching from
+>>>> 4.13 to 4.16.  Using a custom PCI-e endpoint and driver, I was able to
+>>>> track it to the precise race and verify the fixed behavior, as will be
+>>>> described below.
+>>>>
+>>>> This bug was originally fixed in 2013, in commit ca1658921b63 ("PCI:
+>>>> designware: Fix missing MSI IRQs") The discussion of that commit,
+>>>> archived in patchwork [1], is informative and worth reading.
+>>>>
+>>>> The bug was re-added in the '8c934 commit this is reverting, which
+>>>> appeared in the 4.14 kernel.
+>>>>
+>>>> Unfortunately, Synopsys appears to consider the operation of this PCI-e
+>>>> controller secret.  They provide no publicly available docs for it nor
+>>>> allow the references manuals of SoCs using the controller to publish any
+>>>> documentation of it.
+>>>>
+>>>> So I can not say certain this code is correctly using the controller's
+>>>> features.  However, extensive testing gives me high confidence in the
+>>>> accuracy of what is described below.
+>>>>
+>>>> If an MSI is received by the PCI-e controller while the status register
+>>>> bit for that MSI is set, the PCI-e controller will NOT generate another
+>>>> interrupt.  In addition, it will NOT queue or otherwise mark the
+>>>> interrupt as "pending", which means it will NOT generate an interrupt
+>>>> when the status bit is unmasked.
+>>>>
+>>>> This gives the following race scenario:
+>>>>
+>>>> 1.  An MSI is received by, and the status bit for the MSI is set in, the
+>>>> DWC PCI-e controller.
+>>>> 2.  dw_handle_msi_irq() calls a driver's registered interrupt handler
+>>>> for the MSI received.
+>>>> 3.  At some point, the interrupt handler must decide, correctly, that
+>>>> there is no more work to do and return.
+>>>> 4.  The hardware generates a new MSI.  As the MSI's status bit is still
+>>>> set, this new MSI is ignored.
+>>>> 6.  dw_handle_msi_irq() unsets the MSI status bit.
+>>>>
+>>>> The MSI received at point 4 will never be acted upon.  It occurred after
+>>>> the driver had finished checking the hardware status for interrupt
+>>>> conditions to act on.  Since the MSI status was masked, it does not
+>>>> generated a new IRQ, neither when it was received nor when the MSI is
+>>>> unmasked.
+>>>>
+>>>> It seems clear there is an unsolvable race here.
+>>>>
+>>>> After this patch, the sequence becomes as follows:
+>>>>
+>>>> 1.  An MSI is received and the status bit for the MSI is set in the
+>>>> DWC PCI-e controller.
+>>>> 2.  dw_handle_msi_irq() clears this MSI status bit.
+>>>> 3.  dw_handle_msi_irq() calls a driver's registered interrupt handler
+>>>> for the MSI received.
+>>>> 3.  At some point, the interrupt handler must decide, correctly, that
+>>>> there is no more work to do and return.
+>>>> 4.  The hardware generates a new MSI.  This sets the MSI status bit and
+>>>> triggers another interrupt in the interrupt controller(s) above the DWC
+>>>> PCI-e controller.  As the the dwc-pcie handler is not re-entrant, it is
+>>>> not run again at this time.
+>>>> 6.  dw_handle_msi_irq() finishes.  The MSI status bit remains set.
+>>>> 7.  The IRQ is re-raised and dw_handle_msi_irq() runs again.
+>>>> 8.  dw_handle_msi_irq() invokes the MSI's registered interrupt handler
+>>>> again as the status bit was still set.
+>>>
+>>> Not sure why (5) is not used in your lists, I assume because you want
+>>> to highlight the race condition with the jump from 4 to 6 (or maybe
+>>> you do not like number 5 :), just curious).
+>>>
+>>>> The observant will notice that point 4 present the opportunity for the
+>>>> SoC's interrupt controller to lose the interrupt in the same manner as
+>>>> the bug in this driver.  The driver for that interrupt controller will
+>>>> be written to properly deal with this.  In some cases the hardware
+>>>> supports an EOI concept, where the 2nd IRQ is masked and internally
+>>>> queued in the hardware, to be re-raised at EOI in step 7.  In other
+>>>> cases the IRQ will be unmasked and re-raised at step 4, but the kernel
+>>>> will see the handler is INPROGRESS and not re-invoke it, and instead set
+>>>> a PENDING flag, which causes the handler to re-run at step 7.
+>>>>
+>>>> [1] https://urldefense.proofpoint.com/v2/url?u=https-3A__patchwork.kernel.org_patch_3333681_&d=DwICaQ&c=DPL6_X_6JkXFx7AXWqB0tg&r=bkWxpLoW-f-E3EdiDCCa0_h0PicsViasSlvIpzZvPxs&m=3fxVS1aKAoLsOD0JiRgCC9pnyPfwwNVecSPqFznQ3Kc&s=X9ZYshlrXFwQbZJTzWC3ZC77lveB4ZlqfYqGJiSuqY8&e=
+>>>>
+>>>> Fixes: 8c934095fa2f ("PCI: dwc: Clear MSI interrupt status after it is handled, not before")
+>>>
+>>> I have two questions:
+>>>
+>>> - Commit 8c934095fa2f has been in the kernel for a year and no
+>>>   regression was reported. It was assumed to fix a problem so before
+>>>   reverting it I want to make sure we are not breaking anything else.
+>>> - Your reasoning seems correct but I would pick Marc's brain on this
+>>>   because I want to understand if what this patch does is what IRQ core
+>>>   expects it to do, especially in relation to the IRQ chaining you
+>>>   are mentioning.
 >>
 >> It is hard to decide what the right solution is without understanding
 >> exactly what this particular write actually does. It seems to be some
 >> form of acknowledgement, but I'm only making an educated guess, and some
 >> of the defines suggest that there might be another register for that.
 > 
-> Unfortunately, there are no docs for this controller.  I've determined
-> that it sets a bit in this register when an MSI is received.  Once set,
-> it acts as a mask and the controller will generate no interrupts when
-> the same MSI is subsequently received.  Writing a 1 to a bit clears
-> that mask bit, obviously so that each bit can be cleared atomically vs
-> a non-atomic RMW.  The controller does not queue any MSIs received
-> while the interrupt was masked.
+> This status register indicates whether exists or not a MSI interrupt on that
+> controller [0..7] to be handle.
 
-I'm not sure this is really a mask, as the controller seems to have
-other ways of really masking the interrupt. It looks a lot more like
-either an ACK, but I need to understand how this interacts with the
-masking register.
+OK. What happen when the interrupt is masked? Does this interrupt appear
+in the status register? And what is the effect of writing to that register?
 
-And I do not want to guess it. I want actual information from people who
-build this IP.
+> In theory, we should clear the interrupt flag only after the interrupt has
+> actually handled (which can take some time to process on the worst case scenario).
 
+At this stage, we do not care about performance, but correctness. If we
+loose interrupts, then the driver is not correct, and we need to address
+this first.
+
+> However, the Trent's patch allows to acknowledge the flag and handle the
+> interrupt later, giving the opportunity to catch a possible new interrupt, which
+> will be handle by a new call of this function.
+> 
+>>
 >> What I'm interested in is the relationship this has with the mask/unmask
 >> callbacks, and whether masking the interrupt before acking it would help.
 > 
-> 
->>
->> Gustavo, can you help here?
->>
->> In any way, moving the action of acknowledging the interrupt to its
->> right spot in the kernel (dw_pci_bottom_ack) would be a good start.
-> 
-> What about stable kernels that don't have the hierarchical API?
+> Although there is the possibility of mask/unmask the interruptions on the
+> controller, from what I've seen typically in other dw drivers this is not done.
+> Probably we don't get much benefit from using it.
 
-My goal is to fix mainline first. Once we have something that works on
-mainline, we can look at propagating the fix to other versions. But
-mainline always comes first.
+I don't worry care about the drivers. I need to know what the HW does,
+and how this maps to the Linux interrupt subsystem. At the moment, this
+is just too blurry to be understandable.
 
 Thanks,
 
