@@ -2,92 +2,379 @@ Return-Path: <SRS0=XjPq=NT=vger.kernel.org=linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-5.3 required=3.0 tests=DKIM_INVALID,DKIM_SIGNED,
-	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_PASS,URIBL_BLOCKED,USER_AGENT_MUTT
+X-Spam-Status: No, score=-7.0 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_PASS,URIBL_BLOCKED
 	autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 362EDECDE4B
-	for <linux-pci@archiver.kernel.org>; Thu,  8 Nov 2018 14:34:39 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 73944ECDE47
+	for <linux-pci@archiver.kernel.org>; Thu,  8 Nov 2018 14:49:00 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id E8A8C20825
-	for <linux-pci@archiver.kernel.org>; Thu,  8 Nov 2018 14:34:38 +0000 (UTC)
-Authentication-Results: mail.kernel.org;
-	dkim=fail reason="signature verification failed" (1024-bit key) header.d=sirena.org.uk header.i=@sirena.org.uk header.b="KtvEPJ9R"
-DMARC-Filter: OpenDMARC Filter v1.3.2 mail.kernel.org E8A8C20825
-Authentication-Results: mail.kernel.org; dmarc=fail (p=none dis=none) header.from=kernel.org
+	by mail.kernel.org (Postfix) with ESMTP id 3DB172081D
+	for <linux-pci@archiver.kernel.org>; Thu,  8 Nov 2018 14:49:00 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.3.2 mail.kernel.org 3DB172081D
+Authentication-Results: mail.kernel.org; dmarc=fail (p=none dis=none) header.from=redhat.com
 Authentication-Results: mail.kernel.org; spf=none smtp.mailfrom=linux-pci-owner@vger.kernel.org
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726509AbeKIAKX (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Thu, 8 Nov 2018 19:10:23 -0500
-Received: from heliosphere.sirena.org.uk ([172.104.155.198]:40512 "EHLO
-        heliosphere.sirena.org.uk" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726469AbeKIAKX (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Thu, 8 Nov 2018 19:10:23 -0500
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
-        d=sirena.org.uk; s=20170815-heliosphere; h=In-Reply-To:Content-Type:
-        MIME-Version:References:Message-ID:Subject:Cc:To:From:Date:Sender:Reply-To:
-        Content-Transfer-Encoding:Content-ID:Content-Description:Resent-Date:
-        Resent-From:Resent-Sender:Resent-To:Resent-Cc:Resent-Message-ID:List-Id:
-        List-Help:List-Unsubscribe:List-Subscribe:List-Post:List-Owner:List-Archive;
-         bh=Ugg2Q9dGtiOE81lMh3L9KC3ByUPlHS6Y+GmRK4+1PsI=; b=KtvEPJ9ReHcQUVtlLm9zJ+aoW
-        /tlMTDVGBC/I57UR/XRbuBUjpJ6Q4y1Whe7SubWxf327WX0vyAWtITUvGyOVh0xHvp9AOQP4uDSid
-        iGNODEh2t0hDYOa5PcCXiv7z7NWoHfB6sRETDUaZHHNOJXLpGJg/2u+CA2xJ6cV1EwV3k=;
-Received: from cpc102320-sgyl38-2-0-cust46.18-2.cable.virginm.net ([82.37.168.47] helo=debutante.sirena.org.uk)
-        by heliosphere.sirena.org.uk with esmtpa (Exim 4.89)
-        (envelope-from <broonie@sirena.org.uk>)
-        id 1gKlOC-0008Tq-AT; Thu, 08 Nov 2018 14:34:32 +0000
-Received: by debutante.sirena.org.uk (Postfix, from userid 1000)
-        id E3CF71124D9E; Thu,  8 Nov 2018 14:34:31 +0000 (GMT)
-Date:   Thu, 8 Nov 2018 14:34:31 +0000
-From:   Mark Brown <broonie@kernel.org>
-To:     Andy Shevchenko <andriy.shevchenko@linux.intel.com>
-Cc:     Vinod Koul <vkoul@kernel.org>,
-        Linus Walleij <linus.walleij@linaro.org>,
-        Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-        "David S. Miller" <davem@davemloft.net>,
-        Felipe Balbi <balbi@kernel.org>, linux-kernel@vger.kernel.org,
-        Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org
-Subject: Re: [PATCH v1] PCI: Move Rohm vendor ID to generic list
-Message-ID: <20181108143431.GG6675@sirena.org.uk>
-References: <20181107195856.43223-1-andriy.shevchenko@linux.intel.com>
+        id S1726571AbeKIAYt (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Thu, 8 Nov 2018 19:24:49 -0500
+Received: from mx1.redhat.com ([209.132.183.28]:54528 "EHLO mx1.redhat.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1726952AbeKIAYt (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Thu, 8 Nov 2018 19:24:49 -0500
+Received: from smtp.corp.redhat.com (int-mx05.intmail.prod.int.phx2.redhat.com [10.5.11.15])
+        (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
+        (No client certificate requested)
+        by mx1.redhat.com (Postfix) with ESMTPS id 0278C307DAAD;
+        Thu,  8 Nov 2018 14:48:57 +0000 (UTC)
+Received: from [10.36.116.55] (ovpn-116-55.ams2.redhat.com [10.36.116.55])
+        by smtp.corp.redhat.com (Postfix) with ESMTPS id 887285D6A6;
+        Thu,  8 Nov 2018 14:48:46 +0000 (UTC)
+Subject: Re: [PATCH v3 6/7] iommu/virtio: Add probe request
+To:     Jean-Philippe Brucker <jean-philippe.brucker@arm.com>,
+        iommu@lists.linux-foundation.org,
+        virtualization@lists.linux-foundation.org,
+        devicetree@vger.kernel.org
+Cc:     linux-pci@vger.kernel.org, kvmarm@lists.cs.columbia.edu,
+        peter.maydell@linaro.org, joro@8bytes.org, mst@redhat.com,
+        jasowang@redhat.com, robh+dt@kernel.org, mark.rutland@arm.com,
+        tnowicki@caviumnetworks.com, kevin.tian@intel.com,
+        marc.zyngier@arm.com, robin.murphy@arm.com, will.deacon@arm.com,
+        lorenzo.pieralisi@arm.com
+References: <20181012145917.6840-1-jean-philippe.brucker@arm.com>
+ <20181012145917.6840-7-jean-philippe.brucker@arm.com>
+From:   Auger Eric <eric.auger@redhat.com>
+Message-ID: <295d30bb-5aef-2727-01c0-ec10c7a8fa8c@redhat.com>
+Date:   Thu, 8 Nov 2018 15:48:45 +0100
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:60.0) Gecko/20100101
+ Thunderbird/60.2.1
 MIME-Version: 1.0
-Content-Type: multipart/signed; micalg=pgp-sha512;
-        protocol="application/pgp-signature"; boundary="5L6AZ1aJH5mDrqCQ"
-Content-Disposition: inline
-In-Reply-To: <20181107195856.43223-1-andriy.shevchenko@linux.intel.com>
-X-Cookie: I'm having a BIG BANG THEORY!!
-User-Agent: Mutt/1.10.1 (2018-07-13)
+In-Reply-To: <20181012145917.6840-7-jean-philippe.brucker@arm.com>
+Content-Type: text/plain; charset=utf-8
+Content-Language: en-US
+Content-Transfer-Encoding: 7bit
+X-Scanned-By: MIMEDefang 2.79 on 10.5.11.15
+X-Greylist: Sender IP whitelisted, not delayed by milter-greylist-4.5.16 (mx1.redhat.com [10.5.110.42]); Thu, 08 Nov 2018 14:48:58 +0000 (UTC)
 Sender: linux-pci-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
+Hi Jean-Philippe,
 
---5L6AZ1aJH5mDrqCQ
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-Content-Transfer-Encoding: quoted-printable
+On 10/12/18 4:59 PM, Jean-Philippe Brucker wrote:
+> When the device offers the probe feature, send a probe request for each
+> device managed by the IOMMU. Extract RESV_MEM information. When we
+> encounter a MSI doorbell region, set it up as a IOMMU_RESV_MSI region.
+> This will tell other subsystems that there is no need to map the MSI
+> doorbell in the virtio-iommu, because MSIs bypass it.
+> 
+> Signed-off-by: Jean-Philippe Brucker <jean-philippe.brucker@arm.com>
+> ---
+>  drivers/iommu/virtio-iommu.c      | 147 ++++++++++++++++++++++++++++--
+>  include/uapi/linux/virtio_iommu.h |  39 ++++++++
+>  2 files changed, 180 insertions(+), 6 deletions(-)
+> 
+> diff --git a/drivers/iommu/virtio-iommu.c b/drivers/iommu/virtio-iommu.c
+> index 9fb38cd3b727..8eaf66770469 100644
+> --- a/drivers/iommu/virtio-iommu.c
+> +++ b/drivers/iommu/virtio-iommu.c
+> @@ -56,6 +56,7 @@ struct viommu_dev {
+>  	struct iommu_domain_geometry	geometry;
+>  	u64				pgsize_bitmap;
+>  	u8				domain_bits;
+> +	u32				probe_size;
+>  };
+>  
+>  struct viommu_mapping {
+> @@ -77,8 +78,10 @@ struct viommu_domain {
+>  };
+>  
+>  struct viommu_endpoint {
+> +	struct device			*dev;
+>  	struct viommu_dev		*viommu;
+>  	struct viommu_domain		*vdomain;
+> +	struct list_head		resv_regions;
+>  };
+>  
+>  struct viommu_request {
+> @@ -129,6 +132,9 @@ static off_t viommu_get_req_offset(struct viommu_dev *viommu,
+>  {
+>  	size_t tail_size = sizeof(struct virtio_iommu_req_tail);
+>  
+> +	if (req->type == VIRTIO_IOMMU_T_PROBE)
+> +		return len - viommu->probe_size - tail_size;
+> +
+>  	return len - tail_size;
+>  }
+>  
+> @@ -414,6 +420,101 @@ static int viommu_replay_mappings(struct viommu_domain *vdomain)
+>  	return ret;
+>  }
+>  
+> +static int viommu_add_resv_mem(struct viommu_endpoint *vdev,
+> +			       struct virtio_iommu_probe_resv_mem *mem,
+> +			       size_t len)
+> +{
+> +	struct iommu_resv_region *region = NULL;
+> +	unsigned long prot = IOMMU_WRITE | IOMMU_NOEXEC | IOMMU_MMIO;
+> +
+> +	u64 start = le64_to_cpu(mem->start);
+> +	u64 end = le64_to_cpu(mem->end);
+> +	size_t size = end - start + 1;
+> +
+> +	if (len < sizeof(*mem))
+> +		return -EINVAL;
+> +
+> +	switch (mem->subtype) {
+> +	default:
+> +		dev_warn(vdev->dev, "unknown resv mem subtype 0x%x\n",
+> +			 mem->subtype);
+> +		/* Fall-through */
+> +	case VIRTIO_IOMMU_RESV_MEM_T_RESERVED:
+> +		region = iommu_alloc_resv_region(start, size, 0,
+> +						 IOMMU_RESV_RESERVED);
+> +		break;
+> +	case VIRTIO_IOMMU_RESV_MEM_T_MSI:
+> +		region = iommu_alloc_resv_region(start, size, prot,
+> +						 IOMMU_RESV_MSI);
+> +		break;
+> +	}
+> +
+> +	list_add(&vdev->resv_regions, &region->list);
+> +	return 0;
+> +}
+> +
+> +static int viommu_probe_endpoint(struct viommu_dev *viommu, struct device *dev)
+> +{
+> +	int ret;
+> +	u16 type, len;
+> +	size_t cur = 0;
+> +	size_t probe_len;
+> +	struct virtio_iommu_req_probe *probe;
+> +	struct virtio_iommu_probe_property *prop;
+> +	struct iommu_fwspec *fwspec = dev->iommu_fwspec;
+> +	struct viommu_endpoint *vdev = fwspec->iommu_priv;
+> +
+> +	if (!fwspec->num_ids)
+> +		return -EINVAL;
+> +
+> +	probe_len = sizeof(*probe) + viommu->probe_size +
+> +		    sizeof(struct virtio_iommu_req_tail);
+> +	probe = kzalloc(probe_len, GFP_KERNEL);
+> +	if (!probe)
+> +		return -ENOMEM;
+> +
+> +	probe->head.type = VIRTIO_IOMMU_T_PROBE;
+> +	/*
+> +	 * For now, assume that properties of an endpoint that outputs multiple
+> +	 * IDs are consistent. Only probe the first one.
+> +	 */
+> +	probe->endpoint = cpu_to_le32(fwspec->ids[0]);
+> +
+> +	ret = viommu_send_req_sync(viommu, probe, probe_len);
+> +	if (ret)
+> +		goto out_free;
+> +
+> +	prop = (void *)probe->properties;
+> +	type = le16_to_cpu(prop->type) & VIRTIO_IOMMU_PROBE_T_MASK;
+> +
+> +	while (type != VIRTIO_IOMMU_PROBE_T_NONE &&
+> +	       cur < viommu->probe_size) {
+> +		len = le16_to_cpu(prop->length) + sizeof(*prop);
+> +
+> +		switch (type) {
+> +		case VIRTIO_IOMMU_PROBE_T_RESV_MEM:
+> +			ret = viommu_add_resv_mem(vdev, (void *)prop, len);
+> +			break;
+> +		default:
+> +			dev_err(dev, "unknown viommu prop 0x%x\n", type);
+> +		}
+> +
+> +		if (ret)
+> +			dev_err(dev, "failed to parse viommu prop 0x%x\n", type);
+> +
+> +		cur += len;
+> +		if (cur >= viommu->probe_size)
+> +			break;
+> +
+> +		prop = (void *)probe->properties + cur;
+> +		type = le16_to_cpu(prop->type) & VIRTIO_IOMMU_PROBE_T_MASK;
+> +	}
+> +
+> +out_free:
+> +	kfree(probe);
+> +	return ret;
+> +}
+> +
+>  /* IOMMU API */
+>  
+>  static struct iommu_domain *viommu_domain_alloc(unsigned type)
+> @@ -636,15 +737,33 @@ static void viommu_iotlb_sync(struct iommu_domain *domain)
+>  
+>  static void viommu_get_resv_regions(struct device *dev, struct list_head *head)
+>  {
+> -	struct iommu_resv_region *region;
+> +	struct iommu_resv_region *entry, *new_entry, *msi = NULL;
+> +	struct viommu_endpoint *vdev = dev->iommu_fwspec->iommu_priv;
+>  	int prot = IOMMU_WRITE | IOMMU_NOEXEC | IOMMU_MMIO;
+>  
+> -	region = iommu_alloc_resv_region(MSI_IOVA_BASE, MSI_IOVA_LENGTH, prot,
+> -					 IOMMU_RESV_SW_MSI);
+> -	if (!region)
+> -		return;
+> +	list_for_each_entry(entry, &vdev->resv_regions, list) {
+> +		/*
+> +		 * If the device registered a bypass MSI windows, use it.
+> +		 * Otherwise add a software-mapped region
+> +		 */
+> +		if (entry->type == IOMMU_RESV_MSI)
+> +			msi = entry;
+> +
+> +		new_entry = kmemdup(entry, sizeof(*entry), GFP_KERNEL);
+> +		if (!new_entry)
+> +			return;
+> +		list_add_tail(&new_entry->list, head);
+> +	}
+> +
+> +	if (!msi) {
+> +		msi = iommu_alloc_resv_region(MSI_IOVA_BASE, MSI_IOVA_LENGTH,
+> +					      prot, IOMMU_RESV_SW_MSI);
+> +		if (!msi)
+> +			return;
+> +
+> +		list_add_tail(&msi->list, head);
+> +	}
+>  
+> -	list_add_tail(&region->list, head);
+>  	iommu_dma_get_resv_regions(dev, head);
+>  }
+>  
+> @@ -692,9 +811,18 @@ static int viommu_add_device(struct device *dev)
+>  	if (!vdev)
+>  		return -ENOMEM;
+>  
+> +	vdev->dev = dev;
+>  	vdev->viommu = viommu;
+> +	INIT_LIST_HEAD(&vdev->resv_regions);
+>  	fwspec->iommu_priv = vdev;
+>  
+> +	if (viommu->probe_size) {
+> +		/* Get additional information for this endpoint */
+> +		ret = viommu_probe_endpoint(viommu, dev);
+> +		if (ret)
+> +			return ret;
+> +	}
+> +
+>  	ret = iommu_device_link(&viommu->iommu, dev);
+>  	if (ret)
+>  		goto err_free_dev;
+> @@ -717,6 +845,7 @@ static int viommu_add_device(struct device *dev)
+>  	iommu_device_unlink(&viommu->iommu, dev);
+>  
+>  err_free_dev:
+> +	viommu_put_resv_regions(dev, &vdev->resv_regions);
+>  	kfree(vdev);
+>  
+>  	return ret;
+> @@ -734,6 +863,7 @@ static void viommu_remove_device(struct device *dev)
+>  
+>  	iommu_group_remove_device(dev);
+>  	iommu_device_unlink(&vdev->viommu->iommu, dev);
+> +	viommu_put_resv_regions(dev, &vdev->resv_regions);
+>  	kfree(vdev);
+>  }
+>  
+> @@ -832,6 +962,10 @@ static int viommu_probe(struct virtio_device *vdev)
+>  			     struct virtio_iommu_config, domain_bits,
+>  			     &viommu->domain_bits);
+>  
+> +	virtio_cread_feature(vdev, VIRTIO_IOMMU_F_PROBE,
+> +			     struct virtio_iommu_config, probe_size,
+> +			     &viommu->probe_size);
+> +
+>  	viommu->geometry = (struct iommu_domain_geometry) {
+>  		.aperture_start	= input_start,
+>  		.aperture_end	= input_end,
+> @@ -913,6 +1047,7 @@ static unsigned int features[] = {
+>  	VIRTIO_IOMMU_F_MAP_UNMAP,
+>  	VIRTIO_IOMMU_F_DOMAIN_BITS,
+>  	VIRTIO_IOMMU_F_INPUT_RANGE,
+> +	VIRTIO_IOMMU_F_PROBE,
+>  };
+>  
+>  static struct virtio_device_id id_table[] = {
+> diff --git a/include/uapi/linux/virtio_iommu.h b/include/uapi/linux/virtio_iommu.h
+> index e808fc7fbe82..feed74586bb0 100644
+> --- a/include/uapi/linux/virtio_iommu.h
+> +++ b/include/uapi/linux/virtio_iommu.h
+> @@ -14,6 +14,7 @@
+>  #define VIRTIO_IOMMU_F_DOMAIN_BITS		1
+>  #define VIRTIO_IOMMU_F_MAP_UNMAP		2
+>  #define VIRTIO_IOMMU_F_BYPASS			3
+> +#define VIRTIO_IOMMU_F_PROBE			4
+>  
+>  struct virtio_iommu_config {
+>  	/* Supported page sizes */
+> @@ -25,6 +26,9 @@ struct virtio_iommu_config {
+>  	} input_range;
+>  	/* Max domain ID size */
+>  	__u8					domain_bits;
+> +	__u8					padding[3];
+> +	/* Probe buffer size */
+> +	__u32					probe_size;
+>  };
+>  
+>  /* Request types */
+> @@ -32,6 +36,7 @@ struct virtio_iommu_config {
+>  #define VIRTIO_IOMMU_T_DETACH			0x02
+>  #define VIRTIO_IOMMU_T_MAP			0x03
+>  #define VIRTIO_IOMMU_T_UNMAP			0x04
+> +#define VIRTIO_IOMMU_T_PROBE			0x05
+>  
+>  /* Status types */
+>  #define VIRTIO_IOMMU_S_OK			0x00
+> @@ -98,4 +103,38 @@ struct virtio_iommu_req_unmap {
+>  	struct virtio_iommu_req_tail		tail;
+>  };
+>  
+> +#define VIRTIO_IOMMU_PROBE_T_NONE		0
+> +#define VIRTIO_IOMMU_PROBE_T_RESV_MEM		1
+> +
+> +#define VIRTIO_IOMMU_PROBE_T_MASK		0xfff
+> +
+> +struct virtio_iommu_probe_property {
+> +	__le16					type;
+> +	__le16					length;
+the value[] field has disappeared but still is documented in the v0.8 spec.
 
-On Wed, Nov 07, 2018 at 09:58:56PM +0200, Andy Shevchenko wrote:
-> Move the Rohm vendor ID to pci_ids.h from dozen of drivers.
->=20
-> Signed-off-by: Andy Shevchenko <andriy.shevchenko@linux.intel.com>
+Thanks
 
-Acked-by: Mark Brown <broonie@kernel.org>
-
---5L6AZ1aJH5mDrqCQ
-Content-Type: application/pgp-signature; name="signature.asc"
-
------BEGIN PGP SIGNATURE-----
-
-iQEzBAABCgAdFiEEreZoqmdXGLWf4p/qJNaLcl1Uh9AFAlvkSXcACgkQJNaLcl1U
-h9DvYAf/YIYorONs2ctGtIKujJqvfUD1ejpWmV/M3n5Vmi6T0+IiClgvWFio5LI5
-KXjuJNpQkumjCKhvxdrC9uqX1EDa0XKWyoy5HcBYErt5IAYpKfSqWXRF3XFhRq5n
-mQfCpS5Tlzhry5sf7fdarR38mcIffXBBqgk3tYJJD0dDhXGTvjgaNc5au23zhPIa
-YZJp8NaK5G20X4K2R3DcvjsLZ41TvrjAmwY6eNEW5uDFRcne74jbASHxJURNY9kC
-2CeSE7+rvMMFvXSsTWyQCDatEP/ktHr5Q02FHSjw4hl5t/FZI/E+xIEuWYhD5J81
-lU0Cd7FsvNcczVAyvnPuoRqwf363Qw==
-=L/6h
------END PGP SIGNATURE-----
-
---5L6AZ1aJH5mDrqCQ--
+Eric
+> +};
+> +
+> +#define VIRTIO_IOMMU_RESV_MEM_T_RESERVED	0
+> +#define VIRTIO_IOMMU_RESV_MEM_T_MSI		1
+> +
+> +struct virtio_iommu_probe_resv_mem {
+> +	struct virtio_iommu_probe_property	head;
+> +	__u8					subtype;
+> +	__u8					reserved[3];
+> +	__le64					start;
+> +	__le64					end;
+> +};
+> +
+> +struct virtio_iommu_req_probe {
+> +	struct virtio_iommu_req_head		head;
+> +	__le32					endpoint;
+> +	__u8					reserved[64];
+> +
+> +	__u8					properties[];
+> +
+> +	/*
+> +	 * Tail follows the variable-length properties array. No padding,
+> +	 * property lengths are all aligned on 8 bytes.
+> +	 */
+> +};
+> +
+>  #endif
+> 
