@@ -2,138 +2,286 @@ Return-Path: <SRS0=XjPq=NT=vger.kernel.org=linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-0.8 required=3.0 tests=DKIM_INVALID,DKIM_SIGNED,
-	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_PASS autolearn=ham
-	autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-7.0 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_PASS,UNPARSEABLE_RELAY,
+	URIBL_BLOCKED autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id B9536C0044C
-	for <linux-pci@archiver.kernel.org>; Thu,  8 Nov 2018 01:40:20 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id A03ACC0044C
+	for <linux-pci@archiver.kernel.org>; Thu,  8 Nov 2018 02:54:06 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 7751F20818
-	for <linux-pci@archiver.kernel.org>; Thu,  8 Nov 2018 01:40:20 +0000 (UTC)
-Authentication-Results: mail.kernel.org;
-	dkim=fail reason="signature verification failed" (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="iCnd/rE5"
-DMARC-Filter: OpenDMARC Filter v1.3.2 mail.kernel.org 7751F20818
-Authentication-Results: mail.kernel.org; dmarc=none (p=none dis=none) header.from=roeck-us.net
+	by mail.kernel.org (Postfix) with ESMTP id 381E820857
+	for <linux-pci@archiver.kernel.org>; Thu,  8 Nov 2018 02:54:06 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.3.2 mail.kernel.org 381E820857
+Authentication-Results: mail.kernel.org; dmarc=none (p=none dis=none) header.from=mediatek.com
 Authentication-Results: mail.kernel.org; spf=none smtp.mailfrom=linux-pci-owner@vger.kernel.org
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1728489AbeKHLNV (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Thu, 8 Nov 2018 06:13:21 -0500
-Received: from mail-pl1-f194.google.com ([209.85.214.194]:38506 "EHLO
-        mail-pl1-f194.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1728372AbeKHLNU (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Thu, 8 Nov 2018 06:13:20 -0500
-Received: by mail-pl1-f194.google.com with SMTP id p4-v6so6341019plo.5;
-        Wed, 07 Nov 2018 17:40:19 -0800 (PST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20161025;
-        h=sender:subject:to:cc:references:from:message-id:date:user-agent
-         :mime-version:in-reply-to:content-language:content-transfer-encoding;
-        bh=jeqY7eFzEKBYQPj+khgCjKjeM43EIFozZ8l2056K7eM=;
-        b=iCnd/rE5PC+xeDoTFurFN9es+d64VclCudvsfPv5/mQ3qLO62fZfIa++91Qd5Vpam8
-         ONPlr9FLZkr86aKY8F6pT77YkRmq8s4RLKzlFNVU9RR/KNRlkodt6EvEOZSTQWnCTQVJ
-         8+xNcStzc+Fq+AunPpVoXwtQQmVsUFkO5q62B9YHKXP/wWxsp2I2xJaPmYTaSJByy8M6
-         lhYWVphKIK5kYTODm+UaQ8urFTLspyiKDL3xdDv6kFhJf5wYDry3ZQNMZwuLgVbBTAbW
-         WobG74ueElb/iARN/t9fQY1EiCrkw2MMcVgaRfA9FY2Y3IouIHsgz1xPxuMgyxupaENk
-         WjQg==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20161025;
-        h=x-gm-message-state:sender:subject:to:cc:references:from:message-id
-         :date:user-agent:mime-version:in-reply-to:content-language
-         :content-transfer-encoding;
-        bh=jeqY7eFzEKBYQPj+khgCjKjeM43EIFozZ8l2056K7eM=;
-        b=n+wkxU/ttEIT4+zoC07rNrVN427WuLOTFU6E7u3Fp0OMW9F9xott/s11g6cZzLCVN1
-         20A2u2vvS5B8sTyS6992nNy2fcBlkdrJhnhCqPnpSGCoBoG1CXHzbheevi4e7rbKaWam
-         yZ/x82/DHY+wqEsYq08ZCU4bgZXYy5KlfTp9w7c+sN/uwp3FO494yOHxKefKU+VwkihY
-         47nOuxI2gxv3Wrb6lcRkOjJuRZXL5HQKGvrHjW0QQYUd2an1BvVYhuhxpmQWdmzlnJi5
-         kNRlDaaZNoCKpoDh5p82hZEgw8nDtWUGyJxGQS7BHVY4Du0TVJqQuqe4iINQEnXTE1gy
-         bdrA==
-X-Gm-Message-State: AGRZ1gJtVo7W6Lt1eNrc39+Eo233R9Q1lNmYUaB6h6blp4/lMRcsLA07
-        lVOjll79gqFM9oaLwj+g8rKkvKWW
-X-Google-Smtp-Source: AJdET5eV2hXvshwIRSrkwqcxWqilU5tXX0iRtQJ8zdcMYuZWFZ2Qc02PoPGx2h0aaGtLXqqwcedDWQ==
-X-Received: by 2002:a17:902:7a2:: with SMTP id 31-v6mr2562567plj.277.1541641218379;
-        Wed, 07 Nov 2018 17:40:18 -0800 (PST)
-Received: from server.roeck-us.net ([2600:1700:e321:62f0:329c:23ff:fee3:9d7c])
-        by smtp.gmail.com with ESMTPSA id 3-v6sm2049338pga.12.2018.11.07.17.40.15
-        (version=TLS1_2 cipher=ECDHE-RSA-AES128-GCM-SHA256 bits=128/128);
-        Wed, 07 Nov 2018 17:40:17 -0800 (PST)
-Subject: Re: [PATCH 2/4] x86/amd_nb: add support for newer PCI topologies
-To:     Bjorn Helgaas <helgaas@kernel.org>,
-        Srinivas Pandruvada <srinivas.pandruvada@linux.intel.com>
-Cc:     Borislav Petkov <bp@alien8.de>,
-        "Woods, Brian" <Brian.Woods@amd.com>,
-        Thomas Gleixner <tglx@linutronix.de>,
-        Ingo Molnar <mingo@redhat.com>,
-        "H. Peter Anvin" <hpa@zytor.com>,
-        "x86@kernel.org" <x86@kernel.org>,
-        Clemens Ladisch <clemens@ladisch.de>,
-        Jean Delvare <jdelvare@suse.com>, Pu Wen <puwen@hygon.cn>,
-        Jia Zhang <qianyue.zj@alibaba-inc.com>,
-        Takashi Iwai <tiwai@suse.de>,
-        Andy Whitcroft <apw@canonical.com>,
-        Colin Ian King <colin.king@canonical.com>,
-        Myron Stowe <myron.stowe@redhat.com>,
-        Sumeet Pawnikar <sumeet.r.pawnikar@intel.com>,
-        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-        "linux-hwmon@vger.kernel.org" <linux-hwmon@vger.kernel.org>,
-        "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
-References: <20181102195925.GB160487@google.com>
- <20181102232948.GC26770@zn.tnic> <20181105214537.GA19420@google.com>
- <20181105215650.GG26868@zn.tnic> <20181106214256.GA65443@google.com>
- <20181106220059.GA4139@zn.tnic> <20181106232040.GA85755@google.com>
- <75748b089ee696d5cbaa5c0ce68bad228699894c.camel@linux.intel.com>
- <20181107213103.GA41183@google.com>
- <baf4b2e9c9b7cb2f827fd3bffce4b72f6d9376a8.camel@linux.intel.com>
- <20181107231411.GB41183@google.com>
-From:   Guenter Roeck <linux@roeck-us.net>
-Message-ID: <2c4b9e7e-6558-e5ce-50e6-58aaec22fd1c@roeck-us.net>
-Date:   Wed, 7 Nov 2018 17:40:14 -0800
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:60.0) Gecko/20100101
- Thunderbird/60.2.1
-MIME-Version: 1.0
-In-Reply-To: <20181107231411.GB41183@google.com>
-Content-Type: text/plain; charset=utf-8; format=flowed
-Content-Language: en-US
+        id S1726684AbeKHM1V (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Thu, 8 Nov 2018 07:27:21 -0500
+Received: from Mailgw01.mediatek.com ([1.203.163.78]:30329 "EHLO
+        mailgw01.mediatek.com" rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org
+        with ESMTP id S1726726AbeKHM1V (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Thu, 8 Nov 2018 07:27:21 -0500
+X-UUID: 86ad333d75a9468bae331bb6a66b9b00-20181108
+X-UUID: 86ad333d75a9468bae331bb6a66b9b00-20181108
+Received: from mtkcas34.mediatek.inc [(172.27.4.250)] by mailgw01.mediatek.com
+        (envelope-from <honghui.zhang@mediatek.com>)
+        (mailgw01.mediatek.com ESMTP with TLS)
+        with ESMTP id 1086305309; Thu, 08 Nov 2018 10:53:53 +0800
+Received: from MTKCAS32.mediatek.inc (172.27.4.184) by MTKMBS31N2.mediatek.inc
+ (172.27.4.87) with Microsoft SMTP Server (TLS) id 15.0.1395.4; Thu, 8 Nov
+ 2018 10:53:51 +0800
+Received: from [10.17.3.153] (10.17.3.153) by MTKCAS32.mediatek.inc
+ (172.27.4.170) with Microsoft SMTP Server id 15.0.1395.4 via Frontend
+ Transport; Thu, 8 Nov 2018 10:53:50 +0800
+Message-ID: <1541645630.11281.18.camel@mhfsdcap03>
+Subject: Re: [PATCH] PCI: mediatek: Use
+ devm_of_pci_get_host_bridge_resources() to parse DT
+From:   Honghui Zhang <honghui.zhang@mediatek.com>
+To:     Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
+CC:     <bhelgaas@google.com>, <linux-arm-kernel@lists.infradead.org>,
+        <linux-mediatek@lists.infradead.org>, <linux-pci@vger.kernel.org>,
+        <ryder.lee@mediatek.com>, <linux-kernel@vger.kernel.org>,
+        <youlin.pei@mediatek.com>, <yt.shen@mediatek.com>,
+        <jianjun.wang@mediatek.com>
+Date:   Thu, 8 Nov 2018 10:53:50 +0800
+In-Reply-To: <20181107120333.GB11586@e107981-ln.cambridge.arm.com>
+References: <1539833014-1738-1-git-send-email-honghui.zhang@mediatek.com>
+         <20181107120333.GB11586@e107981-ln.cambridge.arm.com>
+Content-Type: text/plain; charset="UTF-8"
+X-Mailer: Evolution 3.2.3-0ubuntu6 
 Content-Transfer-Encoding: 7bit
+MIME-Version: 1.0
+X-MTK:  N
 Sender: linux-pci-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-On 11/7/18 3:14 PM, Bjorn Helgaas wrote:
->
->>
->> There is no INT3401 on any newer atom or core platforms, so you can't
->> enumerate on this device. We don't control what ACPI device is present
->> on a system. It depends on what the other non-Linux OS is using.
+On Wed, 2018-11-07 at 12:03 +0000, Lorenzo Pieralisi wrote:
+> On Thu, Oct 18, 2018 at 11:23:34AM +0800, honghui.zhang@mediatek.com wrote:
+> > From: Honghui Zhang <honghui.zhang@mediatek.com>
+> > 
+> > Use the devm_of_pci_get_host_bridge_resources() API in place of the PCI OF
+> > DT parser.
+> > 
+> > Signed-off-by: Honghui Zhang <honghui.zhang@mediatek.com>
+> > ---
+> >  drivers/pci/controller/pcie-mediatek.c | 109 +++++++++------------------------
+> >  1 file changed, 29 insertions(+), 80 deletions(-)
+> > 
+> > diff --git a/drivers/pci/controller/pcie-mediatek.c b/drivers/pci/controller/pcie-mediatek.c
+> > index 2a1f97c..6632d4e 100644
+> > --- a/drivers/pci/controller/pcie-mediatek.c
+> > +++ b/drivers/pci/controller/pcie-mediatek.c
+> > @@ -197,29 +197,20 @@ struct mtk_pcie_port {
+> >   * @dev: pointer to PCIe device
+> >   * @base: IO mapped register base
+> >   * @free_ck: free-run reference clock
+> > - * @io: IO resource
+> > - * @pio: PIO resource
+> >   * @mem: non-prefetchable memory resource
+> > - * @busn: bus range
+> > - * @offset: IO / Memory offset
+> >   * @ports: pointer to PCIe port information
+> >   * @soc: pointer to SoC-dependent operations
+> > + * @busnr: root bus number
+> >   */
+> >  struct mtk_pcie {
+> >  	struct device *dev;
+> >  	void __iomem *base;
+> >  	struct clk *free_ck;
+> >  
+> > -	struct resource io;
+> > -	struct resource pio;
+> >  	struct resource mem;
+> > -	struct resource busn;
+> > -	struct {
+> > -		resource_size_t mem;
+> > -		resource_size_t io;
+> > -	} offset;
+> >  	struct list_head ports;
+> >  	const struct mtk_pcie_soc *soc;
+> > +	int busnr;
 > 
-> Sure, you can't *force* OEMs to supply a given ACPI device, but you
-> can certainly say "if you want this functionality, supply INT3401
-> devices."  That's what you do with PNP0A03 (PCI host bridges), for
-> example.  If an OEM doesn't supply PNP0A03 devices, the system can
-> boot just fine as long as you don't need PCI.
+> If you move the code initializing and probing the pci_host_bridge into
+> mtk_pcie_setup() (and rename that function) this variable becomes
+> useless. It should be an unsigned int, by the way.
+
+Yes, I can directly assign the busnr to host->busnr in the
+mtk_pcie_setup and remove this variable.
+
+Thanks.
+
 > 
-> This model of using the PCI IDs forces OS vendors to release updates
-> for every new platform.  I guess you must have considered that and
-> decided whatever benefit you're getting was worth the cost.
+> >  };
+> >  
+> >  static void mtk_pcie_subsys_powerdown(struct mtk_pcie *pcie)
+> > @@ -1045,55 +1036,42 @@ static int mtk_pcie_setup(struct mtk_pcie *pcie)
+> >  {
+> >  	struct device *dev = pcie->dev;
+> >  	struct device_node *node = dev->of_node, *child;
+> > -	struct of_pci_range_parser parser;
+> > -	struct of_pci_range range;
+> > -	struct resource res;
+> >  	struct mtk_pcie_port *port, *tmp;
+> > +	struct pci_host_bridge *host = pci_host_bridge_from_priv(pcie);
+> > +	struct list_head *windows = &host->windows;
+> > +	struct resource_entry *win, *tmp_win;
+> > +	resource_size_t io_base;
+> >  	int err;
+> >  
+> > -	if (of_pci_range_parser_init(&parser, node)) {
+> > -		dev_err(dev, "missing \"ranges\" property\n");
+> > -		return -EINVAL;
+> > -	}
+> > +	err = devm_of_pci_get_host_bridge_resources(dev, 0, 0xff,
+> > +						    windows, &io_base);
+> > +	if (err)
+> > +		return err;
+> >  
+> > -	for_each_of_pci_range(&parser, &range) {
+> > -		err = of_pci_range_to_resource(&range, node, &res);
+> > -		if (err < 0)
+> > -			return err;
+> > +	err = devm_request_pci_bus_resources(dev, windows);
+> > +	if (err < 0)
+> > +		return err;
+> >  
+> > -		switch (res.flags & IORESOURCE_TYPE_BITS) {
+> > +	/* Get the I/O and memory ranges from DT */
+> > +	resource_list_for_each_entry_safe(win, tmp_win, windows) {
+> > +		switch (resource_type(win->res)) {
+> >  		case IORESOURCE_IO:
+> > -			pcie->offset.io = res.start - range.pci_addr;
+> > -
+> > -			memcpy(&pcie->pio, &res, sizeof(res));
+> > -			pcie->pio.name = node->full_name;
+> > -
+> > -			pcie->io.start = range.cpu_addr;
+> > -			pcie->io.end = range.cpu_addr + range.size - 1;
+> > -			pcie->io.flags = IORESOURCE_MEM;
+> > -			pcie->io.name = "I/O";
+> > -
+> > -			memcpy(&res, &pcie->io, sizeof(res));
+> > -			break;
+> > -
+> > +			err = devm_pci_remap_iospace(dev, win->res, io_base);
+> > +			if (err) {
+> > +				dev_warn(dev, "error %d: failed to map resource %pR\n",
+> > +					 err, win->res);
+> > +				resource_list_destroy_entry(win);
+> > +			}
+> 
+> Missing a break.
+
+Thanks.
+> 
+> >  		case IORESOURCE_MEM:
+> > -			pcie->offset.mem = res.start - range.pci_addr;
+> > -
+> > -			memcpy(&pcie->mem, &res, sizeof(res));
+> > +			memcpy(&pcie->mem, win->res, sizeof(*win->res));
+> >  			pcie->mem.name = "non-prefetchable";
+> >  			break;
+> > +		case IORESOURCE_BUS:
+> > +			pcie->busnr = win->res->start;
+> > +			break;
+> >  		}
+> >  	}
+> >  
+> > -	err = of_pci_parse_bus_range(node, &pcie->busn);
+> > -	if (err < 0) {
+> > -		dev_err(dev, "failed to parse bus ranges property: %d\n", err);
+> > -		pcie->busn.name = node->name;
+> > -		pcie->busn.start = 0;
+> > -		pcie->busn.end = 0xff;
+> > -		pcie->busn.flags = IORESOURCE_BUS;
+> > -	}
+> > -
+> >  	for_each_available_child_of_node(node, child) {
+> >  		int slot;
+> >  
+> > @@ -1125,28 +1103,6 @@ static int mtk_pcie_setup(struct mtk_pcie *pcie)
+> >  	return 0;
+> >  }
+> >  
+> > -static int mtk_pcie_request_resources(struct mtk_pcie *pcie)
+> > -{
+> > -	struct pci_host_bridge *host = pci_host_bridge_from_priv(pcie);
+> > -	struct list_head *windows = &host->windows;
+> > -	struct device *dev = pcie->dev;
+> > -	int err;
+> > -
+> > -	pci_add_resource_offset(windows, &pcie->pio, pcie->offset.io);
+> > -	pci_add_resource_offset(windows, &pcie->mem, pcie->offset.mem);
+> > -	pci_add_resource(windows, &pcie->busn);
+> > -
+> > -	err = devm_request_pci_bus_resources(dev, windows);
+> > -	if (err < 0)
+> > -		return err;
+> > -
+> > -	err = devm_pci_remap_iospace(dev, &pcie->pio, pcie->io.start);
+> > -	if (err < 0)
+> > -		return err;
+> > -
+> > -	return 0;
+> > -}
+> > -
+> >  static int mtk_pcie_probe(struct platform_device *pdev)
+> >  {
+> >  	struct device *dev = &pdev->dev;
+> > @@ -1169,11 +1125,7 @@ static int mtk_pcie_probe(struct platform_device *pdev)
+> >  	if (err)
+> >  		return err;
+> >  
+> > -	err = mtk_pcie_request_resources(pcie);
+> > -	if (err)
+> > -		goto put_resources;
+> > -
+> > -	host->busnr = pcie->busn.start;
+> > +	host->busnr = pcie->busnr;
+> >  	host->dev.parent = pcie->dev;
+> >  	host->ops = pcie->soc->ops;
+> >  	host->map_irq = of_irq_parse_and_map_pci;
+> > @@ -1181,12 +1133,9 @@ static int mtk_pcie_probe(struct platform_device *pdev)
+> >  	host->sysdata = pcie;
+> >  
+> >  	err = pci_host_probe(host);
+> > -	if (err)
+> > -		goto put_resources;
+> > -
+> > -	return 0;
+> > +	if (!err)
+> > +		return 0;
+> >  
+> 
+> No, leave the error path.
+> 
+> 	err = pci_host_probe(host);
+> 	if (err)
+> 		goto put_resources;
+> 
+> 	return 0;
+> put_resources:
+> 	...
+> 
+> it is easier to follow.
 > 
 
-I really dislike where this is going. Board vendors - and that included
-Intel when Intel was still selling boards - have a long history of only
-making mandatory methods available in ACPI. Pretty much all of them don't
-make hardware monitoring information available via ACPI. This is a pain
-especially for laptops where the information is provided by an embedded
-controller. On systems with Super-IO chips with dedicated hardware
-monitoring functionality, they often go as far as signing mutual NDAs
-with chip vendors, which lets both the board and the chip vendor claim
-that they can not provide chip specifications to third parties, aka
-users.
+OK.
+I will revert this snippet in the next version.
 
-You are pretty much extending that to CPU temperature monitoring. The
-fallout, if adopted, will be that it will effectively no longer be
-possible to monitor the temperature on chips supporting this
-"feature".
+Thanks.
 
-I do not think that would be a good idea.
+> Thanks,
+> Lorenzo
+> 
+> > -put_resources:
+> >  	if (!list_empty(&pcie->ports))
+> >  		mtk_pcie_put_resources(pcie);
+> >  
+> > -- 
+> > 2.6.4
+> > 
 
-Guenter
+
