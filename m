@@ -2,453 +2,176 @@ Return-Path: <SRS0=XjPq=NT=vger.kernel.org=linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-9.6 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
-	SPF_PASS,USER_AGENT_MUTT autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-1.0 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+	MAILING_LIST_MULTI,SPF_PASS autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 1CFCBECDE4B
-	for <linux-pci@archiver.kernel.org>; Thu,  8 Nov 2018 20:09:25 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 7412EECDE47
+	for <linux-pci@archiver.kernel.org>; Thu,  8 Nov 2018 20:31:51 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id B3EAF20857
-	for <linux-pci@archiver.kernel.org>; Thu,  8 Nov 2018 20:09:24 +0000 (UTC)
-Authentication-Results: mail.kernel.org;
-	dkim=pass (1024-bit key) header.d=kernel.org header.i=@kernel.org header.b="taDaUdki"
-DMARC-Filter: OpenDMARC Filter v1.3.2 mail.kernel.org B3EAF20857
-Authentication-Results: mail.kernel.org; dmarc=fail (p=none dis=none) header.from=kernel.org
+	by mail.kernel.org (Postfix) with ESMTP id 37396206BA
+	for <linux-pci@archiver.kernel.org>; Thu,  8 Nov 2018 20:31:51 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.3.2 mail.kernel.org 37396206BA
+Authentication-Results: mail.kernel.org; dmarc=fail (p=none dis=none) header.from=redhat.com
 Authentication-Results: mail.kernel.org; spf=none smtp.mailfrom=linux-pci-owner@vger.kernel.org
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1725922AbeKIFqZ (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Fri, 9 Nov 2018 00:46:25 -0500
-Received: from mail.kernel.org ([198.145.29.99]:41318 "EHLO mail.kernel.org"
+        id S1725922AbeKIGI5 (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Fri, 9 Nov 2018 01:08:57 -0500
+Received: from mx1.redhat.com ([209.132.183.28]:53188 "EHLO mx1.redhat.com"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1725884AbeKIFqZ (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Fri, 9 Nov 2018 00:46:25 -0500
-Received: from localhost (unknown [69.71.4.100])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+        id S1725882AbeKIGI5 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Fri, 9 Nov 2018 01:08:57 -0500
+Received: from smtp.corp.redhat.com (int-mx05.intmail.prod.int.phx2.redhat.com [10.5.11.15])
+        (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
         (No client certificate requested)
-        by mail.kernel.org (Postfix) with ESMTPSA id 389A02077B;
-        Thu,  8 Nov 2018 20:09:22 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=default; t=1541707762;
-        bh=fUpLikS75hrABD8vxw9zvtufFSADWcBzJRzlonifLH8=;
-        h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-        b=taDaUdkiM0/XCziA9N0wGLLQbGy3VKkFAoHuy/jDgLpuqJAdJ0T78MGIshxRhT0E1
-         xLFT1aW9kC0g6a+s0xaJucCGwZMuNX3WS77cBnDaUVMXjFAAhuMEC0CVktQ36TY/zQ
-         p9rzRQDUKF0nPcpJC72UX95eOE245wQ3yPVo9Tr8=
-Date:   Thu, 8 Nov 2018 14:09:17 -0600
-From:   Bjorn Helgaas <helgaas@kernel.org>
-To:     Alexandru Gagniuc <mr.nuke.me@gmail.com>
-Cc:     linux-pci@vger.kernel.org, keith.busch@intel.com,
-        alex_gagniuc@dellteam.com, austin_bolen@dell.com,
-        shyam_iyer@dell.com, linux-kernel@vger.kernel.org,
-        Jonathan Derrick <jonathan.derrick@intel.com>,
-        Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-        Lukas Wunner <lukas@wunner.de>,
-        Russell Currey <ruscur@russell.cc>,
-        Sam Bobroff <sbobroff@linux.ibm.com>,
-        Oliver O'Halloran <oohall@gmail.com>,
-        linuxppc-dev@lists.ozlabs.org
-Subject: Re: [PATCH v2] PCI/MSI: Don't touch MSI bits when the PCI device is
- disconnected
-Message-ID: <20181108200855.GE41183@google.com>
-References: <20180918221501.13112-1-mr.nuke.me@gmail.com>
- <20181107234257.GC41183@google.com>
+        by mx1.redhat.com (Postfix) with ESMTPS id 20A1C307DAC2;
+        Thu,  8 Nov 2018 20:31:49 +0000 (UTC)
+Received: from w520.home (ovpn-116-133.phx2.redhat.com [10.3.116.133])
+        by smtp.corp.redhat.com (Postfix) with ESMTP id 0AD9E5D778;
+        Thu,  8 Nov 2018 20:31:47 +0000 (UTC)
+Date:   Thu, 8 Nov 2018 13:31:47 -0700
+From:   Alex Williamson <alex.williamson@redhat.com>
+To:     Bjorn Helgaas <helgaas@kernel.org>
+Cc:     Sinan Kaya <okaya@kernel.org>, linux-pci@vger.kernel.org,
+        Derek Chickles <derek.chickles@caviumnetworks.com>,
+        Satanand Burla <satananda.burla@caviumnetworks.com>,
+        Felix Manlunas <felix.manlunas@caviumnetworks.com>,
+        Raghu Vatsavayi <raghu.vatsavayi@caviumnetworks.com>,
+        "David S. Miller" <davem@davemloft.net>,
+        Bjorn Helgaas <bhelgaas@google.com>,
+        Boris Ostrovsky <boris.ostrovsky@oracle.com>,
+        Juergen Gross <jgross@suse.com>,
+        Jia-Ju Bai <baijiaju1990@gmail.com>
+Subject: Re: [PATCH v6 1/7] PCI: Expose reset_type to users of
+ __pci_reset_function_locked()
+Message-ID: <20181108133147.13a0485d@w520.home>
+In-Reply-To: <20181020150353.GR5906@bhelgaas-glaptop.roam.corp.google.com>
+References: <20181019021132.14743-1-okaya@kernel.org>
+        <20181020020908.GQ5906@bhelgaas-glaptop.roam.corp.google.com>
+        <8f368f0b-b9b9-54ab-bd46-88635b9a43e5@kernel.org>
+        <20181020150353.GR5906@bhelgaas-glaptop.roam.corp.google.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20181107234257.GC41183@google.com>
-User-Agent: Mutt/1.10.1 (2018-07-13)
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7bit
+X-Scanned-By: MIMEDefang 2.79 on 10.5.11.15
+X-Greylist: Sender IP whitelisted, not delayed by milter-greylist-4.5.16 (mx1.redhat.com [10.5.110.42]); Thu, 08 Nov 2018 20:31:49 +0000 (UTC)
 Sender: linux-pci-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-[+cc Jonathan, Greg, Lukas, Russell, Sam, Oliver for discussion about
-PCI error recovery in general]
+On Sat, 20 Oct 2018 10:03:53 -0500
+Bjorn Helgaas <helgaas@kernel.org> wrote:
 
-On Wed, Nov 07, 2018 at 05:42:57PM -0600, Bjorn Helgaas wrote:
-> On Tue, Sep 18, 2018 at 05:15:00PM -0500, Alexandru Gagniuc wrote:
-> > When a PCI device is gone, we don't want to send IO to it if we can
-> > avoid it. We expose functionality via the irq_chip structure. As
-> > users of that structure may not know about the underlying PCI device,
-> > it's our responsibility to guard against removed devices.
+> On Fri, Oct 19, 2018 at 10:58:00PM -0400, Sinan Kaya wrote:
+> > On 10/19/2018 10:09 PM, Bjorn Helgaas wrote:  
+> > > On Fri, Oct 19, 2018 at 02:11:21AM +0000, Sinan Kaya wrote:  
+> > > > We need a contract between the reset API users and the PCI core about the
+> > > > types of reset that a user needs vs. what PCI core can do internally.
+> > > > If a platform supports hotplug, we need to do hotplug reset as an example.  
+> > > 
+> > > Somewhere this needs a description of a bug that's being fixed or some
+> > > other justification, e.g., code simplification.  The above is a little
+> > > too abstract for me to grasp it.  
 > > 
-> > .irq_write_msi_msg() is already guarded inside __pci_write_msi_msg().
-> > .irq_mask/unmask() are not. Guard them for completeness.
+> > This series was in response to a request from Alex to have external users
+> > some level of control on what PCI core can do internally.
 > > 
-> > For example, surprise removal of a PCIe device triggers teardown. This
-> > touches the irq_chips ops some point to disable the interrupts. I/O
-> > generated here can crash the system on firmware-first machines.
-> > Not triggering the IO in the first place greatly reduces the
-> > possibility of the problem occurring.
-> > 
-> > Signed-off-by: Alexandru Gagniuc <mr.nuke.me@gmail.com>
+> > On the other hand, I have been posting patches to remove direct access from
+> > external users to PCI core internals and hide all reset semantics like
+> > save/restore from the users. I like giving less power to the users :)  
 > 
-> Applied to pci/misc for v4.21, thanks!
-
-I'm having second thoughts about this.  One thing I'm uncomfortable
-with is that sprinkling pci_dev_is_disconnected() around feels ad hoc
-instead of systematic, in the sense that I don't know how we convince
-ourselves that this (and only this) is the correct place to put it.
-
-Another is that the only place we call pci_dev_set_disconnected() is
-in pciehp and acpiphp, so the only "disconnected" case we catch is if
-hotplug happens to be involved.  Every MMIO read from the device is an
-opportunity to learn whether it is reachable (a read from an
-unreachable device typically returns ~0 data), but we don't do
-anything at all with those.
-
-The config accessors already check pci_dev_is_disconnected(), so this
-patch is really aimed at MMIO accesses.  I think it would be more
-robust if we added wrappers for readl() and writel() so we could
-notice read errors and avoid future reads and writes.
-
-Two compiled but untested patches below for your comments.  You can
-mostly ignore the first; it's just boring interface changes.  The
-important part is the second, which adds the wrappers.
-
-These would be an alternative to the (admittedly much shorter) patch
-here.  The wrappers are independent of MSI and could potentially be
-exported from the PCI core for use by drivers.  I think it would be
-better for drivers to use something like this instead of calling
-pci_device_is_present() or pci_dev_is_disconnected() directly.
-
-> > ---
-> >  drivers/pci/msi.c | 3 +++
-> >  1 file changed, 3 insertions(+)
+> That's a good goal.  Along the way we might need to tweak the users to
+> align their usage to some common cases.
+> 
+> > > > Expose the reset types to the drivers and try different reset types based
+> > > > on the new reset_type parameter.
+> > > > 
+> > > > Most users are expected to use PCI_RESET_ANY, PCI_RESET_FUNC or
+> > > > PCI_RESET_LINK parameters.  
+> > > 
+> > > There are fewer than a dozen callers of all these functions and the
+> > > complication of these interfaces doesn't seem commensurate with the
+> > > problem.  With six different interfaces and five independent bit
+> > > flags, the possibilities are way more than necessary.  
 > > 
-> > diff --git a/drivers/pci/msi.c b/drivers/pci/msi.c
-> > index f2ef896464b3..f31058fd2260 100644
-> > --- a/drivers/pci/msi.c
-> > +++ b/drivers/pci/msi.c
-> > @@ -227,6 +227,9 @@ static void msi_set_mask_bit(struct irq_data *data, u32 flag)
-> >  {
-> >  	struct msi_desc *desc = irq_data_get_msi_desc(data);
-> >  
-> > +	if (pci_dev_is_disconnected(msi_desc_to_pci_dev(desc)))
-> > +		return;
-> > +
-> >  	if (desc->msi_attrib.is_msix) {
-> >  		msix_mask_irq(desc, flag);
-> >  		readl(desc->mask_base);		/* Flush write to device */
+> > True, I posted an RFC to reduce 5 function reset API flavors to 1 and
+> > rely on the flags.  
+> 
+> I don't like the flags.  Even one API with five bit flags has 32
+> possible combinations, most of which are meaningless.
+> 
+> > Even these generic reset examples are not really generic today. Some of them
+> > call reset from probe path and use the locked reset API
+> > (pci_reset_function_locked()).
+> > 
+> > Others call the reset but prefer to not save/restore context.
+> > (__pci_reset_function_locked()). Some drivers even implemented their own
+> > context save/restore code themselves.
+> > 
+> > There are others that do obtain the lock as well as save/restore context.
+> > (pci_reset_function())
+> > 
+> > I really don't like having these many reset API flavors and I thought
+> > we could do something about that.  
+> 
+> I agree we have too many flavors.  I'm not convinced all the variation
+> in save/restore is necessary; I suspect most of that is accidental and
+> drivers could probably all live with a single solution.
+> 
+> > We can also drop the series if we think that current API are good enough
+> > and nuances are well understood.  
+> 
+> I don't think the current API is good enough :)  It's just a small
+> matter of sorting out a better one.
 
+The thing that I was really hoping to fix was what happened in
+811c5cb37df4 where we used to have separate bus vs slot reset
+interfaces that vfio-pci made use of, but these were abstracted away
+such that even though vfio-pci is specifically trying to achieve one or
+the other, not just whichever the pci-core chooses to use, we no longer
+have an interface to do that.  It doesn't make sense that we have
+pci_probe_reset_slot() and pci_probe_reset_bus() exported for drivers
+yet only pci_reset_bus() to execute the reset, which actually does a
+slot reset, not a bus reset, if it's available (and hopefully it picks
+the one that aligns with what the caller was intending).
 
-commit 150346e09edbcaedc520a6d7dec2b16f3a53afa1
-Author: Bjorn Helgaas <bhelgaas@google.com>
-Date:   Thu Nov 8 09:17:51 2018 -0600
+I agree that we should have the "I don't really know what I'm doing,
+please make the correct choice obvious" interface, but at the same time
+I don't see the value in penalizing drivers that do know what they're
+doing and want to make a specific choice.  In that sense a desire to
+give less power to the user (ie. GPL kernel drivers) seems misplaced, I
+think we need to aim for a balance where the interface is hard to
+misuse, but at the same time retains useful functionality.  It can't
+just be one or the other.
 
-    PCI/MSI: Pass pci_dev into IRQ mask interfaces
-    
-    Add the struct pci_dev pointer to these interfaces:
-    
-      __pci_msix_desc_mask_irq()
-      __pci_msi_desc_mask_irq()
-      msix_mask_irq
-      msi_mask_irq()
-    
-    The pci_dev pointer is currently unused, so there's no functional change
-    intended with this patch.  A subsequent patch will use the pointer to
-    improve error detection.
+I was also in a discussion today that seems like it could leverage
+aspects of this series where there's a desire to allow system admin
+level influence over the type of reset used for a device.  We can do
+this in the kernel via device specific resets, but it's not always the
+case that we can develop a universal recipe for blacklisting a reset
+mechanism for a given device.  Consider for instance a device where FLR
+works well only with some firmware revisions, but different system
+vendors might report similar firmware revisions, some afflicted, others
+not.
 
-diff --git a/arch/s390/pci/pci.c b/arch/s390/pci/pci.c
-index 9f6f392a4461..56bbee2cf761 100644
---- a/arch/s390/pci/pci.c
-+++ b/arch/s390/pci/pci.c
-@@ -462,9 +462,9 @@ void arch_teardown_msi_irqs(struct pci_dev *pdev)
- 		if (!msi->irq)
- 			continue;
- 		if (msi->msi_attrib.is_msix)
--			__pci_msix_desc_mask_irq(msi, 1);
-+			__pci_msix_desc_mask_irq(pdev, msi, 1);
- 		else
--			__pci_msi_desc_mask_irq(msi, 1, 1);
-+			__pci_msi_desc_mask_irq(pdev, msi, 1, 1);
- 		irq_set_msi_desc(msi->irq, NULL);
- 		irq_free_desc(msi->irq);
- 		msi->msg.address_lo = 0;
-diff --git a/drivers/pci/msi.c b/drivers/pci/msi.c
-index af24ed50a245..d46ae506e296 100644
---- a/drivers/pci/msi.c
-+++ b/drivers/pci/msi.c
-@@ -170,7 +170,8 @@ static inline __attribute_const__ u32 msi_mask(unsigned x)
-  * reliably as devices without an INTx disable bit will then generate a
-  * level IRQ which will never be cleared.
-  */
--u32 __pci_msi_desc_mask_irq(struct msi_desc *desc, u32 mask, u32 flag)
-+u32 __pci_msi_desc_mask_irq(struct pci_dev *dev, struct msi_desc *desc,
-+			    u32 mask, u32 flag)
- {
- 	u32 mask_bits = desc->masked;
- 
-@@ -179,15 +180,15 @@ u32 __pci_msi_desc_mask_irq(struct msi_desc *desc, u32 mask, u32 flag)
- 
- 	mask_bits &= ~mask;
- 	mask_bits |= flag;
--	pci_write_config_dword(msi_desc_to_pci_dev(desc), desc->mask_pos,
--			       mask_bits);
-+	pci_write_config_dword(dev, desc->mask_pos, mask_bits);
- 
- 	return mask_bits;
- }
- 
--static void msi_mask_irq(struct msi_desc *desc, u32 mask, u32 flag)
-+static void msi_mask_irq(struct pci_dev *dev, struct msi_desc *desc, u32 mask,
-+			 u32 flag)
- {
--	desc->masked = __pci_msi_desc_mask_irq(desc, mask, flag);
-+	desc->masked = __pci_msi_desc_mask_irq(dev, desc, mask, flag);
- }
- 
- static void __iomem *pci_msix_desc_addr(struct msi_desc *desc)
-@@ -203,7 +204,8 @@ static void __iomem *pci_msix_desc_addr(struct msi_desc *desc)
-  * file.  This saves a few milliseconds when initialising devices with lots
-  * of MSI-X interrupts.
-  */
--u32 __pci_msix_desc_mask_irq(struct msi_desc *desc, u32 flag)
-+u32 __pci_msix_desc_mask_irq(struct pci_dev *dev, struct msi_desc *desc,
-+			     u32 flag)
- {
- 	u32 mask_bits = desc->masked;
- 
-@@ -218,21 +220,22 @@ u32 __pci_msix_desc_mask_irq(struct msi_desc *desc, u32 flag)
- 	return mask_bits;
- }
- 
--static void msix_mask_irq(struct msi_desc *desc, u32 flag)
-+static void msix_mask_irq(struct pci_dev *dev, struct msi_desc *desc, u32 flag)
- {
--	desc->masked = __pci_msix_desc_mask_irq(desc, flag);
-+	desc->masked = __pci_msix_desc_mask_irq(dev, desc, flag);
- }
- 
- static void msi_set_mask_bit(struct irq_data *data, u32 flag)
- {
- 	struct msi_desc *desc = irq_data_get_msi_desc(data);
-+	struct pci_dev *dev = msi_desc_to_pci_dev(desc);
- 
- 	if (desc->msi_attrib.is_msix) {
--		msix_mask_irq(desc, flag);
-+		msix_mask_irq(dev, desc, flag);
- 		readl(desc->mask_base);		/* Flush write to device */
- 	} else {
- 		unsigned offset = data->irq - desc->irq;
--		msi_mask_irq(desc, 1 << offset, flag << offset);
-+		msi_mask_irq(dev, desc, 1 << offset, flag << offset);
- 	}
- }
- 
-@@ -401,7 +404,7 @@ static void __pci_restore_msi_state(struct pci_dev *dev)
- 	arch_restore_msi_irqs(dev);
- 
- 	pci_read_config_word(dev, dev->msi_cap + PCI_MSI_FLAGS, &control);
--	msi_mask_irq(entry, msi_mask(entry->msi_attrib.multi_cap),
-+	msi_mask_irq(dev, entry, msi_mask(entry->msi_attrib.multi_cap),
- 		     entry->masked);
- 	control &= ~PCI_MSI_FLAGS_QSIZE;
- 	control |= (entry->msi_attrib.multiple << 4) | PCI_MSI_FLAGS_ENABLE;
-@@ -423,7 +426,7 @@ static void __pci_restore_msix_state(struct pci_dev *dev)
- 
- 	arch_restore_msi_irqs(dev);
- 	for_each_pci_msi_entry(entry, dev)
--		msix_mask_irq(entry, entry->masked);
-+		msix_mask_irq(dev, entry, entry->masked);
- 
- 	pci_msix_clear_and_set_ctrl(dev, PCI_MSIX_FLAGS_MASKALL, 0);
- }
-@@ -612,28 +615,28 @@ static int msi_capability_init(struct pci_dev *dev, int nvec,
- 
- 	/* All MSIs are unmasked by default, Mask them all */
- 	mask = msi_mask(entry->msi_attrib.multi_cap);
--	msi_mask_irq(entry, mask, mask);
-+	msi_mask_irq(dev, entry, mask, mask);
- 
- 	list_add_tail(&entry->list, dev_to_msi_list(&dev->dev));
- 
- 	/* Configure MSI capability structure */
- 	ret = pci_msi_setup_msi_irqs(dev, nvec, PCI_CAP_ID_MSI);
- 	if (ret) {
--		msi_mask_irq(entry, mask, ~mask);
-+		msi_mask_irq(dev, entry, mask, ~mask);
- 		free_msi_irqs(dev);
- 		return ret;
- 	}
- 
- 	ret = msi_verify_entries(dev);
- 	if (ret) {
--		msi_mask_irq(entry, mask, ~mask);
-+		msi_mask_irq(dev, entry, mask, ~mask);
- 		free_msi_irqs(dev);
- 		return ret;
- 	}
- 
- 	ret = populate_msi_sysfs(dev);
- 	if (ret) {
--		msi_mask_irq(entry, mask, ~mask);
-+		msi_mask_irq(dev, entry, mask, ~mask);
- 		free_msi_irqs(dev);
- 		return ret;
- 	}
-@@ -721,7 +724,7 @@ static void msix_program_entries(struct pci_dev *dev,
- 			entries[i++].vector = entry->irq;
- 		entry->masked = readl(pci_msix_desc_addr(entry) +
- 				PCI_MSIX_ENTRY_VECTOR_CTRL);
--		msix_mask_irq(entry, 1);
-+		msix_mask_irq(dev, entry, 1);
- 	}
- }
- 
-@@ -895,7 +898,7 @@ static void pci_msi_shutdown(struct pci_dev *dev)
- 	/* Return the device with MSI unmasked as initial states */
- 	mask = msi_mask(desc->msi_attrib.multi_cap);
- 	/* Keep cached state to be restored */
--	__pci_msi_desc_mask_irq(desc, mask, ~mask);
-+	__pci_msi_desc_mask_irq(dev, desc, mask, ~mask);
- 
- 	/* Restore dev->irq to its default pin-assertion irq */
- 	dev->irq = desc->msi_attrib.default_irq;
-@@ -982,7 +985,7 @@ static void pci_msix_shutdown(struct pci_dev *dev)
- 	/* Return the device with MSI-X masked as initial states */
- 	for_each_pci_msi_entry(entry, dev) {
- 		/* Keep cached states to be restored */
--		__pci_msix_desc_mask_irq(entry, 1);
-+		__pci_msix_desc_mask_irq(dev, entry, 1);
- 	}
- 
- 	pci_msix_clear_and_set_ctrl(dev, PCI_MSIX_FLAGS_ENABLE, 0);
-diff --git a/include/linux/msi.h b/include/linux/msi.h
-index 0e9c50052ff3..1525ec9457a4 100644
---- a/include/linux/msi.h
-+++ b/include/linux/msi.h
-@@ -141,8 +141,9 @@ void free_msi_entry(struct msi_desc *entry);
- void __pci_read_msi_msg(struct msi_desc *entry, struct msi_msg *msg);
- void __pci_write_msi_msg(struct msi_desc *entry, struct msi_msg *msg);
- 
--u32 __pci_msix_desc_mask_irq(struct msi_desc *desc, u32 flag);
--u32 __pci_msi_desc_mask_irq(struct msi_desc *desc, u32 mask, u32 flag);
-+u32 __pci_msix_desc_mask_irq(struct pci_dev *, struct msi_desc *desc, u32 flag);
-+u32 __pci_msi_desc_mask_irq(struct pci_dev *, struct msi_desc *desc, u32 mask,
-+			    u32 flag);
- void pci_msi_mask_irq(struct irq_data *data);
- void pci_msi_unmask_irq(struct irq_data *data);
- 
+The bar is relatively high to not introduce device regressions and
+incorrectly requiring a device to use SBR rather than FLR can have
+functionality repercussions.  I know Bjorn has a desire to have things
+work well by default and command line options and sysfs tweaking of
+devices are obstacles to that, but there are cases where I don't see
+that we have a clear path to impose a device specific quirk without
+fear of regressions, and some mechanism of letting userspace policy
+influence the operation seems a viable path.  IMO it would also be a
+useful debugging tool if I could select a specific method of reset for a
+device from userspace and perhaps the infrastructure for this might
+make it easier to test and implement device specific quirks that simply
+need to pick a reset mechanism different from the one the kernel
+chooses by default.
 
-commit 9b51617cc910b5facdb4ab0442d6562422c916d7
-Author: Bjorn Helgaas <bhelgaas@google.com>
-Date:   Thu Nov 8 08:34:07 2018 -0600
+The interface in this proposal maybe needs some work, but at some level
+it seems we need to consider which resets the device/bus/slot is capable
+of, resets blacklisted/selected/prioritized by the user/driver, and
+allow the caller to identify the type of reset they want to achieve.
+Can we agree that's a desirable goal?  Thanks,
 
-    PCI/MSI: Avoid MMIO accesses to device if it's unreachable
-    
-    Add wrappers around MMIO accesses (readl/writel) to the device.  If we
-    already know the device is unreachable because of hot-removal or a bus
-    error, skip the MMIO access.
-    
-    In addition, if we're doing an MMIO read, check whether it returns ~0 data.
-    If a read fails because of a bus error, host bridges typically synthesize
-    ~0 data to complete the CPU's read.  If a read returns ~0, do a config read
-    to determine whether the device is still reachable.  If the config read is
-    successful, the ~0 data is probably valid data from the device.  If the
-    config read fails, the device is unreachable, so mark it as disconnected.
-
-diff --git a/drivers/pci/msi.c b/drivers/pci/msi.c
-index d46ae506e296..0cf095eef69d 100644
---- a/drivers/pci/msi.c
-+++ b/drivers/pci/msi.c
-@@ -31,6 +31,38 @@ int pci_msi_ignore_mask;
- 
- #define msix_table_size(flags)	((flags & PCI_MSIX_FLAGS_QSIZE) + 1)
- 
-+static u32 mmio_readl(struct pci_dev *dev, const volatile void __iomem *addr)
-+{
-+	u32 val, id;
-+
-+	if (pci_dev_is_disconnected(dev))
-+		return ~0;
-+
-+	val = readl(addr);
-+
-+	/*
-+	 * If an MMIO read from the device returns ~0 data, that data may
-+	 * be valid, or it may indicate a bus error.  If config space is
-+	 * readable, assume it's valid data; otherwise, assume a bus error.
-+	 */
-+	if (val == ~0) {
-+		pci_read_config_dword(dev, PCI_VENDOR_ID, &id);
-+		if (id == ~0)
-+			pci_dev_set_disconnected(dev, NULL);
-+	}
-+
-+	return val;
-+}
-+
-+static void mmio_writel(struct pci_dev *dev, u32 val,
-+			volatile void __iomem *addr)
-+{
-+	if (pci_dev_is_disconnected(dev))
-+		return;
-+
-+	writel(val, addr);
-+}
-+
- #ifdef CONFIG_PCI_MSI_IRQ_DOMAIN
- static int pci_msi_setup_msi_irqs(struct pci_dev *dev, int nvec, int type)
- {
-@@ -215,7 +247,8 @@ u32 __pci_msix_desc_mask_irq(struct pci_dev *dev, struct msi_desc *desc,
- 	mask_bits &= ~PCI_MSIX_ENTRY_CTRL_MASKBIT;
- 	if (flag)
- 		mask_bits |= PCI_MSIX_ENTRY_CTRL_MASKBIT;
--	writel(mask_bits, pci_msix_desc_addr(desc) + PCI_MSIX_ENTRY_VECTOR_CTRL);
-+	mmio_writel(dev, mask_bits,
-+		    pci_msix_desc_addr(desc) + PCI_MSIX_ENTRY_VECTOR_CTRL);
- 
- 	return mask_bits;
- }
-@@ -232,7 +265,7 @@ static void msi_set_mask_bit(struct irq_data *data, u32 flag)
- 
- 	if (desc->msi_attrib.is_msix) {
- 		msix_mask_irq(dev, desc, flag);
--		readl(desc->mask_base);		/* Flush write to device */
-+		mmio_readl(dev, desc->mask_base); /* Flush write to device */
- 	} else {
- 		unsigned offset = data->irq - desc->irq;
- 		msi_mask_irq(dev, desc, 1 << offset, flag << offset);
-@@ -276,9 +309,11 @@ void __pci_read_msi_msg(struct msi_desc *entry, struct msi_msg *msg)
- 	if (entry->msi_attrib.is_msix) {
- 		void __iomem *base = pci_msix_desc_addr(entry);
- 
--		msg->address_lo = readl(base + PCI_MSIX_ENTRY_LOWER_ADDR);
--		msg->address_hi = readl(base + PCI_MSIX_ENTRY_UPPER_ADDR);
--		msg->data = readl(base + PCI_MSIX_ENTRY_DATA);
-+		msg->address_lo = mmio_readl(dev,
-+					     base + PCI_MSIX_ENTRY_LOWER_ADDR);
-+		msg->address_hi = mmio_readl(dev,
-+					     base + PCI_MSIX_ENTRY_UPPER_ADDR);
-+		msg->data = mmio_readl(dev, base + PCI_MSIX_ENTRY_DATA);
- 	} else {
- 		int pos = dev->msi_cap;
- 		u16 data;
-@@ -306,9 +341,11 @@ void __pci_write_msi_msg(struct msi_desc *entry, struct msi_msg *msg)
- 	} else if (entry->msi_attrib.is_msix) {
- 		void __iomem *base = pci_msix_desc_addr(entry);
- 
--		writel(msg->address_lo, base + PCI_MSIX_ENTRY_LOWER_ADDR);
--		writel(msg->address_hi, base + PCI_MSIX_ENTRY_UPPER_ADDR);
--		writel(msg->data, base + PCI_MSIX_ENTRY_DATA);
-+		mmio_writel(dev, msg->address_lo,
-+			    base + PCI_MSIX_ENTRY_LOWER_ADDR);
-+		mmio_writel(dev, msg->address_hi,
-+			    base + PCI_MSIX_ENTRY_UPPER_ADDR);
-+		mmio_writel(dev, msg->data, base + PCI_MSIX_ENTRY_DATA);
- 	} else {
- 		int pos = dev->msi_cap;
- 		u16 msgctl;
-@@ -722,8 +759,8 @@ static void msix_program_entries(struct pci_dev *dev,
- 	for_each_pci_msi_entry(entry, dev) {
- 		if (entries)
- 			entries[i++].vector = entry->irq;
--		entry->masked = readl(pci_msix_desc_addr(entry) +
--				PCI_MSIX_ENTRY_VECTOR_CTRL);
-+		entry->masked = mmio_readl(dev, pci_msix_desc_addr(entry) +
-+					   PCI_MSIX_ENTRY_VECTOR_CTRL);
- 		msix_mask_irq(dev, entry, 1);
- 	}
- }
+Alex
