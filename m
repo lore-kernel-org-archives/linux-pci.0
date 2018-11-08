@@ -2,287 +2,142 @@ Return-Path: <SRS0=XjPq=NT=vger.kernel.org=linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-10.1 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,
-	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_PASS,USER_AGENT_GIT
-	autolearn=unavailable autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-1.1 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
+	DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_PASS
+	autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 33C12ECDE4C
-	for <linux-pci@archiver.kernel.org>; Thu,  8 Nov 2018 17:11:28 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 63DF9ECDE47
+	for <linux-pci@archiver.kernel.org>; Thu,  8 Nov 2018 19:50:02 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id D2FA320989
-	for <linux-pci@archiver.kernel.org>; Thu,  8 Nov 2018 17:11:27 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 1089A20857
+	for <linux-pci@archiver.kernel.org>; Thu,  8 Nov 2018 19:50:02 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (1024-bit key) header.d=chromium.org header.i=@chromium.org header.b="MF+Ux7k2"
-DMARC-Filter: OpenDMARC Filter v1.3.2 mail.kernel.org D2FA320989
-Authentication-Results: mail.kernel.org; dmarc=fail (p=none dis=none) header.from=chromium.org
+	dkim=pass (1024-bit key) header.d=impinj.com header.i=@impinj.com header.b="NbyGjNLv"
+DMARC-Filter: OpenDMARC Filter v1.3.2 mail.kernel.org 1089A20857
+Authentication-Results: mail.kernel.org; dmarc=fail (p=quarantine dis=none) header.from=impinj.com
 Authentication-Results: mail.kernel.org; spf=none smtp.mailfrom=linux-pci-owner@vger.kernel.org
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727178AbeKICrv (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Thu, 8 Nov 2018 21:47:51 -0500
-Received: from mail-pg1-f193.google.com ([209.85.215.193]:45317 "EHLO
-        mail-pg1-f193.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726585AbeKICrv (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Thu, 8 Nov 2018 21:47:51 -0500
-Received: by mail-pg1-f193.google.com with SMTP id y4so8675536pgc.12
-        for <linux-pci@vger.kernel.org>; Thu, 08 Nov 2018 09:11:24 -0800 (PST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=chromium.org; s=google;
-        h=from:to:cc:subject:date:message-id:mime-version
-         :content-transfer-encoding;
-        bh=/7QJD6QyN4a7tCGv0UAwEV35V+U7OQLpTdnOlwe/UIk=;
-        b=MF+Ux7k2StOreuROdRCMWZIJI9kOkmgExm0GoIPapVQY/fph+Kh8mjLOGEGKFBvYzu
-         qC7+HVHvZR8Ai990c/tL22zlIHNPRxh2R0uPBaOMv0fIQlbpuh8IZ1os9od/6MtAriiq
-         rEM0b+/4pLKXIPSJv5wPjmz/U39XEIoRAV99U=
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20161025;
-        h=x-gm-message-state:from:to:cc:subject:date:message-id:mime-version
-         :content-transfer-encoding;
-        bh=/7QJD6QyN4a7tCGv0UAwEV35V+U7OQLpTdnOlwe/UIk=;
-        b=s/L+5ROp+XP0OAPYUFPmi3gC3Hi9UCPg9tGGJfDh3x3VGkSlDqDIObvjsBh7BIOYgu
-         cb3AytP2RmQwFxVvXoiKrZdXPvRDcLfAfRDW8fDUFO2BH8QavibCV9fCFV4l+oVNY902
-         LB4uNa1ZeauinoGi+1N3WTIOSO3ysSIzb3E28KdF95Otbi7cPOAicFbqRf97CYyItN3T
-         iakiPDfYAMDNTh7+VYbce/HmlD385zXC66Ic2jfJ607WLbIQPWR83YEigUm7qgvp5154
-         zNpJpvmpqp5hTTu6Gui+GY3OlO9cBrhiTC9FFfEqwz8OpFBhnHTwcG/7W+QWXmVO99wq
-         Rvbg==
-X-Gm-Message-State: AGRZ1gJRHoQLnaDlddyF9cDvBFs3HjfFrnAaDHWDlC9BLO37vNaaf+lG
-        EPa5a+82lAHVaHF53E0s+O9stg==
-X-Google-Smtp-Source: AJdET5e+x/8kNitiv3lRCTXGBPMnZK9QLKHxzYzCswFeEQ+WdxERpnNjuhl045XAP2dRK9qIRWx43w==
-X-Received: by 2002:a65:664e:: with SMTP id z14-v6mr4250026pgv.347.1541697083998;
-        Thu, 08 Nov 2018 09:11:23 -0800 (PST)
-Received: from zsm-linux.mtv.corp.google.com ([2620:15c:202:201:1b7c:8280:c835:b226])
-        by smtp.googlemail.com with ESMTPSA id s86-v6sm9586941pfa.137.2018.11.08.09.11.22
-        (version=TLS1_2 cipher=ECDHE-RSA-AES128-GCM-SHA256 bits=128/128);
-        Thu, 08 Nov 2018 09:11:23 -0800 (PST)
-From:   Zubin Mithra <zsm@chromium.org>
-To:     tglx@linutronix.de, mingo@redhat.com, bp@alien8.de, hpa@zytor.com,
-        hch@infradead.org, bhelgaas@google.com
-Cc:     groeck@chromium.org, keescook@chromium.org, zsm@chromium.org,
-        linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org
-Subject: [RFC] x86/pci: Mark pci_root_ops as const
-Date:   Thu,  8 Nov 2018 09:11:15 -0800
-Message-Id: <20181108171115.216060-1-zsm@chromium.org>
-X-Mailer: git-send-email 2.19.1.930.g4563a0d9d0-goog
+        id S1725723AbeKIF06 (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Fri, 9 Nov 2018 00:26:58 -0500
+Received: from mail-eopbgr720116.outbound.protection.outlook.com ([40.107.72.116]:6167
+        "EHLO NAM05-CO1-obe.outbound.protection.outlook.com"
+        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+        id S1727074AbeKIF05 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Fri, 9 Nov 2018 00:26:57 -0500
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=impinj.com;
+ s=selector1;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
+ bh=EwfNhzhPhK3EJFSeQdKEjSsZRXWqhDXPU1ITLrGiPKs=;
+ b=NbyGjNLvLsQqMYZj9wIEzQtmZAb/JOmCZuoSwkmEWy2os7NU8bLu60Sx/zBCFcLUzAwmK3r3jze8QCaC/879qnsCDYerSQL2IfXbbN+0LXDE6YyyBMxRUYEyBstIp7q/nar8qOJC5bpocDhTtO7FOAItaXB3Ly0YNHjwicDswNE=
+Received: from MWHPR0601MB3708.namprd06.prod.outlook.com (10.167.236.38) by
+ MWHPR0601MB3692.namprd06.prod.outlook.com (10.167.236.34) with Microsoft SMTP
+ Server (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
+ 15.20.1294.21; Thu, 8 Nov 2018 19:49:53 +0000
+Received: from MWHPR0601MB3708.namprd06.prod.outlook.com
+ ([fe80::f51a:d8dd:1aad:3bf9]) by MWHPR0601MB3708.namprd06.prod.outlook.com
+ ([fe80::f51a:d8dd:1aad:3bf9%3]) with mapi id 15.20.1294.034; Thu, 8 Nov 2018
+ 19:49:53 +0000
+From:   Trent Piepho <tpiepho@impinj.com>
+To:     "marc.zyngier@arm.com" <marc.zyngier@arm.com>,
+        "lorenzo.pieralisi@arm.com" <lorenzo.pieralisi@arm.com>
+CC:     "jpinto@synopsys.com" <jpinto@synopsys.com>,
+        "jingoohan1@gmail.com" <jingoohan1@gmail.com>,
+        "gustavo.pimentel@synopsys.com" <gustavo.pimentel@synopsys.com>,
+        "faiz_abbas@ti.com" <faiz_abbas@ti.com>,
+        "stable@vger.kernel.org" <stable@vger.kernel.org>,
+        "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+        "bhelgaas@google.com" <bhelgaas@google.com>,
+        "vigneshr@ti.com" <vigneshr@ti.com>
+Subject: Re: [PATCH] PCI: dwc: Fix interrupt race in when handling MSI
+Thread-Topic: [PATCH] PCI: dwc: Fix interrupt race in when handling MSI
+Thread-Index: AQHUbYgjUY6vVpEq1Ees3VO0f7sjeaVC5fqAgAASigCAAD2CgIABgdKAgAAa7ICAAOK+gIAAp9qA
+Date:   Thu, 8 Nov 2018 19:49:52 +0000
+Message-ID: <1541706591.30311.308.camel@impinj.com>
+References: <20181027000028.21343-1-tpiepho@impinj.com>
+         <20181106145347.GB19060@e107981-ln.cambridge.arm.com>
+         <db3462e2-422c-161a-1f58-135bc4eab7eb@arm.com>
+         <1541533217.30311.263.camel@impinj.com>
+         <597d9ebd-f95f-0a4d-e1a3-fe79d4333879@arm.com>
+         <1541621853.30311.294.camel@impinj.com>
+         <268eae88-274e-edfe-5668-5759efae62e6@arm.com>
+In-Reply-To: <268eae88-274e-edfe-5668-5759efae62e6@arm.com>
+Accept-Language: en-US
+Content-Language: en-US
+X-MS-Has-Attach: 
+X-MS-TNEF-Correlator: 
+authentication-results: spf=none (sender IP is )
+ smtp.mailfrom=tpiepho@impinj.com; 
+x-originating-ip: [216.207.205.253]
+x-ms-publictraffictype: Email
+x-microsoft-exchange-diagnostics: 1;MWHPR0601MB3692;6:7DZ/DTMBFwXPWPtWjW4AwlBluscYZzMMetV8AD7Dyt4VhkRGmoSSMWq5NxPRUCv94KrdZSGmw22EgJqSffhsE3vkNOkC6SxbquZ3iw6ocYgPwckzcFlMZXzhpMSOpNJJNKXgNYg8cZDOreau6/O9HRqMXnyD9IkJioMlX+hvBWdnepDHXtQjpAxvoSF33wa1KjwNa2uetbt5KOb5RhZsTVDC2j7vkim+XhhbYoMOGv5Kk3Wecox/UuNdibRjB8klv86Zq5T450rgciXrw23z2/FpOoFkbekvkxScOT8PBW2ytOFovrTYo5B1vVQ6x8rVo0OmeOhuKb0So4bB1pDnZAbE58c0cKz//oDzo9f2O34NWCyD02KD3FhKRykW8sXhmbyn2lyx18Tu22rVaV+dLzmbk47sb5Jo7eeEwIYfebpoVT0DFNcP9nDG+/oPNryJ4cjNvSVAzj8+C00ho+PNUw==;5:ijgLQM6ldRuHQ+YoCHZIfDUgBC/r8Y5n3ophaO7WX/4AG3Fmc4jZRFM40fszSyNciVf8Ob2dEh1EVcvcm/A73YvLh2u+Yy2uWpXyAY5UXoJL1exZetKHWV9Iml6LbFv1VjDVqkTHCRXBdcWd4oZrFnmh3Ho4Zf0cAl/kTt8km44=;7:bNr38HJJ2iG0S/ToQbRBkTlvJ4ebJi1yIVqFGSiQF9sJHbdlAjGC/kM1nxOB9qerdMd/aDtFyIrXSKAt71IA5apjMOJ3VXe8vO51gRoNjATE13hBW5Zko7vQjHU2rOpDbhy391mU9hpEcku1A1HwyQ==
+x-ms-exchange-antispam-srfa-diagnostics: SOS;
+x-ms-office365-filtering-correlation-id: fa1c675d-bf97-4375-72d3-08d645b35a03
+x-microsoft-antispam: BCL:0;PCL:0;RULEID:(7020095)(4652040)(8989299)(4534185)(4627221)(201703031133081)(201702281549075)(8990200)(5600074)(711020)(2017052603328)(7153060)(7193020);SRVR:MWHPR0601MB3692;
+x-ms-traffictypediagnostic: MWHPR0601MB3692:
+x-microsoft-antispam-prvs: <MWHPR0601MB369254541C9175302CA40FEFD3C50@MWHPR0601MB3692.namprd06.prod.outlook.com>
+x-exchange-antispam-report-test: UriScan:;
+x-ms-exchange-senderadcheck: 1
+x-exchange-antispam-report-cfa-test: BCL:0;PCL:0;RULEID:(8211001083)(6040522)(2401047)(5005006)(8121501046)(93006095)(93001095)(3231382)(944501410)(52105095)(3002001)(10201501046)(148016)(149066)(150057)(6041310)(201703131423095)(201702281528075)(20161123555045)(201703061421075)(201703061406153)(20161123560045)(20161123558120)(20161123564045)(20161123562045)(201708071742011)(7699051)(76991095);SRVR:MWHPR0601MB3692;BCL:0;PCL:0;RULEID:;SRVR:MWHPR0601MB3692;
+x-forefront-prvs: 0850800A29
+x-forefront-antispam-report: SFV:NSPM;SFS:(10019020)(396003)(366004)(376002)(39850400004)(346002)(136003)(199004)(189003)(476003)(305945005)(6512007)(7416002)(7736002)(316002)(97736004)(54906003)(110136005)(478600001)(93886005)(103116003)(6506007)(99286004)(105586002)(76176011)(2900100001)(102836004)(53546011)(14454004)(966005)(106356001)(39060400002)(26005)(6246003)(486006)(53936002)(71190400001)(229853002)(25786009)(71200400001)(81156014)(8936002)(81166006)(2501003)(4326008)(6486002)(8676002)(66066001)(6436002)(256004)(3846002)(2616005)(6306002)(6116002)(2906002)(11346002)(36756003)(5660300001)(186003)(86362001)(68736007)(446003);DIR:OUT;SFP:1102;SCL:1;SRVR:MWHPR0601MB3692;H:MWHPR0601MB3708.namprd06.prod.outlook.com;FPR:;SPF:None;LANG:en;PTR:InfoNoRecords;A:1;MX:1;
+received-spf: None (protection.outlook.com: impinj.com does not designate
+ permitted sender hosts)
+x-microsoft-antispam-message-info: Vrkkxoo/V4wDSFnTkFgppkufLlydPbdcwlqKZYYgUsAWoNVx7mgN5T0NYQ6E8gHcTNSkskK4uTlCANYHBcXjtqtpt74iyeMmwRyPH9oUYSzTNKoPYkwTp2yI4OE2yF6NWpnpSomFqhtrLDbMXFHetjXgwmXeS0m44grMsFxhAxLgJd6GDZD9HnIZ9KW6un48VPOzFa0TZgAZR7VSbTwtm+bpGJu0Ikww1ibaywUmm75marqvPaCBqfMpK9HexkS80ZZOitv69/L5TReT+Ysyn/pxCzCzXoMWUEL/FjZYJ1AhyWCNnwHLLuT42OuRJOOnbAjPlLXjXiD27Sa0v8YgIwVkxCJRZGFkFBBRFJZ6fk8=
+spamdiagnosticoutput: 1:99
+spamdiagnosticmetadata: NSPM
+Content-Type: text/plain; charset="utf-8"
+Content-ID: <375DA7942D2D0540AEA1FB1294FE7CF9@namprd06.prod.outlook.com>
+Content-Transfer-Encoding: base64
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
+X-OriginatorOrg: impinj.com
+X-MS-Exchange-CrossTenant-Network-Message-Id: fa1c675d-bf97-4375-72d3-08d645b35a03
+X-MS-Exchange-CrossTenant-originalarrivaltime: 08 Nov 2018 19:49:52.9590
+ (UTC)
+X-MS-Exchange-CrossTenant-fromentityheader: Hosted
+X-MS-Exchange-CrossTenant-id: 6de70f0f-7357-4529-a415-d8cbb7e93e5e
+X-MS-Exchange-Transport-CrossTenantHeadersStamped: MWHPR0601MB3692
 Sender: linux-pci-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-pci_root_ops is only written to from within intel_mid_pci_init. This
-is linked in only when CONFIG_X86_INTEL_MID is set. If not for this,
-pci_root_ops could be marked as const.
-
-Fix this by replacing pci_root_ops usage with pci_root_ops_ptr. If
-CONFIG_X86_INTEL_MID is set, pci_root_ops_ptr will be set to
-intel_mid_pci_ops inside intel_mid_pci_init.
-
-Introduce pci_acpi_set_ops for intel_mid_pci_init to set
-acpi_pci_root_ops.pci_ops.
-
-This also means that intel_mid_pci_ops cannot be freed after init, hence
-remove __initconst.
-
-Signed-off-by: Zubin Mithra <zsm@chromium.org>
----
- arch/x86/include/asm/pci_x86.h |  4 +++-
- arch/x86/pci/acpi.c            |  5 +++++
- arch/x86/pci/common.c          |  5 +++--
- arch/x86/pci/intel_mid_pci.c   |  5 +++--
- drivers/pci/access.c           |  4 ++--
- drivers/pci/probe.c            |  4 ++--
- include/linux/pci-acpi.h       |  2 +-
- include/linux/pci.h            | 11 ++++++-----
- 8 files changed, 25 insertions(+), 15 deletions(-)
-
-diff --git a/arch/x86/include/asm/pci_x86.h b/arch/x86/include/asm/pci_x86.h
-index 959d618dbb17..1e82ddaeb52f 100644
---- a/arch/x86/include/asm/pci_x86.h
-+++ b/arch/x86/include/asm/pci_x86.h
-@@ -58,7 +58,8 @@ void pcibios_set_cache_line_size(void);
- /* pci-pc.c */
- 
- extern int pcibios_last_bus;
--extern struct pci_ops pci_root_ops;
-+extern const struct pci_ops pci_root_ops;
-+extern const struct pci_ops *pci_root_ops_ptr;
- 
- void pcibios_scan_specific_bus(int busn);
- 
-@@ -122,6 +123,7 @@ extern void __init dmi_check_skip_isa_align(void);
- 
- /* some common used subsys_initcalls */
- extern int __init pci_acpi_init(void);
-+extern void __init pci_acpi_set_ops(const struct pci_ops *ops);
- extern void __init pcibios_irq_init(void);
- extern int __init pcibios_init(void);
- extern int pci_legacy_init(void);
-diff --git a/arch/x86/pci/acpi.c b/arch/x86/pci/acpi.c
-index 948656069cdd..63ebac5fa212 100644
---- a/arch/x86/pci/acpi.c
-+++ b/arch/x86/pci/acpi.c
-@@ -397,6 +397,11 @@ int pcibios_root_bridge_prepare(struct pci_host_bridge *bridge)
- 	return 0;
- }
- 
-+void __init pci_acpi_set_ops(const struct pci_ops *ops)
-+{
-+	acpi_pci_root_ops.pci_ops = ops;
-+}
-+
- int __init pci_acpi_init(void)
- {
- 	struct pci_dev *dev = NULL;
-diff --git a/arch/x86/pci/common.c b/arch/x86/pci/common.c
-index d4ec117c1142..747a8e9fd430 100644
---- a/arch/x86/pci/common.c
-+++ b/arch/x86/pci/common.c
-@@ -67,10 +67,11 @@ static int pci_write(struct pci_bus *bus, unsigned int devfn, int where, int siz
- 				  devfn, where, size, value);
- }
- 
--struct pci_ops pci_root_ops = {
-+const struct pci_ops pci_root_ops = {
- 	.read = pci_read,
- 	.write = pci_write,
- };
-+const struct pci_ops *pci_root_ops_ptr = &pci_root_ops;
- 
- /*
-  * This interrupt-safe spinlock protects all accesses to PCI configuration
-@@ -467,7 +468,7 @@ void pcibios_scan_root(int busnum)
- 	sd->node = x86_pci_root_bus_node(busnum);
- 	x86_pci_root_bus_resources(busnum, &resources);
- 	printk(KERN_DEBUG "PCI: Probing PCI hardware (bus %02x)\n", busnum);
--	bus = pci_scan_root_bus(NULL, busnum, &pci_root_ops, sd, &resources);
-+	bus = pci_scan_root_bus(NULL, busnum, pci_root_ops_ptr, sd, &resources);
- 	if (!bus) {
- 		pci_free_resource_list(&resources);
- 		kfree(sd);
-diff --git a/arch/x86/pci/intel_mid_pci.c b/arch/x86/pci/intel_mid_pci.c
-index 43867bc85368..b79c469afd57 100644
---- a/arch/x86/pci/intel_mid_pci.c
-+++ b/arch/x86/pci/intel_mid_pci.c
-@@ -280,7 +280,7 @@ static void intel_mid_pci_irq_disable(struct pci_dev *dev)
- 	}
- }
- 
--static const struct pci_ops intel_mid_pci_ops __initconst = {
-+static const struct pci_ops intel_mid_pci_ops = {
- 	.read = pci_read,
- 	.write = pci_write,
- };
-@@ -297,7 +297,8 @@ int __init intel_mid_pci_init(void)
- 	pci_mmcfg_late_init();
- 	pcibios_enable_irq = intel_mid_pci_irq_enable;
- 	pcibios_disable_irq = intel_mid_pci_irq_disable;
--	pci_root_ops = intel_mid_pci_ops;
-+	pci_root_ops_ptr = &intel_mid_pci_ops;
-+	pci_acpi_set_ops(&intel_mid_pci_ops);
- 	pci_soc_mode = 1;
- 	/* Continue with standard init */
- 	acpi_noirq_set();
-diff --git a/drivers/pci/access.c b/drivers/pci/access.c
-index 544922f097c0..ca9d3cbc5541 100644
---- a/drivers/pci/access.c
-+++ b/drivers/pci/access.c
-@@ -180,9 +180,9 @@ EXPORT_SYMBOL_GPL(pci_generic_config_write32);
-  *
-  * Return previous raw operations
-  */
--struct pci_ops *pci_bus_set_ops(struct pci_bus *bus, struct pci_ops *ops)
-+const struct pci_ops *pci_bus_set_ops(struct pci_bus *bus, const struct pci_ops *ops)
- {
--	struct pci_ops *old_ops;
-+	const struct pci_ops *old_ops;
- 	unsigned long flags;
- 
- 	raw_spin_lock_irqsave(&pci_lock, flags);
-diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
-index b1c05b5054a0..c66c84ef070a 100644
---- a/drivers/pci/probe.c
-+++ b/drivers/pci/probe.c
-@@ -2915,7 +2915,7 @@ void __weak pcibios_remove_bus(struct pci_bus *bus)
- }
- 
- struct pci_bus *pci_create_root_bus(struct device *parent, int bus,
--		struct pci_ops *ops, void *sysdata, struct list_head *resources)
-+		const struct pci_ops *ops, void *sysdata, struct list_head *resources)
- {
- 	int error;
- 	struct pci_host_bridge *bridge;
-@@ -3079,7 +3079,7 @@ int pci_scan_root_bus_bridge(struct pci_host_bridge *bridge)
- EXPORT_SYMBOL(pci_scan_root_bus_bridge);
- 
- struct pci_bus *pci_scan_root_bus(struct device *parent, int bus,
--		struct pci_ops *ops, void *sysdata, struct list_head *resources)
-+		const struct pci_ops *ops, void *sysdata, struct list_head *resources)
- {
- 	struct resource_entry *window;
- 	bool found = false;
-diff --git a/include/linux/pci-acpi.h b/include/linux/pci-acpi.h
-index 8082b612f561..e2c80f2edbe8 100644
---- a/include/linux/pci-acpi.h
-+++ b/include/linux/pci-acpi.h
-@@ -69,7 +69,7 @@ struct acpi_pci_root_info {
- };
- 
- struct acpi_pci_root_ops {
--	struct pci_ops *pci_ops;
-+	const struct pci_ops *pci_ops;
- 	int (*init_info)(struct acpi_pci_root_info *info);
- 	void (*release_info)(struct acpi_pci_root_info *info);
- 	int (*prepare_resources)(struct acpi_pci_root_info *info);
-diff --git a/include/linux/pci.h b/include/linux/pci.h
-index 11c71c4ecf75..994a4418a3c4 100644
---- a/include/linux/pci.h
-+++ b/include/linux/pci.h
-@@ -474,7 +474,7 @@ static inline int pci_channel_offline(struct pci_dev *pdev)
- struct pci_host_bridge {
- 	struct device	dev;
- 	struct pci_bus	*bus;		/* Root bus */
--	struct pci_ops	*ops;
-+	const struct pci_ops	*ops;
- 	void		*sysdata;
- 	int		busnr;
- 	struct list_head windows;	/* resource_entry */
-@@ -558,7 +558,7 @@ struct pci_bus {
- 	struct list_head resources;	/* Address space routed to this bus */
- 	struct resource busn_res;	/* Bus numbers routed to this bus */
- 
--	struct pci_ops	*ops;		/* Configuration access functions */
-+	const struct pci_ops	*ops;	/* Configuration access functions */
- 	struct msi_controller *msi;	/* MSI controller */
- 	void		*sysdata;	/* Hook for sys-specific extension */
- 	struct proc_dir_entry *procdir;	/* Directory entry in /proc/bus/pci */
-@@ -913,14 +913,14 @@ struct pci_bus *pci_find_bus(int domain, int busnr);
- void pci_bus_add_devices(const struct pci_bus *bus);
- struct pci_bus *pci_scan_bus(int bus, struct pci_ops *ops, void *sysdata);
- struct pci_bus *pci_create_root_bus(struct device *parent, int bus,
--				    struct pci_ops *ops, void *sysdata,
-+				    const struct pci_ops *ops, void *sysdata,
- 				    struct list_head *resources);
- int pci_host_probe(struct pci_host_bridge *bridge);
- int pci_bus_insert_busn_res(struct pci_bus *b, int bus, int busmax);
- int pci_bus_update_busn_res_end(struct pci_bus *b, int busmax);
- void pci_bus_release_busn_res(struct pci_bus *b);
- struct pci_bus *pci_scan_root_bus(struct device *parent, int bus,
--				  struct pci_ops *ops, void *sysdata,
-+				  const struct pci_ops *ops, void *sysdata,
- 				  struct list_head *resources);
- int pci_scan_root_bus_bridge(struct pci_host_bridge *bridge);
- struct pci_bus *pci_add_new_bus(struct pci_bus *parent, struct pci_dev *dev,
-@@ -1010,7 +1010,8 @@ int pci_generic_config_read32(struct pci_bus *bus, unsigned int devfn,
- int pci_generic_config_write32(struct pci_bus *bus, unsigned int devfn,
- 			       int where, int size, u32 val);
- 
--struct pci_ops *pci_bus_set_ops(struct pci_bus *bus, struct pci_ops *ops);
-+const struct pci_ops *pci_bus_set_ops(struct pci_bus *bus,
-+				      const struct pci_ops *ops);
- 
- int pci_read_config_byte(const struct pci_dev *dev, int where, u8 *val);
- int pci_read_config_word(const struct pci_dev *dev, int where, u16 *val);
--- 
-2.19.1.930.g4563a0d9d0-goog
-
+T24gVGh1LCAyMDE4LTExLTA4IGF0IDA5OjQ5ICswMDAwLCBNYXJjIFp5bmdpZXIgd3JvdGU6DQo+
+IE9uIDA3LzExLzE4IDIwOjE3LCBUcmVudCBQaWVwaG8gd3JvdGU6DQo+ID4gT24gV2VkLCAyMDE4
+LTExLTA3IGF0IDE4OjQxICswMDAwLCBNYXJjIFp5bmdpZXIgd3JvdGU6DQo+ID4gPiBPbiAwNi8x
+MS8xOCAxOTo0MCwgVHJlbnQgUGllcGhvIHdyb3RlOg0KPiA+ID4gPiANCj4gPiA+ID4gV2hhdCBh
+Ym91dCBzdGFibGUga2VybmVscyB0aGF0IGRvbid0IGhhdmUgdGhlIGhpZXJhcmNoaWNhbCBBUEk/
+DQo+ID4gPiANCj4gPiA+IE15IGdvYWwgaXMgdG8gZml4IG1haW5saW5lIGZpcnN0LiBPbmNlIHdl
+IGhhdmUgc29tZXRoaW5nIHRoYXQgd29ya3Mgb24NCj4gPiA+IG1haW5saW5lLCB3ZSBjYW4gbG9v
+ayBhdCBwcm9wYWdhdGluZyB0aGUgZml4IHRvIG90aGVyIHZlcnNpb25zLiBCdXQNCj4gPiA+IG1h
+aW5saW5lIGFsd2F5cyBjb21lcyBmaXJzdC4NCj4gPiANCj4gPiBUaGlzIGlzIGEgcmVncmVzc2lv
+biB0aGF0IHdlbnQgaW50byA0LjE0LiAgV291bGRuJ3QgdGhlIGFwcHJvcHJpYXRlDQo+ID4gYWN0
+aW9uIGZvciB0aGUgc3RhYmxlIHNlcmllcyBiZSB0byB1bmRvIHRoZSByZWdyZXNzaW9uPw0KPiAN
+Cj4gVGhpcyBpcyBub3QgaG93IHN0YWJsZSB3b3Jrcy4gU3RhYmxlIGtlcm5lbHMgKm9ubHkqIGNv
+bnRhaW4gcGF0Y2hlcyB0aGF0DQo+IGFyZSBiYWNrcG9ydGVkIGZyb20gbWFpbmxpbmUsIGFuZCBk
+byBub3QgdGFrZSBzdGFuZGFsb25lIHBhdGNoLg0KPiANCj4gRnVydGhlcm1vcmUsIHlvdXIgZml4
+IGlzIHRvIGFjdHVhbGx5IHVuZG8gc29tZW9uZSBlbHNlJ3MgZml4LiBXaG8gaXMNCj4gcmlnaHQ/
+IEluIHRoZSBhYnNlbmNlIG9mIGFueSBkb2N1bWVudGF0aW9uLCB0aGUgYW5zd2VyIGlzICJub2Jv
+ZHkiLg0KDQpMaXR0bGUgbW9yZSBoaXN0b3J5IHRvIHRoaXMgYnVnLiAgVGhlIGNvZGUgd2FzIG9y
+aWdpbmFsbHkgdGhlIHdheSBpdCBpcw0Kbm93LCBidXQgdGhpcyBzYW1lIGJ1ZyB3YXMgZml4ZWQg
+aW4gMjAxMyBpbiBodHRwczovL3BhdGNod29yay5rZXJuZWwub3INCmcvcGF0Y2gvMzMzMzY4MS8N
+Cg0KVGhlbiB0aGF0IGxhc3RlZCBmb3VyIHllYXJzIHVudGlsIGl0IHdhcyBjaGFuZ2VkIEF1ZyAy
+MDE3IGluIGh0dHBzOi8vcGENCnRjaHdvcmsua2VybmVsLm9yZy9wYXRjaC85ODkzMzAzLw0KDQpU
+aGF0IGxhc3RlZCBqdXN0IHNpeCBtb250aHMgdW50aWwgc29tZW9uZSB0cmllZCB0byByZXZlcnQg
+aXQsIGh0dHBzOi8vcA0KYXRjaHdvcmsua2VybmVsLm9yZy9wYXRjaC85ODkzMzAzLw0KDQpTZWVt
+cyBwcmV0dHkgY2xlYXIgdGhlIHdheSBpdCBpcyBub3cgaXMgbXVjaCB3b3JzZSB0aGFuIHRoZSB3
+YXkgaXQgd2FzDQpiZWZvcmUsIGV2ZW4gaWYgdGhlIHByZXZpb3VzIGRlc2lnbiBtYXkgaGF2ZSBo
+YWQgYW5vdGhlciBmbGF3LiAgVGhvdWdoDQpJJ3ZlIHlldCB0byBzZWUgYW55b25lIHBvaW50IG91
+dCBzb21ldGhpbmcgbWFrZXMgdGhlIHByZXZpb3VzIGRlc2lnbg0KYnJva2VuLiAgU3ViLW9wdGlt
+YWwgeWVzLCBidXQgbm90IGJyb2tlbi4NCg0KPiBBbnl0aGluZyBjYW4gYmUgYmFja3BvcnRlZCB0
+byBzdGFibGUgb25jZSB3ZSB1bmRlcnN0YW5kIHRoZSBpc3N1ZS4gQXQNCj4gdGhlIG1vbWVudCwg
+d2UncmUganVzdCBwbGF5aW5nIGdhbWVzIG1vdmluZyBzdHVmZiBhcm91bmQgYW5kIGhvcGUNCj4g
+bm90aGluZyBlbHNlIHdpbGwgYnJlYWsuIFRoYXQncyBub3QgYSBzdXN0YWluYWJsZSB3YXkgb2Yg
+bWFpbnRhaW5pbmcNCj4gdGhpcyBkcml2ZXIuIEF0IHRoZSBtb21lbnQsIHRoZSBvbmx5IHBhdGNo
+IEknbSBpbmNsaW5lZCB0byBwcm9wb3NlIHVudGlsDQo+IHdlIGdldCBhbiBhY3R1YWwgaW50ZXJy
+dXB0IGhhbmRsaW5nIGZsb3cgZnJvbSBTeW5vcHN5cyBpcyB0byBtYXJrIHRoaXMNCj4gZHJpdmVy
+IGFzICJCUk9LRU4iLg0KDQpJdCBmZWVscyBsaWtlIHlvdSdyZSB1c2luZyB0aGlzIGJ1ZyB0byBo
+b2xkIGRlc2lnbndhcmUgaG9zdGFnZSBpbiBhDQpicm9rZW4ga2VybmVsLCBhbmQgbWUgYWxvbmcg
+d2l0aCB0aGVtLiAgSSBkb24ndCBoYXZlIHRoZSBkb2N1bWVudGF0aW9uLA0Kbm8gb25lIGRvZXMs
+IHRoZXJlJ3Mgbm8gd2F5IGZvciBtZSB0byBnaXZlIHlvdSB3YW50IHlvdSB3YW50LiAgQnV0IEkn
+dmUNCmdvdCBoYXJkd2FyZSB0aGF0IGRvZXNuJ3Qgd29yayBpbiB0aGUgbWFpbmxpbmUga2VybmVs
+Lg0K
