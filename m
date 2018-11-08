@@ -2,142 +2,453 @@ Return-Path: <SRS0=XjPq=NT=vger.kernel.org=linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-1.1 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
-	DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_PASS
-	autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-9.6 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
+	SPF_PASS,USER_AGENT_MUTT autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 63DF9ECDE47
-	for <linux-pci@archiver.kernel.org>; Thu,  8 Nov 2018 19:50:02 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 1CFCBECDE4B
+	for <linux-pci@archiver.kernel.org>; Thu,  8 Nov 2018 20:09:25 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 1089A20857
-	for <linux-pci@archiver.kernel.org>; Thu,  8 Nov 2018 19:50:02 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id B3EAF20857
+	for <linux-pci@archiver.kernel.org>; Thu,  8 Nov 2018 20:09:24 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (1024-bit key) header.d=impinj.com header.i=@impinj.com header.b="NbyGjNLv"
-DMARC-Filter: OpenDMARC Filter v1.3.2 mail.kernel.org 1089A20857
-Authentication-Results: mail.kernel.org; dmarc=fail (p=quarantine dis=none) header.from=impinj.com
+	dkim=pass (1024-bit key) header.d=kernel.org header.i=@kernel.org header.b="taDaUdki"
+DMARC-Filter: OpenDMARC Filter v1.3.2 mail.kernel.org B3EAF20857
+Authentication-Results: mail.kernel.org; dmarc=fail (p=none dis=none) header.from=kernel.org
 Authentication-Results: mail.kernel.org; spf=none smtp.mailfrom=linux-pci-owner@vger.kernel.org
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1725723AbeKIF06 (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Fri, 9 Nov 2018 00:26:58 -0500
-Received: from mail-eopbgr720116.outbound.protection.outlook.com ([40.107.72.116]:6167
-        "EHLO NAM05-CO1-obe.outbound.protection.outlook.com"
-        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1727074AbeKIF05 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Fri, 9 Nov 2018 00:26:57 -0500
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=impinj.com;
- s=selector1;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=EwfNhzhPhK3EJFSeQdKEjSsZRXWqhDXPU1ITLrGiPKs=;
- b=NbyGjNLvLsQqMYZj9wIEzQtmZAb/JOmCZuoSwkmEWy2os7NU8bLu60Sx/zBCFcLUzAwmK3r3jze8QCaC/879qnsCDYerSQL2IfXbbN+0LXDE6YyyBMxRUYEyBstIp7q/nar8qOJC5bpocDhTtO7FOAItaXB3Ly0YNHjwicDswNE=
-Received: from MWHPR0601MB3708.namprd06.prod.outlook.com (10.167.236.38) by
- MWHPR0601MB3692.namprd06.prod.outlook.com (10.167.236.34) with Microsoft SMTP
- Server (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- 15.20.1294.21; Thu, 8 Nov 2018 19:49:53 +0000
-Received: from MWHPR0601MB3708.namprd06.prod.outlook.com
- ([fe80::f51a:d8dd:1aad:3bf9]) by MWHPR0601MB3708.namprd06.prod.outlook.com
- ([fe80::f51a:d8dd:1aad:3bf9%3]) with mapi id 15.20.1294.034; Thu, 8 Nov 2018
- 19:49:53 +0000
-From:   Trent Piepho <tpiepho@impinj.com>
-To:     "marc.zyngier@arm.com" <marc.zyngier@arm.com>,
-        "lorenzo.pieralisi@arm.com" <lorenzo.pieralisi@arm.com>
-CC:     "jpinto@synopsys.com" <jpinto@synopsys.com>,
-        "jingoohan1@gmail.com" <jingoohan1@gmail.com>,
-        "gustavo.pimentel@synopsys.com" <gustavo.pimentel@synopsys.com>,
-        "faiz_abbas@ti.com" <faiz_abbas@ti.com>,
-        "stable@vger.kernel.org" <stable@vger.kernel.org>,
-        "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-        "bhelgaas@google.com" <bhelgaas@google.com>,
-        "vigneshr@ti.com" <vigneshr@ti.com>
-Subject: Re: [PATCH] PCI: dwc: Fix interrupt race in when handling MSI
-Thread-Topic: [PATCH] PCI: dwc: Fix interrupt race in when handling MSI
-Thread-Index: AQHUbYgjUY6vVpEq1Ees3VO0f7sjeaVC5fqAgAASigCAAD2CgIABgdKAgAAa7ICAAOK+gIAAp9qA
-Date:   Thu, 8 Nov 2018 19:49:52 +0000
-Message-ID: <1541706591.30311.308.camel@impinj.com>
-References: <20181027000028.21343-1-tpiepho@impinj.com>
-         <20181106145347.GB19060@e107981-ln.cambridge.arm.com>
-         <db3462e2-422c-161a-1f58-135bc4eab7eb@arm.com>
-         <1541533217.30311.263.camel@impinj.com>
-         <597d9ebd-f95f-0a4d-e1a3-fe79d4333879@arm.com>
-         <1541621853.30311.294.camel@impinj.com>
-         <268eae88-274e-edfe-5668-5759efae62e6@arm.com>
-In-Reply-To: <268eae88-274e-edfe-5668-5759efae62e6@arm.com>
-Accept-Language: en-US
-Content-Language: en-US
-X-MS-Has-Attach: 
-X-MS-TNEF-Correlator: 
-authentication-results: spf=none (sender IP is )
- smtp.mailfrom=tpiepho@impinj.com; 
-x-originating-ip: [216.207.205.253]
-x-ms-publictraffictype: Email
-x-microsoft-exchange-diagnostics: 1;MWHPR0601MB3692;6:7DZ/DTMBFwXPWPtWjW4AwlBluscYZzMMetV8AD7Dyt4VhkRGmoSSMWq5NxPRUCv94KrdZSGmw22EgJqSffhsE3vkNOkC6SxbquZ3iw6ocYgPwckzcFlMZXzhpMSOpNJJNKXgNYg8cZDOreau6/O9HRqMXnyD9IkJioMlX+hvBWdnepDHXtQjpAxvoSF33wa1KjwNa2uetbt5KOb5RhZsTVDC2j7vkim+XhhbYoMOGv5Kk3Wecox/UuNdibRjB8klv86Zq5T450rgciXrw23z2/FpOoFkbekvkxScOT8PBW2ytOFovrTYo5B1vVQ6x8rVo0OmeOhuKb0So4bB1pDnZAbE58c0cKz//oDzo9f2O34NWCyD02KD3FhKRykW8sXhmbyn2lyx18Tu22rVaV+dLzmbk47sb5Jo7eeEwIYfebpoVT0DFNcP9nDG+/oPNryJ4cjNvSVAzj8+C00ho+PNUw==;5:ijgLQM6ldRuHQ+YoCHZIfDUgBC/r8Y5n3ophaO7WX/4AG3Fmc4jZRFM40fszSyNciVf8Ob2dEh1EVcvcm/A73YvLh2u+Yy2uWpXyAY5UXoJL1exZetKHWV9Iml6LbFv1VjDVqkTHCRXBdcWd4oZrFnmh3Ho4Zf0cAl/kTt8km44=;7:bNr38HJJ2iG0S/ToQbRBkTlvJ4ebJi1yIVqFGSiQF9sJHbdlAjGC/kM1nxOB9qerdMd/aDtFyIrXSKAt71IA5apjMOJ3VXe8vO51gRoNjATE13hBW5Zko7vQjHU2rOpDbhy391mU9hpEcku1A1HwyQ==
-x-ms-exchange-antispam-srfa-diagnostics: SOS;
-x-ms-office365-filtering-correlation-id: fa1c675d-bf97-4375-72d3-08d645b35a03
-x-microsoft-antispam: BCL:0;PCL:0;RULEID:(7020095)(4652040)(8989299)(4534185)(4627221)(201703031133081)(201702281549075)(8990200)(5600074)(711020)(2017052603328)(7153060)(7193020);SRVR:MWHPR0601MB3692;
-x-ms-traffictypediagnostic: MWHPR0601MB3692:
-x-microsoft-antispam-prvs: <MWHPR0601MB369254541C9175302CA40FEFD3C50@MWHPR0601MB3692.namprd06.prod.outlook.com>
-x-exchange-antispam-report-test: UriScan:;
-x-ms-exchange-senderadcheck: 1
-x-exchange-antispam-report-cfa-test: BCL:0;PCL:0;RULEID:(8211001083)(6040522)(2401047)(5005006)(8121501046)(93006095)(93001095)(3231382)(944501410)(52105095)(3002001)(10201501046)(148016)(149066)(150057)(6041310)(201703131423095)(201702281528075)(20161123555045)(201703061421075)(201703061406153)(20161123560045)(20161123558120)(20161123564045)(20161123562045)(201708071742011)(7699051)(76991095);SRVR:MWHPR0601MB3692;BCL:0;PCL:0;RULEID:;SRVR:MWHPR0601MB3692;
-x-forefront-prvs: 0850800A29
-x-forefront-antispam-report: SFV:NSPM;SFS:(10019020)(396003)(366004)(376002)(39850400004)(346002)(136003)(199004)(189003)(476003)(305945005)(6512007)(7416002)(7736002)(316002)(97736004)(54906003)(110136005)(478600001)(93886005)(103116003)(6506007)(99286004)(105586002)(76176011)(2900100001)(102836004)(53546011)(14454004)(966005)(106356001)(39060400002)(26005)(6246003)(486006)(53936002)(71190400001)(229853002)(25786009)(71200400001)(81156014)(8936002)(81166006)(2501003)(4326008)(6486002)(8676002)(66066001)(6436002)(256004)(3846002)(2616005)(6306002)(6116002)(2906002)(11346002)(36756003)(5660300001)(186003)(86362001)(68736007)(446003);DIR:OUT;SFP:1102;SCL:1;SRVR:MWHPR0601MB3692;H:MWHPR0601MB3708.namprd06.prod.outlook.com;FPR:;SPF:None;LANG:en;PTR:InfoNoRecords;A:1;MX:1;
-received-spf: None (protection.outlook.com: impinj.com does not designate
- permitted sender hosts)
-x-microsoft-antispam-message-info: Vrkkxoo/V4wDSFnTkFgppkufLlydPbdcwlqKZYYgUsAWoNVx7mgN5T0NYQ6E8gHcTNSkskK4uTlCANYHBcXjtqtpt74iyeMmwRyPH9oUYSzTNKoPYkwTp2yI4OE2yF6NWpnpSomFqhtrLDbMXFHetjXgwmXeS0m44grMsFxhAxLgJd6GDZD9HnIZ9KW6un48VPOzFa0TZgAZR7VSbTwtm+bpGJu0Ikww1ibaywUmm75marqvPaCBqfMpK9HexkS80ZZOitv69/L5TReT+Ysyn/pxCzCzXoMWUEL/FjZYJ1AhyWCNnwHLLuT42OuRJOOnbAjPlLXjXiD27Sa0v8YgIwVkxCJRZGFkFBBRFJZ6fk8=
-spamdiagnosticoutput: 1:99
-spamdiagnosticmetadata: NSPM
-Content-Type: text/plain; charset="utf-8"
-Content-ID: <375DA7942D2D0540AEA1FB1294FE7CF9@namprd06.prod.outlook.com>
-Content-Transfer-Encoding: base64
+        id S1725922AbeKIFqZ (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Fri, 9 Nov 2018 00:46:25 -0500
+Received: from mail.kernel.org ([198.145.29.99]:41318 "EHLO mail.kernel.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1725884AbeKIFqZ (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Fri, 9 Nov 2018 00:46:25 -0500
+Received: from localhost (unknown [69.71.4.100])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+        (No client certificate requested)
+        by mail.kernel.org (Postfix) with ESMTPSA id 389A02077B;
+        Thu,  8 Nov 2018 20:09:22 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+        s=default; t=1541707762;
+        bh=fUpLikS75hrABD8vxw9zvtufFSADWcBzJRzlonifLH8=;
+        h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
+        b=taDaUdkiM0/XCziA9N0wGLLQbGy3VKkFAoHuy/jDgLpuqJAdJ0T78MGIshxRhT0E1
+         xLFT1aW9kC0g6a+s0xaJucCGwZMuNX3WS77cBnDaUVMXjFAAhuMEC0CVktQ36TY/zQ
+         p9rzRQDUKF0nPcpJC72UX95eOE245wQ3yPVo9Tr8=
+Date:   Thu, 8 Nov 2018 14:09:17 -0600
+From:   Bjorn Helgaas <helgaas@kernel.org>
+To:     Alexandru Gagniuc <mr.nuke.me@gmail.com>
+Cc:     linux-pci@vger.kernel.org, keith.busch@intel.com,
+        alex_gagniuc@dellteam.com, austin_bolen@dell.com,
+        shyam_iyer@dell.com, linux-kernel@vger.kernel.org,
+        Jonathan Derrick <jonathan.derrick@intel.com>,
+        Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+        Lukas Wunner <lukas@wunner.de>,
+        Russell Currey <ruscur@russell.cc>,
+        Sam Bobroff <sbobroff@linux.ibm.com>,
+        Oliver O'Halloran <oohall@gmail.com>,
+        linuxppc-dev@lists.ozlabs.org
+Subject: Re: [PATCH v2] PCI/MSI: Don't touch MSI bits when the PCI device is
+ disconnected
+Message-ID: <20181108200855.GE41183@google.com>
+References: <20180918221501.13112-1-mr.nuke.me@gmail.com>
+ <20181107234257.GC41183@google.com>
 MIME-Version: 1.0
-X-OriginatorOrg: impinj.com
-X-MS-Exchange-CrossTenant-Network-Message-Id: fa1c675d-bf97-4375-72d3-08d645b35a03
-X-MS-Exchange-CrossTenant-originalarrivaltime: 08 Nov 2018 19:49:52.9590
- (UTC)
-X-MS-Exchange-CrossTenant-fromentityheader: Hosted
-X-MS-Exchange-CrossTenant-id: 6de70f0f-7357-4529-a415-d8cbb7e93e5e
-X-MS-Exchange-Transport-CrossTenantHeadersStamped: MWHPR0601MB3692
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20181107234257.GC41183@google.com>
+User-Agent: Mutt/1.10.1 (2018-07-13)
 Sender: linux-pci-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-T24gVGh1LCAyMDE4LTExLTA4IGF0IDA5OjQ5ICswMDAwLCBNYXJjIFp5bmdpZXIgd3JvdGU6DQo+
-IE9uIDA3LzExLzE4IDIwOjE3LCBUcmVudCBQaWVwaG8gd3JvdGU6DQo+ID4gT24gV2VkLCAyMDE4
-LTExLTA3IGF0IDE4OjQxICswMDAwLCBNYXJjIFp5bmdpZXIgd3JvdGU6DQo+ID4gPiBPbiAwNi8x
-MS8xOCAxOTo0MCwgVHJlbnQgUGllcGhvIHdyb3RlOg0KPiA+ID4gPiANCj4gPiA+ID4gV2hhdCBh
-Ym91dCBzdGFibGUga2VybmVscyB0aGF0IGRvbid0IGhhdmUgdGhlIGhpZXJhcmNoaWNhbCBBUEk/
-DQo+ID4gPiANCj4gPiA+IE15IGdvYWwgaXMgdG8gZml4IG1haW5saW5lIGZpcnN0LiBPbmNlIHdl
-IGhhdmUgc29tZXRoaW5nIHRoYXQgd29ya3Mgb24NCj4gPiA+IG1haW5saW5lLCB3ZSBjYW4gbG9v
-ayBhdCBwcm9wYWdhdGluZyB0aGUgZml4IHRvIG90aGVyIHZlcnNpb25zLiBCdXQNCj4gPiA+IG1h
-aW5saW5lIGFsd2F5cyBjb21lcyBmaXJzdC4NCj4gPiANCj4gPiBUaGlzIGlzIGEgcmVncmVzc2lv
-biB0aGF0IHdlbnQgaW50byA0LjE0LiAgV291bGRuJ3QgdGhlIGFwcHJvcHJpYXRlDQo+ID4gYWN0
-aW9uIGZvciB0aGUgc3RhYmxlIHNlcmllcyBiZSB0byB1bmRvIHRoZSByZWdyZXNzaW9uPw0KPiAN
-Cj4gVGhpcyBpcyBub3QgaG93IHN0YWJsZSB3b3Jrcy4gU3RhYmxlIGtlcm5lbHMgKm9ubHkqIGNv
-bnRhaW4gcGF0Y2hlcyB0aGF0DQo+IGFyZSBiYWNrcG9ydGVkIGZyb20gbWFpbmxpbmUsIGFuZCBk
-byBub3QgdGFrZSBzdGFuZGFsb25lIHBhdGNoLg0KPiANCj4gRnVydGhlcm1vcmUsIHlvdXIgZml4
-IGlzIHRvIGFjdHVhbGx5IHVuZG8gc29tZW9uZSBlbHNlJ3MgZml4LiBXaG8gaXMNCj4gcmlnaHQ/
-IEluIHRoZSBhYnNlbmNlIG9mIGFueSBkb2N1bWVudGF0aW9uLCB0aGUgYW5zd2VyIGlzICJub2Jv
-ZHkiLg0KDQpMaXR0bGUgbW9yZSBoaXN0b3J5IHRvIHRoaXMgYnVnLiAgVGhlIGNvZGUgd2FzIG9y
-aWdpbmFsbHkgdGhlIHdheSBpdCBpcw0Kbm93LCBidXQgdGhpcyBzYW1lIGJ1ZyB3YXMgZml4ZWQg
-aW4gMjAxMyBpbiBodHRwczovL3BhdGNod29yay5rZXJuZWwub3INCmcvcGF0Y2gvMzMzMzY4MS8N
-Cg0KVGhlbiB0aGF0IGxhc3RlZCBmb3VyIHllYXJzIHVudGlsIGl0IHdhcyBjaGFuZ2VkIEF1ZyAy
-MDE3IGluIGh0dHBzOi8vcGENCnRjaHdvcmsua2VybmVsLm9yZy9wYXRjaC85ODkzMzAzLw0KDQpU
-aGF0IGxhc3RlZCBqdXN0IHNpeCBtb250aHMgdW50aWwgc29tZW9uZSB0cmllZCB0byByZXZlcnQg
-aXQsIGh0dHBzOi8vcA0KYXRjaHdvcmsua2VybmVsLm9yZy9wYXRjaC85ODkzMzAzLw0KDQpTZWVt
-cyBwcmV0dHkgY2xlYXIgdGhlIHdheSBpdCBpcyBub3cgaXMgbXVjaCB3b3JzZSB0aGFuIHRoZSB3
-YXkgaXQgd2FzDQpiZWZvcmUsIGV2ZW4gaWYgdGhlIHByZXZpb3VzIGRlc2lnbiBtYXkgaGF2ZSBo
-YWQgYW5vdGhlciBmbGF3LiAgVGhvdWdoDQpJJ3ZlIHlldCB0byBzZWUgYW55b25lIHBvaW50IG91
-dCBzb21ldGhpbmcgbWFrZXMgdGhlIHByZXZpb3VzIGRlc2lnbg0KYnJva2VuLiAgU3ViLW9wdGlt
-YWwgeWVzLCBidXQgbm90IGJyb2tlbi4NCg0KPiBBbnl0aGluZyBjYW4gYmUgYmFja3BvcnRlZCB0
-byBzdGFibGUgb25jZSB3ZSB1bmRlcnN0YW5kIHRoZSBpc3N1ZS4gQXQNCj4gdGhlIG1vbWVudCwg
-d2UncmUganVzdCBwbGF5aW5nIGdhbWVzIG1vdmluZyBzdHVmZiBhcm91bmQgYW5kIGhvcGUNCj4g
-bm90aGluZyBlbHNlIHdpbGwgYnJlYWsuIFRoYXQncyBub3QgYSBzdXN0YWluYWJsZSB3YXkgb2Yg
-bWFpbnRhaW5pbmcNCj4gdGhpcyBkcml2ZXIuIEF0IHRoZSBtb21lbnQsIHRoZSBvbmx5IHBhdGNo
-IEknbSBpbmNsaW5lZCB0byBwcm9wb3NlIHVudGlsDQo+IHdlIGdldCBhbiBhY3R1YWwgaW50ZXJy
-dXB0IGhhbmRsaW5nIGZsb3cgZnJvbSBTeW5vcHN5cyBpcyB0byBtYXJrIHRoaXMNCj4gZHJpdmVy
-IGFzICJCUk9LRU4iLg0KDQpJdCBmZWVscyBsaWtlIHlvdSdyZSB1c2luZyB0aGlzIGJ1ZyB0byBo
-b2xkIGRlc2lnbndhcmUgaG9zdGFnZSBpbiBhDQpicm9rZW4ga2VybmVsLCBhbmQgbWUgYWxvbmcg
-d2l0aCB0aGVtLiAgSSBkb24ndCBoYXZlIHRoZSBkb2N1bWVudGF0aW9uLA0Kbm8gb25lIGRvZXMs
-IHRoZXJlJ3Mgbm8gd2F5IGZvciBtZSB0byBnaXZlIHlvdSB3YW50IHlvdSB3YW50LiAgQnV0IEkn
-dmUNCmdvdCBoYXJkd2FyZSB0aGF0IGRvZXNuJ3Qgd29yayBpbiB0aGUgbWFpbmxpbmUga2VybmVs
-Lg0K
+[+cc Jonathan, Greg, Lukas, Russell, Sam, Oliver for discussion about
+PCI error recovery in general]
+
+On Wed, Nov 07, 2018 at 05:42:57PM -0600, Bjorn Helgaas wrote:
+> On Tue, Sep 18, 2018 at 05:15:00PM -0500, Alexandru Gagniuc wrote:
+> > When a PCI device is gone, we don't want to send IO to it if we can
+> > avoid it. We expose functionality via the irq_chip structure. As
+> > users of that structure may not know about the underlying PCI device,
+> > it's our responsibility to guard against removed devices.
+> > 
+> > .irq_write_msi_msg() is already guarded inside __pci_write_msi_msg().
+> > .irq_mask/unmask() are not. Guard them for completeness.
+> > 
+> > For example, surprise removal of a PCIe device triggers teardown. This
+> > touches the irq_chips ops some point to disable the interrupts. I/O
+> > generated here can crash the system on firmware-first machines.
+> > Not triggering the IO in the first place greatly reduces the
+> > possibility of the problem occurring.
+> > 
+> > Signed-off-by: Alexandru Gagniuc <mr.nuke.me@gmail.com>
+> 
+> Applied to pci/misc for v4.21, thanks!
+
+I'm having second thoughts about this.  One thing I'm uncomfortable
+with is that sprinkling pci_dev_is_disconnected() around feels ad hoc
+instead of systematic, in the sense that I don't know how we convince
+ourselves that this (and only this) is the correct place to put it.
+
+Another is that the only place we call pci_dev_set_disconnected() is
+in pciehp and acpiphp, so the only "disconnected" case we catch is if
+hotplug happens to be involved.  Every MMIO read from the device is an
+opportunity to learn whether it is reachable (a read from an
+unreachable device typically returns ~0 data), but we don't do
+anything at all with those.
+
+The config accessors already check pci_dev_is_disconnected(), so this
+patch is really aimed at MMIO accesses.  I think it would be more
+robust if we added wrappers for readl() and writel() so we could
+notice read errors and avoid future reads and writes.
+
+Two compiled but untested patches below for your comments.  You can
+mostly ignore the first; it's just boring interface changes.  The
+important part is the second, which adds the wrappers.
+
+These would be an alternative to the (admittedly much shorter) patch
+here.  The wrappers are independent of MSI and could potentially be
+exported from the PCI core for use by drivers.  I think it would be
+better for drivers to use something like this instead of calling
+pci_device_is_present() or pci_dev_is_disconnected() directly.
+
+> > ---
+> >  drivers/pci/msi.c | 3 +++
+> >  1 file changed, 3 insertions(+)
+> > 
+> > diff --git a/drivers/pci/msi.c b/drivers/pci/msi.c
+> > index f2ef896464b3..f31058fd2260 100644
+> > --- a/drivers/pci/msi.c
+> > +++ b/drivers/pci/msi.c
+> > @@ -227,6 +227,9 @@ static void msi_set_mask_bit(struct irq_data *data, u32 flag)
+> >  {
+> >  	struct msi_desc *desc = irq_data_get_msi_desc(data);
+> >  
+> > +	if (pci_dev_is_disconnected(msi_desc_to_pci_dev(desc)))
+> > +		return;
+> > +
+> >  	if (desc->msi_attrib.is_msix) {
+> >  		msix_mask_irq(desc, flag);
+> >  		readl(desc->mask_base);		/* Flush write to device */
+
+
+commit 150346e09edbcaedc520a6d7dec2b16f3a53afa1
+Author: Bjorn Helgaas <bhelgaas@google.com>
+Date:   Thu Nov 8 09:17:51 2018 -0600
+
+    PCI/MSI: Pass pci_dev into IRQ mask interfaces
+    
+    Add the struct pci_dev pointer to these interfaces:
+    
+      __pci_msix_desc_mask_irq()
+      __pci_msi_desc_mask_irq()
+      msix_mask_irq
+      msi_mask_irq()
+    
+    The pci_dev pointer is currently unused, so there's no functional change
+    intended with this patch.  A subsequent patch will use the pointer to
+    improve error detection.
+
+diff --git a/arch/s390/pci/pci.c b/arch/s390/pci/pci.c
+index 9f6f392a4461..56bbee2cf761 100644
+--- a/arch/s390/pci/pci.c
++++ b/arch/s390/pci/pci.c
+@@ -462,9 +462,9 @@ void arch_teardown_msi_irqs(struct pci_dev *pdev)
+ 		if (!msi->irq)
+ 			continue;
+ 		if (msi->msi_attrib.is_msix)
+-			__pci_msix_desc_mask_irq(msi, 1);
++			__pci_msix_desc_mask_irq(pdev, msi, 1);
+ 		else
+-			__pci_msi_desc_mask_irq(msi, 1, 1);
++			__pci_msi_desc_mask_irq(pdev, msi, 1, 1);
+ 		irq_set_msi_desc(msi->irq, NULL);
+ 		irq_free_desc(msi->irq);
+ 		msi->msg.address_lo = 0;
+diff --git a/drivers/pci/msi.c b/drivers/pci/msi.c
+index af24ed50a245..d46ae506e296 100644
+--- a/drivers/pci/msi.c
++++ b/drivers/pci/msi.c
+@@ -170,7 +170,8 @@ static inline __attribute_const__ u32 msi_mask(unsigned x)
+  * reliably as devices without an INTx disable bit will then generate a
+  * level IRQ which will never be cleared.
+  */
+-u32 __pci_msi_desc_mask_irq(struct msi_desc *desc, u32 mask, u32 flag)
++u32 __pci_msi_desc_mask_irq(struct pci_dev *dev, struct msi_desc *desc,
++			    u32 mask, u32 flag)
+ {
+ 	u32 mask_bits = desc->masked;
+ 
+@@ -179,15 +180,15 @@ u32 __pci_msi_desc_mask_irq(struct msi_desc *desc, u32 mask, u32 flag)
+ 
+ 	mask_bits &= ~mask;
+ 	mask_bits |= flag;
+-	pci_write_config_dword(msi_desc_to_pci_dev(desc), desc->mask_pos,
+-			       mask_bits);
++	pci_write_config_dword(dev, desc->mask_pos, mask_bits);
+ 
+ 	return mask_bits;
+ }
+ 
+-static void msi_mask_irq(struct msi_desc *desc, u32 mask, u32 flag)
++static void msi_mask_irq(struct pci_dev *dev, struct msi_desc *desc, u32 mask,
++			 u32 flag)
+ {
+-	desc->masked = __pci_msi_desc_mask_irq(desc, mask, flag);
++	desc->masked = __pci_msi_desc_mask_irq(dev, desc, mask, flag);
+ }
+ 
+ static void __iomem *pci_msix_desc_addr(struct msi_desc *desc)
+@@ -203,7 +204,8 @@ static void __iomem *pci_msix_desc_addr(struct msi_desc *desc)
+  * file.  This saves a few milliseconds when initialising devices with lots
+  * of MSI-X interrupts.
+  */
+-u32 __pci_msix_desc_mask_irq(struct msi_desc *desc, u32 flag)
++u32 __pci_msix_desc_mask_irq(struct pci_dev *dev, struct msi_desc *desc,
++			     u32 flag)
+ {
+ 	u32 mask_bits = desc->masked;
+ 
+@@ -218,21 +220,22 @@ u32 __pci_msix_desc_mask_irq(struct msi_desc *desc, u32 flag)
+ 	return mask_bits;
+ }
+ 
+-static void msix_mask_irq(struct msi_desc *desc, u32 flag)
++static void msix_mask_irq(struct pci_dev *dev, struct msi_desc *desc, u32 flag)
+ {
+-	desc->masked = __pci_msix_desc_mask_irq(desc, flag);
++	desc->masked = __pci_msix_desc_mask_irq(dev, desc, flag);
+ }
+ 
+ static void msi_set_mask_bit(struct irq_data *data, u32 flag)
+ {
+ 	struct msi_desc *desc = irq_data_get_msi_desc(data);
++	struct pci_dev *dev = msi_desc_to_pci_dev(desc);
+ 
+ 	if (desc->msi_attrib.is_msix) {
+-		msix_mask_irq(desc, flag);
++		msix_mask_irq(dev, desc, flag);
+ 		readl(desc->mask_base);		/* Flush write to device */
+ 	} else {
+ 		unsigned offset = data->irq - desc->irq;
+-		msi_mask_irq(desc, 1 << offset, flag << offset);
++		msi_mask_irq(dev, desc, 1 << offset, flag << offset);
+ 	}
+ }
+ 
+@@ -401,7 +404,7 @@ static void __pci_restore_msi_state(struct pci_dev *dev)
+ 	arch_restore_msi_irqs(dev);
+ 
+ 	pci_read_config_word(dev, dev->msi_cap + PCI_MSI_FLAGS, &control);
+-	msi_mask_irq(entry, msi_mask(entry->msi_attrib.multi_cap),
++	msi_mask_irq(dev, entry, msi_mask(entry->msi_attrib.multi_cap),
+ 		     entry->masked);
+ 	control &= ~PCI_MSI_FLAGS_QSIZE;
+ 	control |= (entry->msi_attrib.multiple << 4) | PCI_MSI_FLAGS_ENABLE;
+@@ -423,7 +426,7 @@ static void __pci_restore_msix_state(struct pci_dev *dev)
+ 
+ 	arch_restore_msi_irqs(dev);
+ 	for_each_pci_msi_entry(entry, dev)
+-		msix_mask_irq(entry, entry->masked);
++		msix_mask_irq(dev, entry, entry->masked);
+ 
+ 	pci_msix_clear_and_set_ctrl(dev, PCI_MSIX_FLAGS_MASKALL, 0);
+ }
+@@ -612,28 +615,28 @@ static int msi_capability_init(struct pci_dev *dev, int nvec,
+ 
+ 	/* All MSIs are unmasked by default, Mask them all */
+ 	mask = msi_mask(entry->msi_attrib.multi_cap);
+-	msi_mask_irq(entry, mask, mask);
++	msi_mask_irq(dev, entry, mask, mask);
+ 
+ 	list_add_tail(&entry->list, dev_to_msi_list(&dev->dev));
+ 
+ 	/* Configure MSI capability structure */
+ 	ret = pci_msi_setup_msi_irqs(dev, nvec, PCI_CAP_ID_MSI);
+ 	if (ret) {
+-		msi_mask_irq(entry, mask, ~mask);
++		msi_mask_irq(dev, entry, mask, ~mask);
+ 		free_msi_irqs(dev);
+ 		return ret;
+ 	}
+ 
+ 	ret = msi_verify_entries(dev);
+ 	if (ret) {
+-		msi_mask_irq(entry, mask, ~mask);
++		msi_mask_irq(dev, entry, mask, ~mask);
+ 		free_msi_irqs(dev);
+ 		return ret;
+ 	}
+ 
+ 	ret = populate_msi_sysfs(dev);
+ 	if (ret) {
+-		msi_mask_irq(entry, mask, ~mask);
++		msi_mask_irq(dev, entry, mask, ~mask);
+ 		free_msi_irqs(dev);
+ 		return ret;
+ 	}
+@@ -721,7 +724,7 @@ static void msix_program_entries(struct pci_dev *dev,
+ 			entries[i++].vector = entry->irq;
+ 		entry->masked = readl(pci_msix_desc_addr(entry) +
+ 				PCI_MSIX_ENTRY_VECTOR_CTRL);
+-		msix_mask_irq(entry, 1);
++		msix_mask_irq(dev, entry, 1);
+ 	}
+ }
+ 
+@@ -895,7 +898,7 @@ static void pci_msi_shutdown(struct pci_dev *dev)
+ 	/* Return the device with MSI unmasked as initial states */
+ 	mask = msi_mask(desc->msi_attrib.multi_cap);
+ 	/* Keep cached state to be restored */
+-	__pci_msi_desc_mask_irq(desc, mask, ~mask);
++	__pci_msi_desc_mask_irq(dev, desc, mask, ~mask);
+ 
+ 	/* Restore dev->irq to its default pin-assertion irq */
+ 	dev->irq = desc->msi_attrib.default_irq;
+@@ -982,7 +985,7 @@ static void pci_msix_shutdown(struct pci_dev *dev)
+ 	/* Return the device with MSI-X masked as initial states */
+ 	for_each_pci_msi_entry(entry, dev) {
+ 		/* Keep cached states to be restored */
+-		__pci_msix_desc_mask_irq(entry, 1);
++		__pci_msix_desc_mask_irq(dev, entry, 1);
+ 	}
+ 
+ 	pci_msix_clear_and_set_ctrl(dev, PCI_MSIX_FLAGS_ENABLE, 0);
+diff --git a/include/linux/msi.h b/include/linux/msi.h
+index 0e9c50052ff3..1525ec9457a4 100644
+--- a/include/linux/msi.h
++++ b/include/linux/msi.h
+@@ -141,8 +141,9 @@ void free_msi_entry(struct msi_desc *entry);
+ void __pci_read_msi_msg(struct msi_desc *entry, struct msi_msg *msg);
+ void __pci_write_msi_msg(struct msi_desc *entry, struct msi_msg *msg);
+ 
+-u32 __pci_msix_desc_mask_irq(struct msi_desc *desc, u32 flag);
+-u32 __pci_msi_desc_mask_irq(struct msi_desc *desc, u32 mask, u32 flag);
++u32 __pci_msix_desc_mask_irq(struct pci_dev *, struct msi_desc *desc, u32 flag);
++u32 __pci_msi_desc_mask_irq(struct pci_dev *, struct msi_desc *desc, u32 mask,
++			    u32 flag);
+ void pci_msi_mask_irq(struct irq_data *data);
+ void pci_msi_unmask_irq(struct irq_data *data);
+ 
+
+commit 9b51617cc910b5facdb4ab0442d6562422c916d7
+Author: Bjorn Helgaas <bhelgaas@google.com>
+Date:   Thu Nov 8 08:34:07 2018 -0600
+
+    PCI/MSI: Avoid MMIO accesses to device if it's unreachable
+    
+    Add wrappers around MMIO accesses (readl/writel) to the device.  If we
+    already know the device is unreachable because of hot-removal or a bus
+    error, skip the MMIO access.
+    
+    In addition, if we're doing an MMIO read, check whether it returns ~0 data.
+    If a read fails because of a bus error, host bridges typically synthesize
+    ~0 data to complete the CPU's read.  If a read returns ~0, do a config read
+    to determine whether the device is still reachable.  If the config read is
+    successful, the ~0 data is probably valid data from the device.  If the
+    config read fails, the device is unreachable, so mark it as disconnected.
+
+diff --git a/drivers/pci/msi.c b/drivers/pci/msi.c
+index d46ae506e296..0cf095eef69d 100644
+--- a/drivers/pci/msi.c
++++ b/drivers/pci/msi.c
+@@ -31,6 +31,38 @@ int pci_msi_ignore_mask;
+ 
+ #define msix_table_size(flags)	((flags & PCI_MSIX_FLAGS_QSIZE) + 1)
+ 
++static u32 mmio_readl(struct pci_dev *dev, const volatile void __iomem *addr)
++{
++	u32 val, id;
++
++	if (pci_dev_is_disconnected(dev))
++		return ~0;
++
++	val = readl(addr);
++
++	/*
++	 * If an MMIO read from the device returns ~0 data, that data may
++	 * be valid, or it may indicate a bus error.  If config space is
++	 * readable, assume it's valid data; otherwise, assume a bus error.
++	 */
++	if (val == ~0) {
++		pci_read_config_dword(dev, PCI_VENDOR_ID, &id);
++		if (id == ~0)
++			pci_dev_set_disconnected(dev, NULL);
++	}
++
++	return val;
++}
++
++static void mmio_writel(struct pci_dev *dev, u32 val,
++			volatile void __iomem *addr)
++{
++	if (pci_dev_is_disconnected(dev))
++		return;
++
++	writel(val, addr);
++}
++
+ #ifdef CONFIG_PCI_MSI_IRQ_DOMAIN
+ static int pci_msi_setup_msi_irqs(struct pci_dev *dev, int nvec, int type)
+ {
+@@ -215,7 +247,8 @@ u32 __pci_msix_desc_mask_irq(struct pci_dev *dev, struct msi_desc *desc,
+ 	mask_bits &= ~PCI_MSIX_ENTRY_CTRL_MASKBIT;
+ 	if (flag)
+ 		mask_bits |= PCI_MSIX_ENTRY_CTRL_MASKBIT;
+-	writel(mask_bits, pci_msix_desc_addr(desc) + PCI_MSIX_ENTRY_VECTOR_CTRL);
++	mmio_writel(dev, mask_bits,
++		    pci_msix_desc_addr(desc) + PCI_MSIX_ENTRY_VECTOR_CTRL);
+ 
+ 	return mask_bits;
+ }
+@@ -232,7 +265,7 @@ static void msi_set_mask_bit(struct irq_data *data, u32 flag)
+ 
+ 	if (desc->msi_attrib.is_msix) {
+ 		msix_mask_irq(dev, desc, flag);
+-		readl(desc->mask_base);		/* Flush write to device */
++		mmio_readl(dev, desc->mask_base); /* Flush write to device */
+ 	} else {
+ 		unsigned offset = data->irq - desc->irq;
+ 		msi_mask_irq(dev, desc, 1 << offset, flag << offset);
+@@ -276,9 +309,11 @@ void __pci_read_msi_msg(struct msi_desc *entry, struct msi_msg *msg)
+ 	if (entry->msi_attrib.is_msix) {
+ 		void __iomem *base = pci_msix_desc_addr(entry);
+ 
+-		msg->address_lo = readl(base + PCI_MSIX_ENTRY_LOWER_ADDR);
+-		msg->address_hi = readl(base + PCI_MSIX_ENTRY_UPPER_ADDR);
+-		msg->data = readl(base + PCI_MSIX_ENTRY_DATA);
++		msg->address_lo = mmio_readl(dev,
++					     base + PCI_MSIX_ENTRY_LOWER_ADDR);
++		msg->address_hi = mmio_readl(dev,
++					     base + PCI_MSIX_ENTRY_UPPER_ADDR);
++		msg->data = mmio_readl(dev, base + PCI_MSIX_ENTRY_DATA);
+ 	} else {
+ 		int pos = dev->msi_cap;
+ 		u16 data;
+@@ -306,9 +341,11 @@ void __pci_write_msi_msg(struct msi_desc *entry, struct msi_msg *msg)
+ 	} else if (entry->msi_attrib.is_msix) {
+ 		void __iomem *base = pci_msix_desc_addr(entry);
+ 
+-		writel(msg->address_lo, base + PCI_MSIX_ENTRY_LOWER_ADDR);
+-		writel(msg->address_hi, base + PCI_MSIX_ENTRY_UPPER_ADDR);
+-		writel(msg->data, base + PCI_MSIX_ENTRY_DATA);
++		mmio_writel(dev, msg->address_lo,
++			    base + PCI_MSIX_ENTRY_LOWER_ADDR);
++		mmio_writel(dev, msg->address_hi,
++			    base + PCI_MSIX_ENTRY_UPPER_ADDR);
++		mmio_writel(dev, msg->data, base + PCI_MSIX_ENTRY_DATA);
+ 	} else {
+ 		int pos = dev->msi_cap;
+ 		u16 msgctl;
+@@ -722,8 +759,8 @@ static void msix_program_entries(struct pci_dev *dev,
+ 	for_each_pci_msi_entry(entry, dev) {
+ 		if (entries)
+ 			entries[i++].vector = entry->irq;
+-		entry->masked = readl(pci_msix_desc_addr(entry) +
+-				PCI_MSIX_ENTRY_VECTOR_CTRL);
++		entry->masked = mmio_readl(dev, pci_msix_desc_addr(entry) +
++					   PCI_MSIX_ENTRY_VECTOR_CTRL);
+ 		msix_mask_irq(dev, entry, 1);
+ 	}
+ }
