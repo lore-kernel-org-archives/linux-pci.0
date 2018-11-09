@@ -7,97 +7,116 @@ X-Spam-Status: No, score=-9.6 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
 	SPF_PASS,URIBL_BLOCKED,USER_AGENT_MUTT autolearn=unavailable
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 55390C43441
-	for <linux-pci@archiver.kernel.org>; Fri,  9 Nov 2018 00:03:08 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 466ABC43441
+	for <linux-pci@archiver.kernel.org>; Fri,  9 Nov 2018 00:22:19 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 1B27C20892
-	for <linux-pci@archiver.kernel.org>; Fri,  9 Nov 2018 00:03:07 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 0DD6020883
+	for <linux-pci@archiver.kernel.org>; Fri,  9 Nov 2018 00:22:19 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (1024-bit key) header.d=kernel.org header.i=@kernel.org header.b="xKDwz3N2"
-DMARC-Filter: OpenDMARC Filter v1.3.2 mail.kernel.org 1B27C20892
+	dkim=pass (1024-bit key) header.d=kernel.org header.i=@kernel.org header.b="z7yF3rt2"
+DMARC-Filter: OpenDMARC Filter v1.3.2 mail.kernel.org 0DD6020883
 Authentication-Results: mail.kernel.org; dmarc=fail (p=none dis=none) header.from=kernel.org
 Authentication-Results: mail.kernel.org; spf=none smtp.mailfrom=linux-pci-owner@vger.kernel.org
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727334AbeKIJlB (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Fri, 9 Nov 2018 04:41:01 -0500
-Received: from mail.kernel.org ([198.145.29.99]:35458 "EHLO mail.kernel.org"
+        id S1727403AbeKIKAD (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Fri, 9 Nov 2018 05:00:03 -0500
+Received: from mail.kernel.org ([198.145.29.99]:43238 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1727289AbeKIJlA (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Fri, 9 Nov 2018 04:41:00 -0500
+        id S1727137AbeKIKAD (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Fri, 9 Nov 2018 05:00:03 -0500
 Received: from localhost (unknown [69.71.4.100])
         (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
         (No client certificate requested)
-        by mail.kernel.org (Postfix) with ESMTPSA id 634B320855;
-        Fri,  9 Nov 2018 00:03:00 +0000 (UTC)
+        by mail.kernel.org (Postfix) with ESMTPSA id 4E57220840;
+        Fri,  9 Nov 2018 00:21:59 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=default; t=1541721780;
-        bh=AU7s0hxISLbndazbOtKy7OKnOr7YO4cmUQe6Dacb/FE=;
+        s=default; t=1541722919;
+        bh=OSN03HVgPsQZON3BcSygDZ+c8jWcUqPVSotvP8Hjshw=;
         h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-        b=xKDwz3N2/dDsLRBAZ4uPsJqofibLchVA2GaMjuGZW9FnOq2Zo8aM15K9II0B8Y+Pi
-         hTsKzWD/SFAJVh/CfJje28OHDfRpxHyuhdSVRu1em+wqBteUdTYBJEQGP82pvCqreD
-         xkQmFGSCXFhJXz00nK8XAAoNqL9qhYoz9SCDNxUw=
-Date:   Thu, 8 Nov 2018 18:02:58 -0600
+        b=z7yF3rt2aAy4nsbBryur/i8WIBZmFWmm3xZS5+N2XluhJ9B8yFmELS1N04ux//WKW
+         wOHBnOS5dP1QX475CdNoXLC6kr1ciMO+r2x9elT8IIlRLgopdD0Y40yEGITFOFvtOt
+         R1jzQkpJgJWgScyaDk9WbuDZ3aD5phNRHAK9pl+Y=
+Date:   Thu, 8 Nov 2018 18:21:57 -0600
 From:   Bjorn Helgaas <helgaas@kernel.org>
-To:     Colin King <colin.king@canonical.com>
-Cc:     Thomas Gleixner <tglx@linutronix.de>,
-        Ingo Molnar <mingo@redhat.com>, Borislav Petkov <bp@alien8.de>,
-        "H . Peter Anvin" <hpa@zytor.com>, x86@kernel.org,
-        linux-pci@vger.kernel.org, kernel-janitors@vger.kernel.org,
-        linux-kernel@vger.kernel.org
-Subject: Re: [PATCH] x86/PCI: Fix Broadcom CNB20LE unintended sign extension
- (redux)
-Message-ID: <20181109000258.GJ41183@google.com>
-References: <20181025135231.27817-1-colin.king@canonical.com>
+To:     AceLan Kao <acelan.kao@canonical.com>
+Cc:     Keith Busch <keith.busch@intel.com>, Jens Axboe <axboe@fb.com>,
+        Christoph Hellwig <hch@lst.de>,
+        Sagi Grimberg <sagi@grimberg.me>,
+        linux-nvme@lists.infradead.org, linux-kernel@vger.kernel.org,
+        linux-pci@vger.kernel.org
+Subject: Re: [PATCH v2 1/2] pci: prevent sk hynix nvme from entering D3
+Message-ID: <20181109002157.GK41183@google.com>
+References: <20181106071214.12745-1-acelan.kao@canonical.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20181025135231.27817-1-colin.king@canonical.com>
+In-Reply-To: <20181106071214.12745-1-acelan.kao@canonical.com>
 User-Agent: Mutt/1.10.1 (2018-07-13)
 Sender: linux-pci-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-On Thu, Oct 25, 2018 at 02:52:31PM +0100, Colin King wrote:
-> From: Colin Ian King <colin.king@canonical.com>
-> 
-> In the expression "word1 << 16", word1 starts as u16, but is promoted to
-> a signed int, then sign-extended to resource_size_t, which is probably
-> not what was intended.  Cast to resource_size_t to avoid the sign
-> extension.
-> 
-> This fixes an identical issue as fixed by commit 0b2d70764bb3
-> ("x86/PCI: Fix Broadcom CNB20LE unintended sign extension") back in 2014.
-> 
-> Detected by CoverityScan, CID#138749, 138750 ("Unintended sign extension")
-> 
-> Fixes: 3f6ea84a3035 ("PCI: read memory ranges out of Broadcom CNB20LE host bridge")
-> Signed-off-by: Colin Ian King <colin.king@canonical.com>
+On Tue, Nov 06, 2018 at 03:12:13PM +0800, AceLan Kao wrote:
+> It leads to the power consumption raises to 2.2W during s2idle, while
+> it consumes less than 1W during long idle if put SK hynix nvme to D3
+> and then enter s2idle.
+> From SK hynix FE, MS Windows doesn't put nvme to D3, and uses its own
+> APST feature to do the power management.
+> To leverage its APST feature during s2idle, we can't disable nvme
+> device while suspending, too.
 
-How lame that I fixed one but not both with 0b2d70764bb3, sorry about
-that!
+I don't know how APST works, but it sounds like you want to disable D3
+if you're using APST.  But that's not what this patch does; this
+disables it always.
 
-Applied to pci/enumeration for v4.21, thanks!
+I'm not sure we want a quirk for this at all, since as Christoph
+points out, it doesn't fix a functional issue as the other uses of
+quirk_no_ata_d3() do.
 
+From your emails with Christoph, it sounds like this quirk is a
+workaround for a firmware defect.  If we *do* end up wanting a quirk,
+the changelog should at least mention the firmware defect and maybe
+check whether it has been fixed.
+
+> BTW, prevent it from entering D3 will increase the power consumtion around
+> 0.13W ~ 0.15W during short/long idle, and the power consumption during
+> s2idle becomes 0.77W.
+> 
+> Signed-off-by: AceLan Kao <acelan.kao@canonical.com>
 > ---
->  arch/x86/pci/broadcom_bus.c | 4 ++--
->  1 file changed, 2 insertions(+), 2 deletions(-)
+>  drivers/pci/quirks.c    | 1 +
+>  include/linux/pci_ids.h | 2 ++
+>  2 files changed, 3 insertions(+)
 > 
-> diff --git a/arch/x86/pci/broadcom_bus.c b/arch/x86/pci/broadcom_bus.c
-> index 526536c81ddc..d09c401a300d 100644
-> --- a/arch/x86/pci/broadcom_bus.c
-> +++ b/arch/x86/pci/broadcom_bus.c
-> @@ -50,8 +50,8 @@ static void __init cnb20le_res(u8 bus, u8 slot, u8 func)
->  	word1 = read_pci_config_16(bus, slot, func, 0xc0);
->  	word2 = read_pci_config_16(bus, slot, func, 0xc2);
->  	if (word1 != word2) {
-> -		res.start = (word1 << 16) | 0x0000;
-> -		res.end   = (word2 << 16) | 0xffff;
-> +		res.start = ((resource_size_t) word1 << 16) | 0x0000;
-> +		res.end   = ((resource_size_t) word2 << 16) | 0xffff;
->  		res.flags = IORESOURCE_MEM;
->  		update_res(info, res.start, res.end, res.flags, 0);
->  	}
+> diff --git a/drivers/pci/quirks.c b/drivers/pci/quirks.c
+> index 4700d24e5d55..b7e6492e8311 100644
+> --- a/drivers/pci/quirks.c
+> +++ b/drivers/pci/quirks.c
+> @@ -1332,6 +1332,7 @@ DECLARE_PCI_FIXUP_CLASS_EARLY(PCI_VENDOR_ID_AL, PCI_ANY_ID,
+>     occur when mode detecting */
+>  DECLARE_PCI_FIXUP_CLASS_EARLY(PCI_VENDOR_ID_VIA, PCI_ANY_ID,
+>  				PCI_CLASS_STORAGE_IDE, 8, quirk_no_ata_d3);
+> +DECLARE_PCI_FIXUP_EARLY(PCI_VENDOR_ID_SK_HYNIX, 0x1527, quirk_no_ata_d3);
+>  
+>  /*
+>   * This was originally an Alpha-specific thing, but it really fits here.
+> diff --git a/include/linux/pci_ids.h b/include/linux/pci_ids.h
+> index 69f0abe1ba1a..5f5adda07de0 100644
+> --- a/include/linux/pci_ids.h
+> +++ b/include/linux/pci_ids.h
+> @@ -3090,4 +3090,6 @@
+>  
+>  #define PCI_VENDOR_ID_NCUBE		0x10ff
+>  
+> +#define PCI_VENDOR_ID_SK_HYNIX		0x1c5c
+> +
+>  #endif /* _LINUX_PCI_IDS_H */
 > -- 
-> 2.19.1
+> 2.17.1
 > 
+> 
+> _______________________________________________
+> Linux-nvme mailing list
+> Linux-nvme@lists.infradead.org
+> http://lists.infradead.org/mailman/listinfo/linux-nvme
