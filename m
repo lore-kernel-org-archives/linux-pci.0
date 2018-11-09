@@ -2,115 +2,168 @@ Return-Path: <SRS0=f7a+=NU=vger.kernel.org=linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-2.5 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	MAILING_LIST_MULTI,SPF_PASS,USER_AGENT_MUTT autolearn=ham autolearn_force=no
-	version=3.4.0
+X-Spam-Status: No, score=-1.0 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+	MAILING_LIST_MULTI,SPF_PASS autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id D5CB8C43441
-	for <linux-pci@archiver.kernel.org>; Fri,  9 Nov 2018 16:40:09 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 02EFEC43441
+	for <linux-pci@archiver.kernel.org>; Fri,  9 Nov 2018 17:16:36 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id A5A8A20818
-	for <linux-pci@archiver.kernel.org>; Fri,  9 Nov 2018 16:40:09 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.3.2 mail.kernel.org A5A8A20818
-Authentication-Results: mail.kernel.org; dmarc=fail (p=none dis=none) header.from=intel.com
+	by mail.kernel.org (Postfix) with ESMTP id C192720825
+	for <linux-pci@archiver.kernel.org>; Fri,  9 Nov 2018 17:16:35 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.3.2 mail.kernel.org C192720825
+Authentication-Results: mail.kernel.org; dmarc=fail (p=quarantine dis=none) header.from=ti.com
 Authentication-Results: mail.kernel.org; spf=none smtp.mailfrom=linux-pci-owner@vger.kernel.org
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1728236AbeKJCV3 (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Fri, 9 Nov 2018 21:21:29 -0500
-Received: from mga02.intel.com ([134.134.136.20]:41201 "EHLO mga02.intel.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1727955AbeKJCV2 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Fri, 9 Nov 2018 21:21:28 -0500
-X-Amp-Result: UNSCANNABLE
-X-Amp-File-Uploaded: False
-Received: from orsmga001.jf.intel.com ([10.7.209.18])
-  by orsmga101.jf.intel.com with ESMTP/TLS/DHE-RSA-AES256-GCM-SHA384; 09 Nov 2018 08:40:08 -0800
-X-ExtLoop1: 1
-X-IronPort-AV: E=Sophos;i="5.54,483,1534834800"; 
-   d="scan'208";a="106901690"
-Received: from unknown (HELO localhost.localdomain) ([10.232.112.69])
-  by orsmga001.jf.intel.com with ESMTP; 09 Nov 2018 08:40:06 -0800
-Date:   Fri, 9 Nov 2018 09:36:29 -0700
-From:   Keith Busch <keith.busch@intel.com>
-To:     Greg Kroah-Hartman <gregkh@linuxfoundation.org>
-Cc:     Lukas Wunner <lukas@wunner.de>, Bjorn Helgaas <helgaas@kernel.org>,
-        Alexandru Gagniuc <mr.nuke.me@gmail.com>,
-        linux-pci@vger.kernel.org, alex_gagniuc@dellteam.com,
-        austin_bolen@dell.com, shyam_iyer@dell.com,
-        linux-kernel@vger.kernel.org,
-        Jonathan Derrick <jonathan.derrick@intel.com>,
-        Russell Currey <ruscur@russell.cc>,
-        Sam Bobroff <sbobroff@linux.ibm.com>,
-        Oliver O'Halloran <oohall@gmail.com>,
-        linuxppc-dev@lists.ozlabs.org
-Subject: Re: [PATCH v2] PCI/MSI: Don't touch MSI bits when the PCI device is
- disconnected
-Message-ID: <20181109163629.GF2932@localhost.localdomain>
-References: <20180918221501.13112-1-mr.nuke.me@gmail.com>
- <20181107234257.GC41183@google.com>
- <20181108200855.GE41183@google.com>
- <20181108220117.GA11466@kroah.com>
- <20181109072953.ox7qfpnibb7drmf6@wunner.de>
- <20181109113257.GB29785@kroah.com>
+        id S1728183AbeKJC6D (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Fri, 9 Nov 2018 21:58:03 -0500
+Received: from fllv0016.ext.ti.com ([198.47.19.142]:38762 "EHLO
+        fllv0016.ext.ti.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1727961AbeKJC6D (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Fri, 9 Nov 2018 21:58:03 -0500
+Received: from fllv0035.itg.ti.com ([10.64.41.0])
+        by fllv0016.ext.ti.com (8.15.2/8.15.2) with ESMTP id wA9HGQrZ067125;
+        Fri, 9 Nov 2018 11:16:26 -0600
+Received: from DLEE113.ent.ti.com (dlee113.ent.ti.com [157.170.170.24])
+        by fllv0035.itg.ti.com (8.15.2/8.15.2) with ESMTPS id wA9HGQwL014962
+        (version=TLSv1.2 cipher=AES256-GCM-SHA384 bits=256 verify=FAIL);
+        Fri, 9 Nov 2018 11:16:26 -0600
+Received: from DLEE114.ent.ti.com (157.170.170.25) by DLEE113.ent.ti.com
+ (157.170.170.24) with Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_128_CBC_SHA256_P256) id 15.1.1466.3; Fri, 9 Nov
+ 2018 11:16:26 -0600
+Received: from dflp33.itg.ti.com (10.64.6.16) by DLEE114.ent.ti.com
+ (157.170.170.25) with Microsoft SMTP Server (version=TLS1_0,
+ cipher=TLS_RSA_WITH_AES_256_CBC_SHA) id 15.1.1466.3 via Frontend Transport;
+ Fri, 9 Nov 2018 11:16:26 -0600
+Received: from [172.24.190.89] (ileax41-snat.itg.ti.com [10.172.224.153])
+        by dflp33.itg.ti.com (8.14.3/8.13.8) with ESMTP id wA9HGMb4008902;
+        Fri, 9 Nov 2018 11:16:23 -0600
+Subject: Re: [PATCH] PCI: dwc: Fix interrupt race in when handling MSI
+To:     Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
+        Trent Piepho <tpiepho@impinj.com>
+CC:     "marc.zyngier@arm.com" <marc.zyngier@arm.com>,
+        "jpinto@synopsys.com" <jpinto@synopsys.com>,
+        "jingoohan1@gmail.com" <jingoohan1@gmail.com>,
+        "gustavo.pimentel@synopsys.com" <gustavo.pimentel@synopsys.com>,
+        "faiz_abbas@ti.com" <faiz_abbas@ti.com>,
+        "stable@vger.kernel.org" <stable@vger.kernel.org>,
+        "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+        "bhelgaas@google.com" <bhelgaas@google.com>,
+        Sekhar Nori <nsekhar@ti.com>
+References: <20181027000028.21343-1-tpiepho@impinj.com>
+ <20181106145347.GB19060@e107981-ln.cambridge.arm.com>
+ <db3462e2-422c-161a-1f58-135bc4eab7eb@arm.com>
+ <1541533217.30311.263.camel@impinj.com>
+ <597d9ebd-f95f-0a4d-e1a3-fe79d4333879@arm.com>
+ <1541621853.30311.294.camel@impinj.com>
+ <268eae88-274e-edfe-5668-5759efae62e6@arm.com>
+ <1541706591.30311.308.camel@impinj.com>
+ <20181109101316.GA25155@e107981-ln.cambridge.arm.com>
+From:   Vignesh R <vigneshr@ti.com>
+Message-ID: <614ee9cd-fea2-304c-61a3-04d4b0174098@ti.com>
+Date:   Fri, 9 Nov 2018 22:47:18 +0530
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:60.0) Gecko/20100101
+ Thunderbird/60.2.1
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20181109113257.GB29785@kroah.com>
-User-Agent: Mutt/1.9.1 (2017-09-22)
+In-Reply-To: <20181109101316.GA25155@e107981-ln.cambridge.arm.com>
+Content-Type: text/plain; charset="utf-8"
+Content-Language: en-US
+Content-Transfer-Encoding: 7bit
+X-EXCLAIMER-MD-CONFIG: e1e8a2fd-e40a-4ac6-ac9b-f7e9cc9ee180
 Sender: linux-pci-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-On Fri, Nov 09, 2018 at 03:32:57AM -0800, Greg Kroah-Hartman wrote:
-> On Fri, Nov 09, 2018 at 08:29:53AM +0100, Lukas Wunner wrote:
-> > On Thu, Nov 08, 2018 at 02:01:17PM -0800, Greg Kroah-Hartman wrote:
-> > > On Thu, Nov 08, 2018 at 02:09:17PM -0600, Bjorn Helgaas wrote:
-> > > > I'm having second thoughts about this.  One thing I'm uncomfortable
-> > > > with is that sprinkling pci_dev_is_disconnected() around feels ad hoc
-> > > 
-> > > I think my stance always has been that this call is not good at all
-> > > because once you call it you never really know if it is still true as
-> > > the device could have been removed right afterward.
-> > > 
-> > > So almost any code that relies on it is broken, there is no locking and
-> > > it can and will race and you will loose.
-> > 
-> > Hm, to be honest if that's your impression I think you must have missed a
-> > large portion of the discussion we've been having over the past 2 years.
-> > 
-> > Please consider reading this LWN article, particularly the "Surprise
-> > removal" section, to get up to speed:
-> > 
-> > https://lwn.net/Articles/767885/
-> > 
-> > You seem to be assuming that all we care about is the *return value* of
-> > an mmio read.  However a transaction to a surprise removed device has
-> > side effects beyond returning all ones, such as a Completion Timeout
-> > which, with thousands of transactions in flight, added up to many seconds
-> > to handle removal of an NVMe array and occasionally caused MCEs.
-> 
-> Again, I still claim this is broken hardware/firmware :)
 
-Indeed it is, but I don't want to abandon people with hardware in hand
-if we can make it work despite being broken. Perfection is the enemy of
-good. :)
- 
-> > It is not an option to just blindly carry out device accesses even though
-> > it is known the device is gone, Completion Timeouts be damned.
-> 
-> I don't disagree with you at all, and your other email is great with
-> summarizing the issues here.
-> 
-> What I do object to is somehow relying on that function call as knowing
-> that the device really is present or not.  It's a good hint, yes, but
-> driver authors still have to be able to handle the bad data coming back
-> from when the call races with the device being removed.
 
-The function has always been a private interface. It is not available
-for drivers to rely on.
+On 09/11/18 3:43 PM, Lorenzo Pieralisi wrote:
+> On Thu, Nov 08, 2018 at 07:49:52PM +0000, Trent Piepho wrote:
+>> On Thu, 2018-11-08 at 09:49 +0000, Marc Zyngier wrote:
+>>> On 07/11/18 20:17, Trent Piepho wrote:
+>>>> On Wed, 2018-11-07 at 18:41 +0000, Marc Zyngier wrote:
+>>>>> On 06/11/18 19:40, Trent Piepho wrote:
+>>>>>>
+>>>>>> What about stable kernels that don't have the hierarchical API?
+>>>>>
+>>>>> My goal is to fix mainline first. Once we have something that works on
+>>>>> mainline, we can look at propagating the fix to other versions. But
+>>>>> mainline always comes first.
+>>>>
+>>>> This is a regression that went into 4.14.  Wouldn't the appropriate
+>>>> action for the stable series be to undo the regression?
+>>>
+>>> This is not how stable works. Stable kernels *only* contain patches that
+>>> are backported from mainline, and do not take standalone patch.
+>>>
+>>> Furthermore, your fix is to actually undo someone else's fix. Who is
+>>> right? In the absence of any documentation, the answer is "nobody".
+>>
+>> Little more history to this bug.  The code was originally the way it is
+>> now, but this same bug was fixed in 2013 in https://patchwork.kernel.or
+>> g/patch/3333681/
+>>
+>> Then that lasted four years until it was changed Aug 2017 in https://pa
+>> tchwork.kernel.org/patch/9893303/
+>>
+>> That lasted just six months until someone tried to revert it, https://p
+>> atchwork.kernel.org/patch/9893303/
+> 
+> The last link is the same as the previous one, unless I am missing
+> something.
+> 
+>> Seems pretty clear the way it is now is much worse than the way it was
+>> before, even if the previous design may have had another flaw.  Though
+>> I've yet to see anyone point out something makes the previous design
+>> broken.  Sub-optimal yes, but not broken.
+> 
+> The way I see it is: either the MSI handling works or it does not.
+> 
+> AFAICS:
+> 
+> 8c934095fa2f ("PCI: dwc: Clear MSI interrupt status after it is handled,
+> not before")
+> 
+> was fixing a bug, causing "timeouts on some wireless lan cards", we want
+> to understand what the problem is, fix it once for all on all DWC
+> based systems.
+> 
 
-The only thing we're trying to accomplish is not start a transaction
-if software knows it will not succeed. There are certainly times when
-a transaction will fail that software does not forsee, but we're not
-suggesting the intent handles that either.
+That issue was root caused to be due to a HW errata in dra7xx DWC
+wrapper which requires a special way of handling MSI interrupts at
+wrapper level. More info in this thread:
+https://www.spinics.net/lists/linux-pci/msg70462.html
+
+Unfortunately, commit 8c934095fa2f did not fix WLAN issue in longer
+tests and also broke PCIe USB cards. Therefore, it makes sense to revert
+8c934095fa2f
+
+I am working on patches fix dra7xx wrapper for WLAN card issue.
+
+Regards
+Vignesh
+
+>>> Anything can be backported to stable once we understand the issue. At
+>>> the moment, we're just playing games moving stuff around and hope
+>>> nothing else will break. That's not a sustainable way of maintaining
+>>> this driver. At the moment, the only patch I'm inclined to propose until
+>>> we get an actual interrupt handling flow from Synopsys is to mark this
+>>> driver as "BROKEN".
+>>
+>> It feels like you're using this bug to hold designware hostage in a
+>> broken kernel, and me along with them.  I don't have the documentation,
+>> no one does, there's no way for me to give you want you want.  But I've
+>> got hardware that doesn't work in the mainline kernel.
+> 
+> Nobody is holding anyone hostage here, it is a pretty normal patch
+> discussion, given the controversial history of fixes you reported
+> we are just trying to get the whole picture.
+> 
+> There is a bug that ought to be fixed, you are doing the right thing
+> with the feedback you are providing and DWC maintainers must provide the
+> information you need to get to the bottom of this, once for all, that's
+> as simple as that.
+> 
+> Thanks,
+> Lorenzo
+> 
