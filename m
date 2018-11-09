@@ -6,120 +6,89 @@ X-Spam-Status: No, score=-3.0 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
 	MAILING_LIST_MULTI,SPF_PASS,URIBL_BLOCKED,USER_AGENT_NEOMUTT autolearn=ham
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id DA274C43441
-	for <linux-pci@archiver.kernel.org>; Fri,  9 Nov 2018 07:11:44 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 4C66CC43441
+	for <linux-pci@archiver.kernel.org>; Fri,  9 Nov 2018 07:29:57 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 8E97120840
-	for <linux-pci@archiver.kernel.org>; Fri,  9 Nov 2018 07:11:44 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.3.2 mail.kernel.org 8E97120840
+	by mail.kernel.org (Postfix) with ESMTP id 197DD20855
+	for <linux-pci@archiver.kernel.org>; Fri,  9 Nov 2018 07:29:57 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.3.2 mail.kernel.org 197DD20855
 Authentication-Results: mail.kernel.org; dmarc=none (p=none dis=none) header.from=wunner.de
 Authentication-Results: mail.kernel.org; spf=none smtp.mailfrom=linux-pci-owner@vger.kernel.org
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727870AbeKIQu5 (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Fri, 9 Nov 2018 11:50:57 -0500
-Received: from bmailout2.hostsharing.net ([83.223.90.240]:59375 "EHLO
-        bmailout2.hostsharing.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1727789AbeKIQu5 (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Fri, 9 Nov 2018 11:50:57 -0500
+        id S1728022AbeKIRJN (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Fri, 9 Nov 2018 12:09:13 -0500
+Received: from bmailout1.hostsharing.net ([83.223.95.100]:44703 "EHLO
+        bmailout1.hostsharing.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1727869AbeKIRJN (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Fri, 9 Nov 2018 12:09:13 -0500
 Received: from h08.hostsharing.net (h08.hostsharing.net [83.223.95.28])
         (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
         (Client CN "*.hostsharing.net", Issuer "COMODO RSA Domain Validation Secure Server CA" (not verified))
-        by bmailout2.hostsharing.net (Postfix) with ESMTPS id 45CCA2800B4A4;
-        Fri,  9 Nov 2018 08:11:40 +0100 (CET)
+        by bmailout1.hostsharing.net (Postfix) with ESMTPS id 77C1630000CD0;
+        Fri,  9 Nov 2018 08:29:53 +0100 (CET)
 Received: by h08.hostsharing.net (Postfix, from userid 100393)
-        id E738313125; Fri,  9 Nov 2018 08:11:39 +0100 (CET)
-Date:   Fri, 9 Nov 2018 08:11:39 +0100
+        id 3F063AEAD; Fri,  9 Nov 2018 08:29:53 +0100 (CET)
+Date:   Fri, 9 Nov 2018 08:29:53 +0100
 From:   Lukas Wunner <lukas@wunner.de>
-To:     Bjorn Helgaas <helgaas@kernel.org>
-Cc:     Alexandru Gagniuc <mr.nuke.me@gmail.com>,
+To:     Greg Kroah-Hartman <gregkh@linuxfoundation.org>
+Cc:     Bjorn Helgaas <helgaas@kernel.org>,
+        Alexandru Gagniuc <mr.nuke.me@gmail.com>,
         linux-pci@vger.kernel.org, keith.busch@intel.com,
         alex_gagniuc@dellteam.com, austin_bolen@dell.com,
         shyam_iyer@dell.com, linux-kernel@vger.kernel.org,
         Jonathan Derrick <jonathan.derrick@intel.com>,
-        Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
         Russell Currey <ruscur@russell.cc>,
         Sam Bobroff <sbobroff@linux.ibm.com>,
         Oliver O'Halloran <oohall@gmail.com>,
         linuxppc-dev@lists.ozlabs.org
 Subject: Re: [PATCH v2] PCI/MSI: Don't touch MSI bits when the PCI device is
  disconnected
-Message-ID: <20181109071139.uxa6gu7jwsvr7ve6@wunner.de>
+Message-ID: <20181109072953.ox7qfpnibb7drmf6@wunner.de>
 References: <20180918221501.13112-1-mr.nuke.me@gmail.com>
  <20181107234257.GC41183@google.com>
  <20181108200855.GE41183@google.com>
+ <20181108220117.GA11466@kroah.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20181108200855.GE41183@google.com>
+In-Reply-To: <20181108220117.GA11466@kroah.com>
 User-Agent: NeoMutt/20170113 (1.7.2)
 Sender: linux-pci-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-On Thu, Nov 08, 2018 at 02:09:17PM -0600, Bjorn Helgaas wrote:
-> +	/*
-> +	 * If an MMIO read from the device returns ~0 data, that data may
-> +	 * be valid, or it may indicate a bus error.  If config space is
-> +	 * readable, assume it's valid data; otherwise, assume a bus error.
-> +	 */
-> +	if (val == ~0) {
-> +		pci_read_config_dword(dev, PCI_VENDOR_ID, &id);
-> +		if (id == ~0)
-> +			pci_dev_set_disconnected(dev, NULL);
-> +	}
+On Thu, Nov 08, 2018 at 02:01:17PM -0800, Greg Kroah-Hartman wrote:
+> On Thu, Nov 08, 2018 at 02:09:17PM -0600, Bjorn Helgaas wrote:
+> > I'm having second thoughts about this.  One thing I'm uncomfortable
+> > with is that sprinkling pci_dev_is_disconnected() around feels ad hoc
+> 
+> I think my stance always has been that this call is not good at all
+> because once you call it you never really know if it is still true as
+> the device could have been removed right afterward.
+> 
+> So almost any code that relies on it is broken, there is no locking and
+> it can and will race and you will loose.
 
-This isn't safe unfortunately because "all ones" may occur for other
-reasons besides disconnectedness.  E.g. on an Uncorrectable Error,
-the device may likewise respond with all ones, but revert to valid
-responses if the error can be recovered through a Secondary Bus Reset.
-In such a case, marking the device disconnected would be inappropriate.
+Hm, to be honest if that's your impression I think you must have missed a
+large portion of the discussion we've been having over the past 2 years.
 
-Accessing a device in D3cold would be another example where all ones
-is returned both from mmio and config space despite the device still
-being present and future accesses having a chance to succeed.
-
-In fact, in v2 of Keith's patches adding pci_dev_set_disconnected()
-he attempted the same as what you're doing here and caused issues
-for me with devices in D3cold:
-
-https://spinics.net/lists/linux-pci/msg54337.html
-
-
-> One thing I'm uncomfortable with is that [...].  Another is that the
-> only place we call pci_dev_set_disconnected() is in pciehp and acpiphp,
-> so the only "disconnected" case we catch is if hotplug happens to be
-> involved.
-
-Yes, that's because the hotplug drivers are the only ones who can
-identify removal authoritatively and unambiguously.  They *know*
-when the device is gone and don't have to resort to heuristics
-such as all ones.  (ISTR that dpc also marks devices disconnected.)
-
-
-> sprinkling pci_dev_is_disconnected() around feels ad hoc
-> instead of systematic, in the sense that I don't know how we convince
-> ourselves that this (and only this) is the correct place to put it.
-
-We need to add documentation for driver authors how to deal with
-surprise removal.  Briefly:
-
-* If (pdev->error_state == pci_channel_io_perm_failure), the device
-  is definitely gone and any further device access can be skipped.
-  Otherwise presence of the device is likely, but not guaranteed.
-
-* If a device access can significantly delay device removal due to
-  Completion Timeouts, or can cause an infinite loop, MCE or crash,
-  do check pdev->error_state before carrying out the device access.
-
-* Always be prepared that a device access may fail due to surprise
-  removal, do not blindly trust mmio or config space reads or
-  assume success of writes.
-
-I'm sure this can be extended quite a bit.  There's more information
-in this LWN article in the "Surprise removal" section:
+Please consider reading this LWN article, particularly the "Surprise
+removal" section, to get up to speed:
 
 https://lwn.net/Articles/767885/
+
+You seem to be assuming that all we care about is the *return value* of
+an mmio read.  However a transaction to a surprise removed device has
+side effects beyond returning all ones, such as a Completion Timeout
+which, with thousands of transactions in flight, added up to many seconds
+to handle removal of an NVMe array and occasionally caused MCEs.
+
+It is not an option to just blindly carry out device accesses even though
+it is known the device is gone, Completion Timeouts be damned.
+
+However there is more to it than just Completion Timeouts, this is all
+detailed in the LWN article.
 
 Thanks,
 
