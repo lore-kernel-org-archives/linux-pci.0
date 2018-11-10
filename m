@@ -1,128 +1,107 @@
-Return-Path: <SRS0=f7a+=NU=vger.kernel.org=linux-pci-owner@kernel.org>
+Return-Path: <SRS0=66QY=NV=vger.kernel.org=linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-0.8 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
-	DKIM_VALID_AU,FREEMAIL_FORGED_FROMDOMAIN,FREEMAIL_FROM,
-	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_PASS autolearn=ham
-	autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-1.1 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
+	DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_PASS
+	autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id CFAF7C43441
-	for <linux-pci@archiver.kernel.org>; Fri,  9 Nov 2018 21:43:21 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 89CDEC43441
+	for <linux-pci@archiver.kernel.org>; Sat, 10 Nov 2018 00:22:17 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 8BDE320827
-	for <linux-pci@archiver.kernel.org>; Fri,  9 Nov 2018 21:43:21 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 3093420858
+	for <linux-pci@archiver.kernel.org>; Sat, 10 Nov 2018 00:22:17 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="eCtRVODr"
-DMARC-Filter: OpenDMARC Filter v1.3.2 mail.kernel.org 8BDE320827
-Authentication-Results: mail.kernel.org; dmarc=fail (p=none dis=none) header.from=gmail.com
+	dkim=pass (2048-bit key) header.d=ctrlinux.com header.i=@ctrlinux.com header.b="WPb1cWQT";
+	dkim=pass (2048-bit key) header.d=messagingengine.com header.i=@messagingengine.com header.b="Rb53jOhU"
+DMARC-Filter: OpenDMARC Filter v1.3.2 mail.kernel.org 3093420858
+Authentication-Results: mail.kernel.org; dmarc=none (p=none dis=none) header.from=ctrlinux.com
 Authentication-Results: mail.kernel.org; spf=none smtp.mailfrom=linux-pci-owner@vger.kernel.org
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727181AbeKJHZq (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Sat, 10 Nov 2018 02:25:46 -0500
-Received: from mail-it1-f169.google.com ([209.85.166.169]:40131 "EHLO
-        mail-it1-f169.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1727012AbeKJHZq (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Sat, 10 Nov 2018 02:25:46 -0500
-Received: by mail-it1-f169.google.com with SMTP id e11so5504980itl.5
-        for <linux-pci@vger.kernel.org>; Fri, 09 Nov 2018 13:43:19 -0800 (PST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20161025;
-        h=mime-version:references:in-reply-to:reply-to:from:date:message-id
-         :subject:to:cc;
-        bh=/VcJ/avfxBXz9O5A8VZwrBbdKMKLcbesuiK1KzRal4g=;
-        b=eCtRVODr8ia2dz2wqc2BDsTq4EqbKPWSH6n0Z/nq+Pd7P0Yuvk6RfI+RjKdt7Fzq9j
-         +32shh0we1C5somhIv1L0jmObXjtb9iXGEMQBOrWGFvhjABLR4LGFtI1txAS5cSiZy1A
-         SJcrElTQw/3GWRqbF/8sjC/P2dOunYSaPCTAIyJ5Q1HeA7ERLV5Nnp1NV9gYdfp8CSMT
-         Gwn44hEWoqQbSCsfyFSxh+fxALweF372preUNeUpC1YSKov32/WAxR496pVmTYzq/3u5
-         iIxBXrtOCp4fZh4ZsK+sRxFX+HjsPn0hDDPQ7ObWz6G5JL95C4kIiaU5PLehf/iC1vT7
-         S8aw==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20161025;
-        h=x-gm-message-state:mime-version:references:in-reply-to:reply-to
-         :from:date:message-id:subject:to:cc;
-        bh=/VcJ/avfxBXz9O5A8VZwrBbdKMKLcbesuiK1KzRal4g=;
-        b=biOewcnEolKkocxracpYmwBvnOABsRR5krFNt2LmcU8Ah2UwsZYHaw2iOmh+O9SKRO
-         L0mylYWL9dGWK45SBK9HhvJBGmSQ8gHBIvASGqA3iqfYiuMThnaVu0KW8RwDRqcOlgwN
-         8NR7gC8XB8eUgfuFiqbDl6ffZbVsJyqIwNXdZzBRFn3FSMmH8uIYmSA5mDkTY7K5Utcx
-         ueWhM/WR6TE3uN9/A+JKRa/MR4O1RfokWP4cC+w9wwVy4FayidGg3QIRXzB/x2pBULK9
-         aVMEWhKrrgvVdfvFz4mg1yvlfPoeRaqtWAOepytKnaWXazt5VOD9q5jjl0apLoTCN2uA
-         5RHA==
-X-Gm-Message-State: AGRZ1gIHw65WoFLuBSAWPGJa1w/9cnbbSInz4vlCUHA4UznHuUdPJDg/
-        0vo2AlPIpKkoGqxMRwdycki3xeTgBr/ujTxxXw1kwndB
-X-Google-Smtp-Source: AJdET5e47Ln4tnhKM77dZZC7JbLQ8bzDjj89gMZGr+j9RuFyRpQXy0rdbm3Lhr2ogg4tbECtV1LIGzuWOdBBADw6OPw=
-X-Received: by 2002:a24:1a87:: with SMTP id 129-v6mr3936760iti.23.1541799798855;
- Fri, 09 Nov 2018 13:43:18 -0800 (PST)
-MIME-Version: 1.0
-References: <bug-201647-193951@https.bugzilla.kernel.org/>
-In-Reply-To: <bug-201647-193951@https.bugzilla.kernel.org/>
-Reply-To: bjorn@helgaas.com
-From:   Bjorn Helgaas <bjorn.helgaas@gmail.com>
-Date:   Fri, 9 Nov 2018 15:43:06 -0600
-Message-ID: <CABhMZUXc4FS-f52ZDsErEhbkm_jjEz+kn75YO5Tuvp42Qm+1xw@mail.gmail.com>
-Subject: Fwd: [Bug 201647] New: Intel Wireless card 3165 does not get detected
- but bluetooth works
+        id S1728082AbeKJKFQ (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Sat, 10 Nov 2018 05:05:16 -0500
+Received: from out5-smtp.messagingengine.com ([66.111.4.29]:41591 "EHLO
+        out5-smtp.messagingengine.com" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1728032AbeKJKFP (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Sat, 10 Nov 2018 05:05:15 -0500
+Received: from compute7.internal (compute7.nyi.internal [10.202.2.47])
+        by mailout.nyi.internal (Postfix) with ESMTP id 42C5821F0A
+        for <linux-pci@vger.kernel.org>; Fri,  9 Nov 2018 19:22:15 -0500 (EST)
+Received: from web6 ([10.202.2.216])
+  by compute7.internal (MEProxy); Fri, 09 Nov 2018 19:22:15 -0500
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=ctrlinux.com; h=
+        message-id:from:to:mime-version:content-transfer-encoding
+        :content-type:subject:reply-to:date; s=fm1; bh=EKbYnbH07byfq6SeQ
+        bJSn26G+entBbGJA5sYHQRetgo=; b=WPb1cWQTBJCMT3BSmXg+cGgrsLOtK2a80
+        ThqFvmjbi4PtOxYqM+NZRx5XnikV23LTx6GVVpHN6u5084TIkSMUMspsaxiUD3JO
+        lltLIoieEDZX1J14wrg/yn8CTKmplwjmLIR6Kkv3A+n1Kh9ShQdsz8b7SWZLzhlZ
+        yDFZp2ZuTerLBsIsNmLR6n9SuNtc1TT142vLARtAVqiG/tjzYFTIAxhI16ASLna0
+        MmLVNVN+OSLzrsZ/GUjdCDIpb0BqkiHsIgUn9Omo7TQGJ1gXEkrrRySvmJG9M0Ep
+        hugrd1T01doVV6shLmxZ11ce6hou9Hm/5Joj3wRP3sf5ne4fxlNfw==
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=
+        messagingengine.com; h=content-transfer-encoding:content-type
+        :date:from:message-id:mime-version:reply-to:subject:to
+        :x-me-proxy:x-me-proxy:x-me-sender:x-me-sender:x-sasl-enc; s=
+        fm1; bh=EKbYnbH07byfq6SeQbJSn26G+entBbGJA5sYHQRetgo=; b=Rb53jOhU
+        bg3Y6DKOjDRa9XsYF+4VX6bPknUOJt946HZbtzsaijwgmDjcb5ONuaimO69nptgN
+        zFmR3yRxYfUb6XO2655EgTprgRNY3yYB6rt3O9pWvP5+/27zb96HS1/oLgthffHp
+        /zTwgd+2hWZZRSNWYvZwwr85dYvsb1VoTsgtdBWZt6Wphn7kqCwxXsO+5HHwcAe1
+        AZsxpygcA/BUmRFGO0o5ngyBeXqeCm4uspFb4tvCVCvdBXwaalFtb+c+z76Vm02x
+        p9Lo8SQDVMceZTauEJ/AK+XF/UtYFy1EjtUlF3SvjRE5lQz6Fejq44X1Yobx+1eR
+        szul0uRWXFAR0g==
+X-ME-Sender: <xms:tiTmW2_YpgYFBew18ztpichvX-1p_6IAyc61KtLM4kw1aSnR1HpXGg>
+X-ME-Proxy: <xmx:tiTmWyM7pjKhjcGuTKig3mGWPY6tsfjvPyTUCwgfx-toJk6-ntx10g>
+    <xmx:tiTmW360zG7dfehZOvof8nJVqq5wyQ5jINNUDBezPrh7WqbVO0Z7cw>
+    <xmx:tiTmW-54nDvH9njvZDdhB8csR29JHnRAsQkVCaArghcNb-jD8WdkFw>
+    <xmx:tiTmW33SIj7eJsu3bxak--y3d2ryvLzgnRBgn80mC3FBJ4fs-7cLOA>
+    <xmx:tiTmW6XiUNCMnKyiC1l7UV07bqWR_-HsDIaCuyfeHzMcH0yI7vWqCA>
+    <xmx:tyTmW3UOqW8cn4y89LhGTH2b59fvkJG5L4YLZVnux-6e0QEBZ3UXPQ>
+Received: by mailuser.nyi.internal (Postfix, from userid 99)
+        id D510E4156; Fri,  9 Nov 2018 19:22:14 -0500 (EST)
+Message-Id: <1541809334.2290928.1571950584.2632F1FD@webmail.messagingengine.com>
+From:   Andrei Danaila <adanaila@ctrlinux.com>
 To:     linux-pci@vger.kernel.org
-Cc:     Mertarg10@gmail.com
-Content-Type: text/plain; charset="UTF-8"
+MIME-Version: 1.0
+Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset="utf-8"
+X-Mailer: MessagingEngine.com Webmail Interface - ajax-c0552f07
+Subject: Sharing PCIe MMIO with other Drivers
+Reply-To: adanaila@ctrlinux.com
+Date:   Fri, 09 Nov 2018 16:22:14 -0800
 Sender: linux-pci-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-[Resend because I forgot to send as plain text and linux-pci rejected it.]
+Hello,
 
-The report below shows only one PCI-PCI bridge (00:13.0) but no
-devices below it.  I wonder if that's related to whatever's wrong with
-this host bridge window:
+I have a question about best practices in writing an PCIe driver for an FPGA. If this is not the best place to ask, please let me know.
 
-  acpi PNP0A08:00: host bridge window [mem 0x1000000010000 window]
-(ignored, not CPU addressable)
-  pci 0000:00:13.0: PCI bridge to [bus 01]
+I have an FPGA which is connected over PCIe to an x86 host. The FPGA has a variety of peripherals on it, I2C, UART, SPI etc. All of these peripherals can be accessed from the host by accessing different offsets from the BAR0 address.
 
-Mertarg10, would you mind attaching the "sudo lspci -vv" output, too?
+I am running linux kernel 4.14 on the host and have written a PCIe device driver which probes off the device id manufacturer ID of the FPGA.
 
----------- Forwarded message ---------
-From: <bugzilla-daemon@bugzilla.kernel.org>
-Date: Fri, Nov 9, 2018 at 4:10 AM
-Subject: [Bug 201647] New: Intel Wireless card 3165 does not get
-detected but bluetooth works
-To: <bugzilla.pci@gmail.com>
+The device driver calls pci_iomap( to obtain the cookie used to access the BAR. This works fine and via this mechanism I can read/write to the FPGA address space after calling ioremap on the cookie.
+
+What I am trying to do now however is create a I2C platform device representing the I2C bus on the FPGA and add to it, as a resource, the BAR0 address + the I2C offset, to get the host's i2c driver to probe off this new PCI device.
+
+In addition I am also trying to add an IRQ number for the I2C driver to use which is an MSIX mapped interrupt number obtained via pci_irq_vector.
+
+In essence, I am trying to get the x86 host to own this device exposed via io-remapped region in PCI land, and use its driver to manage it.
+
+The problem I am having is that I am getting a EBUSY return code when I try to register the resource to the platform device, after the pci_iomap has taken place.
+
+The resource type is IORESOURCE_SYSTEM_RAM | IORESOURCE_MUXED and the start of the resource is the BAR0 address as returned by pci_iomap + I2C_OFFSET.
+
+In the I2C device driver, I am expecting to do an ioremap on the resource and be able to access it by de-refencing
 
 
-https://bugzilla.kernel.org/show_bug.cgi?id=201647
+A couple of questions:
 
-            Bug ID: 201647
-           Summary: Intel Wireless card 3165 does not get detected but
-                    bluetooth works
-           Product: Drivers
-           Version: 2.5
-    Kernel Version: 4.19.1
-          Hardware: Intel
-                OS: Linux
-              Tree: Mainline
-            Status: NEW
-          Severity: high
-          Priority: P1
-         Component: PCI
-          Assignee: drivers_pci@kernel-bugs.osdl.org
-          Reporter: Mertarg10@gmail.com
-        Regression: No
+1. Is this the correct software flow for managing multiple devices exposed by a PCIe BAR0 address space?
+    If not, what is the correct flow?
+    If yes, any ideas on what may be going wrong?
 
-Created attachment 279385
-  --> https://bugzilla.kernel.org/attachment.cgi?id=279385&action=edit
-Contains outputs of dmesg and lspci
+Please feel free to point me to any examples, I have looked around quite a bit but did not manage to find enough detail to let me solve this problem.
 
-This bug affects most of the devices with a Celeron N4000 and an Intel wifi
-3165 Ac adapter.
-
-When using Linux wifi is not working however, Bluetooth is working fine.
-Also, Bluetooth part of this chip is connected via btusb and the wifi part of
-this chip is connected via PCIe.
-
-I have contacted the Linux wireless team of Intel, which suggested me to report
-this bug as a PCIe bug.
-
---
-You are receiving this mail because:
-You are watching the assignee of the bug.
+Thank you
