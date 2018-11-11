@@ -2,144 +2,127 @@ Return-Path: <SRS0=P2LY=NW=vger.kernel.org=linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-6.9 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
-	DKIM_VALID_AU,FREEMAIL_FORGED_FROMDOMAIN,FREEMAIL_FROM,
-	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
-	SPF_PASS autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-9.0 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_PASS,USER_AGENT_GIT
+	autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 81198C43441
-	for <linux-pci@archiver.kernel.org>; Sun, 11 Nov 2018 19:31:33 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 14C89C43441
+	for <linux-pci@archiver.kernel.org>; Sun, 11 Nov 2018 20:23:19 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 40F6C214E0
-	for <linux-pci@archiver.kernel.org>; Sun, 11 Nov 2018 19:31:33 +0000 (UTC)
-Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="T6nSlkCk"
-DMARC-Filter: OpenDMARC Filter v1.3.2 mail.kernel.org 40F6C214E0
-Authentication-Results: mail.kernel.org; dmarc=fail (p=none dis=none) header.from=gmail.com
+	by mail.kernel.org (Postfix) with ESMTP id D57EE20871
+	for <linux-pci@archiver.kernel.org>; Sun, 11 Nov 2018 20:23:18 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.3.2 mail.kernel.org D57EE20871
+Authentication-Results: mail.kernel.org; dmarc=fail (p=none dis=none) header.from=linux.ibm.com
 Authentication-Results: mail.kernel.org; spf=none smtp.mailfrom=linux-pci-owner@vger.kernel.org
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726207AbeKLFUz (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Mon, 12 Nov 2018 00:20:55 -0500
-Received: from mail-wr1-f65.google.com ([209.85.221.65]:32959 "EHLO
-        mail-wr1-f65.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726044AbeKLFUz (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Mon, 12 Nov 2018 00:20:55 -0500
-Received: by mail-wr1-f65.google.com with SMTP id u9-v6so7061168wrr.0;
-        Sun, 11 Nov 2018 11:31:31 -0800 (PST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20161025;
-        h=from:subject:to:cc:references:message-id:date:user-agent
-         :mime-version:in-reply-to:content-language:content-transfer-encoding;
-        bh=fTXrcxPGhOwvLbQIKch1/lWVLEpF3+zBUaTfcsmQYHM=;
-        b=T6nSlkCklFgIhJUVE3A2Jxr1c6111dS4mB4qW8W+/8P2mfaEctMKg6TBlKIirGHsZ7
-         80WbkVuP3gVJrRNtnpnk3cN2cJcfT9cF3xWzQhPUlDRbOvz2DQcQQyXW/UvAF3RJTcTj
-         nwPJmhP6dQp0A1sghFyUVp8/Zz8CI8PUO5L0f07vjDMONQuT9vbW8VT8IXnSsuMrOWWN
-         fb7l60539mSKouYRjVLGm1Ewwe3pi7GMaxpCqeFrFhO4YcFFXIp4WgFnmEWdVljiAmpH
-         yPr4kDSrgaNbLUezcabohfZHnoU4acUuk3pWWB5S/2hlKcbjvmseZ4c49D5RewTgdPOe
-         NaIg==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20161025;
-        h=x-gm-message-state:from:subject:to:cc:references:message-id:date
-         :user-agent:mime-version:in-reply-to:content-language
-         :content-transfer-encoding;
-        bh=fTXrcxPGhOwvLbQIKch1/lWVLEpF3+zBUaTfcsmQYHM=;
-        b=gLyBvDMMfxOcvStuxQIt7z21LfZA++iJkhmU9zBWmysI3prYUAmpVUsnRv3ZPnw6XE
-         Qc9ZkSLZTivU3zaAc0lH4lC3kfwxYTv7OxHNqUwyaxUz5jHTSW+jOHRqFhiY+zxYCZji
-         osAO8kyx1K+YVdcSl7sdXD4IQmyw+pWAlV4OHldLb6+Cgxrd05DGRMdoaFPrjXJSw3Bm
-         4WgqkdUM1cHE7+2kmntQQm1hbd71+k0NDsgaKwrwO96obq2oyXWlF9ZHwjY942Pa7Ryz
-         G3bWtQiAWvWYJh7UwxcL0L27JQPW0xvzCJDfvmu7oJrz9tPGAbV1d7V+86juYZWHXQXV
-         vjeg==
-X-Gm-Message-State: AGRZ1gJCiZgIME7cDR03WBXWeXGStXIK5axxEAgjrYCXwtYmHn5vIG1f
-        0nKvxXIUpiYxHXgEmTVV3itCU1Y2
-X-Google-Smtp-Source: AJdET5c1yWiqDlluIeaLKaijxCmSkIMcRPqDi1paZFqIWMoA2flSi/BFmH/Hv2lkM6hySpdTZVu07A==
-X-Received: by 2002:a5d:4a11:: with SMTP id m17-v6mr14309235wrq.259.1541964689904;
-        Sun, 11 Nov 2018 11:31:29 -0800 (PST)
-Received: from ?IPv6:2003:ea:8bcf:e300:f00f:a30e:a742:e444? (p200300EA8BCFE300F00FA30EA742E444.dip0.t-ipconnect.de. [2003:ea:8bcf:e300:f00f:a30e:a742:e444])
-        by smtp.googlemail.com with ESMTPSA id p17-v6sm5340389wmc.16.2018.11.11.11.31.28
-        (version=TLS1_2 cipher=ECDHE-RSA-AES128-GCM-SHA256 bits=128/128);
-        Sun, 11 Nov 2018 11:31:29 -0800 (PST)
-From:   Heiner Kallweit <hkallweit1@gmail.com>
-Subject: [PATCH net-next v3] PCI: add USR vendor id and use it in r8169 and
- w6692 driver
-To:     Bjorn Helgaas <bhelgaas@google.com>,
-        David Miller <davem@davemloft.net>,
-        Karsten Keil <isdn@linux-pingi.de>
-Cc:     "netdev@vger.kernel.org" <netdev@vger.kernel.org>,
-        "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
-References: <9af6abf5-ba01-155f-17d1-ca4b71b74fa6@gmail.com>
-Message-ID: <a1c56e9d-b427-af43-840e-c527c79feadc@gmail.com>
-Date:   Sun, 11 Nov 2018 20:31:21 +0100
-User-Agent: Mozilla/5.0 (Windows NT 10.0; WOW64; rv:60.0) Gecko/20100101
- Thunderbird/60.3.0
-MIME-Version: 1.0
-In-Reply-To: <9af6abf5-ba01-155f-17d1-ca4b71b74fa6@gmail.com>
-Content-Type: text/plain; charset=utf-8
-Content-Language: en-US
-Content-Transfer-Encoding: 7bit
+        id S1731189AbeKLFyX (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Mon, 12 Nov 2018 00:54:23 -0500
+Received: from mx0b-001b2d01.pphosted.com ([148.163.158.5]:43050 "EHLO
+        mx0a-001b2d01.pphosted.com" rhost-flags-OK-OK-OK-FAIL)
+        by vger.kernel.org with ESMTP id S1731170AbeKLFyV (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Mon, 12 Nov 2018 00:54:21 -0500
+Received: from pps.filterd (m0098419.ppops.net [127.0.0.1])
+        by mx0b-001b2d01.pphosted.com (8.16.0.22/8.16.0.22) with SMTP id wABJwtga075196
+        for <linux-pci@vger.kernel.org>; Sun, 11 Nov 2018 15:04:52 -0500
+Received: from e17.ny.us.ibm.com (e17.ny.us.ibm.com [129.33.205.207])
+        by mx0b-001b2d01.pphosted.com with ESMTP id 2npdvs9d5k-1
+        (version=TLSv1.2 cipher=AES256-GCM-SHA384 bits=256 verify=NOT)
+        for <linux-pci@vger.kernel.org>; Sun, 11 Nov 2018 15:04:52 -0500
+Received: from localhost
+        by e17.ny.us.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
+        for <linux-pci@vger.kernel.org> from <paulmck@linux.vnet.ibm.com>;
+        Sun, 11 Nov 2018 20:04:51 -0000
+Received: from b01cxnp22035.gho.pok.ibm.com (9.57.198.25)
+        by e17.ny.us.ibm.com (146.89.104.204) with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted;
+        (version=TLSv1/SSLv3 cipher=AES256-GCM-SHA384 bits=256/256)
+        Sun, 11 Nov 2018 20:04:44 -0000
+Received: from b01ledav003.gho.pok.ibm.com (b01ledav003.gho.pok.ibm.com [9.57.199.108])
+        by b01cxnp22035.gho.pok.ibm.com (8.14.9/8.14.9/NCO v10.0) with ESMTP id wABK4hhi44368014
+        (version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-GCM-SHA384 bits=256 verify=FAIL);
+        Sun, 11 Nov 2018 20:04:43 GMT
+Received: from b01ledav003.gho.pok.ibm.com (unknown [127.0.0.1])
+        by IMSVA (Postfix) with ESMTP id A78FCB2070;
+        Sun, 11 Nov 2018 20:04:43 +0000 (GMT)
+Received: from b01ledav003.gho.pok.ibm.com (unknown [127.0.0.1])
+        by IMSVA (Postfix) with ESMTP id 65F7EB2065;
+        Sun, 11 Nov 2018 20:04:43 +0000 (GMT)
+Received: from paulmck-ThinkPad-W541 (unknown [9.85.207.24])
+        by b01ledav003.gho.pok.ibm.com (Postfix) with ESMTP;
+        Sun, 11 Nov 2018 20:04:43 +0000 (GMT)
+Received: by paulmck-ThinkPad-W541 (Postfix, from userid 1000)
+        id 99A9716C5D38; Sun, 11 Nov 2018 12:04:44 -0800 (PST)
+From:   "Paul E. McKenney" <paulmck@linux.ibm.com>
+To:     linux-kernel@vger.kernel.org
+Cc:     mingo@kernel.org, jiangshanlai@gmail.com, dipankar@in.ibm.com,
+        akpm@linux-foundation.org, mathieu.desnoyers@efficios.com,
+        josh@joshtriplett.org, tglx@linutronix.de, peterz@infradead.org,
+        rostedt@goodmis.org, dhowells@redhat.com, edumazet@google.com,
+        fweisbec@gmail.com, oleg@redhat.com, joel@joelfernandes.org,
+        Lance Roy <ldr709@gmail.com>,
+        Bjorn Helgaas <bhelgaas@google.com>,
+        Ingo Molnar <mingo@redhat.com>, Borislav Petkov <bp@alien8.de>,
+        "H. Peter Anvin" <hpa@zytor.com>, x86@kernel.org,
+        linux-pci@vger.kernel.org,
+        "Paul E . McKenney" <paulmck@linux.ibm.com>
+Subject: [PATCH tip/core/rcu 1/7] x86/PCI: Replace spin_is_locked() with lockdep
+Date:   Sun, 11 Nov 2018 12:04:37 -0800
+X-Mailer: git-send-email 2.17.1
+In-Reply-To: <20181111200421.GA10551@linux.ibm.com>
+References: <20181111200421.GA10551@linux.ibm.com>
+X-TM-AS-GCONF: 00
+x-cbid: 18111120-0040-0000-0000-000004908A31
+X-IBM-SpamModules-Scores: 
+X-IBM-SpamModules-Versions: BY=3.00010028; HX=3.00000242; KW=3.00000007;
+ PH=3.00000004; SC=3.00000270; SDB=6.01116025; UDB=6.00577119; IPR=6.00896126;
+ MB=3.00024114; MTD=3.00000008; XFM=3.00000015; UTC=2018-11-11 20:04:49
+X-IBM-AV-DETECTION: SAVI=unused REMOTE=unused XFE=unused
+x-cbparentid: 18111120-0041-0000-0000-0000089992E2
+Message-Id: <20181111200443.10772-1-paulmck@linux.ibm.com>
+X-Proofpoint-Virus-Version: vendor=fsecure engine=2.50.10434:,, definitions=2018-11-11_13:,,
+ signatures=0
+X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0 priorityscore=1501
+ malwarescore=0 suspectscore=1 phishscore=0 bulkscore=0 spamscore=0
+ clxscore=1011 lowpriorityscore=0 mlxscore=0 impostorscore=0
+ mlxlogscore=566 adultscore=0 classifier=spam adjust=0 reason=mlx
+ scancount=1 engine=8.0.1-1807170000 definitions=main-1811110191
 Sender: linux-pci-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-The PCI vendor id of U.S. Robotics isn't defined in pci_ids.h so far,
-only ISDN driver w6692 has a private definition. Move the definition
-to pci_ids.h and use it in the r8169 driver too.
+From: Lance Roy <ldr709@gmail.com>
 
-Signed-off-by: Heiner Kallweit <hkallweit1@gmail.com>
----
-v2:
-- The original patch caused a build failure in w6692 driver because
-  it broke the private PCI device id definition.
-v3:
-- Don't move device id's to pci_ids.h because they are used in
-  one module only respectively.
----
- drivers/isdn/hardware/mISDN/w6692.c  | 3 ---
- drivers/net/ethernet/realtek/r8169.c | 2 +-
- include/linux/pci_ids.h              | 2 ++
- 3 files changed, 3 insertions(+), 4 deletions(-)
+lockdep_assert_held() is better suited to checking locking requirements,
+since it only checks if the current thread holds the lock regardless of
+whether someone else does. This is also a step towards possibly removing
+spin_is_locked().
 
-diff --git a/drivers/isdn/hardware/mISDN/w6692.c b/drivers/isdn/hardware/mISDN/w6692.c
-index 5acf6ab67..6f60aced1 100644
---- a/drivers/isdn/hardware/mISDN/w6692.c
-+++ b/drivers/isdn/hardware/mISDN/w6692.c
-@@ -52,10 +52,7 @@ static const struct w6692map  w6692_map[] =
- 	{W6692_USR, "USR W6692"}
- };
+Signed-off-by: Lance Roy <ldr709@gmail.com>
+Cc: Bjorn Helgaas <bhelgaas@google.com>
+Cc: Thomas Gleixner <tglx@linutronix.de>
+Cc: Ingo Molnar <mingo@redhat.com>
+Cc: Borislav Petkov <bp@alien8.de>
+Cc: "H. Peter Anvin" <hpa@zytor.com>
+Cc: <x86@kernel.org>
+Cc: <linux-pci@vger.kernel.org>
+Signed-off-by: Paul E. McKenney <paulmck@linux.ibm.com>
+---
+ arch/x86/pci/i386.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/arch/x86/pci/i386.c b/arch/x86/pci/i386.c
+index 8cd66152cdb0..9df652d3d927 100644
+--- a/arch/x86/pci/i386.c
++++ b/arch/x86/pci/i386.c
+@@ -59,7 +59,7 @@ static struct pcibios_fwaddrmap *pcibios_fwaddrmap_lookup(struct pci_dev *dev)
+ {
+ 	struct pcibios_fwaddrmap *map;
  
--#ifndef PCI_VENDOR_ID_USR
--#define PCI_VENDOR_ID_USR	0x16ec
- #define PCI_DEVICE_ID_USR_6692	0x3409
--#endif
+-	WARN_ON_SMP(!spin_is_locked(&pcibios_fwaddrmap_lock));
++	lockdep_assert_held(&pcibios_fwaddrmap_lock);
  
- struct w6692_ch {
- 	struct bchannel		bch;
-diff --git a/drivers/net/ethernet/realtek/r8169.c b/drivers/net/ethernet/realtek/r8169.c
-index 1fd01688d..366a690eb 100644
---- a/drivers/net/ethernet/realtek/r8169.c
-+++ b/drivers/net/ethernet/realtek/r8169.c
-@@ -224,7 +224,7 @@ static const struct pci_device_id rtl8169_pci_tbl[] = {
- 	{ PCI_DEVICE(PCI_VENDOR_ID_DLINK,	0x4300), 0, 0, RTL_CFG_0 },
- 	{ PCI_DEVICE(PCI_VENDOR_ID_DLINK,	0x4302), 0, 0, RTL_CFG_0 },
- 	{ PCI_DEVICE(PCI_VENDOR_ID_AT,		0xc107), 0, 0, RTL_CFG_0 },
--	{ PCI_DEVICE(0x16ec,			0x0116), 0, 0, RTL_CFG_0 },
-+	{ PCI_DEVICE(PCI_VENDOR_ID_USR,		0x0116), 0, 0, RTL_CFG_0 },
- 	{ PCI_VENDOR_ID_LINKSYS,		0x1032,
- 		PCI_ANY_ID, 0x0024, 0, 0, RTL_CFG_0 },
- 	{ 0x0001,				0x8168,
-diff --git a/include/linux/pci_ids.h b/include/linux/pci_ids.h
-index 69f0abe1b..144de2e89 100644
---- a/include/linux/pci_ids.h
-+++ b/include/linux/pci_ids.h
-@@ -2359,6 +2359,8 @@
- 
- #define PCI_VENDOR_ID_SYNOPSYS		0x16c3
- 
-+#define PCI_VENDOR_ID_USR		0x16ec
-+
- #define PCI_VENDOR_ID_VITESSE		0x1725
- #define PCI_DEVICE_ID_VITESSE_VSC7174	0x7174
- 
+ 	list_for_each_entry(map, &pcibios_fwaddrmappings, list)
+ 		if (map->dev == dev)
 -- 
-2.19.1
+2.17.1
 
