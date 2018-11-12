@@ -2,207 +2,121 @@ Return-Path: <SRS0=qbZn=NX=vger.kernel.org=linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-2.5 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	MAILING_LIST_MULTI,SPF_PASS,USER_AGENT_MUTT autolearn=ham autolearn_force=no
-	version=3.4.0
+X-Spam-Status: No, score=-3.0 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+	MAILING_LIST_MULTI,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT autolearn=ham
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 183CDC43441
-	for <linux-pci@archiver.kernel.org>; Mon, 12 Nov 2018 16:01:59 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 166F5C43441
+	for <linux-pci@archiver.kernel.org>; Mon, 12 Nov 2018 16:06:35 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id D6C7F224E0
-	for <linux-pci@archiver.kernel.org>; Mon, 12 Nov 2018 16:01:58 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.3.2 mail.kernel.org D6C7F224E0
-Authentication-Results: mail.kernel.org; dmarc=none (p=none dis=none) header.from=arm.com
+	by mail.kernel.org (Postfix) with ESMTP id DD4A122419
+	for <linux-pci@archiver.kernel.org>; Mon, 12 Nov 2018 16:06:34 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.3.2 mail.kernel.org DD4A122419
+Authentication-Results: mail.kernel.org; dmarc=fail (p=none dis=none) header.from=linux.intel.com
 Authentication-Results: mail.kernel.org; spf=none smtp.mailfrom=linux-pci-owner@vger.kernel.org
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1729988AbeKMBzr (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Mon, 12 Nov 2018 20:55:47 -0500
-Received: from foss.arm.com ([217.140.101.70]:38846 "EHLO foss.arm.com"
+        id S1729633AbeKMCAZ (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Mon, 12 Nov 2018 21:00:25 -0500
+Received: from mga11.intel.com ([192.55.52.93]:52069 "EHLO mga11.intel.com"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1727976AbeKMBzr (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Mon, 12 Nov 2018 20:55:47 -0500
-Received: from usa-sjc-imap-foss1.foss.arm.com (unknown [10.72.51.249])
-        by usa-sjc-mx-foss1.foss.arm.com (Postfix) with ESMTP id 9932EA78;
-        Mon, 12 Nov 2018 08:01:55 -0800 (PST)
-Received: from e107981-ln.cambridge.arm.com (e107981-ln.cambridge.arm.com [10.1.197.40])
-        by usa-sjc-imap-foss1.foss.arm.com (Postfix) with ESMTPSA id CB9333F5CF;
-        Mon, 12 Nov 2018 08:01:53 -0800 (PST)
-Date:   Mon, 12 Nov 2018 16:01:48 +0000
-From:   Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
-To:     Trent Piepho <tpiepho@impinj.com>
-Cc:     "marc.zyngier@arm.com" <marc.zyngier@arm.com>,
-        "gustavo.pimentel@synopsys.com" <gustavo.pimentel@synopsys.com>,
-        "faiz_abbas@ti.com" <faiz_abbas@ti.com>,
-        "jingoohan1@gmail.com" <jingoohan1@gmail.com>,
-        "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-        "vigneshr@ti.com" <vigneshr@ti.com>,
-        "stable@vger.kernel.org" <stable@vger.kernel.org>,
-        "bhelgaas@google.com" <bhelgaas@google.com>,
-        "joao.pinto@synopsys.com" <joao.pinto@synopsys.com>
-Subject: Re: [PATCH] PCI: dwc: Fix interrupt race in when handling MSI
-Message-ID: <20181112160148.GA26379@e107981-ln.cambridge.arm.com>
-References: <20181027000028.21343-1-tpiepho@impinj.com>
- <20181106145347.GB19060@e107981-ln.cambridge.arm.com>
- <db3462e2-422c-161a-1f58-135bc4eab7eb@arm.com>
- <725afc4a-ec19-e4e6-7091-f499bfb63652@synopsys.com>
- <1541615551.30311.286.camel@impinj.com>
- <60173610-25c2-5f11-a55f-bd431199dc0c@synopsys.com>
- <1541710298.30311.349.camel@impinj.com>
+        id S1728103AbeKMCAZ (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Mon, 12 Nov 2018 21:00:25 -0500
+X-Amp-Result: SKIPPED(no attachment in message)
+X-Amp-File-Uploaded: False
+Received: from fmsmga004.fm.intel.com ([10.253.24.48])
+  by fmsmga102.fm.intel.com with ESMTP/TLS/DHE-RSA-AES256-GCM-SHA384; 12 Nov 2018 08:06:33 -0800
+X-ExtLoop1: 1
+X-IronPort-AV: E=Sophos;i="5.54,495,1534834800"; 
+   d="scan'208";a="105580985"
+Received: from black.fi.intel.com ([10.237.72.28])
+  by fmsmga004.fm.intel.com with ESMTP; 12 Nov 2018 08:06:29 -0800
+Received: by black.fi.intel.com (Postfix, from userid 1001)
+        id 59EFA3EA; Mon, 12 Nov 2018 18:06:28 +0200 (EET)
+From:   Mika Westerberg <mika.westerberg@linux.intel.com>
+To:     iommu@lists.linux-foundation.org
+Cc:     Joerg Roedel <joro@8bytes.org>,
+        David Woodhouse <dwmw2@infradead.org>,
+        Lu Baolu <baolu.lu@linux.intel.com>,
+        Ashok Raj <ashok.raj@intel.com>,
+        Bjorn Helgaas <bhelgaas@google.com>,
+        "Rafael J. Wysocki" <rjw@rjwysocki.net>,
+        Jacob jun Pan <jacob.jun.pan@intel.com>,
+        Andreas Noever <andreas.noever@gmail.com>,
+        Michael Jamet <michael.jamet@intel.com>,
+        Yehezkel Bernat <YehezkelShB@gmail.com>,
+        Lukas Wunner <lukas@wunner.de>,
+        Christian Kellner <ckellner@redhat.com>,
+        Mario.Limonciello@dell.com,
+        Anthony Wong <anthony.wong@canonical.com>,
+        Mika Westerberg <mika.westerberg@linux.intel.com>,
+        linux-acpi@vger.kernel.org, linux-pci@vger.kernel.org,
+        linux-kernel@vger.kernel.org
+Subject: [PATCH 0/4] PCI / iommu / thunderbolt: IOMMU based DMA protection
+Date:   Mon, 12 Nov 2018 19:06:24 +0300
+Message-Id: <20181112160628.86620-1-mika.westerberg@linux.intel.com>
+X-Mailer: git-send-email 2.19.1
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <1541710298.30311.349.camel@impinj.com>
-User-Agent: Mutt/1.5.24 (2015-08-30)
+Content-Transfer-Encoding: 8bit
 Sender: linux-pci-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-On Thu, Nov 08, 2018 at 08:51:38PM +0000, Trent Piepho wrote:
-> On Thu, 2018-11-08 at 11:46 +0000, Gustavo Pimentel wrote:
-> > On 07/11/2018 18:32, Trent Piepho wrote:
-> > > On Wed, 2018-11-07 at 12:57 +0000, Gustavo Pimentel wrote:
-> > > > On 06/11/2018 16:00, Marc Zyngier wrote:
-> > > > > On 06/11/18 14:53, Lorenzo Pieralisi wrote:
-> > > > > > On Sat, Oct 27, 2018 at 12:00:57AM +0000, Trent Piepho wrote:
-> > > > > > > 
-> > > > > > > This gives the following race scenario:
-> > > > > > > 
-> > > > > > > 1.  An MSI is received by, and the status bit for the MSI is set in, the
-> > > > > > > DWC PCI-e controller.
-> > > > > > > 2.  dw_handle_msi_irq() calls a driver's registered interrupt handler
-> > > > > > > for the MSI received.
-> > > > > > > 3.  At some point, the interrupt handler must decide, correctly, that
-> > > > > > > there is no more work to do and return.
-> > > > > > > 4.  The hardware generates a new MSI.  As the MSI's status bit is still
-> > > > > > > set, this new MSI is ignored.
-> > > > > > > 6.  dw_handle_msi_irq() unsets the MSI status bit.
-> > > > > > > 
-> > > > > > > The MSI received at point 4 will never be acted upon.  It occurred after
-> > > > > > > the driver had finished checking the hardware status for interrupt
-> > > > > > > conditions to act on.  Since the MSI status was masked, it does not
-> > > > > > > generated a new IRQ, neither when it was received nor when the MSI is
-> > > > > > > unmasked.
-> > > > > > > 
-> > > > This status register indicates whether exists or not a MSI interrupt on that
-> > > > controller [0..7] to be handle.
-> > > 
-> > > While the status for an MSI is set, no new interrupt will be triggered
-> > 
-> > Yes
-> > 
-> > > if another identical MSI is received, correct?
-> > 
-> > You cannot receive another identical MSI till you acknowledge the current one
-> > (This is ensured by the PCI protocol, I guess).
-> 
-> I don't believe this is a requirement of PCI.  We designed our hardware
-> to not send another MSI until our hardware's interrupt status register
-> is read, but we didn't have to do that.
-> 
-> > > > In theory, we should clear the interrupt flag only after the interrupt has
-> > > > actually handled (which can take some time to process on the worst case scenario).
-> > > 
-> > > But see above, there is a race if a new MSI arrives while still masked.
-> > >  I can see no possible way to solve this in software that does not
-> > > involve unmasking the MSI before calling the handler.  To leave the
-> > > interrupt masked while calling the handler requires the hardware to
-> > > queue an interrupt that arrives while masked.  We have no docs, but the
-> > > designware controller doesn't appear to do this in practice.
-> > 
-> > See my reply to Marc about the interrupt masking. Like you said, probably the
-> > solution pass through using interrupt mask/unmask register instead of interrupt
-> > enable/disable register.
-> > 
-> > Can you do a quick test, since you can easily reproduce the issue? Can you
-> > change register offset on both functions dw_pci_bottom_mask() and
-> > dw_pci_bottom_unmask()?
-> > 
-> > Basically exchange the PCIE_MSI_INTR0_ENABLE register by PCIE_MSI_INTR0_MASK.
-> 
-> Of course MSI still need to be enabled to work at all, which happens
-> once when the driver using the MSI registers a handler.  Masking can be
-> done via mask register after that.
+Hi all,
 
-I want to understand from Synopsys maintainers what's the difference
-between the ENABLE and MASK registers and *why* the MSI IRQ masking is
-currently implemented through the PCIE_MSI_INTR0_ENABLE register instead
-of PCIE_MSI_INTR0_MASK.
+Recent systems shipping with Windows 10 version 1803 or newer may be
+utilizing IOMMU to prevent DMA attacks via Thunderbolt ports. This is
+different from the previous security level based scheme because the
+connected device cannot access system memory outside of the regions
+allocated for it by the driver.
 
-I am not happy to test and see what's the difference I want to know
-what's the difference as-per specifications.
+When enabled the BIOS makes sure no device can do DMA outside of RMRR
+(Reserved Memory Region Record) regions. This means that during OS boot,
+before it enables IOMMU, none of the connected devices can bypass DMA
+protection for instance by overwriting the data structures used by the
+IOMMU. The BIOS communicates support for this to the OS by setting a new
+bit in ACPI DMAR table [1].
 
-I need a definitive answer on this based on HW specifications before
-merging any code.
+Because these systems utilize an IOMMU to block possible DMA attacks,
+typically (but not always) the Thunderbolt security level is set to "none"
+which means that all PCIe devices are immediately usable. This also means
+that Linux needs to follow Windows 10 and enable IOMMU automatically when
+running on such system otherwise connected devices can read/write system
+memory pretty much without any restrictions.
 
-> It is not so easy for me to test on the newest kernel, as imx7d does
-> not work due to yet more bugs.  I have to port a set of patches to each
-> new kernel.  A set that does not shrink due to holdups like this.
-> 
-> I understand the new flow would look like this (assume dw controller
-> MSI interrupt output signal is connected to one of the ARM GIC
-> interrupt lines, there could be different or more controllers above the
-> dwc of course (but usually aren't)):
-> 
-> 1. MSI arrives, status bit is set in dwc, interrupt raised to GIC.
-> 2. dwc handler runs
-> 3. dwc handler sees status bit is set for a(n) MSI(s)
-> 4. dwc handler sets mask for those MSIs
-> 5. dwc handler clears status bit
-> 6. dwc handler runs driver handler for the received MSI
-> 7. ** an new MSI arrives, racing with 6 **
-> 8. status bit becomes set again, but no interrupt is raised due to mask
-> 9. dwc handler unmasks MSI, which raises the interrupt to GIC because
-> of new MSI received in 7.
-> 10. The original GIC interrupt is EOI'ed.
-> 11. The interrupt for the dwc is re-raised by the GIC due to 9, and we
-> go back to 2.
-> 
-> It is very important that 5 be done before 6.  Less so 4 before 5, but
-> reversing the order there would allow re-raising even if the 2nd MSI
-> arrived before the driver handler ran, which is not necessary.
-> 
-> I do not see a race in this design and it appears correct to me.  But,
-> I also do not think there is any immediate improvement due to extra
-> steps of masking and unmasking the MSI.
-> 
-> The reason is that the GIC interrupt above the dwc is non-reentrant. 
-> It remains masked (aka active[1]) during this entire process (1 to 10).
->  This means every MSI is effectively already masked.  So masking the
-> active MSI(s) a 2nd time gains nothing besides preventing some extra
-> edges for a masked interrupt going to the ARM GIC.
-> 
-> In theory, if the GIC interrupt handler was reentrant, then on receipt
-> of a new MSI we could re-enter the dwc handler on a different CPU and
-> run the new MSI (a different MSI!) at the same time as the original MSI
-> handler is still running.
-> 
-> There difference here is that by unmasking in the interrupt in the GIC
-> before the dwc handler is finished, masking an individual MSI in the
-> dwc is no longer a 2nd redundant masking.
+Since there is a way to identify PCIe root ports that are "external facing"
+we can put all internal devices to pass through (identity mapping) mode and
+only external devices need to go through full IOMMU mappings.
 
-There is not (and there must not be) anything in DWC HW that allows
-us assume its "interrupt controller" is cascaded to a GIC. It may
-correspond to what we are debugging but it is an assumption we must not
-make and its driver has to work regardless of what its interrupt
-controller is connected to, that's the basis of hierarchical IRQ chips
-management, at least from my narrow and (most likely) incomplete
-knowledge of the IRQ subsystem.
+We also make sure PCIe ATS (Address Translation Service) is not enabled for
+external devices because it could be used to bypass IOMMU completely as
+explained in the changelog of patch 3/4.
 
-So, this means that both the masking AND your revert must be
-merged in the mainline to make sure we are fixing MSI handling
-for good, that's how I sum up your report.
+Finally we expose this information to userspace so tools such as bolt can
+do more accurate decision whether or not authorize the connected device.
 
-Pending my request above, I am inclined to merge your revert but I would
-appreciate testing (tags) from all DWC host bridge maintainers (I am
-happy to delay it till -rc3 or -rc4 to that extent), do not take this as
-a lack of trust in your testing, it is just that the last thing we want
-is asking for reverting the revert given that it is going to stable
-kernels and most of all we have to make sure this works for all DWC
-derived host bridges.
+[1] https://software.intel.com/sites/default/files/managed/c5/15/vt-directed-io-spec.pdf
 
-I *also* expect the patch implementing the MSI masking and I think that
-falls within Gustavo's remit.
+Lu Baolu (1):
+  iommu/vt-d: Force IOMMU on for platform opt in hint
 
-Thanks,
-Lorenzo
+Mika Westerberg (3):
+  PCI / ACPI: Identify external PCI devices
+  iommu/vt-d: Do not enable ATS for external devices
+  thunderbolt: Export IOMMU based DMA protection support to userspace
+
+ .../ABI/testing/sysfs-bus-thunderbolt         |  9 +++
+ Documentation/admin-guide/thunderbolt.rst     | 23 ++++++++
+ drivers/acpi/property.c                       |  3 +
+ drivers/iommu/dmar.c                          | 25 ++++++++
+ drivers/iommu/intel-iommu.c                   | 58 ++++++++++++++++++-
+ drivers/pci/pci-acpi.c                        | 13 +++++
+ drivers/pci/probe.c                           | 23 ++++++++
+ drivers/thunderbolt/domain.c                  | 17 ++++++
+ include/linux/dmar.h                          |  8 +++
+ include/linux/pci.h                           |  1 +
+ 10 files changed, 177 insertions(+), 3 deletions(-)
+
+-- 
+2.19.1
+
