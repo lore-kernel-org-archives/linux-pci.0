@@ -2,146 +2,207 @@ Return-Path: <SRS0=qbZn=NX=vger.kernel.org=linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-9.1 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
-	DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,
-	SIGNED_OFF_BY,SPF_PASS,USER_AGENT_GIT autolearn=ham autolearn_force=no
+X-Spam-Status: No, score=-2.5 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+	MAILING_LIST_MULTI,SPF_PASS,USER_AGENT_MUTT autolearn=ham autolearn_force=no
 	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 5DAC1C43441
-	for <linux-pci@archiver.kernel.org>; Mon, 12 Nov 2018 11:15:20 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 183CDC43441
+	for <linux-pci@archiver.kernel.org>; Mon, 12 Nov 2018 16:01:59 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 087E8223DD
-	for <linux-pci@archiver.kernel.org>; Mon, 12 Nov 2018 11:15:20 +0000 (UTC)
-Authentication-Results: mail.kernel.org;
-	dkim=pass (1024-bit key) header.d=linaro.org header.i=@linaro.org header.b="IqPtKD+a"
-DMARC-Filter: OpenDMARC Filter v1.3.2 mail.kernel.org 087E8223DD
-Authentication-Results: mail.kernel.org; dmarc=fail (p=none dis=none) header.from=linaro.org
+	by mail.kernel.org (Postfix) with ESMTP id D6C7F224E0
+	for <linux-pci@archiver.kernel.org>; Mon, 12 Nov 2018 16:01:58 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.3.2 mail.kernel.org D6C7F224E0
+Authentication-Results: mail.kernel.org; dmarc=none (p=none dis=none) header.from=arm.com
 Authentication-Results: mail.kernel.org; spf=none smtp.mailfrom=linux-pci-owner@vger.kernel.org
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1728350AbeKLVIG (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Mon, 12 Nov 2018 16:08:06 -0500
-Received: from mail-wm1-f68.google.com ([209.85.128.68]:53729 "EHLO
-        mail-wm1-f68.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1728302AbeKLVIG (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Mon, 12 Nov 2018 16:08:06 -0500
-Received: by mail-wm1-f68.google.com with SMTP id f10-v6so8053730wme.3
-        for <linux-pci@vger.kernel.org>; Mon, 12 Nov 2018 03:15:18 -0800 (PST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=linaro.org; s=google;
-        h=from:to:cc:subject:date:message-id;
-        bh=EQB9tZHTykcdTERBnFRL0vdG71N1IvLfnOeuvuLo1LM=;
-        b=IqPtKD+aR0Nmkxq4pmR74da6t/BUgMiGI0HLNNiYmCN5x36noDt/1B+QT89mkv+PeX
-         U9X/GBAcqfdWL5BJY79dhwwO23D8JaVDsvgxAhDFTTXzfASAEA9g55HkWr/UlgxtZR4O
-         mCVmw6W3g6svCZHktVlftVYJplstF92luf5xs=
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20161025;
-        h=x-gm-message-state:from:to:cc:subject:date:message-id;
-        bh=EQB9tZHTykcdTERBnFRL0vdG71N1IvLfnOeuvuLo1LM=;
-        b=ebmRllhWBz8pHocX5hHdGIaP26kblrcyq8cU09KE2dpvoDR9D+RlnFKnmvCvROCH2+
-         Nzsqp/OrOPOy4Jr+p/fzYZgHj4JEbr2AxU/jUGb6glxN7qNWxijY0lIlNXs1w7tI6Y5g
-         xM9Uo4EzZtbgsq+H6L/8scf8LSfoKGZ1n8dWlIJxmAXDz6q2vq3P0Y/Nby3Zd5nr95e7
-         x6OzZd+QcaPjLH/ZnD3yaHroiWwVMX4QRxI9fQBmoZPdC2LoJZZeOqWgt26ozRNZ1f6U
-         3sLiqaEhSa+hRwol06coytbOm+XXgS5XAq4tdWkWDxUXu1YGLS3uDFrkw1HgDXzOHjRM
-         IYbA==
-X-Gm-Message-State: AGRZ1gLFzR99+MRPZPM6CRppIYkGQMLJawPOCfqG+TkGorJLJIzD+YJX
-        jOc6tyMNgn/FfvMd2zCkLBFxkw==
-X-Google-Smtp-Source: AJdET5cdfWJKW7JVSh/oRw3ZAqI3rcFP/M5/gZO6a37/oalXw9t3iePYNhYr6GLVsOOmbQHq0HDn0w==
-X-Received: by 2002:a1c:9b4e:: with SMTP id d75-v6mr7851600wme.62.1542021317545;
-        Mon, 12 Nov 2018 03:15:17 -0800 (PST)
-Received: from localhost.localdomain (237.204.154.77.rev.sfr.net. [77.154.204.237])
-        by smtp.gmail.com with ESMTPSA id q11-v6sm2923009wrn.45.2018.11.12.03.15.15
-        (version=TLS1_2 cipher=ECDHE-RSA-AES128-GCM-SHA256 bits=128/128);
-        Mon, 12 Nov 2018 03:15:16 -0800 (PST)
-From:   Ard Biesheuvel <ard.biesheuvel@linaro.org>
-To:     linux-arm-kernel@lists.infradead.org, linux-pci@vger.kernel.org
-Cc:     catalin.marinas@arm.com, will.deacon@arm.com,
-        lorenzo.pieralisi@arm.com, bhelgaas@google.com,
-        graeme.gregory@linaro.org, nariman.poushin@linaro.org,
-        Ard Biesheuvel <ard.biesheuvel@linaro.org>
-Subject: [PATCH] arm64: acpi/pci: WARN() when ignoring _DSM request to preserve PCI resources
-Date:   Mon, 12 Nov 2018 12:15:11 +0100
-Message-Id: <20181112111511.12091-1-ard.biesheuvel@linaro.org>
-X-Mailer: git-send-email 2.17.1
+        id S1729988AbeKMBzr (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Mon, 12 Nov 2018 20:55:47 -0500
+Received: from foss.arm.com ([217.140.101.70]:38846 "EHLO foss.arm.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1727976AbeKMBzr (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Mon, 12 Nov 2018 20:55:47 -0500
+Received: from usa-sjc-imap-foss1.foss.arm.com (unknown [10.72.51.249])
+        by usa-sjc-mx-foss1.foss.arm.com (Postfix) with ESMTP id 9932EA78;
+        Mon, 12 Nov 2018 08:01:55 -0800 (PST)
+Received: from e107981-ln.cambridge.arm.com (e107981-ln.cambridge.arm.com [10.1.197.40])
+        by usa-sjc-imap-foss1.foss.arm.com (Postfix) with ESMTPSA id CB9333F5CF;
+        Mon, 12 Nov 2018 08:01:53 -0800 (PST)
+Date:   Mon, 12 Nov 2018 16:01:48 +0000
+From:   Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
+To:     Trent Piepho <tpiepho@impinj.com>
+Cc:     "marc.zyngier@arm.com" <marc.zyngier@arm.com>,
+        "gustavo.pimentel@synopsys.com" <gustavo.pimentel@synopsys.com>,
+        "faiz_abbas@ti.com" <faiz_abbas@ti.com>,
+        "jingoohan1@gmail.com" <jingoohan1@gmail.com>,
+        "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+        "vigneshr@ti.com" <vigneshr@ti.com>,
+        "stable@vger.kernel.org" <stable@vger.kernel.org>,
+        "bhelgaas@google.com" <bhelgaas@google.com>,
+        "joao.pinto@synopsys.com" <joao.pinto@synopsys.com>
+Subject: Re: [PATCH] PCI: dwc: Fix interrupt race in when handling MSI
+Message-ID: <20181112160148.GA26379@e107981-ln.cambridge.arm.com>
+References: <20181027000028.21343-1-tpiepho@impinj.com>
+ <20181106145347.GB19060@e107981-ln.cambridge.arm.com>
+ <db3462e2-422c-161a-1f58-135bc4eab7eb@arm.com>
+ <725afc4a-ec19-e4e6-7091-f499bfb63652@synopsys.com>
+ <1541615551.30311.286.camel@impinj.com>
+ <60173610-25c2-5f11-a55f-bd431199dc0c@synopsys.com>
+ <1541710298.30311.349.camel@impinj.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <1541710298.30311.349.camel@impinj.com>
+User-Agent: Mutt/1.5.24 (2015-08-30)
 Sender: linux-pci-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-On arm64 ACPI systems, we unconditionally reconfigure the entire PCI
-hierarchy at boot. This is a departure from what is customary on ACPI
-systems, and may break assumptions in some places (e.g., CCIX), that
-the OS will honour the PCI resource allocation as configured by the
-firmware.
+On Thu, Nov 08, 2018 at 08:51:38PM +0000, Trent Piepho wrote:
+> On Thu, 2018-11-08 at 11:46 +0000, Gustavo Pimentel wrote:
+> > On 07/11/2018 18:32, Trent Piepho wrote:
+> > > On Wed, 2018-11-07 at 12:57 +0000, Gustavo Pimentel wrote:
+> > > > On 06/11/2018 16:00, Marc Zyngier wrote:
+> > > > > On 06/11/18 14:53, Lorenzo Pieralisi wrote:
+> > > > > > On Sat, Oct 27, 2018 at 12:00:57AM +0000, Trent Piepho wrote:
+> > > > > > > 
+> > > > > > > This gives the following race scenario:
+> > > > > > > 
+> > > > > > > 1.  An MSI is received by, and the status bit for the MSI is set in, the
+> > > > > > > DWC PCI-e controller.
+> > > > > > > 2.  dw_handle_msi_irq() calls a driver's registered interrupt handler
+> > > > > > > for the MSI received.
+> > > > > > > 3.  At some point, the interrupt handler must decide, correctly, that
+> > > > > > > there is no more work to do and return.
+> > > > > > > 4.  The hardware generates a new MSI.  As the MSI's status bit is still
+> > > > > > > set, this new MSI is ignored.
+> > > > > > > 6.  dw_handle_msi_irq() unsets the MSI status bit.
+> > > > > > > 
+> > > > > > > The MSI received at point 4 will never be acted upon.  It occurred after
+> > > > > > > the driver had finished checking the hardware status for interrupt
+> > > > > > > conditions to act on.  Since the MSI status was masked, it does not
+> > > > > > > generated a new IRQ, neither when it was received nor when the MSI is
+> > > > > > > unmasked.
+> > > > > > > 
+> > > > This status register indicates whether exists or not a MSI interrupt on that
+> > > > controller [0..7] to be handle.
+> > > 
+> > > While the status for an MSI is set, no new interrupt will be triggered
+> > 
+> > Yes
+> > 
+> > > if another identical MSI is received, correct?
+> > 
+> > You cannot receive another identical MSI till you acknowledge the current one
+> > (This is ensured by the PCI protocol, I guess).
+> 
+> I don't believe this is a requirement of PCI.  We designed our hardware
+> to not send another MSI until our hardware's interrupt status register
+> is read, but we didn't have to do that.
+> 
+> > > > In theory, we should clear the interrupt flag only after the interrupt has
+> > > > actually handled (which can take some time to process on the worst case scenario).
+> > > 
+> > > But see above, there is a race if a new MSI arrives while still masked.
+> > >  I can see no possible way to solve this in software that does not
+> > > involve unmasking the MSI before calling the handler.  To leave the
+> > > interrupt masked while calling the handler requires the hardware to
+> > > queue an interrupt that arrives while masked.  We have no docs, but the
+> > > designware controller doesn't appear to do this in practice.
+> > 
+> > See my reply to Marc about the interrupt masking. Like you said, probably the
+> > solution pass through using interrupt mask/unmask register instead of interrupt
+> > enable/disable register.
+> > 
+> > Can you do a quick test, since you can easily reproduce the issue? Can you
+> > change register offset on both functions dw_pci_bottom_mask() and
+> > dw_pci_bottom_unmask()?
+> > 
+> > Basically exchange the PCIE_MSI_INTR0_ENABLE register by PCIE_MSI_INTR0_MASK.
+> 
+> Of course MSI still need to be enabled to work at all, which happens
+> once when the driver using the MSI registers a handler.  Masking can be
+> done via mask register after that.
 
-ACPI already specifies a device specific ACPI method (_DSM) for PCI
-root bridge nodes that tells us whether the firmware thinks the
-configuration should be ignored or preserved, but unfortunately, we
-cannot simply change the behavior of the OS and start honouring
-these requests unconditionally, given that firmware implementations
-in the field may issue the _DSM request inadvertently and still rely
-on the OS to create the resource allocation from scratch.
+I want to understand from Synopsys maintainers what's the difference
+between the ENABLE and MASK registers and *why* the MSI IRQ masking is
+currently implemented through the PCIE_MSI_INTR0_ENABLE register instead
+of PCIE_MSI_INTR0_MASK.
 
-So as a preliminary step, let's issue a warning about this case,
-increasing the likelihood that we can fix this behavior at some
-point in the future.
+I am not happy to test and see what's the difference I want to know
+what's the difference as-per specifications.
 
-Signed-off-by: Ard Biesheuvel <ard.biesheuvel@linaro.org>
----
- arch/arm64/kernel/pci.c  | 15 +++++++++++++++
- include/linux/pci-acpi.h |  7 ++++---
- 2 files changed, 19 insertions(+), 3 deletions(-)
+I need a definitive answer on this based on HW specifications before
+merging any code.
 
-diff --git a/arch/arm64/kernel/pci.c b/arch/arm64/kernel/pci.c
-index bb85e2f4603f..318ca865c41f 100644
---- a/arch/arm64/kernel/pci.c
-+++ b/arch/arm64/kernel/pci.c
-@@ -168,6 +168,7 @@ struct pci_bus *pci_acpi_scan_root(struct acpi_pci_root *root)
- 	struct acpi_pci_generic_root_info *ri;
- 	struct pci_bus *bus, *child;
- 	struct acpi_pci_root_ops *root_ops;
-+	union acpi_object *obj;
- 
- 	ri = kzalloc(sizeof(*ri), GFP_KERNEL);
- 	if (!ri)
-@@ -193,6 +194,20 @@ struct pci_bus *pci_acpi_scan_root(struct acpi_pci_root *root)
- 	if (!bus)
- 		return NULL;
- 
-+	/*
-+	 * Invoke the PCI device specific method (_DSM) #5 'Ignore PCI Boot
-+	 * Configuration', which tells us whether the firmware wants us to
-+	 * preserve or ignore the firmware's configuration of the PCI resource
-+	 * tree for this root bridge.
-+	 */
-+	obj = acpi_evaluate_dsm(ACPI_HANDLE(bus->bridge), &pci_acpi_dsm_guid, 1,
-+				IGNORE_PCI_BOOT_CONFIG_DSM, NULL);
-+	if (obj && obj->type == ACPI_TYPE_INTEGER)
-+		WARN_ONCE(obj->integer.value == 0,
-+			  "Firmware did not request its PCI resource allocation to be ignored, but ignoring it anyway\n");
-+
-+	ACPI_FREE(obj);
-+
- 	pci_bus_size_bridges(bus);
- 	pci_bus_assign_resources(bus);
- 
-diff --git a/include/linux/pci-acpi.h b/include/linux/pci-acpi.h
-index 8082b612f561..62b7fdcc661c 100644
---- a/include/linux/pci-acpi.h
-+++ b/include/linux/pci-acpi.h
-@@ -107,9 +107,10 @@ static inline void acpiphp_check_host_bridge(struct acpi_device *adev) { }
- #endif
- 
- extern const guid_t pci_acpi_dsm_guid;
--#define DEVICE_LABEL_DSM	0x07
--#define RESET_DELAY_DSM		0x08
--#define FUNCTION_DELAY_DSM	0x09
-+#define IGNORE_PCI_BOOT_CONFIG_DSM	0x05
-+#define DEVICE_LABEL_DSM		0x07
-+#define RESET_DELAY_DSM			0x08
-+#define FUNCTION_DELAY_DSM		0x09
- 
- #else	/* CONFIG_ACPI */
- static inline void acpi_pci_add_bus(struct pci_bus *bus) { }
--- 
-2.17.1
+> It is not so easy for me to test on the newest kernel, as imx7d does
+> not work due to yet more bugs.  I have to port a set of patches to each
+> new kernel.  A set that does not shrink due to holdups like this.
+> 
+> I understand the new flow would look like this (assume dw controller
+> MSI interrupt output signal is connected to one of the ARM GIC
+> interrupt lines, there could be different or more controllers above the
+> dwc of course (but usually aren't)):
+> 
+> 1. MSI arrives, status bit is set in dwc, interrupt raised to GIC.
+> 2. dwc handler runs
+> 3. dwc handler sees status bit is set for a(n) MSI(s)
+> 4. dwc handler sets mask for those MSIs
+> 5. dwc handler clears status bit
+> 6. dwc handler runs driver handler for the received MSI
+> 7. ** an new MSI arrives, racing with 6 **
+> 8. status bit becomes set again, but no interrupt is raised due to mask
+> 9. dwc handler unmasks MSI, which raises the interrupt to GIC because
+> of new MSI received in 7.
+> 10. The original GIC interrupt is EOI'ed.
+> 11. The interrupt for the dwc is re-raised by the GIC due to 9, and we
+> go back to 2.
+> 
+> It is very important that 5 be done before 6.  Less so 4 before 5, but
+> reversing the order there would allow re-raising even if the 2nd MSI
+> arrived before the driver handler ran, which is not necessary.
+> 
+> I do not see a race in this design and it appears correct to me.  But,
+> I also do not think there is any immediate improvement due to extra
+> steps of masking and unmasking the MSI.
+> 
+> The reason is that the GIC interrupt above the dwc is non-reentrant. 
+> It remains masked (aka active[1]) during this entire process (1 to 10).
+>  This means every MSI is effectively already masked.  So masking the
+> active MSI(s) a 2nd time gains nothing besides preventing some extra
+> edges for a masked interrupt going to the ARM GIC.
+> 
+> In theory, if the GIC interrupt handler was reentrant, then on receipt
+> of a new MSI we could re-enter the dwc handler on a different CPU and
+> run the new MSI (a different MSI!) at the same time as the original MSI
+> handler is still running.
+> 
+> There difference here is that by unmasking in the interrupt in the GIC
+> before the dwc handler is finished, masking an individual MSI in the
+> dwc is no longer a 2nd redundant masking.
 
+There is not (and there must not be) anything in DWC HW that allows
+us assume its "interrupt controller" is cascaded to a GIC. It may
+correspond to what we are debugging but it is an assumption we must not
+make and its driver has to work regardless of what its interrupt
+controller is connected to, that's the basis of hierarchical IRQ chips
+management, at least from my narrow and (most likely) incomplete
+knowledge of the IRQ subsystem.
+
+So, this means that both the masking AND your revert must be
+merged in the mainline to make sure we are fixing MSI handling
+for good, that's how I sum up your report.
+
+Pending my request above, I am inclined to merge your revert but I would
+appreciate testing (tags) from all DWC host bridge maintainers (I am
+happy to delay it till -rc3 or -rc4 to that extent), do not take this as
+a lack of trust in your testing, it is just that the last thing we want
+is asking for reverting the revert given that it is going to stable
+kernels and most of all we have to make sure this works for all DWC
+derived host bridges.
+
+I *also* expect the patch implementing the MSI masking and I think that
+falls within Gustavo's remit.
+
+Thanks,
+Lorenzo
