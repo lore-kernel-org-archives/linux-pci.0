@@ -2,198 +2,208 @@ Return-Path: <SRS0=qbZn=NX=vger.kernel.org=linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-9.0 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_PASS,USER_AGENT_GIT
+X-Spam-Status: No, score=-1.1 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
+	DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_PASS
 	autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id D36DBC43441
-	for <linux-pci@archiver.kernel.org>; Mon, 12 Nov 2018 22:57:42 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 428ADC43441
+	for <linux-pci@archiver.kernel.org>; Mon, 12 Nov 2018 23:49:51 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 90E2E2245E
-	for <linux-pci@archiver.kernel.org>; Mon, 12 Nov 2018 22:57:42 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.3.2 mail.kernel.org 90E2E2245E
-Authentication-Results: mail.kernel.org; dmarc=none (p=none dis=none) header.from=wwwdotorg.org
+	by mail.kernel.org (Postfix) with ESMTP id DF2CB2250F
+	for <linux-pci@archiver.kernel.org>; Mon, 12 Nov 2018 23:49:50 +0000 (UTC)
+Authentication-Results: mail.kernel.org;
+	dkim=pass (2048-bit key) header.d=synopsys.com header.i=@synopsys.com header.b="jBbEjgoM"
+DMARC-Filter: OpenDMARC Filter v1.3.2 mail.kernel.org DF2CB2250F
+Authentication-Results: mail.kernel.org; dmarc=fail (p=none dis=none) header.from=synopsys.com
 Authentication-Results: mail.kernel.org; spf=none smtp.mailfrom=linux-pci-owner@vger.kernel.org
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726006AbeKMIw5 (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Tue, 13 Nov 2018 03:52:57 -0500
-Received: from avon.wwwdotorg.org ([104.237.132.123]:37728 "EHLO
-        avon.wwwdotorg.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1725973AbeKMIw4 (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Tue, 13 Nov 2018 03:52:56 -0500
-Received: from swarren-lx1.nvidia.com (unknown [216.228.112.24])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES128-SHA256 (128/128 bits))
-        (No client certificate requested)
-        by avon.wwwdotorg.org (Postfix) with ESMTPSA id C70D21C0162;
-        Mon, 12 Nov 2018 15:57:34 -0700 (MST)
-X-Virus-Status: Clean
-X-Virus-Scanned: clamav-milter 0.100.2 at avon.wwwdotorg.org
-From:   Stephen Warren <swarren@wwwdotorg.org>
-To:     Jingoo Han <jingoohan1@gmail.com>,
-        Gustavo Pimentel <gustavo.pimentel@synopsys.com>,
-        Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
-        Bjorn Helgaas <bhelgaas@google.com>
-Cc:     linux-pci@vger.kernel.org, Vidya Sagar <vidyas@nvidia.com>,
-        Manikanta Maddireddy <mmaddireddy@nvidia.com>,
-        Stephen Warren <swarren@nvidia.com>
-Subject: [PATCH] PCI: designware: don't hard-code DBI/ATU offset
-Date:   Mon, 12 Nov 2018 15:57:10 -0700
-Message-Id: <20181112225710.29557-1-swarren@wwwdotorg.org>
-X-Mailer: git-send-email 2.19.1
+        id S1725914AbeKMJpN (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Tue, 13 Nov 2018 04:45:13 -0500
+Received: from smtprelay.synopsys.com ([198.182.60.111]:36042 "EHLO
+        smtprelay.synopsys.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1725847AbeKMJpN (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Tue, 13 Nov 2018 04:45:13 -0500
+Received: from mailhost.synopsys.com (mailhost2.synopsys.com [10.13.184.66])
+        by smtprelay.synopsys.com (Postfix) with ESMTP id 7143F10C06F3;
+        Mon, 12 Nov 2018 15:49:49 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=synopsys.com; s=mail;
+        t=1542066589; bh=pgc/18LFOkaM+xuo5ssoi+VAO4dB5j0T6rXJ/lY746I=;
+        h=Subject:To:CC:References:From:Date:In-Reply-To:From;
+        b=jBbEjgoMt49N0SYX+53GkGNNFfenDfzyzLpPd5HEI/tu8N8bOpUwnrWzclUufDg8S
+         usTX27jXqUV5PCYBCOmMfGv3yx4M6jS8KS/q0P1Ob53NKHP4tz79UUG3pFoNsXi1MI
+         GkvT/5SLUFyKBycV0z7l/mILbcFteeEF3ofK8ZlvaLWWK00isKRqjAYv9CJ3bQ5OGV
+         wRamkkhv9YdA+zQK0B3tn88QeLIVGewI1sFiVYIID3eSIPRWfefK7URQ7GvyZg39ih
+         7imSbYW0IX2xaJrWdZso5vaH8cCEQ45UWa9R5PSExj0J5laOxARFsba5iqKhCz0Tb4
+         gxVmHXH8ae8oQ==
+Received: from US01WXQAHTC1.internal.synopsys.com (us01wxqahtc1.internal.synopsys.com [10.12.238.230])
+        by mailhost.synopsys.com (Postfix) with ESMTP id 373B43D9A;
+        Mon, 12 Nov 2018 15:49:49 -0800 (PST)
+Received: from DE02WEHTCB.internal.synopsys.com (10.225.19.94) by
+ US01WXQAHTC1.internal.synopsys.com (10.12.238.230) with Microsoft SMTP Server
+ (TLS) id 14.3.408.0; Mon, 12 Nov 2018 15:49:49 -0800
+Received: from DE02WEHTCA.internal.synopsys.com (10.225.19.92) by
+ DE02WEHTCB.internal.synopsys.com (10.225.19.94) with Microsoft SMTP Server
+ (TLS) id 14.3.408.0; Tue, 13 Nov 2018 00:49:47 +0100
+Received: from [10.4.120.67] (10.4.120.67) by DE02WEHTCA.internal.synopsys.com
+ (10.225.19.80) with Microsoft SMTP Server (TLS) id 14.3.408.0; Tue, 13 Nov
+ 2018 00:49:46 +0100
+Subject: Re: [PATCH] PCI: dwc: Fix interrupt race in when handling MSI
+To:     Trent Piepho <tpiepho@impinj.com>,
+        "marc.zyngier@arm.com" <marc.zyngier@arm.com>,
+        "lorenzo.pieralisi@arm.com" <lorenzo.pieralisi@arm.com>,
+        "gustavo.pimentel@synopsys.com" <gustavo.pimentel@synopsys.com>
+CC:     "faiz_abbas@ti.com" <faiz_abbas@ti.com>,
+        "jingoohan1@gmail.com" <jingoohan1@gmail.com>,
+        "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+        "vigneshr@ti.com" <vigneshr@ti.com>,
+        "stable@vger.kernel.org" <stable@vger.kernel.org>,
+        "bhelgaas@google.com" <bhelgaas@google.com>,
+        "joao.pinto@synopsys.com" <joao.pinto@synopsys.com>
+References: <20181027000028.21343-1-tpiepho@impinj.com>
+ <20181106145347.GB19060@e107981-ln.cambridge.arm.com>
+ <db3462e2-422c-161a-1f58-135bc4eab7eb@arm.com>
+ <725afc4a-ec19-e4e6-7091-f499bfb63652@synopsys.com>
+ <1541615551.30311.286.camel@impinj.com>
+ <60173610-25c2-5f11-a55f-bd431199dc0c@synopsys.com>
+ <1541710298.30311.349.camel@impinj.com>
+From:   Gustavo Pimentel <gustavo.pimentel@synopsys.com>
+Message-ID: <4806d92c-697c-2a92-d843-37effd00b20a@synopsys.com>
+Date:   Mon, 12 Nov 2018 23:45:42 +0000
+User-Agent: Mozilla/5.0 (Windows NT 10.0; WOW64; rv:52.0) Gecko/20100101
+ Thunderbird/52.9.1
 MIME-Version: 1.0
-X-NVConfidentiality: public
-Content-Transfer-Encoding: 8bit
+In-Reply-To: <1541710298.30311.349.camel@impinj.com>
+Content-Type: text/plain; charset="utf-8"
+Content-Language: en-US
+Content-Transfer-Encoding: 7bit
+X-Originating-IP: [10.4.120.67]
 Sender: linux-pci-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-From: Stephen Warren <swarren@nvidia.com>
+On 08/11/2018 20:51, Trent Piepho wrote:
+> On Thu, 2018-11-08 at 11:46 +0000, Gustavo Pimentel wrote:
+>> On 07/11/2018 18:32, Trent Piepho wrote:
+>>> On Wed, 2018-11-07 at 12:57 +0000, Gustavo Pimentel wrote:
+>>>> On 06/11/2018 16:00, Marc Zyngier wrote:
+>>>>> On 06/11/18 14:53, Lorenzo Pieralisi wrote:
+>>>>>> On Sat, Oct 27, 2018 at 12:00:57AM +0000, Trent Piepho wrote:
+>>>>>>>
+>>>>>>> This gives the following race scenario:
+>>>>>>>
+>>>>>>> 1.  An MSI is received by, and the status bit for the MSI is set in, the
+>>>>>>> DWC PCI-e controller.
+>>>>>>> 2.  dw_handle_msi_irq() calls a driver's registered interrupt handler
+>>>>>>> for the MSI received.
+>>>>>>> 3.  At some point, the interrupt handler must decide, correctly, that
+>>>>>>> there is no more work to do and return.
+>>>>>>> 4.  The hardware generates a new MSI.  As the MSI's status bit is still
+>>>>>>> set, this new MSI is ignored.
+>>>>>>> 6.  dw_handle_msi_irq() unsets the MSI status bit.
+>>>>>>>
+>>>>>>> The MSI received at point 4 will never be acted upon.  It occurred after
+>>>>>>> the driver had finished checking the hardware status for interrupt
+>>>>>>> conditions to act on.  Since the MSI status was masked, it does not
+>>>>>>> generated a new IRQ, neither when it was received nor when the MSI is
+>>>>>>> unmasked.
+>>>>>>>
+>>>> This status register indicates whether exists or not a MSI interrupt on that
+>>>> controller [0..7] to be handle.
+>>>
+>>> While the status for an MSI is set, no new interrupt will be triggered
+>>
+>> Yes
+>>
+>>> if another identical MSI is received, correct?
+>>
+>> You cannot receive another identical MSI till you acknowledge the current one
+>> (This is ensured by the PCI protocol, I guess).
+> 
+> I don't believe this is a requirement of PCI.  We designed our hardware
+> to not send another MSI until our hardware's interrupt status register
+> is read, but we didn't have to do that.
+> 
+>>>> In theory, we should clear the interrupt flag only after the interrupt has
+>>>> actually handled (which can take some time to process on the worst case scenario).
+>>>
+>>> But see above, there is a race if a new MSI arrives while still masked.
+>>>  I can see no possible way to solve this in software that does not
+>>> involve unmasking the MSI before calling the handler.  To leave the
+>>> interrupt masked while calling the handler requires the hardware to
+>>> queue an interrupt that arrives while masked.  We have no docs, but the
+>>> designware controller doesn't appear to do this in practice.
+>>
+>> See my reply to Marc about the interrupt masking. Like you said, probably the
+>> solution pass through using interrupt mask/unmask register instead of interrupt
+>> enable/disable register.
+>>
+>> Can you do a quick test, since you can easily reproduce the issue? Can you
+>> change register offset on both functions dw_pci_bottom_mask() and
+>> dw_pci_bottom_unmask()?
+>>
+>> Basically exchange the PCIE_MSI_INTR0_ENABLE register by PCIE_MSI_INTR0_MASK.
+> 
+> Of course MSI still need to be enabled to work at all, which happens
+> once when the driver using the MSI registers a handler.  Masking can be
+> done via mask register after that.
+> 
+Correct, I was asking to switch only on the functions mentioned that are called
+after the dw_pcie_setup_rc() that enables the interrupts.
 
-The DWC PCIe core contains various separate register spaces: DBI, DBI2,
-ATU, DMA, etc. The relationship between the addresses of these register
-spaces is entirely determined by the implementation of the IP block, not
-by the IP block design itself. Hence, the DWC driver must not make
-assumptions that one register space can be accessed at a fixed offset from
-any other register space. To avoid such assumptions, introduce an
-explicit/separate register pointer for the ATU register space. In
-particular, the current assumption is not valid for NVIDIA's T194 SoC.
+> It is not so easy for me to test on the newest kernel, as imx7d does
+> not work due to yet more bugs.  I have to port a set of patches to each
+> new kernel.  A set that does not shrink due to holdups like this.
 
-The ATU register space is only used on systems that require unrolled ATU
-access. This property is detected at run-time for host controllers, and
-when this is detected, this patch provides a default value for atu_base
-that matches the previous assumption re: register layout. An alternative
-would be to update all drivers for HW that requires unrolled access to
-explicitly set atu_base. However, it's hard to tell which drivers would
-require atu_base to be set. The unrolled property is not detected for
-endpoint systems, and so any endpoint driver that requires unrolled access
-must explicitly set the iatu_unroll_enabled flag (none do at present), and
-so a check is added to require the driver to also set atu_base while at
-it.
+Ok, I've to try to replicate this scenario of loss of interruptions so that I
+can do something about it. Till now this never happen before.
 
-Signed-off-by: Stephen Warren <swarren@nvidia.com>
----
- .../pci/controller/dwc/pcie-designware-ep.c   |  4 ++++
- .../pci/controller/dwc/pcie-designware-host.c |  3 +++
- drivers/pci/controller/dwc/pcie-designware.c  |  8 ++++----
- drivers/pci/controller/dwc/pcie-designware.h  | 20 +++++++++++++++----
- 4 files changed, 27 insertions(+), 8 deletions(-)
-
-diff --git a/drivers/pci/controller/dwc/pcie-designware-ep.c b/drivers/pci/controller/dwc/pcie-designware-ep.c
-index 1e7b02221eac..880210366e71 100644
---- a/drivers/pci/controller/dwc/pcie-designware-ep.c
-+++ b/drivers/pci/controller/dwc/pcie-designware-ep.c
-@@ -504,6 +504,10 @@ int dw_pcie_ep_init(struct dw_pcie_ep *ep)
- 		dev_err(dev, "dbi_base/dbi_base2 is not populated\n");
- 		return -EINVAL;
- 	}
-+	if (pci->iatu_unroll_enabled && !pci->atu_base) {
-+		dev_err(dev, "atu_base is not populated\n");
-+		return -EINVAL;
-+	}
- 
- 	ret = of_property_read_u32(np, "num-ib-windows", &ep->num_ib_windows);
- 	if (ret < 0) {
-diff --git a/drivers/pci/controller/dwc/pcie-designware-host.c b/drivers/pci/controller/dwc/pcie-designware-host.c
-index 29a05759a294..2ebb7f4768cf 100644
---- a/drivers/pci/controller/dwc/pcie-designware-host.c
-+++ b/drivers/pci/controller/dwc/pcie-designware-host.c
-@@ -699,6 +699,9 @@ void dw_pcie_setup_rc(struct pcie_port *pp)
- 		dev_dbg(pci->dev, "iATU unroll: %s\n",
- 			pci->iatu_unroll_enabled ? "enabled" : "disabled");
- 
-+		if (pci->iatu_unroll_enabled && !pci->atu_base)
-+			pci->atu_base = pci->dbi_base + (0x3 << 20);
-+
- 		dw_pcie_prog_outbound_atu(pci, PCIE_ATU_REGION_INDEX0,
- 					  PCIE_ATU_TYPE_MEM, pp->mem_base,
- 					  pp->mem_bus_addr, pp->mem_size);
-diff --git a/drivers/pci/controller/dwc/pcie-designware.c b/drivers/pci/controller/dwc/pcie-designware.c
-index 2153956a0b20..93ef8c31fb39 100644
---- a/drivers/pci/controller/dwc/pcie-designware.c
-+++ b/drivers/pci/controller/dwc/pcie-designware.c
-@@ -93,7 +93,7 @@ static u32 dw_pcie_readl_ob_unroll(struct dw_pcie *pci, u32 index, u32 reg)
- {
- 	u32 offset = PCIE_GET_ATU_OUTB_UNR_REG_OFFSET(index);
- 
--	return dw_pcie_readl_dbi(pci, offset + reg);
-+	return dw_pcie_readl_atu(pci, offset + reg);
- }
- 
- static void dw_pcie_writel_ob_unroll(struct dw_pcie *pci, u32 index, u32 reg,
-@@ -101,7 +101,7 @@ static void dw_pcie_writel_ob_unroll(struct dw_pcie *pci, u32 index, u32 reg,
- {
- 	u32 offset = PCIE_GET_ATU_OUTB_UNR_REG_OFFSET(index);
- 
--	dw_pcie_writel_dbi(pci, offset + reg, val);
-+	dw_pcie_writel_atu(pci, offset + reg, val);
- }
- 
- static void dw_pcie_prog_outbound_atu_unroll(struct dw_pcie *pci, int index,
-@@ -187,7 +187,7 @@ static u32 dw_pcie_readl_ib_unroll(struct dw_pcie *pci, u32 index, u32 reg)
- {
- 	u32 offset = PCIE_GET_ATU_INB_UNR_REG_OFFSET(index);
- 
--	return dw_pcie_readl_dbi(pci, offset + reg);
-+	return dw_pcie_readl_atu(pci, offset + reg);
- }
- 
- static void dw_pcie_writel_ib_unroll(struct dw_pcie *pci, u32 index, u32 reg,
-@@ -195,7 +195,7 @@ static void dw_pcie_writel_ib_unroll(struct dw_pcie *pci, u32 index, u32 reg,
- {
- 	u32 offset = PCIE_GET_ATU_INB_UNR_REG_OFFSET(index);
- 
--	dw_pcie_writel_dbi(pci, offset + reg, val);
-+	dw_pcie_writel_atu(pci, offset + reg, val);
- }
- 
- static int dw_pcie_prog_inbound_atu_unroll(struct dw_pcie *pci, int index,
-diff --git a/drivers/pci/controller/dwc/pcie-designware.h b/drivers/pci/controller/dwc/pcie-designware.h
-index 0989d880ac46..02fb532c5db9 100644
---- a/drivers/pci/controller/dwc/pcie-designware.h
-+++ b/drivers/pci/controller/dwc/pcie-designware.h
-@@ -93,11 +93,11 @@
- #define PCIE_ATU_UNR_UPPER_TARGET	0x18
- 
- /* Register address builder */
--#define PCIE_GET_ATU_OUTB_UNR_REG_OFFSET(region)	\
--			((0x3 << 20) | ((region) << 9))
-+#define PCIE_GET_ATU_OUTB_UNR_REG_OFFSET(region) \
-+		((region) << 9)
- 
--#define PCIE_GET_ATU_INB_UNR_REG_OFFSET(region)				\
--			((0x3 << 20) | ((region) << 9) | (0x1 << 8))
-+#define PCIE_GET_ATU_INB_UNR_REG_OFFSET(region) \
-+		((region) << 9) | (0x1 << 8)
- 
- #define MAX_MSI_IRQS			256
- #define MAX_MSI_IRQS_PER_CTRL		32
-@@ -219,6 +219,8 @@ struct dw_pcie {
- 	struct device		*dev;
- 	void __iomem		*dbi_base;
- 	void __iomem		*dbi_base2;
-+	/* Used when iatu_unroll_enabled is true */
-+	void __iomem		*atu_base;
- 	u32			num_viewport;
- 	u8			iatu_unroll_enabled;
- 	struct pcie_port	pp;
-@@ -289,6 +291,16 @@ static inline u32 dw_pcie_readl_dbi2(struct dw_pcie *pci, u32 reg)
- 	return __dw_pcie_read_dbi(pci, pci->dbi_base2, reg, 0x4);
- }
- 
-+static inline void dw_pcie_writel_atu(struct dw_pcie *pci, u32 reg, u32 val)
-+{
-+	__dw_pcie_write_dbi(pci, pci->atu_base, reg, 0x4, val);
-+}
-+
-+static inline u32 dw_pcie_readl_atu(struct dw_pcie *pci, u32 reg)
-+{
-+	return __dw_pcie_read_dbi(pci, pci->atu_base, reg, 0x4);
-+}
-+
- static inline void dw_pcie_dbi_ro_wr_en(struct dw_pcie *pci)
- {
- 	u32 reg;
--- 
-2.19.1
+> 
+> I understand the new flow would look like this (assume dw controller
+> MSI interrupt output signal is connected to one of the ARM GIC
+> interrupt lines, there could be different or more controllers above the
+> dwc of course (but usually aren't)):
+> 
+> 1. MSI arrives, status bit is set in dwc, interrupt raised to GIC.
+> 2. dwc handler runs
+> 3. dwc handler sees status bit is set for a(n) MSI(s)
+> 4. dwc handler sets mask for those MSIs
+> 5. dwc handler clears status bit
+> 6. dwc handler runs driver handler for the received MSI
+> 7. ** an new MSI arrives, racing with 6 **
+> 8. status bit becomes set again, but no interrupt is raised due to mask
+> 9. dwc handler unmasks MSI, which raises the interrupt to GIC because
+> of new MSI received in 7.
+> 10. The original GIC interrupt is EOI'ed.
+> 11. The interrupt for the dwc is re-raised by the GIC due to 9, and we
+> go back to 2.
+> 
+> It is very important that 5 be done before 6.  Less so 4 before 5, but
+> reversing the order there would allow re-raising even if the 2nd MSI
+> arrived before the driver handler ran, which is not necessary.
+> 
+> I do not see a race in this design and it appears correct to me.  But,
+> I also do not think there is any immediate improvement due to extra
+> steps of masking and unmasking the MSI.
+> 
+> The reason is that the GIC interrupt above the dwc is non-reentrant. 
+> It remains masked (aka active[1]) during this entire process (1 to 10).
+>  This means every MSI is effectively already masked.  So masking the
+> active MSI(s) a 2nd time gains nothing besides preventing some extra
+> edges for a masked interrupt going to the ARM GIC.
+> 
+> In theory, if the GIC interrupt handler was reentrant, then on receipt
+> of a new MSI we could re-enter the dwc handler on a different CPU and
+> run the new MSI (a different MSI!) at the same time as the original MSI
+> handler is still running.
+> 
+> There difference here is that by unmasking in the interrupt in the GIC
+> before the dwc handler is finished, masking an individual MSI in the
+> dwc is no longer a 2nd redundant masking.
+> 
+> 
+> [1] When I say masked in GIC, I mean the interrupt is in the "active"
+> or "active and pending" states.  In these states the interrupt will not
+> be raised to the CPU and can be considered masked.
+> 
 
