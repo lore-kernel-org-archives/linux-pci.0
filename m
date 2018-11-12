@@ -2,51 +2,198 @@ Return-Path: <SRS0=qbZn=NX=vger.kernel.org=linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-2.9 required=3.0 tests=FROM_EXCESS_BASE64,
-	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_PASS,USER_AGENT_NEOMUTT
+X-Spam-Status: No, score=-9.0 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_PASS,USER_AGENT_GIT
 	autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 1FA21C43441
-	for <linux-pci@archiver.kernel.org>; Mon, 12 Nov 2018 21:32:52 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id D36DBC43441
+	for <linux-pci@archiver.kernel.org>; Mon, 12 Nov 2018 22:57:42 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id DDB7922506
-	for <linux-pci@archiver.kernel.org>; Mon, 12 Nov 2018 21:32:51 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.3.2 mail.kernel.org DDB7922506
-Authentication-Results: mail.kernel.org; dmarc=none (p=none dis=none) header.from=ucw.cz
+	by mail.kernel.org (Postfix) with ESMTP id 90E2E2245E
+	for <linux-pci@archiver.kernel.org>; Mon, 12 Nov 2018 22:57:42 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.3.2 mail.kernel.org 90E2E2245E
+Authentication-Results: mail.kernel.org; dmarc=none (p=none dis=none) header.from=wwwdotorg.org
 Authentication-Results: mail.kernel.org; spf=none smtp.mailfrom=linux-pci-owner@vger.kernel.org
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1729564AbeKMH1w (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Tue, 13 Nov 2018 02:27:52 -0500
-Received: from nikam.ms.mff.cuni.cz ([195.113.20.16]:44484 "EHLO
-        nikam.ms.mff.cuni.cz" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1725861AbeKMH1w (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Tue, 13 Nov 2018 02:27:52 -0500
-X-Greylist: delayed 314 seconds by postgrey-1.27 at vger.kernel.org; Tue, 13 Nov 2018 02:27:51 EST
-Received: by nikam.ms.mff.cuni.cz (Postfix, from userid 2587)
-        id EC328281A64; Mon, 12 Nov 2018 22:27:35 +0100 (CET)
-Date:   Mon, 12 Nov 2018 22:27:35 +0100
-From:   Martin =?utf-8?B?TWFyZcWh?= <mj@ucw.cz>
-To:     Bjorn Helgaas <helgaas@kernel.org>
-Cc:     linux-pci@vger.kernel.org
-Subject: Re: [PATCH 0/2] lspci: Decode Multicast capability
-Message-ID: <mj+md-20181112.212725.12721.nikam@ucw.cz>
-References: <154154102296.78911.760432131801074864.stgit@bhelgaas-glaptop.roam.corp.google.com>
+        id S1726006AbeKMIw5 (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Tue, 13 Nov 2018 03:52:57 -0500
+Received: from avon.wwwdotorg.org ([104.237.132.123]:37728 "EHLO
+        avon.wwwdotorg.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1725973AbeKMIw4 (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Tue, 13 Nov 2018 03:52:56 -0500
+Received: from swarren-lx1.nvidia.com (unknown [216.228.112.24])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES128-SHA256 (128/128 bits))
+        (No client certificate requested)
+        by avon.wwwdotorg.org (Postfix) with ESMTPSA id C70D21C0162;
+        Mon, 12 Nov 2018 15:57:34 -0700 (MST)
+X-Virus-Status: Clean
+X-Virus-Scanned: clamav-milter 0.100.2 at avon.wwwdotorg.org
+From:   Stephen Warren <swarren@wwwdotorg.org>
+To:     Jingoo Han <jingoohan1@gmail.com>,
+        Gustavo Pimentel <gustavo.pimentel@synopsys.com>,
+        Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
+        Bjorn Helgaas <bhelgaas@google.com>
+Cc:     linux-pci@vger.kernel.org, Vidya Sagar <vidyas@nvidia.com>,
+        Manikanta Maddireddy <mmaddireddy@nvidia.com>,
+        Stephen Warren <swarren@nvidia.com>
+Subject: [PATCH] PCI: designware: don't hard-code DBI/ATU offset
+Date:   Mon, 12 Nov 2018 15:57:10 -0700
+Message-Id: <20181112225710.29557-1-swarren@wwwdotorg.org>
+X-Mailer: git-send-email 2.19.1
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <154154102296.78911.760432131801074864.stgit@bhelgaas-glaptop.roam.corp.google.com>
-User-Agent: NeoMutt/20170113 (1.7.2)
+X-NVConfidentiality: public
+Content-Transfer-Encoding: 8bit
 Sender: linux-pci-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-Hi Bjorn,
+From: Stephen Warren <swarren@nvidia.com>
 
-> Here's some decoding for the Multicast capability and some new capability
-> names for setpci.  These are based on a42aea906410 ("Add a couple of
-> missing va_end's").
+The DWC PCIe core contains various separate register spaces: DBI, DBI2,
+ATU, DMA, etc. The relationship between the addresses of these register
+spaces is entirely determined by the implementation of the IP block, not
+by the IP block design itself. Hence, the DWC driver must not make
+assumptions that one register space can be accessed at a fixed offset from
+any other register space. To avoid such assumptions, introduce an
+explicit/separate register pointer for the ATU register space. In
+particular, the current assumption is not valid for NVIDIA's T194 SoC.
 
-thanks, applied.
+The ATU register space is only used on systems that require unrolled ATU
+access. This property is detected at run-time for host controllers, and
+when this is detected, this patch provides a default value for atu_base
+that matches the previous assumption re: register layout. An alternative
+would be to update all drivers for HW that requires unrolled access to
+explicitly set atu_base. However, it's hard to tell which drivers would
+require atu_base to be set. The unrolled property is not detected for
+endpoint systems, and so any endpoint driver that requires unrolled access
+must explicitly set the iatu_unroll_enabled flag (none do at present), and
+so a check is added to require the driver to also set atu_base while at
+it.
 
-				Martin
+Signed-off-by: Stephen Warren <swarren@nvidia.com>
+---
+ .../pci/controller/dwc/pcie-designware-ep.c   |  4 ++++
+ .../pci/controller/dwc/pcie-designware-host.c |  3 +++
+ drivers/pci/controller/dwc/pcie-designware.c  |  8 ++++----
+ drivers/pci/controller/dwc/pcie-designware.h  | 20 +++++++++++++++----
+ 4 files changed, 27 insertions(+), 8 deletions(-)
+
+diff --git a/drivers/pci/controller/dwc/pcie-designware-ep.c b/drivers/pci/controller/dwc/pcie-designware-ep.c
+index 1e7b02221eac..880210366e71 100644
+--- a/drivers/pci/controller/dwc/pcie-designware-ep.c
++++ b/drivers/pci/controller/dwc/pcie-designware-ep.c
+@@ -504,6 +504,10 @@ int dw_pcie_ep_init(struct dw_pcie_ep *ep)
+ 		dev_err(dev, "dbi_base/dbi_base2 is not populated\n");
+ 		return -EINVAL;
+ 	}
++	if (pci->iatu_unroll_enabled && !pci->atu_base) {
++		dev_err(dev, "atu_base is not populated\n");
++		return -EINVAL;
++	}
+ 
+ 	ret = of_property_read_u32(np, "num-ib-windows", &ep->num_ib_windows);
+ 	if (ret < 0) {
+diff --git a/drivers/pci/controller/dwc/pcie-designware-host.c b/drivers/pci/controller/dwc/pcie-designware-host.c
+index 29a05759a294..2ebb7f4768cf 100644
+--- a/drivers/pci/controller/dwc/pcie-designware-host.c
++++ b/drivers/pci/controller/dwc/pcie-designware-host.c
+@@ -699,6 +699,9 @@ void dw_pcie_setup_rc(struct pcie_port *pp)
+ 		dev_dbg(pci->dev, "iATU unroll: %s\n",
+ 			pci->iatu_unroll_enabled ? "enabled" : "disabled");
+ 
++		if (pci->iatu_unroll_enabled && !pci->atu_base)
++			pci->atu_base = pci->dbi_base + (0x3 << 20);
++
+ 		dw_pcie_prog_outbound_atu(pci, PCIE_ATU_REGION_INDEX0,
+ 					  PCIE_ATU_TYPE_MEM, pp->mem_base,
+ 					  pp->mem_bus_addr, pp->mem_size);
+diff --git a/drivers/pci/controller/dwc/pcie-designware.c b/drivers/pci/controller/dwc/pcie-designware.c
+index 2153956a0b20..93ef8c31fb39 100644
+--- a/drivers/pci/controller/dwc/pcie-designware.c
++++ b/drivers/pci/controller/dwc/pcie-designware.c
+@@ -93,7 +93,7 @@ static u32 dw_pcie_readl_ob_unroll(struct dw_pcie *pci, u32 index, u32 reg)
+ {
+ 	u32 offset = PCIE_GET_ATU_OUTB_UNR_REG_OFFSET(index);
+ 
+-	return dw_pcie_readl_dbi(pci, offset + reg);
++	return dw_pcie_readl_atu(pci, offset + reg);
+ }
+ 
+ static void dw_pcie_writel_ob_unroll(struct dw_pcie *pci, u32 index, u32 reg,
+@@ -101,7 +101,7 @@ static void dw_pcie_writel_ob_unroll(struct dw_pcie *pci, u32 index, u32 reg,
+ {
+ 	u32 offset = PCIE_GET_ATU_OUTB_UNR_REG_OFFSET(index);
+ 
+-	dw_pcie_writel_dbi(pci, offset + reg, val);
++	dw_pcie_writel_atu(pci, offset + reg, val);
+ }
+ 
+ static void dw_pcie_prog_outbound_atu_unroll(struct dw_pcie *pci, int index,
+@@ -187,7 +187,7 @@ static u32 dw_pcie_readl_ib_unroll(struct dw_pcie *pci, u32 index, u32 reg)
+ {
+ 	u32 offset = PCIE_GET_ATU_INB_UNR_REG_OFFSET(index);
+ 
+-	return dw_pcie_readl_dbi(pci, offset + reg);
++	return dw_pcie_readl_atu(pci, offset + reg);
+ }
+ 
+ static void dw_pcie_writel_ib_unroll(struct dw_pcie *pci, u32 index, u32 reg,
+@@ -195,7 +195,7 @@ static void dw_pcie_writel_ib_unroll(struct dw_pcie *pci, u32 index, u32 reg,
+ {
+ 	u32 offset = PCIE_GET_ATU_INB_UNR_REG_OFFSET(index);
+ 
+-	dw_pcie_writel_dbi(pci, offset + reg, val);
++	dw_pcie_writel_atu(pci, offset + reg, val);
+ }
+ 
+ static int dw_pcie_prog_inbound_atu_unroll(struct dw_pcie *pci, int index,
+diff --git a/drivers/pci/controller/dwc/pcie-designware.h b/drivers/pci/controller/dwc/pcie-designware.h
+index 0989d880ac46..02fb532c5db9 100644
+--- a/drivers/pci/controller/dwc/pcie-designware.h
++++ b/drivers/pci/controller/dwc/pcie-designware.h
+@@ -93,11 +93,11 @@
+ #define PCIE_ATU_UNR_UPPER_TARGET	0x18
+ 
+ /* Register address builder */
+-#define PCIE_GET_ATU_OUTB_UNR_REG_OFFSET(region)	\
+-			((0x3 << 20) | ((region) << 9))
++#define PCIE_GET_ATU_OUTB_UNR_REG_OFFSET(region) \
++		((region) << 9)
+ 
+-#define PCIE_GET_ATU_INB_UNR_REG_OFFSET(region)				\
+-			((0x3 << 20) | ((region) << 9) | (0x1 << 8))
++#define PCIE_GET_ATU_INB_UNR_REG_OFFSET(region) \
++		((region) << 9) | (0x1 << 8)
+ 
+ #define MAX_MSI_IRQS			256
+ #define MAX_MSI_IRQS_PER_CTRL		32
+@@ -219,6 +219,8 @@ struct dw_pcie {
+ 	struct device		*dev;
+ 	void __iomem		*dbi_base;
+ 	void __iomem		*dbi_base2;
++	/* Used when iatu_unroll_enabled is true */
++	void __iomem		*atu_base;
+ 	u32			num_viewport;
+ 	u8			iatu_unroll_enabled;
+ 	struct pcie_port	pp;
+@@ -289,6 +291,16 @@ static inline u32 dw_pcie_readl_dbi2(struct dw_pcie *pci, u32 reg)
+ 	return __dw_pcie_read_dbi(pci, pci->dbi_base2, reg, 0x4);
+ }
+ 
++static inline void dw_pcie_writel_atu(struct dw_pcie *pci, u32 reg, u32 val)
++{
++	__dw_pcie_write_dbi(pci, pci->atu_base, reg, 0x4, val);
++}
++
++static inline u32 dw_pcie_readl_atu(struct dw_pcie *pci, u32 reg)
++{
++	return __dw_pcie_read_dbi(pci, pci->atu_base, reg, 0x4);
++}
++
+ static inline void dw_pcie_dbi_ro_wr_en(struct dw_pcie *pci)
+ {
+ 	u32 reg;
+-- 
+2.19.1
+
