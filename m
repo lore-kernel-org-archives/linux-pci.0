@@ -6,72 +6,79 @@ X-Spam-Status: No, score=-2.5 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
 	MAILING_LIST_MULTI,SPF_PASS,USER_AGENT_MUTT autolearn=ham autolearn_force=no
 	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 381B5C43441
-	for <linux-pci@archiver.kernel.org>; Tue, 13 Nov 2018 10:36:25 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id F363DC43441
+	for <linux-pci@archiver.kernel.org>; Tue, 13 Nov 2018 10:36:56 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id F395B223C8
-	for <linux-pci@archiver.kernel.org>; Tue, 13 Nov 2018 10:36:24 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.3.2 mail.kernel.org F395B223C8
-Authentication-Results: mail.kernel.org; dmarc=fail (p=none dis=none) header.from=linux.intel.com
+	by mail.kernel.org (Postfix) with ESMTP id C30FF2250F
+	for <linux-pci@archiver.kernel.org>; Tue, 13 Nov 2018 10:36:56 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.3.2 mail.kernel.org C30FF2250F
+Authentication-Results: mail.kernel.org; dmarc=none (p=none dis=none) header.from=arm.com
 Authentication-Results: mail.kernel.org; spf=none smtp.mailfrom=linux-pci-owner@vger.kernel.org
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1732179AbeKMUdx (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Tue, 13 Nov 2018 15:33:53 -0500
-Received: from mga11.intel.com ([192.55.52.93]:11734 "EHLO mga11.intel.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1731276AbeKMUdx (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Tue, 13 Nov 2018 15:33:53 -0500
-X-Amp-Result: UNKNOWN
-X-Amp-Original-Verdict: FILE UNKNOWN
-X-Amp-File-Uploaded: False
-Received: from orsmga006.jf.intel.com ([10.7.209.51])
-  by fmsmga102.fm.intel.com with ESMTP/TLS/DHE-RSA-AES256-GCM-SHA384; 13 Nov 2018 02:36:23 -0800
-X-ExtLoop1: 1
-X-IronPort-AV: E=Sophos;i="5.54,498,1534834800"; 
-   d="scan'208";a="90729178"
-Received: from lahna.fi.intel.com (HELO lahna) ([10.237.72.157])
-  by orsmga006.jf.intel.com with SMTP; 13 Nov 2018 02:36:17 -0800
-Received: by lahna (sSMTP sendmail emulation); Tue, 13 Nov 2018 12:36:16 +0200
-Date:   Tue, 13 Nov 2018 12:36:16 +0200
-From:   Mika Westerberg <mika.westerberg@linux.intel.com>
-To:     Mario.Limonciello@dell.com
-Cc:     iommu@lists.linux-foundation.org, joro@8bytes.org,
-        dwmw2@infradead.org, baolu.lu@linux.intel.com, ashok.raj@intel.com,
-        bhelgaas@google.com, rjw@rjwysocki.net, jacob.jun.pan@intel.com,
-        andreas.noever@gmail.com, michael.jamet@intel.com,
-        YehezkelShB@gmail.com, lukas@wunner.de, ckellner@redhat.com,
-        anthony.wong@canonical.com, linux-acpi@vger.kernel.org,
-        linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org
-Subject: Re: [PATCH 4/4] thunderbolt: Export IOMMU based DMA protection
- support to userspace
-Message-ID: <20181113103616.GQ2500@lahna.fi.intel.com>
-References: <20181112160628.86620-1-mika.westerberg@linux.intel.com>
- <20181112160628.86620-5-mika.westerberg@linux.intel.com>
- <d4d2488e85174cff9ab8c641336d5919@ausx13mpc120.AMER.DELL.COM>
+        id S1732293AbeKMUeZ (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Tue, 13 Nov 2018 15:34:25 -0500
+Received: from usa-sjc-mx-foss1.foss.arm.com ([217.140.101.70]:51744 "EHLO
+        foss.arm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1732292AbeKMUeZ (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Tue, 13 Nov 2018 15:34:25 -0500
+Received: from usa-sjc-imap-foss1.foss.arm.com (unknown [10.72.51.249])
+        by usa-sjc-mx-foss1.foss.arm.com (Postfix) with ESMTP id 8EAD01596;
+        Tue, 13 Nov 2018 02:36:55 -0800 (PST)
+Received: from e107981-ln.cambridge.arm.com (e107981-ln.cambridge.arm.com [10.1.197.40])
+        by usa-sjc-imap-foss1.foss.arm.com (Postfix) with ESMTPSA id C209E3F5CF;
+        Tue, 13 Nov 2018 02:36:53 -0800 (PST)
+Date:   Tue, 13 Nov 2018 10:36:46 +0000
+From:   Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
+To:     Trent Piepho <tpiepho@impinj.com>
+Cc:     "marc.zyngier@arm.com" <marc.zyngier@arm.com>,
+        "gustavo.pimentel@synopsys.com" <gustavo.pimentel@synopsys.com>,
+        "joao.pinto@synopsys.com" <joao.pinto@synopsys.com>,
+        "jingoohan1@gmail.com" <jingoohan1@gmail.com>,
+        "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+        "faiz_abbas@ti.com" <faiz_abbas@ti.com>,
+        "stable@vger.kernel.org" <stable@vger.kernel.org>,
+        "bhelgaas@google.com" <bhelgaas@google.com>,
+        "vigneshr@ti.com" <vigneshr@ti.com>
+Subject: Re: [PATCH] PCI: dwc: Fix interrupt race in when handling MSI
+Message-ID: <20181113103646.GA11202@e107981-ln.cambridge.arm.com>
+References: <20181106145347.GB19060@e107981-ln.cambridge.arm.com>
+ <db3462e2-422c-161a-1f58-135bc4eab7eb@arm.com>
+ <1541533217.30311.263.camel@impinj.com>
+ <597d9ebd-f95f-0a4d-e1a3-fe79d4333879@arm.com>
+ <1541621853.30311.294.camel@impinj.com>
+ <268eae88-274e-edfe-5668-5759efae62e6@arm.com>
+ <1541706591.30311.308.camel@impinj.com>
+ <b4dfa6e0-c569-c669-d3f1-b1016eecefa8@arm.com>
+ <f474f03d-4b3f-9175-f91f-327f67060936@synopsys.com>
+ <1542071920.30311.411.camel@impinj.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <d4d2488e85174cff9ab8c641336d5919@ausx13mpc120.AMER.DELL.COM>
-Organization: Intel Finland Oy - BIC 0357606-4 - Westendinkatu 7, 02160 Espoo
-User-Agent: Mutt/1.10.1 (2018-07-13)
+In-Reply-To: <1542071920.30311.411.camel@impinj.com>
+User-Agent: Mutt/1.5.24 (2015-08-30)
 Sender: linux-pci-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-On Mon, Nov 12, 2018 at 04:22:25PM +0000, Mario.Limonciello@dell.com wrote:
-> > +DMA protection utilizing IOMMU
-> > +------------------------------
-> > +Recent systems shipping with Windows 10 version 1803 or later may support a
-> > +feature called `Kernel DMA Protection for Thunderbolt 3`_.  This means that
+On Tue, Nov 13, 2018 at 01:18:41AM +0000, Trent Piepho wrote:
+
+[...]
+
+> > Based on the information provided, its very likely that I should use the
+> > PCIE_MSI_INTR0_MASK register instead of PCIE_MSI_INTR0_ENABLE on the
+> > dw_pci_bottom_mask() and dw_pci_bottom_unmask() callbacks. As soon as I return
+> > from Linux plumbers conference, I will test the system using the
+> > PCIE_MSI_INTR0_MASK register.
 > 
-> Keep in mind there will be systems that ship with Linux that enable this feature too ;)
+> Using enable to mask the interrupt is broken.  It will allow an MSI to
+> be lost if it arrives while the MSI in not enabled.  It is impossible
+> to prevent that from racing against the pci device driver's final check
+> that no MSI-signaled condition in the hardware is present.
 
-Yes, you are absolutely right. I sometimes forgot that fact ;-)
+That's exactly why I raised the point. I would like to understand if
+this means that this revert is not enough to fix the underlying issue
+or we need this revert AND correct mask/unmask operations.
 
-> It might be better to make it time frame and platform  firmware oriented as it's
-> entirely possible for an OEM to have a field firmware upgrade that may enable this
-> functionality from the platform and allow an end user to upgrade to a sufficiently
-> protected kernel or Windows OS to take advantage of it.
-
-I agree. I will update this in the next version.
+Thanks,
+Lorenzo
