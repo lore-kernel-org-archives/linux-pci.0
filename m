@@ -2,148 +2,183 @@ Return-Path: <SRS0=6VBI=NY=vger.kernel.org=linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-4.0 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	INCLUDES_PATCH,MAILING_LIST_MULTI,SPF_PASS,URIBL_BLOCKED autolearn=ham
-	autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-1.0 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+	MAILING_LIST_MULTI,SPF_PASS,URIBL_BLOCKED autolearn=ham autolearn_force=no
+	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id EE64FC43441
-	for <linux-pci@archiver.kernel.org>; Tue, 13 Nov 2018 13:28:14 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id B6B62C43441
+	for <linux-pci@archiver.kernel.org>; Tue, 13 Nov 2018 14:40:42 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id BDD542245E
-	for <linux-pci@archiver.kernel.org>; Tue, 13 Nov 2018 13:28:14 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.3.2 mail.kernel.org BDD542245E
-Authentication-Results: mail.kernel.org; dmarc=none (p=none dis=none) header.from=huawei.com
+	by mail.kernel.org (Postfix) with ESMTP id 74FB4223AE
+	for <linux-pci@archiver.kernel.org>; Tue, 13 Nov 2018 14:40:42 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.3.2 mail.kernel.org 74FB4223AE
+Authentication-Results: mail.kernel.org; dmarc=none (p=none dis=none) header.from=arm.com
 Authentication-Results: mail.kernel.org; spf=none smtp.mailfrom=linux-pci-owner@vger.kernel.org
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S2387401AbeKMX0V convert rfc822-to-8bit (ORCPT
-        <rfc822;linux-pci@archiver.kernel.org>);
-        Tue, 13 Nov 2018 18:26:21 -0500
-Received: from lhrrgout.huawei.com ([185.176.76.210]:32754 "EHLO huawei.com"
-        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1732728AbeKMX0V (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Tue, 13 Nov 2018 18:26:21 -0500
-Received: from LHREML713-CAH.china.huawei.com (unknown [172.18.7.106])
-        by Forcepoint Email with ESMTP id A78109683A999;
-        Tue, 13 Nov 2018 13:28:10 +0000 (GMT)
-Received: from FRAEMA706-CHM.china.huawei.com (10.206.14.55) by
- LHREML713-CAH.china.huawei.com (10.201.108.36) with Microsoft SMTP Server
- (TLS) id 14.3.408.0; Tue, 13 Nov 2018 13:28:11 +0000
-Received: from FRAEML521-MBX.china.huawei.com ([169.254.1.76]) by
- FRAEMA706-CHM.china.huawei.com ([169.254.6.151]) with mapi id 14.03.0415.000;
- Tue, 13 Nov 2018 14:28:04 +0100
-From:   Shameerali Kolothum Thodi <shameerali.kolothum.thodi@huawei.com>
-To:     "mika.westerberg@linux.intel.com" <mika.westerberg@linux.intel.com>
-CC:     "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-        "Wangzhou (B)" <wangzhou1@hisilicon.com>,
-        Linuxarm <linuxarm@huawei.com>, Lukas Wunner <lukas@wunner.de>
-Subject: RE: Qemu Guest kernel 4.20-rc1 PCIe hotplug issue
-Thread-Topic: Qemu Guest kernel 4.20-rc1 PCIe hotplug issue
-Thread-Index: AdR7RP5EYT33x2cVTRiE4AudJSgcHP///SQA///uY1CAABsPAP//6WQQ
-Date:   Tue, 13 Nov 2018 13:28:04 +0000
-Message-ID: <5FC3163CFD30C246ABAA99954A238FA8387DF51F@FRAEML521-MBX.china.huawei.com>
-References: <5FC3163CFD30C246ABAA99954A238FA8387DD344@FRAEML521-MBX.china.huawei.com>
- <20181113122522.GA2500@lahna.fi.intel.com>
- <5FC3163CFD30C246ABAA99954A238FA8387DF43F@FRAEML521-MBX.china.huawei.com>
- <20181113125910.GB2500@lahna.fi.intel.com>
-In-Reply-To: <20181113125910.GB2500@lahna.fi.intel.com>
-Accept-Language: en-GB, en-US
-Content-Language: en-US
-X-MS-Has-Attach: 
-X-MS-TNEF-Correlator: 
-x-originating-ip: [10.202.227.237]
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 8BIT
-MIME-Version: 1.0
-X-CFilter-Loop: Reflected
+        id S1731338AbeKNAjH (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Tue, 13 Nov 2018 19:39:07 -0500
+Received: from usa-sjc-mx-foss1.foss.arm.com ([217.140.101.70]:57274 "EHLO
+        foss.arm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1726846AbeKNAjH (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Tue, 13 Nov 2018 19:39:07 -0500
+Received: from usa-sjc-imap-foss1.foss.arm.com (unknown [10.72.51.249])
+        by usa-sjc-mx-foss1.foss.arm.com (Postfix) with ESMTP id E858CA78;
+        Tue, 13 Nov 2018 06:40:40 -0800 (PST)
+Received: from big-swifty.misterjones.org (usa-sjc-mx-foss1.foss.arm.com [217.140.101.70])
+        by usa-sjc-imap-foss1.foss.arm.com (Postfix) with ESMTPSA id 8929D3F5BD;
+        Tue, 13 Nov 2018 06:40:40 -0800 (PST)
+Date:   Tue, 13 Nov 2018 14:40:39 +0000
+Message-ID: <86h8gldorc.wl-marc.zyngier@arm.com>
+From:   Marc Zyngier <marc.zyngier@arm.com>
+To:     Gustavo Pimentel <gustavo.pimentel@synopsys.com>
+Cc:     Trent Piepho <tpiepho@impinj.com>,
+        "lorenzo.pieralisi@arm.com" <lorenzo.pieralisi@arm.com>,
+        "jpinto@synopsys.com" <joao.pinto@synopsys.com>,
+        "jingoohan1@gmail.com" <jingoohan1@gmail.com>,
+        "faiz_abbas@ti.com" <faiz_abbas@ti.com>,
+        "stable@vger.kernel.org" <stable@vger.kernel.org>,
+        "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+        "bhelgaas@google.com" <bhelgaas@google.com>,
+        "vigneshr@ti.com" <vigneshr@ti.com>
+Subject: Re: [PATCH] PCI: dwc: Fix interrupt race in when handling MSI
+In-Reply-To: <f474f03d-4b3f-9175-f91f-327f67060936@synopsys.com>
+References: <20181027000028.21343-1-tpiepho@impinj.com>
+        <20181106145347.GB19060@e107981-ln.cambridge.arm.com>
+        <db3462e2-422c-161a-1f58-135bc4eab7eb@arm.com>
+        <1541533217.30311.263.camel@impinj.com>
+        <597d9ebd-f95f-0a4d-e1a3-fe79d4333879@arm.com>
+        <1541621853.30311.294.camel@impinj.com>
+        <268eae88-274e-edfe-5668-5759efae62e6@arm.com>
+        <1541706591.30311.308.camel@impinj.com>
+        <b4dfa6e0-c569-c669-d3f1-b1016eecefa8@arm.com>
+        <f474f03d-4b3f-9175-f91f-327f67060936@synopsys.com>
+User-Agent: Wanderlust/2.15.9 (Almost Unreal) SEMI-EPG/1.14.7 (Harue)
+ FLIM/1.14.9 (=?UTF-8?B?R29qxY0=?=) APEL/10.8 EasyPG/1.0.0 Emacs/25.1
+ (aarch64-unknown-linux-gnu) MULE/6.0 (HANACHIRUSATO)
+Organization: ARM Ltd
+MIME-Version: 1.0 (generated by SEMI-EPG 1.14.7 - "Harue")
+Content-Type: text/plain; charset=US-ASCII
 Sender: linux-pci-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-
-> -----Original Message-----
-> From: mika.westerberg@linux.intel.com
-> [mailto:mika.westerberg@linux.intel.com]
-> Sent: 13 November 2018 12:59
-> To: Shameerali Kolothum Thodi <shameerali.kolothum.thodi@huawei.com>
-> Cc: linux-pci@vger.kernel.org; linux-kernel@vger.kernel.org; Wangzhou (B)
-> <wangzhou1@hisilicon.com>; Linuxarm <linuxarm@huawei.com>; Lukas
-> Wunner <lukas@wunner.de>
-> Subject: Re: Qemu Guest kernel 4.20-rc1 PCIe hotplug issue
+On Tue, 13 Nov 2018 00:41:24 +0000,
+Gustavo Pimentel <gustavo.pimentel@synopsys.com> wrote:
 > 
-> On Tue, Nov 13, 2018 at 12:36:20PM +0000, Shameerali Kolothum Thodi wrote:
-> > > @@ -156,9 +156,9 @@ static void pcie_do_write_cmd(struct controller
-> > > *ctrl,
-> > > u16 cmd,
-> > >  	slot_ctrl |= (cmd & mask);
-> > >  	ctrl->cmd_busy = 1;
-> > >  	smp_mb();
-> > > +	ctrl->slot_ctrl = slot_ctrl;
-> >
-> > Actually I tried this one, but it doesn't help in this case as the
-> > initial
-> > pcie_capability_read_word() returns the slot_ctrl without
-> > PCI_EXP_SLTCTL_HPIE bit set.  It looks to me
-> > pcie_enable_notification() function enables this,
-> >
-> > 	if (!pciehp_poll_mode)
-> > 		cmd |= PCI_EXP_SLTCTL_HPIE | PCI_EXP_SLTCTL_CCIE;
-> >
-> > I don't know this is as per the spec or not as the initial cap read
-> > doesn't seems to have the PCI_EXP_SLTCTL_HPIE bit set.
+> On 09/11/2018 11:34, Marc Zyngier wrote:
+> > On 08/11/18 19:49, Trent Piepho wrote:
+> >> On Thu, 2018-11-08 at 09:49 +0000, Marc Zyngier wrote:
+> >>> On 07/11/18 20:17, Trent Piepho wrote:
+> >>>> On Wed, 2018-11-07 at 18:41 +0000, Marc Zyngier wrote:
+> >>>>> On 06/11/18 19:40, Trent Piepho wrote:
+> >>>>>>
+> >>>>>> What about stable kernels that don't have the hierarchical API?
+> >>>>>
+> >>>>> My goal is to fix mainline first. Once we have something that works on
+> >>>>> mainline, we can look at propagating the fix to other versions. But
+> >>>>> mainline always comes first.
+> >>>>
+> >>>> This is a regression that went into 4.14.  Wouldn't the appropriate
+> >>>> action for the stable series be to undo the regression?
+> >>>
+> >>> This is not how stable works. Stable kernels *only* contain patches that
+> >>> are backported from mainline, and do not take standalone patch.
+> >>>
+> >>> Furthermore, your fix is to actually undo someone else's fix. Who is
+> >>> right? In the absence of any documentation, the answer is "nobody".
+> >>
+> >> Little more history to this bug.  The code was originally the way it is
+> >> now, but this same bug was fixed in 2013 in https://urldefense.proofpoint.com/v2/url?u=https-3A__patchwork.kernel.or&d=DwICaQ&c=DPL6_X_6JkXFx7AXWqB0tg&r=bkWxpLoW-f-E3EdiDCCa0_h0PicsViasSlvIpzZvPxs&m=Tk2dtPxJ5WvHjQbWWx35od-JZmur8mRuDrSSVhf8nYs&s=3nFZMUc2qvOXJht1WuNCDorudHeFiWyeDaO1UbhTXmw&e=
+> >> g/patch/3333681/
+> >>
+> >> Then that lasted four years until it was changed Aug 2017 in https://urldefense.proofpoint.com/v2/url?u=https-3A__pa&d=DwICaQ&c=DPL6_X_6JkXFx7AXWqB0tg&r=bkWxpLoW-f-E3EdiDCCa0_h0PicsViasSlvIpzZvPxs&m=Tk2dtPxJ5WvHjQbWWx35od-JZmur8mRuDrSSVhf8nYs&s=yfWJAoFIGjLbTnuE_KLzhW7J_pyMD3X1dXm4eHoy7_o&e=
+> >> tchwork.kernel.org/patch/9893303/
+> >>
+> >> That lasted just six months until someone tried to revert it, https://urldefense.proofpoint.com/v2/url?u=https-3A__p&d=DwICaQ&c=DPL6_X_6JkXFx7AXWqB0tg&r=bkWxpLoW-f-E3EdiDCCa0_h0PicsViasSlvIpzZvPxs&m=Tk2dtPxJ5WvHjQbWWx35od-JZmur8mRuDrSSVhf8nYs&s=q1LGEb9w_CjcwmWVFOM5VWJ17oS9XHd8SsWTsBF8zfU&e=
+> >> atchwork.kernel.org/patch/9893303/
+> >>
+> >> Seems pretty clear the way it is now is much worse than the way it was
+> >> before, even if the previous design may have had another flaw.  Though
+> >> I've yet to see anyone point out something makes the previous design
+> >> broken.  Sub-optimal yes, but not broken.
+> > 
+> > This is not what was reported by the previous submitter. I guess they
+> > changed this for a reason, no? I'm prepared to admit this is a end-point
+> > driver bug, but we need to understand what is happening and stop
+> > changing this driver randomly.
+> > 
+> >>> Anything can be backported to stable once we understand the issue. At
+> >>> the moment, we're just playing games moving stuff around and hope
+> >>> nothing else will break. That's not a sustainable way of maintaining
+> >>> this driver. At the moment, the only patch I'm inclined to propose until
+> >>> we get an actual interrupt handling flow from Synopsys is to mark this
+> >>> driver as "BROKEN".
+> >>
+> >> It feels like you're using this bug to hold designware hostage in a
+> >> broken kernel, and me along with them.  I don't have the documentation,
+> >> no one does, there's no way for me to give you want you want.  But I've
+> >> got hardware that doesn't work in the mainline kernel.
+> > 
+> > I take it as a personal offence that I'd be holding anything or anyone
+> > hostage. I think I have a long enough track record working with the
+> > Linux kernel not to take any of this nonsense. What's my interest in
+> > keeping anything in this sorry state? Think about it for a minute.
+> > 
+> > When I'm asking for documentation, I'm not asking you. I perfectly
+> > understood that you don't have any. We need Synopsys to step up and give
+> > us a simple description of what the MSI workflow is. Because no matter
+> > how you randomly mutate this code, it will still be broken until we get
+> > a clear answer from *Synopsys*.
+> > 
+> > Gustavo, here's one simple ask. Please reply to this email with a step
+> > by step, register by register description of how an MSI must be handled
+> > on this HW. We do need it, and we need it now.
 > 
-> If I read the code right cmd value should end up in ctrl->slot_ctrl properly from
-> pcie_enable_notification().
+> Hi Marc, I thought that I did respond to your question on Nov 8. However I will
+> repeat it and add some extra information to it now.
+> 
+> About the registers:
+> 
+> PCIE_MSI_INTR0_MASK
+> When an MSI is received for a masked interrupt, the corresponding status bit
+> gets set in the interrupt status register but the controller will not signal it.
+> As soon as the masked interrupt is unmasked and assuming the status bit is still
+> set the controller will signal it.
 
-Right. As I mentioned in my previous mail, I missed the fact that you are updating
-the ctrl->slot_ctrl with cmd value while in my test I did my update with the value
-returned by pcie_capability_read_word().
- 
-> However, I think we are missing check for PCI_EXP_SLTCTL_CCIE in
-> pciehp_isr().
+So this is *really* a mask.
 
-Ok.
- 
-> Here's an updated patch, can you try and see if it makes any difference?
+> PCIE_MSI_INTR0_ENABLE
+> Enables/disables every interrupt. When an MSI is received from a disabled
+> interrupt, no status bit gets set in MSI controller interrupt status register.
 
-I just tried this and it works. Thanks.
+And that's not a mask at all. This allows the interrupt to be simply
+lost. It is just a bit worrying that this is exactly what the DWC
+driver is using, and faces all kind of interrupt loss when
+enabling/disabling interrupts (which do have a mask/unmask semantic --
+yes, the language is confusing).
 
-See few comments below.
 
-> diff --git a/drivers/pci/hotplug/pciehp_hpc.c
-> b/drivers/pci/hotplug/pciehp_hpc.c
-> index 7dd443aea5a5..da2cbe892444 100644
-> --- a/drivers/pci/hotplug/pciehp_hpc.c
-> +++ b/drivers/pci/hotplug/pciehp_hpc.c
-> @@ -156,9 +156,9 @@ static void pcie_do_write_cmd(struct controller *ctrl,
-> u16 cmd,
->  	slot_ctrl |= (cmd & mask);
->  	ctrl->cmd_busy = 1;
->  	smp_mb();
-> +	ctrl->slot_ctrl = slot_ctrl;
+> 
+> About this new callbacks:
+> 
+> The dw_pci_bottom_mask() and dw_pci_bottom_unmask() callbacks were added on
+> Linux kernel v4.17 on PCI: dwc: Move MSI IRQs allocation to IRQ domains
+> hierarchical API patch [1] and based on what I've seen so far, before this patch
+> there were no interrupt masking been performed.
+> 
+> Based on the information provided, its very likely that I should use the
+> PCIE_MSI_INTR0_MASK register instead of PCIE_MSI_INTR0_ENABLE on the
+> dw_pci_bottom_mask() and dw_pci_bottom_unmask() callbacks. As soon as I return
+> from Linux plumbers conference, I will test the system using the
+> PCIE_MSI_INTR0_MASK register.
 
-Does it make more sense if we can move this before smp_mb()?. Also I am not
-sure updating the  ctrl->slot_ctrl before actually the hardware is programmed
-with that value will result in any other race conditions? TBH, I am not that familiar
-with this code and I leave that to you :)
+I'm at Plumbers as well, so feel free to grab me and we'll sort this
+out. We've wasted enough time on this broken driver.
 
 Thanks,
-Shameer
 
->  	pcie_capability_write_word(pdev, PCI_EXP_SLTCTL, slot_ctrl);
->  	ctrl->cmd_started = jiffies;
-> -	ctrl->slot_ctrl = slot_ctrl;
-> 
->  	/*
->  	 * Controllers with the Intel CF118 and similar errata advertise @@ -
-> 522,7 +522,7 @@ static irqreturn_t pciehp_isr(int irq, void *dev_id)
->  	 * in the Slot Control register (PCIe r4.0, sec 6.7.3.4).
->  	 */
->  	if (pdev->current_state == PCI_D3cold ||
-> -	    (!(ctrl->slot_ctrl & PCI_EXP_SLTCTL_HPIE) && !pciehp_poll_mode))
-> +	    (!(ctrl->slot_ctrl & (PCI_EXP_SLTCTL_HPIE | PCI_EXP_SLTCTL_CCIE))
-> +&& !pciehp_poll_mode))
->  		return IRQ_NONE;
-> 
->  	/*
+	M.
+
+-- 
+Jazz is not dead, it just smell funny.
