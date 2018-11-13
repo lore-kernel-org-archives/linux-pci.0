@@ -2,138 +2,149 @@ Return-Path: <SRS0=6VBI=NY=vger.kernel.org=linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-0.8 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
-	DKIM_VALID_AU,FREEMAIL_FORGED_FROMDOMAIN,FREEMAIL_FROM,
-	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_PASS autolearn=ham
+X-Spam-Status: No, score=-4.0 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+	INCLUDES_PATCH,MAILING_LIST_MULTI,SPF_PASS,URIBL_BLOCKED autolearn=ham
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 1FF1EC43441
-	for <linux-pci@archiver.kernel.org>; Tue, 13 Nov 2018 15:39:13 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 333ABC43441
+	for <linux-pci@archiver.kernel.org>; Tue, 13 Nov 2018 15:58:02 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id D297A21582
-	for <linux-pci@archiver.kernel.org>; Tue, 13 Nov 2018 15:39:12 +0000 (UTC)
-Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="qsQPpXPj"
-DMARC-Filter: OpenDMARC Filter v1.3.2 mail.kernel.org D297A21582
-Authentication-Results: mail.kernel.org; dmarc=fail (p=none dis=none) header.from=gmail.com
+	by mail.kernel.org (Postfix) with ESMTP id 03DBE2175B
+	for <linux-pci@archiver.kernel.org>; Tue, 13 Nov 2018 15:58:01 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.3.2 mail.kernel.org 03DBE2175B
+Authentication-Results: mail.kernel.org; dmarc=none (p=none dis=none) header.from=huawei.com
 Authentication-Results: mail.kernel.org; spf=none smtp.mailfrom=linux-pci-owner@vger.kernel.org
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S2387754AbeKNBht (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Tue, 13 Nov 2018 20:37:49 -0500
-Received: from mail-io1-f68.google.com ([209.85.166.68]:45432 "EHLO
-        mail-io1-f68.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726932AbeKNBht (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Tue, 13 Nov 2018 20:37:49 -0500
-Received: by mail-io1-f68.google.com with SMTP id w7so1528958iom.12;
-        Tue, 13 Nov 2018 07:39:11 -0800 (PST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20161025;
-        h=mime-version:references:in-reply-to:from:date:message-id:subject:to
-         :cc;
-        bh=jSIJ+oKbA1WotNsQCWWl1qO+2qp88o+N6SAZHL37ang=;
-        b=qsQPpXPjUXnbRphMNbROnbtE9gQi4UUn228kO/kkx0bY+irAtFmilzjHummMoTs6oj
-         DSDRonAziEwiO7Det4zBfHqG8AsE2pX4ZaAO0MV6qaQjImLCARdu1ExV0JzDdRRh59oU
-         usb0OX7ZQ5Wq9X/mPImhd58inZXEYEShngUIpYkevV4v95AYwG8khZRohPKiBPd2eD7D
-         ZbVZLE8AsAyOrUbrauDwrrgA8is9kOHggI1AFZ2jJ4IVzLx7LqT/zyAssS96eR8xDOSU
-         /y1m+/4tY+ovfkS39NCD0aLTJFldJncGypNJnfoEyzhHQm3rI/IXdj2uCOJEcwF28s7Y
-         TBOw==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20161025;
-        h=x-gm-message-state:mime-version:references:in-reply-to:from:date
-         :message-id:subject:to:cc;
-        bh=jSIJ+oKbA1WotNsQCWWl1qO+2qp88o+N6SAZHL37ang=;
-        b=as+Nz06lMrqieT7kUQNXukMNf4GzIEfvMF6tGVgRFlNFprURdVqrSHsLnwwnULQ8Ps
-         VfPg/EEtaNVmRNKTxPSqXxR3hCCG6uO6yIHytzj0ml5ht4tZg2ogqjR9KJ67kSOJ4vsE
-         6XwnmT0M/vQ/jmDRnZ+b3sye2PLmvYYnVF9PU+mppjpMsCkMBDutSKwJZGzL7Tu5KWtV
-         Za+HCfY2Z6G0UG4X1qZfr323I54O/kimwP9dEF7pCn0xhhO/A1sPkDRh49dw65Al+IA0
-         RPNQbjczJ2zY72AaHVGWz8Z81vH3X54p7EE/RfIHZuy8jOJslcm8VFckg2005QjWmWyn
-         hJRQ==
-X-Gm-Message-State: AGRZ1gIdgypPTU735dTTlhWwFScPEdtHCYYzEONyqMoQb5/Xd4QBr++Z
-        IKKn+nuno/jLrDty/oY6BvatnY/jCn6jKxqZ0Ws=
-X-Google-Smtp-Source: AJdET5cPF4hn5erMbhrxRplgJ0U/+CxA+U/9a/+PDCd9eWraM44pGaKcFABuoj366kqxVRnCGQroxW9DCXw6OmtWg9U=
-X-Received: by 2002:a6b:d117:: with SMTP id l23-v6mr4401302iob.146.1542123550491;
- Tue, 13 Nov 2018 07:39:10 -0800 (PST)
+        id S2387992AbeKNB4l convert rfc822-to-8bit (ORCPT
+        <rfc822;linux-pci@archiver.kernel.org>);
+        Tue, 13 Nov 2018 20:56:41 -0500
+Received: from lhrrgout.huawei.com ([185.176.76.210]:32757 "EHLO huawei.com"
+        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+        id S1731811AbeKNB4l (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Tue, 13 Nov 2018 20:56:41 -0500
+Received: from LHREML710-CAH.china.huawei.com (unknown [172.18.7.107])
+        by Forcepoint Email with ESMTP id 9CB011FFFE0DB;
+        Tue, 13 Nov 2018 15:57:56 +0000 (GMT)
+Received: from FRAEMA702-CHM.china.huawei.com (10.206.14.51) by
+ LHREML710-CAH.china.huawei.com (10.201.108.33) with Microsoft SMTP Server
+ (TLS) id 14.3.408.0; Tue, 13 Nov 2018 15:57:58 +0000
+Received: from FRAEML521-MBX.china.huawei.com ([169.254.1.76]) by
+ FRAEMA702-CHM.china.huawei.com ([169.254.2.148]) with mapi id 14.03.0415.000;
+ Tue, 13 Nov 2018 16:57:48 +0100
+From:   Shameerali Kolothum Thodi <shameerali.kolothum.thodi@huawei.com>
+To:     "mika.westerberg@linux.intel.com" <mika.westerberg@linux.intel.com>
+CC:     "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+        "Wangzhou (B)" <wangzhou1@hisilicon.com>,
+        Linuxarm <linuxarm@huawei.com>, Lukas Wunner <lukas@wunner.de>
+Subject: RE: Qemu Guest kernel 4.20-rc1 PCIe hotplug issue
+Thread-Topic: Qemu Guest kernel 4.20-rc1 PCIe hotplug issue
+Thread-Index: AdR7RP5EYT33x2cVTRiE4AudJSgcHP///SQA///uY1CAABsPAP//6WQQgAA6joD//+e+AA==
+Date:   Tue, 13 Nov 2018 15:57:47 +0000
+Message-ID: <5FC3163CFD30C246ABAA99954A238FA8387DF7B5@FRAEML521-MBX.china.huawei.com>
+References: <5FC3163CFD30C246ABAA99954A238FA8387DD344@FRAEML521-MBX.china.huawei.com>
+ <20181113122522.GA2500@lahna.fi.intel.com>
+ <5FC3163CFD30C246ABAA99954A238FA8387DF43F@FRAEML521-MBX.china.huawei.com>
+ <20181113125910.GB2500@lahna.fi.intel.com>
+ <5FC3163CFD30C246ABAA99954A238FA8387DF51F@FRAEML521-MBX.china.huawei.com>
+ <20181113150749.GC2500@lahna.fi.intel.com>
+In-Reply-To: <20181113150749.GC2500@lahna.fi.intel.com>
+Accept-Language: en-GB, en-US
+Content-Language: en-US
+X-MS-Has-Attach: 
+X-MS-TNEF-Correlator: 
+x-originating-ip: [10.202.227.237]
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 8BIT
 MIME-Version: 1.0
-References: <20181112160628.86620-1-mika.westerberg@linux.intel.com>
- <20181112160628.86620-5-mika.westerberg@linux.intel.com> <CA+CmpXvZJFk=kYvZybgTtqDWBVP_jSE37tdkQbyGA8U9WOrkoQ@mail.gmail.com>
- <20181113105558.GR2500@lahna.fi.intel.com> <CA+CmpXtre+A-sNT0XBWfdkuq9xJ+j34EGZ0nEpahJCSe3Kvg9A@mail.gmail.com>
- <20181113114020.GV2500@lahna.fi.intel.com> <CA+CmpXt1cfqjz94=WsggKpNCUw3761-cewa_HTa0ETcYK7o+Hw@mail.gmail.com>
- <20181113152038.GD2500@lahna.fi.intel.com>
-In-Reply-To: <20181113152038.GD2500@lahna.fi.intel.com>
-From:   Yehezkel Bernat <yehezkelshb@gmail.com>
-Date:   Tue, 13 Nov 2018 17:38:53 +0200
-Message-ID: <CA+CmpXteN1PJEHMV8rvfeBXK6Eb4z6BgZwa8Ojavi1y9pKN-jA@mail.gmail.com>
-Subject: Re: [PATCH 4/4] thunderbolt: Export IOMMU based DMA protection
- support to userspace
-To:     Mika Westerberg <mika.westerberg@linux.intel.com>
-Cc:     iommu@lists.linux-foundation.org, joro@8bytes.org,
-        David Woodhouse <dwmw2@infradead.org>,
-        baolu.lu@linux.intel.com, ashok.raj@intel.com,
-        Bjorn Helgaas <bhelgaas@google.com>, rjw@rjwysocki.net,
-        jacob.jun.pan@intel.com, Andreas Noever <andreas.noever@gmail.com>,
-        michael.jamet@intel.com, lukas@wunner.de,
-        Christian Kellner <ckellner@redhat.com>,
-        Mario Limonciello <Mario.Limonciello@dell.com>,
-        Anthony Wong <anthony.wong@canonical.com>,
-        linux-acpi@vger.kernel.org, linux-pci@vger.kernel.org,
-        LKML <linux-kernel@vger.kernel.org>
-Content-Type: text/plain; charset="UTF-8"
+X-CFilter-Loop: Reflected
 Sender: linux-pci-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-On Tue, Nov 13, 2018 at 5:20 PM Mika Westerberg
-<mika.westerberg@linux.intel.com> wrote:
->
-> On Tue, Nov 13, 2018 at 04:42:58PM +0200, Yehezkel Bernat wrote:
-> > On Tue, Nov 13, 2018 at 1:40 PM Mika Westerberg
-> > <mika.westerberg@linux.intel.com> wrote:
-> > >
-> > > On Tue, Nov 13, 2018 at 01:13:31PM +0200, Yehezkel Bernat wrote:
-> > > > On Tue, Nov 13, 2018 at 12:56 PM Mika Westerberg
-> > > > <mika.westerberg@linux.intel.com> wrote:
-> > > > >
-> > > > > > Just one point:
-> > > > > > Have you considered the option to add this property per (TBT?) device?
-> > > > >
-> > > > > No. ;-)
-> > > > >
-> > > > > You mean that one device uses security levels and another IOMMU? I don't
-> > > > > think it is possible without having some sort of table in the IOMMU
-> > > > > driver telling which devices it needs identity map and which not. Also
-> > > > > not sure what would be the benefit?
-> > > >
-> > > > For performance, of course. If some devices are considered safe (maybe a list
-> > > > communicated by platform firmware), the kernel may decide to configure them to
-> > > > passthrough the IOMMU (I think I remember there is such an option, but maybe I'm
-> > > > wrong.)
-> > >
-> > > At least I'm not aware of such an option. Windows for example enables
-> > > IOMMU for everything and I think macOS does the same. In Linux (with
-> > > these patches) we put all internal devices already passthrough mode so
-> > > things like internal graphics should not be affected. eGPUs are
-> > > different thing, though.
+
+
+> -----Original Message-----
+> From: mika.westerberg@linux.intel.com
+> [mailto:mika.westerberg@linux.intel.com]
+> Sent: 13 November 2018 15:08
+> To: Shameerali Kolothum Thodi <shameerali.kolothum.thodi@huawei.com>
+> Cc: linux-pci@vger.kernel.org; linux-kernel@vger.kernel.org; Wangzhou (B)
+> <wangzhou1@hisilicon.com>; Linuxarm <linuxarm@huawei.com>; Lukas
+> Wunner <lukas@wunner.de>
+> Subject: Re: Qemu Guest kernel 4.20-rc1 PCIe hotplug issue
+
+[...]
+ 
+> > Right. As I mentioned in my previous mail, I missed the fact that you are
+> updating
+> > the ctrl->slot_ctrl with cmd value while in my test I did my update with the
+> value
+> > returned by pcie_capability_read_word().
+> 
+> OK, I see.
+> 
+> > > However, I think we are missing check for PCI_EXP_SLTCTL_CCIE in
+> > > pciehp_isr().
 > >
-> > So your point here is "currently we do the IOMMU decisions system-wide; we can
-> > always add a per-device attribute if needed"?
->
-> Well, let me elaborate a bit :) I think it is possible to put certain
-> devices into IOMMU passthrough mode even if they are "external" but I'm
-> not that familiar with the guts of Intel IOMMU (Baolu or Ashok are the
-> experts). Assuming it is possible we could have a table or similar in
-> the kernel that can be used to identify devices that are allowed to be
-> in passthrough mode.
->
-> I'm not sure if it can be per-device sysfs attribute because at the time
-> the PCIe device is enumerated it is already put to its IOMMU group.
+> > Ok.
+> >
+> > > Here's an updated patch, can you try and see if it makes any difference?
+> >
+> > I just tried this and it works. Thanks.
+> 
+> Can you still check that the previous one (without _CCIE check) works?
 
-Good point. But I thought about per-TBT-device decision. If the platform is
-configured for IOMMU+"user" security level, while approving the device the user
-may want to set also in which IOMMU group to put all the PCIe devices connected
-to it. The same goes if kernel is supposed to auto-approve such devices based on
-an internal table. The point is that we can think on a configuration where the
-devices aren't tunneled yet and the decision about IOMMU can still be changed.
+Yes, it works for me without _CCIE.
 
-As you mentioned this isn't the common configuration anyway, so it probably
-doesn't worth all this hassle.
+> > See few comments below.
+> >
+> > > diff --git a/drivers/pci/hotplug/pciehp_hpc.c
+> > > b/drivers/pci/hotplug/pciehp_hpc.c
+> > > index 7dd443aea5a5..da2cbe892444 100644
+> > > --- a/drivers/pci/hotplug/pciehp_hpc.c
+> > > +++ b/drivers/pci/hotplug/pciehp_hpc.c
+> > > @@ -156,9 +156,9 @@ static void pcie_do_write_cmd(struct controller
+> *ctrl,
+> > > u16 cmd,
+> > >  	slot_ctrl |= (cmd & mask);
+> > >  	ctrl->cmd_busy = 1;
+> > >  	smp_mb();
+> > > +	ctrl->slot_ctrl = slot_ctrl;
+> >
+> > Does it make more sense if we can move this before smp_mb()?. Also I am
+> not
+> > sure updating the  ctrl->slot_ctrl before actually the hardware is
+> programmed
+> > with that value will result in any other race conditions? TBH, I am not that
+> familiar
+> > with this code and I leave that to you :)
+> 
+> Both are good questions :)
+> 
+> For the moving ctrl->slot_ctrl before pcie_capability_write_word(), I
+> think we should be fine and this is actually more correct because if we
+> are unmasking interrupts they may trigger immediately making
+> pciehp_isr() find wrong values in ctrl->slot_ctrl (as can be seen in the
+> issue you reported).
+
+Ok. I was more concerned about an unsolicited event triggering the _isr
+while we are modifying the ctrl->slot_ctrl. But that's ok I think as the _isr
+reads the hw status anyway. 
+
+> The smb_mb() thing is not that clear (at least to me) because it is used
+> in two places in the driver and both seem to be making write to
+> ctrl->cmd_busy visible to other CPUs but I don't see where we deal with
+> the read part.
+> 
+> I may be missing something, though.
+
+I think the read part is in wait_event_timeout() which evaluates the condition.
+The wake_up is called from the pciehp_isr().  Since the flag is being updated
+in both process level and interrupt handler context, smp_mb() is used. I think
+the same now applies to  ctrl->slot_ctrl now as this being used in process
+context and interrupt context as well.
+
+Thanks,
+Shameer
