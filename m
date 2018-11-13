@@ -2,117 +2,118 @@ Return-Path: <SRS0=6VBI=NY=vger.kernel.org=linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-0.8 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
-	DKIM_VALID_AU,FREEMAIL_FORGED_FROMDOMAIN,FREEMAIL_FROM,
-	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_PASS,URIBL_BLOCKED
-	autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-3.2 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,MAILING_LIST_MULTI,SPF_PASS,USER_AGENT_MUTT
+	autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 8D99AC43441
-	for <linux-pci@archiver.kernel.org>; Tue, 13 Nov 2018 14:43:17 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 9E3C4C43441
+	for <linux-pci@archiver.kernel.org>; Tue, 13 Nov 2018 14:47:54 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 549C7223DD
-	for <linux-pci@archiver.kernel.org>; Tue, 13 Nov 2018 14:43:17 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 65F89223D0
+	for <linux-pci@archiver.kernel.org>; Tue, 13 Nov 2018 14:47:54 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="XP9jrKkJ"
-DMARC-Filter: OpenDMARC Filter v1.3.2 mail.kernel.org 549C7223DD
-Authentication-Results: mail.kernel.org; dmarc=fail (p=none dis=none) header.from=gmail.com
+	dkim=pass (1024-bit key) header.d=kernel.org header.i=@kernel.org header.b="CDYU1TXE"
+DMARC-Filter: OpenDMARC Filter v1.3.2 mail.kernel.org 65F89223D0
+Authentication-Results: mail.kernel.org; dmarc=fail (p=none dis=none) header.from=kernel.org
 Authentication-Results: mail.kernel.org; spf=none smtp.mailfrom=linux-pci-owner@vger.kernel.org
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S2387599AbeKNAlm (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Tue, 13 Nov 2018 19:41:42 -0500
-Received: from mail-it1-f193.google.com ([209.85.166.193]:51552 "EHLO
-        mail-it1-f193.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1732401AbeKNAlm (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Tue, 13 Nov 2018 19:41:42 -0500
-Received: by mail-it1-f193.google.com with SMTP id m34-v6so18501887iti.1;
-        Tue, 13 Nov 2018 06:43:15 -0800 (PST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20161025;
-        h=mime-version:references:in-reply-to:from:date:message-id:subject:to
-         :cc;
-        bh=RV4rqa3fvX2pFeaOjQTSbx+QYwt27qebk0roPH5fBLA=;
-        b=XP9jrKkJExoPBGkUSCClFsXZlBniO/+vA2A+YMPBkQ+s5pP+DtHzVZ7i60Zr2zveqq
-         ZEaPcNCDTeXSNT6FkEy6fsbVey4bYqdfifkhldVHcEqrsARBNazDxUgHsI2GovGMTMnp
-         JtlcxAuIPcb8u7k8mNB/x+De4PaQnclAIKNl5PGJ1bJTXRQf9K2sQVoQ49Se6h35+m+x
-         DPmQ/TRVemtlLtbR7Tu05+MOKwRPQuiq+E5o+sEr/6B97xZItK40fbg4Jm83Vc4Qcbpr
-         wmFP8xbux54qhyLAa2xJWY7CN/hfhV6MyYZukDb1lsyfPBtpLXcFryfBj8PmxQ2PAuR0
-         9tuQ==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20161025;
-        h=x-gm-message-state:mime-version:references:in-reply-to:from:date
-         :message-id:subject:to:cc;
-        bh=RV4rqa3fvX2pFeaOjQTSbx+QYwt27qebk0roPH5fBLA=;
-        b=YZCKFFrwyt5iOZc9Rql639fT5rfwAUaFOt+iqsKwdUKa131QGnUbuz2MQhctqHl1nJ
-         Ov82Jw/vLrrooue3K5W7MdUGTWt6fvFnZ7kppJy8jrBuaB8P6DEp7BRdyH/man/D5nhF
-         HT6V6GvByOPp0k2YC03tfVj8477qXTRbZKuoqEymVWxW14I9wPRHEF3yPCkbq6or1uW3
-         IV6/1jpQzJGSrmZ2uzsFuI/2P+amxVKcTNuQ638j8zr65999kjDJSySsI3/qpleF5Gbj
-         HsLAEc6cKdVxwRJ7FwkJInAWbQ2BQiIVRpEtP9dhWfsnMEAZTaRv8x4ubziS46lBf6mJ
-         i7jQ==
-X-Gm-Message-State: AGRZ1gIQEkinonZbl8P9GqZV+Ff+HyIVUvuK0dvfIVImTnfDOG6f5+os
-        dABQGitSySOtq8NggV0L1vmG7bpgvqL2aQCu4fM=
-X-Google-Smtp-Source: AJdET5eHM0rc/kZtBUY98kEgnk+gTjAdfM83l7aCNMItL7CT3/FHzemmQtNBnHtcNnZji26XTq3Fj/Fi3F/1H7LgC/s=
-X-Received: by 2002:a24:a0cb:: with SMTP id o194mr3486527ite.115.1542120194996;
- Tue, 13 Nov 2018 06:43:14 -0800 (PST)
+        id S1732521AbeKNAqP (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Tue, 13 Nov 2018 19:46:15 -0500
+Received: from mail.kernel.org ([198.145.29.99]:34540 "EHLO mail.kernel.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S2387892AbeKNAqP (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Tue, 13 Nov 2018 19:46:15 -0500
+Received: from localhost (unknown [64.114.255.114])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+        (No client certificate requested)
+        by mail.kernel.org (Postfix) with ESMTPSA id A3BD8223C8;
+        Tue, 13 Nov 2018 14:47:46 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+        s=default; t=1542120466;
+        bh=G/SQTqC0KrL2++i5H59g/QIk1eK7oFtlXMI/deBiCFI=;
+        h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
+        b=CDYU1TXEyhpSm8ow2r10wDZjMs5xaa0ct5oVE5LyR6/FuquJ3U9eWsanRRFrRi5+z
+         6ezXFFJjKso2GdfuC7bQGVIXh01/380hS6CFtLYkY9oeU3HIEpKMquV0xBOcXp/hOO
+         sQ9yy1LX/2lHaI/bj/8QAHCJrx7R5COvLV44DC/Q=
+Date:   Tue, 13 Nov 2018 08:47:46 -0600
+From:   Bjorn Helgaas <helgaas@kernel.org>
+To:     Borislav Petkov <bp@alien8.de>
+Cc:     Ingo Molnar <mingo@kernel.org>,
+        Jonathan Cameron <Jonathan.Cameron@huawei.com>,
+        Linus Torvalds <torvalds@linux-foundation.org>,
+        linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
+        Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
+        Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+        Bart Van Assche <bvanassche@acm.org>,
+        Jens Axboe <axboe@kernel.dk>,
+        Thomas Gleixner <tglx@linutronix.de>,
+        Peter Zijlstra <a.p.zijlstra@chello.nl>,
+        Tom Lendacky <thomas.lendacky@amd.com>,
+        Martin =?iso-8859-1?Q?Hundeb=F8ll?= <martin@geanix.com>,
+        "Rafael J. Wysocki" <rjw@rjwysocki.net>,
+        Len Brown <lenb@kernel.org>, linux-acpi@vger.kernel.org
+Subject: Re: [GIT PULL] PCI changes for v4.20
+Message-ID: <20181113144746.GA69034@google.com>
+References: <20181023173934.GA14918@bhelgaas-glaptop.roam.corp.google.com>
+ <20181113071712.GA2353@gmail.com>
+ <20181113102004.GC10502@zn.tnic>
 MIME-Version: 1.0
-References: <20181112160628.86620-1-mika.westerberg@linux.intel.com>
- <20181112160628.86620-5-mika.westerberg@linux.intel.com> <CA+CmpXvZJFk=kYvZybgTtqDWBVP_jSE37tdkQbyGA8U9WOrkoQ@mail.gmail.com>
- <20181113105558.GR2500@lahna.fi.intel.com> <CA+CmpXtre+A-sNT0XBWfdkuq9xJ+j34EGZ0nEpahJCSe3Kvg9A@mail.gmail.com>
- <20181113114020.GV2500@lahna.fi.intel.com>
-In-Reply-To: <20181113114020.GV2500@lahna.fi.intel.com>
-From:   Yehezkel Bernat <yehezkelshb@gmail.com>
-Date:   Tue, 13 Nov 2018 16:42:58 +0200
-Message-ID: <CA+CmpXt1cfqjz94=WsggKpNCUw3761-cewa_HTa0ETcYK7o+Hw@mail.gmail.com>
-Subject: Re: [PATCH 4/4] thunderbolt: Export IOMMU based DMA protection
- support to userspace
-To:     Mika Westerberg <mika.westerberg@linux.intel.com>
-Cc:     iommu@lists.linux-foundation.org, joro@8bytes.org,
-        David Woodhouse <dwmw2@infradead.org>,
-        baolu.lu@linux.intel.com, ashok.raj@intel.com,
-        Bjorn Helgaas <bhelgaas@google.com>, rjw@rjwysocki.net,
-        jacob.jun.pan@intel.com, Andreas Noever <andreas.noever@gmail.com>,
-        michael.jamet@intel.com, lukas@wunner.de,
-        Christian Kellner <ckellner@redhat.com>,
-        Mario Limonciello <Mario.Limonciello@dell.com>,
-        Anthony Wong <anthony.wong@canonical.com>,
-        linux-acpi@vger.kernel.org, linux-pci@vger.kernel.org,
-        LKML <linux-kernel@vger.kernel.org>
-Content-Type: text/plain; charset="UTF-8"
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20181113102004.GC10502@zn.tnic>
+User-Agent: Mutt/1.10.1 (2018-07-13)
 Sender: linux-pci-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-On Tue, Nov 13, 2018 at 1:40 PM Mika Westerberg
-<mika.westerberg@linux.intel.com> wrote:
->
-> On Tue, Nov 13, 2018 at 01:13:31PM +0200, Yehezkel Bernat wrote:
-> > On Tue, Nov 13, 2018 at 12:56 PM Mika Westerberg
-> > <mika.westerberg@linux.intel.com> wrote:
-> > >
-> > > > Just one point:
-> > > > Have you considered the option to add this property per (TBT?) device?
-> > >
-> > > No. ;-)
-> > >
-> > > You mean that one device uses security levels and another IOMMU? I don't
-> > > think it is possible without having some sort of table in the IOMMU
-> > > driver telling which devices it needs identity map and which not. Also
-> > > not sure what would be the benefit?
-> >
-> > For performance, of course. If some devices are considered safe (maybe a list
-> > communicated by platform firmware), the kernel may decide to configure them to
-> > passthrough the IOMMU (I think I remember there is such an option, but maybe I'm
-> > wrong.)
->
-> At least I'm not aware of such an option. Windows for example enables
-> IOMMU for everything and I think macOS does the same. In Linux (with
-> these patches) we put all internal devices already passthrough mode so
-> things like internal graphics should not be affected. eGPUs are
-> different thing, though.
+[+cc Martin, Rafael, Len, linux-acpi]
 
-So your point here is "currently we do the IOMMU decisions system-wide; we can
-always add a per-device attribute if needed"?
-Fair enough.
+On Tue, Nov 13, 2018 at 11:20:04AM +0100, Borislav Petkov wrote:
+> On Tue, Nov 13, 2018 at 08:17:12AM +0100, Ingo Molnar wrote:
+> > 
+> > * Bjorn Helgaas <helgaas@kernel.org> wrote:
+> > 
+> > > PCI changes:
+> > > 
+> > >   - Pay attention to device-specific _PXM node values (Jonathan Cameron)
+> > 
+> > There's a new boot regression, my AMD ThreadRipper system (MSI X399 SLI 
+> > PLUS (MS-7B09)) hangs during early bootup, and I have bisected it down to 
+> > this commit:
+> > 
+> >   bad7dcd94f39: ACPI/PCI: Pay attention to device-specific _PXM node values
+> > 
+> > Reverting it solves the hang.
+> > 
+> > Unfortunately there's no console output when it hangs, even with 
+> > earlyprintk. It just hangs after the "loading initrd" line.
+> > 
+> > Config is an Ubuntu-ish config with PROVE_LOCKING=y and a few other debug 
+> > options.
+> > 
+> > All my other testsystems boot fine with similar configs, so it's probably 
+> > something specific to this system.
 
-So for this patch,
-Reviewed-by: Yehezkel Bernat <YehezkelShB@gmail.com>
+Martin reported the same thing [1] (unfortunately the archive didn't
+capture Martin's original emails, I think because they were multi-part
+messages with attachments).
+
+Looks like Martin might have a similar system:
+
+  DMI: To Be Filled By O.E.M. To Be Filled By O.E.M./X399 Taichi, BIOS P3.30 08/14/2018
+  smpboot: CPU0: AMD Ryzen Threadripper 2950X 16-Core Processor (family: 0x17, model: 0x8, stepping: 0x2)
+
+Given how painful this is to debug, I queued up a revert on my
+for-linus branch until we figure out what sanity checks are needed to
+make the original patch safe.
+
+I would expect proximity information to be basically just a hint for
+optimization, not a functional requirement, so it would be really
+interesting to figure out why this causes such a catastrophic failure.
+Maybe there's a way to improve that path as well so it would be more
+robust or at least more debuggable.
+
+Bjorn
+
+[1] https://lore.kernel.org/linux-pci/20180912152140.3676-2-Jonathan.Cameron@huawei.com
