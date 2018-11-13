@@ -2,74 +2,162 @@ Return-Path: <SRS0=6VBI=NY=vger.kernel.org=linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-2.5 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	MAILING_LIST_MULTI,SPF_PASS,USER_AGENT_MUTT autolearn=ham autolearn_force=no
+X-Spam-Status: No, score=-12.0 required=3.0
+	tests=HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,
+	MENTIONS_GIT_HOSTING,SIGNED_OFF_BY,SPF_PASS autolearn=ham autolearn_force=no
 	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 38850C43441
-	for <linux-pci@archiver.kernel.org>; Tue, 13 Nov 2018 08:54:28 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id AEC4AC43441
+	for <linux-pci@archiver.kernel.org>; Tue, 13 Nov 2018 09:24:54 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 06C442251A
-	for <linux-pci@archiver.kernel.org>; Tue, 13 Nov 2018 08:54:28 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.3.2 mail.kernel.org 06C442251A
-Authentication-Results: mail.kernel.org; dmarc=fail (p=none dis=none) header.from=8bytes.org
+	by mail.kernel.org (Postfix) with ESMTP id 7C5B722510
+	for <linux-pci@archiver.kernel.org>; Tue, 13 Nov 2018 09:24:54 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.3.2 mail.kernel.org 7C5B722510
+Authentication-Results: mail.kernel.org; dmarc=none (p=none dis=none) header.from=huawei.com
 Authentication-Results: mail.kernel.org; spf=none smtp.mailfrom=linux-pci-owner@vger.kernel.org
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727122AbeKMSvc (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Tue, 13 Nov 2018 13:51:32 -0500
-Received: from 8bytes.org ([81.169.241.247]:52308 "EHLO theia.8bytes.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1726245AbeKMSvc (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Tue, 13 Nov 2018 13:51:32 -0500
-Received: by theia.8bytes.org (Postfix, from userid 1000)
-        id EE63536B; Tue, 13 Nov 2018 09:54:24 +0100 (CET)
-Date:   Tue, 13 Nov 2018 09:54:24 +0100
-From:   Joerg Roedel <joro@8bytes.org>
-To:     Mika Westerberg <mika.westerberg@linux.intel.com>
-Cc:     iommu@lists.linux-foundation.org,
-        David Woodhouse <dwmw2@infradead.org>,
-        Lu Baolu <baolu.lu@linux.intel.com>,
-        Ashok Raj <ashok.raj@intel.com>,
-        Bjorn Helgaas <bhelgaas@google.com>,
-        "Rafael J. Wysocki" <rjw@rjwysocki.net>,
-        Jacob jun Pan <jacob.jun.pan@intel.com>,
-        Andreas Noever <andreas.noever@gmail.com>,
-        Michael Jamet <michael.jamet@intel.com>,
-        Yehezkel Bernat <YehezkelShB@gmail.com>,
-        Lukas Wunner <lukas@wunner.de>,
-        Christian Kellner <ckellner@redhat.com>,
-        Mario.Limonciello@dell.com,
-        Anthony Wong <anthony.wong@canonical.com>,
-        linux-acpi@vger.kernel.org, linux-pci@vger.kernel.org,
-        linux-kernel@vger.kernel.org
-Subject: Re: [PATCH 0/4] PCI / iommu / thunderbolt: IOMMU based DMA protection
-Message-ID: <20181113085424.GC25808@8bytes.org>
-References: <20181112160628.86620-1-mika.westerberg@linux.intel.com>
+        id S1731001AbeKMTWF convert rfc822-to-8bit (ORCPT
+        <rfc822;linux-pci@archiver.kernel.org>);
+        Tue, 13 Nov 2018 14:22:05 -0500
+Received: from szxga05-in.huawei.com ([45.249.212.191]:14650 "EHLO huawei.com"
+        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+        id S1727530AbeKMTWF (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Tue, 13 Nov 2018 14:22:05 -0500
+Received: from DGGEMS401-HUB.china.huawei.com (unknown [172.30.72.59])
+        by Forcepoint Email with ESMTP id 512BCB7AA5DF4;
+        Tue, 13 Nov 2018 17:24:49 +0800 (CST)
+Received: from localhost (10.202.226.46) by DGGEMS401-HUB.china.huawei.com
+ (10.3.19.201) with Microsoft SMTP Server id 14.3.408.0; Tue, 13 Nov 2018
+ 17:24:44 +0800
+Date:   Tue, 13 Nov 2018 09:24:35 +0000
+From:   Jonathan Cameron <jonathan.cameron@huawei.com>
+To:     Martin =?ISO-8859-1?Q?Hundeb=F8ll?= <martin@geanix.com>
+CC:     <bhelgaas@google.com>, <lorenzo.pieralisi@arm.com>,
+        <linux-pci@vger.kernel.org>, <linuxarm@huawei.com>,
+        <linux-acpi@vger.kernel.org>
+Subject: Re: [PATCH 1/1] pci: Pick up the acpi numa node value if it is
+ specified at the device level.
+Message-ID: <20181113092435.00004466@huawei.com>
+In-Reply-To: <e4bd3423-ae2a-262c-1391-f9741ac4fdd0@geanix.com>
+References: <20180912152140.3676-1-Jonathan.Cameron@huawei.com>
+        <20180912152140.3676-2-Jonathan.Cameron@huawei.com>
+        <e4bd3423-ae2a-262c-1391-f9741ac4fdd0@geanix.com>
+Organization: Huawei
+X-Mailer: Claws Mail 3.16.0 (GTK+ 2.24.32; i686-w64-mingw32)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20181112160628.86620-1-mika.westerberg@linux.intel.com>
-User-Agent: Mutt/1.9.4 (2018-02-28)
+Content-Type: text/plain; charset="ISO-8859-1"
+Content-Transfer-Encoding: 8BIT
+X-Originating-IP: [10.202.226.46]
+X-CFilter-Loop: Reflected
 Sender: linux-pci-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-On Mon, Nov 12, 2018 at 07:06:24PM +0300, Mika Westerberg wrote:
-> Lu Baolu (1):
->   iommu/vt-d: Force IOMMU on for platform opt in hint
+On Mon, 12 Nov 2018 20:40:35 +0100
+Martin Hundebøll <martin@geanix.com> wrote:
+
+> Hi Jonathan,
 > 
-> Mika Westerberg (3):
->   PCI / ACPI: Identify external PCI devices
->   iommu/vt-d: Do not enable ATS for external devices
->   thunderbolt: Export IOMMU based DMA protection support to userspace
+> I'm afraid this change made my system unbootable :(
+Hi Martin,
 
-Looks good to me. Which tree should go this trough? In case its not the
-IOMMU tree, for the iommu-parts:
+Thanks for the report!
+> 
+> Testing both v4.20-rc1 and v4.20-rc2 resulting in nothing but a black 
+> screen, with no sign of life from either the keyboard or the network.
+> 
+> Bisecting changes from v4.19 led me to this commit, and the system boots 
+> again with the change reverted.
+> 
+> I know little about ACPI and PCI, so please tell the kind of debug/log 
+> you need.
+The ACPI DSDT would be where I would start.  Please send the output of
+$cat /sys/firmware/acpi/tables/DSDT > DSDT.asl
+(under whatever boots for you)
 
-	Acked-by: Joerg Roedel <jroedel@suse.de>
-	Reviewed-by: Joerg Roedel <jroedel@suse.de>
+If you want to look further yourself, you'll need to disassemble this using
+the iASL compiler.  That is usually in a package called something like
+acpica-tools or can be built from source from 
+
+https://github.com/acpica/acpica
+
+iasl -d DSDT.asl
+
+This should generate a plain text file called DSDL.dsl.
+
+Send us that and hopefully it'll be obvious what is wrong!
+Given we haven't had lots of reports, I'm going to guess there is something
+unusual in the table, but we'll see.
 
 Thanks,
 
-	Joerg
+Jonathan
+
+> 
+> Thanks,
+> Martin
+> 
+> On 12/09/2018 17.21, Jonathan Cameron wrote:
+> > The ACPI specification allows you to provide _PXM entries for devices based
+> > on their location on a particular bus.  Let us use that if it is provided
+> > rather than just assuming it makes sense to put the device into the proximity
+> > domain of the root.
+> > 
+> > An example DSDT entry that will supply this is:
+> > 
+> >    Device (PCI2)
+> >    {
+> >      Name (_HID, "PNP0A08") // PCI Express Root Bridge
+> >      Name (_CID, "PNP0A03") // Compatible PCI Root Bridge
+> >      Name(_SEG, 2) // Segment of this Root complex
+> >      Name(_BBN, 0xF8) // Base Bus Number
+> >      Name(_CCA, 1)
+> >      Method (_PXM, 0, NotSerialized) {
+> >        Return(0x00)
+> >      }
+> > 
+> > ...
+> >      Device (BRI0) {
+> >        Name (_HID, "19E51610")
+> >        Name (_ADR, 0)
+> >        Name (_BBN, 0xF9)
+> >        Device (CAR0) {
+> >          Name (_HID, "97109912")
+> >          Name (_ADR, 0)
+> >          Method (_PXM, 0, NotSerialized) {
+> >            Return(0x02)
+> >          }
+> >        }
+> >      }
+> >    }
+> > 
+> > Signed-off-by: Jonathan Cameron <Jonathan.Cameron@huawei.com>
+> > ---
+> >   drivers/pci/pci-acpi.c | 5 +++++
+> >   1 file changed, 5 insertions(+)
+> > 
+> > diff --git a/drivers/pci/pci-acpi.c b/drivers/pci/pci-acpi.c
+> > index 738e3546abb1..f2f5f0ddd60e 100644
+> > --- a/drivers/pci/pci-acpi.c
+> > +++ b/drivers/pci/pci-acpi.c
+> > @@ -753,10 +753,15 @@ static void pci_acpi_setup(struct device *dev)
+> >   {
+> >   	struct pci_dev *pci_dev = to_pci_dev(dev);
+> >   	struct acpi_device *adev = ACPI_COMPANION(dev);
+> > +	int node;
+> >   
+> >   	if (!adev)
+> >   		return;
+> >   
+> > +	node = acpi_get_node(adev->handle);
+> > +	if (node != NUMA_NO_NODE)
+> > +		set_dev_node(dev, node);
+> > +	
+> >   	pci_acpi_optimize_delay(pci_dev, adev->handle);
+> >   
+> >   	pci_acpi_add_pm_notifier(adev, pci_dev);
+> >  
+> 
+
+
