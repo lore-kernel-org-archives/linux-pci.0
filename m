@@ -2,88 +2,292 @@ Return-Path: <SRS0=Q3Ib=NZ=vger.kernel.org=linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-8.2 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,INCLUDES_PULL_REQUEST,MAILING_LIST_MULTI,SPF_PASS,
-	USER_AGENT_MUTT autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-12.0 required=3.0
+	tests=HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,
+	MENTIONS_GIT_HOSTING,SIGNED_OFF_BY,SPF_PASS,URIBL_BLOCKED autolearn=ham
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 4E024C07E85
-	for <linux-pci@archiver.kernel.org>; Wed, 14 Nov 2018 06:20:22 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 4470DC43441
+	for <linux-pci@archiver.kernel.org>; Wed, 14 Nov 2018 08:57:49 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id A253622360
-	for <linux-pci@archiver.kernel.org>; Wed, 14 Nov 2018 06:20:17 +0000 (UTC)
-Authentication-Results: mail.kernel.org;
-	dkim=pass (1024-bit key) header.d=kernel.org header.i=@kernel.org header.b="Fb2nK2o2"
-DMARC-Filter: OpenDMARC Filter v1.3.2 mail.kernel.org A253622360
-Authentication-Results: mail.kernel.org; dmarc=fail (p=none dis=none) header.from=kernel.org
+	by mail.kernel.org (Postfix) with ESMTP id ED2862250E
+	for <linux-pci@archiver.kernel.org>; Wed, 14 Nov 2018 08:57:48 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.3.2 mail.kernel.org ED2862250E
+Authentication-Results: mail.kernel.org; dmarc=none (p=none dis=none) header.from=huawei.com
 Authentication-Results: mail.kernel.org; spf=none smtp.mailfrom=linux-pci-owner@vger.kernel.org
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727528AbeKNQWD (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Wed, 14 Nov 2018 11:22:03 -0500
-Received: from mail.kernel.org ([198.145.29.99]:58058 "EHLO mail.kernel.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1727318AbeKNQWD (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Wed, 14 Nov 2018 11:22:03 -0500
-Received: from localhost (unknown [64.114.255.114])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
-        (No client certificate requested)
-        by mail.kernel.org (Postfix) with ESMTPSA id 08DC6214F1;
-        Wed, 14 Nov 2018 06:20:15 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=default; t=1542176415;
-        bh=uu1cGRk+WUtJ0eZ77ISi0awUGGDn1+jv1aQvMWj+rt8=;
-        h=Date:From:To:Cc:Subject:From;
-        b=Fb2nK2o2fQ6tDzUYo1CgZEPzeq84yJEQDURJ86JSS1+PD/iauY0PHGCt5qbUvs/n3
-         23XiSGi0agS7sYkoIDpQrs3PBOU6nio/HHwLSq9fccsELzRJAEjCTMBXGczoyFk32t
-         BeL4jt8Q7oukH0BvVjS7lLmTyb8ENUQyG46WSItQ=
-Date:   Wed, 14 Nov 2018 00:20:10 -0600
-From:   Bjorn Helgaas <helgaas@kernel.org>
-To:     Linus Torvalds <torvalds@linux-foundation.org>
-Cc:     Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-        linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
-        Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
-        Thomas Lendacky <Thomas.Lendacky@amd.com>,
-        Borislav Petkov <bp@alien8.de>, Ingo Molnar <mingo@kernel.org>,
-        Jonathan Cameron <Jonathan.Cameron@huawei.com>,
-        Thomas Gleixner <tglx@linutronix.de>,
-        Peter Zijlstra <a.p.zijlstra@chello.nl>,
-        Martin =?iso-8859-1?Q?Hundeb=F8ll?= <martin@geanix.com>,
-        "Rafael J. Wysocki" <rjw@rjwysocki.net>,
-        Len Brown <lenb@kernel.org>, linux-acpi@vger.kernel.org
-Subject: [GIT PULL] PCI fixes for v4.20
-Message-ID: <20181114062010.GA189193@google.com>
+        id S1727558AbeKNTAG convert rfc822-to-8bit (ORCPT
+        <rfc822;linux-pci@archiver.kernel.org>);
+        Wed, 14 Nov 2018 14:00:06 -0500
+Received: from szxga06-in.huawei.com ([45.249.212.32]:53799 "EHLO huawei.com"
+        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+        id S1727154AbeKNTAG (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Wed, 14 Nov 2018 14:00:06 -0500
+Received: from DGGEMS404-HUB.china.huawei.com (unknown [172.30.72.59])
+        by Forcepoint Email with ESMTP id 00E1B9A9201E7;
+        Wed, 14 Nov 2018 16:57:34 +0800 (CST)
+Received: from localhost (10.202.226.46) by DGGEMS404-HUB.china.huawei.com
+ (10.3.19.204) with Microsoft SMTP Server id 14.3.408.0; Wed, 14 Nov 2018
+ 16:57:28 +0800
+Date:   Wed, 14 Nov 2018 08:57:17 +0000
+From:   Jonathan Cameron <jonathan.cameron@huawei.com>
+To:     Martin =?ISO-8859-1?Q?Hundeb=F8ll?= <martin@geanix.com>
+CC:     <bhelgaas@google.com>, <lorenzo.pieralisi@arm.com>,
+        <linux-pci@vger.kernel.org>, <linuxarm@huawei.com>,
+        <linux-acpi@vger.kernel.org>,
+        Dave Hansen <dave.hansen@linux.intel.com>,
+        "Andy Lutomirski" <luto@kernel.org>,
+        Peter Zijlstra <peterz@infradead.org>, <x86@kernel.org>
+Subject: Re: [PATCH 1/1] pci: Pick up the acpi numa node value if it is
+ specified at the device level.
+Message-ID: <20181114085717.000046b6@huawei.com>
+In-Reply-To: <c02e2579-3572-533d-2c14-b7fe35a1057b@geanix.com>
+References: <20180912152140.3676-1-Jonathan.Cameron@huawei.com>
+        <20180912152140.3676-2-Jonathan.Cameron@huawei.com>
+        <e4bd3423-ae2a-262c-1391-f9741ac4fdd0@geanix.com>
+        <20181113092435.00004466@huawei.com>
+        <8a0fd569-fa52-b884-ef0d-18aab1ef8c3f@geanix.com>
+        <20181113102344.000078c1@huawei.com>
+        <0d7bc41d-71b9-86a5-113e-773177c9e53a@geanix.com>
+        <20181113144924.000056e6@huawei.com>
+        <c02e2579-3572-533d-2c14-b7fe35a1057b@geanix.com>
+Organization: Huawei
+X-Mailer: Claws Mail 3.16.0 (GTK+ 2.24.32; i686-w64-mingw32)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-User-Agent: Mutt/1.10.1 (2018-07-13)
+Content-Type: text/plain; charset="ISO-8859-1"
+Content-Transfer-Encoding: 8BIT
+X-Originating-IP: [10.202.226.46]
+X-CFilter-Loop: Reflected
 Sender: linux-pci-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-PCI fixes:
+On Tue, 13 Nov 2018 16:50:50 +0100
+Martin Hundebøll <martin@geanix.com> wrote:
 
-  - Revert a _PXM change that causes silent early boot failure on some AMD
-    ThreadRipper systems (Bjorn Helgaas)
+> On 13/11/2018 15.49, Jonathan Cameron wrote:
+> > On Tue, 13 Nov 2018 11:26:54 +0100
+> > Martin Hundebøll <martin@geanix.com> wrote:
+> >   
+> >> On 13/11/2018 11.23, Jonathan Cameron wrote:  
+> >>> On Tue, 13 Nov 2018 10:35:29 +0100
+> >>> Martin Hundebøll <martin@geanix.com> wrote:
+> >>>      
+> >>>> Hi Jonathan,
+> >>>>
+> >>>> On 13/11/2018 10.24, Jonathan Cameron wrote:  
+> >>>>> On Mon, 12 Nov 2018 20:40:35 +0100
+> >>>>> Martin Hundebøll <martin@geanix.com> wrote:
+> >>>>>         
+> >>>>>> Hi Jonathan,
+> >>>>>>
+> >>>>>> I'm afraid this change made my system unbootable :(  
+> >>>>> Hi Martin,
+> >>>>>
+> >>>>> Thanks for the report!  
+> >>>>>>
+> >>>>>> Testing both v4.20-rc1 and v4.20-rc2 resulting in nothing but a black
+> >>>>>> screen, with no sign of life from either the keyboard or the network.
+> >>>>>>
+> >>>>>> Bisecting changes from v4.19 led me to this commit, and the system boots
+> >>>>>> again with the change reverted.
+> >>>>>>
+> >>>>>> I know little about ACPI and PCI, so please tell the kind of debug/log
+> >>>>>> you need.  
+> >>>>> The ACPI DSDT would be where I would start.  Please send the output of
+> >>>>> $cat /sys/firmware/acpi/tables/DSDT > DSDT.asl
+> >>>>> (under whatever boots for you)
+> >>>>>
+> >>>>> If you want to look further yourself, you'll need to disassemble this using
+> >>>>> the iASL compiler.  That is usually in a package called something like
+> >>>>> acpica-tools or can be built from source from
+> >>>>>
+> >>>>> https://github.com/acpica/acpica
+> >>>>>
+> >>>>> iasl -d DSDT.asl
+> >>>>>
+> >>>>> This should generate a plain text file called DSDL.dsl.
+> >>>>>
+> >>>>> Send us that and hopefully it'll be obvious what is wrong!
+> >>>>> Given we haven't had lots of reports, I'm going to guess there is something
+> >>>>> unusual in the table, but we'll see.  
+> >>>>
+> >>>> Judging from the stderr output of the iasl command, additional ACPI
+> >>>> tables were needed to do a full disassembly, so I ended up with:
+> >>>>
+> >>>> iasl -e SSDT1.asl SSDT2.asl SSDT3.asl SSDT4.asl SSDT5.asl SSDT6.asl
+> >>>> SSDT7.asl  -d DSDT.asl
+> >>>>
+> >>>> I've attached the output.  
+> >>>
+> >>> So a couple of possibilities come to mind.
+> >>>
+> >>> 1) There are _PXM entries for
+> >>> _SB.PCI0 - Looks like a root port. Bus number of 0
+> >>> _SB.S0D1 - Looks like a root port. Bus number of 1
+> >>> _SB.S0D2 - Looks like a root port. Bus number of 2
+> >>> _SB.S0D3 - Looks like a root port. Bus number of 3
+> >>>
+> >>> covering nodes 0 - 3 which seems reasonable but the kernel log is recording that
+> >>> no NUMA information was found - and you didn't attach an SRAT table along with the
+> >>> others earlier so I'm going to guess there wasn't one?  
+> >>
+> >> No SRAT file in /sys/firmware/acpi/tables/, so I guess not.
+> >>  
+> >>> I suspect that will cause us all sorts of fun issues as I don't think the code
+> >>> verifies the node exists - or at the very least there is one path that isn't.
+> >>>
+> >>> I'll fake up some equivalents on a machine here and see whether a few well placed
+> >>> sanity checks will fix it.  
+> >>
+> >> I'll be happy to test patches, once we get there.  
+> > Unfortunately I've not managed to replicate this yet.
+> > 
+> > The code that this particular patch enabled shouldn't be effected by PXM entries
+> > for the root ports (and doesn't seem to be on my system).
+> > 
+> > Your log clearly states that PCI bus 40 is on numa node 1.
+> > Could you check if that was logged prior to this patch?  
+> 
+> Booting v4.18.16 shows the same in the kernel log (somewhat later in the 
+> boot process: 1.149584 vs 1.394208):
+> 
+> [    1.149584] pci_bus 0000:40: on NUMA node 1
+
+Hi Martin,
+
+Finally tracked down why I can't replicate.  A small difference between the arm64
+paths and the x86 ones.  When arm64 doesn't find an SRAT it uses a dummy
+numa table and one of the things that does is set the numa_off flag.
+
+After that any call to acpi_get_node will pass the retrieved PXM (which may be
+from a parent node in ACPI or anywhere above it in the tree) to acpi_map_pxm_to_node.
+This is where things differ.
+
+On X86 the numa_off flag isn't set so we get a potentially new numa node (with none
+of the appropriate infrastructure being set up).  On arm64 we fail the first check
+and drop out as numa_off is set. This results in a NUMA_NO_NODE being returned and
+everything being fine.
+
+So this is a question for the x86 people.  Is there reason to not set numa_off
+at the end of the dummy_numa_init call?  Or is different handling needed?
+
+Martin perhaps you can smoke test such a change by adding
+numa_off = 1;
+
+to the end of dummy_numa_init in arch/x86/mm/numa.c ?
+
+Thanks,
+
+Jonathan
+> 
+> // Martin
+> 
+> > Thanks,
+> > 
+> > Jonathan
+> >   
+> >>
+> >> // Martin
+> >>  
+> >>> 2) We are successfully associating a lot of other stuff a little earlier
+> >>> in the process for ACPI than previously so we 'might' cause a side effect where
+> >>> data (that is presumably wrong) is now visible.
+> >>>
+> >>> This one looks less likely to me...
+> >>>
+> >>> 3) Something that someone who knows more about ACPI than me will spot!
+> >>>
+> >>> Thanks,
+> >>>
+> >>> Jonathan
+> >>>
+> >>> p.s. Rule one of ACPI. If it is possible to break it and still have common OSes
+> >>> booting then people will manage to do so...
+> >>>      
+> >>>>
+> >>>> Thanks,
+> >>>> Martin
+> >>>>     
+> >>>>>
+> >>>>> Thanks,
+> >>>>>
+> >>>>> Jonathan
+> >>>>>         
+> >>>>>>
+> >>>>>> Thanks,
+> >>>>>> Martin
+> >>>>>>
+> >>>>>> On 12/09/2018 17.21, Jonathan Cameron wrote:  
+> >>>>>>> The ACPI specification allows you to provide _PXM entries for devices based
+> >>>>>>> on their location on a particular bus.  Let us use that if it is provided
+> >>>>>>> rather than just assuming it makes sense to put the device into the proximity
+> >>>>>>> domain of the root.
+> >>>>>>>
+> >>>>>>> An example DSDT entry that will supply this is:
+> >>>>>>>
+> >>>>>>>       Device (PCI2)
+> >>>>>>>       {
+> >>>>>>>         Name (_HID, "PNP0A08") // PCI Express Root Bridge
+> >>>>>>>         Name (_CID, "PNP0A03") // Compatible PCI Root Bridge
+> >>>>>>>         Name(_SEG, 2) // Segment of this Root complex
+> >>>>>>>         Name(_BBN, 0xF8) // Base Bus Number
+> >>>>>>>         Name(_CCA, 1)
+> >>>>>>>         Method (_PXM, 0, NotSerialized) {
+> >>>>>>>           Return(0x00)
+> >>>>>>>         }
+> >>>>>>>
+> >>>>>>> ...
+> >>>>>>>         Device (BRI0) {
+> >>>>>>>           Name (_HID, "19E51610")
+> >>>>>>>           Name (_ADR, 0)
+> >>>>>>>           Name (_BBN, 0xF9)
+> >>>>>>>           Device (CAR0) {
+> >>>>>>>             Name (_HID, "97109912")
+> >>>>>>>             Name (_ADR, 0)
+> >>>>>>>             Method (_PXM, 0, NotSerialized) {
+> >>>>>>>               Return(0x02)
+> >>>>>>>             }
+> >>>>>>>           }
+> >>>>>>>         }
+> >>>>>>>       }
+> >>>>>>>
+> >>>>>>> Signed-off-by: Jonathan Cameron <Jonathan.Cameron@huawei.com>
+> >>>>>>> ---
+> >>>>>>>      drivers/pci/pci-acpi.c | 5 +++++
+> >>>>>>>      1 file changed, 5 insertions(+)
+> >>>>>>>
+> >>>>>>> diff --git a/drivers/pci/pci-acpi.c b/drivers/pci/pci-acpi.c
+> >>>>>>> index 738e3546abb1..f2f5f0ddd60e 100644
+> >>>>>>> --- a/drivers/pci/pci-acpi.c
+> >>>>>>> +++ b/drivers/pci/pci-acpi.c
+> >>>>>>> @@ -753,10 +753,15 @@ static void pci_acpi_setup(struct device *dev)
+> >>>>>>>      {
+> >>>>>>>      	struct pci_dev *pci_dev = to_pci_dev(dev);
+> >>>>>>>      	struct acpi_device *adev = ACPI_COMPANION(dev);
+> >>>>>>> +	int node;
+> >>>>>>>      
+> >>>>>>>      	if (!adev)
+> >>>>>>>      		return;
+> >>>>>>>      
+> >>>>>>> +	node = acpi_get_node(adev->handle);
+> >>>>>>> +	if (node != NUMA_NO_NODE)
+> >>>>>>> +		set_dev_node(dev, node);
+> >>>>>>> +	
+> >>>>>>>      	pci_acpi_optimize_delay(pci_dev, adev->handle);
+> >>>>>>>      
+> >>>>>>>      	pci_acpi_add_pm_notifier(adev, pci_dev);
+> >>>>>>>           
+> >>>>>>        
+> >>>>>
+> >>>>>         
+> >>>>     
+> >>>
+> >>>      
+> >>  
+> > 
+> >   
+> 
 
 
-The following changes since commit 651022382c7f8da46cb4872a545ee1da6d097d2a:
-
-  Linux 4.20-rc1 (2018-11-04 15:37:52 -0800)
-
-are available in the Git repository at:
-
-  ssh://git@gitolite.kernel.org/pub/scm/linux/kernel/git/helgaas/pci.git tags/pci-v4.20-fixes-1
-
-for you to fetch changes up to 0d76bcc960e6057750fcf556b65da13f8bbdfd2b:
-
-  Revert "ACPI/PCI: Pay attention to device-specific _PXM node values" (2018-11-13 08:38:17 -0600)
-
-----------------------------------------------------------------
-pci-v4.20-fixes-1
-
-----------------------------------------------------------------
-Bjorn Helgaas (1):
-      Revert "ACPI/PCI: Pay attention to device-specific _PXM node values"
-
- drivers/pci/pci-acpi.c | 5 -----
- 1 file changed, 5 deletions(-)
