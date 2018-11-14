@@ -2,79 +2,115 @@ Return-Path: <SRS0=Q3Ib=NZ=vger.kernel.org=linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-2.5 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	MAILING_LIST_MULTI,SPF_PASS,USER_AGENT_MUTT autolearn=ham autolearn_force=no
+X-Spam-Status: No, score=-1.0 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+	MAILING_LIST_MULTI,SPF_PASS,URIBL_BLOCKED autolearn=ham autolearn_force=no
 	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 76673C43441
-	for <linux-pci@archiver.kernel.org>; Wed, 14 Nov 2018 21:46:21 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 828A5C43441
+	for <linux-pci@archiver.kernel.org>; Wed, 14 Nov 2018 22:21:02 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 388FE22419
-	for <linux-pci@archiver.kernel.org>; Wed, 14 Nov 2018 21:46:21 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.3.2 mail.kernel.org 388FE22419
-Authentication-Results: mail.kernel.org; dmarc=none (p=none dis=none) header.from=alien8.de
+	by mail.kernel.org (Postfix) with ESMTP id 4823B2250E
+	for <linux-pci@archiver.kernel.org>; Wed, 14 Nov 2018 22:21:02 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.3.2 mail.kernel.org 4823B2250E
+Authentication-Results: mail.kernel.org; dmarc=none (p=none dis=none) header.from=arm.com
 Authentication-Results: mail.kernel.org; spf=none smtp.mailfrom=linux-pci-owner@vger.kernel.org
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1725895AbeKOHvR (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Thu, 15 Nov 2018 02:51:17 -0500
-Received: from mail.skyhub.de ([5.9.137.197]:50536 "EHLO mail.skyhub.de"
+        id S1726240AbeKOI0D (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Thu, 15 Nov 2018 03:26:03 -0500
+Received: from foss.arm.com ([217.140.101.70]:51916 "EHLO foss.arm.com"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1725756AbeKOHvR (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Thu, 15 Nov 2018 02:51:17 -0500
-X-Virus-Scanned: Nedap ESD1 at mail.skyhub.de
-Received: from mail.skyhub.de ([127.0.0.1])
-        by localhost (blast.alien8.de [127.0.0.1]) (amavisd-new, port 10026)
-        with ESMTP id J5a695jAwFTK; Wed, 14 Nov 2018 22:46:18 +0100 (CET)
-Received: from zn.tnic (p200300EC2BD0D200D5714500C00E26FD.dip0.t-ipconnect.de [IPv6:2003:ec:2bd0:d200:d571:4500:c00e:26fd])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
-        (No client certificate requested)
-        by mail.skyhub.de (SuperMail on ZX Spectrum 128k) with ESMTPSA id AA6001EC03C8;
-        Wed, 14 Nov 2018 22:46:18 +0100 (CET)
-Date:   Wed, 14 Nov 2018 22:46:01 +0100
-From:   Borislav Petkov <bp@alien8.de>
-To:     Konstantin Ryabitsev <konstantin@linuxfoundation.org>,
-        Bjorn Helgaas <helgaas@kernel.org>
-Cc:     pr-tracker-bot@kernel.org,
-        Linus Torvalds <torvalds@linux-foundation.org>,
-        Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-        linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
-        Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
-        Thomas Lendacky <Thomas.Lendacky@amd.com>,
-        Ingo Molnar <mingo@kernel.org>,
-        Jonathan Cameron <Jonathan.Cameron@huawei.com>,
-        Thomas Gleixner <tglx@linutronix.de>,
-        Peter Zijlstra <a.p.zijlstra@chello.nl>,
-        Martin =?utf-8?Q?Hundeb=C3=B8ll?= <martin@geanix.com>,
-        "Rafael J. Wysocki" <rjw@rjwysocki.net>,
-        Len Brown <lenb@kernel.org>, linux-acpi@vger.kernel.org
-Subject: Re: [GIT PULL] PCI fixes for v4.20
-Message-ID: <20181114214601.GO13926@zn.tnic>
-References: <20181114062010.GA189193@google.com>
- <20181114200003.14496.1490.pr-tracker-bot@pdx-korg-gitolite-1.ci.codeaurora.org>
- <20181114201214.GM13926@zn.tnic>
- <20181114201658.GB25069@pure.paranoia.local>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Disposition: inline
-In-Reply-To: <20181114201658.GB25069@pure.paranoia.local>
-User-Agent: Mutt/1.10.1 (2018-07-13)
+        id S1725952AbeKOI0D (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Thu, 15 Nov 2018 03:26:03 -0500
+Received: from usa-sjc-imap-foss1.foss.arm.com (unknown [10.72.51.249])
+        by usa-sjc-mx-foss1.foss.arm.com (Postfix) with ESMTP id E289880D;
+        Wed, 14 Nov 2018 14:01:53 -0800 (PST)
+Received: from big-swifty.misterjones.org (usa-sjc-mx-foss1.foss.arm.com [217.140.101.70])
+        by usa-sjc-imap-foss1.foss.arm.com (Postfix) with ESMTPSA id 8E3993F5A0;
+        Wed, 14 Nov 2018 14:01:53 -0800 (PST)
+Date:   Wed, 14 Nov 2018 22:01:49 +0000
+Message-ID: <86sh0348tu.wl-marc.zyngier@arm.com>
+From:   Marc Zyngier <marc.zyngier@arm.com>
+To:     Trent Piepho <tpiepho@impinj.com>
+Cc:     "gustavo.pimentel@synopsys.com" <gustavo.pimentel@synopsys.com>,
+        "jingoohan1@gmail.com" <jingoohan1@gmail.com>,
+        "faiz_abbas@ti.com" <faiz_abbas@ti.com>,
+        "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+        "lorenzo.pieralisi@arm.com" <lorenzo.pieralisi@arm.com>,
+        "helgaas@google.com" <helgaas@google.com>,
+        "vigneshr@ti.com" <vigneshr@ti.com>,
+        "Joao.Pinto@synopsys.com" <Joao.Pinto@synopsys.com>
+Subject: Re: [PATCH 0/3] PCI: designware: Fixing MSI handling flow
+In-Reply-To: <1542223166.30311.471.camel@impinj.com>
+References: <20181113225734.8026-1-marc.zyngier@arm.com>
+        <e73891a5-d798-ee9c-607c-9648d07f6505@synopsys.com>
+        <86a7mcdlwg.wl-marc.zyngier@arm.com>
+        <1542223166.30311.471.camel@impinj.com>
+User-Agent: Wanderlust/2.15.9 (Almost Unreal) SEMI-EPG/1.14.7 (Harue)
+ FLIM/1.14.9 (=?UTF-8?B?R29qxY0=?=) APEL/10.8 EasyPG/1.0.0 Emacs/25.1
+ (aarch64-unknown-linux-gnu) MULE/6.0 (HANACHIRUSATO)
+Organization: ARM Ltd
+MIME-Version: 1.0 (generated by SEMI-EPG 1.14.7 - "Harue")
+Content-Type: text/plain; charset=US-ASCII
 Sender: linux-pci-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-On Wed, Nov 14, 2018 at 03:16:58PM -0500, Konstantin Ryabitsev wrote:
-> On Wed, Nov 14, 2018 at 09:12:14PM +0100, Borislav Petkov wrote:
-> > Hey Konstantin,
-> > 
-> > that bot needs some parsing improvs: "None None".
+On Wed, 14 Nov 2018 19:19:27 +0000,
+Trent Piepho <tpiepho@impinj.com> wrote:
 > 
-> Correct, this is because the original pull request was for an ssh://
+> On Wed, 2018-11-14 at 09:54 +0000, Marc Zyngier wrote:
+> >         /* Initialize IRQ Status array */
+> > -       for (ctrl = 0; ctrl < num_ctrls; ctrl++)
+> > -               dw_pcie_rd_own_conf(pp, PCIE_MSI_INTR0_ENABLE +
+> > +       for (ctrl = 0; ctrl < num_ctrls; ctrl++) {
+> > +               dw_pcie_wr_own_conf(pp, PCIE_MSI_INTR0_MASK +
+> >                                         (ctrl * MSI_REG_CTRL_BLOCK_SIZE),
+> > -                                   4, &pp->irq_status[ctrl]);
+> > +                                   4, ~0);
+> > +               dw_pcie_wr_own_conf(pp, PCIE_MSI_INTR0_ENABLE +
+> > +                                       (ctrl * MSI_REG_CTRL_BLOCK_SIZE),
+> > +                                   4, ~0);
+> > +               pp->irq_status[ctrl] = 0;
+> > +       }
+> >  
+> 
+> I tested yesterday before this patch was sent and fixed this issue
+> another way.  I pretty sure this would work as well, though it's not
+> clear to me it's more correct.
 
-You'd think Bjorn would know better... :-)))
+Given that we don't have a spec or any form of useful documentation
+(except for the information that Gustavo gave us), I don't think
+*anything* we'll write here has a remote chance of being
+correct. We're simply poking in the dark.
+
+> It looks to me that the previous code was using whatever MSIs were
+> already enabled when the driver is initialized as the set to leave
+> enabled.
+
+And I claim that this is a gross bug. We don't want to inherit
+anything at all, rather start from a fresh start.
+
+> This looks like it changing that behavior, and instead enabling all
+> MSIs on initialization.
+> 
+> I would think the default value for a MSI should be disabled until
+> something enables it.
+
+Sure, that's no big deal. We can plug in the enable/disable callbacks
+to that effect, although we'll end-up with similar result, I'd expect.
+
+> I speculated that the previous behavior was trying to work with an MSI
+> enabled by the bootloader, ACPI firmware, etc. that should be left
+> alone.  Or perhaps there was no good reason not to disable everything
+> on initialization and that code just got copied from somewhere else and
+> no one thought about it.  There's certainly evidence of that in this
+> driver.
+
+As you said, you're speculating. Nonetheless, there is no reason to
+start with anything enabled the first place.
+
+	M.
 
 -- 
-Regards/Gruss,
-    Boris.
-
-Good mailing practices for 400: avoid top-posting and trim the reply.
+Jazz is not dead, it just smell funny.
