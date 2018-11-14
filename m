@@ -2,311 +2,106 @@ Return-Path: <SRS0=Q3Ib=NZ=vger.kernel.org=linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-12.0 required=3.0
-	tests=HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,
-	MENTIONS_GIT_HOSTING,SIGNED_OFF_BY,SPF_PASS,URIBL_BLOCKED autolearn=ham
-	autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-7.1 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
+	DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,
+	SIGNED_OFF_BY,SPF_PASS autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 3659DC43441
-	for <linux-pci@archiver.kernel.org>; Wed, 14 Nov 2018 09:32:02 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 93C8BC43441
+	for <linux-pci@archiver.kernel.org>; Wed, 14 Nov 2018 09:33:17 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id DA73122419
-	for <linux-pci@archiver.kernel.org>; Wed, 14 Nov 2018 09:32:01 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.3.2 mail.kernel.org DA73122419
-Authentication-Results: mail.kernel.org; dmarc=none (p=none dis=none) header.from=geanix.com
+	by mail.kernel.org (Postfix) with ESMTP id 584C4223DD
+	for <linux-pci@archiver.kernel.org>; Wed, 14 Nov 2018 09:33:17 +0000 (UTC)
+Authentication-Results: mail.kernel.org;
+	dkim=pass (1024-bit key) header.d=mobiveil.co.in header.i=@mobiveil.co.in header.b="l0oUMgVi"
+DMARC-Filter: OpenDMARC Filter v1.3.2 mail.kernel.org 584C4223DD
+Authentication-Results: mail.kernel.org; dmarc=none (p=none dis=none) header.from=mobiveil.co.in
 Authentication-Results: mail.kernel.org; spf=none smtp.mailfrom=linux-pci-owner@vger.kernel.org
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727595AbeKNTe1 (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Wed, 14 Nov 2018 14:34:27 -0500
-Received: from mail.hundeboll.net ([88.198.92.70]:41106 "EHLO
-        mail.hundeboll.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1727558AbeKNTe1 (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Wed, 14 Nov 2018 14:34:27 -0500
-Received: from [10.0.0.11] (unknown [85.184.147.232])
-        by mail.hundeboll.net (Postfix) with ESMTPSA id 11D651C1ACD;
-        Wed, 14 Nov 2018 10:31:58 +0100 (CET)
-Subject: Re: [PATCH 1/1] pci: Pick up the acpi numa node value if it is
- specified at the device level.
-To:     Jonathan Cameron <jonathan.cameron@huawei.com>
-Cc:     bhelgaas@google.com, lorenzo.pieralisi@arm.com,
-        linux-pci@vger.kernel.org, linuxarm@huawei.com,
-        linux-acpi@vger.kernel.org,
-        Dave Hansen <dave.hansen@linux.intel.com>,
-        Andy Lutomirski <luto@kernel.org>,
-        Peter Zijlstra <peterz@infradead.org>, x86@kernel.org
-References: <20180912152140.3676-1-Jonathan.Cameron@huawei.com>
- <20180912152140.3676-2-Jonathan.Cameron@huawei.com>
- <e4bd3423-ae2a-262c-1391-f9741ac4fdd0@geanix.com>
- <20181113092435.00004466@huawei.com>
- <8a0fd569-fa52-b884-ef0d-18aab1ef8c3f@geanix.com>
- <20181113102344.000078c1@huawei.com>
- <0d7bc41d-71b9-86a5-113e-773177c9e53a@geanix.com>
- <20181113144924.000056e6@huawei.com>
- <c02e2579-3572-533d-2c14-b7fe35a1057b@geanix.com>
- <20181114085717.000046b6@huawei.com>
-From:   =?UTF-8?Q?Martin_Hundeb=c3=b8ll?= <martin@geanix.com>
-Message-ID: <ff6e6c1d-2413-3be5-b76b-9d524646ae39@geanix.com>
-Date:   Wed, 14 Nov 2018 10:31:37 +0100
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:60.0) Gecko/20100101
- Thunderbird/60.3.0
+        id S1728391AbeKNTfk (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Wed, 14 Nov 2018 14:35:40 -0500
+Received: from mail-wr1-f66.google.com ([209.85.221.66]:43506 "EHLO
+        mail-wr1-f66.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1727773AbeKNTfj (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Wed, 14 Nov 2018 14:35:39 -0500
+Received: by mail-wr1-f66.google.com with SMTP id y3-v6so16432693wrh.10
+        for <linux-pci@vger.kernel.org>; Wed, 14 Nov 2018 01:33:11 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=mobiveil.co.in; s=google;
+        h=mime-version:references:in-reply-to:from:date:message-id:subject:to
+         :cc;
+        bh=D5Lp9ntbsbh28GYUXUxxGmzBKIyMj7U/1WLCquFYSRo=;
+        b=l0oUMgVi8b67BPrJLTFJtkGqwT/S7KOtygHVB12epp3TAu+as9kZEYNzQ5xlB3/i3V
+         C3xnHyo9y9fAYr5fqSM+ss9/25h26VRk88ljBcfwY9mI5paAIGJK9IHJFKsa/mnuSS9s
+         cdDFCCYJgkvzRV1hqEisas4eE4Kptcmlt9EEE=
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20161025;
+        h=x-gm-message-state:mime-version:references:in-reply-to:from:date
+         :message-id:subject:to:cc;
+        bh=D5Lp9ntbsbh28GYUXUxxGmzBKIyMj7U/1WLCquFYSRo=;
+        b=JexCAKjLIssAun+9fiLjllJoFIB3ngNPcSZnHFPj1+UvddwS0mjuI0t1BCeeNVwE7g
+         AHFqziEL/MfNEZ01/tEk/5g350jV8LcksOiGs/zerhEO21iY9913mChepksfRHeJBnYT
+         BoiMFJGPVNw1Wj4Ty4v2dBDSg3OiHuMMdH5To/kWwQbOB0GZpFO+/J2Vx/5BvIz13uan
+         Fad3OyOMtlVuzoqGQJdNAnW3L6QSGM1hpDmyCrqJNo44dMuGNVXN8H/xL6LJpLPi+Jg7
+         uRtT0ZWyT93u13DpbvmR9AzE6gtc51CLFYxZ4z8HYSqEb3GWCFqhTgAzbk7ryH9XhEXZ
+         jTFA==
+X-Gm-Message-State: AGRZ1gINvW3EqAxeiSLMCtEn5v5d0A00V5XjvcyCRpQrWRlgxfZZDvY0
+        6F25TVBuJPxNhw2zBbopBVmlabZ4dEQRMI76F1jwlQ==
+X-Google-Smtp-Source: AJdET5cz1zJp/8q+kJ+haPqz1PNbmURdYIudfTmNyFrNugTqoS6UNGnpr5++Q/HS3izrFQjimH/MJlE+3ku/eYw52XM=
+X-Received: by 2002:a5d:4ec4:: with SMTP id s4-v6mr1066220wrv.32.1542187990966;
+ Wed, 14 Nov 2018 01:33:10 -0800 (PST)
 MIME-Version: 1.0
-In-Reply-To: <20181114085717.000046b6@huawei.com>
-Content-Type: text/plain; charset=utf-8; format=flowed
-Content-Language: en-US-large
-Content-Transfer-Encoding: 8bit
+References: <20181106131807.29951-1-Zhiqiang.Hou@nxp.com> <20181106131807.29951-16-Zhiqiang.Hou@nxp.com>
+In-Reply-To: <20181106131807.29951-16-Zhiqiang.Hou@nxp.com>
+From:   Subrahmanya Lingappa <l.subrahmanya@mobiveil.co.in>
+Date:   Wed, 14 Nov 2018 15:03:26 +0530
+Message-ID: <CAFZiPx270bWemYRekvk1BZ23RW3ecK+znEc6C1Dix_U-2y+cnA@mail.gmail.com>
+Subject: Re: [PATCH 15/23] dt-bindings: pci: mobiveil: change gpio_slave and
+ apb_csr to optional
+To:     "Z.q. Hou" <zhiqiang.hou@nxp.com>
+Cc:     linux-pci@vger.kernel.org, linux-arm-kernel@lists.infradead.org,
+        devicetree@vger.kernel.org, linux-kernel@vger.kernel.org,
+        Bjorn Helgaas <bhelgaas@google.com>, robh+dt@kernel.org,
+        mark.rutland@arm.com, shawnguo@kernel.org,
+        Leo Li <leoyang.li@nxp.com>,
+        Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
+        Mingkai Hu <mingkai.hu@nxp.com>,
+        "M.h. Lian" <minghuan.lian@nxp.com>, xiaowei.bao@nxp.com
+Content-Type: text/plain; charset="UTF-8"
 Sender: linux-pci-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
+Acked-by: Subrahmanya Lingappa <l.subrahmanya@mobiveil.co.in>
 
-
-On 14/11/2018 09.57, Jonathan Cameron wrote:
-> On Tue, 13 Nov 2018 16:50:50 +0100
-> Martin Hundebøll <martin@geanix.com> wrote:
-> 
->> On 13/11/2018 15.49, Jonathan Cameron wrote:
->>> On Tue, 13 Nov 2018 11:26:54 +0100
->>> Martin Hundebøll <martin@geanix.com> wrote:
->>>    
->>>> On 13/11/2018 11.23, Jonathan Cameron wrote:
->>>>> On Tue, 13 Nov 2018 10:35:29 +0100
->>>>> Martin Hundebøll <martin@geanix.com> wrote:
->>>>>       
->>>>>> Hi Jonathan,
->>>>>>
->>>>>> On 13/11/2018 10.24, Jonathan Cameron wrote:
->>>>>>> On Mon, 12 Nov 2018 20:40:35 +0100
->>>>>>> Martin Hundebøll <martin@geanix.com> wrote:
->>>>>>>          
->>>>>>>> Hi Jonathan,
->>>>>>>>
->>>>>>>> I'm afraid this change made my system unbootable :(
->>>>>>> Hi Martin,
->>>>>>>
->>>>>>> Thanks for the report!
->>>>>>>>
->>>>>>>> Testing both v4.20-rc1 and v4.20-rc2 resulting in nothing but a black
->>>>>>>> screen, with no sign of life from either the keyboard or the network.
->>>>>>>>
->>>>>>>> Bisecting changes from v4.19 led me to this commit, and the system boots
->>>>>>>> again with the change reverted.
->>>>>>>>
->>>>>>>> I know little about ACPI and PCI, so please tell the kind of debug/log
->>>>>>>> you need.
->>>>>>> The ACPI DSDT would be where I would start.  Please send the output of
->>>>>>> $cat /sys/firmware/acpi/tables/DSDT > DSDT.asl
->>>>>>> (under whatever boots for you)
->>>>>>>
->>>>>>> If you want to look further yourself, you'll need to disassemble this using
->>>>>>> the iASL compiler.  That is usually in a package called something like
->>>>>>> acpica-tools or can be built from source from
->>>>>>>
->>>>>>> https://github.com/acpica/acpica
->>>>>>>
->>>>>>> iasl -d DSDT.asl
->>>>>>>
->>>>>>> This should generate a plain text file called DSDL.dsl.
->>>>>>>
->>>>>>> Send us that and hopefully it'll be obvious what is wrong!
->>>>>>> Given we haven't had lots of reports, I'm going to guess there is something
->>>>>>> unusual in the table, but we'll see.
->>>>>>
->>>>>> Judging from the stderr output of the iasl command, additional ACPI
->>>>>> tables were needed to do a full disassembly, so I ended up with:
->>>>>>
->>>>>> iasl -e SSDT1.asl SSDT2.asl SSDT3.asl SSDT4.asl SSDT5.asl SSDT6.asl
->>>>>> SSDT7.asl  -d DSDT.asl
->>>>>>
->>>>>> I've attached the output.
->>>>>
->>>>> So a couple of possibilities come to mind.
->>>>>
->>>>> 1) There are _PXM entries for
->>>>> _SB.PCI0 - Looks like a root port. Bus number of 0
->>>>> _SB.S0D1 - Looks like a root port. Bus number of 1
->>>>> _SB.S0D2 - Looks like a root port. Bus number of 2
->>>>> _SB.S0D3 - Looks like a root port. Bus number of 3
->>>>>
->>>>> covering nodes 0 - 3 which seems reasonable but the kernel log is recording that
->>>>> no NUMA information was found - and you didn't attach an SRAT table along with the
->>>>> others earlier so I'm going to guess there wasn't one?
->>>>
->>>> No SRAT file in /sys/firmware/acpi/tables/, so I guess not.
->>>>   
->>>>> I suspect that will cause us all sorts of fun issues as I don't think the code
->>>>> verifies the node exists - or at the very least there is one path that isn't.
->>>>>
->>>>> I'll fake up some equivalents on a machine here and see whether a few well placed
->>>>> sanity checks will fix it.
->>>>
->>>> I'll be happy to test patches, once we get there.
->>> Unfortunately I've not managed to replicate this yet.
->>>
->>> The code that this particular patch enabled shouldn't be effected by PXM entries
->>> for the root ports (and doesn't seem to be on my system).
->>>
->>> Your log clearly states that PCI bus 40 is on numa node 1.
->>> Could you check if that was logged prior to this patch?
->>
->> Booting v4.18.16 shows the same in the kernel log (somewhat later in the
->> boot process: 1.149584 vs 1.394208):
->>
->> [    1.149584] pci_bus 0000:40: on NUMA node 1
-> 
-> Hi Martin,
-> 
-> Finally tracked down why I can't replicate.  A small difference between the arm64
-> paths and the x86 ones.  When arm64 doesn't find an SRAT it uses a dummy
-> numa table and one of the things that does is set the numa_off flag.
-> 
-> After that any call to acpi_get_node will pass the retrieved PXM (which may be
-> from a parent node in ACPI or anywhere above it in the tree) to acpi_map_pxm_to_node.
-> This is where things differ.
-> 
-> On X86 the numa_off flag isn't set so we get a potentially new numa node (with none
-> of the appropriate infrastructure being set up).  On arm64 we fail the first check
-> and drop out as numa_off is set. This results in a NUMA_NO_NODE being returned and
-> everything being fine.
-> 
-> So this is a question for the x86 people.  Is there reason to not set numa_off
-> at the end of the dummy_numa_init call?  Or is different handling needed?
-> 
-> Martin perhaps you can smoke test such a change by adding
-> numa_off = 1;
-> 
-> to the end of dummy_numa_init in arch/x86/mm/numa.c ?
-
-Hi Jonathan,
-
-It seems like your on to something here: My workstation boots again with 
-'numa_off = 1;' added to dummy_numa_init().
-
-// Martin
-
-> 
-> Thanks,
-> 
-> Jonathan
->>
->> // Martin
->>
->>> Thanks,
->>>
->>> Jonathan
->>>    
->>>>
->>>> // Martin
->>>>   
->>>>> 2) We are successfully associating a lot of other stuff a little earlier
->>>>> in the process for ACPI than previously so we 'might' cause a side effect where
->>>>> data (that is presumably wrong) is now visible.
->>>>>
->>>>> This one looks less likely to me...
->>>>>
->>>>> 3) Something that someone who knows more about ACPI than me will spot!
->>>>>
->>>>> Thanks,
->>>>>
->>>>> Jonathan
->>>>>
->>>>> p.s. Rule one of ACPI. If it is possible to break it and still have common OSes
->>>>> booting then people will manage to do so...
->>>>>       
->>>>>>
->>>>>> Thanks,
->>>>>> Martin
->>>>>>      
->>>>>>>
->>>>>>> Thanks,
->>>>>>>
->>>>>>> Jonathan
->>>>>>>          
->>>>>>>>
->>>>>>>> Thanks,
->>>>>>>> Martin
->>>>>>>>
->>>>>>>> On 12/09/2018 17.21, Jonathan Cameron wrote:
->>>>>>>>> The ACPI specification allows you to provide _PXM entries for devices based
->>>>>>>>> on their location on a particular bus.  Let us use that if it is provided
->>>>>>>>> rather than just assuming it makes sense to put the device into the proximity
->>>>>>>>> domain of the root.
->>>>>>>>>
->>>>>>>>> An example DSDT entry that will supply this is:
->>>>>>>>>
->>>>>>>>>        Device (PCI2)
->>>>>>>>>        {
->>>>>>>>>          Name (_HID, "PNP0A08") // PCI Express Root Bridge
->>>>>>>>>          Name (_CID, "PNP0A03") // Compatible PCI Root Bridge
->>>>>>>>>          Name(_SEG, 2) // Segment of this Root complex
->>>>>>>>>          Name(_BBN, 0xF8) // Base Bus Number
->>>>>>>>>          Name(_CCA, 1)
->>>>>>>>>          Method (_PXM, 0, NotSerialized) {
->>>>>>>>>            Return(0x00)
->>>>>>>>>          }
->>>>>>>>>
->>>>>>>>> ...
->>>>>>>>>          Device (BRI0) {
->>>>>>>>>            Name (_HID, "19E51610")
->>>>>>>>>            Name (_ADR, 0)
->>>>>>>>>            Name (_BBN, 0xF9)
->>>>>>>>>            Device (CAR0) {
->>>>>>>>>              Name (_HID, "97109912")
->>>>>>>>>              Name (_ADR, 0)
->>>>>>>>>              Method (_PXM, 0, NotSerialized) {
->>>>>>>>>                Return(0x02)
->>>>>>>>>              }
->>>>>>>>>            }
->>>>>>>>>          }
->>>>>>>>>        }
->>>>>>>>>
->>>>>>>>> Signed-off-by: Jonathan Cameron <Jonathan.Cameron@huawei.com>
->>>>>>>>> ---
->>>>>>>>>       drivers/pci/pci-acpi.c | 5 +++++
->>>>>>>>>       1 file changed, 5 insertions(+)
->>>>>>>>>
->>>>>>>>> diff --git a/drivers/pci/pci-acpi.c b/drivers/pci/pci-acpi.c
->>>>>>>>> index 738e3546abb1..f2f5f0ddd60e 100644
->>>>>>>>> --- a/drivers/pci/pci-acpi.c
->>>>>>>>> +++ b/drivers/pci/pci-acpi.c
->>>>>>>>> @@ -753,10 +753,15 @@ static void pci_acpi_setup(struct device *dev)
->>>>>>>>>       {
->>>>>>>>>       	struct pci_dev *pci_dev = to_pci_dev(dev);
->>>>>>>>>       	struct acpi_device *adev = ACPI_COMPANION(dev);
->>>>>>>>> +	int node;
->>>>>>>>>       
->>>>>>>>>       	if (!adev)
->>>>>>>>>       		return;
->>>>>>>>>       
->>>>>>>>> +	node = acpi_get_node(adev->handle);
->>>>>>>>> +	if (node != NUMA_NO_NODE)
->>>>>>>>> +		set_dev_node(dev, node);
->>>>>>>>> +	
->>>>>>>>>       	pci_acpi_optimize_delay(pci_dev, adev->handle);
->>>>>>>>>       
->>>>>>>>>       	pci_acpi_add_pm_notifier(adev, pci_dev);
->>>>>>>>>            
->>>>>>>>         
->>>>>>>
->>>>>>>          
->>>>>>      
->>>>>
->>>>>       
->>>>   
->>>
->>>    
->>
-> 
-> 
-
--- 
-Kind regards,
-Martin Hundebøll
-Embedded Linux Consultant
-
-+45 61 65 54 61
-martin@geanix.com
-
-Geanix IVS
-https://geanix.com
-DK39600706
+On Tue, Nov 6, 2018 at 6:50 PM Z.q. Hou <zhiqiang.hou@nxp.com> wrote:
+>
+> From: Hou Zhiqiang <Zhiqiang.Hou@nxp.com>
+>
+> Change the "gpio_slave" and "apb_csr" to optional, the "gpio_slave"
+> is not used in current code, and "apb_csr" is not used by some
+> platorms.
+>
+> Signed-off-by: Hou Zhiqiang <Zhiqiang.Hou@nxp.com>
+> ---
+>  Documentation/devicetree/bindings/pci/mobiveil-pcie.txt | 2 ++
+>  1 file changed, 2 insertions(+)
+>
+> diff --git a/Documentation/devicetree/bindings/pci/mobiveil-pcie.txt b/Documentation/devicetree/bindings/pci/mobiveil-pcie.txt
+> index a618d4787dd7..64156993e052 100644
+> --- a/Documentation/devicetree/bindings/pci/mobiveil-pcie.txt
+> +++ b/Documentation/devicetree/bindings/pci/mobiveil-pcie.txt
+> @@ -10,8 +10,10 @@ Required properties:
+>         interrupt source. The value must be 1.
+>  - compatible: Should contain "mbvl,gpex40-pcie"
+>  - reg: Should contain PCIe registers location and length
+> +       Mandatory:
+>         "config_axi_slave": PCIe controller registers
+>         "csr_axi_slave"   : Bridge config registers
+> +       Optional:
+>         "gpio_slave"      : GPIO registers to control slot power
+>         "apb_csr"         : MSI registers
+>
+> --
+> 2.17.1
+>
