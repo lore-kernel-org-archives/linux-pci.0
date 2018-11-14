@@ -2,269 +2,167 @@ Return-Path: <SRS0=Q3Ib=NZ=vger.kernel.org=linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-7.1 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
-	DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,
-	SIGNED_OFF_BY,SPF_PASS,URIBL_BLOCKED autolearn=ham autolearn_force=no
-	version=3.4.0
+X-Spam-Status: No, score=-1.1 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
+	DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_PASS
+	autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id CA806C43441
-	for <linux-pci@archiver.kernel.org>; Wed, 14 Nov 2018 17:41:25 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 0619DC43441
+	for <linux-pci@archiver.kernel.org>; Wed, 14 Nov 2018 18:28:13 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 813C02145D
-	for <linux-pci@archiver.kernel.org>; Wed, 14 Nov 2018 17:41:25 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 8D294223DD
+	for <linux-pci@archiver.kernel.org>; Wed, 14 Nov 2018 18:28:12 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (1024-bit key) header.d=agner.ch header.i=@agner.ch header.b="dXh6czJx"
-DMARC-Filter: OpenDMARC Filter v1.3.2 mail.kernel.org 813C02145D
-Authentication-Results: mail.kernel.org; dmarc=none (p=none dis=none) header.from=agner.ch
+	dkim=pass (1024-bit key) header.d=impinj.com header.i=@impinj.com header.b="OEevYhAO"
+DMARC-Filter: OpenDMARC Filter v1.3.2 mail.kernel.org 8D294223DD
+Authentication-Results: mail.kernel.org; dmarc=fail (p=reject dis=none) header.from=impinj.com
 Authentication-Results: mail.kernel.org; spf=none smtp.mailfrom=linux-pci-owner@vger.kernel.org
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1728023AbeKODpc (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Wed, 14 Nov 2018 22:45:32 -0500
-Received: from mail.kmu-office.ch ([178.209.48.109]:50348 "EHLO
-        mail.kmu-office.ch" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1727576AbeKODpc (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Wed, 14 Nov 2018 22:45:32 -0500
-Received: from webmail.kmu-office.ch (unknown [IPv6:2a02:418:6a02::a3])
-        by mail.kmu-office.ch (Postfix) with ESMTPSA id 446175C005C;
-        Wed, 14 Nov 2018 18:41:21 +0100 (CET)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=agner.ch; s=dkim;
-        t=1542217281;
-        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-         content-transfer-encoding:content-transfer-encoding:
-         in-reply-to:in-reply-to:references:references;
-        bh=eTeF0Ca3uIvRJDOIJmD+xhJcdCB5W5Md3K6RJZT4C18=;
-        b=dXh6czJxKbF7LvmjbGMwtdPRGGEBHZP6x9EXMxVgk2x6aq8oVDRVHuSavGI8JFEKHEQC7F
-        ydLdviTCAfi1VnUZNGG2ak12fWRBDTS0FjGoU+yRdRvC+4z4fn7p6oJA0EJSKW6UyWya4r
-        JcrZjrwQV467zNSLXHZCFLNlRZfZeRI=
+        id S1727251AbeKOEc2 (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Wed, 14 Nov 2018 23:32:28 -0500
+Received: from mail-eopbgr710108.outbound.protection.outlook.com ([40.107.71.108]:13376
+        "EHLO NAM05-BY2-obe.outbound.protection.outlook.com"
+        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+        id S1727969AbeKOEc1 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Wed, 14 Nov 2018 23:32:27 -0500
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=impinj.com;
+ s=selector1;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
+ bh=hMMxNkP0LRnVMaBUkfYKtTDHvWs5bAWAUVOjp5o6XS0=;
+ b=OEevYhAOel83Tim6yArGKOunIBpBGQStVEvU2wLDhFdfTGgY8XiV3Bb3XVqFIrIy5uHQ46xZSBzVWpPwzTLwFetVP9GMldKxo+NEoM2zhB4A/bhILZVYfMw4zhCvl/j/FRmDi5yOcJTzQ0KpRpaYmXy+/BwZ7VXIrqZoQ0rcX7I=
+Received: from MWHPR0601MB3708.namprd06.prod.outlook.com (10.167.236.38) by
+ MWHPR0601MB3674.namprd06.prod.outlook.com (10.167.236.28) with Microsoft SMTP
+ Server (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
+ 15.20.1294.28; Wed, 14 Nov 2018 18:28:05 +0000
+Received: from MWHPR0601MB3708.namprd06.prod.outlook.com
+ ([fe80::f51a:d8dd:1aad:3bf9]) by MWHPR0601MB3708.namprd06.prod.outlook.com
+ ([fe80::f51a:d8dd:1aad:3bf9%3]) with mapi id 15.20.1294.045; Wed, 14 Nov 2018
+ 18:28:05 +0000
+From:   Trent Piepho <tpiepho@impinj.com>
+To:     "marc.zyngier@arm.com" <marc.zyngier@arm.com>,
+        "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+        "lorenzo.pieralisi@arm.com" <lorenzo.pieralisi@arm.com>,
+        "helgaas@google.com" <helgaas@google.com>
+CC:     "jingoohan1@gmail.com" <jingoohan1@gmail.com>,
+        "faiz_abbas@ti.com" <faiz_abbas@ti.com>,
+        "vigneshr@ti.com" <vigneshr@ti.com>,
+        "Joao.Pinto@synopsys.com" <Joao.Pinto@synopsys.com>,
+        "gustavo.pimentel@synopsys.com" <gustavo.pimentel@synopsys.com>
+Subject: Re: [PATCH 0/3] PCI: designware: Fixing MSI handling flow
+Thread-Topic: [PATCH 0/3] PCI: designware: Fixing MSI handling flow
+Thread-Index: AQHUe6RNjvB+uYCyEUiVT8YH/lgHCqVPmEcA
+Date:   Wed, 14 Nov 2018 18:28:05 +0000
+Message-ID: <1542220084.30311.453.camel@impinj.com>
+References: <20181113225734.8026-1-marc.zyngier@arm.com>
+In-Reply-To: <20181113225734.8026-1-marc.zyngier@arm.com>
+Accept-Language: en-US
+Content-Language: en-US
+X-MS-Has-Attach: 
+X-MS-TNEF-Correlator: 
+authentication-results: spf=none (sender IP is )
+ smtp.mailfrom=tpiepho@impinj.com; 
+x-originating-ip: [216.207.205.253]
+x-ms-publictraffictype: Email
+x-microsoft-exchange-diagnostics: 1;MWHPR0601MB3674;6:w/aGgkW4foJpKKUQL9Rhx3WePar37TCrBUhzVL3VZeVzKBLVrfRrRhUnzb1cAOnIxCCVxb7fvfapTnZBolENFAdy0OVjOHzcrEcnd/Uc5Mo5QZRjEeoUmDfitO4t2CpAH1Bsr3uDIhq5X2Y3SOy5+vabIw4BD8fbanXILAdrcgJjPkHjiB22nxpvWrLIPvGXR2u4XjDnhYdsCvA7ldshQj/XtFQUxfgebqU5txzfNXrtb0GKX2kwta0EQAEw5AnQiPhT0SNeBWWt0cajozI9X4OvenA2MptuLXEfBocl3WPNNg0kRzj0Pyz9hpUxbxiv/alhjx/drYmNwR6OoQ+aLyhYCoNnQTjG2nYd5O7XMvo/pju4or36TPPU4BDlM85+jJq1EkoddksEAM55AUW2l9V0UCeZWwZwMiItAZqu442+F3qJ8bobc4dSkKIdmRtfRJB0vmz3h5btnMhcK9LA0A==;5:5FU8iQ56DtoB3pG2I89higrqSP4lSypxWtQJjkKMjIu667MpvGaoljBZKrTkSYHAghOZmP7YGrjkowIW/JdsV2ORyeVMjeYs0RC9e9ZR+tsThb3sfUC8/743rLqsVmxWGXw5fGUVc87bLhTjbAOx3qszM15fyRBRqIeKeOUd1iY=;7:m2HyLb0Xuh17fpfpxgF9YMicBqNJbNg664G1IhzL7AVjK1lXptUvmZVDPAjhIFoG/+zcibHwQK2kHQcFLqwf0aTIjEmEJVhGqjrQFh0X9cIvWykCUxTnM/BYW1ctimhAM+v0KPm0QSR1JVq9ZBhEpQ==
+x-ms-exchange-antispam-srfa-diagnostics: SOS;
+x-ms-office365-filtering-correlation-id: 1b1ed3df-2e14-4bb5-a5d0-08d64a5eeb42
+x-microsoft-antispam: BCL:0;PCL:0;RULEID:(2390098)(7020095)(4652040)(8989299)(5600074)(711020)(4534185)(4627221)(201703031133081)(201702281549075)(8990200)(2017052603328)(7153060)(7193020);SRVR:MWHPR0601MB3674;
+x-ms-traffictypediagnostic: MWHPR0601MB3674:
+x-microsoft-antispam-prvs: <MWHPR0601MB36741213FD8717A0B9618809D3C30@MWHPR0601MB3674.namprd06.prod.outlook.com>
+x-exchange-antispam-report-test: UriScan:(269456686620040);
+x-ms-exchange-senderadcheck: 1
+x-exchange-antispam-report-cfa-test: BCL:0;PCL:0;RULEID:(8211001083)(6040522)(2401047)(5005006)(8121501046)(93006095)(93001095)(10201501046)(3002001)(3231415)(944501410)(52105112)(148016)(149066)(150057)(6041310)(201703131423095)(201702281528075)(20161123555045)(201703061421075)(201703061406153)(20161123564045)(20161123562045)(20161123558120)(20161123560045)(201708071742011)(7699051)(76991095);SRVR:MWHPR0601MB3674;BCL:0;PCL:0;RULEID:;SRVR:MWHPR0601MB3674;
+x-forefront-prvs: 085634EFF4
+x-forefront-antispam-report: SFV:NSPM;SFS:(10019020)(39840400004)(396003)(346002)(376002)(136003)(366004)(189003)(199004)(39060400002)(99286004)(26005)(4001150100001)(8676002)(3846002)(6506007)(6246003)(8936002)(81166006)(36756003)(81156014)(5660300001)(4326008)(68736007)(71190400001)(2900100001)(256004)(2616005)(11346002)(476003)(103116003)(446003)(76176011)(486006)(14444005)(186003)(71200400001)(6116002)(102836004)(2906002)(105586002)(97736004)(106356001)(2201001)(2501003)(478600001)(6436002)(54906003)(110136005)(316002)(6512007)(66066001)(53936002)(7736002)(229853002)(6486002)(25786009)(14454004)(305945005)(86362001);DIR:OUT;SFP:1102;SCL:1;SRVR:MWHPR0601MB3674;H:MWHPR0601MB3708.namprd06.prod.outlook.com;FPR:;SPF:None;LANG:en;PTR:InfoNoRecords;MX:1;A:1;
+received-spf: None (protection.outlook.com: impinj.com does not designate
+ permitted sender hosts)
+x-microsoft-antispam-message-info: HaYPrT+lhgOfvfuitkzi8/gRfS1HOfpvOxL/erqlCbAAjhtacqmblHiDlsNuTWC/p/BZzd6cicCk48hXigFY64/voR7feR9P4CkaI8LCMUJEor1pVhT6Wvrz/lOnV8skaLYh9WhTJKpyqQtbzEN3I8scX7C+gOAhKvdhLvNUb0/U4bhLqG2mnPzjC7xJe3vFb4jCOlWv3FzI03zEFdxIcRRnfvpm/47cLox5EHnIR5x2xbh+s+rTpqy0T7KGWGKTLWMaf0XLqtsMeRl71V6XPGvcZ4UqOSas0PlxFOGNUFUwswnM+f/OlIWN+zWeOWXdSmujKEKPt2uR05WENFVySR9AHD5ovZlyc9dMCcFRDdA=
+spamdiagnosticoutput: 1:99
+spamdiagnosticmetadata: NSPM
+Content-Type: text/plain; charset="utf-8"
+Content-ID: <7EAD98A1A7ABC84698C9F2889F327C02@namprd06.prod.outlook.com>
+Content-Transfer-Encoding: base64
 MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 8bit
-Date:   Wed, 14 Nov 2018 18:41:21 +0100
-From:   Stefan Agner <stefan@agner.ch>
-To:     Lucas Stach <l.stach@pengutronix.de>
-Cc:     jingoohan1@gmail.com, gustavo.pimentel@synopsys.com,
-        bhelgaas@google.com, linux-pci@vger.kernel.org,
-        linux-kernel@vger.kernel.org
-Subject: Re: [PATCH] PCI: dwc: Limit config space size for i.MX6
-In-Reply-To: <1542212438.23489.6.camel@pengutronix.de>
-References: <20181019111350.6170-1-stefan@agner.ch>
- <40d0c27d612534033d146497029b1922@agner.ch>
- <1542212438.23489.6.camel@pengutronix.de>
-Message-ID: <7b7743d55f2522c7af5be058fd02574d@agner.ch>
-X-Sender: stefan@agner.ch
-User-Agent: Roundcube Webmail/1.3.7
+X-OriginatorOrg: impinj.com
+X-MS-Exchange-CrossTenant-Network-Message-Id: 1b1ed3df-2e14-4bb5-a5d0-08d64a5eeb42
+X-MS-Exchange-CrossTenant-originalarrivaltime: 14 Nov 2018 18:28:05.2177
+ (UTC)
+X-MS-Exchange-CrossTenant-fromentityheader: Hosted
+X-MS-Exchange-CrossTenant-id: 6de70f0f-7357-4529-a415-d8cbb7e93e5e
+X-MS-Exchange-Transport-CrossTenantHeadersStamped: MWHPR0601MB3674
 Sender: linux-pci-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-On 14.11.2018 17:20, Lucas Stach wrote:
-> Am Mittwoch, den 14.11.2018, 16:49 +0100 schrieb Stefan Agner:
->> On 19.10.2018 13:13, Stefan Agner wrote:
->> > Reading the full 4k config space through sysfs leads to an
->> > external abort. Testing on a platform showed that the upper
->> > limit is 512. Limit config space to 512.
->>
->> Any comment on this patch?
->>
->> Since other devices use similar quirks, I guess the fix can't be far
->> off?
->>
->> Maybe restricting to the PCI device ID used in i.MX 6 only is too
->> restrictive, but I guess better restrictive for now?
-> 
-> I don't think we need a quirk here, but dw_pcie_rd_own_conf() should
-> really check that the config read isn't targeting registers that are
-> not implemented in the core.
-> 
-> According to the i.MX6 docs (PCIE_RC memory map) the last implemented
-> register is at 0x158.
-
-Hm, I was somehow under the impression that we read from the config
-space, but I see that this is actually dw_pcie_rd_own_conf, which is
-from the "dbi" range...
-
-How do we know the length of the memory map? Afaik, we typically do not
-store the effective register set length but the reserved length... Add a
-field in struct dw_pcie and set it in the IP specific code (pci-imx6.c
-in this case?)
-
-If that sounds reasonable, I am going to prepare a patch.
-
---
-Stefan
-
-> 
-> Regards,
-> Lucas
-> 
->> --
->> Stefan
->>
->> >
->> > > > Signed-off-by: Stefan Agner <stefan@agner.ch>
->> > ---
->> > I observed this on a Apalis iMX6 which uses the i.MX 6Quad without any
->> > PCIe device connected. It is especially annoying since it breaks by
->> > simply reading a file as root in sysfs (e.g. grepping through sysfs)...
->> >
->> > I am not very familiar with PCIe, so there might be better/more generic
->> > ways to fix this?
->> >
->> > # cat /sys/devices/soc0/soc/1ffc000.pcie/pci0000\:00/0000\:00\:00.0/config
->> > [  100.015997] pci_read_config, size 4096
->> > [  100.021433] Unhandled fault: imprecise external abort (0x1406) at 0xb6ea7000
->> > [  100.028985] pgd = 1a90ef4f
->> > [  100.031780] [b6ea7000] *pgd=4a039831
->> > [  100.035475] Internal error: : 1406 [#1] SMP ARM
->> > [  100.040094] Modules linked in:
->> > [  100.043230] CPU: 1 PID: 605 Comm: cat Not tainted 4.19.0-rc8+ #366
->> > [  100.049626] Hardware name: Freescale i.MX6 Quad/DualLite (Device Tree)
->> > [  100.056423] PC is at dw_pcie_read+0x50/0x84
->> > [  100.060790] LR is at dw_pcie_rd_own_conf+0x44/0x48
->> > [  100.065779] pc : [<c05bd600>]    lr : [<c05be248>]    psr: 60080093
->> > [  100.072274] sp : c3f77d40  ip : c3f77d50  fp : c3f77d4c
->> > [  100.077693] r10: 00000000  r9 : 00000004  r8 : c1708908
->> > [  100.083122] r7 : c3f77dc8  r6 : 00000200  r5 : 00000004  r4 : 00000000
->> > [  100.089895] r3 : 00000000  r2 : c3f77dc8  r1 : 00000000  r0 : f09b4200
->> > [  100.096657] Flags: nZCv  IRQs off  FIQs on  Mode SVC_32  ISA ARM 
->> > Segment none
->> > [  100.104152] Control: 10c5387d  Table: 13fb404a  DAC: 00000051
->> > [  100.110114] Process cat (pid: 605, stack limit = 0xcd2180c8)
->> > [  100.115994] Stack: (0xc3f77d40 to 0xc3f78000)
->> > [  100.120533] 7d40: c3f77d6c c3f77d50 c05be248 c05bd5bc eceede28
->> > ecef7800 00000000 00000200
->> > [  100.129025] 7d60: c3f77dbc c3f77d70 c05be2c4 c05be210 c05956dc
->> > 00000200 c3f77e08 c1708908
->> > [  100.137504] 7d80: c17665c4 c05956dc c3f77dbc 00000000 c0d27974
->> > c05be24c c1708908 00000200
->> > [  100.145980] 7da0: c3f77e08 c1708908 ec276000 ec276200 c3f77dec
->> > c3f77dc0 c059570c c05be258
->> > [  100.160586] 7dc0: c3f77dc8 00000000 ffffffff e5e423ab ec5c1800
->> > ec277000 00001000 13d8a000
->> > [  100.175434] 7de0: c3f77e3c c3f77df0 c05a4a5c c05956a8 c019b890
->> > 000003ff 00000001 00000000
->> > [  100.190328] 7e00: 00000000 00000000 00000000 e5e423ab ffffe000
->> > c05a4944 00000000 00000000
->> > [  100.205490] 7e20: 00000000 00000000 00000000 c38f5790 c3f77e6c
->> > c3f77e40 c038022c c05a4950
->> > [  100.220890] 7e40: 00000000 00000000 00001000 c3f77e58 c38f5780
->> > 00001000 c3f77f58 b6ea8000
->> > [  100.236386] 7e60: c3f77eac c3f77e70 c037fae0 c03801d8 00000000
->> > 00000000 c3f77e9c ec276000
->> > [  100.252114] 7e80: c0194a18 c1708908 c037fa28 c3fb83c0 c3f77f58
->> > 00000000 b6ea8000 00020000
->> > [  100.268039] 7ea0: c3f77f24 c3f77eb0 c02efcc4 c037fa34 00000022
->> > 00000000 00000000 00000000
->> > [  100.284170] 7ec0: 00000800 00000000 b6ea7000 c170eec8 00000817
->> > c1708908 c0119574 b6ea7000
->> > [  100.300390] 7ee0: c3f77fb0 00000000 c3f77fac c3f77ef8 c0119ac8
->> > c0119580 c3f77f5c e5e423ab
->> > [  100.316721] 7f00: 00020000 c3fb83c0 b6ea8000 c3f77f58 00000000
->> > b6ea8000 c3f77f54 c3f77f28
->> > [  100.333196] 7f20: c02efe74 c02efc94 c010e5c4 c010cc7c c3fb83c0
->> > c3fb83c0 00000000 00000000
->> > [  100.349704] 7f40: c1708908 b6ea8000 c3f77f94 c3f77f58 c02f0388
->> > c02efdf4 00000000 00000000
->> > [  100.366197] 7f60: c16eedd8 e5e423ab c1708d64 0000006c 7ff00000
->> > 00000000 00000003 c01011e4
->> > [  100.382693] 7f80: c3f76000 00000003 c3f77fa4 c3f77f98 c02f03fc
->> > c02f0344 00000000 c3f77fa8
->> > [  100.399206] 7fa0: c0101000 c02f03f8 0000006c 7ff00000 00000003
->> > b6ea8000 00020000 00000000
->> > [  100.415718] 7fc0: 0000006c 7ff00000 00000000 00000003 00000003
->> > 00000000 00020000 00000000
->> > [  100.432222] 7fe0: 00000003 bef56ab8 b6f53d57 b6ee06c6 80080030
->> > 00000003 00000000 00000000
->> > [  100.448703] Backtrace:
->> > [  100.455228] [<c05bd5b0>] (dw_pcie_read) from [<c05be248>]
->> > (dw_pcie_rd_own_conf+0x44/0x48)
->> > [  100.471541] [<c05be204>] (dw_pcie_rd_own_conf) from [<c05be2c4>]
->> > (dw_pcie_rd_conf+0x78/0x1c8)
->> > [  100.488164]  r7:00000200 r6:00000000 r5:ecef7800 r4:eceede28
->> > [  100.497930] [<c05be24c>] (dw_pcie_rd_conf) from [<c059570c>]
->> > (pci_user_read_config_dword+0x70/0xec)
->> > [  100.515006]  r10:ec276200 r9:ec276000 r8:c1708908 r7:c3f77e08
->> > r6:00000200 r5:c1708908
->> > [  100.530829]  r4:c05be24c
->> > [  100.537271] [<c059569c>] (pci_user_read_config_dword) from
->> > [<c05a4a5c>] (pci_read_config+0x118/0x2cc)
->> > [  100.554299]  r7:13d8a000 r6:00001000 r5:ec277000 r4:ec5c1800
->> > [  100.563911] [<c05a4944>] (pci_read_config) from [<c038022c>]
->> > (sysfs_kf_bin_read+0x60/0xac)
->> > [  100.579880]  r10:c38f5790 r9:00000000 r8:00000000 r7:00000000
->> > r6:00000000 r5:00000000
->> > [  100.595383]  r4:c05a4944
->> > [  100.601650] [<c03801cc>] (sysfs_kf_bin_read) from [<c037fae0>]
->> > (kernfs_fop_read+0xb8/0x200)
->> > [  100.617481]  r7:b6ea8000 r6:c3f77f58 r5:00001000 r4:c38f5780
->> > [  100.626926] [<c037fa28>] (kernfs_fop_read) from [<c02efcc4>]
->> > (__vfs_read+0x3c/0x160)
->> > [  100.642031]  r10:00020000 r9:b6ea8000 r8:00000000 r7:c3f77f58
->> > r6:c3fb83c0 r5:c037fa28
->> > [  100.657201]  r4:c1708908
->> > [  100.663320] [<c02efc88>] (__vfs_read) from [<c02efe74>] (vfs_read+0x8c/0x114)
->> > [  100.674165]  r9:b6ea8000 r8:00000000 r7:c3f77f58 r6:b6ea8000
->> > r5:c3fb83c0 r4:00020000
->> > [  100.689131] [<c02efde8>] (vfs_read) from [<c02f0388>] (ksys_read+0x50/0xb4)
->> > [  100.699876]  r9:b6ea8000 r8:c1708908 r7:00000000 r6:00000000
->> > r5:c3fb83c0 r4:c3fb83c0
->> > [  100.714919] [<c02f0338>] (ksys_read) from [<c02f03fc>] (sys_read+0x10/0x14)
->> > [  100.725650]  r10:00000003 r9:c3f76000 r8:c01011e4 r7:00000003
->> > r6:00000000 r5:7ff00000
->> > [  100.740784]  r4:0000006c
->> > [  100.746897] [<c02f03ec>] (sys_read) from [<c0101000>]
->> > (ret_fast_syscall+0x0/0x28)
->> > [  100.761495] Exception stack(0xc3f77fa8 to 0xc3f77ff0)
->> > [  100.770224] 7fa0:                   0000006c 7ff00000 00000003
->> > b6ea8000 00020000 00000000
->> > [  100.785624] 7fc0: 0000006c 7ff00000 00000000 00000003 00000003
->> > 00000000 00020000 00000000
->> > [  100.801074] 7fe0: 00000003 bef56ab8 b6f53d57 b6ee06c6
->> > [  100.809800] Code: e5821000 e89da800 e5901000 ee073f9a (e5821000)
->> > [  100.819571] ---[ end trace 1be350dbae42cdaf ]---
->> >
->> > --
->> > Stefan
->> >
->> >  drivers/pci/quirks.c    | 10 ++++++++++
->> >  include/linux/pci_ids.h |  1 +
->> >  2 files changed, 11 insertions(+)
->> >
->> > diff --git a/drivers/pci/quirks.c b/drivers/pci/quirks.c
->> > index 6bc27b7fd452..24d8d1d614e5 100644
->> > --- a/drivers/pci/quirks.c
->> > +++ b/drivers/pci/quirks.c
->> > @@ -471,6 +471,16 @@
->> > > > DECLARE_PCI_FIXUP_HEADER(PCI_VENDOR_ID_NETRONOME,	PCI_DEVICE_ID_NETRONOME_NFP600
->> >
->> > > > > > DECLARE_PCI_FIXUP_HEADER(PCI_VENDOR_ID_NETRONOME,	PCI_DEVICE_ID_NETRONOME_NFP5000,	quirk_nfp6000);
->> >
->> > > > > > DECLARE_PCI_FIXUP_HEADER(PCI_VENDOR_ID_NETRONOME,	PCI_DEVICE_ID_NETRONOME_NFP6000_VF,	quirk_nfp6000);
->> >  
->> > +/*
->> > + * This PCIe controller causes external abort if config addresses above 0x200
->> > + * are read.
->> > + */
->> > +static void quirk_dw_imx6(struct pci_dev *dev)
->> > +{
->> > > > +	dev->cfg_size = 0x200;
->> > +}
->> > > > > > +DECLARE_PCI_FIXUP_HEADER(PCI_VENDOR_ID_SYNOPSYS,	PCI_DEVICE_ID_SYNOPSYS_IMX6,	quirk_dw_imx6);
->> > +
->> >  /*  On IBM Crocodile ipr SAS adapters, expand BAR to system page size */
->> >  static void quirk_extend_bar_to_page(struct pci_dev *dev)
->> >  {
->> > diff --git a/include/linux/pci_ids.h b/include/linux/pci_ids.h
->> > index d157983b84cf..cfd43468f983 100644
->> > --- a/include/linux/pci_ids.h
->> > +++ b/include/linux/pci_ids.h
->> > @@ -2354,6 +2354,7 @@
->> > > >  #define PCI_DEVICE_ID_CENATEK_IDE	0x0001
->> >  
->> > > >  #define PCI_VENDOR_ID_SYNOPSYS		0x16c3
->> > > > +#define PCI_DEVICE_ID_SYNOPSYS_IMX6	0xabcd
->> >  
->> > > >  #define PCI_VENDOR_ID_VITESSE		0x1725
->> > > >  #define PCI_DEVICE_ID_VITESSE_VSC7174	0x7174
+T24gVHVlLCAyMDE4LTExLTEzIGF0IDIyOjU3ICswMDAwLCBNYXJjIFp5bmdpZXIgd3JvdGU6DQo+
+IEl0IHJlY2VudGx5IGNhbWUgdG8gbGlnaHQgdGhhdCB0aGUgRGVzaWdud2FyZSBQQ0llIGRyaXZl
+ciBpcyByYXRoZXINCj4gYnJva2VuIGluIHRoZSB3YXkgaXQgaGFuZGxlcyBNU0lbMV06DQo+IA0K
+PiAtIEl0IG1hc2tzIGludGVycnVwdCBieSBkaXNhYmxpbmcgdGhlbSwgbWVhbmluZyB0aGF0IE1T
+SXMgZ2VuZXJhdGVkDQo+ICAgZHVyaW5nIHRoZSBtYXNrZWQgd2luZG93IGFyZSBzaW1wbHkgbG9z
+dC4gT29wcy4NCj4gDQo+IC0gQWNraW5nIG9mIHRoZSBjdXJyZW50bHkgcGVuZGluZyBNU0kgaXMg
+ZG9uZSBvdXRzaWRlIG9mIHRoZQ0KPiBpbnRlcnJ1cHQNCj4gICBmbG93LCBnZXR0aW5nIG1vdmVk
+IGFyb3VuZCByYW5kb21seSBhbmQgdWx0aW1hdGVseSBicmVha2luZyB0aGUNCj4gICBkcml2ZXIu
+IE5vdCBncmVhdC4NCj4gDQo+IFRoaXMgc2VyaWVzIGF0dGVtcHRzIHRvIGFkZHJlc3MgdGhpcyBi
+eSBzd2l0Y2hpbmcgdG8gdXNpbmcgdGhlIE1BU0sNCj4gcmVnaXN0ZXIgZm9yIG1hc2tpbmcgaW50
+ZXJydXB0cyAoISksIGFuZCBtb3ZlIHRoZSBhY2sgaW50byB0aGUNCj4gYXBwcm9wcmlhdGUgY2Fs
+bGJhY2ssIGdpdmluZyBpdCBhIGZpeGVkIHBsYWNlIGluIHRoZSBNU0kgaGFuZGxpbmcNCj4gZmxv
+dy4NCj4gDQo+IE5vdGUgdGhhdCB0aGlzIGlzIG9ubHkgY29tcGlsZS10ZXN0ZWQgb24gbXkgYXJt
+NjQgbGFwdG9wLCBhcyBJJ20NCj4gdHJhdmVsbGluZyBhbmQgZG8gbm90IGhhdmUgdGhlIHJlcXVp
+cmVkIEhXIHRvIHRlc3QgaXQgYW55d2F5LiBJJ2QNCj4gd2VsY29tZSBib3RoIHJldmlldyBhbmQg
+dGVzdGluZyBieSB0aGUgaW50ZXJlc3RlZCBwYXJ0aWVzIChkd2MNCj4gbWFpbnRhaW5lciBhbmQg
+dXNlcnMgYWZmZWN0ZWQgYnkgZXhpc3RpbmcgYnVncykuDQo+IA0KDQpJJ3ZlIHN0YXJ0ZWQgdG8g
+dGVzdCB0aGlzIHNlcmllcyBhZnRlciBwb3J0aW5nIGFsbCB0aGUgcGF0Y2hlcyBuZWVkZWQNCnRv
+IG1ha2UgSU1YN2Qgd29yayBmcm9tIDQuMTYuOCB0byA0LjIwLjAtcmMyLg0KDQpUb29rIGEgbGl0
+dGxlIHdoaWxlIHRvIGZpZ3VyZSBvdXQgdGhhdCB0aGUgcGNpZXBvcnQgZHJpdmVyIGhhcyBhIG5l
+dw0KY29uZmlnIGVudHJ5IHRvIGVuYWJsZSwgb3Igb25lIGdldHMgbm8gaW50ZXJydXB0cy4gIEkn
+bSBub3Qgc3VyZSBpZg0KdGhpcyBpcyBlbnRpcmVseSBjb3JyZWN0IGJlaGF2aW9yLg0KDQpUaGUg
+bmV3IGRvbWFpbiBzdHVmZiBkb2VzIG5vdCBhcHBlYXIgdG8gaW50ZWdyYXRlIGludG8gdGhlIGV4
+aXN0aW5nIGlycQ0KZnJhbWV3b3JrIHBlcmZlY3RseS4gIE15IGludGVycnVwdCBoYXMgY2hhbmdl
+ZCBmcm9tIE1TSSAjMSB0byBNU0kNCiM1MjQyODguICBOb3QgdGhlIG1vc3QgdXNlciBmcmllbmRs
+eSBudW1iZXIuDQoNCjI5MjogICAgICAgICAgMCAgICAgICAgICAwICAgUENJLU1TSSAgIDAgRWRn
+ZSAgICAgIFBDSWUgUE1FLCBhZXJkcnYNCjI5MzogICAgICAgICAgMSAgICAgICAgICAwICAgUENJ
+LU1TSSA1MjQyODggRWRnZSAgICAgIGltcGluai1yZmlkLW1vZGVtDQoNClByZXZpb3VzbHkgdGhl
+IGR3YyBjb250cm9sbGVyIHdvdWxkIHNob3cgdXAgYXMgdGhlIG93bmVyIG9mIEdQQ3YyIElSUQ0K
+MTIyLiAgSXQgZG9lc24ndCBhbnkgbW9yZS4gIFNlZW1zIGxpa2UgdGhlIGtlcm5lbCBpbmZvIGZv
+ciBpdCBpcyB3cm9uZy4NCg0KL3N5cy9rZXJuZWwvaXJxLzY1L2FjdGlvbnM6KG51bGwpDQovc3lz
+L2tlcm5lbC9pcnEvNjUvY2hpcF9uYW1lOkdQQ3YyDQovc3lzL2tlcm5lbC9pcnEvNjUvaHdpcnE6
+MTIyDQovc3lzL2tlcm5lbC9pcnEvNjUvcGVyX2NwdV9jb3VudDowLDANCi9zeXMva2VybmVsL2ly
+cS82NS90eXBlOmVkZ2UNCg0KU2hvdWxkIGJlIGxldmVsIGFuZCB0aGUgY291bnQgc2hvdWxkIGJl
+IDEsMC4gIFRoZSBkZWJ1Z2ZzIGludGVyZmFjZSBpcw0KbW9yZSBhY2N1cmF0ZToNCg0KIyBjYXQg
+L3N5cy9rZXJuZWwvZGVidWcvaXJxL2lycXMvNjUNCmhhbmRsZXI6ICBkd19jaGFpbmVkX21zaV9p
+c3INCmRldmljZTogICAobnVsbCkNCnN0YXR1czogICAweDAwMDEwYzAwDQogICAgICAgICAgICBf
+SVJRX05PUFJPQkUNCiAgICAgICAgICAgIF9JUlFfTk9SRVFVRVNUDQogICAgICAgICAgICBfSVJR
+X05PVEhSRUFEDQpkc3RhdGU6ICAgMHgwMzQwMDIwNA0KICAgICAgICAgICAgSVJRX1RZUEVfTEVW
+RUxfSElHSA0KICAgICAgICAgICAgSVJRRF9BQ1RJVkFURUQNCiAgICAgICAgICAgIElSUURfSVJR
+X1NUQVJURUQNCiAgICAgICAgICAgIElSUURfU0lOR0xFX1RBUkdFVA0KDQpTdGlsbCBkb2Vzbid0
+IGtub3cgd2hhdCBkZXZpY2UgaXQncyBmb3IuDQoNCk5vdyBJIGNhbiBmaW5hbGx5IHRlc3QgaXQh
+DQoNCkNvbmZpcm1lZCBpbnRlcnJ1cHQgcmFjZSBpcyBzdGlsbCB0aGVyZSBpbiBzdG9jayBrZXJu
+ZWwuDQoNCkNvbmZpcm1lZCBhZnRlciBteSBwYXRjaCBJIGRpZG4ndCBzZWUgdGhlIHJhY2UuICBE
+aWRuJ3QgY2hlY2sgd2h5IHRoZQ0KYnJva2VuIGVuYWJsZS9kaXNhYmxlIGFzIG1hc2sgZGlkbid0
+IGFwcGVhciBjYXVzZSBhIG5ldyByYWNlLCBidXQNCnNvbWV0aGluZyBtdXN0IGJlIHdyb25nIHNv
+bWV3aGVyZS4NCg0KVHJpZWQgeW91ciAxc3QgcGF0Y2guICBBcyBJIG1lbnRpb25lZCBiZWZvcmUg
+aW4gYSByZXBseSB0byBHdXN0YXZvLA0KanVzdCBjaGFuZ2luZyB0aGUgZW5hYmxlIHRvIG1hc2sg
+cmVzdWx0cyBpbiB0aGUgTVNJIG5ldmVyIGdldHRpbmcNCmVuYWJsZWQgaW4gdGhlIGZpcnN0IHBs
+YWNlLiAgTm90aGluZyBlbHNlIHdyaXRlcyB0byB0aGUgZW5hYmxlDQpyZWdpc3Rlci4uLg0KDQpB
+cyBhIHdvcmthcm91bmQsIEkgYWRkZWQgYW4gaXJxX2VuYWJsZSBtZXRob2QgdG8gZHdfcGNpZV9t
+c2lfaXJxX2NoaXANCnRoYXQganVzdCBjaGFpbnMgdG8gdGhlIHBhcmVudCwgYW5kIHRoZW4gYSBo
+YWNreSBpcnFfZW5hYmxlIGluDQpkd19wY2lfbXNpX2JvdHRvbV9pcnFfY2hpcCB0aGF0IG1hbmlw
+dWxhdGVzIHRoZSBlbmFibGUgcmVnaXN0ZXIuDQoNCk5vdyBpdCB3b3JrcyBhZ2Fpbi4gIFJhY2Ug
+c3RpbGwgcHJlc2VudC4gIEkgZG9uJ3Qgc2VlIHRoZQ0KZHdfcGNpX21zaV9ib3R0b21fKHVuKW1h
+c2sgbWV0aG9kcyBldmVyIGdldCBjYWxsZWQuICBJIHNlZW0gdG8gcmVjYWxsDQp0aGF0IHRoZXkg
+YXJlIGNhbGxlZCBhcyBhIHN1YnN0aXR1dGUgaWYgZW5hYmxlL2Rpc2FibGUgYXJlIG5vdCBwcmVz
+ZW50LA0KYnV0IGhhdmVuJ3QgY29uZmlybWVkIHRoYXQsIHdoaWNoIHdvdWxkIGV4cGxhaW4gd2h5
+IHRoZXkgYXJlIG5vdCBjYWxsZWQNCmFmdGVyIEkgYWRkZWQgZW5hYmxlLg0KDQpOZXh0IHRyaWVk
+IHlvdXIgbmV4dCB0d28gcGF0Y2hlcy4gIE5vIGxvbmdlciBzZWUgbG9zdCBpbnRlcnJ1cHRzLCBh
+cw0KdGhlIHN0YXR1cyBpcyBjbGVhcmVkIGJlZm9yZSB0aGUgaGFuZGxlciBpcyBjYWxsZWQuDQoN
+CkZyb20gd2hhdCBJIHNlZSB0aGUgY2xlYXIgb2YgdGhlIHN0YXR1cyBiaXQgaXMgZWZmZWN0aXZl
+bHkgYXQgdGhlIHNhbWUNCnBvaW50IGluIHRoZSBpcnEgcGF0aCBhcyB0aGUgd2F5IEkgY2xlYXJl
+ZCBpdCBpbiBteSBwYXRjaC4gIFRoZXJlJ3MNCmp1c3QgYSBsb25nZXIgY2FsbCBjaGFpbiB0byBn
+ZXQgdG8gaXQgaW4gdGhlIGFjayBtZXRob2QuICBOb3QgdGhhdCBpdCdzDQpub3QgYSBiZXR0ZXIg
+cGxhY2UgZm9yIGl0ICh3aGljaCBpc24ndCB0aGVyZSBpbiA0LjE2KSwgYnV0IEkgZG9uJ3QNCnRo
+aW5rIGl0IGNoYW5nZXMgYW55dGhpbmcuICBJcyB0aGVyZSBzb21lIHJlYXNvbiBkd19wY2lfYm90
+dG9tX2Fjaw0Kd291bGQgbm90IGJlIGNhbGxlZD8NCg0KU2luY2UgSSBkb24ndCBzZWUgdGhlIHVu
+KG1hc2spIG1ldGhvZHMgZXZlciBnZXQgY2FsbGVkLCBJJ20gbm90IHN1cmUgaWYNCnRoZXkgYXJl
+IGNvcnJlY3Qgb3Igbm90LiAgSSBhbHNvIGhhZCBzb21lIHVuYW5zd2VyZWQgZGV0YWlscyBvZg0K
+YmVoYXZpb3Igb24gdW5tYXNrLiAgSSBjYW4gc2VlIHBvc3NpYmxlIGZsYXdzLCBkZXBlbmRpbmcg
+b24gaG93IHRoaXMNCndvcmtzLg==
