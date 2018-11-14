@@ -1,137 +1,150 @@
 Return-Path: <SRS0=Q3Ib=NZ=vger.kernel.org=linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
-X-Spam-Level: 
-X-Spam-Status: No, score=-4.0 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	INCLUDES_PATCH,MAILING_LIST_MULTI,SPF_PASS,URIBL_BLOCKED autolearn=ham
+X-Spam-Level: *
+X-Spam-Status: No, score=1.7 required=3.0 tests=DKIM_INVALID,DKIM_SIGNED,
+	FSL_HELO_FAKE,MAILING_LIST_MULTI,SPF_PASS,USER_AGENT_MUTT autolearn=no
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 79EDFC43441
-	for <linux-pci@archiver.kernel.org>; Wed, 14 Nov 2018 09:54:42 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id E50F3C43441
+	for <linux-pci@archiver.kernel.org>; Wed, 14 Nov 2018 10:21:11 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 4333822360
-	for <linux-pci@archiver.kernel.org>; Wed, 14 Nov 2018 09:54:42 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.3.2 mail.kernel.org 4333822360
-Authentication-Results: mail.kernel.org; dmarc=none (p=none dis=none) header.from=arm.com
+	by mail.kernel.org (Postfix) with ESMTP id A9F792243E
+	for <linux-pci@archiver.kernel.org>; Wed, 14 Nov 2018 10:21:11 +0000 (UTC)
+Authentication-Results: mail.kernel.org;
+	dkim=fail reason="signature verification failed" (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="FrmTryQ0"
+DMARC-Filter: OpenDMARC Filter v1.3.2 mail.kernel.org A9F792243E
+Authentication-Results: mail.kernel.org; dmarc=fail (p=none dis=none) header.from=kernel.org
 Authentication-Results: mail.kernel.org; spf=none smtp.mailfrom=linux-pci-owner@vger.kernel.org
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727598AbeKNT5N (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Wed, 14 Nov 2018 14:57:13 -0500
-Received: from foss.arm.com ([217.140.101.70]:41086 "EHLO foss.arm.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1727558AbeKNT5N (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Wed, 14 Nov 2018 14:57:13 -0500
-Received: from usa-sjc-imap-foss1.foss.arm.com (unknown [10.72.51.249])
-        by usa-sjc-mx-foss1.foss.arm.com (Postfix) with ESMTP id 05A4D80D;
-        Wed, 14 Nov 2018 01:54:41 -0800 (PST)
-Received: from big-swifty.misterjones.org (usa-sjc-mx-foss1.foss.arm.com [217.140.101.70])
-        by usa-sjc-imap-foss1.foss.arm.com (Postfix) with ESMTPSA id A4C333F5BD;
-        Wed, 14 Nov 2018 01:54:40 -0800 (PST)
-Date:   Wed, 14 Nov 2018 09:54:39 +0000
-Message-ID: <86a7mcdlwg.wl-marc.zyngier@arm.com>
-From:   Marc Zyngier <marc.zyngier@arm.com>
-To:     Gustavo Pimentel <gustavo.pimentel@synopsys.com>
-Cc:     "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+        id S1732704AbeKNUXr (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Wed, 14 Nov 2018 15:23:47 -0500
+Received: from mail-wm1-f68.google.com ([209.85.128.68]:37333 "EHLO
+        mail-wm1-f68.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1728071AbeKNUXr (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Wed, 14 Nov 2018 15:23:47 -0500
+Received: by mail-wm1-f68.google.com with SMTP id p2-v6so14136845wmc.2;
+        Wed, 14 Nov 2018 02:21:08 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20161025;
+        h=sender:date:from:to:cc:subject:message-id:references:mime-version
+         :content-disposition:in-reply-to:user-agent;
+        bh=dGVNalAlUla5dwr9j7vWc9GqcmFVNI56HiRwYDboDkY=;
+        b=FrmTryQ01XcAdb+CxfNru0yCA/gGQ1nOF67dlrybp37xg2EDgC/5TNJnCUpO8SvYi3
+         7ZoF7PgCUoKJel9+Uq5RAHGWeqB7vnJI0/N+gM/niempPBwDsVMo7OedvUfQ28sfZpEv
+         7SigffQMoEGw0H6/jmPvSofTViYmvvzd+npEZZgMd0eLtRfqNS8VYj8+MCMs8W8isWxb
+         oBfOfvq6Wve9QdCBPuQT16zJf47GWa/oJuP2IjBzMAiSeBLPp86NGX3yzA4QWgEZ2GkO
+         Ea7mTkcjqjQeBI2SfUS21sveGQbMa0TMW5cOdvxcYAXUPH8bxTydOFeJhfw0DA0CZD9N
+         GB9w==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20161025;
+        h=x-gm-message-state:sender:date:from:to:cc:subject:message-id
+         :references:mime-version:content-disposition:in-reply-to:user-agent;
+        bh=dGVNalAlUla5dwr9j7vWc9GqcmFVNI56HiRwYDboDkY=;
+        b=hR/lLzCMWi9GsTfixjK9xfGZsOdFxuat2zfqoAXG5vwZ7IuVqLGuTCqX6p4/brNpuH
+         KluKmLg0XHua9L5PB9KMDLhIHs5nyQP1EgtgwYQVI46MDugASO+AdSz7R0CONqyekGQ8
+         IdWB02kx8jh2mwXFu1Fwl8ewUVZmXqunV8a+P49/JJzQ8X1uegmHcyYhhPKG/A0N3fNx
+         VuVAKExg34HpdUuZNenWK8wggUfYL+51tzvLX3UBszY2M3IeO0YVyYX9pIGf2kyNrPUs
+         13N4PGEDylSKcLinTEdLcUHNOcZVrQOBp6/zQ6KQyQJrDqD69fTUsu7UrSZDwHnOYnxF
+         eiNQ==
+X-Gm-Message-State: AGRZ1gLECedFRh3cwNFDCnWC/4koCfbIFrv30EP46YUbRG3/ulaLq2ot
+        M/FTTw5LYx8RujAvaNrwdeI=
+X-Google-Smtp-Source: AJdET5f+QT7zdH5M2y2hsMFKK0v6Twifd1Lmjd3LEjBry3v91c7Wt9x5Dp8ms/HTlnKCIkTGsbs/Mw==
+X-Received: by 2002:a1c:8a91:: with SMTP id m139-v6mr1329144wmd.27.1542190867746;
+        Wed, 14 Nov 2018 02:21:07 -0800 (PST)
+Received: from gmail.com (2E8B0CD5.catv.pool.telekom.hu. [46.139.12.213])
+        by smtp.gmail.com with ESMTPSA id f68sm7603536wmd.15.2018.11.14.02.21.06
+        (version=TLS1_2 cipher=ECDHE-RSA-CHACHA20-POLY1305 bits=256/256);
+        Wed, 14 Nov 2018 02:21:07 -0800 (PST)
+Date:   Wed, 14 Nov 2018 11:21:04 +0100
+From:   Ingo Molnar <mingo@kernel.org>
+To:     Bjorn Helgaas <helgaas@kernel.org>
+Cc:     Borislav Petkov <bp@alien8.de>,
+        Jonathan Cameron <Jonathan.Cameron@huawei.com>,
+        Linus Torvalds <torvalds@linux-foundation.org>,
+        linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
         Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
-        Bjorn Helgaas <helgaas@google.com>,
-        Trent Piepho <tpiepho@impinj.com>,
-        Jingoo Han <jingoohan1@gmail.com>,
-        "faiz_abbas@ti.com" <faiz_abbas@ti.com>,
-        Joao Pinto <Joao.Pinto@synopsys.com>,
-        Vignesh R <vigneshr@ti.com>
-Subject: Re: [PATCH 0/3] PCI: designware: Fixing MSI handling flow
-In-Reply-To: <e73891a5-d798-ee9c-607c-9648d07f6505@synopsys.com>
-References: <20181113225734.8026-1-marc.zyngier@arm.com>
-        <e73891a5-d798-ee9c-607c-9648d07f6505@synopsys.com>
-User-Agent: Wanderlust/2.15.9 (Almost Unreal) SEMI-EPG/1.14.7 (Harue)
- FLIM/1.14.9 (=?UTF-8?B?R29qxY0=?=) APEL/10.8 EasyPG/1.0.0 Emacs/25.1
- (aarch64-unknown-linux-gnu) MULE/6.0 (HANACHIRUSATO)
-Organization: ARM Ltd
-MIME-Version: 1.0 (generated by SEMI-EPG 1.14.7 - "Harue")
-Content-Type: text/plain; charset=US-ASCII
+        Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+        Bart Van Assche <bvanassche@acm.org>,
+        Jens Axboe <axboe@kernel.dk>,
+        Thomas Gleixner <tglx@linutronix.de>,
+        Peter Zijlstra <a.p.zijlstra@chello.nl>,
+        Tom Lendacky <thomas.lendacky@amd.com>,
+        Martin =?iso-8859-1?Q?Hundeb=F8ll?= <martin@geanix.com>,
+        "Rafael J. Wysocki" <rjw@rjwysocki.net>,
+        Len Brown <lenb@kernel.org>, linux-acpi@vger.kernel.org
+Subject: Re: [GIT PULL] PCI changes for v4.20
+Message-ID: <20181114102104.GA57814@gmail.com>
+References: <20181023173934.GA14918@bhelgaas-glaptop.roam.corp.google.com>
+ <20181113071712.GA2353@gmail.com>
+ <20181113102004.GC10502@zn.tnic>
+ <20181113144746.GA69034@google.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20181113144746.GA69034@google.com>
+User-Agent: Mutt/1.9.4 (2018-02-28)
 Sender: linux-pci-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-On Tue, 13 Nov 2018 23:16:33 +0000,
-Gustavo Pimentel <gustavo.pimentel@synopsys.com> wrote:
+
+* Bjorn Helgaas <helgaas@kernel.org> wrote:
+
+> [+cc Martin, Rafael, Len, linux-acpi]
 > 
-> On 13/11/2018 22:57, Marc Zyngier wrote:
-> > It recently came to light that the Designware PCIe driver is rather
-> > broken in the way it handles MSI[1]:
-> > 
-> > - It masks interrupt by disabling them, meaning that MSIs generated
-> >   during the masked window are simply lost. Oops.
-> > 
-> > - Acking of the currently pending MSI is done outside of the interrupt
-> >   flow, getting moved around randomly and ultimately breaking the
-> >   driver. Not great.
-> > 
-> > This series attempts to address this by switching to using the MASK
-> > register for masking interrupts (!), and move the ack into the
-> > appropriate callback, giving it a fixed place in the MSI handling
-> > flow.
-> > 
-> > Note that this is only compile-tested on my arm64 laptop, as I'm
-> > travelling and do not have the required HW to test it anyway. I'd
-> > welcome both review and testing by the interested parties (dwc
-> > maintainer and users affected by existing bugs).
+> On Tue, Nov 13, 2018 at 11:20:04AM +0100, Borislav Petkov wrote:
+> > On Tue, Nov 13, 2018 at 08:17:12AM +0100, Ingo Molnar wrote:
+> > > 
+> > > * Bjorn Helgaas <helgaas@kernel.org> wrote:
+> > > 
+> > > > PCI changes:
+> > > > 
+> > > >   - Pay attention to device-specific _PXM node values (Jonathan Cameron)
+> > > 
+> > > There's a new boot regression, my AMD ThreadRipper system (MSI X399 SLI 
+> > > PLUS (MS-7B09)) hangs during early bootup, and I have bisected it down to 
+> > > this commit:
+> > > 
+> > >   bad7dcd94f39: ACPI/PCI: Pay attention to device-specific _PXM node values
+> > > 
+> > > Reverting it solves the hang.
+> > > 
+> > > Unfortunately there's no console output when it hangs, even with 
+> > > earlyprintk. It just hangs after the "loading initrd" line.
+> > > 
+> > > Config is an Ubuntu-ish config with PROVE_LOCKING=y and a few other debug 
+> > > options.
+> > > 
+> > > All my other testsystems boot fine with similar configs, so it's probably 
+> > > something specific to this system.
 > 
-> As we spoke on the conference, as soon as I get back and I've the necessary
-> conditions I'll test the discussed modifications on my HW.
+> Martin reported the same thing [1] (unfortunately the archive didn't
+> capture Martin's original emails, I think because they were multi-part
+> messages with attachments).
+> 
+> Looks like Martin might have a similar system:
+> 
+>   DMI: To Be Filled By O.E.M. To Be Filled By O.E.M./X399 Taichi, BIOS P3.30 08/14/2018
+>   smpboot: CPU0: AMD Ryzen Threadripper 2950X 16-Core Processor (family: 0x17, model: 0x8, stepping: 0x2)
+> 
+> Given how painful this is to debug, I queued up a revert on my
+> for-linus branch until we figure out what sanity checks are needed to
+> make the original patch safe.
 
-I just realised (at 1am!) that the first patch is awfully buggy:
-- ENABLE and MASK have opposite polarities
-- There is nothing initialising the ENABLE and MASK registers
+Thanks!
 
-I've stashed the following fix-up on top of the existing series:
+Took me about a day to bisect this, on this hard to bisect machine. :-/
 
-diff --git a/drivers/pci/controller/dwc/pcie-designware-host.c b/drivers/pci/controller/dwc/pcie-designware-host.c
-index f06e67c60593..0fa9e8fdce66 100644
---- a/drivers/pci/controller/dwc/pcie-designware-host.c
-+++ b/drivers/pci/controller/dwc/pcie-designware-host.c
-@@ -166,7 +166,7 @@ static void dw_pci_bottom_mask(struct irq_data *data)
- 
- 		pp->irq_status[ctrl] &= ~(1 << bit);
- 		dw_pcie_wr_own_conf(pp, PCIE_MSI_INTR0_MASK + res, 4,
--				    pp->irq_status[ctrl]);
-+				    ~pp->irq_status[ctrl]);
- 	}
- 
- 	raw_spin_unlock_irqrestore(&pp->lock, flags);
-@@ -189,7 +189,7 @@ static void dw_pci_bottom_unmask(struct irq_data *data)
- 
- 		pp->irq_status[ctrl] |= 1 << bit;
- 		dw_pcie_wr_own_conf(pp, PCIE_MSI_INTR0_MASK + res, 4,
--				    pp->irq_status[ctrl]);
-+				    ~pp->irq_status[ctrl]);
- 	}
- 
- 	raw_spin_unlock_irqrestore(&pp->lock, flags);
-@@ -664,10 +664,15 @@ void dw_pcie_setup_rc(struct pcie_port *pp)
- 	num_ctrls = pp->num_vectors / MAX_MSI_IRQS_PER_CTRL;
- 
- 	/* Initialize IRQ Status array */
--	for (ctrl = 0; ctrl < num_ctrls; ctrl++)
--		dw_pcie_rd_own_conf(pp, PCIE_MSI_INTR0_ENABLE +
-+	for (ctrl = 0; ctrl < num_ctrls; ctrl++) {
-+		dw_pcie_wr_own_conf(pp, PCIE_MSI_INTR0_MASK +
- 					(ctrl * MSI_REG_CTRL_BLOCK_SIZE),
--				    4, &pp->irq_status[ctrl]);
-+				    4, ~0);
-+		dw_pcie_wr_own_conf(pp, PCIE_MSI_INTR0_ENABLE +
-+					(ctrl * MSI_REG_CTRL_BLOCK_SIZE),
-+				    4, ~0);
-+		pp->irq_status[ctrl] = 0;
-+	}
- 
- 	/* Setup RC BARs */
- 	dw_pcie_writel_dbi(pci, PCI_BASE_ADDRESS_0, 0x00000004);
+> I would expect proximity information to be basically just a hint for 
+> optimization, not a functional requirement, so it would be really 
+> interesting to figure out why this causes such a catastrophic failure. 
+> Maybe there's a way to improve that path as well so it would be more 
+> robust or at least more debuggable.
 
-Please let me know if this helps.
+Yeah.
 
-	M.
+Thanks,
 
--- 
-Jazz is not dead, it just smell funny.
+	Ingo
