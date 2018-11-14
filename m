@@ -1,117 +1,140 @@
-Return-Path: <SRS0=6VBI=NY=vger.kernel.org=linux-pci-owner@kernel.org>
+Return-Path: <SRS0=Q3Ib=NZ=vger.kernel.org=linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-1.1 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
-	DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_PASS,
-	URIBL_BLOCKED autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-0.8 required=3.0 tests=DKIM_INVALID,DKIM_SIGNED,
+	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_PASS autolearn=ham
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 6F439C43441
-	for <linux-pci@archiver.kernel.org>; Tue, 13 Nov 2018 23:21:00 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id DDA00C43441
+	for <linux-pci@archiver.kernel.org>; Wed, 14 Nov 2018 00:31:20 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 031DC20835
-	for <linux-pci@archiver.kernel.org>; Tue, 13 Nov 2018 23:21:00 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id A16E122419
+	for <linux-pci@archiver.kernel.org>; Wed, 14 Nov 2018 00:31:20 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=synopsys.com header.i=@synopsys.com header.b="EORBKekZ"
-DMARC-Filter: OpenDMARC Filter v1.3.2 mail.kernel.org 031DC20835
-Authentication-Results: mail.kernel.org; dmarc=fail (p=none dis=none) header.from=synopsys.com
+	dkim=fail reason="signature verification failed" (1024-bit key) header.d=dellteam.com header.i=@dellteam.com header.b="xh7BSZXs"
+DMARC-Filter: OpenDMARC Filter v1.3.2 mail.kernel.org A16E122419
+Authentication-Results: mail.kernel.org; dmarc=none (p=none dis=none) header.from=Dellteam.com
 Authentication-Results: mail.kernel.org; spf=none smtp.mailfrom=linux-pci-owner@vger.kernel.org
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1728066AbeKNJVa (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Wed, 14 Nov 2018 04:21:30 -0500
-Received: from us01smtprelay-2.synopsys.com ([198.182.47.9]:41700 "EHLO
-        smtprelay.synopsys.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726022AbeKNJV3 (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Wed, 14 Nov 2018 04:21:29 -0500
-Received: from mailhost.synopsys.com (mailhost3.synopsys.com [10.12.238.238])
-        by smtprelay.synopsys.com (Postfix) with ESMTP id 41C6324E0935;
-        Tue, 13 Nov 2018 15:20:58 -0800 (PST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=synopsys.com; s=mail;
-        t=1542151258; bh=ZgucZdDPHea4HA6oGdTKzUQV3XgGQeqEp0He94KaQLc=;
-        h=Subject:To:CC:References:From:Date:In-Reply-To:From;
-        b=EORBKekZa/5395D/84VOx2MvaOmYyVjFEEuewdO2hI1yPfWmiwBDnYosZNrrM4wDL
-         XOnGqUXa+XNgbB7/yvBDw3/qOr9LoCRoKQS36PDS3yx43xKr4kjmkFBPIsAxEIsvJs
-         u6xKqyAhjb0uIzPICd1yikcHGXXTSs3u7PwfYDw3n/OW1C4fktMHek2IYXsx+WW28+
-         D5MxP+BS3zmfgNyo1ZtbnxEHC4wbkoSMlD6aNCr3bSNh7lXNbn29/tHqV8utwP8EV0
-         Y5qAf3XIfu+U1cpKZkRcUFkSkLY/wwL+rTsY/+a/dcmRs3w7Fmjqrr0sBm4Gb3aqrX
-         b2P7ssl5tPSWw==
-Received: from us01wehtc1.internal.synopsys.com (us01wehtc1-vip.internal.synopsys.com [10.12.239.236])
-        by mailhost.synopsys.com (Postfix) with ESMTP id 1B2E43DCD;
-        Tue, 13 Nov 2018 15:20:58 -0800 (PST)
-Received: from DE02WEHTCA.internal.synopsys.com (10.225.19.92) by
- us01wehtc1.internal.synopsys.com (10.12.239.231) with Microsoft SMTP Server
- (TLS) id 14.3.408.0; Tue, 13 Nov 2018 15:20:38 -0800
-Received: from DE02WEHTCB.internal.synopsys.com (10.225.19.94) by
- DE02WEHTCA.internal.synopsys.com (10.225.19.92) with Microsoft SMTP Server
- (TLS) id 14.3.408.0; Wed, 14 Nov 2018 00:20:37 +0100
-Received: from [10.4.120.48] (10.4.120.48) by DE02WEHTCB.internal.synopsys.com
- (10.225.19.80) with Microsoft SMTP Server (TLS) id 14.3.408.0; Wed, 14 Nov
- 2018 00:20:37 +0100
-Subject: Re: [PATCH 0/3] PCI: designware: Fixing MSI handling flow
-To:     Marc Zyngier <marc.zyngier@arm.com>,
-        "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-        Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
-        Bjorn Helgaas <helgaas@google.com>
-CC:     Trent Piepho <tpiepho@impinj.com>,
-        Jingoo Han <jingoohan1@gmail.com>,
-        Gustavo Pimentel <gustavo.pimentel@synopsys.com>,
-        "faiz_abbas@ti.com" <faiz_abbas@ti.com>,
-        Joao Pinto <Joao.Pinto@synopsys.com>,
-        Vignesh R <vigneshr@ti.com>
-References: <20181113225734.8026-1-marc.zyngier@arm.com>
-From:   Gustavo Pimentel <gustavo.pimentel@synopsys.com>
-Message-ID: <e73891a5-d798-ee9c-607c-9648d07f6505@synopsys.com>
-Date:   Tue, 13 Nov 2018 23:16:33 +0000
-User-Agent: Mozilla/5.0 (Windows NT 10.0; WOW64; rv:52.0) Gecko/20100101
- Thunderbird/52.9.1
-MIME-Version: 1.0
-In-Reply-To: <20181113225734.8026-1-marc.zyngier@arm.com>
-Content-Type: text/plain; charset="utf-8"
+        id S1727005AbeKNKcF (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Wed, 14 Nov 2018 05:32:05 -0500
+Received: from esa3.dell-outbound.iphmx.com ([68.232.153.94]:27148 "EHLO
+        esa3.dell-outbound.iphmx.com" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1731250AbeKNKcE (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Wed, 14 Nov 2018 05:32:04 -0500
+DKIM-Signature: v=1; a=rsa-sha256; c=simple/simple;
+  d=dellteam.com; i=@dellteam.com; q=dns/txt; s=smtpout;
+  t=1542155477; x=1573691477;
+  h=cc:from:to:subject:date:message-id:references:
+   content-transfer-encoding:mime-version;
+  bh=ZtOQ29/cvWpRBNtxeWx0syMkcEv4/RledEdseLfTv4Q=;
+  b=xh7BSZXsxDHkjyXNtByBVCP4ua3pnKOlDE+LQh90/4+QR4umav7VaKQO
+   9Q3l43f4KNzJ61W5J47/Gyl8Ny9/nO0wbY6JVkC0hBy2DPNFawX1gWGUC
+   tkmLJeSH39tARsH0XdvSDY6UUp4sr1nuoN21TNznvBrRFOMERgwA6UrVF
+   8=;
+X-IronPort-Anti-Spam-Filtered: true
+X-IronPort-Anti-Spam-Result: =?us-ascii?q?A2ERAABpa+tbhiWd50NkHAEBAQQBAQc?=
+ =?us-ascii?q?EAQGBUQcBAQsBg2snCowGX40qlzWBegsBAYRsgz8iNA0NAQMBAQIBAQIBAQI?=
+ =?us-ascii?q?QAQEBCgkLCCkvgjYigmQBAQEDEig/EAIBCBgeEFcCBBMIGoJ/ggKdFgKBEIl?=
+ =?us-ascii?q?YAQEBgh2KLIwCghaBEYMShH5NhQ4CiwCUVgkFkRUgkHOCdZRhAgQCBAUCFIF?=
+ =?us-ascii?q?Dgg5wgzyCNRuOCkABMYxagR8BAQ?=
+X-IPAS-Result: =?us-ascii?q?A2ERAABpa+tbhiWd50NkHAEBAQQBAQcEAQGBUQcBAQsBg?=
+ =?us-ascii?q?2snCowGX40qlzWBegsBAYRsgz8iNA0NAQMBAQIBAQIBAQIQAQEBCgkLCCkvg?=
+ =?us-ascii?q?jYigmQBAQEDEig/EAIBCBgeEFcCBBMIGoJ/ggKdFgKBEIlYAQEBgh2KLIwCg?=
+ =?us-ascii?q?haBEYMShH5NhQ4CiwCUVgkFkRUgkHOCdZRhAgQCBAUCFIFDgg5wgzyCNRuOC?=
+ =?us-ascii?q?kABMYxagR8BAQ?=
+Received: from mx0b-00154901.pphosted.com ([67.231.157.37])
+  by esa3.dell-outbound.iphmx.com with ESMTP/TLS/AES256-SHA256; 13 Nov 2018 18:31:16 -0600
+Received: from pps.filterd (m0144102.ppops.net [127.0.0.1])
+        by mx0b-00154901.pphosted.com (8.16.0.22/8.16.0.22) with SMTP id wAE0SQm0030403;
+        Tue, 13 Nov 2018 19:31:17 -0500
+Received: from esa2.dell-outbound2.iphmx.com (esa2.dell-outbound2.iphmx.com [68.232.153.202])
+        by mx0b-00154901.pphosted.com with ESMTP id 2nr7cb0ehe-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=FAIL);
+        Tue, 13 Nov 2018 19:31:17 -0500
+Cc:     <helgaas@kernel.org>, <oohall@gmail.com>,
+        <gregkh@linuxfoundation.org>, <mr.nuke.me@gmail.com>,
+        <linux-pci@vger.kernel.org>, <Austin.Bolen@dell.com>,
+        <Shyam.Iyer@dell.com>, <linux-kernel@vger.kernel.org>,
+        <jonathan.derrick@intel.com>, <lukas@wunner.de>,
+        <ruscur@russell.cc>, <sbobroff@linux.ibm.com>,
+        <linuxppc-dev@lists.ozlabs.org>
+Received: from ausxippc106.us.dell.com ([143.166.85.156])
+  by esa2.dell-outbound2.iphmx.com with ESMTP/TLS/DHE-RSA-AES256-SHA256; 14 Nov 2018 06:31:00 +0600
+X-LoopCount0: from 10.166.134.87
+X-IronPort-AV: E=Sophos;i="5.56,230,1539666000"; 
+   d="scan'208";a="318281823"
+From:   <Alex_Gagniuc@Dellteam.com>
+To:     <keith.busch@intel.com>
+Subject: Re: [PATCH v2] PCI/MSI: Don't touch MSI bits when the PCI device is
+ disconnected
+Thread-Topic: [PATCH v2] PCI/MSI: Don't touch MSI bits when the PCI device is
+ disconnected
+Thread-Index: AQHUT50UQ290XPGvJEGnaSTTjbCF+g==
+Date:   Wed, 14 Nov 2018 00:31:13 +0000
+Message-ID: <1f7776f2901b40368c847353b74a8cf7@ausx13mps321.AMER.DELL.COM>
+References: <20181108220117.GA11466@kroah.com>
+ <20181108223258.GD2932@localhost.localdomain>
+ <20181108224255.GA20619@kroah.com>
+ <20d68e586fff4dcca5616d5056f6fc21@ausx13mps321.AMER.DELL.COM>
+ <20181108225109.GA3023@kroah.com>
+ <16bf9d14bc5f4a90b2b88dd2eb165186@ausx13mps321.AMER.DELL.COM>
+ <5da8d8aa9f3818af649b1ac547bc4e6062626ddf.camel@gmail.com>
+ <df85813c9860463d85f6c302dfe07b12@ausx13mps321.AMER.DELL.COM>
+ <20181113050240.GA182139@google.com>
+ <19136f44cd5c45e79bbef7e78a6bf332@ausx13mps321.AMER.DELL.COM>
+ <20181113225232.GB10134@localhost.localdomain>
+Accept-Language: en-US
 Content-Language: en-US
-Content-Transfer-Encoding: 7bit
-X-Originating-IP: [10.4.120.48]
+X-MS-Has-Attach: 
+X-MS-TNEF-Correlator: 
+x-ms-exchange-transport-fromentityheader: Hosted
+x-originating-ip: [10.177.49.166]
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: quoted-printable
+MIME-Version: 1.0
+X-Proofpoint-Virus-Version: vendor=fsecure engine=2.50.10434:,, definitions=2018-11-13_17:,,
+ signatures=0
+X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0 priorityscore=1501
+ malwarescore=0 suspectscore=0 phishscore=0 bulkscore=0 spamscore=0
+ clxscore=1015 lowpriorityscore=0 mlxscore=0 impostorscore=0
+ mlxlogscore=999 adultscore=0 classifier=spam adjust=0 reason=mlx
+ scancount=1 engine=8.0.1-1810050000 definitions=main-1811140002
 Sender: linux-pci-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-On 13/11/2018 22:57, Marc Zyngier wrote:
-> It recently came to light that the Designware PCIe driver is rather
-> broken in the way it handles MSI[1]:
-> 
-> - It masks interrupt by disabling them, meaning that MSIs generated
->   during the masked window are simply lost. Oops.
-> 
-> - Acking of the currently pending MSI is done outside of the interrupt
->   flow, getting moved around randomly and ultimately breaking the
->   driver. Not great.
-> 
-> This series attempts to address this by switching to using the MASK
-> register for masking interrupts (!), and move the ack into the
-> appropriate callback, giving it a fixed place in the MSI handling
-> flow.
-> 
-> Note that this is only compile-tested on my arm64 laptop, as I'm
-> travelling and do not have the required HW to test it anyway. I'd
-> welcome both review and testing by the interested parties (dwc
-> maintainer and users affected by existing bugs).
-
-As we spoke on the conference, as soon as I get back and I've the necessary
-conditions I'll test the discussed modifications on my HW.
-
-> 
-> Thanks,
-> 
-> 	M.
-> 
-> [1] https://urldefense.proofpoint.com/v2/url?u=https-3A__patchwork.kernel.org_patch_10657987_&d=DwIDAg&c=DPL6_X_6JkXFx7AXWqB0tg&r=bkWxpLoW-f-E3EdiDCCa0_h0PicsViasSlvIpzZvPxs&m=ksl4uVn2tYUOeqywcyeYHziG6ejYHFeq-Cm4p8q7amU&s=WILOPbhOsYjM3XNhZwxGb2T6069LtLL1aqf9hbS-ajg&e=
-> 
-> Marc Zyngier (3):
->   PCI: designware: Use interrupt masking instead of disabling
->   PCI: designware: Take lock when ACKing an interrupt
->   PCI: designware: Move interrupt acking into the proper callback
-> 
->  .../pci/controller/dwc/pcie-designware-host.c | 22 ++++++++++++-------
->  1 file changed, 14 insertions(+), 8 deletions(-)
-> 
-
+On 11/13/2018 04:56 PM, Keith Busch wrote:=0A=
+> On Tue, Nov 13, 2018 at 10:39:15PM +0000, Alex_Gagniuc@Dellteam.com wrote=
+:=0A=
+>> On 11/12/2018 11:02 PM, Bjorn Helgaas wrote:=0A=
+>>> The whole issue of firmware-first, the mechanism by which firmware=0A=
+>>> gets control, the System Error enables in Root Port Root Control=0A=
+>>> registers, etc., is very murky to me.  Jon has a sort of similar issue=
+=0A=
+>>> with VMD where he needs to leave System Errors enabled instead of=0A=
+>>> disabling them as we currently do.=0A=
+>>=0A=
+>> Well, OS gets control via _OSC method, and based on that it should=0A=
+>> touch/not touch the AER bits. The bits that get set/cleared come from=0A=
+>> _HPX method, and there's a more about the FFS described in ACPI spec. It=
+=0A=
+>> seems that if platform, wants to enable VMD, it should pass the correct=
+=0A=
+>> bits via _HPX. I'm curious to know in what new twisted way FFS doesn't=
+=0A=
+>> work as intended.=0A=
+> =0A=
+> When VMD is enabled, the platform sees a VMD endpoint. It doesn't see=0A=
+> any of the root ports on that domain, so ACPI can't provide policies for=
+=0A=
+> them nor AER registers for the platform to consider controlling.=0A=
+=0A=
+I'm not understanding the interdependency between RP AER settings and =0A=
+VMD. My understanding of VMD is quite rudimentary though, so I'll take =0A=
+your word for it.=0A=
+=0A=
+Alex=0A=
+=0A=
