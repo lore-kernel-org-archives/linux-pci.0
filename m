@@ -2,127 +2,234 @@ Return-Path: <SRS0=Q3Ib=NZ=vger.kernel.org=linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-1.1 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
-	DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_PASS
+X-Spam-Status: No, score=-0.8 required=3.0 tests=DKIM_INVALID,DKIM_SIGNED,
+	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_PASS,URIBL_BLOCKED
 	autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 0D7D6C04EBC
-	for <linux-pci@archiver.kernel.org>; Wed, 14 Nov 2018 19:20:15 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 358F8C43441
+	for <linux-pci@archiver.kernel.org>; Wed, 14 Nov 2018 19:22:13 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id C43CB2243E
-	for <linux-pci@archiver.kernel.org>; Wed, 14 Nov 2018 19:20:14 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id E9E9022360
+	for <linux-pci@archiver.kernel.org>; Wed, 14 Nov 2018 19:22:12 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (1024-bit key) header.d=impinj.com header.i=@impinj.com header.b="SxFOql+d"
-DMARC-Filter: OpenDMARC Filter v1.3.2 mail.kernel.org C43CB2243E
-Authentication-Results: mail.kernel.org; dmarc=fail (p=reject dis=none) header.from=impinj.com
+	dkim=fail reason="signature verification failed" (1024-bit key) header.d=dellteam.com header.i=@dellteam.com header.b="PGmd4f8Q"
+DMARC-Filter: OpenDMARC Filter v1.3.2 mail.kernel.org E9E9022360
+Authentication-Results: mail.kernel.org; dmarc=none (p=none dis=none) header.from=Dellteam.com
 Authentication-Results: mail.kernel.org; spf=none smtp.mailfrom=linux-pci-owner@vger.kernel.org
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1725833AbeKOFYk (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Thu, 15 Nov 2018 00:24:40 -0500
-Received: from mail-eopbgr680122.outbound.protection.outlook.com ([40.107.68.122]:64366
-        "EHLO NAM04-BN3-obe.outbound.protection.outlook.com"
-        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1725756AbeKOFYk (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Thu, 15 Nov 2018 00:24:40 -0500
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=impinj.com;
- s=selector1;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=XkVXy4uJi3CPdRQQhT/gQnMbe81/Z1ujdi1ZJTA0HYk=;
- b=SxFOql+dFwNOpRROI9OcboTPEzVDWZliodkmm8z9wdEHOy1dQKeJt5SxHLWqjKjchEA+iLYinN60ndbdwKB1iDzQ7guUiKFOxInUyr+ecugbnwvNKL6UleaM+4zbT/1znGzgnfvCCWtqDGBl5BJd5L6cju19mIcWA77+J7OtdR0=
-Received: from MWHPR0601MB3708.namprd06.prod.outlook.com (10.167.236.38) by
- MWHPR0601MB3594.namprd06.prod.outlook.com (10.167.173.37) with Microsoft SMTP
- Server (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- 15.20.1294.23; Wed, 14 Nov 2018 19:19:27 +0000
-Received: from MWHPR0601MB3708.namprd06.prod.outlook.com
- ([fe80::f51a:d8dd:1aad:3bf9]) by MWHPR0601MB3708.namprd06.prod.outlook.com
- ([fe80::f51a:d8dd:1aad:3bf9%3]) with mapi id 15.20.1294.045; Wed, 14 Nov 2018
- 19:19:27 +0000
-From:   Trent Piepho <tpiepho@impinj.com>
-To:     "marc.zyngier@arm.com" <marc.zyngier@arm.com>,
-        "gustavo.pimentel@synopsys.com" <gustavo.pimentel@synopsys.com>
-CC:     "jingoohan1@gmail.com" <jingoohan1@gmail.com>,
-        "faiz_abbas@ti.com" <faiz_abbas@ti.com>,
-        "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-        "lorenzo.pieralisi@arm.com" <lorenzo.pieralisi@arm.com>,
-        "helgaas@google.com" <helgaas@google.com>,
-        "vigneshr@ti.com" <vigneshr@ti.com>,
-        "Joao.Pinto@synopsys.com" <Joao.Pinto@synopsys.com>
-Subject: Re: [PATCH 0/3] PCI: designware: Fixing MSI handling flow
-Thread-Topic: [PATCH 0/3] PCI: designware: Fixing MSI handling flow
-Thread-Index: AQHUe6RNjvB+uYCyEUiVT8YH/lgHCqVOVoyAgACySICAAJ3NAA==
-Date:   Wed, 14 Nov 2018 19:19:27 +0000
-Message-ID: <1542223166.30311.471.camel@impinj.com>
-References: <20181113225734.8026-1-marc.zyngier@arm.com>
-         <e73891a5-d798-ee9c-607c-9648d07f6505@synopsys.com>
-         <86a7mcdlwg.wl-marc.zyngier@arm.com>
-In-Reply-To: <86a7mcdlwg.wl-marc.zyngier@arm.com>
+        id S1726734AbeKOF0k (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Thu, 15 Nov 2018 00:26:40 -0500
+Received: from esa4.dell-outbound.iphmx.com ([68.232.149.214]:56407 "EHLO
+        esa4.dell-outbound.iphmx.com" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1725756AbeKOF0k (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Thu, 15 Nov 2018 00:26:40 -0500
+DKIM-Signature: v=1; a=rsa-sha256; c=simple/simple;
+  d=dellteam.com; i=@dellteam.com; q=dns/txt; s=smtpout;
+  t=1542223331; x=1573759331;
+  h=cc:from:to:subject:date:message-id:references:
+   content-transfer-encoding:mime-version;
+  bh=u1Zvib28hFLkZLIbgSGhz4o7P/pZdL5a27D/ZoPHxq8=;
+  b=PGmd4f8QU+9zSxJDlWvPpQGkUoNZpNi9JDyuZg4PMVz2w1B3yOwy4Q42
+   GkmZIkwa0sif8wifIRJeapvRjdtlIq3y8kb1aCFhvnK+/klaMS86bwI67
+   FlL0OAjJedIE9owuWcfgbGX3EmT5/gc46qjRXG1xaRIcGMVGQxbM9EXow
+   w=;
+X-IronPort-Anti-Spam-Filtered: true
+X-IronPort-Anti-Spam-Result: =?us-ascii?q?A2EYAACHdOxbhyeV50NjHAEBAQQBAQc?=
+ =?us-ascii?q?EAQGBUQcBAQsBAYNqJwqMBl+LGYINlzYUgWYLAQGEbINMIjQNDQEDAQECAQE?=
+ =?us-ascii?q?CAQECEAEBAQoLCQgpL0IBEAGBYiKCYwEBAQECARIVEy0SBQsCAQgYHhBXAgQ?=
+ =?us-ascii?q?TCBqCf4F6CJ1pAoEQiVgBAQGBajOKKIwFghaBEYMShEsBEgEJBBIshS8CiRO?=
+ =?us-ascii?q?BcJRbCQWRFSCBWIUFihiCdZRlAgQCBAUCFIFFgR1xcIM8gicOCRKOCkABMYI?=
+ =?us-ascii?q?HiUGBH4EfAQE?=
+X-IPAS-Result: =?us-ascii?q?A2EYAACHdOxbhyeV50NjHAEBAQQBAQcEAQGBUQcBAQsBA?=
+ =?us-ascii?q?YNqJwqMBl+LGYINlzYUgWYLAQGEbINMIjQNDQEDAQECAQECAQECEAEBAQoLC?=
+ =?us-ascii?q?QgpL0IBEAGBYiKCYwEBAQECARIVEy0SBQsCAQgYHhBXAgQTCBqCf4F6CJ1pA?=
+ =?us-ascii?q?oEQiVgBAQGBajOKKIwFghaBEYMShEsBEgEJBBIshS8CiROBcJRbCQWRFSCBW?=
+ =?us-ascii?q?IUFihiCdZRlAgQCBAUCFIFFgR1xcIM8gicOCRKOCkABMYIHiUGBH4EfAQE?=
+Received: from mx0a-00154901.pphosted.com ([67.231.149.39])
+  by esa4.dell-outbound.iphmx.com with ESMTP/TLS/AES256-SHA256; 14 Nov 2018 13:22:07 -0600
+Received: from pps.filterd (m0142699.ppops.net [127.0.0.1])
+        by mx0a-00154901.pphosted.com (8.16.0.22/8.16.0.22) with SMTP id wAEJudSj064483;
+        Wed, 14 Nov 2018 15:04:56 -0500
+Received: from esa4.dell-outbound2.iphmx.com (esa4.dell-outbound2.iphmx.com [68.232.154.98])
+        by mx0a-00154901.pphosted.com with ESMTP id 2nrmqsaaac-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=FAIL);
+        Wed, 14 Nov 2018 15:04:56 -0500
+Cc:     <oohall@gmail.com>, <gregkh@linuxfoundation.org>,
+        <keith.busch@intel.com>, <mr.nuke.me@gmail.com>,
+        <linux-pci@vger.kernel.org>, <Austin.Bolen@dell.com>,
+        <Shyam.Iyer@dell.com>, <linux-kernel@vger.kernel.org>,
+        <jonathan.derrick@intel.com>, <lukas@wunner.de>,
+        <ruscur@russell.cc>, <sbobroff@linux.ibm.com>,
+        <linuxppc-dev@lists.ozlabs.org>
+Received: from ausxipps306.us.dell.com ([143.166.148.156])
+  by esa4.dell-outbound2.iphmx.com with ESMTP/TLS/DHE-RSA-AES256-SHA256; 15 Nov 2018 01:22:05 +0600
+X-LoopCount0: from 10.166.134.83
+X-IronPort-AV: E=Sophos;i="5.56,233,1539666000"; 
+   d="scan'208";a="238430554"
+From:   <Alex_Gagniuc@Dellteam.com>
+To:     <helgaas@kernel.org>
+Subject: Re: [PATCH v2] PCI/MSI: Don't touch MSI bits when the PCI device is
+ disconnected
+Thread-Topic: [PATCH v2] PCI/MSI: Don't touch MSI bits when the PCI device is
+ disconnected
+Thread-Index: AQHUT50UQ290XPGvJEGnaSTTjbCF+g==
+Date:   Wed, 14 Nov 2018 19:22:04 +0000
+Message-ID: <1eb0fa27924f426992715684f5e63346@ausx13mps321.AMER.DELL.COM>
+References: <20181108220117.GA11466@kroah.com>
+ <20181108223258.GD2932@localhost.localdomain>
+ <20181108224255.GA20619@kroah.com>
+ <20d68e586fff4dcca5616d5056f6fc21@ausx13mps321.AMER.DELL.COM>
+ <20181108225109.GA3023@kroah.com>
+ <16bf9d14bc5f4a90b2b88dd2eb165186@ausx13mps321.AMER.DELL.COM>
+ <5da8d8aa9f3818af649b1ac547bc4e6062626ddf.camel@gmail.com>
+ <df85813c9860463d85f6c302dfe07b12@ausx13mps321.AMER.DELL.COM>
+ <20181113050240.GA182139@google.com>
+ <19136f44cd5c45e79bbef7e78a6bf332@ausx13mps321.AMER.DELL.COM>
+ <20181114055956.GA144931@google.com>
 Accept-Language: en-US
 Content-Language: en-US
 X-MS-Has-Attach: 
 X-MS-TNEF-Correlator: 
-authentication-results: spf=none (sender IP is )
- smtp.mailfrom=tpiepho@impinj.com; 
-x-originating-ip: [216.207.205.253]
-x-ms-publictraffictype: Email
-x-microsoft-exchange-diagnostics: 1;MWHPR0601MB3594;6:QN+Li3X5+BQfmcDmafB6vNVcrZRMxtvoK5ycFN0PZkAW+1NmjDTkzxZ1IOUSaeIUrqUvAOMSslibEyJosVhJ29NCipgS0eOnB7lqOQrogdomPiw/QBux+CdHOxVUz8UCEdhydgT2qc8PlocOmvB+Kv6PXsBgOwXfGUmPEFEoQdEZPpRRFQUjutQ6umco1r8mPdBo0ex3zsMnqbgYeV5WitvR6Perkm9kBc1fX5sNZyfyM0qcGQzG7giZ/+PoCtwLH85kn/b3OyQ1deHgUEElq0ETsMOjfFglCnOmQB+vaLsJsVo5vuKT1uEdsGHcuI3lVQJbpLzxlH6w8jirGwuQIx868NWiWXyD4dB4lPdCJNhAnetrCDU4rxxUfN58VRHGxqD7xcrxbQ5sDNDj3G/agg7bTrtHljiD5QGaAER7asi4KIlz7aWDKkwq9lb83gF43Cvbdj8KLEiM7H5X9r5+og==;5:27tl8sFIdxdrzS0V4msE8JKxJZHZSW8xIybqBjlGnqM4wslFqIssMcdaF+fvi+6bcoUBDLL9W2dfsvxf4a/N0R4goIxYfeQlADFhyHwJQ1fqKP0oP75m7y6A2dxmWeyrRD4m6oaFB+JbuJTh+xJYQPRz0R9ktdMUSWuTr4dSX98=;7:NVQpmS9V/sqKc9TJfnfLMaMa9HDkcmPHHexfgzUkG8dZV7hOuD1XpsOEWFarCGWWJet8qVHTBYkV9Ryt3/tEJP+pyhAfLoDWVAQx09e1vntvapsODSB6BpXbc2eW2nq1k2971slTUyvA8QlwaeIlMw==
-x-ms-exchange-antispam-srfa-diagnostics: SOS;
-x-ms-office365-filtering-correlation-id: eaa687d9-316b-4e7f-922d-08d64a661832
-x-microsoft-antispam: BCL:0;PCL:0;RULEID:(2390098)(7020095)(4652040)(8989299)(4534185)(4627221)(201703031133081)(201702281549075)(8990200)(5600074)(711020)(2017052603328)(7153060)(7193020);SRVR:MWHPR0601MB3594;
-x-ms-traffictypediagnostic: MWHPR0601MB3594:
-x-microsoft-antispam-prvs: <MWHPR0601MB3594FBF8BA2790B11153C569D3C30@MWHPR0601MB3594.namprd06.prod.outlook.com>
-x-exchange-antispam-report-test: UriScan:;
-x-ms-exchange-senderadcheck: 1
-x-exchange-antispam-report-cfa-test: BCL:0;PCL:0;RULEID:(8211001083)(6040522)(2401047)(8121501046)(5005006)(10201501046)(3231415)(944501410)(52105112)(3002001)(93006095)(93001095)(148016)(149066)(150057)(6041310)(20161123558120)(20161123564045)(20161123560045)(20161123562045)(201703131423095)(201702281528075)(20161123555045)(201703061421075)(201703061406153)(201708071742011)(7699051)(76991095);SRVR:MWHPR0601MB3594;BCL:0;PCL:0;RULEID:;SRVR:MWHPR0601MB3594;
-x-forefront-prvs: 085634EFF4
-x-forefront-antispam-report: SFV:NSPM;SFS:(10019020)(39850400004)(366004)(396003)(376002)(136003)(346002)(199004)(189003)(25786009)(2900100001)(2501003)(68736007)(14444005)(256004)(305945005)(97736004)(7736002)(4326008)(4001150100001)(8936002)(39060400002)(486006)(71200400001)(86362001)(71190400001)(36756003)(54906003)(476003)(81156014)(81166006)(229853002)(2906002)(6116002)(3846002)(446003)(6506007)(11346002)(2616005)(102836004)(6512007)(66066001)(53936002)(6486002)(106356001)(478600001)(5660300001)(110136005)(14454004)(76176011)(105586002)(316002)(8676002)(6246003)(99286004)(6436002)(26005)(186003)(103116003);DIR:OUT;SFP:1102;SCL:1;SRVR:MWHPR0601MB3594;H:MWHPR0601MB3708.namprd06.prod.outlook.com;FPR:;SPF:None;LANG:en;PTR:InfoNoRecords;A:1;MX:1;
-received-spf: None (protection.outlook.com: impinj.com does not designate
- permitted sender hosts)
-x-microsoft-antispam-message-info: QfIkSFPraJ3mSkB9qs/zae3+KPNzLK9CwqOYbBS66N/QuroWiB2fZW7aJlkcnwWL5cRV+dW/TlWBpnLgW0qNiwSI4k5tqxAArlFZS2rBVNXMnLIedVB6v04fpXA/avZa6OcuzNlcU9kLL1IPVeDikGtjBz7eo2e3s9PocX6UQUko1WwBSwKTYjy/CEgsugmrBnfpm4rxcTAsAo/ymv4nhsPLIMAW0+jxX5PQuFjNbSeMkAt09n0JEWGYSMWKX5slyxtpcgfL7Rfvjo+wQ2AwvqRUu1gjhBneMhUc3Hwp7Wy70sKIP0ziQiwXvT71HAYzKwZTiejWOhfDDmqS83wyelF8NB0TROMdIVMKGBcB8R4=
-spamdiagnosticoutput: 1:99
-spamdiagnosticmetadata: NSPM
-Content-Type: text/plain; charset="utf-8"
-Content-ID: <A6A1AE2D159FCB41B1B76EA9BB79DC67@namprd06.prod.outlook.com>
-Content-Transfer-Encoding: base64
+x-ms-exchange-transport-fromentityheader: Hosted
+x-originating-ip: [10.177.49.166]
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: quoted-printable
 MIME-Version: 1.0
-X-OriginatorOrg: impinj.com
-X-MS-Exchange-CrossTenant-Network-Message-Id: eaa687d9-316b-4e7f-922d-08d64a661832
-X-MS-Exchange-CrossTenant-originalarrivaltime: 14 Nov 2018 19:19:27.1490
- (UTC)
-X-MS-Exchange-CrossTenant-fromentityheader: Hosted
-X-MS-Exchange-CrossTenant-id: 6de70f0f-7357-4529-a415-d8cbb7e93e5e
-X-MS-Exchange-Transport-CrossTenantHeadersStamped: MWHPR0601MB3594
+X-Proofpoint-Virus-Version: vendor=fsecure engine=2.50.10434:,, definitions=2018-11-14_15:,,
+ signatures=0
+X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0 priorityscore=1501
+ malwarescore=0 suspectscore=0 phishscore=0 bulkscore=0 spamscore=0
+ clxscore=1015 lowpriorityscore=0 mlxscore=0 impostorscore=0
+ mlxlogscore=999 adultscore=0 classifier=spam adjust=0 reason=mlx
+ scancount=1 engine=8.0.1-1810050000 definitions=main-1811140171
 Sender: linux-pci-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-T24gV2VkLCAyMDE4LTExLTE0IGF0IDA5OjU0ICswMDAwLCBNYXJjIFp5bmdpZXIgd3JvdGU6DQo+
-ICAgICAgICAgLyogSW5pdGlhbGl6ZSBJUlEgU3RhdHVzIGFycmF5ICovDQo+IC0gICAgICAgZm9y
-IChjdHJsID0gMDsgY3RybCA8IG51bV9jdHJsczsgY3RybCsrKQ0KPiAtICAgICAgICAgICAgICAg
-ZHdfcGNpZV9yZF9vd25fY29uZihwcCwgUENJRV9NU0lfSU5UUjBfRU5BQkxFICsNCj4gKyAgICAg
-ICBmb3IgKGN0cmwgPSAwOyBjdHJsIDwgbnVtX2N0cmxzOyBjdHJsKyspIHsNCj4gKyAgICAgICAg
-ICAgICAgIGR3X3BjaWVfd3Jfb3duX2NvbmYocHAsIFBDSUVfTVNJX0lOVFIwX01BU0sgKw0KPiAg
-ICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgKGN0cmwgKiBNU0lfUkVHX0NU
-UkxfQkxPQ0tfU0laRSksDQo+IC0gICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgIDQs
-ICZwcC0+aXJxX3N0YXR1c1tjdHJsXSk7DQo+ICsgICAgICAgICAgICAgICAgICAgICAgICAgICAg
-ICAgICAgIDQsIH4wKTsNCj4gKyAgICAgICAgICAgICAgIGR3X3BjaWVfd3Jfb3duX2NvbmYocHAs
-IFBDSUVfTVNJX0lOVFIwX0VOQUJMRSArDQo+ICsgICAgICAgICAgICAgICAgICAgICAgICAgICAg
-ICAgICAgICAgICAoY3RybCAqIE1TSV9SRUdfQ1RSTF9CTE9DS19TSVpFKSwNCj4gKyAgICAgICAg
-ICAgICAgICAgICAgICAgICAgICAgICAgICAgNCwgfjApOw0KPiArICAgICAgICAgICAgICAgcHAt
-PmlycV9zdGF0dXNbY3RybF0gPSAwOw0KPiArICAgICAgIH0NCj4gIA0KDQpJIHRlc3RlZCB5ZXN0
-ZXJkYXkgYmVmb3JlIHRoaXMgcGF0Y2ggd2FzIHNlbnQgYW5kIGZpeGVkIHRoaXMgaXNzdWUNCmFu
-b3RoZXIgd2F5LiAgSSBwcmV0dHkgc3VyZSB0aGlzIHdvdWxkIHdvcmsgYXMgd2VsbCwgdGhvdWdo
-IGl0J3Mgbm90DQpjbGVhciB0byBtZSBpdCdzIG1vcmUgY29ycmVjdC4NCg0KSXQgbG9va3MgdG8g
-bWUgdGhhdCB0aGUgcHJldmlvdXMgY29kZSB3YXMgdXNpbmcgd2hhdGV2ZXIgTVNJcyB3ZXJlDQph
-bHJlYWR5IGVuYWJsZWQgd2hlbiB0aGUgZHJpdmVyIGlzIGluaXRpYWxpemVkIGFzIHRoZSBzZXQg
-dG8gbGVhdmUNCmVuYWJsZWQuDQoNClRoaXMgbG9va3MgbGlrZSBpdCBjaGFuZ2luZyB0aGF0IGJl
-aGF2aW9yLCBhbmQgaW5zdGVhZCBlbmFibGluZyBhbGwNCk1TSXMgb24gaW5pdGlhbGl6YXRpb24u
-DQoNCkkgd291bGQgdGhpbmsgdGhlIGRlZmF1bHQgdmFsdWUgZm9yIGEgTVNJIHNob3VsZCBiZSBk
-aXNhYmxlZCB1bnRpbA0Kc29tZXRoaW5nIGVuYWJsZXMgaXQuDQoNCkkgc3BlY3VsYXRlZCB0aGF0
-IHRoZSBwcmV2aW91cyBiZWhhdmlvciB3YXMgdHJ5aW5nIHRvIHdvcmsgd2l0aCBhbiBNU0kNCmVu
-YWJsZWQgYnkgdGhlIGJvb3Rsb2FkZXIsIEFDUEkgZmlybXdhcmUsIGV0Yy4gdGhhdCBzaG91bGQg
-YmUgbGVmdA0KYWxvbmUuICBPciBwZXJoYXBzIHRoZXJlIHdhcyBubyBnb29kIHJlYXNvbiBub3Qg
-dG8gZGlzYWJsZSBldmVyeXRoaW5nDQpvbiBpbml0aWFsaXphdGlvbiBhbmQgdGhhdCBjb2RlIGp1
-c3QgZ290IGNvcGllZCBmcm9tIHNvbWV3aGVyZSBlbHNlIGFuZA0Kbm8gb25lIHRob3VnaHQgYWJv
-dXQgaXQuICBUaGVyZSdzIGNlcnRhaW5seSBldmlkZW5jZSBvZiB0aGF0IGluIHRoaXMNCmRyaXZl
-ci4NCg0K
+On 11/14/2018 12:00 AM, Bjorn Helgaas wrote:=0A=
+> On Tue, Nov 13, 2018 at 10:39:15PM +0000, Alex_Gagniuc@Dellteam.com wrote=
+:=0A=
+>> On 11/12/2018 11:02 PM, Bjorn Helgaas wrote:=0A=
+>>>=0A=
+>>> [EXTERNAL EMAIL]=0A=
+>>> Please report any suspicious attachments, links, or requests for sensit=
+ive information.=0A=
+> =0A=
+> It looks like Dell's email system adds the above in such a way that the=
+=0A=
+> email quoting convention suggests that *I* wrote it, when I did not.=0A=
+=0A=
+I was wondering why you thought I was suspicious. It's a recent =0A=
+(server-side) change. You used to be able to disable these sort of =0A=
+notices. I'm told back in the day people were asked to delete emails =0A=
+before reading them.=0A=
+=0A=
+>> ...=0A=
+>>> Do you think Linux observes the rule about not touching AER bits on=0A=
+>>> FFS?  I'm not sure it does.  I'm not even sure what section of the=0A=
+>>> spec is relevant.=0A=
+>>=0A=
+>> I haven't found any place where linux breaks this rule. I'm very=0A=
+>> confident that, unless otherwise instructed, we follow this rule.=0A=
+> =0A=
+> Just to make sure we're on the same page, can you point me to this=0A=
+> rule?  I do see that OSPM must request control of AER using _OSC=0A=
+> before it touches the AER registers.  What I don't see is the=0A=
+> connection between firmware-first and the AER registers.=0A=
+=0A=
+ACPI 6.2 - 6.2.11.3, Table 6-197:=0A=
+=0A=
+PCI Express Advanced Error Reporting control:=0A=
+  * The firmware sets this bit to 1 to grant control over PCI Express =0A=
+Advanced Error Reporting. If firmware allows the OS control of this =0A=
+feature, then in the context of the _OSC method it must ensure that =0A=
+error messages are routed to device interrupts as described in the PCI =0A=
+Express Base Specification[...]=0A=
+=0A=
+Now I'm confused too:=0A=
+  * HEST -> __aer_firmware_first=0A=
+	This is used for touching/not touching AER bits=0A=
+  * _OSC -> bridge->native_aer=0A=
+	Used to enable/not enable AER portdrv service=0A=
+Maybe Keith knows better why we're doing it this way. From ACPI text, it =
+=0A=
+doesn't seem that control of AER would be tied to HEST entries, although =
+=0A=
+in practice, it is.=0A=
+=0A=
+> The closest I can find is the "Enabled" field in the HEST PCIe=0A=
+> AER structures (ACPI v6.2, sec 18.3.2.4, .5, .6), where it says:=0A=
+> =0A=
+>    If the field value is 1, indicates this error source is=0A=
+>    to be enabled.=0A=
+> =0A=
+>    If the field value is 0, indicates that the error source=0A=
+>    is not to be enabled.=0A=
+> =0A=
+>    If FIRMWARE_FIRST is set in the flags field, the Enabled=0A=
+>    field is ignored by the OSPM.=0A=
+> =0A=
+> AFAICT, Linux completely ignores the Enabled field in these=0A=
+> structures.=0A=
+=0A=
+I don't think ignoring the field is a problem:=0A=
+  * With FFS, OS should ignore it.=0A=
+  * Without FFS, we have control, and we get to make the decisions anyway.=
+=0A=
+In the latter case we decide whether to use AER, independent of the crap =
+=0A=
+in ACPI. I'm not even sure why "Enabled" matters in native AER handling. =
+=0A=
+Probably one of the check-boxes in "Binary table designer's handbook"?=0A=
+=0A=
+> These structures also contain values the OS is apparently supposed to=0A=
+> write to Device Control and several AER registers (in struct=0A=
+> acpi_hest_aer_common).  Linux ignores these as well.=0A=
+> =0A=
+> These seem like fairly serious omissions in Linux.=0A=
+=0A=
+I think HPX carries the same sort of information (except for Root =0A=
+Command reg). FW is supposed to program those registers anyway, so even =0A=
+if OS doesn't touch them, I'd expect things to just work.=0A=
+=0A=
+>>> The whole issue of firmware-first, the mechanism by which firmware=0A=
+>>> gets control, the System Error enables in Root Port Root Control=0A=
+>>> registers, etc., is very murky to me.  Jon has a sort of similar issue=
+=0A=
+>>> with VMD where he needs to leave System Errors enabled instead of=0A=
+>>> disabling them as we currently do.=0A=
+>>=0A=
+>> Well, OS gets control via _OSC method, and based on that it should=0A=
+>> touch/not touch the AER bits.=0A=
+> =0A=
+> I agree so far.=0A=
+> =0A=
+>> The bits that get set/cleared come from _HPX method,=0A=
+> =0A=
+> _HPX tells us about some AER registers, Device Control, Link Control,=0A=
+> and some bridge registers.  It doesn't say anything about the Root=0A=
+> Control register that Jon is concerned with.=0A=
+=0A=
+_HPX type 3 (yay!!!) got approved recently, and that will have more =0A=
+fine-grained control. It will be able to handle root control reg.=0A=
+=0A=
+> For firmware-first to work, firmware has to get control.  How does it=0A=
+> get control?  How does OSPM know to either set up that mechanism or=0A=
+> keep its mitts off something firmware set up before handoff?=0A=
+=0A=
+My understanding is that, if FW keeps control of AER in _OSC, then it =0A=
+will have set things up to get notified instead of the OS. OSPM not =0A=
+touching AER bits is to make sure it doesn't mess up FW's setup. I think =
+=0A=
+there are some proprietary bits in the root port to route interrupts to =0A=
+SMIs instead of the AER vectors.=0A=
+=0A=
+> In Jon's=0A=
+> VMD case, I think firmware-first relies on the System Error controlled=0A=
+> by the Root Control register.  Linux thinks it owns that, and I don't=0A=
+> know how to learn otherwise.=0A=
+=0A=
+Didn't Keith say the root port is not visible to the OS?=0A=
+=0A=
+Alex=0A=
