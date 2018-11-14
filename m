@@ -2,215 +2,126 @@ Return-Path: <SRS0=Q3Ib=NZ=vger.kernel.org=linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-1.0 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	MAILING_LIST_MULTI,SPF_PASS,URIBL_BLOCKED autolearn=ham autolearn_force=no
-	version=3.4.0
+X-Spam-Status: No, score=-1.1 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
+	DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_PASS,
+	URIBL_BLOCKED autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 8D2B4C43441
-	for <linux-pci@archiver.kernel.org>; Wed, 14 Nov 2018 19:41:15 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 2A7F7C43441
+	for <linux-pci@archiver.kernel.org>; Wed, 14 Nov 2018 19:44:19 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 4687D2243E
-	for <linux-pci@archiver.kernel.org>; Wed, 14 Nov 2018 19:41:15 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.3.2 mail.kernel.org 4687D2243E
-Authentication-Results: mail.kernel.org; dmarc=fail (p=none dis=none) header.from=intel.com
+	by mail.kernel.org (Postfix) with ESMTP id DCA3F22419
+	for <linux-pci@archiver.kernel.org>; Wed, 14 Nov 2018 19:44:18 +0000 (UTC)
+Authentication-Results: mail.kernel.org;
+	dkim=pass (1024-bit key) header.d=impinj.com header.i=@impinj.com header.b="QLTV+S+Q"
+DMARC-Filter: OpenDMARC Filter v1.3.2 mail.kernel.org DCA3F22419
+Authentication-Results: mail.kernel.org; dmarc=fail (p=reject dis=none) header.from=impinj.com
 Authentication-Results: mail.kernel.org; spf=none smtp.mailfrom=linux-pci-owner@vger.kernel.org
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1725757AbeKOFpr (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Thu, 15 Nov 2018 00:45:47 -0500
-Received: from mga11.intel.com ([192.55.52.93]:39733 "EHLO mga11.intel.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1725756AbeKOFpq (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Thu, 15 Nov 2018 00:45:46 -0500
-X-Amp-Result: UNKNOWN
-X-Amp-Original-Verdict: FILE UNKNOWN
-X-Amp-File-Uploaded: False
-Received: from fmsmga007.fm.intel.com ([10.253.24.52])
-  by fmsmga102.fm.intel.com with ESMTP/TLS/DHE-RSA-AES256-GCM-SHA384; 14 Nov 2018 11:41:13 -0800
-X-ExtLoop1: 1
-X-IronPort-AV: E=Sophos;i="5.56,233,1539673200"; 
-   d="p7s'?scan'208";a="85839986"
-Received: from orsmsx109.amr.corp.intel.com ([10.22.240.7])
-  by fmsmga007.fm.intel.com with ESMTP; 14 Nov 2018 11:41:13 -0800
-Received: from orsmsx101.amr.corp.intel.com ([169.254.8.195]) by
- ORSMSX109.amr.corp.intel.com ([169.254.11.127]) with mapi id 14.03.0415.000;
- Wed, 14 Nov 2018 11:41:13 -0800
-From:   "Derrick, Jonathan" <jonathan.derrick@intel.com>
-To:     "Alex_Gagniuc@Dellteam.com" <Alex_Gagniuc@Dellteam.com>,
-        "helgaas@kernel.org" <helgaas@kernel.org>
-CC:     "Austin.Bolen@dell.com" <Austin.Bolen@dell.com>,
-        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-        "Shyam.Iyer@dell.com" <Shyam.Iyer@dell.com>,
-        "sbobroff@linux.ibm.com" <sbobroff@linux.ibm.com>,
-        "linuxppc-dev@lists.ozlabs.org" <linuxppc-dev@lists.ozlabs.org>,
-        "ruscur@russell.cc" <ruscur@russell.cc>,
-        "oohall@gmail.com" <oohall@gmail.com>,
-        "mr.nuke.me@gmail.com" <mr.nuke.me@gmail.com>,
-        "lukas@wunner.de" <lukas@wunner.de>,
-        "gregkh@linuxfoundation.org" <gregkh@linuxfoundation.org>,
+        id S1725791AbeKOFsv (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Thu, 15 Nov 2018 00:48:51 -0500
+Received: from mail-eopbgr770134.outbound.protection.outlook.com ([40.107.77.134]:61305
+        "EHLO NAM02-SN1-obe.outbound.protection.outlook.com"
+        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+        id S1725766AbeKOFsv (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Thu, 15 Nov 2018 00:48:51 -0500
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=impinj.com;
+ s=selector1;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
+ bh=05FZDwbsLFlwcQ3AeP4jhbqcdeosBdGKRZsheZeAnbI=;
+ b=QLTV+S+QAnAiFXduTAdmYXRsmzSdQiISqeBwNLkikGMSmB1b1dHVDFovDSrlA3QQauXLyBiT8d0NUZShMAv7rAqaFWkeOl5Rv7zyeiPfF2HbkypYubxjOHpgQQG9zuiztBShcmWJRjkQegfoxpxAaUJZ93+OO4/mB/q8zUlczow=
+Received: from MWHPR0601MB3708.namprd06.prod.outlook.com (10.167.236.38) by
+ MWHPR0601MB3675.namprd06.prod.outlook.com (10.167.236.29) with Microsoft SMTP
+ Server (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
+ 15.20.1294.27; Wed, 14 Nov 2018 19:44:02 +0000
+Received: from MWHPR0601MB3708.namprd06.prod.outlook.com
+ ([fe80::f51a:d8dd:1aad:3bf9]) by MWHPR0601MB3708.namprd06.prod.outlook.com
+ ([fe80::f51a:d8dd:1aad:3bf9%3]) with mapi id 15.20.1294.045; Wed, 14 Nov 2018
+ 19:44:01 +0000
+From:   Trent Piepho <tpiepho@impinj.com>
+To:     "stefan@agner.ch" <stefan@agner.ch>,
+        "jingoohan1@gmail.com" <jingoohan1@gmail.com>,
+        "l.stach@pengutronix.de" <l.stach@pengutronix.de>,
+        "gustavo.pimentel@synopsys.com" <gustavo.pimentel@synopsys.com>
+CC:     "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
         "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-        "Busch, Keith" <keith.busch@intel.com>
-Subject: Re: [PATCH v2] PCI/MSI: Don't touch MSI bits when the PCI device is
- disconnected
-Thread-Topic: [PATCH v2] PCI/MSI: Don't touch MSI bits when the PCI device
- is disconnected
-Thread-Index: AQHUT50UGu8tYuYbD0+KJZJsxJImXKVQit4A
-Date:   Wed, 14 Nov 2018 19:41:12 +0000
-Message-ID: <1542224470.22756.6.camel@intel.com>
-References: <20181108220117.GA11466@kroah.com>
-         <20181108223258.GD2932@localhost.localdomain>
-         <20181108224255.GA20619@kroah.com>
-         <20d68e586fff4dcca5616d5056f6fc21@ausx13mps321.AMER.DELL.COM>
-         <20181108225109.GA3023@kroah.com>
-         <16bf9d14bc5f4a90b2b88dd2eb165186@ausx13mps321.AMER.DELL.COM>
-         <5da8d8aa9f3818af649b1ac547bc4e6062626ddf.camel@gmail.com>
-         <df85813c9860463d85f6c302dfe07b12@ausx13mps321.AMER.DELL.COM>
-         <20181113050240.GA182139@google.com>
-         <19136f44cd5c45e79bbef7e78a6bf332@ausx13mps321.AMER.DELL.COM>
-         <20181114055956.GA144931@google.com>
-         <1eb0fa27924f426992715684f5e63346@ausx13mps321.AMER.DELL.COM>
-In-Reply-To: <1eb0fa27924f426992715684f5e63346@ausx13mps321.AMER.DELL.COM>
+        "bhelgaas@google.com" <bhelgaas@google.com>
+Subject: Re: [PATCH] PCI: dwc: Limit config space size for i.MX6
+Thread-Topic: [PATCH] PCI: dwc: Limit config space size for i.MX6
+Thread-Index: AQHUfDGaNaKS20SjpkOT2QrUGo/m36VPrGWA
+Date:   Wed, 14 Nov 2018 19:44:01 +0000
+Message-ID: <1542224641.30311.478.camel@impinj.com>
+References: <20181019111350.6170-1-stefan@agner.ch>
+         <40d0c27d612534033d146497029b1922@agner.ch>
+In-Reply-To: <40d0c27d612534033d146497029b1922@agner.ch>
 Accept-Language: en-US
 Content-Language: en-US
-X-MS-Has-Attach: yes
+X-MS-Has-Attach: 
 X-MS-TNEF-Correlator: 
-x-originating-ip: [10.232.115.167]
-Content-Type: multipart/signed; micalg=sha-1;
-        protocol="application/x-pkcs7-signature"; boundary="=-lpB01QR67hbuIT54IqVb"
+x-originating-ip: [216.207.205.253]
+x-ms-publictraffictype: Email
+x-microsoft-exchange-diagnostics: 1;MWHPR0601MB3675;6:XMnsDf26tNo7DsOYoPtjPS9O5AKrfuK9VQz0j0mHulStCUWHiR9Fnj5vZF2HfVgDfNp4XkgXRKcKbWz6sjyDqiACRakgh1oNUBldMoRhxxmE38NoUw2hQ0T3sxjmlN9x6B/vNxxtxjgMMiGUGO2Y9GpUPUSE52PBPpRgsHLt+CHr8B+IfKrxlD0d2z93xPiCdTTjvMeaQUeCmFNiw8fhTkPFK21bsAuVu+XVJQc22R71X0qOZFpA3JbV34t9DGNd/34kvu5aM9B8JRv7+IlMIwiriENnljwerTvadSyoGpXqOo/XeAJx1yDoEDfZaa5mjBeOZEN2KYBcpGtsZTZWI4u8myHPR8+ytjKDzD2t5WiT2lxjl9cuaO7IiWOy8/1lPV3DbI7We8K9thwrFjMQAaEwsBNdrxf+v/eEQZbg8tG0SNtO1yyiXY/WZhKGk3l3teTUUX7xpNCp+abbLdt0aw==;5:riWtrnZqa4THM5bQwtq9nArcqZ8cUpOCF2GKIxe9ip9JAtUPSsIIOJ1tWIUq0+/gz+0A0slt2Y9IISTh9mJSaIDGpbCA4sVQ0e/aZpwo6GTeQyRtyeuXTiz05o7ErDzAJswvY3D00wgSuXd75HAenXTxvDdLWtermMrwi28TpFw=;7:8MlqGyRFyV0AxFmJ2Ke8Tc5hwWt/OkZpfhwoSNjSXuk+IphMwuvl98lB7YmmqYc6i05UoFAtmVQ1ObuvVTBE1sZnjyCfj+UAmHLV1CLnesJdhYmBIGLvnzK5NVaMj+qZ0RlVu+g4CRWl436DAg3BzA==
+x-ms-exchange-antispam-srfa-diagnostics: SOS;
+x-ms-office365-filtering-correlation-id: 8e81e434-3525-4ec7-1fe5-08d64a698724
+x-microsoft-antispam: BCL:0;PCL:0;RULEID:(2390098)(7020095)(4652040)(8989299)(5600074)(711020)(4534185)(4627221)(201703031133081)(201702281549075)(8990200)(2017052603328)(7153060)(7193020);SRVR:MWHPR0601MB3675;
+x-ms-traffictypediagnostic: MWHPR0601MB3675:
+authentication-results: spf=none (sender IP is )
+ smtp.mailfrom=tpiepho@impinj.com; 
+x-microsoft-antispam-prvs: <MWHPR0601MB36754B020B8A3442ADDF7649D3C30@MWHPR0601MB3675.namprd06.prod.outlook.com>
+x-exchange-antispam-report-test: UriScan:;
+x-ms-exchange-senderadcheck: 1
+x-exchange-antispam-report-cfa-test: BCL:0;PCL:0;RULEID:(8211001083)(6040522)(2401047)(5005006)(8121501046)(3231415)(944501410)(52105112)(10201501046)(93006095)(93001095)(3002001)(148016)(149066)(150057)(6041310)(20161123564045)(201703131423095)(201702281528075)(20161123555045)(201703061421075)(201703061406153)(20161123558120)(20161123562045)(20161123560045)(201708071742011)(7699051)(76991095);SRVR:MWHPR0601MB3675;BCL:0;PCL:0;RULEID:;SRVR:MWHPR0601MB3675;
+x-forefront-prvs: 085634EFF4
+x-forefront-antispam-report: SFV:NSPM;SFS:(10019020)(979002)(376002)(136003)(366004)(39850400004)(396003)(346002)(199004)(189003)(14454004)(66066001)(229853002)(2900100001)(476003)(2906002)(446003)(11346002)(14444005)(2616005)(478600001)(6486002)(99286004)(2201001)(7736002)(76176011)(86362001)(575784001)(5660300001)(8936002)(486006)(2501003)(3846002)(39060400002)(6116002)(316002)(25786009)(106356001)(4326008)(186003)(6512007)(103116003)(102836004)(53936002)(68736007)(36756003)(8676002)(110136005)(305945005)(81166006)(256004)(97736004)(81156014)(105586002)(54906003)(6246003)(6436002)(71190400001)(53546011)(71200400001)(4001150100001)(26005)(6506007)(505234006)(969003)(989001)(999001)(1009001)(1019001);DIR:OUT;SFP:1102;SCL:1;SRVR:MWHPR0601MB3675;H:MWHPR0601MB3708.namprd06.prod.outlook.com;FPR:;SPF:None;LANG:en;PTR:InfoNoRecords;A:1;MX:1;
+received-spf: None (protection.outlook.com: impinj.com does not designate
+ permitted sender hosts)
+x-microsoft-antispam-message-info: ZFvrx6ige4MyX3K6+oViVZAW4uTHLPrjrz6BID7Z69F5CgbgpK+00GosaEQhtFNQ3t14xUwbRd1IHR3ZCvbyboM0f1pPMYQvugc+/H5DYU0UXoGQEDcQTYdEicMSe96MOIV7Wjoxf7UhE0tfOZBLcFoWmKV+UA7OJSHE/fLGJS+gDVUJzryV3RlAXVHoGXVB2n5Ho2tgjx+fQwHnL1bCyTwZhkJGhwLPBKjXApJGJVPxaUZxDCA3+gstlj8cT50WnjN2lkHZ86Kje7IRqCfhozJYKRSIX1szIzEHDyq5dYyYTkZdgcHKR7TJbx+TJ1qk9FMme+SWlwBwfo9esrGrHZRB8abnYiZwiC79eqfQ494=
+spamdiagnosticoutput: 1:99
+spamdiagnosticmetadata: NSPM
+Content-Type: text/plain; charset="utf-8"
+Content-ID: <2F02AF5CB99EE049A3412996D35EAF30@namprd06.prod.outlook.com>
+Content-Transfer-Encoding: base64
 MIME-Version: 1.0
+X-OriginatorOrg: impinj.com
+X-MS-Exchange-CrossTenant-Network-Message-Id: 8e81e434-3525-4ec7-1fe5-08d64a698724
+X-MS-Exchange-CrossTenant-originalarrivaltime: 14 Nov 2018 19:44:01.7646
+ (UTC)
+X-MS-Exchange-CrossTenant-fromentityheader: Hosted
+X-MS-Exchange-CrossTenant-id: 6de70f0f-7357-4529-a415-d8cbb7e93e5e
+X-MS-Exchange-Transport-CrossTenantHeadersStamped: MWHPR0601MB3675
 Sender: linux-pci-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
---=-lpB01QR67hbuIT54IqVb
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
-
-On Wed, 2018-11-14 at 19:22 +0000, Alex_Gagniuc@Dellteam.com wrote:
-[snip]
-> The whole issue of firmware-first, the mechanism by which
-> > > > firmware
-> > > > gets control, the System Error enables in Root Port Root
-> > > > Control
-> > > > registers, etc., is very murky to me.  Jon has a sort of
-> > > > similar issue
-> > > > with VMD where he needs to leave System Errors enabled instead
-> > > > of
-> > > > disabling them as we currently do.
-> > >=20
-> > > Well, OS gets control via _OSC method, and based on that it
-> > > should
-> > > touch/not touch the AER bits.
-> >=20
-> > I agree so far.
-> >=20
-> > > The bits that get set/cleared come from _HPX method,
-> >=20
-> > _HPX tells us about some AER registers, Device Control, Link
-> > Control,
-> > and some bridge registers.  It doesn't say anything about the Root
-> > Control register that Jon is concerned with.
->=20
-> _HPX type 3 (yay!!!) got approved recently, and that will have more=20
-> fine-grained control. It will be able to handle root control reg.
->=20
-> > For firmware-first to work, firmware has to get control.  How does
-> > it
-> > get control?  How does OSPM know to either set up that mechanism or
-> > keep its mitts off something firmware set up before handoff?
->=20
-> My understanding is that, if FW keeps control of AER in _OSC, then
-> it=20
-> will have set things up to get notified instead of the OS. OSPM not=20
-> touching AER bits is to make sure it doesn't mess up FW's setup. I
-> think=20
-> there are some proprietary bits in the root port to route interrupts
-> to=20
-> SMIs instead of the AER vectors.
->=20
-> > In Jon's
-> > VMD case, I think firmware-first relies on the System Error
-> > controlled
-> > by the Root Control register.  Linux thinks it owns that, and I
-> > don't
-> > know how to learn otherwise.
->=20
-> Didn't Keith say the root port is not visible to the OS?
->=20
-> Alex
-
-That's correct. OS visibility wrt ACPI is limited to the VMD
-endpoint/host bridge device which exposes the root ports. The root
-ports aren't described by ACPI. VMD is the unusual case.
-
-In VMD case, we might or might not need to pass back control to AER for
-further error handling post FFS. I can see that's normally done by GHES
-but will probably need some shimming to support the VMD case. I can't
-rely on AER, because if any other devices use APEI, then the AER module
-won't be initialized (aer_service_init::aer_acpi_firmware_first)
---=-lpB01QR67hbuIT54IqVb
-Content-Type: application/x-pkcs7-signature; name="smime.p7s"
-Content-Disposition: attachment; filename="smime.p7s"
-Content-Transfer-Encoding: base64
-
-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
-PNauajAtxgRKfqfSMb+IcL/VXiPtVZOxVq+CTZeDJkaEmn/79vg8OYxpR+YhFF+tGlKf/Zc4id1P
-AgMBAAGjggI3MIICMzAdBgNVHQ4EFgQU4oawcWXM1cPGdwGcIszDfjORVZAwHwYDVR0jBBgwFoAU
-HmkqtNwo/kcYTiELP7ysES/wmPUwZQYDVR0fBF4wXDBaoFigVoZUaHR0cDovL3d3dy5pbnRlbC5j
-b20vcmVwb3NpdG9yeS9DUkwvSW50ZWwlMjBFeHRlcm5hbCUyMEJhc2ljJTIwSXNzdWluZyUyMENB
-JTIwNEEuY3JsMIGfBggrBgEFBQcBAQSBkjCBjzBpBggrBgEFBQcwAoZdaHR0cDovL3d3dy5pbnRl
-bC5jb20vcmVwb3NpdG9yeS9jZXJ0aWZpY2F0ZXMvSW50ZWwlMjBFeHRlcm5hbCUyMEJhc2ljJTIw
-SXNzdWluZyUyMENBJTIwNEEuY3J0MCIGCCsGAQUFBzABhhZodHRwOi8vb2NzcC5pbnRlbC5jb20v
-MAsGA1UdDwQEAwIHgDA8BgkrBgEEAYI3FQcELzAtBiUrBgEEAYI3FQiGw4x1hJnlUYP9gSiFjp9T
-gpHACWeB3r05lfBDAgFkAgEJMB8GA1UdJQQYMBYGCCsGAQUFBwMEBgorBgEEAYI3CgMMMCkGCSsG
-AQQBgjcVCgQcMBowCgYIKwYBBQUHAwQwDAYKKwYBBAGCNwoDDDBRBgNVHREESjBIoCoGCisGAQQB
-gjcUAgOgHAwaam9uYXRoYW4uZGVycmlja0BpbnRlbC5jb22BGmpvbmF0aGFuLmRlcnJpY2tAaW50
-ZWwuY29tMA0GCSqGSIb3DQEBBQUAA4IBAQBxGkHe05DNpYel4b9WbbyQqD1G6y6YA6C93TjKULZi
-p8+gO1LL096ixD44+frVm3jtXMikoadRHQJmBJdzsCywNE1KgtrYF0k4zRWr7a28nyfGgQe4UHHD
-7ARyZFeGd7AKSQ1y4/LU57I2Aw2HKx9/PXavv1JXjjO2/bqTfnZDJTQmOQ0nvlO3/gvbbABxZHqz
-NtfHZsQWS7s+Elk2xGUQ0Po2pMCQoaPo9R96mm+84UP9q3OvSqMoaZwfzoUeAx2wGJYl0h3S+ABr
-CPVfCgq9qnmVCn5DyHWE3V/BRjJCoILLBLxAxnmSdH4pF6wJ6pYRLEw9qoyNhpzGUIJU/Lk1MYIC
-FzCCAhMCAQEwgZAweTELMAkGA1UEBhMCVVMxCzAJBgNVBAgTAkNBMRQwEgYDVQQHEwtTYW50YSBD
-bGFyYTEaMBgGA1UEChMRSW50ZWwgQ29ycG9yYXRpb24xKzApBgNVBAMTIkludGVsIEV4dGVybmFs
-IEJhc2ljIElzc3VpbmcgQ0EgNEECEzMAAMamAkocC+WQNPgAAAAAxqYwCQYFKw4DAhoFAKBdMBgG
-CSqGSIb3DQEJAzELBgkqhkiG9w0BBwEwHAYJKoZIhvcNAQkFMQ8XDTE4MTExNDE5NDExMFowIwYJ
-KoZIhvcNAQkEMRYEFHni90O5DHeZQC73IwuLy7GfyN4yMA0GCSqGSIb3DQEBAQUABIIBAC+5yM9O
-b3MSbIlXfB0Ebee0VQ+3CJ1x3cxOfnR2+atMo+L0jsqflxjWrGs2BN2EsPA6fDkjQ/wv17/0tAix
-ydb+BkoPS6I4G0NkR1peqMSrmZ/LFGDrtOMlZpPTO7pYpYFEW/untmT6OVhOVSNf6wdEyTveehMg
-arkdHmVT2kJ1tFOUu1OcuJNSrH3/iVNMcGWTcuv/uwQN4KlbZTeFbHNv/l+VrdG3qIdqeVysSuhc
-9XLZE7L0Yv9vTWWop1Spzx5PjPAK/+VM6BCYUvPAQLs7Pg4nUiG9UV4g1uUbWmo2HIsLejgNieJa
-PQ7CPrYUvd0gvSl8xpThtozfCj1nB48AAAAAAAA=
-
-
---=-lpB01QR67hbuIT54IqVb--
+T24gV2VkLCAyMDE4LTExLTE0IGF0IDE2OjQ5ICswMTAwLCBTdGVmYW4gQWduZXIgd3JvdGU6DQo+
+IE9uIDE5LjEwLjIwMTggMTM6MTMsIFN0ZWZhbiBBZ25lciB3cm90ZToNCj4gPiBSZWFkaW5nIHRo
+ZSBmdWxsIDRrIGNvbmZpZyBzcGFjZSB0aHJvdWdoIHN5c2ZzIGxlYWRzIHRvIGFuDQo+ID4gZXh0
+ZXJuYWwgYWJvcnQuIFRlc3Rpbmcgb24gYSBwbGF0Zm9ybSBzaG93ZWQgdGhhdCB0aGUgdXBwZXIN
+Cj4gPiBsaW1pdCBpcyA1MTIuIExpbWl0IGNvbmZpZyBzcGFjZSB0byA1MTIuDQo+IA0KPiBBbnkg
+Y29tbWVudCBvbiB0aGlzIHBhdGNoPw0KPiANCj4gU2luY2Ugb3RoZXIgZGV2aWNlcyB1c2Ugc2lt
+aWxhciBxdWlya3MsIEkgZ3Vlc3MgdGhlIGZpeCBjYW4ndCBiZSBmYXINCj4gb2ZmPw0KPiANCj4g
+TWF5YmUgcmVzdHJpY3RpbmcgdG8gdGhlIFBDSSBkZXZpY2UgSUQgdXNlZCBpbiBpLk1YIDYgb25s
+eSBpcyB0b28NCj4gcmVzdHJpY3RpdmUsIGJ1dCBJIGd1ZXNzIGJldHRlciByZXN0cmljdGl2ZSBm
+b3Igbm93Pw0KDQpUbyB0cmlnZ2VyIHRoaXMgYnVnIEkgc2hvdWxkIHJlYWQgdGhlIHN5c2ZzICJj
+b25maWciIGZpbGUgZm9yIHRoZSBQQ0kNCmJyaWRnZSBkZXZpY2U/DQoNClRlc3RlZCBvbiBpbXg3
+LCBubyBwcm9ibGVtcy4NCg0KIyBoZXhkdW1wIC1DIC9zeXMvZGV2aWNlcy9wbGF0Zm9ybS9zb2Mv
+MzA4MDAwMDAuYWlwcy1idXMvMzM4MDAwMDAucGNpZS9wY2kwMDAwOjAwLzAwMDA6MDA6MDAuMC9j
+b25maWcgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAg
+ICAgICAgICAgICAgICAgICAgICAgICAgIA0KW3N0dWZmXQ0KMDAwMDAxMzAgIDAwIDAwIDAwIDAw
+IDAwIDAwIDAwIDAwICAwMCAwMCAwMCAwMCAwMCAwMCAwMCAwMCAgfC4uLi4uLi4uLi4uLi4uLi58
+ICAgICAgICAgICAgICAgICAgICAgICAgICAgIA0KKiAgICAgICAgICAgICAgICAgICAgICAgICAg
+ICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAg
+ICAgICAgICAgICAgICAgICAgICAgIA0KMDAwMDA0MDAgIGZmIGZmIGZmIGZmIGZmIGZmIGZmIGZm
+ICBmZiBmZiBmZiBmZiBmZiBmZiBmZiBmZiAgfC4uLi4uLi4uLi4uLi4uLi58ICAgICAgICAgICAg
+ICAgICAgICAgICAgICAgIA0KKiAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAg
+ICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAg
+ICAgICAgICAgIA0KMDAwMDA3MDAgIDc2IDAwIDYzIDAxIGZmIGZmIGZmIGZmICAwNCAwMCAwMCAw
+NyAwMCBmMCBmMCAxYiAgfHYuYy4uLi4uLi4uLi4uLi58ICAgICAgICAgICAgICAgICAgICAgICAg
+ICAgDQpbbW9yZSBzdHVmZl0NCg0KVGhlIGJyaWRnZSBvbiBpbXg3ZCBpcyAxNmMzOmFiY2QsIHNh
+bWUgYXMgcGF0Y2ggSSBiZWxpZXZlLiAgSSBkbyBoYXZlIGENCnBjaS1lIGRldmljZSBjb25uZWN0
+ZWQsIHVubGlrZSB0aGUgb3JpZ2luYWwgYnVnLiAgTWF5YmUgdGhhdCBpcw0KcmVsYXRlZD8gIE9y
+IG1heWJlIHRoaXMgcHJvYmxlbSBpcyBmaXhlZCBpbiBpbXg3ZD8NCg0KPiA+ICANCj4gPiAgI2Rl
+ZmluZSBQQ0lfVkVORE9SX0lEX1NZTk9QU1lTCQkweDE2YzMNCj4gPiArI2RlZmluZSBQQ0lfREVW
+SUNFX0lEX1NZTk9QU1lTX0lNWDYJMHhhYmNkDQo+ID4gIA0KPiA+ICAjZGVmaW5lIFBDSV9WRU5E
+T1JfSURfVklURVNTRQkJMHgxNzI1DQo+ID4gICNkZWZpbmUgUENJX0RFVklDRV9JRF9WSVRFU1NF
+X1ZTQzcxNzQJMHg3MTc0
