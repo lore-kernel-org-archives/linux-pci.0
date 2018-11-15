@@ -2,73 +2,89 @@ Return-Path: <SRS0=ulVR=N2=vger.kernel.org=linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-3.0 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	MAILING_LIST_MULTI,SPF_PASS,USER_AGENT_NEOMUTT autolearn=ham
-	autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-1.0 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+	MAILING_LIST_MULTI,SPF_PASS,URIBL_BLOCKED autolearn=ham autolearn_force=no
+	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id EBAB0C43441
-	for <linux-pci@archiver.kernel.org>; Thu, 15 Nov 2018 19:27:45 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id A6127C43441
+	for <linux-pci@archiver.kernel.org>; Thu, 15 Nov 2018 19:29:33 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 585F02245E
-	for <linux-pci@archiver.kernel.org>; Thu, 15 Nov 2018 19:27:45 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.3.2 mail.kernel.org 585F02245E
-Authentication-Results: mail.kernel.org; dmarc=none (p=none dis=none) header.from=wunner.de
+	by mail.kernel.org (Postfix) with ESMTP id 744EA21582
+	for <linux-pci@archiver.kernel.org>; Thu, 15 Nov 2018 19:29:33 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.3.2 mail.kernel.org 744EA21582
+Authentication-Results: mail.kernel.org; dmarc=none (p=none dis=none) header.from=arm.com
 Authentication-Results: mail.kernel.org; spf=none smtp.mailfrom=linux-pci-owner@vger.kernel.org
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1725809AbeKPFgt (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Fri, 16 Nov 2018 00:36:49 -0500
-Received: from bmailout2.hostsharing.net ([83.223.90.240]:54623 "EHLO
-        bmailout2.hostsharing.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1725769AbeKPFgt (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Fri, 16 Nov 2018 00:36:49 -0500
-Received: from h08.hostsharing.net (h08.hostsharing.net [83.223.95.28])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
-        (Client CN "*.hostsharing.net", Issuer "COMODO RSA Domain Validation Secure Server CA" (not verified))
-        by bmailout2.hostsharing.net (Postfix) with ESMTPS id 0D23D2800B3D8;
-        Thu, 15 Nov 2018 20:27:42 +0100 (CET)
-Received: by h08.hostsharing.net (Postfix, from userid 100393)
-        id A0AD0155178; Thu, 15 Nov 2018 20:27:41 +0100 (CET)
-Date:   Thu, 15 Nov 2018 20:27:41 +0100
-From:   Lukas Wunner <lukas@wunner.de>
-To:     Mika Westerberg <mika.westerberg@linux.intel.com>
-Cc:     Yehezkel Bernat <yehezkelshb@gmail.com>, lorenzo.pieralisi@arm.com,
-        iommu@lists.linux-foundation.org, joro@8bytes.org,
-        David Woodhouse <dwmw2@infradead.org>,
-        baolu.lu@linux.intel.com, ashok.raj@intel.com,
-        Bjorn Helgaas <bhelgaas@google.com>, rjw@rjwysocki.net,
-        jacob.jun.pan@intel.com, Andreas Noever <andreas.noever@gmail.com>,
-        michael.jamet@intel.com, Christian Kellner <ckellner@redhat.com>,
-        Mario Limonciello <Mario.Limonciello@dell.com>,
-        Anthony Wong <anthony.wong@canonical.com>,
-        linux-acpi@vger.kernel.org, linux-pci@vger.kernel.org,
-        LKML <linux-kernel@vger.kernel.org>
-Subject: Re: [PATCH 1/4] PCI / ACPI: Identify external PCI devices
-Message-ID: <20181115192741.4ugt6usmsemokxle@wunner.de>
-References: <20181113112700.GT2500@lahna.fi.intel.com>
- <20181113114527.GA12821@e107981-ln.cambridge.arm.com>
- <20181115102239.GU2500@lahna.fi.intel.com>
- <20181115111356.GA599@e107981-ln.cambridge.arm.com>
- <20181115113737.GW2500@lahna.fi.intel.com>
- <20181115120736.pscly6zwd3k2tvd2@wunner.de>
- <20181115121627.GA2500@lahna.fi.intel.com>
- <20181115174608.GA17691@e107981-ln.cambridge.arm.com>
- <CA+CmpXv9yM6nFdb0mcMPGHS-B_uGbQHYoO6iuefZC8gWoZYD3Q@mail.gmail.com>
- <20181115191026.GE4179@lahna.fi.intel.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20181115191026.GE4179@lahna.fi.intel.com>
-User-Agent: NeoMutt/20170113 (1.7.2)
+        id S1727041AbeKPFii (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Fri, 16 Nov 2018 00:38:38 -0500
+Received: from usa-sjc-mx-foss1.foss.arm.com ([217.140.101.70]:40276 "EHLO
+        foss.arm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1725923AbeKPFii (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Fri, 16 Nov 2018 00:38:38 -0500
+Received: from usa-sjc-imap-foss1.foss.arm.com (unknown [10.72.51.249])
+        by usa-sjc-mx-foss1.foss.arm.com (Postfix) with ESMTP id 2330980D;
+        Thu, 15 Nov 2018 11:29:32 -0800 (PST)
+Received: from big-swifty.misterjones.org (usa-sjc-mx-foss1.foss.arm.com [217.140.101.70])
+        by usa-sjc-imap-foss1.foss.arm.com (Postfix) with ESMTPSA id C63D83F5BD;
+        Thu, 15 Nov 2018 11:29:31 -0800 (PST)
+Date:   Thu, 15 Nov 2018 19:29:30 +0000
+Message-ID: <865zwyw351.wl-marc.zyngier@arm.com>
+From:   Marc Zyngier <marc.zyngier@arm.com>
+To:     Trent Piepho <tpiepho@impinj.com>
+Cc:     "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+        "lorenzo.pieralisi@arm.com" <lorenzo.pieralisi@arm.com>,
+        "gustavo.pimentel@synopsys.com" <gustavo.pimentel@synopsys.com>,
+        "helgaas@google.com" <helgaas@google.com>,
+        "jingoohan1@gmail.com" <jingoohan1@gmail.com>,
+        "faiz_abbas@ti.com" <faiz_abbas@ti.com>,
+        "vigneshr@ti.com" <vigneshr@ti.com>,
+        "Joao.Pinto@synopsys.com" <Joao.Pinto@synopsys.com>
+Subject: Re: [PATCH 0/3] PCI: designware: Fixing MSI handling flow
+In-Reply-To: <1542307052.30311.531.camel@impinj.com>
+References: <20181113225734.8026-1-marc.zyngier@arm.com>
+        <1542220084.30311.453.camel@impinj.com>
+        <a5f464c5-bc21-5986-7974-6fbabc450147@synopsys.com>
+        <1542307052.30311.531.camel@impinj.com>
+User-Agent: Wanderlust/2.15.9 (Almost Unreal) SEMI-EPG/1.14.7 (Harue)
+ FLIM/1.14.9 (=?UTF-8?B?R29qxY0=?=) APEL/10.8 EasyPG/1.0.0 Emacs/25.1
+ (aarch64-unknown-linux-gnu) MULE/6.0 (HANACHIRUSATO)
+Organization: ARM Ltd
+MIME-Version: 1.0 (generated by SEMI-EPG 1.14.7 - "Harue")
+Content-Type: text/plain; charset=US-ASCII
 Sender: linux-pci-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-On Thu, Nov 15, 2018 at 09:10:26PM +0200, Mika Westerberg wrote:
-> I was thinking we could cover all these with is_external filling them
-> based on the _DSD or some other means in the kernel.
+On Thu, 15 Nov 2018 18:37:33 +0000,
+Trent Piepho <tpiepho@impinj.com> wrote:
 > 
-> We would then deal all such devices as "untrusted" by default.
+> On Thu, 2018-11-15 at 15:22 +0000, Gustavo Pimentel wrote:
+> > On 14/11/2018 18:28, Trent Piepho wrote:
+> > > On Tue, 2018-11-13 at 22:57 +0000, Marc Zyngier wrote:
+> > > > 
+> > > Now it works again.  Race still present.  I don't see the
+> > > dw_pci_msi_bottom_(un)mask methods ever get called.  I seem to recall
+> > > that they are called as a substitute if enable/disable are not present,
+> > > but haven't confirmed that, which would explain why they are not called
+> > > after I added enable.
+> > 
+> > Hum, this probably is correlated with [1] where on the describition the this
+> > enumerator says that "One shot does not require mask/unmask" see [2]
+> 
+> That seems reasonable then.  I've said before that while I think
+> masking could be added in the interrupt flow without breaking anything,
+> I think it's redundant to do it at this layer.
+> 
+> I suspect it might be possible mask/unmask the interrupt "manually",
+> e.g. UIO does this to allow handling a level interrupt from userspace,
+> and that would be a path to reach the mask methods.
 
-Tinfoil hat on, even internal devices could be malicious.
-What's the downside of enabling the feature for everything?
+The real use case is that a driver can perfectly disable (mask) an
+interrupt while being in the interrupt handler, and enable it again at
+a later time.
+
+	M.
+
+-- 
+Jazz is not dead, it just smell funny.
