@@ -4,41 +4,41 @@ X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 X-Spam-Level: 
 X-Spam-Status: No, score=-8.8 required=3.0 tests=DKIM_INVALID,DKIM_SIGNED,
 	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
-	SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT autolearn=ham autolearn_force=no
-	version=3.4.0
+	SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT autolearn=unavailable
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 76F80C04EBF
-	for <linux-pci@archiver.kernel.org>; Thu, 15 Nov 2018 19:06:15 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 3FEA1C43441
+	for <linux-pci@archiver.kernel.org>; Thu, 15 Nov 2018 19:06:29 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 2ED1A22506
-	for <linux-pci@archiver.kernel.org>; Thu, 15 Nov 2018 19:06:15 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id E8D83224E0
+	for <linux-pci@archiver.kernel.org>; Thu, 15 Nov 2018 19:06:28 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=fail reason="signature verification failed" (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="iAhgzAvu"
-DMARC-Filter: OpenDMARC Filter v1.3.2 mail.kernel.org 2ED1A22506
+	dkim=fail reason="signature verification failed" (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="Fg71+vyi"
+DMARC-Filter: OpenDMARC Filter v1.3.2 mail.kernel.org E8D83224E0
 Authentication-Results: mail.kernel.org; dmarc=none (p=none dis=none) header.from=lst.de
 Authentication-Results: mail.kernel.org; spf=none smtp.mailfrom=linux-pci-owner@vger.kernel.org
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S2388952AbeKPFPN (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Fri, 16 Nov 2018 00:15:13 -0500
-Received: from bombadil.infradead.org ([198.137.202.133]:33022 "EHLO
+        id S2389006AbeKPFPW (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Fri, 16 Nov 2018 00:15:22 -0500
+Received: from bombadil.infradead.org ([198.137.202.133]:34102 "EHLO
         bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S2388909AbeKPFPM (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Fri, 16 Nov 2018 00:15:12 -0500
+        with ESMTP id S1729101AbeKPFPV (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Fri, 16 Nov 2018 00:15:21 -0500
 DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
         d=infradead.org; s=bombadil.20170209; h=Content-Transfer-Encoding:
         MIME-Version:References:In-Reply-To:Message-Id:Date:Subject:Cc:To:From:Sender
         :Reply-To:Content-Type:Content-ID:Content-Description:Resent-Date:Resent-From
         :Resent-Sender:Resent-To:Resent-Cc:Resent-Message-ID:List-Id:List-Help:
         List-Unsubscribe:List-Subscribe:List-Post:List-Owner:List-Archive;
-        bh=V+JMCPQPTXR/2268sL57x6N33ZatvXBmPYvafESpNf8=; b=iAhgzAvuqAAeMm4tpm9SUm9fx6
-        7e1QLFyWawm9a4E6xSqQOReCuBx1WbKaQaEGnhnP9TAaeQqNH59FsGq0GU2G+ERRHYvPHwk1LcW1o
-        RfD5vA7Zp6KrL490ZXCicib0L3ivl3ZWX/YRZJKH/XGFR9Ek1K13FfJf7yP+bojr+vrsQVmBamXUV
-        hylZ/KJ/EqDGNQ6yRsf2JkklJ4OfAfUeJUCRHz/1qSr1C4Rqv/M3Nd9Pvw0BuBrFv4dLqpa3T5tyE
-        xxLuqgDGxtesgNMYsFP/1Q3S3AFvA2x4xWeuff71hH1XccolxtqYYIT79o49v/eWgSbSWnQhp3ZJ6
-        XIOA/eeQ==;
+        bh=eXOQ+dvudBbzM5dl4WVVovz+qKPOlBqh8OVH/LPXs+U=; b=Fg71+vyi5c7/QX+KWk3UdtCGz7
+        eGID6AVUI/tU62X1Kj9ydrIGfieFHbasDux8tWYA2eDbKt803u/AMEj77MYHm5ed/gI0WbQ3xBb+B
+        3aOq6FozvUQqWw5Q4mSdxf9Y5Oj+7D/z9wtibMXmGpu8EeMnbkQIme3Cq4+w0jVmQgGsWstT4wZ6g
+        oU+Yu+jK83HpvzPas4+e1J62JbOcLAAT7zVn+Pypeh0qPLTZ/vd1M++nSO6z/kfCisGpETXoGlIZy
+        yP9Yu6kZ0ZsIeLYfajkz/tWZibV5W6v0KDzLDDTs/NDzZDoztDyIG4iZdPUGvHaVSLPcAHHx4ILMY
+        GvY93XLw==;
 Received: from 089144211136.atnat0020.highway.a1.net ([89.144.211.136] helo=localhost)
         by bombadil.infradead.org with esmtpsa (Exim 4.90_1 #2 (Red Hat Linux))
-        id 1gNMxo-00068O-7M; Thu, 15 Nov 2018 19:06:04 +0000
+        id 1gNMxy-0006MX-04; Thu, 15 Nov 2018 19:06:14 +0000
 From:   Christoph Hellwig <hch@lst.de>
 To:     Masahiro Yamada <yamada.masahiro@socionext.com>
 Cc:     Matt Porter <mporter@kernel.crashing.org>,
@@ -48,9 +48,9 @@ Cc:     Matt Porter <mporter@kernel.crashing.org>,
         linux-pci@vger.kernel.org, linux-arch@vger.kernel.org,
         linux-kernel@vger.kernel.org, linuxppc-dev@lists.ozlabs.org,
         linux-alpha@vger.kernel.org, linux-mips@linux-mips.org
-Subject: [PATCH 6/9] PCI: consolidate the PCI_SYSCALL symbol
-Date:   Thu, 15 Nov 2018 20:05:34 +0100
-Message-Id: <20181115190538.17016-7-hch@lst.de>
+Subject: [PATCH 9/9] eisa: consolidate EISA Kconfig entry in drivers/eisa
+Date:   Thu, 15 Nov 2018 20:05:37 +0100
+Message-Id: <20181115190538.17016-10-hch@lst.de>
 X-Mailer: git-send-email 2.19.1
 In-Reply-To: <20181115190538.17016-1-hch@lst.de>
 References: <20181115190538.17016-1-hch@lst.de>
@@ -62,210 +62,321 @@ Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-Let architectures select the syscall support instead of duplicating the
-kconfig entry.
+Let architectures opt into EISA support by selecting HAS_EISA and
+handle everything else in drivers/eisa.
 
 Signed-off-by: Christoph Hellwig <hch@lst.de>
+Acked-by: Thomas Gleixner <tglx@linutronix.de>
 ---
- arch/alpha/Kconfig      | 4 +---
- arch/arc/Kconfig        | 4 +---
- arch/arm/Kconfig        | 4 +---
- arch/arm64/Kconfig      | 4 +---
- arch/ia64/Kconfig       | 4 +---
- arch/microblaze/Kconfig | 4 +---
- arch/powerpc/Kconfig    | 4 +---
- arch/sparc/Kconfig      | 4 +---
- drivers/pci/Kconfig     | 3 +++
- 9 files changed, 11 insertions(+), 24 deletions(-)
+ arch/alpha/Kconfig     | 15 ++++++++-------
+ arch/mips/Kconfig      | 31 +++++--------------------------
+ arch/powerpc/Kconfig   |  3 ---
+ arch/x86/Kconfig       | 19 +------------------
+ drivers/Kconfig        |  1 +
+ drivers/eisa/Kconfig   | 21 ++++++++++++++++++++-
+ drivers/parisc/Kconfig | 11 +----------
+ 7 files changed, 36 insertions(+), 65 deletions(-)
 
 diff --git a/arch/alpha/Kconfig b/arch/alpha/Kconfig
-index 2bf98e581684..1f679508bc34 100644
+index 0ff180ab2a42..5e7a44e6110f 100644
 --- a/arch/alpha/Kconfig
 +++ b/arch/alpha/Kconfig
-@@ -8,6 +8,7 @@ config ALPHA
- 	select ARCH_USE_CMPXCHG_LOCKREF
- 	select FORCE_PCI if !ALPHA_JENSEN
- 	select PCI_DOMAINS if PCI
-+	select PCI_SYSCALL if PCI
- 	select HAVE_AOUT
- 	select HAVE_IDE
- 	select HAVE_OPROFILE
-@@ -322,9 +323,6 @@ config ISA_DMA_API
- 	bool
- 	default y
- 
--config PCI_SYSCALL
--	def_bool PCI
--
- config ALPHA_NONAME
- 	bool
- 	depends on ALPHA_BOOK1 || ALPHA_NONAME_CH
-diff --git a/arch/arc/Kconfig b/arch/arc/Kconfig
-index 5d2dde4b04cd..54d618960a14 100644
---- a/arch/arc/Kconfig
-+++ b/arch/arc/Kconfig
-@@ -46,6 +46,7 @@ config ARC
- 	select OF
- 	select OF_EARLY_FLATTREE
- 	select OF_RESERVED_MEM
-+	select PCI_SYSCALL if PCI
- 	select PERF_USE_VMALLOC if ARC_CACHE_VIPT_ALIASING
- 
- config ARCH_HAS_CACHE_LINE_SIZE
-@@ -550,7 +551,4 @@ config FORCE_MAX_ZONEORDER
- 	default "12" if ARC_HUGEPAGE_16M
- 	default "11"
- 
--config PCI_SYSCALL
--	def_bool PCI
--
- source "kernel/power/Kconfig"
-diff --git a/arch/arm/Kconfig b/arch/arm/Kconfig
-index 5eab9f943723..73d0f5e9feb7 100644
---- a/arch/arm/Kconfig
-+++ b/arch/arm/Kconfig
-@@ -103,6 +103,7 @@ config ARM
- 	select OF_RESERVED_MEM if OF
- 	select OLD_SIGACTION
- 	select OLD_SIGSUSPEND3
-+	select PCI_SYSCALL if PCI
- 	select PERF_USE_VMALLOC
- 	select REFCOUNT_FULL
- 	select RTC_LIB
-@@ -1218,9 +1219,6 @@ config PCI_NANOENGINE
+@@ -129,11 +129,13 @@ choice
+ config ALPHA_GENERIC
+ 	bool "Generic"
+ 	depends on TTY
++	select HAVE_EISA
  	help
- 	  Enable PCI on the BSE nanoEngine board.
+ 	  A generic kernel will run on all supported Alpha hardware.
  
--config PCI_SYSCALL
--	def_bool PCI
+ config ALPHA_ALCOR
+ 	bool "Alcor/Alpha-XLT"
++	select HAVE_EISA
+ 	help
+ 	  For systems using the Digital ALCOR chipset: 5 chips (4, 64-bit data
+ 	  slices (Data Switch, DSW) - 208-pin PQFP and 1 control (Control, I/O
+@@ -207,6 +209,7 @@ config ALPHA_JENSEN
+ 	bool "Jensen"
+ 	depends on BROKEN
+ 	select DMA_DIRECT_OPS
++	select HAVE_EISA
+ 	help
+ 	  DEC PC 150 AXP (aka Jensen): This is a very old Digital system - one
+ 	  of the first-generation Alpha systems. A number of these systems
+@@ -223,6 +226,7 @@ config ALPHA_LX164
+ 
+ config ALPHA_LYNX
+ 	bool "Lynx"
++	select HAVE_EISA
+ 	help
+ 	  AlphaServer 2100A-based systems.
+ 
+@@ -233,6 +237,7 @@ config ALPHA_MARVEL
+ 
+ config ALPHA_MIATA
+ 	bool "Miata"
++	select HAVE_EISA
+ 	help
+ 	  The Digital PersonalWorkStation (PWS 433a, 433au, 500a, 500au, 600a,
+ 	  or 600au).
+@@ -252,6 +257,7 @@ config ALPHA_NONAME_CH
+ 
+ config ALPHA_NORITAKE
+ 	bool "Noritake"
++	select HAVE_EISA
+ 	help
+ 	  AlphaServer 1000A, AlphaServer 600A, and AlphaServer 800-based
+ 	  systems.
+@@ -264,6 +270,7 @@ config ALPHA_P2K
+ 
+ config ALPHA_RAWHIDE
+ 	bool "Rawhide"
++	select HAVE_EISA
+ 	help
+ 	  AlphaServer 1200, AlphaServer 4000 and AlphaServer 4100 machines.
+ 	  See HOWTO at
+@@ -283,6 +290,7 @@ config ALPHA_SX164
+ 
+ config ALPHA_SABLE
+ 	bool "Sable"
++	select HAVE_EISA
+ 	help
+ 	  Digital AlphaServer 2000 and 2100-based systems.
+ 
+@@ -512,11 +520,6 @@ config ALPHA_SRM
+ 
+ 	  If unsure, say N.
+ 
+-config EISA
+-	bool
+-	depends on ALPHA_GENERIC || ALPHA_JENSEN || ALPHA_ALCOR || ALPHA_MIKASA || ALPHA_SABLE || ALPHA_LYNX || ALPHA_NORITAKE || ALPHA_RAWHIDE
+-	default y
 -
- config PCI_HOST_ITE8152
+ config ARCH_MAY_HAVE_PC_FDC
+ 	def_bool y
+ 
+@@ -667,8 +670,6 @@ config HZ
+ 	default 1200 if HZ_1200
+ 	default 1024
+ 
+-source "drivers/eisa/Kconfig"
+-
+ config SRM_ENV
+ 	tristate "SRM environment through procfs"
+ 	depends on PROC_FS
+diff --git a/arch/mips/Kconfig b/arch/mips/Kconfig
+index 67fbd4952ff4..f4df8007fddb 100644
+--- a/arch/mips/Kconfig
++++ b/arch/mips/Kconfig
+@@ -24,6 +24,7 @@ config MIPS
+ 	select GENERIC_IOMAP
+ 	select GENERIC_IRQ_PROBE
+ 	select GENERIC_IRQ_SHOW
++	select GENERIC_ISA_DMA if EISA
+ 	select GENERIC_LIB_ASHLDI3
+ 	select GENERIC_LIB_ASHRDI3
+ 	select GENERIC_LIB_CMPDI2
+@@ -71,6 +72,7 @@ config MIPS
+ 	select HAVE_SYSCALL_TRACEPOINTS
+ 	select HAVE_VIRT_CPU_ACCOUNTING_GEN if 64BIT || !SMP
+ 	select IRQ_FORCED_THREADING
++	select ISA if EISA
+ 	select MODULES_USE_ELF_RELA if MODULES && 64BIT
+ 	select MODULES_USE_ELF_REL if MODULES
+ 	select PERF_USE_VMALLOC
+@@ -632,7 +634,7 @@ config SGI_IP22
+ 	select CSRC_R4K
+ 	select DEFAULT_SGI_PARTITION
+ 	select DMA_NONCOHERENT
+-	select HW_HAS_EISA
++	select HAVE_EISA
+ 	select I8253
+ 	select I8259
+ 	select IP22_CPU_SCACHE
+@@ -697,7 +699,7 @@ config SGI_IP28
+ 	select DMA_NONCOHERENT
+ 	select GENERIC_ISA_DMA_SUPPORT_BROKEN
+ 	select IRQ_MIPS_CPU
+-	select HW_HAS_EISA
++	select HAVE_EISA
+ 	select I8253
+ 	select I8259
+ 	select SGI_HAS_I8042
+@@ -840,8 +842,8 @@ config SNI_RM
+ 	select DEFAULT_SGI_PARTITION if CPU_BIG_ENDIAN
+ 	select DMA_NONCOHERENT
+ 	select GENERIC_ISA_DMA
++	select HAVE_EISA
+ 	select HAVE_PCSPKR_PLATFORM
+-	select HW_HAS_EISA
+ 	select HAVE_PCI
+ 	select IRQ_MIPS_CPU
+ 	select I8253
+@@ -3024,9 +3026,6 @@ config MIPS_AUTO_PFN_OFFSET
+ 
+ menu "Bus options (PCI, PCMCIA, EISA, ISA, TC)"
+ 
+-config HW_HAS_EISA
+-	bool
+-
+ config PCI_DRIVERS_GENERIC
+ 	select PCI_DOMAINS_GENERIC if PCI
  	bool
- 	depends on PCI && MACH_ARMCORE
-diff --git a/arch/arm64/Kconfig b/arch/arm64/Kconfig
-index 0eba26143350..8db186f8442b 100644
---- a/arch/arm64/Kconfig
-+++ b/arch/arm64/Kconfig
-@@ -166,6 +166,7 @@ config ARM64
- 	select OF_RESERVED_MEM
- 	select PCI_DOMAINS_GENERIC if PCI
- 	select PCI_ECAM if ACPI
-+	select PCI_SYSCALL if PCI
- 	select POWER_RESET
- 	select POWER_SUPPLY
- 	select REFCOUNT_FULL
-@@ -289,9 +290,6 @@ config ARCH_PROC_KCORE_TEXT
+@@ -3044,26 +3043,6 @@ config PCI_DRIVERS_LEGACY
+ config ISA
+ 	bool
  
- source "arch/arm64/Kconfig.platforms"
- 
--config PCI_SYSCALL
--	def_bool PCI
+-config EISA
+-	bool "EISA support"
+-	depends on HW_HAS_EISA
+-	select ISA
+-	select GENERIC_ISA_DMA
+-	---help---
+-	  The Extended Industry Standard Architecture (EISA) bus was
+-	  developed as an open alternative to the IBM MicroChannel bus.
 -
- menu "Kernel Features"
- 
- menu "ARM errata workarounds via the alternatives framework"
-diff --git a/arch/ia64/Kconfig b/arch/ia64/Kconfig
-index 7cf4b8bd779f..8f18d90c933d 100644
---- a/arch/ia64/Kconfig
-+++ b/arch/ia64/Kconfig
-@@ -16,6 +16,7 @@ config IA64
- 	select ARCH_MIGHT_HAVE_ACPI_PDC if ACPI
- 	select FORCE_PCI if (!IA64_HP_SIM)
- 	select PCI_DOMAINS if PCI
-+	select PCI_SYSCALL if PCI
- 	select HAVE_UNSTABLE_SCHED_CLOCK
- 	select HAVE_EXIT_THREAD
- 	select HAVE_IDE
-@@ -545,9 +546,6 @@ if !IA64_HP_SIM
- 
- menu "Bus options (PCI, PCMCIA)"
- 
--config PCI_SYSCALL
--	def_bool PCI
+-	  The EISA bus provided some of the features of the IBM MicroChannel
+-	  bus while maintaining backward compatibility with cards made for
+-	  the older ISA bus.  The EISA bus saw limited use between 1988 and
+-	  1995 when it was made obsolete by the PCI bus.
 -
- source "drivers/pcmcia/Kconfig"
- 
- endmenu
-diff --git a/arch/microblaze/Kconfig b/arch/microblaze/Kconfig
-index 551252d5c561..b3012bb4e2b2 100644
---- a/arch/microblaze/Kconfig
-+++ b/arch/microblaze/Kconfig
-@@ -37,6 +37,7 @@ config MICROBLAZE
- 	select OF
- 	select OF_EARLY_FLATTREE
- 	select PCI_DOMAINS_GENERIC if PCI
-+	select PCI_SYSCALL if PCI
- 	select TRACING_SUPPORT
- 	select VIRT_TO_BUS
- 	select CPU_NO_EFFICIENT_FFS
-@@ -268,9 +269,6 @@ endmenu
- 
- menu "Bus Options"
- 
--config PCI_SYSCALL
--	def_bool PCI
+-	  Say Y here if you are building a kernel for an EISA-based machine.
 -
- config PCI_XILINX
- 	bool "Xilinx PCI host bridge support"
- 	depends on PCI
+-	  Otherwise, say N.
+-
+-source "drivers/eisa/Kconfig"
+-
+ config TC
+ 	bool "TURBOchannel support"
+ 	depends on MACH_DECSTATION
 diff --git a/arch/powerpc/Kconfig b/arch/powerpc/Kconfig
-index edd3686eec28..cbdcd1c0b1e0 100644
+index f2f70cc2bd44..4dadf83d9d5c 100644
 --- a/arch/powerpc/Kconfig
 +++ b/arch/powerpc/Kconfig
-@@ -237,6 +237,7 @@ config PPC
- 	select OLD_SIGACTION			if PPC32
- 	select OLD_SIGSUSPEND
- 	select PCI_DOMAINS			if PCI
-+	select PCI_SYSCALL			if PCI
- 	select RTC_LIB
- 	select SPARSE_IRQ
- 	select SYSCTL_EXCEPTION_TRACE
-@@ -932,9 +933,6 @@ config FSL_GTM
- 	help
- 	  Freescale General-purpose Timers support
+@@ -886,9 +886,6 @@ config PPC_INDIRECT_PCI
+ 	depends on PCI
+ 	default y if 40x || 44x
  
--config PCI_SYSCALL
--	def_bool PCI
+-config EISA
+-	bool
 -
- config PCI_8260
+ config SBUS
  	bool
- 	depends on PCI && 8260
-diff --git a/arch/sparc/Kconfig b/arch/sparc/Kconfig
-index d2b760b4d2d2..20417b8b12a5 100644
---- a/arch/sparc/Kconfig
-+++ b/arch/sparc/Kconfig
-@@ -39,6 +39,7 @@ config SPARC
- 	select GENERIC_STRNCPY_FROM_USER
- 	select GENERIC_STRNLEN_USER
- 	select MODULES_USE_ELF_RELA
-+	select PCI_SYSCALL if PCI
- 	select ODD_RT_SIGACTION
- 	select OLD_SIGSUSPEND
- 	select ARCH_HAS_SG_CHAIN
-@@ -474,9 +475,6 @@ config SUN_LDOMS
- 	  Say Y here is you want to support virtual devices via
- 	  Logical Domains.
  
--config PCI_SYSCALL
--	def_bool PCI
+diff --git a/arch/x86/Kconfig b/arch/x86/Kconfig
+index 4c8052a7c3f9..305dcb6498cc 100644
+--- a/arch/x86/Kconfig
++++ b/arch/x86/Kconfig
+@@ -147,6 +147,7 @@ config X86
+ 	select HAVE_DYNAMIC_FTRACE_WITH_REGS
+ 	select HAVE_EBPF_JIT
+ 	select HAVE_EFFICIENT_UNALIGNED_ACCESS
++	select HAVE_EISA
+ 	select HAVE_EXIT_THREAD
+ 	select HAVE_FENTRY			if X86_64 || DYNAMIC_FTRACE
+ 	select HAVE_FTRACE_MCOUNT_RECORD
+@@ -2682,24 +2683,6 @@ config ISA
+ 	  (MCA) or VESA.  ISA is an older system, now being displaced by PCI;
+ 	  newer boards don't support it.  If you have ISA, say Y, otherwise N.
+ 
+-config EISA
+-	bool "EISA support"
+-	depends on ISA
+-	---help---
+-	  The Extended Industry Standard Architecture (EISA) bus was
+-	  developed as an open alternative to the IBM MicroChannel bus.
 -
- config PCIC_PCI
- 	bool
- 	depends on PCI && SPARC32 && !SPARC_LEON
-diff --git a/drivers/pci/Kconfig b/drivers/pci/Kconfig
-index 95812fc4958c..904847d173de 100644
---- a/drivers/pci/Kconfig
-+++ b/drivers/pci/Kconfig
-@@ -30,6 +30,9 @@ config PCI_DOMAINS_GENERIC
- 	select PCI_DOMAINS
- 	bool
+-	  The EISA bus provided some of the features of the IBM MicroChannel
+-	  bus while maintaining backward compatibility with cards made for
+-	  the older ISA bus.  The EISA bus saw limited use between 1988 and
+-	  1995 when it was made obsolete by the PCI bus.
+-
+-	  Say Y here if you are building a kernel for an EISA-based machine.
+-
+-	  Otherwise, say N.
+-
+-source "drivers/eisa/Kconfig"
+-
+ config SCx200
+ 	tristate "NatSemi SCx200 support"
+ 	---help---
+diff --git a/drivers/Kconfig b/drivers/Kconfig
+index 065d308fcb00..ea58a6b99288 100644
+--- a/drivers/Kconfig
++++ b/drivers/Kconfig
+@@ -4,6 +4,7 @@ menu "Device Drivers"
+ # Keep I/O buses first
  
-+config PCI_SYSCALL
+ source "drivers/amba/Kconfig"
++source "drivers/eisa/Kconfig"
+ source "drivers/pci/Kconfig"
+ source "drivers/pcmcia/Kconfig"
+ source "drivers/rapidio/Kconfig"
+diff --git a/drivers/eisa/Kconfig b/drivers/eisa/Kconfig
+index 2705284f6223..4570e3bca42c 100644
+--- a/drivers/eisa/Kconfig
++++ b/drivers/eisa/Kconfig
+@@ -1,6 +1,26 @@
+ #
+ # EISA configuration
+ #
++
++config HAVE_EISA
 +	bool
 +
- source "drivers/pci/pcie/Kconfig"
++menuconfig EISA
++	bool "EISA support"
++	depends on HAVE_EISA
++	---help---
++	  The Extended Industry Standard Architecture (EISA) bus was
++	  developed as an open alternative to the IBM MicroChannel bus.
++
++	  The EISA bus provided some of the features of the IBM MicroChannel
++	  bus while maintaining backward compatibility with cards made for
++	  the older ISA bus.  The EISA bus saw limited use between 1988 and
++	  1995 when it was made obsolete by the PCI bus.
++
++	  Say Y here if you are building a kernel for an EISA-based machine.
++
++	  Otherwise, say N.
++
+ config EISA_VLB_PRIMING
+ 	bool "Vesa Local Bus priming"
+ 	depends on X86 && EISA
+@@ -53,4 +73,3 @@ config EISA_NAMES
+ 	  names.
  
- config PCI_MSI
+ 	  When in doubt, say Y.
+-
+diff --git a/drivers/parisc/Kconfig b/drivers/parisc/Kconfig
+index 1a55763d1245..74e119adca01 100644
+--- a/drivers/parisc/Kconfig
++++ b/drivers/parisc/Kconfig
+@@ -2,6 +2,7 @@ menu "Bus options (PCI, PCMCIA, EISA, GSC, ISA)"
+ 
+ config GSC
+ 	bool "VSC/GSC/HSC bus support"
++	select HAVE_EISA
+ 	default y
+ 	help
+ 	  The VSC, GSC and HSC busses were used from the earliest 700-series
+@@ -46,16 +47,6 @@ config GSC_WAX
+ 	  used), a HIL interface chip and is also known to be used as the
+ 	  GSC bridge for an X.25 GSC card.
+ 
+-config EISA
+-	bool "EISA support"
+-	depends on GSC
+-	help
+-	  Say Y here if you have an EISA bus in your machine.  This code
+-	  supports both the Mongoose & Wax EISA adapters.  It is sadly
+-	  incomplete and lacks support for card-to-host DMA.
+-
+-source "drivers/eisa/Kconfig"
+-
+ config ISA
+ 	bool "ISA support"
+ 	depends on EISA
 -- 
 2.19.1
 
