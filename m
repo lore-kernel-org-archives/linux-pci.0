@@ -6,30 +6,35 @@ X-Spam-Status: No, score=-2.5 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
 	MAILING_LIST_MULTI,SPF_PASS,USER_AGENT_MUTT autolearn=ham autolearn_force=no
 	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 52F25C43441
-	for <linux-pci@archiver.kernel.org>; Thu, 15 Nov 2018 11:14:08 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 6FE6BC43441
+	for <linux-pci@archiver.kernel.org>; Thu, 15 Nov 2018 11:37:45 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 22F6321780
-	for <linux-pci@archiver.kernel.org>; Thu, 15 Nov 2018 11:14:08 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.3.2 mail.kernel.org 22F6321780
-Authentication-Results: mail.kernel.org; dmarc=none (p=none dis=none) header.from=arm.com
+	by mail.kernel.org (Postfix) with ESMTP id 3346B223DD
+	for <linux-pci@archiver.kernel.org>; Thu, 15 Nov 2018 11:37:45 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.3.2 mail.kernel.org 3346B223DD
+Authentication-Results: mail.kernel.org; dmarc=fail (p=none dis=none) header.from=linux.intel.com
 Authentication-Results: mail.kernel.org; spf=none smtp.mailfrom=linux-pci-owner@vger.kernel.org
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1728757AbeKOVVb (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Thu, 15 Nov 2018 16:21:31 -0500
-Received: from usa-sjc-mx-foss1.foss.arm.com ([217.140.101.70]:60342 "EHLO
-        foss.arm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1725827AbeKOVVb (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Thu, 15 Nov 2018 16:21:31 -0500
-Received: from usa-sjc-imap-foss1.foss.arm.com (unknown [10.72.51.249])
-        by usa-sjc-mx-foss1.foss.arm.com (Postfix) with ESMTP id 9B497A78;
-        Thu, 15 Nov 2018 03:14:06 -0800 (PST)
-Received: from e107981-ln.cambridge.arm.com (e107981-ln.cambridge.arm.com [10.1.197.40])
-        by usa-sjc-imap-foss1.foss.arm.com (Postfix) with ESMTPSA id 82A9D3F718;
-        Thu, 15 Nov 2018 03:14:03 -0800 (PST)
-Date:   Thu, 15 Nov 2018 11:13:56 +0000
-From:   Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
-To:     Mika Westerberg <mika.westerberg@linux.intel.com>
+        id S2387647AbeKOVpM (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Thu, 15 Nov 2018 16:45:12 -0500
+Received: from mga12.intel.com ([192.55.52.136]:33265 "EHLO mga12.intel.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1729155AbeKOVpM (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Thu, 15 Nov 2018 16:45:12 -0500
+X-Amp-Result: UNKNOWN
+X-Amp-Original-Verdict: FILE UNKNOWN
+X-Amp-File-Uploaded: False
+Received: from orsmga008.jf.intel.com ([10.7.209.65])
+  by fmsmga106.fm.intel.com with ESMTP/TLS/DHE-RSA-AES256-GCM-SHA384; 15 Nov 2018 03:37:43 -0800
+X-ExtLoop1: 1
+X-IronPort-AV: E=Sophos;i="5.56,236,1539673200"; 
+   d="scan'208";a="92260992"
+Received: from lahna.fi.intel.com (HELO lahna) ([10.237.72.157])
+  by orsmga008.jf.intel.com with SMTP; 15 Nov 2018 03:37:37 -0800
+Received: by lahna (sSMTP sendmail emulation); Thu, 15 Nov 2018 13:37:37 +0200
+Date:   Thu, 15 Nov 2018 13:37:37 +0200
+From:   Mika Westerberg <mika.westerberg@linux.intel.com>
+To:     Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
 Cc:     Lukas Wunner <lukas@wunner.de>, iommu@lists.linux-foundation.org,
         Joerg Roedel <joro@8bytes.org>,
         David Woodhouse <dwmw2@infradead.org>,
@@ -47,7 +52,7 @@ Cc:     Lukas Wunner <lukas@wunner.de>, iommu@lists.linux-foundation.org,
         linux-acpi@vger.kernel.org, linux-pci@vger.kernel.org,
         linux-kernel@vger.kernel.org
 Subject: Re: [PATCH 1/4] PCI / ACPI: Identify external PCI devices
-Message-ID: <20181115111356.GA599@e107981-ln.cambridge.arm.com>
+Message-ID: <20181115113737.GW2500@lahna.fi.intel.com>
 References: <20181112160628.86620-1-mika.westerberg@linux.intel.com>
  <20181112160628.86620-2-mika.westerberg@linux.intel.com>
  <20181112180203.lx72gjfplb6xlur7@wunner.de>
@@ -55,58 +60,36 @@ References: <20181112160628.86620-1-mika.westerberg@linux.intel.com>
  <20181113112700.GT2500@lahna.fi.intel.com>
  <20181113114527.GA12821@e107981-ln.cambridge.arm.com>
  <20181115102239.GU2500@lahna.fi.intel.com>
+ <20181115111356.GA599@e107981-ln.cambridge.arm.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20181115102239.GU2500@lahna.fi.intel.com>
-User-Agent: Mutt/1.5.24 (2015-08-30)
+In-Reply-To: <20181115111356.GA599@e107981-ln.cambridge.arm.com>
+Organization: Intel Finland Oy - BIC 0357606-4 - Westendinkatu 7, 02160 Espoo
+User-Agent: Mutt/1.10.1 (2018-07-13)
 Sender: linux-pci-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-On Thu, Nov 15, 2018 at 12:22:39PM +0200, Mika Westerberg wrote:
-> On Tue, Nov 13, 2018 at 11:45:36AM +0000, Lorenzo Pieralisi wrote:
-> > On Tue, Nov 13, 2018 at 01:27:00PM +0200, Mika Westerberg wrote:
-> > 
-> > [...]
-> > 
-> > > > To be frank the concept (and Microsoft _DSD bindings) seems a bit vague
-> > > > and not thoroughly defined and I would question its detection at
-> > > > PCI/ACPI core level, I would hope this can be clarified at ACPI
-> > > > specification level, at least.
-> > > 
-> > > I guess that is the way they envision to use _DSD. Instead of having
-> > > single UUID that covers all properties (like what we have with device
-> > > properties) they have one UUID per property "class". I certainly hope we
-> > > don't need to keep extending prp_guids[] array each time they invent
-> > > another "class" of properties.
-> > 
-> > It is even worse than that. This is a unilateral/obscure change that
-> > won't be part of ACPI specifications (I guess it was easier to add a
-> > UUID than add this to the ACPI specifications through the AWSG) but it
-> > is still supposed to be applicable to ACPI PCI bindings on any
-> > platforms/arches; this way of adding bindings does not work and it
-> > has to be rectified.
+On Thu, Nov 15, 2018 at 11:13:56AM +0000, Lorenzo Pieralisi wrote:
+> I have strong objections to the way these bindings have been forced upon
+> everybody; if that's the way *generic* ACPI bindings are specified I
+> wonder why there still exists an ACPI specification and related working
+> group.
 > 
-> I agree.
-> 
-> For the existing property "classes" such as the one here I don't think
-> we can do anything. There are systems already with these included in
-> their ACPI tables.
-> 
-> I wonder if you have any objections regarding this patch?
+> I personally (but that's Bjorn and Rafael choice) think that this is
+> not a change that belongs in PCI core, ACPI bindings are ill-defined
+> and device tree bindings are non-existing.
 
-I have strong objections to the way these bindings have been forced upon
-everybody; if that's the way *generic* ACPI bindings are specified I
-wonder why there still exists an ACPI specification and related working
-group.
+Any idea where should I put it then? These systems are already out there
+and we need to support them one way or another.
 
-I personally (but that's Bjorn and Rafael choice) think that this is
-not a change that belongs in PCI core, ACPI bindings are ill-defined
-and device tree bindings are non-existing.
+> At the very least Microsoft should be asked to publish and discuss
+> these bindings within the ACPI and UEFI forums.
 
-At the very least Microsoft should be asked to publish and discuss
-these bindings within the ACPI and UEFI forums.
+These bindings are public, see here:
 
-Lorenzo
+  https://docs.microsoft.com/en-us/windows-hardware/drivers/pci/dsd-for-pcie-root-ports
+
+However, they are not part of the ACPI spec as you say.
