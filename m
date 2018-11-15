@@ -2,151 +2,116 @@ Return-Path: <SRS0=ulVR=N2=vger.kernel.org=linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-1.0 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	MAILING_LIST_MULTI,SPF_PASS,URIBL_BLOCKED autolearn=ham autolearn_force=no
-	version=3.4.0
+X-Spam-Status: No, score=-1.1 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
+	DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_PASS
+	autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id B5FAEC43441
-	for <linux-pci@archiver.kernel.org>; Thu, 15 Nov 2018 18:24:14 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 9BFC4C43441
+	for <linux-pci@archiver.kernel.org>; Thu, 15 Nov 2018 18:37:38 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 66A0421780
-	for <linux-pci@archiver.kernel.org>; Thu, 15 Nov 2018 18:24:14 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.3.2 mail.kernel.org 66A0421780
-Authentication-Results: mail.kernel.org; dmarc=none (p=none dis=none) header.from=wwwdotorg.org
+	by mail.kernel.org (Postfix) with ESMTP id 5996B2146D
+	for <linux-pci@archiver.kernel.org>; Thu, 15 Nov 2018 18:37:38 +0000 (UTC)
+Authentication-Results: mail.kernel.org;
+	dkim=pass (1024-bit key) header.d=impinj.com header.i=@impinj.com header.b="RdLInYPa"
+DMARC-Filter: OpenDMARC Filter v1.3.2 mail.kernel.org 5996B2146D
+Authentication-Results: mail.kernel.org; dmarc=fail (p=reject dis=none) header.from=impinj.com
 Authentication-Results: mail.kernel.org; spf=none smtp.mailfrom=linux-pci-owner@vger.kernel.org
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S2388388AbeKPEdG (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Thu, 15 Nov 2018 23:33:06 -0500
-Received: from avon.wwwdotorg.org ([104.237.132.123]:50740 "EHLO
-        avon.wwwdotorg.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726453AbeKPEdG (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Thu, 15 Nov 2018 23:33:06 -0500
-Received: from [172.17.129.155] (thunderhill.nvidia.com [216.228.112.22])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
-        (No client certificate requested)
-        by avon.wwwdotorg.org (Postfix) with ESMTPSA id F10001C00E8;
-        Thu, 15 Nov 2018 11:24:11 -0700 (MST)
-X-Virus-Status: Clean
-X-Virus-Scanned: clamav-milter 0.100.2 at avon.wwwdotorg.org
-Subject: Re: [PATCH] PCI: designware: don't hard-code DBI/ATU offset
-To:     Gustavo Pimentel <gustavo.pimentel@synopsys.com>
-Cc:     Jingoo Han <jingoohan1@gmail.com>,
-        Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
-        Bjorn Helgaas <bhelgaas@google.com>,
+        id S1726941AbeKPEqc (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Thu, 15 Nov 2018 23:46:32 -0500
+Received: from mail-eopbgr770125.outbound.protection.outlook.com ([40.107.77.125]:14272
+        "EHLO NAM02-SN1-obe.outbound.protection.outlook.com"
+        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+        id S1726453AbeKPEqc (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Thu, 15 Nov 2018 23:46:32 -0500
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=impinj.com;
+ s=selector1;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
+ bh=wlANYFbd9mkg7r5Z8zBFmJXxRo5AOGR++lqQkSbKYyY=;
+ b=RdLInYPadq09+zUIMOcUHWrlU67epn5j8lLkaxkGXZWVELCNFQNS+dYc/SK7nHal6nIHhK+0Y92klM1wbIeSDWBKl+Dn2U4JLuawwZPm+LNcdutmU9v0al0fAG5apAn35f8Paa1DuzZwa5gkH8QA+ddB6LeXL4nT9e5BiaUB4ds=
+Received: from MWHPR0601MB3708.namprd06.prod.outlook.com (10.167.236.38) by
+ MWHPR0601MB3721.namprd06.prod.outlook.com (10.167.236.138) with Microsoft
+ SMTP Server (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
+ 15.20.1294.27; Thu, 15 Nov 2018 18:37:33 +0000
+Received: from MWHPR0601MB3708.namprd06.prod.outlook.com
+ ([fe80::f51a:d8dd:1aad:3bf9]) by MWHPR0601MB3708.namprd06.prod.outlook.com
+ ([fe80::f51a:d8dd:1aad:3bf9%3]) with mapi id 15.20.1294.045; Thu, 15 Nov 2018
+ 18:37:33 +0000
+From:   Trent Piepho <tpiepho@impinj.com>
+To:     "marc.zyngier@arm.com" <marc.zyngier@arm.com>,
         "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-        Vidya Sagar <vidyas@nvidia.com>,
-        Manikanta Maddireddy <mmaddireddy@nvidia.com>,
-        Stephen Warren <swarren@nvidia.com>
-References: <20181112225710.29557-1-swarren@wwwdotorg.org>
- <ce3ac825-c05b-c782-81ba-dad0acc8d3c8@synopsys.com>
- <87acc658-489a-6b8f-44cb-f9fbad3297a3@wwwdotorg.org>
- <3f4797f3-5477-a31f-9292-ac89c21533fd@synopsys.com>
-From:   Stephen Warren <swarren@wwwdotorg.org>
-Openpgp: preference=signencrypt
-Autocrypt: addr=swarren@wwwdotorg.org; prefer-encrypt=mutual; keydata=
- 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
- 93UTmhOymgekufw=
-Message-ID: <8a004998-095c-b7a9-0b41-bf6a61f2380d@wwwdotorg.org>
-Date:   Thu, 15 Nov 2018 10:24:10 -0800
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:60.0) Gecko/20100101
- Thunderbird/60.2.1
+        "lorenzo.pieralisi@arm.com" <lorenzo.pieralisi@arm.com>,
+        "gustavo.pimentel@synopsys.com" <gustavo.pimentel@synopsys.com>,
+        "helgaas@google.com" <helgaas@google.com>
+CC:     "jingoohan1@gmail.com" <jingoohan1@gmail.com>,
+        "faiz_abbas@ti.com" <faiz_abbas@ti.com>,
+        "vigneshr@ti.com" <vigneshr@ti.com>,
+        "Joao.Pinto@synopsys.com" <Joao.Pinto@synopsys.com>
+Subject: Re: [PATCH 0/3] PCI: designware: Fixing MSI handling flow
+Thread-Topic: [PATCH 0/3] PCI: designware: Fixing MSI handling flow
+Thread-Index: AQHUe6RNjvB+uYCyEUiVT8YH/lgHCqVPmEcAgAFeawCAADaPAA==
+Date:   Thu, 15 Nov 2018 18:37:33 +0000
+Message-ID: <1542307052.30311.531.camel@impinj.com>
+References: <20181113225734.8026-1-marc.zyngier@arm.com>
+         <1542220084.30311.453.camel@impinj.com>
+         <a5f464c5-bc21-5986-7974-6fbabc450147@synopsys.com>
+In-Reply-To: <a5f464c5-bc21-5986-7974-6fbabc450147@synopsys.com>
+Accept-Language: en-US
+Content-Language: en-US
+X-MS-Has-Attach: 
+X-MS-TNEF-Correlator: 
+authentication-results: spf=none (sender IP is )
+ smtp.mailfrom=tpiepho@impinj.com; 
+x-originating-ip: [216.207.205.253]
+x-ms-publictraffictype: Email
+x-microsoft-exchange-diagnostics: 1;MWHPR0601MB3721;6:2h3VkSlcQnpSotbBYGX8MIqg3NiZ/XLzzb8sv1h3zHUAH419Z+2j9v6WXhzMDPzD9LZWkHpT6kzXwpJ113DyWRWjNL9kWtwXxuId+OrgfjLDJaXL9y6Gpge23xgXnUOEK9F74fOG5iNjL3YYFaYbc8mdl0w/hpnbF91A6Oa1S9o0jMgJjPlrk2yRi+Sj0e8uWKhq5aASd3mrjWjzU2zEzqlbhQNWU/u+QQkokHmrR4b60OPiSCFtqsNMpC+RCSNUqfGULvsiD7utZfpIkGnkMQ+gb8WwNGLa7h8WEieETv4Ne0yLMsX3R++J6yY/cF8m6vC2S+GZ4Y48m9qn9Icg+2h6tzL2tUOrZE3OIzpIISaePzjG+thWqYNyDtrd1LmFVHexd4IBNGdk+HapNYTE3PE98qj5LsibMroEGPllYvJNiQlkDVxjFsFeCqYbOcC5vwjJyft5+z7h/y1bZucnwA==;5:nA4ZtGaiw0AsvYRvJOT0fSTaKrond267dZTvU9/1XAe+F6ZjwnDAEfK1Sl6hyBT+Yd2dYgeEFUPC0Xc5CEFdqkh0R0H9RVrVlovcy3yoot5TSp2YrvGoojBUge2KRzwgj+fpCeYC9eY/hBfFjaRQVcn+RbAKM9MC7b6+3UOdk/o=;7:rizM07U1CZFrtjt/InUUqjunvJqQ8neTUqOkQgoNn8JyrKWPND2Lc6jvX16rjolg/yk6bpziz5p4P71cJA9B8LVltlC9y5jt+l7Ip4ycv76tHa31dGckDXuMxHYmk2UnVFc7AfOqn6LMgkG1H5h8Qg==
+x-ms-exchange-antispam-srfa-diagnostics: SOS;
+x-ms-office365-filtering-correlation-id: 1939b434-2c64-4bd3-39d9-08d64b296835
+x-microsoft-antispam: BCL:0;PCL:0;RULEID:(2390098)(7020095)(4652040)(8989299)(5600074)(711020)(4534185)(4627221)(201703031133081)(201702281549075)(8990200)(2017052603328)(7153060)(7193020);SRVR:MWHPR0601MB3721;
+x-ms-traffictypediagnostic: MWHPR0601MB3721:
+x-microsoft-antispam-prvs: <MWHPR0601MB372198BD40C752F549831F29D3DC0@MWHPR0601MB3721.namprd06.prod.outlook.com>
+x-exchange-antispam-report-test: UriScan:;
+x-ms-exchange-senderadcheck: 1
+x-exchange-antispam-report-cfa-test: BCL:0;PCL:0;RULEID:(8211001083)(6040522)(2401047)(8121501046)(5005006)(93006095)(93001095)(3231415)(944501410)(52105112)(10201501046)(3002001)(148016)(149066)(150057)(6041310)(20161123564045)(20161123562045)(201703131423095)(201702281528075)(20161123555045)(201703061421075)(201703061406153)(20161123560045)(20161123558120)(201708071742011)(7699051)(76991095);SRVR:MWHPR0601MB3721;BCL:0;PCL:0;RULEID:;SRVR:MWHPR0601MB3721;
+x-forefront-prvs: 08572BD77F
+x-forefront-antispam-report: SFV:NSPM;SFS:(10019020)(39850400004)(396003)(136003)(366004)(346002)(376002)(189003)(199004)(486006)(8676002)(186003)(8936002)(81156014)(81166006)(6246003)(71190400001)(71200400001)(36756003)(68736007)(229853002)(39060400002)(6506007)(4326008)(53936002)(66066001)(316002)(25786009)(305945005)(2616005)(446003)(476003)(478600001)(11346002)(54906003)(26005)(110136005)(2201001)(7736002)(14454004)(5660300001)(86362001)(6486002)(2906002)(2900100001)(106356001)(6116002)(99286004)(53546011)(105586002)(103116003)(97736004)(76176011)(6436002)(256004)(3846002)(4001150100001)(6512007)(2501003)(102836004);DIR:OUT;SFP:1102;SCL:1;SRVR:MWHPR0601MB3721;H:MWHPR0601MB3708.namprd06.prod.outlook.com;FPR:;SPF:None;LANG:en;PTR:InfoNoRecords;MX:1;A:1;
+received-spf: None (protection.outlook.com: impinj.com does not designate
+ permitted sender hosts)
+x-microsoft-antispam-message-info: WRzUOUAfldPmb5zdNChyUMzB6Jw6RHkyRQrhHlKlacuQt3quL2oJYG6tsLruDTmn/06rDPPC1NwD4vcVgvzlel9ADc0Xyz7rUErFyuercCiMrO0oHgewaXvChjvC6ZdtukXXMGo5R0NTJcomy8aOHW3P029mrW0nNakLeMAMV4/MxdbGR7v+hmM++Cp3PtftGf79rpdYKA4w/BYwRBORxgEsAaojvK0QWqv9eugF9GRdO8HVOGYFOHiUQTbZqKJtI//rJ9kN8wfjePcUCEqjT8D3p6j2T153I9bdwd8B9DX5T1GRRzc4YcObxMb8wHU9S8AlI84/1rapQM+PGVPQsNLDrxn3JJWkKneOAy+FemE=
+spamdiagnosticoutput: 1:99
+spamdiagnosticmetadata: NSPM
+Content-Type: text/plain; charset="utf-8"
+Content-ID: <61147431EAAC3F47AC1C9B2108E74054@namprd06.prod.outlook.com>
+Content-Transfer-Encoding: base64
 MIME-Version: 1.0
-In-Reply-To: <3f4797f3-5477-a31f-9292-ac89c21533fd@synopsys.com>
-Content-Type: text/plain; charset=utf-8
-Content-Language: en-GB
-Content-Transfer-Encoding: 7bit
+X-OriginatorOrg: impinj.com
+X-MS-Exchange-CrossTenant-Network-Message-Id: 1939b434-2c64-4bd3-39d9-08d64b296835
+X-MS-Exchange-CrossTenant-originalarrivaltime: 15 Nov 2018 18:37:33.2003
+ (UTC)
+X-MS-Exchange-CrossTenant-fromentityheader: Hosted
+X-MS-Exchange-CrossTenant-id: 6de70f0f-7357-4529-a415-d8cbb7e93e5e
+X-MS-Exchange-Transport-CrossTenantHeadersStamped: MWHPR0601MB3721
 Sender: linux-pci-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-On 11/14/18 9:33 PM, Gustavo Pimentel wrote:
-> Hi Stephen,
-> 
-> On 14/11/2018 04:31, Stephen Warren wrote:
->> On 11/12/18 9:19 PM, Gustavo Pimentel wrote:
->>> Hi Stephen,
->>>
->>> I'd suggest to change the designware on the patch name by dwc and use another
->>> description for the patch instead of don't hard-code DBI/ATU offset.
->>
->> What issue do you see with the patch description? I believe it's
->> correct/accurate. Perhaps the confusion is due to the question you
->> raised below; see my answer there.
->>
->>> On 12/11/2018 22:57, Stephen Warren wrote:
->>>> From: Stephen Warren <swarren@nvidia.com>
->>>>
->>>> The DWC PCIe core contains various separate register spaces: DBI, DBI2,
->>>> ATU, DMA, etc. The relationship between the addresses of these register
->>>> spaces is entirely determined by the implementation of the IP block, not
->>>> by the IP block design itself. Hence, the DWC driver must not make
->>>> assumptions that one register space can be accessed at a fixed offset from
->>>> any other register space. To avoid such assumptions, introduce an
->>>> explicit/separate register pointer for the ATU register space. In
->>>> particular, the current assumption is not valid for NVIDIA's T194 SoC.
->>>
->>> If I understood this patch correctly, you basically replace the dbi_base offset
->>> by atu_base offset that still depends of dbi_base offset.
->>
->> That's not what the patch does.
->>
->> The patch leaves most DBI accesses still using dbi_base, but updates
->> just a few accesses to use atu_base. Thus, after the patch, all accesses
->> use the correct base address for the register being accessed.
->>
->> There is a default value supplied for atu_base, which does indeed depend
->> on dbi_base. This maintains backwards compatibility, so that all the
->> existing drivers don't need to be updated to explicitly set atu_base,
->> and will continue to use the existing offset between DBI and ATU base.
-> 
-> I think we're talking about the same thing, but with different terms.
-> 
->> In the future, we'll send a driver for the NVIDIA Tegra SoC which does
->> explicitly set atu_base to a non-default value.
-> 
-> That's what I wanted to know. Because otherwise this patch was just to turn the
-> code more readable.
-
-So it sounds like I've addressed your questions? If so, is the next step
-for you to ack the patch and Bjorn to apply it? Thanks!
+T24gVGh1LCAyMDE4LTExLTE1IGF0IDE1OjIyICswMDAwLCBHdXN0YXZvIFBpbWVudGVsIHdyb3Rl
+Og0KPiBPbiAxNC8xMS8yMDE4IDE4OjI4LCBUcmVudCBQaWVwaG8gd3JvdGU6DQo+ID4gT24gVHVl
+LCAyMDE4LTExLTEzIGF0IDIyOjU3ICswMDAwLCBNYXJjIFp5bmdpZXIgd3JvdGU6DQo+ID4gPiAN
+Cj4gPiBOb3cgaXQgd29ya3MgYWdhaW4uICBSYWNlIHN0aWxsIHByZXNlbnQuICBJIGRvbid0IHNl
+ZSB0aGUNCj4gPiBkd19wY2lfbXNpX2JvdHRvbV8odW4pbWFzayBtZXRob2RzIGV2ZXIgZ2V0IGNh
+bGxlZC4gIEkgc2VlbSB0byByZWNhbGwNCj4gPiB0aGF0IHRoZXkgYXJlIGNhbGxlZCBhcyBhIHN1
+YnN0aXR1dGUgaWYgZW5hYmxlL2Rpc2FibGUgYXJlIG5vdCBwcmVzZW50LA0KPiA+IGJ1dCBoYXZl
+bid0IGNvbmZpcm1lZCB0aGF0LCB3aGljaCB3b3VsZCBleHBsYWluIHdoeSB0aGV5IGFyZSBub3Qg
+Y2FsbGVkDQo+ID4gYWZ0ZXIgSSBhZGRlZCBlbmFibGUuDQo+IA0KPiBIdW0sIHRoaXMgcHJvYmFi
+bHkgaXMgY29ycmVsYXRlZCB3aXRoIFsxXSB3aGVyZSBvbiB0aGUgZGVzY3JpYml0aW9uIHRoZSB0
+aGlzDQo+IGVudW1lcmF0b3Igc2F5cyB0aGF0ICJPbmUgc2hvdCBkb2VzIG5vdCByZXF1aXJlIG1h
+c2svdW5tYXNrIiBzZWUgWzJdDQoNClRoYXQgc2VlbXMgcmVhc29uYWJsZSB0aGVuLiAgSSd2ZSBz
+YWlkIGJlZm9yZSB0aGF0IHdoaWxlIEkgdGhpbmsNCm1hc2tpbmcgY291bGQgYmUgYWRkZWQgaW4g
+dGhlIGludGVycnVwdCBmbG93IHdpdGhvdXQgYnJlYWtpbmcgYW55dGhpbmcsDQpJIHRoaW5rIGl0
+J3MgcmVkdW5kYW50IHRvIGRvIGl0IGF0IHRoaXMgbGF5ZXIuDQoNCkkgc3VzcGVjdCBpdCBtaWdo
+dCBiZSBwb3NzaWJsZSBtYXNrL3VubWFzayB0aGUgaW50ZXJydXB0ICJtYW51YWxseSIsDQplLmcu
+IFVJTyBkb2VzIHRoaXMgdG8gYWxsb3cgaGFuZGxpbmcgYSBsZXZlbCBpbnRlcnJ1cHQgZnJvbSB1
+c2Vyc3BhY2UsDQphbmQgdGhhdCB3b3VsZCBiZSBhIHBhdGggdG8gcmVhY2ggdGhlIG1hc2sgbWV0
+aG9kcy4=
