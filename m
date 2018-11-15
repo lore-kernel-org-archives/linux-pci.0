@@ -2,114 +2,151 @@ Return-Path: <SRS0=ulVR=N2=vger.kernel.org=linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-2.6 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
-	DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_PASS,
-	USER_AGENT_MUTT autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-1.0 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+	MAILING_LIST_MULTI,SPF_PASS,URIBL_BLOCKED autolearn=ham autolearn_force=no
+	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 1CD33C43441
-	for <linux-pci@archiver.kernel.org>; Thu, 15 Nov 2018 18:13:14 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id B5FAEC43441
+	for <linux-pci@archiver.kernel.org>; Thu, 15 Nov 2018 18:24:14 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id CCC5921582
-	for <linux-pci@archiver.kernel.org>; Thu, 15 Nov 2018 18:13:13 +0000 (UTC)
-Authentication-Results: mail.kernel.org;
-	dkim=pass (1024-bit key) header.d=linuxfoundation.org header.i=@linuxfoundation.org header.b="e9wCopL2"
-DMARC-Filter: OpenDMARC Filter v1.3.2 mail.kernel.org CCC5921582
-Authentication-Results: mail.kernel.org; dmarc=none (p=none dis=none) header.from=linuxfoundation.org
+	by mail.kernel.org (Postfix) with ESMTP id 66A0421780
+	for <linux-pci@archiver.kernel.org>; Thu, 15 Nov 2018 18:24:14 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.3.2 mail.kernel.org 66A0421780
+Authentication-Results: mail.kernel.org; dmarc=none (p=none dis=none) header.from=wwwdotorg.org
 Authentication-Results: mail.kernel.org; spf=none smtp.mailfrom=linux-pci-owner@vger.kernel.org
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S2387839AbeKPEWD (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Thu, 15 Nov 2018 23:22:03 -0500
-Received: from mail-pg1-f180.google.com ([209.85.215.180]:36498 "EHLO
-        mail-pg1-f180.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726941AbeKPEWD (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Thu, 15 Nov 2018 23:22:03 -0500
-Received: by mail-pg1-f180.google.com with SMTP id n2so2187195pgm.3
-        for <linux-pci@vger.kernel.org>; Thu, 15 Nov 2018 10:13:11 -0800 (PST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=linuxfoundation.org; s=google;
-        h=date:from:to:cc:subject:message-id:references:mime-version
-         :content-disposition:in-reply-to:user-agent;
-        bh=Z0upDZ2mFAUdjDXMYp+S4KJ1R74hWPx56On0E4nZmIs=;
-        b=e9wCopL2F24XiwBGWdhfkGc6Sy8Vg7P6NDKBnEWrEQcKk8LXyEtLMyLtDODDiDShET
-         Tgp9Zik6CwQesmlIHXieWgnjBEi3ZvRg5eRiKa2Dl/I/W70T1804vHb0RQi2MVI/udya
-         34yOTdlN1RW+DTkaAYFGAB1jGU7FwvFWpME8E=
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20161025;
-        h=x-gm-message-state:date:from:to:cc:subject:message-id:references
-         :mime-version:content-disposition:in-reply-to:user-agent;
-        bh=Z0upDZ2mFAUdjDXMYp+S4KJ1R74hWPx56On0E4nZmIs=;
-        b=bGkefobS6/zQzTSmcSkJHmRZgfCBdifMEy3/hW+OMbbDzMuTNm7ClF9qYgZC85RgVh
-         U8ikV+oMYIoERCWE7AJY0PGddz2SvfG4FE+fOiqs+FVx+0SOieZ/dk+UeMqIX4gWScHc
-         2P7TRx0TaD94JR6WAcexLD2zpnXVm2j8TiCEI7YGmHMMW1Of0r/ANRZlNEyMN8ubTOdz
-         2SVFdHOPfA5yR6lZOB04P7x8tU/gH9YdIxyHlgD0kVKnjSaQ9bju++BsGhRzxFdXSEmN
-         /dSKgvP5NbSpmdwdYULJqpuWEV8ArFsBSrodwnY4xdcOsjSgOlELbb+H/ZpEV4KtH/gm
-         ajgA==
-X-Gm-Message-State: AGRZ1gKnD0vVg2dHQXs9OJJ79XRVrCbwjaHmuxFPGIf85WTuJuMxnpNT
-        P1u/f7I/yyMUeNMZY9ebsNtUaw==
-X-Google-Smtp-Source: AJdET5cfLmgZtlZbg+yDFPLI/N6InjIU4J17K2lyvtZfEqwO1+v6RLmuQhhVo87XEA5o+3wADZbZaw==
-X-Received: by 2002:a65:55ca:: with SMTP id k10mr6694049pgs.448.1542305590785;
-        Thu, 15 Nov 2018 10:13:10 -0800 (PST)
-Received: from pure.paranoia.local ([172.83.40.72])
-        by smtp.gmail.com with ESMTPSA id w2-v6sm30490745pfw.26.2018.11.15.10.13.09
-        (version=TLS1_2 cipher=ECDHE-RSA-CHACHA20-POLY1305 bits=256/256);
-        Thu, 15 Nov 2018 10:13:10 -0800 (PST)
-Date:   Thu, 15 Nov 2018 13:13:07 -0500
-From:   Konstantin Ryabitsev <konstantin@linuxfoundation.org>
-To:     Bjorn Helgaas <helgaas@kernel.org>
-Cc:     Borislav Petkov <bp@alien8.de>, pr-tracker-bot@kernel.org,
-        Linus Torvalds <torvalds@linux-foundation.org>,
-        Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-        linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
+        id S2388388AbeKPEdG (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Thu, 15 Nov 2018 23:33:06 -0500
+Received: from avon.wwwdotorg.org ([104.237.132.123]:50740 "EHLO
+        avon.wwwdotorg.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726453AbeKPEdG (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Thu, 15 Nov 2018 23:33:06 -0500
+Received: from [172.17.129.155] (thunderhill.nvidia.com [216.228.112.22])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+        (No client certificate requested)
+        by avon.wwwdotorg.org (Postfix) with ESMTPSA id F10001C00E8;
+        Thu, 15 Nov 2018 11:24:11 -0700 (MST)
+X-Virus-Status: Clean
+X-Virus-Scanned: clamav-milter 0.100.2 at avon.wwwdotorg.org
+Subject: Re: [PATCH] PCI: designware: don't hard-code DBI/ATU offset
+To:     Gustavo Pimentel <gustavo.pimentel@synopsys.com>
+Cc:     Jingoo Han <jingoohan1@gmail.com>,
         Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
-        Thomas Lendacky <Thomas.Lendacky@amd.com>,
-        Ingo Molnar <mingo@kernel.org>,
-        Jonathan Cameron <Jonathan.Cameron@huawei.com>,
-        Thomas Gleixner <tglx@linutronix.de>,
-        Peter Zijlstra <a.p.zijlstra@chello.nl>,
-        Martin =?utf-8?Q?Hundeb=C3=B8ll?= <martin@geanix.com>,
-        "Rafael J. Wysocki" <rjw@rjwysocki.net>,
-        Len Brown <lenb@kernel.org>, linux-acpi@vger.kernel.org
-Subject: Re: [GIT PULL] PCI fixes for v4.20
-Message-ID: <20181115181307.GA25806@pure.paranoia.local>
-References: <20181114201214.GM13926@zn.tnic>
- <20181114201658.GB25069@pure.paranoia.local>
- <20181114214601.GO13926@zn.tnic>
- <20181114222154.GA22445@pure.paranoia.local>
- <20181114224839.GP13926@zn.tnic>
- <20181115071252.GB94998@google.com>
- <20181115075330.GA32162@pure.paranoia.local>
- <20181115150321.GB207836@google.com>
- <20181115155418.GA25764@pure.paranoia.local>
- <20181115172706.GA229449@google.com>
+        Bjorn Helgaas <bhelgaas@google.com>,
+        "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+        Vidya Sagar <vidyas@nvidia.com>,
+        Manikanta Maddireddy <mmaddireddy@nvidia.com>,
+        Stephen Warren <swarren@nvidia.com>
+References: <20181112225710.29557-1-swarren@wwwdotorg.org>
+ <ce3ac825-c05b-c782-81ba-dad0acc8d3c8@synopsys.com>
+ <87acc658-489a-6b8f-44cb-f9fbad3297a3@wwwdotorg.org>
+ <3f4797f3-5477-a31f-9292-ac89c21533fd@synopsys.com>
+From:   Stephen Warren <swarren@wwwdotorg.org>
+Openpgp: preference=signencrypt
+Autocrypt: addr=swarren@wwwdotorg.org; prefer-encrypt=mutual; keydata=
+ xsFNBE6KoecBEACosznehcVarBMNKGOiQ4MBbDAKQo73RDLP4hKEtaTVoQKg7tAM/tcQgbR6
+ p1NSxVq9tunbEskwHkHc/ES/xT+JBFMmG8mh2SmBocyuNjlN8lsW8r2CuLA8EuDr7Laz5yl0
+ Gf/G3Q+yYH+ytUnUuPmlxTueR7MNxIT0lz0fjil2HJclha/T3o8osagYWsXyN9Iaqy+6YTit
+ fG4hVCr0s+3SYylRp9m2/LaP0CPTQVCJKnv1Oq83PnnV/BA/9sBYxDaVNGfdz2FAWqSH4H7q
+ oyonAMzsF7f/cTYcFGTN3kL3UonG43DHpqCv+gHMKITBCxN+3HjX4wuNC7raoHVRRbx7/JES
+ ZrJ1ymKdMNxl8bquldTk6VyAJlTRjuq7jRY9LIEHcns91MYFgpz7RAhCPmXnsMgpuIvU/yTE
+ aApIAkHSo2Nyk9NeyIsji5voa9VAAoZKLGFTkhyPLEcjU9JmH/x224zGLtK28bL+P61PCk02
+ jG7RTF4665IDbmC8UNvEm9mBgFNlEgOPqbVF9oa5Gd9cnaOTucDLJqjCpM53SM5Jd3eRHk7A
+ zDHSBWsRsmKXU4hhxlu+90tb7I0TcjPfqeCrO46rNELdskcJAlLzx0v07+IhhGAM70oAbP49
+ VBA7hsVCimuITFSUUwAtzFJmFg/mjxNdftTr3yssaK41VmxsIQARAQABzSZTdGVwaGVuIFdh
+ cnJlbiA8c3dhcnJlbkB3d3dkb3Rvcmcub3JnPsLBfgQTAQIAKAIbAwYLCQgHAwIGFQgCCQoL
+ BBYCAwECHgECF4AFAluXN0cFCQ8NbNYACgkQm42nCSZUIZyYrQ//TE5D9Al8ajUCHmL9xabK
+ GkpYn+3/fDnnWLEwtzcTthoXsLTPGeMgg03fVaSGzmTr/im8zJNHD70nQUbjzUrWuX+QYiep
+ tW94QXpgGJnXonLdJxNanf+Xu+Eb24t6SjgMzrwOp9W4EeM/jlyzHkBCzqU9SGOMiJZCwNhG
+ 8bxnhJc1IK2MEFyOZClp4o/kjewW4EypQTnZr2Tzkwv4qs2tmoIs31i+SzOCFGekJTVwYe5j
+ byeaO0aIq+chiY6X3b2NHDKADTe2aJaXeZjMvJNCi5Ks0UiMdUBk47wZbelA5yWMIy52pjVw
+ w35m1LzQT3ZsJTiGiLHL7LiYG2ZYoOuyFqIidTASy3bZjsWuSIRntSUDLJZtd/IJYl3Gdnyu
+ Lzv9hAwygcQV9QxnAMShtFk5ssr4FEw72RfZNA//EgxZIKuVj6VVdIOhdHHZxZxyJE18iT2a
+ 5t3/iyaJgH71u8fPPWuZYOQ338Kcyilar6zE+l2Fp0maUdaaq1c8l3EHKZjnTOxn1kdH9yLQ
+ 378R0Sxe+2IF3yb3bBYBMUnntENlfQtlzw0C8yIUGyGS1QiRsjLAF+Fgfe8CroPybqI27ole
+ zYuqWu+SXGYTIF/wU67q44qaBUyJH9g6b+FIs59wV7XjWz0BM2qGuZmpz/fpTsuK1UW7QP5v
+ SakkKYuTQk5lYNTOwU0EToqh5wEQALnGdiFAkKxo4IJOvOmeJ8wJQLTMu+EqB0KF3hAAmbxq
+ n6q5+RvPegWInHW7X0Btfw81PeZ23CyC4mFxqZ1Pj1h6lUS+jrOdzhL+nGNtfzzYKi8qg6pI
+ 9KcT1UhsscZWfHANAanZxt2pg4Xuq+vjAaWJH9fUfHvYQreRKmm8YRCn+7JbRDMdQLpdf1N0
+ prBYA+iFqqZNeppBIynq46E0JObJ1MA3ZXhsmlAFTcGk020Fn6aceW79iXvjHS2AhgGrERV1
+ jPdHKfUVNMI0IpwaI7ynHZ7tUGwoCIL21ExliO4fkdpLRKAjZqxsCpfU526ILUFO8z0/eiqm
+ zRWzzNHufG0uh3Czv1WOhzQBv/kFIQwiijDDQSj9VjCqcyzoG+Tl22/uQJVExTJXYmtMPRwL
+ DQT66uNbkPCSviFENOLxevjlZ5wfFcwdk6WUTirw/For6vChfRuhchD6Ldsvo16aPd3r4Qth
+ 7kOmzDOafRlGsN6CruXL3fTdsS97T1whVng9LauTHnhsY31H1OBeFTtedEfIJIoUTy9JdfIb
+ 0u7Zoer6h3VtShM5B+gs4B4k6tuj5ytkCrfdbr23qsPRDVYe6/N3bOk5B2WytQ4aQMq6TR0H
+ GnOV/y66xoOUTl+N3hFBet4pWNIpzOsx326Et7Zx2xU0WWMdmVecVFyI2xSB7oArABEBAAHC
+ wWUEGAECAA8CGwwFAluXN1oFCQ8NbO8ACgkQm42nCSZUIZztUg//Ui5+GUmZb9rIg2HTnMBW
+ CwMDOQOxRhWQy4hxZyj1sF4misKmC3VHV/1NUeHiD0ls1E/hNunhZML8bFWPKwgFBDPvX3k5
+ 9y037v6XWZ/UQ6ihZ5P3vxkUPhN5p3ItpIcuWu1iVjvKUBq2bOLkh2YKdiHocrWGQVI6HHIt
+ iSuS8KYgfcsWKcQx1mmzV+GGPfnvJ7W9aVFduYC6kIKOdbUKtZzcoyyQGN+9IGETzyZLMgbM
+ 2/h69PEMvaVIyc5J2bjoujG4PqW9aUePl8U2jwBs4g9e5fPhbWerr3ZIheSrkbHbgkVKjeq6
+ I8N7CMrmvXOjxo5iO2NTV3NoSatRt3FFdqmnl3ZvS0/NQ+IUNrJFaXmxaGOLGDrBLUcDH6I7
+ I2jqmRw4+iaV3f+b8nCjRZGsZbjPrspl4tYsvuXAq7vkuuyoINH7KFOHIi/qzdXXvpIfkuCZ
+ C5jI5HPSrFM8jBa0HTZ1+j9/8jA/X43ptLgAvdH46cyrA9Q4bPde3YDdaP9uqsk2QiRnNO4f
+ Owk2U9oQ8EMeHMHlyxV+evyT8TMmUHAo0O/kzFHe8kP6rvafdo5nWZQ3nt17wUhsz76Ec8ew
+ QULRFIBe3fuZo05SKbdTIOZ/U3qExjXybjmUE0FdZLsgBiEAS2qcn5qUdzC7IKjKypxlmHt+
+ 93UTmhOymgekufw=
+Message-ID: <8a004998-095c-b7a9-0b41-bf6a61f2380d@wwwdotorg.org>
+Date:   Thu, 15 Nov 2018 10:24:10 -0800
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:60.0) Gecko/20100101
+ Thunderbird/60.2.1
 MIME-Version: 1.0
+In-Reply-To: <3f4797f3-5477-a31f-9292-ac89c21533fd@synopsys.com>
 Content-Type: text/plain; charset=utf-8
-Content-Disposition: inline
-In-Reply-To: <20181115172706.GA229449@google.com>
-User-Agent: Mutt/1.10.1 (2018-07-13)
+Content-Language: en-GB
+Content-Transfer-Encoding: 7bit
 Sender: linux-pci-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-On Thu, Nov 15, 2018 at 11:27:06AM -0600, Bjorn Helgaas wrote:
-> > > OK, I think I'll remove the insteadOf chunk from my .gitconfig.  Should
-> > > https://korg.wiki.kernel.org/userdoc/gitolite be updated to remove or
-> > > expand that recommendation?  The only reason I added insteadOf in the first
-> > > place was because it sounded like a security improvement.
-> > 
-> > It is. Does adding the insteadOf rules result in ssh:// URLs when using
-> > git-request-pull? I didn't expect that it would.
+On 11/14/18 9:33 PM, Gustavo Pimentel wrote:
+> Hi Stephen,
 > 
-> Yep, it seems to for me.  Maybe I'm doing something else weird, because I
-> don't see many other pull requests with ssh:// URLs.
+> On 14/11/2018 04:31, Stephen Warren wrote:
+>> On 11/12/18 9:19 PM, Gustavo Pimentel wrote:
+>>> Hi Stephen,
+>>>
+>>> I'd suggest to change the designware on the patch name by dwc and use another
+>>> description for the patch instead of don't hard-code DBI/ATU offset.
+>>
+>> What issue do you see with the patch description? I believe it's
+>> correct/accurate. Perhaps the confusion is due to the question you
+>> raised below; see my answer there.
+>>
+>>> On 12/11/2018 22:57, Stephen Warren wrote:
+>>>> From: Stephen Warren <swarren@nvidia.com>
+>>>>
+>>>> The DWC PCIe core contains various separate register spaces: DBI, DBI2,
+>>>> ATU, DMA, etc. The relationship between the addresses of these register
+>>>> spaces is entirely determined by the implementation of the IP block, not
+>>>> by the IP block design itself. Hence, the DWC driver must not make
+>>>> assumptions that one register space can be accessed at a fixed offset from
+>>>> any other register space. To avoid such assumptions, introduce an
+>>>> explicit/separate register pointer for the ATU register space. In
+>>>> particular, the current assumption is not valid for NVIDIA's T194 SoC.
+>>>
+>>> If I understood this patch correctly, you basically replace the dbi_base offset
+>>> by atu_base offset that still depends of dbi_base offset.
+>>
+>> That's not what the patch does.
+>>
+>> The patch leaves most DBI accesses still using dbi_base, but updates
+>> just a few accesses to use atu_base. Thus, after the patch, all accesses
+>> use the correct base address for the register being accessed.
+>>
+>> There is a default value supplied for atu_base, which does indeed depend
+>> on dbi_base. This maintains backwards compatibility, so that all the
+>> existing drivers don't need to be updated to explicitly set atu_base,
+>> and will continue to use the existing offset between DBI and ATU base.
+> 
+> I think we're talking about the same thing, but with different terms.
+> 
+>> In the future, we'll send a driver for the NVIDIA Tegra SoC which does
+>> explicitly set atu_base to a non-default value.
+> 
+> That's what I wanted to know. Because otherwise this patch was just to turn the
+> code more readable.
 
-Hmm, you're right -- I just tested this and it does. I can't imagine
-that's the intended effect of insteadOf -- it's supposed to alter URLs
-behind the scenes, not permanently transform them. I'll talk to git
-folks about it.
-
-For now, you should probably remove that from your gitconfig so that
-your pull requests have public URLs in them.
-
-Best,
--K
+So it sounds like I've addressed your questions? If so, is the next step
+for you to ack the patch and Bjorn to apply it? Thanks!
