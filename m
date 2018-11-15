@@ -2,91 +2,112 @@ Return-Path: <SRS0=ulVR=N2=vger.kernel.org=linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-3.2 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,MAILING_LIST_MULTI,SPF_PASS,USER_AGENT_MUTT
-	autolearn=unavailable autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-2.5 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+	MAILING_LIST_MULTI,SPF_PASS,USER_AGENT_MUTT autolearn=ham autolearn_force=no
+	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 02336C43610
-	for <linux-pci@archiver.kernel.org>; Thu, 15 Nov 2018 17:30:22 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 7D028C43441
+	for <linux-pci@archiver.kernel.org>; Thu, 15 Nov 2018 17:46:20 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id B71C3223CB
-	for <linux-pci@archiver.kernel.org>; Thu, 15 Nov 2018 17:30:21 +0000 (UTC)
-Authentication-Results: mail.kernel.org;
-	dkim=pass (1024-bit key) header.d=kernel.org header.i=@kernel.org header.b="JUjbQmNC"
-DMARC-Filter: OpenDMARC Filter v1.3.2 mail.kernel.org B71C3223CB
-Authentication-Results: mail.kernel.org; dmarc=fail (p=none dis=none) header.from=kernel.org
+	by mail.kernel.org (Postfix) with ESMTP id 4F40E21780
+	for <linux-pci@archiver.kernel.org>; Thu, 15 Nov 2018 17:46:20 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.3.2 mail.kernel.org 4F40E21780
+Authentication-Results: mail.kernel.org; dmarc=none (p=none dis=none) header.from=arm.com
 Authentication-Results: mail.kernel.org; spf=none smtp.mailfrom=linux-pci-owner@vger.kernel.org
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S2388789AbeKPDi7 (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Thu, 15 Nov 2018 22:38:59 -0500
-Received: from mail.kernel.org ([198.145.29.99]:41620 "EHLO mail.kernel.org"
+        id S2388835AbeKPDzF (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Thu, 15 Nov 2018 22:55:05 -0500
+Received: from foss.arm.com ([217.140.101.70]:38760 "EHLO foss.arm.com"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S2388263AbeKPDi7 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Thu, 15 Nov 2018 22:38:59 -0500
-Received: from localhost (unknown [64.114.255.114])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
-        (No client certificate requested)
-        by mail.kernel.org (Postfix) with ESMTPSA id 6A09321582;
-        Thu, 15 Nov 2018 17:30:15 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=default; t=1542303015;
-        bh=616VF2c0zwHLmP5zBeZAFrZeAKzD51E0R1HGIPVl/I0=;
-        h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-        b=JUjbQmNCO9XV/xyCWSKJmW6ndAJp8+mV55hj9MfIZ5rqtY0GqQxLLqIpQhrr1x7tL
-         k13RcHWK4OsIlDvRveANohhY4BQ5moNhn9ruUEv83MqHZSRZzcVF7pe4tZmJZG8IWl
-         w5Q1wHNRnyO6fl64scXvG52e7puawLu4cPSnMKdU=
-Date:   Thu, 15 Nov 2018 11:30:15 -0600
-From:   Bjorn Helgaas <helgaas@kernel.org>
-To:     Kai Heng Feng <kai.heng.feng@canonical.com>
-Cc:     AceLan Kao <acelan.kao@canonical.com>,
-        Keith Busch <keith.busch@intel.com>, Jens Axboe <axboe@fb.com>,
-        Christoph Hellwig <hch@lst.de>,
-        Sagi Grimberg <sagi@grimberg.me>,
-        linux-nvme@lists.infradead.org, linux-kernel@vger.kernel.org,
-        linux-pci@vger.kernel.org
-Subject: Re: [PATCH v2 1/2] pci: prevent sk hynix nvme from entering D3
-Message-ID: <20181115173015.GB229449@google.com>
-References: <20181106071214.12745-1-acelan.kao@canonical.com>
- <20181109002157.GK41183@google.com>
- <B21C5A96-AB21-4405-BBF1-9AD343425CA9@canonical.com>
- <20181115145809.GA207836@google.com>
+        id S2388808AbeKPDzF (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Thu, 15 Nov 2018 22:55:05 -0500
+Received: from usa-sjc-imap-foss1.foss.arm.com (unknown [10.72.51.249])
+        by usa-sjc-mx-foss1.foss.arm.com (Postfix) with ESMTP id C486780D;
+        Thu, 15 Nov 2018 09:46:18 -0800 (PST)
+Received: from e107981-ln.cambridge.arm.com (e107981-ln.cambridge.arm.com [10.1.197.40])
+        by usa-sjc-imap-foss1.foss.arm.com (Postfix) with ESMTPSA id ADAD63F718;
+        Thu, 15 Nov 2018 09:46:15 -0800 (PST)
+Date:   Thu, 15 Nov 2018 17:46:08 +0000
+From:   Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
+To:     Mika Westerberg <mika.westerberg@linux.intel.com>
+Cc:     Lukas Wunner <lukas@wunner.de>, iommu@lists.linux-foundation.org,
+        Joerg Roedel <joro@8bytes.org>,
+        David Woodhouse <dwmw2@infradead.org>,
+        Lu Baolu <baolu.lu@linux.intel.com>,
+        Ashok Raj <ashok.raj@intel.com>,
+        Bjorn Helgaas <bhelgaas@google.com>,
+        "Rafael J. Wysocki" <rjw@rjwysocki.net>,
+        Jacob jun Pan <jacob.jun.pan@intel.com>,
+        Andreas Noever <andreas.noever@gmail.com>,
+        Michael Jamet <michael.jamet@intel.com>,
+        Yehezkel Bernat <YehezkelShB@gmail.com>,
+        Christian Kellner <ckellner@redhat.com>,
+        Mario.Limonciello@dell.com,
+        Anthony Wong <anthony.wong@canonical.com>,
+        linux-acpi@vger.kernel.org, linux-pci@vger.kernel.org,
+        linux-kernel@vger.kernel.org
+Subject: Re: [PATCH 1/4] PCI / ACPI: Identify external PCI devices
+Message-ID: <20181115174608.GA17691@e107981-ln.cambridge.arm.com>
+References: <20181112160628.86620-2-mika.westerberg@linux.intel.com>
+ <20181112180203.lx72gjfplb6xlur7@wunner.de>
+ <20181113105636.GB11202@e107981-ln.cambridge.arm.com>
+ <20181113112700.GT2500@lahna.fi.intel.com>
+ <20181113114527.GA12821@e107981-ln.cambridge.arm.com>
+ <20181115102239.GU2500@lahna.fi.intel.com>
+ <20181115111356.GA599@e107981-ln.cambridge.arm.com>
+ <20181115113737.GW2500@lahna.fi.intel.com>
+ <20181115120736.pscly6zwd3k2tvd2@wunner.de>
+ <20181115121627.GA2500@lahna.fi.intel.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20181115145809.GA207836@google.com>
-User-Agent: Mutt/1.10.1 (2018-07-13)
+In-Reply-To: <20181115121627.GA2500@lahna.fi.intel.com>
+User-Agent: Mutt/1.5.24 (2015-08-30)
 Sender: linux-pci-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-On Thu, Nov 15, 2018 at 08:58:09AM -0600, Bjorn Helgaas wrote:
-> On Thu, Nov 15, 2018 at 03:16:29PM +0800, Kai Heng Feng wrote:
-> > On Nov 9, 2018, at 08:21, Bjorn Helgaas <helgaas@kernel.org> wrote:
-
-> > > I'm not sure we want a quirk for this at all, since as Christoph
-> > > points out, it doesn't fix a functional issue as the other uses of
-> > > quirk_no_ata_d3() do.
+On Thu, Nov 15, 2018 at 02:16:27PM +0200, Mika Westerberg wrote:
+> On Thu, Nov 15, 2018 at 01:07:36PM +0100, Lukas Wunner wrote:
+> > On Thu, Nov 15, 2018 at 01:37:37PM +0200, Mika Westerberg wrote:
+> > > On Thu, Nov 15, 2018 at 11:13:56AM +0000, Lorenzo Pieralisi wrote:
+> > > > I have strong objections to the way these bindings have been forced upon
+> > > > everybody; if that's the way *generic* ACPI bindings are specified I
+> > > > wonder why there still exists an ACPI specification and related working
+> > > > group.
+> > > > 
+> > > > I personally (but that's Bjorn and Rafael choice) think that this is
+> > > > not a change that belongs in PCI core, ACPI bindings are ill-defined
+> > > > and device tree bindings are non-existing.
 > > > 
-> > > From your emails with Christoph, it sounds like this quirk is a
-> > > workaround for a firmware defect.  If we *do* end up wanting a quirk,
-> > > the changelog should at least mention the firmware defect and maybe
-> > > check whether it has been fixed.
+> > > Any idea where should I put it then? These systems are already out there
+> > > and we need to support them one way or another.
 > > 
-> > According to SK Hynix folks and new evidence on the new Intel NVMe
-> > we have, this is something we are going to see more often.
+> > I suppose those are all Thunderbolt, so could be handled by the
+> > existing ->is_thunderbolt bit?
+> > 
+> > It was said in this thread that ->is_external is more generic in
+> > that it could also be used on PCIe slots, however that use case
+> > doesn't appear to lend itself to the "plug in while laptop owner
+> > is getting coffee" attack.  To access PCIe slots on a server you
+> > normally need access to a data center.  On a desktop, you usually
+> > have to open the case, by which time the coffee may already have
+> > been fetched.  So frankly the binding seems a bit over-engineered
+> > to me and yet another thing that BIOS writers may get wrong.
 > 
-> Hmmm, are you suggesting that if we went this quirk route, we'd be
-> updating the quirk frequently to add new devices?
+> I would not say it should include PCIe slots but there are other cables
+> that carry PCIe and I was thinking we could make it to support those as
+> well.
 > 
-> I'm opposed to that as a strategy because it makes needless work.  You
-> have to update the quirk, backport it to older kernels, re-release
-> distro kernels, etc.
+> I have no problem using is_thunderbolt here, though if we don't want to
+> support non-Thunderbolt external devices this way.
+> 
+> However, the question here is more that where I should put the _DSD
+> parsing code if it is not suitable to be placed inside PCI/ACPI core as
+> I've done in this patch? ;-)
 
-But I guess you have to do this anyway just to add the vendor/device
-ID to the driver, so maybe this isn't a big deal to you.  If you can
-do a quirk like this in the driver, it would be invisible to me and I
-wouldn't care.  I just don't want to deal with ongoing tweaks like
-this in the PCI core :)
+Do you really need to parse it if the dev->is_thunderbolt check is enough ?
 
-Bjorn
+Thanks,
+Lorenzo
