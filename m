@@ -2,98 +2,120 @@ Return-Path: <SRS0=UeAH=N3=vger.kernel.org=linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-1.0 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	MAILING_LIST_MULTI,SPF_PASS autolearn=unavailable autolearn_force=no
-	version=3.4.0
+X-Spam-Status: No, score=-6.0 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+	MAILING_LIST_MULTI,MENTIONS_GIT_HOSTING,SPF_PASS,URIBL_BLOCKED autolearn=ham
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 7636AC43441
-	for <linux-pci@archiver.kernel.org>; Fri, 16 Nov 2018 12:37:01 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 9F237C43441
+	for <linux-pci@archiver.kernel.org>; Fri, 16 Nov 2018 13:00:58 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 464D62087C
-	for <linux-pci@archiver.kernel.org>; Fri, 16 Nov 2018 12:37:01 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.3.2 mail.kernel.org 464D62087C
-Authentication-Results: mail.kernel.org; dmarc=none (p=none dis=none) header.from=ACULAB.COM
+	by mail.kernel.org (Postfix) with ESMTP id 6BF182087A
+	for <linux-pci@archiver.kernel.org>; Fri, 16 Nov 2018 13:00:58 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.3.2 mail.kernel.org 6BF182087A
+Authentication-Results: mail.kernel.org; dmarc=fail (p=none dis=none) header.from=redhat.com
 Authentication-Results: mail.kernel.org; spf=none smtp.mailfrom=linux-pci-owner@vger.kernel.org
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727965AbeKPWtK convert rfc822-to-8bit (ORCPT
-        <rfc822;linux-pci@archiver.kernel.org>);
-        Fri, 16 Nov 2018 17:49:10 -0500
-Received: from eu-smtp-delivery-151.mimecast.com ([207.82.80.151]:26169 "EHLO
-        eu-smtp-delivery-151.mimecast.com" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S2389685AbeKPWtK (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Fri, 16 Nov 2018 17:49:10 -0500
-Received: from AcuMS.aculab.com (156.67.243.126 [156.67.243.126]) (Using
- TLS) by relay.mimecast.com with ESMTP id
- uk-mta-110-sHBmeO1DNEmY3fg_B1RTqw-1; Fri, 16 Nov 2018 12:36:54 +0000
-Received: from AcuMS.Aculab.com (fd9f:af1c:a25b::d117) by AcuMS.aculab.com
- (fd9f:af1c:a25b::d117) with Microsoft SMTP Server (TLS) id 15.0.1347.2; Fri,
- 16 Nov 2018 12:37:00 +0000
-Received: from AcuMS.Aculab.com ([fe80::43c:695e:880f:8750]) by
- AcuMS.aculab.com ([fe80::43c:695e:880f:8750%12]) with mapi id 15.00.1347.000;
- Fri, 16 Nov 2018 12:37:00 +0000
-From:   David Laight <David.Laight@ACULAB.COM>
-To:     'Alexandru Gagniuc' <mr.nuke.me@gmail.com>,
-        "helgaas@google.com" <helgaas@google.com>
-CC:     "austin_bolen@dell.com" <austin_bolen@dell.com>,
-        "alex_gagniuc@dellteam.com" <alex_gagniuc@dellteam.com>,
-        "keith.busch@intel.com" <keith.busch@intel.com>,
-        "Shyam_Iyer@Dell.com" <Shyam_Iyer@Dell.com>,
-        "lukas@wunner.de" <lukas@wunner.de>,
-        Bjorn Helgaas <bhelgaas@google.com>,
-        "Rafael J. Wysocki" <rjw@rjwysocki.net>,
-        Len Brown <lenb@kernel.org>,
-        Russell Currey <ruscur@russell.cc>,
-        Sam Bobroff <sbobroff@linux.ibm.com>,
-        Oliver O'Halloran <oohall@gmail.com>,
-        "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-        "linux-acpi@vger.kernel.org" <linux-acpi@vger.kernel.org>,
-        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-        "linuxppc-dev@lists.ozlabs.org" <linuxppc-dev@lists.ozlabs.org>
-Subject: RE: [PATCH 0/2] PCI/AER: Consistently use _OSC to determine who owns
- AER
-Thread-Topic: [PATCH 0/2] PCI/AER: Consistently use _OSC to determine who owns
- AER
-Thread-Index: AQHUfTk7lFmreXBXOEO6S+wDoXDgXaVSVjAw
-Date:   Fri, 16 Nov 2018 12:37:00 +0000
-Message-ID: <ab363e80d45e4c3d91770c1b1010d1ce@AcuMS.aculab.com>
-References: <20181115231605.24352-1-mr.nuke.me@gmail.com>
-In-Reply-To: <20181115231605.24352-1-mr.nuke.me@gmail.com>
-Accept-Language: en-GB, en-US
-Content-Language: en-US
-X-MS-Has-Attach: 
-X-MS-TNEF-Correlator: 
-x-ms-exchange-transport-fromentityheader: Hosted
-x-originating-ip: [10.202.205.107]
+        id S1727965AbeKPXNP (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Fri, 16 Nov 2018 18:13:15 -0500
+Received: from mx1.redhat.com ([209.132.183.28]:37010 "EHLO mx1.redhat.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1727772AbeKPXNP (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Fri, 16 Nov 2018 18:13:15 -0500
+Received: from smtp.corp.redhat.com (int-mx02.intmail.prod.int.phx2.redhat.com [10.5.11.12])
+        (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
+        (No client certificate requested)
+        by mx1.redhat.com (Postfix) with ESMTPS id C1D1C3082E50;
+        Fri, 16 Nov 2018 13:00:56 +0000 (UTC)
+Received: from [10.36.116.180] (ovpn-116-180.ams2.redhat.com [10.36.116.180])
+        by smtp.corp.redhat.com (Postfix) with ESMTPS id AA59560C80;
+        Fri, 16 Nov 2018 13:00:52 +0000 (UTC)
+Subject: Re: [PATCH v4 0/7] Add virtio-iommu driver
+To:     Jean-Philippe Brucker <jean-philippe.brucker@arm.com>,
+        iommu@lists.linux-foundation.org, linux-pci@vger.kernel.org,
+        devicetree@vger.kernel.org,
+        virtualization@lists.linux-foundation.org,
+        virtio-dev@lists.oasis-open.org, joro@8bytes.org, mst@redhat.com
+Cc:     frowand.list@gmail.com, jasowang@redhat.com, robh+dt@kernel.org,
+        mark.rutland@arm.com, bhelgaas@google.com,
+        kvmarm@lists.cs.columbia.edu, tnowicki@caviumnetworks.com,
+        kevin.tian@intel.com, marc.zyngier@arm.com, robin.murphy@arm.com,
+        will.deacon@arm.com, lorenzo.pieralisi@arm.com,
+        bharat.bhushan@nxp.com
+References: <20181115165234.43990-1-jean-philippe.brucker@arm.com>
+From:   Auger Eric <eric.auger@redhat.com>
+Message-ID: <a9545c11-347e-aa07-0609-9a9c0141a438@redhat.com>
+Date:   Fri, 16 Nov 2018 14:00:51 +0100
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:60.0) Gecko/20100101
+ Thunderbird/60.2.1
 MIME-Version: 1.0
-X-MC-Unique: sHBmeO1DNEmY3fg_B1RTqw-1
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 8BIT
+In-Reply-To: <20181115165234.43990-1-jean-philippe.brucker@arm.com>
+Content-Type: text/plain; charset=utf-8
+Content-Language: en-US
+Content-Transfer-Encoding: 7bit
+X-Scanned-By: MIMEDefang 2.79 on 10.5.11.12
+X-Greylist: Sender IP whitelisted, not delayed by milter-greylist-4.5.16 (mx1.redhat.com [10.5.110.46]); Fri, 16 Nov 2018 13:00:57 +0000 (UTC)
 Sender: linux-pci-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-From: Alexandru Gagniuc
-> Sent: 15 November 2018 23:16
-...
-> I've asked around a few people at Dell and they unanimously agree that
-> _OSC is the correct way to determine ownership of AER.
+Hi Jean,
+On 11/15/18 5:52 PM, Jean-Philippe Brucker wrote:
+> Implement the virtio-iommu driver, following specification v0.8 [1].
+> 
+> Changes since v3 [2]:
+> * Rebase onto v4.20-rc2. Patch 3 now touches drivers/of/base.c instead
+>   of drivers/pci/of.c, since the map_rid() function has moved.
+> * Removed the request timeout, that depended on DEBUG.
+> * Other small fixes addressing comments on v3.
+> 
+> You can find Linux driver and kvmtool device on my virtio-iommu/v0.8.1
+> branches [3]. You can also test it with the latest version of Eric's
+> QEMU device [4].
 
-This is all very well, but we have systems (they might be Dell ones)
-where failure of a PCIe link (even when all the drivers are removed)
-causes an NMI - and crashes the kernel.
+Tested-by: Eric Auger <eric.auger@redhat.com>
 
-There are other systems which have AER registers available for
-some of the PCIe devices, but the BIOS ignores them and _OSC
-doesn't let the kernel take control.
-In this case the AER registers can contain useful information
-after a read returns ~0u.
-It would be useful to be able to get this information without
-having to grovel through all the PCIe config space.
+this was tested with qemu
+(https://github.com/eauger/qemu/tree/v3.1.0-rc1-virtio-iommu-v0.8.1)
 
-	David
+Thanks
 
--
-Registered Address Lakeside, Bramley Road, Mount Farm, Milton Keynes, MK1 1PT, UK
-Registration No: 1397386 (Wales)
-
+Eric
+> 
+> [1] Virtio-iommu specification v0.8, sources and pdf
+>     git://linux-arm.org/virtio-iommu.git virtio-iommu/v0.8
+>     http://jpbrucker.net/virtio-iommu/spec/v0.8/virtio-iommu-v0.8.pdf
+> 
+> [2] [PATCH v3 0/7] Add virtio-iommu driver
+>     https://www.spinics.net/lists/linux-pci/msg77110.html
+> 
+> [3] git://linux-arm.org/linux-jpb.git virtio-iommu/v0.8.1
+>     git://linux-arm.org/kvmtool-jpb.git virtio-iommu/v0.8.1
+> 
+> [4] [RFC v8 00/18] VIRTIO-IOMMU device
+>     https://www.mail-archive.com/qemu-devel@nongnu.org/msg572637.html
+> 
+> Jean-Philippe Brucker (7):
+>   dt-bindings: virtio-mmio: Add IOMMU description
+>   dt-bindings: virtio: Add virtio-pci-iommu node
+>   of: Allow the iommu-map property to omit untranslated devices
+>   PCI: OF: Initialize dev->fwnode appropriately
+>   iommu: Add virtio-iommu driver
+>   iommu/virtio: Add probe request
+>   iommu/virtio: Add event queue
+> 
+>  .../devicetree/bindings/virtio/iommu.txt      |   66 +
+>  .../devicetree/bindings/virtio/mmio.txt       |   30 +
+>  MAINTAINERS                                   |    7 +
+>  drivers/iommu/Kconfig                         |   11 +
+>  drivers/iommu/Makefile                        |    1 +
+>  drivers/iommu/virtio-iommu.c                  | 1160 +++++++++++++++++
+>  drivers/of/base.c                             |   10 +-
+>  drivers/pci/of.c                              |    7 +
+>  include/uapi/linux/virtio_ids.h               |    1 +
+>  include/uapi/linux/virtio_iommu.h             |  161 +++
+>  10 files changed, 1451 insertions(+), 3 deletions(-)
+>  create mode 100644 Documentation/devicetree/bindings/virtio/iommu.txt
+>  create mode 100644 drivers/iommu/virtio-iommu.c
+>  create mode 100644 include/uapi/linux/virtio_iommu.h
+> 
