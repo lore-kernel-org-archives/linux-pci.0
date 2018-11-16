@@ -2,91 +2,87 @@ Return-Path: <SRS0=UeAH=N3=vger.kernel.org=linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-4.0 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_PASS,URIBL_BLOCKED autolearn=ham
-	autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-2.3 required=3.0 tests=DKIM_INVALID,DKIM_SIGNED,
+	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_PASS,USER_AGENT_MUTT
+	autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 446CBC43441
-	for <linux-pci@archiver.kernel.org>; Fri, 16 Nov 2018 09:10:15 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 320FBC43610
+	for <linux-pci@archiver.kernel.org>; Fri, 16 Nov 2018 09:18:20 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 0E43A223C8
-	for <linux-pci@archiver.kernel.org>; Fri, 16 Nov 2018 09:10:15 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.3.2 mail.kernel.org 0E43A223C8
-Authentication-Results: mail.kernel.org; dmarc=none (p=none dis=none) header.from=linux-m68k.org
+	by mail.kernel.org (Postfix) with ESMTP id 8114B2245E
+	for <linux-pci@archiver.kernel.org>; Fri, 16 Nov 2018 09:18:19 +0000 (UTC)
+Authentication-Results: mail.kernel.org;
+	dkim=fail reason="signature verification failed" (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="RQkTxLAU"
+DMARC-Filter: OpenDMARC Filter v1.3.2 mail.kernel.org 8114B2245E
+Authentication-Results: mail.kernel.org; dmarc=none (p=none dis=none) header.from=infradead.org
 Authentication-Results: mail.kernel.org; spf=none smtp.mailfrom=linux-pci-owner@vger.kernel.org
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727490AbeKPTVi (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Fri, 16 Nov 2018 14:21:38 -0500
-Received: from mail-vs1-f68.google.com ([209.85.217.68]:44727 "EHLO
-        mail-vs1-f68.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1727405AbeKPTVi (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Fri, 16 Nov 2018 14:21:38 -0500
-Received: by mail-vs1-f68.google.com with SMTP id g68so13328296vsd.11;
-        Fri, 16 Nov 2018 01:10:12 -0800 (PST)
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20161025;
-        h=x-gm-message-state:mime-version:references:in-reply-to:from:date
-         :message-id:subject:to:cc;
-        bh=0qIfpn7h25apnxv19ipNRo2saSk++fXxcgVKZddxbd8=;
-        b=EE9VFIdEUGl6BOttRQ5VEbMkIQLdwLTx8OW6FKfUtKdAC55fPQAtJbRBHTRxyQo/rs
-         0Twmyn94E+n9YQUKPjsJV4b7tL/ErX1s9opGUwWU92D5L2oA9yK9B6fWHttIcRaKld1+
-         ILcOQic4mgFtparzRWVtiRPymOMZgDmsaQKUtiB3YWN8bhLwXJpJ4r0S9zY1UY35xYHh
-         f1ye/rO6r9i0oX1F2CltVgqCVBUS1/GRn8yUYaOlwdwYbTNepxdda3/tJAGyZkbBwnN9
-         20Ze3Is5C0fwG6c3VypD+2myY17muvjotVUYV9sXYLYMhDqvG7ws24zyXuvxmtiRzOrP
-         Tp0A==
-X-Gm-Message-State: AGRZ1gIbrcbOTvc3TRSyXw3h0PlaQa3icfQBQ7BJxlU0LMXONOo1CyRp
-        Ilh1WnPex8z7sDGBIxUYKeiqE0pCCsDhHwFcpX4=
-X-Google-Smtp-Source: AJdET5dlfGYqms4VL8TAsTO4xbguV5f6uh/c85Xjvb5Y+HsSloqPxkMAmjYYAmv6yQBQjwLoHd4Z5CWuXeMdl6pHxzk=
-X-Received: by 2002:a67:3885:: with SMTP id n5mr3694101vsi.96.1542359412431;
- Fri, 16 Nov 2018 01:10:12 -0800 (PST)
+        id S1727543AbeKPT3o (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Fri, 16 Nov 2018 14:29:44 -0500
+Received: from bombadil.infradead.org ([198.137.202.133]:44600 "EHLO
+        bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1727398AbeKPT3o (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Fri, 16 Nov 2018 14:29:44 -0500
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
+        d=infradead.org; s=bombadil.20170209; h=In-Reply-To:Content-Type:MIME-Version
+        :References:Message-ID:Subject:Cc:To:From:Date:Sender:Reply-To:
+        Content-Transfer-Encoding:Content-ID:Content-Description:Resent-Date:
+        Resent-From:Resent-Sender:Resent-To:Resent-Cc:Resent-Message-ID:List-Id:
+        List-Help:List-Unsubscribe:List-Subscribe:List-Post:List-Owner:List-Archive;
+         bh=b5OutxS0GhcercmpX11Sg1tknmPeUT3sBqckvewo8zA=; b=RQkTxLAUFOLPA0J+RppItlpIB
+        9kxTGUs2y4LLsgZ8EuCtZwLQLM2MMhu1rG+qls0/zIjSoV5AvMQZPzgiAteiRkkB60IFUCQuNi2Pw
+        Xlkg3+1gJh0u0eLVG1GBlvVINgJXch1SU9tm6k2gb1UU4C4VjPqJchEvC3CBW//wmHqqpNrnVCUgS
+        qNM73fMXTq0i66M7gARtiW6xyn1qmMDBXKkuST/tWiT/J3p5QB4BWcOYeMJ3c0L8iMtWC6ayOEhsF
+        Izub2bAiZd7A+UyM1hYDB1G9pfULIjbAUY5e1DPsAqS6H4e4BFXhyUa+Vxwi2DLVDE75zEZ56Mee2
+        I8nJ1dmew==;
+Received: from hch by bombadil.infradead.org with local (Exim 4.90_1 #2 (Red Hat Linux))
+        id 1gNaGK-0002Gm-Ok; Fri, 16 Nov 2018 09:18:04 +0000
+Date:   Fri, 16 Nov 2018 01:18:04 -0800
+From:   Christoph Hellwig <hch@infradead.org>
+To:     Mika Westerberg <mika.westerberg@linux.intel.com>
+Cc:     Yehezkel Bernat <yehezkelshb@gmail.com>, ashok.raj@intel.com,
+        Mario Limonciello <Mario.Limonciello@dell.com>,
+        michael.jamet@intel.com, Christian Kellner <ckellner@redhat.com>,
+        rjw@rjwysocki.net, Anthony Wong <anthony.wong@canonical.com>,
+        LKML <linux-kernel@vger.kernel.org>,
+        Andreas Noever <andreas.noever@gmail.com>,
+        iommu@lists.linux-foundation.org, lukas@wunner.de,
+        jacob.jun.pan@intel.com, linux-pci@vger.kernel.org,
+        Bjorn Helgaas <bhelgaas@google.com>,
+        linux-acpi@vger.kernel.org, David Woodhouse <dwmw2@infradead.org>
+Subject: Re: [PATCH 1/4] PCI / ACPI: Identify external PCI devices
+Message-ID: <20181116091804.GA4548@infradead.org>
+References: <20181113112700.GT2500@lahna.fi.intel.com>
+ <20181113114527.GA12821@e107981-ln.cambridge.arm.com>
+ <20181115102239.GU2500@lahna.fi.intel.com>
+ <20181115111356.GA599@e107981-ln.cambridge.arm.com>
+ <20181115113737.GW2500@lahna.fi.intel.com>
+ <20181115120736.pscly6zwd3k2tvd2@wunner.de>
+ <20181115121627.GA2500@lahna.fi.intel.com>
+ <20181115174608.GA17691@e107981-ln.cambridge.arm.com>
+ <CA+CmpXv9yM6nFdb0mcMPGHS-B_uGbQHYoO6iuefZC8gWoZYD3Q@mail.gmail.com>
+ <20181115191026.GE4179@lahna.fi.intel.com>
 MIME-Version: 1.0
-References: <20181115190538.17016-1-hch@lst.de> <20181115190538.17016-5-hch@lst.de>
-In-Reply-To: <20181115190538.17016-5-hch@lst.de>
-From:   Geert Uytterhoeven <geert@linux-m68k.org>
-Date:   Fri, 16 Nov 2018 10:10:00 +0100
-Message-ID: <CAMuHMdUSr6uxXUv8HtWZihFVj9zR8SJoFByLJ=J+_Lj-Mmgagg@mail.gmail.com>
-Subject: Re: [PATCH 4/9] PCI: consolidate PCI config entry in drivers/pci
-To:     Christoph Hellwig <hch@lst.de>
-Cc:     Masahiro Yamada <yamada.masahiro@socionext.com>,
-        Matt Porter <mporter@kernel.crashing.org>,
-        Alex Bounine <alex.bou9@gmail.com>,
-        Dominik Brodowski <linux@dominikbrodowski.net>,
-        linux-kbuild <linux-kbuild@vger.kernel.org>,
-        Linux ARM <linux-arm-kernel@lists.infradead.org>,
-        linux-pci <linux-pci@vger.kernel.org>,
-        Linux-Arch <linux-arch@vger.kernel.org>,
-        Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
-        linuxppc-dev <linuxppc-dev@lists.ozlabs.org>,
-        alpha <linux-alpha@vger.kernel.org>,
-        Linux MIPS Mailing List <linux-mips@linux-mips.org>
-Content-Type: text/plain; charset="UTF-8"
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20181115191026.GE4179@lahna.fi.intel.com>
+User-Agent: Mutt/1.9.2 (2017-12-15)
+X-SRS-Rewrite: SMTP reverse-path rewritten from <hch@infradead.org> by bombadil.infradead.org. See http://www.infradead.org/rpr.html
 Sender: linux-pci-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-On Thu, Nov 15, 2018 at 8:06 PM Christoph Hellwig <hch@lst.de> wrote:
-> There is no good reason to duplicate the PCI menu in every architecture.
-> Instead provide a selectable HAVE_PCI symbol that indicates availability
-> of PCI support, and a FORCE_PCI symbol to for PCI on and the handle the
-> rest in drivers/pci.
->
-> Signed-off-by: Christoph Hellwig <hch@lst.de>
-> Reviewed-by: Palmer Dabbelt <palmer@sifive.com>
-> Acked-by: Max Filippov <jcmvbkbc@gmail.com>
-> Acked-by: Thomas Gleixner <tglx@linutronix.de>
-> Acked-by: Bjorn Helgaas <bhelgaas@google.com>
+On Thu, Nov 15, 2018 at 09:10:26PM +0200, Mika Westerberg wrote:
+> FireWire is kind of different but there are connectors such as
+> ExpressCard and NVMe (over U.2 connector) which carry PCIe and are
+> relatively easy to access without need for a screwdriver. AFAIK some
+> eGPUs are also using some other proprietary (non-TBT) connector that
+> carries PCIe.
 
-For m68k:
-Acked-by: Geert Uytterhoeven <geert@linux-m68k.org>
+U.2 is a data center internal form factor with hot plug capability. If
+you enable an iommu for that by default you will make a lot of people
+very unhappy.
 
-Gr{oetje,eeting}s,
-
-                        Geert
-
--- 
-Geert Uytterhoeven -- There's lots of Linux beyond ia32 -- geert@linux-m68k.org
-
-In personal conversations with technical people, I call myself a hacker. But
-when I'm talking to journalists I just say "programmer" or something like that.
-                                -- Linus Torvalds
+More importantly NVMe is now used for the current/next generation
+Compact Flash and SD cards, which contain full PCIe gen 3 links.
