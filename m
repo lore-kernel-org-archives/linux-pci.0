@@ -2,128 +2,248 @@ Return-Path: <SRS0=UeAH=N3=vger.kernel.org=linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-7.1 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
-	DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,
-	SIGNED_OFF_BY,SPF_PASS,URIBL_BLOCKED autolearn=ham autolearn_force=no
-	version=3.4.0
+X-Spam-Status: No, score=-0.8 required=3.0 tests=DKIM_INVALID,DKIM_SIGNED,
+	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_PASS,URIBL_BLOCKED
+	autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 059E8C43441
-	for <linux-pci@archiver.kernel.org>; Fri, 16 Nov 2018 00:08:39 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id F00FFC43610
+	for <linux-pci@archiver.kernel.org>; Fri, 16 Nov 2018 00:19:59 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id AA9032146D
-	for <linux-pci@archiver.kernel.org>; Fri, 16 Nov 2018 00:08:38 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id AA58B208A3
+	for <linux-pci@archiver.kernel.org>; Fri, 16 Nov 2018 00:19:59 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (1024-bit key) header.d=impinj.com header.i=@impinj.com header.b="JTkJ/J8b"
-DMARC-Filter: OpenDMARC Filter v1.3.2 mail.kernel.org AA9032146D
-Authentication-Results: mail.kernel.org; dmarc=fail (p=reject dis=none) header.from=impinj.com
+	dkim=fail reason="signature verification failed" (1024-bit key) header.d=dellteam.com header.i=@dellteam.com header.b="VN9Or/2I"
+DMARC-Filter: OpenDMARC Filter v1.3.2 mail.kernel.org AA58B208A3
+Authentication-Results: mail.kernel.org; dmarc=none (p=none dis=none) header.from=Dellteam.com
 Authentication-Results: mail.kernel.org; spf=none smtp.mailfrom=linux-pci-owner@vger.kernel.org
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726360AbeKPKSl (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Fri, 16 Nov 2018 05:18:41 -0500
-Received: from mail-eopbgr680136.outbound.protection.outlook.com ([40.107.68.136]:53504
-        "EHLO NAM04-BN3-obe.outbound.protection.outlook.com"
-        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1726271AbeKPKSl (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Fri, 16 Nov 2018 05:18:41 -0500
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=impinj.com;
- s=selector1;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=fFzZQbGqBzsew26mtXhiDXjVuxf7XB/oh2BJE3lBf6I=;
- b=JTkJ/J8b+oTMH1eMqX56bO3ekKdo3y6T6A3xhQlNz5/81ON8NlZPeSch93iZEZX1C3onAIb1+xlixRj9LsGwTOyXO4Qu1id3WEuAOXB2mWxjA1RVSx1G1QB5XSFhmkHSQb9tSWf7SZQHOHaWf0VegNcK3RRjsALYqy77XJdtzFY=
-Received: from MWHPR0601MB3708.namprd06.prod.outlook.com (10.167.236.38) by
- MWHPR0601MB3642.namprd06.prod.outlook.com (10.167.236.20) with Microsoft SMTP
- Server (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- 15.20.1294.20; Fri, 16 Nov 2018 00:08:34 +0000
-Received: from MWHPR0601MB3708.namprd06.prod.outlook.com
- ([fe80::f51a:d8dd:1aad:3bf9]) by MWHPR0601MB3708.namprd06.prod.outlook.com
- ([fe80::f51a:d8dd:1aad:3bf9%3]) with mapi id 15.20.1294.045; Fri, 16 Nov 2018
- 00:08:34 +0000
-From:   Trent Piepho <tpiepho@impinj.com>
-To:     "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
-CC:     Bjorn Helgaas <bhelgaas@google.com>,
-        Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
-        Trent Piepho <tpiepho@impinj.com>,
-        Andrey Smirnov <andrew.smirnov@gmail.com>
-Subject: [PATCH v2] PCI: dwc: Adjust Kconfig to allow IMX6 PCIe host on IMX7
-Thread-Topic: [PATCH v2] PCI: dwc: Adjust Kconfig to allow IMX6 PCIe host on
- IMX7
-Thread-Index: AQHUfUCDRa6/ov2/w0OqBXIeNHRK4Q==
-Date:   Fri, 16 Nov 2018 00:08:33 +0000
-Message-ID: <20181116000803.5880-1-tpiepho@impinj.com>
+        id S2388265AbeKPK35 (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Fri, 16 Nov 2018 05:29:57 -0500
+Received: from esa1.dell-outbound.iphmx.com ([68.232.153.90]:62048 "EHLO
+        esa1.dell-outbound.iphmx.com" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1726271AbeKPK34 (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Fri, 16 Nov 2018 05:29:56 -0500
+DKIM-Signature: v=1; a=rsa-sha256; c=simple/simple;
+  d=dellteam.com; i=@dellteam.com; q=dns/txt; s=smtpout;
+  t=1542327569; x=1573863569;
+  h=cc:from:to:subject:date:message-id:references:
+   content-transfer-encoding:mime-version;
+  bh=MvjbAK62sxqNV5+o1lwvIv5ucRTJ4VMmMbmHn/VJPzg=;
+  b=VN9Or/2IIZzRqxg7qgxduyFfRUWr2FUSU5BjcWtVzoL6mg747uW6qrEw
+   dulgp16c3gVTk4gB6JxjIM0nEToUeNHj5VgVw91rtr8EC1920MLFJq7XI
+   +Q8dB6cTtgH5Zb5Leb4y97ylg+XJufTzXjQE28qwNbtEHcVJVRA9rBs/C
+   A=;
+X-IronPort-Anti-Spam-Filtered: true
+X-IronPort-Anti-Spam-Result: =?us-ascii?q?A2EUAACXDO5bhyeV50NjHQEBBQEHBQG?=
+ =?us-ascii?q?BUQgBCwGCaYECJwqMBl+LHIINlzaBegsBAR8PhD6DUyI0CQ0BAwEBAgEBAgE?=
+ =?us-ascii?q?BAhABAQEKCwkIKSMMgjYiEk1rAQEBAQEBIwINYwEBAQECARIoPwULAgEIGB4?=
+ =?us-ascii?q?QVwIEEwgagn8BgXkID5wAAoEQiVgBAQGCHYQtAYV0BYwFghaBEYMSgwIZAYF?=
+ =?us-ascii?q?ihVsCiRSBcJQLVQkFhnSKIyCBWIgohnaCdYo6ijECBAIEBQIUgUaCDnCDPB+?=
+ =?us-ascii?q?CCA4JEohMhT5AATGMQIEfAQE?=
+X-IPAS-Result: =?us-ascii?q?A2EUAACXDO5bhyeV50NjHQEBBQEHBQGBUQgBCwGCaYECJ?=
+ =?us-ascii?q?wqMBl+LHIINlzaBegsBAR8PhD6DUyI0CQ0BAwEBAgEBAgEBAhABAQEKCwkIK?=
+ =?us-ascii?q?SMMgjYiEk1rAQEBAQEBIwINYwEBAQECARIoPwULAgEIGB4QVwIEEwgagn8Bg?=
+ =?us-ascii?q?XkID5wAAoEQiVgBAQGCHYQtAYV0BYwFghaBEYMSgwIZAYFihVsCiRSBcJQLV?=
+ =?us-ascii?q?QkFhnSKIyCBWIgohnaCdYo6ijECBAIEBQIUgUaCDnCDPB+CCA4JEohMhT5AA?=
+ =?us-ascii?q?TGMQIEfAQE?=
+Received: from mx0a-00154901.pphosted.com ([67.231.149.39])
+  by esa1.dell-outbound.iphmx.com with ESMTP/TLS/AES256-SHA256; 15 Nov 2018 18:19:28 -0600
+Received: from pps.filterd (m0133268.ppops.net [127.0.0.1])
+        by mx0a-00154901.pphosted.com (8.16.0.22/8.16.0.22) with SMTP id wAG0Hl4b038321;
+        Thu, 15 Nov 2018 19:19:49 -0500
+Received: from esa2.dell-outbound2.iphmx.com (esa2.dell-outbound2.iphmx.com [68.232.153.202])
+        by mx0a-00154901.pphosted.com with ESMTP id 2nr7c4p0g0-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=FAIL);
+        Thu, 15 Nov 2018 19:19:49 -0500
+Cc:     <oohall@gmail.com>, <gregkh@linuxfoundation.org>,
+        <keith.busch@intel.com>, <mr.nuke.me@gmail.com>,
+        <linux-pci@vger.kernel.org>, <Austin.Bolen@dell.com>,
+        <Shyam.Iyer@dell.com>, <linux-kernel@vger.kernel.org>,
+        <jonathan.derrick@intel.com>, <lukas@wunner.de>,
+        <ruscur@russell.cc>, <sbobroff@linux.ibm.com>,
+        <linuxppc-dev@lists.ozlabs.org>, <bp@alien8.de>
+Received: from ausxipps306.us.dell.com ([143.166.148.156])
+  by esa2.dell-outbound2.iphmx.com with ESMTP/TLS/DHE-RSA-AES256-SHA256; 16 Nov 2018 06:19:26 +0600
+X-LoopCount0: from 10.166.134.89
+X-IronPort-AV: E=Sophos;i="5.56,238,1539666000"; 
+   d="scan'208";a="238996346"
+From:   <Alex_Gagniuc@Dellteam.com>
+To:     <helgaas@kernel.org>
+Subject: Re: [PATCH v2] PCI/MSI: Don't touch MSI bits when the PCI device is
+ disconnected
+Thread-Topic: [PATCH v2] PCI/MSI: Don't touch MSI bits when the PCI device is
+ disconnected
+Thread-Index: AQHUT50UQ290XPGvJEGnaSTTjbCF+g==
+Date:   Fri, 16 Nov 2018 00:19:46 +0000
+Message-ID: <8775f80440fd437da083fb188718f5e0@ausx13mps321.AMER.DELL.COM>
+References: <20181108224255.GA20619@kroah.com>
+ <20d68e586fff4dcca5616d5056f6fc21@ausx13mps321.AMER.DELL.COM>
+ <20181108225109.GA3023@kroah.com>
+ <16bf9d14bc5f4a90b2b88dd2eb165186@ausx13mps321.AMER.DELL.COM>
+ <5da8d8aa9f3818af649b1ac547bc4e6062626ddf.camel@gmail.com>
+ <df85813c9860463d85f6c302dfe07b12@ausx13mps321.AMER.DELL.COM>
+ <20181113050240.GA182139@google.com>
+ <19136f44cd5c45e79bbef7e78a6bf332@ausx13mps321.AMER.DELL.COM>
+ <20181114055956.GA144931@google.com>
+ <1eb0fa27924f426992715684f5e63346@ausx13mps321.AMER.DELL.COM>
+ <20181115062423.GA94998@google.com>
 Accept-Language: en-US
 Content-Language: en-US
 X-MS-Has-Attach: 
 X-MS-TNEF-Correlator: 
-x-clientproxiedby: CO2PR04CA0176.namprd04.prod.outlook.com
- (2603:10b6:104:4::30) To MWHPR0601MB3708.namprd06.prod.outlook.com
- (2603:10b6:301:7c::38)
-authentication-results: spf=none (sender IP is )
- smtp.mailfrom=tpiepho@impinj.com; 
-x-ms-exchange-messagesentrepresentingtype: 1
-x-originating-ip: [216.207.205.253]
-x-ms-publictraffictype: Email
-x-microsoft-exchange-diagnostics: 1;MWHPR0601MB3642;6:SCACotLrhMwYz9C4lPERKnip/LFYcuUnkBqq0DUpcjLlf/xvWGQfRdscfwdrjMzTBqHotu0tYrhFpgkQ56ri3fnRGVARThNBE1QTdxuNEbRYlKEN6LsUizPK6o4tp2BCs0L5CJ9Oh92YXoYjSPani8gkG9teQB7QlHQFPD+Xo1onruv4+V4b/FPNO3NqqY5YrxyKeyzPzorwMY21VxU+2KXQyTqCUuQdI0bBs1qZ5V4djctsj0UuGRnpOODL5JgHvyLoTCGEIrDgqChIlc9SU9oeE56EcxbJqYqbyurVB4mFiTxOQDBLpJcgmY5ZUQBlqoaj5CKZLhdwXhdRw2pUqvHAK5cTHKBuIlSOBDZ94wlyB7X9XnNnhrhK/Boxa/t0LwC4qzH3W3CmxoIjcJ5OA8J8wceRlW612XFd28FBD9w94d5ANzNDB3ZkUGicLoV3gaMebI0wNwULPBbRThYz1g==;5:7jaCUnXZP+HlfJljtNyHxWtnltwrwEICmsC+Y7j//i628ihBnCJ7+AtE7DV8V/83Rv5LUOBCy+mtvxwHyQFq/0fQqn6N+ztnmgZ+Ug9fOtQfOdbQVX8MDVuJbEDOylvZlJZjt0Sgud8Kgxvzmj+FXKeevfbeFbToh4Zj49ZJKZQ=;7:6YY3Z4DrYyJ6aIXPMvSVS8UF76ud5EZBXSw6eTHBEvol9xaTACQpKjR0CHJn5XLGw7AYGJkcJ+s6EFsDrZcZIKaiZx2Cz+8xStjJzX5QaiSoN5ur/awhbhMaQttbdy/SeHDRuypNNxgkiEAzpJypEQ==
-x-ms-office365-filtering-correlation-id: 34bb0b46-816f-48f2-2634-08d64b57a5c5
-x-microsoft-antispam: BCL:0;PCL:0;RULEID:(2390098)(7020095)(4652040)(8989299)(5600074)(711020)(4534185)(4627221)(201703031133081)(201702281549075)(8990200)(2017052603328)(7153060)(7193020);SRVR:MWHPR0601MB3642;
-x-ms-traffictypediagnostic: MWHPR0601MB3642:
-x-microsoft-antispam-prvs: <MWHPR0601MB36422FA990033B7DAE2AED57D3DD0@MWHPR0601MB3642.namprd06.prod.outlook.com>
-x-exchange-antispam-report-test: UriScan:(85827821059158);
-x-ms-exchange-senderadcheck: 1
-x-exchange-antispam-report-cfa-test: BCL:0;PCL:0;RULEID:(8211001083)(6040522)(2401047)(8121501046)(5005006)(93006095)(93001095)(3231415)(944501410)(52105112)(10201501046)(3002001)(148016)(149066)(150057)(6041310)(20161123558120)(20161123562045)(20161123560045)(201703131423095)(201702281528075)(20161123555045)(201703061421075)(201703061406153)(20161123564045)(201708071742011)(7699051)(76991095);SRVR:MWHPR0601MB3642;BCL:0;PCL:0;RULEID:;SRVR:MWHPR0601MB3642;
-x-forefront-prvs: 0858FF8026
-x-forefront-antispam-report: SFV:NSPM;SFS:(10019020)(136003)(39850400004)(366004)(346002)(396003)(376002)(189003)(199004)(36756003)(2501003)(99286004)(6436002)(52116002)(53936002)(102836004)(6512007)(186003)(1076002)(7736002)(6116002)(3846002)(305945005)(5660300001)(66066001)(71190400001)(476003)(105586002)(6486002)(97736004)(478600001)(2906002)(8936002)(4326008)(26005)(256004)(25786009)(68736007)(110136005)(6506007)(54906003)(39060400002)(71200400001)(486006)(14454004)(2900100001)(386003)(2616005)(8676002)(86362001)(81166006)(81156014)(316002)(106356001);DIR:OUT;SFP:1102;SCL:1;SRVR:MWHPR0601MB3642;H:MWHPR0601MB3708.namprd06.prod.outlook.com;FPR:;SPF:None;LANG:en;PTR:InfoNoRecords;MX:1;A:1;
-received-spf: None (protection.outlook.com: impinj.com does not designate
- permitted sender hosts)
-x-microsoft-antispam-message-info: 7aF6JGbdSVs95GGt1KthnkKVvOgoWPh/3PDL+mQ6kKYIpDa7+bpjKNNczPSM1u7Pp2+aJpKBi2LAzAo2ZIpheHkdKnBhwFkxjjOfpv1zDTA8gl/cOgCuLZ0KkEBMHfKcUf1xdASBGpYVS0DF6lM/MOmTgYl+1vpithK+4VIVZTwOJluX3mMnUmsZ0a7zlh49ral9cllpE7W6z7AmOulc8pI6mmpSnLAllpQeGnkFCzELJxEH7SzQY5UEbVylRUNPf8B5NBp7ss9DP/T8yyuvYsNlwgYgYb5GgKLKHuAG66MxY5cdU0iNm2qZc6sioWiFaz6gzUHbN1L4ZB2awrleA+FdpoTxbuYcAnemaqgo1Tc=
-spamdiagnosticoutput: 1:99
-spamdiagnosticmetadata: NSPM
-Content-Type: text/plain; charset="iso-8859-1"
+x-ms-exchange-transport-fromentityheader: Hosted
+x-originating-ip: [10.178.128.193]
+Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: quoted-printable
 MIME-Version: 1.0
-X-OriginatorOrg: impinj.com
-X-MS-Exchange-CrossTenant-Network-Message-Id: 34bb0b46-816f-48f2-2634-08d64b57a5c5
-X-MS-Exchange-CrossTenant-originalarrivaltime: 16 Nov 2018 00:08:33.9496
- (UTC)
-X-MS-Exchange-CrossTenant-fromentityheader: Hosted
-X-MS-Exchange-CrossTenant-id: 6de70f0f-7357-4529-a415-d8cbb7e93e5e
-X-MS-Exchange-Transport-CrossTenantHeadersStamped: MWHPR0601MB3642
+X-Proofpoint-Virus-Version: vendor=fsecure engine=2.50.10434:,, definitions=2018-11-15_17:,,
+ signatures=0
+X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0 priorityscore=1501
+ malwarescore=0 suspectscore=0 phishscore=0 bulkscore=0 spamscore=0
+ clxscore=1015 lowpriorityscore=0 mlxscore=0 impostorscore=0
+ mlxlogscore=999 adultscore=0 classifier=spam adjust=0 reason=mlx
+ scancount=1 engine=8.0.1-1810050000 definitions=main-1811160000
 Sender: linux-pci-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-The IMX6 PCI-e host drier also supports the IMX7d.  However, the
-Kconfig dependencies of the driver prevented it from being enabled
-unless the kernel was built with both IMX6 and IMX7 support.  It works
-fine to build with only IMX7 support enabled.
-
-Cc: Andrey Smirnov <andrew.smirnov@gmail.com>
-Reviewed-by: Lucas Stach <l.stach@pengutronix.de>
-Signed-off-by: Trent Piepho <tpiepho@impinj.com>
----
-Changes from v1:
-  Ported to current kernel
-
- drivers/pci/controller/dwc/Kconfig | 4 ++--
- 1 file changed, 2 insertions(+), 2 deletions(-)
-
-diff --git a/drivers/pci/controller/dwc/Kconfig b/drivers/pci/controller/dw=
-c/Kconfig
-index 91b0194240a5..6aafec3fad00 100644
---- a/drivers/pci/controller/dwc/Kconfig
-+++ b/drivers/pci/controller/dwc/Kconfig
-@@ -89,8 +89,8 @@ config PCI_EXYNOS
- 	select PCIE_DW_HOST
-=20
- config PCI_IMX6
--	bool "Freescale i.MX6 PCIe controller"
--	depends on SOC_IMX6Q || (ARM && COMPILE_TEST)
-+	bool "Freescale i.MX6/7 PCIe controller"
-+	depends on SOC_IMX6Q || SOC_IMX7D || (ARM && COMPILE_TEST)
- 	depends on PCI_MSI_IRQ_DOMAIN
- 	select PCIE_DW_HOST
-=20
---=20
-2.14.4
-
++ Borislav (ACPI guy, maybe he can answer more about HEST)=0A=
+=0A=
+On 11/15/2018 12:24 AM, Bjorn Helgaas wrote:=0A=
+> On Wed, Nov 14, 2018 at 07:22:04PM +0000, Alex_Gagniuc@Dellteam.com wrote=
+:=0A=
+>> On 11/14/2018 12:00 AM, Bjorn Helgaas wrote:=0A=
+>>> On Tue, Nov 13, 2018 at 10:39:15PM +0000, Alex_Gagniuc@Dellteam.com wro=
+te:=0A=
+>> ACPI 6.2 - 6.2.11.3, Table 6-197:=0A=
+>>=0A=
+>> PCI Express Advanced Error Reporting control:=0A=
+>>    * The firmware sets this bit to 1 to grant control over PCI Express=
+=0A=
+>> Advanced Error Reporting. If firmware allows the OS control of this=0A=
+>> feature, then in the context of the _OSC method it must ensure that=0A=
+>> error messages are routed to device interrupts as described in the PCI=
+=0A=
+>> Express Base Specification[...]=0A=
+> =0A=
+> The PCIe Base Spec is pretty big, so I wish this reference were a=0A=
+> little more explicit.  I *guess* maybe it's referring to PCIe r4.0,=0A=
+> figure 6-3 in sec 6.2.6, where PCIe ERR_* Messages can be routed to=0A=
+> "INTx or MSI Error Interrupts" and/or "platform-specific System Error"=0A=
+> interrupts.=0A=
+=0A=
+It's engineering slang for "I don't know what the spec says, but do what =
+=0A=
+the spec says." What it means is that FW should set up HW in such a way, =
+=0A=
+that PCIe-compliant OS which enables interrupts will get interrupts the =0A=
+way it expects. For example, some FW might set the root port to trigger =0A=
+an SMI instead of firing up the proper MSI vector. In this case FW must =0A=
+ensure that AER interrupts fire up the MSI vector instead of triggering SMI=
+.=0A=
+=0A=
+> "Device interrupts" seems like it refers to the "INTx or MSI"=0A=
+> interrupts, not the platform-specific System Errors, so I would read=0A=
+> that as saying "if firmware grants OS control of AER via _OSC,=0A=
+> firmware must set the AER Reporting Enables in the AER Root Error=0A=
+> Command register."  But that seems a little silly because the OS now=0A=
+> *owns* the AER capability and it can set the AER Root Error Command=0A=
+> register itself if it wants to.=0A=
+=0A=
+When OS takes control of AER, it is responsible for setting things up, =0A=
+at least as far as standard PCIe registers are concerned. So setting up =0A=
+the the root command register would still be the OS's responsibility. =0A=
+Proprietary registers, like routing to SMI/SCI/MSI would have to be done =
+=0A=
+by FW.=0A=
+=0A=
+=0A=
+> And I still don't see the connection here with Firmware-First.  I'm=0A=
+> pretty sure firmware could not be notified via INTx or MSI interrupts=0A=
+> because those are totally managed by OSPM.=0A=
+=0A=
+The connection with FFS is that FFS needs to be notified by some other =0A=
+method. FW can't commandeer interrupt vectors willie-nillie. FW gets =0A=
+notified by platform-specific mechanisms. In my case, it happens to be =0A=
+SMM, but it could be a number of other proprietary mechanisms.=0A=
+=0A=
+=0A=
+>>> The closest I can find is the "Enabled" field in the HEST PCIe=0A=
+>>> AER structures (ACPI v6.2, sec 18.3.2.4, .5, .6), where it says:=0A=
+>>>[...] =0A=
+>>> AFAICT, Linux completely ignores the Enabled field in these=0A=
+>>> structures.=0A=
+>>=0A=
+>> I don't think ignoring the field is a problem:=0A=
+>>    * With FFS, OS should ignore it.=0A=
+>>    * Without FFS, we have control, and we get to make the decisions anyw=
+ay.=0A=
+>> In the latter case we decide whether to use AER, independent of the crap=
+=0A=
+>> in ACPI. I'm not even sure why "Enabled" matters in native AER handling.=
+=0A=
+> =0A=
+> It seems like these HEST structures are "here's how firmware thinks=0A=
+> you should set up AER on this device".  But I agree, I have no idea=0A=
+> how to interpret "Enabled".  The rest of the HEST fields cover all the=0A=
+> useful AER registers, including the Reporting Enables in the AER Root=0A=
+> Error Command register *and* the Error Reporting Enables in the Device=0A=
+> Control register.  So I don't know what the "Enabled" field adds to=0A=
+> all that.  =0A=
+=0A=
+"This table contains information platform firmware supplies to OSPM for =0A=
+configuring AER support on a given PCI Express device."=0A=
+=0A=
+I don't fully get the point of the HEST structures for PCIe. I'm hoping =0A=
+Borislav can shed enlightment on this. I think we can ignore them in PCI =
+=0A=
+core, with a note to revisit them if something ever goes horribly wrong. =
+=0A=
+I've patched some changes to reduce reliance on HEST [1].=0A=
+=0A=
+> What a mess.=0A=
+=0A=
+It's ACPI. What else did you expect?=0A=
+=0A=
+>>> For firmware-first to work, firmware has to get control.  How does=0A=
+>>> it get control?  How does OSPM know to either set up that=0A=
+>>> mechanism or keep its mitts off something firmware set up before=0A=
+>>> handoff?=0A=
+>>=0A=
+>> My understanding is that, if FW keeps control of AER in _OSC, then=0A=
+>> it will have set things up to get notified instead of the OS. OSPM=0A=
+>> not touching AER bits is to make sure it doesn't mess up FW's setup.=0A=
+>> I think there are some proprietary bits in the root port to route=0A=
+>> interrupts to SMIs instead of the AER vectors.=0A=
+> =0A=
+> It makes good sense that if OSPM doesn't have AER control, firmware=0A=
+> does all AER handling, including any setup for firmware-first=0A=
+> notification.  If we can assume that firmware-first notification is=0A=
+> done in some way the OS doesn't know about and can't mess up, that=0A=
+> would be awesome.=0A=
+=0A=
+I think that's a reasonable assumption as long as OS respects AER ownership=
+.=0A=
+=0A=
+> But I think the VMD model really has nothing to do with the APEI=0A=
+> firmware-first model.  With VMD, it sounds like OSPM owns the AER=0A=
+> capability and doesn't know firmware exists *except* that it has to be=0A=
+> careful not to step on firmware's interrupt.  So maybe we can handle it=
+=0A=
+> separately.=0A=
+=0A=
+<sarcasm_alert>=0A=
+Sounds like VMD is qualified to become part of ACPI spec.=0A=
+<\sarcasm_alert>=0A=
+=0A=
+I'll have to look into VMD in more detail, but this sounds like a design =
+=0A=
+flaw. It's possible to use the values in HEST to set up AER, but that =0A=
+might conflict with the OS's wish on how to set up AER.=0A=
+=0A=
+Alex=0A=
+=0A=
+=0A=
+[1] https://lkml.org/lkml/2018/11/16/202=0A=
+=0A=
