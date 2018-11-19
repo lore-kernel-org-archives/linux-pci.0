@@ -2,150 +2,165 @@ Return-Path: <SRS0=q0B1=N6=vger.kernel.org=linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-2.6 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,MAILING_LIST_MULTI,SPF_PASS autolearn=ham
-	autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-6.8 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
+	DKIM_VALID_AU,FREEMAIL_FORGED_FROMDOMAIN,FREEMAIL_FROM,
+	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
+	SPF_PASS,URIBL_BLOCKED autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 92088C43441
-	for <linux-pci@archiver.kernel.org>; Mon, 19 Nov 2018 19:32:11 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 98CA9C43441
+	for <linux-pci@archiver.kernel.org>; Mon, 19 Nov 2018 20:12:40 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 5A2F620870
-	for <linux-pci@archiver.kernel.org>; Mon, 19 Nov 2018 19:32:11 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 52826208E3
+	for <linux-pci@archiver.kernel.org>; Mon, 19 Nov 2018 20:12:40 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (1024-bit key) header.d=kernel.org header.i=@kernel.org header.b="2qpYOSr5"
-DMARC-Filter: OpenDMARC Filter v1.3.2 mail.kernel.org 5A2F620870
-Authentication-Results: mail.kernel.org; dmarc=fail (p=none dis=none) header.from=kernel.org
+	dkim=pass (2048-bit key) header.d=googlemail.com header.i=@googlemail.com header.b="oXMSCEVi"
+DMARC-Filter: OpenDMARC Filter v1.3.2 mail.kernel.org 52826208E3
+Authentication-Results: mail.kernel.org; dmarc=fail (p=quarantine dis=none) header.from=googlemail.com
 Authentication-Results: mail.kernel.org; spf=none smtp.mailfrom=linux-pci-owner@vger.kernel.org
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1730293AbeKTF5N (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Tue, 20 Nov 2018 00:57:13 -0500
-Received: from mail.kernel.org ([198.145.29.99]:50704 "EHLO mail.kernel.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1729995AbeKTF5N (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Tue, 20 Nov 2018 00:57:13 -0500
-Received: from [10.80.45.159] (unknown [71.69.156.42])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
-        (No client certificate requested)
-        by mail.kernel.org (Postfix) with ESMTPSA id B89C02075B;
-        Mon, 19 Nov 2018 19:32:07 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=default; t=1542655929;
-        bh=NnVnKv61t5wHI5WrKHh5zGKc/h2tnNHwmFNgkgpVOFU=;
-        h=Subject:To:Cc:References:From:Date:In-Reply-To:From;
-        b=2qpYOSr5Idunb91/Dusf5Xnwj/g6s52Tx7n61f6V8MITf6YnRm4X5rORWWcMWa7Na
-         OYxRrHzwott4JKXD5GwuNT+lkQqE88SjXQyiUj7eEepQEjsGHCcUj8Smhi9efdQu3f
-         pkNP7VTQz3VP6Dd12m0Qa938IJjFFhr0J3HzYxnQ=
-Subject: Re: [PATCH 0/2] PCI/AER: Consistently use _OSC to determine who owns
- AER
-To:     "Alex G." <mr.nuke.me@gmail.com>,
-        Keith Busch <keith.busch@intel.com>
-Cc:     Tyler Baicar <baicar.tyler@gmail.com>, austin_bolen@dell.com,
-        alex_gagniuc@dellteam.com, Shyam_Iyer@dell.com, lukas@wunner.de,
-        bhelgaas@google.com, rjw@rjwysocki.net, lenb@kernel.org,
-        ruscur@russell.cc, sbobroff@linux.ibm.com, oohall@gmail.com,
-        linux-pci@vger.kernel.org, linux-acpi@vger.kernel.org,
-        Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
-        linuxppc-dev@lists.ozlabs.org
-References: <20181115231605.24352-1-mr.nuke.me@gmail.com>
- <b9a739c8-80bd-e04c-ac19-97bc54f20eff@kernel.org>
- <CABo9ajD5GJY7MrMjQc3hE=4tpPKpeceMtVEHwCwgjrvJUYjLvg@mail.gmail.com>
- <20181119165318.GB26595@localhost.localdomain>
- <74f2c527-0890-5e14-5e2d-48934a42dae6@kernel.org>
- <ab2427f1-c1f0-68fe-5335-1494caafdcbb@kernel.org>
- <20181119174127.GE26595@localhost.localdomain>
- <ef0a24e4-906e-f6df-c646-1fe47ea0dcc0@kernel.org>
- <20181119181051.GA26707@localhost.localdomain>
- <c0d6535f-324b-557a-3d0e-ccec070459a7@kernel.org>
- <3f923367-2cc1-c0d6-bca6-bf9a03d1b9ca@gmail.com>
-From:   Sinan Kaya <okaya@kernel.org>
-Message-ID: <ef6b19de-dd18-850f-4db9-8ab71b975e94@kernel.org>
-Date:   Mon, 19 Nov 2018 14:32:06 -0500
-User-Agent: Mozilla/5.0 (Windows NT 10.0; WOW64; rv:60.0) Gecko/20100101
- Thunderbird/60.3.1
+        id S1730622AbeKTGhx (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Tue, 20 Nov 2018 01:37:53 -0500
+Received: from mail-oi1-f195.google.com ([209.85.167.195]:39039 "EHLO
+        mail-oi1-f195.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1730214AbeKTGhx (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Tue, 20 Nov 2018 01:37:53 -0500
+Received: by mail-oi1-f195.google.com with SMTP id 192-v6so26336921oii.6;
+        Mon, 19 Nov 2018 12:12:38 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=googlemail.com; s=20161025;
+        h=mime-version:references:in-reply-to:from:date:message-id:subject:to
+         :cc;
+        bh=sWqRt1hx9afwx1pA4ot31NcExm8qubHQTBZSMfxxSbg=;
+        b=oXMSCEVix3pfFdd5P0Bu+TZFKlIUwEZnsgHEJmFKM7r4vHAUvqXOmMWjl1i5JsiJik
+         9vlqosggm0VEraOwSRFAhkMdg0QjsAmSMyf/uZaQyn/ebQ3Lq9Jul4PXh0ZzCSBDih1k
+         DuWKVICETPTsO3RUHIlJsSchT7OrB92ax8+OPXBEVuGt3WotN3CWxQvORG4UPc/5qfnr
+         MvEE/naWr4RQrvBguJjSUrlEDriIV6/xMM6X132548dZIGP0WUIacrPkl8P95x6l+jZC
+         Nw29lvri+CvW9pgZok0LNd6Y/FGvHtvYsSa8GPh3ZvGstgi9eDzOOa1RUwSmylIqxXtD
+         P7iQ==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20161025;
+        h=x-gm-message-state:mime-version:references:in-reply-to:from:date
+         :message-id:subject:to:cc;
+        bh=sWqRt1hx9afwx1pA4ot31NcExm8qubHQTBZSMfxxSbg=;
+        b=ecHc23z1iUstqRbCui74t7UciLsUTBAlv/ErjYV0FKBju9CI0bZ9VwDeWPtIK/w+C/
+         mJaaU2sBYvrKigVgEMhvGbe1M8nOm5DG5GaiEe/a/ulWXun2HT3dTUpQKvNH24aGrGg2
+         LWv6xf6zNQ/B/epmSApuiQq6O+0qKr8xfVveZa/wHZo8Bf9a8K5ekcs1wHXHdwer5YsU
+         LrlrCI5NOCuR0g5+nyf1XwIL4cTDQnzc3B425/bBfUuzN0GIeZ1gA9zeeKq4i69D0JyM
+         l9nk+XPyQtTbDxQMhDYY0oBuQ5XpfagVDzbpm+V3bziYgM5kyyBJ20M41kj5OA+bKuP8
+         qzAg==
+X-Gm-Message-State: AGRZ1gL8jpY2fcKiYmZ4I5sCOWq8HzizsTS4zb6CF2jjja3sMxS1rjQf
+        DQOfjxlrlYQ0MKw/2L5H0gB0OW236AEhgx268xA=
+X-Google-Smtp-Source: AJdET5cLlagfTIEWhSq/UYFQGT8iVWdauWNcWAku3JG9VS5LDnbFgRYo+2yrbEZRKwG+w8UVPzAnaqagE50JoFTpLwU=
+X-Received: by 2002:aca:f0f:: with SMTP id 15mr8162552oip.47.1542658357928;
+ Mon, 19 Nov 2018 12:12:37 -0800 (PST)
 MIME-Version: 1.0
-In-Reply-To: <3f923367-2cc1-c0d6-bca6-bf9a03d1b9ca@gmail.com>
-Content-Type: text/plain; charset=utf-8; format=flowed
-Content-Language: en-US
-Content-Transfer-Encoding: 7bit
+References: <1539049990-30810-1-git-send-email-hanjie.lin@amlogic.com> <1539049990-30810-2-git-send-email-hanjie.lin@amlogic.com>
+In-Reply-To: <1539049990-30810-2-git-send-email-hanjie.lin@amlogic.com>
+From:   Martin Blumenstingl <martin.blumenstingl@googlemail.com>
+Date:   Mon, 19 Nov 2018 21:12:26 +0100
+Message-ID: <CAFBinCCChD-phwyb3hSzAjBmy09g35ijQa_chJX5HufuVnPjaw@mail.gmail.com>
+Subject: Re: [PATCH v5 1/2] dt-bindings: PCI: meson: add DT bindings for
+ Amlogic Meson PCIe controller
+To:     hanjie.lin@amlogic.com
+Cc:     lorenzo.pieralisi@arm.com, bhelgaas@google.com,
+        yixun.lan@amlogic.com, robh@kernel.org, jianxin.pan@amlogic.com,
+        devicetree@vger.kernel.org, khilman@baylibre.com,
+        shawn.lin@rock-chips.com, pombredanne@nexb.com,
+        linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
+        qiufang.dai@amlogic.com, jian.hu@amlogic.com,
+        liang.yang@amlogic.com, cyrille.pitchen@free-electrons.com,
+        gustavo.pimentel@synopsys.com, carlo@caione.org,
+        linux-amlogic@lists.infradead.org,
+        linux-arm-kernel@lists.infradead.org, jbrunet@baylibre.com,
+        yue.wang@amlogic.com
+Content-Type: text/plain; charset="UTF-8"
 Sender: linux-pci-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
->> UEFI HEST table specification also claims that it should be the ultimate
->> table for when PCI firmware-first should be disabled/enabled.
-> 
-> IIRC, EFI absorbed ACPI before FFS was a thing. Could you point me to the UEFI 
-> chapter that says HEST is authoritative?
-> (not being a smartie, just that my free software PDF readers can't search within 
-> a file that large)
-> 
+Hello Hanjie, Hello Yue,
 
-ACPI 6.2:
+sorry for being late with my comment
 
-18.3.2.4 PCI Express Root Port AER Structure
+On Tue, Oct 9, 2018 at 3:53 AM Hanjie Lin <hanjie.lin@amlogic.com> wrote:
+>
+> From: Yue Wang <yue.wang@amlogic.com>
+>
+> The Amlogic Meson PCIe host controller is based on the Synopsys DesignWare
+> PCI core. This patch adds documentation for the DT bindings in Meson PCIe
+> controller.
+>
+> Signed-off-by: Yue Wang <yue.wang@amlogic.com>
+> Signed-off-by: Hanjie Lin <hanjie.lin@amlogic.com>
+> Reviewed-by: Rob Herring <robh@kernel.org>
+> ---
+>  .../devicetree/bindings/pci/amlogic,meson-pcie.txt | 70 ++++++++++++++++++++++
+>  1 file changed, 70 insertions(+)
+>  create mode 100644 Documentation/devicetree/bindings/pci/amlogic,meson-pcie.txt
+>
+> diff --git a/Documentation/devicetree/bindings/pci/amlogic,meson-pcie.txt b/Documentation/devicetree/bindings/pci/amlogic,meson-pcie.txt
+> new file mode 100644
+> index 0000000..12b18f8
+> --- /dev/null
+> +++ b/Documentation/devicetree/bindings/pci/amlogic,meson-pcie.txt
+> @@ -0,0 +1,70 @@
+> +Amlogic Meson AXG DWC PCIE SoC controller
+> +
+> +Amlogic Meson PCIe host controller is based on the Synopsys DesignWare PCI core.
+> +It shares common functions with the PCIe DesignWare core driver and
+> +inherits common properties defined in
+> +Documentation/devicetree/bindings/pci/designware-pci.txt.
+> +
+> +Additional properties are described here:
+> +
+> +Required properties:
+> +- compatible:
+> +       should contain "amlogic,axg-pcie" to identify the core.
+> +- reg:
+> +       should contain the configuration address space.
+> +- reg-names: Must be
+> +       - "elbi"        External local bus interface registers
+> +       - "cfg"         Meson specific registers
+> +       - "phy"         Meson PCIE PHY registers
+is this only the PCIe PHY registers or is it the registers of the PHY
+which supports USB3.0 and PCIe?
+buildroot_openlinux_kernel_4.9_fbdev_20180706 uses the following
+registers in the pcie_A node for the "phy" registers:
+0x0 0xff646000 0x0 0x2000
+while the usb3_phy_v2 node uses:
+phy-reg = <0xff646000>;
 
-Flags:
+> +       - "config"      PCIe configuration space
+> +- reset-gpios: The GPIO to generate PCIe PERST# assert and deassert signal.
+> +- clocks: Must contain an entry for each entry in clock-names.
+> +- clock-names: Must include the following entries:
+> +       - "pclk"       PCIe GEN 100M PLL clock
+> +       - "port"       PCIe_x(A or B) RC clock gate
+> +       - "general"    PCIe Phy clock
+> +       - "mipi"       PCIe_x(A or B) 100M ref clock gate
+> +- resets: phandle to the reset lines.
+> +- reset-names: must contain "phy" "port" and "apb"
+> +       - "phy"         Share PHY reset
+> +       - "port"        Port A or B reset
+> +       - "apb"         Share APB reset
+> +- device_type:
+> +       should be "pci". As specified in designware-pcie.txt
+> +
+> +
+> +Example configuration:
+> +
+> +       pcie: pcie@f9800000 {
+> +                       compatible = "amlogic,axg-pcie", "snps,dw-pcie";
+> +                       reg = <0x0 0xf9800000 0x0 0x400000
+> +                                       0x0 0xff646000 0x0 0x2000
+> +                                       0x0 0xff644000 0x0 0x2000
+> +                                       0x0 0xf9f00000 0x0 0x100000>;
+> +                       reg-names = "elbi", "cfg", "phy", "config";
+is the order of the reg-names correct?
+buildroot_openlinux_kernel_4.9_fbdev_20180706 uses 0xff646000 for the
+PHY (instead of 0xff646000) in mesong12a.dtsi and mesong12b.dtsi
 
-Bit [0] - FIRMWARE_FIRST: If set, this bit indicates to the OSPM that system 
-firmware will handle errors from this source first.
-Bit [1] - GLOBAL: If set, indicates that the settings contained in this 
-structure apply globally to all PCI Express Devices.
-All other bits must be set to zero.
 
-It doesn't say shall, may or might. It says will.
-
-> 
->> I think somebody needs to fix these. I saw an email from Harb Abdulhamid
->> sent to aswg this morning.
->>
->> That's why I suggested circulating this idea in UEFI forums first.
->> Let's see what everybody thinks. We can go from there.
-> 
-> However you look at it, we have a glaring inconsistency in how we handle AER 
-> control in linux. I'm surprised we didn't see huge issues because of mixing 
-> HEST/_OSC.
-> 
-> What systems rely on the HEST definition as opposed to _OSC? It doesn't make 
-> sense to me that you could have a system with mixed FFS and native AER on the 
-> same root port. The granularity of HEST shouldn't matter here because of how AER 
-> works.
-
-I think It depends on your PCI topology.
-
-For other topologies with multiple PCI root complexes, I can see this being
-used per root complex flag to indicate which root complex needs firmware first
-and which one doesn't.
-
-> 
-> I'd like see how exactly we break one of those elusive systems with _OSC. I 
-> suspect _OSC and HEST end up having the same information, and that's why we 
-> didn't see any real-life issue with mixing the approaches.
-
-I'm already aware of two systems that rely on HEST table to pass information to
-the OS that firmware first is enabled. Both of the systems do not change their
-_OSC bits during this assuming HEST table has priority over _OSC for firmware
-first.
-
-If we add this patch, OS will try to claim the AER address space while firmware
-wants exclusive access.
-
-As I said in my previous email, the right place to talk about this is UEFI
-forum.
-
-> 
-> Alex
-> 
-> 
-> P.S.
-> (SARCASM ALERT) Isn't UEFI is a pile of stuff that didn't stick to the wall?
-> 
-> P.P.S
-> I remember someone asking why we don't disable FFS in the BIOS. I think it would 
-> be next to impossible to get certain platform vendors to relinquish FFS control, 
-> unless the specs required things to be that way -- and had a "standard" way to 
-> do so.
-> 
-> Then getting the specs to change in that direction is also a battle.
-> 
-
+Regards
+Martin
