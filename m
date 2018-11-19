@@ -2,132 +2,190 @@ Return-Path: <SRS0=q0B1=N6=vger.kernel.org=linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-1.1 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
-	DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_PASS,
-	URIBL_BLOCKED autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-0.8 required=3.0 tests=DKIM_INVALID,DKIM_SIGNED,
+	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_PASS autolearn=ham
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id E6078C43441
-	for <linux-pci@archiver.kernel.org>; Mon, 19 Nov 2018 20:15:01 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id BE6C3C43441
+	for <linux-pci@archiver.kernel.org>; Mon, 19 Nov 2018 20:17:05 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 9B97A2086A
-	for <linux-pci@archiver.kernel.org>; Mon, 19 Nov 2018 20:15:01 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 787352086A
+	for <linux-pci@archiver.kernel.org>; Mon, 19 Nov 2018 20:17:05 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (1024-bit key) header.d=impinj.com header.i=@impinj.com header.b="J/x0P7II"
-DMARC-Filter: OpenDMARC Filter v1.3.2 mail.kernel.org 9B97A2086A
-Authentication-Results: mail.kernel.org; dmarc=fail (p=reject dis=none) header.from=impinj.com
+	dkim=fail reason="signature verification failed" (1024-bit key) header.d=dellteam.com header.i=@dellteam.com header.b="qaZAkqGU"
+DMARC-Filter: OpenDMARC Filter v1.3.2 mail.kernel.org 787352086A
+Authentication-Results: mail.kernel.org; dmarc=none (p=none dis=none) header.from=Dellteam.com
 Authentication-Results: mail.kernel.org; spf=none smtp.mailfrom=linux-pci-owner@vger.kernel.org
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1729111AbeKTGkP (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Tue, 20 Nov 2018 01:40:15 -0500
-Received: from mail-eopbgr680091.outbound.protection.outlook.com ([40.107.68.91]:34306
-        "EHLO NAM04-BN3-obe.outbound.protection.outlook.com"
-        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1728844AbeKTGkP (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Tue, 20 Nov 2018 01:40:15 -0500
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=impinj.com;
- s=selector1;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=n9G0bfu5PfHVB4M+uH2F8REpVhHSCv+TueWem0dbHAQ=;
- b=J/x0P7II/CgnRrBUFUbToTFgMNJgsgy/i82dx8wxFgM8sbXgZngul2aoGgbj2XI7eL1DqPef7RWIF3hwSKv5tq+MXIoIfxK5bXov1CIrdfSRHji1bw1aKVKcf55Gmz0K6nlPhjfGrRFKmG4NIpLVyGyWPzYdHCkD7xeijd/wLas=
-Received: from MWHPR0601MB3708.namprd06.prod.outlook.com (10.167.236.38) by
- MWHPR0601MB3612.namprd06.prod.outlook.com (10.167.236.14) with Microsoft SMTP
- Server (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- 15.20.1294.27; Mon, 19 Nov 2018 20:14:55 +0000
-Received: from MWHPR0601MB3708.namprd06.prod.outlook.com
- ([fe80::f51a:d8dd:1aad:3bf9]) by MWHPR0601MB3708.namprd06.prod.outlook.com
- ([fe80::f51a:d8dd:1aad:3bf9%3]) with mapi id 15.20.1294.048; Mon, 19 Nov 2018
- 20:14:55 +0000
-From:   Trent Piepho <tpiepho@impinj.com>
-To:     "marc.zyngier@arm.com" <marc.zyngier@arm.com>
-CC:     "jingoohan1@gmail.com" <jingoohan1@gmail.com>,
-        "lorenzo.pieralisi@arm.com" <lorenzo.pieralisi@arm.com>,
-        "gustavo.pimentel@synopsys.com" <gustavo.pimentel@synopsys.com>,
-        "faiz_abbas@ti.com" <faiz_abbas@ti.com>,
-        "Joao.Pinto@synopsys.com" <Joao.Pinto@synopsys.com>,
-        "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-        "helgaas@google.com" <helgaas@google.com>,
-        "vigneshr@ti.com" <vigneshr@ti.com>
-Subject: Re: [PATCH 0/3] PCI: designware: Fixing MSI handling flow
-Thread-Topic: [PATCH 0/3] PCI: designware: Fixing MSI handling flow
-Thread-Index: AQHUe6RNjvB+uYCyEUiVT8YH/lgHCqVPmEcAgAFeawCAADaPAIAADoUAgAZWAgA=
-Date:   Mon, 19 Nov 2018 20:14:55 +0000
-Message-ID: <1542658494.30311.552.camel@impinj.com>
-References: <20181113225734.8026-1-marc.zyngier@arm.com>
-         <1542220084.30311.453.camel@impinj.com>
-         <a5f464c5-bc21-5986-7974-6fbabc450147@synopsys.com>
-         <1542307052.30311.531.camel@impinj.com>
-         <865zwyw351.wl-marc.zyngier@arm.com>
-In-Reply-To: <865zwyw351.wl-marc.zyngier@arm.com>
+        id S1730258AbeKTGmT (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Tue, 20 Nov 2018 01:42:19 -0500
+Received: from esa6.dell-outbound.iphmx.com ([68.232.149.229]:49119 "EHLO
+        esa6.dell-outbound.iphmx.com" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1728844AbeKTGmT (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Tue, 20 Nov 2018 01:42:19 -0500
+DKIM-Signature: v=1; a=rsa-sha256; c=simple/simple;
+  d=dellteam.com; i=@dellteam.com; q=dns/txt; s=smtpout;
+  t=1542658624; x=1574194624;
+  h=cc:from:to:subject:date:message-id:references:
+   content-transfer-encoding:mime-version;
+  bh=xZxbI4lACu2SbRtSOT54faqcXVe0ZqTunVMUKNclKVE=;
+  b=qaZAkqGUNTzNF26y/o1HuDdRh9+XeIlhl46mGp/HuLUkWatXZ3ycv6Mk
+   pjQlqUZzbBbs+UJIdMIWketS25VSEWWspCjTvj62fuVyUB+vOtWeNPDjk
+   832qa7eUqxL2ySO7SpyFQpjeDz/alp55pGjPRQTwz/AmjTuN1OWBJmZvb
+   Y=;
+X-IronPort-Anti-Spam-Filtered: true
+X-IronPort-Anti-Spam-Result: =?us-ascii?q?A2GxAQCSGfNbhiWd50NkHAEBAQQBAQc?=
+ =?us-ascii?q?EAQGBZQKBWYF/EjGMZY0rgXqVUIFmCwEBhGyEEjgSAQMBAQIBAQIBAQIQAQE?=
+ =?us-ascii?q?BCgkLCCkvQgEQAYFiIoJlAQEBAQIBEhUTPwULAgEIGB4QVwIEARoRCYJ/gXo?=
+ =?us-ascii?q?InDICgRCJWAEBAYFqM4okjhuBEYMShEsBEgEfhVsCiRiBcJRnCQWRGiCHSIk?=
+ =?us-ascii?q?1LJdDAgQCBAUCFIFdgQZxcIM9giYOCX8BB40VQAGCOYoXgR+BHwEB?=
+X-IPAS-Result: =?us-ascii?q?A2GxAQCSGfNbhiWd50NkHAEBAQQBAQcEAQGBZQKBWYF/E?=
+ =?us-ascii?q?jGMZY0rgXqVUIFmCwEBhGyEEjgSAQMBAQIBAQIBAQIQAQEBCgkLCCkvQgEQA?=
+ =?us-ascii?q?YFiIoJlAQEBAQIBEhUTPwULAgEIGB4QVwIEARoRCYJ/gXoInDICgRCJWAEBA?=
+ =?us-ascii?q?YFqM4okjhuBEYMShEsBEgEfhVsCiRiBcJRnCQWRGiCHSIk1LJdDAgQCBAUCF?=
+ =?us-ascii?q?IFdgQZxcIM9giYOCX8BB40VQAGCOYoXgR+BHwEB?=
+Received: from mx0b-00154901.pphosted.com (HELO mx0a-00154901.pphosted.com) ([67.231.157.37])
+  by esa6.dell-outbound.iphmx.com with ESMTP/TLS/AES256-SHA256; 19 Nov 2018 14:17:03 -0600
+Received: from pps.filterd (m0089484.ppops.net [127.0.0.1])
+        by mx0b-00154901.pphosted.com (8.16.0.22/8.16.0.22) with SMTP id wAJKCup6139457;
+        Mon, 19 Nov 2018 15:17:02 -0500
+Received: from esa4.dell-outbound2.iphmx.com (esa4.dell-outbound2.iphmx.com [68.232.154.98])
+        by mx0b-00154901.pphosted.com with ESMTP id 2nusf43x52-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=FAIL);
+        Mon, 19 Nov 2018 15:17:02 -0500
+Cc:     <baicar.tyler@gmail.com>, <Austin.Bolen@dell.com>,
+        <Shyam.Iyer@dell.com>, <lukas@wunner.de>, <bhelgaas@google.com>,
+        <rjw@rjwysocki.net>, <lenb@kernel.org>, <ruscur@russell.cc>,
+        <sbobroff@linux.ibm.com>, <oohall@gmail.com>,
+        <linux-pci@vger.kernel.org>, <linux-acpi@vger.kernel.org>,
+        <linux-kernel@vger.kernel.org>, <linuxppc-dev@lists.ozlabs.org>
+Received: from ausxipps310.us.dell.com ([143.166.148.211])
+  by esa4.dell-outbound2.iphmx.com with ESMTP/TLS/DHE-RSA-AES256-SHA256; 20 Nov 2018 02:17:00 +0600
+X-LoopCount0: from 10.166.134.86
+X-IronPort-AV: E=Sophos;i="5.56,254,1539666000"; 
+   d="scan'208";a="285285730"
+From:   <Alex_Gagniuc@Dellteam.com>
+To:     <okaya@kernel.org>, <mr.nuke.me@gmail.com>, <keith.busch@intel.com>
+Subject: Re: [PATCH 0/2] PCI/AER: Consistently use _OSC to determine who owns
+ AER
+Thread-Topic: [PATCH 0/2] PCI/AER: Consistently use _OSC to determine who owns
+ AER
+Thread-Index: AQHUfTk2X+FUHiVWnkuZssuLn5DqDg==
+Date:   Mon, 19 Nov 2018 20:16:59 +0000
+Message-ID: <bb575cfdcd0a4c50b489fb16eccfbff2@ausx13mps321.AMER.DELL.COM>
+References: <20181115231605.24352-1-mr.nuke.me@gmail.com>
+ <b9a739c8-80bd-e04c-ac19-97bc54f20eff@kernel.org>
+ <CABo9ajD5GJY7MrMjQc3hE=4tpPKpeceMtVEHwCwgjrvJUYjLvg@mail.gmail.com>
+ <20181119165318.GB26595@localhost.localdomain>
+ <74f2c527-0890-5e14-5e2d-48934a42dae6@kernel.org>
+ <ab2427f1-c1f0-68fe-5335-1494caafdcbb@kernel.org>
+ <20181119174127.GE26595@localhost.localdomain>
+ <ef0a24e4-906e-f6df-c646-1fe47ea0dcc0@kernel.org>
+ <20181119181051.GA26707@localhost.localdomain>
+ <c0d6535f-324b-557a-3d0e-ccec070459a7@kernel.org>
+ <3f923367-2cc1-c0d6-bca6-bf9a03d1b9ca@gmail.com>
+ <ef6b19de-dd18-850f-4db9-8ab71b975e94@kernel.org>
 Accept-Language: en-US
 Content-Language: en-US
 X-MS-Has-Attach: 
 X-MS-TNEF-Correlator: 
-authentication-results: spf=none (sender IP is )
- smtp.mailfrom=tpiepho@impinj.com; 
-x-originating-ip: [216.207.205.253]
-x-ms-publictraffictype: Email
-x-microsoft-exchange-diagnostics: 1;MWHPR0601MB3612;6:peXVc5QfXSdoO7/moBWkTj0jr/MHUXP2QYS6stV8b9JBHvpkcEPDlPw7Zja1gZWrd1ab/fdOsckT150UlryyJYcY9x4jY3zr6AARZwzcLHguN7p+KAuwkGR+VelwgcNjVtHBL/aoPEr9uduEzCCr7eVI/UPvKqbClaSmvXKrgrmsS+m1iL0P4Nk5qzlodjxTWJtRZpoDq0YP4NCJr6s94bDlHdW/V6CHRxayfVwrrhrmI2SCK0Y/xqU+SA8I35/wyKZRbEOdslVdCXb4zyUXSRqvHnxpJpbxirGFTMpFzd3gON96sOpjsFslffH/cxSE1VMsrq+WaNXDTqrmOSzKFwZqhWOcY0/0b0zFXyyuI3H2yqrCz/zfan0mwufssURqpxxwgkQnPqQ872oMUZHL4DCGFxBep7IrhZ+z8b6MSiIZohHUAMHOFZCaIn+TQba4MvWvSoF7wnb8kd1yEvSd+A==;5:wfEdez+eBLtuhoncLPVzIH9GE2OeDTCprZtuipG6XV5pOT03CwlxPUoixxxswP5F0ICu9ZauWCOpdriniq5lVigPhLZCfD9ExjKKvYuoxHwbwVI0gjuT/Z7R3xxMTZwIkHutR1mBqxx9lLKhnzfCSt7htEhvVeDFf3t79XH3zVg=;7:Lm1q1TZZKwz+pyzFYjNNbSY+xZUO15NEsMDJny15wQs7x9SK/97QSpN5nX9ARJBxEo1Qq/KkSpLC4qRaCfEsdHy+xD13X7m1c7Wk850H2eUSPW4YPshq5dZq7C4UaYLPqih7OtgyLmzUaswBMHjI9A==
-x-ms-exchange-antispam-srfa-diagnostics: SOS;
-x-ms-office365-filtering-correlation-id: 2568c83b-a1bc-4d73-ef12-08d64e5bac14
-x-microsoft-antispam: BCL:0;PCL:0;RULEID:(2390098)(7020095)(4652040)(8989299)(5600074)(711020)(4534185)(4627221)(201703031133081)(201702281549075)(8990200)(2017052603328)(7153060)(7193020);SRVR:MWHPR0601MB3612;
-x-ms-traffictypediagnostic: MWHPR0601MB3612:
-x-microsoft-antispam-prvs: <MWHPR0601MB36129B1260E5063B2010CEBBD3D80@MWHPR0601MB3612.namprd06.prod.outlook.com>
-x-exchange-antispam-report-test: UriScan:;
-x-ms-exchange-senderadcheck: 1
-x-exchange-antispam-report-cfa-test: BCL:0;PCL:0;RULEID:(8211001083)(6040522)(2401047)(8121501046)(5005006)(93006095)(93001095)(10201501046)(3002001)(3231415)(944501410)(52105112)(148016)(149066)(150057)(6041310)(20161123560045)(20161123558120)(20161123564045)(201703131423095)(201702281528075)(20161123555045)(201703061421075)(201703061406153)(20161123562045)(201708071742011)(7699051)(76991095);SRVR:MWHPR0601MB3612;BCL:0;PCL:0;RULEID:;SRVR:MWHPR0601MB3612;
-x-forefront-prvs: 08617F610C
-x-forefront-antispam-report: SFV:NSPM;SFS:(10019020)(136003)(376002)(346002)(39840400004)(396003)(366004)(199004)(54094003)(189003)(2501003)(14444005)(66066001)(103116003)(71190400001)(305945005)(71200400001)(229853002)(8676002)(7736002)(81156014)(81166006)(256004)(2616005)(476003)(11346002)(36756003)(486006)(53546011)(99286004)(4326008)(105586002)(39060400002)(2906002)(76176011)(6916009)(8936002)(25786009)(106356001)(6506007)(93886005)(102836004)(446003)(6246003)(186003)(14454004)(5660300001)(68736007)(6116002)(3846002)(97736004)(86362001)(26005)(2900100001)(478600001)(6436002)(6512007)(5640700003)(2351001)(4001150100001)(53936002)(316002)(54906003)(6486002);DIR:OUT;SFP:1102;SCL:1;SRVR:MWHPR0601MB3612;H:MWHPR0601MB3708.namprd06.prod.outlook.com;FPR:;SPF:None;LANG:en;PTR:InfoNoRecords;A:1;MX:1;
-received-spf: None (protection.outlook.com: impinj.com does not designate
- permitted sender hosts)
-x-microsoft-antispam-message-info: bpXDqE+xIJupzqvJIm6Xu1OOO/Bykk/3ua/CpTIXRu3oJLQfIahbgZdmOW8ijVHxLdcLG/7PwHUiaXvrH1VBUpt0rxYvlEfA+GsvowtCvLRXTI4lEu1iXxTV4Xba/Dc43r7l/Tmk2ZldxhpwjSqJLzZTQ17lHF5XpmtLP5vGnqBP5kAK5sOknEdNVGHwzj3eWwLd7sMvGvVH00FgOlyapjASG+rn7fWh3qUBBbmHETNWD5enjzkSDNTgZxKHmIyVu0qgBDE4AA40va9b1agKLXwXznwa+fo81VuB00JeOOywsJz9V6dTAJF+gb0Lrdugwa3HA1bPVqqfDhJeGPu7Q2tUpihWzdHK5dJ9YVCgaaE=
-spamdiagnosticoutput: 1:99
-spamdiagnosticmetadata: NSPM
-Content-Type: text/plain; charset="utf-8"
-Content-ID: <FF0B6873A739C449AFF25B5813C1A643@namprd06.prod.outlook.com>
-Content-Transfer-Encoding: base64
+x-ms-exchange-transport-fromentityheader: Hosted
+x-originating-ip: [10.178.128.193]
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: quoted-printable
 MIME-Version: 1.0
-X-OriginatorOrg: impinj.com
-X-MS-Exchange-CrossTenant-Network-Message-Id: 2568c83b-a1bc-4d73-ef12-08d64e5bac14
-X-MS-Exchange-CrossTenant-originalarrivaltime: 19 Nov 2018 20:14:55.4396
- (UTC)
-X-MS-Exchange-CrossTenant-fromentityheader: Hosted
-X-MS-Exchange-CrossTenant-id: 6de70f0f-7357-4529-a415-d8cbb7e93e5e
-X-MS-Exchange-Transport-CrossTenantHeadersStamped: MWHPR0601MB3612
+X-Proofpoint-Virus-Version: vendor=fsecure engine=2.50.10434:,, definitions=2018-11-19_08:,,
+ signatures=0
+X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0 priorityscore=1501
+ malwarescore=0 suspectscore=0 phishscore=0 bulkscore=0 spamscore=0
+ clxscore=1011 lowpriorityscore=0 mlxscore=0 impostorscore=0
+ mlxlogscore=999 adultscore=0 classifier=spam adjust=0 reason=mlx
+ scancount=1 engine=8.0.1-1810050000 definitions=main-1811190181
 Sender: linux-pci-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-T24gVGh1LCAyMDE4LTExLTE1IGF0IDE5OjI5ICswMDAwLCBNYXJjIFp5bmdpZXIgd3JvdGU6DQo+
-IE9uIFRodSwgMTUgTm92IDIwMTggMTg6Mzc6MzMgKzAwMDAsDQo+IFRyZW50IFBpZXBobyA8dHBp
-ZXBob0BpbXBpbmouY29tPiB3cm90ZToNCj4gPiANCj4gPiBPbiBUaHUsIDIwMTgtMTEtMTUgYXQg
-MTU6MjIgKzAwMDAsIEd1c3Rhdm8gUGltZW50ZWwgd3JvdGU6DQo+ID4gPiBPbiAxNC8xMS8yMDE4
-IDE4OjI4LCBUcmVudCBQaWVwaG8gd3JvdGU6DQo+ID4gPiA+IE9uIFR1ZSwgMjAxOC0xMS0xMyBh
-dCAyMjo1NyArMDAwMCwgTWFyYyBaeW5naWVyIHdyb3RlOg0KPiA+ID4gPiA+IA0KPiA+ID4gPiAN
-Cj4gPiA+ID4gTm93IGl0IHdvcmtzIGFnYWluLiAgUmFjZSBzdGlsbCBwcmVzZW50LiAgSSBkb24n
-dCBzZWUgdGhlDQo+ID4gPiA+IGR3X3BjaV9tc2lfYm90dG9tXyh1biltYXNrIG1ldGhvZHMgZXZl
-ciBnZXQgY2FsbGVkLiAgSSBzZWVtIHRvIHJlY2FsbA0KPiA+ID4gPiB0aGF0IHRoZXkgYXJlIGNh
-bGxlZCBhcyBhIHN1YnN0aXR1dGUgaWYgZW5hYmxlL2Rpc2FibGUgYXJlIG5vdCBwcmVzZW50LA0K
-PiA+ID4gPiBidXQgaGF2ZW4ndCBjb25maXJtZWQgdGhhdCwgd2hpY2ggd291bGQgZXhwbGFpbiB3
-aHkgdGhleSBhcmUgbm90IGNhbGxlZA0KPiA+ID4gPiBhZnRlciBJIGFkZGVkIGVuYWJsZS4NCj4g
-PiA+IA0KPiA+ID4gSHVtLCB0aGlzIHByb2JhYmx5IGlzIGNvcnJlbGF0ZWQgd2l0aCBbMV0gd2hl
-cmUgb24gdGhlIGRlc2NyaWJpdGlvbiB0aGUgdGhpcw0KPiA+ID4gZW51bWVyYXRvciBzYXlzIHRo
-YXQgIk9uZSBzaG90IGRvZXMgbm90IHJlcXVpcmUgbWFzay91bm1hc2siIHNlZSBbMl0NCj4gPiAN
-Cj4gPiBUaGF0IHNlZW1zIHJlYXNvbmFibGUgdGhlbi4gIEkndmUgc2FpZCBiZWZvcmUgdGhhdCB3
-aGlsZSBJIHRoaW5rDQo+ID4gbWFza2luZyBjb3VsZCBiZSBhZGRlZCBpbiB0aGUgaW50ZXJydXB0
-IGZsb3cgd2l0aG91dCBicmVha2luZyBhbnl0aGluZywNCj4gPiBJIHRoaW5rIGl0J3MgcmVkdW5k
-YW50IHRvIGRvIGl0IGF0IHRoaXMgbGF5ZXIuDQo+ID4gDQo+ID4gSSBzdXNwZWN0IGl0IG1pZ2h0
-IGJlIHBvc3NpYmxlIG1hc2svdW5tYXNrIHRoZSBpbnRlcnJ1cHQgIm1hbnVhbGx5IiwNCj4gPiBl
-LmcuIFVJTyBkb2VzIHRoaXMgdG8gYWxsb3cgaGFuZGxpbmcgYSBsZXZlbCBpbnRlcnJ1cHQgZnJv
-bSB1c2Vyc3BhY2UsDQo+ID4gYW5kIHRoYXQgd291bGQgYmUgYSBwYXRoIHRvIHJlYWNoIHRoZSBt
-YXNrIG1ldGhvZHMuDQo+IA0KPiBUaGUgcmVhbCB1c2UgY2FzZSBpcyB0aGF0IGEgZHJpdmVyIGNh
-biBwZXJmZWN0bHkgZGlzYWJsZSAobWFzaykgYW4NCj4gaW50ZXJydXB0IHdoaWxlIGJlaW5nIGlu
-IHRoZSBpbnRlcnJ1cHQgaGFuZGxlciwgYW5kIGVuYWJsZSBpdCBhZ2FpbiBhdA0KPiBhIGxhdGVy
-IHRpbWUuDQoNClRoYXQncyB3aGF0IEkgd2FzIHRoaW5raW5nIG9mIHdpdGggVUlPLCBidXQgdWlv
-X2RtZW1fZ2VuaXJxX2hhbmRsZXIoKQ0KYWN0dWFsbHkgY2FsbHMgZGlzYWJsZV9pcnFfbm9zeW5j
-KCkuICBJIGhhZCB0aG91Z2h0IGl0IG1hc2tlZCB0aGUgaXJxDQpyYXRoZXIgdGhhbiBkaXNhYmxl
-ZCBpdC4NCg0KSSB3b25kZXIgaWYgdGhpcyBpcyBhIFVJTyBidWcuICBUaGUgZGlzdGluY3Rpb24g
-YmV0d2VlbiBkaXNhYmxlIGFuZA0KbWFzayBpcyB1c3VhbGx5IHRoYXQgdGhlIG1hc2tlZCBpbnRl
-cnJ1cHQgaXMgbm90IGxvc3Qgd2hpbGUgdGhlDQpkaXNhYmxlZCBpbnRlcnJ1cHQgaXMuICBCdXQg
-dGhlcmUgYXJlIGlycSBjaGlwcyAobGlrZSBkd2MhKSB0aGF0IGRvIG5vdA0KIGltcGxlbWVudCBl
-bmFibGUvZGlzYWJsZSBtZXRob2RzIGFuZCB1c2UgbWFzayBtZXRob2RzIGluc3RlYWQu
+On 11/19/2018 01:32 PM, Sinan Kaya wrote:=0A=
+> ACPI 6.2:=0A=
+> =0A=
+> 18.3.2.4 PCI Express Root Port AER Structure=0A=
+> =0A=
+> Flags:=0A=
+> =0A=
+> Bit [0] - FIRMWARE_FIRST: If set, this bit indicates to the OSPM that sys=
+tem=0A=
+> firmware will handle errors from this source first.=0A=
+> Bit [1] - GLOBAL: If set, indicates that the settings contained in this=
+=0A=
+> structure apply globally to all PCI Express Devices.=0A=
+> All other bits must be set to zero.=0A=
+> =0A=
+> It doesn't say shall, may or might. It says will.=0A=
+=0A=
+It says "system firmware will handle errors". It does not say "system =0A=
+firmware owns AER registers". In absence on any descriptor text on the =0A=
+meaning of these tables, this really looks to me like it should be =0A=
+interpreted as a descriptor of APEI error sources, not a mutex on who =0A=
+writes to certain bits-- AER in this case.=0A=
+=0A=
+I don't think that is contradictory or inconsistent.=0A=
+I also wasn't able to find any reference to HEST in UEFI 2.7, only in =0A=
+ACPI spec.=0A=
+=0A=
+> I think It depends on your PCI topology.=0A=
+> =0A=
+> For other topologies with multiple PCI root complexes, I can see this bei=
+ng=0A=
+> used per root complex flag to indicate which root complex needs firmware =
+first=0A=
+> and which one doesn't.=0A=
+=0A=
+_OSC is per root bus, so it's already granular enough, right? Why would =0A=
+it depend on PCI topology?=0A=
+=0A=
+=0A=
+>> I'd like see how exactly we break one of those elusive systems with _OSC=
+. I=0A=
+>> suspect _OSC and HEST end up having the same information, and that's why=
+ we=0A=
+>> didn't see any real-life issue with mixing the approaches.=0A=
+> =0A=
+> I'm already aware of two systems that rely on HEST table to pass informat=
+ion to=0A=
+> the OS that firmware first is enabled. Both of the systems do not change =
+their=0A=
+> _OSC bits during this assuming HEST table has priority over _OSC for firm=
+ware=0A=
+> first.=0A=
+=0A=
+Are those hax86 systems?=0A=
+It seems like the systems have broken firmware. I see several ways to =0A=
+handle broken systems like those:=0A=
+  - Parse both HEST and _OSC, and decide AER ownership with root bridge =0A=
+granularity. i.e. host_bridge->native_aer is authoritative, but is =0A=
+derived from both HEST and _OSC=0A=
+  - Add quirks for the broken systems=0A=
+  - Keep doing what we're doing until current code breaks a new system=0A=
+=0A=
+> If we add this patch, OS will try to claim the AER address space while fi=
+rmware=0A=
+> wants exclusive access.=0A=
+=0A=
+Yay! FFS wants exclusive access, but does not claim it. Oh, FFS!=0A=
+=0A=
+=0A=
+> As I said in my previous email, the right place to talk about this is UEF=
+I=0A=
+> forum.=0A=
+=0A=
+The way I would present the problem to he spec writers is that, although =
+=0A=
+the spec appears to be consistent, we've seen firmware vendors that made =
+=0A=
+the wrong assumptions about HEST/_OSC. Instead of describing AER =0A=
+ownership with _OSC, they attempted to do it with HEST. So we should add =
+=0A=
+an implementation note, or clarification about this.=0A=
+=0A=
+Alex=0A=
