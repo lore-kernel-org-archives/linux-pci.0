@@ -2,506 +2,145 @@ Return-Path: <SRS0=q0B1=N6=vger.kernel.org=linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-9.0 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_PASS,URIBL_BLOCKED,
-	USER_AGENT_GIT autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-0.8 required=3.0 tests=DKIM_INVALID,DKIM_SIGNED,
+	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_PASS autolearn=ham
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id A4917C43441
-	for <linux-pci@archiver.kernel.org>; Mon, 19 Nov 2018 22:26:51 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 315A6C43441
+	for <linux-pci@archiver.kernel.org>; Mon, 19 Nov 2018 23:49:39 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 5F3762086A
-	for <linux-pci@archiver.kernel.org>; Mon, 19 Nov 2018 22:26:51 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.3.2 mail.kernel.org 5F3762086A
-Authentication-Results: mail.kernel.org; dmarc=none (p=none dis=none) header.from=wwwdotorg.org
+	by mail.kernel.org (Postfix) with ESMTP id E862C2086A
+	for <linux-pci@archiver.kernel.org>; Mon, 19 Nov 2018 23:49:38 +0000 (UTC)
+Authentication-Results: mail.kernel.org;
+	dkim=fail reason="signature verification failed" (1024-bit key) header.d=dellteam.com header.i=@dellteam.com header.b="deWliD/Q"
+DMARC-Filter: OpenDMARC Filter v1.3.2 mail.kernel.org E862C2086A
+Authentication-Results: mail.kernel.org; dmarc=none (p=none dis=none) header.from=Dellteam.com
 Authentication-Results: mail.kernel.org; spf=none smtp.mailfrom=linux-pci-owner@vger.kernel.org
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1730244AbeKTIwi (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Tue, 20 Nov 2018 03:52:38 -0500
-Received: from avon.wwwdotorg.org ([104.237.132.123]:37954 "EHLO
-        avon.wwwdotorg.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726431AbeKTIwi (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Tue, 20 Nov 2018 03:52:38 -0500
-Received: from swarren-lx1.nvidia.com (unknown [216.228.112.24])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES128-SHA256 (128/128 bits))
-        (No client certificate requested)
-        by avon.wwwdotorg.org (Postfix) with ESMTPSA id 68E061C00E3;
-        Mon, 19 Nov 2018 15:26:47 -0700 (MST)
-X-Virus-Status: Clean
-X-Virus-Scanned: clamav-milter 0.100.2 at avon.wwwdotorg.org
-From:   Stephen Warren <swarren@wwwdotorg.org>
-To:     Jingoo Han <jingoohan1@gmail.com>,
-        Gustavo Pimentel <gustavo.pimentel@synopsys.com>,
-        Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
-        Bjorn Helgaas <bhelgaas@google.com>
-Cc:     linux-pci@vger.kernel.org, Vidya Sagar <vidyas@nvidia.com>,
-        Manikanta Maddireddy <mmaddireddy@nvidia.com>,
-        Stephen Warren <swarren@nvidia.com>
-Subject: [PATCH] PCI: dwc ep: cache config until DBI regs available
-Date:   Mon, 19 Nov 2018 15:26:02 -0700
-Message-Id: <20181119222602.28001-1-swarren@wwwdotorg.org>
-X-Mailer: git-send-email 2.19.1
+        id S1731971AbeKTKPq (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Tue, 20 Nov 2018 05:15:46 -0500
+Received: from esa3.dell-outbound.iphmx.com ([68.232.153.94]:46800 "EHLO
+        esa3.dell-outbound.iphmx.com" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1727583AbeKTKPp (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Tue, 20 Nov 2018 05:15:45 -0500
+DKIM-Signature: v=1; a=rsa-sha256; c=simple/simple;
+  d=dellteam.com; i=@dellteam.com; q=dns/txt; s=smtpout;
+  t=1542671278; x=1574207278;
+  h=cc:from:to:subject:date:message-id:references:
+   content-transfer-encoding:mime-version;
+  bh=NAxAvGot0khMKPE5N+9ISDgf1cKvBtg3TvGfwGYmPkw=;
+  b=deWliD/Qdms4+Jx3aKpIlDD8V1lbnY731uml8qFT2X9YxhFjjkuRJyBm
+   gjFku8jkHXqh65zyis52y0r75Zxi1jkUAgPRIwS3A3n+2jnDrSIN+OR8V
+   mLWFv+HxROirtmJXX4f4I3xXw3U3yYgF146UTDqnCrsertXFXdBmLAc/V
+   E=;
+X-IronPort-Anti-Spam-Filtered: true
+X-IronPort-Anti-Spam-Result: =?us-ascii?q?A2GxAQA9S/NbhiWd50NkHAEBAQQBAQc?=
+ =?us-ascii?q?EAQGBZQKDWBIxjGWNLIF6lVCBZgsBAYRshBI4EgEDAQECAQECAQECEAEBAQo?=
+ =?us-ascii?q?JCwgpL0IBEAGBYiKCZQEBAQECARIoPwULAgEIGB4QVwIEARoagn+BegicHgK?=
+ =?us-ascii?q?BEIlYAQEBgh2KKI4bgRGDEoRLARIBH4VbAosIlGcJBZEaIIdIiTUsl0MCBAI?=
+ =?us-ascii?q?EBQIUgV2BBnFwgz2CJg4JjhxAAYI5iheBH4EfAQE?=
+X-IPAS-Result: =?us-ascii?q?A2GxAQA9S/NbhiWd50NkHAEBAQQBAQcEAQGBZQKDWBIxj?=
+ =?us-ascii?q?GWNLIF6lVCBZgsBAYRshBI4EgEDAQECAQECAQECEAEBAQoJCwgpL0IBEAGBY?=
+ =?us-ascii?q?iKCZQEBAQECARIoPwULAgEIGB4QVwIEARoagn+BegicHgKBEIlYAQEBgh2KK?=
+ =?us-ascii?q?I4bgRGDEoRLARIBH4VbAosIlGcJBZEaIIdIiTUsl0MCBAIEBQIUgV2BBnFwg?=
+ =?us-ascii?q?z2CJg4JjhxAAYI5iheBH4EfAQE?=
+Received: from mx0b-00154901.pphosted.com (HELO mx0a-00154901.pphosted.com) ([67.231.157.37])
+  by esa3.dell-outbound.iphmx.com with ESMTP/TLS/AES256-SHA256; 19 Nov 2018 17:47:57 -0600
+Received: from pps.filterd (m0089484.ppops.net [127.0.0.1])
+        by mx0b-00154901.pphosted.com (8.16.0.22/8.16.0.22) with SMTP id wAJNnagN124279;
+        Mon, 19 Nov 2018 18:49:36 -0500
+Received: from esa1.dell-outbound2.iphmx.com (esa1.dell-outbound2.iphmx.com [68.232.153.201])
+        by mx0b-00154901.pphosted.com with ESMTP id 2nv5ap0fu6-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=FAIL);
+        Mon, 19 Nov 2018 18:49:36 -0500
+Cc:     <baicar.tyler@gmail.com>, <Austin.Bolen@dell.com>,
+        <Shyam.Iyer@dell.com>, <lukas@wunner.de>, <bhelgaas@google.com>,
+        <rjw@rjwysocki.net>, <lenb@kernel.org>, <ruscur@russell.cc>,
+        <sbobroff@linux.ibm.com>, <oohall@gmail.com>,
+        <linux-pci@vger.kernel.org>, <linux-acpi@vger.kernel.org>,
+        <linux-kernel@vger.kernel.org>, <linuxppc-dev@lists.ozlabs.org>
+Received: from ausxippc101.us.dell.com ([143.166.85.207])
+  by esa1.dell-outbound2.iphmx.com with ESMTP/TLS/DHE-RSA-AES256-SHA256; 20 Nov 2018 05:49:20 +0600
+X-LoopCount0: from 10.166.134.84
+X-IronPort-AV: E=Sophos;i="5.56,254,1539666000"; 
+   d="scan'208";a="1163380859"
+From:   <Alex_Gagniuc@Dellteam.com>
+To:     <okaya@kernel.org>, <mr.nuke.me@gmail.com>, <keith.busch@intel.com>
+Subject: Re: [PATCH 0/2] PCI/AER: Consistently use _OSC to determine who owns
+ AER
+Thread-Topic: [PATCH 0/2] PCI/AER: Consistently use _OSC to determine who owns
+ AER
+Thread-Index: AQHUfTk2X+FUHiVWnkuZssuLn5DqDg==
+Date:   Mon, 19 Nov 2018 23:49:32 +0000
+Message-ID: <9c9531c7efb846438f03f744b9afc466@ausx13mps321.AMER.DELL.COM>
+References: <20181115231605.24352-1-mr.nuke.me@gmail.com>
+ <b9a739c8-80bd-e04c-ac19-97bc54f20eff@kernel.org>
+ <CABo9ajD5GJY7MrMjQc3hE=4tpPKpeceMtVEHwCwgjrvJUYjLvg@mail.gmail.com>
+ <20181119165318.GB26595@localhost.localdomain>
+ <74f2c527-0890-5e14-5e2d-48934a42dae6@kernel.org>
+ <ab2427f1-c1f0-68fe-5335-1494caafdcbb@kernel.org>
+ <20181119174127.GE26595@localhost.localdomain>
+ <ef0a24e4-906e-f6df-c646-1fe47ea0dcc0@kernel.org>
+ <20181119181051.GA26707@localhost.localdomain>
+ <c0d6535f-324b-557a-3d0e-ccec070459a7@kernel.org>
+ <3f923367-2cc1-c0d6-bca6-bf9a03d1b9ca@gmail.com>
+ <ef6b19de-dd18-850f-4db9-8ab71b975e94@kernel.org>
+ <bb575cfdcd0a4c50b489fb16eccfbff2@ausx13mps321.AMER.DELL.COM>
+ <84013a8a-287d-d700-6710-91cc35f507c8@kernel.org>
+Accept-Language: en-US
+Content-Language: en-US
+X-MS-Has-Attach: 
+X-MS-TNEF-Correlator: 
+x-ms-exchange-transport-fromentityheader: Hosted
+x-originating-ip: [10.178.128.193]
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: quoted-printable
 MIME-Version: 1.0
-X-NVConfidentiality: public
-Content-Transfer-Encoding: 8bit
+X-Proofpoint-Virus-Version: vendor=fsecure engine=2.50.10434:,, definitions=2018-11-19_09:,,
+ signatures=0
+X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0 priorityscore=1501
+ malwarescore=0 suspectscore=0 phishscore=0 bulkscore=0 spamscore=0
+ clxscore=1015 lowpriorityscore=0 mlxscore=0 impostorscore=0
+ mlxlogscore=999 adultscore=0 classifier=spam adjust=0 reason=mlx
+ scancount=1 engine=8.0.1-1810050000 definitions=main-1811190209
 Sender: linux-pci-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-From: Stephen Warren <swarren@nvidia.com>
-
-Some implementations of the DWC PCIe endpoint controller do not allow
-access to DBI registers until the attached host has started REFCLK,
-released PERST, and the endpoint driver has initialized clocking of the
-DBI registers based on that. One such system is NVIDIA's T194 SoC. The
-PCIe endpoint subsystem and DWC driver currently don't work on such
-hardware, since they assume that all endpoint configuration can happen
-at any arbitrary time.
-
-Enhance the DWC endpoint driver to support such systems by caching all
-endpoint configuration in software, and only writing the configuration
-to hardware once it's been initialized. This is implemented by splitting
-all endpoint controller ops into two functions; the first which simply
-records/caches the desired configuration whenever called by the
-associated function driver and optionally calls the second, and the
-second which actually programs the configuration into hardware, which
-may be called either by the first function, or later when it's known
-that the DBI registers are available.
-
-Signed-off-by: Stephen Warren <swarren@nvidia.com>
----
-Note: I have only compiled-tested this patch in the context of the
-mainline kernel since NVIDIA Tegra PCIe EP support is not yet present.
-However, I've built and tested an equivalent patch in our downstream
-kernel. I did have to manually port it to mainline due to conflicts
-though.
-
-This patch was developed on top of "PCI: designware: don't hard-code
-DBI/ATU offset" which I sent last week, so may rely on that for patch
-context.
----
- .../pci/controller/dwc/pcie-designware-ep.c   | 199 ++++++++++++++----
- drivers/pci/controller/dwc/pcie-designware.h  |  26 ++-
- 2 files changed, 181 insertions(+), 44 deletions(-)
-
-diff --git a/drivers/pci/controller/dwc/pcie-designware-ep.c b/drivers/pci/controller/dwc/pcie-designware-ep.c
-index 880210366e71..6910b64bfdcb 100644
---- a/drivers/pci/controller/dwc/pcie-designware-ep.c
-+++ b/drivers/pci/controller/dwc/pcie-designware-ep.c
-@@ -73,11 +73,10 @@ static u8 dw_pcie_ep_find_capability(struct dw_pcie *pci, u8 cap)
- 	return __dw_pcie_ep_find_next_cap(pci, next_cap_ptr, cap);
- }
- 
--static int dw_pcie_ep_write_header(struct pci_epc *epc, u8 func_no,
--				   struct pci_epf_header *hdr)
-+static void dw_pcie_ep_write_header_regs(struct dw_pcie_ep *ep)
- {
--	struct dw_pcie_ep *ep = epc_get_drvdata(epc);
- 	struct dw_pcie *pci = to_dw_pcie_from_ep(ep);
-+	struct pci_epf_header *hdr = &(ep->cached_hdr);
- 
- 	dw_pcie_dbi_ro_wr_en(pci);
- 	dw_pcie_writew_dbi(pci, PCI_VENDOR_ID, hdr->vendorid);
-@@ -94,6 +93,19 @@ static int dw_pcie_ep_write_header(struct pci_epc *epc, u8 func_no,
- 	dw_pcie_writeb_dbi(pci, PCI_INTERRUPT_PIN,
- 			   hdr->interrupt_pin);
- 	dw_pcie_dbi_ro_wr_dis(pci);
-+}
-+
-+static int dw_pcie_ep_write_header(struct pci_epc *epc, u8 func_no,
-+				   struct pci_epf_header *hdr)
-+{
-+	struct dw_pcie_ep *ep = epc_get_drvdata(epc);
-+
-+	ep->cached_hdr = *hdr;
-+
-+	if (!ep->hw_regs_available)
-+		return 0;
-+
-+	dw_pcie_ep_write_header_regs(ep);
- 
- 	return 0;
- }
-@@ -112,6 +124,15 @@ static int dw_pcie_ep_inbound_atu(struct dw_pcie_ep *ep, enum pci_barno bar,
- 		return -EINVAL;
- 	}
- 
-+	ep->cached_inbound_atus[free_win].bar = bar;
-+	ep->cached_inbound_atus[free_win].cpu_addr = cpu_addr;
-+	ep->cached_inbound_atus[free_win].as_type = as_type;
-+	ep->cached_bars[bar].atu_index = free_win;
-+	set_bit(free_win, ep->ib_window_map);
-+
-+	if (!ep->hw_regs_available)
-+		return 0;
-+
- 	ret = dw_pcie_prog_inbound_atu(pci, free_win, bar, cpu_addr,
- 				       as_type);
- 	if (ret < 0) {
-@@ -119,9 +140,6 @@ static int dw_pcie_ep_inbound_atu(struct dw_pcie_ep *ep, enum pci_barno bar,
- 		return ret;
- 	}
- 
--	ep->bar_to_atu[bar] = free_win;
--	set_bit(free_win, ep->ib_window_map);
--
- 	return 0;
- }
- 
-@@ -137,27 +155,66 @@ static int dw_pcie_ep_outbound_atu(struct dw_pcie_ep *ep, phys_addr_t phys_addr,
- 		return -EINVAL;
- 	}
- 
-+	ep->cached_outbound_atus[free_win].addr = phys_addr;
-+	ep->cached_outbound_atus[free_win].pci_addr = pci_addr;
-+	ep->cached_outbound_atus[free_win].size = size;
-+	set_bit(free_win, ep->ob_window_map);
-+
-+	if (!ep->hw_regs_available)
-+		return 0;
-+
- 	dw_pcie_prog_outbound_atu(pci, free_win, PCIE_ATU_TYPE_MEM,
- 				  phys_addr, pci_addr, size);
- 
--	set_bit(free_win, ep->ob_window_map);
--	ep->outbound_addr[free_win] = phys_addr;
--
- 	return 0;
- }
- 
-+static void dw_pcie_ep_clear_bar_regs(struct dw_pcie_ep *ep, u8 func_no,
-+				      enum pci_barno bar)
-+{
-+	struct dw_pcie *pci = to_dw_pcie_from_ep(ep);
-+	int flags = ep->cached_bars[bar].flags;
-+	u32 atu_index = ep->cached_bars[bar].atu_index;
-+
-+	__dw_pcie_ep_reset_bar(pci, bar, flags);
-+
-+	dw_pcie_disable_atu(pci, atu_index, DW_PCIE_REGION_INBOUND);
-+}
-+
- static void dw_pcie_ep_clear_bar(struct pci_epc *epc, u8 func_no,
- 				 struct pci_epf_bar *epf_bar)
- {
- 	struct dw_pcie_ep *ep = epc_get_drvdata(epc);
--	struct dw_pcie *pci = to_dw_pcie_from_ep(ep);
- 	enum pci_barno bar = epf_bar->barno;
--	u32 atu_index = ep->bar_to_atu[bar];
-+	u32 atu_index = ep->cached_bars[bar].atu_index;
- 
--	__dw_pcie_ep_reset_bar(pci, bar, epf_bar->flags);
--
--	dw_pcie_disable_atu(pci, atu_index, DW_PCIE_REGION_INBOUND);
- 	clear_bit(atu_index, ep->ib_window_map);
-+
-+	if (!ep->hw_regs_available)
-+		return;
-+
-+	dw_pcie_ep_clear_bar_regs(ep, func_no, bar);
-+}
-+
-+static void dw_pcie_ep_set_bar_regs(struct dw_pcie_ep *ep, u8 func_no,
-+				    enum pci_barno bar)
-+{
-+	struct dw_pcie *pci = to_dw_pcie_from_ep(ep);
-+	size_t size = ep->cached_bars[bar].size;
-+	int flags = ep->cached_bars[bar].flags;
-+	u32 reg = PCI_BASE_ADDRESS_0 + (4 * bar);
-+
-+	dw_pcie_dbi_ro_wr_en(pci);
-+
-+	dw_pcie_writel_dbi2(pci, reg, lower_32_bits(size - 1));
-+	dw_pcie_writel_dbi(pci, reg, flags);
-+
-+	if (flags & PCI_BASE_ADDRESS_MEM_TYPE_64) {
-+		dw_pcie_writel_dbi2(pci, reg + 4, upper_32_bits(size - 1));
-+		dw_pcie_writel_dbi(pci, reg + 4, 0);
-+	}
-+
-+	dw_pcie_dbi_ro_wr_dis(pci);
- }
- 
- static int dw_pcie_ep_set_bar(struct pci_epc *epc, u8 func_no,
-@@ -165,12 +222,10 @@ static int dw_pcie_ep_set_bar(struct pci_epc *epc, u8 func_no,
- {
- 	int ret;
- 	struct dw_pcie_ep *ep = epc_get_drvdata(epc);
--	struct dw_pcie *pci = to_dw_pcie_from_ep(ep);
- 	enum pci_barno bar = epf_bar->barno;
- 	size_t size = epf_bar->size;
- 	int flags = epf_bar->flags;
- 	enum dw_pcie_as_type as_type;
--	u32 reg = PCI_BASE_ADDRESS_0 + (4 * bar);
- 
- 	if (!(flags & PCI_BASE_ADDRESS_SPACE))
- 		as_type = DW_PCIE_AS_MEM;
-@@ -181,17 +236,13 @@ static int dw_pcie_ep_set_bar(struct pci_epc *epc, u8 func_no,
- 	if (ret)
- 		return ret;
- 
--	dw_pcie_dbi_ro_wr_en(pci);
--
--	dw_pcie_writel_dbi2(pci, reg, lower_32_bits(size - 1));
--	dw_pcie_writel_dbi(pci, reg, flags);
-+	ep->cached_bars[bar].size = size;
-+	ep->cached_bars[bar].flags = flags;
- 
--	if (flags & PCI_BASE_ADDRESS_MEM_TYPE_64) {
--		dw_pcie_writel_dbi2(pci, reg + 4, upper_32_bits(size - 1));
--		dw_pcie_writel_dbi(pci, reg + 4, 0);
--	}
-+	if (!ep->hw_regs_available)
-+		return 0;
- 
--	dw_pcie_dbi_ro_wr_dis(pci);
-+	dw_pcie_ep_set_bar_regs(ep, func_no, bar);
- 
- 	return 0;
- }
-@@ -202,7 +253,7 @@ static int dw_pcie_find_index(struct dw_pcie_ep *ep, phys_addr_t addr,
- 	u32 index;
- 
- 	for (index = 0; index < ep->num_ob_windows; index++) {
--		if (ep->outbound_addr[index] != addr)
-+		if (ep->cached_outbound_atus[index].addr != addr)
- 			continue;
- 		*atu_index = index;
- 		return 0;
-@@ -223,8 +274,12 @@ static void dw_pcie_ep_unmap_addr(struct pci_epc *epc, u8 func_no,
- 	if (ret < 0)
- 		return;
- 
--	dw_pcie_disable_atu(pci, atu_index, DW_PCIE_REGION_OUTBOUND);
- 	clear_bit(atu_index, ep->ob_window_map);
-+
-+	if (!ep->hw_regs_available)
-+		return;
-+
-+	dw_pcie_disable_atu(pci, atu_index, DW_PCIE_REGION_OUTBOUND);
- }
- 
- static int dw_pcie_ep_map_addr(struct pci_epc *epc, u8 func_no,
-@@ -254,7 +309,10 @@ static int dw_pcie_ep_get_msi(struct pci_epc *epc, u8 func_no)
- 		return -EINVAL;
- 
- 	reg = ep->msi_cap + PCI_MSI_FLAGS;
--	val = dw_pcie_readw_dbi(pci, reg);
-+	if (ep->hw_regs_available)
-+		val = dw_pcie_readw_dbi(pci, reg);
-+	else
-+		val = ep->cached_msi_flags;
- 	if (!(val & PCI_MSI_FLAGS_ENABLE))
- 		return -EINVAL;
- 
-@@ -273,12 +331,19 @@ static int dw_pcie_ep_set_msi(struct pci_epc *epc, u8 func_no, u8 interrupts)
- 		return -EINVAL;
- 
- 	reg = ep->msi_cap + PCI_MSI_FLAGS;
--	val = dw_pcie_readw_dbi(pci, reg);
-+	if (ep->hw_regs_available)
-+		val = dw_pcie_readw_dbi(pci, reg);
-+	else
-+		val = ep->cached_msi_flags;
- 	val &= ~PCI_MSI_FLAGS_QMASK;
- 	val |= (interrupts << 1) & PCI_MSI_FLAGS_QMASK;
--	dw_pcie_dbi_ro_wr_en(pci);
--	dw_pcie_writew_dbi(pci, reg, val);
--	dw_pcie_dbi_ro_wr_dis(pci);
-+	if (ep->hw_regs_available) {
-+		dw_pcie_dbi_ro_wr_en(pci);
-+		dw_pcie_writew_dbi(pci, reg, val);
-+		dw_pcie_dbi_ro_wr_dis(pci);
-+	} else {
-+		ep->cached_msi_flags = val;
-+	}
- 
- 	return 0;
- }
-@@ -293,7 +358,10 @@ static int dw_pcie_ep_get_msix(struct pci_epc *epc, u8 func_no)
- 		return -EINVAL;
- 
- 	reg = ep->msix_cap + PCI_MSIX_FLAGS;
--	val = dw_pcie_readw_dbi(pci, reg);
-+	if (ep->hw_regs_available)
-+		val = dw_pcie_readw_dbi(pci, reg);
-+	else
-+		val = ep->cached_msix_flags;
- 	if (!(val & PCI_MSIX_FLAGS_ENABLE))
- 		return -EINVAL;
- 
-@@ -312,16 +380,49 @@ static int dw_pcie_ep_set_msix(struct pci_epc *epc, u8 func_no, u16 interrupts)
- 		return -EINVAL;
- 
- 	reg = ep->msix_cap + PCI_MSIX_FLAGS;
--	val = dw_pcie_readw_dbi(pci, reg);
-+	if (ep->hw_regs_available)
-+		val = dw_pcie_readw_dbi(pci, reg);
-+	else
-+		val = ep->cached_msix_flags;
- 	val &= ~PCI_MSIX_FLAGS_QSIZE;
- 	val |= interrupts;
--	dw_pcie_dbi_ro_wr_en(pci);
--	dw_pcie_writew_dbi(pci, reg, val);
--	dw_pcie_dbi_ro_wr_dis(pci);
-+	if (ep->hw_regs_available) {
-+		dw_pcie_dbi_ro_wr_en(pci);
-+		dw_pcie_writew_dbi(pci, reg, val);
-+		dw_pcie_dbi_ro_wr_dis(pci);
-+	} else {
-+		ep->cached_msix_flags = val;
-+	}
- 
- 	return 0;
- }
- 
-+void dw_pcie_set_regs_available(struct dw_pcie *pci)
-+{
-+	struct dw_pcie_ep *ep = &(pci->ep);
-+	int i;
-+
-+	ep->hw_regs_available = true;
-+
-+	dw_pcie_ep_write_header_regs(ep);
-+	for_each_set_bit(i, ep->ib_window_map, ep->num_ib_windows) {
-+		dw_pcie_prog_inbound_atu(pci, i,
-+			ep->cached_inbound_atus[i].bar,
-+			ep->cached_inbound_atus[i].cpu_addr,
-+			ep->cached_inbound_atus[i].as_type);
-+		dw_pcie_ep_set_bar_regs(ep, 0, ep->cached_inbound_atus[i].bar);
-+	}
-+	for_each_set_bit(i, ep->ob_window_map, ep->num_ob_windows)
-+		dw_pcie_prog_outbound_atu(pci, i, PCIE_ATU_TYPE_MEM,
-+			ep->cached_outbound_atus[i].addr,
-+			ep->cached_outbound_atus[i].pci_addr,
-+			ep->cached_outbound_atus[i].size);
-+	dw_pcie_dbi_ro_wr_en(pci);
-+	dw_pcie_writew_dbi(pci, PCI_MSI_FLAGS, ep->cached_msi_flags);
-+	dw_pcie_writew_dbi(pci, PCI_MSIX_FLAGS, ep->cached_msix_flags);
-+	dw_pcie_dbi_ro_wr_dis(pci);
-+}
-+
- static int dw_pcie_ep_raise_irq(struct pci_epc *epc, u8 func_no,
- 				enum pci_epc_irq_type type, u16 interrupt_num)
- {
-@@ -330,6 +431,9 @@ static int dw_pcie_ep_raise_irq(struct pci_epc *epc, u8 func_no,
- 	if (!ep->ops->raise_irq)
- 		return -EINVAL;
- 
-+	if (!ep->hw_regs_available)
-+		return -EAGAIN;
-+
- 	return ep->ops->raise_irq(ep, func_no, type, interrupt_num);
- }
- 
-@@ -391,6 +495,9 @@ int dw_pcie_ep_raise_msi_irq(struct dw_pcie_ep *ep, u8 func_no,
- 	bool has_upper;
- 	int ret;
- 
-+	if (!ep->hw_regs_available)
-+		return -EAGAIN;
-+
- 	if (!ep->msi_cap)
- 		return -EINVAL;
- 
-@@ -436,6 +543,9 @@ int dw_pcie_ep_raise_msix_irq(struct dw_pcie_ep *ep, u8 func_no,
- 	void __iomem *msix_tbl;
- 	int ret;
- 
-+	if (!ep->hw_regs_available)
-+		return -EAGAIN;
-+
- 	reg = ep->msix_cap + PCI_MSIX_TABLE;
- 	tbl_offset = dw_pcie_readl_dbi(pci, reg);
- 	bir = (tbl_offset & PCI_MSIX_TABLE_BIR);
-@@ -494,7 +604,6 @@ void dw_pcie_ep_exit(struct dw_pcie_ep *ep)
- int dw_pcie_ep_init(struct dw_pcie_ep *ep)
- {
- 	int ret;
--	void *addr;
- 	struct pci_epc *epc;
- 	struct dw_pcie *pci = to_dw_pcie_from_ep(ep);
- 	struct device *dev = pci->dev;
-@@ -543,11 +652,17 @@ int dw_pcie_ep_init(struct dw_pcie_ep *ep)
- 	if (!ep->ob_window_map)
- 		return -ENOMEM;
- 
--	addr = devm_kcalloc(dev, ep->num_ob_windows, sizeof(phys_addr_t),
--			    GFP_KERNEL);
--	if (!addr)
-+	ep->cached_inbound_atus = devm_kzalloc(dev,
-+		sizeof(ep->cached_inbound_atus[0]) * ep->num_ib_windows,
-+		GFP_KERNEL);
-+	if (!ep->cached_inbound_atus)
-+		return -ENOMEM;
-+
-+	ep->cached_outbound_atus = devm_kzalloc(dev,
-+		sizeof(ep->cached_outbound_atus[0]) * ep->num_ob_windows,
-+		GFP_KERNEL);
-+	if (!ep->cached_outbound_atus)
- 		return -ENOMEM;
--	ep->outbound_addr = addr;
- 
- 	epc = devm_pci_epc_create(dev, &epc_ops);
- 	if (IS_ERR(epc)) {
-diff --git a/drivers/pci/controller/dwc/pcie-designware.h b/drivers/pci/controller/dwc/pcie-designware.h
-index 02fb532c5db9..c116b289aa51 100644
---- a/drivers/pci/controller/dwc/pcie-designware.h
-+++ b/drivers/pci/controller/dwc/pcie-designware.h
-@@ -192,8 +192,6 @@ struct dw_pcie_ep {
- 	phys_addr_t		phys_base;
- 	size_t			addr_size;
- 	size_t			page_size;
--	u8			bar_to_atu[6];
--	phys_addr_t		*outbound_addr;
- 	unsigned long		*ib_window_map;
- 	unsigned long		*ob_window_map;
- 	u32			num_ib_windows;
-@@ -202,6 +200,25 @@ struct dw_pcie_ep {
- 	phys_addr_t		msi_mem_phys;
- 	u8			msi_cap;	/* MSI capability offset */
- 	u8			msix_cap;	/* MSI-X capability offset */
-+	bool			hw_regs_available;
-+	struct pci_epf_header	cached_hdr;
-+	struct {
-+		size_t			size;
-+		int			flags;
-+		u8			atu_index;
-+	}			cached_bars[6];
-+	struct {
-+		enum pci_barno		bar;
-+		dma_addr_t		cpu_addr;
-+		enum dw_pcie_as_type	as_type;
-+	}			*cached_inbound_atus;
-+	struct {
-+		phys_addr_t		addr;
-+		u64			pci_addr;
-+		size_t			size;
-+	}			*cached_outbound_atus;
-+	u32			cached_msi_flags;
-+	u32			cached_msix_flags;
- };
- 
- struct dw_pcie_ops {
-@@ -363,6 +380,7 @@ static inline int dw_pcie_allocate_domains(struct pcie_port *pp)
- void dw_pcie_ep_linkup(struct dw_pcie_ep *ep);
- int dw_pcie_ep_init(struct dw_pcie_ep *ep);
- void dw_pcie_ep_exit(struct dw_pcie_ep *ep);
-+void dw_pcie_ep_set_regs_available(struct dw_pcie *pci);
- int dw_pcie_ep_raise_legacy_irq(struct dw_pcie_ep *ep, u8 func_no);
- int dw_pcie_ep_raise_msi_irq(struct dw_pcie_ep *ep, u8 func_no,
- 			     u8 interrupt_num);
-@@ -383,6 +401,10 @@ static inline void dw_pcie_ep_exit(struct dw_pcie_ep *ep)
- {
- }
- 
-+static inline void dw_pcie_ep_set_regs_available(struct dw_pcie *pci)
-+{
-+}
-+
- static inline int dw_pcie_ep_raise_legacy_irq(struct dw_pcie_ep *ep, u8 func_no)
- {
- 	return 0;
--- 
-2.19.1
-
+On 11/19/2018 02:33 PM, Sinan Kaya wrote:=0A=
+> True. I was trying to get it out in a rush. I omitted words.=0A=
+=0A=
+Sounds like you'd make an top notch spec writer! :p=0A=
+=0A=
+> However; table assumes governance about for which entities firmware first=
+=0A=
+> should be enabled. There is no cross reference to _OSC or permission=0A=
+> negotiation like _OST.=0A=
+=0A=
+Well, from an OSPM perspective, is FFS something that can be enabled or =0A=
+disabled? FFS seems to be static to OSPM, which would change the sort of =
+=0A=
+assumptions we can reasonably make here.=0A=
+=0A=
+=0A=
+>>> As I said in my previous email, the right place to talk about this is U=
+EFI=0A=
+>>> forum.=0A=
+>>=0A=
+>> The way I would present the problem to he spec writers is that, although=
+=0A=
+>> the spec appears to be consistent, we've seen firmware vendors that made=
+=0A=
+>> the wrong assumptions about HEST/_OSC. Instead of describing AER=0A=
+>> ownership with _OSC, they attempted to do it with HEST. So we should add=
+=0A=
+>> an implementation note, or clarification about this.=0A=
+> =0A=
+> I agree.=0A=
+=0A=
+Cool. While the UEFI Secret Society debates, can we figure out if/how =0A=
+[patch 1/2] breaks those systems, or is it only [patch 2/2] of this =0A=
+series that we suspect?=0A=
+=0A=
+Alex=0A=
