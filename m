@@ -2,102 +2,171 @@ Return-Path: <SRS0=q0B1=N6=vger.kernel.org=linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-7.1 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_PASS,
-	URIBL_BLOCKED,USER_AGENT_MUTT autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-8.5 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_PASS,USER_AGENT_MUTT
+	autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id D0E2CC43441
-	for <linux-pci@archiver.kernel.org>; Mon, 19 Nov 2018 11:38:45 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 244F1C43441
+	for <linux-pci@archiver.kernel.org>; Mon, 19 Nov 2018 11:40:50 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 892152086A
-	for <linux-pci@archiver.kernel.org>; Mon, 19 Nov 2018 11:38:45 +0000 (UTC)
-Authentication-Results: mail.kernel.org;
-	dkim=pass (1024-bit key) header.d=kernel.org header.i=@kernel.org header.b="AypJ+omw"
-DMARC-Filter: OpenDMARC Filter v1.3.2 mail.kernel.org 892152086A
-Authentication-Results: mail.kernel.org; dmarc=fail (p=none dis=none) header.from=kernel.org
+	by mail.kernel.org (Postfix) with ESMTP id E5C252086A
+	for <linux-pci@archiver.kernel.org>; Mon, 19 Nov 2018 11:40:49 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.3.2 mail.kernel.org E5C252086A
+Authentication-Results: mail.kernel.org; dmarc=none (p=none dis=none) header.from=arm.com
 Authentication-Results: mail.kernel.org; spf=none smtp.mailfrom=linux-pci-owner@vger.kernel.org
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1728572AbeKSWCG (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Mon, 19 Nov 2018 17:02:06 -0500
-Received: from mail.kernel.org ([198.145.29.99]:58096 "EHLO mail.kernel.org"
+        id S1728586AbeKSWEK (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Mon, 19 Nov 2018 17:04:10 -0500
+Received: from foss.arm.com ([217.140.101.70]:55032 "EHLO foss.arm.com"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1728553AbeKSWCG (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Mon, 19 Nov 2018 17:02:06 -0500
-Received: from dragon (61-216-91-114.HINET-IP.hinet.net [61.216.91.114])
-        (using TLSv1.2 with cipher DHE-RSA-AES128-SHA (128/128 bits))
-        (No client certificate requested)
-        by mail.kernel.org (Postfix) with ESMTPSA id A1F4E20851;
-        Mon, 19 Nov 2018 11:38:38 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=default; t=1542627523;
-        bh=sxQHa6RGtExdE0ID2w0S+++Uo9asUk+vEz8MYLtfOoY=;
-        h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-        b=AypJ+omwU2GziG66oPbxLOKMuEebb6BwWliKlpQsy/uGBxw2Yr9RjRTW9AEYY7/Nu
-         7ewwK4C+u5lnLG/YQcgjmCepU3/x+MLYea4DSvYbC9cBZJy+7sO8r18l0f5ZPvZz3P
-         eF0SQhjSYx7Tj4bNQYTdButt4gN/g3+7cEi61eUM=
-Date:   Mon, 19 Nov 2018 19:38:18 +0800
-From:   Shawn Guo <shawnguo@kernel.org>
-To:     Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
-Cc:     Leonard Crestez <leonard.crestez@nxp.com>,
-        Lucas Stach <l.stach@pengutronix.de>,
-        Richard Zhu <hongxing.zhu@nxp.com>,
-        Fabio Estevam <fabio.estevam@nxp.com>,
-        Stefan Agner <stefan@agner.ch>, Marek Vasut <marex@denx.de>,
-        Ulf Hansson <ulf.hansson@linaro.org>,
+        id S1728573AbeKSWEK (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Mon, 19 Nov 2018 17:04:10 -0500
+Received: from usa-sjc-imap-foss1.foss.arm.com (unknown [10.72.51.249])
+        by usa-sjc-mx-foss1.foss.arm.com (Postfix) with ESMTP id 3599C80D;
+        Mon, 19 Nov 2018 03:40:48 -0800 (PST)
+Received: from e107981-ln.cambridge.arm.com (e107981-ln.cambridge.arm.com [10.1.197.40])
+        by usa-sjc-imap-foss1.foss.arm.com (Postfix) with ESMTPSA id 2241B3F5B7;
+        Mon, 19 Nov 2018 03:40:45 -0800 (PST)
+Date:   Mon, 19 Nov 2018 11:40:36 +0000
+From:   Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
+To:     Kunihiko Hayashi <hayashi.kunihiko@socionext.com>
+Cc:     Bjorn Helgaas <bhelgaas@google.com>,
         Rob Herring <robh+dt@kernel.org>,
         Mark Rutland <mark.rutland@arm.com>,
-        "linux-pm@vger.kernel.org" <linux-pm@vger.kernel.org>,
-        "devicetree@vger.kernel.org" <devicetree@vger.kernel.org>,
-        "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-        "dri-devel@lists.freedesktop.org" <dri-devel@lists.freedesktop.org>,
-        dl-linux-imx <linux-imx@nxp.com>,
-        "kernel@pengutronix.de" <kernel@pengutronix.de>,
-        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
-Subject: Re: [PATCH v2 3/4] PCI: imx: Add multi-pd support
-Message-ID: <20181119113816.GP5829@dragon>
-References: <cover.1539020938.git.leonard.crestez@nxp.com>
- <ee0c4ecb4b6bd26f548096e7be90a07d181d50ee.1539020938.git.leonard.crestez@nxp.com>
- <20181116122541.GD3228@e107981-ln.cambridge.arm.com>
+        Masahiro Yamada <yamada.masahiro@socionext.com>,
+        linux-pci@vger.kernel.org, devicetree@vger.kernel.org,
+        linux-arm-kernel@lists.infradead.org, linux-kernel@vger.kernel.org,
+        Masami Hiramatsu <masami.hiramatsu@linaro.org>,
+        Jassi Brar <jaswinder.singh@linaro.org>,
+        Gustavo Pimentel <gustavo.pimentel@synopsys.com>
+Subject: Re: [RESEND PATCH v3 1/2] dt-bindings: PCI: Add UniPhier PCIe host
+ controller description
+Message-ID: <20181119114028.GA30042@e107981-ln.cambridge.arm.com>
+References: <1539667641-26024-1-git-send-email-hayashi.kunihiko@socionext.com>
+ <1539667641-26024-2-git-send-email-hayashi.kunihiko@socionext.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20181116122541.GD3228@e107981-ln.cambridge.arm.com>
-User-Agent: Mutt/1.5.21 (2010-09-15)
+In-Reply-To: <1539667641-26024-2-git-send-email-hayashi.kunihiko@socionext.com>
+User-Agent: Mutt/1.5.24 (2015-08-30)
 Sender: linux-pci-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-On Fri, Nov 16, 2018 at 12:25:41PM +0000, Lorenzo Pieralisi wrote:
-> On Mon, Oct 08, 2018 at 06:06:21PM +0000, Leonard Crestez wrote:
-> > On some chips the PCIE and PCIE_PHY blocks are in separate power domains
-> > which can be power-gated independently. The pci driver needs to handle
-> > this by keeping both domain active.
-> > 
-> > This is intended for imx6sx where PCIE is in DISPLAY and PCIE_PHY in
-> > it's own domain. Defining the DISPLAY domain requires a way for pcie to
-> > keep it active or it will break when displays are off.
-> > 
-> > The power-domains on imx6sx are meant to look like this:
-> > 	power-domains = <&pd_disp>, <&pd_pci>;
-> > 	power-domain-names = "pcie", "pcie_phy";
-> > 
-> > Signed-off-by: Leonard Crestez <leonard.crestez@nxp.com>
-> > Reviewed-by: Ulf Hansson <ulf.hansson@linaro.org>
-> > ---
-> >  drivers/pci/controller/dwc/pci-imx6.c | 48 +++++++++++++++++++++++++++
-> >  1 file changed, 48 insertions(+)
+On Tue, Oct 16, 2018 at 02:27:20PM +0900, Kunihiko Hayashi wrote:
+> Add DT bindings for PCIe controller implemented in UniPhier SoCs when
+> configured in Root Complex (host) mode. This controller is based on
+> the DesignWare PCIe core.
 > 
-> I expect Shawn to pick the whole series up and therefore I am dropping
-> this series from the PCI tree.
+> Signed-off-by: Kunihiko Hayashi <hayashi.kunihiko@socionext.com>
+> Reviewed-by: Rob Herring <robh@kernel.org>
+> ---
+>  .../devicetree/bindings/pci/uniphier-pcie.txt      | 81 ++++++++++++++++++++++
+>  1 file changed, 81 insertions(+)
+>  create mode 100644 Documentation/devicetree/bindings/pci/uniphier-pcie.txt
+> 
+> diff --git a/Documentation/devicetree/bindings/pci/uniphier-pcie.txt b/Documentation/devicetree/bindings/pci/uniphier-pcie.txt
+> new file mode 100644
+> index 0000000..46a2754
+> --- /dev/null
+> +++ b/Documentation/devicetree/bindings/pci/uniphier-pcie.txt
+> @@ -0,0 +1,81 @@
+> +Socionext UniPhier PCIe host controller bindings
+> +
+> +This describes the devicetree bindings for PCIe host controller implemented
+> +on Socionext UniPhier SoCs.
+> +
+> +UniPhier PCIe host controller is based on the Synopsys DesignWare PCI core.
+> +It shares common functions with the PCIe DesignWare core driver and inherits
+> +common properties defined in
+> +Documentation/devicetree/bindings/pci/designware-pcie.txt.
+> +
+> +Required properties:
+> +- compatible: Should be "socionext,uniphier-pcie".
+> +- reg: Specifies offset and length of the register set for the device.
+> +	According to the reg-names, appropriate register sets are required.
+> +- reg-names: Must include the following entries:
+> +    "dbi"    - controller configuration registers
+> +    "link"   - SoC-specific glue layer registers
+> +    "config" - PCIe configuration space
+> +- clocks: A phandle to the clock gate for PCIe glue layer including
+> +	the host controller.
+> +- resets: A phandle to the reset line for PCIe glue layer including
+> +	the host controller.
+> +- interrupts: A list of interrupt specifiers. According to the
+> +	interrupt-names, appropriate interrupts are required.
+> +- interrupt-names: Must include the following entries:
+> +    "dma" - DMA interrupt
+> +    "msi" - MSI interrupt
+> +
+> +Optional properties:
+> +- phys: A phandle to generic PCIe PHY. According to the phy-names, appropriate
+> +	phys are required.
+> +- phy-names: Must be "pcie-phy".
+> +
+> +Required sub-node:
+> +- legacy-interrupt-controller: Specifies interrupt controller for legacy PCI
+> +	interrupts.
+> +
+> +Required properties for legacy-interrupt-controller:
+> +- interrupt-controller: identifies the node as an interrupt controller.
+> +- #interrupt-cells: specifies the number of cells needed to encode an
+> +	interrupt source. The value must be 1.
+> +- interrupt-parent: Phandle to the parent interrupt controller.
+> +- interrupts: An interrupt specifier for legacy interrupt.
+> +
+> +Example:
+> +
+> +	pcie: pcie@66000000 {
+> +		compatible = "socionext,uniphier-pcie", "snps,dw-pcie";
+> +		status = "disabled";
+> +		reg-names = "dbi", "link", "config";
+> +		reg = <0x66000000 0x1000>, <0x66010000 0x10000>,
+> +		      <0x2fff0000 0x10000>;
+> +		#address-cells = <3>;
+> +		#size-cells = <2>;
+> +		clocks = <&sys_clk 24>;
+> +		resets = <&sys_rst 24>;
+> +		num-lanes = <1>;
+> +		num-viewport = <1>;
+> +		bus-range = <0x0 0xff>;
+> +		device_type = "pci";
+> +		ranges =
+> +		/* downstream I/O */
+> +			<0x81000000 0 0x00000000  0x2ffe0000  0 0x00010000
+> +		/* non-prefetchable memory */
+> +			 0x82000000 0 0x00000000  0x20000000  0 0x0ffe0000>;
+> +		#interrupt-cells = <1>;
+> +		interrupt-names = "dma", "msi";
+> +		interrupts = <0 224 4>, <0 225 4>;
+> +		interrupt-map-mask = <0 0 0  7>;
+> +		interrupt-map = <0 0 0  1  &pcie_intc 1>,	/* INTA */
+> +				<0 0 0  2  &pcie_intc 2>,	/* INTB */
+> +				<0 0 0  3  &pcie_intc 3>,	/* INTC */
+> +				<0 0 0  4  &pcie_intc 4>;	/* INTD */
 
-Lorenzo,
+This is not correct and we must fix this concept for all DWC based host
+bridges bindings. We are mapping INTX to inputs [0,1,2,3] of the host
+bridge interrupt controllers and the binding should reflect that.
 
-I think the best approach is that you send patch #2 and #3 for 4.21
-through PCI tree, and we will be able to apply patch #4 in 4.22
-development cycle.
+This should be the correct mapping:
 
-Queuing patch #3 on IMX tree will stands a good chance for conflicts
-with other pci-imx6.c changes on PCI tree.
+		interrupt-map = <0 0 0  1  &pcie_intc 0>,	/* INTA */
+				<0 0 0  2  &pcie_intc 1>,	/* INTB */
+				<0 0 0  3  &pcie_intc 2>,	/* INTC */
+				<0 0 0  4  &pcie_intc 3>;	/* INTD */
 
-Shawn
+Lorenzo
+
+> +
+> +		pcie_intc: legacy-interrupt-controller {
+> +			interrupt-controller;
+> +			#interrupt-cells = <1>;
+> +			interrupt-parent = <&gic>;
+> +			interrupts = <0 226 4>;
+> +		};
+> +	};
+> -- 
+> 2.7.4
+> 
