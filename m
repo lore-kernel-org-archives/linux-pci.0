@@ -1,118 +1,106 @@
-Return-Path: <SRS0=yfZz=N4=vger.kernel.org=linux-pci-owner@kernel.org>
+Return-Path: <SRS0=q0B1=N6=vger.kernel.org=linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-8.9 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
-	DKIM_VALID_AU,FREEMAIL_FORGED_FROMDOMAIN,FREEMAIL_FROM,
-	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
-	SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT autolearn=unavailable
-	autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-7.0 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_PASS,URIBL_BLOCKED
+	autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id B40C1C43441
-	for <linux-pci@archiver.kernel.org>; Sat, 17 Nov 2018 18:12:50 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 48313C43441
+	for <linux-pci@archiver.kernel.org>; Mon, 19 Nov 2018 01:08:39 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 7EFD820815
-	for <linux-pci@archiver.kernel.org>; Sat, 17 Nov 2018 18:12:50 +0000 (UTC)
-Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="jRk/FBmz"
-DMARC-Filter: OpenDMARC Filter v1.3.2 mail.kernel.org 7EFD820815
-Authentication-Results: mail.kernel.org; dmarc=fail (p=none dis=none) header.from=gmail.com
+	by mail.kernel.org (Postfix) with ESMTP id 185232080C
+	for <linux-pci@archiver.kernel.org>; Mon, 19 Nov 2018 01:08:39 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.3.2 mail.kernel.org 185232080C
+Authentication-Results: mail.kernel.org; dmarc=none (p=none dis=none) header.from=hxt-semitech.com
 Authentication-Results: mail.kernel.org; spf=none smtp.mailfrom=linux-pci-owner@vger.kernel.org
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727056AbeKREaC (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Sat, 17 Nov 2018 23:30:02 -0500
-Received: from mail-pf1-f195.google.com ([209.85.210.195]:35909 "EHLO
-        mail-pf1-f195.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726071AbeKREaC (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Sat, 17 Nov 2018 23:30:02 -0500
-Received: by mail-pf1-f195.google.com with SMTP id b85so6080315pfc.3;
-        Sat, 17 Nov 2018 10:12:33 -0800 (PST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20161025;
-        h=from:to:cc:subject:date:message-id:in-reply-to:references
-         :mime-version:content-transfer-encoding;
-        bh=AHMjBXV+tZeSxvUQvlaaMP7K5FV8BZph/ua16Vl6Z4g=;
-        b=jRk/FBmz57Cjg2rHbL8eTwN16Wte8exPdg/zqO7/RxtO1XmaO132ojAp4YrKoxkQoW
-         vprza5Yh8gBNuXppWb1quyXiGDFEQKt7EXMZBSwLCC1dibd2nUuvY2k4H0mWgXTgKd7O
-         tMwi5rdXcnlJqFo3e/hGSu0aO804qj8X6sX2Xjj19uFtH2JKCgpyTFMEHCKZxDBQRih4
-         A8+oCS0v0+W5Iel8mPtj2A6V/W8/Y0V3Zmc+ppaK3tTYwmqyNhoNlvdotH+yyp0jRn2J
-         EdFMVLqL8pkduB+wBaBQVxiwpQnKzZ+ckoZ6YSEi9CtB1jlSacALAKxvEI+J6n7XbrWi
-         Mc4g==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20161025;
-        h=x-gm-message-state:from:to:cc:subject:date:message-id:in-reply-to
-         :references:mime-version:content-transfer-encoding;
-        bh=AHMjBXV+tZeSxvUQvlaaMP7K5FV8BZph/ua16Vl6Z4g=;
-        b=bMMsQR7e1IPEDjKX57BcrL80xyJOXrmdkYew6tSlR+E698W4KyJmCvtWK3+EqOf6hT
-         yfxoHfv8a2DTbUr3sj1u77aGGdb4lqPGq2tbmLR3O40a6fWfueC8H5qBl5njogonAm/A
-         nT/0akkRNX7d4DmzK7Qx4te6/UnyK53Qbc3gV+0FaWkdBPGzWqgEGsYHPEmZUnR7fzww
-         YwmjayJP+K8zhVQsAnBDaI7+hWLmXnfOkri8tSijIHMidf0kYLggH0ZV9bjhzwZBVOHx
-         2jZ9ljXZqwwJuBoTIHSb2ilmRiwz2gGdhJs9Zy4156488EDLWw6A7mRbFWGScF9cMWnQ
-         X+hA==
-X-Gm-Message-State: AGRZ1gLIo9yjvITNkZzSQ/ugmZq1fRamXVJPCAuJZFhfgJKvSJ7PScp5
-        sv+YYbsR4gKR5TgxynWesKOJKsPcNyI=
-X-Google-Smtp-Source: AJdET5feNuTysNZsW12ctaii8G7xgO/LM/NexVDVWuk452DtrAj7XbF/bryczoPTv633dmWipEemmA==
-X-Received: by 2002:a63:7a5b:: with SMTP id j27mr14416020pgn.112.1542478352963;
-        Sat, 17 Nov 2018 10:12:32 -0800 (PST)
-Received: from squirtle.lan (c-24-22-235-96.hsd1.wa.comcast.net. [24.22.235.96])
-        by smtp.gmail.com with ESMTPSA id t2sm13868196pfm.32.2018.11.17.10.12.31
-        (version=TLS1_2 cipher=ECDHE-RSA-CHACHA20-POLY1305 bits=256/256);
-        Sat, 17 Nov 2018 10:12:32 -0800 (PST)
-From:   Andrey Smirnov <andrew.smirnov@gmail.com>
-To:     linux-kernel@vger.kernel.org
-Cc:     Andrey Smirnov <andrew.smirnov@gmail.com>, bhelgaas@google.com,
-        Fabio Estevam <fabio.estevam@nxp.com>, cphealy@gmail.com,
-        l.stach@pengutronix.de, Leonard Crestez <leonard.crestez@nxp.com>,
-        "A.s. Dong" <aisheng.dong@nxp.com>,
-        Richard Zhu <hongxing.zhu@nxp.com>, linux-imx@nxp.com,
-        linux-arm-kernel@lists.infradead.org, linux-pci@vger.kernel.org
-Subject: [PATCH 1/3] PCI: imx: No-op imx6_setup_phy_mpll() on i.MX7D
-Date:   Sat, 17 Nov 2018 10:12:23 -0800
-Message-Id: <20181117181225.10737-2-andrew.smirnov@gmail.com>
-X-Mailer: git-send-email 2.19.1
-In-Reply-To: <20181117181225.10737-1-andrew.smirnov@gmail.com>
-References: <20181117181225.10737-1-andrew.smirnov@gmail.com>
+        id S1725955AbeKSLac convert rfc822-to-8bit (ORCPT
+        <rfc822;linux-pci@archiver.kernel.org>);
+        Mon, 19 Nov 2018 06:30:32 -0500
+Received: from mx01.hxt-semitech.com ([223.203.96.7]:57449 "EHLO
+        barracuda.hxt-semitech.com" rhost-flags-OK-OK-OK-FAIL)
+        by vger.kernel.org with ESMTP id S1725881AbeKSLac (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Mon, 19 Nov 2018 06:30:32 -0500
+X-ASG-Debug-ID: 1542589700-093b7e362426430001-0c9NHn
+Received: from HXTBJIDCEMVIW02.hxtcorp.net ([10.128.0.15]) by barracuda.hxt-semitech.com with ESMTP id YCaUFfwBa1wMAHBC (version=TLSv1.2 cipher=ECDHE-RSA-AES256-SHA384 bits=256 verify=NO); Mon, 19 Nov 2018 09:08:21 +0800 (CST)
+X-Barracuda-Envelope-From: shunyong.yang@hxt-semitech.com
+Received: from HXTBJIDCEMVIW01.hxtcorp.net (10.128.0.14) by
+ HXTBJIDCEMVIW02.hxtcorp.net (10.128.0.15) with Microsoft SMTP Server (TLS) id
+ 15.0.1395.4; Mon, 19 Nov 2018 09:07:40 +0800
+Received: from HXTBJIDCEMVIW01.hxtcorp.net ([fe80::f451:a443:c0b5:87d1]) by
+ HXTBJIDCEMVIW01.hxtcorp.net ([fe80::f451:a443:c0b5:87d1%12]) with mapi id
+ 15.00.1395.000; Mon, 19 Nov 2018 09:07:40 +0800
+From:   "Yang, Shunyong" <shunyong.yang@hxt-semitech.com>
+To:     "bhelgaas@google.com" <bhelgaas@google.com>
+CC:     "okaya@kernel.org" <okaya@kernel.org>,
+        "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+        "Zheng, Joey" <yu.zheng@hxt-semitech.com>
+Subject: Re: [PATCH v2 2/2] PCI: pciehp: Add HXT quirk for Command Completed
+ errata
+Thread-Topic: [PATCH v2 2/2] PCI: pciehp: Add HXT quirk for Command Completed
+ errata
+X-ASG-Orig-Subj: Re: [PATCH v2 2/2] PCI: pciehp: Add HXT quirk for Command Completed
+ errata
+Thread-Index: AQHUdmrzK+cv2Db6mkeg7e7p7Mrs0A==
+Date:   Mon, 19 Nov 2018 01:07:39 +0000
+Message-ID: <77c4a0a9a9174e0aa5d94dada2e0be15@HXTBJIDCEMVIW01.hxtcorp.net>
+References: <bcaf1d5d-23a6-d4e6-08e8-587daf6cca06@kernel.org>
+ <5e88860c8426df537c5a5f2d0e6add6df8955a0f.1541574331.git.shunyong.yang@hxt-semitech.com>
+Accept-Language: en-US
+Content-Language: en-US
+X-MS-Has-Attach: 
+X-MS-TNEF-Correlator: 
+x-ms-exchange-transport-fromentityheader: Hosted
+x-originating-ip: [10.64.6.155]
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 8BIT
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
+X-Barracuda-Connect: UNKNOWN[10.128.0.15]
+X-Barracuda-Start-Time: 1542589701
+X-Barracuda-Encrypted: ECDHE-RSA-AES256-SHA384
+X-Barracuda-URL: https://192.168.50.101:443/cgi-mod/mark.cgi
+X-Virus-Scanned: by bsmtpd at hxt-semitech.com
+X-Barracuda-BRTS-Status: 1
+X-Barracuda-Bayes: INNOCENT GLOBAL 0.0247 1.0000 -1.8606
+X-Barracuda-Spam-Score: -1.86
+X-Barracuda-Spam-Status: No, SCORE=-1.86 using global scores of TAG_LEVEL=1000.0 QUARANTINE_LEVEL=1000.0 KILL_LEVEL=9.0 tests=
+X-Barracuda-Spam-Report: Code version 3.2, rules version 3.2.3.62008
+        Rule breakdown below
+         pts rule name              description
+        ---- ---------------------- --------------------------------------------------
 Sender: linux-pci-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-PCIE PHY IP block on i.MX7D differs from the one used on i.MX6 family,
-so none of the code in current implementation of imx6_setup_phy_mpll()
-is applicable.
+Hi, Bjorn,
+  Would you please help to review and pull these two quirk patches to
+your branch if there is no problem?
 
-Cc: bhelgaas@google.com
-Cc: Fabio Estevam <fabio.estevam@nxp.com>
-Cc: cphealy@gmail.com
-Cc: l.stach@pengutronix.de
-Cc: Leonard Crestez <leonard.crestez@nxp.com>
-Cc: "A.s. Dong" <aisheng.dong@nxp.com>
-Cc: Richard Zhu <hongxing.zhu@nxp.com>
-Cc: linux-imx@nxp.com
-Cc: linux-arm-kernel@lists.infradead.org
-Cc: linux-kernel@vger.kernel.org
-Cc: linux-pci@vger.kernel.org
-Signed-off-by: Andrey Smirnov <andrew.smirnov@gmail.com>
----
- drivers/pci/controller/dwc/pci-imx6.c | 3 +++
- 1 file changed, 3 insertions(+)
+Thanks.
+Shunyong.
 
-diff --git a/drivers/pci/controller/dwc/pci-imx6.c b/drivers/pci/controller/dwc/pci-imx6.c
-index 2cbef2d7c207..c140f7987598 100644
---- a/drivers/pci/controller/dwc/pci-imx6.c
-+++ b/drivers/pci/controller/dwc/pci-imx6.c
-@@ -525,6 +525,9 @@ static int imx6_setup_phy_mpll(struct imx6_pcie *imx6_pcie)
- 	int mult, div;
- 	u32 val;
- 
-+	if (imx6_pcie->variant == IMX7D)
-+		return 0;
-+
- 	switch (phy_rate) {
- 	case 125000000:
- 		/*
--- 
-2.19.1
+On 2018/11/7 15:24, Yang, Shunyong wrote:
+> The HXT SD4800 PCI controller does not set the Command Completed
+> bit unless writes to the Slot Command register change "Control"
+> bits.
+> 
+> This patch adds SD4800 to the quirk.
+> 
+> Cc: Joey Zheng <yu.zheng@hxt-semitech.com>
+> Signed-off-by: Shunyong Yang <shunyong.yang@hxt-semitech.com>
+> 
+> diff --git a/drivers/pci/hotplug/pciehp_hpc.c b/drivers/pci/hotplug/pciehp_hpc.c
+> index 7dd443aea5a5..91db67963aea 100644
+> --- a/drivers/pci/hotplug/pciehp_hpc.c
+> +++ b/drivers/pci/hotplug/pciehp_hpc.c
+> @@ -920,3 +920,5 @@ static void quirk_cmd_compl(struct pci_dev *pdev)
+>  			      PCI_CLASS_BRIDGE_PCI, 8, quirk_cmd_compl);
+>  DECLARE_PCI_FIXUP_CLASS_EARLY(PCI_VENDOR_ID_QCOM, 0x0401,
+>  			      PCI_CLASS_BRIDGE_PCI, 8, quirk_cmd_compl);
+> +DECLARE_PCI_FIXUP_CLASS_EARLY(PCI_VENDOR_ID_HXT, 0x0401,
+> +			      PCI_CLASS_BRIDGE_PCI, 8, quirk_cmd_compl);
+> 
 
