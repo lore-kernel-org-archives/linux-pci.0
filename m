@@ -2,110 +2,506 @@ Return-Path: <SRS0=q0B1=N6=vger.kernel.org=linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-1.0 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	MAILING_LIST_MULTI,SPF_PASS,URIBL_BLOCKED autolearn=ham autolearn_force=no
-	version=3.4.0
+X-Spam-Status: No, score=-9.0 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_PASS,URIBL_BLOCKED,
+	USER_AGENT_GIT autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id AF849C43441
-	for <linux-pci@archiver.kernel.org>; Mon, 19 Nov 2018 21:58:09 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id A4917C43441
+	for <linux-pci@archiver.kernel.org>; Mon, 19 Nov 2018 22:26:51 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 80419206BA
-	for <linux-pci@archiver.kernel.org>; Mon, 19 Nov 2018 21:58:09 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.3.2 mail.kernel.org 80419206BA
-Authentication-Results: mail.kernel.org; dmarc=none (p=none dis=none) header.from=bootlin.com
+	by mail.kernel.org (Postfix) with ESMTP id 5F3762086A
+	for <linux-pci@archiver.kernel.org>; Mon, 19 Nov 2018 22:26:51 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.3.2 mail.kernel.org 5F3762086A
+Authentication-Results: mail.kernel.org; dmarc=none (p=none dis=none) header.from=wwwdotorg.org
 Authentication-Results: mail.kernel.org; spf=none smtp.mailfrom=linux-pci-owner@vger.kernel.org
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1731423AbeKTIXs convert rfc822-to-8bit (ORCPT
-        <rfc822;linux-pci@archiver.kernel.org>);
-        Tue, 20 Nov 2018 03:23:48 -0500
-Received: from mail.bootlin.com ([62.4.15.54]:41785 "EHLO mail.bootlin.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1731422AbeKTIXs (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Tue, 20 Nov 2018 03:23:48 -0500
-Received: by mail.bootlin.com (Postfix, from userid 110)
-        id 5E25A20D0D; Mon, 19 Nov 2018 22:58:06 +0100 (CET)
-Received: from xps13 (unknown [91.224.148.103])
-        by mail.bootlin.com (Postfix) with ESMTPSA id C35D420510;
-        Mon, 19 Nov 2018 22:57:55 +0100 (CET)
-Date:   Mon, 19 Nov 2018 22:57:54 +0100
-From:   Miquel Raynal <miquel.raynal@bootlin.com>
-To:     Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
-Cc:     Marek =?UTF-8?B?QmVow7pu?= <marek.behun@nic.cz>,
-        Thomas Petazzoni <thomas.petazzoni@bootlin.com>,
-        Thomas Petazzoni <thomas.petazzoni@free-electrons.com>,
-        Bjorn Helgaas <helgaas@kernel.org>, linux-pci@vger.kernel.org,
-        Antoine =?UTF-8?B?VMOpbmFydA==?= 
-        <antoine.tenart@free-electrons.com>,
-        =?UTF-8?B?R3LDqWdvcnk=?= Clement 
-        <gregory.clement@free-electrons.com>,
-        =?UTF-8?B?TWlxdcOobA==?= Raynal 
-        <miquel.raynal@free-electrons.com>, Victor Gu <xigu@marvell.com>
-Subject: Re: [PATCH RFC v4.14] PCI: aadrvark: warm reset the cores and card
-Message-ID: <20181119225754.1284ee1b@xps13>
-In-Reply-To: <20181119170948.GA30910@red-moon>
-References: <20181024152056.17813-1-marek.behun@nic.cz>
-        <20181119170948.GA30910@red-moon>
-Organization: Bootlin
-X-Mailer: Claws Mail 3.16.0 (GTK+ 2.24.32; x86_64-pc-linux-gnu)
+        id S1730244AbeKTIwi (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Tue, 20 Nov 2018 03:52:38 -0500
+Received: from avon.wwwdotorg.org ([104.237.132.123]:37954 "EHLO
+        avon.wwwdotorg.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726431AbeKTIwi (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Tue, 20 Nov 2018 03:52:38 -0500
+Received: from swarren-lx1.nvidia.com (unknown [216.228.112.24])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES128-SHA256 (128/128 bits))
+        (No client certificate requested)
+        by avon.wwwdotorg.org (Postfix) with ESMTPSA id 68E061C00E3;
+        Mon, 19 Nov 2018 15:26:47 -0700 (MST)
+X-Virus-Status: Clean
+X-Virus-Scanned: clamav-milter 0.100.2 at avon.wwwdotorg.org
+From:   Stephen Warren <swarren@wwwdotorg.org>
+To:     Jingoo Han <jingoohan1@gmail.com>,
+        Gustavo Pimentel <gustavo.pimentel@synopsys.com>,
+        Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
+        Bjorn Helgaas <bhelgaas@google.com>
+Cc:     linux-pci@vger.kernel.org, Vidya Sagar <vidyas@nvidia.com>,
+        Manikanta Maddireddy <mmaddireddy@nvidia.com>,
+        Stephen Warren <swarren@nvidia.com>
+Subject: [PATCH] PCI: dwc ep: cache config until DBI regs available
+Date:   Mon, 19 Nov 2018 15:26:02 -0700
+Message-Id: <20181119222602.28001-1-swarren@wwwdotorg.org>
+X-Mailer: git-send-email 2.19.1
 MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 8BIT
+X-NVConfidentiality: public
+Content-Transfer-Encoding: 8bit
 Sender: linux-pci-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-Hi Lorenzo,
+From: Stephen Warren <swarren@nvidia.com>
 
-Lorenzo Pieralisi <lorenzo.pieralisi@arm.com> wrote on Mon, 19 Nov 2018
-17:09:48 +0000:
+Some implementations of the DWC PCIe endpoint controller do not allow
+access to DBI registers until the attached host has started REFCLK,
+released PERST, and the endpoint driver has initialized clocking of the
+DBI registers based on that. One such system is NVIDIA's T194 SoC. The
+PCIe endpoint subsystem and DWC driver currently don't work on such
+hardware, since they assume that all endpoint configuration can happen
+at any arbitrary time.
 
-> On Wed, Oct 24, 2018 at 05:20:56PM +0200, Marek Behún wrote:
-> > Add code to do a warm reset on the PHY and PCIE cores and if PERSTN GPIO
-> > is specified in device tree (as reset-gpio), also reset the card.
-> > 
-> > The reset-gpio is inspired by what is done in U-Boot and linux-marvell,
-> > and is not final version: I am hoping this can be done via a PCIe register
-> > rather than GPIO - bit 3 of CTRL_WARM_RESET_REG register (which is added
-> > by this patch) is called PERSTN_GPIO_EN (Enable PERSTN from GPIO) and
-> > I think this is the right register, but manipulating this register did
-> > not have any effect on the PERSTN pin, even when pinctrl was correctly set.
-> > 
-> > I asked Marvell about this and am awaiting their reply.
-> > 
-> > The reset-gpio is needed for Compex 5 GHz wifi card model WLE900VX. Without
-> > this patch the PCIe link never comes up in kernel (although U-Boot pci
-> > command was able to enumerate the card).
-> > 
-> > What is weird is that the link does not come up for this card when
-> > pci-aardvark driver is probed in U-Boot. I haven't yet had time to discover
-> > the problem there. My temporary solution is to compile out the pci-aardvark
-> > driver from U-Boot.
-> > 
-> > This patch is based on 4.14 kernel.  
-> 
-> This is not a commit log, these comments go either in a cover letter
-> or below the log, prior to the diff.
-> 
-> Patches should always be aimed at mainline, that's what is discussed
-> and merged on linux-pci@vger.kernel.org
-> 
-> Given its RFC status I consider this patch a proof of concept and
-> won't consider it for upstreaming, not yet at least.
-> 
-> > If you have time, please try it with some PCIe cards and let me know
-> > if they work correctly.  
-> 
-> See above. For the time being I will drop this patch from the linux-pci
-> patch queue, I really do not know what to do with it.
-> 
-> Thanks,
-> Lorenzo
+Enhance the DWC endpoint driver to support such systems by caching all
+endpoint configuration in software, and only writing the configuration
+to hardware once it's been initialized. This is implemented by splitting
+all endpoint controller ops into two functions; the first which simply
+records/caches the desired configuration whenever called by the
+associated function driver and optionally calls the second, and the
+second which actually programs the configuration into hardware, which
+may be called either by the first function, or later when it's known
+that the DBI registers are available.
 
-Just an FYI, I am currently working on S2RAM support on A3700, and
-doing this I added a few things to this driver including reset GPIO
-support. Patches will come soon. There is no warm-reset coming in
-though. 
+Signed-off-by: Stephen Warren <swarren@nvidia.com>
+---
+Note: I have only compiled-tested this patch in the context of the
+mainline kernel since NVIDIA Tegra PCIe EP support is not yet present.
+However, I've built and tested an equivalent patch in our downstream
+kernel. I did have to manually port it to mainline due to conflicts
+though.
 
-Thanks,
-Miquèl
+This patch was developed on top of "PCI: designware: don't hard-code
+DBI/ATU offset" which I sent last week, so may rely on that for patch
+context.
+---
+ .../pci/controller/dwc/pcie-designware-ep.c   | 199 ++++++++++++++----
+ drivers/pci/controller/dwc/pcie-designware.h  |  26 ++-
+ 2 files changed, 181 insertions(+), 44 deletions(-)
+
+diff --git a/drivers/pci/controller/dwc/pcie-designware-ep.c b/drivers/pci/controller/dwc/pcie-designware-ep.c
+index 880210366e71..6910b64bfdcb 100644
+--- a/drivers/pci/controller/dwc/pcie-designware-ep.c
++++ b/drivers/pci/controller/dwc/pcie-designware-ep.c
+@@ -73,11 +73,10 @@ static u8 dw_pcie_ep_find_capability(struct dw_pcie *pci, u8 cap)
+ 	return __dw_pcie_ep_find_next_cap(pci, next_cap_ptr, cap);
+ }
+ 
+-static int dw_pcie_ep_write_header(struct pci_epc *epc, u8 func_no,
+-				   struct pci_epf_header *hdr)
++static void dw_pcie_ep_write_header_regs(struct dw_pcie_ep *ep)
+ {
+-	struct dw_pcie_ep *ep = epc_get_drvdata(epc);
+ 	struct dw_pcie *pci = to_dw_pcie_from_ep(ep);
++	struct pci_epf_header *hdr = &(ep->cached_hdr);
+ 
+ 	dw_pcie_dbi_ro_wr_en(pci);
+ 	dw_pcie_writew_dbi(pci, PCI_VENDOR_ID, hdr->vendorid);
+@@ -94,6 +93,19 @@ static int dw_pcie_ep_write_header(struct pci_epc *epc, u8 func_no,
+ 	dw_pcie_writeb_dbi(pci, PCI_INTERRUPT_PIN,
+ 			   hdr->interrupt_pin);
+ 	dw_pcie_dbi_ro_wr_dis(pci);
++}
++
++static int dw_pcie_ep_write_header(struct pci_epc *epc, u8 func_no,
++				   struct pci_epf_header *hdr)
++{
++	struct dw_pcie_ep *ep = epc_get_drvdata(epc);
++
++	ep->cached_hdr = *hdr;
++
++	if (!ep->hw_regs_available)
++		return 0;
++
++	dw_pcie_ep_write_header_regs(ep);
+ 
+ 	return 0;
+ }
+@@ -112,6 +124,15 @@ static int dw_pcie_ep_inbound_atu(struct dw_pcie_ep *ep, enum pci_barno bar,
+ 		return -EINVAL;
+ 	}
+ 
++	ep->cached_inbound_atus[free_win].bar = bar;
++	ep->cached_inbound_atus[free_win].cpu_addr = cpu_addr;
++	ep->cached_inbound_atus[free_win].as_type = as_type;
++	ep->cached_bars[bar].atu_index = free_win;
++	set_bit(free_win, ep->ib_window_map);
++
++	if (!ep->hw_regs_available)
++		return 0;
++
+ 	ret = dw_pcie_prog_inbound_atu(pci, free_win, bar, cpu_addr,
+ 				       as_type);
+ 	if (ret < 0) {
+@@ -119,9 +140,6 @@ static int dw_pcie_ep_inbound_atu(struct dw_pcie_ep *ep, enum pci_barno bar,
+ 		return ret;
+ 	}
+ 
+-	ep->bar_to_atu[bar] = free_win;
+-	set_bit(free_win, ep->ib_window_map);
+-
+ 	return 0;
+ }
+ 
+@@ -137,27 +155,66 @@ static int dw_pcie_ep_outbound_atu(struct dw_pcie_ep *ep, phys_addr_t phys_addr,
+ 		return -EINVAL;
+ 	}
+ 
++	ep->cached_outbound_atus[free_win].addr = phys_addr;
++	ep->cached_outbound_atus[free_win].pci_addr = pci_addr;
++	ep->cached_outbound_atus[free_win].size = size;
++	set_bit(free_win, ep->ob_window_map);
++
++	if (!ep->hw_regs_available)
++		return 0;
++
+ 	dw_pcie_prog_outbound_atu(pci, free_win, PCIE_ATU_TYPE_MEM,
+ 				  phys_addr, pci_addr, size);
+ 
+-	set_bit(free_win, ep->ob_window_map);
+-	ep->outbound_addr[free_win] = phys_addr;
+-
+ 	return 0;
+ }
+ 
++static void dw_pcie_ep_clear_bar_regs(struct dw_pcie_ep *ep, u8 func_no,
++				      enum pci_barno bar)
++{
++	struct dw_pcie *pci = to_dw_pcie_from_ep(ep);
++	int flags = ep->cached_bars[bar].flags;
++	u32 atu_index = ep->cached_bars[bar].atu_index;
++
++	__dw_pcie_ep_reset_bar(pci, bar, flags);
++
++	dw_pcie_disable_atu(pci, atu_index, DW_PCIE_REGION_INBOUND);
++}
++
+ static void dw_pcie_ep_clear_bar(struct pci_epc *epc, u8 func_no,
+ 				 struct pci_epf_bar *epf_bar)
+ {
+ 	struct dw_pcie_ep *ep = epc_get_drvdata(epc);
+-	struct dw_pcie *pci = to_dw_pcie_from_ep(ep);
+ 	enum pci_barno bar = epf_bar->barno;
+-	u32 atu_index = ep->bar_to_atu[bar];
++	u32 atu_index = ep->cached_bars[bar].atu_index;
+ 
+-	__dw_pcie_ep_reset_bar(pci, bar, epf_bar->flags);
+-
+-	dw_pcie_disable_atu(pci, atu_index, DW_PCIE_REGION_INBOUND);
+ 	clear_bit(atu_index, ep->ib_window_map);
++
++	if (!ep->hw_regs_available)
++		return;
++
++	dw_pcie_ep_clear_bar_regs(ep, func_no, bar);
++}
++
++static void dw_pcie_ep_set_bar_regs(struct dw_pcie_ep *ep, u8 func_no,
++				    enum pci_barno bar)
++{
++	struct dw_pcie *pci = to_dw_pcie_from_ep(ep);
++	size_t size = ep->cached_bars[bar].size;
++	int flags = ep->cached_bars[bar].flags;
++	u32 reg = PCI_BASE_ADDRESS_0 + (4 * bar);
++
++	dw_pcie_dbi_ro_wr_en(pci);
++
++	dw_pcie_writel_dbi2(pci, reg, lower_32_bits(size - 1));
++	dw_pcie_writel_dbi(pci, reg, flags);
++
++	if (flags & PCI_BASE_ADDRESS_MEM_TYPE_64) {
++		dw_pcie_writel_dbi2(pci, reg + 4, upper_32_bits(size - 1));
++		dw_pcie_writel_dbi(pci, reg + 4, 0);
++	}
++
++	dw_pcie_dbi_ro_wr_dis(pci);
+ }
+ 
+ static int dw_pcie_ep_set_bar(struct pci_epc *epc, u8 func_no,
+@@ -165,12 +222,10 @@ static int dw_pcie_ep_set_bar(struct pci_epc *epc, u8 func_no,
+ {
+ 	int ret;
+ 	struct dw_pcie_ep *ep = epc_get_drvdata(epc);
+-	struct dw_pcie *pci = to_dw_pcie_from_ep(ep);
+ 	enum pci_barno bar = epf_bar->barno;
+ 	size_t size = epf_bar->size;
+ 	int flags = epf_bar->flags;
+ 	enum dw_pcie_as_type as_type;
+-	u32 reg = PCI_BASE_ADDRESS_0 + (4 * bar);
+ 
+ 	if (!(flags & PCI_BASE_ADDRESS_SPACE))
+ 		as_type = DW_PCIE_AS_MEM;
+@@ -181,17 +236,13 @@ static int dw_pcie_ep_set_bar(struct pci_epc *epc, u8 func_no,
+ 	if (ret)
+ 		return ret;
+ 
+-	dw_pcie_dbi_ro_wr_en(pci);
+-
+-	dw_pcie_writel_dbi2(pci, reg, lower_32_bits(size - 1));
+-	dw_pcie_writel_dbi(pci, reg, flags);
++	ep->cached_bars[bar].size = size;
++	ep->cached_bars[bar].flags = flags;
+ 
+-	if (flags & PCI_BASE_ADDRESS_MEM_TYPE_64) {
+-		dw_pcie_writel_dbi2(pci, reg + 4, upper_32_bits(size - 1));
+-		dw_pcie_writel_dbi(pci, reg + 4, 0);
+-	}
++	if (!ep->hw_regs_available)
++		return 0;
+ 
+-	dw_pcie_dbi_ro_wr_dis(pci);
++	dw_pcie_ep_set_bar_regs(ep, func_no, bar);
+ 
+ 	return 0;
+ }
+@@ -202,7 +253,7 @@ static int dw_pcie_find_index(struct dw_pcie_ep *ep, phys_addr_t addr,
+ 	u32 index;
+ 
+ 	for (index = 0; index < ep->num_ob_windows; index++) {
+-		if (ep->outbound_addr[index] != addr)
++		if (ep->cached_outbound_atus[index].addr != addr)
+ 			continue;
+ 		*atu_index = index;
+ 		return 0;
+@@ -223,8 +274,12 @@ static void dw_pcie_ep_unmap_addr(struct pci_epc *epc, u8 func_no,
+ 	if (ret < 0)
+ 		return;
+ 
+-	dw_pcie_disable_atu(pci, atu_index, DW_PCIE_REGION_OUTBOUND);
+ 	clear_bit(atu_index, ep->ob_window_map);
++
++	if (!ep->hw_regs_available)
++		return;
++
++	dw_pcie_disable_atu(pci, atu_index, DW_PCIE_REGION_OUTBOUND);
+ }
+ 
+ static int dw_pcie_ep_map_addr(struct pci_epc *epc, u8 func_no,
+@@ -254,7 +309,10 @@ static int dw_pcie_ep_get_msi(struct pci_epc *epc, u8 func_no)
+ 		return -EINVAL;
+ 
+ 	reg = ep->msi_cap + PCI_MSI_FLAGS;
+-	val = dw_pcie_readw_dbi(pci, reg);
++	if (ep->hw_regs_available)
++		val = dw_pcie_readw_dbi(pci, reg);
++	else
++		val = ep->cached_msi_flags;
+ 	if (!(val & PCI_MSI_FLAGS_ENABLE))
+ 		return -EINVAL;
+ 
+@@ -273,12 +331,19 @@ static int dw_pcie_ep_set_msi(struct pci_epc *epc, u8 func_no, u8 interrupts)
+ 		return -EINVAL;
+ 
+ 	reg = ep->msi_cap + PCI_MSI_FLAGS;
+-	val = dw_pcie_readw_dbi(pci, reg);
++	if (ep->hw_regs_available)
++		val = dw_pcie_readw_dbi(pci, reg);
++	else
++		val = ep->cached_msi_flags;
+ 	val &= ~PCI_MSI_FLAGS_QMASK;
+ 	val |= (interrupts << 1) & PCI_MSI_FLAGS_QMASK;
+-	dw_pcie_dbi_ro_wr_en(pci);
+-	dw_pcie_writew_dbi(pci, reg, val);
+-	dw_pcie_dbi_ro_wr_dis(pci);
++	if (ep->hw_regs_available) {
++		dw_pcie_dbi_ro_wr_en(pci);
++		dw_pcie_writew_dbi(pci, reg, val);
++		dw_pcie_dbi_ro_wr_dis(pci);
++	} else {
++		ep->cached_msi_flags = val;
++	}
+ 
+ 	return 0;
+ }
+@@ -293,7 +358,10 @@ static int dw_pcie_ep_get_msix(struct pci_epc *epc, u8 func_no)
+ 		return -EINVAL;
+ 
+ 	reg = ep->msix_cap + PCI_MSIX_FLAGS;
+-	val = dw_pcie_readw_dbi(pci, reg);
++	if (ep->hw_regs_available)
++		val = dw_pcie_readw_dbi(pci, reg);
++	else
++		val = ep->cached_msix_flags;
+ 	if (!(val & PCI_MSIX_FLAGS_ENABLE))
+ 		return -EINVAL;
+ 
+@@ -312,16 +380,49 @@ static int dw_pcie_ep_set_msix(struct pci_epc *epc, u8 func_no, u16 interrupts)
+ 		return -EINVAL;
+ 
+ 	reg = ep->msix_cap + PCI_MSIX_FLAGS;
+-	val = dw_pcie_readw_dbi(pci, reg);
++	if (ep->hw_regs_available)
++		val = dw_pcie_readw_dbi(pci, reg);
++	else
++		val = ep->cached_msix_flags;
+ 	val &= ~PCI_MSIX_FLAGS_QSIZE;
+ 	val |= interrupts;
+-	dw_pcie_dbi_ro_wr_en(pci);
+-	dw_pcie_writew_dbi(pci, reg, val);
+-	dw_pcie_dbi_ro_wr_dis(pci);
++	if (ep->hw_regs_available) {
++		dw_pcie_dbi_ro_wr_en(pci);
++		dw_pcie_writew_dbi(pci, reg, val);
++		dw_pcie_dbi_ro_wr_dis(pci);
++	} else {
++		ep->cached_msix_flags = val;
++	}
+ 
+ 	return 0;
+ }
+ 
++void dw_pcie_set_regs_available(struct dw_pcie *pci)
++{
++	struct dw_pcie_ep *ep = &(pci->ep);
++	int i;
++
++	ep->hw_regs_available = true;
++
++	dw_pcie_ep_write_header_regs(ep);
++	for_each_set_bit(i, ep->ib_window_map, ep->num_ib_windows) {
++		dw_pcie_prog_inbound_atu(pci, i,
++			ep->cached_inbound_atus[i].bar,
++			ep->cached_inbound_atus[i].cpu_addr,
++			ep->cached_inbound_atus[i].as_type);
++		dw_pcie_ep_set_bar_regs(ep, 0, ep->cached_inbound_atus[i].bar);
++	}
++	for_each_set_bit(i, ep->ob_window_map, ep->num_ob_windows)
++		dw_pcie_prog_outbound_atu(pci, i, PCIE_ATU_TYPE_MEM,
++			ep->cached_outbound_atus[i].addr,
++			ep->cached_outbound_atus[i].pci_addr,
++			ep->cached_outbound_atus[i].size);
++	dw_pcie_dbi_ro_wr_en(pci);
++	dw_pcie_writew_dbi(pci, PCI_MSI_FLAGS, ep->cached_msi_flags);
++	dw_pcie_writew_dbi(pci, PCI_MSIX_FLAGS, ep->cached_msix_flags);
++	dw_pcie_dbi_ro_wr_dis(pci);
++}
++
+ static int dw_pcie_ep_raise_irq(struct pci_epc *epc, u8 func_no,
+ 				enum pci_epc_irq_type type, u16 interrupt_num)
+ {
+@@ -330,6 +431,9 @@ static int dw_pcie_ep_raise_irq(struct pci_epc *epc, u8 func_no,
+ 	if (!ep->ops->raise_irq)
+ 		return -EINVAL;
+ 
++	if (!ep->hw_regs_available)
++		return -EAGAIN;
++
+ 	return ep->ops->raise_irq(ep, func_no, type, interrupt_num);
+ }
+ 
+@@ -391,6 +495,9 @@ int dw_pcie_ep_raise_msi_irq(struct dw_pcie_ep *ep, u8 func_no,
+ 	bool has_upper;
+ 	int ret;
+ 
++	if (!ep->hw_regs_available)
++		return -EAGAIN;
++
+ 	if (!ep->msi_cap)
+ 		return -EINVAL;
+ 
+@@ -436,6 +543,9 @@ int dw_pcie_ep_raise_msix_irq(struct dw_pcie_ep *ep, u8 func_no,
+ 	void __iomem *msix_tbl;
+ 	int ret;
+ 
++	if (!ep->hw_regs_available)
++		return -EAGAIN;
++
+ 	reg = ep->msix_cap + PCI_MSIX_TABLE;
+ 	tbl_offset = dw_pcie_readl_dbi(pci, reg);
+ 	bir = (tbl_offset & PCI_MSIX_TABLE_BIR);
+@@ -494,7 +604,6 @@ void dw_pcie_ep_exit(struct dw_pcie_ep *ep)
+ int dw_pcie_ep_init(struct dw_pcie_ep *ep)
+ {
+ 	int ret;
+-	void *addr;
+ 	struct pci_epc *epc;
+ 	struct dw_pcie *pci = to_dw_pcie_from_ep(ep);
+ 	struct device *dev = pci->dev;
+@@ -543,11 +652,17 @@ int dw_pcie_ep_init(struct dw_pcie_ep *ep)
+ 	if (!ep->ob_window_map)
+ 		return -ENOMEM;
+ 
+-	addr = devm_kcalloc(dev, ep->num_ob_windows, sizeof(phys_addr_t),
+-			    GFP_KERNEL);
+-	if (!addr)
++	ep->cached_inbound_atus = devm_kzalloc(dev,
++		sizeof(ep->cached_inbound_atus[0]) * ep->num_ib_windows,
++		GFP_KERNEL);
++	if (!ep->cached_inbound_atus)
++		return -ENOMEM;
++
++	ep->cached_outbound_atus = devm_kzalloc(dev,
++		sizeof(ep->cached_outbound_atus[0]) * ep->num_ob_windows,
++		GFP_KERNEL);
++	if (!ep->cached_outbound_atus)
+ 		return -ENOMEM;
+-	ep->outbound_addr = addr;
+ 
+ 	epc = devm_pci_epc_create(dev, &epc_ops);
+ 	if (IS_ERR(epc)) {
+diff --git a/drivers/pci/controller/dwc/pcie-designware.h b/drivers/pci/controller/dwc/pcie-designware.h
+index 02fb532c5db9..c116b289aa51 100644
+--- a/drivers/pci/controller/dwc/pcie-designware.h
++++ b/drivers/pci/controller/dwc/pcie-designware.h
+@@ -192,8 +192,6 @@ struct dw_pcie_ep {
+ 	phys_addr_t		phys_base;
+ 	size_t			addr_size;
+ 	size_t			page_size;
+-	u8			bar_to_atu[6];
+-	phys_addr_t		*outbound_addr;
+ 	unsigned long		*ib_window_map;
+ 	unsigned long		*ob_window_map;
+ 	u32			num_ib_windows;
+@@ -202,6 +200,25 @@ struct dw_pcie_ep {
+ 	phys_addr_t		msi_mem_phys;
+ 	u8			msi_cap;	/* MSI capability offset */
+ 	u8			msix_cap;	/* MSI-X capability offset */
++	bool			hw_regs_available;
++	struct pci_epf_header	cached_hdr;
++	struct {
++		size_t			size;
++		int			flags;
++		u8			atu_index;
++	}			cached_bars[6];
++	struct {
++		enum pci_barno		bar;
++		dma_addr_t		cpu_addr;
++		enum dw_pcie_as_type	as_type;
++	}			*cached_inbound_atus;
++	struct {
++		phys_addr_t		addr;
++		u64			pci_addr;
++		size_t			size;
++	}			*cached_outbound_atus;
++	u32			cached_msi_flags;
++	u32			cached_msix_flags;
+ };
+ 
+ struct dw_pcie_ops {
+@@ -363,6 +380,7 @@ static inline int dw_pcie_allocate_domains(struct pcie_port *pp)
+ void dw_pcie_ep_linkup(struct dw_pcie_ep *ep);
+ int dw_pcie_ep_init(struct dw_pcie_ep *ep);
+ void dw_pcie_ep_exit(struct dw_pcie_ep *ep);
++void dw_pcie_ep_set_regs_available(struct dw_pcie *pci);
+ int dw_pcie_ep_raise_legacy_irq(struct dw_pcie_ep *ep, u8 func_no);
+ int dw_pcie_ep_raise_msi_irq(struct dw_pcie_ep *ep, u8 func_no,
+ 			     u8 interrupt_num);
+@@ -383,6 +401,10 @@ static inline void dw_pcie_ep_exit(struct dw_pcie_ep *ep)
+ {
+ }
+ 
++static inline void dw_pcie_ep_set_regs_available(struct dw_pcie *pci)
++{
++}
++
+ static inline int dw_pcie_ep_raise_legacy_irq(struct dw_pcie_ep *ep, u8 func_no)
+ {
+ 	return 0;
+-- 
+2.19.1
+
