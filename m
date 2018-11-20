@@ -7,33 +7,33 @@ X-Spam-Status: No, score=-7.1 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
 	SIGNED_OFF_BY,SPF_PASS,URIBL_BLOCKED autolearn=ham autolearn_force=no
 	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 66F7EC4161D
-	for <linux-pci@archiver.kernel.org>; Tue, 20 Nov 2018 19:46:34 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 61083C4161D
+	for <linux-pci@archiver.kernel.org>; Tue, 20 Nov 2018 20:00:34 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 01C152146D
-	for <linux-pci@archiver.kernel.org>; Tue, 20 Nov 2018 19:46:11 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id EB560214E0
+	for <linux-pci@archiver.kernel.org>; Tue, 20 Nov 2018 20:00:33 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=nvidia.com header.i=@nvidia.com header.b="hm+Gl7Fd"
-DMARC-Filter: OpenDMARC Filter v1.3.2 mail.kernel.org 01C152146D
+	dkim=pass (2048-bit key) header.d=nvidia.com header.i=@nvidia.com header.b="bdi07Y4C"
+DMARC-Filter: OpenDMARC Filter v1.3.2 mail.kernel.org EB560214E0
 Authentication-Results: mail.kernel.org; dmarc=fail (p=none dis=none) header.from=nvidia.com
 Authentication-Results: mail.kernel.org; spf=none smtp.mailfrom=linux-pci-owner@vger.kernel.org
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726101AbeKUGQ6 (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Wed, 21 Nov 2018 01:16:58 -0500
-Received: from hqemgate16.nvidia.com ([216.228.121.65]:8286 "EHLO
+        id S1726039AbeKUGbX (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Wed, 21 Nov 2018 01:31:23 -0500
+Received: from hqemgate16.nvidia.com ([216.228.121.65]:8941 "EHLO
         hqemgate16.nvidia.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726644AbeKUGQ6 (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Wed, 21 Nov 2018 01:16:58 -0500
+        with ESMTP id S1725977AbeKUGbX (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Wed, 21 Nov 2018 01:31:23 -0500
 Received: from hqpgpgate101.nvidia.com (Not Verified[216.228.121.13]) by hqemgate16.nvidia.com (using TLS: TLSv1.2, DES-CBC3-SHA)
-        id <B5bf464760000>; Tue, 20 Nov 2018 11:45:58 -0800
+        id <B5bf467e60000>; Tue, 20 Nov 2018 12:00:38 -0800
 Received: from hqmail.nvidia.com ([172.20.161.6])
   by hqpgpgate101.nvidia.com (PGP Universal service);
-  Tue, 20 Nov 2018 11:45:50 -0800
+  Tue, 20 Nov 2018 12:00:29 -0800
 X-PGP-Universal: processed;
-        by hqpgpgate101.nvidia.com on Tue, 20 Nov 2018 11:45:50 -0800
-Received: from [10.24.37.36] (172.20.13.39) by HQMAIL101.nvidia.com
+        by hqpgpgate101.nvidia.com on Tue, 20 Nov 2018 12:00:29 -0800
+Received: from [10.24.37.36] (10.124.1.5) by HQMAIL101.nvidia.com
  (172.20.187.10) with Microsoft SMTP Server (TLS) id 15.0.1395.4; Tue, 20 Nov
- 2018 19:45:47 +0000
+ 2018 20:00:26 +0000
 Subject: Re: [PATCH] PCI: dwc ep: cache config until DBI regs available
 To:     Stephen Warren <swarren@wwwdotorg.org>,
         Jingoo Han <jingoohan1@gmail.com>,
@@ -48,30 +48,30 @@ References: <20181119222602.28001-1-swarren@wwwdotorg.org>
  <921c50a5-35b7-33e7-398b-3c4cacef8529@wwwdotorg.org>
 X-Nvconfidentiality: public
 From:   Vidya Sagar <vidyas@nvidia.com>
-Message-ID: <1a624400-5f3f-b1b8-50e1-e5aa4b1eb112@nvidia.com>
-Date:   Wed, 21 Nov 2018 01:15:44 +0530
+Message-ID: <02f9d34c-6eb0-2d32-2ef8-c43d255c046a@nvidia.com>
+Date:   Wed, 21 Nov 2018 01:30:23 +0530
 User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:60.0) Gecko/20100101
  Thunderbird/60.2.1
 MIME-Version: 1.0
 In-Reply-To: <921c50a5-35b7-33e7-398b-3c4cacef8529@wwwdotorg.org>
-X-Originating-IP: [172.20.13.39]
-X-ClientProxiedBy: HQMAIL106.nvidia.com (172.18.146.12) To
+X-Originating-IP: [10.124.1.5]
+X-ClientProxiedBy: HQMAIL104.nvidia.com (172.18.146.11) To
  HQMAIL101.nvidia.com (172.20.187.10)
 Content-Type: text/plain; charset="utf-8"; format=flowed
 Content-Transfer-Encoding: quoted-printable
 Content-Language: en-US
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=nvidia.com; s=n1;
-        t=1542743159; bh=/v+whejfp56eZNAw4OEustugwTfFkxXyGZxt2+9VZFc=;
+        t=1542744038; bh=lPF4cxHyuQ+/t725Sb6fJEEwY4CS4icAcVxLU6oDI2A=;
         h=X-PGP-Universal:Subject:To:CC:References:X-Nvconfidentiality:From:
          Message-ID:Date:User-Agent:MIME-Version:In-Reply-To:
          X-Originating-IP:X-ClientProxiedBy:Content-Type:
          Content-Transfer-Encoding:Content-Language;
-        b=hm+Gl7Fdlv2vLgy+558E2jhhKJ1FWwgYsDwBPJETqhgw9c9RDMsqhUx3X0eSfB1Ve
-         OMz99aZkvTdcVH5QTdFJqtEO+MYEMB1DfEl051LzjmjbIv5CvRz0xn+UBYmf8oW31q
-         /6w1wCCyfFm+Ac6wleXDOFNIq8nRQOszWac52/y2KNa16eBPpYzuY4OZyJ0y3JVSVE
-         ZajIzLTF8wHzB+iS7li3Z1riMVGoADaVa8ckPMibjQ8MF4RE4QspGkhXJs2XrXlr8+
-         0YafTanEBAH+W1wpUFICUguIp+Jq80oSfQtA2X5dTbnjw6ApR4KECaezgzJcXcL9HW
-         HB8Az0LqrL3iQ==
+        b=bdi07Y4Ch6Bt1/pd+ukUjQw0CTmeQzjHednTDkt8Hftjbg7T/eRxckWmP8iMjVhpz
+         k2qJAf96zdMi6ixjpiHIAlo8gy9zA5JwqYySK/GY06WCB1RPe8HGt+hYk6+85Wj7zF
+         F2KBKTnjReQwx15rPsY+GYbY/O4l03ahPeU/ZLbr7qekDXXAH9sV62Sr1XMpCPnIA4
+         k71sx/C7sw6aWWO8V6jJu/X+KGDYQwyZYv8B6SLE5ZR7oiJCxXS36ISm/NVV63cVub
+         l7IjePWF958m2wqOk/9rECG7piBqNfu6/dpEDnbs3gOYxKrZ5a9FG4XElUwYKg3K5o
+         okWBvaEXUmA+Q==
 Sender: linux-pci-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
@@ -723,4 +723,4 @@ ct
 >> pci_epc -> pci_epf_driver.
 >
 > I don't understand this part.
-Nevermind. With option-(a) above, it is not required.
+Nevermind. With Option-(a) above, it is not required anymore.
