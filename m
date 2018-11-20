@@ -2,182 +2,135 @@ Return-Path: <SRS0=4GJS=N7=vger.kernel.org=linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-7.1 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
-	DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,
-	SIGNED_OFF_BY,SPF_PASS,URIBL_BLOCKED autolearn=ham autolearn_force=no
-	version=3.4.0
+X-Spam-Status: No, score=-8.5 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_PASS,URIBL_BLOCKED,
+	USER_AGENT_MUTT autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 798FCC43441
-	for <linux-pci@archiver.kernel.org>; Tue, 20 Nov 2018 11:02:35 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 6A2E7C43441
+	for <linux-pci@archiver.kernel.org>; Tue, 20 Nov 2018 11:05:12 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 37D0F20685
-	for <linux-pci@archiver.kernel.org>; Tue, 20 Nov 2018 11:02:35 +0000 (UTC)
-Authentication-Results: mail.kernel.org;
-	dkim=pass (1024-bit key) header.d=nxp.com header.i=@nxp.com header.b="QqpJRgoF"
-DMARC-Filter: OpenDMARC Filter v1.3.2 mail.kernel.org 37D0F20685
-Authentication-Results: mail.kernel.org; dmarc=fail (p=none dis=none) header.from=nxp.com
+	by mail.kernel.org (Postfix) with ESMTP id 60AA92087E
+	for <linux-pci@archiver.kernel.org>; Tue, 20 Nov 2018 11:05:11 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.3.2 mail.kernel.org 60AA92087E
+Authentication-Results: mail.kernel.org; dmarc=none (p=none dis=none) header.from=arm.com
 Authentication-Results: mail.kernel.org; spf=none smtp.mailfrom=linux-pci-owner@vger.kernel.org
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727620AbeKTVbI (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Tue, 20 Nov 2018 16:31:08 -0500
-Received: from mail-eopbgr60076.outbound.protection.outlook.com ([40.107.6.76]:43472
-        "EHLO EUR04-DB3-obe.outbound.protection.outlook.com"
-        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1727497AbeKTVbH (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Tue, 20 Nov 2018 16:31:07 -0500
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=nxp.com; s=selector1;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=G/Porhk9rKN5O9rpyzS78zVPHRHYaot0kMJQlbQ5TJo=;
- b=QqpJRgoFgYbSb+g1OvmeRiEO9/T3apcX9PqRnPv+tdVu2OOxFPubVfHU7r2XLbzOBo0/YssngTr6MxIZstrto6vm5N9BUQrTNGFHXg2rqav8FpTlVL4zB+6d/1FiPtl79kYBkUPZdQRZiQM+78xXxa9BfCNbj8lYWDXa0NilGig=
-Received: from HE1PR0401MB2235.eurprd04.prod.outlook.com (10.168.32.20) by
- HE1PR0401MB2202.eurprd04.prod.outlook.com (10.166.76.26) with Microsoft SMTP
- Server (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- 15.20.1339.26; Tue, 20 Nov 2018 11:01:49 +0000
-Received: from HE1PR0401MB2235.eurprd04.prod.outlook.com
- ([fe80::60ff:1b2a:d0fd:5bd2]) by HE1PR0401MB2235.eurprd04.prod.outlook.com
- ([fe80::60ff:1b2a:d0fd:5bd2%8]) with mapi id 15.20.1339.027; Tue, 20 Nov 2018
- 11:01:49 +0000
-From:   "M.h. Lian" <minghuan.lian@nxp.com>
-To:     "Z.q. Hou" <zhiqiang.hou@nxp.com>,
-        "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+        id S1727807AbeKTVdo (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Tue, 20 Nov 2018 16:33:44 -0500
+Received: from usa-sjc-mx-foss1.foss.arm.com ([217.140.101.70]:47052 "EHLO
+        foss.arm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1725989AbeKTVdo (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Tue, 20 Nov 2018 16:33:44 -0500
+Received: from usa-sjc-imap-foss1.foss.arm.com (unknown [10.72.51.249])
+        by usa-sjc-mx-foss1.foss.arm.com (Postfix) with ESMTP id B975D15AB;
+        Tue, 20 Nov 2018 03:05:09 -0800 (PST)
+Received: from e107981-ln.cambridge.arm.com (e107981-ln.cambridge.arm.com [10.1.197.40])
+        by usa-sjc-imap-foss1.foss.arm.com (Postfix) with ESMTPSA id 861673F575;
+        Tue, 20 Nov 2018 03:05:08 -0800 (PST)
+Date:   Tue, 20 Nov 2018 11:05:05 +0000
+From:   Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
+To:     Trent Piepho <tpiepho@impinj.com>
+Cc:     "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
         "linux-arm-kernel@lists.infradead.org" 
         <linux-arm-kernel@lists.infradead.org>,
-        "devicetree@vger.kernel.org" <devicetree@vger.kernel.org>,
-        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-        "bhelgaas@google.com" <bhelgaas@google.com>,
-        "robh+dt@kernel.org" <robh+dt@kernel.org>,
-        "mark.rutland@arm.com" <mark.rutland@arm.com>,
-        "l.subrahmanya@mobiveil.co.in" <l.subrahmanya@mobiveil.co.in>,
-        "shawnguo@kernel.org" <shawnguo@kernel.org>,
-        Leo Li <leoyang.li@nxp.com>,
-        "lorenzo.pieralisi@arm.com" <lorenzo.pieralisi@arm.com>,
-        "catalin.marinas@arm.com" <catalin.marinas@arm.com>,
-        "will.deacon@arm.com" <will.deacon@arm.com>
-CC:     Mingkai Hu <mingkai.hu@nxp.com>, Xiaowei Bao <xiaowei.bao@nxp.com>
-Subject: RE: [PATCHv2 12/25] PCI: mobiveil: move out the link up waiting from
- mobiveil_host_init
-Thread-Topic: [PATCHv2 12/25] PCI: mobiveil: move out the link up waiting from
- mobiveil_host_init
-Thread-Index: AQHUgLMqaVbEFA8UPE25WAZopVq0WqVYf3Hw
-Date:   Tue, 20 Nov 2018 11:01:49 +0000
-Message-ID: <HE1PR0401MB2235E159D0F9F922F36B1517E8D90@HE1PR0401MB2235.eurprd04.prod.outlook.com>
-References: <20181120092615.11680-1-Zhiqiang.Hou@nxp.com>
- <20181120092615.11680-13-Zhiqiang.Hou@nxp.com>
-In-Reply-To: <20181120092615.11680-13-Zhiqiang.Hou@nxp.com>
-Accept-Language: zh-CN, en-US
-Content-Language: en-US
-X-MS-Has-Attach: 
-X-MS-TNEF-Correlator: 
-authentication-results: spf=none (sender IP is )
- smtp.mailfrom=minghuan.lian@nxp.com; 
-x-originating-ip: [119.31.174.73]
-x-ms-publictraffictype: Email
-x-microsoft-exchange-diagnostics: 1;HE1PR0401MB2202;6:QiKYsdacK0gXskodqaBOJq4Z+og5zVZjDX20gX07GgCMIhvVIlysNR1BTBnlh7aQx2CGCEuBkhwy6keWuFAdhaPrjVg4wc785KeRd69qUO3qG279g4NCHaD8ucvcZPw+yyKk/0hVNwdaiAjjOJIdKDQWffy5KumloIy4zR5eDIbROjPSo+wkvD3gcozyucCI38xQ/HfBUTe1Cr9K3mJ8fNOWmXJNJKBPjPHG3CS8feWqnLhhijwj7GRxKwnrcTpXKKdcwF+wcqOlVigD2+27qBBEbwmDE3j6eSs9WoV9u+sKhZdP/VNhyMZtcYoQEf5gST9f/H+aB21+Wt4VVPI7YdYkNLwA1u0q6wIVX8s/HwfTC2lrTei2Sq9Zoa1OryWCdq1bQMmEMjbMW9RzFHZH5pDegAkxwUDgDb6LQE3/k7mvFl6Y73tdUJJrwaGmc+xnQau/5i6CjCeiJDyd9tD2newcdO7scsOwlHWgZgspT0s=;5:8MjjT0KicNJ7LQNubMtBDoVGDY6jDXsMZj9PgKxw2vy3onEkynae4cn32FBgvL4oSj6oQIzj3HYLp1J+5oMFKp6ba65OT8u4xzi/TPHK4Ml+NTux9BOWobnNEkKf/8Etslqsjp5iuZ7DdeC7DGOgUOZHJvfLrvXpg/iFn9AmqpA=;7:RJzAHeXod/7ByrPwKC92iYSiu0dn1z1uELJEiv7SYwNA/TowDOwzwOl0a7sid4D+eHXEXTkxABBv3jV+pqSbViAuVRH0BQn9HRPGfWN+nJOa2WVrUxYWnDKYtyzKH6AaM/IAmKPuGKQouSStfxCmhw==
-x-ms-exchange-antispam-srfa-diagnostics: SOS;
-x-ms-office365-filtering-correlation-id: 7e03f4c4-4ad7-4c17-661d-08d64ed7921a
-x-ms-office365-filtering-ht: Tenant
-x-microsoft-antispam: BCL:0;PCL:0;RULEID:(2390098)(7020095)(4652040)(8989299)(5600074)(711020)(4618075)(4534185)(4627221)(201703031133081)(201702281549075)(8990200)(2017052603328)(7153060)(7193020);SRVR:HE1PR0401MB2202;
-x-ms-traffictypediagnostic: HE1PR0401MB2202:
-x-microsoft-antispam-prvs: <HE1PR0401MB2202A428D34066D6C77B5D7FE8D90@HE1PR0401MB2202.eurprd04.prod.outlook.com>
-x-ms-exchange-senderadcheck: 1
-x-exchange-antispam-report-cfa-test: BCL:0;PCL:0;RULEID:(8211001083)(6040522)(2401047)(5005006)(8121501046)(3231442)(944501410)(52105112)(3002001)(10201501046)(93006095)(93001095)(6055026)(148016)(149066)(150057)(6041310)(20161123564045)(20161123562045)(20161123558120)(201703131423095)(201702281528075)(20161123555045)(201703061421075)(201703061406153)(20161123560045)(201708071742011)(7699051)(76991095);SRVR:HE1PR0401MB2202;BCL:0;PCL:0;RULEID:;SRVR:HE1PR0401MB2202;
-x-forefront-prvs: 08626BE3A5
-x-forefront-antispam-report: SFV:NSPM;SFS:(10009020)(396003)(376002)(39860400002)(346002)(136003)(366004)(189003)(199004)(13464003)(6506007)(53546011)(102836004)(99286004)(26005)(186003)(76176011)(7696005)(229853002)(106356001)(105586002)(54906003)(6436002)(14454004)(33656002)(25786009)(110136005)(486006)(3846002)(478600001)(68736007)(2900100001)(476003)(316002)(11346002)(446003)(53936002)(9686003)(55016002)(2201001)(81156014)(81166006)(74316002)(71200400001)(8936002)(71190400001)(7736002)(8676002)(66066001)(97736004)(305945005)(5660300001)(2501003)(6116002)(4326008)(2906002)(6246003)(7416002)(86362001)(256004)(921003)(1121003);DIR:OUT;SFP:1101;SCL:1;SRVR:HE1PR0401MB2202;H:HE1PR0401MB2235.eurprd04.prod.outlook.com;FPR:;SPF:None;LANG:en;PTR:InfoNoRecords;MX:1;A:1;
-received-spf: None (protection.outlook.com: nxp.com does not designate
- permitted sender hosts)
-x-microsoft-antispam-message-info: f0K54lQOF69yPnJRFoSfFambDsTNZxEF1bRYJg9lt4x9MvWg6yM4bzZ6vG+dxFyz2EcLbhF+xnWWCDi2XEfJH24NIEBnMT6w57yXNSxg2xqKnZXT+leTP69Hd4hkABxUW+utgSOac/HO8Th0r/mOujDGpG7/99nSsKJNudxa4n2FwJwIQ6yFihqcZ6YpNBI9faG76OGDWEquBfJB83ouLDGO50Mbo/obnA828oKyRUE3iTiYsC+z9QajoBYNcp31mtUxPvQgVUw6WUlosj4YqvEMjtI7YQEtidj3O6Z6jGSj1akg/hBBCwKqBaPQX1r2j/3p865Dm6RopbH28dthubR3z8oRBt/r3kVlvvWUhR0=
-spamdiagnosticoutput: 1:99
-spamdiagnosticmetadata: NSPM
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: quoted-printable
+        Bjorn Helgaas <bhelgaas@google.com>,
+        Joao Pinto <Joao.Pinto@synopsys.com>,
+        Richard Zhu <hongxing.zhu@nxp.com>
+Subject: Re: [PATCH v3] PCI: imx6: Check for link training status in link up
+ check
+Message-ID: <20181120110505.GB19867@e107981-ln.cambridge.arm.com>
+References: <20181105181117.23230-1-tpiepho@impinj.com>
 MIME-Version: 1.0
-X-OriginatorOrg: nxp.com
-X-MS-Exchange-CrossTenant-Network-Message-Id: 7e03f4c4-4ad7-4c17-661d-08d64ed7921a
-X-MS-Exchange-CrossTenant-originalarrivaltime: 20 Nov 2018 11:01:49.4080
- (UTC)
-X-MS-Exchange-CrossTenant-fromentityheader: Hosted
-X-MS-Exchange-CrossTenant-id: 686ea1d3-bc2b-4c6f-a92c-d99c5c301635
-X-MS-Exchange-Transport-CrossTenantHeadersStamped: HE1PR0401MB2202
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20181105181117.23230-1-tpiepho@impinj.com>
+User-Agent: Mutt/1.5.24 (2015-08-30)
 Sender: linux-pci-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-reviewed-by: Minghuan Lian <Minghuan.Lian@nxp.com>
-
-> -----Original Message-----
-> From: Z.q. Hou
-> Sent: Tuesday, November 20, 2018 5:27 PM
-> To: linux-pci@vger.kernel.org; linux-arm-kernel@lists.infradead.org;
-> devicetree@vger.kernel.org; linux-kernel@vger.kernel.org;
-> bhelgaas@google.com; robh+dt@kernel.org; mark.rutland@arm.com;
-> l.subrahmanya@mobiveil.co.in; shawnguo@kernel.org; Leo Li
-> <leoyang.li@nxp.com>; lorenzo.pieralisi@arm.com;
-> catalin.marinas@arm.com; will.deacon@arm.com
-> Cc: Mingkai Hu <mingkai.hu@nxp.com>; M.h. Lian
-> <minghuan.lian@nxp.com>; Xiaowei Bao <xiaowei.bao@nxp.com>; Z.q. Hou
-> <zhiqiang.hou@nxp.com>
-> Subject: [PATCHv2 12/25] PCI: mobiveil: move out the link up waiting from
-> mobiveil_host_init
->=20
-> From: Hou Zhiqiang <Zhiqiang.Hou@nxp.com>
->=20
-> Host initial sequence does not depend on PCIe link up, so move it to the
-> place just before the enumeration.
->=20
-> Signed-off-by: Hou Zhiqiang <Zhiqiang.Hou@nxp.com>
+On Mon, Nov 05, 2018 at 06:11:36PM +0000, Trent Piepho wrote:
+> Eliminate imx6_pcie_link_up() so that the default handler,
+> dw_pcie_link_up(), is used instead.  The default handler has the correct
+> code, which checks for link up and also not still training.
+> 
+> This bug was fixed some time ago, but the fix was lost in the merge
+> commit 562df5c8521e ("Merge branch 'pci/host-designware' into next").
+> 
+> This was due to the interaction for two commits on either branch of the
+> merge.  Commit 4d107d3b5a68 ("PCI: imx6: Move link up check into
+> imx6_pcie_wait_for_link()"), changed imx6_pcie_wait_for_link() to poll
+> the link status register directly, checking for link up and not
+> training, and made imx6_pcie_link_up() only check the link up bit (once,
+> not a polling loop).
+> 
+> While commit commit 886bc5ceb5cc ("PCI: designware: Add generic
+> dw_pcie_wait_for_link()"), replaced the loop in
+> imx6_pcie_wait_for_link() with a call to a new dwc core function, which
+> polled imx6_pcie_link_up(), which still checked both link up and not
+> training in a loop.
+> 
+> When these two commits were merged, the version of
+> imx6_pcie_wait_for_link() from '886 was kept, which eliminated the link
+> training check placed there by '4d1.  But the version of
+> imx6_pcie_link_up() from '4d1 was kept, which eliminated the link
+> training check that had been there and was moved to
+> imx6_pcie_wait_for_link().
+> 
+> And the result was the link training check got lost for the imx6 driver.
+> 
+> Fixes: 562df5c8521e ("Merge branch 'pci/host-designware' into next")
+> Cc: Bjorn Helgaas <bhelgaas@google.com>
+> Cc: Joao Pinto <Joao.Pinto@synopsys.com>
+> Cc: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
+> Cc: Richard Zhu <hongxing.zhu@nxp.com>
+> Reviewed-by: Lucas Stach <l.stach@pengutronix.de>
+> Signed-off-by: Trent Piepho <tpiepho@impinj.com>
 > ---
-> V2:
->  - no change
->=20
->  drivers/pci/controller/pcie-mobiveil.c | 15 +++++++--------
->  1 file changed, 7 insertions(+), 8 deletions(-)
->=20
-> diff --git a/drivers/pci/controller/pcie-mobiveil.c
-> b/drivers/pci/controller/pcie-mobiveil.c
-> index 8eee1ab7ee24..c2848c22b466 100644
-> --- a/drivers/pci/controller/pcie-mobiveil.c
-> +++ b/drivers/pci/controller/pcie-mobiveil.c
-> @@ -582,15 +582,8 @@ static void mobiveil_pcie_enable_msi(struct
-> mobiveil_pcie *pcie)  static int mobiveil_host_init(struct mobiveil_pcie =
-*pcie)
-> {
->  	u32 value, pab_ctrl, type;
-> -	int err;
->  	struct resource_entry *win;
->=20
-> -	err =3D mobiveil_bringup_link(pcie);
-> -	if (err) {
-> -		dev_info(&pcie->pdev->dev, "link bring-up failed\n");
-> -		return err;
-> -	}
-> -
->  	/*
->  	 * program Bus Master Enable Bit in Command Register in PAB Config
->  	 * Space
-> @@ -662,7 +655,7 @@ static int mobiveil_host_init(struct mobiveil_pcie
-> *pcie)
->  	/* setup MSI hardware registers */
->  	mobiveil_pcie_enable_msi(pcie);
->=20
-> -	return err;
-> +	return 0;
->  }
->=20
->  static void mobiveil_mask_intx_irq(struct irq_data *data) @@ -922,6
-> +915,12 @@ static int mobiveil_pcie_probe(struct platform_device *pdev)
->  	bridge->map_irq =3D of_irq_parse_and_map_pci;
->  	bridge->swizzle_irq =3D pci_common_swizzle;
->=20
-> +	ret =3D mobiveil_bringup_link(pcie);
-> +	if (ret) {
-> +		dev_info(dev, "link bring-up failed\n");
-> +		goto error;
-> +	}
-> +
->  	/* setup the kernel resources for the newly added PCIe root bus */
->  	ret =3D pci_scan_root_bus_bridge(bridge);
->  	if (ret)
-> --
-> 2.17.1
+>  drivers/pci/controller/dwc/pci-imx6.c | 10 +---------
+>  1 file changed, 1 insertion(+), 9 deletions(-)
 
+I have applied it to pci/controller-fixes for one of the upcoming -rc*.
+
+Thanks,
+Lorenzo
+
+> diff --git a/drivers/pci/controller/dwc/pci-imx6.c b/drivers/pci/controller/dwc/pci-imx6.c
+> index 4a9a673b4777..975050a69494 100644
+> --- a/drivers/pci/controller/dwc/pci-imx6.c
+> +++ b/drivers/pci/controller/dwc/pci-imx6.c
+> @@ -80,8 +80,6 @@ struct imx6_pcie {
+>  #define PCIE_PL_PFLR_FORCE_LINK			(1 << 15)
+>  #define PCIE_PHY_DEBUG_R0 (PL_OFFSET + 0x28)
+>  #define PCIE_PHY_DEBUG_R1 (PL_OFFSET + 0x2c)
+> -#define PCIE_PHY_DEBUG_R1_XMLH_LINK_IN_TRAINING	(1 << 29)
+> -#define PCIE_PHY_DEBUG_R1_XMLH_LINK_UP		(1 << 4)
+>  
+>  #define PCIE_PHY_CTRL (PL_OFFSET + 0x114)
+>  #define PCIE_PHY_CTRL_DATA_LOC 0
+> @@ -641,12 +639,6 @@ static int imx6_pcie_host_init(struct pcie_port *pp)
+>  	return 0;
+>  }
+>  
+> -static int imx6_pcie_link_up(struct dw_pcie *pci)
+> -{
+> -	return dw_pcie_readl_dbi(pci, PCIE_PHY_DEBUG_R1) &
+> -			PCIE_PHY_DEBUG_R1_XMLH_LINK_UP;
+> -}
+> -
+>  static const struct dw_pcie_host_ops imx6_pcie_host_ops = {
+>  	.host_init = imx6_pcie_host_init,
+>  };
+> @@ -679,7 +671,7 @@ static int imx6_add_pcie_port(struct imx6_pcie *imx6_pcie,
+>  }
+>  
+>  static const struct dw_pcie_ops dw_pcie_ops = {
+> -	.link_up = imx6_pcie_link_up,
+> +	/* No special ops needed, but pcie-designware still expects this struct */
+>  };
+>  
+>  static int imx6_pcie_probe(struct platform_device *pdev)
+> -- 
+> 2.14.4
+> 
