@@ -7,36 +7,36 @@ X-Spam-Status: No, score=-7.1 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
 	SIGNED_OFF_BY,SPF_PASS,URIBL_BLOCKED autolearn=unavailable autolearn_force=no
 	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id C5F47C43610
-	for <linux-pci@archiver.kernel.org>; Tue, 20 Nov 2018 09:28:30 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 83573C43610
+	for <linux-pci@archiver.kernel.org>; Tue, 20 Nov 2018 09:28:35 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 6DF0E20671
-	for <linux-pci@archiver.kernel.org>; Tue, 20 Nov 2018 09:28:30 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 35BD82075B
+	for <linux-pci@archiver.kernel.org>; Tue, 20 Nov 2018 09:28:35 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (1024-bit key) header.d=nxp.com header.i=@nxp.com header.b="O6Wz3zKZ"
-DMARC-Filter: OpenDMARC Filter v1.3.2 mail.kernel.org 6DF0E20671
+	dkim=pass (1024-bit key) header.d=nxp.com header.i=@nxp.com header.b="Z4eL2l+7"
+DMARC-Filter: OpenDMARC Filter v1.3.2 mail.kernel.org 35BD82075B
 Authentication-Results: mail.kernel.org; dmarc=fail (p=none dis=none) header.from=nxp.com
 Authentication-Results: mail.kernel.org; spf=none smtp.mailfrom=linux-pci-owner@vger.kernel.org
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727744AbeKTT4M (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Tue, 20 Nov 2018 14:56:12 -0500
-Received: from mail-eopbgr70054.outbound.protection.outlook.com ([40.107.7.54]:9376
-        "EHLO EUR04-HE1-obe.outbound.protection.outlook.com"
+        id S1728099AbeKTTz6 (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Tue, 20 Nov 2018 14:55:58 -0500
+Received: from mail-eopbgr30082.outbound.protection.outlook.com ([40.107.3.82]:29684
+        "EHLO EUR03-AM5-obe.outbound.protection.outlook.com"
         rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1727453AbeKTT4L (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Tue, 20 Nov 2018 14:56:11 -0500
+        id S1727453AbeKTTz5 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Tue, 20 Nov 2018 14:55:57 -0500
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=nxp.com; s=selector1;
  h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=EsWc3HHrsvCw3TAwiGTFo3m6TFcG6WSs2Q/TCpBa6hQ=;
- b=O6Wz3zKZW874i7b2OoGIyiiPnTX/l6Br6wt4MiObbqcq/ESmFTTTmosnnYEfBq4D/CSetptjNLlMrWhoSx7zFqLQ1Cjm7vCxjpwN+tWP1DlRD7BGJmWRo4t2cWdx1xzcOmzVPQ0U12asP+M5cS9gHbgHLimRbKaodKFCr+RS69k=
+ bh=6GGE+D1K97Uim7BzdeFvPAUZXAd8GUxbz3cRM28RI7M=;
+ b=Z4eL2l+7wKihGp26NodvVE3TpeD0VOkVyKeAGX8fH+014Rqy4oG6H66OPyQAfh1E5zFuhEJqWMz7GFAkDi+ybfr+/eS0fU8u8HGB8kcx+vopkaCy0b0H2HTsY6nsFYJ0pVleWjzTke1f7ppK30i/aIX5/ss+RtCp1WEQTP/6cCQ=
 Received: from AM6PR04MB5781.eurprd04.prod.outlook.com (20.179.2.80) by
  AM6PR04MB4775.eurprd04.prod.outlook.com (20.177.32.216) with Microsoft SMTP
  Server (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- 15.20.1339.21; Tue, 20 Nov 2018 09:27:57 +0000
+ 15.20.1339.21; Tue, 20 Nov 2018 09:27:45 +0000
 Received: from AM6PR04MB5781.eurprd04.prod.outlook.com
  ([fe80::29b5:b3ed:3854:cf1c]) by AM6PR04MB5781.eurprd04.prod.outlook.com
  ([fe80::29b5:b3ed:3854:cf1c%4]) with mapi id 15.20.1339.026; Tue, 20 Nov 2018
- 09:27:57 +0000
+ 09:27:45 +0000
 From:   "Z.q. Hou" <zhiqiang.hou@nxp.com>
 To:     "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
         "linux-arm-kernel@lists.infradead.org" 
@@ -56,13 +56,13 @@ CC:     Mingkai Hu <mingkai.hu@nxp.com>,
         "M.h. Lian" <minghuan.lian@nxp.com>,
         Xiaowei Bao <xiaowei.bao@nxp.com>,
         "Z.q. Hou" <zhiqiang.hou@nxp.com>
-Subject: [PATCHv2 23/25] PCI: mobiveil: add PCIe Gen4 RC driver for NXP
- Layerscape SoCs
-Thread-Topic: [PATCHv2 23/25] PCI: mobiveil: add PCIe Gen4 RC driver for NXP
- Layerscape SoCs
-Thread-Index: AQHUgLNSP5Bm4CVLVUSREMlUOF4EKw==
-Date:   Tue, 20 Nov 2018 09:27:57 +0000
-Message-ID: <20181120092615.11680-24-Zhiqiang.Hou@nxp.com>
+Subject: [PATCHv2 21/25] PCI: mobiveil: make mobiveil_host_init can be used to
+ re-init host
+Thread-Topic: [PATCHv2 21/25] PCI: mobiveil: make mobiveil_host_init can be
+ used to re-init host
+Thread-Index: AQHUgLNL3BLuWxLGBEm5/AH+TXpIjA==
+Date:   Tue, 20 Nov 2018 09:27:45 +0000
+Message-ID: <20181120092615.11680-22-Zhiqiang.Hou@nxp.com>
 References: <20181120092615.11680-1-Zhiqiang.Hou@nxp.com>
 In-Reply-To: <20181120092615.11680-1-Zhiqiang.Hou@nxp.com>
 Accept-Language: zh-CN, en-US
@@ -77,28 +77,27 @@ authentication-results: spf=none (sender IP is )
 x-ms-exchange-messagesentrepresentingtype: 1
 x-originating-ip: [119.31.174.73]
 x-ms-publictraffictype: Email
-x-microsoft-exchange-diagnostics: 1;AM6PR04MB4775;6:oLnUSrZeyDiIt0kSqpvfhdkF4T1mhgt/COeKl+5I+uCUZqXX4eZcQGG69OhZHReemH/7o+B0El0YjxL5EQhXeu4BXLSWAI7W+omDAZogf9Wfq+mwyD/Nb2LR0gr5pS+th89vOGcMcfPfLfUaBG+pzWA0R27ZdxhN5m4BOq/xYOreBX1UD1RHmhQg8T8MC03Yh7XMP+VCSQgPG8Fx6gmsdBfo+tKIKJBbT/nCP9f6tCSmYVjLCqGg1kTOLoC6h6lg3xxp4zGuP1l/U6wXr9m79DJVq/yEwFNIfT0/MRGSrc5dEAgShyUW9gd6MuIp0/us9/QoFQRgBnm8kXKlsufMzbKOoEo6mot4kbWEzbV+gZz8sgNduDnPh0G9/CK1c0BqusrjwphfhAfrEsMZJSt63EBkxdiBC2UtQiAXGHrNs8IK77TjNM3N8QFjJKjQAJuF037aFLhVuEtwgIrxF9i0xw==;5:htHl+EBHmc/sCJcdFY7Q9CyAzvE/VGvF2vaPyXl3BLVHJ4KPth8C8fRv56P00gL7nyugIoMg6jVuGHioBXzL+0HQ/wQo1gk2Pp1sVzfTF06Os5p8iU/GFDfXXXyFARbBdcasbIWa2YAZfFEdbnZhhdRe9AADo2UBz73frf6fvDY=;7:bvCuqQYJQ1mWOWGJ8LgKjWAXXAA//I3xEY26p+2fp9HQJbOxW7DsdQtl4kXsMCC9YWJQUmDzmjjA5MhnHfpafqCR7dhhBnLtvdrfvmkueBRU450Mi7lX9I2U9vUlv1VQxVFibHngvXh9ewnGI9E8Xw==
-x-ms-office365-filtering-correlation-id: 71340e26-cd9b-4209-1975-08d64eca751b
+x-microsoft-exchange-diagnostics: 1;AM6PR04MB4775;6:KRj/yIcmp2taLLk1UAI1CyyPcziuZoBQ3bhnyRBIWwKx56dhoY6rbA2iU0Qje8tAz32QPBwpG26PUZqJtHXNUAkbVHw00A+mXC4fhEiGJCyM3YTJrTFrATUFjo6InrkegNanpcUEErVTRCq3KPxJAFRSakjo0OIUic4NcAxb0ymbiXTqlW4+7l7pJzPAvASuSX6bcfcuy8od5i5IsJHH6xzhaWsRXkn7aXgE7pRsVnnN05aN1/67WdMbgN4eRgM8bSyMZEYVesWVZpL5piwPu3zjoObpRoUbsqR5VOnlxfyll63Gxzg6fS27Bwjnrg/ykrpjsAalJ31OYUmANCDyVaJJZsNcR7rsyX5tCcBkp+578Yzz//6YYRNcegx1Ddixzblggwg5yUVKpjxNMbbfLDUUr/ELcdqwRBJtWFcLHSIN6gRCqdwEZ54gsDPwrrRtNItSAsy3nYm09DqxQgJXcQ==;5:VsoKnTB/phS4OLtdGj+fqiA7eie6b+qChMYso7g21uC9Bop3YH30Nx50Lxhd24eEk/PEMZKgj6jasjbmBCQ8tLQT8BF0g+++Qf+Py+gcwN4xTb3VXT613QRrRj8e43sT76GBwrq0K1Xia3bMqNI8yTn1V7kSt4hy3KHpwUtOivg=;7:v0Z+87SzIBCmHWu6uqN7vG5URm1d2Dx7UjgJc5TM2Zqfov0/FHG1W7fGRhRwXM6T3FoDIZZ3a9JovSaxl9aIYmDndS1jF86VPm//tT9RN7h1uT0M/zlFe/jUR+e3hHG4i644TGhV8GG9x/oxlBe6aQ==
+x-ms-office365-filtering-correlation-id: 7e2c51ec-4b23-4e51-f3c0-08d64eca6de0
 x-ms-office365-filtering-ht: Tenant
 x-microsoft-antispam: BCL:0;PCL:0;RULEID:(2390098)(7020095)(4652040)(8989299)(5600074)(711020)(4618075)(4534185)(4627221)(201703031133081)(201702281549075)(8990200)(2017052603328)(7153060)(7193020);SRVR:AM6PR04MB4775;
 x-ms-traffictypediagnostic: AM6PR04MB4775:
-x-microsoft-antispam-prvs: <AM6PR04MB47758D2DF30A919EC66E56D084D90@AM6PR04MB4775.eurprd04.prod.outlook.com>
+x-microsoft-antispam-prvs: <AM6PR04MB477515471E2EA61B1D4F993084D90@AM6PR04MB4775.eurprd04.prod.outlook.com>
 x-ms-exchange-senderadcheck: 1
 x-exchange-antispam-report-cfa-test: BCL:0;PCL:0;RULEID:(8211001083)(6040522)(2401047)(8121501046)(5005006)(93006095)(93001095)(3231442)(944501410)(52105112)(3002001)(10201501046)(6055026)(148016)(149066)(150057)(6041310)(20161123562045)(20161123564045)(20161123560045)(20161123558120)(201703131423095)(201702281528075)(20161123555045)(201703061421075)(201703061406153)(201708071742011)(7699051)(76991095);SRVR:AM6PR04MB4775;BCL:0;PCL:0;RULEID:;SRVR:AM6PR04MB4775;
 x-forefront-prvs: 08626BE3A5
-x-forefront-antispam-report: SFV:NSPM;SFS:(10009020)(6029001)(366004)(39860400002)(136003)(376002)(396003)(346002)(189003)(199004)(66066001)(1076002)(2900100001)(68736007)(8676002)(6486002)(5660300001)(8936002)(6116002)(3846002)(2501003)(97736004)(81166006)(26005)(186003)(81156014)(105586002)(7416002)(102836004)(2906002)(386003)(6506007)(7736002)(305945005)(106356001)(6512007)(76176011)(36756003)(4326008)(99286004)(52116002)(14444005)(25786009)(575784001)(110136005)(54906003)(2616005)(86362001)(53936002)(446003)(11346002)(256004)(2201001)(6436002)(486006)(71190400001)(71200400001)(478600001)(316002)(476003)(14454004)(921003)(1121003);DIR:OUT;SFP:1101;SCL:1;SRVR:AM6PR04MB4775;H:AM6PR04MB5781.eurprd04.prod.outlook.com;FPR:;SPF:None;LANG:en;PTR:InfoNoRecords;MX:1;A:1;
+x-forefront-antispam-report: SFV:NSPM;SFS:(10009020)(366004)(39860400002)(136003)(376002)(396003)(346002)(189003)(199004)(66066001)(1076002)(2900100001)(68736007)(8676002)(6486002)(5660300001)(8936002)(6116002)(3846002)(2501003)(97736004)(81166006)(26005)(186003)(81156014)(105586002)(7416002)(102836004)(2906002)(386003)(6506007)(7736002)(305945005)(106356001)(6512007)(76176011)(36756003)(4326008)(99286004)(52116002)(14444005)(25786009)(575784001)(110136005)(54906003)(2616005)(86362001)(53936002)(446003)(11346002)(256004)(2201001)(6436002)(486006)(71190400001)(71200400001)(478600001)(316002)(476003)(14454004)(921003)(1121003);DIR:OUT;SFP:1101;SCL:1;SRVR:AM6PR04MB4775;H:AM6PR04MB5781.eurprd04.prod.outlook.com;FPR:;SPF:None;LANG:en;PTR:InfoNoRecords;MX:1;A:1;
 received-spf: None (protection.outlook.com: nxp.com does not designate
  permitted sender hosts)
-x-microsoft-antispam-message-info: nQjTqqLGwHw6f09lvx2CppTGmXJEmNZLNWiE09Bv2F8G+z68jN49kVX5lEMIWzwyS8zOcHabef0l8kn0AFklSzfyymymdY8morc7ck/rm+jC6waIvTHCECE9Ov16bl9gmMra2gj8jbIchgU1fENayxaNsIRim51aWXHaayg0snf98Kci+TRBQSlS3o4DxgWm6dok2tnTIzl4GF0c1epTxhR1Qh/mQqFVjvw1e3nTiUYvEz6hHNVKYP1xpaG72MBJxf0tcxYNgjtHfctOygUAnAhFQ1aUNISyBESqXPapNMZQdiwUwuQSLCMsBaJZNj9mLtrvmA1c3YltZ9z6Bir7wE1vVn/IkmpkLKPfoGNVj+c=
+x-microsoft-antispam-message-info: o1p0SjrnmzMaStZfYMg58NrSXimv02zn6aIO5AnLOoRuE/4HVUM3a/tv2lmqwzw9Z3fRxTNGiaDhVN8Bn0/HofCd/o84ODcaLZ5Y1kEQl4PwaZfBThj3JUwlxU5O2n6GWUWkPxr6zcJwMulRNzHgN+OH0qiBFAgyG8p2vC0tZDapEA2B5P8IlUQuXNR39DuPFVThBbhw9pJ1W/OWJpXhw0agqkQJnfJmnfx+llAkJvc31HarNLyQ3qKSJWXkAW2xGQAp/qjfDAGIITcvu61QSTkkTi1prjEPRfO5qJAKdXk1gcBLLJfo3o23o8Itx9+26g8IXEmF1flIT0T3/D9al+g8SPkM5bq05tBB89hbTSA=
 spamdiagnosticoutput: 1:99
 spamdiagnosticmetadata: NSPM
-Content-Type: text/plain; charset="utf-8"
-Content-ID: <56EDB6A0BB4E1E40BF3180250A6DE33B@eurprd04.prod.outlook.com>
-Content-Transfer-Encoding: base64
+Content-Type: text/plain; charset="iso-8859-1"
+Content-Transfer-Encoding: quoted-printable
 MIME-Version: 1.0
 X-OriginatorOrg: nxp.com
-X-MS-Exchange-CrossTenant-Network-Message-Id: 71340e26-cd9b-4209-1975-08d64eca751b
-X-MS-Exchange-CrossTenant-originalarrivaltime: 20 Nov 2018 09:27:57.7074
+X-MS-Exchange-CrossTenant-Network-Message-Id: 7e2c51ec-4b23-4e51-f3c0-08d64eca6de0
+X-MS-Exchange-CrossTenant-originalarrivaltime: 20 Nov 2018 09:27:45.6135
  (UTC)
 X-MS-Exchange-CrossTenant-fromentityheader: Hosted
 X-MS-Exchange-CrossTenant-id: 686ea1d3-bc2b-4c6f-a92c-d99c5c301635
@@ -108,187 +107,152 @@ Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-RnJvbTogSG91IFpoaXFpYW5nIDxaaGlxaWFuZy5Ib3VAbnhwLmNvbT4NCg0KVGhpcyBQQ0llIGNv
-bnRyb2xsZXIgaXMgYmFzZWQgb24gdGhlIE1vYml2ZWlsIEdQRVggSVAsIHdoaWNoIGlzDQpjb21w
-YXRpYmxlIHdpdGggdGhlIFBDSSBFeHByZXNz4oSiIEJhc2UgU3BlY2lmaWNhdGlvbiwgUmV2aXNp
-b24gNC4wLg0KDQpTaWduZWQtb2ZmLWJ5OiBIb3UgWmhpcWlhbmcgPFpoaXFpYW5nLkhvdUBueHAu
-Y29tPg0KLS0tDQpWMjoNCiAtIENoYW5nZWQgdGhlIG5hbWUgb2YgZnVuY3Rpb25zIGFuZCBkYXRh
-IHN0cnVjdHVyZXMgaW4gdGhpcyBkcml2ZXIuDQogLSBNb3ZlZCB0aGUgcmVzZXQgb3BlcmF0aW9u
-cyB0byBib3R0bGUgaGFsZiBvZiB0aGUgSVNSLiANCiAtIEFkZGVkIHRpbWVvdXQgY2hlY2sgaW4g
-cG9sbGluZyB0aGUgc3RhdHVzIG9mIHRoZSBQQUIuDQogLSBNb3ZlZCB0aGUgaW50ZXJydXB0IGlu
-aXQgb3BlcmF0aW9ucyB0byBsc19wY2llX2c0X2ludGVycnVwdF9pbml0KCkuDQoNCiBkcml2ZXJz
-L3BjaS9jb250cm9sbGVyL21vYml2ZWlsL0tjb25maWcgICAgICAgfCAgMTAgKw0KIGRyaXZlcnMv
-cGNpL2NvbnRyb2xsZXIvbW9iaXZlaWwvTWFrZWZpbGUgICAgICB8ICAgMSArDQogLi4uL2NvbnRy
-b2xsZXIvbW9iaXZlaWwvcGNpLWxheWVyc2NhcGUtZ2VuNC5jIHwgMjU0ICsrKysrKysrKysrKysr
-KysrKw0KIC4uLi9wY2kvY29udHJvbGxlci9tb2JpdmVpbC9wY2llLW1vYml2ZWlsLmggICB8ICAx
-NiArLQ0KIDQgZmlsZXMgY2hhbmdlZCwgMjc5IGluc2VydGlvbnMoKyksIDIgZGVsZXRpb25zKC0p
-DQogY3JlYXRlIG1vZGUgMTAwNjQ0IGRyaXZlcnMvcGNpL2NvbnRyb2xsZXIvbW9iaXZlaWwvcGNp
-LWxheWVyc2NhcGUtZ2VuNC5jDQoNCmRpZmYgLS1naXQgYS9kcml2ZXJzL3BjaS9jb250cm9sbGVy
-L21vYml2ZWlsL0tjb25maWcgYi9kcml2ZXJzL3BjaS9jb250cm9sbGVyL21vYml2ZWlsL0tjb25m
-aWcNCmluZGV4IDY0MzQzYzA3YmZlZC4uM2RkYjdkNjE2M2E5IDEwMDY0NA0KLS0tIGEvZHJpdmVy
-cy9wY2kvY29udHJvbGxlci9tb2JpdmVpbC9LY29uZmlnDQorKysgYi9kcml2ZXJzL3BjaS9jb250
-cm9sbGVyL21vYml2ZWlsL0tjb25maWcNCkBAIC0yMSw0ICsyMSwxNCBAQCBjb25maWcgUENJRV9N
-T0JJVkVJTF9QTEFUDQogCSAgU29mdCBJUC4gSXQgaGFzIHVwIHRvIDggb3V0Ym91bmQgYW5kIGlu
-Ym91bmQgd2luZG93cw0KIAkgIGZvciBhZGRyZXNzIHRyYW5zbGF0aW9uIGFuZCBpdCBpcyBhIFBD
-SWUgR2VuNCBJUC4NCiANCitjb25maWcgUENJX0xBWUVSU0NBUEVfR0VONA0KKwlib29sICJGcmVl
-c2NhbGUgTGF5ZXJzY3BlIFBDSWUgR2VuNCBjb250cm9sbGVyIg0KKwlkZXBlbmRzIG9uIFBDSQ0K
-KwlkZXBlbmRzIG9uIE9GICYmIChBUk02NCB8fCBBUkNIX0xBWUVSU0NBUEUpDQorCWRlcGVuZHMg
-b24gUENJX01TSV9JUlFfRE9NQUlODQorCXNlbGVjdCBQQ0lFX01PQklWRUlMX0hPU1QNCisJaGVs
-cA0KKwkgIFNheSBZIGhlcmUgaWYgeW91IHdhbnQgUENJZSBHZW40IGNvbnRyb2xsZXIgc3VwcG9y
-dCBvbg0KKwkgIExheWVyc2NhcGUgU29Dcy4gVGhlIFBDSWUgY29udHJvbGxlciBjYW4gd29yayBp
-biBSQyBvcg0KKwkgIEVQIG1vZGUgYWNjb3JkaW5nIHRvIFJDV1tIT1NUX0FHVF9QRVhdIHNldHRp
-bmcuDQogZW5kbWVudQ0KZGlmZiAtLWdpdCBhL2RyaXZlcnMvcGNpL2NvbnRyb2xsZXIvbW9iaXZl
-aWwvTWFrZWZpbGUgYi9kcml2ZXJzL3BjaS9jb250cm9sbGVyL21vYml2ZWlsL01ha2VmaWxlDQpp
-bmRleCA5ZmI2ZDFjNjUwNGQuLmZmNjY3NzRjY2FjNCAxMDA2NDQNCi0tLSBhL2RyaXZlcnMvcGNp
-L2NvbnRyb2xsZXIvbW9iaXZlaWwvTWFrZWZpbGUNCisrKyBiL2RyaXZlcnMvcGNpL2NvbnRyb2xs
-ZXIvbW9iaXZlaWwvTWFrZWZpbGUNCkBAIC0yLDMgKzIsNCBAQA0KIG9iai0kKENPTkZJR19QQ0lF
-X01PQklWRUlMKSArPSBwY2llLW1vYml2ZWlsLm8NCiBvYmotJChDT05GSUdfUENJRV9NT0JJVkVJ
-TF9IT1NUKSArPSBwY2llLW1vYml2ZWlsLWhvc3Qubw0KIG9iai0kKENPTkZJR19QQ0lFX01PQklW
-RUlMX1BMQVQpICs9IHBjaWUtbW9iaXZlaWwtcGxhdC5vDQorb2JqLSQoQ09ORklHX1BDSV9MQVlF
-UlNDQVBFX0dFTjQpICs9IHBjaS1sYXllcnNjYXBlLWdlbjQubw0KZGlmZiAtLWdpdCBhL2RyaXZl
-cnMvcGNpL2NvbnRyb2xsZXIvbW9iaXZlaWwvcGNpLWxheWVyc2NhcGUtZ2VuNC5jIGIvZHJpdmVy
-cy9wY2kvY29udHJvbGxlci9tb2JpdmVpbC9wY2ktbGF5ZXJzY2FwZS1nZW40LmMNCm5ldyBmaWxl
-IG1vZGUgMTAwNjQ0DQppbmRleCAwMDAwMDAwMDAwMDAuLjE3NGNiY2FjNDA1OQ0KLS0tIC9kZXYv
-bnVsbA0KKysrIGIvZHJpdmVycy9wY2kvY29udHJvbGxlci9tb2JpdmVpbC9wY2ktbGF5ZXJzY2Fw
-ZS1nZW40LmMNCkBAIC0wLDAgKzEsMjU0IEBADQorLy8gU1BEWC1MaWNlbnNlLUlkZW50aWZpZXI6
-IEdQTC0yLjANCisvKg0KKyAqIFBDSWUgaG9zdCBjb250cm9sbGVyIGRyaXZlciBmb3IgTlhQIExh
-eWVyc2NhcGUgU29Dcw0KKyAqDQorICogQ29weXJpZ2h0IDIwMTggTlhQDQorICoNCisgKiBBdXRo
-b3I6IFpoaXFpYW5nIEhvdSA8WmhpcWlhbmcuSG91QG54cC5jb20+DQorICovDQorDQorI2luY2x1
-ZGUgPGxpbnV4L2tlcm5lbC5oPg0KKyNpbmNsdWRlIDxsaW51eC9pbnRlcnJ1cHQuaD4NCisjaW5j
-bHVkZSA8bGludXgvaW5pdC5oPg0KKyNpbmNsdWRlIDxsaW51eC9vZl9wY2kuaD4NCisjaW5jbHVk
-ZSA8bGludXgvb2ZfcGxhdGZvcm0uaD4NCisjaW5jbHVkZSA8bGludXgvb2ZfaXJxLmg+DQorI2lu
-Y2x1ZGUgPGxpbnV4L29mX2FkZHJlc3MuaD4NCisjaW5jbHVkZSA8bGludXgvcGNpLmg+DQorI2lu
-Y2x1ZGUgPGxpbnV4L3BsYXRmb3JtX2RldmljZS5oPg0KKyNpbmNsdWRlIDxsaW51eC9yZXNvdXJj
-ZS5oPg0KKyNpbmNsdWRlIDxsaW51eC9tZmQvc3lzY29uLmg+DQorI2luY2x1ZGUgPGxpbnV4L3Jl
-Z21hcC5oPg0KKw0KKyNpbmNsdWRlICJwY2llLW1vYml2ZWlsLmgiDQorDQorLyogTFVUIGFuZCBQ
-RiBjb250cm9sIHJlZ2lzdGVycyAqLw0KKyNkZWZpbmUgUENJRV9MVVRfT0ZGCQkJKDB4ODAwMDAp
-DQorI2RlZmluZSBQQ0lFX1BGX09GRgkJCSgweGMwMDAwKQ0KKyNkZWZpbmUgUENJRV9QRl9JTlRf
-U1RBVAkJKDB4MTgpDQorI2RlZmluZSBQRl9JTlRfU1RBVF9QQUJSU1QJCSgzMSkNCisNCisjZGVm
-aW5lIFBDSUVfUEZfREJHCQkJKDB4N2ZjKQ0KKyNkZWZpbmUgUEZfREJHX0xUU1NNX01BU0sJCSgw
-eDNmKQ0KKyNkZWZpbmUgUEZfREJHX1dFCQkJKDMxKQ0KKyNkZWZpbmUgUEZfREJHX1BBQlIJCQko
-MjcpDQorDQorI2RlZmluZSBMU19QQ0lFX0c0X0xUU1NNX0wwCQkweDJkIC8qIEwwIHN0YXRlICov
-DQorDQorI2RlZmluZSB0b19sc19wY2llX2c0KHgpCQlwbGF0Zm9ybV9nZXRfZHJ2ZGF0YSgoeCkt
-PnBkZXYpDQorDQorc3RydWN0IGxzX3BjaWVfZzQgew0KKwlzdHJ1Y3QgbW9iaXZlaWxfcGNpZSAq
-cGNpOw0KKwlzdHJ1Y3QgZGVsYXllZF93b3JrIGR3b3JrOw0KKwlpbnQgaXJxOw0KK307DQorDQor
-c3RhdGljIGlubGluZSB1MzIgbHNfcGNpZV9nNF9sdXRfcmVhZGwoc3RydWN0IGxzX3BjaWVfZzQg
-KnBjaWUsIHUzMiBvZmYpDQorew0KKwlyZXR1cm4gaW9yZWFkMzIocGNpZS0+cGNpLT5jc3JfYXhp
-X3NsYXZlX2Jhc2UgKyBQQ0lFX0xVVF9PRkYgKyBvZmYpOw0KK30NCisNCitzdGF0aWMgaW5saW5l
-IHZvaWQgbHNfcGNpZV9nNF9sdXRfd3JpdGVsKHN0cnVjdCBsc19wY2llX2c0ICpwY2llLA0KKwkJ
-CQkJIHUzMiBvZmYsIHUzMiB2YWwpDQorew0KKwlpb3dyaXRlMzIodmFsLCBwY2llLT5wY2ktPmNz
-cl9heGlfc2xhdmVfYmFzZSArIFBDSUVfTFVUX09GRiArIG9mZik7DQorfQ0KKw0KK3N0YXRpYyBp
-bmxpbmUgdTMyIGxzX3BjaWVfZzRfcGZfcmVhZGwoc3RydWN0IGxzX3BjaWVfZzQgKnBjaWUsIHUz
-MiBvZmYpDQorew0KKwlyZXR1cm4gaW9yZWFkMzIocGNpZS0+cGNpLT5jc3JfYXhpX3NsYXZlX2Jh
-c2UgKyBQQ0lFX1BGX09GRiArIG9mZik7DQorfQ0KKw0KK3N0YXRpYyBpbmxpbmUgdm9pZCBsc19w
-Y2llX2c0X3BmX3dyaXRlbChzdHJ1Y3QgbHNfcGNpZV9nNCAqcGNpZSwNCisJCQkJCXUzMiBvZmYs
-IHUzMiB2YWwpDQorew0KKwlpb3dyaXRlMzIodmFsLCBwY2llLT5wY2ktPmNzcl9heGlfc2xhdmVf
-YmFzZSArIFBDSUVfUEZfT0ZGICsgb2ZmKTsNCit9DQorDQorc3RhdGljIGJvb2wgbHNfcGNpZV9n
-NF9pc19icmlkZ2Uoc3RydWN0IGxzX3BjaWVfZzQgKnBjaWUpDQorew0KKwlzdHJ1Y3QgbW9iaXZl
-aWxfcGNpZSAqbXZfcGNpID0gcGNpZS0+cGNpOw0KKwl1MzIgaGVhZGVyX3R5cGU7DQorDQorCWhl
-YWRlcl90eXBlID0gY3NyX3JlYWRiKG12X3BjaSwgUENJX0hFQURFUl9UWVBFKTsNCisJaGVhZGVy
-X3R5cGUgJj0gMHg3ZjsNCisNCisJcmV0dXJuIGhlYWRlcl90eXBlID09IFBDSV9IRUFERVJfVFlQ
-RV9CUklER0U7DQorfQ0KKw0KK3N0YXRpYyBpbnQgbHNfcGNpZV9nNF9saW5rX3VwKHN0cnVjdCBt
-b2JpdmVpbF9wY2llICpwY2kpDQorew0KKwlzdHJ1Y3QgbHNfcGNpZV9nNCAqcGNpZSA9IHRvX2xz
-X3BjaWVfZzQocGNpKTsNCisJdTMyIHN0YXRlOw0KKw0KKwlzdGF0ZSA9IGxzX3BjaWVfZzRfcGZf
-cmVhZGwocGNpZSwgUENJRV9QRl9EQkcpOw0KKwlzdGF0ZSA9CXN0YXRlICYgUEZfREJHX0xUU1NN
-X01BU0s7DQorDQorCWlmIChzdGF0ZSA9PSBMU19QQ0lFX0c0X0xUU1NNX0wwKQ0KKwkJcmV0dXJu
-IDE7DQorDQorCXJldHVybiAwOw0KK30NCisNCitzdGF0aWMgdm9pZCBsc19wY2llX2c0X3JlaW5p
-dF9odyhzdHJ1Y3QgbHNfcGNpZV9nNCAqcGNpZSkNCit7DQorCXN0cnVjdCBtb2JpdmVpbF9wY2ll
-ICptdl9wY2kgPSBwY2llLT5wY2k7DQorCXUzMiB2YWwsIGFjdF9zdGF0Ow0KKwlpbnQgdG8gPSAx
-MDA7DQorDQorCS8qIFBvbGwgZm9yIHBhYl9jc2JfcmVzZXQgdG8gc2V0IGFuZCBQQUIgYWN0aXZp
-dHkgdG8gY2xlYXIgKi8NCisJZG8gew0KKwkJdXNsZWVwX3JhbmdlKDEwLCAxNSk7DQorCQl2YWwg
-PSBsc19wY2llX2c0X3BmX3JlYWRsKHBjaWUsIFBDSUVfUEZfSU5UX1NUQVQpOw0KKwkJYWN0X3N0
-YXQgPSBjc3JfcmVhZGwobXZfcGNpLCBQQUJfQUNUSVZJVFlfU1RBVCk7DQorCX0gd2hpbGUgKCgo
-dmFsICYgMSA8PCBQRl9JTlRfU1RBVF9QQUJSU1QpID09IDAgfHwgYWN0X3N0YXQpICYmIHRvLS0p
-Ow0KKwlpZiAodG8gPCAwKSB7DQorCQlkZXZfZXJyKCZtdl9wY2ktPnBkZXYtPmRldiwgInBvbGwg
-UEFCUlNUJlBBQkFDVCB0aW1lb3V0XG4iKTsNCisJCXJldHVybjsNCisJfQ0KKw0KKwkvKiBjbGVh
-ciBQRVhfUkVTRVQgYml0IGluIFBFWF9QRjBfREJHIHJlZ2lzdGVyICovDQorCXZhbCA9IGxzX3Bj
-aWVfZzRfcGZfcmVhZGwocGNpZSwgUENJRV9QRl9EQkcpOw0KKwl2YWwgfD0gMSA8PCBQRl9EQkdf
-V0U7DQorCWxzX3BjaWVfZzRfcGZfd3JpdGVsKHBjaWUsIFBDSUVfUEZfREJHLCB2YWwpOw0KKw0K
-Kwl2YWwgPSBsc19wY2llX2c0X3BmX3JlYWRsKHBjaWUsIFBDSUVfUEZfREJHKTsNCisJdmFsIHw9
-IDEgPDwgUEZfREJHX1BBQlI7DQorCWxzX3BjaWVfZzRfcGZfd3JpdGVsKHBjaWUsIFBDSUVfUEZf
-REJHLCB2YWwpOw0KKw0KKwl2YWwgPSBsc19wY2llX2c0X3BmX3JlYWRsKHBjaWUsIFBDSUVfUEZf
-REJHKTsNCisJdmFsICY9IH4oMSA8PCBQRl9EQkdfV0UpOw0KKwlsc19wY2llX2c0X3BmX3dyaXRl
-bChwY2llLCBQQ0lFX1BGX0RCRywgdmFsKTsNCisNCisJbW9iaXZlaWxfaG9zdF9pbml0KG12X3Bj
-aSwgdHJ1ZSk7DQorDQorCXRvID0gMTAwOw0KKwl3aGlsZSAoIWxzX3BjaWVfZzRfbGlua191cCht
-dl9wY2kpICYmIHRvLS0pDQorCQl1c2xlZXBfcmFuZ2UoMjAwLCAyNTApOw0KKwlpZiAodG8gPCAw
-KQ0KKwkJZGV2X2VycigmbXZfcGNpLT5wZGV2LT5kZXYsICJQQ0llIGxpbmsgdHJhaW5uaW5nIHRp
-bWVvdXRcbiIpOw0KK30NCisNCitzdGF0aWMgaXJxcmV0dXJuX3QgbHNfcGNpZV9nNF9oYW5kbGVy
-KGludCBpcnEsIHZvaWQgKmRldl9pZCkNCit7DQorCXN0cnVjdCBsc19wY2llX2c0ICpwY2llID0g
-KHN0cnVjdCBsc19wY2llX2c0ICopZGV2X2lkOw0KKwlzdHJ1Y3QgbW9iaXZlaWxfcGNpZSAqbXZf
-cGNpID0gcGNpZS0+cGNpOw0KKwl1MzIgdmFsOw0KKw0KKwl2YWwgPSBjc3JfcmVhZGwobXZfcGNp
-LCBQQUJfSU5UUF9BTUJBX01JU0NfU1RBVCk7DQorCWlmICghdmFsKQ0KKwkJcmV0dXJuIElSUV9O
-T05FOw0KKw0KKwlpZiAodmFsICYgUEFCX0lOVFBfUkVTRVQpDQorCQlzY2hlZHVsZV9kZWxheWVk
-X3dvcmsoJnBjaWUtPmR3b3JrLCBtc2Vjc190b19qaWZmaWVzKDEpKTsNCisNCisJY3NyX3dyaXRl
-bChtdl9wY2ksIHZhbCwgUEFCX0lOVFBfQU1CQV9NSVNDX1NUQVQpOw0KKw0KKwlyZXR1cm4gSVJR
-X0hBTkRMRUQ7DQorfQ0KKw0KK3N0YXRpYyBpbnQgbHNfcGNpZV9nNF9pbnRlcnJ1cHRfaW5pdChz
-dHJ1Y3QgbW9iaXZlaWxfcGNpZSAqbXZfcGNpKQ0KK3sNCisJc3RydWN0IGxzX3BjaWVfZzQgKnBj
-aWUgPSB0b19sc19wY2llX2c0KG12X3BjaSk7DQorCXUzMiB2YWw7DQorCWludCByZXQ7DQorDQor
-CXBjaWUtPmlycSA9IHBsYXRmb3JtX2dldF9pcnFfYnluYW1lKG12X3BjaS0+cGRldiwgImludHIi
-KTsNCisJaWYgKHBjaWUtPmlycSA8IDApIHsNCisJCWRldl9lcnIoJm12X3BjaS0+cGRldi0+ZGV2
-LCAiQ2FuJ3QgZ2V0ICdpbnRyJyBpcnEuXG4iKTsNCisJCXJldHVybiBwY2llLT5pcnE7DQorCX0N
-CisJcmV0ID0gZGV2bV9yZXF1ZXN0X2lycSgmbXZfcGNpLT5wZGV2LT5kZXYsIHBjaWUtPmlycSwN
-CisJCQkgICAgICAgbHNfcGNpZV9nNF9oYW5kbGVyLCBJUlFGX1NIQVJFRCwNCisJCQkgICAgICAg
-bXZfcGNpLT5wZGV2LT5uYW1lLCBwY2llKTsNCisJaWYgKHJldCkgew0KKwkJZGV2X2VycigmbXZf
-cGNpLT5wZGV2LT5kZXYsICJDYW4ndCByZWdpc3RlciBQQ0llIElSUS5cbiIpOw0KKwkJcmV0dXJu
-ICByZXQ7DQorCX0NCisNCisJLyogRW5hYmxlIGludGVycnVwdHMgKi8NCisJdmFsID0gUEFCX0lO
-VFBfSU5UWF9NQVNLIHwgUEFCX0lOVFBfTVNJIHwgUEFCX0lOVFBfUkVTRVQgfA0KKwkgICAgICBQ
-QUJfSU5UUF9QQ0lFX1VFIHwgUEFCX0lOVFBfSUVfUE1SRURJIHwgUEFCX0lOVFBfSUVfRUM7DQor
-CWNzcl93cml0ZWwobXZfcGNpLCB2YWwsIFBBQl9JTlRQX0FNQkFfTUlTQ19FTkIpOw0KKw0KKwly
-ZXR1cm4gMDsNCit9DQorDQorc3RhdGljIHZvaWQgbHNfcGNpZV9nNF9yZXNldChzdHJ1Y3Qgd29y
-a19zdHJ1Y3QgKndvcmspDQorew0KKwlzdHJ1Y3QgZGVsYXllZF93b3JrICpkd29yayA9IGNvbnRh
-aW5lcl9vZih3b3JrLCBzdHJ1Y3QgZGVsYXllZF93b3JrLA0KKwkJCQkJCSAgd29yayk7DQorCXN0
-cnVjdCBsc19wY2llX2c0ICpwY2llID0gY29udGFpbmVyX29mKGR3b3JrLCBzdHJ1Y3QgbHNfcGNp
-ZV9nNCwgZHdvcmspOw0KKwlzdHJ1Y3QgbW9iaXZlaWxfcGNpZSAqbXZfcGNpID0gcGNpZS0+cGNp
-Ow0KKwl1MTYgY3RybDsNCisNCisJY3RybCA9IGNzcl9yZWFkdyhtdl9wY2ksIFBDSV9CUklER0Vf
-Q09OVFJPTCk7DQorCWN0cmwgJj0gflBDSV9CUklER0VfQ1RMX0JVU19SRVNFVDsNCisJY3NyX3dy
-aXRldyhtdl9wY2ksIGN0cmwsIFBDSV9CUklER0VfQ09OVFJPTCk7DQorCWxzX3BjaWVfZzRfcmVp
-bml0X2h3KHBjaWUpOw0KK30NCisNCitzdGF0aWMgc3RydWN0IG1vYml2ZWlsX3JwX29wcyBsc19w
-Y2llX2c0X3JwX29wcyA9IHsNCisJLmludGVycnVwdF9pbml0ID0gbHNfcGNpZV9nNF9pbnRlcnJ1
-cHRfaW5pdCwNCit9Ow0KKw0KK3N0YXRpYyBjb25zdCBzdHJ1Y3QgbW9iaXZlaWxfcGFiX29wcyBs
-c19wY2llX2c0X3BhYl9vcHMgPSB7DQorCS5saW5rX3VwID0gbHNfcGNpZV9nNF9saW5rX3VwLA0K
-K307DQorDQorc3RhdGljIGludCBfX2luaXQgbHNfcGNpZV9nNF9wcm9iZShzdHJ1Y3QgcGxhdGZv
-cm1fZGV2aWNlICpwZGV2KQ0KK3sNCisJc3RydWN0IGRldmljZSAqZGV2ID0gJnBkZXYtPmRldjsN
-CisJc3RydWN0IG1vYml2ZWlsX3BjaWUgKm12X3BjaTsNCisJc3RydWN0IGxzX3BjaWVfZzQgKnBj
-aWU7DQorCXN0cnVjdCBkZXZpY2Vfbm9kZSAqbnAgPSBkZXYtPm9mX25vZGU7DQorCWludCByZXQ7
-DQorDQorCWlmICghb2ZfcGFyc2VfcGhhbmRsZShucCwgIm1zaS1wYXJlbnQiLCAwKSkgew0KKwkJ
-ZGV2X2VycihkZXYsICJmYWlsZWQgdG8gZmluZCBtc2ktcGFyZW50XG4iKTsNCisJCXJldHVybiAt
-RUlOVkFMOw0KKwl9DQorDQorCXBjaWUgPSBkZXZtX2t6YWxsb2MoZGV2LCBzaXplb2YoKnBjaWUp
-LCBHRlBfS0VSTkVMKTsNCisJaWYgKCFwY2llKQ0KKwkJcmV0dXJuIC1FTk9NRU07DQorDQorCW12
-X3BjaSA9IGRldm1fa3phbGxvYyhkZXYsIHNpemVvZigqbXZfcGNpKSwgR0ZQX0tFUk5FTCk7DQor
-CWlmICghbXZfcGNpKQ0KKwkJcmV0dXJuIC1FTk9NRU07DQorDQorCW12X3BjaS0+cGRldiA9IHBk
-ZXY7DQorCW12X3BjaS0+b3BzID0gJmxzX3BjaWVfZzRfcGFiX29wczsNCisJbXZfcGNpLT5ycC5v
-cHMgPSAmbHNfcGNpZV9nNF9ycF9vcHM7DQorCXBjaWUtPnBjaSA9IG12X3BjaTsNCisNCisJcGxh
-dGZvcm1fc2V0X2RydmRhdGEocGRldiwgcGNpZSk7DQorDQorCUlOSVRfREVMQVlFRF9XT1JLKCZw
-Y2llLT5kd29yaywgbHNfcGNpZV9nNF9yZXNldCk7DQorDQorCXJldCA9IG1vYml2ZWlsX3BjaWVf
-aG9zdF9wcm9iZShtdl9wY2kpOw0KKwlpZiAocmV0KSB7DQorCQlkZXZfZXJyKGRldiwgImZhaWwg
-dG8gcHJvYmUhXG4iKTsNCisJCXJldHVybiAgcmV0Ow0KKwl9DQorDQorCWlmICghbHNfcGNpZV9n
-NF9pc19icmlkZ2UocGNpZSkpDQorCQlyZXR1cm4gLUVOT0RFVjsNCisNCisJcmV0dXJuIDA7DQor
-fQ0KKw0KK3N0YXRpYyBjb25zdCBzdHJ1Y3Qgb2ZfZGV2aWNlX2lkIGxzX3BjaWVfZzRfb2ZfbWF0
-Y2hbXSA9IHsNCisJeyAuY29tcGF0aWJsZSA9ICJmc2wsbHgyMTYwYS1wY2llIiwgfSwNCisJeyB9
-LA0KK307DQorDQorc3RhdGljIHN0cnVjdCBwbGF0Zm9ybV9kcml2ZXIgbHNfcGNpZV9nNF9kcml2
-ZXIgPSB7DQorCS5kcml2ZXIgPSB7DQorCQkubmFtZSA9ICJsYXllcnNjYXBlLXBjaWUtZ2VuNCIs
-DQorCQkub2ZfbWF0Y2hfdGFibGUgPSBsc19wY2llX2c0X29mX21hdGNoLA0KKwkJLnN1cHByZXNz
-X2JpbmRfYXR0cnMgPSB0cnVlLA0KKwl9LA0KK307DQorDQorYnVpbHRpbl9wbGF0Zm9ybV9kcml2
-ZXJfcHJvYmUobHNfcGNpZV9nNF9kcml2ZXIsIGxzX3BjaWVfZzRfcHJvYmUpOw0KZGlmZiAtLWdp
-dCBhL2RyaXZlcnMvcGNpL2NvbnRyb2xsZXIvbW9iaXZlaWwvcGNpZS1tb2JpdmVpbC5oIGIvZHJp
-dmVycy9wY2kvY29udHJvbGxlci9tb2JpdmVpbC9wY2llLW1vYml2ZWlsLmgNCmluZGV4IDBmNTMw
-Mzk2MmU4OC4uMGNjZDZjZWU1ZjhmIDEwMDY0NA0KLS0tIGEvZHJpdmVycy9wY2kvY29udHJvbGxl
-ci9tb2JpdmVpbC9wY2llLW1vYml2ZWlsLmgNCisrKyBiL2RyaXZlcnMvcGNpL2NvbnRyb2xsZXIv
-bW9iaXZlaWwvcGNpZS1tb2JpdmVpbC5oDQpAQCAtNDEsNiArNDEsOCBAQA0KICNkZWZpbmUgIFBB
-R0VfTE9fTUFTSwkJCTB4M2ZmDQogI2RlZmluZSAgUEFHRV9TRUxfT0ZGU0VUX1NISUZUCQkxMA0K
-IA0KKyNkZWZpbmUgUEFCX0FDVElWSVRZX1NUQVQJCTB4ODFjDQorDQogI2RlZmluZSBQQUJfQVhJ
-X1BJT19DVFJMCQkweDA4NDANCiAjZGVmaW5lICBBUElPX0VOX01BU0sJCQkweGYNCiANCkBAIC00
-OSw4ICs1MSwxOCBAQA0KIA0KICNkZWZpbmUgUEFCX0lOVFBfQU1CQV9NSVNDX0VOQgkJMHgwYjBj
-DQogI2RlZmluZSBQQUJfSU5UUF9BTUJBX01JU0NfU1RBVAkJMHgwYjFjDQotI2RlZmluZSAgUEFC
-X0lOVFBfSU5UWF9NQVNLCQkweDAxZTANCi0jZGVmaW5lICBQQUJfSU5UUF9NU0lfTUFTSwkJMHg4
-DQorI2RlZmluZSAgUEFCX0lOVFBfUkVTRVQJCQkoMHgxIDw8IDEpDQorI2RlZmluZSAgUEFCX0lO
-VFBfTVNJCQkJKDB4MSA8PCAzKQ0KKyNkZWZpbmUgIFBBQl9JTlRQX0lOVEEJCQkoMHgxIDw8IDUp
-DQorI2RlZmluZSAgUEFCX0lOVFBfSU5UQgkJCSgweDEgPDwgNikNCisjZGVmaW5lICBQQUJfSU5U
-UF9JTlRDCQkJKDB4MSA8PCA3KQ0KKyNkZWZpbmUgIFBBQl9JTlRQX0lOVEQJCQkoMHgxIDw8IDgp
-DQorI2RlZmluZSAgUEFCX0lOVFBfUENJRV9VRQkJKDB4MSA8PCA5KQ0KKyNkZWZpbmUgIFBBQl9J
-TlRQX0lFX1BNUkVESQkJKDB4MSA8PCAyOSkNCisjZGVmaW5lICBQQUJfSU5UUF9JRV9FQwkJCSgw
-eDEgPDwgMzApDQorI2RlZmluZSAgUEFCX0lOVFBfTVNJX01BU0sJCVBBQl9JTlRQX01TSQ0KKyNk
-ZWZpbmUgIFBBQl9JTlRQX0lOVFhfTUFTSwkJKFBBQl9JTlRQX0lOVEEgfCBQQUJfSU5UUF9JTlRC
-IHxcDQorCQkJCQlQQUJfSU5UUF9JTlRDIHwgUEFCX0lOVFBfSU5URCkNCiANCiAjZGVmaW5lIFBB
-Ql9BWElfQU1BUF9DVFJMKHdpbikJCVBBQl9SRUdfQUREUigweDBiYTAsIHdpbikNCiAjZGVmaW5l
-ICBXSU5fRU5BQkxFX1NISUZUCQkwDQotLSANCjIuMTcuMQ0KDQo=
+From: Hou Zhiqiang <Zhiqiang.Hou@nxp.com>
+
+Make the mobiveil_host_init function can be used to re-init
+host controller's PAB and GPEX CSR register block, as NXP
+integrated Mobiveil IP has to reset and then re-init the PAB
+and GPEX CSR registers upon Hot-reset.
+
+Signed-off-by: Hou Zhiqiang <Zhiqiang.Hou@nxp.com>
+---
+V2:
+ - Reset the statistic of IB/OB windows configured.
+ - Change the type of member 'resources' to pointer to record the parsed
+   resources for re-init the outbound windows.
+
+ .../controller/mobiveil/pcie-mobiveil-host.c  | 32 +++++++++++--------
+ .../pci/controller/mobiveil/pcie-mobiveil.h   |  3 +-
+ 2 files changed, 20 insertions(+), 15 deletions(-)
+
+diff --git a/drivers/pci/controller/mobiveil/pcie-mobiveil-host.c b/drivers=
+/pci/controller/mobiveil/pcie-mobiveil-host.c
+index d028cdf31d0e..c85f00d3cfcf 100644
+--- a/drivers/pci/controller/mobiveil/pcie-mobiveil-host.c
++++ b/drivers/pci/controller/mobiveil/pcie-mobiveil-host.c
+@@ -217,7 +217,7 @@ static void mobiveil_pcie_enable_msi(struct mobiveil_pc=
+ie *pcie)
+ 	writel_relaxed(1, pcie->apb_csr_base + MSI_ENABLE_OFFSET);
+ }
+=20
+-static int mobiveil_host_init(struct mobiveil_pcie *pcie)
++int mobiveil_host_init(struct mobiveil_pcie *pcie, bool reinit)
+ {
+ 	u32 value, pab_ctrl, type;
+ 	struct resource_entry *win;
+@@ -229,11 +229,16 @@ static int mobiveil_host_init(struct mobiveil_pcie *p=
+cie)
+ 	for (i =3D 0; i < pcie->ppio_wins; i++)
+ 		mobiveil_pcie_disable_ib_win(pcie, i);
+=20
+-	/* setup bus numbers */
+-	value =3D csr_readl(pcie, PCI_PRIMARY_BUS);
+-	value &=3D 0xff000000;
+-	value |=3D 0x00ff0100;
+-	csr_writel(pcie, value, PCI_PRIMARY_BUS);
++	pcie->ib_wins_configured =3D 0;
++	pcie->ob_wins_configured =3D 0;
++
++	if (!reinit) {
++		/* setup bus numbers */
++		value =3D csr_readl(pcie, PCI_PRIMARY_BUS);
++		value &=3D 0xff000000;
++		value |=3D 0x00ff0100;
++		csr_writel(pcie, value, PCI_PRIMARY_BUS);
++	}
+=20
+ 	/*
+ 	 * program Bus Master Enable Bit in Command Register in PAB Config
+@@ -279,7 +284,7 @@ static int mobiveil_host_init(struct mobiveil_pcie *pci=
+e)
+ 	program_ib_windows(pcie, WIN_NUM_0, 0, 0, MEM_WINDOW_TYPE, IB_WIN_SIZE);
+=20
+ 	/* Get the I/O and memory ranges from DT */
+-	resource_list_for_each_entry(win, &pcie->resources) {
++	resource_list_for_each_entry(win, pcie->resources) {
+ 		if (resource_type(win->res) =3D=3D IORESOURCE_MEM) {
+ 			type =3D MEM_WINDOW_TYPE;
+ 		} else if (resource_type(win->res) =3D=3D IORESOURCE_IO) {
+@@ -550,8 +555,6 @@ int mobiveil_pcie_host_probe(struct mobiveil_pcie *pcie=
+)
+ 	resource_size_t iobase;
+ 	int ret;
+=20
+-	INIT_LIST_HEAD(&pcie->resources);
+-
+ 	ret =3D mobiveil_pcie_parse_dt(pcie);
+ 	if (ret) {
+ 		dev_err(dev, "Parsing DT failed, ret: %x\n", ret);
+@@ -565,17 +568,19 @@ int mobiveil_pcie_host_probe(struct mobiveil_pcie *pc=
+ie)
+=20
+ 	/* parse the host bridge base addresses from the device tree file */
+ 	ret =3D devm_of_pci_get_host_bridge_resources(dev, 0, 0xff,
+-						    &pcie->resources, &iobase);
++						    &bridge->windows, &iobase);
+ 	if (ret) {
+ 		dev_err(dev, "Getting bridge resources failed\n");
+ 		return ret;
+ 	}
+=20
++	pcie->resources =3D &bridge->windows;
++
+ 	/*
+ 	 * configure all inbound and outbound windows and prepare the RC for
+ 	 * config access
+ 	 */
+-	ret =3D mobiveil_host_init(pcie);
++	ret =3D mobiveil_host_init(pcie, false);
+ 	if (ret) {
+ 		dev_err(dev, "Failed to initialize host\n");
+ 		goto error;
+@@ -587,12 +592,11 @@ int mobiveil_pcie_host_probe(struct mobiveil_pcie *pc=
+ie)
+ 		goto error;
+ 	}
+=20
+-	ret =3D devm_request_pci_bus_resources(dev, &pcie->resources);
++	ret =3D devm_request_pci_bus_resources(dev, pcie->resources);
+ 	if (ret)
+ 		goto error;
+=20
+ 	/* Initialize bridge */
+-	list_splice_init(&pcie->resources, &bridge->windows);
+ 	bridge->dev.parent =3D dev;
+ 	bridge->sysdata =3D pcie;
+ 	bridge->busnr =3D pcie->rp.root_bus_nr;
+@@ -619,6 +623,6 @@ int mobiveil_pcie_host_probe(struct mobiveil_pcie *pcie=
+)
+=20
+ 	return 0;
+ error:
+-	pci_free_resource_list(&pcie->resources);
++	pci_free_resource_list(pcie->resources);
+ 	return ret;
+ }
+diff --git a/drivers/pci/controller/mobiveil/pcie-mobiveil.h b/drivers/pci/=
+controller/mobiveil/pcie-mobiveil.h
+index 933c2f34bc52..0f5303962e88 100644
+--- a/drivers/pci/controller/mobiveil/pcie-mobiveil.h
++++ b/drivers/pci/controller/mobiveil/pcie-mobiveil.h
+@@ -152,7 +152,7 @@ struct mobiveil_pab_ops {
+=20
+ struct mobiveil_pcie {
+ 	struct platform_device *pdev;
+-	struct list_head resources;
++	struct list_head *resources;
+ 	void __iomem *csr_axi_slave_base;	/* PAB registers base */
+ 	phys_addr_t pcie_reg_base;	/* Physical PCIe Controller Base */
+ 	void __iomem *apb_csr_base;	/* MSI register base */
+@@ -165,6 +165,7 @@ struct mobiveil_pcie {
+ };
+=20
+ int mobiveil_pcie_host_probe(struct mobiveil_pcie *pcie);
++int mobiveil_host_init(struct mobiveil_pcie *pcie, bool reinit);
+ bool mobiveil_pcie_link_up(struct mobiveil_pcie *pcie);
+ int mobiveil_bringup_link(struct mobiveil_pcie *pcie);
+ void program_ob_windows(struct mobiveil_pcie *pcie, int win_num, u64 cpu_a=
+ddr,
+--=20
+2.17.1
+
