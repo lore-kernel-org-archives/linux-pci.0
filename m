@@ -2,133 +2,725 @@ Return-Path: <SRS0=4GJS=N7=vger.kernel.org=linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-1.1 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
-	DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_PASS,
-	URIBL_BLOCKED autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-7.1 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
+	DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,
+	SIGNED_OFF_BY,SPF_PASS,URIBL_BLOCKED autolearn=ham autolearn_force=no
+	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 336D4C4161D
-	for <linux-pci@archiver.kernel.org>; Tue, 20 Nov 2018 19:13:34 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 66F7EC4161D
+	for <linux-pci@archiver.kernel.org>; Tue, 20 Nov 2018 19:46:34 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 7A5102145D
-	for <linux-pci@archiver.kernel.org>; Tue, 20 Nov 2018 19:13:24 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 01C152146D
+	for <linux-pci@archiver.kernel.org>; Tue, 20 Nov 2018 19:46:11 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (1024-bit key) header.d=impinj.com header.i=@impinj.com header.b="hG2trV7o"
-DMARC-Filter: OpenDMARC Filter v1.3.2 mail.kernel.org 7A5102145D
-Authentication-Results: mail.kernel.org; dmarc=fail (p=reject dis=none) header.from=impinj.com
+	dkim=pass (2048-bit key) header.d=nvidia.com header.i=@nvidia.com header.b="hm+Gl7Fd"
+DMARC-Filter: OpenDMARC Filter v1.3.2 mail.kernel.org 01C152146D
+Authentication-Results: mail.kernel.org; dmarc=fail (p=none dis=none) header.from=nvidia.com
 Authentication-Results: mail.kernel.org; spf=none smtp.mailfrom=linux-pci-owner@vger.kernel.org
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726467AbeKUFoE (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Wed, 21 Nov 2018 00:44:04 -0500
-Received: from mail-eopbgr780134.outbound.protection.outlook.com ([40.107.78.134]:6127
-        "EHLO NAM03-BY2-obe.outbound.protection.outlook.com"
-        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1726460AbeKUFoE (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Wed, 21 Nov 2018 00:44:04 -0500
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=impinj.com;
- s=selector1;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=nHqiaPwbOHU/xR7Lw7EuqTxF7nJepExjydPubo1+Y0M=;
- b=hG2trV7oqJN7GaRMgo3C7Ms9X3YhqUfK8soeqqDltwXDvUIJjVblwGYW8WdyueZ3AzMF+nGNab98VvAKHnLfbSHLHjFxRPivzFadf5cGKDl9iVvcTrUs+vrcglENoDtLJ7sM6qrmdAHiO0KErY6YjXjteUM2Ei00gt3rg1npHXI=
-Received: from MWHPR0601MB3708.namprd06.prod.outlook.com (10.167.236.38) by
- MWHPR0601MB3769.namprd06.prod.outlook.com (10.167.236.150) with Microsoft
- SMTP Server (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- 15.20.1339.20; Tue, 20 Nov 2018 19:13:19 +0000
-Received: from MWHPR0601MB3708.namprd06.prod.outlook.com
- ([fe80::c0f3:ea8f:48ba:a5d7]) by MWHPR0601MB3708.namprd06.prod.outlook.com
- ([fe80::c0f3:ea8f:48ba:a5d7%4]) with mapi id 15.20.1361.013; Tue, 20 Nov 2018
- 19:13:19 +0000
-From:   Trent Piepho <tpiepho@impinj.com>
-To:     "stefan@agner.ch" <stefan@agner.ch>,
-        "l.stach@pengutronix.de" <l.stach@pengutronix.de>,
-        "lorenzo.pieralisi@arm.com" <lorenzo.pieralisi@arm.com>,
-        "leonard.crestez@nxp.com" <leonard.crestez@nxp.com>
-CC:     "jingoohan1@gmail.com" <jingoohan1@gmail.com>,
-        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-        "andrew.smirnov@gmail.com" <andrew.smirnov@gmail.com>,
-        "hongxing.zhu@nxp.com" <hongxing.zhu@nxp.com>,
-        "gustavo.pimentel@synopsys.com" <gustavo.pimentel@synopsys.com>,
-        "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-        "bhelgaas@google.com" <bhelgaas@google.com>
-Subject: Re: [PATCH v3 2/2] PCI: imx6: limit DBI register length
-Thread-Topic: [PATCH v3 2/2] PCI: imx6: limit DBI register length
-Thread-Index: AQHUgPH+9f73kyfh4Ey6Y3qhQ/Hi4qVY+SkAgAAPIwA=
-Date:   Tue, 20 Nov 2018 19:13:19 +0000
-Message-ID: <1542741198.30311.608.camel@impinj.com>
-References: <20181120165626.26424-1-stefan@agner.ch>
-         <20181120165626.26424-2-stefan@agner.ch>
-         <581b9548043d5276f6685f534386180fd0673a9a.camel@nxp.com>
-In-Reply-To: <581b9548043d5276f6685f534386180fd0673a9a.camel@nxp.com>
-Accept-Language: en-US
-Content-Language: en-US
-X-MS-Has-Attach: 
-X-MS-TNEF-Correlator: 
-authentication-results: spf=none (sender IP is )
- smtp.mailfrom=tpiepho@impinj.com; 
-x-originating-ip: [216.207.205.253]
-x-ms-publictraffictype: Email
-x-microsoft-exchange-diagnostics: 1;MWHPR0601MB3769;6:ZbMgrT7GS9R/ad5ehR3C0Dho3ljBgILIZe38S3+O3nB9h7/7Pg3SPBRfPXnlFX6p0fzmLTcOjK7McUJXORPEPMJ36OVmqNCaqTkHkPCJVByz7lPhwqBOG3+XkasO+F5LYMEIIHke3wsB5n8UL1QIv64Xxjy3fg6GwlfVIWrbDpEXFKNxL36WY50GW8DffPTg748uVU9tkdnZHz+kx8MyCJ2HZsVoEL6FmRRIs5vSOngjTCejBRH8Q4rPrUAlqwAsOtufQ8WP+ZQkG9eXQWBGdwI0C4IdYqubQxLvpBjkB1w0lKg/pirwploAZFT1g4h/V50z6t9hWm5T7/w9Wp1gUjS5DJv3hInRXA40pY0qd1OW3EyXUyk4wpa6G+PzaL8H69XnQIKZbmerN4EC7H0P4xKuaVlQ+xuuRNx0UdocZ3DDGLjMC8A+SIuzaGKQ8T1OhfvEd2x6z3UnMo3hJHbxAA==;5:cIW+I0IYPBFIKttVKoxMAzB4oDXPp+5lxRmiXoLQ+v7QiBbDVrCY8Enei4wdHT6Mm0bpGI4ZIFH7XEHg+heJXCdIGY6FysTh5JHmem1tAbzK+i5F4b90BuUohMX/s3xi6UACuvPYpG2QGZ06eTU37IPSzA+YhuqH5e5hWYHFQdM=;7:1X+45nmBA8PwijFjMUWAIdU/1REF0ytb6GTUqgCO8gLghxtWZCFG2ZoiIuQtTXTDwvFLbP1BoMiTawZlZp3YMwmbpupCRRx71QPPcG8aw5HFGIi3cOQ3B1dd4yCCsne6UiZ7Hyl7TMDTHSLoI5VuGQ==
-x-ms-exchange-antispam-srfa-diagnostics: SOS;
-x-ms-office365-filtering-correlation-id: 7add7613-20cd-4a11-941a-08d64f1c3b51
-x-microsoft-antispam: BCL:0;PCL:0;RULEID:(2390098)(7020095)(4652040)(8989299)(5600074)(711020)(4534185)(4627221)(201703031133081)(201702281549075)(8990200)(2017052603328)(7153060)(7193020);SRVR:MWHPR0601MB3769;
-x-ms-traffictypediagnostic: MWHPR0601MB3769:
-x-microsoft-antispam-prvs: <MWHPR0601MB3769942F36B738F8538536E4D3D90@MWHPR0601MB3769.namprd06.prod.outlook.com>
-x-ms-exchange-senderadcheck: 1
-x-exchange-antispam-report-cfa-test: BCL:0;PCL:0;RULEID:(8211001083)(6040522)(2401047)(5005006)(8121501046)(3231442)(944501410)(52105112)(3002001)(10201501046)(93006095)(93001095)(148016)(149066)(150057)(6041310)(20161123558120)(20161123560045)(20161123562045)(20161123564045)(201703131423095)(201702281528075)(20161123555045)(201703061421075)(201703061406153)(201708071742011)(7699051)(76991095);SRVR:MWHPR0601MB3769;BCL:0;PCL:0;RULEID:;SRVR:MWHPR0601MB3769;
-x-forefront-prvs: 08626BE3A5
-x-forefront-antispam-report: SFV:NSPM;SFS:(10019020)(366004)(136003)(39850400004)(376002)(346002)(396003)(199004)(189003)(105586002)(2501003)(14444005)(66066001)(486006)(39060400002)(11346002)(256004)(2201001)(4001150100001)(71190400001)(76176011)(99286004)(71200400001)(6506007)(4326008)(102836004)(81166006)(68736007)(8936002)(26005)(8676002)(81156014)(25786009)(86362001)(229853002)(97736004)(186003)(110136005)(6512007)(54906003)(305945005)(7416002)(2616005)(478600001)(53936002)(5660300001)(476003)(7736002)(2906002)(446003)(14454004)(6246003)(2900100001)(6436002)(103116003)(316002)(3846002)(36756003)(6486002)(6116002)(106356001);DIR:OUT;SFP:1102;SCL:1;SRVR:MWHPR0601MB3769;H:MWHPR0601MB3708.namprd06.prod.outlook.com;FPR:;SPF:None;LANG:en;PTR:InfoNoRecords;A:1;MX:1;
-received-spf: None (protection.outlook.com: impinj.com does not designate
- permitted sender hosts)
-x-microsoft-antispam-message-info: aE2kQbwPoq57znhKSEhlYVu9QEL76RbsHT63XsUwGeZ0kfVj6qSA0cQ7w8Dq4rzOooU1patekqF+Dv9u7MN8nXtMKU634D8DGVNwEjSQ0VOeOtw4drpv+e4zuOgKL8UkEO7pX5wqDQjtGBD1SKZxHIyp5wM9bqpLKpyH5HDPYjzeeD+GXm8uJxYCLqPYq1bFJuuiOlbrwTsQ4S1LhkvVpbAcm2fiHOwgGf/CD1uhTZbpP2Z0AyEdc3nKGHOpLZoTW222PRQr/8O7qyaWORF2hhQ38MMReLc8rO2GAGxG4Ogr87ADWrQAwBf9dY6iyB1YBOoSgCIhi0k/vlbQjDVv9XSl5zO8XV58kqXeFtiwlc0=
-spamdiagnosticoutput: 1:99
-spamdiagnosticmetadata: NSPM
-Content-Type: text/plain; charset="utf-8"
-Content-ID: <7B265E1D2BCC32469775FAF50363D52C@namprd06.prod.outlook.com>
-Content-Transfer-Encoding: base64
+        id S1726101AbeKUGQ6 (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Wed, 21 Nov 2018 01:16:58 -0500
+Received: from hqemgate16.nvidia.com ([216.228.121.65]:8286 "EHLO
+        hqemgate16.nvidia.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726644AbeKUGQ6 (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Wed, 21 Nov 2018 01:16:58 -0500
+Received: from hqpgpgate101.nvidia.com (Not Verified[216.228.121.13]) by hqemgate16.nvidia.com (using TLS: TLSv1.2, DES-CBC3-SHA)
+        id <B5bf464760000>; Tue, 20 Nov 2018 11:45:58 -0800
+Received: from hqmail.nvidia.com ([172.20.161.6])
+  by hqpgpgate101.nvidia.com (PGP Universal service);
+  Tue, 20 Nov 2018 11:45:50 -0800
+X-PGP-Universal: processed;
+        by hqpgpgate101.nvidia.com on Tue, 20 Nov 2018 11:45:50 -0800
+Received: from [10.24.37.36] (172.20.13.39) by HQMAIL101.nvidia.com
+ (172.20.187.10) with Microsoft SMTP Server (TLS) id 15.0.1395.4; Tue, 20 Nov
+ 2018 19:45:47 +0000
+Subject: Re: [PATCH] PCI: dwc ep: cache config until DBI regs available
+To:     Stephen Warren <swarren@wwwdotorg.org>,
+        Jingoo Han <jingoohan1@gmail.com>,
+        Gustavo Pimentel <gustavo.pimentel@synopsys.com>,
+        Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
+        Bjorn Helgaas <bhelgaas@google.com>
+CC:     "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+        Manikanta Maddireddy <mmaddireddy@nvidia.com>,
+        Stephen Warren <swarren@nvidia.com>
+References: <20181119222602.28001-1-swarren@wwwdotorg.org>
+ <BN6PR12MB11714E3FED1EF50D7F3CA3C9B8D90@BN6PR12MB1171.namprd12.prod.outlook.com>
+ <921c50a5-35b7-33e7-398b-3c4cacef8529@wwwdotorg.org>
+X-Nvconfidentiality: public
+From:   Vidya Sagar <vidyas@nvidia.com>
+Message-ID: <1a624400-5f3f-b1b8-50e1-e5aa4b1eb112@nvidia.com>
+Date:   Wed, 21 Nov 2018 01:15:44 +0530
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:60.0) Gecko/20100101
+ Thunderbird/60.2.1
 MIME-Version: 1.0
-X-OriginatorOrg: impinj.com
-X-MS-Exchange-CrossTenant-Network-Message-Id: 7add7613-20cd-4a11-941a-08d64f1c3b51
-X-MS-Exchange-CrossTenant-originalarrivaltime: 20 Nov 2018 19:13:19.1447
- (UTC)
-X-MS-Exchange-CrossTenant-fromentityheader: Hosted
-X-MS-Exchange-CrossTenant-id: 6de70f0f-7357-4529-a415-d8cbb7e93e5e
-X-MS-Exchange-Transport-CrossTenantHeadersStamped: MWHPR0601MB3769
+In-Reply-To: <921c50a5-35b7-33e7-398b-3c4cacef8529@wwwdotorg.org>
+X-Originating-IP: [172.20.13.39]
+X-ClientProxiedBy: HQMAIL106.nvidia.com (172.18.146.12) To
+ HQMAIL101.nvidia.com (172.20.187.10)
+Content-Type: text/plain; charset="utf-8"; format=flowed
+Content-Transfer-Encoding: quoted-printable
+Content-Language: en-US
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=nvidia.com; s=n1;
+        t=1542743159; bh=/v+whejfp56eZNAw4OEustugwTfFkxXyGZxt2+9VZFc=;
+        h=X-PGP-Universal:Subject:To:CC:References:X-Nvconfidentiality:From:
+         Message-ID:Date:User-Agent:MIME-Version:In-Reply-To:
+         X-Originating-IP:X-ClientProxiedBy:Content-Type:
+         Content-Transfer-Encoding:Content-Language;
+        b=hm+Gl7Fdlv2vLgy+558E2jhhKJ1FWwgYsDwBPJETqhgw9c9RDMsqhUx3X0eSfB1Ve
+         OMz99aZkvTdcVH5QTdFJqtEO+MYEMB1DfEl051LzjmjbIv5CvRz0xn+UBYmf8oW31q
+         /6w1wCCyfFm+Ac6wleXDOFNIq8nRQOszWac52/y2KNa16eBPpYzuY4OZyJ0y3JVSVE
+         ZajIzLTF8wHzB+iS7li3Z1riMVGoADaVa8ckPMibjQ8MF4RE4QspGkhXJs2XrXlr8+
+         0YafTanEBAH+W1wpUFICUguIp+Jq80oSfQtA2X5dTbnjw6ApR4KECaezgzJcXcL9HW
+         HB8Az0LqrL3iQ==
 Sender: linux-pci-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-T24gVHVlLCAyMDE4LTExLTIwIGF0IDE4OjE5ICswMDAwLCBMZW9uYXJkIENyZXN0ZXogd3JvdGU6
-DQo+IE9uIFR1ZSwgMjAxOC0xMS0yMCBhdCAxNzo1NiArMDEwMCwgU3RlZmFuIEFnbmVyIHdyb3Rl
-Og0KPiA+IERlZmluZSB0aGUgbGVuZ3RoIG9mIHRoZSBEQkkgcmVnaXN0ZXJzLiBUaGlzIG1ha2Vz
-IHN1cmUgdGhhdA0KPiA+IHRoZSBrZXJuZWwgZG9lcyBub3QgYWNjZXNzIHJlZ2lzdGVycyBiZXlv
-bmQgdGhhdCBwb2ludCwgYXZvaWRpbmcNCj4gPiB0aGUgZm9sbG93aW5nIGFib3J0IG9uIGEgaS5N
-WCA2UXVhZDoNCj4gPiAgICMgY2F0DQo+ID4gL3N5cy9kZXZpY2VzL3NvYzAvc29jLzFmZmMwMDAu
-cGNpZS9wY2kwMDAwXDowMC8wMDAwXDowMFw6MDAuMC9jb25maWcNCj4gPiAgIFsgIDEwMC4wMjE0
-MzNdIFVuaGFuZGxlZCBmYXVsdDogaW1wcmVjaXNlIGV4dGVybmFsIGFib3J0ICgweDE0MDYpDQo+
-ID4gYXQgMHhiNmVhNzAwMA0KPiA+ICAgLi4uDQo+ID4gICBbICAxMDAuMDU2NDIzXSBQQyBpcyBh
-dCBkd19wY2llX3JlYWQrMHg1MC8weDg0DQo+ID4gICBbICAxMDAuMDYwNzkwXSBMUiBpcyBhdCBk
-d19wY2llX3JkX293bl9jb25mKzB4NDQvMHg0OA0KPiANCj4gSSBkb24ndCBrbm93IGV4YWN0bHkg
-d2hlcmUgdGhpcyBsaW1pdGF0aW9uIGNvbWVzIGZyb20sIEkgY2FuIGluZGVlZA0KPiByZXByb2R1
-Y2UgYSBzdGFjayBkdW1wIHdoZW4gZHVtcGluZyBwY2kgY29uZmlnIGZyb20gL3N5cy8NCj4gDQo+
-IFVuZm9ydHVuYXRlbHkgdGhpcyBzZWVtcyB0byBibG9jayBhY2Nlc3MgdG8gcmVnaXN0ZXJzIHVz
-ZWQgZm9yDQo+IGZ1bmN0aW9uYWxpdHkgbGlrZSBpbnRlcnJ1cHRzLiBGb3IgZXhhbXBsZSBkd19o
-YW5kbGVfbXNpX2lycSBkb2VzOg0KPiANCj4gCWR3X3BjaWVfcmRfb3duX2NvbmYocHAsIFBDSUVf
-TVNJX0lOVFIwX1NUQVRVUyArDQo+IAkJCSAgICAoaSAqIE1TSV9SRUdfQ1RSTF9CTE9DS19TSVpF
-KSwNCj4gCQkJICAgIDQsICZ2YWwpOw0KPiANCj4gd2hlcmUgUENJX01TSV9JTlRSMF9TVEFUVVMg
-aXMgMHg4MzAuIFRoZXJlIGFyZSBtb3JlIGFjY2Vzc2VzIGxpa2UgdGhpcy4NCj4gDQo+IFRlc3Rp
-bmcgb24gNmRsLXNhYnJlYXV0byAoZHRzIGNoYW5nZSByZXF1aXJlZCkgd2l0aCBhbiBhdGg5ayBw
-Y2llIGNhcmQNCj4gd2l0aCB5b3VyIHNlcmllcyBJIHNvbWV0aW1lcyBnZXQgImlycSAyOTU6IG5v
-Ym9keSBjYXJlZCIgb24gYm9vdC4gTWF5YmUNCj4gSSdtIG1pc3Npbmcgc29tZXRoaW5nPw0KDQpP
-biBJTVg3ZCwgdGhlcmUgYXJlIHNpZ25pZmljYW50IGJsb2NrcyBvZiAwMHMgaW4gdGhlIGNvbmZp
-ZyBzcGFjZSwgYW5kDQphbGwgMHhmZiBhdCAweGI1MCBvbiB1cC4NCg0KSS5lLiwgc2lnbmlmaWNh
-bnQgcG9ydGlvbnMgYXJlIGVtcHR5LCBpbiB0aGUgbWlkZGxlIG9mIHRoZSBjb25maWcNCnNwYWNl
-LCBub3QganVzdCBhdCB0aGUgZW5kLg0KDQpCdXQgdGhleSBjYW4gYmUgcmVhZCB3aXRob3V0IHBy
-b2JsZW0uDQoNClBlcmhhcHMgaW14NnEgYWJvcnRzIG9uIGEgcmVhZCBvZiBhbiB1bmltcGxlbWVu
-dGVkIGFkZHJlc3MgaW5zdGVhZCBvZg0KcmV0dXJuaW5nIHplcm9zIGxpa2UgaW14N2QuICBJbiB0
-aGF0IGNhc2UgaXQgcmVhbGx5IG5lZWRzIHNvbWV0aGluZw0KbW9yZSBjb21wbGV4IHRvIHByZXZl
-bnQgYWJvcnQgdGhhbiBqdXN0IGEgbGVuZ3RoLg0KDQpJdCBhbHNvIHNlZW1zIHRvIG1lIHRoYXQg
-dGhpcyBkb2Vzbid0IG5lZWQgdG8gYmUgaW4gdGhlIGludGVybmFsIHBjaQ0KY29uZmlnIGFjY2Vz
-cyBmdW5jdGlvbnMuICBUaGUgZHJpdmVyIHNob3VsZG4ndCBiZSByZWFkaW5nIHJlZ2lzdGVycw0K
-dGhhdCBkb24ndCBleGlzdCBhbnl3YXkuICBJdCdzIHJlYWxseSBhYm91dCB0cnlpbmcgdG8gZml4
-IHN5c2ZzIGFjY2Vzcw0KdG8gcmVnaXN0ZXJzIHRoYXQgZG9uJ3QgZXhpc3QuICBTbyBtYXliZSBp
-dCBzaG91bGQgYmUgZG9uZSB0aGVyZS4=
+
+On 20/11/18 11:11 PM, Stephen Warren wrote:
+> On 11/20/18 10:30 AM, Vidya Sagar wrote:
+>>> -----Original Message-----
+>>> From: Stephen Warren <swarren@wwwdotorg.org>
+>>> Sent: Tuesday, November 20, 2018 3:56 AM
+>>> To: Jingoo Han <jingoohan1@gmail.com>; Gustavo Pimentel
+>>> <gustavo.pimentel@synopsys.com>; Lorenzo Pieralisi
+>>> <lorenzo.pieralisi@arm.com>; Bjorn Helgaas <bhelgaas@google.com>
+>>> Cc: linux-pci@vger.kernel.org; Vidya Sagar <vidyas@nvidia.com>;=20
+>>> Manikanta
+>>> Maddireddy <mmaddireddy@nvidia.com>; Stephen Warren
+>>> <swarren@nvidia.com>
+>>> Subject: [PATCH] PCI: dwc ep: cache config until DBI regs available
+>>>
+>>> From: Stephen Warren <swarren@nvidia.com>
+>>>
+>>> Some implementations of the DWC PCIe endpoint controller do not=20
+>>> allow access
+>>> to DBI registers until the attached host has started REFCLK,=20
+>>> released PERST, and
+>>> the endpoint driver has initialized clocking of the DBI registers=20
+>>> based on that.
+>>> One such system is NVIDIA's T194 SoC. The PCIe endpoint subsystem=20
+>>> and DWC
+>>> driver currently don't work on such hardware, since they assume that=20
+>>> all
+>>> endpoint configuration can happen at any arbitrary time.
+>>>
+>>> Enhance the DWC endpoint driver to support such systems by caching all
+>>> endpoint configuration in software, and only writing the=20
+>>> configuration to
+>>> hardware once it's been initialized. This is implemented by=20
+>>> splitting all endpoint
+>>> controller ops into two functions; the first which simply=20
+>>> records/caches the
+>>> desired configuration whenever called by the associated function=20
+>>> driver and
+>>> optionally calls the second, and the second which actually programs the
+>>> configuration into hardware, which may be called either by the first=20
+>>> function, or
+>>> later when it's known that the DBI registers are available.
+>>>
+>>> Signed-off-by: Stephen Warren <swarren@nvidia.com>
+>>> ---
+>>> Note: I have only compiled-tested this patch in the context of the=20
+>>> mainline
+>>> kernel since NVIDIA Tegra PCIe EP support is not yet present.
+>>> However, I've built and tested an equivalent patch in our downstream=20
+>>> kernel. I
+>>> did have to manually port it to mainline due to conflicts though.
+>>>
+>>> This patch was developed on top of "PCI: designware: don't hard-code=20
+>>> DBI/ATU
+>>> offset" which I sent last week, so may rely on that for patch context.
+>>> ---
+>>> =C2=A0 .../pci/controller/dwc/pcie-designware-ep.c=C2=A0=C2=A0 | 199=20
+>>> ++++++++++++++----
+>>> =C2=A0 drivers/pci/controller/dwc/pcie-designware.h=C2=A0 |=C2=A0 26 ++=
+-
+>>> =C2=A0 2 files changed, 181 insertions(+), 44 deletions(-)
+>>>
+>>> diff --git a/drivers/pci/controller/dwc/pcie-designware-ep.c
+>>> b/drivers/pci/controller/dwc/pcie-designware-ep.c
+>>> index 880210366e71..6910b64bfdcb 100644
+>>> --- a/drivers/pci/controller/dwc/pcie-designware-ep.c
+>>> +++ b/drivers/pci/controller/dwc/pcie-designware-ep.c
+>>> @@ -73,11 +73,10 @@ static u8 dw_pcie_ep_find_capability(struct dw_pcie
+>>> *pci, u8 cap)
+>>> =C2=A0=C2=A0=C2=A0=C2=A0=C2=A0 return __dw_pcie_ep_find_next_cap(pci, n=
+ext_cap_ptr, cap);=C2=A0 }
+>>>
+>>> -static int dw_pcie_ep_write_header(struct pci_epc *epc, u8 func_no,
+>>> -=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=
+=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0 struct pci_epf_header *hdr)
+>>> +static void dw_pcie_ep_write_header_regs(struct dw_pcie_ep *ep)
+>>> =C2=A0 {
+>>> -=C2=A0=C2=A0=C2=A0 struct dw_pcie_ep *ep =3D epc_get_drvdata(epc);
+>>> =C2=A0=C2=A0=C2=A0=C2=A0=C2=A0 struct dw_pcie *pci =3D to_dw_pcie_from_=
+ep(ep);
+>>> +=C2=A0=C2=A0=C2=A0 struct pci_epf_header *hdr =3D &(ep->cached_hdr);
+>>>
+>>> =C2=A0=C2=A0=C2=A0=C2=A0=C2=A0 dw_pcie_dbi_ro_wr_en(pci);
+>>> =C2=A0=C2=A0=C2=A0=C2=A0=C2=A0 dw_pcie_writew_dbi(pci, PCI_VENDOR_ID, h=
+dr->vendorid); @@ -94,6
+>>> +93,19 @@ static int dw_pcie_ep_write_header(struct pci_epc *epc, u8
+>>> func_no,
+>>> =C2=A0=C2=A0=C2=A0=C2=A0=C2=A0 dw_pcie_writeb_dbi(pci, PCI_INTERRUPT_PI=
+N,
+>>> =C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=
+=A0=C2=A0=C2=A0=C2=A0=C2=A0 hdr->interrupt_pin);
+>>> =C2=A0=C2=A0=C2=A0=C2=A0=C2=A0 dw_pcie_dbi_ro_wr_dis(pci);
+>>> +}
+>>> +
+>>> +static int dw_pcie_ep_write_header(struct pci_epc *epc, u8 func_no,
+>>> +=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=
+=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0 struct pci_epf_header *hdr)
+>>> +{
+>>> +=C2=A0=C2=A0=C2=A0 struct dw_pcie_ep *ep =3D epc_get_drvdata(epc);
+>>> +
+>>> +=C2=A0=C2=A0=C2=A0 ep->cached_hdr =3D *hdr;
+>>> +
+>>> +=C2=A0=C2=A0=C2=A0 if (!ep->hw_regs_available)
+>>> +=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0 return 0;
+>>> +
+>>> +=C2=A0=C2=A0=C2=A0 dw_pcie_ep_write_header_regs(ep);
+>>>
+>>> =C2=A0=C2=A0=C2=A0=C2=A0=C2=A0 return 0;
+>>> =C2=A0 }
+>>> @@ -112,6 +124,15 @@ static int dw_pcie_ep_inbound_atu(struct=20
+>>> dw_pcie_ep
+>>> *ep, enum pci_barno bar,
+>>> =C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0 return -EINVAL;
+>>> =C2=A0=C2=A0=C2=A0=C2=A0=C2=A0 }
+>>>
+>>> +=C2=A0=C2=A0=C2=A0 ep->cached_inbound_atus[free_win].bar =3D bar;
+>>> +=C2=A0=C2=A0=C2=A0 ep->cached_inbound_atus[free_win].cpu_addr =3D cpu_=
+addr;
+>>> +=C2=A0=C2=A0=C2=A0 ep->cached_inbound_atus[free_win].as_type =3D as_ty=
+pe;
+>>> +=C2=A0=C2=A0=C2=A0 ep->cached_bars[bar].atu_index =3D free_win;
+>>> +=C2=A0=C2=A0=C2=A0 set_bit(free_win, ep->ib_window_map);
+>>> +
+>>> +=C2=A0=C2=A0=C2=A0 if (!ep->hw_regs_available)
+>>> +=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0 return 0;
+>>> +
+>>> =C2=A0=C2=A0=C2=A0=C2=A0=C2=A0 ret =3D dw_pcie_prog_inbound_atu(pci, fr=
+ee_win, bar, cpu_addr,
+>>> =C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=
+=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=
+ as_type);
+>>> =C2=A0=C2=A0=C2=A0=C2=A0=C2=A0 if (ret < 0) {
+>>> @@ -119,9 +140,6 @@ static int dw_pcie_ep_inbound_atu(struct dw_pcie_ep
+>>> *ep, enum pci_barno bar,
+>>> =C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0 return ret;
+>>> =C2=A0=C2=A0=C2=A0=C2=A0=C2=A0 }
+>>>
+>>> -=C2=A0=C2=A0=C2=A0 ep->bar_to_atu[bar] =3D free_win;
+>>> -=C2=A0=C2=A0=C2=A0 set_bit(free_win, ep->ib_window_map);
+>>> -
+>>> =C2=A0=C2=A0=C2=A0=C2=A0=C2=A0 return 0;
+>>> =C2=A0 }
+>>>
+>>> @@ -137,27 +155,66 @@ static int dw_pcie_ep_outbound_atu(struct
+>>> dw_pcie_ep *ep, phys_addr_t phys_addr,
+>>> =C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0 return -EINVAL;
+>>> =C2=A0=C2=A0=C2=A0=C2=A0=C2=A0 }
+>>>
+>>> +=C2=A0=C2=A0=C2=A0 ep->cached_outbound_atus[free_win].addr =3D phys_ad=
+dr;
+>>> +=C2=A0=C2=A0=C2=A0 ep->cached_outbound_atus[free_win].pci_addr =3D pci=
+_addr;
+>>> +=C2=A0=C2=A0=C2=A0 ep->cached_outbound_atus[free_win].size =3D size;
+>>> +=C2=A0=C2=A0=C2=A0 set_bit(free_win, ep->ob_window_map);
+>>> +
+>>> +=C2=A0=C2=A0=C2=A0 if (!ep->hw_regs_available)
+>>> +=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0 return 0;
+>>> +
+>>> =C2=A0=C2=A0=C2=A0=C2=A0=C2=A0 dw_pcie_prog_outbound_atu(pci, free_win,=
+ PCIE_ATU_TYPE_MEM,
+>>> =C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=
+=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0 phys_addr, pci_addr, size);
+>>>
+>>> -=C2=A0=C2=A0=C2=A0 set_bit(free_win, ep->ob_window_map);
+>>> -=C2=A0=C2=A0=C2=A0 ep->outbound_addr[free_win] =3D phys_addr;
+>>> -
+>>> =C2=A0=C2=A0=C2=A0=C2=A0=C2=A0 return 0;
+>>> =C2=A0 }
+>>>
+>>> +static void dw_pcie_ep_clear_bar_regs(struct dw_pcie_ep *ep, u8=20
+>>> func_no,
+>>> +=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=
+=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0 enum pci_barno ba=
+r)
+>>> +{
+>>> +=C2=A0=C2=A0=C2=A0 struct dw_pcie *pci =3D to_dw_pcie_from_ep(ep);
+>>> +=C2=A0=C2=A0=C2=A0 int flags =3D ep->cached_bars[bar].flags;
+>>> +=C2=A0=C2=A0=C2=A0 u32 atu_index =3D ep->cached_bars[bar].atu_index;
+>>> +
+>>> +=C2=A0=C2=A0=C2=A0 __dw_pcie_ep_reset_bar(pci, bar, flags);
+>>> +
+>>> +=C2=A0=C2=A0=C2=A0 dw_pcie_disable_atu(pci, atu_index, DW_PCIE_REGION_=
+INBOUND); }
+>>> +
+>>> =C2=A0 static void dw_pcie_ep_clear_bar(struct pci_epc *epc, u8 func_no=
+,
+>>> =C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=
+=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0 struct pci_epf_bar *epf_bar)
+>>> =C2=A0 {
+>>> =C2=A0=C2=A0=C2=A0=C2=A0=C2=A0 struct dw_pcie_ep *ep =3D epc_get_drvdat=
+a(epc);
+>>> -=C2=A0=C2=A0=C2=A0 struct dw_pcie *pci =3D to_dw_pcie_from_ep(ep);
+>>> =C2=A0=C2=A0=C2=A0=C2=A0=C2=A0 enum pci_barno bar =3D epf_bar->barno;
+>>> -=C2=A0=C2=A0=C2=A0 u32 atu_index =3D ep->bar_to_atu[bar];
+>>> +=C2=A0=C2=A0=C2=A0 u32 atu_index =3D ep->cached_bars[bar].atu_index;
+>>>
+>>> -=C2=A0=C2=A0=C2=A0 __dw_pcie_ep_reset_bar(pci, bar, epf_bar->flags);
+>>> -
+>>> -=C2=A0=C2=A0=C2=A0 dw_pcie_disable_atu(pci, atu_index, DW_PCIE_REGION_=
+INBOUND);
+>>> =C2=A0=C2=A0=C2=A0=C2=A0=C2=A0 clear_bit(atu_index, ep->ib_window_map);
+>>> +
+>>> +=C2=A0=C2=A0=C2=A0 if (!ep->hw_regs_available)
+>>> +=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0 return;
+>>> +
+>>> +=C2=A0=C2=A0=C2=A0 dw_pcie_ep_clear_bar_regs(ep, func_no, bar); }
+>>> +
+>>> +static void dw_pcie_ep_set_bar_regs(struct dw_pcie_ep *ep, u8 func_no,
+>>> +=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=
+=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0 enum pci_barno bar)
+>>> +{
+>>> +=C2=A0=C2=A0=C2=A0 struct dw_pcie *pci =3D to_dw_pcie_from_ep(ep);
+>>> +=C2=A0=C2=A0=C2=A0 size_t size =3D ep->cached_bars[bar].size;
+>>> +=C2=A0=C2=A0=C2=A0 int flags =3D ep->cached_bars[bar].flags;
+>>> +=C2=A0=C2=A0=C2=A0 u32 reg =3D PCI_BASE_ADDRESS_0 + (4 * bar);
+>>> +
+>>> +=C2=A0=C2=A0=C2=A0 dw_pcie_dbi_ro_wr_en(pci);
+>>> +
+>>> +=C2=A0=C2=A0=C2=A0 dw_pcie_writel_dbi2(pci, reg, lower_32_bits(size - =
+1));
+>>> +=C2=A0=C2=A0=C2=A0 dw_pcie_writel_dbi(pci, reg, flags);
+>>> +
+>>> +=C2=A0=C2=A0=C2=A0 if (flags & PCI_BASE_ADDRESS_MEM_TYPE_64) {
+>>> +=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0 dw_pcie_writel_dbi2(pci, re=
+g + 4, upper_32_bits(size - 1));
+>>> +=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0 dw_pcie_writel_dbi(pci, reg=
+ + 4, 0);
+>>> +=C2=A0=C2=A0=C2=A0 }
+>>> +
+>>> +=C2=A0=C2=A0=C2=A0 dw_pcie_dbi_ro_wr_dis(pci);
+>>> =C2=A0 }
+>>>
+>>> =C2=A0 static int dw_pcie_ep_set_bar(struct pci_epc *epc, u8 func_no, @=
+@=20
+>>> -165,12
+>>> +222,10 @@ static int dw_pcie_ep_set_bar(struct pci_epc *epc, u8=20
+>>> func_no,=C2=A0 {
+>>> =C2=A0=C2=A0=C2=A0=C2=A0=C2=A0 int ret;
+>>> =C2=A0=C2=A0=C2=A0=C2=A0=C2=A0 struct dw_pcie_ep *ep =3D epc_get_drvdat=
+a(epc);
+>>> -=C2=A0=C2=A0=C2=A0 struct dw_pcie *pci =3D to_dw_pcie_from_ep(ep);
+>>> =C2=A0=C2=A0=C2=A0=C2=A0=C2=A0 enum pci_barno bar =3D epf_bar->barno;
+>>> =C2=A0=C2=A0=C2=A0=C2=A0=C2=A0 size_t size =3D epf_bar->size;
+>>> =C2=A0=C2=A0=C2=A0=C2=A0=C2=A0 int flags =3D epf_bar->flags;
+>>> =C2=A0=C2=A0=C2=A0=C2=A0=C2=A0 enum dw_pcie_as_type as_type;
+>>> -=C2=A0=C2=A0=C2=A0 u32 reg =3D PCI_BASE_ADDRESS_0 + (4 * bar);
+>>>
+>>> =C2=A0=C2=A0=C2=A0=C2=A0=C2=A0 if (!(flags & PCI_BASE_ADDRESS_SPACE))
+>>> =C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0 as_type =3D DW_P=
+CIE_AS_MEM;
+>>> @@ -181,17 +236,13 @@ static int dw_pcie_ep_set_bar(struct pci_epc=20
+>>> *epc, u8
+>>> func_no,
+>>> =C2=A0=C2=A0=C2=A0=C2=A0=C2=A0 if (ret)
+>>> =C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0 return ret;
+>>>
+>>> -=C2=A0=C2=A0=C2=A0 dw_pcie_dbi_ro_wr_en(pci);
+>>> -
+>>> -=C2=A0=C2=A0=C2=A0 dw_pcie_writel_dbi2(pci, reg, lower_32_bits(size - =
+1));
+>>> -=C2=A0=C2=A0=C2=A0 dw_pcie_writel_dbi(pci, reg, flags);
+>>> +=C2=A0=C2=A0=C2=A0 ep->cached_bars[bar].size =3D size;
+>>> +=C2=A0=C2=A0=C2=A0 ep->cached_bars[bar].flags =3D flags;
+>>>
+>>> -=C2=A0=C2=A0=C2=A0 if (flags & PCI_BASE_ADDRESS_MEM_TYPE_64) {
+>>> -=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0 dw_pcie_writel_dbi2(pci, re=
+g + 4, upper_32_bits(size - 1));
+>>> -=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0 dw_pcie_writel_dbi(pci, reg=
+ + 4, 0);
+>>> -=C2=A0=C2=A0=C2=A0 }
+>>> +=C2=A0=C2=A0=C2=A0 if (!ep->hw_regs_available)
+>>> +=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0 return 0;
+>>>
+>>> -=C2=A0=C2=A0=C2=A0 dw_pcie_dbi_ro_wr_dis(pci);
+>>> +=C2=A0=C2=A0=C2=A0 dw_pcie_ep_set_bar_regs(ep, func_no, bar);
+>>>
+>>> =C2=A0=C2=A0=C2=A0=C2=A0=C2=A0 return 0;
+>>> =C2=A0 }
+>>> @@ -202,7 +253,7 @@ static int dw_pcie_find_index(struct dw_pcie_ep=20
+>>> *ep,
+>>> phys_addr_t addr,
+>>> =C2=A0=C2=A0=C2=A0=C2=A0=C2=A0 u32 index;
+>>>
+>>> =C2=A0=C2=A0=C2=A0=C2=A0=C2=A0 for (index =3D 0; index < ep->num_ob_win=
+dows; index++) {
+>>> -=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0 if (ep->outbound_addr[index=
+] !=3D addr)
+>>> +=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0 if (ep->cached_outbound_atu=
+s[index].addr !=3D addr)
+>>> =C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=
+=A0=C2=A0 continue;
+>>> =C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0 *atu_index =3D i=
+ndex;
+>>> =C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0 return 0;
+>>> @@ -223,8 +274,12 @@ static void dw_pcie_ep_unmap_addr(struct pci_epc
+>>> *epc, u8 func_no,
+>>> =C2=A0=C2=A0=C2=A0=C2=A0=C2=A0 if (ret < 0)
+>>> =C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0 return;
+>>>
+>>> -=C2=A0=C2=A0=C2=A0 dw_pcie_disable_atu(pci, atu_index, DW_PCIE_REGION_=
+OUTBOUND);
+>>> =C2=A0=C2=A0=C2=A0=C2=A0=C2=A0 clear_bit(atu_index, ep->ob_window_map);
+>>> +
+>>> +=C2=A0=C2=A0=C2=A0 if (!ep->hw_regs_available)
+>>> +=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0 return;
+>>> +
+>>> +=C2=A0=C2=A0=C2=A0 dw_pcie_disable_atu(pci, atu_index, DW_PCIE_REGION_=
+OUTBOUND);
+>>> =C2=A0 }
+>>>
+>>> =C2=A0 static int dw_pcie_ep_map_addr(struct pci_epc *epc, u8 func_no, =
+@@=20
+>>> -254,7
+>>> +309,10 @@ static int dw_pcie_ep_get_msi(struct pci_epc *epc, u8=20
+>>> func_no)
+>>> =C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0 return -EINVAL;
+>>>
+>>> =C2=A0=C2=A0=C2=A0=C2=A0=C2=A0 reg =3D ep->msi_cap + PCI_MSI_FLAGS;
+>>> -=C2=A0=C2=A0=C2=A0 val =3D dw_pcie_readw_dbi(pci, reg);
+>>> +=C2=A0=C2=A0=C2=A0 if (ep->hw_regs_available)
+>>> +=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0 val =3D dw_pcie_readw_dbi(p=
+ci, reg);
+>>> +=C2=A0=C2=A0=C2=A0 else
+>>> +=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0 val =3D ep->cached_msi_flag=
+s;
+>>> =C2=A0=C2=A0=C2=A0=C2=A0=C2=A0 if (!(val & PCI_MSI_FLAGS_ENABLE))
+>>> =C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0 return -EINVAL;
+>>>
+>>> @@ -273,12 +331,19 @@ static int dw_pcie_ep_set_msi(struct pci_epc=20
+>>> *epc, u8
+>>> func_no, u8 interrupts)
+>>> =C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0 return -EINVAL;
+>>>
+>>> =C2=A0=C2=A0=C2=A0=C2=A0=C2=A0 reg =3D ep->msi_cap + PCI_MSI_FLAGS;
+>>> -=C2=A0=C2=A0=C2=A0 val =3D dw_pcie_readw_dbi(pci, reg);
+>>> +=C2=A0=C2=A0=C2=A0 if (ep->hw_regs_available)
+>>> +=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0 val =3D dw_pcie_readw_dbi(p=
+ci, reg);
+>>> +=C2=A0=C2=A0=C2=A0 else
+>>> +=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0 val =3D ep->cached_msi_flag=
+s;
+>>> =C2=A0=C2=A0=C2=A0=C2=A0=C2=A0 val &=3D ~PCI_MSI_FLAGS_QMASK;
+>>> =C2=A0=C2=A0=C2=A0=C2=A0=C2=A0 val |=3D (interrupts << 1) & PCI_MSI_FLA=
+GS_QMASK;
+>>> -=C2=A0=C2=A0=C2=A0 dw_pcie_dbi_ro_wr_en(pci);
+>>> -=C2=A0=C2=A0=C2=A0 dw_pcie_writew_dbi(pci, reg, val);
+>>> -=C2=A0=C2=A0=C2=A0 dw_pcie_dbi_ro_wr_dis(pci);
+>>> +=C2=A0=C2=A0=C2=A0 if (ep->hw_regs_available) {
+>>> +=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0 dw_pcie_dbi_ro_wr_en(pci);
+>>> +=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0 dw_pcie_writew_dbi(pci, reg=
+, val);
+>>> +=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0 dw_pcie_dbi_ro_wr_dis(pci);
+>>> +=C2=A0=C2=A0=C2=A0 } else {
+>>> +=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0 ep->cached_msi_flags =3D va=
+l;
+>>> +=C2=A0=C2=A0=C2=A0 }
+>>>
+>>> =C2=A0=C2=A0=C2=A0=C2=A0=C2=A0 return 0;
+>>> =C2=A0 }
+>>> @@ -293,7 +358,10 @@ static int dw_pcie_ep_get_msix(struct pci_epc=20
+>>> *epc,
+>>> u8 func_no)
+>>> =C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0 return -EINVAL;
+>>>
+>>> =C2=A0=C2=A0=C2=A0=C2=A0=C2=A0 reg =3D ep->msix_cap + PCI_MSIX_FLAGS;
+>>> -=C2=A0=C2=A0=C2=A0 val =3D dw_pcie_readw_dbi(pci, reg);
+>>> +=C2=A0=C2=A0=C2=A0 if (ep->hw_regs_available)
+>>> +=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0 val =3D dw_pcie_readw_dbi(p=
+ci, reg);
+>>> +=C2=A0=C2=A0=C2=A0 else
+>>> +=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0 val =3D ep->cached_msix_fla=
+gs;
+>>> =C2=A0=C2=A0=C2=A0=C2=A0=C2=A0 if (!(val & PCI_MSIX_FLAGS_ENABLE))
+>>> =C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0 return -EINVAL;
+>>>
+>>> @@ -312,16 +380,49 @@ static int dw_pcie_ep_set_msix(struct pci_epc=20
+>>> *epc,
+>>> u8 func_no, u16 interrupts)
+>>> =C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0 return -EINVAL;
+>>>
+>>> =C2=A0=C2=A0=C2=A0=C2=A0=C2=A0 reg =3D ep->msix_cap + PCI_MSIX_FLAGS;
+>>> -=C2=A0=C2=A0=C2=A0 val =3D dw_pcie_readw_dbi(pci, reg);
+>>> +=C2=A0=C2=A0=C2=A0 if (ep->hw_regs_available)
+>>> +=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0 val =3D dw_pcie_readw_dbi(p=
+ci, reg);
+>>> +=C2=A0=C2=A0=C2=A0 else
+>>> +=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0 val =3D ep->cached_msix_fla=
+gs;
+>>> =C2=A0=C2=A0=C2=A0=C2=A0=C2=A0 val &=3D ~PCI_MSIX_FLAGS_QSIZE;
+>>> =C2=A0=C2=A0=C2=A0=C2=A0=C2=A0 val |=3D interrupts;
+>>> -=C2=A0=C2=A0=C2=A0 dw_pcie_dbi_ro_wr_en(pci);
+>>> -=C2=A0=C2=A0=C2=A0 dw_pcie_writew_dbi(pci, reg, val);
+>>> -=C2=A0=C2=A0=C2=A0 dw_pcie_dbi_ro_wr_dis(pci);
+>>> +=C2=A0=C2=A0=C2=A0 if (ep->hw_regs_available) {
+>>> +=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0 dw_pcie_dbi_ro_wr_en(pci);
+>>> +=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0 dw_pcie_writew_dbi(pci, reg=
+, val);
+>>> +=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0 dw_pcie_dbi_ro_wr_dis(pci);
+>>> +=C2=A0=C2=A0=C2=A0 } else {
+>>> +=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0 ep->cached_msix_flags =3D v=
+al;
+>>> +=C2=A0=C2=A0=C2=A0 }
+>>>
+>>> =C2=A0=C2=A0=C2=A0=C2=A0=C2=A0 return 0;
+>>> =C2=A0 }
+>>>
+>>> +void dw_pcie_set_regs_available(struct dw_pcie *pci) {
+>>> +=C2=A0=C2=A0=C2=A0 struct dw_pcie_ep *ep =3D &(pci->ep);
+>>> +=C2=A0=C2=A0=C2=A0 int i;
+>>> +
+>>> +=C2=A0=C2=A0=C2=A0 ep->hw_regs_available =3D true;
+>>> +
+>>> +=C2=A0=C2=A0=C2=A0 dw_pcie_ep_write_header_regs(ep);
+>>> +=C2=A0=C2=A0=C2=A0 for_each_set_bit(i, ep->ib_window_map, ep->num_ib_w=
+indows) {
+>>> +=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0 dw_pcie_prog_inbound_atu(pc=
+i, i,
+>>> +=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0 ep-=
+>cached_inbound_atus[i].bar,
+>>> +=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0 ep-=
+>cached_inbound_atus[i].cpu_addr,
+>>> +=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0 ep-=
+>cached_inbound_atus[i].as_type);
+>>> +=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0 dw_pcie_ep_set_bar_regs(ep,=
+ 0, ep-
+>>>> cached_inbound_atus[i].bar);
+>>> +=C2=A0=C2=A0=C2=A0 }
+>>> +=C2=A0=C2=A0=C2=A0 for_each_set_bit(i, ep->ob_window_map, ep->num_ob_w=
+indows)
+>>> +=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0 dw_pcie_prog_outbound_atu(p=
+ci, i, PCIE_ATU_TYPE_MEM,
+>>> +=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0 ep-=
+>cached_outbound_atus[i].addr,
+>>> +=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0 ep-=
+>cached_outbound_atus[i].pci_addr,
+>>> +=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0 ep-=
+>cached_outbound_atus[i].size);
+>>> +=C2=A0=C2=A0=C2=A0 dw_pcie_dbi_ro_wr_en(pci);
+>>> +=C2=A0=C2=A0=C2=A0 dw_pcie_writew_dbi(pci, PCI_MSI_FLAGS, ep->cached_m=
+si_flags);
+>>> +=C2=A0=C2=A0=C2=A0 dw_pcie_writew_dbi(pci, PCI_MSIX_FLAGS, ep->cached_=
+msix_flags);
+>>> +=C2=A0=C2=A0=C2=A0 dw_pcie_dbi_ro_wr_dis(pci);
+>>> +}
+>>> +
+>>> =C2=A0 static int dw_pcie_ep_raise_irq(struct pci_epc *epc, u8 func_no,
+>>> =C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=
+=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0 enum pci_epc_irq_type type, u16
+>>> interrupt_num)=C2=A0 { @@ -330,6 +431,9 @@ static int=20
+>>> dw_pcie_ep_raise_irq(struct
+>>> pci_epc *epc, u8 func_no,
+>>> =C2=A0=C2=A0=C2=A0=C2=A0=C2=A0 if (!ep->ops->raise_irq)
+>>> =C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0 return -EINVAL;
+>>>
+>>> +=C2=A0=C2=A0=C2=A0 if (!ep->hw_regs_available)
+>>> +=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0 return -EAGAIN;
+>>> +
+>>> =C2=A0=C2=A0=C2=A0=C2=A0=C2=A0 return ep->ops->raise_irq(ep, func_no, t=
+ype, interrupt_num);=C2=A0 }
+>>>
+>>> @@ -391,6 +495,9 @@ int dw_pcie_ep_raise_msi_irq(struct dw_pcie_ep *ep,
+>>> u8 func_no,
+>>> =C2=A0=C2=A0=C2=A0=C2=A0=C2=A0 bool has_upper;
+>>> =C2=A0=C2=A0=C2=A0=C2=A0=C2=A0 int ret;
+>>>
+>>> +=C2=A0=C2=A0=C2=A0 if (!ep->hw_regs_available)
+>>> +=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0 return -EAGAIN;
+>>> +
+>>> =C2=A0=C2=A0=C2=A0=C2=A0=C2=A0 if (!ep->msi_cap)
+>>> =C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0 return -EINVAL;
+>>>
+>>> @@ -436,6 +543,9 @@ int dw_pcie_ep_raise_msix_irq(struct dw_pcie_ep=20
+>>> *ep,
+>>> u8 func_no,
+>>> =C2=A0=C2=A0=C2=A0=C2=A0=C2=A0 void __iomem *msix_tbl;
+>>> =C2=A0=C2=A0=C2=A0=C2=A0=C2=A0 int ret;
+>>>
+>>> +=C2=A0=C2=A0=C2=A0 if (!ep->hw_regs_available)
+>>> +=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0 return -EAGAIN;
+>>> +
+>>> =C2=A0=C2=A0=C2=A0=C2=A0=C2=A0 reg =3D ep->msix_cap + PCI_MSIX_TABLE;
+>>> =C2=A0=C2=A0=C2=A0=C2=A0=C2=A0 tbl_offset =3D dw_pcie_readl_dbi(pci, re=
+g);
+>>> =C2=A0=C2=A0=C2=A0=C2=A0=C2=A0 bir =3D (tbl_offset & PCI_MSIX_TABLE_BIR=
+); @@ -494,7 +604,6 @@ void
+>>> dw_pcie_ep_exit(struct dw_pcie_ep *ep)=C2=A0 int dw_pcie_ep_init(struct
+>>> dw_pcie_ep *ep)=C2=A0 {
+>>> =C2=A0=C2=A0=C2=A0=C2=A0=C2=A0 int ret;
+>>> -=C2=A0=C2=A0=C2=A0 void *addr;
+>>> =C2=A0=C2=A0=C2=A0=C2=A0=C2=A0 struct pci_epc *epc;
+>>> =C2=A0=C2=A0=C2=A0=C2=A0=C2=A0 struct dw_pcie *pci =3D to_dw_pcie_from_=
+ep(ep);
+>>> =C2=A0=C2=A0=C2=A0=C2=A0=C2=A0 struct device *dev =3D pci->dev;
+>>> @@ -543,11 +652,17 @@ int dw_pcie_ep_init(struct dw_pcie_ep *ep)
+>>> =C2=A0=C2=A0=C2=A0=C2=A0=C2=A0 if (!ep->ob_window_map)
+>>> =C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0 return -ENOMEM;
+>>>
+>>> -=C2=A0=C2=A0=C2=A0 addr =3D devm_kcalloc(dev, ep->num_ob_windows, size=
+of(phys_addr_t),
+>>> -=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=
+=A0=C2=A0=C2=A0=C2=A0 GFP_KERNEL);
+>>> -=C2=A0=C2=A0=C2=A0 if (!addr)
+>>> +=C2=A0=C2=A0=C2=A0 ep->cached_inbound_atus =3D devm_kzalloc(dev,
+>>> +=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0 sizeof(ep->cached_inbound_a=
+tus[0]) * ep->num_ib_windows,
+>>> +=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0 GFP_KERNEL);
+>>> +=C2=A0=C2=A0=C2=A0 if (!ep->cached_inbound_atus)
+>>> +=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0 return -ENOMEM;
+>>> +
+>>> +=C2=A0=C2=A0=C2=A0 ep->cached_outbound_atus =3D devm_kzalloc(dev,
+>>> +=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0 sizeof(ep->cached_outbound_=
+atus[0]) * ep->num_ob_windows,
+>>> +=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0 GFP_KERNEL);
+>>> +=C2=A0=C2=A0=C2=A0 if (!ep->cached_outbound_atus)
+>>> =C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0 return -ENOMEM;
+>>> -=C2=A0=C2=A0=C2=A0 ep->outbound_addr =3D addr;
+>>>
+>>> =C2=A0=C2=A0=C2=A0=C2=A0=C2=A0 epc =3D devm_pci_epc_create(dev, &epc_op=
+s);
+>>> =C2=A0=C2=A0=C2=A0=C2=A0=C2=A0 if (IS_ERR(epc)) {
+>>> diff --git a/drivers/pci/controller/dwc/pcie-designware.h
+>>> b/drivers/pci/controller/dwc/pcie-designware.h
+>>> index 02fb532c5db9..c116b289aa51 100644
+>>> --- a/drivers/pci/controller/dwc/pcie-designware.h
+>>> +++ b/drivers/pci/controller/dwc/pcie-designware.h
+>>> @@ -192,8 +192,6 @@ struct dw_pcie_ep {
+>>> =C2=A0=C2=A0=C2=A0=C2=A0=C2=A0 phys_addr_t=C2=A0=C2=A0=C2=A0=C2=A0=C2=
+=A0=C2=A0=C2=A0 phys_base;
+>>> =C2=A0=C2=A0=C2=A0=C2=A0=C2=A0 size_t=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=
+=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0 addr_size;
+>>> =C2=A0=C2=A0=C2=A0=C2=A0=C2=A0 size_t=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=
+=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0 page_size;
+>>> -=C2=A0=C2=A0=C2=A0 u8=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=
+=C2=A0=C2=A0=C2=A0 bar_to_atu[6];
+>>> -=C2=A0=C2=A0=C2=A0 phys_addr_t=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=
+=A0 *outbound_addr;
+>>> =C2=A0=C2=A0=C2=A0=C2=A0=C2=A0 unsigned long=C2=A0=C2=A0=C2=A0=C2=A0=C2=
+=A0=C2=A0=C2=A0 *ib_window_map;
+>>> =C2=A0=C2=A0=C2=A0=C2=A0=C2=A0 unsigned long=C2=A0=C2=A0=C2=A0=C2=A0=C2=
+=A0=C2=A0=C2=A0 *ob_window_map;
+>>> =C2=A0=C2=A0=C2=A0=C2=A0=C2=A0 u32=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=
+=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0 num_ib_windows;
+>>> @@ -202,6 +200,25 @@ struct dw_pcie_ep {
+>>> =C2=A0=C2=A0=C2=A0=C2=A0=C2=A0 phys_addr_t=C2=A0=C2=A0=C2=A0=C2=A0=C2=
+=A0=C2=A0=C2=A0 msi_mem_phys;
+>>> =C2=A0=C2=A0=C2=A0=C2=A0=C2=A0 u8=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=
+=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0 msi_cap;=C2=A0=C2=A0=C2=A0 /* MSI capability=
+ offset */
+>>> =C2=A0=C2=A0=C2=A0=C2=A0=C2=A0 u8=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=
+=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0 msix_cap;=C2=A0=C2=A0=C2=A0 /* MSI-X capabil=
+ity offset */
+>>> +=C2=A0=C2=A0=C2=A0 bool=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=
+=A0=C2=A0=C2=A0=C2=A0 hw_regs_available;
+>>> +=C2=A0=C2=A0=C2=A0 struct pci_epf_header=C2=A0=C2=A0=C2=A0 cached_hdr;
+>>> +=C2=A0=C2=A0=C2=A0 struct {
+>>> +=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0 size_t=C2=A0=C2=A0=C2=A0=C2=
+=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0 size;
+>>> +=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0 int=C2=A0=C2=A0=C2=A0=C2=A0=
+=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0 flags;
+>>> +=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0 u8=C2=A0=C2=A0=C2=A0=C2=A0=
+=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0 atu_index;
+>>> +=C2=A0=C2=A0=C2=A0 }=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=
+=C2=A0=C2=A0=C2=A0 cached_bars[6];
+>>> +=C2=A0=C2=A0=C2=A0 struct {
+>>> +=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0 enum pci_barno=C2=A0=C2=A0=
+=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0 bar;
+>>> +=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0 dma_addr_t=C2=A0=C2=A0=C2=
+=A0=C2=A0=C2=A0=C2=A0=C2=A0 cpu_addr;
+>>> +=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0 enum dw_pcie_as_type=C2=A0=
+=C2=A0=C2=A0 as_type;
+>>> +=C2=A0=C2=A0=C2=A0 }=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=
+=C2=A0=C2=A0=C2=A0 *cached_inbound_atus;
+>>> +=C2=A0=C2=A0=C2=A0 struct {
+>>> +=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0 phys_addr_t=C2=A0=C2=A0=C2=
+=A0=C2=A0=C2=A0=C2=A0=C2=A0 addr;
+>>> +=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0 u64=C2=A0=C2=A0=C2=A0=C2=A0=
+=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0 pci_addr;
+>>> +=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0 size_t=C2=A0=C2=A0=C2=A0=C2=
+=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0 size;
+>>> +=C2=A0=C2=A0=C2=A0 }=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=
+=C2=A0=C2=A0=C2=A0 *cached_outbound_atus;
+>>> +=C2=A0=C2=A0=C2=A0 u32=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=
+=C2=A0=C2=A0=C2=A0 cached_msi_flags;
+>>> +=C2=A0=C2=A0=C2=A0 u32=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=
+=C2=A0=C2=A0=C2=A0 cached_msix_flags;
+>>> =C2=A0 };
+>>>
+>>> =C2=A0 struct dw_pcie_ops {
+>>> @@ -363,6 +380,7 @@ static inline int dw_pcie_allocate_domains(struct
+>>> pcie_port *pp)=C2=A0 void dw_pcie_ep_linkup(struct dw_pcie_ep *ep);=C2=
+=A0 int
+>>> dw_pcie_ep_init(struct dw_pcie_ep *ep);=C2=A0 void dw_pcie_ep_exit(stru=
+ct
+>>> dw_pcie_ep *ep);
+>>> +void dw_pcie_ep_set_regs_available(struct dw_pcie *pci);
+>>> =C2=A0 int dw_pcie_ep_raise_legacy_irq(struct dw_pcie_ep *ep, u8=20
+>>> func_no);=C2=A0 int
+>>> dw_pcie_ep_raise_msi_irq(struct dw_pcie_ep *ep, u8 func_no,
+>>> =C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=
+=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0 u8 interrupt_num);
+>>> @@ -383,6 +401,10 @@ static inline void dw_pcie_ep_exit(struct=20
+>>> dw_pcie_ep
+>>> *ep)=C2=A0 {=C2=A0 }
+>>>
+>>> +static inline void dw_pcie_ep_set_regs_available(struct dw_pcie=20
+>>> *pci) {
+>>> +}
+>>> +
+>>> =C2=A0 static inline int dw_pcie_ep_raise_legacy_irq(struct dw_pcie_ep=
+=20
+>>> *ep, u8
+>>> func_no)=C2=A0 {
+>>> =C2=A0=C2=A0=C2=A0=C2=A0=C2=A0 return 0;
+>>> --=20
+>>> 2.19.1
+>>
+>> What is the guidance on setting "hw_regs_available" param?
+>> I mean, in case of hardware platforms where registers are always=20
+>> available to write (Ex:- pci-epf-test.c), how do they
+>> either (a) set the param hw_regs_available to '1' or (b) call=20
+>> dw_pcie_set_regs_available() to commit all cached values to registers?
+>
+> Oh yes, I forgot to add that part when moving this patch upstream.
+>
+> Right now, our downstream endpoint driver calls=20
+> dw_pcie_set_regs_available() when it has made the registers available.=20
+> Drivers for any hardware where the registers are always available=20
+> (i.e. all current DWC EP drivers in mainline) should set=20
+> ep->hw_regs_available during initialization. So, this patch needs to=20
+> be amended to either:
+>
+> a) Update every existing DWC EP driver to set ep->hw_regs_available=20
+> during probe/initialization.
+>
+> b) Replace ep->hw_regs_available with ep->hw_regs_unavailable, so that=20
+> the default 0 value (assuming kzalloc is used to alloc the ep struct)=20
+> means the registers can be accessed, with the ability for individual=20
+> drivers (i.e. Tegra's) to set that value during probe/initialization.
+>
+> Before I do that though, I'd still like general feedback on this patch=20
+> so I can incorporate that into any updated version.
+>
+>> I see a need for APIs to establish the link among dw_pcie_ep ->=20
+>> pci_epc -> pci_epf_driver.
+>
+> I don't understand this part.
+Nevermind. With option-(a) above, it is not required.
