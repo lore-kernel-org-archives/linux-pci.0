@@ -7,36 +7,36 @@ X-Spam-Status: No, score=-7.1 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
 	SIGNED_OFF_BY,SPF_PASS,URIBL_BLOCKED autolearn=unavailable autolearn_force=no
 	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 83573C43610
-	for <linux-pci@archiver.kernel.org>; Tue, 20 Nov 2018 09:28:35 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id EC803C43610
+	for <linux-pci@archiver.kernel.org>; Tue, 20 Nov 2018 09:28:42 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 35BD82075B
-	for <linux-pci@archiver.kernel.org>; Tue, 20 Nov 2018 09:28:35 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id AD2A72075B
+	for <linux-pci@archiver.kernel.org>; Tue, 20 Nov 2018 09:28:42 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (1024-bit key) header.d=nxp.com header.i=@nxp.com header.b="Z4eL2l+7"
-DMARC-Filter: OpenDMARC Filter v1.3.2 mail.kernel.org 35BD82075B
+	dkim=pass (1024-bit key) header.d=nxp.com header.i=@nxp.com header.b="NzqOilEh"
+DMARC-Filter: OpenDMARC Filter v1.3.2 mail.kernel.org AD2A72075B
 Authentication-Results: mail.kernel.org; dmarc=fail (p=none dis=none) header.from=nxp.com
 Authentication-Results: mail.kernel.org; spf=none smtp.mailfrom=linux-pci-owner@vger.kernel.org
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1728099AbeKTTz6 (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Tue, 20 Nov 2018 14:55:58 -0500
-Received: from mail-eopbgr30082.outbound.protection.outlook.com ([40.107.3.82]:29684
+        id S1727589AbeKTTzt (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Tue, 20 Nov 2018 14:55:49 -0500
+Received: from mail-eopbgr30040.outbound.protection.outlook.com ([40.107.3.40]:36159
         "EHLO EUR03-AM5-obe.outbound.protection.outlook.com"
         rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1727453AbeKTTz5 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Tue, 20 Nov 2018 14:55:57 -0500
+        id S1727619AbeKTTzt (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Tue, 20 Nov 2018 14:55:49 -0500
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=nxp.com; s=selector1;
  h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=6GGE+D1K97Uim7BzdeFvPAUZXAd8GUxbz3cRM28RI7M=;
- b=Z4eL2l+7wKihGp26NodvVE3TpeD0VOkVyKeAGX8fH+014Rqy4oG6H66OPyQAfh1E5zFuhEJqWMz7GFAkDi+ybfr+/eS0fU8u8HGB8kcx+vopkaCy0b0H2HTsY6nsFYJ0pVleWjzTke1f7ppK30i/aIX5/ss+RtCp1WEQTP/6cCQ=
+ bh=YDw3kEaa0DQsETyfo+oSPAgHHhgLI1NCNUESfmlPsyc=;
+ b=NzqOilEhG4Hn9EPrNKF79c1QqWQPunTPOz94b6gwq7wnqmppwCWmxNWsWGYBDCiOfkqf/KUhmQrglL8da/AHkNIVuMLd9vdgG3/HijHf+dfCTnH2aRAdrLRKu+10o+0uzy9umtUkY1izOMFf6b7QLNDhn9vVVCdH80+YmMVaVg8=
 Received: from AM6PR04MB5781.eurprd04.prod.outlook.com (20.179.2.80) by
  AM6PR04MB4775.eurprd04.prod.outlook.com (20.177.32.216) with Microsoft SMTP
  Server (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- 15.20.1339.21; Tue, 20 Nov 2018 09:27:45 +0000
+ 15.20.1339.21; Tue, 20 Nov 2018 09:27:33 +0000
 Received: from AM6PR04MB5781.eurprd04.prod.outlook.com
  ([fe80::29b5:b3ed:3854:cf1c]) by AM6PR04MB5781.eurprd04.prod.outlook.com
  ([fe80::29b5:b3ed:3854:cf1c%4]) with mapi id 15.20.1339.026; Tue, 20 Nov 2018
- 09:27:45 +0000
+ 09:27:33 +0000
 From:   "Z.q. Hou" <zhiqiang.hou@nxp.com>
 To:     "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
         "linux-arm-kernel@lists.infradead.org" 
@@ -56,13 +56,13 @@ CC:     Mingkai Hu <mingkai.hu@nxp.com>,
         "M.h. Lian" <minghuan.lian@nxp.com>,
         Xiaowei Bao <xiaowei.bao@nxp.com>,
         "Z.q. Hou" <zhiqiang.hou@nxp.com>
-Subject: [PATCHv2 21/25] PCI: mobiveil: make mobiveil_host_init can be used to
- re-init host
-Thread-Topic: [PATCHv2 21/25] PCI: mobiveil: make mobiveil_host_init can be
- used to re-init host
-Thread-Index: AQHUgLNL3BLuWxLGBEm5/AH+TXpIjA==
-Date:   Tue, 20 Nov 2018 09:27:45 +0000
-Message-ID: <20181120092615.11680-22-Zhiqiang.Hou@nxp.com>
+Subject: [PATCHv2 19/25] PCI: mobiveil: disabled IB and OB windows set by
+ bootloader
+Thread-Topic: [PATCHv2 19/25] PCI: mobiveil: disabled IB and OB windows set by
+ bootloader
+Thread-Index: AQHUgLNEY3zDU/qMo0Oy4NY1Qyg81w==
+Date:   Tue, 20 Nov 2018 09:27:33 +0000
+Message-ID: <20181120092615.11680-20-Zhiqiang.Hou@nxp.com>
 References: <20181120092615.11680-1-Zhiqiang.Hou@nxp.com>
 In-Reply-To: <20181120092615.11680-1-Zhiqiang.Hou@nxp.com>
 Accept-Language: zh-CN, en-US
@@ -77,27 +77,27 @@ authentication-results: spf=none (sender IP is )
 x-ms-exchange-messagesentrepresentingtype: 1
 x-originating-ip: [119.31.174.73]
 x-ms-publictraffictype: Email
-x-microsoft-exchange-diagnostics: 1;AM6PR04MB4775;6:KRj/yIcmp2taLLk1UAI1CyyPcziuZoBQ3bhnyRBIWwKx56dhoY6rbA2iU0Qje8tAz32QPBwpG26PUZqJtHXNUAkbVHw00A+mXC4fhEiGJCyM3YTJrTFrATUFjo6InrkegNanpcUEErVTRCq3KPxJAFRSakjo0OIUic4NcAxb0ymbiXTqlW4+7l7pJzPAvASuSX6bcfcuy8od5i5IsJHH6xzhaWsRXkn7aXgE7pRsVnnN05aN1/67WdMbgN4eRgM8bSyMZEYVesWVZpL5piwPu3zjoObpRoUbsqR5VOnlxfyll63Gxzg6fS27Bwjnrg/ykrpjsAalJ31OYUmANCDyVaJJZsNcR7rsyX5tCcBkp+578Yzz//6YYRNcegx1Ddixzblggwg5yUVKpjxNMbbfLDUUr/ELcdqwRBJtWFcLHSIN6gRCqdwEZ54gsDPwrrRtNItSAsy3nYm09DqxQgJXcQ==;5:VsoKnTB/phS4OLtdGj+fqiA7eie6b+qChMYso7g21uC9Bop3YH30Nx50Lxhd24eEk/PEMZKgj6jasjbmBCQ8tLQT8BF0g+++Qf+Py+gcwN4xTb3VXT613QRrRj8e43sT76GBwrq0K1Xia3bMqNI8yTn1V7kSt4hy3KHpwUtOivg=;7:v0Z+87SzIBCmHWu6uqN7vG5URm1d2Dx7UjgJc5TM2Zqfov0/FHG1W7fGRhRwXM6T3FoDIZZ3a9JovSaxl9aIYmDndS1jF86VPm//tT9RN7h1uT0M/zlFe/jUR+e3hHG4i644TGhV8GG9x/oxlBe6aQ==
-x-ms-office365-filtering-correlation-id: 7e2c51ec-4b23-4e51-f3c0-08d64eca6de0
+x-microsoft-exchange-diagnostics: 1;AM6PR04MB4775;6:Q4KzPdFe3J+y1T/1qtn4Z/74yD5vZAjz9tx4QrCG7JFVXwo2YDowfNVt9xFrTGJ/jhXal5FKgm3kg0qarHJ3Ufd8wZuT7H8KXNRkMaP0pZgjXhIPVAeJHfUNj0hOWi0iPjAb3xs7Oi5b61/LcgbdJeVABbSVaOiYEYSLHhvQVKGhxcpzq2IK5CqOh7aVo9jSfseItDHkwOpa+0OL3wwNzPEzuKzp8+tC13O0jtebUlgjuyl4g+ftZxoWXUa+K93aRx6J0tQjZQ9D+gTrFfNIOZu94RJUMyuWJWTki7X8k8q+G+BvWbrU/mt6tBr3PfYX7HRUoFS4jNJb/tcOF5BrjyI2J/l8nkaZm9/CN6T4EdJ8ulc9fZl7p2wo1KRpjCbdeaoT7usdc5/Ig+I82M0wG2aFZwIeh0JAs7G2Z3M9nlYm+MKv/bVV8j+xUj3Q9UDaBdbjjbsIJlkmmPqCPqMYWw==;5:UpPggIRmA5xf4owFMdK51G8XEBVGMmlxBneAb9Sh5d7JWGUo9cJs5x/r08VF8ufbvvpPjDynvLV2Kf0n0+ItirETc2Bpkau3La/1rs6DnJrvMCtUoxjLqgWsJRziDnZ1kPuoBf8YggIxnmCb1/vqcXuVlneRG/gfSNDxVr0m3HA=;7:4oClPQx7FfkWhivydoCSd1z8m9+Cr36RylQ/z0pFzi3DaYDT9AQHNjde4Ds2+swKBplrR+nwbteKL43BSRRGHQWsEawzCsCXj2HSFuoHxjCQny7Q4uo4XqmQbwtIG/LvkPcivANmd8+i0XFgCs+/yw==
+x-ms-office365-filtering-correlation-id: beb93c8a-4d22-47b9-3044-08d64eca66a9
 x-ms-office365-filtering-ht: Tenant
 x-microsoft-antispam: BCL:0;PCL:0;RULEID:(2390098)(7020095)(4652040)(8989299)(5600074)(711020)(4618075)(4534185)(4627221)(201703031133081)(201702281549075)(8990200)(2017052603328)(7153060)(7193020);SRVR:AM6PR04MB4775;
 x-ms-traffictypediagnostic: AM6PR04MB4775:
-x-microsoft-antispam-prvs: <AM6PR04MB477515471E2EA61B1D4F993084D90@AM6PR04MB4775.eurprd04.prod.outlook.com>
+x-microsoft-antispam-prvs: <AM6PR04MB477558021D921D5FA3A22EE884D90@AM6PR04MB4775.eurprd04.prod.outlook.com>
 x-ms-exchange-senderadcheck: 1
 x-exchange-antispam-report-cfa-test: BCL:0;PCL:0;RULEID:(8211001083)(6040522)(2401047)(8121501046)(5005006)(93006095)(93001095)(3231442)(944501410)(52105112)(3002001)(10201501046)(6055026)(148016)(149066)(150057)(6041310)(20161123562045)(20161123564045)(20161123560045)(20161123558120)(201703131423095)(201702281528075)(20161123555045)(201703061421075)(201703061406153)(201708071742011)(7699051)(76991095);SRVR:AM6PR04MB4775;BCL:0;PCL:0;RULEID:;SRVR:AM6PR04MB4775;
 x-forefront-prvs: 08626BE3A5
 x-forefront-antispam-report: SFV:NSPM;SFS:(10009020)(366004)(39860400002)(136003)(376002)(396003)(346002)(189003)(199004)(66066001)(1076002)(2900100001)(68736007)(8676002)(6486002)(5660300001)(8936002)(6116002)(3846002)(2501003)(97736004)(81166006)(26005)(186003)(81156014)(105586002)(7416002)(102836004)(2906002)(386003)(6506007)(7736002)(305945005)(106356001)(6512007)(76176011)(36756003)(4326008)(99286004)(52116002)(14444005)(25786009)(575784001)(110136005)(54906003)(2616005)(86362001)(53936002)(446003)(11346002)(256004)(2201001)(6436002)(486006)(71190400001)(71200400001)(478600001)(316002)(476003)(14454004)(921003)(1121003);DIR:OUT;SFP:1101;SCL:1;SRVR:AM6PR04MB4775;H:AM6PR04MB5781.eurprd04.prod.outlook.com;FPR:;SPF:None;LANG:en;PTR:InfoNoRecords;MX:1;A:1;
 received-spf: None (protection.outlook.com: nxp.com does not designate
  permitted sender hosts)
-x-microsoft-antispam-message-info: o1p0SjrnmzMaStZfYMg58NrSXimv02zn6aIO5AnLOoRuE/4HVUM3a/tv2lmqwzw9Z3fRxTNGiaDhVN8Bn0/HofCd/o84ODcaLZ5Y1kEQl4PwaZfBThj3JUwlxU5O2n6GWUWkPxr6zcJwMulRNzHgN+OH0qiBFAgyG8p2vC0tZDapEA2B5P8IlUQuXNR39DuPFVThBbhw9pJ1W/OWJpXhw0agqkQJnfJmnfx+llAkJvc31HarNLyQ3qKSJWXkAW2xGQAp/qjfDAGIITcvu61QSTkkTi1prjEPRfO5qJAKdXk1gcBLLJfo3o23o8Itx9+26g8IXEmF1flIT0T3/D9al+g8SPkM5bq05tBB89hbTSA=
+x-microsoft-antispam-message-info: LhdnLkClXRsFFqPKipGSxXJwgpHMWOodwiY70PrYvrnUrw+/DHx/48uM87z46ww18Wq0IpJiT0f+WFBe3C4PT3O9v5x4DsZWQQktq6Wry1paXZG0Ay9IOo81Iz0NatsCHFZASKbrZOg3OQTPRmCNmVfCZEp8mpw17TUBjy/BgGjmLMT6CwbT/dIVRvCZRRveBN9GItHF5JGO7WQytcRQTK9QhC9poVa/Mdu1R1TvZocy7OV9FMbTTav+UcVQPtSLXAKJV0xdmPvjuraV7ulFm5XSPgUqG8VGYNzJenKZpctpKpF7DwMplpXcnEGwYKAzcpmWwRb3+qkaHkrZO7z3YvspHgDsDDp23SQZIFMbJgo=
 spamdiagnosticoutput: 1:99
 spamdiagnosticmetadata: NSPM
 Content-Type: text/plain; charset="iso-8859-1"
 Content-Transfer-Encoding: quoted-printable
 MIME-Version: 1.0
 X-OriginatorOrg: nxp.com
-X-MS-Exchange-CrossTenant-Network-Message-Id: 7e2c51ec-4b23-4e51-f3c0-08d64eca6de0
-X-MS-Exchange-CrossTenant-originalarrivaltime: 20 Nov 2018 09:27:45.6135
+X-MS-Exchange-CrossTenant-Network-Message-Id: beb93c8a-4d22-47b9-3044-08d64eca66a9
+X-MS-Exchange-CrossTenant-originalarrivaltime: 20 Nov 2018 09:27:33.4728
  (UTC)
 X-MS-Exchange-CrossTenant-fromentityheader: Hosted
 X-MS-Exchange-CrossTenant-id: 686ea1d3-bc2b-4c6f-a92c-d99c5c301635
@@ -109,150 +109,82 @@ X-Mailing-List: linux-pci@vger.kernel.org
 
 From: Hou Zhiqiang <Zhiqiang.Hou@nxp.com>
 
-Make the mobiveil_host_init function can be used to re-init
-host controller's PAB and GPEX CSR register block, as NXP
-integrated Mobiveil IP has to reset and then re-init the PAB
-and GPEX CSR registers upon Hot-reset.
+Disabled all inbound and outbound windows before set up the windows
+in kernel, in case transactions match the window set by bootloader.
 
 Signed-off-by: Hou Zhiqiang <Zhiqiang.Hou@nxp.com>
 ---
 V2:
- - Reset the statistic of IB/OB windows configured.
- - Change the type of member 'resources' to pointer to record the parsed
-   resources for re-init the outbound windows.
+ - no change
 
- .../controller/mobiveil/pcie-mobiveil-host.c  | 32 +++++++++++--------
- .../pci/controller/mobiveil/pcie-mobiveil.h   |  3 +-
- 2 files changed, 20 insertions(+), 15 deletions(-)
+ .../controller/mobiveil/pcie-mobiveil-host.c   |  7 +++++++
+ .../pci/controller/mobiveil/pcie-mobiveil.c    | 18 ++++++++++++++++++
+ .../pci/controller/mobiveil/pcie-mobiveil.h    |  2 ++
+ 3 files changed, 27 insertions(+)
 
 diff --git a/drivers/pci/controller/mobiveil/pcie-mobiveil-host.c b/drivers=
 /pci/controller/mobiveil/pcie-mobiveil-host.c
-index d028cdf31d0e..c85f00d3cfcf 100644
+index d1765d572f44..d028cdf31d0e 100644
 --- a/drivers/pci/controller/mobiveil/pcie-mobiveil-host.c
 +++ b/drivers/pci/controller/mobiveil/pcie-mobiveil-host.c
-@@ -217,7 +217,7 @@ static void mobiveil_pcie_enable_msi(struct mobiveil_pc=
-ie *pcie)
- 	writel_relaxed(1, pcie->apb_csr_base + MSI_ENABLE_OFFSET);
- }
-=20
--static int mobiveil_host_init(struct mobiveil_pcie *pcie)
-+int mobiveil_host_init(struct mobiveil_pcie *pcie, bool reinit)
+@@ -221,6 +221,13 @@ static int mobiveil_host_init(struct mobiveil_pcie *pc=
+ie)
  {
  	u32 value, pab_ctrl, type;
  	struct resource_entry *win;
-@@ -229,11 +229,16 @@ static int mobiveil_host_init(struct mobiveil_pcie *p=
-cie)
- 	for (i =3D 0; i < pcie->ppio_wins; i++)
- 		mobiveil_pcie_disable_ib_win(pcie, i);
-=20
--	/* setup bus numbers */
--	value =3D csr_readl(pcie, PCI_PRIMARY_BUS);
--	value &=3D 0xff000000;
--	value |=3D 0x00ff0100;
--	csr_writel(pcie, value, PCI_PRIMARY_BUS);
-+	pcie->ib_wins_configured =3D 0;
-+	pcie->ob_wins_configured =3D 0;
++	int i;
 +
-+	if (!reinit) {
-+		/* setup bus numbers */
-+		value =3D csr_readl(pcie, PCI_PRIMARY_BUS);
-+		value &=3D 0xff000000;
-+		value |=3D 0x00ff0100;
-+		csr_writel(pcie, value, PCI_PRIMARY_BUS);
-+	}
++	/* Disable all inbound/outbound windows */
++	for (i =3D 0; i < pcie->apio_wins; i++)
++		mobiveil_pcie_disable_ob_win(pcie, i);
++	for (i =3D 0; i < pcie->ppio_wins; i++)
++		mobiveil_pcie_disable_ib_win(pcie, i);
 =20
- 	/*
- 	 * program Bus Master Enable Bit in Command Register in PAB Config
-@@ -279,7 +284,7 @@ static int mobiveil_host_init(struct mobiveil_pcie *pci=
-e)
- 	program_ib_windows(pcie, WIN_NUM_0, 0, 0, MEM_WINDOW_TYPE, IB_WIN_SIZE);
+ 	/* setup bus numbers */
+ 	value =3D csr_readl(pcie, PCI_PRIMARY_BUS);
+diff --git a/drivers/pci/controller/mobiveil/pcie-mobiveil.c b/drivers/pci/=
+controller/mobiveil/pcie-mobiveil.c
+index 370658d6546d..49d471b75925 100644
+--- a/drivers/pci/controller/mobiveil/pcie-mobiveil.c
++++ b/drivers/pci/controller/mobiveil/pcie-mobiveil.c
+@@ -226,3 +226,21 @@ int mobiveil_bringup_link(struct mobiveil_pcie *pcie)
 =20
- 	/* Get the I/O and memory ranges from DT */
--	resource_list_for_each_entry(win, &pcie->resources) {
-+	resource_list_for_each_entry(win, pcie->resources) {
- 		if (resource_type(win->res) =3D=3D IORESOURCE_MEM) {
- 			type =3D MEM_WINDOW_TYPE;
- 		} else if (resource_type(win->res) =3D=3D IORESOURCE_IO) {
-@@ -550,8 +555,6 @@ int mobiveil_pcie_host_probe(struct mobiveil_pcie *pcie=
-)
- 	resource_size_t iobase;
- 	int ret;
-=20
--	INIT_LIST_HEAD(&pcie->resources);
--
- 	ret =3D mobiveil_pcie_parse_dt(pcie);
- 	if (ret) {
- 		dev_err(dev, "Parsing DT failed, ret: %x\n", ret);
-@@ -565,17 +568,19 @@ int mobiveil_pcie_host_probe(struct mobiveil_pcie *pc=
-ie)
-=20
- 	/* parse the host bridge base addresses from the device tree file */
- 	ret =3D devm_of_pci_get_host_bridge_resources(dev, 0, 0xff,
--						    &pcie->resources, &iobase);
-+						    &bridge->windows, &iobase);
- 	if (ret) {
- 		dev_err(dev, "Getting bridge resources failed\n");
- 		return ret;
- 	}
-=20
-+	pcie->resources =3D &bridge->windows;
-+
- 	/*
- 	 * configure all inbound and outbound windows and prepare the RC for
- 	 * config access
- 	 */
--	ret =3D mobiveil_host_init(pcie);
-+	ret =3D mobiveil_host_init(pcie, false);
- 	if (ret) {
- 		dev_err(dev, "Failed to initialize host\n");
- 		goto error;
-@@ -587,12 +592,11 @@ int mobiveil_pcie_host_probe(struct mobiveil_pcie *pc=
-ie)
- 		goto error;
- 	}
-=20
--	ret =3D devm_request_pci_bus_resources(dev, &pcie->resources);
-+	ret =3D devm_request_pci_bus_resources(dev, pcie->resources);
- 	if (ret)
- 		goto error;
-=20
- 	/* Initialize bridge */
--	list_splice_init(&pcie->resources, &bridge->windows);
- 	bridge->dev.parent =3D dev;
- 	bridge->sysdata =3D pcie;
- 	bridge->busnr =3D pcie->rp.root_bus_nr;
-@@ -619,6 +623,6 @@ int mobiveil_pcie_host_probe(struct mobiveil_pcie *pcie=
-)
-=20
- 	return 0;
- error:
--	pci_free_resource_list(&pcie->resources);
-+	pci_free_resource_list(pcie->resources);
- 	return ret;
+ 	return -ETIMEDOUT;
  }
++
++void mobiveil_pcie_disable_ib_win(struct mobiveil_pcie *pci, int win_num)
++{
++	u32 val;
++
++	val =3D csr_readl(pci, PAB_PEX_AMAP_CTRL(win_num));
++	val &=3D ~(1 << AMAP_CTRL_EN_SHIFT);
++	csr_writel(pci, val, PAB_PEX_AMAP_CTRL(win_num));
++}
++
++void mobiveil_pcie_disable_ob_win(struct mobiveil_pcie *pci, int win_num)
++{
++	u32 val;
++
++	val =3D csr_readl(pci, PAB_AXI_AMAP_CTRL(win_num));
++	val &=3D ~(1 << WIN_ENABLE_SHIFT);
++	csr_writel(pci, val, PAB_AXI_AMAP_CTRL(win_num));
++}
 diff --git a/drivers/pci/controller/mobiveil/pcie-mobiveil.h b/drivers/pci/=
 controller/mobiveil/pcie-mobiveil.h
-index 933c2f34bc52..0f5303962e88 100644
+index eb4cb61291a8..81685840b378 100644
 --- a/drivers/pci/controller/mobiveil/pcie-mobiveil.h
 +++ b/drivers/pci/controller/mobiveil/pcie-mobiveil.h
-@@ -152,7 +152,7 @@ struct mobiveil_pab_ops {
-=20
- struct mobiveil_pcie {
- 	struct platform_device *pdev;
--	struct list_head resources;
-+	struct list_head *resources;
- 	void __iomem *csr_axi_slave_base;	/* PAB registers base */
- 	phys_addr_t pcie_reg_base;	/* Physical PCIe Controller Base */
- 	void __iomem *apb_csr_base;	/* MSI register base */
-@@ -165,6 +165,7 @@ struct mobiveil_pcie {
- };
-=20
- int mobiveil_pcie_host_probe(struct mobiveil_pcie *pcie);
-+int mobiveil_host_init(struct mobiveil_pcie *pcie, bool reinit);
- bool mobiveil_pcie_link_up(struct mobiveil_pcie *pcie);
- int mobiveil_bringup_link(struct mobiveil_pcie *pcie);
- void program_ob_windows(struct mobiveil_pcie *pcie, int win_num, u64 cpu_a=
+@@ -171,6 +171,8 @@ void program_ob_windows(struct mobiveil_pcie *pcie, int=
+ win_num, u64 cpu_addr,
+ 			u64 pci_addr, u32 type, u64 size);
+ void program_ib_windows(struct mobiveil_pcie *pcie, int win_num, u64 cpu_a=
 ddr,
+ 			u64 pci_addr, u32 type, u64 size);
++void mobiveil_pcie_disable_ob_win(struct mobiveil_pcie *pci, int win_num);
++void mobiveil_pcie_disable_ib_win(struct mobiveil_pcie *pci, int win_num);
+ u32 csr_read(struct mobiveil_pcie *pcie, u32 off, size_t size);
+ void csr_write(struct mobiveil_pcie *pcie, u32 val, u32 off, size_t size);
+=20
 --=20
 2.17.1
 
