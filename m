@@ -4,39 +4,39 @@ X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 X-Spam-Level: 
 X-Spam-Status: No, score=-7.1 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
 	DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,
-	SIGNED_OFF_BY,SPF_PASS,URIBL_BLOCKED autolearn=unavailable autolearn_force=no
+	SIGNED_OFF_BY,SPF_PASS,URIBL_BLOCKED autolearn=ham autolearn_force=no
 	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 9AB12C41536
-	for <linux-pci@archiver.kernel.org>; Tue, 20 Nov 2018 10:35:55 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 7E14AC41537
+	for <linux-pci@archiver.kernel.org>; Tue, 20 Nov 2018 10:36:14 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 14A2620671
-	for <linux-pci@archiver.kernel.org>; Tue, 20 Nov 2018 10:35:14 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 1D1CA20671
+	for <linux-pci@archiver.kernel.org>; Tue, 20 Nov 2018 10:36:14 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (1024-bit key) header.d=nxp.com header.i=@nxp.com header.b="Jm8QYxw0"
-DMARC-Filter: OpenDMARC Filter v1.3.2 mail.kernel.org 14A2620671
+	dkim=pass (1024-bit key) header.d=nxp.com header.i=@nxp.com header.b="tPeGMswc"
+DMARC-Filter: OpenDMARC Filter v1.3.2 mail.kernel.org 1D1CA20671
 Authentication-Results: mail.kernel.org; dmarc=fail (p=none dis=none) header.from=nxp.com
 Authentication-Results: mail.kernel.org; spf=none smtp.mailfrom=linux-pci-owner@vger.kernel.org
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1728473AbeKTVDe (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Tue, 20 Nov 2018 16:03:34 -0500
-Received: from mail-eopbgr60051.outbound.protection.outlook.com ([40.107.6.51]:59771
+        id S1726546AbeKTVEk (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Tue, 20 Nov 2018 16:04:40 -0500
+Received: from mail-eopbgr60060.outbound.protection.outlook.com ([40.107.6.60]:51693
         "EHLO EUR04-DB3-obe.outbound.protection.outlook.com"
         rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1726569AbeKTVDe (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Tue, 20 Nov 2018 16:03:34 -0500
+        id S1728119AbeKTVEk (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Tue, 20 Nov 2018 16:04:40 -0500
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=nxp.com; s=selector1;
  h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=tsVM6OvNopiZVZShFA5ESQPdDgIWP+pxhO+ofU+3fh8=;
- b=Jm8QYxw0ez1zVMhn6zngGwcxY8+xDvGRPjz2JS1znpn3JfhyL8iyHlormDO93c0Ikj4gdzXQHIy9HnyABtBBnp3QmV8elNRnr2KwbCEaGf1RXvJID8tfRX5o57KqgD9RlcnIP+WKZ9WHMu5qFzBy4UBF8/qjwG70dQB7fPmYI38=
+ bh=7bOvrTgZcxR1pGK0UVBSa7wpeUa1MpQm9DcGBmINqPc=;
+ b=tPeGMswcfmqIjQ90bEGrqt1Ok2sVOsRIGCdg71+YwXO2eFS1IL1I0nz5vrSakmcu2MKCy/zLW5yU8SWOc0+sM6Wnm7hVrHD+lBYq9035NjM9TvPhVpxDSKBBs1ot0MM89XOWn56CmWjolovdejj87zLj0+G9Vh9VkoMlgbjywPQ=
 Received: from HE1PR0401MB2235.eurprd04.prod.outlook.com (10.168.32.20) by
- HE1PR0401MB2667.eurprd04.prod.outlook.com (10.168.148.148) with Microsoft
- SMTP Server (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- 15.20.1339.26; Tue, 20 Nov 2018 10:34:23 +0000
+ HE1PR0401MB1884.eurprd04.prod.outlook.com (10.166.122.12) with Microsoft SMTP
+ Server (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
+ 15.20.1339.23; Tue, 20 Nov 2018 10:35:28 +0000
 Received: from HE1PR0401MB2235.eurprd04.prod.outlook.com
  ([fe80::60ff:1b2a:d0fd:5bd2]) by HE1PR0401MB2235.eurprd04.prod.outlook.com
  ([fe80::60ff:1b2a:d0fd:5bd2%8]) with mapi id 15.20.1339.027; Tue, 20 Nov 2018
- 10:34:23 +0000
+ 10:35:28 +0000
 From:   "M.h. Lian" <minghuan.lian@nxp.com>
 To:     "Z.q. Hou" <zhiqiang.hou@nxp.com>,
         "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
@@ -54,16 +54,16 @@ To:     "Z.q. Hou" <zhiqiang.hou@nxp.com>,
         "catalin.marinas@arm.com" <catalin.marinas@arm.com>,
         "will.deacon@arm.com" <will.deacon@arm.com>
 CC:     Mingkai Hu <mingkai.hu@nxp.com>, Xiaowei Bao <xiaowei.bao@nxp.com>
-Subject: RE: [PATCHv2 05/25] PCI: mobiveil: correct PCI base address in MEM/IO
- outbound windows
-Thread-Topic: [PATCHv2 05/25] PCI: mobiveil: correct PCI base address in
- MEM/IO outbound windows
-Thread-Index: AQHUgLMQsrQshiueh0e3aoUcxeibAqVYd8VA
-Date:   Tue, 20 Nov 2018 10:34:23 +0000
-Message-ID: <HE1PR0401MB2235D9D485A1CC090CC6C6D3E8D90@HE1PR0401MB2235.eurprd04.prod.outlook.com>
+Subject: RE: [PATCHv2 07/25] PCI: mobiveil: use WIN_NUM_0 explicitly for CFG
+ outbound window
+Thread-Topic: [PATCHv2 07/25] PCI: mobiveil: use WIN_NUM_0 explicitly for CFG
+ outbound window
+Thread-Index: AQHUgLMYVvtpvt2HK0G434t0xXdQBKVYeBJQ
+Date:   Tue, 20 Nov 2018 10:35:27 +0000
+Message-ID: <HE1PR0401MB223579F27C305AD96ABC4202E8D90@HE1PR0401MB2235.eurprd04.prod.outlook.com>
 References: <20181120092615.11680-1-Zhiqiang.Hou@nxp.com>
- <20181120092615.11680-6-Zhiqiang.Hou@nxp.com>
-In-Reply-To: <20181120092615.11680-6-Zhiqiang.Hou@nxp.com>
+ <20181120092615.11680-8-Zhiqiang.Hou@nxp.com>
+In-Reply-To: <20181120092615.11680-8-Zhiqiang.Hou@nxp.com>
 Accept-Language: zh-CN, en-US
 Content-Language: en-US
 X-MS-Has-Attach: 
@@ -72,32 +72,32 @@ authentication-results: spf=none (sender IP is )
  smtp.mailfrom=minghuan.lian@nxp.com; 
 x-originating-ip: [119.31.174.73]
 x-ms-publictraffictype: Email
-x-microsoft-exchange-diagnostics: 1;HE1PR0401MB2667;6:7gmjD1C6NomxgM3Fc2qL3+qaj01XTRwQa0V/6Ak6dgg/+0M8SsYBAG8cFdBrKAOZ+keRNJsLSRaSsrBc7uSHaFnP65gnE/Ep5bSLHyJbqQNsHprbTXW5LIeM+v03FdSAZnGZWcl5pIefr4cGlR6OQdYvAjyipsR2Wx3HByfLblTfB/A8qY4kV7VqdvMUNKAWFzDpKB8EPnI9wx9JGSukRNbG4DM8/2dcj3eg3+ba2Ihk7HD3nqw3Wiy5Zy2x/GVwsfa9kkipzcLzOKqAPW5ebwnmSDinClXRSWyvNV7aGp2p2rem7rCwqqqwyzrBTum2EwMLbOA69tj8OHopxz6zfVu+4NEaS4oOD9lK/cbwc6RIU4Ev/XXY450NtNnlA6p0mu8rOS+1pRw7EW3fdWtD/oW3GqEG7y18m63n5ckeAUmt9Crw4r9YK/VzKMNZZml+qX5nnxlCLWTF6EZr2kCtUA==;5:/cSGoPqKg69GhR2cNauYouoX9DkcPVQ+nGEzV04A7qFDshTA86n8kN6GEzHKVeqZ5AfVoCrXXutJ29FSElByXLv+1XseatqAcIhI2HT32if7tit5+r5S18fdUU9/Yj5ea7QFJr8nKEWhFkDUUq09PCot0SSkwesjU65bbZSZjdk=;7:AoJEMamPsazhLFXpTXRaBnfdl6WTlSPw4D7hyBlYcrt35LLB7rspjwnDKLiIldilINd5cT1/n6VEdg1+N2IdRnq1OWnSwEI6ymT3dy+Y/ulTnyR4afalRSIXqNBWgj8qwVBMbPvx0gStbq99Gi/9AA==
+x-microsoft-exchange-diagnostics: 1;HE1PR0401MB1884;6:Y59aPeX3pqATfG+MKQVk9EpNqinndwJSdkBTb4n3+RGPHKVwh08T65N8F3vtAlymzsZW81BrEKIV3gfmP/ME04F7FtU4LZKBx+6eaAE7uE/oFplDbRIIbbRSncUwRbOaMCh+Sx5bYAYfYCToHaVG3t3UsAXDbxijaWunqkNiQlXYYluznuIJFfQwe9WKDLxj0xMv3DH9452dBTof3Z/803gUgtLHkdwKYvqi9UHRRw/kkag5/1aCbVJn37ZbfHYBJfusVr/26O3Qi36cLfgyrwCs5c19mc91K0NWSTl3RSuzeTYH0MD2QZRXvV6jI9ZL9C6vjbfyOj/iUpaObt84BwidaXRSRCVcuXx3joHoyM+HXMKWpl9qyNCL5IjYJO0CDWAgiAPba1OFnL2UNYyIh+FcDULEkI7lBM7JG3UdWqBtut6EorqL+OjvwUGXR29l76RGy2ODuTE2lk0Is+ANcfIttGQ/lbrAkVM1EMg7V2Q=;5:5i0T2j5mP39mPciZ8tyQ502RFQRj4pDQiCSY8GvFkVvy7hHNwH7+QduQLbcbTBh1WOYhiZHEYoiPKhGZgXMkQctfqMQr36Y2ouOZLTSG929Hp+5z2Hrx7HlYdJFQHOiiyYWR9bvPJmTMZqEu5bSBlqmGu4vg0NktAcjXiF79R+g=;7:fL9Lnf0LZR4IWVeHjUmDIQTNGY3ix7YiqC9lBtK8grXU9gi+xC9lFkSI7OhcmSCo5CM9xdIGN1fXwRBX8N47iL/BwakFM104PuY4RLvdKrDqG6jshRMM8wpfDjJxYSX+uuM7sKxX4EWcUjwaXMpH/w==
 x-ms-exchange-antispam-srfa-diagnostics: SOS;
-x-ms-office365-filtering-correlation-id: 82f5197e-298a-43f4-3afd-08d64ed3bd1a
+x-ms-office365-filtering-correlation-id: a8ae165c-a4e5-4162-abba-08d64ed3e382
 x-ms-office365-filtering-ht: Tenant
-x-microsoft-antispam: BCL:0;PCL:0;RULEID:(2390098)(7020095)(4652040)(8989299)(4534185)(4627221)(201703031133081)(201702281549075)(8990200)(5600074)(711020)(4618075)(2017052603328)(7153060)(7193020);SRVR:HE1PR0401MB2667;
-x-ms-traffictypediagnostic: HE1PR0401MB2667:
-x-microsoft-antispam-prvs: <HE1PR0401MB2667A93600E80ECE09079E14E8D90@HE1PR0401MB2667.eurprd04.prod.outlook.com>
+x-microsoft-antispam: BCL:0;PCL:0;RULEID:(2390098)(7020095)(4652040)(8989299)(4534185)(4627221)(201703031133081)(201702281549075)(8990200)(5600074)(711020)(4618075)(2017052603328)(7153060)(7193020);SRVR:HE1PR0401MB1884;
+x-ms-traffictypediagnostic: HE1PR0401MB1884:
+x-microsoft-antispam-prvs: <HE1PR0401MB1884DA40C4D7089B5E97B0F8E8D90@HE1PR0401MB1884.eurprd04.prod.outlook.com>
 x-ms-exchange-senderadcheck: 1
-x-exchange-antispam-report-cfa-test: BCL:0;PCL:0;RULEID:(8211001083)(6040522)(2401047)(5005006)(8121501046)(93006095)(93001095)(3231442)(944501410)(52105112)(10201501046)(3002001)(6055026)(148016)(149066)(150057)(6041310)(20161123560045)(201703131423095)(201702281528075)(20161123555045)(201703061421075)(201703061406153)(20161123562045)(20161123564045)(20161123558120)(201708071742011)(7699051)(76991095);SRVR:HE1PR0401MB2667;BCL:0;PCL:0;RULEID:;SRVR:HE1PR0401MB2667;
+x-exchange-antispam-report-cfa-test: BCL:0;PCL:0;RULEID:(8211001083)(6040522)(2401047)(8121501046)(5005006)(3231442)(944501410)(52105112)(10201501046)(3002001)(93006095)(93001095)(6055026)(148016)(149066)(150057)(6041310)(201703131423095)(201702281528075)(20161123555045)(201703061421075)(201703061406153)(20161123560045)(20161123558120)(20161123564045)(20161123562045)(201708071742011)(7699051)(76991095);SRVR:HE1PR0401MB1884;BCL:0;PCL:0;RULEID:;SRVR:HE1PR0401MB1884;
 x-forefront-prvs: 08626BE3A5
-x-forefront-antispam-report: SFV:NSPM;SFS:(10009020)(366004)(39860400002)(396003)(346002)(136003)(376002)(13464003)(199004)(189003)(6246003)(33656002)(105586002)(2900100001)(8676002)(81166006)(478600001)(4326008)(81156014)(106356001)(25786009)(6116002)(3846002)(2906002)(229853002)(8936002)(14454004)(7696005)(71190400001)(71200400001)(9686003)(256004)(53936002)(6436002)(7736002)(5660300001)(55016002)(305945005)(68736007)(486006)(74316002)(476003)(99286004)(11346002)(446003)(76176011)(110136005)(186003)(54906003)(66066001)(316002)(6506007)(53546011)(86362001)(575784001)(7416002)(2201001)(26005)(2501003)(97736004)(102836004)(921003)(1121003);DIR:OUT;SFP:1101;SCL:1;SRVR:HE1PR0401MB2667;H:HE1PR0401MB2235.eurprd04.prod.outlook.com;FPR:;SPF:None;LANG:en;PTR:InfoNoRecords;A:1;MX:1;
+x-forefront-antispam-report: SFV:NSPM;SFS:(10009020)(376002)(346002)(39860400002)(136003)(366004)(396003)(189003)(199004)(13464003)(26005)(6116002)(3846002)(102836004)(14454004)(66066001)(53936002)(186003)(6246003)(106356001)(8936002)(81156014)(81166006)(316002)(54906003)(478600001)(6506007)(4326008)(76176011)(8676002)(53546011)(33656002)(99286004)(68736007)(7696005)(25786009)(229853002)(2900100001)(7416002)(97736004)(110136005)(74316002)(256004)(7736002)(2201001)(71200400001)(305945005)(105586002)(71190400001)(5660300001)(11346002)(476003)(446003)(486006)(86362001)(2501003)(2906002)(55016002)(6436002)(9686003)(921003)(1121003);DIR:OUT;SFP:1101;SCL:1;SRVR:HE1PR0401MB1884;H:HE1PR0401MB2235.eurprd04.prod.outlook.com;FPR:;SPF:None;LANG:en;PTR:InfoNoRecords;MX:1;A:1;
 received-spf: None (protection.outlook.com: nxp.com does not designate
  permitted sender hosts)
-x-microsoft-antispam-message-info: 2J8zj/gPo4Aiknch1Al/g5i1V3qmQ6B/zETtD7jUMY93/TKJG0Yr/lPyCy+mcmcHqncTte4vVHTP9rfuy8KFlnP3EqWpxWXjuGPS7lR+V5RcDhwtb1YQ9CX8SE4BoyPJAZws07bceFpbBdP2J7txObfrgdRtjO4/cf7LbA0iFRGhEB+nl9tc7oS94vABED9AdqfIvS1z2lUJETmmi9SZkrhqr+pgdAjb06CS6mq2FYqcODfI9ijZRHUVjr/8ozzlCbHowb6j6P+fL1WBIlecxiBHg+h+tLIqgLBXS/JA/nYJe19FoIfkbHepSP9d/3HDcjG7w4+Jvbm5VAlEhpRrnEzfocKVcNEBpZcxnbOpz70=
+x-microsoft-antispam-message-info: zTlvzralXgtxDHKFisg3Qm0GHkMEpfe4EEP5KDCBe4J698+AMyXhNNkTFd6YHcUxOKbnOCY6FGg0+9zCcAjoudH3NGjImJpRwqQhEkoXKPNBKS8qfivOix8ph2BnPNoH4KNI1TT+dXT1cdQJFFyuGOxM/ph8Oh1RvnHw783iNeUjrcRIU1eE9HP5/G1+IoJT/iiKwzt+Ba2GCLHc9XFgbcO6wHLZWFmfWMJZC2rugB2nn4vSc/YZC4P94RY1pDsWWiaCvp4rVGz93RCqfjgoHTgIX5vjWQzAbm+LrKDc346Y43RjxaWdenlL31WPe51fsQfXT0l+i4CrWuUrN8ArX9nxF0pBNDh3bTHTQ2M4xIU=
 spamdiagnosticoutput: 1:99
 spamdiagnosticmetadata: NSPM
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: quoted-printable
 MIME-Version: 1.0
 X-OriginatorOrg: nxp.com
-X-MS-Exchange-CrossTenant-Network-Message-Id: 82f5197e-298a-43f4-3afd-08d64ed3bd1a
-X-MS-Exchange-CrossTenant-originalarrivaltime: 20 Nov 2018 10:34:23.5307
+X-MS-Exchange-CrossTenant-Network-Message-Id: a8ae165c-a4e5-4162-abba-08d64ed3e382
+X-MS-Exchange-CrossTenant-originalarrivaltime: 20 Nov 2018 10:35:27.9686
  (UTC)
 X-MS-Exchange-CrossTenant-fromentityheader: Hosted
 X-MS-Exchange-CrossTenant-id: 686ea1d3-bc2b-4c6f-a92c-d99c5c301635
-X-MS-Exchange-Transport-CrossTenantHeadersStamped: HE1PR0401MB2667
+X-MS-Exchange-Transport-CrossTenantHeadersStamped: HE1PR0401MB1884
 Sender: linux-pci-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
@@ -117,43 +117,42 @@ reviewed-by: Minghuan Lian <Minghuan.Lian@nxp.com>
 > Cc: Mingkai Hu <mingkai.hu@nxp.com>; M.h. Lian
 > <minghuan.lian@nxp.com>; Xiaowei Bao <xiaowei.bao@nxp.com>; Z.q. Hou
 > <zhiqiang.hou@nxp.com>
-> Subject: [PATCHv2 05/25] PCI: mobiveil: correct PCI base address in MEM/I=
-O
-> outbound windows
+> Subject: [PATCHv2 07/25] PCI: mobiveil: use WIN_NUM_0 explicitly for CFG
+> outbound window
 >=20
 > From: Hou Zhiqiang <Zhiqiang.Hou@nxp.com>
 >=20
-> It should get PCI base address from the DT node property 'ranges'
-> to setup MEM/IO outbound windows instead of always zero.
+> As the .map_bus() use the WIN_NUM_0 for CFG transactions, it's better
+> passing WIN_NUM_0 explicitly when initialize the CFG outbound window.
 >=20
-> Fixes: 9af6bcb11e12 ("PCI: mobiveil: Add Mobiveil PCIe Host Bridge IP dri=
-ver")
 > Signed-off-by: Hou Zhiqiang <Zhiqiang.Hou@nxp.com>
 > ---
 > V2:
->  - Added fixes entry.
+>  - no change
 >=20
->  drivers/pci/controller/pcie-mobiveil.c | 5 +++--
->  1 file changed, 3 insertions(+), 2 deletions(-)
+>  drivers/pci/controller/pcie-mobiveil.c | 5 ++---
+>  1 file changed, 2 insertions(+), 3 deletions(-)
 >=20
 > diff --git a/drivers/pci/controller/pcie-mobiveil.c
 > b/drivers/pci/controller/pcie-mobiveil.c
-> index a0dd337c6214..8ff873023b5f 100644
+> index b2cc9c097fc9..df71c11b4810 100644
 > --- a/drivers/pci/controller/pcie-mobiveil.c
 > +++ b/drivers/pci/controller/pcie-mobiveil.c
-> @@ -630,8 +630,9 @@ static int mobiveil_host_init(struct mobiveil_pcie
+> @@ -612,9 +612,8 @@ static int mobiveil_host_init(struct mobiveil_pcie
 > *pcie)
+>  	 */
 >=20
->  		/* configure outbound translation window */
->  		program_ob_windows(pcie, pcie->ob_wins_configured,
-> -				   win->res->start, 0, type,
-> -				   resource_size(win->res));
-> +				   win->res->start,
-> +				   win->res->start - win->offset,
-> +				   type, resource_size(win->res));
->  	}
+>  	/* config outbound translation window */
+> -	program_ob_windows(pcie, pcie->ob_wins_configured,
+> -			   pcie->ob_io_res->start, 0, CFG_WINDOW_TYPE,
+> -			   resource_size(pcie->ob_io_res));
+> +	program_ob_windows(pcie, WIN_NUM_0, pcie->ob_io_res->start, 0,
+> +			   CFG_WINDOW_TYPE, resource_size(pcie-
+> >ob_io_res));
 >=20
->  	/* setup MSI hardware registers */
+>  	/* memory inbound translation window */
+>  	program_ib_windows(pcie, WIN_NUM_1, 0, MEM_WINDOW_TYPE,
+> IB_WIN_SIZE);
 > --
 > 2.17.1
 
