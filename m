@@ -2,108 +2,133 @@ Return-Path: <SRS0=4GJS=N7=vger.kernel.org=linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-7.1 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
-	DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,
-	SIGNED_OFF_BY,SPF_PASS,URIBL_BLOCKED autolearn=ham autolearn_force=no
-	version=3.4.0
+X-Spam-Status: No, score=-7.0 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_PASS,URIBL_BLOCKED
+	autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 33169C04EBC
-	for <linux-pci@archiver.kernel.org>; Tue, 20 Nov 2018 13:12:34 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id DCDF5C04EBC
+	for <linux-pci@archiver.kernel.org>; Tue, 20 Nov 2018 13:20:05 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id DFCAD2075B
-	for <linux-pci@archiver.kernel.org>; Tue, 20 Nov 2018 13:12:33 +0000 (UTC)
-Authentication-Results: mail.kernel.org;
-	dkim=pass (1024-bit key) header.d=agner.ch header.i=@agner.ch header.b="O+CMcYSV"
-DMARC-Filter: OpenDMARC Filter v1.3.2 mail.kernel.org DFCAD2075B
-Authentication-Results: mail.kernel.org; dmarc=none (p=none dis=none) header.from=agner.ch
+	by mail.kernel.org (Postfix) with ESMTP id A55BB20C01
+	for <linux-pci@archiver.kernel.org>; Tue, 20 Nov 2018 13:20:00 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.3.2 mail.kernel.org A55BB20C01
+Authentication-Results: mail.kernel.org; dmarc=none (p=none dis=none) header.from=huawei.com
 Authentication-Results: mail.kernel.org; spf=none smtp.mailfrom=linux-pci-owner@vger.kernel.org
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1725950AbeKTXlg (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Tue, 20 Nov 2018 18:41:36 -0500
-Received: from mail.kmu-office.ch ([178.209.48.109]:47074 "EHLO
-        mail.kmu-office.ch" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1725902AbeKTXlg (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Tue, 20 Nov 2018 18:41:36 -0500
-Received: from webmail.kmu-office.ch (unknown [IPv6:2a02:418:6a02::a3])
-        by mail.kmu-office.ch (Postfix) with ESMTPSA id A18555C21FC;
-        Tue, 20 Nov 2018 14:12:30 +0100 (CET)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=agner.ch; s=dkim;
-        t=1542719550;
-        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-         content-transfer-encoding:content-transfer-encoding:
-         in-reply-to:in-reply-to:references:references;
-        bh=JAsMiJ/ognRSZmMxK1JKQolbBDGuLOku+iNadRy4yDE=;
-        b=O+CMcYSVvjrIfhKIEgDWlEMsHO06XRUMf5tQi+ZzLit+lP6lqcGPITXIGQ4hulXo/Tv70h
-        /cp3G6GsXx3yd4430GcTKE2mC3veQf2jsg0TBlUJy03LMsZEUBe+Ss+8eKkeWwFoeFVIph
-        SReQr6QKpanr2mU8HgNdQfxZPCnvt6A=
+        id S1725904AbeKTXtF (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Tue, 20 Nov 2018 18:49:05 -0500
+Received: from szxga07-in.huawei.com ([45.249.212.35]:52462 "EHLO huawei.com"
+        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+        id S1725876AbeKTXtF (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Tue, 20 Nov 2018 18:49:05 -0500
+Received: from DGGEMS411-HUB.china.huawei.com (unknown [172.30.72.60])
+        by Forcepoint Email with ESMTP id AC23FBB5B5549;
+        Tue, 20 Nov 2018 21:19:51 +0800 (CST)
+Received: from localhost (10.202.226.46) by DGGEMS411-HUB.china.huawei.com
+ (10.3.19.211) with Microsoft SMTP Server id 14.3.408.0; Tue, 20 Nov 2018
+ 21:19:46 +0800
+Date:   Tue, 20 Nov 2018 13:19:35 +0000
+From:   Jonathan Cameron <jonathan.cameron@huawei.com>
+To:     Peter Zijlstra <peterz@infradead.org>
+CC:     <helgaas@kernel.org>, <linux-pci@vger.kernel.org>,
+        <linuxarm@huawei.com>, Ingo Molnar <mingo@kernel.org>,
+        <linux-acpi@vger.kernel.org>,
+        Dave Hansen <dave.hansen@linux.intel.com>,
+        Andy Lutomirski <luto@kernel.org>, <x86@kernel.org>
+Subject: Re: [PATCH] x86: Fix an issue with invalid ACPI numa config
+Message-ID: <20181120131935.00001f3a@huawei.com>
+In-Reply-To: <20181120120105.GI2131@hirez.programming.kicks-ass.net>
+References: <20181115110617.13280-1-Jonathan.Cameron@huawei.com>
+        <20181120120105.GI2131@hirez.programming.kicks-ass.net>
+Organization: Huawei
+X-Mailer: Claws Mail 3.16.0 (GTK+ 2.24.32; i686-w64-mingw32)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+Content-Type: text/plain; charset="US-ASCII"
 Content-Transfer-Encoding: 7bit
-Date:   Tue, 20 Nov 2018 14:12:30 +0100
-From:   Stefan Agner <stefan@agner.ch>
-To:     Leonard Crestez <leonard.crestez@nxp.com>
-Cc:     Richard Zhu <hongxing.zhu@nxp.com>, linux-kernel@vger.kernel.org,
-        jingoohan1@gmail.com, gustavo.pimentel@synopsys.com,
-        tpiepho@impinj.com, andrew.smirnov@gmail.com,
-        linux-pci@vger.kernel.org, l.stach@pengutronix.de,
-        bhelgaas@google.com
-Subject: Re: [PATCH 2/2] PCI: imx6: limit DBI register length
-In-Reply-To: <VI1PR04MB553386A3F452E13BFCF79688EED90@VI1PR04MB5533.eurprd04.prod.outlook.com>
-References: <20181119094144.4127-1-stefan@agner.ch>
- <20181119094144.4127-2-stefan@agner.ch>
- <ceb95fbdf0f6d0e0eeb1db3a22743f1453c8e060.camel@nxp.com>
- <6dfdd46d76a380b900b68d13ce5bfa62@agner.ch>
- <VI1PR04MB553386A3F452E13BFCF79688EED90@VI1PR04MB5533.eurprd04.prod.outlook.com>
-Message-ID: <d0efcd4d71a4af9da6c2fb0b3f2183b0@agner.ch>
-X-Sender: stefan@agner.ch
-User-Agent: Roundcube Webmail/1.3.7
+X-Originating-IP: [10.202.226.46]
+X-CFilter-Loop: Reflected
 Sender: linux-pci-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-On 20.11.2018 14:03, Leonard Crestez wrote:
-> From: Stefan Agner <stefan@agner.ch>
->> On 20.11.2018 11:22, Leonard Crestez wrote:
->> > On Mon, 2018-11-19 at 10:41 +0100, Stefan Agner wrote:
->> >> Define the length of the DBI registers. This makes sure that
->> >> the kernel does not access registers beyond that point, avoiding
->> >> the following abort on a i.MX 6Quad:
->> >>   # cat
->> /sys/devices/soc0/soc/1ffc000.pcie/pci0000\:00/0000\:00\:00.0/config
->> >>   [  100.021433] Unhandled fault: imprecise external abort (0x1406) at
->> 0xb6ea7000
->> >>   ...
->> >>   [  100.056423] PC is at dw_pcie_read+0x50/0x84
->> >>   [  100.060790] LR is at dw_pcie_rd_own_conf+0x44/0x48
->> >>   ...
->> >>
->> >> Signed-off-by: Stefan Agner <stefan@agner.ch>
->> >>
->> >> diff --git a/drivers/pci/controller/dwc/pci-imx6.c
->> >
->> >> +struct imx6_pcie_drvdata {
->> >> +	enum imx6_pcie_variants variant;
->> >> +	int			dbi_length;
->> >> +};
->> >
->> > Turning imx6_pcie drvdata into a struct is very nice, maybe in the
->> > future some of the long case statements in this driver could be split
->> > into per-soc functions called via drvdata.
->>
->> Yeah I thought that too. At a quick glance I did not saw an obvious
->> contender. Should certainly help for similar cases in the future.
-> 
-> Yes, there are other cases in which it would be useful.
-> 
-> But I think it makes more sense to split introducing drvdata to a
-> separate patch.
-> It's nice to separate functional and code cleanup changes.
-> 
-> For example maybe dbi_length causes issues and has to be reverted?
+On Tue, 20 Nov 2018 13:01:05 +0100
+Peter Zijlstra <peterz@infradead.org> wrote:
 
-Ok, makes sense, will split drvdata introduction in its own patch.
+> On Thu, Nov 15, 2018 at 11:06:17AM +0000, Jonathan Cameron wrote:
+> > The addition of support to read the numa node for a PCI
+> > card specified by _PXM resulted in Martin's system not
+> > booting.   Looking at the ACPI tables it seems that there
+> > are PXM entries for the root ports, but no SRAT table.
+> > 
+> > The absence of SRAT table results in dummy_numa_init being
+> > called.  However, unlike on arm64, this doesn't then result
+> > in numa_off being set.  When the PCI code later comes along
+> > and calls acpi_get_node for any PCI card below the root port,
+> > it navigates up the ACPI tree until it finds the PXM value in
+> > the root port. This value is then passed to
+> > acpi_map_pxm_to_node.  If numa_off is set this returns,
+> > NUMA_NO_NODE (as it does on arm64), on x86 it instead tries
+> > to allocate a numa node from the unused set without setting
+> > up all the infrastructure that would normally accompany such
+> > a call.  We have not identified exactly which driver is
+> > causing the subsequent hang for Martin.
+> > 
+> > It is invalid under the ACPI spec to specify new
+> > numa nodes using PXM if they have no presence in SRAT.
+> > Thus the simplest fix is to set numa_off when it is off due
+> > to an invalid SRAT (here not present at all).
+> > 
+> > I do not have easy access to appropriate x86 numa systems so
+> > would appreciate some testing of this one!
+> > 
+> > Known problem boards setups:
+> > 
+> > AMD Ryzen Threadripper 2950X on ASROCK X399 TAICHI
+> > MSI X399 SLI PLUS (probably - not confirmed yet)
+> > 
+> > The PCI patch has been reverted, so this fix is not critical.
+> > 
+> > Reported-by: Martin Hundeb?ll <martin@geanix.com>
+> > Signed-off-by: Jonathan Cameron <Jonathan.Cameron@huawei.com>
+> > Fixes: bad7dcd94f39 ("ACPI/PCI: Pay attention to device-specific _PXM node values")
+> > 
+> > ---
+> >  arch/x86/mm/numa.c | 2 ++
+> >  1 file changed, 2 insertions(+)
+> > 
+> > diff --git a/arch/x86/mm/numa.c b/arch/x86/mm/numa.c
+> > index 1308f5408bf7..ce1182f953ff 100644
+> > --- a/arch/x86/mm/numa.c
+> > +++ b/arch/x86/mm/numa.c
+> > @@ -695,6 +695,8 @@ static int __init dummy_numa_init(void)
+> >  	node_set(0, numa_nodes_parsed);
+> >  	numa_add_memblk(0, 0, PFN_PHYS(max_pfn));
+> >  
+> > +	numa_off = true;  
+> 
+> Should we not:
+> 
+> 	pr_err(FW_BUG "Invalid SRAT table.\n");
+> 
+> or something along those lines?
+> 
+> We should take every possibility to call out broken and non-compliant
+> firmware.
 
---
-Stefan
+While I agree we should definitely be calling this out nice and loud,
+not having an SRAT isn't indicating a broken firmware as SRAT is optional
+in ACPI.  The breakage only occurs much later when the DSDT contains a
+PXM entry that doesn't correspond to any entries in SRAT.
+
+To report at that point, we would need some background info stashed
+on why numa_off was set.  It could be off because we set it so via
+the kernel command line.
+
+If people are happy with this general direction I'm happy to spin a
+patch to do that state tracking and pr_err as a follow up.
+
+Thanks,
+
+Jonathan
+
