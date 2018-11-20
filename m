@@ -2,61 +2,50 @@ Return-Path: <SRS0=4GJS=N7=vger.kernel.org=linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-1.0 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	MAILING_LIST_MULTI,SPF_PASS autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-7.0 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_PASS,URIBL_BLOCKED
+	autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id E7053C41536
-	for <linux-pci@archiver.kernel.org>; Tue, 20 Nov 2018 17:31:35 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 7D43EC41536
+	for <linux-pci@archiver.kernel.org>; Tue, 20 Nov 2018 17:41:16 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id D83E1208E4
-	for <linux-pci@archiver.kernel.org>; Tue, 20 Nov 2018 17:31:08 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.3.2 mail.kernel.org D83E1208E4
-Authentication-Results: mail.kernel.org; dmarc=none (p=none dis=none) header.from=arm.com
+	by mail.kernel.org (Postfix) with ESMTP id 8771D20684
+	for <linux-pci@archiver.kernel.org>; Tue, 20 Nov 2018 17:41:11 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.3.2 mail.kernel.org 8771D20684
+Authentication-Results: mail.kernel.org; dmarc=none (p=none dis=none) header.from=wwwdotorg.org
 Authentication-Results: mail.kernel.org; spf=none smtp.mailfrom=linux-pci-owner@vger.kernel.org
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1728884AbeKUEBY (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Tue, 20 Nov 2018 23:01:24 -0500
-Received: from foss.arm.com ([217.140.101.70]:58068 "EHLO foss.arm.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1727618AbeKUEBY (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Tue, 20 Nov 2018 23:01:24 -0500
-Received: from usa-sjc-imap-foss1.foss.arm.com (unknown [10.72.51.249])
-        by usa-sjc-mx-foss1.foss.arm.com (Postfix) with ESMTP id 647981DC8;
-        Tue, 20 Nov 2018 09:31:07 -0800 (PST)
-Received: from [10.1.196.78] (ostrya.cambridge.arm.com [10.1.196.78])
-        by usa-sjc-imap-foss1.foss.arm.com (Postfix) with ESMTPSA id A76173F5AF;
-        Tue, 20 Nov 2018 09:31:04 -0800 (PST)
-Subject: Re: [virtio-dev] Re: [PATCH v4 5/7] iommu: Add virtio-iommu driver
-From:   Jean-Philippe Brucker <jean-philippe.brucker@arm.com>
-To:     Auger Eric <eric.auger@redhat.com>,
-        "iommu@lists.linux-foundation.org" <iommu@lists.linux-foundation.org>,
-        "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-        "devicetree@vger.kernel.org" <devicetree@vger.kernel.org>,
-        "virtualization@lists.linux-foundation.org" 
-        <virtualization@lists.linux-foundation.org>,
-        "virtio-dev@lists.oasis-open.org" <virtio-dev@lists.oasis-open.org>,
-        "joro@8bytes.org" <joro@8bytes.org>,
-        "mst@redhat.com" <mst@redhat.com>
-Cc:     Mark Rutland <Mark.Rutland@arm.com>,
-        Lorenzo Pieralisi <Lorenzo.Pieralisi@arm.com>,
-        "tnowicki@caviumnetworks.com" <tnowicki@caviumnetworks.com>,
-        Marc Zyngier <Marc.Zyngier@arm.com>,
-        Robin Murphy <Robin.Murphy@arm.com>,
-        Will Deacon <Will.Deacon@arm.com>,
-        "robh+dt@kernel.org" <robh+dt@kernel.org>,
-        "bhelgaas@google.com" <bhelgaas@google.com>,
-        "kvmarm@lists.cs.columbia.edu" <kvmarm@lists.cs.columbia.edu>
-References: <20181115165234.43990-1-jean-philippe.brucker@arm.com>
- <20181115165234.43990-6-jean-philippe.brucker@arm.com>
- <64abfb83-c555-c518-1030-cb73846517fc@redhat.com>
- <41460260-417b-762f-f007-ccfd5ac1e8a5@arm.com>
-Message-ID: <6d003fde-9574-0ff9-0bf8-7901d1a4aa5c@arm.com>
-Date:   Tue, 20 Nov 2018 17:30:45 +0000
+        id S1726062AbeKUEL3 (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Tue, 20 Nov 2018 23:11:29 -0500
+Received: from avon.wwwdotorg.org ([104.237.132.123]:42062 "EHLO
+        avon.wwwdotorg.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726026AbeKUEL3 (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Tue, 20 Nov 2018 23:11:29 -0500
+Received: from [10.20.204.51] (unknown [216.228.112.24])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+        (No client certificate requested)
+        by avon.wwwdotorg.org (Postfix) with ESMTPSA id 445AB1C00E7;
+        Tue, 20 Nov 2018 10:41:08 -0700 (MST)
+X-Virus-Status: Clean
+X-Virus-Scanned: clamav-milter 0.100.2 at avon.wwwdotorg.org
+Subject: Re: [PATCH] PCI: dwc ep: cache config until DBI regs available
+To:     Vidya Sagar <vidyas@nvidia.com>, Jingoo Han <jingoohan1@gmail.com>,
+        Gustavo Pimentel <gustavo.pimentel@synopsys.com>,
+        Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
+        Bjorn Helgaas <bhelgaas@google.com>
+Cc:     "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+        Manikanta Maddireddy <mmaddireddy@nvidia.com>,
+        Stephen Warren <swarren@nvidia.com>
+References: <20181119222602.28001-1-swarren@wwwdotorg.org>
+ <BN6PR12MB11714E3FED1EF50D7F3CA3C9B8D90@BN6PR12MB1171.namprd12.prod.outlook.com>
+From:   Stephen Warren <swarren@wwwdotorg.org>
+Message-ID: <921c50a5-35b7-33e7-398b-3c4cacef8529@wwwdotorg.org>
+Date:   Tue, 20 Nov 2018 10:41:06 -0700
 User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:60.0) Gecko/20100101
- Thunderbird/60.0
+ Thunderbird/60.2.1
 MIME-Version: 1.0
-In-Reply-To: <41460260-417b-762f-f007-ccfd5ac1e8a5@arm.com>
-Content-Type: text/plain; charset=utf-8
+In-Reply-To: <BN6PR12MB11714E3FED1EF50D7F3CA3C9B8D90@BN6PR12MB1171.namprd12.prod.outlook.com>
+Content-Type: text/plain; charset=utf-8; format=flowed
 Content-Language: en-US
 Content-Transfer-Encoding: 7bit
 Sender: linux-pci-owner@vger.kernel.org
@@ -64,87 +53,501 @@ Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-On 16/11/2018 18:46, Jean-Philippe Brucker wrote:
->>> +/*
->>> + * __viommu_sync_req - Complete all in-flight requests
->>> + *
->>> + * Wait for all added requests to complete. When this function returns, all
->>> + * requests that were in-flight at the time of the call have completed.
->>> + */
->>> +static int __viommu_sync_req(struct viommu_dev *viommu)
->>> +{
->>> +	int ret = 0;
->>> +	unsigned int len;
->>> +	size_t write_len;
->>> +	struct viommu_request *req;
->>> +	struct virtqueue *vq = viommu->vqs[VIOMMU_REQUEST_VQ];
->>> +
->>> +	assert_spin_locked(&viommu->request_lock);
->>> +
->>> +	virtqueue_kick(vq);
->>> +
->>> +	while (!list_empty(&viommu->requests)) {
->>> +		len = 0;
->>> +		req = virtqueue_get_buf(vq, &len);
->>> +		if (!req)
->>> +			continue;
->>> +
->>> +		if (!len)
->>> +			viommu_set_req_status(req->buf, req->len,
->>> +					      VIRTIO_IOMMU_S_IOERR);
->>> +
->>> +		write_len = req->len - req->write_offset;
->>> +		if (req->writeback && len >= write_len)
->> I don't get "len >= write_len". Is it valid for the device to write more
->> than write_len? If it writes less than write_len, the status is not set,
->> is it?
-
-Actually, len could well be three bytes smaller than write_len. The spec
-doesn't require the device to write the three padding bytes in
-virtio_iommu_req_tail, after the status byte.
-
-Here the driver just assumes that the device wrote the reserved field.
-The QEMU device seems to write uninitialized data in there...
-
-Any objection to changing the spec to require the device to initialize
-those bytes to zero? I think it makes things nicer overall and shouldn't
-have any performance impact.
-
-[...]
->>> +static struct iommu_domain *viommu_domain_alloc(unsigned type)
->>> +{
->>> +	struct viommu_domain *vdomain;
->>> +
->>> +	if (type != IOMMU_DOMAIN_UNMANAGED && type != IOMMU_DOMAIN_DMA)
->> smmu drivers also support the IDENTITY type. Don't we want to support it
->> as well?
+On 11/20/18 10:30 AM, Vidya Sagar wrote:
+>> -----Original Message-----
+>> From: Stephen Warren <swarren@wwwdotorg.org>
+>> Sent: Tuesday, November 20, 2018 3:56 AM
+>> To: Jingoo Han <jingoohan1@gmail.com>; Gustavo Pimentel
+>> <gustavo.pimentel@synopsys.com>; Lorenzo Pieralisi
+>> <lorenzo.pieralisi@arm.com>; Bjorn Helgaas <bhelgaas@google.com>
+>> Cc: linux-pci@vger.kernel.org; Vidya Sagar <vidyas@nvidia.com>; Manikanta
+>> Maddireddy <mmaddireddy@nvidia.com>; Stephen Warren
+>> <swarren@nvidia.com>
+>> Subject: [PATCH] PCI: dwc ep: cache config until DBI regs available
+>>
+>> From: Stephen Warren <swarren@nvidia.com>
+>>
+>> Some implementations of the DWC PCIe endpoint controller do not allow access
+>> to DBI registers until the attached host has started REFCLK, released PERST, and
+>> the endpoint driver has initialized clocking of the DBI registers based on that.
+>> One such system is NVIDIA's T194 SoC. The PCIe endpoint subsystem and DWC
+>> driver currently don't work on such hardware, since they assume that all
+>> endpoint configuration can happen at any arbitrary time.
+>>
+>> Enhance the DWC endpoint driver to support such systems by caching all
+>> endpoint configuration in software, and only writing the configuration to
+>> hardware once it's been initialized. This is implemented by splitting all endpoint
+>> controller ops into two functions; the first which simply records/caches the
+>> desired configuration whenever called by the associated function driver and
+>> optionally calls the second, and the second which actually programs the
+>> configuration into hardware, which may be called either by the first function, or
+>> later when it's known that the DBI registers are available.
+>>
+>> Signed-off-by: Stephen Warren <swarren@nvidia.com>
+>> ---
+>> Note: I have only compiled-tested this patch in the context of the mainline
+>> kernel since NVIDIA Tegra PCIe EP support is not yet present.
+>> However, I've built and tested an equivalent patch in our downstream kernel. I
+>> did have to manually port it to mainline due to conflicts though.
+>>
+>> This patch was developed on top of "PCI: designware: don't hard-code DBI/ATU
+>> offset" which I sent last week, so may rely on that for patch context.
+>> ---
+>>   .../pci/controller/dwc/pcie-designware-ep.c   | 199 ++++++++++++++----
+>>   drivers/pci/controller/dwc/pcie-designware.h  |  26 ++-
+>>   2 files changed, 181 insertions(+), 44 deletions(-)
+>>
+>> diff --git a/drivers/pci/controller/dwc/pcie-designware-ep.c
+>> b/drivers/pci/controller/dwc/pcie-designware-ep.c
+>> index 880210366e71..6910b64bfdcb 100644
+>> --- a/drivers/pci/controller/dwc/pcie-designware-ep.c
+>> +++ b/drivers/pci/controller/dwc/pcie-designware-ep.c
+>> @@ -73,11 +73,10 @@ static u8 dw_pcie_ep_find_capability(struct dw_pcie
+>> *pci, u8 cap)
+>>   	return __dw_pcie_ep_find_next_cap(pci, next_cap_ptr, cap);  }
+>>
+>> -static int dw_pcie_ep_write_header(struct pci_epc *epc, u8 func_no,
+>> -				   struct pci_epf_header *hdr)
+>> +static void dw_pcie_ep_write_header_regs(struct dw_pcie_ep *ep)
+>>   {
+>> -	struct dw_pcie_ep *ep = epc_get_drvdata(epc);
+>>   	struct dw_pcie *pci = to_dw_pcie_from_ep(ep);
+>> +	struct pci_epf_header *hdr = &(ep->cached_hdr);
+>>
+>>   	dw_pcie_dbi_ro_wr_en(pci);
+>>   	dw_pcie_writew_dbi(pci, PCI_VENDOR_ID, hdr->vendorid); @@ -94,6
+>> +93,19 @@ static int dw_pcie_ep_write_header(struct pci_epc *epc, u8
+>> func_no,
+>>   	dw_pcie_writeb_dbi(pci, PCI_INTERRUPT_PIN,
+>>   			   hdr->interrupt_pin);
+>>   	dw_pcie_dbi_ro_wr_dis(pci);
+>> +}
+>> +
+>> +static int dw_pcie_ep_write_header(struct pci_epc *epc, u8 func_no,
+>> +				   struct pci_epf_header *hdr)
+>> +{
+>> +	struct dw_pcie_ep *ep = epc_get_drvdata(epc);
+>> +
+>> +	ep->cached_hdr = *hdr;
+>> +
+>> +	if (!ep->hw_regs_available)
+>> +		return 0;
+>> +
+>> +	dw_pcie_ep_write_header_regs(ep);
+>>
+>>   	return 0;
+>>   }
+>> @@ -112,6 +124,15 @@ static int dw_pcie_ep_inbound_atu(struct dw_pcie_ep
+>> *ep, enum pci_barno bar,
+>>   		return -EINVAL;
+>>   	}
+>>
+>> +	ep->cached_inbound_atus[free_win].bar = bar;
+>> +	ep->cached_inbound_atus[free_win].cpu_addr = cpu_addr;
+>> +	ep->cached_inbound_atus[free_win].as_type = as_type;
+>> +	ep->cached_bars[bar].atu_index = free_win;
+>> +	set_bit(free_win, ep->ib_window_map);
+>> +
+>> +	if (!ep->hw_regs_available)
+>> +		return 0;
+>> +
+>>   	ret = dw_pcie_prog_inbound_atu(pci, free_win, bar, cpu_addr,
+>>   				       as_type);
+>>   	if (ret < 0) {
+>> @@ -119,9 +140,6 @@ static int dw_pcie_ep_inbound_atu(struct dw_pcie_ep
+>> *ep, enum pci_barno bar,
+>>   		return ret;
+>>   	}
+>>
+>> -	ep->bar_to_atu[bar] = free_win;
+>> -	set_bit(free_win, ep->ib_window_map);
+>> -
+>>   	return 0;
+>>   }
+>>
+>> @@ -137,27 +155,66 @@ static int dw_pcie_ep_outbound_atu(struct
+>> dw_pcie_ep *ep, phys_addr_t phys_addr,
+>>   		return -EINVAL;
+>>   	}
+>>
+>> +	ep->cached_outbound_atus[free_win].addr = phys_addr;
+>> +	ep->cached_outbound_atus[free_win].pci_addr = pci_addr;
+>> +	ep->cached_outbound_atus[free_win].size = size;
+>> +	set_bit(free_win, ep->ob_window_map);
+>> +
+>> +	if (!ep->hw_regs_available)
+>> +		return 0;
+>> +
+>>   	dw_pcie_prog_outbound_atu(pci, free_win, PCIE_ATU_TYPE_MEM,
+>>   				  phys_addr, pci_addr, size);
+>>
+>> -	set_bit(free_win, ep->ob_window_map);
+>> -	ep->outbound_addr[free_win] = phys_addr;
+>> -
+>>   	return 0;
+>>   }
+>>
+>> +static void dw_pcie_ep_clear_bar_regs(struct dw_pcie_ep *ep, u8 func_no,
+>> +				      enum pci_barno bar)
+>> +{
+>> +	struct dw_pcie *pci = to_dw_pcie_from_ep(ep);
+>> +	int flags = ep->cached_bars[bar].flags;
+>> +	u32 atu_index = ep->cached_bars[bar].atu_index;
+>> +
+>> +	__dw_pcie_ep_reset_bar(pci, bar, flags);
+>> +
+>> +	dw_pcie_disable_atu(pci, atu_index, DW_PCIE_REGION_INBOUND); }
+>> +
+>>   static void dw_pcie_ep_clear_bar(struct pci_epc *epc, u8 func_no,
+>>   				 struct pci_epf_bar *epf_bar)
+>>   {
+>>   	struct dw_pcie_ep *ep = epc_get_drvdata(epc);
+>> -	struct dw_pcie *pci = to_dw_pcie_from_ep(ep);
+>>   	enum pci_barno bar = epf_bar->barno;
+>> -	u32 atu_index = ep->bar_to_atu[bar];
+>> +	u32 atu_index = ep->cached_bars[bar].atu_index;
+>>
+>> -	__dw_pcie_ep_reset_bar(pci, bar, epf_bar->flags);
+>> -
+>> -	dw_pcie_disable_atu(pci, atu_index, DW_PCIE_REGION_INBOUND);
+>>   	clear_bit(atu_index, ep->ib_window_map);
+>> +
+>> +	if (!ep->hw_regs_available)
+>> +		return;
+>> +
+>> +	dw_pcie_ep_clear_bar_regs(ep, func_no, bar); }
+>> +
+>> +static void dw_pcie_ep_set_bar_regs(struct dw_pcie_ep *ep, u8 func_no,
+>> +				    enum pci_barno bar)
+>> +{
+>> +	struct dw_pcie *pci = to_dw_pcie_from_ep(ep);
+>> +	size_t size = ep->cached_bars[bar].size;
+>> +	int flags = ep->cached_bars[bar].flags;
+>> +	u32 reg = PCI_BASE_ADDRESS_0 + (4 * bar);
+>> +
+>> +	dw_pcie_dbi_ro_wr_en(pci);
+>> +
+>> +	dw_pcie_writel_dbi2(pci, reg, lower_32_bits(size - 1));
+>> +	dw_pcie_writel_dbi(pci, reg, flags);
+>> +
+>> +	if (flags & PCI_BASE_ADDRESS_MEM_TYPE_64) {
+>> +		dw_pcie_writel_dbi2(pci, reg + 4, upper_32_bits(size - 1));
+>> +		dw_pcie_writel_dbi(pci, reg + 4, 0);
+>> +	}
+>> +
+>> +	dw_pcie_dbi_ro_wr_dis(pci);
+>>   }
+>>
+>>   static int dw_pcie_ep_set_bar(struct pci_epc *epc, u8 func_no, @@ -165,12
+>> +222,10 @@ static int dw_pcie_ep_set_bar(struct pci_epc *epc, u8 func_no,  {
+>>   	int ret;
+>>   	struct dw_pcie_ep *ep = epc_get_drvdata(epc);
+>> -	struct dw_pcie *pci = to_dw_pcie_from_ep(ep);
+>>   	enum pci_barno bar = epf_bar->barno;
+>>   	size_t size = epf_bar->size;
+>>   	int flags = epf_bar->flags;
+>>   	enum dw_pcie_as_type as_type;
+>> -	u32 reg = PCI_BASE_ADDRESS_0 + (4 * bar);
+>>
+>>   	if (!(flags & PCI_BASE_ADDRESS_SPACE))
+>>   		as_type = DW_PCIE_AS_MEM;
+>> @@ -181,17 +236,13 @@ static int dw_pcie_ep_set_bar(struct pci_epc *epc, u8
+>> func_no,
+>>   	if (ret)
+>>   		return ret;
+>>
+>> -	dw_pcie_dbi_ro_wr_en(pci);
+>> -
+>> -	dw_pcie_writel_dbi2(pci, reg, lower_32_bits(size - 1));
+>> -	dw_pcie_writel_dbi(pci, reg, flags);
+>> +	ep->cached_bars[bar].size = size;
+>> +	ep->cached_bars[bar].flags = flags;
+>>
+>> -	if (flags & PCI_BASE_ADDRESS_MEM_TYPE_64) {
+>> -		dw_pcie_writel_dbi2(pci, reg + 4, upper_32_bits(size - 1));
+>> -		dw_pcie_writel_dbi(pci, reg + 4, 0);
+>> -	}
+>> +	if (!ep->hw_regs_available)
+>> +		return 0;
+>>
+>> -	dw_pcie_dbi_ro_wr_dis(pci);
+>> +	dw_pcie_ep_set_bar_regs(ep, func_no, bar);
+>>
+>>   	return 0;
+>>   }
+>> @@ -202,7 +253,7 @@ static int dw_pcie_find_index(struct dw_pcie_ep *ep,
+>> phys_addr_t addr,
+>>   	u32 index;
+>>
+>>   	for (index = 0; index < ep->num_ob_windows; index++) {
+>> -		if (ep->outbound_addr[index] != addr)
+>> +		if (ep->cached_outbound_atus[index].addr != addr)
+>>   			continue;
+>>   		*atu_index = index;
+>>   		return 0;
+>> @@ -223,8 +274,12 @@ static void dw_pcie_ep_unmap_addr(struct pci_epc
+>> *epc, u8 func_no,
+>>   	if (ret < 0)
+>>   		return;
+>>
+>> -	dw_pcie_disable_atu(pci, atu_index, DW_PCIE_REGION_OUTBOUND);
+>>   	clear_bit(atu_index, ep->ob_window_map);
+>> +
+>> +	if (!ep->hw_regs_available)
+>> +		return;
+>> +
+>> +	dw_pcie_disable_atu(pci, atu_index, DW_PCIE_REGION_OUTBOUND);
+>>   }
+>>
+>>   static int dw_pcie_ep_map_addr(struct pci_epc *epc, u8 func_no, @@ -254,7
+>> +309,10 @@ static int dw_pcie_ep_get_msi(struct pci_epc *epc, u8 func_no)
+>>   		return -EINVAL;
+>>
+>>   	reg = ep->msi_cap + PCI_MSI_FLAGS;
+>> -	val = dw_pcie_readw_dbi(pci, reg);
+>> +	if (ep->hw_regs_available)
+>> +		val = dw_pcie_readw_dbi(pci, reg);
+>> +	else
+>> +		val = ep->cached_msi_flags;
+>>   	if (!(val & PCI_MSI_FLAGS_ENABLE))
+>>   		return -EINVAL;
+>>
+>> @@ -273,12 +331,19 @@ static int dw_pcie_ep_set_msi(struct pci_epc *epc, u8
+>> func_no, u8 interrupts)
+>>   		return -EINVAL;
+>>
+>>   	reg = ep->msi_cap + PCI_MSI_FLAGS;
+>> -	val = dw_pcie_readw_dbi(pci, reg);
+>> +	if (ep->hw_regs_available)
+>> +		val = dw_pcie_readw_dbi(pci, reg);
+>> +	else
+>> +		val = ep->cached_msi_flags;
+>>   	val &= ~PCI_MSI_FLAGS_QMASK;
+>>   	val |= (interrupts << 1) & PCI_MSI_FLAGS_QMASK;
+>> -	dw_pcie_dbi_ro_wr_en(pci);
+>> -	dw_pcie_writew_dbi(pci, reg, val);
+>> -	dw_pcie_dbi_ro_wr_dis(pci);
+>> +	if (ep->hw_regs_available) {
+>> +		dw_pcie_dbi_ro_wr_en(pci);
+>> +		dw_pcie_writew_dbi(pci, reg, val);
+>> +		dw_pcie_dbi_ro_wr_dis(pci);
+>> +	} else {
+>> +		ep->cached_msi_flags = val;
+>> +	}
+>>
+>>   	return 0;
+>>   }
+>> @@ -293,7 +358,10 @@ static int dw_pcie_ep_get_msix(struct pci_epc *epc,
+>> u8 func_no)
+>>   		return -EINVAL;
+>>
+>>   	reg = ep->msix_cap + PCI_MSIX_FLAGS;
+>> -	val = dw_pcie_readw_dbi(pci, reg);
+>> +	if (ep->hw_regs_available)
+>> +		val = dw_pcie_readw_dbi(pci, reg);
+>> +	else
+>> +		val = ep->cached_msix_flags;
+>>   	if (!(val & PCI_MSIX_FLAGS_ENABLE))
+>>   		return -EINVAL;
+>>
+>> @@ -312,16 +380,49 @@ static int dw_pcie_ep_set_msix(struct pci_epc *epc,
+>> u8 func_no, u16 interrupts)
+>>   		return -EINVAL;
+>>
+>>   	reg = ep->msix_cap + PCI_MSIX_FLAGS;
+>> -	val = dw_pcie_readw_dbi(pci, reg);
+>> +	if (ep->hw_regs_available)
+>> +		val = dw_pcie_readw_dbi(pci, reg);
+>> +	else
+>> +		val = ep->cached_msix_flags;
+>>   	val &= ~PCI_MSIX_FLAGS_QSIZE;
+>>   	val |= interrupts;
+>> -	dw_pcie_dbi_ro_wr_en(pci);
+>> -	dw_pcie_writew_dbi(pci, reg, val);
+>> -	dw_pcie_dbi_ro_wr_dis(pci);
+>> +	if (ep->hw_regs_available) {
+>> +		dw_pcie_dbi_ro_wr_en(pci);
+>> +		dw_pcie_writew_dbi(pci, reg, val);
+>> +		dw_pcie_dbi_ro_wr_dis(pci);
+>> +	} else {
+>> +		ep->cached_msix_flags = val;
+>> +	}
+>>
+>>   	return 0;
+>>   }
+>>
+>> +void dw_pcie_set_regs_available(struct dw_pcie *pci) {
+>> +	struct dw_pcie_ep *ep = &(pci->ep);
+>> +	int i;
+>> +
+>> +	ep->hw_regs_available = true;
+>> +
+>> +	dw_pcie_ep_write_header_regs(ep);
+>> +	for_each_set_bit(i, ep->ib_window_map, ep->num_ib_windows) {
+>> +		dw_pcie_prog_inbound_atu(pci, i,
+>> +			ep->cached_inbound_atus[i].bar,
+>> +			ep->cached_inbound_atus[i].cpu_addr,
+>> +			ep->cached_inbound_atus[i].as_type);
+>> +		dw_pcie_ep_set_bar_regs(ep, 0, ep-
+>>> cached_inbound_atus[i].bar);
+>> +	}
+>> +	for_each_set_bit(i, ep->ob_window_map, ep->num_ob_windows)
+>> +		dw_pcie_prog_outbound_atu(pci, i, PCIE_ATU_TYPE_MEM,
+>> +			ep->cached_outbound_atus[i].addr,
+>> +			ep->cached_outbound_atus[i].pci_addr,
+>> +			ep->cached_outbound_atus[i].size);
+>> +	dw_pcie_dbi_ro_wr_en(pci);
+>> +	dw_pcie_writew_dbi(pci, PCI_MSI_FLAGS, ep->cached_msi_flags);
+>> +	dw_pcie_writew_dbi(pci, PCI_MSIX_FLAGS, ep->cached_msix_flags);
+>> +	dw_pcie_dbi_ro_wr_dis(pci);
+>> +}
+>> +
+>>   static int dw_pcie_ep_raise_irq(struct pci_epc *epc, u8 func_no,
+>>   				enum pci_epc_irq_type type, u16
+>> interrupt_num)  { @@ -330,6 +431,9 @@ static int dw_pcie_ep_raise_irq(struct
+>> pci_epc *epc, u8 func_no,
+>>   	if (!ep->ops->raise_irq)
+>>   		return -EINVAL;
+>>
+>> +	if (!ep->hw_regs_available)
+>> +		return -EAGAIN;
+>> +
+>>   	return ep->ops->raise_irq(ep, func_no, type, interrupt_num);  }
+>>
+>> @@ -391,6 +495,9 @@ int dw_pcie_ep_raise_msi_irq(struct dw_pcie_ep *ep,
+>> u8 func_no,
+>>   	bool has_upper;
+>>   	int ret;
+>>
+>> +	if (!ep->hw_regs_available)
+>> +		return -EAGAIN;
+>> +
+>>   	if (!ep->msi_cap)
+>>   		return -EINVAL;
+>>
+>> @@ -436,6 +543,9 @@ int dw_pcie_ep_raise_msix_irq(struct dw_pcie_ep *ep,
+>> u8 func_no,
+>>   	void __iomem *msix_tbl;
+>>   	int ret;
+>>
+>> +	if (!ep->hw_regs_available)
+>> +		return -EAGAIN;
+>> +
+>>   	reg = ep->msix_cap + PCI_MSIX_TABLE;
+>>   	tbl_offset = dw_pcie_readl_dbi(pci, reg);
+>>   	bir = (tbl_offset & PCI_MSIX_TABLE_BIR); @@ -494,7 +604,6 @@ void
+>> dw_pcie_ep_exit(struct dw_pcie_ep *ep)  int dw_pcie_ep_init(struct
+>> dw_pcie_ep *ep)  {
+>>   	int ret;
+>> -	void *addr;
+>>   	struct pci_epc *epc;
+>>   	struct dw_pcie *pci = to_dw_pcie_from_ep(ep);
+>>   	struct device *dev = pci->dev;
+>> @@ -543,11 +652,17 @@ int dw_pcie_ep_init(struct dw_pcie_ep *ep)
+>>   	if (!ep->ob_window_map)
+>>   		return -ENOMEM;
+>>
+>> -	addr = devm_kcalloc(dev, ep->num_ob_windows, sizeof(phys_addr_t),
+>> -			    GFP_KERNEL);
+>> -	if (!addr)
+>> +	ep->cached_inbound_atus = devm_kzalloc(dev,
+>> +		sizeof(ep->cached_inbound_atus[0]) * ep->num_ib_windows,
+>> +		GFP_KERNEL);
+>> +	if (!ep->cached_inbound_atus)
+>> +		return -ENOMEM;
+>> +
+>> +	ep->cached_outbound_atus = devm_kzalloc(dev,
+>> +		sizeof(ep->cached_outbound_atus[0]) * ep->num_ob_windows,
+>> +		GFP_KERNEL);
+>> +	if (!ep->cached_outbound_atus)
+>>   		return -ENOMEM;
+>> -	ep->outbound_addr = addr;
+>>
+>>   	epc = devm_pci_epc_create(dev, &epc_ops);
+>>   	if (IS_ERR(epc)) {
+>> diff --git a/drivers/pci/controller/dwc/pcie-designware.h
+>> b/drivers/pci/controller/dwc/pcie-designware.h
+>> index 02fb532c5db9..c116b289aa51 100644
+>> --- a/drivers/pci/controller/dwc/pcie-designware.h
+>> +++ b/drivers/pci/controller/dwc/pcie-designware.h
+>> @@ -192,8 +192,6 @@ struct dw_pcie_ep {
+>>   	phys_addr_t		phys_base;
+>>   	size_t			addr_size;
+>>   	size_t			page_size;
+>> -	u8			bar_to_atu[6];
+>> -	phys_addr_t		*outbound_addr;
+>>   	unsigned long		*ib_window_map;
+>>   	unsigned long		*ob_window_map;
+>>   	u32			num_ib_windows;
+>> @@ -202,6 +200,25 @@ struct dw_pcie_ep {
+>>   	phys_addr_t		msi_mem_phys;
+>>   	u8			msi_cap;	/* MSI capability offset */
+>>   	u8			msix_cap;	/* MSI-X capability offset */
+>> +	bool			hw_regs_available;
+>> +	struct pci_epf_header	cached_hdr;
+>> +	struct {
+>> +		size_t			size;
+>> +		int			flags;
+>> +		u8			atu_index;
+>> +	}			cached_bars[6];
+>> +	struct {
+>> +		enum pci_barno		bar;
+>> +		dma_addr_t		cpu_addr;
+>> +		enum dw_pcie_as_type	as_type;
+>> +	}			*cached_inbound_atus;
+>> +	struct {
+>> +		phys_addr_t		addr;
+>> +		u64			pci_addr;
+>> +		size_t			size;
+>> +	}			*cached_outbound_atus;
+>> +	u32			cached_msi_flags;
+>> +	u32			cached_msix_flags;
+>>   };
+>>
+>>   struct dw_pcie_ops {
+>> @@ -363,6 +380,7 @@ static inline int dw_pcie_allocate_domains(struct
+>> pcie_port *pp)  void dw_pcie_ep_linkup(struct dw_pcie_ep *ep);  int
+>> dw_pcie_ep_init(struct dw_pcie_ep *ep);  void dw_pcie_ep_exit(struct
+>> dw_pcie_ep *ep);
+>> +void dw_pcie_ep_set_regs_available(struct dw_pcie *pci);
+>>   int dw_pcie_ep_raise_legacy_irq(struct dw_pcie_ep *ep, u8 func_no);  int
+>> dw_pcie_ep_raise_msi_irq(struct dw_pcie_ep *ep, u8 func_no,
+>>   			     u8 interrupt_num);
+>> @@ -383,6 +401,10 @@ static inline void dw_pcie_ep_exit(struct dw_pcie_ep
+>> *ep)  {  }
+>>
+>> +static inline void dw_pcie_ep_set_regs_available(struct dw_pcie *pci) {
+>> +}
+>> +
+>>   static inline int dw_pcie_ep_raise_legacy_irq(struct dw_pcie_ep *ep, u8
+>> func_no)  {
+>>   	return 0;
+>> --
+>> 2.19.1
 > 
-> Eventually yes. The IDENTITY domain is useful when an IOMMU has been
-> forced upon you and gets in the way of performance, in which case you
-> get rid of it with CONFIG_IOMMU_DEFAULT_PASSTHROUGH=y or
-> iommu.passthrough=y. For virtio-iommu though, you could simply not
-> instantiate the device.
-> 
-> I don't think it's difficult to add: if the device supports
-> VIRTIO_IOMMU_F_BYPASS, then we simply don't send an ATTACH request.
-> Otherwise after ATTACH we send a MAP for the whole input range. If the
-> change isn't bigger than this, I'll add it to v5.
+> What is the guidance on setting "hw_regs_available" param?
+> I mean, in case of hardware platforms where registers are always available to write (Ex:- pci-epf-test.c), how do they
+> either (a) set the param hw_regs_available to '1' or (b) call dw_pcie_set_regs_available() to commit all cached values to registers?
 
-Not as straightforward as I hoped, when the device doesn't support
-VIRTIO_IOMMU_F_BYPASS:
+Oh yes, I forgot to add that part when moving this patch upstream.
 
-* We can't simply create an ID map for the whole input range, we need to
-carve out the resv_mem regions.
+Right now, our downstream endpoint driver calls 
+dw_pcie_set_regs_available() when it has made the registers available. 
+Drivers for any hardware where the registers are always available (i.e. 
+all current DWC EP drivers in mainline) should set ep->hw_regs_available 
+during initialization. So, this patch needs to be amended to either:
 
-* For a VFIO device, the host has no way of forwarding the identity
-mapping. For example the guest will attempt to map [0; 0xffffffffffff]
--> [0; 0xffffffffffff], but VFIO only allows to map RAM and cannot take
-such request. One solution is to only create ID mapping for RAM, and
-register a notifier for memory hotplug, like intel-iommu does for IOMMUs
-that don't support HW pass-through.
+a) Update every existing DWC EP driver to set ep->hw_regs_available 
+during probe/initialization.
 
-Since it's not completely trivial and - I think - not urgent, I'll leave
-this for later.
+b) Replace ep->hw_regs_available with ep->hw_regs_unavailable, so that 
+the default 0 value (assuming kzalloc is used to alloc the ep struct) 
+means the registers can be accessed, with the ability for individual 
+drivers (i.e. Tegra's) to set that value during probe/initialization.
 
-Thanks,
-Jean
+Before I do that though, I'd still like general feedback on this patch 
+so I can incorporate that into any updated version.
+
+> I see a need for APIs to establish the link among dw_pcie_ep -> pci_epc -> pci_epf_driver.
+
+I don't understand this part.
