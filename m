@@ -2,104 +2,212 @@ Return-Path: <SRS0=4GJS=N7=vger.kernel.org=linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-9.1 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
-	DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,
-	SIGNED_OFF_BY,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT autolearn=unavailable
+X-Spam-Status: No, score=-11.8 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
+	DKIM_VALID_AU,FREEMAIL_FORGED_FROMDOMAIN,FREEMAIL_FROM,
+	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,
+	MENTIONS_GIT_HOSTING,SIGNED_OFF_BY,SPF_PASS,URIBL_BLOCKED autolearn=ham
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id C7A78C18DF5
-	for <linux-pci@archiver.kernel.org>; Tue, 20 Nov 2018 13:27:54 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 47959C18E01
+	for <linux-pci@archiver.kernel.org>; Tue, 20 Nov 2018 14:18:19 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id F156A206BB
-	for <linux-pci@archiver.kernel.org>; Tue, 20 Nov 2018 13:27:23 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 2B1E4206BA
+	for <linux-pci@archiver.kernel.org>; Tue, 20 Nov 2018 14:18:10 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (1024-bit key) header.d=agner.ch header.i=@agner.ch header.b="0GHyHRpN"
-DMARC-Filter: OpenDMARC Filter v1.3.2 mail.kernel.org F156A206BB
-Authentication-Results: mail.kernel.org; dmarc=none (p=none dis=none) header.from=agner.ch
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="BtTRXmIm"
+DMARC-Filter: OpenDMARC Filter v1.3.2 mail.kernel.org 2B1E4206BA
+Authentication-Results: mail.kernel.org; dmarc=fail (p=none dis=none) header.from=gmail.com
 Authentication-Results: mail.kernel.org; spf=none smtp.mailfrom=linux-pci-owner@vger.kernel.org
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726457AbeKTX4T (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Tue, 20 Nov 2018 18:56:19 -0500
-Received: from mail.kmu-office.ch ([178.209.48.109]:47292 "EHLO
-        mail.kmu-office.ch" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1727536AbeKTX4T (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Tue, 20 Nov 2018 18:56:19 -0500
-Received: from trochilidae.toradex.int (unknown [46.140.72.82])
-        by mail.kmu-office.ch (Postfix) with ESMTPSA id A83235C2673;
-        Tue, 20 Nov 2018 14:27:09 +0100 (CET)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=agner.ch; s=dkim;
-        t=1542720429;
-        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-         to:to:cc:cc:mime-version:mime-version:content-type:
-         content-transfer-encoding:content-transfer-encoding:
-         in-reply-to:in-reply-to:references:references;
-        bh=K7rDdsRBxzLSxyHmL1i9ojUubg1idCe5WOAmjcZYgLw=;
-        b=0GHyHRpNCj1WLOCzvICmmsO3eKN9j6BssqU6E8uomUgJKVqi3yMu8+UngiAFGqNIYj1yDg
-        kmeMEkRzP/kHCZRZ72THjfFb3gS4w+tMmg67cOFQMFI52KZw6pFrGjI5SVulTZhULr5gVy
-        1Mj6G8NrqJnj6dlUrXoPilouz9CricU=
-From:   Stefan Agner <stefan@agner.ch>
-To:     jingoohan1@gmail.com, gustavo.pimentel@synopsys.com,
-        l.stach@pengutronix.de, tpiepho@impinj.com
-Cc:     bhelgaas@google.com, linux-pci@vger.kernel.org,
-        linux-kernel@vger.kernel.org, Stefan Agner <stefan@agner.ch>
-Subject: [PATCH v2 3/3] PCI: imx6: limit DBI register length
-Date:   Tue, 20 Nov 2018 14:27:05 +0100
-Message-Id: <20181120132705.6917-3-stefan@agner.ch>
-X-Mailer: git-send-email 2.19.1
-In-Reply-To: <20181120132705.6917-1-stefan@agner.ch>
-References: <20181120132705.6917-1-stefan@agner.ch>
+        id S1726005AbeKUAra (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Tue, 20 Nov 2018 19:47:30 -0500
+Received: from mail-wr1-f65.google.com ([209.85.221.65]:40323 "EHLO
+        mail-wr1-f65.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726916AbeKUAra (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Tue, 20 Nov 2018 19:47:30 -0500
+Received: by mail-wr1-f65.google.com with SMTP id p4so2149745wrt.7
+        for <linux-pci@vger.kernel.org>; Tue, 20 Nov 2018 06:18:07 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20161025;
+        h=mime-version:references:in-reply-to:from:date:message-id:subject:to
+         :cc;
+        bh=pvTNB7sGdiSbgZChWHuP0+74UeugGHfo08blu9XRRl4=;
+        b=BtTRXmImvCgeoPVQcdPY+RoYx68zRA8/9IEmfGftb1hojuq+Dv1XHrcvrKjui+tUTe
+         lRnHq51zwsRBitGxYnjo2JffeAVeJlWKEHgKIvgSHc0WI7vPsL6PEjo+6DUKJFUz6+TE
+         4G1+luRdNgAh/6SdMWdBcen/2jij3rDK66uPW7zmvJj7cFkJlEtntRDKa47oguHLNnRO
+         QAk4EoDz7hbxVbnQmqcTRlkbV/9cHkbMjxl+81hTz45Gx15eFrzTgDoK8i2GLKoXrXWR
+         AIW15YDmHrv5c9uUgTJG3sqnheBIg75Zszm109H9xJAvl4kXGllxQDEfOd8F/8KlWPlW
+         wPQQ==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20161025;
+        h=x-gm-message-state:mime-version:references:in-reply-to:from:date
+         :message-id:subject:to:cc;
+        bh=pvTNB7sGdiSbgZChWHuP0+74UeugGHfo08blu9XRRl4=;
+        b=DNok2/L/+9sHsZmnAxeiB+fArNpheekP081xO3cH6lFnurC2pZtmSL+6CYkbU7xKn8
+         lvx6TbDwjTDHDq4M2rTqwT0E8nnIe8nLbZu3l7bNMN8N0AX0Wx9QhmYHdUor+thBu+3O
+         /eT41eWukgws34egt0tHcPIY3pkIgATuqBZ/LULLKJH8/yuxSFGVOFMC4+W5G4mVrxe8
+         FFY+JbQi1VaVl1v6A+2klvNrgiWfAyOLjQUeqFygf+448qJwsr/JX/cIkl8TQHzqwnXr
+         4xn2h/AQCFDl3iKyOJMvJr54Yd7fUyaoNMYSdUuDXF0Zom8zTUWUSknzslOAWoLJNyWX
+         197g==
+X-Gm-Message-State: AA+aEWbrb4FJufCqWGhtQcX2Pu+EN9DuFqn9eC4RO8ltYbxxXoRLVNFR
+        uhhECnhhNFGPS/2u/4aPjL7epjs/mvTp8LFOGZmx9yzq
+X-Google-Smtp-Source: AFSGD/VvXe8GJsMy4y2HXsesoZUQKOcRJRg1MyMh5rCGkeLt8PHbrrau483axiteBYAIHa3sPlalRtbCK0jPvXEiIJU=
+X-Received: by 2002:adf:d0c9:: with SMTP id z9mr2052299wrh.317.1542723486096;
+ Tue, 20 Nov 2018 06:18:06 -0800 (PST)
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
+References: <alpine.LRH.2.02.1810301232310.23106@file01.intranet.prod.int.rdu2.redhat.com>
+ <20181120004704.GA191199@google.com>
+In-Reply-To: <20181120004704.GA191199@google.com>
+From:   Alex Deucher <alexdeucher@gmail.com>
+Date:   Tue, 20 Nov 2018 09:17:52 -0500
+Message-ID: <CADnq5_OjN8jaxr9SsSgLxeUvOcZoxY401pg732QoXxJjtUiCuw@mail.gmail.com>
+Subject: Re: [PATCH] pci: fix incorrect value returned from pcie_get_speed_cap
+To:     Bjorn Helgaas <helgaas@kernel.org>
+Cc:     mpatocka@redhat.com, Linux PCI <linux-pci@vger.kernel.org>,
+        talgi@mellanox.com, tariqt@mellanox.com,
+        amd-gfx list <amd-gfx@lists.freedesktop.org>
+Content-Type: text/plain; charset="UTF-8"
 Sender: linux-pci-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-Define the length of the DBI registers. This makes sure that
-the kernel does not access registers beyond that point, avoiding
-the following abort on a i.MX 6Quad:
-  # cat /sys/devices/soc0/soc/1ffc000.pcie/pci0000\:00/0000\:00\:00.0/config
-  [  100.021433] Unhandled fault: imprecise external abort (0x1406) at 0xb6ea7000
-  ...
-  [  100.056423] PC is at dw_pcie_read+0x50/0x84
-  [  100.060790] LR is at dw_pcie_rd_own_conf+0x44/0x48
-  ...
+On Mon, Nov 19, 2018 at 7:47 PM Bjorn Helgaas <helgaas@kernel.org> wrote:
+>
+> On Tue, Oct 30, 2018 at 12:36:08PM -0400, Mikulas Patocka wrote:
+> > The macros PCI_EXP_LNKCAP_SLS_*GB are values, not bit masks. We must mask
+> > the register and compare it against them.
+> >
+> > This patch fixes errors "amdgpu: [powerplay] failed to send message 261
+> > ret is 0" errors when PCIe-v3 card is plugged into PCIe-v1 slot, because
+> > the slot is being incorrectly reported as PCIe-v3 capable.
+> >
+> > Signed-off-by: Mikulas Patocka <mpatocka@redhat.com>
+> > Fixes: 6cf57be0f78e ("PCI: Add pcie_get_speed_cap() to find max supported link speed")
+> > Cc: stable@vger.kernel.org    # v4.17+
+> >
+> > ---
+> >  drivers/pci/pci.c |    8 ++++----
+> >  1 file changed, 4 insertions(+), 4 deletions(-)
+> >
+> > Index: linux-4.19/drivers/pci/pci.c
+> > ===================================================================
+> > --- linux-4.19.orig/drivers/pci/pci.c 2018-10-30 16:58:58.000000000 +0100
+> > +++ linux-4.19/drivers/pci/pci.c      2018-10-30 16:58:58.000000000 +0100
+> > @@ -5492,13 +5492,13 @@ enum pci_bus_speed pcie_get_speed_cap(st
+> >
+> >       pcie_capability_read_dword(dev, PCI_EXP_LNKCAP, &lnkcap);
+> >       if (lnkcap) {
+> > -             if (lnkcap & PCI_EXP_LNKCAP_SLS_16_0GB)
+> > +             if ((lnkcap & PCI_EXP_LNKCAP_SLS) == PCI_EXP_LNKCAP_SLS_16_0GB)
+> >                       return PCIE_SPEED_16_0GT;
+> > -             else if (lnkcap & PCI_EXP_LNKCAP_SLS_8_0GB)
+> > +             else if ((lnkcap & PCI_EXP_LNKCAP_SLS) == PCI_EXP_LNKCAP_SLS_8_0GB)
+> >                       return PCIE_SPEED_8_0GT;
+> > -             else if (lnkcap & PCI_EXP_LNKCAP_SLS_5_0GB)
+> > +             else if ((lnkcap & PCI_EXP_LNKCAP_SLS) ==PCI_EXP_LNKCAP_SLS_5_0GB)
+> >                       return PCIE_SPEED_5_0GT;
+> > -             else if (lnkcap & PCI_EXP_LNKCAP_SLS_2_5GB)
+> > +             else if ((lnkcap & PCI_EXP_LNKCAP_SLS) == PCI_EXP_LNKCAP_SLS_2_5GB)
+> >                       return PCIE_SPEED_2_5GT;
+> >       }
+> >
+>
+> I'd like to apply this as below, where I removed the 8_0GB and 16_0GB
+> cases as recommended by the spec.  I can't test it myself, and the
+> bugzillas don't contain enough information for me to confirm that the
+> patch below is enough (the "lspci -vv" output of the root port and GPU
+> is what I would need).
+>
+> I'm confused about the fact that 6cf57be0f78e appeared in v4.17, but
+> v4.18 works fine according to both bugzillas.
 
-Signed-off-by: Stefan Agner <stefan@agner.ch>
----
- drivers/pci/controller/dwc/pci-imx6.c | 5 ++++-
- 1 file changed, 4 insertions(+), 1 deletion(-)
+This issue affects AMD GPUs because we switched from using an open
+coded check for pcie link speeds in the driver to using the common
+pcie variants in
+https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/commit/?h=v4.19&id=5d9a6330403271fbb1244f14380a7cc44662796f
 
-diff --git a/drivers/pci/controller/dwc/pci-imx6.c b/drivers/pci/controller/dwc/pci-imx6.c
-index 7ac1a639fe91..41d6127b40ad 100644
---- a/drivers/pci/controller/dwc/pci-imx6.c
-+++ b/drivers/pci/controller/dwc/pci-imx6.c
-@@ -41,6 +41,7 @@ enum imx6_pcie_variants {
- 
- struct imx6_pcie_drvdata {
- 	enum imx6_pcie_variants variant;
-+	int			dbi_length;
- };
- 
- struct imx6_pcie {
-@@ -779,6 +780,8 @@ static int imx6_pcie_probe(struct platform_device *pdev)
- 		break;
- 	}
- 
-+	pci->dbi_length = imx6_pcie->drvdata->dbi_length;
-+
- 	/* Grab GPR config register range */
- 	imx6_pcie->iomuxc_gpr =
- 		 syscon_regmap_lookup_by_compatible("fsl,imx6q-iomuxc-gpr");
-@@ -839,7 +842,7 @@ static void imx6_pcie_shutdown(struct platform_device *pdev)
- }
- 
- static const struct imx6_pcie_drvdata drvdata[] = {
--	[IMX6Q] = { .variant = IMX6Q },
-+	[IMX6Q] = { .variant = IMX6Q, .dbi_length = 0x15c },
- 	[IMX6SX] = { .variant = IMX6SX },
- 	[IMX6QP] = { .variant = IMX6QP },
- 	[IMX7D] = { .variant = IMX7D },
--- 
-2.19.1
+The patch below would regress performance, at least on AMD GPUs, since
+we'd end up reporting a max speed of gen 2 (5 GT/s) which would cause
+the driver to limit the speed to gen2 even if gen3 or 4 are available.
 
+>
+> I also don't have a good feel for whether this is urgent enough to be
+> a v4.20 fix or whether it can wait for v4.21.  Evidence either way
+> would help.
+
+I'd like it to land for 4.19 and 4.20 at least.  Alternatively, we
+could revert all of the drm patches to and bring back all the open
+coded implementations, but it's a fairly large number of patches to
+revert.
+
+Alex
+
+>
+> We also need similar fixes in pci_set_bus_speed(), pcie_speeds()
+> (hfi1), cobalt_pcie_status_show(), hba_ioctl_callback(),
+> qla24xx_pci_info_str(), and maybe a couple other places.
+>
+> Bjorn
+>
+>
+> commit 871f73abf4b8e6aee8a206775f944ede7c7d7250
+> Author: Mikulas Patocka <mpatocka@redhat.com>
+> Date:   Tue Oct 30 12:36:08 2018 -0400
+>
+>     PCI: Fix incorrect value returned from pcie_get_speed_cap()
+>
+>     The macros PCI_EXP_LNKCAP_SLS_*GB are values, not bit masks.  We must mask
+>     the register and compare it against them.
+>
+>     This patch fixes errors "amdgpu: [powerplay] failed to send message 261 ret
+>     is 0" errors when PCIe-v3 card is plugged into PCIe-v1 slot, because the
+>     slot is being incorrectly reported as PCIe-v3 capable.
+>
+>     Fixes: 6cf57be0f78e ("PCI: Add pcie_get_speed_cap() to find max supported link speed")
+>     Link: https://bugs.freedesktop.org/show_bug.cgi?id=108704
+>     Link: https://bugs.freedesktop.org/show_bug.cgi?id=108778
+>     Signed-off-by: Mikulas Patocka <mpatocka@redhat.com>
+>     [bhelgaas: update comment, remove use of PCI_EXP_LNKCAP_SLS_8_0GB and
+>     PCI_EXP_LNKCAP_SLS_16_0GB since those should be covered by PCI_EXP_LNKCAP2]
+>     Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
+>     Acked-by: Alex Deucher <alexander.deucher@amd.com>
+>     Cc: stable@vger.kernel.org      # v4.17+
+>
+> diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
+> index d068f11d08a7..8563d1d9b102 100644
+> --- a/drivers/pci/pci.c
+> +++ b/drivers/pci/pci.c
+> @@ -5556,9 +5556,13 @@ enum pci_bus_speed pcie_get_speed_cap(struct pci_dev *dev)
+>         u32 lnkcap2, lnkcap;
+>
+>         /*
+> -        * PCIe r4.0 sec 7.5.3.18 recommends using the Supported Link
+> -        * Speeds Vector in Link Capabilities 2 when supported, falling
+> -        * back to Max Link Speed in Link Capabilities otherwise.
+> +        * Link Capabilities 2 was added in PCIe r3.0, sec 7.8.18.  The
+> +        * implementation note there recommends using the Supported Link
+> +        * Speeds Vector in Link Capabilities 2 when supported.
+> +        *
+> +        * Without Link Capabilities 2, i.e., prior to PCIe r3.0, software
+> +        * should use the Supported Link Speeds field in Link Capabilities,
+> +        * where only 2.5 GT/s and 5.0 GT/s speeds were defined.
+>          */
+>         pcie_capability_read_dword(dev, PCI_EXP_LNKCAP2, &lnkcap2);
+>         if (lnkcap2) { /* PCIe r3.0-compliant */
+> @@ -5575,13 +5579,9 @@ enum pci_bus_speed pcie_get_speed_cap(struct pci_dev *dev)
+>
+>         pcie_capability_read_dword(dev, PCI_EXP_LNKCAP, &lnkcap);
+>         if (lnkcap) {
+> -               if (lnkcap & PCI_EXP_LNKCAP_SLS_16_0GB)
+> -                       return PCIE_SPEED_16_0GT;
+> -               else if (lnkcap & PCI_EXP_LNKCAP_SLS_8_0GB)
+> -                       return PCIE_SPEED_8_0GT;
+> -               else if (lnkcap & PCI_EXP_LNKCAP_SLS_5_0GB)
+> +               if ((lnkcap & PCI_EXP_LNKCAP_SLS) == PCI_EXP_LNKCAP_SLS_5_0GB)
+>                         return PCIE_SPEED_5_0GT;
+> -               else if (lnkcap & PCI_EXP_LNKCAP_SLS_2_5GB)
+> +               else if ((lnkcap & PCI_EXP_LNKCAP_SLS) == PCI_EXP_LNKCAP_SLS_2_5GB)
+>                         return PCIE_SPEED_2_5GT;
+>         }
+>
