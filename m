@@ -2,153 +2,99 @@ Return-Path: <SRS0=lMXa=OB=vger.kernel.org=linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-9.0 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_PASS,USER_AGENT_GIT
-	autolearn=unavailable autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-2.5 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+	MAILING_LIST_MULTI,SPF_PASS,USER_AGENT_MUTT autolearn=ham autolearn_force=no
+	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 3D9F6C43441
-	for <linux-pci@archiver.kernel.org>; Thu, 22 Nov 2018 08:53:50 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id ADC90C43441
+	for <linux-pci@archiver.kernel.org>; Thu, 22 Nov 2018 10:48:48 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 09E6F20820
-	for <linux-pci@archiver.kernel.org>; Thu, 22 Nov 2018 08:53:50 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.3.2 mail.kernel.org 09E6F20820
-Authentication-Results: mail.kernel.org; dmarc=none (p=none dis=none) header.from=amlogic.com
+	by mail.kernel.org (Postfix) with ESMTP id 77BE420892
+	for <linux-pci@archiver.kernel.org>; Thu, 22 Nov 2018 10:48:48 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.3.2 mail.kernel.org 77BE420892
+Authentication-Results: mail.kernel.org; dmarc=fail (p=none dis=none) header.from=linux.intel.com
 Authentication-Results: mail.kernel.org; spf=none smtp.mailfrom=linux-pci-owner@vger.kernel.org
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S2392974AbeKVTcG (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Thu, 22 Nov 2018 14:32:06 -0500
-Received: from mail-sh2.amlogic.com ([58.32.228.45]:35030 "EHLO
-        mail-sh2.amlogic.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1729305AbeKVTcE (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Thu, 22 Nov 2018 14:32:04 -0500
-Received: from droid10.amlogic.com (10.18.11.213) by mail-sh2.amlogic.com
- (10.18.11.6) with Microsoft SMTP Server id 15.0.1320.4; Thu, 22 Nov 2018
- 16:53:40 +0800
-From:   Hanjie Lin <hanjie.lin@amlogic.com>
-To:     Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
-        Bjorn Helgaas <bhelgaas@google.com>
-CC:     Yue Wang <yue.wang@amlogic.com>,
-        Hanjie Lin <hanjie.lin@amlogic.com>,
-        Kevin Hilman <khilman@baylibre.com>,
-        Carlo Caione <carlo@caione.org>,
-        Jerome Brunet <jbrunet@baylibre.com>,
-        Rob Herring <robh@kernel.org>,
-        Gustavo Pimentel <gustavo.pimentel@synopsys.com>,
-        Shawn Lin <shawn.lin@rock-chips.com>,
-        Philippe Ombredanne <pombredanne@nexb.com>,
-        Cyrille Pitchen <cyrille.pitchen@free-electrons.com>,
-        <linux-kernel@vger.kernel.org>, <linux-pci@vger.kernel.org>,
-        <linux-arm-kernel@lists.infradead.org>,
-        <linux-amlogic@lists.infradead.org>,
-        Yixun Lan <yixun.lan@amlogic.com>,
-        Liang Yang <liang.yang@amlogic.com>,
-        Jianxin Pan <jianxin.pan@amlogic.com>,
-        Qiufang Dai <qiufang.dai@amlogic.com>,
-        Jian Hu <jian.hu@amlogic.com>, <devicetree@vger.kernel.org>
-Subject: [PATCH v6 1/2] dt-bindings: PCI: meson: add DT bindings for Amlogic Meson PCIe controller
-Date:   Thu, 22 Nov 2018 16:53:53 +0800
-Message-ID: <1542876836-191355-2-git-send-email-hanjie.lin@amlogic.com>
-X-Mailer: git-send-email 2.7.4
-In-Reply-To: <1542876836-191355-1-git-send-email-hanjie.lin@amlogic.com>
-References: <1542876836-191355-1-git-send-email-hanjie.lin@amlogic.com>
+        id S2394407AbeKVV1i (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Thu, 22 Nov 2018 16:27:38 -0500
+Received: from mga09.intel.com ([134.134.136.24]:2144 "EHLO mga09.intel.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1732079AbeKVV1i (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Thu, 22 Nov 2018 16:27:38 -0500
+X-Amp-Result: UNSCANNABLE
+X-Amp-File-Uploaded: False
+Received: from fmsmga007.fm.intel.com ([10.253.24.52])
+  by orsmga102.jf.intel.com with ESMTP/TLS/DHE-RSA-AES256-GCM-SHA384; 22 Nov 2018 02:48:46 -0800
+X-ExtLoop1: 1
+X-IronPort-AV: E=Sophos;i="5.56,265,1539673200"; 
+   d="scan'208";a="87872248"
+Received: from lahna.fi.intel.com (HELO lahna) ([10.237.72.157])
+  by fmsmga007.fm.intel.com with SMTP; 22 Nov 2018 02:48:41 -0800
+Received: by lahna (sSMTP sendmail emulation); Thu, 22 Nov 2018 12:48:40 +0200
+Date:   Thu, 22 Nov 2018 12:48:40 +0200
+From:   Mika Westerberg <mika.westerberg@linux.intel.com>
+To:     Christoph Hellwig <hch@infradead.org>
+Cc:     Yehezkel Bernat <yehezkelshb@gmail.com>, ashok.raj@intel.com,
+        Mario Limonciello <Mario.Limonciello@dell.com>,
+        michael.jamet@intel.com, Christian Kellner <ckellner@redhat.com>,
+        rjw@rjwysocki.net, Anthony Wong <anthony.wong@canonical.com>,
+        LKML <linux-kernel@vger.kernel.org>,
+        Andreas Noever <andreas.noever@gmail.com>,
+        iommu@lists.linux-foundation.org, lukas@wunner.de,
+        jacob.jun.pan@intel.com, linux-pci@vger.kernel.org,
+        Bjorn Helgaas <bhelgaas@google.com>,
+        linux-acpi@vger.kernel.org, David Woodhouse <dwmw2@infradead.org>
+Subject: Re: [PATCH 1/4] PCI / ACPI: Identify external PCI devices
+Message-ID: <20181122104840.GO4179@lahna.fi.intel.com>
+References: <20181115102239.GU2500@lahna.fi.intel.com>
+ <20181115111356.GA599@e107981-ln.cambridge.arm.com>
+ <20181115113737.GW2500@lahna.fi.intel.com>
+ <20181115120736.pscly6zwd3k2tvd2@wunner.de>
+ <20181115121627.GA2500@lahna.fi.intel.com>
+ <20181115174608.GA17691@e107981-ln.cambridge.arm.com>
+ <CA+CmpXv9yM6nFdb0mcMPGHS-B_uGbQHYoO6iuefZC8gWoZYD3Q@mail.gmail.com>
+ <20181115191026.GE4179@lahna.fi.intel.com>
+ <20181116091804.GA4548@infradead.org>
+ <20181116093210.GK4179@lahna.fi.intel.com>
 MIME-Version: 1.0
-Content-Type: text/plain
-X-Originating-IP: [10.18.11.213]
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20181116093210.GK4179@lahna.fi.intel.com>
+Organization: Intel Finland Oy - BIC 0357606-4 - Westendinkatu 7, 02160 Espoo
+User-Agent: Mutt/1.10.1 (2018-07-13)
 Sender: linux-pci-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-From: Yue Wang <yue.wang@amlogic.com>
+On Fri, Nov 16, 2018 at 11:32:10AM +0200, Mika Westerberg wrote:
+> On Fri, Nov 16, 2018 at 01:18:04AM -0800, Christoph Hellwig wrote:
+> > On Thu, Nov 15, 2018 at 09:10:26PM +0200, Mika Westerberg wrote:
+> > > FireWire is kind of different but there are connectors such as
+> > > ExpressCard and NVMe (over U.2 connector) which carry PCIe and are
+> > > relatively easy to access without need for a screwdriver. AFAIK some
+> > > eGPUs are also using some other proprietary (non-TBT) connector that
+> > > carries PCIe.
+> > 
+> > U.2 is a data center internal form factor with hot plug capability. If
+> > you enable an iommu for that by default you will make a lot of people
+> > very unhappy.
+> 
+> Well, it needs the other bit in ACPI DMAR table to be enabled by default
+> so I don't think anyone in data center domain will notice ;-)
+> 
+> > More importantly NVMe is now used for the current/next generation
+> > Compact Flash and SD cards, which contain full PCIe gen 3 links.
+> 
+> OK, thanks for the information - I did not know that. I guess those
+> belong to the "external" category as well.
 
-The Amlogic Meson PCIe host controller is based on the Synopsys DesignWare
-PCI core. This patch adds documentation for the DT bindings in Meson PCIe
-controller.
+We had an internal discussion regarding this and it was suggested that
+the new flag is called "is_untrusted" instead of "is_external". This
+covers Thunderbolt devices currently but can be extend to any other PCIe
+device such as "SD express" ones. When IOMMU is turned on it will then
+make sure devices with "is_untrusted" set are always using full IOMMU
+protection.
 
-Signed-off-by: Yue Wang <yue.wang@amlogic.com>
-Signed-off-by: Hanjie Lin <hanjie.lin@amlogic.com>
-Reviewed-by: Rob Herring <robh@kernel.org>
----
- .../devicetree/bindings/pci/amlogic,meson-pcie.txt | 70 ++++++++++++++++++++++
- 1 file changed, 70 insertions(+)
- create mode 100644 Documentation/devicetree/bindings/pci/amlogic,meson-pcie.txt
-
-diff --git a/Documentation/devicetree/bindings/pci/amlogic,meson-pcie.txt b/Documentation/devicetree/bindings/pci/amlogic,meson-pcie.txt
-new file mode 100644
-index 0000000..12b18f8
---- /dev/null
-+++ b/Documentation/devicetree/bindings/pci/amlogic,meson-pcie.txt
-@@ -0,0 +1,70 @@
-+Amlogic Meson AXG DWC PCIE SoC controller
-+
-+Amlogic Meson PCIe host controller is based on the Synopsys DesignWare PCI core.
-+It shares common functions with the PCIe DesignWare core driver and
-+inherits common properties defined in
-+Documentation/devicetree/bindings/pci/designware-pci.txt.
-+
-+Additional properties are described here:
-+
-+Required properties:
-+- compatible:
-+	should contain "amlogic,axg-pcie" to identify the core.
-+- reg:
-+	should contain the configuration address space.
-+- reg-names: Must be
-+	- "elbi"	External local bus interface registers
-+	- "cfg"		Meson specific registers
-+	- "phy"		Meson PCIE PHY registers
-+	- "config"	PCIe configuration space
-+- reset-gpios: The GPIO to generate PCIe PERST# assert and deassert signal.
-+- clocks: Must contain an entry for each entry in clock-names.
-+- clock-names: Must include the following entries:
-+	- "pclk"       PCIe GEN 100M PLL clock
-+	- "port"       PCIe_x(A or B) RC clock gate
-+	- "general"    PCIe Phy clock
-+	- "mipi"       PCIe_x(A or B) 100M ref clock gate
-+- resets: phandle to the reset lines.
-+- reset-names: must contain "phy" "port" and "apb"
-+       - "phy"         Share PHY reset
-+       - "port"        Port A or B reset
-+       - "apb"         Share APB reset
-+- device_type:
-+	should be "pci". As specified in designware-pcie.txt
-+
-+
-+Example configuration:
-+
-+	pcie: pcie@f9800000 {
-+			compatible = "amlogic,axg-pcie", "snps,dw-pcie";
-+			reg = <0x0 0xf9800000 0x0 0x400000
-+					0x0 0xff646000 0x0 0x2000
-+					0x0 0xff644000 0x0 0x2000
-+					0x0 0xf9f00000 0x0 0x100000>;
-+			reg-names = "elbi", "cfg", "phy", "config";
-+			reset-gpios = <&gpio GPIOX_19 GPIO_ACTIVE_HIGH>;
-+			interrupts = <GIC_SPI 177 IRQ_TYPE_EDGE_RISING>;
-+			#interrupt-cells = <1>;
-+			interrupt-map-mask = <0 0 0 0>;
-+			interrupt-map = <0 0 0 0 &gic GIC_SPI 179 IRQ_TYPE_EDGE_RISING>;
-+			bus-range = <0x0 0xff>;
-+			#address-cells = <3>;
-+			#size-cells = <2>;
-+			device_type = "pci";
-+			ranges = <0x82000000 0 0 0x0 0xf9c00000 0 0x00300000>;
-+
-+			clocks = <&clkc CLKID_USB
-+					&clkc CLKID_MIPI_ENABLE
-+					&clkc CLKID_PCIE_A
-+					&clkc CLKID_PCIE_CML_EN0>;
-+			clock-names = "general",
-+					"mipi",
-+					"pclk",
-+					"port";
-+			resets = <&reset RESET_PCIE_PHY>,
-+				<&reset RESET_PCIE_A>,
-+				<&reset RESET_PCIE_APB>;
-+			reset-names = "phy",
-+					"port",
-+					"apb";
-+	};
--- 
-2.7.4
-
+Any comments, objections? I was going to send v2 with this change
+included.
