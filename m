@@ -2,216 +2,97 @@ Return-Path: <SRS0=lMXa=OB=vger.kernel.org=linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-4.1 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
+X-Spam-Status: No, score=-9.1 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
 	DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,
-	SPF_PASS autolearn=ham autolearn_force=no version=3.4.0
+	SIGNED_OFF_BY,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT autolearn=ham
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id BD5C7C43441
-	for <linux-pci@archiver.kernel.org>; Thu, 22 Nov 2018 16:11:27 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 3A21FC43441
+	for <linux-pci@archiver.kernel.org>; Thu, 22 Nov 2018 16:24:44 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 6FF2620672
-	for <linux-pci@archiver.kernel.org>; Thu, 22 Nov 2018 16:11:27 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id EECED206B2
+	for <linux-pci@archiver.kernel.org>; Thu, 22 Nov 2018 16:24:43 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=synopsys.com header.i=@synopsys.com header.b="GI15rV3A"
-DMARC-Filter: OpenDMARC Filter v1.3.2 mail.kernel.org 6FF2620672
+	dkim=pass (2048-bit key) header.d=synopsys.com header.i=@synopsys.com header.b="WeFzhiuA"
+DMARC-Filter: OpenDMARC Filter v1.3.2 mail.kernel.org EECED206B2
 Authentication-Results: mail.kernel.org; dmarc=fail (p=none dis=none) header.from=synopsys.com
 Authentication-Results: mail.kernel.org; spf=none smtp.mailfrom=linux-pci-owner@vger.kernel.org
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S2388841AbeKWCv0 (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Thu, 22 Nov 2018 21:51:26 -0500
-Received: from smtprelay4.synopsys.com ([198.182.47.9]:37980 "EHLO
+        id S2395383AbeKWDEq (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Thu, 22 Nov 2018 22:04:46 -0500
+Received: from us01smtprelay-2.synopsys.com ([198.182.60.111]:41836 "EHLO
         smtprelay.synopsys.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S2388435AbeKWCv0 (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Thu, 22 Nov 2018 21:51:26 -0500
-Received: from mailhost.synopsys.com (mailhost2.synopsys.com [10.13.184.66])
-        by smtprelay.synopsys.com (Postfix) with ESMTP id EB6D224E11E5;
-        Thu, 22 Nov 2018 08:11:25 -0800 (PST)
+        with ESMTP id S2395258AbeKWDEq (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Thu, 22 Nov 2018 22:04:46 -0500
+Received: from mailhost.synopsys.com (mailhost1.synopsys.com [10.12.238.239])
+        by smtprelay.synopsys.com (Postfix) with ESMTP id BDC2010C13DB;
+        Thu, 22 Nov 2018 08:24:42 -0800 (PST)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=synopsys.com; s=mail;
-        t=1542903086; bh=K4YvrJBI1LUVviRUTn/vvx8f/ToZAfRKBP0GzoSAtNA=;
-        h=Subject:From:To:CC:References:Date:In-Reply-To:From;
-        b=GI15rV3A1WZbnUWBdyaQvBPRsxku6G05u82QYkFXcqqoRjXaP5dqY4ViXNBxV6iOu
-         vKqV4uBPh853xaPeURvpCNrpB+XroQ4Cmw7BBqj6bFoHyYJy6qX1TvyNONakfoDEcC
-         ++XoL05Jzo7TmgcxACQr85dbt94p/O35UdfnrQ4w+42dctTHoTW5mPiKYHXutYLyci
-         6loWNT8+MJ/+p6YpQe10+IvN7rWjVBQV9sbXaQc/xRgmxbqxUrHhAOehiYjOiJV/s5
-         wJP/VGWscuHYWEtqemxQ/ia0t5oU0jzuLWFWGp+Vs+mZt8XWt95ujQjOBvwnLRZWYp
-         Uyumx/BuMz9GQ==
-Received: from US01WXQAHTC1.internal.synopsys.com (us01wxqahtc1.internal.synopsys.com [10.12.238.230])
-        by mailhost.synopsys.com (Postfix) with ESMTP id 9248E39F6;
-        Thu, 22 Nov 2018 08:11:25 -0800 (PST)
-Received: from DE02WEHTCA.internal.synopsys.com (10.225.19.92) by
- US01WXQAHTC1.internal.synopsys.com (10.12.238.230) with Microsoft SMTP Server
- (TLS) id 14.3.408.0; Thu, 22 Nov 2018 08:11:25 -0800
-Received: from DE02WEHTCB.internal.synopsys.com (10.225.19.94) by
- DE02WEHTCA.internal.synopsys.com (10.225.19.92) with Microsoft SMTP Server
- (TLS) id 14.3.408.0; Thu, 22 Nov 2018 17:11:23 +0100
-Received: from [10.107.25.131] (10.107.25.131) by
- DE02WEHTCB.internal.synopsys.com (10.225.19.80) with Microsoft SMTP Server
- (TLS) id 14.3.408.0; Thu, 22 Nov 2018 17:11:23 +0100
-Subject: Re: [PATCH 0/3] PCI: designware: Fixing MSI handling flow
+        t=1542903882; bh=GdJJ8Msy/9aSgdBYlMbr2GiFqyMyNIZ4EObwk0SjbNc=;
+        h=From:To:Cc:Subject:Date:From;
+        b=WeFzhiuAnmD9eu8wP6d2dA8/cRoV1QLkmGPfIAEx5QUMau/lp1QENxBHSWphbtyoH
+         x64qlc41jQB+nbCX8RUuMZRa0CcFcW2OI/iT0DtTs7LBKHsynZWMMYrjM2NVq3O7gQ
+         BU4nXrpCVxAtRWPCukKfzoJZ+CHYfqifrWaB1uY1k6bimCq/qOZfmUr0esl0I1likc
+         YeyS2lxxq0CKpgQyDC30kZdEtyDa/dXC9PBsfOwJjJWHp7C3nC9+GP5y63OEGOO1Yo
+         qBn4dZ668P/BTOi8lzlIQ05MpC/YSePIsmy118K7TL3+s6r0tchR0jA1PmqbcN7fWP
+         7rJvJ8l28wEkw==
+Received: from de02.synopsys.com (germany.internal.synopsys.com [10.225.17.21])
+        by mailhost.synopsys.com (Postfix) with ESMTP id 7E54B5614;
+        Thu, 22 Nov 2018 08:24:42 -0800 (PST)
+Received: from de02dwia024.internal.synopsys.com (de02dwia024.internal.synopsys.com [10.225.19.81])
+        by de02.synopsys.com (Postfix) with ESMTP id AF14E3F776;
+        Thu, 22 Nov 2018 17:24:41 +0100 (CET)
 From:   Gustavo Pimentel <gustavo.pimentel@synopsys.com>
-To:     Gustavo Pimentel <gustavo.pimentel@synopsys.com>,
-        Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
-CC:     Marc Zyngier <marc.zyngier@arm.com>,
-        "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-        Bjorn Helgaas <helgaas@google.com>,
-        Trent Piepho <tpiepho@impinj.com>,
-        Jingoo Han <jingoohan1@gmail.com>,
-        "faiz_abbas@ti.com" <faiz_abbas@ti.com>,
-        Joao Pinto <Joao.Pinto@synopsys.com>,
-        Vignesh R <vigneshr@ti.com>
-References: <20181113225734.8026-1-marc.zyngier@arm.com>
- <e73891a5-d798-ee9c-607c-9648d07f6505@synopsys.com>
- <86a7mcdlwg.wl-marc.zyngier@arm.com>
- <9b63c20b-f928-7c40-2734-00ed783625f5@synopsys.com>
-Message-ID: <a3f04e34-803a-0185-5311-8b38ac23a4ee@synopsys.com>
-Date:   Thu, 22 Nov 2018 16:07:20 +0000
-User-Agent: Mozilla/5.0 (Windows NT 10.0; WOW64; rv:52.0) Gecko/20100101
- Thunderbird/52.9.1
-MIME-Version: 1.0
-In-Reply-To: <9b63c20b-f928-7c40-2734-00ed783625f5@synopsys.com>
-Content-Type: text/plain; charset="utf-8"
-Content-Language: en-US
-Content-Transfer-Encoding: 7bit
-X-Originating-IP: [10.107.25.131]
+To:     lorenzo.pieralisi@arm.com, jingoohan1@gmail.com,
+        bhelgaas@google.com
+Cc:     joao.pinto@synopsys.com, linux-pci@vger.kernel.org,
+        Gustavo Pimentel <gustavo.pimentel@synopsys.com>
+Subject: [PATCH] PCI: dwc: Remove 3-bit right rotation on MSI-X table offset address calculation
+Date:   Thu, 22 Nov 2018 17:24:28 +0100
+Message-Id: <a9c24a70e23dbc5a2d0300452588dc6a0b5e218a.1542903868.git.gustavo.pimentel@synopsys.com>
+X-Mailer: git-send-email 2.7.4
 Sender: linux-pci-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-Hi Lorenzo,
+Remove 3-bit right rotation on MSI-X table offset address calculation on
+dw_pcie_ep_raise_msix_irq().
 
-Just to ease the job, please also include this:
+By default, the offset address of the MSI-X table is zero, so that even with a
+3-bit right rotation, the computed result would still be zero, so still valid.
 
-Fixes: 7c5925afbc58 ("PCI: dwc: Move MSI IRQs allocation to IRQ domains
-hierarchical API")
+Fixes: beb4641a787d ("PCI: dwc: Add MSI-X callbacks handler")
 
-On 22/11/2018 12:03, Gustavo Pimentel wrote:
-> 
-> Hi all,
-> 
-> 
->>
->> I just realised (at 1am!) that the first patch is awfully buggy:
->> - ENABLE and MASK have opposite polarities
->> - There is nothing initialising the ENABLE and MASK registers
->>
->> I've stashed the following fix-up on top of the existing series:
->>
->> diff --git a/drivers/pci/controller/dwc/pcie-designware-host.c b/drivers/pci/controller/dwc/pcie-designware-host.c
->> index f06e67c60593..0fa9e8fdce66 100644
->> --- a/drivers/pci/controller/dwc/pcie-designware-host.c
->> +++ b/drivers/pci/controller/dwc/pcie-designware-host.c
->> @@ -166,7 +166,7 @@ static void dw_pci_bottom_mask(struct irq_data *data)
-> 
-> (snip)
-> 
-> I used your patch and made it more perceptible in my opinion, (basically I
-> transformed the variable irq_mask (previous irq_status) into a mirror of MASK
-> registers, which removed the need for the *NOT* operation and forced the mask
-> operation swap in the callbacks)
-> 
-> Lorenzo can you apply this fix-up in your branch test/pci-dwc-msi? Maybe merging
-> with eca44651920c ("PCI: designware: Move interrupt acking into the proper
-> callback"), perhaps.
-> 
-> I've tested Marc's patch series (with and without my fix-up and both) with a
-> NVme EP that generates a burst of 19 MSI-X interrupts. Both approaches are
-> working fine.
-> 
-> Just a couple of suggestions Lorenzo, maybe you could exchange the *designware*
-> by *dwc* on all patch series titles and on eca44651920c("PCI: designware: Move
-> interrupt acking into the proper callback") replace *acking* by *ACKing* like
-> previous patch has.
-> 
-> Marc thanks for this patch fix! :)
-> 
-> Tested-by: Gustavo Pimentel <gustavo.pimentel@synopsys.com>
-> 
-> diff --git a/drivers/pci/controller/dwc/pcie-designware-host.c
-> b/drivers/pci/controller/dwc/pcie-designware-host.c
-> index 0fa9e8f..a5132b3 100644
-> --- a/drivers/pci/controller/dwc/pcie-designware-host.c
-> +++ b/drivers/pci/controller/dwc/pcie-designware-host.c
-> @@ -164,9 +164,9 @@ static void dw_pci_bottom_mask(struct irq_data *data)
->                 res = ctrl * MSI_REG_CTRL_BLOCK_SIZE;
->                 bit = data->hwirq % MAX_MSI_IRQS_PER_CTRL;
-> 
-> -               pp->irq_status[ctrl] &= ~(1 << bit);
-> +               pp->irq_mask[ctrl] |= BIT(bit);
->                 dw_pcie_wr_own_conf(pp, PCIE_MSI_INTR0_MASK + res, 4,
-> -                                   ~pp->irq_status[ctrl]);
-> +                                   pp->irq_mask[ctrl]);
->         }
-> 
->         raw_spin_unlock_irqrestore(&pp->lock, flags);
-> @@ -187,30 +187,30 @@ static void dw_pci_bottom_unmask(struct irq_data *data)
->                 res = ctrl * MSI_REG_CTRL_BLOCK_SIZE;
->                 bit = data->hwirq % MAX_MSI_IRQS_PER_CTRL;
-> 
-> -               pp->irq_status[ctrl] |= 1 << bit;
-> +               pp->irq_mask[ctrl] &= ~BIT(bit);
->                 dw_pcie_wr_own_conf(pp, PCIE_MSI_INTR0_MASK + res, 4,
-> -                                   ~pp->irq_status[ctrl]);
-> +                                   pp->irq_mask[ctrl]);
->         }
-> 
->         raw_spin_unlock_irqrestore(&pp->lock, flags);
->  }
-> 
-> -static void dw_pci_bottom_ack(struct irq_data *d)
-> +static void dw_pci_bottom_ack(struct irq_data *data)
->  {
-> -       struct pcie_port *pp  = irq_data_get_irq_chip_data(d);
-> +       struct pcie_port *pp = irq_data_get_irq_chip_data(data);
->         unsigned int res, bit, ctrl;
->         unsigned long flags;
-> 
-> -       ctrl = d->hwirq / MAX_MSI_IRQS_PER_CTRL;
-> +       ctrl = data->hwirq / MAX_MSI_IRQS_PER_CTRL;
->         res = ctrl * MSI_REG_CTRL_BLOCK_SIZE;
-> -       bit = d->hwirq % MAX_MSI_IRQS_PER_CTRL;
-> +       bit = data->hwirq % MAX_MSI_IRQS_PER_CTRL;
-> 
->         raw_spin_lock_irqsave(&pp->lock, flags);
-> 
-> -       dw_pcie_wr_own_conf(pp, PCIE_MSI_INTR0_STATUS + res, 4, 1 << bit);
-> +       dw_pcie_wr_own_conf(pp, PCIE_MSI_INTR0_STATUS + res, 4, BIT(bit));
-> 
->         if (pp->ops->msi_irq_ack)
-> -               pp->ops->msi_irq_ack(d->hwirq, pp);
-> +               pp->ops->msi_irq_ack(data->hwirq, pp);
-> 
->         raw_spin_unlock_irqrestore(&pp->lock, flags);
->  }
-> @@ -665,13 +665,13 @@ void dw_pcie_setup_rc(struct pcie_port *pp)
-> 
->         /* Initialize IRQ Status array */
->         for (ctrl = 0; ctrl < num_ctrls; ctrl++) {
-> +               pp->irq_mask[ctrl] = ~0;
->                 dw_pcie_wr_own_conf(pp, PCIE_MSI_INTR0_MASK +
->                                         (ctrl * MSI_REG_CTRL_BLOCK_SIZE),
-> -                                   4, ~0);
-> +                                   4, pp->irq_mask[ctrl]);
->                 dw_pcie_wr_own_conf(pp, PCIE_MSI_INTR0_ENABLE +
->                                         (ctrl * MSI_REG_CTRL_BLOCK_SIZE),
->                                     4, ~0);
-> -               pp->irq_status[ctrl] = 0;
->         }
-> 
->         /* Setup RC BARs */
-> diff --git a/drivers/pci/controller/dwc/pcie-designware.h
-> b/drivers/pci/controller/dwc/pcie-designware.h
-> index 0989d88..9d1614a 100644
-> --- a/drivers/pci/controller/dwc/pcie-designware.h
-> +++ b/drivers/pci/controller/dwc/pcie-designware.h
-> @@ -169,7 +169,7 @@ struct pcie_port {
->         struct irq_domain       *msi_domain;
->         dma_addr_t              msi_data;
->         u32                     num_vectors;
-> -       u32                     irq_status[MAX_MSI_CTRLS];
-> +       u32                     irq_mask[MAX_MSI_CTRLS];
->         raw_spinlock_t          lock;
->         DECLARE_BITMAP(msi_irq_in_use, MAX_MSI_IRQS);
->  };
-> 
+Signed-off-by: Gustavo Pimentel <gustavo.pimentel@synopsys.com>
+---
+ drivers/pci/controller/dwc/pcie-designware-ep.c | 5 +++--
+ 1 file changed, 3 insertions(+), 2 deletions(-)
+
+diff --git a/drivers/pci/controller/dwc/pcie-designware-ep.c b/drivers/pci/controller/dwc/pcie-designware-ep.c
+index 1e7b022..cdb2005 100644
+--- a/drivers/pci/controller/dwc/pcie-designware-ep.c
++++ b/drivers/pci/controller/dwc/pcie-designware-ep.c
+@@ -440,7 +440,6 @@ int dw_pcie_ep_raise_msix_irq(struct dw_pcie_ep *ep, u8 func_no,
+ 	tbl_offset = dw_pcie_readl_dbi(pci, reg);
+ 	bir = (tbl_offset & PCI_MSIX_TABLE_BIR);
+ 	tbl_offset &= PCI_MSIX_TABLE_OFFSET;
+-	tbl_offset >>= 3;
+ 
+ 	reg = PCI_BASE_ADDRESS_0 + (4 * bir);
+ 	bar_addr_upper = 0;
+@@ -466,8 +465,10 @@ int dw_pcie_ep_raise_msix_irq(struct dw_pcie_ep *ep, u8 func_no,
+ 
+ 	iounmap(msix_tbl);
+ 
+-	if (vec_ctrl & PCI_MSIX_ENTRY_CTRL_MASKBIT)
++	if (vec_ctrl & PCI_MSIX_ENTRY_CTRL_MASKBIT) {
++		dev_err(pci->dev, "MSI-X entry ctrl set\n");
+ 		return -EPERM;
++	}
+ 
+ 	ret = dw_pcie_ep_map_addr(epc, func_no, ep->msi_mem_phys, msg_addr,
+ 				  epc->mem->page_size);
+-- 
+2.7.4
 
