@@ -2,186 +2,194 @@ Return-Path: <SRS0=lMXa=OB=vger.kernel.org=linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-7.9 required=3.0 tests=DATE_IN_PAST_03_06,
-	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
-	SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT autolearn=unavailable
-	autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-1.3 required=3.0 tests=DKIM_INVALID,DKIM_SIGNED,
+	FSL_HELO_FAKE,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_PASS,URIBL_BLOCKED,
+	USER_AGENT_MUTT autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 4D794C43441
-	for <linux-pci@archiver.kernel.org>; Thu, 22 Nov 2018 03:04:56 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 8DB8EC43441
+	for <linux-pci@archiver.kernel.org>; Thu, 22 Nov 2018 08:48:29 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id F41C42075B
-	for <linux-pci@archiver.kernel.org>; Thu, 22 Nov 2018 03:04:55 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.3.2 mail.kernel.org F41C42075B
-Authentication-Results: mail.kernel.org; dmarc=none (p=none dis=none) header.from=microchip.com
+	by mail.kernel.org (Postfix) with ESMTP id 3FA5520866
+	for <linux-pci@archiver.kernel.org>; Thu, 22 Nov 2018 08:48:29 +0000 (UTC)
+Authentication-Results: mail.kernel.org;
+	dkim=fail reason="signature verification failed" (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="OReEh0yd"
+DMARC-Filter: OpenDMARC Filter v1.3.2 mail.kernel.org 3FA5520866
+Authentication-Results: mail.kernel.org; dmarc=fail (p=none dis=none) header.from=kernel.org
 Authentication-Results: mail.kernel.org; spf=none smtp.mailfrom=linux-pci-owner@vger.kernel.org
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S2404091AbeKVNls (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Thu, 22 Nov 2018 08:41:48 -0500
-Received: from mail-eopbgr770042.outbound.protection.outlook.com ([40.107.77.42]:31984
-        "EHLO NAM02-SN1-obe.outbound.protection.outlook.com"
-        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1729872AbeKVNlr (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Thu, 22 Nov 2018 08:41:47 -0500
-Received: from CY4PR19CA0036.namprd19.prod.outlook.com (2603:10b6:903:103::22)
- by SN2PR19MB0735.namprd19.prod.outlook.com (2603:10b6:804:29::23) with
- Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.1361.15; Thu, 22 Nov
- 2018 03:04:27 +0000
-Received: from BL2FFO11FD014.protection.gbl (2a01:111:f400:7c09::192) by
- CY4PR19CA0036.outlook.office365.com (2603:10b6:903:103::22) with Microsoft
- SMTP Server (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_CBC_SHA384) id
- 15.20.1361.14 via Frontend Transport; Thu, 22 Nov 2018 03:04:27 +0000
-Authentication-Results: spf=softfail (sender IP is 208.19.99.221)
- smtp.mailfrom=microchip.com; vger.kernel.org; dkim=none (message not signed)
- header.d=none;vger.kernel.org; dmarc=none action=none
- header.from=microchip.com;
-Received-SPF: SoftFail (protection.outlook.com: domain of transitioning
- microchip.com discourages use of 208.19.99.221 as permitted sender)
-Received: from AUSMBX1.microsemi.net (208.19.99.221) by
- BL2FFO11FD014.mail.protection.outlook.com (10.173.160.222) with Microsoft
- SMTP Server (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_CBC_SHA256) id
- 15.20.1339.12 via Frontend Transport; Thu, 22 Nov 2018 03:04:26 +0000
-Received: from AUSMBX1.microsemi.net (10.201.34.31) by AUSMBX1.microsemi.net
- (10.201.34.31) with Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id 15.1.1531.3; Wed, 21 Nov
- 2018 20:04:10 -0600
-Received: from server1.microsemi.net (10.188.116.209) by ausmbx1.microsemi.net
- (10.201.34.31) with Microsoft SMTP Server id 15.1.1531.3 via Frontend
- Transport; Wed, 21 Nov 2018 20:04:07 -0600
-From:   Wesley Sheng <wesley.sheng@microchip.com>
-To:     <kurt.schwemmer@microsemi.com>, <logang@deltatee.com>,
-        <jdmason@kudzu.us>, <dave.jiang@intel.com>, <allenbh@gmail.com>,
-        <linux-pci@vger.kernel.org>, <linux-ntb@googlegroups.com>,
-        <linux-kernel@vger.kernel.org>
-CC:     <wesleyshenggit@sina.com>, <wesley.sheng@microchip.com>
-Subject: [PATCH 2/3] ntb_hw_switchtec: Added support of >=4G memory windows
-Date:   Thu, 22 Nov 2018 17:02:01 +0800
-Message-ID: <1542877322-24548-3-git-send-email-wesley.sheng@microchip.com>
-X-Mailer: git-send-email 2.7.4
-In-Reply-To: <1542877322-24548-1-git-send-email-wesley.sheng@microchip.com>
-References: <1542877322-24548-1-git-send-email-wesley.sheng@microchip.com>
+        id S2389919AbeKVT0w (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Thu, 22 Nov 2018 14:26:52 -0500
+Received: from mail-wr1-f65.google.com ([209.85.221.65]:37824 "EHLO
+        mail-wr1-f65.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1729305AbeKVT0w (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Thu, 22 Nov 2018 14:26:52 -0500
+Received: by mail-wr1-f65.google.com with SMTP id j10so8372568wru.4;
+        Thu, 22 Nov 2018 00:48:21 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20161025;
+        h=sender:date:from:to:cc:subject:message-id:references:mime-version
+         :content-disposition:content-transfer-encoding:in-reply-to
+         :user-agent;
+        bh=DOYMijtaJDziVSb7Zv8psIw4n/bqDFgT46BevDmNv9E=;
+        b=OReEh0ydQqJ99Eo4W1ohfEeiFObE8fEuYEx0XmICEUH8X1WCGXmwwnTUCNysWYKXE3
+         NsaIAObcAs9B8sR2w5mhgSqXSSVYPTX/ncB3VfIrCJxqEDlYb7lUR2w9IDysf7rnR1Ze
+         AiHCFaftRti0sK1yQtpA4lLgKZCPRX8JgVX05gMpfRwK9y8R7PmR/lZE4Pb/gSqJnTeJ
+         ZCLUm1j0AwUA8xYayDTxPw7gv87hcWbuKF2az+dngQGzfRVkYz3IJKzVdJ/vH/zGeh12
+         t2vzx5Ek3L6zGKMUb7eeeBzRjwbOzcQ32Zdh95/JnL1TpxzVFAI33nqVF3hZnxAWZeZi
+         eaCQ==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20161025;
+        h=x-gm-message-state:sender:date:from:to:cc:subject:message-id
+         :references:mime-version:content-disposition
+         :content-transfer-encoding:in-reply-to:user-agent;
+        bh=DOYMijtaJDziVSb7Zv8psIw4n/bqDFgT46BevDmNv9E=;
+        b=Ocmn9ZRYKgv6jPAjaG1bDEdFZQTi2TB2t/QPuwINis/ic04df0Oj/VuxV7Et4gwSio
+         9xeAFxfKe+GtjRXPrF+HBAEjN9CbnQV4S7eoZGbE8laeEzQNeX4yMV4wRkpARXcx/gyP
+         1AHQPua+Z2CoPcsNpFZYp38m1awLXWB0At0KM2A/17sUJULkGQJ3F/vrYueyFARxynZ0
+         AbLJLjKijBloMu/Xmtn/n9nK7Yxv8j6s3HY0rrnYbDVQxBwGnwTZeJcfo8qDfZJEr2QI
+         adm+wZbP4AU1nE7oxlx7dILCYJm74S6nnN+agW/G974S0uAxL3H6/mgiZkVd70ryMBFT
+         qdnA==
+X-Gm-Message-State: AA+aEWbiBrG03dVhTi5TFaJgd2Zezcjv4/bYRCUQr8Trrf4Kb5b88O5Z
+        GaWL4RueyWShBTzx9NiwDIQ=
+X-Google-Smtp-Source: AFSGD/W3z8lqLSw90N5u8GTXFFAiw5jkJ8szU7oFFEhYPNtcQmUv4I/DFbQlhQM+iG427TiwYbz0UA==
+X-Received: by 2002:adf:8101:: with SMTP id 1-v6mr1486285wrm.18.1542876500189;
+        Thu, 22 Nov 2018 00:48:20 -0800 (PST)
+Received: from gmail.com (2E8B0CD5.catv.pool.telekom.hu. [46.139.12.213])
+        by smtp.gmail.com with ESMTPSA id y9sm13832755wrq.55.2018.11.22.00.48.17
+        (version=TLS1_2 cipher=ECDHE-RSA-CHACHA20-POLY1305 bits=256/256);
+        Thu, 22 Nov 2018 00:48:19 -0800 (PST)
+Date:   Thu, 22 Nov 2018 09:48:15 +0100
+From:   Ingo Molnar <mingo@kernel.org>
+To:     Yi Wang <wang.yi59@zte.com.cn>
+Cc:     tglx@linutronix.de, mingo@redhat.com, bp@alien8.de, hpa@zytor.com,
+        x86@kernel.org, linux-kernel@vger.kernel.org,
+        ard.biesheuvel@linaro.org, linux-efi@vger.kernel.org,
+        pbonzini@redhat.com, rkrcmar@redhat.com, kvm@vger.kernel.org,
+        jgross@suse.com, akataria@vmware.com,
+        virtualization@lists.linux-foundation.org, m.mizuma@jp.fujitsu.com,
+        peterz@infradead.org, prarit@redhat.com, douly.fnst@cn.fujitsu.com,
+        dwmw@amazon.co.uk, luto@kernel.org, pasha.tatashin@oracle.com,
+        rajvi.jingar@intel.com, zhe.he@windriver.com,
+        akpm@linux-foundation.org, dyoung@redhat.com,
+        takahiro.akashi@linaro.org, ebiederm@xmission.com, bhe@redhat.com,
+        ivan.gorinov@intel.com, robh@kernel.org, andy.shevchenko@gmail.com,
+        frank.rowand@sony.com, jan.kiszka@siemens.com,
+        jailhouse-dev@googlegroups.com, konrad.wilk@oracle.com,
+        thomas.lendacky@amd.com, pravin.shedge4linux@gmail.com,
+        namit@vmware.com, jroedel@suse.de, bhelgaas@google.com,
+        linux-pci@vger.kernel.org, keescook@chromium.org, anton@enomsg.org,
+        ccross@android.com, tony.luck@intel.com, rostedt@goodmis.org,
+        kexec@lists.infradead.org, robh+dt@kernel.org,
+        frowand.list@gmail.com, devicetree@vger.kernel.org,
+        oleg@redhat.com, zhong.weidong@zte.com.cn, up2wing@gmail.com
+Subject: Re: [PATCH] x86: fix -Wmissing-prototypes warning
+Message-ID: <20181122084815.GA84118@gmail.com>
+References: <1542852249-19820-1-git-send-email-wang.yi59@zte.com.cn>
 MIME-Version: 1.0
-Content-Type: text/plain
-X-EOPAttributedMessage: 0
-X-Matching-Connectors: 131873294671628129;(5a93feec-e11d-4f7b-166a-08d09f1f276b);()
-X-Forefront-Antispam-Report: CIP:208.19.99.221;IPV:NLI;CTRY:US;EFV:NLI;SFV:NSPM;SFS:(10009020)(979002)(136003)(346002)(376002)(39860400002)(396003)(2980300002)(199004)(189003)(68736007)(110136005)(54906003)(316002)(16586007)(77096007)(76176011)(6666004)(51416003)(356004)(26005)(4326008)(81156014)(81166006)(8936002)(50226002)(305945005)(53936002)(69596002)(107886003)(36756003)(105596002)(2906002)(498600001)(86362001)(2201001)(106466001)(5660300001)(48376002)(450100002)(47776003)(336012)(44832011)(50466002)(8676002)(53416004)(2616005)(97736004)(486006)(476003)(446003)(126002)(11346002)(2101003)(969003)(989001)(999001)(1009001)(1019001);DIR:OUT;SFP:1101;SCL:1;SRVR:SN2PR19MB0735;H:AUSMBX1.microsemi.net;FPR:;SPF:SoftFail;LANG:en;PTR:InfoDomainNonexistent;A:1;MX:1;
-X-Microsoft-Exchange-Diagnostics: 1;BL2FFO11FD014;1:kKw+i+JHj7NciZJHXRcXFadBfK3s8tprtCgRnWk3C9aV8Ht9K/GOOTJ5mahj3G0CLuZ3BOt0u9AG11NbAWW1i3+h0Br5GdmnZ/ybmPv8ROFvZrB6wRZoXTBV7KD4TK+W
-X-MS-PublicTrafficType: Email
-X-MS-Office365-Filtering-Correlation-Id: 9c699c02-f49b-471a-beac-08d6502736b0
-X-Microsoft-Antispam: BCL:0;PCL:0;RULEID:(2390098)(7020095)(5600074)(711020)(2017052603328);SRVR:SN2PR19MB0735;
-X-Microsoft-Exchange-Diagnostics: 1;SN2PR19MB0735;3:bLBXgYzBHYOLpEUAkM2oKU1phus7BJxfcRfEUfrySNP8sr1Vv0FVBYUxig2AiT1/1Eqje3emAD0MxCQj1ZRBeN/dLv7DJ7q1aXMm27R4A5BCoHF/FZN5x2VoEaDeYdD6wSUfDpev0nm40YoRH2w4bPTm5oq0wgBGMW8C+zQ9irzlJC1RrstAUwDcbIyOO1Wo0z9TFGn7CQHfKA5jYlLbImY9D36BUtWjAfjo6wdrxW2AtbNKiRNm2h2RXdieey5f2tAgOsiVEhQHUxgNLDE84TpwdUPLU97s6e19fcJpoGlVChbNdXnA6B8HnRwtVaJ3QrR9I7GOJr1gTdVFSqqifnoUpoCFm7k09OsK+jWLR8c=;25:O5NE8n1+hTM8dLpLeC0iHb2y6KNJBqf/EHHUu7ZUNJaNccE0AXe7ncJyWz3cYm0NYaeZMMSYJeZifnQElFxpM2TVm3GwQExxlaifumusSkbWRfuG+7OWrmUSfgqXz/usMKmeMJDlUuxLLBLlcNkn9cK8y7i2wZIxS5d05AhABk2UO8i+6obh6z8OLnFz/WrKtYtG4hkbI4yiLcv8WY/DI1Le0KT+OFB0gV7XX+D/3wIOA+4tk2ev7DiPRv/C2YZS9laUik0ZVj8YUadrNYBANtEEg0D/xdl1bhEUoStO7zjGbcoJbfBz7a1iou1IPuk/u0zEQzHFDcYyrSSpm26ZWA==
-X-MS-TrafficTypeDiagnostic: SN2PR19MB0735:
-X-Microsoft-Exchange-Diagnostics: 1;SN2PR19MB0735;31:o0ms+dV0/0XRPskJMtGpLVB7r4vRpgcb4F6GSQV3AfjVF15mmDlCdHMyiOS/QPCgHrCOxFaLHQ0AOHWzm/ezl7dAX+k5KYEs5MmnkjQscOc/0+kWRTwVE/ph5LyIEizFvpECnulDIM5Riq8ii0DTv2XIYbAOfHS6m9d8jQCTJIu7bT7y1XKC3qzOMHJ5Afuu15NC6ezKymxqLaNaa8j9dTu5eDojDkHro+XUQbtO45c=;4:Jo9IvVVBdEC2+N7hv2uprspAlkxjOPoNPR/lgqVfHmthTLIIoWqwx0pVSuiXWTwGp6t9VyA2PhZC5kJ/4le7ZBnD+N5MQ8x5hBSf/IXASQrD7Ydp/JHpcyIPTAHShnYXo3Bw0VEBukTJcdGMemvakxD3YEcnbiT2H+WYdVxcRaRrRjmiEb8NEbIfZkKKL/zP0lp8CgDDg7yoFYXMuhak+nuNB/QyqOo7sE053xxEPmcldEDKbfiZdBjdJE4Tz1Ar7Z2AgzwcOosbrXTWjjsfug==
-X-Microsoft-Antispam-PRVS: <SN2PR19MB0735D915402FA5B57B31F88195DB0@SN2PR19MB0735.namprd19.prod.outlook.com>
-X-Exchange-Antispam-Report-CFA-Test: BCL:0;PCL:0;RULEID:(6095135)(2401047)(5005006)(8121501046)(10201501046)(3231442)(944501410)(52105112)(3002001)(93006095)(93001095)(6055026)(148016)(6096035)(20161123565025)(20161123563025)(20161123559100)(20161123556025)(20161123561025)(201703131430075)(201703131448075)(201703131433075)(201703151042153)(201708071742011)(7699051)(76991095);SRVR:SN2PR19MB0735;BCL:0;PCL:0;RULEID:(400006);SRVR:SN2PR19MB0735;
-X-Forefront-PRVS: 0864A36BBF
-X-Microsoft-Exchange-Diagnostics: =?us-ascii?Q?1;SN2PR19MB0735;23:RmkzxWrbd68vDd5Sxfci4dgv8HMMYKWkWuVrJ8Vuk?=
- =?us-ascii?Q?wxZ+WHpl/Wy3kJEdSurPWNZiGG2QSkoDdvP53H9ilwFqFd0ad6Xjj1+EBN2b?=
- =?us-ascii?Q?fALlLxFOuFjh6KCWbuTIQZoBlPrP5iETonwc2uykp6GSqJ36Z0RzIDSQbqr1?=
- =?us-ascii?Q?lApYu2Joa6hI0CTRTkHfD2mpneydMDeg7jrqdWbqEIlfhTC2McZhsZFlafMf?=
- =?us-ascii?Q?O0EYVb98N6EaJLVVV+dJpPu/wjCsA0qhUvBJhSzm6lySuIrnfuoZwDWTc81m?=
- =?us-ascii?Q?Sk/f7qH3sFt7rKnfBQjusAv5aIp46jGA9nvfFDhJ0TeX+btIda2bMA6lOGdp?=
- =?us-ascii?Q?wotDW3zB0gF8DuA4F8uK93CinfBU8rDZyUTygoBbwLedZDI4PoLrSkBWcBNq?=
- =?us-ascii?Q?B7zHzeTKw+RqhZqoWKLG4uFnhb+bB5vwCOEawmpo7sTSWiS8HQ4RJrC1g7KA?=
- =?us-ascii?Q?lE9//UQ3InTCbf6VlFMnzVpgvH5Zwzv719rkrv4lxoRk5qNpNf0iPU9GxZLk?=
- =?us-ascii?Q?LzgAGO8TM+51j7wYBwGDhMAQhGvdiaH2T9M6NA2971ucrYly7KdzS3ooWJ3j?=
- =?us-ascii?Q?YJi0oAKrSdBRrzXwvkBy+FXhhL/uNFVZiXwbJVIr79MEUzDURXi8UkZb0ATg?=
- =?us-ascii?Q?TLeCozCU2VvPidyTBjQ+xfqOAuXU64m96sJiNjM1mOORM2HXROUfwMQLsqPj?=
- =?us-ascii?Q?hEQ3h3d7Yw8IGjZSC3eCQ2KQEqFbxqpq4JzSpSjUnNbPf8R9gBpdxFGkgbWc?=
- =?us-ascii?Q?KouW5fYkQBQo9pTpeX2SgLMS8vNHooE7RZHjOZ40XMZAIoz/xaRHmIf5aM2f?=
- =?us-ascii?Q?iqv5DsI22gVKCcNbSUOGqOEXpRo+B+YWng3juM8dDwlNBb4Oe9LdbfiCheZd?=
- =?us-ascii?Q?F+LtKjbAKVSwQJ+7GGx0AjLJFVxjTXq26u96+whR9nPoHRK7InNO4UHdXhjD?=
- =?us-ascii?Q?KQ40bmBmK3qDyhav0zA1JkfffdY+aCr/Xgazb3UvM9nENbMnO7++ZmQr1rEg?=
- =?us-ascii?Q?sCLzODFdx2BgJ5aX7fMhfuIFQmWF+7/tRElGrcyfqCz6QLOW2h0BsZ7Qx3pO?=
- =?us-ascii?Q?DaF19RtOAqxa2S4mDC5/jSAHlwog22hIukwKHZ05UPcG5LDHBvaUY3+jymw0?=
- =?us-ascii?Q?rWY5MiBhvhzE3FuSDFoOLY5jvIq2iU0c0unTs+22DcVO5xNf7HxF76Q8khE1?=
- =?us-ascii?Q?8Q80pPJeh8Hm485i26AR6M6FzAE+Et3ZtyXFJJ25AVt9bwgU5enfcKixrMDu?=
- =?us-ascii?Q?KFsptyFjbtsw/VPzBK1hjybAfMlGaXq82shILb1?=
-X-Microsoft-Antispam-Message-Info: 16wch/MsrJkfF6RLQrLw5SXekquf3LSX32ME9omj1vO5UHRxnOG8jonmje7BN4gg5lyQh/V5+ggyvVnPcj/eJa89ZFb4BC1QdBSgmiQxGLlQx6wFw2uf251lYuP5Xh40XUxWxk6CDOpFLEyuRl0cEqUks9n53oYB7apJtHmuk6q1kcJe1z0MevfVdAfzrE2Yj8rrCOOLx9t7vSQScpW9L74x8Yt1p0U35zIp5yS0BRqOZ0FoUy9aZb1jWOU50ezl1KrElXirS6OhwBdgT+mEPPx+N+bDRf0VjhIOhDp3euTJkOUAok0aQ5prxLhs0alFW/OZ1TIHVRshrJUekfFY8xBskVMJjN9Xk/ypLXdY54Q=
-X-Microsoft-Exchange-Diagnostics: 1;SN2PR19MB0735;6:yUA7Z29QbsEXEuUTDSUKENJgwkaZ8Xow4ZKeKeZfsQEeQWPYAU84eQkOOHdD15vfWV+aW6Ot+IZRiwSM8/hSP8Qx4VYSNffiO/ZTM4NcCYYKP/3hBWL6GPIrBHxbvT8JA4/+/d7D+fgGXLFYNmoYkvmfmRRB2asoUgfoVjVxC7YZ7MNxSn1ICo2tidD3JrOFvBu5ojRfcvbDuE/US9bhIi8168N3PfEcDIQ6eDz1vUdU85MzeAqmikKl0tYwxyDVoaobS4Y9dx/J/UaE0K0qqThfoaiQTp/c/dJW6oI+2xYNX1SpYY7I2bE5EPBrZWTR5um2xSdifpMT023dx0z+3LKlO512lp4hwayTnf4Zi9yL7SdupQc1eEalFVEgv6ItbHMAzSyFq/wSb9R1yEy54ldjXOpgACqiJ8TjA2I2STcZeT8V5unIYeCY+YY+Kj8P7kUvwIhp/cEZ/6fo8W2INw==;5:8dXOwHusOqHEcC9WuAVYKsUYSmJhnaZSdezZhSZGimF+7cWllImQ1WFndoR9+kA+BEQmkxjW0dMVRS73Vlf/eJfp9SOEAIJko3RQO3Lkiimf8WgEGFabc8PkhK1fCfI1XHhPAaWPxagKp44Qq9kKyJAo6M8P++apAYuRyDR6Xhw=;7:aHE6nVm58pXOJRwXa+HPg/C+tWu3ZSPJs9nGsy/Orcf3RQYuXaQUMqynnm2IqtCrNfEQSxEBPys32nuWIgvq4U6xRZRnw+7PSeOWXpYbw3BXLTQr/iWasCuTQ+ucOXuwBnZga2yrjyVv7d4gQw0H3g==
-SpamDiagnosticOutput: 1:99
-SpamDiagnosticMetadata: NSPM
-X-MS-Exchange-CrossTenant-OriginalArrivalTime: 22 Nov 2018 03:04:26.9753
- (UTC)
-X-MS-Exchange-CrossTenant-Network-Message-Id: 9c699c02-f49b-471a-beac-08d6502736b0
-X-MS-Exchange-CrossTenant-Id: 5afe0b00-7697-4969-b663-5eab37d5f47e
-X-MS-Exchange-CrossTenant-OriginalAttributedTenantConnectingIp: TenantId=5afe0b00-7697-4969-b663-5eab37d5f47e;Ip=[208.19.99.221];Helo=[AUSMBX1.microsemi.net]
-X-MS-Exchange-CrossTenant-FromEntityHeader: HybridOnPrem
-X-MS-Exchange-Transport-CrossTenantHeadersStamped: SN2PR19MB0735
+Content-Type: text/plain; charset=utf-8
+Content-Disposition: inline
+Content-Transfer-Encoding: 8bit
+In-Reply-To: <1542852249-19820-1-git-send-email-wang.yi59@zte.com.cn>
+User-Agent: Mutt/1.9.4 (2018-02-28)
 Sender: linux-pci-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-From: Paul Selles <paul.selles@microchip.com>
 
-Current Switchtec's BAR setup registers are limited to 32bits,
-corresponding to the maximum MW (memory window) size is <4G.
+* Yi Wang <wang.yi59@zte.com.cn> wrote:
 
-Increase the MW sizes with the addition of the BAR Setup Extension
-Register for the upper 32bits of a 64bits MW size. This increases the MW
-range to between 4K and 2^63.
+> We may get -Wmissing-prototypes warnings when building
+> kernel with W=1, it's better to fix them as global function
+> signature can be changed and caller who use the old unchanged
+> prototypes will be hosed.
+> 
+> This patch fixes most of -Wmissing-prototypes warnings which
+> are in the root directory of arch/x86/kernel, not including
+> the subdirectories.
+> 
+> These are the warnings fixed in this patch:
+> arch/x86/kernel/signal.c:865:17: warning: no previous prototype for ‘sys32_x32_rt_sigreturn’ [-Wmissing-prototypes]
+> arch/x86/kernel/signal_compat.c:164:6: warning: no previous prototype for ‘sigaction_compat_abi’ [-Wmissing-prototypes]
+> arch/x86/kernel/traps.c:625:46: warning: no previous prototype for ‘sync_regs’ [-Wmissing-prototypes]
+> arch/x86/kernel/traps.c:640:24: warning: no previous prototype for ‘fixup_bad_iret’ [-Wmissing-prototypes]
+> arch/x86/kernel/traps.c:929:13: warning: no previous prototype for ‘trap_init’ [-Wmissing-prototypes]
+> arch/x86/kernel/irq.c:270:28: warning: no previous prototype for ‘smp_x86_platform_ipi’ [-Wmissing-prototypes]
+> arch/x86/kernel/irq.c:301:16: warning: no previous prototype for ‘smp_kvm_posted_intr_ipi’ [-Wmissing-prototypes]
+> arch/x86/kernel/irq.c:314:16: warning: no previous prototype for ‘smp_kvm_posted_intr_wakeup_ipi’ [-Wmissing-prototypes]
+> arch/x86/kernel/irq.c:328:16: warning: no previous prototype for ‘smp_kvm_posted_intr_nested_ipi’ [-Wmissing-prototypes]
+> arch/x86/kernel/irq_work.c:16:28: warning: no previous prototype for ‘smp_irq_work_interrupt’ [-Wmissing-prototypes]
+> arch/x86/kernel/irqinit.c:79:13: warning: no previous prototype for ‘init_IRQ’ [-Wmissing-prototypes]
+> arch/x86/kernel/quirks.c:672:13: warning: no previous prototype for ‘early_platform_quirks’ [-Wmissing-prototypes]
+> arch/x86/kernel/tsc.c:1499:15: warning: no previous prototype for ‘calibrate_delay_is_known’ [-Wmissing-prototypes]
+> arch/x86/kernel/process.c:653:13: warning: no previous prototype for ‘arch_post_acpi_subsys_init’ [-Wmissing-prototypes]
+> arch/x86/kernel/process.c:717:15: warning: no previous prototype for ‘arch_randomize_brk’ [-Wmissing-prototypes]
+> arch/x86/kernel/process.c:784:6: warning: no previous prototype for ‘do_arch_prctl_common’ [-Wmissing-prototypes]
+> arch/x86/kernel/reboot.c:869:6: warning: no previous prototype for ‘nmi_panic_self_stop’ [-Wmissing-prototypes]
+> arch/x86/kernel/smp.c:176:27: warning: no previous prototype for ‘smp_reboot_interrupt’ [-Wmissing-prototypes]
+> arch/x86/kernel/smp.c:260:28: warning: no previous prototype for ‘smp_reschedule_interrupt’ [-Wmissing-prototypes]
+> arch/x86/kernel/smp.c:281:28: warning: no previous prototype for ‘smp_call_function_interrupt’ [-Wmissing-prototypes]
+> arch/x86/kernel/smp.c:291:28: warning: no previous prototype for ‘smp_call_function_single_interrupt’ [-Wmissing-prototypes]
+> arch/x86/kernel/ftrace.c:840:6: warning: no previous prototype for ‘arch_ftrace_update_trampoline’ [-Wmissing-prototypes]
+> arch/x86/kernel/ftrace.c:934:7: warning: no previous prototype for ‘arch_ftrace_trampoline_func’ [-Wmissing-prototypes]
+> arch/x86/kernel/ftrace.c:946:6: warning: no previous prototype for ‘arch_ftrace_trampoline_free’ [-Wmissing-prototypes]
+> arch/x86/kernel/crash.c:114:6: warning: no previous prototype for ‘crash_smp_send_stop’ [-Wmissing-prototypes]
+> arch/x86/kernel/crash.c:351:5: warning: no previous prototype for ‘crash_setup_memmap_entries’ [-Wmissing-prototypes]
+> arch/x86/kernel/crash.c:424:5: warning: no previous prototype for ‘crash_load_segments’ [-Wmissing-prototypes]
+> arch/x86/kernel/machine_kexec_64.c:372:7: warning: no previous prototype for ‘arch_kexec_kernel_image_load’ [-Wmissing-prototypes]
+> arch/x86/kernel/paravirt-spinlocks.c:12:16: warning: no previous prototype for ‘__native_queued_spin_unlock’ [-Wmissing-prototypes]
+> arch/x86/kernel/paravirt-spinlocks.c:18:6: warning: no previous prototype for ‘pv_is_native_spin_unlock’ [-Wmissing-prototypes]
+> arch/x86/kernel/paravirt-spinlocks.c:24:16: warning: no previous prototype for ‘__native_vcpu_is_preempted’ [-Wmissing-prototypes]
+> arch/x86/kernel/paravirt-spinlocks.c:30:6: warning: no previous prototype for ‘pv_is_native_vcpu_is_preempted’ [-Wmissing-prototypes]
+> arch/x86/kernel/kvm.c:258:1: warning: no previous prototype for ‘do_async_page_fault’ [-Wmissing-prototypes]
+> arch/x86/kernel/jailhouse.c:200:6: warning: no previous prototype for ‘jailhouse_paravirt’ [-Wmissing-prototypes]
+> arch/x86/kernel/check.c:91:13: warning: no previous prototype for ‘setup_bios_corruption_check’ [-Wmissing-prototypes]
+> arch/x86/kernel/check.c:139:6: warning: no previous prototype for ‘check_for_bios_corruption’ [-Wmissing-prototypes]
+> arch/x86/kernel/devicetree.c:32:13: warning: no previous prototype for ‘early_init_dt_scan_chosen_arch’ [-Wmissing-prototypes]
+> arch/x86/kernel/devicetree.c:42:13: warning: no previous prototype for ‘add_dtb’ [-Wmissing-prototypes]
+> arch/x86/kernel/devicetree.c:108:6: warning: no previous prototype for ‘x86_of_pci_init’ [-Wmissing-prototypes]
+> arch/x86/kernel/devicetree.c:314:13: warning: no previous prototype for ‘x86_dtb_init’ [-Wmissing-prototypes]
+> arch/x86/kernel/tracepoint.c:16:5: warning: no previous prototype for ‘trace_pagefault_reg’ [-Wmissing-prototypes]
+> arch/x86/kernel/tracepoint.c:22:6: warning: no previous prototype for ‘trace_pagefault_unreg’ [-Wmissing-prototypes]
+> arch/x86/kernel/head64.c:113:22: warning: no previous prototype for ‘__startup_64’ [-Wmissing-prototypes]
+> arch/x86/kernel/head64.c:262:15: warning: no previous prototype for ‘__startup_secondary_64’ [-Wmissing-prototypes]
+> arch/x86/kernel/head64.c:350:12: warning: no previous prototype for ‘early_make_pgtable’ [-Wmissing-prototypes]
+> 
+> Signed-off-by: Yi Wang <wang.yi59@zte.com.cn>
+> ---
+>  arch/x86/include/asm/crash.h       | 1 +
+>  arch/x86/include/asm/efi.h         | 2 --
+>  arch/x86/include/asm/irq.h         | 7 +++++++
+>  arch/x86/include/asm/irq_work.h    | 1 +
+>  arch/x86/include/asm/kvm_para.h    | 1 +
+>  arch/x86/include/asm/paravirt.h    | 5 +++++
+>  arch/x86/include/asm/reboot.h      | 1 +
+>  arch/x86/include/asm/setup.h       | 5 +++++
+>  arch/x86/include/asm/sighandling.h | 5 +++++
+>  arch/x86/include/asm/smp.h         | 6 ++++++
+>  arch/x86/include/asm/traps.h       | 4 ++++
+>  arch/x86/include/asm/tsc.h         | 1 +
+>  arch/x86/kernel/check.c            | 3 ++-
+>  arch/x86/kernel/crash.c            | 1 +
+>  arch/x86/kernel/devicetree.c       | 1 +
+>  arch/x86/kernel/jailhouse.c        | 1 +
+>  arch/x86/kernel/process.c          | 3 +++
+>  arch/x86/kernel/quirks.c           | 1 +
+>  arch/x86/kernel/tracepoint.c       | 1 +
+>  include/linux/efi.h                | 2 ++
+>  include/linux/ftrace.h             | 3 +++
+>  include/linux/kexec.h              | 1 +
+>  include/linux/of_fdt.h             | 1 +
+>  include/linux/ptrace.h             | 1 +
+>  24 files changed, 55 insertions(+), 3 deletions(-)
 
-Reported-by: Boris Glimcher <boris.glimcher@emc.com>
-Signed-off-by: Paul Selles <paul.selles@microchip.com>
-Signed-off-by: Wesley Sheng <wesley.sheng@microchip.com>
----
- drivers/ntb/hw/mscc/ntb_hw_switchtec.c | 9 +++++++--
- include/linux/switchtec.h              | 6 +++++-
- 2 files changed, 12 insertions(+), 3 deletions(-)
+Breaks 32-bit compilation:
 
-diff --git a/drivers/ntb/hw/mscc/ntb_hw_switchtec.c b/drivers/ntb/hw/mscc/ntb_hw_switchtec.c
-index 9916bc5..32850fb 100644
---- a/drivers/ntb/hw/mscc/ntb_hw_switchtec.c
-+++ b/drivers/ntb/hw/mscc/ntb_hw_switchtec.c
-@@ -264,6 +264,7 @@ static void switchtec_ntb_mw_clr_direct(struct switchtec_ntb *sndev, int idx)
- 	ctl_val &= ~NTB_CTRL_BAR_DIR_WIN_EN;
- 	iowrite32(ctl_val, &ctl->bar_entry[bar].ctl);
- 	iowrite32(0, &ctl->bar_entry[bar].win_size);
-+	iowrite32(0, &ctl->bar_ext_entry[bar].win_size);
- 	iowrite64(sndev->self_partition, &ctl->bar_entry[bar].xlate_addr);
- }
- 
-@@ -286,7 +287,9 @@ static void switchtec_ntb_mw_set_direct(struct switchtec_ntb *sndev, int idx,
- 	ctl_val |= NTB_CTRL_BAR_DIR_WIN_EN;
- 
- 	iowrite32(ctl_val, &ctl->bar_entry[bar].ctl);
--	iowrite32(xlate_pos | size, &ctl->bar_entry[bar].win_size);
-+	iowrite32(xlate_pos | (size & 0xFFFFF000),
-+		  &ctl->bar_entry[bar].win_size);
-+	iowrite32(size >> 32, &ctl->bar_ext_entry[bar].win_size);
- 	iowrite64(sndev->self_partition | addr,
- 		  &ctl->bar_entry[bar].xlate_addr);
- }
-@@ -1053,7 +1056,9 @@ static int crosslink_setup_mws(struct switchtec_ntb *sndev, int ntb_lut_idx,
- 		ctl_val |= NTB_CTRL_BAR_DIR_WIN_EN;
- 
- 		iowrite32(ctl_val, &ctl->bar_entry[bar].ctl);
--		iowrite32(xlate_pos | size, &ctl->bar_entry[bar].win_size);
-+		iowrite32(xlate_pos | (size & 0xFFFFF000),
-+			  &ctl->bar_entry[bar].win_size);
-+		iowrite32(size >> 32, &ctl->bar_ext_entry[bar].win_size);
- 		iowrite64(sndev->peer_partition | addr,
- 			  &ctl->bar_entry[bar].xlate_addr);
- 	}
-diff --git a/include/linux/switchtec.h b/include/linux/switchtec.h
-index eee0412..1e6e333 100644
---- a/include/linux/switchtec.h
-+++ b/include/linux/switchtec.h
-@@ -248,7 +248,11 @@ struct ntb_ctrl_regs {
- 		u32 win_size;
- 		u64 xlate_addr;
- 	} bar_entry[6];
--	u32 reserved2[216];
-+	struct {
-+		u32 win_size;
-+		u32 reserved[3];
-+	} bar_ext_entry[6];
-+	u32 reserved2[192];
- 	u32 req_id_table[256];
- 	u32 reserved3[512];
- 	u64 lut_entry[512];
--- 
-2.7.4
+./arch/x86/include/asm/setup.h: Assembler messages:
+./arch/x86/include/asm/setup.h:30: Error: no such instruction: `unsigned long __startup_64(unsigned long physaddr,struct boot_params *bp)'
 
+I'll skip the setup.h bits - let's hope that's the only bug.
+
+Thanks,
+
+	Ingo
