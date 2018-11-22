@@ -2,263 +2,502 @@ Return-Path: <SRS0=lMXa=OB=vger.kernel.org=linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-7.1 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
-	DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,
-	SIGNED_OFF_BY,SPF_PASS,URIBL_BLOCKED autolearn=ham autolearn_force=no
-	version=3.4.0
+X-Spam-Status: No, score=-9.0 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_PASS,URIBL_BLOCKED,
+	USER_AGENT_GIT autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 7EBECC43441
-	for <linux-pci@archiver.kernel.org>; Thu, 22 Nov 2018 01:03:23 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id A360EC43441
+	for <linux-pci@archiver.kernel.org>; Thu, 22 Nov 2018 02:02:57 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 1DDBD206B2
-	for <linux-pci@archiver.kernel.org>; Thu, 22 Nov 2018 01:03:22 +0000 (UTC)
-Authentication-Results: mail.kernel.org;
-	dkim=pass (1024-bit key) header.d=nxp.com header.i=@nxp.com header.b="xHWhhhZ0"
-DMARC-Filter: OpenDMARC Filter v1.3.2 mail.kernel.org 1DDBD206B2
-Authentication-Results: mail.kernel.org; dmarc=fail (p=none dis=none) header.from=nxp.com
+	by mail.kernel.org (Postfix) with ESMTP id 5498B20821
+	for <linux-pci@archiver.kernel.org>; Thu, 22 Nov 2018 02:02:57 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.3.2 mail.kernel.org 5498B20821
+Authentication-Results: mail.kernel.org; dmarc=none (p=none dis=none) header.from=zte.com.cn
 Authentication-Results: mail.kernel.org; spf=none smtp.mailfrom=linux-pci-owner@vger.kernel.org
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1732010AbeKVLkN (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Thu, 22 Nov 2018 06:40:13 -0500
-Received: from mail-eopbgr150084.outbound.protection.outlook.com ([40.107.15.84]:31107
-        "EHLO EUR01-DB5-obe.outbound.protection.outlook.com"
-        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1730060AbeKVLkN (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Thu, 22 Nov 2018 06:40:13 -0500
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=nxp.com; s=selector1;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=hKhvoXIOFEwg9q3HMYApTBr/Yvb2z57xk5Oc30VyNeQ=;
- b=xHWhhhZ0sfO+rYRJdPQBf83+ihZHOIOLuNiyX3GcNMgtb43m8lC94x2/1CP4R/j5Jx6HBqt4tZySVLE7LYN5SOjAYsUKT419JYBDL5rpP70j0vKHjkmuzD2UGLJZZ86u+5VyXS/vBJSux0+BXdZ0Lca2g3a5yN1i/4vutzrBfYs=
-Received: from VI1PR04MB5792.eurprd04.prod.outlook.com (20.178.204.10) by
- VI1PR04MB3037.eurprd04.prod.outlook.com (10.170.228.147) with Microsoft SMTP
- Server (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- 15.20.1339.23; Thu, 22 Nov 2018 01:03:15 +0000
-Received: from VI1PR04MB5792.eurprd04.prod.outlook.com
- ([fe80::bd66:413b:c4dd:3fa1]) by VI1PR04MB5792.eurprd04.prod.outlook.com
- ([fe80::bd66:413b:c4dd:3fa1%3]) with mapi id 15.20.1339.027; Thu, 22 Nov 2018
- 01:03:15 +0000
-From:   "Z.q. Hou" <zhiqiang.hou@nxp.com>
-To:     Gustavo Pimentel <gustavo.pimentel@synopsys.com>,
-        "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-        "bhelgaas@google.com" <bhelgaas@google.com>,
-        "lorenzo.pieralisi@arm.com" <lorenzo.pieralisi@arm.com>,
-        "jingoohan1@gmail.com" <jingoohan1@gmail.com>
-CC:     Roy Zang <roy.zang@nxp.com>, Mingkai Hu <mingkai.hu@nxp.com>,
-        "M.h. Lian" <minghuan.lian@nxp.com>
-Subject: RE: [PATCHv2 4/4] PCI: dwc: add prefetchable memory range support
-Thread-Topic: [PATCHv2 4/4] PCI: dwc: add prefetchable memory range support
-Thread-Index: AQHUdoHzO92qDxmIZkykN3HwHZxeDqValHmAgAB8iCA=
-Date:   Thu, 22 Nov 2018 01:03:15 +0000
-Message-ID: <VI1PR04MB5792EE29FF55E98CD43FD4C184DB0@VI1PR04MB5792.eurprd04.prod.outlook.com>
-References: <20181107100854.28389-1-Zhiqiang.Hou@nxp.com>
- <20181107100854.28389-5-Zhiqiang.Hou@nxp.com>
- <b878c46f-4f1f-2ece-6c91-a62d05b6ba8d@synopsys.com>
-In-Reply-To: <b878c46f-4f1f-2ece-6c91-a62d05b6ba8d@synopsys.com>
-Accept-Language: zh-CN, en-US
-Content-Language: en-US
-X-MS-Has-Attach: 
-X-MS-TNEF-Correlator: 
-authentication-results: spf=none (sender IP is )
- smtp.mailfrom=zhiqiang.hou@nxp.com; 
-x-originating-ip: [119.31.174.73]
-x-ms-publictraffictype: Email
-x-microsoft-exchange-diagnostics: 1;VI1PR04MB3037;6:BOuZeGkIG/n677t/jWTYW0pYvijrvKCQf7yDH34g8r696lihVSQtEn2WDGwKux6GostXl3t8sdIJr+5ouoKhqI2muCDwJ0WwKx7e7es81Q+oJ8zl69pBPlZjtBkmzG33pJOCR0BuUBdP7Tmq85OVF52HgBakSrlD4FlH5LLSTL0XqjswkmJUPlJGfeUxT0rH6oz5LbIjbRQ1vw6TfRupx4txhka2hz7P/6kWNY2K4cXRV0ANbiEEAk6+UHiXnM+/0xXy3x53Zuq1CFMT9nB8nFGNV+du5fpcIvXhGstYYee/Pbm6jFrhynmnkxqcCJCaQ/CsiT1j2QsXXAyBnWydaXS7kJZZfR4ExOC5+3vscCbkGGCup6oRlOkg1MJqVxpe5KKoKtEJJQEHMNL7ViC7MIxjxiGC3SZXXOFtWHD5CslrYeeY509eHs95g8c6CnRjj/tKjHUP04EfUWLlJ2VIQg==;5:XSNk0jwQRFHR1IcONhEt0VlmRDLy4N7uQ/KRyHBXoHAqH92eqbD5G7ZEuuCvO9+s6NxuTuaR3SF93vuFkn8dAD2zAJ9sTlYUbnlEpAsKiDZwDCtZzxOnXafNRPScZ6ipBs5NQL9cTcOvLjNCRG66IWmROdmg0WFOS+LVSiX5Q/k=;7:09ial4xcOQ8FlPWDWJenol7hDVhnuIetv/J2TnGbyjs/sFrwcNebb71fqAeVWTVJGhB1CDmzZPQqHZulU5471oOGlQ0kOg+0f8n+LHqc8QANcnuXrYN7FkijqROa3wr1v3/etxoEAkNR0u1TI0JJZA==
-x-ms-exchange-antispam-srfa-diagnostics: SOS;
-x-ms-office365-filtering-correlation-id: ef9952fc-8779-41b8-a771-08d6501648a9
-x-ms-office365-filtering-ht: Tenant
-x-microsoft-antispam: BCL:0;PCL:0;RULEID:(2390098)(7020095)(4652040)(8989299)(5600074)(711020)(4618075)(4534185)(4627221)(201703031133081)(201702281549075)(8990200)(2017052603328)(7153060)(7193020);SRVR:VI1PR04MB3037;
-x-ms-traffictypediagnostic: VI1PR04MB3037:
-x-microsoft-antispam-prvs: <VI1PR04MB3037816993858E8AC45C3FBC84DB0@VI1PR04MB3037.eurprd04.prod.outlook.com>
-x-ms-exchange-senderadcheck: 1
-x-exchange-antispam-report-cfa-test: BCL:0;PCL:0;RULEID:(8211001083)(6040522)(2401047)(8121501046)(5005006)(3231442)(944501410)(52105112)(10201501046)(93006095)(93001095)(3002001)(6055026)(148016)(149066)(150057)(6041310)(20161123560045)(201703131423095)(201702281528075)(20161123555045)(201703061421075)(201703061406153)(20161123562045)(20161123564045)(20161123558120)(201708071742011)(7699051)(76991095);SRVR:VI1PR04MB3037;BCL:0;PCL:0;RULEID:;SRVR:VI1PR04MB3037;
-x-forefront-prvs: 0864A36BBF
-x-forefront-antispam-report: SFV:NSPM;SFS:(10009020)(136003)(366004)(39860400002)(376002)(396003)(346002)(189003)(199004)(13464003)(39060400002)(66066001)(256004)(76176011)(105586002)(11346002)(2201001)(14444005)(486006)(99286004)(71190400001)(71200400001)(86362001)(4326008)(6506007)(68736007)(53546011)(8676002)(81166006)(81156014)(229853002)(2501003)(8936002)(26005)(97736004)(25786009)(102836004)(2900100001)(53936002)(478600001)(186003)(74316002)(54906003)(110136005)(305945005)(55016002)(9686003)(5660300001)(446003)(7696005)(2906002)(476003)(106356001)(7736002)(6246003)(3846002)(316002)(6116002)(6436002)(14454004)(33656002);DIR:OUT;SFP:1101;SCL:1;SRVR:VI1PR04MB3037;H:VI1PR04MB5792.eurprd04.prod.outlook.com;FPR:;SPF:None;LANG:en;PTR:InfoNoRecords;MX:1;A:1;
-received-spf: None (protection.outlook.com: nxp.com does not designate
- permitted sender hosts)
-x-microsoft-antispam-message-info: 8LlZXmg/UD7tH1KpVqVdaVbQBfbkse58B/mpgnT/vEl9nsc9J/I8uP+jhxEAA/odvYPoFt/BKoHJkPmHnakOys0kIsWsTKJn8kdStZV8iB7qu0AyqbuM3wSI/ww3xvQmQlsgo+i+sDcJ2Q4rrVA5Nsu6a2HKAc6oxU0QsujnLNhAoSbf45x/6LkEt88xnpEV6C4n9mk23yhkKKlu5jxtL9EY8mzoPCrkbaLamNhOrAlVhs2MZJATyDEoR8IcEg1KnVc8ebv9aTVsArqRuYSxKennKOMmd39S/w3gr0JiTwmOWBSqa95+dj6c4HcxrytMjjG71Iq1zPaD7oXuCgtqVI2ez5svkdm2b+3tQqD02ts=
-spamdiagnosticoutput: 1:99
-spamdiagnosticmetadata: NSPM
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: base64
+        id S1730634AbeKVMkB convert rfc822-to-8bit (ORCPT
+        <rfc822;linux-pci@archiver.kernel.org>);
+        Thu, 22 Nov 2018 07:40:01 -0500
+Received: from mxhk.zte.com.cn ([63.217.80.70]:45478 "EHLO mxhk.zte.com.cn"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1727713AbeKVMkB (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Thu, 22 Nov 2018 07:40:01 -0500
+Received: from mse01.zte.com.cn (unknown [10.30.3.20])
+        by Forcepoint Email with ESMTPS id 66895DA88B8EE42D2CEF;
+        Thu, 22 Nov 2018 10:02:50 +0800 (CST)
+Received: from notes_smtp.zte.com.cn ([10.30.1.239])
+        by mse01.zte.com.cn with ESMTP id wAM22kiO053616;
+        Thu, 22 Nov 2018 10:02:46 +0800 (GMT-8)
+        (envelope-from wang.yi59@zte.com.cn)
+Received: from fox-host8.localdomain ([10.74.120.8])
+          by szsmtp06.zte.com.cn (Lotus Domino Release 8.5.3FP6)
+          with ESMTP id 2018112210031327-12211291 ;
+          Thu, 22 Nov 2018 10:03:13 +0800 
+From:   Yi Wang <wang.yi59@zte.com.cn>
+To:     tglx@linutronix.de
+Cc:     mingo@redhat.com, bp@alien8.de, hpa@zytor.com, x86@kernel.org,
+        wang.yi59@zte.com.cn, linux-kernel@vger.kernel.org,
+        ard.biesheuvel@linaro.org, linux-efi@vger.kernel.org,
+        pbonzini@redhat.com, rkrcmar@redhat.com, kvm@vger.kernel.org,
+        jgross@suse.com, akataria@vmware.com,
+        virtualization@lists.linux-foundation.org, m.mizuma@jp.fujitsu.com,
+        peterz@infradead.org, prarit@redhat.com, douly.fnst@cn.fujitsu.com,
+        dwmw@amazon.co.uk, luto@kernel.org, pasha.tatashin@oracle.com,
+        rajvi.jingar@intel.com, zhe.he@windriver.com,
+        akpm@linux-foundation.org, dyoung@redhat.com,
+        takahiro.akashi@linaro.org, ebiederm@xmission.com, bhe@redhat.com,
+        ivan.gorinov@intel.com, robh@kernel.org, andy.shevchenko@gmail.com,
+        frank.rowand@sony.com, jan.kiszka@siemens.com,
+        jailhouse-dev@googlegroups.com, konrad.wilk@oracle.com,
+        thomas.lendacky@amd.com, pravin.shedge4linux@gmail.com,
+        namit@vmware.com, jroedel@suse.de, bhelgaas@google.com,
+        linux-pci@vger.kernel.org, keescook@chromium.org, anton@enomsg.org,
+        ccross@android.com, tony.luck@intel.com, rostedt@goodmis.org,
+        kexec@lists.infradead.org, robh+dt@kernel.org,
+        frowand.list@gmail.com, devicetree@vger.kernel.org,
+        oleg@redhat.com, zhong.weidong@zte.com.cn, up2wing@gmail.com
+Subject: [PATCH] x86: fix -Wmissing-prototypes warning
+Date:   Thu, 22 Nov 2018 10:04:09 +0800
+Message-Id: <1542852249-19820-1-git-send-email-wang.yi59@zte.com.cn>
+X-Mailer: git-send-email 1.8.3.1
 MIME-Version: 1.0
-X-OriginatorOrg: nxp.com
-X-MS-Exchange-CrossTenant-Network-Message-Id: ef9952fc-8779-41b8-a771-08d6501648a9
-X-MS-Exchange-CrossTenant-originalarrivaltime: 22 Nov 2018 01:03:15.6834
- (UTC)
-X-MS-Exchange-CrossTenant-fromentityheader: Hosted
-X-MS-Exchange-CrossTenant-id: 686ea1d3-bc2b-4c6f-a92c-d99c5c301635
-X-MS-Exchange-Transport-CrossTenantHeadersStamped: VI1PR04MB3037
+X-MIMETrack: Itemize by SMTP Server on SZSMTP06/server/zte_ltd(Release 8.5.3FP6|November
+ 21, 2013) at 2018-11-22 10:03:13,
+        Serialize by Router on notes_smtp/zte_ltd(Release 9.0.1FP7|August  17, 2016) at
+ 2018-11-22 10:02:34
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 8BIT
+X-MAIL: mse01.zte.com.cn wAM22kiO053616
 Sender: linux-pci-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-SGkgR3VzdGF2bywNCg0KVGhhbmtzIGEgbG90IGZvciB5b3VyIHRlc3RpbmcgYW5kIEFDSyENCg0K
-UmVnYXJkcywNClpoaXFpYW5nDQoNCj4gLS0tLS1PcmlnaW5hbCBNZXNzYWdlLS0tLS0NCj4gRnJv
-bTogR3VzdGF2byBQaW1lbnRlbCA8Z3VzdGF2by5waW1lbnRlbEBzeW5vcHN5cy5jb20+DQo+IFNl
-bnQ6IDIwMTjlubQxMeaciDIy5pelIDE6MzcNCj4gVG86IFoucS4gSG91IDx6aGlxaWFuZy5ob3VA
-bnhwLmNvbT47IGxpbnV4LXBjaUB2Z2VyLmtlcm5lbC5vcmc7DQo+IGxpbnV4LWtlcm5lbEB2Z2Vy
-Lmtlcm5lbC5vcmc7IGJoZWxnYWFzQGdvb2dsZS5jb207DQo+IGxvcmVuem8ucGllcmFsaXNpQGFy
-bS5jb207IGppbmdvb2hhbjFAZ21haWwuY29tOw0KPiBndXN0YXZvLnBpbWVudGVsQHN5bm9wc3lz
-LmNvbQ0KPiBDYzogUm95IFphbmcgPHJveS56YW5nQG54cC5jb20+OyBNaW5na2FpIEh1IDxtaW5n
-a2FpLmh1QG54cC5jb20+OyBNLmguDQo+IExpYW4gPG1pbmdodWFuLmxpYW5AbnhwLmNvbT4NCj4g
-U3ViamVjdDogUmU6IFtQQVRDSHYyIDQvNF0gUENJOiBkd2M6IGFkZCBwcmVmZXRjaGFibGUgbWVt
-b3J5IHJhbmdlIHN1cHBvcnQNCj4gDQo+IE9uIDA3LzExLzIwMTggMTA6MDksIFoucS4gSG91IHdy
-b3RlOg0KPiA+IEZyb206IEhvdSBaaGlxaWFuZyA8WmhpcWlhbmcuSG91QG54cC5jb20+DQo+ID4N
-Cj4gPiBUaGUgY3VycmVudCBjb2RlIG9ubHkgc3VwcG9ydCBub24tcHJlZmV0Y2hhYmxlIG1lbW9y
-eSByYW5nZSwgYXMgdGhlDQo+ID4gbm9uLXByZWZldGNoYWJsZSBtZW1vcnkgcmFuZ2UgbXVzdCBu
-b3QgYmUgZ3JlYXRlciB0aGFuIDRHaUIsIG9uZQ0KPiA+IHZpZXdwb3J0IGNhbiBjb3ZlciBpdCwg
-d2hpY2ggc3VwcG9ydHMgdXB0byA0R2lCLg0KPiA+DQo+ID4gVG8gc3VwcG9ydCBwcmVmZXRjaGFi
-bGUgbWVtb3J5IHJhbmdlLCB3aGljaCBpcyB1cHRvIDY0LWJpdCBtZW1vcnkNCj4gPiBzcGFjZSBh
-bmQgY2FuIGJlIGdyZWF0ZXIgdGhhbiA0R2lCLCBzbyB3ZSBuZWVkIG11bHRpcGxlIHZpZXdwb3J0
-cy4gQW5kDQo+ID4gYWRkZWQgc2VwYXJhdGUgdmFycyB0byBzdG9yZSBwcmVmZXRjaGFibGUgbWVt
-b3J5IHJhbmdlIGluZm8gdG8gcHJldmVudA0KPiA+IG92ZXJyaWRpbmcgdGhlIG5vbi1wcmVmZXRj
-aGFibGUgbWVtb3J5IHJhbmdlIGluZm8uDQo+ID4NCj4gPiBBbmQgdGhpcyBwYXRjaCBleHBsaWNp
-dGx5IGFzc2lnbmVkIHRoZSBsYXN0IChpZiB0aGVyZSBhcmUgb25seQ0KPiA+IDIgdmlld3BvcnRz
-KSBvciBsYXN0IDIgdmlld3BvcnRzIGZvciBDRkcgYW5kIEkvTyB3aW5kb3dzIGFuZCB0aGUgcmVz
-dHMNCj4gPiBmb3IgTUVNIHdpbmRvd3MuDQo+ID4NCj4gPiBTaWduZWQtb2ZmLWJ5OiBIb3UgWmhp
-cWlhbmcgPFpoaXFpYW5nLkhvdUBueHAuY29tPg0KPiA+IC0tLQ0KPiA+IFYyOg0KPiA+ICAtIFJl
-d29yZGVkIHRoZSBzdWJqZWN0IGFuZCBjb21taXQgZGVzY3JpcHRpb24uDQo+ID4gIC0gRml4IHRo
-ZSBwcmVmZXRjaGFibGUgbWVtb3J5IHJhbmdlIG92ZXJyaWRpbmcgbm9uLXBlcmZldGNoYWJsZQ0K
-PiA+ICAgIG1lbW9yeSByYW5nZSBpc3N1ZSBieSBhZGRpbmcgdmFycyB0byBzdG9yZSBwcmVmZXRj
-aGFibGUgbWVtb3J5DQo+ID4gICAgcmFuZ2UgaW5mby4NCj4gPg0KPiA+ICAuLi4vcGNpL2NvbnRy
-b2xsZXIvZHdjL3BjaWUtZGVzaWdud2FyZS1ob3N0LmMgfCAxMDcgKysrKysrKysrKysrKystLS0t
-DQo+ID4gIGRyaXZlcnMvcGNpL2NvbnRyb2xsZXIvZHdjL3BjaWUtZGVzaWdud2FyZS5oICB8ICAg
-NyArKw0KPiA+ICAyIGZpbGVzIGNoYW5nZWQsIDk1IGluc2VydGlvbnMoKyksIDE5IGRlbGV0aW9u
-cygtKQ0KPiA+DQo+ID4gZGlmZiAtLWdpdCBhL2RyaXZlcnMvcGNpL2NvbnRyb2xsZXIvZHdjL3Bj
-aWUtZGVzaWdud2FyZS1ob3N0LmMNCj4gPiBiL2RyaXZlcnMvcGNpL2NvbnRyb2xsZXIvZHdjL3Bj
-aWUtZGVzaWdud2FyZS1ob3N0LmMNCj4gPiBpbmRleCBlY2FjY2UwMTY0ODkuLjMyOGFhNDBhNjYw
-OSAxMDA2NDQNCj4gPiAtLS0gYS9kcml2ZXJzL3BjaS9jb250cm9sbGVyL2R3Yy9wY2llLWRlc2ln
-bndhcmUtaG9zdC5jDQo+ID4gKysrIGIvZHJpdmVycy9wY2kvY29udHJvbGxlci9kd2MvcGNpZS1k
-ZXNpZ253YXJlLWhvc3QuYw0KPiA+IEBAIC0zNDYsNiArMzQ2LDM1IEBAIGludCBkd19wY2llX2hv
-c3RfaW5pdChzdHJ1Y3QgcGNpZV9wb3J0ICpwcCkNCj4gPiAgCQlkZXZfZXJyKGRldiwgIk1pc3Np
-bmcgKmNvbmZpZyogcmVnIHNwYWNlXG4iKTsNCj4gPiAgCX0NCj4gPg0KPiA+ICsJLyoNCj4gPiAr
-CSAqIElmIHZlbmRvcidzIHBsYXRmb3JtIGRyaXZlciBoYXMgc2V0IHRoZSBudW1fdmlld3BvcnQg
-YW5kIGl0IGlzDQo+ID4gKwkgKiBub3QgbGVzcyB0aGFuIDIsIHNraXAgZ2V0dGluZyB0aGUgbnVt
-X3ZpZXdwb3J0IGZyb20gRFQgaGVyZS4NCj4gPiArCSAqLw0KPiA+ICsJaWYgKHBjaS0+bnVtX3Zp
-ZXdwb3J0IDwgMikgew0KPiA+ICsJCXJldCA9IG9mX3Byb3BlcnR5X3JlYWRfdTMyKG5wLCAibnVt
-LXZpZXdwb3J0IiwNCj4gPiArCQkJCQkgICAmcGNpLT5udW1fdmlld3BvcnQpOw0KPiA+ICsJCWlm
-IChyZXQgfHwgcGNpLT5udW1fdmlld3BvcnQgPCAyKQ0KPiA+ICsJCQlwY2ktPm51bV92aWV3cG9y
-dCA9IDI7DQo+ID4gKwl9DQo+ID4gKw0KPiA+ICsJLyoNCj4gPiArCSAqIGlmIHRoZXJlIGFyZSBv
-bmx5IDIgdmlld3BvcnRzLCBhc3NpZ24gdGhlIGxhc3Qgdmlld3BvcnQgZm9yDQo+ID4gKwkgKiBi
-b3RoIENGRyBhbmQgSU8gd2luZG93LCBvdGhlcndpc2UgYXNzaWduIHRoZSBsYXN0IDIgdmlld3Bv
-cnQNCj4gPiArCSAqIGZvciBDRkcgYW5kIElPIHdpbmRvdyBzcGVjaWZpYy4gQW5kIHRoZSByZXN0
-IHZpZXdwb3J0cyBhcmUNCj4gPiArCSAqIGFzc2lnbmVkIHRvIE1FTSB3aW5kb3dzLg0KPiA+ICsJ
-ICovDQo+ID4gKwlpZiAocGNpLT5udW1fdmlld3BvcnQgPT0gMikgew0KPiA+ICsJCXBwLT5jZmdf
-aWR4ID0gcHAtPmlvX2lkeCA9IFBDSUVfQVRVX1JFR0lPTl9JTkRFWDE7DQo+ID4gKwkJcHAtPm1l
-bV93aW5zID0gMTsNCj4gPiArCX0gZWxzZSB7DQo+ID4gKwkJcHAtPmNmZ19pZHggPSBwY2ktPm51
-bV92aWV3cG9ydCAtIDE7DQo+ID4gKwkJcHAtPmlvX2lkeCA9IHBjaS0+bnVtX3ZpZXdwb3J0IC0g
-MjsNCj4gPiArCQlwcC0+bWVtX3dpbnMgPSBwY2ktPm51bV92aWV3cG9ydCAtIDI7DQo+ID4gKwl9
-DQo+ID4gKw0KPiA+ICsJZGV2X2RiZyhkZXYsICJDRkcgd2luIGlkOiAlZCwgSS9PIHdpbiBpZDog
-JWQsIFRvdGFsIE1FTSB3aW46ICVkXG4iLA0KPiA+ICsJCXBwLT5jZmdfaWR4LCBwcC0+aW9faWR4
-LCBwcC0+bWVtX3dpbnMpOw0KPiA+ICsNCj4gPiAgCWJyaWRnZSA9IHBjaV9hbGxvY19ob3N0X2Jy
-aWRnZSgwKTsNCj4gPiAgCWlmICghYnJpZGdlKQ0KPiA+ICAJCXJldHVybiAtRU5PTUVNOw0KPiA+
-IEBAIC0zNzcsMTAgKzQwNiwyMCBAQCBpbnQgZHdfcGNpZV9ob3N0X2luaXQoc3RydWN0IHBjaWVf
-cG9ydCAqcHApDQo+ID4gIAkJCX0NCj4gPiAgCQkJYnJlYWs7DQo+ID4gIAkJY2FzZSBJT1JFU09V
-UkNFX01FTToNCj4gPiAtCQkJcHAtPm1lbSA9IHdpbi0+cmVzOw0KPiA+IC0JCQlwcC0+bWVtLT5u
-YW1lID0gIk1FTSI7DQo+ID4gLQkJCXBwLT5tZW1fc2l6ZSA9IHJlc291cmNlX3NpemUocHAtPm1l
-bSk7DQo+ID4gLQkJCXBwLT5tZW1fYnVzX2FkZHIgPSBwcC0+bWVtLT5zdGFydCAtIHdpbi0+b2Zm
-c2V0Ow0KPiA+ICsJCQlpZiAod2luLT5yZXMtPmZsYWdzICYgSU9SRVNPVVJDRV9QUkVGRVRDSCkg
-ew0KPiA+ICsJCQkJcHAtPm1lbV9wZXJmID0gd2luLT5yZXM7DQo+ID4gKwkJCQlwcC0+bWVtX3Bl
-cmYtPm5hbWUgPSAiTUVNIHBlcmYiOw0KPiA+ICsJCQkJcHAtPm1lbV9wZXJmX3NpemUgPSByZXNv
-dXJjZV9zaXplKHBwLT5tZW1fcGVyZik7DQo+ID4gKwkJCQlwcC0+bWVtX3BlcmZfYnVzX2FkZHIg
-PSBwcC0+bWVtX3BlcmYtPnN0YXJ0IC0NCj4gPiArCQkJCQkJCXdpbi0+b2Zmc2V0Ow0KPiA+ICsJ
-CQkJcHAtPm1lbV9wZXJmX2Jhc2UgPSBwcC0+bWVtX3BlcmYtPnN0YXJ0Ow0KPiA+ICsJCQl9IGVs
-c2Ugew0KPiA+ICsJCQkJcHAtPm1lbSA9IHdpbi0+cmVzOw0KPiA+ICsJCQkJcHAtPm1lbS0+bmFt
-ZSA9ICJNRU0iOw0KPiA+ICsJCQkJcHAtPm1lbV9zaXplID0gcmVzb3VyY2Vfc2l6ZShwcC0+bWVt
-KTsNCj4gPiArCQkJCXBwLT5tZW1fYnVzX2FkZHIgPSBwcC0+bWVtLT5zdGFydCAtIHdpbi0+b2Zm
-c2V0Ow0KPiA+ICsJCQkJcHAtPm1lbV9iYXNlID0gcHAtPm1lbS0+c3RhcnQ7DQo+ID4gKwkJCX0N
-Cj4gPiAgCQkJYnJlYWs7DQo+ID4gIAkJY2FzZSAwOg0KPiA+ICAJCQlwcC0+Y2ZnID0gd2luLT5y
-ZXM7DQo+ID4gQEAgLTQwNiw4ICs0NDUsNiBAQCBpbnQgZHdfcGNpZV9ob3N0X2luaXQoc3RydWN0
-IHBjaWVfcG9ydCAqcHApDQo+ID4gIAkJfQ0KPiA+ICAJfQ0KPiA+DQo+ID4gLQlwcC0+bWVtX2Jh
-c2UgPSBwcC0+bWVtLT5zdGFydDsNCj4gPiAtDQo+ID4gIAlpZiAoIXBwLT52YV9jZmcwX2Jhc2Up
-IHsNCj4gPiAgCQlwcC0+dmFfY2ZnMF9iYXNlID0gZGV2bV9wY2lfcmVtYXBfY2Znc3BhY2UoZGV2
-LA0KPiA+ICAJCQkJCXBwLT5jZmcwX2Jhc2UsIHBwLT5jZmcwX3NpemUpOw0KPiA+IEBAIC01MzQs
-MTIgKzU3MSwxMiBAQCBzdGF0aWMgaW50IGR3X3BjaWVfcmRfb3RoZXJfY29uZihzdHJ1Y3QNCj4g
-cGNpZV9wb3J0ICpwcCwgc3RydWN0IHBjaV9idXMgKmJ1cywNCj4gPiAgCQl2YV9jZmdfYmFzZSA9
-IHBwLT52YV9jZmcxX2Jhc2U7DQo+ID4gIAl9DQo+ID4NCj4gPiAtCWR3X3BjaWVfcHJvZ19vdXRi
-b3VuZF9hdHUocGNpLCBQQ0lFX0FUVV9SRUdJT05fSU5ERVgxLA0KPiA+ICsJZHdfcGNpZV9wcm9n
-X291dGJvdW5kX2F0dShwY2ksIHBwLT5jZmdfaWR4LA0KPiA+ICAJCQkJICB0eXBlLCBjcHVfYWRk
-ciwNCj4gPiAgCQkJCSAgYnVzZGV2LCBjZmdfc2l6ZSk7DQo+ID4gIAlyZXQgPSBkd19wY2llX3Jl
-YWQodmFfY2ZnX2Jhc2UgKyB3aGVyZSwgc2l6ZSwgdmFsKTsNCj4gPiAtCWlmIChwY2ktPm51bV92
-aWV3cG9ydCA8PSAyKQ0KPiA+IC0JCWR3X3BjaWVfcHJvZ19vdXRib3VuZF9hdHUocGNpLCBQQ0lF
-X0FUVV9SRUdJT05fSU5ERVgxLA0KPiA+ICsJaWYgKHBwLT5jZmdfaWR4ID09IHBwLT5pb19pZHgp
-DQo+ID4gKwkJZHdfcGNpZV9wcm9nX291dGJvdW5kX2F0dShwY2ksIHBwLT5pb19pZHgsDQo+ID4g
-IAkJCQkJICBQQ0lFX0FUVV9UWVBFX0lPLCBwcC0+aW9fYmFzZSwNCj4gPiAgCQkJCQkgIHBwLT5p
-b19idXNfYWRkciwgcHAtPmlvX3NpemUpOw0KPiA+DQo+ID4gQEAgLTU3MywxMiArNjEwLDEyIEBA
-IHN0YXRpYyBpbnQgZHdfcGNpZV93cl9vdGhlcl9jb25mKHN0cnVjdA0KPiBwY2llX3BvcnQgKnBw
-LCBzdHJ1Y3QgcGNpX2J1cyAqYnVzLA0KPiA+ICAJCXZhX2NmZ19iYXNlID0gcHAtPnZhX2NmZzFf
-YmFzZTsNCj4gPiAgCX0NCj4gPg0KPiA+IC0JZHdfcGNpZV9wcm9nX291dGJvdW5kX2F0dShwY2ks
-IFBDSUVfQVRVX1JFR0lPTl9JTkRFWDEsDQo+ID4gKwlkd19wY2llX3Byb2dfb3V0Ym91bmRfYXR1
-KHBjaSwgcHAtPmNmZ19pZHgsDQo+ID4gIAkJCQkgIHR5cGUsIGNwdV9hZGRyLA0KPiA+ICAJCQkJ
-ICBidXNkZXYsIGNmZ19zaXplKTsNCj4gPiAgCXJldCA9IGR3X3BjaWVfd3JpdGUodmFfY2ZnX2Jh
-c2UgKyB3aGVyZSwgc2l6ZSwgdmFsKTsNCj4gPiAtCWlmIChwY2ktPm51bV92aWV3cG9ydCA8PSAy
-KQ0KPiA+IC0JCWR3X3BjaWVfcHJvZ19vdXRib3VuZF9hdHUocGNpLCBQQ0lFX0FUVV9SRUdJT05f
-SU5ERVgxLA0KPiA+ICsJaWYgKHBwLT5jZmdfaWR4ID09IHBwLT5pb19pZHgpDQo+ID4gKwkJZHdf
-cGNpZV9wcm9nX291dGJvdW5kX2F0dShwY2ksIHBwLT5pb19pZHgsDQo+ID4gIAkJCQkJICBQQ0lF
-X0FUVV9UWVBFX0lPLCBwcC0+aW9fYmFzZSwNCj4gPiAgCQkJCQkgIHBwLT5pb19idXNfYWRkciwg
-cHAtPmlvX3NpemUpOw0KPiA+DQo+ID4gQEAgLTY1Miw2ICs2ODksOSBAQCBzdGF0aWMgdTggZHdf
-cGNpZV9pYXR1X3Vucm9sbF9lbmFibGVkKHN0cnVjdA0KPiA+IGR3X3BjaWUgKnBjaSkgIHZvaWQg
-ZHdfcGNpZV9zZXR1cF9yYyhzdHJ1Y3QgcGNpZV9wb3J0ICpwcCkgIHsNCj4gPiAgCXUzMiB2YWws
-IGN0cmwsIG51bV9jdHJsczsNCj4gPiArCXU2NCByZW1haW5fc2l6ZSwgYmFzZSwgd2luX3NpemU7
-DQo+ID4gKwlwaHlzX2FkZHJfdCBidXNfYWRkcjsNCj4gPiArCWludCBpOw0KPiA+ICAJc3RydWN0
-IGR3X3BjaWUgKnBjaSA9IHRvX2R3X3BjaWVfZnJvbV9wcChwcCk7DQo+ID4NCj4gPiAgCWR3X3Bj
-aWVfc2V0dXAocGNpKTsNCj4gPiBAQCAtNzAwLDEzICs3NDAsNDIgQEAgdm9pZCBkd19wY2llX3Nl
-dHVwX3JjKHN0cnVjdCBwY2llX3BvcnQgKnBwKQ0KPiA+ICAJCWRldl9kYmcocGNpLT5kZXYsICJp
-QVRVIHVucm9sbDogJXNcbiIsDQo+ID4gIAkJCXBjaS0+aWF0dV91bnJvbGxfZW5hYmxlZCA/ICJl
-bmFibGVkIiA6ICJkaXNhYmxlZCIpOw0KPiA+DQo+ID4gLQkJZHdfcGNpZV9wcm9nX291dGJvdW5k
-X2F0dShwY2ksIFBDSUVfQVRVX1JFR0lPTl9JTkRFWDAsDQo+ID4gLQkJCQkJICBQQ0lFX0FUVV9U
-WVBFX01FTSwgcHAtPm1lbV9iYXNlLA0KPiA+IC0JCQkJCSAgcHAtPm1lbV9idXNfYWRkciwgcHAt
-Pm1lbV9zaXplKTsNCj4gPiAtCQlpZiAocGNpLT5udW1fdmlld3BvcnQgPiAyKQ0KPiA+IC0JCQlk
-d19wY2llX3Byb2dfb3V0Ym91bmRfYXR1KHBjaSwgUENJRV9BVFVfUkVHSU9OX0lOREVYMiwNCj4g
-PiAtCQkJCQkJICBQQ0lFX0FUVV9UWVBFX0lPLCBwcC0+aW9fYmFzZSwNCj4gPiAtCQkJCQkJICBw
-cC0+aW9fYnVzX2FkZHIsIHBwLT5pb19zaXplKTsNCj4gPiArCQkvKg0KPiA+ICsJCSAqIFRoZSBt
-YXhpbXVtIHJlZ2lvbiBzaXplIGlzIDQgR0IsIGFuZCBhIHJlZ2lvbg0KPiA+ICsJCSAqIG11c3Qg
-bm90IGNyb3NzIGEgNCBHQiBib3VuZGFyeS4NCj4gPiArCQkgKi8NCj4gPiArCQl3aW5fc2l6ZSA9
-IFNaXzRHIC0gKHBwLT5tZW1fYmFzZSAmIChTWl80RyAtIDEpKTsNCj4gPiArCQl3aW5fc2l6ZSA9
-IG1pbih3aW5fc2l6ZSwgcHAtPm1lbV9zaXplKTsNCj4gPiArCQlkd19wY2llX3Byb2dfb3V0Ym91
-bmRfYXR1KHBjaSwgMCwgUENJRV9BVFVfVFlQRV9NRU0sDQo+ID4gKwkJCQkJICBwcC0+bWVtX2Jh
-c2UsIHBwLT5tZW1fYnVzX2FkZHIsDQo+ID4gKwkJCQkJICB3aW5fc2l6ZSk7DQo+ID4gKwkJZGV2
-X2RiZyhwY2ktPmRldiwNCj4gPiArCQkJImlBVFU6IG5vbi1wcmVmIE1FTTogd2luID0gJWQ6IGJh
-c2UgPSAlbGx4LCBidXNfYWRkciA9ICVwYSwNCj4gc2l6ZSA9ICVsbHhcbiIsDQo+ID4gKwkJCTAs
-IHBwLT5tZW1fYmFzZSwgJnBwLT5tZW1fYnVzX2FkZHIsIHdpbl9zaXplKTsNCj4gPiArDQo+ID4g
-KwkJLyogUHJlZmV0Y2hhYmxlIHJhbmdlIGNhbiBiZSA2NGJpdCBzcGFjZSAqLw0KPiA+ICsJCXJl
-bWFpbl9zaXplID0gcHAtPm1lbV9wZXJmX3NpemU7DQo+ID4gKwkJYmFzZSA9IHBwLT5tZW1fcGVy
-Zl9iYXNlOw0KPiA+ICsJCWJ1c19hZGRyID0gcHAtPm1lbV9wZXJmX2J1c19hZGRyOw0KPiA+ICsJ
-CWZvciAoaSA9IDE7IHJlbWFpbl9zaXplID4gMCAmJiBpIDwgcHAtPm1lbV93aW5zOyBpKyspIHsN
-Cj4gPiArCQkJd2luX3NpemUgPSBTWl80RyAtIChiYXNlICYgKFNaXzRHIC0gMSkpOw0KPiA+ICsJ
-CQl3aW5fc2l6ZSA9IG1pbih3aW5fc2l6ZSwgcmVtYWluX3NpemUpOw0KPiA+ICsJCQlkd19wY2ll
-X3Byb2dfb3V0Ym91bmRfYXR1KHBjaSwgaSwgUENJRV9BVFVfVFlQRV9NRU0sDQo+ID4gKwkJCQkJ
-CSAgYmFzZSwgYnVzX2FkZHIsIHdpbl9zaXplKTsNCj4gPiArCQkJZGV2X2RiZyhwY2ktPmRldiwg
-ImlBVFU6IHByZWYgTUVNOiB3aW4gPSAlZDogYmFzZSA9ICVsbHgsDQo+IGJ1c19hZGRyID0gJXBh
-LCBzaXplID0gJWxseFxuIiwNCj4gPiArCQkJCWksIGJhc2UsICZidXNfYWRkciwgd2luX3NpemUp
-Ow0KPiA+ICsNCj4gPiArCQkJYmFzZSArPSB3aW5fc2l6ZTsNCj4gPiArCQkJYnVzX2FkZHIgKz0g
-d2luX3NpemU7DQo+ID4gKwkJCXJlbWFpbl9zaXplIC09IHdpbl9zaXplOw0KPiA+ICsJCX0NCj4g
-PiArDQo+ID4gKwkJaWYgKHJlbWFpbl9zaXplID4gMCkNCj4gPiArCQkJZGV2X2luZm8ocGNpLT5k
-ZXYsICJpQVRVOiBNRU0gd2luZG93IGlzbid0IGVub3VnaFxuIik7DQo+ID4gKw0KPiA+ICsJCWR3
-X3BjaWVfcHJvZ19vdXRib3VuZF9hdHUocGNpLCBwcC0+aW9faWR4LCBQQ0lFX0FUVV9UWVBFX0lP
-LA0KPiA+ICsJCQkJCSAgcHAtPmlvX2Jhc2UsIHBwLT5pb19idXNfYWRkciwNCj4gPiArCQkJCQkg
-IHBwLT5pb19zaXplKTsNCj4gPiAgCX0NCj4gPg0KPiA+ICAJZHdfcGNpZV93cl9vd25fY29uZihw
-cCwgUENJX0JBU0VfQUREUkVTU18wLCA0LCAwKTsgZGlmZiAtLWdpdA0KPiA+IGEvZHJpdmVycy9w
-Y2kvY29udHJvbGxlci9kd2MvcGNpZS1kZXNpZ253YXJlLmgNCj4gPiBiL2RyaXZlcnMvcGNpL2Nv
-bnRyb2xsZXIvZHdjL3BjaWUtZGVzaWdud2FyZS5oDQo+ID4gaW5kZXggYTQzOGMzODc5YWE5Li4w
-MTk3ZjY3ZjgyYjcgMTAwNjQ0DQo+ID4gLS0tIGEvZHJpdmVycy9wY2kvY29udHJvbGxlci9kd2Mv
-cGNpZS1kZXNpZ253YXJlLmgNCj4gPiArKysgYi9kcml2ZXJzL3BjaS9jb250cm9sbGVyL2R3Yy9w
-Y2llLWRlc2lnbndhcmUuaA0KPiA+IEBAIC0xNDgsMTUgKzE0OCwyMiBAQCBzdHJ1Y3QgcGNpZV9w
-b3J0IHsNCj4gPiAgCXU2NAkJCWNmZzFfYmFzZTsNCj4gPiAgCXZvaWQgX19pb21lbQkJKnZhX2Nm
-ZzFfYmFzZTsNCj4gPiAgCXUzMgkJCWNmZzFfc2l6ZTsNCj4gPiArCXUzMgkJCWNmZ19pZHg7DQo+
-ID4gIAlyZXNvdXJjZV9zaXplX3QJCWlvX2Jhc2U7DQo+ID4gIAlwaHlzX2FkZHJfdAkJaW9fYnVz
-X2FkZHI7DQo+ID4gIAl1MzIJCQlpb19zaXplOw0KPiA+ICsJdTMyCQkJaW9faWR4Ow0KPiA+ICAJ
-dTY0CQkJbWVtX2Jhc2U7DQo+ID4gIAlwaHlzX2FkZHJfdAkJbWVtX2J1c19hZGRyOw0KPiA+ICAJ
-dTY0CQkJbWVtX3NpemU7DQo+ID4gKwl1NjQJCQltZW1fcGVyZl9iYXNlOw0KPiA+ICsJcGh5c19h
-ZGRyX3QJCW1lbV9wZXJmX2J1c19hZGRyOw0KPiA+ICsJdTY0CQkJbWVtX3BlcmZfc2l6ZTsNCj4g
-PiArCXUzMgkJCW1lbV93aW5zOw0KPiA+ICAJc3RydWN0IHJlc291cmNlCQkqY2ZnOw0KPiA+ICAJ
-c3RydWN0IHJlc291cmNlCQkqaW87DQo+ID4gIAlzdHJ1Y3QgcmVzb3VyY2UJCSptZW07DQo+ID4g
-KwlzdHJ1Y3QgcmVzb3VyY2UJCSptZW1fcGVyZjsNCj4gPiAgCXN0cnVjdCByZXNvdXJjZQkJKmJ1
-c247DQo+ID4gIAlpbnQJCQlpcnE7DQo+ID4gIAljb25zdCBzdHJ1Y3QgZHdfcGNpZV9ob3N0X29w
-cyAqb3BzOw0KPiA+DQo+IA0KPiBIaSwNCj4gDQo+IEl0IHdvcmtlZCBwZXJmZWN0bHkgaW4gbXkg
-c2V0dXAsIGhvd2V2ZXIgbXkgY3VycmVudCBjb25maWd1cmF0aW9uIGhhdmUNCj4gbm9uLXByZWZl
-dGNoYWJsZSBtZW1vcnkgbGVzcyB0aGFuIDRHYi4gSW4gb3ZlcmFsbCB0aGUgY29kZSBzZWVtcyBn
-b29kLg0KPiANCj4gQWNrZWQtYnk6IEd1c3Rhdm8gUGltZW50ZWwgPGd1c3Rhdm8ucGltZW50ZWxA
-c3lub3BzeXMuY29tPg0KPiANCj4gUmVnYXJkcywNCj4gR3VzdGF2bw0K
+We may get -Wmissing-prototypes warnings when building
+kernel with W=1, it's better to fix them as global function
+signature can be changed and caller who use the old unchanged
+prototypes will be hosed.
+
+This patch fixes most of -Wmissing-prototypes warnings which
+are in the root directory of arch/x86/kernel, not including
+the subdirectories.
+
+These are the warnings fixed in this patch:
+arch/x86/kernel/signal.c:865:17: warning: no previous prototype for ‘sys32_x32_rt_sigreturn’ [-Wmissing-prototypes]
+arch/x86/kernel/signal_compat.c:164:6: warning: no previous prototype for ‘sigaction_compat_abi’ [-Wmissing-prototypes]
+arch/x86/kernel/traps.c:625:46: warning: no previous prototype for ‘sync_regs’ [-Wmissing-prototypes]
+arch/x86/kernel/traps.c:640:24: warning: no previous prototype for ‘fixup_bad_iret’ [-Wmissing-prototypes]
+arch/x86/kernel/traps.c:929:13: warning: no previous prototype for ‘trap_init’ [-Wmissing-prototypes]
+arch/x86/kernel/irq.c:270:28: warning: no previous prototype for ‘smp_x86_platform_ipi’ [-Wmissing-prototypes]
+arch/x86/kernel/irq.c:301:16: warning: no previous prototype for ‘smp_kvm_posted_intr_ipi’ [-Wmissing-prototypes]
+arch/x86/kernel/irq.c:314:16: warning: no previous prototype for ‘smp_kvm_posted_intr_wakeup_ipi’ [-Wmissing-prototypes]
+arch/x86/kernel/irq.c:328:16: warning: no previous prototype for ‘smp_kvm_posted_intr_nested_ipi’ [-Wmissing-prototypes]
+arch/x86/kernel/irq_work.c:16:28: warning: no previous prototype for ‘smp_irq_work_interrupt’ [-Wmissing-prototypes]
+arch/x86/kernel/irqinit.c:79:13: warning: no previous prototype for ‘init_IRQ’ [-Wmissing-prototypes]
+arch/x86/kernel/quirks.c:672:13: warning: no previous prototype for ‘early_platform_quirks’ [-Wmissing-prototypes]
+arch/x86/kernel/tsc.c:1499:15: warning: no previous prototype for ‘calibrate_delay_is_known’ [-Wmissing-prototypes]
+arch/x86/kernel/process.c:653:13: warning: no previous prototype for ‘arch_post_acpi_subsys_init’ [-Wmissing-prototypes]
+arch/x86/kernel/process.c:717:15: warning: no previous prototype for ‘arch_randomize_brk’ [-Wmissing-prototypes]
+arch/x86/kernel/process.c:784:6: warning: no previous prototype for ‘do_arch_prctl_common’ [-Wmissing-prototypes]
+arch/x86/kernel/reboot.c:869:6: warning: no previous prototype for ‘nmi_panic_self_stop’ [-Wmissing-prototypes]
+arch/x86/kernel/smp.c:176:27: warning: no previous prototype for ‘smp_reboot_interrupt’ [-Wmissing-prototypes]
+arch/x86/kernel/smp.c:260:28: warning: no previous prototype for ‘smp_reschedule_interrupt’ [-Wmissing-prototypes]
+arch/x86/kernel/smp.c:281:28: warning: no previous prototype for ‘smp_call_function_interrupt’ [-Wmissing-prototypes]
+arch/x86/kernel/smp.c:291:28: warning: no previous prototype for ‘smp_call_function_single_interrupt’ [-Wmissing-prototypes]
+arch/x86/kernel/ftrace.c:840:6: warning: no previous prototype for ‘arch_ftrace_update_trampoline’ [-Wmissing-prototypes]
+arch/x86/kernel/ftrace.c:934:7: warning: no previous prototype for ‘arch_ftrace_trampoline_func’ [-Wmissing-prototypes]
+arch/x86/kernel/ftrace.c:946:6: warning: no previous prototype for ‘arch_ftrace_trampoline_free’ [-Wmissing-prototypes]
+arch/x86/kernel/crash.c:114:6: warning: no previous prototype for ‘crash_smp_send_stop’ [-Wmissing-prototypes]
+arch/x86/kernel/crash.c:351:5: warning: no previous prototype for ‘crash_setup_memmap_entries’ [-Wmissing-prototypes]
+arch/x86/kernel/crash.c:424:5: warning: no previous prototype for ‘crash_load_segments’ [-Wmissing-prototypes]
+arch/x86/kernel/machine_kexec_64.c:372:7: warning: no previous prototype for ‘arch_kexec_kernel_image_load’ [-Wmissing-prototypes]
+arch/x86/kernel/paravirt-spinlocks.c:12:16: warning: no previous prototype for ‘__native_queued_spin_unlock’ [-Wmissing-prototypes]
+arch/x86/kernel/paravirt-spinlocks.c:18:6: warning: no previous prototype for ‘pv_is_native_spin_unlock’ [-Wmissing-prototypes]
+arch/x86/kernel/paravirt-spinlocks.c:24:16: warning: no previous prototype for ‘__native_vcpu_is_preempted’ [-Wmissing-prototypes]
+arch/x86/kernel/paravirt-spinlocks.c:30:6: warning: no previous prototype for ‘pv_is_native_vcpu_is_preempted’ [-Wmissing-prototypes]
+arch/x86/kernel/kvm.c:258:1: warning: no previous prototype for ‘do_async_page_fault’ [-Wmissing-prototypes]
+arch/x86/kernel/jailhouse.c:200:6: warning: no previous prototype for ‘jailhouse_paravirt’ [-Wmissing-prototypes]
+arch/x86/kernel/check.c:91:13: warning: no previous prototype for ‘setup_bios_corruption_check’ [-Wmissing-prototypes]
+arch/x86/kernel/check.c:139:6: warning: no previous prototype for ‘check_for_bios_corruption’ [-Wmissing-prototypes]
+arch/x86/kernel/devicetree.c:32:13: warning: no previous prototype for ‘early_init_dt_scan_chosen_arch’ [-Wmissing-prototypes]
+arch/x86/kernel/devicetree.c:42:13: warning: no previous prototype for ‘add_dtb’ [-Wmissing-prototypes]
+arch/x86/kernel/devicetree.c:108:6: warning: no previous prototype for ‘x86_of_pci_init’ [-Wmissing-prototypes]
+arch/x86/kernel/devicetree.c:314:13: warning: no previous prototype for ‘x86_dtb_init’ [-Wmissing-prototypes]
+arch/x86/kernel/tracepoint.c:16:5: warning: no previous prototype for ‘trace_pagefault_reg’ [-Wmissing-prototypes]
+arch/x86/kernel/tracepoint.c:22:6: warning: no previous prototype for ‘trace_pagefault_unreg’ [-Wmissing-prototypes]
+arch/x86/kernel/head64.c:113:22: warning: no previous prototype for ‘__startup_64’ [-Wmissing-prototypes]
+arch/x86/kernel/head64.c:262:15: warning: no previous prototype for ‘__startup_secondary_64’ [-Wmissing-prototypes]
+arch/x86/kernel/head64.c:350:12: warning: no previous prototype for ‘early_make_pgtable’ [-Wmissing-prototypes]
+
+Signed-off-by: Yi Wang <wang.yi59@zte.com.cn>
+---
+ arch/x86/include/asm/crash.h       | 1 +
+ arch/x86/include/asm/efi.h         | 2 --
+ arch/x86/include/asm/irq.h         | 7 +++++++
+ arch/x86/include/asm/irq_work.h    | 1 +
+ arch/x86/include/asm/kvm_para.h    | 1 +
+ arch/x86/include/asm/paravirt.h    | 5 +++++
+ arch/x86/include/asm/reboot.h      | 1 +
+ arch/x86/include/asm/setup.h       | 5 +++++
+ arch/x86/include/asm/sighandling.h | 5 +++++
+ arch/x86/include/asm/smp.h         | 6 ++++++
+ arch/x86/include/asm/traps.h       | 4 ++++
+ arch/x86/include/asm/tsc.h         | 1 +
+ arch/x86/kernel/check.c            | 3 ++-
+ arch/x86/kernel/crash.c            | 1 +
+ arch/x86/kernel/devicetree.c       | 1 +
+ arch/x86/kernel/jailhouse.c        | 1 +
+ arch/x86/kernel/process.c          | 3 +++
+ arch/x86/kernel/quirks.c           | 1 +
+ arch/x86/kernel/tracepoint.c       | 1 +
+ include/linux/efi.h                | 2 ++
+ include/linux/ftrace.h             | 3 +++
+ include/linux/kexec.h              | 1 +
+ include/linux/of_fdt.h             | 1 +
+ include/linux/ptrace.h             | 1 +
+ 24 files changed, 55 insertions(+), 3 deletions(-)
+
+diff --git a/arch/x86/include/asm/crash.h b/arch/x86/include/asm/crash.h
+index a7adb2bfb..0acf5ee 100644
+--- a/arch/x86/include/asm/crash.h
++++ b/arch/x86/include/asm/crash.h
+@@ -6,5 +6,6 @@
+ int crash_copy_backup_region(struct kimage *image);
+ int crash_setup_memmap_entries(struct kimage *image,
+ 		struct boot_params *params);
++void crash_smp_send_stop(void);
+ 
+ #endif /* _ASM_X86_CRASH_H */
+diff --git a/arch/x86/include/asm/efi.h b/arch/x86/include/asm/efi.h
+index eea40d5..063f1d4 100644
+--- a/arch/x86/include/asm/efi.h
++++ b/arch/x86/include/asm/efi.h
+@@ -173,8 +173,6 @@ static inline bool efi_runtime_supported(void)
+ extern struct console early_efi_console;
+ extern void parse_efi_setup(u64 phys_addr, u32 data_len);
+ 
+-extern void efifb_setup_from_dmi(struct screen_info *si, const char *opt);
+-
+ #ifdef CONFIG_EFI_MIXED
+ extern void efi_thunk_runtime_setup(void);
+ extern efi_status_t efi_thunk_set_virtual_address_map(
+diff --git a/arch/x86/include/asm/irq.h b/arch/x86/include/asm/irq.h
+index 2395bb7..fbb16e6 100644
+--- a/arch/x86/include/asm/irq.h
++++ b/arch/x86/include/asm/irq.h
+@@ -30,6 +30,9 @@ static inline int irq_canonicalize(int irq)
+ 
+ #ifdef CONFIG_HAVE_KVM
+ extern void kvm_set_posted_intr_wakeup_handler(void (*handler)(void));
++extern __visible void smp_kvm_posted_intr_ipi(struct pt_regs *regs);
++extern __visible void smp_kvm_posted_intr_wakeup_ipi(struct pt_regs *regs);
++extern __visible void smp_kvm_posted_intr_nested_ipi(struct pt_regs *regs);
+ #endif
+ 
+ extern void (*x86_platform_ipi_callback)(void);
+@@ -41,9 +44,13 @@ static inline int irq_canonicalize(int irq)
+ 
+ extern void init_ISA_irqs(void);
+ 
++extern void __init init_IRQ(void);
++
+ #ifdef CONFIG_X86_LOCAL_APIC
+ void arch_trigger_cpumask_backtrace(const struct cpumask *mask,
+ 				    bool exclude_self);
++
++extern __visible void smp_x86_platform_ipi(struct pt_regs *regs);
+ #define arch_trigger_cpumask_backtrace arch_trigger_cpumask_backtrace
+ #endif
+ 
+diff --git a/arch/x86/include/asm/irq_work.h b/arch/x86/include/asm/irq_work.h
+index 800ffce..80b35e3 100644
+--- a/arch/x86/include/asm/irq_work.h
++++ b/arch/x86/include/asm/irq_work.h
+@@ -10,6 +10,7 @@ static inline bool arch_irq_work_has_interrupt(void)
+ 	return boot_cpu_has(X86_FEATURE_APIC);
+ }
+ extern void arch_irq_work_raise(void);
++extern __visible void smp_irq_work_interrupt(struct pt_regs *regs);
+ #else
+ static inline bool arch_irq_work_has_interrupt(void)
+ {
+diff --git a/arch/x86/include/asm/kvm_para.h b/arch/x86/include/asm/kvm_para.h
+index 4c72363..5ed3cf1 100644
+--- a/arch/x86/include/asm/kvm_para.h
++++ b/arch/x86/include/asm/kvm_para.h
+@@ -92,6 +92,7 @@ static inline long kvm_hypercall4(unsigned int nr, unsigned long p1,
+ void kvm_async_pf_task_wake(u32 token);
+ u32 kvm_read_and_reset_pf_reason(void);
+ extern void kvm_disable_steal_time(void);
++void do_async_page_fault(struct pt_regs *regs, unsigned long error_code);
+ 
+ #ifdef CONFIG_PARAVIRT_SPINLOCKS
+ void __init kvm_spinlock_init(void);
+diff --git a/arch/x86/include/asm/paravirt.h b/arch/x86/include/asm/paravirt.h
+index 4bf42f9..a97f28d 100644
+--- a/arch/x86/include/asm/paravirt.h
++++ b/arch/x86/include/asm/paravirt.h
+@@ -26,6 +26,11 @@ static inline unsigned long long paravirt_sched_clock(void)
+ extern struct static_key paravirt_steal_enabled;
+ extern struct static_key paravirt_steal_rq_enabled;
+ 
++__visible void __native_queued_spin_unlock(struct qspinlock *lock);
++bool pv_is_native_spin_unlock(void);
++__visible bool __native_vcpu_is_preempted(long cpu);
++bool pv_is_native_vcpu_is_preempted(void);
++
+ static inline u64 paravirt_steal_clock(int cpu)
+ {
+ 	return PVOP_CALL1(u64, time.steal_clock, cpu);
+diff --git a/arch/x86/include/asm/reboot.h b/arch/x86/include/asm/reboot.h
+index a671a11..04c17be 100644
+--- a/arch/x86/include/asm/reboot.h
++++ b/arch/x86/include/asm/reboot.h
+@@ -26,6 +26,7 @@ struct machine_ops {
+ #define MRR_APM		1
+ 
+ typedef void (*nmi_shootdown_cb)(int, struct pt_regs*);
++void nmi_panic_self_stop(struct pt_regs *regs);
+ void nmi_shootdown_cpus(nmi_shootdown_cb callback);
+ void run_crash_ipi_callback(struct pt_regs *regs);
+ 
+diff --git a/arch/x86/include/asm/setup.h b/arch/x86/include/asm/setup.h
+index ae13bc9..d85f5fa 100644
+--- a/arch/x86/include/asm/setup.h
++++ b/arch/x86/include/asm/setup.h
+@@ -26,6 +26,11 @@
+ #define OLD_CL_ADDRESS		0x020	/* Relative to real mode data */
+ #define NEW_CL_POINTER		0x228	/* Relative to real mode data */
+ 
++
++unsigned long __startup_64(unsigned long physaddr, struct boot_params *bp);
++unsigned long __startup_secondary_64(void);
++int __init early_make_pgtable(unsigned long address);
++
+ #ifndef __ASSEMBLY__
+ #include <asm/bootparam.h>
+ #include <asm/x86_init.h>
+diff --git a/arch/x86/include/asm/sighandling.h b/arch/x86/include/asm/sighandling.h
+index bd26834..2fcbd6f 100644
+--- a/arch/x86/include/asm/sighandling.h
++++ b/arch/x86/include/asm/sighandling.h
+@@ -17,4 +17,9 @@
+ int setup_sigcontext(struct sigcontext __user *sc, void __user *fpstate,
+ 		     struct pt_regs *regs, unsigned long mask);
+ 
++
++#ifdef CONFIG_X86_X32_ABI
++asmlinkage long sys32_x32_rt_sigreturn(void);
++#endif
++
+ #endif /* _ASM_X86_SIGHANDLING_H */
+diff --git a/arch/x86/include/asm/smp.h b/arch/x86/include/asm/smp.h
+index 547c4fe..2e95b6c 100644
+--- a/arch/x86/include/asm/smp.h
++++ b/arch/x86/include/asm/smp.h
+@@ -148,6 +148,12 @@ static inline void arch_send_call_function_ipi_mask(const struct cpumask *mask)
+ 
+ void smp_store_boot_cpu_info(void);
+ void smp_store_cpu_info(int id);
++
++asmlinkage __visible void smp_reboot_interrupt(void);
++__visible void smp_reschedule_interrupt(struct pt_regs *regs);
++__visible void smp_call_function_interrupt(struct pt_regs *regs);
++__visible void smp_call_function_single_interrupt(struct pt_regs *r);
++
+ #define cpu_physical_id(cpu)	per_cpu(x86_cpu_to_apicid, cpu)
+ #define cpu_acpi_id(cpu)	per_cpu(x86_cpu_to_acpiid, cpu)
+ 
+diff --git a/arch/x86/include/asm/traps.h b/arch/x86/include/asm/traps.h
+index 7a4db72..c950d3d 100644
+--- a/arch/x86/include/asm/traps.h
++++ b/arch/x86/include/asm/traps.h
+@@ -75,6 +75,10 @@
+ dotraplinkage void do_stack_segment(struct pt_regs *regs, long error_code);
+ #ifdef CONFIG_X86_64
+ dotraplinkage void do_double_fault(struct pt_regs *regs, long error_code);
++asmlinkage __visible notrace struct pt_regs *sync_regs(struct pt_regs *eregs);
++asmlinkage __visible notrace
++struct bad_iret_stack *fixup_bad_iret(struct bad_iret_stack *s);
++void __init trap_init(void);
+ #endif
+ dotraplinkage void do_general_protection(struct pt_regs *regs, long error_code);
+ dotraplinkage void do_page_fault(struct pt_regs *regs, unsigned long error_code);
+diff --git a/arch/x86/include/asm/tsc.h b/arch/x86/include/asm/tsc.h
+index eb5bbfe..8a0c25c 100644
+--- a/arch/x86/include/asm/tsc.h
++++ b/arch/x86/include/asm/tsc.h
+@@ -35,6 +35,7 @@ static inline cycles_t get_cycles(void)
+ 
+ extern void tsc_early_init(void);
+ extern void tsc_init(void);
++extern unsigned long calibrate_delay_is_known(void);
+ extern void mark_tsc_unstable(char *reason);
+ extern int unsynchronized_tsc(void);
+ extern int check_tsc_unstable(void);
+diff --git a/arch/x86/kernel/check.c b/arch/x86/kernel/check.c
+index 1979a76..5136e68 100644
+--- a/arch/x86/kernel/check.c
++++ b/arch/x86/kernel/check.c
+@@ -9,6 +9,7 @@
+ #include <linux/memblock.h>
+ 
+ #include <asm/proto.h>
++#include <asm/setup.h>
+ 
+ /*
+  * Some BIOSes seem to corrupt the low 64k of memory during events
+@@ -136,7 +137,7 @@ void __init setup_bios_corruption_check(void)
+ }
+ 
+ 
+-void check_for_bios_corruption(void)
++static void check_for_bios_corruption(void)
+ {
+ 	int i;
+ 	int corruption = 0;
+diff --git a/arch/x86/kernel/crash.c b/arch/x86/kernel/crash.c
+index f631a3f..c8b07d8 100644
+--- a/arch/x86/kernel/crash.c
++++ b/arch/x86/kernel/crash.c
+@@ -37,6 +37,7 @@
+ #include <asm/reboot.h>
+ #include <asm/virtext.h>
+ #include <asm/intel_pt.h>
++#include <asm/crash.h>
+ 
+ /* Used while preparing memory map entries for second kernel */
+ struct crash_memmap_data {
+diff --git a/arch/x86/kernel/devicetree.c b/arch/x86/kernel/devicetree.c
+index 7299dcb..8d85e00 100644
+--- a/arch/x86/kernel/devicetree.c
++++ b/arch/x86/kernel/devicetree.c
+@@ -23,6 +23,7 @@
+ #include <asm/pci_x86.h>
+ #include <asm/setup.h>
+ #include <asm/i8259.h>
++#include <asm/prom.h>
+ 
+ __initdata u64 initial_dtb;
+ char __initdata cmd_line[COMMAND_LINE_SIZE];
+diff --git a/arch/x86/kernel/jailhouse.c b/arch/x86/kernel/jailhouse.c
+index 108c48d..1b2ee55 100644
+--- a/arch/x86/kernel/jailhouse.c
++++ b/arch/x86/kernel/jailhouse.c
+@@ -19,6 +19,7 @@
+ #include <asm/pci_x86.h>
+ #include <asm/reboot.h>
+ #include <asm/setup.h>
++#include <asm/jailhouse_para.h>
+ 
+ static __initdata struct jailhouse_setup_data setup_data;
+ static unsigned int precalibrated_tsc_khz;
+diff --git a/arch/x86/kernel/process.c b/arch/x86/kernel/process.c
+index c93fcfd..8a33d4a 100644
+--- a/arch/x86/kernel/process.c
++++ b/arch/x86/kernel/process.c
+@@ -22,6 +22,8 @@
+ #include <linux/utsname.h>
+ #include <linux/stackprotector.h>
+ #include <linux/cpuidle.h>
++#include <linux/acpi.h>
++#include <linux/elf-randomize.h>
+ #include <trace/events/power.h>
+ #include <linux/hw_breakpoint.h>
+ #include <asm/cpu.h>
+@@ -39,6 +41,7 @@
+ #include <asm/desc.h>
+ #include <asm/prctl.h>
+ #include <asm/spec-ctrl.h>
++#include <asm/proto.h>
+ 
+ /*
+  * per-CPU TSS segments. Threads are completely 'soft' on Linux,
+diff --git a/arch/x86/kernel/quirks.c b/arch/x86/kernel/quirks.c
+index 736348e..8451f38 100644
+--- a/arch/x86/kernel/quirks.c
++++ b/arch/x86/kernel/quirks.c
+@@ -7,6 +7,7 @@
+ #include <linux/irq.h>
+ 
+ #include <asm/hpet.h>
++#include <asm/setup.h>
+ 
+ #if defined(CONFIG_X86_IO_APIC) && defined(CONFIG_SMP) && defined(CONFIG_PCI)
+ 
+diff --git a/arch/x86/kernel/tracepoint.c b/arch/x86/kernel/tracepoint.c
+index 5bd30c4..2e85f4d 100644
+--- a/arch/x86/kernel/tracepoint.c
++++ b/arch/x86/kernel/tracepoint.c
+@@ -10,6 +10,7 @@
+ 
+ #include <asm/hw_irq.h>
+ #include <asm/desc.h>
++#include <asm/trace/exceptions.h>
+ 
+ DEFINE_STATIC_KEY_FALSE(trace_pagefault_key);
+ 
+diff --git a/include/linux/efi.h b/include/linux/efi.h
+index 845174e..890c4cb 100644
+--- a/include/linux/efi.h
++++ b/include/linux/efi.h
+@@ -1053,6 +1053,8 @@ extern void efi_initialize_iomem_resources(struct resource *code_resource,
+ extern int efi_reboot_quirk_mode;
+ extern bool efi_poweroff_required(void);
+ 
++extern void efifb_setup_from_dmi(struct screen_info *si, const char *opt);
++
+ #ifdef CONFIG_EFI_FAKE_MEMMAP
+ extern void __init efi_fake_memmap(void);
+ #else
+diff --git a/include/linux/ftrace.h b/include/linux/ftrace.h
+index a397907..182d669 100644
+--- a/include/linux/ftrace.h
++++ b/include/linux/ftrace.h
+@@ -420,6 +420,9 @@ enum {
+ };
+ 
+ void arch_ftrace_update_code(int command);
++void arch_ftrace_update_trampoline(struct ftrace_ops *ops);
++void *arch_ftrace_trampoline_func(struct ftrace_ops *ops, struct dyn_ftrace *rec);
++void arch_ftrace_trampoline_free(struct ftrace_ops *ops);
+ 
+ struct ftrace_rec_iter;
+ 
+diff --git a/include/linux/kexec.h b/include/linux/kexec.h
+index 9e4e638..53efeda 100644
+--- a/include/linux/kexec.h
++++ b/include/linux/kexec.h
+@@ -174,6 +174,7 @@ int kexec_purgatory_get_set_symbol(struct kimage *image, const char *name,
+ 				   bool get_value);
+ void *kexec_purgatory_get_symbol_addr(struct kimage *image, const char *name);
+ 
++void * __weak arch_kexec_kernel_image_load(struct kimage *image);
+ int __weak arch_kexec_apply_relocations_add(struct purgatory_info *pi,
+ 					    Elf_Shdr *section,
+ 					    const Elf_Shdr *relsec,
+diff --git a/include/linux/of_fdt.h b/include/linux/of_fdt.h
+index b9cd9eb..a713e5d 100644
+--- a/include/linux/of_fdt.h
++++ b/include/linux/of_fdt.h
+@@ -76,6 +76,7 @@ extern int early_init_dt_scan_memory(unsigned long node, const char *uname,
+ extern int early_init_dt_scan_chosen_stdout(void);
+ extern void early_init_fdt_scan_reserved_mem(void);
+ extern void early_init_fdt_reserve_self(void);
++extern void __init early_init_dt_scan_chosen_arch(unsigned long node);
+ extern void early_init_dt_add_memory_arch(u64 base, u64 size);
+ extern int early_init_dt_mark_hotplug_memory_arch(u64 base, u64 size);
+ extern int early_init_dt_reserve_memory_arch(phys_addr_t base, phys_addr_t size,
+diff --git a/include/linux/ptrace.h b/include/linux/ptrace.h
+index 6c2ffed..a37d7c0 100644
+--- a/include/linux/ptrace.h
++++ b/include/linux/ptrace.h
+@@ -428,4 +428,5 @@ extern int task_current_syscall(struct task_struct *target, long *callno,
+ 				unsigned long args[6], unsigned int maxargs,
+ 				unsigned long *sp, unsigned long *pc);
+ 
++extern void sigaction_compat_abi(struct k_sigaction *act, struct k_sigaction *oact);
+ #endif
+-- 
+1.8.3.1
+
