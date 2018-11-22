@@ -1,4 +1,4 @@
-Return-Path: <SRS0=MCOJ=OA=vger.kernel.org=linux-pci-owner@kernel.org>
+Return-Path: <SRS0=lMXa=OB=vger.kernel.org=linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
@@ -7,305 +7,258 @@ X-Spam-Status: No, score=-7.1 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
 	SIGNED_OFF_BY,SPF_PASS,URIBL_BLOCKED autolearn=ham autolearn_force=no
 	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 96DB2C43441
-	for <linux-pci@archiver.kernel.org>; Wed, 21 Nov 2018 17:40:40 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 7EBECC43441
+	for <linux-pci@archiver.kernel.org>; Thu, 22 Nov 2018 01:03:23 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 50AAC214F1
-	for <linux-pci@archiver.kernel.org>; Wed, 21 Nov 2018 17:40:40 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 1DDBD206B2
+	for <linux-pci@archiver.kernel.org>; Thu, 22 Nov 2018 01:03:22 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=synopsys.com header.i=@synopsys.com header.b="agH6kY6X"
-DMARC-Filter: OpenDMARC Filter v1.3.2 mail.kernel.org 50AAC214F1
-Authentication-Results: mail.kernel.org; dmarc=fail (p=none dis=none) header.from=synopsys.com
+	dkim=pass (1024-bit key) header.d=nxp.com header.i=@nxp.com header.b="xHWhhhZ0"
+DMARC-Filter: OpenDMARC Filter v1.3.2 mail.kernel.org 1DDBD206B2
+Authentication-Results: mail.kernel.org; dmarc=fail (p=none dis=none) header.from=nxp.com
 Authentication-Results: mail.kernel.org; spf=none smtp.mailfrom=linux-pci-owner@vger.kernel.org
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1730156AbeKVEP6 (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Wed, 21 Nov 2018 23:15:58 -0500
-Received: from smtprelay4.synopsys.com ([198.182.47.9]:57092 "EHLO
-        smtprelay.synopsys.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726671AbeKVEP6 (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Wed, 21 Nov 2018 23:15:58 -0500
-Received: from mailhost.synopsys.com (mailhost3.synopsys.com [10.12.238.238])
-        by smtprelay.synopsys.com (Postfix) with ESMTP id AE21024E1527;
-        Wed, 21 Nov 2018 09:40:38 -0800 (PST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=synopsys.com; s=mail;
-        t=1542822038; bh=dpLA2lJ28MFGNPb8NSvGrVLvOmA4I1aXfSg3goaEEJU=;
-        h=Subject:To:CC:References:From:Date:In-Reply-To:From;
-        b=agH6kY6X+Gc13nibiEeAk5ylJJZExCPlosU193WUebYF/v9e4JYDoUR1jmXVcUga1
-         MHRWV/HmiTiBEVtklpOz50PcpnL7HfrsEjHYMtU4p9ynM3Ehr3Shl266eX/1/1uYbs
-         8I6ylGgofhcfZhn9W8Njg2CiObDePBPDC4iVnV4SSkVDYEoERGnDyuM80LSjwHG9ts
-         Aztg1tdOZT/rsFfZB7Dnxj+WLUhvVKzZ9qgho76LFYrXfSOtuyubC7Y69MfUG3FYIm
-         uzBuwUWH+ToCTnfRrblkcUxgSP6C1zLIgAWBgsWkqRqVOe3MKiQ2oERd6Wcn5WGk4D
-         xCo3PEK2TC37g==
-Received: from US01WXQAHTC1.internal.synopsys.com (us01wxqahtc1.internal.synopsys.com [10.12.238.230])
-        by mailhost.synopsys.com (Postfix) with ESMTP id 655E93B32;
-        Wed, 21 Nov 2018 09:40:38 -0800 (PST)
-Received: from DE02WEHTCA.internal.synopsys.com (10.225.19.92) by
- US01WXQAHTC1.internal.synopsys.com (10.12.238.230) with Microsoft SMTP Server
- (TLS) id 14.3.408.0; Wed, 21 Nov 2018 09:40:38 -0800
-Received: from DE02WEHTCB.internal.synopsys.com (10.225.19.94) by
- DE02WEHTCA.internal.synopsys.com (10.225.19.92) with Microsoft SMTP Server
- (TLS) id 14.3.408.0; Wed, 21 Nov 2018 18:40:36 +0100
-Received: from [10.107.25.131] (10.107.25.131) by
- DE02WEHTCB.internal.synopsys.com (10.225.19.80) with Microsoft SMTP Server
- (TLS) id 14.3.408.0; Wed, 21 Nov 2018 18:40:35 +0100
-Subject: Re: [PATCHv2 4/4] PCI: dwc: add prefetchable memory range support
-To:     "Z.q. Hou" <zhiqiang.hou@nxp.com>,
+        id S1732010AbeKVLkN (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Thu, 22 Nov 2018 06:40:13 -0500
+Received: from mail-eopbgr150084.outbound.protection.outlook.com ([40.107.15.84]:31107
+        "EHLO EUR01-DB5-obe.outbound.protection.outlook.com"
+        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+        id S1730060AbeKVLkN (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Thu, 22 Nov 2018 06:40:13 -0500
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=nxp.com; s=selector1;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
+ bh=hKhvoXIOFEwg9q3HMYApTBr/Yvb2z57xk5Oc30VyNeQ=;
+ b=xHWhhhZ0sfO+rYRJdPQBf83+ihZHOIOLuNiyX3GcNMgtb43m8lC94x2/1CP4R/j5Jx6HBqt4tZySVLE7LYN5SOjAYsUKT419JYBDL5rpP70j0vKHjkmuzD2UGLJZZ86u+5VyXS/vBJSux0+BXdZ0Lca2g3a5yN1i/4vutzrBfYs=
+Received: from VI1PR04MB5792.eurprd04.prod.outlook.com (20.178.204.10) by
+ VI1PR04MB3037.eurprd04.prod.outlook.com (10.170.228.147) with Microsoft SMTP
+ Server (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
+ 15.20.1339.23; Thu, 22 Nov 2018 01:03:15 +0000
+Received: from VI1PR04MB5792.eurprd04.prod.outlook.com
+ ([fe80::bd66:413b:c4dd:3fa1]) by VI1PR04MB5792.eurprd04.prod.outlook.com
+ ([fe80::bd66:413b:c4dd:3fa1%3]) with mapi id 15.20.1339.027; Thu, 22 Nov 2018
+ 01:03:15 +0000
+From:   "Z.q. Hou" <zhiqiang.hou@nxp.com>
+To:     Gustavo Pimentel <gustavo.pimentel@synopsys.com>,
         "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
         "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
         "bhelgaas@google.com" <bhelgaas@google.com>,
         "lorenzo.pieralisi@arm.com" <lorenzo.pieralisi@arm.com>,
-        "jingoohan1@gmail.com" <jingoohan1@gmail.com>,
-        "gustavo.pimentel@synopsys.com" <gustavo.pimentel@synopsys.com>
+        "jingoohan1@gmail.com" <jingoohan1@gmail.com>
 CC:     Roy Zang <roy.zang@nxp.com>, Mingkai Hu <mingkai.hu@nxp.com>,
         "M.h. Lian" <minghuan.lian@nxp.com>
+Subject: RE: [PATCHv2 4/4] PCI: dwc: add prefetchable memory range support
+Thread-Topic: [PATCHv2 4/4] PCI: dwc: add prefetchable memory range support
+Thread-Index: AQHUdoHzO92qDxmIZkykN3HwHZxeDqValHmAgAB8iCA=
+Date:   Thu, 22 Nov 2018 01:03:15 +0000
+Message-ID: <VI1PR04MB5792EE29FF55E98CD43FD4C184DB0@VI1PR04MB5792.eurprd04.prod.outlook.com>
 References: <20181107100854.28389-1-Zhiqiang.Hou@nxp.com>
  <20181107100854.28389-5-Zhiqiang.Hou@nxp.com>
-From:   Gustavo Pimentel <gustavo.pimentel@synopsys.com>
-Message-ID: <b878c46f-4f1f-2ece-6c91-a62d05b6ba8d@synopsys.com>
-Date:   Wed, 21 Nov 2018 17:36:33 +0000
-User-Agent: Mozilla/5.0 (Windows NT 10.0; WOW64; rv:52.0) Gecko/20100101
- Thunderbird/52.9.1
-MIME-Version: 1.0
-In-Reply-To: <20181107100854.28389-5-Zhiqiang.Hou@nxp.com>
-Content-Type: text/plain; charset="utf-8"
+ <b878c46f-4f1f-2ece-6c91-a62d05b6ba8d@synopsys.com>
+In-Reply-To: <b878c46f-4f1f-2ece-6c91-a62d05b6ba8d@synopsys.com>
+Accept-Language: zh-CN, en-US
 Content-Language: en-US
-Content-Transfer-Encoding: 7bit
-X-Originating-IP: [10.107.25.131]
+X-MS-Has-Attach: 
+X-MS-TNEF-Correlator: 
+authentication-results: spf=none (sender IP is )
+ smtp.mailfrom=zhiqiang.hou@nxp.com; 
+x-originating-ip: [119.31.174.73]
+x-ms-publictraffictype: Email
+x-microsoft-exchange-diagnostics: 1;VI1PR04MB3037;6:BOuZeGkIG/n677t/jWTYW0pYvijrvKCQf7yDH34g8r696lihVSQtEn2WDGwKux6GostXl3t8sdIJr+5ouoKhqI2muCDwJ0WwKx7e7es81Q+oJ8zl69pBPlZjtBkmzG33pJOCR0BuUBdP7Tmq85OVF52HgBakSrlD4FlH5LLSTL0XqjswkmJUPlJGfeUxT0rH6oz5LbIjbRQ1vw6TfRupx4txhka2hz7P/6kWNY2K4cXRV0ANbiEEAk6+UHiXnM+/0xXy3x53Zuq1CFMT9nB8nFGNV+du5fpcIvXhGstYYee/Pbm6jFrhynmnkxqcCJCaQ/CsiT1j2QsXXAyBnWydaXS7kJZZfR4ExOC5+3vscCbkGGCup6oRlOkg1MJqVxpe5KKoKtEJJQEHMNL7ViC7MIxjxiGC3SZXXOFtWHD5CslrYeeY509eHs95g8c6CnRjj/tKjHUP04EfUWLlJ2VIQg==;5:XSNk0jwQRFHR1IcONhEt0VlmRDLy4N7uQ/KRyHBXoHAqH92eqbD5G7ZEuuCvO9+s6NxuTuaR3SF93vuFkn8dAD2zAJ9sTlYUbnlEpAsKiDZwDCtZzxOnXafNRPScZ6ipBs5NQL9cTcOvLjNCRG66IWmROdmg0WFOS+LVSiX5Q/k=;7:09ial4xcOQ8FlPWDWJenol7hDVhnuIetv/J2TnGbyjs/sFrwcNebb71fqAeVWTVJGhB1CDmzZPQqHZulU5471oOGlQ0kOg+0f8n+LHqc8QANcnuXrYN7FkijqROa3wr1v3/etxoEAkNR0u1TI0JJZA==
+x-ms-exchange-antispam-srfa-diagnostics: SOS;
+x-ms-office365-filtering-correlation-id: ef9952fc-8779-41b8-a771-08d6501648a9
+x-ms-office365-filtering-ht: Tenant
+x-microsoft-antispam: BCL:0;PCL:0;RULEID:(2390098)(7020095)(4652040)(8989299)(5600074)(711020)(4618075)(4534185)(4627221)(201703031133081)(201702281549075)(8990200)(2017052603328)(7153060)(7193020);SRVR:VI1PR04MB3037;
+x-ms-traffictypediagnostic: VI1PR04MB3037:
+x-microsoft-antispam-prvs: <VI1PR04MB3037816993858E8AC45C3FBC84DB0@VI1PR04MB3037.eurprd04.prod.outlook.com>
+x-ms-exchange-senderadcheck: 1
+x-exchange-antispam-report-cfa-test: BCL:0;PCL:0;RULEID:(8211001083)(6040522)(2401047)(8121501046)(5005006)(3231442)(944501410)(52105112)(10201501046)(93006095)(93001095)(3002001)(6055026)(148016)(149066)(150057)(6041310)(20161123560045)(201703131423095)(201702281528075)(20161123555045)(201703061421075)(201703061406153)(20161123562045)(20161123564045)(20161123558120)(201708071742011)(7699051)(76991095);SRVR:VI1PR04MB3037;BCL:0;PCL:0;RULEID:;SRVR:VI1PR04MB3037;
+x-forefront-prvs: 0864A36BBF
+x-forefront-antispam-report: SFV:NSPM;SFS:(10009020)(136003)(366004)(39860400002)(376002)(396003)(346002)(189003)(199004)(13464003)(39060400002)(66066001)(256004)(76176011)(105586002)(11346002)(2201001)(14444005)(486006)(99286004)(71190400001)(71200400001)(86362001)(4326008)(6506007)(68736007)(53546011)(8676002)(81166006)(81156014)(229853002)(2501003)(8936002)(26005)(97736004)(25786009)(102836004)(2900100001)(53936002)(478600001)(186003)(74316002)(54906003)(110136005)(305945005)(55016002)(9686003)(5660300001)(446003)(7696005)(2906002)(476003)(106356001)(7736002)(6246003)(3846002)(316002)(6116002)(6436002)(14454004)(33656002);DIR:OUT;SFP:1101;SCL:1;SRVR:VI1PR04MB3037;H:VI1PR04MB5792.eurprd04.prod.outlook.com;FPR:;SPF:None;LANG:en;PTR:InfoNoRecords;MX:1;A:1;
+received-spf: None (protection.outlook.com: nxp.com does not designate
+ permitted sender hosts)
+x-microsoft-antispam-message-info: 8LlZXmg/UD7tH1KpVqVdaVbQBfbkse58B/mpgnT/vEl9nsc9J/I8uP+jhxEAA/odvYPoFt/BKoHJkPmHnakOys0kIsWsTKJn8kdStZV8iB7qu0AyqbuM3wSI/ww3xvQmQlsgo+i+sDcJ2Q4rrVA5Nsu6a2HKAc6oxU0QsujnLNhAoSbf45x/6LkEt88xnpEV6C4n9mk23yhkKKlu5jxtL9EY8mzoPCrkbaLamNhOrAlVhs2MZJATyDEoR8IcEg1KnVc8ebv9aTVsArqRuYSxKennKOMmd39S/w3gr0JiTwmOWBSqa95+dj6c4HcxrytMjjG71Iq1zPaD7oXuCgtqVI2ez5svkdm2b+3tQqD02ts=
+spamdiagnosticoutput: 1:99
+spamdiagnosticmetadata: NSPM
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: base64
+MIME-Version: 1.0
+X-OriginatorOrg: nxp.com
+X-MS-Exchange-CrossTenant-Network-Message-Id: ef9952fc-8779-41b8-a771-08d6501648a9
+X-MS-Exchange-CrossTenant-originalarrivaltime: 22 Nov 2018 01:03:15.6834
+ (UTC)
+X-MS-Exchange-CrossTenant-fromentityheader: Hosted
+X-MS-Exchange-CrossTenant-id: 686ea1d3-bc2b-4c6f-a92c-d99c5c301635
+X-MS-Exchange-Transport-CrossTenantHeadersStamped: VI1PR04MB3037
 Sender: linux-pci-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-On 07/11/2018 10:09, Z.q. Hou wrote:
-> From: Hou Zhiqiang <Zhiqiang.Hou@nxp.com>
-> 
-> The current code only support non-prefetchable memory range,
-> as the non-prefetchable memory range must not be greater than
-> 4GiB, one viewport can cover it, which supports upto 4GiB.
-> 
-> To support prefetchable memory range, which is upto 64-bit
-> memory space and can be greater than 4GiB, so we need multiple
-> viewports. And added separate vars to store prefetchable memory
-> range info to prevent overriding the non-prefetchable memory
-> range info.
-> 
-> And this patch explicitly assigned the last (if there are only
-> 2 viewports) or last 2 viewports for CFG and I/O windows and the
-> rests for MEM windows.
-> 
-> Signed-off-by: Hou Zhiqiang <Zhiqiang.Hou@nxp.com>
-> ---
-> V2:
->  - Reworded the subject and commit description.
->  - Fix the prefetchable memory range overriding non-perfetchable
->    memory range issue by adding vars to store prefetchable memory
->    range info.
-> 
->  .../pci/controller/dwc/pcie-designware-host.c | 107 ++++++++++++++----
->  drivers/pci/controller/dwc/pcie-designware.h  |   7 ++
->  2 files changed, 95 insertions(+), 19 deletions(-)
-> 
-> diff --git a/drivers/pci/controller/dwc/pcie-designware-host.c b/drivers/pci/controller/dwc/pcie-designware-host.c
-> index ecacce016489..328aa40a6609 100644
-> --- a/drivers/pci/controller/dwc/pcie-designware-host.c
-> +++ b/drivers/pci/controller/dwc/pcie-designware-host.c
-> @@ -346,6 +346,35 @@ int dw_pcie_host_init(struct pcie_port *pp)
->  		dev_err(dev, "Missing *config* reg space\n");
->  	}
->  
-> +	/*
-> +	 * If vendor's platform driver has set the num_viewport and it is
-> +	 * not less than 2, skip getting the num_viewport from DT here.
-> +	 */
-> +	if (pci->num_viewport < 2) {
-> +		ret = of_property_read_u32(np, "num-viewport",
-> +					   &pci->num_viewport);
-> +		if (ret || pci->num_viewport < 2)
-> +			pci->num_viewport = 2;
-> +	}
-> +
-> +	/*
-> +	 * if there are only 2 viewports, assign the last viewport for
-> +	 * both CFG and IO window, otherwise assign the last 2 viewport
-> +	 * for CFG and IO window specific. And the rest viewports are
-> +	 * assigned to MEM windows.
-> +	 */
-> +	if (pci->num_viewport == 2) {
-> +		pp->cfg_idx = pp->io_idx = PCIE_ATU_REGION_INDEX1;
-> +		pp->mem_wins = 1;
-> +	} else {
-> +		pp->cfg_idx = pci->num_viewport - 1;
-> +		pp->io_idx = pci->num_viewport - 2;
-> +		pp->mem_wins = pci->num_viewport - 2;
-> +	}
-> +
-> +	dev_dbg(dev, "CFG win id: %d, I/O win id: %d, Total MEM win: %d\n",
-> +		pp->cfg_idx, pp->io_idx, pp->mem_wins);
-> +
->  	bridge = pci_alloc_host_bridge(0);
->  	if (!bridge)
->  		return -ENOMEM;
-> @@ -377,10 +406,20 @@ int dw_pcie_host_init(struct pcie_port *pp)
->  			}
->  			break;
->  		case IORESOURCE_MEM:
-> -			pp->mem = win->res;
-> -			pp->mem->name = "MEM";
-> -			pp->mem_size = resource_size(pp->mem);
-> -			pp->mem_bus_addr = pp->mem->start - win->offset;
-> +			if (win->res->flags & IORESOURCE_PREFETCH) {
-> +				pp->mem_perf = win->res;
-> +				pp->mem_perf->name = "MEM perf";
-> +				pp->mem_perf_size = resource_size(pp->mem_perf);
-> +				pp->mem_perf_bus_addr = pp->mem_perf->start -
-> +							win->offset;
-> +				pp->mem_perf_base = pp->mem_perf->start;
-> +			} else {
-> +				pp->mem = win->res;
-> +				pp->mem->name = "MEM";
-> +				pp->mem_size = resource_size(pp->mem);
-> +				pp->mem_bus_addr = pp->mem->start - win->offset;
-> +				pp->mem_base = pp->mem->start;
-> +			}
->  			break;
->  		case 0:
->  			pp->cfg = win->res;
-> @@ -406,8 +445,6 @@ int dw_pcie_host_init(struct pcie_port *pp)
->  		}
->  	}
->  
-> -	pp->mem_base = pp->mem->start;
-> -
->  	if (!pp->va_cfg0_base) {
->  		pp->va_cfg0_base = devm_pci_remap_cfgspace(dev,
->  					pp->cfg0_base, pp->cfg0_size);
-> @@ -534,12 +571,12 @@ static int dw_pcie_rd_other_conf(struct pcie_port *pp, struct pci_bus *bus,
->  		va_cfg_base = pp->va_cfg1_base;
->  	}
->  
-> -	dw_pcie_prog_outbound_atu(pci, PCIE_ATU_REGION_INDEX1,
-> +	dw_pcie_prog_outbound_atu(pci, pp->cfg_idx,
->  				  type, cpu_addr,
->  				  busdev, cfg_size);
->  	ret = dw_pcie_read(va_cfg_base + where, size, val);
-> -	if (pci->num_viewport <= 2)
-> -		dw_pcie_prog_outbound_atu(pci, PCIE_ATU_REGION_INDEX1,
-> +	if (pp->cfg_idx == pp->io_idx)
-> +		dw_pcie_prog_outbound_atu(pci, pp->io_idx,
->  					  PCIE_ATU_TYPE_IO, pp->io_base,
->  					  pp->io_bus_addr, pp->io_size);
->  
-> @@ -573,12 +610,12 @@ static int dw_pcie_wr_other_conf(struct pcie_port *pp, struct pci_bus *bus,
->  		va_cfg_base = pp->va_cfg1_base;
->  	}
->  
-> -	dw_pcie_prog_outbound_atu(pci, PCIE_ATU_REGION_INDEX1,
-> +	dw_pcie_prog_outbound_atu(pci, pp->cfg_idx,
->  				  type, cpu_addr,
->  				  busdev, cfg_size);
->  	ret = dw_pcie_write(va_cfg_base + where, size, val);
-> -	if (pci->num_viewport <= 2)
-> -		dw_pcie_prog_outbound_atu(pci, PCIE_ATU_REGION_INDEX1,
-> +	if (pp->cfg_idx == pp->io_idx)
-> +		dw_pcie_prog_outbound_atu(pci, pp->io_idx,
->  					  PCIE_ATU_TYPE_IO, pp->io_base,
->  					  pp->io_bus_addr, pp->io_size);
->  
-> @@ -652,6 +689,9 @@ static u8 dw_pcie_iatu_unroll_enabled(struct dw_pcie *pci)
->  void dw_pcie_setup_rc(struct pcie_port *pp)
->  {
->  	u32 val, ctrl, num_ctrls;
-> +	u64 remain_size, base, win_size;
-> +	phys_addr_t bus_addr;
-> +	int i;
->  	struct dw_pcie *pci = to_dw_pcie_from_pp(pp);
->  
->  	dw_pcie_setup(pci);
-> @@ -700,13 +740,42 @@ void dw_pcie_setup_rc(struct pcie_port *pp)
->  		dev_dbg(pci->dev, "iATU unroll: %s\n",
->  			pci->iatu_unroll_enabled ? "enabled" : "disabled");
->  
-> -		dw_pcie_prog_outbound_atu(pci, PCIE_ATU_REGION_INDEX0,
-> -					  PCIE_ATU_TYPE_MEM, pp->mem_base,
-> -					  pp->mem_bus_addr, pp->mem_size);
-> -		if (pci->num_viewport > 2)
-> -			dw_pcie_prog_outbound_atu(pci, PCIE_ATU_REGION_INDEX2,
-> -						  PCIE_ATU_TYPE_IO, pp->io_base,
-> -						  pp->io_bus_addr, pp->io_size);
-> +		/*
-> +		 * The maximum region size is 4 GB, and a region
-> +		 * must not cross a 4 GB boundary.
-> +		 */
-> +		win_size = SZ_4G - (pp->mem_base & (SZ_4G - 1));
-> +		win_size = min(win_size, pp->mem_size);
-> +		dw_pcie_prog_outbound_atu(pci, 0, PCIE_ATU_TYPE_MEM,
-> +					  pp->mem_base, pp->mem_bus_addr,
-> +					  win_size);
-> +		dev_dbg(pci->dev,
-> +			"iATU: non-pref MEM: win = %d: base = %llx, bus_addr = %pa, size = %llx\n",
-> +			0, pp->mem_base, &pp->mem_bus_addr, win_size);
-> +
-> +		/* Prefetchable range can be 64bit space */
-> +		remain_size = pp->mem_perf_size;
-> +		base = pp->mem_perf_base;
-> +		bus_addr = pp->mem_perf_bus_addr;
-> +		for (i = 1; remain_size > 0 && i < pp->mem_wins; i++) {
-> +			win_size = SZ_4G - (base & (SZ_4G - 1));
-> +			win_size = min(win_size, remain_size);
-> +			dw_pcie_prog_outbound_atu(pci, i, PCIE_ATU_TYPE_MEM,
-> +						  base, bus_addr, win_size);
-> +			dev_dbg(pci->dev, "iATU: pref MEM: win = %d: base = %llx, bus_addr = %pa, size = %llx\n",
-> +				i, base, &bus_addr, win_size);
-> +
-> +			base += win_size;
-> +			bus_addr += win_size;
-> +			remain_size -= win_size;
-> +		}
-> +
-> +		if (remain_size > 0)
-> +			dev_info(pci->dev, "iATU: MEM window isn't enough\n");
-> +
-> +		dw_pcie_prog_outbound_atu(pci, pp->io_idx, PCIE_ATU_TYPE_IO,
-> +					  pp->io_base, pp->io_bus_addr,
-> +					  pp->io_size);
->  	}
->  
->  	dw_pcie_wr_own_conf(pp, PCI_BASE_ADDRESS_0, 4, 0);
-> diff --git a/drivers/pci/controller/dwc/pcie-designware.h b/drivers/pci/controller/dwc/pcie-designware.h
-> index a438c3879aa9..0197f67f82b7 100644
-> --- a/drivers/pci/controller/dwc/pcie-designware.h
-> +++ b/drivers/pci/controller/dwc/pcie-designware.h
-> @@ -148,15 +148,22 @@ struct pcie_port {
->  	u64			cfg1_base;
->  	void __iomem		*va_cfg1_base;
->  	u32			cfg1_size;
-> +	u32			cfg_idx;
->  	resource_size_t		io_base;
->  	phys_addr_t		io_bus_addr;
->  	u32			io_size;
-> +	u32			io_idx;
->  	u64			mem_base;
->  	phys_addr_t		mem_bus_addr;
->  	u64			mem_size;
-> +	u64			mem_perf_base;
-> +	phys_addr_t		mem_perf_bus_addr;
-> +	u64			mem_perf_size;
-> +	u32			mem_wins;
->  	struct resource		*cfg;
->  	struct resource		*io;
->  	struct resource		*mem;
-> +	struct resource		*mem_perf;
->  	struct resource		*busn;
->  	int			irq;
->  	const struct dw_pcie_host_ops *ops;
-> 
-
-Hi,
-
-It worked perfectly in my setup, however my current configuration have
-non-prefetchable memory less than 4Gb. In overall the code seems good.
-
-Acked-by: Gustavo Pimentel <gustavo.pimentel@synopsys.com>
-
-Regards,
-Gustavo
+SGkgR3VzdGF2bywNCg0KVGhhbmtzIGEgbG90IGZvciB5b3VyIHRlc3RpbmcgYW5kIEFDSyENCg0K
+UmVnYXJkcywNClpoaXFpYW5nDQoNCj4gLS0tLS1PcmlnaW5hbCBNZXNzYWdlLS0tLS0NCj4gRnJv
+bTogR3VzdGF2byBQaW1lbnRlbCA8Z3VzdGF2by5waW1lbnRlbEBzeW5vcHN5cy5jb20+DQo+IFNl
+bnQ6IDIwMTjlubQxMeaciDIy5pelIDE6MzcNCj4gVG86IFoucS4gSG91IDx6aGlxaWFuZy5ob3VA
+bnhwLmNvbT47IGxpbnV4LXBjaUB2Z2VyLmtlcm5lbC5vcmc7DQo+IGxpbnV4LWtlcm5lbEB2Z2Vy
+Lmtlcm5lbC5vcmc7IGJoZWxnYWFzQGdvb2dsZS5jb207DQo+IGxvcmVuem8ucGllcmFsaXNpQGFy
+bS5jb207IGppbmdvb2hhbjFAZ21haWwuY29tOw0KPiBndXN0YXZvLnBpbWVudGVsQHN5bm9wc3lz
+LmNvbQ0KPiBDYzogUm95IFphbmcgPHJveS56YW5nQG54cC5jb20+OyBNaW5na2FpIEh1IDxtaW5n
+a2FpLmh1QG54cC5jb20+OyBNLmguDQo+IExpYW4gPG1pbmdodWFuLmxpYW5AbnhwLmNvbT4NCj4g
+U3ViamVjdDogUmU6IFtQQVRDSHYyIDQvNF0gUENJOiBkd2M6IGFkZCBwcmVmZXRjaGFibGUgbWVt
+b3J5IHJhbmdlIHN1cHBvcnQNCj4gDQo+IE9uIDA3LzExLzIwMTggMTA6MDksIFoucS4gSG91IHdy
+b3RlOg0KPiA+IEZyb206IEhvdSBaaGlxaWFuZyA8WmhpcWlhbmcuSG91QG54cC5jb20+DQo+ID4N
+Cj4gPiBUaGUgY3VycmVudCBjb2RlIG9ubHkgc3VwcG9ydCBub24tcHJlZmV0Y2hhYmxlIG1lbW9y
+eSByYW5nZSwgYXMgdGhlDQo+ID4gbm9uLXByZWZldGNoYWJsZSBtZW1vcnkgcmFuZ2UgbXVzdCBu
+b3QgYmUgZ3JlYXRlciB0aGFuIDRHaUIsIG9uZQ0KPiA+IHZpZXdwb3J0IGNhbiBjb3ZlciBpdCwg
+d2hpY2ggc3VwcG9ydHMgdXB0byA0R2lCLg0KPiA+DQo+ID4gVG8gc3VwcG9ydCBwcmVmZXRjaGFi
+bGUgbWVtb3J5IHJhbmdlLCB3aGljaCBpcyB1cHRvIDY0LWJpdCBtZW1vcnkNCj4gPiBzcGFjZSBh
+bmQgY2FuIGJlIGdyZWF0ZXIgdGhhbiA0R2lCLCBzbyB3ZSBuZWVkIG11bHRpcGxlIHZpZXdwb3J0
+cy4gQW5kDQo+ID4gYWRkZWQgc2VwYXJhdGUgdmFycyB0byBzdG9yZSBwcmVmZXRjaGFibGUgbWVt
+b3J5IHJhbmdlIGluZm8gdG8gcHJldmVudA0KPiA+IG92ZXJyaWRpbmcgdGhlIG5vbi1wcmVmZXRj
+aGFibGUgbWVtb3J5IHJhbmdlIGluZm8uDQo+ID4NCj4gPiBBbmQgdGhpcyBwYXRjaCBleHBsaWNp
+dGx5IGFzc2lnbmVkIHRoZSBsYXN0IChpZiB0aGVyZSBhcmUgb25seQ0KPiA+IDIgdmlld3BvcnRz
+KSBvciBsYXN0IDIgdmlld3BvcnRzIGZvciBDRkcgYW5kIEkvTyB3aW5kb3dzIGFuZCB0aGUgcmVz
+dHMNCj4gPiBmb3IgTUVNIHdpbmRvd3MuDQo+ID4NCj4gPiBTaWduZWQtb2ZmLWJ5OiBIb3UgWmhp
+cWlhbmcgPFpoaXFpYW5nLkhvdUBueHAuY29tPg0KPiA+IC0tLQ0KPiA+IFYyOg0KPiA+ICAtIFJl
+d29yZGVkIHRoZSBzdWJqZWN0IGFuZCBjb21taXQgZGVzY3JpcHRpb24uDQo+ID4gIC0gRml4IHRo
+ZSBwcmVmZXRjaGFibGUgbWVtb3J5IHJhbmdlIG92ZXJyaWRpbmcgbm9uLXBlcmZldGNoYWJsZQ0K
+PiA+ICAgIG1lbW9yeSByYW5nZSBpc3N1ZSBieSBhZGRpbmcgdmFycyB0byBzdG9yZSBwcmVmZXRj
+aGFibGUgbWVtb3J5DQo+ID4gICAgcmFuZ2UgaW5mby4NCj4gPg0KPiA+ICAuLi4vcGNpL2NvbnRy
+b2xsZXIvZHdjL3BjaWUtZGVzaWdud2FyZS1ob3N0LmMgfCAxMDcgKysrKysrKysrKysrKystLS0t
+DQo+ID4gIGRyaXZlcnMvcGNpL2NvbnRyb2xsZXIvZHdjL3BjaWUtZGVzaWdud2FyZS5oICB8ICAg
+NyArKw0KPiA+ICAyIGZpbGVzIGNoYW5nZWQsIDk1IGluc2VydGlvbnMoKyksIDE5IGRlbGV0aW9u
+cygtKQ0KPiA+DQo+ID4gZGlmZiAtLWdpdCBhL2RyaXZlcnMvcGNpL2NvbnRyb2xsZXIvZHdjL3Bj
+aWUtZGVzaWdud2FyZS1ob3N0LmMNCj4gPiBiL2RyaXZlcnMvcGNpL2NvbnRyb2xsZXIvZHdjL3Bj
+aWUtZGVzaWdud2FyZS1ob3N0LmMNCj4gPiBpbmRleCBlY2FjY2UwMTY0ODkuLjMyOGFhNDBhNjYw
+OSAxMDA2NDQNCj4gPiAtLS0gYS9kcml2ZXJzL3BjaS9jb250cm9sbGVyL2R3Yy9wY2llLWRlc2ln
+bndhcmUtaG9zdC5jDQo+ID4gKysrIGIvZHJpdmVycy9wY2kvY29udHJvbGxlci9kd2MvcGNpZS1k
+ZXNpZ253YXJlLWhvc3QuYw0KPiA+IEBAIC0zNDYsNiArMzQ2LDM1IEBAIGludCBkd19wY2llX2hv
+c3RfaW5pdChzdHJ1Y3QgcGNpZV9wb3J0ICpwcCkNCj4gPiAgCQlkZXZfZXJyKGRldiwgIk1pc3Np
+bmcgKmNvbmZpZyogcmVnIHNwYWNlXG4iKTsNCj4gPiAgCX0NCj4gPg0KPiA+ICsJLyoNCj4gPiAr
+CSAqIElmIHZlbmRvcidzIHBsYXRmb3JtIGRyaXZlciBoYXMgc2V0IHRoZSBudW1fdmlld3BvcnQg
+YW5kIGl0IGlzDQo+ID4gKwkgKiBub3QgbGVzcyB0aGFuIDIsIHNraXAgZ2V0dGluZyB0aGUgbnVt
+X3ZpZXdwb3J0IGZyb20gRFQgaGVyZS4NCj4gPiArCSAqLw0KPiA+ICsJaWYgKHBjaS0+bnVtX3Zp
+ZXdwb3J0IDwgMikgew0KPiA+ICsJCXJldCA9IG9mX3Byb3BlcnR5X3JlYWRfdTMyKG5wLCAibnVt
+LXZpZXdwb3J0IiwNCj4gPiArCQkJCQkgICAmcGNpLT5udW1fdmlld3BvcnQpOw0KPiA+ICsJCWlm
+IChyZXQgfHwgcGNpLT5udW1fdmlld3BvcnQgPCAyKQ0KPiA+ICsJCQlwY2ktPm51bV92aWV3cG9y
+dCA9IDI7DQo+ID4gKwl9DQo+ID4gKw0KPiA+ICsJLyoNCj4gPiArCSAqIGlmIHRoZXJlIGFyZSBv
+bmx5IDIgdmlld3BvcnRzLCBhc3NpZ24gdGhlIGxhc3Qgdmlld3BvcnQgZm9yDQo+ID4gKwkgKiBi
+b3RoIENGRyBhbmQgSU8gd2luZG93LCBvdGhlcndpc2UgYXNzaWduIHRoZSBsYXN0IDIgdmlld3Bv
+cnQNCj4gPiArCSAqIGZvciBDRkcgYW5kIElPIHdpbmRvdyBzcGVjaWZpYy4gQW5kIHRoZSByZXN0
+IHZpZXdwb3J0cyBhcmUNCj4gPiArCSAqIGFzc2lnbmVkIHRvIE1FTSB3aW5kb3dzLg0KPiA+ICsJ
+ICovDQo+ID4gKwlpZiAocGNpLT5udW1fdmlld3BvcnQgPT0gMikgew0KPiA+ICsJCXBwLT5jZmdf
+aWR4ID0gcHAtPmlvX2lkeCA9IFBDSUVfQVRVX1JFR0lPTl9JTkRFWDE7DQo+ID4gKwkJcHAtPm1l
+bV93aW5zID0gMTsNCj4gPiArCX0gZWxzZSB7DQo+ID4gKwkJcHAtPmNmZ19pZHggPSBwY2ktPm51
+bV92aWV3cG9ydCAtIDE7DQo+ID4gKwkJcHAtPmlvX2lkeCA9IHBjaS0+bnVtX3ZpZXdwb3J0IC0g
+MjsNCj4gPiArCQlwcC0+bWVtX3dpbnMgPSBwY2ktPm51bV92aWV3cG9ydCAtIDI7DQo+ID4gKwl9
+DQo+ID4gKw0KPiA+ICsJZGV2X2RiZyhkZXYsICJDRkcgd2luIGlkOiAlZCwgSS9PIHdpbiBpZDog
+JWQsIFRvdGFsIE1FTSB3aW46ICVkXG4iLA0KPiA+ICsJCXBwLT5jZmdfaWR4LCBwcC0+aW9faWR4
+LCBwcC0+bWVtX3dpbnMpOw0KPiA+ICsNCj4gPiAgCWJyaWRnZSA9IHBjaV9hbGxvY19ob3N0X2Jy
+aWRnZSgwKTsNCj4gPiAgCWlmICghYnJpZGdlKQ0KPiA+ICAJCXJldHVybiAtRU5PTUVNOw0KPiA+
+IEBAIC0zNzcsMTAgKzQwNiwyMCBAQCBpbnQgZHdfcGNpZV9ob3N0X2luaXQoc3RydWN0IHBjaWVf
+cG9ydCAqcHApDQo+ID4gIAkJCX0NCj4gPiAgCQkJYnJlYWs7DQo+ID4gIAkJY2FzZSBJT1JFU09V
+UkNFX01FTToNCj4gPiAtCQkJcHAtPm1lbSA9IHdpbi0+cmVzOw0KPiA+IC0JCQlwcC0+bWVtLT5u
+YW1lID0gIk1FTSI7DQo+ID4gLQkJCXBwLT5tZW1fc2l6ZSA9IHJlc291cmNlX3NpemUocHAtPm1l
+bSk7DQo+ID4gLQkJCXBwLT5tZW1fYnVzX2FkZHIgPSBwcC0+bWVtLT5zdGFydCAtIHdpbi0+b2Zm
+c2V0Ow0KPiA+ICsJCQlpZiAod2luLT5yZXMtPmZsYWdzICYgSU9SRVNPVVJDRV9QUkVGRVRDSCkg
+ew0KPiA+ICsJCQkJcHAtPm1lbV9wZXJmID0gd2luLT5yZXM7DQo+ID4gKwkJCQlwcC0+bWVtX3Bl
+cmYtPm5hbWUgPSAiTUVNIHBlcmYiOw0KPiA+ICsJCQkJcHAtPm1lbV9wZXJmX3NpemUgPSByZXNv
+dXJjZV9zaXplKHBwLT5tZW1fcGVyZik7DQo+ID4gKwkJCQlwcC0+bWVtX3BlcmZfYnVzX2FkZHIg
+PSBwcC0+bWVtX3BlcmYtPnN0YXJ0IC0NCj4gPiArCQkJCQkJCXdpbi0+b2Zmc2V0Ow0KPiA+ICsJ
+CQkJcHAtPm1lbV9wZXJmX2Jhc2UgPSBwcC0+bWVtX3BlcmYtPnN0YXJ0Ow0KPiA+ICsJCQl9IGVs
+c2Ugew0KPiA+ICsJCQkJcHAtPm1lbSA9IHdpbi0+cmVzOw0KPiA+ICsJCQkJcHAtPm1lbS0+bmFt
+ZSA9ICJNRU0iOw0KPiA+ICsJCQkJcHAtPm1lbV9zaXplID0gcmVzb3VyY2Vfc2l6ZShwcC0+bWVt
+KTsNCj4gPiArCQkJCXBwLT5tZW1fYnVzX2FkZHIgPSBwcC0+bWVtLT5zdGFydCAtIHdpbi0+b2Zm
+c2V0Ow0KPiA+ICsJCQkJcHAtPm1lbV9iYXNlID0gcHAtPm1lbS0+c3RhcnQ7DQo+ID4gKwkJCX0N
+Cj4gPiAgCQkJYnJlYWs7DQo+ID4gIAkJY2FzZSAwOg0KPiA+ICAJCQlwcC0+Y2ZnID0gd2luLT5y
+ZXM7DQo+ID4gQEAgLTQwNiw4ICs0NDUsNiBAQCBpbnQgZHdfcGNpZV9ob3N0X2luaXQoc3RydWN0
+IHBjaWVfcG9ydCAqcHApDQo+ID4gIAkJfQ0KPiA+ICAJfQ0KPiA+DQo+ID4gLQlwcC0+bWVtX2Jh
+c2UgPSBwcC0+bWVtLT5zdGFydDsNCj4gPiAtDQo+ID4gIAlpZiAoIXBwLT52YV9jZmcwX2Jhc2Up
+IHsNCj4gPiAgCQlwcC0+dmFfY2ZnMF9iYXNlID0gZGV2bV9wY2lfcmVtYXBfY2Znc3BhY2UoZGV2
+LA0KPiA+ICAJCQkJCXBwLT5jZmcwX2Jhc2UsIHBwLT5jZmcwX3NpemUpOw0KPiA+IEBAIC01MzQs
+MTIgKzU3MSwxMiBAQCBzdGF0aWMgaW50IGR3X3BjaWVfcmRfb3RoZXJfY29uZihzdHJ1Y3QNCj4g
+cGNpZV9wb3J0ICpwcCwgc3RydWN0IHBjaV9idXMgKmJ1cywNCj4gPiAgCQl2YV9jZmdfYmFzZSA9
+IHBwLT52YV9jZmcxX2Jhc2U7DQo+ID4gIAl9DQo+ID4NCj4gPiAtCWR3X3BjaWVfcHJvZ19vdXRi
+b3VuZF9hdHUocGNpLCBQQ0lFX0FUVV9SRUdJT05fSU5ERVgxLA0KPiA+ICsJZHdfcGNpZV9wcm9n
+X291dGJvdW5kX2F0dShwY2ksIHBwLT5jZmdfaWR4LA0KPiA+ICAJCQkJICB0eXBlLCBjcHVfYWRk
+ciwNCj4gPiAgCQkJCSAgYnVzZGV2LCBjZmdfc2l6ZSk7DQo+ID4gIAlyZXQgPSBkd19wY2llX3Jl
+YWQodmFfY2ZnX2Jhc2UgKyB3aGVyZSwgc2l6ZSwgdmFsKTsNCj4gPiAtCWlmIChwY2ktPm51bV92
+aWV3cG9ydCA8PSAyKQ0KPiA+IC0JCWR3X3BjaWVfcHJvZ19vdXRib3VuZF9hdHUocGNpLCBQQ0lF
+X0FUVV9SRUdJT05fSU5ERVgxLA0KPiA+ICsJaWYgKHBwLT5jZmdfaWR4ID09IHBwLT5pb19pZHgp
+DQo+ID4gKwkJZHdfcGNpZV9wcm9nX291dGJvdW5kX2F0dShwY2ksIHBwLT5pb19pZHgsDQo+ID4g
+IAkJCQkJICBQQ0lFX0FUVV9UWVBFX0lPLCBwcC0+aW9fYmFzZSwNCj4gPiAgCQkJCQkgIHBwLT5p
+b19idXNfYWRkciwgcHAtPmlvX3NpemUpOw0KPiA+DQo+ID4gQEAgLTU3MywxMiArNjEwLDEyIEBA
+IHN0YXRpYyBpbnQgZHdfcGNpZV93cl9vdGhlcl9jb25mKHN0cnVjdA0KPiBwY2llX3BvcnQgKnBw
+LCBzdHJ1Y3QgcGNpX2J1cyAqYnVzLA0KPiA+ICAJCXZhX2NmZ19iYXNlID0gcHAtPnZhX2NmZzFf
+YmFzZTsNCj4gPiAgCX0NCj4gPg0KPiA+IC0JZHdfcGNpZV9wcm9nX291dGJvdW5kX2F0dShwY2ks
+IFBDSUVfQVRVX1JFR0lPTl9JTkRFWDEsDQo+ID4gKwlkd19wY2llX3Byb2dfb3V0Ym91bmRfYXR1
+KHBjaSwgcHAtPmNmZ19pZHgsDQo+ID4gIAkJCQkgIHR5cGUsIGNwdV9hZGRyLA0KPiA+ICAJCQkJ
+ICBidXNkZXYsIGNmZ19zaXplKTsNCj4gPiAgCXJldCA9IGR3X3BjaWVfd3JpdGUodmFfY2ZnX2Jh
+c2UgKyB3aGVyZSwgc2l6ZSwgdmFsKTsNCj4gPiAtCWlmIChwY2ktPm51bV92aWV3cG9ydCA8PSAy
+KQ0KPiA+IC0JCWR3X3BjaWVfcHJvZ19vdXRib3VuZF9hdHUocGNpLCBQQ0lFX0FUVV9SRUdJT05f
+SU5ERVgxLA0KPiA+ICsJaWYgKHBwLT5jZmdfaWR4ID09IHBwLT5pb19pZHgpDQo+ID4gKwkJZHdf
+cGNpZV9wcm9nX291dGJvdW5kX2F0dShwY2ksIHBwLT5pb19pZHgsDQo+ID4gIAkJCQkJICBQQ0lF
+X0FUVV9UWVBFX0lPLCBwcC0+aW9fYmFzZSwNCj4gPiAgCQkJCQkgIHBwLT5pb19idXNfYWRkciwg
+cHAtPmlvX3NpemUpOw0KPiA+DQo+ID4gQEAgLTY1Miw2ICs2ODksOSBAQCBzdGF0aWMgdTggZHdf
+cGNpZV9pYXR1X3Vucm9sbF9lbmFibGVkKHN0cnVjdA0KPiA+IGR3X3BjaWUgKnBjaSkgIHZvaWQg
+ZHdfcGNpZV9zZXR1cF9yYyhzdHJ1Y3QgcGNpZV9wb3J0ICpwcCkgIHsNCj4gPiAgCXUzMiB2YWws
+IGN0cmwsIG51bV9jdHJsczsNCj4gPiArCXU2NCByZW1haW5fc2l6ZSwgYmFzZSwgd2luX3NpemU7
+DQo+ID4gKwlwaHlzX2FkZHJfdCBidXNfYWRkcjsNCj4gPiArCWludCBpOw0KPiA+ICAJc3RydWN0
+IGR3X3BjaWUgKnBjaSA9IHRvX2R3X3BjaWVfZnJvbV9wcChwcCk7DQo+ID4NCj4gPiAgCWR3X3Bj
+aWVfc2V0dXAocGNpKTsNCj4gPiBAQCAtNzAwLDEzICs3NDAsNDIgQEAgdm9pZCBkd19wY2llX3Nl
+dHVwX3JjKHN0cnVjdCBwY2llX3BvcnQgKnBwKQ0KPiA+ICAJCWRldl9kYmcocGNpLT5kZXYsICJp
+QVRVIHVucm9sbDogJXNcbiIsDQo+ID4gIAkJCXBjaS0+aWF0dV91bnJvbGxfZW5hYmxlZCA/ICJl
+bmFibGVkIiA6ICJkaXNhYmxlZCIpOw0KPiA+DQo+ID4gLQkJZHdfcGNpZV9wcm9nX291dGJvdW5k
+X2F0dShwY2ksIFBDSUVfQVRVX1JFR0lPTl9JTkRFWDAsDQo+ID4gLQkJCQkJICBQQ0lFX0FUVV9U
+WVBFX01FTSwgcHAtPm1lbV9iYXNlLA0KPiA+IC0JCQkJCSAgcHAtPm1lbV9idXNfYWRkciwgcHAt
+Pm1lbV9zaXplKTsNCj4gPiAtCQlpZiAocGNpLT5udW1fdmlld3BvcnQgPiAyKQ0KPiA+IC0JCQlk
+d19wY2llX3Byb2dfb3V0Ym91bmRfYXR1KHBjaSwgUENJRV9BVFVfUkVHSU9OX0lOREVYMiwNCj4g
+PiAtCQkJCQkJICBQQ0lFX0FUVV9UWVBFX0lPLCBwcC0+aW9fYmFzZSwNCj4gPiAtCQkJCQkJICBw
+cC0+aW9fYnVzX2FkZHIsIHBwLT5pb19zaXplKTsNCj4gPiArCQkvKg0KPiA+ICsJCSAqIFRoZSBt
+YXhpbXVtIHJlZ2lvbiBzaXplIGlzIDQgR0IsIGFuZCBhIHJlZ2lvbg0KPiA+ICsJCSAqIG11c3Qg
+bm90IGNyb3NzIGEgNCBHQiBib3VuZGFyeS4NCj4gPiArCQkgKi8NCj4gPiArCQl3aW5fc2l6ZSA9
+IFNaXzRHIC0gKHBwLT5tZW1fYmFzZSAmIChTWl80RyAtIDEpKTsNCj4gPiArCQl3aW5fc2l6ZSA9
+IG1pbih3aW5fc2l6ZSwgcHAtPm1lbV9zaXplKTsNCj4gPiArCQlkd19wY2llX3Byb2dfb3V0Ym91
+bmRfYXR1KHBjaSwgMCwgUENJRV9BVFVfVFlQRV9NRU0sDQo+ID4gKwkJCQkJICBwcC0+bWVtX2Jh
+c2UsIHBwLT5tZW1fYnVzX2FkZHIsDQo+ID4gKwkJCQkJICB3aW5fc2l6ZSk7DQo+ID4gKwkJZGV2
+X2RiZyhwY2ktPmRldiwNCj4gPiArCQkJImlBVFU6IG5vbi1wcmVmIE1FTTogd2luID0gJWQ6IGJh
+c2UgPSAlbGx4LCBidXNfYWRkciA9ICVwYSwNCj4gc2l6ZSA9ICVsbHhcbiIsDQo+ID4gKwkJCTAs
+IHBwLT5tZW1fYmFzZSwgJnBwLT5tZW1fYnVzX2FkZHIsIHdpbl9zaXplKTsNCj4gPiArDQo+ID4g
+KwkJLyogUHJlZmV0Y2hhYmxlIHJhbmdlIGNhbiBiZSA2NGJpdCBzcGFjZSAqLw0KPiA+ICsJCXJl
+bWFpbl9zaXplID0gcHAtPm1lbV9wZXJmX3NpemU7DQo+ID4gKwkJYmFzZSA9IHBwLT5tZW1fcGVy
+Zl9iYXNlOw0KPiA+ICsJCWJ1c19hZGRyID0gcHAtPm1lbV9wZXJmX2J1c19hZGRyOw0KPiA+ICsJ
+CWZvciAoaSA9IDE7IHJlbWFpbl9zaXplID4gMCAmJiBpIDwgcHAtPm1lbV93aW5zOyBpKyspIHsN
+Cj4gPiArCQkJd2luX3NpemUgPSBTWl80RyAtIChiYXNlICYgKFNaXzRHIC0gMSkpOw0KPiA+ICsJ
+CQl3aW5fc2l6ZSA9IG1pbih3aW5fc2l6ZSwgcmVtYWluX3NpemUpOw0KPiA+ICsJCQlkd19wY2ll
+X3Byb2dfb3V0Ym91bmRfYXR1KHBjaSwgaSwgUENJRV9BVFVfVFlQRV9NRU0sDQo+ID4gKwkJCQkJ
+CSAgYmFzZSwgYnVzX2FkZHIsIHdpbl9zaXplKTsNCj4gPiArCQkJZGV2X2RiZyhwY2ktPmRldiwg
+ImlBVFU6IHByZWYgTUVNOiB3aW4gPSAlZDogYmFzZSA9ICVsbHgsDQo+IGJ1c19hZGRyID0gJXBh
+LCBzaXplID0gJWxseFxuIiwNCj4gPiArCQkJCWksIGJhc2UsICZidXNfYWRkciwgd2luX3NpemUp
+Ow0KPiA+ICsNCj4gPiArCQkJYmFzZSArPSB3aW5fc2l6ZTsNCj4gPiArCQkJYnVzX2FkZHIgKz0g
+d2luX3NpemU7DQo+ID4gKwkJCXJlbWFpbl9zaXplIC09IHdpbl9zaXplOw0KPiA+ICsJCX0NCj4g
+PiArDQo+ID4gKwkJaWYgKHJlbWFpbl9zaXplID4gMCkNCj4gPiArCQkJZGV2X2luZm8ocGNpLT5k
+ZXYsICJpQVRVOiBNRU0gd2luZG93IGlzbid0IGVub3VnaFxuIik7DQo+ID4gKw0KPiA+ICsJCWR3
+X3BjaWVfcHJvZ19vdXRib3VuZF9hdHUocGNpLCBwcC0+aW9faWR4LCBQQ0lFX0FUVV9UWVBFX0lP
+LA0KPiA+ICsJCQkJCSAgcHAtPmlvX2Jhc2UsIHBwLT5pb19idXNfYWRkciwNCj4gPiArCQkJCQkg
+IHBwLT5pb19zaXplKTsNCj4gPiAgCX0NCj4gPg0KPiA+ICAJZHdfcGNpZV93cl9vd25fY29uZihw
+cCwgUENJX0JBU0VfQUREUkVTU18wLCA0LCAwKTsgZGlmZiAtLWdpdA0KPiA+IGEvZHJpdmVycy9w
+Y2kvY29udHJvbGxlci9kd2MvcGNpZS1kZXNpZ253YXJlLmgNCj4gPiBiL2RyaXZlcnMvcGNpL2Nv
+bnRyb2xsZXIvZHdjL3BjaWUtZGVzaWdud2FyZS5oDQo+ID4gaW5kZXggYTQzOGMzODc5YWE5Li4w
+MTk3ZjY3ZjgyYjcgMTAwNjQ0DQo+ID4gLS0tIGEvZHJpdmVycy9wY2kvY29udHJvbGxlci9kd2Mv
+cGNpZS1kZXNpZ253YXJlLmgNCj4gPiArKysgYi9kcml2ZXJzL3BjaS9jb250cm9sbGVyL2R3Yy9w
+Y2llLWRlc2lnbndhcmUuaA0KPiA+IEBAIC0xNDgsMTUgKzE0OCwyMiBAQCBzdHJ1Y3QgcGNpZV9w
+b3J0IHsNCj4gPiAgCXU2NAkJCWNmZzFfYmFzZTsNCj4gPiAgCXZvaWQgX19pb21lbQkJKnZhX2Nm
+ZzFfYmFzZTsNCj4gPiAgCXUzMgkJCWNmZzFfc2l6ZTsNCj4gPiArCXUzMgkJCWNmZ19pZHg7DQo+
+ID4gIAlyZXNvdXJjZV9zaXplX3QJCWlvX2Jhc2U7DQo+ID4gIAlwaHlzX2FkZHJfdAkJaW9fYnVz
+X2FkZHI7DQo+ID4gIAl1MzIJCQlpb19zaXplOw0KPiA+ICsJdTMyCQkJaW9faWR4Ow0KPiA+ICAJ
+dTY0CQkJbWVtX2Jhc2U7DQo+ID4gIAlwaHlzX2FkZHJfdAkJbWVtX2J1c19hZGRyOw0KPiA+ICAJ
+dTY0CQkJbWVtX3NpemU7DQo+ID4gKwl1NjQJCQltZW1fcGVyZl9iYXNlOw0KPiA+ICsJcGh5c19h
+ZGRyX3QJCW1lbV9wZXJmX2J1c19hZGRyOw0KPiA+ICsJdTY0CQkJbWVtX3BlcmZfc2l6ZTsNCj4g
+PiArCXUzMgkJCW1lbV93aW5zOw0KPiA+ICAJc3RydWN0IHJlc291cmNlCQkqY2ZnOw0KPiA+ICAJ
+c3RydWN0IHJlc291cmNlCQkqaW87DQo+ID4gIAlzdHJ1Y3QgcmVzb3VyY2UJCSptZW07DQo+ID4g
+KwlzdHJ1Y3QgcmVzb3VyY2UJCSptZW1fcGVyZjsNCj4gPiAgCXN0cnVjdCByZXNvdXJjZQkJKmJ1
+c247DQo+ID4gIAlpbnQJCQlpcnE7DQo+ID4gIAljb25zdCBzdHJ1Y3QgZHdfcGNpZV9ob3N0X29w
+cyAqb3BzOw0KPiA+DQo+IA0KPiBIaSwNCj4gDQo+IEl0IHdvcmtlZCBwZXJmZWN0bHkgaW4gbXkg
+c2V0dXAsIGhvd2V2ZXIgbXkgY3VycmVudCBjb25maWd1cmF0aW9uIGhhdmUNCj4gbm9uLXByZWZl
+dGNoYWJsZSBtZW1vcnkgbGVzcyB0aGFuIDRHYi4gSW4gb3ZlcmFsbCB0aGUgY29kZSBzZWVtcyBn
+b29kLg0KPiANCj4gQWNrZWQtYnk6IEd1c3Rhdm8gUGltZW50ZWwgPGd1c3Rhdm8ucGltZW50ZWxA
+c3lub3BzeXMuY29tPg0KPiANCj4gUmVnYXJkcywNCj4gR3VzdGF2bw0K
