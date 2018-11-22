@@ -2,125 +2,228 @@ Return-Path: <SRS0=lMXa=OB=vger.kernel.org=linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-8.5 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_PASS,URIBL_BLOCKED,
-	USER_AGENT_MUTT autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-4.1 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
+	DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,
+	SPF_PASS autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id D0B47C43441
-	for <linux-pci@archiver.kernel.org>; Thu, 22 Nov 2018 17:48:55 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id CD164C43441
+	for <linux-pci@archiver.kernel.org>; Thu, 22 Nov 2018 17:53:36 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 9A72220684
-	for <linux-pci@archiver.kernel.org>; Thu, 22 Nov 2018 17:48:55 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.3.2 mail.kernel.org 9A72220684
-Authentication-Results: mail.kernel.org; dmarc=none (p=none dis=none) header.from=arm.com
+	by mail.kernel.org (Postfix) with ESMTP id 83FB6206B2
+	for <linux-pci@archiver.kernel.org>; Thu, 22 Nov 2018 17:53:36 +0000 (UTC)
+Authentication-Results: mail.kernel.org;
+	dkim=pass (2048-bit key) header.d=synopsys.com header.i=@synopsys.com header.b="h6anni7X"
+DMARC-Filter: OpenDMARC Filter v1.3.2 mail.kernel.org 83FB6206B2
+Authentication-Results: mail.kernel.org; dmarc=fail (p=none dis=none) header.from=synopsys.com
 Authentication-Results: mail.kernel.org; spf=none smtp.mailfrom=linux-pci-owner@vger.kernel.org
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1732523AbeKWE3S (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Thu, 22 Nov 2018 23:29:18 -0500
-Received: from foss.arm.com ([217.140.101.70]:54916 "EHLO foss.arm.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1732157AbeKWE3S (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Thu, 22 Nov 2018 23:29:18 -0500
-Received: from usa-sjc-imap-foss1.foss.arm.com (unknown [10.72.51.249])
-        by usa-sjc-mx-foss1.foss.arm.com (Postfix) with ESMTP id F1472168F;
-        Thu, 22 Nov 2018 09:48:53 -0800 (PST)
-Received: from e107981-ln.cambridge.arm.com (e107981-ln.cambridge.arm.com [10.1.197.40])
-        by usa-sjc-imap-foss1.foss.arm.com (Postfix) with ESMTPSA id E102F3F5A0;
-        Thu, 22 Nov 2018 09:48:52 -0800 (PST)
-Date:   Thu, 22 Nov 2018 17:48:47 +0000
-From:   Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
-To:     Gustavo Pimentel <gustavo.pimentel@synopsys.com>
-Cc:     "jingoohan1@gmail.com" <jingoohan1@gmail.com>,
-        "bhelgaas@google.com" <bhelgaas@google.com>,
-        "joao.pinto@synopsys.com" <joao.pinto@synopsys.com>,
-        "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
-Subject: Re: [PATCH] PCI: dwc: Remove 3-bit right rotation on MSI-X table
- offset address calculation
-Message-ID: <20181122174847.GA19779@e107981-ln.cambridge.arm.com>
-References: <a9c24a70e23dbc5a2d0300452588dc6a0b5e218a.1542903868.git.gustavo.pimentel@synopsys.com>
- <20181122170846.GB17826@e107981-ln.cambridge.arm.com>
- <bae11891-4a6e-3b30-196d-c138ef493ff8@synopsys.com>
+        id S1732480AbeKWEeA (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Thu, 22 Nov 2018 23:34:00 -0500
+Received: from smtprelay2.synopsys.com ([198.182.60.111]:43630 "EHLO
+        smtprelay.synopsys.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1730594AbeKWEeA (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Thu, 22 Nov 2018 23:34:00 -0500
+Received: from mailhost.synopsys.com (mailhost3.synopsys.com [10.12.238.238])
+        by smtprelay.synopsys.com (Postfix) with ESMTP id 1AAE810C1414;
+        Thu, 22 Nov 2018 09:53:35 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=synopsys.com; s=mail;
+        t=1542909215; bh=CF1ShnrV9G3guwc1iT39Hdprtbi0yXT7Tcptv4O0/kE=;
+        h=Subject:To:CC:References:From:Date:In-Reply-To:From;
+        b=h6anni7XOgjVaSYXORes5cQZMVBpFyfE+vY4o1zbqoHGvAujBd70isFzV7lVSlGhW
+         YAtF2bdv777YIm3PrbD5OHqK5cSYOd27lCpP13W+6qLz1ApwbZxTknRxTmRQe3R2bV
+         9Dll0fo1cidDczhonUHAQ6yuNDWHgyZGujIiwUPuMLqKWsb573vIphfCjujXc/JtcQ
+         RL51NhnHu9PCwuQ6Jg9C7UQo7184csKze0++03pujIEWBuBrRQSwTelyuhURDI2S3G
+         5EYIxrz+nbJ0Dpx5rhQrcoQW7I2ztC2NfyClJkFYv+8Gxx5ujv6/QSbu/MlpQ57Ijq
+         coVMIg15jjswA==
+Received: from US01WXQAHTC1.internal.synopsys.com (us01wxqahtc1.internal.synopsys.com [10.12.238.230])
+        by mailhost.synopsys.com (Postfix) with ESMTP id AFC593AC1;
+        Thu, 22 Nov 2018 09:53:34 -0800 (PST)
+Received: from DE02WEHTCA.internal.synopsys.com (10.225.19.92) by
+ US01WXQAHTC1.internal.synopsys.com (10.12.238.230) with Microsoft SMTP Server
+ (TLS) id 14.3.408.0; Thu, 22 Nov 2018 09:53:34 -0800
+Received: from DE02WEHTCB.internal.synopsys.com (10.225.19.94) by
+ DE02WEHTCA.internal.synopsys.com (10.225.19.92) with Microsoft SMTP Server
+ (TLS) id 14.3.408.0; Thu, 22 Nov 2018 18:53:32 +0100
+Received: from [10.107.19.112] (10.107.19.112) by
+ DE02WEHTCB.internal.synopsys.com (10.225.19.80) with Microsoft SMTP Server
+ (TLS) id 14.3.408.0; Thu, 22 Nov 2018 18:53:32 +0100
+Subject: Re: [PATCH 0/3] PCI: designware: Fixing MSI handling flow
+To:     Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
+        Gustavo Pimentel <gustavo.pimentel@synopsys.com>
+CC:     Marc Zyngier <marc.zyngier@arm.com>,
+        "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+        Bjorn Helgaas <helgaas@google.com>,
+        Trent Piepho <tpiepho@impinj.com>,
+        Jingoo Han <jingoohan1@gmail.com>,
+        "faiz_abbas@ti.com" <faiz_abbas@ti.com>,
+        Joao Pinto <Joao.Pinto@synopsys.com>,
+        Vignesh R <vigneshr@ti.com>
+References: <20181113225734.8026-1-marc.zyngier@arm.com>
+ <e73891a5-d798-ee9c-607c-9648d07f6505@synopsys.com>
+ <86a7mcdlwg.wl-marc.zyngier@arm.com>
+ <9b63c20b-f928-7c40-2734-00ed783625f5@synopsys.com>
+ <20181122162616.GA17826@e107981-ln.cambridge.arm.com>
+From:   Gustavo Pimentel <gustavo.pimentel@synopsys.com>
+Message-ID: <e5bbbfb4-a40a-223a-49e3-e17751733c46@synopsys.com>
+Date:   Thu, 22 Nov 2018 17:49:29 +0000
+User-Agent: Mozilla/5.0 (Windows NT 10.0; WOW64; rv:52.0) Gecko/20100101
+ Thunderbird/52.9.1
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <bae11891-4a6e-3b30-196d-c138ef493ff8@synopsys.com>
-User-Agent: Mutt/1.5.24 (2015-08-30)
+In-Reply-To: <20181122162616.GA17826@e107981-ln.cambridge.arm.com>
+Content-Type: text/plain; charset="utf-8"
+Content-Language: en-US
+Content-Transfer-Encoding: 7bit
+X-Originating-IP: [10.107.19.112]
 Sender: linux-pci-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-On Thu, Nov 22, 2018 at 05:31:06PM +0000, Gustavo Pimentel wrote:
-> Hi Lorenzo,
+On 22/11/2018 16:26, Lorenzo Pieralisi wrote:
+> On Thu, Nov 22, 2018 at 12:03:25PM +0000, Gustavo Pimentel wrote:
+>>
+>> Hi all,
+>>
+>>
+>>>
+>>> I just realised (at 1am!) that the first patch is awfully buggy:
+>>> - ENABLE and MASK have opposite polarities
+>>> - There is nothing initialising the ENABLE and MASK registers
+>>>
+>>> I've stashed the following fix-up on top of the existing series:
+>>>
+>>> diff --git a/drivers/pci/controller/dwc/pcie-designware-host.c b/drivers/pci/controller/dwc/pcie-designware-host.c
+>>> index f06e67c60593..0fa9e8fdce66 100644
+>>> --- a/drivers/pci/controller/dwc/pcie-designware-host.c
+>>> +++ b/drivers/pci/controller/dwc/pcie-designware-host.c
+>>> @@ -166,7 +166,7 @@ static void dw_pci_bottom_mask(struct irq_data *data)
+>>
+>> (snip)
+>>
+>> I used your patch and made it more perceptible in my opinion, (basically I
+>> transformed the variable irq_mask (previous irq_status) into a mirror of MASK
+>> registers, which removed the need for the *NOT* operation and forced the mask
+>> operation swap in the callbacks)
+>>
+>> Lorenzo can you apply this fix-up in your branch test/pci-dwc-msi? Maybe merging
+>> with eca44651920c ("PCI: designware: Move interrupt acking into the proper
+>> callback"), perhaps.
+>>
+>> I've tested Marc's patch series (with and without my fix-up and both) with a
+>> NVme EP that generates a burst of 19 MSI-X interrupts. Both approaches are
+>> working fine.
 > 
-> On 22/11/2018 17:08, Lorenzo Pieralisi wrote:
-> > On Thu, Nov 22, 2018 at 05:24:28PM +0100, Gustavo Pimentel wrote:
-> >> Remove 3-bit right rotation on MSI-X table offset address calculation on
-> >> dw_pcie_ep_raise_msix_irq().
-> >>
-> >> By default, the offset address of the MSI-X table is zero, so that even with a
-> >> 3-bit right rotation, the computed result would still be zero, so still valid.
-> >>
-> >> Fixes: beb4641a787d ("PCI: dwc: Add MSI-X callbacks handler")
-> >>
-> >> Signed-off-by: Gustavo Pimentel <gustavo.pimentel@synopsys.com>
-> >> ---
-> >>  drivers/pci/controller/dwc/pcie-designware-ep.c | 5 +++--
-> >>  1 file changed, 3 insertions(+), 2 deletions(-)
-> >>
-> >> diff --git a/drivers/pci/controller/dwc/pcie-designware-ep.c b/drivers/pci/controller/dwc/pcie-designware-ep.c
-> >> index 1e7b022..cdb2005 100644
-> >> --- a/drivers/pci/controller/dwc/pcie-designware-ep.c
-> >> +++ b/drivers/pci/controller/dwc/pcie-designware-ep.c
-> >> @@ -440,7 +440,6 @@ int dw_pcie_ep_raise_msix_irq(struct dw_pcie_ep *ep, u8 func_no,
-> >>  	tbl_offset = dw_pcie_readl_dbi(pci, reg);
-> >>  	bir = (tbl_offset & PCI_MSIX_TABLE_BIR);
-> >>  	tbl_offset &= PCI_MSIX_TABLE_OFFSET;
-> >> -	tbl_offset >>= 3;
-> > 
-> > This looks wrong.>
-> > - If tlb_offset is always 0 there would no point reading it (but I think
-> >   that's a completely wrong assumption)
-> > - If tlb_offset can be != 0 you are introducing a bug
+> I want to see more testing before getting this series merged upstream,
+> especially for the platform configurations on which this bug was
+> reported.
+
+Yes, of course.
+
 > 
-> That is the bug. I misunderstood the spec and I though that was
-> required to perform 3-bit right rotation. Since my setup during the
-> developing had the MSI-X table offset set to zero, this bug passed
-> undetected. Now that my current setup has a MSI-X table offset
-> different from zero I was able to detect this bug.
-
-Correct, now I got it. You should reword the commit log since it is
-not really clear that you are fixing a bug and add a Fixes: tag please,
-this is not a minor bug and should go to stable kernels.
-
-> >>  	reg = PCI_BASE_ADDRESS_0 + (4 * bir);
-> >>  	bar_addr_upper = 0;
-> >> @@ -466,8 +465,10 @@ int dw_pcie_ep_raise_msix_irq(struct dw_pcie_ep *ep, u8 func_no,
-> >>  
-> >>  	iounmap(msix_tbl);
-> >>  
-> >> -	if (vec_ctrl & PCI_MSIX_ENTRY_CTRL_MASKBIT)
-> >> +	if (vec_ctrl & PCI_MSIX_ENTRY_CTRL_MASKBIT) {
-> >> +		dev_err(pci->dev, "MSI-X entry ctrl set\n");
-> > 
-> > Unrelated change.
+> I am a bit annoyed with DWC platform maintainers in this regard.
 > 
-> Ups, that's right. It's just a debug message in case of error.
-> Do you prefer a patch version 2 with the description including this debug
-> message or do you prefer a second patch only with this debug message?
-
-One patch one logical change. So I expect this patch to be split into
-two (more so because this is a significant fix).
-
-Thanks,
-Lorenzo
-
-> >>  		return -EPERM;
-> >> +	}
-> >>  
-> >>  	ret = dw_pcie_ep_map_addr(epc, func_no, ep->msi_mem_phys, msg_addr,
-> >>  				  epc->mem->page_size);
-> >> -- 
-> >> 2.7.4
-> >>
+>> Just a couple of suggestions Lorenzo, maybe you could exchange the *designware*
+>> by *dwc* on all patch series titles and on eca44651920c("PCI: designware: Move
+>> interrupt acking into the proper callback") replace *acking* by *ACKing* like
+>> previous patch has.
+>>
+>> Marc thanks for this patch fix! :)
+>>
+>> Tested-by: Gustavo Pimentel <gustavo.pimentel@synopsys.com>
+>>
+>> diff --git a/drivers/pci/controller/dwc/pcie-designware-host.c
+>> b/drivers/pci/controller/dwc/pcie-designware-host.c
+>> index 0fa9e8f..a5132b3 100644
+>> --- a/drivers/pci/controller/dwc/pcie-designware-host.c
+>> +++ b/drivers/pci/controller/dwc/pcie-designware-host.c
+>> @@ -164,9 +164,9 @@ static void dw_pci_bottom_mask(struct irq_data *data)
+>>                 res = ctrl * MSI_REG_CTRL_BLOCK_SIZE;
+>>                 bit = data->hwirq % MAX_MSI_IRQS_PER_CTRL;
+>>
+>> -               pp->irq_status[ctrl] &= ~(1 << bit);
+>> +               pp->irq_mask[ctrl] |= BIT(bit);
+>>                 dw_pcie_wr_own_conf(pp, PCIE_MSI_INTR0_MASK + res, 4,
+>> -                                   ~pp->irq_status[ctrl]);
+>> +                                   pp->irq_mask[ctrl]);
+>>         }
+>>
+>>         raw_spin_unlock_irqrestore(&pp->lock, flags);
+>> @@ -187,30 +187,30 @@ static void dw_pci_bottom_unmask(struct irq_data *data)
+>>                 res = ctrl * MSI_REG_CTRL_BLOCK_SIZE;
+>>                 bit = data->hwirq % MAX_MSI_IRQS_PER_CTRL;
+>>
+>> -               pp->irq_status[ctrl] |= 1 << bit;
+>> +               pp->irq_mask[ctrl] &= ~BIT(bit);
+>>                 dw_pcie_wr_own_conf(pp, PCIE_MSI_INTR0_MASK + res, 4,
+>> -                                   ~pp->irq_status[ctrl]);
+>> +                                   pp->irq_mask[ctrl]);
+>>         }
+>>
+>>         raw_spin_unlock_irqrestore(&pp->lock, flags);
+>>  }
+>>
+>> -static void dw_pci_bottom_ack(struct irq_data *d)
+>> +static void dw_pci_bottom_ack(struct irq_data *data)
+>>  {
+>> -       struct pcie_port *pp  = irq_data_get_irq_chip_data(d);
+>> +       struct pcie_port *pp = irq_data_get_irq_chip_data(data);
+>>         unsigned int res, bit, ctrl;
+>>         unsigned long flags;
+>>
+>> -       ctrl = d->hwirq / MAX_MSI_IRQS_PER_CTRL;
+>> +       ctrl = data->hwirq / MAX_MSI_IRQS_PER_CTRL;
+>>         res = ctrl * MSI_REG_CTRL_BLOCK_SIZE;
+>> -       bit = d->hwirq % MAX_MSI_IRQS_PER_CTRL;
+>> +       bit = data->hwirq % MAX_MSI_IRQS_PER_CTRL;
+>>
+>>         raw_spin_lock_irqsave(&pp->lock, flags);
+>>
+>> -       dw_pcie_wr_own_conf(pp, PCIE_MSI_INTR0_STATUS + res, 4, 1 << bit);
+>> +       dw_pcie_wr_own_conf(pp, PCIE_MSI_INTR0_STATUS + res, 4, BIT(bit));
+>>
+>>         if (pp->ops->msi_irq_ack)
+>> -               pp->ops->msi_irq_ack(d->hwirq, pp);
+>> +               pp->ops->msi_irq_ack(data->hwirq, pp);
 > 
+> Changes in this hunk are unrelated, I won't squash them in.
+
+Following Marc's suggestion, this can go in a separate patch.
+
+> 
+> Lorenzo
+> 
+>>
+>>         raw_spin_unlock_irqrestore(&pp->lock, flags);
+>>  }
+>> @@ -665,13 +665,13 @@ void dw_pcie_setup_rc(struct pcie_port *pp)
+>>
+>>         /* Initialize IRQ Status array */
+>>         for (ctrl = 0; ctrl < num_ctrls; ctrl++) {
+>> +               pp->irq_mask[ctrl] = ~0;
+>>                 dw_pcie_wr_own_conf(pp, PCIE_MSI_INTR0_MASK +
+>>                                         (ctrl * MSI_REG_CTRL_BLOCK_SIZE),
+>> -                                   4, ~0);
+>> +                                   4, pp->irq_mask[ctrl]);
+>>                 dw_pcie_wr_own_conf(pp, PCIE_MSI_INTR0_ENABLE +
+>>                                         (ctrl * MSI_REG_CTRL_BLOCK_SIZE),
+>>                                     4, ~0);
+>> -               pp->irq_status[ctrl] = 0;
+>>         }
+>>
+>>         /* Setup RC BARs */
+>> diff --git a/drivers/pci/controller/dwc/pcie-designware.h
+>> b/drivers/pci/controller/dwc/pcie-designware.h
+>> index 0989d88..9d1614a 100644
+>> --- a/drivers/pci/controller/dwc/pcie-designware.h
+>> +++ b/drivers/pci/controller/dwc/pcie-designware.h
+>> @@ -169,7 +169,7 @@ struct pcie_port {
+>>         struct irq_domain       *msi_domain;
+>>         dma_addr_t              msi_data;
+>>         u32                     num_vectors;
+>> -       u32                     irq_status[MAX_MSI_CTRLS];
+>> +       u32                     irq_mask[MAX_MSI_CTRLS];
+>>         raw_spinlock_t          lock;
+>>         DECLARE_BITMAP(msi_irq_in_use, MAX_MSI_IRQS);
+>>  };
+>>
+
