@@ -6,30 +6,30 @@ X-Spam-Status: No, score=-7.0 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
 	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_PASS,URIBL_BLOCKED
 	autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 3DB65C43441
-	for <linux-pci@archiver.kernel.org>; Fri, 23 Nov 2018 21:56:34 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 2410FC43441
+	for <linux-pci@archiver.kernel.org>; Fri, 23 Nov 2018 22:02:58 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id BC0DE20868
-	for <linux-pci@archiver.kernel.org>; Fri, 23 Nov 2018 21:56:33 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.3.2 mail.kernel.org BC0DE20868
+	by mail.kernel.org (Postfix) with ESMTP id C9FA020824
+	for <linux-pci@archiver.kernel.org>; Fri, 23 Nov 2018 22:02:57 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.3.2 mail.kernel.org C9FA020824
 Authentication-Results: mail.kernel.org; dmarc=fail (p=none dis=none) header.from=redhat.com
 Authentication-Results: mail.kernel.org; spf=none smtp.mailfrom=linux-pci-owner@vger.kernel.org
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727168AbeKXImc (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Sat, 24 Nov 2018 03:42:32 -0500
-Received: from mx1.redhat.com ([209.132.183.28]:53390 "EHLO mx1.redhat.com"
+        id S1727219AbeKXIs5 (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Sat, 24 Nov 2018 03:48:57 -0500
+Received: from mx1.redhat.com ([209.132.183.28]:34754 "EHLO mx1.redhat.com"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1726979AbeKXImc (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Sat, 24 Nov 2018 03:42:32 -0500
-Received: from smtp.corp.redhat.com (int-mx01.intmail.prod.int.phx2.redhat.com [10.5.11.11])
+        id S1727217AbeKXIs5 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Sat, 24 Nov 2018 03:48:57 -0500
+Received: from smtp.corp.redhat.com (int-mx08.intmail.prod.int.phx2.redhat.com [10.5.11.23])
         (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
         (No client certificate requested)
-        by mx1.redhat.com (Postfix) with ESMTPS id B342EC0587DF;
-        Fri, 23 Nov 2018 21:56:30 +0000 (UTC)
+        by mx1.redhat.com (Postfix) with ESMTPS id 66DFC307D846;
+        Fri, 23 Nov 2018 22:02:55 +0000 (UTC)
 Received: from redhat.com (ovpn-121-146.rdu2.redhat.com [10.10.121.146])
-        by smtp.corp.redhat.com (Postfix) with SMTP id 26F9717C5B;
-        Fri, 23 Nov 2018 21:56:26 +0000 (UTC)
-Date:   Fri, 23 Nov 2018 16:56:25 -0500
+        by smtp.corp.redhat.com (Postfix) with SMTP id 44B691974D;
+        Fri, 23 Nov 2018 22:02:51 +0000 (UTC)
+Date:   Fri, 23 Nov 2018 17:02:50 -0500
 From:   "Michael S. Tsirkin" <mst@redhat.com>
 To:     Jean-Philippe Brucker <jean-philippe.brucker@arm.com>
 Cc:     iommu@lists.linux-foundation.org, linux-pci@vger.kernel.org,
@@ -42,15 +42,15 @@ Cc:     iommu@lists.linux-foundation.org, linux-pci@vger.kernel.org,
         robh+dt@kernel.org, bhelgaas@google.com,
         kvmarm@lists.cs.columbia.edu
 Subject: Re: [PATCH v5 5/7] iommu: Add virtio-iommu driver
-Message-ID: <20181123165206-mutt-send-email-mst@kernel.org>
+Message-ID: <20181123165742-mutt-send-email-mst@kernel.org>
 References: <20181122193801.50510-1-jean-philippe.brucker@arm.com>
  <20181122193801.50510-6-jean-philippe.brucker@arm.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
 In-Reply-To: <20181122193801.50510-6-jean-philippe.brucker@arm.com>
-X-Scanned-By: MIMEDefang 2.79 on 10.5.11.11
-X-Greylist: Sender IP whitelisted, not delayed by milter-greylist-4.5.16 (mx1.redhat.com [10.5.110.32]); Fri, 23 Nov 2018 21:56:31 +0000 (UTC)
+X-Scanned-By: MIMEDefang 2.84 on 10.5.11.23
+X-Greylist: Sender IP whitelisted, not delayed by milter-greylist-4.5.16 (mx1.redhat.com [10.5.110.48]); Fri, 23 Nov 2018 22:02:55 +0000 (UTC)
 Sender: linux-pci-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
@@ -115,10 +115,6 @@ On Thu, Nov 22, 2018 at 07:37:59PM +0000, Jean-Philippe Brucker wrote:
 > +
 > +	  Say Y here if you intend to run this kernel as a guest.
 > +
-
-Given it is arm specific right now, shouldn't this depend on ARM?
-E.g. there's a hack for x86 right now.
-
 >  endif # IOMMU_SUPPORT
 > diff --git a/drivers/iommu/Makefile b/drivers/iommu/Makefile
 > index 5481e5fe1f95..bd7e55751d09 100644
@@ -295,6 +291,18 @@ E.g. there's a hack for x86 right now.
 > +		list_del(&req->list);
 > +		kfree(req);
 > +	}
+
+I didn't notice this in the past but it seems this will spin
+with interrupts disabled until host handles the request.
+Please do not do this - host execution can be another
+task that needs the same host CPU. This will then disable
+interrupts for a very very long time.
+
+What to do then? Queue in software and wake up task.
+
+As kick is vm exit, kick under interrupts disabled is discouraged too:
+better to prepare for kick enable interrupts then kick.
+
 > +
 > +	return ret;
 > +}
@@ -908,9 +916,6 @@ E.g. there's a hack for x86 right now.
 > +
 > +	if (!virtio_has_feature(vdev, VIRTIO_F_VERSION_1) ||
 > +	    !virtio_has_feature(vdev, VIRTIO_IOMMU_F_MAP_UNMAP))
-
-Why bother with a feature bit for this then btw?
-
 > +		return -ENODEV;
 > +
 > +	viommu = devm_kzalloc(dev, sizeof(*viommu), GFP_KERNEL);
