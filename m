@@ -6,26 +6,26 @@ X-Spam-Status: No, score=-9.0 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
 	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_PASS,USER_AGENT_GIT
 	autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id CF8F0C43441
-	for <linux-pci@archiver.kernel.org>; Fri, 23 Nov 2018 14:19:27 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 77C59C43441
+	for <linux-pci@archiver.kernel.org>; Fri, 23 Nov 2018 14:19:31 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 960F520820
-	for <linux-pci@archiver.kernel.org>; Fri, 23 Nov 2018 14:19:27 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.3.2 mail.kernel.org 960F520820
+	by mail.kernel.org (Postfix) with ESMTP id 477D420664
+	for <linux-pci@archiver.kernel.org>; Fri, 23 Nov 2018 14:19:31 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.3.2 mail.kernel.org 477D420664
 Authentication-Results: mail.kernel.org; dmarc=none (p=none dis=none) header.from=bootlin.com
 Authentication-Results: mail.kernel.org; spf=none smtp.mailfrom=linux-pci-owner@vger.kernel.org
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S2439878AbeKXBDZ (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Fri, 23 Nov 2018 20:03:25 -0500
-Received: from mail.bootlin.com ([62.4.15.54]:33981 "EHLO mail.bootlin.com"
+        id S2436706AbeKXBDA (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Fri, 23 Nov 2018 20:03:00 -0500
+Received: from mail.bootlin.com ([62.4.15.54]:33929 "EHLO mail.bootlin.com"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S2439877AbeKXBDB (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Fri, 23 Nov 2018 20:03:01 -0500
+        id S2388551AbeKXBC7 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Fri, 23 Nov 2018 20:02:59 -0500
 Received: by mail.bootlin.com (Postfix, from userid 110)
-        id 36EA720DCB; Fri, 23 Nov 2018 15:18:38 +0100 (CET)
+        id 4590120D29; Fri, 23 Nov 2018 15:18:35 +0100 (CET)
 Received: from localhost.localdomain (aaubervilliers-681-1-94-205.w90-88.abo.wanadoo.fr [90.88.35.205])
-        by mail.bootlin.com (Postfix) with ESMTPSA id C364A20741;
-        Fri, 23 Nov 2018 15:18:37 +0100 (CET)
+        by mail.bootlin.com (Postfix) with ESMTPSA id D371C20741;
+        Fri, 23 Nov 2018 15:18:34 +0100 (CET)
 From:   Miquel Raynal <miquel.raynal@bootlin.com>
 To:     Gregory Clement <gregory.clement@bootlin.com>,
         Jason Cooper <jason@lakedaemon.net>,
@@ -42,9 +42,9 @@ Cc:     <devicetree@vger.kernel.org>, Rob Herring <robh+dt@kernel.org>,
         Maxime Chevallier <maxime.chevallier@bootlin.com>,
         Nadav Haklai <nadavh@marvell.com>,
         Miquel Raynal <miquel.raynal@bootlin.com>
-Subject: [PATCH 10/12] ARM64: dts: marvell: armada-3720-espressobin: declare PCIe reset GPIO
-Date:   Fri, 23 Nov 2018 15:18:29 +0100
-Message-Id: <20181123141831.8214-11-miquel.raynal@bootlin.com>
+Subject: [PATCH 02/12] PCI: aardvark: add reset GPIO support
+Date:   Fri, 23 Nov 2018 15:18:21 +0100
+Message-Id: <20181123141831.8214-3-miquel.raynal@bootlin.com>
 X-Mailer: git-send-email 2.19.1
 In-Reply-To: <20181123141831.8214-1-miquel.raynal@bootlin.com>
 References: <20181123141831.8214-1-miquel.raynal@bootlin.com>
@@ -55,27 +55,111 @@ Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-Add a reset-gpios property to the PCIe node.
+The IP supports a reset GPIO. When S2RAM will be added, we must ensure
+the reset line (if any) is deasserted when resuming. Add support for
+it.
 
 Signed-off-by: Miquel Raynal <miquel.raynal@bootlin.com>
 ---
- arch/arm64/boot/dts/marvell/armada-3720-espressobin.dts | 3 +++
- 1 file changed, 3 insertions(+)
+ drivers/pci/controller/pci-aardvark.c | 57 +++++++++++++++++++++++++++
+ 1 file changed, 57 insertions(+)
 
-diff --git a/arch/arm64/boot/dts/marvell/armada-3720-espressobin.dts b/arch/arm64/boot/dts/marvell/armada-3720-espressobin.dts
-index 094994a9c68e..76a508da80b9 100644
---- a/arch/arm64/boot/dts/marvell/armada-3720-espressobin.dts
-+++ b/arch/arm64/boot/dts/marvell/armada-3720-espressobin.dts
-@@ -46,6 +46,9 @@
- /* J9 */
- &pcie0 {
- 	status = "okay";
-+	pinctrl-names = "default";
-+	pinctrl-0 = <&pcie_pins>;
-+	reset-gpios = <&gpiosb 3 GPIO_ACTIVE_HIGH>;
+diff --git a/drivers/pci/controller/pci-aardvark.c b/drivers/pci/controller/pci-aardvark.c
+index b95eb2aa00bb..1d31d74ddab7 100644
+--- a/drivers/pci/controller/pci-aardvark.c
++++ b/drivers/pci/controller/pci-aardvark.c
+@@ -9,6 +9,7 @@
+  */
+ 
+ #include <linux/delay.h>
++#include <linux/gpio.h>
+ #include <linux/interrupt.h>
+ #include <linux/irq.h>
+ #include <linux/irqdomain.h>
+@@ -17,6 +18,7 @@
+ #include <linux/init.h>
+ #include <linux/platform_device.h>
+ #include <linux/of_address.h>
++#include <linux/of_gpio.h>
+ #include <linux/of_pci.h>
+ 
+ #include "../pci.h"
+@@ -201,6 +203,7 @@ struct advk_pcie {
+ 	u16 msi_msg;
+ 	int root_bus_nr;
+ 	struct pci_bridge_emul bridge;
++	struct gpio_desc *reset_gpio;
  };
  
- /* J6 */
+ static inline void advk_writel(struct advk_pcie *pcie, u32 val, u64 reg)
+@@ -973,6 +976,55 @@ static int advk_pcie_parse_request_of_pci_ranges(struct advk_pcie *pcie)
+ 	return err;
+ }
+ 
++static int advk_pcie_hard_reset(struct advk_pcie *pcie)
++{
++	if (!pcie->reset_gpio)
++		return -EINVAL;
++
++	gpiod_set_value_cansleep(pcie->reset_gpio, 0);
++	msleep(1);
++	gpiod_set_value_cansleep(pcie->reset_gpio, 1);
++
++	return 0;
++}
++
++static int advk_pcie_setup_reset_gpio(struct advk_pcie *pcie)
++{
++	struct device *dev = &pcie->pdev->dev;
++	enum of_gpio_flags of_flags;
++	unsigned long gpio_flags;
++	int gpio_nb;
++	int ret;
++
++	gpio_nb = of_get_named_gpio_flags(dev->of_node, "reset-gpios", 0,
++					  &of_flags);
++	if (gpio_nb == -EPROBE_DEFER)
++		return gpio_nb;
++
++	/* Old bindings miss the reset GPIO handle */
++	if (!gpio_is_valid(gpio_nb)) {
++		dev_warn(dev, "Reset GPIO unavailable\n");
++		return 0;
++	}
++
++	if (of_flags & OF_GPIO_ACTIVE_LOW)
++		gpio_flags = GPIOF_ACTIVE_LOW |
++			     GPIOF_OUT_INIT_LOW;
++	else
++		gpio_flags = GPIOF_OUT_INIT_HIGH;
++
++	ret = devm_gpio_request_one(dev, gpio_nb, gpio_flags,
++				    "pcie-aardvark-reset");
++	if (ret) {
++		dev_err(dev, "Failed to retrieve reset GPIO (%d)\n", ret);
++		return ret;
++	}
++
++	pcie->reset_gpio = gpio_to_desc(gpio_nb);
++
++	return 0;
++}
++
+ static int advk_pcie_probe(struct platform_device *pdev)
+ {
+ 	struct device *dev = &pdev->dev;
+@@ -1008,6 +1060,11 @@ static int advk_pcie_probe(struct platform_device *pdev)
+ 		return ret;
+ 	}
+ 
++	ret = advk_pcie_setup_reset_gpio(pcie);
++	if (ret)
++		return ret;
++
++	advk_pcie_hard_reset(pcie);
+ 	advk_pcie_setup_hw(pcie);
+ 
+ 	advk_sw_pci_bridge_init(pcie);
 -- 
 2.19.1
 
