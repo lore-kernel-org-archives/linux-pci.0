@@ -2,88 +2,76 @@ Return-Path: <SRS0=PFnE=OC=vger.kernel.org=linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-9.1 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
-	DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,
-	SIGNED_OFF_BY,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT autolearn=ham
-	autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-2.5 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+	MAILING_LIST_MULTI,SPF_PASS,USER_AGENT_MUTT autolearn=ham autolearn_force=no
+	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id ADF5AC43441
-	for <linux-pci@archiver.kernel.org>; Fri, 23 Nov 2018 17:00:45 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 3A3CDC43441
+	for <linux-pci@archiver.kernel.org>; Fri, 23 Nov 2018 17:50:40 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 5FA4420863
-	for <linux-pci@archiver.kernel.org>; Fri, 23 Nov 2018 17:00:45 +0000 (UTC)
-Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=synopsys.com header.i=@synopsys.com header.b="gDEzFaaW"
-DMARC-Filter: OpenDMARC Filter v1.3.2 mail.kernel.org 5FA4420863
-Authentication-Results: mail.kernel.org; dmarc=fail (p=none dis=none) header.from=synopsys.com
+	by mail.kernel.org (Postfix) with ESMTP id 0567020861
+	for <linux-pci@archiver.kernel.org>; Fri, 23 Nov 2018 17:50:39 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.3.2 mail.kernel.org 0567020861
+Authentication-Results: mail.kernel.org; dmarc=none (p=none dis=none) header.from=arm.com
 Authentication-Results: mail.kernel.org; spf=none smtp.mailfrom=linux-pci-owner@vger.kernel.org
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S2436993AbeKXDpr (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Fri, 23 Nov 2018 22:45:47 -0500
-Received: from us01smtprelay-2.synopsys.com ([198.182.60.111]:43068 "EHLO
-        smtprelay.synopsys.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S2391367AbeKXDpq (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Fri, 23 Nov 2018 22:45:46 -0500
-Received: from mailhost.synopsys.com (mailhost1.synopsys.com [10.12.238.239])
-        by smtprelay.synopsys.com (Postfix) with ESMTP id 0F24810C0909;
-        Fri, 23 Nov 2018 09:00:44 -0800 (PST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=synopsys.com; s=mail;
-        t=1542992444; bh=Kn/ps6iF2Wz3k8Li+M7/HyvlX3akEHWDXji1nvIS6qg=;
-        h=From:To:Cc:Subject:Date:From;
-        b=gDEzFaaWIXQpjWYgfjejsLWKajqNNnSOUvr1G5zZvm5Qa1aOT9b4YNDHNXRITWdSO
-         6zFZLcBhnsRst7QbpYiuPzNh7ftcqLF+KbPrgPq8iSopXbsVxdjzpbHFc7KY4upDv/
-         LIDrK49Ih1S2zC94MzXMMnEK89NMgA5tf3w14ux2cVbm7VXTSdVpBD55tLhf9RwFeX
-         NOs4qL6G9F1/UKUlnajRwQSiYZl6syX2LaCwsiXO4QYJ27H0LZ7/ue29EPLfjMvEuV
-         Xrw7yUT7toS6CzLpEc09Y5MPmK/4tFsqIZwhvO+uq9HCLZlgAoh9Tqs3Qw9pcDdFZE
-         o0TOl1XezD+nQ==
-Received: from de02.synopsys.com (de02.internal.synopsys.com [10.225.17.21])
-        by mailhost.synopsys.com (Postfix) with ESMTP id BD40F5566;
-        Fri, 23 Nov 2018 09:00:43 -0800 (PST)
-Received: from de02dwia024.internal.synopsys.com (de02dwia024.internal.synopsys.com [10.225.19.81])
-        by de02.synopsys.com (Postfix) with ESMTP id CA6537C7D;
-        Fri, 23 Nov 2018 18:00:42 +0100 (CET)
-From:   Gustavo Pimentel <gustavo.pimentel@synopsys.com>
-To:     jingoohan1@gmail.com, bhelgaas@google.com,
-        lorenzo.pieralisi@arm.com
-Cc:     joao.pinto@synopsys.com, linux-pci@vger.kernel.org,
-        Gustavo Pimentel <gustavo.pimentel@synopsys.com>,
-        stable@vger.kernel.org
-Subject: [PATCH v2] PCI: dwc: Fix MSI-X EP framework address calculation bug
-Date:   Fri, 23 Nov 2018 18:00:21 +0100
-Message-Id: <7d7ec9c537b5aa6cac918b0201572efb14dc89c3.1542992421.git.gustavo.pimentel@synopsys.com>
-X-Mailer: git-send-email 2.7.4
+        id S2391594AbeKXEfx (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Fri, 23 Nov 2018 23:35:53 -0500
+Received: from usa-sjc-mx-foss1.foss.arm.com ([217.140.101.70]:50160 "EHLO
+        foss.arm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1730951AbeKXEfx (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Fri, 23 Nov 2018 23:35:53 -0500
+Received: from usa-sjc-imap-foss1.foss.arm.com (unknown [10.72.51.249])
+        by usa-sjc-mx-foss1.foss.arm.com (Postfix) with ESMTP id 8FB203574;
+        Fri, 23 Nov 2018 09:50:38 -0800 (PST)
+Received: from e107981-ln.cambridge.arm.com (e107981-ln.cambridge.arm.com [10.1.197.40])
+        by usa-sjc-imap-foss1.foss.arm.com (Postfix) with ESMTPSA id 798403F5CF;
+        Fri, 23 Nov 2018 09:50:36 -0800 (PST)
+Date:   Fri, 23 Nov 2018 17:50:20 +0000
+From:   Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
+To:     Kunihiko Hayashi <hayashi.kunihiko@socionext.com>
+Cc:     Bjorn Helgaas <bhelgaas@google.com>,
+        Rob Herring <robh+dt@kernel.org>,
+        Mark Rutland <mark.rutland@arm.com>,
+        Masahiro Yamada <yamada.masahiro@socionext.com>,
+        linux-pci@vger.kernel.org, devicetree@vger.kernel.org,
+        linux-arm-kernel@lists.infradead.org, linux-kernel@vger.kernel.org,
+        Masami Hiramatsu <masami.hiramatsu@linaro.org>,
+        Jassi Brar <jaswinder.singh@linaro.org>,
+        Gustavo Pimentel <gustavo.pimentel@synopsys.com>
+Subject: Re: [RESEND PATCH v3 2/2] PCI: uniphier: Add UniPhier PCIe host
+ controller support
+Message-ID: <20181123174754.GA9772@e107981-ln.cambridge.arm.com>
+References: <1539667641-26024-3-git-send-email-hayashi.kunihiko@socionext.com>
+ <20181119161653.GA32232@e107981-ln.cambridge.arm.com>
+ <20181120211531.3607.4A936039@socionext.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20181120211531.3607.4A936039@socionext.com>
+User-Agent: Mutt/1.5.24 (2015-08-30)
 Sender: linux-pci-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-Fixes an error caused by 3-bit right rotation on offset address
-calculation of MSI-X table in dw_pcie_ep_raise_msix_irq().
+On Tue, Nov 20, 2018 at 09:15:31PM +0900, Kunihiko Hayashi wrote:
 
-During the development time, by default the offset address of MSI-X
-table was set to zero, so that even with a 3-bit right rotation the
-computed result would still be zero and valid, therefore not being
-noticed this bug.
+[...]
 
-Fixes: beb4641a787d ("PCI: dwc: Add MSI-X callbacks handler")
-Signed-off-by: Gustavo Pimentel <gustavo.pimentel@synopsys.com>
-Cc: stable@vger.kernel.org
----
- drivers/pci/controller/dwc/pcie-designware-ep.c | 1 -
- 1 file changed, 1 deletion(-)
+> > > +static int uniphier_pcie_link_up(struct dw_pcie *pci)
+> > 
+> > This function returns a bool value, make it return a bool.
+> 
+> This function is registered in struct dw_pcie_ops.link_up, that is defined
+> in pcie-designware.h as follows:
+> 
+>        int     (*link_up)(struct dw_pcie *pcie);
+> 
+> Changing the return type of this function makes type mismatch,
+> so I think it's difficult to change it.
 
-diff --git a/drivers/pci/controller/dwc/pcie-designware-ep.c b/drivers/pci/controller/dwc/pcie-designware-ep.c
-index 1e7b022..de8635a 100644
---- a/drivers/pci/controller/dwc/pcie-designware-ep.c
-+++ b/drivers/pci/controller/dwc/pcie-designware-ep.c
-@@ -440,7 +440,6 @@ int dw_pcie_ep_raise_msix_irq(struct dw_pcie_ep *ep, u8 func_no,
- 	tbl_offset = dw_pcie_readl_dbi(pci, reg);
- 	bir = (tbl_offset & PCI_MSIX_TABLE_BIR);
- 	tbl_offset &= PCI_MSIX_TABLE_OFFSET;
--	tbl_offset >>= 3;
- 
- 	reg = PCI_BASE_ADDRESS_0 + (4 * bir);
- 	bar_addr_upper = 0;
--- 
-2.7.4
+You are right, it is fine.
 
+Thanks,
+Lorenzo
