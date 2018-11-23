@@ -6,25 +6,25 @@ X-Spam-Status: No, score=-9.0 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
 	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_PASS,URIBL_BLOCKED,
 	USER_AGENT_GIT autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 10CF2C43441
-	for <linux-pci@archiver.kernel.org>; Fri, 23 Nov 2018 14:19:39 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id B133BC43441
+	for <linux-pci@archiver.kernel.org>; Fri, 23 Nov 2018 14:19:52 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id D60EA20820
-	for <linux-pci@archiver.kernel.org>; Fri, 23 Nov 2018 14:19:38 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.3.2 mail.kernel.org D60EA20820
+	by mail.kernel.org (Postfix) with ESMTP id 7FAC420664
+	for <linux-pci@archiver.kernel.org>; Fri, 23 Nov 2018 14:19:52 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.3.2 mail.kernel.org 7FAC420664
 Authentication-Results: mail.kernel.org; dmarc=none (p=none dis=none) header.from=bootlin.com
 Authentication-Results: mail.kernel.org; spf=none smtp.mailfrom=linux-pci-owner@vger.kernel.org
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S2395126AbeKXBD4 (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Fri, 23 Nov 2018 20:03:56 -0500
-Received: from mail.bootlin.com ([62.4.15.54]:33955 "EHLO mail.bootlin.com"
+        id S2391206AbeKXBEI (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Fri, 23 Nov 2018 20:04:08 -0500
+Received: from mail.bootlin.com ([62.4.15.54]:33939 "EHLO mail.bootlin.com"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S2436600AbeKXBDA (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Fri, 23 Nov 2018 20:03:00 -0500
+        id S2388574AbeKXBC7 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Fri, 23 Nov 2018 20:02:59 -0500
 Received: by mail.bootlin.com (Postfix, from userid 110)
-        id 5836120DB0; Fri, 23 Nov 2018 15:18:36 +0100 (CET)
+        id 9E99E20D72; Fri, 23 Nov 2018 15:18:35 +0100 (CET)
 Received: from localhost.localdomain (aaubervilliers-681-1-94-205.w90-88.abo.wanadoo.fr [90.88.35.205])
-        by mail.bootlin.com (Postfix) with ESMTPSA id EC30A20791;
+        by mail.bootlin.com (Postfix) with ESMTPSA id 3CD7F20791;
         Fri, 23 Nov 2018 15:18:35 +0100 (CET)
 From:   Miquel Raynal <miquel.raynal@bootlin.com>
 To:     Gregory Clement <gregory.clement@bootlin.com>,
@@ -42,9 +42,9 @@ Cc:     <devicetree@vger.kernel.org>, Rob Herring <robh+dt@kernel.org>,
         Maxime Chevallier <maxime.chevallier@bootlin.com>,
         Nadav Haklai <nadavh@marvell.com>,
         Miquel Raynal <miquel.raynal@bootlin.com>
-Subject: [PATCH 05/12] PCI: aardvark: add suspend to RAM support
-Date:   Fri, 23 Nov 2018 15:18:24 +0100
-Message-Id: <20181123141831.8214-6-miquel.raynal@bootlin.com>
+Subject: [PATCH 03/12] PCI: aardvark: add PHY support
+Date:   Fri, 23 Nov 2018 15:18:22 +0100
+Message-Id: <20181123141831.8214-4-miquel.raynal@bootlin.com>
 X-Mailer: git-send-email 2.19.1
 In-Reply-To: <20181123141831.8214-1-miquel.raynal@bootlin.com>
 References: <20181123141831.8214-1-miquel.raynal@bootlin.com>
@@ -55,92 +55,110 @@ Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-Add suspend and resume callbacks. The priority of these are
-"_noirq()", to workaround early access to the registers done by the
-PCI core through the ->read()/->write() callbacks at resume time.
+The IP needs its PHY to be properly configured to work. While the PHY
+is usually already configured by the bootloader, we will need this
+feature when adding S2RAM support. Take care of registering and
+configuring the PHY from the driver itself.
 
 Signed-off-by: Miquel Raynal <miquel.raynal@bootlin.com>
 ---
- drivers/pci/controller/pci-aardvark.c | 52 +++++++++++++++++++++++++++
- 1 file changed, 52 insertions(+)
+ drivers/pci/controller/pci-aardvark.c | 62 +++++++++++++++++++++++++++
+ 1 file changed, 62 insertions(+)
 
 diff --git a/drivers/pci/controller/pci-aardvark.c b/drivers/pci/controller/pci-aardvark.c
-index 108b3f15c410..7ecf1ac4036b 100644
+index 1d31d74ddab7..da695572a2ed 100644
 --- a/drivers/pci/controller/pci-aardvark.c
 +++ b/drivers/pci/controller/pci-aardvark.c
-@@ -1108,6 +1108,55 @@ static int advk_pcie_setup_clk(struct advk_pcie *pcie)
- 	return ret;
+@@ -17,6 +17,7 @@
+ #include <linux/pci.h>
+ #include <linux/init.h>
+ #include <linux/platform_device.h>
++#include <linux/phy/phy.h>
+ #include <linux/of_address.h>
+ #include <linux/of_gpio.h>
+ #include <linux/of_pci.h>
+@@ -204,6 +205,7 @@ struct advk_pcie {
+ 	int root_bus_nr;
+ 	struct pci_bridge_emul bridge;
+ 	struct gpio_desc *reset_gpio;
++	struct phy *phy;
+ };
+ 
+ static inline void advk_writel(struct advk_pcie *pcie, u32 val, u64 reg)
+@@ -1025,6 +1027,62 @@ static int advk_pcie_setup_reset_gpio(struct advk_pcie *pcie)
+ 	return 0;
  }
  
-+static int __maybe_unused advk_pcie_suspend(struct device *dev)
++static void advk_pcie_disable_phy(struct advk_pcie *pcie)
 +{
-+	struct advk_pcie *pcie = dev_get_drvdata(dev);
++	phy_power_off(pcie->phy);
++	phy_exit(pcie->phy);
++}
 +
-+	advk_pcie_disable_phy(pcie);
++static int advk_pcie_enable_phy(struct advk_pcie *pcie)
++{
++	int ret;
 +
-+	clk_disable_unprepare(pcie->clk);
++	if (!pcie->phy)
++		return 0;
++
++	ret = phy_init(pcie->phy);
++	if (ret)
++		return ret;
++
++	ret = phy_set_mode(pcie->phy, PHY_MODE_PCIE);
++	if (ret) {
++		phy_exit(pcie->phy);
++		return ret;
++	}
++
++	ret = phy_power_on(pcie->phy);
++	if (ret) {
++		phy_exit(pcie->phy);
++		return ret;
++	}
 +
 +	return 0;
 +}
 +
-+static int __maybe_unused advk_pcie_resume(struct device *dev)
++static int advk_pcie_setup_phy(struct advk_pcie *pcie)
 +{
-+	struct advk_pcie *pcie = dev_get_drvdata(dev);
-+	int ret;
++	struct device *dev = &pcie->pdev->dev;
++	struct device_node *node = dev->of_node;
++	int ret = 0;
 +
-+	ret = clk_prepare_enable(pcie->clk);
-+	if (ret)
-+		return ret;
++	pcie->phy = devm_of_phy_get(dev, node, NULL);
++	if (IS_ERR(pcie->phy) && (PTR_ERR(pcie->phy) == -EPROBE_DEFER))
++		return PTR_ERR(pcie->phy);
 +
-+	/*
-+	 * Empirical delay needed after enabling the clock and before
-+	 * accessing any register.
-+	 */
-+	msleep(10);
++	/* Old bindings miss the PHY handle */
++	if (IS_ERR(pcie->phy)) {
++		dev_warn(dev, "PHY unavailable (%ld)\n", PTR_ERR(pcie->phy));
++		pcie->phy = NULL;
++		return 0;
++	}
 +
 +	ret = advk_pcie_enable_phy(pcie);
 +	if (ret)
-+		return ret;
++		dev_err(dev, "Failed to initialize PHY (%d)\n", ret);
 +
-+	advk_pcie_hard_reset(pcie);
-+
-+	advk_pcie_setup_hw(pcie);
-+
-+	advk_sw_pci_bridge_init(pcie);
-+
-+	return 0;
++	return ret;
 +}
-+
-+/*
-+ * The PCI core will try to reconfigure the bus quite early in the resume path.
-+ * We must use the _noirq() alternatives to ensure the controller is ready when
-+ * the core uses the ->read()/->write() callbacks.
-+ */
-+static const struct dev_pm_ops advk_pcie_dev_pm_ops = {
-+	SET_NOIRQ_SYSTEM_SLEEP_PM_OPS(advk_pcie_suspend,
-+				      advk_pcie_resume)
-+};
 +
  static int advk_pcie_probe(struct platform_device *pdev)
  {
  	struct device *dev = &pdev->dev;
-@@ -1188,6 +1237,8 @@ static int advk_pcie_probe(struct platform_device *pdev)
+@@ -1060,6 +1118,10 @@ static int advk_pcie_probe(struct platform_device *pdev)
  		return ret;
  	}
  
-+	dev_set_drvdata(dev, pcie);
++	ret = advk_pcie_setup_phy(pcie);
++	if (ret)
++		return ret;
 +
- 	return 0;
- }
- 
-@@ -1200,6 +1251,7 @@ static struct platform_driver advk_pcie_driver = {
- 	.driver = {
- 		.name = "advk-pcie",
- 		.of_match_table = advk_pcie_of_match_table,
-+		.pm = &advk_pcie_dev_pm_ops,
- 		/* Driver unloading/unbinding currently not supported */
- 		.suppress_bind_attrs = true,
- 	},
+ 	ret = advk_pcie_setup_reset_gpio(pcie);
+ 	if (ret)
+ 		return ret;
 -- 
 2.19.1
 
