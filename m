@@ -5,93 +5,93 @@ X-Spam-Level:
 X-Spam-Status: No, score=-1.0 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
 	MAILING_LIST_MULTI,SPF_PASS autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 0C2BBC43441
-	for <linux-pci@archiver.kernel.org>; Tue, 27 Nov 2018 22:22:55 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 3443CC43441
+	for <linux-pci@archiver.kernel.org>; Tue, 27 Nov 2018 22:33:00 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id C0236208E4
-	for <linux-pci@archiver.kernel.org>; Tue, 27 Nov 2018 22:22:54 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.3.2 mail.kernel.org C0236208E4
-Authentication-Results: mail.kernel.org; dmarc=none (p=none dis=none) header.from=grimberg.me
+	by mail.kernel.org (Postfix) with ESMTP id F3D5A208E4
+	for <linux-pci@archiver.kernel.org>; Tue, 27 Nov 2018 22:32:59 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.3.2 mail.kernel.org F3D5A208E4
+Authentication-Results: mail.kernel.org; dmarc=none (p=none dis=none) header.from=rjwysocki.net
 Authentication-Results: mail.kernel.org; spf=none smtp.mailfrom=linux-pci-owner@vger.kernel.org
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726551AbeK1JWP (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Wed, 28 Nov 2018 04:22:15 -0500
-Received: from mail-wr1-f48.google.com ([209.85.221.48]:42563 "EHLO
-        mail-wr1-f48.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726286AbeK1JWO (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Wed, 28 Nov 2018 04:22:14 -0500
-Received: by mail-wr1-f48.google.com with SMTP id q18so24323979wrx.9
-        for <linux-pci@vger.kernel.org>; Tue, 27 Nov 2018 14:22:53 -0800 (PST)
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20161025;
-        h=x-gm-message-state:from:to:cc:subject:message-id:date:user-agent
-         :mime-version:content-language:content-transfer-encoding;
-        bh=tF7VToxMokqo11hFJmZBMVn1UckJVP9IglJL4IAgfoE=;
-        b=tOlagXMOwUuTyqVIyf3OuTlgPVRPHKuscPSk/ALBzBFnVR1zeFdC0/hhcAdtvRu+ZF
-         b+rWoeCClYM4RPf6PTBVetSXsBk0BAW4oh1G0uRvpU0mw4IW4Bs4QVn8KWHElb2CQ18E
-         1OnwfjQnhUe+b1x+tPZwOcPhawRorgMfq11UYQkBVzDJMLKlTkZEaJvfg4+jHCjBqaVD
-         uhhDSZBnsnJOkFVyl7cgtImaalkL03YYY7vNDqgmJedWP/mDtVJ4Efs/lPRNFfbTrhsB
-         9vZuh4bfYrDkAJGxAdMkNJowvCFXYlJsNe/EG+Uk8OG8LI1PI7UWtS+ELx3d/mQP41y+
-         YrvA==
-X-Gm-Message-State: AA+aEWYbksenrZrSIrUenBIUsSK31I1YIS14aZQ95Jr7q4oqCPL2vTFw
-        KvUDVjBTqAaeesyCntrX90g=
-X-Google-Smtp-Source: AFSGD/VK9A0GKoVn8lgC61r4ILKK90Dr//nzjODeFA7yPLt1u5hrDzOfmCSibsgtTvcLjTdGrlFZQA==
-X-Received: by 2002:a5d:4b8b:: with SMTP id b11mr29339075wrt.180.1543357372174;
-        Tue, 27 Nov 2018 14:22:52 -0800 (PST)
-Received: from ?IPv6:2600:1700:65a0:78e0:514:7862:1503:8e4d? ([2600:1700:65a0:78e0:514:7862:1503:8e4d])
-        by smtp.gmail.com with ESMTPSA id h131sm1078890wmd.17.2018.11.27.14.22.50
-        (version=TLS1_2 cipher=ECDHE-RSA-AES128-GCM-SHA256 bits=128/128);
-        Tue, 27 Nov 2018 14:22:51 -0800 (PST)
-From:   Sagi Grimberg <sagi@grimberg.me>
-To:     "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
-Cc:     Roy Shterman <roys@lightbitslabs.com>,
-        Ofer Hayut <ofer@lightbitslabs.com>,
-        Yinghai Lu <yinghai@kernel.org>
-Subject: Questions about pci_bridge_check_ranges()
-Message-ID: <34458c2d-0faf-e9c1-55fd-7ade553a2b45@grimberg.me>
-Date:   Tue, 27 Nov 2018 14:22:48 -0800
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:60.0) Gecko/20100101
- Thunderbird/60.2.1
+        id S1726702AbeK1JcV (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Wed, 28 Nov 2018 04:32:21 -0500
+Received: from cloudserver094114.home.pl ([79.96.170.134]:48351 "EHLO
+        cloudserver094114.home.pl" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726277AbeK1JcV (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Wed, 28 Nov 2018 04:32:21 -0500
+Received: from 79.184.252.167.ipv4.supernova.orange.pl (79.184.252.167) (HELO aspire.rjw.lan)
+ by serwer1319399.home.pl (79.96.170.134) with SMTP (IdeaSmtpServer 0.83.157)
+ id 16363634018e03a9; Tue, 27 Nov 2018 23:32:56 +0100
+From:   "Rafael J. Wysocki" <rjw@rjwysocki.net>
+To:     Bjorn Helgaas <helgaas@kernel.org>
+Cc:     LKML <linux-kernel@vger.kernel.org>,
+        Linux PCI <linux-pci@vger.kernel.org>,
+        Patrick Talbert <ptalbert@redhat.com>,
+        Linux ACPI <linux-acpi@vger.kernel.org>
+Subject: Re: [Bug] SD card reader in Acer Aspire S5 broken in 4.20-rc
+Date:   Tue, 27 Nov 2018 23:32:52 +0100
+Message-ID: <2589393.XVIVmOtOXj@aspire.rjw.lan>
+In-Reply-To: <20181127202514.GB112381@google.com>
+References: <2960808.4YCFhzuD0k@aspire.rjw.lan> <1675729.7aZxPkvRd8@aspire.rjw.lan> <20181127202514.GB112381@google.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8; format=flowed
-Content-Language: en-US
-Content-Transfer-Encoding: 7bit
+Content-Transfer-Encoding: 7Bit
+Content-Type: text/plain; charset="us-ascii"
 Sender: linux-pci-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-Hi,
+On Tuesday, November 27, 2018 9:25:14 PM CET Bjorn Helgaas wrote:
+> On Mon, Nov 26, 2018 at 11:37:20PM +0100, Rafael J. Wysocki wrote:
+> > On Monday, November 26, 2018 7:03:58 PM CET Rafael J. Wysocki wrote:
+> > > Hi Bjorn,
+> > > 
+> > > The SD card reader in my Acer Aspire S5 doesn't work with 4.20-rc.
+> > > 
+> > > Here's what lspci -v says about it (in a bad kernel):
+> > > 
+> > > 02:00.0 Unassigned class [ff00]: Realtek Semiconductor Co., Ltd. RTS5209 PCI Express Card Reader 
+> > > (rev 01)
+> > >         Subsystem: Acer Incorporated [ALI] Device 0704
+> > >         Flags: bus master, fast devsel, latency 0, IRQ 35
+> > >         Memory at d9001000 (32-bit, non-prefetchable) [size=4K]
+> > >         Capabilities: [40] Power Management version 3
+> > >         Capabilities: [50] MSI: Enable+ Count=1/1 Maskable- 64bit+
+> > >         Capabilities: [70] Express Endpoint, MSI 00
+> > >         Capabilities: [100] Advanced Error Reporting
+> > >         Capabilities: [140] Device Serial Number 00-00-00-01-00-4c-e0-00
+> > >         Kernel driver in use: rtsx_pci
+> > >         Kernel modules: rtsx_pci
+> 
+> Thanks a lot for bisecting this!
+> 
+> With a good kernel (v4.19 or v4.20-rc with 17c91487364f reverted),
+> would you mind collecting "lspci -vv" output, the dmesg log with
+> "pci=earlydump", and the FADT dump?
 
-During a rescan process, pci bridge regions capabilities are
-re-verified. In particular, prefetchable regions are checked for 64-bit
-addressing support. This check is done by reading the base-address
-register 4 LSBs.
+I'll do that tomorrow.
 
-Then, we "double check" that the bridge support 64-bit prefetchable
-addresses. This double-check is done by writing ones to the base-address
-buffer (high 32-bit), and check if we read zeros [1].
+> I'm interested in the initial state of the device at handoff from
+> BIOS, and what Linux changes even when aspm_disabled is set.
 
-Questions:
-1. Why do we need to "double-check"?
-2. What is expected to happen if a memory transaction arrive to this
-    port during this process, while its base-address is miss-configured?
-    (say, a read-transaction issued by a peer device)
+OK
 
-[1] (drivers/pci/setup-bus.c:780):
-/* double check if bridge does support 64 bit pref */
-if (b_res[2].flags & IORESOURCE_MEM_64) {
-	u32 mem_base_hi, tmp;
-	pci_read_config_dword(bridge, PCI_PREF_BASE_UPPER32,
-				 &mem_base_hi);
-	pci_write_config_dword(bridge, PCI_PREF_BASE_UPPER32,
-			       0xffffffff);
-	pci_read_config_dword(bridge, PCI_PREF_BASE_UPPER32, &tmp)
-	if (!tmp)
-		b_res[2].flags &= ~IORESOURCE_MEM_64;
-	pci_write_config_dword(bridge, PCI_PREF_BASE_UPPER32,
-			       mem_base_hi);
-}
+> If we can't figure out a way to fix both this issue and the one fixed
+> by 17c91487364f, I guess the fallback will be to revert 17c91487364f
+> since it's better to allow a system that was previously broken to
+> remain broken than it is to break a system that previously worked.
 
-Cheers,
-Sagi.
+Well, depending on how many systems are affected by the issues fixed by
+17c91487364f IMO.
+
+Arguably, if the FADT says "NO_ASPM", then the platform should not need the
+OS to initialize ASPM to work.  I guess a manual workaround (like an extra
+kernel command line option or similar) should suffice in this particular
+case.
+
+> But obviously I hope we can figure out a solution that fixes both
+> cases.
+
+Of course.
+
