@@ -2,80 +2,49 @@ Return-Path: <SRS0=/WWX=OG=vger.kernel.org=linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-0.8 required=3.0 tests=DKIM_INVALID,DKIM_SIGNED,
-	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_PASS autolearn=ham
-	autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-2.6 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,MAILING_LIST_MULTI,SPF_PASS,URIBL_BLOCKED
+	autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 651FAC43441
-	for <linux-pci@archiver.kernel.org>; Tue, 27 Nov 2018 18:22:22 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 8BA35C43441
+	for <linux-pci@archiver.kernel.org>; Tue, 27 Nov 2018 18:32:16 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 351B52146D
-	for <linux-pci@archiver.kernel.org>; Tue, 27 Nov 2018 18:22:22 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 4CE482146F
+	for <linux-pci@archiver.kernel.org>; Tue, 27 Nov 2018 18:32:16 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=fail reason="signature verification failed" (1024-bit key) header.d=dellteam.com header.i=@dellteam.com header.b="BUS5YFaU"
-DMARC-Filter: OpenDMARC Filter v1.3.2 mail.kernel.org 351B52146D
-Authentication-Results: mail.kernel.org; dmarc=none (p=none dis=none) header.from=Dellteam.com
+	dkim=pass (1024-bit key) header.d=kernel.org header.i=@kernel.org header.b="xWRk0QFl"
+DMARC-Filter: OpenDMARC Filter v1.3.2 mail.kernel.org 4CE482146F
+Authentication-Results: mail.kernel.org; dmarc=fail (p=none dis=none) header.from=kernel.org
 Authentication-Results: mail.kernel.org; spf=none smtp.mailfrom=linux-pci-owner@vger.kernel.org
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1728988AbeK1FVF (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Wed, 28 Nov 2018 00:21:05 -0500
-Received: from esa4.dell-outbound.iphmx.com ([68.232.149.214]:6590 "EHLO
-        esa4.dell-outbound.iphmx.com" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1726086AbeK1FVF (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Wed, 28 Nov 2018 00:21:05 -0500
-DKIM-Signature: v=1; a=rsa-sha256; c=simple/simple;
-  d=dellteam.com; i=@dellteam.com; q=dns/txt; s=smtpout;
-  t=1543342940; x=1574878940;
-  h=cc:from:to:subject:date:message-id:references:
-   content-transfer-encoding:mime-version;
-  bh=hurL8EwyUQszf5IY19+ZGB7He+ZXs+g2ggV8DqcOpV8=;
-  b=BUS5YFaUqPU1XWi2WmSwYYJc+GFFcQcHTirKDhHJIymiu8GWBvABW/4T
-   fg4ThC5Ozg6N/0WtUFxcwwk3mCGrINDm2GmOdhusA+vPZi5MCdKd4g+x9
-   ZY9qaix7o7rHV1oN6EIE0aCr6YqWdEhCuKXmocStMzU1tuHmU7KSgH1t2
-   w=;
-X-IronPort-Anti-Spam-Filtered: true
-X-IronPort-Anti-Spam-Result: =?us-ascii?q?A2FRAQCqiv1bhiWd50NkHAEBAQQBAQc?=
- =?us-ascii?q?EAQGBZYNsMYxmiymCDYF9lz0LAQGEbIMbIjgSAQMBAQIBAQIBAQIQAQEBCgk?=
- =?us-ascii?q?LCCkvgjYigmYBAQEDEig/EAIBCBgeEFcCBAEaGoJ/ggKaFwKBEIlYAQEBgh2?=
- =?us-ascii?q?KLIwNghaBEYMShQGFWwKLFZR3CQWRIyCBSgGPQCyXZAIEAgQFAhSBXYF3cIM?=
- =?us-ascii?q?9gjSOJkABjSiBHwEB?=
-X-IPAS-Result: =?us-ascii?q?A2FRAQCqiv1bhiWd50NkHAEBAQQBAQcEAQGBZYNsMYxmi?=
- =?us-ascii?q?ymCDYF9lz0LAQGEbIMbIjgSAQMBAQIBAQIBAQIQAQEBCgkLCCkvgjYigmYBA?=
- =?us-ascii?q?QEDEig/EAIBCBgeEFcCBAEaGoJ/ggKaFwKBEIlYAQEBgh2KLIwNghaBEYMSh?=
- =?us-ascii?q?QGFWwKLFZR3CQWRIyCBSgGPQCyXZAIEAgQFAhSBXYF3cIM9gjSOJkABjSiBH?=
- =?us-ascii?q?wEB?=
-Received: from mx0b-00154901.pphosted.com ([67.231.157.37])
-  by esa4.dell-outbound.iphmx.com with ESMTP/TLS/AES256-SHA256; 27 Nov 2018 12:22:19 -0600
-Received: from pps.filterd (m0144104.ppops.net [127.0.0.1])
-        by mx0b-00154901.pphosted.com (8.16.0.22/8.16.0.22) with SMTP id wARIDxID143519;
-        Tue, 27 Nov 2018 13:22:19 -0500
-Received: from esa2.dell-outbound2.iphmx.com (esa2.dell-outbound2.iphmx.com [68.232.153.202])
-        by mx0b-00154901.pphosted.com with ESMTP id 2p19t40fsb-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=FAIL);
-        Tue, 27 Nov 2018 13:22:19 -0500
-Cc:     <baicar.tyler@gmail.com>, <Austin.Bolen@dell.com>,
-        <Shyam.Iyer@dell.com>, <lukas@wunner.de>, <bhelgaas@google.com>,
-        <rjw@rjwysocki.net>, <lenb@kernel.org>, <ruscur@russell.cc>,
-        <sbobroff@linux.ibm.com>, <oohall@gmail.com>,
-        <linux-pci@vger.kernel.org>, <linux-acpi@vger.kernel.org>,
-        <linux-kernel@vger.kernel.org>, <linuxppc-dev@lists.ozlabs.org>
-Received: from ausxippc110.us.dell.com ([143.166.85.200])
-  by esa2.dell-outbound2.iphmx.com with ESMTP/TLS/DHE-RSA-AES256-SHA256; 28 Nov 2018 00:21:57 +0600
-X-LoopCount0: from 10.166.134.89
-X-IronPort-AV: E=Sophos;i="5.56,287,1539666000"; 
-   d="scan'208";a="734245329"
-From:   <Alex_Gagniuc@Dellteam.com>
-To:     <okaya@kernel.org>, <mr.nuke.me@gmail.com>, <keith.busch@intel.com>
+        id S1726086AbeK1FbB (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Wed, 28 Nov 2018 00:31:01 -0500
+Received: from mail.kernel.org ([198.145.29.99]:56712 "EHLO mail.kernel.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1725758AbeK1FbB (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Wed, 28 Nov 2018 00:31:01 -0500
+Received: from [10.80.45.159] (unknown [71.69.156.42])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+        (No client certificate requested)
+        by mail.kernel.org (Postfix) with ESMTPSA id AEF1520851;
+        Tue, 27 Nov 2018 18:32:12 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+        s=default; t=1543343534;
+        bh=XR3Yd7KfTsk0F6f5B52JgHul55tl9r5TlXToGf2RZeQ=;
+        h=Subject:To:Cc:References:From:Date:In-Reply-To:From;
+        b=xWRk0QFl5KAdkgRsqvTyDxwdCtdorb6Ckn4723TqelGT07pC4YRAXXjH9jr6/aDZ8
+         wWI0TvePUnL2h6+u1h+EdDCw7JnnK9ie+xSzX0M0/BsmT/vRYz1n1OhQfNga8hLDPs
+         7E+FWdWcW1plUsPXWXprd8an8yK7R4EUwWyHKvZo=
 Subject: Re: [PATCH 0/2] PCI/AER: Consistently use _OSC to determine who owns
  AER
-Thread-Topic: [PATCH 0/2] PCI/AER: Consistently use _OSC to determine who owns
- AER
-Thread-Index: AQHUfTk2X+FUHiVWnkuZssuLn5DqDg==
-Date:   Tue, 27 Nov 2018 18:22:15 +0000
-Message-ID: <336e233b1ad642dcac9638d5fb275810@ausx13mps321.AMER.DELL.COM>
+To:     Alex_Gagniuc@Dellteam.com, mr.nuke.me@gmail.com,
+        keith.busch@intel.com, baicar.tyler@gmail.com
+Cc:     Austin.Bolen@dell.com, Shyam.Iyer@dell.com, lukas@wunner.de,
+        bhelgaas@google.com, rjw@rjwysocki.net, lenb@kernel.org,
+        ruscur@russell.cc, sbobroff@linux.ibm.com, oohall@gmail.com,
+        linux-pci@vger.kernel.org, linux-acpi@vger.kernel.org,
+        linux-kernel@vger.kernel.org, linuxppc-dev@lists.ozlabs.org
 References: <20181115231605.24352-1-mr.nuke.me@gmail.com>
- <CABo9ajD5GJY7MrMjQc3hE=4tpPKpeceMtVEHwCwgjrvJUYjLvg@mail.gmail.com>
- <20181119165318.GB26595@localhost.localdomain>
  <74f2c527-0890-5e14-5e2d-48934a42dae6@kernel.org>
  <ab2427f1-c1f0-68fe-5335-1494caafdcbb@kernel.org>
  <20181119174127.GE26595@localhost.localdomain>
@@ -92,31 +61,29 @@ References: <20181115231605.24352-1-mr.nuke.me@gmail.com>
  <314e59da-48e1-545b-3ee9-6e5056b90fd9@kernel.org>
  <4728316eb84446358e0a07bbf1e42b57@ausx13mps321.AMER.DELL.COM>
  <bac2c78a-cd56-7287-e4fd-6042e9b3432c@kernel.org>
-Accept-Language: en-US
-Content-Language: en-US
-X-MS-Has-Attach: 
-X-MS-TNEF-Correlator: 
-x-ms-exchange-transport-fromentityheader: Hosted
-x-originating-ip: [10.178.128.193]
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: quoted-printable
+ <336e233b1ad642dcac9638d5fb275810@ausx13mps321.AMER.DELL.COM>
+From:   Sinan Kaya <okaya@kernel.org>
+Message-ID: <c385770a-9eec-b040-7861-0a3d455148b9@kernel.org>
+Date:   Tue, 27 Nov 2018 13:32:11 -0500
+User-Agent: Mozilla/5.0 (Windows NT 10.0; WOW64; rv:60.0) Gecko/20100101
+ Thunderbird/60.3.1
 MIME-Version: 1.0
-X-Proofpoint-Virus-Version: vendor=fsecure engine=2.50.10434:,, definitions=2018-11-27_14:,,
- signatures=0
-X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0 priorityscore=1501
- malwarescore=0 suspectscore=0 phishscore=0 bulkscore=0 spamscore=0
- clxscore=1015 lowpriorityscore=0 mlxscore=0 impostorscore=0
- mlxlogscore=731 adultscore=0 classifier=spam adjust=0 reason=mlx
- scancount=1 engine=8.0.1-1810050000 definitions=main-1811270155
+In-Reply-To: <336e233b1ad642dcac9638d5fb275810@ausx13mps321.AMER.DELL.COM>
+Content-Type: text/plain; charset=utf-8; format=flowed
+Content-Language: en-US
+Content-Transfer-Encoding: 7bit
 Sender: linux-pci-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-On 11/20/2018 04:08 PM, Sinan Kaya wrote:=0A=
-> I followed the ASWG thread yesterday. There will be a meeting next week t=
-o=0A=
-> discuss this.=0A=
-=0A=
-Any updates on the meeting?=0A=
-=0A=
+On 11/27/2018 1:22 PM, Alex_Gagniuc@Dellteam.com wrote:
+> On 11/20/2018 04:08 PM, Sinan Kaya wrote:
+>> I followed the ASWG thread yesterday. There will be a meeting next week to
+>> discuss this.
+> 
+> Any updates on the meeting?
+> 
+> 
+
+Tyler should be able to get an update.
