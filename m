@@ -2,125 +2,280 @@ Return-Path: <SRS0=/WWX=OG=vger.kernel.org=linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-9.1 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
-	DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,
-	SIGNED_OFF_BY,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT autolearn=ham
-	autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-8.5 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_PASS,USER_AGENT_MUTT
+	autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 83FAEC43441
-	for <linux-pci@archiver.kernel.org>; Tue, 27 Nov 2018 08:46:37 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 47E09C43441
+	for <linux-pci@archiver.kernel.org>; Tue, 27 Nov 2018 08:54:35 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 3C82220989
-	for <linux-pci@archiver.kernel.org>; Tue, 27 Nov 2018 08:46:37 +0000 (UTC)
-Authentication-Results: mail.kernel.org;
-	dkim=pass (1024-bit key) header.d=nxp.com header.i=@nxp.com header.b="fK6BJjM+"
-DMARC-Filter: OpenDMARC Filter v1.3.2 mail.kernel.org 3C82220989
-Authentication-Results: mail.kernel.org; dmarc=fail (p=none dis=none) header.from=nxp.com
+	by mail.kernel.org (Postfix) with ESMTP id 0F193208E4
+	for <linux-pci@archiver.kernel.org>; Tue, 27 Nov 2018 08:54:35 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.3.2 mail.kernel.org 0F193208E4
+Authentication-Results: mail.kernel.org; dmarc=fail (p=none dis=none) header.from=linux.intel.com
 Authentication-Results: mail.kernel.org; spf=none smtp.mailfrom=linux-pci-owner@vger.kernel.org
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1729259AbeK0Tnp (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Tue, 27 Nov 2018 14:43:45 -0500
-Received: from mail-eopbgr40062.outbound.protection.outlook.com ([40.107.4.62]:56160
-        "EHLO EUR03-DB5-obe.outbound.protection.outlook.com"
-        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1728882AbeK0Tno (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Tue, 27 Nov 2018 14:43:44 -0500
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=nxp.com; s=selector1;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=ozH8T2oUtKR9CuTkvOxEDqr41xlBAP4sYJszAZloRDA=;
- b=fK6BJjM+ovzhWyEpszkgbSXClP8Zjj/5AJmOze2Qs4omoXNb6bk22bRDdPOYmREafCN5CWNnUVfkxow/dUem2/viBMnWGB0BoSaBpKlRLsJnxEJtWXFiMY2RTOAlGHUAlk7ZwEeGgTP+6KmREBSg25sBZQziMmAKNTseVlfQzqU=
-Received: from VI1PR04MB4845.eurprd04.prod.outlook.com (20.177.49.14) by
- VI1PR04MB1454.eurprd04.prod.outlook.com (10.163.166.146) with Microsoft SMTP
- Server (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- 15.20.1361.19; Tue, 27 Nov 2018 08:46:33 +0000
-Received: from VI1PR04MB4845.eurprd04.prod.outlook.com
- ([fe80::21f7:a45b:3d8f:d16a]) by VI1PR04MB4845.eurprd04.prod.outlook.com
- ([fe80::21f7:a45b:3d8f:d16a%2]) with mapi id 15.20.1339.032; Tue, 27 Nov 2018
- 08:46:33 +0000
-From:   Bharat Bhushan <bharat.bhushan@nxp.com>
-To:     "bhelgaas@google.com" <bhelgaas@google.com>,
-        "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
-CC:     "bharatb.yadav@gmail.com" <bharatb.yadav@gmail.com>,
-        Bharat Bhushan <bharat.bhushan@nxp.com>
-Subject: [PATCH] PCI: Mark NXP LS1088 to avoid bus reset bus
-Thread-Topic: [PATCH] PCI: Mark NXP LS1088 to avoid bus reset bus
-Thread-Index: AQHUhi2yh4+Qm28J50ixacdSn4eZIg==
-Date:   Tue, 27 Nov 2018 08:46:33 +0000
-Message-ID: <20181127083454.26560-1-Bharat.Bhushan@nxp.com>
-Accept-Language: en-US
-Content-Language: en-US
-X-MS-Has-Attach: 
-X-MS-TNEF-Correlator: 
-x-mailer: git-send-email 2.19.1
-x-clientproxiedby: PN1PR0101CA0032.INDPRD01.PROD.OUTLOOK.COM
- (2603:1096:c00:c::18) To VI1PR04MB4845.eurprd04.prod.outlook.com
- (2603:10a6:803:54::14)
-authentication-results: spf=none (sender IP is )
- smtp.mailfrom=bharat.bhushan@nxp.com; 
-x-ms-exchange-messagesentrepresentingtype: 1
-x-originating-ip: [14.142.187.166]
-x-ms-publictraffictype: Email
-x-microsoft-exchange-diagnostics: 1;VI1PR04MB1454;6:plY3jUE282DD2R3nPE6isVXi7SlZL+M4Kd5xmu6w/ERTjWqCvE5ZHPqmjg7ndaUjCWHcRI78C4alwvVgLWtZslrovGr9x6tRRWC8WB8aF3tf5Dwo6LehS7fCirQDiUsiQ+KkrRXpM2B7Pew57zUTPNS4mEeaE684Ye+gwHN+bmSK0gbqHNzjV3tOz+kr2DX36qkvQtWq07Q7VIXKXp+2ELWREkRbN6p2v6ZntgoRB3BzriPOo6iZhaUgYm9gMmjUhTbmZYuh9JOjFKTxBD/vJCQsgVCbekTxzIVoHtiqHzxEk4N+sD0tDl139TMx4GV87nHqGYQc0yVSPYM6JchjwcOWZzXqZcocyrdBoT3UU9IcUvAPyuDTKSONPSpoJp8ehtnVOjAhb0Ql0yTF4JIz7lxZGRvn38TByuBExSuXUACsKWsK4mwrfHAiown9yrq+6aFFPGDmksxHkrBHTk+hMw==;5:YZcy9Sf2qilf7/xwO0kb5D8Yk1xmCtKysnXVu3zr5NMov0KsLQB2VK5i3xR1D301XagnTBfz10Glqi/ox+PzkC4/uc8yFeLHR+QGP9sfzSkcY1CAP4GI8MbgQw3yaGzsDtUgHLzE5B3T2fDEgtDNTFyBRISzIaQYGvdZomAFZMU=;7:I1fC+TgiaNWGbi/7ZPga884by33UReDYCjhb700jRFHyqMdmgn9J737qBFs5XVbxdWBK07N8kgKmcziBMq1z12DA5TLaDimOCr2K+8Ia6WRGFdq6oUq2+gbW5deyKI2RJbuYbPYAnnTCCLS75gRbkg==
-x-ms-office365-filtering-correlation-id: a72cea3e-057a-4a74-76ce-08d65444d4e5
-x-ms-office365-filtering-ht: Tenant
-x-microsoft-antispam: BCL:0;PCL:0;RULEID:(2390098)(7020095)(4652040)(8989299)(5600074)(711020)(4618075)(4534185)(7168020)(4627221)(201703031133081)(201702281549075)(8990200)(2017052603328)(7153060)(7193020);SRVR:VI1PR04MB1454;
-x-ms-traffictypediagnostic: VI1PR04MB1454:
-x-microsoft-antispam-prvs: <VI1PR04MB1454A044BDCAF584822115FC9AD00@VI1PR04MB1454.eurprd04.prod.outlook.com>
-x-ms-exchange-senderadcheck: 1
-x-exchange-antispam-report-cfa-test: BCL:0;PCL:0;RULEID:(8211001083)(6040522)(2401047)(5005006)(8121501046)(93006095)(93001095)(3002001)(10201501046)(3231443)(944501410)(52105112)(6055026)(148016)(149066)(150057)(6041310)(20161123560045)(20161123564045)(201703131423095)(201702281528075)(20161123555045)(201703061421075)(201703061406153)(20161123562045)(20161123558120)(201708071742011)(7699051)(76991095);SRVR:VI1PR04MB1454;BCL:0;PCL:0;RULEID:;SRVR:VI1PR04MB1454;
-x-forefront-prvs: 086943A159
-x-forefront-antispam-report: SFV:NSPM;SFS:(10009020)(136003)(366004)(39860400002)(376002)(396003)(346002)(199004)(189003)(6436002)(5660300001)(66066001)(105586002)(256004)(478600001)(68736007)(6486002)(106356001)(52116002)(86362001)(99286004)(2906002)(81156014)(81166006)(102836004)(55236004)(8936002)(8676002)(36756003)(25786009)(386003)(6506007)(4326008)(39060400002)(7736002)(14454004)(6512007)(2201001)(305945005)(53936002)(476003)(2616005)(1857600001)(486006)(26005)(6116002)(97736004)(50226002)(3846002)(1076002)(2501003)(71190400001)(71200400001)(110136005)(54906003)(186003)(78486014)(316002);DIR:OUT;SFP:1101;SCL:1;SRVR:VI1PR04MB1454;H:VI1PR04MB4845.eurprd04.prod.outlook.com;FPR:;SPF:None;LANG:en;PTR:InfoNoRecords;A:1;MX:1;
-received-spf: None (protection.outlook.com: nxp.com does not designate
- permitted sender hosts)
-x-microsoft-antispam-message-info: P83iaMoYiKmhkp48nlItzCCDtBnDlmBcqLsrGpQaQdt9BUNvDmg/bBvyHFrW/qHLnBfAFN/Y/IgbdVlMr//o2gVd4xq1ycu0GjIkwSbARjDizLjkHiAC7/xvGRn543vKZ2RtYzdrdV56LO0Q0UA5SJ+EMs4XdP4mDxdm1zv7XaKwvZCH0iHuAt7CwaQkG3n4PN6fzHcq8QWZ1d72k5scUin4daFm0slXboAIVAs+T4g4vVCn3GPC9ch4XHUKUyJlsFBc5mP8MNgVlBqb9LAXxSHLKRA2mrauRSP2rWF3lfTwXY5Xd13QHfbpxRPIDCNwLrmSR3w1huPABw7Uzaje6eX/snh1ovHS/oZ4UITnOKY=
-spamdiagnosticoutput: 1:99
-spamdiagnosticmetadata: NSPM
-Content-Type: text/plain; charset="iso-8859-1"
-Content-Transfer-Encoding: quoted-printable
+        id S1729599AbeK0Tvo (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Tue, 27 Nov 2018 14:51:44 -0500
+Received: from mga11.intel.com ([192.55.52.93]:14125 "EHLO mga11.intel.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1729591AbeK0Tvo (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Tue, 27 Nov 2018 14:51:44 -0500
+X-Amp-Result: UNKNOWN
+X-Amp-Original-Verdict: FILE UNKNOWN
+X-Amp-File-Uploaded: False
+Received: from orsmga002.jf.intel.com ([10.7.209.21])
+  by fmsmga102.fm.intel.com with ESMTP/TLS/DHE-RSA-AES256-GCM-SHA384; 27 Nov 2018 00:54:33 -0800
+X-ExtLoop1: 1
+X-IronPort-AV: E=Sophos;i="5.56,286,1539673200"; 
+   d="scan'208";a="112148768"
+Received: from lahna.fi.intel.com (HELO lahna) ([10.237.72.157])
+  by orsmga002.jf.intel.com with SMTP; 27 Nov 2018 00:54:27 -0800
+Received: by lahna (sSMTP sendmail emulation); Tue, 27 Nov 2018 10:54:26 +0200
+Date:   Tue, 27 Nov 2018 10:54:26 +0200
+From:   Mika Westerberg <mika.westerberg@linux.intel.com>
+To:     Bjorn Helgaas <helgaas@kernel.org>
+Cc:     iommu@lists.linux-foundation.org, Joerg Roedel <joro@8bytes.org>,
+        David Woodhouse <dwmw2@infradead.org>,
+        Lu Baolu <baolu.lu@linux.intel.com>,
+        Ashok Raj <ashok.raj@intel.com>,
+        "Rafael J. Wysocki" <rjw@rjwysocki.net>,
+        Jacob jun Pan <jacob.jun.pan@intel.com>,
+        Andreas Noever <andreas.noever@gmail.com>,
+        Michael Jamet <michael.jamet@intel.com>,
+        Yehezkel Bernat <YehezkelShB@gmail.com>,
+        Lukas Wunner <lukas@wunner.de>,
+        Christian Kellner <ckellner@redhat.com>,
+        Mario.Limonciello@dell.com,
+        Anthony Wong <anthony.wong@canonical.com>,
+        Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
+        Christoph Hellwig <hch@infradead.org>,
+        Alex Williamson <alex.williamson@redhat.com>,
+        linux-acpi@vger.kernel.org, linux-pci@vger.kernel.org,
+        linux-kernel@vger.kernel.org
+Subject: Re: [PATCH v2 1/4] PCI / ACPI: Identify untrusted PCI devices
+Message-ID: <20181127085426.GI2296@lahna.fi.intel.com>
+References: <20181126111526.56340-1-mika.westerberg@linux.intel.com>
+ <20181126111526.56340-2-mika.westerberg@linux.intel.com>
+ <20181127001711.GC212532@google.com>
 MIME-Version: 1.0
-X-OriginatorOrg: nxp.com
-X-MS-Exchange-CrossTenant-Network-Message-Id: a72cea3e-057a-4a74-76ce-08d65444d4e5
-X-MS-Exchange-CrossTenant-originalarrivaltime: 27 Nov 2018 08:46:33.1602
- (UTC)
-X-MS-Exchange-CrossTenant-fromentityheader: Hosted
-X-MS-Exchange-CrossTenant-id: 686ea1d3-bc2b-4c6f-a92c-d99c5c301635
-X-MS-Exchange-Transport-CrossTenantHeadersStamped: VI1PR04MB1454
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20181127001711.GC212532@google.com>
+Organization: Intel Finland Oy - BIC 0357606-4 - Westendinkatu 7, 02160 Espoo
+User-Agent: Mutt/1.10.1 (2018-07-13)
 Sender: linux-pci-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-NXP (Freescale Vendor ID) LS1088 chips do not behave correctly after
-bus reset with e1000e. Link state of device does not comes UP and so
-config space never accessible again.
+On Mon, Nov 26, 2018 at 06:17:11PM -0600, Bjorn Helgaas wrote:
+> Hi Mika,
 
-Signed-off-by: Bharat Bhushan <Bharat.Bhushan@nxp.com>
----
- drivers/pci/quirks.c | 7 +++++++
- 1 file changed, 7 insertions(+)
+Hi,
 
-diff --git a/drivers/pci/quirks.c b/drivers/pci/quirks.c
-index 4700d24e5d55..b9ae4e9f101a 100644
---- a/drivers/pci/quirks.c
-+++ b/drivers/pci/quirks.c
-@@ -3391,6 +3391,13 @@ DECLARE_PCI_FIXUP_HEADER(PCI_VENDOR_ID_ATHEROS, 0x00=
-33, quirk_no_bus_reset);
-  */
- DECLARE_PCI_FIXUP_HEADER(PCI_VENDOR_ID_CAVIUM, 0xa100, quirk_no_bus_reset)=
-;
-=20
-+/*
-+ * NXP (Freescale Vendor ID) LS1088 chips do not behave correctly after
-+ * bus reset. Link state of device does not comes UP and so config space
-+ * never accessible again.
-+ */
-+DECLARE_PCI_FIXUP_HEADER(PCI_VENDOR_ID_FREESCALE, 0x80c0, quirk_no_bus_res=
-et);
-+
- static void quirk_no_pm_reset(struct pci_dev *dev)
- {
- 	/*
---=20
-2.19.1
+> On Mon, Nov 26, 2018 at 02:15:23PM +0300, Mika Westerberg wrote:
+> > Recent systems with Thunderbolt ports may support IOMMU natively.
+> 
+> This sentence doesn't make sense to me.  There's no logical connection
+> between having an IOMMU and having a Thunderbolt port.
+> 
+> > This means that the platform utilizes IOMMU to prevent DMA attacks
+> > over externally exposed PCIe root ports (typically Thunderbolt
+> > ports)
+> 
+> Nor this one.  The platform only uses the IOMMU to prevent DMA attacks
+> if the OS chooses to do that.
 
+I guess I'm trying to say here that the recent changes add such support
+to the platform BIOS that allows the OS to enable IOMMU without being
+compromised by a malicious device that is already connected. The BIOS
+sets the new ACPI DMAR bit in that case.
+
+> > The system BIOS marks these PCIe root ports as being externally facing
+> > ports by implementing following ACPI _DSD [1] under the root port in
+> > question:
+> 
+> There's no standard that requires this, so the best we can say is that
+> a system BIOS *may* mark externally facing ports with this mechanism.
+
+There is no standard but I'm quite sure this is something that will be
+required to be implemented properly by the OEM by Microsoft hardware
+compatibility suite.
+
+> I think it would make sense to say something like:
+> 
+>   A malicious PCI device may use DMA to attack the system.  An
+>   external Thunderbolt port is a convenient point to attach such a
+>   device.  The OS may use an IOMMU to defend against DMA attacks.
+> 
+>   Some BIOSes mark externally facing Root Ports with the this ACPI
+>   _DSD:
+> 
+>     ...
+> 
+>   If we find such a Root Port, mark it and all its children as
+>   "is_untrusted".  The rest of the OS may use this to prevent use of
+>   the device unless we have an IOMMU to prevent malicious DMA [I don't
+>   know your actual policy yet].
+
+OK, I will update the commit message accordingly.
+
+> >   Name (_DSD, Package () {
+> >       ToUUID ("efcc06cc-73ac-4bc3-bff0-76143807c389"),
+> >       Package () {
+> >           Package () {"ExternalFacingPort", 1},
+> > 	  Package () {"UID", 0 }
+> >       }
+> >   })
+> > 
+> > To make it possible for IOMMU code to identify these devices, we look up
+> > for this property and mark all children devices (including the root port
+> > itself) with a new flag (->is_untrusted). This flag is meant to be used
+> > with all PCIe devices (not just Thunderbolt) that cannot be trusted in
+> > the same level than integrated devices and may need to put behind full
+> > IOMMU protection.
+> > 
+> > [1] https://docs.microsoft.com/en-us/windows-hardware/drivers/pci/dsd-for-pcie-root-ports#identifying-externally-exposed-pcie-root-ports
+> > 
+> > Signed-off-by: Mika Westerberg <mika.westerberg@linux.intel.com>
+> > ---
+> >  drivers/acpi/property.c |  3 +++
+> >  drivers/pci/pci-acpi.c  | 18 ++++++++++++++++++
+> >  drivers/pci/probe.c     | 22 ++++++++++++++++++++++
+> >  include/linux/pci.h     |  8 ++++++++
+> >  4 files changed, 51 insertions(+)
+> > 
+> > diff --git a/drivers/acpi/property.c b/drivers/acpi/property.c
+> > index 8c7c4583b52d..4bdad32f62c8 100644
+> > --- a/drivers/acpi/property.c
+> > +++ b/drivers/acpi/property.c
+> > @@ -31,6 +31,9 @@ static const guid_t prp_guids[] = {
+> >  	/* Hotplug in D3 GUID: 6211e2c0-58a3-4af3-90e1-927a4e0c55a4 */
+> >  	GUID_INIT(0x6211e2c0, 0x58a3, 0x4af3,
+> >  		  0x90, 0xe1, 0x92, 0x7a, 0x4e, 0x0c, 0x55, 0xa4),
+> > +	/* External facing port GUID: efcc06cc-73ac-4bc3-bff0-76143807c389 */
+> > +	GUID_INIT(0xefcc06cc, 0x73ac, 0x4bc3,
+> > +		  0xbf, 0xf0, 0x76, 0x14, 0x38, 0x07, 0xc3, 0x89),
+> >  };
+> >  
+> >  static const guid_t ads_guid =
+> > diff --git a/drivers/pci/pci-acpi.c b/drivers/pci/pci-acpi.c
+> > index 921db6f80340..84233cf46fc2 100644
+> > --- a/drivers/pci/pci-acpi.c
+> > +++ b/drivers/pci/pci-acpi.c
+> > @@ -789,6 +789,23 @@ static void pci_acpi_optimize_delay(struct pci_dev *pdev,
+> >  	ACPI_FREE(obj);
+> >  }
+> >  
+> > +static void pci_acpi_set_untrusted(struct pci_dev *dev)
+> > +{
+> > +	u8 val;
+> > +
+> > +	if (pci_pcie_type(dev) != PCI_EXP_TYPE_ROOT_PORT)
+> > +		return;
+> > +	if (device_property_read_u8(&dev->dev, "ExternalFacingPort", &val))
+> > +		return;
+> > +
+> > +	/*
+> > +	 * These root ports expose PCIe (including DMA) outside of the
+> > +	 * system so make sure we treat them and everything behind as
+> > +	 * untrusted.
+> > +	 */
+> > +	dev->is_untrusted = val == 1;
+> 
+> Simpler to parse:
+> 
+>   if (val)
+>     dev->is_untrusted = 1;
+
+OK.
+
+> > +}
+> > +
+> >  static void pci_acpi_setup(struct device *dev)
+> >  {
+> >  	struct pci_dev *pci_dev = to_pci_dev(dev);
+> > @@ -798,6 +815,7 @@ static void pci_acpi_setup(struct device *dev)
+> >  		return;
+> >  
+> >  	pci_acpi_optimize_delay(pci_dev, adev->handle);
+> > +	pci_acpi_set_untrusted(pci_dev);
+> >  
+> >  	pci_acpi_add_pm_notifier(adev, pci_dev);
+> >  	if (!adev->wakeup.flags.valid)
+> > diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
+> > index b1c05b5054a0..144623ae2e68 100644
+> > --- a/drivers/pci/probe.c
+> > +++ b/drivers/pci/probe.c
+> > @@ -1378,6 +1378,26 @@ static void set_pcie_thunderbolt(struct pci_dev *dev)
+> >  	}
+> >  }
+> >  
+> > +static void set_pcie_untrusted(struct pci_dev *dev)
+> > +{
+> > +	struct pci_dev *parent;
+> > +
+> > +	/*
+> > +	 * Walk up the device hierarchy and check for any upstream bridge
+> > +	 * that has is_untrusted set to true. In that case treat this one
+> > +	 * untrusted as well.
+> > +	 */
+> > +	parent = pci_upstream_bridge(dev);
+> > +	while (parent) {
+> > +		if (parent->is_untrusted) {
+> > +			dev->is_untrusted = true;
+> > +			break;
+> > +		}
+> > +
+> > +		parent = pci_upstream_bridge(parent);
+> > +	}
+> 
+> In what circumstance is this loop needed?  I expected this would be
+> sufficient:
+> 
+>   bridge = pci_upstream_bridge(dev);
+>   if (bridge && bridge->is_untrusted)
+>     dev->is_untrusted = true;
+
+I agree the loop is not necessary. I'll change it in the next version.
+
+> > +}
+> > +
+> >  /**
+> >   * pci_ext_cfg_is_aliased - Is ext config space just an alias of std config?
+> >   * @dev: PCI device
+> > @@ -1638,6 +1658,8 @@ int pci_setup_device(struct pci_dev *dev)
+> >  	/* Need to have dev->cfg_size ready */
+> >  	set_pcie_thunderbolt(dev);
+> >  
+> > +	set_pcie_untrusted(dev);
+> > +
+> >  	/* "Unknown power state" */
+> >  	dev->current_state = PCI_UNKNOWN;
+> >  
+> > diff --git a/include/linux/pci.h b/include/linux/pci.h
+> > index 11c71c4ecf75..3fa73cc6cf68 100644
+> > --- a/include/linux/pci.h
+> > +++ b/include/linux/pci.h
+> > @@ -396,6 +396,14 @@ struct pci_dev {
+> >  	unsigned int	is_hotplug_bridge:1;
+> >  	unsigned int	shpc_managed:1;		/* SHPC owned by shpchp */
+> >  	unsigned int	is_thunderbolt:1;	/* Thunderbolt controller */
+> > +	/*
+> > +	 * Devices marked being untrusted are the ones that can potentially
+> > +	 * execute DMA attacks and similar. They are typically connected
+> > +	 * through external ports such as Thunderbolt but not limited to
+> > +	 * that. When an IOMMU is enabled they should be getting full
+> > +	 * mappings to make sure they cannot access arbitrary memory.
+> > +	 */
+> > +	unsigned int	is_untrusted:1;
+> 
+> We have a mix of "is_X" and "X", but I think "untrusted" is sufficient
+> since "untrusted" is a perfectly good predicate all by itself, i.e.,
+> 
+>   if (dev->untrusted)
+> 
+> reads easily and makes good sense.
+
+Works for me :)
