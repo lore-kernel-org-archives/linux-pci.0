@@ -2,154 +2,138 @@ Return-Path: <SRS0=/WWX=OG=vger.kernel.org=linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-7.0 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_PASS autolearn=ham
-	autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-4.0 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_PASS autolearn=ham autolearn_force=no
+	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 58D3CC43441
-	for <linux-pci@archiver.kernel.org>; Tue, 27 Nov 2018 16:08:33 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 73CF6C43441
+	for <linux-pci@archiver.kernel.org>; Tue, 27 Nov 2018 16:49:46 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 2880E20873
-	for <linux-pci@archiver.kernel.org>; Tue, 27 Nov 2018 16:08:33 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.3.2 mail.kernel.org 2880E20873
+	by mail.kernel.org (Postfix) with ESMTP id 42715208E4
+	for <linux-pci@archiver.kernel.org>; Tue, 27 Nov 2018 16:49:46 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.3.2 mail.kernel.org 42715208E4
 Authentication-Results: mail.kernel.org; dmarc=fail (p=none dis=none) header.from=redhat.com
 Authentication-Results: mail.kernel.org; spf=none smtp.mailfrom=linux-pci-owner@vger.kernel.org
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1729891AbeK1DGy (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Tue, 27 Nov 2018 22:06:54 -0500
-Received: from mx1.redhat.com ([209.132.183.28]:42030 "EHLO mx1.redhat.com"
+        id S1729472AbeK1DsO (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Tue, 27 Nov 2018 22:48:14 -0500
+Received: from mx1.redhat.com ([209.132.183.28]:48730 "EHLO mx1.redhat.com"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1726746AbeK1DGy (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Tue, 27 Nov 2018 22:06:54 -0500
-Received: from smtp.corp.redhat.com (int-mx05.intmail.prod.int.phx2.redhat.com [10.5.11.15])
+        id S1729321AbeK1DsO (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Tue, 27 Nov 2018 22:48:14 -0500
+Received: from smtp.corp.redhat.com (int-mx06.intmail.prod.int.phx2.redhat.com [10.5.11.16])
         (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
         (No client certificate requested)
-        by mx1.redhat.com (Postfix) with ESMTPS id 576E73154862;
-        Tue, 27 Nov 2018 16:08:31 +0000 (UTC)
-Received: from x1.home (ovpn-116-133.phx2.redhat.com [10.3.116.133])
-        by smtp.corp.redhat.com (Postfix) with ESMTP id 98CB65D75D;
-        Tue, 27 Nov 2018 16:08:30 +0000 (UTC)
-Date:   Tue, 27 Nov 2018 09:08:30 -0700
-From:   Alex Williamson <alex.williamson@redhat.com>
+        by mx1.redhat.com (Postfix) with ESMTPS id C026AA048A;
+        Tue, 27 Nov 2018 16:49:44 +0000 (UTC)
+Received: from file01.intranet.prod.int.rdu2.redhat.com (file01.intranet.prod.int.rdu2.redhat.com [10.11.5.7])
+        by smtp.corp.redhat.com (Postfix) with ESMTPS id 937175C1B2;
+        Tue, 27 Nov 2018 16:49:44 +0000 (UTC)
+Received: from file01.intranet.prod.int.rdu2.redhat.com (localhost [127.0.0.1])
+        by file01.intranet.prod.int.rdu2.redhat.com (8.14.4/8.14.4) with ESMTP id wARGniZo029271;
+        Tue, 27 Nov 2018 11:49:44 -0500
+Received: from localhost (mpatocka@localhost)
+        by file01.intranet.prod.int.rdu2.redhat.com (8.14.4/8.14.4/Submit) with ESMTP id wARGnhKn029267;
+        Tue, 27 Nov 2018 11:49:43 -0500
+X-Authentication-Warning: file01.intranet.prod.int.rdu2.redhat.com: mpatocka owned process doing -bs
+Date:   Tue, 27 Nov 2018 11:49:43 -0500 (EST)
+From:   Mikulas Patocka <mpatocka@redhat.com>
+X-X-Sender: mpatocka@file01.intranet.prod.int.rdu2.redhat.com
 To:     Bjorn Helgaas <helgaas@kernel.org>
-Cc:     Bharat Bhushan <bharat.bhushan@nxp.com>,
-        "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-        "bharatb.yadav@gmail.com" <bharatb.yadav@gmail.com>,
-        David Daney <david.daney@cavium.com>,
-        Jan Glauber <jglauber@cavium.com>,
-        Maik Broemme <mbroemme@libmpq.org>,
-        Chris Blake <chrisrblake93@gmail.com>
-Subject: Re: [PATCH] PCI: Mark NXP LS1088 to avoid bus reset bus
-Message-ID: <20181127090830.084fedf1@x1.home>
-In-Reply-To: <20181127153356.GA112381@google.com>
-References: <20181127083454.26560-1-Bharat.Bhushan@nxp.com>
-        <20181127153356.GA112381@google.com>
-Organization: Red Hat
+cc:     linux-pci@vger.kernel.org, Tal Gilboa <talgi@mellanox.com>,
+        Tariq Toukan <tariqt@mellanox.com>,
+        Alex Deucher <alexdeucher@gmail.com>,
+        amd-gfx@lists.freedesktop.org
+Subject: Re: [PATCH] pci: fix incorrect value returned from
+ pcie_get_speed_cap
+In-Reply-To: <20181126224051.GB212532@google.com>
+Message-ID: <alpine.LRH.2.02.1811271144420.27588@file01.intranet.prod.int.rdu2.redhat.com>
+References: <alpine.LRH.2.02.1810301232310.23106@file01.intranet.prod.int.rdu2.redhat.com> <20181120004704.GA191199@google.com> <20181126224051.GB212532@google.com>
+User-Agent: Alpine 2.02 (LRH 1266 2009-07-14)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7bit
-X-Scanned-By: MIMEDefang 2.79 on 10.5.11.15
-X-Greylist: Sender IP whitelisted, not delayed by milter-greylist-4.5.16 (mx1.redhat.com [10.5.110.41]); Tue, 27 Nov 2018 16:08:31 +0000 (UTC)
+Content-Type: TEXT/PLAIN; charset=US-ASCII
+X-Scanned-By: MIMEDefang 2.79 on 10.5.11.16
+X-Greylist: Sender IP whitelisted, not delayed by milter-greylist-4.5.16 (mx1.redhat.com [10.5.110.28]); Tue, 27 Nov 2018 16:49:44 +0000 (UTC)
 Sender: linux-pci-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-On Tue, 27 Nov 2018 09:33:56 -0600
-Bjorn Helgaas <helgaas@kernel.org> wrote:
 
-> [+cc David, Jan, Alex, Maik, Chris]
-> 
-> On Tue, Nov 27, 2018 at 08:46:33AM +0000, Bharat Bhushan wrote:
-> > NXP (Freescale Vendor ID) LS1088 chips do not behave correctly after
-> > bus reset with e1000e. Link state of device does not comes UP and so
-> > config space never accessible again.  
-> 
-> Previous similar commits:
-> 
->   822155100e58 ("PCI: Mark Cavium CN8xxx to avoid bus reset")
->   8e2e03179923 ("PCI: Mark Atheros AR9580 to avoid bus reset")
->   9ac0108c2bac ("PCI: Mark Atheros AR9485 and QCA9882 to avoid bus reset")
->   c3e59ee4e766 ("PCI: Mark Atheros AR93xx to avoid bus reset")
-> 
-> 1) Please make your subject match (remove the spurious "bus" at the
-> end)
-> 
-> 2) This should probably be marked for stable (v3.14 and later, since
-> the quirk itself appeared in v3.19 and marked for v3.14 and later
-> stable kernels).  Maybe even mark it as "Fixes: c3e59ee4e766..." to
-> connect it.
-> 
-> 3) The 1957:80c0 PCI ID doesn't appear in https://pci-ids.ucw.cz/; can
-> you add it?
-> 
-> 4) Is there a hardware erratum for this?  If so, please include the
-> URL here.
-> 
-> 5) Can you reproduce the problem using the same endpoint (e1000e) on a
-> different system with a different bridge?
-> 
-> 6) Have you looked at this with a PCIe analyzer?  It would be very
-> interesting to compare the boot-time or system reboot path with the
-> individual bus reset path you're fixing.
-> 
-> Since there are several similar reports and they sometimes involve the
-> same devices (both your patch and 822155100e58 mention e1000e), I'm a
-> little suspicious that we're doing something wrong in the bus reset
-> path.
 
-I agree, entirely excluding bus resets is not something to be taken
-lightly.  It's less than ideal for an endpoint and a fairly major
-functional gap for a downstream port.  It should really be considered
-a last resort.
+On Mon, 26 Nov 2018, Bjorn Helgaas wrote:
 
-> I think bus reset uses Secondary Bus Reset in the Bridge Control
-> register.  That's a generic mechanism that I would expect to be pretty
-> well-tested.  I suspect the BIOS probably uses it in the reboot path,
-> and the device probably works after that.
+> On Mon, Nov 19, 2018 at 06:47:04PM -0600, Bjorn Helgaas wrote:
+> > On Tue, Oct 30, 2018 at 12:36:08PM -0400, Mikulas Patocka wrote:
+> > > The macros PCI_EXP_LNKCAP_SLS_*GB are values, not bit masks. We must mask
+> > > the register and compare it against them.
+> > > 
+> > > This patch fixes errors "amdgpu: [powerplay] failed to send message 261
+> > > ret is 0" errors when PCIe-v3 card is plugged into PCIe-v1 slot, because
+> > > the slot is being incorrectly reported as PCIe-v3 capable.
+> > > 
+> > > Signed-off-by: Mikulas Patocka <mpatocka@redhat.com>
+> > > Fixes: 6cf57be0f78e ("PCI: Add pcie_get_speed_cap() to find max supported link speed")
+> > > Cc: stable@vger.kernel.org	# v4.17+
+> > > 
+> > > ---
+> > >  drivers/pci/pci.c |    8 ++++----
+> > >  1 file changed, 4 insertions(+), 4 deletions(-)
+> > > 
+> > > Index: linux-4.19/drivers/pci/pci.c
+> > > ===================================================================
+> > > --- linux-4.19.orig/drivers/pci/pci.c	2018-10-30 16:58:58.000000000 +0100
+> > > +++ linux-4.19/drivers/pci/pci.c	2018-10-30 16:58:58.000000000 +0100
+> > > @@ -5492,13 +5492,13 @@ enum pci_bus_speed pcie_get_speed_cap(st
+> > >  
+> > >  	pcie_capability_read_dword(dev, PCI_EXP_LNKCAP, &lnkcap);
+> > >  	if (lnkcap) {
+> > > -		if (lnkcap & PCI_EXP_LNKCAP_SLS_16_0GB)
+> > > +		if ((lnkcap & PCI_EXP_LNKCAP_SLS) == PCI_EXP_LNKCAP_SLS_16_0GB)
+> > >  			return PCIE_SPEED_16_0GT;
+> > > -		else if (lnkcap & PCI_EXP_LNKCAP_SLS_8_0GB)
+> > > +		else if ((lnkcap & PCI_EXP_LNKCAP_SLS) == PCI_EXP_LNKCAP_SLS_8_0GB)
+> > >  			return PCIE_SPEED_8_0GT;
+> > > -		else if (lnkcap & PCI_EXP_LNKCAP_SLS_5_0GB)
+> > > +		else if ((lnkcap & PCI_EXP_LNKCAP_SLS) ==PCI_EXP_LNKCAP_SLS_5_0GB)
+> > >  			return PCIE_SPEED_5_0GT;
+> > > -		else if (lnkcap & PCI_EXP_LNKCAP_SLS_2_5GB)
+> > > +		else if ((lnkcap & PCI_EXP_LNKCAP_SLS) == PCI_EXP_LNKCAP_SLS_2_5GB)
+> > >  			return PCIE_SPEED_2_5GT;
+> > >  	}
 > 
-> So I wonder if the Linux delay isn't quite long enough, or our first
-> access to the device isn't quite right, e.g., maybe there's some issue
-> with the bus/device number capture (PCIe r4.0, sec 2.2.6.2).
+> > We also need similar fixes in pci_set_bus_speed(), pcie_speeds()
+> > (hfi1), cobalt_pcie_status_show(), hba_ioctl_callback(),
+> > qla24xx_pci_info_str(), and maybe a couple other places.
+> 
+> Does anybody want to volunteer to fix the places above as well?  I
+> found them by grepping for PCI_EXP_LNKCAP, and they're all broken in
+> ways similar to pcie_get_speed_cap().  Possibly some of these places
+> could use pcie_get_speed_cap() directly.
+> 
+> Bjorn
+> 
 
-Tweaking the delay would be a reasonable solution, though we are seeing
-some issues where users with lots of assigned devices that require bus
-resets experience long delays as vfio file descriptors are closed
-sequentially on exit.  So perhaps we could flag downstream ports
-requiring an extra delay, if that becomes a solution.  Your mention of
-the bus/device number also reminds me of the issue we saw on
-Threadripper where there were patches proposed to re-write the
-secondary and subordinate bus numbers after reset.  AMD was able to
-resolve that in a firmware update, but there could be something similar
-occurring here. Thanks,
+They are not broken, they are masking the value with PCI_EXP_LNKCAP_SLS - 
+that is correct.
 
-Alex
+pci_set_bus_speed:
+                pcie_capability_read_dword(bridge, PCI_EXP_LNKCAP, &linkcap);
+                bus->max_bus_speed = pcie_link_speed[linkcap & PCI_EXP_LNKCAP_SLS];
 
-> > Signed-off-by: Bharat Bhushan <Bharat.Bhushan@nxp.com>
-> > ---
-> >  drivers/pci/quirks.c | 7 +++++++
-> >  1 file changed, 7 insertions(+)
-> > 
-> > diff --git a/drivers/pci/quirks.c b/drivers/pci/quirks.c
-> > index 4700d24e5d55..b9ae4e9f101a 100644
-> > --- a/drivers/pci/quirks.c
-> > +++ b/drivers/pci/quirks.c
-> > @@ -3391,6 +3391,13 @@ DECLARE_PCI_FIXUP_HEADER(PCI_VENDOR_ID_ATHEROS, 0x0033, quirk_no_bus_reset);
-> >   */
-> >  DECLARE_PCI_FIXUP_HEADER(PCI_VENDOR_ID_CAVIUM, 0xa100, quirk_no_bus_reset);
-> >  
-> > +/*
-> > + * NXP (Freescale Vendor ID) LS1088 chips do not behave correctly after
-> > + * bus reset. Link state of device does not comes UP and so config space
-> > + * never accessible again.
-> > + */
-> > +DECLARE_PCI_FIXUP_HEADER(PCI_VENDOR_ID_FREESCALE, 0x80c0, quirk_no_bus_reset);
-> > +
-> >  static void quirk_no_pm_reset(struct pci_dev *dev)
-> >  {
-> >  	/*
-> > -- 
-> > 2.19.1
-> >   
+pcie_speeds:
+	if ((linkcap & PCI_EXP_LNKCAP_SLS) != PCI_EXP_LNKCAP_SLS_8_0GB)
 
+cobalt_pcie_status_show:
+	just prints the values without doing anything with them
+
+hba_ioctl_callback:
+	gai->pci.link_speed_max = (u8)(caps & PCI_EXP_LNKCAP_SLS);
+
+	gai->pci.link_width_max = (u8)((caps & PCI_EXP_LNKCAP_MLW) >> 4);
+
+qla24xx_pci_info_str:
+	lspeed = lstat & PCI_EXP_LNKCAP_SLS;
+	lwidth = (lstat & PCI_EXP_LNKCAP_MLW) >> 4;
+
+Mikulas
