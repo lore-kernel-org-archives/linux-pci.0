@@ -2,50 +2,52 @@ Return-Path: <SRS0=/WWX=OG=vger.kernel.org=linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-4.0 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	INCLUDES_PATCH,MAILING_LIST_MULTI,SPF_PASS,URIBL_BLOCKED autolearn=ham
-	autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-1.0 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+	MAILING_LIST_MULTI,SPF_PASS,URIBL_BLOCKED autolearn=ham autolearn_force=no
+	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 9564BC43441
-	for <linux-pci@archiver.kernel.org>; Tue, 27 Nov 2018 07:50:47 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 67B47C43441
+	for <linux-pci@archiver.kernel.org>; Tue, 27 Nov 2018 07:52:15 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 6881A20873
-	for <linux-pci@archiver.kernel.org>; Tue, 27 Nov 2018 07:50:47 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.3.2 mail.kernel.org 6881A20873
+	by mail.kernel.org (Postfix) with ESMTP id 2BC0F208E4
+	for <linux-pci@archiver.kernel.org>; Tue, 27 Nov 2018 07:52:15 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.3.2 mail.kernel.org 2BC0F208E4
 Authentication-Results: mail.kernel.org; dmarc=none (p=none dis=none) header.from=arm.com
 Authentication-Results: mail.kernel.org; spf=none smtp.mailfrom=linux-pci-owner@vger.kernel.org
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1728977AbeK0Srr (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Tue, 27 Nov 2018 13:47:47 -0500
-Received: from foss.arm.com ([217.140.101.70]:56790 "EHLO foss.arm.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1728838AbeK0Srq (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Tue, 27 Nov 2018 13:47:46 -0500
+        id S1729113AbeK0StP (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Tue, 27 Nov 2018 13:49:15 -0500
+Received: from usa-sjc-mx-foss1.foss.arm.com ([217.140.101.70]:56814 "EHLO
+        foss.arm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1729104AbeK0StO (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Tue, 27 Nov 2018 13:49:14 -0500
 Received: from usa-sjc-imap-foss1.foss.arm.com (unknown [10.72.51.249])
-        by usa-sjc-mx-foss1.foss.arm.com (Postfix) with ESMTP id 446FF3563;
-        Mon, 26 Nov 2018 23:50:46 -0800 (PST)
+        by usa-sjc-mx-foss1.foss.arm.com (Postfix) with ESMTP id D11063563;
+        Mon, 26 Nov 2018 23:52:13 -0800 (PST)
 Received: from big-swifty.misterjones.org (big-swifty.copenhagen.arm.com [10.32.148.142])
-        by usa-sjc-imap-foss1.foss.arm.com (Postfix) with ESMTPSA id BECDB3F5AF;
-        Mon, 26 Nov 2018 23:50:38 -0800 (PST)
-Date:   Tue, 27 Nov 2018 07:50:31 +0000
-Message-ID: <86d0qrrmbc.wl-marc.zyngier@arm.com>
+        by usa-sjc-imap-foss1.foss.arm.com (Postfix) with ESMTPSA id E1BFA3F5AF;
+        Mon, 26 Nov 2018 23:52:05 -0800 (PST)
+Date:   Tue, 27 Nov 2018 07:51:59 +0000
+Message-ID: <86bm6brm8w.wl-marc.zyngier@arm.com>
 From:   Marc Zyngier <marc.zyngier@arm.com>
 To:     Trent Piepho <tpiepho@impinj.com>
-Cc:     "gustavo.pimentel@synopsys.com" <gustavo.pimentel@synopsys.com>,
+Cc:     "lorenzo.pieralisi@arm.com" <lorenzo.pieralisi@arm.com>,
+        "gustavo.pimentel@synopsys.com" <gustavo.pimentel@synopsys.com>,
         "jingoohan1@gmail.com" <jingoohan1@gmail.com>,
         "faiz_abbas@ti.com" <faiz_abbas@ti.com>,
         "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-        "lorenzo.pieralisi@arm.com" <lorenzo.pieralisi@arm.com>,
         "helgaas@google.com" <helgaas@google.com>,
         "vigneshr@ti.com" <vigneshr@ti.com>,
         "Joao.Pinto@synopsys.com" <Joao.Pinto@synopsys.com>
 Subject: Re: [PATCH 0/3] PCI: designware: Fixing MSI handling flow
-In-Reply-To: <1543247559.18519.13.camel@impinj.com>
+In-Reply-To: <1543248401.18519.24.camel@impinj.com>
 References: <20181113225734.8026-1-marc.zyngier@arm.com>
         <e73891a5-d798-ee9c-607c-9648d07f6505@synopsys.com>
         <86a7mcdlwg.wl-marc.zyngier@arm.com>
         <9b63c20b-f928-7c40-2734-00ed783625f5@synopsys.com>
-        <1543247559.18519.13.camel@impinj.com>
+        <20181122162616.GA17826@e107981-ln.cambridge.arm.com>
+        <1d83d4e5-3cfc-3fc4-f875-c25b5ae3284f@arm.com>
+        <1543248401.18519.24.camel@impinj.com>
 User-Agent: Wanderlust/2.15.9 (Almost Unreal) SEMI-EPG/1.14.7 (Harue)
  FLIM/1.14.9 (=?UTF-8?B?R29qxY0=?=) APEL/10.8 EasyPG/1.0.0 Emacs/25.1
  (aarch64-unknown-linux-gnu) MULE/6.0 (HANACHIRUSATO)
@@ -57,43 +59,29 @@ Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-On Mon, 26 Nov 2018 15:52:42 +0000,
+On Mon, 26 Nov 2018 16:06:54 +0000,
 Trent Piepho <tpiepho@impinj.com> wrote:
 > 
-> On Thu, 2018-11-22 at 12:03 +0000, Gustavo Pimentel wrote:
+> On Thu, 2018-11-22 at 16:38 +0000, Marc Zyngier wrote:
 > > 
-> > > I just realised (at 1am!) that the first patch is awfully buggy:
-> > > - ENABLE and MASK have opposite polarities
-> > > - There is nothing initialising the ENABLE and MASK registers
-> > > 
-> > > I've stashed the following fix-up on top of the existing series:
-> > > 
-> > > diff --git a/drivers/pci/controller/dwc/pcie-designware-host.c
-> > > b/drivers/pci/controller/dwc/pcie-designware-host.c
-> > > index f06e67c60593..0fa9e8fdce66 100644
-> > > --- a/drivers/pci/controller/dwc/pcie-designware-host.c
-> > > +++ b/drivers/pci/controller/dwc/pcie-designware-host.c
-> > > @@ -166,7 +166,7 @@ static void dw_pci_bottom_mask(struct irq_data
-> > > *data)
+> > To add to Lorenzo's comment, we're trying hard to have a *minimal* fix
+> > that can be easily backported. Changing variable and field names as well
+> > as flipping the semantic of other bits of the driver makes it harder to
+> > review, and certainly doesn't help getting things backported to stable
+> > (see the stable kernel rules).
 > > 
-> > (snip)
-> > 
-> > I used your patch and made it more perceptible in my opinion, (basically I
-> > transformed the variable irq_mask (previous irq_status) into a mirror of MASK
-> > registers, which removed the need for the *NOT* operation and forced the mask
-> > operation swap in the callbacks)
+> > I'd suggest this kind of repainting is better kept as a separate patch
+> > and merged separately.
 > 
-> This would be the patch that enables all MSI interrupts on driver
-> initialization?
+> If you want a minimal fix to backport, you should just use my original
+> patch for 4.15-4.19 stable series.  It's a one line change to fix the
+> real bug.
 > 
-> I don't think that's a good idea.  I was under the impression Marc
-> thought that as well.  It would be better to enable them when they are
-> enabled, via enable and disable methods.
+> It'll be far easier to backport to < 4.17,  where the hierarchical irq
+> domain stuff wasn't used in this part of the driver.
 
-What gain does this bring? Frankly, I see exactly zero advantage of
-doing so. It may look cosmetically appealing in the sense that it
-makes use of of a register that the IP offers, but for Linux the
-advantage is basically null.
+The right fix is to create an irq_ack method and put the relevant code
+there.
 
 Thanks,
 
