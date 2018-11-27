@@ -5,30 +5,30 @@ X-Spam-Level:
 X-Spam-Status: No, score=-1.0 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
 	MAILING_LIST_MULTI,SPF_PASS autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 0163DC43441
-	for <linux-pci@archiver.kernel.org>; Tue, 27 Nov 2018 18:04:22 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id B03D0C43441
+	for <linux-pci@archiver.kernel.org>; Tue, 27 Nov 2018 18:10:22 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id C9F002082F
-	for <linux-pci@archiver.kernel.org>; Tue, 27 Nov 2018 18:04:21 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.3.2 mail.kernel.org C9F002082F
+	by mail.kernel.org (Postfix) with ESMTP id 881A52145D
+	for <linux-pci@archiver.kernel.org>; Tue, 27 Nov 2018 18:10:22 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.3.2 mail.kernel.org 881A52145D
 Authentication-Results: mail.kernel.org; dmarc=fail (p=none dis=none) header.from=redhat.com
 Authentication-Results: mail.kernel.org; spf=none smtp.mailfrom=linux-pci-owner@vger.kernel.org
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1732196AbeK1FDC (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Wed, 28 Nov 2018 00:03:02 -0500
-Received: from mx1.redhat.com ([209.132.183.28]:45794 "EHLO mx1.redhat.com"
+        id S1726086AbeK1FJE (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Wed, 28 Nov 2018 00:09:04 -0500
+Received: from mx1.redhat.com ([209.132.183.28]:52850 "EHLO mx1.redhat.com"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1732136AbeK1FDB (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Wed, 28 Nov 2018 00:03:01 -0500
-Received: from smtp.corp.redhat.com (int-mx02.intmail.prod.int.phx2.redhat.com [10.5.11.12])
+        id S1725872AbeK1FJE (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Wed, 28 Nov 2018 00:09:04 -0500
+Received: from smtp.corp.redhat.com (int-mx07.intmail.prod.int.phx2.redhat.com [10.5.11.22])
         (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
         (No client certificate requested)
-        by mx1.redhat.com (Postfix) with ESMTPS id 107BB83F3D;
-        Tue, 27 Nov 2018 18:04:19 +0000 (UTC)
+        by mx1.redhat.com (Postfix) with ESMTPS id 17FB7A6E1E;
+        Tue, 27 Nov 2018 18:10:21 +0000 (UTC)
 Received: from redhat.com (ovpn-116-85.ams2.redhat.com [10.36.116.85])
-        by smtp.corp.redhat.com (Postfix) with SMTP id 96F9660BF6;
-        Tue, 27 Nov 2018 18:04:09 +0000 (UTC)
-Date:   Tue, 27 Nov 2018 13:04:08 -0500
+        by smtp.corp.redhat.com (Postfix) with SMTP id 3B4D1100034A;
+        Tue, 27 Nov 2018 18:10:11 +0000 (UTC)
+Date:   Tue, 27 Nov 2018 13:10:10 -0500
 From:   "Michael S. Tsirkin" <mst@redhat.com>
 To:     Jean-Philippe Brucker <jean-philippe.brucker@arm.com>
 Cc:     mark.rutland@arm.com, virtio-dev@lists.oasis-open.org,
@@ -40,108 +40,77 @@ Cc:     mark.rutland@arm.com, virtio-dev@lists.oasis-open.org,
         bhelgaas@google.com, robin.murphy@arm.com,
         kvmarm@lists.cs.columbia.edu
 Subject: Re: [PATCH v5 5/7] iommu: Add virtio-iommu driver
-Message-ID: <20181127125424-mutt-send-email-mst@kernel.org>
+Message-ID: <20181127130527-mutt-send-email-mst@kernel.org>
 References: <20181122193801.50510-1-jean-philippe.brucker@arm.com>
  <20181122193801.50510-6-jean-philippe.brucker@arm.com>
- <20181123165742-mutt-send-email-mst@kernel.org>
- <fd221210-7e12-1d15-0c80-52a761f6893d@arm.com>
+ <20181123165206-mutt-send-email-mst@kernel.org>
+ <e76a51ba-7a0f-3fca-a1ae-640131f9dfe1@arm.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <fd221210-7e12-1d15-0c80-52a761f6893d@arm.com>
-X-Scanned-By: MIMEDefang 2.79 on 10.5.11.12
-X-Greylist: Sender IP whitelisted, not delayed by milter-greylist-4.5.16 (mx1.redhat.com [10.5.110.27]); Tue, 27 Nov 2018 18:04:19 +0000 (UTC)
+In-Reply-To: <e76a51ba-7a0f-3fca-a1ae-640131f9dfe1@arm.com>
+X-Scanned-By: MIMEDefang 2.84 on 10.5.11.22
+X-Greylist: Sender IP whitelisted, not delayed by milter-greylist-4.5.16 (mx1.redhat.com [10.5.110.38]); Tue, 27 Nov 2018 18:10:21 +0000 (UTC)
 Sender: linux-pci-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-On Tue, Nov 27, 2018 at 05:50:50PM +0000, Jean-Philippe Brucker wrote:
-> On 23/11/2018 22:02, Michael S. Tsirkin wrote:
-> >> +/*
-> >> + * __viommu_sync_req - Complete all in-flight requests
-> >> + *
-> >> + * Wait for all added requests to complete. When this function returns, all
-> >> + * requests that were in-flight at the time of the call have completed.
-> >> + */
-> >> +static int __viommu_sync_req(struct viommu_dev *viommu)
-> >> +{
-> >> +	int ret = 0;
-> >> +	unsigned int len;
-> >> +	size_t write_len;
-> >> +	struct viommu_request *req;
-> >> +	struct virtqueue *vq = viommu->vqs[VIOMMU_REQUEST_VQ];
+On Tue, Nov 27, 2018 at 05:55:20PM +0000, Jean-Philippe Brucker wrote:
+> On 23/11/2018 21:56, Michael S. Tsirkin wrote:
+> >> +config VIRTIO_IOMMU
+> >> +	bool "Virtio IOMMU driver"
+> >> +	depends on VIRTIO=y
+> >> +	select IOMMU_API
+> >> +	select INTERVAL_TREE
+> >> +	select ARM_DMA_USE_IOMMU if ARM
+> >> +	help
+> >> +	  Para-virtualised IOMMU driver with virtio.
 > >> +
-> >> +	assert_spin_locked(&viommu->request_lock);
+> >> +	  Say Y here if you intend to run this kernel as a guest.
 > >> +
-> >> +	virtqueue_kick(vq);
-> >> +
-> >> +	while (!list_empty(&viommu->requests)) {
-> >> +		len = 0;
-> >> +		req = virtqueue_get_buf(vq, &len);
-> >> +		if (!req)
-> >> +			continue;
-> >> +
-> >> +		if (!len)
-> >> +			viommu_set_req_status(req->buf, req->len,
-> >> +					      VIRTIO_IOMMU_S_IOERR);
-> >> +
-> >> +		write_len = req->len - req->write_offset;
-> >> +		if (req->writeback && len == write_len)
-> >> +			memcpy(req->writeback, req->buf + req->write_offset,
-> >> +			       write_len);
-> >> +
-> >> +		list_del(&req->list);
-> >> +		kfree(req);
-> >> +	}
 > > 
-> > I didn't notice this in the past but it seems this will spin
-> > with interrupts disabled until host handles the request.
-> > Please do not do this - host execution can be another
-> > task that needs the same host CPU. This will then disable
-> > interrupts for a very very long time.
+> > Given it is arm specific right now, shouldn't this depend on ARM?
+> > E.g. there's a hack for x86 right now.
 > 
-> In the guest yes, but that doesn't prevent the host from running another
-> task right?
-
-Doesn't prevent it but it will delay it significantly
-until scheduler decides to kick the VCPU task out.
-
-> My tests run fine when QEMU is bound to a single CPU, even
-> though vcpu and viommu run in different threads
+> Sure, I'll make it depend on ARM64 for now
 > 
-> > What to do then? Queue in software and wake up task.
+> [..]
+> >> +static int viommu_probe(struct virtio_device *vdev)
+> >> +{
+> >> +	struct device *parent_dev = vdev->dev.parent;
+> >> +	struct viommu_dev *viommu = NULL;
+> >> +	struct device *dev = &vdev->dev;
+> >> +	u64 input_start = 0;
+> >> +	u64 input_end = -1UL;
+> >> +	int ret;
+> >> +
+> >> +	if (!virtio_has_feature(vdev, VIRTIO_F_VERSION_1) ||
+> >> +	    !virtio_has_feature(vdev, VIRTIO_IOMMU_F_MAP_UNMAP))
+> > 
+> > Why bother with a feature bit for this then btw?
 > 
-> Unfortunately I can't do anything here, because IOMMU drivers can't
-> sleep in the iommu_map() or iommu_unmap() path.
->
-> The problem is the same
-> for all IOMMU drivers. That's because the DMA API allows drivers to call
-> some functions with interrupts disabled. For example
-> Documentation/DMA-API-HOWTO.txt allows dma_alloc_coherent() and
-> dma_unmap_single() to be called in interrupt context.
-
-In fact I don't really understand how it's supposed to
-work at all: you only sync when ring is full.
-So host may not have seen your map request if ring
-is not full.
-Why is it safe to use the address with a device then?
-
-
-> > As kick is vm exit, kick under interrupts disabled is discouraged too:
-> > better to prepare for kick enable interrupts then kick.
-> 
-> That was on my list of things to look at, because it could relax
-> things for device drivers that don't call us with interrupts disabled. I
-> just tried it and I can see some performance improvement (7% and 4% on
-> tcp_stream and tcp_maerts respectively, +/-2.5%).
-> 
-> Since it's an optimization I'll leave it for later (ACPI and module
-> support is higher on my list). The resulting change is complicated
-> because we now need to deal with threads adding new requests while
-> sync() is running. With my current prototype one thread could end up
-> staying in sync() while other threads add new async requests, so I need
-> to find a way to bound it.
+> We'll need a new feature bit for sharing page tables with the hardware,
+> because they require different requests (attach_table/invalidate instead
+> of map/unmap.) A future device supporting page table sharing won't
+> necessarily need to support map/unmap.
 > 
 > Thanks,
 > Jean
+
+I don't see virtio iommu being extended to support ARM specific
+requests. This just won't scale, too many different
+descriptor formats out there.
+
+If you want to go that way down the road, you should avoid
+virtio iommu, instead emulate and share code with the ARM SMMU (probably
+with a different vendor id so you can implement the
+report on map for devices without PRI).
+
+Others on the TC might feel differently.
+
+If someone's looking into adding virtio iommu support in hardware,
+that's a different matter. Which is it?
+
+-- 
+MST
