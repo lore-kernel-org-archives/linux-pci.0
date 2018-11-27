@@ -2,116 +2,122 @@ Return-Path: <SRS0=/WWX=OG=vger.kernel.org=linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-1.0 required=3.0 tests=MAILING_LIST_MULTI,SPF_PASS,
-	URIBL_BLOCKED autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-6.0 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+	MAILING_LIST_MULTI,MENTIONS_GIT_HOSTING,SPF_PASS,URIBL_BLOCKED autolearn=ham
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id D3C65C43441
-	for <linux-pci@archiver.kernel.org>; Tue, 27 Nov 2018 16:50:06 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 8E580C43441
+	for <linux-pci@archiver.kernel.org>; Tue, 27 Nov 2018 16:53:30 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 948F1208E4
-	for <linux-pci@archiver.kernel.org>; Tue, 27 Nov 2018 16:50:06 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.3.2 mail.kernel.org 948F1208E4
-Authentication-Results: mail.kernel.org; dmarc=fail (p=none dis=none) header.from=kernel.org
+	by mail.kernel.org (Postfix) with ESMTP id 629C620817
+	for <linux-pci@archiver.kernel.org>; Tue, 27 Nov 2018 16:53:30 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.3.2 mail.kernel.org 629C620817
+Authentication-Results: mail.kernel.org; dmarc=fail (p=none dis=none) header.from=redhat.com
 Authentication-Results: mail.kernel.org; spf=none smtp.mailfrom=linux-pci-owner@vger.kernel.org
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1729321AbeK1Dse (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Tue, 27 Nov 2018 22:48:34 -0500
-Received: from mail-ot1-f65.google.com ([209.85.210.65]:33002 "EHLO
-        mail-ot1-f65.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726492AbeK1Dse (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Tue, 27 Nov 2018 22:48:34 -0500
-Received: by mail-ot1-f65.google.com with SMTP id i20so20775939otl.0;
-        Tue, 27 Nov 2018 08:50:04 -0800 (PST)
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20161025;
-        h=x-gm-message-state:mime-version:references:in-reply-to:from:date
-         :message-id:subject:to:cc;
-        bh=EJCj7vK0zBuuvOMxLpjkEUxKpjWVJIgSW7zI2E5ss2o=;
-        b=dWmtDY5xk3ucXPSMvAeStQULn2ue2nIy+3wkGoU8luP0GAOlItf7qGCt10AMhTNYnS
-         BZOiO4oT5mpP+V07GJYiVKyVrNF02qagrjB3x/TxSymMATSyn8p8MvI5PVHlHuRvToyv
-         URI/gHIM2pCaQomeEHHVuno1t2x7y1O7XGQAD1rUBNMKdo9zj54l8Ciw0fe29v8Chlpz
-         pLLNndT6Xman1YCXgY/KYrz2T4rA2uDxxxpwGpaKDLPV3DXoYmQRUxKXkUBagwG+EgRA
-         GRygc0nR218aRJ3DlHzEcn6QzxG+yG25NfkWgklZE6Gm2Yr7AF1bs/y8pKkfXC5w7Gvu
-         03vA==
-X-Gm-Message-State: AGRZ1gJVhYCWQIZIbYeIkDSSnQMxTmhVMXsG9WGZLhSfMLHYj8FwoJPM
-        WV4ioU3DxE88o2DkgC9+5lxdIPfLlEj2aTe8pls=
-X-Google-Smtp-Source: AFSGD/WeVBJI0BfxUWVjFs31XL8yQEMlnqITpaAUMyNroLh3tvj5yvobAv1/KZd+fOR6zF4q8a59nI8gIH2BE38cUl4=
-X-Received: by 2002:a9d:588c:: with SMTP id x12mr19276782otg.139.1543337404384;
- Tue, 27 Nov 2018 08:50:04 -0800 (PST)
+        id S1731576AbeK1Dv6 (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Tue, 27 Nov 2018 22:51:58 -0500
+Received: from mx1.redhat.com ([209.132.183.28]:39174 "EHLO mx1.redhat.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1729763AbeK1Dv6 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Tue, 27 Nov 2018 22:51:58 -0500
+Received: from smtp.corp.redhat.com (int-mx01.intmail.prod.int.phx2.redhat.com [10.5.11.11])
+        (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
+        (No client certificate requested)
+        by mx1.redhat.com (Postfix) with ESMTPS id 08136356CA;
+        Tue, 27 Nov 2018 16:53:28 +0000 (UTC)
+Received: from redhat.com (ovpn-116-85.ams2.redhat.com [10.36.116.85])
+        by smtp.corp.redhat.com (Postfix) with SMTP id 2973F600C2;
+        Tue, 27 Nov 2018 16:53:15 +0000 (UTC)
+Date:   Tue, 27 Nov 2018 11:53:14 -0500
+From:   "Michael S. Tsirkin" <mst@redhat.com>
+To:     Jean-Philippe Brucker <jean-philippe.brucker@arm.com>
+Cc:     iommu@lists.linux-foundation.org, linux-pci@vger.kernel.org,
+        devicetree@vger.kernel.org,
+        virtualization@lists.linux-foundation.org,
+        virtio-dev@lists.oasis-open.org, joro@8bytes.org,
+        jasowang@redhat.com, robh+dt@kernel.org, mark.rutland@arm.com,
+        bhelgaas@google.com, frowand.list@gmail.com,
+        kvmarm@lists.cs.columbia.edu, eric.auger@redhat.com,
+        tnowicki@caviumnetworks.com, kevin.tian@intel.com,
+        marc.zyngier@arm.com, robin.murphy@arm.com, will.deacon@arm.com,
+        lorenzo.pieralisi@arm.com, bharat.bhushan@nxp.com
+Subject: Re: [PATCH v5 0/7] Add virtio-iommu driver
+Message-ID: <20181127114402-mutt-send-email-mst@kernel.org>
+References: <20181122193801.50510-1-jean-philippe.brucker@arm.com>
 MIME-Version: 1.0
-References: <20181126111526.56340-1-mika.westerberg@linux.intel.com>
- <20181126111526.56340-2-mika.westerberg@linux.intel.com> <20181127001711.GC212532@google.com>
- <20181127085426.GI2296@lahna.fi.intel.com>
-In-Reply-To: <20181127085426.GI2296@lahna.fi.intel.com>
-From:   "Rafael J. Wysocki" <rafael@kernel.org>
-Date:   Tue, 27 Nov 2018 17:49:53 +0100
-Message-ID: <CAJZ5v0gxap5qWQTrmrTmzfvL0RerZ1T1MUPyh6b1FAHY9N0Ryw@mail.gmail.com>
-Subject: Re: [PATCH v2 1/4] PCI / ACPI: Identify untrusted PCI devices
-To:     Mika Westerberg <mika.westerberg@linux.intel.com>
-Cc:     Bjorn Helgaas <helgaas@kernel.org>,
-        "open list:AMD IOMMU (AMD-VI)" <iommu@lists.linux-foundation.org>,
-        Joerg Roedel <joro@8bytes.org>,
-        David Woodhouse <dwmw2@infradead.org>,
-        Lu Baolu <baolu.lu@linux.intel.com>,
-        "Raj, Ashok" <ashok.raj@intel.com>,
-        "Rafael J. Wysocki" <rjw@rjwysocki.net>,
-        "Pan, Jacob jun" <jacob.jun.pan@intel.com>,
-        Andreas Noever <andreas.noever@gmail.com>,
-        Michael Jamet <michael.jamet@intel.com>,
-        Yehezkel Bernat <YehezkelShB@gmail.com>,
-        Lukas Wunner <lukas@wunner.de>, ckellner@redhat.com,
-        Mario Limonciello <Mario.Limonciello@dell.com>,
-        Anthony Wong <anthony.wong@canonical.com>,
-        Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
-        Christoph Hellwig <hch@infradead.org>,
-        Alex Williamson <alex.williamson@redhat.com>,
-        ACPI Devel Maling List <linux-acpi@vger.kernel.org>,
-        Linux PCI <linux-pci@vger.kernel.org>,
-        Linux Kernel Mailing List <linux-kernel@vger.kernel.org>
-Content-Type: text/plain; charset="UTF-8"
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20181122193801.50510-1-jean-philippe.brucker@arm.com>
+X-Scanned-By: MIMEDefang 2.79 on 10.5.11.11
+X-Greylist: Sender IP whitelisted, not delayed by milter-greylist-4.5.16 (mx1.redhat.com [10.5.110.30]); Tue, 27 Nov 2018 16:53:28 +0000 (UTC)
 Sender: linux-pci-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-On Tue, Nov 27, 2018 at 9:54 AM Mika Westerberg
-<mika.westerberg@linux.intel.com> wrote:
->
-> On Mon, Nov 26, 2018 at 06:17:11PM -0600, Bjorn Helgaas wrote:
-> > Hi Mika,
->
-> Hi,
->
-> > On Mon, Nov 26, 2018 at 02:15:23PM +0300, Mika Westerberg wrote:
-> > > Recent systems with Thunderbolt ports may support IOMMU natively.
-> >
-> > This sentence doesn't make sense to me.  There's no logical connection
-> > between having an IOMMU and having a Thunderbolt port.
-> >
-> > > This means that the platform utilizes IOMMU to prevent DMA attacks
-> > > over externally exposed PCIe root ports (typically Thunderbolt
-> > > ports)
-> >
-> > Nor this one.  The platform only uses the IOMMU to prevent DMA attacks
-> > if the OS chooses to do that.
->
-> I guess I'm trying to say here that the recent changes add such support
-> to the platform BIOS that allows the OS to enable IOMMU without being
-> compromised by a malicious device that is already connected. The BIOS
-> sets the new ACPI DMAR bit in that case.
->
-> > > The system BIOS marks these PCIe root ports as being externally facing
-> > > ports by implementing following ACPI _DSD [1] under the root port in
-> > > question:
-> >
-> > There's no standard that requires this, so the best we can say is that
-> > a system BIOS *may* mark externally facing ports with this mechanism.
->
-> There is no standard but I'm quite sure this is something that will be
-> required to be implemented properly by the OEM by Microsoft hardware
-> compatibility suite.
+On Thu, Nov 22, 2018 at 07:37:54PM +0000, Jean-Philippe Brucker wrote:
+> Implement the virtio-iommu driver, following specification v0.9 [1].
+> 
+> Since v4 [2] I fixed the issues reported by Eric, and added Reviewed-by
+> from Eric and Rob. Thanks!
+> 
+> I changed the specification to fix one inconsistency discussed in v4.
+> That the device fills the probe buffer with zeroes is now a "SHOULD"
+> instead of a "MAY", since it's the only way for the driver to know if
+> the device wrote the status. Existing devices already do this. In
+> addition the device now needs to fill the three padding bytes at the
+> tail with zeroes.
+> 
+> You can find Linux driver and kvmtool device on branches
+> virtio-iommu/v0.9 [3]. I also lightly tested with Eric's latest QEMU
+> device [4].
 
-I think it would be fair to say that future versions of Windows will
-expect the firmware to identify the "externally facing" root PCIe
-ports as per the above which practically means that it is as good as a
-formal standard in the Windows world.
+I tried to get this to work on my x86 box but without
+success. Any hints? Does this have to do with the IORT table?
+I think we really should just reserve our own table ID
+and avoid the pain of trying to add things to the IORT spec.
+I'm reluctant to merge lots of code that I can't easily test.
+Again, if we found a way to push more configuration into
+virtio config space the problem space would be smaller.
+
+> [1] Virtio-iommu specification v0.9, sources, pdf and diff from v0.8
+>     git://linux-arm.org/virtio-iommu.git virtio-iommu/v0.9
+>     http://jpbrucker.net/virtio-iommu/spec/v0.9/virtio-iommu-v0.9.pdf
+>     http://jpbrucker.net/virtio-iommu/spec/diffs/virtio-iommu-pdf-diff-v0.8-v0.9.pdf
+> 
+> [2] [PATCH v4 0/7] Add virtio-iommu driver
+>     https://lists.linuxfoundation.org/pipermail/iommu/2018-November/031074.html
+> 
+> [3] git://linux-arm.org/linux-jpb.git virtio-iommu/v0.9
+>     git://linux-arm.org/kvmtool-jpb.git virtio-iommu/v0.9
+> 
+> [4] [RFC v9 00/17] VIRTIO-IOMMU device
+>     https://www.mail-archive.com/qemu-devel@nongnu.org/msg575578.html
+> 
+> Jean-Philippe Brucker (7):
+>   dt-bindings: virtio-mmio: Add IOMMU description
+>   dt-bindings: virtio: Add virtio-pci-iommu node
+>   of: Allow the iommu-map property to omit untranslated devices
+>   PCI: OF: Initialize dev->fwnode appropriately
+>   iommu: Add virtio-iommu driver
+>   iommu/virtio: Add probe request
+>   iommu/virtio: Add event queue
+> 
+>  .../devicetree/bindings/virtio/iommu.txt      |   66 +
+>  .../devicetree/bindings/virtio/mmio.txt       |   30 +
+>  MAINTAINERS                                   |    7 +
+>  drivers/iommu/Kconfig                         |   11 +
+>  drivers/iommu/Makefile                        |    1 +
+>  drivers/iommu/virtio-iommu.c                  | 1157 +++++++++++++++++
+>  drivers/of/base.c                             |   10 +-
+>  drivers/pci/of.c                              |    7 +
+>  include/uapi/linux/virtio_ids.h               |    1 +
+>  include/uapi/linux/virtio_iommu.h             |  161 +++
+>  10 files changed, 1448 insertions(+), 3 deletions(-)
+>  create mode 100644 Documentation/devicetree/bindings/virtio/iommu.txt
+>  create mode 100644 drivers/iommu/virtio-iommu.c
+>  create mode 100644 include/uapi/linux/virtio_iommu.h
+> 
+> -- 
+> 2.19.1
