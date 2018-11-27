@@ -2,104 +2,123 @@ Return-Path: <SRS0=/WWX=OG=vger.kernel.org=linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-0.8 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
-	DKIM_VALID_AU,FREEMAIL_FORGED_FROMDOMAIN,FREEMAIL_FROM,
-	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_PASS
-	autolearn=unavailable autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-1.1 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
+	DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_PASS
+	autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 0CBF9C43441
-	for <linux-pci@archiver.kernel.org>; Tue, 27 Nov 2018 18:46:31 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 6E066C43441
+	for <linux-pci@archiver.kernel.org>; Tue, 27 Nov 2018 18:53:31 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id CAF472133F
-	for <linux-pci@archiver.kernel.org>; Tue, 27 Nov 2018 18:46:30 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 2016D2133F
+	for <linux-pci@archiver.kernel.org>; Tue, 27 Nov 2018 18:53:31 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="O1NkMX5g"
-DMARC-Filter: OpenDMARC Filter v1.3.2 mail.kernel.org CAF472133F
-Authentication-Results: mail.kernel.org; dmarc=fail (p=none dis=none) header.from=gmail.com
+	dkim=pass (1024-bit key) header.d=impinj.com header.i=@impinj.com header.b="CVKqnoaG"
+DMARC-Filter: OpenDMARC Filter v1.3.2 mail.kernel.org 2016D2133F
+Authentication-Results: mail.kernel.org; dmarc=fail (p=reject dis=none) header.from=impinj.com
 Authentication-Results: mail.kernel.org; spf=none smtp.mailfrom=linux-pci-owner@vger.kernel.org
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1730448AbeK1FpH (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Wed, 28 Nov 2018 00:45:07 -0500
-Received: from mail-vk1-f195.google.com ([209.85.221.195]:39474 "EHLO
-        mail-vk1-f195.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726461AbeK1FpH (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Wed, 28 Nov 2018 00:45:07 -0500
-Received: by mail-vk1-f195.google.com with SMTP id q80so5312667vka.6;
-        Tue, 27 Nov 2018 10:46:18 -0800 (PST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20161025;
-        h=mime-version:references:in-reply-to:from:date:message-id:subject:to
-         :cc;
-        bh=hQTVYi/IX2AKLhpwGzc+W4Z78Vf1wsvfIygNygWDrpE=;
-        b=O1NkMX5gSQym1ZHxSW2nPI7UUNMYYB1BcymE3f/pL/1krh9wyMNUjpCwmoboD0HNks
-         kKSIspCARkYH0R6sSZfmeLToD5RK+eDRTVmHKSAGe66nEkNzSV3vcaDm4aqtCN9cHxxr
-         LMW+EgdOWYAbw/t0uorblBvknJ/Pm7tGQdsCNOAwIrQmMXa4qa/yYuOjW9V8URPLtNle
-         lxhlDYNkgSd9Wjx82AH8yCQ+61f2TEBtIpgwrb7lp31xi/15wxy52AYoV4pda8u6yEEt
-         KZPbfTZ+4Gj9MYY9jEUkbHrKiPkDWlYdEfUI9Ls4QFvPKeS9Bq/8wWKZQR/ccfoTTLST
-         c15g==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20161025;
-        h=x-gm-message-state:mime-version:references:in-reply-to:from:date
-         :message-id:subject:to:cc;
-        bh=hQTVYi/IX2AKLhpwGzc+W4Z78Vf1wsvfIygNygWDrpE=;
-        b=INHh31/BHkLWKPayqvqxQS3G6P6YxTTSxMesR8x+qBw0lOGWUNl/S0CGmX3hOP8fgD
-         GIBpvg3+lwI3azaB9B/vAujVfWi0CAHeBSvg43Y/CurUjEo60fZzEvRwNB75NssDPWlm
-         rRL9vDrYuMGP8kh1subgTtlYT9FfkTZUdrWRmKTx23LlZjcJPpgOTLUQuZpCfd1bLBvz
-         Q0IoCIlHi9LdBhR1hVqxdq25YegSZ4eR7TOtnrCaEzFev10QGEkGGQXELZ+Dm1d1Q7l8
-         kDBmUmt36kr531e2qwBIaPSc7KvZe1pPtXYMXI2Wi04vn2zg+jO6JCC9MLwLf48boSbV
-         wJzQ==
-X-Gm-Message-State: AA+aEWZtCE7H6ACKz2Q21gsQUS1GCxvezyHGfmV2Oc+RJDjmpU4bwKUO
-        a883XYPDlZemJpkHtBnBzstl5XtsrxRskMfczqU=
-X-Google-Smtp-Source: AFSGD/XUyF3HxcHdb/0AOzE0E/BgNWSBqJHw7iGkDFASWxF50bPcCw2N/mStGuROZo0OBWAXAq/ka2ZjQAwqwdVa4lI=
-X-Received: by 2002:a1f:eecf:: with SMTP id m198mr13521763vkh.49.1543344377798;
- Tue, 27 Nov 2018 10:46:17 -0800 (PST)
+        id S1730748AbeK1FwT (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Wed, 28 Nov 2018 00:52:19 -0500
+Received: from mail-eopbgr700115.outbound.protection.outlook.com ([40.107.70.115]:55616
+        "EHLO NAM04-SN1-obe.outbound.protection.outlook.com"
+        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+        id S1730447AbeK1FwT (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Wed, 28 Nov 2018 00:52:19 -0500
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=impinj.com;
+ s=selector1;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
+ bh=VeMMelTINFPG+G94hbYHKSkjNBfA8W314QUVGHbyot4=;
+ b=CVKqnoaGlrd6QjonfHZ7zswTHzwUtpQL4ytF5GB/tH2Adg5VCBZ+X8YmLRDxoRtuykmavg38FBtPXf2lX3luLIUBqa8wz5TWiOoBuPADUZZS7y0nUxVgqs0SOjkQAsvgx01QaTSXe7ONj6lttrooBzWGPC4DxhR9p13gmNiysQA=
+Received: from MWHPR0601MB3708.namprd06.prod.outlook.com (10.167.236.38) by
+ MWHPR0601MB3785.namprd06.prod.outlook.com (10.167.236.154) with Microsoft
+ SMTP Server (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
+ 15.20.1361.20; Tue, 27 Nov 2018 18:53:25 +0000
+Received: from MWHPR0601MB3708.namprd06.prod.outlook.com
+ ([fe80::c0f3:ea8f:48ba:a5d7]) by MWHPR0601MB3708.namprd06.prod.outlook.com
+ ([fe80::c0f3:ea8f:48ba:a5d7%4]) with mapi id 15.20.1361.019; Tue, 27 Nov 2018
+ 18:53:25 +0000
+From:   Trent Piepho <tpiepho@impinj.com>
+To:     "festevam@gmail.com" <festevam@gmail.com>,
+        "hancock@sedsystems.ca" <hancock@sedsystems.ca>,
+        "tharvey@gateworks.com" <tharvey@gateworks.com>
+CC:     "linux-arm-kernel@lists.infradead.org" 
+        <linux-arm-kernel@lists.infradead.org>,
+        "l.stach@pengutronix.de" <l.stach@pengutronix.de>,
+        "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+        "hongxing.zhu@nxp.com" <hongxing.zhu@nxp.com>
+Subject: Re: iMX6 PCIe MSI issues
+Thread-Topic: iMX6 PCIe MSI issues
+Thread-Index: AQHUhaWJBRIzlENaBEOJ27/P3prKvaViSkqAgAAluQCAAYmlgA==
+Date:   Tue, 27 Nov 2018 18:53:25 +0000
+Message-ID: <1543344805.18519.71.camel@impinj.com>
+References: <aad42775-52b6-6086-60a8-e45a17d50960@sedsystems.ca>
+         <CAOMZO5DuZ4ZWk03tnsTx=Vpd8AbnCADMgyyKRuL0F6N3ZmN6qw@mail.gmail.com>
+         <1543252169.18519.49.camel@impinj.com>
+         <4a582df8-f7dc-3ad5-42d7-33924eb57b0a@sedsystems.ca>
+In-Reply-To: <4a582df8-f7dc-3ad5-42d7-33924eb57b0a@sedsystems.ca>
+Accept-Language: en-US
+Content-Language: en-US
+X-MS-Has-Attach: 
+X-MS-TNEF-Correlator: 
+authentication-results: spf=none (sender IP is )
+ smtp.mailfrom=tpiepho@impinj.com; 
+x-originating-ip: [216.207.205.253]
+x-ms-publictraffictype: Email
+x-microsoft-exchange-diagnostics: 1;MWHPR0601MB3785;6:DJoA2RQ0f5K/JB5QIpRWB3HbXxWTZSEw1ftbLk5A81izV099lY/4/xnW5p9Qj6Jx2em3uQQV0ZWHD+hklZ28A0m97n7UNokhkQBj1T2ZEMlLd34ZItURbMqioPfYjAB8GCzEzd4YbtJpW+W+Mg+LNBz0Z64HZI86h1bCtp/rkWogU+8eugPZ14s4CWqWVENU+oV0+5SM19e5R3xNHun/855A/grFVWf/m5NRG+Y0vVbM+uRb1sV2DbJPh0oWyDN3APGIeYXx702gqDKUjhQu7dwPCG+5H59EcEVBS3MFhpSeUAovT3B7ZjUUJIQR3n2cKEeQZigrDArv1E+75qAfyBB9OEXKc6U1xcVzkJ+dPwdIYG2hcFQCpFAOV7RC9GeQ/LdrO9NUqvJ5E1iZ/37orwe8LjkQB/EKRm1H298jh/nnsw0FtOOD5dw2q+IRWxw7vwfLkcIBFTYaBXLUosaaew==;5:CZZMqZ5A+Fhy9Bm8DfUYseIsDdyOY16+LZK91Coi4REf2ZPXwubAngAq4wWN766k/fWZ3AMgf8Hc97Uq+cSRbvXmLx9zoXmQRqyzvrCIKsb55MUTLGycKp2LsKWAirZdU7edde6Z+vgjncScVtvrf9LwKpP61SlciAMu6cEt9ak=;7:EajbHZawwrGo482TYSG1Xq2Tuv/2Wv/5l7JJjiHEwo4hPDdg8v/VhJutjcTNymyIrVIEGRpTOzzgWT0oQGnPC9fujboxRn5GsJtmDv4L3fRFF7FxVM+ffDi/edov7C63SM5Ml0uZ49pIYQcQ/LJKZA==
+x-ms-exchange-antispam-srfa-diagnostics: SOS;
+x-ms-office365-filtering-correlation-id: 26cf0fb9-db2a-4102-dd8e-08d654999cc7
+x-microsoft-antispam: BCL:0;PCL:0;RULEID:(2390098)(7020095)(4652040)(8989299)(4534185)(4627221)(201703031133081)(201702281549075)(8990200)(5600074)(711020)(2017052603328)(7153060)(7193020);SRVR:MWHPR0601MB3785;
+x-ms-traffictypediagnostic: MWHPR0601MB3785:
+x-microsoft-antispam-prvs: <MWHPR0601MB378517C5BD33BF204EDB1169D3D00@MWHPR0601MB3785.namprd06.prod.outlook.com>
+x-ms-exchange-senderadcheck: 1
+x-exchange-antispam-report-cfa-test: BCL:0;PCL:0;RULEID:(8211001083)(6040522)(2401047)(8121501046)(5005006)(10201501046)(93006095)(93001095)(3231443)(944501410)(52105112)(3002001)(148016)(149066)(150057)(6041310)(20161123560045)(20161123564045)(20161123562045)(20161123558120)(201703131423095)(201702281528075)(20161123555045)(201703061421075)(201703061406153)(201708071742011)(7699051)(76991095);SRVR:MWHPR0601MB3785;BCL:0;PCL:0;RULEID:;SRVR:MWHPR0601MB3785;
+x-forefront-prvs: 086943A159
+x-forefront-antispam-report: SFV:NSPM;SFS:(10019020)(346002)(376002)(396003)(366004)(39850400004)(136003)(189003)(199004)(4326008)(68736007)(446003)(11346002)(14444005)(256004)(53936002)(486006)(86362001)(106356001)(2906002)(3846002)(6512007)(6116002)(6246003)(2201001)(476003)(39060400002)(2616005)(105586002)(6436002)(71190400001)(71200400001)(103116003)(36756003)(229853002)(76176011)(14454004)(6486002)(99286004)(2501003)(26005)(186003)(478600001)(6506007)(316002)(102836004)(54906003)(110136005)(4001150100001)(97736004)(81166006)(93886005)(8676002)(81156014)(8936002)(25786009)(5660300001)(305945005)(7736002)(66066001);DIR:OUT;SFP:1102;SCL:1;SRVR:MWHPR0601MB3785;H:MWHPR0601MB3708.namprd06.prod.outlook.com;FPR:;SPF:None;LANG:en;PTR:InfoNoRecords;MX:1;A:1;
+received-spf: None (protection.outlook.com: impinj.com does not designate
+ permitted sender hosts)
+x-microsoft-antispam-message-info: m2jk7cJUgKzFNIQF1+C36kkXaVGsyVEf9ekcBmEHVPRwFRJzyQvVOBhT7ODPt92vV3y7SyyNknflg4nSJC5A3ckzICRDgNMGjhZoZpl9fstKvBKjOx1AbormR80io1GrbaJhnVrj8G7M7fhfX5uS48avgxTf2bK8LyWUw2skUS8/jb5ibQxEYQuYi6ifAb2zC3yydtUIMaqAzv6aenx8+6zsidZQ8x8YNFlzBckAs4DINRnpG8J/ze1s3dysur6qZmSbcPbO6irI5nfsltE6PtZGRwReShrY0rgFxqRWGzu9mZLwpvm6cojl1bvaRAbYwa2CBjOTL2LnXwwaQyWE+SwfWeylrcXX2GaLXKfQheM=
+spamdiagnosticoutput: 1:99
+spamdiagnosticmetadata: NSPM
+Content-Type: text/plain; charset="utf-8"
+Content-ID: <F5370CDF0337A349A55CA6F89B6AF27C@namprd06.prod.outlook.com>
+Content-Transfer-Encoding: base64
 MIME-Version: 1.0
-References: <20181115231605.24352-1-mr.nuke.me@gmail.com> <74f2c527-0890-5e14-5e2d-48934a42dae6@kernel.org>
- <ab2427f1-c1f0-68fe-5335-1494caafdcbb@kernel.org> <20181119174127.GE26595@localhost.localdomain>
- <ef0a24e4-906e-f6df-c646-1fe47ea0dcc0@kernel.org> <20181119181051.GA26707@localhost.localdomain>
- <c0d6535f-324b-557a-3d0e-ccec070459a7@kernel.org> <3f923367-2cc1-c0d6-bca6-bf9a03d1b9ca@gmail.com>
- <ef6b19de-dd18-850f-4db9-8ab71b975e94@kernel.org> <bb575cfdcd0a4c50b489fb16eccfbff2@ausx13mps321.AMER.DELL.COM>
- <84013a8a-287d-d700-6710-91cc35f507c8@kernel.org> <9c9531c7efb846438f03f744b9afc466@ausx13mps321.AMER.DELL.COM>
- <3b18a9fa-7bdd-0fb4-285d-4efb454be50a@kernel.org> <e86f04ef8c054d61969862a6e7b72d0d@ausx13mps321.AMER.DELL.COM>
- <314e59da-48e1-545b-3ee9-6e5056b90fd9@kernel.org> <4728316eb84446358e0a07bbf1e42b57@ausx13mps321.AMER.DELL.COM>
- <bac2c78a-cd56-7287-e4fd-6042e9b3432c@kernel.org> <336e233b1ad642dcac9638d5fb275810@ausx13mps321.AMER.DELL.COM>
- <c385770a-9eec-b040-7861-0a3d455148b9@kernel.org>
-In-Reply-To: <c385770a-9eec-b040-7861-0a3d455148b9@kernel.org>
-From:   Tyler Baicar <baicar.tyler@gmail.com>
-Date:   Tue, 27 Nov 2018 13:46:05 -0500
-Message-ID: <CABo9ajDNECh8WNACUwTBLPF_UDvMq5XGqYF3ZT8ehnO0F3n=5w@mail.gmail.com>
-Subject: Re: [PATCH 0/2] PCI/AER: Consistently use _OSC to determine who owns AER
-To:     okaya@kernel.org
-Cc:     Alex_Gagniuc@dellteam.com,
-        Alexandru Gagniuc <mr.nuke.me@gmail.com>,
-        keith.busch@intel.com, Austin.Bolen@dell.com, Shyam.Iyer@dell.com,
-        lukas@wunner.de, Bjorn Helgaas <bhelgaas@google.com>,
-        rjw@rjwysocki.net, Len Brown <lenb@kernel.org>, ruscur@russell.cc,
-        sbobroff@linux.ibm.com, Oliver <oohall@gmail.com>,
-        linux-pci@vger.kernel.org, linux-acpi@vger.kernel.org,
-        Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
-        linuxppc-dev@lists.ozlabs.org
-Content-Type: text/plain; charset="UTF-8"
+X-OriginatorOrg: impinj.com
+X-MS-Exchange-CrossTenant-Network-Message-Id: 26cf0fb9-db2a-4102-dd8e-08d654999cc7
+X-MS-Exchange-CrossTenant-originalarrivaltime: 27 Nov 2018 18:53:25.5796
+ (UTC)
+X-MS-Exchange-CrossTenant-fromentityheader: Hosted
+X-MS-Exchange-CrossTenant-id: 6de70f0f-7357-4529-a415-d8cbb7e93e5e
+X-MS-Exchange-Transport-CrossTenantHeadersStamped: MWHPR0601MB3785
 Sender: linux-pci-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-On Tue, Nov 27, 2018 at 1:32 PM Sinan Kaya <okaya@kernel.org> wrote:
->
-> On 11/27/2018 1:22 PM, Alex_Gagniuc@Dellteam.com wrote:
-> > On 11/20/2018 04:08 PM, Sinan Kaya wrote:
-> >> I followed the ASWG thread yesterday. There will be a meeting next week to
-> >> discuss this.
-> >
-> > Any updates on the meeting?
-> >
-> >
->
-> Tyler should be able to get an update.
-
-As per Harb, the meetings are on Thursdays so it will be discussed this
-Thursday since last week was a holiday.
-
-Thanks,
-Tyler
+T24gTW9uLCAyMDE4LTExLTI2IGF0IDEzOjI0IC0wNjAwLCBSb2JlcnQgSGFuY29jayB3cm90ZToN
+Cj4gDQo+ID4gQWxzbywgSSB0aGluayB0aGUgbmV3IGlycSBkb21haW4gc3R1ZmYgaW4gNC4xNyBi
+cmVha3MgaXJxIGFjY291bnRpbmcgdG8NCj4gPiB0aGUgR0lDIGNoYWluIGludGVycnVwdCAoMTUy
+KSB0byB0aGUgZHdjIG1zaSBkb21haW4uICBJdCdsbCBhbHdheXMgc2hvdw0KPiA+IGFzIHplcm8g
+aW4gL3Byb2MvaW50ZXJydXB0cy4gIEJ1dCBJJ3ZlIG1vc3RseSBiZWVuIHdvcmtpbmcgaW4gNC4x
+NiBzbw0KPiA+IEknbSBub3Qgc3VyZSBhYm91dCB0aGUgcHJlY2lzZSBpbnRlcmFjdGlvbiBvZiBp
+cnEgZG9tYWlucyBhbmQNCj4gPiAvcHJvYy9pbnRlcnJ1cHRzIHlldC4NCj4gDQo+IEknbSBub3Qg
+YWN0dWFsbHkgc2VlaW5nIHRoZSBNU0kgaW50ZXJydXB0IHNob3dpbmcgdXAgaW4gL3Byb2MvaW50
+ZXJydXB0cw0KPiBhdCBhbGwgaW4gNC4xOS4gRnJvbSBhZGRpbmcgc29tZSBkZWJ1ZyBvdXRwdXQg
+aW50byB0aGUgZHdjIFBDSWUgY29kZSwgaXQNCj4gYXBwZWFycyBpdCdzIHVzaW5nIExpbnV4IElS
+USAyNCBhcyB0aGUgY2hhaW5pbmcgaW50ZXJydXB0LCBidXQgdGhlcmUncw0KPiBubyBlbnRyeSBp
+biAvcHJvYy9pbnRlcnJ1cHRzIGZvciBlaXRoZXIgTGludXggSVJRIDI0IG9yIEdJQyB2ZWN0b3Ig
+MTUyLg0KPiBOb3Qgc3VyZSBpZiB0aGVyZSBpcyBzdXBwb3NlZCB0byBiZSBvciBub3QuIEl0IGRv
+ZXMgYXBwZWFyIHRoYXQgdGhlDQo+IHZlY3RvciBpc24ndCBtYXNrZWQgaW4gdGhlIEdJQyBpbiBh
+bnkgY2FzZSwgaG93ZXZlciwgYW5kIHdoZW4gSSBmb3JjZQ0KPiB0aGUgaW50ZXJydXB0IGludG8g
+dGhlIEdJQyBwZW5kaW5nIHJlZ2lzdGVyLCB0aGluZ3Mgc2VlbSB0byBoYXBwZW4NCj4gcHJvcGVy
+bHkgYWZ0ZXIgdGhhdC4NCg0KSW4gNC4xNiwgdGhlIE1TSSBjaGFpbmluZyBpbnRlcnJ1cHQgZG9l
+cyBzaG93IHVwIGluIC9wcm9jL2ludGVycnVwdHMNCmFuZCBkb2VzIGluY3JlbWVudC4gIEFsc28g
+c2hvd3MgdXAgYXMgdHJhY2UgZXZlbnRzIHRvby4NCg0KSW4gNC4xNywgaXQgbm8gbG9uZ2VyIGFw
+cGVhcnMgaW4gL3Byb2MvaW50ZXJydXB0cy4gIEZpbmRpbmcgdGhlIExpbnV4DQppcnEgbnVtYmVy
+IGlzIG5vbi1vYnZpb3VzLCBhcyB5b3UndmUgc2Vlbi4gIEl0IHdpbGwgc2hvdyB1cCBpbg0KL3N5
+cy9rZXJuZWwvaXJxIGFuZCAvc3lzL2tlcm5lbC9kZWJ1Zy9pcnEvaXJxcywgYnV0IHRoZSBjb3Vu
+dCBpcyBhbHdheXMNCnplcm8uICBJTUhPLCBub3QgYW4gaW1wcm92ZW1lbnQuDQoNClNvIGlmIHlv
+dSdyZSB1c2luZyB0aGF0IGNvdW50IGluIC9zeXMgdG8gZGV0ZXJtaW5lIHRoYXQgdGhlIEdJQyBp
+cnENCm5ldmVyIGZpcmVkLCB0aGVuIGl0J3Mgbm90IGNvbmNsdXNpdmUuICBJdCBhbHdheXMgcmVh
+ZHMgemVyby4NCg0KQnV0IHRoZSBzYW1lIHByb2JsZW0gMjAxNCB3b3VsZCBvYnZpb3VzbHkgcHJl
+ZGF0ZSB0aGUgNC4xNyBrZXJuZWwu
