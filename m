@@ -2,87 +2,79 @@ Return-Path: <SRS0=2mbU=OH=vger.kernel.org=linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-2.5 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	MAILING_LIST_MULTI,SPF_PASS,USER_AGENT_MUTT autolearn=ham autolearn_force=no
-	version=3.4.0
+X-Spam-Status: No, score=-1.0 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+	MAILING_LIST_MULTI,SPF_PASS autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 34DFEC43441
-	for <linux-pci@archiver.kernel.org>; Wed, 28 Nov 2018 11:40:01 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 408F5C43441
+	for <linux-pci@archiver.kernel.org>; Wed, 28 Nov 2018 12:13:52 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id F3FF221104
-	for <linux-pci@archiver.kernel.org>; Wed, 28 Nov 2018 11:40:00 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.3.2 mail.kernel.org F3FF221104
-Authentication-Results: mail.kernel.org; dmarc=fail (p=none dis=none) header.from=linux.intel.com
+	by mail.kernel.org (Postfix) with ESMTP id 10E69208E7
+	for <linux-pci@archiver.kernel.org>; Wed, 28 Nov 2018 12:13:52 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.3.2 mail.kernel.org 10E69208E7
+Authentication-Results: mail.kernel.org; dmarc=none (p=none dis=none) header.from=rjwysocki.net
 Authentication-Results: mail.kernel.org; spf=none smtp.mailfrom=linux-pci-owner@vger.kernel.org
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727641AbeK1WlV (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Wed, 28 Nov 2018 17:41:21 -0500
-Received: from mga09.intel.com ([134.134.136.24]:1659 "EHLO mga09.intel.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1727519AbeK1WlU (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Wed, 28 Nov 2018 17:41:20 -0500
-X-Amp-Result: UNSCANNABLE
-X-Amp-File-Uploaded: False
-Received: from fmsmga007.fm.intel.com ([10.253.24.52])
-  by orsmga102.jf.intel.com with ESMTP/TLS/DHE-RSA-AES256-GCM-SHA384; 28 Nov 2018 03:39:59 -0800
-X-ExtLoop1: 1
-X-IronPort-AV: E=Sophos;i="5.56,290,1539673200"; 
-   d="scan'208";a="93534588"
-Received: from lahna.fi.intel.com (HELO lahna) ([10.237.72.157])
-  by fmsmga007.fm.intel.com with SMTP; 28 Nov 2018 03:39:53 -0800
-Received: by lahna (sSMTP sendmail emulation); Wed, 28 Nov 2018 13:39:52 +0200
-Date:   Wed, 28 Nov 2018 13:39:52 +0200
-From:   Mika Westerberg <mika.westerberg@linux.intel.com>
-To:     "Rafael J. Wysocki" <rafael@kernel.org>
-Cc:     "open list:AMD IOMMU (AMD-VI)" <iommu@lists.linux-foundation.org>,
-        Joerg Roedel <joro@8bytes.org>,
-        David Woodhouse <dwmw2@infradead.org>,
-        Lu Baolu <baolu.lu@linux.intel.com>,
-        "Raj, Ashok" <ashok.raj@intel.com>,
-        Bjorn Helgaas <bhelgaas@google.com>,
-        "Rafael J. Wysocki" <rjw@rjwysocki.net>,
-        "Pan, Jacob jun" <jacob.jun.pan@intel.com>,
-        Andreas Noever <andreas.noever@gmail.com>,
-        Michael Jamet <michael.jamet@intel.com>,
-        Yehezkel Bernat <YehezkelShB@gmail.com>,
-        Lukas Wunner <lukas@wunner.de>, ckellner@redhat.com,
-        Mario Limonciello <Mario.Limonciello@dell.com>,
-        Anthony Wong <anthony.wong@canonical.com>,
-        Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
-        Christoph Hellwig <hch@infradead.org>,
-        Alex Williamson <alex.williamson@redhat.com>,
-        ACPI Devel Maling List <linux-acpi@vger.kernel.org>,
+        id S1727676AbeK1XPS (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Wed, 28 Nov 2018 18:15:18 -0500
+Received: from cloudserver094114.home.pl ([79.96.170.134]:53948 "EHLO
+        cloudserver094114.home.pl" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1727783AbeK1XPS (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Wed, 28 Nov 2018 18:15:18 -0500
+Received: from 79.184.252.167.ipv4.supernova.orange.pl (79.184.252.167) (HELO aspire.rjw.lan)
+ by serwer1319399.home.pl (79.96.170.134) with SMTP (IdeaSmtpServer 0.83.157)
+ id 64a5ab6f7a697fa5; Wed, 28 Nov 2018 13:13:48 +0100
+From:   "Rafael J. Wysocki" <rjw@rjwysocki.net>
+To:     Bjorn Helgaas <helgaas@kernel.org>
+Cc:     LKML <linux-kernel@vger.kernel.org>,
         Linux PCI <linux-pci@vger.kernel.org>,
-        Linux Kernel Mailing List <linux-kernel@vger.kernel.org>
-Subject: Re: [PATCH v2 1/4] PCI / ACPI: Identify untrusted PCI devices
-Message-ID: <20181128113952.GX2296@lahna.fi.intel.com>
-References: <20181126111526.56340-1-mika.westerberg@linux.intel.com>
- <20181126111526.56340-2-mika.westerberg@linux.intel.com>
- <CAJZ5v0he4BmyJ97=uwVpJtojhe0f5pTq81LBdAQG6RFy6edKrQ@mail.gmail.com>
- <20181128105415.GV2296@lahna.fi.intel.com>
- <CAJZ5v0g5h42G-Svc_DZafucb0SyNQGE2ZhnnKnJ5UTjCWCMgxw@mail.gmail.com>
+        Patrick Talbert <ptalbert@redhat.com>
+Subject: Re: [Bug] SD card reader in Acer Aspire S5 broken in 4.20-rc
+Date:   Wed, 28 Nov 2018 13:13:44 +0100
+Message-ID: <3669527.fZMjlSGqLg@aspire.rjw.lan>
+In-Reply-To: <20181127202514.GB112381@google.com>
+References: <2960808.4YCFhzuD0k@aspire.rjw.lan> <1675729.7aZxPkvRd8@aspire.rjw.lan> <20181127202514.GB112381@google.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <CAJZ5v0g5h42G-Svc_DZafucb0SyNQGE2ZhnnKnJ5UTjCWCMgxw@mail.gmail.com>
-Organization: Intel Finland Oy - BIC 0357606-4 - Westendinkatu 7, 02160 Espoo
-User-Agent: Mutt/1.10.1 (2018-07-13)
+Content-Transfer-Encoding: 7Bit
+Content-Type: text/plain; charset="us-ascii"
 Sender: linux-pci-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-On Wed, Nov 28, 2018 at 12:24:27PM +0100, Rafael J. Wysocki wrote:
-> I'm not sure if this is worth the extra complexity either, which is
-> why I have no strong opinion here. :-)
+On Tuesday, November 27, 2018 9:25:14 PM CET Bjorn Helgaas wrote:
+> On Mon, Nov 26, 2018 at 11:37:20PM +0100, Rafael J. Wysocki wrote:
+> > On Monday, November 26, 2018 7:03:58 PM CET Rafael J. Wysocki wrote:
+> > > Hi Bjorn,
+> > > 
+> > > The SD card reader in my Acer Aspire S5 doesn't work with 4.20-rc.
+> > > 
+> > > Here's what lspci -v says about it (in a bad kernel):
+> > > 
+> > > 02:00.0 Unassigned class [ff00]: Realtek Semiconductor Co., Ltd. RTS5209 PCI Express Card Reader 
+> > > (rev 01)
+> > >         Subsystem: Acer Incorporated [ALI] Device 0704
+> > >         Flags: bus master, fast devsel, latency 0, IRQ 35
+> > >         Memory at d9001000 (32-bit, non-prefetchable) [size=4K]
+> > >         Capabilities: [40] Power Management version 3
+> > >         Capabilities: [50] MSI: Enable+ Count=1/1 Maskable- 64bit+
+> > >         Capabilities: [70] Express Endpoint, MSI 00
+> > >         Capabilities: [100] Advanced Error Reporting
+> > >         Capabilities: [140] Device Serial Number 00-00-00-01-00-4c-e0-00
+> > >         Kernel driver in use: rtsx_pci
+> > >         Kernel modules: rtsx_pci
 > 
-> Maybe you can add a comment, next to the prp_guids[] definition, to
-> explain that the GUIDs are made equivalent to each other in order to
-> avoid extra complexity in the properties handling code, with the
-> caveat that the kernel will accept certain combinations of GUIDs and
-> properties that are not defined strictly speaking without warning, but
-> those combinations of GUIDs and properties are not expected to be used
-> by firmware and they should be caught by firmware validation tools and
-> reported as errors anyway.
+> Thanks a lot for bisecting this!
+> 
+> With a good kernel (v4.19 or v4.20-rc with 17c91487364f reverted),
+> would you mind collecting "lspci -vv" output, the dmesg log with
+> "pci=earlydump", and the FADT dump?
 
-Sure, I'll add the comment in the next version of the series.
+All of the information is attached to the BZ entry at
+
+https://bugzilla.kernel.org/show_bug.cgi?id=201801
+
+I have created for the tracking of this issue.  Let's continue in the BZ.
+
+Cheers,
+Rafael
+
