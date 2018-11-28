@@ -2,179 +2,306 @@ Return-Path: <SRS0=2mbU=OH=vger.kernel.org=linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-6.1 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
-	DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,
-	MENTIONS_GIT_HOSTING,SPF_PASS,URIBL_BLOCKED autolearn=unavailable
-	autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-8.5 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_PASS,URIBL_BLOCKED,
+	USER_AGENT_MUTT autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 39261C43610
-	for <linux-pci@archiver.kernel.org>; Wed, 28 Nov 2018 17:56:27 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id B7A24C43441
+	for <linux-pci@archiver.kernel.org>; Wed, 28 Nov 2018 18:00:05 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id ECC5F20665
-	for <linux-pci@archiver.kernel.org>; Wed, 28 Nov 2018 17:56:26 +0000 (UTC)
-Authentication-Results: mail.kernel.org;
-	dkim=pass (1024-bit key) header.d=agner.ch header.i=@agner.ch header.b="b5pc/RvO"
-DMARC-Filter: OpenDMARC Filter v1.3.2 mail.kernel.org ECC5F20665
-Authentication-Results: mail.kernel.org; dmarc=none (p=none dis=none) header.from=agner.ch
+	by mail.kernel.org (Postfix) with ESMTP id 7FF6C205C9
+	for <linux-pci@archiver.kernel.org>; Wed, 28 Nov 2018 18:00:05 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.3.2 mail.kernel.org 7FF6C205C9
+Authentication-Results: mail.kernel.org; dmarc=none (p=none dis=none) header.from=arm.com
 Authentication-Results: mail.kernel.org; spf=none smtp.mailfrom=linux-pci-owner@vger.kernel.org
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1729289AbeK2E6u (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Wed, 28 Nov 2018 23:58:50 -0500
-Received: from mail.kmu-office.ch ([178.209.48.109]:45226 "EHLO
-        mail.kmu-office.ch" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1728341AbeK2E6t (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Wed, 28 Nov 2018 23:58:49 -0500
-Received: from webmail.kmu-office.ch (unknown [IPv6:2a02:418:6a02::a3])
-        by mail.kmu-office.ch (Postfix) with ESMTPSA id 5C9A25C0D8F;
-        Wed, 28 Nov 2018 18:56:19 +0100 (CET)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=agner.ch; s=dkim;
-        t=1543427779;
-        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-         content-transfer-encoding:content-transfer-encoding:
-         in-reply-to:in-reply-to:references:references;
-        bh=kP98xifePJOH9xH007JIyp4GU9vk/2zWb3pImuRgfJA=;
-        b=b5pc/RvOdCU1RHfP6mrqriRLdb8ai/TuEopSlGGe9F8rZ27gd8Y7Pfu7xlpCFaVRRgsnHk
-        iuTDVikNQ4LpMugvnUvpvmhTIgzcVo4Z5Bhee/v5L+rFNT8HJH1pQteZNS1mT/cE+iuFTd
-        wor1u52S/MO9VFMZkPYa9StNQrvME1I=
+        id S1725815AbeK2FCc (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Thu, 29 Nov 2018 00:02:32 -0500
+Received: from usa-sjc-mx-foss1.foss.arm.com ([217.140.101.70]:47684 "EHLO
+        foss.arm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1725266AbeK2FCc (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Thu, 29 Nov 2018 00:02:32 -0500
+Received: from usa-sjc-imap-foss1.foss.arm.com (unknown [10.72.51.249])
+        by usa-sjc-mx-foss1.foss.arm.com (Postfix) with ESMTP id E424A80D;
+        Wed, 28 Nov 2018 10:00:03 -0800 (PST)
+Received: from e107981-ln.cambridge.arm.com (e107981-ln.cambridge.arm.com [10.1.197.40])
+        by usa-sjc-imap-foss1.foss.arm.com (Postfix) with ESMTPSA id 44BE73F59C;
+        Wed, 28 Nov 2018 10:00:02 -0800 (PST)
+Date:   Wed, 28 Nov 2018 17:59:51 +0000
+From:   Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
+To:     "Z.q. Hou" <zhiqiang.hou@nxp.com>
+Cc:     "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+        "bhelgaas@google.com" <bhelgaas@google.com>,
+        "jingoohan1@gmail.com" <jingoohan1@gmail.com>,
+        "gustavo.pimentel@synopsys.com" <gustavo.pimentel@synopsys.com>,
+        Roy Zang <roy.zang@nxp.com>, Mingkai Hu <mingkai.hu@nxp.com>,
+        "M.h. Lian" <minghuan.lian@nxp.com>
+Subject: Re: [PATCHv2 4/4] PCI: dwc: add prefetchable memory range support
+Message-ID: <20181128175943.GA25307@e107981-ln.cambridge.arm.com>
+References: <20181107100854.28389-1-Zhiqiang.Hou@nxp.com>
+ <20181107100854.28389-5-Zhiqiang.Hou@nxp.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 8bit
-Date:   Wed, 28 Nov 2018 18:56:19 +0100
-From:   Stefan Agner <stefan@agner.ch>
-To:     Lucas Stach <l.stach@pengutronix.de>
-Cc:     Leonard Crestez <leonard.crestez@nxp.com>,
-        lorenzo.pieralisi@arm.com, Trent Piepho <tpiepho@impinj.com>,
-        Richard Zhu <hongxing.zhu@nxp.com>,
-        linux-kernel@vger.kernel.org, jingoohan1@gmail.com,
-        gustavo.pimentel@synopsys.com, andrew.smirnov@gmail.com,
-        linux-pci@vger.kernel.org, bhelgaas@google.com
-Subject: Re: [PATCH v3 2/2] PCI: imx6: limit DBI register length
-In-Reply-To: <1543427438.2507.52.camel@pengutronix.de>
-References: <20181120165626.26424-1-stefan@agner.ch>
- <20181120165626.26424-2-stefan@agner.ch>
- <581b9548043d5276f6685f534386180fd0673a9a.camel@nxp.com>
- <1542741198.30311.608.camel@impinj.com>
- <268e109e1c6b309454bd5a313078894c@agner.ch>
- <1542749302.30311.624.camel@impinj.com>
- <VI1PR04MB5533BBC2B45752ED84E4D037EEDA0@VI1PR04MB5533.eurprd04.prod.outlook.com>
- <fd07b82d2473d5d7db9826142e79b00a@agner.ch>
- <fd74de3125bf7df8789e83f2e0631157@agner.ch>
- <1543427438.2507.52.camel@pengutronix.de>
-Message-ID: <52f4ec8b298ec8e672f2dc5bf670b7b5@agner.ch>
-X-Sender: stefan@agner.ch
-User-Agent: Roundcube Webmail/1.3.7
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20181107100854.28389-5-Zhiqiang.Hou@nxp.com>
+User-Agent: Mutt/1.5.24 (2015-08-30)
 Sender: linux-pci-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-On 28.11.2018 18:50, Lucas Stach wrote:
-> Am Mittwoch, den 28.11.2018, 18:36 +0100 schrieb Stefan Agner:
->> On 28.11.2018 13:19, Stefan Agner wrote:
->> > On 21.11.2018 14:47, Leonard Crestez wrote:
->> > > On 11/20/2018 11:28 PM, Trent Piepho wrote:
->> > > > On Tue, 2018-11-20 at 21:42 +0100, Stefan Agner wrote:
->> > > > > On 20.11.2018 20:13, Trent Piepho wrote:
->> > > > > > It also seems to me that this doesn't need to be in the internal pci
->> > > > > > config access functions.  The driver shouldn't be reading registers
->> > > > > > that don't exist anyway.  It's really about trying to fix sysfs access
->> > > > > > to registers that don't exist.  So maybe it should be done there.
->> > > > >
->> > > > > That was my first approach, see:
->> > > >
->> > > > Yes, but that just used the pci device id which applies to every IMX
->> > > > design.
->> > > >
->> > > > It's also not totally correct, as it seems real registers after 0x200
->> > > > do work on imx6, and that would prevent access to them.
->> > >
->> > > I see that Lorenzo already accepted the patch in pci/dwc:
->> > >
->> > > https://git.kernel.org/pub/scm/linux/kernel/git/lpieralisi/pci.git/commit/?h=pci/dwc&id=f14eaec153aaebbe940ddd21e4198cc2abc927c2
->> > >
->> > > My tests show that this series breaks pci cards on 6qdl and I think it
->> > > should be reverted until a fix is found. Are you OK with this?
->> > >
->> > > Fixing might require an entirely different approach.
->> >
->> > I tried to reproduce this issue on Apalis iMX6 (i.MX 6Q) with a ath9k
->> > PCIe WiFi card, the issue you are seeing did not happen. My lspci looks
->> > as follows:
->> >
->> > root@ea210c63d739:/# lspci -v
->> > 00:00.0 PCI bridge: Synopsys, Inc. Device abcd (rev 01) (prog-if 00
->> > [Normal decode])
->> >         Flags: bus master, fast devsel, latency 0, IRQ 255
->> >         Memory at 01000000 (32-bit, non-prefetchable) [size=1M]
->> >         Bus: primary=00, secondary=01, subordinate=ff, sec-latency=0
->> >         Memory behind bridge: 01100000-011fffff
->> >         [virtual] Expansion ROM at 01200000 [disabled] [size=64K]
->> >         Capabilities: [40] Power Management version 3
->> >         Capabilities: [50] MSI: Enable- Count=1/1 Maskable+ 64bit+
->> >         Capabilities: [70] Express Root Port (Slot-), MSI 00
->> >         Capabilities: [100] Advanced Error Reporting
->> >         Capabilities: [140] Virtual Channel
->> > lspci: Unable to load libkmod resources: error -12
->> >
->> > 01:00.0 Network controller: Qualcomm Atheros AR928X Wireless Network
->> > Adapter (PCI-Express) (rev 01)
->> >         Subsystem: Foxconn International, Inc. Device e007
->> >         Flags: bus master, fast devsel, latency 0, IRQ 312
->> >         Memory at 01100000 (64-bit, non-prefetchable) [size=64K]
->> >         Capabilities: [40] Power Management version 2
->> >         Capabilities: [50] MSI: Enable- Count=1/1 Maskable- 64bit-
->> >         Capabilities: [60] Express Legacy Endpoint, MSI 00
->> >         Capabilities: [90] MSI-X: Enable- Count=1 Masked-
->> >         Capabilities: [100] Advanced Error Reporting
->> >         Capabilities: [140] Virtual Channel
->> >         Capabilities: [160] Device Serial Number 00-00-00-00-00-00-00-00
->> >         Kernel driver in use: ath9k
->> >
->> >
->> > I did also setup a WiFi network and transmitted some packages, but I did
->> > not get a nobody carred message. Do you have an idea why that might be?
->> >
->> > # cat /proc/interrupts
->> > ...
->> > 312:      10967          0          0          0       GPC 123 Level    
->> > ath9k
->> > ...
->> >
->> >
->> > Your conclusion in this thread seem reasonable, hence reverting the
->> > issue does. However, I still would like to reproduce the issue so I can
->> > make sure that future patches don't break it :-)
->>
->> Hm, I realized that I need to enable CONFIG_PCIEPORTBUS and set
->> ath9k.use_msi=1 to get MSI for that card. However, it seems that ath9k
->> does not behave well in that setup. It does get interrupts, and seems to
->> work to some degree, but I was not successful in transmitting data over
->> WiFi, but that might be an entirly different thing.
->>
->> However, what I noticed is that when CONFIG_PCIEPORTBUS and
->> CONFIG_PCI_MSI is enabled, MSI works but legacy interrupt seem not to
->> fire anymore. That is true for ath9k as well as e1000e (using
->> e1000e.IntMode=0 to force legacy). Is that a known issue/limitation with
->> i.MX 6 PCIe?
+On Wed, Nov 07, 2018 at 10:09:21AM +0000, Z.q. Hou wrote:
+> From: Hou Zhiqiang <Zhiqiang.Hou@nxp.com>
 > 
-> Yes, this is a known issue with the Designware PCIe core, not just on
-> i.MX6. As soon as any MSI interrupt is enabled, the core doesn't
-> forward legacy IRQs anymore.
-
-Oh I see, unfortunate!
-
+> The current code only support non-prefetchable memory range,
+> as the non-prefetchable memory range must not be greater than
+> 4GiB, one viewport can cover it, which supports upto 4GiB.
 > 
-> So if any card in your system needs legacy interrupts (and ath9k is
-> very likely to need this, as MSI support is pretty new and
-> experimental), you need to boot with "nomsi" set on the kernel command
-> line.
+> To support prefetchable memory range, which is upto 64-bit
+> memory space and can be greater than 4GiB, so we need multiple
+> viewports. And added separate vars to store prefetchable memory
+> range info to prevent overriding the non-prefetchable memory
+> range info.
+> 
+> And this patch explicitly assigned the last (if there are only
+> 2 viewports) or last 2 viewports for CFG and I/O windows and the
+> rests for MEM windows.
+> 
+> Signed-off-by: Hou Zhiqiang <Zhiqiang.Hou@nxp.com>
+> ---
+> V2:
+>  - Reworded the subject and commit description.
+>  - Fix the prefetchable memory range overriding non-perfetchable
+>    memory range issue by adding vars to store prefetchable memory
+>    range info.
+> 
+>  .../pci/controller/dwc/pcie-designware-host.c | 107 ++++++++++++++----
+>  drivers/pci/controller/dwc/pcie-designware.h  |   7 ++
+>  2 files changed, 95 insertions(+), 19 deletions(-)
+> 
+> diff --git a/drivers/pci/controller/dwc/pcie-designware-host.c b/drivers/pci/controller/dwc/pcie-designware-host.c
+> index ecacce016489..328aa40a6609 100644
+> --- a/drivers/pci/controller/dwc/pcie-designware-host.c
+> +++ b/drivers/pci/controller/dwc/pcie-designware-host.c
+> @@ -346,6 +346,35 @@ int dw_pcie_host_init(struct pcie_port *pp)
+>  		dev_err(dev, "Missing *config* reg space\n");
+>  	}
+>  
+> +	/*
+> +	 * If vendor's platform driver has set the num_viewport and it is
+> +	 * not less than 2, skip getting the num_viewport from DT here.
 
-Ok, thanks for clarification.
+That's not what the device tree bindings specify. If DT does contain
+the property you *must* read it.
 
-FWIW, e1000e with MSI works perfectly fine, its just ath9k when forcing
-MSI using the kernel parameter which does not work really. I guess that
-is the reason it is not enabled by default.
+> +	 */
+> +	if (pci->num_viewport < 2) {
+> +		ret = of_property_read_u32(np, "num-viewport",
+> +					   &pci->num_viewport);
+> +		if (ret || pci->num_viewport < 2)
+> +			pci->num_viewport = 2;
+> +	}
+> +
+> +	/*
+> +	 * if there are only 2 viewports, assign the last viewport for
+> +	 * both CFG and IO window, otherwise assign the last 2 viewport
 
---
-Stefan
+Gah. Can anyone explain to me how this driver works if only two
+viewports are available ? What happens if an IO access happens at
+the same time of a config access (that fiddles with the outbound
+memory windows) ?
+
+> +	 * for CFG and IO window specific. And the rest viewports are
+> +	 * assigned to MEM windows.
+> +	 */
+> +	if (pci->num_viewport == 2) {
+> +		pp->cfg_idx = pp->io_idx = PCIE_ATU_REGION_INDEX1;
+> +		pp->mem_wins = 1;
+> +	} else {
+> +		pp->cfg_idx = pci->num_viewport - 1;
+> +		pp->io_idx = pci->num_viewport - 2;
+> +		pp->mem_wins = pci->num_viewport - 2;
+> +	}
+> +
+> +	dev_dbg(dev, "CFG win id: %d, I/O win id: %d, Total MEM win: %d\n",
+> +		pp->cfg_idx, pp->io_idx, pp->mem_wins);
+> +
+>  	bridge = pci_alloc_host_bridge(0);
+>  	if (!bridge)
+>  		return -ENOMEM;
+> @@ -377,10 +406,20 @@ int dw_pcie_host_init(struct pcie_port *pp)
+>  			}
+>  			break;
+>  		case IORESOURCE_MEM:
+> -			pp->mem = win->res;
+> -			pp->mem->name = "MEM";
+> -			pp->mem_size = resource_size(pp->mem);
+> -			pp->mem_bus_addr = pp->mem->start - win->offset;
+> +			if (win->res->flags & IORESOURCE_PREFETCH) {
+> +				pp->mem_perf = win->res;
+> +				pp->mem_perf->name = "MEM perf";
+
+Nit: Why "perf" and not "pref" ?
+
+It is confusing but that's the least of this patch problems.
+
+> +				pp->mem_perf_size = resource_size(pp->mem_perf);
+> +				pp->mem_perf_bus_addr = pp->mem_perf->start -
+> +							win->offset;
+> +				pp->mem_perf_base = pp->mem_perf->start;
+> +			} else {
+> +				pp->mem = win->res;
+> +				pp->mem->name = "MEM";
+> +				pp->mem_size = resource_size(pp->mem);
+> +				pp->mem_bus_addr = pp->mem->start - win->offset;
+> +				pp->mem_base = pp->mem->start;
+> +			}
+>  			break;
+>  		case 0:
+>  			pp->cfg = win->res;
+> @@ -406,8 +445,6 @@ int dw_pcie_host_init(struct pcie_port *pp)
+>  		}
+>  	}
+>  
+> -	pp->mem_base = pp->mem->start;
+> -
+>  	if (!pp->va_cfg0_base) {
+>  		pp->va_cfg0_base = devm_pci_remap_cfgspace(dev,
+>  					pp->cfg0_base, pp->cfg0_size);
+> @@ -534,12 +571,12 @@ static int dw_pcie_rd_other_conf(struct pcie_port *pp, struct pci_bus *bus,
+>  		va_cfg_base = pp->va_cfg1_base;
+>  	}
+>  
+> -	dw_pcie_prog_outbound_atu(pci, PCIE_ATU_REGION_INDEX1,
+> +	dw_pcie_prog_outbound_atu(pci, pp->cfg_idx,
+>  				  type, cpu_addr,
+>  				  busdev, cfg_size);
+>  	ret = dw_pcie_read(va_cfg_base + where, size, val);
+> -	if (pci->num_viewport <= 2)
+> -		dw_pcie_prog_outbound_atu(pci, PCIE_ATU_REGION_INDEX1,
+> +	if (pp->cfg_idx == pp->io_idx)
+> +		dw_pcie_prog_outbound_atu(pci, pp->io_idx,
+>  					  PCIE_ATU_TYPE_IO, pp->io_base,
+>  					  pp->io_bus_addr, pp->io_size);
+
+See above, even though this is not related to this patch.
+
+>  
+> @@ -573,12 +610,12 @@ static int dw_pcie_wr_other_conf(struct pcie_port *pp, struct pci_bus *bus,
+>  		va_cfg_base = pp->va_cfg1_base;
+>  	}
+>  
+> -	dw_pcie_prog_outbound_atu(pci, PCIE_ATU_REGION_INDEX1,
+> +	dw_pcie_prog_outbound_atu(pci, pp->cfg_idx,
+>  				  type, cpu_addr,
+>  				  busdev, cfg_size);
+>  	ret = dw_pcie_write(va_cfg_base + where, size, val);
+> -	if (pci->num_viewport <= 2)
+> -		dw_pcie_prog_outbound_atu(pci, PCIE_ATU_REGION_INDEX1,
+> +	if (pp->cfg_idx == pp->io_idx)
+> +		dw_pcie_prog_outbound_atu(pci, pp->io_idx,
+>  					  PCIE_ATU_TYPE_IO, pp->io_base,
+>  					  pp->io_bus_addr, pp->io_size);
+>  
+> @@ -652,6 +689,9 @@ static u8 dw_pcie_iatu_unroll_enabled(struct dw_pcie *pci)
+>  void dw_pcie_setup_rc(struct pcie_port *pp)
+>  {
+>  	u32 val, ctrl, num_ctrls;
+> +	u64 remain_size, base, win_size;
+> +	phys_addr_t bus_addr;
+> +	int i;
+>  	struct dw_pcie *pci = to_dw_pcie_from_pp(pp);
+>  
+>  	dw_pcie_setup(pci);
+> @@ -700,13 +740,42 @@ void dw_pcie_setup_rc(struct pcie_port *pp)
+>  		dev_dbg(pci->dev, "iATU unroll: %s\n",
+>  			pci->iatu_unroll_enabled ? "enabled" : "disabled");
+>  
+> -		dw_pcie_prog_outbound_atu(pci, PCIE_ATU_REGION_INDEX0,
+> -					  PCIE_ATU_TYPE_MEM, pp->mem_base,
+> -					  pp->mem_bus_addr, pp->mem_size);
+> -		if (pci->num_viewport > 2)
+> -			dw_pcie_prog_outbound_atu(pci, PCIE_ATU_REGION_INDEX2,
+> -						  PCIE_ATU_TYPE_IO, pp->io_base,
+> -						  pp->io_bus_addr, pp->io_size);
+> +		/*
+> +		 * The maximum region size is 4 GB, and a region
+> +		 * must not cross a 4 GB boundary.
+> +		 */
+> +		win_size = SZ_4G - (pp->mem_base & (SZ_4G - 1));
+> +		win_size = min(win_size, pp->mem_size);
+> +		dw_pcie_prog_outbound_atu(pci, 0, PCIE_ATU_TYPE_MEM,
+> +					  pp->mem_base, pp->mem_bus_addr,
+> +					  win_size);
+> +		dev_dbg(pci->dev,
+> +			"iATU: non-pref MEM: win = %d: base = %llx, bus_addr = %pa, size = %llx\n",
+> +			0, pp->mem_base, &pp->mem_bus_addr, win_size);
+> +
+> +		/* Prefetchable range can be 64bit space */
+> +		remain_size = pp->mem_perf_size;
+
+unallocated/free_size ?
+
+> +		base = pp->mem_perf_base;
+> +		bus_addr = pp->mem_perf_bus_addr;
+> +		for (i = 1; remain_size > 0 && i < pp->mem_wins; i++) {
+> +			win_size = SZ_4G - (base & (SZ_4G - 1));
+> +			win_size = min(win_size, remain_size);
+> +			dw_pcie_prog_outbound_atu(pci, i, PCIE_ATU_TYPE_MEM,
+> +						  base, bus_addr, win_size);
+> +			dev_dbg(pci->dev, "iATU: pref MEM: win = %d: base = %llx, bus_addr = %pa, size = %llx\n",
+> +				i, base, &bus_addr, win_size);
+> +
+> +			base += win_size;
+> +			bus_addr += win_size;
+> +			remain_size -= win_size;
+> +		}
+> +
+> +		if (remain_size > 0)
+> +			dev_info(pci->dev, "iATU: MEM window isn't enough\n");
+> +
+> +		dw_pcie_prog_outbound_atu(pci, pp->io_idx, PCIE_ATU_TYPE_IO,
+> +					  pp->io_base, pp->io_bus_addr,
+> +					  pp->io_size);
+>  	}
+>  
+>  	dw_pcie_wr_own_conf(pp, PCI_BASE_ADDRESS_0, 4, 0);
+> diff --git a/drivers/pci/controller/dwc/pcie-designware.h b/drivers/pci/controller/dwc/pcie-designware.h
+> index a438c3879aa9..0197f67f82b7 100644
+> --- a/drivers/pci/controller/dwc/pcie-designware.h
+> +++ b/drivers/pci/controller/dwc/pcie-designware.h
+> @@ -148,15 +148,22 @@ struct pcie_port {
+>  	u64			cfg1_base;
+>  	void __iomem		*va_cfg1_base;
+>  	u32			cfg1_size;
+> +	u32			cfg_idx;
+>  	resource_size_t		io_base;
+>  	phys_addr_t		io_bus_addr;
+>  	u32			io_size;
+> +	u32			io_idx;
+>  	u64			mem_base;
+>  	phys_addr_t		mem_bus_addr;
+>  	u64			mem_size;
+> +	u64			mem_perf_base;
+
+This is a phys_addr_t
+
+> +	phys_addr_t		mem_perf_bus_addr;
+
+pci_bus_addr_t ?
+
+Lorenzo
+
+> +	u64			mem_perf_size;
+> +	u32			mem_wins;
+>  	struct resource		*cfg;
+>  	struct resource		*io;
+>  	struct resource		*mem;
+> +	struct resource		*mem_perf;
+>  	struct resource		*busn;
+>  	int			irq;
+>  	const struct dw_pcie_host_ops *ops;
+> -- 
+> 2.17.1
+> 
