@@ -2,159 +2,191 @@ Return-Path: <SRS0=2mbU=OH=vger.kernel.org=linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-6.0 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	MAILING_LIST_MULTI,MENTIONS_GIT_HOSTING,SPF_PASS,URIBL_BLOCKED
-	autolearn=unavailable autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-7.1 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
+	DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,
+	SIGNED_OFF_BY,SPF_PASS,URIBL_BLOCKED autolearn=ham autolearn_force=no
+	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 1C843C43441
-	for <linux-pci@archiver.kernel.org>; Wed, 28 Nov 2018 17:50:50 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 7B444C43441
+	for <linux-pci@archiver.kernel.org>; Wed, 28 Nov 2018 17:53:32 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id D8DDF20665
-	for <linux-pci@archiver.kernel.org>; Wed, 28 Nov 2018 17:50:49 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.3.2 mail.kernel.org D8DDF20665
-Authentication-Results: mail.kernel.org; dmarc=none (p=none dis=none) header.from=pengutronix.de
+	by mail.kernel.org (Postfix) with ESMTP id 39864208E7
+	for <linux-pci@archiver.kernel.org>; Wed, 28 Nov 2018 17:53:32 +0000 (UTC)
+Authentication-Results: mail.kernel.org;
+	dkim=pass (1024-bit key) header.d=agner.ch header.i=@agner.ch header.b="kX9fTbt5"
+DMARC-Filter: OpenDMARC Filter v1.3.2 mail.kernel.org 39864208E7
+Authentication-Results: mail.kernel.org; dmarc=none (p=none dis=none) header.from=agner.ch
 Authentication-Results: mail.kernel.org; spf=none smtp.mailfrom=linux-pci-owner@vger.kernel.org
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1729159AbeK2ExO (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Wed, 28 Nov 2018 23:53:14 -0500
-Received: from metis.ext.pengutronix.de ([85.220.165.71]:36993 "EHLO
-        metis.ext.pengutronix.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1727867AbeK2ExO (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Wed, 28 Nov 2018 23:53:14 -0500
-Received: from kresse.hi.pengutronix.de ([2001:67c:670:100:1d::2a])
-        by metis.ext.pengutronix.de with esmtp (Exim 4.89)
-        (envelope-from <l.stach@pengutronix.de>)
-        id 1gS3yy-0003VL-PR; Wed, 28 Nov 2018 18:50:40 +0100
-Message-ID: <1543427438.2507.52.camel@pengutronix.de>
-Subject: Re: [PATCH v3 2/2] PCI: imx6: limit DBI register length
-From:   Lucas Stach <l.stach@pengutronix.de>
-To:     Stefan Agner <stefan@agner.ch>,
-        Leonard Crestez <leonard.crestez@nxp.com>
-Cc:     lorenzo.pieralisi@arm.com, Trent Piepho <tpiepho@impinj.com>,
-        Richard Zhu <hongxing.zhu@nxp.com>,
-        linux-kernel@vger.kernel.org, jingoohan1@gmail.com,
-        gustavo.pimentel@synopsys.com, andrew.smirnov@gmail.com,
-        linux-pci@vger.kernel.org, bhelgaas@google.com
-Date:   Wed, 28 Nov 2018 18:50:38 +0100
-In-Reply-To: <fd74de3125bf7df8789e83f2e0631157@agner.ch>
-References: <20181120165626.26424-1-stefan@agner.ch>
-         <20181120165626.26424-2-stefan@agner.ch>
-         <581b9548043d5276f6685f534386180fd0673a9a.camel@nxp.com>
-         <1542741198.30311.608.camel@impinj.com>
-         <268e109e1c6b309454bd5a313078894c@agner.ch>
-         <1542749302.30311.624.camel@impinj.com>
-         <VI1PR04MB5533BBC2B45752ED84E4D037EEDA0@VI1PR04MB5533.eurprd04.prod.outlook.com>
-         <fd07b82d2473d5d7db9826142e79b00a@agner.ch>
-         <fd74de3125bf7df8789e83f2e0631157@agner.ch>
-Content-Type: text/plain; charset="UTF-8"
-X-Mailer: Evolution 3.22.6-1+deb9u1 
-Mime-Version: 1.0
-Content-Transfer-Encoding: 8bit
-X-SA-Exim-Connect-IP: 2001:67c:670:100:1d::2a
-X-SA-Exim-Mail-From: l.stach@pengutronix.de
-X-SA-Exim-Scanned: No (on metis.ext.pengutronix.de); SAEximRunCond expanded to false
-X-PTX-Original-Recipient: linux-pci@vger.kernel.org
+        id S1729246AbeK2Ez5 (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Wed, 28 Nov 2018 23:55:57 -0500
+Received: from mail.kmu-office.ch ([178.209.48.109]:45138 "EHLO
+        mail.kmu-office.ch" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1729018AbeK2Ez5 (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Wed, 28 Nov 2018 23:55:57 -0500
+Received: from webmail.kmu-office.ch (unknown [IPv6:2a02:418:6a02::a3])
+        by mail.kmu-office.ch (Postfix) with ESMTPSA id CB9AB5C0D8F;
+        Wed, 28 Nov 2018 18:53:27 +0100 (CET)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=agner.ch; s=dkim;
+        t=1543427607;
+        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
+         content-transfer-encoding:content-transfer-encoding:
+         in-reply-to:in-reply-to:references:references;
+        bh=tM1NfCTpmphNJigx4fPTAD6FxbrUBI91FzMFuSgPT8k=;
+        b=kX9fTbt5vdfwHDN82Rsqfv8inCu4TXnhJ4rZs9PaAn+1cnC0CH36mcbqJ6diCBeX4U7f3U
+        16kRY8TRpvGc9vfqST5cd5c6wTvyGElXwXTI1nklYLkccjpgNNGqrCV5szKq4QdD7qRt/p
+        vXCX3mpuPZWdpfo8V24vwuQAMC0KJ28=
+MIME-Version: 1.0
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7bit
+Date:   Wed, 28 Nov 2018 18:53:27 +0100
+From:   Stefan Agner <stefan@agner.ch>
+To:     Robin Murphy <robin.murphy@arm.com>
+Cc:     hongxing.zhu@nxp.com, l.stach@pengutronix.de,
+        lorenzo.pieralisi@arm.com, andrew.smirnov@gmail.com,
+        linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
+        bhelgaas@google.com, leonard.crestez@nxp.com, festevam@gmail.com,
+        linux-arm-kernel@lists.infradead.org, tpiepho@impinj.com
+Subject: Re: [PATCH] pci: imx6: support kernels built in Thumb-2 mode
+In-Reply-To: <ff476784-b79e-18bf-5870-4365c8377deb@arm.com>
+References: <20181128132554.28139-1-stefan@agner.ch>
+ <ff476784-b79e-18bf-5870-4365c8377deb@arm.com>
+Message-ID: <074f80db0eceb76672bca283c5de37b9@agner.ch>
+X-Sender: stefan@agner.ch
+User-Agent: Roundcube Webmail/1.3.7
 Sender: linux-pci-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-Am Mittwoch, den 28.11.2018, 18:36 +0100 schrieb Stefan Agner:
-> On 28.11.2018 13:19, Stefan Agner wrote:
-> > On 21.11.2018 14:47, Leonard Crestez wrote:
-> > > On 11/20/2018 11:28 PM, Trent Piepho wrote:
-> > > > On Tue, 2018-11-20 at 21:42 +0100, Stefan Agner wrote:
-> > > > > On 20.11.2018 20:13, Trent Piepho wrote:
-> > > > > > It also seems to me that this doesn't need to be in the internal pci
-> > > > > > config access functions.  The driver shouldn't be reading registers
-> > > > > > that don't exist anyway.  It's really about trying to fix sysfs access
-> > > > > > to registers that don't exist.  So maybe it should be done there.
-> > > > > 
-> > > > > That was my first approach, see:
-> > > > 
-> > > > Yes, but that just used the pci device id which applies to every IMX
-> > > > design.
-> > > > 
-> > > > It's also not totally correct, as it seems real registers after 0x200
-> > > > do work on imx6, and that would prevent access to them.
-> > > 
-> > > I see that Lorenzo already accepted the patch in pci/dwc:
-> > > 
-> > > https://git.kernel.org/pub/scm/linux/kernel/git/lpieralisi/pci.git/commit/?h=pci/dwc&id=f14eaec153aaebbe940ddd21e4198cc2abc927c2
-> > > 
-> > > My tests show that this series breaks pci cards on 6qdl and I think it
-> > > should be reverted until a fix is found. Are you OK with this?
-> > > 
-> > > Fixing might require an entirely different approach.
-> > 
-> > I tried to reproduce this issue on Apalis iMX6 (i.MX 6Q) with a ath9k
-> > PCIe WiFi card, the issue you are seeing did not happen. My lspci looks
-> > as follows:
-> > 
-> > root@ea210c63d739:/# lspci -v
-> > 00:00.0 PCI bridge: Synopsys, Inc. Device abcd (rev 01) (prog-if 00
-> > [Normal decode])
-> >         Flags: bus master, fast devsel, latency 0, IRQ 255
-> >         Memory at 01000000 (32-bit, non-prefetchable) [size=1M]
-> >         Bus: primary=00, secondary=01, subordinate=ff, sec-latency=0
-> >         Memory behind bridge: 01100000-011fffff
-> >         [virtual] Expansion ROM at 01200000 [disabled] [size=64K]
-> >         Capabilities: [40] Power Management version 3
-> >         Capabilities: [50] MSI: Enable- Count=1/1 Maskable+ 64bit+
-> >         Capabilities: [70] Express Root Port (Slot-), MSI 00
-> >         Capabilities: [100] Advanced Error Reporting
-> >         Capabilities: [140] Virtual Channel
-> > lspci: Unable to load libkmod resources: error -12
-> > 
-> > 01:00.0 Network controller: Qualcomm Atheros AR928X Wireless Network
-> > Adapter (PCI-Express) (rev 01)
-> >         Subsystem: Foxconn International, Inc. Device e007
-> >         Flags: bus master, fast devsel, latency 0, IRQ 312
-> >         Memory at 01100000 (64-bit, non-prefetchable) [size=64K]
-> >         Capabilities: [40] Power Management version 2
-> >         Capabilities: [50] MSI: Enable- Count=1/1 Maskable- 64bit-
-> >         Capabilities: [60] Express Legacy Endpoint, MSI 00
-> >         Capabilities: [90] MSI-X: Enable- Count=1 Masked-
-> >         Capabilities: [100] Advanced Error Reporting
-> >         Capabilities: [140] Virtual Channel
-> >         Capabilities: [160] Device Serial Number 00-00-00-00-00-00-00-00
-> >         Kernel driver in use: ath9k
-> > 
-> > 
-> > I did also setup a WiFi network and transmitted some packages, but I did
-> > not get a nobody carred message. Do you have an idea why that might be?
-> > 
-> > # cat /proc/interrupts
-> > ...
-> > 312:      10967          0          0          0       GPC 123 Level    
-> > ath9k
-> > ...
-> > 
-> > 
-> > Your conclusion in this thread seem reasonable, hence reverting the
-> > issue does. However, I still would like to reproduce the issue so I can
-> > make sure that future patches don't break it :-)
+On 28.11.2018 17:16, Robin Murphy wrote:
+> Hi Stefan,
 > 
-> Hm, I realized that I need to enable CONFIG_PCIEPORTBUS and set
-> ath9k.use_msi=1 to get MSI for that card. However, it seems that ath9k
-> does not behave well in that setup. It does get interrupts, and seems to
-> work to some degree, but I was not successful in transmitting data over
-> WiFi, but that might be an entirly different thing.
+> On 28/11/2018 13:25, Stefan Agner wrote:
+>> Add a fault handler which handles reads in Thumb-2 mode. Install
+>> the appropriate handler depending on which mode the kernel has
+>> been built. This avoids an "Unhandled fault: external abort on
+>> non-linefetch (0x1008) at 0xf0a80000" during boot on a device
+>> with a PCIe switch connected.
+>>
+>> Link: https://lore.kernel.org/linux-pci/20181126161645.8177-1-stefan@agner.ch/
+>> Signed-off-by: Stefan Agner <stefan@agner.ch>
+>> ---
+>> FWIW, I found this manual helpful to write the code below:
+>> http://hermes.wings.cs.wisc.edu/files/Thumb-2SupplementReferenceManual.pdf#page=43&zoom=100,0,66
 > 
-> However, what I noticed is that when CONFIG_PCIEPORTBUS and
-> CONFIG_PCI_MSI is enabled, MSI works but legacy interrupt seem not to
-> fire anymore. That is true for ath9k as well as e1000e (using
-> e1000e.IntMode=0 to force legacy). Is that a known issue/limitation with
-> i.MX 6 PCIe?
+> This one's rather less ancient and even more authoritative ;)
+> 
+> https://static.docs.arm.com/ddi0406/cd/DDI0406C_d_armv7ar_arm.pdf
+> 
+> (ARMv7 had a few new encodings over and above ARMv6T2, although in
+> fairness I don't think any should be relevant to this specific case)
+> 
 
-Yes, this is a known issue with the Designware PCIe core, not just on
-i.MX6. As soon as any MSI interrupt is enabled, the core doesn't
-forward legacy IRQs anymore.
+Thanks, I tried to find the right document on arm.com, but I timed out
+after 5 minutes or so :-)
 
-So if any card in your system needs legacy interrupts (and ath9k is
-very likely to need this, as MSI support is pretty new and
-experimental), you need to boot with "nomsi" set on the kernel command
-line.
+>> --
+>> Stefan
+>>
+>>   drivers/pci/controller/dwc/pci-imx6.c | 37 ++++++++++++++++++++++++++-
+>>   1 file changed, 36 insertions(+), 1 deletion(-)
+>>
+>> diff --git a/drivers/pci/controller/dwc/pci-imx6.c b/drivers/pci/controller/dwc/pci-imx6.c
+>> index 69f86234f7c0..683deb74d69f 100644
+>> --- a/drivers/pci/controller/dwc/pci-imx6.c
+>> +++ b/drivers/pci/controller/dwc/pci-imx6.c
+>> @@ -29,6 +29,7 @@
+>>   #include <linux/reset.h>
+>>   #include <linux/pm_domain.h>
+>>   #include <linux/pm_runtime.h>
+>> +#include <asm/opcodes.h>
+>>     #include "pcie-designware.h"
+>>   @@ -299,6 +300,37 @@ static int imx6q_pcie_abort_handler(unsigned long addr,
+>>   	return 1;
+>>   }
+>>   +static int imx6q_pcie_abort_handler_thumb2(unsigned long addr,
+>> +		unsigned int fsr, struct pt_regs *regs)
+>> +{
+>> +	unsigned long pc = instruction_pointer(regs);
+>> +	unsigned long instr = *(unsigned long *)pc;
+>> +	unsigned long thumb2_instr = __mem_to_opcode_thumb16(instr);
+>> +	int reg = thumb2_instr & 7;
+>> +
+>> +	if (!__opcode_is_thumb16(instr & 0x0000ffffUL))
+>> +		return 1;
+> 
+> There are plenty of 32-bit Thumb encodings of various LDR/STR
+> variants, and I doubt we can guarantee that the offset, target
+> register, and/or addressing mode for a config space access will
+> *always* suit the (relatively limited) 16-bit ones.
 
-Regards,
-Lucas
+Hm, I guess they should be handled too?
+
+I looked at the code where I had the abort at hand triggered
+(dw_pcie_read).
+ 
+>> +
+>> +	/* Load word/byte and halfword immediate offset */
+>> +	if (((thumb2_instr & 0xe800) == 0x6800) ||
+>> +	    ((thumb2_instr & 0xf800) == 0x8800)) {
+>> +		unsigned long val;
+>> +
+>> +		if (thumb2_instr & 0x1000)
+>> +			val = 0xff;
+>> +		else if (thumb2_instr & 0x8000)
+>> +			val = 0xffff;
+>> +		else
+>> +			val = 0xffffffffUL;
+>> +
+>> +		regs->uregs[reg] = val;
+>> +		regs->ARM_pc += 2;
+>> +		return 0;
+>> +	}
+> 
+> What about stores? The existing implementation handles them, so either
+> that's dead code which could perhaps be cleaned up, or they need to be
+> handled here too.
+> 
+
+I think the current handler (imx6q_pcie_abort_handler) checks bit 20,
+which means it must be a load not?
+
+>> +
+>> +	return 1;
+>> +}
+>> +
+>>   static int imx6_pcie_attach_pd(struct device *dev)
+>>   {
+>>   	struct imx6_pcie *imx6_pcie = dev_get_drvdata(dev);
+>> @@ -1069,6 +1101,8 @@ static struct platform_driver imx6_pcie_driver = {
+>>     static int __init imx6_pcie_init(void)
+>>   {
+>> +	bool thumb2 = IS_ENABLED(CONFIG_THUMB2_KERNEL);
+> 
+> Can these aborts definitely *only* be triggered by kernel accesses,
+> and never, say, via an mmap() of anything exposed to userspace?
+
+Honestly, I am not very familiar with PCIe, I don't know...
+
+--
+Stefan
+
+> 
+> Robin.
+> 
+>> +
+>>   	/*
+>>   	 * Since probe() can be deferred we need to make sure that
+>>   	 * hook_fault_code is not called after __init memory is freed
+>> @@ -1076,7 +1110,8 @@ static int __init imx6_pcie_init(void)
+>>   	 * we can install the handler here without risking it
+>>   	 * accessing some uninitialized driver state.
+>>   	 */
+>> -	hook_fault_code(8, imx6q_pcie_abort_handler, SIGBUS, 0,
+>> +	hook_fault_code(8, thumb2 ? imx6q_pcie_abort_handler_thumb2 :
+>> +			imx6q_pcie_abort_handler, SIGBUS, 0,
+>>   			"external abort on non-linefetch");
+>>     	return platform_driver_register(&imx6_pcie_driver);
+>>
