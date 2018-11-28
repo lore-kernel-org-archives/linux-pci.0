@@ -2,62 +2,62 @@ Return-Path: <SRS0=2mbU=OH=vger.kernel.org=linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-6.1 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
-	DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,
-	MENTIONS_GIT_HOSTING,SPF_PASS autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-1.1 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
+	DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_PASS
+	autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 67918C43441
-	for <linux-pci@archiver.kernel.org>; Wed, 28 Nov 2018 12:19:55 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id D592EC43441
+	for <linux-pci@archiver.kernel.org>; Wed, 28 Nov 2018 12:45:19 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id B83F820832
-	for <linux-pci@archiver.kernel.org>; Wed, 28 Nov 2018 12:19:54 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 8B8CF20660
+	for <linux-pci@archiver.kernel.org>; Wed, 28 Nov 2018 12:45:19 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (1024-bit key) header.d=agner.ch header.i=@agner.ch header.b="t34DvvKe"
-DMARC-Filter: OpenDMARC Filter v1.3.2 mail.kernel.org B83F820832
+	dkim=pass (1024-bit key) header.d=agner.ch header.i=@agner.ch header.b="YRdXvqfx"
+DMARC-Filter: OpenDMARC Filter v1.3.2 mail.kernel.org 8B8CF20660
 Authentication-Results: mail.kernel.org; dmarc=none (p=none dis=none) header.from=agner.ch
 Authentication-Results: mail.kernel.org; spf=none smtp.mailfrom=linux-pci-owner@vger.kernel.org
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727703AbeK1XVW (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Wed, 28 Nov 2018 18:21:22 -0500
-Received: from mail.kmu-office.ch ([178.209.48.109]:41154 "EHLO
+        id S1727872AbeK1Xqv (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Wed, 28 Nov 2018 18:46:51 -0500
+Received: from mail.kmu-office.ch ([178.209.48.109]:41468 "EHLO
         mail.kmu-office.ch" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1727673AbeK1XVW (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Wed, 28 Nov 2018 18:21:22 -0500
+        with ESMTP id S1727811AbeK1Xqv (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Wed, 28 Nov 2018 18:46:51 -0500
 Received: from webmail.kmu-office.ch (unknown [IPv6:2a02:418:6a02::a3])
-        by mail.kmu-office.ch (Postfix) with ESMTPSA id 89CFF5C0D8F;
-        Wed, 28 Nov 2018 13:19:50 +0100 (CET)
+        by mail.kmu-office.ch (Postfix) with ESMTPSA id 603B95C03BB;
+        Wed, 28 Nov 2018 13:45:15 +0100 (CET)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=agner.ch; s=dkim;
-        t=1543407590;
+        t=1543409115;
         h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
          to:to:cc:cc:mime-version:mime-version:content-type:content-type:
          content-transfer-encoding:content-transfer-encoding:
          in-reply-to:in-reply-to:references:references;
-        bh=IOaznXUhgSUqF5ImwCosCQAP0wNYk4thXHfjoSnpR3k=;
-        b=t34DvvKeE3IBzfJgzQf9FTaKk0XVZYK1YOdMiL3NGZY4HnQhoFX0I7O8JrAwklDF1fL2Ld
-        PQK1hY99xey4KJDoEaxHpGGXsMBmSZjPzOb1Ig84rEtx8vbEYet3PYuLDuKvrwtzjk15eU
-        TGaz+uWnvRfGDtptYvTgIUPUHVmVnQ4=
+        bh=i37+8Zmu7QIa2sTS41oBI+kGzorEJQk3OyenywtQJRg=;
+        b=YRdXvqfx3U6i0WuVn7huD1kD42AjA5zjH44RKeBEoHg8ZAXBuzfbtHtFEaLq2kI5NU3TBc
+        xqy2jdsxdPbugpLhpHE88qqr9Ojy1wQwXqFNMrNQbl3N1cQH7oH2aiebfFF9UnkgReu7nc
+        UcYdh95awa1Hnrv11nYdwbpRYPAthSM=
 MIME-Version: 1.0
 Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: 7bit
-Date:   Wed, 28 Nov 2018 13:19:50 +0100
+Date:   Wed, 28 Nov 2018 13:45:15 +0100
 From:   Stefan Agner <stefan@agner.ch>
-To:     Leonard Crestez <leonard.crestez@nxp.com>
-Cc:     lorenzo.pieralisi@arm.com, Trent Piepho <tpiepho@impinj.com>,
-        Richard Zhu <hongxing.zhu@nxp.com>,
-        linux-kernel@vger.kernel.org, jingoohan1@gmail.com,
-        gustavo.pimentel@synopsys.com, andrew.smirnov@gmail.com,
-        linux-pci@vger.kernel.org, l.stach@pengutronix.de,
-        bhelgaas@google.com
-Subject: Re: [PATCH v3 2/2] PCI: imx6: limit DBI register length
-In-Reply-To: <VI1PR04MB5533BBC2B45752ED84E4D037EEDA0@VI1PR04MB5533.eurprd04.prod.outlook.com>
-References: <20181120165626.26424-1-stefan@agner.ch>
- <20181120165626.26424-2-stefan@agner.ch>
- <581b9548043d5276f6685f534386180fd0673a9a.camel@nxp.com>
- <1542741198.30311.608.camel@impinj.com>
- <268e109e1c6b309454bd5a313078894c@agner.ch>
- <1542749302.30311.624.camel@impinj.com>
- <VI1PR04MB5533BBC2B45752ED84E4D037EEDA0@VI1PR04MB5533.eurprd04.prod.outlook.com>
-Message-ID: <fd07b82d2473d5d7db9826142e79b00a@agner.ch>
+To:     Andrey Smirnov <andrew.smirnov@gmail.com>
+Cc:     Fabio Estevam <festevam@gmail.com>,
+        Jingoo Han <jingoohan1@gmail.com>,
+        gustavo.pimentel@synopsys.com,
+        Lucas Stach <l.stach@pengutronix.de>,
+        Trent Piepho <tpiepho@impinj.com>,
+        Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org,
+        linux-kernel <linux-kernel@vger.kernel.org>,
+        Leonard Crestez <leonard.crestez@nxp.com>
+Subject: Re: [PATCH v2 3/3] PCI: imx6: limit DBI register length
+In-Reply-To: <CAHQ1cqFprD4k+aO_x-znEs6sXpx9jxih-moSuNZZ3dAKHuLpPw@mail.gmail.com>
+References: <20181120132705.6917-1-stefan@agner.ch>
+ <20181120132705.6917-3-stefan@agner.ch>
+ <CAHQ1cqEfjqtJbb6qxTRa-rVvgy8+_Og4Eh21XMRETJHnRG9a6w@mail.gmail.com>
+ <CAOMZO5DZRUUkkqNPRZWhK0C56sRU+eQqFzV+akpEvwcKHW1DNw@mail.gmail.com>
+ <CAHQ1cqFprD4k+aO_x-znEs6sXpx9jxih-moSuNZZ3dAKHuLpPw@mail.gmail.com>
+Message-ID: <482dc823b1567c9a933104b02a6bfeac@agner.ch>
 X-Sender: stefan@agner.ch
 User-Agent: Roundcube Webmail/1.3.7
 Sender: linux-pci-owner@vger.kernel.org
@@ -65,80 +65,122 @@ Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-On 21.11.2018 14:47, Leonard Crestez wrote:
-> On 11/20/2018 11:28 PM, Trent Piepho wrote:
->> On Tue, 2018-11-20 at 21:42 +0100, Stefan Agner wrote:
->>> On 20.11.2018 20:13, Trent Piepho wrote:
-> 
->>>> It also seems to me that this doesn't need to be in the internal pci
->>>> config access functions.  The driver shouldn't be reading registers
->>>> that don't exist anyway.  It's really about trying to fix sysfs access
->>>> to registers that don't exist.  So maybe it should be done there.
->>>
->>> That was my first approach, see:
+On 28.11.2018 02:28, Andrey Smirnov wrote:
+> On Tue, Nov 27, 2018 at 5:12 PM Fabio Estevam <festevam@gmail.com> wrote:
 >>
->> Yes, but that just used the pci device id which applies to every IMX
->> design.
+>> Hi Andrey,
 >>
->> It's also not totally correct, as it seems real registers after 0x200
->> do work on imx6, and that would prevent access to them.
+>> On Tue, Nov 27, 2018 at 10:57 PM Andrey Smirnov
+>> <andrew.smirnov@gmail.com> wrote:
+>>
+>> > Could this be a regression? Prior to 415b6185c541 ("PCI: imx6: Fix
+>> > config read timeout handling") all of the imprecise aborts were caught
+>> > and handled via no-op handler. I did an experiment on i.MX6Q board
+>> > that I have (ZII RDU2) and adding a simple no-op for imprecise aborts
+>> > via
+>> >
+>> > hook_fault_code(16 + 6, imx6q_pcie_no_op_handler, SIGBUS, 0,
+>> >                        "imprecise external abort");
+
+Unsurprisingly, introducing this handler also "fixes" the issue in my
+setup.
+
+FWIW, during my investigation with the Thumb2 issue, I was looking at
+the abort handler and its history a bit more closely too. I was about to
+suggest readding this handler too, you just beat me by some hours :-)
+
+The current 4.9 downstream BSP still has the old fault handler, and
+hence this issue does not happen in the downstream BSP.
+
+>> >
+>> > seems to "resolve" this problem:
+>>
+>> Please check https://patchwork.kernel.org/patch/9720313/
+>>
+>> This commit fixed a kernel crash on mx6q boards with a PCI switch.
+>>
+>> So we can't go back to the simple no-op.
 > 
-> I see that Lorenzo already accepted the patch in pci/dwc:
+> It's probably not exactly clear form my message, but I wasn't
+> proposing to go back to a no-op. What I had in mind is having a no-op
+> handler for imprecise aborts _alongside_ the non-linefetch handlers
+> that is already there when running against i.MX6Q type of the IP
+> block.
 > 
-> https://git.kernel.org/pub/scm/linux/kernel/git/lpieralisi/pci.git/commit/?h=pci/dwc&id=f14eaec153aaebbe940ddd21e4198cc2abc927c2
-> 
-> My tests show that this series breaks pci cards on 6qdl and I think it 
-> should be reverted until a fix is found. Are you OK with this?
-> 
-> Fixing might require an entirely different approach.
 
-I tried to reproduce this issue on Apalis iMX6 (i.MX 6Q) with a ath9k
-PCIe WiFi card, the issue you are seeing did not happen. My lspci looks
-as follows:
+Agreed, it should be alongside the "external abort on non-linefetch"
+handler.
 
-root@ea210c63d739:/# lspci -v
-00:00.0 PCI bridge: Synopsys, Inc. Device abcd (rev 01) (prog-if 00
-[Normal decode])
-        Flags: bus master, fast devsel, latency 0, IRQ 255
-        Memory at 01000000 (32-bit, non-prefetchable) [size=1M]
-        Bus: primary=00, secondary=01, subordinate=ff, sec-latency=0
-        Memory behind bridge: 01100000-011fffff
-        [virtual] Expansion ROM at 01200000 [disabled] [size=64K]
-        Capabilities: [40] Power Management version 3
-        Capabilities: [50] MSI: Enable- Count=1/1 Maskable+ 64bit+
-        Capabilities: [70] Express Root Port (Slot-), MSI 00
-        Capabilities: [100] Advanced Error Reporting
-        Capabilities: [140] Virtual Channel
-lspci: Unable to load libkmod resources: error -12
+I actually encountered another issue when I had a Intel e1000e running
+yesterday. Unfortunately I wasn't able to reproduce the issue, so maybe
+it was just a fluke. It probably would be solved by the additional
+"imprecise external abort" too:
 
-01:00.0 Network controller: Qualcomm Atheros AR928X Wireless Network
-Adapter (PCI-Express) (rev 01)
-        Subsystem: Foxconn International, Inc. Device e007
-        Flags: bus master, fast devsel, latency 0, IRQ 312
-        Memory at 01100000 (64-bit, non-prefetchable) [size=64K]
-        Capabilities: [40] Power Management version 2
-        Capabilities: [50] MSI: Enable- Count=1/1 Maskable- 64bit-
-        Capabilities: [60] Express Legacy Endpoint, MSI 00
-        Capabilities: [90] MSI-X: Enable- Count=1 Masked-
-        Capabilities: [100] Advanced Error Reporting
-        Capabilities: [140] Virtual Channel
-        Capabilities: [160] Device Serial Number 00-00-00-00-00-00-00-00
-        Kernel driver in use: ath9k
-
-
-I did also setup a WiFi network and transmitted some packages, but I did
-not get a nobody carred message. Do you have an idea why that might be?
-
-# cat /proc/interrupts
-...
-312:      10967          0          0          0       GPC 123 Level    
-ath9k
-...
-
-
-Your conclusion in this thread seem reasonable, hence reverting the
-issue does. However, I still would like to reproduce the issue so I can
-make sure that future patches don't break it :-)
+[   37.644300] fec 2188000.ethernet eth0: Link is Down
+[   38.077383] Unhandled fault: imprecise external abort (0x1406) at
+0xb64e8000
+[   38.084638] pgd = ac4709d6
+[   38.087434] [b64e8000] *pgd=00000000
+[   38.091129] Internal error: : 1406 [#1] PREEMPT SMP ARM
+[   38.096508] CPU: 0 PID: 468 Comm: kworker/0:2 Not tainted
+4.19.4-00044-ged7a0cc2ef01-dirty #479
+[   38.105428] Hardware name: Freescale i.MX6 Quad/DualLite (Device
+Tree)
+[   38.112143] Workqueue: events e1000_watchdog_task
+[   38.116993] PC is at e1000e_update_stats+0x68/0xa7c
+[   38.122008] LR is at e1000_watchdog_task+0xe8/0x71c
+[   38.127021] pc : [<c0621238>]    lr : [<c0628d0c>]    psr: 60010013
+[   38.133449] sp : ed185ea0  ip : 00007374  fp : ec83ece4
+[   38.138814] r10: ec71f700  r9 : ec83c500  r8 : ec83c000
+[   38.144180] r7 : ec83c924  r6 : ec83c000  r5 : c1104cc8  r4 :
+ec83c500
+[   38.150875] r3 : f14c4000  r2 : 000003e8  r1 : 00000000  r0 :
+ec83c500
+[   38.157573] Flags: nZCv  IRQs on  FIQs on  Mode SVC_32  ISA ARM 
+Segment none
+[   38.164890] Control: 10c5387d  Table: 3d1c004a  DAC: 00000051
+[   38.170789] Process kworker/0:2 (pid: 468, stack limit = 0xbc71b316)
+[   38.177306] Stack: (0xed185ea0 to 0xed186000)
+[   38.181794] 5ea0: ef7a9100 c0619ba3 ec0870e0 ec087068 ec0870e0
+00000000 60010013 c0619ba3
+[   38.190184] 5ec0: ef7a8d00 ec83c54c c1104cc8 ec83e54c ec83c924
+ec83c000 ec83c500 ec71f700
+[   38.198573] 5ee0: ec83ece4 c0628d0c ecbd16c0 c0c0237c ed185f3c
+c0b26de0 ec131c04 c0619ba3
+[   38.206966] 5f00: c1153fe4 ec83c54c ecdcc100 ef7a8d00 ef7a9e00
+00000000 ec83c550 00000000
+[   38.221770] 5f20: ef7a8d00 c0136aec c1103d00 ef7a8d18 ecdcc100
+ef7a8d00 ecdcc114 c1103d00
+[   38.236801] 5f40: ef7a8d18 ffffe000 00000008 c0136d40 ec521c70
+c1176068 c0e4213c ed184000
+[   38.251874] 5f60: ecfecfdc ecfecfc0 ed0db1c0 00000000 ed184000
+ecdcc100 c0136cfc ec0a3ea4
+[   38.267199] 5f80: ecfecfdc c013c810 00000000 ed0db1c0 c013c6c8
+00000000 00000000 00000000
+[   38.282612] 5fa0: 00000000 00000000 00000000 c01010e8 00000000
+00000000 00000000 00000000
+[   38.298080] 5fc0: 00000000 00000000 00000000 00000000 00000000
+00000000 00000000 00000000
+[   38.313792] 5fe0: 00000000 00000000 00000000 00000000 00000013
+00000000 00000000 00000000
+[   38.329716] [<c0621238>] (e1000e_update_stats) from [<c0628d0c>]
+(e1000_watchdog_task+0xe8/0x71c)
+[   38.346597] [<c0628d0c>] (e1000_watchdog_task) from [<c0136aec>]
+(process_one_work+0x1f0/0x400)
+[   38.363493] [<c0136aec>] (process_one_work) from [<c0136d40>]
+(worker_thread+0x44/0x584)
+[   38.379844] [<c0136d40>] (worker_thread) from [<c013c810>]
+(kthread+0x148/0x150)
+[   38.395575] [<c013c810>] (kthread) from [<c01010e8>]
+(ret_from_fork+0x14/0x2c)
+[   38.411119] Exception stack(0xed185fb0 to 0xed185ff8)
+[   38.420331] 5fa0:                                     00000000
+00000000 00000000 00000000
+[   38.436662] 5fc0: 00000000 00000000 00000000 00000000 00000000
+00000000 00000000 00000000
+[   38.452933] 5fe0: 00000000 00000000 00000000 00000000 00000013
+00000000
+[   38.463661] Code: e590641c e2833901 e5931000 f57ff04f (e280ad9f)
 
 --
 Stefan
