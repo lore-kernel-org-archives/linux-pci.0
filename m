@@ -2,171 +2,114 @@ Return-Path: <SRS0=2mbU=OH=vger.kernel.org=linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-8.3 required=3.0 tests=DKIM_INVALID,DKIM_SIGNED,
-	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
-	SPF_PASS,URIBL_BLOCKED,USER_AGENT_MUTT autolearn=ham autolearn_force=no
-	version=3.4.0
+X-Spam-Status: No, score=-1.1 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
+	DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_PASS
+	autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 72BF9C43441
-	for <linux-pci@archiver.kernel.org>; Wed, 28 Nov 2018 18:02:06 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 293F4C43441
+	for <linux-pci@archiver.kernel.org>; Wed, 28 Nov 2018 18:56:25 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 3290C20665
-	for <linux-pci@archiver.kernel.org>; Wed, 28 Nov 2018 18:02:06 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id CE5EF2081C
+	for <linux-pci@archiver.kernel.org>; Wed, 28 Nov 2018 18:56:24 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=fail reason="signature verification failed" (1024-bit key) header.d=armlinux.org.uk header.i=@armlinux.org.uk header.b="fV6AsF6m"
-DMARC-Filter: OpenDMARC Filter v1.3.2 mail.kernel.org 3290C20665
-Authentication-Results: mail.kernel.org; dmarc=fail (p=none dis=none) header.from=armlinux.org.uk
+	dkim=pass (1024-bit key) header.d=impinj.com header.i=@impinj.com header.b="GFLANw8l"
+DMARC-Filter: OpenDMARC Filter v1.3.2 mail.kernel.org CE5EF2081C
+Authentication-Results: mail.kernel.org; dmarc=fail (p=reject dis=none) header.from=impinj.com
 Authentication-Results: mail.kernel.org; spf=none smtp.mailfrom=linux-pci-owner@vger.kernel.org
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1725779AbeK2FEd (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Thu, 29 Nov 2018 00:04:33 -0500
-Received: from pandora.armlinux.org.uk ([78.32.30.218]:52708 "EHLO
-        pandora.armlinux.org.uk" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1725760AbeK2FEd (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Thu, 29 Nov 2018 00:04:33 -0500
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
-        d=armlinux.org.uk; s=pandora-2014; h=Sender:In-Reply-To:Content-Type:
-        MIME-Version:References:Message-ID:Subject:Cc:To:From:Date:Reply-To:
-        Content-Transfer-Encoding:Content-ID:Content-Description:Resent-Date:
-        Resent-From:Resent-Sender:Resent-To:Resent-Cc:Resent-Message-ID:List-Id:
-        List-Help:List-Unsubscribe:List-Subscribe:List-Post:List-Owner:List-Archive;
-         bh=umgPfq7NjN8HCsrLBhRW/yyv6LLIAk6oEAnV+t2vfvg=; b=fV6AsF6m4wtEc2nvmEDKmlazQ
-        HpIwOe+bJII/YtTegdgJ8lyPuv+L/EXXrEsWjg8T4QKlaEA93G9BPUMoBKKCcVh8YFIu5dlAWCxfl
-        0rLUEw32w5KXrPotGGgHRPJfQJt6UkEg7V+kSTi8DVecf9zdhz8A7sYAe78wGVJF0LxGQ=;
-Received: from n2100.armlinux.org.uk ([fd8f:7570:feb6:1:214:fdff:fe10:4f86]:51424)
-        by pandora.armlinux.org.uk with esmtpsa (TLSv1.2:ECDHE-RSA-AES128-GCM-SHA256:128)
-        (Exim 4.90_1)
-        (envelope-from <linux@armlinux.org.uk>)
-        id 1gS49p-0006Db-C4; Wed, 28 Nov 2018 18:01:53 +0000
-Received: from linux by n2100.armlinux.org.uk with local (Exim 4.90_1)
-        (envelope-from <linux@n2100.armlinux.org.uk>)
-        id 1gS49l-0005uu-5y; Wed, 28 Nov 2018 18:01:49 +0000
-Date:   Wed, 28 Nov 2018 18:01:47 +0000
-From:   Russell King - ARM Linux <linux@armlinux.org.uk>
-To:     Stefan Agner <stefan@agner.ch>
-Cc:     hongxing.zhu@nxp.com, l.stach@pengutronix.de,
-        lorenzo.pieralisi@arm.com, andrew.smirnov@gmail.com,
-        linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
-        bhelgaas@google.com, leonard.crestez@nxp.com, festevam@gmail.com,
-        linux-arm-kernel@lists.infradead.org, tpiepho@impinj.com
+        id S1725994AbeK2F7B (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Thu, 29 Nov 2018 00:59:01 -0500
+Received: from mail-eopbgr740139.outbound.protection.outlook.com ([40.107.74.139]:31712
+        "EHLO NAM01-BN3-obe.outbound.protection.outlook.com"
+        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+        id S1725772AbeK2F7A (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Thu, 29 Nov 2018 00:59:00 -0500
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=impinj.com;
+ s=selector1;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
+ bh=or/HfVT8OIRIaXZlxd1D2dGXyZ4ljobVJOLrhYBmgSU=;
+ b=GFLANw8lrkCziYwsRsEbXICpzXA3lD4Qvh/CniQ3CWCLitlZrIfq4Y5NZsi478LBj3nx60d8i1SfVk9W0ZIiwruY4KPvepbFyXIuOMGOOovyMItVRY6RAZGb1y/bK8DGf28y38mS+pOMmZc90lmWjtluqMU441/v0rY6Jdt9FJo=
+Received: from MWHPR0601MB3708.namprd06.prod.outlook.com (10.167.236.38) by
+ MWHPR0601MB3611.namprd06.prod.outlook.com (10.167.236.13) with Microsoft SMTP
+ Server (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
+ 15.20.1361.19; Wed, 28 Nov 2018 18:56:18 +0000
+Received: from MWHPR0601MB3708.namprd06.prod.outlook.com
+ ([fe80::c0f3:ea8f:48ba:a5d7]) by MWHPR0601MB3708.namprd06.prod.outlook.com
+ ([fe80::c0f3:ea8f:48ba:a5d7%4]) with mapi id 15.20.1361.019; Wed, 28 Nov 2018
+ 18:56:18 +0000
+From:   Trent Piepho <tpiepho@impinj.com>
+To:     "robin.murphy@arm.com" <robin.murphy@arm.com>,
+        "stefan@agner.ch" <stefan@agner.ch>,
+        "hongxing.zhu@nxp.com" <hongxing.zhu@nxp.com>,
+        "l.stach@pengutronix.de" <l.stach@pengutronix.de>
+CC:     "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+        "lorenzo.pieralisi@arm.com" <lorenzo.pieralisi@arm.com>,
+        "festevam@gmail.com" <festevam@gmail.com>,
+        "andrew.smirnov@gmail.com" <andrew.smirnov@gmail.com>,
+        "linux-arm-kernel@lists.infradead.org" 
+        <linux-arm-kernel@lists.infradead.org>,
+        "bhelgaas@google.com" <bhelgaas@google.com>,
+        "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+        "leonard.crestez@nxp.com" <leonard.crestez@nxp.com>
 Subject: Re: [PATCH] pci: imx6: support kernels built in Thumb-2 mode
-Message-ID: <20181128180147.GL30658@n2100.armlinux.org.uk>
+Thread-Topic: [PATCH] pci: imx6: support kernels built in Thumb-2 mode
+Thread-Index: AQHUhx3olr351tELyESJsCCkW3sxWqVlXTUAgAAspIA=
+Date:   Wed, 28 Nov 2018 18:56:18 +0000
+Message-ID: <1543431377.18519.94.camel@impinj.com>
 References: <20181128132554.28139-1-stefan@agner.ch>
+         <ff476784-b79e-18bf-5870-4365c8377deb@arm.com>
+In-Reply-To: <ff476784-b79e-18bf-5870-4365c8377deb@arm.com>
+Accept-Language: en-US
+Content-Language: en-US
+X-MS-Has-Attach: 
+X-MS-TNEF-Correlator: 
+authentication-results: spf=none (sender IP is )
+ smtp.mailfrom=tpiepho@impinj.com; 
+x-originating-ip: [216.207.205.253]
+x-ms-publictraffictype: Email
+x-microsoft-exchange-diagnostics: 1;MWHPR0601MB3611;6:QQigNdPRlpYaiQuse3niNoW9FLZFJ5D1i1+bzp1vyHWS5otYyJTDZYipTX/lngY9p/NFeCnPUvp96J9esDMyPwdOvV17UuvTNC6D3E3C5j6zMClMKltSXXj7WI4GYe+m9DyIsW2aE2yCEFx7sPq8OvYTlwSRe56tnD7aShcyI6PtIFJIAh/IZG3CctYJye5isY+T2DCMKAV8wbuzYBYi+V1CHWbXz9hU4CSH0rwYOB/NVXhVsV41qgo3KjzCV/nPIBADPe7zM8Dl3w74k1i5LCNjls31N1uWTIJrmgYIPmOQy0ZByC2sEp/LS2gCEBgvrZngJ8J4smGYgWTZqh/nsOAxeHPiriGNOrOpcWpQiqQeew60mh4Hooibblf81UMvlqOzikwQ+wn1DSMAug8F0DE019JXdi/DICn7J0e30dBbDZF8eNhcpudFXrzdHNxzpjOOA0XmaRrk2CrAVPdVbQ==;5:+HaJMWhUexUrylWp+djcd7z0tZ/c51UI64lj0UHE119EGvwq5hBeuL0hcCGtV+9GOpo3d42qewFnXMS6NTsx9Xw4v16d9Ct0uPwPnuNipX5EFMPUMnHty2xi3MD2PLyp3A0rFsGcdv/Lc3RQtErs+fmucIZoI+tQDL+LQxX+mlM=;7:Y+5wKOjrULNxG+qO1bY9szyIwNKycVcFBIESznHzkmAcc5iKmMtw9PM3KGH47jLg5IhXOwBM7uzfswTUEP1WIx1uvrGtTCsnZAlvx9SrQtqVAepcK+LuZwQM2lOrLf/f57f9lLmk3hI96gLANHBzqA==
+x-ms-exchange-antispam-srfa-diagnostics: SOS;
+x-ms-office365-filtering-correlation-id: 716026d1-801a-421c-945e-08d655632e1d
+x-microsoft-antispam: BCL:0;PCL:0;RULEID:(2390098)(7020095)(4652040)(8989299)(5600074)(711020)(4534185)(4627221)(201703031133081)(201702281549075)(8990200)(2017052603328)(7153060)(7193020);SRVR:MWHPR0601MB3611;
+x-ms-traffictypediagnostic: MWHPR0601MB3611:
+x-microsoft-antispam-prvs: <MWHPR0601MB3611C75B14F05AE5EC3BF1CFD3D10@MWHPR0601MB3611.namprd06.prod.outlook.com>
+x-ms-exchange-senderadcheck: 1
+x-exchange-antispam-report-cfa-test: BCL:0;PCL:0;RULEID:(8211001083)(6040522)(2401047)(5005006)(8121501046)(93006095)(93001095)(3231443)(999002)(944501410)(52105112)(10201501046)(3002001)(148016)(149066)(150057)(6041310)(20161123560045)(201703131423095)(201702281528075)(20161123555045)(201703061421075)(201703061406153)(20161123558120)(20161123562045)(20161123564045)(201708071742011)(7699051)(76991095);SRVR:MWHPR0601MB3611;BCL:0;PCL:0;RULEID:;SRVR:MWHPR0601MB3611;
+x-forefront-prvs: 0870212862
+x-forefront-antispam-report: SFV:NSPM;SFS:(10019020)(376002)(366004)(136003)(39850400004)(346002)(396003)(199004)(189003)(4326008)(6506007)(5660300001)(229853002)(478600001)(6486002)(7416002)(26005)(97736004)(106356001)(105586002)(14454004)(2906002)(3846002)(71190400001)(71200400001)(2616005)(316002)(446003)(11346002)(103116003)(66066001)(486006)(305945005)(81156014)(7736002)(25786009)(36756003)(81166006)(6116002)(14444005)(256004)(2501003)(6436002)(8936002)(110136005)(8676002)(54906003)(476003)(4001150100001)(39060400002)(102836004)(2201001)(6512007)(76176011)(68736007)(99286004)(6246003)(86362001)(186003)(53936002);DIR:OUT;SFP:1102;SCL:1;SRVR:MWHPR0601MB3611;H:MWHPR0601MB3708.namprd06.prod.outlook.com;FPR:;SPF:None;LANG:en;PTR:InfoNoRecords;A:1;MX:1;
+received-spf: None (protection.outlook.com: impinj.com does not designate
+ permitted sender hosts)
+x-microsoft-antispam-message-info: PqyRbmaBw2eRFAa/v2LbPIOv7b3MivmzNKdATS4mJ4CYFowUn4OksQDsOq6Pfi1qJiAbZHtFUgpi181q36NE3Bi70RGG/gVPkbFeX8IPMr7lYRAyaaKA4RVF1zVwM792LByEfpt4yxw/BTr9vTZN/fvaV0DwYu3JjSPqd9qbvF8xCAxpzEWLOAhgpNiPkBhgRglM84COG7frRrqL1JZDNN6x8l2E3uw3lO68qQYvRp+QKHk8XhZfN2aQ4DmG6CoXzvHGP4eLpMzEQAAj3pYf5CNaIHSXVrOI8e+eVBUUYgyS1jbaU4A/6JBj6/ZLnL4gIHdQHurPQOvGRBP+qEINDLU9nGC5uPENrZ/H2mcGK+8=
+spamdiagnosticoutput: 1:99
+spamdiagnosticmetadata: NSPM
+Content-Type: text/plain; charset="utf-8"
+Content-ID: <43DC035817687E439537C947F6369EBF@namprd06.prod.outlook.com>
+Content-Transfer-Encoding: base64
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20181128132554.28139-1-stefan@agner.ch>
-User-Agent: Mutt/1.5.23 (2014-03-12)
+X-OriginatorOrg: impinj.com
+X-MS-Exchange-CrossTenant-Network-Message-Id: 716026d1-801a-421c-945e-08d655632e1d
+X-MS-Exchange-CrossTenant-originalarrivaltime: 28 Nov 2018 18:56:18.2067
+ (UTC)
+X-MS-Exchange-CrossTenant-fromentityheader: Hosted
+X-MS-Exchange-CrossTenant-id: 6de70f0f-7357-4529-a415-d8cbb7e93e5e
+X-MS-Exchange-Transport-CrossTenantHeadersStamped: MWHPR0601MB3611
 Sender: linux-pci-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-On Wed, Nov 28, 2018 at 02:25:54PM +0100, Stefan Agner wrote:
-> Add a fault handler which handles reads in Thumb-2 mode. Install
-> the appropriate handler depending on which mode the kernel has
-> been built. This avoids an "Unhandled fault: external abort on
-> non-linefetch (0x1008) at 0xf0a80000" during boot on a device
-> with a PCIe switch connected.
-> 
-> Link: https://lore.kernel.org/linux-pci/20181126161645.8177-1-stefan@agner.ch/
-> Signed-off-by: Stefan Agner <stefan@agner.ch>
-> ---
-> FWIW, I found this manual helpful to write the code below:
-> http://hermes.wings.cs.wisc.edu/files/Thumb-2SupplementReferenceManual.pdf#page=43&zoom=100,0,66
-> 
-> --
-> Stefan
-> 
->  drivers/pci/controller/dwc/pci-imx6.c | 37 ++++++++++++++++++++++++++-
->  1 file changed, 36 insertions(+), 1 deletion(-)
-> 
-> diff --git a/drivers/pci/controller/dwc/pci-imx6.c b/drivers/pci/controller/dwc/pci-imx6.c
-> index 69f86234f7c0..683deb74d69f 100644
-> --- a/drivers/pci/controller/dwc/pci-imx6.c
-> +++ b/drivers/pci/controller/dwc/pci-imx6.c
-> @@ -29,6 +29,7 @@
->  #include <linux/reset.h>
->  #include <linux/pm_domain.h>
->  #include <linux/pm_runtime.h>
-> +#include <asm/opcodes.h>
->  
->  #include "pcie-designware.h"
->  
-> @@ -299,6 +300,37 @@ static int imx6q_pcie_abort_handler(unsigned long addr,
->  	return 1;
->  }
->  
-> +static int imx6q_pcie_abort_handler_thumb2(unsigned long addr,
-> +		unsigned int fsr, struct pt_regs *regs)
-> +{
-> +	unsigned long pc = instruction_pointer(regs);
-> +	unsigned long instr = *(unsigned long *)pc;
-
-So what happens if userspace mmap()s the PCIe space (eg, via
-/dev/mem), and then accesses it, triggering this fault?  You'll
-be attempting to read from userspace here, which will oops the
-kernel.  The kernel is not allowed to access userspace by
-simply dereferencing a pointer.
-
-> +	unsigned long thumb2_instr = __mem_to_opcode_thumb16(instr);
-> +	int reg = thumb2_instr & 7;
-> +
-> +	if (!__opcode_is_thumb16(instr & 0x0000ffffUL))
-> +		return 1;
-> +
-> +	/* Load word/byte and halfword immediate offset */
-> +	if (((thumb2_instr & 0xe800) == 0x6800) ||
-> +	    ((thumb2_instr & 0xf800) == 0x8800)) {
-> +		unsigned long val;
-> +
-> +		if (thumb2_instr & 0x1000)
-> +			val = 0xff;
-> +		else if (thumb2_instr & 0x8000)
-> +			val = 0xffff;
-> +		else
-> +			val = 0xffffffffUL;
-> +
-> +		regs->uregs[reg] = val;
-> +		regs->ARM_pc += 2;
-> +		return 0;
-> +	}
-> +
-> +	return 1;
-> +}
-> +
->  static int imx6_pcie_attach_pd(struct device *dev)
->  {
->  	struct imx6_pcie *imx6_pcie = dev_get_drvdata(dev);
-> @@ -1069,6 +1101,8 @@ static struct platform_driver imx6_pcie_driver = {
->  
->  static int __init imx6_pcie_init(void)
->  {
-> +	bool thumb2 = IS_ENABLED(CONFIG_THUMB2_KERNEL);
-> +
->  	/*
->  	 * Since probe() can be deferred we need to make sure that
->  	 * hook_fault_code is not called after __init memory is freed
-> @@ -1076,7 +1110,8 @@ static int __init imx6_pcie_init(void)
->  	 * we can install the handler here without risking it
->  	 * accessing some uninitialized driver state.
->  	 */
-> -	hook_fault_code(8, imx6q_pcie_abort_handler, SIGBUS, 0,
-> +	hook_fault_code(8, thumb2 ? imx6q_pcie_abort_handler_thumb2 :
-> +			imx6q_pcie_abort_handler, SIGBUS, 0,
->  			"external abort on non-linefetch");
->  
->  	return platform_driver_register(&imx6_pcie_driver);
-> -- 
-> 2.19.1
-> 
-> 
-> _______________________________________________
-> linux-arm-kernel mailing list
-> linux-arm-kernel@lists.infradead.org
-> http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
-
--- 
-RMK's Patch system: http://www.armlinux.org.uk/developer/patches/
-FTTC broadband for 0.8mile line in suburbia: sync at 12.1Mbps down 622kbps up
-According to speedtest.net: 11.9Mbps down 500kbps up
+T24gV2VkLCAyMDE4LTExLTI4IGF0IDE2OjE2ICswMDAwLCBSb2JpbiBNdXJwaHkgd3JvdGU6DQo+
+IA0KPiA+ICAgDQo+ID4gK3N0YXRpYyBpbnQgaW14NnFfcGNpZV9hYm9ydF9oYW5kbGVyX3RodW1i
+Mih1bnNpZ25lZCBsb25nIGFkZHIsDQo+ID4gKwkJdW5zaWduZWQgaW50IGZzciwgc3RydWN0IHB0
+X3JlZ3MgKnJlZ3MpDQo+ID4gK3sNCj4gPiArCXVuc2lnbmVkIGxvbmcgcGMgPSBpbnN0cnVjdGlv
+bl9wb2ludGVyKHJlZ3MpOw0KPiA+ICsJdW5zaWduZWQgbG9uZyBpbnN0ciA9ICoodW5zaWduZWQg
+bG9uZyAqKXBjOw0KPiA+ICsJdW5zaWduZWQgbG9uZyB0aHVtYjJfaW5zdHIgPSBfX21lbV90b19v
+cGNvZGVfdGh1bWIxNihpbnN0cik7DQo+ID4gKwlpbnQgcmVnID0gdGh1bWIyX2luc3RyICYgNzsN
+Cj4gPiArDQo+ID4gKwlpZiAoIV9fb3Bjb2RlX2lzX3RodW1iMTYoaW5zdHIgJiAweDAwMDBmZmZm
+VUwpKQ0KPiA+ICsJCXJldHVybiAxOw0KPiANCj4gVGhlcmUgYXJlIHBsZW50eSBvZiAzMi1iaXQg
+VGh1bWIgZW5jb2RpbmdzIG9mIHZhcmlvdXMgTERSL1NUUiB2YXJpYW50cywgDQo+IGFuZCBJIGRv
+dWJ0IHdlIGNhbiBndWFyYW50ZWUgdGhhdCB0aGUgb2Zmc2V0LCB0YXJnZXQgcmVnaXN0ZXIsIGFu
+ZC9vciANCj4gYWRkcmVzc2luZyBtb2RlIGZvciBhIGNvbmZpZyBzcGFjZSBhY2Nlc3Mgd2lsbCAq
+YWx3YXlzKiBzdWl0IHRoZSANCj4gKHJlbGF0aXZlbHkgbGltaXRlZCkgMTYtYml0IG9uZXMuDQoN
+Ckl0IG1pZ2h0IGJlIHRoZSBjYXNlIHRoYXQgUExEL1BMSSwgMzItYml0IHRodW1iMiBpbnN0cnVj
+dGlvbnMsIGNvdWxkDQp0cmlnZ2VyIGFuIGFib3J0IHRvby4NCg==
