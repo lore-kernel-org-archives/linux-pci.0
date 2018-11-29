@@ -2,69 +2,83 @@ Return-Path: <SRS0=ChyX=OI=vger.kernel.org=linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-6.8 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
+X-Spam-Status: No, score=-0.8 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
 	DKIM_VALID_AU,FREEMAIL_FORGED_FROMDOMAIN,FREEMAIL_FROM,
-	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
-	SPF_PASS,URIBL_BLOCKED autolearn=ham autolearn_force=no version=3.4.0
+	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_PASS,URIBL_BLOCKED
+	autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id B6B03C43441
-	for <linux-pci@archiver.kernel.org>; Thu, 29 Nov 2018 13:30:28 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id B3D5CC43441
+	for <linux-pci@archiver.kernel.org>; Thu, 29 Nov 2018 14:36:35 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 6DEAE208E7
-	for <linux-pci@archiver.kernel.org>; Thu, 29 Nov 2018 13:30:28 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 79F82213A2
+	for <linux-pci@archiver.kernel.org>; Thu, 29 Nov 2018 14:36:35 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="pqABhvNh"
-DMARC-Filter: OpenDMARC Filter v1.3.2 mail.kernel.org 6DEAE208E7
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="U23WiSdA"
+DMARC-Filter: OpenDMARC Filter v1.3.2 mail.kernel.org 79F82213A2
 Authentication-Results: mail.kernel.org; dmarc=fail (p=none dis=none) header.from=gmail.com
 Authentication-Results: mail.kernel.org; spf=none smtp.mailfrom=linux-pci-owner@vger.kernel.org
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727262AbeK3Aft (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Thu, 29 Nov 2018 19:35:49 -0500
-Received: from mail-vk1-f196.google.com ([209.85.221.196]:43403 "EHLO
-        mail-vk1-f196.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726724AbeK3Aft (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Thu, 29 Nov 2018 19:35:49 -0500
-Received: by mail-vk1-f196.google.com with SMTP id o130so416144vke.10;
-        Thu, 29 Nov 2018 05:30:26 -0800 (PST)
+        id S2387983AbeK3BgU (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Thu, 29 Nov 2018 20:36:20 -0500
+Received: from mail-pf1-f196.google.com ([209.85.210.196]:40858 "EHLO
+        mail-pf1-f196.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S2388288AbeK3BgT (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Thu, 29 Nov 2018 20:36:19 -0500
+Received: by mail-pf1-f196.google.com with SMTP id i12so1094386pfo.7;
+        Thu, 29 Nov 2018 06:30:46 -0800 (PST)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=gmail.com; s=20161025;
-        h=mime-version:references:in-reply-to:from:date:message-id:subject:to
-         :cc;
-        bh=oIUGz+WkHmE4ye5Fq3na7+RiMPurDu55C/ZbJQB5cI4=;
-        b=pqABhvNhjDr1poBiRNMTnPtRA8h716XVfl1gt5TgEHVuFOUP2NRMy9aeIs2fDsg/Nb
-         k7Z1LK2VJX0wqZGZ3ecjph0pWahf7XIMoS9Ih361kthElFJ9pDHS4Mxh2Hp3W0Cr8H69
-         d5sYtfjFhTdf7kJh78AIE8wEevc5/BD8NkcGOaVxhGGfBAD+XlbPBtN4Z/BX/PNR+FyP
-         CP/l/p3qumCRng/2GpIDgs3nIJi0eTLJsV1dHxa+gDbBCtUJhiAfgyjmLf3vwxJNdJPJ
-         2BvwCuUuL7+00Fu6MQUU8kKkP4uzHJDAg82X3tre0pVWAIwrOUlFnsCeBVhchWAT23Oe
-         7pYQ==
+        h=subject:to:cc:references:from:message-id:date:user-agent
+         :mime-version:in-reply-to:content-language:content-transfer-encoding;
+        bh=kdzKz3ui18WvBy/HfDYaNC9+FBWk622avJo1sOZ9ERY=;
+        b=U23WiSdAPsYw3HM3lNbTh7jvwfwmyyDmwV0wo+kbEx1yhY8M4AMupHuNPVG2zbVUza
+         dC/mba7q6MjW6YUrFt6OvX6bY7FQcR1YtSlbu2qeQhxXUT1NOiFreIDyh3u96NGrin18
+         8+hO6CiyrhWNB+bXTHofi4AdsIQj04gNv9JTJEBTgT8+CtGzwUjPPK+RTkRYCYD6ApqG
+         CF8KU9uY+mp+UV10PJsRFfgUjcKrxNtumwTtY31aqTZZDPcWFQHJynmZXX21m9hOwISY
+         vbxZFh+p1Ogwx1I44UJrIp2Ps5m2zeKtTh6ZboYha/AxVJO+k9pOPHaJEB60WuBZWleM
+         58yw==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20161025;
-        h=x-gm-message-state:mime-version:references:in-reply-to:from:date
-         :message-id:subject:to:cc;
-        bh=oIUGz+WkHmE4ye5Fq3na7+RiMPurDu55C/ZbJQB5cI4=;
-        b=AAkYIuPZGW5FmWaGgqA31y0jzBLutkl6kVqZwzARAnGsBvodnDi5NdU+d/pUICu5FL
-         3tnwEgrcxOlMO+PLpaYT1C+bAyCIyaQyL42S7ssXTPQCsvgh7EhsxHmgN9Wu1ZI6vT/d
-         rtN07MMrGM4PB9tBNoVgOq1/N5hI4peFFSuQsC4XzWOCTlWphKa+vkXr1eG4Xf+oBT31
-         I4R24GgAaiGvWwFRJs0sWNZYbR/ld0zzRFCYy8G2vTSoOFeFdzOeGjDcZIgdeLQxbBC1
-         VyTIziE3TGIye2KothBblRKqSknfCl6t8XVeKHflCpBt8wZhWUU270CPnejfeJqBa/1m
-         RNIg==
-X-Gm-Message-State: AA+aEWaTveQrAbZOe6a89Keq2BwGZUeavsaS7I+9ZSbRERoIrmuMIa5C
-        LIqZxT2y2HtX1yXmH8Yb3KoRxFzjtzo+RFQBcvY=
-X-Google-Smtp-Source: AFSGD/XtMzNV9mj9bPmAgGim9IJGMV1I2Sp8LFeT5uHdzK4iVb23/trZgFC7+tmPIrgDPMyena0Oq5TVhDWcpGY4VEo=
-X-Received: by 2002:a1f:4301:: with SMTP id q1mr611759vka.70.1543498225596;
- Thu, 29 Nov 2018 05:30:25 -0800 (PST)
+        h=x-gm-message-state:subject:to:cc:references:from:message-id:date
+         :user-agent:mime-version:in-reply-to:content-language
+         :content-transfer-encoding;
+        bh=kdzKz3ui18WvBy/HfDYaNC9+FBWk622avJo1sOZ9ERY=;
+        b=TGwxUXjmbR5KK6A4oXw5CTygeqO4sVtVsqSkyQ2kf+FZKNm4tLFY/JqZJaYAIsDCG6
+         pB7OuMUrUUML9hs7KAPgZOxcp53p+pcmZtO+HBVYyuJ1iOClXCPM3SrjEusO4wjeas0I
+         b8ercOvm/74Ojsc4LIOVjzftNBJauKJoaLt0asttu23pee9IR7XGU4ARLt8GVVlgRebi
+         fFq9ivD6pat2DmchXEI0W5Oiid1hZXSOD8gtmx3/12tnJ9ZbHIuUH5X1m33Vdb0AVBn9
+         kVVqaoBlvHzdohzzAse55veONlfzDdougGjc9a5JTYyTWRci2INq/DltZ8yHwbkecGP4
+         35mA==
+X-Gm-Message-State: AA+aEWZ8+FT/T61oq/OO/hMopqiX5c0+axC2oumwGzkYVOlHrkYxAkXs
+        BktxWpyudkiwUQ0f9KmN+juusMvEzdQ=
+X-Google-Smtp-Source: AFSGD/XQ8ZamKadZ2Rt8BLItkJBGoK4cYkryZ3STAu3oeHZcouJvMGnezBT88Bmw/bZmcII8p1VZ1A==
+X-Received: by 2002:a63:8d44:: with SMTP id z65mr1436603pgd.57.1543501846379;
+        Thu, 29 Nov 2018 06:30:46 -0800 (PST)
+Received: from localhost.localdomain ([104.238.160.83])
+        by smtp.gmail.com with ESMTPSA id 186sm3873997pga.36.2018.11.29.06.30.29
+        (version=TLS1_2 cipher=ECDHE-RSA-AES128-GCM-SHA256 bits=128/128);
+        Thu, 29 Nov 2018 06:30:45 -0800 (PST)
+Subject: Re: [RFC PATCH v3] genirq/affinity: Create and transfer more irq desc
+ info by a new structure
+To:     Bjorn Helgaas <bhelgaas@google.com>
+Cc:     Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
+        Thomas Gleixner <tglx@linutronix.de>,
+        Kashyap Desai <kashyap.desai@broadcom.com>,
+        shivasharan.srikanteshwara@broadcom.com,
+        Sumit Saxena <sumit.saxena@broadcom.com>, ming.lei@redhat.com,
+        Christoph Hellwig <hch@lst.de>, linux-pci@vger.kernel.org
+References: <20181128164503.6194-1-douliyangs@gmail.com>
+ <CAErSpo5NCy6C7xqaWUNnC2uY+RRpZnbpOJUQxrz0aER-g6+XqQ@mail.gmail.com>
+From:   Dou Liyang <douliyangs@gmail.com>
+Message-ID: <b6f3cbb6-60b7-1425-9bff-0ac4565f56a7@gmail.com>
+Date:   Thu, 29 Nov 2018 22:30:22 +0800
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:60.0) Gecko/20100101
+ Thunderbird/60.0
 MIME-Version: 1.0
-References: <1542633272-16161-1-git-send-email-sundeep.lkml@gmail.com> <20181128215545.GC178809@google.com>
-In-Reply-To: <20181128215545.GC178809@google.com>
-From:   sundeep subbaraya <sundeep.lkml@gmail.com>
-Date:   Thu, 29 Nov 2018 19:00:14 +0530
-Message-ID: <CALHRZurM1XgwtaLQw2Nqtcb+uX+SY8thgnKDQUzftO9i9a+_RA@mail.gmail.com>
-Subject: Re: [PATCH v2] PCI: assign bus numbers present in EA capability for bridges
-To:     helgaas@kernel.org
-Cc:     linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
-        sean.stalley@intel.com, sgoutham@marvell.com,
-        Subbaraya Sundeep <sbhatta@marvell.com>
-Content-Type: text/plain; charset="UTF-8"
+In-Reply-To: <CAErSpo5NCy6C7xqaWUNnC2uY+RRpZnbpOJUQxrz0aER-g6+XqQ@mail.gmail.com>
+Content-Type: text/plain; charset=utf-8; format=flowed
+Content-Language: en-US
+Content-Transfer-Encoding: 7bit
 Sender: linux-pci-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
@@ -72,219 +86,43 @@ X-Mailing-List: linux-pci@vger.kernel.org
 
 Hi Bjorn,
 
+on 2018/11/29 4:00, Bjorn Helgaas wrote:
+> [+cc linux-pci]
+> Since you mention reports, are there URLs to mailing list archives you
+> can include?
+OK, I will add it:
 
-On Thu, Nov 29, 2018 at 3:25 AM Bjorn Helgaas <helgaas@kernel.org> wrote:
->
-> On Mon, Nov 19, 2018 at 06:44:32PM +0530, sundeep.lkml@gmail.com wrote:
-> > From: Subbaraya Sundeep <sbhatta@marvell.com>
-> >
-> > As per the spec, bridges with EA capability work
-> > with fixed secondary and subordinate bus numbers.
-> > Hence assign bus numbers to bridges from EA if the
-> > capability exists.
->
-> A reference to the spec section would be good, i.e., PCIe r4.0, sec xxx.
->
-Ok. I referred ECN 2014 section 6.9.1.2.
+https://marc.info/?l=linux-kernel&m=153543887027997&w=2
 
-> > Signed-off-by: Subbaraya Sundeep <sbhatta@marvell.com>
-> > ---
-> > Changes for v2:
-> >       No changes just added Sean Stalley who did EA support for BARs.
-> >
-> >  drivers/pci/probe.c           | 58 ++++++++++++++++++++++++++++++++++++++++---
-> >  include/uapi/linux/pci_regs.h |  6 +++++
-> >  2 files changed, 60 insertions(+), 4 deletions(-)
-> >
-> > diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
-> > index b1c05b5..f41d2e6 100644
-> > --- a/drivers/pci/probe.c
-> > +++ b/drivers/pci/probe.c
-> > @@ -1030,6 +1030,40 @@ static void pci_enable_crs(struct pci_dev *pdev)
-> >
-> >  static unsigned int pci_scan_child_bus_extend(struct pci_bus *bus,
-> >                                             unsigned int available_buses);
-> > +/*
-> > + * pci_ea_fixed_busnrs() - Read fixed Secondary and Subordinate bus
-> > + * numbers from EA capability.
-> > + * @dev: Bridge with EA
-> > + * @secondary: updated with secondary bus number in EA
-> > + * @subordinate: updated with subordinate bus number in EA
-> > + *
-> > + * If it is a bridge with EA capability then fixed bus numbers are
-> > + * read from EA capability list and secondary, subordinate reference
-> > + * variables will be updated. Otherwise secondary and subordinate reference
-> > + * variables will be zeroed.
-> > + */
-> > +static void pci_ea_fixed_busnrs(struct pci_dev *dev, u8 *secondary,
-> > +                             u8 *subordinate)
-> > +{
-> > +     int ea;
-> > +     int offset;
-> > +     u32 dw;
-> > +
-> > +     *secondary = *subordinate = 0;
-> > +
-> > +     if (dev->hdr_type != PCI_HEADER_TYPE_BRIDGE)
-> > +             return;
-> > +
-> > +     /* find PCI EA capability in list */
-> > +     ea = pci_find_capability(dev, PCI_CAP_ID_EA);
-> > +     if (!ea)
-> > +             return;
-> > +
-> > +     offset = ea + PCI_EA_FIRST_ENT;
-> > +     pci_read_config_dword(dev, offset, &dw);
->
-> "Num Entries" in the first DW of the capability is allowed to be zero,
-> in which case this word (the second DW) is invalid.  [See comments
-> below; this code would be valid based on the 2014 ECN, but not per the
-> 2017 PCIe r4.0 spec]
->
-Yes but Entries follow after first DW of EA capability for devices and
-after second
-DW for bridges.
-2014 ECN says for bridges DW2 of EA must be present:
-"For Type 1 functions only, there is a second DW in the capability,
-preceding the first entry.
-This second DW must be included in the Enhanced Allocation Capability
-whenever this
-capability is implemented in a Type 1 Function"
-So for normal device EA DW1, Entries(if any)
-for bridges EA DW1,EA DW2, Entries(if any)
+>> -       entry = alloc_msi_entry(&dev->dev, nvec, masks);
+>> +       entry = alloc_msi_entry(&dev->dev, nvec, affi_desc);
+> 
+> Can you split this into two or more patches?  Most of these changes
 
-> It would be much better if this function could be somehow incorporated
-> into pci_ea_init(), which already knows how to parse much of the EA
-> capability.
->
-I initially thought of this but didn't do it to avoid new members in pci_dev.
+Yes, next non-RFC version will do.
 
-> > +     *secondary =  dw & PCI_EA_SEC_BUS_MASK;
-> > +     *subordinate = (dw & PCI_EA_SUB_BUS_MASK) >> PCI_EA_SUB_BUS_SHIFT;
-> > +}
-> >
-> >  /*
-> >   * pci_scan_bridge_extend() - Scan buses behind a bridge
-> > @@ -1064,6 +1098,8 @@ static int pci_scan_bridge_extend(struct pci_bus *bus, struct pci_dev *dev,
-> >       u16 bctl;
-> >       u8 primary, secondary, subordinate;
-> >       int broken = 0;
-> > +     u8 fixed_sec, fixed_sub;
-> > +     int next_busnr;
-> >
-> >       /*
-> >        * Make sure the bridge is powered on to be able to access config
-> > @@ -1163,17 +1199,25 @@ static int pci_scan_bridge_extend(struct pci_bus *bus, struct pci_dev *dev,
-> >               /* Clear errors */
-> >               pci_write_config_word(dev, PCI_STATUS, 0xffff);
-> >
-> > +             /* read bus numbers from EA */
-> > +             pci_ea_fixed_busnrs(dev, &fixed_sec, &fixed_sub);
-> > +
-> > +             next_busnr = max + 1;
-> > +             /* Use secondary bus number in EA */
-> > +             if (fixed_sec)
-> > +                     next_busnr = fixed_sec;
-> > +
-> >               /*
-> >                * Prevent assigning a bus number that already exists.
-> >                * This can happen when a bridge is hot-plugged, so in this
-> >                * case we only re-scan this bus.
-> >                */
-> > -             child = pci_find_bus(pci_domain_nr(bus), max+1);
-> > +             child = pci_find_bus(pci_domain_nr(bus), next_busnr);
-> >               if (!child) {
-> > -                     child = pci_add_new_bus(bus, dev, max+1);
-> > +                     child = pci_add_new_bus(bus, dev, next_busnr);
-> >                       if (!child)
-> >                               goto out;
-> > -                     pci_bus_insert_busn_res(child, max+1,
-> > +                     pci_bus_insert_busn_res(child, next_busnr,
-> >                                               bus->busn_res.end);
-> >               }
-> >               max++;
-> > @@ -1234,7 +1278,13 @@ static int pci_scan_bridge_extend(struct pci_bus *bus, struct pci_dev *dev,
-> >                       max += i;
-> >               }
-> >
-> > -             /* Set subordinate bus number to its real value */
-> > +             /*
-> > +              * Set subordinate bus number to its real value.
-> > +              * If fixed subordinate bus number exists from EA
-> > +              * capability then use it.
-> > +              */
-> > +             if (fixed_sub)
-> > +                     max = fixed_sub;
-> >               pci_bus_update_busn_res_end(child, max);
-> >               pci_write_config_byte(dev, PCI_SUBORDINATE_BUS, max);
-> >       }
-> > diff --git a/include/uapi/linux/pci_regs.h b/include/uapi/linux/pci_regs.h
-> > index e1e9888..c3d0904 100644
-> > --- a/include/uapi/linux/pci_regs.h
-> > +++ b/include/uapi/linux/pci_regs.h
-> > @@ -372,6 +372,12 @@
-> >  #define PCI_EA_FIRST_ENT_BRIDGE      8       /* First EA Entry for Bridges */
->
-> You didn't add PCI_EA_FIRST_ENT_BRIDGE (Sean did with f80b0ba95964
-> ("PCI: Add Enhanced Allocation register entries")), but it is unused
-> and I can't match it with anything in the spec (PCIe r4.0, sec 7.8.5).
->
-> It might be related to the code in pci_ea_init() that skips DWORD 2
-> for type 1 functions.  But I still don't see that in the spec.
->
-> If it's obsolete, we should remove it (with a separate patch).
->
-PCI_EA_FIRST_ENT_BRIDGE is not needed we can remove.
-I will send a patch to remove it.
-I will add new members for fixed secondary and subordinate bus numbers in
-pci_dev and make changes as below please let me know it is okay for you:
-@@ -2909,6 +2909,7 @@ void pci_ea_init(struct pci_dev *dev)
-        u8 num_ent;
-        int offset;
-        int i;
-+      u32 dw;
+> are trivial and not very interesting, and the fact that they're all in
+> one patch makes it hard to find and review the interesting bits.  For
+> example,
+> 
+>    1) Rename all the local variables while keeping the type the same
+> (or just leave the name the same; I think "affinity" would be a fine
+> name, and I would be OK if we ended up with "struct irq_affinity_desc
+> *masks" or "struct irq_affinity_desc *affinity").  This patch would
+> obviously have no functional impact and would remove a lot of the
+> trivial changes.
+> Oops, how stupid I am !
 
-        /* find PCI EA capability in list */
-        ea = pci_find_capability(dev, PCI_CAP_ID_EA); @@ -2922,9
-+2923,14 @@ void pci_ea_init(struct pci_dev *dev)
-        offset = ea + PCI_EA_FIRST_ENT;
--       /* Skip DWORD 2 for type 1 functions */
--       if (dev->hdr_type == PCI_HEADER_TYPE_BRIDGE)
-+       /* Note fixed bus numbers for type 1 functions */
-+       if (dev->hdr_type == PCI_HEADER_TYPE_BRIDGE) {
-+               pci_read_config_dword(dev, offset, &dw);
-+               dev->fixed_sec_busnr = dw & PCI_EA_FIXED_SEC_BUS;
-+               dev->fixed_sub_busnr = (dw & PCI_EA_FIXED_SUB_BUS) >>
-+                                       PCI_EA_FIXED_SUB_SHIFT;
-                offset += 4;
-+       }
-
-
-> Hmm, I do see this in the ECN dated 23 Oct 2014, sec 6.9.1.2.  But
-> presumably that would be incorporated in PCIe r4.0, which is dated 27
-> Sep 2017.
->
-> I have no idea what to do with this.  I can't merge this without some
-> clarification here,
->
-Yeah I see there is no mention of EA for bridges in r4.0.
-Since we check whether the device is bridge or not before reading DW2 of EA
-I guess we are okay.
+>    2) Add "struct irq_affinity_desc" containing only "struct cpumask
+> masks" and irq_create_affinity_desc() (or leave the name as
+> irq_create_affinity_masks() and adjust the signature).  This would
+> also have no functional impact and would be a fairly trivial patch.
+> >    3) Add "flags" to struct irq_affinity_desc and the related code.
+> This is the real meat of your patch, and with the above out of the
+> way, it will be much smaller and it'll be obvious what the important
+> changes are.
+> 
+I see, :)
 
 Thanks,
-Sundeep
-
-> >  #define  PCI_EA_ES           0x00000007 /* Entry Size */
-> >  #define  PCI_EA_BEI          0x000000f0 /* BAR Equivalent Indicator */
-> > +
-> > +/* EA fixed Secondary and Subordinate bus numbers for Bridge */
-> > +#define PCI_EA_SEC_BUS_MASK  0xff
-> > +#define PCI_EA_SUB_BUS_MASK  0xff00
-> > +#define PCI_EA_SUB_BUS_SHIFT 8
-> > +
-> >  /* 0-5 map to BARs 0-5 respectively */
-> >  #define   PCI_EA_BEI_BAR0            0
-> >  #define   PCI_EA_BEI_BAR5            5
-> > --
-> > 1.8.3.1
-> >
+	dou
