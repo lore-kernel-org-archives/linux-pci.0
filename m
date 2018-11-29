@@ -2,159 +2,129 @@ Return-Path: <SRS0=ChyX=OI=vger.kernel.org=linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-8.8 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
-	DKIM_VALID_AU,FREEMAIL_FORGED_FROMDOMAIN,FREEMAIL_FROM,
-	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
-	SPF_PASS,USER_AGENT_GIT autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-9.1 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,FAKE_REPLY_C,HEADER_FROM_DIFFERENT_DOMAINS,
+	MAILING_LIST_MULTI,MENTIONS_GIT_HOSTING,SPF_PASS,UNPARSEABLE_RELAY,
+	URIBL_BLOCKED,USER_AGENT_MUTT autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 2F803C43441
-	for <linux-pci@archiver.kernel.org>; Thu, 29 Nov 2018 00:08:41 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id BE381C43441
+	for <linux-pci@archiver.kernel.org>; Thu, 29 Nov 2018 09:05:05 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id DE81620645
-	for <linux-pci@archiver.kernel.org>; Thu, 29 Nov 2018 00:08:40 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 828C9205C9
+	for <linux-pci@archiver.kernel.org>; Thu, 29 Nov 2018 09:05:05 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="VLrfencs"
-DMARC-Filter: OpenDMARC Filter v1.3.2 mail.kernel.org DE81620645
-Authentication-Results: mail.kernel.org; dmarc=fail (p=none dis=none) header.from=gmail.com
+	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="jFX9I/Bn"
+DMARC-Filter: OpenDMARC Filter v1.3.2 mail.kernel.org 828C9205C9
+Authentication-Results: mail.kernel.org; dmarc=fail (p=none dis=none) header.from=oracle.com
 Authentication-Results: mail.kernel.org; spf=none smtp.mailfrom=linux-pci-owner@vger.kernel.org
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726617AbeK2LMD (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Thu, 29 Nov 2018 06:12:03 -0500
-Received: from mail-ot1-f67.google.com ([209.85.210.67]:34809 "EHLO
-        mail-ot1-f67.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726328AbeK2LMD (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Thu, 29 Nov 2018 06:12:03 -0500
-Received: by mail-ot1-f67.google.com with SMTP id t5so136119otk.1;
-        Wed, 28 Nov 2018 16:08:39 -0800 (PST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20161025;
-        h=from:to:cc:subject:date:message-id;
-        bh=xICuYGJFIVC010WL+cgzN1jRnwq76q1669QvCJY3WAw=;
-        b=VLrfencsB/0m1qawUYLPan5i5jpLdYzA3G4EQjwzSHV3npQogeUN35aKW/KNPECfpp
-         tegQZ4tWC0paFK9j7599M0PMl5YkfQel2Y8sAafzetwmkOvtS5QEhXzPi9snJoGVHcc3
-         Gnq8kaHbSULD68Vrf81vzAakLGH81gteyh4+aEgO2YrEGK4ZZk69VIK8osYhJKhOIiW8
-         Oa5KZIIwmVpxtbEq2jsEkg7p3WdSZYSuT/574QKz5xbkp1MeYr8RYM0fKJa+vJN47b4W
-         rewAR2yIfhB5VW+Lfb4sBDFCRGvOYLUPNDiKAtbu0G58ovs9ioSdQimYrdPrPqDltCkJ
-         2KXg==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20161025;
-        h=x-gm-message-state:from:to:cc:subject:date:message-id;
-        bh=xICuYGJFIVC010WL+cgzN1jRnwq76q1669QvCJY3WAw=;
-        b=oKlhItcnM0OX0CRR12PPxJAKyDfiyHSw0XCgWu6hXokfPCCJu2uTuMj6huKmxHNc9g
-         JhAXV4Ni5LOAwsSjN1/ZWiniYXke0vxlihj5GOjGsyaRqmEG8nSjLF2OlabwzijuJ9sL
-         dpLAqNxVUVXMI7RWNhgxdDh8T7A0ZCDPvZR8YAgknx/59TGUlM7S/ey13LwmbxukFsuh
-         DZOc4KX9hQt8UbHaIy7hfGSb0G2NVi6V0YqkRmsk5qzVcrtcEgFKkj5vvapr3z0HD4Mm
-         ry8+nXlnr1kxaFHpLorq3lRtUqO+LWGlqXGWNatbxDLgecW/KFCFOc+jLTYhkEYheCi7
-         a86Q==
-X-Gm-Message-State: AA+aEWaUX7PZAgGO4Pf7HDi0aSsCKP/y95MF9vmCeFZp6ZaKkIxIcxxf
-        fCrWR5q4CbcDxD8NbXTiivzSgjIicl4=
-X-Google-Smtp-Source: AFSGD/VlHk3sJEHb2a4+pONmk57NpjPSvrC9WEPzmpYZl98Zq9iT9XvHkYPgTozjyThCRLIH+VXYPg==
-X-Received: by 2002:a9d:2015:: with SMTP id n21mr19609221ota.289.1543450118454;
-        Wed, 28 Nov 2018 16:08:38 -0800 (PST)
-Received: from nuclearis2-1.lan (c-98-195-139-126.hsd1.tx.comcast.net. [98.195.139.126])
-        by smtp.gmail.com with ESMTPSA id r17sm68400otn.0.2018.11.28.16.08.37
-        (version=TLS1_2 cipher=ECDHE-RSA-CHACHA20-POLY1305 bits=256/256);
-        Wed, 28 Nov 2018 16:08:37 -0800 (PST)
-From:   Alexandru Gagniuc <mr.nuke.me@gmail.com>
-To:     bhelgaas@google.com
-Cc:     austin_bolen@dell.com, alex_gagniuc@dellteam.com,
-        keith.busch@intel.com, Shyam_Iyer@Dell.com, lukas@wunner.de,
-        Alexandru Gagniuc <mr.nuke.me@gmail.com>,
-        Mika Westerberg <mika.westerberg@linux.intel.com>,
-        Sinan Kaya <okaya@codeaurora.org>,
-        "Rafael J. Wysocki" <rafael.j.wysocki@intel.com>,
-        Oza Pawandeep <poza@codeaurora.org>, linux-pci@vger.kernel.org,
-        linux-kernel@vger.kernel.org
-Subject: [PATCH] PCI: pciehp: Report degraded links via link bandwidth notification
-Date:   Wed, 28 Nov 2018 18:08:24 -0600
-Message-Id: <20181129000829.14751-1-mr.nuke.me@gmail.com>
-X-Mailer: git-send-email 2.17.1
+        id S1726895AbeK2UJo (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Thu, 29 Nov 2018 15:09:44 -0500
+Received: from userp2130.oracle.com ([156.151.31.86]:34956 "EHLO
+        userp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726565AbeK2UJo (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Thu, 29 Nov 2018 15:09:44 -0500
+Received: from pps.filterd (userp2130.oracle.com [127.0.0.1])
+        by userp2130.oracle.com (8.16.0.22/8.16.0.22) with SMTP id wAT8xNBb000836;
+        Thu, 29 Nov 2018 09:04:02 GMT
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=date : from : to : cc
+ : subject : message-id : mime-version : content-type : in-reply-to;
+ s=corp-2018-07-02; bh=BSuLx5LjNSkayjfJEBeeB4vpBjbY2AdbwGMwOUrmzYs=;
+ b=jFX9I/BnCp3eaT3w+4cN6eRkcAGnxnE/pnKOadWXCwSJ4HiAN79BJizXtRfukm+qxatn
+ yOUg1st9P3zYXyorO6ONPQtCq5TkHZMF0F8xygC/lLqMU8bUV5+LS389WkhiZz8swFXm
+ Kjj9/rIXY1b8Rk2edXS8Q33qvnX4jeVi2dAbEdrJ5N3V+WkzQYHSBjzWgTHcEpa7fwOk
+ hu8ZdjT3TJaxl6rPNp6ae67YexY+x8qM2jcx0eRMSr87akIK1HOgqeXDnO5/xyypLHST
+ 3IjoZDIGQBNOrlTbLvG+iodPN5WJMqKSFbr04LlGyE9ShXKiAamGgnNSuJnG+PkAAQS9 mA== 
+Received: from aserv0022.oracle.com (aserv0022.oracle.com [141.146.126.234])
+        by userp2130.oracle.com with ESMTP id 2nxx2ueyap-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
+        Thu, 29 Nov 2018 09:04:02 +0000
+Received: from userv0122.oracle.com (userv0122.oracle.com [156.151.31.75])
+        by aserv0022.oracle.com (8.14.4/8.14.4) with ESMTP id wAT93x8a010078
+        (version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
+        Thu, 29 Nov 2018 09:04:00 GMT
+Received: from abhmp0017.oracle.com (abhmp0017.oracle.com [141.146.116.23])
+        by userv0122.oracle.com (8.14.4/8.14.4) with ESMTP id wAT93uL3003235;
+        Thu, 29 Nov 2018 09:03:56 GMT
+Received: from unbuntlaptop (/197.157.34.169)
+        by default (Oracle Beehive Gateway v4.0)
+        with ESMTP ; Thu, 29 Nov 2018 01:03:55 -0800
+Date:   Thu, 29 Nov 2018 12:03:40 +0300
+From:   Dan Carpenter <dan.carpenter@oracle.com>
+To:     kbuild@01.org, Hanjie Lin <hanjie.lin@amlogic.com>
+Cc:     kbuild-all@01.org, Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
+        Bjorn Helgaas <bhelgaas@google.com>,
+        Yue Wang <yue.wang@amlogic.com>,
+        Hanjie Lin <hanjie.lin@amlogic.com>,
+        Kevin Hilman <khilman@baylibre.com>,
+        Carlo Caione <carlo@caione.org>,
+        Jerome Brunet <jbrunet@baylibre.com>,
+        Rob Herring <robh@kernel.org>,
+        Gustavo Pimentel <gustavo.pimentel@synopsys.com>,
+        Shawn Lin <shawn.lin@rock-chips.com>,
+        Philippe Ombredanne <pombredanne@nexb.com>,
+        Cyrille Pitchen <cyrille.pitchen@free-electrons.com>,
+        linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
+        linux-arm-kernel@lists.infradead.org,
+        linux-amlogic@lists.infradead.org,
+        Yixun Lan <yixun.lan@amlogic.com>,
+        Liang Yang <liang.yang@amlogic.com>,
+        Jianxin Pan <jianxin.pan@amlogic.com>,
+        Qiufang Dai <qiufang.dai@amlogic.com>,
+        Jian Hu <jian.hu@amlogic.com>
+Subject: Re: [PATCH v6 2/2] PCI: amlogic: Add the Amlogic Meson PCIe
+ controller driver
+Message-ID: <20181129090340.GO3073@unbuntlaptop>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <1542876836-191355-3-git-send-email-hanjie.lin@amlogic.com>
+User-Agent: Mutt/1.9.4 (2018-02-28)
+X-Proofpoint-Virus-Version: vendor=nai engine=5900 definitions=9091 signatures=668686
+X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 suspectscore=0 malwarescore=0
+ phishscore=0 bulkscore=0 spamscore=0 mlxscore=0 mlxlogscore=999
+ adultscore=0 classifier=spam adjust=0 reason=mlx scancount=1
+ engine=8.0.1-1810050000 definitions=main-1811290079
 Sender: linux-pci-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-A warning is generated when a PCIe device is probed with a degraded
-link, but there was no similar mechanism to warn when the link becomes
-degraded after probing. The Link Bandwidth Notification provides this
-mechanism.
+Hi Yue,
 
-Use the link bandwidth notification interrupt to detect bandwidth
-changes, and rescan the bandwidth, looking for the weakest point. This
-is the same logic used in probe().
+url:    https://github.com/0day-ci/linux/commits/Hanjie-Lin/dt-bindings-PCI-meson-add-DT-bindings-for-Amlogic-Meson-PCIe-controller/20181122-225955
+base:   https://git.kernel.org/pub/scm/linux/kernel/git/helgaas/pci.git next
 
-Signed-off-by: Alexandru Gagniuc <mr.nuke.me@gmail.com>
+smatch warnings:
+drivers/pci/controller/dwc/pci-meson.c:171 meson_pcie_get_mem_shared() error: passing non negative 6 to ERR_PTR
+
+# https://github.com/0day-ci/linux/commit/c882cdc75e49b6de65cd3d95ebf688272af6b5f9
+git remote add linux-review https://github.com/0day-ci/linux
+git remote update linux-review
+git checkout c882cdc75e49b6de65cd3d95ebf688272af6b5f9
+vim +171 drivers/pci/controller/dwc/pci-meson.c
+
+c882cdc75 Yue Wang 2018-11-22  160  
+c882cdc75 Yue Wang 2018-11-22  161  static void __iomem *meson_pcie_get_mem_shared(struct platform_device *pdev,
+c882cdc75 Yue Wang 2018-11-22  162  					       struct meson_pcie *mp,
+c882cdc75 Yue Wang 2018-11-22  163  					       const char *id)
+c882cdc75 Yue Wang 2018-11-22  164  {
+c882cdc75 Yue Wang 2018-11-22  165  	struct device *dev = mp->pci.dev;
+c882cdc75 Yue Wang 2018-11-22  166  	struct resource *res;
+c882cdc75 Yue Wang 2018-11-22  167  
+c882cdc75 Yue Wang 2018-11-22  168  	res = platform_get_resource_byname(pdev, IORESOURCE_MEM, id);
+c882cdc75 Yue Wang 2018-11-22  169  	if (!res) {
+c882cdc75 Yue Wang 2018-11-22  170  		dev_err(dev, "No REG resource %s\n", id);
+c882cdc75 Yue Wang 2018-11-22 @171  		return ERR_PTR(ENXIO);
+                                                               ^^^^^
+                                                               -ENXIO
+
+c882cdc75 Yue Wang 2018-11-22  172  	}
+c882cdc75 Yue Wang 2018-11-22  173  
+c882cdc75 Yue Wang 2018-11-22  174  	return devm_ioremap(dev, res->start, resource_size(res));
+c882cdc75 Yue Wang 2018-11-22  175  }
+c882cdc75 Yue Wang 2018-11-22  176  
+
 ---
- drivers/pci/hotplug/pciehp_hpc.c | 35 +++++++++++++++++++++++++++++++-
- 1 file changed, 34 insertions(+), 1 deletion(-)
-
-diff --git a/drivers/pci/hotplug/pciehp_hpc.c b/drivers/pci/hotplug/pciehp_hpc.c
-index 7dd443aea5a5..834672000b59 100644
---- a/drivers/pci/hotplug/pciehp_hpc.c
-+++ b/drivers/pci/hotplug/pciehp_hpc.c
-@@ -515,7 +515,8 @@ static irqreturn_t pciehp_isr(int irq, void *dev_id)
- 	struct controller *ctrl = (struct controller *)dev_id;
- 	struct pci_dev *pdev = ctrl_dev(ctrl);
- 	struct device *parent = pdev->dev.parent;
--	u16 status, events;
-+	struct pci_dev *endpoint;
-+	u16 status, events, link_status;
- 
- 	/*
- 	 * Interrupts only occur in D3hot or shallower and only if enabled
-@@ -525,6 +526,17 @@ static irqreturn_t pciehp_isr(int irq, void *dev_id)
- 	    (!(ctrl->slot_ctrl & PCI_EXP_SLTCTL_HPIE) && !pciehp_poll_mode))
- 		return IRQ_NONE;
- 
-+	pcie_capability_read_word(pdev, PCI_EXP_LNKSTA, &link_status);
-+
-+	if (link_status & PCI_EXP_LNKSTA_LBMS) {
-+		if (pdev->subordinate && pdev->subordinate->self)
-+			endpoint = pdev->subordinate->self;
-+		else
-+			endpoint = pdev;
-+		__pcie_print_link_status(endpoint, false);
-+		pcie_capability_write_word(pdev, PCI_EXP_LNKSTA, link_status);
-+	}
-+
- 	/*
- 	 * Keep the port accessible by holding a runtime PM ref on its parent.
- 	 * Defer resume of the parent to the IRQ thread if it's suspended.
-@@ -677,6 +689,24 @@ static int pciehp_poll(void *data)
- 	return 0;
- }
- 
-+static bool pcie_link_bandwidth_notification_supported(struct controller *ctrl)
-+{
-+	int ret;
-+	u32 cap;
-+
-+	ret = pcie_capability_read_dword(ctrl_dev(ctrl), PCI_EXP_LNKCAP, &cap);
-+	return (ret == PCIBIOS_SUCCESSFUL) && (cap & PCI_EXP_LNKCAP_LBNC);
-+}
-+
-+static void pcie_enable_link_bandwidth_notification(struct controller *ctrl)
-+{
-+	u16 lnk_ctl;
-+
-+	pcie_capability_read_word(ctrl_dev(ctrl), PCI_EXP_LNKCTL, &lnk_ctl);
-+	lnk_ctl |= PCI_EXP_LNKCTL_LBMIE;
-+	pcie_capability_write_word(ctrl_dev(ctrl), PCI_EXP_LNKCTL, lnk_ctl);
-+}
-+
- static void pcie_enable_notification(struct controller *ctrl)
- {
- 	u16 cmd, mask;
-@@ -713,6 +743,9 @@ static void pcie_enable_notification(struct controller *ctrl)
- 	pcie_write_cmd_nowait(ctrl, cmd, mask);
- 	ctrl_dbg(ctrl, "%s: SLOTCTRL %x write cmd %x\n", __func__,
- 		 pci_pcie_cap(ctrl->pcie->port) + PCI_EXP_SLTCTL, cmd);
-+
-+	if (pcie_link_bandwidth_notification_supported(ctrl))
-+		pcie_enable_link_bandwidth_notification(ctrl);
- }
- 
- static void pcie_disable_notification(struct controller *ctrl)
--- 
-2.17.1
-
+0-DAY kernel test infrastructure                Open Source Technology Center
+https://lists.01.org/pipermail/kbuild-all                   Intel Corporation
