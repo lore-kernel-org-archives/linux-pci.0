@@ -2,261 +2,193 @@ Return-Path: <SRS0=ChyX=OI=vger.kernel.org=linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-10.1 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
-	SPF_PASS,USER_AGENT_MUTT autolearn=unavailable autolearn_force=no
-	version=3.4.0
+X-Spam-Status: No, score=-9.0 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_PASS,URIBL_BLOCKED,
+	USER_AGENT_GIT autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id EEF03C43441
-	for <linux-pci@archiver.kernel.org>; Thu, 29 Nov 2018 15:03:42 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 136A3C43610
+	for <linux-pci@archiver.kernel.org>; Thu, 29 Nov 2018 15:52:03 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id ABF2021019
-	for <linux-pci@archiver.kernel.org>; Thu, 29 Nov 2018 15:03:42 +0000 (UTC)
-Authentication-Results: mail.kernel.org;
-	dkim=pass (1024-bit key) header.d=kernel.org header.i=@kernel.org header.b="E+HmHWbo"
-DMARC-Filter: OpenDMARC Filter v1.3.2 mail.kernel.org ABF2021019
-Authentication-Results: mail.kernel.org; dmarc=fail (p=none dis=none) header.from=kernel.org
+	by mail.kernel.org (Postfix) with ESMTP id 9F0E2213A2
+	for <linux-pci@archiver.kernel.org>; Thu, 29 Nov 2018 15:52:02 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.3.2 mail.kernel.org 9F0E2213A2
+Authentication-Results: mail.kernel.org; dmarc=fail (p=none dis=none) header.from=linux.intel.com
 Authentication-Results: mail.kernel.org; spf=none smtp.mailfrom=linux-pci-owner@vger.kernel.org
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1728290AbeK3CJO (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Thu, 29 Nov 2018 21:09:14 -0500
-Received: from mail.kernel.org ([198.145.29.99]:59530 "EHLO mail.kernel.org"
+        id S1729147AbeK3C5t (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Thu, 29 Nov 2018 21:57:49 -0500
+Received: from mga04.intel.com ([192.55.52.120]:65045 "EHLO mga04.intel.com"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1728528AbeK3CJN (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Thu, 29 Nov 2018 21:09:13 -0500
-Received: from localhost (173-25-171-118.client.mchsi.com [173.25.171.118])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
-        (No client certificate requested)
-        by mail.kernel.org (Postfix) with ESMTPSA id E1F4A2082F;
-        Thu, 29 Nov 2018 15:03:33 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=default; t=1543503814;
-        bh=z0yA2fmW6AAfQHtJol27Z5D7iiJmpSCaptAauJncejg=;
-        h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-        b=E+HmHWbollj651mM4mzzjdQ6LK7rfke2RUFXSrwMsprJaLf9+ge5hshSVeGD7bTaa
-         CsvoItf7zbMBzzVJiQDKujmn1XivMm1DOeH5zBL7ccAuZ57OQBW+yB3fM/UdKKrLwe
-         2zGjv9qW9nObN5VDmHc4vnc7426gd/7NyYxz8+yA=
-Date:   Thu, 29 Nov 2018 09:03:32 -0600
-From:   Bjorn Helgaas <helgaas@kernel.org>
-To:     sundeep subbaraya <sundeep.lkml@gmail.com>
-Cc:     linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
-        sean.stalley@intel.com, sgoutham@marvell.com,
-        Subbaraya Sundeep <sbhatta@marvell.com>
-Subject: Re: [PATCH v2] PCI: assign bus numbers present in EA capability for
- bridges
-Message-ID: <20181129150332.GA107073@google.com>
-References: <1542633272-16161-1-git-send-email-sundeep.lkml@gmail.com>
- <20181128215545.GC178809@google.com>
- <CALHRZurM1XgwtaLQw2Nqtcb+uX+SY8thgnKDQUzftO9i9a+_RA@mail.gmail.com>
+        id S1729044AbeK3C5t (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Thu, 29 Nov 2018 21:57:49 -0500
+X-Amp-Result: SKIPPED(no attachment in message)
+X-Amp-File-Uploaded: False
+Received: from orsmga001.jf.intel.com ([10.7.209.18])
+  by fmsmga104.fm.intel.com with ESMTP/TLS/DHE-RSA-AES256-GCM-SHA384; 29 Nov 2018 07:52:00 -0800
+X-ExtLoop1: 1
+X-IronPort-AV: E=Sophos;i="5.56,295,1539673200"; 
+   d="scan'208";a="113754391"
+Received: from black.fi.intel.com ([10.237.72.28])
+  by orsmga001.jf.intel.com with ESMTP; 29 Nov 2018 07:51:54 -0800
+Received: by black.fi.intel.com (Postfix, from userid 1001)
+        id 05843325; Thu, 29 Nov 2018 17:51:53 +0200 (EET)
+From:   Mika Westerberg <mika.westerberg@linux.intel.com>
+To:     iommu@lists.linux-foundation.org
+Cc:     Joerg Roedel <joro@8bytes.org>,
+        David Woodhouse <dwmw2@infradead.org>,
+        Lu Baolu <baolu.lu@linux.intel.com>,
+        Ashok Raj <ashok.raj@intel.com>,
+        Bjorn Helgaas <bhelgaas@google.com>,
+        "Rafael J. Wysocki" <rjw@rjwysocki.net>,
+        Jacob jun Pan <jacob.jun.pan@intel.com>,
+        Andreas Noever <andreas.noever@gmail.com>,
+        Michael Jamet <michael.jamet@intel.com>,
+        Yehezkel Bernat <YehezkelShB@gmail.com>,
+        Lukas Wunner <lukas@wunner.de>,
+        Christian Kellner <ckellner@redhat.com>,
+        Mario.Limonciello@dell.com,
+        Anthony Wong <anthony.wong@canonical.com>,
+        Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
+        Christoph Hellwig <hch@infradead.org>,
+        Alex Williamson <alex.williamson@redhat.com>,
+        Mika Westerberg <mika.westerberg@linux.intel.com>,
+        linux-acpi@vger.kernel.org, linux-pci@vger.kernel.org,
+        linux-kernel@vger.kernel.org
+Subject: [PATCH v3 4/4] thunderbolt: Export IOMMU based DMA protection support to userspace
+Date:   Thu, 29 Nov 2018 18:51:53 +0300
+Message-Id: <20181129155153.35840-5-mika.westerberg@linux.intel.com>
+X-Mailer: git-send-email 2.19.2
+In-Reply-To: <20181129155153.35840-1-mika.westerberg@linux.intel.com>
+References: <20181129155153.35840-1-mika.westerberg@linux.intel.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <CALHRZurM1XgwtaLQw2Nqtcb+uX+SY8thgnKDQUzftO9i9a+_RA@mail.gmail.com>
-User-Agent: Mutt/1.10.1 (2018-07-13)
+Content-Transfer-Encoding: 8bit
 Sender: linux-pci-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-On Thu, Nov 29, 2018 at 07:00:14PM +0530, sundeep subbaraya wrote:
-> On Thu, Nov 29, 2018 at 3:25 AM Bjorn Helgaas <helgaas@kernel.org> wrote:
-> > On Mon, Nov 19, 2018 at 06:44:32PM +0530, sundeep.lkml@gmail.com wrote:
-> > > From: Subbaraya Sundeep <sbhatta@marvell.com>
-> > >
-> > > As per the spec, bridges with EA capability work
-> > > with fixed secondary and subordinate bus numbers.
-> > > Hence assign bus numbers to bridges from EA if the
-> > > capability exists.
-> >
-> > A reference to the spec section would be good, i.e., PCIe r4.0, sec xxx.
-> >
-> Ok. I referred ECN 2014 section 6.9.1.2.
-> 
-> > > Signed-off-by: Subbaraya Sundeep <sbhatta@marvell.com>
-> > > ---
-> > > Changes for v2:
-> > >       No changes just added Sean Stalley who did EA support for BARs.
-> > >
-> > >  drivers/pci/probe.c           | 58 ++++++++++++++++++++++++++++++++++++++++---
-> > >  include/uapi/linux/pci_regs.h |  6 +++++
-> > >  2 files changed, 60 insertions(+), 4 deletions(-)
-> > >
-> > > diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
-> > > index b1c05b5..f41d2e6 100644
-> > > --- a/drivers/pci/probe.c
-> > > +++ b/drivers/pci/probe.c
-> > > @@ -1030,6 +1030,40 @@ static void pci_enable_crs(struct pci_dev *pdev)
-> > >
-> > >  static unsigned int pci_scan_child_bus_extend(struct pci_bus *bus,
-> > >                                             unsigned int available_buses);
-> > > +/*
-> > > + * pci_ea_fixed_busnrs() - Read fixed Secondary and Subordinate bus
-> > > + * numbers from EA capability.
-> > > + * @dev: Bridge with EA
-> > > + * @secondary: updated with secondary bus number in EA
-> > > + * @subordinate: updated with subordinate bus number in EA
-> > > + *
-> > > + * If it is a bridge with EA capability then fixed bus numbers are
-> > > + * read from EA capability list and secondary, subordinate reference
-> > > + * variables will be updated. Otherwise secondary and subordinate reference
-> > > + * variables will be zeroed.
-> > > + */
-> > > +static void pci_ea_fixed_busnrs(struct pci_dev *dev, u8 *secondary,
-> > > +                             u8 *subordinate)
-> > > +{
-> > > +     int ea;
-> > > +     int offset;
-> > > +     u32 dw;
-> > > +
-> > > +     *secondary = *subordinate = 0;
-> > > +
-> > > +     if (dev->hdr_type != PCI_HEADER_TYPE_BRIDGE)
-> > > +             return;
-> > > +
-> > > +     /* find PCI EA capability in list */
-> > > +     ea = pci_find_capability(dev, PCI_CAP_ID_EA);
-> > > +     if (!ea)
-> > > +             return;
-> > > +
-> > > +     offset = ea + PCI_EA_FIRST_ENT;
-> > > +     pci_read_config_dword(dev, offset, &dw);
-> >
-> > "Num Entries" in the first DW of the capability is allowed to be zero,
-> > in which case this word (the second DW) is invalid.  [See comments
-> > below; this code would be valid based on the 2014 ECN, but not per the
-> > 2017 PCIe r4.0 spec]
-> >
-> Yes but Entries follow after first DW of EA capability for devices and
-> after second
-> DW for bridges.
-> 2014 ECN says for bridges DW2 of EA must be present:
-> "For Type 1 functions only, there is a second DW in the capability,
-> preceding the first entry.
-> This second DW must be included in the Enhanced Allocation Capability
-> whenever this
-> capability is implemented in a Type 1 Function"
-> So for normal device EA DW1, Entries(if any)
-> for bridges EA DW1,EA DW2, Entries(if any)
-> 
-> > It would be much better if this function could be somehow incorporated
-> > into pci_ea_init(), which already knows how to parse much of the EA
-> > capability.
-> >
-> I initially thought of this but didn't do it to avoid new members in pci_dev.
-> 
-> > > +     *secondary =  dw & PCI_EA_SEC_BUS_MASK;
-> > > +     *subordinate = (dw & PCI_EA_SUB_BUS_MASK) >> PCI_EA_SUB_BUS_SHIFT;
-> > > +}
-> > >
-> > >  /*
-> > >   * pci_scan_bridge_extend() - Scan buses behind a bridge
-> > > @@ -1064,6 +1098,8 @@ static int pci_scan_bridge_extend(struct pci_bus *bus, struct pci_dev *dev,
-> > >       u16 bctl;
-> > >       u8 primary, secondary, subordinate;
-> > >       int broken = 0;
-> > > +     u8 fixed_sec, fixed_sub;
-> > > +     int next_busnr;
-> > >
-> > >       /*
-> > >        * Make sure the bridge is powered on to be able to access config
-> > > @@ -1163,17 +1199,25 @@ static int pci_scan_bridge_extend(struct pci_bus *bus, struct pci_dev *dev,
-> > >               /* Clear errors */
-> > >               pci_write_config_word(dev, PCI_STATUS, 0xffff);
-> > >
-> > > +             /* read bus numbers from EA */
-> > > +             pci_ea_fixed_busnrs(dev, &fixed_sec, &fixed_sub);
-> > > +
-> > > +             next_busnr = max + 1;
-> > > +             /* Use secondary bus number in EA */
-> > > +             if (fixed_sec)
-> > > +                     next_busnr = fixed_sec;
-> > > +
-> > >               /*
-> > >                * Prevent assigning a bus number that already exists.
-> > >                * This can happen when a bridge is hot-plugged, so in this
-> > >                * case we only re-scan this bus.
-> > >                */
-> > > -             child = pci_find_bus(pci_domain_nr(bus), max+1);
-> > > +             child = pci_find_bus(pci_domain_nr(bus), next_busnr);
-> > >               if (!child) {
-> > > -                     child = pci_add_new_bus(bus, dev, max+1);
-> > > +                     child = pci_add_new_bus(bus, dev, next_busnr);
-> > >                       if (!child)
-> > >                               goto out;
-> > > -                     pci_bus_insert_busn_res(child, max+1,
-> > > +                     pci_bus_insert_busn_res(child, next_busnr,
-> > >                                               bus->busn_res.end);
-> > >               }
-> > >               max++;
-> > > @@ -1234,7 +1278,13 @@ static int pci_scan_bridge_extend(struct pci_bus *bus, struct pci_dev *dev,
-> > >                       max += i;
-> > >               }
-> > >
-> > > -             /* Set subordinate bus number to its real value */
-> > > +             /*
-> > > +              * Set subordinate bus number to its real value.
-> > > +              * If fixed subordinate bus number exists from EA
-> > > +              * capability then use it.
-> > > +              */
-> > > +             if (fixed_sub)
-> > > +                     max = fixed_sub;
-> > >               pci_bus_update_busn_res_end(child, max);
-> > >               pci_write_config_byte(dev, PCI_SUBORDINATE_BUS, max);
-> > >       }
-> > > diff --git a/include/uapi/linux/pci_regs.h b/include/uapi/linux/pci_regs.h
-> > > index e1e9888..c3d0904 100644
-> > > --- a/include/uapi/linux/pci_regs.h
-> > > +++ b/include/uapi/linux/pci_regs.h
-> > > @@ -372,6 +372,12 @@
-> > >  #define PCI_EA_FIRST_ENT_BRIDGE      8       /* First EA Entry for Bridges */
-> >
-> > You didn't add PCI_EA_FIRST_ENT_BRIDGE (Sean did with f80b0ba95964
-> > ("PCI: Add Enhanced Allocation register entries")), but it is unused
-> > and I can't match it with anything in the spec (PCIe r4.0, sec 7.8.5).
-> >
-> > It might be related to the code in pci_ea_init() that skips DWORD 2
-> > for type 1 functions.  But I still don't see that in the spec.
-> >
-> > If it's obsolete, we should remove it (with a separate patch).
-> >
-> PCI_EA_FIRST_ENT_BRIDGE is not needed we can remove.
-> I will send a patch to remove it.
-> I will add new members for fixed secondary and subordinate bus numbers in
-> pci_dev and make changes as below please let me know it is okay for you:
-> @@ -2909,6 +2909,7 @@ void pci_ea_init(struct pci_dev *dev)
->         u8 num_ent;
->         int offset;
->         int i;
-> +      u32 dw;
-> 
->         /* find PCI EA capability in list */
->         ea = pci_find_capability(dev, PCI_CAP_ID_EA); @@ -2922,9
-> +2923,14 @@ void pci_ea_init(struct pci_dev *dev)
->         offset = ea + PCI_EA_FIRST_ENT;
-> -       /* Skip DWORD 2 for type 1 functions */
-> -       if (dev->hdr_type == PCI_HEADER_TYPE_BRIDGE)
-> +       /* Note fixed bus numbers for type 1 functions */
-> +       if (dev->hdr_type == PCI_HEADER_TYPE_BRIDGE) {
-> +               pci_read_config_dword(dev, offset, &dw);
-> +               dev->fixed_sec_busnr = dw & PCI_EA_FIXED_SEC_BUS;
-> +               dev->fixed_sub_busnr = (dw & PCI_EA_FIXED_SUB_BUS) >>
-> +                                       PCI_EA_FIXED_SUB_SHIFT;
->                 offset += 4;
-> +       }
-> 
-> > Hmm, I do see this in the ECN dated 23 Oct 2014, sec 6.9.1.2.  But
-> > presumably that would be incorporated in PCIe r4.0, which is dated 27
-> > Sep 2017.
-> >
-> > I have no idea what to do with this.  I can't merge this without some
-> > clarification here,
-> >
-> Yeah I see there is no mention of EA for bridges in r4.0.
-> Since we check whether the device is bridge or not before reading DW2 of EA
-> I guess we are okay.
+Recent systems with Thunderbolt ports may support IOMMU natively. In
+practice this means that Thunderbolt connected devices are placed behind
+an IOMMU during the whole time it is connected (including during boot)
+making Thunderbolt security levels redundant. This is called Kernel DMA
+protection [1] by Microsoft.
 
-I don't think so.  We need at least some plan to clarify this in the
-spec.  I think Sean is plugged into the PCI-SIG, so maybe he can help
-with that?
+Some of these systems still have Thunderbolt security level set to
+"user" in order to support OS downgrade (the older version of the OS
+might not support IOMMU based DMA protection so connecting a device
+still relies on user approval).
 
-Bjorn
+Export this information to userspace by introducing a new sysfs
+attribute (iommu_dma_protection). Based on it userspace tools can make
+more accurate decision whether or not authorize the connected device.
+
+In addition update Thunderbolt documentation regarding IOMMU based DMA
+protection.
+
+[1] https://docs.microsoft.com/en-us/windows/security/information-protection/kernel-dma-protection-for-thunderbolt
+
+Signed-off-by: Mika Westerberg <mika.westerberg@linux.intel.com>
+Reviewed-by: Yehezkel Bernat <YehezkelShB@gmail.com>
+---
+ .../ABI/testing/sysfs-bus-thunderbolt         |  9 +++++++++
+ Documentation/admin-guide/thunderbolt.rst     | 20 +++++++++++++++++++
+ drivers/thunderbolt/domain.c                  | 17 ++++++++++++++++
+ 3 files changed, 46 insertions(+)
+
+diff --git a/Documentation/ABI/testing/sysfs-bus-thunderbolt b/Documentation/ABI/testing/sysfs-bus-thunderbolt
+index 151584a1f950..b21fba14689b 100644
+--- a/Documentation/ABI/testing/sysfs-bus-thunderbolt
++++ b/Documentation/ABI/testing/sysfs-bus-thunderbolt
+@@ -21,6 +21,15 @@ Description:	Holds a comma separated list of device unique_ids that
+ 		If a device is authorized automatically during boot its
+ 		boot attribute is set to 1.
+ 
++What: /sys/bus/thunderbolt/devices/.../domainX/iommu_dma_protection
++Date:		Mar 2019
++KernelVersion:	4.21
++Contact:	thunderbolt-software@lists.01.org
++Description:	This attribute tells whether the system uses IOMMU
++		for DMA protection. Value of 1 means IOMMU is used 0 means
++		it is not (DMA protection is solely based on Thunderbolt
++		security levels).
++
+ What: /sys/bus/thunderbolt/devices/.../domainX/security
+ Date:		Sep 2017
+ KernelVersion:	4.13
+diff --git a/Documentation/admin-guide/thunderbolt.rst b/Documentation/admin-guide/thunderbolt.rst
+index 35fccba6a9a6..898ad78f3cc7 100644
+--- a/Documentation/admin-guide/thunderbolt.rst
++++ b/Documentation/admin-guide/thunderbolt.rst
+@@ -133,6 +133,26 @@ If the user still wants to connect the device they can either approve
+ the device without a key or write a new key and write 1 to the
+ ``authorized`` file to get the new key stored on the device NVM.
+ 
++DMA protection utilizing IOMMU
++------------------------------
++Recent systems from 2018 and forward with Thunderbolt ports may natively
++support IOMMU. This means that Thunderbolt security is handled by an IOMMU
++so connected devices cannot access memory regions outside of what is
++allocated for them by drivers. When Linux is running on such system it
++automatically enables IOMMU if not enabled by the user already. These
++systems can be identified by reading ``1`` from
++``/sys/bus/thunderbolt/devices/domainX/iommu_dma_protection`` attribute.
++
++The driver does not do anything special in this case but because DMA
++protection is handled by the IOMMU, security levels (if set) are
++redundant. For this reason some systems ship with security level set to
++``none``. Other systems have security level set to ``user`` in order to
++support downgrade to older OS, so users who want to automatically
++authorize devices when IOMMU DMA protection is enabled can use the
++following ``udev`` rule::
++
++  ACTION=="add", SUBSYSTEM=="thunderbolt", ATTRS{iommu_dma_protection}=="1", ATTR{authorized}=="0", ATTR{authorized}="1"
++
+ Upgrading NVM on Thunderbolt device or host
+ -------------------------------------------
+ Since most of the functionality is handled in firmware running on a
+diff --git a/drivers/thunderbolt/domain.c b/drivers/thunderbolt/domain.c
+index 93e562f18d40..7416bdbd8576 100644
+--- a/drivers/thunderbolt/domain.c
++++ b/drivers/thunderbolt/domain.c
+@@ -7,7 +7,9 @@
+  */
+ 
+ #include <linux/device.h>
++#include <linux/dmar.h>
+ #include <linux/idr.h>
++#include <linux/iommu.h>
+ #include <linux/module.h>
+ #include <linux/pm_runtime.h>
+ #include <linux/slab.h>
+@@ -236,6 +238,20 @@ static ssize_t boot_acl_store(struct device *dev, struct device_attribute *attr,
+ }
+ static DEVICE_ATTR_RW(boot_acl);
+ 
++static ssize_t iommu_dma_protection_show(struct device *dev,
++					 struct device_attribute *attr,
++					 char *buf)
++{
++	/*
++	 * Kernel DMA protection is a feature where Thunderbolt security is
++	 * handled natively using IOMMU. It is enabled when IOMMU is
++	 * enabled and ACPI DMAR table has DMAR_PLATFORM_OPT_IN set.
++	 */
++	return sprintf(buf, "%d\n",
++		       iommu_present(&pci_bus_type) && dmar_platform_optin());
++}
++static DEVICE_ATTR_RO(iommu_dma_protection);
++
+ static ssize_t security_show(struct device *dev, struct device_attribute *attr,
+ 			     char *buf)
+ {
+@@ -251,6 +267,7 @@ static DEVICE_ATTR_RO(security);
+ 
+ static struct attribute *domain_attrs[] = {
+ 	&dev_attr_boot_acl.attr,
++	&dev_attr_iommu_dma_protection.attr,
+ 	&dev_attr_security.attr,
+ 	NULL,
+ };
+-- 
+2.19.2
+
