@@ -2,76 +2,239 @@ Return-Path: <SRS0=gDpg=OJ=vger.kernel.org=linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-4.1 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
-	DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SIGNED_OFF_BY,
-	SPF_PASS,URIBL_BLOCKED autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-7.0 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_PASS,UNPARSEABLE_RELAY,
+	URIBL_BLOCKED autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id CB971C04EB9
-	for <linux-pci@archiver.kernel.org>; Fri, 30 Nov 2018 00:07:22 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 8C113C64EB4
+	for <linux-pci@archiver.kernel.org>; Fri, 30 Nov 2018 02:31:13 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 7FDB020868
-	for <linux-pci@archiver.kernel.org>; Fri, 30 Nov 2018 00:07:22 +0000 (UTC)
-Authentication-Results: mail.kernel.org;
-	dkim=pass (1024-bit key) header.d=linaro.org header.i=@linaro.org header.b="iVYGtaRh"
-DMARC-Filter: OpenDMARC Filter v1.3.2 mail.kernel.org 7FDB020868
-Authentication-Results: mail.kernel.org; dmarc=fail (p=none dis=none) header.from=linaro.org
+	by mail.kernel.org (Postfix) with ESMTP id 4D21A2146F
+	for <linux-pci@archiver.kernel.org>; Fri, 30 Nov 2018 02:31:13 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.3.2 mail.kernel.org 4D21A2146F
+Authentication-Results: mail.kernel.org; dmarc=none (p=none dis=none) header.from=mediatek.com
 Authentication-Results: mail.kernel.org; spf=none smtp.mailfrom=linux-pci-owner@vger.kernel.org
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726446AbeK3LOk (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Fri, 30 Nov 2018 06:14:40 -0500
-Received: from mail-ed1-f67.google.com ([209.85.208.67]:45829 "EHLO
-        mail-ed1-f67.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726393AbeK3LOk (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Fri, 30 Nov 2018 06:14:40 -0500
-Received: by mail-ed1-f67.google.com with SMTP id d39so3387844edb.12
-        for <linux-pci@vger.kernel.org>; Thu, 29 Nov 2018 16:07:20 -0800 (PST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=linaro.org; s=google;
-        h=mime-version:references:in-reply-to:from:date:message-id:subject:to
-         :cc;
-        bh=bfk0aDQvIwhgeDS+Vj6aBE+N4EJBjIo9SmyfIBxXHxo=;
-        b=iVYGtaRhxra9IOBBi6RPOA5BYqPqwQsEqVVgWLL4gbU8NwOpGLzRP4EP/Flv3pHbRB
-         q1PrdfKnGRakz6BcKorFqU+nFQDEQofjdsHYDgTPruD4oql4y+vilmDfWOUF1nsCMNKZ
-         QnjkP43Ltk6oHK0c1VnaL5ych342YFN9Q7DTo=
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20161025;
-        h=x-gm-message-state:mime-version:references:in-reply-to:from:date
-         :message-id:subject:to:cc;
-        bh=bfk0aDQvIwhgeDS+Vj6aBE+N4EJBjIo9SmyfIBxXHxo=;
-        b=eutyfy9UMXRtk+lX0eDkU0z2s6KcM7OCQiXF4HdFeQDoGoZH0IEo4kiLTw9c8ubI4N
-         VMoHHPQA7HryOXYGOEQwkBPxaMxCJRKkkySohLahzXNIqqS6gPG/MEurTnwu1N7uTIWb
-         PBU3yifevuj4UtNsaR6j/ZPCzY0W+9Qxrp6R1+JynZ2mNnR1TfvZYA0VY4rlj79mEyvZ
-         E2loC4zHANR+omhS6LemgoLHPjkrkl5cPPhR1BMyzv+IuF2iYt5N0LeytaOwI2oIGfnP
-         3o1TQ+wXYSUJw8memqOOAU/+vJAP7GpNluVZ+OjQOjmE0DVI/KcE6QwKPabzR6b5dhgL
-         FmlQ==
-X-Gm-Message-State: AA+aEWYIBEGJzkQy10xL4kJCMAWoWPXYdHG5Cne9W7o/60LNN4c4yxDr
-        /CTM1xjkpfOkl/ttvc9OjH8Rc6hYPi+CNd5laDUVVA==
-X-Google-Smtp-Source: AFSGD/U17+NqP17Y120cbtc6KVH27hCs1NpuT8yx4pWxv0lKxS6SHBiPLzFb0zxhWbaCuq2dKgSO+pC/chuXs2xd3x8=
-X-Received: by 2002:a05:6402:1299:: with SMTP id w25mr3156037edv.237.1543536439879;
- Thu, 29 Nov 2018 16:07:19 -0800 (PST)
-MIME-Version: 1.0
-References: <20181129182354.3273-1-lorenzo.pieralisi@arm.com>
-In-Reply-To: <20181129182354.3273-1-lorenzo.pieralisi@arm.com>
-From:   Shawn Guo <shawn.guo@linaro.org>
-Date:   Fri, 30 Nov 2018 08:06:59 +0800
-Message-ID: <CAAQ0ZWQhVwjHAkd-tYe2K+YDZ9-Srzn5tyPA2nQxYf2ZUEY6aQ@mail.gmail.com>
-Subject: Re: [PATCH] MAINTAINERS: Remove Jianguo Sun from Hisilicon STB DWC entry
+        id S1726609AbeK3Niw (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Fri, 30 Nov 2018 08:38:52 -0500
+Received: from mailgw02.mediatek.com ([1.203.163.81]:17198 "EHLO
+        mailgw02.mediatek.com" rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org
+        with ESMTP id S1726161AbeK3Niw (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Fri, 30 Nov 2018 08:38:52 -0500
+X-UUID: e502bc003ce848efb427af08f1479f7f-20181130
+X-UUID: e502bc003ce848efb427af08f1479f7f-20181130
+Received: from mtkcas32.mediatek.inc [(172.27.4.250)] by mailgw02.mediatek.com
+        (envelope-from <honghui.zhang@mediatek.com>)
+        (mailgw01.mediatek.com ESMTP with TLS)
+        with ESMTP id 1413464676; Fri, 30 Nov 2018 10:31:01 +0800
+Received: from MTKCAS32.mediatek.inc (172.27.4.184) by MTKMBS31DR.mediatek.inc
+ (172.27.6.102) with Microsoft SMTP Server (TLS) id 15.0.1395.4; Fri, 30 Nov
+ 2018 10:30:59 +0800
+Received: from [10.17.3.153] (10.17.3.153) by MTKCAS32.mediatek.inc
+ (172.27.4.170) with Microsoft SMTP Server id 15.0.1395.4 via Frontend
+ Transport; Fri, 30 Nov 2018 10:30:59 +0800
+Message-ID: <1543545059.3753.4.camel@mhfsdcap03>
+Subject: Re: [PATCH v2] PCI: mediatek: Use
+ devm_of_pci_get_host_bridge_resources() to parse DT
+From:   Honghui Zhang <honghui.zhang@mediatek.com>
 To:     Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
-Cc:     linux-pci@vger.kernel.org, Bjorn Helgaas <bhelgaas@google.com>
+CC:     <bhelgaas@google.com>, <linux-arm-kernel@lists.infradead.org>,
+        <linux-mediatek@lists.infradead.org>, <linux-pci@vger.kernel.org>,
+        <linux-kernel@vger.kernel.org>, <ryder.lee@mediatek.com>,
+        <devicetree@vger.kernel.org>, <youlin.pei@mediatek.com>,
+        <jianjun.wang@mediatek.com>
+Date:   Fri, 30 Nov 2018 10:30:59 +0800
+In-Reply-To: <20181129113324.GA27228@e107981-ln.cambridge.arm.com>
+References: <1541645815-30340-1-git-send-email-honghui.zhang@mediatek.com>
+         <20181129113324.GA27228@e107981-ln.cambridge.arm.com>
 Content-Type: text/plain; charset="UTF-8"
+X-Mailer: Evolution 3.2.3-0ubuntu6 
+Content-Transfer-Encoding: 7bit
+MIME-Version: 1.0
+X-MTK:  N
 Sender: linux-pci-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-On Fri, Nov 30, 2018 at 2:24 AM Lorenzo Pieralisi
-<lorenzo.pieralisi@arm.com> wrote:
->
-> Jianguo Sun's email address reported in MAINTAINERS is not active any
-> longer, remove it from the DWC Hisilicon STB entry.
->
-> Signed-off-by: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
-> Cc: Bjorn Helgaas <bhelgaas@google.com>
-> Cc: Shawn Guo <shawn.guo@linaro.org>
+On Thu, 2018-11-29 at 11:33 +0000, Lorenzo Pieralisi wrote:
+> On Thu, Nov 08, 2018 at 10:56:55AM +0800, honghui.zhang@mediatek.com wrote:
+> > From: Honghui Zhang <honghui.zhang@mediatek.com>
+> > 
+> > Use the devm_of_pci_get_host_bridge_resources() API in place of the PCI OF
+> > DT parser.
+> > 
+> > Signed-off-by: Honghui Zhang <honghui.zhang@mediatek.com>
+> > ---
+> >  drivers/pci/controller/pcie-mediatek.c | 98 +++++++++-------------------------
+> >  1 file changed, 24 insertions(+), 74 deletions(-)
+> > 
+> > diff --git a/drivers/pci/controller/pcie-mediatek.c b/drivers/pci/controller/pcie-mediatek.c
+> > index 2a1f97c..0590a93 100644
+> > --- a/drivers/pci/controller/pcie-mediatek.c
+> > +++ b/drivers/pci/controller/pcie-mediatek.c
+> > @@ -197,11 +197,7 @@ struct mtk_pcie_port {
+> >   * @dev: pointer to PCIe device
+> >   * @base: IO mapped register base
+> >   * @free_ck: free-run reference clock
+> > - * @io: IO resource
+> > - * @pio: PIO resource
+> >   * @mem: non-prefetchable memory resource
+> > - * @busn: bus range
+> > - * @offset: IO / Memory offset
+> >   * @ports: pointer to PCIe port information
+> >   * @soc: pointer to SoC-dependent operations
+> >   */
+> > @@ -210,14 +206,7 @@ struct mtk_pcie {
+> >  	void __iomem *base;
+> >  	struct clk *free_ck;
+> >  
+> > -	struct resource io;
+> > -	struct resource pio;
+> >  	struct resource mem;
+> > -	struct resource busn;
+> > -	struct {
+> > -		resource_size_t mem;
+> > -		resource_size_t io;
+> > -	} offset;
+> >  	struct list_head ports;
+> >  	const struct mtk_pcie_soc *soc;
+> >  };
+> > @@ -1045,55 +1034,43 @@ static int mtk_pcie_setup(struct mtk_pcie *pcie)
+> >  {
+> >  	struct device *dev = pcie->dev;
+> >  	struct device_node *node = dev->of_node, *child;
+> > -	struct of_pci_range_parser parser;
+> > -	struct of_pci_range range;
+> > -	struct resource res;
+> >  	struct mtk_pcie_port *port, *tmp;
+> > +	struct pci_host_bridge *host = pci_host_bridge_from_priv(pcie);
+> > +	struct list_head *windows = &host->windows;
+> > +	struct resource_entry *win, *tmp_win;
+> > +	resource_size_t io_base;
+> >  	int err;
+> >  
+> > -	if (of_pci_range_parser_init(&parser, node)) {
+> > -		dev_err(dev, "missing \"ranges\" property\n");
+> > -		return -EINVAL;
+> > -	}
+> > +	err = devm_of_pci_get_host_bridge_resources(dev, 0, 0xff,
+> > +						    windows, &io_base);
+> > +	if (err)
+> > +		return err;
+> >  
+> > -	for_each_of_pci_range(&parser, &range) {
+> > -		err = of_pci_range_to_resource(&range, node, &res);
+> > -		if (err < 0)
+> > -			return err;
+> > +	err = devm_request_pci_bus_resources(dev, windows);
+> > +	if (err < 0)
+> > +		return err;
+> >  
+> > -		switch (res.flags & IORESOURCE_TYPE_BITS) {
+> > +	/* Get the I/O and memory ranges from DT */
+> > +	resource_list_for_each_entry_safe(win, tmp_win, windows) {
+> > +		switch (resource_type(win->res)) {
+> >  		case IORESOURCE_IO:
+> > -			pcie->offset.io = res.start - range.pci_addr;
+> > -
+> > -			memcpy(&pcie->pio, &res, sizeof(res));
+> > -			pcie->pio.name = node->full_name;
+> > -
+> > -			pcie->io.start = range.cpu_addr;
+> > -			pcie->io.end = range.cpu_addr + range.size - 1;
+> > -			pcie->io.flags = IORESOURCE_MEM;
+> > -			pcie->io.name = "I/O";
+> > -
+> > -			memcpy(&res, &pcie->io, sizeof(res));
+> > +			err = devm_pci_remap_iospace(dev, win->res, io_base);
+> > +			if (err) {
+> > +				dev_warn(dev, "error %d: failed to map resource %pR\n",
+> > +					 err, win->res);
+> > +				resource_list_destroy_entry(win);
+> > +			}
+> >  			break;
+> > -
+> >  		case IORESOURCE_MEM:
+> > -			pcie->offset.mem = res.start - range.pci_addr;
+> > -
+> > -			memcpy(&pcie->mem, &res, sizeof(res));
+> > +			memcpy(&pcie->mem, win->res, sizeof(*win->res));
+> >  			pcie->mem.name = "non-prefetchable";
+> >  			break;
+> > +		case IORESOURCE_BUS:
+> > +			host->busnr = win->res->start;
+> > +			break;
+> >  		}
+> >  	}
+> >  
+> > -	err = of_pci_parse_bus_range(node, &pcie->busn);
+> > -	if (err < 0) {
+> > -		dev_err(dev, "failed to parse bus ranges property: %d\n", err);
+> > -		pcie->busn.name = node->name;
+> > -		pcie->busn.start = 0;
+> > -		pcie->busn.end = 0xff;
+> > -		pcie->busn.flags = IORESOURCE_BUS;
+> > -	}
+> > -
+> >  	for_each_available_child_of_node(node, child) {
+> >  		int slot;
+> >  
+> > @@ -1125,28 +1102,6 @@ static int mtk_pcie_setup(struct mtk_pcie *pcie)
+> >  	return 0;
+> >  }
+> >  
+> > -static int mtk_pcie_request_resources(struct mtk_pcie *pcie)
+> > -{
+> > -	struct pci_host_bridge *host = pci_host_bridge_from_priv(pcie);
+> > -	struct list_head *windows = &host->windows;
+> > -	struct device *dev = pcie->dev;
+> > -	int err;
+> > -
+> > -	pci_add_resource_offset(windows, &pcie->pio, pcie->offset.io);
+> > -	pci_add_resource_offset(windows, &pcie->mem, pcie->offset.mem);
+> > -	pci_add_resource(windows, &pcie->busn);
+> > -
+> > -	err = devm_request_pci_bus_resources(dev, windows);
+> > -	if (err < 0)
+> > -		return err;
+> > -
+> > -	err = devm_pci_remap_iospace(dev, &pcie->pio, pcie->io.start);
+> > -	if (err < 0)
+> > -		return err;
+> > -
+> > -	return 0;
+> > -}
+> > -
+> >  static int mtk_pcie_probe(struct platform_device *pdev)
+> >  {
+> >  	struct device *dev = &pdev->dev;
+> > @@ -1169,11 +1124,6 @@ static int mtk_pcie_probe(struct platform_device *pdev)
+> >  	if (err)
+> >  		return err;
+> >  
+> > -	err = mtk_pcie_request_resources(pcie);
+> > -	if (err)
+> > -		goto put_resources;
+> > -
+> > -	host->busnr = pcie->busn.start;
+> >  	host->dev.parent = pcie->dev;
+> >  	host->ops = pcie->soc->ops;
+> >  	host->map_irq = of_irq_parse_and_map_pci;
+> 
+> I would prefer having all the host initialization carried out in a
+> single function. I appreciate you may need to reintroduce a temporary
+> busnumber value or reshuffle the code to do that, sorry for asking to
+> change it again but I do not want to see the struct pci_host_bridge
+> variables initialization scattered around, it is confusing.
+> 
+Okay, I will change it in the next version, and I will ask Ryder for
+review internally and if it's OK with him I will add his ack directly in
+the next version.
 
-Acked-by: Shawn Guo <shawn.guo@linaro.org>
+Thanks.
+
+> Thanks,
+> Lorenzo
+
+
