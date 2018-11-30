@@ -3,249 +3,224 @@ X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
 X-Spam-Status: No, score=-8.5 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_PASS,USER_AGENT_MUTT
-	autolearn=ham autolearn_force=no version=3.4.0
+	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_PASS,URIBL_BLOCKED,
+	USER_AGENT_MUTT autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 0A01BC04EB8
-	for <linux-pci@archiver.kernel.org>; Fri, 30 Nov 2018 16:22:30 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 9765EC04EB8
+	for <linux-pci@archiver.kernel.org>; Fri, 30 Nov 2018 17:12:04 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id CF64420834
-	for <linux-pci@archiver.kernel.org>; Fri, 30 Nov 2018 16:22:29 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.3.2 mail.kernel.org CF64420834
+	by mail.kernel.org (Postfix) with ESMTP id 567BA20834
+	for <linux-pci@archiver.kernel.org>; Fri, 30 Nov 2018 17:12:04 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.3.2 mail.kernel.org 567BA20834
 Authentication-Results: mail.kernel.org; dmarc=none (p=none dis=none) header.from=arm.com
 Authentication-Results: mail.kernel.org; spf=none smtp.mailfrom=linux-pci-owner@vger.kernel.org
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726883AbeLADcS (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Fri, 30 Nov 2018 22:32:18 -0500
-Received: from foss.arm.com ([217.140.101.70]:60252 "EHLO foss.arm.com"
+        id S1726659AbeLAEWB (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Fri, 30 Nov 2018 23:22:01 -0500
+Received: from foss.arm.com ([217.140.101.70]:60836 "EHLO foss.arm.com"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1726881AbeLADcS (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Fri, 30 Nov 2018 22:32:18 -0500
+        id S1726647AbeLAEWB (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Fri, 30 Nov 2018 23:22:01 -0500
 Received: from usa-sjc-imap-foss1.foss.arm.com (unknown [10.72.51.249])
-        by usa-sjc-mx-foss1.foss.arm.com (Postfix) with ESMTP id 1659BA78;
-        Fri, 30 Nov 2018 08:22:28 -0800 (PST)
+        by usa-sjc-mx-foss1.foss.arm.com (Postfix) with ESMTP id E8129EBD;
+        Fri, 30 Nov 2018 09:12:02 -0800 (PST)
 Received: from e107981-ln.cambridge.arm.com (e107981-ln.cambridge.arm.com [10.1.197.40])
-        by usa-sjc-imap-foss1.foss.arm.com (Postfix) with ESMTPSA id 887E03F5AF;
-        Fri, 30 Nov 2018 08:22:24 -0800 (PST)
-Date:   Fri, 30 Nov 2018 16:22:15 +0000
+        by usa-sjc-imap-foss1.foss.arm.com (Postfix) with ESMTPSA id 6D6423F5A0;
+        Fri, 30 Nov 2018 09:12:01 -0800 (PST)
+Date:   Fri, 30 Nov 2018 17:11:58 +0000
 From:   Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
-To:     Xiaowei Bao <xiaowei.bao@nxp.com>
-Cc:     bhelgaas@google.com, robh+dt@kernel.org, mark.rutland@arm.com,
-        shawnguo@kernel.org, leoyang.li@nxp.com, kishon@ti.com,
-        arnd@arndb.de, gregkh@linuxfoundation.org, minghuan.Lian@nxp.com,
-        mingkai.hu@nxp.com, roy.zang@nxp.com, kstewart@linuxfoundation.org,
-        cyrille.pitchen@free-electrons.com, pombredanne@nexb.com,
-        shawn.lin@rock-chips.com, niklas.cassel@axis.com,
-        linux-pci@vger.kernel.org, devicetree@vger.kernel.org,
-        linux-kernel@vger.kernel.org, linux-arm-kernel@lists.infradead.org,
-        linuxppc-dev@lists.ozlabs.org
-Subject: Re: [PATCHv2 5/6] pci: layerscape: Add the EP mode support.
-Message-ID: <20181130162214.GA23332@e107981-ln.cambridge.arm.com>
-References: <20181105084653.26597-1-xiaowei.bao@nxp.com>
- <20181105084653.26597-5-xiaowei.bao@nxp.com>
+To:     Stephen Warren <swarren@wwwdotorg.org>
+Cc:     Jingoo Han <jingoohan1@gmail.com>,
+        Gustavo Pimentel <gustavo.pimentel@synopsys.com>,
+        Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org,
+        Vidya Sagar <vidyas@nvidia.com>,
+        Manikanta Maddireddy <mmaddireddy@nvidia.com>,
+        Stephen Warren <swarren@nvidia.com>
+Subject: Re: [PATCH V2] PCI: dwc: Don't hard-code DBI/ATU offset
+Message-ID: <20181130171158.GB23332@e107981-ln.cambridge.arm.com>
+References: <20181120175750.26141-1-swarren@wwwdotorg.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20181105084653.26597-5-xiaowei.bao@nxp.com>
+In-Reply-To: <20181120175750.26141-1-swarren@wwwdotorg.org>
 User-Agent: Mutt/1.5.24 (2015-08-30)
 Sender: linux-pci-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-On Mon, Nov 05, 2018 at 04:46:52PM +0800, Xiaowei Bao wrote:
-> Add the PCIe EP mode support for layerscape platform.
+On Tue, Nov 20, 2018 at 10:57:50AM -0700, Stephen Warren wrote:
+> From: Stephen Warren <swarren@nvidia.com>
 > 
-> Signed-off-by: Xiaowei Bao <xiaowei.bao@nxp.com>
+> The DWC PCIe core contains various separate register spaces: DBI, DBI2,
+> ATU, DMA, etc. The relationship between the addresses of these register
+> spaces is entirely determined by the implementation of the IP block, not
+> by the IP block design itself. Hence, the DWC driver must not make
+> assumptions that one register space can be accessed at a fixed offset from
+> any other register space. To avoid such assumptions, introduce an
+> explicit/separate register pointer for the ATU register space. In
+> particular, the current assumption is not valid for NVIDIA's T194 SoC.
+> 
+> The ATU register space is only used on systems that require unrolled ATU
+> access. This property is detected at run-time for host controllers, and
+> when this is detected, this patch provides a default value for atu_base
+> that matches the previous assumption re: register layout. An alternative
+> would be to update all drivers for HW that requires unrolled access to
+> explicitly set atu_base. However, it's hard to tell which drivers would
+> require atu_base to be set. The unrolled property is not detected for
+> endpoint systems, and so any endpoint driver that requires unrolled access
+> must explicitly set the iatu_unroll_enabled flag (none do at present), and
+> so a check is added to require the driver to also set atu_base while at
+> it.
+> 
+> Signed-off-by: Stephen Warren <swarren@nvidia.com>
+> Acked-by: Gustavo Pimentel <gustavo.pimentel@synopsys.com>
 > ---
 > v2:
->  - remove the EP mode check function.
+> * Modified patch subject
+> * Added missing outer brackets to PCIE_GET_ATU_INB_UNR_REG_OFFSET macro
+> ---
+>  .../pci/controller/dwc/pcie-designware-ep.c   |  4 ++++
+>  .../pci/controller/dwc/pcie-designware-host.c |  3 +++
+>  drivers/pci/controller/dwc/pcie-designware.c  |  8 ++++----
+>  drivers/pci/controller/dwc/pcie-designware.h  | 20 +++++++++++++++----
+>  4 files changed, 27 insertions(+), 8 deletions(-)
 > 
->  drivers/pci/controller/dwc/Makefile            |    2 +-
->  drivers/pci/controller/dwc/pci-layerscape-ep.c |  147 ++++++++++++++++++++++++
->  2 files changed, 148 insertions(+), 1 deletions(-)
->  create mode 100644 drivers/pci/controller/dwc/pci-layerscape-ep.c
-> 
-> diff --git a/drivers/pci/controller/dwc/Makefile b/drivers/pci/controller/dwc/Makefile
-> index 5d2ce72..b26d617 100644
-> --- a/drivers/pci/controller/dwc/Makefile
-> +++ b/drivers/pci/controller/dwc/Makefile
-> @@ -8,7 +8,7 @@ obj-$(CONFIG_PCI_EXYNOS) += pci-exynos.o
->  obj-$(CONFIG_PCI_IMX6) += pci-imx6.o
->  obj-$(CONFIG_PCIE_SPEAR13XX) += pcie-spear13xx.o
->  obj-$(CONFIG_PCI_KEYSTONE) += pci-keystone-dw.o pci-keystone.o
-> -obj-$(CONFIG_PCI_LAYERSCAPE) += pci-layerscape.o
-> +obj-$(CONFIG_PCI_LAYERSCAPE) += pci-layerscape.o pci-layerscape-ep.o
->  obj-$(CONFIG_PCIE_QCOM) += pcie-qcom.o
->  obj-$(CONFIG_PCIE_ARMADA_8K) += pcie-armada8k.o
->  obj-$(CONFIG_PCIE_ARTPEC6) += pcie-artpec6.o
-> diff --git a/drivers/pci/controller/dwc/pci-layerscape-ep.c b/drivers/pci/controller/dwc/pci-layerscape-ep.c
-> new file mode 100644
-> index 0000000..289618b
-> --- /dev/null
-> +++ b/drivers/pci/controller/dwc/pci-layerscape-ep.c
-> @@ -0,0 +1,147 @@
-> +// SPDX-License-Identifier: GPL-2.0
-> +/*
-> + * PCIe controller EP driver for Freescale Layerscape SoCs
-> + *
-> + * Copyright (C) 2018 NXP Semiconductor.
-> + *
-> + * Author: Xiaowei Bao <xiaowei.bao@nxp.com>
-> + */
-> +
-> +#include <linux/kernel.h>
-> +#include <linux/init.h>
-> +#include <linux/of_pci.h>
-> +#include <linux/of_platform.h>
-> +#include <linux/of_address.h>
-> +#include <linux/pci.h>
-> +#include <linux/platform_device.h>
-> +#include <linux/resource.h>
-> +
-> +#include "pcie-designware.h"
-> +
-> +#define PCIE_DBI2_OFFSET		0x1000	/* DBI2 base address*/
-> +
-> +struct ls_pcie_ep {
-> +	struct dw_pcie		*pci;
-> +};
-
-I am not really sure why you need an additional struct.
-
-> +#define to_ls_pcie_ep(x)	dev_get_drvdata((x)->dev)
-
-Unused.
-
-> +
-> +static int ls_pcie_establish_link(struct dw_pcie *pci)
-> +{
-> +	return 0;
-> +}
-> +
-> +static const struct dw_pcie_ops ls_pcie_ep_ops = {
-> +	.start_link = ls_pcie_establish_link,
-> +};
-> +
-> +static const struct of_device_id ls_pcie_ep_of_match[] = {
-> +	{ .compatible = "fsl,ls-pcie-ep",},
-> +	{ },
-> +};
-> +
-> +static void ls_pcie_ep_init(struct dw_pcie_ep *ep)
-> +{
-> +	struct dw_pcie *pci = to_dw_pcie_from_ep(ep);
-> +	struct pci_epc *epc = ep->epc;
-> +	enum pci_barno bar;
-> +
-> +	for (bar = BAR_0; bar <= BAR_5; bar++)
-> +		dw_pcie_ep_reset_bar(pci, bar);
-> +
-> +	epc->features |= EPC_FEATURE_NO_LINKUP_NOTIFIER;
-> +}
-> +
-> +static int ls_pcie_ep_raise_irq(struct dw_pcie_ep *ep, u8 func_no,
-> +				  enum pci_epc_irq_type type, u16 interrupt_num)
-> +{
-> +	struct dw_pcie *pci = to_dw_pcie_from_ep(ep);
-> +
-> +	switch (type) {
-> +	case PCI_EPC_IRQ_LEGACY:
-> +		return dw_pcie_ep_raise_legacy_irq(ep, func_no);
-> +	case PCI_EPC_IRQ_MSI:
-> +		return dw_pcie_ep_raise_msi_irq(ep, func_no, interrupt_num);
-> +	case PCI_EPC_IRQ_MSIX:
-> +		return dw_pcie_ep_raise_msix_irq(ep, func_no, interrupt_num);
-> +	default:
-> +		dev_err(pci->dev, "UNKNOWN IRQ type\n");
+> diff --git a/drivers/pci/controller/dwc/pcie-designware-ep.c b/drivers/pci/controller/dwc/pcie-designware-ep.c
+> index 1e7b02221eac..880210366e71 100644
+> --- a/drivers/pci/controller/dwc/pcie-designware-ep.c
+> +++ b/drivers/pci/controller/dwc/pcie-designware-ep.c
+> @@ -504,6 +504,10 @@ int dw_pcie_ep_init(struct dw_pcie_ep *ep)
+>  		dev_err(dev, "dbi_base/dbi_base2 is not populated\n");
+>  		return -EINVAL;
+>  	}
+> +	if (pci->iatu_unroll_enabled && !pci->atu_base) {
+> +		dev_err(dev, "atu_base is not populated\n");
+> +		return -EINVAL;
 > +	}
-> +
-> +	return 0;
+>  
+>  	ret = of_property_read_u32(np, "num-ib-windows", &ep->num_ib_windows);
+>  	if (ret < 0) {
+> diff --git a/drivers/pci/controller/dwc/pcie-designware-host.c b/drivers/pci/controller/dwc/pcie-designware-host.c
+> index 29a05759a294..2ebb7f4768cf 100644
+> --- a/drivers/pci/controller/dwc/pcie-designware-host.c
+> +++ b/drivers/pci/controller/dwc/pcie-designware-host.c
+> @@ -699,6 +699,9 @@ void dw_pcie_setup_rc(struct pcie_port *pp)
+>  		dev_dbg(pci->dev, "iATU unroll: %s\n",
+>  			pci->iatu_unroll_enabled ? "enabled" : "disabled");
+>  
+> +		if (pci->iatu_unroll_enabled && !pci->atu_base)
+> +			pci->atu_base = pci->dbi_base + (0x3 << 20);
 
-So if it falls through to the default, we log an error but return 0 ? This
-does not make much sense.
+Hi Stephen,
 
-I know you probably copy/pasted code from DWC platform, that code must
-be fixed too I suppose.
+I think the patch is sound, minor nit, do you think that making
 
+(0x3 << 20)
+
+a preprocessor macro (and a comment on the default initialization above)
+can help clarify the code ?
+
+eg DEFAULT_ATU_BASE_OFFSET
+
+or something like that.
+
+Please let me know, I can merge the patch as-is, it is just to improve
+readability.
+
+Thanks,
 Lorenzo
 
-> +}
 > +
-> +static struct dw_pcie_ep_ops pcie_ep_ops = {
-> +	.ep_init = ls_pcie_ep_init,
-> +	.raise_irq = ls_pcie_ep_raise_irq,
-> +};
-> +
-> +static int __init ls_add_pcie_ep(struct ls_pcie_ep *pcie,
-> +					struct platform_device *pdev)
+>  		dw_pcie_prog_outbound_atu(pci, PCIE_ATU_REGION_INDEX0,
+>  					  PCIE_ATU_TYPE_MEM, pp->mem_base,
+>  					  pp->mem_bus_addr, pp->mem_size);
+> diff --git a/drivers/pci/controller/dwc/pcie-designware.c b/drivers/pci/controller/dwc/pcie-designware.c
+> index 2153956a0b20..93ef8c31fb39 100644
+> --- a/drivers/pci/controller/dwc/pcie-designware.c
+> +++ b/drivers/pci/controller/dwc/pcie-designware.c
+> @@ -93,7 +93,7 @@ static u32 dw_pcie_readl_ob_unroll(struct dw_pcie *pci, u32 index, u32 reg)
+>  {
+>  	u32 offset = PCIE_GET_ATU_OUTB_UNR_REG_OFFSET(index);
+>  
+> -	return dw_pcie_readl_dbi(pci, offset + reg);
+> +	return dw_pcie_readl_atu(pci, offset + reg);
+>  }
+>  
+>  static void dw_pcie_writel_ob_unroll(struct dw_pcie *pci, u32 index, u32 reg,
+> @@ -101,7 +101,7 @@ static void dw_pcie_writel_ob_unroll(struct dw_pcie *pci, u32 index, u32 reg,
+>  {
+>  	u32 offset = PCIE_GET_ATU_OUTB_UNR_REG_OFFSET(index);
+>  
+> -	dw_pcie_writel_dbi(pci, offset + reg, val);
+> +	dw_pcie_writel_atu(pci, offset + reg, val);
+>  }
+>  
+>  static void dw_pcie_prog_outbound_atu_unroll(struct dw_pcie *pci, int index,
+> @@ -187,7 +187,7 @@ static u32 dw_pcie_readl_ib_unroll(struct dw_pcie *pci, u32 index, u32 reg)
+>  {
+>  	u32 offset = PCIE_GET_ATU_INB_UNR_REG_OFFSET(index);
+>  
+> -	return dw_pcie_readl_dbi(pci, offset + reg);
+> +	return dw_pcie_readl_atu(pci, offset + reg);
+>  }
+>  
+>  static void dw_pcie_writel_ib_unroll(struct dw_pcie *pci, u32 index, u32 reg,
+> @@ -195,7 +195,7 @@ static void dw_pcie_writel_ib_unroll(struct dw_pcie *pci, u32 index, u32 reg,
+>  {
+>  	u32 offset = PCIE_GET_ATU_INB_UNR_REG_OFFSET(index);
+>  
+> -	dw_pcie_writel_dbi(pci, offset + reg, val);
+> +	dw_pcie_writel_atu(pci, offset + reg, val);
+>  }
+>  
+>  static int dw_pcie_prog_inbound_atu_unroll(struct dw_pcie *pci, int index,
+> diff --git a/drivers/pci/controller/dwc/pcie-designware.h b/drivers/pci/controller/dwc/pcie-designware.h
+> index 0989d880ac46..e895f37b1dee 100644
+> --- a/drivers/pci/controller/dwc/pcie-designware.h
+> +++ b/drivers/pci/controller/dwc/pcie-designware.h
+> @@ -93,11 +93,11 @@
+>  #define PCIE_ATU_UNR_UPPER_TARGET	0x18
+>  
+>  /* Register address builder */
+> -#define PCIE_GET_ATU_OUTB_UNR_REG_OFFSET(region)	\
+> -			((0x3 << 20) | ((region) << 9))
+> +#define PCIE_GET_ATU_OUTB_UNR_REG_OFFSET(region) \
+> +		((region) << 9)
+>  
+> -#define PCIE_GET_ATU_INB_UNR_REG_OFFSET(region)				\
+> -			((0x3 << 20) | ((region) << 9) | (0x1 << 8))
+> +#define PCIE_GET_ATU_INB_UNR_REG_OFFSET(region) \
+> +		(((region) << 9) | (0x1 << 8))
+>  
+>  #define MAX_MSI_IRQS			256
+>  #define MAX_MSI_IRQS_PER_CTRL		32
+> @@ -219,6 +219,8 @@ struct dw_pcie {
+>  	struct device		*dev;
+>  	void __iomem		*dbi_base;
+>  	void __iomem		*dbi_base2;
+> +	/* Used when iatu_unroll_enabled is true */
+> +	void __iomem		*atu_base;
+>  	u32			num_viewport;
+>  	u8			iatu_unroll_enabled;
+>  	struct pcie_port	pp;
+> @@ -289,6 +291,16 @@ static inline u32 dw_pcie_readl_dbi2(struct dw_pcie *pci, u32 reg)
+>  	return __dw_pcie_read_dbi(pci, pci->dbi_base2, reg, 0x4);
+>  }
+>  
+> +static inline void dw_pcie_writel_atu(struct dw_pcie *pci, u32 reg, u32 val)
 > +{
-> +	struct dw_pcie *pci = pcie->pci;
-> +	struct device *dev = pci->dev;
-> +	struct dw_pcie_ep *ep;
-> +	struct resource *res;
-> +	int ret;
-> +
-> +	ep = &pci->ep;
-> +	ep->ops = &pcie_ep_ops;
-> +
-> +	res = platform_get_resource_byname(pdev, IORESOURCE_MEM, "addr_space");
-> +	if (!res)
-> +		return -EINVAL;
-> +
-> +	ep->phys_base = res->start;
-> +	ep->addr_size = resource_size(res);
-> +
-> +	ret = dw_pcie_ep_init(ep);
-> +	if (ret) {
-> +		dev_err(dev, "failed to initialize endpoint\n");
-> +		return ret;
-> +	}
-> +
-> +	return 0;
+> +	__dw_pcie_write_dbi(pci, pci->atu_base, reg, 0x4, val);
 > +}
 > +
-> +static int __init ls_pcie_ep_probe(struct platform_device *pdev)
+> +static inline u32 dw_pcie_readl_atu(struct dw_pcie *pci, u32 reg)
 > +{
-> +	struct device *dev = &pdev->dev;
-> +	struct dw_pcie *pci;
-> +	struct ls_pcie_ep *pcie;
-> +	struct resource *dbi_base;
-> +	int ret;
-> +
-> +	pcie = devm_kzalloc(dev, sizeof(*pcie), GFP_KERNEL);
-> +	if (!pcie)
-> +		return -ENOMEM;
-> +
-> +	pci = devm_kzalloc(dev, sizeof(*pci), GFP_KERNEL);
-> +	if (!pci)
-> +		return -ENOMEM;
-> +
-> +	dbi_base = platform_get_resource_byname(pdev, IORESOURCE_MEM, "regs");
-> +	pci->dbi_base = devm_pci_remap_cfg_resource(dev, dbi_base);
-> +	if (IS_ERR(pci->dbi_base))
-> +		return PTR_ERR(pci->dbi_base);
-> +
-> +	pci->dbi_base2 = pci->dbi_base + PCIE_DBI2_OFFSET;
-> +	pci->dev = dev;
-> +	pci->ops = &ls_pcie_ep_ops;
-> +	pcie->pci = pci;
-> +
-> +	platform_set_drvdata(pdev, pcie);
-> +
-> +	ret = ls_add_pcie_ep(pcie, pdev);
-> +
-> +	return ret;
+> +	return __dw_pcie_read_dbi(pci, pci->atu_base, reg, 0x4);
 > +}
 > +
-> +static struct platform_driver ls_pcie_ep_driver = {
-> +	.driver = {
-> +		.name = "layerscape-pcie-ep",
-> +		.of_match_table = ls_pcie_ep_of_match,
-> +		.suppress_bind_attrs = true,
-> +	},
-> +};
-> +builtin_platform_driver_probe(ls_pcie_ep_driver, ls_pcie_ep_probe);
+>  static inline void dw_pcie_dbi_ro_wr_en(struct dw_pcie *pci)
+>  {
+>  	u32 reg;
 > -- 
-> 1.7.1
+> 2.19.1
 > 
