@@ -2,118 +2,162 @@ Return-Path: <SRS0=IfUz=OK=vger.kernel.org=linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-8.3 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
-	DKIM_VALID_AU,FREEMAIL_FORGED_FROMDOMAIN,FREEMAIL_FROM,
-	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
-	SPF_PASS,URIBL_BLOCKED,USER_AGENT_MUTT autolearn=ham autolearn_force=no
-	version=3.4.0
+X-Spam-Status: No, score=-3.8 required=3.0 tests=DKIM_INVALID,DKIM_SIGNED,
+	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_PASS,
+	URIBL_BLOCKED autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id AF0CDC04EB9
-	for <linux-pci@archiver.kernel.org>; Sat,  1 Dec 2018 16:07:16 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 32062C04EB9
+	for <linux-pci@archiver.kernel.org>; Sat,  1 Dec 2018 17:31:50 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 6C3722081D
-	for <linux-pci@archiver.kernel.org>; Sat,  1 Dec 2018 16:07:16 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id E7B1F2081C
+	for <linux-pci@archiver.kernel.org>; Sat,  1 Dec 2018 17:31:49 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="YvSVFNNF"
-DMARC-Filter: OpenDMARC Filter v1.3.2 mail.kernel.org 6C3722081D
-Authentication-Results: mail.kernel.org; dmarc=fail (p=none dis=none) header.from=gmail.com
+	dkim=fail reason="signature verification failed" (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="XUMNPSnN"
+DMARC-Filter: OpenDMARC Filter v1.3.2 mail.kernel.org E7B1F2081C
+Authentication-Results: mail.kernel.org; dmarc=none (p=none dis=none) header.from=infradead.org
 Authentication-Results: mail.kernel.org; spf=none smtp.mailfrom=linux-pci-owner@vger.kernel.org
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726947AbeLBDUF (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Sat, 1 Dec 2018 22:20:05 -0500
-Received: from mail-oi1-f194.google.com ([209.85.167.194]:36195 "EHLO
-        mail-oi1-f194.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726885AbeLBDUF (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Sat, 1 Dec 2018 22:20:05 -0500
-Received: by mail-oi1-f194.google.com with SMTP id x23so7405963oix.3;
-        Sat, 01 Dec 2018 08:07:14 -0800 (PST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20161025;
-        h=date:from:to:subject:message-id:mime-version:content-disposition
-         :user-agent;
-        bh=LmhTKiqrz4jqaZKIEYW2otUBWhpbwR5cPjehX6hgoeQ=;
-        b=YvSVFNNFqvWUM3Rqoufj3d4n8T5XgSTelw5hEgmOUqaZ+vo0U5szISffWPSFhP9Iot
-         p7qT3Te3KYKZ4yJE7BZR9vwLfm9c07mDevYh+kIyUSCOgOcGSXa0+qfHzpDDHeagcwjv
-         vcOrGSTcGoWzHoXe+gdacoUkZfTwzDiSSzFo5rRmTLIaQTPPWPwRVDpD6UmuqHJdY31N
-         21GsGCqXJaalT4AUoRgY5QXeScU9uAhGnLtIcF9fV6LD5rspC4zMdLJSwmZDvVKtqTpm
-         sFbbTfjBf0stGisBNVzLUc3E7AnNLMAKUl9R9FJeqShhsI27H+QfI2YGbDzMKsLbRmm9
-         2aeQ==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20161025;
-        h=x-gm-message-state:date:from:to:subject:message-id:mime-version
-         :content-disposition:user-agent;
-        bh=LmhTKiqrz4jqaZKIEYW2otUBWhpbwR5cPjehX6hgoeQ=;
-        b=sWCYJV2vwgUlVYFPNxxyG0HFaPUPlHFiaLB6g4QEtsJ2fhoh7QSY62M+pmAh5RwFWU
-         HOMLOfq4yGOI6EB7pUZMpn8IYBMhSVaUkzvdfXlduc/r8Xfe+vSK1LdTelOYHbm+KM72
-         U4bj6nrJfSTTVflsQFcSlb/395DHI0ABMpdAZ9V+6XmTCfequaQgH1ibgIH7VscFLVYD
-         TYtkpZYIhdQ5FF1lF4NwcVhFC+yb5gfC9/gL7QBpJKMsT02QXZDbIgmCbBFJb5zmchfN
-         QjAxmdPodFnvEZpPV3YNC3CcGPL55iKlbAnBGFA4ivQV0d9NRlpmY7dy6uLcZJcuqY59
-         /k2A==
-X-Gm-Message-State: AA+aEWa2u+TJbD8VsLjwH6z0n5cZNR8Qd1C3QydbVUp6OsxcaB8j05mB
-        5BdScyjpnlMet5w/FvyntBDICPqI
-X-Google-Smtp-Source: AFSGD/WTWoi7XCSyiAy64PD8JUAqhOGSThrY8fVsDO+XC0M3PqTwxsxNm9oEggI1bueeteGumCdVHA==
-X-Received: by 2002:aca:d944:: with SMTP id q65-v6mr6218854oig.0.1543680434508;
-        Sat, 01 Dec 2018 08:07:14 -0800 (PST)
-Received: from ycd-dell-ltp ([2600:8802:700:7:7ae4:ff:fe9e:c789])
-        by smtp.gmail.com with ESMTPSA id w17sm2925796otk.12.2018.12.01.08.07.13
-        (version=TLS1_2 cipher=ECDHE-RSA-AES128-GCM-SHA256 bits=128/128);
-        Sat, 01 Dec 2018 08:07:14 -0800 (PST)
-Date:   Sat, 1 Dec 2018 08:07:11 -0800
-From:   Benjamin Young <youngcdev@gmail.com>
-To:     Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org,
-        linux-kernel@vger.kernel.org
-Subject: [PATCH] pcie: portdrv: Fix Unnecessary space before function pointer
- arguments
-Message-ID: <20181201160711.GA21373@ycd-dell-ltp>
+        id S1726812AbeLBEot (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Sat, 1 Dec 2018 23:44:49 -0500
+Received: from merlin.infradead.org ([205.233.59.134]:49182 "EHLO
+        merlin.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726788AbeLBEot (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Sat, 1 Dec 2018 23:44:49 -0500
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
+        d=infradead.org; s=merlin.20170209; h=Content-Transfer-Encoding:Content-Type:
+        MIME-Version:Date:Message-ID:Subject:From:Cc:To:Sender:Reply-To:Content-ID:
+        Content-Description:Resent-Date:Resent-From:Resent-Sender:Resent-To:Resent-Cc
+        :Resent-Message-ID:In-Reply-To:References:List-Id:List-Help:List-Unsubscribe:
+        List-Subscribe:List-Post:List-Owner:List-Archive;
+        bh=lh0EZ0c2CU5068qPf2AbEQHB4VOR+VcLe9am/jFMM3w=; b=XUMNPSnNProh9yjZZB+FS2t6YT
+        3Dn6CpRQS7SFx9PMpjlLVY6CBM/TQB43THK7Ls0BuYiPGS3t5WhTJ/zInaOjNkZtpEJkIRoxmRydl
+        otsZoHG1kNZULpT5q0CdqI4cYGhuaGjXqGWkaP1zD4TzD2XoD4b4acQBN7Z9+EhQ7s26ZosHN6Ntz
+        AUTNWVrdaaOSfL+ZPdhd1no02aZ5/vjESfuhQ6o3PKvIVzlJm3Wej4mTOU2kp9vRXDZ5+zwED3VMG
+        pPiWszrj5JiCbgeftzTzhU5C5OJJo9lDB5AR5edQ/raSndFQtuqs9rhmJ5FYKZ2NtcUYiTPAEo7pe
+        5grwtkAA==;
+Received: from static-50-53-52-16.bvtn.or.frontiernet.net ([50.53.52.16] helo=midway.dunlab)
+        by merlin.infradead.org with esmtpsa (Exim 4.90_1 #2 (Red Hat Linux))
+        id 1gT97B-0003dK-Vf; Sat, 01 Dec 2018 17:31:39 +0000
+To:     LKML <linux-kernel@vger.kernel.org>,
+        linux-pci <linux-pci@vger.kernel.org>
+Cc:     Bjorn Helgaas <bhelgaas@google.com>,
+        Jonathan Corbet <corbet@lwn.net>,
+        Logan Gunthorpe <logang@deltatee.com>
+From:   Randy Dunlap <rdunlap@infradead.org>
+Subject: [PATCH] pci: p2pdma: clean up documentation and kernel-doc
+Message-ID: <9f17c653-07dd-bf00-a4a2-fccbd9470603@infradead.org>
+Date:   Sat, 1 Dec 2018 09:31:34 -0800
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:60.0) Gecko/20100101
+ Thunderbird/60.3.0
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-User-Agent: Mutt/1.5.24 (2015-08-30)
+Content-Type: text/plain; charset=utf-8
+Content-Language: en-US
+Content-Transfer-Encoding: 7bit
 Sender: linux-pci-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-Made spacing more consistent in the code for function pointer
-declarations based on checkpatch.pl
+From: Randy Dunlap <rdunlap@infradead.org>
 
-Signed-off-by: Benjamin Young <youngcdev@gmail.com>
+Fix typos, spellos, and grammar in p2pdma.rst and p2pdma.c.
+
+Fix return value(s) in function pci_p2pmem_alloc_sgl().
+
+Signed-off-by: Randy Dunlap <rdunlap@infradead.org>
+Cc: linux-pci@vger.kernel.org
+Cc: Bjorn Helgaas <bhelgaas@google.com>
+Cc: Jonathan Corbet <corbet@lwn.net>
+Cc: Logan Gunthorpe <logang@deltatee.com>
 ---
- drivers/pci/pcie/portdrv.h | 16 ++++++++--------
- 1 file changed, 8 insertions(+), 8 deletions(-)
+ Documentation/driver-api/pci/p2pdma.rst |    4 ++--
+ drivers/pci/p2pdma.c                    |   14 +++++++-------
+ 2 files changed, 9 insertions(+), 9 deletions(-)
 
-diff --git a/drivers/pci/pcie/portdrv.h b/drivers/pci/pcie/portdrv.h
-index e495f04..fbbf00b0 100644
---- a/drivers/pci/pcie/portdrv.h
-+++ b/drivers/pci/pcie/portdrv.h
-@@ -71,19 +71,19 @@ static inline void *get_service_data(struct pcie_device *dev)
+--- lnx-420-rc4.orig/Documentation/driver-api/pci/p2pdma.rst
++++ lnx-420-rc4/Documentation/driver-api/pci/p2pdma.rst
+@@ -49,7 +49,7 @@ For example, in the NVMe Target Copy Off
+   in that it exposes any CMB (Controller Memory Buffer) as a P2P memory
+   resource (provider), it accepts P2P memory pages as buffers in requests
+   to be used directly (client) and it can also make use of the CMB as
+-  submission queue entries (orchastrator).
++  submission queue entries (orchestrator).
+ * The RDMA driver is a client in this arrangement so that an RNIC
+   can DMA directly to the memory exposed by the NVMe device.
+ * The NVMe Target driver (nvmet) can orchestrate the data from the RNIC
+@@ -111,7 +111,7 @@ that's compatible with all clients using
+ If more than one provider is supported, the one nearest to all the clients will
+ be chosen first. If more than one provider is an equal distance away, the
+ one returned will be chosen at random (it is not an arbitrary but
+-truely random). This function returns the PCI device to use for the provider
++truly random). This function returns the PCI device to use for the provider
+ with a reference taken and therefore when it's no longer needed it should be
+ returned with pci_dev_put().
  
- struct pcie_port_service_driver {
- 	const char *name;
--	int (*probe) (struct pcie_device *dev);
--	void (*remove) (struct pcie_device *dev);
--	int (*suspend) (struct pcie_device *dev);
--	int (*resume_noirq) (struct pcie_device *dev);
--	int (*resume) (struct pcie_device *dev);
--	int (*runtime_suspend) (struct pcie_device *dev);
--	int (*runtime_resume) (struct pcie_device *dev);
-+	int (*probe)(struct pcie_device *dev);
-+	void (*remove)(struct pcie_device *dev);
-+	int (*suspend)(struct pcie_device *dev);
-+	int (*resume_noirq)(struct pcie_device *dev);
-+	int (*resume)(struct pcie_device *dev);
-+	int (*runtime_suspend)(struct pcie_device *dev);
-+	int (*runtime_resume)(struct pcie_device *dev);
- 
- 	/* Device driver may resume normal operations */
- 	void (*error_resume)(struct pci_dev *dev);
- 
- 	/* Link Reset Capability - AER service driver specific */
--	pci_ers_result_t (*reset_link) (struct pci_dev *dev);
-+	pci_ers_result_t (*reset_link)(struct pci_dev *dev);
- 
- 	int port_type;  /* Type of the port this driver can handle */
- 	u32 service;    /* Port service this device represents */
--- 
-2.5.0
+--- lnx-420-rc4.orig/drivers/pci/p2pdma.c
++++ lnx-420-rc4/drivers/pci/p2pdma.c
+@@ -422,7 +422,7 @@ static int upstream_bridge_distance_warn
+  *
+  * Returns -1 if any of the clients are not compatible (behind the same
+  * root port as the provider), otherwise returns a positive number where
+- * a lower number is the preferrable choice. (If there's one client
++ * a lower number is the preferable choice. (If there's one client
+  * that's the same as the provider it will return 0, which is best choice).
+  *
+  * For now, "compatible" means the provider and the clients are all behind
+@@ -493,7 +493,7 @@ EXPORT_SYMBOL_GPL(pci_has_p2pmem);
+  * @num_clients: number of client devices in the list
+  *
+  * If multiple devices are behind the same switch, the one "closest" to the
+- * client devices in use will be chosen first. (So if one of the providers are
++ * client devices in use will be chosen first. (So if one of the providers is
+  * the same as one of the clients, that provider will be used ahead of any
+  * other providers that are unrelated). If multiple providers are an equal
+  * distance away, one will be chosen at random.
+@@ -580,7 +580,7 @@ EXPORT_SYMBOL_GPL(pci_alloc_p2pmem);
+  * pci_free_p2pmem - free peer-to-peer DMA memory
+  * @pdev: the device the memory was allocated from
+  * @addr: address of the memory that was allocated
+- * @size: number of bytes that was allocated
++ * @size: number of bytes that were allocated
+  */
+ void pci_free_p2pmem(struct pci_dev *pdev, void *addr, size_t size)
+ {
+@@ -617,7 +617,7 @@ EXPORT_SYMBOL_GPL(pci_p2pmem_virt_to_bus
+  * @nents: the number of SG entries in the list
+  * @length: number of bytes to allocate
+  *
+- * Returns 0 on success
++ * Return: %NULL on error or &struct scatterlist pointer and @nents on success
+  */
+ struct scatterlist *pci_p2pmem_alloc_sgl(struct pci_dev *pdev,
+ 					 unsigned int *nents, u32 length)
+@@ -673,7 +673,7 @@ EXPORT_SYMBOL_GPL(pci_p2pmem_free_sgl);
+  *
+  * Published memory can be used by other PCI device drivers for
+  * peer-2-peer DMA operations. Non-published memory is reserved for
+- * exlusive use of the device driver that registers the peer-to-peer
++ * exclusive use of the device driver that registers the peer-to-peer
+  * memory.
+  */
+ void pci_p2pmem_publish(struct pci_dev *pdev, bool publish)
+@@ -733,7 +733,7 @@ EXPORT_SYMBOL_GPL(pci_p2pdma_map_sg);
+  * @use_p2pdma: returns whether to enable p2pdma or not
+  *
+  * Parses an attribute value to decide whether to enable p2pdma.
+- * The value can select a PCI device (using it's full BDF device
++ * The value can select a PCI device (using its full BDF device
+  * name) or a boolean (in any format strtobool() accepts). A false
+  * value disables p2pdma, a true value expects the caller
+  * to automatically find a compatible device and specifying a PCI device
+@@ -784,7 +784,7 @@ EXPORT_SYMBOL_GPL(pci_p2pdma_enable_stor
+  *		whether p2pdma is enabled
+  * @page: contents of the stored value
+  * @p2p_dev: the selected p2p device (NULL if no device is selected)
+- * @use_p2pdma: whether p2pdme has been enabled
++ * @use_p2pdma: whether p2pdma has been enabled
+  *
+  * Attributes that use pci_p2pdma_enable_store() should use this function
+  * to show the value of the attribute.
+
 
