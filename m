@@ -2,106 +2,118 @@ Return-Path: <SRS0=IfUz=OK=vger.kernel.org=linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-14.1 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,INCLUDES_PULL_REQUEST,MAILING_LIST_MULTI,
-	MENTIONS_GIT_HOSTING,SPF_PASS,USER_AGENT_MUTT autolearn=ham
-	autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-8.3 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
+	DKIM_VALID_AU,FREEMAIL_FORGED_FROMDOMAIN,FREEMAIL_FROM,
+	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
+	SPF_PASS,URIBL_BLOCKED,USER_AGENT_MUTT autolearn=ham autolearn_force=no
+	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 90DD5C04EB9
-	for <linux-pci@archiver.kernel.org>; Sat,  1 Dec 2018 05:59:57 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id AF0CDC04EB9
+	for <linux-pci@archiver.kernel.org>; Sat,  1 Dec 2018 16:07:16 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 4A2A32146D
-	for <linux-pci@archiver.kernel.org>; Sat,  1 Dec 2018 05:59:57 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 6C3722081D
+	for <linux-pci@archiver.kernel.org>; Sat,  1 Dec 2018 16:07:16 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (1024-bit key) header.d=kernel.org header.i=@kernel.org header.b="w5uD6uOj"
-DMARC-Filter: OpenDMARC Filter v1.3.2 mail.kernel.org 4A2A32146D
-Authentication-Results: mail.kernel.org; dmarc=fail (p=none dis=none) header.from=kernel.org
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="YvSVFNNF"
+DMARC-Filter: OpenDMARC Filter v1.3.2 mail.kernel.org 6C3722081D
+Authentication-Results: mail.kernel.org; dmarc=fail (p=none dis=none) header.from=gmail.com
 Authentication-Results: mail.kernel.org; spf=none smtp.mailfrom=linux-pci-owner@vger.kernel.org
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726124AbeLARLk (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Sat, 1 Dec 2018 12:11:40 -0500
-Received: from mail.kernel.org ([198.145.29.99]:43546 "EHLO mail.kernel.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1725893AbeLARLj (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Sat, 1 Dec 2018 12:11:39 -0500
-Received: from localhost (unknown [69.71.4.100])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
-        (No client certificate requested)
-        by mail.kernel.org (Postfix) with ESMTPSA id DFD6A2081D;
-        Sat,  1 Dec 2018 05:59:54 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=default; t=1543643995;
-        bh=Pg3d1Bs6TfgaZQkWBTvhasrsnC6KkCRnsSJouqdeUWo=;
-        h=Date:From:To:Cc:Subject:From;
-        b=w5uD6uOjyksUMdDMrR0fYiw+hc5b7s43HsdS7FvceA3Wmuv+hTsSe7FCwu+kppdEW
-         I07zYcaIt+XnOAlfXjbW3I85Z852iSQoNDWzALuzaOic9ktF0vr/CkBRfUHHNid0vK
-         Cuvr+SqC3GUqVhs8DaHRWYz8LbRIWbTyTuO/UPc0=
-Date:   Fri, 30 Nov 2018 23:59:53 -0600
-From:   Bjorn Helgaas <helgaas@kernel.org>
-To:     Linus Torvalds <torvalds@linux-foundation.org>
-Cc:     linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
-        Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
-        Trent Piepho <tpiepho@impinj.com>,
-        Hou Zhiqiang <Zhiqiang.Hou@nxp.com>,
-        Gustavo Pimentel <gustavo.pimentel@synopsys.com>,
-        Mikulas Patocka <mpatocka@redhat.com>
-Subject: [GIT PULL] PCI fixes for v4.20
-Message-ID: <20181201055953.GA207198@google.com>
+        id S1726947AbeLBDUF (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Sat, 1 Dec 2018 22:20:05 -0500
+Received: from mail-oi1-f194.google.com ([209.85.167.194]:36195 "EHLO
+        mail-oi1-f194.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726885AbeLBDUF (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Sat, 1 Dec 2018 22:20:05 -0500
+Received: by mail-oi1-f194.google.com with SMTP id x23so7405963oix.3;
+        Sat, 01 Dec 2018 08:07:14 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20161025;
+        h=date:from:to:subject:message-id:mime-version:content-disposition
+         :user-agent;
+        bh=LmhTKiqrz4jqaZKIEYW2otUBWhpbwR5cPjehX6hgoeQ=;
+        b=YvSVFNNFqvWUM3Rqoufj3d4n8T5XgSTelw5hEgmOUqaZ+vo0U5szISffWPSFhP9Iot
+         p7qT3Te3KYKZ4yJE7BZR9vwLfm9c07mDevYh+kIyUSCOgOcGSXa0+qfHzpDDHeagcwjv
+         vcOrGSTcGoWzHoXe+gdacoUkZfTwzDiSSzFo5rRmTLIaQTPPWPwRVDpD6UmuqHJdY31N
+         21GsGCqXJaalT4AUoRgY5QXeScU9uAhGnLtIcF9fV6LD5rspC4zMdLJSwmZDvVKtqTpm
+         sFbbTfjBf0stGisBNVzLUc3E7AnNLMAKUl9R9FJeqShhsI27H+QfI2YGbDzMKsLbRmm9
+         2aeQ==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20161025;
+        h=x-gm-message-state:date:from:to:subject:message-id:mime-version
+         :content-disposition:user-agent;
+        bh=LmhTKiqrz4jqaZKIEYW2otUBWhpbwR5cPjehX6hgoeQ=;
+        b=sWCYJV2vwgUlVYFPNxxyG0HFaPUPlHFiaLB6g4QEtsJ2fhoh7QSY62M+pmAh5RwFWU
+         HOMLOfq4yGOI6EB7pUZMpn8IYBMhSVaUkzvdfXlduc/r8Xfe+vSK1LdTelOYHbm+KM72
+         U4bj6nrJfSTTVflsQFcSlb/395DHI0ABMpdAZ9V+6XmTCfequaQgH1ibgIH7VscFLVYD
+         TYtkpZYIhdQ5FF1lF4NwcVhFC+yb5gfC9/gL7QBpJKMsT02QXZDbIgmCbBFJb5zmchfN
+         QjAxmdPodFnvEZpPV3YNC3CcGPL55iKlbAnBGFA4ivQV0d9NRlpmY7dy6uLcZJcuqY59
+         /k2A==
+X-Gm-Message-State: AA+aEWa2u+TJbD8VsLjwH6z0n5cZNR8Qd1C3QydbVUp6OsxcaB8j05mB
+        5BdScyjpnlMet5w/FvyntBDICPqI
+X-Google-Smtp-Source: AFSGD/WTWoi7XCSyiAy64PD8JUAqhOGSThrY8fVsDO+XC0M3PqTwxsxNm9oEggI1bueeteGumCdVHA==
+X-Received: by 2002:aca:d944:: with SMTP id q65-v6mr6218854oig.0.1543680434508;
+        Sat, 01 Dec 2018 08:07:14 -0800 (PST)
+Received: from ycd-dell-ltp ([2600:8802:700:7:7ae4:ff:fe9e:c789])
+        by smtp.gmail.com with ESMTPSA id w17sm2925796otk.12.2018.12.01.08.07.13
+        (version=TLS1_2 cipher=ECDHE-RSA-AES128-GCM-SHA256 bits=128/128);
+        Sat, 01 Dec 2018 08:07:14 -0800 (PST)
+Date:   Sat, 1 Dec 2018 08:07:11 -0800
+From:   Benjamin Young <youngcdev@gmail.com>
+To:     Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org,
+        linux-kernel@vger.kernel.org
+Subject: [PATCH] pcie: portdrv: Fix Unnecessary space before function pointer
+ arguments
+Message-ID: <20181201160711.GA21373@ycd-dell-ltp>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-User-Agent: Mutt/1.10.1 (2018-07-13)
+User-Agent: Mutt/1.5.24 (2015-08-30)
 Sender: linux-pci-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-PCI fixes:
+Made spacing more consistent in the code for function pointer
+declarations based on checkpatch.pl
 
-  - Fix a link speed checking interface that broke PCIe gen3 cards in gen1
-    slots (Mikulas Patocka)
+Signed-off-by: Benjamin Young <youngcdev@gmail.com>
+---
+ drivers/pci/pcie/portdrv.h | 16 ++++++++--------
+ 1 file changed, 8 insertions(+), 8 deletions(-)
 
-  - Fix an imx6 link training error (Trent Piepho)
+diff --git a/drivers/pci/pcie/portdrv.h b/drivers/pci/pcie/portdrv.h
+index e495f04..fbbf00b0 100644
+--- a/drivers/pci/pcie/portdrv.h
++++ b/drivers/pci/pcie/portdrv.h
+@@ -71,19 +71,19 @@ static inline void *get_service_data(struct pcie_device *dev)
+ 
+ struct pcie_port_service_driver {
+ 	const char *name;
+-	int (*probe) (struct pcie_device *dev);
+-	void (*remove) (struct pcie_device *dev);
+-	int (*suspend) (struct pcie_device *dev);
+-	int (*resume_noirq) (struct pcie_device *dev);
+-	int (*resume) (struct pcie_device *dev);
+-	int (*runtime_suspend) (struct pcie_device *dev);
+-	int (*runtime_resume) (struct pcie_device *dev);
++	int (*probe)(struct pcie_device *dev);
++	void (*remove)(struct pcie_device *dev);
++	int (*suspend)(struct pcie_device *dev);
++	int (*resume_noirq)(struct pcie_device *dev);
++	int (*resume)(struct pcie_device *dev);
++	int (*runtime_suspend)(struct pcie_device *dev);
++	int (*runtime_resume)(struct pcie_device *dev);
+ 
+ 	/* Device driver may resume normal operations */
+ 	void (*error_resume)(struct pci_dev *dev);
+ 
+ 	/* Link Reset Capability - AER service driver specific */
+-	pci_ers_result_t (*reset_link) (struct pci_dev *dev);
++	pci_ers_result_t (*reset_link)(struct pci_dev *dev);
+ 
+ 	int port_type;  /* Type of the port this driver can handle */
+ 	u32 service;    /* Port service this device represents */
+-- 
+2.5.0
 
-  - Fix a layerscape outbound window accessor calling error (Hou Zhiqiang)
-
-  - Fix a DesignWare endpoint MSI-X address calculation error (Gustavo
-    Pimentel)
-
-
-The following changes since commit 0d76bcc960e6057750fcf556b65da13f8bbdfd2b:
-
-  Revert "ACPI/PCI: Pay attention to device-specific _PXM node values" (2018-11-13 08:38:17 -0600)
-
-are available in the Git repository at:
-
-  git://git.kernel.org/pub/scm/linux/kernel/git/helgaas/pci.git tags/pci-v4.20-fixes-2
-
-for you to fetch changes up to c74eadf881ad634c68880e2c1b504989d95993ee:
-
-  Merge remote-tracking branch 'lorenzo/pci/controller-fixes' into for-linus (2018-11-30 23:42:08 -0600)
-
-----------------------------------------------------------------
-pci-v4.20-fixes-2
-
-----------------------------------------------------------------
-Bjorn Helgaas (1):
-      Merge remote-tracking branch 'lorenzo/pci/controller-fixes' into for-linus
-
-Gustavo Pimentel (1):
-      PCI: dwc: Fix MSI-X EP framework address calculation bug
-
-Hou Zhiqiang (1):
-      PCI: layerscape: Fix wrong invocation of outbound window disable accessor
-
-Mikulas Patocka (1):
-      PCI: Fix incorrect value returned from pcie_get_speed_cap()
-
-Trent Piepho (1):
-      PCI: imx6: Fix link training status detection in link up check
-
- drivers/pci/controller/dwc/pci-imx6.c           | 10 +---------
- drivers/pci/controller/dwc/pci-layerscape.c     |  2 +-
- drivers/pci/controller/dwc/pcie-designware-ep.c |  1 -
- drivers/pci/pci.c                               | 24 +++++++++++-------------
- 4 files changed, 13 insertions(+), 24 deletions(-)
