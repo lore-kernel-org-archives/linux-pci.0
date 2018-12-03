@@ -2,152 +2,158 @@ Return-Path: <SRS0=SeHV=OM=vger.kernel.org=linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-7.0 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_PASS,URIBL_BLOCKED
-	autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-8.5 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_PASS,URIBL_BLOCKED,
+	USER_AGENT_MUTT autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id CE007C04EBF
-	for <linux-pci@archiver.kernel.org>; Mon,  3 Dec 2018 10:15:40 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 7C9F9C04EB9
+	for <linux-pci@archiver.kernel.org>; Mon,  3 Dec 2018 10:27:18 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 9CD1B2087F
-	for <linux-pci@archiver.kernel.org>; Mon,  3 Dec 2018 10:15:40 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.3.2 mail.kernel.org 9CD1B2087F
-Authentication-Results: mail.kernel.org; dmarc=none (p=none dis=none) header.from=huawei.com
+	by mail.kernel.org (Postfix) with ESMTP id 4B34F214DA
+	for <linux-pci@archiver.kernel.org>; Mon,  3 Dec 2018 10:27:18 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.3.2 mail.kernel.org 4B34F214DA
+Authentication-Results: mail.kernel.org; dmarc=none (p=none dis=none) header.from=arm.com
 Authentication-Results: mail.kernel.org; spf=none smtp.mailfrom=linux-pci-owner@vger.kernel.org
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726105AbeLCKQC (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Mon, 3 Dec 2018 05:16:02 -0500
-Received: from szxga05-in.huawei.com ([45.249.212.191]:15631 "EHLO huawei.com"
-        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1726039AbeLCKQB (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Mon, 3 Dec 2018 05:16:01 -0500
-Received: from DGGEMS406-HUB.china.huawei.com (unknown [172.30.72.59])
-        by Forcepoint Email with ESMTP id EF1ECD17C1ED;
-        Mon,  3 Dec 2018 18:15:33 +0800 (CST)
-Received: from localhost (10.202.226.46) by DGGEMS406-HUB.china.huawei.com
- (10.3.19.206) with Microsoft SMTP Server id 14.3.408.0; Mon, 3 Dec 2018
- 18:15:27 +0800
-Date:   Mon, 3 Dec 2018 10:15:15 +0000
-From:   Jonathan Cameron <jonathan.cameron@huawei.com>
-To:     Peter Zijlstra <peterz@infradead.org>
-CC:     <helgaas@kernel.org>, <linux-pci@vger.kernel.org>,
-        <linuxarm@huawei.com>, Ingo Molnar <mingo@kernel.org>,
-        <linux-acpi@vger.kernel.org>,
-        Dave Hansen <dave.hansen@linux.intel.com>,
-        Andy Lutomirski <luto@kernel.org>, <x86@kernel.org>
-Subject: Re: [PATCH] x86: Fix an issue with invalid ACPI numa config
-Message-ID: <20181203101515.00006cb8@huawei.com>
-In-Reply-To: <20181120131935.00001f3a@huawei.com>
-References: <20181115110617.13280-1-Jonathan.Cameron@huawei.com>
-        <20181120120105.GI2131@hirez.programming.kicks-ass.net>
-        <20181120131935.00001f3a@huawei.com>
-Organization: Huawei
-X-Mailer: Claws Mail 3.16.0 (GTK+ 2.24.32; i686-w64-mingw32)
+        id S1726167AbeLCK1n (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Mon, 3 Dec 2018 05:27:43 -0500
+Received: from foss.arm.com ([217.140.101.70]:33788 "EHLO foss.arm.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1725947AbeLCK1n (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Mon, 3 Dec 2018 05:27:43 -0500
+Received: from usa-sjc-imap-foss1.foss.arm.com (unknown [10.72.51.249])
+        by usa-sjc-mx-foss1.foss.arm.com (Postfix) with ESMTP id CB4ED80D;
+        Mon,  3 Dec 2018 02:27:16 -0800 (PST)
+Received: from e107981-ln.cambridge.arm.com (e107981-ln.cambridge.arm.com [10.1.197.40])
+        by usa-sjc-imap-foss1.foss.arm.com (Postfix) with ESMTPSA id D7CD23F59C;
+        Mon,  3 Dec 2018 02:27:13 -0800 (PST)
+Date:   Mon, 3 Dec 2018 10:27:08 +0000
+From:   Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
+To:     Miquel Raynal <miquel.raynal@bootlin.com>,
+        "Rafael J. Wysocki" <rjw@rjwysocki.net>, sudeep.holla@arm.com
+Cc:     Gregory Clement <gregory.clement@bootlin.com>,
+        Jason Cooper <jason@lakedaemon.net>,
+        Andrew Lunn <andrew@lunn.ch>,
+        Sebastian Hesselbarth <sebastian.hesselbarth@gmail.com>,
+        Thomas Petazzoni <thomas.petazzoni@bootlin.com>,
+        Bjorn Helgaas <bhelgaas@google.com>,
+        devicetree@vger.kernel.org, Rob Herring <robh+dt@kernel.org>,
+        Mark Rutland <mark.rutland@arm.com>, linux-pci@vger.kernel.org,
+        linux-kernel@vger.kernel.org, linux-arm-kernel@lists.infradead.org,
+        Antoine Tenart <antoine.tenart@bootlin.com>,
+        Maxime Chevallier <maxime.chevallier@bootlin.com>,
+        Nadav Haklai <nadavh@marvell.com>
+Subject: Re: [PATCH 05/12] PCI: aardvark: add suspend to RAM support
+Message-ID: <20181203102708.GA6090@e107981-ln.cambridge.arm.com>
+References: <20181123141831.8214-1-miquel.raynal@bootlin.com>
+ <20181123141831.8214-6-miquel.raynal@bootlin.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="US-ASCII"
-Content-Transfer-Encoding: 7bit
-X-Originating-IP: [10.202.226.46]
-X-CFilter-Loop: Reflected
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20181123141831.8214-6-miquel.raynal@bootlin.com>
+User-Agent: Mutt/1.5.24 (2015-08-30)
 Sender: linux-pci-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-On Tue, 20 Nov 2018 13:19:35 +0000
-Jonathan Cameron <jonathan.cameron@huawei.com> wrote:
+[+Rafael, Sudeep]
 
-> On Tue, 20 Nov 2018 13:01:05 +0100
-> Peter Zijlstra <peterz@infradead.org> wrote:
+On Fri, Nov 23, 2018 at 03:18:24PM +0100, Miquel Raynal wrote:
+> Add suspend and resume callbacks. The priority of these are
+> "_noirq()", to workaround early access to the registers done by the
+> PCI core through the ->read()/->write() callbacks at resume time.
 > 
-> > On Thu, Nov 15, 2018 at 11:06:17AM +0000, Jonathan Cameron wrote:  
-> > > The addition of support to read the numa node for a PCI
-> > > card specified by _PXM resulted in Martin's system not
-> > > booting.   Looking at the ACPI tables it seems that there
-> > > are PXM entries for the root ports, but no SRAT table.
-> > > 
-> > > The absence of SRAT table results in dummy_numa_init being
-> > > called.  However, unlike on arm64, this doesn't then result
-> > > in numa_off being set.  When the PCI code later comes along
-> > > and calls acpi_get_node for any PCI card below the root port,
-> > > it navigates up the ACPI tree until it finds the PXM value in
-> > > the root port. This value is then passed to
-> > > acpi_map_pxm_to_node.  If numa_off is set this returns,
-> > > NUMA_NO_NODE (as it does on arm64), on x86 it instead tries
-> > > to allocate a numa node from the unused set without setting
-> > > up all the infrastructure that would normally accompany such
-> > > a call.  We have not identified exactly which driver is
-> > > causing the subsequent hang for Martin.
-> > > 
-> > > It is invalid under the ACPI spec to specify new
-> > > numa nodes using PXM if they have no presence in SRAT.
-> > > Thus the simplest fix is to set numa_off when it is off due
-> > > to an invalid SRAT (here not present at all).
-> > > 
-> > > I do not have easy access to appropriate x86 numa systems so
-> > > would appreciate some testing of this one!
-> > > 
-> > > Known problem boards setups:
-> > > 
-> > > AMD Ryzen Threadripper 2950X on ASROCK X399 TAICHI
-> > > MSI X399 SLI PLUS (probably - not confirmed yet)
-> > > 
-> > > The PCI patch has been reverted, so this fix is not critical.
-> > > 
-> > > Reported-by: Martin Hundeb?ll <martin@geanix.com>
-> > > Signed-off-by: Jonathan Cameron <Jonathan.Cameron@huawei.com>
-> > > Fixes: bad7dcd94f39 ("ACPI/PCI: Pay attention to device-specific _PXM node values")
-> > > 
-> > > ---
-> > >  arch/x86/mm/numa.c | 2 ++
-> > >  1 file changed, 2 insertions(+)
-> > > 
-> > > diff --git a/arch/x86/mm/numa.c b/arch/x86/mm/numa.c
-> > > index 1308f5408bf7..ce1182f953ff 100644
-> > > --- a/arch/x86/mm/numa.c
-> > > +++ b/arch/x86/mm/numa.c
-> > > @@ -695,6 +695,8 @@ static int __init dummy_numa_init(void)
-> > >  	node_set(0, numa_nodes_parsed);
-> > >  	numa_add_memblk(0, 0, PFN_PHYS(max_pfn));
-> > >  
-> > > +	numa_off = true;    
-> > 
-> > Should we not:
-> > 
-> > 	pr_err(FW_BUG "Invalid SRAT table.\n");
-> > 
-> > or something along those lines?
-> > 
-> > We should take every possibility to call out broken and non-compliant
-> > firmware.  
+> Signed-off-by: Miquel Raynal <miquel.raynal@bootlin.com>
+> ---
+>  drivers/pci/controller/pci-aardvark.c | 52 +++++++++++++++++++++++++++
+>  1 file changed, 52 insertions(+)
 > 
-> While I agree we should definitely be calling this out nice and loud,
-> not having an SRAT isn't indicating a broken firmware as SRAT is optional
-> in ACPI.  The breakage only occurs much later when the DSDT contains a
-> PXM entry that doesn't correspond to any entries in SRAT.
-> 
-> To report at that point, we would need some background info stashed
-> on why numa_off was set.  It could be off because we set it so via
-> the kernel command line.
-> 
-> If people are happy with this general direction I'm happy to spin a
-> patch to do that state tracking and pr_err as a follow up.
-> 
+> diff --git a/drivers/pci/controller/pci-aardvark.c b/drivers/pci/controller/pci-aardvark.c
+> index 108b3f15c410..7ecf1ac4036b 100644
+> --- a/drivers/pci/controller/pci-aardvark.c
+> +++ b/drivers/pci/controller/pci-aardvark.c
+> @@ -1108,6 +1108,55 @@ static int advk_pcie_setup_clk(struct advk_pcie *pcie)
+>  	return ret;
+>  }
+>  
+> +static int __maybe_unused advk_pcie_suspend(struct device *dev)
+> +{
+> +	struct advk_pcie *pcie = dev_get_drvdata(dev);
+> +
+> +	advk_pcie_disable_phy(pcie);
+> +
+> +	clk_disable_unprepare(pcie->clk);
 
-Just a quick *bump* on this one as I'd really like to get the PCIe patch
-that caused the issue back in for the next merge window if possible.
-There is some related new ACPI spec stuff coming shortly that will be
-making more use of this.
-
-Martin tested the basic principle (if not necessarily exactly this patch)
-with success.
-
-Ingo, did you have a chance to take a look at this for your test system?
-
-To my mind it seems like a very straight forward fix, with a small potential
-that someone is dong something 'interesting' that would stop working due to
-us blocking the domain lookup when SRAT isn't present.
+I have noticed it is common practice, still, I would like to check whether
+it is allowed to call functions that may sleep in a NOIRQ suspend/resume
+callback ?
 
 Thanks,
+Lorenzo
 
-Jonathan
-
+> +
+> +	return 0;
+> +}
+> +
+> +static int __maybe_unused advk_pcie_resume(struct device *dev)
+> +{
+> +	struct advk_pcie *pcie = dev_get_drvdata(dev);
+> +	int ret;
+> +
+> +	ret = clk_prepare_enable(pcie->clk);
+> +	if (ret)
+> +		return ret;
+> +
+> +	/*
+> +	 * Empirical delay needed after enabling the clock and before
+> +	 * accessing any register.
+> +	 */
+> +	msleep(10);
+> +
+> +	ret = advk_pcie_enable_phy(pcie);
+> +	if (ret)
+> +		return ret;
+> +
+> +	advk_pcie_hard_reset(pcie);
+> +
+> +	advk_pcie_setup_hw(pcie);
+> +
+> +	advk_sw_pci_bridge_init(pcie);
+> +
+> +	return 0;
+> +}
+> +
+> +/*
+> + * The PCI core will try to reconfigure the bus quite early in the resume path.
+> + * We must use the _noirq() alternatives to ensure the controller is ready when
+> + * the core uses the ->read()/->write() callbacks.
+> + */
+> +static const struct dev_pm_ops advk_pcie_dev_pm_ops = {
+> +	SET_NOIRQ_SYSTEM_SLEEP_PM_OPS(advk_pcie_suspend,
+> +				      advk_pcie_resume)
+> +};
+> +
+>  static int advk_pcie_probe(struct platform_device *pdev)
+>  {
+>  	struct device *dev = &pdev->dev;
+> @@ -1188,6 +1237,8 @@ static int advk_pcie_probe(struct platform_device *pdev)
+>  		return ret;
+>  	}
+>  
+> +	dev_set_drvdata(dev, pcie);
+> +
+>  	return 0;
+>  }
+>  
+> @@ -1200,6 +1251,7 @@ static struct platform_driver advk_pcie_driver = {
+>  	.driver = {
+>  		.name = "advk-pcie",
+>  		.of_match_table = advk_pcie_of_match_table,
+> +		.pm = &advk_pcie_dev_pm_ops,
+>  		/* Driver unloading/unbinding currently not supported */
+>  		.suppress_bind_attrs = true,
+>  	},
+> -- 
+> 2.19.1
+> 
