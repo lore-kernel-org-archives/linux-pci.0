@@ -2,156 +2,119 @@ Return-Path: <SRS0=SeHV=OM=vger.kernel.org=linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-7.5 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	MAILING_LIST_MULTI,MENTIONS_GIT_HOSTING,SPF_PASS,URIBL_BLOCKED,
-	USER_AGENT_MUTT autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-8.6 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
+	DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,
+	SIGNED_OFF_BY,SPF_PASS,URIBL_BLOCKED,USER_AGENT_MUTT autolearn=ham
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 41AEBC04EB9
-	for <linux-pci@archiver.kernel.org>; Mon,  3 Dec 2018 17:43:08 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 2C3EBC04EB9
+	for <linux-pci@archiver.kernel.org>; Mon,  3 Dec 2018 18:02:14 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 0E9EC2087F
-	for <linux-pci@archiver.kernel.org>; Mon,  3 Dec 2018 17:43:08 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.3.2 mail.kernel.org 0E9EC2087F
-Authentication-Results: mail.kernel.org; dmarc=none (p=none dis=none) header.from=arm.com
+	by mail.kernel.org (Postfix) with ESMTP id EBA4820848
+	for <linux-pci@archiver.kernel.org>; Mon,  3 Dec 2018 18:02:13 +0000 (UTC)
+Authentication-Results: mail.kernel.org;
+	dkim=pass (1024-bit key) header.d=linaro.org header.i=@linaro.org header.b="UTZ2pGuZ"
+DMARC-Filter: OpenDMARC Filter v1.3.2 mail.kernel.org EBA4820848
+Authentication-Results: mail.kernel.org; dmarc=fail (p=none dis=none) header.from=linaro.org
 Authentication-Results: mail.kernel.org; spf=none smtp.mailfrom=linux-pci-owner@vger.kernel.org
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726123AbeLCRnI (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Mon, 3 Dec 2018 12:43:08 -0500
-Received: from foss.arm.com ([217.140.101.70]:43228 "EHLO foss.arm.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1725897AbeLCRnI (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Mon, 3 Dec 2018 12:43:08 -0500
-Received: from usa-sjc-imap-foss1.foss.arm.com (unknown [10.72.51.249])
-        by usa-sjc-mx-foss1.foss.arm.com (Postfix) with ESMTP id 70A921682;
-        Mon,  3 Dec 2018 09:43:06 -0800 (PST)
-Received: from e107981-ln.cambridge.arm.com (e107981-ln.cambridge.arm.com [10.1.197.40])
-        by usa-sjc-imap-foss1.foss.arm.com (Postfix) with ESMTPSA id 8001D3F59C;
-        Mon,  3 Dec 2018 09:43:04 -0800 (PST)
-Date:   Mon, 3 Dec 2018 17:42:57 +0000
-From:   Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
-To:     Niklas Cassel <niklas.cassel@linaro.org>
-Cc:     Stanimir Varbanov <svarbanov@mm-sol.com>,
-        Marc Zyngier <marc.zyngier@arm.com>, linux-pci@vger.kernel.org,
+        id S1726221AbeLCSCS (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Mon, 3 Dec 2018 13:02:18 -0500
+Received: from mail-lf1-f66.google.com ([209.85.167.66]:38324 "EHLO
+        mail-lf1-f66.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726014AbeLCSCS (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Mon, 3 Dec 2018 13:02:18 -0500
+Received: by mail-lf1-f66.google.com with SMTP id p86so9855880lfg.5
+        for <linux-pci@vger.kernel.org>; Mon, 03 Dec 2018 10:02:11 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=linaro.org; s=google;
+        h=date:from:to:cc:subject:message-id:references:mime-version
+         :content-disposition:in-reply-to:user-agent;
+        bh=xjxo77HLOwXZgqZrzdmytZRn5YRf80zljBom3D8Rfxs=;
+        b=UTZ2pGuZqcgO0QbZ3YRkunR8LP45bXm9P/1gR9ZBx5GIo6e0V7dizB8gHUKGifNTa7
+         BtGvpuHO5mBwiWeBUGRhGvoHFMISJgva0HeuuIPmZhvmwGZu8tnXdJ8ve5Kh+oNYz1Nd
+         s2VUHkBfHoTQlyYTc6oGgINFg79mb2H3AnLjQ=
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20161025;
+        h=x-gm-message-state:date:from:to:cc:subject:message-id:references
+         :mime-version:content-disposition:in-reply-to:user-agent;
+        bh=xjxo77HLOwXZgqZrzdmytZRn5YRf80zljBom3D8Rfxs=;
+        b=gLW13JAld/XHHLRlRfAgGY2uFn5OsRTREPaGfqD/H/g3dMkyOy/Q0tha1Hhmxq30YG
+         5E5xN2tvn/B3eRJcuCQAYlD8Ix05pndbUO0ZWx3iTzfZ43OG926YOvO+VtWpWUCxaxXo
+         q2Lz7JRRwoVfQnIy7EYYn0rPjLbMMV+ei8shDP3aImOZeehwnumCdd+IkwbF/foHNpk+
+         tq56A9Ay3p1OiEP2HFx07ImAEo/R8DCu4jcuMh+r+M21vJoI1Cjxrbvc6ZBdl4tbjbxJ
+         PaWw6A7z0Z93H1kRg7v/Dr/2LnmquPR033f0zD3dxaUDOqNXp+i/Hmp12/Tac16cpIRa
+         Gsmw==
+X-Gm-Message-State: AA+aEWaKb3eiYdY6l7iUf++weBrMXBCuXEcVy4IP5MZcD44frk+/2XYE
+        0J/b1Ai0Rz8Fai2HN7clem2OGQ==
+X-Google-Smtp-Source: AFSGD/VCikYmFgdM0Gt5KhgSBojDXoOz2wGB77voF8gugZH99eatf6XWhL1ln44s5hhtUQZLZ4mmXg==
+X-Received: by 2002:a19:e01e:: with SMTP id x30mr9337806lfg.89.1543860130789;
+        Mon, 03 Dec 2018 10:02:10 -0800 (PST)
+Received: from centauri.lan (h-229-118.A785.priv.bahnhof.se. [5.150.229.118])
+        by smtp.gmail.com with ESMTPSA id i78sm2728954lfa.9.2018.12.03.10.02.09
+        (version=TLS1_2 cipher=ECDHE-RSA-CHACHA20-POLY1305 bits=256/256);
+        Mon, 03 Dec 2018 10:02:10 -0800 (PST)
+Date:   Mon, 3 Dec 2018 19:02:08 +0100
+From:   Niklas Cassel <niklas.cassel@linaro.org>
+To:     Marc Zyngier <marc.zyngier@arm.com>
+Cc:     linux-pci@vger.kernel.org,
+        Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
         Bjorn Helgaas <bhelgaas@google.com>,
         Trent Piepho <tpiepho@impinj.com>,
         Jingoo Han <jingoohan1@gmail.com>,
         Gustavo Pimentel <gustavo.pimentel@synopsys.com>,
         faiz_abbas@ti.com, Joao Pinto <Joao.Pinto@synopsys.com>,
         Vignesh R <vigneshr@ti.com>
-Subject: Re: [PATCH 0/3] PCI: designware: Fixing MSI handling flow
-Message-ID: <20181203174257.GA13670@e107981-ln.cambridge.arm.com>
-References: <20181113225734.8026-1-marc.zyngier@arm.com>
- <693b46a1-18ea-ef94-ca18-8d3c23698986@mm-sol.com>
- <20181201235058.GA21020@centauri.lan>
- <20181203104218.GB6090@e107981-ln.cambridge.arm.com>
- <20181203130924.GA5105@centauri.lan>
+Subject: Re: [1/3] PCI: designware: Use interrupt masking instead of disabling
+Message-ID: <20181203180208.GA18985@centauri.lan>
+References: <20181113225734.8026-2-marc.zyngier@arm.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20181203130924.GA5105@centauri.lan>
-User-Agent: Mutt/1.5.24 (2015-08-30)
+In-Reply-To: <20181113225734.8026-2-marc.zyngier@arm.com>
+User-Agent: Mutt/1.10.1 (2018-07-13)
 Sender: linux-pci-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-On Mon, Dec 03, 2018 at 02:09:24PM +0100, Niklas Cassel wrote:
-> On Mon, Dec 03, 2018 at 10:42:19AM +0000, Lorenzo Pieralisi wrote:
-> > On Sun, Dec 02, 2018 at 12:50:58AM +0100, Niklas Cassel wrote:
-> > > On Wed, Nov 21, 2018 at 07:24:53PM +0200, Stanimir Varbanov wrote:
-> > > > Hi,
-> > > > 
-> > > > On 11/14/18 12:57 AM, Marc Zyngier wrote:
-> > > > > It recently came to light that the Designware PCIe driver is rather
-> > > > > broken in the way it handles MSI[1]:
-> > > > > 
-> > > > > - It masks interrupt by disabling them, meaning that MSIs generated
-> > > > >   during the masked window are simply lost. Oops.
-> > > > > 
-> > > > > - Acking of the currently pending MSI is done outside of the interrupt
-> > > > >   flow, getting moved around randomly and ultimately breaking the
-> > > > >   driver. Not great.
-> > > > > 
-> > > > > This series attempts to address this by switching to using the MASK
-> > > > > register for masking interrupts (!), and move the ack into the
-> > > > > appropriate callback, giving it a fixed place in the MSI handling
-> > > > > flow.
-> > > > > 
-> > > > > Note that this is only compile-tested on my arm64 laptop, as I'm
-> > > > > travelling and do not have the required HW to test it anyway. I'd
-> > > > > welcome both review and testing by the interested parties (dwc
-> > > > > maintainer and users affected by existing bugs).
-> > > > > 
-> > > > > Thanks,
-> > > > > 
-> > > > > 	M.
-> > > > > 
-> > > > > [1] https://patchwork.kernel.org/patch/10657987/
-> > > > > 
-> > > > > Marc Zyngier (3):
-> > > > >   PCI: designware: Use interrupt masking instead of disabling
-> > > > >   PCI: designware: Take lock when ACKing an interrupt
-> > > > >   PCI: designware: Move interrupt acking into the proper callback
-> > > > > 
-> > > > >  .../pci/controller/dwc/pcie-designware-host.c | 22 ++++++++++++-------
-> > > > >  1 file changed, 14 insertions(+), 8 deletions(-)
-> > > > > 
-> > > > 
-> > > > for pcie-qcom:
-> > > > 
-> > > > Tested-by: Stanimir Varbanov <svarbanov@mm-sol.com>
-> > > 
-> > > Hello PCI folks,
-> > > 
-> > > Since this is a real bug, we should try get a couple of Tested-by tags
-> > > before it's too late.
-> > > It would be nice if v4.20 was released without broken MSIs in this driver.
-> > > 
-> > > Personally I get confused just by looking at this mail thread.
-> > > 
-> > > I see 3 patches from Marc and a fix-up from Marc, but I also see
-> > > a patch from Gustavo, and another patch from Trent.
-> > > 
-> > > Is seems like Lorenzo has a branch with Marc's 3 patches + Marc's fix-up
-> > > folded in here:
-> > > https://git.kernel.org/pub/scm/linux/kernel/git/lpieralisi/pci.git/log/?h=test%2Fpci-dwc-msi
-> > > 
-> > > Perhaps it would be a good idea to send a V2, with proper Fixes-tags,
-> > > just so that people would know what to test, so that we can start getting
-> > > those Tested-by tags.
-> > 
-> > Perhaps it would be a good idea to pull the branch above and test it
-> > after I have sent three reminders to all DWC host bridge maintainers through
-> > this email thread.
-> > 
-> > I have no problem reposting those patches but it is time you started
-> > testing them, I have already explained what's the issue they are fixing
-> > in this thread, I do not think a Fixes: tag will add any further degree
-> > of urgency.
-> > 
+On Tue, Nov 13, 2018 at 10:57:32PM +0000, Marc Zyngier wrote:
+> The dwc driver is showing an interesting level of brokeness, as it
+> insists on using the "enable" register to mask/unmask MSIs, meaning
+> that an MSIs being generated while the interrupt is in that "disabled"
+> state will simply be lost.
 > 
-> I tested Lorenzo's
-> https://git.kernel.org/pub/scm/linux/kernel/git/lpieralisi/pci.git/log/?h=test%2Fpci-dwc-msi
-> branch with drivers/pci/controller/dwc/pcie-qcom.c.
+> Let's move to the MASK register, which offers the expected semantics.
 > 
-> Without this branch, when having an ath10k PCIe endpoint connected,
-> and simply running the ath10k as a host access point (running hostapd):
-> watch cat /proc/interrupts | grep ath10k_pci
-> I consistenly stop getting interrupts in less than a minute.
+> Signed-off-by: Marc Zyngier <marc.zyngier@arm.com>
+> ---
+>  drivers/pci/controller/dwc/pcie-designware-host.c | 4 ++--
+>  1 file changed, 2 insertions(+), 2 deletions(-)
 > 
-> With this branch, I've been able to run the same test case successfully
-> for 30+ minutes.
-> 
-> Tested-by: Niklas Cassel <niklas.cassel@linaro.org>
+> diff --git a/drivers/pci/controller/dwc/pcie-designware-host.c b/drivers/pci/controller/dwc/pcie-designware-host.c
+> index 29a05759a294..c3aa8b5fb51d 100644
+> --- a/drivers/pci/controller/dwc/pcie-designware-host.c
+> +++ b/drivers/pci/controller/dwc/pcie-designware-host.c
+> @@ -168,7 +168,7 @@ static void dw_pci_bottom_mask(struct irq_data *data)
+>  		bit = data->hwirq % MAX_MSI_IRQS_PER_CTRL;
+>  
+>  		pp->irq_status[ctrl] &= ~(1 << bit);
+> -		dw_pcie_wr_own_conf(pp, PCIE_MSI_INTR0_ENABLE + res, 4,
+> +		dw_pcie_wr_own_conf(pp, PCIE_MSI_INTR0_MASK + res, 4,
+>  				    pp->irq_status[ctrl]);
+>  	}
+>  
+> @@ -191,7 +191,7 @@ static void dw_pci_bottom_unmask(struct irq_data *data)
+>  		bit = data->hwirq % MAX_MSI_IRQS_PER_CTRL;
+>  
+>  		pp->irq_status[ctrl] |= 1 << bit;
+> -		dw_pcie_wr_own_conf(pp, PCIE_MSI_INTR0_ENABLE + res, 4,
+> +		dw_pcie_wr_own_conf(pp, PCIE_MSI_INTR0_MASK + res, 4,
+>  				    pp->irq_status[ctrl]);
+>  	}
+>  
 
-Thank you very much, I need this tag on linux-pci@vger.kernel.org in
-reply to this series:
+For this patch combined with the fix-up from:
+https://marc.info/?l=linux-pci&m=154218928401960&w=2
 
-https://patchwork.ozlabs.org/project/linux-pci/list/?series=75827
-
-I need more testing done, I encourage other DWC maintainers to test my
-branch above. I am mulling over it but I may consider this v4.21
-material if I do not get enough testing done this week.
-
-Thanks,
-Lorenzo
+Tested-by: Niklas Cassel <niklas.cassel@linaro.org>
