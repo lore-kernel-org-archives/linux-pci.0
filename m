@@ -2,221 +2,130 @@ Return-Path: <SRS0=SeHV=OM=vger.kernel.org=linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-8.5 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_PASS,URIBL_BLOCKED,
-	USER_AGENT_MUTT autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-2.5 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+	MAILING_LIST_MULTI,SPF_PASS,URIBL_BLOCKED,USER_AGENT_MUTT autolearn=ham
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id BCBE0C04EBF
-	for <linux-pci@archiver.kernel.org>; Mon,  3 Dec 2018 11:48:46 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id C09F2C04EB9
+	for <linux-pci@archiver.kernel.org>; Mon,  3 Dec 2018 11:58:56 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 837A720848
-	for <linux-pci@archiver.kernel.org>; Mon,  3 Dec 2018 11:48:46 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.3.2 mail.kernel.org 837A720848
+	by mail.kernel.org (Postfix) with ESMTP id 8A39820850
+	for <linux-pci@archiver.kernel.org>; Mon,  3 Dec 2018 11:58:56 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.3.2 mail.kernel.org 8A39820850
 Authentication-Results: mail.kernel.org; dmarc=none (p=none dis=none) header.from=arm.com
 Authentication-Results: mail.kernel.org; spf=none smtp.mailfrom=linux-pci-owner@vger.kernel.org
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726273AbeLCLt2 (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Mon, 3 Dec 2018 06:49:28 -0500
-Received: from foss.arm.com ([217.140.101.70]:35472 "EHLO foss.arm.com"
+        id S1726223AbeLCL7k (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Mon, 3 Dec 2018 06:59:40 -0500
+Received: from foss.arm.com ([217.140.101.70]:35594 "EHLO foss.arm.com"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1725975AbeLCLt1 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Mon, 3 Dec 2018 06:49:27 -0500
+        id S1725975AbeLCL7k (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Mon, 3 Dec 2018 06:59:40 -0500
 Received: from usa-sjc-imap-foss1.foss.arm.com (unknown [10.72.51.249])
-        by usa-sjc-mx-foss1.foss.arm.com (Postfix) with ESMTP id 6FF1E165C;
-        Mon,  3 Dec 2018 03:48:44 -0800 (PST)
+        by usa-sjc-mx-foss1.foss.arm.com (Postfix) with ESMTP id 4AD81165C;
+        Mon,  3 Dec 2018 03:58:55 -0800 (PST)
 Received: from e107981-ln.cambridge.arm.com (e107981-ln.cambridge.arm.com [10.1.197.40])
-        by usa-sjc-imap-foss1.foss.arm.com (Postfix) with ESMTPSA id EA33A3F59C;
-        Mon,  3 Dec 2018 03:48:42 -0800 (PST)
-Date:   Mon, 3 Dec 2018 11:48:37 +0000
+        by usa-sjc-imap-foss1.foss.arm.com (Postfix) with ESMTPSA id E3F2A3F59C;
+        Mon,  3 Dec 2018 03:58:52 -0800 (PST)
+Date:   Mon, 3 Dec 2018 11:58:50 +0000
 From:   Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
-To:     Stephen Warren <swarren@wwwdotorg.org>
-Cc:     Jingoo Han <jingoohan1@gmail.com>,
-        Gustavo Pimentel <gustavo.pimentel@synopsys.com>,
-        Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org,
-        Vidya Sagar <vidyas@nvidia.com>,
-        Manikanta Maddireddy <mmaddireddy@nvidia.com>,
-        Stephen Warren <swarren@nvidia.com>
-Subject: Re: [PATCH V3] PCI: dwc: Don't hard-code DBI/ATU offset
-Message-ID: <20181203114837.GA8040@e107981-ln.cambridge.arm.com>
-References: <20181130183719.27142-1-swarren@wwwdotorg.org>
+To:     "Z.q. Hou" <zhiqiang.hou@nxp.com>,
+        Subrahmanya Lingappa <l.subrahmanya@mobiveil.co.in>
+Cc:     "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+        "linux-arm-kernel@lists.infradead.org" 
+        <linux-arm-kernel@lists.infradead.org>,
+        "devicetree@vger.kernel.org" <devicetree@vger.kernel.org>,
+        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+        "bhelgaas@google.com" <bhelgaas@google.com>,
+        "robh+dt@kernel.org" <robh+dt@kernel.org>,
+        "mark.rutland@arm.com" <mark.rutland@arm.com>,
+        "shawnguo@kernel.org" <shawnguo@kernel.org>,
+        Leo Li <leoyang.li@nxp.com>, Mingkai Hu <mingkai.hu@nxp.com>,
+        "M.h. Lian" <minghuan.lian@nxp.com>,
+        Xiaowei Bao <xiaowei.bao@nxp.com>
+Subject: Re: [PATCH 00/23] PCI: refactor the Mobiveil driver and add PCIe
+ support for NXP LX SoCs
+Message-ID: <20181203115850.GB8040@e107981-ln.cambridge.arm.com>
+References: <20181106131807.29951-1-Zhiqiang.Hou@nxp.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20181130183719.27142-1-swarren@wwwdotorg.org>
+In-Reply-To: <20181106131807.29951-1-Zhiqiang.Hou@nxp.com>
 User-Agent: Mutt/1.5.24 (2015-08-30)
 Sender: linux-pci-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-On Fri, Nov 30, 2018 at 11:37:19AM -0700, Stephen Warren wrote:
-> From: Stephen Warren <swarren@nvidia.com>
+On Tue, Nov 06, 2018 at 01:19:03PM +0000, Z.q. Hou wrote:
+> From: Hou Zhiqiang <Zhiqiang.Hou@nxp.com>
 > 
-> The DWC PCIe core contains various separate register spaces: DBI, DBI2,
-> ATU, DMA, etc. The relationship between the addresses of these register
-> spaces is entirely determined by the implementation of the IP block, not
-> by the IP block design itself. Hence, the DWC driver must not make
-> assumptions that one register space can be accessed at a fixed offset from
-> any other register space. To avoid such assumptions, introduce an
-> explicit/separate register pointer for the ATU register space. In
-> particular, the current assumption is not valid for NVIDIA's T194 SoC.
+> This patch set is aim to refactor the Mobiveil driver and add
+> PCIe support for NXP LX series SoCs.
 > 
-> The ATU register space is only used on systems that require unrolled ATU
-> access. This property is detected at run-time for host controllers, and
-> when this is detected, this patch provides a default value for atu_base
-> that matches the previous assumption re: register layout. An alternative
-> would be to update all drivers for HW that requires unrolled access to
-> explicitly set atu_base. However, it's hard to tell which drivers would
-> require atu_base to be set. The unrolled property is not detected for
-> endpoint systems, and so any endpoint driver that requires unrolled access
-> must explicitly set the iatu_unroll_enabled flag (none do at present), and
-> so a check is added to require the driver to also set atu_base while at
-> it.
+> Hou Zhiqiang (23):
+>   PCI: mobiveil: uniform the register accessors
+>   PCI: mobiveil: format the code without function change
+>   PCI: mobiveil: correct the returned error number
+>   PCI: mobiveil: remove flag MSI_FLAG_MULTI_PCI_MSI
+>   PCI: mobiveil: correct PCI base address in MEM/IO outbound windows
+>   PCI: mobiveil: replace the resource list iteration function
+>   PCI: mobiveil: use WIN_NUM_0 explicitly for CFG outbound window
+>   PCI: mobiveil: use the 1st inbound window for MEM inbound transactions
+>   PCI: mobiveil: correct the inbound/outbound window setup routine
+>   PCI: mobiveil: fix the INTx process error
+>   PCI: mobiveil: only fixup the Class Code field
+>   PCI: mobiveil: move out the link up waiting from mobiveil_host_init
+>   PCI: mobiveil: move irq chained handler setup out of DT parse
+>   PCI: mobiveil: initialize Primary/Secondary/Subordinate bus number
+>   dt-bindings: pci: mobiveil: change gpio_slave and apb_csr to optional
+>   PCI: mobiveil: refactor the Mobiveil driver
+>   PCI: mobiveil: continue to initialize the host upon no PCIe link
+>   PCI: mobiveil: disabled IB and OB windows set by bootloader
+>   PCI: mobiveil: add Byte and Half-Word width register accessors
+>   PCI: mobiveil: change prototype of function mobiveil_host_init
+>   dt-bindings: pci: Add NXP LX SoCs PCIe controller
+>   PCI: mobiveil: add PCIe RC driver for NXP LX series SoCs
+>   arm64: dts: freescale: lx2160a: add pcie DT nodes
 > 
-> Signed-off-by: Stephen Warren <swarren@nvidia.com>
-> Acked-by: Gustavo Pimentel <gustavo.pimentel@synopsys.com>
-> Acked-by: Vidya Sagar <vidyas@nvidia.com>
-> ---
-> v3:
-> * Added DEFAULT_DBI_ATU_OFFSET define and associated comment.
-> v2:
-> * Modified patch subject
-> * Added missing outer brackets to PCIE_GET_ATU_INB_UNR_REG_OFFSET macro
-> ---
->  .../pci/controller/dwc/pcie-designware-ep.c   |  4 +++
->  .../pci/controller/dwc/pcie-designware-host.c |  3 ++
->  drivers/pci/controller/dwc/pcie-designware.c  |  8 +++---
->  drivers/pci/controller/dwc/pcie-designware.h  | 28 ++++++++++++++++---
->  4 files changed, 35 insertions(+), 8 deletions(-)
+>  .../devicetree/bindings/pci/lx-pci.txt        |  52 ++
+>  .../devicetree/bindings/pci/mobiveil-pcie.txt |   2 +
+>  MAINTAINERS                                   |  10 +-
+>  .../arm64/boot/dts/freescale/fsl-lx2160a.dtsi | 157 ++++
+>  drivers/pci/controller/Kconfig                |  11 +-
+>  drivers/pci/controller/Makefile               |   2 +-
+>  drivers/pci/controller/mobiveil/Kconfig       |  34 +
+>  drivers/pci/controller/mobiveil/Makefile      |   5 +
+>  drivers/pci/controller/mobiveil/pci-lx.c      | 222 +++++
+>  .../controller/mobiveil/pcie-mobiveil-host.c  | 622 +++++++++++++
+>  .../controller/mobiveil/pcie-mobiveil-plat.c  |  54 ++
+>  .../pci/controller/mobiveil/pcie-mobiveil.c   | 245 +++++
+>  .../pci/controller/mobiveil/pcie-mobiveil.h   | 221 +++++
+>  drivers/pci/controller/pcie-mobiveil.c        | 861 ------------------
+>  14 files changed, 1625 insertions(+), 873 deletions(-)
+>  create mode 100644 Documentation/devicetree/bindings/pci/lx-pci.txt
+>  create mode 100644 drivers/pci/controller/mobiveil/Kconfig
+>  create mode 100644 drivers/pci/controller/mobiveil/Makefile
+>  create mode 100644 drivers/pci/controller/mobiveil/pci-lx.c
+>  create mode 100644 drivers/pci/controller/mobiveil/pcie-mobiveil-host.c
+>  create mode 100644 drivers/pci/controller/mobiveil/pcie-mobiveil-plat.c
+>  create mode 100644 drivers/pci/controller/mobiveil/pcie-mobiveil.c
+>  create mode 100644 drivers/pci/controller/mobiveil/pcie-mobiveil.h
+>  delete mode 100644 drivers/pci/controller/pcie-mobiveil.c
 
-Applied to pci/dwc for v4.21, thanks.
+Subrahmanya,
 
+for the records, this is the driver *you* are maintaining, aren't you ?
+
+We ask developers to be added to the MAINTAINERS list in order to hold
+them accountable, merging a driver upstream means that you need to
+actively maintain it, which in turn means reviewing series affecting
+its code, like this one.
+
+I will have a look too but it is your responsibility to review these
+patches and ACK them accordingly.
+
+So I strongly suggest you start doing it please.
+
+Thanks,
 Lorenzo
-
-> diff --git a/drivers/pci/controller/dwc/pcie-designware-ep.c b/drivers/pci/controller/dwc/pcie-designware-ep.c
-> index 1e7b02221eac..880210366e71 100644
-> --- a/drivers/pci/controller/dwc/pcie-designware-ep.c
-> +++ b/drivers/pci/controller/dwc/pcie-designware-ep.c
-> @@ -504,6 +504,10 @@ int dw_pcie_ep_init(struct dw_pcie_ep *ep)
->  		dev_err(dev, "dbi_base/dbi_base2 is not populated\n");
->  		return -EINVAL;
->  	}
-> +	if (pci->iatu_unroll_enabled && !pci->atu_base) {
-> +		dev_err(dev, "atu_base is not populated\n");
-> +		return -EINVAL;
-> +	}
->  
->  	ret = of_property_read_u32(np, "num-ib-windows", &ep->num_ib_windows);
->  	if (ret < 0) {
-> diff --git a/drivers/pci/controller/dwc/pcie-designware-host.c b/drivers/pci/controller/dwc/pcie-designware-host.c
-> index 29a05759a294..692dd1b264fb 100644
-> --- a/drivers/pci/controller/dwc/pcie-designware-host.c
-> +++ b/drivers/pci/controller/dwc/pcie-designware-host.c
-> @@ -699,6 +699,9 @@ void dw_pcie_setup_rc(struct pcie_port *pp)
->  		dev_dbg(pci->dev, "iATU unroll: %s\n",
->  			pci->iatu_unroll_enabled ? "enabled" : "disabled");
->  
-> +		if (pci->iatu_unroll_enabled && !pci->atu_base)
-> +			pci->atu_base = pci->dbi_base + DEFAULT_DBI_ATU_OFFSET;
-> +
->  		dw_pcie_prog_outbound_atu(pci, PCIE_ATU_REGION_INDEX0,
->  					  PCIE_ATU_TYPE_MEM, pp->mem_base,
->  					  pp->mem_bus_addr, pp->mem_size);
-> diff --git a/drivers/pci/controller/dwc/pcie-designware.c b/drivers/pci/controller/dwc/pcie-designware.c
-> index 2153956a0b20..93ef8c31fb39 100644
-> --- a/drivers/pci/controller/dwc/pcie-designware.c
-> +++ b/drivers/pci/controller/dwc/pcie-designware.c
-> @@ -93,7 +93,7 @@ static u32 dw_pcie_readl_ob_unroll(struct dw_pcie *pci, u32 index, u32 reg)
->  {
->  	u32 offset = PCIE_GET_ATU_OUTB_UNR_REG_OFFSET(index);
->  
-> -	return dw_pcie_readl_dbi(pci, offset + reg);
-> +	return dw_pcie_readl_atu(pci, offset + reg);
->  }
->  
->  static void dw_pcie_writel_ob_unroll(struct dw_pcie *pci, u32 index, u32 reg,
-> @@ -101,7 +101,7 @@ static void dw_pcie_writel_ob_unroll(struct dw_pcie *pci, u32 index, u32 reg,
->  {
->  	u32 offset = PCIE_GET_ATU_OUTB_UNR_REG_OFFSET(index);
->  
-> -	dw_pcie_writel_dbi(pci, offset + reg, val);
-> +	dw_pcie_writel_atu(pci, offset + reg, val);
->  }
->  
->  static void dw_pcie_prog_outbound_atu_unroll(struct dw_pcie *pci, int index,
-> @@ -187,7 +187,7 @@ static u32 dw_pcie_readl_ib_unroll(struct dw_pcie *pci, u32 index, u32 reg)
->  {
->  	u32 offset = PCIE_GET_ATU_INB_UNR_REG_OFFSET(index);
->  
-> -	return dw_pcie_readl_dbi(pci, offset + reg);
-> +	return dw_pcie_readl_atu(pci, offset + reg);
->  }
->  
->  static void dw_pcie_writel_ib_unroll(struct dw_pcie *pci, u32 index, u32 reg,
-> @@ -195,7 +195,7 @@ static void dw_pcie_writel_ib_unroll(struct dw_pcie *pci, u32 index, u32 reg,
->  {
->  	u32 offset = PCIE_GET_ATU_INB_UNR_REG_OFFSET(index);
->  
-> -	dw_pcie_writel_dbi(pci, offset + reg, val);
-> +	dw_pcie_writel_atu(pci, offset + reg, val);
->  }
->  
->  static int dw_pcie_prog_inbound_atu_unroll(struct dw_pcie *pci, int index,
-> diff --git a/drivers/pci/controller/dwc/pcie-designware.h b/drivers/pci/controller/dwc/pcie-designware.h
-> index 0989d880ac46..9943d8c68335 100644
-> --- a/drivers/pci/controller/dwc/pcie-designware.h
-> +++ b/drivers/pci/controller/dwc/pcie-designware.h
-> @@ -92,12 +92,20 @@
->  #define PCIE_ATU_UNR_LOWER_TARGET	0x14
->  #define PCIE_ATU_UNR_UPPER_TARGET	0x18
->  
-> +/*
-> + * The default address offset between dbi_base and atu_base. Root controller
-> + * drivers are not required to initialize atu_base if the offset matches this
-> + * default; the driver core automatically derives atu_base from dbi_base using
-> + * this offset, if atu_base not set.
-> + */
-> +#define DEFAULT_DBI_ATU_OFFSET (0x3 << 20)
-> +
->  /* Register address builder */
-> -#define PCIE_GET_ATU_OUTB_UNR_REG_OFFSET(region)	\
-> -			((0x3 << 20) | ((region) << 9))
-> +#define PCIE_GET_ATU_OUTB_UNR_REG_OFFSET(region) \
-> +		((region) << 9)
->  
-> -#define PCIE_GET_ATU_INB_UNR_REG_OFFSET(region)				\
-> -			((0x3 << 20) | ((region) << 9) | (0x1 << 8))
-> +#define PCIE_GET_ATU_INB_UNR_REG_OFFSET(region) \
-> +		(((region) << 9) | (0x1 << 8))
->  
->  #define MAX_MSI_IRQS			256
->  #define MAX_MSI_IRQS_PER_CTRL		32
-> @@ -219,6 +227,8 @@ struct dw_pcie {
->  	struct device		*dev;
->  	void __iomem		*dbi_base;
->  	void __iomem		*dbi_base2;
-> +	/* Used when iatu_unroll_enabled is true */
-> +	void __iomem		*atu_base;
->  	u32			num_viewport;
->  	u8			iatu_unroll_enabled;
->  	struct pcie_port	pp;
-> @@ -289,6 +299,16 @@ static inline u32 dw_pcie_readl_dbi2(struct dw_pcie *pci, u32 reg)
->  	return __dw_pcie_read_dbi(pci, pci->dbi_base2, reg, 0x4);
->  }
->  
-> +static inline void dw_pcie_writel_atu(struct dw_pcie *pci, u32 reg, u32 val)
-> +{
-> +	__dw_pcie_write_dbi(pci, pci->atu_base, reg, 0x4, val);
-> +}
-> +
-> +static inline u32 dw_pcie_readl_atu(struct dw_pcie *pci, u32 reg)
-> +{
-> +	return __dw_pcie_read_dbi(pci, pci->atu_base, reg, 0x4);
-> +}
-> +
->  static inline void dw_pcie_dbi_ro_wr_en(struct dw_pcie *pci)
->  {
->  	u32 reg;
-> -- 
-> 2.19.2
-> 
