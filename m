@@ -6,191 +6,293 @@ X-Spam-Status: No, score=-10.3 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
 	DKIM_VALID,DKIM_VALID_AU,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
 	SPF_PASS,USER_AGENT_MUTT autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id F39B2C04EB9
-	for <linux-pci@archiver.kernel.org>; Mon,  3 Dec 2018 21:06:06 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id CD77DC04EB9
+	for <linux-pci@archiver.kernel.org>; Mon,  3 Dec 2018 21:39:52 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id AE5582087F
-	for <linux-pci@archiver.kernel.org>; Mon,  3 Dec 2018 21:06:06 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 80C3320864
+	for <linux-pci@archiver.kernel.org>; Mon,  3 Dec 2018 21:39:52 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (1024-bit key) header.d=kernel.org header.i=@kernel.org header.b="mhCG5//W"
-DMARC-Filter: OpenDMARC Filter v1.3.2 mail.kernel.org AE5582087F
+	dkim=pass (1024-bit key) header.d=kernel.org header.i=@kernel.org header.b="gTAnzR3L"
+DMARC-Filter: OpenDMARC Filter v1.3.2 mail.kernel.org 80C3320864
 Authentication-Results: mail.kernel.org; dmarc=fail (p=none dis=none) header.from=kernel.org
 Authentication-Results: mail.kernel.org; spf=none smtp.mailfrom=linux-pci-owner@vger.kernel.org
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726003AbeLCVGG (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Mon, 3 Dec 2018 16:06:06 -0500
-Received: from mail.kernel.org ([198.145.29.99]:54684 "EHLO mail.kernel.org"
+        id S1725984AbeLCVjv (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Mon, 3 Dec 2018 16:39:51 -0500
+Received: from mail.kernel.org ([198.145.29.99]:48140 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1725908AbeLCVGF (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Mon, 3 Dec 2018 16:06:05 -0500
+        id S1725903AbeLCVjv (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Mon, 3 Dec 2018 16:39:51 -0500
 Received: from localhost (unknown [69.71.4.100])
         (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
         (No client certificate requested)
-        by mail.kernel.org (Postfix) with ESMTPSA id 4C18E2082F;
-        Mon,  3 Dec 2018 21:06:04 +0000 (UTC)
+        by mail.kernel.org (Postfix) with ESMTPSA id D514B20672;
+        Mon,  3 Dec 2018 21:39:49 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=default; t=1543871164;
-        bh=PvoMyo+/n4YeOvpFXSplnX/WqoiaryB2LW1RF3g/evw=;
+        s=default; t=1543873190;
+        bh=9t2j9NdYFHEuBSNEPi5wpZL2KNQ6t0FuielaLR+kB84=;
         h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-        b=mhCG5//W7gbOuGItph8C16C7mNwe+oNwxdn95fKeeT9bydxks1FEkV3qL7myzVl5Z
-         WAVs/erdvCaFRh+8OTJLoNVz0fc3uV7cM+yQaVZfGlr+HkQqlYfEKDBL1d0pqoZz1S
-         V/JsWo1KtKIOQ5cebkyV61MqN8RBolbvHsFGwLR4=
-Date:   Mon, 3 Dec 2018 15:06:02 -0600
+        b=gTAnzR3LmHb5HPAWkh4pQ18iVZ0+PrLH/llMPFXA3+58XcTIJg8JUFVE4G1QnnCD/
+         MMFFsT/Mh69TKl9nH5LJ2l8kVsabq9FgjQJv7bhG/Ds8aa6bg+qCcVBnZ75aLXAUbA
+         Oy3Lbp3SkvHDDeLC6hs68vfqWaVJUvwBcEvzf+R4=
+Date:   Mon, 3 Dec 2018 15:39:48 -0600
 From:   Bjorn Helgaas <helgaas@kernel.org>
-To:     "Z.q. Hou" <zhiqiang.hou@nxp.com>
-Cc:     "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-        "lorenzo.pieralisi@arm.com" <lorenzo.pieralisi@arm.com>,
-        "l.subrahmanya@mobiveil.co.in" <l.subrahmanya@mobiveil.co.in>,
-        Leo Li <leoyang.li@nxp.com>,
-        "M.h. Lian" <minghuan.lian@nxp.com>,
-        Xiaowei Bao <xiaowei.bao@nxp.com>
-Subject: Re: [PATCH 1/2] PCI: mobiveil: ls_pcie_g4: add Workaround for
- A-011577
-Message-ID: <20181203210602.GB207198@google.com>
-References: <20181202133303.33988-1-Zhiqiang.Hou@nxp.com>
- <20181202133303.33988-2-Zhiqiang.Hou@nxp.com>
+To:     Ingo Molnar <mingo@kernel.org>
+Cc:     linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
+        Thomas Gleixner <tglx@linutronix.de>,
+        Borislav Petkov <bp@alien8.de>
+Subject: Re: [PATCH] x86/pci: Remove dead code DBG() macro
+Message-ID: <20181203213948.GC207198@google.com>
+References: <20181203082140.GA15318@gmail.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20181202133303.33988-2-Zhiqiang.Hou@nxp.com>
+In-Reply-To: <20181203082140.GA15318@gmail.com>
 User-Agent: Mutt/1.10.1 (2018-07-13)
 Sender: linux-pci-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-On Sun, Dec 02, 2018 at 01:32:42PM +0000, Z.q. Hou wrote:
-> From: Hou Zhiqiang <Zhiqiang.Hou@nxp.com>
-
-Can we pick one driver name (either "mobiveil" or "ls_pcie_g4" (this
-seems excessively long and excessively specific), or something else)?
-I don't want to waste the space of "PCI: mobiveil: ls_pcie_g4:" in
-every future subject line.
-
-Then "Add workaround for ...".  I assume the "A-011577" part is
-meaningful inside NXP, but it's not useful to anybody else.  Move that
-to the changelog proper and say something about the actual issue in
-the subject.
-
-> PCIe configuration access to non-existent function triggered
-> SERROR interrupt exception.
+On Mon, Dec 03, 2018 at 09:21:40AM +0100, Ingo Molnar wrote:
+> From 22b71f970f18f5f38161be028ab7ce7cd1f769f7 Mon Sep 17 00:00:00 2001
+> From: Ingo Molnar <mingo@kernel.org>
+> Date: Mon, 3 Dec 2018 09:15:40 +0100
+> Subject: [PATCH] x86/pci: Remove the dead-code DBG() macro
 > 
-> Workaround:
-> Disable error reporting on AXI bus during the Vendor ID read
-> transactions in enumeration.
+> While reading arch/x86/include/asm/pci_x86.h I noticed that we have ancient
+> residuals of debugging code, which is never actually enabled via any regular
+> Kconfig mechanism:
 > 
-> This ERRATA is only for LX2160A Rev1.0, and it will be fixed
-> in Rev2.0.
+>  #undef DEBUG
 > 
-> Signed-off-by: Hou Zhiqiang <Zhiqiang.Hou@nxp.com>
+>  #ifdef DEBUG
+>  #define DBG(fmt, ...) printk(fmt, ##__VA_ARGS__)
+>  #else
+>  #define DBG(fmt, ...)                          \
+>  do {                                           \
+>        if (0)                                  \
+>                printk(fmt, ##__VA_ARGS__);     \
+>  } while (0)
+>  #endif
+> 
+> Remove this and the call sites. These messages might have been
+> super interesting decades ago when the PCI code was first
+> bootstrapped, but we have better mechanisms meanwhile, and code
+> readability is king ... ;-)
+> 
+> Signed-off-by: Ingo Molnar <mingo@kernel.org>
+
+Acked-by: Bjorn Helgaas <bhelgaas@google.com>
+
+for both of these.  I have nothing in the queue for these files, so
+probably easier if you just take them.  FWIW, recent history
+capitalizes the subject lines as "x86/PCI: "
+
+Thanks for all this cleanup!
+
 > ---
->  .../controller/mobiveil/pci-layerscape-gen4.c | 24 +++++++++++++++++++
->  .../controller/mobiveil/pcie-mobiveil-host.c  | 13 +++++++++-
->  .../pci/controller/mobiveil/pcie-mobiveil.h   |  2 ++
->  3 files changed, 38 insertions(+), 1 deletion(-)
+>  arch/x86/include/asm/pci_x86.h | 12 ------------
+>  arch/x86/pci/direct.c          |  1 -
+>  arch/x86/pci/i386.c            |  2 --
+>  arch/x86/pci/irq.c             | 29 +++--------------------------
+>  arch/x86/pci/legacy.c          |  3 +--
+>  arch/x86/pci/pcbios.c          |  9 ++-------
+>  6 files changed, 6 insertions(+), 50 deletions(-)
 > 
-> diff --git a/drivers/pci/controller/mobiveil/pci-layerscape-gen4.c b/drivers/pci/controller/mobiveil/pci-layerscape-gen4.c
-> index 174cbcac4059..1fe56532b288 100644
-> --- a/drivers/pci/controller/mobiveil/pci-layerscape-gen4.c
-> +++ b/drivers/pci/controller/mobiveil/pci-layerscape-gen4.c
-> @@ -24,6 +24,9 @@
+> diff --git a/arch/x86/include/asm/pci_x86.h b/arch/x86/include/asm/pci_x86.h
+> index 959d618dbb17..3f8d9c75b9ee 100644
+> --- a/arch/x86/include/asm/pci_x86.h
+> +++ b/arch/x86/include/asm/pci_x86.h
+> @@ -7,18 +7,6 @@
 >  
->  /* LUT and PF control registers */
->  #define PCIE_LUT_OFF			(0x80000)
-> +#define PCIE_LUT_GCR			(0x28)
-> +#define PCIE_LUT_GCR_RRE		(0)
-> +
->  #define PCIE_PF_OFF			(0xc0000)
->  #define PCIE_PF_INT_STAT		(0x18)
->  #define PF_INT_STAT_PABRST		(31)
-> @@ -188,8 +191,29 @@ static void ls_pcie_g4_reset(struct work_struct *work)
->  	ls_pcie_g4_reinit_hw(pcie);
+>  #include <linux/ioport.h>
+>  
+> -#undef DEBUG
+> -
+> -#ifdef DEBUG
+> -#define DBG(fmt, ...) printk(fmt, ##__VA_ARGS__)
+> -#else
+> -#define DBG(fmt, ...)				\
+> -do {						\
+> -	if (0)					\
+> -		printk(fmt, ##__VA_ARGS__);	\
+> -} while (0)
+> -#endif
+> -
+>  #define PCI_PROBE_BIOS		0x0001
+>  #define PCI_PROBE_CONF1		0x0002
+>  #define PCI_PROBE_CONF2		0x0004
+> diff --git a/arch/x86/pci/direct.c b/arch/x86/pci/direct.c
+> index a51074c55982..68a115629568 100644
+> --- a/arch/x86/pci/direct.c
+> +++ b/arch/x86/pci/direct.c
+> @@ -216,7 +216,6 @@ static int __init pci_sanity_check(const struct pci_raw_ops *o)
+>  			return 1;
+>  	}
+>  
+> -	DBG(KERN_WARNING "PCI: Sanity check failed\n");
+>  	return 0;
 >  }
 >  
-> +static int ls_pcie_g4_read_other_conf(struct pci_bus *bus, unsigned int devfn,
-> +				   int where, int size, u32 *val)
-> +{
-> +	struct mobiveil_pcie *pci = bus->sysdata;
-> +	struct ls_pcie_g4 *pcie = to_ls_pcie_g4(pci);
-> +	int ret;
-> +
-> +	if (where == PCI_VENDOR_ID)
-> +		ls_pcie_g4_lut_writel(pcie, PCIE_LUT_GCR,
-> +				      0 << PCIE_LUT_GCR_RRE);
-> +
-> +	ret = pci_generic_config_read(bus, devfn, where, size, val);
-> +
-> +	if (where == PCI_VENDOR_ID)
-> +		ls_pcie_g4_lut_writel(pcie, PCIE_LUT_GCR,
-> +				      1 << PCIE_LUT_GCR_RRE);
-
-1) As a general style rule, it's better to "clear, then restore" than
-to "clear, then set" the bit.  That way if somebody elsewhere decides
-that PCIE_LUT_GCR_RRE should be cleared by default, this code won't
-stomp on that decision.  E.g.,
-
-  gcr = ls_pcie_g4_lut_readl(...);
-  ls_pcie_g4_lut_writel(..., 0 << PCIE_LUT_GCR_RRE);
-  ret = pci_generic_config_read(...);
-  ls_pcie_g4_lut_writel(..., gcr);
-
-2) I don't *think* the PCIe spec requires that the first access to a
-device be a read of the Vendor ID, so this is a 99% solution, not a
-100% solution.  A 100% solution would be to handle the SERROR so it's
-not fatal.  But I'm pretty sure Linux always does read the Vendor ID
-first (except after a reset, and when we do config reads after a
-reset, we already know the device *exists*), so this is probably
-pretty safe.
-
-> +	return ret;
-> +}
-> +
->  static struct mobiveil_rp_ops ls_pcie_g4_rp_ops = {
->  	.interrupt_init = ls_pcie_g4_interrupt_init,
-> +	.read_other_conf = ls_pcie_g4_read_other_conf,
->  };
+> diff --git a/arch/x86/pci/i386.c b/arch/x86/pci/i386.c
+> index 8cd66152cdb0..5c2b31315750 100644
+> --- a/arch/x86/pci/i386.c
+> +++ b/arch/x86/pci/i386.c
+> @@ -389,8 +389,6 @@ void __init pcibios_resource_survey(void)
+>  {
+>  	struct pci_bus *bus;
 >  
->  static const struct mobiveil_pab_ops ls_pcie_g4_pab_ops = {
-> diff --git a/drivers/pci/controller/mobiveil/pcie-mobiveil-host.c b/drivers/pci/controller/mobiveil/pcie-mobiveil-host.c
-> index c85f00d3cfcf..8b6db38320d7 100644
-> --- a/drivers/pci/controller/mobiveil/pcie-mobiveil-host.c
-> +++ b/drivers/pci/controller/mobiveil/pcie-mobiveil-host.c
-> @@ -79,9 +79,20 @@ static void __iomem *mobiveil_pcie_map_bus(struct pci_bus *bus,
->  	return pcie->rp.config_axi_slave_base + where;
+> -	DBG("PCI: Allocating resources\n");
+> -
+>  	list_for_each_entry(bus, &pci_root_buses, node)
+>  		pcibios_allocate_bus_resources(bus);
+>  
+> diff --git a/arch/x86/pci/irq.c b/arch/x86/pci/irq.c
+> index 52e55108404e..1286f138e281 100644
+> --- a/arch/x86/pci/irq.c
+> +++ b/arch/x86/pci/irq.c
+> @@ -77,11 +77,8 @@ static inline struct irq_routing_table *pirq_check_routing_table(u8 *addr)
+>  	sum = 0;
+>  	for (i = 0; i < rt->size; i++)
+>  		sum += addr[i];
+> -	if (!sum) {
+> -		DBG(KERN_DEBUG "PCI: Interrupt Routing Table found at 0x%p\n",
+> -			rt);
+> +	if (!sum)
+>  		return rt;
+> -	}
+>  	return NULL;
 >  }
 >  
-> +static int mobiveil_pcie_config_read(struct pci_bus *bus, unsigned int devfn,
-> +				     int where, int size, u32 *val)
-> +{
-> +	struct mobiveil_pcie *pcie = bus->sysdata;
-> +	struct root_port *rp = &pcie->rp;
+> @@ -126,15 +123,6 @@ static void __init pirq_peer_trick(void)
+>  	memset(busmap, 0, sizeof(busmap));
+>  	for (i = 0; i < (rt->size - sizeof(struct irq_routing_table)) / sizeof(struct irq_info); i++) {
+>  		e = &rt->slots[i];
+> -#ifdef DEBUG
+> -		{
+> -			int j;
+> -			DBG(KERN_DEBUG "%02x:%02x slot=%02x", e->bus, e->devfn/8, e->slot);
+> -			for (j = 0; j < 4; j++)
+> -				DBG(" %d:%02x/%04x", j, e->irq[j].link, e->irq[j].bitmap);
+> -			DBG("\n");
+> -		}
+> -#endif
+>  		busmap[e->bus] = 1;
+>  	}
+>  	for (i = 1; i < 256; i++) {
+> @@ -163,10 +151,8 @@ void elcr_set_level_irq(unsigned int irq)
+>  	elcr_irq_mask |= (1 << irq);
+>  	printk(KERN_DEBUG "PCI: setting IRQ %u as level-triggered\n", irq);
+>  	val = inb(port);
+> -	if (!(val & mask)) {
+> -		DBG(KERN_DEBUG " -> edge");
+> +	if (!(val & mask))
+>  		outb(val | mask, port);
+> -	}
+>  }
+>  
+>  /*
+> @@ -836,16 +822,10 @@ static void __init pirq_find_router(struct irq_router *r)
+>  	r->get = NULL;
+>  	r->set = NULL;
+>  
+> -	DBG(KERN_DEBUG "PCI: Attempting to find IRQ router for [%04x:%04x]\n",
+> -	    rt->rtr_vendor, rt->rtr_device);
+> -
+>  	pirq_router_dev = pci_get_domain_bus_and_slot(0, rt->rtr_bus,
+>  						      rt->rtr_devfn);
+> -	if (!pirq_router_dev) {
+> -		DBG(KERN_DEBUG "PCI: Interrupt router not found at "
+> -			"%02x:%02x\n", rt->rtr_bus, rt->rtr_devfn);
+> +	if (!pirq_router_dev)
+>  		return;
+> -	}
+>  
+>  	for (h = pirq_routers; h->vendor; h++) {
+>  		/* First look for a router match */
+> @@ -1028,7 +1008,6 @@ void __init pcibios_fixup_irqs(void)
+>  	struct pci_dev *dev = NULL;
+>  	u8 pin;
+>  
+> -	DBG(KERN_DEBUG "PCI: IRQ fixup\n");
+>  	for_each_pci_dev(dev) {
+>  		/*
+>  		 * If the BIOS has set an out of range IRQ number, just
+> @@ -1119,8 +1098,6 @@ static const struct dmi_system_id pciirq_dmi_table[] __initconst = {
+>  
+>  void __init pcibios_irq_init(void)
+>  {
+> -	DBG(KERN_DEBUG "PCI: IRQ init\n");
+> -
+>  	if (raw_pci_ops == NULL)
+>  		return;
+>  
+> diff --git a/arch/x86/pci/legacy.c b/arch/x86/pci/legacy.c
+> index dfbe6ac38830..045089b34400 100644
+> --- a/arch/x86/pci/legacy.c
+> +++ b/arch/x86/pci/legacy.c
+> @@ -17,7 +17,6 @@ static void pcibios_fixup_peer_bridges(void)
+>  
+>  	if (pcibios_last_bus <= 0 || pcibios_last_bus > 0xff)
+>  		return;
+> -	DBG("PCI: Peer bridge fixup\n");
+>  
+>  	for (n=0; n <= pcibios_last_bus; n++)
+>  		pcibios_scan_specific_bus(n);
+> @@ -45,7 +44,7 @@ void pcibios_scan_specific_bus(int busn)
+>  	for (devfn = 0; devfn < 256; devfn += stride) {
+>  		if (!raw_pci_read(0, busn, devfn, PCI_VENDOR_ID, 2, &l) &&
+>  		    l != 0x0000 && l != 0xffff) {
+> -			DBG("Found device at %02x:%02x [%04x]\n", busn, devfn, l);
 > +
-> +	if (bus->number > rp->root_bus_nr && rp->ops->read_other_conf)
-> +		return rp->ops->read_other_conf(bus, devfn, where, size, val);
+>  			pr_info("PCI: Discovered peer bus %02x\n", busn);
+>  			pcibios_scan_root(busn);
+>  			return;
+> diff --git a/arch/x86/pci/pcbios.c b/arch/x86/pci/pcbios.c
+> index 9c97d814125e..a6fc43aa668c 100644
+> --- a/arch/x86/pci/pcbios.c
+> +++ b/arch/x86/pci/pcbios.c
+> @@ -160,8 +160,6 @@ static int __init check_pcibios(void)
+>  		minor_ver = ebx & 0xff;
+>  		if (pcibios_last_bus < 0)
+>  			pcibios_last_bus = ecx & 0xff;
+> -		DBG("PCI: BIOS probe returned s=%02x hw=%02x ver=%02x.%02x l=%02x\n",
+> -			status, hw_mech, major_ver, minor_ver, pcibios_last_bus);
+>  		if (status || signature != PCI_SIGNATURE) {
+>  			printk (KERN_ERR "PCI: BIOS BUG #%x[%08x] found\n",
+>  				status, signature);
+> @@ -320,15 +318,13 @@ static const struct pci_raw_ops *__init pci_find_bios(void)
+>  				check->fields.revision, check);
+>  			continue;
+>  		}
+> -		DBG("PCI: BIOS32 Service Directory structure at 0x%p\n", check);
+>  		if (check->fields.entry >= 0x100000) {
+>  			printk("PCI: BIOS32 entry (0x%p) in high memory, "
+>  					"cannot use.\n", check);
+>  			return NULL;
+>  		} else {
+>  			unsigned long bios32_entry = check->fields.entry;
+> -			DBG("PCI: BIOS32 Service Directory entry at 0x%lx\n",
+> -					bios32_entry);
 > +
-> +	return pci_generic_config_read(bus, devfn, where, size, val);
-> +}
->  static struct pci_ops mobiveil_pcie_ops = {
->  	.map_bus = mobiveil_pcie_map_bus,
-> -	.read = pci_generic_config_read,
-> +	.read = mobiveil_pcie_config_read,
->  	.write = pci_generic_config_write,
->  };
+>  			bios32_indirect.address = bios32_entry + PAGE_OFFSET;
+>  			set_bios_x();
+>  			if (check_pcibios())
+> @@ -366,7 +362,6 @@ struct irq_routing_table * pcibios_get_irq_routing_table(void)
+>  	opt.size = PAGE_SIZE;
+>  	opt.segment = __KERNEL_DS;
 >  
-> diff --git a/drivers/pci/controller/mobiveil/pcie-mobiveil.h b/drivers/pci/controller/mobiveil/pcie-mobiveil.h
-> index 0ccd6cee5f8f..ef93b41f4419 100644
-> --- a/drivers/pci/controller/mobiveil/pcie-mobiveil.h
-> +++ b/drivers/pci/controller/mobiveil/pcie-mobiveil.h
-> @@ -145,6 +145,8 @@ struct mobiveil_msi {			/* MSI information */
->  
->  struct mobiveil_rp_ops {
->  	int (*interrupt_init)(struct mobiveil_pcie *pcie);
-> +	int (*read_other_conf)(struct pci_bus *bus, unsigned int devfn,
-> +			       int where, int size, u32 *val);
->  };
->  
->  struct root_port {
-> -- 
-> 2.17.1
-> 
+> -	DBG("PCI: Fetching IRQ routing table... ");
+>  	__asm__("push %%es\n\t"
+>  		"push %%ds\n\t"
+>  		"pop  %%es\n\t"
+> @@ -384,7 +379,7 @@ struct irq_routing_table * pcibios_get_irq_routing_table(void)
+>  		  "S" (&pci_indirect),
+>  		  "m" (opt)
+>  		: "memory");
+> -	DBG("OK  ret=%d, size=%d, map=%x\n", ret, opt.size, map);
+> +
+>  	if (ret & 0xff00)
+>  		printk(KERN_ERR "PCI: Error %02x when fetching IRQ routing table.\n", (ret >> 8) & 0xff);
+>  	else if (opt.size) {
