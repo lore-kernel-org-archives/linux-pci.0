@@ -2,128 +2,122 @@ Return-Path: <SRS0=SeHV=OM=vger.kernel.org=linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-7.0 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_PASS,URIBL_BLOCKED
+X-Spam-Status: No, score=-4.3 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,MAILING_LIST_MULTI,SPF_PASS,USER_AGENT_MUTT
 	autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 6BB4AC04EB9
-	for <linux-pci@archiver.kernel.org>; Mon,  3 Dec 2018 22:18:59 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 50528C04EB9
+	for <linux-pci@archiver.kernel.org>; Mon,  3 Dec 2018 22:57:35 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 38EDB20851
-	for <linux-pci@archiver.kernel.org>; Mon,  3 Dec 2018 22:18:59 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.3.2 mail.kernel.org 38EDB20851
-Authentication-Results: mail.kernel.org; dmarc=none (p=none dis=none) header.from=bootlin.com
+	by mail.kernel.org (Postfix) with ESMTP id 164562146D
+	for <linux-pci@archiver.kernel.org>; Mon,  3 Dec 2018 22:57:35 +0000 (UTC)
+Authentication-Results: mail.kernel.org;
+	dkim=pass (1024-bit key) header.d=kernel.org header.i=@kernel.org header.b="IRcBphgE"
+DMARC-Filter: OpenDMARC Filter v1.3.2 mail.kernel.org 164562146D
+Authentication-Results: mail.kernel.org; dmarc=fail (p=none dis=none) header.from=kernel.org
 Authentication-Results: mail.kernel.org; spf=none smtp.mailfrom=linux-pci-owner@vger.kernel.org
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1725893AbeLCWS6 convert rfc822-to-8bit (ORCPT
-        <rfc822;linux-pci@archiver.kernel.org>);
-        Mon, 3 Dec 2018 17:18:58 -0500
-Received: from mail.bootlin.com ([62.4.15.54]:34451 "EHLO mail.bootlin.com"
+        id S1725931AbeLCW5e (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Mon, 3 Dec 2018 17:57:34 -0500
+Received: from mail.kernel.org ([198.145.29.99]:59500 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1725873AbeLCWS6 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Mon, 3 Dec 2018 17:18:58 -0500
-Received: by mail.bootlin.com (Postfix, from userid 110)
-        id C9D6620791; Mon,  3 Dec 2018 23:18:55 +0100 (CET)
-Received: from xps13 (unknown [91.224.148.103])
-        by mail.bootlin.com (Postfix) with ESMTPSA id BDCEC207AD;
-        Mon,  3 Dec 2018 23:18:44 +0100 (CET)
-Date:   Mon, 3 Dec 2018 23:18:44 +0100
-From:   Miquel Raynal <miquel.raynal@bootlin.com>
-To:     "Rafael J. Wysocki" <rjw@rjwysocki.net>
-Cc:     Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
-        sudeep.holla@arm.com,
-        Gregory Clement <gregory.clement@bootlin.com>,
-        Jason Cooper <jason@lakedaemon.net>,
-        Andrew Lunn <andrew@lunn.ch>,
-        Sebastian Hesselbarth <sebastian.hesselbarth@gmail.com>,
-        Thomas Petazzoni <thomas.petazzoni@bootlin.com>,
-        Bjorn Helgaas <bhelgaas@google.com>,
-        devicetree@vger.kernel.org, Rob Herring <robh+dt@kernel.org>,
-        Mark Rutland <mark.rutland@arm.com>, linux-pci@vger.kernel.org,
-        linux-kernel@vger.kernel.org, linux-arm-kernel@lists.infradead.org,
-        Antoine Tenart <antoine.tenart@bootlin.com>,
-        Maxime Chevallier <maxime.chevallier@bootlin.com>,
-        Nadav Haklai <nadavh@marvell.com>
-Subject: Re: [PATCH 05/12] PCI: aardvark: add suspend to RAM support
-Message-ID: <20181203231844.0791bdee@xps13>
-In-Reply-To: <1999610.6DN9RK2Tt3@aspire.rjw.lan>
-References: <20181123141831.8214-1-miquel.raynal@bootlin.com>
-        <20181203102708.GA6090@e107981-ln.cambridge.arm.com>
-        <20181203163846.494904f9@xps13>
-        <1999610.6DN9RK2Tt3@aspire.rjw.lan>
-Organization: Bootlin
-X-Mailer: Claws Mail 3.17.1 (GTK+ 2.24.32; x86_64-pc-linux-gnu)
+        id S1725909AbeLCW5d (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Mon, 3 Dec 2018 17:57:33 -0500
+Received: from localhost (unknown [69.71.4.100])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+        (No client certificate requested)
+        by mail.kernel.org (Postfix) with ESMTPSA id AC70C2145D;
+        Mon,  3 Dec 2018 22:57:32 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+        s=default; t=1543877852;
+        bh=xpUXBn7bisODtn97eXlLbqefPm16ou93J84qDoiuM3U=;
+        h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
+        b=IRcBphgETprKlqhF149iLwCazbPU++sTOoHY1gjzgHuHQOER4n7Gwopbupdtg52FN
+         vNf/StcBGKnUukKYyI4BFKJ4uLUowG9LVzPCzTmeHl4VTrVS+dgSkfxAPbf8fGM/vE
+         X51qsIfTb2fEJZAkNInT7twUs8X3tS9F1gA2pZws=
+Date:   Mon, 3 Dec 2018 16:57:31 -0600
+From:   Bjorn Helgaas <helgaas@kernel.org>
+To:     Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
+Cc:     Hanjie Lin <hanjie.lin@amlogic.com>,
+        Yixun Lan <yixun.lan@amlogic.com>,
+        Rob Herring <robh@kernel.org>,
+        Jianxin Pan <jianxin.pan@amlogic.com>,
+        Kevin Hilman <khilman@baylibre.com>,
+        Shawn Lin <shawn.lin@rock-chips.com>,
+        Philippe Ombredanne <pombredanne@nexb.com>,
+        linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
+        Yue Wang <yue.wang@amlogic.com>,
+        Qiufang Dai <qiufang.dai@amlogic.com>,
+        Jian Hu <jian.hu@amlogic.com>,
+        Liang Yang <liang.yang@amlogic.com>,
+        Cyrille Pitchen <cyrille.pitchen@free-electrons.com>,
+        Gustavo Pimentel <gustavo.pimentel@synopsys.com>,
+        Carlo Caione <carlo@caione.org>,
+        linux-amlogic@lists.infradead.org,
+        linux-arm-kernel@lists.infradead.org,
+        Jerome Brunet <jbrunet@baylibre.com>
+Subject: Re: [PATCH v6 2/2] PCI: amlogic: Add the Amlogic Meson PCIe
+ controller driver
+Message-ID: <20181203225731.GE207198@google.com>
+References: <1542876836-191355-1-git-send-email-hanjie.lin@amlogic.com>
+ <1542876836-191355-3-git-send-email-hanjie.lin@amlogic.com>
+ <20181203164150.GA11855@e107981-ln.cambridge.arm.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 8BIT
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20181203164150.GA11855@e107981-ln.cambridge.arm.com>
+User-Agent: Mutt/1.10.1 (2018-07-13)
 Sender: linux-pci-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-Hi Rafael, Stephen,
-
-"Rafael J. Wysocki" <rjw@rjwysocki.net> wrote on Mon, 03 Dec 2018
-23:00:20 +0100:
-
-> On Monday, December 3, 2018 4:38:46 PM CET Miquel Raynal wrote:
-> > Hi Lorenzo,
-> > 
-> > Lorenzo Pieralisi <lorenzo.pieralisi@arm.com> wrote on Mon, 3 Dec 2018
-> > 10:27:08 +0000:
-> >   
-> > > [+Rafael, Sudeep]
-> > > 
-> > > On Fri, Nov 23, 2018 at 03:18:24PM +0100, Miquel Raynal wrote:  
-> > > > Add suspend and resume callbacks. The priority of these are
-> > > > "_noirq()", to workaround early access to the registers done by the
-> > > > PCI core through the ->read()/->write() callbacks at resume time.
-> > > > 
-> > > > Signed-off-by: Miquel Raynal <miquel.raynal@bootlin.com>
-> > > > ---
-> > > >  drivers/pci/controller/pci-aardvark.c | 52 +++++++++++++++++++++++++++
-> > > >  1 file changed, 52 insertions(+)
-> > > > 
-> > > > diff --git a/drivers/pci/controller/pci-aardvark.c b/drivers/pci/controller/pci-aardvark.c
-> > > > index 108b3f15c410..7ecf1ac4036b 100644
-> > > > --- a/drivers/pci/controller/pci-aardvark.c
-> > > > +++ b/drivers/pci/controller/pci-aardvark.c
-> > > > @@ -1108,6 +1108,55 @@ static int advk_pcie_setup_clk(struct advk_pcie *pcie)
-> > > >  	return ret;
-> > > >  }
-> > > >  
-> > > > +static int __maybe_unused advk_pcie_suspend(struct device *dev)
-> > > > +{
-> > > > +	struct advk_pcie *pcie = dev_get_drvdata(dev);
-> > > > +
-> > > > +	advk_pcie_disable_phy(pcie);
-> > > > +
-> > > > +	clk_disable_unprepare(pcie->clk);    
-> > > 
-> > > I have noticed it is common practice, still, I would like to check whether
-> > > it is allowed to call functions that may sleep in a NOIRQ suspend/resume
-> > > callback ?  
-> > 
-> > You are right this is weird. I double checked and for instance,
-> > pcie-mediatek.c, pci-tegra.c and pci-imx6.c do the exact same thing. There are
-> > probably other cases where drivers call functions that may sleep from a NOIRQ
-> > context. I am interested to know if this is valid and if not, what is the
-> > alternative?
-> >   
+On Mon, Dec 03, 2018 at 04:41:50PM +0000, Lorenzo Pieralisi wrote:
+> On Thu, Nov 22, 2018 at 04:53:54PM +0800, Hanjie Lin wrote:
 > 
-> Yes, it is valid.  _noirq means that the high-level action handlers will not be
-> invoked for interrupts occurring during that period, but that doesn't apply to
-> timer interrupts.
+> [...]
 > 
-> IOW, don't expect *your* IRQ handler to be invoked then (if this is not a timer
-> IRQ), but you can sleep.
+> > +static int meson_pcie_rd_own_conf(struct pcie_port *pp, int where, int size,
+> > +				  u32 *val)
+> > +{
+> > +	struct dw_pcie *pci = to_dw_pcie_from_pp(pp);
+> > +
+> > +	/*
+> > +	 * there is a bug of MESON AXG pcie controller that software can not
+> > +	 * programe PCI_CLASS_DEVICE register, so we must return a fake right
+> > +	 * value to ensure driver could probe successfully.
+> > +	 */
+> > +	if (where == PCI_CLASS_REVISION) {
+> > +		*val = readl(pci->dbi_base + PCI_CLASS_REVISION);
+> > +		/* keep revision id */
+> > +		*val &= PCI_CLASS_REVISION_MASK;
+> > +		*val |= PCI_CLASS_BRIDGE_PCI << 16;
+> > +		return PCIBIOS_SUCCESSFUL;
+> > +	}
 > 
-> Thanks,
-> Rafael
+> As I said before, this looks broken. If this code (or other drivers with
+> the same broken assumptions, eg dwc/pcie-qcom.c) carries out a, say,
+> byte sized config access of eg PCI_CLASS_DEVICE you will get junk out of
+> it according to your comment above.
 > 
+> I would like to pick Bjorn's brain on this to see what we can really do
+> to fix this (and other) drivers.
 
-Thank you both for the enlightenment.
+  - Check to see whether you're reading anything in the 32-bit dword at
+    offset 0x08.
 
+  - Do the 32-bit readl().
 
-Thanks,
-Miquèl
+  - Insert the correct Sub-Class and Base Class code (you also throw
+    away the Programming Interface; not sure why that is)
+
+  - If you're reading something smaller than 32 bits, mask & shift as
+    needed.  pci_bridge_emul_conf_read() does something similar that
+    you might be able to copy.
+
+Out of curiosity, what code depends on PCI_CLASS_BRIDGE_PCI?  There
+are several places in the kernel that currently depend on it, but I
+think several of them *should* be checking dev->hdr_type to identify a
+type 1 header instead.
+
+Bjorn
