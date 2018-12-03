@@ -2,109 +2,155 @@ Return-Path: <SRS0=SeHV=OM=vger.kernel.org=linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-7.0 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_PASS,URIBL_BLOCKED
-	autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-10.3 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
+	SPF_PASS,URIBL_BLOCKED,USER_AGENT_MUTT autolearn=ham autolearn_force=no
+	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 1D243C04EB9
-	for <linux-pci@archiver.kernel.org>; Mon,  3 Dec 2018 22:00:35 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id B690BC04EB9
+	for <linux-pci@archiver.kernel.org>; Mon,  3 Dec 2018 22:07:03 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id DC62020850
-	for <linux-pci@archiver.kernel.org>; Mon,  3 Dec 2018 22:00:34 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.3.2 mail.kernel.org DC62020850
-Authentication-Results: mail.kernel.org; dmarc=none (p=none dis=none) header.from=rjwysocki.net
+	by mail.kernel.org (Postfix) with ESMTP id 7C9B120864
+	for <linux-pci@archiver.kernel.org>; Mon,  3 Dec 2018 22:07:03 +0000 (UTC)
+Authentication-Results: mail.kernel.org;
+	dkim=pass (1024-bit key) header.d=kernel.org header.i=@kernel.org header.b="hU7DOutP"
+DMARC-Filter: OpenDMARC Filter v1.3.2 mail.kernel.org 7C9B120864
+Authentication-Results: mail.kernel.org; dmarc=fail (p=none dis=none) header.from=kernel.org
 Authentication-Results: mail.kernel.org; spf=none smtp.mailfrom=linux-pci-owner@vger.kernel.org
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1725847AbeLCWAe (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Mon, 3 Dec 2018 17:00:34 -0500
-Received: from cloudserver094114.home.pl ([79.96.170.134]:50451 "EHLO
-        cloudserver094114.home.pl" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1725808AbeLCWAd (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Mon, 3 Dec 2018 17:00:33 -0500
-Received: from 79.184.252.87.ipv4.supernova.orange.pl (79.184.252.87) (HELO aspire.rjw.lan)
- by serwer1319399.home.pl (79.96.170.134) with SMTP (IdeaSmtpServer 0.83.157)
- id 47be791860265607; Mon, 3 Dec 2018 23:00:30 +0100
-From:   "Rafael J. Wysocki" <rjw@rjwysocki.net>
-To:     Miquel Raynal <miquel.raynal@bootlin.com>
-Cc:     Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
-        sudeep.holla@arm.com,
-        Gregory Clement <gregory.clement@bootlin.com>,
-        Jason Cooper <jason@lakedaemon.net>,
-        Andrew Lunn <andrew@lunn.ch>,
-        Sebastian Hesselbarth <sebastian.hesselbarth@gmail.com>,
-        Thomas Petazzoni <thomas.petazzoni@bootlin.com>,
-        Bjorn Helgaas <bhelgaas@google.com>,
-        devicetree@vger.kernel.org, Rob Herring <robh+dt@kernel.org>,
-        Mark Rutland <mark.rutland@arm.com>, linux-pci@vger.kernel.org,
-        linux-kernel@vger.kernel.org, linux-arm-kernel@lists.infradead.org,
-        Antoine Tenart <antoine.tenart@bootlin.com>,
-        Maxime Chevallier <maxime.chevallier@bootlin.com>,
-        Nadav Haklai <nadavh@marvell.com>
-Subject: Re: [PATCH 05/12] PCI: aardvark: add suspend to RAM support
-Date:   Mon, 03 Dec 2018 23:00:20 +0100
-Message-ID: <1999610.6DN9RK2Tt3@aspire.rjw.lan>
-In-Reply-To: <20181203163846.494904f9@xps13>
-References: <20181123141831.8214-1-miquel.raynal@bootlin.com> <20181203102708.GA6090@e107981-ln.cambridge.arm.com> <20181203163846.494904f9@xps13>
+        id S1725939AbeLCWHC (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Mon, 3 Dec 2018 17:07:02 -0500
+Received: from mail.kernel.org ([198.145.29.99]:32896 "EHLO mail.kernel.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1725848AbeLCWHC (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Mon, 3 Dec 2018 17:07:02 -0500
+Received: from localhost (unknown [69.71.4.100])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+        (No client certificate requested)
+        by mail.kernel.org (Postfix) with ESMTPSA id F35E420851;
+        Mon,  3 Dec 2018 22:07:00 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+        s=default; t=1543874821;
+        bh=P+ClqifsYBB5+feA1KgYgp5Jf4neLwGqIj2CUPXxFXE=;
+        h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
+        b=hU7DOutPAOrnKbkj6S1cjGVdqpBefmmg6dZhPUd4xvvlJ5MUGLXra8s58L3nEtwFO
+         klEjdaprxndwSLRhqQAKqXbg9fq9zW4cxOj3BTK2wejgqVjH+UC6X4PfQsrnJmfU58
+         7RGdoNxyGmMkNHAmkiWj6DlacsbeFRS3IyLxL/0w=
+Date:   Mon, 3 Dec 2018 16:06:59 -0600
+From:   Bjorn Helgaas <helgaas@kernel.org>
+To:     "Z.q. Hou" <zhiqiang.hou@nxp.com>
+Cc:     "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+        "lorenzo.pieralisi@arm.com" <lorenzo.pieralisi@arm.com>,
+        "l.subrahmanya@mobiveil.co.in" <l.subrahmanya@mobiveil.co.in>,
+        Leo Li <leoyang.li@nxp.com>,
+        "M.h. Lian" <minghuan.lian@nxp.com>,
+        Xiaowei Bao <xiaowei.bao@nxp.com>
+Subject: Re: [PATCH 2/2] PCI: mobiveil: ls_pcie_g4: add Workaround for
+ A-011451
+Message-ID: <20181203220659.GD207198@google.com>
+References: <20181202133303.33988-1-Zhiqiang.Hou@nxp.com>
+ <20181202133303.33988-3-Zhiqiang.Hou@nxp.com>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 7Bit
-Content-Type: text/plain; charset="us-ascii"
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20181202133303.33988-3-Zhiqiang.Hou@nxp.com>
+User-Agent: Mutt/1.10.1 (2018-07-13)
 Sender: linux-pci-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-On Monday, December 3, 2018 4:38:46 PM CET Miquel Raynal wrote:
-> Hi Lorenzo,
+On Sun, Dec 02, 2018 at 01:32:45PM +0000, Z.q. Hou wrote:
+> From: Hou Zhiqiang <Zhiqiang.Hou@nxp.com>
 > 
-> Lorenzo Pieralisi <lorenzo.pieralisi@arm.com> wrote on Mon, 3 Dec 2018
-> 10:27:08 +0000:
+> When LX2 PCIe controller is sending multiple split completions and
+> ACK latency expires indicating that ACK should be send at priority.
+> But because of large number of split completions and FC update DLLP,
+> the controller does not give priority to ACK transmission. This
+> results into ACK latency timer timeout error at the link partner and
+> the pending TLPs are replayed by the link partner again.
 > 
-> > [+Rafael, Sudeep]
-> > 
-> > On Fri, Nov 23, 2018 at 03:18:24PM +0100, Miquel Raynal wrote:
-> > > Add suspend and resume callbacks. The priority of these are
-> > > "_noirq()", to workaround early access to the registers done by the
-> > > PCI core through the ->read()/->write() callbacks at resume time.
-> > > 
-> > > Signed-off-by: Miquel Raynal <miquel.raynal@bootlin.com>
-> > > ---
-> > >  drivers/pci/controller/pci-aardvark.c | 52 +++++++++++++++++++++++++++
-> > >  1 file changed, 52 insertions(+)
-> > > 
-> > > diff --git a/drivers/pci/controller/pci-aardvark.c b/drivers/pci/controller/pci-aardvark.c
-> > > index 108b3f15c410..7ecf1ac4036b 100644
-> > > --- a/drivers/pci/controller/pci-aardvark.c
-> > > +++ b/drivers/pci/controller/pci-aardvark.c
-> > > @@ -1108,6 +1108,55 @@ static int advk_pcie_setup_clk(struct advk_pcie *pcie)
-> > >  	return ret;
-> > >  }
-> > >  
-> > > +static int __maybe_unused advk_pcie_suspend(struct device *dev)
-> > > +{
-> > > +	struct advk_pcie *pcie = dev_get_drvdata(dev);
-> > > +
-> > > +	advk_pcie_disable_phy(pcie);
-> > > +
-> > > +	clk_disable_unprepare(pcie->clk);  
-> > 
-> > I have noticed it is common practice, still, I would like to check whether
-> > it is allowed to call functions that may sleep in a NOIRQ suspend/resume
-> > callback ?
+> Workaround:
+> 1. Reduce the ACK latency timeout value to a very small value.
+> 2. Restrict the number of completions from the LX2 PCIe controller
+>    to 1, by changing the Max Read Request Size (MRRS) of link partner
+>    to the same value as Max Packet size (MPS).
 > 
-> You are right this is weird. I double checked and for instance,
-> pcie-mediatek.c, pci-tegra.c and pci-imx6.c do the exact same thing. There are
-> probably other cases where drivers call functions that may sleep from a NOIRQ
-> context. I am interested to know if this is valid and if not, what is the
-> alternative?
+> This patch implemented part 1, the part 2 can be set by kernel parameter
+> 'pci=pcie_bus_perf'
+
+So you're saying that users of this controller must boot with
+"pci=pcie_bus_perf"?  That's a little unfriendly to users.  When they
+forget to use that parameter and some mysterious PCIe error occurs,
+they will not thank you.
+
+We should be able to figure this out automatically via some sort of
+quirk in the driver, and then do the right thing in the MPS/MRRS
+configuration.  That would also give us a chance to make sure that
+when the MPS/MRRS code changes, it can be done in a way that keeps
+this Rev1.0 controller working.
+
+If you depend on users booting with "pci=pcie_bus_perf", there's no
+connection in the code, and if we change or remove that parameter, we
+would have no clue that you depend on it.
+
+> This ERRATA is only for LX2160A Rev1.0, and it will be fixed
+> in Rev2.0.
 > 
-
-Yes, it is valid.  _noirq means that the high-level action handlers will not be
-invoked for interrupts occurring during that period, but that doesn't apply to
-timer interrupts.
-
-IOW, don't expect *your* IRQ handler to be invoked then (if this is not a timer
-IRQ), but you can sleep.
-
-Thanks,
-Rafael
-
+> Signed-off-by: Hou Zhiqiang <Zhiqiang.Hou@nxp.com>
+> ---
+>  .../pci/controller/mobiveil/pci-layerscape-gen4.c  | 14 ++++++++++++++
+>  drivers/pci/controller/mobiveil/pcie-mobiveil.h    |  4 ++++
+>  2 files changed, 18 insertions(+)
+> 
+> diff --git a/drivers/pci/controller/mobiveil/pci-layerscape-gen4.c b/drivers/pci/controller/mobiveil/pci-layerscape-gen4.c
+> index 1fe56532b288..ef43033e1c2a 100644
+> --- a/drivers/pci/controller/mobiveil/pci-layerscape-gen4.c
+> +++ b/drivers/pci/controller/mobiveil/pci-layerscape-gen4.c
+> @@ -220,6 +220,18 @@ static const struct mobiveil_pab_ops ls_pcie_g4_pab_ops = {
+>  	.link_up = ls_pcie_g4_link_up,
+>  };
+>  
+> +static void workaround_A011451(struct ls_pcie_g4 *pcie)
+> +{
+> +	struct mobiveil_pcie *mv_pci = pcie->pci;
+> +	u32 val;
+> +
+> +	/* Set ACK latency timeout */
+> +	val = csr_readl(mv_pci, GPEX_ACK_REPLAY_TO);
+> +	val &= ~(ACK_LAT_TO_VAL_MASK << ACK_LAT_TO_VAL_SHIFT);
+> +	val |= (4 << ACK_LAT_TO_VAL_SHIFT);
+> +	csr_writel(mv_pci, val, GPEX_ACK_REPLAY_TO);
+> +}
+> +
+>  static int __init ls_pcie_g4_probe(struct platform_device *pdev)
+>  {
+>  	struct device *dev = &pdev->dev;
+> @@ -259,6 +271,8 @@ static int __init ls_pcie_g4_probe(struct platform_device *pdev)
+>  	if (!ls_pcie_g4_is_bridge(pcie))
+>  		return -ENODEV;
+>  
+> +	workaround_A011451(pcie);
+> +
+>  	return 0;
+>  }
+>  
+> diff --git a/drivers/pci/controller/mobiveil/pcie-mobiveil.h b/drivers/pci/controller/mobiveil/pcie-mobiveil.h
+> index ef93b41f4419..c75b7c304c46 100644
+> --- a/drivers/pci/controller/mobiveil/pcie-mobiveil.h
+> +++ b/drivers/pci/controller/mobiveil/pcie-mobiveil.h
+> @@ -85,6 +85,10 @@
+>  #define PAB_AXI_AMAP_PEX_WIN_H(win)	PAB_REG_ADDR(0x0bac, win)
+>  #define PAB_INTP_AXI_PIO_CLASS		0x474
+>  
+> +#define GPEX_ACK_REPLAY_TO		0x438
+> +#define  ACK_LAT_TO_VAL_MASK		0x1fff
+> +#define  ACK_LAT_TO_VAL_SHIFT		0
+> +
+>  #define PAB_PEX_AMAP_CTRL(win)		PAB_REG_ADDR(0x4ba0, win)
+>  #define  AMAP_CTRL_EN_SHIFT		0
+>  #define  AMAP_CTRL_TYPE_SHIFT		1
+> -- 
+> 2.17.1
+> 
