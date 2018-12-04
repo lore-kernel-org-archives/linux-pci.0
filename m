@@ -2,39 +2,37 @@ Return-Path: <SRS0=uO3t=ON=vger.kernel.org=linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-4.0 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_PASS autolearn=ham autolearn_force=no
+X-Spam-Status: No, score=-1.0 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+	MAILING_LIST_MULTI,SPF_PASS,URIBL_BLOCKED autolearn=ham autolearn_force=no
 	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 64425C04EB8
-	for <linux-pci@archiver.kernel.org>; Tue,  4 Dec 2018 17:55:56 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 27813C04EB8
+	for <linux-pci@archiver.kernel.org>; Tue,  4 Dec 2018 18:04:22 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 3469D20672
-	for <linux-pci@archiver.kernel.org>; Tue,  4 Dec 2018 17:55:56 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.3.2 mail.kernel.org 3469D20672
+	by mail.kernel.org (Postfix) with ESMTP id E28D120672
+	for <linux-pci@archiver.kernel.org>; Tue,  4 Dec 2018 18:04:21 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.3.2 mail.kernel.org E28D120672
 Authentication-Results: mail.kernel.org; dmarc=none (p=none dis=none) header.from=rjwysocki.net
 Authentication-Results: mail.kernel.org; spf=none smtp.mailfrom=linux-pci-owner@vger.kernel.org
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726073AbeLDRzz (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Tue, 4 Dec 2018 12:55:55 -0500
-Received: from cloudserver094114.home.pl ([79.96.170.134]:43779 "EHLO
+        id S1725880AbeLDSEV (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Tue, 4 Dec 2018 13:04:21 -0500
+Received: from cloudserver094114.home.pl ([79.96.170.134]:48931 "EHLO
         cloudserver094114.home.pl" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726038AbeLDRzz (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Tue, 4 Dec 2018 12:55:55 -0500
+        with ESMTP id S1725797AbeLDSEV (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Tue, 4 Dec 2018 13:04:21 -0500
 Received: from 79.184.252.87.ipv4.supernova.orange.pl (79.184.252.87) (HELO aspire.rjw.lan)
  by serwer1319399.home.pl (79.96.170.134) with SMTP (IdeaSmtpServer 0.83.157)
- id 3abdd1b8d69e1ef3; Tue, 4 Dec 2018 18:55:52 +0100
+ id f9c61c2cc873e88a; Tue, 4 Dec 2018 19:04:18 +0100
 From:   "Rafael J. Wysocki" <rjw@rjwysocki.net>
-To:     Mika Westerberg <mika.westerberg@linux.intel.com>
-Cc:     Bjorn Helgaas <bhelgaas@google.com>,
-        Kedar A Dongre <kedar.a.dongre@intel.com>,
-        Lukas Wunner <lukas@wunner.de>, linux-pci@vger.kernel.org,
-        linux-acpi@vger.kernel.org
-Subject: Re: [PATCH] PCI: Blacklist power management of Gigabyte X299 DESIGNARE EX PCIe ports
-Date:   Tue, 04 Dec 2018 18:55:41 +0100
-Message-ID: <6545061.J5ZaFccAEN@aspire.rjw.lan>
-In-Reply-To: <20181204112048.35378-1-mika.westerberg@linux.intel.com>
-References: <20181204112048.35378-1-mika.westerberg@linux.intel.com>
+To:     Bjorn Helgaas <helgaas@kernel.org>
+Cc:     Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
+        linux-pci@vger.kernel.org, ptalbert@redhat.com
+Subject: Re: [Bug] SD card reader in Acer Aspire S5 broken in 4.20-rc
+Date:   Tue, 04 Dec 2018 19:04:08 +0100
+Message-ID: <14167565.uHCdXzdPNX@aspire.rjw.lan>
+In-Reply-To: <20181204001009.GA85090@google.com>
+References: <2960808.4YCFhzuD0k@aspire.rjw.lan> <CAErSpo476FzJJ_OMGiPbR5SkJ2-41zR_Jy25Hhnw-dA51V5i6A@mail.gmail.com> <20181204001009.GA85090@google.com>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 7Bit
 Content-Type: text/plain; charset="us-ascii"
@@ -43,63 +41,54 @@ Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-On Tuesday, December 4, 2018 12:20:48 PM CET Mika Westerberg wrote:
-> Gigabyte X299 DESIGNARE EX motherboard has one PCIe root port that is
-> connected to an Alpine Ridge Thunderbolt controller. This port has slot
-> implemented bit set in the config space but other than that it is not
-> hotplug capable in the sense we are expecting in Linux (it has
-> dev->is_hotplug_bridge set to 0):
+On Tuesday, December 4, 2018 1:10:09 AM CET Bjorn Helgaas wrote:
+> On Wed, Nov 28, 2018 at 02:05:21PM -0600, Bjorn Helgaas wrote:
+> > On Wed, Nov 28, 2018 at 6:13 AM Rafael J. Wysocki <rjw@rjwysocki.net> wrote:
+> > > On Tuesday, November 27, 2018 9:25:14 PM CET Bjorn Helgaas wrote:
+> > > > On Mon, Nov 26, 2018 at 11:37:20PM +0100, Rafael J. Wysocki wrote:
+> > > > > On Monday, November 26, 2018 7:03:58 PM CET Rafael J. Wysocki wrote:
+> > > > > > Hi Bjorn,
+> > > > > >
+> > > > > > The SD card reader in my Acer Aspire S5 doesn't work with 4.20-rc.
+> > > > > >
+> > > > > > Here's what lspci -v says about it (in a bad kernel):
+> > > > > >
+> > > > > > 02:00.0 Unassigned class [ff00]: Realtek Semiconductor Co., Ltd. RTS5209 PCI Express Card Reader
+> > > > > > (rev 01)
+> > > > > >         Subsystem: Acer Incorporated [ALI] Device 0704
+> > > > > >         Flags: bus master, fast devsel, latency 0, IRQ 35
+> > > > > >         Memory at d9001000 (32-bit, non-prefetchable) [size=4K]
+> > > > > >         Capabilities: [40] Power Management version 3
+> > > > > >         Capabilities: [50] MSI: Enable+ Count=1/1 Maskable- 64bit+
+> > > > > >         Capabilities: [70] Express Endpoint, MSI 00
+> > > > > >         Capabilities: [100] Advanced Error Reporting
+> > > > > >         Capabilities: [140] Device Serial Number 00-00-00-01-00-4c-e0-00
+> > > > > >         Kernel driver in use: rtsx_pci
+> > > > > >         Kernel modules: rtsx_pci
+> > > >
+> > > > Thanks a lot for bisecting this!
+> > > >
+> > > > With a good kernel (v4.19 or v4.20-rc with 17c91487364f reverted),
+> > > > would you mind collecting "lspci -vv" output, the dmesg log with
+> > > > "pci=earlydump", and the FADT dump?
+> > >
+> > > All of the information is attached to the BZ entry at
+> > >
+> > > https://bugzilla.kernel.org/show_bug.cgi?id=201801
+> > 
+> > Thanks!  I hope Patrick has a chance to look at this.  Per the
+> > bugzilla mentioned in 17c91487364f, it fixes a problem with a custom
+> > proprietary PCIe device, and there's a lot of good detailed analysis
+> > there, so hopefully we can figure out a way to address both
+> > situations.
 > 
-> 00:1c.4 PCI bridge: Intel Corporation 200 Series PCH PCI Express Root Port #5
->         Bus: primary=00, secondary=05, subordinate=46, sec-latency=0
->         Memory behind bridge: 78000000-8fffffff [size=384M]
->         Prefetchable memory behind bridge: 00003800f8000000-00003800ffffffff [size=128M]
->         ...
->         Capabilities: [40] Express (v2) Root Port (Slot+), MSI 00
->         ...
->                 SltCap: AttnBtn- PwrCtrl- MRL- AttnInd- PwrInd- HotPlug- Surprise-
->                         Slot #8, PowerLimit 25.000W; Interlock- NoCompl+
->                 SltCtl: Enable: AttnBtn- PwrFlt- MRL- PresDet- CmdCplt- HPIrq- LinkChg-
->                         Control: AttnInd Unknown, PwrInd Unknown, Power- Interlock-
->                 SltSta: Status: AttnBtn- PowerFlt- MRL- CmdCplt- PresDet- Interlock-
->                         Changed: MRL- PresDet+ LinkState+
-> 
-> This system is using ACPI based hotplug to notify the OS that it needs
-> to rescan the PCI bus (ACPI hotplug).
-> 
-> If there is nothing connected in any of the Thunderbolt ports the root
-> port will not have any runtime PM active children and is thus
-> automatically runtime suspended pretty soon after boot by PCI PM core.
-> Now, when a device is connected the BIOS SMI handler responsible for
-> enumerating newly added devices is not able to find anything because the
-> port is in D3.
-> 
-> Prevent this from happening by blacklisting PCI power management of this
-> particular Gigabyte system.
-> 
-> Reported-by: Kedar A Dongre <kedar.a.dongre@intel.com>
-> Signed-off-by: Mika Westerberg <mika.westerberg@linux.intel.com>
-> ---
-> I checked booting Windows on the same system and it does not put any of the
-> PCIe root ports to low power states so there is no issue in Windows. I'm
-> also quite certain Windows does not have similar blacklist.
+> I queued up a revert on for-linus, since we haven't made any progress on
+> this yet.  I'll be on vacation much of this week, but I want to get
+> the revert (or better, a fix if we can find one) in before -rc6 comes
+> out next Sunday.
 
-Well, that only means that Windows uses a different approach to decide whether
-or not to use PCI PM on PCIe root ports (but we knew that that would be the
-case upfront, didn't we?).
+Thanks!
 
-> I wonder if our pci_bridge_d3_possible() heuristics would need to be
-> refined somehow? At least if this blacklist starts growing.
-
-Because Windows uses a different approach here, there will be systems for
-which Linux will decide to use PCI PM with PCIe root ports and Windows
-won't (or vice versa).  That will cause Linux to use configurations that
-have not been validated against Windows, so it is likely that some of them
-will not work.  Hence, the need for a blacklist is not a surprise really.
-
-So
-
-Reviewed-by: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
-
-BTW, what version of Windows you have tested?
+> If we figure out a fix before then, I'll drop the revert and use the
+> fix instead.
 
