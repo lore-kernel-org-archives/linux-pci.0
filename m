@@ -2,120 +2,129 @@ Return-Path: <SRS0=uO3t=ON=vger.kernel.org=linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-9.0 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
-	DKIM_VALID_AU,FREEMAIL_FORGED_FROMDOMAIN,FREEMAIL_FROM,
-	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
-	SPF_PASS,USER_AGENT_GIT autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-9.1 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
+	DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,
+	SIGNED_OFF_BY,SPF_PASS,USER_AGENT_GIT autolearn=ham autolearn_force=no
+	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 0EAC2C04EBF
-	for <linux-pci@archiver.kernel.org>; Tue,  4 Dec 2018 15:52:26 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id D1FE8C04EB8
+	for <linux-pci@archiver.kernel.org>; Tue,  4 Dec 2018 16:55:36 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id C9A8220645
-	for <linux-pci@archiver.kernel.org>; Tue,  4 Dec 2018 15:52:25 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 79FF920659
+	for <linux-pci@archiver.kernel.org>; Tue,  4 Dec 2018 16:55:36 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="SaIss0ji"
-DMARC-Filter: OpenDMARC Filter v1.3.2 mail.kernel.org C9A8220645
-Authentication-Results: mail.kernel.org; dmarc=fail (p=none dis=none) header.from=gmail.com
+	dkim=pass (1024-bit key) header.d=agner.ch header.i=@agner.ch header.b="pU3TnJAN"
+DMARC-Filter: OpenDMARC Filter v1.3.2 mail.kernel.org 79FF920659
+Authentication-Results: mail.kernel.org; dmarc=none (p=none dis=none) header.from=agner.ch
 Authentication-Results: mail.kernel.org; spf=none smtp.mailfrom=linux-pci-owner@vger.kernel.org
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726740AbeLDPwZ (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Tue, 4 Dec 2018 10:52:25 -0500
-Received: from mail-pg1-f195.google.com ([209.85.215.195]:45049 "EHLO
-        mail-pg1-f195.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726445AbeLDPwY (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Tue, 4 Dec 2018 10:52:24 -0500
-Received: by mail-pg1-f195.google.com with SMTP id t13so7537115pgr.11;
-        Tue, 04 Dec 2018 07:52:24 -0800 (PST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20161025;
-        h=from:to:cc:subject:date:message-id:in-reply-to:references;
-        bh=T5+rm2G+CG4RcqJPn9oni1Nfoo3IO96rRBFqIoeXuRI=;
-        b=SaIss0jiT7fv8RECTR0Ooa+5NmTZBhwA/6/uZwuhKF2dvklF0GUA3/S3QJsCGPn9tQ
-         RyYV4q3Sc1TqfEn9/Y12XuZSyy4aEeqVXiuhYcMauETgrH+ChpCTpEQyrT0NT+mqLuZv
-         JO0EVxDGxTKGNLaQZv7glSIUmYLf2DK6AvR5Ni8W4v3RnKnWDAswJFwoAjIL1F/iwRUS
-         PnnCvv8W+bLtHFHcZyf/L3gX8bPDifalNZE8vwoz8wtQw5Kb4zCVffois0Ke/MqF5DXf
-         gESc5LVmevhohhL9RWw+8dr8EzyqJG+OZ1aJ+phwfXqmg4z7ktlXxJRyNRw+i8v06OIZ
-         QqBA==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20161025;
-        h=x-gm-message-state:from:to:cc:subject:date:message-id:in-reply-to
-         :references;
-        bh=T5+rm2G+CG4RcqJPn9oni1Nfoo3IO96rRBFqIoeXuRI=;
-        b=AmKk0BAOa1FY3yKbpZeovQM3jqTcpC9sO4/Aduv43As14RpfoNBNMz31ysDH5hJObt
-         qww1aneqyJBUzIqBo+NmWk3Vt9HNVQOZ1J08GdECHkAB4vqMDKG0WSbF5/uUSseArvyO
-         rlq1kXgEWO1hTlIcA3n7tFY7+6qBwQ+VVqcytICz90FetDMGeJFPbFXa7fYBxkxmuEvX
-         aUCT9iKNeFmSQzSBiplbhLxgVwAIxhzaYp6trcMiMwo9algY9sKb0zmRMaJMOdLTmluj
-         s9UfbeAvhwEkGjWudEaD/nIcALAKjAELwc26bnS8ggQlLPD+XJOong/s6z7XIboVB/dk
-         cebQ==
-X-Gm-Message-State: AA+aEWYJSIEGN531TkWKg59CnM7qVQGlWLap8ckFmQ6+qs3KyMDkXNWu
-        K9NzPgQIPgBnOYkZ+HrwL6WDj5U7X3A=
-X-Google-Smtp-Source: AFSGD/UlhGhR2KgdWc6y1cFJc6QsYSDcJSSfx0QU+nf0iACA6VOSoXAphdwShOw0Q1ZUwG5f98RmLg==
-X-Received: by 2002:a62:f247:: with SMTP id y7mr20584770pfl.25.1543938743845;
-        Tue, 04 Dec 2018 07:52:23 -0800 (PST)
-Received: from localhost.localdomain ([104.238.160.83])
-        by smtp.gmail.com with ESMTPSA id u78sm40653444pfi.2.2018.12.04.07.52.15
-        (version=TLS1_2 cipher=ECDHE-RSA-CHACHA20-POLY1305 bits=256/256);
-        Tue, 04 Dec 2018 07:52:23 -0800 (PST)
-From:   Dou Liyang <douliyangs@gmail.com>
-To:     linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org
-Cc:     tglx@linutronix.de, kashyap.desai@broadcom.com,
-        shivasharan.srikanteshwara@broadcom.com, sumit.saxena@broadcom.com,
-        ming.lei@redhat.com, hch@lst.de, bhelgaas@google.com,
-        douliyang1@huawei.com, Dou Liyang <douliyangs@gmail.com>
-Subject: [PATCH 3/3] irq/affinity: Fix a possible breakage
-Date:   Tue,  4 Dec 2018 23:51:22 +0800
-Message-Id: <20181204155122.6327-4-douliyangs@gmail.com>
-X-Mailer: git-send-email 2.17.2
-In-Reply-To: <20181204155122.6327-1-douliyangs@gmail.com>
-References: <20181204155122.6327-1-douliyangs@gmail.com>
+        id S1726618AbeLDQzg (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Tue, 4 Dec 2018 11:55:36 -0500
+Received: from mail.kmu-office.ch ([178.209.48.109]:36306 "EHLO
+        mail.kmu-office.ch" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726367AbeLDQzf (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Tue, 4 Dec 2018 11:55:35 -0500
+Received: from trochilidae.toradex.int (unknown [46.140.72.82])
+        by mail.kmu-office.ch (Postfix) with ESMTPSA id 2703B5C03A3;
+        Tue,  4 Dec 2018 17:55:33 +0100 (CET)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=agner.ch; s=dkim;
+        t=1543942534;
+        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+         to:to:cc:cc:mime-version:mime-version:content-type:
+         content-transfer-encoding:content-transfer-encoding:in-reply-to:
+         references; bh=NX10ckMc3R1dgUUnyidEtTbBw4+aPrqKIUVwguJm7Rg=;
+        b=pU3TnJANc2kHJTwA+xUVlziR+rumLqmSwYEEQql0ngmEJgt4B+DNEWBd06mxqUaCevWYWx
+        iRPIYt6C7nPMUV4o4c3one08i1vIt/Eqo2rIBA2oZvBw2yNNffT0jzuKJMVfEWueUZWha6
+        nptpCuqaX2xfX32PpoloDy13n8DWHyc=
+From:   Stefan Agner <stefan@agner.ch>
+To:     lorenzo.pieralisi@arm.com, jingoohan1@gmail.com,
+        gustavo.pimentel@synopsys.com, l.stach@pengutronix.de,
+        tpiepho@impinj.com
+Cc:     leonard.crestez@nxp.com, bhelgaas@google.com,
+        linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
+        Stefan Agner <stefan@agner.ch>
+Subject: [PATCH v4 1/3] PCI: dwc: allow to limit registers set length
+Date:   Tue,  4 Dec 2018 17:55:26 +0100
+Message-Id: <20181204165528.15534-1-stefan@agner.ch>
+X-Mailer: git-send-email 2.19.1
+MIME-Version: 1.0
+Content-Transfer-Encoding: 8bit
 Sender: linux-pci-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-In case of irq_default_affinity != cpu_possible_mask, setting the affinity
-for the pre/post vectors to irq_default_affinity is a breakage.
+Add length to the struct dw_pcie and check that the accessors
+dw_pcie_(rd|wr)_conf() do not read/write beyond that point.
 
-Just set the pre/post vectors to cpu_possible_mask and be done with it.
-
-Suggested-by: Thomas Gleixner <tglx@linutronix.de>
-Signed-off-by: Dou Liyang <douliyangs@gmail.com>
+Suggested-by: Trent Piepho <tpiepho@impinj.com>
+Signed-off-by: Stefan Agner <stefan@agner.ch>
 ---
- kernel/irq/affinity.c | 11 +++++++----
- 1 file changed, 7 insertions(+), 4 deletions(-)
+Changes in v4:
+- Move length check to dw_pcie_rd_conf
 
-diff --git a/kernel/irq/affinity.c b/kernel/irq/affinity.c
-index d122575ba1b4..aaa1dd82c3df 100644
---- a/kernel/irq/affinity.c
-+++ b/kernel/irq/affinity.c
-@@ -257,7 +257,7 @@ irq_create_affinity_masks(int nvecs, const struct irq_affinity *affd)
+ .../pci/controller/dwc/pcie-designware-host.c    | 16 ++++++++++++++--
+ drivers/pci/controller/dwc/pcie-designware.h     |  1 +
+ 2 files changed, 15 insertions(+), 2 deletions(-)
+
+diff --git a/drivers/pci/controller/dwc/pcie-designware-host.c b/drivers/pci/controller/dwc/pcie-designware-host.c
+index 692dd1b264fb..9fc0f7bd99f0 100644
+--- a/drivers/pci/controller/dwc/pcie-designware-host.c
++++ b/drivers/pci/controller/dwc/pcie-designware-host.c
+@@ -606,14 +606,20 @@ static int dw_pcie_rd_conf(struct pci_bus *bus, u32 devfn, int where,
+ 			   int size, u32 *val)
+ {
+ 	struct pcie_port *pp = bus->sysdata;
++	struct dw_pcie *pci;
  
- 	/* Fill out vectors at the beginning that don't need affinity */
- 	for (curvec = 0; curvec < affd->pre_vectors; curvec++)
--		cpumask_copy(&masks[curvec].mask, irq_default_affinity);
-+		cpumask_copy(&masks[curvec].mask, cpu_possible_mask);
- 	/*
- 	 * Spread on present CPUs starting from affd->pre_vectors. If we
- 	 * have multiple sets, build each sets affinity mask separately.
-@@ -282,12 +282,15 @@ irq_create_affinity_masks(int nvecs, const struct irq_affinity *affd)
+ 	if (!dw_pcie_valid_device(pp, bus, PCI_SLOT(devfn))) {
+ 		*val = 0xffffffff;
+ 		return PCIBIOS_DEVICE_NOT_FOUND;
  	}
  
- 	/* Fill out vectors at the end that don't need affinity */
--	if (usedvecs >= affvecs)
-+	if (usedvecs >= affvecs) {
- 		curvec = affd->pre_vectors + affvecs;
--	else
-+	} else {
- 		curvec = affd->pre_vectors + usedvecs;
-+		for (; curvec < affd->pre_vectors + affvecs; curvec++)
-+			cpumask_copy(&masks[curvec].mask, irq_default_affinity);
+-	if (bus->number == pp->root_bus_nr)
++	if (bus->number == pp->root_bus_nr) {
++		pci = to_dw_pcie_from_pp(pp);
++		if (pci->dbi_length && where + size > pci->dbi_length)
++			return PCIBIOS_BAD_REGISTER_NUMBER;
++
+ 		return dw_pcie_rd_own_conf(pp, where, size, val);
 +	}
- 	for (; curvec < nvecs; curvec++)
--		cpumask_copy(&masks[curvec].mask, irq_default_affinity);
-+		cpumask_copy(&masks[curvec].mask, cpu_possible_mask);
  
- 	/*  Setup complementary information */
- 	for (i = 0; i < nvecs; i++) {
+ 	return dw_pcie_rd_other_conf(pp, bus, devfn, where, size, val);
+ }
+@@ -622,12 +628,18 @@ static int dw_pcie_wr_conf(struct pci_bus *bus, u32 devfn,
+ 			   int where, int size, u32 val)
+ {
+ 	struct pcie_port *pp = bus->sysdata;
++	struct dw_pcie *pci;
+ 
+ 	if (!dw_pcie_valid_device(pp, bus, PCI_SLOT(devfn)))
+ 		return PCIBIOS_DEVICE_NOT_FOUND;
+ 
+-	if (bus->number == pp->root_bus_nr)
++	if (bus->number == pp->root_bus_nr) {
++		pci = to_dw_pcie_from_pp(pp);
++		if (pci->dbi_length && where + size > pci->dbi_length)
++			return PCIBIOS_BAD_REGISTER_NUMBER;
++
+ 		return dw_pcie_wr_own_conf(pp, where, size, val);
++	}
+ 
+ 	return dw_pcie_wr_other_conf(pp, bus, devfn, where, size, val);
+ }
+diff --git a/drivers/pci/controller/dwc/pcie-designware.h b/drivers/pci/controller/dwc/pcie-designware.h
+index 9943d8c68335..9cd7bdc94200 100644
+--- a/drivers/pci/controller/dwc/pcie-designware.h
++++ b/drivers/pci/controller/dwc/pcie-designware.h
+@@ -229,6 +229,7 @@ struct dw_pcie {
+ 	void __iomem		*dbi_base2;
+ 	/* Used when iatu_unroll_enabled is true */
+ 	void __iomem		*atu_base;
++	int			dbi_length;
+ 	u32			num_viewport;
+ 	u8			iatu_unroll_enabled;
+ 	struct pcie_port	pp;
 -- 
-2.17.2
+2.19.1
 
