@@ -2,122 +2,178 @@ Return-Path: <SRS0=uO3t=ON=vger.kernel.org=linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-7.1 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
-	DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,
-	SIGNED_OFF_BY,SPF_PASS autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-1.0 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+	MAILING_LIST_MULTI,SPF_PASS autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id A3D06C04EB8
-	for <linux-pci@archiver.kernel.org>; Tue,  4 Dec 2018 10:40:37 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 56055C04EB8
+	for <linux-pci@archiver.kernel.org>; Tue,  4 Dec 2018 10:40:42 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 567A320834
-	for <linux-pci@archiver.kernel.org>; Tue,  4 Dec 2018 10:40:37 +0000 (UTC)
-Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=synopsys.com header.i=@synopsys.com header.b="BX7sy0mU"
-DMARC-Filter: OpenDMARC Filter v1.3.2 mail.kernel.org 567A320834
-Authentication-Results: mail.kernel.org; dmarc=fail (p=none dis=none) header.from=synopsys.com
+	by mail.kernel.org (Postfix) with ESMTP id 1DE3A20834
+	for <linux-pci@archiver.kernel.org>; Tue,  4 Dec 2018 10:40:42 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.3.2 mail.kernel.org 1DE3A20834
+Authentication-Results: mail.kernel.org; dmarc=none (p=none dis=none) header.from=amlogic.com
 Authentication-Results: mail.kernel.org; spf=none smtp.mailfrom=linux-pci-owner@vger.kernel.org
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1725797AbeLDKkg (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Tue, 4 Dec 2018 05:40:36 -0500
-Received: from smtprelay.synopsys.com ([198.182.60.111]:47112 "EHLO
-        smtprelay.synopsys.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1725769AbeLDKkg (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Tue, 4 Dec 2018 05:40:36 -0500
-Received: from mailhost.synopsys.com (mailhost3.synopsys.com [10.12.238.238])
-        by smtprelay.synopsys.com (Postfix) with ESMTP id 274F910C0C13;
-        Tue,  4 Dec 2018 02:40:36 -0800 (PST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=synopsys.com; s=mail;
-        t=1543920036; bh=QFptKFuEEOboXwvfSm4BVTKR8HyhhdyharqkxaMepII=;
-        h=Subject:To:CC:References:From:Date:In-Reply-To:From;
-        b=BX7sy0mUrcoIoY0w4fzbECk0NEL0M4jHo8H7v8Wef5Oy2UeZ/WFSMY/p4InIv9fV4
-         R3OEiUUc+qIlJgbefxRr0DAgzG8DPlu4S4r64tMg2nt00eVHGYYoHI6fjEE6wziSFP
-         qwemo/PBUmqvrwJoffIlxO42FQPU8yBW+W0/6+cb+Z/wvVy30wlHrwR7ACHjOL92RH
-         wi3IvSmr0uf7wqTGYIjRR1iHdEqgnb2N5sid+/B9+LK721Gof45XSTkOVxoZK6Mnew
-         R6ybxSAnJmW+fjgZdNpI2+BTPW3NBeHcj0d06pDaoDRQLN6jiCIy8BmvWmapbde7/4
-         N9yiDI/tVmaHw==
-Received: from US01WEHTC2.internal.synopsys.com (us01wehtc2-vip.internal.synopsys.com [10.12.239.238])
-        by mailhost.synopsys.com (Postfix) with ESMTP id D5E83304B;
-        Tue,  4 Dec 2018 02:40:35 -0800 (PST)
-Received: from DE02WEHTCA.internal.synopsys.com (10.225.19.92) by
- US01WEHTC2.internal.synopsys.com (10.12.239.237) with Microsoft SMTP Server
- (TLS) id 14.3.408.0; Tue, 4 Dec 2018 02:40:35 -0800
-Received: from DE02WEHTCB.internal.synopsys.com (10.225.19.94) by
- DE02WEHTCA.internal.synopsys.com (10.225.19.92) with Microsoft SMTP Server
- (TLS) id 14.3.408.0; Tue, 4 Dec 2018 11:40:33 +0100
-Received: from [10.107.25.131] (10.107.25.131) by
- DE02WEHTCB.internal.synopsys.com (10.225.19.80) with Microsoft SMTP Server
- (TLS) id 14.3.408.0; Tue, 4 Dec 2018 11:40:33 +0100
-Subject: Re: [PATCH] PCI: dwc: Print debug error message when MSI-X entry
- control mask bit is set
-To:     Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
-        Gustavo Pimentel <gustavo.pimentel@synopsys.com>
-CC:     "jingoohan1@gmail.com" <jingoohan1@gmail.com>,
-        "bhelgaas@google.com" <bhelgaas@google.com>,
-        "joao.pinto@synopsys.com" <joao.pinto@synopsys.com>,
-        "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
-References: <113052d54c1f3fa01f8ea1aa6e5a49e2620b5c64.1542910855.git.gustavo.pimentel@synopsys.com>
- <20181130103834.GA17598@e107981-ln.cambridge.arm.com>
-From:   Gustavo Pimentel <gustavo.pimentel@synopsys.com>
-Message-ID: <5dc240eb-624b-1f24-7382-a860cf9ded17@synopsys.com>
-Date:   Tue, 4 Dec 2018 10:36:20 +0000
-User-Agent: Mozilla/5.0 (Windows NT 10.0; WOW64; rv:52.0) Gecko/20100101
- Thunderbird/52.9.1
+        id S1725801AbeLDKkl (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Tue, 4 Dec 2018 05:40:41 -0500
+Received: from mail-sh2.amlogic.com ([58.32.228.45]:37149 "EHLO
+        mail-sh2.amlogic.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1725769AbeLDKkl (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Tue, 4 Dec 2018 05:40:41 -0500
+Received: from [10.18.29.147] (10.18.29.147) by mail-sh2.amlogic.com
+ (10.18.11.6) with Microsoft SMTP Server (TLS) id 15.0.1320.4; Tue, 4 Dec 2018
+ 18:40:55 +0800
+Subject: Re: [PATCH v6 2/2] PCI: amlogic: Add the Amlogic Meson PCIe
+ controller driver
+To:     Bjorn Helgaas <helgaas@kernel.org>,
+        Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
+CC:     Rob Herring <robh@kernel.org>,
+        Jianxin Pan <jianxin.pan@amlogic.com>,
+        Kevin Hilman <khilman@baylibre.com>,
+        Shawn Lin <shawn.lin@rock-chips.com>,
+        Philippe Ombredanne <pombredanne@nexb.com>,
+        <linux-pci@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
+        Yue Wang <yue.wang@amlogic.com>,
+        Qiufang Dai <qiufang.dai@amlogic.com>,
+        Jian Hu <jian.hu@amlogic.com>,
+        Liang Yang <liang.yang@amlogic.com>,
+        Cyrille Pitchen <cyrille.pitchen@free-electrons.com>,
+        Gustavo Pimentel <gustavo.pimentel@synopsys.com>,
+        Carlo Caione <carlo@caione.org>,
+        <linux-amlogic@lists.infradead.org>,
+        <linux-arm-kernel@lists.infradead.org>,
+        Jerome Brunet <jbrunet@baylibre.com>
+References: <1542876836-191355-1-git-send-email-hanjie.lin@amlogic.com>
+ <1542876836-191355-3-git-send-email-hanjie.lin@amlogic.com>
+ <20181203164150.GA11855@e107981-ln.cambridge.arm.com>
+ <20181203225731.GE207198@google.com>
+From:   Hanjie Lin <hanjie.lin@amlogic.com>
+Message-ID: <1bc8f5bd-6f69-4867-89ca-e5a611da9136@amlogic.com>
+Date:   Tue, 4 Dec 2018 18:40:55 +0800
+User-Agent: Mozilla/5.0 (Windows NT 10.0; WOW64; rv:60.0) Gecko/20100101
+ Thunderbird/60.3.2
 MIME-Version: 1.0
-In-Reply-To: <20181130103834.GA17598@e107981-ln.cambridge.arm.com>
-Content-Type: text/plain; charset="utf-8"
+In-Reply-To: <20181203225731.GE207198@google.com>
+Content-Type: text/plain; charset="windows-1252"
 Content-Language: en-US
 Content-Transfer-Encoding: 7bit
-X-Originating-IP: [10.107.25.131]
+X-Originating-IP: [10.18.29.147]
+X-ClientProxiedBy: mail-sh2.amlogic.com (10.18.11.6) To mail-sh2.amlogic.com
+ (10.18.11.6)
 Sender: linux-pci-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-On 30/11/2018 10:38, Lorenzo Pieralisi wrote:
-> On Thu, Nov 22, 2018 at 07:20:55PM +0100, Gustavo Pimentel wrote:
->> Add debug error message when MSI-X entry control mask bit is set, to help
->> depur which reason why a MSI-X interrupt is not being trigger.
-> 
-> s/depur which/debug the
-> 
-> s/trigger/triggered
 
-Ok, I'll fix it.
 
-> 
->> Signed-off-by: Gustavo Pimentel <gustavo.pimentel@synopsys.com>
->> ---
->>  drivers/pci/controller/dwc/pcie-designware-ep.c | 4 +++-
->>  1 file changed, 3 insertions(+), 1 deletion(-)
+On 2018/12/4 6:57, Bjorn Helgaas wrote:
+> On Mon, Dec 03, 2018 at 04:41:50PM +0000, Lorenzo Pieralisi wrote:
+>> On Thu, Nov 22, 2018 at 04:53:54PM +0800, Hanjie Lin wrote:
 >>
->> diff --git a/drivers/pci/controller/dwc/pcie-designware-ep.c b/drivers/pci/controller/dwc/pcie-designware-ep.c
->> index 1e7b022..b52b986 100644
->> --- a/drivers/pci/controller/dwc/pcie-designware-ep.c
->> +++ b/drivers/pci/controller/dwc/pcie-designware-ep.c
->> @@ -466,8 +466,10 @@ int dw_pcie_ep_raise_msix_irq(struct dw_pcie_ep *ep, u8 func_no,
->>  
->>  	iounmap(msix_tbl);
->>  
->> -	if (vec_ctrl & PCI_MSIX_ENTRY_CTRL_MASKBIT)
->> +	if (vec_ctrl & PCI_MSIX_ENTRY_CTRL_MASKBIT) {
->> +		dev_err(pci->dev, "MSI-X entry ctrl set\n");
-> 
-> I would make it dev_dbg() given debugging is the reason you are adding
-> it, can I make this change ?
-
-I see your point. Yes, of course, please do it.
-
-Gustavo
-
-> 
-> Lorenzo
-> 
->>  		return -EPERM;
->> +	}
->>  
->>  	ret = dw_pcie_ep_map_addr(epc, func_no, ep->msi_mem_phys, msg_addr,
->>  				  epc->mem->page_size);
->> -- 
->> 2.7.4
+>> [...]
 >>
+>>> +static int meson_pcie_rd_own_conf(struct pcie_port *pp, int where, int size,
+>>> +				  u32 *val)
+>>> +{
+>>> +	struct dw_pcie *pci = to_dw_pcie_from_pp(pp);
+>>> +
+>>> +	/*
+>>> +	 * there is a bug of MESON AXG pcie controller that software can not
+>>> +	 * programe PCI_CLASS_DEVICE register, so we must return a fake right
+>>> +	 * value to ensure driver could probe successfully.
+>>> +	 */
+>>> +	if (where == PCI_CLASS_REVISION) {
+>>> +		*val = readl(pci->dbi_base + PCI_CLASS_REVISION);
+>>> +		/* keep revision id */
+>>> +		*val &= PCI_CLASS_REVISION_MASK;
+>>> +		*val |= PCI_CLASS_BRIDGE_PCI << 16;
+>>> +		return PCIBIOS_SUCCESSFUL;
+>>> +	}
+>>
+>> As I said before, this looks broken. If this code (or other drivers with
+>> the same broken assumptions, eg dwc/pcie-qcom.c) carries out a, say,
+>> byte sized config access of eg PCI_CLASS_DEVICE you will get junk out of
+>> it according to your comment above.
+>>
+>> I would like to pick Bjorn's brain on this to see what we can really do
+>> to fix this (and other) drivers.
+> 
+>   - Check to see whether you're reading anything in the 32-bit dword at
+>     offset 0x08.
+> 
+>   - Do the 32-bit readl().
+> 
+>   - Insert the correct Sub-Class and Base Class code (you also throw
+>     away the Programming Interface; not sure why that is)
+> 
+>   - If you're reading something smaller than 32 bits, mask & shift as
+>     needed.  pci_bridge_emul_conf_read() does something similar that
+>     you might be able to copy.
+> 
+> Out of curiosity, what code depends on PCI_CLASS_BRIDGE_PCI?  There
+> are several places in the kernel that currently depend on it, but I
+> think several of them *should* be checking dev->hdr_type to identify a
+> type 1 header instead.
+> 
+> Bjorn
+> 
+> .
+> 
 
+Yes, it would be broken in particular scenes(eg: read 1 or 2 bytes from 0xa/PCI_CLASS_DEVICE)
+that I didn't considered.
+ 
+As your suggestion, I consider some code below may help this issue:
+1, First call dw_pcie_read() help to read 1/2/4 bytes from register,
+   request all other *size* bytes will return error and dw_pcie_read()
+   will also check register alignment.
+ 
+2, If dw_pcie_read() return success and *where* is 0x8/PCI_CLASS_DEVICE or 0xa/PCI_CLASS_REVISION,
+   we may need to correct class code.
+   As PCI_CLASS_REVISION is two-bytes register, so only when read 4 bytes from 0x8/PCI_CLASS_DEVICE
+   or read 2 bytes from 0xa/PCI_CLASS_REVISION we should correct the class code.
+ 
+ps: read 1 byte from 0xa/PCI_CLASS_REVISION or 0xb will get incorrect value.
+
+static int meson_pcie_rd_own_conf(struct pcie_port *pp, int where, int size,
+                u32 *val)
+{
+        struct dw_pcie *pci = to_dw_pcie_from_pp(pp);
+        int ret;
+
+        ret = dw_pcie_read(pci->dbi_base + where, size, val);
+        if (ret != PCIBIOS_SUCCESSFUL)
+                return ret;
+
+        /*
+        * there is a bug of MESON AXG pcie controller that software can not
+        * programe PCI_CLASS_DEVICE register, so we must return a fake right
+        * value to ensure driver could probe successfully.
+        */
+        if (where == PCI_CLASS_REVISION && size == 4)
+                *val = (PCI_CLASS_BRIDGE_PCI << 16) | (*val & 0xffff);
+        else if (where == PCI_CLASS_DEVICE && size == 2)
+                *val = PCI_CLASS_BRIDGE_PCI;
+
+        return PCIBIOS_SUCCESSFUL;
+}
+
+3, We must ensure class is PCI_CLASS_BRIDGE_PCI except right hdr_type,
+   or pci_setup_device() will get failed: 
+
+   ...
+   class = pci_class(dev);
+   dev->revision = class & 0xff;
+   dev->class = class >> 8; /* upper 3 bytes */ 
+   ....
+   switch (dev->hdr_type) { /* header type */
+   ... 
+   case PCI_HEADER_TYPE_BRIDGE: /* bridge header */
+      if (class != PCI_CLASS_BRIDGE_PCI)  /* class must be PCI_CLASS_BRIDGE_PCI  */
+         goto bad; 
+
+
+thanks.
+
+hanjie
