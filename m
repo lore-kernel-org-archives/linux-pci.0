@@ -4,37 +4,38 @@ X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 X-Spam-Level: 
 X-Spam-Status: No, score=-10.8 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
 	DKIM_VALID,DKIM_VALID_AU,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
-	SPF_PASS,USER_AGENT_GIT autolearn=unavailable autolearn_force=no version=3.4.0
+	SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT autolearn=unavailable
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id BF268C04EB9
-	for <linux-pci@archiver.kernel.org>; Wed,  5 Dec 2018 10:04:22 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 5C42FC04EB9
+	for <linux-pci@archiver.kernel.org>; Wed,  5 Dec 2018 10:10:37 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 81A62214E0
-	for <linux-pci@archiver.kernel.org>; Wed,  5 Dec 2018 10:04:22 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 21AAB21527
+	for <linux-pci@archiver.kernel.org>; Wed,  5 Dec 2018 10:10:37 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (1024-bit key) header.d=kernel.org header.i=@kernel.org header.b="spMANBxm"
-DMARC-Filter: OpenDMARC Filter v1.3.2 mail.kernel.org 81A62214E0
+	dkim=pass (1024-bit key) header.d=kernel.org header.i=@kernel.org header.b="Cuptd3Jm"
+DMARC-Filter: OpenDMARC Filter v1.3.2 mail.kernel.org 21AAB21527
 Authentication-Results: mail.kernel.org; dmarc=fail (p=none dis=none) header.from=kernel.org
 Authentication-Results: mail.kernel.org; spf=none smtp.mailfrom=linux-pci-owner@vger.kernel.org
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1728569AbeLEJoe (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Wed, 5 Dec 2018 04:44:34 -0500
-Received: from mail.kernel.org ([198.145.29.99]:49190 "EHLO mail.kernel.org"
+        id S1728185AbeLEJib (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Wed, 5 Dec 2018 04:38:31 -0500
+Received: from mail.kernel.org ([198.145.29.99]:42348 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1728746AbeLEJod (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Wed, 5 Dec 2018 04:44:33 -0500
+        id S1727737AbeLEJia (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Wed, 5 Dec 2018 04:38:30 -0500
 Received: from sasha-vm.mshome.net (unknown [213.57.143.11])
         (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
         (No client certificate requested)
-        by mail.kernel.org (Postfix) with ESMTPSA id C3BAD208E7;
-        Wed,  5 Dec 2018 09:44:29 +0000 (UTC)
+        by mail.kernel.org (Postfix) with ESMTPSA id EF07820879;
+        Wed,  5 Dec 2018 09:38:26 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=default; t=1544003072;
-        bh=nn2zB4Y4vw5uzvKroaTJscFgaekWDkQ2FT4Osg7FZnY=;
+        s=default; t=1544002709;
+        bh=hYdXHR/b2MIZbDZpwGAtpofplpyVnAHSmuDaVyFvj+w=;
         h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=spMANBxmx9OqQYap/ikkp4FOyvBmS3GjUSG1917usWutFq/FQFSGSHblH2rL9uBxR
-         uZoVs3isB5I2oGLO+Kl86wwViQFfyULUBjpZYUTtfSzF1EwNj6u0d40HoI1y+c3D6j
-         3v1fpdd1m2qic6SOPdPFCKytUusL9cGrYweEnvuY=
+        b=Cuptd3JmTGg+er46K8KZirIpj2fO+TLUigfLVYv/UsWfXx8iwhN+fn1lLG7htDCPR
+         BuG7l7oYmmHQyxbzeQaXO4r89NF82uRhtY0VEWA3CDRaxAJAw5K1JZW42vT3J5beU6
+         Y32+7omnuVcI7+qY6umqmg+DkD104qG6KXnc3+Hg=
 From:   Sasha Levin <sashal@kernel.org>
 To:     stable@vger.kernel.org, linux-kernel@vger.kernel.org
 Cc:     Trent Piepho <tpiepho@impinj.com>,
@@ -43,12 +44,12 @@ Cc:     Trent Piepho <tpiepho@impinj.com>,
         Joao Pinto <Joao.Pinto@synopsys.com>,
         Richard Zhu <hongxing.zhu@nxp.com>,
         Sasha Levin <sashal@kernel.org>, linux-pci@vger.kernel.org
-Subject: [PATCH AUTOSEL 4.14 20/69] PCI: imx6: Fix link training status detection in link up check
-Date:   Wed,  5 Dec 2018 04:41:58 -0500
-Message-Id: <20181205094247.6556-20-sashal@kernel.org>
+Subject: [PATCH AUTOSEL 4.19 045/123] PCI: imx6: Fix link training status detection in link up check
+Date:   Wed,  5 Dec 2018 04:34:37 -0500
+Message-Id: <20181205093555.5386-45-sashal@kernel.org>
 X-Mailer: git-send-email 2.17.1
-In-Reply-To: <20181205094247.6556-1-sashal@kernel.org>
-References: <20181205094247.6556-1-sashal@kernel.org>
+In-Reply-To: <20181205093555.5386-1-sashal@kernel.org>
+References: <20181205093555.5386-1-sashal@kernel.org>
 Sender: linux-pci-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
@@ -99,14 +100,14 @@ Cc: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
 Cc: Richard Zhu <hongxing.zhu@nxp.com>
 Signed-off-by: Sasha Levin <sashal@kernel.org>
 ---
- drivers/pci/dwc/pci-imx6.c | 10 +---------
+ drivers/pci/controller/dwc/pci-imx6.c | 10 +---------
  1 file changed, 1 insertion(+), 9 deletions(-)
 
-diff --git a/drivers/pci/dwc/pci-imx6.c b/drivers/pci/dwc/pci-imx6.c
-index b73483534a5b..1f1069b70e45 100644
---- a/drivers/pci/dwc/pci-imx6.c
-+++ b/drivers/pci/dwc/pci-imx6.c
-@@ -83,8 +83,6 @@ struct imx6_pcie {
+diff --git a/drivers/pci/controller/dwc/pci-imx6.c b/drivers/pci/controller/dwc/pci-imx6.c
+index 4a9a673b4777..975050a69494 100644
+--- a/drivers/pci/controller/dwc/pci-imx6.c
++++ b/drivers/pci/controller/dwc/pci-imx6.c
+@@ -80,8 +80,6 @@ struct imx6_pcie {
  #define PCIE_PL_PFLR_FORCE_LINK			(1 << 15)
  #define PCIE_PHY_DEBUG_R0 (PL_OFFSET + 0x28)
  #define PCIE_PHY_DEBUG_R1 (PL_OFFSET + 0x2c)
@@ -115,7 +116,7 @@ index b73483534a5b..1f1069b70e45 100644
  
  #define PCIE_PHY_CTRL (PL_OFFSET + 0x114)
  #define PCIE_PHY_CTRL_DATA_LOC 0
-@@ -653,12 +651,6 @@ static int imx6_pcie_host_init(struct pcie_port *pp)
+@@ -641,12 +639,6 @@ static int imx6_pcie_host_init(struct pcie_port *pp)
  	return 0;
  }
  
@@ -128,7 +129,7 @@ index b73483534a5b..1f1069b70e45 100644
  static const struct dw_pcie_host_ops imx6_pcie_host_ops = {
  	.host_init = imx6_pcie_host_init,
  };
-@@ -701,7 +693,7 @@ static int imx6_add_pcie_port(struct imx6_pcie *imx6_pcie,
+@@ -679,7 +671,7 @@ static int imx6_add_pcie_port(struct imx6_pcie *imx6_pcie,
  }
  
  static const struct dw_pcie_ops dw_pcie_ops = {
