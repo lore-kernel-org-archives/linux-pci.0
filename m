@@ -1,99 +1,128 @@
-Return-Path: <SRS0=uO3t=ON=vger.kernel.org=linux-pci-owner@kernel.org>
+Return-Path: <SRS0=Hio3=OO=vger.kernel.org=linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-12.0 required=3.0
-	tests=HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,
-	MENTIONS_GIT_HOSTING,SIGNED_OFF_BY,SPF_PASS,URIBL_BLOCKED autolearn=ham
-	autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-1.0 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+	MAILING_LIST_MULTI,SPF_PASS autolearn=unavailable autolearn_force=no
+	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 646DFC04EB8
-	for <linux-pci@archiver.kernel.org>; Tue,  4 Dec 2018 22:13:27 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 71C83C04EB8
+	for <linux-pci@archiver.kernel.org>; Wed,  5 Dec 2018 02:14:01 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 22AE02082B
-	for <linux-pci@archiver.kernel.org>; Tue,  4 Dec 2018 22:13:27 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.3.2 mail.kernel.org 22AE02082B
-Authentication-Results: mail.kernel.org; dmarc=none (p=none dis=none) header.from=zytor.com
+	by mail.kernel.org (Postfix) with ESMTP id 3EE6B20851
+	for <linux-pci@archiver.kernel.org>; Wed,  5 Dec 2018 02:14:01 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.3.2 mail.kernel.org 3EE6B20851
+Authentication-Results: mail.kernel.org; dmarc=none (p=none dis=none) header.from=socionext.com
 Authentication-Results: mail.kernel.org; spf=none smtp.mailfrom=linux-pci-owner@vger.kernel.org
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1725904AbeLDWN0 (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Tue, 4 Dec 2018 17:13:26 -0500
-Received: from terminus.zytor.com ([198.137.202.136]:47463 "EHLO
-        terminus.zytor.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1725875AbeLDWN0 (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Tue, 4 Dec 2018 17:13:26 -0500
-Received: from terminus.zytor.com (localhost [127.0.0.1])
-        by terminus.zytor.com (8.15.2/8.15.2) with ESMTPS id wB4MDAUV1031962
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NO);
-        Tue, 4 Dec 2018 14:13:10 -0800
-Received: (from tipbot@localhost)
-        by terminus.zytor.com (8.15.2/8.15.2/Submit) id wB4MDAZG1031959;
-        Tue, 4 Dec 2018 14:13:10 -0800
-Date:   Tue, 4 Dec 2018 14:13:10 -0800
-X-Authentication-Warning: terminus.zytor.com: tipbot set sender to tipbot@zytor.com using -f
-From:   tip-bot for Lance Roy <tipbot@zytor.com>
-Message-ID: <tip-868f7a09a4f385e5167fc0ff9ec4c3f817897f3a@git.kernel.org>
-Cc:     paulmck@linux.ibm.com, x86@kernel.org, bp@alien8.de,
-        mingo@redhat.com, linux-pci@vger.kernel.org, ldr709@gmail.com,
-        mingo@kernel.org, bhelgaas@google.com, tglx@linutronix.de,
-        hpa@zytor.com
-Reply-To: linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
-          mingo@redhat.com, bp@alien8.de, x86@kernel.org,
-          paulmck@linux.ibm.com, tglx@linutronix.de, hpa@zytor.com,
-          mingo@kernel.org, bhelgaas@google.com, ldr709@gmail.com
-To:     linux-tip-commits@vger.kernel.org
-Subject: [tip:core/rcu] x86/PCI: Replace spin_is_locked() with lockdep
-Git-Commit-ID: 868f7a09a4f385e5167fc0ff9ec4c3f817897f3a
-X-Mailer: tip-git-log-daemon
-Robot-ID: <tip-bot.git.kernel.org>
-Robot-Unsubscribe: Contact <mailto:hpa@kernel.org> to get blacklisted from
- these emails
+        id S1725841AbeLECNz (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Tue, 4 Dec 2018 21:13:55 -0500
+Received: from mx.socionext.com ([202.248.49.38]:14799 "EHLO mx.socionext.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1725834AbeLECNz (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Tue, 4 Dec 2018 21:13:55 -0500
+Received: from unknown (HELO iyokan-ex.css.socionext.com) ([172.31.9.54])
+  by mx.socionext.com with ESMTP; 05 Dec 2018 11:13:53 +0900
+Received: from mail.mfilter.local (m-filter-2 [10.213.24.62])
+        by iyokan-ex.css.socionext.com (Postfix) with ESMTP id 97FD160062;
+        Wed,  5 Dec 2018 11:13:53 +0900 (JST)
+Received: from 172.31.9.53 (172.31.9.53) by m-FILTER with ESMTP; Wed, 5 Dec 2018 11:13:53 +0900
+Received: from yuzu.css.socionext.com (yuzu [172.31.8.45])
+        by iyokan.css.socionext.com (Postfix) with ESMTP id F258140377;
+        Wed,  5 Dec 2018 11:13:52 +0900 (JST)
+Received: from [127.0.0.1] (unknown [10.213.132.48])
+        by yuzu.css.socionext.com (Postfix) with ESMTP id B7A94120304;
+        Wed,  5 Dec 2018 11:13:52 +0900 (JST)
+Date:   Wed, 05 Dec 2018 11:13:52 +0900
+From:   Kunihiko Hayashi <hayashi.kunihiko@socionext.com>
+To:     Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
+Subject: Re: [PATCH v4 2/2] PCI: uniphier: Add UniPhier PCIe host controller support
+Cc:     Bjorn Helgaas <bhelgaas@google.com>,
+        Rob Herring <robh+dt@kernel.org>,
+        Mark Rutland <mark.rutland@arm.com>,
+        Masahiro Yamada <yamada.masahiro@socionext.com>,
+        <linux-pci@vger.kernel.org>, <devicetree@vger.kernel.org>,
+        <linux-arm-kernel@lists.infradead.org>,
+        <linux-kernel@vger.kernel.org>,
+        Masami Hiramatsu <masami.hiramatsu@linaro.org>,
+        Jassi Brar <jaswinder.singh@linaro.org>,
+        Gustavo Pimentel <gustavo.pimentel@synopsys.com>
+In-Reply-To: <20181204151227.GA29926@e107981-ln.cambridge.arm.com>
+References: <1543377866-16634-3-git-send-email-hayashi.kunihiko@socionext.com> <20181204151227.GA29926@e107981-ln.cambridge.arm.com>
+Message-Id: <20181205111351.00E3.4A936039@socionext.com>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
-Content-Type: text/plain; charset=UTF-8
-Content-Disposition: inline
+Content-Type: text/plain; charset="US-ASCII"
+Content-Transfer-Encoding: 7bit
+X-Mailer: Becky! ver. 2.70 [ja]
 Sender: linux-pci-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-Commit-ID:  868f7a09a4f385e5167fc0ff9ec4c3f817897f3a
-Gitweb:     https://git.kernel.org/tip/868f7a09a4f385e5167fc0ff9ec4c3f817897f3a
-Author:     Lance Roy <ldr709@gmail.com>
-AuthorDate: Thu, 4 Oct 2018 23:45:38 -0700
-Committer:  Paul E. McKenney <paulmck@linux.ibm.com>
-CommitDate: Thu, 8 Nov 2018 21:53:35 -0800
+Hi Lorenzo,
 
-x86/PCI: Replace spin_is_locked() with lockdep
+On Tue, 4 Dec 2018 15:12:27 +0000 <lorenzo.pieralisi@arm.com> wrote:
 
-lockdep_assert_held() is better suited to checking locking requirements,
-since it only checks if the current thread holds the lock regardless of
-whether someone else does. This is also a step towards possibly removing
-spin_is_locked().
+> On Wed, Nov 28, 2018 at 01:04:26PM +0900, Kunihiko Hayashi wrote:
+> 
+> [...]
+> 
+> > +static void uniphier_pcie_irq_ack(struct irq_data *d)
+> > +{
+> > +	struct pcie_port *pp = irq_data_get_irq_chip_data(d);
+> > +	struct dw_pcie *pci = to_dw_pcie_from_pp(pp);
+> > +	struct uniphier_pcie_priv *priv = to_uniphier_pcie(pci);
+> > +	u32 val;
+> > +
+> > +	val = readl(priv->base + PCL_RCV_INTX);
+> > +	val &= ~PCL_RCV_INTX_ALL_STATUS;
+> > +	val |= BIT(irqd_to_hwirq(d) + PCL_RCV_INTX_STATUS_SHIFT);
+> > +	writel(val, priv->base + PCL_RCV_INTX);
+> > +}
+> > +
+> > +static void uniphier_pcie_irq_mask(struct irq_data *d)
+> > +{
+> > +	struct pcie_port *pp = irq_data_get_irq_chip_data(d);
+> > +	struct dw_pcie *pci = to_dw_pcie_from_pp(pp);
+> > +	struct uniphier_pcie_priv *priv = to_uniphier_pcie(pci);
+> > +	u32 val;
+> > +
+> > +	val = readl(priv->base + PCL_RCV_INTX);
+> > +	val &= ~PCL_RCV_INTX_ALL_STATUS;
+> > +	val |= BIT(irqd_to_hwirq(d) + PCL_RCV_INTX_MASK_SHIFT);
+> > +	writel(val, priv->base + PCL_RCV_INTX);
+> > +}
+> > +
+> > +static void uniphier_pcie_irq_unmask(struct irq_data *d)
+> > +{
+> > +	struct pcie_port *pp = irq_data_get_irq_chip_data(d);
+> > +	struct dw_pcie *pci = to_dw_pcie_from_pp(pp);
+> > +	struct uniphier_pcie_priv *priv = to_uniphier_pcie(pci);
+> > +	u32 val;
+> > +
+> > +	val = readl(priv->base + PCL_RCV_INTX);
+> > +	val &= ~PCL_RCV_INTX_ALL_STATUS;
+> 
+> I have noticed this operation is carried out on ACK/MASK/UNMASK,
+> what's its purpose ?
 
-Signed-off-by: Lance Roy <ldr709@gmail.com>
-Cc: Bjorn Helgaas <bhelgaas@google.com>
-Cc: Thomas Gleixner <tglx@linutronix.de>
-Cc: Ingo Molnar <mingo@redhat.com>
-Cc: Borislav Petkov <bp@alien8.de>
-Cc: "H. Peter Anvin" <hpa@zytor.com>
-Cc: <x86@kernel.org>
-Cc: <linux-pci@vger.kernel.org>
-Signed-off-by: Paul E. McKenney <paulmck@linux.ibm.com>
+Thanks for pointing out. This is wrong.
+
+The register PCL_RCV_INTX has 3 parts of bits.
+
+#define PCL_RCV_INTX_ALL_ENABLE         GENMASK(19, 16)
+#define PCL_RCV_INTX_ALL_MASK           GENMASK(11, 8)
+#define PCL_RCV_INTX_ALL_STATUS         GENMASK(3, 0)
+
+In the mask/unmask operation,
+We should use PCL_RCV_INTX_ALL_MASK to represent 'mask bits',
+not PCL_RCV_INTX_ALL_STATUS.
+And the ack operation is effective by writing 1 to 'status bits'.
+
+Thank you,
+
 ---
- arch/x86/pci/i386.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+Best Regards,
+Kunihiko Hayashi
 
-diff --git a/arch/x86/pci/i386.c b/arch/x86/pci/i386.c
-index 8cd66152cdb0..9df652d3d927 100644
---- a/arch/x86/pci/i386.c
-+++ b/arch/x86/pci/i386.c
-@@ -59,7 +59,7 @@ static struct pcibios_fwaddrmap *pcibios_fwaddrmap_lookup(struct pci_dev *dev)
- {
- 	struct pcibios_fwaddrmap *map;
- 
--	WARN_ON_SMP(!spin_is_locked(&pcibios_fwaddrmap_lock));
-+	lockdep_assert_held(&pcibios_fwaddrmap_lock);
- 
- 	list_for_each_entry(map, &pcibios_fwaddrmappings, list)
- 		if (map->dev == dev)
+
