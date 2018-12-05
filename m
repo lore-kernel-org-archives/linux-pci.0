@@ -2,211 +2,141 @@ Return-Path: <SRS0=Hio3=OO=vger.kernel.org=linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-1.0 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	MAILING_LIST_MULTI,SPF_PASS autolearn=unavailable autolearn_force=no
-	version=3.4.0
+X-Spam-Status: No, score=-10.8 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
+	SPF_PASS,USER_AGENT_GIT autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 0938BC04EB9
-	for <linux-pci@archiver.kernel.org>; Wed,  5 Dec 2018 09:54:57 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id BF268C04EB9
+	for <linux-pci@archiver.kernel.org>; Wed,  5 Dec 2018 10:04:22 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id C155320661
-	for <linux-pci@archiver.kernel.org>; Wed,  5 Dec 2018 09:54:56 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.3.2 mail.kernel.org C155320661
-Authentication-Results: mail.kernel.org; dmarc=none (p=none dis=none) header.from=amlogic.com
+	by mail.kernel.org (Postfix) with ESMTP id 81A62214E0
+	for <linux-pci@archiver.kernel.org>; Wed,  5 Dec 2018 10:04:22 +0000 (UTC)
+Authentication-Results: mail.kernel.org;
+	dkim=pass (1024-bit key) header.d=kernel.org header.i=@kernel.org header.b="spMANBxm"
+DMARC-Filter: OpenDMARC Filter v1.3.2 mail.kernel.org 81A62214E0
+Authentication-Results: mail.kernel.org; dmarc=fail (p=none dis=none) header.from=kernel.org
 Authentication-Results: mail.kernel.org; spf=none smtp.mailfrom=linux-pci-owner@vger.kernel.org
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727337AbeLEJyt (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Wed, 5 Dec 2018 04:54:49 -0500
-Received: from mail-sh2.amlogic.com ([58.32.228.45]:58258 "EHLO
-        mail-sh2.amlogic.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1727271AbeLEJyt (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Wed, 5 Dec 2018 04:54:49 -0500
-Received: from [10.18.29.147] (10.18.29.147) by mail-sh2.amlogic.com
- (10.18.11.6) with Microsoft SMTP Server (TLS) id 15.0.1320.4; Wed, 5 Dec 2018
- 17:55:00 +0800
-Subject: Re: [PATCH v6 2/2] PCI: amlogic: Add the Amlogic Meson PCIe
- controller driver
-To:     Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
-CC:     Bjorn Helgaas <helgaas@kernel.org>, Rob Herring <robh@kernel.org>,
-        Jianxin Pan <jianxin.pan@amlogic.com>,
-        Kevin Hilman <khilman@baylibre.com>,
-        Shawn Lin <shawn.lin@rock-chips.com>,
-        Philippe Ombredanne <pombredanne@nexb.com>,
-        <linux-pci@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
-        Yue Wang <yue.wang@amlogic.com>,
-        Qiufang Dai <qiufang.dai@amlogic.com>,
-        Jian Hu <jian.hu@amlogic.com>,
-        Liang Yang <liang.yang@amlogic.com>,
-        Cyrille Pitchen <cyrille.pitchen@free-electrons.com>,
-        Gustavo Pimentel <gustavo.pimentel@synopsys.com>,
-        Carlo Caione <carlo@caione.org>,
-        <linux-amlogic@lists.infradead.org>,
-        <linux-arm-kernel@lists.infradead.org>,
-        Jerome Brunet <jbrunet@baylibre.com>
-References: <1542876836-191355-1-git-send-email-hanjie.lin@amlogic.com>
- <1542876836-191355-3-git-send-email-hanjie.lin@amlogic.com>
- <20181203164150.GA11855@e107981-ln.cambridge.arm.com>
- <20181203225731.GE207198@google.com>
- <1bc8f5bd-6f69-4867-89ca-e5a611da9136@amlogic.com>
- <20181204120034.GA25842@e107981-ln.cambridge.arm.com>
-From:   Hanjie Lin <hanjie.lin@amlogic.com>
-Message-ID: <b914e35b-f77e-1e42-333f-b5030121cc53@amlogic.com>
-Date:   Wed, 5 Dec 2018 17:55:00 +0800
-User-Agent: Mozilla/5.0 (Windows NT 10.0; WOW64; rv:60.0) Gecko/20100101
- Thunderbird/60.3.2
-MIME-Version: 1.0
-In-Reply-To: <20181204120034.GA25842@e107981-ln.cambridge.arm.com>
-Content-Type: text/plain; charset="windows-1252"
-Content-Language: en-US
-Content-Transfer-Encoding: 7bit
-X-Originating-IP: [10.18.29.147]
-X-ClientProxiedBy: mail-sh2.amlogic.com (10.18.11.6) To mail-sh2.amlogic.com
- (10.18.11.6)
+        id S1728569AbeLEJoe (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Wed, 5 Dec 2018 04:44:34 -0500
+Received: from mail.kernel.org ([198.145.29.99]:49190 "EHLO mail.kernel.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1728746AbeLEJod (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Wed, 5 Dec 2018 04:44:33 -0500
+Received: from sasha-vm.mshome.net (unknown [213.57.143.11])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+        (No client certificate requested)
+        by mail.kernel.org (Postfix) with ESMTPSA id C3BAD208E7;
+        Wed,  5 Dec 2018 09:44:29 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+        s=default; t=1544003072;
+        bh=nn2zB4Y4vw5uzvKroaTJscFgaekWDkQ2FT4Osg7FZnY=;
+        h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
+        b=spMANBxmx9OqQYap/ikkp4FOyvBmS3GjUSG1917usWutFq/FQFSGSHblH2rL9uBxR
+         uZoVs3isB5I2oGLO+Kl86wwViQFfyULUBjpZYUTtfSzF1EwNj6u0d40HoI1y+c3D6j
+         3v1fpdd1m2qic6SOPdPFCKytUusL9cGrYweEnvuY=
+From:   Sasha Levin <sashal@kernel.org>
+To:     stable@vger.kernel.org, linux-kernel@vger.kernel.org
+Cc:     Trent Piepho <tpiepho@impinj.com>,
+        Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
+        Bjorn Helgaas <bhelgaas@google.com>,
+        Joao Pinto <Joao.Pinto@synopsys.com>,
+        Richard Zhu <hongxing.zhu@nxp.com>,
+        Sasha Levin <sashal@kernel.org>, linux-pci@vger.kernel.org
+Subject: [PATCH AUTOSEL 4.14 20/69] PCI: imx6: Fix link training status detection in link up check
+Date:   Wed,  5 Dec 2018 04:41:58 -0500
+Message-Id: <20181205094247.6556-20-sashal@kernel.org>
+X-Mailer: git-send-email 2.17.1
+In-Reply-To: <20181205094247.6556-1-sashal@kernel.org>
+References: <20181205094247.6556-1-sashal@kernel.org>
 Sender: linux-pci-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
+From: Trent Piepho <tpiepho@impinj.com>
 
+[ Upstream commit 68bc10bf992180f269816ff3d22eb30383138577 ]
 
-On 2018/12/4 20:00, Lorenzo Pieralisi wrote:
-> On Tue, Dec 04, 2018 at 06:40:55PM +0800, Hanjie Lin wrote:
->>
->>
->> On 2018/12/4 6:57, Bjorn Helgaas wrote:
->>> On Mon, Dec 03, 2018 at 04:41:50PM +0000, Lorenzo Pieralisi wrote:
->>>> On Thu, Nov 22, 2018 at 04:53:54PM +0800, Hanjie Lin wrote:
->>>>
->>>> [...]
->>>>
->>>>> +static int meson_pcie_rd_own_conf(struct pcie_port *pp, int where, int size,
->>>>> +				  u32 *val)
->>>>> +{
->>>>> +	struct dw_pcie *pci = to_dw_pcie_from_pp(pp);
->>>>> +
->>>>> +	/*
->>>>> +	 * there is a bug of MESON AXG pcie controller that software can not
->>>>> +	 * programe PCI_CLASS_DEVICE register, so we must return a fake right
->>>>> +	 * value to ensure driver could probe successfully.
->>>>> +	 */
->>>>> +	if (where == PCI_CLASS_REVISION) {
->>>>> +		*val = readl(pci->dbi_base + PCI_CLASS_REVISION);
->>>>> +		/* keep revision id */
->>>>> +		*val &= PCI_CLASS_REVISION_MASK;
->>>>> +		*val |= PCI_CLASS_BRIDGE_PCI << 16;
->>>>> +		return PCIBIOS_SUCCESSFUL;
->>>>> +	}
->>>>
->>>> As I said before, this looks broken. If this code (or other drivers with
->>>> the same broken assumptions, eg dwc/pcie-qcom.c) carries out a, say,
->>>> byte sized config access of eg PCI_CLASS_DEVICE you will get junk out of
->>>> it according to your comment above.
->>>>
->>>> I would like to pick Bjorn's brain on this to see what we can really do
->>>> to fix this (and other) drivers.
->>>
->>>   - Check to see whether you're reading anything in the 32-bit dword at
->>>     offset 0x08.
->>>
->>>   - Do the 32-bit readl().
->>>
->>>   - Insert the correct Sub-Class and Base Class code (you also throw
->>>     away the Programming Interface; not sure why that is)
->>>
->>>   - If you're reading something smaller than 32 bits, mask & shift as
->>>     needed.  pci_bridge_emul_conf_read() does something similar that
->>>     you might be able to copy.
->>>
->>> Out of curiosity, what code depends on PCI_CLASS_BRIDGE_PCI?  There
->>> are several places in the kernel that currently depend on it, but I
->>> think several of them *should* be checking dev->hdr_type to identify a
->>> type 1 header instead.
->>>
->>> Bjorn
->>>
->>> .
->>>
->>
->> Yes, it would be broken in particular scenes(eg: read 1 or 2 bytes from 0xa/PCI_CLASS_DEVICE)
->> that I didn't considered.
->>  
->> As your suggestion, I consider some code below may help this issue:
->> 1, First call dw_pcie_read() help to read 1/2/4 bytes from register,
->>    request all other *size* bytes will return error and dw_pcie_read()
->>    will also check register alignment.
->>  
->> 2, If dw_pcie_read() return success and *where* is 0x8/PCI_CLASS_DEVICE or 0xa/PCI_CLASS_REVISION,
->>    we may need to correct class code.
->>    As PCI_CLASS_REVISION is two-bytes register, so only when read 4 bytes from 0x8/PCI_CLASS_DEVICE
->>    or read 2 bytes from 0xa/PCI_CLASS_REVISION we should correct the class code.
->>  
->> ps: read 1 byte from 0xa/PCI_CLASS_REVISION or 0xb will get incorrect value.
-> 
-> You can fix this too.
-> 
->> static int meson_pcie_rd_own_conf(struct pcie_port *pp, int where, int size,
->>                 u32 *val)
->> {
->>         struct dw_pcie *pci = to_dw_pcie_from_pp(pp);
->>         int ret;
->>
->>         ret = dw_pcie_read(pci->dbi_base + where, size, val);
->>         if (ret != PCIBIOS_SUCCESSFUL)
->>                 return ret;
->>
->>         /*
->>         * there is a bug of MESON AXG pcie controller that software can not
->>         * programe PCI_CLASS_DEVICE register, so we must return a fake right
-> 
-> "There is a bug in the MESON AXG pcie controller whereby software cannot
-> programme the PCI_CLASS_DEVICE register, so we must fabricate the return
-> value in the config accessors."
-> 
+This bug was introduced in the interaction for two commits on either
+branch of the merge commit 562df5c8521e ("Merge branch
+'pci/host-designware' into next").
 
-Ok, it's more clear :)
+Commit 4d107d3b5a68 ("PCI: imx6: Move link up check into
+imx6_pcie_wait_for_link()"), changed imx6_pcie_wait_for_link() to poll
+the link status register directly, checking for link up and not
+training, and made imx6_pcie_link_up() only check the link up bit (once,
+not a polling loop).
 
->>         * value to ensure driver could probe successfully.
->>         */
->>         if (where == PCI_CLASS_REVISION && size == 4)
->>                 *val = (PCI_CLASS_BRIDGE_PCI << 16) | (*val & 0xffff);
->>         else if (where == PCI_CLASS_DEVICE && size == 2)
->>                 *val = PCI_CLASS_BRIDGE_PCI;
-> 
-> You can further filter it with (where & 0x1) == PCI_CLASS_DEVICE
-> and handle the size accordingly, so that even a byte access would
-> work, for completeness.
-> 
-> Lorenzo
->
+While commit 886bc5ceb5cc ("PCI: designware: Add generic
+dw_pcie_wait_for_link()"), replaced the loop in
+imx6_pcie_wait_for_link() with a call to a new dwc core function, which
+polled imx6_pcie_link_up(), which still checked both link up and not
+training in a loop.
 
-Of course, I will add process to handle one-byte access from 0xa/0xb register 
-in next-version.
+When these two commits were merged, the version of
+imx6_pcie_wait_for_link() from 886bc5ceb5cc was kept, which eliminated
+the link training check placed there by 4d107d3b5a68. However, the
+version of imx6_pcie_link_up() from 4d107d3b5a68 was kept, which
+eliminated the link training check that had been there and was moved to
+imx6_pcie_wait_for_link().
 
-thanks.
+The result was the link training check got lost for the imx6 driver.
 
-hanjie
+Eliminate imx6_pcie_link_up() so that the default handler,
+dw_pcie_link_up(), is used instead. The default handler has the correct
+code, which checks for link up and also that it still is not training,
+fixing the regression.
+
+Fixes: 562df5c8521e ("Merge branch 'pci/host-designware' into next")
+Signed-off-by: Trent Piepho <tpiepho@impinj.com>
+[lorenzo.pieralisi@arm.com: rewrote the commit log]
+Signed-off-by: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
+Reviewed-by: Lucas Stach <l.stach@pengutronix.de>
+Cc: Bjorn Helgaas <bhelgaas@google.com>
+Cc: Joao Pinto <Joao.Pinto@synopsys.com>
+Cc: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
+Cc: Richard Zhu <hongxing.zhu@nxp.com>
+Signed-off-by: Sasha Levin <sashal@kernel.org>
+---
+ drivers/pci/dwc/pci-imx6.c | 10 +---------
+ 1 file changed, 1 insertion(+), 9 deletions(-)
+
+diff --git a/drivers/pci/dwc/pci-imx6.c b/drivers/pci/dwc/pci-imx6.c
+index b73483534a5b..1f1069b70e45 100644
+--- a/drivers/pci/dwc/pci-imx6.c
++++ b/drivers/pci/dwc/pci-imx6.c
+@@ -83,8 +83,6 @@ struct imx6_pcie {
+ #define PCIE_PL_PFLR_FORCE_LINK			(1 << 15)
+ #define PCIE_PHY_DEBUG_R0 (PL_OFFSET + 0x28)
+ #define PCIE_PHY_DEBUG_R1 (PL_OFFSET + 0x2c)
+-#define PCIE_PHY_DEBUG_R1_XMLH_LINK_IN_TRAINING	(1 << 29)
+-#define PCIE_PHY_DEBUG_R1_XMLH_LINK_UP		(1 << 4)
  
->>         return PCIBIOS_SUCCESSFUL;
->> }
->>
->> 3, We must ensure class is PCI_CLASS_BRIDGE_PCI except right hdr_type,
->>    or pci_setup_device() will get failed: 
->>
->>    ...
->>    class = pci_class(dev);
->>    dev->revision = class & 0xff;
->>    dev->class = class >> 8; /* upper 3 bytes */ 
->>    ....
->>    switch (dev->hdr_type) { /* header type */
->>    ... 
->>    case PCI_HEADER_TYPE_BRIDGE: /* bridge header */
->>       if (class != PCI_CLASS_BRIDGE_PCI)  /* class must be PCI_CLASS_BRIDGE_PCI  */
->>          goto bad; 
->>
->>
->> thanks.
->>
->> hanjie
-> 
-> .
-> 
+ #define PCIE_PHY_CTRL (PL_OFFSET + 0x114)
+ #define PCIE_PHY_CTRL_DATA_LOC 0
+@@ -653,12 +651,6 @@ static int imx6_pcie_host_init(struct pcie_port *pp)
+ 	return 0;
+ }
+ 
+-static int imx6_pcie_link_up(struct dw_pcie *pci)
+-{
+-	return dw_pcie_readl_dbi(pci, PCIE_PHY_DEBUG_R1) &
+-			PCIE_PHY_DEBUG_R1_XMLH_LINK_UP;
+-}
+-
+ static const struct dw_pcie_host_ops imx6_pcie_host_ops = {
+ 	.host_init = imx6_pcie_host_init,
+ };
+@@ -701,7 +693,7 @@ static int imx6_add_pcie_port(struct imx6_pcie *imx6_pcie,
+ }
+ 
+ static const struct dw_pcie_ops dw_pcie_ops = {
+-	.link_up = imx6_pcie_link_up,
++	/* No special ops needed, but pcie-designware still expects this struct */
+ };
+ 
+ static int imx6_pcie_probe(struct platform_device *pdev)
+-- 
+2.17.1
+
