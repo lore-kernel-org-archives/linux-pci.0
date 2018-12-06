@@ -2,168 +2,159 @@ Return-Path: <SRS0=KO/x=OP=vger.kernel.org=linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-7.0 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_PASS,URIBL_BLOCKED
-	autolearn=unavailable autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-7.0 required=3.0 tests=DKIMWL_WL_MED,DKIM_SIGNED,
+	DKIM_VALID,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,
+	SIGNED_OFF_BY,SPF_PASS autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id B4CBAC64EB1
-	for <linux-pci@archiver.kernel.org>; Thu,  6 Dec 2018 15:46:37 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id EFC12C64EB1
+	for <linux-pci@archiver.kernel.org>; Thu,  6 Dec 2018 15:47:29 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 7A6FE214C1
-	for <linux-pci@archiver.kernel.org>; Thu,  6 Dec 2018 15:46:37 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.3.2 mail.kernel.org 7A6FE214C1
-Authentication-Results: mail.kernel.org; dmarc=none (p=none dis=none) header.from=sedsystems.ca
+	by mail.kernel.org (Postfix) with ESMTP id AB7E1214C1
+	for <linux-pci@archiver.kernel.org>; Thu,  6 Dec 2018 15:47:29 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.3.2 mail.kernel.org AB7E1214C1
+Authentication-Results: mail.kernel.org; dmarc=none (p=none dis=none) header.from=xilinx.com
 Authentication-Results: mail.kernel.org; spf=none smtp.mailfrom=linux-pci-owner@vger.kernel.org
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1725922AbeLFPqg (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Thu, 6 Dec 2018 10:46:36 -0500
-Received: from sed198n136.SEDSystems.ca ([198.169.180.136]:16200 "EHLO
-        sed198n136.sedsystems.ca" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1725908AbeLFPqg (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Thu, 6 Dec 2018 10:46:36 -0500
-Received: from barney.sedsystems.ca (barney [198.169.180.121])
-        by sed198n136.sedsystems.ca  with ESMTP id wB6FjmpS001603
-        (version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-        Thu, 6 Dec 2018 09:45:48 -0600 (CST)
-Received: from eng1n65.eng.sedsystems.ca (eng1n65.eng.sedsystems.ca [172.21.1.65])
-        by barney.sedsystems.ca (8.14.7/8.14.4) with ESMTP id wB6FjluQ049453
-        (version=TLSv1/SSLv3 cipher=ECDHE-RSA-AES128-GCM-SHA256 bits=128 verify=NO);
-        Thu, 6 Dec 2018 09:45:48 -0600
-Subject: Re: [PATCH] PCI: controller: dwc: Make PCI_IMX6 depend on PCIEPORTBUS
-To:     Baruch Siach <baruch@tkos.co.il>,
-        Andrey Smirnov <andrew.smirnov@gmail.com>
-Cc:     linux-pci@vger.kernel.org, "A.s. Dong" <aisheng.dong@nxp.com>,
-        Richard Zhu <hongxing.zhu@nxp.com>,
-        linux-arm-kernel@lists.infradead.org, linux-kernel@vger.kernel.org,
-        linux-imx@nxp.com, bhelgaas@google.com,
-        Leonard Crestez <leonard.crestez@nxp.com>, cphealy@gmail.com,
-        l.stach@pengutronix.de, Trent Piepho <tpiepho@impinj.com>
-References: <20181206074555.19579-1-andrew.smirnov@gmail.com>
- <87o99zjcsc.fsf@tkos.co.il>
-From:   Robert Hancock <hancock@sedsystems.ca>
-Openpgp: preference=signencrypt
-Autocrypt: addr=hancock@sedsystems.ca; prefer-encrypt=mutual; keydata=
- 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
-Organization: SED Systems
-Message-ID: <5a3543f2-fe58-221d-694f-0f98a643edfc@sedsystems.ca>
-Date:   Thu, 6 Dec 2018 09:45:47 -0600
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:60.0) Gecko/20100101
- Thunderbird/60.3.1
-MIME-Version: 1.0
-In-Reply-To: <87o99zjcsc.fsf@tkos.co.il>
-Content-Type: text/plain; charset=utf-8
+        id S1725936AbeLFPr3 (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Thu, 6 Dec 2018 10:47:29 -0500
+Received: from mail-eopbgr770045.outbound.protection.outlook.com ([40.107.77.45]:59070
+        "EHLO NAM02-SN1-obe.outbound.protection.outlook.com"
+        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+        id S1725908AbeLFPr2 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Thu, 6 Dec 2018 10:47:28 -0500
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+ d=xilinx.onmicrosoft.com; s=selector1-xilinx-com;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
+ bh=K6PuRFIKOSXHM+3cR6dG1ekBu5cgchE5xZXtXyw98bU=;
+ b=fHtCl5lPLz1pBO++O+t3wcM1UH5csN4TkW0g0Zwq58gQI4VGXLb22UPfvoeEYP2SgjOK0oVXwBJZIVtmy5EYCjkOaoUvg4z3E56RnY2GWamQ1DkdpBdjvdtKvrrgxY1FrNrdYVDd3XSbyKI+p1tLaZvPyc+tdmbCQlMssqn/rYo=
+Received: from MWHPR02MB2783.namprd02.prod.outlook.com (10.175.49.149) by
+ MWHPR02MB2735.namprd02.prod.outlook.com (10.175.49.137) with Microsoft SMTP
+ Server (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
+ 15.20.1404.17; Thu, 6 Dec 2018 15:47:26 +0000
+Received: from MWHPR02MB2783.namprd02.prod.outlook.com
+ ([fe80::3cdc:f4c:38f2:f62f]) by MWHPR02MB2783.namprd02.prod.outlook.com
+ ([fe80::3cdc:f4c:38f2:f62f%3]) with mapi id 15.20.1404.021; Thu, 6 Dec 2018
+ 15:47:13 +0000
+From:   Bharat Kumar Gogada <bharatku@xilinx.com>
+To:     Bharat Kumar Gogada <bharatku@xilinx.com>,
+        "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
+CC:     "bhelgaas@google.com" <bhelgaas@google.com>,
+        Ravikiran Gummaluri <rgummal@xilinx.com>
+Subject: RE: [PATCH] PCI: Enable SERR# forwarding for Type-1 PCI devices
+Thread-Topic: [PATCH] PCI: Enable SERR# forwarding for Type-1 PCI devices
+Thread-Index: AQHUfCn2igqy2G0j/kqJFDtUguzydaVx/C+A
+Date:   Thu, 6 Dec 2018 15:47:13 +0000
+Message-ID: <MWHPR02MB2783A4D7F18724F9A2FA2A8FA5A90@MWHPR02MB2783.namprd02.prod.outlook.com>
+References: <1542206821-24503-1-git-send-email-bharat.kumar.gogada@xilinx.com>
+In-Reply-To: <1542206821-24503-1-git-send-email-bharat.kumar.gogada@xilinx.com>
+Accept-Language: en-US
 Content-Language: en-US
-Content-Transfer-Encoding: 8bit
-X-Scanned-By: MIMEDefang 2.64 on 198.169.180.136
+X-MS-Has-Attach: 
+X-Auto-Response-Suppress: DR, RN, NRN, OOF, AutoReply
+X-MS-TNEF-Correlator: 
+authentication-results: spf=none (sender IP is )
+ smtp.mailfrom=bharatku@xilinx.com; 
+x-originating-ip: [149.199.50.133]
+x-ms-publictraffictype: Email
+x-microsoft-exchange-diagnostics: 1;MWHPR02MB2735;6:PQZvupuRAGgvGp9E6uzShZS/5j5txV8nm3izUDot5RY19xiDfuLj0BpYNmBLHjtuaKeOcSOPbcEnDTl0Q0hxGqFReS/e0Q0CjtvMfEkqPYl/b8um0xpWctfgvI+ejSFKKDMx3TgvsXNa2ECj5A4iWXXFRlNPRG7Afoa93BCwF0AYn5q/+R9V8vPjDlneY3g9+93L7RJvaKICG/TkIkrYxJc6Du6/uIaR1aCtJT6Ej8yRQa6le338zWBdJWF1yyz0B0BJ3cc9tZ60XbCBCpp1hFRh122CJ3bbLp7di9pHbBJDPbIscO8677iSvRU2DP3k4e3gkH5PcXGY1UIQefi/CfO/w8cUt4N2RGSDNGWn9cp3PYuIBXuC8pb1uJH04h4Wnfapa+5nj5j1dFReBCZvS4iZh+9psD63atNkPKAgYVghyAt/ScFMdIh9PuYwE/mWwPlJN41BcaqwQJ6C1BZpyQ==;5:CImbIwZ79YmyPFYkuT4Yyw4uDR2vgPL5bxgOk40n3rK/0ybk5X0UvdrjBMvSllxQRR3X9lTLsIA/g4c23dbXFRfY/UcSN6lXTN9Umy1CDqr8+DNgEVxSrndLM5UgBxFzHU0KxjS38ih8m4tRr9KhaPOGDHg/Fu0AO//g4cPmgXQ=;7:5JCkOdT8xzQzQJWgELs64jY//H3mVbcXAbau8VVV6ZW+LgaL+JN81Q6pylgAO3XTO+7TgQIE7V/gciwPWeqm9GdSxzTWaHUXRlrmd/42MLz050w8c33BNeAKoT7Ni80pF6jNUhefeLCocGBgxE+3gQ==
+x-ms-exchange-antispam-srfa-diagnostics: SOS;SOR;
+x-ms-office365-filtering-correlation-id: 2605ee63-a917-4db5-c2b3-08d65b92178d
+x-ms-office365-filtering-ht: Tenant
+x-microsoft-antispam: BCL:0;PCL:0;RULEID:(2390098)(7020095)(4652040)(8989299)(4534185)(4627221)(201703031133081)(201702281549075)(8990200)(5600074)(711020)(4618075)(2017052603328)(7153060)(7193020);SRVR:MWHPR02MB2735;
+x-ms-traffictypediagnostic: MWHPR02MB2735:
+x-microsoft-antispam-prvs: <MWHPR02MB2735B76C805BE1DDE4B608D9A5A90@MWHPR02MB2735.namprd02.prod.outlook.com>
+x-ms-exchange-senderadcheck: 1
+x-exchange-antispam-report-cfa-test: BCL:0;PCL:0;RULEID:(8211001083)(6040522)(2401047)(8121501046)(5005006)(3231455)(999002)(944501520)(52105112)(93006095)(93001095)(3002001)(10201501046)(6055026)(148016)(149066)(150057)(6041310)(20161123564045)(20161123558120)(20161123560045)(20161123562045)(201703131423095)(201702281528075)(20161123555045)(201703061421075)(201703061406153)(201708071742011)(7699051)(76991095);SRVR:MWHPR02MB2735;BCL:0;PCL:0;RULEID:;SRVR:MWHPR02MB2735;
+x-forefront-prvs: 087894CD3C
+x-forefront-antispam-report: SFV:NSPM;SFS:(10009020)(39860400002)(396003)(136003)(376002)(366004)(346002)(199004)(189003)(53754006)(5660300001)(110136005)(99286004)(97736004)(186003)(305945005)(68736007)(7736002)(102836004)(6506007)(106356001)(2501003)(2906002)(105586002)(71200400001)(26005)(54906003)(33656002)(86362001)(6116002)(229853002)(9686003)(53936002)(3846002)(478600001)(71190400001)(66066001)(2201001)(8676002)(476003)(11346002)(8936002)(81166006)(81156014)(256004)(4326008)(446003)(55016002)(316002)(6436002)(6246003)(14454004)(107886003)(486006)(7696005)(76176011)(25786009)(74316002);DIR:OUT;SFP:1101;SCL:1;SRVR:MWHPR02MB2735;H:MWHPR02MB2783.namprd02.prod.outlook.com;FPR:;SPF:None;LANG:en;PTR:InfoNoRecords;A:1;MX:1;
+received-spf: None (protection.outlook.com: xilinx.com does not designate
+ permitted sender hosts)
+x-microsoft-antispam-message-info: SuEo3kbQFZe7YljbJmmPJkIdMps3yutKrqv6XauaW5cLNUnc4oRIXne29abNn/R20RAjZ/qiKjFGxA3rMJXsmA8P8CdhB2o+TVqZpMWM94ObRJ4cyvVJubhkwRTFBSS/FYwmdccZgHzbauJcR2l4LxPWw9ECRDc3WCWu/GSI+rrIW8hQYlQn+Zo+90NbXkP6M9tNMMG59LuPH3XTmwUazP90xSzVTshiXeg9f69hV/jCspad6V1Nycak6D09oW/V+1Lrp2/EiOXhEbsPdzWarw5e8w7EhR6Ozw2kQEWUNA0oKPRpqS93pzEmSU2v96r9j0oaj1ZaF3CZuJdtnv6uG+2OiUTRrL8jX6dD/1CAJ60=
+spamdiagnosticoutput: 1:99
+spamdiagnosticmetadata: NSPM
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: quoted-printable
+MIME-Version: 1.0
+X-OriginatorOrg: xilinx.com
+X-MS-Exchange-CrossTenant-Network-Message-Id: 2605ee63-a917-4db5-c2b3-08d65b92178d
+X-MS-Exchange-CrossTenant-originalarrivaltime: 06 Dec 2018 15:47:13.3849
+ (UTC)
+X-MS-Exchange-CrossTenant-fromentityheader: Hosted
+X-MS-Exchange-CrossTenant-id: 657af505-d5df-48d0-8300-c31994686c5c
+X-MS-Exchange-Transport-CrossTenantHeadersStamped: MWHPR02MB2735
 Sender: linux-pci-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-On 2018-12-06 2:10 a.m., Baruch Siach wrote:
-> Hi Andrey,
-> 
-> Adding Robert Hancock who reported[1] on a PCIe MSI issue with i.MX6.
-> 
-> Andrey Smirnov writes:
-> 
->> Building a kernel with CONFIG_PCI_IMX6=y, but CONFIG_PCIEPORTBUS=n
->> produces a system where built-in PCIE bridge (16c3:abcd) isn't bound
->> to pcieport driver. This, in turn, results in a PCIE bus that is
->> capable of enumerating attached PCIE device, but lacks functional
->> interrupt support.
-> 
-> Robert, does that fix your issue?
+Hi All,
 
-Unfortunately, no.. in fact the situation on my setup is even worse with
-CONFIG_PCIEPORTBUS enabled: Not only does MSI still not function, but
-now INTx interrupts are somehow broken as well - no interrupts are
-received. The IRQ information shown in /proc/interrupts is correct, but
-the count remains stubbornly at 0.
+Please let me know if anyone has any issue with this patch.
 
-So given that outcome, I don't think we should add this as a hard
-dependency until we can figure out what is going on, as it seems to
-regress working setups.
-
-> 
->> Signed-off-by: Andrey Smirnov <andrew.smirnov@gmail.com>
->> ---
->>
->> Assuming this is a reasonable dependency, shold this be done to more
->> than just i.MX6 driver?
->>
->>  drivers/pci/controller/dwc/Kconfig | 1 +
->>  1 file changed, 1 insertion(+)
->>
->> diff --git a/drivers/pci/controller/dwc/Kconfig b/drivers/pci/controller/dwc/Kconfig
->> index 2b139acccf32..44ededbeab85 100644
->> --- a/drivers/pci/controller/dwc/Kconfig
->> +++ b/drivers/pci/controller/dwc/Kconfig
->> @@ -92,6 +92,7 @@ config PCI_IMX6
->>  	bool "Freescale i.MX6 PCIe controller"
->>  	depends on SOC_IMX8MQ || SOC_IMX6Q || (ARM && COMPILE_TEST)
->>  	depends on PCI_MSI_IRQ_DOMAIN
->> +	depends on PCIEPORTBUS
-> 
-> This effectively disables PCIe in imx_v6_v7_defconfig, since
-> CONFIG_PCIEPORTBUS is not enabled there. Maybe do 'select' instead?
-> 
->>  	Select PCIE_DW_HOST
->>
->>  config PCIE_SPEAR13XX
-> 
-> baruch
-> 
-> [1] http://lists.infradead.org/pipermail/linux-arm-kernel/2018-November/614800.html
-> 
+Regards,
+Bharat
+> As per Figure 6-3 in PCIe r4.0, sec 6.2.6, ERR_ messages will be forwarde=
+d
+> from the secondary interface to the primary interface, if the SERR# Enabl=
+e
+> bit in the Bridge Control register is set.
+> Currently PCI_BRIDGE_CTL_SERR is being enabled only in ACPI flow.
+> This patch enables PCI_BRIDGE_CTL_SERR for Type-1 PCI device.
+>=20
+> Signed-off-by: Bharat Kumar Gogada <bharat.kumar.gogada@xilinx.com>
+> ---
+>  drivers/pci/probe.c | 20 ++++++++++++++++++--
+>  1 file changed, 18 insertions(+), 2 deletions(-)
+>=20
+> diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c index
+> b1c05b5..ed71e8e 100644
+> --- a/drivers/pci/probe.c
+> +++ b/drivers/pci/probe.c
+> @@ -1841,8 +1841,6 @@ static void program_hpp_type0(struct pci_dev
+> *dev, struct hpp_type0 *hpp)
+>  		pci_write_config_byte(dev, PCI_SEC_LATENCY_TIMER,
+>  				      hpp->latency_timer);
+>  		pci_read_config_word(dev, PCI_BRIDGE_CONTROL,
+> &pci_bctl);
+> -		if (hpp->enable_serr)
+> -			pci_bctl |=3D PCI_BRIDGE_CTL_SERR;
+>  		if (hpp->enable_perr)
+>  			pci_bctl |=3D PCI_BRIDGE_CTL_PARITY;
+>  		pci_write_config_word(dev, PCI_BRIDGE_CONTROL,
+> pci_bctl); @@ -2114,6 +2112,23 @@ static void
+> pci_configure_eetlp_prefix(struct pci_dev *dev)  #endif  }
+>=20
+> +static void pci_configure_serr(struct pci_dev *dev) {
+> +	if (dev->hdr_type =3D=3D PCI_HEADER_TYPE_BRIDGE) {
+> +		u16 control;
+> +
+> +		/*
+> +		 * A Type-1 PCI bridge will not forward ERR_ messages
+> coming
+> +		 * from an endpoint if SERR# forwarding is not enabled.
+> +		 */
+> +		pci_read_config_word(dev, PCI_BRIDGE_CONTROL,
+> &control);
+> +		if (!(control & PCI_BRIDGE_CTL_SERR)) {
+> +			control |=3D PCI_BRIDGE_CTL_SERR;
+> +			pci_write_config_word(dev, PCI_BRIDGE_CONTROL,
+> control);
+> +		}
+> +	}
+> +}
+> +
+>  static void pci_configure_device(struct pci_dev *dev)  {
+>  	struct hotplug_params hpp;
+> @@ -2124,6 +2139,7 @@ static void pci_configure_device(struct pci_dev
+> *dev)
+>  	pci_configure_relaxed_ordering(dev);
+>  	pci_configure_ltr(dev);
+>  	pci_configure_eetlp_prefix(dev);
+> +	pci_configure_serr(dev);
+>=20
+>  	memset(&hpp, 0, sizeof(hpp));
+>  	ret =3D pci_get_hp_params(dev, &hpp);
 > --
->      http://baruch.siach.name/blog/                  ~. .~   Tk Open Systems
-> =}------------------------------------------------ooO--U--Ooo------------{=
->    - baruch@tkos.co.il - tel: +972.52.368.4656, http://www.tkos.co.il -
-> 
+> 2.7.4
 
--- 
-Robert Hancock
-Senior Software Developer
-SED Systems
-Email: hancock@sedsystems.ca
