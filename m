@@ -2,103 +2,168 @@ Return-Path: <SRS0=KO/x=OP=vger.kernel.org=linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-9.0 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_PASS,URIBL_BLOCKED,
-	USER_AGENT_GIT autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-7.0 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_PASS,URIBL_BLOCKED
+	autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 4EE7DC04EB8
-	for <linux-pci@archiver.kernel.org>; Thu,  6 Dec 2018 12:52:47 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id B4CBAC64EB1
+	for <linux-pci@archiver.kernel.org>; Thu,  6 Dec 2018 15:46:37 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 1DF5C20878
-	for <linux-pci@archiver.kernel.org>; Thu,  6 Dec 2018 12:52:47 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.3.2 mail.kernel.org 1DF5C20878
-Authentication-Results: mail.kernel.org; dmarc=none (p=none dis=none) header.from=zte.com.cn
+	by mail.kernel.org (Postfix) with ESMTP id 7A6FE214C1
+	for <linux-pci@archiver.kernel.org>; Thu,  6 Dec 2018 15:46:37 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.3.2 mail.kernel.org 7A6FE214C1
+Authentication-Results: mail.kernel.org; dmarc=none (p=none dis=none) header.from=sedsystems.ca
 Authentication-Results: mail.kernel.org; spf=none smtp.mailfrom=linux-pci-owner@vger.kernel.org
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1729069AbeLFMwq (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Thu, 6 Dec 2018 07:52:46 -0500
-Received: from mxhk.zte.com.cn ([63.217.80.70]:32548 "EHLO mxhk.zte.com.cn"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1728482AbeLFMwq (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Thu, 6 Dec 2018 07:52:46 -0500
-Received: from mse01.zte.com.cn (unknown [10.30.3.20])
-        by Forcepoint Email with ESMTPS id 98821D6411D58018E514;
-        Thu,  6 Dec 2018 20:52:43 +0800 (CST)
-Received: from notes_smtp.zte.com.cn ([10.30.1.239])
-        by mse01.zte.com.cn with ESMTP id wB6CqXAW072381;
-        Thu, 6 Dec 2018 20:52:33 +0800 (GMT-8)
-        (envelope-from wen.yang99@zte.com.cn)
-Received: from LIN-A6CB96A0603.zte.intra ([10.90.106.118])
-          by szsmtp06.zte.com.cn (Lotus Domino Release 8.5.3FP6)
-          with ESMTP id 2018120620530589-15149764 ;
-          Thu, 6 Dec 2018 20:53:05 +0800 
-From:   Wen Yang <wen.yang99@zte.com.cn>
-To:     Kishon Vijay Abraham I <kishon@ti.com>,
-        Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
-        Bjorn Helgaas <bhelgaas@google.com>
-Cc:     linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
-        zhong.weidong@zte.com.cn, Wen Yang <wen.yang99@zte.com.cn>,
-        Gustavo Pimentel <gustavo.pimentel@synopsys.com>,
-        Niklas Cassel <niklas.cassel@axis.com>,
-        Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-        Cyrille Pitchen <cyrille.pitchen@free-electrons.com>
-Subject: [PATCH v2] PCI: endpoint: functions: Use kmemdup instead of duplicating its function
-Date:   Thu, 6 Dec 2018 20:52:25 +0800
-Message-Id: <20181206125225.9497-1-wen.yang99@zte.com.cn>
-X-Mailer: git-send-email 2.19.1
+        id S1725922AbeLFPqg (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Thu, 6 Dec 2018 10:46:36 -0500
+Received: from sed198n136.SEDSystems.ca ([198.169.180.136]:16200 "EHLO
+        sed198n136.sedsystems.ca" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1725908AbeLFPqg (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Thu, 6 Dec 2018 10:46:36 -0500
+Received: from barney.sedsystems.ca (barney [198.169.180.121])
+        by sed198n136.sedsystems.ca  with ESMTP id wB6FjmpS001603
+        (version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
+        Thu, 6 Dec 2018 09:45:48 -0600 (CST)
+Received: from eng1n65.eng.sedsystems.ca (eng1n65.eng.sedsystems.ca [172.21.1.65])
+        by barney.sedsystems.ca (8.14.7/8.14.4) with ESMTP id wB6FjluQ049453
+        (version=TLSv1/SSLv3 cipher=ECDHE-RSA-AES128-GCM-SHA256 bits=128 verify=NO);
+        Thu, 6 Dec 2018 09:45:48 -0600
+Subject: Re: [PATCH] PCI: controller: dwc: Make PCI_IMX6 depend on PCIEPORTBUS
+To:     Baruch Siach <baruch@tkos.co.il>,
+        Andrey Smirnov <andrew.smirnov@gmail.com>
+Cc:     linux-pci@vger.kernel.org, "A.s. Dong" <aisheng.dong@nxp.com>,
+        Richard Zhu <hongxing.zhu@nxp.com>,
+        linux-arm-kernel@lists.infradead.org, linux-kernel@vger.kernel.org,
+        linux-imx@nxp.com, bhelgaas@google.com,
+        Leonard Crestez <leonard.crestez@nxp.com>, cphealy@gmail.com,
+        l.stach@pengutronix.de, Trent Piepho <tpiepho@impinj.com>
+References: <20181206074555.19579-1-andrew.smirnov@gmail.com>
+ <87o99zjcsc.fsf@tkos.co.il>
+From:   Robert Hancock <hancock@sedsystems.ca>
+Openpgp: preference=signencrypt
+Autocrypt: addr=hancock@sedsystems.ca; prefer-encrypt=mutual; keydata=
+ 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
+Organization: SED Systems
+Message-ID: <5a3543f2-fe58-221d-694f-0f98a643edfc@sedsystems.ca>
+Date:   Thu, 6 Dec 2018 09:45:47 -0600
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:60.0) Gecko/20100101
+ Thunderbird/60.3.1
 MIME-Version: 1.0
-X-MIMETrack: Itemize by SMTP Server on SZSMTP06/server/zte_ltd(Release 8.5.3FP6|November
- 21, 2013) at 2018-12-06 20:53:05,
-        Serialize by Router on notes_smtp/zte_ltd(Release 9.0.1FP7|August  17, 2016) at
- 2018-12-06 20:52:21
-Content-Transfer-Encoding: quoted-printable
-X-MAIL: mse01.zte.com.cn wB6CqXAW072381
+In-Reply-To: <87o99zjcsc.fsf@tkos.co.il>
+Content-Type: text/plain; charset=utf-8
+Content-Language: en-US
+Content-Transfer-Encoding: 8bit
+X-Scanned-By: MIMEDefang 2.64 on 198.169.180.136
 Sender: linux-pci-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-kmemdup has implemented the function that kmalloc() + memcpy().
-We prefer to kmemdup rather than code opened implementation.
+On 2018-12-06 2:10 a.m., Baruch Siach wrote:
+> Hi Andrey,
+> 
+> Adding Robert Hancock who reported[1] on a PCIe MSI issue with i.MX6.
+> 
+> Andrey Smirnov writes:
+> 
+>> Building a kernel with CONFIG_PCI_IMX6=y, but CONFIG_PCIEPORTBUS=n
+>> produces a system where built-in PCIE bridge (16c3:abcd) isn't bound
+>> to pcieport driver. This, in turn, results in a PCIE bus that is
+>> capable of enumerating attached PCIE device, but lacks functional
+>> interrupt support.
+> 
+> Robert, does that fix your issue?
 
-This issue was detected with the help of coccinelle.
+Unfortunately, no.. in fact the situation on my setup is even worse with
+CONFIG_PCIEPORTBUS enabled: Not only does MSI still not function, but
+now INTx interrupts are somehow broken as well - no interrupts are
+received. The IRQ information shown in /proc/interrupts is correct, but
+the count remains stubbornly at 0.
 
-Signed-off-by: Wen Yang <wen.yang99@zte.com.cn>
-CC: Kishon Vijay Abraham I <kishon@ti.com>
-CC: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
-CC: Bjorn Helgaas <bhelgaas@google.com>
-CC: Gustavo Pimentel <gustavo.pimentel@synopsys.com>
-CC: Niklas Cassel <niklas.cassel@axis.com>
-CC: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
-CC: Cyrille Pitchen <cyrille.pitchen@free-electrons.com>
-CC: linux-pci@vger.kernel.org (open list:PCI ENDPOINT SUBSYSTEM)
-CC: linux-kernel@vger.kernel.org (open list)
----
- drivers/pci/endpoint/functions/pci-epf-test.c | 4 +---
- 1 file changed, 1 insertion(+), 3 deletions(-)
+So given that outcome, I don't think we should add this as a hard
+dependency until we can figure out what is going on, as it seems to
+regress working setups.
 
-diff --git a/drivers/pci/endpoint/functions/pci-epf-test.c b/drivers/pci/en=
-dpoint/functions/pci-epf-test.c
-index 3e86fa3c7da3..8df6c019f8a2 100644
---- a/drivers/pci/endpoint/functions/pci-epf-test.c
-+++ b/drivers/pci/endpoint/functions/pci-epf-test.c
-@@ -169,14 +169,12 @@ static int pci=5Fepf=5Ftest=5Fread(struct pci=5Fepf=
-=5Ftest *epf=5Ftest)
- 		goto err=5Faddr;
- 	}
-=20
--	buf =3D kzalloc(reg->size, GFP=5FKERNEL);
-+	buf =3D kmemdup(src=5Faddr, reg->size, GFP=5FKERNEL);
- 	if (!buf) {
- 		ret =3D -ENOMEM;
- 		goto err=5Fmap=5Faddr;
- 	}
-=20
--	memcpy(buf, src=5Faddr, reg->size);
--
- 	crc32 =3D crc32=5Fle(~0, buf, reg->size);
- 	if (crc32 !=3D reg->checksum)
- 		ret =3D -EIO;
---=20
-2.19.1
+> 
+>> Signed-off-by: Andrey Smirnov <andrew.smirnov@gmail.com>
+>> ---
+>>
+>> Assuming this is a reasonable dependency, shold this be done to more
+>> than just i.MX6 driver?
+>>
+>>  drivers/pci/controller/dwc/Kconfig | 1 +
+>>  1 file changed, 1 insertion(+)
+>>
+>> diff --git a/drivers/pci/controller/dwc/Kconfig b/drivers/pci/controller/dwc/Kconfig
+>> index 2b139acccf32..44ededbeab85 100644
+>> --- a/drivers/pci/controller/dwc/Kconfig
+>> +++ b/drivers/pci/controller/dwc/Kconfig
+>> @@ -92,6 +92,7 @@ config PCI_IMX6
+>>  	bool "Freescale i.MX6 PCIe controller"
+>>  	depends on SOC_IMX8MQ || SOC_IMX6Q || (ARM && COMPILE_TEST)
+>>  	depends on PCI_MSI_IRQ_DOMAIN
+>> +	depends on PCIEPORTBUS
+> 
+> This effectively disables PCIe in imx_v6_v7_defconfig, since
+> CONFIG_PCIEPORTBUS is not enabled there. Maybe do 'select' instead?
+> 
+>>  	Select PCIE_DW_HOST
+>>
+>>  config PCIE_SPEAR13XX
+> 
+> baruch
+> 
+> [1] http://lists.infradead.org/pipermail/linux-arm-kernel/2018-November/614800.html
+> 
+> --
+>      http://baruch.siach.name/blog/                  ~. .~   Tk Open Systems
+> =}------------------------------------------------ooO--U--Ooo------------{=
+>    - baruch@tkos.co.il - tel: +972.52.368.4656, http://www.tkos.co.il -
+> 
 
+-- 
+Robert Hancock
+Senior Software Developer
+SED Systems
+Email: hancock@sedsystems.ca
