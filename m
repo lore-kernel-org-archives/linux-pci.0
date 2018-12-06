@@ -2,118 +2,170 @@ Return-Path: <SRS0=KO/x=OP=vger.kernel.org=linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-9.1 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
-	DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,
-	SIGNED_OFF_BY,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT autolearn=ham
-	autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-7.0 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_PASS,UNPARSEABLE_RELAY,
+	URIBL_BLOCKED autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 1C015C04EBF
-	for <linux-pci@archiver.kernel.org>; Thu,  6 Dec 2018 04:20:15 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 5A38EC04EB8
+	for <linux-pci@archiver.kernel.org>; Thu,  6 Dec 2018 05:54:09 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id D5C512146D
-	for <linux-pci@archiver.kernel.org>; Thu,  6 Dec 2018 04:20:14 +0000 (UTC)
-Authentication-Results: mail.kernel.org;
-	dkim=pass (1024-bit key) header.d=gibson.dropbear.id.au header.i=@gibson.dropbear.id.au header.b="TZ96w9Mt"
-DMARC-Filter: OpenDMARC Filter v1.3.2 mail.kernel.org D5C512146D
-Authentication-Results: mail.kernel.org; dmarc=none (p=none dis=none) header.from=gibson.dropbear.id.au
+	by mail.kernel.org (Postfix) with ESMTP id 1BCDB214C1
+	for <linux-pci@archiver.kernel.org>; Thu,  6 Dec 2018 05:54:09 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.3.2 mail.kernel.org 1BCDB214C1
+Authentication-Results: mail.kernel.org; dmarc=none (p=none dis=none) header.from=mediatek.com
 Authentication-Results: mail.kernel.org; spf=none smtp.mailfrom=linux-pci-owner@vger.kernel.org
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1728294AbeLFEUB (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Wed, 5 Dec 2018 23:20:01 -0500
-Received: from ozlabs.org ([203.11.71.1]:43561 "EHLO ozlabs.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1727695AbeLFEUA (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Wed, 5 Dec 2018 23:20:00 -0500
-Received: by ozlabs.org (Postfix, from userid 1007)
-        id 439Mnn2xg6z9s7h; Thu,  6 Dec 2018 15:19:57 +1100 (AEDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
-        d=gibson.dropbear.id.au; s=201602; t=1544069997;
-        bh=QfCDKFem+tJn9rNn8MYnoPCP4PC1UJhmRYJ4KBb7coM=;
-        h=From:To:Cc:Subject:Date:From;
-        b=TZ96w9MtVoS99ghXZApZhoWNx8WuX/FMIGjPUAoBNaRVseslpSluwbzk0ZeaEaLvM
-         WM8SteRDD3oiMugu2haF5ucU+AtLrO3SZfuYHiwBmz2rRhsIe6nE70EiJZaGj0gG9+
-         zqjCZhQHXJlYkEXivu/LhE4VuTrQ1+ckaXa0SfS0=
-From:   David Gibson <david@gibson.dropbear.id.au>
-To:     davem@davemloft.net, saeedm@mellanox.com, ogerlitz@mellanox.com,
-        tariqt@mellanox.com, bhelgaas@google.com, leon@kernel.org
-Cc:     linux-kernel@vger.kernel.org, linuxppc-dev@lists.ozlabs.org,
-        netdev@vger.kernel.org, alex.williamson@redhat.com,
-        linux-pci@vger.kernel.org, linux-rdma@vger.kernel.org,
-        sbest@redhat.com, paulus@samba.org, benh@kernel.crashing.org,
-        David Gibson <david@gibson.dropbear.id.au>
-Subject: [PATCH] PCI: Add no-D3 quirk for Mellanox ConnectX-[45]
-Date:   Thu,  6 Dec 2018 15:19:51 +1100
-Message-Id: <20181206041951.22413-1-david@gibson.dropbear.id.au>
-X-Mailer: git-send-email 2.19.2
+        id S1728489AbeLFFyI (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Thu, 6 Dec 2018 00:54:08 -0500
+Received: from mailgw02.mediatek.com ([1.203.163.81]:60021 "EHLO
+        mailgw02.mediatek.com" rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org
+        with ESMTP id S1728294AbeLFFyI (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Thu, 6 Dec 2018 00:54:08 -0500
+X-UUID: e899e5154b84451297bbb2e5e49e94bd-20181206
+X-UUID: e899e5154b84451297bbb2e5e49e94bd-20181206
+Received: from mtkcas36.mediatek.inc [(172.27.4.250)] by mailgw02.mediatek.com
+        (envelope-from <honghui.zhang@mediatek.com>)
+        (mailgw01.mediatek.com ESMTP with TLS)
+        with ESMTP id 877240392; Thu, 06 Dec 2018 13:53:55 +0800
+Received: from MTKCAS32.mediatek.inc (172.27.4.184) by MTKMBS31DR.mediatek.inc
+ (172.27.6.102) with Microsoft SMTP Server (TLS) id 15.0.1395.4; Thu, 6 Dec
+ 2018 13:53:53 +0800
+Received: from [10.17.3.153] (10.17.3.153) by MTKCAS32.mediatek.inc
+ (172.27.4.170) with Microsoft SMTP Server id 15.0.1395.4 via Frontend
+ Transport; Thu, 6 Dec 2018 13:53:53 +0800
+Message-ID: <1544075633.3753.11.camel@mhfsdcap03>
+Subject: Re: [PATCH 2/2] PCI: mediatek: Add controller support for MT7629
+From:   Honghui Zhang <honghui.zhang@mediatek.com>
+To:     Jianjun Wang <jianjun.wang@mediatek.com>
+CC:     <ryder.lee@mediatek.com>, <bhelgaas@google.com>,
+        <robh+dt@kernel.org>, <lorenzo.pieralisi@arm.com>,
+        <matthias.bgg@gmail.com>, <linux-pci@vger.kernel.org>,
+        <mark.rutland@arm.com>, <linux-mediatek@lists.infradead.org>,
+        <devicetree@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
+        <linux-arm-kernel@lists.infradead.org>, <youlin.pei@mediatek.com>
+Date:   Thu, 6 Dec 2018 13:53:53 +0800
+In-Reply-To: <1544058553-10936-3-git-send-email-jianjun.wang@mediatek.com>
+References: <1544058553-10936-1-git-send-email-jianjun.wang@mediatek.com>
+         <1544058553-10936-3-git-send-email-jianjun.wang@mediatek.com>
+Content-Type: text/plain; charset="UTF-8"
+X-Mailer: Evolution 3.2.3-0ubuntu6 
+Content-Transfer-Encoding: 7bit
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
+X-MTK:  N
 Sender: linux-pci-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-Mellanox ConnectX-5 IB cards (MT27800) seem to cause a call trace when
-unbound from their regular driver and attached to vfio-pci in order to pass
-them through to a guest.
+On Thu, 2018-12-06 at 09:09 +0800, Jianjun Wang wrote:
+> MT7629 is an arm platform SoC which has the same PCIe IP with MT7622.
+> 
+> The read value of BAR0 is 0xffff_ffff, it's size will be calculated as 4GB
+> in arm64 but bogus alignment values at arm32, the pcie device and devices
 
-This goes away if the disable_idle_d3 option is used, so it looks like a
-problem with the hardware handling D3 state.  To fix that more permanently,
-use a device quirk to disable D3 state for these devices.
+:s /the pcie device /the bridge device
 
-We do this by renaming the existing quirk_no_ata_d3() more generally and
-attaching it to the ConnectX-[45] devices (0x15b3:0x1013).
+> behind this bridge will not be enabled. Fix it's BAR0 resource size to
+> guarantee the pcie devices will be enabled correctly.
+> 
+> The HW default value of its device id is invalid, fix it's device id to
+> match the hardware implementation.
+> 
+> Signed-off-by: Jianjun Wang <jianjun.wang@mediatek.com>
+> ---
+>  drivers/pci/controller/pcie-mediatek.c | 26 ++++++++++++++++++++++++++
+>  include/linux/pci_ids.h                |  1 +
+>  2 files changed, 27 insertions(+)
+> 
+> diff --git a/drivers/pci/controller/pcie-mediatek.c b/drivers/pci/controller/pcie-mediatek.c
+> index d20cf461ba00..f8937cc3c87c 100644
+> --- a/drivers/pci/controller/pcie-mediatek.c
+> +++ b/drivers/pci/controller/pcie-mediatek.c
+> @@ -73,6 +73,7 @@
+>  #define PCIE_MSI_VECTOR		0x0c0
+>  
+>  #define PCIE_CONF_VEND_ID	0x100
+> +#define PCIE_CONF_DEVICE_ID	0x102
+>  #define PCIE_CONF_CLASS_ID	0x106
+>  
+>  #define PCIE_INT_MASK		0x420
+> @@ -135,12 +136,14 @@ struct mtk_pcie_port;
+>  /**
+>   * struct mtk_pcie_soc - differentiate between host generations
+>   * @need_fix_class_id: whether this host's class ID needed to be fixed or not
+> + * @need_fix_device_id: whether this host's device ID needed to be fixed or not
+>   * @ops: pointer to configuration access functions
+>   * @startup: pointer to controller setting functions
+>   * @setup_irq: pointer to initialize IRQ functions
+>   */
+>  struct mtk_pcie_soc {
+>  	bool need_fix_class_id;
+> +	bool need_fix_device_id;
+>  	struct pci_ops *ops;
+>  	int (*startup)(struct mtk_pcie_port *port);
+>  	int (*setup_irq)(struct mtk_pcie_port *port, struct device_node *node);
+> @@ -692,6 +695,11 @@ static int mtk_pcie_startup_port_v2(struct mtk_pcie_port *port)
+>  		writew(val, port->base + PCIE_CONF_CLASS_ID);
+>  	}
+>  
+> +	if (soc->need_fix_device_id) {
+> +		val = PCI_DEVICE_ID_MEDIATEK_7629;
+> +		writew(val, port->base + PCIE_CONF_DEVICE_ID);
+> +	}
+> +
+>  	/* 100ms timeout value should be enough for Gen1/2 training */
+>  	err = readl_poll_timeout(port->base + PCIE_LINK_STATUS_V2, val,
+>  				 !!(val & PCIE_PORT_LINKUP_V2), 20,
+> @@ -1238,11 +1246,29 @@ static const struct mtk_pcie_soc mtk_pcie_soc_mt7622 = {
+>  	.setup_irq = mtk_pcie_setup_irq,
+>  };
+>  
+> +static const struct mtk_pcie_soc mtk_pcie_soc_mt7629 = {
+> +	.need_fix_class_id = true,
+> +	.need_fix_device_id = true,
+> +	.ops = &mtk_pcie_ops_v2,
+> +	.startup = mtk_pcie_startup_port_v2,
+> +	.setup_irq = mtk_pcie_setup_irq,
+> +};
+> +
+> +static void mtk_fixup_bar_size(struct pci_dev *dev)
+> +{
+> +	struct resource *dev_res = &dev->resource[0];
+> +	/* 32bit resource length will calculate size to 0, set it smaller */
+> +	dev_res->end = 0xfffffffe;
+> +}
 
-Signed-off-by: David Gibson <david@gibson.dropbear.id.au>
----
- drivers/pci/quirks.c | 17 +++++++++++------
- 1 file changed, 11 insertions(+), 6 deletions(-)
+I'm not sure assign the BAR0 size in driver to fit in the bogus
+alignment is a good idea. Seems the size value of 0xffff_fffe also is an
+arbitrary value.
+Do we have a chance to change the resource framework code to make it
+adopt this scenario?
 
-diff --git a/drivers/pci/quirks.c b/drivers/pci/quirks.c
-index 4700d24e5d55..add3f516ca12 100644
---- a/drivers/pci/quirks.c
-+++ b/drivers/pci/quirks.c
-@@ -1315,23 +1315,24 @@ static void quirk_ide_samemode(struct pci_dev *pdev)
- }
- DECLARE_PCI_FIXUP_EARLY(PCI_VENDOR_ID_INTEL, PCI_DEVICE_ID_INTEL_82801CA_10, quirk_ide_samemode);
- 
--/* Some ATA devices break if put into D3 */
--static void quirk_no_ata_d3(struct pci_dev *pdev)
-+/* Some devices (including a number of ATA cards) break if put into D3 */
-+static void quirk_no_d3(struct pci_dev *pdev)
- {
- 	pdev->dev_flags |= PCI_DEV_FLAGS_NO_D3;
- }
-+
- /* Quirk the legacy ATA devices only. The AHCI ones are ok */
- DECLARE_PCI_FIXUP_CLASS_EARLY(PCI_VENDOR_ID_SERVERWORKS, PCI_ANY_ID,
--				PCI_CLASS_STORAGE_IDE, 8, quirk_no_ata_d3);
-+				PCI_CLASS_STORAGE_IDE, 8, quirk_no_d3);
- DECLARE_PCI_FIXUP_CLASS_EARLY(PCI_VENDOR_ID_ATI, PCI_ANY_ID,
--				PCI_CLASS_STORAGE_IDE, 8, quirk_no_ata_d3);
-+				PCI_CLASS_STORAGE_IDE, 8, quirk_no_d3);
- /* ALi loses some register settings that we cannot then restore */
- DECLARE_PCI_FIXUP_CLASS_EARLY(PCI_VENDOR_ID_AL, PCI_ANY_ID,
--				PCI_CLASS_STORAGE_IDE, 8, quirk_no_ata_d3);
-+				PCI_CLASS_STORAGE_IDE, 8, quirk_no_d3);
- /* VIA comes back fine but we need to keep it alive or ACPI GTM failures
-    occur when mode detecting */
- DECLARE_PCI_FIXUP_CLASS_EARLY(PCI_VENDOR_ID_VIA, PCI_ANY_ID,
--				PCI_CLASS_STORAGE_IDE, 8, quirk_no_ata_d3);
-+				PCI_CLASS_STORAGE_IDE, 8, quirk_no_d3);
- 
- /*
-  * This was originally an Alpha-specific thing, but it really fits here.
-@@ -3367,6 +3368,10 @@ static void mellanox_check_broken_intx_masking(struct pci_dev *pdev)
- DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_MELLANOX, PCI_ANY_ID,
- 			mellanox_check_broken_intx_masking);
- 
-+/* Mellanox MT27800 (ConnectX-5) IB card seems to break with D3
-+ * In particular this shows up when the device is bound to the vfio-pci driver */
-+DECLARE_PCI_FIXUP_EARLY(PCI_VENDOR_ID_MELLANOX, PCI_DEVICE_ID_MELLANOX_CONNECTX4, quirk_no_d3)
-+
- static void quirk_no_bus_reset(struct pci_dev *dev)
- {
- 	dev->dev_flags |= PCI_DEV_FLAGS_NO_BUS_RESET;
--- 
-2.19.2
+Thanks.
+
+> +DECLARE_PCI_FIXUP_HEADER(PCI_VENDOR_ID_MEDIATEK, PCI_DEVICE_ID_MEDIATEK_7629,
+> +			 mtk_fixup_bar_size);
+> +
+>  static const struct of_device_id mtk_pcie_ids[] = {
+>  	{ .compatible = "mediatek,mt2701-pcie", .data = &mtk_pcie_soc_v1 },
+>  	{ .compatible = "mediatek,mt7623-pcie", .data = &mtk_pcie_soc_v1 },
+>  	{ .compatible = "mediatek,mt2712-pcie", .data = &mtk_pcie_soc_mt2712 },
+>  	{ .compatible = "mediatek,mt7622-pcie", .data = &mtk_pcie_soc_mt7622 },
+> +	{ .compatible = "mediatek,mt7629-pcie", .data = &mtk_pcie_soc_mt7629 },
+>  	{},
+>  };
+>  
+> diff --git a/include/linux/pci_ids.h b/include/linux/pci_ids.h
+> index 69f0abe1ba1a..77b278bac3a8 100644
+> --- a/include/linux/pci_ids.h
+> +++ b/include/linux/pci_ids.h
+> @@ -2126,6 +2126,7 @@
+>  #define PCI_VENDOR_ID_MYRICOM		0x14c1
+>  
+>  #define PCI_VENDOR_ID_MEDIATEK		0x14c3
+> +#define PCI_DEVICE_ID_MEDIATEK_7629	0x7629
+>  
+>  #define PCI_VENDOR_ID_TITAN		0x14D2
+>  #define PCI_DEVICE_ID_TITAN_010L	0x8001
+
 
