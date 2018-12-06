@@ -2,185 +2,382 @@ Return-Path: <SRS0=KO/x=OP=vger.kernel.org=linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-6.6 required=3.0 tests=DATE_IN_FUTURE_03_06,
+X-Spam-Status: No, score=-9.0 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
+	DKIM_VALID_AU,FREEMAIL_FORGED_FROMDOMAIN,FREEMAIL_FROM,
 	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
-	SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT autolearn=ham autolearn_force=no
-	version=3.4.0
+	SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT autolearn=unavailable
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 6FCF8C65BB0
-	for <linux-pci@archiver.kernel.org>; Thu,  6 Dec 2018 07:33:34 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 76667C04EB9
+	for <linux-pci@archiver.kernel.org>; Thu,  6 Dec 2018 07:36:08 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 2BF992146D
-	for <linux-pci@archiver.kernel.org>; Thu,  6 Dec 2018 07:33:34 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.3.2 mail.kernel.org 2BF992146D
-Authentication-Results: mail.kernel.org; dmarc=none (p=none dis=none) header.from=microchip.com
+	by mail.kernel.org (Postfix) with ESMTP id 2A09F214DB
+	for <linux-pci@archiver.kernel.org>; Thu,  6 Dec 2018 07:36:08 +0000 (UTC)
+Authentication-Results: mail.kernel.org;
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="Zx0QwkvG"
+DMARC-Filter: OpenDMARC Filter v1.3.2 mail.kernel.org 2A09F214DB
+Authentication-Results: mail.kernel.org; dmarc=fail (p=none dis=none) header.from=gmail.com
 Authentication-Results: mail.kernel.org; spf=none smtp.mailfrom=linux-pci-owner@vger.kernel.org
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1729038AbeLFHdc (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Thu, 6 Dec 2018 02:33:32 -0500
-Received: from mail-eopbgr720050.outbound.protection.outlook.com ([40.107.72.50]:47104
-        "EHLO NAM05-CO1-obe.outbound.protection.outlook.com"
-        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1729317AbeLFHdc (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Thu, 6 Dec 2018 02:33:32 -0500
-Received: from MWHPR19CA0005.namprd19.prod.outlook.com (2603:10b6:300:d4::15)
- by BY2PR19MB0389.namprd19.prod.outlook.com (2a01:111:e400:5a2d::26) with
- Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.1404.21; Thu, 6 Dec
- 2018 07:33:29 +0000
-Received: from BN1AFFO11FD012.protection.gbl (2a01:111:f400:7c10::138) by
- MWHPR19CA0005.outlook.office365.com (2603:10b6:300:d4::15) with Microsoft
- SMTP Server (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_CBC_SHA384) id
- 15.20.1404.17 via Frontend Transport; Thu, 6 Dec 2018 07:33:29 +0000
-Authentication-Results: spf=softfail (sender IP is 208.19.99.221)
- smtp.mailfrom=microchip.com; vger.kernel.org; dkim=none (message not signed)
- header.d=none;vger.kernel.org; dmarc=none action=none
- header.from=microchip.com;
-Received-SPF: SoftFail (protection.outlook.com: domain of transitioning
- microchip.com discourages use of 208.19.99.221 as permitted sender)
-Received: from AUSMBX1.microsemi.net (208.19.99.221) by
- BN1AFFO11FD012.mail.protection.outlook.com (10.58.52.72) with Microsoft SMTP
- Server (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_CBC_SHA256) id
- 15.20.1404.13 via Frontend Transport; Thu, 6 Dec 2018 07:33:28 +0000
-Received: from AUSMBX2.microsemi.net (10.201.34.32) by AUSMBX1.microsemi.net
- (10.201.34.31) with Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id 15.1.1531.3; Thu, 6 Dec 2018
- 00:33:00 -0600
-Received: from server1.microsemi.net (10.188.116.209) by ausmbx2.microsemi.net
- (10.201.34.32) with Microsoft SMTP Server id 15.1.1531.3 via Frontend
- Transport; Thu, 6 Dec 2018 00:32:57 -0600
-From:   Wesley Sheng <wesley.sheng@microchip.com>
-To:     <kurt.schwemmer@microsemi.com>, <logang@deltatee.com>,
-        <jdmason@kudzu.us>, <dave.jiang@intel.com>, <allenbh@gmail.com>,
-        <linux-pci@vger.kernel.org>, <linux-ntb@googlegroups.com>,
-        <linux-kernel@vger.kernel.org>
-CC:     <wesleyshenggit@sina.com>, <wesley.sheng@microchip.com>
-Subject: [PATCH v2 3/3] ntb_hw_switchtec: Added support of >=4G memory windows
-Date:   Thu, 6 Dec 2018 21:30:52 +0800
-Message-ID: <1544103052-28191-4-git-send-email-wesley.sheng@microchip.com>
-X-Mailer: git-send-email 2.7.4
-In-Reply-To: <1544103052-28191-1-git-send-email-wesley.sheng@microchip.com>
-References: <1544103052-28191-1-git-send-email-wesley.sheng@microchip.com>
+        id S1729000AbeLFHgC (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Thu, 6 Dec 2018 02:36:02 -0500
+Received: from mail-pl1-f193.google.com ([209.85.214.193]:38932 "EHLO
+        mail-pl1-f193.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1729189AbeLFHgB (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Thu, 6 Dec 2018 02:36:01 -0500
+Received: by mail-pl1-f193.google.com with SMTP id 101so11381417pld.6;
+        Wed, 05 Dec 2018 23:36:00 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20161025;
+        h=from:to:cc:subject:date:message-id:in-reply-to:references
+         :mime-version:content-transfer-encoding;
+        bh=JsopjK7zH4q0Nw3Raq1i3v5Oy+hMRXGd6aNhJXLKDOo=;
+        b=Zx0QwkvGqWvYleO5YxHykENoT/IEMpl+za83/8wJymnkSutF939Yo4l7ViwUNF0kwS
+         IEJ0i7P860TG6PDGERo4b9fIUAKbDlE8CJ3DGRL9oKhmibtsqKxtrATGoJpXOvi+FJ4X
+         vQQxOMkOsL8lJV8mFw/8AqmCYcH/Yn6tJgLTFFUG2n5CvfL846rczzdrzVOVjJK1vRgp
+         P5F9ZR4V7lrd1meBqHXwS2vtVP5qdfrHaXWyKwGYVQUaneFze0nlY9DkAghiX3d8jPyG
+         mMS0y61HGb3joqMEcgWjrcJjce7bhf/TIMh8g+fOOzvUmhCiOB4+CzHhWeNVQ7fNCGXS
+         rn6Q==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20161025;
+        h=x-gm-message-state:from:to:cc:subject:date:message-id:in-reply-to
+         :references:mime-version:content-transfer-encoding;
+        bh=JsopjK7zH4q0Nw3Raq1i3v5Oy+hMRXGd6aNhJXLKDOo=;
+        b=ZKQaFCZIrHZ3cJWXf0oVIdxn5gm+AWXupMk+P+Qmhc9SEduQ8UL31vYvEH0Qe2iL2E
+         lKBfiqU/rghYyo8JRFC4sB9mAf8iL1Hs5JJm40tIB27HRcluNw+W08+XNTIdzxGteuXL
+         33fxOsQ4zzr9RAmBuU3zF7u773aZXViK/12F+LxS3cALHOTikKkq5wLJMtqIXzOzux/M
+         zFMFhoR0SZZ+WfWOY9FU9pJCvUaGscPmy5z79IQ4j0OmEfHcW9MlPZr50QiYH43F0eja
+         LMqP6KLVN624KmNbhC5QQbeXZ2i4pdgBL82JLVGah02tNnDLObVw3vKJOh2FpVfAd+UJ
+         HMuw==
+X-Gm-Message-State: AA+aEWawnkxB5ii/ZA065ioGSzFvO1toVtYSuLccBH156Nu/98KsTlKG
+        ERbMaS4UwWsaQJbACCC/CI6qJOKY
+X-Google-Smtp-Source: AFSGD/W6GT9BTMXIBVJ1TrwhN0cnpSbhXZYZErwUM56TeiXs4JlLvPEtWZ1mBFL1f6Ml31IHTJQ8LQ==
+X-Received: by 2002:a17:902:8541:: with SMTP id d1mr27811877plo.205.1544081759584;
+        Wed, 05 Dec 2018 23:35:59 -0800 (PST)
+Received: from squirtle.lan (c-24-22-235-96.hsd1.wa.comcast.net. [24.22.235.96])
+        by smtp.gmail.com with ESMTPSA id v15sm33035894pfn.94.2018.12.05.23.35.57
+        (version=TLS1_2 cipher=ECDHE-RSA-CHACHA20-POLY1305 bits=256/256);
+        Wed, 05 Dec 2018 23:35:58 -0800 (PST)
+From:   Andrey Smirnov <andrew.smirnov@gmail.com>
+To:     linux-pci@vger.kernel.org
+Cc:     Andrey Smirnov <andrew.smirnov@gmail.com>, bhelgaas@google.com,
+        Fabio Estevam <fabio.estevam@nxp.com>, cphealy@gmail.com,
+        l.stach@pengutronix.de, Leonard Crestez <leonard.crestez@nxp.com>,
+        "A.s. Dong" <aisheng.dong@nxp.com>,
+        Richard Zhu <hongxing.zhu@nxp.com>, linux-imx@nxp.com,
+        linux-arm-kernel@lists.infradead.org, linux-kernel@vger.kernel.org,
+        Mark Rutland <mark.rutland@arm.com>,
+        Rob Herring <robh@kernel.org>, devicetree@vger.kernel.org
+Subject: [PATCH v2 3/3] PCI: imx: Add support for i.MX8MQ
+Date:   Wed,  5 Dec 2018 23:35:45 -0800
+Message-Id: <20181206073545.10967-4-andrew.smirnov@gmail.com>
+X-Mailer: git-send-email 2.19.1
+In-Reply-To: <20181206073545.10967-1-andrew.smirnov@gmail.com>
+References: <20181206073545.10967-1-andrew.smirnov@gmail.com>
 MIME-Version: 1.0
-Content-Type: text/plain
-X-EOPAttributedMessage: 0
-X-Matching-Connectors: 131885552091019118;(5a93feec-e11d-4f7b-166a-08d09f1f276b);()
-X-Forefront-Antispam-Report: CIP:208.19.99.221;IPV:NLI;CTRY:US;EFV:NLI;SFV:NSPM;SFS:(10009020)(39860400002)(136003)(346002)(396003)(376002)(2980300002)(189003)(199004)(44832011)(2201001)(316002)(16586007)(77096007)(336012)(47776003)(305945005)(86362001)(69596002)(8676002)(81166006)(81156014)(11346002)(446003)(5660300001)(2616005)(126002)(50226002)(476003)(8936002)(486006)(356004)(6666004)(53936002)(76176011)(97736004)(53416004)(68736007)(107886003)(498600001)(105596002)(4326008)(51416003)(26005)(54906003)(110136005)(2906002)(50466002)(48376002)(36756003)(106466001)(450100002)(2101003);DIR:OUT;SFP:1101;SCL:1;SRVR:BY2PR19MB0389;H:AUSMBX1.microsemi.net;FPR:;SPF:SoftFail;LANG:en;PTR:InfoDomainNonexistent;MX:1;A:1;
-X-Microsoft-Exchange-Diagnostics: 1;BN1AFFO11FD012;1:EXaPtraIymMsctqO7myIJ6sKkKVWYprLXzwNd0pph6kETAoV4TJhX686xXEJXH4IPQfeCCfB3NpmscYzNBOYQUd7MuUWgCjD2lMyrIHBcduv0usOQLVLCkUR8rtLVf9W
-X-MS-PublicTrafficType: Email
-X-MS-Office365-Filtering-Correlation-Id: c1ca6188-2319-44e4-24a7-08d65b4d1dc8
-X-Microsoft-Antispam: BCL:0;PCL:0;RULEID:(2390098)(7020095)(5600074)(711020)(2017052603328);SRVR:BY2PR19MB0389;
-X-Microsoft-Exchange-Diagnostics: 1;BY2PR19MB0389;3:Z/j6UyJZmz3WC4mNKzTpp2+mOw+vW7IoPX1zoYNT1S4u1b0T8a6jilxtiCTDKCjglXS2RxtWcDWWR2WlwVzcG0pOURuOJ1UnNtPN6L8eARG7K0IbvuxObwWzZy8pze1xH3iNf/VjaKH9B4UNzzY1e9k8RIIISDyG3ZFYzNqoCV5jNdEuGByi8sqcvTShqc4McJBqF/sum3NO5VEX2dwMlKHo0mVIz3C2mmioQ3xxBiU+YWs85y3BACifKXHEXH3VMYfy/qkKAlT+HqD6Yl0qFVUYxZo5eTHv4QxjYPbQjMCiFgtxKaeE2/D+maFQMjWl2Np6FZKC7MlaeEUFVVofuqWwT39CwAC8JQf97WNmGIs=;25:8xLqq8xU45Hc0Y7vJw3Zau9tPdqm+/25wp7hZe02E5+m+QonZH7EOioNVGS/Wpgp94TagUsfQHAfIyyuM7cEVju4S6A/pyfcWJOtqxLppokov5NgprZhsqKRzgUicXRCwK17R3GxW/ukVB7dsaWWNFRY96Y9bLF0V7gXHEM9rimEFk1s3uy+UV/buQxOcDpdJ7IE2jRcIMJyrodoMXBRKYQgfuTr04yQGHF2d6MH3MFqEweSZfVWRJPHfQ6h8/pUND2Ne/WSsv827mvxiLLzBSho77C2QtmK374mJVaTBwm+w0hTyfY6+PHPp3XqX9/O+TCIxYVT5DL1H7HPJFf49A==
-X-MS-TrafficTypeDiagnostic: BY2PR19MB0389:
-X-Microsoft-Exchange-Diagnostics: 1;BY2PR19MB0389;31:EgK2k27w7XTvU3DoZjiBqxOYTOz/Dol68+5AGQzj/LBfkq5Av5BgMtyuj+ltGemVuvg442kMonvyjaIPGf27vyy7opxrcZIOQ64Wi2o1dIHpTZ1jTmGeYAHEvlAt4u/MuZZBC+d+Rg5jGyC/uIxu1Hji/tq+r1lobp4jLVdpQBSf5o1Td8slZMbUMGOi0bZn12GzETtrY8Mc3purtXvdhXFXKpeX0EbKHrMCcUq4qRw=;4:TxM4+tk74TbVV13n5JK41FeIQgGJO2nFb/pdCjABjAR6CY4Um/r6KHmL1UMKDqRwqMiZmklWJvYDVG+WJrY7/3xJaQHnNVWMmtT3pb61NPwkhS2f27dIU7Dy7xKzo9HeoKK+tddaIoL/RCVeYCeHVbaq3AZ4XIZZXpBLKqAZjHc82lO6SlEEL0jg2nMSVhxNkjB9cn+AVYufdEDvwtXyCg+tnylTvNNl7jw2TymdVxLx9rR0dzMdqpbINXJ/NCcO2bCtLWhuwcUQh6XLPzpQcw==
-X-Microsoft-Antispam-PRVS: <BY2PR19MB0389EAAA9175B8528ECE522095A90@BY2PR19MB0389.namprd19.prod.outlook.com>
-X-Exchange-Antispam-Report-CFA-Test: BCL:0;PCL:0;RULEID:(6095135)(2401047)(8121501046)(5005006)(10201501046)(3002001)(93006095)(93001095)(3231455)(999002)(944501520)(52105112)(6055026)(148016)(6096035)(20161123559100)(20161123556025)(201703131430075)(201703131448075)(201703131433075)(201703151042153)(20161123565025)(20161123561025)(20161123563025)(201708071742011)(7699051)(76991095);SRVR:BY2PR19MB0389;BCL:0;PCL:0;RULEID:(400006);SRVR:BY2PR19MB0389;
-X-Forefront-PRVS: 087894CD3C
-X-Microsoft-Exchange-Diagnostics: =?us-ascii?Q?1;BY2PR19MB0389;23:wh0DCYI46jDM/bL+DiH+HX5wJyuHn8GenReY6fyKD?=
- =?us-ascii?Q?QuWu87i5ztgMednFLFA8saRuB3+dAP/DPyWMP5I1cckn/RZ66CmQsyW9FLL9?=
- =?us-ascii?Q?QwoFYyL7p/q6Dy17QReymsmNmHLqAWnZftYbqSabS7QS4IxgSIuqBJPPp9s2?=
- =?us-ascii?Q?YYUoX7Sr7MwDt6nbHE+QJKgEv7u0qvjVvwr6X2pqmE/sKqpx04Z8zcpAZXrS?=
- =?us-ascii?Q?pvvfwgndTx3kgz1SEAhNQg/AEmVBVD4OEV0T32ny5fZb+WEVZ7loeL878nEW?=
- =?us-ascii?Q?9Ai+IfR50Z5+v4SonNqUu9vSt6SLtV3YI46hdICEJ4eRoH56+9HywBSUrGDD?=
- =?us-ascii?Q?i/w+i9NaWSZhNTAqbmHjiYRbYedCea5xovUmnVg1VPKLJTj74OGMLHPhrVxW?=
- =?us-ascii?Q?x43AZ8O8AB67sWfKmOADCOq8bEHM9OPnfYmacRz/2JXNVKnXCbaYSh2/AwgS?=
- =?us-ascii?Q?7xldV+vFNzOlgReZuS0dH3N5Hc5aDC7ghxaG4LogQO8hYGFe7oBuMbQjYVzu?=
- =?us-ascii?Q?ZQkX9oJC4q/VqByvyBhb8FY7ZzEc92zG48E4I4Vkp4TfZfEM7l7K6ITq9L5Y?=
- =?us-ascii?Q?71bz/RXJmfW6rt0oDzjSBJ+u6Ed43maluKy3jp/N9khxkGiQBs3XR99pC7k+?=
- =?us-ascii?Q?/8+Cs3AF2ro0mQV9Gz89Ln5hmaWu1xrHTlQWFSm6nhJpLJfOdbRgQNoytc7B?=
- =?us-ascii?Q?FzO197XuyuTGsyHFgwhyCXVYNsxnj0Sc9rX3zkrXabKZqZWtPi67hIYDtYGo?=
- =?us-ascii?Q?4MXJtOqPbNuuvnoqYu3KJut1dFwijtcb2tw4Ls/5agRKFjiwNXWdoIXZ7538?=
- =?us-ascii?Q?ZRP2n1ZQQ7hHBLPaCJGwwrlyOsH6+btD1+vvTOxzpYQnpmU55s/i0ab/r7Yw?=
- =?us-ascii?Q?an2i1bh6wsy9pbtzNJiyRKd6z4wp1RZw9tiNYrmZvWWSyeKDSo1eefweuUe0?=
- =?us-ascii?Q?zlc76POPCpD0mJ4RgKuFCFIJuKybB6AIAWQi+QvCmtJJBpqxprq8vauurDiF?=
- =?us-ascii?Q?naa4ppmUyufv7gYeEtQqLtWQ5z7VpHBrWu0DJLawMZ/raeWXRiyIp0VazBlW?=
- =?us-ascii?Q?7uie7RllrRrwr1t8X5c3+Dpt+KqeTFxv355j7CyRp3im6oEB4MwIq1yQKNf1?=
- =?us-ascii?Q?CyxFuxtyxpLoByliRrqGDqB0miMjTZRsV5bF1sZ1flzHlzrgyAf7A=3D=3D?=
-X-Microsoft-Antispam-Message-Info: WmsiX/e9t7ZqgNY9gL0St7DdJcQXf/GpS4F3x0BjBicOpqskmcdc8y5WXTEeoHwHwo1pfh78rF4sfN2Tc5VoTUxvRBtP9Ia9Eg/KS2hNXd44iAHxZrVjB7JkuKbhK2BWqEIwCx5v22te4Vhmlx6BeH0mDbRUmqwmxme9chpAiFMFyBkUj3SQd3E38dYrn3zl9tYyUJjFgJn2UJy6HJKh+w+PD0bmEIKVL68e5L7lykCZ4vcxLUMgKYTd9Rnihy7zYaC4jyCwC3ADVighOYvfFXFUELnRRTXi3oTEts9+MD2/g+SEbcujyZ1WllQqiisCUME+uBVz7UXEa+tcA7OXXIrEDgqOqrzMApOcxagi8OE=
-X-Microsoft-Exchange-Diagnostics: 1;BY2PR19MB0389;6:pJtgNaFa48NzxTkSF9ZZC4EIRbaZ08WKhPJPdjc7DTU92yfxPsRl3RYpQEJ7EI7eO/+nQ4MU5nGj5J2uxl8D0uPkasMCWNjxtxO+ZtDaS18fTWGehcMKejTNKKhImBufYdLnq9FK1ATw27n94xRGMmUKk1L2mVatxUYUzKbo8gRb07rBJ6Wh01V6VixodVdGudjOgXF+Nk81EszZ19V2NGBfkSdWRmJApGFetJHeinH1tD4SjUxgYV/z0F8OmDbIiA4UJpw1K+Yi6+L3mu7khP25Gz66mlBUQQKKRrnrFmZ0Gm4GBeH0DFVoDNMWjqfdGSsrpLzhrPSAzO/r4O1TH17EYdQNDwUzGZ2LzwKoZgdz/1Zvre8agOmUnmBRxYjWaNOZxpuvuFr3oZ5lRCDKUZaHHMryZM9L662JvgW2HAQtLUYLO8r1f9OPg0gLtdFzBLjRRcNWO1NvuaAS4jAvxw==;5:W329h6LY5Y92jT2gHfNBA01J3N6HuMZjvoeZI4Vu+Pmoh6LrPVK21LpIONr9sylAOs5wN9NLEsOEd3IWxb/V/Pwke6/o9lmjEcJJUxJSppNeiDYfbJDoAxTqTw3hcieCg4GwXoFzQjaSdfInA71hR8WxSKyCYxIM/a1vW1DlN7M=;7:CXhoyUzF7EpXBTnnccR8Yj4LI7z40qx6fb4OxCcXf89F5jWXDGPQFfE5InmDwMDKL074qc2HcYDGmED3nCFERfa1CtFY9mtZVi5xa7Zc/b4FvENOx/hLKM3UrdR+7QIl5jDi3jrQnxnmknVE1KHXfw==
-SpamDiagnosticOutput: 1:99
-SpamDiagnosticMetadata: NSPM
-X-MS-Exchange-CrossTenant-OriginalArrivalTime: 06 Dec 2018 07:33:28.1331
- (UTC)
-X-MS-Exchange-CrossTenant-Network-Message-Id: c1ca6188-2319-44e4-24a7-08d65b4d1dc8
-X-MS-Exchange-CrossTenant-Id: 5afe0b00-7697-4969-b663-5eab37d5f47e
-X-MS-Exchange-CrossTenant-OriginalAttributedTenantConnectingIp: TenantId=5afe0b00-7697-4969-b663-5eab37d5f47e;Ip=[208.19.99.221];Helo=[AUSMBX1.microsemi.net]
-X-MS-Exchange-CrossTenant-FromEntityHeader: HybridOnPrem
-X-MS-Exchange-Transport-CrossTenantHeadersStamped: BY2PR19MB0389
+Content-Transfer-Encoding: 8bit
 Sender: linux-pci-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-From: Paul Selles <paul.selles@microchip.com>
+Add code needed to support i.MX8MQ variant.
 
-Current Switchtec's BAR setup registers are limited to 32bits,
-corresponding to the maximum MW (memory window) size is <4G.
-
-Increase the MW sizes with the addition of the BAR Setup Extension
-Register for the upper 32bits of a 64bits MW size. This increases the MW
-range to between 4K and 2^63.
-
-Reported-by: Boris Glimcher <boris.glimcher@emc.com>
-Signed-off-by: Paul Selles <paul.selles@microchip.com>
-Signed-off-by: Wesley Sheng <wesley.sheng@microchip.com>
-Reviewed-by: Logan Gunthorpe <logang@deltatee.com>
+Cc: bhelgaas@google.com
+Cc: Fabio Estevam <fabio.estevam@nxp.com>
+Cc: cphealy@gmail.com
+Cc: l.stach@pengutronix.de
+Cc: Leonard Crestez <leonard.crestez@nxp.com>
+Cc: "A.s. Dong" <aisheng.dong@nxp.com>
+Cc: Richard Zhu <hongxing.zhu@nxp.com>
+Cc: linux-imx@nxp.com
+Cc: linux-arm-kernel@lists.infradead.org
+Cc: linux-kernel@vger.kernel.org
+Cc: linux-pci@vger.kernel.org
+Cc: Mark Rutland <mark.rutland@arm.com>
+Cc: Rob Herring <robh@kernel.org>
+Cc: devicetree@vger.kernel.org
+Signed-off-by: Andrey Smirnov <andrew.smirnov@gmail.com>
 ---
- drivers/ntb/hw/mscc/ntb_hw_switchtec.c | 9 +++++++--
- include/linux/switchtec.h              | 6 +++++-
- 2 files changed, 12 insertions(+), 3 deletions(-)
+ .../bindings/pci/fsl,imx6q-pcie.txt           |  6 +-
+ drivers/pci/controller/dwc/Kconfig            |  2 +-
+ drivers/pci/controller/dwc/pci-imx6.c         | 85 +++++++++++++++++--
+ 3 files changed, 86 insertions(+), 7 deletions(-)
 
-diff --git a/drivers/ntb/hw/mscc/ntb_hw_switchtec.c b/drivers/ntb/hw/mscc/ntb_hw_switchtec.c
-index 9916bc5..f6f0035 100644
---- a/drivers/ntb/hw/mscc/ntb_hw_switchtec.c
-+++ b/drivers/ntb/hw/mscc/ntb_hw_switchtec.c
-@@ -264,6 +264,7 @@ static void switchtec_ntb_mw_clr_direct(struct switchtec_ntb *sndev, int idx)
- 	ctl_val &= ~NTB_CTRL_BAR_DIR_WIN_EN;
- 	iowrite32(ctl_val, &ctl->bar_entry[bar].ctl);
- 	iowrite32(0, &ctl->bar_entry[bar].win_size);
-+	iowrite32(0, &ctl->bar_ext_entry[bar].win_size);
- 	iowrite64(sndev->self_partition, &ctl->bar_entry[bar].xlate_addr);
+diff --git a/Documentation/devicetree/bindings/pci/fsl,imx6q-pcie.txt b/Documentation/devicetree/bindings/pci/fsl,imx6q-pcie.txt
+index f37494d5a7be..40b46d11e7e7 100644
+--- a/Documentation/devicetree/bindings/pci/fsl,imx6q-pcie.txt
++++ b/Documentation/devicetree/bindings/pci/fsl,imx6q-pcie.txt
+@@ -9,6 +9,7 @@ Required properties:
+ 	- "fsl,imx6sx-pcie",
+ 	- "fsl,imx6qp-pcie"
+ 	- "fsl,imx7d-pcie"
++	- "fsl,imx8mq-pcie"
+ - reg: base address and length of the PCIe controller
+ - interrupts: A list of interrupt outputs of the controller. Must contain an
+   entry for each entry in the interrupt-names property.
+@@ -43,7 +44,7 @@ Additional required properties for imx6sx-pcie:
+ 	- "pcie_inbound_axi"
+ - power-domains: Must be set to a phandle pointing to the PCIE_PHY power domain
+ 
+-Additional required properties for imx7d-pcie:
++Additional required properties for imx7d-pcie and imx8mq-pcie:
+ - power-domains: Must be set to a phandle pointing to PCIE_PHY power domain
+ - resets: Must contain phandles to PCIe-related reset lines exposed by SRC
+   IP block
+@@ -52,6 +53,9 @@ Additional required properties for imx7d-pcie:
+ 	       - "apps"
+ 	       - "turnoff"
+ 
++Additional required properties for imx8mq-pcie:
++- fsl,controller-id: Logical ID of a given PCIE controller. PCIE1 is 0, PCIE2 is 1;
++
+ Example:
+ 
+ 	pcie@01000000 {
+diff --git a/drivers/pci/controller/dwc/Kconfig b/drivers/pci/controller/dwc/Kconfig
+index 91b0194240a5..2b139acccf32 100644
+--- a/drivers/pci/controller/dwc/Kconfig
++++ b/drivers/pci/controller/dwc/Kconfig
+@@ -90,7 +90,7 @@ config PCI_EXYNOS
+ 
+ config PCI_IMX6
+ 	bool "Freescale i.MX6 PCIe controller"
+-	depends on SOC_IMX6Q || (ARM && COMPILE_TEST)
++	depends on SOC_IMX8MQ || SOC_IMX6Q || (ARM && COMPILE_TEST)
+ 	depends on PCI_MSI_IRQ_DOMAIN
+ 	select PCIE_DW_HOST
+ 
+diff --git a/drivers/pci/controller/dwc/pci-imx6.c b/drivers/pci/controller/dwc/pci-imx6.c
+index 3c3002861d25..326f71698ac2 100644
+--- a/drivers/pci/controller/dwc/pci-imx6.c
++++ b/drivers/pci/controller/dwc/pci-imx6.c
+@@ -8,6 +8,7 @@
+  * Author: Sean Cross <xobs@kosagi.com>
+  */
+ 
++#include <linux/bitfield.h>
+ #include <linux/clk.h>
+ #include <linux/delay.h>
+ #include <linux/gpio.h>
+@@ -30,6 +31,11 @@
+ 
+ #include "pcie-designware.h"
+ 
++#define IMX8MQ_GPR_PCIE_REF_USE_PAD		BIT(9)
++#define IMX8MQ_GPR_PCIE_CLK_REQ_OVERRIDE_EN	BIT(10)
++#define IMX8MQ_GPR_PCIE_CLK_REQ_OVERRIDE	BIT(11)
++#define IMX8MQ_GPR12_PCIE2_CTRL_DEVICE_TYPE	GENMASK(11, 8)
++
+ #define to_imx6_pcie(x)	dev_get_drvdata((x)->dev)
+ 
+ enum imx6_pcie_variants {
+@@ -37,6 +43,7 @@ enum imx6_pcie_variants {
+ 	IMX6SX,
+ 	IMX6QP,
+ 	IMX7D,
++	IMX8MQ,
+ };
+ 
+ struct imx6_pcie {
+@@ -48,6 +55,7 @@ struct imx6_pcie {
+ 	struct clk		*pcie_inbound_axi;
+ 	struct clk		*pcie;
+ 	struct regmap		*iomuxc_gpr;
++	u32			controller_id;
+ 	struct reset_control	*pciephy_reset;
+ 	struct reset_control	*apps_reset;
+ 	struct reset_control	*turnoff_reset;
+@@ -245,7 +253,8 @@ static void imx6_pcie_reset_phy(struct imx6_pcie *imx6_pcie)
+ {
+ 	u32 tmp;
+ 
+-	if (imx6_pcie->variant == IMX7D)
++	if (imx6_pcie->variant == IMX7D ||
++	    imx6_pcie->variant == IMX8MQ)
+ 		return;
+ 
+ 	pcie_phy_read(imx6_pcie, PHY_RX_OVRD_IN_LO, &tmp);
+@@ -261,6 +270,7 @@ static void imx6_pcie_reset_phy(struct imx6_pcie *imx6_pcie)
+ 	pcie_phy_write(imx6_pcie, PHY_RX_OVRD_IN_LO, tmp);
  }
  
-@@ -286,7 +287,9 @@ static void switchtec_ntb_mw_set_direct(struct switchtec_ntb *sndev, int idx,
- 	ctl_val |= NTB_CTRL_BAR_DIR_WIN_EN;
++#ifdef CONFIG_ARM
+ /*  Added for PCI abort handling */
+ static int imx6q_pcie_abort_handler(unsigned long addr,
+ 		unsigned int fsr, struct pt_regs *regs)
+@@ -294,6 +304,7 @@ static int imx6q_pcie_abort_handler(unsigned long addr,
  
- 	iowrite32(ctl_val, &ctl->bar_entry[bar].ctl);
--	iowrite32(xlate_pos | size, &ctl->bar_entry[bar].win_size);
-+	iowrite32(xlate_pos | (lower_32_bits(size) & 0xFFFFF000),
-+		  &ctl->bar_entry[bar].win_size);
-+	iowrite32(upper_32_bits(size), &ctl->bar_ext_entry[bar].win_size);
- 	iowrite64(sndev->self_partition | addr,
- 		  &ctl->bar_entry[bar].xlate_addr);
+ 	return 1;
  }
-@@ -1053,7 +1056,9 @@ static int crosslink_setup_mws(struct switchtec_ntb *sndev, int ntb_lut_idx,
- 		ctl_val |= NTB_CTRL_BAR_DIR_WIN_EN;
++#endif
  
- 		iowrite32(ctl_val, &ctl->bar_entry[bar].ctl);
--		iowrite32(xlate_pos | size, &ctl->bar_entry[bar].win_size);
-+		iowrite32(xlate_pos | (lower_32_bits(size) & 0xFFFFF000),
-+			  &ctl->bar_entry[bar].win_size);
-+		iowrite32(upper_32_bits(size), &ctl->bar_ext_entry[bar].win_size);
- 		iowrite64(sndev->peer_partition | addr,
- 			  &ctl->bar_entry[bar].xlate_addr);
+ static void imx6_pcie_assert_core_reset(struct imx6_pcie *imx6_pcie)
+ {
+@@ -301,6 +312,7 @@ static void imx6_pcie_assert_core_reset(struct imx6_pcie *imx6_pcie)
+ 
+ 	switch (imx6_pcie->variant) {
+ 	case IMX7D:
++	case IMX8MQ: /* FALLTHROUGH */
+ 		reset_control_assert(imx6_pcie->pciephy_reset);
+ 		reset_control_assert(imx6_pcie->apps_reset);
+ 		break;
+@@ -339,6 +351,7 @@ static int imx6_pcie_enable_ref_clk(struct imx6_pcie *imx6_pcie)
+ {
+ 	struct dw_pcie *pci = imx6_pcie->pci;
+ 	struct device *dev = pci->dev;
++	unsigned int offset;
+ 	int ret = 0;
+ 
+ 	switch (imx6_pcie->variant) {
+@@ -369,6 +382,29 @@ static int imx6_pcie_enable_ref_clk(struct imx6_pcie *imx6_pcie)
+ 		break;
+ 	case IMX7D:
+ 		break;
++	case IMX8MQ:
++		switch (imx6_pcie->controller_id) {
++		case 0:
++			offset = IOMUXC_GPR14;
++			break;
++		case 1:
++			offset = IOMUXC_GPR16;
++			break;
++		default:
++			return -EINVAL;
++		}
++
++		/*
++		 * Set the over ride low and enabled
++		 * make sure that REF_CLK is turned on.
++		 */
++		regmap_update_bits(imx6_pcie->iomuxc_gpr, offset,
++				   IMX8MQ_GPR_PCIE_CLK_REQ_OVERRIDE,
++				   0);
++		regmap_update_bits(imx6_pcie->iomuxc_gpr, offset,
++				   IMX8MQ_GPR_PCIE_CLK_REQ_OVERRIDE_EN,
++				   IMX8MQ_GPR_PCIE_CLK_REQ_OVERRIDE_EN);
++		break;
  	}
-diff --git a/include/linux/switchtec.h b/include/linux/switchtec.h
-index 623719c9..64aa25e 100644
---- a/include/linux/switchtec.h
-+++ b/include/linux/switchtec.h
-@@ -243,7 +243,11 @@ struct ntb_ctrl_regs {
- 		u32 win_size;
- 		u64 xlate_addr;
- 	} bar_entry[6];
--	u32 reserved2[216];
-+	struct {
-+		u32 win_size;
-+		u32 reserved[3];
-+	} bar_ext_entry[6];
-+	u32 reserved2[192];
- 	u32 req_id_table[512];
- 	u32 reserved3[256];
- 	u64 lut_entry[512];
+ 
+ 	return ret;
+@@ -445,6 +481,9 @@ static void imx6_pcie_deassert_core_reset(struct imx6_pcie *imx6_pcie)
+ 	}
+ 
+ 	switch (imx6_pcie->variant) {
++	case IMX8MQ:
++		reset_control_deassert(imx6_pcie->pciephy_reset);
++		break;
+ 	case IMX7D:
+ 		reset_control_deassert(imx6_pcie->pciephy_reset);
+ 		imx7d_pcie_wait_for_phy_pll_lock(imx6_pcie);
+@@ -482,7 +521,34 @@ static void imx6_pcie_deassert_core_reset(struct imx6_pcie *imx6_pcie)
+ 
+ static void imx6_pcie_init_phy(struct imx6_pcie *imx6_pcie)
+ {
++	unsigned int mask, val, offset;
++
++	mask = IMX6Q_GPR12_DEVICE_TYPE;
++	val  = FIELD_PREP(IMX6Q_GPR12_DEVICE_TYPE, PCI_EXP_TYPE_ROOT_PORT);
++
+ 	switch (imx6_pcie->variant) {
++	case IMX8MQ:
++		switch (imx6_pcie->controller_id) {
++		case 0:
++			offset = IOMUXC_GPR14;
++			break;
++		case 1:
++			offset = IOMUXC_GPR16;
++			mask = IMX8MQ_GPR12_PCIE2_CTRL_DEVICE_TYPE;
++			val  = FIELD_PREP(IMX8MQ_GPR12_PCIE2_CTRL_DEVICE_TYPE,
++					  PCI_EXP_TYPE_ROOT_PORT);
++			break;
++		default:
++			return;
++		}
++		/*
++		 * TODO: Currently this code assumes external
++		 * oscillator is being used
++		 */
++		regmap_update_bits(imx6_pcie->iomuxc_gpr, offset,
++				   IMX8MQ_GPR_PCIE_REF_USE_PAD,
++				   IMX8MQ_GPR_PCIE_REF_USE_PAD);
++		break;
+ 	case IMX7D:
+ 		regmap_update_bits(imx6_pcie->iomuxc_gpr, IOMUXC_GPR12,
+ 				   IMX7D_GPR12_PCIE_PHY_REFCLK_SEL, 0);
+@@ -518,8 +584,7 @@ static void imx6_pcie_init_phy(struct imx6_pcie *imx6_pcie)
+ 		break;
+ 	}
+ 
+-	regmap_update_bits(imx6_pcie->iomuxc_gpr, IOMUXC_GPR12,
+-			IMX6Q_GPR12_DEVICE_TYPE, PCI_EXP_TYPE_ROOT_PORT << 12);
++	regmap_update_bits(imx6_pcie->iomuxc_gpr, IOMUXC_GPR12, mask, val);
+ }
+ 
+ static int imx6_setup_phy_mpll(struct imx6_pcie *imx6_pcie)
+@@ -528,7 +593,8 @@ static int imx6_setup_phy_mpll(struct imx6_pcie *imx6_pcie)
+ 	int mult, div;
+ 	u32 val;
+ 
+-	if (imx6_pcie->variant == IMX7D)
++	if (imx6_pcie->variant == IMX7D ||
++	    imx6_pcie->variant == IMX8MQ)
+ 		return 0;
+ 
+ 	switch (phy_rate) {
+@@ -616,6 +682,7 @@ static void imx6_pcie_ltssm_enable(struct device *dev)
+ 				   IMX6Q_GPR12_PCIE_CTL_2);
+ 		break;
+ 	case IMX7D:
++	case IMX8MQ:		/* FALLTHROUGH */
+ 		reset_control_deassert(imx6_pcie->apps_reset);
+ 		break;
+ 	}
+@@ -870,6 +937,10 @@ static int imx6_pcie_probe(struct platform_device *pdev)
+ 	imx6_pcie->variant =
+ 		(enum imx6_pcie_variants)of_device_get_match_data(dev);
+ 
++	if (of_property_read_u32(node, "fsl,controller-id",
++				 &imx6_pcie->controller_id))
++		imx6_pcie->controller_id = 0;
++
+ 	dbi_base = platform_get_resource(pdev, IORESOURCE_MEM, 0);
+ 	pci->dbi_base = devm_ioremap_resource(dev, dbi_base);
+ 	if (IS_ERR(pci->dbi_base))
+@@ -921,7 +992,8 @@ static int imx6_pcie_probe(struct platform_device *pdev)
+ 			return PTR_ERR(imx6_pcie->pcie_inbound_axi);
+ 		}
+ 		break;
+-	case IMX7D:
++	case IMX8MQ:
++	case IMX7D:		/* FALLTHROUGH */
+ 		imx6_pcie->pciephy_reset = devm_reset_control_get_exclusive(dev,
+ 									    "pciephy");
+ 		if (IS_ERR(imx6_pcie->pciephy_reset)) {
+@@ -1011,6 +1083,7 @@ static const struct of_device_id imx6_pcie_of_match[] = {
+ 	{ .compatible = "fsl,imx6sx-pcie", .data = (void *)IMX6SX, },
+ 	{ .compatible = "fsl,imx6qp-pcie", .data = (void *)IMX6QP, },
+ 	{ .compatible = "fsl,imx7d-pcie",  .data = (void *)IMX7D,  },
++	{ .compatible = "fsl,imx8mq-pcie", .data = (void *)IMX8MQ, } ,
+ 	{},
+ };
+ 
+@@ -1027,6 +1100,7 @@ static struct platform_driver imx6_pcie_driver = {
+ 
+ static int __init imx6_pcie_init(void)
+ {
++#ifdef CONFIG_ARM
+ 	/*
+ 	 * Since probe() can be deferred we need to make sure that
+ 	 * hook_fault_code is not called after __init memory is freed
+@@ -1036,6 +1110,7 @@ static int __init imx6_pcie_init(void)
+ 	 */
+ 	hook_fault_code(8, imx6q_pcie_abort_handler, SIGBUS, 0,
+ 			"external abort on non-linefetch");
++#endif
+ 
+ 	return platform_driver_register(&imx6_pcie_driver);
+ }
 -- 
-2.7.4
+2.19.1
 
