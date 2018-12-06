@@ -3,32 +3,34 @@ X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
 X-Spam-Status: No, score=-1.0 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	MAILING_LIST_MULTI,SPF_PASS autolearn=ham autolearn_force=no version=3.4.0
+	MAILING_LIST_MULTI,SPF_PASS autolearn=unavailable autolearn_force=no
+	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id D223CC04EB8
-	for <linux-pci@archiver.kernel.org>; Thu,  6 Dec 2018 15:50:38 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 85205C64EB1
+	for <linux-pci@archiver.kernel.org>; Thu,  6 Dec 2018 16:10:34 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 8F3EA208E7
-	for <linux-pci@archiver.kernel.org>; Thu,  6 Dec 2018 15:50:38 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.3.2 mail.kernel.org 8F3EA208E7
-Authentication-Results: mail.kernel.org; dmarc=none (p=none dis=none) header.from=pengutronix.de
+	by mail.kernel.org (Postfix) with ESMTP id 558FB20868
+	for <linux-pci@archiver.kernel.org>; Thu,  6 Dec 2018 16:10:34 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.3.2 mail.kernel.org 558FB20868
+Authentication-Results: mail.kernel.org; dmarc=none (p=none dis=none) header.from=sedsystems.ca
 Authentication-Results: mail.kernel.org; spf=none smtp.mailfrom=linux-pci-owner@vger.kernel.org
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726050AbeLFPui (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Thu, 6 Dec 2018 10:50:38 -0500
-Received: from metis.ext.pengutronix.de ([85.220.165.71]:60819 "EHLO
-        metis.ext.pengutronix.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1725922AbeLFPuh (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Thu, 6 Dec 2018 10:50:37 -0500
-Received: from kresse.hi.pengutronix.de ([2001:67c:670:100:1d::2a])
-        by metis.ext.pengutronix.de with esmtp (Exim 4.89)
-        (envelope-from <l.stach@pengutronix.de>)
-        id 1gUvv6-0003nm-Oa; Thu, 06 Dec 2018 16:50:32 +0100
-Message-ID: <1544111431.3709.70.camel@pengutronix.de>
-Subject: Re: [PATCH] PCI: controller: dwc: Make PCI_IMX6 depend on
- PCIEPORTBUS
-From:   Lucas Stach <l.stach@pengutronix.de>
-To:     Robert Hancock <hancock@sedsystems.ca>,
+        id S1725945AbeLFQKd (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Thu, 6 Dec 2018 11:10:33 -0500
+Received: from sed198n136.SEDSystems.ca ([198.169.180.136]:43565 "EHLO
+        sed198n136.sedsystems.ca" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1725871AbeLFQKd (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Thu, 6 Dec 2018 11:10:33 -0500
+Received: from barney.sedsystems.ca (barney [198.169.180.121])
+        by sed198n136.sedsystems.ca  with ESMTP id wB6GA1Ts001404
+        (version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
+        Thu, 6 Dec 2018 10:10:01 -0600 (CST)
+Received: from eng1n65.eng.sedsystems.ca (eng1n65.eng.sedsystems.ca [172.21.1.65])
+        by barney.sedsystems.ca (8.14.7/8.14.4) with ESMTP id wB6GA0bY022948
+        (version=TLSv1/SSLv3 cipher=ECDHE-RSA-AES128-GCM-SHA256 bits=128 verify=NO);
+        Thu, 6 Dec 2018 10:10:00 -0600
+Subject: Re: [PATCH] PCI: controller: dwc: Make PCI_IMX6 depend on PCIEPORTBUS
+To:     Lucas Stach <l.stach@pengutronix.de>,
         Baruch Siach <baruch@tkos.co.il>,
         Andrey Smirnov <andrew.smirnov@gmail.com>
 Cc:     linux-pci@vger.kernel.org, "A.s. Dong" <aisheng.dong@nxp.com>,
@@ -37,51 +39,112 @@ Cc:     linux-pci@vger.kernel.org, "A.s. Dong" <aisheng.dong@nxp.com>,
         linux-imx@nxp.com, bhelgaas@google.com,
         Leonard Crestez <leonard.crestez@nxp.com>, cphealy@gmail.com,
         Trent Piepho <tpiepho@impinj.com>
-Date:   Thu, 06 Dec 2018 16:50:31 +0100
-In-Reply-To: <5a3543f2-fe58-221d-694f-0f98a643edfc@sedsystems.ca>
 References: <20181206074555.19579-1-andrew.smirnov@gmail.com>
-         <87o99zjcsc.fsf@tkos.co.il>
-         <5a3543f2-fe58-221d-694f-0f98a643edfc@sedsystems.ca>
-Content-Type: text/plain; charset="UTF-8"
-X-Mailer: Evolution 3.22.6-1+deb9u1 
-Mime-Version: 1.0
-Content-Transfer-Encoding: 7bit
-X-SA-Exim-Connect-IP: 2001:67c:670:100:1d::2a
-X-SA-Exim-Mail-From: l.stach@pengutronix.de
-X-SA-Exim-Scanned: No (on metis.ext.pengutronix.de); SAEximRunCond expanded to false
-X-PTX-Original-Recipient: linux-pci@vger.kernel.org
+ <87o99zjcsc.fsf@tkos.co.il>
+ <5a3543f2-fe58-221d-694f-0f98a643edfc@sedsystems.ca>
+ <1544111431.3709.70.camel@pengutronix.de>
+From:   Robert Hancock <hancock@sedsystems.ca>
+Openpgp: preference=signencrypt
+Autocrypt: addr=hancock@sedsystems.ca; prefer-encrypt=mutual; keydata=
+ xsFNBFfazlkBEADG7wwkexPSLcsG1Rr+tRaqlrITNQiwdXTZG0elskoQeqS0FyOR4BrKTU8c
+ FAX1R512lhHgEZHV02l0uIWRTFBshg/8EK4qwQiS2L7Bp84H1g5c/I8fsT7c5UKBBXgZ0jAL
+ ls4MJiSTubo4dSG+QcjFzNDj6pTqzschZeDZvmCWyC6O1mQ+ySrGj+Fty5dE7YXpHEtrOVkq
+ Y0v3jRm51+7Sufhp7x0rLF7X/OFWcGhPzru3oWxPa4B1QmAWvEMGJRTxdSw4WvUbftJDiz2E
+ VV+1ACsG23c4vlER1muLhvEmx7z3s82lXRaVkEyTXKb8X45tf0NUA9sypDhJ3XU2wmri+4JS
+ JiGVGHCvrPYjjEajlhTAF2yLkWhlxCInLRVgxKBQfTV6WtBuKV/Fxua5DMuS7qUTchz7grJH
+ PQmyylLs44YMH21cG6aujI2FwI90lMdZ6fPYZaaL4X8ZTbY9x53zoMTxS/uI3fUoE0aDW5hU
+ vfzzgSB+JloaRhVtQNTG4BjzNEz9zK6lmrV4o9NdYLSlGScs4AtiKBxQMjIHntArHlArExNr
+ so3c8er4mixubxrIg252dskjtPLNO1/QmdNTvhpGugoE6J4+pVo+fdvu7vwQGMBSwQapzieT
+ mVxuyGKiWOA6hllr5mheej8D1tWzEfsFMkZR2ElkhwlRcEX0ewARAQABzSZSb2JlcnQgSGFu
+ Y29jayA8aGFuY29ja0BzZWRzeXN0ZW1zLmNhPsLBdwQTAQIAIQIbAwIeAQIXgAUCV9rOwQUL
+ CQgHAwUVCgkICwUWAgMBAAAKCRCAQSxR8cmd98VTEADFuaeLonfIJiSBY4JQmicwe+O83FSm
+ s72W0tE7k3xIFd7M6NphdbqbPSjXEX6mMjRwzBplTeBvFKu2OJWFOWCETSuQbbnpZwXFAxNJ
+ wTKdoUdNY2fvX33iBRGnMBwKEGl+jEgs1kxSwpaU4HwIwso/2BxgwkF2SQixeifKxyyJ0qMq
+ O+YRtPLtqIjS89cJ7z+0AprpnKeJulWik5hNTHd41mcCr+HI60SFSPWFRn0YXrngx+O1VF0Z
+ gUToZVFv5goRG8y2wB3mzduXOoTGM54Z8z+xdO9ir44btMsW7Wk+EyCxzrAF0kv68T7HLWWz
+ 4M+Q75OCzSuf5R6Ijj7loeI4Gy1jNx0AFcSd37toIzTW8bBj+3g9YMN9SIOTKcb6FGExuI1g
+ PgBgHxUEsjUL1z8bnTIz+qjYwejHbcndwzZpot0XxCOo4Ljz/LS5CMPYuHB3rVZ672qUV2Kd
+ MwGtGgjwpM4+K8/6LgCe/vIA3b203QGCK4kFFpCFTUPGOBLXWbJ14AfkxT24SAeo21BiR8Ad
+ SmXdnwc0/C2sEiGOAmMkFilpEgm+eAoOGvyGs+NRkSs1B2KqYdGgbrq+tZbjxdj82zvozWqT
+ aajT/d59yeC4Fm3YNf0qeqcA1cJSuKV34qMkLNMQn3OlMCG7Jq/feuFLrWmJIh+G7GZOmG4L
+ bahC087BTQRX2s5ZARAAvXYOsI4sCJrreit3wRhSoC/AIm/hNmQMr+zcsHpR9BEmgmA9FxjR
+ 357WFjYkX6mM+FS4Y2+D+t8PC1HiUXPnvS5FL/WHpXgpn8O8MQYFWd0gWV7xefPv5cC3oHS8
+ Q94r7esRt7iUGzMi/NqHXStBwLDdzY2+DOX2jJpqW+xvo9Kw3WdYHTwxTWWvB5earh2I0JCY
+ LU3JLoMr/h42TYRPdHzhVZwRmGeKIcbOwc6fE1UuEjq+AF1316mhRs+boSRog140RgHIXRCK
+ +LLyPv+jzpm11IC5LvwjT5o71axkDpaRM/MRiXHEfG6OTooQFX4PXleSy7ZpBmZ4ekyQ17P+
+ /CV64wM+IKuVgnbgrYXBB9H3+0etghth/CNf1QRTukPtY56g2BHudDSxfxeoRtuyBUgtT4gq
+ haF1KObvnliy65PVG88EMKlC5TJ2bYdh8n49YxkIk1miQ4gfA8WgOoHjBLGT5lxz+7+MOiF5
+ 4g03e0so8tkoJgHFe1DGCayFf8xrFVSPzaxk6CY9f2CuxsZokc7CDAvZrfOqQt8Z4SofSC8z
+ KnJ1I1hBnlcoHDKMi3KabDBi1dHzKm9ifNBkGNP8ux5yAjL/Z6C1yJ+Q28hNiAddX7dArOKd
+ h1L4/QwjER2g3muK6IKfoP7PRjL5S9dbH0q+sbzOJvUQq0HO6apmu78AEQEAAcLBXwQYAQIA
+ CQUCV9rOWQIbDAAKCRCAQSxR8cmd90K9D/4tV1ChjDXWT9XRTqvfNauz7KfsmOFpyN5LtyLH
+ JqtiJeBfIDALF8Wz/xCyJRmYFegRLT6DB6j4BUwAUSTFAqYN+ohFEg8+BdUZbe2LCpV//iym
+ cQW29De9wWpzPyQvM9iEvCG4tc/pnRubk7cal/f3T3oH2RTrpwDdpdi4QACWxqsVeEnd02hf
+ ji6tKFBWVU4k5TQ9I0OFzrkEegQFUE91aY/5AVk5yV8xECzUdjvij2HKdcARbaFfhziwpvL6
+ uy1RdP+LGeq+lUbkMdQXVf0QArnlHkLVK+j1wPYyjWfk9YGLuznvw8VqHhjA7G7rrgOtAmTS
+ h5V9JDZ9nRbLcak7cndceDAFHwWiwGy9s40cW1DgTWJdxUGAMlHT0/HLGVWmmDCqJFPmJepU
+ brjY1ozW5o1NzTvT7mlVtSyct+2h3hfHH6rhEMcSEm9fhe/+g4GBeHwwlpMtdXLNgKARZmZF
+ W3s/L229E/ooP/4TtgAS6eeA/HU1U9DidN5SlON3E/TTJ0YKnKm3CNddQLYm6gUXMagytE+O
+ oUTM4rxZQ3xuR595XxhIBUW/YzP/yQsL7+67nTDiHq+toRl20ATEtOZQzYLG0/I9TbodwVCu
+ Tf86Ob96JU8nptd2WMUtzV+L+zKnd/MIeaDzISB1xr1TlKjMAc6dj2WvBfHDkqL9tpwGvQ==
+Organization: SED Systems
+Message-ID: <ff33ed91-431d-9620-da75-216298a58667@sedsystems.ca>
+Date:   Thu, 6 Dec 2018 10:10:00 -0600
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:60.0) Gecko/20100101
+ Thunderbird/60.3.1
+MIME-Version: 1.0
+In-Reply-To: <1544111431.3709.70.camel@pengutronix.de>
+Content-Type: text/plain; charset=utf-8
+Content-Language: en-US
+Content-Transfer-Encoding: 8bit
+X-Scanned-By: MIMEDefang 2.64 on 198.169.180.136
 Sender: linux-pci-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-Am Donnerstag, den 06.12.2018, 09:45 -0600 schrieb Robert Hancock:
-> On 2018-12-06 2:10 a.m., Baruch Siach wrote:
-> > Hi Andrey,
-> > 
-> > Adding Robert Hancock who reported[1] on a PCIe MSI issue with i.MX6.
-> > 
-> > Andrey Smirnov writes:
-> > 
-> > > Building a kernel with CONFIG_PCI_IMX6=y, but CONFIG_PCIEPORTBUS=n
-> > > produces a system where built-in PCIE bridge (16c3:abcd) isn't bound
-> > > to pcieport driver. This, in turn, results in a PCIE bus that is
-> > > capable of enumerating attached PCIE device, but lacks functional
-> > > interrupt support.
-> > 
-> > Robert, does that fix your issue?
+On 2018-12-06 9:50 a.m., Lucas Stach wrote:
+> Am Donnerstag, den 06.12.2018, 09:45 -0600 schrieb Robert Hancock:
+>> On 2018-12-06 2:10 a.m., Baruch Siach wrote:
+>>> Hi Andrey,
+>>>
+>>> Adding Robert Hancock who reported[1] on a PCIe MSI issue with i.MX6.
+>>>
+>>> Andrey Smirnov writes:
+>>>
+>>>> Building a kernel with CONFIG_PCI_IMX6=y, but CONFIG_PCIEPORTBUS=n
+>>>> produces a system where built-in PCIE bridge (16c3:abcd) isn't bound
+>>>> to pcieport driver. This, in turn, results in a PCIE bus that is
+>>>> capable of enumerating attached PCIE device, but lacks functional
+>>>> interrupt support.
+>>>
+>>> Robert, does that fix your issue?
+>>
+>> Unfortunately, no.. in fact the situation on my setup is even worse with
+>> CONFIG_PCIEPORTBUS enabled: Not only does MSI still not function, but
+>> now INTx interrupts are somehow broken as well - no interrupts are
+>> received. The IRQ information shown in /proc/interrupts is correct, but
+>> the count remains stubbornly at 0.
 > 
-> Unfortunately, no.. in fact the situation on my setup is even worse with
-> CONFIG_PCIEPORTBUS enabled: Not only does MSI still not function, but
-> now INTx interrupts are somehow broken as well - no interrupts are
-> received. The IRQ information shown in /proc/interrupts is correct, but
-> the count remains stubbornly at 0.
+> That's expected. The port services will use an MSI IRQ when available
+> and due to a design issue with the DWC PCIe it will not forward any
+> legacy IRQs if any MSI is in use. If any of the PCIe devices in your
+> system are unable to work with MSI IRQs, you must boot with "nomsi" on
+> the kernel command line set.
 
-That's expected. The port services will use an MSI IRQ when available
-and due to a design issue with the DWC PCIe it will not forward any
-legacy IRQs if any MSI is in use. If any of the PCIe devices in your
-system are unable to work with MSI IRQs, you must boot with "nomsi" on
-the kernel command line set.
+That seems like an unfortunate design choice on their part.. well that
+would probably argue against adding this as a hard dependency then, if
+non-MSI-supporting PCIe devices can't work with default boot options
+with that set.
 
-Regards,
-Lucas
+I'm looking into testing with an NXP Smart Devices board and some PCIe
+cards to see if I can verify whether MSI works on those or not, since we
+currently don't have a way to independently verify that the MSI
+implementation in our FPGA is working or whether another PCIe device
+works with MSI (the FPGA is integrated on the system board).
+
+-- 
+Robert Hancock
+Senior Software Developer
+SED Systems
+Email: hancock@sedsystems.ca
