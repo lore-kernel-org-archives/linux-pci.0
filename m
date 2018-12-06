@@ -2,149 +2,134 @@ Return-Path: <SRS0=KO/x=OP=vger.kernel.org=linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-1.0 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	MAILING_LIST_MULTI,SPF_PASS autolearn=unavailable autolearn_force=no
-	version=3.4.0
+X-Spam-Status: No, score=-1.1 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
+	DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_PASS
+	autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 85205C64EB1
-	for <linux-pci@archiver.kernel.org>; Thu,  6 Dec 2018 16:10:34 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id DFA44C04EB8
+	for <linux-pci@archiver.kernel.org>; Thu,  6 Dec 2018 20:20:19 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 558FB20868
-	for <linux-pci@archiver.kernel.org>; Thu,  6 Dec 2018 16:10:34 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.3.2 mail.kernel.org 558FB20868
-Authentication-Results: mail.kernel.org; dmarc=none (p=none dis=none) header.from=sedsystems.ca
+	by mail.kernel.org (Postfix) with ESMTP id 88C6D2082B
+	for <linux-pci@archiver.kernel.org>; Thu,  6 Dec 2018 20:20:19 +0000 (UTC)
+Authentication-Results: mail.kernel.org;
+	dkim=pass (1024-bit key) header.d=impinj.com header.i=@impinj.com header.b="aNKtgha8"
+DMARC-Filter: OpenDMARC Filter v1.3.2 mail.kernel.org 88C6D2082B
+Authentication-Results: mail.kernel.org; dmarc=fail (p=reject dis=none) header.from=impinj.com
 Authentication-Results: mail.kernel.org; spf=none smtp.mailfrom=linux-pci-owner@vger.kernel.org
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1725945AbeLFQKd (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Thu, 6 Dec 2018 11:10:33 -0500
-Received: from sed198n136.SEDSystems.ca ([198.169.180.136]:43565 "EHLO
-        sed198n136.sedsystems.ca" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1725871AbeLFQKd (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Thu, 6 Dec 2018 11:10:33 -0500
-Received: from barney.sedsystems.ca (barney [198.169.180.121])
-        by sed198n136.sedsystems.ca  with ESMTP id wB6GA1Ts001404
-        (version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-        Thu, 6 Dec 2018 10:10:01 -0600 (CST)
-Received: from eng1n65.eng.sedsystems.ca (eng1n65.eng.sedsystems.ca [172.21.1.65])
-        by barney.sedsystems.ca (8.14.7/8.14.4) with ESMTP id wB6GA0bY022948
-        (version=TLSv1/SSLv3 cipher=ECDHE-RSA-AES128-GCM-SHA256 bits=128 verify=NO);
-        Thu, 6 Dec 2018 10:10:00 -0600
+        id S1725935AbeLFUUS (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Thu, 6 Dec 2018 15:20:18 -0500
+Received: from mail-eopbgr750099.outbound.protection.outlook.com ([40.107.75.99]:37907
+        "EHLO NAM02-BL2-obe.outbound.protection.outlook.com"
+        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+        id S1725916AbeLFUUS (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Thu, 6 Dec 2018 15:20:18 -0500
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=impinj.com;
+ s=selector1;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
+ bh=l9eliro8QS7lXIM0GF4ySg+5dSdoikSEeyYZXNc70fY=;
+ b=aNKtgha8aNH1bCQo8pigplhSR/wCrnRBBxC7PXho9VMNwOl6ldtJefUqZ9L1Tt5fAQZQAhm7M3lPzoR56W9HZ2Te53VIofF+0lY1s8/L0fFe6evofLEDUcG7G5QX5+As/WQBJzIQS+DeMlQtAnjCUP8snqUzTxsFO4hW1d6aasM=
+Received: from MWHPR0601MB3708.namprd06.prod.outlook.com (10.167.236.38) by
+ MWHPR0601MB3625.namprd06.prod.outlook.com (10.167.236.15) with Microsoft SMTP
+ Server (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
+ 15.20.1404.19; Thu, 6 Dec 2018 20:20:01 +0000
+Received: from MWHPR0601MB3708.namprd06.prod.outlook.com
+ ([fe80::c0f3:ea8f:48ba:a5d7]) by MWHPR0601MB3708.namprd06.prod.outlook.com
+ ([fe80::c0f3:ea8f:48ba:a5d7%5]) with mapi id 15.20.1404.020; Thu, 6 Dec 2018
+ 20:20:01 +0000
+From:   Trent Piepho <tpiepho@impinj.com>
+To:     "l.stach@pengutronix.de" <l.stach@pengutronix.de>,
+        "andrew.smirnov@gmail.com" <andrew.smirnov@gmail.com>,
+        "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
+CC:     "hongxing.zhu@nxp.com" <hongxing.zhu@nxp.com>,
+        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+        "cphealy@gmail.com" <cphealy@gmail.com>,
+        "linux-imx@nxp.com" <linux-imx@nxp.com>,
+        "aisheng.dong@nxp.com" <aisheng.dong@nxp.com>,
+        "linux-arm-kernel@lists.infradead.org" 
+        <linux-arm-kernel@lists.infradead.org>,
+        "bhelgaas@google.com" <bhelgaas@google.com>,
+        "leonard.crestez@nxp.com" <leonard.crestez@nxp.com>
 Subject: Re: [PATCH] PCI: controller: dwc: Make PCI_IMX6 depend on PCIEPORTBUS
-To:     Lucas Stach <l.stach@pengutronix.de>,
-        Baruch Siach <baruch@tkos.co.il>,
-        Andrey Smirnov <andrew.smirnov@gmail.com>
-Cc:     linux-pci@vger.kernel.org, "A.s. Dong" <aisheng.dong@nxp.com>,
-        Richard Zhu <hongxing.zhu@nxp.com>,
-        linux-arm-kernel@lists.infradead.org, linux-kernel@vger.kernel.org,
-        linux-imx@nxp.com, bhelgaas@google.com,
-        Leonard Crestez <leonard.crestez@nxp.com>, cphealy@gmail.com,
-        Trent Piepho <tpiepho@impinj.com>
+Thread-Topic: [PATCH] PCI: controller: dwc: Make PCI_IMX6 depend on
+ PCIEPORTBUS
+Thread-Index: AQHUjTfBbQvVAJ6kdke01R/lWmbrWaVxgowAgAClJAA=
+Date:   Thu, 6 Dec 2018 20:20:01 +0000
+Message-ID: <1544127600.18519.175.camel@impinj.com>
 References: <20181206074555.19579-1-andrew.smirnov@gmail.com>
- <87o99zjcsc.fsf@tkos.co.il>
- <5a3543f2-fe58-221d-694f-0f98a643edfc@sedsystems.ca>
- <1544111431.3709.70.camel@pengutronix.de>
-From:   Robert Hancock <hancock@sedsystems.ca>
-Openpgp: preference=signencrypt
-Autocrypt: addr=hancock@sedsystems.ca; prefer-encrypt=mutual; keydata=
- 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
-Organization: SED Systems
-Message-ID: <ff33ed91-431d-9620-da75-216298a58667@sedsystems.ca>
-Date:   Thu, 6 Dec 2018 10:10:00 -0600
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:60.0) Gecko/20100101
- Thunderbird/60.3.1
-MIME-Version: 1.0
-In-Reply-To: <1544111431.3709.70.camel@pengutronix.de>
-Content-Type: text/plain; charset=utf-8
+         <1544092136.3709.57.camel@pengutronix.de>
+In-Reply-To: <1544092136.3709.57.camel@pengutronix.de>
+Accept-Language: en-US
 Content-Language: en-US
-Content-Transfer-Encoding: 8bit
-X-Scanned-By: MIMEDefang 2.64 on 198.169.180.136
+X-MS-Has-Attach: 
+X-MS-TNEF-Correlator: 
+authentication-results: spf=none (sender IP is )
+ smtp.mailfrom=tpiepho@impinj.com; 
+x-originating-ip: [216.207.205.253]
+x-ms-publictraffictype: Email
+x-microsoft-exchange-diagnostics: 1;MWHPR0601MB3625;6:TD5+BQkZ66rTM/cVfgiYSuHCZr/vB9NjH4uUnlLWQtDM8+KYlJjBDl79frbdE0voFyZuZRi6khrRjsan0AefIqo61UsY4t4V74/zEHYLVXAMEwRABprsIndoojyV7HX3fbNw955YOqgSBEctspTJLK2HnkM7mNsDyGEHmqPiLWlAiIWCGxtPp1v13wc6bBAZim+8jqWcAUtOInr92lgbsznuq+tLo9bmF3lbeQ/2D4a63d4cqvyn90RDktzQypb8j8aJUYpaE8W7uMwBD8HiIqUrwUETh0cDG6pZYSv/OR8Sclwg8TPyvojwc3F9+LKBEc1lfnidPkgqL0GuRwVp1CjQMFzwog+5OzT+gFQxq3v/3vdM6y2NIikvop/MdEdkmAqqKWl7OmdpkFUbRanXut+T3p+RVEFsRY/LSWAx/+Q8Wlq0YRyELxY2lhSTLQ/uiOE+Tzs/1+bnqy7CA3pq7Q==;5:izPJUL8Bpd1pJYyOkY0+e1lWkaL4JMyR6Ihk+oEq+N7E/kjLvqn62+8C+AE6MM+edeCbp7Pp1bSSkqFJ8bby5j23OeqUugue15vJeAEr+zg6oHLJpx8QzjMFx/IGPxw6+uhM1bmCj6J74y/3qXRr40oJC21TXt3y1SdT5gO6sJM=;7:hQSjBUaUI/031Ad//vlpX8yPA6+EJ7oP+NoWD8WkAmMte2O4loC2Auo8ZVB4raGhZoEcNubpA2AnZ3sSrHcnlcBN18XOTW1OVkmZ4rKL+eYRbComRLyIt+38OcWubeduSFSel3PRBCsKei+w38QD9w==
+x-ms-exchange-antispam-srfa-diagnostics: SOS;
+x-ms-office365-filtering-correlation-id: 1b7f2a6c-bad8-44b6-bc25-08d65bb8338a
+x-microsoft-antispam: BCL:0;PCL:0;RULEID:(2390098)(7020095)(4652040)(8989299)(4534185)(4627221)(201703031133081)(201702281549075)(8990200)(5600074)(711020)(2017052603328)(7153060)(7193020);SRVR:MWHPR0601MB3625;
+x-ms-traffictypediagnostic: MWHPR0601MB3625:
+x-microsoft-antispam-prvs: <MWHPR0601MB36259BCF7E262A97852893AAD3A90@MWHPR0601MB3625.namprd06.prod.outlook.com>
+x-ms-exchange-senderadcheck: 1
+x-exchange-antispam-report-cfa-test: BCL:0;PCL:0;RULEID:(8211001083)(6040522)(2401047)(5005006)(8121501046)(3231455)(999002)(944501520)(52105112)(93006095)(93001095)(3002001)(10201501046)(148016)(149066)(150057)(6041310)(20161123564045)(20161123560045)(20161123558120)(20161123562045)(201703131423095)(201702281528075)(20161123555045)(201703061421075)(201703061406153)(201708071742011)(7699051)(76991095);SRVR:MWHPR0601MB3625;BCL:0;PCL:0;RULEID:;SRVR:MWHPR0601MB3625;
+x-forefront-prvs: 087894CD3C
+x-forefront-antispam-report: SFV:NSPM;SFS:(10019020)(979002)(366004)(39850400004)(396003)(346002)(136003)(376002)(189003)(199004)(2616005)(11346002)(446003)(966005)(476003)(14454004)(66066001)(76176011)(7416002)(4326008)(8936002)(105586002)(486006)(2501003)(478600001)(6486002)(6436002)(6116002)(39060400002)(5660300001)(3846002)(71200400001)(71190400001)(305945005)(5024004)(99286004)(68736007)(2906002)(229853002)(316002)(103116003)(6512007)(86362001)(256004)(106356001)(53936002)(186003)(2201001)(54906003)(6246003)(8676002)(97736004)(81156014)(6306002)(26005)(7736002)(81166006)(25786009)(110136005)(102836004)(6506007)(36756003)(969003)(989001)(999001)(1009001)(1019001);DIR:OUT;SFP:1102;SCL:1;SRVR:MWHPR0601MB3625;H:MWHPR0601MB3708.namprd06.prod.outlook.com;FPR:;SPF:None;LANG:en;PTR:InfoNoRecords;MX:1;A:1;
+received-spf: None (protection.outlook.com: impinj.com does not designate
+ permitted sender hosts)
+x-microsoft-antispam-message-info: Xjzv7B7aprDrA0GrybGQgk/Ahxda41amJNmDK5I11dPRgdK8r4efXSnUeR/5dy57wn420rr16qsWXm2xi3DiTmck6rp8+r0cO2cY/NdVciCsLwC32ZryPv4d+4rgyKDgoO0aGuiyqsuAr1nhy3EWKjcfThqrwIDED2W0OPs2QOOfsyV7sz9pxeIJVh+GJrbEGPqmiP3eShfYYS0riKedp09jBV+oQfQB4PO65yd2aIZj9B2QgYlkLtIdbF5KECQbBU+JKQ+fWN7MlNvh6gnr9l2xFUPEvXs7bmu0C3YvgLpeDZQH8DrTwIuS8aLgIf2dKPtL1FjvxjvH0aBfSBKg2nLRYqo+OPk1OaFWOv+whwA=
+spamdiagnosticoutput: 1:99
+spamdiagnosticmetadata: NSPM
+Content-Type: text/plain; charset="utf-8"
+Content-ID: <3B4DF0C2968DBE4793149EDF8E3E488F@namprd06.prod.outlook.com>
+Content-Transfer-Encoding: base64
+MIME-Version: 1.0
+X-OriginatorOrg: impinj.com
+X-MS-Exchange-CrossTenant-Network-Message-Id: 1b7f2a6c-bad8-44b6-bc25-08d65bb8338a
+X-MS-Exchange-CrossTenant-originalarrivaltime: 06 Dec 2018 20:20:01.5233
+ (UTC)
+X-MS-Exchange-CrossTenant-fromentityheader: Hosted
+X-MS-Exchange-CrossTenant-id: 6de70f0f-7357-4529-a415-d8cbb7e93e5e
+X-MS-Exchange-Transport-CrossTenantHeadersStamped: MWHPR0601MB3625
 Sender: linux-pci-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-On 2018-12-06 9:50 a.m., Lucas Stach wrote:
-> Am Donnerstag, den 06.12.2018, 09:45 -0600 schrieb Robert Hancock:
->> On 2018-12-06 2:10 a.m., Baruch Siach wrote:
->>> Hi Andrey,
->>>
->>> Adding Robert Hancock who reported[1] on a PCIe MSI issue with i.MX6.
->>>
->>> Andrey Smirnov writes:
->>>
->>>> Building a kernel with CONFIG_PCI_IMX6=y, but CONFIG_PCIEPORTBUS=n
->>>> produces a system where built-in PCIE bridge (16c3:abcd) isn't bound
->>>> to pcieport driver. This, in turn, results in a PCIE bus that is
->>>> capable of enumerating attached PCIE device, but lacks functional
->>>> interrupt support.
->>>
->>> Robert, does that fix your issue?
->>
->> Unfortunately, no.. in fact the situation on my setup is even worse with
->> CONFIG_PCIEPORTBUS enabled: Not only does MSI still not function, but
->> now INTx interrupts are somehow broken as well - no interrupts are
->> received. The IRQ information shown in /proc/interrupts is correct, but
->> the count remains stubbornly at 0.
-> 
-> That's expected. The port services will use an MSI IRQ when available
-> and due to a design issue with the DWC PCIe it will not forward any
-> legacy IRQs if any MSI is in use. If any of the PCIe devices in your
-> system are unable to work with MSI IRQs, you must boot with "nomsi" on
-> the kernel command line set.
-
-That seems like an unfortunate design choice on their part.. well that
-would probably argue against adding this as a hard dependency then, if
-non-MSI-supporting PCIe devices can't work with default boot options
-with that set.
-
-I'm looking into testing with an NXP Smart Devices board and some PCIe
-cards to see if I can verify whether MSI works on those or not, since we
-currently don't have a way to independently verify that the MSI
-implementation in our FPGA is working or whether another PCIe device
-works with MSI (the FPGA is integrated on the system board).
-
--- 
-Robert Hancock
-Senior Software Developer
-SED Systems
-Email: hancock@sedsystems.ca
+T24gVGh1LCAyMDE4LTEyLTA2IGF0IDExOjI4ICswMTAwLCBMdWNhcyBTdGFjaCB3cm90ZToNCj4g
+QW0gTWl0dHdvY2gsIGRlbiAwNS4xMi4yMDE4LCAyMzo0NSAtMDgwMCBzY2hyaWViIEFuZHJleSBT
+bWlybm92Og0KPiA+IEJ1aWxkaW5nIGEga2VybmVsIHdpdGggQ09ORklHX1BDSV9JTVg2PXksIGJ1
+dCBDT05GSUdfUENJRVBPUlRCVVM9bg0KPiA+IHByb2R1Y2VzIGEgc3lzdGVtIHdoZXJlIGJ1aWx0
+LWluIFBDSUUgYnJpZGdlICgxNmMzOmFiY2QpIGlzbid0DQo+ID4gYm91bmQNCj4gPiB0byBwY2ll
+cG9ydCBkcml2ZXIuIFRoaXMsIGluIHR1cm4sIHJlc3VsdHMgaW4gYSBQQ0lFIGJ1cyB0aGF0IGlz
+DQo+ID4gY2FwYWJsZSBvZiBlbnVtZXJhdGluZyBhdHRhY2hlZCBQQ0lFIGRldmljZSwgYnV0IGxh
+Y2tzIGZ1bmN0aW9uYWwNCj4gPiBpbnRlcnJ1cHQgc3VwcG9ydC4NCj4gDQo+IFRoaXMgaXMgb2Rk
+LiBBRkFJSyBQQ0kgcG9ydCBzZXJ2aWNlcyBhcmUgYSB0b3RhbGx5IG9wdGlvbmFsIHRoaW5nIGFu
+ZA0KPiB0aGVtIGJlaW5nIGFic2VudCBzaG91bGQgbm90IGxlYWQgdG8gYSBub24tZnVuY3Rpb25h
+bCBQQ0kgYnVzLiBTbyBJDQo+IHdvdWxkIHJlYWxseSBsaWtlIHRvIHNlZSBzb21lIGRlZXBlciBh
+bmFseXNpcyB3aGF0IGlzIGdvaW5nIG9uIGhlcmUuDQoNCkkgbm90aWNlZCB0aGlzIHByZXZpb3Vz
+bHksIA0KaHR0cHM6Ly93d3cuc3Bpbmljcy5uZXQvbGlzdHMvbGludXgtcGNpL21zZzc3ODQwLmh0
+bWwNCg0KV2hhdCBoYXBwZW5lZCB3YXMgdGhhdCBQQ0lFUE9SVEJVUyAqd2FzKiBzZWxlY3RlZCBi
+eSBhbGwgdGhlIHBsYXRmb3JtDQpkd2MgZHJpdmVycyBhbmQgdGhvc2Ugc2VsZWN0aW9ucyB3ZXJl
+IHJlbW92ZWQgaW46DQoNCmNvbW1pdCBmM2ZkZmM0YWMzYTI2ODY1ZTg0NjI3YTdmZTA4YTkwNjA4
+MWU1YWJjDQpBdXRob3I6IEJqb3JuIEhlbGdhYXMgPGJoZWxnYWFzQGdvb2dsZS5jb20+DQpEYXRl
+OiAgIEZyaSBNYXkgMTggMTU6MDg6MzYgMjAxOCAtMDUwMA0KDQogICAgUENJOiBSZW1vdmUgaG9z
+dCBkcml2ZXIgS2NvbmZpZyBzZWxlY3Rpb24gb2YgQ09ORklHX1BDSUVQT1JUQlVTDQogICAgDQog
+ICAgSG9zdCBicmlkZ2UgZHJpdmVycyBkbyBub3QgdXNlIHRoZSBwb3J0ZHJ2IGludGVyZmFjZXMg
+KHN0cnVjdCBwY2llX2RldmljZSwNCiAgICBzdHJ1Y3QgcGNpZV9wb3J0X3NlcnZpY2VfZHJpdmVy
+LCBwY2llX3BvcnRfc2VydmljZV9yZWdpc3RlcigpLCBldGMpLCBhbmQNCiAgICB0aGV5IHNob3Vs
+ZCBub3Qgc2VsZWN0IENPTkZJR19QQ0lFUE9SVEJVUy4NCg0KSSBlbmNvdW50ZXJlZCB0aGlzIHdo
+ZW4gYSBrZXJuZWwgZGVmY29uZmlnIHRoYXQgcHJldmlvdXNseSB0dXJuZWQgb24NClBDSUVQT1JU
+QlVTIHN0b3BwZWQgdHVybmluZyBpbiBvbiwgcmVzdWx0aW5nIGluIHRoZSBzaXR1YXRpb24gdGhh
+dA0KQW5kcmV5IGRlc2NyaWJlczogIG5vIGVycm9ycywgZGV2aWNlIHByZXNlbnQsIGJ1dCBubyBN
+U0kgaW50ZXJydXB0cy4NCg0KVGhlIGluIGtlcm5lbCBkZWZjb25maWdzIChtaW5lIG5vdCBiZWlu
+ZyBvbmUgb2YgdGhvc2UpIGZvciBhbGwgdGhlIGR3Yw0KcGNpZSB1c2VycyBzaG91bGQgcHJvYmFi
+bHkgYmUgcmVmcmVzaGVkIHRvIGVuYWJsZSBwY2llcG9ydGJ1cy4NCg0KSXQgc2VlbXMgYXBwcm9w
+cmlhdGUgdGhhdCB0aGUgcG9ydCBzZXJ2aWNlcyBhcmUgb3B0aW9uYWwgYW5kIGl0J3MNCnVuZm9y
+dHVuYXRlIHRoYXQgdGhlIGtlcm5lbCBkZWZjb25maWcgc3lzdGVtIHJlc29sdmVzIGluIHRoZSBj
+aGFuZ2UgaW4NCnRoaXMgbWFubmVyLCB2cyBrZWVwaW5nIHBjaWVwb3J0YnVzIG9uIGJ5IGRlZmF1
+bHQuICBJIGRvIGtub3cgd2h5IGl0IGlzDQp0aGlzIHdheSBhbmQgSSBkb24ndCB0aGluayB0aGVy
+ZSBpcyBhbnkgZ3JlYXQgc29sdXRpb24gdGhlcmUuDQoNCkl0IGhhcyBuZXZlciBiZWVuIGNsZWFy
+IHRvIG1lIHdoeSBwY2llcG9ydGJ1cyB3YXMgbmVjZXNzYXJ5IGZvciBNU0ku
