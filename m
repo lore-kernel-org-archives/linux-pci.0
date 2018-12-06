@@ -6,93 +6,92 @@ X-Spam-Status: No, score=-7.0 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
 	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_PASS,URIBL_BLOCKED
 	autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id AADFEC04EB8
-	for <linux-pci@archiver.kernel.org>; Thu,  6 Dec 2018 08:10:47 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id A6FF3C04EB9
+	for <linux-pci@archiver.kernel.org>; Thu,  6 Dec 2018 09:41:37 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 4F8ED20989
-	for <linux-pci@archiver.kernel.org>; Thu,  6 Dec 2018 08:10:47 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.3.2 mail.kernel.org 4F8ED20989
-Authentication-Results: mail.kernel.org; dmarc=none (p=none dis=none) header.from=tkos.co.il
+	by mail.kernel.org (Postfix) with ESMTP id 6E89520892
+	for <linux-pci@archiver.kernel.org>; Thu,  6 Dec 2018 09:41:37 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.3.2 mail.kernel.org 6E89520892
+Authentication-Results: mail.kernel.org; dmarc=none (p=none dis=none) header.from=pengutronix.de
 Authentication-Results: mail.kernel.org; spf=none smtp.mailfrom=linux-pci-owner@vger.kernel.org
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1729024AbeLFIKq (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Thu, 6 Dec 2018 03:10:46 -0500
-Received: from guitar.tcltek.co.il ([192.115.133.116]:49705 "EHLO
-        mx.tkos.co.il" rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1728909AbeLFIKq (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Thu, 6 Dec 2018 03:10:46 -0500
-Received: from tarshish (unknown [10.0.8.6])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
-        (No client certificate requested)
-        by mx.tkos.co.il (Postfix) with ESMTPS id 7E2B744011A;
-        Thu,  6 Dec 2018 10:10:43 +0200 (IST)
-References: <20181206074555.19579-1-andrew.smirnov@gmail.com>
-User-agent: mu4e 1.0; emacs 25.2.2
-From:   Baruch Siach <baruch@tkos.co.il>
+        id S1727806AbeLFJlh (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Thu, 6 Dec 2018 04:41:37 -0500
+Received: from metis.ext.pengutronix.de ([85.220.165.71]:45373 "EHLO
+        metis.ext.pengutronix.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1727575AbeLFJlg (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Thu, 6 Dec 2018 04:41:36 -0500
+Received: from kresse.hi.pengutronix.de ([2001:67c:670:100:1d::2a])
+        by metis.ext.pengutronix.de with esmtp (Exim 4.89)
+        (envelope-from <l.stach@pengutronix.de>)
+        id 1gUqA2-00018n-QO; Thu, 06 Dec 2018 10:41:34 +0100
+Message-ID: <1544089293.3709.53.camel@pengutronix.de>
+Subject: Re: [PATCH v2 1/3] PCI: imx: No-op imx6_setup_phy_mpll() on i.MX7D
+From:   Lucas Stach <l.stach@pengutronix.de>
 To:     Andrey Smirnov <andrew.smirnov@gmail.com>,
-        Robert Hancock <hancock@sedsystems.ca>
-Cc:     linux-pci@vger.kernel.org, "A.s. Dong" <aisheng.dong@nxp.com>,
-        Richard Zhu <hongxing.zhu@nxp.com>,
-        linux-arm-kernel@lists.infradead.org, linux-kernel@vger.kernel.org,
-        linux-imx@nxp.com, bhelgaas@google.com,
-        Leonard Crestez <leonard.crestez@nxp.com>, cphealy@gmail.com,
-        l.stach@pengutronix.de, Trent Piepho <tpiepho@impinj.com>
-Subject: Re: [PATCH] PCI: controller: dwc: Make PCI_IMX6 depend on PCIEPORTBUS
-In-reply-to: <20181206074555.19579-1-andrew.smirnov@gmail.com>
-Date:   Thu, 06 Dec 2018 10:10:43 +0200
-Message-ID: <87o99zjcsc.fsf@tkos.co.il>
-MIME-Version: 1.0
-Content-Type: text/plain
+        linux-pci@vger.kernel.org
+Cc:     bhelgaas@google.com, Fabio Estevam <fabio.estevam@nxp.com>,
+        cphealy@gmail.com, Leonard Crestez <leonard.crestez@nxp.com>,
+        "A.s. Dong" <aisheng.dong@nxp.com>,
+        Richard Zhu <hongxing.zhu@nxp.com>, linux-imx@nxp.com,
+        linux-arm-kernel@lists.infradead.org, linux-kernel@vger.kernel.org
+Date:   Thu, 06 Dec 2018 10:41:33 +0100
+In-Reply-To: <20181206073545.10967-2-andrew.smirnov@gmail.com>
+References: <20181206073545.10967-1-andrew.smirnov@gmail.com>
+         <20181206073545.10967-2-andrew.smirnov@gmail.com>
+Content-Type: text/plain; charset="UTF-8"
+X-Mailer: Evolution 3.22.6-1+deb9u1 
+Mime-Version: 1.0
+Content-Transfer-Encoding: 8bit
+X-SA-Exim-Connect-IP: 2001:67c:670:100:1d::2a
+X-SA-Exim-Mail-From: l.stach@pengutronix.de
+X-SA-Exim-Scanned: No (on metis.ext.pengutronix.de); SAEximRunCond expanded to false
+X-PTX-Original-Recipient: linux-pci@vger.kernel.org
 Sender: linux-pci-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-Hi Andrey,
-
-Adding Robert Hancock who reported[1] on a PCIe MSI issue with i.MX6.
-
-Andrey Smirnov writes:
-
-> Building a kernel with CONFIG_PCI_IMX6=y, but CONFIG_PCIEPORTBUS=n
-> produces a system where built-in PCIE bridge (16c3:abcd) isn't bound
-> to pcieport driver. This, in turn, results in a PCIE bus that is
-> capable of enumerating attached PCIE device, but lacks functional
-> interrupt support.
-
-Robert, does that fix your issue?
-
+Am Mittwoch, den 05.12.2018, 23:35 -0800 schrieb Andrey Smirnov:
+> PCIE PHY IP block on i.MX7D differs from the one used on i.MX6
+> family,
+> so none of the code in current implementation of
+> imx6_setup_phy_mpll()
+> is applicable.
+> 
+> Cc: bhelgaas@google.com
+> Cc: Fabio Estevam <fabio.estevam@nxp.com>
+> Cc: cphealy@gmail.com
+> Cc: l.stach@pengutronix.de
+> Cc: Leonard Crestez <leonard.crestez@nxp.com>
+> Cc: "A.s. Dong" <aisheng.dong@nxp.com>
+> Cc: Richard Zhu <hongxing.zhu@nxp.com>
+> Cc: linux-imx@nxp.com
+> Cc: linux-arm-kernel@lists.infradead.org
+> Cc: linux-kernel@vger.kernel.org
+> Cc: linux-pci@vger.kernel.org
+> Tested-by: Trent Piepho <tpiepho@impinj.com>
 > Signed-off-by: Andrey Smirnov <andrew.smirnov@gmail.com>
+
+Reviewed-by: Lucas Stach <l.stach@pengutronix.de>
+
 > ---
->
-> Assuming this is a reasonable dependency, shold this be done to more
-> than just i.MX6 driver?
->
->  drivers/pci/controller/dwc/Kconfig | 1 +
->  1 file changed, 1 insertion(+)
->
-> diff --git a/drivers/pci/controller/dwc/Kconfig b/drivers/pci/controller/dwc/Kconfig
-> index 2b139acccf32..44ededbeab85 100644
-> --- a/drivers/pci/controller/dwc/Kconfig
-> +++ b/drivers/pci/controller/dwc/Kconfig
-> @@ -92,6 +92,7 @@ config PCI_IMX6
->  	bool "Freescale i.MX6 PCIe controller"
->  	depends on SOC_IMX8MQ || SOC_IMX6Q || (ARM && COMPILE_TEST)
->  	depends on PCI_MSI_IRQ_DOMAIN
-> +	depends on PCIEPORTBUS
-
-This effectively disables PCIe in imx_v6_v7_defconfig, since
-CONFIG_PCIEPORTBUS is not enabled there. Maybe do 'select' instead?
-
->  	Select PCIE_DW_HOST
->
->  config PCIE_SPEAR13XX
-
-baruch
-
-[1] http://lists.infradead.org/pipermail/linux-arm-kernel/2018-November/614800.html
-
---
-     http://baruch.siach.name/blog/                  ~. .~   Tk Open Systems
-=}------------------------------------------------ooO--U--Ooo------------{=
-   - baruch@tkos.co.il - tel: +972.52.368.4656, http://www.tkos.co.il -
+>  drivers/pci/controller/dwc/pci-imx6.c | 3 +++
+>  1 file changed, 3 insertions(+)
+> 
+> diff --git a/drivers/pci/controller/dwc/pci-imx6.c
+> b/drivers/pci/controller/dwc/pci-imx6.c
+> index 2cbef2d7c207..c140f7987598 100644
+> --- a/drivers/pci/controller/dwc/pci-imx6.c
+> +++ b/drivers/pci/controller/dwc/pci-imx6.c
+> @@ -525,6 +525,9 @@ static int imx6_setup_phy_mpll(struct imx6_pcie
+> *imx6_pcie)
+>  	int mult, div;
+>  	u32 val;
+>  
+> +	if (imx6_pcie->variant == IMX7D)
+> +		return 0;
+> +
+>  	switch (phy_rate) {
+>  	case 125000000:
+>  		/*
