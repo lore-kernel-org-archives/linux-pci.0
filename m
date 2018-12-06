@@ -2,92 +2,124 @@ Return-Path: <SRS0=KO/x=OP=vger.kernel.org=linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-10.3 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
-	SPF_PASS,URIBL_BLOCKED,USER_AGENT_MUTT autolearn=ham autolearn_force=no
-	version=3.4.0
+X-Spam-Status: No, score=-7.0 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
+	DKIM_VALID_AU,FREEMAIL_FORGED_FROMDOMAIN,FREEMAIL_FROM,
+	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
+	SPF_PASS,URIBL_BLOCKED autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id C0FEEC04EB8
-	for <linux-pci@archiver.kernel.org>; Thu,  6 Dec 2018 20:49:14 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 37AB5C04EB8
+	for <linux-pci@archiver.kernel.org>; Thu,  6 Dec 2018 20:50:28 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 7D2C0214E0
-	for <linux-pci@archiver.kernel.org>; Thu,  6 Dec 2018 20:49:14 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=default; t=1544129354;
-	bh=Bv+kZq0KTage8x9eJjPNRosOdNFGkxzTlsV4NVZLOsc=;
-	h=Date:From:To:Cc:Subject:References:In-Reply-To:List-ID:From;
-	b=kam85jHUxNU/lTg6TyvsGGk8B0H6OaZ8+3mMK0SLZZ3jN+F/qpetCvbKhzNqvrFit
-	 +ocBmVoI96cf6R8pkjUJxDz5wQkB8uvjYSFBb1r8m/Th8a93r9hfh/oCnyNPZD9P2d
-	 B6PR7pufK+QEft5K3qgr/Kb9sdqAtNrBvY0C2CtU=
-DMARC-Filter: OpenDMARC Filter v1.3.2 mail.kernel.org 7D2C0214E0
-Authentication-Results: mail.kernel.org; dmarc=fail (p=none dis=none) header.from=kernel.org
+	by mail.kernel.org (Postfix) with ESMTP id EEE022082B
+	for <linux-pci@archiver.kernel.org>; Thu,  6 Dec 2018 20:50:27 +0000 (UTC)
+Authentication-Results: mail.kernel.org;
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="r0R4F5Lr"
+DMARC-Filter: OpenDMARC Filter v1.3.2 mail.kernel.org EEE022082B
+Authentication-Results: mail.kernel.org; dmarc=fail (p=none dis=none) header.from=gmail.com
 Authentication-Results: mail.kernel.org; spf=none smtp.mailfrom=linux-pci-owner@vger.kernel.org
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1725955AbeLFUtN (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Thu, 6 Dec 2018 15:49:13 -0500
-Received: from mail.kernel.org ([198.145.29.99]:55492 "EHLO mail.kernel.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1725916AbeLFUtN (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Thu, 6 Dec 2018 15:49:13 -0500
-Received: from localhost (unknown [66.115.192.46])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
-        (No client certificate requested)
-        by mail.kernel.org (Postfix) with ESMTPSA id 107B521479;
-        Thu,  6 Dec 2018 20:49:13 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=default; t=1544129353;
-        bh=Bv+kZq0KTage8x9eJjPNRosOdNFGkxzTlsV4NVZLOsc=;
-        h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-        b=ArlwgQnbhSVDLYp6TqRm/GrJ3bMhGM1Z/lp+40Tnjj/pgk15sp1KZD2rDzORUevoI
-         7HRt6jzjP8sZnZaLmfubCE/izS1aLUpI1BpIR0N1vPv8P+uAJPwUltkFJAUTAtqLkI
-         wK8+xxAQGBrLTeT6iK0fb0e26nG/UZSUR8XRdKA0=
-Date:   Thu, 6 Dec 2018 14:49:12 -0600
-From:   Bjorn Helgaas <helgaas@kernel.org>
-To:     Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
-Cc:     linux-pci@vger.kernel.org, Shawn Guo <shawn.guo@linaro.org>
-Subject: Re: [PATCH] MAINTAINERS: Remove Jianguo Sun from Hisilicon STB DWC
- entry
-Message-ID: <20181206204912.GD247703@google.com>
-References: <20181129182354.3273-1-lorenzo.pieralisi@arm.com>
+        id S1725928AbeLFUu1 (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Thu, 6 Dec 2018 15:50:27 -0500
+Received: from mail-io1-f65.google.com ([209.85.166.65]:46920 "EHLO
+        mail-io1-f65.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1725916AbeLFUu1 (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Thu, 6 Dec 2018 15:50:27 -0500
+Received: by mail-io1-f65.google.com with SMTP id v10so1472157ios.13;
+        Thu, 06 Dec 2018 12:50:26 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20161025;
+        h=mime-version:references:in-reply-to:from:date:message-id:subject:to
+         :cc;
+        bh=MxkfNPeZcrG8EjRvaPrQ+4BMehoT7MX1k7wo0sIAPv4=;
+        b=r0R4F5LrmXFDW5CH/dXCUHQKjmWyXPq2bFsse/o84D63gjkNAELkP37HI2STm2DqK7
+         HSScYwYOSC+oIoi0eQr3V5GQjYA97gfdUsE92tOfY4Ch8PVU15EPIZHbUePs/l4yfT/U
+         18SZheUwRA36aIFPJcpCa33MotK+oMsmU4OfVcZlbwXbpMXD29Yueml0bdzzxPAPZU69
+         8HlouKw8TZGIqFq7VRtOkvoD/YJVAYpE8xCRSP/0u8yNwc/YZCY6MNHZeWifBAE1gnN+
+         Kb3hIvKsZDDCg+zVvfWAIndgtGnJvcpEUpluowKT6sohb0G5X84MPVvjnvcKLwBcSjId
+         rnuw==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20161025;
+        h=x-gm-message-state:mime-version:references:in-reply-to:from:date
+         :message-id:subject:to:cc;
+        bh=MxkfNPeZcrG8EjRvaPrQ+4BMehoT7MX1k7wo0sIAPv4=;
+        b=MKMFmj6hnHIXWFPJ/ipdknltK40AM/BkZQrkfSvEMroxju/qEfh6r8StAwERgeuG0d
+         x3rCXjFGv9lQYZWZRkQn98x/0PzqcybH2dgaNCTPYsGSUtMCYPqF16g6Y2bfa1V7+x22
+         5Xfvpn9C57VWt8kpgTLXekmUGDi+5bKOgX02YkK4m7c0pKybaEtQ+Nt12uEBt5ty5H2U
+         h9Dw2UpyVhyyPFy5zsSaz2xMVdfPhp58CMaddsRZh5MC6EbE1GfysW2BmmTCwT//PK6J
+         Jal0+vuaEvCAmA6Ibhf+TXSQ1e8Ld2CEmNwEnK7zKMXXbGZP0JgxpIF+GYJEDzvFI1Y3
+         TwfA==
+X-Gm-Message-State: AA+aEWbqJhxfvdBotVa4Inoxy1uBycFUM1rqfxA5ZipDSZoNGKggSGgY
+        XmdrTI3CGq6iS0js5QET7d1QqQ1YijQ0czAFtKJazA==
+X-Google-Smtp-Source: AFSGD/Urq3dddLWB7mI/R6BaIw5WKhTWrjl4n1H3cZckfVtVUWJjwLjRX/2YfiwpB/pZWwupwpwZQe/4CL5nLdx1Fh0=
+X-Received: by 2002:a6b:d318:: with SMTP id s24mr25690628iob.6.1544129425994;
+ Thu, 06 Dec 2018 12:50:25 -0800 (PST)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20181129182354.3273-1-lorenzo.pieralisi@arm.com>
-User-Agent: Mutt/1.10.1 (2018-07-13)
+References: <20181201160711.GA21373@ycd-dell-ltp> <20181206204407.GB247703@google.com>
+In-Reply-To: <20181206204407.GB247703@google.com>
+From:   Benjamin Young <youngcdev@gmail.com>
+Date:   Thu, 6 Dec 2018 12:50:14 -0800
+Message-ID: <CAKDnngEo9Yo8j9pNrJNEdzK2du3bzWA87+rqBX+T1OaTNZ_cDA@mail.gmail.com>
+Subject: Re: [PATCH] pcie: portdrv: Fix Unnecessary space before function
+ pointer arguments
+To:     helgaas@kernel.org
+Cc:     linux-pci@vger.kernel.org, open list <linux-kernel@vger.kernel.org>
+Content-Type: text/plain; charset="UTF-8"
 Sender: linux-pci-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-On Thu, Nov 29, 2018 at 06:23:54PM +0000, Lorenzo Pieralisi wrote:
-> Jianguo Sun's email address reported in MAINTAINERS is not active any
-> longer, remove it from the DWC Hisilicon STB entry.
+Thanks, I will do that next time :)
 
-s/Hisilicon/HiSilicon/
-
-> Signed-off-by: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
-> Cc: Bjorn Helgaas <bhelgaas@google.com>
-> Cc: Shawn Guo <shawn.guo@linaro.org>
-
-Probably makes sense for you to merge this, Lorenzo, along with the
-HiSilicon code changes.
-
-> ---
->  MAINTAINERS | 1 -
->  1 file changed, 1 deletion(-)
-> 
-> diff --git a/MAINTAINERS b/MAINTAINERS
-> index f4855974f325..5d7beffe9935 100644
-> --- a/MAINTAINERS
-> +++ b/MAINTAINERS
-> @@ -11541,7 +11541,6 @@ F:	Documentation/devicetree/bindings/pci/kirin-pcie.txt
->  F:	drivers/pci/controller/dwc/pcie-kirin.c
->  
->  PCIE DRIVER FOR HISILICON STB
-> -M:	Jianguo Sun <sunjianguo1@huawei.com>
->  M:	Shawn Guo <shawn.guo@linaro.org>
->  L:	linux-pci@vger.kernel.org
->  S:	Maintained
-> -- 
-> 2.19.2
-> 
+On Thu, Dec 6, 2018 at 12:44 PM Bjorn Helgaas <helgaas@kernel.org> wrote:
+>
+> On Sat, Dec 01, 2018 at 08:07:11AM -0800, Benjamin Young wrote:
+> > Made spacing more consistent in the code for function pointer
+> > declarations based on checkpatch.pl
+> >
+> > Signed-off-by: Benjamin Young <youngcdev@gmail.com>
+>
+> Applied to pci/misc for v4.21, thanks!
+>
+> I also made similar changes to include/linux/pci.h.  For trivial changes
+> like this I like to fix similar issues in all of PCI at the same time.
+>
+> > ---
+> >  drivers/pci/pcie/portdrv.h | 16 ++++++++--------
+> >  1 file changed, 8 insertions(+), 8 deletions(-)
+> >
+> > diff --git a/drivers/pci/pcie/portdrv.h b/drivers/pci/pcie/portdrv.h
+> > index e495f04..fbbf00b0 100644
+> > --- a/drivers/pci/pcie/portdrv.h
+> > +++ b/drivers/pci/pcie/portdrv.h
+> > @@ -71,19 +71,19 @@ static inline void *get_service_data(struct pcie_device *dev)
+> >
+> >  struct pcie_port_service_driver {
+> >       const char *name;
+> > -     int (*probe) (struct pcie_device *dev);
+> > -     void (*remove) (struct pcie_device *dev);
+> > -     int (*suspend) (struct pcie_device *dev);
+> > -     int (*resume_noirq) (struct pcie_device *dev);
+> > -     int (*resume) (struct pcie_device *dev);
+> > -     int (*runtime_suspend) (struct pcie_device *dev);
+> > -     int (*runtime_resume) (struct pcie_device *dev);
+> > +     int (*probe)(struct pcie_device *dev);
+> > +     void (*remove)(struct pcie_device *dev);
+> > +     int (*suspend)(struct pcie_device *dev);
+> > +     int (*resume_noirq)(struct pcie_device *dev);
+> > +     int (*resume)(struct pcie_device *dev);
+> > +     int (*runtime_suspend)(struct pcie_device *dev);
+> > +     int (*runtime_resume)(struct pcie_device *dev);
+> >
+> >       /* Device driver may resume normal operations */
+> >       void (*error_resume)(struct pci_dev *dev);
+> >
+> >       /* Link Reset Capability - AER service driver specific */
+> > -     pci_ers_result_t (*reset_link) (struct pci_dev *dev);
+> > +     pci_ers_result_t (*reset_link)(struct pci_dev *dev);
+> >
+> >       int port_type;  /* Type of the port this driver can handle */
+> >       u32 service;    /* Port service this device represents */
+> > --
+> > 2.5.0
+> >
