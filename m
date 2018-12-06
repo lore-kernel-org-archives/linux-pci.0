@@ -2,121 +2,101 @@ Return-Path: <SRS0=KO/x=OP=vger.kernel.org=linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-3.0 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	MAILING_LIST_MULTI,SPF_PASS,USER_AGENT_GIT autolearn=unavailable
-	autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-7.5 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+	MAILING_LIST_MULTI,MENTIONS_GIT_HOSTING,SPF_PASS,USER_AGENT_MUTT
+	autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 37FE3C04EB9
-	for <linux-pci@archiver.kernel.org>; Thu,  6 Dec 2018 12:03:18 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 3AFC9C04EB8
+	for <linux-pci@archiver.kernel.org>; Thu,  6 Dec 2018 12:15:59 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 08CD7208E7
-	for <linux-pci@archiver.kernel.org>; Thu,  6 Dec 2018 12:03:18 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.3.2 mail.kernel.org 08CD7208E7
-Authentication-Results: mail.kernel.org; dmarc=none (p=none dis=none) header.from=amlogic.com
+	by mail.kernel.org (Postfix) with ESMTP id 09EDB20878
+	for <linux-pci@archiver.kernel.org>; Thu,  6 Dec 2018 12:15:59 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.3.2 mail.kernel.org 09EDB20878
+Authentication-Results: mail.kernel.org; dmarc=none (p=none dis=none) header.from=arm.com
 Authentication-Results: mail.kernel.org; spf=none smtp.mailfrom=linux-pci-owner@vger.kernel.org
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1729321AbeLFMDA (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Thu, 6 Dec 2018 07:03:00 -0500
-Received: from mail-sh2.amlogic.com ([58.32.228.45]:55748 "EHLO
-        mail-sh2.amlogic.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1727832AbeLFMDA (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Thu, 6 Dec 2018 07:03:00 -0500
-Received: from droid10.amlogic.com (10.18.11.213) by mail-sh2.amlogic.com
- (10.18.11.6) with Microsoft SMTP Server id 15.0.1320.4; Thu, 6 Dec 2018
- 20:03:06 +0800
-From:   Hanjie Lin <hanjie.lin@amlogic.com>
-To:     Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
-        Bjorn Helgaas <bhelgaas@google.com>
-CC:     Hanjie Lin <hanjie.lin@amlogic.com>,
-        Kevin Hilman <khilman@baylibre.com>,
-        Carlo Caione <carlo@caione.org>,
-        Jerome Brunet <jbrunet@baylibre.com>,
-        Rob Herring <robh@kernel.org>,
-        Gustavo Pimentel <gustavo.pimentel@synopsys.com>,
-        Shawn Lin <shawn.lin@rock-chips.com>,
-        Philippe Ombredanne <pombredanne@nexb.com>,
-        Cyrille Pitchen <cyrille.pitchen@free-electrons.com>,
-        <linux-kernel@vger.kernel.org>, <linux-pci@vger.kernel.org>,
-        <linux-arm-kernel@lists.infradead.org>,
-        <linux-amlogic@lists.infradead.org>,
-        Yixun Lan <yixun.lan@amlogic.com>,
-        Liang Yang <liang.yang@amlogic.com>,
-        Jianxin Pan <jianxin.pan@amlogic.com>,
-        Qiufang Dai <qiufang.dai@amlogic.com>,
-        Jian Hu <jian.hu@amlogic.com>, <devicetree@vger.kernel.org>
-Subject: [PATCH v7 0/2] add the Amlogic Meson PCIe controller driver
-Date:   Thu, 6 Dec 2018 20:02:36 +0800
-Message-ID: <1544097760-85834-1-git-send-email-hanjie.lin@amlogic.com>
-X-Mailer: git-send-email 2.7.4
+        id S1729367AbeLFMP6 (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Thu, 6 Dec 2018 07:15:58 -0500
+Received: from usa-sjc-mx-foss1.foss.arm.com ([217.140.101.70]:48674 "EHLO
+        foss.arm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1727908AbeLFMP6 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Thu, 6 Dec 2018 07:15:58 -0500
+Received: from usa-sjc-imap-foss1.foss.arm.com (unknown [10.72.51.249])
+        by usa-sjc-mx-foss1.foss.arm.com (Postfix) with ESMTP id A041D80D;
+        Thu,  6 Dec 2018 04:15:57 -0800 (PST)
+Received: from e107981-ln.cambridge.arm.com (e107981-ln.cambridge.arm.com [10.1.197.40])
+        by usa-sjc-imap-foss1.foss.arm.com (Postfix) with ESMTPSA id 22F4E3F575;
+        Thu,  6 Dec 2018 04:15:54 -0800 (PST)
+Date:   Thu, 6 Dec 2018 12:15:50 +0000
+From:   Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
+To:     Andrey Smirnov <andrew.smirnov@gmail.com>
+Cc:     linux-pci@vger.kernel.org, bhelgaas@google.com,
+        Fabio Estevam <fabio.estevam@nxp.com>, cphealy@gmail.com,
+        l.stach@pengutronix.de, Leonard Crestez <leonard.crestez@nxp.com>,
+        "A.s. Dong" <aisheng.dong@nxp.com>,
+        Richard Zhu <hongxing.zhu@nxp.com>, linux-imx@nxp.com,
+        linux-arm-kernel@lists.infradead.org, linux-kernel@vger.kernel.org,
+        Mark Rutland <mark.rutland@arm.com>,
+        Rob Herring <robh@kernel.org>, devicetree@vger.kernel.org
+Subject: Re: [PATCH v2 0/3] PCIE support for i.MX8MQ
+Message-ID: <20181206121550.GA2725@e107981-ln.cambridge.arm.com>
+References: <20181206073545.10967-1-andrew.smirnov@gmail.com>
 MIME-Version: 1.0
-Content-Type: text/plain
-X-Originating-IP: [10.18.11.213]
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20181206073545.10967-1-andrew.smirnov@gmail.com>
+User-Agent: Mutt/1.5.24 (2015-08-30)
 Sender: linux-pci-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-The Amlogic Meson PCIe host controller is based on the Synopsys DesignWare
-PCI core. This patchset add the driver and dt-bindings of the controller.
-Changes since v6: [5]
- - fix bad usage of ERR_PTR(ENXIO)
- - fix meson_pcie_rd_own_conf() when read PCI_CLASS_DEVICE reg 
+On Wed, Dec 05, 2018 at 11:35:42PM -0800, Andrey Smirnov wrote:
+> Everyone:
+> 
+> This series contains changes I made in order to enable support of PCIE
+> IP block on i.MX8MQ SoCs (full tree can be found at [github-v2]).
+> 
+> NOTE: The last patch have a Kconfig symbol depenency on [imx8mq-kconfig].
+> 
+> Changes since [v1]:
+> 
+>  - Driver changed to use single "fsl,controller-id" property to
+>    distinguish between two intances of PCIE IP block
+> 
+>  - All code pertaining to L1SS was dropped to simplify the patch
+> 
+>  - Documented additions to DT bindings
+> 
+> Feedback is welcome!
+> 
+> Thanks,
+> Andrey Smirnov
 
-Changes since v5: [4]
- - update MAINTAINER file in alphabetical order
- - remove meaningless comment
- - use ERR_PTR function instead of (void *) cast
- - use is_power_of_2(size) instead of size & (size - 1)
- - add comment for PCI_CLASS_REVISION register operation
- 
-Changes since v4: [3]
- - fix kbuild test robot and compile warnings
+Andrey,
 
-Changes since v3: [2]
- - modify subject format
- - update Kconfig
- - update MAINTAINER file
- - add comment and error handle for meson_pcie_get_mem_shared()
- - drop useless initialization code
- - add comment for meson_size_to_payload()
- - optimize meson_pcie_establish_link() return code
- - optimize meson_pcie_enable_interrupts() redundant function
- - drop device_attch related code
- - drop dw_pcie_ops read_dbi and write_dbi function
- - add error handle for meson_add_pcie_port() when probe
+I have applied the patches, I would like to make the CC list in standard
+format so I kindly ask you firstname/surname for cphealy@gmail.com, I
+could not find it in the maintainers list but I want to keep the CC
+list as per patches (I removed the lists, though).
 
-Changes since v2: [1]
- - abandon phy driver, move reset to the controller
- - use devm_add_action_or_reset() to use clock res
- - format correcting
+Thanks,
+Lorenzo
 
-Changes since v1: [0]
- - use gpio lib instead open code
- - move 'apb' and 'port' reset from phy driver
- - format correcting
-
-[0] : https://lkml.kernel.org/r/1534227522-186798-1-git-send-email-hanjie.lin@amlogic.com
-[1] : https://lkml.kernel.org/r/1535096165-45827-1-git-send-email-hanjie.lin@amlogic.com
-[2] : https://lkml.kernel.org/r/1537509820-52040-1-git-send-email-hanjie.lin@amlogic.com 
-[3] : https://lkml.kernel.org/r/1538999834-156423-3-git-send-email-hanjie.lin@amlogic.com
-[4] : https://lkml.kernel.org/r/1539049990-30810-1-git-send-email-hanjie.lin@amlogic.com
-[5] : https://lkml.kernel.org/r/1542876836-191355-1-git-send-email-hanjie.lin@amlogic.com
-
-
-Yue Wang (2):
-  dt-bindings: PCI: meson: add DT bindings for Amlogic Meson PCIe
-    controller
-  PCI: amlogic: Add the Amlogic Meson PCIe controller driver
-
- .../devicetree/bindings/pci/amlogic,meson-pcie.txt |  70 +++
- MAINTAINERS                                        |   7 +
- drivers/pci/controller/dwc/Kconfig                 |  10 +
- drivers/pci/controller/dwc/Makefile                |   1 +
- drivers/pci/controller/dwc/pci-meson.c             | 603 +++++++++++++++++++++
- 5 files changed, 691 insertions(+)
- create mode 100644 Documentation/devicetree/bindings/pci/amlogic,meson-pcie.txt
- create mode 100644 drivers/pci/controller/dwc/pci-meson.c
-
--- 
-2.7.4
-
+> [v1] https://lore.kernel.org/linux-arm-kernel/20181117181225.10737-1-andrew.smirnov@gmail.com/
+> [github-v2] https://github.com/ndreys/linux/commits/imx8mq-pcie-v2
+> [imx8mq-kconfig] https://lore.kernel.org/linux-arm-kernel/20181114175242.12468-1-l.stach@pengutronix.de/
+> 
+> Andrey Smirnov (3):
+>   PCI: imx: No-op imx6_setup_phy_mpll() on i.MX7D
+>   PCI: imx: No-op imx6_pcie_reset_phy() on i.MX7D
+>   PCI: imx: Add support for i.MX8MQ
+> 
+>  .../bindings/pci/fsl,imx6q-pcie.txt           |  6 +-
+>  drivers/pci/controller/dwc/Kconfig            |  2 +-
+>  drivers/pci/controller/dwc/pci-imx6.c         | 87 ++++++++++++++++++-
+>  3 files changed, 90 insertions(+), 5 deletions(-)
+> 
+> -- 
+> 2.19.1
+> 
