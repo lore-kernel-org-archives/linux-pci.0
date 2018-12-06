@@ -2,123 +2,158 @@ Return-Path: <SRS0=KO/x=OP=vger.kernel.org=linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-7.3 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_PASS,
-	USER_AGENT_MUTT autolearn=unavailable autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-5.6 required=3.0 tests=DATE_IN_FUTURE_03_06,
+	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,MENTIONS_GIT_HOSTING,
+	SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT autolearn=ham autolearn_force=no
+	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id BCDDAC04EB8
-	for <linux-pci@archiver.kernel.org>; Thu,  6 Dec 2018 06:45:23 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 8B6FAC04EB8
+	for <linux-pci@archiver.kernel.org>; Thu,  6 Dec 2018 07:33:05 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 7F69B214DA
-	for <linux-pci@archiver.kernel.org>; Thu,  6 Dec 2018 06:45:23 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=default; t=1544078723;
-	bh=g6Czx7nLEy93+bDguAtYiatB9x3PPOqHGI/j5b57/Ak=;
-	h=Date:From:To:Cc:Subject:References:In-Reply-To:List-ID:From;
-	b=2cNaYZj3VSIO+1ISVlP2Y1sDWlw605lx640v8Um93WdB/RumrD/rZuwEKG4Tl2Ceq
-	 kEcAmf7IwXTKdmU6DFGGhWpxmcc4AVT/POocDNvQbTawgEJc+Oh1Hx0qedYHDX+XVr
-	 d03WCN2OriWG0kzjxF0dr8LjapguVCwI4LwtDmgw=
-DMARC-Filter: OpenDMARC Filter v1.3.2 mail.kernel.org 7F69B214DA
-Authentication-Results: mail.kernel.org; dmarc=fail (p=none dis=none) header.from=kernel.org
+	by mail.kernel.org (Postfix) with ESMTP id 4F44E20989
+	for <linux-pci@archiver.kernel.org>; Thu,  6 Dec 2018 07:33:05 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.3.2 mail.kernel.org 4F44E20989
+Authentication-Results: mail.kernel.org; dmarc=none (p=none dis=none) header.from=microchip.com
 Authentication-Results: mail.kernel.org; spf=none smtp.mailfrom=linux-pci-owner@vger.kernel.org
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1728758AbeLFGpP (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Thu, 6 Dec 2018 01:45:15 -0500
-Received: from mail.kernel.org ([198.145.29.99]:57192 "EHLO mail.kernel.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1728294AbeLFGpP (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Thu, 6 Dec 2018 01:45:15 -0500
-Received: from localhost (unknown [77.138.135.184])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
-        (No client certificate requested)
-        by mail.kernel.org (Postfix) with ESMTPSA id 3EB3220989;
-        Thu,  6 Dec 2018 06:45:14 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=default; t=1544078714;
-        bh=g6Czx7nLEy93+bDguAtYiatB9x3PPOqHGI/j5b57/Ak=;
-        h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-        b=OJLScHgLgDQ1JZdxw2PmXeliVG9qLciE4iGyalPGKT+MNhI93eh5pXXbcuP2axMx2
-         ccmKIP3uIzsXH0/L7Q5FdKTNj8uMco4eTGSAqj5/S+b7z7HeKBOTvLQae1yJ13vM4w
-         Jv1XIReSKLcBBTG4dxsiL7CsUOxuhY/+G4wjWdyw=
-Date:   Thu, 6 Dec 2018 08:45:09 +0200
-From:   Leon Romanovsky <leon@kernel.org>
-To:     David Gibson <david@gibson.dropbear.id.au>
-Cc:     davem@davemloft.net, saeedm@mellanox.com, ogerlitz@mellanox.com,
-        tariqt@mellanox.com, bhelgaas@google.com,
-        linux-kernel@vger.kernel.org, linuxppc-dev@lists.ozlabs.org,
-        netdev@vger.kernel.org, alex.williamson@redhat.com,
-        linux-pci@vger.kernel.org, linux-rdma@vger.kernel.org,
-        sbest@redhat.com, paulus@samba.org, benh@kernel.crashing.org
-Subject: Re: [PATCH] PCI: Add no-D3 quirk for Mellanox ConnectX-[45]
-Message-ID: <20181206064509.GM15544@mtr-leonro.mtl.com>
-References: <20181206041951.22413-1-david@gibson.dropbear.id.au>
+        id S1728964AbeLFHdE (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Thu, 6 Dec 2018 02:33:04 -0500
+Received: from mail-eopbgr740052.outbound.protection.outlook.com ([40.107.74.52]:46958
+        "EHLO NAM01-BN3-obe.outbound.protection.outlook.com"
+        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+        id S1727620AbeLFHdE (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Thu, 6 Dec 2018 02:33:04 -0500
+Received: from MWHPR19CA0052.namprd19.prod.outlook.com (2603:10b6:300:94::14)
+ by CY1PR19MB0394.namprd19.prod.outlook.com (2a01:111:e400:c447::12) with
+ Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.1404.17; Thu, 6 Dec
+ 2018 07:33:01 +0000
+Received: from BN1AFFO11FD005.protection.gbl (2a01:111:f400:7c10::156) by
+ MWHPR19CA0052.outlook.office365.com (2603:10b6:300:94::14) with Microsoft
+ SMTP Server (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_CBC_SHA384) id
+ 15.20.1404.19 via Frontend Transport; Thu, 6 Dec 2018 07:33:01 +0000
+Authentication-Results: spf=softfail (sender IP is 208.19.99.221)
+ smtp.mailfrom=microchip.com; vger.kernel.org; dkim=none (message not signed)
+ header.d=none;vger.kernel.org; dmarc=none action=none
+ header.from=microchip.com;
+Received-SPF: SoftFail (protection.outlook.com: domain of transitioning
+ microchip.com discourages use of 208.19.99.221 as permitted sender)
+Received: from AUSMBX1.microsemi.net (208.19.99.221) by
+ BN1AFFO11FD005.mail.protection.outlook.com (10.58.52.65) with Microsoft SMTP
+ Server (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_CBC_SHA256) id
+ 15.20.1404.13 via Frontend Transport; Thu, 6 Dec 2018 07:32:59 +0000
+Received: from AUSMBX2.microsemi.net (10.201.34.32) by AUSMBX1.microsemi.net
+ (10.201.34.31) with Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id 15.1.1531.3; Thu, 6 Dec 2018
+ 00:32:47 -0600
+Received: from server1.microsemi.net (10.188.116.209) by ausmbx2.microsemi.net
+ (10.201.34.32) with Microsoft SMTP Server id 15.1.1531.3 via Frontend
+ Transport; Thu, 6 Dec 2018 00:32:44 -0600
+From:   Wesley Sheng <wesley.sheng@microchip.com>
+To:     <kurt.schwemmer@microsemi.com>, <logang@deltatee.com>,
+        <jdmason@kudzu.us>, <dave.jiang@intel.com>, <allenbh@gmail.com>,
+        <linux-pci@vger.kernel.org>, <linux-ntb@googlegroups.com>,
+        <linux-kernel@vger.kernel.org>
+CC:     <wesleyshenggit@sina.com>, <wesley.sheng@microchip.com>
+Subject: [PATCH v2 0/3] ntb_hw_switchtec: Added support of >=4G memory windows
+Date:   Thu, 6 Dec 2018 21:30:49 +0800
+Message-ID: <1544103052-28191-1-git-send-email-wesley.sheng@microchip.com>
+X-Mailer: git-send-email 2.7.4
 MIME-Version: 1.0
-Content-Type: multipart/signed; micalg=pgp-sha1;
-        protocol="application/pgp-signature"; boundary="Re2uCLPLNzqOLVJA"
-Content-Disposition: inline
-In-Reply-To: <20181206041951.22413-1-david@gibson.dropbear.id.au>
-User-Agent: Mutt/1.10.1 (2018-07-13)
+Content-Type: text/plain
+X-EOPAttributedMessage: 0
+X-Matching-Connectors: 131885551805568549;(5a93feec-e11d-4f7b-166a-08d09f1f276b);()
+X-Forefront-Antispam-Report: CIP:208.19.99.221;IPV:NLI;CTRY:US;EFV:NLI;SFV:NSPM;SFS:(10009020)(39860400002)(136003)(346002)(376002)(396003)(2980300002)(189003)(199004)(77096007)(26005)(54906003)(498600001)(48376002)(356004)(50466002)(81166006)(81156014)(8676002)(8936002)(105596002)(316002)(4326008)(51416003)(966005)(14444005)(44832011)(450100002)(110136005)(2616005)(336012)(126002)(476003)(53416004)(486006)(16586007)(86362001)(36756003)(5660300001)(50226002)(106466001)(47776003)(53936002)(107886003)(2201001)(6306002)(2906002)(69596002)(68736007)(305945005)(97736004)(2101003);DIR:OUT;SFP:1101;SCL:1;SRVR:CY1PR19MB0394;H:AUSMBX1.microsemi.net;FPR:;SPF:SoftFail;LANG:en;PTR:InfoDomainNonexistent;MX:1;A:1;
+X-Microsoft-Exchange-Diagnostics: 1;BN1AFFO11FD005;1:FBWI1QNypbfZcb+xIGc9PJPIt2qNmjVtOZy2Qfg6sEocCKl8pM6UsDgPqnyodvw3lf8cJ0O+j033NgafD9/MJfXP+y4/WspT/0yfqsSMQI0BhnrznprQyJXdjs5UJPi7
+X-MS-PublicTrafficType: Email
+X-MS-Office365-Filtering-Correlation-Id: e74ad72b-b5f7-494e-47be-08d65b4d0cc9
+X-Microsoft-Antispam: BCL:0;PCL:0;RULEID:(2390098)(7020095)(5600074)(711020)(2017052603328);SRVR:CY1PR19MB0394;
+X-Microsoft-Exchange-Diagnostics: 1;CY1PR19MB0394;3:KAuh1Lunqx9qfp+DcdSa6LxDmMWPwuWp6KJPJKsOWutNxGUZb4mqwsW1G5qfrzk/LZDcCvpNAWmmcCaelaLjlSjCLhmvbgXFuPO17B65Q9L7VbCGbIm7F8mYdBYBwgK6E1th8mpe2ObWu/v2DBfJE581T30zAvkd8lMWDacFdUivAkfQCbCnhZoZa2ac2qYLH6TmnpvTNaA5nrCc1f7wOn0aNmMNtkCL73ztUqt/JdI2y+lICxSh5yuaA/RM+fLpjWPDisGbkSQivX6PT18J7Dfx7KZgoLanUPKdfo0rTilX5LToeTBXBE6OTUNS1weSYp3ygiqjgTU/UhPeiSiJ3+SXwhcWYlopKRy9SvM6swA=;25:a20EfVyuauWerPhhyaZscKGkkJz5GmQt4i+JQg582YslR3/pgjlNdPXGPgjZOv4fFM5tqkOjtTDt0OxjV1e2I3a159WTpNUk9tzvjkA1lv+YJOtEB9P0xjZIl40OS3zeqleE8Q2k2e/uiliqO52ZOQDE3Cfl3BN7Ys44HJoKXFr4Hcjr5OYTGA/S3tB+KEN8YxKXxQrsGpRrFZEDYFin7v4SoFdltP8AlF8Irngm03EV7sn4IZeckMr1M1Of+41emLcqcvFKMTNTHpkpnUB+PlAZYLkFEiTfQez5d4f24RFErPvhqg61mbqM9009PcWtAHwlOUCn8JfDeMXfhSwIRg==;31:9DMDml3HlAmjAcNHivt44H/fdNiYPdXLl28yeQx90Df9PLC9TAH1as66UiC0Ttozj14wytN7iC65Vx1wvgBDjQo+JPbzn1R//qz8aLUz6Z165nZ1Jb5oZE8IxIxFg4Shzkrb/jB8Q5OHOSOyWSAQbUEKnue8y5tDE3Eixf295k7/YVSMOhAOLjkydpsG5ttmQ4Q6T+2r3iTc8VibJ8aYXg==
+X-MS-TrafficTypeDiagnostic: CY1PR19MB0394:
+X-Microsoft-Antispam-PRVS: <CY1PR19MB0394053A121A39973385A6F495A90@CY1PR19MB0394.namprd19.prod.outlook.com>
+X-Exchange-Antispam-Report-CFA-Test: BCL:0;PCL:0;RULEID:(6095135)(2401047)(8121501046)(5005006)(10201501046)(93006095)(93001095)(3002001)(3231455)(999002)(944501520)(52105112)(6055026)(148016)(6096035)(20161123556025)(20161123561025)(20161123563025)(20161123565025)(201703131430075)(201703131448075)(201703131433075)(201703151042153)(20161123559100)(201708071742011)(7699051)(76991095);SRVR:CY1PR19MB0394;BCL:0;PCL:0;RULEID:(400006);SRVR:CY1PR19MB0394;
+X-Microsoft-Exchange-Diagnostics: 1;CY1PR19MB0394;4:sXwOfUojotuSAOAtSvR7VZeTr5N5ikSmHLJ0ZlGF2YboGkzTDYfGbYm/+Q4Ie3YXRKDi7bCfzYSERe7ESiQR3AhEVdTuprdfzmabJ1BTG0W49/QRKKGDwZVmgu07kiqx3NvTLJLZ5Gl4sZgmCVGF2Z5Xs120erkAb8xpOnWzMFwecaryi1fgGHEIdgeV6qBlx//O0F3qXhx+3WPzv4Rs8/5LnJQYZTEDPrnVmf7zxzBu+Cv2udJIGJaehDYkKRVormheB4apdxjMCQVvSQ/prw==
+X-Forefront-PRVS: 087894CD3C
+X-Microsoft-Exchange-Diagnostics: =?us-ascii?Q?1;CY1PR19MB0394;23:Wurz3Sq4iVK1GjyIx34mPevjFzJrIIUUV9h+awKdS?=
+ =?us-ascii?Q?IYve24l3dMdVXovNd0Np4uOUBYOs9a+b+/K2ZBmO3DaVecL+VD/HVCUeewsf?=
+ =?us-ascii?Q?xXT3gNIG9CwSmV55jAX7ba1tCjmGOTN0kl0jbdMIasJJMx9c0jLozeHJgWAs?=
+ =?us-ascii?Q?08umU3IdbCZK0egChnBNkMf/40hwQBdNgF7IdWrgfzaBGU+sCfp8IO1MGOQO?=
+ =?us-ascii?Q?PL805tvfRjZ+NzoEUrJ5lBmVaQGM3fUPYrX/nrnj14oN6krUy/JRmnccBABZ?=
+ =?us-ascii?Q?ZgEI2UykmdRjk7AHW0c4ktU4sWAfjIB+W2RNp2nGykg6ux2xQ+viek+vWLIC?=
+ =?us-ascii?Q?FU5Ya1frECdsxl6Rw41kKZ7GDGL2I1zpHeBo15O0pHQrbWRrFztj/WyCRrqU?=
+ =?us-ascii?Q?GJV2M8GPWa7Nf6MWJOHpnZgAfD3deKMxUxTiJQ0/bNxX4xgJ36xsRkFYVwGi?=
+ =?us-ascii?Q?OL25LMQPXk2Bpiww+xY2ApnDEYlSprgs5EMuMffiDiCL7VCHOyiGvoEyeDhj?=
+ =?us-ascii?Q?DYM7I/SuFzw9+6GK5/3AzEjA0iIOKFBWj1P29/GJHpfSMicOKUC3ka1ODOOO?=
+ =?us-ascii?Q?pVS17ApjJ+GigR5ptayiz10wN0E95kEHPaALP+kWL2aViEq4HVMu4UctDsj/?=
+ =?us-ascii?Q?mgo55aOoayELdeMYSYXH77wQuV2tiXQ2zfNsw075YuP/jlAnt4fO2GZUTgxF?=
+ =?us-ascii?Q?EY8WEuS423B+UeO+JC51KofLU61Y8IwRd7r/HJvceiTYWlayJD1SklRWMJnw?=
+ =?us-ascii?Q?SfsAKU2mVRLJby8ClEkfZU82HX17SWJh25dFlEFdewJ61Vt13LkLJ4fu0eWy?=
+ =?us-ascii?Q?WVAMzZkBB98SSsW4/89DmwxMoNaz/RF0vgNvjggs8CmTWsNCj5J7oxFyLNhi?=
+ =?us-ascii?Q?bR1W3yhrtezr77TlL8fUHsmDHsDo6xF1ugHrv3qfVGZh76EVFNN8Rgv4lMfU?=
+ =?us-ascii?Q?bM6x6g6P7YdXFZuHo1CIS33SM/JGkqsZJRrSlPrpioOA2lz/XYeZjX7+YJnV?=
+ =?us-ascii?Q?+c67Xv1ET9pdpKnW+eqnCqyTeDPx466UYhnEPSyrkrhLv1YU0Iq7+OddaB3Z?=
+ =?us-ascii?Q?gEs6HVqf/s9k1zHI7ypdBcmmi6BdLnS2E+D4Gk+fQ4oaGdAV5LSPX7zKxyUY?=
+ =?us-ascii?Q?slPO7w/ILL6wmf1BjCDxGopba5yMUeI?=
+X-Microsoft-Antispam-Message-Info: Y1gmNwb+turpv2IPi0zACR3PKfkNqSNFZL5Vs5vTT8Kqw8EXJmbVh4TA/M7cKR4TH0k6dyjmhbDo+AGoBOJauF7M5fe0Is89e8raYMA2WPQ4wigS56oHQDPrXohkia8g1ThaG0xMzJji3sT+GIRrARdf/1HpIyTy5sctqqlHFpqyuaWJy6q7VFqPqeWiWYWjUn9xl6eBnWMtWxI8Qa0rTEFxzEdmz3chmCE9A0tcQFC3G7rfGCF6hqezRB6NkUikM1jm1uqLQm2DP22s6g/eTxQ2KUd+RR6tzyd3WmSRD9DCsbBfx3y+ZVIakzd+0qBLqP9q+hlG7i3Gv25DiTapeg==
+X-Microsoft-Exchange-Diagnostics: 1;CY1PR19MB0394;6:JnkhvnIMCrkKNp3xWyTql40nyYd9RA2ibKabgAnDJSUhxW1avZuskEnF5pbfgGFqZFSkOC+Uj/1zur1DSPlsjxa9T4h+TzaIF4egPY5K3ls3aAkukSpxxvxbi9ZfiWcv5v3vo56XaIic4r2dADpIWMVK6wrTshEvAFW8kKHQG7NbBF1YviqIIQwotkCg6MQS2WRgOn4QClK3cb0PhvyddzuHqNN0FzHT65dq7qezZtxVgbjnihh+8yTYxeeojmS/vZ8r4pHThbalSWp5/h2QlZ/B5hrIn1vT5aEWzhnicLv3gDeNsi83CAZupJDqk8pA5Bwa1S23pQqY0aU4xou/3XPOtC+D1yXm6nWHbH/K8wKU2Zxefx4RV/Be+gh2C2rqBKP0OXg8e1zYY24hrWGNX6XZb5ieuMSFnxDxLxKWcahu4gP3m/RKILSBdhWmI5ZjtuvWan1achUIik35oRuuAw==;5:2DBqYJuQmdqcz9noIbOek0KtNl6HLBy1wBpZrD79qeA3lSWxbKulyZd8V7pU0E1jDYkKBVdUzLzV7uBtu7No1xS8EqTuVAqagzyIjc56CwpbFB3iyNrvmHoB0F4zvOFn6enP4AJsRBMspJM0Db7tHxkecOehAGKuE2Fmpf6uN44=;7:RBxFw5kur4Liaqm+1Fa6T8Oof1adM7QfFzRm9xIO+bAUsj7Z7LoUXvIC3qbkzDLoidG+//uGN4jEaAuY9Bm6xv5SkMRmFAUiPLXW/2w9/p6nRrIOT5+ROCobaXTv0A7QPfzJQn3iivPiaEb5Jq68zg==
+SpamDiagnosticOutput: 1:99
+SpamDiagnosticMetadata: NSPM
+X-MS-Exchange-CrossTenant-OriginalArrivalTime: 06 Dec 2018 07:32:59.6349
+ (UTC)
+X-MS-Exchange-CrossTenant-Network-Message-Id: e74ad72b-b5f7-494e-47be-08d65b4d0cc9
+X-MS-Exchange-CrossTenant-Id: 5afe0b00-7697-4969-b663-5eab37d5f47e
+X-MS-Exchange-CrossTenant-OriginalAttributedTenantConnectingIp: TenantId=5afe0b00-7697-4969-b663-5eab37d5f47e;Ip=[208.19.99.221];Helo=[AUSMBX1.microsemi.net]
+X-MS-Exchange-CrossTenant-FromEntityHeader: HybridOnPrem
+X-MS-Exchange-Transport-CrossTenantHeadersStamped: CY1PR19MB0394
 Sender: linux-pci-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
+Hi, Everyone,
 
---Re2uCLPLNzqOLVJA
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
+This patch series adds support of >=4G memory windows.
 
-On Thu, Dec 06, 2018 at 03:19:51PM +1100, David Gibson wrote:
-> Mellanox ConnectX-5 IB cards (MT27800) seem to cause a call trace when
-> unbound from their regular driver and attached to vfio-pci in order to pass
-> them through to a guest.
->
-> This goes away if the disable_idle_d3 option is used, so it looks like a
-> problem with the hardware handling D3 state.  To fix that more permanently,
-> use a device quirk to disable D3 state for these devices.
->
-> We do this by renaming the existing quirk_no_ata_d3() more generally and
-> attaching it to the ConnectX-[45] devices (0x15b3:0x1013).
->
-> Signed-off-by: David Gibson <david@gibson.dropbear.id.au>
-> ---
->  drivers/pci/quirks.c | 17 +++++++++++------
->  1 file changed, 11 insertions(+), 6 deletions(-)
->
+Current Switchtec's BAR setup registers are limited to 32bits,
+corresponding to the maximum MW (memory window) size is <4G.
+Increase the MW sizes with the addition of the BAR Setup Extension
+Register for the upper 32bits of a 64bits MW size. This increases the MW
+range to between 4K and 2^63.
 
-Hi David,
+Additionally, we've made the following changes:
 
-Thank for your patch,
+* debug print 64bit aligned crosslink BAR numbers
+* Fix the array size of NT req id mapping table
 
-I would like to reproduce the calltrace before moving forward,
-but have trouble to reproduce the original issue.
+Tested with ntb_test.sh successfully based on NTB fixes series from
+Logan Gunthorpe <logang@deltatee.com> at 
+https://github.com/sbates130272/linux-p2pmem on branch of
+ntb_multiport_fixes
 
-I'm working with vfio-pci and CX-4/5 cards on daily basis,
-tried manually enter into D3 state now, and it worked for me.
+Regards,
+Wesley
 
-Can you please post your full calltrace, and "lspci -s PCI_ID -vv"
-output?
+--
 
-Thanks
+Changed since v1:
+  - Using upper_32_bits() and lower_32_bits() marcos makes it easier
+    to read and avoids compiler warning on 32-bit arch
+  - Reorder the patches to make the bug fixes first and add a "Fixes"
+    line to the commit messages
 
---Re2uCLPLNzqOLVJA
-Content-Type: application/pgp-signature; name="signature.asc"
+--
+Paul Selles (2):
+  ntb_hw_switchtec: debug print 64bit aligned crosslink BAR Numbers
+  ntb_hw_switchtec: Added support of >=4G memory windows
 
------BEGIN PGP SIGNATURE-----
+Wesley Sheng (1):
+  ntb_hw_switchtec: NT req id mapping table register entry number should
+    be 512
 
-iQIcBAEBAgAGBQJcCMV1AAoJEORje4g2clinjAQP/1QohDmpz3Nx1/0h9KEad/Gv
-xb/XKSpynLFHroGdEEAHUaDgLOfsp5WoJxVs5sj8/EI7ZB7+jT89DAByeXkFQI5J
-8LBm+eEZboNTLa2lOcl5yBSVNWb3POGFmsuTAf2q4F+fijds+lyATk3kKYpDc7wC
-4zJ22LiEr4rryTOuxZyFi5YTaNso3WhHs0XB8bAFoJar9ypY+aSPq48C+wU+08da
-AbD3yThzPT++z61FgK5tmyaG2xN8uZmHzeRpSaX7vEDMgPznJk4qnIaA0FtCnjRu
-SYOg8XLPksqmrdU/N/vV5FM2uk77s8yoNtOEkdCg19rkG04c2pzqdX/aZtW4epKX
-h1mKWK2x21U2+l/gd5atRuFuJfP3k7P6LEsfzWprmFsyC6fwrt2H8ojN+10fuEiP
-1KURSsGdMYCrKrDklpsAeu5JHRc5UEOKyQsWPQZ+wmZtpI4zJTW9Av9YfYd/RZ6d
-PefEN2j6gmDpC7ffZqV0oenEuEgGAPGFiBRRTeOqgggfLMT1Rn9FZHX4zAGLZMpR
-jciOwJNwN9rPTkLyEyCQItjhqQjty3gvDMlYpuMpNsYIXcyl/gkjMWuke4TaHHZP
-M6g+P6qfUvDEDTlMO+wU6hcKRmqLFr+LsjQhtfHza9j1gGIcYO6FFTvPN0o0tGcq
-mItAd9DzgosnlmUT2DHQ
-=Hvye
------END PGP SIGNATURE-----
+ drivers/ntb/hw/mscc/ntb_hw_switchtec.c | 11 ++++++++---
+ include/linux/switchtec.h              | 10 +++++++---
+ 2 files changed, 15 insertions(+), 6 deletions(-)
 
---Re2uCLPLNzqOLVJA--
+-- 
+2.7.4
+
