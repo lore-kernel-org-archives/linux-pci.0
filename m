@@ -2,89 +2,166 @@ Return-Path: <SRS0=KO/x=OP=vger.kernel.org=linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-10.3 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
-	SPF_PASS,USER_AGENT_MUTT autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-1.0 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+	MAILING_LIST_MULTI,SPF_PASS autolearn=unavailable autolearn_force=no
+	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 4C815C04EB8
-	for <linux-pci@archiver.kernel.org>; Thu,  6 Dec 2018 20:56:28 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 298D8C04EB8
+	for <linux-pci@archiver.kernel.org>; Thu,  6 Dec 2018 21:41:34 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 07CE821479
-	for <linux-pci@archiver.kernel.org>; Thu,  6 Dec 2018 20:56:28 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=default; t=1544129788;
-	bh=wNDitL2LMb3N8cxB50C/TrdMP8V0vf5q+7RxMDbmbPA=;
-	h=Date:From:To:Cc:Subject:References:In-Reply-To:List-ID:From;
-	b=qHDe1lpjdEG13r488/4l/LyNvyxZi6MM/HNpvTfK0z8G8K7YBeh5rDG7f+s2AwSkv
-	 dUfT0aCmqD5vQRIUkh+4YdauEzKN6Zeo054Q56Vi9NkWq5peA0MTmmHLj+UvVKoXPi
-	 tXapSrTANGYj6vGwx2TudXUM40wykXpdqVCq+DWk=
-DMARC-Filter: OpenDMARC Filter v1.3.2 mail.kernel.org 07CE821479
-Authentication-Results: mail.kernel.org; dmarc=fail (p=none dis=none) header.from=kernel.org
+	by mail.kernel.org (Postfix) with ESMTP id E159B20868
+	for <linux-pci@archiver.kernel.org>; Thu,  6 Dec 2018 21:41:33 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.3.2 mail.kernel.org E159B20868
+Authentication-Results: mail.kernel.org; dmarc=none (p=none dis=none) header.from=sedsystems.ca
 Authentication-Results: mail.kernel.org; spf=none smtp.mailfrom=linux-pci-owner@vger.kernel.org
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1725928AbeLFU41 (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Thu, 6 Dec 2018 15:56:27 -0500
-Received: from mail.kernel.org ([198.145.29.99]:57324 "EHLO mail.kernel.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1725916AbeLFU41 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Thu, 6 Dec 2018 15:56:27 -0500
-Received: from localhost (unknown [66.115.192.46])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
-        (No client certificate requested)
-        by mail.kernel.org (Postfix) with ESMTPSA id 767BD2146D;
-        Thu,  6 Dec 2018 20:56:26 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=default; t=1544129786;
-        bh=wNDitL2LMb3N8cxB50C/TrdMP8V0vf5q+7RxMDbmbPA=;
-        h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-        b=bSJqU4RaSZToICLsfze/CTYp3Pt4kQPXzB1LDzuHWbMRbfvLB/OAr8Pf2RXxbBbVi
-         +mket2sS3yafscFXYIHbsb8+FaS5ue004y7EFjl3pig/Fm2mt5+iWdJkwYgcNBYKu4
-         KU+OcwEceG1uiO2rVtzNL0uc9Hbqa/FdNzmo+2Cs=
-Date:   Thu, 6 Dec 2018 14:56:25 -0600
-From:   Bjorn Helgaas <helgaas@kernel.org>
-To:     Alexandru Gagniuc <mr.nuke.me@gmail.com>
-Cc:     austin_bolen@dell.com, alex_gagniuc@dellteam.com,
-        keith.busch@intel.com, Shyam_Iyer@Dell.com, lukas@wunner.de,
-        linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org
-Subject: Re: [PATCH] PCI: Add missing include to drivers/pci.h
-Message-ID: <20181206205625.GE247703@google.com>
-References: <20181128222805.12637-1-mr.nuke.me@gmail.com>
+        id S1725945AbeLFVld (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Thu, 6 Dec 2018 16:41:33 -0500
+Received: from sed198n136.SEDSystems.ca ([198.169.180.136]:15811 "EHLO
+        sed198n136.sedsystems.ca" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1725929AbeLFVlc (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Thu, 6 Dec 2018 16:41:32 -0500
+Received: from barney.sedsystems.ca (barney [198.169.180.121])
+        by sed198n136.sedsystems.ca  with ESMTP id wB6Lf3oN002874
+        (version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
+        Thu, 6 Dec 2018 15:41:03 -0600 (CST)
+Received: from eng1n65.eng.sedsystems.ca (eng1n65.eng.sedsystems.ca [172.21.1.65])
+        by barney.sedsystems.ca (8.14.7/8.14.4) with ESMTP id wB6Lf2h2022293
+        (version=TLSv1/SSLv3 cipher=ECDHE-RSA-AES128-GCM-SHA256 bits=128 verify=NO);
+        Thu, 6 Dec 2018 15:41:02 -0600
+Subject: Re: [PATCH] PCI: controller: dwc: Make PCI_IMX6 depend on PCIEPORTBUS
+From:   Robert Hancock <hancock@sedsystems.ca>
+To:     Lucas Stach <l.stach@pengutronix.de>,
+        Baruch Siach <baruch@tkos.co.il>,
+        Andrey Smirnov <andrew.smirnov@gmail.com>
+Cc:     linux-pci@vger.kernel.org, "A.s. Dong" <aisheng.dong@nxp.com>,
+        Richard Zhu <hongxing.zhu@nxp.com>,
+        linux-arm-kernel@lists.infradead.org, linux-kernel@vger.kernel.org,
+        linux-imx@nxp.com, bhelgaas@google.com,
+        Leonard Crestez <leonard.crestez@nxp.com>, cphealy@gmail.com,
+        Trent Piepho <tpiepho@impinj.com>
+References: <20181206074555.19579-1-andrew.smirnov@gmail.com>
+ <87o99zjcsc.fsf@tkos.co.il>
+ <5a3543f2-fe58-221d-694f-0f98a643edfc@sedsystems.ca>
+ <1544111431.3709.70.camel@pengutronix.de>
+ <ff33ed91-431d-9620-da75-216298a58667@sedsystems.ca>
+Openpgp: preference=signencrypt
+Autocrypt: addr=hancock@sedsystems.ca; prefer-encrypt=mutual; keydata=
+ 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
+Organization: SED Systems
+Message-ID: <6ead613a-295b-3efc-4865-0bed7e4fe3f4@sedsystems.ca>
+Date:   Thu, 6 Dec 2018 15:41:02 -0600
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:60.0) Gecko/20100101
+ Thunderbird/60.3.1
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20181128222805.12637-1-mr.nuke.me@gmail.com>
-User-Agent: Mutt/1.10.1 (2018-07-13)
+In-Reply-To: <ff33ed91-431d-9620-da75-216298a58667@sedsystems.ca>
+Content-Type: text/plain; charset=utf-8
+Content-Language: en-US
+Content-Transfer-Encoding: 8bit
+X-Scanned-By: MIMEDefang 2.64 on 198.169.180.136
 Sender: linux-pci-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-On Wed, Nov 28, 2018 at 04:28:04PM -0600, Alexandru Gagniuc wrote:
-> This files makes use of definitions provided in <linux/pci.h>. This
-> only compiles when <linux/pci.h> is included beforehand, and creates
-> a nasty include dependency. Instead, just include the correct file.
+On 2018-12-06 10:10 a.m., Robert Hancock wrote:
+> On 2018-12-06 9:50 a.m., Lucas Stach wrote:
+>> Am Donnerstag, den 06.12.2018, 09:45 -0600 schrieb Robert Hancock:
+>>> On 2018-12-06 2:10 a.m., Baruch Siach wrote:
+>>>> Hi Andrey,
+>>>>
+>>>> Adding Robert Hancock who reported[1] on a PCIe MSI issue with i.MX6.
+>>>>
+>>>> Andrey Smirnov writes:
+>>>>
+>>>>> Building a kernel with CONFIG_PCI_IMX6=y, but CONFIG_PCIEPORTBUS=n
+>>>>> produces a system where built-in PCIE bridge (16c3:abcd) isn't bound
+>>>>> to pcieport driver. This, in turn, results in a PCIE bus that is
+>>>>> capable of enumerating attached PCIE device, but lacks functional
+>>>>> interrupt support.
+>>>>
+>>>> Robert, does that fix your issue?
+>>>
+>>> Unfortunately, no.. in fact the situation on my setup is even worse with
+>>> CONFIG_PCIEPORTBUS enabled: Not only does MSI still not function, but
+>>> now INTx interrupts are somehow broken as well - no interrupts are
+>>> received. The IRQ information shown in /proc/interrupts is correct, but
+>>> the count remains stubbornly at 0.
+>>
+>> That's expected. The port services will use an MSI IRQ when available
+>> and due to a design issue with the DWC PCIe it will not forward any
+>> legacy IRQs if any MSI is in use. If any of the PCIe devices in your
+>> system are unable to work with MSI IRQs, you must boot with "nomsi" on
+>> the kernel command line set.
 > 
-> Signed-off-by: Alexandru Gagniuc <mr.nuke.me@gmail.com>
+> That seems like an unfortunate design choice on their part.. well that
+> would probably argue against adding this as a hard dependency then, if
+> non-MSI-supporting PCIe devices can't work with default boot options
+> with that set.
+> 
+> I'm looking into testing with an NXP Smart Devices board and some PCIe
+> cards to see if I can verify whether MSI works on those or not, since we
+> currently don't have a way to independently verify that the MSI
+> implementation in our FPGA is working or whether another PCIe device
+> works with MSI (the FPGA is integrated on the system board).
 
-Applied to pci/misc for v4.21, thanks!
+I've now done some tests with a NXP SabreSD reference board and an Intel
+wireless card:
 
-> ---
->  drivers/pci/pci.h | 2 ++
->  1 file changed, 2 insertions(+)
-> 
-> diff --git a/drivers/pci/pci.h b/drivers/pci/pci.h
-> index 662b7457db23..224d88634115 100644
-> --- a/drivers/pci/pci.h
-> +++ b/drivers/pci/pci.h
-> @@ -2,6 +2,8 @@
->  #ifndef DRIVERS_PCI_H
->  #define DRIVERS_PCI_H
->  
-> +#include <linux/pci.h>
-> +
->  #define PCI_FIND_CAP_TTL	48
->  
->  #define PCI_VSEC_ID_INTEL_TBT	0x1234	/* Thunderbolt */
-> -- 
-> 2.17.1
-> 
+-With the standard imx_v6_v7 defconfig, MSI does not work, INTx works
+
+-With CONFIG_PCIEPORTBUS=y, MSI does work
+
+So it seems like enabling PCIEPORTBUS should fix our MSI issue on the
+CPU side, and our remaining problem is likely on the FPGA device side.
+However, there's still the issue that enabling that option breaks INTx
+support - I don't have a PCIe card handy that the kernel doesn't enable
+MSI for in order to test that on the Sabre board, but based on Lucas's
+comment and my results on our board, it definitely seems to be an issue.
+I would hope there must be a way to handle that..
+
+-- 
+Robert Hancock
+Senior Software Developer
+SED Systems
+Email: hancock@sedsystems.ca
