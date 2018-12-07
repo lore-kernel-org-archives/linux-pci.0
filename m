@@ -4,41 +4,41 @@ X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 X-Spam-Level: 
 X-Spam-Status: No, score=-8.8 required=3.0 tests=DKIM_INVALID,DKIM_SIGNED,
 	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
-	SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT autolearn=unavailable
-	autolearn_force=no version=3.4.0
+	SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT autolearn=ham autolearn_force=no
+	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 1734EC64EB1
-	for <linux-pci@archiver.kernel.org>; Fri,  7 Dec 2018 19:08:27 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id BF746C65BAF
+	for <linux-pci@archiver.kernel.org>; Fri,  7 Dec 2018 19:08:33 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id CF7D520868
-	for <linux-pci@archiver.kernel.org>; Fri,  7 Dec 2018 19:08:26 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 83745208E7
+	for <linux-pci@archiver.kernel.org>; Fri,  7 Dec 2018 19:08:33 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=fail reason="signature verification failed" (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="sI0r7/6e"
-DMARC-Filter: OpenDMARC Filter v1.3.2 mail.kernel.org CF7D520868
+	dkim=fail reason="signature verification failed" (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="ZfTRxh60"
+DMARC-Filter: OpenDMARC Filter v1.3.2 mail.kernel.org 83745208E7
 Authentication-Results: mail.kernel.org; dmarc=none (p=none dis=none) header.from=lst.de
 Authentication-Results: mail.kernel.org; spf=none smtp.mailfrom=linux-pci-owner@vger.kernel.org
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726358AbeLGTIU (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Fri, 7 Dec 2018 14:08:20 -0500
-Received: from bombadil.infradead.org ([198.137.202.133]:48556 "EHLO
+        id S1726203AbeLGTIc (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Fri, 7 Dec 2018 14:08:32 -0500
+Received: from bombadil.infradead.org ([198.137.202.133]:48624 "EHLO
         bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726124AbeLGTIU (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Fri, 7 Dec 2018 14:08:20 -0500
+        with ESMTP id S1726389AbeLGTI3 (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Fri, 7 Dec 2018 14:08:29 -0500
 DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
         d=infradead.org; s=bombadil.20170209; h=Content-Transfer-Encoding:
         MIME-Version:References:In-Reply-To:Message-Id:Date:Subject:Cc:To:From:Sender
         :Reply-To:Content-Type:Content-ID:Content-Description:Resent-Date:Resent-From
         :Resent-Sender:Resent-To:Resent-Cc:Resent-Message-ID:List-Id:List-Help:
         List-Unsubscribe:List-Subscribe:List-Post:List-Owner:List-Archive;
-        bh=glz+b8z0nShY9w1RbIdMqc4DyDTui7DptyDzyYZ7dHk=; b=sI0r7/6ewt1zj8XJy5koE2cXft
-        uh/mQ2EgQaOyBUBhQWS03X9ZWZpE5At3YA6/Fk/tVhIku30j7h16wQpP/gp6RNaOhwUyKkp5B+hu7
-        CpLfr41z58bZy5M3Lm23jHMRYUBrBjmdmYUKs58upUK5SsPYQRzmMcGJ+B1prCWUbrWO2cMATYbHP
-        LTVDtKlbgFpuldsO7LCVGYEGTlDT87kOzKPsiO0EsH2vA96M87cCGvKVCOyRKKxNe8s6CMgznvuet
-        YjaOY2Pq3lDVrWNoH+SCod4Z9Z3KnGFgYV0eXXN1ij30cN8VRLUAp+CKDC0gprq19r2SjWfLG/jB+
-        t0pzCqVQ==;
+        bh=ChQTgKiZwHVIwfgRsCDcMPaE+ZWz7J22Nwq2a30o9aU=; b=ZfTRxh60hk4ZBQ6JO81vJjk8Pp
+        ZikcVQo9Y5l8K6iY0LjzHeEDfM0G3iuHYYtmynLzpZKsod8MnffY5rjPhX9IQBxoT2TpcHh+8x7q6
+        6urf+OMWfWsWyXMpAefHCvJbfcc8N7uwIB3EoDuWvAkVxC+ioMI5GGczGKT2xE5BQ6cBfNHVDMlx7
+        NlJOXVgOrJkuLWs2lWKIda4xe5NSSDvjMCau+/zwwn6tFRI7NrtcsKRYEPWeV9dmU/4dH5gFK/+vv
+        9khR3PinaaC63md3+UuvfYsiBf8faedXq0Lxvh+X29EIbo86hmoeryImc5atFPGu1fYl6sgCSXVsB
+        4Ciz6lCA==;
 Received: from [199.255.44.128] (helo=localhost)
         by bombadil.infradead.org with esmtpsa (Exim 4.90_1 #2 (Red Hat Linux))
-        id 1gVLTt-0006pu-MZ; Fri, 07 Dec 2018 19:08:09 +0000
+        id 1gVLU4-0006tF-8r; Fri, 07 Dec 2018 19:08:20 +0000
 From:   Christoph Hellwig <hch@lst.de>
 To:     iommu@lists.linux-foundation.org,
         Linus Torvalds <torvalds@linux-foundation.org>,
@@ -55,9 +55,9 @@ Cc:     Tariq Toukan <tariqt@mellanox.com>,
         Jonathan Derrick <jonathan.derrick@intel.com>,
         linux-pci@vger.kernel.org, linux-ia64@vger.kernel.org,
         x86@kernel.org, linux-kernel@vger.kernel.org
-Subject: [PATCH 08/15] dma-mapping: move dma_get_required_mask to kernel/dma
-Date:   Fri,  7 Dec 2018 11:07:13 -0800
-Message-Id: <20181207190720.18517-9-hch@lst.de>
+Subject: [PATCH 10/15] dma-mapping: move dma_cache_sync out of line
+Date:   Fri,  7 Dec 2018 11:07:15 -0800
+Message-Id: <20181207190720.18517-11-hch@lst.de>
 X-Mailer: git-send-email 2.19.1
 In-Reply-To: <20181207190720.18517-1-hch@lst.de>
 References: <20181207190720.18517-1-hch@lst.de>
@@ -69,106 +69,58 @@ Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-dma_get_required_mask should really be with the rest of the DMA mapping
-implementation instead of in drivers/base as a lone outlier.
+This isn't exactly a slow path routine, but it is not super critical
+either, and moving it out of line will help to keep the include chain
+clean for the following DMA indirection bypass work.
 
 Signed-off-by: Christoph Hellwig <hch@lst.de>
 ---
- drivers/base/platform.c | 31 -------------------------------
- kernel/dma/mapping.c    | 34 +++++++++++++++++++++++++++++++++-
- 2 files changed, 33 insertions(+), 32 deletions(-)
+ include/linux/dma-mapping.h | 12 ++----------
+ kernel/dma/mapping.c        | 11 +++++++++++
+ 2 files changed, 13 insertions(+), 10 deletions(-)
 
-diff --git a/drivers/base/platform.c b/drivers/base/platform.c
-index 41b91af95afb..eae841935a45 100644
---- a/drivers/base/platform.c
-+++ b/drivers/base/platform.c
-@@ -1179,37 +1179,6 @@ int __init platform_bus_init(void)
- 	return error;
- }
+diff --git a/include/linux/dma-mapping.h b/include/linux/dma-mapping.h
+index 0bbce52606c2..0f0078490df4 100644
+--- a/include/linux/dma-mapping.h
++++ b/include/linux/dma-mapping.h
+@@ -411,16 +411,8 @@ dma_sync_sg_for_device(struct device *dev, struct scatterlist *sg,
+ #define dma_map_page(d, p, o, s, r) dma_map_page_attrs(d, p, o, s, r, 0)
+ #define dma_unmap_page(d, a, s, r) dma_unmap_page_attrs(d, a, s, r, 0)
  
--#ifndef ARCH_HAS_DMA_GET_REQUIRED_MASK
--static u64 dma_default_get_required_mask(struct device *dev)
--{
--	u32 low_totalram = ((max_pfn - 1) << PAGE_SHIFT);
--	u32 high_totalram = ((max_pfn - 1) >> (32 - PAGE_SHIFT));
--	u64 mask;
--
--	if (!high_totalram) {
--		/* convert to mask just covering totalram */
--		low_totalram = (1 << (fls(low_totalram) - 1));
--		low_totalram += low_totalram - 1;
--		mask = low_totalram;
--	} else {
--		high_totalram = (1 << (fls(high_totalram) - 1));
--		high_totalram += high_totalram - 1;
--		mask = (((u64)high_totalram) << 32) + 0xffffffff;
--	}
--	return mask;
--}
--
--u64 dma_get_required_mask(struct device *dev)
+-static inline void
+-dma_cache_sync(struct device *dev, void *vaddr, size_t size,
+-		enum dma_data_direction dir)
 -{
 -	const struct dma_map_ops *ops = get_dma_ops(dev);
 -
--	if (ops->get_required_mask)
--		return ops->get_required_mask(dev);
--	return dma_default_get_required_mask(dev);
+-	BUG_ON(!valid_dma_direction(dir));
+-	if (ops->cache_sync)
+-		ops->cache_sync(dev, vaddr, size, dir);
 -}
--EXPORT_SYMBOL_GPL(dma_get_required_mask);
--#endif
--
- static __initdata LIST_HEAD(early_platform_driver_list);
- static __initdata LIST_HEAD(early_platform_device_list);
++void dma_cache_sync(struct device *dev, void *vaddr, size_t size,
++		enum dma_data_direction dir);
  
+ extern int dma_common_mmap(struct device *dev, struct vm_area_struct *vma,
+ 		void *cpu_addr, dma_addr_t dma_addr, size_t size,
 diff --git a/kernel/dma/mapping.c b/kernel/dma/mapping.c
-index dfbc3deb95cd..dfe29d18dba1 100644
+index 176ae3e08916..0b18cfbdde95 100644
 --- a/kernel/dma/mapping.c
 +++ b/kernel/dma/mapping.c
-@@ -5,7 +5,7 @@
-  * Copyright (c) 2006  SUSE Linux Products GmbH
-  * Copyright (c) 2006  Tejun Heo <teheo@suse.de>
-  */
--
-+#include <linux/memblock.h> /* for max_pfn */
- #include <linux/acpi.h>
- #include <linux/dma-noncoherent.h>
- #include <linux/export.h>
-@@ -262,3 +262,35 @@ int dma_common_mmap(struct device *dev, struct vm_area_struct *vma,
- #endif /* !CONFIG_ARCH_NO_COHERENT_DMA_MMAP */
+@@ -430,3 +430,14 @@ int dma_set_coherent_mask(struct device *dev, u64 mask)
  }
- EXPORT_SYMBOL(dma_common_mmap);
+ EXPORT_SYMBOL(dma_set_coherent_mask);
+ #endif
 +
-+#ifndef ARCH_HAS_DMA_GET_REQUIRED_MASK
-+static u64 dma_default_get_required_mask(struct device *dev)
-+{
-+	u32 low_totalram = ((max_pfn - 1) << PAGE_SHIFT);
-+	u32 high_totalram = ((max_pfn - 1) >> (32 - PAGE_SHIFT));
-+	u64 mask;
-+
-+	if (!high_totalram) {
-+		/* convert to mask just covering totalram */
-+		low_totalram = (1 << (fls(low_totalram) - 1));
-+		low_totalram += low_totalram - 1;
-+		mask = low_totalram;
-+	} else {
-+		high_totalram = (1 << (fls(high_totalram) - 1));
-+		high_totalram += high_totalram - 1;
-+		mask = (((u64)high_totalram) << 32) + 0xffffffff;
-+	}
-+	return mask;
-+}
-+
-+u64 dma_get_required_mask(struct device *dev)
++void dma_cache_sync(struct device *dev, void *vaddr, size_t size,
++		enum dma_data_direction dir)
 +{
 +	const struct dma_map_ops *ops = get_dma_ops(dev);
 +
-+	if (ops->get_required_mask)
-+		return ops->get_required_mask(dev);
-+	return dma_default_get_required_mask(dev);
++	BUG_ON(!valid_dma_direction(dir));
++	if (ops->cache_sync)
++		ops->cache_sync(dev, vaddr, size, dir);
 +}
-+EXPORT_SYMBOL_GPL(dma_get_required_mask);
-+#endif
-+
++EXPORT_SYMBOL(dma_cache_sync);
 -- 
 2.19.1
 
