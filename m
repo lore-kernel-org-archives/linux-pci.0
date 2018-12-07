@@ -2,101 +2,150 @@ Return-Path: <SRS0=SqGm=OQ=vger.kernel.org=linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-1.0 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
-	DKIM_VALID_AU,FREEMAIL_FORGED_FROMDOMAIN,FREEMAIL_FROM,
-	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_PASS autolearn=ham
+X-Spam-Status: No, score=-7.1 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
+	DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,
+	SIGNED_OFF_BY,SPF_PASS,T_DKIMWL_WL_HIGH,URIBL_BLOCKED autolearn=ham
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id AC8E2C07E85
-	for <linux-pci@archiver.kernel.org>; Fri,  7 Dec 2018 04:55:28 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id DD64BC07E85
+	for <linux-pci@archiver.kernel.org>; Fri,  7 Dec 2018 08:13:17 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 404972081C
-	for <linux-pci@archiver.kernel.org>; Fri,  7 Dec 2018 04:55:28 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 95F4C20989
+	for <linux-pci@archiver.kernel.org>; Fri,  7 Dec 2018 08:13:17 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="jRMyYvXI"
-DMARC-Filter: OpenDMARC Filter v1.3.2 mail.kernel.org 404972081C
-Authentication-Results: mail.kernel.org; dmarc=fail (p=none dis=none) header.from=gmail.com
+	dkim=pass (1024-bit key) header.d=ti.com header.i=@ti.com header.b="ReoFjygn"
+DMARC-Filter: OpenDMARC Filter v1.3.2 mail.kernel.org 95F4C20989
+Authentication-Results: mail.kernel.org; dmarc=fail (p=quarantine dis=none) header.from=ti.com
 Authentication-Results: mail.kernel.org; spf=none smtp.mailfrom=linux-pci-owner@vger.kernel.org
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1725948AbeLGEz1 (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Thu, 6 Dec 2018 23:55:27 -0500
-Received: from mail-wm1-f65.google.com ([209.85.128.65]:37059 "EHLO
-        mail-wm1-f65.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1725939AbeLGEz1 (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Thu, 6 Dec 2018 23:55:27 -0500
-Received: by mail-wm1-f65.google.com with SMTP id g67so3173063wmd.2;
-        Thu, 06 Dec 2018 20:55:26 -0800 (PST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20161025;
-        h=mime-version:references:in-reply-to:from:date:message-id:subject:to
-         :cc;
-        bh=FI059+PUySrZpDCKnJZdfS9mUaz4H0QkSomxsjPgG5U=;
-        b=jRMyYvXIn6Oo8/NyHT6lKnQ/fYpPc5iq1bfKOvGZ8J4AiFCsE0qM8W8JLnbkq9lr2v
-         a+l6ViDkWrw5dSJ2lokitm2wpniqllwYVoPNDyJXCLFbbq+1LP7P6JsepqaulNisRBiR
-         vD2cBHvNzC5ZCpuhzzfFpkD0/wFQ7H3tEHzObV+/wGOEuIiB7JLJdv1rk6oCl1BBfri4
-         y9Gwl7aBAqiFeUA0/67Z53B/LP2AXgdJQkNVbm7izI7QYJB25AnIOM+EjnJ0g9UNEY5e
-         ZQaANRRV+fp6e5S6HRMDkO77ZAzwpbfjIaLq5LlX6FAFsPEgvN29J5BE+/mxQRaNHaJa
-         nLZA==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20161025;
-        h=x-gm-message-state:mime-version:references:in-reply-to:from:date
-         :message-id:subject:to:cc;
-        bh=FI059+PUySrZpDCKnJZdfS9mUaz4H0QkSomxsjPgG5U=;
-        b=PYxUszvZjoU9UhEW16+PgvuUYnrdINsgyegDkEWFHeHUaKxxQS3wkk8EqiGwSA+hvV
-         IpkvwhwCLDRhu7LEIFWq4+mq9UK/Y+kiJUO3h9OChB8Ys057ktw87YUyQ+IEppqogHf4
-         6FkEVovGGnnIST1WksWBStepKLfS4V2SMFBTruId55481pawJEEm7Kh+BuKlffE84meC
-         GX1xgy/ipEAfqCmjIHB5/dyLUogHts/rbI4AW9Qkrj2FrklJ42xjeICnIct5rNP8RDn0
-         ROJlseyForx4Y4UrP+nmPx1dekcbo990k3e5xTIcSJzyczWbk/jwhYHrrgSkCFfBw+/D
-         Qlew==
-X-Gm-Message-State: AA+aEWaR7nzHSXl7U0pj9tKjy8Bjf9VzR/nbpg3YJGxE/AMjNN9YQlx3
-        AJLWSltbwX9kd/1j9yMbw3QwP5L7d2PwVC4UeUc=
-X-Google-Smtp-Source: AFSGD/X1UJ4ujP4WZtgCTKzMuE45UOnd6c+UV6ew0wwcdhBostzHDDOdXy27O5Pk6YDMNCbU2L9BohQk4HEt8AXhzls=
-X-Received: by 2002:a1c:5585:: with SMTP id j127-v6mr769633wmb.127.1544158525164;
- Thu, 06 Dec 2018 20:55:25 -0800 (PST)
+        id S1725963AbeLGINQ (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Fri, 7 Dec 2018 03:13:16 -0500
+Received: from fllv0015.ext.ti.com ([198.47.19.141]:36540 "EHLO
+        fllv0015.ext.ti.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1725948AbeLGINQ (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Fri, 7 Dec 2018 03:13:16 -0500
+Received: from fllv0035.itg.ti.com ([10.64.41.0])
+        by fllv0015.ext.ti.com (8.15.2/8.15.2) with ESMTP id wB78D9kQ071172;
+        Fri, 7 Dec 2018 02:13:09 -0600
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=ti.com;
+        s=ti-com-17Q1; t=1544170389;
+        bh=MrkRsSd7bFXU6+jc1gDdjsl19w+EVxyQHnMHDCawjNs=;
+        h=Subject:To:CC:References:From:Date:In-Reply-To;
+        b=ReoFjygnmsdNtfsc0UM9rFQQCgWYk1YLY+YkqAaHSKZhFRCLxLbynjG4vSGHAT2aQ
+         n/dOn3wtyVqMBotDCQUU7W+m2Cvbj2irQxIJ0A4l1RNDVimZ8j3k5uDuhINZLgiMLc
+         BRde2UV1k/O88t/BR2B41PsDFEUA0UUbmp6LMnrQ=
+Received: from DFLE109.ent.ti.com (dfle109.ent.ti.com [10.64.6.30])
+        by fllv0035.itg.ti.com (8.15.2/8.15.2) with ESMTPS id wB78D9Xb127315
+        (version=TLSv1.2 cipher=AES256-GCM-SHA384 bits=256 verify=FAIL);
+        Fri, 7 Dec 2018 02:13:09 -0600
+Received: from DFLE101.ent.ti.com (10.64.6.22) by DFLE109.ent.ti.com
+ (10.64.6.30) with Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_128_CBC_SHA256_P256) id 15.1.1591.10; Fri, 7
+ Dec 2018 02:13:08 -0600
+Received: from dflp32.itg.ti.com (10.64.6.15) by DFLE101.ent.ti.com
+ (10.64.6.22) with Microsoft SMTP Server (version=TLS1_0,
+ cipher=TLS_RSA_WITH_AES_256_CBC_SHA) id 15.1.1591.10 via Frontend Transport;
+ Fri, 7 Dec 2018 02:13:08 -0600
+Received: from [172.24.190.233] (ileax41-snat.itg.ti.com [10.172.224.153])
+        by dflp32.itg.ti.com (8.14.3/8.13.8) with ESMTP id wB78D5c3002587;
+        Fri, 7 Dec 2018 02:13:06 -0600
+Subject: Re: [PATCH 3/3] PCI: designware: Move interrupt acking into the
+ proper callback
+To:     Marc Zyngier <marc.zyngier@arm.com>
+CC:     <linux-pci@vger.kernel.org>,
+        Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
+        Bjorn Helgaas <helgaas@google.com>,
+        Trent Piepho <tpiepho@impinj.com>,
+        Jingoo Han <jingoohan1@gmail.com>,
+        Gustavo Pimentel <gustavo.pimentel@synopsys.com>,
+        <faiz_abbas@ti.com>, Joao Pinto <Joao.Pinto@synopsys.com>,
+        Vignesh R <vigneshr@ti.com>
+References: <20181113225734.8026-1-marc.zyngier@arm.com>
+ <20181113225734.8026-4-marc.zyngier@arm.com>
+ <126f12da-b69d-ae3a-72bf-dc1bff22cd77@ti.com>
+ <20181204134559.74957d43@why.wild-wind.fr.eu.org>
+From:   Kishon Vijay Abraham I <kishon@ti.com>
+Message-ID: <251318fd-c72c-3082-ac10-99f4312cbd52@ti.com>
+Date:   Fri, 7 Dec 2018 13:42:57 +0530
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:60.0) Gecko/20100101
+ Thunderbird/60.2.1
 MIME-Version: 1.0
-References: <20181206074555.19579-1-andrew.smirnov@gmail.com> <1544092136.3709.57.camel@pengutronix.de>
-In-Reply-To: <1544092136.3709.57.camel@pengutronix.de>
-From:   Andrey Smirnov <andrew.smirnov@gmail.com>
-Date:   Thu, 6 Dec 2018 20:55:13 -0800
-Message-ID: <CAHQ1cqFeJtxnpfzqWVQ3T9Sv=gfw+cvZZw-uKnZV7pxJg_S+EA@mail.gmail.com>
-Subject: Re: [PATCH] PCI: controller: dwc: Make PCI_IMX6 depend on PCIEPORTBUS
-To:     Lucas Stach <l.stach@pengutronix.de>
-Cc:     linux-pci@vger.kernel.org, Bjorn Helgaas <bhelgaas@google.com>,
-        Chris Healy <cphealy@gmail.com>,
-        Leonard Crestez <leonard.crestez@nxp.com>,
-        Dong Aisheng <aisheng.dong@nxp.com>,
-        Richard Zhu <hongxing.zhu@nxp.com>, linux-imx@nxp.com,
-        linux-arm-kernel <linux-arm-kernel@lists.infradead.org>,
-        linux-kernel <linux-kernel@vger.kernel.org>
-Content-Type: text/plain; charset="UTF-8"
+In-Reply-To: <20181204134559.74957d43@why.wild-wind.fr.eu.org>
+Content-Type: text/plain; charset="utf-8"
+Content-Language: en-US
+Content-Transfer-Encoding: 7bit
+X-EXCLAIMER-MD-CONFIG: e1e8a2fd-e40a-4ac6-ac9b-f7e9cc9ee180
 Sender: linux-pci-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-On Thu, Dec 6, 2018 at 2:28 AM Lucas Stach <l.stach@pengutronix.de> wrote:
->
-> Am Mittwoch, den 05.12.2018, 23:45 -0800 schrieb Andrey Smirnov:
-> > Building a kernel with CONFIG_PCI_IMX6=y, but CONFIG_PCIEPORTBUS=n
-> > produces a system where built-in PCIE bridge (16c3:abcd) isn't bound
-> > to pcieport driver. This, in turn, results in a PCIE bus that is
-> > capable of enumerating attached PCIE device, but lacks functional
-> > interrupt support.
->
-> This is odd. AFAIK PCI port services are a totally optional thing and
-> them being absent should not lead to a non-functional PCI bus. So I
-> would really like to see some deeper analysis what is going on here.
->
+Hi Marc,
 
-AFAICT, this is due to pcieport driver enabling MSI of the bridge
-device (16c3:abcd) via pcie_port_device_register() ->
-pcie_init_service_irqs() -> pcie_port_enable_irq_vec() -> etc.
+On 04/12/18 7:15 PM, Marc Zyngier wrote:
+> On Tue, 4 Dec 2018 15:50:32 +0530
+> Kishon Vijay Abraham I <kishon@ti.com> wrote:
+> 
+>> Hi,
+>>
+>> On 14/11/18 4:27 AM, Marc Zyngier wrote:
+>>> The write to the status register is really an ACK for the HW,
+>>> and should be treated as such by the driver. Let's move it to the
+>>> irq_ack callback, which will prevent people from moving it around
+>>> in order to paper over other bugs.
+>>>
+>>> Signed-off-by: Marc Zyngier <marc.zyngier@arm.com>
+>>> ---
+>>>  drivers/pci/controller/dwc/pcie-designware-host.c | 13 +++++++------
+>>>  1 file changed, 7 insertions(+), 6 deletions(-)
+>>>
+>>> diff --git a/drivers/pci/controller/dwc/pcie-designware-host.c b/drivers/pci/controller/dwc/pcie-designware-host.c
+>>> index 0a76948ed49e..f06e67c60593 100644
+>>> --- a/drivers/pci/controller/dwc/pcie-designware-host.c
+>>> +++ b/drivers/pci/controller/dwc/pcie-designware-host.c
+>>> @@ -99,9 +99,6 @@ irqreturn_t dw_handle_msi_irq(struct pcie_port *pp)
+>>>  					       (i * MAX_MSI_IRQS_PER_CTRL) +
+>>>  					       pos);
+>>>  			generic_handle_irq(irq);
+>>> -			dw_pcie_wr_own_conf(pp, PCIE_MSI_INTR0_STATUS +
+>>> -						(i * MSI_REG_CTRL_BLOCK_SIZE),
+>>> -					    4, 1 << pos);
+>>>  			pos++;
+>>>  		}
+>>>  	}
+>>> @@ -200,14 +197,18 @@ static void dw_pci_bottom_unmask(struct irq_data *data)
+>>>  
+>>>  static void dw_pci_bottom_ack(struct irq_data *d)
+>>>  {
+>>> -	struct msi_desc *msi = irq_data_get_msi_desc(d);
+>>> -	struct pcie_port *pp;
+>>> +	struct pcie_port *pp  = irq_data_get_irq_chip_data(d);
+>>> +	unsigned int res, bit, ctrl;
+>>>  	unsigned long flags;
+>>>  
+>>> -	pp = msi_desc_to_pci_sysdata(msi);
+>>> +	ctrl = d->hwirq / MAX_MSI_IRQS_PER_CTRL;
+>>> +	res = ctrl * MSI_REG_CTRL_BLOCK_SIZE;
+>>> +	bit = d->hwirq % MAX_MSI_IRQS_PER_CTRL;
+>>>  
+>>>  	raw_spin_lock_irqsave(&pp->lock, flags);
+>>>  
+>>> +	dw_pcie_wr_own_conf(pp, PCIE_MSI_INTR0_STATUS + res, 4, 1 << bit);  
+>>
+>> This register should be written only if msi_irq_ack callback is not populated
+>> similar to other dw_pci_bottom_*() functions.
+> 
+> Why? This was so far unconditionally written, and my understanding is
+> that without this write, no further MSI can be delivered.
 
-I did an experiment on a i.MX8MQ/PCIE -> i210 setup I have: I disabled
-CONFIG_PCIEPORTBUS and hacked igb_main.c enough to make the i210
-driver believe it should fall back onto legacy interrupts. Even
-without pcieport present in the system, i210 worked as expected via
-legacy interrupts, which seems to collaborate my conjecture above.
+Not all platforms invoke dw_handle_msi_irq() for handling MSI irq.
 
-Thanks,
-Andrey Smirnov
+Platforms that doesn't use the MSI functionality of Designware makes use of the
+various callbacks like msi_irq_ack, msi_host_init etc., Keystone has MSI
+controller in the Keystone wrapper, AM654 uses GIC ITS etc.,
+
+The platforms that doesn't use MSI functionality of Designware doesn't have to
+write to Designware's MSI configuration registers.
+
+Thanks
+Kishon
