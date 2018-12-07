@@ -1,89 +1,114 @@
-Return-Path: <SRS0=KO/x=OP=vger.kernel.org=linux-pci-owner@kernel.org>
+Return-Path: <SRS0=SqGm=OQ=vger.kernel.org=linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-4.0 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_PASS,URIBL_BLOCKED autolearn=ham
-	autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-3.0 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+	MAILING_LIST_MULTI,SPF_PASS,USER_AGENT_GIT autolearn=ham autolearn_force=no
+	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id A1F1CC64EB1
-	for <linux-pci@archiver.kernel.org>; Thu,  6 Dec 2018 22:17:04 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 6E731C04EB8
+	for <linux-pci@archiver.kernel.org>; Fri,  7 Dec 2018 00:53:20 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 643E52082B
-	for <linux-pci@archiver.kernel.org>; Thu,  6 Dec 2018 22:17:04 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.3.2 mail.kernel.org 643E52082B
-Authentication-Results: mail.kernel.org; dmarc=none (p=none dis=none) header.from=deltatee.com
+	by mail.kernel.org (Postfix) with ESMTP id 30D3820989
+	for <linux-pci@archiver.kernel.org>; Fri,  7 Dec 2018 00:53:20 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.3.2 mail.kernel.org 30D3820989
+Authentication-Results: mail.kernel.org; dmarc=none (p=none dis=none) header.from=socionext.com
 Authentication-Results: mail.kernel.org; spf=none smtp.mailfrom=linux-pci-owner@vger.kernel.org
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1725984AbeLFWRD (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Thu, 6 Dec 2018 17:17:03 -0500
-Received: from ale.deltatee.com ([207.54.116.67]:46458 "EHLO ale.deltatee.com"
+        id S1725963AbeLGAxT (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Thu, 6 Dec 2018 19:53:19 -0500
+Received: from mx.socionext.com ([202.248.49.38]:42321 "EHLO mx.socionext.com"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1725958AbeLFWRD (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Thu, 6 Dec 2018 17:17:03 -0500
-Received: from guinness.priv.deltatee.com ([172.16.1.162])
-        by ale.deltatee.com with esmtp (Exim 4.89)
-        (envelope-from <logang@deltatee.com>)
-        id 1gV1x7-0005U1-Hk; Thu, 06 Dec 2018 15:17:03 -0700
-To:     Bjorn Helgaas <helgaas@kernel.org>
-Cc:     Andrew Morton <akpm@linux-foundation.org>,
-        Linux MM <linux-mm@kvack.org>, linux-pci@vger.kernel.org,
-        Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
-        Dan Williams <dan.j.williams@intel.com>
-References: <20181130225911.2900-1-logang@deltatee.com>
- <20181206204643.GC247703@google.com>
-From:   Logan Gunthorpe <logang@deltatee.com>
-Message-ID: <c226426d-e88c-da18-f643-f3faaf1c0dbd@deltatee.com>
-Date:   Thu, 6 Dec 2018 15:17:00 -0700
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:60.0) Gecko/20100101
- Thunderbird/60.3.0
-MIME-Version: 1.0
-In-Reply-To: <20181206204643.GC247703@google.com>
-Content-Type: text/plain; charset=utf-8
-Content-Language: en-CA
-Content-Transfer-Encoding: 7bit
-X-SA-Exim-Connect-IP: 172.16.1.162
-X-SA-Exim-Rcpt-To: dan.j.williams@intel.com, linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org, linux-mm@kvack.org, akpm@linux-foundation.org, helgaas@kernel.org
-X-SA-Exim-Mail-From: logang@deltatee.com
-Subject: Re: [PATCH] PCI/P2PDMA: Match interface changes to
- devm_memremap_pages()
-X-SA-Exim-Version: 4.2.1 (built Tue, 02 Aug 2016 21:08:31 +0000)
-X-SA-Exim-Scanned: Yes (on ale.deltatee.com)
+        id S1725950AbeLGAxT (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Thu, 6 Dec 2018 19:53:19 -0500
+Received: from unknown (HELO iyokan-ex.css.socionext.com) ([172.31.9.54])
+  by mx.socionext.com with ESMTP; 07 Dec 2018 09:53:17 +0900
+Received: from mail.mfilter.local (m-filter-2 [10.213.24.62])
+        by iyokan-ex.css.socionext.com (Postfix) with ESMTP id 6104660062;
+        Fri,  7 Dec 2018 09:53:17 +0900 (JST)
+Received: from 172.31.9.51 (172.31.9.51) by m-FILTER with ESMTP; Fri, 7 Dec 2018 09:53:17 +0900
+Received: from plum.e01.socionext.com (unknown [10.213.132.32])
+        by kinkan.css.socionext.com (Postfix) with ESMTP id F34C41A1235;
+        Fri,  7 Dec 2018 09:53:16 +0900 (JST)
+From:   Kunihiko Hayashi <hayashi.kunihiko@socionext.com>
+To:     Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
+        Bjorn Helgaas <bhelgaas@google.com>,
+        Rob Herring <robh+dt@kernel.org>,
+        Mark Rutland <mark.rutland@arm.com>,
+        Masahiro Yamada <yamada.masahiro@socionext.com>
+Cc:     linux-pci@vger.kernel.org, devicetree@vger.kernel.org,
+        linux-arm-kernel@lists.infradead.org, linux-kernel@vger.kernel.org,
+        Masami Hiramatsu <masami.hiramatsu@linaro.org>,
+        Jassi Brar <jaswinder.singh@linaro.org>,
+        Gustavo Pimentel <gustavo.pimentel@synopsys.com>,
+        Kunihiko Hayashi <hayashi.kunihiko@socionext.com>
+Subject: [PATCH v5 0/2] Add new UniPhier PCIe host driver
+Date:   Fri,  7 Dec 2018 09:53:10 +0900
+Message-Id: <1544143992-16385-1-git-send-email-hayashi.kunihiko@socionext.com>
+X-Mailer: git-send-email 2.7.4
 Sender: linux-pci-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
+This series adds PCIe host controller driver for Socionext UniPhier SoCs.
+This controller is based on the DesignWare PCIe core. This driver
+supports LD20 and PXs3 SoCs.
 
+v4: https://www.spinics.net/lists/linux-pci/msg78278.html
 
-On 2018-12-06 1:46 p.m., Bjorn Helgaas wrote:
-> On Fri, Nov 30, 2018 at 03:59:11PM -0700, Logan Gunthorpe wrote:
->> "mm-hmm-mark-hmm_devmem_add-add_resource-export_symbol_gpl.patch" in the
->> mm tree breaks p2pdma. The patch was written and reviewed before p2pdma
->> was merged so the necessary changes were not done to the call site in
->> that code.
->>
->> Without this patch, all drivers will fail to register P2P resources
->> because devm_memremap_pages() will return -EINVAL due to the 'kill'
->> member of the pagemap structure not yet being set.
->>
->> Signed-off-by: Logan Gunthorpe <logang@deltatee.com>
->> Cc: Andrew Morton <akpm@linux-foundation.org>
->> Cc: Dan Williams <dan.j.williams@intel.com>
->> Cc: Bjorn Helgaas <bhelgaas@google.com>
-> 
-> Applied with Dan's reviewed-by to pci/peer-to-peer for v4.21, thanks!
-> 
-> If the mm patch you mention gets merged for v4.20, let me know and I can
-> promote this to for-linus so v4.20 doesn't end up broken.
+About legacy IRQ, it might be necessary to share common view from
+keystone driver that have been cleaned up[1].
 
-Thanks Bjorn, but I think Andrew has also picked it up in the mm tree
-with the patch in question. My hope is that he squashes the two but I'm
-not sure what his intentions are. I mostly copied you for  information
-purposes as this patch shouldn't even compile without Dan's patch.
+[1] https://lore.kernel.org/patchwork/patch/989541/
 
-Though, I guess we'll find out what goes in after the merge window --
-you may not need to do anything.
+Changes since v4:
+- fix an issue of using the wrong value to mask IRQ mask register
 
-Logan
+Changes since v3:
+- dt-bindings: fix INTX numbering of legacy interrupt map
+- change interrupts to level ones
+- remove .xlate function
+- merge uniphier_pcie_ltssm_disable() into uniphier_pcie_ltssm_enable()
+- remove an error message on uniphier_pcie_establish_link()
+- change the order between irq_domain_add_liniear() and
+  irq_set_chained_handler_and_data()
+- replace dummy_irq_chip with uniphier_pcie_irq_chip and its functions
+- add dependency on CONFIG_HAS_IOMEM
+- MAINTAINERS: add pcie-uniphier entry
+
+Changes since v2:
+- dt-bindings: remove a comment that the node name isn't important
+- dt-bindings: remove "intx" interrupt
+- dt-bindings: define 'legacy-interrupt-controller' node and its properties
+- return an error value when link up fails
+- remove devm_request_irq() and a handler for MSI IRQ
+- use chained interrupt instead of devm_request_irq() for legacy IRQ
+- add unipher_pcie_config_legacy_irq() to get legacy IRQ from
+  'legacy-interrupt controller' node
+- replace 4 statments to handle INTX with for_each_set_bit()
+- remove initialization of pp->root_bus_nr
+- remove indivisual interrupt enable bit definitions
+- rename 'irq_domain' member to 'legacy_irq_domain' in private structure
+- use pci_irqd_intx_xlate() for irq_domain_ops.xlate function
+
+Changes since v1:
+- follow capitalization conventions in the descriptions
+- use C style comments except for the SPDX line
+
+Kunihiko Hayashi (2):
+  dt-bindings: PCI: Add UniPhier PCIe host controller description
+  PCI: uniphier: Add UniPhier PCIe host controller support
+
+ .../devicetree/bindings/pci/uniphier-pcie.txt      |  81 ++++
+ MAINTAINERS                                        |   7 +
+ drivers/pci/controller/dwc/Kconfig                 |  10 +
+ drivers/pci/controller/dwc/Makefile                |   1 +
+ drivers/pci/controller/dwc/pcie-uniphier.c         | 471 +++++++++++++++++++++
+ 5 files changed, 570 insertions(+)
+ create mode 100644 Documentation/devicetree/bindings/pci/uniphier-pcie.txt
+ create mode 100644 drivers/pci/controller/dwc/pcie-uniphier.c
+
+-- 
+2.7.4
 
