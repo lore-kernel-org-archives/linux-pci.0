@@ -2,185 +2,145 @@ Return-Path: <SRS0=SqGm=OQ=vger.kernel.org=linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-7.0 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_PASS,UNPARSEABLE_RELAY,
-	URIBL_BLOCKED autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-2.6 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
+	DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_PASS,
+	USER_AGENT_MUTT autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 1B5D9C07E85
-	for <linux-pci@archiver.kernel.org>; Fri,  7 Dec 2018 12:56:50 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 98BB1C07E85
+	for <linux-pci@archiver.kernel.org>; Fri,  7 Dec 2018 13:11:20 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id D6DFD20892
-	for <linux-pci@archiver.kernel.org>; Fri,  7 Dec 2018 12:56:49 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.3.2 mail.kernel.org D6DFD20892
-Authentication-Results: mail.kernel.org; dmarc=none (p=none dis=none) header.from=mediatek.com
+	by mail.kernel.org (Postfix) with ESMTP id 5AF84208E7
+	for <linux-pci@archiver.kernel.org>; Fri,  7 Dec 2018 13:11:20 +0000 (UTC)
+Authentication-Results: mail.kernel.org;
+	dkim=pass (1024-bit key) header.d=linaro.org header.i=@linaro.org header.b="LmCipauO"
+DMARC-Filter: OpenDMARC Filter v1.3.2 mail.kernel.org 5AF84208E7
+Authentication-Results: mail.kernel.org; dmarc=fail (p=none dis=none) header.from=linaro.org
 Authentication-Results: mail.kernel.org; spf=none smtp.mailfrom=linux-pci-owner@vger.kernel.org
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726010AbeLGM4t (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Fri, 7 Dec 2018 07:56:49 -0500
-Received: from mailgw02.mediatek.com ([1.203.163.81]:65037 "EHLO
-        mailgw02.mediatek.com" rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org
-        with ESMTP id S1725994AbeLGM4s (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Fri, 7 Dec 2018 07:56:48 -0500
-X-UUID: a5016e4c3241480a89e311ccad2365f6-20181207
-X-UUID: a5016e4c3241480a89e311ccad2365f6-20181207
-Received: from mtkcas32.mediatek.inc [(172.27.4.250)] by mailgw02.mediatek.com
-        (envelope-from <jianjun.wang@mediatek.com>)
-        (mailgw01.mediatek.com ESMTP with TLS)
-        with ESMTP id 1553370085; Fri, 07 Dec 2018 20:56:39 +0800
-Received: from MTKCAS32.mediatek.inc (172.27.4.184) by MTKMBS31N2.mediatek.inc
- (172.27.4.87) with Microsoft SMTP Server (TLS) id 15.0.1395.4; Fri, 7 Dec
- 2018 20:56:38 +0800
-Received: from [10.17.3.153] (10.17.3.153) by MTKCAS32.mediatek.inc
- (172.27.4.170) with Microsoft SMTP Server id 15.0.1395.4 via Frontend
- Transport; Fri, 7 Dec 2018 20:56:37 +0800
-Message-ID: <1544187397.10946.27.camel@mhfsdcap03>
-Subject: Re: [PATCH 2/2] PCI: mediatek: Add controller support for MT7629
-From:   Jianjun Wang <jianjun.wang@mediatek.com>
-To:     Honghui Zhang <honghui.zhang@mediatek.com>
-CC:     <ryder.lee@mediatek.com>, <bhelgaas@google.com>,
-        <robh+dt@kernel.org>, <lorenzo.pieralisi@arm.com>,
-        <matthias.bgg@gmail.com>, <linux-pci@vger.kernel.org>,
-        <mark.rutland@arm.com>, <linux-mediatek@lists.infradead.org>,
-        <devicetree@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
-        <linux-arm-kernel@lists.infradead.org>, <youlin.pei@mediatek.com>
-Date:   Fri, 7 Dec 2018 20:56:37 +0800
-In-Reply-To: <1544075633.3753.11.camel@mhfsdcap03>
-References: <1544058553-10936-1-git-send-email-jianjun.wang@mediatek.com>
-         <1544058553-10936-3-git-send-email-jianjun.wang@mediatek.com>
-         <1544075633.3753.11.camel@mhfsdcap03>
-Content-Type: text/plain; charset="UTF-8"
-X-Mailer: Evolution 3.2.3-0ubuntu6 
-Content-Transfer-Encoding: 7bit
+        id S1726161AbeLGNLT (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Fri, 7 Dec 2018 08:11:19 -0500
+Received: from mail-lf1-f66.google.com ([209.85.167.66]:35213 "EHLO
+        mail-lf1-f66.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726050AbeLGNLS (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Fri, 7 Dec 2018 08:11:18 -0500
+Received: by mail-lf1-f66.google.com with SMTP id e26so2998612lfc.2
+        for <linux-pci@vger.kernel.org>; Fri, 07 Dec 2018 05:11:17 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=linaro.org; s=google;
+        h=date:from:to:cc:subject:message-id:references:mime-version
+         :content-disposition:in-reply-to:user-agent;
+        bh=EFj9X/innvkpACYNCTtZcY37pslKCk2J0+kVrFHIYOI=;
+        b=LmCipauOb1yLA1CNjfxYn4Q7iy7tl70uGlFvAgMt74FNEpfLA2CjVMLuKDLmyxf9P9
+         vaVmbpOIrI+S6dfKTq9sX/snFic79x2CqMlbxsMCJI1hHSf+subIIkVQuOXv2+B+LXjn
+         xa+GDgGu0JMtiGoaSGSsjQTHibBTehXtos3U8=
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20161025;
+        h=x-gm-message-state:date:from:to:cc:subject:message-id:references
+         :mime-version:content-disposition:in-reply-to:user-agent;
+        bh=EFj9X/innvkpACYNCTtZcY37pslKCk2J0+kVrFHIYOI=;
+        b=M4E7fuhdO0ZEsxSDkEqnXKATLpHnaFq5WQHxxC/b5c6q9lcTahRIP5QVsz+TSMY9s8
+         5D/Cp7Yld8PmcbtAh4R6O6kaNJLAWZp6WkpyPx2FcpvYNslHfaMLtzoQ9SoJl5avay8I
+         7hULkQlcprfD1xgpaq7WMn+vdRNlpSG8qPNz0Yc8uoaqlnN3jVde0yq9ub1hX7QOnC9x
+         YDfJ5YWJvWcWS+P0yH+1vs2qIi4b+VamIEeQ4ANtBbhd2SzzqBstmojm4mRC7uXlUbNZ
+         E7PUJy/XuWMXwl5z7njNbbQu0V+cCk9smFeHqIm8CD3uOjZoLil0kkgO/+b4uTddMOJH
+         hMGw==
+X-Gm-Message-State: AA+aEWaxc6104TXgB3BIh0833cvLKMcnaqveCoQTXX8a2mUWr5SnjgRX
+        9UiAYTMq1NYAJ7aHbQsq4oIuow==
+X-Google-Smtp-Source: AFSGD/WYjfEugWJ/CiebXU8yXokboCL047BVIH5KUpU6vVPMwFkDZfarIwmrnaQbyupeZioH9F/HOg==
+X-Received: by 2002:a19:8f45:: with SMTP id r66mr1413285lfd.9.1544188276612;
+        Fri, 07 Dec 2018 05:11:16 -0800 (PST)
+Received: from centauri.lan (h-229-118.A785.priv.bahnhof.se. [5.150.229.118])
+        by smtp.gmail.com with ESMTPSA id i143sm604609lfg.74.2018.12.07.05.11.15
+        (version=TLS1_2 cipher=ECDHE-RSA-CHACHA20-POLY1305 bits=256/256);
+        Fri, 07 Dec 2018 05:11:15 -0800 (PST)
+Date:   Fri, 7 Dec 2018 14:11:13 +0100
+From:   Niklas Cassel <niklas.cassel@linaro.org>
+To:     Andrey Smirnov <andrew.smirnov@gmail.com>
+Cc:     Lucas Stach <l.stach@pengutronix.de>, linux-pci@vger.kernel.org,
+        Bjorn Helgaas <bhelgaas@google.com>,
+        Chris Healy <cphealy@gmail.com>,
+        Leonard Crestez <leonard.crestez@nxp.com>,
+        Dong Aisheng <aisheng.dong@nxp.com>,
+        Richard Zhu <hongxing.zhu@nxp.com>, linux-imx@nxp.com,
+        linux-arm-kernel <linux-arm-kernel@lists.infradead.org>,
+        linux-kernel <linux-kernel@vger.kernel.org>
+Subject: Re: [PATCH] PCI: controller: dwc: Make PCI_IMX6 depend on PCIEPORTBUS
+Message-ID: <20181207131113.GA427@centauri.lan>
+References: <20181206074555.19579-1-andrew.smirnov@gmail.com>
+ <1544092136.3709.57.camel@pengutronix.de>
+ <CAHQ1cqFeJtxnpfzqWVQ3T9Sv=gfw+cvZZw-uKnZV7pxJg_S+EA@mail.gmail.com>
 MIME-Version: 1.0
-X-MTK:  N
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <CAHQ1cqFeJtxnpfzqWVQ3T9Sv=gfw+cvZZw-uKnZV7pxJg_S+EA@mail.gmail.com>
+User-Agent: Mutt/1.10.1 (2018-07-13)
 Sender: linux-pci-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-On Thu, 2018-12-06 at 13:53 +0800, Honghui Zhang wrote:
-> On Thu, 2018-12-06 at 09:09 +0800, Jianjun Wang wrote:
-> > MT7629 is an arm platform SoC which has the same PCIe IP with MT7622.
-> > 
-> > The read value of BAR0 is 0xffff_ffff, it's size will be calculated as 4GB
-> > in arm64 but bogus alignment values at arm32, the pcie device and devices
+On Thu, Dec 06, 2018 at 08:55:13PM -0800, Andrey Smirnov wrote:
+> On Thu, Dec 6, 2018 at 2:28 AM Lucas Stach <l.stach@pengutronix.de> wrote:
+> >
+> > Am Mittwoch, den 05.12.2018, 23:45 -0800 schrieb Andrey Smirnov:
+> > > Building a kernel with CONFIG_PCI_IMX6=y, but CONFIG_PCIEPORTBUS=n
+> > > produces a system where built-in PCIE bridge (16c3:abcd) isn't bound
+> > > to pcieport driver. This, in turn, results in a PCIE bus that is
+> > > capable of enumerating attached PCIE device, but lacks functional
+> > > interrupt support.
+> >
+> > This is odd. AFAIK PCI port services are a totally optional thing and
+> > them being absent should not lead to a non-functional PCI bus. So I
+> > would really like to see some deeper analysis what is going on here.
+> >
 > 
-> :s /the pcie device /the bridge device
+> AFAICT, this is due to pcieport driver enabling MSI of the bridge
+> device (16c3:abcd) via pcie_port_device_register() ->
+> pcie_init_service_irqs() -> pcie_port_enable_irq_vec() -> etc.
 > 
-> > behind this bridge will not be enabled. Fix it's BAR0 resource size to
-> > guarantee the pcie devices will be enabled correctly.
-> > 
-> > The HW default value of its device id is invalid, fix it's device id to
-> > match the hardware implementation.
-> > 
-> > Signed-off-by: Jianjun Wang <jianjun.wang@mediatek.com>
-> > ---
-> >  drivers/pci/controller/pcie-mediatek.c | 26 ++++++++++++++++++++++++++
-> >  include/linux/pci_ids.h                |  1 +
-> >  2 files changed, 27 insertions(+)
-> > 
-> > diff --git a/drivers/pci/controller/pcie-mediatek.c b/drivers/pci/controller/pcie-mediatek.c
-> > index d20cf461ba00..f8937cc3c87c 100644
-> > --- a/drivers/pci/controller/pcie-mediatek.c
-> > +++ b/drivers/pci/controller/pcie-mediatek.c
-> > @@ -73,6 +73,7 @@
-> >  #define PCIE_MSI_VECTOR		0x0c0
-> >  
-> >  #define PCIE_CONF_VEND_ID	0x100
-> > +#define PCIE_CONF_DEVICE_ID	0x102
-> >  #define PCIE_CONF_CLASS_ID	0x106
-> >  
-> >  #define PCIE_INT_MASK		0x420
-> > @@ -135,12 +136,14 @@ struct mtk_pcie_port;
-> >  /**
-> >   * struct mtk_pcie_soc - differentiate between host generations
-> >   * @need_fix_class_id: whether this host's class ID needed to be fixed or not
-> > + * @need_fix_device_id: whether this host's device ID needed to be fixed or not
-> >   * @ops: pointer to configuration access functions
-> >   * @startup: pointer to controller setting functions
-> >   * @setup_irq: pointer to initialize IRQ functions
-> >   */
-> >  struct mtk_pcie_soc {
-> >  	bool need_fix_class_id;
-> > +	bool need_fix_device_id;
-> >  	struct pci_ops *ops;
-> >  	int (*startup)(struct mtk_pcie_port *port);
-> >  	int (*setup_irq)(struct mtk_pcie_port *port, struct device_node *node);
-> > @@ -692,6 +695,11 @@ static int mtk_pcie_startup_port_v2(struct mtk_pcie_port *port)
-> >  		writew(val, port->base + PCIE_CONF_CLASS_ID);
-> >  	}
-> >  
-> > +	if (soc->need_fix_device_id) {
-> > +		val = PCI_DEVICE_ID_MEDIATEK_7629;
-> > +		writew(val, port->base + PCIE_CONF_DEVICE_ID);
-> > +	}
-> > +
-> >  	/* 100ms timeout value should be enough for Gen1/2 training */
-> >  	err = readl_poll_timeout(port->base + PCIE_LINK_STATUS_V2, val,
-> >  				 !!(val & PCIE_PORT_LINKUP_V2), 20,
-> > @@ -1238,11 +1246,29 @@ static const struct mtk_pcie_soc mtk_pcie_soc_mt7622 = {
-> >  	.setup_irq = mtk_pcie_setup_irq,
-> >  };
-> >  
-> > +static const struct mtk_pcie_soc mtk_pcie_soc_mt7629 = {
-> > +	.need_fix_class_id = true,
-> > +	.need_fix_device_id = true,
-> > +	.ops = &mtk_pcie_ops_v2,
-> > +	.startup = mtk_pcie_startup_port_v2,
-> > +	.setup_irq = mtk_pcie_setup_irq,
-> > +};
-> > +
-> > +static void mtk_fixup_bar_size(struct pci_dev *dev)
-> > +{
-> > +	struct resource *dev_res = &dev->resource[0];
-> > +	/* 32bit resource length will calculate size to 0, set it smaller */
-> > +	dev_res->end = 0xfffffffe;
-> > +}
+> I did an experiment on a i.MX8MQ/PCIE -> i210 setup I have: I disabled
+> CONFIG_PCIEPORTBUS and hacked igb_main.c enough to make the i210
+> driver believe it should fall back onto legacy interrupts. Even
+> without pcieport present in the system, i210 worked as expected via
+> legacy interrupts, which seems to collaborate my conjecture above.
 > 
-> I'm not sure assign the BAR0 size in driver to fit in the bogus
-> alignment is a good idea. Seems the size value of 0xffff_fffe also is an
-> arbitrary value.
-> Do we have a chance to change the resource framework code to make it
-> adopt this scenario?
-> 
-> Thanks.
+> Thanks,
+> Andrey Smirnov
 
-I'm afraid not, the resource size length defined by phys_addr_t, which
-related to the hardware's physical address length. 
-It will be much more better if the BAR0 size is not related with the
-pcie to axi window, when we set the window to 4GB, the BAR0 size still
-have initial value, and we can set the BAR0 size value or just disable
-it independently.
-The BAR0 size value need bigger than the MMIO space size, so the
-software will think it's a invalid resource but not a bogus alignment
-one, since we can't disable the BAR0 by hardware, and the flow of enable
-devices will keep going. 
-> 
-> > +DECLARE_PCI_FIXUP_HEADER(PCI_VENDOR_ID_MEDIATEK, PCI_DEVICE_ID_MEDIATEK_7629,
-> > +			 mtk_fixup_bar_size);
-> > +
-> >  static const struct of_device_id mtk_pcie_ids[] = {
-> >  	{ .compatible = "mediatek,mt2701-pcie", .data = &mtk_pcie_soc_v1 },
-> >  	{ .compatible = "mediatek,mt7623-pcie", .data = &mtk_pcie_soc_v1 },
-> >  	{ .compatible = "mediatek,mt2712-pcie", .data = &mtk_pcie_soc_mt2712 },
-> >  	{ .compatible = "mediatek,mt7622-pcie", .data = &mtk_pcie_soc_mt7622 },
-> > +	{ .compatible = "mediatek,mt7629-pcie", .data = &mtk_pcie_soc_mt7629 },
-> >  	{},
-> >  };
-> >  
-> > diff --git a/include/linux/pci_ids.h b/include/linux/pci_ids.h
-> > index 69f0abe1ba1a..77b278bac3a8 100644
-> > --- a/include/linux/pci_ids.h
-> > +++ b/include/linux/pci_ids.h
-> > @@ -2126,6 +2126,7 @@
-> >  #define PCI_VENDOR_ID_MYRICOM		0x14c1
-> >  
-> >  #define PCI_VENDOR_ID_MEDIATEK		0x14c3
-> > +#define PCI_DEVICE_ID_MEDIATEK_7629	0x7629
-> >  
-> >  #define PCI_VENDOR_ID_TITAN		0x14D2
-> >  #define PCI_DEVICE_ID_TITAN_010L	0x8001
-> 
-> 
+IIUC PCIEPORTBUS should not be needed for MSIs to work,
+it is only needed if you want e.g. PME or AER.
+
+The difference is that if PCIEPORTBUS is enabled, a MSI irq vector will be
+allocated for the Root Complex itself, so that it can send an irq when
+e.g. AER has detected an error.
 
 
+If we disregard that MSI handling is currently broken on DWC PCIe:
+https://marc.info/?l=linux-pci&m=154214986924244&w=2
+It is very possible to have MSIs on dragonboard 820c, which also
+uses the DWC PCIe controller, without having PCIEPORTBUS selected:
+
+# zcat /proc/config.gz | grep -E "PCIE_QCOM|PCIEPORTBUS"
+# CONFIG_PCIEPORTBUS is not set
+CONFIG_PCIE_QCOM=y
+
+
+# lspci -v -s 0000:00:00.0
+0000:00:00.0 PCI bridge: Qualcomm Device 0104 (prog-if 00 [Normal decode])
+	...
+        Capabilities: [50] MSI: Enable- Count=1/32 Maskable+ 64bit+
+
+# lspci -v -s 0000:01:00.0
+0000:01:00.0 Network controller: Qualcomm Atheros QCA6174 802.11ac Wireless Network Adapter (rev 32)
+	...
+        Capabilities: [50] MSI: Enable+ Count=1/8 Maskable+ 64bit-
+
+
+# cat /proc/interrupts | grep MSI
+ 70:       5620          0          0          0   PCI-MSI 524288 Edge      ath10k_pci
+
+So perhaps this is a bug specific to imx6?
+
+
+Kind regards,
+Niklas
