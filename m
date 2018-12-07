@@ -7,38 +7,38 @@ X-Spam-Status: No, score=-8.8 required=3.0 tests=DKIM_INVALID,DKIM_SIGNED,
 	SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT autolearn=unavailable
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id E5785C07E85
-	for <linux-pci@archiver.kernel.org>; Fri,  7 Dec 2018 19:08:04 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 6579DC65BAF
+	for <linux-pci@archiver.kernel.org>; Fri,  7 Dec 2018 19:08:06 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id A91A120989
-	for <linux-pci@archiver.kernel.org>; Fri,  7 Dec 2018 19:08:04 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 20F1620989
+	for <linux-pci@archiver.kernel.org>; Fri,  7 Dec 2018 19:08:06 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=fail reason="signature verification failed" (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="GNoq4Ro1"
-DMARC-Filter: OpenDMARC Filter v1.3.2 mail.kernel.org A91A120989
+	dkim=fail reason="signature verification failed" (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="G+uRqnx8"
+DMARC-Filter: OpenDMARC Filter v1.3.2 mail.kernel.org 20F1620989
 Authentication-Results: mail.kernel.org; dmarc=none (p=none dis=none) header.from=lst.de
 Authentication-Results: mail.kernel.org; spf=none smtp.mailfrom=linux-pci-owner@vger.kernel.org
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726146AbeLGTH7 (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Fri, 7 Dec 2018 14:07:59 -0500
-Received: from bombadil.infradead.org ([198.137.202.133]:48416 "EHLO
+        id S1726155AbeLGTHt (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Fri, 7 Dec 2018 14:07:49 -0500
+Received: from bombadil.infradead.org ([198.137.202.133]:48358 "EHLO
         bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726074AbeLGTH6 (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Fri, 7 Dec 2018 14:07:58 -0500
+        with ESMTP id S1726146AbeLGTHs (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Fri, 7 Dec 2018 14:07:48 -0500
 DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
         d=infradead.org; s=bombadil.20170209; h=Content-Transfer-Encoding:
         MIME-Version:References:In-Reply-To:Message-Id:Date:Subject:Cc:To:From:Sender
         :Reply-To:Content-Type:Content-ID:Content-Description:Resent-Date:Resent-From
         :Resent-Sender:Resent-To:Resent-Cc:Resent-Message-ID:List-Id:List-Help:
         List-Unsubscribe:List-Subscribe:List-Post:List-Owner:List-Archive;
-        bh=wGOQvkZqq0wHy8bDnO+MiQJtbDM796t5ELhd1RsQZNg=; b=GNoq4Ro1XLj3ha7XXkX652Y70E
-        Oc5aVvV7+7XIghlce+6q9qcHORKvyXjTseYLWhN+Gss1dESCnVICXn2nJYvIElyfLcSJMCqF2/IYY
-        GYi78kwlRRY3i38iXygPc0IzZ5K4cTTNfDlWJv62TcjhDyxACM8WJDYE7qYPxVqrLqxy7w2lOo1HX
-        PeWcZHV9RLjfEyIEIoF9gud3pifrp0IL/nnVmeEEQCxgTjJfl2kgLJ7zUYdKTwm7IuEWptr8Q3CiZ
-        K67Yg+qf8kx1zRJBXxfVPSTWLtojxayzk++OHYxxdNXcEa8fW+VsDoGJerLAaRI6s+1shOv2qDscM
-        ZWsxx3Xw==;
+        bh=OdiQvejXg7U4UyBnHOb5EcFbvlk/jZVotuBMl8reZZc=; b=G+uRqnx8SawyCDooYFhDftKHEW
+        yOdVaEYiOKFNfPqe5kM2e4x76eKiIf/zpgbN9UQXyg3CzVfDdBLVwoJQ8fuWmcS3FA4pSXKIXWzzT
+        iIgGScNTAhQBtQe7pv2uvHYmuGW92swgCpW6LHYn9NICFrlt+fd5FlVs/Ia2zIYsIa8CCzfNCCKbc
+        wmRxRpwRruGrFMGv4R2/js6+70hwcjHrm4gshSjYxXA2nO0Og/xR9UXuJQDoBT3YTjZeJ/f+2dqt1
+        9mLYjpFat2aV5TCHRvjWJiLvJC5jtnavj3TEZPVAwPusMLKOdQeKHsYzk4eGQ3MWHxJRJUyyBYeD2
+        7tHyDkgQ==;
 Received: from [199.255.44.128] (helo=localhost)
         by bombadil.infradead.org with esmtpsa (Exim 4.90_1 #2 (Red Hat Linux))
-        id 1gVLTY-0006ie-HC; Fri, 07 Dec 2018 19:07:48 +0000
+        id 1gVLTN-0006ey-Vt; Fri, 07 Dec 2018 19:07:38 +0000
 From:   Christoph Hellwig <hch@lst.de>
 To:     iommu@lists.linux-foundation.org,
         Linus Torvalds <torvalds@linux-foundation.org>,
@@ -55,9 +55,9 @@ Cc:     Tariq Toukan <tariqt@mellanox.com>,
         Jonathan Derrick <jonathan.derrick@intel.com>,
         linux-pci@vger.kernel.org, linux-ia64@vger.kernel.org,
         x86@kernel.org, linux-kernel@vger.kernel.org
-Subject: [PATCH 04/15] dma-direct: use dma_direct_map_page to implement dma_direct_map_sg
-Date:   Fri,  7 Dec 2018 11:07:09 -0800
-Message-Id: <20181207190720.18517-5-hch@lst.de>
+Subject: [PATCH 02/15] swiotlb: remove dma_mark_clean
+Date:   Fri,  7 Dec 2018 11:07:07 -0800
+Message-Id: <20181207190720.18517-3-hch@lst.de>
 X-Mailer: git-send-email 2.19.1
 In-Reply-To: <20181207190720.18517-1-hch@lst.de>
 References: <20181207190720.18517-1-hch@lst.de>
@@ -69,56 +69,198 @@ Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-No need to duplicate the mapping logic.
+Instead of providing a special dma_mark_clean hook just for ia64, switch
+ia64 to use the normal arch_sync_dma_for_cpu hooks instead.
+
+This means that we now also set the PG_arch_1 bit for pages in the
+swiotlb buffer, which isn't stricly needed as we will never execute code
+out of the swiotlb buffer, but otherwise harmless.
 
 Signed-off-by: Christoph Hellwig <hch@lst.de>
 ---
- kernel/dma/direct.c | 14 +++++---------
- 1 file changed, 5 insertions(+), 9 deletions(-)
+ arch/ia64/Kconfig              |  3 ++-
+ arch/ia64/kernel/dma-mapping.c | 20 +++++++++++++++++++-
+ arch/ia64/mm/init.c            | 18 +++++++-----------
+ drivers/xen/swiotlb-xen.c      | 20 +-------------------
+ include/linux/dma-direct.h     |  8 --------
+ kernel/dma/swiotlb.c           | 18 +-----------------
+ 6 files changed, 30 insertions(+), 57 deletions(-)
 
-diff --git a/kernel/dma/direct.c b/kernel/dma/direct.c
-index edb24f94ea1e..d45306473c90 100644
---- a/kernel/dma/direct.c
-+++ b/kernel/dma/direct.c
-@@ -217,6 +217,7 @@ static void dma_direct_sync_single_for_device(struct device *dev,
- 	arch_sync_dma_for_device(dev, dma_to_phys(dev, addr), size, dir);
- }
+diff --git a/arch/ia64/Kconfig b/arch/ia64/Kconfig
+index d6f203658994..c587e3316c38 100644
+--- a/arch/ia64/Kconfig
++++ b/arch/ia64/Kconfig
+@@ -28,7 +28,8 @@ config IA64
+ 	select HAVE_ARCH_TRACEHOOK
+ 	select HAVE_MEMBLOCK_NODE_MAP
+ 	select HAVE_VIRT_CPU_ACCOUNTING
+-	select ARCH_HAS_DMA_MARK_CLEAN
++	select ARCH_HAS_DMA_COHERENT_TO_PFN
++	select ARCH_HAS_SYNC_DMA_FOR_CPU
+ 	select VIRT_TO_BUS
+ 	select ARCH_DISCARD_MEMBLOCK
+ 	select GENERIC_IRQ_PROBE
+diff --git a/arch/ia64/kernel/dma-mapping.c b/arch/ia64/kernel/dma-mapping.c
+index 7a471d8d67d4..36dd6aa6d759 100644
+--- a/arch/ia64/kernel/dma-mapping.c
++++ b/arch/ia64/kernel/dma-mapping.c
+@@ -1,5 +1,5 @@
+ // SPDX-License-Identifier: GPL-2.0
+-#include <linux/dma-mapping.h>
++#include <linux/dma-direct.h>
+ #include <linux/swiotlb.h>
+ #include <linux/export.h>
  
-+#if defined(CONFIG_ARCH_HAS_SYNC_DMA_FOR_DEVICE)
- static void dma_direct_sync_sg_for_device(struct device *dev,
- 		struct scatterlist *sgl, int nents, enum dma_data_direction dir)
+@@ -16,6 +16,24 @@ const struct dma_map_ops *dma_get_ops(struct device *dev)
+ EXPORT_SYMBOL(dma_get_ops);
+ 
+ #ifdef CONFIG_SWIOTLB
++void *arch_dma_alloc(struct device *dev, size_t size,
++		dma_addr_t *dma_handle, gfp_t gfp, unsigned long attrs)
++{
++	return dma_direct_alloc_pages(dev, size, dma_handle, gfp, attrs);
++}
++
++void arch_dma_free(struct device *dev, size_t size, void *cpu_addr,
++		dma_addr_t dma_addr, unsigned long attrs)
++{
++	dma_direct_free_pages(dev, size, cpu_addr, dma_addr, attrs);
++}
++
++long arch_dma_coherent_to_pfn(struct device *dev, void *cpu_addr,
++		dma_addr_t dma_addr)
++{
++	return page_to_pfn(virt_to_page(cpu_addr));
++}
++
+ void __init swiotlb_dma_init(void)
  {
-@@ -229,6 +230,7 @@ static void dma_direct_sync_sg_for_device(struct device *dev,
- 	for_each_sg(sgl, sg, nents, i)
- 		arch_sync_dma_for_device(dev, sg_phys(sg), sg->length, dir);
- }
-+#endif
- 
- #if defined(CONFIG_ARCH_HAS_SYNC_DMA_FOR_CPU) || \
-     defined(CONFIG_ARCH_HAS_SYNC_DMA_FOR_CPU_ALL)
-@@ -294,19 +296,13 @@ int dma_direct_map_sg(struct device *dev, struct scatterlist *sgl, int nents,
- 	struct scatterlist *sg;
- 
- 	for_each_sg(sgl, sg, nents, i) {
--		BUG_ON(!sg_page(sg));
+ 	dma_ops = &swiotlb_dma_ops;
+diff --git a/arch/ia64/mm/init.c b/arch/ia64/mm/init.c
+index d5e12ff1d73c..2c51733f1dfd 100644
+--- a/arch/ia64/mm/init.c
++++ b/arch/ia64/mm/init.c
+@@ -71,18 +71,14 @@ __ia64_sync_icache_dcache (pte_t pte)
+  * DMA can be marked as "clean" so that lazy_mmu_prot_update() doesn't have to
+  * flush them when they get mapped into an executable vm-area.
+  */
+-void
+-dma_mark_clean(void *addr, size_t size)
++void arch_sync_dma_for_cpu(struct device *dev, phys_addr_t paddr,
++		size_t size, enum dma_data_direction dir)
+ {
+-	unsigned long pg_addr, end;
 -
--		sg_dma_address(sg) = phys_to_dma(dev, sg_phys(sg));
--		if (unlikely(dev && !dma_capable(dev, sg_dma_address(sg),
--				sg->length))) {
--			report_addr(dev, sg_dma_address(sg), sg->length);
-+		sg->dma_address = dma_direct_map_page(dev, sg_page(sg),
-+				sg->offset, sg->length, dir, attrs);
-+		if (sg->dma_address == DMA_MAPPING_ERROR)
- 			return 0;
--		}
- 		sg_dma_len(sg) = sg->length;
- 	}
- 
--	if (!(attrs & DMA_ATTR_SKIP_CPU_SYNC))
--		dma_direct_sync_sg_for_device(dev, sgl, nents, dir);
- 	return nents;
+-	pg_addr = PAGE_ALIGN((unsigned long) addr);
+-	end = (unsigned long) addr + size;
+-	while (pg_addr + PAGE_SIZE <= end) {
+-		struct page *page = virt_to_page(pg_addr);
+-		set_bit(PG_arch_1, &page->flags);
+-		pg_addr += PAGE_SIZE;
+-	}
++	unsigned long pfn = __phys_to_pfn(paddr);
++
++	do {
++		set_bit(PG_arch_1, &pfn_to_page(pfn)->flags);
++	} while (++pfn <= __phys_to_pfn(paddr + size - 1));
  }
  
+ inline void
+diff --git a/drivers/xen/swiotlb-xen.c b/drivers/xen/swiotlb-xen.c
+index 833e80b46eb2..989cf872b98c 100644
+--- a/drivers/xen/swiotlb-xen.c
++++ b/drivers/xen/swiotlb-xen.c
+@@ -441,21 +441,8 @@ static void xen_unmap_single(struct device *hwdev, dma_addr_t dev_addr,
+ 	xen_dma_unmap_page(hwdev, dev_addr, size, dir, attrs);
+ 
+ 	/* NOTE: We use dev_addr here, not paddr! */
+-	if (is_xen_swiotlb_buffer(dev_addr)) {
++	if (is_xen_swiotlb_buffer(dev_addr))
+ 		swiotlb_tbl_unmap_single(hwdev, paddr, size, dir, attrs);
+-		return;
+-	}
+-
+-	if (dir != DMA_FROM_DEVICE)
+-		return;
+-
+-	/*
+-	 * phys_to_virt doesn't work with hihgmem page but we could
+-	 * call dma_mark_clean() with hihgmem page here. However, we
+-	 * are fine since dma_mark_clean() is null on POWERPC. We can
+-	 * make dma_mark_clean() take a physical address if necessary.
+-	 */
+-	dma_mark_clean(phys_to_virt(paddr), size);
+ }
+ 
+ static void xen_swiotlb_unmap_page(struct device *hwdev, dma_addr_t dev_addr,
+@@ -493,11 +480,6 @@ xen_swiotlb_sync_single(struct device *hwdev, dma_addr_t dev_addr,
+ 
+ 	if (target == SYNC_FOR_DEVICE)
+ 		xen_dma_sync_single_for_device(hwdev, dev_addr, size, dir);
+-
+-	if (dir != DMA_FROM_DEVICE)
+-		return;
+-
+-	dma_mark_clean(phys_to_virt(paddr), size);
+ }
+ 
+ void
+diff --git a/include/linux/dma-direct.h b/include/linux/dma-direct.h
+index 6e5a47ae7d64..1aa73f4907ae 100644
+--- a/include/linux/dma-direct.h
++++ b/include/linux/dma-direct.h
+@@ -48,14 +48,6 @@ static inline phys_addr_t dma_to_phys(struct device *dev, dma_addr_t daddr)
+ 	return __sme_clr(__dma_to_phys(dev, daddr));
+ }
+ 
+-#ifdef CONFIG_ARCH_HAS_DMA_MARK_CLEAN
+-void dma_mark_clean(void *addr, size_t size);
+-#else
+-static inline void dma_mark_clean(void *addr, size_t size)
+-{
+-}
+-#endif /* CONFIG_ARCH_HAS_DMA_MARK_CLEAN */
+-
+ u64 dma_direct_get_required_mask(struct device *dev);
+ void *dma_direct_alloc(struct device *dev, size_t size, dma_addr_t *dma_handle,
+ 		gfp_t gfp, unsigned long attrs);
+diff --git a/kernel/dma/swiotlb.c b/kernel/dma/swiotlb.c
+index 19ba8e473d71..2e126bac5d7d 100644
+--- a/kernel/dma/swiotlb.c
++++ b/kernel/dma/swiotlb.c
+@@ -706,21 +706,8 @@ void swiotlb_unmap_page(struct device *hwdev, dma_addr_t dev_addr,
+ 	    (attrs & DMA_ATTR_SKIP_CPU_SYNC) == 0)
+ 		arch_sync_dma_for_cpu(hwdev, paddr, size, dir);
+ 
+-	if (is_swiotlb_buffer(paddr)) {
++	if (is_swiotlb_buffer(paddr))
+ 		swiotlb_tbl_unmap_single(hwdev, paddr, size, dir, attrs);
+-		return;
+-	}
+-
+-	if (dir != DMA_FROM_DEVICE)
+-		return;
+-
+-	/*
+-	 * phys_to_virt doesn't work with hihgmem page but we could
+-	 * call dma_mark_clean() with hihgmem page here. However, we
+-	 * are fine since dma_mark_clean() is null on POWERPC. We can
+-	 * make dma_mark_clean() take a physical address if necessary.
+-	 */
+-	dma_mark_clean(phys_to_virt(paddr), size);
+ }
+ 
+ /*
+@@ -750,9 +737,6 @@ swiotlb_sync_single(struct device *hwdev, dma_addr_t dev_addr,
+ 
+ 	if (!dev_is_dma_coherent(hwdev) && target == SYNC_FOR_DEVICE)
+ 		arch_sync_dma_for_device(hwdev, paddr, size, dir);
+-
+-	if (!is_swiotlb_buffer(paddr) && dir == DMA_FROM_DEVICE)
+-		dma_mark_clean(phys_to_virt(paddr), size);
+ }
+ 
+ void
 -- 
 2.19.1
 
