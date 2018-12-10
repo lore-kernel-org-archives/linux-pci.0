@@ -5,81 +5,78 @@ X-Spam-Level:
 X-Spam-Status: No, score=-0.9 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
 	MAILING_LIST_MULTI,SPF_PASS autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 521EDC5CFFE
-	for <linux-pci@archiver.kernel.org>; Mon, 10 Dec 2018 17:20:21 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 251EFC04EB8
+	for <linux-pci@archiver.kernel.org>; Mon, 10 Dec 2018 18:05:08 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 11ABE20880
-	for <linux-pci@archiver.kernel.org>; Mon, 10 Dec 2018 17:20:21 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.3.2 mail.kernel.org 11ABE20880
-Authentication-Results: mail.kernel.org; dmarc=none (p=none dis=none) header.from=deltatee.com
+	by mail.kernel.org (Postfix) with ESMTP id EB76E2086D
+	for <linux-pci@archiver.kernel.org>; Mon, 10 Dec 2018 18:05:07 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.3.2 mail.kernel.org EB76E2086D
+Authentication-Results: mail.kernel.org; dmarc=none (p=none dis=none) header.from=wwwdotorg.org
 Authentication-Results: mail.kernel.org; spf=none smtp.mailfrom=linux-pci-owner@vger.kernel.org
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727771AbeLJRUN (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Mon, 10 Dec 2018 12:20:13 -0500
-Received: from ale.deltatee.com ([207.54.116.67]:59916 "EHLO ale.deltatee.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1727921AbeLJRUM (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Mon, 10 Dec 2018 12:20:12 -0500
-Received: from guinness.priv.deltatee.com ([172.16.1.162])
-        by ale.deltatee.com with esmtp (Exim 4.89)
-        (envelope-from <logang@deltatee.com>)
-        id 1gWPDv-0001JP-Ve; Mon, 10 Dec 2018 10:20:05 -0700
-To:     Jonathan Cameron <jonathan.cameron@huawei.com>,
-        linux-pci@vger.kernel.org
-Cc:     bhelgaas@google.com, lorenzo.pieralisi@arm.com,
-        Eric Wehage <Eric.Wehage@huawei.com>, linuxarm@huawei.com,
-        Stephen Bates <sbates@raithlin.com>
-References: <20181210115653.0000615a@huawei.com>
-From:   Logan Gunthorpe <logang@deltatee.com>
-Message-ID: <45b01572-7d53-c3d0-9a9b-77917ffe6171@deltatee.com>
-Date:   Mon, 10 Dec 2018 10:20:02 -0700
+        id S1729089AbeLJSFC (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Mon, 10 Dec 2018 13:05:02 -0500
+Received: from avon.wwwdotorg.org ([104.237.132.123]:38018 "EHLO
+        avon.wwwdotorg.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1729055AbeLJSFC (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Mon, 10 Dec 2018 13:05:02 -0500
+Received: from [10.20.204.51] (unknown [216.228.112.24])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+        (No client certificate requested)
+        by avon.wwwdotorg.org (Postfix) with ESMTPSA id 777851C00EF;
+        Mon, 10 Dec 2018 11:04:58 -0700 (MST)
+X-Virus-Status: Clean
+X-Virus-Scanned: clamav-milter 0.100.2 at avon.wwwdotorg.org
+Subject: Re: [PATCH V2] PCI: dwc ep: cache config until DBI regs available
+To:     "kishon@ti.com" <kishon@ti.com>
+Cc:     Gustavo Pimentel <gustavo.pimentel@synopsys.com>,
+        Jingoo Han <jingoohan1@gmail.com>,
+        Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
+        Bjorn Helgaas <bhelgaas@google.com>,
+        "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+        Vidya Sagar <vidyas@nvidia.com>,
+        Manikanta Maddireddy <mmaddireddy@nvidia.com>,
+        Trent Piepho <tpiepho@impinj.com>
+References: <20181126230958.8175-1-swarren@wwwdotorg.org>
+ <5586f6c0-4305-5d7e-d0ff-90f7eb8fd363@synopsys.com>
+From:   Stephen Warren <swarren@wwwdotorg.org>
+Message-ID: <5718ccf4-95ba-7823-7d19-5c9888f0077a@wwwdotorg.org>
+Date:   Mon, 10 Dec 2018 11:04:56 -0700
 User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:60.0) Gecko/20100101
- Thunderbird/60.3.0
+ Thunderbird/60.2.1
 MIME-Version: 1.0
-In-Reply-To: <20181210115653.0000615a@huawei.com>
-Content-Type: text/plain; charset=utf-8
-Content-Language: en-CA
+In-Reply-To: <5586f6c0-4305-5d7e-d0ff-90f7eb8fd363@synopsys.com>
+Content-Type: text/plain; charset=utf-8; format=flowed
+Content-Language: en-US
 Content-Transfer-Encoding: 7bit
-X-SA-Exim-Connect-IP: 172.16.1.162
-X-SA-Exim-Rcpt-To: sbates@raithlin.com, linuxarm@huawei.com, Eric.Wehage@huawei.com, lorenzo.pieralisi@arm.com, bhelgaas@google.com, linux-pci@vger.kernel.org, jonathan.cameron@huawei.com
-X-SA-Exim-Mail-From: logang@deltatee.com
-Subject: Re: [RFC] Proposed PCI ECR for description of Advanced Peer to Peer
- Capabilities
-X-SA-Exim-Version: 4.2.1 (built Tue, 02 Aug 2016 21:08:31 +0000)
-X-SA-Exim-Scanned: Yes (on ale.deltatee.com)
 Sender: linux-pci-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-Hi Jonathan,
-
-Thanks for taking this on.
-
-On 2018-12-10 4:56 a.m., Jonathan Cameron wrote:
-> I would recommend reading the ECR and presentation for more details.
-> Anyone who can't get to Google Drive, email me and I'll send a copy directly.
+On 12/4/18 4:02 AM, Gustavo Pimentel wrote:
+> [CC Kishon]
 > 
-> ECR: https://drive.google.com/open?id=1X08pfyjkNwSfpTVBuiut90ajxBZd7BXg
-> Slides: https://drive.google.com/open?id=11d3egA8x91d99-QqfYGZ-MxLGrHpJHCK
+> On 26/11/2018 23:09, Stephen Warren wrote:
+>> From: Stephen Warren <swarren@nvidia.com>
+>>
+>> Some implementations of the DWC PCIe endpoint controller do not allow
+>> access to DBI registers until the attached host has started REFCLK,
+>> released PERST, and the endpoint driver has initialized clocking of the
+>> DBI registers based on that. One such system is NVIDIA's T194 SoC. The
+>> PCIe endpoint subsystem and DWC driver currently don't work on such
+>> hardware, since they assume that all endpoint configuration can happen
+>> at any arbitrary time.
+>>
+>> Enhance the DWC endpoint driver to support such systems by caching all
+>> endpoint configuration in software, and only writing the configuration
+>> to hardware once it's been initialized. This is implemented by splitting
+>> all endpoint controller ops into two functions; the first which simply
+>> records/caches the desired configuration whenever called by the
+>> associated function driver and optionally calls the second, and the
+>> second which actually programs the configuration into hardware, which
+>> may be called either by the first function, or later when it's known
+>> that the DBI registers are available.
 
-I've looked through the ECR now a couple times and haven't really
-spotted any major issues with it.
-
-The minimum supported bandwidth requirement is pretty vague and my
-biggest concern is that hardware vendors must report consistently
-otherwise this is useless. So I'd maybe suggest expanding on what's
-required before hardware is allowed to indicate support.
-
-Also, one thought is, it might be better to add another bit indicating
-performance. So the hardware can say: these TLPs will be supported but
-they will not be supported at high bandwidth.
-
-In terms of defining high bandwidth: what I care about is whether the
-bandwidth through the P2P link will be significantly slower than the
-bandwidth of going to/from system RAM. If that's the case it probably
-means a subset of P2P applications would rather just transfer to RAM
-instead of going P2P.
-
-Logan
+Kishon, any thoughts on this? Thanks.
 
