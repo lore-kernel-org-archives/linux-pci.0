@@ -2,141 +2,94 @@ Return-Path: <SRS0=6KXC=OT=vger.kernel.org=linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-2.8 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,MAILING_LIST_MULTI,SPF_PASS,URIBL_BLOCKED,
-	USER_AGENT_MUTT autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-5.8 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_PASS,
+	URIBL_BLOCKED,USER_AGENT_MUTT autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 7D087C04EB8
-	for <linux-pci@archiver.kernel.org>; Mon, 10 Dec 2018 22:24:56 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 4590FC04EB8
+	for <linux-pci@archiver.kernel.org>; Mon, 10 Dec 2018 22:27:23 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 3C6DB2082F
-	for <linux-pci@archiver.kernel.org>; Mon, 10 Dec 2018 22:24:56 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 073AB20870
+	for <linux-pci@archiver.kernel.org>; Mon, 10 Dec 2018 22:27:22 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=default; t=1544480696;
-	bh=8GzBDr3IF05sb1PvOTqA+jHGxjPF7TVcwt9aEuUlBwQ=;
+	s=default; t=1544480843;
+	bh=PDLjyvRfE0cemEu05PQ0ksV3VLEv5Q1ohXJAdlKLAZg=;
 	h=Date:From:To:Cc:Subject:References:In-Reply-To:List-ID:From;
-	b=APyJJ5N5UoTmd5aHcGI7CUm64UDh1idN/AUsBBdaiGL2elfpYunyc/lMZXS1DulRs
-	 TOc4PyA2U64Mo+oFD+5KkDbVxXhKVEtwuSoKDztZj7KW9HL/HGeAu9Tqd1O3oCJeBR
-	 4WUob+ipAFOSDYRgqo2FfRK6EIhPIsSduDFPnidA=
-DMARC-Filter: OpenDMARC Filter v1.3.2 mail.kernel.org 3C6DB2082F
+	b=ayivXxR/avTCM33zbpdTmqGtIZZysO8nN5TOTBjYaq9i/UzrqrSmatHQ7cxxUZvEn
+	 IP++X8FSTofqjtTmCglecCfeBORmkz7xM1bvTz6HEwpsXWwBSjZ0KNGbZI+JEna0uC
+	 851ihRtlqelxtxAHx3p6l/5sU+2UQ1J0GxJew2Mk=
+DMARC-Filter: OpenDMARC Filter v1.3.2 mail.kernel.org 073AB20870
 Authentication-Results: mail.kernel.org; dmarc=fail (p=none dis=none) header.from=kernel.org
 Authentication-Results: mail.kernel.org; spf=none smtp.mailfrom=linux-pci-owner@vger.kernel.org
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1729119AbeLJWYz (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Mon, 10 Dec 2018 17:24:55 -0500
-Received: from mail.kernel.org ([198.145.29.99]:52714 "EHLO mail.kernel.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1726024AbeLJWYz (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Mon, 10 Dec 2018 17:24:55 -0500
-Received: from localhost (unknown [69.71.4.100])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
-        (No client certificate requested)
-        by mail.kernel.org (Postfix) with ESMTPSA id CA46F2082F;
-        Mon, 10 Dec 2018 22:24:53 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=default; t=1544480694;
-        bh=8GzBDr3IF05sb1PvOTqA+jHGxjPF7TVcwt9aEuUlBwQ=;
-        h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-        b=p/xZ21JMR9j4tF0BjajlBcch/e7wrIEV1MJ82mLUSo3FgL/hY54+NV8P6smqjCt2w
-         m/df6HtJyUuuiMXy5oR+9GQarUEl+Ys/3hH6fSelszpZ6Byi+03M+C4ojiyNpOKZtI
-         yEf4Rgz0mMLoefLdLcPRRCRcpVQlJdHiAPJdiONY=
-Date:   Mon, 10 Dec 2018 16:24:52 -0600
-From:   Bjorn Helgaas <helgaas@kernel.org>
-To:     "Grumbach, Emmanuel" <emmanuel.grumbach@intel.com>
-Cc:     "bjorn@helgaas.com" <bjorn@helgaas.com>,
-        "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-        "Mertarg10@gmail.com" <Mertarg10@gmail.com>,
-        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
-Subject: Re: Fwd: [Bug 201647] New: Intel Wireless card 3165 does not get
- detected but bluetooth works
-Message-ID: <20181210222452.GC85090@google.com>
-References: <bug-201647-193951@https.bugzilla.kernel.org/>
- <CABhMZUXc4FS-f52ZDsErEhbkm_jjEz+kn75YO5Tuvp42Qm+1xw@mail.gmail.com>
- <20181128211959.GB178809@google.com>
- <0BA3FCBA62E2DC44AF3030971E174FB3013373E4A3@HASMSX112.ger.corp.intel.com>
+        id S1727515AbeLJW1W (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Mon, 10 Dec 2018 17:27:22 -0500
+Received: from mail-ot1-f41.google.com ([209.85.210.41]:41771 "EHLO
+        mail-ot1-f41.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726392AbeLJW1V (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Mon, 10 Dec 2018 17:27:21 -0500
+Received: by mail-ot1-f41.google.com with SMTP id u16so12062258otk.8;
+        Mon, 10 Dec 2018 14:27:21 -0800 (PST)
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20161025;
+        h=x-gm-message-state:date:from:to:cc:subject:message-id:references
+         :mime-version:content-disposition:in-reply-to:user-agent;
+        bh=NvRhIVVhr/cozyJX9RAjS/CB+7fBgUA/l3WWhv0euSk=;
+        b=FjaLypW/I7BVPbK7wZ1Qalvoj/VIg4D2ZToxXFa+MuNTRaaHlzOzSDid/5CQyCYAkn
+         lI1fNWncyb49TPBp4SaFZTSKrVgPGdCKrKPD8XhjSYWWt0P8YOFcGSvhS/aaV/eON93i
+         OGdGqMQgwRb+N//MYEoHS+ixlbI95cYu3gqcdY8TdjH1+UIjOLuLIcWJRQvGs2opGqju
+         3Ai4nJk6ud6qJwZ4rGEyrjqUYex6R4C3eHO43fcIO0lxHNhrrSFKTCHrhcI+Nkne1t6L
+         jl6zYY+yhIZmhveqM9f3vdRkjqw00JOTpNA7sFSOWTDlfiq2j6HbfRb5NY8onSIFUxnJ
+         CKRQ==
+X-Gm-Message-State: AA+aEWYaJKUyN4rpL7Y98UW0ijpbj+CEy23sHNYlo34Vk3X2NHTTzNdi
+        iR4dY1KLP5ECxMSYnbYRbw==
+X-Google-Smtp-Source: AFSGD/UddJoUUe90aa225QLWVvx6jXXsrkNO0JvtpOE/jl2a4WMPME28Jfk11g9sdE5mSwnpMhleLA==
+X-Received: by 2002:a9d:3208:: with SMTP id t8mr9630444otc.312.1544480841066;
+        Mon, 10 Dec 2018 14:27:21 -0800 (PST)
+Received: from localhost (24-155-109-49.dyn.grandenetworks.net. [24.155.109.49])
+        by smtp.gmail.com with ESMTPSA id s66sm9097817oia.55.2018.12.10.14.27.20
+        (version=TLS1_2 cipher=ECDHE-RSA-CHACHA20-POLY1305 bits=256/256);
+        Mon, 10 Dec 2018 14:27:20 -0800 (PST)
+Date:   Mon, 10 Dec 2018 16:27:19 -0600
+From:   Rob Herring <robh@kernel.org>
+To:     Xiaowei Bao <xiaowei.bao@nxp.com>
+Cc:     bhelgaas@google.com, robh+dt@kernel.org, mark.rutland@arm.com,
+        shawnguo@kernel.org, leoyang.li@nxp.com, kishon@ti.com,
+        lorenzo.pieralisi@arm.com, arnd@arndb.de,
+        gregkh@linuxfoundation.org, minghuan.Lian@nxp.com,
+        mingkai.hu@nxp.com, roy.zang@nxp.com, kstewart@linuxfoundation.org,
+        cyrille.pitchen@free-electrons.com, pombredanne@nexb.com,
+        shawn.lin@rock-chips.com, niklas.cassel@axis.com,
+        linux-pci@vger.kernel.org, devicetree@vger.kernel.org,
+        linux-kernel@vger.kernel.org, linux-arm-kernel@lists.infradead.org,
+        linuxppc-dev@lists.ozlabs.org, Xiaowei Bao <xiaowei.bao@nxp.com>
+Subject: Re: [PATCHv3 1/4] dt-bindings: add DT binding for the layerscape
+ PCIe controller with EP mode
+Message-ID: <20181210222719.GA6506@bogus>
+References: <20181203103505.46885-1-xiaowei.bao@nxp.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <0BA3FCBA62E2DC44AF3030971E174FB3013373E4A3@HASMSX112.ger.corp.intel.com>
+In-Reply-To: <20181203103505.46885-1-xiaowei.bao@nxp.com>
 User-Agent: Mutt/1.10.1 (2018-07-13)
 Sender: linux-pci-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-On Sun, Dec 02, 2018 at 06:57:35AM +0000, Grumbach, Emmanuel wrote:
-> > On Fri, Nov 09, 2018 at 03:43:06PM -0600, Bjorn Helgaas wrote:
-> > > ---------- Forwarded message ---------
-> > > From: <bugzilla-daemon@bugzilla.kernel.org>
-> > > Date: Fri, Nov 9, 2018 at 4:10 AM
-> > > Subject: [Bug 201647] New: Intel Wireless card 3165 does not get
-> > > detected but bluetooth works
-> > >
-> > > https://bugzilla.kernel.org/show_bug.cgi?id=201647
-> > >
-> > >             Bug ID: 201647
-> > >            Summary: Intel Wireless card 3165 does not get detected but
-> > >                     bluetooth works
-> > >            Product: Drivers
-> > >            Version: 2.5
-> > >     Kernel Version: 4.19.1
-> > >           Hardware: Intel
-> > >                 OS: Linux
-> > >               Tree: Mainline
-> > >             Status: NEW
-> > >           Severity: high
-> > >           Priority: P1
-> > >          Component: PCI
-> > >           Assignee: drivers_pci@kernel-bugs.osdl.org
-> > >           Reporter: Mertarg10@gmail.com
-> > >         Regression: No
-> > >
-> > > This bug affects most of the devices with a Celeron N4000 and an Intel
-> > > wifi 3165 Ac adapter.
-> > >
-> > > When using Linux wifi is not working however, Bluetooth is working
-> > > fine.  Also, Bluetooth part of this chip is connected via btusb and
-> > > the wifi part of this chip is connected via PCIe.
-> > 
-> > Can you attach a screenshot of the Windows 10 device manager info for the
-> > wifi adapter to the bugzilla?  If you can get a raw hex dump of its config
-> > space, that would be awesome.
-> > 
-> > Also attach a copy of your kernel .config file (typically in /boot/).
-> > 
-> > My only guess is that maybe the system keeps wifi completely powered
-> > down and uses hotplug to add it when needed.  [1] mentions wifi being on
-> > pcibus 1 under Windows.  Your lspci does show bridge 00:13.0 leading to bus
-> > 01, but Linux doesn't find any devices on bus 01.
-> > 
-> > Hotplug could be done via either acpiphp (ACPI mediated hotplug) or pciehp
-> > (native PCIe hotplug).  Your dmesg shows you do have acpiphp.
-> > 
-> > I can't tell about pciehp (your .config will show that), but I think pciehp will
-> > only claim bridges where SltCap contains HotPlug+, and yours shows HotPlug-
-> > , so I don't think pciehp will do anything on your system.
-> > 
-> > Even if the system does use hotplug, I don't know what mechanism the OS
-> > would use to wake up the device, since we don't know it even exists.  I guess
-> > there could be some magic switch accessible via USB.
-> > But if that were the case, I'm sure Emmanuel would know about it.
+On Mon,  3 Dec 2018 18:35:02 +0800, Xiaowei Bao wrote:
+> Add the documentation for the Device Tree binding for the layerscape PCIe
+> controller with EP mode.
 > 
-> Hm... Don't be so sure... :)
-> I don't think we have anything as fancy as this.
-> I guess you can try to dig into the BIOS settings?
-> I have heard of such a switch that would make the device disappear.
+> Signed-off-by: Xiaowei Bao <xiaowei.bao@nxp.com>
+> ---
+> v2:
+>  - Add the SoC specific compatibles.
+> v3:
+>  - modify the commit message.
+> 
+>  .../devicetree/bindings/pci/layerscape-pci.txt     |    3 +++
+>  1 files changed, 3 insertions(+), 0 deletions(-)
+> 
 
-It's worth looking, but I don't understand how a BIOS switch would
-solve this problem.  I assume that with the same BIOS settings,
-Windows works and Linux fails.
-
-Maybe there would be a clue in an acpidump from affected machines,
-e.g., maybe we'd see some kind of ACPI hotplug notification.  That
-seems like a long shot because we do have acpiphp in the kernel, and
-it *should* be handling such notifications, but it could always be
-broken.
-
-The Windows device manager info (requested above) would be
-interesting.
-
-Bjorn
+Reviewed-by: Rob Herring <robh@kernel.org>
