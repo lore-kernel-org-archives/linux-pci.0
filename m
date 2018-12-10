@@ -5,96 +5,158 @@ X-Spam-Level:
 X-Spam-Status: No, score=-0.9 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
 	MAILING_LIST_MULTI,SPF_PASS autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id A227BC04EB8
-	for <linux-pci@archiver.kernel.org>; Mon, 10 Dec 2018 11:57:14 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id CA839C04EB8
+	for <linux-pci@archiver.kernel.org>; Mon, 10 Dec 2018 15:07:14 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 7629F2086D
-	for <linux-pci@archiver.kernel.org>; Mon, 10 Dec 2018 11:57:14 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.3.2 mail.kernel.org 7629F2086D
-Authentication-Results: mail.kernel.org; dmarc=none (p=none dis=none) header.from=huawei.com
+	by mail.kernel.org (Postfix) with ESMTP id 982C720855
+	for <linux-pci@archiver.kernel.org>; Mon, 10 Dec 2018 15:07:14 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.3.2 mail.kernel.org 982C720855
+Authentication-Results: mail.kernel.org; dmarc=none (p=none dis=none) header.from=arm.com
 Authentication-Results: mail.kernel.org; spf=none smtp.mailfrom=linux-pci-owner@vger.kernel.org
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727056AbeLJL5N (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Mon, 10 Dec 2018 06:57:13 -0500
-Received: from szxga05-in.huawei.com ([45.249.212.191]:15670 "EHLO huawei.com"
-        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1726146AbeLJL5N (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Mon, 10 Dec 2018 06:57:13 -0500
-Received: from DGGEMS407-HUB.china.huawei.com (unknown [172.30.72.60])
-        by Forcepoint Email with ESMTP id 8C36F8208A4A9;
-        Mon, 10 Dec 2018 19:57:10 +0800 (CST)
-Received: from localhost (10.202.226.46) by DGGEMS407-HUB.china.huawei.com
- (10.3.19.207) with Microsoft SMTP Server id 14.3.408.0; Mon, 10 Dec 2018
- 19:57:02 +0800
-Date:   Mon, 10 Dec 2018 11:56:53 +0000
-From:   Jonathan Cameron <jonathan.cameron@huawei.com>
-To:     <linux-pci@vger.kernel.org>
-CC:     Logan Gunthorpe <logang@deltatee.com>, <bhelgaas@google.com>,
-        <lorenzo.pieralisi@arm.com>, Eric Wehage <Eric.Wehage@huawei.com>,
-        <linuxarm@huawei.com>
-Subject: [RFC] Proposed PCI ECR for description of Advanced Peer to Peer
- Capabilities
-Message-ID: <20181210115653.0000615a@huawei.com>
-Organization: Huawei
-X-Mailer: Claws Mail 3.16.0 (GTK+ 2.24.32; i686-w64-mingw32)
+        id S1727761AbeLJPHN (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Mon, 10 Dec 2018 10:07:13 -0500
+Received: from foss.arm.com ([217.140.101.70]:55922 "EHLO foss.arm.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1727109AbeLJPHN (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Mon, 10 Dec 2018 10:07:13 -0500
+Received: from usa-sjc-imap-foss1.foss.arm.com (unknown [10.72.51.249])
+        by usa-sjc-mx-foss1.foss.arm.com (Postfix) with ESMTP id DDE091596;
+        Mon, 10 Dec 2018 07:07:12 -0800 (PST)
+Received: from [10.1.196.78] (ostrya.cambridge.arm.com [10.1.196.78])
+        by usa-sjc-imap-foss1.foss.arm.com (Postfix) with ESMTPSA id 34E9F3F59C;
+        Mon, 10 Dec 2018 07:07:10 -0800 (PST)
+Subject: Re: [PATCH v5 5/7] iommu: Add virtio-iommu driver
+To:     "Michael S. Tsirkin" <mst@redhat.com>
+Cc:     Mark Rutland <Mark.Rutland@arm.com>,
+        "virtio-dev@lists.oasis-open.org" <virtio-dev@lists.oasis-open.org>,
+        Lorenzo Pieralisi <Lorenzo.Pieralisi@arm.com>,
+        "tnowicki@caviumnetworks.com" <tnowicki@caviumnetworks.com>,
+        "devicetree@vger.kernel.org" <devicetree@vger.kernel.org>,
+        Marc Zyngier <Marc.Zyngier@arm.com>,
+        "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+        "joro@8bytes.org" <joro@8bytes.org>,
+        Will Deacon <Will.Deacon@arm.com>,
+        "virtualization@lists.linux-foundation.org" 
+        <virtualization@lists.linux-foundation.org>,
+        "eric.auger@redhat.com" <eric.auger@redhat.com>,
+        "iommu@lists.linux-foundation.org" <iommu@lists.linux-foundation.org>,
+        "robh+dt@kernel.org" <robh+dt@kernel.org>,
+        "bhelgaas@google.com" <bhelgaas@google.com>,
+        Robin Murphy <Robin.Murphy@arm.com>,
+        "kvmarm@lists.cs.columbia.edu" <kvmarm@lists.cs.columbia.edu>
+References: <20181122193801.50510-1-jean-philippe.brucker@arm.com>
+ <20181122193801.50510-6-jean-philippe.brucker@arm.com>
+ <20181123165742-mutt-send-email-mst@kernel.org>
+ <fd221210-7e12-1d15-0c80-52a761f6893d@arm.com>
+ <20181127125424-mutt-send-email-mst@kernel.org>
+ <ef97313f-4795-9537-e0b8-8bf6751db6a6@arm.com>
+ <20181127131455-mutt-send-email-mst@kernel.org>
+From:   Jean-Philippe Brucker <jean-philippe.brucker@arm.com>
+Message-ID: <29bdf062-06cb-4b7d-1753-33fac609ddc3@arm.com>
+Date:   Mon, 10 Dec 2018 15:06:47 +0000
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:60.0) Gecko/20100101
+ Thunderbird/60.0
 MIME-Version: 1.0
-Content-Type: text/plain; charset="US-ASCII"
+In-Reply-To: <20181127131455-mutt-send-email-mst@kernel.org>
+Content-Type: text/plain; charset=windows-1252
+Content-Language: en-US
 Content-Transfer-Encoding: 7bit
-X-Originating-IP: [10.202.226.46]
-X-CFilter-Loop: Reflected
 Sender: linux-pci-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-Hi All,
+On 27/11/2018 18:53, Michael S. Tsirkin wrote:
+> On Tue, Nov 27, 2018 at 06:10:46PM +0000, Jean-Philippe Brucker wrote:
+>> On 27/11/2018 18:04, Michael S. Tsirkin wrote:
+>>> On Tue, Nov 27, 2018 at 05:50:50PM +0000, Jean-Philippe Brucker wrote:
+>>>> On 23/11/2018 22:02, Michael S. Tsirkin wrote:
+>>>>>> +/*
+>>>>>> + * __viommu_sync_req - Complete all in-flight requests
+>>>>>> + *
+>>>>>> + * Wait for all added requests to complete. When this function returns, all
+>>>>>> + * requests that were in-flight at the time of the call have completed.
+>>>>>> + */
+>>>>>> +static int __viommu_sync_req(struct viommu_dev *viommu)
+>>>>>> +{
+>>>>>> +	int ret = 0;
+>>>>>> +	unsigned int len;
+>>>>>> +	size_t write_len;
+>>>>>> +	struct viommu_request *req;
+>>>>>> +	struct virtqueue *vq = viommu->vqs[VIOMMU_REQUEST_VQ];
+>>>>>> +
+>>>>>> +	assert_spin_locked(&viommu->request_lock);
+>>>>>> +
+>>>>>> +	virtqueue_kick(vq);
+>>>>>> +
+>>>>>> +	while (!list_empty(&viommu->requests)) {
+>>>>>> +		len = 0;
+>>>>>> +		req = virtqueue_get_buf(vq, &len);
+>>>>>> +		if (!req)
+>>>>>> +			continue;
+>>>>>> +
+>>>>>> +		if (!len)
+>>>>>> +			viommu_set_req_status(req->buf, req->len,
+>>>>>> +					      VIRTIO_IOMMU_S_IOERR);
+>>>>>> +
+>>>>>> +		write_len = req->len - req->write_offset;
+>>>>>> +		if (req->writeback && len == write_len)
+>>>>>> +			memcpy(req->writeback, req->buf + req->write_offset,
+>>>>>> +			       write_len);
+>>>>>> +
+>>>>>> +		list_del(&req->list);
+>>>>>> +		kfree(req);
+>>>>>> +	}
+>>>>>
+>>>>> I didn't notice this in the past but it seems this will spin
+>>>>> with interrupts disabled until host handles the request.
+>>>>> Please do not do this - host execution can be another
+>>>>> task that needs the same host CPU. This will then disable
+>>>>> interrupts for a very very long time.
+>>>>
+>>>> In the guest yes, but that doesn't prevent the host from running another
+>>>> task right?
+>>>
+>>> Doesn't prevent it but it will delay it significantly
+>>> until scheduler decides to kick the VCPU task out.
+>>>
+>>>> My tests run fine when QEMU is bound to a single CPU, even
+>>>> though vcpu and viommu run in different threads
+>>>>
+>>>>> What to do then? Queue in software and wake up task.
+>>>>
+>>>> Unfortunately I can't do anything here, because IOMMU drivers can't
+>>>> sleep in the iommu_map() or iommu_unmap() path.
+>>>>
+>>>> The problem is the same
+>>>> for all IOMMU drivers. That's because the DMA API allows drivers to call
+>>>> some functions with interrupts disabled. For example
+>>>> Documentation/DMA-API-HOWTO.txt allows dma_alloc_coherent() and
+>>>> dma_unmap_single() to be called in interrupt context.
+>>>
+>>> In fact I don't really understand how it's supposed to
+>>> work at all: you only sync when ring is full.
+>>> So host may not have seen your map request if ring
+>>> is not full.
+>>> Why is it safe to use the address with a device then?
+>>
+>> viommu_map() calls viommu_send_req_sync(), which does the sync
+>> immediately after adding the MAP request.
+>>
+>> Thanks,
+>> Jean
+> 
+> I see. So it happens on every request. Maybe you should clear
+> event index then. This way if exits are disabled you know that
+> host is processing the ring. Event index is good for when
+> you don't care when it will be processed, you just want
+> to reduce number of exits as much as possible.
+> 
 
-This is perhaps a somewhat unusual RFC as it's to ask for feedback on an ECR
-that is currently under discussion in the PCI SIG.  That ECR, at least partly,
-came out of the issues highlighted during the discussion of P2PDMA.  In
-that patch set, p2pdma is only allowed if there is a switch between the
-devices involved ensuring the path does not pass through a root port.
-Put simply there is no way to know if a root complex will allow p2p or not.
-
-So we are asking for feedback at a stage where modifications to the
-proposal can be made. Eric has agreed to this being shared with mailing list
-to hopefully get such feedback.  Note this is under active discussion within
-the SIG so inputs in that forum also welcome.
-
-I would recommend reading the ECR and presentation for more details.
-Anyone who can't get to Google Drive, email me and I'll send a copy directly.
-
-ECR: https://drive.google.com/open?id=1X08pfyjkNwSfpTVBuiut90ajxBZd7BXg
-Slides: https://drive.google.com/open?id=11d3egA8x91d99-QqfYGZ-MxLGrHpJHCK
-
-My summary probably won't be great, but I'll give it a go to persuade people
-to look at the real docs!
-
-Problem Statement:
-
-Linux does not generally enable Peer to Peer because (amongst other reasons)
-it does not know which Root Complexes support Peer to Peer.
-
-* Some Root Complexes do not support Peer to Peer
-* Some Root Complexes only support Posted Peer to Peer
-* Some Root Complexes only support Peer to Peer within one PCIe Segment
-* Some Root Complexes only support Address Decode Peer to Peer (no ID routing)
-* Some Root Complexes may not support Peer to Peer from Integrated End Points
-
-Related other issue
-* MPS must be programmed the same across all devices supporting P2P
-* Hot plugged devices might require a smaller MPS than was programmed.
-
-Solution:
-* New extended capability and control (though only one bit in the control)
-* Advertise what a Peer to Peer Root Port and Switch Down Stream ports can do.
-* Define packet splitting scheme for MPS mismatches.
-	- Rules on how this must be done if supported.
-
-All feedback welcome.  Let's make sure we get this right.
+I think that's already the case: since we don't attach a callback to the
+request queue, VRING_AVAIL_F_NO_INTERRUPT is set in avail_flags_shadow,
+which causes the used event index to stay clear.
 
 Thanks,
-
-Jonathan Cameron
-Huawei
-
+Jean
