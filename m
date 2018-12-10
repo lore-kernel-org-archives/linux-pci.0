@@ -5,73 +5,76 @@ X-Spam-Level:
 X-Spam-Status: No, score=-0.9 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
 	MAILING_LIST_MULTI,SPF_PASS autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 64633C04EB8
-	for <linux-pci@archiver.kernel.org>; Mon, 10 Dec 2018 19:37:07 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 7E020C04EB8
+	for <linux-pci@archiver.kernel.org>; Mon, 10 Dec 2018 19:39:44 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 13B9B20672
-	for <linux-pci@archiver.kernel.org>; Mon, 10 Dec 2018 19:37:07 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.3.2 mail.kernel.org 13B9B20672
-Authentication-Results: mail.kernel.org; dmarc=none (p=none dis=none) header.from=huawei.com
+	by mail.kernel.org (Postfix) with ESMTP id A4E3220821
+	for <linux-pci@archiver.kernel.org>; Mon, 10 Dec 2018 19:39:43 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.3.2 mail.kernel.org A4E3220821
+Authentication-Results: mail.kernel.org; dmarc=none (p=none dis=none) header.from=deltatee.com
 Authentication-Results: mail.kernel.org; spf=none smtp.mailfrom=linux-pci-owner@vger.kernel.org
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1728258AbeLJThG (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Mon, 10 Dec 2018 14:37:06 -0500
-Received: from dfwrgout.huawei.com ([206.16.17.72]:2060 "EHLO huawei.com"
-        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1727570AbeLJThG (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Mon, 10 Dec 2018 14:37:06 -0500
-Received: from dfweml701-cah.china.huawei.com (unknown [172.18.9.220])
-        by Forcepoint Email with ESMTP id C1F9E4C133404;
-        Mon, 10 Dec 2018 13:37:03 -0600 (CST)
-Received: from SJCEML701-CHM.china.huawei.com (10.208.112.40) by
- dfweml701-cah.china.huawei.com (10.193.5.175) with Microsoft SMTP Server
- (TLS) id 14.3.408.0; Mon, 10 Dec 2018 11:37:04 -0800
-Received: from SJCEML521-MBS.china.huawei.com ([169.254.2.185]) by
- SJCEML701-CHM.china.huawei.com ([169.254.3.191]) with mapi id 14.03.0415.000;
- Mon, 10 Dec 2018 11:36:57 -0800
-From:   Eric Wehage <Eric.Wehage@huawei.com>
-To:     Logan Gunthorpe <logang@deltatee.com>,
+        id S1727611AbeLJTjm (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Mon, 10 Dec 2018 14:39:42 -0500
+Received: from ale.deltatee.com ([207.54.116.67]:32886 "EHLO ale.deltatee.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1727610AbeLJTjm (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Mon, 10 Dec 2018 14:39:42 -0500
+Received: from guinness.priv.deltatee.com ([172.16.1.162])
+        by ale.deltatee.com with esmtp (Exim 4.89)
+        (envelope-from <logang@deltatee.com>)
+        id 1gWROy-0003EO-Vs; Mon, 10 Dec 2018 12:39:37 -0700
+To:     Eric Wehage <Eric.Wehage@huawei.com>,
         Jonathan Cameron <jonathan.cameron@huawei.com>,
         "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
-CC:     "bhelgaas@google.com" <bhelgaas@google.com>,
+Cc:     "bhelgaas@google.com" <bhelgaas@google.com>,
         "lorenzo.pieralisi@arm.com" <lorenzo.pieralisi@arm.com>,
         Linuxarm <linuxarm@huawei.com>,
         Stephen Bates <sbates@raithlin.com>
-Subject: RE: [RFC] Proposed PCI ECR for description of Advanced Peer to Peer
- Capabilities
-Thread-Topic: [RFC] Proposed PCI ECR for description of Advanced Peer to
- Peer Capabilities
-Thread-Index: AQHUkH99uHLQpIpsU0OEL04E/sq5aKV4vkgA//+DUoCAAJj0AP//ejhA
-Date:   Mon, 10 Dec 2018 19:36:57 +0000
-Message-ID: <DD8FB053C05D2D4DB8AA6C9332617878599788A2@sjceml521-mbs.china.huawei.com>
 References: <20181210115653.0000615a@huawei.com>
  <45b01572-7d53-c3d0-9a9b-77917ffe6171@deltatee.com>
  <DD8FB053C05D2D4DB8AA6C933261787859975862@sjceml521-mbs.china.huawei.com>
  <f00c1a70-b022-0fd7-71dd-b9d37b916ef7@deltatee.com>
-In-Reply-To: <f00c1a70-b022-0fd7-71dd-b9d37b916ef7@deltatee.com>
-Accept-Language: en-US
-Content-Language: en-US
-X-MS-Has-Attach: 
-X-MS-TNEF-Correlator: 
-x-originating-ip: [10.212.247.157]
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: base64
+ <DD8FB053C05D2D4DB8AA6C9332617878599788A2@sjceml521-mbs.china.huawei.com>
+From:   Logan Gunthorpe <logang@deltatee.com>
+Message-ID: <41f870ad-2255-4840-34b1-eff0d20b993d@deltatee.com>
+Date:   Mon, 10 Dec 2018 12:39:36 -0700
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:60.0) Gecko/20100101
+ Thunderbird/60.3.0
 MIME-Version: 1.0
-X-CFilter-Loop: Reflected
+In-Reply-To: <DD8FB053C05D2D4DB8AA6C9332617878599788A2@sjceml521-mbs.china.huawei.com>
+Content-Type: text/plain; charset=utf-8
+Content-Language: en-CA
+Content-Transfer-Encoding: 7bit
+X-SA-Exim-Connect-IP: 172.16.1.162
+X-SA-Exim-Rcpt-To: sbates@raithlin.com, linuxarm@huawei.com, lorenzo.pieralisi@arm.com, bhelgaas@google.com, linux-pci@vger.kernel.org, jonathan.cameron@huawei.com, Eric.Wehage@huawei.com
+X-SA-Exim-Mail-From: logang@deltatee.com
+Subject: Re: [RFC] Proposed PCI ECR for description of Advanced Peer to Peer
+ Capabilities
+X-SA-Exim-Version: 4.2.1 (built Tue, 02 Aug 2016 21:08:31 +0000)
+X-SA-Exim-Scanned: Yes (on ale.deltatee.com)
 Sender: linux-pci-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-VGhlcmUgYXJlIDUgVExQIHR5cGVzIGRlc2NyaWJlZCBpbiBlYWNoIG9mIHRoZSB0aHJlZSBQMlAg
-Um91dGVzLiBJJ20NCm5vdCBzdXJlIHRoYXQgYW55b25lIHdvdWxkIGNhcmUgYWJvdXQgTWVzc2Fn
-ZSBCYW5kd2lkdGgsIHNvIEkNCmNvdWxkIHNpbXBseSBhZGQgMyBiaXRzIHRvIGVhY2ggUm91dGUg
-cmVnaXN0ZXIgaW5kaWNhdGluZyB3aGV0aGVyIHRoZQ0KUDJQIHJvdXRlIGJhbmR3aWR0aCBzdXBw
-b3J0cyB0aGUgc2FtZSBvciBtb3JlIGJhbmR3aWR0aCB0aGFuIGlmIGl0DQp0YXJnZXRlZCBEUkFN
-Lg0KDQpUaGUgdGhyZWUgUk8vSFdJbml0IGJpdHMgZm9yIGVhY2ggcm91dGUgcmVnaXN0ZXIgd291
-bGQgYmU6DQotIFAyUCBNZW1vcnkgUmVhZCBCYW5kd2lkdGggaXMgZXF1YWwgdG8gb3IgZ3JlYXRl
-ciB0aGFuIHRvIE1haW4NCiAgIE1lbW9yeQ0KLSBQMlAgTWVtb3J5IFdyaXRlIEJhbmR3aWR0aCBp
-cyBlcXVhbCB0byBvciBncmVhdGVyIHRoYW4gdG8gTWFpbg0KICAgTWVtb3J5DQotIFAyUCBNZW1v
-cnkgQXRvbWljT3AgQmFuZHdpZHRoIGlzIGVxdWFsIHRvIG9yIGdyZWF0ZXIgdGhhbiB0byBNYWlu
-DQogICBNZW1vcnkNCg0KRXJpYyBXZWhhZ2UNCkh1YXdlaSBQcmluY2lwYWwgRW5naW5lZXIsIFBD
-SWUNCg0K
+
+
+On 2018-12-10 12:36 p.m., Eric Wehage wrote:
+> There are 5 TLP types described in each of the three P2P Routes. I'm
+> not sure that anyone would care about Message Bandwidth, so I
+> could simply add 3 bits to each Route register indicating whether the
+> P2P route bandwidth supports the same or more bandwidth than if it
+> targeted DRAM.
+> 
+> The three RO/HWInit bits for each route register would be:
+> - P2P Memory Read Bandwidth is equal to or greater than to Main
+>    Memory
+> - P2P Memory Write Bandwidth is equal to or greater than to Main
+>    Memory
+> - P2P Memory AtomicOp Bandwidth is equal to or greater than to Main
+>    Memory
+
+Yeah! That sounds great. Thanks.
+
+Logan
