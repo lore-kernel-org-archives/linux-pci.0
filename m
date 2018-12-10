@@ -2,161 +2,106 @@ Return-Path: <SRS0=6KXC=OT=vger.kernel.org=linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-0.9 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	MAILING_LIST_MULTI,SPF_PASS autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-7.4 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+	MAILING_LIST_MULTI,MENTIONS_GIT_HOSTING,SPF_PASS,USER_AGENT_MUTT
+	autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id CA839C04EB8
-	for <linux-pci@archiver.kernel.org>; Mon, 10 Dec 2018 15:07:14 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 303B1C67839
+	for <linux-pci@archiver.kernel.org>; Mon, 10 Dec 2018 16:18:03 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 982C720855
-	for <linux-pci@archiver.kernel.org>; Mon, 10 Dec 2018 15:07:14 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.3.2 mail.kernel.org 982C720855
+	by mail.kernel.org (Postfix) with ESMTP id EA21D2086D
+	for <linux-pci@archiver.kernel.org>; Mon, 10 Dec 2018 16:18:02 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.3.2 mail.kernel.org EA21D2086D
 Authentication-Results: mail.kernel.org; dmarc=none (p=none dis=none) header.from=arm.com
 Authentication-Results: mail.kernel.org; spf=none smtp.mailfrom=linux-pci-owner@vger.kernel.org
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727761AbeLJPHN (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Mon, 10 Dec 2018 10:07:13 -0500
-Received: from foss.arm.com ([217.140.101.70]:55922 "EHLO foss.arm.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1727109AbeLJPHN (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Mon, 10 Dec 2018 10:07:13 -0500
+        id S1728575AbeLJQSB (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Mon, 10 Dec 2018 11:18:01 -0500
+Received: from usa-sjc-mx-foss1.foss.arm.com ([217.140.101.70]:57422 "EHLO
+        foss.arm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1728596AbeLJQSB (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Mon, 10 Dec 2018 11:18:01 -0500
 Received: from usa-sjc-imap-foss1.foss.arm.com (unknown [10.72.51.249])
-        by usa-sjc-mx-foss1.foss.arm.com (Postfix) with ESMTP id DDE091596;
-        Mon, 10 Dec 2018 07:07:12 -0800 (PST)
-Received: from [10.1.196.78] (ostrya.cambridge.arm.com [10.1.196.78])
-        by usa-sjc-imap-foss1.foss.arm.com (Postfix) with ESMTPSA id 34E9F3F59C;
-        Mon, 10 Dec 2018 07:07:10 -0800 (PST)
-Subject: Re: [PATCH v5 5/7] iommu: Add virtio-iommu driver
-To:     "Michael S. Tsirkin" <mst@redhat.com>
-Cc:     Mark Rutland <Mark.Rutland@arm.com>,
-        "virtio-dev@lists.oasis-open.org" <virtio-dev@lists.oasis-open.org>,
-        Lorenzo Pieralisi <Lorenzo.Pieralisi@arm.com>,
-        "tnowicki@caviumnetworks.com" <tnowicki@caviumnetworks.com>,
-        "devicetree@vger.kernel.org" <devicetree@vger.kernel.org>,
-        Marc Zyngier <Marc.Zyngier@arm.com>,
-        "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-        "joro@8bytes.org" <joro@8bytes.org>,
-        Will Deacon <Will.Deacon@arm.com>,
-        "virtualization@lists.linux-foundation.org" 
-        <virtualization@lists.linux-foundation.org>,
-        "eric.auger@redhat.com" <eric.auger@redhat.com>,
-        "iommu@lists.linux-foundation.org" <iommu@lists.linux-foundation.org>,
-        "robh+dt@kernel.org" <robh+dt@kernel.org>,
-        "bhelgaas@google.com" <bhelgaas@google.com>,
-        Robin Murphy <Robin.Murphy@arm.com>,
-        "kvmarm@lists.cs.columbia.edu" <kvmarm@lists.cs.columbia.edu>
-References: <20181122193801.50510-1-jean-philippe.brucker@arm.com>
- <20181122193801.50510-6-jean-philippe.brucker@arm.com>
- <20181123165742-mutt-send-email-mst@kernel.org>
- <fd221210-7e12-1d15-0c80-52a761f6893d@arm.com>
- <20181127125424-mutt-send-email-mst@kernel.org>
- <ef97313f-4795-9537-e0b8-8bf6751db6a6@arm.com>
- <20181127131455-mutt-send-email-mst@kernel.org>
-From:   Jean-Philippe Brucker <jean-philippe.brucker@arm.com>
-Message-ID: <29bdf062-06cb-4b7d-1753-33fac609ddc3@arm.com>
-Date:   Mon, 10 Dec 2018 15:06:47 +0000
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:60.0) Gecko/20100101
- Thunderbird/60.0
+        by usa-sjc-mx-foss1.foss.arm.com (Postfix) with ESMTP id AF65D1596;
+        Mon, 10 Dec 2018 08:18:00 -0800 (PST)
+Received: from e107981-ln.cambridge.arm.com (e107981-ln.cambridge.arm.com [10.1.197.40])
+        by usa-sjc-imap-foss1.foss.arm.com (Postfix) with ESMTPSA id 11AD83F6A8;
+        Mon, 10 Dec 2018 08:17:58 -0800 (PST)
+Date:   Mon, 10 Dec 2018 16:17:53 +0000
+From:   Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
+To:     Marc Zyngier <marc.zyngier@arm.com>,
+        Gustavo Pimentel <gustavo.pimentel@synopsys.com>
+Cc:     linux-pci@vger.kernel.org, Bjorn Helgaas <helgaas@google.com>,
+        Trent Piepho <tpiepho@impinj.com>,
+        Jingoo Han <jingoohan1@gmail.com>, faiz_abbas@ti.com,
+        Joao Pinto <Joao.Pinto@synopsys.com>,
+        Vignesh R <vigneshr@ti.com>
+Subject: Re: [PATCH 0/3] PCI: designware: Fixing MSI handling flow
+Message-ID: <20181210161753.GA12563@e107981-ln.cambridge.arm.com>
+References: <20181113225734.8026-1-marc.zyngier@arm.com>
 MIME-Version: 1.0
-In-Reply-To: <20181127131455-mutt-send-email-mst@kernel.org>
-Content-Type: text/plain; charset=windows-1252
-Content-Language: en-US
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20181113225734.8026-1-marc.zyngier@arm.com>
+User-Agent: Mutt/1.5.24 (2015-08-30)
 Sender: linux-pci-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-On 27/11/2018 18:53, Michael S. Tsirkin wrote:
-> On Tue, Nov 27, 2018 at 06:10:46PM +0000, Jean-Philippe Brucker wrote:
->> On 27/11/2018 18:04, Michael S. Tsirkin wrote:
->>> On Tue, Nov 27, 2018 at 05:50:50PM +0000, Jean-Philippe Brucker wrote:
->>>> On 23/11/2018 22:02, Michael S. Tsirkin wrote:
->>>>>> +/*
->>>>>> + * __viommu_sync_req - Complete all in-flight requests
->>>>>> + *
->>>>>> + * Wait for all added requests to complete. When this function returns, all
->>>>>> + * requests that were in-flight at the time of the call have completed.
->>>>>> + */
->>>>>> +static int __viommu_sync_req(struct viommu_dev *viommu)
->>>>>> +{
->>>>>> +	int ret = 0;
->>>>>> +	unsigned int len;
->>>>>> +	size_t write_len;
->>>>>> +	struct viommu_request *req;
->>>>>> +	struct virtqueue *vq = viommu->vqs[VIOMMU_REQUEST_VQ];
->>>>>> +
->>>>>> +	assert_spin_locked(&viommu->request_lock);
->>>>>> +
->>>>>> +	virtqueue_kick(vq);
->>>>>> +
->>>>>> +	while (!list_empty(&viommu->requests)) {
->>>>>> +		len = 0;
->>>>>> +		req = virtqueue_get_buf(vq, &len);
->>>>>> +		if (!req)
->>>>>> +			continue;
->>>>>> +
->>>>>> +		if (!len)
->>>>>> +			viommu_set_req_status(req->buf, req->len,
->>>>>> +					      VIRTIO_IOMMU_S_IOERR);
->>>>>> +
->>>>>> +		write_len = req->len - req->write_offset;
->>>>>> +		if (req->writeback && len == write_len)
->>>>>> +			memcpy(req->writeback, req->buf + req->write_offset,
->>>>>> +			       write_len);
->>>>>> +
->>>>>> +		list_del(&req->list);
->>>>>> +		kfree(req);
->>>>>> +	}
->>>>>
->>>>> I didn't notice this in the past but it seems this will spin
->>>>> with interrupts disabled until host handles the request.
->>>>> Please do not do this - host execution can be another
->>>>> task that needs the same host CPU. This will then disable
->>>>> interrupts for a very very long time.
->>>>
->>>> In the guest yes, but that doesn't prevent the host from running another
->>>> task right?
->>>
->>> Doesn't prevent it but it will delay it significantly
->>> until scheduler decides to kick the VCPU task out.
->>>
->>>> My tests run fine when QEMU is bound to a single CPU, even
->>>> though vcpu and viommu run in different threads
->>>>
->>>>> What to do then? Queue in software and wake up task.
->>>>
->>>> Unfortunately I can't do anything here, because IOMMU drivers can't
->>>> sleep in the iommu_map() or iommu_unmap() path.
->>>>
->>>> The problem is the same
->>>> for all IOMMU drivers. That's because the DMA API allows drivers to call
->>>> some functions with interrupts disabled. For example
->>>> Documentation/DMA-API-HOWTO.txt allows dma_alloc_coherent() and
->>>> dma_unmap_single() to be called in interrupt context.
->>>
->>> In fact I don't really understand how it's supposed to
->>> work at all: you only sync when ring is full.
->>> So host may not have seen your map request if ring
->>> is not full.
->>> Why is it safe to use the address with a device then?
->>
->> viommu_map() calls viommu_send_req_sync(), which does the sync
->> immediately after adding the MAP request.
->>
->> Thanks,
->> Jean
+On Tue, Nov 13, 2018 at 10:57:31PM +0000, Marc Zyngier wrote:
+> It recently came to light that the Designware PCIe driver is rather
+> broken in the way it handles MSI[1]:
 > 
-> I see. So it happens on every request. Maybe you should clear
-> event index then. This way if exits are disabled you know that
-> host is processing the ring. Event index is good for when
-> you don't care when it will be processed, you just want
-> to reduce number of exits as much as possible.
+> - It masks interrupt by disabling them, meaning that MSIs generated
+>   during the masked window are simply lost. Oops.
 > 
+> - Acking of the currently pending MSI is done outside of the interrupt
+>   flow, getting moved around randomly and ultimately breaking the
+>   driver. Not great.
+> 
+> This series attempts to address this by switching to using the MASK
+> register for masking interrupts (!), and move the ack into the
+> appropriate callback, giving it a fixed place in the MSI handling
+> flow.
+> 
+> Note that this is only compile-tested on my arm64 laptop, as I'm
+> travelling and do not have the required HW to test it anyway. I'd
+> welcome both review and testing by the interested parties (dwc
+> maintainer and users affected by existing bugs).
+> 
+> Thanks,
+> 
+> 	M.
+> 
+> [1] https://patchwork.kernel.org/patch/10657987/
+> 
+> Marc Zyngier (3):
+>   PCI: designware: Use interrupt masking instead of disabling
+>   PCI: designware: Take lock when ACKing an interrupt
+>   PCI: designware: Move interrupt acking into the proper callback
+> 
+>  .../pci/controller/dwc/pcie-designware-host.c | 22 ++++++++++++-------
+>  1 file changed, 14 insertions(+), 8 deletions(-)
 
-I think that's already the case: since we don't attach a callback to the
-request queue, VRING_AVAIL_F_NO_INTERRUPT is set in avail_flags_shadow,
-which causes the used event index to stay clear.
+Marc, Gustavo,
+
+I have decided to queue this series - fixed-up as per this thread,
+available at:
+
+git://git.kernel.org/pub/scm/linux/kernel/git/lpieralisi/pci.git test/pci-dwc-msi
+
+We allowed enough time for people to test it, we can't leave mainline
+broken for the, apparently few, people who care.
+
+I *think* that this is the Fixes: tag to be added to all patches in this
+series, @Gustavo please countercheck:
+
+7c5925afbc58 ("PCI: dwc: Move MSI IRQs allocation to IRQ domains
+hierarchical API")
+
+I will mark them for stable too and we will work on backports to be
+sent in due course.
 
 Thanks,
-Jean
+Lorenzo
