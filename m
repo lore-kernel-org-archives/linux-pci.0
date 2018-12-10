@@ -1,157 +1,136 @@
 Return-Path: <SRS0=6KXC=OT=vger.kernel.org=linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
-X-Spam-Level: *
-X-Spam-Status: No, score=1.5 required=3.0 tests=DATE_IN_FUTURE_03_06,
-	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,
-	MAILING_LIST_MULTI,SPF_PASS,URIBL_BLOCKED autolearn=no autolearn_force=no
-	version=3.4.0
+X-Spam-Level: 
+X-Spam-Status: No, score=-1.0 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
+	DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_PASS,
+	URIBL_BLOCKED autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 89713C04EB8
-	for <linux-pci@archiver.kernel.org>; Mon, 10 Dec 2018 04:38:51 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 419BAC04EB8
+	for <linux-pci@archiver.kernel.org>; Mon, 10 Dec 2018 08:49:39 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 3D3F82081F
-	for <linux-pci@archiver.kernel.org>; Mon, 10 Dec 2018 04:38:51 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 050A120821
+	for <linux-pci@archiver.kernel.org>; Mon, 10 Dec 2018 08:49:39 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (1024-bit key) header.d=mobiveil.co.in header.i=@mobiveil.co.in header.b="T+wh7I9D"
-DMARC-Filter: OpenDMARC Filter v1.3.2 mail.kernel.org 3D3F82081F
-Authentication-Results: mail.kernel.org; dmarc=none (p=none dis=none) header.from=mobiveil.co.in
+	dkim=pass (1024-bit key) header.d=lightbitslabs.com header.i=@lightbitslabs.com header.b="QeQl0tDe"
+DMARC-Filter: OpenDMARC Filter v1.3.2 mail.kernel.org 050A120821
+Authentication-Results: mail.kernel.org; dmarc=none (p=none dis=none) header.from=lightbitslabs.com
 Authentication-Results: mail.kernel.org; spf=none smtp.mailfrom=linux-pci-owner@vger.kernel.org
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726213AbeLJEiu (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Sun, 9 Dec 2018 23:38:50 -0500
-Received: from mail-wm1-f66.google.com ([209.85.128.66]:35150 "EHLO
-        mail-wm1-f66.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726374AbeLJEiu (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Sun, 9 Dec 2018 23:38:50 -0500
-Received: by mail-wm1-f66.google.com with SMTP id c126so9708524wmh.0
-        for <linux-pci@vger.kernel.org>; Sun, 09 Dec 2018 20:38:48 -0800 (PST)
+        id S1726526AbeLJIti (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Mon, 10 Dec 2018 03:49:38 -0500
+Received: from mail-lj1-f172.google.com ([209.85.208.172]:39392 "EHLO
+        mail-lj1-f172.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726029AbeLJIti (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Mon, 10 Dec 2018 03:49:38 -0500
+Received: by mail-lj1-f172.google.com with SMTP id t9-v6so8831615ljh.6
+        for <linux-pci@vger.kernel.org>; Mon, 10 Dec 2018 00:49:36 -0800 (PST)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=mobiveil.co.in; s=google;
+        d=lightbitslabs.com; s=google;
         h=mime-version:references:in-reply-to:from:date:message-id:subject:to
-         :cc;
-        bh=QQeTPStWdQffsRdjgIQ5kUxjgC0AbP5Kz14R+R3dPic=;
-        b=T+wh7I9DNmSNRX3WgITI5B09E9p3OBneiKE7VgJYm9K98VAJD4R2VdKNzmtADj6ZDs
-         8HjKPnJrpNJdS5JiaFKUiyybIQIwAwlDremNtS1zD2aU+MrTr93PFCRJsI9RaRqnYUmr
-         qIW4XGzqLYH4dQme2iG9ZbpPbYi41KVsdIfWQ=
+         :cc:content-transfer-encoding;
+        bh=haqnnd+S+VHBvMm4Znj2sSq1l8tSLGq5HQHK5rTml7Y=;
+        b=QeQl0tDes72JEJugpFT5DxBExEHHzDrkw7wXqh6DRg3ZtbcEDuDG7bDIEzuAP6ddMO
+         vFfSQh2vSwHnUX+NB6tSx5397cLpsMoclEk+BmYZUiH6oROc3byDPiNc91xdZYDaAsZa
+         5v21emwMmFsavwMt4m+k0X7uTOwqBA7yHfUfQ=
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20161025;
         h=x-gm-message-state:mime-version:references:in-reply-to:from:date
-         :message-id:subject:to:cc;
-        bh=QQeTPStWdQffsRdjgIQ5kUxjgC0AbP5Kz14R+R3dPic=;
-        b=j1nG/SLHEQV3LS0zqJ+5CJ8+Ipn2bALbXuYdWjwuB+Vi7IaRe5Ans21G7WPq9ZsvYK
-         GiLbrmMLZvimPtrJvFE/tFsqjs04f2YQw+glt+FMoOfENv0Bb8Q/quH95DajqCJI39Pe
-         yU5Vfux05AOy8Hti+kbOI6h3zn3re9eI5cxzUG41rql++iEXHKj0XGB3X3xMSg18TxPi
-         OpkclaVpZviD9P2+//LdQJ9Hw2832XE13+8kizQU4aUfWZP4MW+v0Y961optXxgxe4lr
-         1UGG0yaF4OyhbhoVKtXbeTdSljqIu8iiWU4vzqUIYtQziRdWsmqv9qVCZG5p60iB2aXY
-         JIIQ==
-X-Gm-Message-State: AA+aEWZBiyZ5fDiwXbqwOsw4FdHAWR14KgYxkBTIAqyVQlXKcffWcFR+
-        ePY2Kr3kgGVQqR6eWPNpNvubBXngIEIZfZa5r/GDoQ==
-X-Google-Smtp-Source: AFSGD/WSKQNt6trakD0WZgJFVEZ/HFHbKPf61xg/m2kFM3J3PNhSIJHQGgCKPvIfpbKWxkb5tQP1z95XAd9yAvK9YE4=
-X-Received: by 2002:a1c:a84f:: with SMTP id r76mr9216138wme.16.1544416727742;
- Sun, 09 Dec 2018 20:38:47 -0800 (PST)
+         :message-id:subject:to:cc:content-transfer-encoding;
+        bh=haqnnd+S+VHBvMm4Znj2sSq1l8tSLGq5HQHK5rTml7Y=;
+        b=EuxrDKFuTfHYBHW0rbViAyv8jsvYGaCSbGQvA5IKMO8RLnirhsTqWKpuao74UXnyCl
+         jAxqlKhm+JmCofx+k6BdB443L9bYu+YE2dsbOOORP+da06Lrs+IOzOkE9vVFV7WvRUMt
+         7AHH6y2OxpxfO0SwnvFXrFzXhLzR1UEO3tq1rapJWcSo1itEgqcjmjcgwb+wk3Q0lo9A
+         28aOfj6eaw+X+YXEoTX/sPOM3V7DipbOIrXKSuU1ef8DPxkTCQC1UnmD/a3fzaSHDs6a
+         nOh2IssVWnoquCvabRy8cJ7AA8mejrSurR2LeLhlti7UAKZrOjVbUVCCkbYLlB040Utt
+         uZ9w==
+X-Gm-Message-State: AA+aEWYVKP3BVBDI837Y0v3EVnhSTkRmSYQVM+uFmlOYm9Lm4bMS8A7M
+        /2hx+ojAAaZTtnbWFuy+CvyqW+JNS24ZsGXb6S40bQ==
+X-Google-Smtp-Source: AFSGD/V69yDrLHABpztLi58fEGIhHl8rV57ECUxiihGo7DP39tG8zRj+KtZkdEjM/skUYx1lDVfm87HdK5SrGU/+Wck=
+X-Received: by 2002:a2e:9d86:: with SMTP id c6-v6mr6395979ljj.146.1544431775908;
+ Mon, 10 Dec 2018 00:49:35 -0800 (PST)
 MIME-Version: 1.0
-References: <20181106131807.29951-1-Zhiqiang.Hou@nxp.com> <20181203115850.GB8040@e107981-ln.cambridge.arm.com>
-In-Reply-To: <20181203115850.GB8040@e107981-ln.cambridge.arm.com>
-From:   Subrahmanya Lingappa <l.subrahmanya@mobiveil.co.in>
-Date:   Mon, 10 Dec 2018 07:16:17 -0300
-Message-ID: <CAFZiPx1cXVWi0vLA4ZtOTeObXg8RtvFX+m31NM2Ezqzq7ymPaA@mail.gmail.com>
-Subject: Re: [PATCH 00/23] PCI: refactor the Mobiveil driver and add PCIe
- support for NXP LX SoCs
-To:     Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
-Cc:     "Z.q. Hou" <zhiqiang.hou@nxp.com>, linux-pci@vger.kernel.org,
-        linux-arm-kernel@lists.infradead.org, devicetree@vger.kernel.org,
-        linux-kernel@vger.kernel.org, Bjorn Helgaas <bhelgaas@google.com>,
-        robh+dt@kernel.org, mark.rutland@arm.com, shawnguo@kernel.org,
-        Leo Li <leoyang.li@nxp.com>, Mingkai Hu <mingkai.hu@nxp.com>,
-        "M.h. Lian" <minghuan.lian@nxp.com>, xiaowei.bao@nxp.com
+References: <34458c2d-0faf-e9c1-55fd-7ade553a2b45@grimberg.me> <20181127223901.GD6401@localhost.localdomain>
+In-Reply-To: <20181127223901.GD6401@localhost.localdomain>
+From:   Ofer Hayut <ofer@lightbitslabs.com>
+Date:   Mon, 10 Dec 2018 10:49:25 +0200
+Message-ID: <CABykntOoMi4U+byy9pdMcPCmxqE=aZpRqMn4MSz9TT0+bwi5EQ@mail.gmail.com>
+Subject: Re: Questions about pci_bridge_check_ranges()
+To:     keith.busch@intel.com
+Cc:     sagi@grimberg.me, linux-pci@vger.kernel.org,
+        Roy Shterman <roys@lightbitslabs.com>, yinghai@kernel.org
 Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
 Sender: linux-pci-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-Lorenzo,
-You are right, I reviewed few DT files, will need some time to review
-this train.
-I will start doing it in a while.
+Thanks, but I'm not sure that is the case here.
+The code[1] check that the high 32bits of the address are read only,
+as required by the spec[4].
+However, the spec[3] also require the low 4bits of the address
+indicate 64-bit addressing support, and the code[2] uses that.
+So, I still don't understand why a double-check is required?
 
-Thanks for pitching in.
+[1] (drivers/pci/setup-bus.c:780):
+/* double check if bridge does support 64 bit pref */
+if (b_res[2].flags & IORESOURCE_MEM_64) {
+        u32 mem_base_hi, tmp;
+        pci_read_config_dword(bridge, PCI_PREF_BASE_UPPER32,
+                                 &mem_base_hi);
+        pci_write_config_dword(bridge, PCI_PREF_BASE_UPPER32,
+                               0xffffffff);
+        pci_read_config_dword(bridge, PCI_PREF_BASE_UPPER32, &tmp)
+        if (!tmp)
+                b_res[2].flags &=3D ~IORESOURCE_MEM_64;
+        pci_write_config_dword(bridge, PCI_PREF_BASE_UPPER32,
+                               mem_base_hi);
+}
 
-Thanks.
+[2] (drivers/pci/setup-bus.c:775):
+       if ((pmem & PCI_PREF_RANGE_TYPE_MASK) =3D=3D
+            PCI_PREF_RANGE_TYPE_64) {
+                b_res[2].flags |=3D IORESOURCE_MEM_64;
+                b_res[2].flags |=3D PCI_PREF_RANGE_TYPE_64;
+        }
+[3] (PCI Express=E2=84=A2 to PCI/PCI-X Bridge spec rev 1.0
+Section 5.1.2.9. Prefetchable Memory Base and Prefetchable Memory
+Limit Registers (24h and 26h)):
+"The bottom 4 bits of both the Prefetchable Memory Base and
+Prefetchable Memory Limit registers
+are read-only, contain the same value, and encode whether or not the
+bridge supports 64-bit
+addresses"
 
-On Mon, Dec 3, 2018 at 8:58 AM Lorenzo Pieralisi
-<lorenzo.pieralisi@arm.com> wrote:
+[4] (PCI Express=E2=84=A2 to PCI/PCI-X Bridge spec rev 1.0
+Section 5.1.2.10. Prefetchable Base Upper 32 Bits and Prefetchable Limit
+Upper 32 Bits Registers (28h and 2Ch)):
+"If these registers are not implemented, they must be read-only and
+return zero when read"
+
+On Wed, 28 Nov 2018 at 00:42, Keith Busch <keith.busch@intel.com> wrote:
 >
-> On Tue, Nov 06, 2018 at 01:19:03PM +0000, Z.q. Hou wrote:
-> > From: Hou Zhiqiang <Zhiqiang.Hou@nxp.com>
+> On Tue, Nov 27, 2018 at 02:22:48PM -0800, Sagi Grimberg wrote:
+> > Hi,
 > >
-> > This patch set is aim to refactor the Mobiveil driver and add
-> > PCIe support for NXP LX series SoCs.
+> > During a rescan process, pci bridge regions capabilities are
+> > re-verified. In particular, prefetchable regions are checked for 64-bit
+> > addressing support. This check is done by reading the base-address
+> > register 4 LSBs.
 > >
-> > Hou Zhiqiang (23):
-> >   PCI: mobiveil: uniform the register accessors
-> >   PCI: mobiveil: format the code without function change
-> >   PCI: mobiveil: correct the returned error number
-> >   PCI: mobiveil: remove flag MSI_FLAG_MULTI_PCI_MSI
-> >   PCI: mobiveil: correct PCI base address in MEM/IO outbound windows
-> >   PCI: mobiveil: replace the resource list iteration function
-> >   PCI: mobiveil: use WIN_NUM_0 explicitly for CFG outbound window
-> >   PCI: mobiveil: use the 1st inbound window for MEM inbound transactions
-> >   PCI: mobiveil: correct the inbound/outbound window setup routine
-> >   PCI: mobiveil: fix the INTx process error
-> >   PCI: mobiveil: only fixup the Class Code field
-> >   PCI: mobiveil: move out the link up waiting from mobiveil_host_init
-> >   PCI: mobiveil: move irq chained handler setup out of DT parse
-> >   PCI: mobiveil: initialize Primary/Secondary/Subordinate bus number
-> >   dt-bindings: pci: mobiveil: change gpio_slave and apb_csr to optional
-> >   PCI: mobiveil: refactor the Mobiveil driver
-> >   PCI: mobiveil: continue to initialize the host upon no PCIe link
-> >   PCI: mobiveil: disabled IB and OB windows set by bootloader
-> >   PCI: mobiveil: add Byte and Half-Word width register accessors
-> >   PCI: mobiveil: change prototype of function mobiveil_host_init
-> >   dt-bindings: pci: Add NXP LX SoCs PCIe controller
-> >   PCI: mobiveil: add PCIe RC driver for NXP LX series SoCs
-> >   arm64: dts: freescale: lx2160a: add pcie DT nodes
+> > Then, we "double check" that the bridge support 64-bit prefetchable
+> > addresses. This double-check is done by writing ones to the base-addres=
+s
+> > buffer (high 32-bit), and check if we read zeros [1].
 > >
-> >  .../devicetree/bindings/pci/lx-pci.txt        |  52 ++
-> >  .../devicetree/bindings/pci/mobiveil-pcie.txt |   2 +
-> >  MAINTAINERS                                   |  10 +-
-> >  .../arm64/boot/dts/freescale/fsl-lx2160a.dtsi | 157 ++++
-> >  drivers/pci/controller/Kconfig                |  11 +-
-> >  drivers/pci/controller/Makefile               |   2 +-
-> >  drivers/pci/controller/mobiveil/Kconfig       |  34 +
-> >  drivers/pci/controller/mobiveil/Makefile      |   5 +
-> >  drivers/pci/controller/mobiveil/pci-lx.c      | 222 +++++
-> >  .../controller/mobiveil/pcie-mobiveil-host.c  | 622 +++++++++++++
-> >  .../controller/mobiveil/pcie-mobiveil-plat.c  |  54 ++
-> >  .../pci/controller/mobiveil/pcie-mobiveil.c   | 245 +++++
-> >  .../pci/controller/mobiveil/pcie-mobiveil.h   | 221 +++++
-> >  drivers/pci/controller/pcie-mobiveil.c        | 861 ------------------
-> >  14 files changed, 1625 insertions(+), 873 deletions(-)
-> >  create mode 100644 Documentation/devicetree/bindings/pci/lx-pci.txt
-> >  create mode 100644 drivers/pci/controller/mobiveil/Kconfig
-> >  create mode 100644 drivers/pci/controller/mobiveil/Makefile
-> >  create mode 100644 drivers/pci/controller/mobiveil/pci-lx.c
-> >  create mode 100644 drivers/pci/controller/mobiveil/pcie-mobiveil-host.c
-> >  create mode 100644 drivers/pci/controller/mobiveil/pcie-mobiveil-plat.c
-> >  create mode 100644 drivers/pci/controller/mobiveil/pcie-mobiveil.c
-> >  create mode 100644 drivers/pci/controller/mobiveil/pcie-mobiveil.h
-> >  delete mode 100644 drivers/pci/controller/pcie-mobiveil.c
+> > Questions:
+> > 1. Why do we need to "double-check"?
+> > 2. What is expected to happen if a memory transaction arrive to this
+> >    port during this process, while its base-address is miss-configured?
+> >    (say, a read-transaction issued by a peer device)
 >
-> Subrahmanya,
->
-> for the records, this is the driver *you* are maintaining, aren't you ?
->
-> We ask developers to be added to the MAINTAINERS list in order to hold
-> them accountable, merging a driver upstream means that you need to
-> actively maintain it, which in turn means reviewing series affecting
-> its code, like this one.
->
-> I will have a look too but it is your responsibility to review these
-> patches and ACK them accordingly.
->
-> So I strongly suggest you start doing it please.
->
-> Thanks,
-> Lorenzo
+> I think has something to do with how pbus_size_mem() assumes a
+> 64-bit window will not have a 32-bit resource. If a bridge has a
+> prefetchable window, but happens to contain an address < 4GB, we clear
+> the IORESOURCE_MEM_64 flag so that it can get a resource.
