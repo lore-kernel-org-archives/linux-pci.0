@@ -2,152 +2,141 @@ Return-Path: <SRS0=NFOj=OU=vger.kernel.org=linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-8.4 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_PASS,URIBL_BLOCKED,
-	USER_AGENT_MUTT autolearn=unavailable autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-8.8 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
+	SPF_PASS,URIBL_BLOCKED,USER_AGENT_MUTT autolearn=ham autolearn_force=no
+	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 90F0CC5CFFE
-	for <linux-pci@archiver.kernel.org>; Tue, 11 Dec 2018 14:16:43 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 826DEC07E85
+	for <linux-pci@archiver.kernel.org>; Tue, 11 Dec 2018 14:18:11 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 5AFA72084E
-	for <linux-pci@archiver.kernel.org>; Tue, 11 Dec 2018 14:16:43 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.3.2 mail.kernel.org 5AFA72084E
-Authentication-Results: mail.kernel.org; dmarc=none (p=none dis=none) header.from=arm.com
+	by mail.kernel.org (Postfix) with ESMTP id 4691020851
+	for <linux-pci@archiver.kernel.org>; Tue, 11 Dec 2018 14:18:11 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=default; t=1544537891;
+	bh=mjcczxHWBLk6glsEhzWjENo8W7uzGln1zCBrMNLVbC8=;
+	h=Date:From:To:Cc:Subject:References:In-Reply-To:List-ID:From;
+	b=bGRc7xvv8Vpl3XqAKUWNfNFbBZNLR5I843PR1s0YWpoh3mMNksEDmqAHtxd0ZLp3G
+	 mixcNA01xmj5V8qhhOfi5JDC6RXGj98S2gomrdmI0wjT25wAg5kBKgArTacLXpkzHT
+	 nk861+SokfqvTV0xSBpcDL/QuDPkroqo+6FUmzyE=
+DMARC-Filter: OpenDMARC Filter v1.3.2 mail.kernel.org 4691020851
+Authentication-Results: mail.kernel.org; dmarc=fail (p=none dis=none) header.from=kernel.org
 Authentication-Results: mail.kernel.org; spf=none smtp.mailfrom=linux-pci-owner@vger.kernel.org
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726556AbeLKOQg (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Tue, 11 Dec 2018 09:16:36 -0500
-Received: from foss.arm.com ([217.140.101.70]:48198 "EHLO foss.arm.com"
+        id S1726623AbeLKOSK (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Tue, 11 Dec 2018 09:18:10 -0500
+Received: from mail.kernel.org ([198.145.29.99]:40058 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1726448AbeLKOQg (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Tue, 11 Dec 2018 09:16:36 -0500
-Received: from usa-sjc-imap-foss1.foss.arm.com (unknown [10.72.51.249])
-        by usa-sjc-mx-foss1.foss.arm.com (Postfix) with ESMTP id 426F61596;
-        Tue, 11 Dec 2018 06:16:35 -0800 (PST)
-Received: from e107981-ln.cambridge.arm.com (e107981-ln.cambridge.arm.com [10.1.197.40])
-        by usa-sjc-imap-foss1.foss.arm.com (Postfix) with ESMTPSA id 2B0FF3F59C;
-        Tue, 11 Dec 2018 06:16:32 -0800 (PST)
-Date:   Tue, 11 Dec 2018 14:16:27 +0000
-From:   Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
-To:     "Rafael J. Wysocki" <rjw@rjwysocki.net>, sboyd@kernel.org
-Cc:     Miquel Raynal <miquel.raynal@bootlin.com>, sudeep.holla@arm.com,
-        Gregory Clement <gregory.clement@bootlin.com>,
-        Jason Cooper <jason@lakedaemon.net>,
-        Andrew Lunn <andrew@lunn.ch>,
-        Sebastian Hesselbarth <sebastian.hesselbarth@gmail.com>,
-        Thomas Petazzoni <thomas.petazzoni@bootlin.com>,
-        Bjorn Helgaas <bhelgaas@google.com>,
-        devicetree@vger.kernel.org, Rob Herring <robh+dt@kernel.org>,
-        Mark Rutland <mark.rutland@arm.com>, linux-pci@vger.kernel.org,
-        linux-kernel@vger.kernel.org, linux-arm-kernel@lists.infradead.org,
-        Antoine Tenart <antoine.tenart@bootlin.com>,
-        Maxime Chevallier <maxime.chevallier@bootlin.com>,
-        Nadav Haklai <nadavh@marvell.com>
-Subject: Re: [PATCH 05/12] PCI: aardvark: add suspend to RAM support
-Message-ID: <20181211141627.GA526@e107981-ln.cambridge.arm.com>
-References: <20181123141831.8214-1-miquel.raynal@bootlin.com>
- <1999610.6DN9RK2Tt3@aspire.rjw.lan>
- <20181204094558.GA24588@e107981-ln.cambridge.arm.com>
- <1966692.fVZYlVgWHv@aspire.rjw.lan>
+        id S1726444AbeLKOSK (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Tue, 11 Dec 2018 09:18:10 -0500
+Received: from localhost (173-25-171-118.client.mchsi.com [173.25.171.118])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+        (No client certificate requested)
+        by mail.kernel.org (Postfix) with ESMTPSA id 23F3C20849;
+        Tue, 11 Dec 2018 14:18:09 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+        s=default; t=1544537889;
+        bh=mjcczxHWBLk6glsEhzWjENo8W7uzGln1zCBrMNLVbC8=;
+        h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
+        b=GIebsVLlqSfTxhsvT8uw4oEcp/Rl1ouHa/FoxwZC7+yfgsKKifqKq5GzVYogkuU5T
+         jeQdOb7qOawENsjzijzakr7sNH2qJhl6HKhthch4iHoP+Wko3bs2B3R6+T5Dc/gH+h
+         Gavuwy9F5YfV7eAPetKdFSMQUr7UbtRgAqvuy6+A=
+Date:   Tue, 11 Dec 2018 08:18:08 -0600
+From:   Bjorn Helgaas <helgaas@kernel.org>
+To:     "Michael S. Tsirkin" <mst@redhat.com>
+Cc:     linux-kernel@vger.kernel.org, xuyandong <xuyandong2@huawei.com>,
+        stable@vger.kernel.org, Yinghai Lu <yinghai@kernel.org>,
+        Jesse Barnes <jbarnes@virtuousgeek.org>,
+        linux-pci@vger.kernel.org
+Subject: Re: [PATCH] pci: avoid bridge feature re-probing on hotplug
+Message-ID: <20181211141808.GE99796@google.com>
+References: <20181211021617.24072-1-mst@redhat.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <1966692.fVZYlVgWHv@aspire.rjw.lan>
-User-Agent: Mutt/1.5.24 (2015-08-30)
+In-Reply-To: <20181211021617.24072-1-mst@redhat.com>
+User-Agent: Mutt/1.10.1 (2018-07-13)
 Sender: linux-pci-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-On Tue, Dec 04, 2018 at 10:42:19PM +0100, Rafael J. Wysocki wrote:
-> On Tuesday, December 4, 2018 10:45:58 AM CET Lorenzo Pieralisi wrote:
-> > On Mon, Dec 03, 2018 at 11:00:20PM +0100, Rafael J. Wysocki wrote:
-> > > On Monday, December 3, 2018 4:38:46 PM CET Miquel Raynal wrote:
-> > > > Hi Lorenzo,
-> > > > 
-> > > > Lorenzo Pieralisi <lorenzo.pieralisi@arm.com> wrote on Mon, 3 Dec 2018
-> > > > 10:27:08 +0000:
-> > > > 
-> > > > > [+Rafael, Sudeep]
-> > > > > 
-> > > > > On Fri, Nov 23, 2018 at 03:18:24PM +0100, Miquel Raynal wrote:
-> > > > > > Add suspend and resume callbacks. The priority of these are
-> > > > > > "_noirq()", to workaround early access to the registers done by the
-> > > > > > PCI core through the ->read()/->write() callbacks at resume time.
-> > > > > > 
-> > > > > > Signed-off-by: Miquel Raynal <miquel.raynal@bootlin.com>
-> > > > > > ---
-> > > > > >  drivers/pci/controller/pci-aardvark.c | 52 +++++++++++++++++++++++++++
-> > > > > >  1 file changed, 52 insertions(+)
-> > > > > > 
-> > > > > > diff --git a/drivers/pci/controller/pci-aardvark.c b/drivers/pci/controller/pci-aardvark.c
-> > > > > > index 108b3f15c410..7ecf1ac4036b 100644
-> > > > > > --- a/drivers/pci/controller/pci-aardvark.c
-> > > > > > +++ b/drivers/pci/controller/pci-aardvark.c
-> > > > > > @@ -1108,6 +1108,55 @@ static int advk_pcie_setup_clk(struct advk_pcie *pci
-> > > > > >  	return ret;
-> > > > > >  }
-> > > > > >  
-> > > > > > +static int __maybe_unused advk_pcie_suspend(struct device *dev)
-> > > > > > +{
-> > > > > > +	struct advk_pcie *pcie = dev_get_drvdata(dev);
-> > > > > > +
-> > > > > > +	advk_pcie_disable_phy(pcie);
-> > > > > > +
-> > > > > > +	clk_disable_unprepare(pcie->clk);  
-> > > > > 
-> > > > > I have noticed it is common practice, still, I would like to check whether
-> > > > > it is allowed to call functions that may sleep in a NOIRQ suspend/resume
-> > > > > callback ?
-> > > > 
-> > > > You are right this is weird. I double checked and for instance,
-> > > > pcie-mediatek.c, pci-tegra.c and pci-imx6.c do the exact same thing. There are
-> > > > probably other cases where drivers call functions that may sleep from a NOIRQ
-> > > > context. I am interested to know if this is valid and if not, what is the
-> > > > alternative?
-> > > > 
-> > > 
-> > > Yes, it is valid.  _noirq means that the high-level action handlers
-> > > will not be invoked for interrupts occurring during that period, but
-> > > that doesn't apply to timer interrupts.
-> > > 
-> > > IOW, don't expect *your* IRQ handler to be invoked then (if this is
-> > > not a timer IRQ), but you can sleep.
-> > 
-> > Hi Rafael, all,
-> > 
-> > I did not ask my question (that may be silly) properly apologies. I know
-> > that the S2R context allows sleeping the question is, in case
-> > clk_disable_unprepare() (and resume counterparts) sleeps,
-> 
-> If it just sleeps, then this is not a problem, but if it actually *waits*
-> for something meaningful to happen (which I guess is what you really mean),
-> then things may go awry.
-> 
-> > what is going to wake it up, given that we are in the S2R NOIRQ phase and as
-> > you said the action handlers (that are possibly required to wake up the eg
-> > clk_disable_unprepare() caller) are disabled (unless, AFAIK,
-> > IRQF_NO_SUSPEND is passed at IRQ request time in the respective driver).
-> 
-> So if it waits for an action handler to do something and wake it up, it may
-> very well deadlock.  I have no idea if that really happens, though.
-> 
-> > The clk API implementations back-ends are beyond my depth, I just wanted
-> > to make sure I understand how the S2R flow is expected to work in this
-> > specific case.
-> 
-> Action handlers won't run unless the IRQs are marked as IRQF_NO_SUSPEND
-> (well, there are a few more complications I don't recall exactly, but
-> that's the basic rule).  If anything depends on them to run, it will block.
+Hi Michael,
 
-Stephen, any comments on this ? I would like to understand if it is safe
-to call a clk_*unprepare/prepare_* function (that may have a blocking
-back-end waiting on a wake-up event triggered by an IRQ action) in the
-suspend/resume NOIRQ phase.
+Please run "git log --oneline drivers/pci/setup-bus.c" and follow
+the usual style.
 
-It is not clear how the unprepare/prepare() callers can possibly know
-whether it is safe to block at that stage given that IRQ actions are
-suspended and the wake-up may never trigger.
+On Mon, Dec 10, 2018 at 09:18:40PM -0500, Michael S. Tsirkin wrote:
+> commit 1f82de10d6 ("PCI/x86: don't assume prefetchable ranges are
+> 64bit") added probing of bridge support for 64 bit memory
+> each time bridge is re-enumerated.
 
-Thanks,
-Lorenzo
+Use conventional SHA1 reference (12-char SHA1).
+
+> Unfortunately this probing is destructive if any device behind
+> the bridge is in use at this time.
+
+Agreed, this sounds like a problem.
+
+> There's no real need to re-probe the bridge features as the
+> regiters in question never change - detect that using
+> the memory flag being set and skip the probing.
+
+s/regiters/registers/
+
+> Avoiding repeated calls to pci_bridge_check_ranges might be even nicer
+> would be a bigger patch and probably not appropriate on stable.
+
+Maybe so.  The ideal thing might be to have a trivial patch like this
+that can be marked for stable, immediately followed by the nicer
+patch.  Trivial band-aids tend to accumulate and make things harder in
+the future.
+
+I'd have to take a much harder look at the problem to understand
+1f82de10d6b1.  The comment about "double check" seems misleading -- as
+you say, the hardware doesn't change and checking once should be
+enough.  And if we're calling pci_bridge_check_ranges() more than
+necessary, that sounds like a problem, too.
+
+> Reported-by: xuyandong <xuyandong2@huawei.com>
+> Cc: stable@vger.kernel.org
+> Cc: Yinghai Lu <yinghai@kernel.org>
+> Cc: Jesse Barnes <jbarnes@virtuousgeek.org>
+> Signed-off-by: Michael S. Tsirkin <mst@redhat.com>
+> ---
+> 
+> This issue has been reported on upstream Linux and Centos.
+
+Are there URLs to these reports that we could include in the changelog?
+
+>  drivers/pci/setup-bus.c | 7 +++++++
+>  1 file changed, 7 insertions(+)
+> 
+> diff --git a/drivers/pci/setup-bus.c b/drivers/pci/setup-bus.c
+> index ed960436df5e..7ab42f76579e 100644
+> --- a/drivers/pci/setup-bus.c
+> +++ b/drivers/pci/setup-bus.c
+> @@ -741,6 +741,13 @@ static void pci_bridge_check_ranges(struct pci_bus *bus)
+>  	struct resource *b_res;
+>  
+>  	b_res = &bridge->resource[PCI_BRIDGE_RESOURCES];
+> +
+> +	/* Don't re-check after this was called once already:
+> +	 * important since bridge might be in use.
+> +	 */
+> +	if (b_res[1].flags & IORESOURCE_MEM)
+> +		return;
+
+Use conventional multi-line comment style.
+
+This test isn't 100%: devices below the bridge could be using only IO,
+or theoretically could be even using just config space.
+
+If it's safe to bail out if the bridge is in use, why isn't it safe to
+bail out *always*?
+
+>  	b_res[1].flags |= IORESOURCE_MEM;
+>  
+>  	pci_read_config_word(bridge, PCI_IO_BASE, &io);
+> -- 
+> MST
