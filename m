@@ -2,75 +2,103 @@ Return-Path: <SRS0=NFOj=OU=vger.kernel.org=linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-2.2 required=3.0 tests=DKIM_INVALID,DKIM_SIGNED,
-	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_PASS,USER_AGENT_MUTT
-	autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-0.9 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+	MAILING_LIST_MULTI,SPF_PASS autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 931FBC5CFFE
-	for <linux-pci@archiver.kernel.org>; Tue, 11 Dec 2018 18:31:10 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 61DC1C5CFFE
+	for <linux-pci@archiver.kernel.org>; Tue, 11 Dec 2018 18:31:53 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 5F5052086D
-	for <linux-pci@archiver.kernel.org>; Tue, 11 Dec 2018 18:31:10 +0000 (UTC)
-Authentication-Results: mail.kernel.org;
-	dkim=fail reason="signature verification failed" (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="QcJfMxaK"
-DMARC-Filter: OpenDMARC Filter v1.3.2 mail.kernel.org 5F5052086D
-Authentication-Results: mail.kernel.org; dmarc=none (p=none dis=none) header.from=infradead.org
+	by mail.kernel.org (Postfix) with ESMTP id 1974C20851
+	for <linux-pci@archiver.kernel.org>; Tue, 11 Dec 2018 18:31:53 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.3.2 mail.kernel.org 1974C20851
+Authentication-Results: mail.kernel.org; dmarc=fail (p=none dis=none) header.from=intel.com
 Authentication-Results: mail.kernel.org; spf=none smtp.mailfrom=linux-pci-owner@vger.kernel.org
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726435AbeLKSbJ (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Tue, 11 Dec 2018 13:31:09 -0500
-Received: from bombadil.infradead.org ([198.137.202.133]:57424 "EHLO
-        bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1727163AbeLKSbE (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Tue, 11 Dec 2018 13:31:04 -0500
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
-        d=infradead.org; s=bombadil.20170209; h=In-Reply-To:Content-Type:MIME-Version
-        :References:Message-ID:Subject:Cc:To:From:Date:Sender:Reply-To:
-        Content-Transfer-Encoding:Content-ID:Content-Description:Resent-Date:
-        Resent-From:Resent-Sender:Resent-To:Resent-Cc:Resent-Message-ID:List-Id:
-        List-Help:List-Unsubscribe:List-Subscribe:List-Post:List-Owner:List-Archive;
-         bh=LNKXLjHlX/XKCZkV6XvjHi+pcYeLvv1jUV7Qgn1EyX4=; b=QcJfMxaK1ZJgFzmrotE6d+pHw
-        uL6Lx3Nb6nMAGuDV6LKaMTPJwutsIqdvp1vKjYLBhDVUm2auKhw1c2bNMb8N8/iH6IIQPfxSJoNAL
-        eGVQ1FlvZ6JHLpAwQfIFLz0z+5w442XRk4jnmKf5L4kX7ihsimwC/Mr6owrlWMUqi1OenCQIw/JAv
-        zfCHjMYAz+z1PNo3CJKQNd5ERg2B06GocLHb3SM9dNIj5wm3fOV7Y4+qynXY3q6C5rqoPTwCDkTCC
-        nRsGGh4WaYtrNBxKc8nfFlIu5f9KKWzPkG+2qCi2AXGQqrXZQ7FubHj4XCol84S6yS0lyex54wWEk
-        1MY8Azddw==;
-Received: from hch by bombadil.infradead.org with local (Exim 4.90_1 #2 (Red Hat Linux))
-        id 1gWmo9-0001ag-AH; Tue, 11 Dec 2018 18:31:01 +0000
-Date:   Tue, 11 Dec 2018 10:31:01 -0800
-From:   Christoph Hellwig <hch@infradead.org>
-To:     Jean-Philippe Brucker <jean-philippe.brucker@arm.com>
-Cc:     iommu@lists.linux-foundation.org, linux-pci@vger.kernel.org,
-        devicetree@vger.kernel.org,
-        virtualization@lists.linux-foundation.org,
-        virtio-dev@lists.oasis-open.org, joro@8bytes.org, mst@redhat.com,
-        mark.rutland@arm.com, kevin.tian@intel.com,
-        tnowicki@caviumnetworks.com, marc.zyngier@arm.com,
-        robin.murphy@arm.com, jasowang@redhat.com, will.deacon@arm.com,
-        robh+dt@kernel.org, bhelgaas@google.com, frowand.list@gmail.com,
-        kvmarm@lists.cs.columbia.edu
-Subject: Re: [PATCH v6 0/7] Add virtio-iommu driver
-Message-ID: <20181211183101.GA31936@infradead.org>
-References: <20181211182104.18241-1-jean-philippe.brucker@arm.com>
+        id S1726785AbeLKSbw convert rfc822-to-8bit (ORCPT
+        <rfc822;linux-pci@archiver.kernel.org>);
+        Tue, 11 Dec 2018 13:31:52 -0500
+Received: from mga02.intel.com ([134.134.136.20]:6774 "EHLO mga02.intel.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1726700AbeLKSbw (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Tue, 11 Dec 2018 13:31:52 -0500
+X-Amp-Result: SKIPPED(no attachment in message)
+X-Amp-File-Uploaded: False
+Received: from fmsmga006.fm.intel.com ([10.253.24.20])
+  by orsmga101.jf.intel.com with ESMTP/TLS/DHE-RSA-AES256-GCM-SHA384; 11 Dec 2018 10:31:51 -0800
+X-ExtLoop1: 1
+X-IronPort-AV: E=Sophos;i="5.56,343,1539673200"; 
+   d="scan'208";a="301301276"
+Received: from fmsmsx107.amr.corp.intel.com ([10.18.124.205])
+  by fmsmga006.fm.intel.com with ESMTP; 11 Dec 2018 10:31:51 -0800
+Received: from fmsmsx153.amr.corp.intel.com (10.18.125.6) by
+ fmsmsx107.amr.corp.intel.com (10.18.124.205) with Microsoft SMTP Server (TLS)
+ id 14.3.408.0; Tue, 11 Dec 2018 10:31:51 -0800
+Received: from hasmsx111.ger.corp.intel.com (10.184.198.39) by
+ FMSMSX153.amr.corp.intel.com (10.18.125.6) with Microsoft SMTP Server (TLS)
+ id 14.3.408.0; Tue, 11 Dec 2018 10:31:50 -0800
+Received: from hasmsx112.ger.corp.intel.com ([169.254.11.88]) by
+ HASMSX111.ger.corp.intel.com ([169.254.5.58]) with mapi id 14.03.0415.000;
+ Tue, 11 Dec 2018 20:31:48 +0200
+From:   "Grumbach, Emmanuel" <emmanuel.grumbach@intel.com>
+To:     Bjorn Helgaas <helgaas@kernel.org>
+CC:     "bjorn@helgaas.com" <bjorn@helgaas.com>,
+        "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+        "Mertarg10@gmail.com" <Mertarg10@gmail.com>,
+        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+        Fran RR <fjrr87@outlook.com>
+Subject: RE: Fwd: [Bug 201647] New: Intel Wireless card 3165 does not get
+ detected but bluetooth works
+Thread-Topic: Fwd: [Bug 201647] New: Intel Wireless card 3165 does not get
+ detected but bluetooth works
+Thread-Index: AQHUh2ApCc7lmNGfg0mZ5cTxRsuvBaVrCVdwgA10uACAAKnQcIAAWQuAgABN2ZD///8HAIAAIouA
+Date:   Tue, 11 Dec 2018 18:31:47 +0000
+Message-ID: <0BA3FCBA62E2DC44AF3030971E174FB30133756B5D@HASMSX112.ger.corp.intel.com>
+References: <bug-201647-193951@https.bugzilla.kernel.org/>
+ <CABhMZUXc4FS-f52ZDsErEhbkm_jjEz+kn75YO5Tuvp42Qm+1xw@mail.gmail.com>
+ <20181128211959.GB178809@google.com>
+ <0BA3FCBA62E2DC44AF3030971E174FB3013373E4A3@HASMSX112.ger.corp.intel.com>
+ <20181210222452.GC85090@google.com>
+ <0BA3FCBA62E2DC44AF3030971E174FB30133754C00@HASMSX112.ger.corp.intel.com>
+ <20181211135121.GB99796@google.com>
+ <0BA3FCBA62E2DC44AF3030971E174FB30133756A29@HASMSX112.ger.corp.intel.com>
+ <20181211182630.GF99796@google.com>
+In-Reply-To: <20181211182630.GF99796@google.com>
+Accept-Language: en-US
+Content-Language: en-US
+X-MS-Has-Attach: 
+X-MS-TNEF-Correlator: 
+x-titus-metadata-40: eyJDYXRlZ29yeUxhYmVscyI6IiIsIk1ldGFkYXRhIjp7Im5zIjoiaHR0cDpcL1wvd3d3LnRpdHVzLmNvbVwvbnNcL0ludGVsMyIsImlkIjoiM2ZlMDg5NzYtNDQzMS00OGI2LTkwYmEtYTdhYTViOTVmMGQ2IiwicHJvcHMiOlt7Im4iOiJDVFBDbGFzc2lmaWNhdGlvbiIsInZhbHMiOlt7InZhbHVlIjoiQ1RQX05UIn1dfV19LCJTdWJqZWN0TGFiZWxzIjpbXSwiVE1DVmVyc2lvbiI6IjE3LjEwLjE4MDQuNDkiLCJUcnVzdGVkTGFiZWxIYXNoIjoiTkk0ZjN4T2hQZzlYaEhOc1JXN2NRb2d2S2RWbTBIOE16Q1hhWnRBU1cyMW5GYXYzY0dcL2dUZHEwMWRUYmFkK1QifQ==
+x-ctpclassification: CTP_NT
+dlp-product: dlpe-windows
+dlp-version: 11.0.400.15
+dlp-reaction: no-action
+x-originating-ip: [10.251.82.25]
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 8BIT
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20181211182104.18241-1-jean-philippe.brucker@arm.com>
-User-Agent: Mutt/1.9.2 (2017-12-15)
-X-SRS-Rewrite: SMTP reverse-path rewritten from <hch@infradead.org> by bombadil.infradead.org. See http://www.infradead.org/rpr.html
 Sender: linux-pci-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-On Tue, Dec 11, 2018 at 06:20:57PM +0000, Jean-Philippe Brucker wrote:
-> Implement the virtio-iommu driver, following specification v0.9 [1].
 > 
-> Only minor changes since v5 [2]. I fixed issues reported by Michael and
-> added tags from Eric and Bharat. Thanks!
+> On Tue, Dec 11, 2018 at 04:32:25PM +0000, Grumbach, Emmanuel wrote:
+> > > On Tue, Dec 11, 2018 at 06:35:20AM +0000, Grumbach, Emmanuel wrote:
+> > > > > > > > https://bugzilla.kernel.org/show_bug.cgi?id=201647
+> > >
+> > > > FWIW: I saw another problem like this with a 9650 device.
+> > >
+> > > Do you have a pointer to any info about this 9650 issue?  Maybe that
+> > > would have a clue.
+> >
+> > I added him here so that you can ask whatever you like :) The story is
+> > the same. I am attaching a picture I got from the reporter.
+> > I can confirm that this device ID / subdevice ID is supported by the linux
+> driver.
 > 
-> You can find Linux driver and kvmtool device on v0.9 branches [3],
-> module and x86 support on virtio-iommu/devel. Also tested with Eric's
-> QEMU device [4].
+> Was there a resolution, i.e., if somebody figured out how to make the
+> 9650 wifi work, maybe a similar solution would work for the 3165?
 
-Just curious, what is the use case for it?
+Unfortunately not, I am stuck there at the exact same point.
+No Wifi device shows up in lspci...
+
