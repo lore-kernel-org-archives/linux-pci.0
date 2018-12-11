@@ -3,96 +3,116 @@ X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
 X-Spam-Status: No, score=-6.9 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_PASS,URIBL_BLOCKED
-	autolearn=unavailable autolearn_force=no version=3.4.0
+	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_PASS autolearn=ham
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 7B5FDC04EB8
-	for <linux-pci@archiver.kernel.org>; Tue, 11 Dec 2018 02:45:57 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id EAF4EC07E85
+	for <linux-pci@archiver.kernel.org>; Tue, 11 Dec 2018 04:11:25 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 4112520645
-	for <linux-pci@archiver.kernel.org>; Tue, 11 Dec 2018 02:45:57 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.3.2 mail.kernel.org 4112520645
-Authentication-Results: mail.kernel.org; dmarc=none (p=none dis=none) header.from=huawei.com
+	by mail.kernel.org (Postfix) with ESMTP id A536020672
+	for <linux-pci@archiver.kernel.org>; Tue, 11 Dec 2018 04:11:25 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.3.2 mail.kernel.org A536020672
+Authentication-Results: mail.kernel.org; dmarc=fail (p=none dis=none) header.from=redhat.com
 Authentication-Results: mail.kernel.org; spf=none smtp.mailfrom=linux-pci-owner@vger.kernel.org
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1729730AbeLKCpv (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Mon, 10 Dec 2018 21:45:51 -0500
-Received: from szxga03-in.huawei.com ([45.249.212.189]:6517 "EHLO huawei.com"
-        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1728230AbeLKCpv (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Mon, 10 Dec 2018 21:45:51 -0500
-Received: from DGGEMM405-HUB.china.huawei.com (unknown [172.30.72.54])
-        by Forcepoint Email with ESMTP id ACB4050199465;
-        Tue, 11 Dec 2018 10:45:43 +0800 (CST)
-Received: from DGGEMM424-HUB.china.huawei.com (10.1.198.41) by
- DGGEMM405-HUB.china.huawei.com (10.3.20.213) with Microsoft SMTP Server (TLS)
- id 14.3.408.0; Tue, 11 Dec 2018 10:45:45 +0800
-Received: from DGGEMM501-MBX.china.huawei.com ([169.254.1.207]) by
- dggemm424-hub.china.huawei.com ([10.1.198.41]) with mapi id 14.03.0415.000;
- Tue, 11 Dec 2018 10:45:44 +0800
-From:   xuyandong <xuyandong2@huawei.com>
-To:     "Michael S. Tsirkin" <mst@redhat.com>,
-        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
-CC:     "stable@vger.kernel.org" <stable@vger.kernel.org>,
+        id S1730112AbeLKELY (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Mon, 10 Dec 2018 23:11:24 -0500
+Received: from mx1.redhat.com ([209.132.183.28]:43886 "EHLO mx1.redhat.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1727566AbeLKELY (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Mon, 10 Dec 2018 23:11:24 -0500
+Received: from smtp.corp.redhat.com (int-mx03.intmail.prod.int.phx2.redhat.com [10.5.11.13])
+        (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
+        (No client certificate requested)
+        by mx1.redhat.com (Postfix) with ESMTPS id 4112458E2E;
+        Tue, 11 Dec 2018 04:11:24 +0000 (UTC)
+Received: from redhat.com (ovpn-120-187.rdu2.redhat.com [10.10.120.187])
+        by smtp.corp.redhat.com (Postfix) with SMTP id DB3F6608F2;
+        Tue, 11 Dec 2018 04:11:22 +0000 (UTC)
+Date:   Mon, 10 Dec 2018 23:11:22 -0500
+From:   "Michael S. Tsirkin" <mst@redhat.com>
+To:     xuyandong <xuyandong2@huawei.com>
+Cc:     "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+        "stable@vger.kernel.org" <stable@vger.kernel.org>,
         Yinghai Lu <yinghai@kernel.org>,
         Jesse Barnes <jbarnes@virtuousgeek.org>,
         Bjorn Helgaas <bhelgaas@google.com>,
         "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
-Subject: RE: [PATCH] pci: avoid bridge feature re-probing on hotplug
-Thread-Topic: [PATCH] pci: avoid bridge feature re-probing on hotplug
-Thread-Index: AQHUkPfZm+7kLW/u5UWB8Dht4FV3hKV41OMQ
-Date:   Tue, 11 Dec 2018 02:45:44 +0000
-Message-ID: <7CECC2DFC21538489F72729DF5EFB4D908AC796C@DGGEMM501-MBX.china.huawei.com>
+Subject: Re: [PATCH] pci: avoid bridge feature re-probing on hotplug
+Message-ID: <20181210231038-mutt-send-email-mst@kernel.org>
 References: <20181211021617.24072-1-mst@redhat.com>
-In-Reply-To: <20181211021617.24072-1-mst@redhat.com>
-Accept-Language: zh-CN, en-US
-Content-Language: zh-CN
-X-MS-Has-Attach: 
-X-MS-TNEF-Correlator: 
-x-originating-ip: [10.177.33.58]
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: base64
+ <7CECC2DFC21538489F72729DF5EFB4D908AC796C@DGGEMM501-MBX.china.huawei.com>
 MIME-Version: 1.0
-X-CFilter-Loop: Reflected
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <7CECC2DFC21538489F72729DF5EFB4D908AC796C@DGGEMM501-MBX.china.huawei.com>
+X-Scanned-By: MIMEDefang 2.79 on 10.5.11.13
+X-Greylist: Sender IP whitelisted, not delayed by milter-greylist-4.5.16 (mx1.redhat.com [10.5.110.39]); Tue, 11 Dec 2018 04:11:24 +0000 (UTC)
 Sender: linux-pci-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-DQoNCj4gLS0tLS1PcmlnaW5hbCBNZXNzYWdlLS0tLS0NCj4gRnJvbTogTWljaGFlbCBTLiBUc2ly
-a2luIFttYWlsdG86bXN0QHJlZGhhdC5jb21dDQo+IFNlbnQ6IFR1ZXNkYXksIERlY2VtYmVyIDEx
-LCAyMDE4IDEwOjE5IEFNDQo+IFRvOiBsaW51eC1rZXJuZWxAdmdlci5rZXJuZWwub3JnDQo+IENj
-OiB4dXlhbmRvbmcgPHh1eWFuZG9uZzJAaHVhd2VpLmNvbT47IHN0YWJsZUB2Z2VyLmtlcm5lbC5v
-cmc7IFlpbmdoYWkNCj4gTHUgPHlpbmdoYWlAa2VybmVsLm9yZz47IEplc3NlIEJhcm5lcyA8amJh
-cm5lc0B2aXJ0dW91c2dlZWsub3JnPjsgQmpvcm4NCj4gSGVsZ2FhcyA8YmhlbGdhYXNAZ29vZ2xl
-LmNvbT47IGxpbnV4LXBjaUB2Z2VyLmtlcm5lbC5vcmcNCj4gU3ViamVjdDogW1BBVENIXSBwY2k6
-IGF2b2lkIGJyaWRnZSBmZWF0dXJlIHJlLXByb2Jpbmcgb24gaG90cGx1Zw0KPiANCj4gY29tbWl0
-IDFmODJkZTEwZDYgKCJQQ0kveDg2OiBkb24ndCBhc3N1bWUgcHJlZmV0Y2hhYmxlIHJhbmdlcyBh
-cmUNCj4gNjRiaXQiKSBhZGRlZCBwcm9iaW5nIG9mIGJyaWRnZSBzdXBwb3J0IGZvciA2NCBiaXQg
-bWVtb3J5IGVhY2ggdGltZSBicmlkZ2UgaXMNCj4gcmUtZW51bWVyYXRlZC4NCj4gDQo+IFVuZm9y
-dHVuYXRlbHkgdGhpcyBwcm9iaW5nIGlzIGRlc3RydWN0aXZlIGlmIGFueSBkZXZpY2UgYmVoaW5k
-IHRoZSBicmlkZ2UgaXMgaW4NCj4gdXNlIGF0IHRoaXMgdGltZS4NCj4gDQo+IFRoZXJlJ3Mgbm8g
-cmVhbCBuZWVkIHRvIHJlLXByb2JlIHRoZSBicmlkZ2UgZmVhdHVyZXMgYXMgdGhlIHJlZ2l0ZXJz
-IGluIHF1ZXN0aW9uDQo+IG5ldmVyIGNoYW5nZSAtIGRldGVjdCB0aGF0IHVzaW5nIHRoZSBtZW1v
-cnkgZmxhZyBiZWluZyBzZXQgYW5kIHNraXAgdGhlDQo+IHByb2JpbmcuDQo+IEF2b2lkaW5nIHJl
-cGVhdGVkIGNhbGxzIHRvIHBjaV9icmlkZ2VfY2hlY2tfcmFuZ2VzIG1pZ2h0IGJlIGV2ZW4gbmlj
-ZXIgd291bGQNCj4gYmUgYSBiaWdnZXIgcGF0Y2ggYW5kIHByb2JhYmx5IG5vdCBhcHByb3ByaWF0
-ZSBvbiBzdGFibGUuDQo+IA0KPiBSZXBvcnRlZC1ieTogeHV5YW5kb25nIDx4dXlhbmRvbmcyQGh1
-YXdlaS5jb20+DQo+IENjOiBzdGFibGVAdmdlci5rZXJuZWwub3JnDQo+IENjOiBZaW5naGFpIEx1
-IDx5aW5naGFpQGtlcm5lbC5vcmc+DQo+IENjOiBKZXNzZSBCYXJuZXMgPGpiYXJuZXNAdmlydHVv
-dXNnZWVrLm9yZz4NCj4gU2lnbmVkLW9mZi1ieTogTWljaGFlbCBTLiBUc2lya2luIDxtc3RAcmVk
-aGF0LmNvbT4NCg0KVGVzdGVkLWJ5OiB4dXlhbmRvbmcgPHh1eWFuZG9uZzJAaHVhd2VpLmNvbT4N
-Cg0KPiAtLS0NCj4gDQo+IFRoaXMgaXNzdWUgaGFzIGJlZW4gcmVwb3J0ZWQgb24gdXBzdHJlYW0g
-TGludXggYW5kIENlbnRvcy4NCj4gDQo+ICBkcml2ZXJzL3BjaS9zZXR1cC1idXMuYyB8IDcgKysr
-KysrKw0KPiAgMSBmaWxlIGNoYW5nZWQsIDcgaW5zZXJ0aW9ucygrKQ0KPiANCj4gZGlmZiAtLWdp
-dCBhL2RyaXZlcnMvcGNpL3NldHVwLWJ1cy5jIGIvZHJpdmVycy9wY2kvc2V0dXAtYnVzLmMgaW5k
-ZXgNCj4gZWQ5NjA0MzZkZjVlLi43YWI0MmY3NjU3OWUgMTAwNjQ0DQo+IC0tLSBhL2RyaXZlcnMv
-cGNpL3NldHVwLWJ1cy5jDQo+ICsrKyBiL2RyaXZlcnMvcGNpL3NldHVwLWJ1cy5jDQo+IEBAIC03
-NDEsNiArNzQxLDEzIEBAIHN0YXRpYyB2b2lkIHBjaV9icmlkZ2VfY2hlY2tfcmFuZ2VzKHN0cnVj
-dCBwY2lfYnVzDQo+ICpidXMpDQo+ICAJc3RydWN0IHJlc291cmNlICpiX3JlczsNCj4gDQo+ICAJ
-Yl9yZXMgPSAmYnJpZGdlLT5yZXNvdXJjZVtQQ0lfQlJJREdFX1JFU09VUkNFU107DQo+ICsNCj4g
-KwkvKiBEb24ndCByZS1jaGVjayBhZnRlciB0aGlzIHdhcyBjYWxsZWQgb25jZSBhbHJlYWR5Og0K
-PiArCSAqIGltcG9ydGFudCBzaW5jZSBicmlkZ2UgbWlnaHQgYmUgaW4gdXNlLg0KPiArCSAqLw0K
-PiArCWlmIChiX3Jlc1sxXS5mbGFncyAmIElPUkVTT1VSQ0VfTUVNKQ0KPiArCQlyZXR1cm47DQo+
-ICsNCj4gIAliX3Jlc1sxXS5mbGFncyB8PSBJT1JFU09VUkNFX01FTTsNCj4gDQo+ICAJcGNpX3Jl
-YWRfY29uZmlnX3dvcmQoYnJpZGdlLCBQQ0lfSU9fQkFTRSwgJmlvKTsNCj4gLS0NCj4gTVNUDQo=
+On Tue, Dec 11, 2018 at 02:45:44AM +0000, xuyandong wrote:
+> 
+> 
+> > -----Original Message-----
+> > From: Michael S. Tsirkin [mailto:mst@redhat.com]
+> > Sent: Tuesday, December 11, 2018 10:19 AM
+> > To: linux-kernel@vger.kernel.org
+> > Cc: xuyandong <xuyandong2@huawei.com>; stable@vger.kernel.org; Yinghai
+> > Lu <yinghai@kernel.org>; Jesse Barnes <jbarnes@virtuousgeek.org>; Bjorn
+> > Helgaas <bhelgaas@google.com>; linux-pci@vger.kernel.org
+> > Subject: [PATCH] pci: avoid bridge feature re-probing on hotplug
+> > 
+> > commit 1f82de10d6 ("PCI/x86: don't assume prefetchable ranges are
+> > 64bit") added probing of bridge support for 64 bit memory each time bridge is
+> > re-enumerated.
+> > 
+> > Unfortunately this probing is destructive if any device behind the bridge is in
+> > use at this time.
+> > 
+> > There's no real need to re-probe the bridge features as the regiters in question
+> > never change - detect that using the memory flag being set and skip the
+> > probing.
+> > Avoiding repeated calls to pci_bridge_check_ranges might be even nicer would
+> > be a bigger patch and probably not appropriate on stable.
+> > 
+> > Reported-by: xuyandong <xuyandong2@huawei.com>
+> > Cc: stable@vger.kernel.org
+> > Cc: Yinghai Lu <yinghai@kernel.org>
+> > Cc: Jesse Barnes <jbarnes@virtuousgeek.org>
+> > Signed-off-by: Michael S. Tsirkin <mst@redhat.com>
+> 
+> Tested-by: xuyandong <xuyandong2@huawei.com>
+
+Bjorn could you queue this for this release?
+
+> > ---
+> > 
+> > This issue has been reported on upstream Linux and Centos.
+> > 
+> >  drivers/pci/setup-bus.c | 7 +++++++
+> >  1 file changed, 7 insertions(+)
+> > 
+> > diff --git a/drivers/pci/setup-bus.c b/drivers/pci/setup-bus.c index
+> > ed960436df5e..7ab42f76579e 100644
+> > --- a/drivers/pci/setup-bus.c
+> > +++ b/drivers/pci/setup-bus.c
+> > @@ -741,6 +741,13 @@ static void pci_bridge_check_ranges(struct pci_bus
+> > *bus)
+> >  	struct resource *b_res;
+> > 
+> >  	b_res = &bridge->resource[PCI_BRIDGE_RESOURCES];
+> > +
+> > +	/* Don't re-check after this was called once already:
+> > +	 * important since bridge might be in use.
+> > +	 */
+> > +	if (b_res[1].flags & IORESOURCE_MEM)
+> > +		return;
+> > +
+> >  	b_res[1].flags |= IORESOURCE_MEM;
+> > 
+> >  	pci_read_config_word(bridge, PCI_IO_BASE, &io);
+> > --
+> > MST
