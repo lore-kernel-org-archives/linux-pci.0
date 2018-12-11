@@ -2,433 +2,152 @@ Return-Path: <SRS0=NFOj=OU=vger.kernel.org=linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-7.2 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,
-	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_PASS,URIBL_BLOCKED autolearn=ham
-	autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-0.9 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+	MAILING_LIST_MULTI,SPF_PASS autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id C2689C07E85
-	for <linux-pci@archiver.kernel.org>; Tue, 11 Dec 2018 04:36:29 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id E0AF6C07E85
+	for <linux-pci@archiver.kernel.org>; Tue, 11 Dec 2018 06:35:26 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 3C65920811
-	for <linux-pci@archiver.kernel.org>; Tue, 11 Dec 2018 04:36:29 +0000 (UTC)
-Authentication-Results: mail.kernel.org;
-	dkim=pass (1024-bit key) header.d=ti.com header.i=@ti.com header.b="xTaGhNFC"
-DMARC-Filter: OpenDMARC Filter v1.3.2 mail.kernel.org 3C65920811
-Authentication-Results: mail.kernel.org; dmarc=fail (p=quarantine dis=none) header.from=ti.com
+	by mail.kernel.org (Postfix) with ESMTP id 9CBF320672
+	for <linux-pci@archiver.kernel.org>; Tue, 11 Dec 2018 06:35:25 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.3.2 mail.kernel.org 9CBF320672
+Authentication-Results: mail.kernel.org; dmarc=fail (p=none dis=none) header.from=intel.com
 Authentication-Results: mail.kernel.org; spf=none smtp.mailfrom=linux-pci-owner@vger.kernel.org
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1730078AbeLKEg2 (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Mon, 10 Dec 2018 23:36:28 -0500
-Received: from fllv0015.ext.ti.com ([198.47.19.141]:54840 "EHLO
-        fllv0015.ext.ti.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1729060AbeLKEg2 (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Mon, 10 Dec 2018 23:36:28 -0500
-Received: from fllv0034.itg.ti.com ([10.64.40.246])
-        by fllv0015.ext.ti.com (8.15.2/8.15.2) with ESMTP id wBB4aIPd075895;
-        Mon, 10 Dec 2018 22:36:18 -0600
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=ti.com;
-        s=ti-com-17Q1; t=1544502978;
-        bh=zWTGvCHEozkV63RZPhJcBmNtpVENMPZuxw6t72jEbtw=;
-        h=Subject:To:CC:References:From:Date:In-Reply-To;
-        b=xTaGhNFCW06JQbXTORNO6ntvxb8yea/i1TdyjZ9yXQsUbuKPnjC46cKelXQTsS2kc
-         WY56U3HPsD21POKv4MJ8dO4roqoT4DLTrCX6AMSoeXU0WkvpWa2SLhZoEklpJwxUeN
-         I7ovPq3ipI+DjtepflOlkQWOHiKT19JALdr4GgHM=
-Received: from DFLE100.ent.ti.com (dfle100.ent.ti.com [10.64.6.21])
-        by fllv0034.itg.ti.com (8.15.2/8.15.2) with ESMTPS id wBB4aIN1057400
-        (version=TLSv1.2 cipher=AES256-GCM-SHA384 bits=256 verify=FAIL);
-        Mon, 10 Dec 2018 22:36:18 -0600
-Received: from DFLE106.ent.ti.com (10.64.6.27) by DFLE100.ent.ti.com
- (10.64.6.21) with Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_128_CBC_SHA256_P256) id 15.1.1591.10; Mon, 10
- Dec 2018 22:36:18 -0600
-Received: from dlep32.itg.ti.com (157.170.170.100) by DFLE106.ent.ti.com
- (10.64.6.27) with Microsoft SMTP Server (version=TLS1_0,
- cipher=TLS_RSA_WITH_AES_256_CBC_SHA) id 15.1.1591.10 via Frontend Transport;
- Mon, 10 Dec 2018 22:36:18 -0600
-Received: from [172.24.190.233] (ileax41-snat.itg.ti.com [10.172.224.153])
-        by dlep32.itg.ti.com (8.14.3/8.13.8) with ESMTP id wBB4aFlo005324;
-        Mon, 10 Dec 2018 22:36:15 -0600
-Subject: Re: [PATCH V2] PCI: dwc ep: cache config until DBI regs available
-To:     Stephen Warren <swarren@wwwdotorg.org>,
-        Jingoo Han <jingoohan1@gmail.com>,
-        Gustavo Pimentel <gustavo.pimentel@synopsys.com>,
-        Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
-        Bjorn Helgaas <bhelgaas@google.com>
-CC:     <linux-pci@vger.kernel.org>, Vidya Sagar <vidyas@nvidia.com>,
-        Manikanta Maddireddy <mmaddireddy@nvidia.com>,
-        Trent Piepho <tpiepho@impinj.com>,
-        Stephen Warren <swarren@nvidia.com>
-References: <20181126230958.8175-1-swarren@wwwdotorg.org>
-From:   Kishon Vijay Abraham I <kishon@ti.com>
-Message-ID: <340ed2c5-cb11-0aea-5430-5da5b509d805@ti.com>
-Date:   Tue, 11 Dec 2018 10:06:04 +0530
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:60.0) Gecko/20100101
- Thunderbird/60.2.1
-MIME-Version: 1.0
-In-Reply-To: <20181126230958.8175-1-swarren@wwwdotorg.org>
-Content-Type: text/plain; charset="utf-8"
+        id S1726036AbeLKGfZ convert rfc822-to-8bit (ORCPT
+        <rfc822;linux-pci@archiver.kernel.org>);
+        Tue, 11 Dec 2018 01:35:25 -0500
+Received: from mga14.intel.com ([192.55.52.115]:33857 "EHLO mga14.intel.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1725923AbeLKGfY (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Tue, 11 Dec 2018 01:35:24 -0500
+X-Amp-Result: SKIPPED(no attachment in message)
+X-Amp-File-Uploaded: False
+Received: from fmsmga007.fm.intel.com ([10.253.24.52])
+  by fmsmga103.fm.intel.com with ESMTP/TLS/DHE-RSA-AES256-GCM-SHA384; 10 Dec 2018 22:35:24 -0800
+X-ExtLoop1: 1
+X-IronPort-AV: E=Sophos;i="5.56,341,1539673200"; 
+   d="scan'208";a="106492659"
+Received: from fmsmsx103.amr.corp.intel.com ([10.18.124.201])
+  by fmsmga007.fm.intel.com with ESMTP; 10 Dec 2018 22:35:24 -0800
+Received: from fmsmsx111.amr.corp.intel.com (10.18.116.5) by
+ FMSMSX103.amr.corp.intel.com (10.18.124.201) with Microsoft SMTP Server (TLS)
+ id 14.3.408.0; Mon, 10 Dec 2018 22:35:24 -0800
+Received: from lcsmsx152.ger.corp.intel.com (10.186.165.231) by
+ fmsmsx111.amr.corp.intel.com (10.18.116.5) with Microsoft SMTP Server (TLS)
+ id 14.3.408.0; Mon, 10 Dec 2018 22:35:23 -0800
+Received: from hasmsx112.ger.corp.intel.com ([169.254.11.88]) by
+ LCSMSX152.ger.corp.intel.com ([10.186.165.231]) with mapi id 14.03.0415.000;
+ Tue, 11 Dec 2018 08:35:21 +0200
+From:   "Grumbach, Emmanuel" <emmanuel.grumbach@intel.com>
+To:     Bjorn Helgaas <helgaas@kernel.org>
+CC:     "bjorn@helgaas.com" <bjorn@helgaas.com>,
+        "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+        "Mertarg10@gmail.com" <Mertarg10@gmail.com>,
+        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
+Subject: RE: Fwd: [Bug 201647] New: Intel Wireless card 3165 does not get
+ detected but bluetooth works
+Thread-Topic: Fwd: [Bug 201647] New: Intel Wireless card 3165 does not get
+ detected but bluetooth works
+Thread-Index: AQHUh2ApCc7lmNGfg0mZ5cTxRsuvBaVrCVdwgA10uACAAKnQcA==
+Date:   Tue, 11 Dec 2018 06:35:20 +0000
+Message-ID: <0BA3FCBA62E2DC44AF3030971E174FB30133754C00@HASMSX112.ger.corp.intel.com>
+References: <bug-201647-193951@https.bugzilla.kernel.org/>
+ <CABhMZUXc4FS-f52ZDsErEhbkm_jjEz+kn75YO5Tuvp42Qm+1xw@mail.gmail.com>
+ <20181128211959.GB178809@google.com>
+ <0BA3FCBA62E2DC44AF3030971E174FB3013373E4A3@HASMSX112.ger.corp.intel.com>
+ <20181210222452.GC85090@google.com>
+In-Reply-To: <20181210222452.GC85090@google.com>
+Accept-Language: en-US
 Content-Language: en-US
-Content-Transfer-Encoding: 7bit
-X-EXCLAIMER-MD-CONFIG: e1e8a2fd-e40a-4ac6-ac9b-f7e9cc9ee180
+X-MS-Has-Attach: 
+X-MS-TNEF-Correlator: 
+x-titus-metadata-40: eyJDYXRlZ29yeUxhYmVscyI6IiIsIk1ldGFkYXRhIjp7Im5zIjoiaHR0cDpcL1wvd3d3LnRpdHVzLmNvbVwvbnNcL0ludGVsMyIsImlkIjoiYTEzYmU4YmEtYmU4Mi00ZmY5LTk5ZGYtNzBiYjA5ODlhM2Q5IiwicHJvcHMiOlt7Im4iOiJDVFBDbGFzc2lmaWNhdGlvbiIsInZhbHMiOlt7InZhbHVlIjoiQ1RQX05UIn1dfV19LCJTdWJqZWN0TGFiZWxzIjpbXSwiVE1DVmVyc2lvbiI6IjE3LjEwLjE4MDQuNDkiLCJUcnVzdGVkTGFiZWxIYXNoIjoiSEhrRDZDTE0wRG55dmRab3F3MEU4bTBhWVVKcHUzYlZNNkZ6UXVVbnNxd0VUajRYeG55d1NlelJJZjVsOW5RQyJ9
+x-ctpclassification: CTP_NT
+dlp-product: dlpe-windows
+dlp-version: 11.0.400.15
+dlp-reaction: no-action
+x-originating-ip: [10.251.82.25]
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 8BIT
+MIME-Version: 1.0
 Sender: linux-pci-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-Hi,
-
-On 27/11/18 4:39 AM, Stephen Warren wrote:
-> From: Stephen Warren <swarren@nvidia.com>
+> > > >
+> > > > https://bugzilla.kernel.org/show_bug.cgi?id=201647
+> > > >
+> > > >             Bug ID: 201647
+> > > >            Summary: Intel Wireless card 3165 does not get detected but
+> > > >                     bluetooth works
+> > > >            Product: Drivers
+> > > >            Version: 2.5
+> > > >     Kernel Version: 4.19.1
+> > > >           Hardware: Intel
+> > > >                 OS: Linux
+> > > >               Tree: Mainline
+> > > >             Status: NEW
+> > > >           Severity: high
+> > > >           Priority: P1
+> > > >          Component: PCI
+> > > >           Assignee: drivers_pci@kernel-bugs.osdl.org
+> > > >           Reporter: Mertarg10@gmail.com
+> > > >         Regression: No
+> > > >
+> > > > This bug affects most of the devices with a Celeron N4000 and an
+> > > > Intel wifi 3165 Ac adapter.
+> > > >
+> > > > When using Linux wifi is not working however, Bluetooth is working
+> > > > fine.  Also, Bluetooth part of this chip is connected via btusb
+> > > > and the wifi part of this chip is connected via PCIe.
+> > >
+> > > Can you attach a screenshot of the Windows 10 device manager info
+> > > for the wifi adapter to the bugzilla?  If you can get a raw hex dump
+> > > of its config space, that would be awesome.
+> > >
+> > > Also attach a copy of your kernel .config file (typically in /boot/).
+> > >
+> > > My only guess is that maybe the system keeps wifi completely powered
+> > > down and uses hotplug to add it when needed.  [1] mentions wifi
+> > > being on pcibus 1 under Windows.  Your lspci does show bridge
+> > > 00:13.0 leading to bus 01, but Linux doesn't find any devices on bus 01.
+> > >
+> > > Hotplug could be done via either acpiphp (ACPI mediated hotplug) or
+> > > pciehp (native PCIe hotplug).  Your dmesg shows you do have acpiphp.
+> > >
+> > > I can't tell about pciehp (your .config will show that), but I think
+> > > pciehp will only claim bridges where SltCap contains HotPlug+, and
+> > > yours shows HotPlug- , so I don't think pciehp will do anything on your
+> system.
+> > >
+> > > Even if the system does use hotplug, I don't know what mechanism the
+> > > OS would use to wake up the device, since we don't know it even
+> > > exists.  I guess there could be some magic switch accessible via USB.
+> > > But if that were the case, I'm sure Emmanuel would know about it.
+> >
+> > Hm... Don't be so sure... :)
+> > I don't think we have anything as fancy as this.
+> > I guess you can try to dig into the BIOS settings?
+> > I have heard of such a switch that would make the device disappear.
 > 
-> Some implementations of the DWC PCIe endpoint controller do not allow
-> access to DBI registers until the attached host has started REFCLK,
-> released PERST, and the endpoint driver has initialized clocking of the
-> DBI registers based on that. One such system is NVIDIA's T194 SoC. The
-> PCIe endpoint subsystem and DWC driver currently don't work on such
-> hardware, since they assume that all endpoint configuration can happen
-> at any arbitrary time.
+> It's worth looking, but I don't understand how a BIOS switch would solve this
+> problem.  I assume that with the same BIOS settings, Windows works and
+> Linux fails.
+
+I guess I had a typo there... I have *not* heard of such a switch.
+
 > 
-> Enhance the DWC endpoint driver to support such systems by caching all
-> endpoint configuration in software, and only writing the configuration
-> to hardware once it's been initialized. This is implemented by splitting
-> all endpoint controller ops into two functions; the first which simply
-> records/caches the desired configuration whenever called by the
-> associated function driver and optionally calls the second, and the
-> second which actually programs the configuration into hardware, which
-> may be called either by the first function, or later when it's known
-> that the DBI registers are available.
+> Maybe there would be a clue in an acpidump from affected machines, e.g.,
+> maybe we'd see some kind of ACPI hotplug notification.  That seems like a
+> long shot because we do have acpiphp in the kernel, and it *should* be
+> handling such notifications, but it could always be broken.
 > 
-> Signed-off-by: Stephen Warren <swarren@nvidia.com>
-> ---
-> v2:
-> Replace hw_regs_available with hw_regs_not_available. A 0 value in this
-> field is now equivalent to the existing behaviour, so that drivers that
-> allocate struct dw_pcie_ep with kzalloc or equivalent do not need to
-> explicitly set this new field in order to maintain existing behaviour.
+> The Windows device manager info (requested above) would be interesting.
 > 
-> Note: I have only compiled-tested this patch in the context of the
-> mainline kernel since NVIDIA Tegra PCIe EP support is not yet present.
-> However, I've built and tested an equivalent patch in our downstream
-> kernel. I did have to manually port it to mainline due to conflicts
-> though.
-> 
-> This patch was developed on top of "PCI: designware: don't hard-code
-> DBI/ATU offset" which I sent a little while back, so may rely on that
-> for patch context.
-> ---
->  .../pci/controller/dwc/pcie-designware-ep.c   | 197 ++++++++++++++----
->  drivers/pci/controller/dwc/pcie-designware.h  |  26 ++-
->  2 files changed, 179 insertions(+), 44 deletions(-)
-> 
-> diff --git a/drivers/pci/controller/dwc/pcie-designware-ep.c b/drivers/pci/controller/dwc/pcie-designware-ep.c
-> index 880210366e71..e69b6ef504ed 100644
-> --- a/drivers/pci/controller/dwc/pcie-designware-ep.c
-> +++ b/drivers/pci/controller/dwc/pcie-designware-ep.c
-> @@ -73,11 +73,10 @@ static u8 dw_pcie_ep_find_capability(struct dw_pcie *pci, u8 cap)
->  	return __dw_pcie_ep_find_next_cap(pci, next_cap_ptr, cap);
->  }
->  
-> -static int dw_pcie_ep_write_header(struct pci_epc *epc, u8 func_no,
-> -				   struct pci_epf_header *hdr)
-> +static void dw_pcie_ep_write_header_regs(struct dw_pcie_ep *ep)
->  {
-> -	struct dw_pcie_ep *ep = epc_get_drvdata(epc);
->  	struct dw_pcie *pci = to_dw_pcie_from_ep(ep);
-> +	struct pci_epf_header *hdr = &(ep->cached_hdr);
->  
->  	dw_pcie_dbi_ro_wr_en(pci);
->  	dw_pcie_writew_dbi(pci, PCI_VENDOR_ID, hdr->vendorid);
-> @@ -94,6 +93,19 @@ static int dw_pcie_ep_write_header(struct pci_epc *epc, u8 func_no,
->  	dw_pcie_writeb_dbi(pci, PCI_INTERRUPT_PIN,
->  			   hdr->interrupt_pin);
->  	dw_pcie_dbi_ro_wr_dis(pci);
-> +}
-> +
-> +static int dw_pcie_ep_write_header(struct pci_epc *epc, u8 func_no,
-> +				   struct pci_epf_header *hdr)
-> +{
-> +	struct dw_pcie_ep *ep = epc_get_drvdata(epc);
-> +
-> +	ep->cached_hdr = *hdr;
-> +
-> +	if (ep->hw_regs_not_available)
-> +		return 0;
-> +
-> +	dw_pcie_ep_write_header_regs(ep);
->  
->  	return 0;
->  }
-> @@ -112,6 +124,15 @@ static int dw_pcie_ep_inbound_atu(struct dw_pcie_ep *ep, enum pci_barno bar,
->  		return -EINVAL;
->  	}
->  
-> +	ep->cached_inbound_atus[free_win].bar = bar;
-> +	ep->cached_inbound_atus[free_win].cpu_addr = cpu_addr;
-> +	ep->cached_inbound_atus[free_win].as_type = as_type;
-> +	ep->cached_bars[bar].atu_index = free_win;
-> +	set_bit(free_win, ep->ib_window_map);
-> +
-> +	if (ep->hw_regs_not_available)
-> +		return 0;
-> +
->  	ret = dw_pcie_prog_inbound_atu(pci, free_win, bar, cpu_addr,
->  				       as_type);
->  	if (ret < 0) {
-> @@ -119,9 +140,6 @@ static int dw_pcie_ep_inbound_atu(struct dw_pcie_ep *ep, enum pci_barno bar,
->  		return ret;
->  	}
->  
-> -	ep->bar_to_atu[bar] = free_win;
-> -	set_bit(free_win, ep->ib_window_map);
-> -
->  	return 0;
->  }
->  
-> @@ -137,27 +155,66 @@ static int dw_pcie_ep_outbound_atu(struct dw_pcie_ep *ep, phys_addr_t phys_addr,
->  		return -EINVAL;
->  	}
->  
-> +	ep->cached_outbound_atus[free_win].addr = phys_addr;
-> +	ep->cached_outbound_atus[free_win].pci_addr = pci_addr;
-> +	ep->cached_outbound_atus[free_win].size = size;
-> +	set_bit(free_win, ep->ob_window_map);
-> +
-> +	if (ep->hw_regs_not_available)
-> +		return 0;
-> +
->  	dw_pcie_prog_outbound_atu(pci, free_win, PCIE_ATU_TYPE_MEM,
->  				  phys_addr, pci_addr, size);
->  
-> -	set_bit(free_win, ep->ob_window_map);
-> -	ep->outbound_addr[free_win] = phys_addr;
-> -
->  	return 0;
->  }
->  
-> +static void dw_pcie_ep_clear_bar_regs(struct dw_pcie_ep *ep, u8 func_no,
-> +				      enum pci_barno bar)
-> +{
-> +	struct dw_pcie *pci = to_dw_pcie_from_ep(ep);
-> +	int flags = ep->cached_bars[bar].flags;
-> +	u32 atu_index = ep->cached_bars[bar].atu_index;
-> +
-> +	__dw_pcie_ep_reset_bar(pci, bar, flags);
-> +
-> +	dw_pcie_disable_atu(pci, atu_index, DW_PCIE_REGION_INBOUND);
-> +}
-> +
->  static void dw_pcie_ep_clear_bar(struct pci_epc *epc, u8 func_no,
->  				 struct pci_epf_bar *epf_bar)
->  {
->  	struct dw_pcie_ep *ep = epc_get_drvdata(epc);
-> -	struct dw_pcie *pci = to_dw_pcie_from_ep(ep);
->  	enum pci_barno bar = epf_bar->barno;
-> -	u32 atu_index = ep->bar_to_atu[bar];
-> +	u32 atu_index = ep->cached_bars[bar].atu_index;
->  
-> -	__dw_pcie_ep_reset_bar(pci, bar, epf_bar->flags);
-> -
-> -	dw_pcie_disable_atu(pci, atu_index, DW_PCIE_REGION_INBOUND);
->  	clear_bit(atu_index, ep->ib_window_map);
-> +
-> +	if (ep->hw_regs_not_available)
-> +		return;
-> +
-> +	dw_pcie_ep_clear_bar_regs(ep, func_no, bar);
-> +}
-> +
-> +static void dw_pcie_ep_set_bar_regs(struct dw_pcie_ep *ep, u8 func_no,
-> +				    enum pci_barno bar)
-> +{
-> +	struct dw_pcie *pci = to_dw_pcie_from_ep(ep);
-> +	size_t size = ep->cached_bars[bar].size;
-> +	int flags = ep->cached_bars[bar].flags;
-> +	u32 reg = PCI_BASE_ADDRESS_0 + (4 * bar);
-> +
-> +	dw_pcie_dbi_ro_wr_en(pci);
-> +
-> +	dw_pcie_writel_dbi2(pci, reg, lower_32_bits(size - 1));
-> +	dw_pcie_writel_dbi(pci, reg, flags);
-> +
-> +	if (flags & PCI_BASE_ADDRESS_MEM_TYPE_64) {
-> +		dw_pcie_writel_dbi2(pci, reg + 4, upper_32_bits(size - 1));
-> +		dw_pcie_writel_dbi(pci, reg + 4, 0);
-> +	}
-> +
-> +	dw_pcie_dbi_ro_wr_dis(pci);
->  }
->  
->  static int dw_pcie_ep_set_bar(struct pci_epc *epc, u8 func_no,
-> @@ -165,12 +222,10 @@ static int dw_pcie_ep_set_bar(struct pci_epc *epc, u8 func_no,
->  {
->  	int ret;
->  	struct dw_pcie_ep *ep = epc_get_drvdata(epc);
-> -	struct dw_pcie *pci = to_dw_pcie_from_ep(ep);
->  	enum pci_barno bar = epf_bar->barno;
->  	size_t size = epf_bar->size;
->  	int flags = epf_bar->flags;
->  	enum dw_pcie_as_type as_type;
-> -	u32 reg = PCI_BASE_ADDRESS_0 + (4 * bar);
->  
->  	if (!(flags & PCI_BASE_ADDRESS_SPACE))
->  		as_type = DW_PCIE_AS_MEM;
-> @@ -181,17 +236,13 @@ static int dw_pcie_ep_set_bar(struct pci_epc *epc, u8 func_no,
->  	if (ret)
->  		return ret;
->  
-> -	dw_pcie_dbi_ro_wr_en(pci);
-> +	ep->cached_bars[bar].size = size;
-> +	ep->cached_bars[bar].flags = flags;
->  
-> -	dw_pcie_writel_dbi2(pci, reg, lower_32_bits(size - 1));
-> -	dw_pcie_writel_dbi(pci, reg, flags);
-> -
-> -	if (flags & PCI_BASE_ADDRESS_MEM_TYPE_64) {
-> -		dw_pcie_writel_dbi2(pci, reg + 4, upper_32_bits(size - 1));
-> -		dw_pcie_writel_dbi(pci, reg + 4, 0);
-> -	}
-> +	if (ep->hw_regs_not_available)
-> +		return 0;
->  
-> -	dw_pcie_dbi_ro_wr_dis(pci);
-> +	dw_pcie_ep_set_bar_regs(ep, func_no, bar);
->  
->  	return 0;
->  }
-> @@ -202,7 +253,7 @@ static int dw_pcie_find_index(struct dw_pcie_ep *ep, phys_addr_t addr,
->  	u32 index;
->  
->  	for (index = 0; index < ep->num_ob_windows; index++) {
-> -		if (ep->outbound_addr[index] != addr)
-> +		if (ep->cached_outbound_atus[index].addr != addr)
->  			continue;
->  		*atu_index = index;
->  		return 0;
-> @@ -223,8 +274,12 @@ static void dw_pcie_ep_unmap_addr(struct pci_epc *epc, u8 func_no,
->  	if (ret < 0)
->  		return;
->  
-> -	dw_pcie_disable_atu(pci, atu_index, DW_PCIE_REGION_OUTBOUND);
->  	clear_bit(atu_index, ep->ob_window_map);
-> +
-> +	if (ep->hw_regs_not_available)
-> +		return;
-> +
-> +	dw_pcie_disable_atu(pci, atu_index, DW_PCIE_REGION_OUTBOUND);
->  }
->  
->  static int dw_pcie_ep_map_addr(struct pci_epc *epc, u8 func_no,
-> @@ -254,7 +309,10 @@ static int dw_pcie_ep_get_msi(struct pci_epc *epc, u8 func_no)
->  		return -EINVAL;
->  
->  	reg = ep->msi_cap + PCI_MSI_FLAGS;
-> -	val = dw_pcie_readw_dbi(pci, reg);
-> +	if (ep->hw_regs_not_available)
-> +		val = ep->cached_msi_flags;
-> +	else
-> +		val = dw_pcie_readw_dbi(pci, reg);
->  	if (!(val & PCI_MSI_FLAGS_ENABLE))
->  		return -EINVAL;
->  
-> @@ -273,12 +331,18 @@ static int dw_pcie_ep_set_msi(struct pci_epc *epc, u8 func_no, u8 interrupts)
->  		return -EINVAL;
->  
->  	reg = ep->msi_cap + PCI_MSI_FLAGS;
-> -	val = dw_pcie_readw_dbi(pci, reg);
-> +	if (ep->hw_regs_not_available)
-> +		val = ep->cached_msi_flags;
-> +	else
-> +		val = dw_pcie_readw_dbi(pci, reg);
->  	val &= ~PCI_MSI_FLAGS_QMASK;
->  	val |= (interrupts << 1) & PCI_MSI_FLAGS_QMASK;
-> -	dw_pcie_dbi_ro_wr_en(pci);
-> -	dw_pcie_writew_dbi(pci, reg, val);
-> -	dw_pcie_dbi_ro_wr_dis(pci);
-> +	ep->cached_msi_flags = val;
-> +	if (!ep->hw_regs_not_available) {
-> +		dw_pcie_dbi_ro_wr_en(pci);
-> +		dw_pcie_writew_dbi(pci, reg, val);
-> +		dw_pcie_dbi_ro_wr_dis(pci);
-> +	}
->  
->  	return 0;
->  }
-> @@ -293,7 +357,10 @@ static int dw_pcie_ep_get_msix(struct pci_epc *epc, u8 func_no)
->  		return -EINVAL;
->  
->  	reg = ep->msix_cap + PCI_MSIX_FLAGS;
-> -	val = dw_pcie_readw_dbi(pci, reg);
-> +	if (ep->hw_regs_not_available)
-> +		val = ep->cached_msix_flags;
-> +	else
-> +		val = dw_pcie_readw_dbi(pci, reg);
->  	if (!(val & PCI_MSIX_FLAGS_ENABLE))
->  		return -EINVAL;
->  
-> @@ -312,16 +379,48 @@ static int dw_pcie_ep_set_msix(struct pci_epc *epc, u8 func_no, u16 interrupts)
->  		return -EINVAL;
->  
->  	reg = ep->msix_cap + PCI_MSIX_FLAGS;
-> -	val = dw_pcie_readw_dbi(pci, reg);
-> +	if (ep->hw_regs_not_available)
-> +		val = ep->cached_msix_flags;
-> +	else
-> +		val = dw_pcie_readw_dbi(pci, reg);
->  	val &= ~PCI_MSIX_FLAGS_QSIZE;
->  	val |= interrupts;
-> -	dw_pcie_dbi_ro_wr_en(pci);
-> -	dw_pcie_writew_dbi(pci, reg, val);
-> -	dw_pcie_dbi_ro_wr_dis(pci);
-> +	ep->cached_msix_flags = val;
-> +	if (!ep->hw_regs_not_available) {
-> +		dw_pcie_dbi_ro_wr_en(pci);
-> +		dw_pcie_writew_dbi(pci, reg, val);
-> +		dw_pcie_dbi_ro_wr_dis(pci);
-> +	}
->  
->  	return 0;
->  }
->  
-> +void dw_pcie_set_regs_available(struct dw_pcie *pci)
-> +{
+Indeed.
+FWIW: I saw another problem like this with a 9650 device.
 
-When will this function be invoked? Does the wrapper get an interrupt when
-refclk is enabled where this function will be invoked?
-> +	struct dw_pcie_ep *ep = &(pci->ep);
-> +	int i;
-> +
-> +	ep->hw_regs_not_available = false;
+PS: PCI folks don't use bugzilla's anymore? It's all over the mailing list?
 
-This can race with epc_ops.
-
-> +
-> +	dw_pcie_ep_write_header_regs(ep);
-> +	for_each_set_bit(i, ep->ib_window_map, ep->num_ib_windows) {
-> +		dw_pcie_prog_inbound_atu(pci, i,
-> +			ep->cached_inbound_atus[i].bar,
-> +			ep->cached_inbound_atus[i].cpu_addr,
-> +			ep->cached_inbound_atus[i].as_type);
-
-Depending on the context in which this function is invoked, programming
-inbound/outbound ATU can also race with EPC ops.
-> +		dw_pcie_ep_set_bar_regs(ep, 0, ep->cached_inbound_atus[i].bar);
-> +	}
-> +	for_each_set_bit(i, ep->ob_window_map, ep->num_ob_windows)
-> +		dw_pcie_prog_outbound_atu(pci, i, PCIE_ATU_TYPE_MEM,
-> +			ep->cached_outbound_atus[i].addr,
-> +			ep->cached_outbound_atus[i].pci_addr,
-> +			ep->cached_outbound_atus[i].size);
-> +	dw_pcie_dbi_ro_wr_en(pci);
-> +	dw_pcie_writew_dbi(pci, PCI_MSI_FLAGS, ep->cached_msi_flags);
-> +	dw_pcie_writew_dbi(pci, PCI_MSIX_FLAGS, ep->cached_msix_flags);
-> +	dw_pcie_dbi_ro_wr_dis(pci);
-
-IMHO we should add a new epc ops ->epc_init() which indicates if the EPC is
-ready to be initialized or not. Only if the epc_init indicates it's ready to be
-initialized, the endpoint function driver should go ahead with further
-initialization. Or else it should wait for a notification from EPC to indicate
-when it's ready to be initialized.
-
-Thanks
-Kishon
