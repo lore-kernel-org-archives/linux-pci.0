@@ -6,25 +6,25 @@ X-Spam-Status: No, score=-8.9 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
 	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_PASS,URIBL_BLOCKED,
 	USER_AGENT_GIT autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 40127C04EB8
-	for <linux-pci@archiver.kernel.org>; Wed, 12 Dec 2018 10:23:00 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 360E2C04EB8
+	for <linux-pci@archiver.kernel.org>; Wed, 12 Dec 2018 10:23:02 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 10BCD20873
-	for <linux-pci@archiver.kernel.org>; Wed, 12 Dec 2018 10:23:00 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.3.2 mail.kernel.org 10BCD20873
+	by mail.kernel.org (Postfix) with ESMTP id 03B9E2084E
+	for <linux-pci@archiver.kernel.org>; Wed, 12 Dec 2018 10:23:02 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.3.2 mail.kernel.org 03B9E2084E
 Authentication-Results: mail.kernel.org; dmarc=none (p=none dis=none) header.from=bootlin.com
 Authentication-Results: mail.kernel.org; spf=none smtp.mailfrom=linux-pci-owner@vger.kernel.org
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727168AbeLLKWH (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Wed, 12 Dec 2018 05:22:07 -0500
-Received: from mail.bootlin.com ([62.4.15.54]:57491 "EHLO mail.bootlin.com"
+        id S1727158AbeLLKWG (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Wed, 12 Dec 2018 05:22:06 -0500
+Received: from mail.bootlin.com ([62.4.15.54]:57465 "EHLO mail.bootlin.com"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1727019AbeLLKWH (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Wed, 12 Dec 2018 05:22:07 -0500
+        id S1726869AbeLLKWG (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Wed, 12 Dec 2018 05:22:06 -0500
 Received: by mail.bootlin.com (Postfix, from userid 110)
-        id BF18F2082C; Wed, 12 Dec 2018 11:22:04 +0100 (CET)
+        id B659220DC3; Wed, 12 Dec 2018 11:22:03 +0100 (CET)
 Received: from localhost.localdomain (aaubervilliers-681-1-89-7.w90-88.abo.wanadoo.fr [90.88.30.7])
-        by mail.bootlin.com (Postfix) with ESMTPSA id AC2E9208E3;
+        by mail.bootlin.com (Postfix) with ESMTPSA id 5298B2082C;
         Wed, 12 Dec 2018 11:21:45 +0100 (CET)
 From:   Miquel Raynal <miquel.raynal@bootlin.com>
 To:     Gregory Clement <gregory.clement@bootlin.com>,
@@ -42,9 +42,9 @@ Cc:     <devicetree@vger.kernel.org>, Rob Herring <robh+dt@kernel.org>,
         Maxime Chevallier <maxime.chevallier@bootlin.com>,
         Nadav Haklai <nadavh@marvell.com>,
         Miquel Raynal <miquel.raynal@bootlin.com>
-Subject: [PATCH v2 05/12] PCI: aardvark: Add suspend to RAM support
-Date:   Wed, 12 Dec 2018 11:21:35 +0100
-Message-Id: <20181212102142.16053-6-miquel.raynal@bootlin.com>
+Subject: [PATCH v2 04/12] PCI: aardvark: Add clock support
+Date:   Wed, 12 Dec 2018 11:21:34 +0100
+Message-Id: <20181212102142.16053-5-miquel.raynal@bootlin.com>
 X-Mailer: git-send-email 2.19.1
 In-Reply-To: <20181212102142.16053-1-miquel.raynal@bootlin.com>
 References: <20181212102142.16053-1-miquel.raynal@bootlin.com>
@@ -55,92 +55,76 @@ Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-Add suspend and resume callbacks. The priority of these are
-"_noirq()", to workaround early access to the registers done by the
-PCI core through the ->read()/->write() callbacks at resume time.
+The IP relies on a gated clock. When we will add S2RAM support, this
+clock will need to be resumed before any PCIe registers are
+accessed. Add support for this clock.
 
 Signed-off-by: Miquel Raynal <miquel.raynal@bootlin.com>
 ---
- drivers/pci/controller/pci-aardvark.c | 52 +++++++++++++++++++++++++++
- 1 file changed, 52 insertions(+)
+ drivers/pci/controller/pci-aardvark.c | 29 +++++++++++++++++++++++++++
+ 1 file changed, 29 insertions(+)
 
 diff --git a/drivers/pci/controller/pci-aardvark.c b/drivers/pci/controller/pci-aardvark.c
-index 108b3f15c410..7ecf1ac4036b 100644
+index da695572a2ed..108b3f15c410 100644
 --- a/drivers/pci/controller/pci-aardvark.c
 +++ b/drivers/pci/controller/pci-aardvark.c
-@@ -1108,6 +1108,55 @@ static int advk_pcie_setup_clk(struct advk_pcie *pcie)
+@@ -8,6 +8,7 @@
+  * Author: Hezi Shahmoon <hezi.shahmoon@marvell.com>
+  */
+ 
++#include <linux/clk.h>
+ #include <linux/delay.h>
+ #include <linux/gpio.h>
+ #include <linux/interrupt.h>
+@@ -190,6 +191,7 @@
+ 
+ struct advk_pcie {
+ 	struct platform_device *pdev;
++	struct clk *clk;
+ 	void __iomem *base;
+ 	struct list_head resources;
+ 	struct irq_domain *irq_domain;
+@@ -1083,6 +1085,29 @@ static int advk_pcie_setup_phy(struct advk_pcie *pcie)
  	return ret;
  }
  
-+static int __maybe_unused advk_pcie_suspend(struct device *dev)
++static int advk_pcie_setup_clk(struct advk_pcie *pcie)
 +{
-+	struct advk_pcie *pcie = dev_get_drvdata(dev);
-+
-+	advk_pcie_disable_phy(pcie);
-+
-+	clk_disable_unprepare(pcie->clk);
-+
-+	return 0;
-+}
-+
-+static int __maybe_unused advk_pcie_resume(struct device *dev)
-+{
-+	struct advk_pcie *pcie = dev_get_drvdata(dev);
++	struct device *dev = &pcie->pdev->dev;
 +	int ret;
++
++	pcie->clk = devm_clk_get(dev, NULL);
++	if (IS_ERR(pcie->clk) && (PTR_ERR(pcie->clk) == -EPROBE_DEFER))
++		return PTR_ERR(pcie->clk);
++
++	/* Old bindings miss the clock handle */
++	if (IS_ERR(pcie->clk)) {
++		dev_warn(dev, "Clock unavailable (%ld)\n", PTR_ERR(pcie->clk));
++		pcie->clk = NULL;
++		return 0;
++	}
 +
 +	ret = clk_prepare_enable(pcie->clk);
 +	if (ret)
-+		return ret;
++		dev_err(dev, "Clock initialization failed (%d)\n", ret);
 +
-+	/*
-+	 * Empirical delay needed after enabling the clock and before
-+	 * accessing any register.
-+	 */
-+	msleep(10);
-+
-+	ret = advk_pcie_enable_phy(pcie);
-+	if (ret)
-+		return ret;
-+
-+	advk_pcie_hard_reset(pcie);
-+
-+	advk_pcie_setup_hw(pcie);
-+
-+	advk_sw_pci_bridge_init(pcie);
-+
-+	return 0;
++	return ret;
 +}
-+
-+/*
-+ * The PCI core will try to reconfigure the bus quite early in the resume path.
-+ * We must use the _noirq() alternatives to ensure the controller is ready when
-+ * the core uses the ->read()/->write() callbacks.
-+ */
-+static const struct dev_pm_ops advk_pcie_dev_pm_ops = {
-+	SET_NOIRQ_SYSTEM_SLEEP_PM_OPS(advk_pcie_suspend,
-+				      advk_pcie_resume)
-+};
 +
  static int advk_pcie_probe(struct platform_device *pdev)
  {
  	struct device *dev = &pdev->dev;
-@@ -1188,6 +1237,8 @@ static int advk_pcie_probe(struct platform_device *pdev)
+@@ -1118,6 +1143,10 @@ static int advk_pcie_probe(struct platform_device *pdev)
  		return ret;
  	}
  
-+	dev_set_drvdata(dev, pcie);
++	ret = advk_pcie_setup_clk(pcie);
++	if (ret)
++		return ret;
 +
- 	return 0;
- }
- 
-@@ -1200,6 +1251,7 @@ static struct platform_driver advk_pcie_driver = {
- 	.driver = {
- 		.name = "advk-pcie",
- 		.of_match_table = advk_pcie_of_match_table,
-+		.pm = &advk_pcie_dev_pm_ops,
- 		/* Driver unloading/unbinding currently not supported */
- 		.suppress_bind_attrs = true,
- 	},
+ 	ret = advk_pcie_setup_phy(pcie);
+ 	if (ret)
+ 		return ret;
 -- 
 2.19.1
 
