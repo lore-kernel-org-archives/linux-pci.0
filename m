@@ -2,30 +2,30 @@ Return-Path: <SRS0=ZQeV=OV=vger.kernel.org=linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-8.9 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_PASS,USER_AGENT_GIT
+X-Spam-Status: No, score=-2.9 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+	MAILING_LIST_MULTI,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT
 	autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id A3B83C04EB8
-	for <linux-pci@archiver.kernel.org>; Wed, 12 Dec 2018 10:23:13 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 1BF66C04EB8
+	for <linux-pci@archiver.kernel.org>; Wed, 12 Dec 2018 10:23:17 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 72CB62086D
-	for <linux-pci@archiver.kernel.org>; Wed, 12 Dec 2018 10:23:13 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.3.2 mail.kernel.org 72CB62086D
+	by mail.kernel.org (Postfix) with ESMTP id E119C2086D
+	for <linux-pci@archiver.kernel.org>; Wed, 12 Dec 2018 10:23:16 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.3.2 mail.kernel.org E119C2086D
 Authentication-Results: mail.kernel.org; dmarc=none (p=none dis=none) header.from=bootlin.com
 Authentication-Results: mail.kernel.org; spf=none smtp.mailfrom=linux-pci-owner@vger.kernel.org
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727106AbeLLKV6 (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Wed, 12 Dec 2018 05:21:58 -0500
-Received: from mail.bootlin.com ([62.4.15.54]:57451 "EHLO mail.bootlin.com"
+        id S1726960AbeLLKV4 (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Wed, 12 Dec 2018 05:21:56 -0500
+Received: from mail.bootlin.com ([62.4.15.54]:57438 "EHLO mail.bootlin.com"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1726869AbeLLKV5 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Wed, 12 Dec 2018 05:21:57 -0500
+        id S1726727AbeLLKV4 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Wed, 12 Dec 2018 05:21:56 -0500
 Received: by mail.bootlin.com (Postfix, from userid 110)
-        id A3F6A20D92; Wed, 12 Dec 2018 11:21:54 +0100 (CET)
+        id 921D720DBC; Wed, 12 Dec 2018 11:21:53 +0100 (CET)
 Received: from localhost.localdomain (aaubervilliers-681-1-89-7.w90-88.abo.wanadoo.fr [90.88.30.7])
-        by mail.bootlin.com (Postfix) with ESMTPSA id 3328E20734;
-        Wed, 12 Dec 2018 11:21:44 +0100 (CET)
+        by mail.bootlin.com (Postfix) with ESMTPSA id 2517620733;
+        Wed, 12 Dec 2018 11:21:43 +0100 (CET)
 From:   Miquel Raynal <miquel.raynal@bootlin.com>
 To:     Gregory Clement <gregory.clement@bootlin.com>,
         Jason Cooper <jason@lakedaemon.net>,
@@ -42,66 +42,83 @@ Cc:     <devicetree@vger.kernel.org>, Rob Herring <robh+dt@kernel.org>,
         Maxime Chevallier <maxime.chevallier@bootlin.com>,
         Nadav Haklai <nadavh@marvell.com>,
         Miquel Raynal <miquel.raynal@bootlin.com>
-Subject: [PATCH v2 01/12] PCI: aardvark: Configure more registers in the configuration helper
-Date:   Wed, 12 Dec 2018 11:21:31 +0100
-Message-Id: <20181212102142.16053-2-miquel.raynal@bootlin.com>
+Subject: [PATCH v2 00/12] Bring suspend to RAM support to PCIe Aardvark driver
+Date:   Wed, 12 Dec 2018 11:21:30 +0100
+Message-Id: <20181212102142.16053-1-miquel.raynal@bootlin.com>
 X-Mailer: git-send-email 2.19.1
-In-Reply-To: <20181212102142.16053-1-miquel.raynal@bootlin.com>
-References: <20181212102142.16053-1-miquel.raynal@bootlin.com>
 MIME-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 8bit
 Sender: linux-pci-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-Mimic U-Boot configuration to be sure all hardware registers are set
-properly. This will be needed for future S2RAM operation.
+Hello,
 
-Signed-off-by: Miquel Raynal <miquel.raynal@bootlin.com>
----
- drivers/pci/controller/pci-aardvark.c | 14 ++++++++++++++
- 1 file changed, 14 insertions(+)
+As part of an effort to bring suspend to RAM support to Armada 3700
+SoCs (main target: ESPRESSObin), this series handles the work around
+the PCIe IP.
 
-diff --git a/drivers/pci/controller/pci-aardvark.c b/drivers/pci/controller/pci-aardvark.c
-index 750081c1cb48..b95eb2aa00bb 100644
---- a/drivers/pci/controller/pci-aardvark.c
-+++ b/drivers/pci/controller/pci-aardvark.c
-@@ -100,6 +100,8 @@
- #define     PCIE_CORE_CTRL2_STRICT_ORDER_ENABLE	BIT(5)
- #define     PCIE_CORE_CTRL2_OB_WIN_ENABLE	BIT(6)
- #define     PCIE_CORE_CTRL2_MSI_ENABLE		BIT(10)
-+#define PCIE_PHY_REFCLK				(CONTROL_BASE_ADDR + 0x14)
-+#define     PCIE_PHY_REFCLK_BUF_CTRL		0x1342
- #define PCIE_MSG_LOG_REG			(CONTROL_BASE_ADDR + 0x30)
- #define PCIE_ISR0_REG				(CONTROL_BASE_ADDR + 0x40)
- #define PCIE_MSG_PM_PME_MASK			BIT(7)
-@@ -243,6 +245,9 @@ static void advk_pcie_setup_hw(struct advk_pcie *pcie)
- {
- 	u32 reg;
- 
-+	/* Set HW Reference Clock Buffer Control */
-+	advk_writel(pcie, PCIE_PHY_REFCLK_BUF_CTRL, PCIE_PHY_REFCLK);
-+
- 	/* Set to Direct mode */
- 	reg = advk_readl(pcie, CTRL_CONFIG_REG);
- 	reg &= ~(CTRL_MODE_MASK << CTRL_MODE_SHIFT);
-@@ -274,6 +279,15 @@ static void advk_pcie_setup_hw(struct advk_pcie *pcie)
- 		PCIE_CORE_CTRL2_TD_ENABLE;
- 	advk_writel(pcie, reg, PCIE_CORE_CTRL2_REG);
- 
-+	/* Set PCIe Device Control and Status 1 PF0 register */
-+	reg = PCIE_CORE_DEV_CTRL_STATS_RELAX_ORDER_DISABLE |
-+		PCIE_CORE_DEV_CTRL_STATS_SNOOP_DISABLE;
-+	advk_writel(pcie, reg, PCIE_CORE_DEV_CTRL_STATS_REG);
-+
-+	/* Program PCIe Control 2 to disable strict ordering */
-+	reg = PCIE_CORE_CTRL2_RESERVED | PCIE_CORE_CTRL2_TD_ENABLE;
-+	advk_writel(pcie, reg, PCIE_CORE_CTRL2_REG);
-+
- 	/* Set GEN2 */
- 	reg = advk_readl(pcie, PCIE_CORE_CTRL0_REG);
- 	reg &= ~PCIE_GEN_SEL_MSK;
+First, more configuration is done in the 'setup' helper as inspired
+from the U-Boot driver. This is needed to entirely initialize the IP
+during future resume operation (patch 1).
+
+Then, reset GPIO, PHY and clock support are introduced (patch 2-4). As
+current device trees do not provide the corresponding properties, not
+finding one of these properties is not an error and just produces a
+warning. However, if the property is present, an error during PHY
+initialization will fail the probe of the driver.
+
+Note: To be sure the clock will be resumed before this driver, a first
+series adding links between clocks and consumers has been submitted,
+see [1]. Anyway, having the clock series applied first is not needed.
+
+Patch 5 adds suspend/resume hooks, re-using all the above.
+
+Finally, bindings and device trees are updated to reflect the hardware
+(patch 6-12). While the clock depends on the SoC, the reset GPIO and
+the PHY depends on the board so the clock is added in the
+armada-37xx.dtsi file while the two other properties are added in
+armada-3720-espressobin.dts.
+
+[1] http://lists.infradead.org/pipermail/linux-arm-kernel/2018-November/614527.html
+
+Thanks,
+Miquèl
+
+Changes since v1:
+=================
+* Change the capitalization in commit titles to follow the PCI
+  subsystem rules.
+* Added Suggested-by tag to the patch adding PHY support and to the
+  patch adding the PHY property in the DT.
+* Added Rob's Reviewed-by tags on bindings.
+* I am following the discussion about calling functions that might
+  sleep in a NOIRQ context. As there is no real problem yet (as per my
+  understanding), I did not change anything on this regard.
+
+
+Miquel Raynal (12):
+  PCI: aardvark: Configure more registers in the configuration helper
+  PCI: aardvark: Add reset GPIO support
+  PCI: aardvark: Add PHY support
+  PCI: aardvark: Add clock support
+  PCI: aardvark: Add suspend to RAM support
+  dt-bindings: PCI: aardvark: Describe the reset-gpios property
+  dt-bindings: PCI: aardvark: Describe the clocks property
+  dt-bindings: PCI: aardvark: Describe the PHY property
+  ARM64: dts: marvell: armada-37xx: declare PCIe reset pin
+  ARM64: dts: marvell: armada-3720-espressobin: declare PCIe reset GPIO
+  ARM64: dts: marvell: armada-37xx: declare PCIe clock
+  ARM64: dts: marvell: armada-3720-espressobin: declare PCIe PHY
+
+ .../devicetree/bindings/pci/aardvark-pci.txt  |   9 +
+ .../dts/marvell/armada-3720-espressobin.dts   |   4 +
+ arch/arm64/boot/dts/marvell/armada-37xx.dtsi  |   5 +
+ drivers/pci/controller/pci-aardvark.c         | 214 ++++++++++++++++++
+ 4 files changed, 232 insertions(+)
+
 -- 
 2.19.1
 
