@@ -6,40 +6,40 @@ X-Spam-Status: No, score=-9.3 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
 	DKIM_VALID,DKIM_VALID_AU,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
 	SPF_PASS,USER_AGENT_GIT autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 777D8C04EB8
-	for <linux-pci@archiver.kernel.org>; Wed, 12 Dec 2018 05:24:33 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id DB5A6C04EB8
+	for <linux-pci@archiver.kernel.org>; Wed, 12 Dec 2018 05:29:25 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 3618820873
-	for <linux-pci@archiver.kernel.org>; Wed, 12 Dec 2018 05:24:33 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 8F2D12086D
+	for <linux-pci@archiver.kernel.org>; Wed, 12 Dec 2018 05:29:25 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=default; t=1544592273;
+	s=default; t=1544592565;
 	bh=ROevhMeyWXDwNDM5BjziXs57IerK+hHEjBuLv1h13UE=;
 	h=From:To:Cc:Subject:Date:In-Reply-To:References:List-ID:From;
-	b=WUv2P6kkXVt8NPl4Z95JNT0hoEo3PuPGnW0aREgIb7Hr2BWpKaBS+khJhdKN5cx63
-	 Zczks+AW0nOPCl1iXEJn8ary1Jp6wMSb/H4cuqR+fyH+nCjbNWTKmTErvD0dpWwiEn
-	 Oj2NSC78xrmOCS7sDXHo9fzYpAxxo/IRGoZYh52E=
-DMARC-Filter: OpenDMARC Filter v1.3.2 mail.kernel.org 3618820873
+	b=VZZXr/x2CZQ1nS0cVB9OyfsH8L67MuoX/U4rLl3iNmH3vFFriCo4Z0npvr7RIJ5x2
+	 PRQtWh24W29XB/geyuRQJX2kZgoXyyjMstLUGnwzC0nnyyAgqwQCEKPFdKMQ2jxpgu
+	 QujF60Ds5kbGEp9PUeSZ7cB5OZuQMHgafImOH4yk=
+DMARC-Filter: OpenDMARC Filter v1.3.2 mail.kernel.org 8F2D12086D
 Authentication-Results: mail.kernel.org; dmarc=fail (p=none dis=none) header.from=kernel.org
 Authentication-Results: mail.kernel.org; spf=none smtp.mailfrom=linux-pci-owner@vger.kernel.org
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726480AbeLLFYW (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Wed, 12 Dec 2018 00:24:22 -0500
-Received: from mail.kernel.org ([198.145.29.99]:47510 "EHLO mail.kernel.org"
+        id S1726532AbeLLF25 (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Wed, 12 Dec 2018 00:28:57 -0500
+Received: from mail.kernel.org ([198.145.29.99]:48354 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1726218AbeLLFYV (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Wed, 12 Dec 2018 00:24:21 -0500
+        id S1726522AbeLLF24 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Wed, 12 Dec 2018 00:28:56 -0500
 Received: from sinanubuntu1604.mkjiurmyylmellclgttazegk5f.bx.internal.cloudapp.net (unknown [40.117.78.127])
         (using TLSv1.2 with cipher ECDHE-RSA-AES128-SHA256 (128/128 bits))
         (No client certificate requested)
-        by mail.kernel.org (Postfix) with ESMTPSA id B5EFD20851;
-        Wed, 12 Dec 2018 05:24:18 +0000 (UTC)
+        by mail.kernel.org (Postfix) with ESMTPSA id 38F3620851;
+        Wed, 12 Dec 2018 05:28:53 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=default; t=1544592260;
+        s=default; t=1544592534;
         bh=ROevhMeyWXDwNDM5BjziXs57IerK+hHEjBuLv1h13UE=;
         h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=KgVnVYF9W6BjZ2H3Ev9nF72dOro+qVMO2z6cOBT17tfMmjrt2n9G5GoHkQGcT19zt
-         TfBOZn7ps/H7ufZqd4vpOWFWGGxiAL7hblh9n8HiUMnciMOdThrg0may1yTG0B3qPA
-         Yj/85XTisYhaY3y8wxNKZbfV1VL/CkfPvv45giCQ=
+        b=W649VobZrv2yldOgj5Xqn9oEyiYvofvOg5oStPSnj8W4ZIPqP72UuVoNkjbGvdOpM
+         wCP/kdhactga/ai3sOtZrKc8ycha5ULWqfD4Ijusk7aOOce2avzsmlQRbDEazZAy2y
+         gZscYnV5Su8OSMXnyRFTK/XUL2nDJuDFzzaR52Gs=
 From:   Sinan Kaya <okaya@kernel.org>
 To:     linux-acpi@vger.kernel.org
 Cc:     Sinan Kaya <okaya@kernel.org>,
@@ -52,20 +52,20 @@ Cc:     Sinan Kaya <okaya@kernel.org>,
         Bjorn Helgaas <bhelgaas@google.com>,
         Robert Moore <robert.moore@intel.com>,
         Erik Schmauss <erik.schmauss@intel.com>,
-        Andy Shevchenko <andy.shevchenko@gmail.com>,
         Otavio Pontes <otavio.pontes@intel.com>,
+        =?UTF-8?q?Christian=20K=C3=B6nig?= <christian.koenig@amd.com>,
         Jan Kiszka <jan.kiszka@siemens.com>,
         "=?UTF-8?q?Christian=20K=C3=B6nig?=" 
         <ckoenig.leichtzumerken@gmail.com>,
         linux-kernel@vger.kernel.org (open list:X86 ARCHITECTURE (32-BIT AND
         64-BIT)), linux-pci@vger.kernel.org (open list:PCI SUBSYSTEM),
         devel@acpica.org (open list:ACPI COMPONENT ARCHITECTURE (ACPICA))
-Subject: [PATCH v4 3/4] PCI/ACPI: Allow ACPI to be built without CONFIG_PCI set
-Date:   Wed, 12 Dec 2018 05:23:58 +0000
-Message-Id: <20181212052359.31808-3-okaya@kernel.org>
+Subject: [PATCH v5 4/5] PCI/ACPI: Allow ACPI to be built without CONFIG_PCI set
+Date:   Wed, 12 Dec 2018 05:28:44 +0000
+Message-Id: <20181212052846.32370-5-okaya@kernel.org>
 X-Mailer: git-send-email 2.19.0
-In-Reply-To: <20181212052359.31808-1-okaya@kernel.org>
-References: <20181212052359.31808-1-okaya@kernel.org>
+In-Reply-To: <20181212052846.32370-1-okaya@kernel.org>
+References: <20181212052846.32370-1-okaya@kernel.org>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 Sender: linux-pci-owner@vger.kernel.org
