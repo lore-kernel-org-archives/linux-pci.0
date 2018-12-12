@@ -2,188 +2,184 @@ Return-Path: <SRS0=ZQeV=OV=vger.kernel.org=linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-9.2 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
+X-Spam-Status: No, score=-7.2 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
 	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,
-	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT
-	autolearn=ham autolearn_force=no version=3.4.0
+	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_PASS,URIBL_BLOCKED autolearn=ham
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id B3D9FC65BAF
-	for <linux-pci@archiver.kernel.org>; Wed, 12 Dec 2018 05:46:51 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 09B31C04EB8
+	for <linux-pci@archiver.kernel.org>; Wed, 12 Dec 2018 05:54:44 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 78C6020811
-	for <linux-pci@archiver.kernel.org>; Wed, 12 Dec 2018 05:46:51 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id B55AE2084E
+	for <linux-pci@archiver.kernel.org>; Wed, 12 Dec 2018 05:54:43 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (1024-bit key) header.d=broadcom.com header.i=@broadcom.com header.b="QlIG4Ltx"
-DMARC-Filter: OpenDMARC Filter v1.3.2 mail.kernel.org 78C6020811
-Authentication-Results: mail.kernel.org; dmarc=fail (p=quarantine dis=none) header.from=broadcom.com
+	dkim=pass (1024-bit key) header.d=ti.com header.i=@ti.com header.b="Xj85n6lZ"
+DMARC-Filter: OpenDMARC Filter v1.3.2 mail.kernel.org B55AE2084E
+Authentication-Results: mail.kernel.org; dmarc=fail (p=quarantine dis=none) header.from=ti.com
 Authentication-Results: mail.kernel.org; spf=none smtp.mailfrom=linux-pci-owner@vger.kernel.org
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726547AbeLLFqu (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Wed, 12 Dec 2018 00:46:50 -0500
-Received: from mail-wr1-f68.google.com ([209.85.221.68]:41772 "EHLO
-        mail-wr1-f68.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726500AbeLLFqu (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Wed, 12 Dec 2018 00:46:50 -0500
-Received: by mail-wr1-f68.google.com with SMTP id x10so16325421wrs.8
-        for <linux-pci@vger.kernel.org>; Tue, 11 Dec 2018 21:46:48 -0800 (PST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=broadcom.com; s=google;
-        h=from:to:cc:subject:date:message-id:in-reply-to:references;
-        bh=o9zOKa7UZo6O1oSXPaMqPu6Fib6WbxYaMCsnJYZwlo8=;
-        b=QlIG4Ltxek1NO4qTDSHC89YHHCe0sh1RmxOpdVMF0Otf8WCvUKyW9zfoBCzj5jJy1Z
-         aRmRd7aLNA5vekwKNUtlK0IaM9Yv/gj9MEwrtjTg+JdtdrFOaDTMLbeauVSbxDKj1Syb
-         HMgN+e8vXZT0sbLe38HQRH5SZ36vVljbjYyMw=
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20161025;
-        h=x-gm-message-state:from:to:cc:subject:date:message-id:in-reply-to
-         :references;
-        bh=o9zOKa7UZo6O1oSXPaMqPu6Fib6WbxYaMCsnJYZwlo8=;
-        b=RGdTOPBXjHdhNVVOWIi1aq7Po/r4mebvgQTH0DcbPxqinl04c+JxNW3uLnRqtP53Yb
-         OunUG5CwW0n4HrCrM/AWHnM9BVpGcCxRuC3xFKyCeQmGQQBZzXJMe4qltkJ16evbL8iE
-         kCsfLziKdzuyO0AaU9Nhnk0Q3KEqR89FIF0o/dRG92PNwSPFa6/As5S001T5fBJeW7Oj
-         /K1TNkDy+JGS51RjRpvST7K+JtHgJJduWxYUC7RnEcgefrsDVg7+5Zzr3R46CG3gegqs
-         ildf1jyvBz42LD0qIRAtrwIYtzOZ9P2WxcgRb/jPUFt64c6vKiVvk9XvvI3ycPbk6lsI
-         GFdQ==
-X-Gm-Message-State: AA+aEWa/1E6e/LmBXyfkFF9HYb8l7PPl+9jMos0DfCbmumC+YqdVTd4+
-        pHj9CPANAGoxpqU60tLBIl1iJw==
-X-Google-Smtp-Source: AFSGD/W5fvf+7cGlVD1coGF/72gVx5nYO/sHP4U40r0vjs5KfAPR1WO+tTEdFzJ7o4gqCxb6UJXG6g==
-X-Received: by 2002:adf:ae41:: with SMTP id u1mr15101050wrd.20.1544593608138;
-        Tue, 11 Dec 2018 21:46:48 -0800 (PST)
-Received: from mannams-OptiPlex-7010.dhcp.broadcom.net ([192.19.234.250])
-        by smtp.gmail.com with ESMTPSA id z206sm2015947wmc.18.2018.12.11.21.46.43
-        (version=TLS1_2 cipher=ECDHE-RSA-AES128-SHA bits=128/128);
-        Tue, 11 Dec 2018 21:46:47 -0800 (PST)
-From:   Srinath Mannam <srinath.mannam@broadcom.com>
-To:     Bjorn Helgaas <bhelgaas@google.com>,
-        Robin Murphy <robin.murphy@arm.com>,
-        Joerg Roedel <joro@8bytes.org>,
-        Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
-        Ray Jui <rjui@broadcom.com>
-Cc:     bcm-kernel-feedback-list@broadcom.com, linux-pci@vger.kernel.org,
-        iommu@lists.linux-foundation.org, linux-kernel@vger.kernel.org,
-        Srinath Mannam <srinath.mannam@broadcom.com>
-Subject: [RFC PATCH 3/3] PCI: iproc: Add dma reserve resources to host
-Date:   Wed, 12 Dec 2018 11:16:09 +0530
-Message-Id: <1544593569-8923-4-git-send-email-srinath.mannam@broadcom.com>
-X-Mailer: git-send-email 2.7.4
-In-Reply-To: <1544593569-8923-1-git-send-email-srinath.mannam@broadcom.com>
-References: <1544593569-8923-1-git-send-email-srinath.mannam@broadcom.com>
+        id S1726239AbeLLFyn (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Wed, 12 Dec 2018 00:54:43 -0500
+Received: from lelv0142.ext.ti.com ([198.47.23.249]:41372 "EHLO
+        lelv0142.ext.ti.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726237AbeLLFym (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Wed, 12 Dec 2018 00:54:42 -0500
+Received: from lelv0265.itg.ti.com ([10.180.67.224])
+        by lelv0142.ext.ti.com (8.15.2/8.15.2) with ESMTP id wBC5sZhU125785;
+        Tue, 11 Dec 2018 23:54:35 -0600
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=ti.com;
+        s=ti-com-17Q1; t=1544594075;
+        bh=lDDbBPOExiszLau4ttpvBn25vk2vMEG3YAXR8aM8r/Y=;
+        h=Subject:To:CC:References:From:Date:In-Reply-To;
+        b=Xj85n6lZ7fPnw3BImNkOOIA4SlaO6jCiFN5YzNdiO1bo3sEqxAs0cMZeEZyXsQT2E
+         ZbXGC+sdrMgt20FiVRDAY7EoslxPnCPrkZeWUWKQV8p5y+725YbnchTTFaYyNxg4XD
+         0H4G2FzpMnoJHetJTehwZUgwGjr6k65wPdez48KU=
+Received: from DLEE113.ent.ti.com (dlee113.ent.ti.com [157.170.170.24])
+        by lelv0265.itg.ti.com (8.15.2/8.15.2) with ESMTPS id wBC5sZcR094992
+        (version=TLSv1.2 cipher=AES256-GCM-SHA384 bits=256 verify=FAIL);
+        Tue, 11 Dec 2018 23:54:35 -0600
+Received: from DLEE103.ent.ti.com (157.170.170.33) by DLEE113.ent.ti.com
+ (157.170.170.24) with Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_128_CBC_SHA256_P256) id 15.1.1591.10; Tue, 11
+ Dec 2018 23:54:35 -0600
+Received: from dlep33.itg.ti.com (157.170.170.75) by DLEE103.ent.ti.com
+ (157.170.170.33) with Microsoft SMTP Server (version=TLS1_0,
+ cipher=TLS_RSA_WITH_AES_256_CBC_SHA) id 15.1.1591.10 via Frontend Transport;
+ Tue, 11 Dec 2018 23:54:35 -0600
+Received: from [172.24.190.233] (ileax41-snat.itg.ti.com [10.172.224.153])
+        by dlep33.itg.ti.com (8.14.3/8.13.8) with ESMTP id wBC5sVvQ031112;
+        Tue, 11 Dec 2018 23:54:32 -0600
+Subject: Re: [PATCH 3/3] PCI: designware: Move interrupt acking into the
+ proper callback
+To:     Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
+        Murali Karicheri <m-karicheri2@ti.com>
+CC:     Marc Zyngier <marc.zyngier@arm.com>, <linux-pci@vger.kernel.org>,
+        Bjorn Helgaas <helgaas@google.com>,
+        Trent Piepho <tpiepho@impinj.com>,
+        Jingoo Han <jingoohan1@gmail.com>,
+        Gustavo Pimentel <gustavo.pimentel@synopsys.com>,
+        <faiz_abbas@ti.com>, Joao Pinto <Joao.Pinto@synopsys.com>,
+        Vignesh R <vigneshr@ti.com>
+References: <20181113225734.8026-1-marc.zyngier@arm.com>
+ <20181113225734.8026-4-marc.zyngier@arm.com>
+ <126f12da-b69d-ae3a-72bf-dc1bff22cd77@ti.com>
+ <20181204134559.74957d43@why.wild-wind.fr.eu.org>
+ <251318fd-c72c-3082-ac10-99f4312cbd52@ti.com>
+ <1ff77544-fc1a-6569-1919-3f169319153f@arm.com>
+ <abb906f9-dbec-8f39-677e-687c0bd4e266@ti.com>
+ <20181211123550.GA31209@e107981-ln.cambridge.arm.com>
+From:   Kishon Vijay Abraham I <kishon@ti.com>
+Message-ID: <78e2d1db-fe10-2bc4-4e06-eee07b740130@ti.com>
+Date:   Wed, 12 Dec 2018 11:24:20 +0530
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:60.0) Gecko/20100101
+ Thunderbird/60.2.1
+MIME-Version: 1.0
+In-Reply-To: <20181211123550.GA31209@e107981-ln.cambridge.arm.com>
+Content-Type: text/plain; charset="utf-8"
+Content-Language: en-US
+Content-Transfer-Encoding: 7bit
+X-EXCLAIMER-MD-CONFIG: e1e8a2fd-e40a-4ac6-ac9b-f7e9cc9ee180
 Sender: linux-pci-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-IPROC host has the limitation that it can use
-only those address ranges given by dma-ranges
-property as inbound address.
-So that the memory address holes in dma-ranges
-should be reserved to allocate as DMA address.
+Hi Lorenzo,
 
-All such reserved addresses are created as resource
-entries and add to dma_resv list of pci host bridge.
+On 11/12/18 6:05 PM, Lorenzo Pieralisi wrote:
+> On Fri, Dec 07, 2018 at 03:43:00PM +0530, Kishon Vijay Abraham I wrote:
+>> Hi,
+>>
+>> On 07/12/18 3:15 PM, Marc Zyngier wrote:
+>>> On 07/12/2018 08:12, Kishon Vijay Abraham I wrote:
+>>>> Hi Marc,
+>>>>
+>>>> On 04/12/18 7:15 PM, Marc Zyngier wrote:
+>>>>> On Tue, 4 Dec 2018 15:50:32 +0530
+>>>>> Kishon Vijay Abraham I <kishon@ti.com> wrote:
+>>>>>
+>>>>>> Hi,
+>>>>>>
+>>>>>> On 14/11/18 4:27 AM, Marc Zyngier wrote:
+>>>>>>> The write to the status register is really an ACK for the HW,
+>>>>>>> and should be treated as such by the driver. Let's move it to the
+>>>>>>> irq_ack callback, which will prevent people from moving it around
+>>>>>>> in order to paper over other bugs.
+>>>>>>>
+>>>>>>> Signed-off-by: Marc Zyngier <marc.zyngier@arm.com>
+>>>>>>> ---
+>>>>>>>  drivers/pci/controller/dwc/pcie-designware-host.c | 13 +++++++------
+>>>>>>>  1 file changed, 7 insertions(+), 6 deletions(-)
+>>>>>>>
+>>>>>>> diff --git a/drivers/pci/controller/dwc/pcie-designware-host.c b/drivers/pci/controller/dwc/pcie-designware-host.c
+>>>>>>> index 0a76948ed49e..f06e67c60593 100644
+>>>>>>> --- a/drivers/pci/controller/dwc/pcie-designware-host.c
+>>>>>>> +++ b/drivers/pci/controller/dwc/pcie-designware-host.c
+>>>>>>> @@ -99,9 +99,6 @@ irqreturn_t dw_handle_msi_irq(struct pcie_port *pp)
+>>>>>>>  					       (i * MAX_MSI_IRQS_PER_CTRL) +
+>>>>>>>  					       pos);
+>>>>>>>  			generic_handle_irq(irq);
+>>>>>>> -			dw_pcie_wr_own_conf(pp, PCIE_MSI_INTR0_STATUS +
+>>>>>>> -						(i * MSI_REG_CTRL_BLOCK_SIZE),
+>>>>>>> -					    4, 1 << pos);
+>>>>>>>  			pos++;
+>>>>>>>  		}
+>>>>>>>  	}
+>>>>>>> @@ -200,14 +197,18 @@ static void dw_pci_bottom_unmask(struct irq_data *data)
+>>>>>>>  
+>>>>>>>  static void dw_pci_bottom_ack(struct irq_data *d)
+>>>>>>>  {
+>>>>>>> -	struct msi_desc *msi = irq_data_get_msi_desc(d);
+>>>>>>> -	struct pcie_port *pp;
+>>>>>>> +	struct pcie_port *pp  = irq_data_get_irq_chip_data(d);
+>>>>>>> +	unsigned int res, bit, ctrl;
+>>>>>>>  	unsigned long flags;
+>>>>>>>  
+>>>>>>> -	pp = msi_desc_to_pci_sysdata(msi);
+>>>>>>> +	ctrl = d->hwirq / MAX_MSI_IRQS_PER_CTRL;
+>>>>>>> +	res = ctrl * MSI_REG_CTRL_BLOCK_SIZE;
+>>>>>>> +	bit = d->hwirq % MAX_MSI_IRQS_PER_CTRL;
+>>>>>>>  
+>>>>>>>  	raw_spin_lock_irqsave(&pp->lock, flags);
+>>>>>>>  
+>>>>>>> +	dw_pcie_wr_own_conf(pp, PCIE_MSI_INTR0_STATUS + res, 4, 1 << bit);  
+>>>>>>
+>>>>>> This register should be written only if msi_irq_ack callback is not populated
+>>>>>> similar to other dw_pci_bottom_*() functions.
+>>>>>
+>>>>> Why? This was so far unconditionally written, and my understanding is
+>>>>> that without this write, no further MSI can be delivered.
+>>>>
+>>>> Not all platforms invoke dw_handle_msi_irq() for handling MSI irq.
+>>>>
+>>>> Platforms that doesn't use the MSI functionality of Designware makes use of the
+>>>> various callbacks like msi_irq_ack, msi_host_init etc., Keystone has MSI
+>>>> controller in the Keystone wrapper, AM654 uses GIC ITS etc.,
+>>>>
+>>>> The platforms that doesn't use MSI functionality of Designware doesn't have to
+>>>> write to Designware's MSI configuration registers.
+>>>
+>>> Let's be clear: a platform that doesn't use the DW MSI functionality
+>>> should never get anywhere this code. If they do, then that's a terrible
+>>> bug, and it should be fixed by making the TI stuff standalone instead of
+>>> calling into the internals.
+>>
+>> That makes sense to me. We can start by removing msi_set_irq, msi_clear_irq and
+>> msi_irq_ack callbacks from dw_pcie_host_ops.
+>>
+>> This functionality can be added directly in keystone driver.
+>>>
+>>> Frankly, this whole thing should be marked as BROKEN until it is sorted
+>>> out for good.
+>>
+>> Maybe remove those callbacks and make only Keystone broken?
+> 
+> Hi Kishon, Murali,
+> 
+> Is it possible to rework keystone as discussed on this thread on top of
+> my pci/dwc-msi branch please ?
 
-These dma reserve resources created by parsing
-dma-ranges parameter.
+yeah, I'll work on that.
 
-Ex:
-dma-ranges = < \
-  0x43000000 0x00 0x80000000 0x00 0x80000000 0x00 0x80000000 \
-  0x43000000 0x08 0x00000000 0x08 0x00000000 0x08 0x00000000 \
-  0x43000000 0x80 0x00000000 0x80 0x00000000 0x40 0x00000000>
-
-In the above example of dma-ranges, memory address from
-0x0 - 0x80000000,
-0x100000000 - 0x800000000,
-0x1000000000 - 0x8000000000 and
-0x10000000000 - 0xffffffffffffffff.
-are not allowed to use as inbound addresses.
-So that we need to add these address range to dma_resv
-list to reserve their IOVA address ranges.
-
-Signed-off-by: Srinath Mannam <srinath.mannam@broadcom.com>
----
- drivers/pci/controller/pcie-iproc.c | 49 +++++++++++++++++++++++++++++++++++++
- 1 file changed, 49 insertions(+)
-
-diff --git a/drivers/pci/controller/pcie-iproc.c b/drivers/pci/controller/pcie-iproc.c
-index 3160e93..43e465a 100644
---- a/drivers/pci/controller/pcie-iproc.c
-+++ b/drivers/pci/controller/pcie-iproc.c
-@@ -1154,25 +1154,74 @@ static int iproc_pcie_setup_ib(struct iproc_pcie *pcie,
- 	return ret;
- }
- 
-+static int
-+iproc_pcie_add_dma_resv_range(struct device *dev, struct list_head *resources,
-+			      uint64_t start, uint64_t end)
-+{
-+	struct resource *res;
-+
-+	res = devm_kzalloc(dev, sizeof(struct resource), GFP_KERNEL);
-+	if (!res)
-+		return -ENOMEM;
-+
-+	res->start = (resource_size_t)start;
-+	res->end = (resource_size_t)end;
-+	pci_add_resource_offset(resources, res, 0);
-+
-+	return 0;
-+}
-+
- static int iproc_pcie_map_dma_ranges(struct iproc_pcie *pcie)
- {
-+	struct pci_host_bridge *host = pci_host_bridge_from_priv(pcie);
- 	struct of_pci_range range;
- 	struct of_pci_range_parser parser;
- 	int ret;
-+	uint64_t start, end;
-+	LIST_HEAD(resources);
- 
- 	/* Get the dma-ranges from DT */
- 	ret = of_pci_dma_range_parser_init(&parser, pcie->dev->of_node);
- 	if (ret)
- 		return ret;
- 
-+	start = 0;
- 	for_each_of_pci_range(&parser, &range) {
-+		end = range.pci_addr;
-+		/* dma-ranges list expected in sorted order */
-+		if (end < start) {
-+			ret = -EINVAL;
-+			goto out;
-+		}
- 		/* Each range entry corresponds to an inbound mapping region */
- 		ret = iproc_pcie_setup_ib(pcie, &range, IPROC_PCIE_IB_MAP_MEM);
- 		if (ret)
- 			return ret;
-+
-+		if (end - start) {
-+			ret = iproc_pcie_add_dma_resv_range(pcie->dev,
-+							    &resources,
-+							    start, end);
-+			if (ret)
-+				goto out;
-+		}
-+		start = range.pci_addr + range.size;
- 	}
- 
-+	end = ~0;
-+	if (end - start) {
-+		ret = iproc_pcie_add_dma_resv_range(pcie->dev, &resources,
-+						    start, end);
-+		if (ret)
-+			goto out;
-+	}
-+
-+	list_splice_init(&resources, &host->dma_resv);
-+
- 	return 0;
-+out:
-+	pci_free_resource_list(&resources);
-+	return ret;
- }
- 
- static int iproce_pcie_get_msi(struct iproc_pcie *pcie,
--- 
-2.7.4
-
+Thanks
+Kishon
