@@ -2,130 +2,117 @@ Return-Path: <SRS0=ZQeV=OV=vger.kernel.org=linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-8.8 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
-	SPF_PASS,URIBL_BLOCKED,USER_AGENT_MUTT autolearn=unavailable
-	autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-6.9 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_PASS,URIBL_BLOCKED
+	autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id B727AC65BAF
-	for <linux-pci@archiver.kernel.org>; Wed, 12 Dec 2018 22:52:05 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id A0A32C65BAF
+	for <linux-pci@archiver.kernel.org>; Wed, 12 Dec 2018 22:52:55 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 6F09620870
-	for <linux-pci@archiver.kernel.org>; Wed, 12 Dec 2018 22:52:05 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=default; t=1544655125;
-	bh=trZ22U3D7b7sWDZJG9KhRvMX2v9Gex2HXhF0Y9cZKp0=;
-	h=Date:From:To:Cc:Subject:References:In-Reply-To:List-ID:From;
-	b=z5wM6974dJBlUkyForqW5Dp45yi5Q7FXv00zQ1SQmKDGNQt40cwKIjf0bWrm/kvBU
-	 C/IFa5ErY1/Di4BOjg0Xrxu1WahJLaudd7C0UH9DrZW7OS8cyuNt/AAYlSIv2KkUA1
-	 3ylC70rbN1SpeK5et96x9X0csa5hMstXhlmzH0+E=
-DMARC-Filter: OpenDMARC Filter v1.3.2 mail.kernel.org 6F09620870
-Authentication-Results: mail.kernel.org; dmarc=fail (p=none dis=none) header.from=kernel.org
+	by mail.kernel.org (Postfix) with ESMTP id 6EE4620851
+	for <linux-pci@archiver.kernel.org>; Wed, 12 Dec 2018 22:52:55 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.3.2 mail.kernel.org 6EE4620851
+Authentication-Results: mail.kernel.org; dmarc=none (p=none dis=none) header.from=deltatee.com
 Authentication-Results: mail.kernel.org; spf=none smtp.mailfrom=linux-pci-owner@vger.kernel.org
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726226AbeLLWwE (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Wed, 12 Dec 2018 17:52:04 -0500
-Received: from mail.kernel.org ([198.145.29.99]:59986 "EHLO mail.kernel.org"
+        id S1726236AbeLLWwy (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Wed, 12 Dec 2018 17:52:54 -0500
+Received: from ale.deltatee.com ([207.54.116.67]:51194 "EHLO ale.deltatee.com"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1726214AbeLLWwE (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Wed, 12 Dec 2018 17:52:04 -0500
-Received: from localhost (unknown [69.71.4.100])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
-        (No client certificate requested)
-        by mail.kernel.org (Postfix) with ESMTPSA id C5E2D20851;
-        Wed, 12 Dec 2018 22:52:02 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=default; t=1544655123;
-        bh=trZ22U3D7b7sWDZJG9KhRvMX2v9Gex2HXhF0Y9cZKp0=;
-        h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-        b=zFgb4W4Fjl3AnPdHDoNscIFwPxWC47rjGtxuUeIhPo84ez7gN8SNjJniMhpIuiwbi
-         sJtLKYipjHzDCz+P9tbXOjRGGnexVlbOHmsIOc2f2F7U/joUwEzSPjsDkOCiUAzbvv
-         LjssoqQqF8zTbLbI5LHREmbdEpPxrzBVIWjRNCNw=
-Date:   Wed, 12 Dec 2018 16:52:01 -0600
-From:   Bjorn Helgaas <helgaas@kernel.org>
-To:     Wesley Sheng <wesley.sheng@microchip.com>
-Cc:     kurt.schwemmer@microsemi.com, logang@deltatee.com,
-        linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
-        wesleyshenggit@sina.com
-Subject: Re: [PATCH 5/5] switchtec: MRPC DMA mode implementation
-Message-ID: <20181212225201.GL99796@google.com>
+        id S1726226AbeLLWwy (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Wed, 12 Dec 2018 17:52:54 -0500
+Received: from guinness.priv.deltatee.com ([172.16.1.162])
+        by ale.deltatee.com with esmtp (Exim 4.89)
+        (envelope-from <logang@deltatee.com>)
+        id 1gXDN4-00018k-BX; Wed, 12 Dec 2018 15:52:51 -0700
+To:     Bjorn Helgaas <helgaas@kernel.org>,
+        Wesley Sheng <wesley.sheng@microchip.com>
+Cc:     kurt.schwemmer@microsemi.com, linux-pci@vger.kernel.org,
+        linux-kernel@vger.kernel.org, wesleyshenggit@sina.com
 References: <1544433144-7563-1-git-send-email-wesley.sheng@microchip.com>
- <1544433144-7563-6-git-send-email-wesley.sheng@microchip.com>
+ <1544433144-7563-4-git-send-email-wesley.sheng@microchip.com>
+ <20181212224315.GK99796@google.com>
+From:   Logan Gunthorpe <logang@deltatee.com>
+Message-ID: <0e8da614-dd78-5e41-df25-ec1b037ef4d7@deltatee.com>
+Date:   Wed, 12 Dec 2018 15:52:48 -0700
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:60.0) Gecko/20100101
+ Thunderbird/60.3.0
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <1544433144-7563-6-git-send-email-wesley.sheng@microchip.com>
-User-Agent: Mutt/1.10.1 (2018-07-13)
+In-Reply-To: <20181212224315.GK99796@google.com>
+Content-Type: text/plain; charset=utf-8
+Content-Language: en-CA
+Content-Transfer-Encoding: 7bit
+X-SA-Exim-Connect-IP: 172.16.1.162
+X-SA-Exim-Rcpt-To: wesleyshenggit@sina.com, linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org, kurt.schwemmer@microsemi.com, wesley.sheng@microchip.com, helgaas@kernel.org
+X-SA-Exim-Mail-From: logang@deltatee.com
+Subject: Re: [PATCH 3/5] switchtec: A temporary variable should be used for
+ the flags of switchtec_ioctl_event_ctl
+X-SA-Exim-Version: 4.2.1 (built Tue, 02 Aug 2016 21:08:31 +0000)
+X-SA-Exim-Scanned: Yes (on ale.deltatee.com)
 Sender: linux-pci-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-On Mon, Dec 10, 2018 at 05:12:24PM +0800, Wesley Sheng wrote:
-> MRPC normal mode requires the host to read the MRPC command status and
-> output data from BAR. This results in high latency responses from the
-> Memory Read TLP and potential Completion Timeout (CTO).
-> 
-> MRPC DMA mode implementation includes:
-> Macro definitions for registers and data structures corresponding to
-> MRPC DMA mode.
-> 
-> Add module parameter use_dma_mrpc to select between MRPC DMA mode and
-> MRPC normal mode.
-> 
-> Add MRPC mode functionality to:
-> * Retrieve MRPC DMA mode version
-> * Allocate DMA buffer, ISR registration, and enable DMA function during
->   initialization
-> * Check MRPC execution status and collect execution results from DMA buffer
-> * Release DMA buffer and disable DMA function when unloading module
-> 
-> MRPC DMA mode is a new feature of firmware and the driver will fall back
-> to MRPC normal mode if there is no support in the legacy firmware.
-> 
-> Include <linux/io-64-nonatomic-lo-hi.h> so that readq/writeq is replaced
-> by two readl/writel on systems that do not support it.
-> 
-> Signed-off-by: Wesley Sheng <wesley.sheng@microchip.com>
-> Reviewed-by: Logan Gunthorpe <logang@deltatee.com>
-> ---
->  drivers/pci/switch/switchtec.c | 108 +++++++++++++++++++++++++++++++++++++----
->  include/linux/switchtec.h      |  16 ++++++
->  2 files changed, 114 insertions(+), 10 deletions(-)
-> 
-> diff --git a/drivers/pci/switch/switchtec.c b/drivers/pci/switch/switchtec.c
-> index 0b8862b..6b726cb 100644
-> --- a/drivers/pci/switch/switchtec.c
-> +++ b/drivers/pci/switch/switchtec.c
-> @@ -13,7 +13,7 @@
->  #include <linux/uaccess.h>
->  #include <linux/poll.h>
->  #include <linux/wait.h>
-> -
-> +#include <linux/io-64-nonatomic-lo-hi.h>
->  #include <linux/nospec.h>
->  
->  MODULE_DESCRIPTION("Microsemi Switchtec(tm) PCIe Management Driver");
-> @@ -25,6 +25,11 @@ static int max_devices = 16;
->  module_param(max_devices, int, 0644);
->  MODULE_PARM_DESC(max_devices, "max number of switchtec device instances");
->  
-> +static bool use_dma_mrpc = 1;
-> +module_param(use_dma_mrpc, bool, 0644);
-> +MODULE_PARM_DESC(use_dma_mrpc,
-> +		 "Enable the use of the DMA MRPC feature");
 
-What's the purpose of the module parameter?  Can't you automatically
-figure out whether the firmware supports DMA mode?
 
-Module parameters make life difficult for users and lead to code
-that's rarely used and poorly tested, so I think we should avoid them
-whenever we can.
+On 2018-12-12 3:43 p.m., Bjorn Helgaas wrote:
+> On Mon, Dec 10, 2018 at 05:12:22PM +0800, Wesley Sheng wrote:
+>> From: Joey Zhang <joey.zhang@microchip.com>
+>>
+>> For nr_idxs is larger than 1 switchtec_ioctl_event_ctl event flags will be
+>> used by each event indexes. In current implementation the event flags are
+>> overwritten by first call of the function event_ctl().
+>>
+>> Preserve the event flag value with a temporary variable.
+>>
+>> Fixes: 52eabba5bcdb ("switchtec: Add IOCTLs to the Switchtec driver")
+>> Signed-off-by: Joey Zhang <joey.zhang@microchip.com>
+>> Signed-off-by: Wesley Sheng <wesley.sheng@microchip.com>
+>> Reviewed-by: Logan Gunthorpe <logang@deltatee.com>
+>> ---
+>>  drivers/pci/switch/switchtec.c | 3 +++
+>>  1 file changed, 3 insertions(+)
+>>
+>> diff --git a/drivers/pci/switch/switchtec.c b/drivers/pci/switch/switchtec.c
+>> index 480107e..a908670 100644
+>> --- a/drivers/pci/switch/switchtec.c
+>> +++ b/drivers/pci/switch/switchtec.c
+>> @@ -796,6 +796,7 @@ static int ioctl_event_ctl(struct switchtec_dev *stdev,
+>>  {
+>>  	int ret;
+>>  	int nr_idxs;
+>> +	unsigned int event_flags;
+>>  	struct switchtec_ioctl_event_ctl ctl;
+>>  
+>>  	if (copy_from_user(&ctl, uctl, sizeof(ctl)))
+>> @@ -817,7 +818,9 @@ static int ioctl_event_ctl(struct switchtec_dev *stdev,
+>>  		else
+>>  			return -EINVAL;
+>>  
+>> +		event_flags = ctl.flags;
+>>  		for (ctl.index = 0; ctl.index < nr_idxs; ctl.index++) {
+>> +			ctl.flags = event_flags;
+>>  			ret = event_ctl(stdev, &ctl);
+> 
+> event_ctl() overwrites several other things, in addition to ctl.flags:
+> 
+>   ctl.data[]
+>   ctl.occurred
+>   ctl.count
+> 
+> Is that what you intend?  It looks like only the values from the *last*
+> call of event_ctl() will be copied back to the user buffer.
 
-If you *can't* automatically figure out when to use DMA, please make
-it clear in the changelog that the "use_dma_mrpc" parameter is
-required with legacy firmware.  And in that case, it seems like it
-should be named "disable_dma" or similar, since it defaults to being
-enabled.
+Yeah, it's just SWITCHTEC_IOCTL_EVENT_IDX_ALL is perhaps a strange abuse
+of the interface. The intention being that if you are querying
+information about an event you'd use it's specific index. If you are
+trying to set flags you can set them for all event of a specific type at
+once using IDX_ALL.
 
-Bjorn
+Looking at it now it looks pretty ugly (and I'm not sure what I was
+thinking when I wrote it). But it's what we have and this patch fixes a
+bug where we aren't actually enabling/disabling all events when that's
+what the user is asking for.
+
+Logan
