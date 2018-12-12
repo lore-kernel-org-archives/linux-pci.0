@@ -1,135 +1,105 @@
-Return-Path: <SRS0=NFOj=OU=vger.kernel.org=linux-pci-owner@kernel.org>
+Return-Path: <SRS0=ZQeV=OV=vger.kernel.org=linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-2.8 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,MAILING_LIST_MULTI,SPF_PASS,USER_AGENT_MUTT
-	autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-2.5 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
+	DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_PASS,
+	URIBL_BLOCKED,USER_AGENT_MUTT autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 649E3C67839
-	for <linux-pci@archiver.kernel.org>; Tue, 11 Dec 2018 22:21:44 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 117D3C67839
+	for <linux-pci@archiver.kernel.org>; Wed, 12 Dec 2018 00:37:55 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 281662084C
-	for <linux-pci@archiver.kernel.org>; Tue, 11 Dec 2018 22:21:44 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=default; t=1544566904;
-	bh=fSLFMvVoixiNmlDMP5MQDqBjxk5RY6oXyNRPaQk4bMc=;
-	h=Date:From:To:Cc:Subject:References:In-Reply-To:List-ID:From;
-	b=UI/yqhLTK0ROx5w69k+VntmjO+2/7A2dnxmksoWiiDSGUu6tVQMkEfpJKjkZYOdbn
-	 vrvt13C1KVu9e6ui2M2K66PZabTKW6/niUqPjKBQhn4J4szjQyMSl1Dn5X2reF/nfx
-	 63Bk7lw3IiwuLiKrOIwZsEAzjjNDqaEMxAqydoO0=
-DMARC-Filter: OpenDMARC Filter v1.3.2 mail.kernel.org 281662084C
-Authentication-Results: mail.kernel.org; dmarc=fail (p=none dis=none) header.from=kernel.org
+	by mail.kernel.org (Postfix) with ESMTP id CA0FA20851
+	for <linux-pci@archiver.kernel.org>; Wed, 12 Dec 2018 00:37:54 +0000 (UTC)
+Authentication-Results: mail.kernel.org;
+	dkim=pass (1024-bit key) header.d=gibson.dropbear.id.au header.i=@gibson.dropbear.id.au header.b="SYYS8Vfs"
+DMARC-Filter: OpenDMARC Filter v1.3.2 mail.kernel.org CA0FA20851
+Authentication-Results: mail.kernel.org; dmarc=none (p=none dis=none) header.from=gibson.dropbear.id.au
 Authentication-Results: mail.kernel.org; spf=none smtp.mailfrom=linux-pci-owner@vger.kernel.org
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726183AbeLKWVn (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Tue, 11 Dec 2018 17:21:43 -0500
-Received: from mail.kernel.org ([198.145.29.99]:51436 "EHLO mail.kernel.org"
+        id S1726249AbeLLAhy (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Tue, 11 Dec 2018 19:37:54 -0500
+Received: from ozlabs.org ([203.11.71.1]:41943 "EHLO ozlabs.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1726158AbeLKWVn (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Tue, 11 Dec 2018 17:21:43 -0500
-Received: from localhost (unknown [69.71.4.100])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
-        (No client certificate requested)
-        by mail.kernel.org (Postfix) with ESMTPSA id 5502F2084C;
-        Tue, 11 Dec 2018 22:21:40 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=default; t=1544566902;
-        bh=fSLFMvVoixiNmlDMP5MQDqBjxk5RY6oXyNRPaQk4bMc=;
+        id S1726211AbeLLAhx (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Tue, 11 Dec 2018 19:37:53 -0500
+Received: by ozlabs.org (Postfix, from userid 1007)
+        id 43DyZk6qyjz9s47; Wed, 12 Dec 2018 11:37:50 +1100 (AEDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
+        d=gibson.dropbear.id.au; s=201602; t=1544575070;
+        bh=vUiGKvYaVVCrNhOnq8YxGEvqhpKSI/AAuTcLp+f9B0w=;
         h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-        b=M2KzfXbQcsrgv0jb+hhBJqaYEAg/n6aelD3tVxjcUVX5v4ry42r0FiNVPy/2qIr7y
-         mROUGxwEKErr9bGgVsoj1oAFzWYfxIcOqJemcBo8P8SktR37CBfZ9n7YQSnqvic1yU
-         bd7X8g3BlkqAmxxKaZJbiy55mKReIKmomB0iw25E=
-Date:   Tue, 11 Dec 2018 16:21:31 -0600
-From:   Bjorn Helgaas <helgaas@kernel.org>
-To:     "Grumbach, Emmanuel" <emmanuel.grumbach@intel.com>
-Cc:     "bjorn@helgaas.com" <bjorn@helgaas.com>,
-        "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-        "Mertarg10@gmail.com" <Mertarg10@gmail.com>,
-        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-        Fran RR <fjrr87@outlook.com>
-Subject: Re: Fwd: [Bug 201647] New: Intel Wireless card 3165 does not get
- detected but bluetooth works
-Message-ID: <20181211222131.GH99796@google.com>
-References: <20181128211959.GB178809@google.com>
- <0BA3FCBA62E2DC44AF3030971E174FB3013373E4A3@HASMSX112.ger.corp.intel.com>
- <20181210222452.GC85090@google.com>
- <0BA3FCBA62E2DC44AF3030971E174FB30133754C00@HASMSX112.ger.corp.intel.com>
- <20181211135121.GB99796@google.com>
- <0BA3FCBA62E2DC44AF3030971E174FB30133756A29@HASMSX112.ger.corp.intel.com>
- <20181211182630.GF99796@google.com>
- <0BA3FCBA62E2DC44AF3030971E174FB30133756B5D@HASMSX112.ger.corp.intel.com>
- <20181211183805.GG99796@google.com>
- <0BA3FCBA62E2DC44AF3030971E174FB30133756BE7@HASMSX112.ger.corp.intel.com>
+        b=SYYS8Vfs1DWy6xQreHsDTPuB/A9JCjiqKZ+03SHMNfMqgqCKHP7Ufiy/WdgteWINN
+         GjxhtQhl3ajiH+k4pU86AwFa0wV32Imtr6++ohLfE66CUfKGiK3DUVLxHQHUnHT72R
+         i5D3zVp8wNYV99NNnbrM2a0YSwswZx0UOalSG0No=
+Date:   Wed, 12 Dec 2018 11:22:34 +1100
+From:   David Gibson <david@gibson.dropbear.id.au>
+To:     Bjorn Helgaas <helgaas@kernel.org>
+Cc:     davem@davemloft.net, saeedm@mellanox.com, ogerlitz@mellanox.com,
+        tariqt@mellanox.com, leon@kernel.org, linux-kernel@vger.kernel.org,
+        linuxppc-dev@lists.ozlabs.org, netdev@vger.kernel.org,
+        alex.williamson@redhat.com, linux-pci@vger.kernel.org,
+        linux-rdma@vger.kernel.org, sbest@redhat.com, paulus@samba.org,
+        benh@kernel.crashing.org
+Subject: Re: [PATCH] PCI: Add no-D3 quirk for Mellanox ConnectX-[45]
+Message-ID: <20181212002234.GC2719@umbus.fritz.box>
+References: <20181206041951.22413-1-david@gibson.dropbear.id.au>
+ <20181211140143.GD99796@google.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: multipart/signed; micalg=pgp-sha256;
+        protocol="application/pgp-signature"; boundary="qtZFehHsKgwS5rPz"
 Content-Disposition: inline
-In-Reply-To: <0BA3FCBA62E2DC44AF3030971E174FB30133756BE7@HASMSX112.ger.corp.intel.com>
+In-Reply-To: <20181211140143.GD99796@google.com>
 User-Agent: Mutt/1.10.1 (2018-07-13)
 Sender: linux-pci-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-On Tue, Dec 11, 2018 at 06:51:14PM +0000, Grumbach, Emmanuel wrote:
-> > 
-> > On Tue, Dec 11, 2018 at 06:31:47PM +0000, Grumbach, Emmanuel wrote:
-> > > > On Tue, Dec 11, 2018 at 04:32:25PM +0000, Grumbach, Emmanuel wrote:
-> > > > > > On Tue, Dec 11, 2018 at 06:35:20AM +0000, Grumbach, Emmanuel
-> > wrote:
-> > > > > > > > > > > https://bugzilla.kernel.org/show_bug.cgi?id=201647
-> > > > > >
-> > > > > > > FWIW: I saw another problem like this with a 9650 device.
-> > > > > >
-> > > > > > Do you have a pointer to any info about this 9650 issue?  Maybe
-> > > > > > that would have a clue.
-> > > > >
-> > > > > I added him here so that you can ask whatever you like :) The
-> > > > > story is the same. I am attaching a picture I got from the reporter.
-> > > > > I can confirm that this device ID / subdevice ID is supported by
-> > > > > the linux
-> > > > driver.
-> > > >
-> > > > Was there a resolution, i.e., if somebody figured out how to make
-> > > > the
-> > > > 9650 wifi work, maybe a similar solution would work for the 3165?
-> > >
-> > > Unfortunately not, I am stuck there at the exact same point.  No
-> > > Wifi device shows up in lspci...
-> > 
-> > Is there a public spec?  My patience for reverse engineering
-> > things that are documented somewhere that I'm not allowed to see
-> > is pretty limited.  Presumably *you* should be able to see the
-> > spec, since this is an Intel device and you have an @intel.com
-> > address?
-> 
-> Ok, I start to understand. So no, no public spec. I am an Intel
-> employee, I used to maintain the WiFi driver (iwlwifi). I don't know
-> much about PCI though.  I am definitely not asking you to reverse
-> engineer our device :) I can try to ask internally what could be
-> going on.  The reason I haven't done so so far and reached out to
-> you is because I am not aware about switches that we need to toggle
-> to make the device magically show up. So I thought it'd be related
-> to the PCI core, which take me to the next point...
->
-> > From what we can tell so far, I don't *think* this is a PCI issue.
-> > If the device doesn't respond to a PCI config access, the PCI core
-> > can't really be expected to do anything about it.
-> 
-> Ok, thanks. So I understand from you that you didn't see any weird
-> log from the PCI core saying: "I can see this device, but I can't
-> enumerate it because XYZ".  I tried to look for such a thing but
-> couldn't.
 
-Right; we should be doing a config read to the device, but apparently
-we don't get a response so we think it's not there.  It's still
-conceivable there's some hotplug or power management wrinkle that we
-aren't handling correctly, but those things are used on many systems,
-so it would have to be a fairly esoteric issue.
+--qtZFehHsKgwS5rPz
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+Content-Transfer-Encoding: quoted-printable
 
-> From this point, I guess I can't do much either. I'll try to get
-> info internally.
+On Tue, Dec 11, 2018 at 08:01:43AM -0600, Bjorn Helgaas wrote:
+> Hi David,
+>=20
+> I see you're still working on this, but if you do end up going this
+> direction eventually, would you mind splitting this into two patches:
+> 1) rename the quirk to make it more generic (but not changing any
+> behavior), and 2) add the ConnectX devices to the quirk.  That way
+> the ConnectX change is smaller and more easily
+> understood/reverted/etc.
 
-Great, thanks!
+Sure.  Would it make sense to send (1) as an independent cleanup,
+while I'm still working out exactly what (if anything) we need for
+(2)?
 
-Bjorn
+--=20
+David Gibson			| I'll have my music baroque, and my code
+david AT gibson.dropbear.id.au	| minimalist, thank you.  NOT _the_ _other_
+				| _way_ _around_!
+http://www.ozlabs.org/~dgibson
+
+--qtZFehHsKgwS5rPz
+Content-Type: application/pgp-signature; name="signature.asc"
+
+-----BEGIN PGP SIGNATURE-----
+
+iQIzBAEBCAAdFiEEdfRlhq5hpmzETofcbDjKyiDZs5IFAlwQVMoACgkQbDjKyiDZ
+s5L+cw/+KM764cq7FAR/lTsfb87oC6lgM+U63FC2WIKnaxcJodoYFkg4eYhjc7B9
+OfAliLU6kk4A/cowrU/TZRHtvW3LcaZU4qTlQBKuPoFq6ApOmCv8ftr4jbdcXD/U
+2R/RS4QgRInfPg1g3de5DuveWiVI8gIzfcOKPh53yAkcdbsi937ZMFICwSYfln9X
+hmONBWM0BfrVvx8AFxhyc2lczWNzXHpFTTBqcV+lZnGUlB51K/+WQOIx6BNVssQs
+UfiJqHQixhdJA9pzkMEykEiS5A9hdOLJ4XyYO6jt1S9ZdB4dp1ckPrej8zgXt2l1
+HRG11NfawSntxutiu4CLM4Ra0aykkRw6ws2n2joV0Tb7+jZMGTeCzJSACdIbZM48
+RLKIS+b5PjAziH/QzZ4rSau6vRsaB7NY80fMPuvmM4/P3o5NrqmJm6trUX6LWOFZ
+FnUjMvXlFmO/5E7pmclcUxqvG6n5alBbMg+vJRo5ljZbp2MeFAVR/BWnXA5iTARQ
+JmjIIbUMQhie1ykQuWiZ0rqpCB/rEXDWfWDSyPvdYdXyNK2R/ZLi58G/PU/DQi3D
+By4mlrRHhZCcRoxXK7RznAj/bR9nKI/NsGm+8eaqaTf5foVQ7jW+PQpz+Jiy3nrg
+O/MBa8cWSsV9VH9xCbGAFHTjC6WtICnGk9xscxqcWlwnMWIr3sk=
+=7iRq
+-----END PGP SIGNATURE-----
+
+--qtZFehHsKgwS5rPz--
