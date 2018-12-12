@@ -2,120 +2,105 @@ Return-Path: <SRS0=ZQeV=OV=vger.kernel.org=linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-9.0 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
-	DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,
-	SIGNED_OFF_BY,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT autolearn=ham
+X-Spam-Status: No, score=-3.9 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_PASS,URIBL_BLOCKED autolearn=ham
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id CDAB5C6783B
-	for <linux-pci@archiver.kernel.org>; Wed, 12 Dec 2018 11:13:59 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 6570CC04EB8
+	for <linux-pci@archiver.kernel.org>; Wed, 12 Dec 2018 11:42:34 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 902302084E
-	for <linux-pci@archiver.kernel.org>; Wed, 12 Dec 2018 11:13:59 +0000 (UTC)
-Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=synopsys.com header.i=@synopsys.com header.b="URSML/eb"
-DMARC-Filter: OpenDMARC Filter v1.3.2 mail.kernel.org 902302084E
-Authentication-Results: mail.kernel.org; dmarc=fail (p=none dis=none) header.from=synopsys.com
+	by mail.kernel.org (Postfix) with ESMTP id 34762208E7
+	for <linux-pci@archiver.kernel.org>; Wed, 12 Dec 2018 11:42:34 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.3.2 mail.kernel.org 34762208E7
+Authentication-Results: mail.kernel.org; dmarc=fail (p=none dis=none) header.from=linux.intel.com
 Authentication-Results: mail.kernel.org; spf=none smtp.mailfrom=linux-pci-owner@vger.kernel.org
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727188AbeLLLN6 (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Wed, 12 Dec 2018 06:13:58 -0500
-Received: from smtprelay.synopsys.com ([198.182.60.111]:35104 "EHLO
-        smtprelay.synopsys.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1727159AbeLLLN6 (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Wed, 12 Dec 2018 06:13:58 -0500
-Received: from mailhost.synopsys.com (mailhost2.synopsys.com [10.13.184.66])
-        by smtprelay.synopsys.com (Postfix) with ESMTP id 1F2A110C0461;
-        Wed, 12 Dec 2018 03:13:58 -0800 (PST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=synopsys.com; s=mail;
-        t=1544613238; bh=bQxyfyjhbeTLF292y1bLb172w8Quqj/1rP22rG8cDyM=;
-        h=From:To:Cc:Subject:Date:In-Reply-To:References:In-Reply-To:
-         References:From;
-        b=URSML/ebVHSIquut8oyhUbU3fQ/jwnry3RTsAcD8ctjkNb10jDYG1EZhJr4iwDt+W
-         qjBnl/pVxtKiRl+fQZ7QhcM+3y4QKYbFhUpI5Gqb8KykdBg8rwx/xRr8UACPxhlYJZ
-         fLUOADD39YHdogVcOrgpLhxP25fIFiLT2LTjP4oGZyXN7kCPd6+fOlM2qhnQMIvte/
-         BZpOGpq5XWU3yL2GQL9If28d52q+814aQNYyyHE8nyZUzi32kcMufaLEl5IW1T03xB
-         RWdstKJLDRWrrgnobF4niZLcFq5nxbyjm4FqNIY/HgG3h1/2ZbDyvXuSF3OHCW0knH
-         SkKC/95R5J7Jw==
-Received: from de02.synopsys.com (de02.internal.synopsys.com [10.225.17.21])
-        by mailhost.synopsys.com (Postfix) with ESMTP id DB8703E25;
-        Wed, 12 Dec 2018 03:13:57 -0800 (PST)
-Received: from de02dwia024.internal.synopsys.com (de02dwia024.internal.synopsys.com [10.225.19.81])
-        by de02.synopsys.com (Postfix) with ESMTP id 8A6B33BDE6;
-        Wed, 12 Dec 2018 12:13:57 +0100 (CET)
-From:   Gustavo Pimentel <gustavo.pimentel@synopsys.com>
-To:     linux-pci@vger.kernel.org, dmaengine@vger.kernel.org
-Cc:     Gustavo Pimentel <gustavo.pimentel@synopsys.com>,
-        Kishon Vijay Abraham I <kishon@ti.com>,
+        id S1727274AbeLLLmd (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Wed, 12 Dec 2018 06:42:33 -0500
+Received: from mga14.intel.com ([192.55.52.115]:45265 "EHLO mga14.intel.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1726869AbeLLLmd (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Wed, 12 Dec 2018 06:42:33 -0500
+X-Amp-Result: SKIPPED(no attachment in message)
+X-Amp-File-Uploaded: False
+Received: from fmsmga002.fm.intel.com ([10.253.24.26])
+  by fmsmga103.fm.intel.com with ESMTP/TLS/DHE-RSA-AES256-GCM-SHA384; 12 Dec 2018 03:42:32 -0800
+X-ExtLoop1: 1
+X-IronPort-AV: E=Sophos;i="5.56,344,1539673200"; 
+   d="scan'208";a="125216997"
+Received: from mylly.fi.intel.com (HELO [10.237.72.79]) ([10.237.72.79])
+  by fmsmga002.fm.intel.com with ESMTP; 12 Dec 2018 03:42:30 -0800
+Subject: Re: [PATCH v2] PCI / PM: Allow runtime PM without callback functions
+To:     "Rafael J. Wysocki" <rafael@kernel.org>
+Cc:     Linux PCI <linux-pci@vger.kernel.org>,
+        Linux PM <linux-pm@vger.kernel.org>,
         Bjorn Helgaas <bhelgaas@google.com>,
-        Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
-        Joao Pinto <joao.pinto@synopsys.com>
-Subject: [RFC 6/6] pci: pci_ids: Add Synopsys device id 0xedda
-Date:   Wed, 12 Dec 2018 12:13:26 +0100
-Message-Id: <df5417ded1e55e5f994ab0ec7f696ddba83eaa35.1544610287.git.gustavo.pimentel@synopsys.com>
-X-Mailer: git-send-email 2.7.4
-In-Reply-To: <cover.1544610287.git.gustavo.pimentel@synopsys.com>
-References: <cover.1544610287.git.gustavo.pimentel@synopsys.com>
-In-Reply-To: <cover.1544610287.git.gustavo.pimentel@synopsys.com>
-References: <cover.1544610287.git.gustavo.pimentel@synopsys.com>
+        "Rafael J. Wysocki" <rjw@rjwysocki.net>,
+        Mika Westerberg <mika.westerberg@linux.intel.com>,
+        Jean Delvare <jdelvare@suse.de>,
+        Wolfram Sang <wsa@the-dreams.de>,
+        Stable <stable@vger.kernel.org>
+References: <20181023114552.22958-1-jarkko.nikula@linux.intel.com>
+ <CAJZ5v0gna-KvmezNGmCJZTwMrSBHyxbXqPZi12aKjEkxkr=YPQ@mail.gmail.com>
+From:   Jarkko Nikula <jarkko.nikula@linux.intel.com>
+Message-ID: <14190b11-f7f1-3a27-1476-8b043bd72555@linux.intel.com>
+Date:   Wed, 12 Dec 2018 13:42:29 +0200
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:60.0) Gecko/20100101
+ Thunderbird/60.3.1
+MIME-Version: 1.0
+In-Reply-To: <CAJZ5v0gna-KvmezNGmCJZTwMrSBHyxbXqPZi12aKjEkxkr=YPQ@mail.gmail.com>
+Content-Type: text/plain; charset=utf-8; format=flowed
+Content-Language: en-US
+Content-Transfer-Encoding: 7bit
 Sender: linux-pci-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-Create and add Synopsys device id (0xedda) to pci id list, since this id
-is now being use on two different drivers (pci_endpoint_test.ko and
-dw-edma-pcie.ko).
+Hi
 
-Signed-off-by: Gustavo Pimentel <gustavo.pimentel@synopsys.com>
-Cc: Kishon Vijay Abraham I <kishon@ti.com>
-Cc: Bjorn Helgaas <bhelgaas@google.com>
-Cc: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
-Cc: Joao Pinto <jpinto@synopsys.com>
----
- drivers/dma/dw-edma/dw-edma-pcie.c | 2 +-
- drivers/misc/pci_endpoint_test.c   | 2 +-
- include/linux/pci_ids.h            | 1 +
- 3 files changed, 3 insertions(+), 2 deletions(-)
+On 10/25/18 4:57 PM, Rafael J. Wysocki wrote:
+> On Tue, Oct 23, 2018 at 1:46 PM Jarkko Nikula
+> <jarkko.nikula@linux.intel.com> wrote:
+>>
+>> Commit a9c8088c7988 ("i2c: i801: Don't restore config registers on
+>> runtime PM") nullified the runtime PM suspend/resume callback pointers
+>> while keeping the runtime PM enabled.
+>>
+>> This causes that SMBus PCI device stays in D0 power state and sysfs
+>> /sys/bus/pci/devices/[SMBus PCI ID]/power/runtime_status shows "error"
+>> when the runtime PM framework attempts to autosuspend the device. This
+>> is due PCI bus runtime PM which checks for driver runtime PM callbacks
+>> and returns with -ENOSYS if they are not set.
+>>
+>> Since i2c-i801.c don't need to do anything device specific beyond PCI
+>> device power state management Jean Delvare proposed if this can be fixed
+>> in the PCI subsystem core level rather than adding dummy runtime PM
+>> callback functions in the PCI drivers.
+>>
+>> Change the pci_pm_runtime_suspend()/pci_pm_runtime_resume() semantics so
+>> that they allow change the PCI device power state during runtime PM
+>> transitions even if no runtime PM callback functions are defined.
+>>
+>> This change fixes the runtime PM regression on i2c-i801.c.
+>>
+>> It is not obvious why the code had hard requirements for the runtime PM
+>> callbacks. Test has been here since the code was introduced by the
+>> commit 6cbf82148ff2 ("PCI PM: Run-time callbacks for PCI bus type").
+>>
+>> On the other hand similar change than this was done to generic runtime
+>> PM callbacks way back in the commit 05aa55dddb9e ("PM / Runtime: Lenient
+>> generic runtime pm callbacks").
+>>
+>> Fixes: a9c8088c7988 ("i2c: i801: Don't restore config registers on runtime PM")
+>> Reported-by: Mika Westerberg <mika.westerberg@linux.intel.com>
+>> Cc: <stable@vger.kernel.org> # 4.18+
+>> Signed-off-by: Jarkko Nikula <jarkko.nikula@linux.intel.com>
+> 
+> Reviewed-by: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
+> 
+I guess this patch with Reviewed-by tags from Rafael and Jean got buried 
+under other list traffic as I don't find this from pci.git or linux-next?
 
-diff --git a/drivers/dma/dw-edma/dw-edma-pcie.c b/drivers/dma/dw-edma/dw-edma-pcie.c
-index f29a861..50e0db4 100644
---- a/drivers/dma/dw-edma/dw-edma-pcie.c
-+++ b/drivers/dma/dw-edma/dw-edma-pcie.c
-@@ -280,7 +280,7 @@ static const struct dev_pm_ops dw_edma_pcie_dev_pm_ops = {
- };
- 
- static const struct pci_device_id dw_edma_pcie_id_table[] = {
--	{ PCI_DEVICE_DATA(SYNOPSYS, 0xedda, &snps_edda_data) },
-+	{ PCI_DEVICE_DATA(SYNOPSYS, EDDA, &snps_edda_data) },
- 	{ }
- };
- MODULE_DEVICE_TABLE(pci, dw_edma_pcie_id_table);
-diff --git a/drivers/misc/pci_endpoint_test.c b/drivers/misc/pci_endpoint_test.c
-index 896e2df..d27efe838 100644
---- a/drivers/misc/pci_endpoint_test.c
-+++ b/drivers/misc/pci_endpoint_test.c
-@@ -788,7 +788,7 @@ static void pci_endpoint_test_remove(struct pci_dev *pdev)
- static const struct pci_device_id pci_endpoint_test_tbl[] = {
- 	{ PCI_DEVICE(PCI_VENDOR_ID_TI, PCI_DEVICE_ID_TI_DRA74x) },
- 	{ PCI_DEVICE(PCI_VENDOR_ID_TI, PCI_DEVICE_ID_TI_DRA72x) },
--	{ PCI_DEVICE(PCI_VENDOR_ID_SYNOPSYS, 0xedda) },
-+	{ PCI_DEVICE_DATA(SYNOPSYS, EDDA, NULL) },
- 	{ }
- };
- MODULE_DEVICE_TABLE(pci, pci_endpoint_test_tbl);
-diff --git a/include/linux/pci_ids.h b/include/linux/pci_ids.h
-index 69f0abe..57f17dd 100644
---- a/include/linux/pci_ids.h
-+++ b/include/linux/pci_ids.h
-@@ -2358,6 +2358,7 @@
- #define PCI_DEVICE_ID_CENATEK_IDE	0x0001
- 
- #define PCI_VENDOR_ID_SYNOPSYS		0x16c3
-+#define PCI_DEVICE_ID_SYNOPSYS_EDDA	0xedda
- 
- #define PCI_VENDOR_ID_VITESSE		0x1725
- #define PCI_DEVICE_ID_VITESSE_VSC7174	0x7174
 -- 
-2.7.4
-
+Jarkko
