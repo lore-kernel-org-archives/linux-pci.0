@@ -2,134 +2,105 @@ Return-Path: <SRS0=ZQeV=OV=vger.kernel.org=linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-1.0 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
-	DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_PASS
-	autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-0.9 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+	MAILING_LIST_MULTI,SPF_PASS,URIBL_BLOCKED autolearn=ham autolearn_force=no
+	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 85B19C04EB8
-	for <linux-pci@archiver.kernel.org>; Wed, 12 Dec 2018 09:15:20 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 61501C65BAF
+	for <linux-pci@archiver.kernel.org>; Wed, 12 Dec 2018 09:39:35 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 45FD22086D
-	for <linux-pci@archiver.kernel.org>; Wed, 12 Dec 2018 09:15:20 +0000 (UTC)
-Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=synopsys.com header.i=@synopsys.com header.b="ZA3ujX+f"
-DMARC-Filter: OpenDMARC Filter v1.3.2 mail.kernel.org 45FD22086D
-Authentication-Results: mail.kernel.org; dmarc=fail (p=none dis=none) header.from=synopsys.com
+	by mail.kernel.org (Postfix) with ESMTP id 298EC2084E
+	for <linux-pci@archiver.kernel.org>; Wed, 12 Dec 2018 09:39:35 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.3.2 mail.kernel.org 298EC2084E
+Authentication-Results: mail.kernel.org; dmarc=none (p=none dis=none) header.from=huawei.com
 Authentication-Results: mail.kernel.org; spf=none smtp.mailfrom=linux-pci-owner@vger.kernel.org
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726514AbeLLJPT (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Wed, 12 Dec 2018 04:15:19 -0500
-Received: from smtprelay.synopsys.com ([198.182.47.9]:60462 "EHLO
-        smtprelay.synopsys.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726242AbeLLJPT (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Wed, 12 Dec 2018 04:15:19 -0500
-Received: from mailhost.synopsys.com (mailhost2.synopsys.com [10.13.184.66])
-        by smtprelay.synopsys.com (Postfix) with ESMTP id 35F1124E209C;
-        Wed, 12 Dec 2018 01:15:19 -0800 (PST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=synopsys.com; s=mail;
-        t=1544606119; bh=0ie0/hrcVjNPP7dnFRewnvBLEyluZ1ydaNI1tzoh/0I=;
-        h=Subject:To:CC:References:From:Date:In-Reply-To:From;
-        b=ZA3ujX+fMbeIiRA3kSsqmHhAYwZ9pEilEmA1Nn/h3u6bYMJh7WCo0Co6tWzoZUprP
-         Vt1YPKmcD6mLL9JwvxofDBJqJc8jehlcStJWM3f8LrbDp8H6X81Upo1Qm/Ie55nRNJ
-         O8VBYu++HDjCMiAY4U4O50l/V39p9DqmLOMVBuxgn3xbhfYXrvuQ7DcDfHc4EhQUNP
-         qEOV7CNNdt9mAc6Sb7qRWlQsRvKQ2q8QIUyvpa5OQG+AfrBrFVdACslxyHsGETWBOW
-         BMOo10P+/mPI+rQOb1xH5o7Y7PWjY8mAyhCUj0dXkrbi9505iBjvez4P9l6Xq/upHY
-         aLYOfF9xKs3/g==
-Received: from US01WXQAHTC1.internal.synopsys.com (us01wxqahtc1.internal.synopsys.com [10.12.238.230])
-        by mailhost.synopsys.com (Postfix) with ESMTP id 7DD8F3AD9;
-        Wed, 12 Dec 2018 01:15:16 -0800 (PST)
-Received: from DE02WEHTCA.internal.synopsys.com (10.225.19.92) by
- US01WXQAHTC1.internal.synopsys.com (10.12.238.230) with Microsoft SMTP Server
- (TLS) id 14.3.408.0; Wed, 12 Dec 2018 01:15:16 -0800
-Received: from DE02WEHTCB.internal.synopsys.com (10.225.19.94) by
- DE02WEHTCA.internal.synopsys.com (10.225.19.92) with Microsoft SMTP Server
- (TLS) id 14.3.408.0; Wed, 12 Dec 2018 10:15:14 +0100
-Received: from [10.107.25.131] (10.107.25.131) by
- DE02WEHTCB.internal.synopsys.com (10.225.19.80) with Microsoft SMTP Server
- (TLS) id 14.3.408.0; Wed, 12 Dec 2018 10:15:14 +0100
-Subject: Re: [PATCH 0/3] PCI: designware: Fixing MSI handling flow
-To:     Trent Piepho <tpiepho@impinj.com>,
-        "marc.zyngier@arm.com" <marc.zyngier@arm.com>,
-        "lorenzo.pieralisi@arm.com" <lorenzo.pieralisi@arm.com>,
-        "gustavo.pimentel@synopsys.com" <gustavo.pimentel@synopsys.com>
-CC:     "jingoohan1@gmail.com" <jingoohan1@gmail.com>,
-        "faiz_abbas@ti.com" <faiz_abbas@ti.com>,
-        "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-        "bhelgaas@google.com" <bhelgaas@google.com>,
-        "vigneshr@ti.com" <vigneshr@ti.com>,
-        "Joao.Pinto@synopsys.com" <Joao.Pinto@synopsys.com>
-References: <20181113225734.8026-1-marc.zyngier@arm.com>
- <20181210161753.GA12563@e107981-ln.cambridge.arm.com>
- <1544465752.18519.188.camel@impinj.com>
- <bf6cf5c9-6f82-79b3-c23e-05c48bf9f0f2@arm.com>
- <1544474054.18519.199.camel@impinj.com>
-From:   Gustavo Pimentel <gustavo.pimentel@synopsys.com>
-Message-ID: <bdffa5ff-1119-a711-5b03-7d651edfc15e@synopsys.com>
-Date:   Wed, 12 Dec 2018 09:10:55 +0000
-User-Agent: Mozilla/5.0 (Windows NT 10.0; WOW64; rv:60.0) Gecko/20100101
- Thunderbird/60.3.2
+        id S1726651AbeLLJje (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Wed, 12 Dec 2018 04:39:34 -0500
+Received: from szxga06-in.huawei.com ([45.249.212.32]:55999 "EHLO huawei.com"
+        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+        id S1726525AbeLLJje (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Wed, 12 Dec 2018 04:39:34 -0500
+Received: from DGGEMS406-HUB.china.huawei.com (unknown [172.30.72.58])
+        by Forcepoint Email with ESMTP id ECEFFF80C1759;
+        Wed, 12 Dec 2018 17:39:31 +0800 (CST)
+Received: from localhost (10.202.226.46) by DGGEMS406-HUB.china.huawei.com
+ (10.3.19.206) with Microsoft SMTP Server id 14.3.408.0; Wed, 12 Dec 2018
+ 17:39:25 +0800
+Date:   Wed, 12 Dec 2018 09:39:14 +0000
+From:   Jonathan Cameron <jonathan.cameron@huawei.com>
+To:     Dave Hansen <dave.hansen@intel.com>
+CC:     <linux-pci@vger.kernel.org>, <x86@kernel.org>,
+        <helgaas@kernel.org>, <linuxarm@huawei.com>,
+        Ingo Molnar <mingo@kernel.org>,
+        Dave Hansen <dave.hansen@linux.intel.com>,
+        Andy Lutomirski <luto@kernel.org>,
+        "Peter Zijlstra" <peterz@infradead.org>, <martin@geanix.com>
+Subject: Re: [PATCH V2] x86: Fix an issue with invalid ACPI NUMA config
+Message-ID: <20181212093914.00002aed@huawei.com>
+In-Reply-To: <a5a938d3-ecc9-028a-3b28-610feda8f3f8@intel.com>
+References: <20181211094737.71554-1-Jonathan.Cameron@huawei.com>
+        <a5a938d3-ecc9-028a-3b28-610feda8f3f8@intel.com>
+Organization: Huawei
+X-Mailer: Claws Mail 3.16.0 (GTK+ 2.24.32; i686-w64-mingw32)
 MIME-Version: 1.0
-In-Reply-To: <1544474054.18519.199.camel@impinj.com>
-Content-Type: text/plain; charset="utf-8"
-Content-Language: en-US
+Content-Type: text/plain; charset="US-ASCII"
 Content-Transfer-Encoding: 7bit
-X-Originating-IP: [10.107.25.131]
+X-Originating-IP: [10.202.226.46]
+X-CFilter-Loop: Reflected
 Sender: linux-pci-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-Hi Trent,
+On Tue, 11 Dec 2018 10:19:49 -0800
+Dave Hansen <dave.hansen@intel.com> wrote:
 
-On 10/12/2018 20:34, Trent Piepho wrote:
-> On Mon, 2018-12-10 at 18:31 +0000, Marc Zyngier wrote:
->>
->>> I had concerns about what appears to be an unnecessary extra lock taken
->>> before handling an interrupt and enabling all MSIs even if nothing has
->>> tried to enable them.
->>
->> Regarding the lock: I'm quite puzzled that you consider it
->> "unnecessary", given that all the DWC callbacks expect such a locking. I
->> suspect you are considering from a pure performance angle, and I'd
->> suggest that you post numbers showing the unacceptable overhead of an
->> otherwise uncontended lock.
+> On 12/11/18 1:47 AM, Jonathan Cameron wrote:
+> > When the PCI code later comes along and calls acpi_get_node() for any PCI
+> > card below the root port, it navigates up the ACPI tree until it finds the
+> > _PXM value in the root port. This value is then passed to
+> > acpi_map_pxm_to_node().
+> > 
+> > As numa_off has not been set on x86 it tries to allocate a NUMA node, from
+> > the unused set, without setting up all the infrastructure that would
+> > normally accompany such a call.   
 > 
-> The difference is that the other callbacks can be called outside the
-> path of handling an interrupt.  Any thread could possibly make a call
-> to mask the interrupt at any time, so the lock is needed.
+> FWIW, this _sounds_ like the real problem here.  We're allowing an
+> allocation to proceed without some infrastructure that we require.
+> Shouldn't we be detecting that this infrastructure is not in place and
+> warn about *it* at least?
 > 
-> But the ack is only called in the path of handling an irq.  That's why
-> its different.  There's already a system insuring that callback is not
-> called reentrantly.  If the lock was ever taken when it was attempted
-> to be locked, then we'd already be broken.
-> 
->> As for enabling all MSIs upfront, same thing. Please demonstrate how
->> harmful it is, given that they are all masked by default, consistently
->> with what other interrupt controllers are doing.
-> 
-> Without any information on the controller, who knows what the
-> differences between a masked and enabled vs a disabled msi are?  I
-> don't know there is a difference, but on the other hand, you don't know
-> there isn't.  It's like a dozen lines of code to not change the
-> behavior.
+> I'm a bit worried that this is just papering over an unknown error to
+> make a hang go away.  It seems a bit too far away from the root cause.
 
-That is not true, I've replied on 13/18/2018 with that information.
+I'm not totally convinced.  We are warning about it on the two lines just off the
+top of this patch.
 
-I leave here again the information provided.
+"No NUMA configuration found"
+"Faking a node at [mem....]"
 
-*PCIE_MSI_INTRx_MASK*
-When an MSI is received for a masked interrupt, the corresponding status bit
-gets set in the interrupt status register but the controller will not signal it.
-As soon as the masked interrupt is unmasked and assuming the status bit is still
-set the controller will signal it.
+We are falling back to the exact same code paths as if you had deliberately
+turned off NUMA at the command line with messages stating that is the case.
+That approach seems to be safe and is consistent.
 
-*PCIE_MSI_INTRx_ENABLE*
-Enables/disables every interrupt. When an MSI is received from a disabled
-interrupt, no status bit gets set in MSI controller interrupt status register,
-in another word, the interruption will be lost.
+Now there is a potential corner here where I agree with you that it may
+make sense to 'also' add protections in the acpi_map_pxm_to_node() path
+which is that where we do have a valid NUMA configuration and along comes
+a new device with a node outside of those that are defined,
+(note there is a change coming in next ACPI precisely to work around a case
+that causes this to validly happen when the OS sees some new features and
+doesn't know what to do with them - it still relies on the ACPI tables
+having the right magic in them though for the fallback to work - more
+on that when the spec is out...).
 
-Regards,
-Gustavo
+One option would be to (in addition to this patch) add a new version of
+acpi_get_node that will only give you a node that actually exists
+and an error otherwise allowing code to fallback to to NO_NODE.
 
-> 
+Other than the error we might be able to use acpi_map_pxm_to_online_node
+for this, or call both acpi_map_pxm_to_node and acpi_map_pxm_to_online_node
+and compare the answers to verify we are getting the node we want?
+
+Jonathan
 
