@@ -2,82 +2,89 @@ Return-Path: <SRS0=IRPw=OW=vger.kernel.org=linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-7.2 required=3.0 tests=DKIM_INVALID,DKIM_SIGNED,
-	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,MENTIONS_GIT_HOSTING,
-	SPF_PASS,URIBL_BLOCKED,USER_AGENT_MUTT autolearn=ham autolearn_force=no
-	version=3.4.0
+X-Spam-Status: No, score=-0.9 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+	MAILING_LIST_MULTI,SPF_PASS autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 32871C67839
-	for <linux-pci@archiver.kernel.org>; Thu, 13 Dec 2018 14:17:59 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 7B69AC65BAE
+	for <linux-pci@archiver.kernel.org>; Thu, 13 Dec 2018 14:30:15 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id E0AEE20870
-	for <linux-pci@archiver.kernel.org>; Thu, 13 Dec 2018 14:17:58 +0000 (UTC)
-Authentication-Results: mail.kernel.org;
-	dkim=fail reason="signature verification failed" (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="YsXPSAlo"
-DMARC-Filter: OpenDMARC Filter v1.3.2 mail.kernel.org E0AEE20870
-Authentication-Results: mail.kernel.org; dmarc=none (p=none dis=none) header.from=infradead.org
+	by mail.kernel.org (Postfix) with ESMTP id 4946420880
+	for <linux-pci@archiver.kernel.org>; Thu, 13 Dec 2018 14:30:15 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.3.2 mail.kernel.org 4946420880
+Authentication-Results: mail.kernel.org; dmarc=none (p=none dis=none) header.from=bootlin.com
 Authentication-Results: mail.kernel.org; spf=none smtp.mailfrom=linux-pci-owner@vger.kernel.org
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727707AbeLMOR6 (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Thu, 13 Dec 2018 09:17:58 -0500
-Received: from bombadil.infradead.org ([198.137.202.133]:41838 "EHLO
-        bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1727618AbeLMOR6 (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Thu, 13 Dec 2018 09:17:58 -0500
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
-        d=infradead.org; s=bombadil.20170209; h=In-Reply-To:Content-Type:MIME-Version
-        :References:Message-ID:Subject:Cc:To:From:Date:Sender:Reply-To:
-        Content-Transfer-Encoding:Content-ID:Content-Description:Resent-Date:
-        Resent-From:Resent-Sender:Resent-To:Resent-Cc:Resent-Message-ID:List-Id:
-        List-Help:List-Unsubscribe:List-Subscribe:List-Post:List-Owner:List-Archive;
-         bh=6vwhY13VjviJ/1byR6DWtc/nHp80B+kTdS/xVesDaLc=; b=YsXPSAloHhVnjrTDQBfFc+mK/
-        izWe6aoivWOhPqY60UwNpvA9KRdQuVyo2PjUMDYbCvgN0VNBJ5f1T3iR/TkvGxt3A0ozY9ya2FGZ9
-        zJbXLrZ297lRfCzBSaqDk64SRsnmJBxJSE57wLZ0k3HTPchAcTEgFITJ06uUMZYMNQiLKl2nqig2b
-        rbA+4qi6aICGgNuePfF06AmvTeok/SgJfKiKKVpeQm+PTGgNYeUoksW1eCl594jECsFilbwJK2x8+
-        xR3ER/2pczaGnC7u9vO4tiuxAMRD2hzCHJZDJKibVCbz0TSCsKKpPim05JnfnJPoMs4F5RXoEo6Ch
-        bvG809crw==;
-Received: from hch by bombadil.infradead.org with local (Exim 4.90_1 #2 (Red Hat Linux))
-        id 1gXRoA-0006aS-Ff; Thu, 13 Dec 2018 14:17:46 +0000
-Date:   Thu, 13 Dec 2018 06:17:46 -0800
-From:   Christoph Hellwig <hch@infradead.org>
-To:     Jean-Philippe Brucker <jean-philippe.brucker@arm.com>
-Cc:     Joerg Roedel <joro@8bytes.org>,
-        Mark Rutland <Mark.Rutland@arm.com>,
-        "virtio-dev@lists.oasis-open.org" <virtio-dev@lists.oasis-open.org>,
-        "kevin.tian@intel.com" <kevin.tian@intel.com>,
-        "tnowicki@caviumnetworks.com" <tnowicki@caviumnetworks.com>,
-        "mst@redhat.com" <mst@redhat.com>,
-        Marc Zyngier <Marc.Zyngier@arm.com>,
-        "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-        "jasowang@redhat.com" <jasowang@redhat.com>,
-        Will Deacon <Will.Deacon@arm.com>,
-        Robin Murphy <Robin.Murphy@arm.com>,
-        "virtualization@lists.linux-foundation.org" 
-        <virtualization@lists.linux-foundation.org>,
-        "iommu@lists.linux-foundation.org" <iommu@lists.linux-foundation.org>,
-        "robh+dt@kernel.org" <robh+dt@kernel.org>,
-        "bhelgaas@google.com" <bhelgaas@google.com>,
-        "frowand.list@gmail.com" <frowand.list@gmail.com>,
-        "kvmarm@lists.cs.columbia.edu" <kvmarm@lists.cs.columbia.edu>,
-        "devicetree@vger.kernel.org" <devicetree@vger.kernel.org>
-Subject: Re: [PATCH v6 0/7] Add virtio-iommu driver
-Message-ID: <20181213141746.GA19757@infradead.org>
-References: <20181211182104.18241-1-jean-philippe.brucker@arm.com>
- <20181212103545.GV16835@8bytes.org>
- <9110873f-d344-b6b9-c722-9accfc329db2@arm.com>
+        id S1728173AbeLMOaO convert rfc822-to-8bit (ORCPT
+        <rfc822;linux-pci@archiver.kernel.org>);
+        Thu, 13 Dec 2018 09:30:14 -0500
+Received: from mail.bootlin.com ([62.4.15.54]:53607 "EHLO mail.bootlin.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1727551AbeLMOaO (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Thu, 13 Dec 2018 09:30:14 -0500
+Received: by mail.bootlin.com (Postfix, from userid 110)
+        id 52E3E207AD; Thu, 13 Dec 2018 15:30:12 +0100 (CET)
+Received: from xps13 (unknown [91.224.148.103])
+        by mail.bootlin.com (Postfix) with ESMTPSA id 53E1D20743;
+        Thu, 13 Dec 2018 15:30:01 +0100 (CET)
+Date:   Thu, 13 Dec 2018 15:30:00 +0100
+From:   Miquel Raynal <miquel.raynal@bootlin.com>
+To:     Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
+Cc:     Stephen Boyd <sboyd@kernel.org>,
+        "Rafael J. Wysocki" <rjw@rjwysocki.net>, sudeep.holla@arm.com,
+        Gregory Clement <gregory.clement@bootlin.com>,
+        Jason Cooper <jason@lakedaemon.net>,
+        Andrew Lunn <andrew@lunn.ch>,
+        Sebastian Hesselbarth <sebastian.hesselbarth@gmail.com>,
+        Thomas Petazzoni <thomas.petazzoni@bootlin.com>,
+        Bjorn Helgaas <bhelgaas@google.com>,
+        devicetree@vger.kernel.org, Rob Herring <robh+dt@kernel.org>,
+        Mark Rutland <mark.rutland@arm.com>, linux-pci@vger.kernel.org,
+        linux-kernel@vger.kernel.org, linux-arm-kernel@lists.infradead.org,
+        Antoine Tenart <antoine.tenart@bootlin.com>,
+        Maxime Chevallier <maxime.chevallier@bootlin.com>,
+        Nadav Haklai <nadavh@marvell.com>
+Subject: Re: [PATCH 05/12] PCI: aardvark: add suspend to RAM support
+Message-ID: <20181213153000.245d7d5f@xps13>
+In-Reply-To: <20181213105302.GA5330@e107981-ln.cambridge.arm.com>
+References: <20181123141831.8214-1-miquel.raynal@bootlin.com>
+        <1999610.6DN9RK2Tt3@aspire.rjw.lan>
+        <20181204094558.GA24588@e107981-ln.cambridge.arm.com>
+        <1966692.fVZYlVgWHv@aspire.rjw.lan>
+        <20181211141627.GA526@e107981-ln.cambridge.arm.com>
+        <154469162632.19322.13092710881803732022@swboyd.mtv.corp.google.com>
+        <20181213105302.GA5330@e107981-ln.cambridge.arm.com>
+Organization: Bootlin
+X-Mailer: Claws Mail 3.17.1 (GTK+ 2.24.32; x86_64-pc-linux-gnu)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <9110873f-d344-b6b9-c722-9accfc329db2@arm.com>
-User-Agent: Mutt/1.9.2 (2017-12-15)
-X-SRS-Rewrite: SMTP reverse-path rewritten from <hch@infradead.org> by bombadil.infradead.org. See http://www.infradead.org/rpr.html
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 8BIT
 Sender: linux-pci-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-On Thu, Dec 13, 2018 at 12:50:29PM +0000, Jean-Philippe Brucker wrote:
-> * DMA ops for x86 (see "HACK" commit). I'd like to use dma-iommu but I'm
-> not sure how to implement the glue that sets dma_ops properly.
+Hi Lorenzo,
 
-http://git.infradead.org/users/hch/misc.git/shortlog/refs/heads/dma-iommu-ops
+> > If that's really the case, then I can see how one device and it's
+> > children are suspended and the irq for it is disabled but the providing
+> > devices (clk, regulator, bus controller, etc.) are still fully active
+> > and not suspended but in fact completely usable and able to service
+> > interrupts. If that all makes sense, then I would answer the question
+> > with a definitive "yes it's all fine" because the clk consumer could be
+> > in the NOIRQ phase of its suspend but the clk provider wouldn't have
+> > even started suspending yet when clk_disable_unprepare() is called.  
+> 
+> That's a very good summary and address my concern, I still question this
+> patch correctness (and many others that carry out clk operations in S2R
+> NOIRQ phase), they may work but do not tell me they are rock solid given
+> your accurate summary above.
+
+I understand your concern but I don't see any alternative right now
+and a deep rework of the PM core to respect such dependency is not
+something that can be done in a reasonable amount of time. With
+regard to this constraint, do you think it is worth blocking the
+series?
+
+
+Thanks,
+Miquèl
