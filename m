@@ -2,138 +2,332 @@ Return-Path: <SRS0=IRPw=OW=vger.kernel.org=linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-5.9 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	MAILING_LIST_MULTI,MENTIONS_GIT_HOSTING,SPF_PASS autolearn=ham
+X-Spam-Status: No, score=-0.9 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+	MAILING_LIST_MULTI,SPF_PASS,T_MIXED_ES,URIBL_BLOCKED autolearn=ham
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 3A117C65BAE
-	for <linux-pci@archiver.kernel.org>; Thu, 13 Dec 2018 12:50:58 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 917DAC65BAE
+	for <linux-pci@archiver.kernel.org>; Thu, 13 Dec 2018 14:13:40 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 056252087F
-	for <linux-pci@archiver.kernel.org>; Thu, 13 Dec 2018 12:50:58 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.3.2 mail.kernel.org 056252087F
-Authentication-Results: mail.kernel.org; dmarc=none (p=none dis=none) header.from=arm.com
+	by mail.kernel.org (Postfix) with ESMTP id 56A0D20879
+	for <linux-pci@archiver.kernel.org>; Thu, 13 Dec 2018 14:13:40 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.3.2 mail.kernel.org 56A0D20879
+Authentication-Results: mail.kernel.org; dmarc=fail (p=none dis=none) header.from=redhat.com
 Authentication-Results: mail.kernel.org; spf=none smtp.mailfrom=linux-pci-owner@vger.kernel.org
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1729338AbeLMMu5 (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Thu, 13 Dec 2018 07:50:57 -0500
-Received: from usa-sjc-mx-foss1.foss.arm.com ([217.140.101.70]:33196 "EHLO
-        foss.arm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1729356AbeLMMu4 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Thu, 13 Dec 2018 07:50:56 -0500
-Received: from usa-sjc-imap-foss1.foss.arm.com (unknown [10.72.51.249])
-        by usa-sjc-mx-foss1.foss.arm.com (Postfix) with ESMTP id 48B1FEBD;
-        Thu, 13 Dec 2018 04:50:56 -0800 (PST)
-Received: from [10.1.196.78] (ostrya.cambridge.arm.com [10.1.196.78])
-        by usa-sjc-imap-foss1.foss.arm.com (Postfix) with ESMTPSA id C33D83F575;
-        Thu, 13 Dec 2018 04:50:52 -0800 (PST)
-Subject: Re: [PATCH v6 0/7] Add virtio-iommu driver
-To:     Joerg Roedel <joro@8bytes.org>
-Cc:     "iommu@lists.linux-foundation.org" <iommu@lists.linux-foundation.org>,
-        "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-        "devicetree@vger.kernel.org" <devicetree@vger.kernel.org>,
-        "virtualization@lists.linux-foundation.org" 
-        <virtualization@lists.linux-foundation.org>,
-        "virtio-dev@lists.oasis-open.org" <virtio-dev@lists.oasis-open.org>,
-        "mst@redhat.com" <mst@redhat.com>,
-        "jasowang@redhat.com" <jasowang@redhat.com>,
-        "robh+dt@kernel.org" <robh+dt@kernel.org>,
-        Mark Rutland <Mark.Rutland@arm.com>,
-        "bhelgaas@google.com" <bhelgaas@google.com>,
-        "frowand.list@gmail.com" <frowand.list@gmail.com>,
-        "kvmarm@lists.cs.columbia.edu" <kvmarm@lists.cs.columbia.edu>,
-        "eric.auger@redhat.com" <eric.auger@redhat.com>,
-        "tnowicki@caviumnetworks.com" <tnowicki@caviumnetworks.com>,
-        "kevin.tian@intel.com" <kevin.tian@intel.com>,
-        Marc Zyngier <Marc.Zyngier@arm.com>,
-        Robin Murphy <Robin.Murphy@arm.com>,
-        Will Deacon <Will.Deacon@arm.com>,
-        Lorenzo Pieralisi <Lorenzo.Pieralisi@arm.com>,
-        "bharat.bhushan@nxp.com" <bharat.bhushan@nxp.com>
-References: <20181211182104.18241-1-jean-philippe.brucker@arm.com>
- <20181212103545.GV16835@8bytes.org>
-From:   Jean-Philippe Brucker <jean-philippe.brucker@arm.com>
-Message-ID: <9110873f-d344-b6b9-c722-9accfc329db2@arm.com>
-Date:   Thu, 13 Dec 2018 12:50:29 +0000
+        id S1727791AbeLMONj (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Thu, 13 Dec 2018 09:13:39 -0500
+Received: from mx1.redhat.com ([209.132.183.28]:55880 "EHLO mx1.redhat.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1727720AbeLMONj (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Thu, 13 Dec 2018 09:13:39 -0500
+Received: from smtp.corp.redhat.com (int-mx04.intmail.prod.int.phx2.redhat.com [10.5.11.14])
+        (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
+        (No client certificate requested)
+        by mx1.redhat.com (Postfix) with ESMTPS id 9DEBA308213F;
+        Thu, 13 Dec 2018 14:13:38 +0000 (UTC)
+Received: from [10.36.118.51] (unknown [10.36.118.51])
+        by smtp.corp.redhat.com (Postfix) with ESMTPS id 0F3335D9C9;
+        Thu, 13 Dec 2018 14:13:26 +0000 (UTC)
+Subject: Re: [virtio-dev] Re: [PATCH v5 5/7] iommu: Add virtio-iommu driver
+To:     Robin Murphy <robin.murphy@arm.com>,
+        "Michael S. Tsirkin" <mst@redhat.com>,
+        Jean-Philippe Brucker <jean-philippe.brucker@arm.com>
+Cc:     mark.rutland@arm.com, virtio-dev@lists.oasis-open.org,
+        lorenzo.pieralisi@arm.com, tnowicki@caviumnetworks.com,
+        devicetree@vger.kernel.org, marc.zyngier@arm.com,
+        linux-pci@vger.kernel.org, joro@8bytes.org, will.deacon@arm.com,
+        virtualization@lists.linux-foundation.org,
+        iommu@lists.linux-foundation.org, robh+dt@kernel.org,
+        bhelgaas@google.com, kvmarm@lists.cs.columbia.edu
+References: <20181122193801.50510-1-jean-philippe.brucker@arm.com>
+ <20181122193801.50510-6-jean-philippe.brucker@arm.com>
+ <20181123165206-mutt-send-email-mst@kernel.org>
+ <e76a51ba-7a0f-3fca-a1ae-640131f9dfe1@arm.com>
+ <20181127130527-mutt-send-email-mst@kernel.org>
+ <e1dde79c-0bc4-ea99-1bb0-9e70b56955fb@arm.com>
+ <20181212093709-mutt-send-email-mst@kernel.org>
+ <eb267a7c-a881-afd9-9ce2-bcdc317d16d7@redhat.com>
+ <1494c026-a763-6c77-2476-a3373c21ae6f@arm.com>
+From:   Auger Eric <eric.auger@redhat.com>
+Message-ID: <0898cdc9-b3d7-6f04-f026-94dbd0869420@redhat.com>
+Date:   Thu, 13 Dec 2018 15:13:25 +0100
 User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:60.0) Gecko/20100101
- Thunderbird/60.0
+ Thunderbird/60.3.0
 MIME-Version: 1.0
-In-Reply-To: <20181212103545.GV16835@8bytes.org>
-Content-Type: text/plain; charset=windows-1252
+In-Reply-To: <1494c026-a763-6c77-2476-a3373c21ae6f@arm.com>
+Content-Type: text/plain; charset=utf-8
 Content-Language: en-US
 Content-Transfer-Encoding: 8bit
+X-Scanned-By: MIMEDefang 2.79 on 10.5.11.14
+X-Greylist: Sender IP whitelisted, not delayed by milter-greylist-4.5.16 (mx1.redhat.com [10.5.110.42]); Thu, 13 Dec 2018 14:13:38 +0000 (UTC)
 Sender: linux-pci-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-Hi Joerg,
+Hi Robin
 
-On 12/12/2018 10:35, Joerg Roedel wrote:
-> Hi,
+On 12/13/18 1:37 PM, Robin Murphy wrote:
+> On 2018-12-12 3:27 pm, Auger Eric wrote:
+>> Hi,
+>>
+>> On 12/12/18 3:56 PM, Michael S. Tsirkin wrote:
+>>> On Fri, Dec 07, 2018 at 06:52:31PM +0000, Jean-Philippe Brucker wrote:
+>>>> Sorry for the delay, I wanted to do a little more performance analysis
+>>>> before continuing.
+>>>>
+>>>> On 27/11/2018 18:10, Michael S. Tsirkin wrote:
+>>>>> On Tue, Nov 27, 2018 at 05:55:20PM +0000, Jean-Philippe Brucker wrote:
+>>>>>>>> +    if (!virtio_has_feature(vdev, VIRTIO_F_VERSION_1) ||
+>>>>>>>> +        !virtio_has_feature(vdev, VIRTIO_IOMMU_F_MAP_UNMAP))
+>>>>>>>
+>>>>>>> Why bother with a feature bit for this then btw?
+>>>>>>
+>>>>>> We'll need a new feature bit for sharing page tables with the
+>>>>>> hardware,
+>>>>>> because they require different requests (attach_table/invalidate
+>>>>>> instead
+>>>>>> of map/unmap.) A future device supporting page table sharing won't
+>>>>>> necessarily need to support map/unmap.
+>>>>>>
+>>>>> I don't see virtio iommu being extended to support ARM specific
+>>>>> requests. This just won't scale, too many different
+>>>>> descriptor formats out there.
+>>>>
+>>>> They aren't really ARM specific requests. The two new requests are
+>>>> ATTACH_TABLE and INVALIDATE, which would be used by x86 IOMMUs as well.
+>>>>
+>>>> Sharing CPU address space with the HW IOMMU (SVM) has been in the scope
+>>>> of virtio-iommu since the first RFC, and I've been working with that
+>>>> extension in mind since the beginning. As an example you can have a
+>>>> look
+>>>> at my current draft for this [1], which is inspired from the VFIO work
+>>>> we've been doing with Intel.
+>>>>
+>>>> The negotiation phase inevitably requires vendor-specific fields in the
+>>>> descriptors - host tells which formats are supported, guest chooses a
+>>>> format and attaches page tables. But invalidation and fault reporting
+>>>> descriptors are fairly generic.
+>>>
+>>> We need to tread carefully here.  People expect it that if user does
+>>> lspci and sees a virtio device then it's reasonably portable.
+>>>
+>>>>> If you want to go that way down the road, you should avoid
+>>>>> virtio iommu, instead emulate and share code with the ARM SMMU
+>>>>> (probably
+>>>>> with a different vendor id so you can implement the
+>>>>> report on map for devices without PRI).
+>>>>
+>>>> vSMMU has to stay in userspace though. The main reason we're proposing
+>>>> virtio-iommu is that emulating every possible vIOMMU model in the
+>>>> kernel
+>>>> would be unmaintainable. With virtio-iommu we can process the fast path
+>>>> in the host kernel, through vhost-iommu, and do the heavy lifting in
+>>>> userspace.
+>>>
+>>> Interesting.
+>>>
+>>>> As said above, I'm trying to keep the fast path for
+>>>> virtio-iommu generic.
+>>>>
+>>>> More notes on what I consider to be the fast path, and comparison with
+>>>> vSMMU:
+>>>>
+>>>> (1) The primary use-case we have in mind for vIOMMU is something like
+>>>> DPDK in the guest, assigning a hardware device to guest userspace. DPDK
+>>>> maps a large amount of memory statically, to be used by a pass-through
+>>>> device. For this case I don't think we care about vIOMMU performance.
+>>>> Setup and teardown need to be reasonably fast, sure, but the MAP/UNMAP
+>>>> requests don't have to be optimal.
+>>>>
+>>>>
+>>>> (2) If the assigned device is owned by the guest kernel, then mappings
+>>>> are dynamic and require dma_map/unmap() to be fast, but there generally
+>>>> is no need for a vIOMMU, since device and drivers are trusted by the
+>>>> guest kernel. Even when the user does enable a vIOMMU for this case
+>>>> (allowing to over-commit guest memory, which needs to be pinned
+>>>> otherwise),
+>>>
+>>> BTW that's in theory in practice it doesn't really work.
+>>>
+>>>> we generally play tricks like lazy TLBI (non-strict mode) to
+>>>> make it faster.
+>>>
+>>> Simple lazy TLB for guest/userspace drivers would be a big no no.
+>>> You need something smarter.
+>>>
+>>>> Here device and drivers are trusted, therefore the
+>>>> vulnerability window of lazy mode isn't a concern.
+>>>>
+>>>> If the reason to enable the vIOMMU is over-comitting guest memory
+>>>> however, you can't use nested translation because it requires pinning
+>>>> the second-level tables. For this case performance matters a bit,
+>>>> because your invalidate-on-map needs to be fast, even if you enable
+>>>> lazy
+>>>> mode and only receive inval-on-unmap every 10ms. It won't ever be as
+>>>> fast as nested translation, though. For this case I think vSMMU+Caching
+>>>> Mode and userspace virtio-iommu with MAP/UNMAP would perform similarly
+>>>> (given page-sized payloads), because the pagetable walk doesn't add a
+>>>> lot of overhead compared to the context switch. But given the results
+>>>> below, vhost-iommu would be faster than vSMMU+CM.
+>>>>
+>>>>
+>>>> (3) Then there is SVM. For SVM, any destructive change to the process
+>>>> address space requires a synchronous invalidation command to the
+>>>> hardware (at least when using PCI ATS). Given that SVM is based on page
+>>>> faults, fault reporting from host to guest also needs to be fast, as
+>>>> well as fault response from guest to host.
+>>>>
+>>>> I think this is where performance matters the most. To get a feel of
+>>>> the
+>>>> advantage we get with virtio-iommu, I compared the vSMMU page-table
+>>>> sharing implementation [2] and vhost-iommu + VFIO with page table
+>>>> sharing (based on Tomasz Nowicki's vhost-iommu prototype). That's on a
+>>>> ThunderX2 with a 10Gb NIC assigned to the guest kernel, which
+>>>> corresponds to case (2) above, with nesting page tables and without the
+>>>> lazy mode. The host's only job is forwarding invalidation to the HW
+>>>> SMMU.
+>>>>
+>>>> vhost-iommu performed on average 1.8x and 5.5x better than vSMMU on
+>>>> netperf TCP_STREAM and TCP_MAERTS respectively (~200 samples). I think
+>>>> this can be further optimized (that was still polling under the vq
+>>>> lock), and unlike vSMMU, virtio-iommu offers the possibility of
+>>>> multi-queue for improved scalability. In addition, the guest will need
+>>>> to send both TLB and ATC invalidations with vSMMU, but virtio-iommu
+>>>> allows to multiplex those, and to invalidate ranges. Similarly for
+>>>> fault
+>>>> injection, having the ability to report page faults to the guest from
+>>>> the host kernel should be significantly faster than having to go to
+>>>> userspace and back to the kernel.
+>>>
+>>> Fascinating. Any data about host CPU utilization?
+>>>
+>>> Eric what do you think?
+>>>
+>>> Is it true that SMMUv3 is fundmentally slow at the architecture level
+>>> and so a PV interface will always scale better until
+>>> a new hardware interface is designed?
+>>
+>> As far as I understand the figures above correspond to vhost-iommu
+>> against vsmmuv3. In the 2 cases the guest owns stage1 tables so the
+>> difference comes from the IOTLB invalidation handling. With vhost we
+>> avoid a kernel <-> userspace round trip which may mostly explain the
+>> difference.
+>>
+>> About SMMUv3 issues I already reported one big limitation with respect
+>> to hugepage invalidation. See [RFC v2 4/4] iommu/arm-smmu-v3: add
+>> CMD_TLBI_NH_VA_AM command for iova range invalidation
+>> (https://lkml.org/lkml/2017/8/11/428).
+>>
+>> At smmuv3 guest driver level, arm_smmu_tlb_inv_range_nosync(), when
+>> called with a hugepage size, invalidates each 4K/64K page of the region
+>> and not the whole region at once. Each of them are trapped by the SMMUv3
+>> device which forwards them to the host. This stalls the guest. This
+>> issue can be observed in DPDK case - not the use case benchmarked
+>> above - .
+>>
+>> I raised this point again in recent discussions and it is unclear
+>> whether this is an SMMUv3 driver limitation or an architecture
+>> limitation. Seems a single invalidation within the block mapping should
+>> invalidate the whole mapping at HW level. In the past I hacked a
+>> workaround by defining an implementation defined invalidation command.
+>>
+>> Robin/Will, could you please explain the rationale behind the
+>> arm_smmu_tlb_inv_range_nosync() implementation.
 > 
-> to make progress on this, we should first agree on the protocol used
-> between guest and host. I have a few points to discuss on the protocol
-> first.
+> Fundamentally, TLBI commands only take an address, so invalidations have
+> to match the actual leaf PTEs being removed. If iommu_unmap() sees that
+> 2MB is a valid block size, it may send a single "unmap this 2MB" request
+> to the driver, but nobody knows how that region is actually mapped until
+> the pagetable code walks the tables. If it does find a 2MB block PTE,
+> then it can simply clear it and generate a single invalidation command -
+> if a TLB entry exists for that block mapping then any address within the
+> block will match it. If however that 2MB region was actually covered by
+> a subtable of 4KB pages, then separate TLB entries may exist for any or
+> all of those pages, and a single address can at best only match one of
+> them. Thus after the table PTE is cleared, a separate command has to be
+> generated for each page to ensure that all possible TLB entries
+> associated with that table are invalidated.
 > 
-> On Tue, Dec 11, 2018 at 06:20:57PM +0000, Jean-Philippe Brucker wrote:
->> [1] Virtio-iommu specification v0.9, sources and pdf
->>���� git://linux-arm.org/virtio-iommu.git virtio-iommu/v0.9
->>���� http://jpbrucker.net/virtio-iommu/spec/v0.9/virtio-iommu-v0.9.pdf
+> So if you're seeing page-granularity invalidation, it means that the
+> thing you're unmapping wasn't actually mapped as that size of hugepage
+> in the first place (or something pathological has caused it to be split
+> in the meantime - I recall we once had an amusing bug which caused VFIO
+> to do that on teardown). There is one suboptimal case if we're taking
+> out potentially multiple levels of table at once (e.g. a 1GB region),
+> where we don't bother recursing down the removed table to see whether
+> anything was mapped with blocks at the intermediate level, and just
+> invalidate the whole lot at page granularity to cover the worst-case
+> scenario. I think we assumed that sort of unmap would be unlikely enough
+> that it wasn't worth optimising for at the time, but there's certainly
+> scope to improve it if unmapping 1GB worth of 2MB blocks turns out to be
+> a common thing.
+
+thank you for your reply. This last situation looks like the one I
+encountered. I will test with DPDK again and let you know.
+
+Thanks
+
+Eric
 > 
-> Looking at this I wonder why it doesn't make the IOTLB visible to the
-> guest. the UNMAP requests seem to require that the TLB is already
-> flushed to make the unmap visible.
+> FWIW SMMUv3.2 has introduced actual range-invalidation commands -
+> reworking all the TLBI logic in the driver to make worthwhile use of
+> those is on the to-do list, but until real 3.2 hardware starts coming to
+> light I've not been prioritising it.
 > 
-> I think that will cost significant performance for both, vfio and
-> dma-iommu use-cases which both do (vfio at least to some degree),
-> deferred flushing.
-
-We already do deferred flush: UNMAP requests are added to the queue by
-iommu_unmap(), and then flushed out by iotlb_sync(). So we switch to the
-host only on iotlb_sync(), or when the request queue is full.
-
-> I also wonder whether the protocol should implement a
-> protocol version handshake and iommu-feature set queries.
-
-With the virtio transport there is a handshake when the device (IOMMU)
-is initialized, through feature bits and global config fields. Feature
-bits are made of both transport-specific features, including the version
-number, and device-specific features defined in section 2.3 of the above
-document (the transport is described in the virtio 1.0 specification).
-The device presents features that it supports in a register, and the
-driver masks out the feature bits that it doesn't support. Then the
-driver sets the global status to FEATURES_OK and initialization continues.
-
-In addition virtio-iommu has per-endpoint features through the PROBE
-request, since the vIOMMU may manage hardware (VFIO) and software
-(virtio) endpoints at the same time, which don't have the same DMA
-capabilities (different IOVA ranges, page granularity, reserved ranges,
-pgtable sharing, etc). At the moment this is a one-way probe, not a
-handshake. The device simply fills the properties of each endpoint, but
-the driver doesn't have to ack them. Initially there was a way to
-negotiate each PROBE property but it was deemed unnecessary during
-review. By leaving a few spare bits in the property headers I made sure
-it can be added back with a feature bit if we ever need it.
-
->> [3] git://linux-arm.org/linux-jpb.git virtio-iommu/v0.9.1
->>���� git://linux-arm.org/kvmtool-jpb.git virtio-iommu/v0.9
+> Robin.
 > 
-> Unfortunatly gitweb seems to be broken on linux-arm.org. What is missing
-> in this patch-set to make this work on x86?
-
-You should be able to access it here:
-http://www.linux-arm.org/git?p=linux-jpb.git;a=shortlog;h=refs/heads/virtio-iommu/devel
-
-That branch contains missing bits for x86 support:
-
-* ACPI support. We have the code but it's waiting for an IORT spec
-update, to reserve the IORT node ID. I expect it to take a while, given
-that I'm alone requesting a change for something that's not upstream or
-in hardware.
-
-* DMA ops for x86 (see "HACK" commit). I'd like to use dma-iommu but I'm
-not sure how to implement the glue that sets dma_ops properly.
-
-Thanks,
-Jean
+>>
+>> Thanks
+>>
+>> Eric
+>>
+>>
+>>
+>>>
+>>>
+>>>>
+>>>> (4) Virtio and vhost endpoints weren't really a priority for the base
+>>>> virtio-iommu device, we were looking mainly at device pass-through. I
+>>>> have optimizations in mind for this, although a lot of them are
+>>>> based on
+>>>> page tables, not MAP/UNMAP requests. But just getting the vIOMMU closer
+>>>> to vhost devices, avoiding the trip to userspace through vhost-tlb,
+>>>> should already improve things.
+>>>>
+>>>> The important difference when DMA is done by software is that you don't
+>>>> need to mirror all mappings into the HW IOMMU - you don't need
+>>>> inval-on-map. The endpoint can ask the vIOMMU for mappings when it
+>>>> needs
+>>>> them, like vhost-iotlb does for example. So the MAP/UNMAP interface of
+>>>> virtio-iommu performs poorly for emulated/PV endpoints compared to an
+>>>> emulated IOMMU, since it requires three context switches for DMA
+>>>> (MAP/DMA/UNMAP) between host and guest, rather than two (DMA/INVAL).
+>>>> There is a feature I call "posted MAP", that avoids the kick on MAP and
+>>>> instead lets the device fetch the MAP request on TLB miss, but I
+>>>> haven't
+>>>> spent enough time experimenting with this.
+>>>>
+>>>>> Others on the TC might feel differently.
+>>>>>
+>>>>> If someone's looking into adding virtio iommu support in hardware,
+>>>>> that's a different matter. Which is it?
+>>>>
+>>>> I'm not aware of anything like that, and suspect that no one would
+>>>> consider it until virtio-iommu is more widely adopted.
+>>>>
+>>>> Thanks,
+>>>> Jean
+>>>>
+>>>>
+>>>> [1] Diff between current spec and page table sharing draft
+>>>>      (Very rough, missing page fault support and I'd like to rework the
+>>>>       PASID model a bit, but table descriptors p.24-26 for both Arm
+>>>>       SMMUv2 and SMMUv3.)
+>>>>
+>>>> http://jpbrucker.net/virtio-iommu/spec-table/diffs/virtio-iommu-pdf-diff-v0.9-v0.10.dev03.pdf
+>>>>
+>>>>
+>>>> [2] [RFC v2 00/28] vSMMUv3/pSMMUv3 2 stage VFIO integration
+>>>>      https://www.mail-archive.com/qemu-devel@nongnu.org/msg562369.html
