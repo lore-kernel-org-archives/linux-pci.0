@@ -2,166 +2,134 @@ Return-Path: <SRS0=IRPw=OW=vger.kernel.org=linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-2.4 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	MAILING_LIST_MULTI,SPF_PASS,T_MIXED_ES,USER_AGENT_MUTT autolearn=unavailable
-	autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-4.0 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
+	DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SIGNED_OFF_BY,
+	SPF_PASS,URIBL_BLOCKED autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 88DFBC67872
-	for <linux-pci@archiver.kernel.org>; Thu, 13 Dec 2018 10:53:17 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id DD10FC65BAE
+	for <linux-pci@archiver.kernel.org>; Thu, 13 Dec 2018 11:07:45 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 59AE52086D
-	for <linux-pci@archiver.kernel.org>; Thu, 13 Dec 2018 10:53:17 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.3.2 mail.kernel.org 59AE52086D
-Authentication-Results: mail.kernel.org; dmarc=none (p=none dis=none) header.from=arm.com
+	by mail.kernel.org (Postfix) with ESMTP id 9872620989
+	for <linux-pci@archiver.kernel.org>; Thu, 13 Dec 2018 11:07:45 +0000 (UTC)
+Authentication-Results: mail.kernel.org;
+	dkim=pass (2048-bit key) header.d=synopsys.com header.i=@synopsys.com header.b="ZXWQ3LPC"
+DMARC-Filter: OpenDMARC Filter v1.3.2 mail.kernel.org 9872620989
+Authentication-Results: mail.kernel.org; dmarc=fail (p=none dis=none) header.from=synopsys.com
 Authentication-Results: mail.kernel.org; spf=none smtp.mailfrom=linux-pci-owner@vger.kernel.org
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727864AbeLMKxL (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Thu, 13 Dec 2018 05:53:11 -0500
-Received: from foss.arm.com ([217.140.101.70]:59026 "EHLO foss.arm.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1727455AbeLMKxL (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Thu, 13 Dec 2018 05:53:11 -0500
-Received: from usa-sjc-imap-foss1.foss.arm.com (unknown [10.72.51.249])
-        by usa-sjc-mx-foss1.foss.arm.com (Postfix) with ESMTP id 6CA4CA78;
-        Thu, 13 Dec 2018 02:53:10 -0800 (PST)
-Received: from e107981-ln.cambridge.arm.com (e107981-ln.cambridge.arm.com [10.1.197.40])
-        by usa-sjc-imap-foss1.foss.arm.com (Postfix) with ESMTPSA id 559433F6A8;
-        Thu, 13 Dec 2018 02:53:07 -0800 (PST)
-Date:   Thu, 13 Dec 2018 10:53:02 +0000
-From:   Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
-To:     Stephen Boyd <sboyd@kernel.org>
-Cc:     "Rafael J. Wysocki" <rjw@rjwysocki.net>,
-        Miquel Raynal <miquel.raynal@bootlin.com>,
-        sudeep.holla@arm.com,
-        Gregory Clement <gregory.clement@bootlin.com>,
-        Jason Cooper <jason@lakedaemon.net>,
-        Andrew Lunn <andrew@lunn.ch>,
-        Sebastian Hesselbarth <sebastian.hesselbarth@gmail.com>,
-        Thomas Petazzoni <thomas.petazzoni@bootlin.com>,
-        Bjorn Helgaas <bhelgaas@google.com>,
-        devicetree@vger.kernel.org, Rob Herring <robh+dt@kernel.org>,
-        Mark Rutland <mark.rutland@arm.com>, linux-pci@vger.kernel.org,
-        linux-kernel@vger.kernel.org, linux-arm-kernel@lists.infradead.org,
-        Antoine Tenart <antoine.tenart@bootlin.com>,
-        Maxime Chevallier <maxime.chevallier@bootlin.com>,
-        Nadav Haklai <nadavh@marvell.com>
-Subject: Re: [PATCH 05/12] PCI: aardvark: add suspend to RAM support
-Message-ID: <20181213105302.GA5330@e107981-ln.cambridge.arm.com>
-References: <20181123141831.8214-1-miquel.raynal@bootlin.com>
- <1999610.6DN9RK2Tt3@aspire.rjw.lan>
- <20181204094558.GA24588@e107981-ln.cambridge.arm.com>
- <1966692.fVZYlVgWHv@aspire.rjw.lan>
- <20181211141627.GA526@e107981-ln.cambridge.arm.com>
- <154469162632.19322.13092710881803732022@swboyd.mtv.corp.google.com>
+        id S1727590AbeLMLHo (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Thu, 13 Dec 2018 06:07:44 -0500
+Received: from us01smtprelay-2.synopsys.com ([198.182.60.111]:55278 "EHLO
+        smtprelay.synopsys.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726178AbeLMLHo (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Thu, 13 Dec 2018 06:07:44 -0500
+Received: from mailhost.synopsys.com (mailhost2.synopsys.com [10.13.184.66])
+        by smtprelay.synopsys.com (Postfix) with ESMTP id 411C810C177F;
+        Thu, 13 Dec 2018 03:07:44 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=synopsys.com; s=mail;
+        t=1544699264; bh=s+QehwjkgExw2ba74249xOWbVHcHTN8vCjA8fjKOIq0=;
+        h=Subject:To:CC:References:From:Date:In-Reply-To:From;
+        b=ZXWQ3LPCaTsa/0wjUncxzvVmR2qzwop/sTwmkeSGCiEM/gDZrCsfCGG04wpuDwiQ3
+         +PMvNq7WMWRExE4PATF0w90xSSPM9u+QXsaCd22oOFKeVrN/iJ2bs0hrbNtwk79a6X
+         kgL2reLpQM2daOJQXbcIGluIZG1REPx4zez/V+hAnR/l6lPEmrUbf4l3k5yM50AV05
+         kHYvMhWrp3bCW25pu68ADQazOFkRd1w5jhuQyQGJylv0rVBtJZYr3K8ICdltNNmeZP
+         o9yZMv+tcfu6ENOhpJovC+9VR9lixY7wXWqwwbByExzJud4s0hVOUX7ZBAmi9VSo36
+         sO9J2tu1drYjA==
+Received: from US01WEHTC3.internal.synopsys.com (us01wehtc3.internal.synopsys.com [10.15.84.232])
+        by mailhost.synopsys.com (Postfix) with ESMTP id 076273987;
+        Thu, 13 Dec 2018 03:07:44 -0800 (PST)
+Received: from DE02WEHTCA.internal.synopsys.com (10.225.19.92) by
+ US01WEHTC3.internal.synopsys.com (10.15.84.232) with Microsoft SMTP Server
+ (TLS) id 14.3.408.0; Thu, 13 Dec 2018 03:07:43 -0800
+Received: from DE02WEHTCB.internal.synopsys.com (10.225.19.94) by
+ DE02WEHTCA.internal.synopsys.com (10.225.19.92) with Microsoft SMTP Server
+ (TLS) id 14.3.408.0; Thu, 13 Dec 2018 12:07:41 +0100
+Received: from [10.107.25.131] (10.107.25.131) by
+ DE02WEHTCB.internal.synopsys.com (10.225.19.80) with Microsoft SMTP Server
+ (TLS) id 14.3.408.0; Thu, 13 Dec 2018 12:07:41 +0100
+Subject: Re: [RFC 1/6] dma: Add Synopsys eDMA IP core driver
+To:     Bjorn Helgaas <helgaas@kernel.org>,
+        Gustavo Pimentel <gustavo.pimentel@synopsys.com>
+CC:     "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+        "dmaengine@vger.kernel.org" <dmaengine@vger.kernel.org>,
+        Vinod Koul <vkoul@kernel.org>,
+        Eugeniy Paltsev <eugeniy.paltsev@synopsys.com>,
+        "Andy Shevchenko" <andriy.shevchenko@linux.intel.com>,
+        Joao Pinto <joao.pinto@synopsys.com>
+References: <cover.1544610287.git.gustavo.pimentel@synopsys.com>
+ <bf4eb88265bf8bd95f7b2effdbfbeda8c52a2e0b.1544610287.git.gustavo.pimentel@synopsys.com>
+ <20181212230041.GM99796@google.com>
+From:   Gustavo Pimentel <gustavo.pimentel@synopsys.com>
+Message-ID: <f9181841-e429-f578-4fda-ce7ad6ff2483@synopsys.com>
+Date:   Thu, 13 Dec 2018 11:03:23 +0000
+User-Agent: Mozilla/5.0 (Windows NT 10.0; WOW64; rv:60.0) Gecko/20100101
+ Thunderbird/60.3.3
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <154469162632.19322.13092710881803732022@swboyd.mtv.corp.google.com>
-User-Agent: Mutt/1.5.24 (2015-08-30)
+In-Reply-To: <20181212230041.GM99796@google.com>
+Content-Type: text/plain; charset="utf-8"
+Content-Language: en-US
+Content-Transfer-Encoding: 7bit
+X-Originating-IP: [10.107.25.131]
 Sender: linux-pci-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-On Thu, Dec 13, 2018 at 01:00:26AM -0800, Stephen Boyd wrote:
-> Quoting Lorenzo Pieralisi (2018-12-11 06:16:27)
-> > On Tue, Dec 04, 2018 at 10:42:19PM +0100, Rafael J. Wysocki wrote:
-> > > On Tuesday, December 4, 2018 10:45:58 AM CET Lorenzo Pieralisi wrote:
-> > > > On Mon, Dec 03, 2018 at 11:00:20PM +0100, Rafael J. Wysocki wrote:
-> > > > > On Monday, December 3, 2018 4:38:46 PM CET Miquel Raynal wrote:
-> > > > 
-> > > > I did not ask my question (that may be silly) properly apologies. I know
-> > > > that the S2R context allows sleeping the question is, in case
-> > > > clk_disable_unprepare() (and resume counterparts) sleeps,
-> > > 
-> > > If it just sleeps, then this is not a problem, but if it actually *waits*
-> > > for something meaningful to happen (which I guess is what you really mean),
-> > > then things may go awry.
-> > > 
-> > > > what is going to wake it up, given that we are in the S2R NOIRQ phase and as
-> > > > you said the action handlers (that are possibly required to wake up the eg
-> > > > clk_disable_unprepare() caller) are disabled (unless, AFAIK,
-> > > > IRQF_NO_SUSPEND is passed at IRQ request time in the respective driver).
-> > > 
-> > > So if it waits for an action handler to do something and wake it up, it may
-> > > very well deadlock.  I have no idea if that really happens, though.
-> > > 
-> > > > The clk API implementations back-ends are beyond my depth, I just wanted
-> > > > to make sure I understand how the S2R flow is expected to work in this
-> > > > specific case.
-> > > 
-> > > Action handlers won't run unless the IRQs are marked as IRQF_NO_SUSPEND
-> > > (well, there are a few more complications I don't recall exactly, but
-> > > that's the basic rule).  If anything depends on them to run, it will block.
-> > 
-> > Stephen, any comments on this ?
+Hi,
+
+On 12/12/2018 23:00, Bjorn Helgaas wrote:
+> On Wed, Dec 12, 2018 at 12:13:21PM +0100, Gustavo Pimentel wrote:
+>> Add Synopsys eDMA IP core driver to kernel.
+>>
+>> This core driver, initializes and configures the eDMA IP using vma-helpers
+>> functions and dma-engine subsystem.
+>>
+>> Also creates an abstration layer through callbacks allowing different
+>> registers mappings in the future, organized in to versions.
+>>
+>> This driver can be compile as built-in or external module in kernel.
+>>
+>> To enable this driver just select DW_EDMA option in kernel configuration,
+>> however it requires and selects automatically DMA_ENGINE and
+>> DMA_VIRTUAL_CHANNELS option too.
+>>
+>> Signed-off-by: Gustavo Pimentel <gustavo.pimentel@synopsys.com>
+>> Cc: Vinod Koul <vkoul@kernel.org>
+>> Cc: Eugeniy Paltsev <paltsev@synopsys.com>
+>> Cc: Andy Shevchenko <andriy.shevchenko@linux.intel.com>
+>> Cc: Joao Pinto <jpinto@synopsys.com>
 > 
-> Sorry I seemed to miss this email. BTW, what is an "action handler"
-> here? The IRQ action handler?
-
-Yes, that is.
-
-> > I would like to understand if it is safe
-> > to call a clk_*unprepare/prepare_* function (that may have a blocking
-> > back-end waiting on a wake-up event triggered by an IRQ action) in the
-> > suspend/resume NOIRQ phase.
+>> --- /dev/null
+>> +++ b/drivers/dma/dw-edma/dw-edma-core.c
+>> @@ -0,0 +1,925 @@
+>> +// SPDX-License-Identifier: GPL-2.0
+>> +// Copyright (c) 2018 Synopsys, Inc. and/or its affiliates.
+>> +// Synopsys DesignWare eDMA core driver
 > 
-> Does this ever occur in practice? I imagine "blocking back-end waiting
-> on a wake-up event" would be some sort of i2c or SPI based "slow" clk
-> that is prepared/unprepared in the NOIRQ phase of suspend/resume? So
-> that function call into the clk API fails because the i2c or SPI
-> controller used to toggle the clk on/off state relies on the
-> controller's IRQ to manage the transaction over the bus but that IRQ is
-> disabled. I suppose this is possible but I've never heard of it
-> happening in practice. Do you have such a scenario?
+> The SPDX line in .c files needs the // comment for some obscure reason
 
-No (because my knowledge of clock internals is poor) but I questioned
-the code while reviewing it - I do not think it is a safe assumption
-to make (otherwise what's the purpose of having a clk API -
-*prepare/unprepare*() - that, AFAIK was implemented to allow back-ends to
-block, waiting for an event).
+Yes, I think it's correlated to some build breakage on linking stage.
 
-There is clearly an implicit assumption there from clk API caller POW
-"this call won't block or an IRQ action - IRQF_NO_SUSPEND - will wake
-me up if it does. Or the call can time out, but that's an error path".
+> I can't remember, but based on the other drivers/dma/*.c files, it
+> looks like the convention is the usual /* .. */ comments for the rest.
 
-This seems fragile to me.
+Ok, I'll change it.
 
-> > It is not clear how the unprepare/prepare() callers can possibly know
-> > whether it is safe to block at that stage given that IRQ actions are
-> > suspended and the wake-up may never trigger.
-> > 
 > 
-> Is this solved in other situations somehow? I don't think clk consumers
-> have any idea that things are safe or not safe to use in the NOIRQ phase
-> of suspend, but I also don't see how clks are special here. Any provider
-> consumer pattern would fall into the same trap, but maybe clks are the
-> first ones to get here.
-
-You have a good point, I do not think clk are specials, I am only saying
-this patch code can run into significant issues.
-
-> It seems like a larger problem with NOIRQ suspend in general and how it
-> is too coarse of a solution for suspend ordering of devices. It's not
-> like we need *all* device interrupts to be disabled to do something in
-> suspend with one particular device. Most likely, we just need the device
-> and all it's children to be suspended and this device to have it's IRQ
-> disabled for the NOIRQ suspend callback to work. (Maybe any devices it's
-> supplying with device links too?)
+> I think the SPDX line is /* */ in .h files though.  The rules are
+> under Documentation/ somewhere.
 > 
-> If that's really the case, then I can see how one device and it's
-> children are suspended and the irq for it is disabled but the providing
-> devices (clk, regulator, bus controller, etc.) are still fully active
-> and not suspended but in fact completely usable and able to service
-> interrupts. If that all makes sense, then I would answer the question
-> with a definitive "yes it's all fine" because the clk consumer could be
-> in the NOIRQ phase of its suspend but the clk provider wouldn't have
-> even started suspending yet when clk_disable_unprepare() is called.
 
-That's a very good summary and address my concern, I still question this
-patch correctness (and many others that carry out clk operations in S2R
-NOIRQ phase), they may work but do not tell me they are rock solid given
-your accurate summary above.
+I found the info about this on [1], however I paste here a small extract to
+future reference.
 
-Thanks,
-Lorenzo
+C source: // SPDX-License-Identifier: <SPDX License Expression>
+C header: /* SPDX-License-Identifier: <SPDX License Expression> */
+ASM:      /* SPDX-License-Identifier: <SPDX License Expression> */
+scripts:  # SPDX-License-Identifier: <SPDX License Expression>
+.rst:     .. SPDX-License-Identifier: <SPDX License Expression>
+.dts{i}:  // SPDX-License-Identifier: <SPDX License Expression>
+
+[1] https://www.kernel.org/doc/html/v4.18/process/license-rules.html
+
+Thanks Bjorn.
