@@ -2,72 +2,91 @@ Return-Path: <SRS0=IRPw=OW=vger.kernel.org=linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-2.2 required=3.0 tests=DKIM_INVALID,DKIM_SIGNED,
-	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_PASS,USER_AGENT_MUTT
-	autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-8.9 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_PASS,USER_AGENT_GIT
+	autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 4D80EC65BAE
-	for <linux-pci@archiver.kernel.org>; Thu, 13 Dec 2018 20:08:58 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 9F377C67839
+	for <linux-pci@archiver.kernel.org>; Thu, 13 Dec 2018 20:21:54 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 12FB720851
-	for <linux-pci@archiver.kernel.org>; Thu, 13 Dec 2018 20:08:58 +0000 (UTC)
-Authentication-Results: mail.kernel.org;
-	dkim=fail reason="signature verification failed" (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="g7tX9SBB"
-DMARC-Filter: OpenDMARC Filter v1.3.2 mail.kernel.org 12FB720851
-Authentication-Results: mail.kernel.org; dmarc=none (p=none dis=none) header.from=infradead.org
+	by mail.kernel.org (Postfix) with ESMTP id 6F2C82086D
+	for <linux-pci@archiver.kernel.org>; Thu, 13 Dec 2018 20:21:54 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.3.2 mail.kernel.org 6F2C82086D
+Authentication-Results: mail.kernel.org; dmarc=none (p=none dis=none) header.from=bp.renesas.com
 Authentication-Results: mail.kernel.org; spf=none smtp.mailfrom=linux-pci-owner@vger.kernel.org
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726355AbeLMUI5 (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Thu, 13 Dec 2018 15:08:57 -0500
-Received: from bombadil.infradead.org ([198.137.202.133]:48720 "EHLO
-        bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1725949AbeLMUI5 (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Thu, 13 Dec 2018 15:08:57 -0500
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
-        d=infradead.org; s=bombadil.20170209; h=In-Reply-To:Content-Type:MIME-Version
-        :References:Message-ID:Subject:Cc:To:From:Date:Sender:Reply-To:
-        Content-Transfer-Encoding:Content-ID:Content-Description:Resent-Date:
-        Resent-From:Resent-Sender:Resent-To:Resent-Cc:Resent-Message-ID:List-Id:
-        List-Help:List-Unsubscribe:List-Subscribe:List-Post:List-Owner:List-Archive;
-         bh=7nzAL3z7f4g+9WAy1nKklmAeRlS9+GIAuGoi38nwjWQ=; b=g7tX9SBB2b8bTFwhMc8QesK7W
-        IWaBvFhrvd0Y8GDw9rupIq1NE6QoI4+rq989Jn2Fttm274vPwxMije3Xz7xsfBogC2LIlnAE6odAr
-        yZLJ/gEvLBb9XAYJU0XUhrRfqvZUv3NVeDpT+d1BbuQ2wMfoflIkYSWQQgnWQpXANXRC5zQj598+A
-        JtFdm9lcW0Y5ONEvgdV0rXmPahIWw91QGtnUxZtgO2ea7si9pmSxzumssBHnozhOlXKdQRL2LQifD
-        TNLeNmIuvRsRBOTy7QPXI0xXVAbk1YWa3HP4mTW+YcW0phWJs54Q3MH3zGQeMMRHRF0JNi0rqDJML
-        LezPQDhGQ==;
-Received: from hch by bombadil.infradead.org with local (Exim 4.90_1 #2 (Red Hat Linux))
-        id 1gXXHq-0005jQ-8p; Thu, 13 Dec 2018 20:08:46 +0000
-Date:   Thu, 13 Dec 2018 12:08:46 -0800
-From:   Christoph Hellwig <hch@infradead.org>
-To:     Christoph Hellwig <hch@lst.de>
-Cc:     iommu@lists.linux-foundation.org,
-        Linus Torvalds <torvalds@linux-foundation.org>,
-        Jesper Dangaard Brouer <brouer@redhat.com>,
-        Fenghua Yu <fenghua.yu@intel.com>,
-        Toke =?iso-8859-1?Q?H=F8iland-J=F8rgensen?= <toke@toke.dk>,
-        linux-ia64@vger.kernel.org,
-        Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>,
-        linux-pci@vger.kernel.org,
-        Ilias Apalodimas <ilias.apalodimas@linaro.org>, x86@kernel.org,
-        linux-kernel@vger.kernel.org, Keith Busch <keith.busch@intel.com>,
-        Tony Luck <tony.luck@intel.com>,
-        Robin Murphy <robin.murphy@arm.com>,
-        Jonathan Derrick <jonathan.derrick@intel.com>,
-        Tariq Toukan <tariqt@mellanox.com>
-Subject: Re: [RFC] avoid indirect calls for DMA direct mappings v2
-Message-ID: <20181213200846.GA21726@infradead.org>
-References: <20181207190720.18517-1-hch@lst.de>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20181207190720.18517-1-hch@lst.de>
-User-Agent: Mutt/1.9.2 (2017-12-15)
-X-SRS-Rewrite: SMTP reverse-path rewritten from <hch@infradead.org> by bombadil.infradead.org. See http://www.infradead.org/rpr.html
+        id S1726630AbeLMUVs (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Thu, 13 Dec 2018 15:21:48 -0500
+Received: from relmlor1.renesas.com ([210.160.252.171]:2262 "EHLO
+        relmlie5.idc.renesas.com" rhost-flags-OK-OK-OK-FAIL)
+        by vger.kernel.org with ESMTP id S1726408AbeLMUVs (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Thu, 13 Dec 2018 15:21:48 -0500
+X-IronPort-AV: E=Sophos;i="5.56,349,1539615600"; 
+   d="scan'208";a="2765902"
+Received: from unknown (HELO relmlir5.idc.renesas.com) ([10.200.68.151])
+  by relmlie5.idc.renesas.com with ESMTP; 14 Dec 2018 05:21:45 +0900
+Received: from fabrizio-dev.ree.adwin.renesas.com (unknown [10.226.37.69])
+        by relmlir5.idc.renesas.com (Postfix) with ESMTP id 4363B4072C4F;
+        Fri, 14 Dec 2018 05:21:43 +0900 (JST)
+From:   Fabrizio Castro <fabrizio.castro@bp.renesas.com>
+To:     Rob Herring <robh+dt@kernel.org>,
+        Mark Rutland <mark.rutland@arm.com>
+Cc:     Fabrizio Castro <fabrizio.castro@bp.renesas.com>,
+        Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org,
+        devicetree@vger.kernel.org, linux-kernel@vger.kernel.org,
+        Simon Horman <horms@verge.net.au>,
+        Geert Uytterhoeven <geert+renesas@glider.be>,
+        Chris Paterson <Chris.Paterson2@renesas.com>,
+        Biju Das <biju.das@bp.renesas.com>,
+        linux-renesas-soc@vger.kernel.org
+Subject: [PATCH] dt-bindings: PCI: rcar: Add device tree support for r8a774c0
+Date:   Thu, 13 Dec 2018 20:21:40 +0000
+Message-Id: <1544732500-6866-1-git-send-email-fabrizio.castro@bp.renesas.com>
+X-Mailer: git-send-email 2.7.4
 Sender: linux-pci-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-I've pulled v2 with the ia64 into dma-mapping for-next.  This should
-give us a little more than a week in linux-next to sort out any
-issues.
+Add PCIe support for the RZ/G2E (a.k.a. R8A774C0).
+
+Signed-off-by: Fabrizio Castro <fabrizio.castro@bp.renesas.com>
+---
+ Documentation/devicetree/bindings/pci/rcar-pci.txt | 7 +++++--
+ 1 file changed, 5 insertions(+), 2 deletions(-)
+
+diff --git a/Documentation/devicetree/bindings/pci/rcar-pci.txt b/Documentation/devicetree/bindings/pci/rcar-pci.txt
+index 976ef7b..bb89fed 100644
+--- a/Documentation/devicetree/bindings/pci/rcar-pci.txt
++++ b/Documentation/devicetree/bindings/pci/rcar-pci.txt
+@@ -3,6 +3,7 @@
+ Required properties:
+ compatible: "renesas,pcie-r8a7743" for the R8A7743 SoC;
+ 	    "renesas,pcie-r8a7744" for the R8A7744 SoC;
++	    "renesas,pcie-r8a774c0" for the R8A774C0 SoC;
+ 	    "renesas,pcie-r8a7779" for the R8A7779 SoC;
+ 	    "renesas,pcie-r8a7790" for the R8A7790 SoC;
+ 	    "renesas,pcie-r8a7791" for the R8A7791 SoC;
+@@ -13,7 +14,8 @@ compatible: "renesas,pcie-r8a7743" for the R8A7743 SoC;
+ 	    "renesas,pcie-r8a77990" for the R8A77990 SoC;
+ 	    "renesas,pcie-rcar-gen2" for a generic R-Car Gen2 or
+ 				     RZ/G1 compatible device.
+-	    "renesas,pcie-rcar-gen3" for a generic R-Car Gen3 compatible device.
++	    "renesas,pcie-rcar-gen3" for a generic R-Car Gen3 or
++				     RZ/G2 compatible device.
+ 
+ 	    When compatible with the generic version, nodes must list the
+ 	    SoC-specific version corresponding to the platform first
+@@ -37,7 +39,8 @@ compatible: "renesas,pcie-r8a7743" for the R8A7743 SoC;
+ 
+ Optional properties:
+ - phys: from common PHY binding: PHY phandle and specifier (only make sense
+-	for R-Car gen3 SoCs where the PCIe PHYs have their own register blocks).
++	for R-Car gen3 and RZ/G2 SoCs where the PCIe PHYs have their own
++	register blocks).
+ - phy-names: from common PHY binding: should be "pcie".
+ 
+ Example:
+-- 
+2.7.4
+
