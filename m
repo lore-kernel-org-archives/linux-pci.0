@@ -1,83 +1,182 @@
-Return-Path: <SRS0=IRPw=OW=vger.kernel.org=linux-pci-owner@kernel.org>
+Return-Path: <SRS0=mLR+=OX=vger.kernel.org=linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-0.9 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	MAILING_LIST_MULTI,SPF_PASS autolearn=unavailable autolearn_force=no
+X-Spam-Status: No, score=-7.0 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
+	DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,
+	SIGNED_OFF_BY,SPF_PASS,URIBL_BLOCKED autolearn=unavailable autolearn_force=no
 	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id C65CEC65BAE
-	for <linux-pci@archiver.kernel.org>; Thu, 13 Dec 2018 21:51:20 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id B9591C67839
+	for <linux-pci@archiver.kernel.org>; Fri, 14 Dec 2018 00:47:11 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 921ED20870
-	for <linux-pci@archiver.kernel.org>; Thu, 13 Dec 2018 21:51:20 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.3.2 mail.kernel.org 921ED20870
-Authentication-Results: mail.kernel.org; dmarc=none (p=none dis=none) header.from=rjwysocki.net
+	by mail.kernel.org (Postfix) with ESMTP id 78ACB2075B
+	for <linux-pci@archiver.kernel.org>; Fri, 14 Dec 2018 00:47:11 +0000 (UTC)
+Authentication-Results: mail.kernel.org;
+	dkim=pass (1024-bit key) header.d=nic.cz header.i=@nic.cz header.b="ezQHveDO"
+DMARC-Filter: OpenDMARC Filter v1.3.2 mail.kernel.org 78ACB2075B
+Authentication-Results: mail.kernel.org; dmarc=none (p=none dis=none) header.from=nic.cz
 Authentication-Results: mail.kernel.org; spf=none smtp.mailfrom=linux-pci-owner@vger.kernel.org
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727194AbeLMVvO (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Thu, 13 Dec 2018 16:51:14 -0500
-Received: from cloudserver094114.home.pl ([79.96.170.134]:42533 "EHLO
-        cloudserver094114.home.pl" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726457AbeLMVvO (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Thu, 13 Dec 2018 16:51:14 -0500
-Received: from 79.184.252.35.ipv4.supernova.orange.pl (79.184.252.35) (HELO aspire.rjw.lan)
- by serwer1319399.home.pl (79.96.170.134) with SMTP (IdeaSmtpServer 0.83.183)
- id bcac4d62866666fd; Thu, 13 Dec 2018 22:51:11 +0100
-From:   "Rafael J. Wysocki" <rjw@rjwysocki.net>
+        id S1727638AbeLNArG (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Thu, 13 Dec 2018 19:47:06 -0500
+Received: from mail.nic.cz ([217.31.204.67]:41943 "EHLO mail.nic.cz"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1726254AbeLNArF (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Thu, 13 Dec 2018 19:47:05 -0500
+Received: from localhost (unknown [172.20.6.233])
+        by mail.nic.cz (Postfix) with ESMTPS id 0066562E08;
+        Fri, 14 Dec 2018 01:47:02 +0100 (CET)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=nic.cz; s=default;
+        t=1544748423; bh=yb8lOHDan8M1Cc1yuiZy165cJcrcrl+OlXBrhkDw6NM=;
+        h=Date:From:To;
+        b=ezQHveDO/2JaruPu2IZmOOBViEQIEqRQifKaL2mEH1FSaUJVgfv16LhZ5dZn3U1hY
+         Cif8AhpGHZVbXJn0OXhRuEh2R1UsDNYJ1mQ4fB56/FdmcUBiRdS0k6CAIZKBw3dnrW
+         TP+EmhfRUeHnZtco9UKtPVlVvD15JYZybg0jjGp8=
+Date:   Fri, 14 Dec 2018 01:47:01 +0100
+From:   Marek Behun <marek.behun@nic.cz>
 To:     Miquel Raynal <miquel.raynal@bootlin.com>
-Cc:     Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
-        Stephen Boyd <sboyd@kernel.org>, sudeep.holla@arm.com,
-        Gregory Clement <gregory.clement@bootlin.com>,
+Cc:     Gregory Clement <gregory.clement@bootlin.com>,
         Jason Cooper <jason@lakedaemon.net>,
         Andrew Lunn <andrew@lunn.ch>,
         Sebastian Hesselbarth <sebastian.hesselbarth@gmail.com>,
         Thomas Petazzoni <thomas.petazzoni@bootlin.com>,
         Bjorn Helgaas <bhelgaas@google.com>,
-        devicetree@vger.kernel.org, Rob Herring <robh+dt@kernel.org>,
-        Mark Rutland <mark.rutland@arm.com>, linux-pci@vger.kernel.org,
-        linux-kernel@vger.kernel.org, linux-arm-kernel@lists.infradead.org,
+        <devicetree@vger.kernel.org>, Rob Herring <robh+dt@kernel.org>,
+        Mark Rutland <mark.rutland@arm.com>,
+        Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
+        linux-pci@vger.kernel.org, <linux-kernel@vger.kernel.org>,
+        <linux-arm-kernel@lists.infradead.org>,
         Antoine Tenart <antoine.tenart@bootlin.com>,
         Maxime Chevallier <maxime.chevallier@bootlin.com>,
         Nadav Haklai <nadavh@marvell.com>
-Subject: Re: [PATCH 05/12] PCI: aardvark: add suspend to RAM support
-Date:   Thu, 13 Dec 2018 22:50:51 +0100
-Message-ID: <61805564.abKDZ2rVK7@aspire.rjw.lan>
-In-Reply-To: <20181213153000.245d7d5f@xps13>
-References: <20181123141831.8214-1-miquel.raynal@bootlin.com> <20181213105302.GA5330@e107981-ln.cambridge.arm.com> <20181213153000.245d7d5f@xps13>
+Subject: Re: [PATCH v2 03/12] PCI: aardvark: Add PHY support
+Message-ID: <20181214014701.373b220b@nic.cz>
+In-Reply-To: <20181212102142.16053-4-miquel.raynal@bootlin.com>
+References: <20181212102142.16053-1-miquel.raynal@bootlin.com>
+        <20181212102142.16053-4-miquel.raynal@bootlin.com>
+X-Mailer: Claws Mail 3.15.0-dirty (GTK+ 2.24.32; x86_64-pc-linux-gnu)
 MIME-Version: 1.0
-Content-Transfer-Encoding: 7Bit
-Content-Type: text/plain; charset="us-ascii"
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7bit
+X-Virus-Scanned: clamav-milter 0.99.2 at mail
+X-Virus-Status: Clean
 Sender: linux-pci-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-On Thursday, December 13, 2018 3:30:00 PM CET Miquel Raynal wrote:
-> Hi Lorenzo,
+Hi Miquel,
+are there already patches for the A37xx comphy driver?
+
+On Wed, 12 Dec 2018 11:21:33 +0100
+Miquel Raynal <miquel.raynal@bootlin.com> wrote:
+
+> The IP needs its PHY to be properly configured to work. While the PHY
+> is usually already configured by the bootloader, we will need this
+> feature when adding S2RAM support. Take care of registering and
+> configuring the PHY from the driver itself.
 > 
-> > > If that's really the case, then I can see how one device and it's
-> > > children are suspended and the irq for it is disabled but the providing
-> > > devices (clk, regulator, bus controller, etc.) are still fully active
-> > > and not suspended but in fact completely usable and able to service
-> > > interrupts. If that all makes sense, then I would answer the question
-> > > with a definitive "yes it's all fine" because the clk consumer could be
-> > > in the NOIRQ phase of its suspend but the clk provider wouldn't have
-> > > even started suspending yet when clk_disable_unprepare() is called.  
-> > 
-> > That's a very good summary and address my concern, I still question this
-> > patch correctness (and many others that carry out clk operations in S2R
-> > NOIRQ phase), they may work but do not tell me they are rock solid given
-> > your accurate summary above.
+> Suggested-by: Grzegorz Jaszczyk <jaz@semihalf.com>
+> Signed-off-by: Miquel Raynal <miquel.raynal@bootlin.com>
+> ---
+>  drivers/pci/controller/pci-aardvark.c | 62
+> +++++++++++++++++++++++++++ 1 file changed, 62 insertions(+)
 > 
-> I understand your concern but I don't see any alternative right now
-> and a deep rework of the PM core to respect such dependency is not
-> something that can be done in a reasonable amount of time.
-
-Maybe you don't need to rework anything. :-)
-
-Have you considered using device links?
-
-Thanks,
-Rafael
+> diff --git a/drivers/pci/controller/pci-aardvark.c
+> b/drivers/pci/controller/pci-aardvark.c index
+> 1d31d74ddab7..da695572a2ed 100644 ---
+> a/drivers/pci/controller/pci-aardvark.c +++
+> b/drivers/pci/controller/pci-aardvark.c @@ -17,6 +17,7 @@
+>  #include <linux/pci.h>
+>  #include <linux/init.h>
+>  #include <linux/platform_device.h>
+> +#include <linux/phy/phy.h>
+>  #include <linux/of_address.h>
+>  #include <linux/of_gpio.h>
+>  #include <linux/of_pci.h>
+> @@ -204,6 +205,7 @@ struct advk_pcie {
+>  	int root_bus_nr;
+>  	struct pci_bridge_emul bridge;
+>  	struct gpio_desc *reset_gpio;
+> +	struct phy *phy;
+>  };
+>  
+>  static inline void advk_writel(struct advk_pcie *pcie, u32 val, u64
+> reg) @@ -1025,6 +1027,62 @@ static int
+> advk_pcie_setup_reset_gpio(struct advk_pcie *pcie) return 0;
+>  }
+>  
+> +static void advk_pcie_disable_phy(struct advk_pcie *pcie)
+> +{
+> +	phy_power_off(pcie->phy);
+> +	phy_exit(pcie->phy);
+> +}
+> +
+> +static int advk_pcie_enable_phy(struct advk_pcie *pcie)
+> +{
+> +	int ret;
+> +
+> +	if (!pcie->phy)
+> +		return 0;
+> +
+> +	ret = phy_init(pcie->phy);
+> +	if (ret)
+> +		return ret;
+> +
+> +	ret = phy_set_mode(pcie->phy, PHY_MODE_PCIE);
+> +	if (ret) {
+> +		phy_exit(pcie->phy);
+> +		return ret;
+> +	}
+> +
+> +	ret = phy_power_on(pcie->phy);
+> +	if (ret) {
+> +		phy_exit(pcie->phy);
+> +		return ret;
+> +	}
+> +
+> +	return 0;
+> +}
+> +
+> +static int advk_pcie_setup_phy(struct advk_pcie *pcie)
+> +{
+> +	struct device *dev = &pcie->pdev->dev;
+> +	struct device_node *node = dev->of_node;
+> +	int ret = 0;
+> +
+> +	pcie->phy = devm_of_phy_get(dev, node, NULL);
+> +	if (IS_ERR(pcie->phy) && (PTR_ERR(pcie->phy) ==
+> -EPROBE_DEFER))
+> +		return PTR_ERR(pcie->phy);
+> +
+> +	/* Old bindings miss the PHY handle */
+> +	if (IS_ERR(pcie->phy)) {
+> +		dev_warn(dev, "PHY unavailable (%ld)\n",
+> PTR_ERR(pcie->phy));
+> +		pcie->phy = NULL;
+> +		return 0;
+> +	}
+> +
+> +	ret = advk_pcie_enable_phy(pcie);
+> +	if (ret)
+> +		dev_err(dev, "Failed to initialize PHY (%d)\n", ret);
+> +
+> +	return ret;
+> +}
+> +
+>  static int advk_pcie_probe(struct platform_device *pdev)
+>  {
+>  	struct device *dev = &pdev->dev;
+> @@ -1060,6 +1118,10 @@ static int advk_pcie_probe(struct
+> platform_device *pdev) return ret;
+>  	}
+>  
+> +	ret = advk_pcie_setup_phy(pcie);
+> +	if (ret)
+> +		return ret;
+> +
+>  	ret = advk_pcie_setup_reset_gpio(pcie);
+>  	if (ret)
+>  		return ret;
 
