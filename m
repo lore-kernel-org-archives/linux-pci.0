@@ -2,317 +2,236 @@ Return-Path: <SRS0=mLR+=OX=vger.kernel.org=linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-4.1 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_PASS,
-	UNWANTED_LANGUAGE_BODY,URIBL_BLOCKED autolearn=ham autolearn_force=no
+X-Spam-Status: No, score=-8.8 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
+	SPF_PASS,USER_AGENT_MUTT autolearn=unavailable autolearn_force=no
 	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 11C14C43387
-	for <linux-pci@archiver.kernel.org>; Fri, 14 Dec 2018 21:34:59 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 01DFBC43387
+	for <linux-pci@archiver.kernel.org>; Fri, 14 Dec 2018 21:52:49 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 37106206DD
-	for <linux-pci@archiver.kernel.org>; Fri, 14 Dec 2018 21:34:59 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 318E6208C1
+	for <linux-pci@archiver.kernel.org>; Fri, 14 Dec 2018 21:52:49 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=default; t=1544824369;
+	bh=fqff81EFvKFaVm8jjBD+dP1nk0DKppbK7W3AYXGJMJA=;
+	h=Date:From:To:Cc:Subject:References:In-Reply-To:List-ID:From;
+	b=hty4IkOh3Rx6IonUAfINQG4qpYtzg2B2U4zREAQESnwUk+TfJHHa5ZNvFkYu0B8HO
+	 UHf0pk89Ef3iqroA8l+8eoC+OaJHeOh3i0133u7xo4x8X8eXLHoMl5NhKX6bVRgqp8
+	 n+qX6cGO+zPh7JUIUsDu5svM469vUNMGujSkQL/Q=
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1730916AbeLNVe6 (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Fri, 14 Dec 2018 16:34:58 -0500
-Received: from mga07.intel.com ([134.134.136.100]:9088 "EHLO mga07.intel.com"
+        id S1731094AbeLNVwn (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Fri, 14 Dec 2018 16:52:43 -0500
+Received: from mail.kernel.org ([198.145.29.99]:49458 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1730878AbeLNVe5 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Fri, 14 Dec 2018 16:34:57 -0500
-X-Amp-Result: UNSCANNABLE
-X-Amp-File-Uploaded: False
-Received: from orsmga001.jf.intel.com ([10.7.209.18])
-  by orsmga105.jf.intel.com with ESMTP/TLS/DHE-RSA-AES256-GCM-SHA384; 14 Dec 2018 13:34:55 -0800
-X-ExtLoop1: 1
-X-IronPort-AV: E=Sophos;i="5.56,354,1539673200"; 
-   d="p7s'?scan'208";a="118924747"
-Received: from orsmsx105.amr.corp.intel.com ([10.22.225.132])
-  by orsmga001.jf.intel.com with ESMTP; 14 Dec 2018 13:34:55 -0800
-Received: from orsmsx153.amr.corp.intel.com (10.22.226.247) by
- ORSMSX105.amr.corp.intel.com (10.22.225.132) with Microsoft SMTP Server (TLS)
- id 14.3.408.0; Fri, 14 Dec 2018 13:34:54 -0800
-Received: from orsmsx101.amr.corp.intel.com ([169.254.8.175]) by
- ORSMSX153.amr.corp.intel.com ([169.254.12.130]) with mapi id 14.03.0415.000;
- Fri, 14 Dec 2018 13:34:53 -0800
-From:   "Derrick, Jonathan" <jonathan.derrick@intel.com>
-To:     "hch@lst.de" <hch@lst.de>,
-        "helgaas@kernel.org" <helgaas@kernel.org>
-CC:     "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-        "torvalds@linux-foundation.org" <torvalds@linux-foundation.org>,
-        "brouer@redhat.com" <brouer@redhat.com>,
-        "Yu, Fenghua" <fenghua.yu@intel.com>,
-        "tariqt@mellanox.com" <tariqt@mellanox.com>,
-        "toke@toke.dk" <toke@toke.dk>,
-        "konrad.wilk@oracle.com" <konrad.wilk@oracle.com>,
-        "m.szyprowski@samsung.com" <m.szyprowski@samsung.com>,
-        "iommu@lists.linux-foundation.org" <iommu@lists.linux-foundation.org>,
-        "linux-ia64@vger.kernel.org" <linux-ia64@vger.kernel.org>,
-        "robin.murphy@arm.com" <robin.murphy@arm.com>,
-        "ilias.apalodimas@linaro.org" <ilias.apalodimas@linaro.org>,
-        "x86@kernel.org" <x86@kernel.org>,
-        "Luck, Tony" <tony.luck@intel.com>,
-        "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-        "Busch, Keith" <keith.busch@intel.com>
-Subject: Re: [PATCH 14/15] vmd: use the proper dma_* APIs instead of direct
- methods calls
-Thread-Topic: [PATCH 14/15] vmd: use the proper dma_* APIs instead of direct
- methods calls
-Thread-Index: AQHUjmBQlqeNmEF7qEicnNw1RGZ9vaV/TlOAgAAEqIA=
-Date:   Fri, 14 Dec 2018 21:34:52 +0000
-Message-ID: <1544823277.19764.1.camel@intel.com>
-References: <20181207190720.18517-1-hch@lst.de>
-         <20181207190720.18517-15-hch@lst.de> <20181214211757.GF20725@google.com>
-In-Reply-To: <20181214211757.GF20725@google.com>
-Accept-Language: en-US
-Content-Language: en-US
-X-MS-Has-Attach: yes
-X-MS-TNEF-Correlator: 
-x-originating-ip: [10.255.1.92]
-Content-Type: multipart/signed; micalg=sha-1;
-        protocol="application/x-pkcs7-signature"; boundary="=-9E1D7a0ir8jkFqgEIfO9"
+        id S1730734AbeLNVwn (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Fri, 14 Dec 2018 16:52:43 -0500
+Received: from localhost (unknown [69.71.4.100])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+        (No client certificate requested)
+        by mail.kernel.org (Postfix) with ESMTPSA id 38D122086D;
+        Fri, 14 Dec 2018 21:52:42 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+        s=default; t=1544824362;
+        bh=fqff81EFvKFaVm8jjBD+dP1nk0DKppbK7W3AYXGJMJA=;
+        h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
+        b=WkZ060K+6Gc2w74H7xfcPgyAru9wd2uK0H2TJBaK5898J5tizha0QW/HDQd7HbF7m
+         Mo5PvdmoIwo4yvgnz/zr2VIVtAdhme1amgeoozF+B75UPSuLjrqGWbJzGGGFRHtMG0
+         nRo501t0aC3fom5GV1TGaABW5w2wWoCVTZsbFCS4=
+Date:   Fri, 14 Dec 2018 15:52:39 -0600
+From:   Bjorn Helgaas <helgaas@kernel.org>
+To:     Sinan Kaya <okaya@kernel.org>
+Cc:     linux-acpi@vger.kernel.org, Thomas Gleixner <tglx@linutronix.de>,
+        Ingo Molnar <mingo@redhat.com>, Borislav Petkov <bp@alien8.de>,
+        "H. Peter Anvin" <hpa@zytor.com>,
+        "maintainer:X86 ARCHITECTURE (32-BIT AND 64-BIT)" <x86@kernel.org>,
+        "Rafael J. Wysocki" <rjw@rjwysocki.net>,
+        Len Brown <lenb@kernel.org>,
+        Robert Moore <robert.moore@intel.com>,
+        Erik Schmauss <erik.schmauss@intel.com>,
+        Jan Kiszka <jan.kiszka@siemens.com>,
+        Andy Shevchenko <andy.shevchenko@gmail.com>,
+        Otavio Pontes <otavio.pontes@intel.com>,
+        Christian =?iso-8859-1?Q?K=F6nig?= 
+        <ckoenig.leichtzumerken@gmail.com>,
+        "open list:X86 ARCHITECTURE (32-BIT AND 64-BIT)" 
+        <linux-kernel@vger.kernel.org>,
+        "open list:PCI SUBSYSTEM" <linux-pci@vger.kernel.org>,
+        "open list:ACPI COMPONENT ARCHITECTURE (ACPICA)" <devel@acpica.org>
+Subject: Re: [PATCH v9 3/6] PCI/ACPI: Allow ACPI to be built without
+ CONFIG_PCI set
+Message-ID: <20181214215239.GG20725@google.com>
+References: <20181214163319.27479-1-okaya@kernel.org>
+ <20181214163319.27479-4-okaya@kernel.org>
 MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20181214163319.27479-4-okaya@kernel.org>
+User-Agent: Mutt/1.10.1 (2018-07-13)
 Sender: linux-pci-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
---=-9E1D7a0ir8jkFqgEIfO9
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
+On Fri, Dec 14, 2018 at 04:33:16PM +0000, Sinan Kaya wrote:
+> We are compiling PCI code today for systems with ACPI and no PCI
+> device present. Remove the useless code and reduce the tight
+> dependency.
+> 
+> Signed-off-by: Sinan Kaya <okaya@kernel.org>
 
-Looks good to me
-Thanks Christoph
+Acked-by: Bjorn Helgaas <bhelgaas@google.com>	# PCI parts
 
-Acked-by: Jon Derrick <jonathan.derrick@intel.com>
+Looks like most of this series is ACPI-related, so I assume Rafael
+will pick this up.
 
-On Fri, 2018-12-14 at 15:17 -0600, Bjorn Helgaas wrote:
-> Conventional spelling in subject is
->=20
->   PCI: vmd: Use dma_* APIs instead of direct method calls
->=20
-> On Fri, Dec 07, 2018 at 11:07:19AM -0800, Christoph Hellwig wrote:
-> > With the bypass support for the direct mapping we might not always have
-> > methods to call, so use the proper APIs instead.  The only downside is
-> > that we will create two dma-debug entries for each mapping if
-> > CONFIG_DMA_DEBUG is enabled.
-> >=20
-> > Signed-off-by: Christoph Hellwig <hch@lst.de>
->=20
-> You cc'd the VMD maintainers already, and I have no objection to this
-> from a PCI core point of view, so:
->=20
-> Acked-by: Bjorn Helgaas <bhelgaas@google.com>
->=20
-> > ---
-> >  drivers/pci/controller/vmd.c | 42 +++++++++++++++---------------------
-> >  1 file changed, 17 insertions(+), 25 deletions(-)
-> >=20
-> > diff --git a/drivers/pci/controller/vmd.c b/drivers/pci/controller/vmd.=
-c
-> > index 98ce79eac128..3890812cdf87 100644
-> > --- a/drivers/pci/controller/vmd.c
-> > +++ b/drivers/pci/controller/vmd.c
-> > @@ -307,39 +307,32 @@ static struct device *to_vmd_dev(struct device *d=
-ev)
-> >  	return &vmd->dev->dev;
-> >  }
-> > =20
-> > -static const struct dma_map_ops *vmd_dma_ops(struct device *dev)
-> > -{
-> > -	return get_dma_ops(to_vmd_dev(dev));
-> > -}
-> > -
-> >  static void *vmd_alloc(struct device *dev, size_t size, dma_addr_t *ad=
-dr,
-> >  		       gfp_t flag, unsigned long attrs)
-> >  {
-> > -	return vmd_dma_ops(dev)->alloc(to_vmd_dev(dev), size, addr, flag,
-> > -				       attrs);
-> > +	return dma_alloc_attrs(to_vmd_dev(dev), size, addr, flag, attrs);
-> >  }
-> > =20
-> >  static void vmd_free(struct device *dev, size_t size, void *vaddr,
-> >  		     dma_addr_t addr, unsigned long attrs)
-> >  {
-> > -	return vmd_dma_ops(dev)->free(to_vmd_dev(dev), size, vaddr, addr,
-> > -				      attrs);
-> > +	return dma_free_attrs(to_vmd_dev(dev), size, vaddr, addr, attrs);
-> >  }
-> > =20
-> >  static int vmd_mmap(struct device *dev, struct vm_area_struct *vma,
-> >  		    void *cpu_addr, dma_addr_t addr, size_t size,
-> >  		    unsigned long attrs)
-> >  {
-> > -	return vmd_dma_ops(dev)->mmap(to_vmd_dev(dev), vma, cpu_addr, addr,
-> > -				      size, attrs);
-> > +	return dma_mmap_attrs(to_vmd_dev(dev), vma, cpu_addr, addr, size,
-> > +			attrs);
-> >  }
-> > =20
-> >  static int vmd_get_sgtable(struct device *dev, struct sg_table *sgt,
-> >  			   void *cpu_addr, dma_addr_t addr, size_t size,
-> >  			   unsigned long attrs)
-> >  {
-> > -	return vmd_dma_ops(dev)->get_sgtable(to_vmd_dev(dev), sgt, cpu_addr,
-> > -					     addr, size, attrs);
-> > +	return dma_get_sgtable_attrs(to_vmd_dev(dev), sgt, cpu_addr, addr, si=
-ze,
-> > +			attrs);
-> >  }
-> > =20
-> >  static dma_addr_t vmd_map_page(struct device *dev, struct page *page,
-> > @@ -347,61 +340,60 @@ static dma_addr_t vmd_map_page(struct device *dev=
-, struct page *page,
-> >  			       enum dma_data_direction dir,
-> >  			       unsigned long attrs)
-> >  {
-> > -	return vmd_dma_ops(dev)->map_page(to_vmd_dev(dev), page, offset, size=
-,
-> > -					  dir, attrs);
-> > +	return dma_map_page_attrs(to_vmd_dev(dev), page, offset, size, dir,
-> > +			attrs);
-> >  }
-> > =20
-> >  static void vmd_unmap_page(struct device *dev, dma_addr_t addr, size_t=
- size,
-> >  			   enum dma_data_direction dir, unsigned long attrs)
-> >  {
-> > -	vmd_dma_ops(dev)->unmap_page(to_vmd_dev(dev), addr, size, dir, attrs)=
-;
-> > +	dma_unmap_page_attrs(to_vmd_dev(dev), addr, size, dir, attrs);
-> >  }
-> > =20
-> >  static int vmd_map_sg(struct device *dev, struct scatterlist *sg, int =
-nents,
-> >  		      enum dma_data_direction dir, unsigned long attrs)
-> >  {
-> > -	return vmd_dma_ops(dev)->map_sg(to_vmd_dev(dev), sg, nents, dir, attr=
-s);
-> > +	return dma_map_sg_attrs(to_vmd_dev(dev), sg, nents, dir, attrs);
-> >  }
-> > =20
-> >  static void vmd_unmap_sg(struct device *dev, struct scatterlist *sg, i=
-nt nents,
-> >  			 enum dma_data_direction dir, unsigned long attrs)
-> >  {
-> > -	vmd_dma_ops(dev)->unmap_sg(to_vmd_dev(dev), sg, nents, dir, attrs);
-> > +	dma_unmap_sg_attrs(to_vmd_dev(dev), sg, nents, dir, attrs);
-> >  }
-> > =20
-> >  static void vmd_sync_single_for_cpu(struct device *dev, dma_addr_t add=
-r,
-> >  				    size_t size, enum dma_data_direction dir)
-> >  {
-> > -	vmd_dma_ops(dev)->sync_single_for_cpu(to_vmd_dev(dev), addr, size, di=
-r);
-> > +	dma_sync_single_for_cpu(to_vmd_dev(dev), addr, size, dir);
-> >  }
-> > =20
-> >  static void vmd_sync_single_for_device(struct device *dev, dma_addr_t =
-addr,
-> >  				       size_t size, enum dma_data_direction dir)
-> >  {
-> > -	vmd_dma_ops(dev)->sync_single_for_device(to_vmd_dev(dev), addr, size,
-> > -						 dir);
-> > +	dma_sync_single_for_device(to_vmd_dev(dev), addr, size, dir);
-> >  }
-> > =20
-> >  static void vmd_sync_sg_for_cpu(struct device *dev, struct scatterlist=
- *sg,
-> >  				int nents, enum dma_data_direction dir)
-> >  {
-> > -	vmd_dma_ops(dev)->sync_sg_for_cpu(to_vmd_dev(dev), sg, nents, dir);
-> > +	dma_sync_sg_for_cpu(to_vmd_dev(dev), sg, nents, dir);
-> >  }
-> > =20
-> >  static void vmd_sync_sg_for_device(struct device *dev, struct scatterl=
-ist *sg,
-> >  				   int nents, enum dma_data_direction dir)
-> >  {
-> > -	vmd_dma_ops(dev)->sync_sg_for_device(to_vmd_dev(dev), sg, nents, dir)=
-;
-> > +	dma_sync_sg_for_device(to_vmd_dev(dev), sg, nents, dir);
-> >  }
-> > =20
-> >  static int vmd_dma_supported(struct device *dev, u64 mask)
-> >  {
-> > -	return vmd_dma_ops(dev)->dma_supported(to_vmd_dev(dev), mask);
-> > +	return dma_supported(to_vmd_dev(dev), mask);
-> >  }
-> > =20
-> >  static u64 vmd_get_required_mask(struct device *dev)
-> >  {
-> > -	return vmd_dma_ops(dev)->get_required_mask(to_vmd_dev(dev));
-> > +	return dma_get_required_mask(to_vmd_dev(dev));
-> >  }
-> > =20
-> >  static void vmd_teardown_dma_ops(struct vmd_dev *vmd)
-> > --=20
-> > 2.19.1
-> >=20
---=-9E1D7a0ir8jkFqgEIfO9
-Content-Type: application/x-pkcs7-signature; name="smime.p7s"
-Content-Disposition: attachment; filename="smime.p7s"
-Content-Transfer-Encoding: base64
-
-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
-PNauajAtxgRKfqfSMb+IcL/VXiPtVZOxVq+CTZeDJkaEmn/79vg8OYxpR+YhFF+tGlKf/Zc4id1P
-AgMBAAGjggI3MIICMzAdBgNVHQ4EFgQU4oawcWXM1cPGdwGcIszDfjORVZAwHwYDVR0jBBgwFoAU
-HmkqtNwo/kcYTiELP7ysES/wmPUwZQYDVR0fBF4wXDBaoFigVoZUaHR0cDovL3d3dy5pbnRlbC5j
-b20vcmVwb3NpdG9yeS9DUkwvSW50ZWwlMjBFeHRlcm5hbCUyMEJhc2ljJTIwSXNzdWluZyUyMENB
-JTIwNEEuY3JsMIGfBggrBgEFBQcBAQSBkjCBjzBpBggrBgEFBQcwAoZdaHR0cDovL3d3dy5pbnRl
-bC5jb20vcmVwb3NpdG9yeS9jZXJ0aWZpY2F0ZXMvSW50ZWwlMjBFeHRlcm5hbCUyMEJhc2ljJTIw
-SXNzdWluZyUyMENBJTIwNEEuY3J0MCIGCCsGAQUFBzABhhZodHRwOi8vb2NzcC5pbnRlbC5jb20v
-MAsGA1UdDwQEAwIHgDA8BgkrBgEEAYI3FQcELzAtBiUrBgEEAYI3FQiGw4x1hJnlUYP9gSiFjp9T
-gpHACWeB3r05lfBDAgFkAgEJMB8GA1UdJQQYMBYGCCsGAQUFBwMEBgorBgEEAYI3CgMMMCkGCSsG
-AQQBgjcVCgQcMBowCgYIKwYBBQUHAwQwDAYKKwYBBAGCNwoDDDBRBgNVHREESjBIoCoGCisGAQQB
-gjcUAgOgHAwaam9uYXRoYW4uZGVycmlja0BpbnRlbC5jb22BGmpvbmF0aGFuLmRlcnJpY2tAaW50
-ZWwuY29tMA0GCSqGSIb3DQEBBQUAA4IBAQBxGkHe05DNpYel4b9WbbyQqD1G6y6YA6C93TjKULZi
-p8+gO1LL096ixD44+frVm3jtXMikoadRHQJmBJdzsCywNE1KgtrYF0k4zRWr7a28nyfGgQe4UHHD
-7ARyZFeGd7AKSQ1y4/LU57I2Aw2HKx9/PXavv1JXjjO2/bqTfnZDJTQmOQ0nvlO3/gvbbABxZHqz
-NtfHZsQWS7s+Elk2xGUQ0Po2pMCQoaPo9R96mm+84UP9q3OvSqMoaZwfzoUeAx2wGJYl0h3S+ABr
-CPVfCgq9qnmVCn5DyHWE3V/BRjJCoILLBLxAxnmSdH4pF6wJ6pYRLEw9qoyNhpzGUIJU/Lk1MYIC
-FzCCAhMCAQEwgZAweTELMAkGA1UEBhMCVVMxCzAJBgNVBAgTAkNBMRQwEgYDVQQHEwtTYW50YSBD
-bGFyYTEaMBgGA1UEChMRSW50ZWwgQ29ycG9yYXRpb24xKzApBgNVBAMTIkludGVsIEV4dGVybmFs
-IEJhc2ljIElzc3VpbmcgQ0EgNEECEzMAAMamAkocC+WQNPgAAAAAxqYwCQYFKw4DAhoFAKBdMBgG
-CSqGSIb3DQEJAzELBgkqhkiG9w0BBwEwHAYJKoZIhvcNAQkFMQ8XDTE4MTIxNDIxMzQzN1owIwYJ
-KoZIhvcNAQkEMRYEFK7zC/uHskddgHFj61MTCip8FKViMA0GCSqGSIb3DQEBAQUABIIBAJzKQJAe
-2tvDuvtNXIvTKMqBHNncZjrGPda2y86cWqiDaQj+f+bJDfmE/I2ns1X/x93TXscn7K63zEfpuZWp
-sFoZEl2grOPxeiNQ327E8NXBgUQY+JAbWCRpn3BXC3McSJlaVIihVHvBkafsrN18qHzdgSeewlbL
-3lWJtC8VFQwsZjg21OZVuibrDo+8VZijh7F0arfHfzcKyGyxCK/UHNeMooM2FK5W83AakV2EA6lz
-WNirX2RxXqQyDcpkvvHT1nP+MZf9vzerqc81YFQpR/qYuVLsyffVPJclFseCql0fixQi4y5Sbsvs
-C/NHHvl2wmD3/J1CYwaeCk0rwvRItrgAAAAAAAA=
-
-
---=-9E1D7a0ir8jkFqgEIfO9--
+> ---
+>  arch/x86/include/asm/pci_x86.h | 7 +++++++
+>  drivers/acpi/Kconfig           | 1 -
+>  drivers/acpi/Makefile          | 2 +-
+>  drivers/acpi/internal.h        | 5 +++++
+>  drivers/pci/Makefile           | 2 +-
+>  include/acpi/acpi_drivers.h    | 7 +++++++
+>  include/linux/acpi.h           | 7 +++++++
+>  include/linux/pci.h            | 4 ++++
+>  8 files changed, 32 insertions(+), 3 deletions(-)
+> 
+> diff --git a/arch/x86/include/asm/pci_x86.h b/arch/x86/include/asm/pci_x86.h
+> index 959d618dbb17..73bb404f4d2a 100644
+> --- a/arch/x86/include/asm/pci_x86.h
+> +++ b/arch/x86/include/asm/pci_x86.h
+> @@ -121,7 +121,14 @@ extern void __init dmi_check_pciprobe(void);
+>  extern void __init dmi_check_skip_isa_align(void);
+>  
+>  /* some common used subsys_initcalls */
+> +#ifdef CONFIG_PCI
+>  extern int __init pci_acpi_init(void);
+> +#else
+> +static inline int  __init pci_acpi_init(void)
+> +{
+> +	return -EINVAL;
+> +}
+> +#endif
+>  extern void __init pcibios_irq_init(void);
+>  extern int __init pcibios_init(void);
+>  extern int pci_legacy_init(void);
+> diff --git a/drivers/acpi/Kconfig b/drivers/acpi/Kconfig
+> index 7cea769c37df..a0abcb3bd673 100644
+> --- a/drivers/acpi/Kconfig
+> +++ b/drivers/acpi/Kconfig
+> @@ -9,7 +9,6 @@ config ARCH_SUPPORTS_ACPI
+>  menuconfig ACPI
+>  	bool "ACPI (Advanced Configuration and Power Interface) Support"
+>  	depends on ARCH_SUPPORTS_ACPI
+> -	depends on PCI
+>  	select PNP
+>  	default y if X86
+>  	help
+> diff --git a/drivers/acpi/Makefile b/drivers/acpi/Makefile
+> index edc039313cd6..7c6afc111d76 100644
+> --- a/drivers/acpi/Makefile
+> +++ b/drivers/acpi/Makefile
+> @@ -39,7 +39,7 @@ acpi-y				+= processor_core.o
+>  acpi-$(CONFIG_ARCH_MIGHT_HAVE_ACPI_PDC) += processor_pdc.o
+>  acpi-y				+= ec.o
+>  acpi-$(CONFIG_ACPI_DOCK)	+= dock.o
+> -acpi-y				+= pci_root.o pci_link.o pci_irq.o
+> +acpi-$(CONFIG_PCI)		+= pci_root.o pci_link.o pci_irq.o
+>  obj-$(CONFIG_ACPI_MCFG)		+= pci_mcfg.o
+>  acpi-y				+= acpi_lpss.o acpi_apd.o
+>  acpi-y				+= acpi_platform.o
+> diff --git a/drivers/acpi/internal.h b/drivers/acpi/internal.h
+> index 530a3f675490..b7060dae2789 100644
+> --- a/drivers/acpi/internal.h
+> +++ b/drivers/acpi/internal.h
+> @@ -25,8 +25,13 @@ int acpi_osi_init(void);
+>  acpi_status acpi_os_initialize1(void);
+>  void init_acpi_device_notify(void);
+>  int acpi_scan_init(void);
+> +#ifdef CONFIG_PCI
+>  void acpi_pci_root_init(void);
+>  void acpi_pci_link_init(void);
+> +#else
+> +static inline void acpi_pci_root_init(void) {}
+> +static inline void acpi_pci_link_init(void) {}
+> +#endif
+>  void acpi_processor_init(void);
+>  void acpi_platform_init(void);
+>  void acpi_pnp_init(void);
+> diff --git a/drivers/pci/Makefile b/drivers/pci/Makefile
+> index f2bda77a2df1..657d642fcc67 100644
+> --- a/drivers/pci/Makefile
+> +++ b/drivers/pci/Makefile
+> @@ -11,6 +11,7 @@ ifdef CONFIG_PCI
+>  obj-$(CONFIG_PROC_FS)		+= proc.o
+>  obj-$(CONFIG_SYSFS)		+= slot.o
+>  obj-$(CONFIG_OF)		+= of.o
+> +obj-$(CONFIG_ACPI)		+= pci-acpi.o
+>  endif
+>  
+>  obj-$(CONFIG_PCI_QUIRKS)	+= quirks.o
+> @@ -20,7 +21,6 @@ obj-$(CONFIG_PCI_MSI)		+= msi.o
+>  obj-$(CONFIG_PCI_ATS)		+= ats.o
+>  obj-$(CONFIG_PCI_IOV)		+= iov.o
+>  obj-$(CONFIG_PCI_BRIDGE_EMUL)	+= pci-bridge-emul.o
+> -obj-$(CONFIG_ACPI)		+= pci-acpi.o
+>  obj-$(CONFIG_PCI_LABEL)		+= pci-label.o
+>  obj-$(CONFIG_X86_INTEL_MID)	+= pci-mid.o
+>  obj-$(CONFIG_PCI_SYSCALL)	+= syscall.o
+> diff --git a/include/acpi/acpi_drivers.h b/include/acpi/acpi_drivers.h
+> index 14499757338f..de1804aeaf69 100644
+> --- a/include/acpi/acpi_drivers.h
+> +++ b/include/acpi/acpi_drivers.h
+> @@ -88,7 +88,14 @@ int acpi_pci_link_free_irq(acpi_handle handle);
+>  
+>  struct pci_bus;
+>  
+> +#ifdef CONFIG_PCI
+>  struct pci_dev *acpi_get_pci_dev(acpi_handle);
+> +#else
+> +static inline struct pci_dev *acpi_get_pci_dev(acpi_handle handle)
+> +{
+> +	return NULL;
+> +}
+> +#endif
+>  
+>  /* Arch-defined function to add a bus to the system */
+>  
+> diff --git a/include/linux/acpi.h b/include/linux/acpi.h
+> index ed80f147bd50..eb1fdf4c196a 100644
+> --- a/include/linux/acpi.h
+> +++ b/include/linux/acpi.h
+> @@ -340,7 +340,14 @@ struct pci_dev;
+>  int acpi_pci_irq_enable (struct pci_dev *dev);
+>  void acpi_penalize_isa_irq(int irq, int active);
+>  bool acpi_isa_irq_available(int irq);
+> +#ifdef CONFIG_PCI
+>  void acpi_penalize_sci_irq(int irq, int trigger, int polarity);
+> +#else
+> +static inline void acpi_penalize_sci_irq(int irq, int trigger,
+> +					int polarity)
+> +{
+> +}
+> +#endif
+>  void acpi_pci_irq_disable (struct pci_dev *dev);
+>  
+>  extern int ec_read(u8 addr, u8 *val);
+> diff --git a/include/linux/pci.h b/include/linux/pci.h
+> index 11c71c4ecf75..51a5a5217667 100644
+> --- a/include/linux/pci.h
+> +++ b/include/linux/pci.h
+> @@ -1960,7 +1960,11 @@ int pcibios_set_pcie_reset_state(struct pci_dev *dev,
+>  				 enum pcie_reset_state state);
+>  int pcibios_add_device(struct pci_dev *dev);
+>  void pcibios_release_device(struct pci_dev *dev);
+> +#ifdef CONFIG_PCI
+>  void pcibios_penalize_isa_irq(int irq, int active);
+> +#else
+> +static inline void pcibios_penalize_isa_irq(int irq, int active) {}
+> +#endif
+>  int pcibios_alloc_irq(struct pci_dev *dev);
+>  void pcibios_free_irq(struct pci_dev *dev);
+>  resource_size_t pcibios_default_alignment(void);
+> -- 
+> 2.19.0
+> 
