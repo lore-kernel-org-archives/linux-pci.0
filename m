@@ -2,142 +2,788 @@ Return-Path: <SRS0=mLR+=OX=vger.kernel.org=linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-3.9 required=3.0 tests=DKIMWL_WL_MED,DKIM_SIGNED,
-	DKIM_VALID,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SIGNED_OFF_BY,
-	SPF_PASS,URIBL_BLOCKED autolearn=unavailable autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-11.9 required=3.0
+	tests=HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,
+	MENTIONS_GIT_HOSTING,SIGNED_OFF_BY,SPF_PASS,URIBL_BLOCKED autolearn=ham
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id B271AC67872
-	for <linux-pci@archiver.kernel.org>; Fri, 14 Dec 2018 10:49:22 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 5AFD6C6786C
+	for <linux-pci@archiver.kernel.org>; Fri, 14 Dec 2018 11:02:43 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 77E162133F
-	for <linux-pci@archiver.kernel.org>; Fri, 14 Dec 2018 10:49:22 +0000 (UTC)
-Authentication-Results: mail.kernel.org;
-	dkim=pass (1024-bit key) header.d=renesasgroup.onmicrosoft.com header.i=@renesasgroup.onmicrosoft.com header.b="nT+b7zQp"
-DMARC-Filter: OpenDMARC Filter v1.3.2 mail.kernel.org 77E162133F
-Authentication-Results: mail.kernel.org; dmarc=none (p=none dis=none) header.from=bp.renesas.com
+	by mail.kernel.org (Postfix) with ESMTP id 1359E21104
+	for <linux-pci@archiver.kernel.org>; Fri, 14 Dec 2018 11:02:43 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.3.2 mail.kernel.org 1359E21104
+Authentication-Results: mail.kernel.org; dmarc=none (p=none dis=none) header.from=amlogic.com
 Authentication-Results: mail.kernel.org; spf=none smtp.mailfrom=linux-pci-owner@vger.kernel.org
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727540AbeLNKtV (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Fri, 14 Dec 2018 05:49:21 -0500
-Received: from mail-eopbgr1400128.outbound.protection.outlook.com ([40.107.140.128]:64094
-        "EHLO JPN01-TY1-obe.outbound.protection.outlook.com"
-        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1726344AbeLNKtV (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Fri, 14 Dec 2018 05:49:21 -0500
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
- d=renesasgroup.onmicrosoft.com; s=selector1-bp-renesas-com;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=TRf2NXYZKYkpCTgriJKQWsCkezrTi1rSNDRQkYcWC+Q=;
- b=nT+b7zQpz6y2MSJLRQDuPeNpVGZYLL4lfqXsBpPql8vsCC+o5NukJkYXLudKcHfZLZZM7bAIW5aCUXXDq8uHCz4LV2TN6O9wQURCJf0RIvhM9Nb04tpvBwQqFIcpTaaiBrilUnuGvHyQlg1/05XyLxwCn0xQhEXZsgo0n05NtGc=
-Received: from TY1PR01MB1770.jpnprd01.prod.outlook.com (52.133.163.147) by
- TY1PR01MB1484.jpnprd01.prod.outlook.com (52.133.161.141) with Microsoft SMTP
- Server (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- 15.20.1425.20; Fri, 14 Dec 2018 10:49:16 +0000
-Received: from TY1PR01MB1770.jpnprd01.prod.outlook.com
- ([fe80::dcee:f270:d42b:5b48]) by TY1PR01MB1770.jpnprd01.prod.outlook.com
- ([fe80::dcee:f270:d42b:5b48%5]) with mapi id 15.20.1425.021; Fri, 14 Dec 2018
- 10:49:16 +0000
-From:   Fabrizio Castro <fabrizio.castro@bp.renesas.com>
-To:     Geert Uytterhoeven <geert@linux-m68k.org>
-CC:     Rob Herring <robh+dt@kernel.org>,
-        Mark Rutland <mark.rutland@arm.com>,
-        Bjorn Helgaas <bhelgaas@google.com>,
-        linux-pci <linux-pci@vger.kernel.org>,
-        "open list:OPEN FIRMWARE AND FLATTENED DEVICE TREE BINDINGS" 
-        <devicetree@vger.kernel.org>,
-        Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
-        Simon Horman <horms@verge.net.au>,
-        Geert Uytterhoeven <geert+renesas@glider.be>,
-        Chris Paterson <Chris.Paterson2@renesas.com>,
-        Biju Das <biju.das@bp.renesas.com>,
-        Linux-Renesas <linux-renesas-soc@vger.kernel.org>
-Subject: RE: [PATCH] dt-bindings: PCI: rcar: Add device tree support for
- r8a774c0
-Thread-Topic: [PATCH] dt-bindings: PCI: rcar: Add device tree support for
- r8a774c0
-Thread-Index: AQHUkyF5MBLGbE47ZUK6cwj3ScEsl6V+CXqAgAAFGlA=
-Date:   Fri, 14 Dec 2018 10:49:16 +0000
-Message-ID: <TY1PR01MB1770FAF7F451A3B8F4903ED9C0A10@TY1PR01MB1770.jpnprd01.prod.outlook.com>
-References: <1544732500-6866-1-git-send-email-fabrizio.castro@bp.renesas.com>
- <CAMuHMdUqNR5jKQXvC5gy5r44Jp+cbo8iorfCFpwBHNCu16RH0w@mail.gmail.com>
-In-Reply-To: <CAMuHMdUqNR5jKQXvC5gy5r44Jp+cbo8iorfCFpwBHNCu16RH0w@mail.gmail.com>
-Accept-Language: en-GB, en-US
-Content-Language: en-US
-X-MS-Has-Attach: 
-X-MS-TNEF-Correlator: 
-authentication-results: spf=none (sender IP is )
- smtp.mailfrom=fabrizio.castro@bp.renesas.com; 
-x-originating-ip: [193.141.220.21]
-x-ms-publictraffictype: Email
-x-microsoft-exchange-diagnostics: 1;TY1PR01MB1484;20:NAXf+xnP9CIdEWsNyNeC+zBvhAzCe4UiqoPm0kdE51SUYbu8SroTeY/Q81Oq2GSBKBCdnQNH9FElLVoP8vMOQN0Un/xtojRFToq9sdrU/616yElWaFd7imTYZmR0k/hQ9gLe+pSlAr0xVm+DfqlGNmTidAvSuYFGdnKmTr9nBHo=
-x-ms-exchange-antispam-srfa-diagnostics: SOS;SOR;
-x-ms-office365-filtering-correlation-id: 1a51964e-e5f9-4db5-6127-08d661b1cb0b
-x-ms-office365-filtering-ht: Tenant
-x-microsoft-antispam: BCL:0;PCL:0;RULEID:(2390118)(7020095)(4652040)(8989299)(4534185)(4627221)(201703031133081)(201702281549075)(8990200)(5600074)(711020)(4618075)(2017052603328)(7153060)(7193020);SRVR:TY1PR01MB1484;
-x-ms-traffictypediagnostic: TY1PR01MB1484:
-x-microsoft-antispam-prvs: <TY1PR01MB148443725217D258D41FEB20C0A10@TY1PR01MB1484.jpnprd01.prod.outlook.com>
-x-ms-exchange-senderadcheck: 1
-x-exchange-antispam-report-cfa-test: BCL:0;PCL:0;RULEID:(8211001083)(3230021)(999002)(6040522)(2401047)(5005006)(8121501046)(3002001)(93006095)(93001095)(3231475)(944501520)(52105112)(10201501046)(6055026)(148016)(149066)(150057)(6041310)(201703131423095)(201702281528075)(20161123555045)(201703061421075)(201703061406153)(20161123560045)(20161123558120)(20161123564045)(20161123562045)(201708071742011)(7699051)(76991095);SRVR:TY1PR01MB1484;BCL:0;PCL:0;RULEID:;SRVR:TY1PR01MB1484;
-x-forefront-prvs: 08864C38AC
-x-forefront-antispam-report: SFV:NSPM;SFS:(10019020)(396003)(346002)(376002)(39860400002)(136003)(366004)(189003)(199004)(2906002)(14454004)(345774005)(55016002)(74316002)(76176011)(25786009)(229853002)(6116002)(7696005)(3846002)(10126004)(4326008)(6916009)(7736002)(305945005)(68736007)(7416002)(105586002)(81166006)(81156014)(26005)(102836004)(106356001)(478600001)(8676002)(6436002)(5660300001)(256004)(186003)(53546011)(97736004)(6506007)(8936002)(6246003)(44832011)(66066001)(316002)(86362001)(54906003)(71190400001)(71200400001)(53936002)(99286004)(446003)(476003)(11346002)(14444005)(9686003)(486006)(6306002)(33656002)(138113003)(98903001);DIR:OUT;SFP:1102;SCL:1;SRVR:TY1PR01MB1484;H:TY1PR01MB1770.jpnprd01.prod.outlook.com;FPR:;SPF:None;LANG:en;PTR:InfoNoRecords;MX:1;A:0;
-received-spf: None (protection.outlook.com: bp.renesas.com does not designate
- permitted sender hosts)
-x-microsoft-antispam-message-info: TrnFadpqtWyRw0VCZ9sXn+yT3P4TnH+M6RXPM+ZCN055Ozf6A1kp4+STZpk9sXYaVc702vA1+jh1yIOO6s/Yt776azHbZ+tjfMWjJI4baM5iUL08T7Q4iKEb+gtZVTAG2JeyZg+90AXL5dtmH7+w4RhhoWNgN6sQFsUNw2yGnnthxpukhCxPV4E5CPiszpg28X9S8Bk6OlHQyQoU2NnWE80Erq1h2z2iC+kAtiimHiDvGF8qtOoeebP+2jruxEhhViZKEBEp18YwjohRl68qVNTvucSvQW6Vc2/TJmndaklgHS8uzh9SQNimUpZtIN5G
-spamdiagnosticoutput: 1:99
-spamdiagnosticmetadata: NSPM
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: base64
+        id S1727540AbeLNLCm (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Fri, 14 Dec 2018 06:02:42 -0500
+Received: from mail-sh2.amlogic.com ([58.32.228.45]:18057 "EHLO
+        mail-sh2.amlogic.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726344AbeLNLCm (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Fri, 14 Dec 2018 06:02:42 -0500
+Received: from [10.18.29.147] (10.18.29.147) by mail-sh2.amlogic.com
+ (10.18.11.6) with Microsoft SMTP Server (TLS) id 15.0.1320.4; Fri, 14 Dec
+ 2018 19:02:56 +0800
+Subject: Re: [PATCH v7 2/2] PCI: amlogic: Add the Amlogic Meson PCIe
+ controller driver
+To:     Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
+CC:     Bjorn Helgaas <bhelgaas@google.com>,
+        Yue Wang <yue.wang@amlogic.com>,
+        Kevin Hilman <khilman@baylibre.com>,
+        Carlo Caione <carlo@caione.org>,
+        Jerome Brunet <jbrunet@baylibre.com>,
+        Rob Herring <robh@kernel.org>,
+        Gustavo Pimentel <gustavo.pimentel@synopsys.com>,
+        Shawn Lin <shawn.lin@rock-chips.com>,
+        Philippe Ombredanne <pombredanne@nexb.com>,
+        Cyrille Pitchen <cyrille.pitchen@free-electrons.com>,
+        <linux-kernel@vger.kernel.org>, <linux-pci@vger.kernel.org>,
+        <linux-arm-kernel@lists.infradead.org>,
+        <linux-amlogic@lists.infradead.org>,
+        Yixun Lan <yixun.lan@amlogic.com>,
+        Liang Yang <liang.yang@amlogic.com>,
+        Jianxin Pan <jianxin.pan@amlogic.com>,
+        Qiufang Dai <qiufang.dai@amlogic.com>,
+        Jian Hu <jian.hu@amlogic.com>
+References: <1544097760-85834-1-git-send-email-hanjie.lin@amlogic.com>
+ <1544097760-85834-3-git-send-email-hanjie.lin@amlogic.com>
+ <20181213163419.GA8501@e107981-ln.cambridge.arm.com>
+From:   Hanjie Lin <hanjie.lin@amlogic.com>
+Message-ID: <a7317d96-5c64-075e-26bc-d9a6e771fd22@amlogic.com>
+Date:   Fri, 14 Dec 2018 19:02:55 +0800
+User-Agent: Mozilla/5.0 (Windows NT 10.0; WOW64; rv:60.0) Gecko/20100101
+ Thunderbird/60.3.3
 MIME-Version: 1.0
-X-OriginatorOrg: bp.renesas.com
-X-MS-Exchange-CrossTenant-Network-Message-Id: 1a51964e-e5f9-4db5-6127-08d661b1cb0b
-X-MS-Exchange-CrossTenant-originalarrivaltime: 14 Dec 2018 10:49:16.0818
- (UTC)
-X-MS-Exchange-CrossTenant-fromentityheader: Hosted
-X-MS-Exchange-CrossTenant-id: 53d82571-da19-47e4-9cb4-625a166a4a2a
-X-MS-Exchange-Transport-CrossTenantHeadersStamped: TY1PR01MB1484
+In-Reply-To: <20181213163419.GA8501@e107981-ln.cambridge.arm.com>
+Content-Type: text/plain; charset="windows-1252"
+Content-Language: en-US
+Content-Transfer-Encoding: 7bit
+X-Originating-IP: [10.18.29.147]
+X-ClientProxiedBy: mail-sh2.amlogic.com (10.18.11.6) To mail-sh2.amlogic.com
+ (10.18.11.6)
 Sender: linux-pci-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-SGVsbG8gR2VlcnQsDQoNClRoYW5rIHlvdSBmb3IgeW91ciBmZWVkYmFjayENCg0KPiBGcm9tOiBH
-ZWVydCBVeXR0ZXJob2V2ZW4gPGdlZXJ0QGxpbnV4LW02OGsub3JnPg0KPiBTZW50OiAxNCBEZWNl
-bWJlciAyMDE4IDEwOjI5DQo+IFN1YmplY3Q6IFJlOiBbUEFUQ0hdIGR0LWJpbmRpbmdzOiBQQ0k6
-IHJjYXI6IEFkZCBkZXZpY2UgdHJlZSBzdXBwb3J0IGZvciByOGE3NzRjMA0KPg0KPiBIaSBGYWJy
-aXppbywNCj4NCj4gT24gVGh1LCBEZWMgMTMsIDIwMTggYXQgOToyMSBQTSBGYWJyaXppbyBDYXN0
-cm8NCj4gPGZhYnJpemlvLmNhc3Ryb0BicC5yZW5lc2FzLmNvbT4gd3JvdGU6DQo+ID4gQWRkIFBD
-SWUgc3VwcG9ydCBmb3IgdGhlIFJaL0cyRSAoYS5rLmEuIFI4QTc3NEMwKS4NCj4gPg0KPiA+IFNp
-Z25lZC1vZmYtYnk6IEZhYnJpemlvIENhc3RybyA8ZmFicml6aW8uY2FzdHJvQGJwLnJlbmVzYXMu
-Y29tPg0KPg0KPiBSZXZpZXdlZC1ieTogR2VlcnQgVXl0dGVyaG9ldmVuIDxnZWVydCtyZW5lc2Fz
-QGdsaWRlci5iZT4NCj4NCj4gT25lIHF1ZXN0aW9uIGJlbG93Lg0KPg0KPiA+IC0tLSBhL0RvY3Vt
-ZW50YXRpb24vZGV2aWNldHJlZS9iaW5kaW5ncy9wY2kvcmNhci1wY2kudHh0DQo+ID4gKysrIGIv
-RG9jdW1lbnRhdGlvbi9kZXZpY2V0cmVlL2JpbmRpbmdzL3BjaS9yY2FyLXBjaS50eHQNCj4NCj4g
-PiBAQCAtMzcsNyArMzksOCBAQCBjb21wYXRpYmxlOiAicmVuZXNhcyxwY2llLXI4YTc3NDMiIGZv
-ciB0aGUgUjhBNzc0MyBTb0M7DQo+ID4NCj4gPiAgT3B0aW9uYWwgcHJvcGVydGllczoNCj4gPiAg
-LSBwaHlzOiBmcm9tIGNvbW1vbiBQSFkgYmluZGluZzogUEhZIHBoYW5kbGUgYW5kIHNwZWNpZmll
-ciAob25seSBtYWtlIHNlbnNlDQo+ID4gLSAgICAgICBmb3IgUi1DYXIgZ2VuMyBTb0NzIHdoZXJl
-IHRoZSBQQ0llIFBIWXMgaGF2ZSB0aGVpciBvd24gcmVnaXN0ZXIgYmxvY2tzKS4NCj4gPiArICAg
-ICAgIGZvciBSLUNhciBnZW4zIGFuZCBSWi9HMiBTb0NzIHdoZXJlIHRoZSBQQ0llIFBIWXMgaGF2
-ZSB0aGVpciBvd24NCj4NCj4gR2VuMywgd2hpbGUgYXQgaXQ/DQoNCkNhbiBkbw0KDQo+DQo+ID4g
-KyAgICAgICByZWdpc3RlciBibG9ja3MpLg0KPg0KPiBUaGUgUlovRzIgSGFyZHdhcmUgVXNlciBN
-YW51YWwgSSBoYXZlIGxhY2tzIHRoZSB0YWJsZSBzcGVjaWZ5aW5nIHdoaWNoIFNvQ3MNCj4gaGF2
-ZSB3aGljaCBQSFkgcmVnaXN0ZXJzLiAgU28gSSBjYW5ub3QgdmVyaWZ5IGlmIHRoZSBhYm92ZSBw
-YXJhZ3JhcGggYXBwbGllcyB0bw0KPiBSWi9HMihFKS4NCg0KSSdsbCByZXBseSB0byB0aGlzIG9u
-IHlvdXIgZm9sbG93LXVwICBlbWFpbC4NCg0KVGhhbmtzLA0KRmFiDQoNCj4NCj4gR3J7b2V0amUs
-ZWV0aW5nfXMsDQo+DQo+ICAgICAgICAgICAgICAgICAgICAgICAgIEdlZXJ0DQo+DQo+IC0tDQo+
-IEdlZXJ0IFV5dHRlcmhvZXZlbiAtLSBUaGVyZSdzIGxvdHMgb2YgTGludXggYmV5b25kIGlhMzIg
-LS0gZ2VlcnRAbGludXgtbTY4ay5vcmcNCj4NCj4gSW4gcGVyc29uYWwgY29udmVyc2F0aW9ucyB3
-aXRoIHRlY2huaWNhbCBwZW9wbGUsIEkgY2FsbCBteXNlbGYgYSBoYWNrZXIuIEJ1dA0KPiB3aGVu
-IEknbSB0YWxraW5nIHRvIGpvdXJuYWxpc3RzIEkganVzdCBzYXkgInByb2dyYW1tZXIiIG9yIHNv
-bWV0aGluZyBsaWtlIHRoYXQuDQo+ICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgLS0g
-TGludXMgVG9ydmFsZHMNCg0KDQpbaHR0cHM6Ly93d3cyLnJlbmVzYXMuZXUvbWVkaWEvZW1haWwv
-dW5pY2VmLmpwZ10NCg0KVGhpcyBDaHJpc3RtYXMsIGluc3RlYWQgb2Ygc2VuZGluZyBvdXQgY2Fy
-ZHMsIFJlbmVzYXMgRWxlY3Ryb25pY3MgRXVyb3BlIGhhdmUgZGVjaWRlZCB0byBzdXBwb3J0IFVu
-aWNlZiB3aXRoIGEgZG9uYXRpb24uIEZvciBmdXJ0aGVyIGRldGFpbHMgY2xpY2sgaGVyZTxodHRw
-czovL3d3dy51bmljZWYub3JnLz4gdG8gZmluZCBvdXQgYWJvdXQgdGhlIHZhbHVhYmxlIHdvcmsg
-dGhleSBkbywgaGVscGluZyBjaGlsZHJlbiBhbGwgb3ZlciB0aGUgd29ybGQuDQpXZSB3b3VsZCBs
-aWtlIHRvIHRha2UgdGhpcyBvcHBvcnR1bml0eSB0byB3aXNoIHlvdSBhIE1lcnJ5IENocmlzdG1h
-cyBhbmQgYSBwcm9zcGVyb3VzIE5ldyBZZWFyLg0KDQoNCg0KUmVuZXNhcyBFbGVjdHJvbmljcyBF
-dXJvcGUgTHRkLCBEdWtlcyBNZWFkb3csIE1pbGxib2FyZCBSb2FkLCBCb3VybmUgRW5kLCBCdWNr
-aW5naGFtc2hpcmUsIFNMOCA1RkgsIFVLLiBSZWdpc3RlcmVkIGluIEVuZ2xhbmQgJiBXYWxlcyB1
-bmRlciBSZWdpc3RlcmVkIE5vLiAwNDU4NjcwOS4NCg==
+
+
+On 2018/12/14 0:34, Lorenzo Pieralisi wrote:
+> On Thu, Dec 06, 2018 at 08:02:38PM +0800, Hanjie Lin wrote:
+>> From: Yue Wang <yue.wang@amlogic.com>
+>>
+>> The Amlogic Meson PCIe host controller is based on the Synopsys DesignWare
+>> PCI core. This patch adds the driver support for Meson PCIe controller.
+>>
+>> Signed-off-by: Yue Wang <yue.wang@amlogic.com>
+>> Signed-off-by: Hanjie Lin <hanjie.lin@amlogic.com>
+>> ---
+>>  MAINTAINERS                            |   7 +
+>>  drivers/pci/controller/dwc/Kconfig     |  10 +
+>>  drivers/pci/controller/dwc/Makefile    |   1 +
+>>  drivers/pci/controller/dwc/pci-meson.c | 603 +++++++++++++++++++++++++++++++++
+>>  4 files changed, 621 insertions(+)
+>>  create mode 100644 drivers/pci/controller/dwc/pci-meson.c
+>>
+>> diff --git a/MAINTAINERS b/MAINTAINERS
+>> index 7fe120f..21ed916 100644
+>> --- a/MAINTAINERS
+>> +++ b/MAINTAINERS
+>> @@ -11600,6 +11600,13 @@ T:	git git://git.kernel.org/pub/scm/linux/kernel/git/lpieralisi/pci.git/
+>>  S:	Supported
+>>  F:	drivers/pci/controller/
+>>  
+>> +PCIE DRIVER FOR AMLOGIC MESON
+>> +M:	Yue Wang <yue.wang@Amlogic.com>
+>> +L:	linux-pci@vger.kernel.org
+>> +L:	linux-amlogic@lists.infradead.org
+>> +S:	Maintained
+>> +F:	drivers/pci/controller/dwc/pci-meson.c
+>> +
+>>  PCIE DRIVER FOR AXIS ARTPEC
+>>  M:	Jesper Nilsson <jesper.nilsson@axis.com>
+>>  L:	linux-arm-kernel@axis.com
+>> diff --git a/drivers/pci/controller/dwc/Kconfig b/drivers/pci/controller/dwc/Kconfig
+>> index 91b0194..7800322 100644
+>> --- a/drivers/pci/controller/dwc/Kconfig
+>> +++ b/drivers/pci/controller/dwc/Kconfig
+>> @@ -193,4 +193,14 @@ config PCIE_HISI_STB
+>>  	help
+>>            Say Y here if you want PCIe controller support on HiSilicon STB SoCs
+>>  
+>> +config PCI_MESON
+>> +	bool "MESON PCIe controller"
+>> +	depends on PCI_MSI_IRQ_DOMAIN
+>> +	select PCIE_DW_HOST
+>> +	help
+>> +	  Say Y here if you want to enable PCI controller support on Amlogic
+>> +	  SoCs. The PCI controller on Amlogic is based on DesignWare hardware
+>> +	  and therefore the driver re-uses the DesignWare core functions to
+>> +	  implement the driver.
+>> +
+>>  endmenu
+>> diff --git a/drivers/pci/controller/dwc/Makefile b/drivers/pci/controller/dwc/Makefile
+>> index fcf91ea..e05a015 100644
+>> --- a/drivers/pci/controller/dwc/Makefile
+>> +++ b/drivers/pci/controller/dwc/Makefile
+>> @@ -14,6 +14,7 @@ obj-$(CONFIG_PCIE_ARMADA_8K) += pcie-armada8k.o
+>>  obj-$(CONFIG_PCIE_ARTPEC6) += pcie-artpec6.o
+>>  obj-$(CONFIG_PCIE_KIRIN) += pcie-kirin.o
+>>  obj-$(CONFIG_PCIE_HISI_STB) += pcie-histb.o
+>> +obj-$(CONFIG_PCI_MESON) += pci-meson.o
+>>  
+>>  # The following drivers are for devices that use the generic ACPI
+>>  # pci_root.c driver but don't support standard ECAM config access.
+>> diff --git a/drivers/pci/controller/dwc/pci-meson.c b/drivers/pci/controller/dwc/pci-meson.c
+>> new file mode 100644
+>> index 0000000..428ed42
+>> --- /dev/null
+>> +++ b/drivers/pci/controller/dwc/pci-meson.c
+>> @@ -0,0 +1,603 @@
+>> +// SPDX-License-Identifier: GPL-2.0
+>> +/*
+>> + * PCIe host controller driver for Amlogic MESON SoCs
+>> + *
+>> + * Copyright (c) 2018 Amlogic, inc.
+>> + * Author: Yue Wang <yue.wang@amlogic.com>
+>> + */
+>> +
+>> +#include <linux/clk.h>
+>> +#include <linux/delay.h>
+>> +#include <linux/of_device.h>
+>> +#include <linux/of_gpio.h>
+>> +#include <linux/pci.h>
+>> +#include <linux/platform_device.h>
+>> +#include <linux/resource.h>
+>> +#include <linux/types.h>
+>> +#include <linux/reset.h>
+> 
+> Alphabetical order.
+> 
+
+ok, I will modify and pay attention to this later.
+
+>> +#include "pcie-designware.h"
+>> +
+>> +#define to_meson_pcie(x) dev_get_drvdata((x)->dev)
+>> +
+>> +/* External local bus interface registers */
+>> +#define PLR_OFFSET			0x700
+>> +#define PCIE_PORT_LINK_CTRL_OFF		(PLR_OFFSET + 0x10)
+>> +#define FAST_LINK_MODE			BIT(7)
+>> +#define LINK_CAPABLE_MASK		GENMASK(21, 16)
+>> +#define LINK_CAPABLE_X1			BIT(16)
+>> +
+>> +#define PCIE_GEN2_CTRL_OFF		(PLR_OFFSET + 0x10c)
+>> +#define NUM_OF_LANES_MASK		GENMASK(12, 8)
+>> +#define NUM_OF_LANES_X1			BIT(8)
+>> +#define DIRECT_SPEED_CHANGE		BIT(17)
+>> +
+>> +#define TYPE1_HDR_OFFSET		0x0
+>> +#define PCIE_STATUS_COMMAND		(TYPE1_HDR_OFFSET + 0x04)
+>> +#define PCI_IO_EN			BIT(0)
+>> +#define PCI_MEM_SPACE_EN		BIT(1)
+>> +#define PCI_BUS_MASTER_EN		BIT(2)
+>> +
+>> +#define PCIE_BASE_ADDR0			(TYPE1_HDR_OFFSET + 0x10)
+>> +#define PCIE_BASE_ADDR1			(TYPE1_HDR_OFFSET + 0x14)
+>> +
+>> +#define PCIE_CAP_OFFSET			0x70
+>> +#define PCIE_DEV_CTRL_DEV_STUS		(PCIE_CAP_OFFSET + 0x08)
+>> +#define PCIE_CAP_MAX_PAYLOAD_MASK	GENMASK(7, 5)
+>> +#define PCIE_CAP_MAX_PAYLOAD_SIZE(x)	((x) << 5)
+>> +#define PCIE_CAP_MAX_READ_REQ_MASK	GENMASK(14, 12)
+>> +#define PCIE_CAP_MAX_READ_REQ_SIZE(x)	((x) << 12)
+>> +
+>> +#define PCI_CLASS_REVISION_MASK		GENMASK(7, 0)
+> 
+> Unused.
+> 
+>> +/* PCIe specific config registers */
+>> +#define PCIE_CFG0			0x0
+>> +#define APP_LTSSM_ENABLE		BIT(7)
+>> +
+>> +#define PCIE_CFG_STATUS12		0x30
+>> +#define IS_SMLH_LINK_UP(x)		((x) & (1 << 6))
+>> +#define IS_RDLH_LINK_UP(x)		((x) & (1 << 16))
+>> +#define IS_LTSSM_UP(x)			((((x) >> 10) & 0x1f) == 0x11)
+>> +
+>> +#define PCIE_CFG_STATUS17		0x44
+>> +#define PM_CURRENT_STATE(x)		(((x) >> 7) & 0x1)
+>> +
+>> +#define WAIT_LINKUP_TIMEOUT		2000
+>> +#define PORT_CLK_RATE			100000000UL
+>> +#define MAX_PAYLOAD_SIZE		256
+>> +#define MAX_READ_REQ_SIZE		256
+>> +#define MESON_PCIE_PHY_POWERUP		0x1c
+>> +#define PCIE_RESET_DELAY		500
+>> +#define PCIE_SHARED_RESET		1
+>> +#define PCIE_NORMAL_RESET		0
+>> +
+>> +enum pcie_data_rate {
+>> +	PCIE_GEN1,
+>> +	PCIE_GEN2,
+>> +	PCIE_GEN3,
+>> +	PCIE_GEN4
+>> +};
+>> +
+>> +struct meson_pcie_mem_res {
+>> +	void __iomem *elbi_base;
+>> +	void __iomem *cfg_base;
+>> +	void __iomem *phy_base;
+>> +};
+>> +
+>> +struct meson_pcie_clk_res {
+>> +	struct clk *clk;
+>> +	struct clk *mipi_gate;
+>> +	struct clk *port_clk;
+>> +	struct clk *general_clk;
+>> +};
+>> +
+>> +struct meson_pcie_rc_reset {
+>> +	struct reset_control *phy;
+>> +	struct reset_control *port;
+>> +	struct reset_control *apb;
+>> +};
+>> +
+>> +struct meson_pcie {
+>> +	struct dw_pcie pci;
+>> +	struct meson_pcie_mem_res mem_res;
+>> +	struct meson_pcie_clk_res clk_res;
+>> +	struct meson_pcie_rc_reset mrst;
+>> +	struct gpio_desc *reset_gpio;
+>> +
+>> +	enum of_gpio_flags gpio_flag;
+> 
+> Unused.
+> 
+>> +	int pcie_num;
+> 
+> Unused.
+> 
+>> +	u32 port_num;
+> 
+> Unused.
+> 
+> Please check these details before resubmitting.
+> 
+
+ok, I will correct these and re-check all code again.
+
+>> +};
+>> +
+>> +static struct reset_control *meson_pcie_get_reset(struct meson_pcie *mp,
+>> +						  const char *id,
+>> +						  u32 reset_type)
+>> +{
+>> +	struct device *dev = mp->pci.dev;
+>> +	struct reset_control *reset;
+>> +
+>> +	if (reset_type == PCIE_SHARED_RESET)
+>> +		reset = devm_reset_control_get_shared(dev, id);
+>> +	else
+>> +		reset = devm_reset_control_get(dev, id);
+>> +
+>> +	return reset;
+>> +}
+>> +
+>> +static int meson_pcie_get_resets(struct meson_pcie *mp)
+>> +{
+>> +	struct meson_pcie_rc_reset *mrst = &mp->mrst;
+>> +
+>> +	mrst->phy = meson_pcie_get_reset(mp, "phy", PCIE_SHARED_RESET);
+>> +	if (IS_ERR(mrst->phy))
+>> +		return PTR_ERR(mrst->phy);
+>> +	reset_control_deassert(mrst->phy);
+>> +
+>> +	mrst->port = meson_pcie_get_reset(mp, "port", PCIE_NORMAL_RESET);
+>> +	if (IS_ERR(mrst->port))
+>> +		return PTR_ERR(mrst->port);
+>> +	reset_control_deassert(mrst->port);
+>> +
+>> +	mrst->apb = meson_pcie_get_reset(mp, "apb", PCIE_SHARED_RESET);
+>> +	if (IS_ERR(mrst->apb))
+>> +		return PTR_ERR(mrst->apb);
+>> +	reset_control_deassert(mrst->apb);
+>> +
+>> +	return 0;
+>> +}
+>> +
+>> +static void __iomem *meson_pcie_get_mem(struct platform_device *pdev,
+>> +					struct meson_pcie *mp,
+>> +					const char *id)
+>> +{
+>> +	struct device *dev = mp->pci.dev;
+>> +	struct resource *res;
+>> +
+>> +	res = platform_get_resource_byname(pdev, IORESOURCE_MEM, id);
+>> +
+>> +	return devm_ioremap_resource(dev, res);
+>> +}
+>> +
+>> +static void __iomem *meson_pcie_get_mem_shared(struct platform_device *pdev,
+>> +					       struct meson_pcie *mp,
+>> +					       const char *id)
+>> +{
+>> +	struct device *dev = mp->pci.dev;
+>> +	struct resource *res;
+>> +
+>> +	res = platform_get_resource_byname(pdev, IORESOURCE_MEM, id);
+>> +	if (!res) {
+>> +		dev_err(dev, "No REG resource %s\n", id);
+>> +		return ERR_PTR(-ENXIO);
+>> +	}
+>> +
+>> +	return devm_ioremap(dev, res->start, resource_size(res));
+>> +}
+>> +
+>> +static int meson_pcie_get_mems(struct platform_device *pdev,
+>> +			       struct meson_pcie *mp)
+>> +{
+>> +	mp->mem_res.elbi_base = meson_pcie_get_mem(pdev, mp, "elbi");
+>> +	if (IS_ERR(mp->mem_res.elbi_base))
+>> +		return PTR_ERR(mp->mem_res.elbi_base);
+>> +
+>> +	mp->mem_res.cfg_base = meson_pcie_get_mem(pdev, mp, "cfg");
+>> +	if (IS_ERR(mp->mem_res.cfg_base))
+>> +		return PTR_ERR(mp->mem_res.cfg_base);
+>> +
+>> +	/* Meson SoC has two PCI controllers use same phy register*/
+>> +	mp->mem_res.phy_base = meson_pcie_get_mem_shared(pdev, mp, "phy");
+>> +	if (IS_ERR(mp->mem_res.phy_base))
+>> +		return PTR_ERR(mp->mem_res.phy_base);
+>> +
+>> +	return 0;
+>> +}
+>> +
+>> +static void meson_pcie_power_on(struct meson_pcie *mp)
+>> +{
+>> +	writel(MESON_PCIE_PHY_POWERUP, mp->mem_res.phy_base);
+>> +}
+>> +
+>> +static void meson_pcie_reset(struct meson_pcie *mp)
+>> +{
+>> +	struct meson_pcie_rc_reset *mrst = &mp->mrst;
+>> +
+>> +	reset_control_assert(mrst->phy);
+>> +	udelay(PCIE_RESET_DELAY);
+>> +	reset_control_deassert(mrst->phy);
+>> +	udelay(PCIE_RESET_DELAY);
+>> +
+>> +	reset_control_assert(mrst->port);
+>> +	reset_control_assert(mrst->apb);
+>> +	udelay(PCIE_RESET_DELAY);
+>> +	reset_control_deassert(mrst->port);
+>> +	reset_control_deassert(mrst->apb);
+>> +	udelay(PCIE_RESET_DELAY);
+>> +}
+>> +
+>> +static inline struct clk *meson_pcie_probe_clock(struct device *dev,
+>> +						 const char *id, u64 rate)
+>> +{
+>> +	struct clk *clk;
+>> +	int ret;
+>> +
+>> +	clk = devm_clk_get(dev, id);
+>> +	if (IS_ERR(clk))
+>> +		return clk;
+>> +
+>> +	if (rate) {
+>> +		ret = clk_set_rate(clk, rate);
+>> +		if (ret) {
+>> +			dev_err(dev, "set clk rate failed, ret = %d\n", ret);
+>> +			return ERR_PTR(ret);
+>> +		}
+>> +	}
+>> +
+>> +	ret = clk_prepare_enable(clk);
+>> +	if (ret) {
+>> +		dev_err(dev, "couldn't enable clk\n");
+>> +		return ERR_PTR(ret);
+>> +	}
+>> +
+>> +	devm_add_action_or_reset(dev,
+>> +				 (void (*) (void *))clk_disable_unprepare,
+>> +				 clk);
+>> +
+>> +	return clk;
+>> +}
+>> +
+>> +static int meson_pcie_probe_clocks(struct meson_pcie *mp)
+>> +{
+>> +	struct device *dev = mp->pci.dev;
+>> +	struct meson_pcie_clk_res *res = &mp->clk_res;
+>> +
+>> +	res->port_clk = meson_pcie_probe_clock(dev, "port", PORT_CLK_RATE);
+>> +	if (IS_ERR(res->port_clk))
+>> +		return PTR_ERR(res->port_clk);
+>> +
+>> +	res->mipi_gate = meson_pcie_probe_clock(dev, "pcie_mipi_en", 0);
+>> +	if (IS_ERR(res->mipi_gate))
+>> +		return PTR_ERR(res->mipi_gate);
+>> +
+>> +	res->general_clk = meson_pcie_probe_clock(dev, "pcie_general", 0);
+>> +	if (IS_ERR(res->general_clk))
+>> +		return PTR_ERR(res->general_clk);
+>> +
+>> +	res->clk = meson_pcie_probe_clock(dev, "pcie", 0);
+>> +	if (IS_ERR(res->clk))
+>> +		return PTR_ERR(res->clk);
+>> +
+>> +	return 0;
+>> +}
+>> +
+>> +static inline void meson_elb_writel(struct meson_pcie *mp, u32 val, u32 reg)
+>> +{
+>> +	writel(val, mp->mem_res.elbi_base + reg);
+>> +}
+>> +
+>> +static inline u32 meson_elb_readl(struct meson_pcie *mp, u32 reg)
+>> +{
+>> +	return readl(mp->mem_res.elbi_base + reg);
+>> +}
+>> +
+>> +static inline u32 meson_cfg_readl(struct meson_pcie *mp, u32 reg)
+>> +{
+>> +	return readl(mp->mem_res.cfg_base + reg);
+>> +}
+>> +
+>> +static inline void meson_cfg_writel(struct meson_pcie *mp, u32 val, u32 reg)
+>> +{
+>> +	writel(val, mp->mem_res.cfg_base + reg);
+>> +}
+>> +
+>> +static void meson_pcie_assert_reset(struct meson_pcie *mp)
+>> +{
+>> +	gpiod_set_value_cansleep(mp->reset_gpio, 0);
+>> +	udelay(500);
+>> +	gpiod_set_value_cansleep(mp->reset_gpio, 1);
+>> +}
+>> +
+>> +static void meson_pcie_init_dw(struct meson_pcie *mp)
+>> +{
+>> +	u32 val;
+>> +
+>> +	val = meson_cfg_readl(mp, PCIE_CFG0);
+>> +	val |= APP_LTSSM_ENABLE;
+>> +	meson_cfg_writel(mp, val, PCIE_CFG0);
+>> +
+>> +	val = meson_elb_readl(mp, PCIE_PORT_LINK_CTRL_OFF);
+>> +	val &= ~LINK_CAPABLE_MASK;
+>> +	meson_elb_writel(mp, val, PCIE_PORT_LINK_CTRL_OFF);
+>> +
+>> +	val = meson_elb_readl(mp, PCIE_PORT_LINK_CTRL_OFF);
+>> +	val |= LINK_CAPABLE_X1 | FAST_LINK_MODE;
+>> +	meson_elb_writel(mp, val, PCIE_PORT_LINK_CTRL_OFF);
+>> +
+>> +	val = meson_elb_readl(mp, PCIE_GEN2_CTRL_OFF);
+>> +	val &= ~NUM_OF_LANES_MASK;
+>> +	meson_elb_writel(mp, val, PCIE_GEN2_CTRL_OFF);
+>> +
+>> +	val = meson_elb_readl(mp, PCIE_GEN2_CTRL_OFF);
+>> +	val |= NUM_OF_LANES_X1 | DIRECT_SPEED_CHANGE;
+>> +	meson_elb_writel(mp, val, PCIE_GEN2_CTRL_OFF);
+>> +
+>> +	meson_elb_writel(mp, 0x0, PCIE_BASE_ADDR0);
+>> +	meson_elb_writel(mp, 0x0, PCIE_BASE_ADDR1);
+>> +}
+>> +
+>> +static int meson_size_to_payload(struct meson_pcie *mp, int size)
+>> +{
+>> +	struct device *dev = mp->pci.dev;
+>> +
+>> +	/*
+>> +	 * dwc supports 2^(val+7) payload size, which val is 0~5 default to 1.
+>> +	 * So if input size is not 2^order alignment or less than 2^7 or bigger
+>> +	 * than 2^12, just set to default size 2^(1+7).
+>> +	 */
+>> +	if (!is_power_of_2(size) || size < 128 || size > 4096) {
+>> +		dev_warn(dev, "playload size %d, set to default 256\n", size);
+>> +		return 1;
+>> +	}
+>> +
+>> +	return fls(size) - 8;
+>> +}
+>> +
+>> +static void meson_set_max_payload(struct meson_pcie *mp, int size)
+>> +{
+>> +	u32 val = 0;
+>> +	int max_payload_size = meson_size_to_payload(mp, size);
+>> +
+>> +	val = meson_elb_readl(mp, PCIE_DEV_CTRL_DEV_STUS);
+>> +	val &= ~PCIE_CAP_MAX_PAYLOAD_MASK;
+>> +	meson_elb_writel(mp, val, PCIE_DEV_CTRL_DEV_STUS);
+>> +
+>> +	val = meson_elb_readl(mp, PCIE_DEV_CTRL_DEV_STUS);
+>> +	val |= PCIE_CAP_MAX_PAYLOAD_SIZE(max_payload_size);
+>> +	meson_elb_writel(mp, val, PCIE_DEV_CTRL_DEV_STUS);
+>> +}
+>> +
+>> +static void meson_set_max_rd_req_size(struct meson_pcie *mp, int size)
+>> +{
+>> +	u32 val;
+>> +	int max_rd_req_size = meson_size_to_payload(mp, size);
+>> +
+>> +	val = meson_elb_readl(mp, PCIE_DEV_CTRL_DEV_STUS);
+>> +	val &= ~PCIE_CAP_MAX_READ_REQ_MASK;
+>> +	meson_elb_writel(mp, val, PCIE_DEV_CTRL_DEV_STUS);
+>> +
+>> +	val = meson_elb_readl(mp, PCIE_DEV_CTRL_DEV_STUS);
+>> +	val |= PCIE_CAP_MAX_READ_REQ_SIZE(max_rd_req_size);
+>> +	meson_elb_writel(mp, val, PCIE_DEV_CTRL_DEV_STUS);
+>> +}
+>> +
+>> +static inline void meson_enable_memory_space(struct meson_pcie *mp)
+>> +{
+>> +	/* Set the RC Bus Master, Memory Space and I/O Space enables */
+>> +	meson_elb_writel(mp, PCI_IO_EN | PCI_MEM_SPACE_EN | PCI_BUS_MASTER_EN,
+>> +			 PCIE_STATUS_COMMAND);
+>> +}
+>> +
+>> +static int meson_pcie_establish_link(struct meson_pcie *mp)
+>> +{
+>> +	struct dw_pcie *pci = &mp->pci;
+>> +	struct pcie_port *pp = &pci->pp;
+>> +
+>> +	meson_pcie_init_dw(mp);
+>> +	meson_set_max_payload(mp, MAX_PAYLOAD_SIZE);
+>> +	meson_set_max_rd_req_size(mp, MAX_READ_REQ_SIZE);
+>> +
+>> +	dw_pcie_setup_rc(pp);
+>> +	meson_enable_memory_space(mp);
+>> +
+>> +	meson_pcie_assert_reset(mp);
+>> +
+>> +	return dw_pcie_wait_for_link(pci);
+>> +}
+>> +
+>> +static void meson_pcie_enable_interrupts(struct meson_pcie *mp)
+>> +{
+>> +	if (IS_ENABLED(CONFIG_PCI_MSI))
+>> +		dw_pcie_msi_init(&mp->pci.pp);
+>> +}
+>> +
+>> +static int meson_pcie_rd_own_conf(struct pcie_port *pp, int where, int size,
+>> +				  u32 *val)
+>> +{
+>> +	struct dw_pcie *pci = to_dw_pcie_from_pp(pp);
+>> +	int ret;
+>> +
+>> +	ret = dw_pcie_read(pci->dbi_base + where, size, val);
+>> +	if (ret != PCIBIOS_SUCCESSFUL)
+>> +		return ret;
+>> +
+>> +	/*
+>> +	 * There is a bug in the MESON AXG pcie controller whereby software
+>> +	 * cannot programme the PCI_CLASS_DEVICE register, so we must fabricate
+>> +	 * the return value in the config accessors.
+>> +	 */
+>> +	if (where == PCI_CLASS_REVISION && size == 4)
+>> +		*val = (PCI_CLASS_BRIDGE_PCI << 16) | (*val & 0xffff);
+>> +	else if (where == PCI_CLASS_DEVICE && size == 2)
+>> +		*val = PCI_CLASS_BRIDGE_PCI;
+>> +	else if (where == PCI_CLASS_DEVICE && size == 1)
+>> +		*val = PCI_CLASS_BRIDGE_PCI & 0xff;
+>> +	else if (where == PCI_CLASS_DEVICE + 1 && size == 1)
+>> +		*val = (PCI_CLASS_BRIDGE_PCI >> 8) & 0xff;
+>> +
+>> +	return PCIBIOS_SUCCESSFUL;
+>> +}
+>> +
+>> +static int meson_pcie_wr_own_conf(struct pcie_port *pp, int where,
+>> +				  int size, u32 val)
+>> +{
+>> +	struct dw_pcie *pci = to_dw_pcie_from_pp(pp);
+>> +
+>> +	return dw_pcie_write(pci->dbi_base + where, size, val);
+>> +}
+>> +
+>> +static int meson_pcie_link_up(struct dw_pcie *pci)
+>> +{
+>> +	struct meson_pcie *mp = to_meson_pcie(pci);
+>> +	struct device *dev = pci->dev;
+>> +	u32 smlh_up = 0;
+>> +	u32 ltssm_up = 0;
+>> +	u32 rdlh_up = 0;
+>> +	u32 speed_okay = 0;
+>> +	u32 cnt = 0;
+>> +	u32 state12, state17;
+>> +
+> 
+> Nit: a
+> 
+> do {
+> 
+> } while (...)
+> 
+> makes more sense given the variables you are checking.
+> 
+> Lorenzo
+> 
+
+Yes, it's more readable, I'll modify that.
+
+thanks for all.
+
+>> +	while (smlh_up == 0 || rdlh_up == 0 || ltssm_up == 0 ||
+>> +	       speed_okay == 0) {
+>> +		udelay(20);
+>> +
+>> +		state12 = meson_cfg_readl(mp, PCIE_CFG_STATUS12);
+>> +		state17 = meson_cfg_readl(mp, PCIE_CFG_STATUS17);
+>> +		smlh_up = IS_SMLH_LINK_UP(state12);
+>> +		rdlh_up = IS_RDLH_LINK_UP(state12);
+>> +		ltssm_up = IS_LTSSM_UP(state12);
+>> +
+>> +		if (PM_CURRENT_STATE(state17) < PCIE_GEN3)
+>> +			speed_okay = 1;
+>> +
+>> +		if (smlh_up)
+>> +			dev_dbg(dev, "smlh_link_up is on\n");
+>> +		if (rdlh_up)
+>> +			dev_dbg(dev, "rdlh_link_up is on\n");
+>> +		if (ltssm_up)
+>> +			dev_dbg(dev, "ltssm_up is on\n");
+>> +		if (speed_okay)
+>> +			dev_dbg(dev, "speed_okay\n");
+>> +
+>> +		cnt++;
+>> +
+>> +		if (cnt >= WAIT_LINKUP_TIMEOUT) {
+>> +			dev_err(dev, "Error: Wait linkup timeout.\n");
+>> +			return 0;
+>> +		}
+>> +	}
+>> +
+>> +	return 1;
+>> +}
+>> +
+>> +static int meson_pcie_host_init(struct pcie_port *pp)
+>> +{
+>> +	struct dw_pcie *pci = to_dw_pcie_from_pp(pp);
+>> +	struct meson_pcie *mp = to_meson_pcie(pci);
+>> +	int ret;
+>> +
+>> +	ret = meson_pcie_establish_link(mp);
+>> +	if (ret)
+>> +		return ret;
+>> +
+>> +	meson_pcie_enable_interrupts(mp);
+>> +
+>> +	return 0;
+>> +}
+>> +
+>> +static const struct dw_pcie_host_ops meson_pcie_host_ops = {
+>> +	.rd_own_conf = meson_pcie_rd_own_conf,
+>> +	.wr_own_conf = meson_pcie_wr_own_conf,
+>> +	.host_init = meson_pcie_host_init,
+>> +};
+>> +
+>> +static int meson_add_pcie_port(struct meson_pcie *mp,
+>> +			       struct platform_device *pdev)
+>> +{
+>> +	struct dw_pcie *pci = &mp->pci;
+>> +	struct pcie_port *pp = &pci->pp;
+>> +	struct device *dev = &pdev->dev;
+>> +	int ret;
+>> +
+>> +	if (IS_ENABLED(CONFIG_PCI_MSI)) {
+>> +		pp->msi_irq = platform_get_irq(pdev, 0);
+>> +		if (pp->msi_irq < 0) {
+>> +			dev_err(dev, "failed to get msi irq\n");
+>> +			return pp->msi_irq;
+>> +		}
+>> +	}
+>> +
+>> +	pp->ops = &meson_pcie_host_ops;
+>> +	pci->dbi_base = mp->mem_res.elbi_base;
+>> +
+>> +	ret = dw_pcie_host_init(pp);
+>> +	if (ret) {
+>> +		dev_err(dev, "failed to initialize host\n");
+>> +		return ret;
+>> +	}
+>> +
+>> +	return 0;
+>> +}
+>> +
+>> +static const struct dw_pcie_ops dw_pcie_ops = {
+>> +	.link_up = meson_pcie_link_up,
+>> +};
+>> +
+>> +static int meson_pcie_probe(struct platform_device *pdev)
+>> +{
+>> +	struct device *dev = &pdev->dev;
+>> +	struct dw_pcie *pci;
+>> +	struct meson_pcie *mp;
+>> +	int ret;
+>> +
+>> +	mp = devm_kzalloc(dev, sizeof(*mp), GFP_KERNEL);
+>> +	if (!mp)
+>> +		return -ENOMEM;
+>> +
+>> +	pci = &mp->pci;
+>> +	pci->dev = dev;
+>> +	pci->ops = &dw_pcie_ops;
+>> +
+>> +	mp->reset_gpio = devm_gpiod_get(dev, "reset", GPIOD_OUT_LOW);
+>> +	if (IS_ERR(mp->reset_gpio)) {
+>> +		dev_err(dev, "Get reset gpio failed\n");
+>> +		return PTR_ERR(mp->reset_gpio);
+>> +	}
+>> +
+>> +	ret = meson_pcie_get_resets(mp);
+>> +	if (ret) {
+>> +		dev_err(dev, "Get reset resource failed, %d\n", ret);
+>> +		return ret;
+>> +	}
+>> +
+>> +	ret = meson_pcie_get_mems(pdev, mp);
+>> +	if (ret) {
+>> +		dev_err(dev, "Get memory resource failed, %d\n", ret);
+>> +		return ret;
+>> +	}
+>> +
+>> +	meson_pcie_power_on(mp);
+>> +	meson_pcie_reset(mp);
+>> +
+>> +	ret = meson_pcie_probe_clocks(mp);
+>> +	if (ret) {
+>> +		dev_err(dev, "Init clock resources failed, %d\n", ret);
+>> +		return ret;
+>> +	}
+>> +
+>> +	platform_set_drvdata(pdev, mp);
+>> +
+>> +	ret = meson_add_pcie_port(mp, pdev);
+>> +	if (ret < 0) {
+>> +		dev_err(dev, "Add PCIE port failed, %d\n", ret);
+>> +		return ret;
+>> +	}
+>> +
+>> +	return 0;
+>> +}
+>> +
+>> +static const struct of_device_id meson_pcie_of_match[] = {
+>> +	{
+>> +		.compatible = "amlogic,axg-pcie",
+>> +	},
+>> +	{},
+>> +};
+>> +
+>> +static struct platform_driver meson_pcie_driver = {
+>> +	.probe = meson_pcie_probe,
+>> +	.driver = {
+>> +		.name = "meson-pcie",
+>> +		.of_match_table = meson_pcie_of_match,
+>> +	},
+>> +};
+>> +
+>> +builtin_platform_driver(meson_pcie_driver);
+>> -- 
+>> 2.7.4
+>>
+> 
+> .
+> 
