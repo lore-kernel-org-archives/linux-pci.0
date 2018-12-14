@@ -2,131 +2,120 @@ Return-Path: <SRS0=mLR+=OX=vger.kernel.org=linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-0.9 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	MAILING_LIST_MULTI,SPF_PASS autolearn=unavailable autolearn_force=no
-	version=3.4.0
+X-Spam-Status: No, score=-8.8 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
+	SPF_PASS,USER_AGENT_MUTT autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id D256BC43387
-	for <linux-pci@archiver.kernel.org>; Fri, 14 Dec 2018 21:54:51 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id AFF5EC43387
+	for <linux-pci@archiver.kernel.org>; Fri, 14 Dec 2018 22:26:05 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 1EA842086D
-	for <linux-pci@archiver.kernel.org>; Fri, 14 Dec 2018 21:54:52 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 05F2F208C2
+	for <linux-pci@archiver.kernel.org>; Fri, 14 Dec 2018 22:26:06 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=default; t=1544826366;
+	bh=nBKoQ9cdrUBb+guiM08+nrtsEAwnCDm8SNt3tRHOXDQ=;
+	h=Date:From:To:Cc:Subject:References:In-Reply-To:List-ID:From;
+	b=JyzP43dzg0DvZRj3P9SCuaNezAs19kxTb3B9Qv4i49z8otbhAiEoJTBF0BkV4ZpgP
+	 PbZ6OZTQl3yvp+i2G1qfn1+ijqMAes2xjdbFfGAf21g2KrC0fuag0WNh/D3CTgwLnG
+	 XWa3PfAJvNwJAgrwe356wPCfeFSRJkQFwoSTsEFU=
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1730984AbeLNVyv (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Fri, 14 Dec 2018 16:54:51 -0500
-Received: from gateway30.websitewelcome.com ([192.185.152.11]:20959 "EHLO
-        gateway30.websitewelcome.com" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1730887AbeLNVyu (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Fri, 14 Dec 2018 16:54:50 -0500
-X-Greylist: delayed 1878 seconds by postgrey-1.27 at vger.kernel.org; Fri, 14 Dec 2018 16:54:50 EST
-Received: from cm14.websitewelcome.com (cm14.websitewelcome.com [100.42.49.7])
-        by gateway30.websitewelcome.com (Postfix) with ESMTP id C995C45AF
-        for <linux-pci@vger.kernel.org>; Fri, 14 Dec 2018 14:56:04 -0600 (CST)
-Received: from gator4166.hostgator.com ([108.167.133.22])
-        by cmsmtp with SMTP
-        id XuVAgz3VO2qH7XuVAgilF2; Fri, 14 Dec 2018 14:56:04 -0600
-X-Authority-Reason: nr=8
-Received: from [189.250.106.44] (port=51702 helo=[192.168.43.131])
-        by gator4166.hostgator.com with esmtpsa (TLSv1.2:ECDHE-RSA-AES128-GCM-SHA256:128)
-        (Exim 4.91)
-        (envelope-from <gustavo@embeddedor.com>)
-        id 1gXuV7-001GHR-4D; Fri, 14 Dec 2018 14:56:01 -0600
-Subject: Re: [PATCH v2 3/3] PCI: imx: Add support for i.MX8MQ
-To:     Bjorn Helgaas <helgaas@kernel.org>,
-        Andrey Smirnov <andrew.smirnov@gmail.com>
-Cc:     linux-pci@vger.kernel.org, Fabio Estevam <fabio.estevam@nxp.com>,
-        cphealy@gmail.com, l.stach@pengutronix.de,
-        Leonard Crestez <leonard.crestez@nxp.com>,
-        "A.s. Dong" <aisheng.dong@nxp.com>,
-        Richard Zhu <hongxing.zhu@nxp.com>, linux-imx@nxp.com,
-        linux-arm-kernel@lists.infradead.org, linux-kernel@vger.kernel.org,
-        Mark Rutland <mark.rutland@arm.com>,
-        Rob Herring <robh@kernel.org>, devicetree@vger.kernel.org
-References: <20181206073545.10967-1-andrew.smirnov@gmail.com>
- <20181206073545.10967-4-andrew.smirnov@gmail.com>
- <20181214203042.GC20725@google.com>
-From:   "Gustavo A. R. Silva" <gustavo@embeddedor.com>
-Message-ID: <aacb613f-ad8b-8db9-1c63-a346ac62c772@embeddedor.com>
-Date:   Fri, 14 Dec 2018 14:55:49 -0600
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:60.0) Gecko/20100101
- Thunderbird/60.2.1
+        id S1729630AbeLNW0E (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Fri, 14 Dec 2018 17:26:04 -0500
+Received: from mail.kernel.org ([198.145.29.99]:60980 "EHLO mail.kernel.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1729341AbeLNW0E (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Fri, 14 Dec 2018 17:26:04 -0500
+Received: from localhost (unknown [69.71.4.100])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+        (No client certificate requested)
+        by mail.kernel.org (Postfix) with ESMTPSA id 46189206DD;
+        Fri, 14 Dec 2018 22:26:04 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+        s=default; t=1544826364;
+        bh=nBKoQ9cdrUBb+guiM08+nrtsEAwnCDm8SNt3tRHOXDQ=;
+        h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
+        b=ot2tD3kIsyOF1sN9pjeYvmyv2PM4H7CT9sncBtsStDmcMcJolWRS52if/Bym8dfuL
+         M1haF2p7dMtXeSs2Bhvk57acKP/X7cavKlu1frUE3gO64bkxOQOyC9UzYWywOdVKIO
+         TedO73gYQly9jwZELx898rSgzxx+YNwsL368EUGQ=
+Date:   Fri, 14 Dec 2018 16:26:01 -0600
+From:   Bjorn Helgaas <helgaas@kernel.org>
+To:     Sinan Kaya <okaya@kernel.org>
+Cc:     linux-acpi@vger.kernel.org,
+        "open list:PCI SUBSYSTEM" <linux-pci@vger.kernel.org>,
+        open list <linux-kernel@vger.kernel.org>,
+        Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
+        Robin Murphy <robin.murphy@arm.com>,
+        Logan Gunthorpe <logang@deltatee.com>
+Subject: Re: [PATCH v9 6/6] PCI: Stub out pci_request_acs() when CONFIG_PCI
+ is not set
+Message-ID: <20181214222601.GH20725@google.com>
+References: <20181214163319.27479-1-okaya@kernel.org>
+ <20181214163319.27479-7-okaya@kernel.org>
 MIME-Version: 1.0
-In-Reply-To: <20181214203042.GC20725@google.com>
-Content-Type: text/plain; charset=utf-8; format=flowed
-Content-Language: en-US
-Content-Transfer-Encoding: 7bit
-X-AntiAbuse: This header was added to track abuse, please include it with any abuse report
-X-AntiAbuse: Primary Hostname - gator4166.hostgator.com
-X-AntiAbuse: Original Domain - vger.kernel.org
-X-AntiAbuse: Originator/Caller UID/GID - [47 12] / [47 12]
-X-AntiAbuse: Sender Address Domain - embeddedor.com
-X-BWhitelist: no
-X-Source-IP: 189.250.106.44
-X-Source-L: No
-X-Exim-ID: 1gXuV7-001GHR-4D
-X-Source: 
-X-Source-Args: 
-X-Source-Dir: 
-X-Source-Sender: ([192.168.43.131]) [189.250.106.44]:51702
-X-Source-Auth: gustavo@embeddedor.com
-X-Email-Count: 3
-X-Source-Cap: Z3V6aWRpbmU7Z3V6aWRpbmU7Z2F0b3I0MTY2Lmhvc3RnYXRvci5jb20=
-X-Local-Domain: yes
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20181214163319.27479-7-okaya@kernel.org>
+User-Agent: Mutt/1.10.1 (2018-07-13)
 Sender: linux-pci-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-Hi,
+[+cc Lorenzo, Robin, Logan]
 
-On 12/14/18 2:30 PM, Bjorn Helgaas wrote:
-> [+cc Gustavo for fallthrough annotation]
+On Fri, Dec 14, 2018 at 04:33:19PM +0000, Sinan Kaya wrote:
+> ACPI IORT table code relies on pci_request_acs() to be present. Define
+> a stub function when CONFI_PCI is not set.
 
+This doesn't seem like the simplest approach to me, but I probably
+don't understand what's going on in IORT.
+
+It looks like *all* of iort_enable_acs() (the caller of
+pci_request_acs()) is PCI-specific; at least, the whole thing is
+wrapped in a test for ACPI_IORT_NODE_PCI_ROOT_COMPLEX.  So the whole
+function could be wrapped in #ifdef CONFIG_PCI.
+
+Here's the caller of iort_enable_acs():
+
+  iort_init_platform_devices
+    acs_enabled = false
+    for (i = 0; i < iort->node_count; i++) {
+      if (!acs_enabled)
+        acs_enabled = iort_enable_acs(iort_node);
+
+It seems like the acs_enabled state could be encapsulated inside
+iort_enable_acs().
+
+Today pci_request_acs() is a system-wide thing, but I don't know why
+that's the case.  Isn't it conceivable that different PCI hierarchies
+could have different ACS policies, e.g., because of P2P DMA or
+something?
+
+Bottom line, pci_request_acs() is being called from what looks like
+PCI-specific code in IORT, and it would make more sense to me to prune
+out that code in IORT than to make a stub pci_request_acs().
+
+> Signed-off-by: Sinan Kaya <okaya@kernel.org>
+> ---
+>  include/linux/pci.h | 4 ++++
+>  1 file changed, 4 insertions(+)
 > 
->> @@ -301,6 +312,7 @@ static void imx6_pcie_assert_core_reset(struct imx6_pcie *imx6_pcie)
->>   
->>   	switch (imx6_pcie->variant) {
->>   	case IMX7D:
->> +	case IMX8MQ: /* FALLTHROUGH */
->>   		reset_control_assert(imx6_pcie->pciephy_reset);
->>   		reset_control_assert(imx6_pcie->apps_reset);
->>   		break;
+> diff --git a/include/linux/pci.h b/include/linux/pci.h
+> index 51a5a5217667..f0f2f55ea93c 100644
+> --- a/include/linux/pci.h
+> +++ b/include/linux/pci.h
+> @@ -2101,7 +2101,11 @@ static inline struct pci_dev *pcie_find_root_port(struct pci_dev *dev)
+>  	return NULL;
+>  }
+>  
+> +#ifdef CONFIG_PCI
+>  void pci_request_acs(void);
+> +#else
+> +static inline void pci_request_acs(void) {}
+> +#endif
+>  bool pci_acs_enabled(struct pci_dev *pdev, u16 acs_flags);
+>  bool pci_acs_path_enabled(struct pci_dev *start,
+>  			  struct pci_dev *end, u16 acs_flags);
+> -- 
+> 2.19.0
 > 
-> I'm not an expert on fallthrough annotation (Gustavo, cc'd, is), but
-> this looks wrong.  It's the IMX7D case that falls through, not the
-> IMX8MQ case.
-> 
-
-Correct.
-
-> The recent annotations added by Gustavo are at the point where the
-> "break" would normally be, e.g.,
-> 
->    case IMX7D:
->      /* fall through */                    <--- annotation
->    case IMX8MQ:
->      <code>
->      break;
-> 
-> But in this case there's actually no IMX7D-specific *code* there, so I
-> suspect the annotation is unnecessary.  It's obvious that IMX7D and
-> IMX8MQ are handled the same, so there's really no opportunity for the
-> "forgotten break" mistake -Wimplicit-fallthrough is trying to find.
-> 
-
-Yep. That's correct. There is no need for those annotations in this patch.
-
-> If we *do* want this annotation, we should spell it the same as
-> Gustavo has been, i.e., "fall through".
-> 
-
-This is a matter of style. For -Wimplicit-fallthrough, "FALLTHROUGH" is 
-as valid a "fall through".
-
-Although, currently, there are 1997 instances of "fall through" vs 235 
-of "FALLTHROUGH" in linux-next.
-
-Thanks
---
-Gustavo
-
