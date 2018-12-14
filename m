@@ -4,35 +4,36 @@ X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 X-Spam-Level: 
 X-Spam-Status: No, score=-8.9 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
 	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_PASS,UNPARSEABLE_RELAY,
-	USER_AGENT_GIT autolearn=unavailable autolearn_force=no version=3.4.0
+	URIBL_BLOCKED,USER_AGENT_GIT autolearn=unavailable autolearn_force=no
+	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 08B6CC67872
-	for <linux-pci@archiver.kernel.org>; Fri, 14 Dec 2018 01:26:18 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 69D51C65BAE
+	for <linux-pci@archiver.kernel.org>; Fri, 14 Dec 2018 01:26:19 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id CEE9420879
-	for <linux-pci@archiver.kernel.org>; Fri, 14 Dec 2018 01:26:17 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.3.2 mail.kernel.org CEE9420879
+	by mail.kernel.org (Postfix) with ESMTP id 3232F20879
+	for <linux-pci@archiver.kernel.org>; Fri, 14 Dec 2018 01:26:19 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.3.2 mail.kernel.org 3232F20879
 Authentication-Results: mail.kernel.org; dmarc=none (p=none dis=none) header.from=mediatek.com
 Authentication-Results: mail.kernel.org; spf=none smtp.mailfrom=linux-pci-owner@vger.kernel.org
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1728938AbeLNB0A (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Thu, 13 Dec 2018 20:26:00 -0500
-Received: from mailgw01.mediatek.com ([210.61.82.183]:22115 "EHLO
+        id S1728815AbeLNBZz (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Thu, 13 Dec 2018 20:25:55 -0500
+Received: from mailgw01.mediatek.com ([210.61.82.183]:46181 "EHLO
         mailgw01.mediatek.com" rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org
-        with ESMTP id S1727901AbeLNBZz (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Thu, 13 Dec 2018 20:25:55 -0500
-X-UUID: 05ce704fa55e47f891ad6b3062800876-20181214
-X-UUID: 05ce704fa55e47f891ad6b3062800876-20181214
-Received: from mtkexhb02.mediatek.inc [(172.21.101.103)] by mailgw01.mediatek.com
+        with ESMTP id S1727638AbeLNBZy (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Thu, 13 Dec 2018 20:25:54 -0500
+X-UUID: 01e388c211be4746a3e9218d664d41fa-20181214
+X-UUID: 01e388c211be4746a3e9218d664d41fa-20181214
+Received: from mtkcas06.mediatek.inc [(172.21.101.30)] by mailgw01.mediatek.com
         (envelope-from <honghui.zhang@mediatek.com>)
         (mhqrelay.mediatek.com ESMTP with TLS)
-        with ESMTP id 2041086221; Fri, 14 Dec 2018 09:25:48 +0800
+        with ESMTP id 2026839957; Fri, 14 Dec 2018 09:25:47 +0800
 Received: from MTKCAS06.mediatek.inc (172.21.101.30) by
- mtkmbs08n2.mediatek.inc (172.21.101.56) with Microsoft SMTP Server (TLS) id
+ mtkmbs08n1.mediatek.inc (172.21.101.55) with Microsoft SMTP Server (TLS) id
  15.0.1395.4; Fri, 14 Dec 2018 09:25:46 +0800
 Received: from localhost.localdomain (10.17.3.153) by MTKCAS06.mediatek.inc
  (172.21.101.73) with Microsoft SMTP Server id 15.0.1395.4 via Frontend
- Transport; Fri, 14 Dec 2018 09:25:45 +0800
+ Transport; Fri, 14 Dec 2018 09:25:44 +0800
 From:   <honghui.zhang@mediatek.com>
 To:     <lorenzo.pieralisi@arm.com>, <bhelgaas@google.com>,
         <linux-arm-kernel@lists.infradead.org>,
@@ -42,15 +43,14 @@ To:     <lorenzo.pieralisi@arm.com>, <bhelgaas@google.com>,
 CC:     <devicetree@vger.kernel.org>, <youlin.pei@mediatek.com>,
         <jianjun.wang@mediatek.com>,
         Honghui Zhang <honghui.zhang@mediatek.com>
-Subject: [PATCH 2/4] dt-bindings: PCI: MediaTek: Remove un-used property
-Date:   Fri, 14 Dec 2018 09:25:40 +0800
-Message-ID: <1544750742-31419-3-git-send-email-honghui.zhang@mediatek.com>
+Subject: [PATCH 1/4] PCI: mediatek: Remove un-used variant in struct mtk_pcie_port
+Date:   Fri, 14 Dec 2018 09:25:39 +0800
+Message-ID: <1544750742-31419-2-git-send-email-honghui.zhang@mediatek.com>
 X-Mailer: git-send-email 2.6.4
 In-Reply-To: <1544750742-31419-1-git-send-email-honghui.zhang@mediatek.com>
 References: <1544750742-31419-1-git-send-email-honghui.zhang@mediatek.com>
 MIME-Version: 1.0
 Content-Type: text/plain
-X-TM-SNTS-SMTP: 476BBAF8048127866DD3CAE02BA0EED37B745FED16F4473F0C8DCC23C07537D52000:8
 X-MTK:  N
 Sender: linux-pci-owner@vger.kernel.org
 Precedence: bulk
@@ -59,81 +59,46 @@ X-Mailing-List: linux-pci@vger.kernel.org
 
 From: Honghui Zhang <honghui.zhang@mediatek.com>
 
-The "num-lanes" property is not used, remove it.
+The "lane" variant in struct mtk_pcie_port is not used, remove it.
 
 Signed-off-by: Honghui Zhang <honghui.zhang@mediatek.com>
 ---
- Documentation/devicetree/bindings/pci/mediatek-pcie.txt | 8 --------
+ drivers/pci/controller/pcie-mediatek.c | 8 --------
  1 file changed, 8 deletions(-)
 
-diff --git a/Documentation/devicetree/bindings/pci/mediatek-pcie.txt b/Documentation/devicetree/bindings/pci/mediatek-pcie.txt
-index 20227a8..92437a3 100644
---- a/Documentation/devicetree/bindings/pci/mediatek-pcie.txt
-+++ b/Documentation/devicetree/bindings/pci/mediatek-pcie.txt
-@@ -65,7 +65,6 @@ Required properties:
-   explanation.
- - ranges: Sub-ranges distributed from the PCIe controller node. An empty
-   property is sufficient.
--- num-lanes: Number of lanes to use for this port.
+diff --git a/drivers/pci/controller/pcie-mediatek.c b/drivers/pci/controller/pcie-mediatek.c
+index 6917aec..e307166 100644
+--- a/drivers/pci/controller/pcie-mediatek.c
++++ b/drivers/pci/controller/pcie-mediatek.c
+@@ -161,7 +161,6 @@ struct mtk_pcie_soc {
+  * @obff_ck: pointer to OBFF functional block operating clock
+  * @pipe_ck: pointer to LTSSM and PHY/MAC layer operating clock
+  * @phy: pointer to PHY control block
+- * @lane: lane count
+  * @slot: port slot
+  * @irq: GIC irq
+  * @irq_domain: legacy INTx IRQ domain
+@@ -182,7 +181,6 @@ struct mtk_pcie_port {
+ 	struct clk *obff_ck;
+ 	struct clk *pipe_ck;
+ 	struct phy *phy;
+-	u32 lane;
+ 	u32 slot;
+ 	int irq;
+ 	struct irq_domain *irq_domain;
+@@ -895,12 +893,6 @@ static int mtk_pcie_parse_port(struct mtk_pcie *pcie,
+ 	if (!port)
+ 		return -ENOMEM;
  
- Examples for MT7623:
- 
-@@ -118,7 +117,6 @@ Examples for MT7623:
- 			interrupt-map-mask = <0 0 0 0>;
- 			interrupt-map = <0 0 0 0 &sysirq GIC_SPI 193 IRQ_TYPE_LEVEL_LOW>;
- 			ranges;
--			num-lanes = <1>;
- 		};
- 
- 		pcie@1,0 {
-@@ -129,7 +127,6 @@ Examples for MT7623:
- 			interrupt-map-mask = <0 0 0 0>;
- 			interrupt-map = <0 0 0 0 &sysirq GIC_SPI 194 IRQ_TYPE_LEVEL_LOW>;
- 			ranges;
--			num-lanes = <1>;
- 		};
- 
- 		pcie@2,0 {
-@@ -140,7 +137,6 @@ Examples for MT7623:
- 			interrupt-map-mask = <0 0 0 0>;
- 			interrupt-map = <0 0 0 0 &sysirq GIC_SPI 195 IRQ_TYPE_LEVEL_LOW>;
- 			ranges;
--			num-lanes = <1>;
- 		};
- 	};
- 
-@@ -172,7 +168,6 @@ Examples for MT2712:
- 			#size-cells = <2>;
- 			#interrupt-cells = <1>;
- 			ranges;
--			num-lanes = <1>;
- 			interrupt-map-mask = <0 0 0 7>;
- 			interrupt-map = <0 0 0 1 &pcie_intc0 0>,
- 					<0 0 0 2 &pcie_intc0 1>,
-@@ -191,7 +186,6 @@ Examples for MT2712:
- 			#size-cells = <2>;
- 			#interrupt-cells = <1>;
- 			ranges;
--			num-lanes = <1>;
- 			interrupt-map-mask = <0 0 0 7>;
- 			interrupt-map = <0 0 0 1 &pcie_intc1 0>,
- 					<0 0 0 2 &pcie_intc1 1>,
-@@ -245,7 +239,6 @@ Examples for MT7622:
- 			#size-cells = <2>;
- 			#interrupt-cells = <1>;
- 			ranges;
--			num-lanes = <1>;
- 			interrupt-map-mask = <0 0 0 7>;
- 			interrupt-map = <0 0 0 1 &pcie_intc0 0>,
- 					<0 0 0 2 &pcie_intc0 1>,
-@@ -264,7 +257,6 @@ Examples for MT7622:
- 			#size-cells = <2>;
- 			#interrupt-cells = <1>;
- 			ranges;
--			num-lanes = <1>;
- 			interrupt-map-mask = <0 0 0 7>;
- 			interrupt-map = <0 0 0 1 &pcie_intc1 0>,
- 					<0 0 0 2 &pcie_intc1 1>,
+-	err = of_property_read_u32(node, "num-lanes", &port->lane);
+-	if (err) {
+-		dev_err(dev, "missing num-lanes property\n");
+-		return err;
+-	}
+-
+ 	snprintf(name, sizeof(name), "port%d", slot);
+ 	regs = platform_get_resource_byname(pdev, IORESOURCE_MEM, name);
+ 	port->base = devm_ioremap_resource(dev, regs);
 -- 
 2.6.4
 
