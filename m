@@ -2,114 +2,104 @@ Return-Path: <SRS0=7Kzx=O2=vger.kernel.org=linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-2.4 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,FSL_HELO_FAKE,MAILING_LIST_MULTI,SIGNED_OFF_BY,
-	SPF_PASS,USER_AGENT_MUTT autolearn=unavailable autolearn_force=no
-	version=3.4.0
+X-Spam-Status: No, score=-1.1 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
+	DKIM_VALID_AU,FREEMAIL_FORGED_FROMDOMAIN,FREEMAIL_FROM,
+	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_PASS,URIBL_BLOCKED
+	autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 38206C43387
-	for <linux-pci@archiver.kernel.org>; Mon, 17 Dec 2018 17:01:08 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 3CE1FC43387
+	for <linux-pci@archiver.kernel.org>; Mon, 17 Dec 2018 17:11:28 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 0643A20874
-	for <linux-pci@archiver.kernel.org>; Mon, 17 Dec 2018 17:01:08 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=default; t=1545066068;
-	bh=6auooRPsrcQk7GV+dsoc0ZOfh+31FXAnH3P5a0TMKTU=;
-	h=Date:From:To:Cc:Subject:References:In-Reply-To:List-ID:From;
-	b=sSDmGA/jyXaBDSuPQAEXQ1z4Mw3Lw55CIgqxLe8wJ5CNA5j7UJ10mFhTHIyt76SxT
-	 cIIHoBdZB2KlNWMoPK1TTMZbt7pMiR97KeKp1C/bX7IMS/xu8f3VTCt7MiEqpRKqr1
-	 vk/LmqeNt4XfeATH2ZUB5Yljp88xerQUgYraiWYY=
+	by mail.kernel.org (Postfix) with ESMTP id 0708420874
+	for <linux-pci@archiver.kernel.org>; Mon, 17 Dec 2018 17:11:28 +0000 (UTC)
+Authentication-Results: mail.kernel.org;
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="bE2hQJ5V"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727409AbeLQRBC (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Mon, 17 Dec 2018 12:01:02 -0500
-Received: from mail-wr1-f68.google.com ([209.85.221.68]:44332 "EHLO
-        mail-wr1-f68.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726657AbeLQRBC (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Mon, 17 Dec 2018 12:01:02 -0500
-Received: by mail-wr1-f68.google.com with SMTP id z5so13026392wrt.11;
-        Mon, 17 Dec 2018 09:01:00 -0800 (PST)
+        id S1727247AbeLQRL1 (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Mon, 17 Dec 2018 12:11:27 -0500
+Received: from mail-wr1-f66.google.com ([209.85.221.66]:38739 "EHLO
+        mail-wr1-f66.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726805AbeLQRL1 (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Mon, 17 Dec 2018 12:11:27 -0500
+Received: by mail-wr1-f66.google.com with SMTP id v13so13068917wrw.5;
+        Mon, 17 Dec 2018 09:11:25 -0800 (PST)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=gmail.com; s=20161025;
-        h=sender:date:from:to:cc:subject:message-id:references:mime-version
-         :content-disposition:in-reply-to:user-agent;
-        bh=LvX8+wXVi6Ez+Z+a8Vcs5LlmR6VFE/NIH6mI0wRHq3s=;
-        b=Hr1bhpVqnXrEzKg/3F+HqZiZxRYuAGtfQ9fPWtxRQ4QjGx+9Umw7yHpBALn/qyU8sQ
-         RabjcAe1MuNGz9fCsw/0Hj5zNTJJB3lC4ffm3Z0zM6grkgdTLEPepH2qkTv9Rz+EAEps
-         oQU76TBzGIf49thieCaSEJc/NbHDyJGkzdSqw24Vju4yBFo4MRSE1o6d9KHDAFzqBON1
-         Vp8mDOB4/0WVCi/TmFqlzkqhKBymCOodnOBty4JBheQbPZorCPNIQE4HlHDUhaV27XAZ
-         AK6ZfGtp0rg53QiqfYB+Qts7bQENatlaky6rb6K9XTohaUcr+LMS1d6aPNWI5bff+u4P
-         l1kw==
+        h=mime-version:references:in-reply-to:from:date:message-id:subject:to
+         :cc;
+        bh=/ZY5abb5RJfKSZwIuefMoxZ8yU6NpVNydtn2GiM4hyg=;
+        b=bE2hQJ5VNOfh1ytM66ct3zjSi/JsfqigkAoclkdGTispgNcAEBXfdwfVzWtfVf6nce
+         bPXUMnUNhUs+DTNOx42ARgRrOxntgkYiU1c+JG2uirmSEBqLgg1hclY97DOIRB5xNZna
+         d/1W4qUW1VL2iipDMCfhDgtNnJspUv6GMWF8KVskOEYRt5GT9Oa63l/jt4ZMiWz6BNUu
+         1/vpJObiJ/zmY6RKTIlkid53cDewhOiX1akjx3k7KJsABTTuh5nQYb5CcWhgPEAfsYF1
+         EGcNBQkgSWasDceiWVum3EOmiNicsT/DgKeAbQ69CrYKqQ8g4vh2qVFtOvamVvxUdfN5
+         i5Mg==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20161025;
-        h=x-gm-message-state:sender:date:from:to:cc:subject:message-id
-         :references:mime-version:content-disposition:in-reply-to:user-agent;
-        bh=LvX8+wXVi6Ez+Z+a8Vcs5LlmR6VFE/NIH6mI0wRHq3s=;
-        b=gkHcY0Vtt8aQwOSQQhyFgHmclShm+JdX0hhE4/0uvjEQA4fOxB3tN2D6tORbwcf8h5
-         Rst+/UfiyhBgmajSI4Db39qt4xT/DdVmREnYHFsEQHRfNdNmVZwfiYxAf+K06fU+xIFM
-         sGEyhq5Is97zkuCm4jaLiEpUsP5Ccss/kiVF7p7jAGNAm4eIsjgHMaJHb3Gkhg7iwwcY
-         lqR6+TbqNpxOrqBp5HCNtvPM4LFXZqKZ3sF2SkAAzQ/3JFz4Z6smHl+g71Y28O+LfWiQ
-         xTRakXyN6k8LUPiDsdF+Red/nsgXXh5UI+js4ruCD93vGRK3tSMKdnmVWUBEHNXoM3ON
-         RNhA==
-X-Gm-Message-State: AA+aEWbrvj7iGW8ONKDXc7xS25MhLWFlStSE+ye44KT5M8zYZaCkJiB8
-        y+D73M2LM9LE3eDlw8HUJs4=
-X-Google-Smtp-Source: AFSGD/Xu9e3AICDr+A0csoS2Y/N4kHbkZOZewvvesH4KPdp6P366G9PyH63BB2hChCXG61a8liJffw==
-X-Received: by 2002:a5d:4d46:: with SMTP id a6mr11602804wru.28.1545066060157;
-        Mon, 17 Dec 2018 09:01:00 -0800 (PST)
-Received: from gmail.com (2E8B0CD5.catv.pool.telekom.hu. [46.139.12.213])
-        by smtp.gmail.com with ESMTPSA id q3sm859631wrn.84.2018.12.17.09.00.58
-        (version=TLS1_2 cipher=ECDHE-RSA-CHACHA20-POLY1305 bits=256/256);
-        Mon, 17 Dec 2018 09:00:59 -0800 (PST)
-Date:   Mon, 17 Dec 2018 18:00:57 +0100
-From:   Ingo Molnar <mingo@kernel.org>
-To:     Sinan Kaya <okaya@kernel.org>
-Cc:     linux-acpi@vger.kernel.org, Thomas Gleixner <tglx@linutronix.de>,
-        Ingo Molnar <mingo@redhat.com>, Borislav Petkov <bp@alien8.de>,
-        "H. Peter Anvin" <hpa@zytor.com>,
-        "maintainer:X86 ARCHITECTURE (32-BIT AND 64-BIT)" <x86@kernel.org>,
-        "Rafael J. Wysocki" <rjw@rjwysocki.net>,
-        Len Brown <lenb@kernel.org>,
-        Bjorn Helgaas <bhelgaas@google.com>,
-        Robert Moore <robert.moore@intel.com>,
-        Erik Schmauss <erik.schmauss@intel.com>,
-        Jan Kiszka <jan.kiszka@siemens.com>,
-        Andy Shevchenko <andy.shevchenko@gmail.com>,
-        Christian =?iso-8859-1?Q?K=F6nig?= <christian.koenig@amd.com>,
-        Otavio Pontes <otavio.pontes@intel.com>,
-        Christian =?iso-8859-1?Q?K=F6nig?= 
-        <ckoenig.leichtzumerken@gmail.com>,
-        "open list:X86 ARCHITECTURE (32-BIT AND 64-BIT)" 
-        <linux-kernel@vger.kernel.org>,
-        "open list:PCI SUBSYSTEM" <linux-pci@vger.kernel.org>,
-        "open list:ACPI COMPONENT ARCHITECTURE (ACPICA)" <devel@acpica.org>
-Subject: Re: [PATCH v10 3/6] PCI/ACPI: Allow ACPI to be built without
- CONFIG_PCI set
-Message-ID: <20181217170056.GA20499@gmail.com>
-References: <20181215010247.26101-1-okaya@kernel.org>
- <20181215010247.26101-4-okaya@kernel.org>
+        h=x-gm-message-state:mime-version:references:in-reply-to:from:date
+         :message-id:subject:to:cc;
+        bh=/ZY5abb5RJfKSZwIuefMoxZ8yU6NpVNydtn2GiM4hyg=;
+        b=NxSSKbCp8YTygohuT3Hh4uq479i3NImEh0/VCXxrikJyt2DJLjjsyBIwVzl/tfC80W
+         jZWBOfy+URWZYLeXge8qfxSgJowDq/a1rcJJxBwL9vsAl4hNVeVjs4Pj0+ad3KxIvLlf
+         DJGxpVeTEFXQQG5YwNvYj/lWm6BIzaoVo3ow8nw79o/cN5ESGCOd2fKSpKQl0Rn1s3JI
+         9X92XNNi1TIfBUYYFYKe34bci790tw1wA8CQ4ksWd5YS/x1z867ow15LjZC/zs3QA6ax
+         Opx2WLPUci7pmbdWYby+kzu48wSbVaJTurL0k/ZHhLfa9PVUeI34Pdt7CSum/bLwtLsE
+         OGuQ==
+X-Gm-Message-State: AA+aEWaFUrgoulOeM3K22QsNuizuMPQqbcE1lLONRZLjIXT+Ji53gWIc
+        Imal6vX9rvsn3ZKBGMcK6Ozl3DwdfRXdwTJpAFg=
+X-Google-Smtp-Source: AFSGD/XElLSSUsi/CjNXXV69Ucpm1nJRDdp2hbTudva9JuEPERBBb4MaDH9moukhIcpeZbFIF/HY8JBtm2dFva2MeH0=
+X-Received: by 2002:a05:6000:51:: with SMTP id k17mr10814319wrx.259.1545066685084;
+ Mon, 17 Dec 2018 09:11:25 -0800 (PST)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20181215010247.26101-4-okaya@kernel.org>
-User-Agent: Mutt/1.9.4 (2018-02-28)
+References: <20181216230916.22982-1-andrew.smirnov@gmail.com>
+ <20181216230916.22982-3-andrew.smirnov@gmail.com> <VI1PR04MB5533AAAEA69A54F1CF01D44CEEBC0@VI1PR04MB5533.eurprd04.prod.outlook.com>
+In-Reply-To: <VI1PR04MB5533AAAEA69A54F1CF01D44CEEBC0@VI1PR04MB5533.eurprd04.prod.outlook.com>
+From:   Andrey Smirnov <andrew.smirnov@gmail.com>
+Date:   Mon, 17 Dec 2018 09:11:13 -0800
+Message-ID: <CAHQ1cqEo86-B0mw8edqr0fr9834YRziFJPJbssqoutYnfroyog@mail.gmail.com>
+Subject: Re: [PATCH 2/3] PCI: imx6: Invert checks in imx6_pcie_reset_phy() and imx6_setup_phy_mpll()
+To:     Leonard Crestez <leonard.crestez@nxp.com>
+Cc:     Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
+        Lucas Stach <l.stach@pengutronix.de>,
+        Stefan Agner <stefan@agner.ch>,
+        Bjorn Helgaas <bhelgaas@google.com>,
+        Fabio Estevam <fabio.estevam@nxp.com>,
+        Chris Healy <cphealy@gmail.com>,
+        Aisheng Dong <aisheng.dong@nxp.com>,
+        Richard Zhu <hongxing.zhu@nxp.com>,
+        dl-linux-imx <linux-imx@nxp.com>,
+        "linux-arm-kernel@lists.infradead.org" 
+        <linux-arm-kernel@lists.infradead.org>,
+        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+        "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
+Content-Type: text/plain; charset="UTF-8"
 Sender: linux-pci-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
+On Mon, Dec 17, 2018 at 2:24 AM Leonard Crestez <leonard.crestez@nxp.com> wrote:
+>
+> On 12/17/2018 1:09 AM, Andrey Smirnov wrote:
+> > In order to avoid having potentially ever growing list of variants
+> > that don't support methods implemented in imx6_pcie_reset_phy() and
+> > imx6_setup_phy_mpll(), change logical checks in the to check for SoC's
+> > that _do_ support what they implement. While at it, share the code via
+> > a small helper function.
+> >
+> > +static bool imx6_pcie_has_imx6_phy(struct imx6_pcie *imx6_pcie)
+> > +{
+> > +     return imx6_pcie->variant == IMX6Q ||
+> > +            imx6_pcie->variant == IMX6SX ||
+> > +            imx6_pcie->variant == IMX6QP;
+> > +}
+>
+> This would be an ideal match for adding a field inside drvdata, sadly
+> that was part of a series which stalled:
+>
+> https://patchwork.kernel.org/patch/10712261/
 
-* Sinan Kaya <okaya@kernel.org> wrote:
-
-> We are compiling PCI code today for systems with ACPI and no PCI
-> device present. Remove the useless code and reduce the tight
-> dependency.
-> 
-> Signed-off-by: Sinan Kaya <okaya@kernel.org>
-> Acked-by: Bjorn Helgaas <bhelgaas@google.com> # PCI parts
-
-If this is targeted for the ACPI tree:
-
-Acked-by: Ingo Molnar <mingo@kernel.org>
+OK, I can pick up that individual patch into this series.
 
 Thanks,
-
-	Ingo
+Andrey Smirnov
