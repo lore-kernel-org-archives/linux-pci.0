@@ -1,141 +1,292 @@
-Return-Path: <SRS0=ngrz=OZ=vger.kernel.org=linux-pci-owner@kernel.org>
+Return-Path: <SRS0=7Kzx=O2=vger.kernel.org=linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-9.1 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
-	DKIM_VALID_AU,FREEMAIL_FORGED_FROMDOMAIN,FREEMAIL_FROM,
-	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
-	SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT autolearn=unavailable
-	autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-2.7 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,MAILING_LIST_MULTI,SPF_PASS,URIBL_BLOCKED,
+	USER_AGENT_MUTT autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 82F5CC43612
-	for <linux-pci@archiver.kernel.org>; Sun, 16 Dec 2018 23:09:58 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 77464C43387
+	for <linux-pci@archiver.kernel.org>; Mon, 17 Dec 2018 06:51:32 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 516132084A
-	for <linux-pci@archiver.kernel.org>; Sun, 16 Dec 2018 23:09:58 +0000 (UTC)
-Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="QXYMqlK3"
+	by mail.kernel.org (Postfix) with ESMTP id 2E05420675
+	for <linux-pci@archiver.kernel.org>; Mon, 17 Dec 2018 06:51:32 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=default; t=1545029492;
+	bh=GC/tcewZD3obc+ZgwWPGcvzzs+IomdJ4iyHXeQ23D34=;
+	h=Date:From:To:Cc:Subject:References:In-Reply-To:List-ID:From;
+	b=Vpe2DWPSYqFxKm2HCTvZK49WBhTZShTIA5rOS8D6Yz4TkfFYJIni12FA7ICKZicyZ
+	 +1OrgmGiJBX/FvW5JzExirAlF7pTLdNRedF3ZwCz+IA/MQVwb9sV6oFxdiwftmmi/m
+	 VAnY+Atk73iBi2m/n2ojJBd+WzjcKlY6p0rDh1ws=
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1731073AbeLPXJn (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Sun, 16 Dec 2018 18:09:43 -0500
-Received: from mail-pf1-f193.google.com ([209.85.210.193]:46849 "EHLO
-        mail-pf1-f193.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1728203AbeLPXJk (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Sun, 16 Dec 2018 18:09:40 -0500
-Received: by mail-pf1-f193.google.com with SMTP id c73so5384775pfe.13;
-        Sun, 16 Dec 2018 15:09:40 -0800 (PST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20161025;
-        h=from:to:cc:subject:date:message-id:in-reply-to:references
-         :mime-version:content-transfer-encoding;
-        bh=ThdCHGx7HMeXDSODXXhk1TA+McwuEBwFRrEXyBqC4tY=;
-        b=QXYMqlK3GSzfXI7WNRhf3Lz0lj8ztycPnCZijolGGZxyteGhEryVwQu+wNKPAUY+YP
-         fo+Tg1U2Uo8OzVLtxtxMbZeWIeoOFNtkWQa3txQbNhbx5isGQaM31MOeLS1EG1V2/Aw/
-         PgkX2upipOZOjpz/GhPPaHJ6s4ZBQtHsmZfdAKG7vakzIsckbF/66owIY2jK4U9jH8Gx
-         3qTVt5orgN7K0HlBrnD6gTv+hcgH6OBftgBrN9nG/GtjXuyVwCp7aZVSGqBjH/inSNVw
-         hNfD4FhGss5YL3gZJRrvma3EFKIvfSU4ng5gKPqww+mXYicev6szBieKPoA833+I0QdV
-         OKSA==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20161025;
-        h=x-gm-message-state:from:to:cc:subject:date:message-id:in-reply-to
-         :references:mime-version:content-transfer-encoding;
-        bh=ThdCHGx7HMeXDSODXXhk1TA+McwuEBwFRrEXyBqC4tY=;
-        b=Aw0WuHoqPxun0ZrT/9qNK7YP7kjYEfdZYnZ6PCbAqC3QC41pVu8wRtj05tr8ASoF9Y
-         NoYtryDDkB8EXpSIxSNT0XnD5IK5YOqIavVzd/dgfHd55MNkP8BuUteOKkmeO78te0s+
-         PBGCxWjK7uDbf958AqqR0do7me7eH9teLIMazIF545M+MZAwMzoj/dbv8xdNni7BlEx/
-         dbbsfJLOtab0n892QVpa765N0NGFTavR/ehWM67ZHq1far5XqXU3Esg+peZ1dB0FcQk4
-         +adv/bNy7wi2L3TqHR+d0XCuehjX2causI3qEavYfRt76GuVocdvF2cppXc7ctQ3yqpi
-         T53w==
-X-Gm-Message-State: AA+aEWaEapSu1nLATZw/FNjgijQ40OkSZ5rpfxwzLNhwNCr+6N5UXdal
-        S0hrbn4z4TOYISvS1FXcO7JfiyyT
-X-Google-Smtp-Source: AFSGD/W1bNEAwXlRjNa/wfgL9IEzOfuTo7fwcKylCFfKncceXmLpYw3zP057F6Lfib8rOiNANa1KIw==
-X-Received: by 2002:a63:1013:: with SMTP id f19mr10316563pgl.38.1545001779866;
-        Sun, 16 Dec 2018 15:09:39 -0800 (PST)
-Received: from squirtle.lan (c-24-22-235-96.hsd1.wa.comcast.net. [24.22.235.96])
-        by smtp.gmail.com with ESMTPSA id d18sm13837878pfj.47.2018.12.16.15.09.38
-        (version=TLS1_2 cipher=ECDHE-RSA-CHACHA20-POLY1305 bits=256/256);
-        Sun, 16 Dec 2018 15:09:39 -0800 (PST)
-From:   Andrey Smirnov <andrew.smirnov@gmail.com>
-To:     Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
-Cc:     Andrey Smirnov <andrew.smirnov@gmail.com>,
-        Bjorn Helgaas <bhelgaas@google.com>,
-        Fabio Estevam <fabio.estevam@nxp.com>,
-        Chris Healy <cphealy@gmail.com>,
-        Lucas Stach <l.stach@pengutronix.de>,
-        Leonard Crestez <leonard.crestez@nxp.com>,
-        "A.s. Dong" <aisheng.dong@nxp.com>,
-        Richard Zhu <hongxing.zhu@nxp.com>, linux-imx@nxp.com,
-        linux-arm-kernel@lists.infradead.org, linux-kernel@vger.kernel.org,
-        linux-pci@vger.kernel.org
-Subject: [PATCH 1/3] PCI: imx6: Fixup Kconfig and #endif placement
-Date:   Sun, 16 Dec 2018 15:09:14 -0800
-Message-Id: <20181216230916.22982-2-andrew.smirnov@gmail.com>
-X-Mailer: git-send-email 2.19.1
-In-Reply-To: <20181216230916.22982-1-andrew.smirnov@gmail.com>
-References: <20181216230916.22982-1-andrew.smirnov@gmail.com>
+        id S1726449AbeLQGvb (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Mon, 17 Dec 2018 01:51:31 -0500
+Received: from mail.kernel.org ([198.145.29.99]:52098 "EHLO mail.kernel.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1726323AbeLQGvb (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Mon, 17 Dec 2018 01:51:31 -0500
+Received: from localhost (unknown [171.61.92.201])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+        (No client certificate requested)
+        by mail.kernel.org (Postfix) with ESMTPSA id 23CF520675;
+        Mon, 17 Dec 2018 06:51:27 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+        s=default; t=1545029489;
+        bh=GC/tcewZD3obc+ZgwWPGcvzzs+IomdJ4iyHXeQ23D34=;
+        h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
+        b=FV4R95XL5nO+zmWuYeEdKpvqXqmRVp1NtIg9Fabrzi+u2Qc89RZaiZGK+2GxELs3B
+         rcjIlhoUwzNwX76AH/G9YkKBIkVBxpYrI6vS1YskKyp1Q+5tdQBJUWq/sUZfpWIiEt
+         tB9m9DVNWwjGQd+y0OU66tJfuZQQ/P/0D/i04o7M=
+Date:   Mon, 17 Dec 2018 12:21:20 +0530
+From:   Vinod Koul <vkoul@kernel.org>
+To:     Gustavo Pimentel <gustavo.pimentel@synopsys.com>
+Cc:     linux-pci@vger.kernel.org, dmaengine@vger.kernel.org,
+        Eugeniy Paltsev <eugeniy.paltsev@synopsys.com>,
+        Andy Shevchenko <andriy.shevchenko@linux.intel.com>,
+        Joao Pinto <joao.pinto@synopsys.com>
+Subject: Re: [RFC 1/6] dma: Add Synopsys eDMA IP core driver
+Message-ID: <20181217065120.GH2472@vkoul-mobl>
+References: <cover.1544610287.git.gustavo.pimentel@synopsys.com>
+ <bf4eb88265bf8bd95f7b2effdbfbeda8c52a2e0b.1544610287.git.gustavo.pimentel@synopsys.com>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <bf4eb88265bf8bd95f7b2effdbfbeda8c52a2e0b.1544610287.git.gustavo.pimentel@synopsys.com>
+User-Agent: Mutt/1.10.1 (2018-07-13)
 Sender: linux-pci-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-Fixup Kconfig, which lost SOC_IMX7D during merge as well as move
-"endif" to its original placement to only imx6q_pcie_abort_handler()
-when building for AArch64
+On 12-12-18, 12:13, Gustavo Pimentel wrote:
+> Add Synopsys eDMA IP core driver to kernel.
+> 
+> This core driver, initializes and configures the eDMA IP using vma-helpers
+> functions and dma-engine subsystem.
+> 
+> Also creates an abstration layer through callbacks allowing different
+> registers mappings in the future, organized in to versions.
+> 
+> This driver can be compile as built-in or external module in kernel.
+> 
+> To enable this driver just select DW_EDMA option in kernel configuration,
+> however it requires and selects automatically DMA_ENGINE and
+> DMA_VIRTUAL_CHANNELS option too.
 
-Cc: Bjorn Helgaas <bhelgaas@google.com>
-Cc: Fabio Estevam <fabio.estevam@nxp.com>
-Cc: Chris Healy <cphealy@gmail.com>
-Cc: Lucas Stach <l.stach@pengutronix.de>
-Cc: Leonard Crestez <leonard.crestez@nxp.com>
-Cc: "A.s. Dong" <aisheng.dong@nxp.com>
-Cc: Richard Zhu <hongxing.zhu@nxp.com>
-Cc: linux-imx@nxp.com
-Cc: linux-arm-kernel@lists.infradead.org
-Cc: linux-kernel@vger.kernel.org
-Cc: linux-pci@vger.kernel.org
-Signed-off-by: Andrey Smirnov <andrew.smirnov@gmail.com>
----
- drivers/pci/controller/dwc/Kconfig    | 4 ++--
- drivers/pci/controller/dwc/pci-imx6.c | 2 +-
- 2 files changed, 3 insertions(+), 3 deletions(-)
+The subsystem name is dmaengine: so please use that tag. If you are not
+aware then git log for that subsystem helps you with the patterns
+expected
 
-diff --git a/drivers/pci/controller/dwc/Kconfig b/drivers/pci/controller/dwc/Kconfig
-index 0c8142529241..b5202ed78762 100644
---- a/drivers/pci/controller/dwc/Kconfig
-+++ b/drivers/pci/controller/dwc/Kconfig
-@@ -89,8 +89,8 @@ config PCI_EXYNOS
- 	select PCIE_DW_HOST
- 
- config PCI_IMX6
--	bool "Freescale i.MX6/7 PCIe controller"
--	depends on SOC_IMX8MQ || SOC_IMX6Q || (ARM && COMPILE_TEST)
-+	bool "Freescale i.MX6/7/8 PCIe controller"
-+	depends on SOC_IMX8MQ || SOC_IMX6Q || SOC_IMX7D || (ARM && COMPILE_TEST)
- 	depends on PCI_MSI_IRQ_DOMAIN
- 	select PCIE_DW_HOST
- 
-diff --git a/drivers/pci/controller/dwc/pci-imx6.c b/drivers/pci/controller/dwc/pci-imx6.c
-index e563ca9bdb78..4b7f638b8aff 100644
---- a/drivers/pci/controller/dwc/pci-imx6.c
-+++ b/drivers/pci/controller/dwc/pci-imx6.c
-@@ -311,6 +311,7 @@ static int imx6q_pcie_abort_handler(unsigned long addr,
- 
- 	return 1;
- }
-+#endif
- 
- static int imx6_pcie_attach_pd(struct device *dev)
- {
-@@ -389,7 +390,6 @@ static void imx6_pcie_assert_core_reset(struct imx6_pcie *imx6_pcie)
- 				ret);
- 	}
- }
--#endif
- 
- static int imx6_pcie_enable_ref_clk(struct imx6_pcie *imx6_pcie)
- {
+I did a quick look at the patch, I have highlighted few concerns and
+they repeat in similar code patterns in this patch
+
+> +#include "dw-edma-core.h"
+> +#include "../dmaengine.h"
+> +#include "../virt-dma.h"
+> +
+> +#define DRV_CORE_NAME				"dw-edma-core"
+
+Why is this required?
+
+> +
+> +#define SET(reg, name, val)			\
+> +	reg.name = val
+> +
+> +#define SET_BOTH_CH(name, value)		\
+> +	do {					\
+> +		SET(dw->wr_edma, name, value);	\
+> +		SET(dw->rd_edma, name, value);	\
+> +	} while (0)
+
+I am not sure how this helps, makes things not explicit..
+
+> +static struct dw_edma_burst *dw_edma_alloc_burst(struct dw_edma_chunk *chunk)
+> +{
+> +	struct dw_edma_chan *chan = chunk->chan;
+> +	struct dw_edma_burst *burst;
+> +
+> +	burst = kzalloc(sizeof(struct dw_edma_burst), GFP_NOWAIT);
+> +	if (unlikely(!burst)) {
+> +		dev_err(chan2dev(chan), ": fail to alloc new burst\n");
+
+no need to log mem alloc failures
+
+> +		return NULL;
+> +	}
+> +
+> +	INIT_LIST_HEAD(&burst->list);
+> +	burst->sar = 0;
+> +	burst->dar = 0;
+> +	burst->sz = 0;
+
+you did kzalloc right?
+
+> +
+> +	if (chunk->burst) {
+> +		atomic_inc(&chunk->bursts_alloc);
+
+why does this need atomic variables?
+
+> +static void dw_edma_free_burst(struct dw_edma_chunk *chunk)
+> +{
+> +	struct dw_edma_burst *child, *_next;
+> +
+> +	if (!chunk->burst)
+> +		return;
+> +
+> +	// Remove all the list elements
+
+We dont use C99 style comments, please use 
+        /* single line */
+and
+        /*
+         * multi
+         * line
+         */
+
+> +static void start_transfer(struct dw_edma_chan *chan)
+> +{
+> +	struct virt_dma_desc *vd;
+> +	struct dw_edma_desc *desc;
+> +	struct dw_edma_chunk *child, *_next;
+> +	const struct dw_edma_core_ops *ops = chan2ops(chan);
+> +
+> +	vd = vchan_next_desc(&chan->vc);
+> +	if (!vd)
+> +		return;
+> +
+> +	desc = vd2dw_edma_desc(vd);
+> +	if (!desc)
+> +		return;
+> +
+> +	list_for_each_entry_safe(child, _next, &desc->chunk->list, list) {
+> +		ops->start(child, !desc->xfer_sz);
+> +		desc->xfer_sz += child->sz;
+> +		dev_dbg(chan2dev(chan),
+> +			": transfer of %u bytes started\n", child->sz);
+> +
+> +		dw_edma_free_burst(child);
+> +		if (atomic_read(&child->bursts_alloc))
+> +			dev_dbg(chan2dev(chan),
+> +				": %d bursts still allocated\n",
+> +				atomic_read(&child->bursts_alloc));
+> +		list_del(&child->list);
+> +		kfree(child);
+> +		atomic_dec(&desc->chunks_alloc);
+> +
+> +		return;
+> +	}
+> +}
+> +
+> +static int dw_edma_device_config(struct dma_chan *dchan,
+> +				 struct dma_slave_config *config)
+
+please align to preceding brace. Also running checkpatch with --strict
+option helps, warning checkpatch is a guidebook and not a rule book!
+
+
+> +{
+> +	struct dw_edma_chan *chan = dchan2dw_edma_chan(dchan);
+> +	const struct dw_edma_core_ops *ops = chan2ops(chan);
+> +	enum dma_transfer_direction dir;
+> +	unsigned long flags;
+> +	int err = 0;
+> +
+> +	spin_lock_irqsave(&chan->vc.lock, flags);
+> +
+> +	if (!config) {
+> +		err = -EINVAL;
+> +		goto err_config;
+> +	}
+> +
+> +	if (chan->configured) {
+> +		dev_err(chan2dev(chan), ": channel already configured\n");
+> +		err = -EPERM;
+> +		goto err_config;
+> +	}
+> +
+> +	dir = config->direction;
+
+Direction is depreciated, I have already removed the usages, so please
+do not add new ones.
+
+You need to take direction for respective prep_ calls
+
+> +	if (dir == DMA_DEV_TO_MEM && chan->dir == EDMA_DIR_WRITE) {
+> +		dev_info(chan2dev(chan),
+> +			": direction DMA_DEV_TO_MEM (EDMA_DIR_WRITE)\n");
+> +		chan->p_addr = config->src_addr;
+> +	} else if (dir == DMA_MEM_TO_DEV && chan->dir == EDMA_DIR_READ) {
+> +		dev_info(chan2dev(chan),
+> +			": direction DMA_MEM_TO_DEV (EDMA_DIR_READ)\n");
+> +		chan->p_addr = config->dst_addr;
+> +	} else {
+> +		dev_err(chan2dev(chan), ": invalid direction\n");
+> +		err = -EINVAL;
+> +		goto err_config;
+> +	}
+
+This should be removed
+
+> +
+> +	dev_info(chan2dev(chan),
+> +		": src_addr(physical) = 0x%.16x\n", config->src_addr);
+> +	dev_info(chan2dev(chan),
+> +		": dst_addr(physical) = 0x%.16x\n", config->dst_addr);
+
+You have too many logs, it is good for bringup and initial work but not
+suited for production.
+
+> +
+> +	err = ops->device_config(dchan);
+
+okay what does this callback do. You are already under and dmaengine fwk
+so what is the need to add one more abstraction layer, can you explain
+that in details please
+
+> +static int dw_edma_device_pause(struct dma_chan *dchan)
+> +{
+> +	struct dw_edma_chan *chan = dchan2dw_edma_chan(dchan);
+> +	unsigned long flags;
+> +	int err = 0;
+> +
+> +	spin_lock_irqsave(&chan->vc.lock, flags);
+> +
+> +	if (!chan->configured) {
+> +		dev_err(dchan2dev(dchan), ": channel not configured\n");
+> +		err = -EPERM;
+> +		goto err_pause;
+> +	}
+> +
+> +	switch (chan->status) {
+> +	case EDMA_ST_IDLE:
+> +		dev_err(dchan2dev(dchan), ": channel is idle\n");
+> +		err = -EPERM;
+> +		goto err_pause;
+> +	case EDMA_ST_PAUSE:
+> +		dev_err(dchan2dev(dchan), ": channel is already paused\n");
+> +		err = -EPERM;
+> +		goto err_pause;
+> +	case EDMA_ST_BUSY:
+> +		// Only acceptable state
+> +		break;
+
+Doesn't it look as overkill to use switch for single acceptable case.
+Why not do
+
+        if (chan->status != EDMA_ST_BUSY) {
+                err = -EPERM;
+                ...
+        }
+
+> +	default:
+> +		dev_err(dchan2dev(dchan), ": invalid status state\n");
+> +		err = -EINVAL;
+> +		goto err_pause;
+> +	}
+> +
+> +	switch (chan->request) {
+
+what is the need to track channel status and channel requests?
 -- 
-2.19.1
-
+~Vinod
