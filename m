@@ -2,124 +2,129 @@ Return-Path: <SRS0=7Kzx=O2=vger.kernel.org=linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-7.5 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	MAILING_LIST_MULTI,MENTIONS_GIT_HOSTING,SPF_PASS,USER_AGENT_MUTT
-	autolearn=unavailable autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-8.7 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
+	SPF_PASS,URIBL_BLOCKED,USER_AGENT_MUTT autolearn=ham autolearn_force=no
+	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 212FCC43444
-	for <linux-pci@archiver.kernel.org>; Mon, 17 Dec 2018 11:12:17 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id C38F9C43387
+	for <linux-pci@archiver.kernel.org>; Mon, 17 Dec 2018 13:58:37 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id ECF51205C9
-	for <linux-pci@archiver.kernel.org>; Mon, 17 Dec 2018 11:12:16 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 89D852145D
+	for <linux-pci@archiver.kernel.org>; Mon, 17 Dec 2018 13:58:37 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=default; t=1545055117;
+	bh=fMAJHnfi5IG4Ruj4T3wXEl4IsIwZe6gAaTaAQFNacZ4=;
+	h=Date:From:To:Cc:Subject:References:In-Reply-To:List-ID:From;
+	b=GMyzBlq/2pRQJeX0NaUWTkdgYACfAGM8roV1vReeBARiDPpiwrg6C9mBI0jb4uq41
+	 VhiQrwG6Xlz8eYbCcPa7snkKL8E5cCCwf80LiGagda7XoWARCs3fI2Hu2gSk7uipY8
+	 2AP+G1zdv/nhzcCvdgk99zKc5GoMnJD9tyzMSqX4=
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727060AbeLQLLp (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Mon, 17 Dec 2018 06:11:45 -0500
-Received: from foss.arm.com ([217.140.101.70]:53386 "EHLO foss.arm.com"
+        id S1727789AbeLQN6g (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Mon, 17 Dec 2018 08:58:36 -0500
+Received: from mail.kernel.org ([198.145.29.99]:57334 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1727009AbeLQLLj (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Mon, 17 Dec 2018 06:11:39 -0500
-Received: from usa-sjc-imap-foss1.foss.arm.com (unknown [10.72.51.249])
-        by usa-sjc-mx-foss1.foss.arm.com (Postfix) with ESMTP id B7A2CEBD;
-        Mon, 17 Dec 2018 03:11:38 -0800 (PST)
-Received: from e107981-ln.cambridge.arm.com (e107981-ln.cambridge.arm.com [10.1.197.40])
-        by usa-sjc-imap-foss1.foss.arm.com (Postfix) with ESMTPSA id 158723F6A8;
-        Mon, 17 Dec 2018 03:11:35 -0800 (PST)
-Date:   Mon, 17 Dec 2018 11:11:33 +0000
-From:   Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
-To:     Bjorn Helgaas <helgaas@kernel.org>
-Cc:     Andrey Smirnov <andrew.smirnov@gmail.com>,
-        "A.s. Dong" <aisheng.dong@nxp.com>,
-        Mark Rutland <mark.rutland@arm.com>,
-        Richard Zhu <hongxing.zhu@nxp.com>,
-        linux-arm-kernel@lists.infradead.org,
-        Rob Herring <robh@kernel.org>, linux-pci@vger.kernel.org,
-        linux-kernel@vger.kernel.org,
+        id S1727651AbeLQN6g (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Mon, 17 Dec 2018 08:58:36 -0500
+Received: from localhost (173-25-171-118.client.mchsi.com [173.25.171.118])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+        (No client certificate requested)
+        by mail.kernel.org (Postfix) with ESMTPSA id 4B0282133F;
+        Mon, 17 Dec 2018 13:58:35 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+        s=default; t=1545055115;
+        bh=fMAJHnfi5IG4Ruj4T3wXEl4IsIwZe6gAaTaAQFNacZ4=;
+        h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
+        b=MIC4UmgFCJhAASGPwQ/R2JehEu2jCJ92mdSwyM6IM8o6/CSwqPcpfwolKflSUM0hk
+         V88ifYAgrUgP1iIamyzKZt8igCCvW8aWslmUwQtH/eq9+OVHfES6DGsePBfPfcFI9m
+         VsOaWTNvt0nsG/UvXozjweEkDCP05izvsR5TMcK0=
+Date:   Mon, 17 Dec 2018 07:58:33 -0600
+From:   Bjorn Helgaas <helgaas@kernel.org>
+To:     Andrey Smirnov <andrew.smirnov@gmail.com>
+Cc:     Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
         Fabio Estevam <fabio.estevam@nxp.com>,
-        devicetree@vger.kernel.org, linux-imx@nxp.com,
-        Leonard Crestez <leonard.crestez@nxp.com>, cphealy@gmail.com,
-        l.stach@pengutronix.de, Trent Piepho <tpiepho@impinj.com>
-Subject: Re: [PATCH v2 0/3] PCIE support for i.MX8MQ
-Message-ID: <20181217111133.GB14261@e107981-ln.cambridge.arm.com>
-References: <20181206073545.10967-1-andrew.smirnov@gmail.com>
- <20181206121550.GA2725@e107981-ln.cambridge.arm.com>
- <20181214203828.GD20725@google.com>
+        Chris Healy <cphealy@gmail.com>,
+        Lucas Stach <l.stach@pengutronix.de>,
+        Leonard Crestez <leonard.crestez@nxp.com>,
+        "A.s. Dong" <aisheng.dong@nxp.com>,
+        Richard Zhu <hongxing.zhu@nxp.com>, linux-imx@nxp.com,
+        linux-arm-kernel@lists.infradead.org, linux-kernel@vger.kernel.org,
+        linux-pci@vger.kernel.org
+Subject: Re: [PATCH 3/3] PCI: imx6: Make fallthrough comments more consistent
+Message-ID: <20181217135833.GJ20725@google.com>
+References: <20181216230916.22982-1-andrew.smirnov@gmail.com>
+ <20181216230916.22982-4-andrew.smirnov@gmail.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20181214203828.GD20725@google.com>
-User-Agent: Mutt/1.5.24 (2015-08-30)
+In-Reply-To: <20181216230916.22982-4-andrew.smirnov@gmail.com>
+User-Agent: Mutt/1.10.1 (2018-07-13)
 Sender: linux-pci-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-On Fri, Dec 14, 2018 at 02:38:29PM -0600, Bjorn Helgaas wrote:
-> [+cc Trent]
+On Sun, Dec 16, 2018 at 03:09:16PM -0800, Andrey Smirnov wrote:
+> Convert all fallthrough comments to say "fall through", as well as
+> modify their placement to the point where the "break" would normally
+> be.
 > 
-> On Thu, Dec 06, 2018 at 12:15:50PM +0000, Lorenzo Pieralisi wrote:
-> > On Wed, Dec 05, 2018 at 11:35:42PM -0800, Andrey Smirnov wrote:
-> > > Everyone:
-> > > 
-> > > This series contains changes I made in order to enable support of PCIE
-> > > IP block on i.MX8MQ SoCs (full tree can be found at [github-v2]).
-> > > 
-> > > NOTE: The last patch have a Kconfig symbol depenency on [imx8mq-kconfig].
-> > > 
-> > > Changes since [v1]:
-> > > 
-> > >  - Driver changed to use single "fsl,controller-id" property to
-> > >    distinguish between two intances of PCIE IP block
-> > > 
-> > >  - All code pertaining to L1SS was dropped to simplify the patch
-> > > 
-> > >  - Documented additions to DT bindings
-> > > 
-> > > Feedback is welcome!
-> > > 
-> > > Thanks,
-> > > Andrey Smirnov
-> > 
-> > Andrey,
-> > 
-> > I have applied the patches, ...
-> 
-> When I merged your pci/dwc branch, I noticed what looks like a merge
-> conflict between these commits:
-> 
->   d123765b58ee ("PCI: dwc: Adjust Kconfig to allow IMX6 PCIe host on IMX7")
->   1a059d994189 ("PCI: imx: Add support for i.MX8MQ")
-> 
-> d123765b58ee added SOC_IMX7D:
-> 
->   -       depends on SOC_IMX6Q || (ARM && COMPILE_TEST)
->   +       depends on SOC_IMX6Q || SOC_IMX7D || (ARM && COMPILE_TEST)
-> 
-> and 1a059d994189 added SOC_IMX8MQ but dropped SOC_IMX7D again, which looks
-> like a mistake:
-> 
->   -       depends on SOC_IMX6Q || SOC_IMX7D || (ARM && COMPILE_TEST)
->   +       depends on SOC_IMX8MQ || SOC_IMX6Q || (ARM && COMPILE_TEST)
-> 
-> So my "next" branch[1] (current head 7053eeb009e0) is:
-> 
->   config PCI_IMX6
->         bool "Freescale i.MX6/7 PCIe controller"
->         depends on SOC_IMX8MQ || SOC_IMX6Q || (ARM && COMPILE_TEST)
->         depends on PCI_MSI_IRQ_DOMAIN
->         select PCIE_DW_HOST
-> 
-> which I think is wrong.  Lorenzo, if you update your pci/dwc branch,
-> I'll rebuild my "next" branch.
+> Cc: Bjorn Helgaas <bhelgaas@google.com>
+> Cc: Fabio Estevam <fabio.estevam@nxp.com>
+> Cc: Chris Healy <cphealy@gmail.com>
+> Cc: Lucas Stach <l.stach@pengutronix.de>
+> Cc: Leonard Crestez <leonard.crestez@nxp.com>
+> Cc: "A.s. Dong" <aisheng.dong@nxp.com>
+> Cc: Richard Zhu <hongxing.zhu@nxp.com>
+> Cc: linux-imx@nxp.com
+> Cc: linux-arm-kernel@lists.infradead.org
+> Cc: linux-kernel@vger.kernel.org
+> Cc: linux-pci@vger.kernel.org
+> Suggested-by: Bjorn Helgaas <helgaas@kernel.org>
 
-Sorry about that, I missed it.
+I didn't make it very clear, but my suggestion was really to remove
+the annotation completely; see below.
 
-I dropped Andrey's patches from pci/dwc waiting for him/Lucas to agree
-on a way forward.
-
-Thanks,
-Lorenzo
-
-> If you want to tweak the switch statements and/or IMX8 checks, you
-> could do that at the same time.
+> Signed-off-by: Andrey Smirnov <andrew.smirnov@gmail.com>
+> ---
+>  drivers/pci/controller/dwc/pci-imx6.c | 14 +++++++++-----
+>  1 file changed, 9 insertions(+), 5 deletions(-)
 > 
-> [1] https://git.kernel.org/pub/scm/linux/kernel/git/helgaas/pci.git/log/?h=next
+> diff --git a/drivers/pci/controller/dwc/pci-imx6.c b/drivers/pci/controller/dwc/pci-imx6.c
+> index 59658577e81d..a0510e185d44 100644
+> --- a/drivers/pci/controller/dwc/pci-imx6.c
+> +++ b/drivers/pci/controller/dwc/pci-imx6.c
+> @@ -362,7 +362,8 @@ static void imx6_pcie_assert_core_reset(struct imx6_pcie *imx6_pcie)
+>  
+>  	switch (imx6_pcie->variant) {
+>  	case IMX7D:
+> -	case IMX8MQ: /* FALLTHROUGH */
+> +		/* fall through */
+> +	case IMX8MQ:
+>  		reset_control_assert(imx6_pcie->pciephy_reset);
+>  		reset_control_assert(imx6_pcie->apps_reset);
+>  		break;
+
+IMO this use of "fall through" is superfluous and unusual in the Linux
+source.
+
+A "fall through" comment would be useful if the IMX7D case had
+executable code but no "break".  Then the comment shows that the
+intent was to execute *both* the IMX7D code and the IMX8MQ code and
+the lack of a "break" was intentional.
+
+In this case, the intent is to treat IMX7D and IMX8MQ the same, and
+there's no executable code specifically for the IMX7D.  I think it's
+easiest to read that when the list of identical cases is all together
+without the comment in the middle, i.e., as
+
+>  	case IMX7D:
+> 	case IMX8MQ:
+>  		reset_control_assert(imx6_pcie->pciephy_reset);
+
+rather than this:
+
+>  	case IMX7D:
+> 		/* fall through */
+> 	case IMX8MQ:
+>  		reset_control_assert(imx6_pcie->pciephy_reset);
