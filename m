@@ -2,98 +2,81 @@ Return-Path: <SRS0=7Kzx=O2=vger.kernel.org=linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-1.0 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	MAILING_LIST_MULTI,SPF_PASS autolearn=unavailable autolearn_force=no
-	version=3.4.0
+X-Spam-Status: No, score=-2.7 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,MAILING_LIST_MULTI,SPF_PASS,USER_AGENT_MUTT
+	autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id B6145C43387
-	for <linux-pci@archiver.kernel.org>; Mon, 17 Dec 2018 14:31:59 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 23DA4C43387
+	for <linux-pci@archiver.kernel.org>; Mon, 17 Dec 2018 14:32:50 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 916D7206A2
-	for <linux-pci@archiver.kernel.org>; Mon, 17 Dec 2018 14:31:59 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id DE0332146E
+	for <linux-pci@archiver.kernel.org>; Mon, 17 Dec 2018 14:32:49 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=default; t=1545057170;
+	bh=U3lJ6BneydpJBppucBLQPbsaaT46S5fpMxrOi3dnS5s=;
+	h=Date:From:To:Cc:Subject:References:In-Reply-To:List-ID:From;
+	b=WaU21VLDKQY+xKlUNl2m6IwkQfUSORE17Mi/Fcwfv35SAlMQwzhCf7BYFR3ynKd6b
+	 FYhLOQdQWUxTtD1aCE69f/CmsczU2MFr6vg5cl0pDMzsS75q/6dKMbuA5EYORr4U3u
+	 f7mwLF/C57mhFCO1oAV64jf+IKD3+9emqoy6z5Ak=
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727332AbeLQObx convert rfc822-to-8bit (ORCPT
-        <rfc822;linux-pci@archiver.kernel.org>);
-        Mon, 17 Dec 2018 09:31:53 -0500
-Received: from mail.bootlin.com ([62.4.15.54]:57041 "EHLO mail.bootlin.com"
+        id S1726812AbeLQOct (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Mon, 17 Dec 2018 09:32:49 -0500
+Received: from mail.kernel.org ([198.145.29.99]:55046 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1727301AbeLQObx (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Mon, 17 Dec 2018 09:31:53 -0500
-Received: by mail.bootlin.com (Postfix, from userid 110)
-        id ADBEB2074F; Mon, 17 Dec 2018 15:31:50 +0100 (CET)
-Received: from xps13 (aaubervilliers-681-1-89-7.w90-88.abo.wanadoo.fr [90.88.30.7])
-        by mail.bootlin.com (Postfix) with ESMTPSA id 468AD20711;
-        Mon, 17 Dec 2018 15:31:40 +0100 (CET)
-Date:   Mon, 17 Dec 2018 15:31:40 +0100
-From:   Miquel Raynal <miquel.raynal@bootlin.com>
-To:     Thomas Petazzoni <thomas.petazzoni@bootlin.com>
-Cc:     Gregory Clement <gregory.clement@bootlin.com>,
-        Jason Cooper <jason@lakedaemon.net>,
-        Andrew Lunn <andrew@lunn.ch>,
-        Sebastian Hesselbarth <sebastian.hesselbarth@gmail.com>,
-        Bjorn Helgaas <bhelgaas@google.com>,
-        <devicetree@vger.kernel.org>, Rob Herring <robh+dt@kernel.org>,
-        Mark Rutland <mark.rutland@arm.com>,
-        Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
-        linux-pci@vger.kernel.org, <linux-kernel@vger.kernel.org>,
-        <linux-arm-kernel@lists.infradead.org>,
-        Antoine Tenart <antoine.tenart@bootlin.com>,
-        Maxime Chevallier <maxime.chevallier@bootlin.com>,
-        Nadav Haklai <nadavh@marvell.com>
-Subject: Re: [PATCH v2 10/12] ARM64: dts: marvell: armada-3720-espressobin:
- declare PCIe reset GPIO
-Message-ID: <20181217153140.6d51b9f3@xps13>
-In-Reply-To: <20181213153619.499aab66@windsurf>
-References: <20181212102142.16053-1-miquel.raynal@bootlin.com>
-        <20181212102142.16053-11-miquel.raynal@bootlin.com>
-        <20181213153306.4fc3b511@xps13>
-        <20181213153619.499aab66@windsurf>
-Organization: Bootlin
-X-Mailer: Claws Mail 3.17.1 (GTK+ 2.24.32; x86_64-pc-linux-gnu)
+        id S1726738AbeLQOct (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Mon, 17 Dec 2018 09:32:49 -0500
+Received: from localhost (173-25-171-118.client.mchsi.com [173.25.171.118])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+        (No client certificate requested)
+        by mail.kernel.org (Postfix) with ESMTPSA id 496AB206A2;
+        Mon, 17 Dec 2018 14:32:48 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+        s=default; t=1545057168;
+        bh=U3lJ6BneydpJBppucBLQPbsaaT46S5fpMxrOi3dnS5s=;
+        h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
+        b=HepqszlaEMP64Nm+rnoLqwCkW2ORzS6Xlvc0jzE4+Q7WsoJ/TSzwUPvf6Z8lX9VCe
+         0VAlGGVDGi+1KOZMBATBDoGm/VvvdkwE6IMazCj3sohexQHJ6w0kcLtikJmJN/mTX5
+         XQg9bkFDLLNK/9QdtAq3ZZcTC5x9lURBuXw0vELg=
+Date:   Mon, 17 Dec 2018 08:32:47 -0600
+From:   Bjorn Helgaas <helgaas@kernel.org>
+To:     Jianjun Wang <jianjun.wang@mediatek.com>
+Cc:     ryder.lee@mediatek.com, robh+dt@kernel.org,
+        lorenzo.pieralisi@arm.com, matthias.bgg@gmail.com,
+        linux-pci@vger.kernel.org, mark.rutland@arm.com,
+        devicetree@vger.kernel.org, youlin.pei@mediatek.com,
+        linux-kernel@vger.kernel.org, linux-mediatek@lists.infradead.org,
+        honghui.zhang@mediatek.com, linux-arm-kernel@lists.infradead.org
+Subject: Re: [PATCH 2/2] PCI: mediatek: Add controller support for MT7629
+Message-ID: <20181217143247.GK20725@google.com>
+References: <1544058553-10936-1-git-send-email-jianjun.wang@mediatek.com>
+ <1544058553-10936-3-git-send-email-jianjun.wang@mediatek.com>
+ <20181213145517.GB4701@google.com>
+ <1545034779.8528.8.camel@mhfsdcap03>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 8BIT
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <1545034779.8528.8.camel@mhfsdcap03>
+User-Agent: Mutt/1.10.1 (2018-07-13)
 Sender: linux-pci-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-Hi Thomas,
-
-Thomas Petazzoni <thomas.petazzoni@bootlin.com> wrote on Thu, 13 Dec
-2018 15:36:19 +0100:
-
-> Hello,
+On Mon, Dec 17, 2018 at 04:19:39PM +0800, Jianjun Wang wrote:
+> On Thu, 2018-12-13 at 08:55 -0600, Bjorn Helgaas wrote:
+> > On Thu, Dec 06, 2018 at 09:09:13AM +0800, Jianjun Wang wrote:
+> > > The read value of BAR0 is 0xffff_ffff, it's size will be calculated as 4GB
+> > > in arm64 but bogus alignment values at arm32, the pcie device and devices
+> > > behind this bridge will not be enabled. Fix it's BAR0 resource size to
+> > > guarantee the pcie devices will be enabled correctly.
+> > 
+> > So this is a hardware erratum?  Per spec, a memory BAR has bit 0 hardwired
+> > to 0, and an IO BAR has bit 1 hardwired to 0.
 > 
-> On Thu, 13 Dec 2018 15:33:06 +0100, Miquel Raynal wrote:
-> 
-> > I will re-send a series without this patch. I think it does not hurt to
-> > keep the previous patch adding the pinmux setting in the
-> > Armada-37xx.dtsi file even without using it, so I will drop only this
-> > patch.  
-> 
-> I tend to disagree here (but perhaps you'll have other arguments to
-> convince me otherwise): the GPIO used for PCIe reset is a completely
-> board-specific thing. You can chose whatever GPIO you want, and each
-> board can be different. Therefore, there is no reason to have such a
-> pinmux configuration at the SoC level (.dtsi), it should be within the
-> particular board that uses that pinmux configuration.
-> 
-> This is a rule that we have applied to mvebu platforms in general, and
-> which I believe is fairly common in many DTs.
+> Yes, it only works properly on 64bit platform.
 
-Actually this is a pin that may be driven directly by the PCI IP and is
-not board-specific (note that the patch is wrong as the functions
-should be "pcie" instead of "gpio"). What is board specific is if this
-pin is actually wired to the endpoint PCIe card or not.
+I don't understand.  BARs are supposed to work the same regardless of
+whether it's a 32- or 64-bit platform.  If this is a workaround for a
+hardware defect, please just say that explicitly.
 
-Anyway, as seen by Gregory, the pinctrl driver must be fixed as when
-selecting the "pcie1" group, the driver was poking another area making
-the EspressoBin switch unstable. With a quick fix on my side I realized
-the reset was not behaving at all as expected. As it is not actually
-needed for suspend/resume operation (at least on my setup) I will drop
-the 'reset pin' related patches in the next iteration of the series.
-
-
-Thanks,
-Miquèl
+Bjorn
