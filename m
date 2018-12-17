@@ -2,897 +2,124 @@ Return-Path: <SRS0=7Kzx=O2=vger.kernel.org=linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-7.0 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_PASS,URIBL_BLOCKED
-	autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-7.5 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+	MAILING_LIST_MULTI,MENTIONS_GIT_HOSTING,SPF_PASS,USER_AGENT_MUTT
+	autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 006BCC43387
-	for <linux-pci@archiver.kernel.org>; Mon, 17 Dec 2018 11:09:37 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 212FCC43444
+	for <linux-pci@archiver.kernel.org>; Mon, 17 Dec 2018 11:12:17 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id AD268206A2
-	for <linux-pci@archiver.kernel.org>; Mon, 17 Dec 2018 11:09:36 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id ECF51205C9
+	for <linux-pci@archiver.kernel.org>; Mon, 17 Dec 2018 11:12:16 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726761AbeLQLJg convert rfc822-to-8bit (ORCPT
-        <rfc822;linux-pci@archiver.kernel.org>);
-        Mon, 17 Dec 2018 06:09:36 -0500
-Received: from szxga05-in.huawei.com ([45.249.212.191]:16143 "EHLO huawei.com"
-        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1726692AbeLQLJf (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Mon, 17 Dec 2018 06:09:35 -0500
-Received: from DGGEMS407-HUB.china.huawei.com (unknown [172.30.72.58])
-        by Forcepoint Email with ESMTP id E04205E920FE5;
-        Mon, 17 Dec 2018 19:09:29 +0800 (CST)
-Received: from localhost (10.202.226.46) by DGGEMS407-HUB.china.huawei.com
- (10.3.19.207) with Microsoft SMTP Server id 14.3.408.0; Mon, 17 Dec 2018
- 19:09:21 +0800
-Date:   Mon, 17 Dec 2018 11:09:06 +0000
-From:   Jonathan Cameron <jonathan.cameron@huawei.com>
+        id S1727060AbeLQLLp (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Mon, 17 Dec 2018 06:11:45 -0500
+Received: from foss.arm.com ([217.140.101.70]:53386 "EHLO foss.arm.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1727009AbeLQLLj (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Mon, 17 Dec 2018 06:11:39 -0500
+Received: from usa-sjc-imap-foss1.foss.arm.com (unknown [10.72.51.249])
+        by usa-sjc-mx-foss1.foss.arm.com (Postfix) with ESMTP id B7A2CEBD;
+        Mon, 17 Dec 2018 03:11:38 -0800 (PST)
+Received: from e107981-ln.cambridge.arm.com (e107981-ln.cambridge.arm.com [10.1.197.40])
+        by usa-sjc-imap-foss1.foss.arm.com (Postfix) with ESMTPSA id 158723F6A8;
+        Mon, 17 Dec 2018 03:11:35 -0800 (PST)
+Date:   Mon, 17 Dec 2018 11:11:33 +0000
+From:   Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
 To:     Bjorn Helgaas <helgaas@kernel.org>
-CC:     <linux-pci@vger.kernel.org>, Mark Rutland <mark.rutland@arm.com>,
-        "Shaokun Zhang" <zhangshaokun@hisilicon.com>,
-        Will Deacon <will.deacon@arm.com>, <linuxarm@huawei.com>,
-        Keith Busch <keith.busch@intel.com>,
-        Zhou Wang <wangzhou1@hisilicon.com>,
-        Mika Westerberg <mika.westerberg@linux.intel.com>,
-        <linux-arm-kernel@lists.infradead.org>,
-        "Rafael J. Wysocki" <rjw@rjwysocki.net>,
-        Len Brown <lenb@kernel.org>, <linux-acpi@vger.kernel.org>,
-        <linux-kernel@vger.kernel.org>, <alex.umansky@huawei.com>,
-        <Eric.Wehage@huawei.com>
-Subject: Re: [RFC PATCH 2/2] PCI/portdrv Hisilicon PCIe transport layer Port
- PMU driver.
-Message-ID: <20181217110906.0000003f@huawei.com>
-In-Reply-To: <20181214235505.GI20725@google.com>
-References: <20181214131055.52253-1-Jonathan.Cameron@huawei.com>
-        <20181214131055.52253-3-Jonathan.Cameron@huawei.com>
-        <20181214235505.GI20725@google.com>
-Organization: Huawei
-X-Mailer: Claws Mail 3.16.0 (GTK+ 2.24.32; i686-w64-mingw32)
+Cc:     Andrey Smirnov <andrew.smirnov@gmail.com>,
+        "A.s. Dong" <aisheng.dong@nxp.com>,
+        Mark Rutland <mark.rutland@arm.com>,
+        Richard Zhu <hongxing.zhu@nxp.com>,
+        linux-arm-kernel@lists.infradead.org,
+        Rob Herring <robh@kernel.org>, linux-pci@vger.kernel.org,
+        linux-kernel@vger.kernel.org,
+        Fabio Estevam <fabio.estevam@nxp.com>,
+        devicetree@vger.kernel.org, linux-imx@nxp.com,
+        Leonard Crestez <leonard.crestez@nxp.com>, cphealy@gmail.com,
+        l.stach@pengutronix.de, Trent Piepho <tpiepho@impinj.com>
+Subject: Re: [PATCH v2 0/3] PCIE support for i.MX8MQ
+Message-ID: <20181217111133.GB14261@e107981-ln.cambridge.arm.com>
+References: <20181206073545.10967-1-andrew.smirnov@gmail.com>
+ <20181206121550.GA2725@e107981-ln.cambridge.arm.com>
+ <20181214203828.GD20725@google.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="US-ASCII"
-Content-Transfer-Encoding: 8BIT
-X-Originating-IP: [10.202.226.46]
-X-CFilter-Loop: Reflected
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20181214203828.GD20725@google.com>
+User-Agent: Mutt/1.5.24 (2015-08-30)
 Sender: linux-pci-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-On Fri, 14 Dec 2018 17:55:05 -0600
-Bjorn Helgaas <helgaas@kernel.org> wrote:
-
-> [+cc Rafael, Len, linux-acpi, linux-kernel]
-Hi Bjorn,
-
+On Fri, Dec 14, 2018 at 02:38:29PM -0600, Bjorn Helgaas wrote:
+> [+cc Trent]
 > 
-> Thanks a lot for working on this!  I've been hoping somebody would
-> push on the PMU issue because there are some real wrinkles to work
-> out.
-
-Indeed! I'm glad this isn't one I'm aiming to 'solve' to a particular
-deadline.
-
-> 
-> On Fri, Dec 14, 2018 at 09:10:55PM +0800, Jonathan Cameron wrote:
-> > The Hip08 SoCs contain relatively detailed performance units for the
-> > PCIe Transport Layer at each port.
+> On Thu, Dec 06, 2018 at 12:15:50PM +0000, Lorenzo Pieralisi wrote:
+> > On Wed, Dec 05, 2018 at 11:35:42PM -0800, Andrey Smirnov wrote:
+> > > Everyone:
+> > > 
+> > > This series contains changes I made in order to enable support of PCIE
+> > > IP block on i.MX8MQ SoCs (full tree can be found at [github-v2]).
+> > > 
+> > > NOTE: The last patch have a Kconfig symbol depenency on [imx8mq-kconfig].
+> > > 
+> > > Changes since [v1]:
+> > > 
+> > >  - Driver changed to use single "fsl,controller-id" property to
+> > >    distinguish between two intances of PCIE IP block
+> > > 
+> > >  - All code pertaining to L1SS was dropped to simplify the patch
+> > > 
+> > >  - Documented additions to DT bindings
+> > > 
+> > > Feedback is welcome!
+> > > 
+> > > Thanks,
+> > > Andrey Smirnov
 > > 
-> > The support here is a subset of what will come, but is intended to
-> > provide some initial basic functionality.
+> > Andrey,
 > > 
-> > Note that there is a _lot_ more functionality in this hardware unit
-> > so this is the first RFC of several.
-> > 
-> > RFC questions:
-> > 
-> > 1. There is no standard for PCIe PMUs.  However, there are things that
-> >    are elements of the PCIe protocol so any similar PMU is likely to
-> >    support them.  Do we want to have a go at some consistent naming?  
+> > I have applied the patches, ...
 > 
-> Is this a perf question, i.e., are you asking about the event names
-> from "perf list"?  If so, I have no idea :)  But you're right that the
-> events on the PCIe side are mostly defined by the PCIe spec and I
-> agree it would make a lot of sense to use common names for those
-> things.
-
-Exactly that.  It's nice if users know what they are getting rather than
-having lots of subtly different variants of posted write tlp counters etc.
-Ideally this would be defined by the PCI SIG in a similar fashion to
-architectural counters on Arm, but they aren't yet...
-
-I'm far from an expert on PCIe but I can pull in some of our PCI hardware
-people and see if I can sketch out some docs for what a hypothetical
-magic PMU could count, then working out a naming scheme to cover that.
-+CC Alex and Eric. 
-
-We have things like bandwidth estimation and credits statistics to
-potentially consider as well.  Right now I can only find limited precedence
-for handling that sort of a thing in PMUs in general (there are similar
-things in Intel's graphics drivers).
-
+> When I merged your pci/dwc branch, I noticed what looks like a merge
+> conflict between these commits:
 > 
-> > 2. We are using an ACPI DSDT description to find what is basically a
-> >    platform device that is associated with a PCIe device. Is this an
-> >    acceptable thing to do?  
+>   d123765b58ee ("PCI: dwc: Adjust Kconfig to allow IMX6 PCIe host on IMX7")
+>   1a059d994189 ("PCI: imx: Add support for i.MX8MQ")
 > 
-> If the PCIe device itself, e.g., a Root Port, consumes address space,
-> it should have a BAR that describes it.
-
-I agree that would be the ideal / right way. Here we have an oddity because the
-port is in the host SoC. It's not remotely compliant with any standard.
-We are looking at this for future hardware but I don't think there is
-much we can do with this one.
-
-Looking forwards, there isn't a huge amount of flexibility in port definitions
-if we do want to put this in Bar space as only 2 Bars available
-(type 1 config space header)  I have no idea if these are in heavy use or
-not on existing hardware.  Looks like the Switchtec parts use one of
-them.  I know from other activities that people get very defensive of their BAR
-Space, particularly when looking to retrofit in new versions of a long standing
-device.
-
+> d123765b58ee added SOC_IMX7D:
 > 
-> If the Root Complex, which is not a PCIe device and does not have an
-> architected configuration or programming model, consumes address
-> space, it would make sense to describe it via ACPI in the PNP0A03
-> device like other host bridge registers.
+>   -       depends on SOC_IMX6Q || (ARM && COMPILE_TEST)
+>   +       depends on SOC_IMX6Q || SOC_IMX7D || (ARM && COMPILE_TEST)
 > 
-> From your cover letter, I think you have the latter situation, and if
-> I understand correctly, you have something like this in ACPI:
+> and 1a059d994189 added SOC_IMX8MQ but dropped SOC_IMX7D again, which looks
+> like a mistake:
 > 
->   PNP0A03       PCI host bridge
->     HISIxxxx    PMU registers for Root Port 00:1c.0
->     HISIxxxx    PMU registers for Root Port 00:1c.2
+>   -       depends on SOC_IMX6Q || SOC_IMX7D || (ARM && COMPILE_TEST)
+>   +       depends on SOC_IMX8MQ || SOC_IMX6Q || (ARM && COMPILE_TEST)
 > 
-> The PNP0A03 _CRS describes the address space it consumes, which
-> comprises (1) the register space that operates the bridge itself,
-> e.g., sets apertures, performs PCI config accesses, etc., and
-> (2) space that is converted to PCI transactions on the downstream
-> side.
-
-Pretty much as you describe.  Here, roughly speaking, is the relevant
-DSDT blob.  We have to play the slightly odd trick to get the association
-with the port.  Note this sort of trick is sometimes done for RCiEPs to
-provide for things that aren't quite handled in standard way (stuff
-around resets etc for example - often as a work around for a hardware
-limitation in a particular version).
-
-Device (PCI0)
-{
-	Name (_HID, "PNP0A08")
-	Name (_UID, Zero)
-	Name (_CID, "PNP0A03")
-	Name (_SEG, Zero)
-	Name (_BBN, Zero)
-	Name (_CCA, One)
-	Name (_PRT, Package (0x18))
-	Device (BR00) {
-	/* This device has it's class set to be a bridge so binds to portdrv */
-		Name (_HID, "19E5A120")
-		Name (_ADR, 0)
-		Name (_CRS, ResourceTemplate () {
-			QwordMemory(
- 				ResourceConsumer,
-				PosDecode,
-				MinFixed,
-				MaxFixed,
-				NonCacheable,
-				ReadWrite,
-				0,
-				0x148284000,
-				0x148284FFF,
-				0x0,
-				0x1000)
-		})
-	}
-}
-
+> So my "next" branch[1] (current head 7053eeb009e0) is:
 > 
-> So this feels a little strange to me because ACPI says the HISIxxxx
-> devices are below the host bridge, but instead of consuming PCI
-> address space, they consume part of the PNP0A03 register space.
-> But maybe that makes sense in ACPI, I dunno.
-
-From a logical point of view, it doesn't really - this should have been
-firmly tied to PCIe.  Note they 'also' provide regular PCIe accesses paths
-as they are standard compliant for their normal role as 'dumb' Root Ports.
-
-The lack of any standardization around PMUs basically means that
-people do this sort of nastiness.  To be fair to them, our hardware
-team never thought this one would be exposed in general when they designed
-it.
-
-The requirements came along later when some of us got fed up with
-internal only tooling to access this stuff.  I also wanted to explore
-the space as it has quite a few impacts on future hardware specifications.
-
+>   config PCI_IMX6
+>         bool "Freescale i.MX6/7 PCIe controller"
+>         depends on SOC_IMX8MQ || SOC_IMX6Q || (ARM && COMPILE_TEST)
+>         depends on PCI_MSI_IRQ_DOMAIN
+>         select PCIE_DW_HOST
 > 
-> As far as I can tell, you don't actually need *anything* supplied by
-> portdrv except the pcie_device.port, which you only use to find the
-> ACPI companion device and to hang the devm_ things on.
+> which I think is wrong.  Lorenzo, if you update your pci/dwc branch,
+> I'll rebuild my "next" branch.
 
-Pretty much.  The 'obvious' option would have been to just have this as
-an uncore PMU (which are platform devices instantiated from ACPI) but
-then we loose the association with the PCIe topology entirely.
-This is how internal interconnect, cache, memory controllers PMUs
-are handled on most Arm64 platforms for example.  There are ACPI bindings
-that could be used similar to how we associate caches with their
-CPU clusters, but they are (to my mind) less elegant that above. 
+Sorry about that, I missed it.
 
-That also won't work when future hardware does it in the PCIe domain
-either via a BAR or some other approach.
+I dropped Andrey's patches from pci/dwc waiting for him/Lucas to agree
+on a way forward.
 
+Thanks,
+Lorenzo
+
+> If you want to tweak the switch statements and/or IMX8 checks, you
+> could do that at the same time.
 > 
-> As written, hisi_pcie_pmu will bind to any Port, including Switch
-> Ports as well as Root Ports.  It has a poor-man's match() built into
-> hisi_pcie_pmu_probe(), which is sort of sub-optimal.  It would be
-> nicer to have a real match() function run by the bus driver.  I know
-> portdrv doesn't give you that, and since portdrv claims every Port
-> itself, there's no good way for other drivers like this to get
-> connected to Ports.
-
-Agreed.  As it currently stands it is a dirty hack ;)  I wondered about
-putting a standard bus register / match approach in there but wanted
-to get the discussion going before adding non trivial infrastructure
-in portdrv that might scare people off ;). From your comments below
-it sounds like we might want to more radically change how the port
-driver stuff works anyway.
-
-> 
-> Do you have a hotplug strategy yet?  PMUs in Switches below the Root
-> Ports sound like a useful thing.  Since you bind to every Port, you
-> will bind to hot-added Switch Ports, but unless you use ACPI hotplug,
-> you won't have a chance to add ACPI companion devices for them.
-
-The ACPI hack is very much because our hardware doesn't do it 'right'.
-This particular root port is always in the host anyway so we are fine here.
-
-You certainly couldn't pull this trick with switches out in the fabric,
-but then they hopefully don't provide a non PCI backdoor to read their
-PMUs anyway.  PCI hotplug is causing me enough headaches elsewhere
-that I hope it'll just work with anything we do here!
-
-> 
-> > Not yet fully established.
-> > 
-> > 1. I haven't done enough testing with high performance devices to
-> >    establish the 'minimum' frequency of the high resolution timer.
-> >    It may be that we just end up dropping some of the counters
-> >    because the load is too high to sample them often enough.
-> >    Once the basic approach is established I'll run the numbers
-> >    on this. These are up to Gen4x16 ports so things go pretty quick.
-> > 
-> > Signed-off-by: Jonathan Cameron <Jonathan.Cameron@huawei.com>
-> > ---
-> >  drivers/pci/pcie/Kconfig         |   9 +
-> >  drivers/pci/pcie/Makefile        |   2 +
-> >  drivers/pci/pcie/hisi_pcie_pmu.c | 528 +++++++++++++++++++++++++++++++
-> >  include/linux/cpuhotplug.h       |   1 +
-> >  4 files changed, 540 insertions(+)  
-> 
-> This looks like a nice piece of work, but I'm not sure where to put
-> it.  It really doesn't feel like part of the PCI core in the sense
-> that the PCI specs don't help you write it, and it doesn't provide any
-> PCI services used by other parts of the kernel.  It feels more like
-> just another driver for a device that happens to be on a PCI bus.
-> 
-> Granted, it currently requires portdrv, but I think the only reason
-> for that is to resolve the "multiple drivers need the same device"
-> problem.  I don't think portdrv is a good solution for that.
-> 
-> The other portdrv services (AER, hotplug, DPC, etc) are all defined in
-> the spec, and they're related in strange ways like sharing interrupts.
-> I would *like* to see those services moved into the PCI core directly
-> so they're not *drivers*, they're just optional features like MSI,
-> IOV, etc.
-> 
-> Then the Ports would by default not have a driver bound to them and
-> device-specific drivers like this could directly bind to the Port PCI
-> device.
-> 
-
-So the alternative is to just treat them as generic PMU drivers
-and put them in drivers/perf.  That is fine but I would worry that would
-lose the 'generalization' aspect because they weren't falling under
-the scope of PCI.  I suppose we could just make it clear that any such
-driver needs review from the PCI side as well as the perf side before being
-merged.
-
-However, we really are measuring things that are defined in the PCIe spec
-even if we aren't doing it via PCI SIG defined methods (as there aren't
-any currently), so it's a bit of a gray area to my mind.
-
-Of course we don't have to get it right first time anyway as moving
-drivers later is easy if it's just about where the code sits.  So we can
-park this question until the more fundamental stuff is sorted!
-
-Jonathan
-
-> Bjorn
-> 
-> > diff --git a/drivers/pci/pcie/Kconfig b/drivers/pci/pcie/Kconfig
-> > index 44742b2e1126..983783c42cf0 100644
-> > --- a/drivers/pci/pcie/Kconfig
-> > +++ b/drivers/pci/pcie/Kconfig
-> > @@ -47,6 +47,15 @@ config PCIEAER_INJECT
-> >  	  gotten from:
-> >  	     http://www.kernel.org/pub/linux/utils/pci/aer-inject/
-> >  
-> > +config PCIE_HISI_PMU
-> > +       tristate "PCI Express Root Port Performance Monitoring for Hisilicon Hip08"
-> > +       depends on PCIEPORTBUS
-> > +       help
-> > +	 The hisilicon Hip08 platform has root ports with integrated
-> > +	 transport layer performance measurement units. These are
-> > +	 exposed within the memory map, so resources must be provided
-> > +	 via ACPI DSDT.
-> > + 
-> >  #
-> >  # PCI Express ECRC
-> >  #
-> > diff --git a/drivers/pci/pcie/Makefile b/drivers/pci/pcie/Makefile
-> > index ab514083d5d4..67435abef29d 100644
-> > --- a/drivers/pci/pcie/Makefile
-> > +++ b/drivers/pci/pcie/Makefile
-> > @@ -12,3 +12,5 @@ obj-$(CONFIG_PCIEAER_INJECT)	+= aer_inject.o
-> >  obj-$(CONFIG_PCIE_PME)		+= pme.o
-> >  obj-$(CONFIG_PCIE_DPC)		+= dpc.o
-> >  obj-$(CONFIG_PCIE_PTM)		+= ptm.o
-> > +
-> > +obj-$(CONFIG_PCIE_HISI_PMU)     += hisi_pcie_pmu.o
-> > diff --git a/drivers/pci/pcie/hisi_pcie_pmu.c b/drivers/pci/pcie/hisi_pcie_pmu.c
-> > new file mode 100644
-> > index 000000000000..ddd2885a2b17
-> > --- /dev/null
-> > +++ b/drivers/pci/pcie/hisi_pcie_pmu.c
-> > @@ -0,0 +1,528 @@
-> > +// SPDX-License-Identifier: GPL-2.0
-> > +/*
-> > + * Provide performance monitoring for Hisilicon PCIe root ports
-> > + *
-> > + * Copyright (C) 2018 Hisilicon
-> > + */
-> > +
-> > +#include <linux/acpi.h>
-> > +#include <linux/bitmap.h>
-> > +#include <linux/cpuhotplug.h>
-> > +#include <linux/delay.h>
-> > +#include <linux/device.h>
-> > +#include <linux/kernel.h>
-> > +#include <linux/module.h>
-> > +#include <linux/pci.h>
-> > +#include <linux/perf_event.h>
-> > +
-> > +#include "portdrv.h"
-> > +
-> > +#define HISI_PP_TL_CNT_CTRL_REG 0x96C
-> > +#define   HISI_PP_TL_CNT_CTRL_TX_FLOW_CNT_EN BIT(0)
-> > +#define   HISI_PP_TL_CNT_CTRL_TX_ERR_CNT_EN BIT(1)
-> > +#define   HISI_PP_TL_CNT_CTRL_TX_NAT_CPL_CNT_EN BIT(2)
-> > +#define   HISI_PP_TL_CNT_CTRL_TX_FLOW_FUN_EN BIT(3)
-> > +#define   HISI_PP_TL_CNT_CTRL_TX_FLOW_CNT_TIME_MASK 0xFFF0
-> > +
-> > +#define HISI_MAX_PERIOD(nr) (BIT_ULL(nr) - 1)
-> > +
-> > +#define HISI_PP_TIMER_PERIOD_NS 10000000
-> > +
-> > +enum hisi_pci_counts {
-> > +	TX_MEM_RD,
-> > +	TX_MEM_WR,
-> > +	TX_CFG_RD,
-> > +	TX_CFG_WR,
-> > +	TX_IO_RD,
-> > +	TX_IO_WR,
-> > +	TX_MSG,
-> > +	TX_CPL,
-> > +	TX_CCIX,
-> > +	TX_ATOMIC,
-> > +	TX_P2P,
-> > +	TX_TLP,
-> > +	TX_PAYLOAD,
-> > +	TX_DW,
-> > +
-> > +	RX_TOTAL_TLP,
-> > +	RX_TOTAL_TR,
-> > +	RX_DROP,
-> > +	RX_POSTED,
-> > +	RX_NONPOSTED,
-> > +	RX_CPL,
-> > +	HISI_PP_EVENTS,
-> > +};
-> > +
-> > +static struct hisi_pcie_cnt {
-> > +	u64 reg_offset;
-> > +	u8 bits;
-> > +} hisi_pcie_cnt_info[HISI_PP_EVENTS] = {
-> > +	[TX_MEM_RD]		= { 0x908, 16 },
-> > +	[TX_MEM_WR]		= { 0x90c, 16 },
-> > +	[TX_CFG_RD]		= { 0x910, 16 },
-> > +	[TX_CFG_WR]		= { 0x914, 16 },
-> > +	[TX_IO_RD]		= { 0x918, 16 },
-> > +	[TX_IO_WR]		= { 0x91C, 16 },
-> > +	[TX_MSG]		= { 0x924, 16 },
-> > +	[TX_CPL]		= { 0x930, 16 },
-> > +	[TX_CCIX]		= { 0x934, 16 },
-> > +	[TX_ATOMIC]		= { 0x938, 16 },
-> > +	[TX_P2P]		= { 0x93C, 16 },
-> > +	[TX_TLP]		= { 0x940, 32 },
-> > +	[TX_PAYLOAD]		= { 0x944, 32 },
-> > +	[TX_DW]			= { 0x948, 32 },
-> > +
-> > +	[RX_TOTAL_TLP]		= { 0xb38, 16 },
-> > +	[RX_TOTAL_TR]		= { 0xb3c, 16 },
-> > +	[RX_DROP]		= { 0xb40, 16 },
-> > +	[RX_POSTED]		= { 0xb44, 16 },
-> > +	[RX_NONPOSTED]		= { 0xb48, 16 },
-> > +	[RX_CPL]		= { 0xb4c, 16 },
-> > +};
-> > +
-> > +struct hisi_event_list {
-> > +	struct list_head list;
-> > +	struct perf_event *event;
-> > +};
-> > +
-> > +struct hisi_pcie_pmu {
-> > +	struct pmu pmu;
-> > +	void __iomem *regs;
-> > +	cpumask_t associated_cpus;
-> > +	int on_cpu;
-> > +	struct hlist_node node;
-> > +	DECLARE_BITMAP(pmu_events, HISI_PP_EVENTS);
-> > +	struct hisi_event_list events[HISI_PP_EVENTS];
-> > +	struct hrtimer timer;
-> > +	struct list_head event_list;
-> > +};
-> > +
-> > +#define to_hisi_pcie_pmu(p) container_of((p), struct hisi_pcie_pmu, pmu)
-> > +
-> > +int hisi_pcie_pmu_online_cpu(unsigned int cpu, struct hlist_node *node)
-> > +{
-> > +	struct hisi_pcie_pmu *dev_info = hlist_entry_safe(node,
-> > +							 struct hisi_pcie_pmu,
-> > +							 node);
-> > +
-> > +	cpumask_set_cpu(cpu, &dev_info->associated_cpus);
-> > +	/* If another CPU is already managing this PMU, simply return. */
-> > +	if (dev_info->on_cpu != -1)
-> > +		return 0;
-> > +
-> > +	/* Use this CPU in cpumask for event counting */
-> > +	dev_info->on_cpu = cpu;
-> > +
-> > +	return 0;
-> > +}
-> > +
-> > +int hisi_pcie_pmu_offline_cpu(unsigned int cpu, struct hlist_node *node)
-> > +{
-> > +	struct hisi_pcie_pmu *dev_info = hlist_entry_safe(node,
-> > +							 struct hisi_pcie_pmu,
-> > +							 node);
-> > +	cpumask_t pmu_online_cpus;
-> > +	unsigned int target;
-> > +
-> > +	if (!cpumask_test_and_clear_cpu(cpu, &dev_info->associated_cpus))
-> > +		return 0;
-> > +
-> > +	if (dev_info->on_cpu != cpu)
-> > +		return 0;
-> > +
-> > +	/* Give up ownership of the PMU */
-> > +	dev_info->on_cpu = -1;
-> > +
-> > +	/* Choose a new CPU to migrate ownership of the PMU to */
-> > +	cpumask_and(&pmu_online_cpus, &dev_info->associated_cpus,
-> > +		    cpu_online_mask);
-> > +	target = cpumask_any_but(&pmu_online_cpus, cpu);
-> > +	if (target >= nr_cpu_ids)
-> > +		return 0;
-> > +
-> > +	/* Use this CPU for event counting */
-> > +	dev_info->on_cpu = target;
-> > +	perf_pmu_migrate_context(&dev_info->pmu, cpu, target);
-> > +
-> > +	return 0;
-> > +}
-> > +
-> > +void hisi_pcie_pmu_event_update(struct perf_event *event)
-> > +{
-> > +	struct hisi_pcie_pmu *dev_info = to_hisi_pcie_pmu(event->pmu);
-> > +	struct hw_perf_event *hwc = &event->hw;
-> > +	u64 delta, prev_raw_count, new_raw_count;
-> > +	u64 offset = hisi_pcie_cnt_info[hwc->config_base].reg_offset;
-> > +	u8 period = hisi_pcie_cnt_info[hwc->config_base].bits;
-> > +
-> > +	do {
-> > +		new_raw_count = readl(dev_info->regs + offset);
-> > +		prev_raw_count = local64_read(&hwc->prev_count);
-> > +	} while (local64_cmpxchg(&hwc->prev_count, prev_raw_count,
-> > +				 new_raw_count) != prev_raw_count);
-> > +
-> > +	delta = (new_raw_count - prev_raw_count) & HISI_MAX_PERIOD(period);
-> > +	local64_add(delta, &event->count);
-> > +}
-> > +
-> > +static enum hrtimer_restart event_read(struct hrtimer *timer)
-> > +{
-> > +	struct hisi_pcie_pmu *dev_info =
-> > +		container_of(timer, struct hisi_pcie_pmu, timer);
-> > +	struct hisi_event_list *hevent;
-> > +
-> > +	list_for_each_entry(hevent, &dev_info->event_list, list)
-> > +		hisi_pcie_pmu_event_update(hevent->event);
-> > +	hrtimer_forward_now(timer, HISI_PP_TIMER_PERIOD_NS);
-> > +
-> > +	return HRTIMER_RESTART;
-> > +}
-> > +
-> > +int hisi_pcie_pmu_event_init(struct perf_event *event)
-> > +{
-> > +	struct hw_perf_event *hwc = &event->hw;
-> > +	struct hisi_pcie_pmu *dev_info = to_hisi_pcie_pmu(event->pmu);
-> > +
-> > +	if (event->attr.type != event->pmu->type)
-> > +		return -ENOENT;
-> > +
-> > +	if (is_sampling_event(event) || event->attach_state & PERF_ATTACH_TASK)
-> > +		return -EOPNOTSUPP;
-> > +
-> > +	if (event->attr.exclude_user	||
-> > +	    event->attr.exclude_kernel	||
-> > +	    event->attr.exclude_host	||
-> > +	    event->attr.exclude_guest	||
-> > +	    event->attr.exclude_hv	||
-> > +	    event->attr.exclude_idle)
-> > +		return -EINVAL;
-> > +
-> > +	if (event->cpu < 0)
-> > +		return -EINVAL;
-> > +
-> > +	hwc->idx = -1;
-> > +	hwc->config_base = event->attr.config;
-> > +
-> > +	dev_info->events[hwc->config_base].event = event;
-> > +
-> > +	return 0;
-> > +}
-> > +
-> > +void hisi_pcie_pmu_enable(struct pmu *pmu)
-> > +{
-> > +	struct hisi_pcie_pmu *dev_info = to_hisi_pcie_pmu(pmu);
-> > +	u32 val;
-> > +
-> > +	if (bitmap_empty(dev_info->pmu_events, HISI_PP_EVENTS))
-> > +		return;
-> > +
-> > +	val = readl(dev_info->regs + HISI_PP_TL_CNT_CTRL_REG);
-> > +	/* Disable time period based flow counting */
-> > +	val &= ~HISI_PP_TL_CNT_CTRL_TX_FLOW_CNT_TIME_MASK;
-> > +	val |= HISI_PP_TL_CNT_CTRL_TX_FLOW_CNT_EN |
-> > +		HISI_PP_TL_CNT_CTRL_TX_ERR_CNT_EN;
-> > +	writel(val, dev_info->regs + HISI_PP_TL_CNT_CTRL_REG);
-> > +}
-> > +
-> > +void hisi_pcie_pmu_disable(struct pmu *pmu)
-> > +{
-> > +	struct hisi_pcie_pmu *dev_info = to_hisi_pcie_pmu(pmu);
-> > +	u32 val;
-> > +	u32 new_raw_count;
-> > +
-> > +	new_raw_count = readl(dev_info->regs + 0x908);
-> > +
-> > +	val = readl(dev_info->regs + HISI_PP_TL_CNT_CTRL_REG);
-> > +	val &= ~(HISI_PP_TL_CNT_CTRL_TX_FLOW_CNT_EN |
-> > +		 HISI_PP_TL_CNT_CTRL_TX_ERR_CNT_EN);
-> > +	writel(val, dev_info->regs + HISI_PP_TL_CNT_CTRL_REG);
-> > +}
-> > +
-> > +void hisi_pcie_pmu_enable_event(struct perf_event *event)
-> > +{
-> > +	struct hisi_pcie_pmu *dev_info = to_hisi_pcie_pmu(event->pmu);
-> > +	struct hw_perf_event *hwc = &event->hw;
-> > +	u64 offset = hisi_pcie_cnt_info[hwc->config_base].reg_offset;
-> > +
-> > +	/* Register is write to clear */
-> > +	local64_set(&hwc->prev_count, 0);
-> > +	writel(0, dev_info->regs + offset);
-> > +}
-> > +
-> > +void hisi_pcie_pmu_start(struct perf_event *event, int flags)
-> > +{
-> > +	struct hw_perf_event *hwc = &event->hw;
-> > +
-> > +	if (WARN_ON_ONCE(!(hwc->state & PERF_HES_STOPPED)))
-> > +		return;
-> > +
-> > +	WARN_ON_ONCE(!(hwc->state & PERF_HES_UPTODATE));
-> > +	hwc->state = 0;
-> > +
-> > +	hisi_pcie_pmu_enable_event(event);
-> > +	perf_event_update_userpage(event);
-> > +}
-> > +
-> > +void hisi_pcie_pmu_stop(struct perf_event *event, int flags)
-> > +{
-> > +	struct hw_perf_event *hwc = &event->hw;
-> > +
-> > +	WARN_ON_ONCE(hwc->state & PERF_HES_STOPPED);
-> > +	hwc->state |= PERF_HES_STOPPED;
-> > +
-> > +	if (hwc->state & PERF_HES_UPTODATE)
-> > +		return;
-> > +
-> > +	/* Read hardware counter and update the perf counter statistics */
-> > +	hisi_pcie_pmu_event_update(event);
-> > +	hwc->state |= PERF_HES_UPTODATE;
-> > +}
-> > +
-> > +int hisi_pcie_pmu_add(struct perf_event *event, int flags)
-> > +{
-> > +	struct hisi_pcie_pmu *dev_info = to_hisi_pcie_pmu(event->pmu);
-> > +	struct hw_perf_event *hwc = &event->hw;
-> > +	bool prev_empty;
-> > +
-> > +	hwc->state = PERF_HES_STOPPED | PERF_HES_UPTODATE;
-> > +	set_bit(hwc->config_base, dev_info->pmu_events);
-> > +	if (flags & PERF_EF_START)
-> > +		hisi_pcie_pmu_start(event, PERF_EF_RELOAD);
-> > +	prev_empty = list_empty(&dev_info->event_list);
-> > +	list_add(&dev_info->events[hwc->config_base].list,
-> > +		 &dev_info->event_list);
-> > +	if (prev_empty)
-> > +		hrtimer_start(&dev_info->timer, HISI_PP_TIMER_PERIOD_NS,
-> > +			      HRTIMER_MODE_REL);
-> > +
-> > +	return 0;
-> > +}
-> > +
-> > +
-> > +void hisi_pcie_pmu_del(struct perf_event *event, int flags)
-> > +{
-> > +	struct hisi_pcie_pmu *dev_info = to_hisi_pcie_pmu(event->pmu);
-> > +	struct hw_perf_event *hwc = &event->hw;
-> > +
-> > +	list_del(&dev_info->events[hwc->config_base].list);
-> > +	if (list_empty(&dev_info->event_list))
-> > +		hrtimer_cancel(&dev_info->timer);
-> > +	hisi_pcie_pmu_stop(event, PERF_EF_UPDATE);
-> > +	clear_bit(hwc->config_base, dev_info->pmu_events);
-> > +	perf_event_update_userpage(event);
-> > +}
-> > +
-> > +ssize_t hisi_event_sysfs_show(struct device *dev,
-> > +			      struct device_attribute *attr, char *page)
-> > +{
-> > +	struct dev_ext_attribute *eattr;
-> > +
-> > +	eattr = container_of(attr, struct dev_ext_attribute, attr);
-> > +
-> > +	return sprintf(page, "config=0x%lx\n", (unsigned long)eattr->var);
-> > +}
-> > +
-> > +void hisi_pcie_pmu_read(struct perf_event *event)
-> > +{
-> > +	hisi_pcie_pmu_event_update(event);
-> > +}
-> > +
-> > +ssize_t hisi_cpumask_sysfs_show(struct device *dev,
-> > +				struct device_attribute *attr, char *buf)
-> > +{
-> > +	struct pmu *pmu = dev_get_drvdata(dev);
-> > +	struct hisi_pcie_pmu *dev_info =
-> > +		container_of(pmu, struct hisi_pcie_pmu, pmu);
-> > +
-> > +	return sprintf(buf, "%d\n", dev_info->on_cpu);
-> > +}
-> > +
-> > +static DEVICE_ATTR(cpumask, 0444, hisi_cpumask_sysfs_show, NULL);
-> > +
-> > +static struct attribute *hisi_pcie_pmu_cpumask_attrs[] = {
-> > +	&dev_attr_cpumask.attr,
-> > +	NULL,
-> > +};
-> > +
-> > +static const struct attribute_group hisi_pcie_pmu_cpumask_attr_group = {
-> > +	.attrs = hisi_pcie_pmu_cpumask_attrs,
-> > +};
-> > +
-> > +#define HISI_PP_ATTR(_name, _func, _config)			\
-> > +	(&((struct dev_ext_attribute[]) {				\
-> > +		{ __ATTR(_name, 0444, _func, NULL), (void *)_config }   \
-> > +	})[0].attr.attr)
-> > +
-> > +#define HISI_PP_EVENT_ATTR(_name, _config)		\
-> > +	HISI_PP_ATTR(_name, hisi_event_sysfs_show, (unsigned long)_config)
-> > +
-> > +static struct attribute *hisi_pcie_pmu_events_attr[] = {
-> > +	HISI_PP_EVENT_ATTR(tx_mem_rd, TX_MEM_RD),
-> > +	HISI_PP_EVENT_ATTR(tx_mem_wr, TX_MEM_WR),
-> > +	HISI_PP_EVENT_ATTR(tx_cfg_rd, TX_CFG_RD),
-> > +	HISI_PP_EVENT_ATTR(tx_cfg_wr, TX_CFG_WR),
-> > +	HISI_PP_EVENT_ATTR(tx_io_rd, TX_IO_RD),
-> > +	HISI_PP_EVENT_ATTR(tx_io_wr, TX_IO_WR),
-> > +	HISI_PP_EVENT_ATTR(tx_msg, TX_MSG),
-> > +
-> > +	HISI_PP_EVENT_ATTR(tx_tlp, TX_TLP),
-> > +	HISI_PP_EVENT_ATTR(tx_payload, TX_PAYLOAD),
-> > +	HISI_PP_EVENT_ATTR(tx_dw, TX_DW),
-> > +
-> > +	HISI_PP_EVENT_ATTR(tx_cpl, TX_CPL),
-> > +	HISI_PP_EVENT_ATTR(tx_ccix_tlp, TX_CCIX),
-> > +	HISI_PP_EVENT_ATTR(tx_atomic_tlp, TX_ATOMIC),
-> > +	HISI_PP_EVENT_ATTR(tx_p2p_tlp, TX_P2P),
-> > +
-> > +	HISI_PP_EVENT_ATTR(rx_tlp, RX_TOTAL_TLP),
-> > +	HISI_PP_EVENT_ATTR(rx_tr_tlp, RX_TOTAL_TR),
-> > +	HISI_PP_EVENT_ATTR(rx_posted_tlp, RX_POSTED),
-> > +	HISI_PP_EVENT_ATTR(rx_nonposted_tlp, RX_NONPOSTED),
-> > +	HISI_PP_EVENT_ATTR(rx_cpl_tlp, RX_CPL),
-> > +	NULL,
-> > +};
-> > +
-> > +static struct attribute_group hisi_pcie_pmu_events_group = {
-> > +	.name = "events",
-> > +	.attrs = hisi_pcie_pmu_events_attr,
-> > +};
-> > +
-> > +static const struct attribute_group *hisi_pcie_pmu_attr_groups[] = {
-> > +	&hisi_pcie_pmu_events_group,
-> > +	&hisi_pcie_pmu_cpumask_attr_group,
-> > +	NULL,
-> > +};
-> > +
-> > +static int hisi_pcie_pmu_probe(struct pcie_device *dev)
-> > +{
-> > +	struct pci_dev *pdev = dev->port;
-> > +	struct acpi_device *acpi_dev;
-> > +	struct resource_entry *entry;
-> > +	resource_size_t regs_start, regs_size;
-> > +	struct hisi_pcie_pmu *dev_info;
-> > +	struct list_head list;
-> > +	char *name;
-> > +	int ret;
-> > +
-> > +	INIT_LIST_HEAD(&list);
-> > +
-> > +	if (pdev->vendor != PCI_VENDOR_ID_HUAWEI)
-> > +		return -ENODEV;
-> > +
-> > +	acpi_dev = ACPI_COMPANION(&pdev->dev);
-> > +	if (!acpi_dev)
-> > +		return -ENODEV;
-> > +
-> > +	ret = acpi_dev_get_resources(acpi_dev, &list, NULL, NULL);
-> > +	if (ret < 0) {
-> > +		pr_err("Failed to get PMU resources, ret=%d\n", ret);
-> > +		return ret;
-> > +	}
-> > +	entry = list_first_entry(&list, struct resource_entry, node);
-> > +	if (entry) {
-> > +		regs_start = entry->res->start;
-> > +		regs_size = resource_size(entry->res);
-> > +		ret = 0;
-> > +	} else
-> > +		ret = -EINVAL;
-> > +	acpi_dev_free_resource_list(&list);
-> > +	if (ret)
-> > +		return ret;
-> > +
-> > +	dev_info = devm_kzalloc(&pdev->dev, sizeof(*dev_info), GFP_KERNEL);
-> > +	if (!dev_info)
-> > +		return -ENOMEM;
-> > +
-> > +	hrtimer_init(&dev_info->timer, CLOCK_MONOTONIC, HRTIMER_MODE_REL);
-> > +	dev_info->timer.function = event_read;
-> > +
-> > +	INIT_LIST_HEAD(&dev_info->event_list);
-> > +	dev_info->regs = devm_ioremap_nocache(&pdev->dev, regs_start,
-> > +					      regs_size);
-> > +	if (!dev_info->regs)
-> > +		return -EINVAL;
-> > +	name = devm_kasprintf(&pdev->dev, GFP_KERNEL, "hisi_pcie_port%04x_%02x",
-> > +			      pdev->bus->number,
-> > +			      PCI_SLOT(pdev->devfn));
-> > +	if (!name)
-> > +		return -ENOMEM;
-> > +
-> > +	dev_info->pmu = (struct pmu) {
-> > +		.name = name,
-> > +		.task_ctx_nr = perf_invalid_context,
-> > +		.event_init = hisi_pcie_pmu_event_init,
-> > +		.pmu_enable = hisi_pcie_pmu_enable,
-> > +		.pmu_disable = hisi_pcie_pmu_disable,
-> > +		.add = hisi_pcie_pmu_add,
-> > +		.del = hisi_pcie_pmu_del,
-> > +		.start = hisi_pcie_pmu_start,
-> > +		.stop = hisi_pcie_pmu_stop,
-> > +		.read = hisi_pcie_pmu_read,
-> > +		.attr_groups = hisi_pcie_pmu_attr_groups,
-> > +		.capabilities = PERF_PMU_CAP_NO_INTERRUPT,
-> > +	};
-> > +
-> > +
-> > +	ret = cpuhp_state_add_instance(CPUHP_AP_PERF_ARM_HISI_PCIE_PMU_ONLINE,
-> > +				       &dev_info->node);
-> > +	if (ret) {
-> > +		dev_err(&pdev->dev, "Error %d registering hotplug;\n", ret);
-> > +		return ret;
-> > +	}
-> > +
-> > +	ret = perf_pmu_register(&dev_info->pmu, name, -1);
-> > +	if (ret) {
-> > +		cpuhp_state_remove_instance(CPUHP_AP_PERF_ARM_HISI_PCIE_PMU_ONLINE,
-> > +					    &dev_info->node);
-> > +
-> > +		return ret;
-> > +	}
-> > +
-> > +	dev_set_drvdata(&pdev->dev, dev_info);
-> > +
-> > +	return 0;
-> > +}
-> > +
-> > +static void hisi_pcie_pmu_remove(struct pcie_device *dev)
-> > +{
-> > +	struct hisi_pcie_pmu *dev_info = dev_get_drvdata(&dev->port->dev);
-> > +
-> > +	perf_pmu_unregister(&dev_info->pmu);
-> > +	cpuhp_state_remove_instance(CPUHP_AP_PERF_ARM_HISI_PCIE_PMU_ONLINE,
-> > +				    &dev_info->node);
-> > +}
-> > +
-> > +static struct pcie_port_service_driver hisi_pcie_pmu = {
-> > +	.name = "hisi_pcie_root_port_pmu",
-> > +	.port_type = PCIE_ANY_PORT,
-> > +	.service = PCIE_PORT_SERVICE_PMU,
-> > +	.probe = hisi_pcie_pmu_probe,
-> > +	.remove = hisi_pcie_pmu_remove,
-> > +};
-> > +
-> > +static int __init hisi_pcie_service_init(void)
-> > +{
-> > +	int ret;
-> > +
-> > +	ret = cpuhp_setup_state_multi(CPUHP_AP_PERF_ARM_HISI_PCIE_PMU_ONLINE,
-> > +				      "AP_PERF_ARM_HISI_PCIE_ONLINE",
-> > +				      hisi_pcie_pmu_online_cpu,
-> > +				      hisi_pcie_pmu_offline_cpu);
-> > +	if (ret) {
-> > +		pr_err("PCIE PMU: setup hotplug, ret = %d\n", ret);
-> > +		return ret;
-> > +	}
-> > +
-> > +	pcie_port_service_register(&hisi_pcie_pmu);
-> > +
-> > +	return 0;
-> > +}
-> > +
-> > +static void hisi_pcie_service_remove(void)
-> > +{
-> > +	pcie_port_service_unregister(&hisi_pcie_pmu);
-> > +	cpuhp_remove_multi_state(CPUHP_AP_PERF_ARM_HISI_PCIE_PMU_ONLINE);
-> > +}
-> > +module_init(hisi_pcie_service_init);
-> > +module_exit(hisi_pcie_service_remove);
-> > +MODULE_LICENSE("GPL");
-> > diff --git a/include/linux/cpuhotplug.h b/include/linux/cpuhotplug.h
-> > index e0cd2baa8380..73f2bc8a7201 100644
-> > --- a/include/linux/cpuhotplug.h
-> > +++ b/include/linux/cpuhotplug.h
-> > @@ -161,6 +161,7 @@ enum cpuhp_state {
-> >  	CPUHP_AP_PERF_ARM_HISI_DDRC_ONLINE,
-> >  	CPUHP_AP_PERF_ARM_HISI_HHA_ONLINE,
-> >  	CPUHP_AP_PERF_ARM_HISI_L3_ONLINE,
-> > +	CPUHP_AP_PERF_ARM_HISI_PCIE_PMU_ONLINE,
-> >  	CPUHP_AP_PERF_ARM_L2X0_ONLINE,
-> >  	CPUHP_AP_PERF_ARM_QCOM_L2_ONLINE,
-> >  	CPUHP_AP_PERF_ARM_QCOM_L3_ONLINE,
-> > -- 
-> > 2.19.1
-> > 
-> > 
-> > _______________________________________________
-> > linux-arm-kernel mailing list
-> > linux-arm-kernel@lists.infradead.org
-> > http://lists.infradead.org/mailman/listinfo/linux-arm-kernel  
-
-
+> [1] https://git.kernel.org/pub/scm/linux/kernel/git/helgaas/pci.git/log/?h=next
