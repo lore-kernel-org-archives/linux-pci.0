@@ -2,77 +2,148 @@ Return-Path: <SRS0=7Kzx=O2=vger.kernel.org=linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-2.3 required=3.0 tests=DKIM_INVALID,DKIM_SIGNED,
-	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_PASS,USER_AGENT_MUTT
-	autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-7.1 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
+	DKIM_VALID_AU,FREEMAIL_FORGED_FROMDOMAIN,FREEMAIL_FROM,
+	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
+	SPF_PASS,URIBL_BLOCKED autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id B9620C43387
-	for <linux-pci@archiver.kernel.org>; Mon, 17 Dec 2018 17:35:51 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 53888C43387
+	for <linux-pci@archiver.kernel.org>; Mon, 17 Dec 2018 18:03:51 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 8C41320675
-	for <linux-pci@archiver.kernel.org>; Mon, 17 Dec 2018 17:35:51 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 2538B20874
+	for <linux-pci@archiver.kernel.org>; Mon, 17 Dec 2018 18:03:51 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=fail reason="signature verification failed" (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="S8UdykSu"
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="UhY8iEjj"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726862AbeLQRfu (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Mon, 17 Dec 2018 12:35:50 -0500
-Received: from bombadil.infradead.org ([198.137.202.133]:57694 "EHLO
-        bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726673AbeLQRfu (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Mon, 17 Dec 2018 12:35:50 -0500
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
-        d=infradead.org; s=bombadil.20170209; h=In-Reply-To:Content-Type:MIME-Version
-        :References:Message-ID:Subject:Cc:To:From:Date:Sender:Reply-To:
-        Content-Transfer-Encoding:Content-ID:Content-Description:Resent-Date:
-        Resent-From:Resent-Sender:Resent-To:Resent-Cc:Resent-Message-ID:List-Id:
-        List-Help:List-Unsubscribe:List-Subscribe:List-Post:List-Owner:List-Archive;
-         bh=JmBmThrp855oOtumKAAjqsJEcOKvJL8IthTlNgmmRsI=; b=S8UdykSusuB8NWUm7zK4FEJth
-        600mTxEKqdPjkgY5cL4D8Uiy7xJGksiMZHXnEHfLFnEkzb6RHGlWqftWKOtjfEfR1oLDGXjM57p6O
-        b0H0oyvg3Pj4gBCkB8+RJuwoiS3X5DlGaA4UjZG0Ar/bUhsblR+uATnN3r9Quxge/HD4mQ083TJqF
-        wltiJA//ueGWYT6xPFIv8JdGp+mPKtKBy9WJh/MExxs10iL3pOMaDAOgb0LVd+LFr6HsB5SuwNrw3
-        FsSDN7zK4cmXLG0+bwJ2Qw1krVvB72FY2QW2Q9Rm1DfQrcHX632Rrti4V2gMwukJ5cE7qYZorWmqU
-        kbyIB8ong==;
-Received: from hch by bombadil.infradead.org with local (Exim 4.90_1 #2 (Red Hat Linux))
-        id 1gYwny-0002XH-AC; Mon, 17 Dec 2018 17:35:46 +0000
-Date:   Mon, 17 Dec 2018 09:35:46 -0800
-From:   Christoph Hellwig <hch@infradead.org>
-To:     Sebastian Ott <sebott@linux.ibm.com>
-Cc:     Christoph Hellwig <hch@infradead.org>,
-        Bjorn Helgaas <helgaas@kernel.org>, linux-pci@vger.kernel.org,
-        Arnd Bergmann <arnd@arndb.de>,
-        Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-        Paul Mackerras <paulus@samba.org>,
-        Michael Ellerman <mpe@ellerman.id.au>,
-        Russell Currey <ruscur@russell.cc>,
-        linuxppc-dev@lists.ozlabs.org
-Subject: Re: [PATCH 2/2] s390/pci: handle function enumeration after sriov
- enablement
-Message-ID: <20181217173546.GA4106@infradead.org>
-References: <20181212215453.GJ99796@google.com>
- <20181213175428.87520-2-sebott@linux.ibm.com>
- <20181214131245.GB2606@infradead.org>
- <20181214131802.GA13950@infradead.org>
- <alpine.LFD.2.21.1812171806330.28490@schleppi>
+        id S1727060AbeLQSDu (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Mon, 17 Dec 2018 13:03:50 -0500
+Received: from mail-wm1-f67.google.com ([209.85.128.67]:52563 "EHLO
+        mail-wm1-f67.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1727036AbeLQSDu (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Mon, 17 Dec 2018 13:03:50 -0500
+Received: by mail-wm1-f67.google.com with SMTP id m1so143166wml.2;
+        Mon, 17 Dec 2018 10:03:48 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20161025;
+        h=mime-version:references:in-reply-to:from:date:message-id:subject:to
+         :cc;
+        bh=3iKE+lrdN0BbU0LrEqoXbpQFtnEmptT9/m4IOJh64Kk=;
+        b=UhY8iEjjcRJnz14DlYAmcIR5A6CDKJuEStszagzquRc+JQrkAvUMy6ZbpUwx1WJgE4
+         q5ACnchqXh3DBdnilP6EvA4iHAogkKJ9xcLIsb41Ip1lzoEa1m6gRNwgtDMHXhdaemuZ
+         ilRSaYp6GWr+bB8C1W1G7DktRL3tu3VAB3xNnYzNLV6N7Tid8sNX4VScdOoT9B7x3/HY
+         vV2FsY2KzP+ikY92JijZWzsTR4qRwKYWvzhrWDYCVP+pedMaApu54QlgKPLYG1Alv7Lk
+         2KxqdVlh+hptcrjXeVOJFx91nptm9Gl198MlsAELSLFPvPBPVPANEnqnhweBMBWv3CCj
+         K6RQ==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20161025;
+        h=x-gm-message-state:mime-version:references:in-reply-to:from:date
+         :message-id:subject:to:cc;
+        bh=3iKE+lrdN0BbU0LrEqoXbpQFtnEmptT9/m4IOJh64Kk=;
+        b=GH9fdmqtvET3ua0SBi2qFgjRYVGPEnS47Y8UFPrad5JdflPO2nCYDEp3/0Ckknlvi3
+         QRGKsHtKs/vhcYXuWeuU8ywQ0XdauEW7hVGLtlp1NWcieEg5mq+ws1YMxLZTdevwF8YM
+         Y9JjYOxK26V5k3Yq3x2aRK1oty0OeZkjBpurUrBPZ0UYOcEHPaPJEkbAYSo8rBVSBhAd
+         4/55MKxvcDGTUW9SyApqNWaIkgF23V86ArQ3qNslODUQSbHjTPp7xKYRnKz43eQXn7U8
+         K4tDpIvBJ6OgeDyGKenrdNRodn646AF0z6yC3yE3W0z8bdHzqjid5AI5RMdivdmx7Kjp
+         XPpw==
+X-Gm-Message-State: AA+aEWZy0nLRCbZp7d+4J8Arwcjb2rxs7LXpB7VJe7AvP24zHht4C8KM
+        n3mOqKEOG8h0rowzoml63j3FcTweHlI9ukXBoAE=
+X-Google-Smtp-Source: AFSGD/WC972fXIggXO9uTv5qdxGYibRZXFJUvhQaud5o/Jv6YiX3ZIg1rFnEv/SCIBd7Cta/P3ym0otTCVYrXGd5Zco=
+X-Received: by 2002:a1c:ba0b:: with SMTP id k11mr101622wmf.127.1545069827299;
+ Mon, 17 Dec 2018 10:03:47 -0800 (PST)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <alpine.LFD.2.21.1812171806330.28490@schleppi>
-User-Agent: Mutt/1.9.2 (2017-12-15)
-X-SRS-Rewrite: SMTP reverse-path rewritten from <hch@infradead.org> by bombadil.infradead.org. See http://www.infradead.org/rpr.html
+References: <20181216230916.22982-1-andrew.smirnov@gmail.com>
+ <20181216230916.22982-4-andrew.smirnov@gmail.com> <20181217135833.GJ20725@google.com>
+In-Reply-To: <20181217135833.GJ20725@google.com>
+From:   Andrey Smirnov <andrew.smirnov@gmail.com>
+Date:   Mon, 17 Dec 2018 10:03:36 -0800
+Message-ID: <CAHQ1cqGA1xxY7qQMWBoo0_jbSa4=OBD=6_Du6dOKN5xsdqOj4w@mail.gmail.com>
+Subject: Re: [PATCH 3/3] PCI: imx6: Make fallthrough comments more consistent
+To:     Bjorn Helgaas <helgaas@kernel.org>
+Cc:     Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
+        Fabio Estevam <fabio.estevam@nxp.com>,
+        Chris Healy <cphealy@gmail.com>,
+        Lucas Stach <l.stach@pengutronix.de>,
+        Leonard Crestez <leonard.crestez@nxp.com>,
+        "A.s. Dong" <aisheng.dong@nxp.com>,
+        Richard Zhu <hongxing.zhu@nxp.com>,
+        dl-linux-imx <linux-imx@nxp.com>,
+        linux-arm-kernel <linux-arm-kernel@lists.infradead.org>,
+        linux-kernel <linux-kernel@vger.kernel.org>,
+        linux-pci@vger.kernel.org
+Content-Type: text/plain; charset="UTF-8"
 Sender: linux-pci-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-On Mon, Dec 17, 2018 at 06:30:18PM +0100, Sebastian Ott wrote:
-> Something like this:
-> https://lore.kernel.org/linux-pci/20181212215453.GJ99796@google.com/T/#m649d86ea3c65f669c74d048f89afbaf473876ac3
+On Mon, Dec 17, 2018 at 5:58 AM Bjorn Helgaas <helgaas@kernel.org> wrote:
+>
+> On Sun, Dec 16, 2018 at 03:09:16PM -0800, Andrey Smirnov wrote:
+> > Convert all fallthrough comments to say "fall through", as well as
+> > modify their placement to the point where the "break" would normally
+> > be.
+> >
+> > Cc: Bjorn Helgaas <bhelgaas@google.com>
+> > Cc: Fabio Estevam <fabio.estevam@nxp.com>
+> > Cc: Chris Healy <cphealy@gmail.com>
+> > Cc: Lucas Stach <l.stach@pengutronix.de>
+> > Cc: Leonard Crestez <leonard.crestez@nxp.com>
+> > Cc: "A.s. Dong" <aisheng.dong@nxp.com>
+> > Cc: Richard Zhu <hongxing.zhu@nxp.com>
+> > Cc: linux-imx@nxp.com
+> > Cc: linux-arm-kernel@lists.infradead.org
+> > Cc: linux-kernel@vger.kernel.org
+> > Cc: linux-pci@vger.kernel.org
+> > Suggested-by: Bjorn Helgaas <helgaas@kernel.org>
+>
+> I didn't make it very clear, but my suggestion was really to remove
+> the annotation completely; see below.
+>
+> > Signed-off-by: Andrey Smirnov <andrew.smirnov@gmail.com>
+> > ---
+> >  drivers/pci/controller/dwc/pci-imx6.c | 14 +++++++++-----
+> >  1 file changed, 9 insertions(+), 5 deletions(-)
+> >
+> > diff --git a/drivers/pci/controller/dwc/pci-imx6.c b/drivers/pci/controller/dwc/pci-imx6.c
+> > index 59658577e81d..a0510e185d44 100644
+> > --- a/drivers/pci/controller/dwc/pci-imx6.c
+> > +++ b/drivers/pci/controller/dwc/pci-imx6.c
+> > @@ -362,7 +362,8 @@ static void imx6_pcie_assert_core_reset(struct imx6_pcie *imx6_pcie)
+> >
+> >       switch (imx6_pcie->variant) {
+> >       case IMX7D:
+> > -     case IMX8MQ: /* FALLTHROUGH */
+> > +             /* fall through */
+> > +     case IMX8MQ:
+> >               reset_control_assert(imx6_pcie->pciephy_reset);
+> >               reset_control_assert(imx6_pcie->apps_reset);
+> >               break;
+>
+> IMO this use of "fall through" is superfluous and unusual in the Linux
+> source.
+>
+> A "fall through" comment would be useful if the IMX7D case had
+> executable code but no "break".  Then the comment shows that the
+> intent was to execute *both* the IMX7D code and the IMX8MQ code and
+> the lack of a "break" was intentional.
+>
+> In this case, the intent is to treat IMX7D and IMX8MQ the same, and
+> there's no executable code specifically for the IMX7D.  I think it's
+> easiest to read that when the list of identical cases is all together
+> without the comment in the middle, i.e., as
+>
+> >       case IMX7D:
+> >       case IMX8MQ:
+> >               reset_control_assert(imx6_pcie->pciephy_reset);
+>
+> rather than this:
+>
+> >       case IMX7D:
+> >               /* fall through */
+> >       case IMX8MQ:
+> >               reset_control_assert(imx6_pcie->pciephy_reset);
 
-No, I literally meant a flag to skip the work.  Think about it: there
-is a standard way to probe VFs, which comes from what is defined in the
-PCIe spec itself.  It just turns out s390 for some weird reason decides
-to already let the VFs show up basically like PFs.  There really should
-be no reason to branch out into per-arch code here as there really
-isn't much to do on a per-arch level.  More just a quirk for the
-firmware is buggy and already reports the VFs to us, so skip the
-probing.
+OK, understood, will remove in next version.
+
+Thanks,
+Andrey Smirnov
