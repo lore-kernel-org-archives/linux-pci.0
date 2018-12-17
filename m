@@ -6,162 +6,108 @@ X-Spam-Status: No, score=-8.7 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
 	DKIM_VALID,DKIM_VALID_AU,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
 	SPF_PASS,USER_AGENT_MUTT autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id A4BDEC43387
-	for <linux-pci@archiver.kernel.org>; Mon, 17 Dec 2018 20:28:31 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id C05FEC43387
+	for <linux-pci@archiver.kernel.org>; Mon, 17 Dec 2018 20:32:47 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 70F9F21848
-	for <linux-pci@archiver.kernel.org>; Mon, 17 Dec 2018 20:28:31 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 8FB16217D9
+	for <linux-pci@archiver.kernel.org>; Mon, 17 Dec 2018 20:32:47 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=default; t=1545078511;
-	bh=3Y40BjRDV23ndSs/iS+0hmvoWXR9Tlsw8Fvp4uJBOr0=;
+	s=default; t=1545078767;
+	bh=ZS/YRrxPzbXZW/0HoVZrBG2utPuZS6Yo8BFS7nF4NaI=;
 	h=Date:From:To:Cc:Subject:References:In-Reply-To:List-ID:From;
-	b=Xm8he/b25UwFAWf5y9idxQJSz6qZpJQ5bpI+FXhZHrmjZq7qHvtIE+XFxHA4JX8ct
-	 FrH1CvYYrGB8kupTxiaEZ67tLfr/XzYsm2LtkNmfBpoobQAm436ZFqnx/vU9LSZhDg
-	 xd/F2TFXnpBXaMtUNhg8q6iTjGlmOLPqO16ftsEA=
+	b=lzsFU6+CAk3uMNCF4XjvZMesLZ+Ukg6xltiQJO2/S/CAN6hYjdtmwB40QXdBgHP1P
+	 0giPBZQ//t6uT16YWNiA+XCGkueFlT72T7eASvSV5v8ULBSdX4EA83+KZIDJEcOBaZ
+	 HwR88X8FhzQ7Hlaoo5dHembf9bE9NfIZPW3vbLf4=
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S2389183AbeLQU2a (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Mon, 17 Dec 2018 15:28:30 -0500
-Received: from mail.kernel.org ([198.145.29.99]:54598 "EHLO mail.kernel.org"
+        id S1727571AbeLQUcq (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Mon, 17 Dec 2018 15:32:46 -0500
+Received: from mail.kernel.org ([198.145.29.99]:57304 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1727742AbeLQU2a (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Mon, 17 Dec 2018 15:28:30 -0500
+        id S1727507AbeLQUcq (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Mon, 17 Dec 2018 15:32:46 -0500
 Received: from localhost (unknown [64.22.249.253])
         (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
         (No client certificate requested)
-        by mail.kernel.org (Postfix) with ESMTPSA id 58D012133F;
-        Mon, 17 Dec 2018 20:28:28 +0000 (UTC)
+        by mail.kernel.org (Postfix) with ESMTPSA id 89418214D8;
+        Mon, 17 Dec 2018 20:32:45 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=default; t=1545078508;
-        bh=3Y40BjRDV23ndSs/iS+0hmvoWXR9Tlsw8Fvp4uJBOr0=;
+        s=default; t=1545078766;
+        bh=ZS/YRrxPzbXZW/0HoVZrBG2utPuZS6Yo8BFS7nF4NaI=;
         h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-        b=Oo7mv3qzNC/MRNAB+RJPVLha10WucycYOrU8kRCS15dTxRfllLSMnzuQR55RKA/9+
-         +NFq/PTCzHCWZoUNNIyjkt/MX55ujHo3W2nBXoMvB3gDviVtxGBHl61aYz8fLKZnrC
-         AfZcV8bJoEZhgwPrYtCvMfC2IQ74fLuQkppGTyhI=
-Date:   Mon, 17 Dec 2018 14:28:27 -0600
+        b=P9ZHdXzvRydUjx0Uq3vBKdwLuyGQNV2HjbClHc6qwMz2jn4Ivn6ZUla2v8+iUWKdi
+         7EB1ODH6JwEweMEuqk/N+yn/tlhCEeieg59dQ90LozZqaAfgt1GIsMqABzviZlmbXy
+         O/M/mgjDV3gzC5ugqK0nnfOzGgS3bdJZXmmexi1g=
+Date:   Mon, 17 Dec 2018 14:32:44 -0600
 From:   Bjorn Helgaas <helgaas@kernel.org>
-To:     Mika Westerberg <mika.westerberg@linux.intel.com>
-Cc:     "Rafael J. Wysocki" <rjw@rjwysocki.net>,
-        Kedar A Dongre <kedar.a.dongre@intel.com>,
-        Lukas Wunner <lukas@wunner.de>, linux-pci@vger.kernel.org,
-        linux-acpi@vger.kernel.org
-Subject: Re: [PATCH] PCI: Blacklist power management of Gigabyte X299
- DESIGNARE EX PCIe ports
-Message-ID: <20181217202827.GC28981@google.com>
-References: <20181204112048.35378-1-mika.westerberg@linux.intel.com>
+To:     Frederick Lawler <fred@fredlawl.com>
+Cc:     linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
+        ptalbert@redhat.com
+Subject: Re: [PATCH] PCI/ASPM: Remove unused lists from struct pcie_link_state
+Message-ID: <20181217203244.GD28981@google.com>
+References: <20181209224550.18931-1-fred@fredlawl.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20181204112048.35378-1-mika.westerberg@linux.intel.com>
+In-Reply-To: <20181209224550.18931-1-fred@fredlawl.com>
 User-Agent: Mutt/1.10.1 (2018-07-13)
 Sender: linux-pci-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-On Tue, Dec 04, 2018 at 02:20:48PM +0300, Mika Westerberg wrote:
-> Gigabyte X299 DESIGNARE EX motherboard has one PCIe root port that is
-> connected to an Alpine Ridge Thunderbolt controller. This port has slot
-> implemented bit set in the config space but other than that it is not
-> hotplug capable in the sense we are expecting in Linux (it has
-> dev->is_hotplug_bridge set to 0):
+On Sun, Dec 09, 2018 at 04:45:50PM -0600, Frederick Lawler wrote:
+> ASPM does not make use of the children or link LIST_HEADs declared in
+> struct pcie_link_state and defined in alloc_pcie_link_state(). Therefore,
+> remove these lists.
 > 
-> 00:1c.4 PCI bridge: Intel Corporation 200 Series PCH PCI Express Root Port #5
->         Bus: primary=00, secondary=05, subordinate=46, sec-latency=0
->         Memory behind bridge: 78000000-8fffffff [size=384M]
->         Prefetchable memory behind bridge: 00003800f8000000-00003800ffffffff [size=128M]
->         ...
->         Capabilities: [40] Express (v2) Root Port (Slot+), MSI 00
->         ...
->                 SltCap: AttnBtn- PwrCtrl- MRL- AttnInd- PwrInd- HotPlug- Surprise-
->                         Slot #8, PowerLimit 25.000W; Interlock- NoCompl+
->                 SltCtl: Enable: AttnBtn- PwrFlt- MRL- PresDet- CmdCplt- HPIrq- LinkChg-
->                         Control: AttnInd Unknown, PwrInd Unknown, Power- Interlock-
->                 SltSta: Status: AttnBtn- PowerFlt- MRL- CmdCplt- PresDet- Interlock-
->                         Changed: MRL- PresDet+ LinkState+
+> No functional change intended.
 > 
-> This system is using ACPI based hotplug to notify the OS that it needs
-> to rescan the PCI bus (ACPI hotplug).
-> 
-> If there is nothing connected in any of the Thunderbolt ports the root
-> port will not have any runtime PM active children and is thus
-> automatically runtime suspended pretty soon after boot by PCI PM core.
-> Now, when a device is connected the BIOS SMI handler responsible for
-> enumerating newly added devices is not able to find anything because the
-> port is in D3.
+> Signed-off-by: Frederick Lawler <fred@fredlawl.com>
 
-Ugh.  I don't see how this is a maintainable solution.  Are we going
-to have to just update this blacklist empirically as we get reports of
-systems that are "broken"?
+Applied to pci/aspm for v4.21, thanks, Fred!
 
-I say "broken" because I don't think we can point to anything here
-that doesn't conform to the specs, so maybe we tripped over something
-that *should* be covered in the spec, or maybe we're just not
-interpreting something correctly.
-
-For example, it looks like PCI_EXP_FLAGS_SLOT is set, but Linux
-basically ignores it.  Maybe if PCI_EXP_FLAGS_SLOT is set but we
-aren't using pciehp, we should assume any hotplug would be handled via
-acpiphp?  And in that case, we should avoid doing anything that would
-prevent platform firmware from enumerating things below the bridge?
-
-> Prevent this from happening by blacklisting PCI power management of this
-> particular Gigabyte system.
-> 
-> Reported-by: Kedar A Dongre <kedar.a.dongre@intel.com>
-
-Is there a bugzilla or any other URL we could include here to help with
-future changes in this area?
-
-> Signed-off-by: Mika Westerberg <mika.westerberg@linux.intel.com>
 > ---
-> I checked booting Windows on the same system and it does not put any of the
-> PCIe root ports to low power states so there is no issue in Windows. I'm
-> also quite certain Windows does not have similar blacklist.
+>  drivers/pci/pcie/aspm.c | 6 ------
+>  1 file changed, 6 deletions(-)
 > 
-> I wonder if our pci_bridge_d3_possible() heuristics would need to be
-> refined somehow? At least if this blacklist starts growing.
-> 
->  drivers/pci/pci.c | 20 ++++++++++++++++++++
->  1 file changed, 20 insertions(+)
-> 
-> diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
-> index c9d8e3c837de..1c6e47522c84 100644
-> --- a/drivers/pci/pci.c
-> +++ b/drivers/pci/pci.c
-> @@ -2501,6 +2501,23 @@ void pci_config_pm_runtime_put(struct pci_dev *pdev)
->  		pm_runtime_put_sync(parent);
->  }
+> diff --git a/drivers/pci/pcie/aspm.c b/drivers/pci/pcie/aspm.c
+> index dcb29cb76dc6..2330ebf6df72 100644
+> --- a/drivers/pci/pcie/aspm.c
+> +++ b/drivers/pci/pcie/aspm.c
+> @@ -53,8 +53,6 @@ struct pcie_link_state {
+>  	struct pcie_link_state *root;	/* pointer to the root port link */
+>  	struct pcie_link_state *parent;	/* pointer to the parent Link state */
+>  	struct list_head sibling;	/* node in link_list */
+> -	struct list_head children;	/* list of child link states */
+> -	struct list_head link;		/* node in parent's children list */
 >  
-> +static const struct dmi_system_id bridge_d3_blacklist[] = {
-> +	{
-> +		/*
-> +		 * Gigabyte X299 root port is not marked as hotplug
-> +		 * capable which allows Linux to power manage it.
-> +		 * However, this confuses the BIOS SMI handler so don't
-> +		 * power manage root ports on that system.
-> +		 */
-> +		.ident = "X299 DESIGNARE EX-CF",
-> +		.matches = {
-> +			DMI_MATCH(DMI_BOARD_VENDOR, "Gigabyte Technology Co., Ltd."),
-> +			DMI_MATCH(DMI_BOARD_NAME, "X299 DESIGNARE EX-CF"),
-> +		},
-> +	},
-> +	{ }
-> +};
-> +
->  /**
->   * pci_bridge_d3_possible - Is it possible to put the bridge into D3
->   * @bridge: Bridge to check
-> @@ -2546,6 +2563,9 @@ bool pci_bridge_d3_possible(struct pci_dev *bridge)
->  		if (bridge->is_hotplug_bridge)
->  			return false;
+>  	/* ASPM state */
+>  	u32 aspm_support:7;		/* Supported ASPM state */
+> @@ -850,8 +848,6 @@ static struct pcie_link_state *alloc_pcie_link_state(struct pci_dev *pdev)
+>  		return NULL;
 >  
-> +		if (dmi_check_system(bridge_d3_blacklist))
-> +			return false;
-> +
->  		/*
->  		 * It should be safe to put PCIe ports from 2015 or newer
->  		 * to D3.
+>  	INIT_LIST_HEAD(&link->sibling);
+> -	INIT_LIST_HEAD(&link->children);
+> -	INIT_LIST_HEAD(&link->link);
+>  	link->pdev = pdev;
+>  	link->downstream = pci_function_0(pdev->subordinate);
+>  
+> @@ -877,7 +873,6 @@ static struct pcie_link_state *alloc_pcie_link_state(struct pci_dev *pdev)
+>  
+>  		link->parent = parent;
+>  		link->root = link->parent->root;
+> -		list_add(&link->link, &parent->children);
+>  	}
+>  
+>  	list_add(&link->sibling, &link_list);
+> @@ -1001,7 +996,6 @@ void pcie_aspm_exit_link_state(struct pci_dev *pdev)
+>  	/* All functions are removed, so just disable ASPM for the link */
+>  	pcie_config_aspm_link(link, 0);
+>  	list_del(&link->sibling);
+> -	list_del(&link->link);
+>  	/* Clock PM is for endpoint device */
+>  	free_link_state(link);
+>  
 > -- 
-> 2.19.2
+> 2.17.1
 > 
