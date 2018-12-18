@@ -2,77 +2,69 @@ Return-Path: <SRS0=EJXn=O3=vger.kernel.org=linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-6.0 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	MAILING_LIST_MULTI,MENTIONS_GIT_HOSTING,SPF_PASS,URIBL_BLOCKED autolearn=ham
-	autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-2.5 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+	MAILING_LIST_MULTI,SPF_PASS,URIBL_BLOCKED,USER_AGENT_MUTT
+	autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id A28E6C43387
-	for <linux-pci@archiver.kernel.org>; Tue, 18 Dec 2018 13:47:05 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id F37A1C43387
+	for <linux-pci@archiver.kernel.org>; Tue, 18 Dec 2018 13:53:00 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 7CD8521841
-	for <linux-pci@archiver.kernel.org>; Tue, 18 Dec 2018 13:47:05 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id CFC4E218A4
+	for <linux-pci@archiver.kernel.org>; Tue, 18 Dec 2018 13:53:00 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726584AbeLRNrE convert rfc822-to-8bit (ORCPT
-        <rfc822;linux-pci@archiver.kernel.org>);
-        Tue, 18 Dec 2018 08:47:04 -0500
-Received: from mail.bootlin.com ([62.4.15.54]:59002 "EHLO mail.bootlin.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1726422AbeLRNrE (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Tue, 18 Dec 2018 08:47:04 -0500
-Received: by mail.bootlin.com (Postfix, from userid 110)
-        id A44F1207B2; Tue, 18 Dec 2018 14:47:02 +0100 (CET)
-Received: from windsurf (aaubervilliers-681-1-38-38.w90-88.abo.wanadoo.fr [90.88.157.38])
-        by mail.bootlin.com (Postfix) with ESMTPSA id 77BDB207B2;
-        Tue, 18 Dec 2018 14:47:02 +0100 (CET)
-Date:   Tue, 18 Dec 2018 14:47:02 +0100
-From:   Thomas Petazzoni <thomas.petazzoni@bootlin.com>
-To:     =?UTF-8?B?THXDrXM=?= Mendes <luis.p.mendes@gmail.com>
-Cc:     linux-pci@vger.kernel.org,
-        Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
-Subject: Re: Regression with commit PCI: mvebu: Convert to PCI emulated
- bridge config space
-Message-ID: <20181218144702.752d97cd@windsurf>
-In-Reply-To: <CAEzXK1o9L-bVRGBpAo+a_wYqXZh6_zuebF221Bd8=b-DTL1Q9g@mail.gmail.com>
-References: <CAEzXK1o9L-bVRGBpAo+a_wYqXZh6_zuebF221Bd8=b-DTL1Q9g@mail.gmail.com>
-Organization: Bootlin
-X-Mailer: Claws Mail 3.16.0 (GTK+ 2.24.32; x86_64-redhat-linux-gnu)
+        id S1726512AbeLRNxA (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Tue, 18 Dec 2018 08:53:00 -0500
+Received: from usa-sjc-mx-foss1.foss.arm.com ([217.140.101.70]:46150 "EHLO
+        foss.arm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1726426AbeLRNw7 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Tue, 18 Dec 2018 08:52:59 -0500
+Received: from usa-sjc-imap-foss1.foss.arm.com (unknown [10.72.51.249])
+        by usa-sjc-mx-foss1.foss.arm.com (Postfix) with ESMTP id 7489980D;
+        Tue, 18 Dec 2018 05:52:59 -0800 (PST)
+Received: from e107981-ln.cambridge.arm.com (e107981-ln.cambridge.arm.com [10.1.197.40])
+        by usa-sjc-imap-foss1.foss.arm.com (Postfix) with ESMTPSA id 3A9FD3F575;
+        Tue, 18 Dec 2018 05:52:57 -0800 (PST)
+Date:   Tue, 18 Dec 2018 13:52:51 +0000
+From:   Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
+To:     honghui.zhang@mediatek.com
+Cc:     bhelgaas@google.com, linux-arm-kernel@lists.infradead.org,
+        linux-mediatek@lists.infradead.org, linux-pci@vger.kernel.org,
+        linux-kernel@vger.kernel.org, ryder.lee@mediatek.com,
+        matthias.bgg@gmail.com, robh+dt@kernel.org, robh@kernel.org,
+        devicetree@vger.kernel.org, youlin.pei@mediatek.com,
+        jianjun.wang@mediatek.com
+Subject: Re: [PATCH 0/4] Cleanup un-used variant and un-used property for
+ MediaTek PCIe
+Message-ID: <20181218135251.GA3560@e107981-ln.cambridge.arm.com>
+References: <1544750742-31419-1-git-send-email-honghui.zhang@mediatek.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 8BIT
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <1544750742-31419-1-git-send-email-honghui.zhang@mediatek.com>
+User-Agent: Mutt/1.5.24 (2015-08-30)
 Sender: linux-pci-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-Hello,
-
-On Tue, 18 Dec 2018 12:31:51 +0000, Luís Mendes wrote:
-
-> I've been running Linux on a armhf with an AMD gpu card and since this
-> commit, in linux 4.20, the amdgpu driver causes a kernel oops and fails to
-> initialize when calling pci_map_rom, which then fails on a call to
-> ioremap_page_range. If I revert the patch from commit
+On Fri, Dec 14, 2018 at 09:25:38AM +0800, honghui.zhang@mediatek.com wrote:
+> From: Honghui Zhang <honghui.zhang@mediatek.com>
 > 
-> 1f08673eef1236f7d02d93fcf596bb8531ef0d12
-> <https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/commit/?h=v4.20-rc7&id=1f08673eef1236f7d02d93fcf596bb8531ef0d12>
-> then
-> amdgpu successfully initializes.
+> The "num-lanes" property in MediaTek's PCIe device node is not used by
+> its driver or anyone else, cleanup those related code.
 > 
-> The kernel oops follows in attachment.
+> Honghui Zhang (4):
+>   PCI: mediatek: Remove un-used variant in struct mtk_pcie_port
+>   dt-bindings: PCI: MediaTek: Remove un-used property
+>   arm: dts: mt7623: Remove un-used property for PCIe
+>   arm64: dts: mt7622: Remove un-used property for PCIe
+> 
+>  Documentation/devicetree/bindings/pci/mediatek-pcie.txt | 8 --------
+>  arch/arm/boot/dts/mt7623.dtsi                           | 3 ---
+>  arch/arm64/boot/dts/mediatek/mt7622.dtsi                | 2 --
+>  drivers/pci/controller/pcie-mediatek.c                  | 8 --------
+>  4 files changed, 21 deletions(-)
 
-Thanks for the bug report! I have an idea of what could be causing
-this, I've cooked a patch, I'm doing a build test. I of course won't be
-able to test it as I don't have amdgpu hardware, but I'll share the
-patch with you for testing.
+Applied to pci/mediatek for v4.21, thanks.
 
-Note: I'm not sure where you found <linux-pci@atrey.karlin.mff.cuni.cz>
-to be the address of the linux-pci mailing list, it's really
-linux-pci@vger.kernel.org.
-
-Best regards,
-
-Thomas
--- 
-Thomas Petazzoni, CTO, Bootlin
-Embedded Linux and Kernel engineering
-https://bootlin.com
+Lorenzo
