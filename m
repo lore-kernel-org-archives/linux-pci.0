@@ -2,121 +2,105 @@ Return-Path: <SRS0=EJXn=O3=vger.kernel.org=linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-2.5 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	MAILING_LIST_MULTI,SPF_PASS,URIBL_BLOCKED,USER_AGENT_MUTT autolearn=ham
+X-Spam-Status: No, score=-1.0 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+	MAILING_LIST_MULTI,SPF_PASS,UNPARSEABLE_RELAY autolearn=ham
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 38130C43387
-	for <linux-pci@archiver.kernel.org>; Tue, 18 Dec 2018 08:55:24 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 9F66CC43387
+	for <linux-pci@archiver.kernel.org>; Tue, 18 Dec 2018 09:19:36 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 126772184A
-	for <linux-pci@archiver.kernel.org>; Tue, 18 Dec 2018 08:55:24 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 71971217D8
+	for <linux-pci@archiver.kernel.org>; Tue, 18 Dec 2018 09:19:36 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726407AbeLRIzX (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Tue, 18 Dec 2018 03:55:23 -0500
-Received: from mga14.intel.com ([192.55.52.115]:51272 "EHLO mga14.intel.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1726316AbeLRIzX (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Tue, 18 Dec 2018 03:55:23 -0500
-X-Amp-Result: UNKNOWN
-X-Amp-Original-Verdict: FILE UNKNOWN
-X-Amp-File-Uploaded: False
-Received: from orsmga004.jf.intel.com ([10.7.209.38])
-  by fmsmga103.fm.intel.com with ESMTP/TLS/DHE-RSA-AES256-GCM-SHA384; 18 Dec 2018 00:55:22 -0800
-X-ExtLoop1: 1
-X-IronPort-AV: E=Sophos;i="5.56,367,1539673200"; 
-   d="scan'208";a="260366992"
-Received: from lahna.fi.intel.com (HELO lahna) ([10.237.72.157])
-  by orsmga004.jf.intel.com with SMTP; 18 Dec 2018 00:55:19 -0800
-Received: by lahna (sSMTP sendmail emulation); Tue, 18 Dec 2018 10:55:18 +0200
-Date:   Tue, 18 Dec 2018 10:55:18 +0200
-From:   Mika Westerberg <mika.westerberg@linux.intel.com>
-To:     Bjorn Helgaas <helgaas@kernel.org>
-Cc:     "Rafael J. Wysocki" <rjw@rjwysocki.net>,
-        Kedar A Dongre <kedar.a.dongre@intel.com>,
-        Lukas Wunner <lukas@wunner.de>, linux-pci@vger.kernel.org,
-        linux-acpi@vger.kernel.org
-Subject: Re: [PATCH] PCI: Blacklist power management of Gigabyte X299
- DESIGNARE EX PCIe ports
-Message-ID: <20181218085518.GI2469@lahna.fi.intel.com>
-References: <20181204112048.35378-1-mika.westerberg@linux.intel.com>
- <20181217202827.GC28981@google.com>
+        id S1726365AbeLRJTf (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Tue, 18 Dec 2018 04:19:35 -0500
+Received: from Mailgw01.mediatek.com ([1.203.163.78]:29921 "EHLO
+        mailgw01.mediatek.com" rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org
+        with ESMTP id S1726364AbeLRJTf (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Tue, 18 Dec 2018 04:19:35 -0500
+X-UUID: 5f02a978f3734bb487b3de176a956c4f-20181218
+X-UUID: 5f02a978f3734bb487b3de176a956c4f-20181218
+Received: from mtkcas36.mediatek.inc [(172.27.4.250)] by mailgw01.mediatek.com
+        (envelope-from <jianjun.wang@mediatek.com>)
+        (mailgw01.mediatek.com ESMTP with TLS)
+        with ESMTP id 1600722779; Tue, 18 Dec 2018 17:19:27 +0800
+Received: from MTKCAS32.mediatek.inc (172.27.4.184) by MTKMBS31N2.mediatek.inc
+ (172.27.4.87) with Microsoft SMTP Server (TLS) id 15.0.1395.4; Tue, 18 Dec
+ 2018 17:19:25 +0800
+Received: from [10.17.3.153] (10.17.3.153) by MTKCAS32.mediatek.inc
+ (172.27.4.170) with Microsoft SMTP Server id 15.0.1395.4 via Frontend
+ Transport; Tue, 18 Dec 2018 17:19:25 +0800
+Message-ID: <1545124764.25199.3.camel@mhfsdcap03>
+Subject: Re: [PATCH 2/2] PCI: mediatek: Add controller support for MT7629
+From:   Jianjun Wang <jianjun.wang@mediatek.com>
+To:     Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
+CC:     Bjorn Helgaas <helgaas@kernel.org>, <ryder.lee@mediatek.com>,
+        <robh+dt@kernel.org>, <matthias.bgg@gmail.com>,
+        <linux-pci@vger.kernel.org>, <mark.rutland@arm.com>,
+        <devicetree@vger.kernel.org>, <youlin.pei@mediatek.com>,
+        <linux-kernel@vger.kernel.org>,
+        <linux-mediatek@lists.infradead.org>, <honghui.zhang@mediatek.com>,
+        <linux-arm-kernel@lists.infradead.org>, <jianjun.wang@mediatek.com>
+Date:   Tue, 18 Dec 2018 17:19:24 +0800
+In-Reply-To: <20181217154645.GA24864@e107981-ln.cambridge.arm.com>
+References: <1544058553-10936-1-git-send-email-jianjun.wang@mediatek.com>
+         <1544058553-10936-3-git-send-email-jianjun.wang@mediatek.com>
+         <20181213145517.GB4701@google.com> <1545034779.8528.8.camel@mhfsdcap03>
+         <20181217143247.GK20725@google.com>
+         <20181217154645.GA24864@e107981-ln.cambridge.arm.com>
+Content-Type: text/plain; charset="UTF-8"
+X-Mailer: Evolution 3.2.3-0ubuntu6 
+Content-Transfer-Encoding: 7bit
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20181217202827.GC28981@google.com>
-Organization: Intel Finland Oy - BIC 0357606-4 - Westendinkatu 7, 02160 Espoo
-User-Agent: Mutt/1.10.1 (2018-07-13)
+X-MTK:  N
 Sender: linux-pci-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-On Mon, Dec 17, 2018 at 02:28:27PM -0600, Bjorn Helgaas wrote:
-> On Tue, Dec 04, 2018 at 02:20:48PM +0300, Mika Westerberg wrote:
-> > Gigabyte X299 DESIGNARE EX motherboard has one PCIe root port that is
-> > connected to an Alpine Ridge Thunderbolt controller. This port has slot
-> > implemented bit set in the config space but other than that it is not
-> > hotplug capable in the sense we are expecting in Linux (it has
-> > dev->is_hotplug_bridge set to 0):
+On Mon, 2018-12-17 at 15:46 +0000, Lorenzo Pieralisi wrote:
+> On Mon, Dec 17, 2018 at 08:32:47AM -0600, Bjorn Helgaas wrote:
+> > On Mon, Dec 17, 2018 at 04:19:39PM +0800, Jianjun Wang wrote:
+> > > On Thu, 2018-12-13 at 08:55 -0600, Bjorn Helgaas wrote:
+> > > > On Thu, Dec 06, 2018 at 09:09:13AM +0800, Jianjun Wang wrote:
+> > > > > The read value of BAR0 is 0xffff_ffff, it's size will be calculated as 4GB
+> > > > > in arm64 but bogus alignment values at arm32, the pcie device and devices
+> > > > > behind this bridge will not be enabled. Fix it's BAR0 resource size to
+> > > > > guarantee the pcie devices will be enabled correctly.
+> > > > 
+> > > > So this is a hardware erratum?  Per spec, a memory BAR has bit 0 hardwired
+> > > > to 0, and an IO BAR has bit 1 hardwired to 0.
+> > > 
+> > > Yes, it only works properly on 64bit platform.
 > > 
-> > 00:1c.4 PCI bridge: Intel Corporation 200 Series PCH PCI Express Root Port #5
-> >         Bus: primary=00, secondary=05, subordinate=46, sec-latency=0
-> >         Memory behind bridge: 78000000-8fffffff [size=384M]
-> >         Prefetchable memory behind bridge: 00003800f8000000-00003800ffffffff [size=128M]
-> >         ...
-> >         Capabilities: [40] Express (v2) Root Port (Slot+), MSI 00
-> >         ...
-> >                 SltCap: AttnBtn- PwrCtrl- MRL- AttnInd- PwrInd- HotPlug- Surprise-
-> >                         Slot #8, PowerLimit 25.000W; Interlock- NoCompl+
-> >                 SltCtl: Enable: AttnBtn- PwrFlt- MRL- PresDet- CmdCplt- HPIrq- LinkChg-
-> >                         Control: AttnInd Unknown, PwrInd Unknown, Power- Interlock-
-> >                 SltSta: Status: AttnBtn- PowerFlt- MRL- CmdCplt- PresDet- Interlock-
-> >                         Changed: MRL- PresDet+ LinkState+
-> > 
-> > This system is using ACPI based hotplug to notify the OS that it needs
-> > to rescan the PCI bus (ACPI hotplug).
-> > 
-> > If there is nothing connected in any of the Thunderbolt ports the root
-> > port will not have any runtime PM active children and is thus
-> > automatically runtime suspended pretty soon after boot by PCI PM core.
-> > Now, when a device is connected the BIOS SMI handler responsible for
-> > enumerating newly added devices is not able to find anything because the
-> > port is in D3.
+> > I don't understand.  BARs are supposed to work the same regardless of
+> > whether it's a 32- or 64-bit platform.  If this is a workaround for a
+> > hardware defect, please just say that explicitly.
 > 
-> Ugh.  I don't see how this is a maintainable solution.  Are we going
-> to have to just update this blacklist empirically as we get reports of
-> systems that are "broken"?
-
-I was hoping not but for that we would need to have some means to
-identify these. What you suggest below might be one way to avoid adding
-the blacklist.
-
-> I say "broken" because I don't think we can point to anything here
-> that doesn't conform to the specs, so maybe we tripped over something
-> that *should* be covered in the spec, or maybe we're just not
-> interpreting something correctly.
-
-That is indeed possible.
-
-> For example, it looks like PCI_EXP_FLAGS_SLOT is set, but Linux
-> basically ignores it.  Maybe if PCI_EXP_FLAGS_SLOT is set but we
-> aren't using pciehp, we should assume any hotplug would be handled via
-> acpiphp?  And in that case, we should avoid doing anything that would
-> prevent platform firmware from enumerating things below the bridge?
-
-I don't see why that would not work. This could cause "power regression"
-on some systems but I think that's better than systems that do not work
-at all.
-
-> > Prevent this from happening by blacklisting PCI power management of this
-> > particular Gigabyte system.
-> > 
-> > Reported-by: Kedar A Dongre <kedar.a.dongre@intel.com>
+> I do not understand this either. First thing to do is to describe the
+> problem properly so that we can actually find a solution to it.
 > 
-> Is there a bugzilla or any other URL we could include here to help with
-> future changes in this area?
+> Lorenzo
 
-No, this was reported internally.
+This BAR0 is a 64-bit memory BAR, the HW default values for this BAR is
+0xffff_ffff_0000_0000 and it could not be changed except by config write
+operation.
 
-I can file one if you think it is helpful.
+The calculated BAR size will be 0 in 32-bit platform since the
+phys_addr_t is a 32bit value in 32-bit platform.
+
+Actually MediaTek's HW does not using this BAR0, just omit it when
+assign resource is totally fine.
+
+When assign the resource for each device, software will check the
+resource alignment first, and the resource of length zero will be
+regarded as a bogus alignment resource, it will be ignored and won't
+claim a resource parent for it.
+
+When drivers try to enable the PCIe devices, the software will enable
+it's resources, but it will return an error number when found a
+unclaimed resource, in that case, the flow of enable devices will be
+interrupted and PCIe devices won't work properly.
+
+Thanks.
+
