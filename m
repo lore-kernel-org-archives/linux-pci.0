@@ -2,125 +2,82 @@ Return-Path: <SRS0=EJXn=O3=vger.kernel.org=linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-1.0 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	MAILING_LIST_MULTI,SPF_PASS,URIBL_BLOCKED autolearn=ham autolearn_force=no
-	version=3.4.0
+X-Spam-Status: No, score=-8.5 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_PASS,USER_AGENT_MUTT
+	autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id A986CC43387
-	for <linux-pci@archiver.kernel.org>; Tue, 18 Dec 2018 10:55:12 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 9089AC43387
+	for <linux-pci@archiver.kernel.org>; Tue, 18 Dec 2018 10:57:50 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 7B371217D8
-	for <linux-pci@archiver.kernel.org>; Tue, 18 Dec 2018 10:55:12 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 5C1FF217D9
+	for <linux-pci@archiver.kernel.org>; Tue, 18 Dec 2018 10:57:50 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726426AbeLRKzL (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Tue, 18 Dec 2018 05:55:11 -0500
-Received: from cloudserver094114.home.pl ([79.96.170.134]:52360 "EHLO
-        cloudserver094114.home.pl" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726370AbeLRKzL (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Tue, 18 Dec 2018 05:55:11 -0500
-Received: from 79.184.255.25.ipv4.supernova.orange.pl (79.184.255.25) (HELO aspire.rjw.lan)
- by serwer1319399.home.pl (79.96.170.134) with SMTP (IdeaSmtpServer 0.83.183)
- id 6328331c0890de3f; Tue, 18 Dec 2018 11:55:08 +0100
-From:   "Rafael J. Wysocki" <rjw@rjwysocki.net>
-To:     Miquel Raynal <miquel.raynal@bootlin.com>
-Cc:     Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
-        Stephen Boyd <sboyd@kernel.org>, sudeep.holla@arm.com,
-        Gregory Clement <gregory.clement@bootlin.com>,
-        Jason Cooper <jason@lakedaemon.net>,
-        Andrew Lunn <andrew@lunn.ch>,
-        Sebastian Hesselbarth <sebastian.hesselbarth@gmail.com>,
-        Thomas Petazzoni <thomas.petazzoni@bootlin.com>,
-        Bjorn Helgaas <bhelgaas@google.com>,
-        devicetree@vger.kernel.org, Rob Herring <robh+dt@kernel.org>,
-        Mark Rutland <mark.rutland@arm.com>, linux-pci@vger.kernel.org,
-        linux-kernel@vger.kernel.org, linux-arm-kernel@lists.infradead.org,
-        Antoine Tenart <antoine.tenart@bootlin.com>,
-        Maxime Chevallier <maxime.chevallier@bootlin.com>,
-        Nadav Haklai <nadavh@marvell.com>
-Subject: Re: [PATCH 05/12] PCI: aardvark: add suspend to RAM support
-Date:   Tue, 18 Dec 2018 11:54:43 +0100
-Message-ID: <28619896.152T6JUIHS@aspire.rjw.lan>
-In-Reply-To: <20181217155426.71058a03@xps13>
-References: <20181123141831.8214-1-miquel.raynal@bootlin.com> <61805564.abKDZ2rVK7@aspire.rjw.lan> <20181217155426.71058a03@xps13>
+        id S1726403AbeLRK5t (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Tue, 18 Dec 2018 05:57:49 -0500
+Received: from foss.arm.com ([217.140.101.70]:43180 "EHLO foss.arm.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1726370AbeLRK5t (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Tue, 18 Dec 2018 05:57:49 -0500
+Received: from usa-sjc-imap-foss1.foss.arm.com (unknown [10.72.51.249])
+        by usa-sjc-mx-foss1.foss.arm.com (Postfix) with ESMTP id 426C4A78;
+        Tue, 18 Dec 2018 02:57:49 -0800 (PST)
+Received: from e107981-ln.cambridge.arm.com (e107981-ln.cambridge.arm.com [10.1.197.40])
+        by usa-sjc-imap-foss1.foss.arm.com (Postfix) with ESMTPSA id BA19E3F5C0;
+        Tue, 18 Dec 2018 02:57:47 -0800 (PST)
+Date:   Tue, 18 Dec 2018 10:57:42 +0000
+From:   Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
+To:     Dan Carpenter <dan.carpenter@oracle.com>
+Cc:     Richard Zhu <hongxing.zhu@nxp.com>,
+        Leonard Crestez <leonard.crestez@nxp.com>,
+        Lucas Stach <l.stach@pengutronix.de>,
+        Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org,
+        linux-arm-kernel@lists.infradead.org,
+        kernel-janitors@vger.kernel.org
+Subject: Re: [PATCH] PCI: imx: Fix an IS_ERR() vs NULL bug
+Message-ID: <20181218105742.GA22156@e107981-ln.cambridge.arm.com>
+References: <20181218082329.GB440@kadam>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 7Bit
-Content-Type: text/plain; charset="us-ascii"
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20181218082329.GB440@kadam>
+User-Agent: Mutt/1.5.24 (2015-08-30)
 Sender: linux-pci-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-On Monday, December 17, 2018 3:54:26 PM CET Miquel Raynal wrote:
-> Hi Rafael,
+On Tue, Dec 18, 2018 at 11:23:29AM +0300, Dan Carpenter wrote:
+> The device_link_add() function doesn't return error pointers, it returns
+> NULL if there is an error.
 > 
-> "Rafael J. Wysocki" <rjw@rjwysocki.net> wrote on Thu, 13 Dec 2018
-> 22:50:51 +0100:
+> Fixes: 7a6991159bcd ("PCI: imx: Add multi-pd support")
+> Signed-off-by: Dan Carpenter <dan.carpenter@oracle.com>
+> ---
+>  drivers/pci/controller/dwc/pci-imx6.c | 6 +++---
+>  1 file changed, 3 insertions(+), 3 deletions(-)
+
+Thanks Dan, if you do not mind I will squash this in the initial
+commit given that it is not upstream yet.
+
+Lorenzo
+
+> diff --git a/drivers/pci/controller/dwc/pci-imx6.c b/drivers/pci/controller/dwc/pci-imx6.c
+> index b54b4590ccf9..8e7956224a5f 100644
+> --- a/drivers/pci/controller/dwc/pci-imx6.c
+> +++ b/drivers/pci/controller/dwc/pci-imx6.c
+> @@ -326,9 +326,9 @@ static int imx6_pcie_attach_pd(struct device *dev)
+>  			DL_FLAG_STATELESS |
+>  			DL_FLAG_PM_RUNTIME |
+>  			DL_FLAG_RPM_ACTIVE);
+> -	if (IS_ERR(link)) {
+> -		dev_err(dev, "Failed to add device_link to pcie pd: %ld\n", PTR_ERR(link));
+> -		return PTR_ERR(link);
+> +	if (!link) {
+> +		dev_err(dev, "Failed to add device_link to pcie pd.\n");
+> +		return -EINVAL;
+>  	}
+>  
+>  	imx6_pcie->pd_pcie_phy = dev_pm_domain_attach_by_name(dev, "pcie_phy");
+> -- 
+> 2.17.1
 > 
-> > On Thursday, December 13, 2018 3:30:00 PM CET Miquel Raynal wrote:
-> > > Hi Lorenzo,
-> > >   
-> > > > > If that's really the case, then I can see how one device and it's
-> > > > > children are suspended and the irq for it is disabled but the providing
-> > > > > devices (clk, regulator, bus controller, etc.) are still fully active
-> > > > > and not suspended but in fact completely usable and able to service
-> > > > > interrupts. If that all makes sense, then I would answer the question
-> > > > > with a definitive "yes it's all fine" because the clk consumer could be
-> > > > > in the NOIRQ phase of its suspend but the clk provider wouldn't have
-> > > > > even started suspending yet when clk_disable_unprepare() is called.    
-> > > > 
-> > > > That's a very good summary and address my concern, I still question this
-> > > > patch correctness (and many others that carry out clk operations in S2R
-> > > > NOIRQ phase), they may work but do not tell me they are rock solid given
-> > > > your accurate summary above.  
-> > > 
-> > > I understand your concern but I don't see any alternative right now
-> > > and a deep rework of the PM core to respect such dependency is not
-> > > something that can be done in a reasonable amount of time.  
-> > 
-> > Maybe you don't need to rework anything. :-)
-> > 
-> > Have you considered using device links?
-> 
-> Absolutely, yes :) I am actively working on it in parallel, you can
-> check the third version there [1]. Stephen Boyd has a slightly
-> different idea of how it should be done, I will propose a v4 this week,
-> I can add you in copy if you are interested!
-> 
-> Anyway, there is one thing that is still missing:
-> * Let's have device A that requests clock B
-> * With the device link series, A is linked (as a child) to B.
-> * A suspend/resume hooks handle things in the NOIRQ phase.
-
-Why do you need them to run in the "noirq" phase in the first place?
-
-> * B suspend/resume hooks handle things in the default phase.
-> 
-> What I expected during a suspend:
-> 1/ ->suspend_noirq(device A)
-> 2/ ->suspend(clock B)
-
-This expectation is not in agreement with the documented suspend code flow,
-however.
-
-Each phase of it is carried out for *all* devices completely before getting
-to the next phase, "prepare" first, then "suspend", "suspend_late" and
-"suspend_noirq", in this order.
-
-> Unfortunately, device links do not seem to enforce any priority between
-> phases (default/late/noirq) and what happens is:
-> 1/ ->suspend(B)
-> 2/ ->suspend_noirq(A)
-> Which has no sense in my case. Hence, I had to request the clock
-> suspend/resume callbacks to be upgraded to the NOIRQ phase as well (I
-> don't have a better solution for now). This is still under discussion
-> in a thread you have been recently added to by Bjorn, see [2].
-> 
-> So when I told you I was not confident in "reworking the PM core to
-> respect such dependency", this is what I was referring to. I am
-> definitely ready to help, but I don't feel I can do it alone.
-> 
-> [1] https://www.spinics.net/lists/linux-clk/msg32824.html
-> [2] https://marc.info/?l=linux-pm&m=154465198510735&w=2
-
-The rework you seem to be talking about is not possible, I'm afraid.
-
