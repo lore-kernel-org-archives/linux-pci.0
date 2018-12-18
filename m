@@ -2,111 +2,150 @@ Return-Path: <SRS0=EJXn=O3=vger.kernel.org=linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-2.5 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	MAILING_LIST_MULTI,SPF_PASS,USER_AGENT_MUTT autolearn=unavailable
-	autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-4.0 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
+	DKIM_VALID_AU,FREEMAIL_FORGED_FROMDOMAIN,FREEMAIL_FROM,FROM_EXCESS_BASE64,
+	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,SPF_PASS
+	autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 7A477C43387
-	for <linux-pci@archiver.kernel.org>; Tue, 18 Dec 2018 15:32:51 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 084A3C43387
+	for <linux-pci@archiver.kernel.org>; Tue, 18 Dec 2018 15:42:51 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 5695F2133F
-	for <linux-pci@archiver.kernel.org>; Tue, 18 Dec 2018 15:32:51 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id C7CCE21852
+	for <linux-pci@archiver.kernel.org>; Tue, 18 Dec 2018 15:42:50 +0000 (UTC)
+Authentication-Results: mail.kernel.org;
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="chrXU9y4"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726700AbeLRPck (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Tue, 18 Dec 2018 10:32:40 -0500
-Received: from foss.arm.com ([217.140.101.70]:48238 "EHLO foss.arm.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1726717AbeLRPck (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Tue, 18 Dec 2018 10:32:40 -0500
-Received: from usa-sjc-imap-foss1.foss.arm.com (unknown [10.72.51.249])
-        by usa-sjc-mx-foss1.foss.arm.com (Postfix) with ESMTP id BFCF8A78;
-        Tue, 18 Dec 2018 07:32:39 -0800 (PST)
-Received: from e107981-ln.cambridge.arm.com (e107981-ln.cambridge.arm.com [10.1.197.40])
-        by usa-sjc-imap-foss1.foss.arm.com (Postfix) with ESMTPSA id 85AB23F5C0;
-        Tue, 18 Dec 2018 07:32:37 -0800 (PST)
-Date:   Tue, 18 Dec 2018 15:32:32 +0000
-From:   Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
-To:     Jianjun Wang <jianjun.wang@mediatek.com>
-Cc:     Bjorn Helgaas <helgaas@kernel.org>, ryder.lee@mediatek.com,
-        robh+dt@kernel.org, matthias.bgg@gmail.com,
-        linux-pci@vger.kernel.org, mark.rutland@arm.com,
-        devicetree@vger.kernel.org, youlin.pei@mediatek.com,
-        linux-kernel@vger.kernel.org, linux-mediatek@lists.infradead.org,
-        honghui.zhang@mediatek.com, linux-arm-kernel@lists.infradead.org
-Subject: Re: [PATCH 2/2] PCI: mediatek: Add controller support for MT7629
-Message-ID: <20181218153232.GA6715@e107981-ln.cambridge.arm.com>
-References: <1544058553-10936-1-git-send-email-jianjun.wang@mediatek.com>
- <1544058553-10936-3-git-send-email-jianjun.wang@mediatek.com>
- <20181213145517.GB4701@google.com>
- <1545034779.8528.8.camel@mhfsdcap03>
- <20181217143247.GK20725@google.com>
- <20181217154645.GA24864@e107981-ln.cambridge.arm.com>
- <1545124764.25199.3.camel@mhfsdcap03>
+        id S1726422AbeLRPmt (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Tue, 18 Dec 2018 10:42:49 -0500
+Received: from mail-ed1-f65.google.com ([209.85.208.65]:36822 "EHLO
+        mail-ed1-f65.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726857AbeLRPmr (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Tue, 18 Dec 2018 10:42:47 -0500
+Received: by mail-ed1-f65.google.com with SMTP id f23so14270476edb.3
+        for <linux-pci@vger.kernel.org>; Tue, 18 Dec 2018 07:42:46 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20161025;
+        h=mime-version:references:in-reply-to:from:date:message-id:subject:to
+         :cc:content-transfer-encoding;
+        bh=KDvi0/RUOb0BP+RUB+LVIWVxkk+9t2zTiIYl0P1QLkY=;
+        b=chrXU9y4w991lCWIJLtRXK8D3aKRyg18G73vPW+yEyjfZmbxNvGv/aaP+eTxw6HMvU
+         agLHcixJGG+rcYd1n4qLBuj5OjPTqwY8unC9zNXfFDpdUdoZirLZ+oHq0TmS5YBcnfnZ
+         zrc6vTrqc1aUkF8fr29NysxCkS9JwiwSIzOZDpWVGrxle6LQjToC/fncK4CB1E8c1oYM
+         viFBZA7z7MomQHtjYouV3mwE8dnFSjNyis+PKnt9GOmzkouwwsViKxtqT1OV532bS0vB
+         hzZSMfeE2JOswSX9yQI90UKfA+uUODMcQqJolneH/enBeqMa2vDHFiYGVSXGiIUlWi/1
+         n9nA==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20161025;
+        h=x-gm-message-state:mime-version:references:in-reply-to:from:date
+         :message-id:subject:to:cc:content-transfer-encoding;
+        bh=KDvi0/RUOb0BP+RUB+LVIWVxkk+9t2zTiIYl0P1QLkY=;
+        b=Uvju8EtK+Yc6tgYKVGFFT17cFWF22kq8ZG1EfmkMQDn7CUNGsKTBMUW8LZHeoiKBtD
+         Mud7HRzQvGHlHtUyJ+2CiLSFbDrAqGiP5MvoRUCrKr5NtckJOG1DGBFBDgiW1EDFScno
+         YE4gXgTfBa4FZnWWHBpGZszXFAjrDDQRZ7uSK4HZD6p8h3feoxhSfP1663SHuUC8vaY2
+         aH8zWU4TrX8ktnPyXYtZ5YRMHq/f0vbmCHTjjkyUSeyRtEjL1zborZeOGHS4feRSltIl
+         F0xuttACFeUrOguJciMfxFFqgEhgjH8LDNjttwrAqkhfga8emKYnVlH9AfxRLn+oUXr3
+         g3Lw==
+X-Gm-Message-State: AA+aEWb2NVp1jEAtEF8g0dpixcB9a8UqJOf+qFaTJcueGmEicAq4XcWL
+        nwMlXYwhj/+S7tC/xImlI+MomIZjfy8OV7xdmEFmmshE
+X-Google-Smtp-Source: AFSGD/WffVNwui4eWXKs7KWzm/72uYvMWMf81Y2a68lk81NMbgfrRF67nskqt66UPs6z/7S/YYJF300HwICTr9FWAtU=
+X-Received: by 2002:a50:c182:: with SMTP id m2mr16872418edf.139.1545147765870;
+ Tue, 18 Dec 2018 07:42:45 -0800 (PST)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <1545124764.25199.3.camel@mhfsdcap03>
-User-Agent: Mutt/1.5.24 (2015-08-30)
+References: <CAEzXK1o9L-bVRGBpAo+a_wYqXZh6_zuebF221Bd8=b-DTL1Q9g@mail.gmail.com>
+ <20181218144702.752d97cd@windsurf> <20181218153404.45b038cf@windsurf>
+In-Reply-To: <20181218153404.45b038cf@windsurf>
+From:   =?UTF-8?B?THXDrXMgTWVuZGVz?= <luis.p.mendes@gmail.com>
+Date:   Tue, 18 Dec 2018 15:42:34 +0000
+Message-ID: <CAEzXK1ryTQ5sbUSuZoq36ss=Z7ewLegaxsXtvsNOGqHyTQibmg@mail.gmail.com>
+Subject: Re: Regression with commit PCI: mvebu: Convert to PCI emulated bridge
+ config space
+To:     Thomas Petazzoni <thomas.petazzoni@bootlin.com>
+Cc:     Linux PCI <linux-pci@vger.kernel.org>,
+        Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
 Sender: linux-pci-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-On Tue, Dec 18, 2018 at 05:19:24PM +0800, Jianjun Wang wrote:
-> On Mon, 2018-12-17 at 15:46 +0000, Lorenzo Pieralisi wrote:
-> > On Mon, Dec 17, 2018 at 08:32:47AM -0600, Bjorn Helgaas wrote:
-> > > On Mon, Dec 17, 2018 at 04:19:39PM +0800, Jianjun Wang wrote:
-> > > > On Thu, 2018-12-13 at 08:55 -0600, Bjorn Helgaas wrote:
-> > > > > On Thu, Dec 06, 2018 at 09:09:13AM +0800, Jianjun Wang wrote:
-> > > > > > The read value of BAR0 is 0xffff_ffff, it's size will be calculated as 4GB
-> > > > > > in arm64 but bogus alignment values at arm32, the pcie device and devices
-> > > > > > behind this bridge will not be enabled. Fix it's BAR0 resource size to
-> > > > > > guarantee the pcie devices will be enabled correctly.
-> > > > > 
-> > > > > So this is a hardware erratum?  Per spec, a memory BAR has bit 0 hardwired
-> > > > > to 0, and an IO BAR has bit 1 hardwired to 0.
-> > > > 
-> > > > Yes, it only works properly on 64bit platform.
-> > > 
-> > > I don't understand.  BARs are supposed to work the same regardless of
-> > > whether it's a 32- or 64-bit platform.  If this is a workaround for a
-> > > hardware defect, please just say that explicitly.
-> > 
-> > I do not understand this either. First thing to do is to describe the
-> > problem properly so that we can actually find a solution to it.
-> > 
-> > Lorenzo
-> 
-> This BAR0 is a 64-bit memory BAR, the HW default values for this BAR is
-> 0xffff_ffff_0000_0000 and it could not be changed except by config write
-> operation.
-> 
-> The calculated BAR size will be 0 in 32-bit platform since the
-> phys_addr_t is a 32bit value in 32-bit platform.
-> 
-> Actually MediaTek's HW does not using this BAR0, just omit it when
-> assign resource is totally fine.
-> 
-> When assign the resource for each device, software will check the
-> resource alignment first, and the resource of length zero will be
-> regarded as a bogus alignment resource, it will be ignored and won't
-> claim a resource parent for it.
-> 
-> When drivers try to enable the PCIe devices, the software will enable
-> it's resources, but it will return an error number when found a
-> unclaimed resource, in that case, the flow of enable devices will be
-> interrupted and PCIe devices won't work properly.
+Hi Thomas,
 
-As a starting point, please provide kernel logs for both 64-bit and
-32-bit platforms (without this patch applied) and also a:
+Thanks a lot for your quick reply and patch, but unfortunately the
+problem remains the same with the patch applied.
 
-cat /proc/iomem
+How can I help to further pin down the issue?
 
-and
+Regards,
+Lu=C3=ADs
 
-lspci
+---
+Lu=C3=ADs Mendes, Researcher, Instituto Superior T=C3=A9cnico
+Hardware and Software engineer
+http://tecnico.ulisboa.pt/
 
-output for both configurations.
-
-Thanks,
-Lorenzo
+On Tue, Dec 18, 2018 at 2:34 PM Thomas Petazzoni
+<thomas.petazzoni@bootlin.com> wrote:
+>
+> Hello Luis,
+>
+> On Tue, 18 Dec 2018 14:47:02 +0100, Thomas Petazzoni wrote:
+>
+> > Thanks for the bug report! I have an idea of what could be causing
+> > this, I've cooked a patch, I'm doing a build test. I of course won't be
+> > able to test it as I don't have amdgpu hardware, but I'll share the
+> > patch with you for testing.
+>
+> Could you try the below patch:
+>
+> diff --git a/drivers/pci/controller/pci-mvebu.c b/drivers/pci/controller/=
+pci-mvebu.c
+> index fa0fc46edb0c..62468415e063 100644
+> --- a/drivers/pci/controller/pci-mvebu.c
+> +++ b/drivers/pci/controller/pci-mvebu.c
+> @@ -469,6 +469,23 @@ mvebu_pci_bridge_emul_pcie_conf_read(struct pci_brid=
+ge_emul *bridge,
+>         return PCI_BRIDGE_EMUL_HANDLED;
+>  }
+>
+> +static pci_bridge_emul_read_status_t
+> +mvebu_pci_bridge_emul_base_conf_read(struct pci_bridge_emul *bridge,
+> +                                    int reg, u32 *value)
+> +{
+> +       switch(reg) {
+> +       case PCI_ROM_ADDRESS1:
+> +               /* We don't support the PCI ROM mechanism */
+> +               *value =3D 0;
+> +               break;
+> +
+> +       default:
+> +               return PCI_BRIDGE_EMUL_NOT_HANDLED;
+> +       }
+> +
+> +       return PCI_BRIDGE_EMUL_HANDLED;
+> +}
+> +
+>  static void
+>  mvebu_pci_bridge_emul_base_conf_write(struct pci_bridge_emul *bridge,
+>                                       int reg, u32 old, u32 new, u32 mask=
+)
+> @@ -555,6 +572,7 @@ mvebu_pci_bridge_emul_pcie_conf_write(struct pci_brid=
+ge_emul *bridge,
+>  }
+>
+>  struct pci_bridge_emul_ops mvebu_pci_bridge_emul_ops =3D {
+> +       .read_base =3D mvebu_pci_bridge_emul_base_conf_read,
+>         .write_base =3D mvebu_pci_bridge_emul_base_conf_write,
+>         .read_pcie =3D mvebu_pci_bridge_emul_pcie_conf_read,
+>         .write_pcie =3D mvebu_pci_bridge_emul_pcie_conf_write,
+>
+> If that fixes the problem for you, I'll send it as a proper patch with
+> a commit log that explains the issue.
+>
+> Thanks,
+>
+> Thomas
+> --
+> Thomas Petazzoni, CTO, Bootlin
+> Embedded Linux and Kernel engineering
+> https://bootlin.com
