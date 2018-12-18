@@ -2,111 +2,84 @@ Return-Path: <SRS0=EJXn=O3=vger.kernel.org=linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-4.2 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_PASS
-	autolearn=unavailable autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-12.7 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,INCLUDES_PULL_REQUEST,MAILING_LIST_MULTI,
+	MENTIONS_GIT_HOSTING,SPF_PASS,USER_AGENT_MUTT autolearn=ham
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 97359C43387
-	for <linux-pci@archiver.kernel.org>; Tue, 18 Dec 2018 21:11:02 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 2DCCCC43387
+	for <linux-pci@archiver.kernel.org>; Tue, 18 Dec 2018 21:40:47 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 61E48217D9
-	for <linux-pci@archiver.kernel.org>; Tue, 18 Dec 2018 21:11:02 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id F03E2218A6
+	for <linux-pci@archiver.kernel.org>; Tue, 18 Dec 2018 21:40:46 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=default; t=1545167462;
-	bh=4TSoy7am50zcJFdCj0qlkmFgh7ve6nj0hZ7RxM5K9Po=;
-	h=References:In-Reply-To:From:Date:Subject:To:Cc:List-ID:From;
-	b=ltHJwsamJy3T6e3tt5z84JoTm29lQimBBND9+M8RgnhSLn3GB2rwvdtfthiQmIJIu
-	 k+9hu2kSR+/wifDXGmTSBxcaS687ohJjhESYdDMVBtiXRYIMdzrCLVBfRa3l9dUD7R
-	 zNhb4AXM/6NWPCoazfKkE5Cm7mSlXCC0sgkvDjbY=
+	s=default; t=1545169247;
+	bh=FeSC9pIre235L6EKCrg/anEA02dCzIIXluvloLV1s5Y=;
+	h=Date:From:To:Cc:Subject:List-ID:From;
+	b=rjtzbWBaegLvwEpe+Bc9wt5kJJ+OUVRMVKgO+FjeKPW0aoygvCnMYaP6o5N1coCAV
+	 knmcdY1tOSVDIQlMimUhxd6/DC5L6/a8NIiKlqh3aiA91I+5zmiVDeTNJfYSqPGb6u
+	 vSjMcqWNNUeIuI/IAqTZYt6iHz74dNZqRh66WDYc=
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726904AbeLRVK4 (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Tue, 18 Dec 2018 16:10:56 -0500
-Received: from mail.kernel.org ([198.145.29.99]:56964 "EHLO mail.kernel.org"
+        id S1726716AbeLRVkq (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Tue, 18 Dec 2018 16:40:46 -0500
+Received: from mail.kernel.org ([198.145.29.99]:47594 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1726833AbeLRVK4 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Tue, 18 Dec 2018 16:10:56 -0500
-Received: from mail-qk1-f174.google.com (mail-qk1-f174.google.com [209.85.222.174])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+        id S1726675AbeLRVkq (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Tue, 18 Dec 2018 16:40:46 -0500
+Received: from localhost (unknown [69.71.4.100])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
         (No client certificate requested)
-        by mail.kernel.org (Postfix) with ESMTPSA id AD82A218A4;
-        Tue, 18 Dec 2018 21:10:55 +0000 (UTC)
+        by mail.kernel.org (Postfix) with ESMTPSA id 46CB62184C;
+        Tue, 18 Dec 2018 21:40:45 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=default; t=1545167455;
-        bh=4TSoy7am50zcJFdCj0qlkmFgh7ve6nj0hZ7RxM5K9Po=;
-        h=References:In-Reply-To:From:Date:Subject:To:Cc:From;
-        b=IJBUb327rfAXUE1s+r/hAEIDd0rS0Z5jodnjPsyMu1eVoUNReMdMsntsciGu5MBVm
-         6sP95GSgyvAslUH5JBJOpIejDZ0NZjD/6JcqsBpmWJanoryEpBwjdZpvliqtTHMMSu
-         3/Hb6tfjHnIRkRsFfTrsMMSEP4rUGZLLZptABCLE=
-Received: by mail-qk1-f174.google.com with SMTP id q70so10401527qkh.6;
-        Tue, 18 Dec 2018 13:10:55 -0800 (PST)
-X-Gm-Message-State: AA+aEWbQ64PIJnPiM57nsLaTsj3Bf+9yOxh85h224RePJzOGn5gmNDRm
-        9KqT6xQqXNDYGbW9ooVkcegJcHIFRESKRJ16GA==
-X-Google-Smtp-Source: AFSGD/XDMMsXDqTSKfsppkIWD2amigNADiMJP2tAz6O2uo7RqRXdFgiaPggf87D75bHQhJxasdYd+0hDUMxCGYVSHXU=
-X-Received: by 2002:ae9:ef14:: with SMTP id d20mr18087864qkg.147.1545167454899;
- Tue, 18 Dec 2018 13:10:54 -0800 (PST)
-MIME-Version: 1.0
-References: <20181218040702.29231-1-andrew.smirnov@gmail.com>
- <20181218040702.29231-4-andrew.smirnov@gmail.com> <20181218151533.GA2922@bogus>
- <VI1PR04MB5533533242C036C5CF6352BAEEBD0@VI1PR04MB5533.eurprd04.prod.outlook.com>
-In-Reply-To: <VI1PR04MB5533533242C036C5CF6352BAEEBD0@VI1PR04MB5533.eurprd04.prod.outlook.com>
-From:   Rob Herring <robh@kernel.org>
-Date:   Tue, 18 Dec 2018 15:10:43 -0600
-X-Gmail-Original-Message-ID: <CAL_JsqJb24ZpM7qQfy_F7RUVEGyceBAXOndbZcTMh3a__k38UQ@mail.gmail.com>
-Message-ID: <CAL_JsqJb24ZpM7qQfy_F7RUVEGyceBAXOndbZcTMh3a__k38UQ@mail.gmail.com>
-Subject: Re: [PATCH v3 3/3] PCI: imx6: Add support for i.MX8MQ
-To:     Leonard Crestez <leonard.crestez@nxp.com>
-Cc:     Andrey Smirnov <andrew.smirnov@gmail.com>,
-        Lucas Stach <l.stach@pengutronix.de>,
+        s=default; t=1545169245;
+        bh=FeSC9pIre235L6EKCrg/anEA02dCzIIXluvloLV1s5Y=;
+        h=Date:From:To:Cc:Subject:From;
+        b=KaHJl7FskUfrqz450uK3E1wQdJQYsAlLYk3kz87ywdYuIgVNu/pJxML7FKzw5u2pY
+         1CEXh7pcrLy6VTowrg4VWpgYhtVL3A5JpJFiY6GvbnYAKzjBYC5YHP/DV65KnVOYrQ
+         Mt9K15ZhNJwOquTp87+mtWsQacyvjMb9kmbnF6TM=
+Date:   Tue, 18 Dec 2018 15:40:43 -0600
+From:   Bjorn Helgaas <helgaas@kernel.org>
+To:     Linus Torvalds <torvalds@linux-foundation.org>
+Cc:     linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
         Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
-        Bjorn Helgaas <bhelgaas@google.com>,
-        Fabio Estevam <fabio.estevam@nxp.com>,
-        Chris Healy <cphealy@gmail.com>,
-        Dong Aisheng <aisheng.dong@nxp.com>,
-        Richard Zhu <hongxing.zhu@nxp.com>, devicetree@vger.kernel.org,
-        NXP Linux Team <linux-imx@nxp.com>,
-        "moderated list:ARM/FREESCALE IMX / MXC ARM ARCHITECTURE" 
-        <linux-arm-kernel@lists.infradead.org>,
-        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-        linux-pci@vger.kernel.org
-Content-Type: text/plain; charset="UTF-8"
+        Yanjiang Jin <yanjiang.jin@hxt-semitech.com>,
+        Keith Busch <keith.busch@intel.com>
+Subject: [GIT PULL] PCI fixes for v4.20
+Message-ID: <20181218214043.GA22610@google.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+User-Agent: Mutt/1.10.1 (2018-07-13)
 Sender: linux-pci-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-On Tue, Dec 18, 2018 at 12:09 PM Leonard Crestez
-<leonard.crestez@nxp.com> wrote:
->
-> On 12/18/2018 5:15 PM, Rob Herring wrote:
-> > On Mon, Dec 17, 2018 at 08:07:02PM -0800, Andrey Smirnov wrote:
-> >> Add code needed to support i.MX8MQ variant.
-> >>
-> >> Signed-off-by: Andrey Smirnov <andrew.smirnov@gmail.com>
-> >> Reviewed-by: Lucas Stach <l.stach@pengutronix.de>
->
-> >> --- a/Documentation/devicetree/bindings/pci/fsl,imx6q-pcie.txt
-> >> +++ b/Documentation/devicetree/bindings/pci/fsl,imx6q-pcie.txt
-> >>
-> >> +Additional required properties for imx8mq-pcie:
-> >> +- fsl,controller-id: Logical ID of a given PCIE controller. PCIE1 is 0, PCIE2 is 1;
-> >> +
-> >
-> > Remove this.
-> >
-> > If GPR register offset is what you need, then put that into DT.
-> > Typically, we'd have a property with iomuxc phandle and offset.
->
-> This series initially added explicit offsets but I suggested a single
-> "controller-id" because:
->   * There are multiple bit and byte offsets
->   * Other imx8 SOCs also have 2x pcie with other bit/byte offsets
->
-> Hiding this behind a compatible string and single "controller-id" seem
-> preferable to elaborating register maps in dt bindings. It also makes
-> upgrades simpler: if features are added which use other bits there is no
-> need to describe them in DT and deal with compatibility headaches.
+PCI fixes:
 
-You already have an id for the controllers: the address. Use that if
-you don't want to put the register offsets in DT.
+  - Fix the ACPI APEI error path, which previously queued several
+    uninitialized events (Yanjiang Jin)
 
-Rob
+
+The following changes since commit b07b864ee4232b03125992a8f6a490b040adcb6a:
+
+  Revert "PCI/ASPM: Do not initialize link state when aspm_disabled is set" (2018-12-03 18:05:17 -0600)
+
+are available in the Git repository at:
+
+  git://git.kernel.org/pub/scm/linux/kernel/git/helgaas/pci.git tags/pci-v4.20-fixes-4
+
+for you to fetch changes up to 1063a5148ac9d1606e80886fa53ee57d45fb4589:
+
+  PCI/AER: Queue one GHES event, not several uninitialized ones (2018-12-14 11:29:37 -0600)
+
+----------------------------------------------------------------
+pci-v4.20-fixes-4
+
+----------------------------------------------------------------
+Yanjiang Jin (1):
+      PCI/AER: Queue one GHES event, not several uninitialized ones
+
+ drivers/pci/pcie/aer.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
