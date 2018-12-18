@@ -2,114 +2,70 @@ Return-Path: <SRS0=EJXn=O3=vger.kernel.org=linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-1.1 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
-	DKIM_VALID_AU,FREEMAIL_FORGED_FROMDOMAIN,FREEMAIL_FROM,
-	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_PASS,URIBL_BLOCKED
+X-Spam-Status: No, score=-6.2 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,MAILING_LIST_MULTI,MENTIONS_GIT_HOSTING,SPF_PASS
 	autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 31409C43387
-	for <linux-pci@archiver.kernel.org>; Tue, 18 Dec 2018 23:14:50 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id CC795C43387
+	for <linux-pci@archiver.kernel.org>; Tue, 18 Dec 2018 23:55:03 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id F3E492184C
-	for <linux-pci@archiver.kernel.org>; Tue, 18 Dec 2018 23:14:49 +0000 (UTC)
-Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=googlemail.com header.i=@googlemail.com header.b="OxpD0mQe"
+	by mail.kernel.org (Postfix) with ESMTP id 998B2218AC
+	for <linux-pci@archiver.kernel.org>; Tue, 18 Dec 2018 23:55:03 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=default; t=1545177303;
+	bh=8tk9jzuqeq3NB4zwAIsXpYQgu/X42DMz8I6osu04jEg=;
+	h=Subject:From:In-Reply-To:References:Date:To:Cc:List-ID:From;
+	b=eypJfwHCyrxkmBimMCRQtcknfRFNsaFw8Sk32b7e25fLmeckIEB3g04RUapP0uGbS
+	 bOCXm7+Xna204se+cFsoN0jQIY+m2hqFsMwWpfW2OpChTBksZG2YftZ+YeMpyBxLG9
+	 PhFABzlZsWlOW8hjir8zkxXN2aHEtjd5j0MrdAi0=
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727678AbeLRXOt (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Tue, 18 Dec 2018 18:14:49 -0500
-Received: from mail-oi1-f195.google.com ([209.85.167.195]:35465 "EHLO
-        mail-oi1-f195.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1727417AbeLRXOt (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Tue, 18 Dec 2018 18:14:49 -0500
-Received: by mail-oi1-f195.google.com with SMTP id v6so142753oif.2;
-        Tue, 18 Dec 2018 15:14:48 -0800 (PST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=googlemail.com; s=20161025;
-        h=mime-version:references:in-reply-to:from:date:message-id:subject:to
-         :cc;
-        bh=LM+SCpKm1SU1QFp2bGgNH/8e9PzJQO0K0O14ThmeN3w=;
-        b=OxpD0mQeuQeGBYU0leEKzPXqYmm4bbtVOTuO+KqCGT1rsd9uGsQXwQAY/VJdiRT46w
-         jMa/7G3gHNKgzX+TLge4JHMpygzlsKC7RgAtUo8gcP2C5fM6h4lKNv8ezVbyJHeh1qOR
-         zP//bDkR3/jxxGAD6wqgFJFI7CCJVC0CWfb+B7eBduNixQcyphOtZnDXXlSoWC9g8LoM
-         G51s88dNk2Uv0rVizGY0hdoO4tE/PhTvw651rYL5PqBezW7fTylEi7anV1dqRbTR1ttu
-         ajnNsxOjDWhMHGXm3o6iqmAWXM8SXrU6QNbOP/elQtYPxU3F2wT1wbeG1t1mmE0Mfu2x
-         /qZw==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20161025;
-        h=x-gm-message-state:mime-version:references:in-reply-to:from:date
-         :message-id:subject:to:cc;
-        bh=LM+SCpKm1SU1QFp2bGgNH/8e9PzJQO0K0O14ThmeN3w=;
-        b=kfTcnJngHKDm/+c2Fl7s07wqsE3QHIxW2bh1AjB9E/BTr4WBvJ3w4Ukh/oy1GMo7x4
-         bzFfRL/8HGZyy2N+fS43W3YCQ2rhAqAb6++hmaOzpynvJRtyxqjsGYq8DsCUE9OkTvgh
-         52e/+ZNbXpIr2r5fePHxz1MyuM6/rkh/WtN7aNd2sFu36wRyle+Zyis2hPGP2wNg4h9/
-         y168ai1mYZVRaFdPtQVhcFpxDxNv0Na3+1oPiW3zVQed7ghTYJsYC0hBZ/9FPrcLuGEg
-         gV+rUsZogDkdBIQLUHpNmsIXhZT279nP+LwJlzjUxUkZdWXPdu+2ExGHdF/FzWkfRmqR
-         /IVg==
-X-Gm-Message-State: AA+aEWZR1nBKUNIZPygjKDBRd2JVuyAgprp1H3MtcvXC4S9mK7+56XHJ
-        /vFI2gXYq1vSp7ObMacEMKqhTwPFqEeRYa7tNc8=
-X-Google-Smtp-Source: AFSGD/UYqTj4MR4JR5pzJ+fkoG2pt0w0GjynKLFCNxcIFpA7U8r/WDYWTwbT1b8Rmvj11JB06oFrZ/iSCeCNJcYWpvY=
-X-Received: by 2002:aca:58d7:: with SMTP id m206mr9368690oib.140.1545174887971;
- Tue, 18 Dec 2018 15:14:47 -0800 (PST)
-MIME-Version: 1.0
-References: <1545120286-129258-1-git-send-email-hanjie.lin@amlogic.com> <1545120286-129258-2-git-send-email-hanjie.lin@amlogic.com>
-In-Reply-To: <1545120286-129258-2-git-send-email-hanjie.lin@amlogic.com>
-From:   Martin Blumenstingl <martin.blumenstingl@googlemail.com>
-Date:   Wed, 19 Dec 2018 00:14:37 +0100
-Message-ID: <CAFBinCD1x7jcJJx78yNx87MOmKQ2HuSBeRpDRQE0hyNCwm1JAg@mail.gmail.com>
-Subject: Re: [PATCH v8 1/2] dt-bindings: PCI: meson: add DT bindings for
- Amlogic Meson PCIe controller
-To:     Rob Herring <robh@kernel.org>, Hanjie Lin <hanjie.lin@amlogic.com>
-Cc:     Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
-        Bjorn Helgaas <bhelgaas@google.com>,
-        Yixun Lan <yixun.lan@amlogic.com>,
-        Jianxin Pan <jianxin.pan@amlogic.com>,
-        devicetree@vger.kernel.org, Kevin Hilman <khilman@baylibre.com>,
-        Shawn Lin <shawn.lin@rock-chips.com>,
-        Philippe Ombredanne <pombredanne@nexb.com>,
+        id S1726652AbeLRXzD (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Tue, 18 Dec 2018 18:55:03 -0500
+Received: from mail.kernel.org ([198.145.29.99]:60860 "EHLO mail.kernel.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1726588AbeLRXzC (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Tue, 18 Dec 2018 18:55:02 -0500
+Subject: Re: [GIT PULL] PCI fixes for v4.20
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+        s=default; t=1545177302;
+        bh=8tk9jzuqeq3NB4zwAIsXpYQgu/X42DMz8I6osu04jEg=;
+        h=From:In-Reply-To:References:Date:To:Cc:From;
+        b=FQclNDVnIvYmlvG8qunGipQl9e7X9pLH/d0xjGNTwCiBpyL1lUBDtDhbI5jGWWU3b
+         bE7Bg7vVng3r6Lz5p9dAUbnSn95CLIKh/XSA6sI2Iqu6PSQGPaX0onE9byv2W4DaMA
+         PJbjOz80THmDaq66xaUfxDi71IoVUKucLM6b3l5A=
+From:   pr-tracker-bot@kernel.org
+In-Reply-To: <20181218214043.GA22610@google.com>
+References: <20181218214043.GA22610@google.com>
+X-PR-Tracked-List-Id: <linux-kernel.vger.kernel.org>
+X-PR-Tracked-Message-Id: <20181218214043.GA22610@google.com>
+X-PR-Tracked-Remote: git://git.kernel.org/pub/scm/linux/kernel/git/helgaas/pci.git
+ tags/pci-v4.20-fixes-4
+X-PR-Tracked-Commit-Id: 1063a5148ac9d1606e80886fa53ee57d45fb4589
+X-PR-Merge-Tree: torvalds/linux.git
+X-PR-Merge-Refname: refs/heads/master
+X-PR-Merge-Commit-Id: e738441e803db6b61d5119df8f758396914fafd8
+Message-Id: <20181218235502.14649.78248.pr-tracker-bot@pdx-korg-gitolite-1.ci.codeaurora.org>
+Date:   Tue, 18 Dec 2018 23:55:02 +0000
+To:     Bjorn Helgaas <helgaas@kernel.org>
+Cc:     Linus Torvalds <torvalds@linux-foundation.org>,
         linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
-        Yue Wang <yue.wang@amlogic.com>,
-        Qiufang Dai <qiufang.dai@amlogic.com>,
-        Jian Hu <jian.hu@amlogic.com>,
-        Liang Yang <liang.yang@amlogic.com>,
-        Cyrille Pitchen <cyrille.pitchen@free-electrons.com>,
-        Gustavo Pimentel <gustavo.pimentel@synopsys.com>,
-        Carlo Caione <carlo@caione.org>,
-        linux-amlogic@lists.infradead.org,
-        linux-arm-kernel@lists.infradead.org,
-        Jerome Brunet <jbrunet@baylibre.com>
-Content-Type: text/plain; charset="UTF-8"
+        Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
+        Yanjiang Jin <yanjiang.jin@hxt-semitech.com>,
+        Keith Busch <keith.busch@intel.com>
 Sender: linux-pci-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-Hi Rob, Hi Hanjie,
+The pull request you sent on Tue, 18 Dec 2018 15:40:43 -0600:
 
-(sorry for being late with my question)
+> git://git.kernel.org/pub/scm/linux/kernel/git/helgaas/pci.git tags/pci-v4.20-fixes-4
 
-On Tue, Dec 18, 2018 at 9:05 AM Hanjie Lin <hanjie.lin@amlogic.com> wrote:
-[...]
-> +- reg-names: Must be
-> +       - "elbi"        External local bus interface registers
-> +       - "cfg"         Meson specific registers
-> +       - "phy"         Meson PCIE PHY registers
-I have learned that there are two PHY register designs:
-- AXG only has a PCIe PHY
-- G12A has a PHY which supports PCIe and USB 3.0. The PCIe part of
-this PHY design is compatible with AXG, but this design also supports
-a USB 3.0 port (it's an exclusive choice: either PCIe *or* USB 3.0)
+has been merged into torvalds/linux.git:
+https://git.kernel.org/torvalds/c/e738441e803db6b61d5119df8f758396914fafd8
 
-The PCIe controller itself is identical on both, AXG and G12A.
-This patch adds support for the AXG PCIe controller and PHY within one
-device-tree node.
+Thank you!
 
-For G12A I propose to add a separate "phys" property with a phandle to
-the "combo" PCIe and USB3.0 PHY - this can be part of a separate patch
-though.
-I would like to know whether it's OK that for AXG the PCIe PHY is
-described in the same device-tree node as the PCIe controller (in
-other words: we're not using a "phys" property here)?
-
-
-Kind Regards
-Martin
+-- 
+Deet-doot-dot, I am a bot.
+https://korg.wiki.kernel.org/userdoc/prtracker
