@@ -7,33 +7,33 @@ X-Spam-Status: No, score=-7.1 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
 	SIGNED_OFF_BY,SPF_PASS,URIBL_BLOCKED autolearn=unavailable autolearn_force=no
 	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 526DAC43613
-	for <linux-pci@archiver.kernel.org>; Tue, 18 Dec 2018 04:20:28 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 98B28C43387
+	for <linux-pci@archiver.kernel.org>; Tue, 18 Dec 2018 04:20:29 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 240F021855
-	for <linux-pci@archiver.kernel.org>; Tue, 18 Dec 2018 04:20:28 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 5E47821849
+	for <linux-pci@archiver.kernel.org>; Tue, 18 Dec 2018 04:20:29 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (1024-bit key) header.d=nxp.com header.i=@nxp.com header.b="qXCwJ3Sf"
+	dkim=pass (1024-bit key) header.d=nxp.com header.i=@nxp.com header.b="pzqJ8QiR"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726702AbeLREUU (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Mon, 17 Dec 2018 23:20:20 -0500
+        id S1726575AbeLREUR (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Mon, 17 Dec 2018 23:20:17 -0500
 Received: from mail-eopbgr60046.outbound.protection.outlook.com ([40.107.6.46]:52304
         "EHLO EUR04-DB3-obe.outbound.protection.outlook.com"
         rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1726296AbeLREUT (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Mon, 17 Dec 2018 23:20:19 -0500
+        id S1726305AbeLREUQ (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Mon, 17 Dec 2018 23:20:16 -0500
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=nxp.com; s=selector1;
  h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=EsuyWdJkNxk6PApjsWCbCwRzy+IG8RnH5hWgdRKeS7o=;
- b=qXCwJ3Sf6aqF7G8KwcCy4UntfW/iOs6ZCldtyAiEqZ6Q8yQF+6brYdskpufrXjad6S7My6z19vzs9NggSYvkf/NUVOksYnuxkO3ERO4bUukxpRqMvkkgxN/YtQ9X6Hh0as8xQmhMKq3aw7Xs0Wrid8EJBYsvFbcLlQ5wpMnKl/0=
+ bh=VKRZFZ5xklRUsDW/ETgpbKc1ANi3Rst1a2gdEAK2MjM=;
+ b=pzqJ8QiRKmeO0JdiLCpaQV5OjdnNfX7HBIYqhuUuEUaYjcRTSH+0e7fAh2wHkb5LHN8idFHwlvHH6wAcxJ5JfNAEPbCySrXoOSKjveTJVxAvb2wBGgdyeY1005ZHOCb5edD3qgv0wrJsYjLAResji33MZC65SWua8+SkSVVkCFY=
 Received: from AM6PR04MB5781.eurprd04.prod.outlook.com (20.179.2.80) by
  AM6PR04MB4102.eurprd04.prod.outlook.com (52.135.167.160) with Microsoft SMTP
  Server (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- 15.20.1425.20; Tue, 18 Dec 2018 04:19:48 +0000
+ 15.20.1425.20; Tue, 18 Dec 2018 04:19:32 +0000
 Received: from AM6PR04MB5781.eurprd04.prod.outlook.com
  ([fe80::4d2e:cf15:fcf7:56b2]) by AM6PR04MB5781.eurprd04.prod.outlook.com
  ([fe80::4d2e:cf15:fcf7:56b2%5]) with mapi id 15.20.1446.015; Tue, 18 Dec 2018
- 04:19:48 +0000
+ 04:19:32 +0000
 From:   "Z.q. Hou" <zhiqiang.hou@nxp.com>
 To:     "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
         "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
@@ -50,11 +50,13 @@ To:     "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
 CC:     Roy Zang <roy.zang@nxp.com>, Mingkai Hu <mingkai.hu@nxp.com>,
         "M.h. Lian" <minghuan.lian@nxp.com>,
         "Z.q. Hou" <zhiqiang.hou@nxp.com>
-Subject: [PATCHv3 5/5] PCI: dwc: add prefetchable memory range support
-Thread-Topic: [PATCHv3 5/5] PCI: dwc: add prefetchable memory range support
-Thread-Index: AQHUlojqcT/kWN1oFkqB3BqcFGu4pA==
-Date:   Tue, 18 Dec 2018 04:19:48 +0000
-Message-ID: <20181218041956.41809-6-Zhiqiang.Hou@nxp.com>
+Subject: [PATCHv3 2/5] arm64: dts: layerscape: add num-viewport property for
+ PCIe DT nodes
+Thread-Topic: [PATCHv3 2/5] arm64: dts: layerscape: add num-viewport property
+ for PCIe DT nodes
+Thread-Index: AQHUlojgKIgvtm9vJk+CrhOvDCDM7A==
+Date:   Tue, 18 Dec 2018 04:19:32 +0000
+Message-ID: <20181218041956.41809-3-Zhiqiang.Hou@nxp.com>
 References: <20181218041956.41809-1-Zhiqiang.Hou@nxp.com>
 In-Reply-To: <20181218041956.41809-1-Zhiqiang.Hou@nxp.com>
 Accept-Language: zh-CN, en-US
@@ -67,29 +69,29 @@ x-clientproxiedby: HK0PR03CA0075.apcprd03.prod.outlook.com
 x-ms-exchange-messagesentrepresentingtype: 1
 x-originating-ip: [119.31.174.73]
 x-ms-publictraffictype: Email
-x-microsoft-exchange-diagnostics: 1;AM6PR04MB4102;6:7hm1NPNbRBKuvSBMoSehlmtz7pdDKvd1WfKhvSeeJLmhub7SjdKli7uGqkd7slvhfPnUdnDyzNLzZ6ViE/Gnh/nSEd5GTJrSeQQZ0UWDoA5DomA0YB5LOAHzAirOA4rpWwJBAgRitnrEdeoRRzqTOQvsoFW2G63Bjp/s+3jvtoJ7xv7w6VxPROg7QFATAZGKFpMG5hzH/UteFDXT/YLN+By6xQq5/H64OTX3Dck4CEhuRT6LbYIghHNXF9PHXvxO65hT47/uCFBn1MyNN8m5+u9K+YGIth1+Wy4XSfMYRHQq3Bp5OL/ZI7zNUP2QcWxtvnykgrLZXZMYfTZtKC4dmM7sdsNsxETU/mJq9VFlXxMNOPKNLvgLTgtMc5momHo7y1x6wVX/d+wAkuf0xgzxMW5ok4133adKVjJUgY64chdq0zhrn9Zqpcepm4m11zLn/fp5DuB649krfjxeKq2AHw==;5:44R9MnZIOxg2STiPR1yVJ1BO6ervQ3fhBDxSkg9z8m4pna9PIyyeNhKia6cDNNCq6gkd23gbe7yCq/grtsxF+A254creBlfu9bEgTtyBGZlpCM+pBslJgFtf169MBQtCawEMwks2DKh5iak/PUU9YH7OyminOSHmIlaLpDEJMw8=;7:seqLMJXUscFKnpZVE2H5ErlkN8GBYn3FEnu8EfpfHm+PQ84TwpNjwVqIu732Zq0ghpK2YuwaUQ7XXp0Jw3MBF4fzjN+oFtSJXsA3O/Q+m88/+Y0JiUB2Zw65LxxqgPKINdAzTpH9EDSePslucz64YA==
-x-ms-office365-filtering-correlation-id: ac83a572-9716-45e9-30cc-08d664a00c6f
+x-microsoft-exchange-diagnostics: 1;AM6PR04MB4102;6:kEZXJ6w1RiHwSxWsgi14qQcgk6+61b6ClhkdvkMdNLuu0DkdciY2dGKs1OLpyXswWNUtaAne6RLsi8GVKK00GptNU2mlOUubY3ELoneenb1wPBtWCUkcrqjdr3EI4UekbmmUNEK0gjYXlypIlqPVLJ9/wcpzIuVHfqf23I2E7Skv1ekkHPQfzDe2HnjryonX1HCgml2uohjomuSf3hhQrbF8IB2Vh/W4fk607LCG5xmX7imzlFKGqkEkQDqdCge6OJbeO1eZsGA4NW1QeKC8WlckfvImEAIu57VTBmDm/p/HTmbQFnPm0+fVlvfrJUq+0OFq03niv+QNQjodLwP8VblT99QXASSVcGLBIans5b/le+kmzbmkuL/8F2KPJhaSXSKz8+FiOSbC3QziZPkmXF7meoaWudn2JeI6W34YtOaGxuIOkDPxzmJtcJEf8KyCk8HhIDXvrM5xYn7dgyHVKw==;5:sN+D8+iByAJyji6efT53cuWFjFc+MMXsYu/YS99auRZMhhgCUsiGuNcVmM7v1ajlSOBEmSbTzw9aQ8kOuIoZzmQ/r0lmbd1YmvQTuQteXguzFLwyaFei1TLL1/qCqhtzEd0N/hwIn9/Aab8+XEsHm8UewOBcFR6rKWWj1ak49+E=;7:3kujN/iJqllK8i9g3XvZSAx4Di76XYE4cimyVSFbWytoth8D1XZT2TpEyUQhsbGQJDZiTgOStUqKDqQq+E3uxs7fX78+dXF622q144kopaSlql9ghV+zaxlGGa08FZfsiL4AIqWtiGunLQT3caD7Wg==
+x-ms-office365-filtering-correlation-id: 1a838ac3-28db-4fdc-d37d-08d664a00283
 x-ms-office365-filtering-ht: Tenant
 x-microsoft-antispam: BCL:0;PCL:0;RULEID:(2390118)(7020095)(4652040)(8989299)(4534185)(4627221)(201703031133081)(201702281549075)(8990200)(5600074)(711020)(4618075)(2017052603328)(7153060)(7193020);SRVR:AM6PR04MB4102;
 x-ms-traffictypediagnostic: AM6PR04MB4102:
 authentication-results: spf=none (sender IP is )
  smtp.mailfrom=zhiqiang.hou@nxp.com; 
-x-microsoft-antispam-prvs: <AM6PR04MB4102976A5435EBB20E2C497184BD0@AM6PR04MB4102.eurprd04.prod.outlook.com>
+x-microsoft-antispam-prvs: <AM6PR04MB4102DDD1CB78A8F2CBE1D13C84BD0@AM6PR04MB4102.eurprd04.prod.outlook.com>
 x-ms-exchange-senderadcheck: 1
 x-exchange-antispam-report-cfa-test: BCL:0;PCL:0;RULEID:(8211001083)(3230021)(999002)(5005020)(6040522)(2401047)(8121501046)(93006095)(93001095)(3231475)(944501520)(52105112)(3002001)(10201501046)(6055026)(148016)(149066)(150057)(6041310)(201703131423095)(201702281528075)(20161123555045)(201703061421075)(201703061406153)(20161123562045)(20161123564045)(20161123558120)(20161123560045)(201708071742011)(7699051)(76991095);SRVR:AM6PR04MB4102;BCL:0;PCL:0;RULEID:;SRVR:AM6PR04MB4102;
 x-forefront-prvs: 08902E536D
-x-forefront-antispam-report: SFV:NSPM;SFS:(10009020)(39860400002)(366004)(396003)(136003)(346002)(376002)(199004)(189003)(52116002)(7736002)(97736004)(7416002)(68736007)(25786009)(4326008)(36756003)(316002)(106356001)(102836004)(6636002)(105586002)(99286004)(2616005)(71200400001)(486006)(305945005)(11346002)(186003)(6506007)(386003)(110136005)(54906003)(76176011)(6486002)(1076003)(5660300001)(71190400001)(446003)(476003)(26005)(2501003)(2906002)(2201001)(86362001)(6436002)(256004)(14444005)(3846002)(6116002)(39060400002)(81166006)(66066001)(8936002)(81156014)(8676002)(478600001)(6512007)(53936002)(14454004)(921003)(1121003);DIR:OUT;SFP:1101;SCL:1;SRVR:AM6PR04MB4102;H:AM6PR04MB5781.eurprd04.prod.outlook.com;FPR:;SPF:None;LANG:en;PTR:InfoNoRecords;A:1;MX:1;
+x-forefront-antispam-report: SFV:NSPM;SFS:(10009020)(39860400002)(366004)(396003)(136003)(346002)(376002)(199004)(189003)(52116002)(7736002)(97736004)(7416002)(68736007)(25786009)(4326008)(36756003)(316002)(106356001)(102836004)(6636002)(105586002)(99286004)(2616005)(71200400001)(486006)(305945005)(11346002)(186003)(6506007)(386003)(110136005)(54906003)(76176011)(6486002)(1076003)(5660300001)(71190400001)(446003)(476003)(26005)(2501003)(2906002)(2201001)(86362001)(575784001)(6436002)(256004)(3846002)(6116002)(39060400002)(81166006)(66066001)(8936002)(81156014)(8676002)(478600001)(6512007)(53936002)(14454004)(921003)(1121003);DIR:OUT;SFP:1101;SCL:1;SRVR:AM6PR04MB4102;H:AM6PR04MB5781.eurprd04.prod.outlook.com;FPR:;SPF:None;LANG:en;PTR:InfoNoRecords;A:1;MX:1;
 received-spf: None (protection.outlook.com: nxp.com does not designate
  permitted sender hosts)
-x-microsoft-antispam-message-info: aCvTiePjbLbAyk08w9s/7mSaypvs8541EydryMQop4IZ910YYI2s1hQrYjg8A69kXFKf0/ymq3nJTsr4nZSM3JF32Kj318jOmEICB/4+Dup3bPWmmly/G3ClPYFnW4sg7Kz+dbwLLw+rEzDNOtMm9P2n6uwWa3jQWth4BUWd26+xBESYvxFHqR9cJQdedzLXMtJt31juY8lUKXg8RAIQzdHsrXQuUm5n3SyDyW1XjhFg3gVtAttR/Cg3d905NvN2H5mQVnGzW65MlYkjWOsn2vcfGSy/sreerJaW9qblOuvLlM/+u49l9zJb0PHCu+Co
+x-microsoft-antispam-message-info: 0wvlBQKhhTrDZrWgiNPkK9PAAqRljIvb2HRChTF0D0vS5UdgNNt3u1UnG4YOnAoe2ewDgdOeFYDm94Bf74G8mF0TxRVbA1uoa8s/jyQWVtQb1x65viujA2ZIURcBC5cZ+SyRLD1mAyGwQKsZaSLDevxdy0SNcXfVDrLatmRvVMI5DhWJbqqmDqbk30UmTYHweaNNirZhBwnbUvWZkKUZrRF94jmIhtEmppZJeX2S9LdgJAxdfAnByqj5BsmRt9l3erKRDBZrB8zZIvh6RYLGOB4VxxaT8nyy+QGQ6zZIcCNK0OMG+9UevEYXiLuxaDiD
 spamdiagnosticoutput: 1:99
 spamdiagnosticmetadata: NSPM
 Content-Type: text/plain; charset="iso-8859-1"
 Content-Transfer-Encoding: quoted-printable
 MIME-Version: 1.0
 X-OriginatorOrg: nxp.com
-X-MS-Exchange-CrossTenant-Network-Message-Id: ac83a572-9716-45e9-30cc-08d664a00c6f
-X-MS-Exchange-CrossTenant-originalarrivaltime: 18 Dec 2018 04:19:48.8534
+X-MS-Exchange-CrossTenant-Network-Message-Id: 1a838ac3-28db-4fdc-d37d-08d664a00283
+X-MS-Exchange-CrossTenant-originalarrivaltime: 18 Dec 2018 04:19:32.1894
  (UTC)
 X-MS-Exchange-CrossTenant-fromentityheader: Hosted
 X-MS-Exchange-CrossTenant-id: 686ea1d3-bc2b-4c6f-a92c-d99c5c301635
@@ -101,233 +103,178 @@ X-Mailing-List: linux-pci@vger.kernel.org
 
 From: Hou Zhiqiang <Zhiqiang.Hou@nxp.com>
 
-The current code only support non-prefetchable memory range,
-as the non-prefetchable memory range must not be greater than
-4GiB, one viewport can cover it, which supports upto 4GiB.
-
-To support prefetchable memory range, which is upto 64-bit
-memory space and can be greater than 4GiB, so we need multiple
-viewports. And added separate vars to store prefetchable memory
-range info to prevent overriding the non-prefetchable memory
-range info.
-
-And this patch explicitly assigned the last (if there are only
-2 viewports) or last 2 viewports for CFG and I/O windows and the
-rests for MEM windows.
+Add num-viewport property for PCIe DT nodes to specify how many
+viewports are implemented.
 
 Signed-off-by: Hou Zhiqiang <Zhiqiang.Hou@nxp.com>
 ---
 V3:
- - Changed back to get num-viewport from DTS.
- - Added print info upon non-pref memory truncated.
- - Corrected typo.
+ - New patch=20
 
- .../pci/controller/dwc/pcie-designware-host.c | 107 +++++++++++++++---
- drivers/pci/controller/dwc/pcie-designware.h  |   7 ++
- 2 files changed, 97 insertions(+), 17 deletions(-)
+ arch/arm64/boot/dts/freescale/fsl-ls1012a.dtsi | 1 +
+ arch/arm64/boot/dts/freescale/fsl-ls1043a.dtsi | 3 +++
+ arch/arm64/boot/dts/freescale/fsl-ls1046a.dtsi | 3 +++
+ arch/arm64/boot/dts/freescale/fsl-ls1088a.dtsi | 3 +++
+ arch/arm64/boot/dts/freescale/fsl-ls208xa.dtsi | 4 ++++
+ 5 files changed, 14 insertions(+)
 
-diff --git a/drivers/pci/controller/dwc/pcie-designware-host.c b/drivers/pc=
-i/controller/dwc/pcie-designware-host.c
-index 33b5a3815d24..2d1dd3dba1ba 100644
---- a/drivers/pci/controller/dwc/pcie-designware-host.c
-+++ b/drivers/pci/controller/dwc/pcie-designware-host.c
-@@ -346,6 +346,28 @@ int dw_pcie_host_init(struct pcie_port *pp)
- 		dev_err(dev, "Missing *config* reg space\n");
- 	}
-=20
-+	ret =3D of_property_read_u32(np, "num-viewport", &pci->num_viewport);
-+	if (ret || pci->num_viewport < 2)
-+		pci->num_viewport =3D 2;
-+
-+	/*
-+	 * if there are only 2 viewports, assign the last viewport for
-+	 * both CFG and IO window, otherwise assign the last 2 viewport
-+	 * for CFG and IO window specific. And the rest viewports are
-+	 * assigned to MEM windows.
-+	 */
-+	if (pci->num_viewport =3D=3D 2) {
-+		pp->cfg_idx =3D pp->io_idx =3D PCIE_ATU_REGION_INDEX1;
-+		pp->mem_wins =3D 1;
-+	} else {
-+		pp->cfg_idx =3D pci->num_viewport - 1;
-+		pp->io_idx =3D pci->num_viewport - 2;
-+		pp->mem_wins =3D pci->num_viewport - 2;
-+	}
-+
-+	dev_dbg(dev, "CFG win id: %d, I/O win id: %d, Total MEM win: %d\n",
-+		pp->cfg_idx, pp->io_idx, pp->mem_wins);
-+
- 	bridge =3D devm_pci_alloc_host_bridge(dev, 0);
- 	if (!bridge)
- 		return -ENOMEM;
-@@ -377,10 +399,20 @@ int dw_pcie_host_init(struct pcie_port *pp)
- 			}
- 			break;
- 		case IORESOURCE_MEM:
--			pp->mem =3D win->res;
--			pp->mem->name =3D "MEM";
--			pp->mem_size =3D resource_size(pp->mem);
--			pp->mem_bus_addr =3D pp->mem->start - win->offset;
-+			if (win->res->flags & IORESOURCE_PREFETCH) {
-+				pp->mem_pref =3D win->res;
-+				pp->mem_pref->name =3D "MEM pref";
-+				pp->mem_pref_size =3D resource_size(pp->mem_pref);
-+				pp->mem_pref_bus_addr =3D pp->mem_pref->start -
-+							win->offset;
-+				pp->mem_pref_base =3D pp->mem_pref->start;
-+			} else {
-+				pp->mem =3D win->res;
-+				pp->mem->name =3D "MEM";
-+				pp->mem_size =3D resource_size(pp->mem);
-+				pp->mem_bus_addr =3D pp->mem->start - win->offset;
-+				pp->mem_base =3D pp->mem->start;
-+			}
- 			break;
- 		case 0:
- 			pp->cfg =3D win->res;
-@@ -405,8 +437,6 @@ int dw_pcie_host_init(struct pcie_port *pp)
- 		}
- 	}
-=20
--	pp->mem_base =3D pp->mem->start;
--
- 	if (!pp->va_cfg0_base) {
- 		pp->va_cfg0_base =3D devm_pci_remap_cfgspace(dev,
- 					pp->cfg0_base, pp->cfg0_size);
-@@ -527,12 +557,12 @@ static int dw_pcie_rd_other_conf(struct pcie_port *pp=
-, struct pci_bus *bus,
- 		va_cfg_base =3D pp->va_cfg1_base;
- 	}
-=20
--	dw_pcie_prog_outbound_atu(pci, PCIE_ATU_REGION_INDEX1,
-+	dw_pcie_prog_outbound_atu(pci, pp->cfg_idx,
- 				  type, cpu_addr,
- 				  busdev, cfg_size);
- 	ret =3D dw_pcie_read(va_cfg_base + where, size, val);
--	if (pci->num_viewport <=3D 2)
--		dw_pcie_prog_outbound_atu(pci, PCIE_ATU_REGION_INDEX1,
-+	if (pp->cfg_idx =3D=3D pp->io_idx)
-+		dw_pcie_prog_outbound_atu(pci, pp->io_idx,
- 					  PCIE_ATU_TYPE_IO, pp->io_base,
- 					  pp->io_bus_addr, pp->io_size);
-=20
-@@ -566,12 +596,12 @@ static int dw_pcie_wr_other_conf(struct pcie_port *pp=
-, struct pci_bus *bus,
- 		va_cfg_base =3D pp->va_cfg1_base;
- 	}
-=20
--	dw_pcie_prog_outbound_atu(pci, PCIE_ATU_REGION_INDEX1,
-+	dw_pcie_prog_outbound_atu(pci, pp->cfg_idx,
- 				  type, cpu_addr,
- 				  busdev, cfg_size);
- 	ret =3D dw_pcie_write(va_cfg_base + where, size, val);
--	if (pci->num_viewport <=3D 2)
--		dw_pcie_prog_outbound_atu(pci, PCIE_ATU_REGION_INDEX1,
-+	if (pp->cfg_idx =3D=3D pp->io_idx)
-+		dw_pcie_prog_outbound_atu(pci, pp->io_idx,
- 					  PCIE_ATU_TYPE_IO, pp->io_base,
- 					  pp->io_bus_addr, pp->io_size);
-=20
-@@ -645,6 +675,9 @@ static u8 dw_pcie_iatu_unroll_enabled(struct dw_pcie *p=
-ci)
- void dw_pcie_setup_rc(struct pcie_port *pp)
- {
- 	u32 val, ctrl, num_ctrls;
-+	u64 unmapped_size, base, win_size;
-+	phys_addr_t bus_addr;
-+	int i;
- 	struct dw_pcie *pci =3D to_dw_pcie_from_pp(pp);
-=20
- 	dw_pcie_setup(pci);
-@@ -693,13 +726,53 @@ void dw_pcie_setup_rc(struct pcie_port *pp)
- 		dev_dbg(pci->dev, "iATU unroll: %s\n",
- 			pci->iatu_unroll_enabled ? "enabled" : "disabled");
-=20
-+		/*
-+		 * The maximum region size is 4 GB, and a region
-+		 * must not cross a 4 GB boundary.
-+		 */
-+		win_size =3D SZ_4G - (pp->mem_base & (SZ_4G - 1));
-+		win_size =3D min(win_size, pp->mem_size);
-+		if (win_size < pp->mem_size)
-+			dev_info(pci->dev,
-+				 "iATU: non-pref MEM size is truncated to 0x%llx\n",
-+				 win_size);
-+
- 		dw_pcie_prog_outbound_atu(pci, PCIE_ATU_REGION_INDEX0,
- 					  PCIE_ATU_TYPE_MEM, pp->mem_base,
--					  pp->mem_bus_addr, pp->mem_size);
--		if (pci->num_viewport > 2)
--			dw_pcie_prog_outbound_atu(pci, PCIE_ATU_REGION_INDEX2,
--						  PCIE_ATU_TYPE_IO, pp->io_base,
--						  pp->io_bus_addr, pp->io_size);
-+					  pp->mem_bus_addr, win_size);
-+		dev_dbg(pci->dev,
-+			"iATU: non-pref MEM: win =3D %d: base =3D 0x%llx, bus_addr =3D %pa, siz=
-e =3D 0x%llx\n",
-+			0, pp->mem_base, &pp->mem_bus_addr, win_size);
-+
-+		/*
-+		 * Prefetchable memory range can be 64bit space,
-+		 * so may need multiple viewports.
-+		 */
-+		unmapped_size =3D pp->mem_pref_size;
-+		base =3D pp->mem_pref_base;
-+		bus_addr =3D pp->mem_pref_bus_addr;
-+		for (i =3D PCIE_ATU_REGION_INDEX1;
-+		     unmapped_size > 0 && i < pp->mem_wins; i++) {
-+			win_size =3D SZ_4G - (base & (SZ_4G - 1));
-+			win_size =3D min(win_size, unmapped_size);
-+			dw_pcie_prog_outbound_atu(pci, i, PCIE_ATU_TYPE_MEM,
-+						  base, bus_addr, win_size);
-+			dev_dbg(pci->dev,
-+				"iATU: pref MEM: win =3D %d: base =3D 0x%llx, bus_addr =3D %pa, size =
-=3D 0x%llx\n",
-+				i, base, &bus_addr, win_size);
-+
-+			base +=3D win_size;
-+			bus_addr +=3D win_size;
-+			unmapped_size -=3D win_size;
-+		}
-+
-+		if (unmapped_size > 0)
-+			dev_info(pci->dev,
-+				 "iATU: can't cover pref memory range\n");
-+
-+		dw_pcie_prog_outbound_atu(pci, pp->io_idx, PCIE_ATU_TYPE_IO,
-+					  pp->io_base, pp->io_bus_addr,
-+					  pp->io_size);
- 	}
-=20
- 	dw_pcie_wr_own_conf(pp, PCI_BASE_ADDRESS_0, 4, 0);
-diff --git a/drivers/pci/controller/dwc/pcie-designware.h b/drivers/pci/con=
-troller/dwc/pcie-designware.h
-index 25604387d13e..1e87f18bc417 100644
---- a/drivers/pci/controller/dwc/pcie-designware.h
-+++ b/drivers/pci/controller/dwc/pcie-designware.h
-@@ -152,15 +152,22 @@ struct pcie_port {
- 	u64			cfg1_base;
- 	void __iomem		*va_cfg1_base;
- 	u32			cfg1_size;
-+	u32			cfg_idx;
- 	resource_size_t		io_base;
- 	phys_addr_t		io_bus_addr;
- 	u32			io_size;
-+	u32			io_idx;
- 	u64			mem_base;
- 	phys_addr_t		mem_bus_addr;
- 	u64			mem_size;
-+	phys_addr_t		mem_pref_base;
-+	pci_bus_addr_t		mem_pref_bus_addr;
-+	u64			mem_pref_size;
-+	u32			mem_wins;
- 	struct resource		*cfg;
- 	struct resource		*io;
- 	struct resource		*mem;
-+	struct resource		*mem_pref;
- 	struct resource		*busn;
- 	int			irq;
- 	const struct dw_pcie_host_ops *ops;
+diff --git a/arch/arm64/boot/dts/freescale/fsl-ls1012a.dtsi b/arch/arm64/bo=
+ot/dts/freescale/fsl-ls1012a.dtsi
+index 21f2b3ba6b58..7ce0aa52292c 100644
+--- a/arch/arm64/boot/dts/freescale/fsl-ls1012a.dtsi
++++ b/arch/arm64/boot/dts/freescale/fsl-ls1012a.dtsi
+@@ -486,6 +486,7 @@
+ 			#size-cells =3D <2>;
+ 			device_type =3D "pci";
+ 			num-lanes =3D <4>;
++			num-viewport =3D <2>;
+ 			bus-range =3D <0x0 0xff>;
+ 			ranges =3D <0x81000000 0x0 0x00000000 0x40 0x00010000 0x0 0x00010000   =
+/* downstream I/O */
+ 				  0x82000000 0x0 0x40000000 0x40 0x40000000 0x0 0x40000000>; /* non-pr=
+efetchable memory */
+diff --git a/arch/arm64/boot/dts/freescale/fsl-ls1043a.dtsi b/arch/arm64/bo=
+ot/dts/freescale/fsl-ls1043a.dtsi
+index 760d510d78de..f42368afeea9 100644
+--- a/arch/arm64/boot/dts/freescale/fsl-ls1043a.dtsi
++++ b/arch/arm64/boot/dts/freescale/fsl-ls1043a.dtsi
+@@ -673,6 +673,7 @@
+ 			device_type =3D "pci";
+ 			dma-coherent;
+ 			num-lanes =3D <4>;
++			num-viewport =3D <6>;
+ 			bus-range =3D <0x0 0xff>;
+ 			ranges =3D <0x81000000 0x0 0x00000000 0x40 0x00010000 0x0 0x00010000   =
+/* downstream I/O */
+ 				  0x82000000 0x0 0x40000000 0x40 0x40000000 0x0 0x40000000>; /* non-pr=
+efetchable memory */
+@@ -699,6 +700,7 @@
+ 			device_type =3D "pci";
+ 			dma-coherent;
+ 			num-lanes =3D <2>;
++			num-viewport =3D <6>;
+ 			bus-range =3D <0x0 0xff>;
+ 			ranges =3D <0x81000000 0x0 0x00000000 0x48 0x00010000 0x0 0x00010000   =
+/* downstream I/O */
+ 				  0x82000000 0x0 0x40000000 0x48 0x40000000 0x0 0x40000000>; /* non-pr=
+efetchable memory */
+@@ -725,6 +727,7 @@
+ 			device_type =3D "pci";
+ 			dma-coherent;
+ 			num-lanes =3D <2>;
++			num-viewport =3D <6>;
+ 			bus-range =3D <0x0 0xff>;
+ 			ranges =3D <0x81000000 0x0 0x00000000 0x50 0x00010000 0x0 0x00010000   =
+/* downstream I/O */
+ 				  0x82000000 0x0 0x40000000 0x50 0x40000000 0x0 0x40000000>; /* non-pr=
+efetchable memory */
+diff --git a/arch/arm64/boot/dts/freescale/fsl-ls1046a.dtsi b/arch/arm64/bo=
+ot/dts/freescale/fsl-ls1046a.dtsi
+index 64d334c6b0b4..10be89168793 100644
+--- a/arch/arm64/boot/dts/freescale/fsl-ls1046a.dtsi
++++ b/arch/arm64/boot/dts/freescale/fsl-ls1046a.dtsi
+@@ -642,6 +642,7 @@
+ 			device_type =3D "pci";
+ 			dma-coherent;
+ 			num-lanes =3D <4>;
++			num-viewport =3D <8>;
+ 			bus-range =3D <0x0 0xff>;
+ 			ranges =3D <0x81000000 0x0 0x00000000 0x40 0x00010000 0x0 0x00010000   =
+/* downstream I/O */
+ 				  0x82000000 0x0 0x40000000 0x40 0x40000000 0x0 0x40000000>; /* non-pr=
+efetchable memory */
+@@ -668,6 +669,7 @@
+ 			device_type =3D "pci";
+ 			dma-coherent;
+ 			num-lanes =3D <2>;
++			num-viewport =3D <8>;
+ 			bus-range =3D <0x0 0xff>;
+ 			ranges =3D <0x81000000 0x0 0x00000000 0x48 0x00010000 0x0 0x00010000   =
+/* downstream I/O */
+ 				  0x82000000 0x0 0x40000000 0x48 0x40000000 0x0 0x40000000>; /* non-pr=
+efetchable memory */
+@@ -694,6 +696,7 @@
+ 			device_type =3D "pci";
+ 			dma-coherent;
+ 			num-lanes =3D <2>;
++			num-viewport =3D <8>;
+ 			bus-range =3D <0x0 0xff>;
+ 			ranges =3D <0x81000000 0x0 0x00000000 0x50 0x00010000 0x0 0x00010000   =
+/* downstream I/O */
+ 				  0x82000000 0x0 0x40000000 0x50 0x40000000 0x0 0x40000000>; /* non-pr=
+efetchable memory */
+diff --git a/arch/arm64/boot/dts/freescale/fsl-ls1088a.dtsi b/arch/arm64/bo=
+ot/dts/freescale/fsl-ls1088a.dtsi
+index 9deb9cb83046..7d303bd40047 100644
+--- a/arch/arm64/boot/dts/freescale/fsl-ls1088a.dtsi
++++ b/arch/arm64/boot/dts/freescale/fsl-ls1088a.dtsi
+@@ -523,6 +523,7 @@
+ 			device_type =3D "pci";
+ 			dma-coherent;
+ 			num-lanes =3D <4>;
++			num-viewport =3D <256>;
+ 			bus-range =3D <0x0 0xff>;
+ 			ranges =3D <0x81000000 0x0 0x00000000 0x20 0x00010000 0x0 0x00010000   =
+/* downstream I/O */
+ 				  0x82000000 0x0 0x40000000 0x20 0x40000000 0x0 0x40000000>; /* non-pr=
+efetchable memory */
+@@ -548,6 +549,7 @@
+ 			device_type =3D "pci";
+ 			dma-coherent;
+ 			num-lanes =3D <4>;
++			num-viewport =3D <6>;
+ 			bus-range =3D <0x0 0xff>;
+ 			ranges =3D <0x81000000 0x0 0x00000000 0x28 0x00010000 0x0 0x00010000   =
+/* downstream I/O */
+ 				  0x82000000 0x0 0x40000000 0x28 0x40000000 0x0 0x40000000>; /* non-pr=
+efetchable memory */
+@@ -573,6 +575,7 @@
+ 			device_type =3D "pci";
+ 			dma-coherent;
+ 			num-lanes =3D <8>;
++			num-viewport =3D <6>;
+ 			bus-range =3D <0x0 0xff>;
+ 			ranges =3D <0x81000000 0x0 0x00000000 0x30 0x00010000 0x0 0x00010000   =
+/* downstream I/O */
+ 				  0x82000000 0x0 0x40000000 0x30 0x40000000 0x0 0x40000000>; /* non-pr=
+efetchable memory */
+diff --git a/arch/arm64/boot/dts/freescale/fsl-ls208xa.dtsi b/arch/arm64/bo=
+ot/dts/freescale/fsl-ls208xa.dtsi
+index 5732e3b48be7..4bb9aa2dd8b2 100644
+--- a/arch/arm64/boot/dts/freescale/fsl-ls208xa.dtsi
++++ b/arch/arm64/boot/dts/freescale/fsl-ls208xa.dtsi
+@@ -640,6 +640,7 @@
+ 			device_type =3D "pci";
+ 			dma-coherent;
+ 			num-lanes =3D <4>;
++			num-viewport =3D <6>;
+ 			bus-range =3D <0x0 0xff>;
+ 			msi-parent =3D <&its>;
+ 			#interrupt-cells =3D <1>;
+@@ -662,6 +663,7 @@
+ 			device_type =3D "pci";
+ 			dma-coherent;
+ 			num-lanes =3D <4>;
++			num-viewport =3D <6>;
+ 			bus-range =3D <0x0 0xff>;
+ 			msi-parent =3D <&its>;
+ 			#interrupt-cells =3D <1>;
+@@ -684,6 +686,7 @@
+ 			device_type =3D "pci";
+ 			dma-coherent;
+ 			num-lanes =3D <8>;
++			num-viewport =3D <256>;
+ 			bus-range =3D <0x0 0xff>;
+ 			msi-parent =3D <&its>;
+ 			#interrupt-cells =3D <1>;
+@@ -706,6 +709,7 @@
+ 			device_type =3D "pci";
+ 			dma-coherent;
+ 			num-lanes =3D <4>;
++			num-viewport =3D <6>;
+ 			bus-range =3D <0x0 0xff>;
+ 			msi-parent =3D <&its>;
+ 			#interrupt-cells =3D <1>;
 --=20
 2.17.1
 
