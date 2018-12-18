@@ -2,283 +2,125 @@ Return-Path: <SRS0=EJXn=O3=vger.kernel.org=linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-4.1 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
-	DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SIGNED_OFF_BY,
-	SPF_PASS autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-1.0 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+	MAILING_LIST_MULTI,SPF_PASS,URIBL_BLOCKED autolearn=ham autolearn_force=no
+	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 676B6C43387
-	for <linux-pci@archiver.kernel.org>; Tue, 18 Dec 2018 10:41:27 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id A986CC43387
+	for <linux-pci@archiver.kernel.org>; Tue, 18 Dec 2018 10:55:12 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 223572184A
-	for <linux-pci@archiver.kernel.org>; Tue, 18 Dec 2018 10:41:27 +0000 (UTC)
-Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=synopsys.com header.i=@synopsys.com header.b="FxL/HFKi"
+	by mail.kernel.org (Postfix) with ESMTP id 7B371217D8
+	for <linux-pci@archiver.kernel.org>; Tue, 18 Dec 2018 10:55:12 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726594AbeLRKl0 (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Tue, 18 Dec 2018 05:41:26 -0500
-Received: from us01smtprelay-2.synopsys.com ([198.182.60.111]:36758 "EHLO
-        smtprelay.synopsys.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726421AbeLRKl0 (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Tue, 18 Dec 2018 05:41:26 -0500
-Received: from mailhost.synopsys.com (mailhost3.synopsys.com [10.12.238.238])
-        by smtprelay.synopsys.com (Postfix) with ESMTP id 0F73F10C1D4A;
-        Tue, 18 Dec 2018 02:41:25 -0800 (PST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=synopsys.com; s=mail;
-        t=1545129685; bh=GD/WZPHjMh3ekw3L9QRAOGGpGfA9qIbLoF63h7CedoE=;
-        h=Subject:To:CC:References:From:Date:In-Reply-To:From;
-        b=FxL/HFKivpWchAB/YstnTP0s4SyQE4LRxWNlCPZdxV6T+xQkUJyO081G8ozvfgoRj
-         2TRyu8jG4Rb/ZYiZP1v5IUN32fOdxb+PdcO8PsNN1hrZwRLUIDOWhoa255fBp1B2vc
-         bTfqxnoeBdZSgHC60xF72eB3GEZNxnXipo1LlBJLzu7l++v8T7dp0v8I/tUjoem0og
-         1rCpEBiNaARsxyEw7R3WJJF031zOON9k8ISWCnMuoCens5c33mgxpP933qk/yQgbT0
-         DrDnSgrQY/Trb8HkUhAn6KU9SESYC1WXHQnG9IOgkcEyPNnj1gY9+4Z7EM4jWK5U/+
-         yIEaZc+4Oo4Gg==
-Received: from US01WEHTC3.internal.synopsys.com (us01wehtc3.internal.synopsys.com [10.15.84.232])
-        by mailhost.synopsys.com (Postfix) with ESMTP id F1070329B;
-        Tue, 18 Dec 2018 02:41:23 -0800 (PST)
-Received: from DE02WEHTCA.internal.synopsys.com (10.225.19.92) by
- US01WEHTC3.internal.synopsys.com (10.15.84.232) with Microsoft SMTP Server
- (TLS) id 14.3.408.0; Tue, 18 Dec 2018 02:41:23 -0800
-Received: from DE02WEHTCB.internal.synopsys.com (10.225.19.94) by
- DE02WEHTCA.internal.synopsys.com (10.225.19.92) with Microsoft SMTP Server
- (TLS) id 14.3.408.0; Tue, 18 Dec 2018 11:41:21 +0100
-Received: from [10.107.25.131] (10.107.25.131) by
- DE02WEHTCB.internal.synopsys.com (10.225.19.80) with Microsoft SMTP Server
- (TLS) id 14.3.408.0; Tue, 18 Dec 2018 11:41:21 +0100
-Subject: Re: [RFC v2 0/6] dmaengine: Add Synopsys eDMA IP driver (version 0)
-To:     Niklas Cassel <niklas.cassel@linaro.org>,
-        Gustavo Pimentel <gustavo.pimentel@synopsys.com>
-CC:     "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-        "dmaengine@vger.kernel.org" <dmaengine@vger.kernel.org>,
-        Vinod Koul <vkoul@kernel.org>,
-        Andy Shevchenko <andriy.shevchenko@linux.intel.com>,
-        Russell King <rmk+kernel@armlinux.org.uk>,
-        Eugeniy Paltsev <eugeniy.paltsev@synopsys.com>,
-        Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
+        id S1726426AbeLRKzL (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Tue, 18 Dec 2018 05:55:11 -0500
+Received: from cloudserver094114.home.pl ([79.96.170.134]:52360 "EHLO
+        cloudserver094114.home.pl" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726370AbeLRKzL (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Tue, 18 Dec 2018 05:55:11 -0500
+Received: from 79.184.255.25.ipv4.supernova.orange.pl (79.184.255.25) (HELO aspire.rjw.lan)
+ by serwer1319399.home.pl (79.96.170.134) with SMTP (IdeaSmtpServer 0.83.183)
+ id 6328331c0890de3f; Tue, 18 Dec 2018 11:55:08 +0100
+From:   "Rafael J. Wysocki" <rjw@rjwysocki.net>
+To:     Miquel Raynal <miquel.raynal@bootlin.com>
+Cc:     Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
+        Stephen Boyd <sboyd@kernel.org>, sudeep.holla@arm.com,
+        Gregory Clement <gregory.clement@bootlin.com>,
+        Jason Cooper <jason@lakedaemon.net>,
+        Andrew Lunn <andrew@lunn.ch>,
+        Sebastian Hesselbarth <sebastian.hesselbarth@gmail.com>,
+        Thomas Petazzoni <thomas.petazzoni@bootlin.com>,
         Bjorn Helgaas <bhelgaas@google.com>,
-        "Kishon Vijay Abraham I" <kishon@ti.com>,
-        Joao Pinto <joao.pinto@synopsys.com>,
-        Jose Abreu <jose.abreu@synopsys.com>,
-        Luis Oliveira <luis.oliveira@synopsys.com>,
-        Vitor Soares <vitor.soares@synopsys.com>,
-        Nelson Costa <nelson.costa@synopsys.com>,
-        Pedro Sousa <pedrom.sousa@synopsys.com>
-References: <cover.1545066805.git.gustavo.pimentel@synopsys.com>
- <20181217222107.GA14261@centauri.lan>
-From:   Gustavo Pimentel <gustavo.pimentel@synopsys.com>
-Message-ID: <e3266ef0-bff0-cb91-8f64-43d8a8e4d66a@synopsys.com>
-Date:   Tue, 18 Dec 2018 10:36:58 +0000
-User-Agent: Mozilla/5.0 (Windows NT 10.0; WOW64; rv:60.0) Gecko/20100101
- Thunderbird/60.3.3
+        devicetree@vger.kernel.org, Rob Herring <robh+dt@kernel.org>,
+        Mark Rutland <mark.rutland@arm.com>, linux-pci@vger.kernel.org,
+        linux-kernel@vger.kernel.org, linux-arm-kernel@lists.infradead.org,
+        Antoine Tenart <antoine.tenart@bootlin.com>,
+        Maxime Chevallier <maxime.chevallier@bootlin.com>,
+        Nadav Haklai <nadavh@marvell.com>
+Subject: Re: [PATCH 05/12] PCI: aardvark: add suspend to RAM support
+Date:   Tue, 18 Dec 2018 11:54:43 +0100
+Message-ID: <28619896.152T6JUIHS@aspire.rjw.lan>
+In-Reply-To: <20181217155426.71058a03@xps13>
+References: <20181123141831.8214-1-miquel.raynal@bootlin.com> <61805564.abKDZ2rVK7@aspire.rjw.lan> <20181217155426.71058a03@xps13>
 MIME-Version: 1.0
-In-Reply-To: <20181217222107.GA14261@centauri.lan>
-Content-Type: text/plain; charset="utf-8"
-Content-Language: en-US
-Content-Transfer-Encoding: 7bit
-X-Originating-IP: [10.107.25.131]
+Content-Transfer-Encoding: 7Bit
+Content-Type: text/plain; charset="us-ascii"
 Sender: linux-pci-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-Hi,
-
-On 17/12/2018 22:21, Niklas Cassel wrote:
-> On Mon, Dec 17, 2018 at 06:19:32PM +0100, Gustavo Pimentel wrote:
->> Add Synopsys eDMA IP driver (version 0) to Linux kernel. This IP is generally
->> distributed with Synopsys PCIe EndPoint IP (depends of the use and licensing
->> agreement), which supports:
->>  - legacy and unroll modes
->>  - 16 independent and concurrent channels (8 write + 8 read)
->>  - supports linked list (scatter-gather) transfer
->>  - each linked list descriptor can transfer from 1 byte to 4 Gbytes
->>  - PCIe EndPoint glue-logic
->>
->> Gustavo Pimentel (6):
->>   dmaengine: Add Synopsys eDMA IP core driver
->>   dmaengine: Add Synopsys eDMA IP version 0 support
->>   dmaengine: Add Synopsys eDMA IP version 0 debugfs support
->>   PCI: Add Synopsys endpoint EDDA Device id
->>   dmaengine: Add Synopsys eDMA IP PCIe glue-logic
->>   MAINTAINERS: Add Synopsys eDMA IP driver maintainer
+On Monday, December 17, 2018 3:54:26 PM CET Miquel Raynal wrote:
+> Hi Rafael,
 > 
-> Hello Gustavo,
+> "Rafael J. Wysocki" <rjw@rjwysocki.net> wrote on Thu, 13 Dec 2018
+> 22:50:51 +0100:
 > 
-> Nice to see support for the embedded DMA controller used in the DWC PCIe
-> controller.
-
-Yes, I included you because you were from the beginning one of those who
-requested this feature. :)
-
+> > On Thursday, December 13, 2018 3:30:00 PM CET Miquel Raynal wrote:
+> > > Hi Lorenzo,
+> > >   
+> > > > > If that's really the case, then I can see how one device and it's
+> > > > > children are suspended and the irq for it is disabled but the providing
+> > > > > devices (clk, regulator, bus controller, etc.) are still fully active
+> > > > > and not suspended but in fact completely usable and able to service
+> > > > > interrupts. If that all makes sense, then I would answer the question
+> > > > > with a definitive "yes it's all fine" because the clk consumer could be
+> > > > > in the NOIRQ phase of its suspend but the clk provider wouldn't have
+> > > > > even started suspending yet when clk_disable_unprepare() is called.    
+> > > > 
+> > > > That's a very good summary and address my concern, I still question this
+> > > > patch correctness (and many others that carry out clk operations in S2R
+> > > > NOIRQ phase), they may work but do not tell me they are rock solid given
+> > > > your accurate summary above.  
+> > > 
+> > > I understand your concern but I don't see any alternative right now
+> > > and a deep rework of the PM core to respect such dependency is not
+> > > something that can be done in a reasonable amount of time.  
+> > 
+> > Maybe you don't need to rework anything. :-)
+> > 
+> > Have you considered using device links?
 > 
-> Some kind of documentation in Documentation/ would be nice.
-
-Yes, I thought so too, but under of DOCUMENTATION folder doesn't have anything
-related with DMA drivers implementations either on topic of DMA or PCI.
-
-I thought maybe putting on the dw-edma folder but that doesn't follow the
-standard documentation flow.
-
+> Absolutely, yes :) I am actively working on it in parallel, you can
+> check the third version there [1]. Stephen Boyd has a slightly
+> different idea of how it should be done, I will propose a v4 this week,
+> I can add you in copy if you are interested!
 > 
+> Anyway, there is one thing that is still missing:
+> * Let's have device A that requests clock B
+> * With the device link series, A is linked (as a child) to B.
+> * A suspend/resume hooks handle things in the NOIRQ phase.
+
+Why do you need them to run in the "noirq" phase in the first place?
+
+> * B suspend/resume hooks handle things in the default phase.
 > 
-> The eDMA can be used both while the PCIe controller is in EP and RC mode,
-> right?
+> What I expected during a suspend:
+> 1/ ->suspend_noirq(device A)
+> 2/ ->suspend(clock B)
 
-For now I can not give this certainty. My setup only have the eDMA on the EP
-side and has the eDMA mapped on PCI BAR, which allows me to configure it through
-PCI.
+This expectation is not in agreement with the documented suspend code flow,
+however.
 
-> I guess that this support is only to use the eDMA for RC mode?
+Each phase of it is carried out for *all* devices completely before getting
+to the next phase, "prepare" first, then "suspend", "suspend_late" and
+"suspend_noirq", in this order.
 
-For now this driver runs on the RC side (host/CPU) and configures the eDMA EP.
-I've some plans to support eDMA configuration but on the EP side. I'm guessing
-that also typical use case.
-
+> Unfortunately, device links do not seem to enforce any priority between
+> phases (default/late/noirq) and what happens is:
+> 1/ ->suspend(B)
+> 2/ ->suspend_noirq(A)
+> Which has no sense in my case. Hence, I had to request the clock
+> suspend/resume callbacks to be upgraded to the NOIRQ phase as well (I
+> don't have a better solution for now). This is still under discussion
+> in a thread you have been recently added to by Bjorn, see [2].
 > 
-> Do you have any benchmarks to share? (Perhaps with different buffer sizes).
-
-I'm currently working on the dw-edma-test driver (similar to dmatest driver)
-that supports DEV_TO_MEM and MEM_TO_DEV directions instead of MEM_TO_MEM
-(dmatest), and adapted to WRITE and READ channels with multiple threads. After
-finishing this driver I'll able to do some benchmarks and comparisons. :)
-
-Given your enthusiasm, when I'm finished we could do some brainstorm and define
-some test cases / benchmarks, what do you think?
-
-> Not sure what we will see, lower CPU utilization but more IRQs?
-
-Probably yes. Let me explain you
-
-With this implementation, you can transfer several chunks (a chunk is linked
-list of burst elements).
-
-Each burst basically defines the source, destination addresses and size to
-transfer (from 1 Byte to 4 GB).
-
-This linked list will be written on EP's RAM (mapped on a PCI BAR) which the HW
-block will consume it. The linked list size is dependent of this EP's RAM size,
-i.e. 8 KB will allow 340 elements (bursts).
-
-On my currently setup I'm testing the driver implementation like this:
- - 4 chunks
- - each chunk is composed by 340 elements (bursts)
- - each burst have a transfer size of 100 bytes (can be up to 4GB and the size
-can be also different for each burst)
-
-Chunk #0
-       |--> Burst #0 --> ... --> Burst #339 -> IRQ (Reload new linked list)
-Chunk #1
-       |--> Burst #0 --> ... --> Burst #339 -> IRQ (Reload new linked list)
-Chunk #2
-       |--> Burst #0 --> ... --> Burst #339 -> IRQ (Reload new linked list)
-Chunk #3
-       |--> Burst #0 --> ... --> Burst #34 -> IRQ (End transfer)
-
-In total I'm writing ((4 * 340) + 35) * 100 = 139500 Bytes <=> 136 KB
-
-> Have you thought about doing IRQ coalescing?
-
-No. I'm only focus to implement the driver for now. After the implementation and
-the benchmarks, maybe we could think about it. :)
-
+> So when I told you I was not confident in "reworking the PM core to
+> respect such dependency", this is what I was referring to. I am
+> definitely ready to help, but I don't feel I can do it alone.
 > 
-> Usually we need dmas and dma-names in device tree, however, maybe that
-> isn't needed here, since it is an embedded DMA controller.
-> Don't we even need/want a DT property in the PCIe node, that says if we
-> want to enable the eDMA or not?
+> [1] https://www.spinics.net/lists/linux-clk/msg32824.html
+> [2] https://marc.info/?l=linux-pm&m=154465198510735&w=2
 
-That will be necessary in the future when we have eDMA in RC or when we
-implement the driver to control the eDMA on the EP side.
-
-> 
-> Usually a PCIe EP driver will call pci_ioremap_bar() and then use
-> readl()/writel() directly.
-> But since we now need to setup a DMA transfer, and wait for an IRQ,
-> how does this work?
-
-I gave a brief explanation in a previous comment in this email (see info about
-the chunks and bursts)
-
-I'm dividing this patch series like this:
-
- - eDMA core + eDMA core v0 driver (implementing the interface with DMAengine
-controller APIs and the interface with the eDMA HW block)
-
- - eDMA PCIe glue-logic driver (attaches to EP and provides memory access to
-eDMA core driver), for now is attach to Synopsys Vendor and Device ID and has a
-platform data specific to our EP.
-
- - eDMA Test driver (is a sample driver which aims to test the eDMA, but also
-provides a example how an customer driver would use the eDMA driver, through the
-DMAengine client APIs) (under developing, I hope to make it available before
-xmas :))
-
-Sounds logic?
-
-> 
-> I have a board that has a CC_DMA_ENABLE set, so if you give me some
-> detailed instructions how to test, I might be able to provide you with a
-> Tested-by.
-
-Ok, let me just finish the eDMA test and append it to the patch series.
-I'm happy to help you with this. :)
-
-Thanks!
-
-Gustavo
-
-> 
-> 
-> Kind regards,
-> Niklas
-> 
-> 
->>
->>  MAINTAINERS                              |   7 +
->>  drivers/dma/Kconfig                      |   2 +
->>  drivers/dma/Makefile                     |   1 +
->>  drivers/dma/dw-edma/Kconfig              |  18 +
->>  drivers/dma/dw-edma/Makefile             |   7 +
->>  drivers/dma/dw-edma/dw-edma-core.c       | 845 +++++++++++++++++++++++++++++++
->>  drivers/dma/dw-edma/dw-edma-core.h       | 147 ++++++
->>  drivers/dma/dw-edma/dw-edma-pcie.c       | 258 ++++++++++
->>  drivers/dma/dw-edma/dw-edma-v0-core.c    | 361 +++++++++++++
->>  drivers/dma/dw-edma/dw-edma-v0-core.h    |  26 +
->>  drivers/dma/dw-edma/dw-edma-v0-debugfs.c | 357 +++++++++++++
->>  drivers/dma/dw-edma/dw-edma-v0-debugfs.h |  24 +
->>  drivers/dma/dw-edma/dw-edma-v0-regs.h    | 145 ++++++
->>  drivers/misc/pci_endpoint_test.c         |   2 +-
->>  include/linux/dma/edma.h                 |  43 ++
->>  include/linux/pci_ids.h                  |   1 +
->>  16 files changed, 2243 insertions(+), 1 deletion(-)
->>  create mode 100644 drivers/dma/dw-edma/Kconfig
->>  create mode 100644 drivers/dma/dw-edma/Makefile
->>  create mode 100644 drivers/dma/dw-edma/dw-edma-core.c
->>  create mode 100644 drivers/dma/dw-edma/dw-edma-core.h
->>  create mode 100644 drivers/dma/dw-edma/dw-edma-pcie.c
->>  create mode 100644 drivers/dma/dw-edma/dw-edma-v0-core.c
->>  create mode 100644 drivers/dma/dw-edma/dw-edma-v0-core.h
->>  create mode 100644 drivers/dma/dw-edma/dw-edma-v0-debugfs.c
->>  create mode 100644 drivers/dma/dw-edma/dw-edma-v0-debugfs.h
->>  create mode 100644 drivers/dma/dw-edma/dw-edma-v0-regs.h
->>  create mode 100644 include/linux/dma/edma.h
->>
->> Signed-off-by: Gustavo Pimentel <gustavo.pimentel@synopsys.com>
->> Cc: Vinod Koul <vkoul@kernel.org>
->> Cc: Andy Shevchenko <andriy.shevchenko@linux.intel.com>
->> Cc: Russell King <rmk+kernel@armlinux.org.uk>
->> Cc: Eugeniy Paltsev <paltsev@synopsys.com>
->> Cc: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
->> Cc: Bjorn Helgaas <bhelgaas@google.com>
->> Cc: Kishon Vijay Abraham I <kishon@ti.com>
->> Cc: Niklas Cassel <niklas.cassel@linaro.org>
->> Cc: Joao Pinto <jpinto@synopsys.com>
->> Cc: Jose Abreu <jose.abreu@synopsys.com>
->> Cc: Luis Oliveira <lolivei@synopsys.com>
->> Cc: Vitor Soares <vitor.soares@synopsys.com>
->> Cc: Nelson Costa <nelson.costa@synopsys.com>
->> Cc: Pedro Sousa <pedrom.sousa@synopsys.com>
->>
->> -- 
->> 2.7.4
->>
+The rework you seem to be talking about is not possible, I'm afraid.
 
