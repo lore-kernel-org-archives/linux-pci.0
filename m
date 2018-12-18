@@ -2,228 +2,106 @@ Return-Path: <SRS0=EJXn=O3=vger.kernel.org=linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-9.2 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
-	SPF_PASS,USER_AGENT_GIT autolearn=unavailable autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-2.7 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,MAILING_LIST_MULTI,SPF_PASS,URIBL_BLOCKED,
+	USER_AGENT_MUTT autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 40CE4C43387
-	for <linux-pci@archiver.kernel.org>; Tue, 18 Dec 2018 02:57:06 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id CC540C43387
+	for <linux-pci@archiver.kernel.org>; Tue, 18 Dec 2018 03:54:50 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 056F12080D
-	for <linux-pci@archiver.kernel.org>; Tue, 18 Dec 2018 02:57:06 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 900222184B
+	for <linux-pci@archiver.kernel.org>; Tue, 18 Dec 2018 03:54:50 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=default; t=1545101826;
-	bh=srECx3uDp528BcPgeYFTmHwXgYvdj7lpCSHqqkym1Fg=;
-	h=From:To:Cc:Subject:Date:In-Reply-To:References:List-ID:From;
-	b=pTR1NNKlSTFGltna7T0FRnnslNZ6ZLoukmumFt+OQUigj0CYYHFJEo321o6C3EK+X
-	 gJ6vgb8sT+otM/a3KrVv09yLdBK2o3B6endxcYdabNYuyTyHQrn9pMReCq3J3X06wB
-	 pz+KjlfmRJImtwlLnZN4ZYeP/oHeIyw3rIjZFkSk=
+	s=default; t=1545105290;
+	bh=ePalVh3JawN93rBu5YYkKMohLgY1+Q/U85arqRGWWK0=;
+	h=Date:From:To:Cc:Subject:References:In-Reply-To:List-ID:From;
+	b=GhQY/nzcMKXDRC3SExzTJ73QW0KgaUQmPj2CWxtO7QhtrNcfmo3KAxb9+QstR9xzO
+	 g70u/ofDeDhiOOKu4xd0P5py7oBpUUSk0WUhj0LrQvvKPtOBXhURiDTYNqGOqDmWwj
+	 E9eHI/UXxeGQfxELNA1uDkhn015ybWShlcosQEdc=
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726548AbeLRC4R (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Mon, 17 Dec 2018 21:56:17 -0500
-Received: from mail.kernel.org ([198.145.29.99]:38190 "EHLO mail.kernel.org"
+        id S1726336AbeLRDyt (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Mon, 17 Dec 2018 22:54:49 -0500
+Received: from mail.kernel.org ([198.145.29.99]:53316 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1726488AbeLRC4Q (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Mon, 17 Dec 2018 21:56:16 -0500
-Received: from sinanubuntu1604.mkjiurmyylmellclgttazegk5f.bx.internal.cloudapp.net (unknown [40.76.210.1])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES128-SHA256 (128/128 bits))
+        id S1726303AbeLRDyt (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Mon, 17 Dec 2018 22:54:49 -0500
+Received: from localhost (unknown [171.61.92.201])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
         (No client certificate requested)
-        by mail.kernel.org (Postfix) with ESMTPSA id E9BEC2145D;
-        Tue, 18 Dec 2018 02:56:13 +0000 (UTC)
+        by mail.kernel.org (Postfix) with ESMTPSA id 556E020874;
+        Tue, 18 Dec 2018 03:54:48 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=default; t=1545101775;
-        bh=srECx3uDp528BcPgeYFTmHwXgYvdj7lpCSHqqkym1Fg=;
-        h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=Sae9ws7uHRBtWTqP3XJhS37GpaY5nYtdA+o216aKDsVYWcaOXbX01ycWrbJ/JLfbD
-         IsRBYB8HWUf9xUxnzP3OXGetK0IY4He2s96OSK6qwqlgEdaDL01XJk6x06bAQcFAXc
-         At/xMKtP01xkTi9L2dLIorCQJGsLgi84WJisveNY=
-From:   Sinan Kaya <okaya@kernel.org>
-To:     linux-acpi@vger.kernel.org
-Cc:     Sinan Kaya <okaya@kernel.org>,
-        Thomas Gleixner <tglx@linutronix.de>,
-        Ingo Molnar <mingo@redhat.com>, Borislav Petkov <bp@alien8.de>,
-        "H. Peter Anvin" <hpa@zytor.com>,
-        x86@kernel.org (maintainer:X86 ARCHITECTURE (32-BIT AND 64-BIT)),
-        "Rafael J. Wysocki" <rjw@rjwysocki.net>,
-        Len Brown <lenb@kernel.org>,
-        Bjorn Helgaas <bhelgaas@google.com>,
-        Robert Moore <robert.moore@intel.com>,
-        Erik Schmauss <erik.schmauss@intel.com>,
-        Andy Shevchenko <andy.shevchenko@gmail.com>,
-        =?UTF-8?q?Christian=20K=C3=B6nig?= <christian.koenig@amd.com>,
-        "=?UTF-8?q?Christian=20K=C3=B6nig?=" 
-        <ckoenig.leichtzumerken@gmail.com>,
-        Otavio Pontes <otavio.pontes@intel.com>,
-        linux-kernel@vger.kernel.org (open list:X86 ARCHITECTURE (32-BIT AND
-        64-BIT)), linux-pci@vger.kernel.org (open list:PCI SUBSYSTEM),
-        devel@acpica.org (open list:ACPI COMPONENT ARCHITECTURE (ACPICA))
-Subject: [PATCH v11 3/7] PCI/ACPI: Allow ACPI to be built without CONFIG_PCI set
-Date:   Tue, 18 Dec 2018 02:56:02 +0000
-Message-Id: <20181218025606.32668-4-okaya@kernel.org>
-X-Mailer: git-send-email 2.19.0
-In-Reply-To: <20181218025606.32668-1-okaya@kernel.org>
-References: <20181218025606.32668-1-okaya@kernel.org>
+        s=default; t=1545105289;
+        bh=ePalVh3JawN93rBu5YYkKMohLgY1+Q/U85arqRGWWK0=;
+        h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
+        b=Lhxvu0c33L8ge564jVYVmuxpDBID2aqPRy5xnok5HYquSmvHVO8yEqBos9q05pCKE
+         AcdFY3H19KKEH7aJ6+FGxhBhWvnX9VFi794jOV6JRzEjUG5OzMVjiN2oJdZuYmLYlD
+         wSJ/qMOEgczZHbW631sIDd2U4hy26LRskRUzkGls=
+Date:   Tue, 18 Dec 2018 09:24:38 +0530
+From:   Vinod Koul <vkoul@kernel.org>
+To:     Gustavo Pimentel <gustavo.pimentel@synopsys.com>
+Cc:     "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+        "dmaengine@vger.kernel.org" <dmaengine@vger.kernel.org>,
+        Eugeniy Paltsev <eugeniy.paltsev@synopsys.com>,
+        Andy Shevchenko <andriy.shevchenko@linux.intel.com>,
+        Joao Pinto <joao.pinto@synopsys.com>
+Subject: Re: [RFC 1/6] dma: Add Synopsys eDMA IP core driver
+Message-ID: <20181218035438.GO2472@vkoul-mobl>
+References: <cover.1544610287.git.gustavo.pimentel@synopsys.com>
+ <bf4eb88265bf8bd95f7b2effdbfbeda8c52a2e0b.1544610287.git.gustavo.pimentel@synopsys.com>
+ <20181217065120.GH2472@vkoul-mobl>
+ <0768a44c-60d2-0983-b2e3-b8f711a24504@synopsys.com>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <0768a44c-60d2-0983-b2e3-b8f711a24504@synopsys.com>
+User-Agent: Mutt/1.10.1 (2018-07-13)
 Sender: linux-pci-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-We are compiling PCI code today for systems with ACPI and no PCI
-device present. Remove the useless code and reduce the tight
-dependency.
+On 17-12-18, 15:56, Gustavo Pimentel wrote:
 
-Signed-off-by: Sinan Kaya <okaya@kernel.org>
-Acked-by: Bjorn Helgaas <bhelgaas@google.com> # PCI parts
-Acked-by: Ingo Molnar <mingo@kernel.org>
----
- arch/x86/include/asm/pci_x86.h | 7 +++++++
- drivers/acpi/Kconfig           | 1 -
- drivers/acpi/Makefile          | 2 +-
- drivers/acpi/internal.h        | 5 +++++
- drivers/pci/Makefile           | 2 +-
- include/acpi/acpi_drivers.h    | 7 +++++++
- include/linux/acpi.h           | 7 +++++++
- include/linux/pci.h            | 4 ++++
- 8 files changed, 32 insertions(+), 3 deletions(-)
+> >> +
+> >> +#define SET(reg, name, val)			\
+> >> +	reg.name = val
+> >> +
+> >> +#define SET_BOTH_CH(name, value)		\
+> >> +	do {					\
+> >> +		SET(dw->wr_edma, name, value);	\
+> >> +		SET(dw->rd_edma, name, value);	\
+> >> +	} while (0)
+> > 
+> > I am not sure how this helps, makes things not explicit..
+> 
+> Since this driver has 2 channels (write and read) I'd like to simplify all the
+> configurations that I've to make on both channels (avoiding any omission), that
+> why I created this macro.
 
-diff --git a/arch/x86/include/asm/pci_x86.h b/arch/x86/include/asm/pci_x86.h
-index 959d618dbb17..73bb404f4d2a 100644
---- a/arch/x86/include/asm/pci_x86.h
-+++ b/arch/x86/include/asm/pci_x86.h
-@@ -121,7 +121,14 @@ extern void __init dmi_check_pciprobe(void);
- extern void __init dmi_check_skip_isa_align(void);
- 
- /* some common used subsys_initcalls */
-+#ifdef CONFIG_PCI
- extern int __init pci_acpi_init(void);
-+#else
-+static inline int  __init pci_acpi_init(void)
-+{
-+	return -EINVAL;
-+}
-+#endif
- extern void __init pcibios_irq_init(void);
- extern int __init pcibios_init(void);
- extern int pci_legacy_init(void);
-diff --git a/drivers/acpi/Kconfig b/drivers/acpi/Kconfig
-index 7cea769c37df..a0abcb3bd673 100644
---- a/drivers/acpi/Kconfig
-+++ b/drivers/acpi/Kconfig
-@@ -9,7 +9,6 @@ config ARCH_SUPPORTS_ACPI
- menuconfig ACPI
- 	bool "ACPI (Advanced Configuration and Power Interface) Support"
- 	depends on ARCH_SUPPORTS_ACPI
--	depends on PCI
- 	select PNP
- 	default y if X86
- 	help
-diff --git a/drivers/acpi/Makefile b/drivers/acpi/Makefile
-index edc039313cd6..7c6afc111d76 100644
---- a/drivers/acpi/Makefile
-+++ b/drivers/acpi/Makefile
-@@ -39,7 +39,7 @@ acpi-y				+= processor_core.o
- acpi-$(CONFIG_ARCH_MIGHT_HAVE_ACPI_PDC) += processor_pdc.o
- acpi-y				+= ec.o
- acpi-$(CONFIG_ACPI_DOCK)	+= dock.o
--acpi-y				+= pci_root.o pci_link.o pci_irq.o
-+acpi-$(CONFIG_PCI)		+= pci_root.o pci_link.o pci_irq.o
- obj-$(CONFIG_ACPI_MCFG)		+= pci_mcfg.o
- acpi-y				+= acpi_lpss.o acpi_apd.o
- acpi-y				+= acpi_platform.o
-diff --git a/drivers/acpi/internal.h b/drivers/acpi/internal.h
-index 530a3f675490..b7060dae2789 100644
---- a/drivers/acpi/internal.h
-+++ b/drivers/acpi/internal.h
-@@ -25,8 +25,13 @@ int acpi_osi_init(void);
- acpi_status acpi_os_initialize1(void);
- void init_acpi_device_notify(void);
- int acpi_scan_init(void);
-+#ifdef CONFIG_PCI
- void acpi_pci_root_init(void);
- void acpi_pci_link_init(void);
-+#else
-+static inline void acpi_pci_root_init(void) {}
-+static inline void acpi_pci_link_init(void) {}
-+#endif
- void acpi_processor_init(void);
- void acpi_platform_init(void);
- void acpi_pnp_init(void);
-diff --git a/drivers/pci/Makefile b/drivers/pci/Makefile
-index f2bda77a2df1..657d642fcc67 100644
---- a/drivers/pci/Makefile
-+++ b/drivers/pci/Makefile
-@@ -11,6 +11,7 @@ ifdef CONFIG_PCI
- obj-$(CONFIG_PROC_FS)		+= proc.o
- obj-$(CONFIG_SYSFS)		+= slot.o
- obj-$(CONFIG_OF)		+= of.o
-+obj-$(CONFIG_ACPI)		+= pci-acpi.o
- endif
- 
- obj-$(CONFIG_PCI_QUIRKS)	+= quirks.o
-@@ -20,7 +21,6 @@ obj-$(CONFIG_PCI_MSI)		+= msi.o
- obj-$(CONFIG_PCI_ATS)		+= ats.o
- obj-$(CONFIG_PCI_IOV)		+= iov.o
- obj-$(CONFIG_PCI_BRIDGE_EMUL)	+= pci-bridge-emul.o
--obj-$(CONFIG_ACPI)		+= pci-acpi.o
- obj-$(CONFIG_PCI_LABEL)		+= pci-label.o
- obj-$(CONFIG_X86_INTEL_MID)	+= pci-mid.o
- obj-$(CONFIG_PCI_SYSCALL)	+= syscall.o
-diff --git a/include/acpi/acpi_drivers.h b/include/acpi/acpi_drivers.h
-index 14499757338f..de1804aeaf69 100644
---- a/include/acpi/acpi_drivers.h
-+++ b/include/acpi/acpi_drivers.h
-@@ -88,7 +88,14 @@ int acpi_pci_link_free_irq(acpi_handle handle);
- 
- struct pci_bus;
- 
-+#ifdef CONFIG_PCI
- struct pci_dev *acpi_get_pci_dev(acpi_handle);
-+#else
-+static inline struct pci_dev *acpi_get_pci_dev(acpi_handle handle)
-+{
-+	return NULL;
-+}
-+#endif
- 
- /* Arch-defined function to add a bus to the system */
- 
-diff --git a/include/linux/acpi.h b/include/linux/acpi.h
-index ed80f147bd50..eb1fdf4c196a 100644
---- a/include/linux/acpi.h
-+++ b/include/linux/acpi.h
-@@ -340,7 +340,14 @@ struct pci_dev;
- int acpi_pci_irq_enable (struct pci_dev *dev);
- void acpi_penalize_isa_irq(int irq, int active);
- bool acpi_isa_irq_available(int irq);
-+#ifdef CONFIG_PCI
- void acpi_penalize_sci_irq(int irq, int trigger, int polarity);
-+#else
-+static inline void acpi_penalize_sci_irq(int irq, int trigger,
-+					int polarity)
-+{
-+}
-+#endif
- void acpi_pci_irq_disable (struct pci_dev *dev);
- 
- extern int ec_read(u8 addr, u8 *val);
-diff --git a/include/linux/pci.h b/include/linux/pci.h
-index 11c71c4ecf75..51a5a5217667 100644
---- a/include/linux/pci.h
-+++ b/include/linux/pci.h
-@@ -1960,7 +1960,11 @@ int pcibios_set_pcie_reset_state(struct pci_dev *dev,
- 				 enum pcie_reset_state state);
- int pcibios_add_device(struct pci_dev *dev);
- void pcibios_release_device(struct pci_dev *dev);
-+#ifdef CONFIG_PCI
- void pcibios_penalize_isa_irq(int irq, int active);
-+#else
-+static inline void pcibios_penalize_isa_irq(int irq, int active) {}
-+#endif
- int pcibios_alloc_irq(struct pci_dev *dev);
- void pcibios_free_irq(struct pci_dev *dev);
- resource_size_t pcibios_default_alignment(void);
+So in order to configure a channel you need to write to both?
+
+> Should I add some comment on top of this macro or do you think that is better to
+> replicate the code for each channel?
+
+That will help to explain..
+
+> >> +
+> >> +	err = ops->device_config(dchan);
+> > 
+> > okay what does this callback do. You are already under and dmaengine fwk
+> > so what is the need to add one more abstraction layer, can you explain
+> > that in details please
+> 
+> This callback just configures the eDMA HW block interrupt address (abort and
+> done) and data for each channel. This callback could easily moved to the
+> dw_edma_probe() where each channel is created at first.
+> Should I do it in your opinion?
+
+My question is about callbacks in this driver in general. You are
+already under a dmaengine fwk, so this is adding one more layer on top
+with callbacks implementing low level stiff. Why do we need another layer
+is the question..
+
 -- 
-2.19.0
-
+~Vinod
