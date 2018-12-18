@@ -2,109 +2,145 @@ Return-Path: <SRS0=EJXn=O3=vger.kernel.org=linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-7.0 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_PASS,URIBL_BLOCKED
-	autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-7.2 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
+	SPF_PASS autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 25755C43387
-	for <linux-pci@archiver.kernel.org>; Tue, 18 Dec 2018 00:45:46 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id C8558C43387
+	for <linux-pci@archiver.kernel.org>; Tue, 18 Dec 2018 01:52:29 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id EF05421848
-	for <linux-pci@archiver.kernel.org>; Tue, 18 Dec 2018 00:45:45 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 8AA43214C6
+	for <linux-pci@archiver.kernel.org>; Tue, 18 Dec 2018 01:52:29 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=default; t=1545097949;
+	bh=rjjvVdFBYOMMQNdmFAwDkCpHhYY4LpmKw73t/Gktycg=;
+	h=References:In-Reply-To:From:Date:Subject:To:Cc:List-ID:From;
+	b=djrfoqFnWfaGGxFGwUDcjgOT+we8EAJTICbb7ctr1oEWTMjLXXx+szTiMu1Kzg59k
+	 o0MVddhwnFyxhxPdLQsvt7y4YP79j4GEpXIYZYuJDuaBpMwubIa/AocMdfDXaM+qEP
+	 dQ25SBahX2tkuBdvJmp3+s4I7qu4huEZ/bLqwrsQ=
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726296AbeLRApp (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Mon, 17 Dec 2018 19:45:45 -0500
-Received: from mx1.redhat.com ([209.132.183.28]:50278 "EHLO mx1.redhat.com"
+        id S1726287AbeLRBw2 (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Mon, 17 Dec 2018 20:52:28 -0500
+Received: from mail.kernel.org ([198.145.29.99]:44032 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1726276AbeLRApo (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Mon, 17 Dec 2018 19:45:44 -0500
-Received: from smtp.corp.redhat.com (int-mx07.intmail.prod.int.phx2.redhat.com [10.5.11.22])
-        (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
+        id S1726285AbeLRBw2 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Mon, 17 Dec 2018 20:52:28 -0500
+Received: from mail-oi1-f180.google.com (mail-oi1-f180.google.com [209.85.167.180])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
         (No client certificate requested)
-        by mx1.redhat.com (Postfix) with ESMTPS id E5188C0BF2CB;
-        Tue, 18 Dec 2018 00:45:43 +0000 (UTC)
-Received: from redhat.com (ovpn-120-67.rdu2.redhat.com [10.10.120.67])
-        by smtp.corp.redhat.com (Postfix) with SMTP id 2EF601001F45;
-        Tue, 18 Dec 2018 00:45:42 +0000 (UTC)
-Date:   Mon, 17 Dec 2018 19:45:41 -0500
-From:   "Michael S. Tsirkin" <mst@redhat.com>
-To:     linux-kernel@vger.kernel.org
-Cc:     xuyandong <xuyandong2@huawei.com>, stable@vger.kernel.org,
-        Yinghai Lu <yinghai@kernel.org>,
-        Jesse Barnes <jbarnes@virtuousgeek.org>,
-        Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org
-Subject: [PATCH v2] PCI: avoid bridge feature re-probing on hotplug
-Message-ID: <20181218004455.20186-1-mst@redhat.com>
+        by mail.kernel.org (Postfix) with ESMTPSA id 9DC5D214C6
+        for <linux-pci@vger.kernel.org>; Tue, 18 Dec 2018 01:52:27 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+        s=default; t=1545097947;
+        bh=rjjvVdFBYOMMQNdmFAwDkCpHhYY4LpmKw73t/Gktycg=;
+        h=References:In-Reply-To:From:Date:Subject:To:Cc:From;
+        b=Tc0FBJPtsJbpZThao10IkX0CLI0tCzlDP/MiCQV0zZ7O+C1VLeYD2A1e7cGUlBgiJ
+         jzKAzShvHq/Wz3WmZ7uldCh7JT7tsq99lc12kPfsa/m7Mz0bBAOcWlcgkqQn+TTIlp
+         CnXcghztbjSVGcd3xwdY1evnBZGPrJ8+OqvUYrDc=
+Received: by mail-oi1-f180.google.com with SMTP id h25so737690oig.1
+        for <linux-pci@vger.kernel.org>; Mon, 17 Dec 2018 17:52:27 -0800 (PST)
+X-Gm-Message-State: AA+aEWb6LZ519OUWpbAw9w4Fi5cER980qP32o1A4DdTAlr17fWrR+Qyf
+        JbozVZovM0od3oUN4MclKwkPZBkjYovoQm/nIcs=
+X-Google-Smtp-Source: AFSGD/Xj+6d70BxX4Fx2p4hJBZprVH+Z8O1EaxG85r0rvo5A6lr7lkGtWrdhmb77u7NAkAQdS51t1dtrES2FMt8DEhk=
+X-Received: by 2002:aca:3403:: with SMTP id b3mr6480475oia.242.1545097946937;
+ Mon, 17 Dec 2018 17:52:26 -0800 (PST)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-X-Mutt-Fcc: =sent
-X-Scanned-By: MIMEDefang 2.84 on 10.5.11.22
-X-Greylist: Sender IP whitelisted, not delayed by milter-greylist-4.5.16 (mx1.redhat.com [10.5.110.32]); Tue, 18 Dec 2018 00:45:44 +0000 (UTC)
+References: <20181201204137.1786-1-okaya@kernel.org> <20181217192721.GA28981@google.com>
+In-Reply-To: <20181217192721.GA28981@google.com>
+From:   Sinan Kaya <Okaya@kernel.org>
+Date:   Tue, 18 Dec 2018 02:52:16 +0100
+X-Gmail-Original-Message-ID: <CAK9iUCMFMFT0ZTaf4pnRDUFZW3cbGnCoq0xCM-or0Xm91Nvggg@mail.gmail.com>
+Message-ID: <CAK9iUCMFMFT0ZTaf4pnRDUFZW3cbGnCoq0xCM-or0Xm91Nvggg@mail.gmail.com>
+Subject: Re: [PATCH v1 1/2] PCI: Stub out read/write/raw/find functions
+To:     Bjorn Helgaas <helgaas@kernel.org>
+Cc:     linux-pci@vger.kernel.org
+Content-Type: text/plain; charset="UTF-8"
 Sender: linux-pci-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-commit 1f82de10d6b1 ("PCI/x86: don't assume prefetchable ranges are 64bit")
-added probing of bridge support for 64 bit memory each time bridge is
-re-enumerated.
+On Mon, Dec 17, 2018 at 8:27 PM Bjorn Helgaas <helgaas@kernel.org> wrote:
+>
+> On Sat, Dec 01, 2018 at 08:41:35PM +0000, Sinan Kaya wrote:
+> > Need stub functions in order to be able to compile ACPI without PCI
+> > support.
+> >
+> > Signed-off-by: Sinan Kaya <okaya@kernel.org>
+>
+> I can't tell where this series is since I only got the pieces that
+> touch PCI and the version numbers and n/n numbers don't make much
+> sense then, so apologies if I'm responding to an obsolete patch.
 
-Unfortunately this probing is destructive if any device behind
-the bridge is in use at this time.
+Yes, this is an older version of the patch series for removing coupling between
+ACPI and PCI.
 
-This was observed in the field, see
-https://lists.gnu.org/archive/html/qemu-devel/2018-12/msg01711.html
-and specifically
-https://lists.gnu.org/archive/html/qemu-devel/2018-12/msg02082.html
-
-There's no real need to re-probe the bridge features as the
-registers in question never change - detect that using
-the memory flag being set (it's always set on the 1st pass since
-all PCI2PCI bridges support memory forwarding) and skip the probing.
-Thus, only the first call will perform the disruptive probing and sets
-the resource flags as required - which we can be reasonably sure happens
-before any devices have been configured.
-Avoiding repeated calls to pci_bridge_check_ranges might be even nicer.
-Unfortunately I couldn't come up with a clean way to do it without a
-major probing code refactoring.
-
-Reported-by: xuyandong <xuyandong2@huawei.com>
-Tested-by: xuyandong <xuyandong2@huawei.com>
-Cc: stable@vger.kernel.org
-Cc: Yinghai Lu <yinghai@kernel.org>
-Cc: Jesse Barnes <jbarnes@virtuousgeek.org>
-Signed-off-by: Michael S. Tsirkin <mst@redhat.com>
----
-
-Please review and consider for stable.
-
-changes from v1:
-	comment and commit log updates to address comments by Bjorn.
-
- drivers/pci/setup-bus.c | 10 ++++++++++
- 1 file changed, 10 insertions(+)
-
-diff --git a/drivers/pci/setup-bus.c b/drivers/pci/setup-bus.c
-index ed960436df5e..d5c25d465d97 100644
---- a/drivers/pci/setup-bus.c
-+++ b/drivers/pci/setup-bus.c
-@@ -741,6 +741,16 @@ static void pci_bridge_check_ranges(struct pci_bus *bus)
- 	struct resource *b_res;
- 
- 	b_res = &bridge->resource[PCI_BRIDGE_RESOURCES];
-+
-+	/*
-+	 * Don't re-check after this was called once already:
-+	 * important since bridge might be in use.
-+	 * Note: this is only reliable because as per spec all PCI to PCI
-+	 * bridges support memory unconditionally so IORESOURCE_MEM is set.
-+	 */
-+	if (b_res[1].flags & IORESOURCE_MEM)
-+		return;
-+
- 	b_res[1].flags |= IORESOURCE_MEM;
- 
- 	pci_read_config_word(bridge, PCI_IO_BASE, &io);
--- 
-MST
+>
+> > ---
+> >  include/linux/pci.h | 32 ++++++++++++++++++++++++++++++++
+> >  1 file changed, 32 insertions(+)
+> >
+> > diff --git a/include/linux/pci.h b/include/linux/pci.h
+> > index 11c71c4ecf75..15407f469d41 100644
+> > --- a/include/linux/pci.h
+> > +++ b/include/linux/pci.h
+> > @@ -682,10 +682,22 @@ struct pci_ops {
+> >   * ACPI needs to be able to access PCI config space before we've done a
+> >   * PCI bus scan and created pci_bus structures.
+> >   */
+> > +#ifdef CONFIG_PCI
+> >  int raw_pci_read(unsigned int domain, unsigned int bus, unsigned int devfn,
+> >                int reg, int len, u32 *val);
+> >  int raw_pci_write(unsigned int domain, unsigned int bus, unsigned int devfn,
+> >                 int reg, int len, u32 val);
+> > +#else
+> > +static inline int raw_pci_read(unsigned int domain, unsigned int bus,
+> > +                            unsigned int devfn, int reg, int len, u32 *val)
+> > +{
+> > +     *val = 0;
+> > +     return -EINVAL;
+>
+> Why do you return 0 here?  If a PCI config access fails, you usually
+> get ~0.
+>
+> > +}
+> > +static inline int raw_pci_write(unsigned int domain, unsigned int bus,
+> > +                             unsigned int devfn, int reg, int len, u32 val)
+> > +{ return -EINVAL; }
+> > +#endif
+> >
+> >  #ifdef CONFIG_ARCH_DMA_ADDR_T_64BIT
+> >  typedef u64 pci_bus_addr_t;
+> > @@ -1599,7 +1611,27 @@ pci_release_mem_regions(struct pci_dev *pdev)
+> >  }
+> >
+> >  #else /* CONFIG_PCI is not enabled */
+> > +static inline int pci_bus_read_config_byte(struct pci_bus *bus,
+> > +             unsigned int devfn, int where, u8 *val)
+> > +{ return -EINVAL; }
+>
+> Should these set *val as well?  To ~0 (or 0) to match above, I assume?
+>
+> > +static inline int pci_bus_read_config_word(struct pci_bus *bus,
+> > +             unsigned int devfn, int where, u16 *val)
+> > +{ return -EINVAL; }
+> > +static inline int pci_bus_read_config_dword(struct pci_bus *bus,
+> > +             unsigned int devfn, int where, u32 *val)
+> > +{ return -EINVAL; }
+> > +static inline int pci_bus_write_config_byte(struct pci_bus *bus,
+> > +             unsigned int devfn, int where, u8 val)
+> > +{ return -EINVAL; }
+> > +static inline int pci_bus_write_config_word(struct pci_bus *bus,
+> > +             unsigned int devfn, int where, u16 val)
+> > +{ return -EINVAL; }
+> > +static inline int pci_bus_write_config_dword(struct pci_bus *bus,
+> > +             unsigned int devfn, int where, u32 val)
+> > +{ return -EINVAL; }
+> > +static inline struct pci_bus *pci_find_bus(int domain, int busnr)
+> > +{ return NULL; }
+> >  static inline void pci_set_flags(int flags) { }
+> >  static inline void pci_add_flags(int flags) { }
+> >  static inline void pci_clear_flags(int flags) { }
+> > --
+> > 2.19.0
+> >
