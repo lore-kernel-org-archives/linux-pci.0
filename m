@@ -2,279 +2,125 @@ Return-Path: <SRS0=EJXn=O3=vger.kernel.org=linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-6.3 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
-	DKIM_VALID_AU,FREEMAIL_FORGED_FROMDOMAIN,FREEMAIL_FROM,
-	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
-	SPF_PASS,UNWANTED_LANGUAGE_BODY,USER_AGENT_GIT autolearn=unavailable
-	autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-1.1 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
+	DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_PASS,
+	URIBL_BLOCKED autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 58812C43387
-	for <linux-pci@archiver.kernel.org>; Tue, 18 Dec 2018 04:07:40 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 29840C43387
+	for <linux-pci@archiver.kernel.org>; Tue, 18 Dec 2018 04:19:26 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 1D2382086C
-	for <linux-pci@archiver.kernel.org>; Tue, 18 Dec 2018 04:07:40 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id D98AF217D9
+	for <linux-pci@archiver.kernel.org>; Tue, 18 Dec 2018 04:19:25 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="BY7OvDO0"
+	dkim=pass (1024-bit key) header.d=nxp.com header.i=@nxp.com header.b="nHe/d31Q"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726574AbeLREHX (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Mon, 17 Dec 2018 23:07:23 -0500
-Received: from mail-pf1-f195.google.com ([209.85.210.195]:43511 "EHLO
-        mail-pf1-f195.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726296AbeLREHW (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Mon, 17 Dec 2018 23:07:22 -0500
-Received: by mail-pf1-f195.google.com with SMTP id w73so7447450pfk.10;
-        Mon, 17 Dec 2018 20:07:22 -0800 (PST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20161025;
-        h=from:to:cc:subject:date:message-id:in-reply-to:references
-         :mime-version:content-transfer-encoding;
-        bh=o9euarsav/I7Ly8L1DuHInXCM/cMkfcijwQSR5z4WR0=;
-        b=BY7OvDO0YnvIy3hULxANFR+Bzce9L6Ut8av2NnQXxImslaVZPFgL2GzuAIKb/LVYyC
-         34t+nJXN/wSnpVP2YaLxvA+3P1s4lFhE+B+7fZWEX/sRv50q/79j6SmRym5oaveFP41Z
-         oorZ1KNd8tJfIpIqVCQ8z4wyzY1TrKvEMSelnId6ym+HIHpuq4RIKzuqQjtnJWss1ikU
-         /mrffje+4uMhnI8oKrJJ3ivPJf5qV9rYr28brKyK+lpfPmyBnrBviL5lBsk47rsUuL0H
-         nNwNttCG2ibhHIp73dwnK5VkD1nZQNE4StH8dw5e5cWAtk2giRfXPoIIUrEJHs5yMiW3
-         80Jw==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20161025;
-        h=x-gm-message-state:from:to:cc:subject:date:message-id:in-reply-to
-         :references:mime-version:content-transfer-encoding;
-        bh=o9euarsav/I7Ly8L1DuHInXCM/cMkfcijwQSR5z4WR0=;
-        b=hPecRDQlCwyVwj46abrnaDAG5ZHgUB69LlygV7VDy7hHXWL9hmq9jr8xvbRjCAOoYQ
-         3hId2+gbb6Tm4X78uaf1+ep0Hv+nB7vOM/+Y4ggeEsgqmv1t7OtrJBKg3lkMXnHHvWko
-         dr4bgxxdGgNNXL2FWlV44vbpnWdO8+MychrZs7jwRv3UhgVgwo8hBHFVA2Dr2h3+n+ts
-         BkYeVnMQ4SPNwtdWH30LZT+2MBqwge9oo7BH3HCLHy+ud7Wl/cNIQwEItdowfDBaS8d0
-         BrhF4rpvLS3+fW5M5SivVOBamOlbtlQCwu8mthQdjSw83CABIOIsHxnKTiLqGqjb0aax
-         OwGA==
-X-Gm-Message-State: AA+aEWY+17v05+kgE0dUO+W8sRcjRMz6QWZkmWCwuvYaiZkq8O8jzkTQ
-        qO8WZYn37mCGAZ3iyt4OC9Q=
-X-Google-Smtp-Source: AFSGD/UJPXqBPh57W/mpOqwRodEIpJUrnFqZbtvqtWtO2XEwvM5iDrNaa5m3DULCPJWxRZtGqosK3Q==
-X-Received: by 2002:a65:6684:: with SMTP id b4mr14520076pgw.55.1545106041828;
-        Mon, 17 Dec 2018 20:07:21 -0800 (PST)
-Received: from squirtle.lan (c-24-22-235-96.hsd1.wa.comcast.net. [24.22.235.96])
-        by smtp.gmail.com with ESMTPSA id m67sm18538837pfm.73.2018.12.17.20.07.20
-        (version=TLS1_2 cipher=ECDHE-RSA-CHACHA20-POLY1305 bits=256/256);
-        Mon, 17 Dec 2018 20:07:20 -0800 (PST)
-From:   Andrey Smirnov <andrew.smirnov@gmail.com>
-To:     Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
-Cc:     Andrey Smirnov <andrew.smirnov@gmail.com>,
-        Bjorn Helgaas <bhelgaas@google.com>,
-        Fabio Estevam <fabio.estevam@nxp.com>,
-        Chris Healy <cphealy@gmail.com>,
-        Lucas Stach <l.stach@pengutronix.de>,
-        Leonard Crestez <leonard.crestez@nxp.com>,
-        "A.s. Dong" <aisheng.dong@nxp.com>,
-        Richard Zhu <hongxing.zhu@nxp.com>, linux-imx@nxp.com,
-        linux-arm-kernel@lists.infradead.org, linux-kernel@vger.kernel.org,
-        linux-pci@vger.kernel.org, Stefan Agner <stefan@agner.ch>
-Subject: [PATCH v3 1/3] PCI: imx6: introduce drvdata
-Date:   Mon, 17 Dec 2018 20:07:00 -0800
-Message-Id: <20181218040702.29231-2-andrew.smirnov@gmail.com>
-X-Mailer: git-send-email 2.19.1
-In-Reply-To: <20181218040702.29231-1-andrew.smirnov@gmail.com>
-References: <20181218040702.29231-1-andrew.smirnov@gmail.com>
+        id S1726312AbeLRETZ (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Mon, 17 Dec 2018 23:19:25 -0500
+Received: from mail-eopbgr60063.outbound.protection.outlook.com ([40.107.6.63]:3763
+        "EHLO EUR04-DB3-obe.outbound.protection.outlook.com"
+        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+        id S1726305AbeLRETY (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Mon, 17 Dec 2018 23:19:24 -0500
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=nxp.com; s=selector1;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
+ bh=hzI/nCuz55bqfsFMtFiv9Uqea3bAyZwK7ksZppW6xnw=;
+ b=nHe/d31Q38a+rt4m1MNGAUBs9Xc4KQvob/4D2GfUALDYrmLmXDFRveB7XXJriXZ5JRoLu34geHvIC++xCjCqi0F4TUbVdKR8Qv6AOSl0UzvAutFUT6Fa2EyRZeze+7TRvlx+Zuc1r5xNqlokZ1sca+guIDtPRT6MhnUBUApQJFU=
+Received: from AM6PR04MB5781.eurprd04.prod.outlook.com (20.179.2.80) by
+ AM6PR04MB4102.eurprd04.prod.outlook.com (52.135.167.160) with Microsoft SMTP
+ Server (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
+ 15.20.1425.20; Tue, 18 Dec 2018 04:19:20 +0000
+Received: from AM6PR04MB5781.eurprd04.prod.outlook.com
+ ([fe80::4d2e:cf15:fcf7:56b2]) by AM6PR04MB5781.eurprd04.prod.outlook.com
+ ([fe80::4d2e:cf15:fcf7:56b2%5]) with mapi id 15.20.1446.015; Tue, 18 Dec 2018
+ 04:19:20 +0000
+From:   "Z.q. Hou" <zhiqiang.hou@nxp.com>
+To:     "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+        "devicetree@vger.kernel.org" <devicetree@vger.kernel.org>,
+        "linux-arm-kernel@lists.infradead.org" 
+        <linux-arm-kernel@lists.infradead.org>,
+        "shawnguo@kernel.org" <shawnguo@kernel.org>,
+        "robh+dt@kernel.org" <robh+dt@kernel.org>,
+        "bhelgaas@google.com" <bhelgaas@google.com>,
+        "lorenzo.pieralisi@arm.com" <lorenzo.pieralisi@arm.com>,
+        "jingoohan1@gmail.com" <jingoohan1@gmail.com>,
+        "gustavo.pimentel@synopsys.com" <gustavo.pimentel@synopsys.com>,
+        Leo Li <leoyang.li@nxp.com>
+CC:     Roy Zang <roy.zang@nxp.com>, Mingkai Hu <mingkai.hu@nxp.com>,
+        "M.h. Lian" <minghuan.lian@nxp.com>,
+        "Z.q. Hou" <zhiqiang.hou@nxp.com>
+Subject: [PATCHv3 0/5] PCI: dwc: add prefetchable memory range support
+Thread-Topic: [PATCHv3 0/5] PCI: dwc: add prefetchable memory range support
+Thread-Index: AQHUlojZXjFwizzZ+EOqT/t43p0paw==
+Date:   Tue, 18 Dec 2018 04:19:20 +0000
+Message-ID: <20181218041956.41809-1-Zhiqiang.Hou@nxp.com>
+Accept-Language: zh-CN, en-US
+Content-Language: en-US
+X-MS-Has-Attach: 
+X-MS-TNEF-Correlator: 
+x-clientproxiedby: HK0PR03CA0075.apcprd03.prod.outlook.com
+ (2603:1096:203:72::15) To AM6PR04MB5781.eurprd04.prod.outlook.com
+ (2603:10a6:20b:aa::16)
+x-ms-exchange-messagesentrepresentingtype: 1
+x-originating-ip: [119.31.174.73]
+x-ms-publictraffictype: Email
+x-microsoft-exchange-diagnostics: 1;AM6PR04MB4102;6:gNkM5LH9GKoBBDq0J84EQXGydUF8UA3XgUU8xQG4WIy/moRXcRVsjekf+iIMzsscp64ma+Soy6Wb/RzvQRp5E+Lvewanuwj9fxk9TvS10IgSm5Q+IrvKrjwboRx6W9z+ijHluRNfiYRtB5Vx6BBNYiRKQqm+jBRQ8K+s30v1ADybfqux3y2EullB9XpgXwpvr/VddwrbPcHqmEZJOFuxPCDjlIGy3KktQvmuLG14hDCzGoWbzq10sUzbxwYZd2ZXIcsoypICkvtM5s2B5t3N8ThjfwI7p3W+J5gBO/lkI9UzkvVEI7NQjcotV2rfZtmU9Eo2SqmAUFoBi7+dGmBuo5kJt2R5UkqTZxiH/b+OxPr+lMRKCqu2IAREj4LwwED/L40a9ZoORd34RFQFkzLzHURoLx0tuTNg1877RwV5UgUg0CaaUbVDlHxeIvNpaD164vQ+mK7noBYhQDbD6+C7dg==;5:cbyPpqoDTltITp660hUTerdYNo+O7fnuBgiF3rnjE4ftVDWa1SsUCE5I+QVqLxoVs8cJXKksDL5C1ZPdMBfsMbluw77mjGqX8aIfugyWEPZmtkCZMjbF0OXHAi9HcE9MSbi08pvb4Okg5yt3eqZQWyglfBrCMP0Vy6yOop67pb4=;7:sthorJED0sVTevEFpl39dW4yhAJYo6+7YYPCbe6MlwpwmfzJ0qfwnI/fuIpibkh3h5jW5Ha9NF/KJZQkXdxv1hBPqj/L7af6hryx2AGV0Ep6AidLxUaYBMPZPv7Giv2A41oK9TZzMjX9rTQ5ZjYEOA==
+x-ms-office365-filtering-correlation-id: f5871973-7971-4aa3-08ad-08d6649ffb60
+x-ms-office365-filtering-ht: Tenant
+x-microsoft-antispam: BCL:0;PCL:0;RULEID:(2390118)(7020095)(4652040)(8989299)(4534185)(4627221)(201703031133081)(201702281549075)(8990200)(5600074)(711020)(4618075)(2017052603328)(7153060)(7193020);SRVR:AM6PR04MB4102;
+x-ms-traffictypediagnostic: AM6PR04MB4102:
+authentication-results: spf=none (sender IP is )
+ smtp.mailfrom=zhiqiang.hou@nxp.com; 
+x-microsoft-antispam-prvs: <AM6PR04MB41023C11268A593800E6DB7284BD0@AM6PR04MB4102.eurprd04.prod.outlook.com>
+x-ms-exchange-senderadcheck: 1
+x-exchange-antispam-report-cfa-test: BCL:0;PCL:0;RULEID:(8211001083)(3230021)(999002)(5005020)(6040522)(2401047)(8121501046)(93006095)(93001095)(3231475)(944501520)(52105112)(3002001)(10201501046)(6055026)(148016)(149066)(150057)(6041310)(201703131423095)(201702281528075)(20161123555045)(201703061421075)(201703061406153)(20161123562045)(20161123564045)(20161123558120)(20161123560045)(201708071742011)(7699051)(76991095);SRVR:AM6PR04MB4102;BCL:0;PCL:0;RULEID:;SRVR:AM6PR04MB4102;
+x-forefront-prvs: 08902E536D
+x-forefront-antispam-report: SFV:NSPM;SFS:(10009020)(39860400002)(366004)(396003)(136003)(346002)(376002)(199004)(189003)(52116002)(7736002)(97736004)(7416002)(68736007)(25786009)(4326008)(36756003)(316002)(106356001)(102836004)(6636002)(105586002)(99286004)(2616005)(71200400001)(486006)(305945005)(186003)(6506007)(386003)(110136005)(54906003)(6486002)(1076003)(5660300001)(71190400001)(476003)(26005)(2501003)(2906002)(2201001)(86362001)(6436002)(256004)(3846002)(6116002)(39060400002)(81166006)(66066001)(8936002)(81156014)(8676002)(478600001)(6512007)(53936002)(14454004)(921003)(1121003);DIR:OUT;SFP:1101;SCL:1;SRVR:AM6PR04MB4102;H:AM6PR04MB5781.eurprd04.prod.outlook.com;FPR:;SPF:None;LANG:en;PTR:InfoNoRecords;A:1;MX:1;
+received-spf: None (protection.outlook.com: nxp.com does not designate
+ permitted sender hosts)
+x-microsoft-antispam-message-info: qkaWw/q90hSnwmozUg15vzOC9++v+ktdFGX5R4oRYTUK2nS/AyKts4Fz39iWyfthflUz1rhdlAY+QxDiyHzgXIPUuQy7zDtChWwrxk5Bf63X5eKvmM5P3cpeWH0ue4AjDhbe4g+Eg2k9nfRrxlc7VXmKkqR7S1/mVA002+/tVEtIYYb2tZxZF3REurn8a8R0jJLAbiUZIIPv8dR1wXpFbLEozTA9AWav8mJCKW0e/wc40WVOfARKgN95wwI+uMK75VhmnDDLCQ9xUlY+r5yBfcP6mwX0FVw4Lr0DRalP1tAZFx8WmBnUzLdxkcuMxYqs
+spamdiagnosticoutput: 1:99
+spamdiagnosticmetadata: NSPM
+Content-Type: text/plain; charset="iso-8859-1"
+Content-Transfer-Encoding: quoted-printable
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
+X-OriginatorOrg: nxp.com
+X-MS-Exchange-CrossTenant-Network-Message-Id: f5871973-7971-4aa3-08ad-08d6649ffb60
+X-MS-Exchange-CrossTenant-originalarrivaltime: 18 Dec 2018 04:19:20.6411
+ (UTC)
+X-MS-Exchange-CrossTenant-fromentityheader: Hosted
+X-MS-Exchange-CrossTenant-id: 686ea1d3-bc2b-4c6f-a92c-d99c5c301635
+X-MS-Exchange-Transport-CrossTenantHeadersStamped: AM6PR04MB4102
 Sender: linux-pci-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-Introduce driver data struct. This will simplify handling of device
-specific differences.
+From: Hou Zhiqiang <Zhiqiang.Hou@nxp.com>
 
-Cc: Bjorn Helgaas <bhelgaas@google.com>
-Cc: Fabio Estevam <fabio.estevam@nxp.com>
-Cc: Chris Healy <cphealy@gmail.com>
-Cc: Lucas Stach <l.stach@pengutronix.de>
-Cc: Leonard Crestez <leonard.crestez@nxp.com>
-Cc: "A.s. Dong" <aisheng.dong@nxp.com>
-Cc: Richard Zhu <hongxing.zhu@nxp.com>
-Cc: linux-imx@nxp.com
-Cc: linux-arm-kernel@lists.infradead.org
-Cc: linux-kernel@vger.kernel.org
-Cc: linux-pci@vger.kernel.org
-Signed-off-by: Stefan Agner <stefan@agner.ch>
-Reviewed-by: Lucas Stach <l.stach@pengutronix.de>
-[andrew.smirnov@gmail.com reformatted drvdata, to simplify future diffs]
-Signed-off-by: Andrey Smirnov <andrew.smirnov@gmail.com>
----
- drivers/pci/controller/dwc/pci-imx6.c | 56 ++++++++++++++++++---------
- 1 file changed, 37 insertions(+), 19 deletions(-)
+This patch set is to add prefetchable memory range support, patch 5/5.
+Patch 1/5 and 2/5 are to initialize the number of viewport for
+layerscape PCIe.
+BTW, fix 2 bugs, see patch 3/5 and 4/5.
 
-diff --git a/drivers/pci/controller/dwc/pci-imx6.c b/drivers/pci/controller/dwc/pci-imx6.c
-index 26087b3da590..d50ed69e7a57 100644
---- a/drivers/pci/controller/dwc/pci-imx6.c
-+++ b/drivers/pci/controller/dwc/pci-imx6.c
-@@ -41,6 +41,10 @@ enum imx6_pcie_variants {
- 	IMX7D,
- };
- 
-+struct imx6_pcie_drvdata {
-+	enum imx6_pcie_variants variant;
-+};
-+
- struct imx6_pcie {
- 	struct dw_pcie		*pci;
- 	int			reset_gpio;
-@@ -53,7 +57,6 @@ struct imx6_pcie {
- 	struct reset_control	*pciephy_reset;
- 	struct reset_control	*apps_reset;
- 	struct reset_control	*turnoff_reset;
--	enum imx6_pcie_variants variant;
- 	u32			tx_deemph_gen1;
- 	u32			tx_deemph_gen2_3p5db;
- 	u32			tx_deemph_gen2_6db;
-@@ -66,6 +69,7 @@ struct imx6_pcie {
- 	struct device		*pd_pcie;
- 	/* power domain for pcie phy */
- 	struct device		*pd_pcie_phy;
-+	const struct imx6_pcie_drvdata *drvdata;
- };
- 
- /* Parameters for the waiting for PCIe PHY PLL to lock on i.MX7 */
-@@ -340,7 +344,7 @@ static void imx6_pcie_assert_core_reset(struct imx6_pcie *imx6_pcie)
- {
- 	struct device *dev = imx6_pcie->pci->dev;
- 
--	switch (imx6_pcie->variant) {
-+	switch (imx6_pcie->drvdata->variant) {
- 	case IMX7D:
- 		reset_control_assert(imx6_pcie->pciephy_reset);
- 		reset_control_assert(imx6_pcie->apps_reset);
-@@ -382,7 +386,7 @@ static int imx6_pcie_enable_ref_clk(struct imx6_pcie *imx6_pcie)
- 	struct device *dev = pci->dev;
- 	int ret = 0;
- 
--	switch (imx6_pcie->variant) {
-+	switch (imx6_pcie->drvdata->variant) {
- 	case IMX6SX:
- 		ret = clk_prepare_enable(imx6_pcie->pcie_inbound_axi);
- 		if (ret) {
-@@ -485,7 +489,7 @@ static void imx6_pcie_deassert_core_reset(struct imx6_pcie *imx6_pcie)
- 					!imx6_pcie->gpio_active_high);
- 	}
- 
--	switch (imx6_pcie->variant) {
-+	switch (imx6_pcie->drvdata->variant) {
- 	case IMX7D:
- 		reset_control_deassert(imx6_pcie->pciephy_reset);
- 		imx7d_pcie_wait_for_phy_pll_lock(imx6_pcie);
-@@ -523,7 +527,7 @@ static void imx6_pcie_deassert_core_reset(struct imx6_pcie *imx6_pcie)
- 
- static void imx6_pcie_init_phy(struct imx6_pcie *imx6_pcie)
- {
--	switch (imx6_pcie->variant) {
-+	switch (imx6_pcie->drvdata->variant) {
- 	case IMX7D:
- 		regmap_update_bits(imx6_pcie->iomuxc_gpr, IOMUXC_GPR12,
- 				   IMX7D_GPR12_PCIE_PHY_REFCLK_SEL, 0);
-@@ -645,7 +649,7 @@ static void imx6_pcie_ltssm_enable(struct device *dev)
- {
- 	struct imx6_pcie *imx6_pcie = dev_get_drvdata(dev);
- 
--	switch (imx6_pcie->variant) {
-+	switch (imx6_pcie->drvdata->variant) {
- 	case IMX6Q:
- 	case IMX6SX:
- 	case IMX6QP:
-@@ -698,7 +702,7 @@ static int imx6_pcie_establish_link(struct imx6_pcie *imx6_pcie)
- 		tmp |= PORT_LOGIC_SPEED_CHANGE;
- 		dw_pcie_writel_dbi(pci, PCIE_LINK_WIDTH_SPEED_CONTROL, tmp);
- 
--		if (imx6_pcie->variant != IMX7D) {
-+		if (imx6_pcie->drvdata->variant != IMX7D) {
- 			/*
- 			 * On i.MX7, DIRECT_SPEED_CHANGE behaves differently
- 			 * from i.MX6 family when no link speed transition
-@@ -801,7 +805,7 @@ static void imx6_pcie_ltssm_disable(struct device *dev)
- {
- 	struct imx6_pcie *imx6_pcie = dev_get_drvdata(dev);
- 
--	switch (imx6_pcie->variant) {
-+	switch (imx6_pcie->drvdata->variant) {
- 	case IMX6SX:
- 	case IMX6QP:
- 		regmap_update_bits(imx6_pcie->iomuxc_gpr, IOMUXC_GPR12,
-@@ -827,7 +831,7 @@ static void imx6_pcie_pm_turnoff(struct imx6_pcie *imx6_pcie)
- 	}
- 
- 	/* Others poke directly at IOMUXC registers */
--	switch (imx6_pcie->variant) {
-+	switch (imx6_pcie->drvdata->variant) {
- 	case IMX6SX:
- 		regmap_update_bits(imx6_pcie->iomuxc_gpr, IOMUXC_GPR12,
- 				IMX6SX_GPR12_PCIE_PM_TURN_OFF,
-@@ -857,7 +861,7 @@ static void imx6_pcie_clk_disable(struct imx6_pcie *imx6_pcie)
- 	clk_disable_unprepare(imx6_pcie->pcie_phy);
- 	clk_disable_unprepare(imx6_pcie->pcie_bus);
- 
--	switch (imx6_pcie->variant) {
-+	switch (imx6_pcie->drvdata->variant) {
- 	case IMX6SX:
- 		clk_disable_unprepare(imx6_pcie->pcie_inbound_axi);
- 		break;
-@@ -873,8 +877,8 @@ static void imx6_pcie_clk_disable(struct imx6_pcie *imx6_pcie)
- 
- static inline bool imx6_pcie_supports_suspend(struct imx6_pcie *imx6_pcie)
- {
--	return (imx6_pcie->variant == IMX7D ||
--		imx6_pcie->variant == IMX6SX);
-+	return (imx6_pcie->drvdata->variant == IMX7D ||
-+		imx6_pcie->drvdata->variant == IMX6SX);
- }
- 
- static int imx6_pcie_suspend_noirq(struct device *dev)
-@@ -939,8 +943,7 @@ static int imx6_pcie_probe(struct platform_device *pdev)
- 	pci->ops = &dw_pcie_ops;
- 
- 	imx6_pcie->pci = pci;
--	imx6_pcie->variant =
--		(enum imx6_pcie_variants)of_device_get_match_data(dev);
-+	imx6_pcie->drvdata = of_device_get_match_data(dev);
- 
- 	dbi_base = platform_get_resource(pdev, IORESOURCE_MEM, 0);
- 	pci->dbi_base = devm_ioremap_resource(dev, dbi_base);
-@@ -984,7 +987,7 @@ static int imx6_pcie_probe(struct platform_device *pdev)
- 		return PTR_ERR(imx6_pcie->pcie);
- 	}
- 
--	switch (imx6_pcie->variant) {
-+	switch (imx6_pcie->drvdata->variant) {
- 	case IMX6SX:
- 		imx6_pcie->pcie_inbound_axi = devm_clk_get(dev,
- 							   "pcie_inbound_axi");
-@@ -1082,11 +1085,26 @@ static void imx6_pcie_shutdown(struct platform_device *pdev)
- 	imx6_pcie_assert_core_reset(imx6_pcie);
- }
- 
-+static const struct imx6_pcie_drvdata drvdata[] = {
-+	[IMX6Q] = {
-+		.variant = IMX6Q,
-+	},
-+	[IMX6SX] = {
-+		.variant = IMX6SX,
-+	},
-+	[IMX6QP] = {
-+		.variant = IMX6QP,
-+	},
-+	[IMX7D] = {
-+		.variant = IMX7D,
-+	},
-+};
-+
- static const struct of_device_id imx6_pcie_of_match[] = {
--	{ .compatible = "fsl,imx6q-pcie",  .data = (void *)IMX6Q,  },
--	{ .compatible = "fsl,imx6sx-pcie", .data = (void *)IMX6SX, },
--	{ .compatible = "fsl,imx6qp-pcie", .data = (void *)IMX6QP, },
--	{ .compatible = "fsl,imx7d-pcie",  .data = (void *)IMX7D,  },
-+	{ .compatible = "fsl,imx6q-pcie",  .data = &drvdata[IMX6Q],  },
-+	{ .compatible = "fsl,imx6sx-pcie", .data = &drvdata[IMX6SX], },
-+	{ .compatible = "fsl,imx6qp-pcie", .data = &drvdata[IMX6QP], },
-+	{ .compatible = "fsl,imx7d-pcie",  .data = &drvdata[IMX7D],  },
- 	{},
- };
- 
--- 
-2.19.1
+Hou Zhiqiang (5):
+  ARM: dts: ls1021a: add num-viewport property for PCIe DT nodes
+  arm64: dts: layerscape: add num-viewport property for PCIe DT nodes
+  PCI: dwc: fix potential memory leak
+  PCI: dwc: fix 4GiB outbound window size truncated to zero issue
+  PCI: dwc: add prefetchable memory range support
+
+ arch/arm/boot/dts/ls1021a.dtsi                |   2 +
+ .../arm64/boot/dts/freescale/fsl-ls1012a.dtsi |   1 +
+ .../arm64/boot/dts/freescale/fsl-ls1043a.dtsi |   3 +
+ .../arm64/boot/dts/freescale/fsl-ls1046a.dtsi |   3 +
+ .../arm64/boot/dts/freescale/fsl-ls1088a.dtsi |   3 +
+ .../arm64/boot/dts/freescale/fsl-ls208xa.dtsi |   4 +
+ .../pci/controller/dwc/pcie-designware-host.c | 135 +++++++++++++-----
+ drivers/pci/controller/dwc/pcie-designware.c  |   4 +-
+ drivers/pci/controller/dwc/pcie-designware.h  |  11 +-
+ 9 files changed, 128 insertions(+), 38 deletions(-)
+
+--=20
+2.17.1
 
