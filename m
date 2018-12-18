@@ -2,134 +2,498 @@ Return-Path: <SRS0=EJXn=O3=vger.kernel.org=linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-2.7 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,MAILING_LIST_MULTI,SPF_PASS,USER_AGENT_MUTT
-	autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-9.1 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
+	DKIM_VALID_AU,FREEMAIL_FORGED_FROMDOMAIN,FREEMAIL_FROM,
+	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
+	SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT autolearn=unavailable
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 29B23C43387
-	for <linux-pci@archiver.kernel.org>; Tue, 18 Dec 2018 20:58:59 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id BF4F3C43387
+	for <linux-pci@archiver.kernel.org>; Tue, 18 Dec 2018 21:05:05 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id B51D6218B0
-	for <linux-pci@archiver.kernel.org>; Tue, 18 Dec 2018 20:58:58 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=default; t=1545166738;
-	bh=ZkHBouKwD9dlWFsZDfNhZAD+PkjfmWVyJxr/vmD4o/o=;
-	h=Date:From:To:Cc:Subject:References:In-Reply-To:List-ID:From;
-	b=IsahSIbkY98E++JA3W5bLEiA7lBFjpyWKZA7PmRrJH4HBVi2ZoHg0MkmnG/trQA75
-	 TcaIqSmCp+/rjWSQtKaSOIhhZ4JWG5VtMhTk2U84bZMeP6WwnmCW0oWrcCoG3KxzBe
-	 j9UU8qqIAPlfwPkjBRDFfbNq8KSKtwl94yP8ZnxI=
+	by mail.kernel.org (Postfix) with ESMTP id 62F7E217D9
+	for <linux-pci@archiver.kernel.org>; Tue, 18 Dec 2018 21:05:05 +0000 (UTC)
+Authentication-Results: mail.kernel.org;
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="eZ1dXtVz"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726451AbeLRU65 (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Tue, 18 Dec 2018 15:58:57 -0500
-Received: from mail.kernel.org ([198.145.29.99]:47142 "EHLO mail.kernel.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1726422AbeLRU65 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Tue, 18 Dec 2018 15:58:57 -0500
-Received: from localhost (unknown [69.71.4.100])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
-        (No client certificate requested)
-        by mail.kernel.org (Postfix) with ESMTPSA id 5A560217D9;
-        Tue, 18 Dec 2018 20:58:56 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=default; t=1545166736;
-        bh=ZkHBouKwD9dlWFsZDfNhZAD+PkjfmWVyJxr/vmD4o/o=;
-        h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-        b=TKd31GC7rH5MlmPAJsA+U8Ca5fFkEuSkqYnM4XjJIjmoH3KDcAqiW9HEHBlt1m4T6
-         sHbTwcg2DQQAzdUEmC/5cdNCAfBVyQlo0vM7clUzczXXxzWqrVLlk6Ocoz8GwPj4bQ
-         kHyFgC4e27OZiee0Ul7JzBwP9JVifZRD9XhRR04c=
-Date:   Tue, 18 Dec 2018 14:58:50 -0600
-From:   Bjorn Helgaas <helgaas@kernel.org>
-To:     Mika Westerberg <mika.westerberg@linux.intel.com>
-Cc:     "Rafael J. Wysocki" <rjw@rjwysocki.net>,
-        Kedar A Dongre <kedar.a.dongre@intel.com>,
-        Lukas Wunner <lukas@wunner.de>, linux-pci@vger.kernel.org,
-        linux-acpi@vger.kernel.org
-Subject: Re: [PATCH] PCI: Blacklist power management of Gigabyte X299
- DESIGNARE EX PCIe ports
-Message-ID: <20181218205850.GA12763@google.com>
-References: <20181204112048.35378-1-mika.westerberg@linux.intel.com>
- <20181217202827.GC28981@google.com>
- <20181218085518.GI2469@lahna.fi.intel.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20181218085518.GI2469@lahna.fi.intel.com>
-User-Agent: Mutt/1.10.1 (2018-07-13)
+        id S1727598AbeLRVE6 (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Tue, 18 Dec 2018 16:04:58 -0500
+Received: from mail-io1-f66.google.com ([209.85.166.66]:35573 "EHLO
+        mail-io1-f66.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1727573AbeLRVEv (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Tue, 18 Dec 2018 16:04:51 -0500
+Received: by mail-io1-f66.google.com with SMTP id o13so13922304ioh.2;
+        Tue, 18 Dec 2018 13:04:50 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20161025;
+        h=from:to:cc:subject:date:message-id;
+        bh=8j61t33t219G9enMzVJBPywie4i7NA5zZxu9ZGiF+lc=;
+        b=eZ1dXtVz2T0Biyr8K6KuXwcTb0WgL7j451SwpU9bxFzGDQfzVWWXh69sB8AERZ0sie
+         s1uIAWc+CKLh0wMDoXqn75sz/b5Xu/ZHfA5lzEwNJ7ZooFbZjPPGwQjpSdf3niF93Re2
+         HyEh/8JKKbkQZGj2IsTgZFUMiVNiLKGzCAWPzGMrg6iDv0H8Z8EO1gr2W//lwhhE3OMK
+         1Z2VzKS2It1SGFbLXByLOVmw3jKvS86UzImI8nDhGx7D1qFCaMe2Hd8YGyVsYBEdqK8w
+         m578IW8A+EIM5d3iXamlLGLs664nNp4yp7uP1SYmkitcKoortyATlFMxjslXYDETW9Xk
+         IMvA==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20161025;
+        h=x-gm-message-state:from:to:cc:subject:date:message-id;
+        bh=8j61t33t219G9enMzVJBPywie4i7NA5zZxu9ZGiF+lc=;
+        b=FSHvAh6CbFVdJWzrV5FFvNlahQUSJoFFtug50DhfZaRBCX9+qtJ5+DOq9Zm3Ahjt0o
+         MPA2OHYkrl0PBF6LKxlDqUa4AY3gdlZ5rO8WlkUsxdEiw4ZZwxIar+M44qsVK9+gEv+1
+         vkXsREeCWA6gGP/SOze2oTzipand9qpcXyADHTDH2+6sa0IYl8CjAJFVc7ltkP4WmYUf
+         /SEe9Z9j7UBAXxrGr3FHCNKsCPcUjpGaqpw9lSu2o1+tyXpSfj/AVC+gaMdkT9wn23iQ
+         70w5RXKsywv8pguhpEzqlY35kmsC8CfRDWY0rwb+eDFc4tG3dr6+nCBpxK20mAiEbmyB
+         CgvQ==
+X-Gm-Message-State: AA+aEWaFMs7AnsNqB9+DuD0hDCQw13BMqzV2WBdXHWC7Be54HyS0DvqS
+        sMCCFsmptTrkuKCnb8x+H3E=
+X-Google-Smtp-Source: AFSGD/W4jPe7rsbrTnfY2EyN0IQOB7wpilNwEi5ryhOsLWLiOEJ2zuD/9w9IVTEhw59SFzngWVY2Jw==
+X-Received: by 2002:a5d:97cf:: with SMTP id k15mr7738739ios.209.1545167088777;
+        Tue, 18 Dec 2018 13:04:48 -0800 (PST)
+Received: from svens-asus.arcx.com ([184.94.50.30])
+        by smtp.gmail.com with ESMTPSA id o21sm7603609ioa.71.2018.12.18.13.04.47
+        (version=TLS1_2 cipher=ECDHE-RSA-AES128-GCM-SHA256 bits=128/128);
+        Tue, 18 Dec 2018 13:04:48 -0800 (PST)
+From:   Sven Van Asbroeck <thesven73@gmail.com>
+X-Google-Original-From: Sven Van Asbroeck <TheSven73@googlemail.com>
+To:     Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
+        Bjorn Helgaas <bhelgaas@google.com>,
+        Niklas Cassel <niklas.cassel@axis.com>,
+        Kishon Vijay Abraham I <kishon@ti.com>,
+        Gustavo Pimentel <gustavo.pimentel@synopsys.com>,
+        Shawn Lin <shawn.lin@rock-chips.com>
+Cc:     linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org
+Subject: [RFC BUG] pci: Freescale i.MX6 PCIe controller: revert mainline regression
+Date:   Tue, 18 Dec 2018 16:04:44 -0500
+Message-Id: <20181218210444.5950-1-TheSven73@googlemail.com>
+X-Mailer: git-send-email 2.17.1
 Sender: linux-pci-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-On Tue, Dec 18, 2018 at 10:55:18AM +0200, Mika Westerberg wrote:
-> On Mon, Dec 17, 2018 at 02:28:27PM -0600, Bjorn Helgaas wrote:
-> > On Tue, Dec 04, 2018 at 02:20:48PM +0300, Mika Westerberg wrote:
-> > > Gigabyte X299 DESIGNARE EX motherboard has one PCIe root port that is
-> > > connected to an Alpine Ridge Thunderbolt controller. This port has slot
-> > > implemented bit set in the config space but other than that it is not
-> > > hotplug capable in the sense we are expecting in Linux (it has
-> > > dev->is_hotplug_bridge set to 0):
-> > > 
-> > > 00:1c.4 PCI bridge: Intel Corporation 200 Series PCH PCI Express Root Port #5
-> > >         Bus: primary=00, secondary=05, subordinate=46, sec-latency=0
-> > >         Memory behind bridge: 78000000-8fffffff [size=384M]
-> > >         Prefetchable memory behind bridge: 00003800f8000000-00003800ffffffff [size=128M]
-> > >         ...
-> > >         Capabilities: [40] Express (v2) Root Port (Slot+), MSI 00
-> > >         ...
-> > >                 SltCap: AttnBtn- PwrCtrl- MRL- AttnInd- PwrInd- HotPlug- Surprise-
-> > >                         Slot #8, PowerLimit 25.000W; Interlock- NoCompl+
-> > >                 SltCtl: Enable: AttnBtn- PwrFlt- MRL- PresDet- CmdCplt- HPIrq- LinkChg-
-> > >                         Control: AttnInd Unknown, PwrInd Unknown, Power- Interlock-
-> > >                 SltSta: Status: AttnBtn- PowerFlt- MRL- CmdCplt- PresDet- Interlock-
-> > >                         Changed: MRL- PresDet+ LinkState+
-> > > 
-> > > This system is using ACPI based hotplug to notify the OS that it needs
-> > > to rescan the PCI bus (ACPI hotplug).
-> > > 
-> > > If there is nothing connected in any of the Thunderbolt ports the root
-> > > port will not have any runtime PM active children and is thus
-> > > automatically runtime suspended pretty soon after boot by PCI PM core.
-> > > Now, when a device is connected the BIOS SMI handler responsible for
-> > > enumerating newly added devices is not able to find anything because the
-> > > port is in D3.
-> > 
-> > Ugh.  I don't see how this is a maintainable solution.  Are we going
-> > to have to just update this blacklist empirically as we get reports of
-> > systems that are "broken"?
-> 
-> I was hoping not but for that we would need to have some means to
-> identify these. What you suggest below might be one way to avoid adding
-> the blacklist.
-> 
-> > I say "broken" because I don't think we can point to anything here
-> > that doesn't conform to the specs, so maybe we tripped over something
-> > that *should* be covered in the spec, or maybe we're just not
-> > interpreting something correctly.
-> 
-> That is indeed possible.
-> 
-> > For example, it looks like PCI_EXP_FLAGS_SLOT is set, but Linux
-> > basically ignores it.  Maybe if PCI_EXP_FLAGS_SLOT is set but we
-> > aren't using pciehp, we should assume any hotplug would be handled via
-> > acpiphp?  And in that case, we should avoid doing anything that would
-> > prevent platform firmware from enumerating things below the bridge?
-> 
-> I don't see why that would not work. This could cause "power regression"
-> on some systems but I think that's better than systems that do not work
-> at all.
+We are using a Broadcom BCM57780 ethernet adapter (Tigon3) connected
+to a i.MX6 PCIe controller. On a Freescale i.MX6 SoC.
 
-Yeah, I think that would be better, assuming it wouldn't cause a flood
-of power regressions.  I'd even rather have a whitelist of systems
-where we use acpiphp and it's safe to do power management.
+This combo worked ok on mainline v4.17.
+On mainline v4.18-rc1, a regression was introduced that caused a crash.
+This regression is still present in current mainline as of v4.20-rc7
 
-> > Is there a bugzilla or any other URL we could include here to help with
-> > future changes in this area?
-> 
-> No, this was reported internally.
-> 
-> I can file one if you think it is helpful.
+Bisected the regression to the following merge head:
+commit 0ecda3a08746 ("Merge branch 'pci/kconfig'")
+When this merge head is removed, the regression disappears. This commit
+reverts the changes introduced by the offending merge head.
 
-I think a kernel.org bugzilla that archived the "lspci -vv", a dmesg
-log, and an acpidump might be helpful.
+Crash message:
 
-Bjorn
+<insert live network cable into Broadcom Tigon3 NIC>
+
+[   18.249814] tg3 0000:03:00.0 eth20: Link is up at 1000 Mbps, full duplex
+[   18.256589] tg3 0000:03:00.0 eth20: Flow control is on for TX and on for RX
+[   18.263856] IPv6: ADDRCONF(NETDEV_CHANGE): eth20: link becomes ready
+
+<wait ~5s>
+
+[   28.088219] ------------[ cut here ]------------
+[   28.093349] WARNING: CPU: 0 PID: 0 at net/sched/sch_generic.c:461 dev_watchdog+0x27c/0x29c
+[   28.101693] NETDEV WATCHDOG: eth20 (tg3): transmit queue 0 timed out
+[   28.108110] Modules linked in:
+[   28.111236] CPU: 0 PID: 0 Comm: swapper/0 Not tainted 4.17.0-07573-g8690f53b2719 #92
+[   28.118993] Hardware name: Freescale i.MX6 Quad/DualLite (Device Tree)
+[   28.125533] Backtrace:
+[   28.128012] [<c010d14c>] (dump_backtrace) from [<c010d41c>] (show_stack+0x18/0x1c)
+[   28.135595]  r7:00000000 r6:600f0113 r5:00000000 r4:c107d53c
+[   28.141276] [<c010d404>] (show_stack) from [<c0a6a5d0>] (dump_stack+0xb4/0xec)
+[   28.148519] [<c0a6a51c>] (dump_stack) from [<c0126d58>] (__warn+0xe0/0x10c)
+[   28.155496]  r10:ec57b440 r9:c08686b4 r8:000001cd r7:00000009 r6:c0dbbb80 r5:00000000
+[   28.163337]  r4:c1001c8c r3:96a0b125
+[   28.166930] [<c0126c78>] (__warn) from [<c0126dd0>] (warn_slowpath_fmt+0x4c/0x6c)
+[   28.174428]  r9:ffffffff r8:c1005900 r7:ec496254 r6:ec496000 r5:c0dbbb44 r4:c1008908
+[   28.182189] [<c0126d88>] (warn_slowpath_fmt) from [<c08686b4>] (dev_watchdog+0x27c/0x29c)
+[   28.190377]  r3:ec496000 r2:c0dbbb44
+[   28.193965]  r5:ec49627c r4:00000000
+[   28.197566] [<c0868438>] (dev_watchdog) from [<c0198ea4>] (call_timer_fn+0x7c/0x120)
+[   28.205325]  r10:c0868438 r9:00000100 r8:ec49627c r7:c1008908 r6:00000001 r5:ffffe000
+[   28.213165]  r4:c1001d04
+[   28.215716] [<c0198e28>] (call_timer_fn) from [<c0198fd8>] (expire_timers+0x90/0x9c)
+[   28.223473]  r10:40000001 r9:c0868438 r8:00000000 r7:00000200 r6:c1001d74 r5:eef92500
+[   28.231312]  r4:ec49627c
+[   28.233863] [<c0198f48>] (expire_timers) from [<c0199334>] (run_timer_softirq+0xf4/0x1d4)
+[   28.242054]  r9:c1008a90 r8:c1001d70 r7:eef92500 r6:c1008908 r5:c1005900 r4:c1001d70
+[   28.249816] [<c0199240>] (run_timer_softirq) from [<c01022e0>] (__do_softirq+0xf8/0x2d4)
+[   28.257923]  r9:00000100 r8:c1003080 r7:c1003084 r6:ffffe000 r5:00000001 r4:00000020
+[   28.265687] [<c01021e8>] (__do_softirq) from [<c012ca40>] (irq_exit+0x100/0x1a0)
+[   28.273097]  r10:c1027f70 r9:ec008400 r8:00000001 r7:00000000 r6:c1008a90 r5:00000000
+[   28.280936]  r4:ffffe000
+[   28.283492] [<c012c940>] (irq_exit) from [<c01830f0>] (__handle_domain_irq+0x74/0xe8)
+[   28.291333]  r5:00000000 r4:c0f8206c
+[   28.294930] [<c018307c>] (__handle_domain_irq) from [<c046c558>] (gic_handle_irq+0x60/0xc4)
+[   28.303296]  r9:c1001e80 r8:c1008cbc r7:f4000100 r6:000003ff r5:000003eb r4:f400010c
+[   28.311055] [<c046c4f8>] (gic_handle_irq) from [<c0101a30>] (__irq_svc+0x70/0x98)
+[   28.318550] Exception stack(0xc1001e80 to 0xc1001ec8)
+[   28.323618] 1e80: 00000001 00000001 00000000 c100bfc0 ffffe000 c100892c 00000000 eef95978
+[   28.331811] 1ea0: 8a2e347f 6dd05e8c 00000006 c1001f04 00000000 c1001ed0 c0174d94 c0746684
+[   28.339999] 1ec0: 200f0013 ffffffff
+[   28.343506]  r10:00000006 r9:c1000000 r8:8a2e347f r7:c1001eb4 r6:ffffffff r5:200f0013
+[   28.351346]  r4:c0746684
+[   28.353903] [<c074650c>] (cpuidle_enter_state) from [<c0746860>] (cpuidle_enter+0x1c/0x20)
+[   28.362183]  r10:c1008908 r9:c100f050 r8:eef95978 r7:c100896c r6:00000001 r5:c100892c
+[   28.370022]  r4:ffffe000
+[   28.372578] [<c0746844>] (cpuidle_enter) from [<c01582d8>] (call_cpuidle+0x28/0x44)
+[   28.380252] [<c01582b0>] (call_cpuidle) from [<c01586a0>] (do_idle+0x228/0x2bc)
+[   28.387579] [<c0158478>] (do_idle) from [<c0158ae8>] (cpu_startup_entry+0x20/0x28)
+[   28.395162]  r10:c0f63a4c r9:c1008908 r8:c107f1c0 r7:c1008900 r6:c107f1c0 r5:00000002
+[   28.403002]  r4:000000c2
+[   28.405559] [<c0158ac8>] (cpu_startup_entry) from [<c0a7eb34>] (rest_init+0x214/0x260)
+[   28.413499] [<c0a7e920>] (rest_init) from [<c0f00d50>] (start_kernel+0x390/0x41c)
+[   28.420993]  r5:ffffffff r4:c107f218
+[   28.424585] [<c0f009c0>] (start_kernel) from [<00000000>] (  (null))
+[   28.430982] irq event stamp: 299956
+[   28.434494] hardirqs last  enabled at (299964): [<c01806ac>] console_unlock+0x3e8/0x4f8
+[   28.442525] hardirqs last disabled at (299973): [<c0101a20>] __irq_svc+0x60/0x98
+[   28.449950] softirqs last  enabled at (299900): [<c012c29c>] _local_bh_enable+0x2c/0x60
+[   28.457979] softirqs last disabled at (299901): [<c012ca40>] irq_exit+0x100/0x1a0
+[   28.465481] ---[ end trace d201cd44842cd366 ]---
+[   28.470127] tg3 0000:03:00.0 eth20: transmit timed out, resetting
+[   30.446049] tg3 0000:03:00.0 eth20: 0x00000000: 0x169214e4, 0x00180146, 0x02000001, 0x00000010
+[   30.454703] tg3 0000:03:00.0 eth20: 0x00000010: 0x01100004, 0x00000000, 0x00000000, 0x00000000
+[   30.463341] tg3 0000:03:00.0 eth20: 0x00000020: 0x00000000, 0x00000000, 0x00000000, 0x969214e4
+[   30.471977] tg3 0000:03:00.0 eth20: 0x00000030: 0x00000000, 0x00000048, 0x00000000, 0x00000134
+[   30.480613] tg3 0000:03:00.0 eth20: 0x00000040: 0x00000000, 0x00000000, 0xc0036001, 0x08002008
+[   30.489249] tg3 0000:03:00.0 eth20: 0x00000050: 0x0080cc05, 0x00000000, 0x00000000, 0x00000000
+[   30.497884] tg3 0000:03:00.0 eth20: 0x00000060: 0x006c5009, 0xad29c367, 0xf0010298, 0x76180000
+[   30.506519] tg3 0000:03:00.0 eth20: 0x00000070: 0x000010f0, 0x00000000, 0x00000000, 0x00000000
+[   30.515154] tg3 0000:03:00.0 eth20: 0x00000080: 0x169214e4, 0x4000000e, 0x00000000, 0x00000000
+[   30.523788] tg3 0000:03:00.0 eth20: 0x000000b0: 0x00000000, 0x00000000, 0x00000000, 0x57780001
+[   30.532422] tg3 0000:03:00.0 eth20: 0x000000c0: 0x00000000, 0x00000000, 0x0000800e, 0x00020010
+[   30.541057] tg3 0000:03:00.0 eth20: 0x000000d0: 0x00008fa0, 0x00102100, 0x0006cc11, 0x10110000
+[   30.549691] tg3 0000:03:00.0 eth20: 0x000000f0: 0x0000001f, 0x00000000, 0x00000000, 0x00000000
+[   30.558325] tg3 0000:03:00.0 eth20: 0x00000100: 0x13c10001, 0x00000000, 0x00000000, 0x00062031
+[   30.566959] tg3 0000:03:00.0 eth20: 0x00000110: 0x00000000, 0x00002000, 0x000000a0, 0x00000000
+[   30.575595] tg3 0000:03:00.0 eth20: 0x00000130: 0x00000000, 0x00000000, 0x00000000, 0x16010002
+[   30.584230] tg3 0000:03:00.0 eth20: 0x00000150: 0x800000ff, 0x00000000, 0x00000000, 0x00000000
+[   30.592868] tg3 0000:03:00.0 eth20: 0x00000160: 0x16c10003, 0xfe000000, 0x001018ff, 0x00010004
+[   30.601502] tg3 0000:03:00.0 eth20: 0x00000170: 0x00000000, 0x00078116, 0x00000001, 0x00000000
+[   30.610138] tg3 0000:03:00.0 eth20: 0x00000180: 0x00000000, 0x00000000, 0x00000000, 0xffffffff
+[   30.618773] tg3 0000:03:00.0 eth20: 0x00000260: 0x00000000, 0x00000000, 0x00000000, 0x000000c8
+[   30.627410] tg3 0000:03:00.0 eth20: 0x00000300: 0x00000000, 0x00000001, 0x00000000, 0x00000001
+[   30.636045] tg3 0000:03:00.0 eth20: 0x00000310: 0x00000000, 0x00000001, 0x00000000, 0x00000001
+[   30.644680] tg3 0000:03:00.0 eth20: 0x00000320: 0x00000000, 0x00000001, 0x00000000, 0x00000001
+[   30.653316] tg3 0000:03:00.0 eth20: 0x00000330: 0x00000000, 0x00000001, 0x00000000, 0x00000001
+[   30.661951] tg3 0000:03:00.0 eth20: 0x00000340: 0x00000000, 0x00000001, 0x00000000, 0x00000001
+[   30.670585] tg3 0000:03:00.0 eth20: 0x00000350: 0x00000000, 0x00000001, 0x00000000, 0x00000001
+[   30.679222] tg3 0000:03:00.0 eth20: 0x00000360: 0x00000000, 0x00000001, 0x00000000, 0x00000001
+[   30.687857] tg3 0000:03:00.0 eth20: 0x00000370: 0x00000000, 0x00000001, 0x00000000, 0x00000001
+[   30.696491] tg3 0000:03:00.0 eth20: 0x00000380: 0x00000000, 0x00000001, 0x00000000, 0x00000001
+[   30.705126] tg3 0000:03:00.0 eth20: 0x00000390: 0x00000000, 0x00000001, 0x00000000, 0x00000001
+[   30.713761] tg3 0000:03:00.0 eth20: 0x000003a0: 0x00000000, 0x00000001, 0x00000000, 0x00000001
+[   30.722396] tg3 0000:03:00.0 eth20: 0x000003b0: 0x00000000, 0x00000001, 0x00000000, 0x00000001
+[   30.731032] tg3 0000:03:00.0 eth20: 0x000003c0: 0x00000000, 0x00000001, 0x00000000, 0x00000001
+[   30.739667] tg3 0000:03:00.0 eth20: 0x000003d0: 0x00000000, 0x00000001, 0x00000000, 0x00000001
+[   30.748300] tg3 0000:03:00.0 eth20: 0x000003e0: 0x00000000, 0x00000001, 0x00000000, 0x00000001
+[   30.756934] tg3 0000:03:00.0 eth20: 0x000003f0: 0x00000000, 0x00000001, 0x00000000, 0x00000001
+[   30.765568] tg3 0000:03:00.0 eth20: 0x00000400: 0x00e04808, 0x00401000, 0x00000000, 0x00000880
+[   30.774202] tg3 0000:03:00.0 eth20: 0x00000410: 0x00000010, 0x18000000, 0x00000010, 0x18000000
+[   30.782837] tg3 0000:03:00.0 eth20: 0x00000420: 0x00000010, 0x18000000, 0x00000010, 0x18000000
+[   30.791473] tg3 0000:03:00.0 eth20: 0x00000430: 0x00000000, 0x00000000, 0x00000295, 0x000005f2
+[   30.800106] tg3 0000:03:00.0 eth20: 0x00000440: 0x00000000, 0x00000000, 0x00000000, 0x08240de1
+[   30.808741] tg3 0000:03:00.0 eth20: 0x00000450: 0x00000001, 0x00008000, 0x00000000, 0x00000112
+[   30.817377] tg3 0000:03:00.0 eth20: 0x00000460: 0x00000008, 0x00002620, 0x01000406, 0x00000000
+[   30.826014] tg3 0000:03:00.0 eth20: 0x00000470: 0x80000000, 0x00000000, 0x00000000, 0x41000000
+[   30.834648] tg3 0000:03:00.0 eth20: 0x00000480: 0x42000000, 0x7fffffff, 0x06000004, 0x7fffffff
+[   30.843285] tg3 0000:03:00.0 eth20: 0x00000500: 0x00000008, 0x00000002, 0x00000000, 0x00000000
+[   30.851920] tg3 0000:03:00.0 eth20: 0x00000590: 0x00900111, 0x00000000, 0x00000000, 0x00000000
+[   30.860555] tg3 0000:03:00.0 eth20: 0x00000600: 0xffffffff, 0x00f80011, 0x00000000, 0x00001f04
+[   30.869189] tg3 0000:03:00.0 eth20: 0x00000610: 0xffffffff, 0x00000000, 0x07c00004, 0xa3848000
+[   30.877822] tg3 0000:03:00.0 eth20: 0x00000620: 0x000006a1, 0x00000000, 0x00000000, 0x00000000
+[   30.886458] tg3 0000:03:00.0 eth20: 0x00000800: 0x00000000, 0xffffffff, 0x00000000, 0x00000000
+[   30.895092] tg3 0000:03:00.0 eth20: 0x00000810: 0x00000000, 0xffffffff, 0x00000000, 0x00000000
+[   30.903727] tg3 0000:03:00.0 eth20: 0x00000820: 0x00000000, 0x00000000, 0xffffffff, 0x00000000
+[   30.912361] tg3 0000:03:00.0 eth20: 0x00000830: 0x00000000, 0xffffffff, 0xffffffff, 0xffffffff
+[   30.920997] tg3 0000:03:00.0 eth20: 0x00000840: 0xffffffff, 0xffffffff, 0xffffffff, 0xffffffff
+[   30.929631] tg3 0000:03:00.0 eth20: 0x00000850: 0xffffffff, 0xffffffff, 0xffffffff, 0xffffffff
+[   30.938266] tg3 0000:03:00.0 eth20: 0x00000860: 0xffffffff, 0xffffffff, 0xffffffff, 0x00000000
+[   30.946899] tg3 0000:03:00.0 eth20: 0x00000880: 0x00000000, 0x000008b4, 0x00000000, 0x00000000
+[   30.955534] tg3 0000:03:00.0 eth20: 0x000008f0: 0x00000001, 0x00000000, 0x00000000, 0x00000000
+[   30.964171] tg3 0000:03:00.0 eth20: 0x00000c00: 0x0000000a, 0x00000000, 0x00000003, 0x00000001
+[   30.972806] tg3 0000:03:00.0 eth20: 0x00000c10: 0x00000000, 0x00000000, 0x00000000, 0x005a0000
+[   30.981441] tg3 0000:03:00.0 eth20: 0x00000c80: 0x00000001, 0x00000000, 0x00000000, 0x00000000
+[   30.990075] tg3 0000:03:00.0 eth20: 0x00000ce0: 0x3c57f002, 0x00000000, 0x0000005a, 0x00040028
+[   30.998709] tg3 0000:03:00.0 eth20: 0x00000cf0: 0x00000000, 0x50000001, 0x00000000, 0x00000000
+[   31.007345] tg3 0000:03:00.0 eth20: 0x00001000: 0x00000002, 0x00000000, 0xa0000001, 0x00000000
+[   31.015979] tg3 0000:03:00.0 eth20: 0x00001010: 0x00010010, 0x00000001, 0x00000000, 0x00000000
+[   31.024617] tg3 0000:03:00.0 eth20: 0x00001400: 0x00000006, 0x00000000, 0x00000000, 0x00000000
+[   31.033252] tg3 0000:03:00.0 eth20: 0x00001440: 0x00000001, 0x00000001, 0x00000001, 0x00000001
+[   31.041886] tg3 0000:03:00.0 eth20: 0x00001450: 0x00000001, 0x00000001, 0x00000001, 0x00000001
+[   31.050522] tg3 0000:03:00.0 eth20: 0x00001460: 0x00000001, 0x00000001, 0x00000001, 0x00000001
+[   31.059156] tg3 0000:03:00.0 eth20: 0x00001470: 0x00000001, 0x00000001, 0x00000001, 0x00000001
+[   31.067789] tg3 0000:03:00.0 eth20: 0x00001480: 0x00000005, 0x00000000, 0x00000000, 0x00000000
+[   31.076424] tg3 0000:03:00.0 eth20: 0x00001800: 0x00000016, 0x00000000, 0x00000001, 0x00000000
+[   31.085059] tg3 0000:03:00.0 eth20: 0x00001840: 0x00000000, 0x00000000, 0x00000200, 0x00000010
+[   31.093693] tg3 0000:03:00.0 eth20: 0x00001850: 0x8c506000, 0x00000000, 0x00004000, 0x00010001
+[   31.102327] tg3 0000:03:00.0 eth20: 0x00001860: 0x01000000, 0x00000000, 0x00000000, 0x00000000
+[   31.110964] tg3 0000:03:00.0 eth20: 0x00001c00: 0x00000002, 0x00000000, 0x00000000, 0x00000000
+[   31.119602] tg3 0000:03:00.0 eth20: 0x00002000: 0x00000002, 0x00000000, 0x00000000, 0x00000000
+[   31.128239] tg3 0000:03:00.0 eth20: 0x00002010: 0x00000181, 0x00000001, 0x007bfffd, 0x00000000
+[   31.136874] tg3 0000:03:00.0 eth20: 0x00002100: 0x00082211, 0x00082211, 0x00000000, 0x00000000
+[   31.145508] tg3 0000:03:00.0 eth20: 0x00002110: 0x00082211, 0x00082211, 0x00000000, 0x00000000
+[   31.154141] tg3 0000:03:00.0 eth20: 0x00002120: 0x00082211, 0x00082211, 0x00000000, 0x00000000
+[   31.162776] tg3 0000:03:00.0 eth20: 0x00002130: 0x00082211, 0x00082211, 0x00000000, 0x00000000
+[   31.171410] tg3 0000:03:00.0 eth20: 0x00002140: 0x00082211, 0x00082211, 0x00000000, 0x00000000
+[   31.180045] tg3 0000:03:00.0 eth20: 0x00002150: 0x00082211, 0x00082211, 0x00000000, 0x00000000
+[   31.188678] tg3 0000:03:00.0 eth20: 0x00002160: 0x00082211, 0x00082211, 0x00000000, 0x00000000
+[   31.197313] tg3 0000:03:00.0 eth20: 0x00002170: 0x00082211, 0x00082211, 0x00000000, 0x00000000
+[   31.205947] tg3 0000:03:00.0 eth20: 0x00002180: 0x00082211, 0x00082211, 0x00000000, 0x00000000
+[   31.214584] tg3 0000:03:00.0 eth20: 0x00002190: 0x00082211, 0x00082211, 0x00000000, 0x00000000
+[   31.223222] tg3 0000:03:00.0 eth20: 0x000021a0: 0x00082211, 0x00082211, 0x00000000, 0x00000000
+[   31.231856] tg3 0000:03:00.0 eth20: 0x000021b0: 0x00082211, 0x00082211, 0x00000000, 0x00000000
+[   31.240491] tg3 0000:03:00.0 eth20: 0x000021c0: 0x00082211, 0x00082211, 0x00000000, 0x00000000
+[   31.249127] tg3 0000:03:00.0 eth20: 0x000021d0: 0x00082211, 0x00082211, 0x00000000, 0x00000000
+[   31.257762] tg3 0000:03:00.0 eth20: 0x000021e0: 0x00082211, 0x00082211, 0x00000000, 0x00000000
+[   31.266399] tg3 0000:03:00.0 eth20: 0x000021f0: 0x00082211, 0x00082211, 0x00000000, 0x00000000
+[   31.275034] tg3 0000:03:00.0 eth20: 0x00002200: 0x00000012, 0x00000000, 0x00000000, 0x00000000
+[   31.283670] tg3 0000:03:00.0 eth20: 0x00002400: 0x00000012, 0x00000000, 0x00000000, 0x00000000
+[   31.292305] tg3 0000:03:00.0 eth20: 0x00002450: 0x00000000, 0x8c508000, 0x02000000, 0x00006000
+[   31.300941] tg3 0000:03:00.0 eth20: 0x000024c0: 0x08000001, 0x00000000, 0x00000000, 0x00000000
+[   31.309576] tg3 0000:03:00.0 eth20: 0x00002800: 0x00000006, 0x00000000, 0x00000000, 0x00000000
+[   31.318214] tg3 0000:03:00.0 eth20: 0x00002c00: 0x00000006, 0x00000000, 0x00000000, 0x0000003f
+[   31.326851] tg3 0000:03:00.0 eth20: 0x00002c10: 0x00000000, 0x00000000, 0x00000010, 0x00000000
+[   31.335485] tg3 0000:03:00.0 eth20: 0x00002c20: 0x00000004, 0x00000000, 0x00000000, 0x00000000
+[   31.344122] tg3 0000:03:00.0 eth20: 0x00003000: 0x00000006, 0x00000000, 0x00000000, 0x0000003f
+[   31.352760] tg3 0000:03:00.0 eth20: 0x00003600: 0xe0236600, 0x00170000, 0x00110000, 0x00000000
+[   31.361396] tg3 0000:03:00.0 eth20: 0x00003610: 0x00170000, 0x00130000, 0x00150000, 0x00000000
+[   31.370031] tg3 0000:03:00.0 eth20: 0x00003620: 0x00000000, 0x00000000, 0x00000000, 0x00002080
+[   31.378666] tg3 0000:03:00.0 eth20: 0x00003630: 0x00000000, 0x30000000, 0x00001080, 0x00000000
+[   31.387303] tg3 0000:03:00.0 eth20: 0x00003640: 0x00000000, 0x00000000, 0x00000020, 0x0000004b
+[   31.395938] tg3 0000:03:00.0 eth20: 0x00003650: 0x00000171, 0x00000bff, 0x57780001, 0x00000000
+[   31.404572] tg3 0000:03:00.0 eth20: 0x00003660: 0x00000000, 0x00000000, 0x000000af, 0x00000000
+[   31.413207] tg3 0000:03:00.0 eth20: 0x00003670: 0x0000002a, 0xfefffff7, 0x00000000, 0x00000000
+[   31.421842] tg3 0000:03:00.0 eth20: 0x000036a0: 0x00000000, 0x42000000, 0x00000000, 0x00000041
+[   31.430481] tg3 0000:03:00.0 eth20: 0x00003c00: 0x00000302, 0x00000000, 0x00000014, 0x00000048
+[   31.439118] tg3 0000:03:00.0 eth20: 0x00003c10: 0x00000005, 0x00000035, 0x00000000, 0x00000000
+[   31.447752] tg3 0000:03:00.0 eth20: 0x00003c20: 0x00000005, 0x00000005, 0x00000000, 0x00000000
+[   31.456387] tg3 0000:03:00.0 eth20: 0x00003c30: 0x00000000, 0x00000000, 0x00000000, 0x8c504000
+[   31.465021] tg3 0000:03:00.0 eth20: 0x00003c40: 0x00000000, 0x00000b00, 0x00000000, 0x00000000
+[   31.473655] tg3 0000:03:00.0 eth20: 0x00003cc0: 0x00000001, 0x00000000, 0x00000000, 0x00000000
+[   31.482292] tg3 0000:03:00.0 eth20: 0x00004000: 0x00000002, 0x00000000, 0x00190e7e, 0x00069e7f
+[   31.490925] tg3 0000:03:00.0 eth20: 0x00004010: 0x00401030, 0x00211012, 0x008004c0, 0x00400062
+[   31.499561] tg3 0000:03:00.0 eth20: 0x00004020: 0x00000000, 0x00000000, 0x00000010, 0x00000000
+[   31.508196] tg3 0000:03:00.0 eth20: 0x00004030: 0x00000010, 0x00000030, 0x00000000, 0x00000000
+[   31.516832] tg3 0000:03:00.0 eth20: 0x00004040: 0x00000000, 0x00000000, 0x01080020, 0x00000000
+[   31.525467] tg3 0000:03:00.0 eth20: 0x00004050: 0x00000000, 0x00000000, 0x002fe440, 0x00401002
+[   31.534103] tg3 0000:03:00.0 eth20: 0x00004060: 0x00402000, 0x00000000, 0x00000000, 0x00000000
+[   31.542739] tg3 0000:03:00.0 eth20: 0x00004400: 0x00000006, 0x00000000, 0x00010000, 0x00004000
+[   31.551372] tg3 0000:03:00.0 eth20: 0x00004410: 0x00000000, 0x00000010, 0x00000060, 0x00000000
+[   31.560005] tg3 0000:03:00.0 eth20: 0x00004420: 0x0000003d, 0x00000000, 0x00000000, 0x00000000
+[   31.568640] tg3 0000:03:00.0 eth20: 0x00004440: 0x00000000, 0x00000000, 0x00000000, 0x00000403
+[   31.577275] tg3 0000:03:00.0 eth20: 0x00004450: 0x0001027f, 0x00120013, 0x00000000, 0x00000000
+[   31.585909] tg3 0000:03:00.0 eth20: 0x00004800: 0x18033bfe, 0x00000000, 0x00000000, 0x00000020
+[   31.594544] tg3 0000:03:00.0 eth20: 0x00004810: 0x00000000, 0x00000004, 0x07e003c8, 0x00000000
+[   31.603177] tg3 0000:03:00.0 eth20: 0x00004820: 0x00000002, 0x00000000, 0xf0330000, 0x3c57f060
+[   31.611812] tg3 0000:03:00.0 eth20: 0x00004830: 0x00000000, 0x0000000a, 0x0000000a, 0x00000000
+[   31.620448] tg3 0000:03:00.0 eth20: 0x00004840: 0x00000001, 0x00000001, 0x030e0000, 0x02000000
+[   31.629084] tg3 0000:03:00.0 eth20: 0x00004850: 0x00009fcb, 0x0000005a, 0x01000100, 0x00000000
+[   31.637719] tg3 0000:03:00.0 eth20: 0x00004860: 0x01000002, 0x00000000, 0x00000000, 0x00000000
+[   31.646356] tg3 0000:03:00.0 eth20: 0x00004900: 0x00028207, 0x50200e08, 0x00000000, 0x00000000
+[   31.654990] tg3 0000:03:00.0 eth20: 0x00004910: 0x00000018, 0x00000000, 0x00000000, 0x00000000
+[   31.663628] tg3 0000:03:00.0 eth20: 0x00004c00: 0x200003fe, 0x00000000, 0x00000000, 0x00000000
+[   31.672262] tg3 0000:03:00.0 eth20: 0x00004c10: 0x0000002a, 0x00000000, 0x00000006, 0x00000823
+[   31.680896] tg3 0000:03:00.0 eth20: 0x00004c20: 0x00000000, 0x00000000, 0x00000000, 0x00000006
+[   31.689531] tg3 0000:03:00.0 eth20: 0x00004c30: 0x0000dff7, 0x00000000, 0x00000008, 0x00000008
+[   31.698165] tg3 0000:03:00.0 eth20: 0x00004c40: 0x00000000, 0x8c504000, 0x000124af, 0x00000020
+[   31.706800] tg3 0000:03:00.0 eth20: 0x00004c50: 0x07ffffff, 0x0003ffff, 0x80000000, 0x00000202
+[   31.715436] tg3 0000:03:00.0 eth20: 0x00005000: 0x00009800, 0x80000000, 0x00000000, 0x00000000
+[   31.724071] tg3 0000:03:00.0 eth20: 0x00005010: 0x00000000, 0x00000000, 0x00000000, 0x40002c80
+[   31.732706] tg3 0000:03:00.0 eth20: 0x00005020: 0x00000000, 0x00000000, 0x00000000, 0x40000020
+[   31.741340] tg3 0000:03:00.0 eth20: 0x00005030: 0x00000000, 0x00000051, 0x00000000, 0x00000000
+[   31.749974] tg3 0000:03:00.0 eth20: 0x00005040: 0x00000000, 0x00000000, 0x40002e28, 0x00000000
+[   31.758610] tg3 0000:03:00.0 eth20: 0x00005080: 0x00009800, 0x80008000, 0x00000000, 0x00000000
+[   31.767244] tg3 0000:03:00.0 eth20: 0x00005090: 0x00000000, 0x00000000, 0x00000000, 0x40001d60
+[   31.775878] tg3 0000:03:00.0 eth20: 0x000050a0: 0x00008021, 0x00000000, 0x00000000, 0x40000020
+[   31.784513] tg3 0000:03:00.0 eth20: 0x000050b0: 0x00000000, 0x00000051, 0x00000000, 0x00000000
+[   31.793146] tg3 0000:03:00.0 eth20: 0x000050c0: 0x00000000, 0x00000000, 0x40002cd4, 0x00000000
+[   31.801780] tg3 0000:03:00.0 eth20: 0x00005100: 0x00009800, 0x80000000, 0x00000000, 0x00000000
+[   31.810415] tg3 0000:03:00.0 eth20: 0x00005110: 0x00000000, 0x00000000, 0x00000000, 0x40002cb8
+[   31.819049] tg3 0000:03:00.0 eth20: 0x00005120: 0x00008021, 0x00000000, 0x00000000, 0x40000020
+[   31.827683] tg3 0000:03:00.0 eth20: 0x00005130: 0x00000000, 0x00000051, 0x00000000, 0x00000000
+[   31.836318] tg3 0000:03:00.0 eth20: 0x00005140: 0x00000000, 0x00000000, 0x40002cc4, 0x00000000
+[   31.844952] tg3 0000:03:00.0 eth20: 0x00005180: 0x00009800, 0x80008000, 0x00000000, 0x00000000
+[   31.853586] tg3 0000:03:00.0 eth20: 0x00005190: 0x00000000, 0x00000000, 0x00000000, 0x40002c84
+[   31.862221] tg3 0000:03:00.0 eth20: 0x000051a0: 0x52220001, 0x00000000, 0x00000000, 0x40000020
+[   31.870855] tg3 0000:03:00.0 eth20: 0x000051b0: 0x00000000, 0x00000051, 0x00000000, 0x00000000
+[   31.879490] tg3 0000:03:00.0 eth20: 0x000051c0: 0x00000000, 0x00000000, 0x40002ca8, 0x00000000
+[   31.888125] tg3 0000:03:00.0 eth20: 0x00005200: 0x00000000, 0x00000000, 0x08004c80, 0x40001d2c
+[   31.896760] tg3 0000:03:00.0 eth20: 0x00005210: 0x20085082, 0x00000000, 0x08005fc8, 0x08005fe8
+[   31.905394] tg3 0000:03:00.0 eth20: 0x00005220: 0x00000000, 0x81020000, 0x08004c80, 0x08005fc8
+[   31.914028] tg3 0000:03:00.0 eth20: 0x00005230: 0x00000002, 0x00000000, 0x08005fc8, 0x08005fc8
+[   31.922663] tg3 0000:03:00.0 eth20: 0x00005240: 0x00000000, 0x00000000, 0x08005fc8, 0x00000000
+[   31.931297] tg3 0000:03:00.0 eth20: 0x00005250: 0x00000000, 0x00000000, 0x00000000, 0x40001d2c
+[   31.939933] tg3 0000:03:00.0 eth20: 0x00005260: 0x00000000, 0x00000b50, 0x00000000, 0x40001d2c
+[   31.948567] tg3 0000:03:00.0 eth20: 0x00005270: 0x20085082, 0x00000000, 0x08005fc8, 0x00000000
+[   31.957203] tg3 0000:03:00.0 eth20: 0x00005280: 0x00009800, 0x80004000, 0x00000000, 0x00000000
+[   31.965836] tg3 0000:03:00.0 eth20: 0x00005290: 0x00000000, 0x00000000, 0x00000000, 0x40003544
+[   31.974470] tg3 0000:03:00.0 eth20: 0x000052a0: 0x16220003, 0x00000000, 0x00000000, 0x40000020
+[   31.983102] tg3 0000:03:00.0 eth20: 0x000052b0: 0x00000000, 0x00000051, 0x00000000, 0x00000000
+[   31.991737] tg3 0000:03:00.0 eth20: 0x000052c0: 0x00000000, 0x00000000, 0x40002cc4, 0x00000000
+[   32.000373] tg3 0000:03:00.0 eth20: 0x00005300: 0x00009800, 0x80000000, 0x00000000, 0x00000000
+[   32.009008] tg3 0000:03:00.0 eth20: 0x00005310: 0x00000000, 0x00000000, 0x00000000, 0x40002c90
+[   32.017643] tg3 0000:03:00.0 eth20: 0x00005320: 0x00000000, 0x00000000, 0x00000000, 0x40000020
+[   32.026277] tg3 0000:03:00.0 eth20: 0x00005330: 0x00000000, 0x00000051, 0x00000000, 0x00000000
+[   32.034913] tg3 0000:03:00.0 eth20: 0x00005340: 0x00000000, 0x00000000, 0x40002ca8, 0x00000000
+[   32.043549] tg3 0000:03:00.0 eth20: 0x00005380: 0x00009800, 0x80008000, 0x00000000, 0x00000000
+[   32.052185] tg3 0000:03:00.0 eth20: 0x00005390: 0x00000000, 0x00000000, 0x00000000, 0x40002e1c
+[   32.060819] tg3 0000:03:00.0 eth20: 0x000053a0: 0x24020002, 0x00000000, 0x00000000, 0x40000020
+[   32.069453] tg3 0000:03:00.0 eth20: 0x000053b0: 0x00000000, 0x00000051, 0x00000000, 0x00000000
+[   32.078087] tg3 0000:03:00.0 eth20: 0x000053c0: 0x00000000, 0x00000000, 0x40002e20, 0x00000000
+[   32.086723] tg3 0000:03:00.0 eth20: 0x00005600: 0x169214e4, 0x00180146, 0x02000001, 0x00000010
+[   32.095360] tg3 0000:03:00.0 eth20: 0x00005610: 0x01100004, 0x00000000, 0x00000000, 0x00000000
+[   32.103996] tg3 0000:03:00.0 eth20: 0x00005620: 0x00000000, 0x00000000, 0x00000000, 0x969214e4
+[   32.112632] tg3 0000:03:00.0 eth20: 0x00005630: 0x00000000, 0x00000048, 0x00000000, 0x00000134
+[   32.121268] tg3 0000:03:00.0 eth20: 0x00005640: 0x00000000, 0x00000000, 0xc0036001, 0x08002008
+[   32.129902] tg3 0000:03:00.0 eth20: 0x00005650: 0x0080cc05, 0x00000000, 0x00000000, 0x00000000
+[   32.138537] tg3 0000:03:00.0 eth20: 0x00005660: 0x006c5009, 0xad29c367, 0xf0010298, 0x76180000
+[   32.147171] tg3 0000:03:00.0 eth20: 0x00005670: 0x000010f0, 0x00000000, 0x00000000, 0x00000000
+[   32.155805] tg3 0000:03:00.0 eth20: 0x00005680: 0x40000008, 0x40000008, 0x00000000, 0x00000000
+[   32.164441] tg3 0000:03:00.0 eth20: 0x000056b0: 0x00000000, 0x00000000, 0x00000000, 0x57780001
+[   32.173076] tg3 0000:03:00.0 eth20: 0x000056c0: 0x00000000, 0x00000000, 0x0000800e, 0x00020010
+[   32.181711] tg3 0000:03:00.0 eth20: 0x000056d0: 0x00008fa0, 0x00102100, 0x0006cc11, 0x10110000
+[   32.190347] tg3 0000:03:00.0 eth20: 0x000056f0: 0x0000001f, 0x00000000, 0x00000000, 0x00000000
+[   32.198984] tg3 0000:03:00.0 eth20: 0x00005700: 0x13c10001, 0x00000000, 0x00000000, 0x00062031
+[   32.207619] tg3 0000:03:00.0 eth20: 0x00005710: 0x00000000, 0x00002000, 0x000000a0, 0x00000000
+[   32.216253] tg3 0000:03:00.0 eth20: 0x00005730: 0x00000000, 0x00000000, 0x00000000, 0x16010002
+[   32.224889] tg3 0000:03:00.0 eth20: 0x00005750: 0x800000ff, 0x00000000, 0x00000000, 0x00000000
+[   32.233525] tg3 0000:03:00.0 eth20: 0x00005760: 0x16c10003, 0xfe000000, 0x001018ff, 0x00010004
+[   32.242158] tg3 0000:03:00.0 eth20: 0x00005770: 0x00000000, 0x00078116, 0x00000001, 0x00000000
+[   32.250794] tg3 0000:03:00.0 eth20: 0x00005780: 0x00000000, 0x00000000, 0x00000000, 0xffffffff
+[   32.259429] tg3 0000:03:00.0 eth20: 0x00005860: 0x00000000, 0x00000000, 0x00000000, 0x000000c8
+[   32.268064] tg3 0000:03:00.0 eth20: 0x00005900: 0x00000000, 0x00000001, 0x00000000, 0x00000000
+[   32.276698] tg3 0000:03:00.0 eth20: 0x00005980: 0x00000000, 0x00000001, 0x00000000, 0x00000000
+[   32.285333] tg3 0000:03:00.0 eth20: 0x00005a00: 0x00012001, 0x00000000, 0x00010000, 0x00000000
+[   32.293971] tg3 0000:03:00.0 eth20: 0x00006000: 0x00000002, 0x00000000, 0x00000000, 0x00000000
+[   32.302609] tg3 0000:03:00.0 eth20: 0x00006800: 0x04130034, 0x20085082, 0x01009218, 0x012c07a3
+[   32.311246] tg3 0000:03:00.0 eth20: 0x00006810: 0x81020000, 0xffffffff, 0x00000000, 0x00000000
+[   32.319881] tg3 0000:03:00.0 eth20: 0x000068a0: 0x00000000, 0x20010001, 0x00000000, 0x00000000
+[   32.328516] tg3 0000:03:00.0 eth20: 0x000068b0: 0x00040000, 0x00000000, 0x00000000, 0x00000000
+[   32.337151] tg3 0000:03:00.0 eth20: 0x00006c20: 0x00000000, 0x00200000, 0x00000000, 0x00000000
+[   32.345788] tg3 0000:03:00.0 eth20: 0x00007000: 0x08000188, 0x00000000, 0x00000000, 0x00000000
+[   32.354422] tg3 0000:03:00.0 eth20: 0x00007010: 0xffffffff, 0x00008200, 0x000500db, 0x03000a00
+[   32.363056] tg3 0000:03:00.0 eth20: 0x00007020: 0x00000000, 0x00000000, 0x00000406, 0x10004000
+[   32.371690] tg3 0000:03:00.0 eth20: 0x00007030: 0x00020000, 0x00000004, 0x001f0010, 0x00000000
+[   32.380327] tg3 0000:03:00.0 eth20: 0x00007500: 0x00000000, 0x00000000, 0x0000008b, 0x00000080
+[   32.388961] tg3 0000:03:00.0 eth20: 0x00007510: 0x00000000, 0x00000800, 0x00000000, 0x00000000
+[   32.397609] tg3 0000:03:00.0 eth20: 0: Host status block [00000003:00000002:(0000:0000:0000):(0000:0001)]
+[   32.407205] tg3 0000:03:00.0 eth20: 0: NAPI info [00000000:00000000:(0001:0000:01ff):0000:(00c8:0000:0000:0000)]
+[   32.521509] tg3 0000:03:00.0: tg3_stop_block timed out, ofs=1400 enable_bit=2
+[   32.533646] tg3 0000:03:00.0 eth20: Link is down
+[   32.551044] tg3 0000:03:00.0 eth20: Link is down
+
+Signed-off-by: Sven Van Asbroeck <TheSven73@googlemail.com>
+---
+ drivers/pci/controller/Kconfig     |  2 ++
+ drivers/pci/controller/dwc/Kconfig | 10 ++++++++++
+ 2 files changed, 12 insertions(+)
+
+diff --git a/drivers/pci/controller/Kconfig b/drivers/pci/controller/Kconfig
+index 6671946dbf66..6e4241ac0a1e 100644
+--- a/drivers/pci/controller/Kconfig
++++ b/drivers/pci/controller/Kconfig
+@@ -113,6 +113,7 @@ config PCI_XGENE
+ 	bool "X-Gene PCIe controller"
+ 	depends on ARM64 || COMPILE_TEST
+ 	depends on OF || (ACPI && PCI_QUIRKS)
++	select PCIEPORTBUS
+ 	help
+ 	  Say Y here if you want internal PCI support on APM X-Gene SoC.
+ 	  There are 5 internal PCIe ports available. Each port is GEN3 capable
+@@ -237,6 +238,7 @@ config PCIE_MEDIATEK
+ 	depends on ARCH_MEDIATEK || COMPILE_TEST
+ 	depends on OF
+ 	depends on PCI_MSI_IRQ_DOMAIN
++	select PCIEPORTBUS
+ 	help
+ 	  Say Y here if you want to enable PCIe controller support on
+ 	  MediaTek SoCs.
+diff --git a/drivers/pci/controller/dwc/Kconfig b/drivers/pci/controller/dwc/Kconfig
+index 91b0194240a5..6cda3322b90b 100644
+--- a/drivers/pci/controller/dwc/Kconfig
++++ b/drivers/pci/controller/dwc/Kconfig
+@@ -86,18 +86,21 @@ config PCI_EXYNOS
+ 	bool "Samsung Exynos PCIe controller"
+ 	depends on SOC_EXYNOS5440 || COMPILE_TEST
+ 	depends on PCI_MSI_IRQ_DOMAIN
++	select PCIEPORTBUS
+ 	select PCIE_DW_HOST
+ 
+ config PCI_IMX6
+ 	bool "Freescale i.MX6 PCIe controller"
+ 	depends on SOC_IMX6Q || (ARM && COMPILE_TEST)
+ 	depends on PCI_MSI_IRQ_DOMAIN
++	select PCIEPORTBUS
+ 	select PCIE_DW_HOST
+ 
+ config PCIE_SPEAR13XX
+ 	bool "STMicroelectronics SPEAr PCIe controller"
+ 	depends on ARCH_SPEAR13XX || COMPILE_TEST
+ 	depends on PCI_MSI_IRQ_DOMAIN
++	select PCIEPORTBUS
+ 	select PCIE_DW_HOST
+ 	help
+ 	  Say Y here if you want PCIe support on SPEAr13XX SoCs.
+@@ -106,6 +109,7 @@ config PCI_KEYSTONE
+ 	bool "TI Keystone PCIe controller"
+ 	depends on ARCH_KEYSTONE || (ARM && COMPILE_TEST)
+ 	depends on PCI_MSI_IRQ_DOMAIN
++	select PCIEPORTBUS
+ 	select PCIE_DW_HOST
+ 	help
+ 	  Say Y here if you want to enable PCI controller support on Keystone
+@@ -126,6 +130,7 @@ config PCI_HISI
+ 	depends on OF && (ARM64 || COMPILE_TEST)
+ 	bool "HiSilicon Hip05 and Hip06 SoCs PCIe controllers"
+ 	depends on PCI_MSI_IRQ_DOMAIN
++	select PCIEPORTBUS
+ 	select PCIE_DW_HOST
+ 	select PCI_HOST_COMMON
+ 	help
+@@ -136,6 +141,7 @@ config PCIE_QCOM
+ 	bool "Qualcomm PCIe controller"
+ 	depends on OF && (ARCH_QCOM || COMPILE_TEST)
+ 	depends on PCI_MSI_IRQ_DOMAIN
++	select PCIEPORTBUS
+ 	select PCIE_DW_HOST
+ 	help
+ 	  Say Y here to enable PCIe controller support on Qualcomm SoCs. The
+@@ -146,6 +152,7 @@ config PCIE_ARMADA_8K
+ 	bool "Marvell Armada-8K PCIe controller"
+ 	depends on ARCH_MVEBU || COMPILE_TEST
+ 	depends on PCI_MSI_IRQ_DOMAIN
++	select PCIEPORTBUS
+ 	select PCIE_DW_HOST
+ 	help
+ 	  Say Y here if you want to enable PCIe controller support on
+@@ -160,6 +167,7 @@ config PCIE_ARTPEC6_HOST
+ 	bool "Axis ARTPEC-6 PCIe controller Host Mode"
+ 	depends on MACH_ARTPEC6 || COMPILE_TEST
+ 	depends on PCI_MSI_IRQ_DOMAIN
++	select PCIEPORTBUS
+ 	select PCIE_DW_HOST
+ 	select PCIE_ARTPEC6
+ 	help
+@@ -180,6 +188,7 @@ config PCIE_KIRIN
+ 	depends on OF && (ARM64 || COMPILE_TEST)
+ 	bool "HiSilicon Kirin series SoCs PCIe controllers"
+ 	depends on PCI_MSI_IRQ_DOMAIN
++	select PCIEPORTBUS
+ 	select PCIE_DW_HOST
+ 	help
+ 	  Say Y here if you want PCIe controller support
+@@ -189,6 +198,7 @@ config PCIE_HISI_STB
+ 	bool "HiSilicon STB SoCs PCIe controllers"
+ 	depends on ARCH_HISI || COMPILE_TEST
+ 	depends on PCI_MSI_IRQ_DOMAIN
++	select PCIEPORTBUS
+ 	select PCIE_DW_HOST
+ 	help
+           Say Y here if you want PCIe controller support on HiSilicon STB SoCs
+-- 
+2.17.1
+
