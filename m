@@ -2,83 +2,228 @@ Return-Path: <SRS0=4gsO=O4=vger.kernel.org=linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-5.7 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_PASS,
-	URIBL_BLOCKED,USER_AGENT_MUTT autolearn=unavailable autolearn_force=no
-	version=3.4.0
+X-Spam-Status: No, score=-9.2 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
+	SPF_PASS,USER_AGENT_GIT autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 4431FC43387
-	for <linux-pci@archiver.kernel.org>; Wed, 19 Dec 2018 20:38:59 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 12ECAC43612
+	for <linux-pci@archiver.kernel.org>; Wed, 19 Dec 2018 22:47:38 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 118A320873
-	for <linux-pci@archiver.kernel.org>; Wed, 19 Dec 2018 20:38:59 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id CAFE820874
+	for <linux-pci@archiver.kernel.org>; Wed, 19 Dec 2018 22:47:37 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=default; t=1545251939;
-	bh=WrewN3pP+xXagxVdkwsPCFljB9lgVCIfSx3Z2tMQQbk=;
-	h=Date:From:To:Cc:Subject:References:In-Reply-To:List-ID:From;
-	b=pO2UwZEomBCBUeCj7oIrHol7r6K3YgJeH6OYtcPexVqzaRVqKlrahRqRcURkIAghE
-	 SkVSsqSQLl6uAl3+L+29nb2LDfqJw3uvgvIWJzt8rEldN5p5nQO8JKNqm8W2fIQ2+0
-	 Vc3FQQ6FMkpSFwf2CLu+dV9qiMWewOLyMuIJZNvY=
+	s=default; t=1545259657;
+	bh=srECx3uDp528BcPgeYFTmHwXgYvdj7lpCSHqqkym1Fg=;
+	h=From:To:Cc:Subject:Date:In-Reply-To:References:List-ID:From;
+	b=tGH6iDRyWW9dwtWV299CStz/ggaTTYrYm+OERrjzirOjU7GBP8CPpHI0C3tb06rvb
+	 hXTlSb4g+KXHjiCuSo9gM95g0srCRfStOeyO2ea9SqKPUovc09Ss2WIDu40oC/d3gn
+	 DYDM+JopSSqpn28o8P2dCgDKjecMN1aPj/b9lttA=
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1730275AbeLSUix (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Wed, 19 Dec 2018 15:38:53 -0500
-Received: from mail-oi1-f193.google.com ([209.85.167.193]:41728 "EHLO
-        mail-oi1-f193.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1725294AbeLSUix (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Wed, 19 Dec 2018 15:38:53 -0500
-Received: by mail-oi1-f193.google.com with SMTP id j21so2712548oii.8;
-        Wed, 19 Dec 2018 12:38:52 -0800 (PST)
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20161025;
-        h=x-gm-message-state:date:from:to:cc:subject:message-id:references
-         :mime-version:content-disposition:in-reply-to:user-agent;
-        bh=X9EDmUb25eCGRB3VLJKp5doexQ0zWLS4cH4s5eq7g5c=;
-        b=HevrCZi/9dEk7TI4LgGYRI2eLbb2G8ZV24C8xVCbqHdVgyIIywado0YJxUEa9JkVrD
-         M5wV5/Nc0rTZXJZZUiKWyBwLxAwWwM5jZDjqEOYnS1VOFBaBEHWwKY8Ehf4nPv6gtJAm
-         uB+5Dg6MxOwgm253K97B5wCXnalZ0cPWjmqTy0aU9uQ/971/6N2BpL026Sx+852+VnR1
-         4DI7qROWYFLNNgxzLS5hrWb4YjXmw+kDt9rx0KIqc/BFHpGr42EXKFzSdfnTfyZAv7+7
-         r43oiLFVh/nJKNWXqd6ABQo51W59sGfiqqP2xj3YMOzn+PcrUh03pSPAuJPUJk1lgtrY
-         z/Jg==
-X-Gm-Message-State: AA+aEWa8l8/LO+2VLy4C/H5c+WkYHFOkqoHIOV5lQ6dpGiprs0qv0fSw
-        M7gxSPnL+Ek7KUHUQ3dutA==
-X-Google-Smtp-Source: AFSGD/XvKotdNnZpmSD7TKdK4qZuEYF5GqjjNE66L1B4YLvKB4dvjRIVz19SZ5LxL8yHjtyc2M+2jQ==
-X-Received: by 2002:aca:49cb:: with SMTP id w194mr240905oia.114.1545251932056;
-        Wed, 19 Dec 2018 12:38:52 -0800 (PST)
-Received: from localhost (24-155-109-49.dyn.grandenetworks.net. [24.155.109.49])
-        by smtp.gmail.com with ESMTPSA id v20sm10399529otp.10.2018.12.19.12.38.51
-        (version=TLS1_2 cipher=ECDHE-RSA-CHACHA20-POLY1305 bits=256/256);
-        Wed, 19 Dec 2018 12:38:51 -0800 (PST)
-Date:   Wed, 19 Dec 2018 14:38:50 -0600
-From:   Rob Herring <robh@kernel.org>
-To:     Jianjun Wang <jianjun.wang@mediatek.com>
-Cc:     ryder.lee@mediatek.com, bhelgaas@google.com, robh+dt@kernel.org,
-        lorenzo.pieralisi@arm.com, matthias.bgg@gmail.com,
-        linux-pci@vger.kernel.org, mark.rutland@arm.com,
-        linux-mediatek@lists.infradead.org, devicetree@vger.kernel.org,
-        linux-kernel@vger.kernel.org, linux-arm-kernel@lists.infradead.org,
-        honghui.zhang@mediatek.com, youlin.pei@mediatek.com,
-        Jianjun Wang <jianjun.wang@mediatek.com>
-Subject: Re: [PATCH 1/2] dt-bindings: PCI: Add support for MT7629
-Message-ID: <20181219203850.GA31173@bogus>
-References: <1544058553-10936-1-git-send-email-jianjun.wang@mediatek.com>
- <1544058553-10936-2-git-send-email-jianjun.wang@mediatek.com>
+        id S1729563AbeLSWrP (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Wed, 19 Dec 2018 17:47:15 -0500
+Received: from mail.kernel.org ([198.145.29.99]:59886 "EHLO mail.kernel.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1728519AbeLSWrO (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Wed, 19 Dec 2018 17:47:14 -0500
+Received: from sinanubuntu1604.mkjiurmyylmellclgttazegk5f.bx.internal.cloudapp.net (unknown [13.90.192.21])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES128-SHA256 (128/128 bits))
+        (No client certificate requested)
+        by mail.kernel.org (Postfix) with ESMTPSA id 1BA5A20989;
+        Wed, 19 Dec 2018 22:47:12 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+        s=default; t=1545259633;
+        bh=srECx3uDp528BcPgeYFTmHwXgYvdj7lpCSHqqkym1Fg=;
+        h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
+        b=n+H7qesbFXrmsao3SJuVBTkfyKs50iZylX0k8qSnN6wv7h91igtitvAaGmKHk5l4H
+         4bulQxbGLVSZtKIya8S7Ie9xdhFWVVa4xJReGwiRUky3WmXH5rrxFRsvutqKgIttdV
+         bKAUd9gDItGcRrXGa4iWBukxIyH04E+IK5JEXQVo=
+From:   Sinan Kaya <okaya@kernel.org>
+To:     linux-acpi@vger.kernel.org
+Cc:     Sinan Kaya <okaya@kernel.org>,
+        Thomas Gleixner <tglx@linutronix.de>,
+        Ingo Molnar <mingo@redhat.com>, Borislav Petkov <bp@alien8.de>,
+        "H. Peter Anvin" <hpa@zytor.com>,
+        x86@kernel.org (maintainer:X86 ARCHITECTURE (32-BIT AND 64-BIT)),
+        "Rafael J. Wysocki" <rjw@rjwysocki.net>,
+        Len Brown <lenb@kernel.org>,
+        Bjorn Helgaas <bhelgaas@google.com>,
+        Robert Moore <robert.moore@intel.com>,
+        Erik Schmauss <erik.schmauss@intel.com>,
+        Andy Shevchenko <andy.shevchenko@gmail.com>,
+        =?UTF-8?q?Christian=20K=C3=B6nig?= <christian.koenig@amd.com>,
+        "=?UTF-8?q?Christian=20K=C3=B6nig?=" 
+        <ckoenig.leichtzumerken@gmail.com>,
+        Otavio Pontes <otavio.pontes@intel.com>,
+        linux-kernel@vger.kernel.org (open list:X86 ARCHITECTURE (32-BIT AND
+        64-BIT)), linux-pci@vger.kernel.org (open list:PCI SUBSYSTEM),
+        devel@acpica.org (open list:ACPI COMPONENT ARCHITECTURE (ACPICA))
+Subject: [PATCH v12 4/7] PCI/ACPI: Allow ACPI to be built without CONFIG_PCI set
+Date:   Wed, 19 Dec 2018 22:46:56 +0000
+Message-Id: <20181219224659.4802-5-okaya@kernel.org>
+X-Mailer: git-send-email 2.19.0
+In-Reply-To: <20181219224659.4802-1-okaya@kernel.org>
+References: <20181219224659.4802-1-okaya@kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <1544058553-10936-2-git-send-email-jianjun.wang@mediatek.com>
-User-Agent: Mutt/1.10.1 (2018-07-13)
+Content-Transfer-Encoding: 8bit
 Sender: linux-pci-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-On Thu, 6 Dec 2018 09:09:12 +0800, Jianjun Wang wrote:
-> MT7629 is an arm platform Soc which has the same PCIe IP with MT7622.
-> 
-> Signed-off-by: Jianjun Wang <jianjun.wang@mediatek.com>
-> ---
->  Documentation/devicetree/bindings/pci/mediatek-pcie.txt | 1 +
->  1 file changed, 1 insertion(+)
-> 
+We are compiling PCI code today for systems with ACPI and no PCI
+device present. Remove the useless code and reduce the tight
+dependency.
 
-Reviewed-by: Rob Herring <robh@kernel.org>
+Signed-off-by: Sinan Kaya <okaya@kernel.org>
+Acked-by: Bjorn Helgaas <bhelgaas@google.com> # PCI parts
+Acked-by: Ingo Molnar <mingo@kernel.org>
+---
+ arch/x86/include/asm/pci_x86.h | 7 +++++++
+ drivers/acpi/Kconfig           | 1 -
+ drivers/acpi/Makefile          | 2 +-
+ drivers/acpi/internal.h        | 5 +++++
+ drivers/pci/Makefile           | 2 +-
+ include/acpi/acpi_drivers.h    | 7 +++++++
+ include/linux/acpi.h           | 7 +++++++
+ include/linux/pci.h            | 4 ++++
+ 8 files changed, 32 insertions(+), 3 deletions(-)
+
+diff --git a/arch/x86/include/asm/pci_x86.h b/arch/x86/include/asm/pci_x86.h
+index 959d618dbb17..73bb404f4d2a 100644
+--- a/arch/x86/include/asm/pci_x86.h
++++ b/arch/x86/include/asm/pci_x86.h
+@@ -121,7 +121,14 @@ extern void __init dmi_check_pciprobe(void);
+ extern void __init dmi_check_skip_isa_align(void);
+ 
+ /* some common used subsys_initcalls */
++#ifdef CONFIG_PCI
+ extern int __init pci_acpi_init(void);
++#else
++static inline int  __init pci_acpi_init(void)
++{
++	return -EINVAL;
++}
++#endif
+ extern void __init pcibios_irq_init(void);
+ extern int __init pcibios_init(void);
+ extern int pci_legacy_init(void);
+diff --git a/drivers/acpi/Kconfig b/drivers/acpi/Kconfig
+index 7cea769c37df..a0abcb3bd673 100644
+--- a/drivers/acpi/Kconfig
++++ b/drivers/acpi/Kconfig
+@@ -9,7 +9,6 @@ config ARCH_SUPPORTS_ACPI
+ menuconfig ACPI
+ 	bool "ACPI (Advanced Configuration and Power Interface) Support"
+ 	depends on ARCH_SUPPORTS_ACPI
+-	depends on PCI
+ 	select PNP
+ 	default y if X86
+ 	help
+diff --git a/drivers/acpi/Makefile b/drivers/acpi/Makefile
+index edc039313cd6..7c6afc111d76 100644
+--- a/drivers/acpi/Makefile
++++ b/drivers/acpi/Makefile
+@@ -39,7 +39,7 @@ acpi-y				+= processor_core.o
+ acpi-$(CONFIG_ARCH_MIGHT_HAVE_ACPI_PDC) += processor_pdc.o
+ acpi-y				+= ec.o
+ acpi-$(CONFIG_ACPI_DOCK)	+= dock.o
+-acpi-y				+= pci_root.o pci_link.o pci_irq.o
++acpi-$(CONFIG_PCI)		+= pci_root.o pci_link.o pci_irq.o
+ obj-$(CONFIG_ACPI_MCFG)		+= pci_mcfg.o
+ acpi-y				+= acpi_lpss.o acpi_apd.o
+ acpi-y				+= acpi_platform.o
+diff --git a/drivers/acpi/internal.h b/drivers/acpi/internal.h
+index 530a3f675490..b7060dae2789 100644
+--- a/drivers/acpi/internal.h
++++ b/drivers/acpi/internal.h
+@@ -25,8 +25,13 @@ int acpi_osi_init(void);
+ acpi_status acpi_os_initialize1(void);
+ void init_acpi_device_notify(void);
+ int acpi_scan_init(void);
++#ifdef CONFIG_PCI
+ void acpi_pci_root_init(void);
+ void acpi_pci_link_init(void);
++#else
++static inline void acpi_pci_root_init(void) {}
++static inline void acpi_pci_link_init(void) {}
++#endif
+ void acpi_processor_init(void);
+ void acpi_platform_init(void);
+ void acpi_pnp_init(void);
+diff --git a/drivers/pci/Makefile b/drivers/pci/Makefile
+index f2bda77a2df1..657d642fcc67 100644
+--- a/drivers/pci/Makefile
++++ b/drivers/pci/Makefile
+@@ -11,6 +11,7 @@ ifdef CONFIG_PCI
+ obj-$(CONFIG_PROC_FS)		+= proc.o
+ obj-$(CONFIG_SYSFS)		+= slot.o
+ obj-$(CONFIG_OF)		+= of.o
++obj-$(CONFIG_ACPI)		+= pci-acpi.o
+ endif
+ 
+ obj-$(CONFIG_PCI_QUIRKS)	+= quirks.o
+@@ -20,7 +21,6 @@ obj-$(CONFIG_PCI_MSI)		+= msi.o
+ obj-$(CONFIG_PCI_ATS)		+= ats.o
+ obj-$(CONFIG_PCI_IOV)		+= iov.o
+ obj-$(CONFIG_PCI_BRIDGE_EMUL)	+= pci-bridge-emul.o
+-obj-$(CONFIG_ACPI)		+= pci-acpi.o
+ obj-$(CONFIG_PCI_LABEL)		+= pci-label.o
+ obj-$(CONFIG_X86_INTEL_MID)	+= pci-mid.o
+ obj-$(CONFIG_PCI_SYSCALL)	+= syscall.o
+diff --git a/include/acpi/acpi_drivers.h b/include/acpi/acpi_drivers.h
+index 14499757338f..de1804aeaf69 100644
+--- a/include/acpi/acpi_drivers.h
++++ b/include/acpi/acpi_drivers.h
+@@ -88,7 +88,14 @@ int acpi_pci_link_free_irq(acpi_handle handle);
+ 
+ struct pci_bus;
+ 
++#ifdef CONFIG_PCI
+ struct pci_dev *acpi_get_pci_dev(acpi_handle);
++#else
++static inline struct pci_dev *acpi_get_pci_dev(acpi_handle handle)
++{
++	return NULL;
++}
++#endif
+ 
+ /* Arch-defined function to add a bus to the system */
+ 
+diff --git a/include/linux/acpi.h b/include/linux/acpi.h
+index ed80f147bd50..eb1fdf4c196a 100644
+--- a/include/linux/acpi.h
++++ b/include/linux/acpi.h
+@@ -340,7 +340,14 @@ struct pci_dev;
+ int acpi_pci_irq_enable (struct pci_dev *dev);
+ void acpi_penalize_isa_irq(int irq, int active);
+ bool acpi_isa_irq_available(int irq);
++#ifdef CONFIG_PCI
+ void acpi_penalize_sci_irq(int irq, int trigger, int polarity);
++#else
++static inline void acpi_penalize_sci_irq(int irq, int trigger,
++					int polarity)
++{
++}
++#endif
+ void acpi_pci_irq_disable (struct pci_dev *dev);
+ 
+ extern int ec_read(u8 addr, u8 *val);
+diff --git a/include/linux/pci.h b/include/linux/pci.h
+index 11c71c4ecf75..51a5a5217667 100644
+--- a/include/linux/pci.h
++++ b/include/linux/pci.h
+@@ -1960,7 +1960,11 @@ int pcibios_set_pcie_reset_state(struct pci_dev *dev,
+ 				 enum pcie_reset_state state);
+ int pcibios_add_device(struct pci_dev *dev);
+ void pcibios_release_device(struct pci_dev *dev);
++#ifdef CONFIG_PCI
+ void pcibios_penalize_isa_irq(int irq, int active);
++#else
++static inline void pcibios_penalize_isa_irq(int irq, int active) {}
++#endif
+ int pcibios_alloc_irq(struct pci_dev *dev);
+ void pcibios_free_irq(struct pci_dev *dev);
+ resource_size_t pcibios_default_alignment(void);
+-- 
+2.19.0
+
