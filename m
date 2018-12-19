@@ -3,57 +3,56 @@ X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
 X-Spam-Status: No, score=-1.0 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	MAILING_LIST_MULTI,SPF_PASS,URIBL_BLOCKED autolearn=unavailable
-	autolearn_force=no version=3.4.0
+	MAILING_LIST_MULTI,SPF_PASS,URIBL_BLOCKED autolearn=ham autolearn_force=no
+	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 3942DC43387
-	for <linux-pci@archiver.kernel.org>; Wed, 19 Dec 2018 10:57:36 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 713DCC43387
+	for <linux-pci@archiver.kernel.org>; Wed, 19 Dec 2018 11:13:21 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 12DC621850
-	for <linux-pci@archiver.kernel.org>; Wed, 19 Dec 2018 10:57:36 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 415292184A
+	for <linux-pci@archiver.kernel.org>; Wed, 19 Dec 2018 11:13:21 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727799AbeLSK5a (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Wed, 19 Dec 2018 05:57:30 -0500
-Received: from mail-sh2.amlogic.com ([58.32.228.45]:8380 "EHLO
+        id S1727937AbeLSLNU (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Wed, 19 Dec 2018 06:13:20 -0500
+Received: from mail-sh2.amlogic.com ([58.32.228.45]:29505 "EHLO
         mail-sh2.amlogic.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1728297AbeLSK53 (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Wed, 19 Dec 2018 05:57:29 -0500
+        with ESMTP id S1727551AbeLSLNU (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Wed, 19 Dec 2018 06:13:20 -0500
 Received: from [10.18.29.147] (10.18.29.147) by mail-sh2.amlogic.com
  (10.18.11.6) with Microsoft SMTP Server (TLS) id 15.0.1320.4; Wed, 19 Dec
- 2018 18:57:48 +0800
-Subject: Re: [PATCH v8 1/2] dt-bindings: PCI: meson: add DT bindings for
- Amlogic Meson PCIe controller
-To:     Martin Blumenstingl <martin.blumenstingl@googlemail.com>,
-        Rob Herring <robh@kernel.org>
+ 2018 19:13:47 +0800
+Subject: Re: [PATCH v8 2/2] PCI: amlogic: Add the Amlogic Meson PCIe
+ controller driver
+To:     Bjorn Helgaas <helgaas@kernel.org>
 CC:     Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
-        Bjorn Helgaas <bhelgaas@google.com>,
-        Yixun Lan <yixun.lan@amlogic.com>,
-        Jianxin Pan <jianxin.pan@amlogic.com>,
-        <devicetree@vger.kernel.org>, Kevin Hilman <khilman@baylibre.com>,
+        Yue Wang <yue.wang@amlogic.com>,
+        Kevin Hilman <khilman@baylibre.com>,
+        Carlo Caione <carlo@caione.org>,
+        Jerome Brunet <jbrunet@baylibre.com>,
+        Rob Herring <robh@kernel.org>,
+        Gustavo Pimentel <gustavo.pimentel@synopsys.com>,
         Shawn Lin <shawn.lin@rock-chips.com>,
         Philippe Ombredanne <pombredanne@nexb.com>,
-        <linux-pci@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
-        Yue Wang <yue.wang@amlogic.com>,
-        Qiufang Dai <qiufang.dai@amlogic.com>,
-        Jian Hu <jian.hu@amlogic.com>,
-        Liang Yang <liang.yang@amlogic.com>,
         Cyrille Pitchen <cyrille.pitchen@free-electrons.com>,
-        Gustavo Pimentel <gustavo.pimentel@synopsys.com>,
-        Carlo Caione <carlo@caione.org>,
-        <linux-amlogic@lists.infradead.org>,
+        <linux-kernel@vger.kernel.org>, <linux-pci@vger.kernel.org>,
         <linux-arm-kernel@lists.infradead.org>,
-        Jerome Brunet <jbrunet@baylibre.com>
+        <linux-amlogic@lists.infradead.org>,
+        Yixun Lan <yixun.lan@amlogic.com>,
+        Liang Yang <liang.yang@amlogic.com>,
+        Jianxin Pan <jianxin.pan@amlogic.com>,
+        Qiufang Dai <qiufang.dai@amlogic.com>,
+        Jian Hu <jian.hu@amlogic.com>
 References: <1545120286-129258-1-git-send-email-hanjie.lin@amlogic.com>
- <1545120286-129258-2-git-send-email-hanjie.lin@amlogic.com>
- <CAFBinCD1x7jcJJx78yNx87MOmKQ2HuSBeRpDRQE0hyNCwm1JAg@mail.gmail.com>
+ <1545120286-129258-3-git-send-email-hanjie.lin@amlogic.com>
+ <20181218224708.GB22610@google.com>
 From:   Hanjie Lin <hanjie.lin@amlogic.com>
-Message-ID: <e3cce5d7-354c-4042-bf76-c22f3893d72c@amlogic.com>
-Date:   Wed, 19 Dec 2018 18:57:48 +0800
+Message-ID: <df9e974d-cac8-3522-fdbe-1811160bb4fc@amlogic.com>
+Date:   Wed, 19 Dec 2018 19:13:47 +0800
 User-Agent: Mozilla/5.0 (Windows NT 10.0; WOW64; rv:60.0) Gecko/20100101
  Thunderbird/60.3.3
 MIME-Version: 1.0
-In-Reply-To: <CAFBinCD1x7jcJJx78yNx87MOmKQ2HuSBeRpDRQE0hyNCwm1JAg@mail.gmail.com>
-Content-Type: text/plain; charset="utf-8"
+In-Reply-To: <20181218224708.GB22610@google.com>
+Content-Type: text/plain; charset="windows-1252"
 Content-Language: en-US
 Content-Transfer-Encoding: 7bit
 X-Originating-IP: [10.18.29.147]
@@ -66,52 +65,115 @@ X-Mailing-List: linux-pci@vger.kernel.org
 
 
 
-On 2018/12/19 7:14, Martin Blumenstingl wrote:
-> Hi Rob, Hi Hanjie,
+On 2018/12/19 6:47, Bjorn Helgaas wrote:
+> On Tue, Dec 18, 2018 at 04:04:46PM +0800, Hanjie Lin wrote:
+>> From: Yue Wang <yue.wang@amlogic.com>
+>>
+>> The Amlogic Meson PCIe host controller is based on the Synopsys DesignWare
+>> PCI core. This patch adds the driver support for Meson PCIe controller.
 > 
-> (sorry for being late with my question)
+> I don't have any comments on the code itself; just the trivial things
+> below.  No need to repost for these unless you're changing something
+> else.
 > 
-> On Tue, Dec 18, 2018 at 9:05 AM Hanjie Lin <hanjie.lin@amlogic.com> wrote:
-> [...]
->> +- reg-names: Must be
->> +       - "elbi"        External local bus interface registers
->> +       - "cfg"         Meson specific registers
->> +       - "phy"         Meson PCIE PHY registers
-> I have learned that there are two PHY register designs:
-> - AXG only has a PCIe PHY
-> - G12A has a PHY which supports PCIe and USB 3.0. The PCIe part of
-> this PHY design is compatible with AXG, but this design also supports
-> a USB 3.0 port (it's an exclusive choice: either PCIe *or* USB 3.0)
+> I thought it looked very pretty overall, thanks for paying attention
+> to that!
 > 
-> The PCIe controller itself is identical on both, AXG and G12A.
-> This patch adds support for the AXG PCIe controller and PHY within one
-> device-tree node.
+>> +static int meson_size_to_payload(struct meson_pcie *mp, int size)
+>> +{
+>> +	struct device *dev = mp->pci.dev;
+>> +
+>> +	/*
+>> +	 * dwc supports 2^(val+7) payload size, which val is 0~5 default to 1.
+>> +	 * So if input size is not 2^order alignment or less than 2^7 or bigger
+>> +	 * than 2^12, just set to default size 2^(1+7).
+>> +	 */
+>> +	if (!is_power_of_2(size) || size < 128 || size > 4096) {
+>> +		dev_warn(dev, "playload size %d, set to default 256\n", size);
 > 
-> For G12A I propose to add a separate "phys" property with a phandle to
-> the "combo" PCIe and USB3.0 PHY - this can be part of a separate patch
-> though.
-> I would like to know whether it's OK that for AXG the PCIe PHY is
-> described in the same device-tree node as the PCIe controller (in
-> other words: we're not using a "phys" property here)?
+> s/playload/payload/
 > 
+>> +static void meson_set_max_payload(struct meson_pcie *mp, int size)
+>> +{
+>> +	u32 val = 0;
 > 
-> Kind Regards
-> Martin
+> Unnecessary initialization.
+> 
+>> +	int max_payload_size = meson_size_to_payload(mp, size);
+>> +
+>> +	val = meson_elb_readl(mp, PCIE_DEV_CTRL_DEV_STUS);
+> 
+>> +static int meson_pcie_rd_own_conf(struct pcie_port *pp, int where, int size,
+>> +				  u32 *val)
+>> +{
+>> +	struct dw_pcie *pci = to_dw_pcie_from_pp(pp);
+>> +	int ret;
+>> +
+>> +	ret = dw_pcie_read(pci->dbi_base + where, size, val);
+>> +	if (ret != PCIBIOS_SUCCESSFUL)
+>> +		return ret;
+>> +
+>> +	/*
+>> +	 * There is a bug in the MESON AXG pcie controller whereby software
+>> +	 * cannot programme the PCI_CLASS_DEVICE register, so we must fabricate
+>> +	 * the return value in the config accessors.
+> 
+> s/pcie/PCIe/
+> s/programme/program/ (IIUC, "programme" is British and only used as a
+> noun, where here you need a verb)
+> 
+>> +static int meson_pcie_link_up(struct dw_pcie *pci)
+>> +{
+>> +	struct meson_pcie *mp = to_meson_pcie(pci);
+>> +	struct device *dev = pci->dev;
+>> +	u32 smlh_up = 0;
+>> +	u32 ltssm_up = 0;
+>> +	u32 rdlh_up = 0;
+> 
+> Unnecessary initialization of smlh_up, ltssm_up, and rdlh_up.
+> 
+>> +	u32 speed_okay = 0;
+>> +	u32 cnt = 0;
+>> +	u32 state12, state17;
+>> +
+>> +	do {
+>> +		state12 = meson_cfg_readl(mp, PCIE_CFG_STATUS12);
+>> +		state17 = meson_cfg_readl(mp, PCIE_CFG_STATUS17);
+>> +		smlh_up = IS_SMLH_LINK_UP(state12);
+>> +		rdlh_up = IS_RDLH_LINK_UP(state12);
+>> +		ltssm_up = IS_LTSSM_UP(state12);
+> 
+>> +	dev_err(dev, "Error: Wait linkup timeout.\n");
+> 
+> Message doesn't match others from driver (capitalization and trailing
+> period).
+> 
+>> +			dev_err(dev, "failed to get msi irq\n");
+> 
+> s/msi irq/MSI IRQ/
+> 
+>> +	ret = meson_add_pcie_port(mp, pdev);
+>> +	if (ret < 0) {
+>> +		dev_err(dev, "Add PCIE port failed, %d\n", ret);
+> 
+> s/PCIE/PCIe/
+> 
+> All the messages in this function are capitalized differently than
+> other messages in the driver.
+> 
+> Bjorn
 > 
 > .
 > 
 
-hi matrin,
+hi Bjorn:
 
-We do had a dedicated PHY driver for a time at the begining
-of this patch series, but we decided to remove it and integrate
-into the controller driver after series reviews and disscussions,
-and the main reason is it's too overkill to have a dedicated 
-PHY driver which only do the RESET job.
+Thanks for the all suggestions and corrections.
 
-Of course we can consider the dedicated PHY driver for G12A upstream
-in future.
+There were too many code details unnecessary initialization, typing errors
+and coding style etc. I will pay more attention to these rules and code-details
+in the future patches also my daily work.
 
-thanks
-hanjie
+thanks again
 
+hanjie.
