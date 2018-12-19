@@ -2,50 +2,50 @@ Return-Path: <SRS0=4gsO=O4=vger.kernel.org=linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-9.2 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
+X-Spam-Status: No, score=-6.4 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
 	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,
-	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT
-	autolearn=unavailable autolearn_force=no version=3.4.0
+	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_PASS,UNWANTED_LANGUAGE_BODY,
+	USER_AGENT_GIT autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id D8DEFC43387
-	for <linux-pci@archiver.kernel.org>; Wed, 19 Dec 2018 12:43:06 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 29227C43444
+	for <linux-pci@archiver.kernel.org>; Wed, 19 Dec 2018 12:43:22 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id A35E02080D
-	for <linux-pci@archiver.kernel.org>; Wed, 19 Dec 2018 12:43:06 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id E03DE214AE
+	for <linux-pci@archiver.kernel.org>; Wed, 19 Dec 2018 12:43:21 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (1024-bit key) header.d=ti.com header.i=@ti.com header.b="Xt0aO/qC"
+	dkim=pass (1024-bit key) header.d=ti.com header.i=@ti.com header.b="B4XRHDBL"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727613AbeLSMms (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Wed, 19 Dec 2018 07:42:48 -0500
-Received: from fllv0016.ext.ti.com ([198.47.19.142]:54700 "EHLO
-        fllv0016.ext.ti.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1729726AbeLSMms (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Wed, 19 Dec 2018 07:42:48 -0500
-Received: from fllv0035.itg.ti.com ([10.64.41.0])
-        by fllv0016.ext.ti.com (8.15.2/8.15.2) with ESMTP id wBJCgafD098484;
-        Wed, 19 Dec 2018 06:42:36 -0600
+        id S1729871AbeLSMnU (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Wed, 19 Dec 2018 07:43:20 -0500
+Received: from fllv0015.ext.ti.com ([198.47.19.141]:38698 "EHLO
+        fllv0015.ext.ti.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1729858AbeLSMnT (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Wed, 19 Dec 2018 07:43:19 -0500
+Received: from lelv0265.itg.ti.com ([10.180.67.224])
+        by fllv0015.ext.ti.com (8.15.2/8.15.2) with ESMTP id wBJCgqC6128202;
+        Wed, 19 Dec 2018 06:42:52 -0600
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=ti.com;
-        s=ti-com-17Q1; t=1545223356;
-        bh=/mryJEnDKpkn8c9z8vkT/gef1dG7mXbfXz/QOxGPW7c=;
+        s=ti-com-17Q1; t=1545223372;
+        bh=s8YQTAlDMbSOqhf4u+bKfrqy75XWX+0He0qtHas8k58=;
         h=From:To:CC:Subject:Date:In-Reply-To:References;
-        b=Xt0aO/qCvm1jPcl/uy0Dw1olZC3RzKQaWI0I1dE50ZjJeAun+tzmrUSNI5WuNEhxR
-         /PfqQTLIqUFTe+Wmz0pzgH+VDCuZKc7YKv1v+V9cWPsJAYCTbfxtZMlOlpKgprl01+
-         cOOjet7DzDeP5n/WuA0fTJ+LDu8ccN9xgp+bVhHg=
-Received: from DFLE114.ent.ti.com (dfle114.ent.ti.com [10.64.6.35])
-        by fllv0035.itg.ti.com (8.15.2/8.15.2) with ESMTPS id wBJCga72034588
+        b=B4XRHDBLQXnhVbGq2D9BiU8thbQgCyVJS6yPQajIZlBEoWJgiTFVRRD+Sy0Xs0ZVN
+         5nUoPRPhswPYbt9oEIPgm+mHerJg+MWAUKNHZMNlgJVtssC80GmuZSaeDEGRZ+Sv5v
+         o+5w1aHHwZmm8g1QwMRkDM/XVy5i5JCv9RTinX/4=
+Received: from DLEE103.ent.ti.com (dlee103.ent.ti.com [157.170.170.33])
+        by lelv0265.itg.ti.com (8.15.2/8.15.2) with ESMTPS id wBJCgp9j041051
         (version=TLSv1.2 cipher=AES256-GCM-SHA384 bits=256 verify=FAIL);
-        Wed, 19 Dec 2018 06:42:36 -0600
-Received: from DFLE109.ent.ti.com (10.64.6.30) by DFLE114.ent.ti.com
- (10.64.6.35) with Microsoft SMTP Server (version=TLS1_2,
+        Wed, 19 Dec 2018 06:42:52 -0600
+Received: from DLEE101.ent.ti.com (157.170.170.31) by DLEE103.ent.ti.com
+ (157.170.170.33) with Microsoft SMTP Server (version=TLS1_2,
  cipher=TLS_ECDHE_RSA_WITH_AES_128_CBC_SHA256_P256) id 15.1.1591.10; Wed, 19
- Dec 2018 06:42:36 -0600
-Received: from dlep32.itg.ti.com (157.170.170.100) by DFLE109.ent.ti.com
- (10.64.6.30) with Microsoft SMTP Server (version=TLS1_0,
+ Dec 2018 06:42:51 -0600
+Received: from dlep32.itg.ti.com (157.170.170.100) by DLEE101.ent.ti.com
+ (157.170.170.31) with Microsoft SMTP Server (version=TLS1_0,
  cipher=TLS_RSA_WITH_AES_256_CBC_SHA) id 15.1.1591.10 via Frontend Transport;
- Wed, 19 Dec 2018 06:42:36 -0600
+ Wed, 19 Dec 2018 06:42:51 -0600
 Received: from a0393678ub.india.ti.com (ileax41-snat.itg.ti.com [10.172.224.153])
-        by dlep32.itg.ti.com (8.14.3/8.13.8) with ESMTP id wBJCgNZm003940;
-        Wed, 19 Dec 2018 06:42:33 -0600
+        by dlep32.itg.ti.com (8.14.3/8.13.8) with ESMTP id wBJCgNZr003940;
+        Wed, 19 Dec 2018 06:42:48 -0600
 From:   Kishon Vijay Abraham I <kishon@ti.com>
 To:     Murali Karicheri <m-karicheri2@ti.com>,
         Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
@@ -55,9 +55,9 @@ CC:     Bjorn Helgaas <bhelgaas@google.com>,
         Jingoo Han <jingoohan1@gmail.com>, <linux-pci@vger.kernel.org>,
         <linux-arm-kernel@lists.infradead.org>,
         <linux-kernel@vger.kernel.org>, <kishon@ti.com>
-Subject: [PATCH 03/10] PCI: keystone: Modify legacy_irq_handler to check the IRQ_STATUS of INTA/B/C/D
-Date:   Wed, 19 Dec 2018 18:12:00 +0530
-Message-ID: <20181219124207.13479-4-kishon@ti.com>
+Subject: [PATCH 08/10] PCI: keystone: Use Keystone specific msi_irq_chip
+Date:   Wed, 19 Dec 2018 18:12:05 +0530
+Message-ID: <20181219124207.13479-9-kishon@ti.com>
 X-Mailer: git-send-email 2.17.1
 In-Reply-To: <20181219124207.13479-1-kishon@ti.com>
 References: <20181219124207.13479-1-kishon@ti.com>
@@ -69,79 +69,167 @@ Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-The legacy interrupt handler directly checks the IRQ_STATUS register
-corresponding to a interrupt line inorder to invoke generic_handle_irq.
+Use Keystone specific msi_irq_chip to configure the MSI controller
+logic in the PCIe keystone wrapper instead of using the default
+Designware msi_irq chip (dw_pci_msi_bottom_irq_chip) with
+callback functions for configuring the Keystone MSI controller.
+This will help to remove Keystone specific callback functions
+added in dw_pcie_host_ops.
 
-While this is okay for K2G platform which has separate interrupt line for
-each of the 4 legacy interrupts, AM654 which uses the same PCIe wrapper
-has a single interrupt line for all the legacy interrupts. So for AM654
-the interrupt handler won't be able to directly check the IRQ_STATUS
-register corresponding to the interrupt line.
-
-Also the legacy interrupt handler uses 'virq' obtained from
-irq_of_parse_and_map to find the correct interrupt line which raised the
-interrupt. There is no guarantee that virq assigned for contiguous hardware
-irq will be contiguous and the interrupt handler might end up checking
-the wrong IRQ_STATUS register.
-
-In order to overcome the above issues, read the IRQ_STATUS register of
-all the 4 legacy interrupts to determine which interrupt was raised.
-
-Link: https://lkml.kernel.org/r/bb081d21-7c03-0357-4294-7e92d95d838c@arm.com
 Signed-off-by: Kishon Vijay Abraham I <kishon@ti.com>
 ---
- drivers/pci/controller/dwc/pci-keystone.c | 22 ++++++++++++----------
- 1 file changed, 12 insertions(+), 10 deletions(-)
+ drivers/pci/controller/dwc/pci-keystone.c | 96 +++++++++++++++++------
+ 1 file changed, 72 insertions(+), 24 deletions(-)
 
 diff --git a/drivers/pci/controller/dwc/pci-keystone.c b/drivers/pci/controller/dwc/pci-keystone.c
-index 1ef443009da5..e9f5387136f0 100644
+index 05b2bd613c68..420d30ce11f4 100644
 --- a/drivers/pci/controller/dwc/pci-keystone.c
 +++ b/drivers/pci/controller/dwc/pci-keystone.c
-@@ -214,16 +214,11 @@ static void ks_pcie_handle_legacy_irq(struct keystone_pcie *ks_pcie,
- {
- 	struct dw_pcie *pci = ks_pcie->pci;
- 	struct device *dev = pci->dev;
--	u32 pending;
- 	int virq;
+@@ -104,14 +104,6 @@ struct keystone_pcie {
+ 	struct resource		app;
+ };
  
--	pending = ks_pcie_app_readl(ks_pcie, IRQ_STATUS(offset));
+-static phys_addr_t ks_pcie_get_msi_addr(struct pcie_port *pp)
+-{
+-	struct dw_pcie *pci = to_dw_pcie_from_pp(pp);
+-	struct keystone_pcie *ks_pcie = to_keystone_pcie(pci);
 -
--	if (BIT(0) & pending) {
--		virq = irq_linear_revmap(ks_pcie->legacy_irq_domain, offset);
--		dev_dbg(dev, ": irq: irq_offset %d, virq %d\n", offset, virq);
--		generic_handle_irq(virq);
--	}
-+	virq = irq_linear_revmap(ks_pcie->legacy_irq_domain, offset);
-+	dev_dbg(dev, ": irq: irq_offset %d, virq %d\n", offset, virq);
-+	generic_handle_irq(virq);
- 
- 	/* EOI the INTx interrupt */
- 	ks_pcie_app_writel(ks_pcie, IRQ_EOI, offset);
-@@ -587,8 +582,9 @@ static void ks_pcie_legacy_irq_handler(struct irq_desc *desc)
- 	struct keystone_pcie *ks_pcie = irq_desc_get_handler_data(desc);
- 	struct dw_pcie *pci = ks_pcie->pci;
- 	struct device *dev = pci->dev;
--	u32 irq_offset = irq - ks_pcie->legacy_host_irqs[0];
- 	struct irq_chip *chip = irq_desc_get_chip(desc);
-+	unsigned int irq_no;
-+	u32 reg;
- 
- 	dev_dbg(dev, ": Handling legacy irq %d\n", irq);
- 
-@@ -598,7 +594,13 @@ static void ks_pcie_legacy_irq_handler(struct irq_desc *desc)
- 	 * ack operation.
- 	 */
- 	chained_irq_enter(chip, desc);
--	ks_pcie_handle_legacy_irq(ks_pcie, irq_offset);
-+	for (irq_no = 0; irq_no < PCI_NUM_INTX; irq_no++) {
-+		reg = ks_pcie_app_readl(ks_pcie, IRQ_STATUS(irq_no));
-+		if (!(reg & INTx_EN))
-+			continue;
-+		ks_pcie_handle_legacy_irq(ks_pcie, irq_no);
-+	}
-+
- 	chained_irq_exit(chip, desc);
+-	return ks_pcie->app.start + MSI_IRQ;
+-}
+-
+ static u32 ks_pcie_app_readl(struct keystone_pcie *ks_pcie, u32 offset)
+ {
+ 	return readl(ks_pcie->va_app_base + offset);
+@@ -123,11 +115,14 @@ static void ks_pcie_app_writel(struct keystone_pcie *ks_pcie, u32 offset,
+ 	writel(val, ks_pcie->va_app_base + offset);
  }
+ 
+-static void ks_pcie_msi_irq_ack(int irq, struct pcie_port *pp)
++static void ks_pcie_msi_irq_ack(struct irq_data *data)
+ {
+-	u32 reg_offset, bit_pos;
++	struct pcie_port *pp  = irq_data_get_irq_chip_data(data);
+ 	struct keystone_pcie *ks_pcie;
++	u32 irq = data->hwirq;
+ 	struct dw_pcie *pci;
++	u32 reg_offset;
++	u32 bit_pos;
+ 
+ 	pci = to_dw_pcie_from_pp(pp);
+ 	ks_pcie = to_keystone_pcie(pci);
+@@ -140,34 +135,91 @@ static void ks_pcie_msi_irq_ack(int irq, struct pcie_port *pp)
+ 	ks_pcie_app_writel(ks_pcie, IRQ_EOI, reg_offset + MSI_IRQ_OFFSET);
+ }
+ 
+-static void ks_pcie_msi_set_irq(struct pcie_port *pp, int irq)
++static void ks_pcie_compose_msi_msg(struct irq_data *data, struct msi_msg *msg)
+ {
+-	u32 reg_offset, bit_pos;
+-	struct dw_pcie *pci = to_dw_pcie_from_pp(pp);
+-	struct keystone_pcie *ks_pcie = to_keystone_pcie(pci);
++	struct pcie_port *pp = irq_data_get_irq_chip_data(data);
++	struct keystone_pcie *ks_pcie;
++	struct dw_pcie *pci;
++	u64 msi_target;
++
++	pci = to_dw_pcie_from_pp(pp);
++	ks_pcie = to_keystone_pcie(pci);
++
++	msi_target = ks_pcie->app.start + MSI_IRQ;
++	msg->address_lo = lower_32_bits(msi_target);
++	msg->address_hi = upper_32_bits(msi_target);
++	msg->data = data->hwirq;
++
++	dev_dbg(pci->dev, "msi#%d address_hi %#x address_lo %#x\n",
++		(int)data->hwirq, msg->address_hi, msg->address_lo);
++}
++
++static int ks_pcie_msi_set_affinity(struct irq_data *irq_data,
++				    const struct cpumask *mask, bool force)
++{
++	return -EINVAL;
++}
++
++static void ks_pcie_msi_mask(struct irq_data *data)
++{
++	struct pcie_port *pp = irq_data_get_irq_chip_data(data);
++	struct keystone_pcie *ks_pcie;
++	u32 irq = data->hwirq;
++	struct dw_pcie *pci;
++	unsigned long flags;
++	u32 reg_offset;
++	u32 bit_pos;
++
++	raw_spin_lock_irqsave(&pp->lock, flags);
++
++	pci = to_dw_pcie_from_pp(pp);
++	ks_pcie = to_keystone_pcie(pci);
+ 
+ 	reg_offset = irq % 8;
+ 	bit_pos = irq >> 3;
+ 
+-	ks_pcie_app_writel(ks_pcie, MSI_IRQ_ENABLE_SET(reg_offset),
++	ks_pcie_app_writel(ks_pcie, MSI_IRQ_ENABLE_CLR(reg_offset),
+ 			   BIT(bit_pos));
++
++	raw_spin_unlock_irqrestore(&pp->lock, flags);
+ }
+ 
+-static void ks_pcie_msi_clear_irq(struct pcie_port *pp, int irq)
++static void ks_pcie_msi_unmask(struct irq_data *data)
+ {
+-	u32 reg_offset, bit_pos;
+-	struct dw_pcie *pci = to_dw_pcie_from_pp(pp);
+-	struct keystone_pcie *ks_pcie = to_keystone_pcie(pci);
++	struct pcie_port *pp = irq_data_get_irq_chip_data(data);
++	struct keystone_pcie *ks_pcie;
++	u32 irq = data->hwirq;
++	struct dw_pcie *pci;
++	unsigned long flags;
++	u32 reg_offset;
++	u32 bit_pos;
++
++	raw_spin_lock_irqsave(&pp->lock, flags);
++
++	pci = to_dw_pcie_from_pp(pp);
++	ks_pcie = to_keystone_pcie(pci);
+ 
+ 	reg_offset = irq % 8;
+ 	bit_pos = irq >> 3;
+ 
+-	ks_pcie_app_writel(ks_pcie, MSI_IRQ_ENABLE_CLR(reg_offset),
++	ks_pcie_app_writel(ks_pcie, MSI_IRQ_ENABLE_SET(reg_offset),
+ 			   BIT(bit_pos));
++
++	raw_spin_unlock_irqrestore(&pp->lock, flags);
+ }
+ 
++static struct irq_chip ks_pcie_msi_irq_chip = {
++	.name = "KEYSTONE-PCI-MSI",
++	.irq_ack = ks_pcie_msi_irq_ack,
++	.irq_compose_msi_msg = ks_pcie_compose_msi_msg,
++	.irq_set_affinity = ks_pcie_msi_set_affinity,
++	.irq_mask = ks_pcie_msi_mask,
++	.irq_unmask = ks_pcie_msi_unmask,
++};
++
+ static int ks_pcie_msi_host_init(struct pcie_port *pp)
+ {
++	pp->msi_irq_chip = &ks_pcie_msi_irq_chip;
+ 	return dw_pcie_allocate_domains(pp);
+ }
+ 
+@@ -768,11 +820,7 @@ static const struct dw_pcie_host_ops ks_pcie_host_ops = {
+ 	.rd_other_conf = ks_pcie_rd_other_conf,
+ 	.wr_other_conf = ks_pcie_wr_other_conf,
+ 	.host_init = ks_pcie_host_init,
+-	.msi_set_irq = ks_pcie_msi_set_irq,
+-	.msi_clear_irq = ks_pcie_msi_clear_irq,
+-	.get_msi_addr = ks_pcie_get_msi_addr,
+ 	.msi_host_init = ks_pcie_msi_host_init,
+-	.msi_irq_ack = ks_pcie_msi_irq_ack,
+ 	.scan_bus = ks_pcie_v3_65_scan_bus,
+ };
  
 -- 
 2.17.1
