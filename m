@@ -2,228 +2,110 @@ Return-Path: <SRS0=4gsO=O4=vger.kernel.org=linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-9.2 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
-	SPF_PASS,USER_AGENT_GIT autolearn=unavailable autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-6.0 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+	MAILING_LIST_MULTI,MENTIONS_GIT_HOSTING,SPF_PASS,URIBL_BLOCKED autolearn=ham
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 12ECAC43612
-	for <linux-pci@archiver.kernel.org>; Wed, 19 Dec 2018 22:47:38 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id A7272C43387
+	for <linux-pci@archiver.kernel.org>; Wed, 19 Dec 2018 23:10:12 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id CAFE820874
-	for <linux-pci@archiver.kernel.org>; Wed, 19 Dec 2018 22:47:37 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=default; t=1545259657;
-	bh=srECx3uDp528BcPgeYFTmHwXgYvdj7lpCSHqqkym1Fg=;
-	h=From:To:Cc:Subject:Date:In-Reply-To:References:List-ID:From;
-	b=tGH6iDRyWW9dwtWV299CStz/ggaTTYrYm+OERrjzirOjU7GBP8CPpHI0C3tb06rvb
-	 hXTlSb4g+KXHjiCuSo9gM95g0srCRfStOeyO2ea9SqKPUovc09Ss2WIDu40oC/d3gn
-	 DYDM+JopSSqpn28o8P2dCgDKjecMN1aPj/b9lttA=
+	by mail.kernel.org (Postfix) with ESMTP id 7255C20989
+	for <linux-pci@archiver.kernel.org>; Wed, 19 Dec 2018 23:10:12 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1729563AbeLSWrP (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Wed, 19 Dec 2018 17:47:15 -0500
-Received: from mail.kernel.org ([198.145.29.99]:59886 "EHLO mail.kernel.org"
+        id S1728688AbeLSXKL (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Wed, 19 Dec 2018 18:10:11 -0500
+Received: from mx1.redhat.com ([209.132.183.28]:42138 "EHLO mx1.redhat.com"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1728519AbeLSWrO (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Wed, 19 Dec 2018 17:47:14 -0500
-Received: from sinanubuntu1604.mkjiurmyylmellclgttazegk5f.bx.internal.cloudapp.net (unknown [13.90.192.21])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES128-SHA256 (128/128 bits))
+        id S1728093AbeLSXKL (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Wed, 19 Dec 2018 18:10:11 -0500
+Received: from smtp.corp.redhat.com (int-mx08.intmail.prod.int.phx2.redhat.com [10.5.11.23])
+        (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
         (No client certificate requested)
-        by mail.kernel.org (Postfix) with ESMTPSA id 1BA5A20989;
-        Wed, 19 Dec 2018 22:47:12 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=default; t=1545259633;
-        bh=srECx3uDp528BcPgeYFTmHwXgYvdj7lpCSHqqkym1Fg=;
-        h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=n+H7qesbFXrmsao3SJuVBTkfyKs50iZylX0k8qSnN6wv7h91igtitvAaGmKHk5l4H
-         4bulQxbGLVSZtKIya8S7Ie9xdhFWVVa4xJReGwiRUky3WmXH5rrxFRsvutqKgIttdV
-         bKAUd9gDItGcRrXGa4iWBukxIyH04E+IK5JEXQVo=
-From:   Sinan Kaya <okaya@kernel.org>
-To:     linux-acpi@vger.kernel.org
-Cc:     Sinan Kaya <okaya@kernel.org>,
-        Thomas Gleixner <tglx@linutronix.de>,
-        Ingo Molnar <mingo@redhat.com>, Borislav Petkov <bp@alien8.de>,
-        "H. Peter Anvin" <hpa@zytor.com>,
-        x86@kernel.org (maintainer:X86 ARCHITECTURE (32-BIT AND 64-BIT)),
-        "Rafael J. Wysocki" <rjw@rjwysocki.net>,
-        Len Brown <lenb@kernel.org>,
-        Bjorn Helgaas <bhelgaas@google.com>,
-        Robert Moore <robert.moore@intel.com>,
-        Erik Schmauss <erik.schmauss@intel.com>,
-        Andy Shevchenko <andy.shevchenko@gmail.com>,
-        =?UTF-8?q?Christian=20K=C3=B6nig?= <christian.koenig@amd.com>,
-        "=?UTF-8?q?Christian=20K=C3=B6nig?=" 
-        <ckoenig.leichtzumerken@gmail.com>,
-        Otavio Pontes <otavio.pontes@intel.com>,
-        linux-kernel@vger.kernel.org (open list:X86 ARCHITECTURE (32-BIT AND
-        64-BIT)), linux-pci@vger.kernel.org (open list:PCI SUBSYSTEM),
-        devel@acpica.org (open list:ACPI COMPONENT ARCHITECTURE (ACPICA))
-Subject: [PATCH v12 4/7] PCI/ACPI: Allow ACPI to be built without CONFIG_PCI set
-Date:   Wed, 19 Dec 2018 22:46:56 +0000
-Message-Id: <20181219224659.4802-5-okaya@kernel.org>
-X-Mailer: git-send-email 2.19.0
-In-Reply-To: <20181219224659.4802-1-okaya@kernel.org>
-References: <20181219224659.4802-1-okaya@kernel.org>
+        by mx1.redhat.com (Postfix) with ESMTPS id D296E13AA6;
+        Wed, 19 Dec 2018 23:10:10 +0000 (UTC)
+Received: from redhat.com (ovpn-120-164.rdu2.redhat.com [10.10.120.164])
+        by smtp.corp.redhat.com (Postfix) with ESMTP id D91365794;
+        Wed, 19 Dec 2018 23:10:00 +0000 (UTC)
+Date:   Wed, 19 Dec 2018 18:09:59 -0500
+From:   "Michael S. Tsirkin" <mst@redhat.com>
+To:     Jean-Philippe Brucker <jean-philippe.brucker@arm.com>
+Cc:     Joerg Roedel <joro@8bytes.org>,
+        "iommu@lists.linux-foundation.org" <iommu@lists.linux-foundation.org>,
+        "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+        "devicetree@vger.kernel.org" <devicetree@vger.kernel.org>,
+        "virtualization@lists.linux-foundation.org" 
+        <virtualization@lists.linux-foundation.org>,
+        "virtio-dev@lists.oasis-open.org" <virtio-dev@lists.oasis-open.org>,
+        "jasowang@redhat.com" <jasowang@redhat.com>,
+        "robh+dt@kernel.org" <robh+dt@kernel.org>,
+        Mark Rutland <Mark.Rutland@arm.com>,
+        "bhelgaas@google.com" <bhelgaas@google.com>,
+        "frowand.list@gmail.com" <frowand.list@gmail.com>,
+        "kvmarm@lists.cs.columbia.edu" <kvmarm@lists.cs.columbia.edu>,
+        "eric.auger@redhat.com" <eric.auger@redhat.com>,
+        "tnowicki@caviumnetworks.com" <tnowicki@caviumnetworks.com>,
+        "kevin.tian@intel.com" <kevin.tian@intel.com>,
+        Marc Zyngier <Marc.Zyngier@arm.com>,
+        Robin Murphy <Robin.Murphy@arm.com>,
+        Will Deacon <Will.Deacon@arm.com>,
+        Lorenzo Pieralisi <Lorenzo.Pieralisi@arm.com>,
+        "bharat.bhushan@nxp.com" <bharat.bhushan@nxp.com>
+Subject: Re: [PATCH v6 0/7] Add virtio-iommu driver
+Message-ID: <20181219180417-mutt-send-email-mst@kernel.org>
+References: <20181211182104.18241-1-jean-philippe.brucker@arm.com>
+ <20181212103545.GV16835@8bytes.org>
+ <9110873f-d344-b6b9-c722-9accfc329db2@arm.com>
 MIME-Version: 1.0
+Content-Type: text/plain; charset=iso-8859-1
+Content-Disposition: inline
 Content-Transfer-Encoding: 8bit
+In-Reply-To: <9110873f-d344-b6b9-c722-9accfc329db2@arm.com>
+X-Scanned-By: MIMEDefang 2.84 on 10.5.11.23
+X-Greylist: Sender IP whitelisted, not delayed by milter-greylist-4.5.16 (mx1.redhat.com [10.5.110.29]); Wed, 19 Dec 2018 23:10:11 +0000 (UTC)
 Sender: linux-pci-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-We are compiling PCI code today for systems with ACPI and no PCI
-device present. Remove the useless code and reduce the tight
-dependency.
+On Thu, Dec 13, 2018 at 12:50:29PM +0000, Jean-Philippe Brucker wrote:
+> >> [3] git://linux-arm.org/linux-jpb.git virtio-iommu/v0.9.1
+> >>     git://linux-arm.org/kvmtool-jpb.git virtio-iommu/v0.9
+> > 
+> > Unfortunatly gitweb seems to be broken on linux-arm.org. What is missing
+> > in this patch-set to make this work on x86?
+> 
+> You should be able to access it here:
+> http://www.linux-arm.org/git?p=linux-jpb.git;a=shortlog;h=refs/heads/virtio-iommu/devel
+> 
+> That branch contains missing bits for x86 support:
+> 
+> * ACPI support. We have the code but it's waiting for an IORT spec
+> update, to reserve the IORT node ID. I expect it to take a while, given
+> that I'm alone requesting a change for something that's not upstream or
+> in hardware.
 
-Signed-off-by: Sinan Kaya <okaya@kernel.org>
-Acked-by: Bjorn Helgaas <bhelgaas@google.com> # PCI parts
-Acked-by: Ingo Molnar <mingo@kernel.org>
----
- arch/x86/include/asm/pci_x86.h | 7 +++++++
- drivers/acpi/Kconfig           | 1 -
- drivers/acpi/Makefile          | 2 +-
- drivers/acpi/internal.h        | 5 +++++
- drivers/pci/Makefile           | 2 +-
- include/acpi/acpi_drivers.h    | 7 +++++++
- include/linux/acpi.h           | 7 +++++++
- include/linux/pci.h            | 4 ++++
- 8 files changed, 32 insertions(+), 3 deletions(-)
+Frankly I think you should take a hard look at just getting the data
+needed from the PCI device itself.  You don't need to depend on virtio,
+it can be a small driver that gets you that data from the device config
+space and then just goes away.
 
-diff --git a/arch/x86/include/asm/pci_x86.h b/arch/x86/include/asm/pci_x86.h
-index 959d618dbb17..73bb404f4d2a 100644
---- a/arch/x86/include/asm/pci_x86.h
-+++ b/arch/x86/include/asm/pci_x86.h
-@@ -121,7 +121,14 @@ extern void __init dmi_check_pciprobe(void);
- extern void __init dmi_check_skip_isa_align(void);
- 
- /* some common used subsys_initcalls */
-+#ifdef CONFIG_PCI
- extern int __init pci_acpi_init(void);
-+#else
-+static inline int  __init pci_acpi_init(void)
-+{
-+	return -EINVAL;
-+}
-+#endif
- extern void __init pcibios_irq_init(void);
- extern int __init pcibios_init(void);
- extern int pci_legacy_init(void);
-diff --git a/drivers/acpi/Kconfig b/drivers/acpi/Kconfig
-index 7cea769c37df..a0abcb3bd673 100644
---- a/drivers/acpi/Kconfig
-+++ b/drivers/acpi/Kconfig
-@@ -9,7 +9,6 @@ config ARCH_SUPPORTS_ACPI
- menuconfig ACPI
- 	bool "ACPI (Advanced Configuration and Power Interface) Support"
- 	depends on ARCH_SUPPORTS_ACPI
--	depends on PCI
- 	select PNP
- 	default y if X86
- 	help
-diff --git a/drivers/acpi/Makefile b/drivers/acpi/Makefile
-index edc039313cd6..7c6afc111d76 100644
---- a/drivers/acpi/Makefile
-+++ b/drivers/acpi/Makefile
-@@ -39,7 +39,7 @@ acpi-y				+= processor_core.o
- acpi-$(CONFIG_ARCH_MIGHT_HAVE_ACPI_PDC) += processor_pdc.o
- acpi-y				+= ec.o
- acpi-$(CONFIG_ACPI_DOCK)	+= dock.o
--acpi-y				+= pci_root.o pci_link.o pci_irq.o
-+acpi-$(CONFIG_PCI)		+= pci_root.o pci_link.o pci_irq.o
- obj-$(CONFIG_ACPI_MCFG)		+= pci_mcfg.o
- acpi-y				+= acpi_lpss.o acpi_apd.o
- acpi-y				+= acpi_platform.o
-diff --git a/drivers/acpi/internal.h b/drivers/acpi/internal.h
-index 530a3f675490..b7060dae2789 100644
---- a/drivers/acpi/internal.h
-+++ b/drivers/acpi/internal.h
-@@ -25,8 +25,13 @@ int acpi_osi_init(void);
- acpi_status acpi_os_initialize1(void);
- void init_acpi_device_notify(void);
- int acpi_scan_init(void);
-+#ifdef CONFIG_PCI
- void acpi_pci_root_init(void);
- void acpi_pci_link_init(void);
-+#else
-+static inline void acpi_pci_root_init(void) {}
-+static inline void acpi_pci_link_init(void) {}
-+#endif
- void acpi_processor_init(void);
- void acpi_platform_init(void);
- void acpi_pnp_init(void);
-diff --git a/drivers/pci/Makefile b/drivers/pci/Makefile
-index f2bda77a2df1..657d642fcc67 100644
---- a/drivers/pci/Makefile
-+++ b/drivers/pci/Makefile
-@@ -11,6 +11,7 @@ ifdef CONFIG_PCI
- obj-$(CONFIG_PROC_FS)		+= proc.o
- obj-$(CONFIG_SYSFS)		+= slot.o
- obj-$(CONFIG_OF)		+= of.o
-+obj-$(CONFIG_ACPI)		+= pci-acpi.o
- endif
- 
- obj-$(CONFIG_PCI_QUIRKS)	+= quirks.o
-@@ -20,7 +21,6 @@ obj-$(CONFIG_PCI_MSI)		+= msi.o
- obj-$(CONFIG_PCI_ATS)		+= ats.o
- obj-$(CONFIG_PCI_IOV)		+= iov.o
- obj-$(CONFIG_PCI_BRIDGE_EMUL)	+= pci-bridge-emul.o
--obj-$(CONFIG_ACPI)		+= pci-acpi.o
- obj-$(CONFIG_PCI_LABEL)		+= pci-label.o
- obj-$(CONFIG_X86_INTEL_MID)	+= pci-mid.o
- obj-$(CONFIG_PCI_SYSCALL)	+= syscall.o
-diff --git a/include/acpi/acpi_drivers.h b/include/acpi/acpi_drivers.h
-index 14499757338f..de1804aeaf69 100644
---- a/include/acpi/acpi_drivers.h
-+++ b/include/acpi/acpi_drivers.h
-@@ -88,7 +88,14 @@ int acpi_pci_link_free_irq(acpi_handle handle);
- 
- struct pci_bus;
- 
-+#ifdef CONFIG_PCI
- struct pci_dev *acpi_get_pci_dev(acpi_handle);
-+#else
-+static inline struct pci_dev *acpi_get_pci_dev(acpi_handle handle)
-+{
-+	return NULL;
-+}
-+#endif
- 
- /* Arch-defined function to add a bus to the system */
- 
-diff --git a/include/linux/acpi.h b/include/linux/acpi.h
-index ed80f147bd50..eb1fdf4c196a 100644
---- a/include/linux/acpi.h
-+++ b/include/linux/acpi.h
-@@ -340,7 +340,14 @@ struct pci_dev;
- int acpi_pci_irq_enable (struct pci_dev *dev);
- void acpi_penalize_isa_irq(int irq, int active);
- bool acpi_isa_irq_available(int irq);
-+#ifdef CONFIG_PCI
- void acpi_penalize_sci_irq(int irq, int trigger, int polarity);
-+#else
-+static inline void acpi_penalize_sci_irq(int irq, int trigger,
-+					int polarity)
-+{
-+}
-+#endif
- void acpi_pci_irq_disable (struct pci_dev *dev);
- 
- extern int ec_read(u8 addr, u8 *val);
-diff --git a/include/linux/pci.h b/include/linux/pci.h
-index 11c71c4ecf75..51a5a5217667 100644
---- a/include/linux/pci.h
-+++ b/include/linux/pci.h
-@@ -1960,7 +1960,11 @@ int pcibios_set_pcie_reset_state(struct pci_dev *dev,
- 				 enum pcie_reset_state state);
- int pcibios_add_device(struct pci_dev *dev);
- void pcibios_release_device(struct pci_dev *dev);
-+#ifdef CONFIG_PCI
- void pcibios_penalize_isa_irq(int irq, int active);
-+#else
-+static inline void pcibios_penalize_isa_irq(int irq, int active) {}
-+#endif
- int pcibios_alloc_irq(struct pci_dev *dev);
- void pcibios_free_irq(struct pci_dev *dev);
- resource_size_t pcibios_default_alignment(void);
+If you want help with writing such a small driver let me know.
+
+If there's an advantage to virtio-iommu then that would be its
+portability, and it all goes out of the window because
+of dependencies on ACPI and DT and OF and the rest of the zoo.
+
+
+> * DMA ops for x86 (see "HACK" commit). I'd like to use dma-iommu but I'm
+> not sure how to implement the glue that sets dma_ops properly.
+> 
+> Thanks,
+> Jean
+
+OK so IIUC you are looking into Christoph's suggestions to fix that up?
+
+There's still a bit of time left before the merge window,
+maybe you can make above changes.
+
 -- 
-2.19.0
-
+MST
