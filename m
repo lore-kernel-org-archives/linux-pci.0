@@ -2,117 +2,223 @@ Return-Path: <SRS0=4gsO=O4=vger.kernel.org=linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-1.1 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
-	DKIM_VALID_AU,FREEMAIL_FORGED_FROMDOMAIN,FREEMAIL_FROM,
-	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_PASS,URIBL_BLOCKED
-	autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-4.2 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,
+	MAILING_LIST_MULTI,SPF_PASS,URIBL_BLOCKED autolearn=ham autolearn_force=no
+	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 474FFC43387
-	for <linux-pci@archiver.kernel.org>; Wed, 19 Dec 2018 14:36:20 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 914FDC43387
+	for <linux-pci@archiver.kernel.org>; Wed, 19 Dec 2018 14:38:33 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 15C6921841
-	for <linux-pci@archiver.kernel.org>; Wed, 19 Dec 2018 14:36:20 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 4E06C21841
+	for <linux-pci@archiver.kernel.org>; Wed, 19 Dec 2018 14:38:33 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="AkxOyuQ/"
+	dkim=pass (1024-bit key) header.d=ti.com header.i=@ti.com header.b="hXIqjDVF"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1728017AbeLSOgT (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Wed, 19 Dec 2018 09:36:19 -0500
-Received: from mail-ot1-f68.google.com ([209.85.210.68]:34254 "EHLO
-        mail-ot1-f68.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1728013AbeLSOgT (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Wed, 19 Dec 2018 09:36:19 -0500
-Received: by mail-ot1-f68.google.com with SMTP id t5so19339870otk.1;
-        Wed, 19 Dec 2018 06:36:18 -0800 (PST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20161025;
-        h=mime-version:references:in-reply-to:from:date:message-id:subject:to
-         :cc;
-        bh=i1J0G7Qb3L5GwrfmGAi18Vk60flEeeXwzQEPVkr55SY=;
-        b=AkxOyuQ/VKMUyBKMAsIpcqo3mrGqy/ybUEq99It7f+i+QeLwblefCZ83NKSCVGVXby
-         lcy5Tbxo+Eh7BN4m63AboyDERrSkLysJ7kZJeU1TUqXLozV+93uxLlgLNpozxYayvLsZ
-         1HXyfzFSrmQXtrCNtG7SKD/SAA3dlZmq4xpVuskdGeKrw8pUcJEhG01BEfN2cboIeS3g
-         oe7b2YwBiEBDYELbrIb1pjgtPQAKSPSIcD7l7qfjCAg+22qnmykKNczkkk1NoGRGYVOB
-         2R9UwNGXiKhUj8VL4/5wWavdNa2KbNUR1C5V2styzHvQp0oRTqvx4pkfCPjvnC3Zu2OI
-         K3lg==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20161025;
-        h=x-gm-message-state:mime-version:references:in-reply-to:from:date
-         :message-id:subject:to:cc;
-        bh=i1J0G7Qb3L5GwrfmGAi18Vk60flEeeXwzQEPVkr55SY=;
-        b=LwgL8ZtH3U8Rjry9iOw9O/S4QQngexQ0LGi6J2fuJkJz2z84w4kwlpwCx5goTN8sPP
-         ouQnNY1F3rLcAITj7xVO3oEDH0JAGpzQWT8pwAEYyCDl55yV9qqGMCQoxp1Mgt1rUP+b
-         +vKRME30BQfDa0th76pRSFfCyBXQVMKiStwWzYZXDFmIaSH18tz52lSYycjd+HsTZ+jo
-         Q12KM7cpYKcQuZ0U+TlddOF+nXfS7LPojvEP5YrGe0Vcs1fXJDsTBYkhgY80luMsbRV5
-         qToZ6C0LOeIseAECpA1G/O/iXrOCq+p+zGbg25tA+YDQuYJmOyP2eb+51KBP+35hHFL5
-         qH+w==
-X-Gm-Message-State: AA+aEWYZGzwmBmMa3dIq68EEJWBXJ6BKLjShzAdvfTj2P/9EsnT2XlWj
-        LUzJ9t66jrpHYobwhPe51gDHUeb5CmDCe22VIkd8saDhkfk=
-X-Google-Smtp-Source: AFSGD/UgRLSh8/GFEdpsl9xF2QriOmP/FnBpyP0jEteY15mqRsbcsZlcMFCiCzNbmrVaDwRDaOldPhi1liitXQdMSuo=
-X-Received: by 2002:a9d:74c3:: with SMTP id a3mr5481870otl.107.1545230178083;
- Wed, 19 Dec 2018 06:36:18 -0800 (PST)
+        id S1729494AbeLSOic (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Wed, 19 Dec 2018 09:38:32 -0500
+Received: from lelv0142.ext.ti.com ([198.47.23.249]:38914 "EHLO
+        lelv0142.ext.ti.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1729456AbeLSOic (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Wed, 19 Dec 2018 09:38:32 -0500
+Received: from fllv0034.itg.ti.com ([10.64.40.246])
+        by lelv0142.ext.ti.com (8.15.2/8.15.2) with ESMTP id wBJEcLIY037966;
+        Wed, 19 Dec 2018 08:38:21 -0600
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=ti.com;
+        s=ti-com-17Q1; t=1545230301;
+        bh=FRrtIkS3C3QSLDCk6sBohXXpVLrmReiSndVLmi7R2f4=;
+        h=Subject:To:CC:References:From:Date:In-Reply-To;
+        b=hXIqjDVFIIwF1ulr0kxCNAvapCz02lMkMnoaguO/6ik0KF2pPL8TIhVvc2FudYav3
+         2Tss7JJhO1tMwm8qHB1QF+x5gGC8G2kdKYPLkmjcIN6pQ2chfg/8X8tKc+ubR0vJuO
+         i1hyAGNNjqC7mtjwoVycihmcdSm2MqYPk2zTZvxc=
+Received: from DFLE106.ent.ti.com (dfle106.ent.ti.com [10.64.6.27])
+        by fllv0034.itg.ti.com (8.15.2/8.15.2) with ESMTPS id wBJEcLQQ045127
+        (version=TLSv1.2 cipher=AES256-GCM-SHA384 bits=256 verify=FAIL);
+        Wed, 19 Dec 2018 08:38:21 -0600
+Received: from DFLE114.ent.ti.com (10.64.6.35) by DFLE106.ent.ti.com
+ (10.64.6.27) with Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_128_CBC_SHA256_P256) id 15.1.1591.10; Wed, 19
+ Dec 2018 08:38:20 -0600
+Received: from dlep33.itg.ti.com (157.170.170.75) by DFLE114.ent.ti.com
+ (10.64.6.35) with Microsoft SMTP Server (version=TLS1_0,
+ cipher=TLS_RSA_WITH_AES_256_CBC_SHA) id 15.1.1591.10 via Frontend Transport;
+ Wed, 19 Dec 2018 08:38:21 -0600
+Received: from [172.24.190.233] (ileax41-snat.itg.ti.com [10.172.224.153])
+        by dlep33.itg.ti.com (8.14.3/8.13.8) with ESMTP id wBJEcG7b012226;
+        Wed, 19 Dec 2018 08:38:18 -0600
+Subject: Re: [PATCH V2] PCI: dwc ep: cache config until DBI regs available
+To:     Stephen Warren <swarren@wwwdotorg.org>
+CC:     Jingoo Han <jingoohan1@gmail.com>,
+        Gustavo Pimentel <gustavo.pimentel@synopsys.com>,
+        Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
+        Bjorn Helgaas <bhelgaas@google.com>,
+        <linux-pci@vger.kernel.org>, Vidya Sagar <vidyas@nvidia.com>,
+        Manikanta Maddireddy <mmaddireddy@nvidia.com>,
+        Trent Piepho <tpiepho@impinj.com>,
+        Stephen Warren <swarren@nvidia.com>
+References: <20181126230958.8175-1-swarren@wwwdotorg.org>
+ <340ed2c5-cb11-0aea-5430-5da5b509d805@ti.com>
+ <b4a19329-3fd0-6242-5e31-8270d2c0a3e4@wwwdotorg.org>
+ <27179f56-c7be-a55e-46ef-8ebc144e8547@wwwdotorg.org>
+From:   Kishon Vijay Abraham I <kishon@ti.com>
+Message-ID: <f86f4b8e-6b62-e921-eee2-1cf7ff0266ff@ti.com>
+Date:   Wed, 19 Dec 2018 20:07:59 +0530
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:60.0) Gecko/20100101
+ Thunderbird/60.2.1
 MIME-Version: 1.0
-References: <20181218210444.5950-1-TheSven73@googlemail.com> <1545174393.22930.65.camel@impinj.com>
-In-Reply-To: <1545174393.22930.65.camel@impinj.com>
-From:   Sven Van Asbroeck <thesven73@gmail.com>
-Date:   Wed, 19 Dec 2018 09:36:07 -0500
-Message-ID: <CAGngYiXRXmgWQwUGRrymZzbD-sRqHmzP2u4ysv15S1ha8vbn2g@mail.gmail.com>
-Subject: Re: [RFC BUG] pci: Freescale i.MX6 PCIe controller: revert mainline regression
-To:     Trent Piepho <tpiepho@impinj.com>
-Cc:     "shawn.lin@rock-chips.com" <shawn.lin@rock-chips.com>,
-        "niklas.cassel@axis.com" <niklas.cassel@axis.com>,
-        "lorenzo.pieralisi@arm.com" <lorenzo.pieralisi@arm.com>,
-        "kishon@ti.com" <kishon@ti.com>,
-        "bhelgaas@google.com" <bhelgaas@google.com>,
-        "gustavo.pimentel@synopsys.com" <gustavo.pimentel@synopsys.com>,
-        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-        "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-        "hongxing.zhu@nxp.com" <hongxing.zhu@nxp.com>
-Content-Type: text/plain; charset="UTF-8"
+In-Reply-To: <27179f56-c7be-a55e-46ef-8ebc144e8547@wwwdotorg.org>
+Content-Type: text/plain; charset="utf-8"
+Content-Language: en-US
+Content-Transfer-Encoding: 8bit
+X-EXCLAIMER-MD-CONFIG: e1e8a2fd-e40a-4ac6-ac9b-f7e9cc9ee180
 Sender: linux-pci-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-Thank you Trent !
+Hi,
 
-This patch was intended as a bug report, rather than an actual
-solution to be merged.
-I chose this format so people could easily verify the change in
-behaviour, just by
-applying the patch locally.
+On 14/12/18 10:31 PM, Stephen Warren wrote:
+> On 12/11/18 10:23 AM, Stephen Warren wrote:
+>> On 12/10/18 9:36 PM, Kishon Vijay Abraham I wrote:
+>>> Hi,
+>>>
+>>> On 27/11/18 4:39 AM, Stephen Warren wrote:
+>>>> From: Stephen Warren <swarren@nvidia.com>
+>>>>
+>>>> Some implementations of the DWC PCIe endpoint controller do not allow
+>>>> access to DBI registers until the attached host has started REFCLK,
+>>>> released PERST, and the endpoint driver has initialized clocking of the
+>>>> DBI registers based on that. One such system is NVIDIA's T194 SoC. The
+>>>> PCIe endpoint subsystem and DWC driver currently don't work on such
+>>>> hardware, since they assume that all endpoint configuration can happen
+>>>> at any arbitrary time.
+>>>>
+>>>> Enhance the DWC endpoint driver to support such systems by caching all
+>>>> endpoint configuration in software, and only writing the configuration
+>>>> to hardware once it's been initialized. This is implemented by splitting
+>>>> all endpoint controller ops into two functions; the first which simply
+>>>> records/caches the desired configuration whenever called by the
+>>>> associated function driver and optionally calls the second, and the
+>>>> second which actually programs the configuration into hardware, which
+>>>> may be called either by the first function, or later when it's known
+>>>> that the DBI registers are available.
+>>
+>>>> diff --git a/drivers/pci/controller/dwc/pcie-designware-ep.c
+>>>> b/drivers/pci/controller/dwc/pcie-designware-ep.c
+>>
+>>>> +void dw_pcie_set_regs_available(struct dw_pcie *pci)
+>>>> +{
+>>>
+>>> When will this function be invoked? Does the wrapper get an interrupt when
+>>> refclk is enabled where this function will be invoked?
+>>
+>> Yes, there's an IRQ from the HW that indicates when PEXRST is released. I
+>> don't recall right now if this IRQ is something that exists for all DWC
+>> instantiations, or is Tegra-specific.
+>>
+>>>> +    struct dw_pcie_ep *ep = &(pci->ep);
+>>>> +    int i;
+>>>> +
+>>>> +    ep->hw_regs_not_available = false;
+>>>
+>>> This can race with epc_ops.
+>>>
+>>>> +
+>>>> +    dw_pcie_ep_write_header_regs(ep);
+>>>> +    for_each_set_bit(i, ep->ib_window_map, ep->num_ib_windows) {
+>>>> +        dw_pcie_prog_inbound_atu(pci, i,
+>>>> +            ep->cached_inbound_atus[i].bar,
+>>>> +            ep->cached_inbound_atus[i].cpu_addr,
+>>>> +            ep->cached_inbound_atus[i].as_type);
+>>>
+>>> Depending on the context in which this function is invoked, programming
+>>> inbound/outbound ATU can also race with EPC ops.
+>>  >
+>>>> +        dw_pcie_ep_set_bar_regs(ep, 0, ep->cached_inbound_atus[i].bar);
+>>>> +    }
+>>>> +    for_each_set_bit(i, ep->ob_window_map, ep->num_ob_windows)
+>>>> +        dw_pcie_prog_outbound_atu(pci, i, PCIE_ATU_TYPE_MEM,
+>>>> +            ep->cached_outbound_atus[i].addr,
+>>>> +            ep->cached_outbound_atus[i].pci_addr,
+>>>> +            ep->cached_outbound_atus[i].size);
+>>>> +    dw_pcie_dbi_ro_wr_en(pci);
+>>>> +    dw_pcie_writew_dbi(pci, PCI_MSI_FLAGS, ep->cached_msi_flags);
+>>>> +    dw_pcie_writew_dbi(pci, PCI_MSIX_FLAGS, ep->cached_msix_flags);
+>>>> +    dw_pcie_dbi_ro_wr_dis(pci);
+>>>
+>>> IMHO we should add a new epc ops ->epc_init() which indicates if the EPC is
+>>> ready to be initialized or not. Only if the epc_init indicates it's ready to be
+>>> initialized, the endpoint function driver should go ahead with further
+>>> initialization. Or else it should wait for a notification from EPC to indicate
+>>> when it's ready to be initialized.
+>>
+>> (Did you mean epf op or epc op?)
+>>
+>> I'm not sure how exactly how that would work; do you want the DWC core driver
+>> or the endpoint subsystem to poll that epc op to find out when the HW is
+>> ready to be initialized? Or do you envisage the controller driver still
+>> calling dw_pcie_set_regs_available() (possibly renamed), which in turn calls
+>> ->epc_init() calls for some reason?
+>>
+>> If you don't want to cache the endpoint configuration, perhaps you want:
+>>
+>> a) Endpoint function doesn't pro-actively call the endpoint controller
+>> functions to configure the endpoint.
+>>
+>> b) When endpoint HW is ready, the relevant driver calls pci_epc_ready() (or
+>> whatever name), which lets the core know the HW can be configured. Perhaps
+>> this schedules a work queue item to implement locking to avoid the races you
+>> mentioned.
+>>
+>> c) Endpoint core calls pci_epf_init() which calls epf op ->init().
+>>
+>> One gotcha with this approach, which the caching approach helps avoid:
+>>
+>> Once PEXRST is released, the system must respond to PCIe enumeration requests
+>> within 50ms. Thus, SW must very quickly respond to the IRQ indicating PEXRST
+>> release and program the endpoint configuration into HW. By caching the
+>> configuration in the DWC driver and immediately/synchronously applying it in
+>> the PEXRST IRQ handler, we reduce the number of steps and amount of code
+>> taken to program the HW, so it should get done pretty quickly. If instead we
+>> call back into the endpoint function driver's ->init() op, we run the risk of
+>> that op doing other stuff besides just calling the endpoint HW configuration
+>> APIs (e.g. perhaps the function driver defers memory buffer allocation or
+>> IOVA programming to that ->init function) which in turns makes it much less
+>> likely the 50ms requirement will be hit. Perhaps we can solve this by naming
+>> the op well and providing lots of comments, but my guess is that endpoint
+>> function authors won't notice that...
+> 
+> Kishon,
+> 
+> Do you have any further details exactly how you'd prefer this to work? Does the
+> approach I describe in points a/b/c above sound like what you want? Thanks.
 
-On Tue, Dec 18, 2018 at 6:06 PM Trent Piepho <tpiepho@impinj.com> wrote:
->
->
-> It's actually commit f3fdfc4ac3a2 ("PCI: Remove host driver Kconfig
-> selection of CONFIG_PCIEPORTBUS") that made this problem apparent.
->
-> But the real bug is not in that commit, but a problem with imx6/7 not
-> configuring a setting in the RC correctly without pcieportbus, which
-> should not be necessary.
->
-> See "[v4] PCI: imx: make msi work without CONFIG_PCIEPORTBUS=y" by
-> Richard Zhu for a real fix.
+Agree with your PERST comment.
 
-Awesome! I can verify this patch on our i.MX6 boards, if Richard Zhu
-(or anyone else) is interested.
+What I have in mind is we add a new epc_init() ops. I feel there are more uses
+for it (For e.g I have an internal patch which uses epc_init to initialize DMA.
+Hopefully I'll post it soon).
+If you look at pci_epf_test, pci_epf_test_bind() is where the function actually
+starts to write to HW (i.e using pci_epc_*).
+So before the endpoint function invokes pci_epc_write_header(), it should
+invoke epc_init(). Only if that succeeds, it should go ahead with other
+initialization.
+If epc_init_* fails, we can have a particular error value to indicate the
+controller is waiting for clock from host (so that we don't return error from
+->bind()). Once the controller receives the clock, it can send an atomic
+notification to the endpoint function driver to indicate it is ready to be
+initialized. (Atomic notification makes it easy to handle for multi function
+endpoint devices.)
+The endpoint function can then initialize the controller.
+I think except for pci_epf_test_alloc_space() all other functions are
+configuring the HW (in pci_epf_test_bind). pci_epf_test_alloc_space() could be
+moved to pci_epf_test_probe() so there are no expensive operations to be done
+once the controller is ready to be initialized.
+I have epc_init() and the atomic notification part already implemented and I'm
+planning to post it before next week. Once that is merged, we might have to
+reorder function in pci_epf_test driver and you have to return the correct
+error value for epc_init() if the clock is not there.
 
->
-> There another bug that makes this driver sometimes lose an MSI, but
-
-Is it the one you alerted me to before?
-https://patchwork.kernel.org/patch/10657987/
-
-We are planning to use the PCIe controller in a production environment -
-to communicate with a tg3 based Broadcom ethernet NIC.
-
-What are the practical consequences of this bug?
-What is the state of the patch that fixes it?
-Last patch activity seems to have been in mid-November?
-
-Apologies for the trivial questions, I am by no means a PCIe expert.
-
-> that regression was in v4.14 and would not be fixed by your patch, so
-> this tigon3 problem is almost certainly caused by the previously
-> mentioned issue with pcieportbus.
->
+Thanks
+Kishon
