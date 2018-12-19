@@ -2,342 +2,273 @@ Return-Path: <SRS0=4gsO=O4=vger.kernel.org=linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-9.2 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,
-	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT
-	autolearn=unavailable autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-4.2 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,
+	SIGNED_OFF_BY,SPF_PASS,URIBL_BLOCKED autolearn=ham autolearn_force=no
+	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 3F79EC43387
-	for <linux-pci@archiver.kernel.org>; Wed, 19 Dec 2018 12:51:39 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id DD5F7C43387
+	for <linux-pci@archiver.kernel.org>; Wed, 19 Dec 2018 12:55:58 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id F3F6821479
-	for <linux-pci@archiver.kernel.org>; Wed, 19 Dec 2018 12:51:38 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 9BAA4214AE
+	for <linux-pci@archiver.kernel.org>; Wed, 19 Dec 2018 12:55:58 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (1024-bit key) header.d=ti.com header.i=@ti.com header.b="DHjXmfM1"
+	dkim=pass (1024-bit key) header.d=broadcom.com header.i=@broadcom.com header.b="gPDmYItp"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727850AbeLSMvi (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Wed, 19 Dec 2018 07:51:38 -0500
-Received: from fllv0016.ext.ti.com ([198.47.19.142]:56440 "EHLO
-        fllv0016.ext.ti.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726833AbeLSMvi (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Wed, 19 Dec 2018 07:51:38 -0500
-Received: from lelv0266.itg.ti.com ([10.180.67.225])
-        by fllv0016.ext.ti.com (8.15.2/8.15.2) with ESMTP id wBJCgdeJ098490;
-        Wed, 19 Dec 2018 06:42:39 -0600
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=ti.com;
-        s=ti-com-17Q1; t=1545223359;
-        bh=mbbb79Ac8cqndqKQy/QFEfwpSj42VwCaCqlC/i9Zp2c=;
-        h=From:To:CC:Subject:Date:In-Reply-To:References;
-        b=DHjXmfM1Gctgvkg4S6lQC/uvJ9hHs2jAOBnAMEuyXSUHxQCEGztVY1WBSFqdeKXuj
-         hbidjtzBuVSc6j8jfkRN9NdQcT7MxzFCALRBTk1F0cANRsl1BdHnf2zq0ZA7NYkfmA
-         sRGwTftne+lzgFpJof4kNKakjfRBwNLgS2e/V5UI=
-Received: from DFLE102.ent.ti.com (dfle102.ent.ti.com [10.64.6.23])
-        by lelv0266.itg.ti.com (8.15.2/8.15.2) with ESMTPS id wBJCgd5u062324
-        (version=TLSv1.2 cipher=AES256-GCM-SHA384 bits=256 verify=FAIL);
-        Wed, 19 Dec 2018 06:42:39 -0600
-Received: from DFLE103.ent.ti.com (10.64.6.24) by DFLE102.ent.ti.com
- (10.64.6.23) with Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_128_CBC_SHA256_P256) id 15.1.1591.10; Wed, 19
- Dec 2018 06:42:39 -0600
-Received: from dlep32.itg.ti.com (157.170.170.100) by DFLE103.ent.ti.com
- (10.64.6.24) with Microsoft SMTP Server (version=TLS1_0,
- cipher=TLS_RSA_WITH_AES_256_CBC_SHA) id 15.1.1591.10 via Frontend Transport;
- Wed, 19 Dec 2018 06:42:39 -0600
-Received: from a0393678ub.india.ti.com (ileax41-snat.itg.ti.com [10.172.224.153])
-        by dlep32.itg.ti.com (8.14.3/8.13.8) with ESMTP id wBJCgNZn003940;
-        Wed, 19 Dec 2018 06:42:36 -0600
-From:   Kishon Vijay Abraham I <kishon@ti.com>
-To:     Murali Karicheri <m-karicheri2@ti.com>,
-        Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
-        Gustavo Pimentel <gustavo.pimentel@synopsys.com>,
-        Marc Zyngier <marc.zyngier@arm.com>
-CC:     Bjorn Helgaas <bhelgaas@google.com>,
-        Jingoo Han <jingoohan1@gmail.com>, <linux-pci@vger.kernel.org>,
-        <linux-arm-kernel@lists.infradead.org>,
-        <linux-kernel@vger.kernel.org>, <kishon@ti.com>
-Subject: [PATCH 04/10] PCI: keystone: Add separate functions for configuring MSI and legacy interrupt
-Date:   Wed, 19 Dec 2018 18:12:01 +0530
-Message-ID: <20181219124207.13479-5-kishon@ti.com>
-X-Mailer: git-send-email 2.17.1
-In-Reply-To: <20181219124207.13479-1-kishon@ti.com>
-References: <20181219124207.13479-1-kishon@ti.com>
+        id S1727923AbeLSMz5 (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Wed, 19 Dec 2018 07:55:57 -0500
+Received: from mail-ed1-f66.google.com ([209.85.208.66]:42422 "EHLO
+        mail-ed1-f66.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1727831AbeLSMz5 (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Wed, 19 Dec 2018 07:55:57 -0500
+Received: by mail-ed1-f66.google.com with SMTP id y20so10724721edw.9
+        for <linux-pci@vger.kernel.org>; Wed, 19 Dec 2018 04:55:55 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=broadcom.com; s=google;
+        h=mime-version:references:in-reply-to:from:date:message-id:subject:to
+         :cc;
+        bh=MAfLH1EZQD20uBK2TrTBmxwRXAyaLXXO4enNZzYPr/8=;
+        b=gPDmYItpFdcr21u1CT34XRBw6ywAnTTNDlJFdQgGGbktlqmyouWbHkNvDMgkAuYu0s
+         ihYBqQAmbPbPC863GYv4Br1QO+xs8SVWpLboRMxxWERT+p8kaPgs6TKVIMaEOVezK/dx
+         hN884LoXy5fgj8ujdR/GM9OelCcLCVQyM7Q7M=
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20161025;
+        h=x-gm-message-state:mime-version:references:in-reply-to:from:date
+         :message-id:subject:to:cc;
+        bh=MAfLH1EZQD20uBK2TrTBmxwRXAyaLXXO4enNZzYPr/8=;
+        b=ro2+51Qw+UiehKaq7PGwagibsHVDFBDjkIzc9iOFk1+sJICWEF9JgMwlD3+NjEUvA1
+         IN/uw5mStBFIj1ptoOqYwbCdcpgHUd96HORlGmjJP59Igf/GKBfJXhRmCPLPzZnBiOAN
+         /ZGcCJ4CtMmZV/GF2JXJ8OJM+CkNnAHtABW1/SuvJXTv9sMy5gYWbtJWcSRWXCFBzLYt
+         /tyGAx/JCaXqPhfGkaWUElscNd7bQSIl8APltbCtji3GROYf/vSuGimZnidD8FSp5IOg
+         KWSO6je+JgacwJMYCtDPrFzolJv4AKo5XcdjJWeEPcwSSFFtIvfTU/fKT3wYETQWkMf3
+         ODaA==
+X-Gm-Message-State: AA+aEWZY5twSlKnNeH3KMz/6CVy2ASCuveDDl+auuWLqHOQuiS0yY22/
+        6Lx1A3YaZz1T6U73csE7sdcnk1XQyUzyEd0DG2uXDg==
+X-Google-Smtp-Source: AFSGD/W3zUR6Cezuo3357ZqX6XnYZtbnLT349w886skhrgUaJ7P00H5UH4Ic0FAENvdIn+VEctrsb91K5YoFRd0bejM=
+X-Received: by 2002:a50:ab82:: with SMTP id u2mr20165164edc.111.1545224155167;
+ Wed, 19 Dec 2018 04:55:55 -0800 (PST)
 MIME-Version: 1.0
-Content-Type: text/plain
-X-EXCLAIMER-MD-CONFIG: e1e8a2fd-e40a-4ac6-ac9b-f7e9cc9ee180
+References: <20181204155122.6327-1-douliyangs@gmail.com> <alpine.DEB.2.21.1812191136550.1651@nanos.tec.linutronix.de>
+In-Reply-To: <alpine.DEB.2.21.1812191136550.1651@nanos.tec.linutronix.de>
+From:   Sumit Saxena <sumit.saxena@broadcom.com>
+Date:   Wed, 19 Dec 2018 18:25:44 +0530
+Message-ID: <CAL2rwxq8kKMtPY6SvWzMCUUfYGSJyjjSFCKu4zvLpRyWvQtWNw@mail.gmail.com>
+Subject: Re: [PATCH 0/3] irq/core: Fix and expand the irq affinity descriptor
+To:     Thomas Gleixner <tglx@linutronix.de>
+Cc:     douliyangs@gmail.com, LKML <linux-kernel@vger.kernel.org>,
+        linux-pci@vger.kernel.org,
+        Kashyap Desai <kashyap.desai@broadcom.com>,
+        Shivasharan Srikanteshwara 
+        <shivasharan.srikanteshwara@broadcom.com>,
+        Ming Lei <ming.lei@redhat.com>, Christoph Hellwig <hch@lst.de>,
+        Bjorn Helgaas <bhelgaas@google.com>, douliyang1@huawei.com
+Content-Type: text/plain; charset="UTF-8"
 Sender: linux-pci-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-ks_pcie_get_irq_controller_info() was used to configure both MSI and
-legacy interrupt. This will prevent MSI or legacy interrupt specific
-intializations. Add separate functions to configure MSI and legacy
-interrupts.
+On Wed, Dec 19, 2018 at 4:23 PM Thomas Gleixner <tglx@linutronix.de> wrote:
+>
+> On Tue, 4 Dec 2018, Dou Liyang wrote:
+>
+> > Now,  Spreading the interrupt affinity info by a cpumask pointer is not
+> > enough, meets a problem[1] and hard to expand in the future.
+> >
+> > Fix it by:
+> >
+> >      +-----------------------------------+
+> >      |                                   |
+> >      |     struct cpumask *affinity      |
+> >      |                                   |
+> >      +-----------------------------------+
+> >                        |
+> >     +------------------v-------------------+
+> >     |                                      |
+> >     | struct irq_affinity_desc {           |
+> >     |     struct cpumask   mask;           |
+> >     |     unsigned int     is_managed : 1; |
+> >     | };                                   |
+> >     |                                      |
+> >     +--------------------------------------+
+> >
+>
+> So, I've applied that lot for 4.21 (or whatever number it will be). That's
+> only the first step for solving Kashyap's problem.
+>
+> IIRC, then Kashap wanted to get initial interrupt spreading for these extra
+> magic interrupts as well, but not have them marked managed.
+>
+> That's trivial to do now with the two queued changes in that area:
+>
+>   - The rework above
+>
+>   - The support for interrupt sets from Jens
+>
+> Just adding a small bitfield to struct irq_affinity which allows to tell
+> the core that a particular interrupt set is not managed does the trick.
+>
+> Untested patch below.
+>
+> Kashyap, is that what you were looking for and if so, does it work?
+Thomas,
+We could not test these patches as they did net get applied to latest
+linux-block tree cleanly.
 
-Signed-off-by: Kishon Vijay Abraham I <kishon@ti.com>
----
- drivers/pci/controller/dwc/pci-keystone.c | 188 +++++++++++-----------
- 1 file changed, 96 insertions(+), 92 deletions(-)
+Our requirement is: 1. extra interrupts should be un-managed and 2.
+should be spread to CPUs of local NUMA node.
+If interrupts are un-managed but not spread as per our requirement,
+then still driver/userspace apps can manage by spreading
+them as required by calling API- irq_set_affinity_hint().
 
-diff --git a/drivers/pci/controller/dwc/pci-keystone.c b/drivers/pci/controller/dwc/pci-keystone.c
-index e9f5387136f0..a8712804c891 100644
---- a/drivers/pci/controller/dwc/pci-keystone.c
-+++ b/drivers/pci/controller/dwc/pci-keystone.c
-@@ -87,11 +87,8 @@ struct keystone_pcie {
- 	struct dw_pcie		*pci;
- 	/* PCI Device ID */
- 	u32			device_id;
--	int			num_legacy_host_irqs;
--	int			legacy_host_irqs[PCI_NUM_INTX];
- 	struct			device_node *legacy_intc_np;
- 
--	int			num_msi_host_irqs;
- 	int			msi_host_irqs[MAX_MSI_HOST_IRQS];
- 	int			num_lanes;
- 	u32			num_viewport;
-@@ -201,14 +198,6 @@ static int ks_pcie_msi_host_init(struct pcie_port *pp)
- 	return dw_pcie_allocate_domains(pp);
- }
- 
--static void ks_pcie_enable_legacy_irqs(struct keystone_pcie *ks_pcie)
--{
--	int i;
--
--	for (i = 0; i < PCI_NUM_INTX; i++)
--		ks_pcie_app_writel(ks_pcie, IRQ_ENABLE_SET(i), 0x1);
--}
--
- static void ks_pcie_handle_legacy_irq(struct keystone_pcie *ks_pcie,
- 				      int offset)
- {
-@@ -470,17 +459,6 @@ static int __init ks_pcie_dw_host_init(struct keystone_pcie *ks_pcie)
- 
- 	ks_pcie->app = *res;
- 
--	/* Create legacy IRQ domain */
--	ks_pcie->legacy_irq_domain =
--			irq_domain_add_linear(ks_pcie->legacy_intc_np,
--					      PCI_NUM_INTX,
--					      &ks_pcie_legacy_irq_domain_ops,
--					      NULL);
--	if (!ks_pcie->legacy_irq_domain) {
--		dev_err(dev, "Failed to add irq domain for legacy irqs\n");
--		return -EINVAL;
--	}
--
- 	return dw_pcie_host_init(pp);
- }
- 
-@@ -604,85 +582,117 @@ static void ks_pcie_legacy_irq_handler(struct irq_desc *desc)
- 	chained_irq_exit(chip, desc);
- }
- 
--static int ks_pcie_get_irq_controller_info(struct keystone_pcie *ks_pcie,
--					   char *controller, int *num_irqs)
-+static int ks_pcie_config_msi_irq(struct keystone_pcie *ks_pcie)
- {
--	int temp, max_host_irqs, legacy = 1, *host_irqs;
- 	struct device *dev = ks_pcie->pci->dev;
--	struct device_node *np_pcie = dev->of_node, **np_temp;
--
--	if (!strcmp(controller, "msi-interrupt-controller"))
--		legacy = 0;
--
--	if (legacy) {
--		np_temp = &ks_pcie->legacy_intc_np;
--		max_host_irqs = PCI_NUM_INTX;
--		host_irqs = &ks_pcie->legacy_host_irqs[0];
--	} else {
--		np_temp = &ks_pcie->msi_intc_np;
--		max_host_irqs = MAX_MSI_HOST_IRQS;
--		host_irqs =  &ks_pcie->msi_host_irqs[0];
--	}
-+	struct device_node *np = ks_pcie->np;
-+	struct device_node *intc_np;
-+	int irq_count;
-+	int irq;
-+	int ret;
-+	int i;
- 
--	/* interrupt controller is in a child node */
--	*np_temp = of_get_child_by_name(np_pcie, controller);
--	if (!(*np_temp)) {
--		dev_err(dev, "Node for %s is absent\n", controller);
--		return -EINVAL;
--	}
-+	if (!IS_ENABLED(CONFIG_PCI_MSI))
-+		return 0;
- 
--	temp = of_irq_count(*np_temp);
--	if (!temp) {
--		dev_err(dev, "No IRQ entries in %s\n", controller);
--		of_node_put(*np_temp);
-+	intc_np = of_get_child_by_name(np, "msi-interrupt-controller");
-+	if (!intc_np) {
-+		dev_WARN(dev, "msi-interrupt-controller node is absent\n");
- 		return -EINVAL;
- 	}
- 
--	if (temp > max_host_irqs)
--		dev_warn(dev, "Too many %s interrupts defined %u\n",
--			(legacy ? "legacy" : "MSI"), temp);
-+	irq_count = of_irq_count(intc_np);
-+	if (!irq_count) {
-+		dev_err(dev, "No IRQ entries in msi-interrupt-controller\n");
-+		ret = -EINVAL;
-+		goto err;
-+	}
- 
--	/*
--	 * support upto max_host_irqs. In dt from index 0 to 3 (legacy) or 0 to
--	 * 7 (MSI)
--	 */
--	for (temp = 0; temp < max_host_irqs; temp++) {
--		host_irqs[temp] = irq_of_parse_and_map(*np_temp, temp);
--		if (!host_irqs[temp])
--			break;
-+	if (irq_count > MAX_MSI_HOST_IRQS) {
-+		dev_warn(dev, "Too many MSI interrupt lines defined %u\n",
-+			 irq_count);
-+		irq_count = MAX_MSI_HOST_IRQS;
- 	}
- 
--	of_node_put(*np_temp);
-+	for (i = 0; i < irq_count; i++) {
-+		irq = irq_of_parse_and_map(intc_np, i);
-+		if (!irq) {
-+			ret = -EINVAL;
-+			goto err;
-+		}
-+		ks_pcie->msi_host_irqs[i] = irq;
- 
--	if (temp) {
--		*num_irqs = temp;
--		return 0;
-+		irq_set_chained_handler_and_data(irq, ks_pcie_msi_irq_handler,
-+						 ks_pcie);
- 	}
- 
--	return -EINVAL;
-+	of_node_put(intc_np);
-+	return 0;
-+
-+err:
-+	of_node_put(intc_np);
-+	return ret;
- }
- 
--static void ks_pcie_setup_interrupts(struct keystone_pcie *ks_pcie)
-+static int ks_pcie_config_legacy_irq(struct keystone_pcie *ks_pcie)
- {
-+	struct device *dev = ks_pcie->pci->dev;
-+	struct irq_domain *legacy_irq_domain;
-+	struct device_node *np = ks_pcie->np;
-+	struct device_node *intc_np;
-+	int irq_count;
-+	int irq;
-+	int ret;
- 	int i;
- 
--	/* Legacy IRQ */
--	for (i = 0; i < ks_pcie->num_legacy_host_irqs; i++) {
--		irq_set_chained_handler_and_data(ks_pcie->legacy_host_irqs[i],
-+	intc_np = of_get_child_by_name(np, "legacy-interrupt-controller");
-+	if (!intc_np) {
-+		dev_WARN(dev, "legacy-interrupt-controller node is absent\n");
-+		return -EINVAL;
-+	}
-+
-+	irq_count = of_irq_count(intc_np);
-+	if (!irq_count) {
-+		dev_err(dev, "No IRQ entries in legacy-interrupt-controller\n");
-+		ret = -EINVAL;
-+		goto err;
-+	}
-+
-+	for (i = 0; i < irq_count; i++) {
-+		irq = irq_of_parse_and_map(intc_np, i);
-+		if (!irq) {
-+			ret = -EINVAL;
-+			goto err;
-+		}
-+		irq_set_chained_handler_and_data(irq,
- 						 ks_pcie_legacy_irq_handler,
- 						 ks_pcie);
- 	}
--	ks_pcie_enable_legacy_irqs(ks_pcie);
--
--	/* MSI IRQ */
--	if (IS_ENABLED(CONFIG_PCI_MSI)) {
--		for (i = 0; i < ks_pcie->num_msi_host_irqs; i++) {
--			irq_set_chained_handler_and_data(ks_pcie->msi_host_irqs[i],
--							 ks_pcie_msi_irq_handler,
--							 ks_pcie);
--		}
-+
-+	legacy_irq_domain =
-+		irq_domain_add_linear(intc_np, PCI_NUM_INTX,
-+				      &ks_pcie_legacy_irq_domain_ops, NULL);
-+	if (!legacy_irq_domain) {
-+		dev_err(dev, "Failed to add irq domain for legacy irqs\n");
-+		ret = -EINVAL;
-+		goto err;
- 	}
-+	ks_pcie->legacy_irq_domain = legacy_irq_domain;
-+
-+	for (i = 0; i < PCI_NUM_INTX; i++)
-+		ks_pcie_app_writel(ks_pcie, IRQ_ENABLE_SET(i), INTx_EN);
-+
-+	of_node_put(intc_np);
-+
-+	return 0;
-+
-+err:
-+	of_node_put(intc_np);
-+	return ret;
-+}
- 
-+static void ks_pcie_setup_interrupts(struct keystone_pcie *ks_pcie)
-+{
- 	if (ks_pcie->error_irq > 0)
- 		ks_pcie_enable_error_irq(ks_pcie);
- }
-@@ -736,6 +746,14 @@ static int __init ks_pcie_host_init(struct pcie_port *pp)
- 	struct keystone_pcie *ks_pcie = to_keystone_pcie(pci);
- 	int ret;
- 
-+	ret = ks_pcie_config_legacy_irq(ks_pcie);
-+	if (ret)
-+		return ret;
-+
-+	ret = ks_pcie_config_msi_irq(ks_pcie);
-+	if (ret)
-+		return ret;
-+
- 	dw_pcie_setup_rc(pp);
- 
- 	ks_pcie_establish_link(ks_pcie);
-@@ -785,20 +803,6 @@ static int __init ks_pcie_add_pcie_port(struct keystone_pcie *ks_pcie,
- 	struct device *dev = &pdev->dev;
- 	int ret;
- 
--	ret = ks_pcie_get_irq_controller_info(ks_pcie,
--					"legacy-interrupt-controller",
--					&ks_pcie->num_legacy_host_irqs);
--	if (ret)
--		return ret;
--
--	if (IS_ENABLED(CONFIG_PCI_MSI)) {
--		ret = ks_pcie_get_irq_controller_info(ks_pcie,
--						"msi-interrupt-controller",
--						&ks_pcie->num_msi_host_irqs);
--		if (ret)
--			return ret;
--	}
--
- 	/*
- 	 * Index 0 is the platform interrupt for error interrupt
- 	 * from RC.  This is optional.
--- 
-2.17.1
-
+Thanks,
+Sumit
+>
+> Thanks,
+>
+>         tglx
+>
+> 8<-----------------
+>
+> Subject: genirq/affinity: Add support for non-managed affinity sets
+> From: Thomas Gleixner <tglx@linutronix.de>
+> Date: Tue, 18 Dec 2018 16:46:47 +0100
+>
+> Some drivers need an extra set of interrupts which are not marked managed,
+> but should get initial interrupt spreading.
+>
+> Add a bitmap to struct irq_affinity which allows the driver to mark a
+> particular set of interrupts as non managed. Check the bitmap during
+> spreading and use the result to mark the interrupts in the sets
+> accordingly.
+>
+> The unmanaged interrupts get initial spreading, but user space can change
+> their affinity later on.
+>
+> Usage example:
+>
+>       struct irq_affinity affd = { .pre_vectors = 2 };
+>       int sets[2];
+>
+>       /* Fill in sets[] */
+>
+>       affd.nr_sets = 2;
+>       affd.sets = &sets;
+>       affd.unmanaged_sets = 0x02;
+>
+>       ......
+>
+> So both sets are properly spread out, but the second set is not marked
+> managed.
+>
+> Signed-off-by: Thomas Gleixner <tglx@linutronix.de>
+> ---
+>  include/linux/interrupt.h |   10 ++++++----
+>  kernel/irq/affinity.c     |   24 ++++++++++++++----------
+>  2 files changed, 20 insertions(+), 14 deletions(-)
+>
+> --- a/kernel/irq/affinity.c
+> +++ b/kernel/irq/affinity.c
+> @@ -99,7 +99,8 @@ static int __irq_build_affinity_masks(co
+>                                       cpumask_var_t *node_to_cpumask,
+>                                       const struct cpumask *cpu_mask,
+>                                       struct cpumask *nmsk,
+> -                                     struct irq_affinity_desc *masks)
+> +                                     struct irq_affinity_desc *masks,
+> +                                     bool managed)
+>  {
+>         int n, nodes, cpus_per_vec, extra_vecs, done = 0;
+>         int last_affv = firstvec + numvecs;
+> @@ -154,6 +155,7 @@ static int __irq_build_affinity_masks(co
+>                         }
+>                         irq_spread_init_one(&masks[curvec].mask, nmsk,
+>                                                 cpus_per_vec);
+> +                       masks[curvec].is_managed = managed;
+>                 }
+>
+>                 done += v;
+> @@ -176,7 +178,8 @@ static int __irq_build_affinity_masks(co
+>  static int irq_build_affinity_masks(const struct irq_affinity *affd,
+>                                     int startvec, int numvecs, int firstvec,
+>                                     cpumask_var_t *node_to_cpumask,
+> -                                   struct irq_affinity_desc *masks)
+> +                                   struct irq_affinity_desc *masks,
+> +                                   bool managed)
+>  {
+>         int curvec = startvec, nr_present, nr_others;
+>         int ret = -ENOMEM;
+> @@ -196,7 +199,8 @@ static int irq_build_affinity_masks(cons
+>         /* Spread on present CPUs starting from affd->pre_vectors */
+>         nr_present = __irq_build_affinity_masks(affd, curvec, numvecs,
+>                                                 firstvec, node_to_cpumask,
+> -                                               cpu_present_mask, nmsk, masks);
+> +                                               cpu_present_mask, nmsk, masks,
+> +                                               managed);
+>
+>         /*
+>          * Spread on non present CPUs starting from the next vector to be
+> @@ -211,7 +215,7 @@ static int irq_build_affinity_masks(cons
+>         cpumask_andnot(npresmsk, cpu_possible_mask, cpu_present_mask);
+>         nr_others = __irq_build_affinity_masks(affd, curvec, numvecs,
+>                                                firstvec, node_to_cpumask,
+> -                                              npresmsk, nmsk, masks);
+> +                                              npresmsk, nmsk, masks, managed);
+>         put_online_cpus();
+>
+>         if (nr_present < numvecs)
+> @@ -268,10 +272,11 @@ irq_create_affinity_masks(int nvecs, con
+>
+>         for (i = 0, usedvecs = 0; i < nr_sets; i++) {
+>                 int this_vecs = affd->sets ? affd->sets[i] : affvecs;
+> +               bool managed = !test_bit(i, &affd->unmanaged_sets);
+>                 int ret;
+>
+> -               ret = irq_build_affinity_masks(affd, curvec, this_vecs,
+> -                                               curvec, node_to_cpumask, masks);
+> +               ret = irq_build_affinity_masks(affd, curvec, this_vecs, curvec,
+> +                                              node_to_cpumask, masks, managed);
+>                 if (ret) {
+>                         kfree(masks);
+>                         masks = NULL;
+> @@ -289,10 +294,6 @@ irq_create_affinity_masks(int nvecs, con
+>         for (; curvec < nvecs; curvec++)
+>                 cpumask_copy(&masks[curvec].mask, irq_default_affinity);
+>
+> -       /* Mark the managed interrupts */
+> -       for (i = affd->pre_vectors; i < nvecs - affd->post_vectors; i++)
+> -               masks[i].is_managed = 1;
+> -
+>  outnodemsk:
+>         free_node_to_cpumask(node_to_cpumask);
+>         return masks;
+> @@ -316,6 +317,9 @@ int irq_calc_affinity_vectors(int minvec
+>         if (affd->nr_sets) {
+>                 int i;
+>
+> +               if (WARN_ON_ONCE(affd->nr_sets > BITS_PER_LONG))
+> +                       return 0;
+> +
+>                 for (i = 0, set_vecs = 0;  i < affd->nr_sets; i++)
+>                         set_vecs += affd->sets[i];
+>         } else {
+> --- a/include/linux/interrupt.h
+> +++ b/include/linux/interrupt.h
+> @@ -249,12 +249,14 @@ struct irq_affinity_notify {
+>   *                     the MSI(-X) vector space
+>   * @nr_sets:           Length of passed in *sets array
+>   * @sets:              Number of affinitized sets
+> + * @unmanaged_sets:    Bitmap to mark members of @sets as unmanaged
+>   */
+>  struct irq_affinity {
+> -       int     pre_vectors;
+> -       int     post_vectors;
+> -       int     nr_sets;
+> -       int     *sets;
+> +       int             pre_vectors;
+> +       int             post_vectors;
+> +       int             nr_sets;
+> +       int             *sets;
+> +       unsigned long   unmanaged_sets;
+>  };
+>
+>  /**
