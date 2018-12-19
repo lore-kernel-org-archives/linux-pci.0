@@ -2,111 +2,126 @@ Return-Path: <SRS0=4gsO=O4=vger.kernel.org=linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-1.0 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	MAILING_LIST_MULTI,SPF_PASS autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-6.0 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+	MAILING_LIST_MULTI,MENTIONS_GIT_HOSTING,SPF_PASS,URIBL_BLOCKED autolearn=ham
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 5ED1FC43387
-	for <linux-pci@archiver.kernel.org>; Wed, 19 Dec 2018 15:52:17 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 778F6C43387
+	for <linux-pci@archiver.kernel.org>; Wed, 19 Dec 2018 16:48:06 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 34F8B218C3
-	for <linux-pci@archiver.kernel.org>; Wed, 19 Dec 2018 15:52:17 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 513DD217D9
+	for <linux-pci@archiver.kernel.org>; Wed, 19 Dec 2018 16:48:06 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1728061AbeLSPwQ (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Wed, 19 Dec 2018 10:52:16 -0500
-Received: from metis.ext.pengutronix.de ([85.220.165.71]:59749 "EHLO
-        metis.ext.pengutronix.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1727232AbeLSPwQ (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Wed, 19 Dec 2018 10:52:16 -0500
-Received: from kresse.hi.pengutronix.de ([2001:67c:670:100:1d::2a])
-        by metis.ext.pengutronix.de with esmtp (Exim 4.89)
-        (envelope-from <l.stach@pengutronix.de>)
-        id 1gZe8q-0006dU-M4; Wed, 19 Dec 2018 16:52:12 +0100
-Message-ID: <1545234725.5874.38.camel@pengutronix.de>
-Subject: Re: [v4] PCI: imx: make msi work without CONFIG_PCIEPORTBUS=y
-From:   Lucas Stach <l.stach@pengutronix.de>
-To:     Bjorn Helgaas <helgaas@kernel.org>,
-        Richard Zhu <hongxing.zhu@nxp.com>
-Cc:     Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
-        Andrew Smirnov <andrew.smirnov@gmail.com>,
-        linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
-        linux-arm-kernel@lists.infradead.org,
-        Sven Van Asbroeck <thesven73@gmail.com>,
-        Niklas Cassel <niklas.cassel@axis.com>,
-        Kishon Vijay Abraham I <kishon@ti.com>,
-        Gustavo Pimentel <gustavo.pimentel@synopsys.com>,
-        Shawn Lin <shawn.lin@rock-chips.com>,
-        Trent Piepho <tpiepho@impinj.com>
-Date:   Wed, 19 Dec 2018 16:52:05 +0100
-In-Reply-To: <20181219141241.GB12763@google.com>
-References: <1544768762-18124-1-git-send-email-hongxing.zhu@nxp.com>
-         <20181219141241.GB12763@google.com>
-Content-Type: text/plain; charset="UTF-8"
-X-Mailer: Evolution 3.22.6-1+deb9u1 
-Mime-Version: 1.0
-Content-Transfer-Encoding: 8bit
-X-SA-Exim-Connect-IP: 2001:67c:670:100:1d::2a
-X-SA-Exim-Mail-From: l.stach@pengutronix.de
-X-SA-Exim-Scanned: No (on metis.ext.pengutronix.de); SAEximRunCond expanded to false
-X-PTX-Original-Recipient: linux-pci@vger.kernel.org
+        id S1729882AbeLSQsF convert rfc822-to-8bit (ORCPT
+        <rfc822;linux-pci@archiver.kernel.org>);
+        Wed, 19 Dec 2018 11:48:05 -0500
+Received: from mail.bootlin.com ([62.4.15.54]:39681 "EHLO mail.bootlin.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1728797AbeLSQsF (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Wed, 19 Dec 2018 11:48:05 -0500
+Received: by mail.bootlin.com (Postfix, from userid 110)
+        id 1FF03206FF; Wed, 19 Dec 2018 17:48:02 +0100 (CET)
+Received: from xps13 (aaubervilliers-681-1-38-38.w90-88.abo.wanadoo.fr [90.88.157.38])
+        by mail.bootlin.com (Postfix) with ESMTPSA id 8AC842039F;
+        Wed, 19 Dec 2018 17:48:01 +0100 (CET)
+Date:   Wed, 19 Dec 2018 17:48:01 +0100
+From:   Miquel Raynal <miquel.raynal@bootlin.com>
+To:     Marek =?UTF-8?B?QmVow7pu?= <marek.behun@nic.cz>
+Cc:     Nadav Haklai <nadavh@marvell.com>,
+        Gregory Clement <gregory.clement@bootlin.com>,
+        Jason Cooper <jason@lakedaemon.net>,
+        Andrew Lunn <andrew@lunn.ch>,
+        Sebastian Hesselbarth <sebastian.hesselbarth@gmail.com>,
+        Thomas Petazzoni <thomas.petazzoni@bootlin.com>,
+        Bjorn Helgaas <bhelgaas@google.com>,
+        <devicetree@vger.kernel.org>, Rob Herring <robh+dt@kernel.org>,
+        Mark Rutland <mark.rutland@arm.com>,
+        Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
+        linux-pci@vger.kernel.org, <linux-kernel@vger.kernel.org>,
+        <linux-arm-kernel@lists.infradead.org>,
+        Antoine Tenart <antoine.tenart@bootlin.com>,
+        Maxime Chevallier <maxime.chevallier@bootlin.com>
+Subject: Re: [PATCH v2 03/12] PCI: aardvark: Add PHY support
+Message-ID: <20181219174801.1d611436@xps13>
+In-Reply-To: <20181219162835.5ff9c33c@dellmb.labs.office.nic.cz>
+References: <20181212102142.16053-1-miquel.raynal@bootlin.com>
+        <20181212102142.16053-4-miquel.raynal@bootlin.com>
+        <20181214014701.373b220b@nic.cz>
+        <20181214015712.31f749ea@nic.cz>
+        <20181217170724.58421a29@xps13>
+        <20181217223430.182d01d8@nic.cz>
+        <20181218091817.4a8a5d42@xps13>
+        <20181218092314.725af970@xps13>
+        <20181218140920.6935db39@nic.cz>
+        <20181218144130.3f1a75de@xps13>
+        <20181219162835.5ff9c33c@dellmb.labs.office.nic.cz>
+Organization: Bootlin
+X-Mailer: Claws Mail 3.17.1 (GTK+ 2.24.32; x86_64-pc-linux-gnu)
+MIME-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 8BIT
 Sender: linux-pci-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-Am Mittwoch, den 19.12.2018, 08:12 -0600 schrieb Bjorn Helgaas:
-> [+cc Sven, Trent, et al from related report:
-> https://lore.kernel.org/linux-pci/20181218210444.5950-1-TheSven73@googlemail.com]
+Hi Marek,
+
+Marek Behún <marek.behun@nic.cz> wrote on Wed, 19 Dec 2018 16:28:35
++0100:
+
+> Hi,
 > 
-> On Fri, Dec 14, 2018 at 06:44:15AM +0000, Richard Zhu wrote:
-> > Assertion of the MSI Enable bit of RC's MSI CAP is mandatory required to
-> > trigger MSI on i.MX6 PCIe.
-> > This bit would be asserted when CONFIG_PCIEPORTBUS=y.
-> > Thus, the MSI works fine on i.MX6 PCIe before the commit "f3fdfc4".
+> One thing for which I would like to be able to disable comphy is that
+> each consumes about 100mW of power. On Turris Mox we configure the
+> comphys to SGMII1, PCIe and USB3 modes. If there is no USB device
+> plugged, the USB3 phy can be disabled, and save 100mW of power. If the
+> PCIe extension module is not present, the PCIe can too be disabled, and
+> if there is no switch nor SFP module present, so can SGMII1.
+
+Indeed not all PHY types implement ->power_off() (see in ATF code).
+Better ask Marvell directly for that.
+
+> 
+> The other reason is this: if the SGMII phy is set to 1G mode, and then
+> powered on second time in 2.5G mode, will it work? I would like to
+
+This should work, yes.
+
+> patch mvneta driver to power on/off the comphy, if the device node is
+> present in device tree. But then the system can request such a change
+> (SGMII to 2500BASE-X or back).
+> 
+> Marek
+> 
+> On Tue, 18 Dec 2018 14:41:30 +0100
+> Miquel Raynal <miquel.raynal@bootlin.com> wrote:
+> 
+> > Hi Marek,
 > > 
-> > Assert it unconditionally when MSI is enabled.
-> > Otherwise, the MSI wouldn't be triggered although the EP is present and
-> > the MSIs are assigned.
+> > Marek Behun <marek.behun@nic.cz> wrote on Tue, 18 Dec 2018 14:09:20
+> > +0100:
+> >   
+> > > > [2]
+> > > > https://github.com/ARM-software/arm-trusted-firmware/blob/master/drivers/marvell/comphy/phy-comphy-3700.c      
+> > > 
+> > > Yes, I used mainline atf (it did not work out of the box with 18.09
+> > > atf-marvell of course). But there is no _power_off function for
+> > > SGMII, nor a digital_reset function like in cp110 implementation.    
+> > 
+> > Indeed, but why would you need one? Just use the helpers from the core
+> > and if there is no implementation, nothing should happen and the
+> > helper should exit without error. Just call
+> > phy_set_mode()/phy_power_on() an you should be good.
+> > 
+> > 
+> > Thanks,
+> > Miquèl  
 > 
-> OK, I think I finally understand most of what's going on.  Please
-> check the following possible changelog text:
-> 
->   The MSI Enable bit in the MSI Capability (PCIe r4.0, sec 7.7.1.2)
->   controls whether a Function can request service using MSI.
-> 
->   i.MX6 Root Ports implement the MSI Capability and may use MSI to
->   request service for events like PME, hotplug, AER, etc.  In
->   addition, on i.MX6, the MSI Enable bit controls delivery of MSI
->   interrupts from components below the Root Port.
-> 
->   Prior to f3fdfc4ac3a2 ("PCI: Remove host driver Kconfig selection of
->   CONFIG_PCIEPORTBUS"), enabling CONFIG_PCI_IMX6 automatically also
->   enabled CONFIG_PCIEPORTBUS, and when portdrv claimed the Root Ports,
->   it set the MSI Enable bit so it could use PME, hotplug, AER, etc.
->   As a side effect, that also enabled delivery of MSI interrupts from
->   downstream components.
-> 
->   After f3fdfc4ac3a2, the imx6q-pcie driver can operate without
->   portdrv, but that means imx6q-pcie must set the MSI Enable bit
->   itself if downstream components use MSI.
-> 
->   Fixes: f3fdfc4ac3a2 ("PCI: Remove host driver Kconfig selection of CONFIG_PCIEPORTBUS")
-> 
-> I still don't understand exactly *how* MSI Enable affects MSI from
-> downstream components, since the downstream component just does a DMA
-> write, and the Root Port can't tell whether the write is to memory or
-> interrupt controller unless the Root Port knows where the MSI targets
-> are, e.g., if the interrupt controller is actually part of the RC.
 
-The controller terminating the MSI write is part of the DWC PCIe host
-controller on i.MX6, which is questionable at least when you think
-about how a MSI should be self-synchronizing to memory writes, but
-that's reality...
+For the record, I found out what was wrong in my code, toggling the
+reset lines do not produce random effects anymore.
 
-As to why the controller needs the MSI Enable bit set, I have no idea.
-But then the DWC controller is known to have some funky design
-limitations regarding MSI, like not forwarding legacy PCI interrupts
-anymore when MSI is enabled, so it's not totally surprising that we
-need some quirky setup here.
 
-Regards,
-Lucas
+Thanks,
+Miquèl
