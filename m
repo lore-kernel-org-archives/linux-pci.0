@@ -5,47 +5,47 @@ X-Spam-Level:
 X-Spam-Status: No, score=-6.4 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
 	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,
 	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_PASS,UNWANTED_LANGUAGE_BODY,
-	USER_AGENT_GIT autolearn=ham autolearn_force=no version=3.4.0
+	USER_AGENT_GIT autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 29227C43444
-	for <linux-pci@archiver.kernel.org>; Wed, 19 Dec 2018 12:43:22 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 66682C43387
+	for <linux-pci@archiver.kernel.org>; Wed, 19 Dec 2018 12:43:39 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id E03DE214AE
-	for <linux-pci@archiver.kernel.org>; Wed, 19 Dec 2018 12:43:21 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 296152080D
+	for <linux-pci@archiver.kernel.org>; Wed, 19 Dec 2018 12:43:39 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (1024-bit key) header.d=ti.com header.i=@ti.com header.b="B4XRHDBL"
+	dkim=pass (1024-bit key) header.d=ti.com header.i=@ti.com header.b="OXMtqA3D"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1729871AbeLSMnU (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        id S1729867AbeLSMnU (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
         Wed, 19 Dec 2018 07:43:20 -0500
-Received: from fllv0015.ext.ti.com ([198.47.19.141]:38698 "EHLO
-        fllv0015.ext.ti.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1729858AbeLSMnT (ORCPT
+Received: from fllv0016.ext.ti.com ([198.47.19.142]:54890 "EHLO
+        fllv0016.ext.ti.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1729861AbeLSMnT (ORCPT
         <rfc822;linux-pci@vger.kernel.org>); Wed, 19 Dec 2018 07:43:19 -0500
-Received: from lelv0265.itg.ti.com ([10.180.67.224])
-        by fllv0015.ext.ti.com (8.15.2/8.15.2) with ESMTP id wBJCgqC6128202;
-        Wed, 19 Dec 2018 06:42:52 -0600
+Received: from lelv0266.itg.ti.com ([10.180.67.225])
+        by fllv0016.ext.ti.com (8.15.2/8.15.2) with ESMTP id wBJCgsUI098529;
+        Wed, 19 Dec 2018 06:42:54 -0600
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=ti.com;
-        s=ti-com-17Q1; t=1545223372;
-        bh=s8YQTAlDMbSOqhf4u+bKfrqy75XWX+0He0qtHas8k58=;
+        s=ti-com-17Q1; t=1545223374;
+        bh=eHM305ms/kyJ8xNolT8aiU6XbuWp3EwzvsUreGR0ytM=;
         h=From:To:CC:Subject:Date:In-Reply-To:References;
-        b=B4XRHDBLQXnhVbGq2D9BiU8thbQgCyVJS6yPQajIZlBEoWJgiTFVRRD+Sy0Xs0ZVN
-         5nUoPRPhswPYbt9oEIPgm+mHerJg+MWAUKNHZMNlgJVtssC80GmuZSaeDEGRZ+Sv5v
-         o+5w1aHHwZmm8g1QwMRkDM/XVy5i5JCv9RTinX/4=
-Received: from DLEE103.ent.ti.com (dlee103.ent.ti.com [157.170.170.33])
-        by lelv0265.itg.ti.com (8.15.2/8.15.2) with ESMTPS id wBJCgp9j041051
+        b=OXMtqA3DShZcGrfBZkxGH/k0RKJHMNP2gD5G9Vw/gXivBogGDImELbYat3/5SNKQi
+         a4OaCiLEvsFFJzCNJic4vTaQXpu7pqHKnwYPghWeu7BWuSMUey0Qcm8X2QliHimRZ6
+         5w5ssocZzC19Fax7b4lFCcxmWQg8IDgdF5VcKsS4=
+Received: from DLEE112.ent.ti.com (dlee112.ent.ti.com [157.170.170.23])
+        by lelv0266.itg.ti.com (8.15.2/8.15.2) with ESMTPS id wBJCgs9R062459
         (version=TLSv1.2 cipher=AES256-GCM-SHA384 bits=256 verify=FAIL);
-        Wed, 19 Dec 2018 06:42:52 -0600
-Received: from DLEE101.ent.ti.com (157.170.170.31) by DLEE103.ent.ti.com
- (157.170.170.33) with Microsoft SMTP Server (version=TLS1_2,
+        Wed, 19 Dec 2018 06:42:54 -0600
+Received: from DLEE102.ent.ti.com (157.170.170.32) by DLEE112.ent.ti.com
+ (157.170.170.23) with Microsoft SMTP Server (version=TLS1_2,
  cipher=TLS_ECDHE_RSA_WITH_AES_128_CBC_SHA256_P256) id 15.1.1591.10; Wed, 19
- Dec 2018 06:42:51 -0600
-Received: from dlep32.itg.ti.com (157.170.170.100) by DLEE101.ent.ti.com
- (157.170.170.31) with Microsoft SMTP Server (version=TLS1_0,
+ Dec 2018 06:42:54 -0600
+Received: from dlep32.itg.ti.com (157.170.170.100) by DLEE102.ent.ti.com
+ (157.170.170.32) with Microsoft SMTP Server (version=TLS1_0,
  cipher=TLS_RSA_WITH_AES_256_CBC_SHA) id 15.1.1591.10 via Frontend Transport;
- Wed, 19 Dec 2018 06:42:51 -0600
+ Wed, 19 Dec 2018 06:42:54 -0600
 Received: from a0393678ub.india.ti.com (ileax41-snat.itg.ti.com [10.172.224.153])
-        by dlep32.itg.ti.com (8.14.3/8.13.8) with ESMTP id wBJCgNZr003940;
-        Wed, 19 Dec 2018 06:42:48 -0600
+        by dlep32.itg.ti.com (8.14.3/8.13.8) with ESMTP id wBJCgNZs003940;
+        Wed, 19 Dec 2018 06:42:52 -0600
 From:   Kishon Vijay Abraham I <kishon@ti.com>
 To:     Murali Karicheri <m-karicheri2@ti.com>,
         Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
@@ -55,9 +55,9 @@ CC:     Bjorn Helgaas <bhelgaas@google.com>,
         Jingoo Han <jingoohan1@gmail.com>, <linux-pci@vger.kernel.org>,
         <linux-arm-kernel@lists.infradead.org>,
         <linux-kernel@vger.kernel.org>, <kishon@ti.com>
-Subject: [PATCH 08/10] PCI: keystone: Use Keystone specific msi_irq_chip
-Date:   Wed, 19 Dec 2018 18:12:05 +0530
-Message-ID: <20181219124207.13479-9-kishon@ti.com>
+Subject: [PATCH 09/10] PCI: dwc: Remove Keystone specific dw_pcie_host_ops
+Date:   Wed, 19 Dec 2018 18:12:06 +0530
+Message-ID: <20181219124207.13479-10-kishon@ti.com>
 X-Mailer: git-send-email 2.17.1
 In-Reply-To: <20181219124207.13479-1-kishon@ti.com>
 References: <20181219124207.13479-1-kishon@ti.com>
@@ -69,168 +69,117 @@ Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-Use Keystone specific msi_irq_chip to configure the MSI controller
-logic in the PCIe keystone wrapper instead of using the default
-Designware msi_irq chip (dw_pci_msi_bottom_irq_chip) with
-callback functions for configuring the Keystone MSI controller.
-This will help to remove Keystone specific callback functions
-added in dw_pcie_host_ops.
+Now that Keystone started using it's own msi_irq_chip, remove
+Keystone specific callback function defined in dw_pcie_host_ops.
 
 Signed-off-by: Kishon Vijay Abraham I <kishon@ti.com>
 ---
- drivers/pci/controller/dwc/pci-keystone.c | 96 +++++++++++++++++------
- 1 file changed, 72 insertions(+), 24 deletions(-)
+ .../pci/controller/dwc/pcie-designware-host.c | 45 ++++++-------------
+ drivers/pci/controller/dwc/pcie-designware.h  |  5 ---
+ 2 files changed, 14 insertions(+), 36 deletions(-)
 
-diff --git a/drivers/pci/controller/dwc/pci-keystone.c b/drivers/pci/controller/dwc/pci-keystone.c
-index 05b2bd613c68..420d30ce11f4 100644
---- a/drivers/pci/controller/dwc/pci-keystone.c
-+++ b/drivers/pci/controller/dwc/pci-keystone.c
-@@ -104,14 +104,6 @@ struct keystone_pcie {
- 	struct resource		app;
- };
+diff --git a/drivers/pci/controller/dwc/pcie-designware-host.c b/drivers/pci/controller/dwc/pcie-designware-host.c
+index db21bd11f153..dbc94f3be3d5 100644
+--- a/drivers/pci/controller/dwc/pcie-designware-host.c
++++ b/drivers/pci/controller/dwc/pcie-designware-host.c
+@@ -126,18 +126,12 @@ static void dw_pci_setup_msi_msg(struct irq_data *data, struct msi_msg *msg)
+ 	struct dw_pcie *pci = to_dw_pcie_from_pp(pp);
+ 	u64 msi_target;
  
--static phys_addr_t ks_pcie_get_msi_addr(struct pcie_port *pp)
--{
--	struct dw_pcie *pci = to_dw_pcie_from_pp(pp);
--	struct keystone_pcie *ks_pcie = to_keystone_pcie(pci);
--
--	return ks_pcie->app.start + MSI_IRQ;
--}
--
- static u32 ks_pcie_app_readl(struct keystone_pcie *ks_pcie, u32 offset)
- {
- 	return readl(ks_pcie->va_app_base + offset);
-@@ -123,11 +115,14 @@ static void ks_pcie_app_writel(struct keystone_pcie *ks_pcie, u32 offset,
- 	writel(val, ks_pcie->va_app_base + offset);
- }
+-	if (pp->ops->get_msi_addr)
+-		msi_target = pp->ops->get_msi_addr(pp);
+-	else
+-		msi_target = (u64)pp->msi_data;
++	msi_target = (u64)pp->msi_data;
  
--static void ks_pcie_msi_irq_ack(int irq, struct pcie_port *pp)
-+static void ks_pcie_msi_irq_ack(struct irq_data *data)
- {
--	u32 reg_offset, bit_pos;
-+	struct pcie_port *pp  = irq_data_get_irq_chip_data(data);
- 	struct keystone_pcie *ks_pcie;
-+	u32 irq = data->hwirq;
- 	struct dw_pcie *pci;
-+	u32 reg_offset;
-+	u32 bit_pos;
+ 	msg->address_lo = lower_32_bits(msi_target);
+ 	msg->address_hi = upper_32_bits(msi_target);
  
- 	pci = to_dw_pcie_from_pp(pp);
- 	ks_pcie = to_keystone_pcie(pci);
-@@ -140,34 +135,91 @@ static void ks_pcie_msi_irq_ack(int irq, struct pcie_port *pp)
- 	ks_pcie_app_writel(ks_pcie, IRQ_EOI, reg_offset + MSI_IRQ_OFFSET);
- }
- 
--static void ks_pcie_msi_set_irq(struct pcie_port *pp, int irq)
-+static void ks_pcie_compose_msi_msg(struct irq_data *data, struct msi_msg *msg)
- {
--	u32 reg_offset, bit_pos;
--	struct dw_pcie *pci = to_dw_pcie_from_pp(pp);
--	struct keystone_pcie *ks_pcie = to_keystone_pcie(pci);
-+	struct pcie_port *pp = irq_data_get_irq_chip_data(data);
-+	struct keystone_pcie *ks_pcie;
-+	struct dw_pcie *pci;
-+	u64 msi_target;
-+
-+	pci = to_dw_pcie_from_pp(pp);
-+	ks_pcie = to_keystone_pcie(pci);
-+
-+	msi_target = ks_pcie->app.start + MSI_IRQ;
-+	msg->address_lo = lower_32_bits(msi_target);
-+	msg->address_hi = upper_32_bits(msi_target);
+-	if (pp->ops->get_msi_data)
+-		msg->data = pp->ops->get_msi_data(pp, data->hwirq);
+-	else
+-		msg->data = data->hwirq;
 +	msg->data = data->hwirq;
-+
-+	dev_dbg(pci->dev, "msi#%d address_hi %#x address_lo %#x\n",
-+		(int)data->hwirq, msg->address_hi, msg->address_lo);
-+}
-+
-+static int ks_pcie_msi_set_affinity(struct irq_data *irq_data,
-+				    const struct cpumask *mask, bool force)
-+{
-+	return -EINVAL;
-+}
-+
-+static void ks_pcie_msi_mask(struct irq_data *data)
-+{
-+	struct pcie_port *pp = irq_data_get_irq_chip_data(data);
-+	struct keystone_pcie *ks_pcie;
-+	u32 irq = data->hwirq;
-+	struct dw_pcie *pci;
-+	unsigned long flags;
-+	u32 reg_offset;
-+	u32 bit_pos;
-+
-+	raw_spin_lock_irqsave(&pp->lock, flags);
-+
-+	pci = to_dw_pcie_from_pp(pp);
-+	ks_pcie = to_keystone_pcie(pci);
  
- 	reg_offset = irq % 8;
- 	bit_pos = irq >> 3;
+ 	dev_dbg(pci->dev, "msi#%d address_hi %#x address_lo %#x\n",
+ 		(int)data->hwirq, msg->address_hi, msg->address_lo);
+@@ -157,17 +151,13 @@ static void dw_pci_bottom_mask(struct irq_data *data)
  
--	ks_pcie_app_writel(ks_pcie, MSI_IRQ_ENABLE_SET(reg_offset),
-+	ks_pcie_app_writel(ks_pcie, MSI_IRQ_ENABLE_CLR(reg_offset),
- 			   BIT(bit_pos));
-+
-+	raw_spin_unlock_irqrestore(&pp->lock, flags);
+ 	raw_spin_lock_irqsave(&pp->lock, flags);
+ 
+-	if (pp->ops->msi_clear_irq) {
+-		pp->ops->msi_clear_irq(pp, data->hwirq);
+-	} else {
+-		ctrl = data->hwirq / MAX_MSI_IRQS_PER_CTRL;
+-		res = ctrl * MSI_REG_CTRL_BLOCK_SIZE;
+-		bit = data->hwirq % MAX_MSI_IRQS_PER_CTRL;
++	ctrl = data->hwirq / MAX_MSI_IRQS_PER_CTRL;
++	res = ctrl * MSI_REG_CTRL_BLOCK_SIZE;
++	bit = data->hwirq % MAX_MSI_IRQS_PER_CTRL;
+ 
+-		pp->irq_status[ctrl] &= ~(1 << bit);
+-		dw_pcie_wr_own_conf(pp, PCIE_MSI_INTR0_MASK + res, 4,
+-				    ~pp->irq_status[ctrl]);
+-	}
++	pp->irq_status[ctrl] &= ~(1 << bit);
++	dw_pcie_wr_own_conf(pp, PCIE_MSI_INTR0_MASK + res, 4,
++			    ~pp->irq_status[ctrl]);
+ 
+ 	raw_spin_unlock_irqrestore(&pp->lock, flags);
+ }
+@@ -180,17 +170,13 @@ static void dw_pci_bottom_unmask(struct irq_data *data)
+ 
+ 	raw_spin_lock_irqsave(&pp->lock, flags);
+ 
+-	if (pp->ops->msi_set_irq) {
+-		pp->ops->msi_set_irq(pp, data->hwirq);
+-	} else {
+-		ctrl = data->hwirq / MAX_MSI_IRQS_PER_CTRL;
+-		res = ctrl * MSI_REG_CTRL_BLOCK_SIZE;
+-		bit = data->hwirq % MAX_MSI_IRQS_PER_CTRL;
++	ctrl = data->hwirq / MAX_MSI_IRQS_PER_CTRL;
++	res = ctrl * MSI_REG_CTRL_BLOCK_SIZE;
++	bit = data->hwirq % MAX_MSI_IRQS_PER_CTRL;
+ 
+-		pp->irq_status[ctrl] |= 1 << bit;
+-		dw_pcie_wr_own_conf(pp, PCIE_MSI_INTR0_MASK + res, 4,
+-				    ~pp->irq_status[ctrl]);
+-	}
++	pp->irq_status[ctrl] |= 1 << bit;
++	dw_pcie_wr_own_conf(pp, PCIE_MSI_INTR0_MASK + res, 4,
++			    ~pp->irq_status[ctrl]);
+ 
+ 	raw_spin_unlock_irqrestore(&pp->lock, flags);
+ }
+@@ -209,9 +195,6 @@ static void dw_pci_bottom_ack(struct irq_data *d)
+ 
+ 	dw_pcie_wr_own_conf(pp, PCIE_MSI_INTR0_STATUS + res, 4, 1 << bit);
+ 
+-	if (pp->ops->msi_irq_ack)
+-		pp->ops->msi_irq_ack(d->hwirq, pp);
+-
+ 	raw_spin_unlock_irqrestore(&pp->lock, flags);
  }
  
--static void ks_pcie_msi_clear_irq(struct pcie_port *pp, int irq)
-+static void ks_pcie_msi_unmask(struct irq_data *data)
- {
--	u32 reg_offset, bit_pos;
--	struct dw_pcie *pci = to_dw_pcie_from_pp(pp);
--	struct keystone_pcie *ks_pcie = to_keystone_pcie(pci);
-+	struct pcie_port *pp = irq_data_get_irq_chip_data(data);
-+	struct keystone_pcie *ks_pcie;
-+	u32 irq = data->hwirq;
-+	struct dw_pcie *pci;
-+	unsigned long flags;
-+	u32 reg_offset;
-+	u32 bit_pos;
-+
-+	raw_spin_lock_irqsave(&pp->lock, flags);
-+
-+	pci = to_dw_pcie_from_pp(pp);
-+	ks_pcie = to_keystone_pcie(pci);
- 
- 	reg_offset = irq % 8;
- 	bit_pos = irq >> 3;
- 
--	ks_pcie_app_writel(ks_pcie, MSI_IRQ_ENABLE_CLR(reg_offset),
-+	ks_pcie_app_writel(ks_pcie, MSI_IRQ_ENABLE_SET(reg_offset),
- 			   BIT(bit_pos));
-+
-+	raw_spin_unlock_irqrestore(&pp->lock, flags);
- }
- 
-+static struct irq_chip ks_pcie_msi_irq_chip = {
-+	.name = "KEYSTONE-PCI-MSI",
-+	.irq_ack = ks_pcie_msi_irq_ack,
-+	.irq_compose_msi_msg = ks_pcie_compose_msi_msg,
-+	.irq_set_affinity = ks_pcie_msi_set_affinity,
-+	.irq_mask = ks_pcie_msi_mask,
-+	.irq_unmask = ks_pcie_msi_unmask,
-+};
-+
- static int ks_pcie_msi_host_init(struct pcie_port *pp)
- {
-+	pp->msi_irq_chip = &ks_pcie_msi_irq_chip;
- 	return dw_pcie_allocate_domains(pp);
- }
- 
-@@ -768,11 +820,7 @@ static const struct dw_pcie_host_ops ks_pcie_host_ops = {
- 	.rd_other_conf = ks_pcie_rd_other_conf,
- 	.wr_other_conf = ks_pcie_wr_other_conf,
- 	.host_init = ks_pcie_host_init,
--	.msi_set_irq = ks_pcie_msi_set_irq,
--	.msi_clear_irq = ks_pcie_msi_clear_irq,
--	.get_msi_addr = ks_pcie_get_msi_addr,
- 	.msi_host_init = ks_pcie_msi_host_init,
--	.msi_irq_ack = ks_pcie_msi_irq_ack,
- 	.scan_bus = ks_pcie_v3_65_scan_bus,
+diff --git a/drivers/pci/controller/dwc/pcie-designware.h b/drivers/pci/controller/dwc/pcie-designware.h
+index 0873ee4084aa..53cb6ab405b5 100644
+--- a/drivers/pci/controller/dwc/pcie-designware.h
++++ b/drivers/pci/controller/dwc/pcie-designware.h
+@@ -134,14 +134,9 @@ struct dw_pcie_host_ops {
+ 	int (*wr_other_conf)(struct pcie_port *pp, struct pci_bus *bus,
+ 			     unsigned int devfn, int where, int size, u32 val);
+ 	int (*host_init)(struct pcie_port *pp);
+-	void (*msi_set_irq)(struct pcie_port *pp, int irq);
+-	void (*msi_clear_irq)(struct pcie_port *pp, int irq);
+-	phys_addr_t (*get_msi_addr)(struct pcie_port *pp);
+-	u32 (*get_msi_data)(struct pcie_port *pp, int pos);
+ 	void (*scan_bus)(struct pcie_port *pp);
+ 	void (*set_num_vectors)(struct pcie_port *pp);
+ 	int (*msi_host_init)(struct pcie_port *pp);
+-	void (*msi_irq_ack)(int irq, struct pcie_port *pp);
  };
  
+ struct pcie_port {
 -- 
 2.17.1
 
